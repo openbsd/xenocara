@@ -1,0 +1,57 @@
+2006-04-26  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Bump to 1.0.1
+
+2006-03-20  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* Makefile.am:
+	Bug #6243: Fix build on Cygwin, and when srcdir != objdir.  (Yaakov
+	Selkowitz)
+
+2006-01-12  Adam Jackson  <ajax@freedesktop.org>
+
+	* Wraphelp.c:
+	static -> static const
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-11-19  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* xdmcp.pc.in:
+	Update pkgconfig files to separate library build-time dependencies
+	from application build-time dependencies.
+
+2005-10-18  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for RC1 release.
+
+2005-10-05  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* Makefile.am:
+	Add missing files to EXTRA_DIST
+
+2005-07-08  Keith Packard  <keithp@keithp.com>
+
+	* .cvsignore:
+	* Makefile.am:
+	Add .cvsignore files
+	Switch _la_CFLAGS for AM_CFLAGS to clean up directory
+	
+Tue May 17 10:38:30 2005  Søren Sandmann  <sandmann@redhat.com>
+
+	* configure.ac: Remove Xdmcpconf.h and references to it, since it
+	is not needed.
+
+	* ChangeLog: Delete entries from the xlibs tree since they are not
+	relevant
