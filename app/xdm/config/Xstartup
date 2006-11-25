@@ -1,0 +1,5 @@
+#!/bin/sh
+# Register a login (derived from GiveConsole as follows:)
+#
+/usr/X11R6/bin/sessreg  -a -w "/var/log/wtmp" -u "/var/run/utmp" \
+	-x "/etc/X11/xdm/Xservers" -l $DISPLAY -h "" $USER

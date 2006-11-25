@@ -1,0 +1,307 @@
+2006-04-27  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac: 
+	Version bump: 1.0.4
+
+2006-04-14  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* greeter/verify.c: 
+	<http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6413255>
+	Sun bug #6413255: xdm should check for uid 0, not for username of 
+	"root", when doing non-console login check
+
+2006-04-13  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac: 
+	Add AC_C_INLINE so we can use "inline" keyword
+
+	* greeter/Login.c: 
+	Add "inline" to max function definition
+
+2006-04-11  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* greeter/Login.c: 
+	When clearing username & password buffers, zero out the entire buffer,
+	not just the first byte, for reduced risk of leaking passwords into
+	core dumps.
+
+2006-04-07  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* session.c: 
+	Xorg bug #4765 <https://bugs.freedesktop.org/show_bug.cgi?id=4765>
+	Patch #3555 <https://bugs.freedesktop.org/attachment.cgi?id=3555>
+	xdm doesn't work with the pam_krb5 module (call pam_getenvlist
+	after pam_setcred)  (Constantine Sapuntzakis)
+
+2006-03-30  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac:
+	Version bump: 1.0.3
+
+2006-03-30  Alan Coopersmith  <alan.coopersmith@sun.com>
+	
+	* daemon.c:
+	* util.c:
+	Drop all setpgrp/setpgid silliness and just use setsid everywhere.
+	(Assumes all platforms are at least POSIX.1-1990 compliant.)
+
+	* daemon.c:
+	Check for error return from daemon() function.
+
+2006-03-27  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac: 
+	Version bump: 1.0.2
+
+2006-03-17  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac:
+	* config/Xsession.cpp: 
+	* config/Makefile.am:
+	Bug #5898 <https://bugs.freedesktop.org/show_bug.cgi?id=5898>
+	Use mktemp command to create files safely in TMPDIR or /tmp
+	on systems that have it - don't try to create files there if
+	mktemp is not present.   Fix based on NetBSD fix from
+	<http://www.netbsd.org/cgi-bin/query-pr-single.pl?number=32805> .
+
+2006-03-16  Jeremy C. Reed  <reed@reedmedia.net>
+
+	reviewed by: Alan Coopersmith
+
+	* configure.ac:
+	DragonFly is a BSD, so is CSRG_BASED and use su with -m option.
+
+2006-03-16  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac: 
+	* daemon.c:
+	* session.c:
+	* util.c:
+	Convert checks for <grp.h>, daemon(), and setpgrp arguments to
+	autoconf tests instead of checking OS name #ifdefs.
+
+2006-03-10  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* chooser.c: 
+	Coverity ids #722, 723, 724, 725, 726, 727, 728:
+	Need to XtFree the values returned by XawListShowCurrent to plug
+	memory leaks.
+
+	* socket.c (UpdateMcastGroup): 
+	Coverity id #834:  
+	After joining a multicast group, add group pointer to the list of
+	active multicast groups instead of just leaking the group pointer.
+
+2006-03-09  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* socket.c: (CreateSocklistEntry):
+	Coverity id #332: 
+	When malloc fails, don't just print an error and continue on using
+	the NULL pointer, return NULL to the caller.
+
+2006-03-01  Matthias Hopf  <mhopf@suse.de>
+
+	* greeter/verify.c: (PAM_conv):
+	openSUSE bug #142954
+	Fixed potential segfault on OOM condition.
+
+2006-02-24  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac:
+	* session.c:
+	Bug #6036 <https://bugs.freedesktop.org/show_bug.cgi?id=6036>
+	Check for key_setnet declaration before defining it to avoid
+	compiler error of conflicting types on DragonFly BSD
+
+2006-02-24  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* netaddr.c: 
+	Bug #6026 <https://bugs.freedesktop.org/show_bug.cgi?id=6026>
+	Segfault in netaddr.c:ConvertAddr if ifa_addr is NULL
+	(Loser Mcloser <reebydobalina@yahoo.ca>)
+
+2006-02-24  Jeremy C. Reed  <reed@reedmedia.net>
+
+	reviewed by: Alan.Coopersmith@Sun.COM
+
+	* config/Xsession.cpp:
+	Bug #5897 <https://bugs.freedesktop.org/show_bug.cgi?id=5897>
+	Create xsession error file with umask 077 instead of chmod
+	a moment later. This was reported by Steven M. Bellovin to NetBSD.
+	<http://www.netbsd.org/cgi-bin/query-pr-single.pl?number=32804>
+
+2006-02-24  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* greeter/Login.c: 
+	Bug #1391 <https://bugs.freedesktop.org/show_bug.cgi?id=1391>
+	Patch #4739 <https://bugs.freedesktop.org/attachment.cgi?id=4739>
+	xdm hangs in a loop when invalid xpm bitmap is used for logo
+	(Costantino Leandro <lcostantino@gmail.com>)
+
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-12-11  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* README:
+	* configure.ac:
+	* config/Makefile.am: 
+	* config/xdm-config.cpp:
+	Bugzilla #5055 <https://bugs.freedesktop.org/show_bug.cgi?id=5055>
+	Add --with-xdmscriptdir to allow builder/packager to decide if
+	scripts should go in config, lib, or data directories.
+
+2005-12-07  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* Makefile.am:
+	* configure.ac:
+	Change to use the app-defaults default dir configured in libXt.
+
+2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* Makefile.am:
+	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-11-23  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac:
+	* Makefile.am: 
+	Set HAS_ARC4_RANDOM if arc4random() function is found
+	Set RANDOMMANDEFS to correctly substitute alternate random 
+	device/method descriptions in man page.
+
+2005-11-21  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* Makefile.am (MANDEFS): 
+	Fix file paths in man pages.
+
+2005-11-20  Eric Anholt  <anholt@FreeBSD.org>
+
+	* configure.ac:
+	Bug #5113: The insertion of -lutil into XDM_LIBS ended up having no
+	effect because  PKG_CHECK_MODULES(XDM, ...) later overwrote it.  So put
+	-lutil into XDM_OS_LIBS and add XDM_OS_LIBS to XDM_LIBS later.
+
+2005-11-19  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac: 
+	Add dependency on xau.
+
+2005-11-19  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update dependencies to work with separate build roots.
+
+2005-11-13  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac: 
+	* Makefile.am:
+	* greeter/Makefile.am:
+	Add --enable-dynamic-greeter flag to allow choosing whether
+	greeter should be built into xdm binary or dynamically loaded
+	libXdmGreet.so object.
+	Add -rdynamic flag to link options when using gcc with dynamic
+	greeter to allow greeter object to reference symbols in xdm.
+
+2005-11-12  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* Makefile.am: 
+	Install xdm man page using APP_MAN_SUFFIX instead of forcing .1
+
+2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC2 release.
+
+2005-11-07  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	Changes to match bug #3180 checkin to monolith:
+	
+	* config/Makefile.am: 
+	Generate Xsession from Xsession.cpp
+	Add SHELL_CMD to cpp substitutions
+
+	* configure.ac
+	Set SHELL_CMD to /bin/ksh for sco, /bin/sh for all other OS'es.
+
+2005-11-01  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac: 
+	Add AC_DEFINE_DIR calls for the path #defines previously set in
+	RES_DEFINES section of xdm Imakefile.   (Some should probably
+	be made settable via configure --with-* flags, but at least they
+	correctly set defaults to match the directories specified to configure
+	now.)
+
+2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* Makefile.am:
+	* configure.ac:
+	Update pkgcheck depedencies to work with separate build roots.
+
+2005-10-28  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac: 
+	Add -DGREET_LIB to GREETER_CFLAGS on Solaris & SVR4 (was in #if SVR4
+	in Imake)
+	Add --with-random-device and checks for /dev/urandom & /dev/random
+	for source of random data for key generation
+	Link libXdmgreet with Xinerama & XPM libraries when using those 
+	features.
+
+2005-10-25  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac: 
+	* Makefile.am:
+	* config/Makefile.am:
+	* greeter/Makefile.am:
+	Allow overriding directories for xdm scripts/modules & configuration
+	files via configure options --with-xdmlibdir & --with-xdmconfigdir
+	Add libXt and libX11 to dependencies for libXdmgreet.
+	
+	* README: 
+	Document default directories & configure options to change them	
+
+2005-10-25  Shawn Starr <shawn.starr@rogers.com>
+      
+       * configure.ac:
+       * Makefile.am:
+       * greeter/Makefile.am:
+       We forgot to build the Xdm greeter library. Add it to build and cleanup
+       hardcoded values to find it.
+
+2005-10-18  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for RC1 release.
+
+2005-10-14  Donnie Berkholz  <spyderous@gentoo.org>
+
+	* configure.ac: Add another set of brackets around DEFAULTVT's empty default
+	setting so it isn't treated as a command.
+
+2005-10-05  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* Makefile.am: Use CLEANFILES for all generated files
+
+2005-09-28  Kristian Høgsberg  <krh@redhat.com>
+
+	* config/Makefile.am (EXTRA_DIST): Add Xservers.fs.
+
+2005-08-17  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* Makefile.am:
+	Fix EXTRA_DIST to point to a real variable.  Bump to 0.99.1.

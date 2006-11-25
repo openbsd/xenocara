@@ -1,0 +1,140 @@
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.2//EN" 'http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd'>
+
+<!-- Process this file with DocBook tools to generate the output format
+(such as manual pages or HTML documents).
+
+Note that strings like __appmansuffix__, __filemansuffix__, __libmansuffix__,
+__miscmansuffix__ etc. have to be replaced first (in theory that's the
+job of ENTITIES but some XML tools are highly allergic to such stuff... ;-().
+A quick way to do that is to filter this document via
+/usr/bin/sed "s/__appmansuffix__/${MANSUFFIX}/g;s/__filemansuffix__/${FILEMANSUFFIX}/g;s/__libmansuffix__/${LIBMANSUFFIX}/g;s/__miscmansuffix__/${MISCMANSUFFIX}/g"
+assuming that env vars like MANSUFFIX etc. have been set to the matching
+manual volume numbers.
+  -->
+
+<refentry>
+  <refmeta>
+    <refentrytitle>xpsimplehelloworld</refentrytitle>
+    <manvolnum>__appmansuffix__</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>xpsimplehelloworld</refname>
+
+    <refpurpose>"Hello World"-like Xprint sample utility based on plain X11 rendering calls</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>xpsimplehelloworld</command>
+
+      <arg><option>-printer <replaceable>printernname</replaceable></option></arg>
+
+      <arg><option>-v</option></arg>
+
+      <arg><option>-h</option></arg>
+      
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><command>xpsimplehelloworld</command> is a sample utility for Xprint, the
+      printing system for the X Window system. It demonstrates how to send a test page to
+      the specified printer (or the default printer, if none is specified) using plain X11
+      rendering instructions and without using special toolkit support (like one of
+      the special Xt print shell widget classes
+      (such as
+      <citerefentry><refentrytitle>XmPrintShell</refentrytitle><manvolnum>__libmansuffix__</manvolnum></citerefentry>
+      or
+      <citerefentry><refentrytitle>XawPrintShell</refentrytitle><manvolnum>__libmansuffix__</manvolnum></citerefentry>)).
+    </para>
+
+  </refsect1>
+
+  <refsect1>
+    <title>OPTIONS</title>
+
+    <variablelist>
+      <varlistentry>
+        <term><option>-printer <replaceable>printernname</replaceable></option>
+        </term>
+        <listitem>
+          <para>printer to use</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-v</option>
+        </term>
+        <listitem>
+          <para>verbose output</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-h</option>
+        </term>
+        <listitem>
+          <para>print usage</para>
+        </listitem>
+      </varlistentry>      
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>ENVIRONMENT</title>
+    <variablelist>
+      <varlistentry>
+        <term><envar>XPSERVERLIST</envar>
+        </term>
+        <listitem>
+	    <para>
+              <envar>${XPSERVERLIST}</envar> must be set,
+	      identifying the available Xprint servers.
+              See <citerefentry><refentrytitle>Xprint</refentrytitle><manvolnum>__miscmansuffix__</manvolnum></citerefentry>
+	      for more details.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>KNOWN BUGS</title>
+    <para>
+      A full list of bugs can be obtained from the Xprint.org bug database (<ulink url="http://xprint.mozdev.org/xprint_bugs.html">http://xprint.mozdev.org/xprint_bugs.html</ulink>).
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>
+      <simplelist type="inline">
+        <!-- specific references -->
+        <!-- none -->
+        
+        <!-- Xprint general references -->
+        <member><citerefentry><refentrytitle>Xprint</refentrytitle><manvolnum>__miscmansuffix__</manvolnum></citerefentry></member>
+        <member><citerefentry><refentrytitle>X11</refentrytitle><manvolnum>__miscmansuffix__</manvolnum></citerefentry></member>
+        <member><citerefentry><refentrytitle>xplsprinters</refentrytitle><manvolnum>__appmansuffix__</manvolnum></citerefentry></member>
+        <member><citerefentry><refentrytitle>xphelloworld</refentrytitle><manvolnum>__appmansuffix__</manvolnum></citerefentry></member>
+        <member><citerefentry><refentrytitle>xpxmhelloworld</refentrytitle><manvolnum>__appmansuffix__</manvolnum></citerefentry></member>
+        <member><citerefentry><refentrytitle>xpawhelloworld</refentrytitle><manvolnum>__appmansuffix__</manvolnum></citerefentry></member>
+        <member><citerefentry><refentrytitle>xpxthelloworld</refentrytitle><manvolnum>__appmansuffix__</manvolnum></citerefentry></member>
+<!--
+        <member><citerefentry><refentrytitle>xpsimplehelloworld</refentrytitle><manvolnum>__appmansuffix__</manvolnum></citerefentry></member>
+-->
+        <member><citerefentry><refentrytitle>Xserver</refentrytitle><manvolnum>__appmansuffix__</manvolnum></citerefentry></member>
+        <member><citerefentry><refentrytitle>Xprt</refentrytitle><manvolnum>__appmansuffix__</manvolnum></citerefentry></member>
+        <!-- ToDO: Add manual pages for the single Xprint DDX implementations (PostScript/PDF/PCL/PCL-MONO/Raster/etc.) -->
+        <member><citerefentry><refentrytitle>libXp</refentrytitle><manvolnum>__libmansuffix__</manvolnum></citerefentry></member>
+        <member><citerefentry><refentrytitle>libXprintUtils</refentrytitle><manvolnum>__libmansuffix__</manvolnum></citerefentry></member>
+        <member><citerefentry><refentrytitle>libXprintAppUtils</refentrytitle><manvolnum>__libmansuffix__</manvolnum></citerefentry></member>
+        <member><citerefentry><refentrytitle>XmPrintShell</refentrytitle><manvolnum>__libmansuffix__</manvolnum></citerefentry></member>
+        <member><citerefentry><refentrytitle>XawPrintShell</refentrytitle><manvolnum>__libmansuffix__</manvolnum></citerefentry></member>
+        <member>Xprint FAQ (<ulink url="http://xprint.mozdev.org/docs/Xprint_FAQ.html">http://xprint.mozdev.org/docs/Xprint_FAQ.html</ulink>)</member>
+        <member>Xprint main site (<ulink url="http://xprint.mozdev.org/">http://xprint.mozdev.org/</ulink>)</member>
+      </simplelist>
+    </para>
+  </refsect1>
+
+</refentry>
+
+

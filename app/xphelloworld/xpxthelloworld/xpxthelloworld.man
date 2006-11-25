@@ -1,0 +1,45 @@
+.\" -*- coding: us-ascii -*-
+.TH xpxthelloworld __appmansuffix__ "8 October 2004"  
+.SH NAME
+xpxthelloworld \- "Hello World"-like Xprint sample utility based on the Xt toolkit
+.SH SYNOPSIS
+.ad l
+\fBxpxthelloworld\fR \kx
+.if (\nxu > (\n(.lu / 2)) .nr x (\n(.lu / 5)
+'in \n(.iu+\nxu
+[\fB\-print\fR] [\fB\-printer \fBprinternname\fR\fR] [\fB\-v\fR] [\fB\-h\fR]
+'in \n(.iu-\nxu
+.ad b
+.SH DESCRIPTION
+xpxthelloworld is a sample utility for Xprint, the
+printing system for the X Window system. It demonstrates how to send a test page to
+the specified printer (or the default printer, if none is specified) based on
+the Xt toolkit without using one of the special print shell widget classes
+(such as
+\fBXmPrintShell\fR(__libmansuffix__)
+or
+\fBXawPrintShell\fR(__libmansuffix__)).
+.SH OPTIONS
+.TP 
+\fB\-print\fR 
+Print (default is to display on the video Xserver)
+.TP 
+\fB\-printer \fIprinternname\fB\fR 
+printer to use
+.TP 
+\fB\-v\fR 
+verbose output
+.TP 
+\fB\-h\fR 
+print usage
+.SH ENVIRONMENT
+.TP 
+\fBXPSERVERLIST\fR 
+\fB${XPSERVERLIST}\fR must be set,
+identifying the available Xprint servers.
+See \fBXprint\fR(__miscmansuffix__)
+for more details.
+.SH "KNOWN BUGS"
+A full list of bugs can be obtained from the Xprint.org bug database (http://xprint.mozdev.org/xprint_bugs.html).
+.SH "SEE ALSO"
+\fBXprint\fR(__miscmansuffix__), \fBX11\fR(__miscmansuffix__), \fBxplsprinters\fR(__appmansuffix__), \fBxphelloworld\fR(__appmansuffix__), \fBxpxmhelloworld\fR(__appmansuffix__), \fBxpawhelloworld\fR(__appmansuffix__), \fBxpsimplehelloworld\fR(__appmansuffix__), \fBXserver\fR(__appmansuffix__), \fBXprt\fR(__appmansuffix__), \fBlibXp\fR(__libmansuffix__), \fBlibXprintUtils\fR(__libmansuffix__), \fBlibXprintAppUtils\fR(__libmansuffix__), \fBXmPrintShell\fR(__libmansuffix__), \fBXawPrintShell\fR(__libmansuffix__), Xprint FAQ (http://xprint.mozdev.org/docs/Xprint_FAQ.html), Xprint main site (http://xprint.mozdev.org/)
