@@ -1,0 +1,8 @@
+# Common rules for building *.dir files in all xkb subdirectories
+# Replaces Imake's MakeXkbDir() rule
+
+MOSTLYCLEANFILES = $(subdir).dir
+
+$(subdir).dir:
+	-rm -f $@
+	$(XKBCOMP) -lfhlpR -o $@ '*'

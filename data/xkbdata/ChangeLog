@@ -1,0 +1,60 @@
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-10-18  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for RC1 release.
+
+2005-10-05  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* symbols/pc/Makefile.am: Add missing bt and kg
+
+2005-09-21  Kristian Høgsberg  <krh@redhat.com>
+
+	* compat/Makefile.am:
+	* geometry/Makefile.am:
+	* geometry/digital/Makefile.am:
+	* geometry/ibm/Makefile.am:
+	* geometry/sgi/Makefile.am:
+	* keycodes/Makefile.am:
+	* keycodes/digital/Makefile.am:
+	* keycodes/sgi/Makefile.am:
+	* keymap/Makefile.am:
+	* keymap/digital/Makefile.am:
+	* keymap/sgi/Makefile.am:
+	* keymap/sun/Makefile.am:
+	* rules/Makefile.am:
+	* semantics/Makefile.am:
+	* symbols/Makefile.am:
+	* symbols/digital/Makefile.am:
+	* symbols/fujitsu/Makefile.am:
+	* symbols/hp/Makefile.am:
+	* symbols/macintosh/Makefile.am:
+	* symbols/nec/Makefile.am:
+	* symbols/pc/Makefile.am:
+	* symbols/sgi/Makefile.am:
+	* symbols/sony/Makefile.am:
+	* symbols/sun/Makefile.am:
+	* symbols/xfree68/Makefile.am:
+	* torture/Makefile.am:
+	* types/Makefile.am:
+
+	Install keymaps under ${datadir}/X11/xkb by default.
+
+2005-08-06  Daniel Stone  <daniel@freedesktop.org>
+
+	* **/Makefile.am:
+	Fix paths to *.dir files (thanks, Sergey Udaltsov).
+	Remove empty SUBDIRS = variables.
+
+2005-07-11  Søren Sandmann  <sandmann@freedesktop.org>
+
+	* Initial autotooling.
