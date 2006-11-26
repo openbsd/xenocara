@@ -30,4 +30,14 @@ xproto_HEADERS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xproto.pc
 
-EXTRA_DIST = autogen.sh xproto.pc.in
+EXTRA_DIST = autogen.sh xproto.pc.in ChangeLog
+
+CLEANFILES=ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(cd $(srcdir) && git-log > ChangeLog )
+
+dist-hook: ChangeLog
+

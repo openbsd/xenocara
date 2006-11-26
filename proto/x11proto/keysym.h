@@ -70,6 +70,7 @@ SOFTWARE.
 #define XK_VIETNAMESE
 #define XK_CURRENCY
 #define XK_MATHEMATICAL
+#define XK_BRAILLE
 
 #include <X11/keysymdef.h>
 

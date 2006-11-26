@@ -1,5 +1,5 @@
 /*
- * $XdotOrg: proto/X11/Xos.h,v 1.9 2006/04/20 01:24:25 alanc Exp $
+ * $XdotOrg: proto/X11/Xos.h,v 1.8 2005/11/08 06:33:25 jkj Exp $
  * $Xorg: Xos.h,v 1.6 2001/02/09 02:03:22 xorgcvs Exp $
  * 
  * 

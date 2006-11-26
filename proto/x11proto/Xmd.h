@@ -1,4 +1,4 @@
-/* $XdotOrg: proto/X11/Xmd.h,v 1.4 2006/04/20 01:24:25 alanc Exp $ */
+/* $XdotOrg: $ */
 /* $XFree86: xc/include/Xmd.h,v 3.18tsi Exp $ */
 /***********************************************************
 
@@ -139,7 +139,7 @@ typedef long INT32;
 typedef short INT16;
 #endif
 
-#if defined(__STDC__) || defined(sgi) || defined(AIXV3)
+#if defined(__STDC__) || defined(sgi) || defined(_AIX)
 typedef signed char    INT8;
 #else
 typedef char           INT8;
@@ -150,6 +150,9 @@ typedef unsigned long CARD64;
 typedef unsigned int CARD32;
 #else
 typedef unsigned long CARD32;
+#endif
+#if !defined(WORD64) && !defined(LONG64)
+typedef unsigned long long CARD64;
 #endif
 typedef unsigned short CARD16;
 typedef unsigned char  CARD8;

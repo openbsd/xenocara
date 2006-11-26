@@ -19,7 +19,7 @@
 #define XF86XK_ModeLock		0x1008FF01	/* Mode Switch Lock */
 
 /*
- * Note, 0x1008FF02 - 0x1008FF0F are free and should be used for misc new
+ * Note, 0x1008FF07 - 0x1008FF0F are free and should be used for misc new
  * keysyms that don't fit into any of the groups below.
  *
  * 0x1008FF64, 0x1008FF6F, 0x1008FF71, 0x1008FF83 are no longer used,
@@ -29,6 +29,13 @@
  * symbols here.
  */
 
+
+/* Backlight controls. */
+#define XF86XK_MonBrightnessUp   0x1008FF02
+#define XF86XK_MonBrightnessDown 0x1008FF03
+#define XF86XK_KbdLightOnOff     0x1008FF04
+#define XF86XK_KbdBrightnessUp   0x1008FF05
+#define XF86XK_KbdBrightnessDown 0x1008FF06
 
 /*
  * Keys found on some "Internet" keyboards.

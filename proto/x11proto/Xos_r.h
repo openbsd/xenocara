@@ -1,5 +1,5 @@
 /* $Xorg: Xos_r.h,v 1.4 2001/02/09 02:03:22 xorgcvs Exp $ */
-/* $XdotOrg: proto/X11/Xos_r.h,v 1.6 2006/04/20 01:24:25 alanc Exp $ */
+/* $XdotOrg: proto/X11/Xos_r.h,v 1.5 2005/07/13 07:23:56 keithp Exp $ */
 /*
 Copyright 1996, 1998  The Open Group
 
