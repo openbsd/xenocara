@@ -1,0 +1,154 @@
+1999-10-15  Dominik Vogt  <dominik.vogt@gmx.de>
+
+	* Makefile.am (HTML): removed version.html again
+
+1999-02-19  Dominik Vogt  <dominik_vogt@hp.com>
+
+	* download.html: updated for 2.2
+
+	* version.html: updated for 2.2
+
+	* fvwm.lsm: updated for 2.2
+
+	* ANNOUNCE: Updated for 2.2
+
+1999-02-18  Dominik Vogt  <dominik_vogt@hp.com>
+
+	* FAQ: restructured FAQ and incorporated configuration-hints file
+	* configuration-hints: file removed
+
+1999-02-15  Dominik Vogt  <dominik_vogt@hp.com>
+
+	* configuration-hints: Added new file.
+
+	* ANNOUNCE: updated for 2.1.13
+
+1999-02-14  Dominik Vogt  <dominik_vogt@hp.com>
+
+	* Makefile.am (EXTRA_DIST): removed fvwm-2.xx.lsm from distribution
+
+	* FAQ (15): Added RedHat configuration question
+
+1999-02-04  Paul D. Smith  <psmith@gnu.org>
+
+	* cvs.html: Update CVS pserver hostname.
+	* links.html: Update web site, ftp site, and mailing list URLs.
+	* FAQ: Ditto.
+	* download.html: Ditto.
+	* ftp.html: Ditto.
+	* fvwm-2.2.lsm: Ditto.
+	* mailinglist.html: Ditto.
+	* version.html: Ditto.
+	* fvwm-2.xx.lsm: Ditto.
+
+1999-02-02  Paul D. Smith  <psmith@gnu.org>
+
+	* FAQ: Rewrote question 13 about XPM support.
+
+1999-01-19  Paul D. Smith  <psmith@gnu.org>
+
+	* ANNOUNCE: Update.
+	* FAQ: Update new URLs.
+
+1999-01-19  Steven Michael ROBBINS  <stever@jeff.cs.mcgill.ca>
+
+	* cvs.html: Major overhaul, bringing it up-to-date with current
+	conventions.  Added links to the GNU tools needed for building the
+	CVS tree.
+
+	* DEVELOPERS: Fixed a bug in the recipe for building a
+	distribution (use "cvs tag", rather than "cvs rtag").  Also
+	updated to reflect the situation after the auto*-generated files
+	are removed.
+
+	* BUGS: Removed Xpm library v4.7 coredump note.  The configure
+	script now ensures up-to-date xpm is used.  Added note about
+	removing config.cache file before reconfiguring.
+
+1999-01-18  Paul D. Smith  <psmith@gnu.org>
+
+	* BUGS: Remove install-strip issue.
+
+Sun Jan 17 16:07:15 1999  Steve Robbins  <steve@nyongwa.montreal.qc.ca>
+
+	* FAQ: Fiddled with answers to: 4, 7, 13, 24, 32, 40.  A few other
+	spelling fixes.
+
+1999-01-16  Bob Woodside  <proteus@pcnet.com>
+
+	* docs/FAQ:  Removed Question 20 (why do Motif popups disappear
+	under the window with Autoraise in effect, etc.?). This no longer
+	happens as of 2.1.8. Added Question 49 (why can't I use StartIconic
+	with Netscape, etc.?).
+
+1999-01-16  Dominik Vogt  <dominik_vogt@hp.com>
+
+	* ANNOUNCE: updated for 2.1.8
+
+1999-01-04  Dan Espen  <dane@mk.bellcore.com>
+
+	* version.html: Changed to ask for bug reports to be entered into
+	the Fvwm bug tracking system.
+
+	* download.html: Changed to ask for bug reports to be entered into
+	the Fvwm bug tracking system.
+
+Tue Dec  1 15:33:26 1998  DanEspen  <dje@blue>
+
+	* download.html: Updated beta download URL to 2.1.4.
+
+1998-11-30  Dan Espen  <dane@mk.bellcore.com>
+
+	* download.html: Updated beta download URL to 2.1.3.
+	Added link to /pub/fvwm.
+
+	* index.html: Corrected URL for bug tracking system.
+
+1998-11-25  Dan Espen  <dane@mk.bellcore.com>
+
+	* index.html: Linked main page to bug tracking system.
+
+	* black-stone1.jpg: A little darker version.
+
+1998-11-23  Dan Espen  <dane@mk.bellcore.com>
+
+	* man-pages.html: removed -man from the file names.
+
+1998-11-12  Dan Espen  <dane@mk.bellcore.com>
+
+	* cvs.html (Deleting Directories and Files): Added description of
+	file deletion process.
+
+	*  cvs.html (Getting_Updates): Added example of  how  to resolve a
+ 	conflict during an update.
+
+Tue Nov 10 07:11:44 1998  Steve Robbins  <steve@nyongwa.montreal.qc.ca>
+
+	* Makefile.am: Fixed up the list of files *again*.
+
+1998-11-05  Steven Michael ROBBINS  <stever@jeff.cs.mcgill.ca>
+
+	* cvs.html: Fixed the examples of anonymous CVS.  Added a note
+	that the head of the CVS tree is alpha code.
+
+	* Makefile.am: Fixed up the distributed-files list to include all
+	the HTML Dan added yesterday.
+
+1998-11-05  Dan Espen  <dane@mk.bellcore.com>
+
+	* txt2html.sh (outfile): Replaced txt2html.ksh with txt2html.sh.
+	Added logic to handle '<>&' special characters in text.
+
+1998-11-04  Dan Espen  <dane@mk.bellcore.com>
+
+	*   Added  README,     black-stone1.jpg, index.html,     fvwm.gif,
+ 	download.html      features.html,   mailinglist.html,   docs.html,
+ 	modules.html,           mod_changes.html,        mod_concept.html,
+ 	mod_security.html,                        mod_initialization.html,
+ 	mod_m2f_communication.html,            mod_f2m_communication.html,
+ 	links.html, txt2html.ksh.
+
+	The main docs come from the web site, the module docs are restructured,
+	and updated.
+
+

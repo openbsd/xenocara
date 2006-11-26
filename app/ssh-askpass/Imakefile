@@ -1,0 +1,37 @@
+XCOMM $OpenBSD: Imakefile,v 1.1.1.1 2006/11/26 10:56:00 matthieu Exp $
+
+           SRCS = drawing.c dynlist.c resources.c x11-ssh-askpass.c
+           OBJS = drawing.o dynlist.o resources.o x11-ssh-askpass.o
+        DEPLIBS = $(DEPXTOOLLIB) $(DEPXLIB)
+LOCAL_LIBRARIES = $(XTOOLLIB) $(XLIB)
+
+           NAME = ssh-askpass
+          CLASS = SshAskpass
+        VERSION = 1.2.0
+           DATE = February 14, 2001
+   APP_DEFAULTS = $(CLASS)-default.ad
+
+$(CLASS)_ad.h: $(CLASS).ad
+	cat $(CLASS).ad | grep -v '^[ 	]*$$' |\
+	  awk '/^[ 	]*!/ { sub("^[ 	]*![ ]?","", $$0); printf("/* %s */\n", $$0); next } ! /^[ 	]*!/ { printf("\"%s\",\n", $$0) }' \
+	  >$@
+
+$(CLASS).ad:
+	$(LN) $(APP_DEFAULTS) $(CLASS).ad
+
+$(NAME).man: x11-ssh-askpass.man.in Imakefile
+	sed \@@\
+	  -e 's#@NAME@#$(NAME)#g' \@@\
+	  -e 's#@VERSION@#$(VERSION)#g' \@@\
+	  -e 's#@DATE@#$(DATE)#g' \@@\
+	  <x11-ssh-askpass.man.in >$@.tmp
+	$(MV) $@.tmp $@
+
+includes:: $(CLASS)_ad.h $(NAME).man
+
+clean::
+	$(RM) -f $(CLASS)_ad.h $(CLASS).ad
+	$(RM) -f $(NAME).man
+
+ComplexProgramTarget($(NAME))
+InstallAppDefaults($(CLASS))

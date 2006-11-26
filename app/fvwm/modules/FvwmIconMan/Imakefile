@@ -1,0 +1,14 @@
+XCOMM	$OpenBSD: Imakefile,v 1.1.1.1 2006/11/26 10:53:49 matthieu Exp $
+
+FVWMTOP=../..
+#include "../../Fvwm.tmpl"
+
+SRCS= FvwmIconMan.c debug.c functions.c fvwm.c globals.c readconfig.c \
+winlist.c x.c xmanager.c
+OBJS= FvwmIconMan.o debug.o functions.o fvwm.o globals.o readconfig.o \
+winlist.o x.o xmanager.o
+
+DEPLIBS= $(FVWMLIB) $(DEPXPMLIB) $(DEPXLIB)
+LOCAL_LIBRARIES= $(FVWMLIB) $(XPMLIB) $(XLIB)
+
+FvwmComplexModuleTarget(FvwmIconMan)

@@ -1,0 +1,34 @@
+XCOMM	$OpenBSD: Imakefile,v 1.1.1.1 2006/11/26 10:53:23 matthieu Exp $
+
+FVWMTOP= ..
+#include "../Fvwm.tmpl"
+
+SRCS= add_window.c bindings.c borders.c \
+builtins.c colormaps.c colors.c complex.c decorations.c \
+events.c focus.c functions.c fvwm.c fvwmdebug.c icons.c \
+menus.c misc.c modconf.c module.c move.c \
+placement.c read.c resize.c style.c \
+virtual.c windows.c
+
+OBJS= add_window.o bindings.o borders.o \
+builtins.o colormaps.o colors.o complex.o decorations.o \
+events.o focus.o functions.o fvwm.o fvwmdebug.o icons.o \
+menus.o misc.o modconf.o module.o move.o \
+placement.o read.o resize.o style.o \
+virtual.o windows.o
+
+PATH_DEFINES= -DFVWM_MODULEDIR=\"$(FVWMLIBDIR)\" \
+	-DFVWMRC=\".fvwmrc\" \
+	-DFVWM_CONFIGDIR=\"$(FVWMLIBDIR)\"
+
+DEPLIBS= $(FVWMLIB) $(DEPXPMLIB) $(DEPXTOOLLIB) $(DEPXLIB)
+LOCAL_LIBRARIES= $(FVWMLIB) $(XPMLIB) $(XTOOLLIB) $(XLIB)
+
+INCLUDES= $(FVWMINCLUDES)
+
+ComplexProgramTarget(fvwm)
+
+SpecialObjectRule(builtins.o, builtins.c, $(PATH_DEFINES))
+SpecialObjectRule(read.o, read.c, $(PATH_DEFINES))
+SpecialObjectRule(fvwm.o, fvwm.c, $(PATH_DEFINES))
+LinkFile(fvwm.man,fvwm2.1)

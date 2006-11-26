@@ -1,0 +1,12 @@
+XCOMM	$OpenBSD: Imakefile,v 1.1.1.1 2006/11/26 10:53:43 matthieu Exp $
+
+FVWMTOP=../..
+#include "../../Fvwm.tmpl"
+
+SRCS= FvwmBacker.c Mallocs.c root_bits.c
+OBJS= FvwmBacker.o Mallocs.o root_bits.o
+
+DEPLIBS= $(FVWMLIB) $(DEPXPMLIB) $(DEPXLIB)
+LOCAL_LIBRARIES= $(FVWMLIB) $(XPMLIB) $(XLIB)
+
+FvwmComplexModuleTarget(FvwmBacker)

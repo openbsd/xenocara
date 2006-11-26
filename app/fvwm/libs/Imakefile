@@ -1,0 +1,20 @@
+XCOMM	$OpenBSD: Imakefile,v 1.1.1.1 2006/11/26 10:53:40 matthieu Exp $
+
+#define DoNormalLib	YES
+#define LibName		fvwm
+
+INCLUDES = -I..
+
+SRCS=  ClientMsg.c GetFont.c Grab.c ModParse.c ModParse.h \
+        Module.c Parse.c Picture.c Strings.c System.c \
+        envvar.c fvwmlib.h safemalloc.c wild.c \
+        lang-strings.h XResource.c debug.c ColorUtils.c
+
+OBJS= ClientMsg.o GetFont.o Grab.o ModParse.o ModParse.h \
+        Module.o Parse.o Picture.o Strings.o System.o \
+        envvar.o fvwmlib.h safemalloc.o wild.o \
+        lang-strings.h XResource.o debug.o ColorUtils.o
+
+#include <Library.tmpl>
+
+DependTarget()

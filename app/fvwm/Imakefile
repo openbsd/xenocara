@@ -1,0 +1,16 @@
+#	$OpenBSD: Imakefile,v 1.1.1.1 2006/11/26 10:53:05 matthieu Exp $
+
+#define IHaveSubdirs
+
+SUBDIRS= libs fvwm sample.fvwmrc utils icons \
+	modules/FvwmAuto modules/FvwmBacker modules/FvwmBanner \
+	modules/FvwmButtons modules/FvwmCpp \
+	modules/FvwmForm modules/FvwmIconBox modules/FvwmIconMan \
+	modules/FvwmIdent modules/FvwmM4 modules/FvwmPager \
+	modules/FvwmRearrange modules/FvwmSave modules/FvwmSaveDesk \
+	modules/FvwmScroll modules/FvwmTalk modules/FvwmWinList
+
+#define PassCDebugFlags 'CDEBUGFLAGS=$(CDEBUGFLAGS)'
+
+MakeSubdirs($(SUBDIRS))
+DependSubdirs($(SUBDIRS))

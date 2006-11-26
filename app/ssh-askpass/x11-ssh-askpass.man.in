@@ -1,0 +1,316 @@
+.\" x11-ssh-askpass.man
+.\" Created by Matthieu Herrb <matthieu@laas.fr> for OpenBSD
+.\" Modified by Jim Knoble <jmknoble@jmknoble.cx> for non-OpenBSD
+.\"   distribution
+.\"
+.Dd @DATE@
+.Dt @NAME@ 1 
+.Os "Version @VERSION@"
+.Sh NAME
+.Nm @NAME@
+.Nd an X11-based pass-phrase dialog for use with OpenSSH
+.Sh SYNOPSIS
+.Nm @NAME@
+.Op options
+.Op label
+.Sh DESCRIPTION
+.Nm
+is an X11-based pass-phrase dialog for use with OpenSSH.
+It is intended to be called from the
+.Xr ssh-add 1
+program and not invoked directly.
+.Pp
+.Nm
+supports most standard Toolkit command line arguments, with the
+exception of
+.Ar -geometry ,
+.Ar -borderwidth ,
+.Ar -iconic ,
+.Ar -rv ,
+and
+.Ar -title .
+See
+.Xr X 1 . 
+.Pp
+If exactly one non-option argument is provided on the command line, it
+is displayed in the dialog instead of the default label.
+If the argument contains newline characters ('\\n'), each line of text
+is displayed on a separate line in the dialog.
+.Pp
+The features of
+.Nm
+are as follows:
+.Bl -dash -offset indent 
+.It 
+Configurable via the standard X resource mechanisms
+.Pa /usr/X11R6/lib/X11/app-defaults , 
+.Pa ~/.Xdefaults , 
+.Xr xrdb 1 , 
+etc.
+.It 
+Requires only stock X11 libraries (\%libXt, \%libX11, \%libSM, \%libICE).
+.It 
+Can be configured to grab the keyboard and/or pointer (grabs the
+keyboard by default, not the pointer).
+.El
+.Pp
+The user interface is somewhat different than most password/pass-phrase
+dialogs and more similar to the X11-based pass-phrase dialog that
+accompanies the regular SSH distribution.
+Instead of a text field that fills with asterisks or some other
+character as the user enters the pass-phrase, a series of LED-like
+areas light up one-by-one with each pass-phrase character entered,
+beginning from the left-hand edge of the dialog.
+When they reach the right-hand edge, they go dark one-by-one
+again, and so on.
+This gives the user feedback that pass-phrase characters have been
+entered, but does not provide onlookers with a cue as to the length
+of the pass-phrase.
+.Pp
+Pressing the 
+.Sq OK
+button accepts the pass-phrase (even if it is empty),
+which is printed on the standard output, and the dialog exits with a
+status of zero (success).
+Pressing the 
+.Sq Cancel
+button discards the
+pass-phrase, and the dialog exits with non-zero status.
+.Pp
+The following keystrokes work as expected:
+.Bl -tag -width "[Backspace]" -offset indent -compact
+.Pp
+.It Bq Backspace 
+.It Bq Delete
+Erase previous character
+.Pp
+.It Bq Control+U
+.It Bq Control+X
+Erase entire pass-phrase
+.Pp
+.It Bq Enter
+.It Bq Control+M
+.It Bq Control+J
+Accept pass-phrase (OK)
+.Pp
+.It Bq Escape
+Discard pass-phrase (Cancel)
+.El
+.Sh WIDGETS
+The main window of 
+.Nm
+has the widget hierarchy indicated below.
+The widget class name is given first, followed by the instance name.
+.Bl -tag -width "Dialog" -offset indent
+.It Dialog
+dialog
+.Pp
+.Bl -tag -width "Indicator" -compact
+.It Indicator
+indicator
+.It Button
+okButton 
+.It Button
+cancelButton
+.El
+.El
+.Sh RESOURCES
+The following resources are used to customize the application
+globally: 
+.Bl -tag -width 2n -offset indent
+.It Cm grabKeyboard ( No class Cm GrabKeyboard )
+.Bl -inset -compact
+.It specifies if the application should grab the keyboard.
+.It Default value:
+.Dq True .
+.El
+.It Cm grabPointer ( No class Cm GrabPointer )
+.Bl -inset -compact
+.It specifies if the application should grab the pointer.
+.It Default value:
+.Dq False . 
+.El
+.It Cm grabServer ( No class Cm GrabServer )
+.Bl -inset -compact
+.It specifies if the application should grab the server.
+.It Default value:
+.Dq False . 
+.El
+.It Cm inputTimeout ( No class Cm InputTimeout )
+.Bl -inset -compact
+.It the number of seconds
+.Nm
+should wait for a key or
+button press before it gives up and exits.  A timeout of
+.Dq 0
+means wait forever.
+.It Default value:
+.Dq 0 .
+.El
+.It Cm defaultXResolution ( No class Cm DefaultXResolution )
+.Bl -inset -compact
+.It the number of pixels per unit length that horizontal
+spacing and width values are intended for.  If the actual
+horizontal (x) resolution of the X server is significantly
+greater or less than this value, portions of the dialog,
+indicator, and button widgets are stretched or shrunk
+horizontally to take the difference into account. The value
+is a positive integer, followed by a slash
+.Cm ( / )
+and a one- or two-character unit abbreviation.  Valid units
+are inches
+.Cm ( in
+or
+.Cm i )
+and meters
+.Cm ( m ) .
+.It Default value:
+.Dq 75/in
+(75 pixels per inch).
+.El
+.It Cm defaultYResolution ( No class Cm DefaultYResolution )
+.Bl -inset -compact
+.It the number of pixels per unit length that vertical
+spacing and height values are intended for.  If the actual
+vertical (y) resolution of the X server is significantly
+greater or less than this value, portions of the dialog,
+indicator, and button widgets are stretched or shrunk
+vertically to take the difference into account. Valid
+values are the same as for
+.Cm defaultXResolution
+above.
+.It Default value:
+.Dq 75/in
+(75 pixels per inch).
+.El
+.It Cm xResolutionFuzz ( No class Cm XResolutionFuzz )
+.Bl -inset -compact
+.It the range of
+.Dq fuzz
+around the value of
+.Cm defaultXResolution
+beyond which some widgets will be stretched or shrunk
+horizontally to fit the current actual horizontal
+resolution. Valid values are the same as for
+.Cm defaultXResolution .
+For example, if the default X resolution is
+.Dq 75/in ,
+and the X resolution fuzz is
+.Dq 50/in ,
+then widgets won't be scaled horizontally unless the actual
+horizontal resolution is less than 25 pixels per inch or
+greater than 125 pixels per inch.
+.It Default value:
+.Dq 20/in
+(20 pixels per inch).
+.El
+.It Cm yResolutionFuzz ( No class Cm YResolutionFuzz )
+.Bl -inset -compact
+.It the range of
+.Dq fuzz
+around the value of
+.Cm defaultYResolution
+beyond which some widgets will be stretched or shrunk
+vertically to fit the current actual vertical
+resolution. Valid values are the same as for
+.Cm defaultXResolution 
+above.
+.It Default value:
+.Dq 20/in
+(20 pixels per inch).
+.El
+.El
+.Pp
+The following resources are recognized by the Dialog widget:
+.Bl -tag -width 2n -offset indent
+.It Cm title ( No class Cm Title )
+The title of the application as specified to the window manager.
+.It Cm label ( No class Cm Label )
+The label displayed above the led indicators.
+.It Cm font ( No class Cm Font )
+The font to be used to display the label.
+.El
+.Pp
+The following Resources are recognized by the dialog, button, and
+indicator widgets and the main widget to customize the 3D appearance
+(all measurements are in pixels):
+.Bl -tag -width 2n -offset indent
+.It Cm foreground ( No class Cm Foreground )
+The foreground color of the widget.
+This is the text color of the label for buttons and dialog and the
+color of the active led for the indicator. 
+.It Cm background ( No class Cm Background )
+The background color of the widget.
+In the case of the indicator this is the color of the inactive led. 
+.It Cm topShadowColor ( No class Cm TopShadowColor )
+The color used by the sides of the widget exposed to the light (top
+and left).
+.It Cm bottomShadowColor ( No class Cm BottomShadowColor )
+The color used by the sides of the widget in the shadow (right and
+bottom). 
+.It Cm shadowThickness ( No class Cm ShadowTickness )
+The thickness of the 3D border of the widget.
+.It Cm borderColor ( No class Cm BorderColor )
+The color of the border around the widget. 
+.It Cm borderWidth ( No class Cm BorderWidth )
+The width of the border around the widget.
+.It Cm horizontalSpacing ( No class Cm HorizontalSpacing )
+The space to leave on left and right sides of the widget.
+.It Cm verticalSpacing ( No class Cm VerticalSpacing )
+The space to leave on top and bottom sides of the widget.
+.El
+.Pp
+The following resources are recognized by the indicator widgets:
+.Bl -tag -width 2n -offset indent
+.It Cm minimumCount ( No class Cm MinimumCount )
+The minimum number of indicators to display in the dialog.
+.It Cm maximumCount ( No class Cm MaximumCount )
+The maximum number of indicators to display in the dialog.
+.El
+.Pp
+Each button uses the following resources to customize its label:
+.Bl -tag -width 2n -offset indent
+.It Cm label ( No class Cm Label )
+the string to display on the button.
+.It Cm font ( No class Cm Font )
+the font to use for this button label.
+.El
+.Sh FILES
+.Bl -tag -width "/usr/X11R6/lib/X11/app-defaults/SshAskpass" -compact
+.It Pa /usr/X11R6/lib/X11/app-defaults/SshAskpass
+.El
+.Sh SEE ALSO
+.Xr X 1 ,
+.Xr ssh 1 ,
+.Xr ssh-agent 1
+.Sh LICENSE
+Some portions of
+.Nm
+are derived directly or indirectly
+from portions of xscreensaver by Jamie Zawinski <jwz@jwz.org>, while
+others are original works.
+.Pp
+xscreensaver, Copyright \(co 1991-1999 Jamie Zawinski 
+.Aq jwz@jwz.org
+.Pp
+Permission to use, copy, modify, distribute, and sell this software
+and its documentation for any purpose is hereby granted without fee,
+provided that the above copyright notice appear in all copies and
+that both that copyright notice and this permission notice appear in
+supporting documentation.
+No representations are made about the suitability of this software
+for any purpose.
+It is provided "as is" without express or implied warranty.
+.Pp
+The remaining portions fall under the following copyright and license:
+.Pp
+.Nm
+by Jim Knoble 
+.Aq jmknoble@jmknoble.cx
+Copyright \(co 1999,2000,2001 Jim Knoble
+.Pp
+Permission to use, copy, modify, distribute, and sell this software
+and its documentation for any purpose is hereby granted without fee,
+provided that the above copyright notice appear in all copies and
+that both that copyright notice and this permission notice appear in
+supporting documentation.

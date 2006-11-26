@@ -1,0 +1,12 @@
+XCOMM	$OpenBSD: Imakefile,v 1.1.1.1 2006/11/26 10:53:55 matthieu Exp $
+
+FVWMTOP=../..
+#include "../../Fvwm.tmpl"
+
+SRCS= FvwmScroll.c GrabWindow.c
+OBJS= FvwmScroll.o GrabWindow.o
+
+DEPLIBS= $(FVWMLIB) $(DEPXPMLIB) $(DEPXLIB)
+LOCAL_LIBRARIES= $(FVWMLIB) $(XPMLIB) $(XLIB)
+
+FvwmComplexModuleTarget(FvwmScroll)

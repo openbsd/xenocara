@@ -1,0 +1,102 @@
+! SshAskpass.ad:  Default resources for the X11-based ssh-askpass for OpenSSH
+! created 1999-Nov-17 03:40 Jim Knoble <jmknoble@jmknoble.cx>
+! autodate: 2000-Nov-07 05:50
+! 
+! by Jim Knoble <jmknoble@jmknoble.cx>
+! Copyright (C) 1999,2000 Jim Knoble
+! 
+! Disclaimer:
+! 
+! The software is provided "as is", without warranty of any kind,
+! express or implied, including but not limited to the warranties of
+! merchantability, fitness for a particular purpose and
+! noninfringement. In no event shall the author(s) be liable for any
+! claim, damages or other liability, whether in an action of
+! contract, tort or otherwise, arising from, out of or in connection
+! with the software or the use or other dealings in the software.
+! 
+! Permission to use, copy, modify, distribute, and sell this software
+! and its documentation for any purpose is hereby granted without
+! fee, provided that the above copyright notice appear in all copies
+! and that both that copyright notice and this permission notice
+! appear in supporting documentation.
+! 
+
+! +-------------+
+! | Green theme |
+! +-------------+
+
+*Dialog.font:			-adobe-new century schoolbook-bold-r-normal-*-*-140-*-*-*-*-iso8859-1
+*?.foreground:			rgb:54/ff/9f
+*?.background:			rgb:2e/8b/57
+*topShadowColor:		rgb:43/cd/80
+*bottomShadowColor:		rgb:43/cd/80
+*borderColor:			rgb:43/cd/80
+*shadowThickness:		2
+*borderWidth:			0
+*horizontalSpacing:		5
+*verticalSpacing:		6
+
+*Button.font:			-adobe-new century schoolbook-bold-r-normal-*-*-140-*-*-*-*-iso8859-1
+*Button.shadowThickness:	0
+*Button.borderWidth:		2
+*Button.horizontalSpacing:	4
+*Button.verticalSpacing:	2
+
+*Indicator.foreground:		rgb:ad/ff/2f
+*Indicator.background:		rgb:2e/8b/57
+*Indicator.shadowThickness:	0
+*Indicator.borderWidth:		2
+*Indicator.height:		7
+*Indicator.width:		15
+*Indicator.horizontalSpacing:	3
+*Indicator.verticalSpacing:	4
+*Indicator.minimumCount:	8
+*Indicator.maximumCount:	24
+
+! X11 does a miserable job of providing resolution-independent drawing
+! facilities---it expects everything to be done in pixels.  So if you
+! happen to run your X server at a resolution of 100 pixels per inch
+! (or some other strange value) instead of the widely used default of
+! 75, x11-ssh-askpass looks might tiny.  [Sigh].
+! 
+! To get around this, umm, limitation, we declare the resolution that
+! the spacing and width/height pixels values are "valid" for, along
+! with a fuzz factor.  If the current actual resolution is outside of
+! the range of <DEFAULT - FUZZ>..<DEFAULT + FUZZ>, then we scale pixel
+! measurements to fit the actual resolution.
+! 
+! (And if you think *this* is a horrid hack, then take a look at the
+! actual code, which has to deal with conversion to [cheesy fanfare]
+! that's right---millimeters!!!  The right hand managed to slip that
+! one in while the left hand was adding a '-dpi' switch to the sample
+! server implementation.  I think both left feet were adding the
+! RESOLUTION_X and RESOLUTION_Y fields [in dots per inch, naturally]
+! to the X Logical Font Description.  The irony is underwhelming.)
+
+*defaultXResolution:		75/in
+*defaultYResolution:		75/in
+*xResolutionFuzz:		20/in
+*yResolutionFuzz:		20/in
+
+! Number of seconds to wait for a key- or button-press
+! before giving up.  '0' means wait forever.
+*inputTimeout:			0
+
+! Ssh-askpass grabs the keyboard by default.
+! To stop it from grabbing the keyboard, use:
+!*grabKeyboard:			false
+
+! Ssh-askpass does not grab the pointer by default.
+! To make it grab the pointer, use:
+!*grabPointer:			true
+
+! Ssh-askpass does not grab the server by default.
+! To make it grab the server, use:
+!*grabServer:			true
+
+*Dialog.title:			OpenSSH Authentication Passphrase Request
+*Dialog.label:			Please enter your authentication passphrase:
+*okButton.label:		OK
+*cancelButton.label:		Cancel
+

@@ -1,0 +1,28 @@
+XCOMM	$OpenBSD: Fvwm.tmpl,v 1.1.1.1 2006/11/26 10:53:05 matthieu Exp $
+
+/* Where to install modules and scripts */
+FVWMLIBDIR= $(LIBDIR)/fvwm
+
+/* Standard includes */
+FVWMINCLUDES= -I$(FVWMTOP) -I$(FVWMTOP)/libs
+
+/* Fvwm library */
+FVWMLIB= $(FVWMTOP)/libs/libfvwm.a
+
+
+/* A set of rules to build Fvwm modules */
+#define FvwmSimpleModuleTarget(name)					@@\
+SRCS= name.c								@@\
+OBJS= name.o								@@\
+INCLUDES= $(FVWMINCLUDES)						@@\
+DEPLIBS= $(FVWMLIB) $(DEPXPMLIB) $(DEPXLIB)				@@\
+LOCAL_LIBRARIES= $(FVWMLIB) $(XPMLIB) $(XLIB)				@@\
+BINDIR= $(FVWMLIBDIR)							@@\
+SimpleProgramTarget(name)						@@\
+LinkFile(name.man,name.1)
+
+#define FvwmComplexModuleTarget(name)					@@\
+INCLUDES= $(FVWMINCLUDES)						@@\
+BINDIR= $(FVWMLIBDIR)							@@\
+ComplexProgramTarget(name)						@@\
+LinkFile(name.man,name.1)

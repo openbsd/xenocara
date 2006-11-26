@@ -1,0 +1,153 @@
+# README: Notes about X11-based passphrase dialog for OpenSSH
+# created 1999-Nov-21 jmk
+# autodate: 2001-Feb-14 04:07
+
++-------------+
+| Description |
++-------------+
+
+This is an X11-based passphrase dialog for use with OpenSSH.  It is
+intended to replace the Perl/Tk-based ssh-askpass dialog and
+GNOME-based ssh-askpass dialog which formerly accompanied OpenSSH-1.2.
+These dialogs are intended to be called from the ssh-add program and
+not invoked directly.
+
+The features of x11-ssh-askpass are as follows:
+
+  - Configurable via the standard X resource mechanism
+    (/usr/lib/X11/app-defaults, ~/.Xdefaults, xrdb, etc.).
+    
+  - Require only stock X11 libraries (libXt, libX11, libSM, libICE).
+  
+  - Can be configured to grab the keyboard and/or pointer (grabs the
+    keyboard by default, not the pointer).
+
+The user interface is somewhat different than most password/passphrase
+dialogs and more similar to the X11-based passphrase dialog that
+accompanies the regular SSH distribution.  Instead of a text field that
+fills with asterisks or some other character as the user enters the
+passphrase, a series of LED-like areas light up one-by-one with each
+passphrase character entered, beginning from the lefthand edge of the
+dialog. When they reach the righthand edge, they go dark one-by-one
+again, and so on.  This gives the user feedback that passphrase
+characters have been entered, but does not provide onlookers with a cue
+as to the length of the passphrase.
+
+Pressing the `OK' button accepts the passphrase (even if it is empty),
+which is printed on the standard output, and the dialog exits with a
+status of zero (success).  Pressing the `Cancel' button discards the
+passphrase, and the dialog exits with non-zero status.
+
+The following keystrokes work as expected:
+
+  [Backspace] or [Delete]               Erase previous character
+  [Control+U] or [Control+X]            Erase entire passphrase
+  [Enter], [Control+M], or [Control+J]  Accept passphrase (OK)
+  [Escape]                              Discard passphrase (Cancel)
+
++------------+
+| Installing |
++------------+
+
+x11-ssh-askpass currently uses imake and xmkmf to build.  Here's the
+procedure:
+
+  xmkmf
+  make includes
+  make
+  make install
+  make install.man
+
+x11-ssh-askpass installs by default in /usr/local/libexec/openssh/.  To
+install it somewhere else (for example, /usr/libexec/openssh/) use:
+
+  make install BINDIR=/usr/libexec/openssh
+
+Several different app-defaults files accompany x11-ssh-askpass:
+
+  SshAskpass-1337.ad    - small, dark, and gray
+  SshAskpass-NeXTish.ad - a look mildly similar to that of NEXTstep
+  SshAskpass-default.ad - the default look
+  SshAskpass-green.ad   - somewhat green
+  SshAskpass-motif.ad   - a bit like the look of the Motif toolkit
+
+If you wish a look other than the default, perform the following
+commands before building (for example):
+
+  rm -f SshAskpass_ad.h
+  make includes APP_DEFAULTS=SshAskpass-NeXTish.ad
+
++-----------------+
+| Where To Get It |
++-----------------+
+
+x11-ssh-askpass is available at:
+
+  http://www.jmknoble.cx/software/x11-ssh-askpass/
+
++--------------------------+
+| Copyright, License, Etc. |
++--------------------------+
+
+Some portions of x11-ssh-askpass are derived directly or indirectly
+from portions of xscreensaver by Jamie Zawinski <jwz@jwz.org>, while
+others are original works.
+
+The contents of the following files is taken directly, in whole or in
+part, from xscreensaver:
+
+  drawing.c
+  drawing.h
+  resources.c
+  resources.h
+
+The contents of the following files contains a limited amount of code
+(less than approximately 25%) which is derived from portions of
+xscreensaver:
+
+  x11-ssh-askpass.c
+
+The remainder of the code is an original work, including the following
+files:
+
+  dynlist.c
+  dynlist.h
+  x11-ssh-askpass.h
+  *.ad
+
+The portions derived from xscreensaver require the following notice:
+
+  xscreensaver, Copyright (c) 1991-1999 Jamie Zawinski <jwz@jwz.org>
+
+  Permission to use, copy, modify, distribute, and sell this software
+  and its documentation for any purpose is hereby granted without fee,
+  provided that the above copyright notice appear in all copies and
+  that both that copyright notice and this permission notice appear in
+  supporting documentation.  No representations are made about the
+  suitability of this software for any purpose.  It is provided "as is"
+  without express or implied warranty.
+
+The remaining portions fall under the following copyright and license:
+
+  by Jim Knoble <jmknoble@jmknoble.cx>
+  Copyright (C) 1999,2000,2001 Jim Knoble
+  
+  Permission to use, copy, modify, distribute, and sell this software
+  and its documentation for any purpose is hereby granted without fee,
+  provided that the above copyright notice appear in all copies and
+  that both that copyright notice and this permission notice appear in
+  supporting documentation.
+
++------------+
+| Disclaimer |
++------------+
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  express or implied, including but not limited to the warranties of
+  merchantability, fitness for a particular purpose and
+  noninfringement. In no event shall the author(s) be liable for any
+  claim, damages or other liability, whether in an action of contract,
+  tort or otherwise, arising from, out of or in connection with the
+  software or the use or other dealings in the software.
+
+-------- End of file --------

@@ -1,0 +1,12 @@
+XCOMM	$OpenBSD: Imakefile,v 1.1.1.1 2006/11/26 10:53:56 matthieu Exp $
+
+FVWMTOP=..
+#include "../Fvwm.tmpl"
+
+InstallNamedTargetNoClobber(install,system.fvwmrc,$(INSTDATFLAGS),$(FVWMLIBDIR),.fvwmrc)
+
+InstallNonExecFile(system.fvwm2rc,$(FVWMLIBDIR))
+InstallNonExecFile(decor_examples,$(FVWMLIBDIR))
+InstallNonExecFile(new-features,$(FVWMLIBDIR))
+InstallNonExecFile(system.fvwm2rc-sample-1,$(FVWMLIBDIR))
+InstallNonExecFile(system.fvwm2rc-sample-2,$(FVWMLIBDIR))

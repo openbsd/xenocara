@@ -1,0 +1,14 @@
+XCOMM	$OpenBSD: Imakefile,v 1.1.1.1 2006/11/26 10:53:57 matthieu Exp $
+
+FVWMTOP=..
+#include "../Fvwm.tmpl"
+
+INCLUDES= $(FVWMINCLUDES)
+DEPLIBS= $(DEPXPMLIB) $(DEPXTOOLLIB) $(DEPXLIB)
+LOCAL_LIBRARIES= $(XPMLIB) $(XTOOLLIB) $(XLIB)
+
+SimpleProgramTarget(xpmroot)
+LinkFile(xpmroot.man,xpmroot.1)
+
+InstallNamedProg(fvwmrc_convert,fvwmrc_convert,$(FVWMLIBDIR))
+InstallNamedProg(quantize_pixmaps,quantize_pixmaps,$(FVWMLIBDIR))

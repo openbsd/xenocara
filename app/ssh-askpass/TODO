@@ -1,0 +1,27 @@
+# TODO: Notes about future work on x11-ssh-askpass
+# created 2000-Aug-28 03:32 jmk
+# autodate: 2000-Nov-07 06:19
+
++------------+
+| Fun Things |
++------------+
+
+- (DONE) Add timeout feature.
+
++---------------+
+| High Priority |
++---------------+
+
+No items.
+
++--------------+
+| Low Priority |
++--------------+
+
+- (DONE) Make pressed buttons actually look pressed.
+
+- (DONE) Make pressed buttons pop back up when the pointer leaves them.
+
+- Investigate use of malloc() vs realloc(NULL,) for SunOS and other
+  older systems.  Charles Levert <charles@comm.polymtl.ca>
+

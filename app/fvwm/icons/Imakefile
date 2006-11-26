@@ -1,0 +1,10 @@
+XCOMM $OpenBSD: Imakefile,v 1.1.1.1 2006/11/26 10:53:35 matthieu Exp $
+
+FVWMTOP= ..
+#include "../Fvwm.tmpl"
+
+BITMAPS= *.bitmap *.icon *.xbm
+PIXMAPS= *.xpm
+
+InstallMultipleFlags($(BITMAPS),$(INCDIR)/X11/bitmaps,$(INSTINCFLAGS))
+InstallMultipleFlags($(PIXMAPS),$(INCDIR)/X11/pixmaps,$(INSTINCFLAGS))

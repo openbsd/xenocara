@@ -1,0 +1,321 @@
+2001-02-14 04:10  jmknoble
+
+	* Imakefile: New version 1.2.0.
+
+2001-02-14 04:07  jmknoble
+
+	* README, x11-ssh-askpass.c, x11-ssh-askpass.h,
+	x11-ssh-askpass.man.in: Updated copyright notices to include 2001.
+
+2001-02-14 04:06  jmknoble
+
+	* Imakefile, README: Moved default BINDIR to
+	/usr/local/libexec/openssh to conform with recent releases of
+	portable OpenSSH.
+
+2001-02-14 03:59  jmknoble
+
+	* x11-ssh-askpass.c, x11-ssh-askpass.h, x11-ssh-askpass.man.in: Now
+	x11-ssh-askpass understands newline characters ('\n') in text
+	labels (both the prompt string and the button labels).	Each line
+	of text in the label is displayed on a separate line in the dialog.
+	 Requested by Markus Friedl
+	<markus.friedl@informatik.uni-erlangen.de> to support
+	challenge/response authentication in OpenSSH.
+
+2001-02-14 03:49  jmknoble
+
+	* x11-ssh-askpass.c: Bugfix: "*grabServer" resource was setting
+	flag to grab pointer. Fixed.  (Not surprising that no one noticed;
+	i suspect it's not very widely used).
+
+2001-02-14 03:46  jmknoble
+
+	* x11-ssh-askpass.man.in: Merged changes from matthieu@openbsd.org:
+	Use .Nm instead of @NAME@. It fixes a strange formatting error.
+
+2000-11-08 23:19  jmknoble
+
+	* Imakefile: New version 1.1.1.
+
+2000-11-08 23:19  jmknoble
+
+	* x11-ssh-askpass.c: Fixed problem where inputTimeout of '0' was
+	considered invalid due to bad octal conversion.  Fixed small
+	potential memory leak.
+
+2000-11-07 06:20  jmknoble
+
+	* Imakefile: Bumped version to 1.1.0.
+
+2000-11-07 06:20  jmknoble
+
+	* TODO: Added notes about recently done stuff (that's what todo
+	lists are for, isn't it?;).
+
+2000-11-07 06:16  jmknoble
+
+	* SshAskpass-1337.ad, SshAskpass-NeXTish.ad, SshAskpass-default.ad,
+	SshAskpass-green.ad, SshAskpass-motif.ad: Added new '*inputTimeout'
+	resource, with explanatory comment.
+
+2000-11-07 06:15  jmknoble
+
+	* x11-ssh-askpass.man.in: Documented new '*inputTimeout' resource.
+
+2000-11-07 06:15  jmknoble
+
+	* x11-ssh-askpass.c: Fixed a few warnings, commented another. 
+	Print message to stderr when we time out, so as not to completely
+	confuse the user.
+
+2000-11-07 05:42  jmknoble
+
+	* x11-ssh-askpass.c, x11-ssh-askpass.h: Did stuff to handle timing
+	out if no input received.  In particular, this required changing
+	XNextEvent() in main application loop to XtAppNextEvent().  May
+	make this larger and more cumbersome....
+	
+	Also did stuff to make the button labels shift down and to the
+	right when pressed if they're drawn with 3D shading/highlighting,
+	so that they actually *look* pressed.
+	
+	Finally, added code to handle MotionNotify events, so that buttons
+	don't continue to look pressed if the pointer button is pressed,
+	but the pointer is outside the button.	Wheeeee!  Now we have an
+	actual user interface!
+
+2000-11-07 05:23  jmknoble
+
+	* SshAskpass-1337.ad, SshAskpass-NeXTish.ad, SshAskpass-default.ad,
+	SshAskpass-green.ad, SshAskpass-motif.ad: Converted colors from
+	old-style "#rrggbb" to new-style "rgb:rr/gg/bb".  Corrected typo in
+	perspicacious commentary.
+
+2000-10-30 05:28  jmknoble
+
+	* Imakefile: Bumped version to 1.0.3.
+
+2000-10-30 05:28  jmknoble
+
+	* SshAskpass-1337.ad, SshAskpass-NeXTish.ad, SshAskpass-default.ad,
+	SshAskpass-green.ad, SshAskpass-motif.ad: Added resources used for
+	pseudo-resolution-independence, along with default values and long,
+	drawn out, but mildly fulfilling explanation.
+
+2000-10-30 05:27  jmknoble
+
+	* x11-ssh-askpass.man.in: Documented the new resources for
+	pseudo-resolution-independence (defaultXResolution,
+	defaultYResolution, xResolutionFuzz, and yResolutionFuzz).
+
+2000-10-30 05:25  jmknoble
+
+	* x11-ssh-askpass.c, x11-ssh-askpass.h: Added a small amount of
+	resolution-independence to the dialog widgets.	Now we detect the
+	actual X and Y resolution the server is running at; and if they're
+	significantly different from the ones our resource settings expect,
+	then we stretch or shrink buttons, indicators, and spacing to fit
+	the actual resolution.	Sometimes X11 really makes my stomach
+	hurt....
+
+2000-09-24 00:51  jmknoble
+
+	* Imakefile: New version 1.0.2.
+
+2000-09-24 00:43  jmknoble
+
+	* x11-ssh-askpass.c, x11-ssh-askpass.h: Added process ID to
+	diagnostic/error messages on stderr (helps when more than one
+	ssh-askpass is started, e.g., with a shortcut key and keyboard
+	repeat).
+	
+	Modified keyboard and pointer grabbing so that, if we don't get the
+	keyboard or pointer the first time, we print a helpful message,
+	sleep, and then retry.	If we time out without successfully getting
+	the keyboard or pointer, then we fail as before.
+	
+	Combined the logic for grabKeyboard() and grabPointer() into a
+	common function performGrab().	This makes it easier to ensure that
+	the grab/sleep logic is correct in both places.
+	
+	Fixed, worked around or commented on a few warnings emitted by 'gcc
+	-Wall -W -ansi -pedantic'.
+
+2000-09-24 00:32  jmknoble
+
+	* resources.c: Removed unused declaration of get_time_resource.
+
+2000-08-28 03:35  jmknoble
+
+	* Imakefile, TODO: Added TODO file for listing potential future
+	projects within x11-ssh-askpass.
+
+2000-08-28 03:35  jmknoble
+
+	* README: Added 'make install.man' to installation instructions. 
+	Formulated better wording for reference to (now ancient) Perl/Tk
+	ssh-askpass.
+
+2000-08-28 03:26  jmknoble
+
+	* Imakefile, x11-ssh-askpass.man.in: Added facilities to Imakefile
+	and man page to automatically insert name, date, and version into
+	man page.  Changed install target to include man page.	Rearranged
+	clean and dist targets slightly.  Ready for release.
+
+2000-08-28 02:54  jmknoble
+
+	* x11-ssh-askpass.man.in: Added corrections and clarifications: 
+	Mentioned optional label on command line; noted which toolkit
+	options are unsupported; and added extra indicator-specific
+	resources.
+
+2000-08-28 02:00  jmknoble
+
+	* x11-ssh-askpass.c: Moved saving of argc/argv to after call to
+	XtAppInitialize(), so that toolkit arguments get properly removed
+	from the argument list.
+
+2000-08-28 01:43  jmknoble
+
+	* x11-ssh-askpass.man.in: Changed author email address from
+	pobox.com to jmknoble.cx.  Added 2000 to copyright date.
+
+2000-08-28 01:42  jmknoble
+
+	* x11-ssh-askpass.man.in: Added man page for x11-ssh-askpass from
+	Matthieu Herrb <matthieu@laas.fr> of OpenBSD.
+
+2000-08-28 01:31  jmknoble
+
+	* README, SshAskpass-1337.ad, SshAskpass-NeXTish.ad,
+	SshAskpass-default.ad, SshAskpass-green.ad, SshAskpass-motif.ad,
+	dynlist.c, dynlist.h, x11-ssh-askpass.c, x11-ssh-askpass.h: Changed
+	ISO-8859-1 copyright character '©' to ASCII '(C)'.
+
+2000-08-28 01:27  jmknoble
+
+	* README, SshAskpass-1337.ad, SshAskpass-NeXTish.ad,
+	SshAskpass-default.ad, SshAskpass-green.ad, SshAskpass-motif.ad,
+	drawing.c, drawing.h, dynlist.c, dynlist.h, resources.c,
+	resources.h, x11-ssh-askpass.c, x11-ssh-askpass.h: Changed author
+	email address from pobox.com to jmknoble.cx.  Added 2000 to
+	copyright date.
+
+2000-08-28 01:19  jmknoble
+
+	* x11-ssh-askpass.c: Oops.  When the keyboard or pointer grab
+	failed, the fprintf() calls to print the error message were missing
+	the 'reason' argument.	Thanks to Daniel Packman
+	<pack@mop2.eos.ucar.edu>.
+
+2000-08-28 01:17  jmknoble
+
+	* Imakefile: Portability enhancements to Imakefile, suggested by
+	Charles Levert <charles@comm.polymtl.ca>.   Use imake's '...Cmd'
+	macros where available; otherwise, use less-nonportable commands.
+	
+	Bumped version to 1.0.1.
+
+2000-01-07 04:53  jmknoble
+
+	* README: Added note about location of x11-ssh-askpass.
+
+2000-01-07 04:52  jmknoble
+
+	* Imakefile: Now we install the actual program as
+	`x11-ssh-askpass', and make a symlink to that from `ssh-askpass'. 
+	This allows for multiple passphrase dialogs on a system.
+	
+	Bumped version to 1.0.
+
+1999-12-24 01:59  jmknoble
+
+	* Imakefile: Oops.  Version backed out to 0.99; missing spec file
+	for building RPMs.
+
+1999-12-24 01:05  jmknoble
+
+	* Imakefile: Updated version to 1.0.  Removed reference to utils.h.
+	 Prefer install targets available in X11R6.
+
+1999-12-24 01:00  jmknoble
+
+	* README: Updated install directory.  Removed reference to utils.h.
+
+1999-12-24 00:58  jmknoble
+
+	* resources.c, resources.h: Moved header includes from utils.h into
+	resources.c.  Trimmed unused functions.
+
+1999-12-24 00:56  jmknoble
+
+	* dynlist.c: Removed potential memory leak (and ensuing loss of
+	buffer contents) if realloc() failed.
+
+1999-12-24 00:53  jmknoble
+
+	* utils.h: Moved header includes from here into resources.c.
+
+1999-12-04 23:21  jmknoble
+
+	* Imakefile: Added patch from Markus Friedl to change use of awk
+	(with GNU-specific extensions?) to sed, more likely to be available
+	on various platforms.
+
+1999-11-23 05:16  jmknoble
+
+	* .cvsignore: Added ChangeLog to .cvsignore.
+
+1999-11-23 05:14  jmknoble
+
+	* Imakefile: Added facility for autogenerating ChangeLog using
+	cvs2cl.
+
+1999-11-23 04:57  jmknoble
+
+	* .cvsignore, README, README.x11-ssh-askpass:
+	README.x11-ssh-askpass moved to README.  Shorter.
+
+1999-11-23 04:55  jmknoble
+
+	* .cvsignore: Added .cvsignore file.
+
+1999-11-23 04:53  jmknoble
+
+	* Imakefile, SshAskpass-1337.ad, SshAskpass-NeXTish.ad,
+	SshAskpass-default.ad, SshAskpass-green.ad, SshAskpass-motif.ad,
+	x11-ssh-askpass.c, x11-ssh-askpass.h: - Added version to tarball. 
+	- *grab(Keyboard|Pointer|Server) resources had inverted values in  
+	app-defaults files.  - Futzed with spacing in default and NeXTish
+	themes.  - Added setrlimit() call to main() to avoid core dumps.
+
+1999-11-23 04:50  jmknoble
+
+	* Imakefile, SshAskpass-1337.ad, SshAskpass-NeXTish.ad,
+	SshAskpass-default.ad, SshAskpass-green.ad, SshAskpass-motif.ad,
+	resources.c, resources.h, x11-ssh-askpass.c, x11-ssh-askpass.h: -
+	Can optionally grab server (*grabServer resource, off by default). 
+	- get_pixel_resource(), get_integer_resource() now take default
+	value.	- Added minimum/maximum indicator count.  - memset()
+	passphrase to 0s before freeing.  - Use fputs() instead of printf()
+	to avoid possibility of passphrase   getting stored in dynamic
+	memory by stdio.
+
+1999-11-23 04:43  jmknoble
+
+	* Imakefile, README.x11-ssh-askpass, SshAskpass-1337.ad,
+	SshAskpass-NeXTish.ad, SshAskpass-default.ad, SshAskpass-green.ad,
+	SshAskpass-motif.ad, drawing.c, drawing.h, dynlist.c, dynlist.h,
+	resources.c, resources.h, utils.h, x11-ssh-askpass.c,
+	x11-ssh-askpass.h: Initial revision
+
+1999-11-23 04:43  jmknoble
+
+	* Imakefile, README.x11-ssh-askpass, SshAskpass-1337.ad,
+	SshAskpass-NeXTish.ad, SshAskpass-default.ad, SshAskpass-green.ad,
+	SshAskpass-motif.ad, drawing.c, drawing.h, dynlist.c, dynlist.h,
+	resources.c, resources.h, utils.h, x11-ssh-askpass.c,
+	x11-ssh-askpass.h: Begin CVS revision control
+

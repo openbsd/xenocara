@@ -1,0 +1,11 @@
+#	$OpenBSD: Imakefile,v 1.1.1.1 2006/11/26 10:53:52 matthieu Exp $
+
+FVWMTOP=../..
+#include "../../Fvwm.tmpl"
+
+FvwmSimpleModuleTarget(FvwmM4)
+
+PATH_DEFINES= -DFVWM_MODULEDIR=\"$(FVWMLIBDIR)\" \
+	-DFVWM_CONFIGDIR=\"$(FVWMLIBDIR)\" \
+
+SpecialObjectRule(FvwmM4.o, FvwmM4.c, $(PATH_DEFINES))
