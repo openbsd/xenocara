@@ -55,6 +55,7 @@
 
 #include "config.h"
 
+#include <time.h>
 #include <utmp.h>
 
 #ifdef HAVE_UTMPX_H
