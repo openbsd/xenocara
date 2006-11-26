@@ -1,0 +1,101 @@
+2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/glint.h:
+	Bump to 1.1.1 for Xv changes.
+
+2006-04-07  Aaron Plattner  <aplattner@nvidia.com>
+
+	* src/pm2_video.c: (Permedia2PutVideo), (Permedia2PutStill),
+	(Permedia2GetVideo), (Permedia2GetStill), (Permedia2PutImage):
+	* src/pm3_video.c: (Permedia3PutImage):
+	Add a DrawablePtr argument to the XV functions to pave the way for
+	redirected video.
+
+2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/IBMramdac.c:
+	* src/TIramdac.c:
+	* src/glint.h:
+	* src/glint_dga.c:
+	* src/glint_dri.c:
+	* src/glint_driver.c:
+	* src/glint_shadow.c:
+	* src/pm2_accel.c:
+	* src/pm2_dac.c:
+	* src/pm2_video.c:
+	* src/pm2ramdac.c:
+	* src/pm2v_dac.c:
+	* src/pm2vramdac.c:
+	* src/pm3_accel.c:
+	* src/pm3_dac.c:
+	* src/pm3_video.c:
+	* src/pm_accel.c:
+	* src/pm_dac.c:
+	* src/sx_accel.c:
+	* src/tx_accel.c:
+	* src/tx_dac.c:
+	Unlibcwrap.  Bump server version requirement.  Bump to 1.1.0.
+
+2006-02-02  Alan Hourihane  <alanh@fairlite.demon.co.uk>
+
+	* src/glint.h:
+	Allocate more space for the dac registers on pm2v hardware.
+
+2006-01-09  David Nusinow  <gravity-at-freedesktop-dot-org>
+
+	* man/glint.man:
+	Convert manpage to utf-8
+	Bugzilla #1925 <https://bugs.freedesktop.org/show_bug.cgi?id=1925>
+
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* man/Makefile.am:
+	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Remove extraneous AC_MSG_RESULT.
+
+2005-11-20  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Bump libdrm dep to 2.0.
+
+2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Only build dlloader modules by default.
+
+2005-11-15  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Add check for DGA extension to fix issues when building with
+	separate build roots.
+
+2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC2 release.
+
+2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update pkgcheck dependencies to work with separate build roots.
