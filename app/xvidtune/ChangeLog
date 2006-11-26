@@ -1,0 +1,54 @@
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-12-07  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* Makefile.am:
+	* configure.ac:
+	Change to use the app-defaults default dir configured in libXt.
+
+2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* Makefile.am:
+	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Add m4 magic to allow AS_HELP_STRING to work with older versions
+	of autoconf 2.57.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-10-18  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for RC1 release.
+
+2005-10-18  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* Makefile.am: 
+	Substitute __VENDOR__ with $(VENDORNAME) in disclaimer in XVidtune
+	app-defaults file
+
+	* configure.ac: 
+	Add --with-vendor-name option to set $(VENDORNAME).
+	Set default $(VENDORNAME) to "The X.Org Foundation".	
+
+2005-10-13  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* man/Makefile.am: 
+	* configure.ac:
+	Use sed to fill in variables in man page
+
+
