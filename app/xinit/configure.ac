@@ -49,6 +49,8 @@ DEFAULT_XTERM=xterm
 DEFAULT_XSERVER=${bindir}/X
 DEFAULT_XAUTH=xauth
 DEFAULT_XINIT=xinit
+DEFAULT_WM=fvwm
+DEFAULT_XCONSOLE=xconsole
 
 AC_ARG_WITH(xrdb,
 	 AS_HELP_STRING([--with-xrdb=XRDB], [Path to xrdb]),
@@ -90,6 +92,16 @@ AC_ARG_WITH(xinit,
 	[XINIT="$withval"],
 	[XINIT="$DEFAULT_XINIT"])
 
+AC_ARG_WITH(wm,
+	AS_HELP_STRING([--with-wm=WM], [Path to default window manager]),
+	[WM="$withval"],
+	[WM="$DEFAULT_WM"])
+
+AC_ARG_WITH(xconsole,
+	 AS_HELP_STRING([--with-xconsole=XCONSOLE], [Path to xconsole]),
+	[XCONSOLE="$withval"],
+	[XCONSOLE="$DEFAULT_XCONSOLE"])
+
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XINIT, x11)
 
@@ -104,6 +116,13 @@ AC_SUBST(XINIT_LIBS)
 
 AC_PATH_PROGS(MCOOKIE, [mcookie], [$MCOOKIE],
   [$PATH:/bin:/usr/bin:/usr/lib:/usr/libexec:/usr/local/bin])
+
+case $host_os in
+	*openbsd*)
+	MCOOKIE='dd if=/dev/urandom bs=16 count=1 2>/dev/null | hexdump -e \\\"%08x\\\"'
+	;;
+esac
+
 if test "x$MCOOKIE" != x ; then
 	STARTX_COOKIE_FLAGS='-DHAS_COOKIE_MAKER -DMK_COOKIE="$(MCOOKIE)"'
 fi
@@ -131,6 +150,8 @@ AC_SUBST(XTERM)
 AC_SUBST(XSERVER)
 AC_SUBST(XAUTH)
 AC_SUBST(XINIT)
+AC_SUBST(WM)
+AC_SUBST(XCONSOLE)
 
 # Defines which X servers are listed in help output in xinit.c
 # Cheat, lie, and assume all the world is Xorg for now

@@ -1,5 +1,6 @@
 XCOMM!SHELL_CMD
 XCOMM $Xorg: xinitrc.cpp,v 1.3 2000/08/17 19:54:30 cpqbld Exp $
+XCOMM $OpenBSD: xinitrc.cpp,v 1.2 2006/11/26 17:17:57 matthieu Exp $
 
 userresources=$HOME/.Xresources
 usermodmap=$HOME/.Xmodmap
@@ -24,52 +25,24 @@ if [ -f $usermodmap ]; then
     XMODMAP $usermodmap
 fi
 
+XCOMM if we have private ssh key(s), start ssh-agent and add the key(s)
+id1=$HOME/.ssh/identity
+id2=$HOME/.ssh/id_dsa
+id3=$HOME/.ssh/id_rsa
+if [ -x /usr/bin/ssh-agent ] && [ -f $id1 -o -f $id2 -o -f $id3 ];
+then
+	eval `ssh-agent -s`
+	ssh-add < /dev/null
+fi
+
 XCOMM start some nice programs
 
-#if defined(__SCO__) || defined(__UNIXWARE__)
-if [ -r /etc/default/xdesktops ]; then
-  . /etc/default/xdesktops
-fi
-
-if [ -r $HOME/.x11rc ]; then
-  . $HOME/.x11rc
-else
-  if [ -r /etc/default/X11 ]; then
-  . /etc/default/X11
-  fi
-fi
-
-#if defined(__SCO__)
-if [ -n "$XSESSION" ]; then
-  case "$XSESSION" in
-    [Yy][Ee][Ss])
-      [ -x /usr/bin/X11/scosession ] && exec /usr/bin/X11/scosession
-      ;;
-  esac
-fi
-
-if [ -n "$XDESKTOP" ]; then
-  exec `eval echo $"$XDESKTOP"`
-else
-  if [ -x /usr/bin/X11/pmwm -a -x /usr/bin/X11/scoterm ]; then
-    /usr/bin/X11/scoterm 2> /dev/null &
-    exec /usr/bin/X11/pmwm    2> /dev/null
-  fi
-fi
-#elif defined(__UNIXWARE__)
-if [ -n "$XDESKTOP" ]; then
-  exec `eval echo $"$XDESKTOP"`
-else
-  if [ -x /usr/X/bin/pmwm ]; then
-    exec /usr/X/bin/pmwm    2> /dev/null
-  fi
-fi
-#endif
-
-XCOMM This is the fallback case if nothing else is executed above
-#endif /* !defined(__SCO__)  && !defined(__UNIXWARE__) */
-TWM &
 XCLOCK -geometry 50x50-1+1 &
-XTERM -geometry 80x50+494+51 &
-XTERM -geometry 80x20+494-0 &
-exec XTERM -geometry 80x66+0+0 -name login
+XCONSOLE -iconic &
+XTERM -geometry 80x24 &
+WM || XTERM
+
+if [ "$SSH_AGENT_PID" ]; then
+	ssh-add -D < /dev/null
+	eval `ssh-agent -s -k`
+fi
