@@ -1,0 +1,155 @@
+2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/trident_driver.c:
+	Bump to 1.2.1 for Xv changes.
+
+2006-04-07  Aaron Plattner  <aplattner@nvidia.com>
+
+	* src/trident_video.c: (TRIDENTPutImage):
+	Add a DrawablePtr argument to the XV functions to pave the way for
+	redirected video.
+
+2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/blade_accel.c:
+	* src/blade_accel_exa.c:
+	* src/image_accel.c:
+	* src/trident.h:
+	* src/trident_accel.c:
+	* src/trident_bank.c:
+	* src/trident_dac.c:
+	* src/trident_dga.c:
+	* src/trident_driver.c:
+	* src/trident_i2c.c:
+	* src/trident_shadow.c:
+	* src/trident_tv.c:
+	* src/trident_video.c:
+	* src/tridenthelper.c:
+	* src/tridentramdac.c:
+	* src/tvga_dac.c:
+	* src/xp4_accel.c:
+	* src/xp4_accel_exa.c:
+	* src/xp_accel.c:
+	Unlibcwrap.  Bump server version requirement.  Bump to 1.2.0.
+
+2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+
+	* src/trident.h:
+	Coverity #500: Size the tridentRegsClock array properly.
+
+2006-03-14  Alan Hourihane  <alanh@fairlite.demon.co.uk>
+
+	* src/blade_accel_exa.c: (BladeExaInit):
+	* src/xp4_accel_exa.c: (XP4ExaInit):
+	Change virtualX to displayWidth (caught by Eric Anholt)
+
+2006-03-13  Alan Hourihane  <alanh@fairlite.demon.co.uk>
+
+	* src/blade_accel_exa.c: (BladeExaInit):
+	* src/trident_driver.c: (TRIDENTPreInit):
+	* src/xp4_accel_exa.c: (XP4ExaInit):
+	EXA fixups for version 2
+	Add missing break statement which confused XP4 & XP5.
+	Force 128MB XP5 to 64MB for now.
+
+2006-02-21  Alan Hourihane  <alanh@fairlite.demon.co.uk>
+
+	* man/trident.man:
+	* src/Makefile.am:
+	* src/blade_accel.c: (BladeXaaInit):
+	* src/blade_accel_exa.c: (GetCopyROP), (GetDepth), (PrepareSolid),
+	(Solid), (DoneSolid), (PrepareCopy), (Copy), (DoneCopy),
+	(CheckComposite), (PrepareComposite), (Composite), (DoneComposite),
+	(UploadToScreen), (DownloadFromScreen), (MarkSync),
+	(BladeDisableClipping), (WaitMarker), (PrepareAccess),
+	(FinishAccess), (BladeSetClippingRectangle),
+	(BladeInitializeAccelerator), (BladeExaInit):
+	* src/trident.h:
+	* src/trident_driver.c: (tridentSetup), (TRIDENTProbe),
+	(TRIDENTPreInit), (TRIDENTMapMem), (TRIDENTScreenInit),
+	(TRIDENTLeaveVT), (TRIDENTCloseScreen):
+	* src/trident_regs.h:
+	* src/xp4_accel.c: (XP4InitializeAccelerator), (XP4XaaInit),
+	(XP4Sync), (XP4SetupForScreenToScreenCopy),
+	(XP4SubsequentScreenToScreenCopy), (XP4SetupForSolidLine),
+	(XP4SubsequentSolidBresenhamLine), (XP4SubsequentSolidHorVertLine),
+	(XP4SetupForDashedLine), (XP4SubsequentDashedBresenhamLine),
+	(XP4SetupForFillRectSolid), (XP4SubsequentFillRectSolid),
+	(MoveDWORDS), (MoveDWORDS_FixedBase),
+	(XP4SetupForMono8x8PatternFill),
+	(XP4SubsequentMono8x8PatternFillRect),
+	(XP4SetupForCPUToScreenColorExpandFill),
+	(XP4SubsequentCPUToScreenColorExpandFill):
+	* src/xp4_accel_exa.c: (GetCopyROP), (GetPatternROP),
+	(XP4WaitMarker), (XP4Done), (XP4PrepareSolid), (XP4Solid),
+	(XP4PrepareCopy), (XP4Copy), (XP4ExaInit):
+	Add XAA & EXA Acceleration for XP4 & XP5 Chipsets
+	Add EXA Acceleration for Blade chipsets (Jesse Barnes)
+
+2006-02-01  Alan Hourihane  <alanh@fairlite.demon.co.uk>
+
+	* src/trident_dac.c: (TridentInit), (TridentHWCursorInit):
+	* src/trident_driver.c: (TRIDENTPreInit), (TRIDENTModeInit),
+	(TRIDENTCloseScreen), (TRIDENTLcdDisplaySize):
+	* src/trident_video.c: (tridentFixFrame):
+	* src/tridenthelper.c: (TridentFindClock):
+	Commit patch from https://bugs.freedesktop.org/show_bug.cgi?id=2785
+	i.e. detect 1400x1050 panels from DDC information and a few other
+	fixes for BladeXP chipsets - notably the Toshiba Tecra 8200.
+
+2006-01-27  Alan Hourihane  <alanh@fairlite.demon.co.uk>
+
+	* configure.ac:
+	* src/trident.h:
+	* src/trident_dac.c: (TridentInit), (TridentRestore),
+	(TridentSave), (TridentHWCursorInit):
+	* src/trident_driver.c: (TRIDENTPreInit), (TRIDENTModeInit):
+	Add XGI (aka Trident) Volari XP5 support
+
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* man/Makefile.am:
+	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Remove extraneous AC_MSG_RESULT.
+
+2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Only build dlloader modules by default.
+
+2005-11-15  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Add check for DGA extension to fix issues when building with
+	separate build roots.
+
+2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC2 release.
+
+2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update pkgcheck dependencies to work with separate build roots.
