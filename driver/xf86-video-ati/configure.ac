@@ -1,0 +1,236 @@
+#  Copyright 2005 Adam Jackson.
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  on the rights to use, copy, modify, merge, publish, distribute, sub
+#  license, and/or sell copies of the Software, and to permit persons to whom
+#  the Software is furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice (including the next
+#  paragraph) shall be included in all copies or substantial portions of the
+#  Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.  IN NO EVENT SHALL
+#  ADAM JACKSON BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+#  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+#  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Process this file with autoconf to produce a configure script
+
+AC_PREREQ(2.57)
+AC_INIT([xf86-video-ati],
+        6.6.3,
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        xf86-video-ati)
+AC_DEFINE_UNQUOTED([ATI_VERSION_MAJOR],
+		   [$(echo $PACKAGE_VERSION | sed -e 's/^\([[0-9]]\)\.[[0-9]]\.[[0-9]]/\1/')],
+		   [Major version])
+AC_DEFINE_UNQUOTED([ATI_VERSION_MINOR],
+		   [$(echo $PACKAGE_VERSION | sed -e 's/^[[0-9]]\.\([[0-9]]\)\.[[0-9]]/\1/')],
+		   [Minor version])
+AC_DEFINE_UNQUOTED([ATI_VERSION_PATCH],
+		   [$(echo $PACKAGE_VERSION | sed -e 's/^[[0-9]]\.[[0-9]]\.\([[0-9]]\)/\1/')],
+		   [Patch version])
+
+AC_CONFIG_SRCDIR([Makefile.am])
+AM_CONFIG_HEADER([config.h])
+AC_CONFIG_AUX_DIR(.)
+
+AM_INIT_AUTOMAKE([dist-bzip2])
+
+AM_MAINTAINER_MODE
+
+# Checks for programs.
+AC_DISABLE_STATIC
+AC_PROG_LIBTOOL
+AC_PROG_CC
+
+AH_TOP([#include "xorg-server.h"])
+
+AC_ARG_WITH(xorg-module-dir,
+            AC_HELP_STRING([--with-xorg-module-dir=DIR],
+                           [Default xorg module directory [[default=$libdir/xorg/modules]]]),
+            [moduledir="$withval"],
+            [moduledir="$libdir/xorg/modules"])
+
+AC_ARG_ENABLE(dri, AC_HELP_STRING([--disable-dri],
+                                  [Disable DRI support [[default=auto]]]),
+              [DRI="$enableval"],
+              [DRI=auto])
+
+AC_ARG_ENABLE(exa,
+              AC_HELP_STRING([--disable-exa],
+                             [Disable EXA support [[default enabled]]]),
+              [EXA="$enableval"],
+              [EXA=yes])
+
+# Checks for extensions
+XORG_DRIVER_CHECK_EXT(XINERAMA, xineramaproto)
+XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
+XORG_DRIVER_CHECK_EXT(RENDER, renderproto)
+XORG_DRIVER_CHECK_EXT(XV, videoproto)
+XORG_DRIVER_CHECK_EXT(XF86MISC, xf86miscproto)
+XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
+
+# Checks for pkg-config packages
+PKG_CHECK_MODULES(XORG, [xorg-server xproto fontsproto $REQUIRED_MODULES])
+sdkdir=$(pkg-config --variable=sdkdir xorg-server)
+
+# Checks for libraries.
+
+# Checks for header files.
+AC_HEADER_STDC
+
+if test "$DRI" != no; then
+	AC_CHECK_FILE([${sdkdir}/dri.h],
+                      [have_dri_h="yes"], [have_dri_h="no"])
+	AC_CHECK_FILE([${sdkdir}/sarea.h],
+                      [have_sarea_h="yes"], [have_sarea_h="no"])
+	AC_CHECK_FILE([${sdkdir}/dristruct.h],
+                      [have_dristruct_h="yes"], [have_dristruct_h="no"])
+fi
+
+AC_MSG_CHECKING([whether to include DRI support])
+if test x$DRI = xauto; then
+	if test "$have_dri_h" = yes -a \
+                "$have_sarea_h" = yes -a \
+                "$have_dristruct_h" = yes; then
+		DRI="yes"
+	else
+		DRI="no"
+	fi
+fi
+AC_MSG_RESULT([$DRI])
+
+AM_CONDITIONAL(DRI, test x$DRI = xyes)
+if test "$DRI" = yes; then
+	PKG_CHECK_MODULES(DRI, [libdrm >= 2.0 xf86driproto])
+        AC_DEFINE(XF86DRI,1,[Enable DRI driver support])
+        AC_DEFINE(XF86DRI_DEVEL,1,[Enable developmental DRI driver support])
+fi
+
+# Note that this is sort of inverted from drivers/ati/Imakefile in
+# the monolith.  We test for foo, not for !foo (i.e. ATMISC_CPIO, not
+# ATIMISC_AVOID_CPIO), but the defines are negative.  So beware.  Oh yeah,
+# TV_OUT is the special case where it's a positive define, not AVOID_TV_OUT.
+
+# AVOID_CPIO: Only x86, amd64, and alpha are cool with CPIO.  It needs a
+# little-endian, undirected PIO space of at least 64kB.
+# AVOID_NON_PCI: Platforms which don't deal with PCI master aborts should
+# stick to PCI-only probing, stick their fingers in their ears, and pretend
+# that ISA cards simply don't exist.
+# AVOID_DGA: ???
+# ATI_TV_OUT: This only works on x86.
+
+ATIMISC_CPIO=no
+ATIMISC_NON_PCI=yes
+ATIMISC_DGA=yes
+ATIMISC_TV_OUT=no
+
+case $host_cpu in
+  i*86)
+    ATIMISC_TV_OUT=yes
+    ATIMISC_CPIO=yes
+    ;;
+  x86_64|amd64|alpha|ia64)
+    ATIMISC_CPIO=yes
+    ;;
+  sparc)
+    ATIMISC_DGA=no
+    ;;
+  powerpc)
+    ATIMISC_NON_PCI=no
+    ;;
+  *)
+    ;;
+esac
+
+AC_MSG_CHECKING([whether to include PIO support])
+AM_CONDITIONAL(ATIMISC_CPIO, test "x$ATIMISC_CPIO" = xyes)
+if test "x$ATIMISC_CPIO" = xyes; then
+	AC_MSG_RESULT([yes, PIO])
+else
+	AC_DEFINE(AVOID_CPIO, 1, [Avoid PIO and use MMIO for atimisc.])
+	AC_MSG_RESULT([no, MMIO])
+fi
+
+AC_MSG_CHECKING([whether to include support for non-PCI devices])
+AM_CONDITIONAL(ATIMISC_NON_PCI, test "x$ATIMISC_NON_PCI" = xyes)
+if test "x$ATI_AVOID_NON_PCI" = xyes; then
+	AC_MSG_RESULT([yes, PCI and ISA])
+else
+	AC_DEFINE(AVOID_NON_PCI, 1, [Only probe PCI cards; do not probe ISA.])
+	AC_MSG_RESULT([no, PCI only])
+fi
+
+AC_MSG_CHECKING([whether to include DGA support])
+AC_MSG_RESULT([$ATIMISC_DGA])
+AM_CONDITIONAL(ATIMISC_DGA, test "x$ATIMISC_DGA" = xyes)
+if ! test "x$ATIMISC_DGA" = xyes; then
+	AC_DEFINE(AVOID_DGA, 1, [Do not build DGA support.])
+fi
+
+AC_MSG_CHECKING([whether to include TV Out support])
+AC_MSG_RESULT([$ATIMISC_TV_OUT])
+AM_CONDITIONAL(ATIMISC_TV_OUT, test "x$ATIMISC_TV_OUT" = xyes)
+if test "x$ATIMISC_TV_OUT" = xyes; then
+	AC_DEFINE(TV_OUT, 1, [Build TV-Out support for atimisc.])
+fi
+
+AC_DEFINE(USE_XAA, 1, [Build support for XAA])
+
+# Properly handle EXA.
+AC_MSG_CHECKING([whether to enable EXA support])
+if test "x$EXA" = xyes; then
+        AC_MSG_RESULT(yes)
+
+        SAVE_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
+        AC_CHECK_HEADER(exa.h,
+                       [have_exa_h="yes"], [have_exa_h="no"])
+        CPPFLAGS="$SAVE_CPPFLAGS"
+else
+        AC_MSG_RESULT(no)
+fi 
+
+SAVE_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
+if test "x$have_exa_h" = xyes; then
+        AC_MSG_CHECKING([whether EXA version is at least 2.0.0])
+        AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
+#include "exa.h"
+#if EXA_VERSION_MAJOR < 2
+#error OLD EXA!
+#endif
+                          ]])],
+                          [USE_EXA=yes],
+                          [USE_EXA=no])
+        AC_MSG_RESULT($USE_EXA)
+
+        if test "x$USE_EXA" = xyes; then
+                AC_DEFINE(USE_EXA, 1, [Build support for Exa])
+        fi
+fi
+CPPFLAGS="$SAVE_CPPFLAGS"
+
+AM_CONDITIONAL(USE_EXA, test "x$USE_EXA" = xyes)
+
+AC_SUBST([XORG_CFLAGS])
+AC_SUBST([DRI_CFLAGS])
+AC_SUBST([moduledir])
+
+DRIVER_NAME=ati
+AC_SUBST([DRIVER_NAME])
+
+XORG_MANPAGE_SECTIONS
+XORG_RELEASE_VERSION
+XORG_CHECK_LINUXDOC
+
+AC_OUTPUT([
+	Makefile
+	src/Makefile
+	man/Makefile
+])

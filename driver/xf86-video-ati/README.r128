@@ -1,0 +1,160 @@
+  Information for ATI Rage 128 Users
+  Precision Insight, Inc., SuSE GmbH
+  13 June 2000
+  ____________________________________________________________
+
+  Table of Contents
+
+
+  1. Supported Hardware
+  2. Features
+  3. Technical Notes
+  4. Reported Working Video Cards
+  5. Configuration
+  6. Driver Options
+  7. Known Limitations
+  8. Authors
+
+
+  ______________________________________________________________________
+
+  [1m1.  Supported Hardware[0m
+
+
+  +o  ATI Rage 128 based cards
+
+
+
+  [1m2.  Features[0m
+
+
+  +o  Full support (including hardware accelerated 2D drawing) for 8, 15,
+     16, 24 bit pixel depths.
+
+  +o  Hardware cursor support to reduce sprite flicker.
+
+  +o  Support for high resolution video modes up to 1800x1440 @ 70Hz.
+
+  +o  Support for doublescan video modes (e.g., 320x200 and 320x240).
+
+  +o  Support for gamma correction at all pixel depths.
+
+  +o  Fully programmable clock supported.
+
+  +o  Robust text mode restore for VT switching.
+
+
+
+  [1m3.  Technical Notes[0m
+
+
+  +o  None
+
+
+
+  [1m4.  Reported Working Video Cards[0m
+
+
+  +o  Rage Fury AGP 32MB
+
+  +o  XPERT 128 AGP 16MB
+
+  +o  XPERT 99 AGP 8MB
+
+
+
+  [1m5.  Configuration[0m
+
+  The driver auto-detects all device information necessary to initialize
+  the card.  The only lines you need in the "Device" section of your
+  xorg.conf file are:
+
+         Section "Device"
+             Identifier "Rage 128"
+             Driver     "r128"
+         EndSection
+
+
+  or let xorgconfig do this for you.
+
+  However, if you have problems with auto-detection, you can specify:
+
+  +o  VideoRam - in kilobytes
+
+  +o  MemBase  - physical address of the linear framebuffer
+
+  +o  IOBase   - physical address of the memory mapped IO registers
+
+  +o  ChipID   - PCI DEVICE ID
+
+
+
+  [1m6.  Driver Options[0m
+
+
+  +o  "hw_cursor" - request hardware cursor (default)
+
+  +o  "sw_cursor" - software cursor only
+
+  +o  "no_accel"  - software rendering only
+
+  +o  "dac_8_bit" - use color weight 888 in 8 bpp mode (default)
+
+  +o  "dac_6_bit" - use color weight 666 in 8 bpp mode (VGA emulation)
+
+
+
+  [1m7.  Known Limitations[0m
+
+
+  +o  None
+
+
+
+  [1m8.  Authors[0m
+
+  The X11R6.8 driver was originally part of XFree86 4.4 rc2.
+
+  The XFree86 4 driver was ported from XFree86 3.3.x and enhanced by:
+
+  +o  Rickard E. (Rik) Faith  <faith@precisioninsight.com>
+
+  +o  Kevin E. Martin  <kevin@precisioninsight.com>
+
+  The XFree86 4 driver was funded by ATI and was donated to The XFree86
+  Project by:
+
+      Precision Insight, Inc.
+      Cedar Park, TX
+      USA
+
+
+  The XFree86 3.3.x driver used for the port was written by:
+
+  +o  Rickard E. (Rik) Faith  <faith@precisioninsight.com>
+
+  +o  Kevin E. Martin  <kevin@precisioninsight.com>
+
+     The XFree86 3.3.x driver was funded by ATI and was donated to The
+     XFree86 Project by Precision Insight, Inc.  It was based in part on
+     an earlier driver that was written by:
+
+  +o  Alan Hourihane  <alanh@fairlite.demon.co.uk>
+
+  +o  Dirk Hohndel  <hohndel@suse.de>
+
+  This early driver was funded and donated to The XFree86 Project by:
+
+      SuSE GmbH
+      Schanzaekerstr. 10
+      90443 Nuernberg
+      Germany
+
+
+
+  http://www.precisioninsight.com
+
+  http://www.suse.com
+
+
+
