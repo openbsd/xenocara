@@ -4647,3 +4647,22 @@ Jason Bacon,
 Stephen P. Wall,
 David Wexelblat, and
 Thomas Dickey (XFree86 Project).
+.SH OPENBSD SPECIFICS
+On OpenBSD, the following resources have different default values: 
+.TP 8
+.B deleteIsDEL: true
+The Delete key generates \fB^?\fP. 
+.TP 8
+.B ptyInitialErase: true
+The erase character for the tty is inherited from the parent
+process setting, generally \fB^?\fP. 
+.TP 8
+.B backarrowKeyIsErase: true
+The back arrow key is set to return the erase character defined in the
+tty, generally \fB^?\fP. 
+.PP
+Moreover, on OpenBSD the 
+.IR termcap(5)
+entry for xterm defines the 
+.I kb 
+capability as \fB^?\fP

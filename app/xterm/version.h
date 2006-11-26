@@ -10,5 +10,5 @@
 #define XTERM_PATCH   216
 
 #ifndef __vendorversion__
-#define __vendorversion__ "XTerm"
+#define __vendorversion__ "XTerm/OpenBSD"
 #endif

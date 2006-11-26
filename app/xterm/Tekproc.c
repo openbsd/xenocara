@@ -816,6 +816,8 @@ Tinput(void)
 
 #else /* VMS */
 		XFD_COPYSET(&Select_mask, &Tselect_mask);
+		if (need_cleanup)
+		    Cleanup(0);
 		if (Select(max_plus1, &Tselect_mask, NULL, NULL, NULL) < 0) {
 		    if (errno != EINTR)
 			SysError(ERROR_TSELECT);

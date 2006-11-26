@@ -122,6 +122,7 @@ extern EventMode eventMode;
 
 extern XtermWidget term;
 
+
 extern SIG_ATOMIC_T need_cleanup;
 
 #if defined(HAVE_XKB_BELL_EXT)

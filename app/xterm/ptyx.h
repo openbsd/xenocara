@@ -144,6 +144,9 @@
 #undef USE_PTY_SEARCH
 #elif defined(PUCC_PTYD)
 #undef USE_PTY_SEARCH
+#elif defined(__OpenBSD__)
+#undef USE_PTY_SEARCH
+#undef USE_PTY_DEVICE
 #elif (defined(sun) && defined(SVR4)) || defined(_ALL_SOURCE) || defined(__CYGWIN__)
 #undef USE_PTY_SEARCH
 #endif

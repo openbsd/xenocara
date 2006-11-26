@@ -164,6 +164,8 @@ authorization.
 #endif
 
 #if defined(__OpenBSD__)
+#define USE_UTMP_SETGID TRUE
+#define USE_OPENPTY TRUE
 #define DEFDELETE_DEL TRUE
 #define DEF_BACKARO_ERASE TRUE
 #define DEF_INITIAL_ERASE TRUE
@@ -172,6 +174,10 @@ authorization.
 #if defined(__SCO__) || defined(__UNIXWARE__)
 #define DEFDELETE_DEL TRUE
 #define OPT_SCO_FUNC_KEYS 1
+#endif
+
+#if defined(__OpenBSD__)
+#define DEFDELETE_DEL TRUE
 #endif
 
 #if defined(__SCO__) || defined(SVR4) || defined(_POSIX_SOURCE) || defined(__QNX__) || defined(__hpux) || (defined(BSD) && (BSD >= 199103)) || defined(__CYGWIN__)
@@ -777,7 +783,7 @@ extern SIGNAL_T Exit (int  /* n */);
 #endif
 
 #ifndef SIG_ATOMIC_T
-#define SIG_ATOMIC_T int
+#define SIG_ATOMIC_T volatile sig_atomic_t
 #endif
 
 #if OPT_WIDE_CHARS
