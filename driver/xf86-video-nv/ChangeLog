@@ -1,0 +1,563 @@
+commit 43ec66396f805aba87017d193d97a03372c29909
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Jun 30 12:54:44 2006 -0700
+
+    Bump version to 1.2.0 for release.
+
+commit 6265b77dc8878e36abd76b73e209a2d76d70ba22
+Author: Mark Vojkovich <markv@xfree86.org>
+Date:   Thu Jun 29 18:41:44 2006 -0700
+
+    New chip support and new PCI IDs.
+
+commit 5114639dff73c22845451acffed94f1da284a7df
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Jun 19 09:32:11 2006 -0700
+
+    Generate the ChangeLog from git history for dist.
+
+commit 04d344dfcbb9928cf33943a880de333557e14be9
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Jun 16 18:03:21 2006 -0700
+
+    Delete the ChangeLog.  The git history is just as good.
+
+commit eda3bac20dce2d5584ac07cc6b28a08ec55aa798
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed May 24 15:05:22 2006 -0700
+
+    Derive the module version numbers from the package version.  This idea was
+    lifted from Michel Dänzer's similar code in xf86-video-ati.
+    
+    Also, make the riva and nv driver versions match.
+
+commit 1a40c4a79b79034d191496726a27af8b0805dba6
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Apr 27 18:10:37 2006 -0700
+
+    Add the libcwrapper back, conditionalized on the server version.
+
+commit 425e30d58b7b62fff01fbb58585ee69b2df6fec1
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Apr 27 10:32:10 2006 -0700
+
+    Determine whether PutImage hooks take a DrawablePtr by server version.  Remove
+    dependency on xorg-server >= 1.0.99.901.
+
+commit c34a93265cb42168376ebdf0746b3ccded9f126c
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Apr 25 14:38:43 2006 -0700
+
+    Bump to 1.1.2 for new product names.
+
+commit f70247ade9eac8fa6115889662abb8e678a182dc
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Apr 25 14:29:44 2006 -0700
+
+    Add names for Quadro FX 5500, 3500, 1500, 560, 550, and 350.
+
+commit ca4c8af624e87e5c6a2927092a9c230ae0e60c0e
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Apr 12 02:04:52 2006 -0700
+
+    Add .gitignores.
+
+commit fb3faeb6073cef5a6a1b094f3d3bf020ceba9db6
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Apr 8 01:38:33 2006 +0000
+
+    Bump to 1.1.1 for Xv changes.
+
+commit f793182898c4d844e9861a60a945f53ab7071adc
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Apr 7 23:11:06 2006 +0000
+
+    Add a DrawablePtr argument to the XV functions to pave the way for
+        redirected video.
+
+commit cb6b4073df7404822e2b553519c3a101f2ab0524
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 19:40:34 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.1.0.
+
+commit 3f140052f891a4dc674b82e438c9595e59b4676b
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Mar 27 21:40:24 2006 +0000
+
+    Bump version to 1.0.2.0 for release.
+
+commit 84c007b426d321786f9aec1d9fda14b5baa35561
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Mar 10 02:29:03 2006 +0000
+
+    Coverity nos. 868 and 869: Free the result of xf86GetEntityInfo.
+
+commit 61e237eec7193701ce1236e67ebdfe7465b5db8a
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Jan 24 16:45:29 2006 +0000
+
+    Fix typo in PCI ID (reported by Stefan Dirsch). Patch from Mark Vojkovich
+        to XFree86 CVS on 2006-01-23.
+
+commit 5064f8a903923ca4b819bdf345f8f4c9254bdf3b
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Jan 23 00:04:41 2006 +0000
+
+    New chip support from Mark Vojkovich's 2006-01-20 and 2006-01-21 XFree86
+        CVS updates.
+
+commit e8fd45625f2e09830136bde6bc70d51f25892450
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Jan 2 01:54:19 2006 +0000
+
+    Preliminary RandR rotation support. Bug #4708
+        <https://bugs.freedesktop.org/show_bug.cgi?id=4708>
+
+commit 5ec53e759c5233a26a6c80901b9f31b51153f756
+Author: Kevin E Martin <kem@redhat.com>
+Date:   Wed Dec 21 02:30:01 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit b0c8ca8c03c8ad1648b4597f7825bac7531100a7
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:54 2005 +0000
+
+    Stub COPYING files
+
+commit 4fd25919c2a217d355419efdfbf0fe148af6c146
+Author: Kevin E Martin <kem@redhat.com>
+Date:   Thu Dec 15 00:24:18 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit e4194bab2a790af10581ea2842717623db8998a2
+Author: Kevin E Martin <kem@redhat.com>
+Date:   Tue Dec 6 22:48:36 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit baf60566b505fdf4387ec25789584b3f6ad72ce8
+Author: Kevin E Martin <kem@redhat.com>
+Date:   Sat Dec 3 05:49:34 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 4df200ea93b0a072f29057eeaf7a09e5a3a1dfe2
+Author: Kevin E Martin <kem@redhat.com>
+Date:   Fri Dec 2 02:16:09 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit d4d5d7325fab1ea81f71d1ffc1fbbcc2d2253a65
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:30:00 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit d76f3f776bdab920d050542da45ec2871d4b84e6
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:10 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit d4e306b585f737b4c1287c520470425b0c11dc32
+Author: Kevin E Martin <kem@redhat.com>
+Date:   Wed Nov 9 21:15:19 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit dde6dd1c7f95f9dccabfd919ad4ced795fe3fbd1
+Author: Kevin E Martin <kem@redhat.com>
+Date:   Tue Nov 1 15:08:53 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit 92b1bfcc8fd0f34e636a1e9955d5236334f78cd3
+Author: Kevin E Martin <kem@redhat.com>
+Date:   Wed Oct 19 02:48:03 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit eda1cbc29cb0b2193a5bfb0eb620c740d9aef7c6
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:53 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 6c58a05e405cbc87fbe0497123d9b82d2480bdd3
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:34 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit fc20886c28c465578e6bd3ef2d9fe62bd993382b
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:04 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 1e3c84f332b7b9a4b320b370b8b2ecafbbdd8f8a
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Oct 4 21:36:51 2005 +0000
+
+    Link nvidida readme file into nvidia driver, Exclude duplicated neomagic
+        readme
+
+commit d8be62ab175a013f78d4944036da284ffad34d96
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Sep 29 21:47:29 2005 +0000
+
+    Add entries for GeForce Go 7800. (Change went into XFree86 on 2005-09-28).
+    Don't hang if j is zero. This should never happen, but it's better to be
+        safe than sorry.
+
+commit e39eb8b8c1a79d04f90a195351c4eec3dba0d612
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Sep 28 17:18:02 2005 +0000
+
+    Bug #3333 <https://bugs.freedesktop.org/show_bug.cgi?id=3333> Patch #3417
+        <https://bugs.freedesktop.org/attachment.cgi?id=3417>
+    Fix a hang during screen-to-screen blits on certain GeForce 6xxx and Quadro
+        FX 540 graphics cards.
+
+commit dc5acc2e477edb85f468f8d46862ca138426cfd9
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Fri Sep 23 16:25:28 2005 +0000
+
+    Bug #4558 <https://bugs.freedesktop.org/show_bug.cgi?id=4558> Patch #3551
+        <https://bugs.freedesktop.org/attachment.cgi?id=3381>
+    22-Sep-2005 nv driver update from Mark Vojkovich: Fix possible cause of
+        some acceleration instability on some GeForce6xxx parts.
+
+commit b0ea43a51d2a6983559eecdb7dbb73c5e585697c
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Sat Sep 17 01:37:18 2005 +0000
+
+    Bugzilla #4480 <https://bugs.freedesktop.org/show_bug.cgi?id=4480> Patch
+        #3305 <https://bugs.freedesktop.org/attachment.cgi?id=3305>
+    13-Sep-2005 nv driver update from Mark Vojkovich:
+    - Adds PCI ids for GeForce 6800 XT cards
+    - Adds names for existing PCI ids for some GeForce 6xxx & 7xxx cards
+    - Fix a potential problem with pixmap cache corruption on GeForce 6xxx and
+        7xxx parts. (Mark Vojkovich, NVIDIA)
+
+commit cdf20033e2cfc9e8634876dd42613f7719340a5a
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Fri Sep 16 01:36:45 2005 +0000
+
+    Put the riva_* files in the riva128.so subdriver, like monolithic.
+
+commit 9b1b3184cd586f6f8bf65ebd6f3c1afb1ae64d64
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:47 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 75a0deb6e9d1a5bc698ea67b338c56bc99c1b2c0
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Fri Aug 5 03:52:28 2005 +0000
+
+    Bug #3987 <https://bugs.freedesktop.org/show_bug.cgi?id=3987> Patch #3264
+        <https://bugs.freedesktop.org/attachment.cgi?id=3264> Workaround for
+        512 Meg video cards (can only map 256 Meg of it). (Mark Vojkovich)
+
+commit fb4033bd2662c199d7e4f0e3df7c4a0fb9870984
+Author: Kevin E Martin <kem@redhat.com>
+Date:   Fri Jul 29 21:22:44 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 6ea22f19210448605b9a18bf500c33168a77e77c
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 18:40:29 2005 +0000
+
+    Build system for nv
+
+commit 74772a7dc49e34229497441fbbf2631bfb259b39
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:29:58 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit 80ac36ec4fbbd9a4aae1bde01fe6ebc1088fa8cb
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Sat Jul 9 16:51:58 2005 +0000
+
+    Bug #3740 <https://bugs.freedesktop.org/show_bug.cgi?id=3740> Patch #3058
+        <https://bugs.freedesktop.org/attachment.cgi?id=3058>
+    08-Jul-2005 nv driver updates from Mark Vojkovich:
+    Change some console restore code for NV11. Hopefully, we can more reliably
+        restore the console for desktop systems using DVI. This may correct a
+        recent regression on NV11.
+    Also, new PCI IDs.
+    Add new nVidia PCI ids to match nv_driver.c changes.
+
+commit 6b75bc13462f1cfb735fe1de359ed9e45b5f4415
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Jul 1 22:43:12 2005 +0000
+
+    Change all misc.h and os.h references to <X11/foo.h>.
+
+commit 270f5269a08da8ed0186e8a2223b673e0433a771
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Wed Jun 29 15:56:23 2005 +0000
+
+    Bugzilla #3657 <https://bugs.freedesktop.org/show_bug.cgi?id=3657> Patch
+        #2992 <https://bugs.freedesktop.org/attachment.cgi?id=2992>
+        Experimental DPMS support for GeForce4 and later laptops. (Mark
+        Vojkovich)
+
+commit bf73c0716e9e4be0540d2ee7340bd5833831a434
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Jun 26 04:38:12 2005 +0000
+
+    Bug #3628: Fix video driver submodule visibility.
+
+commit 175766a44ceb0a5d4226e9088d8e3e6d73815b4f
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:55 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 8759399a3744f0eb1e0cdc83ed23aaaafb9be444
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Thu Apr 21 22:25:47 2005 +0000
+
+    programs/Xserver/hw/xfree86/drivers/nv/nv_driver.c
+    programs/Xserver/hw/xfree86/drivers/nv/nv_setup.c
+    //bugs.freedesktop.org/show_bug.cgi?id=3095> Patch #2501
+        <https://bugs.freedesktop.org/attachment.cgi?id=2501> nv DPMS panel
+        fixes (Mark Vojkovich)
+
+commit 2db214d7cf5336fbea36d83bc9b089f70a494614
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:29 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 3fe983d254f1ffe3c285548013be677ed4a67137
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Feb 14 03:37:20 2005 +0000
+
+    Bugzilla #2533 (https://bugs.freedesktop.org/show_bug.cgi?id=2533) Feb. 3,
+        2005 "nv" driver update from Mark Vojkovich (Mainly driver updates for
+        nVidia cards with ((pNv->Chipset & 0xfff0) == 0x0090) )
+
+commit 8c95fdc889b56a76497f5194bafd06edfc962387
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Wed Jan 26 01:36:04 2005 +0000
+
+    Jan. 2005 nv chipset update from Mark Vojkovich Bug #2380
+        <https://bugs.freedesktop.org/show_bug.cgi?id=2380> Patch #1752
+        <https://bugs.freedesktop.org/attachment.cgi?id=1752>
+
+commit 67c89797f62ea53b37927c64e0403e7e7c42de56
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Fri Dec 10 03:56:42 2004 +0000
+
+    Bugzilla #1985 <https://bugs.freedesktop.org/show_bug.cgi?id=1985> sync to
+        12/08/04 version of Nvidia driver from Mark Vojkovich, including these
+        fixes since last sync: Fix some DAC/Graphics memory contention issues
+        on newer NVIDIA chips (specifically, NV40). More PCI IDs. Also, I've
+        had trouble getting some panels to work automagically so I expose an
+        FPTweak option to let the user adjust a troublesome register.
+
+commit 7c34d051168eba499beb20c40fd95703375f4c7b
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Wed Nov 10 02:53:44 2004 +0000
+
+    (Bugzilla #1777) Import Mark Vojkovich's changes to NV driver since last
+        sync with XFree86, including: Support for new NVIDIA chips. Egbert has
+        a laptop that needs some DPMS ordering reversed. New chip support and
+        workaround for Toshiba M30 laptop issue. PCI-Xpress chip support. DPMS
+        support for DVI. Cursor changes for NV11 so that alpha blended cursors
+        will work in conjunction with dithering (laptop panels). It previously
+        did not. HW support for alpha blended stretch blits on NV5 and higher,
+        though nothing is using them at this point. Add support for VBlank
+        syncing the Xv Blit adaptor on hardware that supports it (NV11 and
+        higher). Make console restoration a little more robust. We were making
+        an assumption that failed on a newer laptop. Workaround for some NV31
+        DVI artifacts.
+    Also add nVidia license statement to nv man page to comply with requirement
+        that it appear in "user documentation"
+
+commit fcd6d7b57edb4e396189a0a2683bcf08974f3b59
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Oct 12 19:13:44 2004 +0000
+
+    Set fbdev mode as the default mode on PPC (Olaf Hering).
+    Added support for IBM space saver keyboard (Stefan Dirsch). Added support
+        for Cherry CyMotion Master XPress (Marcus Schaefer).
+    Change order of SetDisplayDevice(), HWRestore(), UnbindGART() and
+        RestoreBIOSMemSize() to be exactly opposite to the Save procedure in
+        EnterVT() (Matthias Hopf, Alan Hourihane).
+    Fix text mode restauration by removing the assumption that the register
+        which determines which head is programmed is set. to the active head by
+        the BIOS (Mark Vojkovich).
+    When I wrote the resource code 5 years ago I made some assumptions which
+        turned out to be false: I've assumed that the bus number of the PCI
+        hostbridge would be the PCI bus the bridge links to. This is not
+        correct. Fixing this assumption is not easy. However I hope that the
+        attached patch will make the system work regardless as it 'ignores'
+        host bridges from which the target bus is not known. This should not
+        matter at all as we really don't care about host bridges (unless we
+        have bridge specific code which retrieves information about the
+        bridge).
+    Fixed server crash on reset when a structure allocated in PreInit() was
+        freed on CloseScreen().
+    Fixed ring buffer lock ups that happened because the structure that
+        contained ringbuffer data was not zeroed after allocation.
+    Fixed numerous warnings due to signed unsigned comparisons.
+        programs/Xserver/hw/xfree86/drivers/nv/nv_driver.c:
+        (NVBacklightEnable): Changed the order in which the sequencer registers
+        and the backlight control registers are written. The sequencer control
+        register need to be written first otherwise DPMS screen blanking
+        produces vertical bars on a mobile device. lib/Xau/Imakefile: Build
+        libXau static library PIC so it can be linked into toolkits that would
+        like to wrap its functionality.
+
+commit 65e13fc61141b36a74c7a0e696d274574641ba20
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Sep 17 03:04:52 2004 +0000
+
+    Bug #1192: Remove cfb support from drivers where its use is an option.
+        Delete xf24_32bpp, as s3virge was the last user. Fix up some comments
+        to refer to fb rather than cfb.
+
+commit bbafc6d2fcb21671de3cfb4ff973409405162e7a
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Aug 16 09:13:14 2004 +0000
+
+    Bug #1087: Make sure all the *Weak symbols are documented in the import
+        list, so the loader knows not to complain about unresolved symbols when
+        an optional module isn't loaded. This typically manifests as warnings
+        about fbdevHW symbols when the user isn't using the framebuffer
+        console.
+
+commit 8b6de7d388b7ae5169b2e38ad1a40981bc406cfc
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jul 31 01:21:19 2004 +0000
+
+    Change several LoaderSymbol calls introduced by the bug #400 patch to
+    *Weak() resolver functions.
+
+commit f745157f15befebe01552b103c573ccb94b8f388
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Jul 30 20:30:53 2004 +0000
+
+    Bug #400 (partial): Driver fixes for the dlloader. When using dlloader, all
+        framebuffer formats except cfb and the overlay modes should work, and
+        r128 and radeon need to be loaded from the ati driver (both issues to
+        be fixed soon). Tested on i740, s3virge, mach64, tdfx, vesa, and vga
+        drivers. elfloader users shouldn't be affected.
+
+commit b9a6776bc04eb19343882bddb371b705677cfc14
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:23:29 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit cbf040deb0ab24425468ed60b3f3edd322ec210f
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:23:29 2004 +0000
+
+    Initial revision
+
+commit 99a7f7ccce4e012bde57021cafcb132c3d599b96
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:42:10 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 708bb2eb0db3808e3edf94a5f22b3e3f5bb6488d
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:30 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit fe564263d97e370817fc862e5c8ead09bfb70b58
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:23 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 1a0be799ce4c479e39f8af86fcca3d192e83f455
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:54 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit ee5c9ef51cea88a630ecc652512603c42b39a533
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:23 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit d176fa338d2d83bcf8d7ec68ff1aec205a258fec
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Mon Feb 23 20:35:04 2004 +0000
+
+    Import most of XFree86 4.4RC3. This import excludes files which have the
+        new license. If we want to, later we can import 4.4RC3 again and pick
+        up the files that have the new license, but for now the vendor branch
+        is "pure."
+
+commit ea7a90e680a2e9259e471dd6677bcca12aeea79e
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Jan 29 08:08:36 2004 +0000
+
+    Importing vendor version xf86-012804-2330 on Thu Jan 29 00:06:33 PST 2004
+
+commit a6c83bd98c34aacdf7a6b82ea83d6ae775479502
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Dec 19 20:55:14 2003 +0000
+
+    XFree86 4.3.99.902 (RC 2)
+
+commit 935c2adf58a10e6d3caa75823b4e7a0689555c49
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:38 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit d84248580d5b05bb47a2ccdce7badfc884efa6da
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:38 2003 +0000
+
+    Initial revision
+
+commit dd1a62caaaac6acc35584a2c8c525962d8574c95
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 2f223903fba2bdee1623f3442d7580c809b428cc
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision
+
+commit 542d57ea12b5461891a13a339e01ca9e1add124d
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 15:54:48 2003 +0000
+
+    R6.6 is the Xorg base-line
+
