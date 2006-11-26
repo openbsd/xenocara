@@ -1,0 +1,98 @@
+2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/ffb.h:
+	* src/ffb_dac.c:
+	* src/ffb_ddc.c:
+	* src/ffb_dga.c:
+	* src/ffb_dri.c:
+	* src/ffb_driver.c:
+	Unlibcwrap.  Bump server version requirement.  Bump to 1.1.0.
+
+2006-01-25  Adam Jackson  <ajax@freedesktop.org>
+
+	* src/ffb_bcopy.c:
+	* src/ffb_circle.c:
+	* src/ffb_driver.c:
+	Remove xf8_32wid damage, it is going away.
+
+	* src/Makefile.am:
+	* src/ffb_accel.c:
+	* src/ffb_bcopy.c:
+	* src/ffb_checks.c:
+	* src/ffb_circle.c:
+	* src/ffb_clip.c:
+	* src/ffb_clip.h:
+	* src/ffb_cplane.c:
+	* src/ffb_dbe.c:
+	* src/ffb_dga.c:
+	* src/ffb_dri.c:
+	* src/ffb_frect.c:
+	* src/ffb_fspans.c:
+	* src/ffb_gc.c:
+	* src/ffb_gc.h:
+	* src/ffb_glyph.c:
+	* src/ffb_gspans.c:
+	* src/ffb_line.c:
+	* src/ffb_plygon.c:
+	* src/ffb_point.c:
+	* src/ffb_rect.c:
+	* src/ffb_seg.c:
+	* src/ffb_sspans.c:
+	* src/ffb_stip.c:
+	* src/ffb_stip.h:
+	* src/ffb_stubs.c:
+	* src/ffb_wline.c:
+	* src/ffb_zeroarc.c:
+	Remove remaining cfb-isms and dead accel code.
+
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-12-14  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/Makefile.am:
+	Bug #4890: Include the assembly in the build (Ferris McCormick)
+
+2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* man/Makefile.am:
+	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Remove extraneous AC_MSG_RESULT.
+
+2005-11-20  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Bump libdrm dep to 2.0.
+
+2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Only build dlloader modules by default.
+
+2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC2 release.
+
+2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update pkgcheck dependencies to work with separate build roots.
