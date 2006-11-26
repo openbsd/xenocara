@@ -1,0 +1,106 @@
+2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/ast.h:
+	* src/ast_2dtool.c:
+	* src/ast_accel.c:
+	* src/ast_cursor.c:
+	* src/ast_driver.c:
+	* src/ast_mode.c:
+	* src/ast_tool.c:
+	* src/ast_vgatool.c:
+	Unlibcwrap.  Bump server version requirement.  Bump to 0.81.0.
+
+2006-03-15  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* src/ast.h: 
+	* src/ast_2dtool.c:
+	* src/ast_accel.c:
+	Update from ASPEED Technology Inc. to fix incorrect line drawing issue
+	and change driver name from "AST1000/2000" to "AST" to fix Xorg log
+	formatting issues with long driver names.
+	Bugzilla #4937 <https://bugs.freedesktop.org/show_bug.cgi?id=4937>
+	Attachment #4948 <https://bugs.freedesktop.org/attachment.cgi?id=4948>
+
+2006-03-14  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* COPYING:
+	* autogen.sh:
+	* configure.ac:
+	* Makefile.am:
+	* src/Makefile.am:
+	* .cvsignore:
+	* src/.cvsignore:
+	Add the normal trappings of the Xorg modular build system.
+
+	* src/ast_2dtool.c:
+	* src/ast_accel.c:
+	* src/ast_cursor.c:
+	* src/ast_driver.c:
+	* src/ast_mode.c:
+	* src/ast_tool.c:
+	* src/ast_vgatool.c:
+	Replace "Xv.h" with <X11/extensions/Xv.h> and add 
+	#include "config.h" for modular build
+	Strip ^M out of ast_accel.c
+	
+2006-03-14  Alan Coopersmith  <alan.coopersmith@sun.com>
+	
+	* src/ast.h:
+	* src/ast_2dtool.c:
+	* src/ast_2dtool.h:
+	* src/ast_accel.c:
+	* src/ast_driver.c:
+	* src/ast_vgatool.c:
+	Version 0.80 from ASPEED Technology Inc.
+	(Fixed abnormal display if set 2D Acceleration Option as MMIO mode)
+	Bugzilla #4937 <https://bugs.freedesktop.org/show_bug.cgi?id=4937>
+	Attachment #4932 <https://bugs.freedesktop.org/attachment.cgi?id=4932>
+
+2006-03-14  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* src/ast.h:
+	* src/ast_driver.c:
+	* src/ast_vgatool.c:
+	Version 0.62 from ASPEED Technology Inc.
+	(Fixed get video buffer size incorrect issue)
+	Bugzilla #4937 <https://bugs.freedesktop.org/show_bug.cgi?id=4937>
+	Attachment #4563 <https://bugs.freedesktop.org/attachment.cgi?id=4563>
+
+2006-03-14  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* src/ast.h:
+	* src/ast_accel.c:
+	* src/ast_driver.c:
+	Version 0.61 from ASPEED Technology Inc.
+	(Update for Xorg 6.9.0 - Can't reference XAACOPYROP)
+	Bugzilla #4937 <https://bugs.freedesktop.org/show_bug.cgi?id=4937>
+	Attachment #4044 <https://bugs.freedesktop.org/attachment.cgi?id=4245>
+
+2006-03-14  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* src/ast.h:
+	* src/ast_cursor.c:
+	* src/ast_cursor.h:
+	Version 0.60 from ASPEED Technology Inc.
+	(Modify H/W cursor parts for customer request)
+	Bugzilla #4937 <https://bugs.freedesktop.org/show_bug.cgi?id=4937>
+	Attachment #4044 <https://bugs.freedesktop.org/attachment.cgi?id=4044>
+
+2006-03-14  Alan Coopersmith  <alan.coopersmith@sun.com>	
+
+	* src/ast.h:
+	* src/ast_2dtool.c:
+	* src/ast_2dtool.h:
+	* src/ast_accel.c:
+	* src/ast_cursor.c:
+	* src/ast_cursor.h:
+	* src/ast_driver.c:
+	* src/ast_mode.c:
+	* src/ast_mode.h:
+	* src/ast_tool.c:
+	* src/ast_vgatool.c:
+	* src/ast_vgatool.h:
+	Initial code release from ASPEED Technology Inc. (Version 0.51)
+	Bugzilla #4937 <https://bugs.freedesktop.org/show_bug.cgi?id=4937>
+	Attachment #3686 <https://bugs.freedesktop.org/attachment.cgi?id=3686>
