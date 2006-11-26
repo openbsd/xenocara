@@ -72,15 +72,13 @@ extern char *cpasswd;
 #include <pwd.h>
 #endif
 
-#if defined( __bsdi__ ) && _BSDI_VERSION >= 199608
+#if defined( __bsdi__ ) && _BSDI_VERSION >= 199608 || defined(__OpenBSD__)
 #define       BSD_AUTH
 #endif
 
 #ifdef        BSD_AUTH
 #include <login_cap.h>
-static login_cap_t *lc = NULL;
-static login_cap_t *rlc = NULL;
-
+#include <bsd_auth.h>
 #endif
 
 #if ( HAVE_SYSLOG_H && defined( USE_SYSLOG ))
@@ -105,9 +103,7 @@ void        set_multiple(int uid);
    screen. */
 struct pwln {
 	char       *pw_name;
-#ifdef        BSD_AUTH
-	login_cap_t *pw_lc;
-#else
+#ifndef        BSD_AUTH
 	char       *pw_passwd;
 #endif
 	struct pwln *next;
@@ -129,9 +125,7 @@ new_pwlnode(void)
 		return ((pwlptr) ENOMEM);
 
 	pwl->pw_name = (char *) NULL;
-#ifdef BSD_AUTH
-	pwl->pw_lc = NULL;
-#else
+#ifndef BSD_AUTH
 	pwl->pw_passwd = (char *) NULL;
 #endif
 	pwl->next = (pwlptr) NULL;
@@ -1282,6 +1276,10 @@ checkPasswd(char *buffer)
 	char       *pass;
 	char       *style;
 	char       *name;
+	int	    authok;
+	extern gid_t egid, rgid;
+
+	(void)setegid(egid);
 
 #if ( HAVE_FCNTL_H && (defined( USE_MULTIPLE_ROOT ) || defined( USE_MULTIPLE_USER )))
 	/* Scan through the linked list until you match a password.  Print
@@ -1292,49 +1290,31 @@ checkPasswd(char *buffer)
 	 */
 	for (pwll = pwllh; done == 0 && pwll->next; pwll = pwll->next) {
 		name = pwll->pw_name;
-		lc = pwll->pw_lc;
 #else
 	name = user;
 #endif
 	if ((pass = strchr(buffer, ':')) != NULL) {
 		*pass++ = '\0';
-		style = login_getstyle(lc, buffer, "auth-xlock");
-		if (auth_response(name, lc->lc_class, style,
-				  "response", NULL, "", pass) > 0)
-			done = True;
-		else if (rlc != NULL) {
-			style = login_getstyle(rlc, buffer, "auth-xlock");
-			if (auth_response(ROOT, rlc->lc_class, style,
-					  "response", NULL, "", pass) > 0)
-				done = True;
-		}
-		pass[-1] = ':';
-	}
-	if (!done) {
-		style = login_getstyle(lc, NULL, "auth-xlock");
-		if (auth_response(name, lc->lc_class, style,
-				  "response", NULL, "", buffer) > 0)
-			done = True;
-		else if (rlc != NULL) {
-			style = login_getstyle(rlc, NULL, "auth-xlock");
-			if (auth_response(ROOT, rlc->lc_class, style,
-					  "response", NULL, "", buffer) > 0) {
-				done = True;
-				if (!*buffer)
-	 				/*
-					 * root has no password, don't let him in...
-					 */
-					done = False;
+		style = buffer;
+		authok = auth_userokay(name, style, "auth-xlock", pass) ||
+		    auth_userokay(ROOT, style, "auth-xlock", pass);
+		*--pass = ':';
+	} else
+		authok = 0;
+	pass = buffer;
+	style = NULL;
+	if (authok || auth_userokay(name, style, "auth-xlock", pass) ||
+		auth_userokay(ROOT, style, "auth-xlock", pass)) {
+		done = True;
 #if ( HAVE_SYSLOG_H && defined( USE_SYSLOG ))
-				else
-					syslog(SYSLOG_NOTICE, "%s: %s unlocked screen", ProgramName, ROOT);
+		syslog(SYSLOG_NOTICE, "%s: %s unlocked screen", ProgramName,
+		    ROOT);
 #endif
-			}
-		}
 	}
 #if ( HAVE_FCNTL_H && (defined( USE_MULTIPLE_ROOT ) || defined( USE_MULTIPLE_USER )))
 }
 #endif
+	(void)setegid(rgid);
 
 #else /* !BSD_AUTH */
 
@@ -1923,9 +1903,7 @@ get_multiple(struct passwd *pw)
 		perror("new");
 		exit(1);
 	}
-#ifdef        BSD_AUTH
-	pwll->pw_lc = login_getclass(pw->pw_class);
-#else
+#ifndef        BSD_AUTH
 	if ((pwll->pw_passwd = (char *) strdup(pw->pw_passwd)) == NULL) {
 		perror("new");
 		exit(1);
@@ -1960,7 +1938,6 @@ set_multiple(int uid)
 			perror("new");
 			exit(1);
 		}
-		pwll->pw_lc = login_getclass(pw->pw_class);
 
 		if ((pwll->next = new_pwlnode()) == (pwlptr) ENOMEM) {
 			perror("new");
@@ -2154,15 +2131,8 @@ void
 initPasswd(void)
 {
 	getUserName();
-#if !defined( ultrix ) && !defined( DCE_PASSWD ) && !defined( USE_PAM )
+#if !defined( ultrix ) && !defined( DCE_PASSWD ) && !defined( USE_PAM ) && !defined(BSD_AUTH)
 	if (!nolock && !inroot && !inwindow && grabmouse) {
-#ifdef BSD_AUTH
-		struct passwd *pwd = getpwnam(user);
-
-		lc = login_getclass(pwd->pw_class);
-		if (allowroot && (pwd = getpwnam(ROOT)) != NULL)
-			rlc = login_getclass(pwd->pw_class);
-#else /* !BSD_AUTH */
 #ifdef USE_XLOCKRC
 		gpass();
 #else
@@ -2180,7 +2150,6 @@ initPasswd(void)
 #ifdef USE_XLOCK_GROUP
 		getCryptedXlockGroupPasswds();
 #endif
-#endif /* !BSD_AUTH */
 	}
 #endif /* !ultrix && !DCE_PASSWD && !USE_PAM */
 #ifdef DCE_PASSWD

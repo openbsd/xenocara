@@ -1287,7 +1287,7 @@ The
 option sets the number of
 .I seconds
 before the screen needs a password to be unlocked.  Good for use with
-an autolocking mechanism like xautolock(1).
+an autolocking mechanism like xidle(1).
 .TP 5
 .BI \-timeout \ seconds
 The
@@ -2480,7 +2480,7 @@ the SETUP menus, under 'Network Parameters', and turn off TCP/IP access
 control.
 .br
 .SH "SEE ALSO"
-X(1), Xlib Documentation.
+xidle(1), X(1), Xlib Documentation.
 .sp
 .SH AUTHOR
 Maintained by:

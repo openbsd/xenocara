@@ -1,8 +1,8 @@
 !!!!
 ! XLock: Class resource for xlock (xlockmore-5.14)
 !!!!
-XLock.mode: random
-!XLock.mode: blank
+!XLock.mode: random
+XLock.mode: blank
 !XLock.mode: life
 !XLock.erasemode: no_fade
 XLock.erasedelay: 400

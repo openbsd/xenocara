@@ -156,6 +156,9 @@ XrmOptionDescRec options[100];
 #endif
 #define inline
 #endif
+#if defined(__OpenBSD__)
+#define HAVE_SYS_PARAM_H 1
+#endif
 #ifdef AIXV3
 #define HAVE_SYS_SELECT_H 1
 #else
@@ -338,7 +341,7 @@ XrmOptionDescRec options[100];
 #define FABSF(n) ((float)fabs((double)(n)))
 #endif
 
-#if VMS
+#ifdef VMS
 #include <unixlib.h>
 #endif
 #if 0
@@ -514,9 +517,6 @@ extern void finish(Display * display, Bool closeDisplay);
 #define error xlock_error
 #endif
 extern void error(const char *buf);
-#ifndef DECLARED_GETENV
-extern char * getenv(const char *);
-#endif
 #ifdef __cplusplus
   }
 #endif

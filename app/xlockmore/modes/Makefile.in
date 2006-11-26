@@ -297,7 +297,7 @@ FLAGPIXMAP = $(MEDIUMPIXMAP)
 #FLAGPIXMAP = m-xlock
 IMAGEPIXMAP = $(MEDIUMPIXMAP)
 #IMAGEPIXMAP = m-xlock
-LIFEPIXMAP = s-grelb
+#LIFEPIXMAP = s-grelb
 MAZEPIXMAP = $(MEDIUMPIXMAP)
 #MAZEPIXMAP = m-xlock
 #PUZZLEPIXMAP = $(LARGEPIXMAP)
@@ -471,8 +471,8 @@ flag.xpm : $(PIXMAPDIR)$(FLAGPIXMAP).xpm
 image.xpm : $(PIXMAPDIR)$(IMAGEPIXMAP).xpm
 	$(RM) image.xpm ; $(LN_S) $(PIXMAPDIR)$(IMAGEPIXMAP).xpm image.xpm
 
-life.xpm : $(PIXMAPDIR)$(LIFEPIXMAP).xpm
-	$(RM) life.xpm ; $(LN_S) $(PIXMAPDIR)$(LIFEPIXMAP).xpm life.xpm
+#life.xpm : $(PIXMAPDIR)$(LIFEPIXMAP).xpm
+#	$(RM) life.xpm ; $(LN_S) $(PIXMAPDIR)$(LIFEPIXMAP).xpm life.xpm
 
 maze.xpm : $(PIXMAPDIR)$(MAZEPIXMAP).xpm
 	$(RM) maze.xpm ; $(LN_S) $(PIXMAPDIR)$(MAZEPIXMAP).xpm maze.xpm

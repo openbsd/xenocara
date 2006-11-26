@@ -1974,7 +1974,7 @@ else
   else
     AC_DEFINE_UNQUOTED(DEF_TTFONT, "${prefix}/lib/X11/xlock/fonts/")
   fi
-  XLOCKLIBS="${XLOCKLIBS} -lfreetype"
+  XLOCKLIBS="${XLOCKLIBS} -lfreetype -lz"
   test "x$freetype_includes" = xNONE && freetype_includes=$ac_freetype_includes
   test "x$freetype_libraries" = xNONE && freetype_libraries=$ac_freetype_libraries
   ac_cv_path_freetype="no_freetype= ac_freetype_includes=$freetype_includes ac_freetype_libraries=$freetype_libraries"
@@ -3337,7 +3337,7 @@ case "${canonical}" in
     esac
   ;;
 
-  *-*-freebsd* | *-*-openbsd* | *-*-netbsd* | *-*-dragonfly* )
+  *-*-freebsd* |  *-*-netbsd* | *-*-dragonfly* )
     BITMAPTYPE="bsd"
     PIXMAPTYPE="bsd"
     INSTPGMFLAGS="-s -o root -m 4111"
@@ -3355,6 +3355,11 @@ case "${canonical}" in
     XMLOCKLDFLAGS="-Wl,-R${XMLOCK_LDFLAGS}"
   ;;
 
+  *-*-openbsd*)
+	BITMAPTYPE="blowfish"
+	PIXMAPTYPE="blowfish"
+	INSTPGMFLAGS="-s -g auth -m 2755"
+  ;;
   *-*-dgux5* )
     BITMAPTYPE="x11"
     PIXMAPTYPE="x11"

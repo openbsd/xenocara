@@ -140,7 +140,7 @@ static int  descr();
 # endif
 #endif
 #ifndef DEF_MODE
-# if 0
+# if 1
 #  define DEF_MODE	"blank"	/* May be safer */
 # else
 #  define DEF_MODE	"random"	/* May be more interesting */

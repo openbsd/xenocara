@@ -311,8 +311,8 @@ pre_merge_options(void)
 
 	/* Put on the PROGCLASS.background/foreground resources. */
 	if ((s = (char *) malloc(50)) != NULL) {
-		(void) strcpy(s, progclass);
-		(void) strcat(s, ".background: black");
+		(void) strlcpy(s, progclass, 50);
+		(void) strlcat(s, ".background: black", 50);
 		defaults[i++] = s;
 	}
 
@@ -722,6 +722,12 @@ static ModeInfo *modeinfo = (ModeInfo *) NULL;
 Window      parent;
 Bool        parentSet = False;
 Display    *dsp = (Display *) NULL;	/* server display connection */
+
+gid_t       rgid;
+#if defined( HAVE_SETEUID ) || defined( HAVE_SETREUID )
+uid_t       euid;
+gid_t       egid;
+#endif
 
 extern char user[PASSLENGTH];
 extern char hostname[MAXHOSTNAMELEN];
@@ -3181,25 +3187,6 @@ main(int argc, char **argv)
 #else
 	static int  old_sigmask;
 
-#endif
-
-#if ultrix
-	extern gid_t rgid;
-
-#else
-	gid_t       rgid;
-
-#endif
-#if defined( HAVE_SETEUID ) || defined( HAVE_SETREUID )
-	uid_t       euid;
-
-#if ultrix
-	extern gid_t egid;
-
-#else
-	gid_t       egid;
-
-#endif
 #endif
 
 #ifdef USE_MB
