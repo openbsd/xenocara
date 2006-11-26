@@ -1,0 +1,13 @@
+# $Xenocara: Makefile.bsd-wrapper,v 1.3 2006/04/17 13:57:13 matthieu Exp $
+
+DIST= ${.CURDIR}
+
+CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
+		--with-module-dir=${LIBDIR}/modules \
+		--with-mesa-source=${XENOCARA_TOP}/dist/Mesa \
+		--enable-install-setuid \
+		--disable-dmx
+
+.include <bsd.xorg.mk>
+
+
