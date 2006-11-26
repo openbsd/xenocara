@@ -273,7 +273,7 @@ PACKAGE_VERSION='1.0.1'
 PACKAGE_STRING='xphelloworld 1.0.1'
 PACKAGE_BUGREPORT='https://bugs.freedesktop.org/enter_bug.cgi?product=xorg'
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE am__leading_dot MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE PKG_CONFIG ac_pt_PKG_CONFIG X11_CFLAGS X11_LIBS BUILD_MOTIFAPPS_TRUE BUILD_MOTIFAPPS_FALSE XPAWHELLOWORLD_CFLAGS XPAWHELLOWORLD_LIBS XPHELLOWORLD_CFLAGS XPHELLOWORLD_LIBS XPSIMPLEHELLOWORLD_CFLAGS XPSIMPLEHELLOWORLD_LIBS XPXMHELLOWORLD_CFLAGS XPXMHELLOWORLD_LIBS XPXTHELLOWORLD_CFLAGS XPXTHELLOWORLD_LIBS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE PKG_CONFIG ac_pt_PKG_CONFIG X11_CFLAGS X11_LIBS BUILD_MOTIFAPPS_TRUE BUILD_MOTIFAPPS_FALSE XPAWHELLOWORLD_CFLAGS XPAWHELLOWORLD_LIBS XPHELLOWORLD_CFLAGS XPHELLOWORLD_LIBS XPSIMPLEHELLOWORLD_CFLAGS XPSIMPLEHELLOWORLD_LIBS XPXMHELLOWORLD_CFLAGS XPXMHELLOWORLD_LIBS XPXTHELLOWORLD_CFLAGS XPXTHELLOWORLD_LIBS LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -859,10 +859,10 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-maintainer-mode enable make rules and dependencies not useful
-                          (and sometimes confusing) to the casual installer
-  --disable-dependency-tracking Speeds up one-time builds
-  --enable-dependency-tracking  Do not reject slow dependency extractors
+  --enable-maintainer-mode  enable make rules and dependencies not useful
+			  (and sometimes confusing) to the casual installer
+  --disable-dependency-tracking  speeds up one-time build
+  --enable-dependency-tracking   do not reject slow dependency extractors
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1352,7 +1352,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-am__api_version="1.7"
+am__api_version="1.9"
 ac_aux_dir=
 for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
   if test -f $ac_dir/install-sh; then
@@ -1515,7 +1515,6 @@ _ACEOF
 program_transform_name=`echo $program_transform_name | sed -f conftest.sed`
 rm conftest.sed
 
-
 # expand $ac_aux_dir to an absolute path
 am_aux_dir=`cd $ac_aux_dir && pwd`
 
@@ -1527,6 +1526,39 @@ else
   am_missing_run=
   { echo "$as_me:$LINENO: WARNING: \`missing' script is too old or missing" >&5
 echo "$as_me: WARNING: \`missing' script is too old or missing" >&2;}
+fi
+
+if mkdir -p --version . >/dev/null 2>&1 && test ! -d ./--version; then
+  # We used to keeping the `.' as first argument, in order to
+  # allow $(mkdir_p) to be used without argument.  As in
+  #   $(mkdir_p) $(somedir)
+  # where $(somedir) is conditionally defined.  However this is wrong
+  # for two reasons:
+  #  1. if the package is installed by a user who cannot write `.'
+  #     make install will fail,
+  #  2. the above comment should most certainly read
+  #     $(mkdir_p) $(DESTDIR)$(somedir)
+  #     so it does not work when $(somedir) is undefined and
+  #     $(DESTDIR) is not.
+  #  To support the latter case, we have to write
+  #     test -z "$(somedir)" || $(mkdir_p) $(DESTDIR)$(somedir),
+  #  so the `.' trick is pointless.
+  mkdir_p='mkdir -p --'
+else
+  # On NextStep and OpenStep, the `mkdir' command does not
+  # recognize any option.  It will interpret all options as
+  # directories to create, and then abort because `.' already
+  # exists.
+  for d in ./-p ./--version;
+  do
+    test -d $d && rmdir $d
+  done
+  # $(mkinstalldirs) is defined by Automake if mkinstalldirs exists.
+  if test -f "$ac_aux_dir/mkinstalldirs"; then
+    mkdir_p='$(mkinstalldirs)'
+  else
+    mkdir_p='$(install_sh) -d'
+  fi
 fi
 
 for ac_prog in gawk mawk nawk awk
@@ -1607,7 +1639,7 @@ else
 fi
 rmdir .tst 2>/dev/null
 
- # test to see if srcdir already configured
+# test to see if srcdir already configured
 if test "`cd $srcdir && pwd`" != "`pwd`" &&
    test -f $srcdir/config.status; then
   { { echo "$as_me:$LINENO: error: source directory already configured; run \"make distclean\" there first" >&5
@@ -1654,9 +1686,6 @@ AUTOHEADER=${AUTOHEADER-"${am_missing_run}autoheader"}
 
 
 MAKEINFO=${MAKEINFO-"${am_missing_run}makeinfo"}
-
-
-AMTAR=${AMTAR-"${am_missing_run}tar"}
 
 install_sh=${install_sh-"$am_aux_dir/install-sh"}
 
@@ -1750,6 +1779,13 @@ INSTALL_STRIP_PROGRAM="\${SHELL} \$(install_sh) -c -s"
 
 # We need awk for the "check" target.  The system "awk" is bad on
 # some platforms.
+# Always define AMTAR for backward compatibility.
+
+AMTAR=${AMTAR-"${am_missing_run}tar"}
+
+am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
+
+
 
 
 
@@ -2817,7 +2853,9 @@ else
     : > sub/conftest.c
     for i in 1 2 3 4 5 6; do
       echo '#include "conftst'$i'.h"' >> sub/conftest.c
-      : > sub/conftst$i.h
+      # Using `: > sub/conftst$i.h' creates only sub/conftst1.h with
+      # Solaris 8's {/usr,}/bin/sh.
+      touch sub/conftst$i.h
     done
     echo "${am__include} ${am__quote}sub/conftest.Po${am__quote}" > confmf
 
@@ -2845,9 +2883,14 @@ else
        grep sub/conftest.${OBJEXT-o} sub/conftest.Po > /dev/null 2>&1 &&
        ${MAKE-make} -s -f confmf > /dev/null 2>&1; then
       # icc doesn't choke on unknown options, it will just issue warnings
-      # (even with -Werror).  So we grep stderr for any message
-      # that says an option was ignored.
-      if grep 'ignoring option' conftest.err >/dev/null 2>&1; then :; else
+      # or remarks (even with -Werror).  So we grep stderr for any message
+      # that says an option was ignored or not supported.
+      # When given -MP, icc 7.0 and 7.1 complain thusly:
+      #   icc: Command line warning: ignoring option '-M'; no argument required
+      # The diagnosis changed in icc 8.0:
+      #   icc: Command line remark: option '-MP' not supported
+      if (grep 'ignoring option' conftest.err ||
+          grep 'not supported' conftest.err) >/dev/null 2>&1; then :; else
         am_cv_CC_dependencies_compiler_type=$depmode
         break
       fi
@@ -3092,9 +3135,6 @@ echo "$as_me:$LINENO: checking for X11" >&5
 echo $ECHO_N "checking for X11... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$X11_CFLAGS"; then
-        pkg_cv_X11_CFLAGS="$X11_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -3105,14 +3145,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$X11_LIBS"; then
-        pkg_cv_X11_LIBS="$X11_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -3123,59 +3159,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        X11_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11"`
-        else
-	        X11_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
-        fi
+	X11_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$X11_PKG_ERRORS" >&5
+	echo "$X11_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (x11) were not met:
-
-$X11_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables X11_CFLAGS
-and X11_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (x11) were not met:
-
-$X11_PKG_ERRORS
-
+Alternatively you may set the X11_CFLAGS and X11_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables X11_CFLAGS
-and X11_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the X11_CFLAGS and X11_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables X11_CFLAGS
-and X11_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the X11_CFLAGS and X11_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -3183,9 +3198,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables X11_CFLAGS
-and X11_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the X11_CFLAGS and X11_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -3306,9 +3321,6 @@ echo "$as_me:$LINENO: checking for XPAWHELLOWORLD" >&5
 echo $ECHO_N "checking for XPAWHELLOWORLD... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPAWHELLOWORLD_CFLAGS"; then
-        pkg_cv_XPAWHELLOWORLD_CFLAGS="$XPAWHELLOWORLD_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xaw8 xprintutil xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xaw8 xprintutil xp") 2>&5
@@ -3319,14 +3331,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPAWHELLOWORLD_LIBS"; then
-        pkg_cv_XPAWHELLOWORLD_LIBS="$XPAWHELLOWORLD_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xaw8 xprintutil xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xaw8 xprintutil xp") 2>&5
@@ -3337,59 +3345,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XPAWHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xaw8 xprintutil xp"`
-        else
-	        XPAWHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xaw8 xprintutil xp"`
-        fi
+	XPAWHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xaw8 xprintutil xp"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XPAWHELLOWORLD_PKG_ERRORS" >&5
+	echo "$XPAWHELLOWORLD_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xaw8 xprintutil xp) were not met:
-
-$XPAWHELLOWORLD_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xaw8 xprintutil xp) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XPAWHELLOWORLD_CFLAGS
-and XPAWHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xaw8 xprintutil xp) were not met:
-
-$XPAWHELLOWORLD_PKG_ERRORS
-
+Alternatively you may set the XPAWHELLOWORLD_CFLAGS and XPAWHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xaw8 xprintutil xp) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XPAWHELLOWORLD_CFLAGS
-and XPAWHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XPAWHELLOWORLD_CFLAGS and XPAWHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XPAWHELLOWORLD_CFLAGS
-and XPAWHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XPAWHELLOWORLD_CFLAGS and XPAWHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -3397,9 +3384,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XPAWHELLOWORLD_CFLAGS
-and XPAWHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XPAWHELLOWORLD_CFLAGS and XPAWHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -3428,9 +3415,6 @@ echo "$as_me:$LINENO: checking for XPHELLOWORLD" >&5
 echo $ECHO_N "checking for XPHELLOWORLD... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPHELLOWORLD_CFLAGS"; then
-        pkg_cv_XPHELLOWORLD_CFLAGS="$XPHELLOWORLD_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xprintapputil xprintutil xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xprintapputil xprintutil xp") 2>&5
@@ -3441,14 +3425,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPHELLOWORLD_LIBS"; then
-        pkg_cv_XPHELLOWORLD_LIBS="$XPHELLOWORLD_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xprintapputil xprintutil xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xprintapputil xprintutil xp") 2>&5
@@ -3459,59 +3439,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XPHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xprintapputil xprintutil xp"`
-        else
-	        XPHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xprintapputil xprintutil xp"`
-        fi
+	XPHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xprintapputil xprintutil xp"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XPHELLOWORLD_PKG_ERRORS" >&5
+	echo "$XPHELLOWORLD_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xprintapputil xprintutil xp) were not met:
-
-$XPHELLOWORLD_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xprintapputil xprintutil xp) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XPHELLOWORLD_CFLAGS
-and XPHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xprintapputil xprintutil xp) were not met:
-
-$XPHELLOWORLD_PKG_ERRORS
-
+Alternatively you may set the XPHELLOWORLD_CFLAGS and XPHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xprintapputil xprintutil xp) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XPHELLOWORLD_CFLAGS
-and XPHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XPHELLOWORLD_CFLAGS and XPHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XPHELLOWORLD_CFLAGS
-and XPHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XPHELLOWORLD_CFLAGS and XPHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -3519,9 +3478,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XPHELLOWORLD_CFLAGS
-and XPHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XPHELLOWORLD_CFLAGS and XPHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -3544,9 +3503,6 @@ echo "$as_me:$LINENO: checking for XPSIMPLEHELLOWORLD" >&5
 echo $ECHO_N "checking for XPSIMPLEHELLOWORLD... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPSIMPLEHELLOWORLD_CFLAGS"; then
-        pkg_cv_XPSIMPLEHELLOWORLD_CFLAGS="$XPSIMPLEHELLOWORLD_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xprintutil xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xprintutil xp") 2>&5
@@ -3557,14 +3513,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPSIMPLEHELLOWORLD_LIBS"; then
-        pkg_cv_XPSIMPLEHELLOWORLD_LIBS="$XPSIMPLEHELLOWORLD_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xprintutil xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xprintutil xp") 2>&5
@@ -3575,59 +3527,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XPSIMPLEHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xprintutil xp"`
-        else
-	        XPSIMPLEHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xprintutil xp"`
-        fi
+	XPSIMPLEHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xprintutil xp"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XPSIMPLEHELLOWORLD_PKG_ERRORS" >&5
+	echo "$XPSIMPLEHELLOWORLD_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xprintutil xp) were not met:
-
-$XPSIMPLEHELLOWORLD_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xprintutil xp) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XPSIMPLEHELLOWORLD_CFLAGS
-and XPSIMPLEHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xprintutil xp) were not met:
-
-$XPSIMPLEHELLOWORLD_PKG_ERRORS
-
+Alternatively you may set the XPSIMPLEHELLOWORLD_CFLAGS and XPSIMPLEHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xprintutil xp) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XPSIMPLEHELLOWORLD_CFLAGS
-and XPSIMPLEHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XPSIMPLEHELLOWORLD_CFLAGS and XPSIMPLEHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XPSIMPLEHELLOWORLD_CFLAGS
-and XPSIMPLEHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XPSIMPLEHELLOWORLD_CFLAGS and XPSIMPLEHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -3635,9 +3566,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XPSIMPLEHELLOWORLD_CFLAGS
-and XPSIMPLEHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XPSIMPLEHELLOWORLD_CFLAGS and XPSIMPLEHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -3661,9 +3592,6 @@ echo "$as_me:$LINENO: checking for XPXMHELLOWORLD" >&5
 echo $ECHO_N "checking for XPXMHELLOWORLD... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPXMHELLOWORLD_CFLAGS"; then
-        pkg_cv_XPXMHELLOWORLD_CFLAGS="$XPXMHELLOWORLD_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xprintutil xt xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xprintutil xt xp") 2>&5
@@ -3674,14 +3602,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPXMHELLOWORLD_LIBS"; then
-        pkg_cv_XPXMHELLOWORLD_LIBS="$XPXMHELLOWORLD_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xprintutil xt xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xprintutil xt xp") 2>&5
@@ -3692,59 +3616,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XPXMHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xprintutil xt xp"`
-        else
-	        XPXMHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xprintutil xt xp"`
-        fi
+	XPXMHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xprintutil xt xp"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XPXMHELLOWORLD_PKG_ERRORS" >&5
+	echo "$XPXMHELLOWORLD_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xprintutil xt xp) were not met:
-
-$XPXMHELLOWORLD_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xprintutil xt xp) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XPXMHELLOWORLD_CFLAGS
-and XPXMHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xprintutil xt xp) were not met:
-
-$XPXMHELLOWORLD_PKG_ERRORS
-
+Alternatively you may set the XPXMHELLOWORLD_CFLAGS and XPXMHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xprintutil xt xp) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XPXMHELLOWORLD_CFLAGS
-and XPXMHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XPXMHELLOWORLD_CFLAGS and XPXMHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XPXMHELLOWORLD_CFLAGS
-and XPXMHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XPXMHELLOWORLD_CFLAGS and XPXMHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -3752,9 +3655,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XPXMHELLOWORLD_CFLAGS
-and XPXMHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XPXMHELLOWORLD_CFLAGS and XPXMHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -3780,9 +3683,6 @@ echo "$as_me:$LINENO: checking for XPXTHELLOWORLD" >&5
 echo $ECHO_N "checking for XPXTHELLOWORLD... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPXTHELLOWORLD_CFLAGS"; then
-        pkg_cv_XPXTHELLOWORLD_CFLAGS="$XPXTHELLOWORLD_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xaw8 xprintutil xt xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xaw8 xprintutil xt xp") 2>&5
@@ -3793,14 +3693,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPXTHELLOWORLD_LIBS"; then
-        pkg_cv_XPXTHELLOWORLD_LIBS="$XPXTHELLOWORLD_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xaw8 xprintutil xt xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xaw8 xprintutil xt xp") 2>&5
@@ -3811,59 +3707,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XPXTHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xaw8 xprintutil xt xp"`
-        else
-	        XPXTHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xaw8 xprintutil xt xp"`
-        fi
+	XPXTHELLOWORLD_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xaw8 xprintutil xt xp"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XPXTHELLOWORLD_PKG_ERRORS" >&5
+	echo "$XPXTHELLOWORLD_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xaw8 xprintutil xt xp) were not met:
-
-$XPXTHELLOWORLD_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xaw8 xprintutil xt xp) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XPXTHELLOWORLD_CFLAGS
-and XPXTHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xaw8 xprintutil xt xp) were not met:
-
-$XPXTHELLOWORLD_PKG_ERRORS
-
+Alternatively you may set the XPXTHELLOWORLD_CFLAGS and XPXTHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xaw8 xprintutil xt xp) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XPXTHELLOWORLD_CFLAGS
-and XPXTHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XPXTHELLOWORLD_CFLAGS and XPXTHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XPXTHELLOWORLD_CFLAGS
-and XPXTHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XPXTHELLOWORLD_CFLAGS and XPXTHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -3871,9 +3746,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XPXTHELLOWORLD_CFLAGS
-and XPXTHELLOWORLD_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XPXTHELLOWORLD_CFLAGS and XPXTHELLOWORLD_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -4571,14 +4446,17 @@ s,@AUTOCONF@,$AUTOCONF,;t t
 s,@AUTOMAKE@,$AUTOMAKE,;t t
 s,@AUTOHEADER@,$AUTOHEADER,;t t
 s,@MAKEINFO@,$MAKEINFO,;t t
-s,@AMTAR@,$AMTAR,;t t
 s,@install_sh@,$install_sh,;t t
 s,@STRIP@,$STRIP,;t t
 s,@ac_ct_STRIP@,$ac_ct_STRIP,;t t
 s,@INSTALL_STRIP_PROGRAM@,$INSTALL_STRIP_PROGRAM,;t t
+s,@mkdir_p@,$mkdir_p,;t t
 s,@AWK@,$AWK,;t t
 s,@SET_MAKE@,$SET_MAKE,;t t
 s,@am__leading_dot@,$am__leading_dot,;t t
+s,@AMTAR@,$AMTAR,;t t
+s,@am__tar@,$am__tar,;t t
+s,@am__untar@,$am__untar,;t t
 s,@MAINTAINER_MODE_TRUE@,$MAINTAINER_MODE_TRUE,;t t
 s,@MAINTAINER_MODE_FALSE@,$MAINTAINER_MODE_FALSE,;t t
 s,@MAINT@,$MAINT,;t t
@@ -5238,27 +5116,21 @@ echo X"$mf" |
   else
     continue
   fi
-  grep '^DEP_FILES *= *[^ #]' < "$mf" > /dev/null || continue
-  # Extract the definition of DEP_FILES from the Makefile without
-  # running `make'.
-  DEPDIR=`sed -n -e '/^DEPDIR = / s///p' < "$mf"`
+  # Extract the definition of DEPDIR, am__include, and am__quote
+  # from the Makefile without running `make'.
+  DEPDIR=`sed -n 's/^DEPDIR = //p' < "$mf"`
   test -z "$DEPDIR" && continue
+  am__include=`sed -n 's/^am__include = //p' < "$mf"`
+  test -z "am__include" && continue
+  am__quote=`sed -n 's/^am__quote = //p' < "$mf"`
   # When using ansi2knr, U may be empty or an underscore; expand it
-  U=`sed -n -e '/^U = / s///p' < "$mf"`
-  test -d "$dirpart/$DEPDIR" || mkdir "$dirpart/$DEPDIR"
-  # We invoke sed twice because it is the simplest approach to
-  # changing $(DEPDIR) to its actual value in the expansion.
-  for file in `sed -n -e '
-    /^DEP_FILES = .*\\\\$/ {
-      s/^DEP_FILES = //
-      :loop
-	s/\\\\$//
-	p
-	n
-	/\\\\$/ b loop
-      p
-    }
-    /^DEP_FILES = / s/^DEP_FILES = //p' < "$mf" | \
+  U=`sed -n 's/^U = //p' < "$mf"`
+  # Find all dependency output files, they are included files with
+  # $(DEPDIR) in their names.  We invoke sed twice because it is the
+  # simplest approach to changing $(DEPDIR) to its actual value in the
+  # expansion.
+  for file in `sed -n "
+    s/^$am__include $am__quote\(.*(DEPDIR).*\)$am__quote"'$/\1/p' <"$mf" | \
        sed -e 's/\$(DEPDIR)/'"$DEPDIR"'/g' -e 's/\$U/'"$U"'/g'`; do
     # Make sure the directory exists.
     test -f "$dirpart/$file" && continue

@@ -273,7 +273,7 @@ PACKAGE_VERSION='1.0.1'
 PACKAGE_STRING='xdpyinfo 1.0.1'
 PACKAGE_BUGREPORT='https://bugs.freedesktop.org/enter_bug.cgi?product=xorg'
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE am__leading_dot MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE PKG_CONFIG ac_pt_PKG_CONFIG XDPYINFO_CFLAGS XDPYINFO_LIBS DPY_X11_CFLAGS DPY_X11_LIBS DPY_XEXT_CFLAGS DPY_XEXT_LIBS DPY_XKB_CFLAGS DPY_XKB_LIBS DPY_XF86VIDMODE_CFLAGS DPY_XF86VIDMODE_LIBS DPY_XF86DGA_CFLAGS DPY_XF86DGA_LIBS DPY_XF86MISC_CFLAGS DPY_XF86MISC_LIBS DPY_XINPUT_CFLAGS DPY_XINPUT_LIBS DPY_XRENDER_CFLAGS DPY_XRENDER_LIBS DPY_XINERAMA_CFLAGS DPY_XINERAMA_LIBS DPY_DMX_CFLAGS DPY_DMX_LIBS DPY_XPRINT_CFLAGS DPY_XPRINT_LIBS DPY_XTST_CFLAGS DPY_XTST_LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE PKG_CONFIG ac_pt_PKG_CONFIG XDPYINFO_CFLAGS XDPYINFO_LIBS DPY_X11_CFLAGS DPY_X11_LIBS DPY_XEXT_CFLAGS DPY_XEXT_LIBS DPY_XKB_CFLAGS DPY_XKB_LIBS DPY_XF86VIDMODE_CFLAGS DPY_XF86VIDMODE_LIBS DPY_XF86DGA_CFLAGS DPY_XF86DGA_LIBS DPY_XF86MISC_CFLAGS DPY_XF86MISC_LIBS DPY_XINPUT_CFLAGS DPY_XINPUT_LIBS DPY_XRENDER_CFLAGS DPY_XRENDER_LIBS DPY_XINERAMA_CFLAGS DPY_XINERAMA_LIBS DPY_DMX_CFLAGS DPY_DMX_LIBS DPY_XPRINT_CFLAGS DPY_XPRINT_LIBS DPY_XTST_CFLAGS DPY_XTST_LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -919,10 +919,10 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-maintainer-mode enable make rules and dependencies not useful
-                          (and sometimes confusing) to the casual installer
-  --disable-dependency-tracking Speeds up one-time builds
-  --enable-dependency-tracking  Do not reject slow dependency extractors
+  --enable-maintainer-mode  enable make rules and dependencies not useful
+			  (and sometimes confusing) to the casual installer
+  --disable-dependency-tracking  speeds up one-time build
+  --enable-dependency-tracking   do not reject slow dependency extractors
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1440,7 +1440,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-am__api_version="1.7"
+am__api_version="1.9"
 ac_aux_dir=
 for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
   if test -f $ac_dir/install-sh; then
@@ -1603,7 +1603,6 @@ _ACEOF
 program_transform_name=`echo $program_transform_name | sed -f conftest.sed`
 rm conftest.sed
 
-
 # expand $ac_aux_dir to an absolute path
 am_aux_dir=`cd $ac_aux_dir && pwd`
 
@@ -1615,6 +1614,39 @@ else
   am_missing_run=
   { echo "$as_me:$LINENO: WARNING: \`missing' script is too old or missing" >&5
 echo "$as_me: WARNING: \`missing' script is too old or missing" >&2;}
+fi
+
+if mkdir -p --version . >/dev/null 2>&1 && test ! -d ./--version; then
+  # We used to keeping the `.' as first argument, in order to
+  # allow $(mkdir_p) to be used without argument.  As in
+  #   $(mkdir_p) $(somedir)
+  # where $(somedir) is conditionally defined.  However this is wrong
+  # for two reasons:
+  #  1. if the package is installed by a user who cannot write `.'
+  #     make install will fail,
+  #  2. the above comment should most certainly read
+  #     $(mkdir_p) $(DESTDIR)$(somedir)
+  #     so it does not work when $(somedir) is undefined and
+  #     $(DESTDIR) is not.
+  #  To support the latter case, we have to write
+  #     test -z "$(somedir)" || $(mkdir_p) $(DESTDIR)$(somedir),
+  #  so the `.' trick is pointless.
+  mkdir_p='mkdir -p --'
+else
+  # On NextStep and OpenStep, the `mkdir' command does not
+  # recognize any option.  It will interpret all options as
+  # directories to create, and then abort because `.' already
+  # exists.
+  for d in ./-p ./--version;
+  do
+    test -d $d && rmdir $d
+  done
+  # $(mkinstalldirs) is defined by Automake if mkinstalldirs exists.
+  if test -f "$ac_aux_dir/mkinstalldirs"; then
+    mkdir_p='$(mkinstalldirs)'
+  else
+    mkdir_p='$(install_sh) -d'
+  fi
 fi
 
 for ac_prog in gawk mawk nawk awk
@@ -1695,7 +1727,7 @@ else
 fi
 rmdir .tst 2>/dev/null
 
- # test to see if srcdir already configured
+# test to see if srcdir already configured
 if test "`cd $srcdir && pwd`" != "`pwd`" &&
    test -f $srcdir/config.status; then
   { { echo "$as_me:$LINENO: error: source directory already configured; run \"make distclean\" there first" >&5
@@ -1742,9 +1774,6 @@ AUTOHEADER=${AUTOHEADER-"${am_missing_run}autoheader"}
 
 
 MAKEINFO=${MAKEINFO-"${am_missing_run}makeinfo"}
-
-
-AMTAR=${AMTAR-"${am_missing_run}tar"}
 
 install_sh=${install_sh-"$am_aux_dir/install-sh"}
 
@@ -1838,6 +1867,13 @@ INSTALL_STRIP_PROGRAM="\${SHELL} \$(install_sh) -c -s"
 
 # We need awk for the "check" target.  The system "awk" is bad on
 # some platforms.
+# Always define AMTAR for backward compatibility.
+
+AMTAR=${AMTAR-"${am_missing_run}tar"}
+
+am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
+
+
 
 
 
@@ -2905,7 +2941,9 @@ else
     : > sub/conftest.c
     for i in 1 2 3 4 5 6; do
       echo '#include "conftst'$i'.h"' >> sub/conftest.c
-      : > sub/conftst$i.h
+      # Using `: > sub/conftst$i.h' creates only sub/conftst1.h with
+      # Solaris 8's {/usr,}/bin/sh.
+      touch sub/conftst$i.h
     done
     echo "${am__include} ${am__quote}sub/conftest.Po${am__quote}" > confmf
 
@@ -2933,9 +2971,14 @@ else
        grep sub/conftest.${OBJEXT-o} sub/conftest.Po > /dev/null 2>&1 &&
        ${MAKE-make} -s -f confmf > /dev/null 2>&1; then
       # icc doesn't choke on unknown options, it will just issue warnings
-      # (even with -Werror).  So we grep stderr for any message
-      # that says an option was ignored.
-      if grep 'ignoring option' conftest.err >/dev/null 2>&1; then :; else
+      # or remarks (even with -Werror).  So we grep stderr for any message
+      # that says an option was ignored or not supported.
+      # When given -MP, icc 7.0 and 7.1 complain thusly:
+      #   icc: Command line warning: ignoring option '-M'; no argument required
+      # The diagnosis changed in icc 8.0:
+      #   icc: Command line remark: option '-MP' not supported
+      if (grep 'ignoring option' conftest.err ||
+          grep 'not supported' conftest.err) >/dev/null 2>&1; then :; else
         am_cv_CC_dependencies_compiler_type=$depmode
         break
       fi
@@ -3158,9 +3201,6 @@ echo "$as_me:$LINENO: checking for XDPYINFO" >&5
 echo $ECHO_N "checking for XDPYINFO... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XDPYINFO_CFLAGS"; then
-        pkg_cv_XDPYINFO_CFLAGS="$XDPYINFO_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xext x11 xtst\"") >&5
   ($PKG_CONFIG --exists --print-errors "xext x11 xtst") 2>&5
@@ -3171,14 +3211,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XDPYINFO_LIBS"; then
-        pkg_cv_XDPYINFO_LIBS="$XDPYINFO_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xext x11 xtst\"") >&5
   ($PKG_CONFIG --exists --print-errors "xext x11 xtst") 2>&5
@@ -3189,59 +3225,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XDPYINFO_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xext x11 xtst"`
-        else
-	        XDPYINFO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xext x11 xtst"`
-        fi
+	XDPYINFO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xext x11 xtst"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XDPYINFO_PKG_ERRORS" >&5
+	echo "$XDPYINFO_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xext x11 xtst) were not met:
-
-$XDPYINFO_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xext x11 xtst) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XDPYINFO_CFLAGS
-and XDPYINFO_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xext x11 xtst) were not met:
-
-$XDPYINFO_PKG_ERRORS
-
+Alternatively you may set the XDPYINFO_CFLAGS and XDPYINFO_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xext x11 xtst) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XDPYINFO_CFLAGS
-and XDPYINFO_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XDPYINFO_CFLAGS and XDPYINFO_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XDPYINFO_CFLAGS
-and XDPYINFO_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XDPYINFO_CFLAGS and XDPYINFO_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -3249,9 +3264,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XDPYINFO_CFLAGS
-and XDPYINFO_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XDPYINFO_CFLAGS and XDPYINFO_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -3273,9 +3288,6 @@ echo "$as_me:$LINENO: checking for DPY_X11" >&5
 echo $ECHO_N "checking for DPY_X11... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_X11_CFLAGS"; then
-        pkg_cv_DPY_X11_CFLAGS="$DPY_X11_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -3286,14 +3298,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_X11_LIBS"; then
-        pkg_cv_DPY_X11_LIBS="$DPY_X11_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -3304,59 +3312,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DPY_X11_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11"`
-        else
-	        DPY_X11_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
-        fi
+	DPY_X11_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DPY_X11_PKG_ERRORS" >&5
+	echo "$DPY_X11_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (x11) were not met:
-
-$DPY_X11_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables DPY_X11_CFLAGS
-and DPY_X11_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (x11) were not met:
-
-$DPY_X11_PKG_ERRORS
-
+Alternatively you may set the DPY_X11_CFLAGS and DPY_X11_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables DPY_X11_CFLAGS
-and DPY_X11_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the DPY_X11_CFLAGS and DPY_X11_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables DPY_X11_CFLAGS
-and DPY_X11_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the DPY_X11_CFLAGS and DPY_X11_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -3364,9 +3351,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables DPY_X11_CFLAGS
-and DPY_X11_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the DPY_X11_CFLAGS and DPY_X11_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -3386,9 +3373,6 @@ echo "$as_me:$LINENO: checking for DPY_XEXT" >&5
 echo $ECHO_N "checking for DPY_XEXT... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XEXT_CFLAGS"; then
-        pkg_cv_DPY_XEXT_CFLAGS="$DPY_XEXT_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xext\"") >&5
   ($PKG_CONFIG --exists --print-errors "xext") 2>&5
@@ -3399,14 +3383,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XEXT_LIBS"; then
-        pkg_cv_DPY_XEXT_LIBS="$DPY_XEXT_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xext\"") >&5
   ($PKG_CONFIG --exists --print-errors "xext") 2>&5
@@ -3417,27 +3397,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DPY_XEXT_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xext"`
-        else
-	        DPY_XEXT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xext"`
-        fi
+	DPY_XEXT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xext"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DPY_XEXT_PKG_ERRORS" >&5
+	echo "$DPY_XEXT_PKG_ERRORS" 1>&5
 
 	echo "not found"
 elif test $pkg_failed = untried; then
@@ -3520,9 +3487,6 @@ echo "$as_me:$LINENO: checking for DPY_XKB" >&5
 echo $ECHO_N "checking for DPY_XKB... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XKB_CFLAGS"; then
-        pkg_cv_DPY_XKB_CFLAGS="$DPY_XKB_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -3533,14 +3497,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XKB_LIBS"; then
-        pkg_cv_DPY_XKB_LIBS="$DPY_XKB_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -3551,27 +3511,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DPY_XKB_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11"`
-        else
-	        DPY_XKB_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
-        fi
+	DPY_XKB_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DPY_XKB_PKG_ERRORS" >&5
+	echo "$DPY_XKB_PKG_ERRORS" 1>&5
 
 	echo "not found"
 elif test $pkg_failed = untried; then
@@ -3654,9 +3601,6 @@ echo "$as_me:$LINENO: checking for DPY_XF86VIDMODE" >&5
 echo $ECHO_N "checking for DPY_XF86VIDMODE... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XF86VIDMODE_CFLAGS"; then
-        pkg_cv_DPY_XF86VIDMODE_CFLAGS="$DPY_XF86VIDMODE_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xxf86vm\"") >&5
   ($PKG_CONFIG --exists --print-errors "xxf86vm") 2>&5
@@ -3667,14 +3611,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XF86VIDMODE_LIBS"; then
-        pkg_cv_DPY_XF86VIDMODE_LIBS="$DPY_XF86VIDMODE_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xxf86vm\"") >&5
   ($PKG_CONFIG --exists --print-errors "xxf86vm") 2>&5
@@ -3685,27 +3625,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DPY_XF86VIDMODE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xxf86vm"`
-        else
-	        DPY_XF86VIDMODE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xxf86vm"`
-        fi
+	DPY_XF86VIDMODE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xxf86vm"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DPY_XF86VIDMODE_PKG_ERRORS" >&5
+	echo "$DPY_XF86VIDMODE_PKG_ERRORS" 1>&5
 
 	echo "not found"
 elif test $pkg_failed = untried; then
@@ -3788,9 +3715,6 @@ echo "$as_me:$LINENO: checking for DPY_XF86DGA" >&5
 echo $ECHO_N "checking for DPY_XF86DGA... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XF86DGA_CFLAGS"; then
-        pkg_cv_DPY_XF86DGA_CFLAGS="$DPY_XF86DGA_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xxf86dga\"") >&5
   ($PKG_CONFIG --exists --print-errors "xxf86dga") 2>&5
@@ -3801,14 +3725,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XF86DGA_LIBS"; then
-        pkg_cv_DPY_XF86DGA_LIBS="$DPY_XF86DGA_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xxf86dga\"") >&5
   ($PKG_CONFIG --exists --print-errors "xxf86dga") 2>&5
@@ -3819,27 +3739,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DPY_XF86DGA_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xxf86dga"`
-        else
-	        DPY_XF86DGA_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xxf86dga"`
-        fi
+	DPY_XF86DGA_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xxf86dga"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DPY_XF86DGA_PKG_ERRORS" >&5
+	echo "$DPY_XF86DGA_PKG_ERRORS" 1>&5
 
 	echo "not found"
 elif test $pkg_failed = untried; then
@@ -3923,9 +3830,6 @@ echo "$as_me:$LINENO: checking for DPY_XF86MISC" >&5
 echo $ECHO_N "checking for DPY_XF86MISC... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XF86MISC_CFLAGS"; then
-        pkg_cv_DPY_XF86MISC_CFLAGS="$DPY_XF86MISC_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xxf86misc\"") >&5
   ($PKG_CONFIG --exists --print-errors "xxf86misc") 2>&5
@@ -3936,14 +3840,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XF86MISC_LIBS"; then
-        pkg_cv_DPY_XF86MISC_LIBS="$DPY_XF86MISC_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xxf86misc\"") >&5
   ($PKG_CONFIG --exists --print-errors "xxf86misc") 2>&5
@@ -3954,27 +3854,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DPY_XF86MISC_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xxf86misc"`
-        else
-	        DPY_XF86MISC_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xxf86misc"`
-        fi
+	DPY_XF86MISC_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xxf86misc"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DPY_XF86MISC_PKG_ERRORS" >&5
+	echo "$DPY_XF86MISC_PKG_ERRORS" 1>&5
 
 	echo "not found"
 elif test $pkg_failed = untried; then
@@ -4058,9 +3945,6 @@ echo "$as_me:$LINENO: checking for DPY_XINPUT" >&5
 echo $ECHO_N "checking for DPY_XINPUT... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XINPUT_CFLAGS"; then
-        pkg_cv_DPY_XINPUT_CFLAGS="$DPY_XINPUT_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xi\"") >&5
   ($PKG_CONFIG --exists --print-errors "xi") 2>&5
@@ -4071,14 +3955,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XINPUT_LIBS"; then
-        pkg_cv_DPY_XINPUT_LIBS="$DPY_XINPUT_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xi\"") >&5
   ($PKG_CONFIG --exists --print-errors "xi") 2>&5
@@ -4089,27 +3969,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DPY_XINPUT_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xi"`
-        else
-	        DPY_XINPUT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xi"`
-        fi
+	DPY_XINPUT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xi"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DPY_XINPUT_PKG_ERRORS" >&5
+	echo "$DPY_XINPUT_PKG_ERRORS" 1>&5
 
 	echo "not found"
 elif test $pkg_failed = untried; then
@@ -4191,9 +4058,6 @@ echo "$as_me:$LINENO: checking for DPY_XRENDER" >&5
 echo $ECHO_N "checking for DPY_XRENDER... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XRENDER_CFLAGS"; then
-        pkg_cv_DPY_XRENDER_CFLAGS="$DPY_XRENDER_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xrender\"") >&5
   ($PKG_CONFIG --exists --print-errors "xrender") 2>&5
@@ -4204,14 +4068,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XRENDER_LIBS"; then
-        pkg_cv_DPY_XRENDER_LIBS="$DPY_XRENDER_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xrender\"") >&5
   ($PKG_CONFIG --exists --print-errors "xrender") 2>&5
@@ -4222,27 +4082,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DPY_XRENDER_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xrender"`
-        else
-	        DPY_XRENDER_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xrender"`
-        fi
+	DPY_XRENDER_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xrender"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DPY_XRENDER_PKG_ERRORS" >&5
+	echo "$DPY_XRENDER_PKG_ERRORS" 1>&5
 
 	echo "not found"
 elif test $pkg_failed = untried; then
@@ -4324,9 +4171,6 @@ echo "$as_me:$LINENO: checking for DPY_XINERAMA" >&5
 echo $ECHO_N "checking for DPY_XINERAMA... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XINERAMA_CFLAGS"; then
-        pkg_cv_DPY_XINERAMA_CFLAGS="$DPY_XINERAMA_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xinerama\"") >&5
   ($PKG_CONFIG --exists --print-errors "xinerama") 2>&5
@@ -4337,14 +4181,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XINERAMA_LIBS"; then
-        pkg_cv_DPY_XINERAMA_LIBS="$DPY_XINERAMA_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xinerama\"") >&5
   ($PKG_CONFIG --exists --print-errors "xinerama") 2>&5
@@ -4355,27 +4195,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DPY_XINERAMA_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xinerama"`
-        else
-	        DPY_XINERAMA_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xinerama"`
-        fi
+	DPY_XINERAMA_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xinerama"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DPY_XINERAMA_PKG_ERRORS" >&5
+	echo "$DPY_XINERAMA_PKG_ERRORS" 1>&5
 
 	echo "not found"
 elif test $pkg_failed = untried; then
@@ -4457,9 +4284,6 @@ echo "$as_me:$LINENO: checking for DPY_DMX" >&5
 echo $ECHO_N "checking for DPY_DMX... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_DMX_CFLAGS"; then
-        pkg_cv_DPY_DMX_CFLAGS="$DPY_DMX_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"dmx\"") >&5
   ($PKG_CONFIG --exists --print-errors "dmx") 2>&5
@@ -4470,14 +4294,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_DMX_LIBS"; then
-        pkg_cv_DPY_DMX_LIBS="$DPY_DMX_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"dmx\"") >&5
   ($PKG_CONFIG --exists --print-errors "dmx") 2>&5
@@ -4488,27 +4308,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DPY_DMX_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "dmx"`
-        else
-	        DPY_DMX_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "dmx"`
-        fi
+	DPY_DMX_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "dmx"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DPY_DMX_PKG_ERRORS" >&5
+	echo "$DPY_DMX_PKG_ERRORS" 1>&5
 
 	echo "not found"
 elif test $pkg_failed = untried; then
@@ -4590,9 +4397,6 @@ echo "$as_me:$LINENO: checking for DPY_XPRINT" >&5
 echo $ECHO_N "checking for DPY_XPRINT... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XPRINT_CFLAGS"; then
-        pkg_cv_DPY_XPRINT_CFLAGS="$DPY_XPRINT_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xp") 2>&5
@@ -4603,14 +4407,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XPRINT_LIBS"; then
-        pkg_cv_DPY_XPRINT_LIBS="$DPY_XPRINT_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xp") 2>&5
@@ -4621,27 +4421,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DPY_XPRINT_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xp"`
-        else
-	        DPY_XPRINT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xp"`
-        fi
+	DPY_XPRINT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xp"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DPY_XPRINT_PKG_ERRORS" >&5
+	echo "$DPY_XPRINT_PKG_ERRORS" 1>&5
 
 	echo "not found"
 elif test $pkg_failed = untried; then
@@ -4723,9 +4510,6 @@ echo "$as_me:$LINENO: checking for DPY_XTST" >&5
 echo $ECHO_N "checking for DPY_XTST... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XTST_CFLAGS"; then
-        pkg_cv_DPY_XTST_CFLAGS="$DPY_XTST_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xtst\"") >&5
   ($PKG_CONFIG --exists --print-errors "xtst") 2>&5
@@ -4736,14 +4520,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DPY_XTST_LIBS"; then
-        pkg_cv_DPY_XTST_LIBS="$DPY_XTST_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xtst\"") >&5
   ($PKG_CONFIG --exists --print-errors "xtst") 2>&5
@@ -4754,27 +4534,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DPY_XTST_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xtst"`
-        else
-	        DPY_XTST_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xtst"`
-        fi
+	DPY_XTST_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xtst"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DPY_XTST_PKG_ERRORS" >&5
+	echo "$DPY_XTST_PKG_ERRORS" 1>&5
 
 	echo "not found"
 elif test $pkg_failed = untried; then
@@ -4908,75 +4675,47 @@ host_os=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
 
 
 if test x$APP_MAN_SUFFIX = x    ; then
-    case $host_os in
-	linux*)	APP_MAN_SUFFIX=1x ;;
-	*)	APP_MAN_SUFFIX=1  ;;
-    esac
+    APP_MAN_SUFFIX=1
 fi
 if test x$APP_MAN_DIR = x    ; then
-    case $host_os in
-	linux*)	APP_MAN_DIR='$(mandir)/man1' ;;
-	*)	APP_MAN_DIR='$(mandir)/man$(APP_MAN_SUFFIX)' ;;
-    esac
+    APP_MAN_DIR='$(mandir)/man$(APP_MAN_SUFFIX)'
 fi
 
 if test x$LIB_MAN_SUFFIX = x    ; then
-    case $host_os in
-	linux*)	LIB_MAN_SUFFIX=3x ;;
-	*)	LIB_MAN_SUFFIX=3  ;;
-    esac
+    LIB_MAN_SUFFIX=3
 fi
 if test x$LIB_MAN_DIR = x    ; then
-    case $host_os in
-	linux*)	LIB_MAN_DIR='$(mandir)/man3' ;;
-	*)	LIB_MAN_DIR='$(mandir)/man$(LIB_MAN_SUFFIX)' ;;
-    esac
+    LIB_MAN_DIR='$(mandir)/man$(LIB_MAN_SUFFIX)'
 fi
 
 if test x$FILE_MAN_SUFFIX = x    ; then
     case $host_os in
-	linux*)		FILE_MAN_SUFFIX=5x ;;
 	solaris*)	FILE_MAN_SUFFIX=4  ;;
 	*)		FILE_MAN_SUFFIX=5  ;;
     esac
 fi
 if test x$FILE_MAN_DIR = x    ; then
-    case $host_os in
-	linux*)	FILE_MAN_DIR='$(mandir)/man5' ;;
-	*)	FILE_MAN_DIR='$(mandir)/man$(FILE_MAN_SUFFIX)' ;;
-    esac
+    FILE_MAN_DIR='$(mandir)/man$(FILE_MAN_SUFFIX)'
 fi
 
-# In Imake's linux.cf, the misc man suffix & dir was only changed for
-# LinuxDebian, not other Linuxes, so we leave it unchanged here
 if test x$MISC_MAN_SUFFIX = x    ; then
     case $host_os in
-#	linux*)		MISC_MAN_SUFFIX=7x ;;
 	solaris*)	MISC_MAN_SUFFIX=5  ;;
 	*)		MISC_MAN_SUFFIX=7  ;;
     esac
 fi
 if test x$MISC_MAN_DIR = x    ; then
-    case $host_os in
-#	linux*)	MISC_MAN_DIR='$(mandir)/man7' ;;
-	*)	MISC_MAN_DIR='$(mandir)/man$(MISC_MAN_SUFFIX)' ;;
-    esac
+    MISC_MAN_DIR='$(mandir)/man$(MISC_MAN_SUFFIX)'
 fi
 
-# In Imake's linux.cf, the driver man suffix & dir was only changed for
-# LinuxDebian, not other Linuxes, so we leave it unchanged here
 if test x$DRIVER_MAN_SUFFIX = x    ; then
     case $host_os in
-#	linux*)		DRIVER_MAN_SUFFIX=4x ;;
 	solaris*)	DRIVER_MAN_SUFFIX=7  ;;
 	*)		DRIVER_MAN_SUFFIX=4  ;;
     esac
 fi
 if test x$DRIVER_MAN_DIR = x    ; then
-    case $host_os in
-#	linux*)	DRIVER_MAN_DIR='$(mandir)/man4' ;;
-	*)	DRIVER_MAN_DIR='$(mandir)/man$(DRIVER_MAN_SUFFIX)' ;;
-    esac
+    DRIVER_MAN_DIR='$(mandir)/man$(DRIVER_MAN_SUFFIX)'
 fi
 
 if test x$ADMIN_MAN_SUFFIX = x    ; then
@@ -5676,14 +5415,17 @@ s,@AUTOCONF@,$AUTOCONF,;t t
 s,@AUTOMAKE@,$AUTOMAKE,;t t
 s,@AUTOHEADER@,$AUTOHEADER,;t t
 s,@MAKEINFO@,$MAKEINFO,;t t
-s,@AMTAR@,$AMTAR,;t t
 s,@install_sh@,$install_sh,;t t
 s,@STRIP@,$STRIP,;t t
 s,@ac_ct_STRIP@,$ac_ct_STRIP,;t t
 s,@INSTALL_STRIP_PROGRAM@,$INSTALL_STRIP_PROGRAM,;t t
+s,@mkdir_p@,$mkdir_p,;t t
 s,@AWK@,$AWK,;t t
 s,@SET_MAKE@,$SET_MAKE,;t t
 s,@am__leading_dot@,$am__leading_dot,;t t
+s,@AMTAR@,$AMTAR,;t t
+s,@am__tar@,$am__tar,;t t
+s,@am__untar@,$am__untar,;t t
 s,@MAINTAINER_MODE_TRUE@,$MAINTAINER_MODE_TRUE,;t t
 s,@MAINTAINER_MODE_FALSE@,$MAINTAINER_MODE_FALSE,;t t
 s,@MAINT@,$MAINT,;t t
@@ -6375,27 +6117,21 @@ echo X"$mf" |
   else
     continue
   fi
-  grep '^DEP_FILES *= *[^ #]' < "$mf" > /dev/null || continue
-  # Extract the definition of DEP_FILES from the Makefile without
-  # running `make'.
-  DEPDIR=`sed -n -e '/^DEPDIR = / s///p' < "$mf"`
+  # Extract the definition of DEPDIR, am__include, and am__quote
+  # from the Makefile without running `make'.
+  DEPDIR=`sed -n 's/^DEPDIR = //p' < "$mf"`
   test -z "$DEPDIR" && continue
+  am__include=`sed -n 's/^am__include = //p' < "$mf"`
+  test -z "am__include" && continue
+  am__quote=`sed -n 's/^am__quote = //p' < "$mf"`
   # When using ansi2knr, U may be empty or an underscore; expand it
-  U=`sed -n -e '/^U = / s///p' < "$mf"`
-  test -d "$dirpart/$DEPDIR" || mkdir "$dirpart/$DEPDIR"
-  # We invoke sed twice because it is the simplest approach to
-  # changing $(DEPDIR) to its actual value in the expansion.
-  for file in `sed -n -e '
-    /^DEP_FILES = .*\\\\$/ {
-      s/^DEP_FILES = //
-      :loop
-	s/\\\\$//
-	p
-	n
-	/\\\\$/ b loop
-      p
-    }
-    /^DEP_FILES = / s/^DEP_FILES = //p' < "$mf" | \
+  U=`sed -n 's/^U = //p' < "$mf"`
+  # Find all dependency output files, they are included files with
+  # $(DEPDIR) in their names.  We invoke sed twice because it is the
+  # simplest approach to changing $(DEPDIR) to its actual value in the
+  # expansion.
+  for file in `sed -n "
+    s/^$am__include $am__quote\(.*(DEPDIR).*\)$am__quote"'$/\1/p' <"$mf" | \
        sed -e 's/\$(DEPDIR)/'"$DEPDIR"'/g' -e 's/\$U/'"$U"'/g'`; do
     # Make sure the directory exists.
     test -f "$dirpart/$file" && continue

@@ -665,7 +665,7 @@ sessreg.$(APP_MAN_SUFFIX): filenames.sed
 
 filenames.sed: filenames.sed.c
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	    $(CPPFLAGS) $(srcdir)/filenames.sed.c | grep 's\|__' > $@
+	    $(CPPFLAGS) $(srcdir)/filenames.sed.c | grep 's|__' > $@
 
 @LINT_TRUE@lint:
 @LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(sessreg_SOURCES)

@@ -310,7 +310,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP RAWCPP RAWCPPFLAGS SED build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP PKG_CONFIG ac_pt_PKG_CONFIG XINIT_CFLAGS XINIT_LIBS MCOOKIE STARTX_COOKIE_FLAGS SHELL_CMD ARCHMANDEFS XRDB XMODMAP TWM XCLOCK XTERM XSERVER XAUTH XINIT APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP RAWCPP RAWCPPFLAGS SED build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP PKG_CONFIG ac_pt_PKG_CONFIG XINIT_CFLAGS XINIT_LIBS MCOOKIE STARTX_COOKIE_FLAGS SHELL_CMD ARCHMANDEFS XRDB XMODMAP TWM XCLOCK XTERM XSERVER XAUTH XINIT WM XCONSOLE APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -880,6 +880,9 @@ Optional Packages:
   --with-xserver=XSERVER  Path to default X server
   --with-xauth=XAUTH      Path to xauth
   --with-xinit=XINIT      Path to xinit
+  --with-wm=WM            Path to default window manager
+  --with-xconsole=XCONSOLE
+                          Path to xconsole
   --with-release-version=STRING
                           Use release version string in package name
 
@@ -4304,6 +4307,8 @@ DEFAULT_XTERM=xterm
 DEFAULT_XSERVER=${bindir}/X
 DEFAULT_XAUTH=xauth
 DEFAULT_XINIT=xinit
+DEFAULT_WM=fvwm
+DEFAULT_XCONSOLE=xconsole
 
 
 # Check whether --with-xrdb or --without-xrdb was given.
@@ -4375,6 +4380,24 @@ if test "${with_xinit+set}" = set; then
   XINIT="$withval"
 else
   XINIT="$DEFAULT_XINIT"
+fi;
+
+
+# Check whether --with-wm or --without-wm was given.
+if test "${with_wm+set}" = set; then
+  withval="$with_wm"
+  WM="$withval"
+else
+  WM="$DEFAULT_WM"
+fi;
+
+
+# Check whether --with-xconsole or --without-xconsole was given.
+if test "${with_xconsole+set}" = set; then
+  withval="$with_xconsole"
+  XCONSOLE="$withval"
+else
+  XCONSOLE="$DEFAULT_XCONSOLE"
 fi;
 
 # Checks for pkg-config packages
@@ -4489,9 +4512,6 @@ echo "$as_me:$LINENO: checking for XINIT" >&5
 echo $ECHO_N "checking for XINIT... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XINIT_CFLAGS"; then
-        pkg_cv_XINIT_CFLAGS="$XINIT_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -4502,14 +4522,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XINIT_LIBS"; then
-        pkg_cv_XINIT_LIBS="$XINIT_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -4520,59 +4536,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XINIT_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11"`
-        else
-	        XINIT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
-        fi
+	XINIT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XINIT_PKG_ERRORS" >&5
+	echo "$XINIT_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (x11) were not met:
-
-$XINIT_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XINIT_CFLAGS
-and XINIT_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (x11) were not met:
-
-$XINIT_PKG_ERRORS
-
+Alternatively you may set the XINIT_CFLAGS and XINIT_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XINIT_CFLAGS
-and XINIT_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XINIT_CFLAGS and XINIT_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XINIT_CFLAGS
-and XINIT_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XINIT_CFLAGS and XINIT_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -4580,9 +4575,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XINIT_CFLAGS
-and XINIT_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XINIT_CFLAGS and XINIT_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -4650,6 +4645,13 @@ fi
 done
 test -n "$MCOOKIE" || MCOOKIE="$MCOOKIE"
 
+
+case $host_os in
+	*openbsd*)
+	MCOOKIE='dd if=/dev/urandom bs=16 count=1 2>/dev/null | hexdump -e \\\"%08x\\\"'
+	;;
+esac
+
 if test "x$MCOOKIE" != x ; then
 	STARTX_COOKIE_FLAGS='-DHAS_COOKIE_MAKER -DMK_COOKIE="$(MCOOKIE)"'
 fi
@@ -4666,6 +4668,8 @@ case $host_os in
 	ARCHMANDEFS=""
 	;;
 esac
+
+
 
 
 
@@ -5489,6 +5493,8 @@ s,@XTERM@,$XTERM,;t t
 s,@XSERVER@,$XSERVER,;t t
 s,@XAUTH@,$XAUTH,;t t
 s,@XINIT@,$XINIT,;t t
+s,@WM@,$WM,;t t
+s,@XCONSOLE@,$XCONSOLE,;t t
 s,@APP_MAN_SUFFIX@,$APP_MAN_SUFFIX,;t t
 s,@LIB_MAN_SUFFIX@,$LIB_MAN_SUFFIX,;t t
 s,@FILE_MAN_SUFFIX@,$FILE_MAN_SUFFIX,;t t

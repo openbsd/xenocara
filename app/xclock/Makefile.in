@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.in,v 1.1.1.1 2006/11/25 20:29:54 matthieu Exp $
+# $Id: Makefile.in,v 1.2 2006/11/26 17:54:06 matthieu Exp $
 # 
 #  Copyright 2005  Red Hat, Inc.
 # 

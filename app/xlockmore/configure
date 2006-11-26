@@ -7948,7 +7948,7 @@ _ACEOF
 _ACEOF
 
   fi
-  XLOCKLIBS="${XLOCKLIBS} -lfreetype"
+  XLOCKLIBS="${XLOCKLIBS} -lfreetype -lz"
   test "x$freetype_includes" = xNONE && freetype_includes=$ac_freetype_includes
   test "x$freetype_libraries" = xNONE && freetype_libraries=$ac_freetype_libraries
   ac_cv_path_freetype="no_freetype= ac_freetype_includes=$freetype_includes ac_freetype_libraries=$freetype_libraries"
@@ -9823,7 +9823,7 @@ _ACEOF
     esac
   ;;
 
-  *-*-freebsd* | *-*-openbsd* | *-*-netbsd* | *-*-dragonfly* )
+  *-*-freebsd* |  *-*-netbsd* | *-*-dragonfly* )
     BITMAPTYPE="bsd"
     PIXMAPTYPE="bsd"
     INSTPGMFLAGS="-s -o root -m 4111"
@@ -9841,6 +9841,11 @@ _ACEOF
     XMLOCKLDFLAGS="-Wl,-R${XMLOCK_LDFLAGS}"
   ;;
 
+  *-*-openbsd*)
+	BITMAPTYPE="blowfish"
+	PIXMAPTYPE="blowfish"
+	INSTPGMFLAGS="-s -g auth -m 2755"
+  ;;
   *-*-dgux5* )
     BITMAPTYPE="x11"
     PIXMAPTYPE="x11"
@@ -13033,10 +13038,9 @@ for ac_i in : $LIBOBJS; do test "x$ac_i" = x: && continue
   # 1. Remove the extension, and $U if already installed.
   ac_i=`echo "$ac_i" |
 	 sed 's/\$U\././;s/\.o$//;s/\.obj$//'`
-  # 2. Prepend LIBOBJDIR.  When used with automake>=1.10 LIBOBJDIR
-  #    will be set to the directory where LIBOBJS objects are built.
-  ac_libobjs="$ac_libobjs \${LIBOBJDIR}$ac_i\$U.$ac_objext"
-  ac_ltlibobjs="$ac_ltlibobjs \${LIBOBJDIR}$ac_i"'$U.lo'
+  # 2. Add them.
+  ac_libobjs="$ac_libobjs $ac_i\$U.$ac_objext"
+  ac_ltlibobjs="$ac_ltlibobjs $ac_i"'$U.lo'
 done
 LIBOBJS=$ac_libobjs
 

@@ -59,6 +59,9 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xconsole$(EXEEXT)
+@USE_PRIVSEP_TRUE@am__append_1 = \
+@USE_PRIVSEP_TRUE@	privsep.c
+
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
@@ -77,7 +80,9 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" \
 	"$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xconsole_OBJECTS = xconsole-xconsole.$(OBJEXT)
+am__xconsole_SOURCES_DIST = xconsole.c privsep.c
+@USE_PRIVSEP_TRUE@am__objects_1 = xconsole-privsep.$(OBJEXT)
+am_xconsole_OBJECTS = xconsole-xconsole.$(OBJEXT) $(am__objects_1)
 xconsole_OBJECTS = $(am_xconsole_OBJECTS)
 am__DEPENDENCIES_1 =
 xconsole_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -89,7 +94,7 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(xconsole_SOURCES)
-DIST_SOURCES = $(xconsole_SOURCES)
+DIST_SOURCES = $(am__xconsole_SOURCES_DIST)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -129,6 +134,7 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
@@ -138,6 +144,7 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
@@ -171,6 +178,8 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 TMP_XAW_CFLAGS = @TMP_XAW_CFLAGS@
 TMP_XAW_LIBS = @TMP_XAW_LIBS@
+USE_PRIVSEP_FALSE = @USE_PRIVSEP_FALSE@
+USE_PRIVSEP_TRUE = @USE_PRIVSEP_TRUE@
 VERSION = @VERSION@
 XAW_USE_XPRINT_FALSE = @XAW_USE_XPRINT_FALSE@
 XAW_USE_XPRINT_TRUE = @XAW_USE_XPRINT_TRUE@
@@ -212,6 +221,7 @@ mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 prefix = @prefix@
+privsep_user = @privsep_user@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
@@ -219,9 +229,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 xconsole_CFLAGS = $(XCONSOLE_CFLAGS)
 xconsole_LDADD = $(XCONSOLE_LIBS)
-xconsole_SOURCES = \
-        xconsole.c
-
+xconsole_SOURCES = xconsole.c $(am__append_1)
 appman_PRE = \
         xconsole.man
 
@@ -340,6 +348,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xconsole-privsep.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xconsole-xconsole.Po@am__quote@
 
 .c.o:
@@ -369,6 +378,20 @@ xconsole-xconsole.obj: xconsole.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xconsole.c' object='xconsole-xconsole.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xconsole_CFLAGS) $(CFLAGS) -c -o xconsole-xconsole.obj `if test -f 'xconsole.c'; then $(CYGPATH_W) 'xconsole.c'; else $(CYGPATH_W) '$(srcdir)/xconsole.c'; fi`
+
+xconsole-privsep.o: privsep.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xconsole_CFLAGS) $(CFLAGS) -MT xconsole-privsep.o -MD -MP -MF "$(DEPDIR)/xconsole-privsep.Tpo" -c -o xconsole-privsep.o `test -f 'privsep.c' || echo '$(srcdir)/'`privsep.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xconsole-privsep.Tpo" "$(DEPDIR)/xconsole-privsep.Po"; else rm -f "$(DEPDIR)/xconsole-privsep.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='privsep.c' object='xconsole-privsep.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xconsole_CFLAGS) $(CFLAGS) -c -o xconsole-privsep.o `test -f 'privsep.c' || echo '$(srcdir)/'`privsep.c
+
+xconsole-privsep.obj: privsep.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xconsole_CFLAGS) $(CFLAGS) -MT xconsole-privsep.obj -MD -MP -MF "$(DEPDIR)/xconsole-privsep.Tpo" -c -o xconsole-privsep.obj `if test -f 'privsep.c'; then $(CYGPATH_W) 'privsep.c'; else $(CYGPATH_W) '$(srcdir)/privsep.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xconsole-privsep.Tpo" "$(DEPDIR)/xconsole-privsep.Po"; else rm -f "$(DEPDIR)/xconsole-privsep.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='privsep.c' object='xconsole-privsep.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xconsole_CFLAGS) $(CFLAGS) -c -o xconsole-privsep.obj `if test -f 'privsep.c'; then $(CYGPATH_W) 'privsep.c'; else $(CYGPATH_W) '$(srcdir)/privsep.c'; fi`
 uninstall-info-am:
 install-appdefaultDATA: $(appdefault_DATA)
 	@$(NORMAL_INSTALL)
@@ -482,6 +505,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -666,8 +692,8 @@ uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appdefaultDATA install-appmanDATA install-binPROGRAMS \
@@ -685,6 +711,13 @@ uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	GIT_DIR=${srcdir}/.git git-log --name-only > ChangeLog
+
+dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
