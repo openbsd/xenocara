@@ -1,0 +1,84 @@
+2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/ct_driver.c:
+	Bump to 1.1.1 for Xv changes.
+
+2006-04-07  Aaron Plattner  <aplattner@nvidia.com>
+
+	* src/ct_video.c: (CHIPSPutImage):
+	Add a DrawablePtr argument to the XV functions to pave the way for
+	redirected video.
+
+2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/ct_accel.c:
+	* src/ct_bank.c:
+	* src/ct_cursor.c:
+	* src/ct_ddc.c:
+	* src/ct_dga.c:
+	* src/ct_driver.c:
+	* src/ct_driver.h:
+	* src/ct_regs.c:
+	* src/ct_shadow.c:
+	* src/ct_video.c:
+	Unlibcwrap.  Bump server version requirement.  Bump to 1.1.0.
+
+	* src/ct_driver.c:
+	VERSION -> CHIPS_VERSION
+
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-19  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* README.sgml:
+	Fix typo.
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-12-08  Adam Jackson  <ajax@freedesktop.org>
+
+	* src/Makefile.am:
+	Re-fix for #4588, this one actually works.
+
+2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* man/Makefile.am:
+	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Remove extraneous AC_MSG_RESULT.
+
+2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Only build dlloader modules by default.
+
+2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC2 release.
+
+2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update pkgcheck depedencies to work with separate build roots.
+
+2005-10-04  Adam Jackson  <ajax@freedesktop.org>
+
+	* src/Makefile.am:
+	Bug #4588: N-way build of ct_accel.c, as in monolith.
