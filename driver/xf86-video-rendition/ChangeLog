@@ -1,0 +1,318 @@
+commit 59db4ddcaee381595e4a134de3cc5f6eb8de4fe8
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Sun Nov 5 19:01:56 2006 +0100
+
+    Bump to 4.1.2
+
+commit 998f5b0fd8f66d248941c0f827bb4912d3bbde93
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Sun Nov 5 18:59:48 2006 +0100
+
+    Replace ChangeLog with a generated file.
+
+commit d5ffaaa013c8109d894c7015f0258ca1802b0225
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Nov 5 18:14:57 2006 +0100
+
+    Add emacs droppings to .gitignore
+
+commit 9a8c7cc28d80cfb75a55a6896eed25b01f2eb0f6
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Nov 5 18:14:22 2006 +0100
+
+    renamed: .cvsignore -> .gitignore
+
+commit 6dd36416843d033b041864c78832bb4fa6c66fd2
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Nov 5 18:12:02 2006 +0100
+
+    Build fix for systems with <elf_abi.h> instead of <elf.h>. Bugzilla #7707.
+
+commit 9935b3093922798e26d79ae7182d86e0cafa91f5
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Oct 13 18:40:46 2006 -0400
+
+    Bump to 4.1.1
+
+commit 4dfc16c59d34780e514d06d74c6cb8ef9f5ad22f
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Apr 12 20:30:03 2006 +0000
+
+    Bug #6564: Additional #include for POSIX. (Matthieu Herrb)
+
+commit c59c3f4f0854b0bb27a5378d58ebaa3fb0814494
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 19:47:58 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 4.1.0.
+
+commit 0723e761f846fa55e850eba14406a106c784dd52
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Wed Feb 8 13:08:54 2006 +0000
+
+    Rendition: Cull ifdeffed out code which used to call xf86GetClocks.
+        Rendition has programmable dotclock anyway.
+
+commit b8fdfed363a4345cb835c9ea7cd0ceca2db3c964
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:30:01 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit cae4e36cd8723c6932f5b467c0880ece3e53c636
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:54 2005 +0000
+
+    Stub COPYING files
+
+commit 98b1f6995d4f08494e27d3ce5310474bdc10a463
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:18 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 34b294994fa03eeda73293865dcc273c10268b5d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:36 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit 725c2003e1e4ab4b84b8a66fe1178b6824ba227e
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:34 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit ce7ac7a45bc95817afd1eeacfcf512c4285c685e
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:09 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit 0f9d833c0c537ccca8473525b9ddb6e327651230
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:30:00 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 259b50ea6c99df34c1c7fd5664b4f41389ec6f66
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:10 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit c8d78848d2690488be409bfa4cc68b5592ae73a9
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:16 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit ea9a31afadd414b98e7d9da885e8746bc69f2253
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Nov 11 20:23:36 2005 +0000
+
+    Monolith parity, only install the .uc files, not .data
+
+commit 03aef516214058e956706b9be3749863e8e60232
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:31:21 2005 +0000
+
+    Bump version numbers for X11R6.9/X11R7 RC2.
+
+commit 9888b941c84b632d670b4764157b36a677edcd7e
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:20 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 2e19028b6b96675cdd8dc283e25a720eb16a6aca
+Author: Kean Johnson <kean@armory.com>
+Date:   Tue Nov 8 06:33:28 2005 +0000
+
+    See ChangeLog entry 2005-11-07 for details.
+
+commit 625d7c3bee425ecf8d154776448bf15bd97d8525
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:54 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit b7e9f7f67b01848786a53a7a910a1062d334ad72
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:04 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 515103e0af4a3b77ed0954f3fdad492177325ec4
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:54 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 2e861a9f1012c62b2355391217028c276c8f9e8a
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:35 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit 8c7050a21016623fc134877644145a95f2cd74cf
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:04 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit f7efbfaa8c4f68a7c26a87da3f3d1e2a05bfff8c
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Thu Oct 13 21:16:32 2005 +0000
+
+    Remove orphaned references to xf[14]bpp.
+
+commit 63d931868260f82fde17767efb21db592ca4df33
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Oct 4 20:01:03 2005 +0000
+
+    Check in generated README files
+
+commit 31d5b943184c592a232435996d079009bff2410c
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Mon Oct 3 21:22:08 2005 +0000
+
+    - For all drivers that have a <driver>.sgml file, add code in their build
+        system to build the README file at make dist time
+    - in util/macros/xorg-macros.m4, add a new XORG_CHECK_LINUXDOC macro that
+        will check if the required tools and files exist, and if so set a
+        conditional.
+    - util/modular/symlink.sh
+    - Link all the <driver>.sgml to xf86-video-<driver>/README.sgml
+    - Add all the README.<driver> to the list of excluded files
+    - xc/programs/Xserver/hw/xfree86/doc/sgml/SiS.sgml: Various changes to make
+        it spew less warnings when the text file is built.
+
+commit a0aa21229a97d6e2111b607312f4144da05d7f68
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Sep 28 15:58:45 2005 +0000
+
+    Dist data to make rendition driver pass distcheck
+
+commit 7a6cdd84fca0b55fbcebac37e9d2c2dd6ad09d7c
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Sep 27 22:22:16 2005 +0000
+
+    Add some files to the rendition and sunffb build systems
+
+commit f957da4c5f904557804a3113add92969d5c7ae0e
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Sep 14 07:56:55 2005 +0000
+
+    Install the microcode in the modules dir, as the monolithic build does.
+
+commit 8abe45c3ae9d1eada32f001d8e731262fbadd680
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:47 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit ef7921174f0254945afcb897609f7dfe5117081a
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:44 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit a705b3f7934be052f001603b58dce1f089aff91a
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 18:45:47 2005 +0000
+
+    Build system for rendition
+
+commit 9accd592ec5f3afa5777872008d81624bbbffe54
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:29:58 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit 6567bb5128407e9e098b602b1b0d5cd94d7bfc0b
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:55 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit bd23ae5f99a76f7ea784f62a30544f31baedb307
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:29 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 8352e1febb4136d28a66b0daa248b419c420b6af
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:24:13 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit 583f85aad19d41987a089d28acded5e846aff71c
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:42:41 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 3be5437c8270dc20e271f9f692d246dda5b84c60
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:30 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit 7adf752647c09920ce46a347a6e39aa8bc89dd55
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:23 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit acf9f479b6759f9c9d71829ee28ca4db0acfeca4
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:54 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit e3035db18f828ef26fada297dcb3ad3c05d46033
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:23 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 5c1c3690ddc5161f424b16e39f827288bd4e19e1
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Jan 29 08:08:36 2004 +0000
+
+    Importing vendor version xf86-012804-2330 on Thu Jan 29 00:06:33 PST 2004
+
+commit 0f7b2fb64d8a84cf5b4b2394a4d8ed95b56aa4d3
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:38 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit fccdc80b12e14862e954520a14aa3df14e795961
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 5829e7dac95cea113b0895e7a5a3625bbf8a0529
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision
