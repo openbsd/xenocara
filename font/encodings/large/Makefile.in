@@ -56,10 +56,6 @@ encodingsDATA_INSTALL = $(INSTALL_DATA)
 DATA = $(encodings_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
-AMCMDECHO = @AMCMDECHO@
-AMDEPSHOWCMDSAT = @AMDEPSHOWCMDSAT@
-AMPRETTYECHO = @AMPRETTYECHO@
-AMSHOWCMDSAT = @AMSHOWCMDSAT@
 AMTAR = @AMTAR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
@@ -83,7 +79,6 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
-LT_QUIET = @LT_QUIET@
 MAKEINFO = @MAKEINFO@
 MKFONTSCALE = @MKFONTSCALE@
 PACKAGE = @PACKAGE@
@@ -97,32 +92,26 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+ac_ct_STRIP = @ac_ct_STRIP@
 am__leading_dot = @am__leading_dot@
 am__tar = @am__tar@
 am__untar = @am__untar@
 bindir = @bindir@
 build_alias = @build_alias@
 datadir = @datadir@
-datarootdir = @datarootdir@
-docdir = @docdir@
-dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host_alias = @host_alias@
-htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
-localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
-pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
-psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -166,8 +155,7 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	@AMPRETTYECHO@ '  [AUTOMAKE  ]  large/Makefile'; \
-	@AMCMDECHO@ ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  large/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  large/Makefile'; \
 	cd $(top_srcdir) && \
 	  $(AUTOMAKE) --foreign  large/Makefile
 .PRECIOUS: Makefile
@@ -176,31 +164,25 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	  *config.status*) \
 	    cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh;; \
 	  *) \
-	    @AMPRETTYECHO@ '  [SH        ]  config.status $(subdir)/$@'; \
-	    @AMCMDECHO@ ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
+	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe);; \
 	esac;
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
-	@@AMPRETTYECHO@ '  [SH        ]  config.status'
-	@AMSHOWCMDSAT@cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
 $(top_srcdir)/configure:  $(am__configure_deps)
-	@@AMPRETTYECHO@ '  [AUTOCONF  ]  Regenerate'
-	@AMSHOWCMDSAT@cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
-	@@AMPRETTYECHO@ '  [ACLOCAL   ]  Regenerate'
-	@AMSHOWCMDSAT@cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 uninstall-info-am:
 install-encodingsDATA: $(encodings_DATA)
 	@$(NORMAL_INSTALL)
-	@@AMPRETTYECHO@ '  [MKDIR     ]  $(DESTDIR)$(encodingsdir)'
-	@AMSHOWCMDSAT@test -z "$(encodingsdir)" || $(mkdir_p) "$(DESTDIR)$(encodingsdir)"
+	test -z "$(encodingsdir)" || $(mkdir_p) "$(DESTDIR)$(encodingsdir)"
 	@list='$(encodings_DATA)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  @AMPRETTYECHO@ "  [INSTALL   ]  '$$d$$p' -> '$(DESTDIR)$(encodingsdir)/$$f'"; \
-	  @AMCMDECHO@ " $(encodingsDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(encodingsdir)/$$f'"; \
+	  echo " $(encodingsDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(encodingsdir)/$$f'"; \
 	  $(encodingsDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(encodingsdir)/$$f"; \
 	done
 
@@ -208,8 +190,7 @@ uninstall-encodingsDATA:
 	@$(NORMAL_UNINSTALL)
 	@list='$(encodings_DATA)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
-	  @AMPRETTYECHO@ "  [RM        ]  $(DESTDIR)$(encodingsdir)/$$f"; \
-	  @AMCMDECHO@ " rm -f '$(DESTDIR)$(encodingsdir)/$$f'"; \
+	  echo " rm -f '$(DESTDIR)$(encodingsdir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(encodingsdir)/$$f"; \
 	done
 tags: TAGS
@@ -220,7 +201,6 @@ CTAGS:
 
 
 distdir: $(DISTFILES)
-	@@AMPRETTYECHO@ '  [MKDIR     ]  '
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -251,8 +231,8 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	@AMSHOWCMDSAT@for dir in "$(DESTDIR)$(encodingsdir)"; do \
-	  test -z "$$dir" || ( @AMPRETTYECHO@ "  [MKDIR     ]  $$dir"; $(mkdir_p) "$$dir" ); \
+	for dir in "$(DESTDIR)$(encodingsdir)"; do \
+	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
 install-exec: install-exec-am
@@ -264,19 +244,17 @@ install-am: all-am
 
 installcheck: installcheck-am
 install-strip:
-	@AMSHOWCMDSAT@$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
 	  install_sh_PROGRAM="$(INSTALL_STRIP_PROGRAM)" INSTALL_STRIP_FLAG=-s \
 	  `test -z '$(STRIP)' || \
 	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
 mostlyclean-generic:
 
 clean-generic:
-	@@AMPRETTYECHO@ '  [RM        ]  $(CLEANFILES)'
 	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
-	@@AMPRETTYECHO@ '  [RM        ]  $(CONFIG_CLEAN_FILES)'
-	@AMSHOWCMDSAT@-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
+	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -286,8 +264,7 @@ clean: clean-am
 clean-am: clean-generic mostlyclean-am
 
 distclean: distclean-am
-	@@AMPRETTYECHO@ '  [RM        ]  Makefile'
-	@AMSHOWCMDSAT@-rm -f Makefile
+	-rm -f Makefile
 distclean-am: clean-am distclean-generic
 
 dvi: dvi-am
@@ -311,8 +288,7 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	@@AMPRETTYECHO@ '  [RM        ]  Makefile'
-	@AMSHOWCMDSAT@-rm -f Makefile
+	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am

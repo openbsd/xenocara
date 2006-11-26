@@ -79,10 +79,6 @@ GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
-AMCMDECHO = @AMCMDECHO@
-AMDEPSHOWCMDSAT = @AMDEPSHOWCMDSAT@
-AMPRETTYECHO = @AMPRETTYECHO@
-AMSHOWCMDSAT = @AMSHOWCMDSAT@
 AMTAR = @AMTAR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
@@ -106,7 +102,6 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
-LT_QUIET = @LT_QUIET@
 MAKEINFO = @MAKEINFO@
 MKFONTSCALE = @MKFONTSCALE@
 PACKAGE = @PACKAGE@
@@ -120,32 +115,26 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+ac_ct_STRIP = @ac_ct_STRIP@
 am__leading_dot = @am__leading_dot@
 am__tar = @am__tar@
 am__untar = @am__untar@
 bindir = @bindir@
 build_alias = @build_alias@
 datadir = @datadir@
-datarootdir = @datarootdir@
-docdir = @docdir@
-dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host_alias = @host_alias@
-htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
-localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
-pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
-psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -205,50 +194,41 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
-	      @AMPRETTYECHO@ '  [AUTOMAKE  ]  rebuild all'; \
-	      @AMCMDECHO@ ' cd $(srcdir) && $(AUTOMAKE) --foreign '; \
+	      echo ' cd $(srcdir) && $(AUTOMAKE) --foreign '; \
 	      cd $(srcdir) && $(AUTOMAKE) --foreign  \
 		&& exit 0; \
 	      exit 1;; \
 	  esac; \
 	done; \
-	@AMPRETTYECHO@ '  [AUTOMAKE  ]  Makefile'; \
-	@AMCMDECHO@ ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  Makefile'; \
 	cd $(top_srcdir) && \
 	  $(AUTOMAKE) --foreign  Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
-	    @AMPRETTYECHO@ '  [SH        ]  config.status'; \
-	    @AMCMDECHO@ ' $(SHELL) ./config.status'; \
+	    echo ' $(SHELL) ./config.status'; \
 	    $(SHELL) ./config.status;; \
 	  *) \
-	    @AMPRETTYECHO@ '  [SH        ]  config.status $@'; \
-	    @AMCMDECHO@ ' cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe)'; \
+	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe);; \
 	esac;
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
-	@@AMPRETTYECHO@ '  [SH        ]  config.status'
-	@AMSHOWCMDSAT@$(SHELL) ./config.status --recheck
+	$(SHELL) ./config.status --recheck
 
 $(top_srcdir)/configure:  $(am__configure_deps)
-	@@AMPRETTYECHO@ '  [AUTOCONF  ]  Regenerate'
-	@AMSHOWCMDSAT@cd $(srcdir) && $(AUTOCONF)
+	cd $(srcdir) && $(AUTOCONF)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
-	@@AMPRETTYECHO@ '  [ACLOCAL   ]  Regenerate'
-	@AMSHOWCMDSAT@cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
+	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 uninstall-info-am:
 install-encodingsDATA: $(encodings_DATA)
 	@$(NORMAL_INSTALL)
-	@@AMPRETTYECHO@ '  [MKDIR     ]  $(DESTDIR)$(encodingsdir)'
-	@AMSHOWCMDSAT@test -z "$(encodingsdir)" || $(mkdir_p) "$(DESTDIR)$(encodingsdir)"
+	test -z "$(encodingsdir)" || $(mkdir_p) "$(DESTDIR)$(encodingsdir)"
 	@list='$(encodings_DATA)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  @AMPRETTYECHO@ "  [INSTALL   ]  '$$d$$p' -> '$(DESTDIR)$(encodingsdir)/$$f'"; \
-	  @AMCMDECHO@ " $(encodingsDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(encodingsdir)/$$f'"; \
+	  echo " $(encodingsDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(encodingsdir)/$$f'"; \
 	  $(encodingsDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(encodingsdir)/$$f"; \
 	done
 
@@ -256,8 +236,7 @@ uninstall-encodingsDATA:
 	@$(NORMAL_UNINSTALL)
 	@list='$(encodings_DATA)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
-	  @AMPRETTYECHO@ "  [RM        ]  $(DESTDIR)$(encodingsdir)/$$f"; \
-	  @AMCMDECHO@ " rm -f '$(DESTDIR)$(encodingsdir)/$$f'"; \
+	  echo " rm -f '$(DESTDIR)$(encodingsdir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(encodingsdir)/$$f"; \
 	done
 
@@ -333,19 +312,18 @@ ctags-recursive:
 	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
-	@AMSHOWCMDSAT@list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
+	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
 	unique=`for i in $$list; do \
 	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
 	  done | \
 	  $(AWK) '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
-	@AMPRETTYECHO@ '  [MKID      ]  $$unique'; \
 	mkid -fID $$unique
 tags: TAGS
 
 TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
-	@AMSHOWCMDSAT@tags=; \
+	tags=; \
 	here=`pwd`; \
 	if ($(ETAGS) --etags-include --version) >/dev/null 2>&1; then \
 	  include_option=--etags-include; \
@@ -368,14 +346,13 @@ TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 	       END { for (i in files) print i; }'`; \
 	if test -z "$(ETAGS_ARGS)$$tags$$unique"; then :; else \
 	  test -n "$$unique" || unique=$$empty_fix; \
-	  @AMPRETTYECHO@ "  [ETAGS     ]  $$tags"; \
 	  $(ETAGS) $(ETAGSFLAGS) $(AM_ETAGSFLAGS) $(ETAGS_ARGS) \
 	    $$tags $$unique; \
 	fi
 ctags: CTAGS
 CTAGS: ctags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
-	@AMSHOWCMDSAT@tags=; \
+	tags=; \
 	here=`pwd`; \
 	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
 	unique=`for i in $$list; do \
@@ -384,26 +361,20 @@ CTAGS: ctags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 	  $(AWK) '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
 	test -z "$(CTAGS_ARGS)$$tags$$unique" \
-	  || ( \
-	     @AMPRETTYECHO@ "  [CTAGS     ]  $$tags"; \
-	     $(CTAGS) $(CTAGSFLAGS) $(AM_CTAGSFLAGS) $(CTAGS_ARGS) \
-	     $$tags $$unique )
+	  || $(CTAGS) $(CTAGSFLAGS) $(AM_CTAGSFLAGS) $(CTAGS_ARGS) \
+	     $$tags $$unique
 
 GTAGS:
-	@@AMPRETTYECHO@ '  [GTAGS     ]'
-	@AMSHOWCMDSAT@here=`$(am__cd) $(top_builddir) && pwd` \
+	here=`$(am__cd) $(top_builddir) && pwd` \
 	  && cd $(top_srcdir) \
 	  && gtags -i $(GTAGS_ARGS) $$here
 
 distclean-tags:
-	@@AMPRETTYECHO@ '  [RM        ]  TAGS ID GTAGS GRTAGS GSYMS GPATH tags'
-	@AMSHOWCMDSAT@-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
-	@AMSHOWCMDSAT@$(am__remove_distdir)
-	@@AMPRETTYECHO@ '  [MKDIR     ]  $(distdir)'
-	@AMSHOWCMDSAT@mkdir $(distdir)
-	@@AMPRETTYECHO@ '  [MKDIR     ]  '
+	$(am__remove_distdir)
+	mkdir $(distdir)
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -430,7 +401,7 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
-	@AMSHOWCMDSAT@list='$(DIST_SUBDIRS)'; for subdir in $$list; do \
+	list='$(DIST_SUBDIRS)'; for subdir in $$list; do \
 	  if test "$$subdir" = .; then :; else \
 	    test -d "$(distdir)/$$subdir" \
 	    || $(mkdir_p) "$(distdir)/$$subdir" \
@@ -445,71 +416,59 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
-	@AMSHOWCMDSAT@$(MAKE) $(AM_MAKEFLAGS) \
+	$(MAKE) $(AM_MAKEFLAGS) \
 	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
 	  dist-hook
-	@AMSHOWCMDSAT@-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
+	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -444 -exec $(SHELL) $(install_sh) -c -m a+r {} {} \; \
-	|| ( @AMPRETTYECHO@ '  [CHMOD     ]  a+r $(distdir)'; chmod -R a+r $(distdir) )
+	|| chmod -R a+r $(distdir)
 dist-gzip: distdir
-	@@AMPRETTYECHO@ '  [TAR.GZ    ]  $(distdir).tar.gz'
-	@AMSHOWCMDSAT@tardir=$(distdir) && $(am__tar) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
-	@AMSHOWCMDSAT@$(am__remove_distdir)
+	tardir=$(distdir) && $(am__tar) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
+	$(am__remove_distdir)
 dist-bzip2: distdir
-	@@AMPRETTYECHO@ '  [TAR.BZ2   ]  $(distdir).tar.bz2'
-	@AMSHOWCMDSAT@tardir=$(distdir) && $(am__tar) | bzip2 -9 -c >$(distdir).tar.bz2
-	@AMSHOWCMDSAT@$(am__remove_distdir)
+	tardir=$(distdir) && $(am__tar) | bzip2 -9 -c >$(distdir).tar.bz2
+	$(am__remove_distdir)
 
 dist-tarZ: distdir
-	@@AMPRETTYECHO@ '  [TAR.Z     ]  $(distdir).tar.Z'
-	@AMSHOWCMDSAT@tardir=$(distdir) && $(am__tar) | compress -c >$(distdir).tar.Z
-	@AMSHOWCMDSAT@$(am__remove_distdir)
+	tardir=$(distdir) && $(am__tar) | compress -c >$(distdir).tar.Z
+	$(am__remove_distdir)
 
 dist-shar: distdir
-	@@AMPRETTYECHO@ '  [SHAR.GZ   ]  $(distdir).shar.gz'
-	@AMSHOWCMDSAT@shar $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).shar.gz
-	@AMSHOWCMDSAT@$(am__remove_distdir)
+	shar $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).shar.gz
+	$(am__remove_distdir)
 
 dist-zip: distdir
-	@@AMPRETTYECHO@ '  [ZIP       ]  $(distdir).zip'
-	@AMSHOWCMDSAT@-rm -f $(distdir).zip
-	@AMSHOWCMDSAT@zip -rq $(distdir).zip $(distdir)
-	@AMSHOWCMDSAT@$(am__remove_distdir)
+	-rm -f $(distdir).zip
+	zip -rq $(distdir).zip $(distdir)
+	$(am__remove_distdir)
 
 dist dist-all: distdir
-	@@AMPRETTYECHO@ '  [TAR.GZ    ]  $(distdir).tar.gz'
-	@AMSHOWCMDSAT@tardir=$(distdir) && $(am__tar) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
-	@@AMPRETTYECHO@ '  [TAR.BZ2   ]  $(distdir).tar.bz2'
-	@AMSHOWCMDSAT@tardir=$(distdir) && $(am__tar) | bzip2 -9 -c >$(distdir).tar.bz2
-	@AMSHOWCMDSAT@$(am__remove_distdir)
+	tardir=$(distdir) && $(am__tar) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
+	tardir=$(distdir) && $(am__tar) | bzip2 -9 -c >$(distdir).tar.bz2
+	$(am__remove_distdir)
 
 # This target untars the dist file and tries a VPATH configuration.  Then
 # it guarantees that the distribution is self-contained by making another
 # tarfile.
 distcheck: dist
-	@AMSHOWCMDSAT@case '$(DIST_ARCHIVES)' in \
+	case '$(DIST_ARCHIVES)' in \
 	*.tar.gz*) \
-	  @AMPRETTYECHO@ '  [UNTAR.GZ  ]  $(distdir).tar.gz'; \
 	  GZIP=$(GZIP_ENV) gunzip -c $(distdir).tar.gz | $(am__untar) ;;\
 	*.tar.bz2*) \
-	  @AMPRETTYECHO@ '  [UNTAR.BZ2 ]  $(distdir).tar.bz2'; \
 	  bunzip2 -c $(distdir).tar.bz2 | $(am__untar) ;;\
 	*.tar.Z*) \
-	  @AMPRETTYECHO@ '  [UNTAR.Z   ]  $(distdir).tar.Z'; \
 	  uncompress -c $(distdir).tar.Z | $(am__untar) ;;\
 	*.shar.gz*) \
-	  @AMPRETTYECHO@ '  [UNSHAR.GZ ]  $(distdir).shar.gz'; \
 	  GZIP=$(GZIP_ENV) gunzip -c $(distdir).shar.gz | unshar ;;\
 	*.zip*) \
-	  @AMPRETTYECHO@ '  [UNZIP     ]  $(distdir).zip'; \
 	  unzip $(distdir).zip ;;\
 	esac
-	@AMSHOWCMDSAT@chmod -R a-w $(distdir); chmod a+w $(distdir)
-	@AMSHOWCMDSAT@mkdir $(distdir)/_build
-	@AMSHOWCMDSAT@mkdir $(distdir)/_inst
-	@AMSHOWCMDSAT@chmod a-w $(distdir)
+	chmod -R a-w $(distdir); chmod a+w $(distdir)
+	mkdir $(distdir)/_build
+	mkdir $(distdir)/_inst
+	chmod a-w $(distdir)
 	dc_install_base=`$(am__cd) $(distdir)/_inst && pwd | sed -e 's,^[^:\\/]:[\\/],/,'` \
 	  && dc_destdir="$${TMPDIR-/tmp}/am-dc-$$$$/" \
 	  && cd $(distdir)/_build \
@@ -562,8 +521,8 @@ check: check-recursive
 all-am: Makefile $(DATA)
 installdirs: installdirs-recursive
 installdirs-am:
-	@AMSHOWCMDSAT@for dir in "$(DESTDIR)$(encodingsdir)"; do \
-	  test -z "$$dir" || ( @AMPRETTYECHO@ "  [MKDIR     ]  $$dir"; $(mkdir_p) "$$dir" ); \
+	for dir in "$(DESTDIR)$(encodingsdir)"; do \
+	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-recursive
 install-exec: install-exec-recursive
@@ -575,34 +534,29 @@ install-am: all-am
 
 installcheck: installcheck-recursive
 install-strip:
-	@AMSHOWCMDSAT@$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
 	  install_sh_PROGRAM="$(INSTALL_STRIP_PROGRAM)" INSTALL_STRIP_FLAG=-s \
 	  `test -z '$(STRIP)' || \
 	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
 mostlyclean-generic:
 
 clean-generic:
-	@@AMPRETTYECHO@ '  [RM        ]  $(CLEANFILES)'
 	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
-	@@AMPRETTYECHO@ '  [RM        ]  $(CONFIG_CLEAN_FILES)'
-	@AMSHOWCMDSAT@-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
+	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	@@AMPRETTYECHO@ '  [RM        ]  $(MAINTAINERCLEANFILES)'
 	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-recursive
 
 clean-am: clean-generic mostlyclean-am
 
 distclean: distclean-recursive
-	@@AMPRETTYECHO@ '  [RM        ]  $(am__CONFIG_DISTCLEAN_FILES)'
-	@AMSHOWCMDSAT@-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	@@AMPRETTYECHO@ '  [RM        ]  Makefile'
-	@AMSHOWCMDSAT@-rm -f Makefile
+	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
+	-rm -f Makefile
 distclean-am: clean-am distclean-generic distclean-tags
 
 dvi: dvi-recursive
@@ -626,12 +580,9 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	@@AMPRETTYECHO@ '  [RM        ]  $(am__CONFIG_DISTCLEAN_FILES)'
-	@AMSHOWCMDSAT@-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	@@AMPRETTYECHO@ '  [RM        ]  autom4te.cache/'
-	@AMSHOWCMDSAT@-rm -rf $(top_srcdir)/autom4te.cache
-	@@AMPRETTYECHO@ '  [RM        ]  Makefile'
-	@AMSHOWCMDSAT@-rm -f Makefile
+	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
+	-rm -rf $(top_srcdir)/autom4te.cache
+	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-recursive

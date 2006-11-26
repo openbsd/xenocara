@@ -11,50 +11,6 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-dnl Copyright 2005 Red Hat, Inc
-dnl
-dnl Permission to use, copy, modify, distribute, and sell this software and its
-dnl documentation for any purpose is hereby granted without fee, provided that
-dnl the above copyright notice appear in all copies and that both that
-dnl copyright notice and this permission notice appear in supporting
-dnl documentation.
-dnl
-dnl The above copyright notice and this permission notice shall be included
-dnl in all copies or substantial portions of the Software.
-dnl
-dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-dnl IN NO EVENT SHALL THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR
-dnl OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-dnl ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-dnl OTHER DEALINGS IN THE SOFTWARE.
-dnl
-dnl Except as contained in this notice, the name of the copyright holders shall
-dnl not be used in advertising or otherwise to promote the sale, use or
-dnl other dealings in this Software without prior written authorization
-dnl from the copyright holders.
-dnl
-
-# XORG_RELEASE_VERSION
-# --------------------
-# Adds --with/without-release-string and changes the PACKAGE and
-# PACKAGE_TARNAME to use "$PACKAGE{_TARNAME}-$RELEASE_VERSION".  If
-# no option is given, PACKAGE and PACKAGE_TARNAME are unchanged.
- 
-AC_DEFUN([XORG_RELEASE_VERSION],[
-	AC_ARG_WITH(release-version,
-			AC_HELP_STRING([--with-release-version=STRING],
-				[Use release version string in package name]),
-			[RELEASE_VERSION="$withval"],
-			[RELEASE_VERSION=""])
-	if test "x$RELEASE_VERSION" != "x"; then
-		PACKAGE="$PACKAGE-$RELEASE_VERSION"
-		PACKAGE_TARNAME="$PACKAGE_TARNAME-$RELEASE_VERSION"
-		AC_MSG_NOTICE([Building with package name set to $PACKAGE])
-	fi
-])
-
 # Copyright (C) 2002, 2003, 2005  Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
@@ -251,7 +207,6 @@ AC_PROVIDE_IFELSE([AC_PROG_CXX],
                   [define([AC_PROG_CXX],
                           defn([AC_PROG_CXX])[_AM_DEPENDENCIES(CXX)])])dnl
 ])
-AC_REQUIRE([AM_PRETTY_CMDS])
 ])
 
 
@@ -441,42 +396,6 @@ AC_DEFUN([_AM_SET_OPTIONS],
 AC_DEFUN([_AM_IF_OPTION],
 [m4_ifset(_AM_MANGLE_OPTION([$1]), [$2], [$3])])
 
-
-# Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005
-# Free Software Foundation, Inc.
-#
-# This file is free software; the Free Software Foundation
-# gives unlimited permission to copy and/or distribute it,
-# with or without modifications, as long as this notice is preserved.
-
-# serial 8
-
-
-# AM_PRETTY_CMDS
-# ------------
-AC_DEFUN([AM_PRETTY_CMDS],
-[AC_ARG_ENABLE(pretty-cmds,
-[  --disable-pretty-cmds          show all commands executed
-  --enable-pretty-cmds           do not output the entire command lines])
-AMSHOWCMDSAT=''
-AMDEPSHOWCMDSAT=''
-AMPRETTYECHO=true
-AMCMDECHO=echo
-if test "x$enable_pretty_cmds" == xyes;
-then
-  AMSHOWCMDSAT='@'
-  _AM_IF_OPTION([no-dependencies],,test x$enable_dependency_tracking == xno &&) AMDEPSHOWCMDSAT='@'
-  AMPRETTYECHO=echo
-  AMCMDECHO=true
-  LT_QUIET='--quiet'
-fi
-AC_SUBST([AMSHOWCMDSAT])
-AC_SUBST([AMDEPSHOWCMDSAT])
-AC_SUBST([AMPRETTYECHO])
-AC_SUBST([AMCMDECHO])
-AC_SUBST([LT_QUIET])
-])
-
 # Check to make sure that the build environment is sane.    -*- Autoconf -*-
 
 # Copyright (C) 1996, 1997, 2000, 2001, 2003, 2005
@@ -652,4 +571,48 @@ AC_MSG_RESULT([$am_cv_prog_tar_$1])])
 AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
+
+dnl Copyright 2005 Red Hat, Inc
+dnl
+dnl Permission to use, copy, modify, distribute, and sell this software and its
+dnl documentation for any purpose is hereby granted without fee, provided that
+dnl the above copyright notice appear in all copies and that both that
+dnl copyright notice and this permission notice appear in supporting
+dnl documentation.
+dnl
+dnl The above copyright notice and this permission notice shall be included
+dnl in all copies or substantial portions of the Software.
+dnl
+dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+dnl IN NO EVENT SHALL THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR
+dnl OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+dnl ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+dnl OTHER DEALINGS IN THE SOFTWARE.
+dnl
+dnl Except as contained in this notice, the name of the copyright holders shall
+dnl not be used in advertising or otherwise to promote the sale, use or
+dnl other dealings in this Software without prior written authorization
+dnl from the copyright holders.
+dnl
+
+# XORG_RELEASE_VERSION
+# --------------------
+# Adds --with/without-release-string and changes the PACKAGE and
+# PACKAGE_TARNAME to use "$PACKAGE{_TARNAME}-$RELEASE_VERSION".  If
+# no option is given, PACKAGE and PACKAGE_TARNAME are unchanged.
+ 
+AC_DEFUN([XORG_RELEASE_VERSION],[
+	AC_ARG_WITH(release-version,
+			AC_HELP_STRING([--with-release-version=STRING],
+				[Use release version string in package name]),
+			[RELEASE_VERSION="$withval"],
+			[RELEASE_VERSION=""])
+	if test "x$RELEASE_VERSION" != "x"; then
+		PACKAGE="$PACKAGE-$RELEASE_VERSION"
+		PACKAGE_TARNAME="$PACKAGE_TARNAME-$RELEASE_VERSION"
+		AC_MSG_NOTICE([Building with package name set to $PACKAGE])
+	fi
+])
 
