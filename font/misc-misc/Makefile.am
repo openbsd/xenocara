@@ -317,7 +317,14 @@ BUILT_BDF_FILES = \
 	$(KOI8_R_BDF_FILES) \
 	$(JISX0201_BDF_FILES)
 
-CLEANFILES = $(font_DATA) $(TRUNC_BDF_FILES) $(BUILT_BDF_FILES)
+KOEIGHTEEN = 18x18ko.bdf.xaa 18x18ko.bdf.xab 18x18ko.bdf.xac 18x18ko.bdf.xad \
+        18x18ko.bdf.xae 18x18ko.bdf.xaf 18x18ko.bdf.xag 18x18ko.bdf.xah \
+        18x18ko.bdf.xai
+
+18x18ko.bdf: $(KOEIGHTEEN)
+	(cd $(srcdir) ; cat $(KOEIGHTEEN)) > $@
+
+CLEANFILES = $(font_DATA) $(TRUNC_BDF_FILES) $(BUILT_BDF_FILES) 18x18ko.bdf
 
 EXTRA_DIST = $(BDF_FILES) autogen.sh
 
