@@ -1,0 +1,116 @@
+2006-05-09  Alex Deucher  <agd5f@yahoo.com>
+
+	* man/savage.man:
+	* src/savage_exa.c: (SavageEXAInit), (SavageDownloadFromScreen):
+	- add AccelMethod to savage.man
+	- fix bug 6847
+	- add memcpy based DFS
+
+2006-04-30  Alex Deucher  <agd5f@yahoo.com>
+
+	* src/Makefile.am:
+	* src/savage_accel.c: (SavageSetGBD_M7), (SavageSetGBD_PM),
+	(SavageSetGBD_2000), (SavageInitAccel):
+	* src/savage_bci.h:
+	* src/savage_driver.c: (SavageSetup), (SavagePreInit):
+	* src/savage_driver.h:
+	* src/savage_exa.c: (SavageGetCopyROP), (SavageGetCopyROP_PM),
+	(SavageEXAInit), (SavageEXASync), (SavageSetBD),
+	(SavagePrepareSolid), (SavageSolid), (SavageDoneSolid),
+	(SavagePrepareCopy), (SavageCopy), (SavageDoneCopy),
+	(SavageUploadToScreen), (SavageDownloadFromScreen):
+	* src/savage_image.c:
+	* src/savage_video.c: (SavageStopVideo), (SavageVideoSave),
+	(SavageAllocateMemory), (SavageFreeMemory), (SavagePutImage),
+	(SavageAllocateSurface), (SavageFreeSurface):
+	* src/savage_xaa.c: (SavageRestoreAccelState), (SavageXAAInit),
+	(SavageAccelSync), (SavageHelpPatternROP), (SavageHelpSolidROP),
+	(SavageSetupForScreenToScreenCopy),
+	(SavageSubsequentScreenToScreenCopy), (SavageSetupForSolidFill),
+	(SavageSubsequentSolidFillRect),
+	(SavageSetupForCPUToScreenColorExpandFill),
+	(SavageSubsequentScanlineCPUToScreenColorExpandFill),
+	(SavageSubsequentColorExpandScanline),
+	(SavageSetupForMono8x8PatternFill),
+	(SavageSubsequentMono8x8PatternFillRect),
+	(SavageSetupForColor8x8PatternFill),
+	(SavageSubsequentColor8x8PatternFillRect),
+	(SavageSubsequentSolidBresenhamLine), (SavageSetClippingRectangle),
+	(SavageDisableClipping), (SavageWriteBitmapCPUToScreenColorExpand),
+	(SavageSetupForImageWrite), (SavageSubsequentImageWriteRect):
+	- Add EXA support (Solid, Copy, UTS)
+
+2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/savage_driver.h:
+	Bump to 2.1.1 for Xv changes.
+
+2006-04-07  Aaron Plattner  <aplattner@nvidia.com>
+
+	* src/savage_video.c: (SavagePutImage):
+	Add a DrawablePtr argument to the XV functions to pave the way for
+	redirected video.
+
+2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/savage_dri.c:
+	* src/savage_driver.h:
+	* src/savage_hwmc.c:
+	* src/savage_i2c.c:
+	Unlibcwrap.  Bump server version requirement.  Bump to 2.1.0.
+
+2006-02-08  Luc Verhaegen  <libv@skynet.be>
+
+	* src/savage_dri.c: (SAVAGEDRIScreenInit):
+	* src/savage_driver.c: (SavagePreInit):
+	* src/savage_driver.h:
+	
+	- Remove insane usage of pScrn->clocks. Set maxClock directly.
+	- Fix trivial and harmless warning in DRI code (FrameBufferBase)
+
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* man/Makefile.am:
+	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Remove extraneous AC_MSG_RESULT.
+
+2005-11-20  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Bump libdrm dep to 2.0.
+
+2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Only build dlloader modules by default.
+
+2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC2 release.
+
+2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update pkgcheck dependencies to work with separate build roots.
