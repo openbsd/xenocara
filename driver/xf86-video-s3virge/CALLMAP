@@ -1,0 +1,23 @@
+-- Only Once, calling order --
+ChipIdentify (S3VIdentify)
+ChipProbe (S3VProbe)
+	Passive only, no ram determination, no writing
+	
+-- For each ScrnInfoRec, still calling order --
+ChipPreInit (S3VPreInit)
+	Allows probing and mapping, hardware must remain unchanged
+  ChipGetRec
+  
+ChipScreenInit
+  ChipMapMem
+  ChipSave
+    vgaHWSaveMMIO
+  ChipModeInit
+    vtSema=TRUE
+    ChipWriteMode
+      vgaHWRestoreMMIO
+
+
+
+
+$XFree86: xc/programs/Xserver/hw/xfree86/drivers/s3virge/CALLMAP,v 1.1 1998/11/01 12:35:58 dawes Exp $
