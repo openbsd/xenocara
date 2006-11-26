@@ -1,0 +1,87 @@
+2006-06-06  Donnie Berkholz  <spyderous@gentoo.org>
+
+	* src/sis_dri.c:
+	Add missing #include <assert.h>.
+
+2006-04-30  Alex Deucher  <agd5f@yahoo.com>
+
+	* src/sis300_accel.c: (SiS300AccelInit):
+	* src/sis310_accel.c:
+	* src/sis_accel.c: (SiSAccelInit):
+	- fix minor typo
+
+2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/sis.h:
+	Bump to 0.9.1 for Xv changes.
+
+2006-04-07  Aaron Plattner  <aplattner@nvidia.com>
+
+	* src/sis6326_video.c:
+	* src/sis_video.c: (SISPutImage):
+	* src/sis_video.h:
+	Add a DrawablePtr argument to the XV functions to pave the way for
+	redirected video.
+
+2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/sis.h:
+	Unlibcwrap.  Bump server version requirement.  Bump to 0.9.0.
+
+2006-04-06  Eric Anholt  <anholt@FreeBSD.org>
+
+	* src/sis_driver.c:
+	Don't forget to zero the xf86ModReqInfo before using it.
+	Noticed by Alex Deucher.
+
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* man/Makefile.am:
+	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Remove extraneous AC_MSG_RESULT.
+
+2005-12-01  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Bug #5207: Enable EXA. (Thomas Winischofer)
+
+2005-11-20  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Bump libdrm dep to 2.0.
+
+2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Only build dlloader modules by default.
+
+2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC2 release.
+
+2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update pkgcheck dependencies to work with separate build roots.
