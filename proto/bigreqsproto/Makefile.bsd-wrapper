@@ -1,0 +1,3 @@
+# $Xenocara: Makefile.bsd-wrapper,v 1.3 2006/04/17 13:55:36 matthieu Exp $
+
+.include <bsd.xorg.mk>
