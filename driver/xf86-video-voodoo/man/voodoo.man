@@ -1,0 +1,72 @@
+.\" $XFree86: xc/programs/Xserver/hw/xfree86/drivers/voodoo/voodoo.man,v 1.0 2004/02/11 23:10:13 alan Exp $
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH VOODOO __drivermansuffix__ __vendorversion__
+.SH NAME
+voodoo \- Voodoo video driver
+.SH SYNOPSIS
+.nf
+.B "Section \*qDevice\*q"
+.BI "  Identifier \*q"  devname \*q
+.B  "  Driver \*qvoodoo\*q"
+\ \ ...
+.B EndSection
+.fi
+.SH DESCRIPTION
+.B voodoo 
+is an XFree86 driver for Voodoo 1 and Voodoo 2 series video adapters.
+On the Voodoo 1 the driver uses a shadow buffer in system memory as
+the video adapter has only 3D acceleration. Selected portions of the shadow 
+framebuffer are copied out to the Voodoo board at the right time. Because 
+of this, the speed of the driver is very dependent on the CPU. Processors 
+nowadays are actually rather fast at moving data so we get very good speed 
+anyway as the shadow framebuffer is in cached RAM.
+.PP
+The Voodoo2 has 16bpp acceleration and the driver provides accelerated
+versions of most operations except angled lines and stipples. Accelerated
+alpha blending with the Render extension is also supported as is DGA.
+.PP
+This driver supports 16bpp modes currently. The video hardware supports
+image conversion from 24bpp to 16bpp but the hardware is 16bpp only.
+.PP
+The Voodoo 1 series cards can go up to 800x600 resolution while the
+Voodoo 2 can reach 1024x768 providing it has at least 2Mb of frame
+buffer memory. 1024x768 2D mode does not require two cards configured in
+scan-line interleave mode (SLI).
+.PP
+Multihead and Xinerama configurations are supported. SLI configurations will
+be treated as multiple video cards.
+.PP
+Limited support for DPMS screen saving is available. The "standby" and
+"suspend" modes are just painting the screen black. The "off" mode turns
+the Voodoo board off and thus works correctly.
+.PP
+This driver does not support a virtual screen size different from the
+display size. This is a hardware limitation. 3D rendering is also not
+supported.
+.SH CONFIGURATION DETAILS
+Please refer to __xconfigfile__(__filemansuffix__) for general configuration
+details.  This section only covers configuration details specific to this
+driver.
+.PP
+The following driver
+.B Options
+are supported:
+.TP
+.BI "Option \*qShadowFB\*q \*q" boolean \*q
+Enables a shadow buffer in main memory. This turns off acceleration but for
+otherwise unaccelerated operations can improve performance materially.
+Default: off for voodoo2, on for voodoo1.
+.TP
+.BI "Option \*qNoAccel\*q \*q" boolean \*q
+Disables acceleration if set. Unless debugging this option should only
+be set if ShadowFB is enabled.
+Default: off for voodoo2, on for voodoo1. 
+.SH "BUGS"
+The driver interacts badly with the
+sstfb frame buffer driver as there is insufficient information to restore
+the chip to its previous state. 
+.SH "SEE ALSO"
+XFree86(1), __xconfigfile__(__filemansuffix__), xf86config(1), Xserver(1), X(__miscmansuffix__)
+.SH AUTHORS
+Authors: Alan Cox, Ghozlane Toumi, Henrik Harmsen.

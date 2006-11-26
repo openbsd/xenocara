@@ -1,0 +1,56 @@
+Quick Voodoo/Voodoo2 Crash Course (mostly Alan's notes to save looking
+stuff up in the docs all the time)
+
+Voodoo and Voodoo 2 appear as multimedia devices. They may be on a "dual
+function" board in which case we should not 'borrow' the Voodoo as we will
+blank the main video card. That is reported in the PCI config space.
+Voodoo/Voodoo2 hardware may not always be initialized by the host OS because
+it is not video.
+
+The voodoo memory is split into two pools. A 1-4Mb pool holds the frame
+buffer, an optional second buffer, zbuffers, and alpha. A second 2-8Mb 
+memory area holds all the textures.
+
+Texture ram is directly writable but not important for the current 2D
+driver. Video RAM is 16bit depth and tiled. The view of the video memory 
+area is "magic", it doesn't contain a mapping of the video RAM into PCI
+space but contains pixel poking functionality.
+
+The frame buffer always appears untiled and 1024 pixels wide. For write
+there are some 16 different write modes including 24/32bit. The hardware
+does not support 24/32bit - these are provided for software rendering
+fallback. Read back is always 16bit. Endian conversion is hardware. Byte
+aligned access is not supported, only word aligned. Also watch how you
+access data - you can't access out of frame buffer space and if you get
+the control bits wrong you also get zbuffered, fogged and other fun.
+LFB writes have depth and alpha if you want.
+
+The real hardware is RGB565, how it sets stuff up internally is out of
+our hands - which means X memory alloc/pixmap cache is a little
+constrained.
+
+[IDEA: Should we put the mouse and framebuffer at different Z values so
+ that we don't have to erase it to draw under it - less flicker]
+
+Acceleration:
+
+All Voodoo
+	Fast Fill	-	Solid 2D rectangle fill
+				(Also depth buffer clear for 3D)
+				Supports a constant alpha option
+				Requires a running 3D engine
+
+Voodoo2 and later
+	Screen to screen blit
+	CPU to screen blit
+	Ultra fast fill to some alignments
+	Monochrome to colour expansion (cpu to screen only)
+	(and they finally made the 2D and 3D state independant
+	 if someone ever gets drunk enough to do DRI...)
+	Colour conversion on blit
+	Dither
+	Chroma testing (src/dst) and selection of op by colour
+	raster ops are the usual 16 suspects
+
+Other bits supported
+	CLUT Gamma correction
