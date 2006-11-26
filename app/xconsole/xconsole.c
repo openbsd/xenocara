@@ -28,6 +28,10 @@ in this Software without prior written authorization from The Open Group.
 
 /* $XFree86: xc/programs/xconsole/xconsole.c,v 3.31tsi Exp $ */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 #include <X11/Xatom.h>
@@ -61,6 +65,21 @@ extern char *_XawTextGetSTRING(TextWidget ctx, XawTextPosition left,
 #include <X11/Shell.h>
 #include <ctype.h>
 #include <stdlib.h>
+#ifdef HAS_OPENPTY
+# ifdef HAS_UTIL_H
+#  include <util.h>
+# endif
+# ifdef HAS_PTY_H
+#  include <pty.h>
+# endif
+#endif
+#ifdef USE_PRIVSEP
+# include <pwd.h>
+#endif
+
+extern int priv_init(uid_t, gid_t);
+extern int priv_openpty(int *, int *);
+extern int priv_set_console(int);
 
 /* Fix ISC brain damage.  When using gcc fdopen isn't declared in <stdio.h>. */
 #if defined(ISC) && __STDC__ && !defined(ISC30)
@@ -275,8 +294,14 @@ OpenConsole(void)
 		{
 # ifdef TIOCCONS
 		    int on = 1;
+#ifdef USE_PRIVSEP
+		    if (priv_set_console(tty_fd) != -1)
+ 			input = fdopen (pty_fd, "r");
+#else
 		    if (ioctl (tty_fd, TIOCCONS, (char *) &on) != -1)
 			input = fdopen (pty_fd, "r");
+#endif
+
 # else
 #  ifndef Lynx
 		    int consfd = open("/dev/console", O_RDONLY);
@@ -646,11 +671,30 @@ main(int argc, char *argv[])
     Arg arglist[10];
     Cardinal num_args;
 
+#ifdef USE_PRIVSEP
+    struct passwd *pw;
+#endif
+
     XtSetLanguageProc(NULL,NULL,NULL);
     top = XtInitialize ("xconsole", "XConsole", options, XtNumber (options),
 			&argc, argv);
     XtGetApplicationResources (top, (XtPointer)&app_resources, resources,
 			       XtNumber (resources), NULL, 0);
+#ifdef USE_PRIVSEP
+    /* Revoke privileges if any */
+    if (getuid() == 0) {
+	/* Running as root */
+	pw = getpwnam(XCONSOLE_USER);
+	if (!pw) {
+	    fprintf(stderr, "%s user not found\n", XCONSOLE_USER);
+	    exit(2);
+	}
+	if (priv_init(pw->pw_uid, pw->pw_gid) < 0) {
+		fprintf(stderr, "priv_init failed\n");
+		exit(2);
+	}
+    }
+#endif
 
     if (app_resources.daemon)
 	if (fork ()) exit (0);
@@ -822,7 +866,17 @@ ScrollLine(Widget w)
 static int
 get_pty(int *pty, int *tty, char *ttydev, char *ptydev)
 {
-#if defined (SVR4) || defined (USE_PTS)
+#ifdef USE_PRIVSEP
+	if (priv_openpty(pty, tty) < 0) {
+		return 1;
+	}
+	return 0;
+#elif HAS_OPENPTY
+	if (openpty(pty, tty, NULL, NULL, NULL) == -1) {
+		return 1;
+	}
+	return 0;
+#elif defined (SVR4) || defined (USE_PTS)
 #if defined (_AIX)
 	if ((*pty = open ("/dev/ptc", O_RDWR)) < 0)
 #else

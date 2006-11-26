@@ -27,6 +27,11 @@ xconsole_LDADD = $(XCONSOLE_LIBS)
 xconsole_SOURCES =	\
         xconsole.c
 
+if USE_PRIVSEP
+xconsole_SOURCES +=	\
+	privsep.c
+endif
+
 appman_PRE = \
         xconsole.man
 
@@ -80,3 +85,10 @@ SUFFIXES += .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	GIT_DIR=${srcdir}/.git git-log --name-only > ChangeLog
+
+dist-hook: ChangeLog
