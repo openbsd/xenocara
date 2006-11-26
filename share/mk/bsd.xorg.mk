@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.3 2006/11/26 13:53:45 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.4 2006/11/26 13:54:48 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -92,14 +92,6 @@ config.status:
 .if !target(depend)
 depend: 
 	@echo "no dependencies here yet"
-.endif
-
-.if exists($(.CURDIR)/.git)
-update:
-	cd $(.CURDIR); git pull
-.else
-update:
-	@echo "no git repository to pull"
 .endif
 
 .if !target(install)
