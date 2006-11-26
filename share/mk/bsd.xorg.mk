@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.2 2006/11/26 12:58:32 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.3 2006/11/26 13:53:45 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -39,10 +39,6 @@ INCSDIR=		${X11BASE}/include
 MANDIR=			${X11BASE}/man/cat
 
 PKG_CONFIG_PATH=	${X11BASE}/lib/pkgconfig
-
-DIST?=			${.CURDIR}
-
-AUTOGEN=		${DIST}/autogen.sh
 
 _cache= --cache-file=${XENOCARA_TOP}/xorg-config.cache.${MACHINE}
 
@@ -85,7 +81,7 @@ config.status:
 .else
 config.status:
 	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" \
-		${CONFIGURE_ENV} ${DIST}/configure --prefix=${X11BASE} \
+		${CONFIGURE_ENV} ${.CURDIR}/configure --prefix=${X11BASE} \
 		--sysconfdir=/etc \
 		--mandir=${X11BASE}/man \
 		${_cache} \
@@ -98,9 +94,9 @@ depend:
 	@echo "no dependencies here yet"
 .endif
 
-.if exists($(DIST)/.git)
+.if exists($(.CURDIR)/.git)
 update:
-	cd $(DIST); git pull
+	cd $(.CURDIR); git pull
 .else
 update:
 	@echo "no git repository to pull"
