@@ -1,0 +1,134 @@
+commit f4fe4cd560d7380ec18de383e55671bce8b2139d
+Author: Jeremy C. Reed <reed@glacier.reedmedia.net>
+Date:   Tue Oct 17 09:14:55 2006 -0500
+
+    Increase version to reflect newer changes and to be ready for release.
+
+commit 3fd859c64b7936d95f1ae65a2b9ce66269c6186b
+Author: Jeremy C. Reed <reed@glacier.reedmedia.net>
+Date:   Tue Oct 17 08:58:33 2006 -0500
+
+    In man page, also mention it supports NetBSD/i386.
+    (Uncomment my previous comment in the man page.)
+
+commit 1890f3e6b8977c362fff413b9dbba6f3aafc4049
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Sun Sep 17 22:08:41 2006 +0200
+
+    Add a driverfunc to indicate that this driver doesn't need hw access.
+
+commit 5c30a4b51326d5d9d1db4ed74573ffa38c1b519a
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Sun Sep 17 22:02:56 2006 +0200
+
+    Replace ChangeLog with a rule that generates it on 'make dist'
+
+commit 8a602328c9a231a9648def19690f361c0f1666e0
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Sun Sep 17 21:47:20 2006 +0200
+
+    renamed: .cvsignore -> .gitignore
+
+commit b77092858a178aa169ed4c1c7fe733d5cd355702
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Thu Jun 1 01:52:35 2006 +0000
+
+    Fix for dlopen() -based module loader.
+
+commit 17dab6d85a369c83fa59129e9ce0570e18ea7fb3
+Author: Jeremy C. Reed <reed@reedmedia.net>
+Date:   Sat May 27 16:24:02 2006 +0000
+
+    Added autoconf related files. Copied from other driver so keeping same
+        copyright. The version is 0.1.0 based on what was in wsfb_driver.c.
+    In wsfb_driver.c, renamed VERSION to WSFB_VERSION so doesn't conflict with
+        VERSION from new makefile.
+    Tested under NetBSD using wsdisplay on vesafb.
+
+commit bfc4b42efaf221740d693ae50f86ba20f9a5a129
+Author: Jeremy C. Reed <reed@reedmedia.net>
+Date:   Fri May 26 20:32:58 2006 +0000
+
+    Use __xservername__ macro instead of hardcoding. Mention it is for NetBSD
+        also (I tested under NetBSD/i386). Add a comment (roff comment) about
+        NetBSD. Mention device name for NetBSD.
+
+commit b3eeae114a521cf68b53575be5c128ea5cd60774
+Author: Jeremy C. Reed <reed@reedmedia.net>
+Date:   Fri May 26 20:23:21 2006 +0000
+
+    NetBSD uses /dev/ttyE?. (Already that way in
+        xserver/xorg/hw/xfree86/os-support/bsd/bsd_init.c.)
+    I tested on NetBSD/i386 using NetBSD's vesafb. Also this is in NetBSD's CVS
+        too where it was tested on Sparc.
+    Also added a ChangeLog file.
+
+commit 509c5587ad0474aee101d6dcebe87e02231ebe7d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu May 18 21:14:44 2006 +0000
+
+    Fix ShadowFB support to work with recent miext/shadow changes from bug
+        #5460.
+
+commit c639cb95424cdf7b8c04a0970b68114f2224c150
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:56 2005 +0000
+
+    Stub COPYING files
+
+commit 7340d355ccd9d9f5d1d8564fdfd7c6e6fcb21728
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:23 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit 22571cf4bc09eeaf0be9038ef0896f1d30a1f3b6
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:30:07 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit 4e0146d2bef7709a8e88461684453f261c0792af
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:17:00 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 53de0a660c3e253a4d70e147917109eeec7e2fa2
+Author: Markus Kuhn <Markus.Kuhn@cl.cam.ac.uk>
+Date:   Sat Dec 4 00:43:10 2004 +0000
+
+    Encoding of numerous files changed to UTF-8
+
+commit d18e0128136b7070bc40ccf3e64dc5379ae81067
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Nov 27 15:14:15 2004 +0000
+
+    xc/programs/Xserver/hw/xfree86/driver/ati/radeon.man
+    xc/programs/Xserver/hw/xfree86/driver/voodoo/voodo.man
+    xc/programs/Xserver/hw/xfree86/driver/wsfb/wsfb.man XF86Config ->
+        __xconfigfile__
+
+commit 60ee2b97e6e723c584d966a67de5c4d8056eb45b
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Nov 9 21:01:05 2004 +0000
+
+    Bugs #1807 & #1808: make wsfb driver work on NetBSD (Nathan J. Williams).
+
+commit e7c66868a9c6be8928541abc31a4fadafde672ae
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Oct 24 21:12:11 2004 +0000
+
+    - don't pretend to support 24bpp or 32bpp framebuffers if probed depth is
+        less than 24. Avoids a core dump after a common configuration error.
+        CVS:
+        ----------------------------------------------------------------------
+
+commit 6b390a5d40c3d36a3742cbd3a37f667f599e2a91
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Sep 26 17:06:45 2004 +0000
+
+    Hook the wsfb driver and resynchonize with OpenBSD's version.
+    Add wsfb, a Net- and OpenBSD specific driver for dumb bitmapped wsdisplay
+        screens.
+
