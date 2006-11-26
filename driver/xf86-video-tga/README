@@ -1,0 +1,84 @@
+  Information for DEC 21030 Users (aka TGA)
+  The XFree86 Project, Inc.
+  Updates for X11R6.8 by Jim Gettys
+  March 25th, 2004
+  ____________________________________________________________
+
+  Table of Contents
+
+
+  1. DEC 21030
+  2. Authors
+
+
+  ______________________________________________________________________
+
+
+  [1m1.  DEC 21030[0m
+
+
+  +o  The DEC 21030 is supported by X11R6.8.  The driver is now partially
+     accelerated.  The built-in graphics on the Multia is supported in
+     8-plane mode, and PCI cards with 8 or 16 MB framebuffers are
+     supported in 24-plane mode.  TGA2 (aka PowerStorm 3D30/4D20) cards
+     are not currently supported.
+
+  +o  Current Known Problems
+
+
+     1. Virtual desktops and multiple modelines do not work.  You should
+        specify only one modeline.
+
+     2. Hardware cursor is only supported on systems with the BT485
+        ramdac, ie the Multia.
+
+     3. After the server has been run using the hardware cursor, the
+        Linux TGA console cursor (which also uses the hardware cursor)
+        is shifted down by one pixel. This problem does not affect Linux
+        kernels 2.2.10 and above, which do not use the hardware cursor.
+
+     4. The XAA PolySegment() method is buggy. If you experience server
+        crashes with SIGFPE, or server hangs, try disabling it (see
+        below).
+
+
+  +o  The following options may be specified for the 21030 driver:
+
+     [1mBusID[0m
+        Currently it is necessary to specify the BusID so that the
+        server will find the card.  Check /proc/pci and look for the
+        bus, device, and function numbers in the 21030 section.  On a
+        Multia, this should be "PCI:0:11:0".
+
+
+     [1mMemBase 0x???????[0m
+        If the server does not detect the base address of the 21030,
+        then check /proc/pci for the 21030 and look for the
+        "Prefetchable 32 bit memory at 0x???????" and enter this as your
+        MemBase setting.
+
+
+     [1mOption[0m
+        Disables acceleration.
+
+
+     [1mOption[0m
+        Disables the hardware cursor.
+     [1mOption[0m
+        Disables the XAA PolySegment() method.
+
+
+
+  [1m2.  Authors[0m
+
+
+  +o  Matthew Grossman,  <mattg@oz.net>
+
+  +o  Alan Hourihane,  <alanh@fairlite.demon.co.uk>
+
+  +o  Martin Lucina,  <mato@kotelna.sk>
+
+  +o  Tim Rowley,  <tor@cs.brown.edu>
+
+
+

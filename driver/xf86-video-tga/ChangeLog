@@ -1,0 +1,63 @@
+2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/BT463ramdac.c:
+	* src/BTramdac.c:
+	* src/IBM561ramdac.c:
+	* src/tga_accel.c:
+	* src/tga_dac.c:
+	* src/tga_driver.c:
+	* src/tga_line.c:
+	* src/tga_regs.h:
+	Unlibcwrap.  Bump server version requirement.  Bump to 1.1.0.
+
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-12-09  Daniel Stone  <daniel@freedesktop.org>
+
+	* src/Makefile.am:
+	Make tga_seg.c generation srcdir != objdir safe.
+
+2005-12-08  Adam Jackson  <ajax@freedesktop.org>
+
+	* src/Makefile.am:
+	Fix a miscompile.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Remove extraneous AC_MSG_RESULT.
+
+2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Only build dlloader modules by default.
+
+2005-11-15  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Add check for DGA extension to fix issues when building with
+	separate build roots.
+
+2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC2 release.
+
+2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update pkgcheck dependencies to work with separate build roots.
