@@ -1,0 +1,138 @@
+2006-05-01  Matthieu Herrb <matthieu.herrb@laas.fr>
+
+	* src/common.h:
+	Fix build on non-dri systems.
+
+2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/i810.h:
+	Bump to 1.6.0.
+
+2006-04-07  Aaron Plattner  <aplattner@nvidia.com>
+
+	* src/i810_video.c: (I810PutImage):
+	* src/i830_video.c: (I830PutImage):
+	Add a DrawablePtr argument to the XV functions to pave the way for
+	redirected video.
+
+2006-04-05  Dave Airlie  <airlied@linux.ie>
+
+	* src/i810_hwmc.c: (I810XvMCCreateContext),
+	(I810XvMCCreateSurface), (I810XvMCCreateSubpicture):
+	* src/i810_memory.c: (I810SetTiledMemory):
+	* src/i830_memory.c: (SetFence):
+	Fix some argument inversions in xf86DrvMsg function calls
+
+2006-04-04  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/i810_dri.c:
+	* src/i810_driver.c:
+	* src/i830_dri.c:
+	* src/i830_driver.c: Add more missing #include's, in particular
+	assert.h.
+
+2006-03-22  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/*.c: Drop libc wrapper; don't include xf86_ansic.h and add
+	includes now missing.
+
+2006-03-10  Alan Hourihane  <alanh@fairlite.demon.co.uk>
+
+	* src/i830_cursor.c: (I830InitHWCursor), (I830ShowCursor),
+	(I830HideCursor):
+	Enable gamma for hw cursor when ARGB cursor in use (Lukas Hejtmanek)
+
+2006-03-03  Alan Hourihane  <alanh@fairlite.demon.co.uk>
+
+	* configure.ac:
+	* src/i810.h:
+	* src/i830.h:
+	* src/i830_dri.h:
+	* src/i830_driver.c: (I830BIOSPreInit), (I830BIOSScreenInit),
+	(I830BIOSCloseScreen):
+	* src/i830_video.c:
+	Check the version of shadow being used and turn off rotation if
+	it isn't the right one.
+	Bump the Xvideo resolution support from 1920x1080 to 1920x1088.
+
+2006-02-20  Alan Hourihane  <alanh@fairlite.demon.co.uk>
+
+	* src/i830_rotate.c: (I915UpdateRotate), (I830UpdateRotate):
+	Fix a rotation problem when DRI is disabled
+
+2005-01-25  Alan Hourihane   <alanh@fairlite.demon.co.uk>
+
+	* src/i830_driver.c: When going dual head only take a portion of
+	  memory for the second head instead of doubling the requirements.
+
+2005-01-25  Alan Hourihane   <alanh@fairlite.demon.co.uk>
+
+	* src/i830_driver.c: Fix a glitch in a dual head fix from #3105
+
+2005-01-24  Alan Hourihane   <alanh@fairlite.demon.co.uk>
+
+	* configure.ac, man/i810.man, src/Makefile.am, src/common.h,
+	  src/i810.h, src/i810_dri.c, src/i810_driver.c, src/i830.h,
+	  src/i830_common.h, src/i830_cursor.c, src/i830_dga.c,
+	  src/i830_dri.c, src/i830_dri.h, src/i830_driver.c,
+	  src/i830_memory.c, src/i830_modes.c, src/i830_randr.c,
+	  src/i830_rotate.c, src/i830_shadow.c, src/i830_video.c: 
+	  Bump version to 1.5.0.0 
+	  Add Intel 945GM support 
+	  Add RandR rotation support (full 3D acceleration, HWcursor & 
+	  Xvideo rotated too)
+	  Remove older shadow framebuffer rotation code 
+	  Add a new LinearAlloc option to allow more offscreen memory 
+	  to be allocated for XVideo applications. This allows HDTV movies
+	  to be played via Xvideo.
+
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* man/Makefile.am:
+	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Remove extraneous AC_MSG_RESULT.
+
+2005-11-30  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Bump libdrm dep to 2.0.
+
+2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Only build dlloader modules by default.
+
+2005-11-19  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update dependencies to work with separate build roots.
+
+2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC2 release.
+
+2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update pkgcheck dependencies to work with separate build roots.

@@ -1,0 +1,17 @@
+send (1) 0 g6<1>F g1.12<0,1,0>F math inv scalar mlen 1 rlen 1 { align1 };
+send (1) 0 g6.4<1>F g1.20<0,1,0>F math inv scalar mlen 1 rlen 1 { align1 };
+add (8) g7<1>F g4<8,8,1>F -g3<8,8,1>F { align1 };
+mul (1) g7<1>F g7<0,1,0>F g6<0,1,0>F { align1 };
+mul (1) g7.4<1>F g7.4<0,1,0>F g6.4<0,1,0>F { align1 };
+mov (8) m1<1>F g7<0,1,0>F { align1 };
+mov (8) m2<1>F g7.4<0,1,0>F { align1 };
+mov (8) m3<1>F g3<8,8,1>F { align1 };
+send (8) 0 null g0<8,8,1>F urb 0 transpose used complete mlen 4 rlen 0 { align1 EOT };
+nop;
+nop;
+nop;
+nop;
+nop;
+nop;
+nop;
+nop;
