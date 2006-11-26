@@ -1,0 +1,46 @@
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH VMWARE __drivermansuffix__ __vendorversion__
+.SH NAME
+vmware \- VMware SVGA video driver
+.SH SYNOPSIS
+.nf
+.B "Section \*qDevice\*q"
+.BI "  Identifier \*q"  devname \*q
+.B  "  Driver \*qvmware\*q"
+\ \ ...
+.B EndSection
+.fi
+.SH DESCRIPTION
+.B vmware 
+is an __xservername__ driver for VMware virtual video cards. 
+.SH CONFIGURATION DETAILS
+Please refer to __xconfigfile__(__filemansuffix__) for general configuration
+details.  This section only covers configuration details specific to this
+driver.
+.PP
+The driver auto-detects the version of any virtual VMware SVGA adapter.
+.PP
+The following driver
+.B Options
+are supported:
+.TP
+.BI "Option \*qHWCursor\*q \*q" boolean \*q
+Enable or disable the HW cursor.  Default: off.
+.TP
+.BI "Option \*qNoAccel\*q \*q" boolean \*q
+Disable or enable acceleration.  Default: acceleration is enabled.
+.TP
+.BI "Option \*qXinerama\*q \*q" boolean \*q
+Disable or enable Xinerama support. Default: xinerama is enabled if the
+hardware supports it.
+.TP
+.BI "Option \*qStaticXinerama\*q \*q" string \*q
+Provide a static xinerama geometry that will be active at server startup
+and will not be overridden at runtime.
+The format is "Width1xHeight1+Xoffset1+Yoffset1;Width2xHeight2+Xoffset2+Yoffset2"
+and so on. Negative offsets are not supported.
+.SH "SEE ALSO"
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+.SH AUTHORS
+Copyright (c) 1999-2006 VMware, Inc.

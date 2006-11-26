@@ -1,0 +1,95 @@
+2006-09-03  Philip langdale <plangdale@vmware.com>
+
+	* src/vmware.c:
+	* src/vmware.h:
+	* src/vmwarectrl.c:
+	Fix https://bugs.freedesktop.org/show_bug.cgi?id=8094
+	Lazily allocate the dynamic modes used for pixel precise guest
+	resizing. They will not appear until they are neeed.
+
+2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/vmware.c:
+	* src/vmware.h:
+	Unlibcwrap.  Bump server version requirement.  Bump to 10.13.0.
+
+2006-02-06  Philip Langdale <plangdale@vmware.com>
+
+	* configure.ac: Bump version number.
+	* src/vmware.c
+	* src/vmware.h: (VMWAREScreenInit) Set up the additional
+	state required by the VMWARE_CTRL extension.
+	A src/vmwarectrl.c
+	A src/vmwarectrl.h
+	A src/vmwarectrlproto.h: Add implementation of the VMWARE_CTRL
+	extension.
+
+	This change adds the VMWARE_CTRL extension which allows for
+	an X client to request an arbitrary resolution be made
+	available in the modeline list. The intent here is not to
+	replace XF86VidMode (which, if it would only work, would have
+	made VMWARE_CTRL unnecessary) so we are not providing an
+	Add/Remove functionality. Rather, a single command "SetRes"
+	is provided. This will update one of two special entries in
+	the modeline list with the requested resolution (assuming
+	it's possible given the fixed framebuffer restriction).
+	The client can then use RandR to find and switch to the
+	requested resolution. We need two entries because the
+	server gets confused when asked to switch to a new
+	mode that has the same position in the list as the old
+	mode.
+	
+	vmwarectrl.h and vmwarectrlproto.h follow the standard
+	pattern for extension headers and can be dropped into any
+	client side project that wishes to call the extension -
+	although it is probably of very limited use to non-VMware
+	clients.
+
+2006-01-12  Philip Langdale  <plangdale@vmware.com>
+
+	* configure.ac: Bump version number.
+	* src/vmware.c: Implement the DriverFunc so that we
+	can adjust the guest 'physical' display size to keep
+	DPI constant. Setting the initial display size to
+	match the host continues to be an exercise for the user.
+
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* man/Makefile.am:
+	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Remove extraneous AC_MSG_RESULT.
+
+2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Only build dlloader modules by default.
+
+2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC2 release.
+
+2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update pkgcheck dependencies to work with separate build roots.
