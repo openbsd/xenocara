@@ -77,8 +77,8 @@ libXaw6_la_LIBADD = $(XAW6_LIBS)
 
 if !PLATFORM_WIN32
 install-exec-hook::
-	-rm -f $(DESTDIR)$(libdir)/libXaw.so.6
-	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.so.6 libXaw.so.6)
+	-rm -f $(DESTDIR)$(libdir)/libXaw.so.9.0
+	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.so.9.0 libXaw.so.9.0)
 endif
 
 endif
@@ -101,8 +101,8 @@ libXaw7_la_LIBADD = $(XAW7_LIBS)
 
 if !PLATFORM_WIN32
 install-exec-hook::
-	-rm -f $(DESTDIR)$(libdir)/libXaw.so.7
-	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.so.7 libXaw.so.7)
+	-rm -f $(DESTDIR)$(libdir)/libXaw.so.10.0
+	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.so.10.0 libXaw.so.10.0)
 endif
 
 endif
@@ -125,8 +125,8 @@ libXaw8_la_LIBADD = $(XAW8_LIBS)
 
 if !PLATFORM_WIN32
 install-exec-hook::
-	-rm -f $(DESTDIR)$(libdir)/libXaw.so.8
-	(cd $(DESTDIR)$(libdir) && ln -s libXaw8.so.8 libXaw.so.8)
+	-rm -f $(DESTDIR)$(libdir)/libXaw.so.11.0
+	(cd $(DESTDIR)$(libdir) && ln -s libXaw8.so.11.0 libXaw.so.11.0)
 endif
 
 endif
