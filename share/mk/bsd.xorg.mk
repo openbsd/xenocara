@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.1.1.1 2006/11/25 14:56:32 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.2 2006/11/26 12:58:32 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -74,7 +74,10 @@ all:	config.status
 .if !target(config.status)
 .if defined(XENOCARA_RERUN_AUTOCONF) && ${XENOCARA_RERUN_AUTOCONF:L} == "yes"
 config.status:
-		${MAKE_ENV} ${CONFIGURE_ENV} ${AUTOGEN} --prefix=${X11BASE} \
+	cd ${.CURDIR}; ${MAKE_ENV} autoreconf -v --install
+	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" \
+		${CONFIGURE_ENV} ${.CURDIR}/configure \
+		--enable-maintainer-mode --prefix=${X11BASE} \
 		--sysconfdir=/etc \
 		--mandir=${X11BASE}/man \
 		${_cache} \
