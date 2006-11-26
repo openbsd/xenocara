@@ -1,0 +1,1116 @@
+commit 1dd6e6995d7a37338dce6ee5b1aa4ee9dd848e1d
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Oct 27 11:53:40 2006 -0700
+
+    Bump version to 1.4.4.
+
+commit 19d950e61b2b33052e52c33add8e70c29ac9d766
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Oct 27 11:48:35 2006 -0700
+
+    Convert tests of pMga->Chipset to tests of single bit flags.
+    
+    Several places in the driver contain if-statements that test Chipset against
+    several different values to determine what functionality to use.  Some of
+    these tests, HALCHIPSETS in particular, test as many as 6 different values.
+    This bloats the code size unnecessarilly.  Instead we cache the results of
+    some of those tests in single bit flags stored in pMga.
+    
+    These changes are similar to some changes in the pci-rework branch.
+
+commit d28c4a3307984b86e0f3cc68fa48cdc01e307a7c
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Thu Oct 26 19:52:54 2006 -0700
+
+    Fix bug #8666.  git-bisect for the win!
+    
+    Since && takes precedence over ||, put parenthesis around the || block to
+    make all the operations associate in the intended manner.
+
+commit 041910d3b9f6284b4b8a7df10f284528a7e79d12
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Oct 13 18:33:39 2006 -0400
+
+    Bump to 1.4.3
+
+commit 2fc0ebfbe850c138e840b6653ed1476623aa04a4
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Sep 28 18:39:20 2006 +0200
+
+    Make the DUALSTAGE0 code slightly easier to read.
+
+commit ddd93ae96c5427d4c8d03eb225b66a1a93fa2bc8
+Author: David Nusinow <dnusinow@debian.org>
+Date:   Wed Sep 20 20:42:12 2006 -0400
+
+    Minor manpage typofixes. Patch by A. Costa (see Debian bug #364558)
+
+commit 34ec93796e4be31d95d1ed507660c65a2c60fa43
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 20 21:05:16 2006 +0200
+
+    Unbreak the build: MGAStormSync() is required by mga_dga.c.
+
+commit 954c8d06f2697d4f764583dd3336b4cc266b90fd
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 20 20:51:36 2006 +0200
+
+    Removed the XAA atype tables.
+    
+    Added a FIXME on BLK support for GXcopy instead.
+
+commit ecc155e27b6566196e56de241ae81266e03dc90e
+Merge: e7b36c6... 2e73c29...
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 20 20:43:55 2006 +0200
+
+    Merge branch 'exa'
+
+commit 2e73c2989e6cf0f24f8b0c4ae372f0c44dc19755
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 20 20:41:18 2006 +0200
+
+    Documented the AccelMethod option (copied from Radeon's man page).
+
+commit 3f4c12a388af05995273c9abe742f82f84e558a8
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 20 20:36:18 2006 +0200
+
+    Removed the DFS stub.
+
+commit 69cc0060d9516d5fba5fa46607a993f3ebfd5d89
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 20 20:26:37 2006 +0200
+
+    Fall back to software rendering for A8 add A8.
+
+commit e7b36c66852077ffbbffdd20e39ed4b6f24541b7
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Sep 18 11:08:51 2006 -0700
+
+    Bump version to 1.4.2.  Bump required server version to 1.1.0 (X.org 7.1)
+    from pre-1.1.0 version.
+
+commit 5830edf81a0c0119bd2486b48e56fdb9daf72586
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Sep 16 23:59:32 2006 +0200
+
+    Generate ChangeLog from git.
+
+commit 3b2a7b1faf142d4301c55b8951657e177b5ac118
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Sep 16 23:06:36 2006 +0200
+
+    Don't install stormdwg.
+
+commit 3d7c109c4864f021590c3bcf0f09685498225dde
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Sep 16 22:31:02 2006 +0200
+
+    Enable the BYPASS332 and NODITHER flags when writing to 8 bpp dests.
+    
+    Thanks to Ville Syrjälä, who noticed these were missing.
+    Note that this messes up glyph compositing (A8 add A8) pretty much, but
+    I don't know what's really going on there yet.
+
+commit 2eae7c98fcd3f452f9b9c2eef4a9cf820edf69aa
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Sep 15 16:01:28 2006 +0200
+
+    More DUALSTAGE0 fixes related to A8 writes.
+    
+    When writing from a texture without an alpha channel to an A8 texture,
+    we now set the alpha channel to 0xff via FCOL.
+
+commit b1031689212bfbbe832dd73337ea8cd5d66ae2ff
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Sep 15 13:43:55 2006 +0200
+
+    Reworked DUALSTAGE0 setup.
+    
+    If we're copying from A8 to A8, we need to replicate the alpha to
+    the color channels.
+
+commit 965faa3661f73a1d4cbf6368458244dff45a76ad
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 13 14:56:29 2006 +0200
+
+    Only use the source texture's alpha channel if it actually has one.
+
+commit 14202e7c47326e8678bf38a6bda63d608f1f152b
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Mon Sep 11 14:22:24 2006 +0200
+
+    Support masks without alpha.
+
+commit 35651deb8fc3b8b7b0cf4895732f2edeecdabeb7
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Sep 10 00:56:10 2006 +0200
+
+    Fixed the remaining MGAAllocateMemory() issues.
+
+commit d5e9270acf2f914fe7603225ac605cd29830bed6
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Sep 10 00:04:48 2006 +0200
+
+    Fixed the engine sync needed for TexturedVideo.
+
+commit 7739a929100d516e06646a38062df8da1f33f774
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Sep 10 00:04:21 2006 +0200
+
+    The XAA path in MGA_SYNC() now only syncs the engine if NeedToSync is set.
+    
+    This makes both paths behave the same way.
+
+commit 1a045b37db4c7c606ed056addf52d337dbdeb88d
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Sep 9 23:58:42 2006 +0200
+
+    Dont't multiply the retval of MGAAllocateMemory() by cpp again.
+
+commit dfa5807c1f5694728aa92138eb0eab5bd5b8c3d7
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Sep 9 13:24:01 2006 +0200
+
+    Make use of MGA_MARK_SYNC.
+
+commit bfb329542377e8e8141c87ed30389de6d7180e06
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Sep 9 13:20:13 2006 +0200
+
+    XV works with EXA now (dumb port of the Radeon code).
+
+commit 9fa71aef67df48b59f9d70fddd2725f739d171a9
+Author: Tilman Sauerbeck <tilman@hammerfest.(none)>
+Date:   Sat Sep 9 11:58:32 2006 +0200
+
+    Do A8->A8 ops in hardware.
+
+commit 7a7feb251b8172786755ab81b154bbfb7d193dbc
+Author: Tilman Sauerbeck <tilman@hammerfest.(none)>
+Date:   Sat Sep 9 01:16:26 2006 +0200
+
+    PrepareSourceTexture() cannot fail.
+
+commit c2545d6e94964fc981746cdf212b5dc9cd4fdd1b
+Author: Tilman Sauerbeck <tilman@hammerfest.(none)>
+Date:   Sat Sep 9 01:14:38 2006 +0200
+
+    Implemented pseudo-DMA based UTS.
+
+commit 3969fe1176da9e39b722982889a3cccc0f812e59
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Sep 7 22:52:26 2006 +0200
+
+    Refactored that texture format lookup code into mgaGetTexFormat().
+
+commit ad57c370ba8ffcbf0b7cf404c61ed01bc924ddd5
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Sep 7 22:21:19 2006 +0200
+
+    Use the right dithering mode for r5g5b5 textures.
+    
+    This makes all of rendercheck's blend tests work.
+
+commit c39749d6e0e967cd12bcc629c3840905e07dd60c
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Sep 7 18:24:08 2006 +0200
+
+    Enable composite hooks on G400/G450 only.
+    
+    The PCI-IDs aren't ordered, so using ">=" there was totally broken.
+    I don't know whether the code works on G550 either, so I'm not enabling
+    it on these cards yet.
+
+commit 0ee922bb4cce012c980c5d6178fe04e86c5cce53
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Sep 7 17:36:23 2006 +0200
+
+    Code cleanup/formatting fixes.
+
+commit 4ed932caa27df8c6a4c58478d3f9b45815de06f5
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Sep 7 17:21:52 2006 +0200
+
+    Moved some FIXMEs.
+
+commit 3b06475096238b3adc3151f27a92d7a8dbbb0231
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Sep 7 17:16:35 2006 +0200
+
+    Put my name in mga_exa.c
+
+commit 6391a058b333de306c9b11c6a723cb4457e76c8f
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 6 16:43:51 2006 +0200
+
+    Fixed the non-EXA build.
+
+commit 74e85b19e564927337f23f6de25bb58f309e892b
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 6 15:38:39 2006 +0200
+
+    Enabled alpha filtering.
+    
+    This doesn't influence rendercheck's test outcome, but helps with
+    evas_xrender_x11_test.
+
+commit c2490640b4b237239872c5acbde3704e6e1412e9
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 6 14:36:38 2006 +0200
+
+    Code cleanup/formatting fixes.
+
+commit 646a9927b8412b0224e260be46162782e87bf7c4
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 6 14:24:26 2006 +0200
+
+    Don't set TAMASK in TEXCTL.
+    
+    According to the specs this disables alpha transparency, which we
+    probably don't want, but the tests say it's good.
+
+commit e7eccaba96e5bc4ff3ddde49b5245cd448bd5d9b
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 6 11:48:16 2006 +0200
+
+    Rendering to (A)BGR isn't supported.
+
+commit 72338321331fe8830d1d95a1c7f4a4fb5f2d9b0a
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 6 10:57:13 2006 +0200
+
+    Disabled color keying.
+
+commit 056915493981be3f3b9270334e0f992a290dfab6
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Mon Aug 28 22:19:23 2006 +0200
+
+    Make this code a little more readable.
+
+commit b8320d198abe0cd26b2f76b9add634ef8245ba27
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Aug 27 16:22:50 2006 +0200
+
+    Minor code cleanup.
+
+commit c525a7e73ac2ef18933d170f8497351d62e5b1ce
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Aug 27 15:22:58 2006 +0200
+
+    Fixed a typo.
+
+commit e0f76b32992274faa0adb39dfd6df0fc3b434e96
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Aug 27 12:44:16 2006 +0200
+
+    Documented the mgaBlendOp array.
+
+commit 5982e8200270d25a57da8ab0d1a8290cfaec070c
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Aug 27 12:27:59 2006 +0200
+
+    Cleaned up the XAA code a bit.
+
+commit e7ba7c993f4e439672810ec9ce3a24df823051a4
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Aug 26 22:33:25 2006 +0200
+
+    Enable composite hooks on G400 or greater.
+
+commit 6c365757891c3e0e0a55c7bea995ef8a4fb3f69c
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Aug 26 22:32:25 2006 +0200
+
+    Added missing mgaSetup() call to the PrepareComposite hook.
+
+commit 2efbc687fcc0d05dca241e4079d9236d9cce0dde
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Aug 26 22:27:34 2006 +0200
+
+    Added a couple of missing newlines.
+
+commit 17153c794d532f27a4248c3f64eba95ede62be87
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Aug 26 21:42:41 2006 +0200
+
+    The texture mapping opcode is 6, not 5.
+
+commit 13f649c65784192c30c18581d8795f3c47060644
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Aug 26 20:03:36 2006 +0200
+
+    Removed ajax' comments on the Copy code, it seems to work well.
+
+commit 4bf16b5f26266132f0c3e9c058df8014d52d56f1
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Aug 26 18:04:08 2006 +0200
+
+    Clean up color/planemask replicating.
+
+commit 5d001aeb21aabde5b6cd919692de726ebaeb3481
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Aug 26 18:00:49 2006 +0200
+
+    Fixed alignment values (taken from kdrive).
+
+commit 693f165e2c6c431e6c61c835781883c2bcef5876
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Aug 25 22:40:17 2006 +0200
+
+    Fixed corruption on copy, by copying kdrive's waitmarker code.
+
+commit 7fbd85b3621f5368ebce178e5e55b0cbd5a80733
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Aug 25 22:33:06 2006 +0200
+
+    MGASelectBuffer() is only need for XAA.
+
+commit 9b24934be499fe5de9fdc02a71e41906c50791d9
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Aug 10 22:01:19 2006 +0200
+
+    Switched the MACCESS code to the stuff from mga_storm.c.
+
+commit 398447c041cffdc712a86f9fe9b58c3f5189c86e
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Aug 10 21:31:49 2006 +0200
+
+    Call exaMarkSync() where we'd set the NeedToSync flag for XAA.
+
+commit b1126b4ab81c12f178fb7366a52b6f2d38af3810
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Aug 10 21:25:48 2006 +0200
+
+    Removed XAA specific code from MGAGetQuiescence.
+
+commit 9141effdbbcd2b3419874ebb4e3898fca3474417
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Aug 10 20:42:56 2006 +0200
+
+    Added another chunk of kdrive code to mgaPrepareSolid().
+
+commit 3f440e499b5d0b073118855fe39fa4077971c06e
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Aug 10 20:40:51 2006 +0200
+
+    Added mgaSetup() from kdrive code.
+
+commit 9285dec527a5f0ec21384b1e079a3878b622a6c2
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Aug 10 20:03:18 2006 +0200
+
+    Disable composite hooks for now, to reduce breakage.
+
+commit db87a5ac8feca5f0126c7af4c51f69222fae7dd9
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Aug 10 20:02:51 2006 +0200
+
+    Wait until the DMA engine is idle in mgaWaitMarker.
+
+commit 84ec0db961de3b10ac02ec5ae6adcec5cc439069
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Aug 10 19:49:22 2006 +0200
+
+    Initial commit of the Exa bits.
+    
+    Based on ajax' mga-exa-2.patch with some straight forward fixes
+    by myself.
+
+commit bde592047cd62194d7ef67520a9fdbaf269a8b90
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Aug 9 21:59:42 2006 +0200
+
+    Bug #7265: Fix MGA DRI locking.
+    
+    The server expects the driver to take the DRI lock in the wakeup
+    handler, and release it in the block handler.
+    The old locking scheme didn't work like this, which caused problems.
+    We now no longer override wakeup/block handler and just use the ones
+    provided by the server. This means the DRI lock will be taken
+    "all the time" and not just when it's needed by the driver.
+    MGADRISwapContext* are activated again, so the wakeup handler could be
+    removed.
+    I didn't notice any DRI performance drop, but I didn't do serious
+    benchmarking either.
+
+commit 7170de83762660efebff79be84f763008466ffa7
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Jul 26 17:06:18 2006 +0200
+
+    Merged the various .cvsignores into .gitignore
+
+commit 80bf41170af91b62b9950a5cf7baf3c364a8f539
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Tue Jul 25 22:03:22 2006 +0200
+
+    Fixed some warnings
+
+commit 78c12368fa1c1985f41ce856ff453a967429870a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Jul 10 18:53:05 2006 -0700
+
+    Add includes of <unistd.h> & <stdlib.h> to replace previously xf86wrapped prototypes
+    
+    Fixes these warnings:
+    make.out:"mga_dacG.c", line 195: warning: implicit function declaration: abs
+    make.out:"mga_dacG.c", line 1117: warning: implicit function declaration: usleepmake.out:"mga_driver.c", line 692: warning: implicit function declaration: usleep
+
+commit c0dfac86e75ea63ae0c25c070bc661b6f41d35eb
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Mon Jul 10 17:21:25 2006 -0700
+
+    Bug #7369: mga(4) manpage typo mutilates part of text
+    
+    Bugzilla #7369: <https://bugs.freedesktop.org/show_bug.cgi?id=7369>
+    Patch #6079: <https://bugs.freedesktop.org/attachment.cgi?id=6079>
+
+commit fe23ada5cc8c13fa30aa210df9968a4042593ea2
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Jun 14 21:52:21 2006 +0000
+
+    Refactor AccelFlags setting and some other feature settings for various MGA
+        hardware. Eventually AccelFlags will be set from a table look-up, but
+        that will come after the PCI rework is merged.
+
+commit 72667a14fa330ef3b08dd72ab84ff09b164ff5ed
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Apr 12 20:26:35 2006 +0000
+
+    Bug #6562: s/MAXSHORT/SHRT_MAX/ for POSIX. (Matthieu Herrb)
+
+commit f0a3923fe65abb04e64e3159b154f677e76423ca
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Apr 8 01:33:58 2006 +0000
+
+    Bump to 1.4.1 for Xv changes.
+
+commit ae30dfebbd6883f1a863d193d6c8e971c0dec92b
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Apr 7 23:09:17 2006 +0000
+
+    Add a DrawablePtr argument to the XV functions to pave the way for
+        redirected video.
+
+commit 8bc544169adfed95b11062fe9816ecf31e35b014
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 19:21:13 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.4.0.
+
+commit 07373669514b104a11fb1b4ed5214f3764c83a2f
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Apr 2 01:03:50 2006 +0000
+
+    Bug #6328: Add support for Matrox G200SE chips. (Matrox)
+
+commit 88ece3c37c4ed529686b6cdea1bf9b6eed8fceea
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Mar 20 19:12:50 2006 +0000
+
+    Bug #5587: Refactor mga_storm.c to only build once for all color depths.
+        (Ian Romanick)
+
+commit 089c7be83d6cace94a692ec46a4c3a05b32fd4f4
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Mar 15 20:21:23 2006 +0000
+
+    Coverity #1009: Check for NULL first before assigning to pMGADRI.
+
+commit 20eb3f159fe3629d1bfb6b9437912f55b690e068
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Mar 15 20:18:43 2006 +0000
+
+    Coverity #92: Eliminate a dead code path.
+
+commit 0be3b6f166709984611affad740bddaecd0bb880
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:30:00 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 7c3b4b0ba321d2a96a6586db585e194102f51bfe
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:53 2005 +0000
+
+    Stub COPYING files
+
+commit 216fcca904e358175f28b4685cdc657c4ebd2245
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Dec 19 09:07:50 2005 +0000
+
+    Typo fixes, mailing list & url updates, and other changes to prepare for
+        X11R6.9 & 7.0 releases.
+
+commit 44ed6a4d7df5353068a1ec464aedee2754a0689c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:17 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 051c589bc038a8f55754decfc90f4a87cec1d318
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:35 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit 8cd8149a942facfadd961b1ce5ab7a4ec4ab13f6
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:34 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 372574887ecbb78b5c88f9b70f380f18e22146c0
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:08 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit 6431eaab73efce760730cc0214819d970fdd39f2
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Nov 30 18:51:34 2005 +0000
+
+    Bump libdrm dep to 2.0.
+
+commit 161a85033eecfb831d6772515b09074bd4632f3f
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:59 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 352f65e64e1276511cb253bf52534a1f30776984
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:09 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit e29459c50ebcde0683aa6e33f936e8cee2eb93a9
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:15 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit df888be94ca02f16e5dc2d1eabc4ede4b1e15369
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:31:20 2005 +0000
+
+    Bump version numbers for X11R6.9/X11R7 RC2.
+
+commit 241c2b24d61266cd363f7e5f20ba8538482199df
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:15 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit a04e08832096e7f6e0763fa17a3684da24916ffe
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Nov 9 17:42:58 2005 +0000
+
+    Bug #4998: Add ';' and ',' as valid separators for MetaModes as well.
+
+commit 00d81f8f104805702ee84c6d7781502bfe37f86b
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:53 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit c906a237b118a80f7d9e1428ad7efd5f189232e6
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Oct 21 18:40:19 2005 +0000
+
+    Bug #4829: Remove some useless DRI symbol checks.
+
+commit f1db5fcc072b0066c7dbe42a2064200191ee759e
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:03 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 12b4af203c4c228521c1095b6f08e02601486137
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:53 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 58ee3b290ef6b1366a1c241063120dece82802cb
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:34 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit e8f6552523f6a2f651fd596db263213eef5edcfe
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:03 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 52497dac4be07bb5a4ca1a73ec6198851173b6c4
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Sep 27 20:53:19 2005 +0000
+
+    Update build system for apm, chips, cirrus, glint, i740, mga, neomagic,
+        newport to accomodate various new documentation and utility files.
+
+commit d3a3818010a620ae57dd6831466ce9cd4137b28f
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Sep 9 23:15:45 2005 +0000
+
+    Clean up some warnings. Fix some '#ifdef USEMGAHAL' issues that had caused
+        the number of curl-braces to be unbalanced.
+
+commit 000f59ff4686d1dbda673bf5a700f33615f9eb89
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Aug 26 07:10:29 2005 +0000
+
+    Wrapping, escaped dashes, and other TeX syntax fixes throughout the
+        manpage. (Branden Robinson, Debian #047)
+
+commit b96b4242f98f7933fab7c1ffe95d04a8b602969e
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Aug 21 19:00:39 2005 +0000
+
+    Fix DRI header checks, bump to 1.1.2.2.
+
+commit db7dde6e7db534e47f43a0b371f5474d24fcaf0f
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Sun Aug 21 01:11:46 2005 +0000
+
+    programs/Xserver/hw/xfree86/drivers/mga/mga_bios.c #include "Xmd.h" ->
+        <X11/Xmd.h>
+
+commit 694247a948d68f711c822c2ffaa9032b3cf4255b
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:47 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit eec95d13f408f5489fe8c6b611d080c275c541fb
+Author: Alan Hourihane <alanh@fairlite.demon.co.uk>
+Date:   Mon Aug 15 07:30:05 2005 +0000
+
+    Egbert's 64bit fixes for mixed 32/64bit clients
+
+commit d4b7edf86b63fb9af377bc4605381c8016a683a5
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Aug 14 00:18:25 2005 +0000
+
+    add mga_bios.c, bump version number.
+
+commit 4c5535161d81174747920a2a3e70ec27a1bcf911
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Aug 5 23:04:33 2005 +0000
+
+    I have resolved this by making all the "Direct rendering disabled" messages
+        X_WARNING and all the "Direct rendering enabled" messages X_INFO.
+        Ideally, we need to factor some of this stuff out to common code. There
+        is a *LOT* of duplication among the *_dri.c files under
+        programs/Xserver/hw/xfree86/drivers.
+    I'm trying to clean up as much low hanging fruit as I can and got tired of
+        waiting for ajax. :P
+
+commit 4a7656a726cd6b848df65cbd9c18bbfd8e09fb47
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Aug 5 18:34:11 2005 +0000
+
+    Now that Mesa has been merged into the tree, set the default value for
+        OldDmaInit to false.
+
+commit 22db234c995d12d3e538198b41fba0d555eb10c2
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Jul 31 17:19:29 2005 +0000
+
+    Post-merge fixups:
+    - Disable building the gamma driver
+    - Fix numerous Imakefiles to get header paths and subdirs right
+    - Symlink client-side GLX lib source from Mesa
+    - Add new shader subdirs to the Mesa core build
+    - Tweak the DDX drivers to not ask for "xf86dri.h"; they don't need it,
+        since they don't generate protocol, and it was breaking the build.
+
+commit 67a25f0c366873050388928a6e712e8eed0e0e67
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:43 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 73d19fde3b2c78693298b60252e1a67e28cb708a
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Thu Jul 28 15:48:19 2005 +0000
+
+    Add missing backslash, patch from Donnie Berkholz
+
+commit 3e06876c193d945f2df0c2521a2c80ec73ce5cb8
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 27 21:23:29 2005 +0000
+
+    Add xf86driproto to dependencies for drivers with DRI support. Patch from
+        Donnie Berkholz
+
+commit dccbba1b92e14df05aa351a28d4439ea4f625967
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 27 07:38:14 2005 +0000
+
+    Include binding.h to fix make distcheck
+
+commit a5f5f658a9875ea2dfb01200305dab54ce4115ac
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 18:29:39 2005 +0000
+
+    symlink.sh: add binding.h from mga/HALlib add nsc/gfx add nsc/panel
+        glint_driver.c: remove include of cfb8_32.h mga_driver.c: remove
+        include of cfb8_32.h modularizevideodriver.sh: fix typo
+
+commit efca764ce95094531baf14daf6e5e538cc1e9210
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 01:18:43 2005 +0000
+
+    "Build system for `basename $PWD | sed s/xf86-video-//`"
+
+commit e2f4c1e72976180cfbf2486236468e25f81ca431
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Tue Jul 26 00:01:58 2005 +0000
+
+    Famous last words: "This last change is so trivial, I don't even need to
+        compile-test it!" This commit fixes a dumb-dumb error by me. I broke
+        the multi-line X_ERROR message into multiple xf86DrvMsg calls to get
+        the formating correct in the log. However, I didn't bother to put in
+        the correct punctuation when I did so.
+
+commit fdb59d2535d7d517a14f3d6489ba91f3dac3b99f
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Jul 25 23:14:50 2005 +0000
+
+    PInS data on later cards (G200 and later) contains information about the
+        physical bus used for the card. This allows accurate detection of PCI
+        cards that use a PCI-to-PCI bridge with an AGP chip.
+    Correctly disable DRI on PCI cards used with pre-3.2 DRM. Previously the
+        test was performed based on PCI ID (see above for why this is wrong)
+        and was done *before* the DRM version was known.
+    Bug #3759: <https://bugs.freedesktop.org/show_bug.cgi?id=3759> Correctly
+        determine the PLL reference frequency from the PInS data. Previously
+        the wrong bit was tested. Blame the dumb programmer that used
+        cut-and-paste (that would be me).
+
+commit 6030e8206db010f65199cbf5d332d2b47cdb3580
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:29:51 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit b52ca7871cb6cf7a01210ec21cd9c20e5453f4fd
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sun Jul 3 03:28:27 2005 +0000
+
+    Fix build issues.
+
+commit 800579ef040cf5df4a8b09a4a8db6118c3d84980
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Jul 1 16:21:35 2005 +0000
+
+    Re-write the PInS processing code
+    This patch dumps all of the old BIOS processing code from the MGA DDX. The
+        new code, located in mga_bios.c, is modeled after the code in
+        matroxfb_misc.c (though no actual code was copied). Basically, the BIOS
+        is processed in one place, with "device independent" values stored in a
+        data structure. This data is then used, without extra switch-statments,
+        throughout the driver.
+    In addition, this patch adds support for processing the BIOS on PowerPC
+        systems. On PPC cards, the magic offset values (that give the location
+        of the PInS data) is not in the BIOS. Instead the driver has to search
+        the BIOS for the PInS structure signature. The patch does this and
+        correctly handles byte-ordering (and data alignement) issues.
+    This code has been tested on an AGP G400 on x86 and a PCI G450 on PowerPC.
+    NOTE: The file mga_bios.h is also removed. The "documentation" in that file
+        was moved to the file mga_PInS.txt. This file documents, as much as
+        possible, the layout of the various PInS datastructure versions. The
+        information in that file is 100% based on the old mga_bios.h and the
+        code in matroxfb_misc.c. No additional information from Matrox
+        documentation is included in that file. This just puts the information
+        that was already known in one place.
+    Xorg Bug: 3553
+
+commit acadff30e40af48592e50e55a94f9c81ab856971
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:55 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 784cd8fabf5a356a8ce501c635e4d09f39a17a0f
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Thu Jun 16 00:11:24 2005 +0000
+
+    Actually commit fix for #3528
+
+commit 89db1e50a85521189926e1e73b1ddfb4a3e12be0
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Jun 15 22:38:36 2005 +0000
+
+    Temporary fixes to work-around the "old" MGA client-side driver in the
+        tree.
+
+commit a6e0ae358bdb26452444d916a956c07da7fe88f4
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Jun 15 20:06:43 2005 +0000
+
+    Adds support for MGA DRM version 3.2.
+    Update MGA DDX to use new features of MGA DRM ersion 3.2 to enable DRI
+        support on PCI cards. Backwards compatability with older client-side
+        drivers is enabled with new Device section settings. See mga.man for
+        details.
+    Xorg bug: 3259 Reviewed by: Eric Anholt
+
+commit c2e50aad47ce32f528dad2abee8b7a8df363c93e
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Tue Jun 7 23:20:02 2005 +0000
+
+    Numerous comments, clean-ups, and refactorings for the DRI portion of the
+        MGA driver.
+    - Use mga_drm.h instead of mga_common.h. Due to this, all the MGA-specific
+        DRM names were changed to generic versions (i.e., drmMGALock became
+        drm_lock_t).
+    - Merge MGADRIMapInit into MGADRIAGPInit and rename the resulting function
+        MGADRIBootstrapDMA.
+    - Eliminate several unnecessary drmMap calls. The server has no need to map
+        MMIO space, primary DMA buffer space, secondary DMA buffer space, WARP
+        microcode space, or the DRM status page.
+    - Clarified which portions of the client / server DRI interface are no
+        longer used.
+    - Removed some unused fields from MGADRIServerPrivateRec.
+    - Bump MGA_PATCHLEVEL.
+    Reviewed by: Adam Jackson Reviewed by: Eric Anholt
+
+commit f4b3779cafdbcfeaddf6f55c4b2c67a667ab5d14
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed May 18 17:47:35 2005 +0000
+
+    Bug #3163: Create new DRIINFO_*_VERSION macros to indicate the version
+        number of the DRIInfoRec, disambiguating it from the XF86DRI protocol
+        version number. Modify DRIQueryVersion to return the libdri version
+        number, which all DDXes were requesting implicitly. Fix the DDXes to
+        check for the DRIINFO version they were compiled against.
+
+commit 1b6392ffb792212016e710aaf27ffe36e5703d36
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:28 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 58e70eb5ef3b0a2d4ac2950c45670a660691b1f6
+Author: Markus Kuhn <Markus.Kuhn@cl.cam.ac.uk>
+Date:   Sat Dec 4 00:43:09 2004 +0000
+
+    Encoding of numerous files changed to UTF-8
+
+commit 99eab59d167595a7deefc55b2c3226bc861a4986
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Aug 16 09:13:14 2004 +0000
+
+    Bug #1087: Make sure all the *Weak symbols are documented in the import
+        list, so the loader knows not to complain about unresolved symbols when
+        an optional module isn't loaded. This typically manifests as warnings
+        about fbdevHW symbols when the user isn't using the framebuffer
+        console.
+
+commit f29f2239d31232e152744321c447035ede658ce2
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Fri Aug 13 18:24:08 2004 +0000
+
+    Fri Aug 13 19:53:10 2004 Soeren Sandmann <sandmann@redhat.com>
+    Fix for lockups on some versions of Matrox Mystique. #687, Patch from Mike
+        Harris.
+    Call xf86EnableDisableFBAccess though the function pointer instead of
+        directly. #1041, Patch from Aaron Plattner.
+    Swap the phsyical size of the screen when rotiation. #1050, Patch from
+        Aaron Plattner.
+    Fri Aug 13 19:47:12 2004 Soeren Sandmann <sandmann@redhat.com>
+    Make HAVE_FT_BITMAP_SIZE_Y_PPEM conditional on the FreeType version instead
+        of proping it. This way it will work with the monolithic version too.
+        #1062, Patch by Owen Taylor.
+
+commit d9e1c04184e016604a9c84d53970c783f0849d2a
+Author: Kevin E Martin <kem@kem.org>
+Date:   Mon Aug 9 22:37:22 2004 +0000
+
+    Fix install problem on platforms not using xorg.cf/xfree86.cf (Bug #339,
+        Harold L. Hunt II, Alexander Gottwald).
+    Fix crash when using X core font in zh_CN.UTF-8 locale (Bug #368, Yu Shao,
+        David Dawes).
+    Fix glXMakeCurrent(Dpy, None, NULL) crash (Bug #719, Adam Jackson).
+    HP-PA build fix (Bug #828, Guy Martin, Paul Anderson).
+    Fix SDK build for GATOS and Wacom driver (Bug #829, Bryan Stine).
+    Fix attempt to read video ROM before enabling it (Bug #843, Ivan
+        Kokshaysky, Mike A. Harris).
+    Fix detection of primary adapter (Bug #843, Ivan Kokshaysky, Mike A.
+        Harris).
+    Clarify xset man page description of how to use the keyboard repeat rate
+        settings (Bug #846, Mike A. Harris).
+    Fix problem where print-screen key would get remapped to sys-req in certain
+        keymaps, which broke GNOME printscreen functionality (Bug #847, Owen
+        Taylor).
+    Fix several render problems:
+    - MMIO mode support
+    - Hang on IGP chips
+    - VT switching hang
+    - 3D render corruption (Bug #922, Hui Yu).
+
+commit 7043429714bbe667f74ead4e5f3465e27695c996
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Aug 3 08:52:16 2004 +0000
+
+    Fix declaration of XAACachePlanarMonoStippleProc. Rename
+        XAACachePlanarMonoStippleWeak to XAAGetCachePlanarMonoStipple() for
+        consistency with other parts of xaa and fix forward declaration in
+        xaalocal.h. Fixes last comments on Bug #962.
+
+commit a44da97b743cf5f131bb6a7709ba72e30701be8b
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Aug 3 02:44:21 2004 +0000
+
+    Bug #962: Remove LoaderSymbol calls introduced by the dlloader work so
+        DoLoadableServer NO builds work again.
+
+commit 4db80992d38311deaefdbe5da1c41b2c14102e1a
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jul 31 01:21:18 2004 +0000
+
+    Change several LoaderSymbol calls introduced by the bug #400 patch to
+    *Weak() resolver functions.
+
+commit dd173d29d2c2bd73bea8eef018b1c6dd6b7a967c
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Jul 30 20:30:52 2004 +0000
+
+    Bug #400 (partial): Driver fixes for the dlloader. When using dlloader, all
+        framebuffer formats except cfb and the overlay modes should work, and
+        r128 and radeon need to be loaded from the ati driver (both issues to
+        be fixed soon). Tested on i740, s3virge, mach64, tdfx, vesa, and vga
+        drivers. elfloader users shouldn't be affected.
+
+commit e12aa54892259cdfef7c0f9419b58f0b9d4163d7
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Jul 30 18:40:36 2004 +0000
+
+    Fixed typo in a comment.
+    Deleted bogus comment.
+    Added debugging support.
+
+commit 4f86d37662c0fe3f27a886f7947e009235103e6b
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Tue Jul 27 02:55:47 2004 +0000
+
+    - add mga_maven.h; needed for mga maven support (Ryan Underwood)
+
+commit 9ae7f9446d049a1fad550f5f681bc557de158c10
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Tue Jul 27 02:50:41 2004 +0000
+
+    - enable maven support for TV detection, DPMS, and DDC on crtc2 on G400
+        (Ryan Underwood) (http://bugs.xfree86.org/show_bug.cgi?id=1098)
+    - expose I2CStart; needed for mga maven support (Ryan Underwood)
+
+commit 8b030a847771f6b34bf38913eb6b53543f320f29
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Mon Jul 26 23:14:37 2004 +0000
+
+    - Add Radeon DynamicClocks option
+    - Add small fixes and clean ups from ati's last code drop (typo_fixes,
+        remove_fudge, laptop, xvfix)
+    - fix possible segfault in mga_dri.c (Ryan Underwood)
+    - Add Xv support to pre-nm2160 neomagic chipsets
+
+commit e9a123f08880882a519b6eba8305d62ac375ca10
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:44:00 2004 +0000
+
+    Merge DRI-trunk-20040613 changes in programs/Xserver/hw/xfree86/drivers,
+        with the following notes:
+    - Savage and Mach64 (= ati/ati*.[ch] changes) DRI not merged due to
+        insecurity.
+    - VIA driver converted to new drmContext and drmHandle names.
+    - Radeon driver merge conflicted in many places, and MergedFB at least
+        could probably use some checking at this point.
+
+commit 1ca2311bee53e99b49a860862e4010e58c918585
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:26:24 2004 +0000
+
+    DRI trunk-20040613 import
+
+commit 7cbb9f870b020742a254f1e9aadd0209b1f0a876
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:23:24 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit 9dd51de1d530c6081333d30f945afb6d9208a77f
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:38:38 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit f02d171b227e657f02a0b99a28cff7cbda21a583
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:25 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit d8072750f830173e3c9eefae8364d12190b20c26
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:19 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit ddb58a6e1be274dce96cc7c29965a45c2294c5d3
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:53 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 0d050fbd293089d93bd78b58b1b454dc2ced8cdf
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:19 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 64c0cb99b62c87052374f63d3e31e2603eab2f9c
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Mon Feb 23 20:35:03 2004 +0000
+
+    Import most of XFree86 4.4RC3. This import excludes files which have the
+        new license. If we want to, later we can import 4.4RC3 again and pick
+        up the files that have the new license, but for now the vendor branch
+        is "pure."
+
+commit bf37df17ecf040836ad8924a9174787d0f57ed5a
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:37 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit d3b3c858814952bc7344a4154e981851fd9bb494
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 1e444800e5935c1c5678aaa9fa3751c4519f42e4
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision

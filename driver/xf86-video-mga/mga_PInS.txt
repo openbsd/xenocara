@@ -1,0 +1,232 @@
+Version 1:
+
+Offset  Type      Description
+
+  0     uint16_t  Length of the PInS data, in bytes.  This must be 64.
+  2     uint16_t  Product ID.  Possible values are:
+        0: MGA-S1P20 (2MB base with 175MHz RAMDAC)
+        1: MGA-S1P21 (2MB base with 220MHz RAMDAC)
+        2: Reserved
+        3: Reserved
+        4: MGA-S1P40 (4MB base with 175MHz RAMDAC)
+        5: MGA-S1P41 (4MB base with 220MHz RAMDAC)
+  4     char[8]   Serial number of the board.  NUL terminated string.
+ 12     uint16_t  Manufacturing date of the board (at product test).
+                  Format (stored little-endian) yyyyyyymmmmddddd.
+ 14     uint16_t  Identification of manufacturing site.
+ 16     uint16_t  Number and revision level of the PCB.  Format (stored
+                  little-endian): nnnnnnnnnnnrrrrr, where n = PCB number
+                  ex:576 (from 0->2047) and r = PCB revision (from 0->31).
+ 18     uint16_t  Identification of any PMBs.
+ 20     uint8_t   RAMDAC speed (0=175MHz, 1=220MHz).
+ 21     uint8_t   RAMDAC type (0=TVP3026, 1=TVP3027).
+ 22     uint16_t  Maximum PCLK of the ramdac.
+ 24     uint16_t  Maximum LDCLK supported by the WRAM memory.
+ 26     uint16_t  Maximum MCLK of base board.
+ 28     uint16_t  Maximum MCLK of 4Mb board.
+ 30     uint16_t  Maximum MCLK of 8Mb board.
+ 32     uint16_t  Maximum MCLK of board with multimedia module.
+ 34     uint16_t  Diagnostic test pass frequency.
+ 36     uint16_t  Default VGA mode1 pixel frequency.
+ 38     uint16_t  Default VGA mode2 pixel frequency.
+ 40     uint16_t  Date of last BIOS programming / update.
+ 42     uint16_t  Number of times BIOS has been programmed.
+ 44     uint32_t  Support for up to 32 hardware/software options.
+ 48     uint32_t  Support for up to 32 hardware/software features.
+ 52     uint16_t  Definition of VGA mode MCLK.
+ 54     uint16_t  Indicate the revision level of this header struct.
+ 56     char[7]   Unused.
+ 63     uint8_t   Check-sum byte.
+
+
+Version 2:
+
+Unless otherwise noted, all clock speeds stored in this version of the PInS
+data are stored as the clock speed in MHz minus 100.  To convert a stored
+clock speed, C, to kHz, use ((C + 100) * 1000).
+
+Offset  Type      Description
+  0     uint16_t  PInS structure signature.  This must be the 16-bit
+                  value (stored little-endian) 0x412E.
+  2     uint8_t   Length of the PInS data, in bytes.  For version 2, this
+                  must be 64.
+  3     uint8_t   Reserved.
+  4     uint16_t  Version of the structure.  For version 2, this must be the
+                  value (stored little-endian) 0x02XX.
+  6     uint16_t  Date of last BIOS programming / update.
+  8     uint16_t  Number of times BIOS has been programmed.
+ 10     uint16_t  Product ID.
+ 12     char[16]  Serial number of the board.  NUL terminated string.
+ 28     char[6]   Parts list identification.  NUL terminated string.
+ 34     uint16_t  Number and revision level of the PCB.  Format (stored
+                  little-endian): nnnnnnnnnnnrrrrr, where n = PCB number
+                  ex:576 (from 0->2047) and r = PCB revision (from 0->31).
+ 36     uint32_t  Support for up to 32 hardware/software features.
+ 40     uint8_t   RAMDAC type.
+ 41     uint8_t   RAMDAC speed.  Stored using standard clock encoding (see
+                  above).
+ 42     uint8_t   PclkMax
+ 43     uint8_t   Memory clock.  Stored using standard clock encoding (see
+                  above).
+ 44     uint8_t   Maximum MCLK of base board.
+ 45     uint8_t   Maximum MCLK of 4Mb board.
+ 46     uint8_t   Maximum MCLK of 8Mb board.
+ 47     uint8_t   Maximum MCLK of board with multimedia module.
+ 48     uint8_t   TestClk
+ 49     uint8_t   Default VGA mode1 pixel frequency.
+ 50     uint8_t   Default VGA mode2 pixel frequency.
+ 51     uint8_t   MCTLWTST
+ 52     uint8_t   VidCtrl
+ 53     uint8_t   Maximum MCLK of 12Mb board.
+ 54     uint8_t   Maximum MCLK of 16Mb board.
+ 55     char[8]   Unused
+ 63     uint8_t   Check-sum byte
+
+
+Version 3:
+
+Unless otherwise noted, all clock speeds stored in this version of the PInS
+data are stored as the clock speed in MHz minus 100.  To convert a stored
+clock speed, C, to kHz, use ((C + 100) * 1000).
+
+Offset  Type      Description
+  0     uint16_t  PInS structure signature.  This must be the 16-bit
+                  value (stored little-endian) 0x412E.
+  2     uint8_t   Length of the PInS data, in bytes.  For version 3, this
+                  must be 64.
+  3     uint8_t   Reserved.
+  4     uint16_t  Version of the structure.  For version 3, this must be the
+                  value (stored little-endian) 0x03XX.
+  6     uint16_t  Date of last BIOS programming / update.
+  8     uint16_t  Number of times BIOS has been programmed.
+ 10     uint16_t  Product ID.
+ 12     char[16]  Serial number of the board.  NUL terminated string.
+ 28     char[6]   Parts list identification.  NUL terminated string.
+ 34     uint16_t  Number and revision level of the PCB.  Format (stored
+                  little-endian): nnnnnnnnnnnrrrrr, where n = PCB number
+                  ex:576 (from 0->2047) and r = PCB revision (from 0->31).
+ 36     uint8_t   RAMDAC speed.  Stored using standard clock encoding (see
+                  above).
+ 37     char[15]  Unknown?
+ 52     uint32_t  OPTION?  Stored little-endian.
+                  Bits     Meaning
+		  0 - 4    Unknown?
+		  5        0 = Reference PLL speed is 27.050MHz.
+		           1 = Reference PLL speed is 14.318MHz.
+		  6 - 31   Unknown?
+ 56     uint16_t  MEMRDBK?
+ 58     uint32_t  OPTION2?
+ 62     char      Unused
+ 63     uint8_t   Check-sum byte
+
+
+Version 4:
+
+Unless otherwise noted, all clock speeds stored in this version of the PInS
+data are stored as the clock speed in MHz divided by 4.  To convert a stored
+clock speed, C, to kHz, use ((C * 4) * 1000).
+
+Offset  Type      Description
+  0     uint16_t  PInS structure signature.  This must be the 16-bit
+                  value (stored little-endian) 0x412E.
+  2     uint8_t   Length of the PInS data, in bytes.  For version 4, this
+                  must be 128.
+  3     uint8_t   Reserved.
+  4     uint16_t  Version of the structure.  For version 4, this must be the
+                  value (stored little-endian) 0x04XX.
+  6     uint16_t  Date of last BIOS programming / update.
+  8     uint16_t  Number of times BIOS has been programmed.
+ 10     uint16_t  Product ID.
+ 12     char[16]  Serial number of the board.  NUL terminated string.
+ 28     char[6]   Parts list identification.  NUL terminated string.
+ 34     uint16_t  Number and revision level of the PCB.  Format (stored
+                  little-endian): nnnnnnnnnnnrrrrr, where n = PCB number
+                  ex:576 (from 0->2047) and r = PCB revision (from 0->31).
+ 36     char      Unknown?
+ 37     char      Unknown?
+ 38     uint8_t   VCO max for system PLL
+ 39     uint8_t   VCO max for pixel PLL
+ 40     char[13]  Unknown?
+ 53     uint8_t   OPTION?
+ 54     char[11]  Unknown?
+ 65     uint8_t   System PLL?  Stored using standard clock encoding (see
+                  above).
+ 66     char      Unknown?
+ 67     uint32_t  OPTION3?  This offset seems wrong, but that's what
+                  matroxfb does.
+ 71     char[15]  Unknown?
+ 86     uint16_t  MEMRDBK?
+ 88     char[4]   Unknown?
+ 92     uint32_t  OPTIONx?
+                  Bits     Meaning
+		  0        0 = Reference PLL speed is 27.050MHz.
+		           1 = Reference PLL speed is 14.318MHz.
+		  1 - 31   Unknown?
+ 96     char[21]  Unknown?
+127     uint8_t   Check-sum byte
+
+
+Version 5:
+
+Unless otherwise noted, all clock speeds stored in this version of the PInS
+data are stored as the clock speed in MHz divided by 6 for version 0x500 or
+by 8 for all other versions.  To convert a stored clock speed, C, to kHz, on
+version 0x0500, use ((C * 6) * 1000).  For all other versions, use ((C * 8) *
+1000).
+
+Offset  Type      Description
+  0     uint16_t  PInS structure signature.  This must be the 16-bit
+                  value (stored little-endian) 0x412E.
+  2     uint8_t   Length of the PInS data, in bytes.  For version 5, this
+                  must be 128.
+  3     uint8_t   Reserved.
+  4     uint16_t  Version of the structure.  For version 5, this must be the
+                  value (stored little-endian) 0x05XX.
+  6     uint16_t  Date of last BIOS programming / update.
+  8     uint16_t  Number of times BIOS has been programmed.
+ 10     uint16_t  Product ID.
+ 12     char[16]  Serial number of the board.  NUL terminated string.
+ 28     char[6]   Parts list identification.  NUL terminated string.
+ 34     uint16_t  Number and revision level of the PCB.  Format (stored
+                  little-endian): nnnnnnnnnnnrrrrr, where n = PCB number
+                  ex:576 (from 0->2047) and r = PCB revision (from 0->31).
+ 36     uint8_t   VCO max for system PLL.  Stored using standard clock
+                  encoding (see above).
+ 37     uint8_t   VCO max for video PLL.  Stored using standard clock
+                  encoding (see above).
+ 38     uint8_t   VCO max for pixel PLL.  Stored using standard clock
+                  encoding (see above).
+ 39     char[9]   Unknown?
+ 48     uint32_t  OPTION1?
+ 52     uint32_t  OPTION2?
+ 56     char[38]  Unknown?
+ 94     uint32_t  OPTION3?
+ 98     uint32_t  MCTLWTST?
+102     uint32_t  MEMMISC?
+106     uint32_t  MEMRDBK?
+110     uint32_t  OPTIONx?
+                  Bits     Meaning
+		  0        0 = Reference PLL speed is 27.050MHz.
+		           1 = Reference PLL speed is 14.318MHz.
+		  1 - 31   Unknown?
+114     uint16_t  MEMINFO?
+                  Bits     Meaning
+		  0 - 4    Unknown
+		  5 - 6    0 = SDR memory installed?
+		           1 = DDR memory installed
+		           2 = Unknown
+		           3 = Unknown
+		  7        Unknown
+		  8        EMRSWEN?
+		  9        Has DLL?
+		  10       Core uses MCTLWTST?
+		  11 - 15  MCTLWTST values for core?
+116     char[5]   Unknown?
+121     uint8_t   VCO min for system PLL.  Stored using standard clock
+                  encoding (see above).
+122     uint8_t   VCO min for video PLL.  Stored using standard clock
+                  encoding (see above).
+123     uint8_t   VCO min for pixel PLL.  Stored using standard clock
+                  encoding (see above).
+124     char[3]   Unknown?
+127     uint8_t   Check-sum byte
