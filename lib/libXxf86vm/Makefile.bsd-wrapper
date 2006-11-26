@@ -1,0 +1,5 @@
+# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2006/11/26 12:07:34 matthieu Exp $
+
+SHARED_LIBS=	Xxf86vm 4.0
+
+.include <bsd.xorg.mk>
