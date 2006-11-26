@@ -312,6 +312,9 @@
 /* Name of the period field in struct kbd_repeat */
 #undef LNX_KBD_PERIOD_NAME
 
+/* Support os-specific local connections */
+#undef LOCALCONN
+
 /* Support MIT Misc extension */
 #undef MITMISC
 

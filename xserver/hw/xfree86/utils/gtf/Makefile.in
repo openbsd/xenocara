@@ -344,7 +344,6 @@ RES_TRUE = @RES_TRUE@
 RGB_DB = @RGB_DB@
 SCREENSAVER_FALSE = @SCREENSAVER_FALSE@
 SCREENSAVER_TRUE = @SCREENSAVER_TRUE@
-SED = sed
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
@@ -577,6 +576,7 @@ gtf_LDADD = -lm
 appmandir = $(APP_MAN_DIR)
 appman_PRE = gtf.man
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
+SED = sed
 SUFFIXES = .pre .man .man.pre .$(APP_MAN_SUFFIX) .man
 
 # Translate XCOMM into pound sign with sed, rather than passing -DXCOMM=XCOMM

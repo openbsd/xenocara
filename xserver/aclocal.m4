@@ -1578,27 +1578,10 @@ linux*)
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # find out which ABI we are using
-  libsuff=
-  case "$host_cpu" in
-  x86_64*|s390x*|powerpc64*)
-    echo '[#]line __oline__ "configure"' > conftest.$ac_ext
-    if AC_TRY_EVAL(ac_compile); then
-      case `/usr/bin/file conftest.$ac_objext` in
-      *64-bit*)
-        libsuff=64
-        sys_lib_search_path_spec="/lib${libsuff} /usr/lib${libsuff} /usr/local/lib${libsuff}"
-        ;;
-      esac
-    fi
-    rm -rf conftest*
-    ;;
-  esac
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
-    lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \[$]2)); skip = 1; } { if (!skip) print \[$]0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib${libsuff} /usr/lib${libsuff} $lt_ld_extra"
+    lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s", \[$]2)); skip = 1; } { if (!skip) print \[$]0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -4305,9 +4288,6 @@ CC=$lt_[]_LT_AC_TAGVAR(compiler, $1)
 # Is the compiler the GNU C compiler?
 with_gcc=$_LT_AC_TAGVAR(GCC, $1)
 
-gcc_dir=\`gcc -print-file-name=. | $SED 's,/\.$,,'\`
-gcc_ver=\`gcc -dumpversion\`
-
 # An ERE matcher.
 EGREP=$lt_EGREP
 
@@ -4441,11 +4421,11 @@ striplib=$lt_striplib
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
-predep_objects=\`echo $lt_[]_LT_AC_TAGVAR(predep_objects, $1) | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+predep_objects=$lt_[]_LT_AC_TAGVAR(predep_objects, $1)
 
 # Dependencies to place after the objects being linked to create a
 # shared library.
-postdep_objects=\`echo $lt_[]_LT_AC_TAGVAR(postdep_objects, $1) | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+postdep_objects=$lt_[]_LT_AC_TAGVAR(postdep_objects, $1)
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
@@ -4457,7 +4437,7 @@ postdeps=$lt_[]_LT_AC_TAGVAR(postdeps, $1)
 
 # The library search path used internally by the compiler when linking
 # a shared library.
-compiler_lib_search_path=\`echo $lt_[]_LT_AC_TAGVAR(compiler_lib_search_path, $1) | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+compiler_lib_search_path=$lt_[]_LT_AC_TAGVAR(compiler_lib_search_path, $1)
 
 # Method to check whether dependent libraries are shared objects.
 deplibs_check_method=$lt_deplibs_check_method
@@ -4537,7 +4517,7 @@ variables_saved_for_relink="$variables_saved_for_relink"
 link_all_deplibs=$_LT_AC_TAGVAR(link_all_deplibs, $1)
 
 # Compile-time system search path for libraries
-sys_lib_search_path_spec=\`echo $lt_sys_lib_search_path_spec | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+sys_lib_search_path_spec=$lt_sys_lib_search_path_spec
 
 # Run-time system search path for libraries
 sys_lib_dlsearch_path_spec=$lt_sys_lib_dlsearch_path_spec
@@ -6373,7 +6353,6 @@ do
     done
   done
 done
-IFS=$as_save_IFS
 lt_ac_max=0
 lt_ac_count=0
 # Add /usr/xpg4/bin/sed as it is typically found on Solaris
@@ -6406,7 +6385,6 @@ for lt_ac_sed in $lt_ac_sed_list /usr/xpg4/bin/sed; do
 done
 ])
 SED=$lt_cv_path_SED
-AC_SUBST([SED])
 AC_MSG_RESULT([$SED])
 ])
 
@@ -6443,7 +6421,7 @@ if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
 	AC_PATH_TOOL([PKG_CONFIG], [pkg-config])
 fi
 if test -n "$PKG_CONFIG"; then
-	_pkg_min_version=m4_default([$1], [0.9.0])
+	_pkg_min_version=m4_ifval([$1], [$1], [0.9.0])
 	AC_MSG_CHECKING([pkg-config is at least version $_pkg_min_version])
 	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
 		AC_MSG_RESULT([yes])
@@ -6479,29 +6457,13 @@ fi])
 # ---------------------------------------------
 m4_define([_PKG_CONFIG],
 [if test -n "$PKG_CONFIG"; then
-    if test -n "$$1"; then
-        pkg_cv_[]$1="$$1"
-    else
         PKG_CHECK_EXISTS([$3],
                          [pkg_cv_[]$1=`$PKG_CONFIG --[]$2 "$3" 2>/dev/null`],
 			 [pkg_failed=yes])
-    fi
 else
 	pkg_failed=untried
 fi[]dnl
 ])# _PKG_CONFIG
-
-# _PKG_SHORT_ERRORS_SUPPORTED
-# -----------------------------
-AC_DEFUN([_PKG_SHORT_ERRORS_SUPPORTED],
-[AC_REQUIRE([PKG_PROG_PKG_CONFIG])
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi[]dnl
-])# _PKG_SHORT_ERRORS_SUPPORTED
-
 
 # PKG_CHECK_MODULES(VARIABLE-PREFIX, MODULES, [ACTION-IF-FOUND],
 # [ACTION-IF-NOT-FOUND])
@@ -6524,39 +6486,29 @@ AC_MSG_CHECKING([for $1])
 _PKG_CONFIG([$1][_CFLAGS], [cflags], [$2])
 _PKG_CONFIG([$1][_LIBS], [libs], [$2])
 
-m4_define([_PKG_TEXT], [Alternatively, you may set the environment variables $1[]_CFLAGS
-and $1[]_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.])
-
 if test $pkg_failed = yes; then
-        _PKG_SHORT_ERRORS_SUPPORTED
-        if test $_pkg_short_errors_supported = yes; then
-	        $1[]_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "$2"`
-        else 
-	        $1[]_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$2"`
-        fi
+	$1[]_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$2"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$$1[]_PKG_ERRORS" >&AS_MESSAGE_LOG_FD
+	echo "$$1[]_PKG_ERRORS" 1>&AS_MESSAGE_LOG_FD
 
 	ifelse([$4], , [AC_MSG_ERROR(dnl
-[Package requirements ($2) were not met:
-
-$$1_PKG_ERRORS
-
+[Package requirements ($2) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-_PKG_TEXT
-])],
-		[AC_MSG_RESULT([no])
-                $4])
+Alternatively you may set the $1_CFLAGS and $1_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.])],
+		[$4])
 elif test $pkg_failed = untried; then
 	ifelse([$4], , [AC_MSG_FAILURE(dnl
 [The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-_PKG_TEXT
+Alternatively you may set the $1_CFLAGS and $1_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.])],
 		[$4])
@@ -6567,522 +6519,6 @@ else
 	ifelse([$3], , :, [$3])
 fi[]dnl
 ])# PKG_CHECK_MODULES
-
-dnl
-dnl Copyright 2005-2006 Sun Microsystems, Inc.  All rights reserved.
-dnl 
-dnl Permission is hereby granted, free of charge, to any person obtaining a
-dnl copy of this software and associated documentation files (the
-dnl "Software"), to deal in the Software without restriction, including
-dnl without limitation the rights to use, copy, modify, merge, publish,
-dnl distribute, and/or sell copies of the Software, and to permit persons
-dnl to whom the Software is furnished to do so, provided that the above
-dnl copyright notice(s) and this permission notice appear in all copies of
-dnl the Software and that both the above copyright notice(s) and this
-dnl permission notice appear in supporting documentation.
-dnl
-dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
-dnl OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
-dnl HOLDERS INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL
-dnl INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING
-dnl FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
-dnl NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
-dnl WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-dnl
-dnl Except as contained in this notice, the name of a copyright holder
-dnl shall not be used in advertising or otherwise to promote the sale, use
-dnl or other dealings in this Software without prior written authorization
-dnl of the copyright holder.
-
-# XORG_MACROS_VERSION(required-version)
-# -------------------------------------
-# Minimum version: 1.1.0
-#
-# If you're using a macro added in Version 1.1 or newer, include this in
-# your configure.ac with the minimum required version, such as:
-# XORG_MACROS_VERSION(1.1)
-#
-# To force at least a version with this macro defined, also add:
-# m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.1 or later before running autoconf/autogen])])
-#
-#
-# See the "minimum version" comment for each macro you use to see what 
-# version you require.
-AC_DEFUN([XORG_MACROS_VERSION],[
-	[XORG_MACROS_needed_version=$1
-	XORG_MACROS_needed_major=`echo $XORG_MACROS_needed_version | sed 's/\..*$//'`
-	XORG_MACROS_needed_minor=`echo $XORG_MACROS_needed_version | sed -e 's/^[0-9]*\.//' -e 's/\..*$//'`]
-	AC_MSG_CHECKING([if xorg-macros used to generate configure is at least ${XORG_MACROS_needed_major}.${XORG_MACROS_needed_minor}])
-	[XORG_MACROS_version=1.1.1
-	XORG_MACROS_major=`echo $XORG_MACROS_version | sed 's/\..*$//'`
-	XORG_MACROS_minor=`echo $XORG_MACROS_version | sed -e 's/^[0-9]*\.//' -e 's/\..*$//'`]
-	if test $XORG_MACROS_major -ne $XORG_MACROS_needed_major ; then
-		AC_MSG_ERROR([configure built with incompatible version of xorg-macros.m4 - requires version ${XORG_MACROS_major}.x])
-	fi
-	if test $XORG_MACROS_minor -lt $XORG_MACROS_needed_minor ; then
-		AC_MSG_ERROR([configure built with too old of a version of xorg-macros.m4 - requires version ${XORG_MACROS_major}.${XORG_MACROS_minor}.0 or newer])
-	fi
-	AC_MSG_RESULT([yes, $XORG_MACROS_version])
-]) # XORG_MACROS_VERSION
-
-# XORG_PROG_RAWCPP()
-# ------------------
-# Minimum version: 1.0.0
-#
-# Find cpp program and necessary flags for use in pre-processing text files
-# such as man pages and config files
-AC_DEFUN([XORG_PROG_RAWCPP],[
-AC_REQUIRE([AC_PROG_CPP])
-AC_PATH_PROGS(RAWCPP, [cpp], [${CPP}], 
-   [$PATH:/bin:/usr/bin:/usr/lib:/usr/libexec:/usr/ccs/lib:/usr/ccs/lbin:/lib])
-
-# Check for flag to avoid builtin definitions - assumes unix is predefined,
-# which is not the best choice for supporting other OS'es, but covers most
-# of the ones we need for now.
-AC_MSG_CHECKING([if $RAWCPP requires -undef])
-AC_LANG_CONFTEST([Does cpp redefine unix ?])
-if test `${RAWCPP} < conftest.$ac_ext | grep -c 'unix'` -eq 1 ; then
-	AC_MSG_RESULT([no])
-else
-	if test `${RAWCPP} -undef < conftest.$ac_ext | grep -c 'unix'` -eq 1 ; then
-		RAWCPPFLAGS=-undef
-		AC_MSG_RESULT([yes])
-	else
-		AC_MSG_ERROR([${RAWCPP} defines unix with or without -undef.  I don't know what to do.])
-	fi
-fi
-rm -f conftest.$ac_ext
-
-AC_MSG_CHECKING([if $RAWCPP requires -traditional])
-AC_LANG_CONFTEST([Does cpp preserve   "whitespace"?])
-if test `${RAWCPP} < conftest.$ac_ext | grep -c 'preserve   \"'` -eq 1 ; then
-	AC_MSG_RESULT([no])
-else
-	if test `${RAWCPP} -traditional < conftest.$ac_ext | grep -c 'preserve   \"'` -eq 1 ; then
-		RAWCPPFLAGS="${RAWCPPFLAGS} -traditional"
-		AC_MSG_RESULT([yes])
-	else
-		AC_MSG_ERROR([${RAWCPP} does not preserve whitespace with or without -traditional.  I don't know what to do.])
-	fi
-fi
-rm -f conftest.$ac_ext
-AC_SUBST(RAWCPPFLAGS)
-]) # XORG_PROG_RAWCPP
-
-# XORG_MANPAGE_SECTIONS()
-# -----------------------
-# Minimum version: 1.0.0
-#
-# Determine which sections man pages go in for the different man page types
-# on this OS - replaces *ManSuffix settings in old Imake *.cf per-os files.
-# Not sure if there's any better way than just hardcoding by OS name.
-# Override default settings by setting environment variables
-
-AC_DEFUN([XORG_MANPAGE_SECTIONS],[
-AC_REQUIRE([AC_CANONICAL_HOST])
-
-if test x$APP_MAN_SUFFIX = x    ; then
-    APP_MAN_SUFFIX=1
-fi
-if test x$APP_MAN_DIR = x    ; then
-    APP_MAN_DIR='$(mandir)/man$(APP_MAN_SUFFIX)'
-fi
-
-if test x$LIB_MAN_SUFFIX = x    ; then
-    LIB_MAN_SUFFIX=3
-fi
-if test x$LIB_MAN_DIR = x    ; then
-    LIB_MAN_DIR='$(mandir)/man$(LIB_MAN_SUFFIX)'
-fi
-
-if test x$FILE_MAN_SUFFIX = x    ; then
-    case $host_os in
-	solaris*)	FILE_MAN_SUFFIX=4  ;;
-	*)		FILE_MAN_SUFFIX=5  ;;
-    esac
-fi
-if test x$FILE_MAN_DIR = x    ; then
-    FILE_MAN_DIR='$(mandir)/man$(FILE_MAN_SUFFIX)'
-fi
-
-if test x$MISC_MAN_SUFFIX = x    ; then
-    case $host_os in
-	solaris*)	MISC_MAN_SUFFIX=5  ;;
-	*)		MISC_MAN_SUFFIX=7  ;;
-    esac
-fi
-if test x$MISC_MAN_DIR = x    ; then
-    MISC_MAN_DIR='$(mandir)/man$(MISC_MAN_SUFFIX)'
-fi
-
-if test x$DRIVER_MAN_SUFFIX = x    ; then
-    case $host_os in
-	solaris*)	DRIVER_MAN_SUFFIX=7  ;;
-	*)		DRIVER_MAN_SUFFIX=4  ;;
-    esac
-fi
-if test x$DRIVER_MAN_DIR = x    ; then
-    DRIVER_MAN_DIR='$(mandir)/man$(DRIVER_MAN_SUFFIX)'
-fi
-
-if test x$ADMIN_MAN_SUFFIX = x    ; then
-    case $host_os in
-	solaris*)	ADMIN_MAN_SUFFIX=1m ;;
-	*)		ADMIN_MAN_SUFFIX=8  ;;
-    esac
-fi
-if test x$ADMIN_MAN_DIR = x    ; then
-    ADMIN_MAN_DIR='$(mandir)/man$(ADMIN_MAN_SUFFIX)'
-fi
-
-
-AC_SUBST([APP_MAN_SUFFIX])
-AC_SUBST([LIB_MAN_SUFFIX])
-AC_SUBST([FILE_MAN_SUFFIX])
-AC_SUBST([MISC_MAN_SUFFIX])
-AC_SUBST([DRIVER_MAN_SUFFIX])
-AC_SUBST([ADMIN_MAN_SUFFIX])
-AC_SUBST([APP_MAN_DIR])
-AC_SUBST([LIB_MAN_DIR])
-AC_SUBST([FILE_MAN_DIR])
-AC_SUBST([MISC_MAN_DIR])
-AC_SUBST([DRIVER_MAN_DIR])
-AC_SUBST([ADMIN_MAN_DIR])
-]) # XORG_MANPAGE_SECTIONS
-
-# XORG_CHECK_LINUXDOC
-# -------------------
-# Minimum version: 1.0.0
-#
-# Defines the variable MAKE_TEXT if the necessary tools and
-# files are found. $(MAKE_TEXT) blah.sgml will then produce blah.txt.
-# Whether or not the necessary tools and files are found can be checked
-# with the AM_CONDITIONAL "BUILD_LINUXDOC"
-AC_DEFUN([XORG_CHECK_LINUXDOC],[
-AC_CHECK_FILE(
-	[$prefix/share/X11/sgml/defs.ent], 
-	[DEFS_ENT_PATH=$prefix/share/X11/sgml],
-	[DEFS_ENT_PATH=]
-)
-
-AC_PATH_PROG(LINUXDOC, linuxdoc)
-AC_PATH_PROG(PS2PDF, ps2pdf)
-
-AC_MSG_CHECKING([Whether to build documentation])
-
-if test x$DEFS_ENT_PATH != x && test x$LINUXDOC != x ; then
-   BUILDDOC=yes
-else
-   BUILDDOC=no
-fi
-
-AM_CONDITIONAL(BUILD_LINUXDOC, [test x$BUILDDOC = xyes])
-
-AC_MSG_RESULT([$BUILDDOC])
-
-AC_MSG_CHECKING([Whether to build pdf documentation])
-
-if test x$PS2PDF != x ; then
-   BUILDPDFDOC=yes
-else
-   BUILDPDFDOC=no
-fi
-
-AM_CONDITIONAL(BUILD_PDFDOC, [test x$BUILDPDFDOC = xyes])
-
-AC_MSG_RESULT([$BUILDPDFDOC])
-
-MAKE_TEXT="SGML_SEARCH_PATH=$DEFS_ENT_PATH GROFF_NO_SGR=y $LINUXDOC -B txt"
-MAKE_PS="SGML_SEARCH_PATH=$DEFS_ENT_PATH $LINUXDOC -B latex --papersize=letter --output=ps"
-MAKE_PDF="$PS2PDF"
-MAKE_HTML="SGML_SEARCH_PATH=$DEFS_ENT_PATH $LINUXDOC  -B html --split=0"
-
-AC_SUBST(MAKE_TEXT)
-AC_SUBST(MAKE_PS)
-AC_SUBST(MAKE_PDF)
-AC_SUBST(MAKE_HTML)
-]) # XORG_CHECK_LINUXDOC
-
-# XORG_CHECK_MALLOC_ZERO
-# ----------------------
-# Minimum version: 1.0.0
-#
-# Defines {MALLOC,XMALLOC,XTMALLOC}_ZERO_CFLAGS appropriately if
-# malloc(0) returns NULL.  Packages should add one of these cflags to
-# their AM_CFLAGS (or other appropriate *_CFLAGS) to use them.
-AC_DEFUN([XORG_CHECK_MALLOC_ZERO],[
-AC_ARG_ENABLE(malloc0returnsnull,
-	AC_HELP_STRING([--enable-malloc0returnsnull],
-		       [malloc(0) returns NULL (default: auto)]),
-	[MALLOC_ZERO_RETURNS_NULL=$enableval],
-	[MALLOC_ZERO_RETURNS_NULL=auto])
-
-AC_MSG_CHECKING([whether malloc(0) returns NULL])
-if test "x$MALLOC_ZERO_RETURNS_NULL" = xauto; then
-	AC_RUN_IFELSE([
-char *malloc();
-char *realloc();
-char *calloc();
-main() {
-    char *m0, *r0, *c0, *p;
-    m0 = malloc(0);
-    p = malloc(10);
-    r0 = realloc(p,0);
-    c0 = calloc(0);
-    exit(m0 == 0 || r0 == 0 || c0 == 0 ? 0 : 1);
-}],
-		[MALLOC_ZERO_RETURNS_NULL=yes],
-		[MALLOC_ZERO_RETURNS_NULL=no])
-fi
-AC_MSG_RESULT([$MALLOC_ZERO_RETURNS_NULL])
-
-if test "x$MALLOC_ZERO_RETURNS_NULL" = xyes; then
-	MALLOC_ZERO_CFLAGS="-DMALLOC_0_RETURNS_NULL"
-	XMALLOC_ZERO_CFLAGS=$MALLOC_ZERO_CFLAGS
-	XTMALLOC_ZERO_CFLAGS="$MALLOC_ZERO_CFLAGS -DXTMALLOC_BC"
-else
-	MALLOC_ZERO_CFLAGS=""
-	XMALLOC_ZERO_CFLAGS=""
-	XTMALLOC_ZERO_CFLAGS=""
-fi
-
-AC_SUBST([MALLOC_ZERO_CFLAGS])
-AC_SUBST([XMALLOC_ZERO_CFLAGS])
-AC_SUBST([XTMALLOC_ZERO_CFLAGS])
-]) # XORG_CHECK_MALLOC_ZERO
-
-# XORG_WITH_LINT()
-# ----------------
-# Minimum version: 1.1.0
-#
-# Sets up flags for source checkers such as lint and sparse if --with-lint
-# is specified.   (Use --with-lint=sparse for sparse.)
-# Sets $LINT to name of source checker passed with --with-lint (default: lint)
-# Sets $LINT_FLAGS to flags to pass to source checker
-# Sets LINT automake conditional if enabled (default: disabled)
-#
-AC_DEFUN([XORG_WITH_LINT],[
-
-# Allow checking code with lint, sparse, etc.
-AC_ARG_WITH(lint, [AC_HELP_STRING([--with-lint],
-		[Use a lint-style source code checker (default: disabled)])],
-		[use_lint=$withval], [use_lint=no])
-if test "x$use_lint" = "xyes" ; then
-	LINT="lint"
-else
-	LINT="$use_lint"
-fi
-if test "x$LINT_FLAGS" = "x" -a "x$LINT" != "xno" ; then
-    case $LINT in
-	lint|*/lint)
-	    case $host_os in
-		solaris*)
-			LINT_FLAGS="-u -b -h -erroff=E_INDISTING_FROM_TRUNC2"
-			;;
-	    esac
-	    ;;
-    esac
-fi
-
-AC_SUBST(LINT)
-AC_SUBST(LINT_FLAGS)
-AM_CONDITIONAL(LINT, [test x$LINT != xno])
-
-]) # XORG_WITH_LINT
-
-# XORG_LINT_LIBRARY(LIBNAME)
-# --------------------------
-# Minimum version: 1.1.0
-#
-# Sets up flags for building lint libraries for checking programs that call
-# functions in the library.
-# Disabled by default, enable with --enable-lint-library
-# Sets: 
-#	@LINTLIB@		- name of lint library file to make
-#	MAKE_LINT_LIB		- automake conditional
-#
-
-AC_DEFUN([XORG_LINT_LIBRARY],[
-AC_REQUIRE([XORG_WITH_LINT])
-# Build lint "library" for more indepth checks of programs calling this library
-AC_ARG_ENABLE(lint-library, [AC_HELP_STRING([--enable-lint-library],
-	[Create lint library (default: disabled)])],
-	[make_lint_lib=$enableval], [make_lint_lib=no])
-if test "x$make_lint_lib" != "xno" ; then
-	if test "x$LINT" = "xno" ; then
-		AC_MSG_ERROR([Cannot make lint library without --with-lint])
-	fi
-	if test "x$make_lint_lib" = "xyes" ; then
-		LINTLIB=llib-l$1.ln
-	else
-		LINTLIB=$make_lint_lib
-	fi
-fi
-AC_SUBST(LINTLIB)
-AM_CONDITIONAL(MAKE_LINT_LIB, [test x$make_lint_lib != xno])
-
-]) # XORG_LINT_LIBRARY
-
-dnl Copyright 2005 Red Hat, Inc
-dnl
-dnl Permission to use, copy, modify, distribute, and sell this software and its
-dnl documentation for any purpose is hereby granted without fee, provided that
-dnl the above copyright notice appear in all copies and that both that
-dnl copyright notice and this permission notice appear in supporting
-dnl documentation.
-dnl
-dnl The above copyright notice and this permission notice shall be included
-dnl in all copies or substantial portions of the Software.
-dnl
-dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-dnl IN NO EVENT SHALL THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR
-dnl OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-dnl ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-dnl OTHER DEALINGS IN THE SOFTWARE.
-dnl
-dnl Except as contained in this notice, the name of the copyright holders shall
-dnl not be used in advertising or otherwise to promote the sale, use or
-dnl other dealings in this Software without prior written authorization
-dnl from the copyright holders.
-dnl
-
-# XORG_RELEASE_VERSION
-# --------------------
-# Adds --with/without-release-string and changes the PACKAGE and
-# PACKAGE_TARNAME to use "$PACKAGE{_TARNAME}-$RELEASE_VERSION".  If
-# no option is given, PACKAGE and PACKAGE_TARNAME are unchanged.
- 
-AC_DEFUN([XORG_RELEASE_VERSION],[
-	AC_ARG_WITH(release-version,
-			AC_HELP_STRING([--with-release-version=STRING],
-				[Use release version string in package name]),
-			[RELEASE_VERSION="$withval"],
-			[RELEASE_VERSION=""])
-	if test "x$RELEASE_VERSION" != "x"; then
-		PACKAGE="$PACKAGE-$RELEASE_VERSION"
-		PACKAGE_TARNAME="$PACKAGE_TARNAME-$RELEASE_VERSION"
-		AC_MSG_NOTICE([Building with package name set to $PACKAGE])
-	fi
-])
-
-dnl $XdotOrg: lib/xtrans/xtrans.m4,v 1.6 2005/07/26 18:59:11 alanc Exp $
-dnl
-dnl Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
-dnl 
-dnl Permission to use, copy, modify, distribute, and sell this software and its
-dnl documentation for any purpose is hereby granted without fee, provided that
-dnl the above copyright notice appear in all copies and that both that
-dnl copyright notice and this permission notice appear in supporting
-dnl documentation.
-dnl 
-dnl The above copyright notice and this permission notice shall be included
-dnl in all copies or substantial portions of the Software.
-dnl 
-dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-dnl IN NO EVENT SHALL THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR
-dnl OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-dnl ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-dnl OTHER DEALINGS IN THE SOFTWARE.
-dnl 
-dnl Except as contained in this notice, the name of the copyright holders shall
-dnl not be used in advertising or otherwise to promote the sale, use or
-dnl other dealings in this Software without prior written authorization
-dnl from the copyright holders.
-dnl 
-
-# XTRANS_TCP_FLAGS()
-# ------------------
-# Find needed libraries for TCP sockets, and check for IPv6 support
-AC_DEFUN([XTRANS_TCP_FLAGS],[
- # SVR4 hides these in libraries other than libc
- AC_SEARCH_LIBS(socket, [socket])
- AC_SEARCH_LIBS(gethostbyname, [nsl])
-
- # Needs to come after above checks for libsocket & libnsl for SVR4 systems
- AC_ARG_ENABLE(ipv6, 
-	AC_HELP_STRING([--enable-IPv6],[Enable IPv6 support]),
-	[IPV6CONN=$enableval], 
-	[AC_CHECK_FUNC(getaddrinfo,[IPV6CONN=yes],[IPV6CONN=no])])
- AC_MSG_CHECKING([if IPv6 support should be built])
- if test "$IPV6CONN" = "yes"; then
-	AC_DEFINE(IPv6,1,[Support IPv6 for TCP connections])
- fi
- AC_MSG_RESULT($IPV6CONN)
-
- # 4.3BSD-Reno added a new member to struct sockaddr_in
- AC_CHECK_MEMBER([struct sockaddr_in.sin_len], 
-	AC_DEFINE([BSD44SOCKETS],1,
- 	    [Define to 1 if `struct sockaddr_in' has a `sin_len' member]), [], [
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
- ])
-]) # XTRANS_TCP_FLAGS
-
-# XTRANS_CONNECTION_FLAGS()
-# -------------------------
-# Standard checks for which Xtrans transports to use by the Xorg packages
-# that use Xtrans functions
-AC_DEFUN([XTRANS_CONNECTION_FLAGS],
-[AC_REQUIRE([AC_TYPE_SIGNAL])
- AC_ARG_ENABLE(unix-transport,
-	AC_HELP_STRING([--enable-unix-transport],[Enable UNIX domain socket transport]),
-	[UNIXCONN=$enableval], [UNIXCONN=yes])
- AC_ARG_ENABLE(tcp-transport, 
-	AC_HELP_STRING([--enable-tcp-transport],[Enable TCP socket transport]),
-	[TCPCONN=$enableval], [TCPCONN=yes])
- AC_MSG_CHECKING([if Xtrans should support UNIX socket connections])
- if test "$UNIXCONN" = "yes"; then
-	AC_DEFINE(UNIXCONN,1,[Support UNIX socket connections])
- fi
- AC_MSG_RESULT($UNIXCONN)
- AC_MSG_CHECKING([if Xtrans should support TCP socket connections])
- AC_MSG_RESULT($TCPCONN)
- if test "$TCPCONN" = "yes"; then
-	AC_DEFINE(TCPCONN,1,[Support TCP socket connections])
-	XTRANS_TCP_FLAGS
- fi
-]) # XTRANS_CONNECTION_FLAGS
-
-
-# XTRANS_SECURE_RPC_FLAGS()
-# -------------------------
-# Check for Secure RPC functions - must come after XTRANS_TCP_FLAGS
-# so that any necessary networking libraries are already found
-AC_DEFUN([XTRANS_SECURE_RPC_FLAGS],
-[AC_REQUIRE([XTRANS_TCP_FLAGS])
- AC_ARG_ENABLE(secure-rpc, 
-	AC_HELP_STRING([--enable-secure-rpc],[Enable Secure RPC]),
-        [SECURE_RPC=$enableval], [SECURE_RPC="try"])
-
- if test "x$SECURE_RPC" = "xyes" -o "x$SECURE_RPC" = "xtry" ; then
-	FOUND_SECURE_RPC="no"
-	AC_CHECK_FUNCS([authdes_seccreate authdes_create],
-			[FOUND_SECURE_RPC="yes"])
-	if test "x$FOUND_SECURE_RPC" = "xno" ; then
-		if test "x$SECURE_RPC" = "xyes" ; then
-	AC_MSG_ERROR([Secure RPC requested, but required functions not found])
-		fi	
-		SECURE_RPC="no"
-	else
-		dnl FreeBSD keeps getsecretkey in librpcsvc
-		AC_SEARCH_LIBS(getsecretkey, [rpcsvc])
-		SECURE_RPC="yes"
-	fi
- fi
- AC_MSG_CHECKING([if Secure RPC authentication ("SUN-DES-1") should be supported])
- if test "x$SECURE_RPC" = "xyes" ; then
-	AC_DEFINE(SECURE_RPC, 1, [Support Secure RPC ("SUN-DES-1") authentication for X11 clients])
- fi
- AC_MSG_RESULT($SECURE_RPC)
-]) # XTRANS_SECURE_RPC_FLAGS
-
 
 # Copyright (C) 2002, 2003, 2005  Free Software Foundation, Inc.
 #
@@ -7970,5 +7406,600 @@ AC_MSG_RESULT([$am_cv_prog_tar_$1])])
 AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
+
+dnl
+dnl Copyright 2005-2006 Sun Microsystems, Inc.  All rights reserved.
+dnl 
+dnl Permission is hereby granted, free of charge, to any person obtaining a
+dnl copy of this software and associated documentation files (the
+dnl "Software"), to deal in the Software without restriction, including
+dnl without limitation the rights to use, copy, modify, merge, publish,
+dnl distribute, and/or sell copies of the Software, and to permit persons
+dnl to whom the Software is furnished to do so, provided that the above
+dnl copyright notice(s) and this permission notice appear in all copies of
+dnl the Software and that both the above copyright notice(s) and this
+dnl permission notice appear in supporting documentation.
+dnl
+dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+dnl OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+dnl HOLDERS INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL
+dnl INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING
+dnl FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+dnl NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
+dnl WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+dnl
+dnl Except as contained in this notice, the name of a copyright holder
+dnl shall not be used in advertising or otherwise to promote the sale, use
+dnl or other dealings in this Software without prior written authorization
+dnl of the copyright holder.
+
+# XORG_MACROS_VERSION(required-version)
+# -------------------------------------
+# Minimum version: 1.1.0
+#
+# If you're using a macro added in Version 1.1 or newer, include this in
+# your configure.ac with the minimum required version, such as:
+# XORG_MACROS_VERSION(1.1)
+#
+# To force at least a version with this macro defined, also add:
+# m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.1 or later before running autoconf/autogen])])
+#
+#
+# See the "minimum version" comment for each macro you use to see what 
+# version you require.
+AC_DEFUN([XORG_MACROS_VERSION],[
+	[XORG_MACROS_needed_version=$1
+	XORG_MACROS_needed_major=`echo $XORG_MACROS_needed_version | sed 's/\..*$//'`
+	XORG_MACROS_needed_minor=`echo $XORG_MACROS_needed_version | sed -e 's/^[0-9]*\.//' -e 's/\..*$//'`]
+	AC_MSG_CHECKING([if xorg-macros used to generate configure is at least ${XORG_MACROS_needed_major}.${XORG_MACROS_needed_minor}])
+	[XORG_MACROS_version=1.1.2
+	XORG_MACROS_major=`echo $XORG_MACROS_version | sed 's/\..*$//'`
+	XORG_MACROS_minor=`echo $XORG_MACROS_version | sed -e 's/^[0-9]*\.//' -e 's/\..*$//'`]
+	if test $XORG_MACROS_major -ne $XORG_MACROS_needed_major ; then
+		AC_MSG_ERROR([configure built with incompatible version of xorg-macros.m4 - requires version ${XORG_MACROS_major}.x])
+	fi
+	if test $XORG_MACROS_minor -lt $XORG_MACROS_needed_minor ; then
+		AC_MSG_ERROR([configure built with too old of a version of xorg-macros.m4 - requires version ${XORG_MACROS_major}.${XORG_MACROS_minor}.0 or newer])
+	fi
+	AC_MSG_RESULT([yes, $XORG_MACROS_version])
+]) # XORG_MACROS_VERSION
+
+# XORG_PROG_RAWCPP()
+# ------------------
+# Minimum version: 1.0.0
+#
+# Find cpp program and necessary flags for use in pre-processing text files
+# such as man pages and config files
+AC_DEFUN([XORG_PROG_RAWCPP],[
+AC_REQUIRE([AC_PROG_CPP])
+AC_PATH_PROGS(RAWCPP, [cpp], [${CPP}], 
+   [$PATH:/bin:/usr/bin:/usr/lib:/usr/libexec:/usr/ccs/lib:/usr/ccs/lbin:/lib])
+
+# Check for flag to avoid builtin definitions - assumes unix is predefined,
+# which is not the best choice for supporting other OS'es, but covers most
+# of the ones we need for now.
+AC_MSG_CHECKING([if $RAWCPP requires -undef])
+AC_LANG_CONFTEST([Does cpp redefine unix ?])
+if test `${RAWCPP} < conftest.$ac_ext | grep -c 'unix'` -eq 1 ; then
+	AC_MSG_RESULT([no])
+else
+	if test `${RAWCPP} -undef < conftest.$ac_ext | grep -c 'unix'` -eq 1 ; then
+		RAWCPPFLAGS=-undef
+		AC_MSG_RESULT([yes])
+	else
+		AC_MSG_ERROR([${RAWCPP} defines unix with or without -undef.  I don't know what to do.])
+	fi
+fi
+rm -f conftest.$ac_ext
+
+AC_MSG_CHECKING([if $RAWCPP requires -traditional])
+AC_LANG_CONFTEST([Does cpp preserve   "whitespace"?])
+if test `${RAWCPP} < conftest.$ac_ext | grep -c 'preserve   \"'` -eq 1 ; then
+	AC_MSG_RESULT([no])
+else
+	if test `${RAWCPP} -traditional < conftest.$ac_ext | grep -c 'preserve   \"'` -eq 1 ; then
+		RAWCPPFLAGS="${RAWCPPFLAGS} -traditional"
+		AC_MSG_RESULT([yes])
+	else
+		AC_MSG_ERROR([${RAWCPP} does not preserve whitespace with or without -traditional.  I don't know what to do.])
+	fi
+fi
+rm -f conftest.$ac_ext
+AC_SUBST(RAWCPPFLAGS)
+]) # XORG_PROG_RAWCPP
+
+# XORG_MANPAGE_SECTIONS()
+# -----------------------
+# Minimum version: 1.0.0
+#
+# Determine which sections man pages go in for the different man page types
+# on this OS - replaces *ManSuffix settings in old Imake *.cf per-os files.
+# Not sure if there's any better way than just hardcoding by OS name.
+# Override default settings by setting environment variables
+
+AC_DEFUN([XORG_MANPAGE_SECTIONS],[
+AC_REQUIRE([AC_CANONICAL_HOST])
+
+if test x$APP_MAN_SUFFIX = x    ; then
+    APP_MAN_SUFFIX=1
+fi
+if test x$APP_MAN_DIR = x    ; then
+    APP_MAN_DIR='$(mandir)/man$(APP_MAN_SUFFIX)'
+fi
+
+if test x$LIB_MAN_SUFFIX = x    ; then
+    LIB_MAN_SUFFIX=3
+fi
+if test x$LIB_MAN_DIR = x    ; then
+    LIB_MAN_DIR='$(mandir)/man$(LIB_MAN_SUFFIX)'
+fi
+
+if test x$FILE_MAN_SUFFIX = x    ; then
+    case $host_os in
+	solaris*)	FILE_MAN_SUFFIX=4  ;;
+	*)		FILE_MAN_SUFFIX=5  ;;
+    esac
+fi
+if test x$FILE_MAN_DIR = x    ; then
+    FILE_MAN_DIR='$(mandir)/man$(FILE_MAN_SUFFIX)'
+fi
+
+if test x$MISC_MAN_SUFFIX = x    ; then
+    case $host_os in
+	solaris*)	MISC_MAN_SUFFIX=5  ;;
+	*)		MISC_MAN_SUFFIX=7  ;;
+    esac
+fi
+if test x$MISC_MAN_DIR = x    ; then
+    MISC_MAN_DIR='$(mandir)/man$(MISC_MAN_SUFFIX)'
+fi
+
+if test x$DRIVER_MAN_SUFFIX = x    ; then
+    case $host_os in
+	solaris*)	DRIVER_MAN_SUFFIX=7  ;;
+	*)		DRIVER_MAN_SUFFIX=4  ;;
+    esac
+fi
+if test x$DRIVER_MAN_DIR = x    ; then
+    DRIVER_MAN_DIR='$(mandir)/man$(DRIVER_MAN_SUFFIX)'
+fi
+
+if test x$ADMIN_MAN_SUFFIX = x    ; then
+    case $host_os in
+	solaris*)	ADMIN_MAN_SUFFIX=1m ;;
+	*)		ADMIN_MAN_SUFFIX=8  ;;
+    esac
+fi
+if test x$ADMIN_MAN_DIR = x    ; then
+    ADMIN_MAN_DIR='$(mandir)/man$(ADMIN_MAN_SUFFIX)'
+fi
+
+
+AC_SUBST([APP_MAN_SUFFIX])
+AC_SUBST([LIB_MAN_SUFFIX])
+AC_SUBST([FILE_MAN_SUFFIX])
+AC_SUBST([MISC_MAN_SUFFIX])
+AC_SUBST([DRIVER_MAN_SUFFIX])
+AC_SUBST([ADMIN_MAN_SUFFIX])
+AC_SUBST([APP_MAN_DIR])
+AC_SUBST([LIB_MAN_DIR])
+AC_SUBST([FILE_MAN_DIR])
+AC_SUBST([MISC_MAN_DIR])
+AC_SUBST([DRIVER_MAN_DIR])
+AC_SUBST([ADMIN_MAN_DIR])
+]) # XORG_MANPAGE_SECTIONS
+
+# XORG_CHECK_LINUXDOC
+# -------------------
+# Minimum version: 1.0.0
+#
+# Defines the variable MAKE_TEXT if the necessary tools and
+# files are found. $(MAKE_TEXT) blah.sgml will then produce blah.txt.
+# Whether or not the necessary tools and files are found can be checked
+# with the AM_CONDITIONAL "BUILD_LINUXDOC"
+AC_DEFUN([XORG_CHECK_LINUXDOC],[
+XORG_SGML_PATH=$prefix/share/sgml
+HAVE_DEFS_ENT=
+
+AC_CHECK_FILE([$XORG_SGML_PATH/X11/defs.ent], [HAVE_DEFS_ENT=yes])
+
+AC_PATH_PROG(LINUXDOC, linuxdoc)
+AC_PATH_PROG(PS2PDF, ps2pdf)
+
+AC_MSG_CHECKING([Whether to build documentation])
+
+if test x$HAVE_DEFS_ENT != x && test x$LINUXDOC != x ; then
+   BUILDDOC=yes
+else
+   BUILDDOC=no
+fi
+
+AM_CONDITIONAL(BUILD_LINUXDOC, [test x$BUILDDOC = xyes])
+
+AC_MSG_RESULT([$BUILDDOC])
+
+AC_MSG_CHECKING([Whether to build pdf documentation])
+
+if test x$PS2PDF != x && test x$BUILD_PDFDOC != xno; then
+   BUILDPDFDOC=yes
+else
+   BUILDPDFDOC=no
+fi
+
+AM_CONDITIONAL(BUILD_PDFDOC, [test x$BUILDPDFDOC = xyes])
+
+AC_MSG_RESULT([$BUILDPDFDOC])
+
+MAKE_TEXT="SGML_SEARCH_PATH=$XORG_SGML_PATH GROFF_NO_SGR=y $LINUXDOC -B txt"
+MAKE_PS="SGML_SEARCH_PATH=$XORG_SGML_PATH $LINUXDOC -B latex --papersize=letter --output=ps"
+MAKE_PDF="$PS2PDF"
+MAKE_HTML="SGML_SEARCH_PATH=$XORG_SGML_PATH $LINUXDOC  -B html --split=0"
+
+AC_SUBST(MAKE_TEXT)
+AC_SUBST(MAKE_PS)
+AC_SUBST(MAKE_PDF)
+AC_SUBST(MAKE_HTML)
+]) # XORG_CHECK_LINUXDOC
+
+# XORG_CHECK_DOCBOOK
+# -------------------
+# Minimum version: 1.0.0
+#
+# Checks for the ability to build output formats from SGML DocBook source.
+# For XXX in {TXT, PDF, PS, HTML}, the AM_CONDITIONAL "BUILD_XXXDOC"
+# indicates whether the necessary tools and files are found and, if set,
+# $(MAKE_XXX) blah.sgml will produce blah.xxx.
+AC_DEFUN([XORG_CHECK_DOCBOOK],[
+XORG_SGML_PATH=$prefix/share/sgml
+HAVE_DEFS_ENT=
+BUILDTXTDOC=no
+BUILDPDFDOC=no
+BUILDPSDOC=no
+BUILDHTMLDOC=no
+
+AC_CHECK_FILE([$XORG_SGML_PATH/X11/defs.ent], [HAVE_DEFS_ENT=yes])
+
+AC_PATH_PROG(DOCBOOKPS, docbook2ps)
+AC_PATH_PROG(DOCBOOKPDF, docbook2pdf)
+AC_PATH_PROG(DOCBOOKHTML, docbook2html)
+AC_PATH_PROG(DOCBOOKTXT, docbook2txt)
+
+AC_MSG_CHECKING([Whether to build text documentation])
+if test x$HAVE_DEFS_ENT != x && test x$DOCBOOKTXT != x &&
+   test x$BUILD_TXTDOC != xno; then
+	BUILDTXTDOC=yes
+fi
+AM_CONDITIONAL(BUILD_TXTDOC, [test x$BUILDTXTDOC = xyes])
+AC_MSG_RESULT([$BUILDTXTDOC])
+
+AC_MSG_CHECKING([Whether to build PDF documentation])
+if test x$HAVE_DEFS_ENT != x && test x$DOCBOOKPDF != x &&
+   test x$BUILD_PDFDOC != xno; then
+	BUILDPDFDOC=yes
+fi
+AM_CONDITIONAL(BUILD_PDFDOC, [test x$BUILDPDFDOC = xyes])
+AC_MSG_RESULT([$BUILDPDFDOC])
+
+AC_MSG_CHECKING([Whether to build PostScript documentation])
+if test x$HAVE_DEFS_ENT != x && test x$DOCBOOKPS != x &&
+   test x$BUILD_PSDOC != xno; then
+	BUILDPSDOC=yes
+fi
+AM_CONDITIONAL(BUILD_PSDOC, [test x$BUILDPSDOC = xyes])
+AC_MSG_RESULT([$BUILDPSDOC])
+
+AC_MSG_CHECKING([Whether to build HTML documentation])
+if test x$HAVE_DEFS_ENT != x && test x$DOCBOOKHTML != x &&
+   test x$BUILD_HTMLDOC != xno; then
+	BUILDHTMLDOC=yes
+fi
+AM_CONDITIONAL(BUILD_HTMLDOC, [test x$BUILDHTMLDOC = xyes])
+AC_MSG_RESULT([$BUILDHTMLDOC])
+
+MAKE_TEXT="SGML_SEARCH_PATH=$XORG_SGML_PATH $DOCBOOKTXT"
+MAKE_PS="SGML_SEARCH_PATH=$XORG_SGML_PATH $DOCBOOKPS"
+MAKE_PDF="SGML_SEARCH_PATH=$XORG_SGML_PATH $DOCBOOKPDF"
+MAKE_HTML="SGML_SEARCH_PATH=$XORG_SGML_PATH $DOCBOOKHTML"
+
+AC_SUBST(MAKE_TEXT)
+AC_SUBST(MAKE_PS)
+AC_SUBST(MAKE_PDF)
+AC_SUBST(MAKE_HTML)
+]) # XORG_CHECK_DOCBOOK
+
+# XORG_CHECK_MALLOC_ZERO
+# ----------------------
+# Minimum version: 1.0.0
+#
+# Defines {MALLOC,XMALLOC,XTMALLOC}_ZERO_CFLAGS appropriately if
+# malloc(0) returns NULL.  Packages should add one of these cflags to
+# their AM_CFLAGS (or other appropriate *_CFLAGS) to use them.
+AC_DEFUN([XORG_CHECK_MALLOC_ZERO],[
+AC_ARG_ENABLE(malloc0returnsnull,
+	AC_HELP_STRING([--enable-malloc0returnsnull],
+		       [malloc(0) returns NULL (default: auto)]),
+	[MALLOC_ZERO_RETURNS_NULL=$enableval],
+	[MALLOC_ZERO_RETURNS_NULL=auto])
+
+AC_MSG_CHECKING([whether malloc(0) returns NULL])
+if test "x$MALLOC_ZERO_RETURNS_NULL" = xauto; then
+	AC_RUN_IFELSE([
+char *malloc();
+char *realloc();
+char *calloc();
+main() {
+    char *m0, *r0, *c0, *p;
+    m0 = malloc(0);
+    p = malloc(10);
+    r0 = realloc(p,0);
+    c0 = calloc(0);
+    exit(m0 == 0 || r0 == 0 || c0 == 0 ? 0 : 1);
+}],
+		[MALLOC_ZERO_RETURNS_NULL=yes],
+		[MALLOC_ZERO_RETURNS_NULL=no])
+fi
+AC_MSG_RESULT([$MALLOC_ZERO_RETURNS_NULL])
+
+if test "x$MALLOC_ZERO_RETURNS_NULL" = xyes; then
+	MALLOC_ZERO_CFLAGS="-DMALLOC_0_RETURNS_NULL"
+	XMALLOC_ZERO_CFLAGS=$MALLOC_ZERO_CFLAGS
+	XTMALLOC_ZERO_CFLAGS="$MALLOC_ZERO_CFLAGS -DXTMALLOC_BC"
+else
+	MALLOC_ZERO_CFLAGS=""
+	XMALLOC_ZERO_CFLAGS=""
+	XTMALLOC_ZERO_CFLAGS=""
+fi
+
+AC_SUBST([MALLOC_ZERO_CFLAGS])
+AC_SUBST([XMALLOC_ZERO_CFLAGS])
+AC_SUBST([XTMALLOC_ZERO_CFLAGS])
+]) # XORG_CHECK_MALLOC_ZERO
+
+# XORG_WITH_LINT()
+# ----------------
+# Minimum version: 1.1.0
+#
+# Sets up flags for source checkers such as lint and sparse if --with-lint
+# is specified.   (Use --with-lint=sparse for sparse.)
+# Sets $LINT to name of source checker passed with --with-lint (default: lint)
+# Sets $LINT_FLAGS to flags to pass to source checker
+# Sets LINT automake conditional if enabled (default: disabled)
+#
+AC_DEFUN([XORG_WITH_LINT],[
+
+# Allow checking code with lint, sparse, etc.
+AC_ARG_WITH(lint, [AC_HELP_STRING([--with-lint],
+		[Use a lint-style source code checker (default: disabled)])],
+		[use_lint=$withval], [use_lint=no])
+if test "x$use_lint" = "xyes" ; then
+	LINT="lint"
+else
+	LINT="$use_lint"
+fi
+if test "x$LINT_FLAGS" = "x" -a "x$LINT" != "xno" ; then
+    case $LINT in
+	lint|*/lint)
+	    case $host_os in
+		solaris*)
+			LINT_FLAGS="-u -b -h -erroff=E_INDISTING_FROM_TRUNC2"
+			;;
+	    esac
+	    ;;
+    esac
+fi
+
+AC_SUBST(LINT)
+AC_SUBST(LINT_FLAGS)
+AM_CONDITIONAL(LINT, [test x$LINT != xno])
+
+]) # XORG_WITH_LINT
+
+# XORG_LINT_LIBRARY(LIBNAME)
+# --------------------------
+# Minimum version: 1.1.0
+#
+# Sets up flags for building lint libraries for checking programs that call
+# functions in the library.
+# Disabled by default, enable with --enable-lint-library
+# Sets: 
+#	@LINTLIB@		- name of lint library file to make
+#	MAKE_LINT_LIB		- automake conditional
+#
+
+AC_DEFUN([XORG_LINT_LIBRARY],[
+AC_REQUIRE([XORG_WITH_LINT])
+# Build lint "library" for more indepth checks of programs calling this library
+AC_ARG_ENABLE(lint-library, [AC_HELP_STRING([--enable-lint-library],
+	[Create lint library (default: disabled)])],
+	[make_lint_lib=$enableval], [make_lint_lib=no])
+if test "x$make_lint_lib" != "xno" ; then
+	if test "x$LINT" = "xno" ; then
+		AC_MSG_ERROR([Cannot make lint library without --with-lint])
+	fi
+	if test "x$make_lint_lib" = "xyes" ; then
+		LINTLIB=llib-l$1.ln
+	else
+		LINTLIB=$make_lint_lib
+	fi
+fi
+AC_SUBST(LINTLIB)
+AM_CONDITIONAL(MAKE_LINT_LIB, [test x$make_lint_lib != xno])
+
+]) # XORG_LINT_LIBRARY
+
+dnl Copyright 2005 Red Hat, Inc
+dnl
+dnl Permission to use, copy, modify, distribute, and sell this software and its
+dnl documentation for any purpose is hereby granted without fee, provided that
+dnl the above copyright notice appear in all copies and that both that
+dnl copyright notice and this permission notice appear in supporting
+dnl documentation.
+dnl
+dnl The above copyright notice and this permission notice shall be included
+dnl in all copies or substantial portions of the Software.
+dnl
+dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+dnl IN NO EVENT SHALL THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR
+dnl OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+dnl ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+dnl OTHER DEALINGS IN THE SOFTWARE.
+dnl
+dnl Except as contained in this notice, the name of the copyright holders shall
+dnl not be used in advertising or otherwise to promote the sale, use or
+dnl other dealings in this Software without prior written authorization
+dnl from the copyright holders.
+dnl
+
+# XORG_RELEASE_VERSION
+# --------------------
+# Adds --with/without-release-string and changes the PACKAGE and
+# PACKAGE_TARNAME to use "$PACKAGE{_TARNAME}-$RELEASE_VERSION".  If
+# no option is given, PACKAGE and PACKAGE_TARNAME are unchanged.
+ 
+AC_DEFUN([XORG_RELEASE_VERSION],[
+	AC_ARG_WITH(release-version,
+			AC_HELP_STRING([--with-release-version=STRING],
+				[Use release version string in package name]),
+			[RELEASE_VERSION="$withval"],
+			[RELEASE_VERSION=""])
+	if test "x$RELEASE_VERSION" != "x"; then
+		PACKAGE="$PACKAGE-$RELEASE_VERSION"
+		PACKAGE_TARNAME="$PACKAGE_TARNAME-$RELEASE_VERSION"
+		AC_MSG_NOTICE([Building with package name set to $PACKAGE])
+	fi
+])
+
+dnl $XdotOrg: lib/xtrans/xtrans.m4,v 1.6 2005/07/26 18:59:11 alanc Exp $
+dnl
+dnl Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+dnl 
+dnl Permission to use, copy, modify, distribute, and sell this software and its
+dnl documentation for any purpose is hereby granted without fee, provided that
+dnl the above copyright notice appear in all copies and that both that
+dnl copyright notice and this permission notice appear in supporting
+dnl documentation.
+dnl 
+dnl The above copyright notice and this permission notice shall be included
+dnl in all copies or substantial portions of the Software.
+dnl 
+dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+dnl IN NO EVENT SHALL THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR
+dnl OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+dnl ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+dnl OTHER DEALINGS IN THE SOFTWARE.
+dnl 
+dnl Except as contained in this notice, the name of the copyright holders shall
+dnl not be used in advertising or otherwise to promote the sale, use or
+dnl other dealings in this Software without prior written authorization
+dnl from the copyright holders.
+dnl 
+
+# XTRANS_TCP_FLAGS()
+# ------------------
+# Find needed libraries for TCP sockets, and check for IPv6 support
+AC_DEFUN([XTRANS_TCP_FLAGS],[
+ # SVR4 hides these in libraries other than libc
+ AC_SEARCH_LIBS(socket, [socket])
+ AC_SEARCH_LIBS(gethostbyname, [nsl])
+
+ # Needs to come after above checks for libsocket & libnsl for SVR4 systems
+ AC_ARG_ENABLE(ipv6, 
+	AC_HELP_STRING([--enable-IPv6],[Enable IPv6 support]),
+	[IPV6CONN=$enableval], 
+	[AC_CHECK_FUNC(getaddrinfo,[IPV6CONN=yes],[IPV6CONN=no])])
+ AC_MSG_CHECKING([if IPv6 support should be built])
+ if test "$IPV6CONN" = "yes"; then
+	AC_DEFINE(IPv6,1,[Support IPv6 for TCP connections])
+ fi
+ AC_MSG_RESULT($IPV6CONN)
+
+ # 4.3BSD-Reno added a new member to struct sockaddr_in
+ AC_CHECK_MEMBER([struct sockaddr_in.sin_len], 
+	AC_DEFINE([BSD44SOCKETS],1,
+ 	    [Define to 1 if `struct sockaddr_in' has a `sin_len' member]), [], [
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+ ])
+]) # XTRANS_TCP_FLAGS
+
+# XTRANS_CONNECTION_FLAGS()
+# -------------------------
+# Standard checks for which Xtrans transports to use by the Xorg packages
+# that use Xtrans functions
+AC_DEFUN([XTRANS_CONNECTION_FLAGS],[
+ AC_REQUIRE([AC_CANONICAL_HOST])
+ AC_REQUIRE([AC_TYPE_SIGNAL])
+ AC_ARG_ENABLE(unix-transport,
+	AC_HELP_STRING([--enable-unix-transport],[Enable UNIX domain socket transport]),
+	[UNIXCONN=$enableval], [UNIXCONN=yes])
+ AC_ARG_ENABLE(tcp-transport, 
+	AC_HELP_STRING([--enable-tcp-transport],[Enable TCP socket transport]),
+	[TCPCONN=$enableval], [TCPCONN=yes])
+ AC_MSG_CHECKING([if Xtrans should support UNIX socket connections])
+ if test "$UNIXCONN" = "yes"; then
+	AC_DEFINE(UNIXCONN,1,[Support UNIX socket connections])
+ fi
+ AC_MSG_RESULT($UNIXCONN)
+ AC_MSG_CHECKING([if Xtrans should support TCP socket connections])
+ AC_MSG_RESULT($TCPCONN)
+ if test "$TCPCONN" = "yes"; then
+	AC_DEFINE(TCPCONN,1,[Support TCP socket connections])
+	XTRANS_TCP_FLAGS
+ fi
+ [case $host_os in
+	solaris*|sco*|sysv4*)	localdef="yes" ;;
+	*)			localdef="no"  ;;
+ esac]
+ AC_ARG_ENABLE(local-transport,
+	AC_HELP_STRING([--enable-local-transport],[Enable os-specific local transport]),
+	[LOCALCONN=$enableval], [LOCALCONN=$localdef])
+ AC_MSG_CHECKING([if Xtrans should support os-specific local connections])
+ AC_MSG_RESULT($LOCALCONN)
+ if test "$LOCALCONN" = "yes"; then
+	AC_DEFINE(LOCALCONN,1,[Support os-specific local connections])
+ fi
+ 
+]) # XTRANS_CONNECTION_FLAGS
+
+
+# XTRANS_SECURE_RPC_FLAGS()
+# -------------------------
+# Check for Secure RPC functions - must come after XTRANS_TCP_FLAGS
+# so that any necessary networking libraries are already found
+AC_DEFUN([XTRANS_SECURE_RPC_FLAGS],
+[AC_REQUIRE([XTRANS_TCP_FLAGS])
+ AC_ARG_ENABLE(secure-rpc, 
+	AC_HELP_STRING([--enable-secure-rpc],[Enable Secure RPC]),
+        [SECURE_RPC=$enableval], [SECURE_RPC="try"])
+
+ if test "x$SECURE_RPC" = "xyes" -o "x$SECURE_RPC" = "xtry" ; then
+	FOUND_SECURE_RPC="no"
+	AC_CHECK_FUNCS([authdes_seccreate authdes_create],
+			[FOUND_SECURE_RPC="yes"])
+	if test "x$FOUND_SECURE_RPC" = "xno" ; then
+		if test "x$SECURE_RPC" = "xyes" ; then
+	AC_MSG_ERROR([Secure RPC requested, but required functions not found])
+		fi	
+		SECURE_RPC="no"
+	else
+		dnl FreeBSD keeps getsecretkey in librpcsvc
+		AC_SEARCH_LIBS(getsecretkey, [rpcsvc])
+		SECURE_RPC="yes"
+	fi
+ fi
+ AC_MSG_CHECKING([if Secure RPC authentication ("SUN-DES-1") should be supported])
+ if test "x$SECURE_RPC" = "xyes" ; then
+	AC_DEFINE(SECURE_RPC, 1, [Support Secure RPC ("SUN-DES-1") authentication for X11 clients])
+ fi
+ AC_MSG_RESULT($SECURE_RPC)
+]) # XTRANS_SECURE_RPC_FLAGS
+
 
 m4_include([acinclude.m4])

@@ -465,7 +465,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CCAS CCASFLAGS LN_S build build_cpu build_vendor build_os host host_cpu host_vendor host_os SED EGREP ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL PKG_CONFIG ac_pt_PKG_CONFIG LEX LEXLIB LEX_OUTPUT_ROOT YACC RAWCPP RAWCPPFLAGS ALLOCA NEED_STRLCAT_TRUE NEED_STRLCAT_FALSE NEED_VSNPRINTF_TRUE NEED_VSNPRINTF_FALSE AGP_TRUE AGP_FALSE LNXAPM_TRUE LNXAPM_FALSE FBDEVHW_TRUE FBDEVHW_FALSE FREEBSD_KLDLOAD_TRUE FREEBSD_KLDLOAD_FALSE ALPHA_VIDEO_TRUE ALPHA_VIDEO_FALSE ARM_VIDEO_TRUE ARM_VIDEO_FALSE I386_VIDEO_TRUE I386_VIDEO_FALSE PPC_VIDEO_TRUE PPC_VIDEO_FALSE SPARC64_VIDEO_TRUE SPARC64_VIDEO_FALSE KDRIVE_HW_TRUE KDRIVE_HW_FALSE MMX_CAPABLE_TRUE MMX_CAPABLE_FALSE INSTALL_SETUID_TRUE INSTALL_SETUID_FALSE INT10_VM86_TRUE INT10_VM86_FALSE INT10_X86EMU_TRUE INT10_X86EMU_FALSE INT10_STUB_TRUE INT10_STUB_FALSE BUILDDOCS_TRUE BUILDDOCS_FALSE LINUXDOC PS2PDF BUILD_LINUXDOC_TRUE BUILD_LINUXDOC_FALSE BUILD_PDFDOC_TRUE BUILD_PDFDOC_FALSE MAKE_TEXT MAKE_PS MAKE_PDF MAKE_HTML INSTALL_LIBXF86CONFIG_TRUE INSTALL_LIBXF86CONFIG_FALSE XV_TRUE XV_FALSE XVMC_TRUE XVMC_FALSE DGA_TRUE DGA_FALSE COMPOSITE_TRUE COMPOSITE_FALSE MITSHM_TRUE MITSHM_FALSE XTRAP_TRUE XTRAP_FALSE RECORD_TRUE RECORD_FALSE SCREENSAVER_TRUE SCREENSAVER_FALSE RES_TRUE RES_FALSE XLIB_CFLAGS XLIB_LIBS GL_CFLAGS GL_LIBS GLX_TRUE GLX_FALSE MESA_SOURCE AIGLX_TRUE AIGLX_FALSE GLX_DEFINES DRI_TRUE DRI_FALSE DRIPROTO_CFLAGS DRIPROTO_LIBS LIBDRM_CFLAGS LIBDRM_LIBS XINERAMA_TRUE XINERAMA_FALSE XACE_TRUE XACE_FALSE XCSECURITY_TRUE XCSECURITY_FALSE XEVIE_TRUE XEVIE_FALSE APPGROUP_TRUE APPGROUP_FALSE CUP_TRUE CUP_FALSE EVI_TRUE EVI_FALSE MULTIBUFFER_TRUE MULTIBUFFER_FALSE FONTCACHE_TRUE FONTCACHE_FALSE DBE_TRUE DBE_FALSE XF86BIGFONT_TRUE XF86BIGFONT_FALSE DPMSExtension_TRUE DPMSExtension_FALSE XPRINTPROTO_CFLAGS XPRINTPROTO_LIBS XPRINT_TRUE XPRINT_FALSE XCALIBRATE_TRUE XCALIBRATE_FALSE XINPUT_TRUE XINPUT_FALSE XF86UTILS_TRUE XF86UTILS_FALSE XDMCP_CFLAGS XDMCP_LIBS XDMCP_TRUE XDMCP_FALSE XDMAUTH_TRUE XDMAUTH_FALSE USE_RGB_BUILTIN_TRUE USE_RGB_BUILTIN_FALSE COMPILEDDEFAULTFONTPATH RGB_DB BASE_FONT_PATH DRI_DRIVER_PATH VENDOR_STRING VENDOR_STRING_SHORT VENDOR_RELEASE VENDOR_MAN_VERSION DEBUG_TRUE DEBUG_FALSE XSERVERCFLAGS_CFLAGS XSERVERCFLAGS_LIBS XSERVERLIBS_CFLAGS XSERVERLIBS_LIBS SYS_LIBS XSERVER_LIBS DMXMODULES_CFLAGS DMXMODULES_LIBS DMX_TRUE DMX_FALSE XDMX_LIBS XDMXCONFIG_DEP_CFLAGS XDMXCONFIG_DEP_LIBS DMXEXAMPLES_DEP_CFLAGS DMXEXAMPLES_DEP_LIBS DMXXMUEXAMPLES_DEP_CFLAGS DMXXMUEXAMPLES_DEP_LIBS DMXXIEXAMPLES_DEP_CFLAGS DMXXIEXAMPLES_DEP_LIBS XTSTEXAMPLES_DEP_CFLAGS XTSTEXAMPLES_DEP_LIBS XRESEXAMPLES_DEP_CFLAGS XRESEXAMPLES_DEP_LIBS X11EXAMPLES_DEP_CFLAGS X11EXAMPLES_DEP_LIBS DMX_BUILD_LNX_TRUE DMX_BUILD_LNX_FALSE DMX_BUILD_USB_TRUE DMX_BUILD_USB_FALSE XVFB_TRUE XVFB_FALSE XVFB_LIBS XNESTMODULES_CFLAGS XNESTMODULES_LIBS XNEST_TRUE XNEST_FALSE XNEST_LIBS XGLMODULES_CFLAGS XGLMODULES_LIBS XGL_TRUE XGL_FALSE XGL_LIBS xglmoduledir XGL_MODULE_PATH XEGLMODULES_CFLAGS XEGLMODULES_LIBS XEGL_TRUE XEGL_FALSE XEGL_LIBS XGLXMODULES_CFLAGS XGLXMODULES_LIBS XGLX_TRUE XGLX_FALSE XGLX_LIBS XORG_CORE_LIBS SOLARIS_INOUT_ARCH SOLARIS_ASM_CFLAGS XORG_LIBS XORG_INCS XORG_OS XORG_OS_SUBDIR XORG_OS_KBD PERL XORG_CFLAGS LD_EXPORT_SYMBOLS_FLAG __XCONFIGFILE__ XF86CONFIGFILE DEFAULT_MODULE_PATH DEFAULT_LOGPREFIX moduledir driverdir sdkdir extdir logdir XORG_TRUE XORG_FALSE XORG_BUS_LINUXPCI_TRUE XORG_BUS_LINUXPCI_FALSE XORG_BUS_FREEBSDPCI_TRUE XORG_BUS_FREEBSDPCI_FALSE XORG_BUS_NETBSDPCI_TRUE XORG_BUS_NETBSDPCI_FALSE XORG_BUS_IX86PCI_TRUE XORG_BUS_IX86PCI_FALSE XORG_BUS_PPCPCI_TRUE XORG_BUS_PPCPCI_FALSE XORG_BUS_SPARCPCI_TRUE XORG_BUS_SPARCPCI_FALSE XORG_BUS_SPARC_TRUE XORG_BUS_SPARC_FALSE XORG_LOADER_SPARC_TRUE XORG_LOADER_SPARC_FALSE LINUX_IA64_TRUE LINUX_IA64_FALSE LINUX_ALPHA_TRUE LINUX_ALPHA_FALSE LNXACPI_TRUE LNXACPI_FALSE SOLARIS_USL_CONSOLE_TRUE SOLARIS_USL_CONSOLE_FALSE SOLARIS_ASM_INLINE_TRUE SOLARIS_ASM_INLINE_FALSE MFB_TRUE MFB_FALSE CFB_TRUE CFB_FALSE AFB_TRUE AFB_FALSE XPRINT_CFLAGS XPRINT_LIBS xpconfigdir MKFONTSCALE MKFONTDIR FREETYPE_CFLAGS FREETYPE_LIBS ft_config FREETYPE_REQUIRES XP_USE_FREETYPE_TRUE XP_USE_FREETYPE_FALSE XWIN_LIBS XWINMODULES_CFLAGS XWINMODULES_LIBS XWIN_SERVER_NAME XWIN_SYSTEM_LIBS XWIN_TRUE XWIN_FALSE XWIN_MULTIWINDOW_TRUE XWIN_MULTIWINDOW_FALSE XWIN_MULTIWINDOWEXTWM_TRUE XWIN_MULTIWINDOWEXTWM_FALSE XWIN_CLIPBOARD_TRUE XWIN_CLIPBOARD_FALSE XWIN_GLX_WINDOWS_TRUE XWIN_GLX_WINDOWS_FALSE XWIN_NATIVEGDI_TRUE XWIN_NATIVEGDI_FALSE XWIN_PRIMARYFB_TRUE XWIN_PRIMARYFB_FALSE XWIN_RANDR_TRUE XWIN_RANDR_FALSE XWIN_XV_TRUE XWIN_XV_FALSE KDRIVE_TRUE KDRIVE_FALSE TSLIB_CFLAGS TSLIB_LIBS XEPHYR_CFLAGS XEPHYR_LIBS KDRIVE_INCS KDRIVE_PURE_INCS KDRIVE_CFLAGS KDRIVE_PURE_LIBS KDRIVE_LIBS TSLIB_TRUE TSLIB_FALSE H3600_TS_TRUE H3600_TS_FALSE KDRIVEVESA_TRUE KDRIVEVESA_FALSE KDRIVEFBDEV_TRUE KDRIVEFBDEV_FALSE XEPHYR_TRUE XEPHYR_FALSE XEPHYR_INCS XSDLSERVER_TRUE XSDLSERVER_FALSE XSDL_LIBS XSDL_INCS XKB_BASE_DIRECTORY XKB_BIN_DIRECTORY XKM_OUTPUT_DIR XKB_COMPILED_DIR PROJECTROOT XORGCONFIG_DEP_CFLAGS XORGCONFIG_DEP_LIBS XORGCFG_DEP_CFLAGS XORGCFG_DEP_LIBS APPDEFAULTDIR BUILD_XORGCFG_TRUE BUILD_XORGCFG_FALSE USE_CURSES_TRUE USE_CURSES_FALSE BUILD_KBD_MODE_TRUE BUILD_KBD_MODE_FALSE BSD_KBD_MODE_TRUE BSD_KBD_MODE_FALSE SUN_KBD_MODE_TRUE SUN_KBD_MODE_FALSE BUILD_DATE DIX_CFLAGS libdir exec_prefix prefix APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CCAS CCASFLAGS LN_S build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL PKG_CONFIG ac_pt_PKG_CONFIG LEX LEXLIB LEX_OUTPUT_ROOT YACC RAWCPP RAWCPPFLAGS ALLOCA NEED_STRLCAT_TRUE NEED_STRLCAT_FALSE NEED_VSNPRINTF_TRUE NEED_VSNPRINTF_FALSE AGP_TRUE AGP_FALSE LNXAPM_TRUE LNXAPM_FALSE FBDEVHW_TRUE FBDEVHW_FALSE FREEBSD_KLDLOAD_TRUE FREEBSD_KLDLOAD_FALSE ALPHA_VIDEO_TRUE ALPHA_VIDEO_FALSE ARM_VIDEO_TRUE ARM_VIDEO_FALSE I386_VIDEO_TRUE I386_VIDEO_FALSE PPC_VIDEO_TRUE PPC_VIDEO_FALSE SPARC64_VIDEO_TRUE SPARC64_VIDEO_FALSE KDRIVE_HW_TRUE KDRIVE_HW_FALSE MMX_CAPABLE_TRUE MMX_CAPABLE_FALSE INSTALL_SETUID_TRUE INSTALL_SETUID_FALSE INT10_VM86_TRUE INT10_VM86_FALSE INT10_X86EMU_TRUE INT10_X86EMU_FALSE INT10_STUB_TRUE INT10_STUB_FALSE BUILDDOCS_TRUE BUILDDOCS_FALSE LINUXDOC PS2PDF BUILD_LINUXDOC_TRUE BUILD_LINUXDOC_FALSE BUILD_PDFDOC_TRUE BUILD_PDFDOC_FALSE MAKE_TEXT MAKE_PS MAKE_PDF MAKE_HTML INSTALL_LIBXF86CONFIG_TRUE INSTALL_LIBXF86CONFIG_FALSE XV_TRUE XV_FALSE XVMC_TRUE XVMC_FALSE DGA_TRUE DGA_FALSE COMPOSITE_TRUE COMPOSITE_FALSE MITSHM_TRUE MITSHM_FALSE XTRAP_TRUE XTRAP_FALSE RECORD_TRUE RECORD_FALSE SCREENSAVER_TRUE SCREENSAVER_FALSE RES_TRUE RES_FALSE XLIB_CFLAGS XLIB_LIBS GL_CFLAGS GL_LIBS GLX_TRUE GLX_FALSE MESA_SOURCE AIGLX_TRUE AIGLX_FALSE GLX_DEFINES DRI_TRUE DRI_FALSE DRIPROTO_CFLAGS DRIPROTO_LIBS LIBDRM_CFLAGS LIBDRM_LIBS XINERAMA_TRUE XINERAMA_FALSE XACE_TRUE XACE_FALSE XCSECURITY_TRUE XCSECURITY_FALSE XEVIE_TRUE XEVIE_FALSE APPGROUP_TRUE APPGROUP_FALSE CUP_TRUE CUP_FALSE EVI_TRUE EVI_FALSE MULTIBUFFER_TRUE MULTIBUFFER_FALSE FONTCACHE_TRUE FONTCACHE_FALSE DBE_TRUE DBE_FALSE XF86BIGFONT_TRUE XF86BIGFONT_FALSE DPMSExtension_TRUE DPMSExtension_FALSE XPRINTPROTO_CFLAGS XPRINTPROTO_LIBS XPRINT_TRUE XPRINT_FALSE XCALIBRATE_TRUE XCALIBRATE_FALSE XINPUT_TRUE XINPUT_FALSE XF86UTILS_TRUE XF86UTILS_FALSE XDMCP_CFLAGS XDMCP_LIBS XDMCP_TRUE XDMCP_FALSE XDMAUTH_TRUE XDMAUTH_FALSE USE_RGB_BUILTIN_TRUE USE_RGB_BUILTIN_FALSE COMPILEDDEFAULTFONTPATH RGB_DB BASE_FONT_PATH DRI_DRIVER_PATH VENDOR_STRING VENDOR_STRING_SHORT VENDOR_RELEASE VENDOR_MAN_VERSION DEBUG_TRUE DEBUG_FALSE XSERVERCFLAGS_CFLAGS XSERVERCFLAGS_LIBS XSERVERLIBS_CFLAGS XSERVERLIBS_LIBS SYS_LIBS XSERVER_LIBS DMXMODULES_CFLAGS DMXMODULES_LIBS DMX_TRUE DMX_FALSE XDMX_LIBS XDMXCONFIG_DEP_CFLAGS XDMXCONFIG_DEP_LIBS DMXEXAMPLES_DEP_CFLAGS DMXEXAMPLES_DEP_LIBS DMXXMUEXAMPLES_DEP_CFLAGS DMXXMUEXAMPLES_DEP_LIBS DMXXIEXAMPLES_DEP_CFLAGS DMXXIEXAMPLES_DEP_LIBS XTSTEXAMPLES_DEP_CFLAGS XTSTEXAMPLES_DEP_LIBS XRESEXAMPLES_DEP_CFLAGS XRESEXAMPLES_DEP_LIBS X11EXAMPLES_DEP_CFLAGS X11EXAMPLES_DEP_LIBS DMX_BUILD_LNX_TRUE DMX_BUILD_LNX_FALSE DMX_BUILD_USB_TRUE DMX_BUILD_USB_FALSE XVFB_TRUE XVFB_FALSE XVFB_LIBS XNESTMODULES_CFLAGS XNESTMODULES_LIBS XNEST_TRUE XNEST_FALSE XNEST_LIBS XGLMODULES_CFLAGS XGLMODULES_LIBS XGL_TRUE XGL_FALSE XGL_LIBS xglmoduledir XGL_MODULE_PATH XEGLMODULES_CFLAGS XEGLMODULES_LIBS XEGL_TRUE XEGL_FALSE XEGL_LIBS XGLXMODULES_CFLAGS XGLXMODULES_LIBS XGLX_TRUE XGLX_FALSE XGLX_LIBS XORG_CORE_LIBS SOLARIS_INOUT_ARCH SOLARIS_ASM_CFLAGS XORG_LIBS XORG_INCS XORG_OS XORG_OS_SUBDIR XORG_OS_KBD PERL XORG_CFLAGS LD_EXPORT_SYMBOLS_FLAG __XCONFIGFILE__ XF86CONFIGFILE DEFAULT_MODULE_PATH DEFAULT_LOGPREFIX moduledir driverdir sdkdir extdir logdir XORG_TRUE XORG_FALSE XORG_BUS_LINUXPCI_TRUE XORG_BUS_LINUXPCI_FALSE XORG_BUS_FREEBSDPCI_TRUE XORG_BUS_FREEBSDPCI_FALSE XORG_BUS_NETBSDPCI_TRUE XORG_BUS_NETBSDPCI_FALSE XORG_BUS_IX86PCI_TRUE XORG_BUS_IX86PCI_FALSE XORG_BUS_PPCPCI_TRUE XORG_BUS_PPCPCI_FALSE XORG_BUS_SPARCPCI_TRUE XORG_BUS_SPARCPCI_FALSE XORG_BUS_SPARC_TRUE XORG_BUS_SPARC_FALSE XORG_LOADER_SPARC_TRUE XORG_LOADER_SPARC_FALSE LINUX_IA64_TRUE LINUX_IA64_FALSE LINUX_ALPHA_TRUE LINUX_ALPHA_FALSE LNXACPI_TRUE LNXACPI_FALSE SOLARIS_USL_CONSOLE_TRUE SOLARIS_USL_CONSOLE_FALSE SOLARIS_ASM_INLINE_TRUE SOLARIS_ASM_INLINE_FALSE MFB_TRUE MFB_FALSE CFB_TRUE CFB_FALSE AFB_TRUE AFB_FALSE XPRINT_CFLAGS XPRINT_LIBS xpconfigdir MKFONTSCALE MKFONTDIR FREETYPE_CFLAGS FREETYPE_LIBS ft_config FREETYPE_REQUIRES XP_USE_FREETYPE_TRUE XP_USE_FREETYPE_FALSE XWIN_LIBS XWINMODULES_CFLAGS XWINMODULES_LIBS XWIN_SERVER_NAME XWIN_SYSTEM_LIBS XWIN_TRUE XWIN_FALSE XWIN_MULTIWINDOW_TRUE XWIN_MULTIWINDOW_FALSE XWIN_MULTIWINDOWEXTWM_TRUE XWIN_MULTIWINDOWEXTWM_FALSE XWIN_CLIPBOARD_TRUE XWIN_CLIPBOARD_FALSE XWIN_GLX_WINDOWS_TRUE XWIN_GLX_WINDOWS_FALSE XWIN_NATIVEGDI_TRUE XWIN_NATIVEGDI_FALSE XWIN_PRIMARYFB_TRUE XWIN_PRIMARYFB_FALSE XWIN_RANDR_TRUE XWIN_RANDR_FALSE XWIN_XV_TRUE XWIN_XV_FALSE KDRIVE_TRUE KDRIVE_FALSE TSLIB_CFLAGS TSLIB_LIBS XEPHYR_CFLAGS XEPHYR_LIBS KDRIVE_INCS KDRIVE_PURE_INCS KDRIVE_CFLAGS KDRIVE_PURE_LIBS KDRIVE_LIBS TSLIB_TRUE TSLIB_FALSE H3600_TS_TRUE H3600_TS_FALSE KDRIVEVESA_TRUE KDRIVEVESA_FALSE KDRIVEFBDEV_TRUE KDRIVEFBDEV_FALSE XEPHYR_TRUE XEPHYR_FALSE XEPHYR_INCS XSDLSERVER_TRUE XSDLSERVER_FALSE XSDL_LIBS XSDL_INCS XKB_BASE_DIRECTORY XKB_BIN_DIRECTORY XKM_OUTPUT_DIR XKB_COMPILED_DIR PROJECTROOT XORGCONFIG_DEP_CFLAGS XORGCONFIG_DEP_LIBS XORGCFG_DEP_CFLAGS XORGCFG_DEP_LIBS APPDEFAULTDIR BUILD_XORGCFG_TRUE BUILD_XORGCFG_FALSE USE_CURSES_TRUE USE_CURSES_FALSE BUILD_KBD_MODE_TRUE BUILD_KBD_MODE_FALSE BSD_KBD_MODE_TRUE BSD_KBD_MODE_FALSE SUN_KBD_MODE_TRUE SUN_KBD_MODE_FALSE BUILD_DATE DIX_CFLAGS libdir exec_prefix prefix APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -3763,7 +3763,6 @@ do
     done
   done
 done
-IFS=$as_save_IFS
 lt_ac_max=0
 lt_ac_count=0
 # Add /usr/xpg4/bin/sed as it is typically found on Solaris
@@ -3798,7 +3797,6 @@ done
 fi
 
 SED=$lt_cv_path_SED
-
 echo "$as_me:$LINENO: result: $SED" >&5
 echo "${ECHO_T}$SED" >&6
 
@@ -4228,7 +4226,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4231 "configure"' > conftest.$ac_ext
+  echo '#line 4229 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -6069,7 +6067,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6072:" \
+echo "$as_me:6070:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7132,11 +7130,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7135: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7133: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7139: \$? = $ac_status" >&5
+   echo "$as_me:7137: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7400,11 +7398,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7403: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7401: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7407: \$? = $ac_status" >&5
+   echo "$as_me:7405: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7504,11 +7502,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7507: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7505: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7511: \$? = $ac_status" >&5
+   echo "$as_me:7509: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8969,31 +8967,10 @@ linux*)
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # find out which ABI we are using
-  libsuff=
-  case "$host_cpu" in
-  x86_64*|s390x*|powerpc64*)
-    echo '#line 8976 "configure"' > conftest.$ac_ext
-    if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-      case `/usr/bin/file conftest.$ac_objext` in
-      *64-bit*)
-        libsuff=64
-        sys_lib_search_path_spec="/lib${libsuff} /usr/lib${libsuff} /usr/local/lib${libsuff}"
-        ;;
-      esac
-    fi
-    rm -rf conftest*
-    ;;
-  esac
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
-    lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib${libsuff} /usr/lib${libsuff} $lt_ld_extra"
+    lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -9870,7 +9847,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9873 "configure"
+#line 9850 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9970,7 +9947,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9973 "configure"
+#line 9950 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10301,9 +10278,6 @@ CC=$lt_compiler
 # Is the compiler the GNU C compiler?
 with_gcc=$GCC
 
-gcc_dir=\`gcc -print-file-name=. | $SED 's,/\.$,,'\`
-gcc_ver=\`gcc -dumpversion\`
-
 # An ERE matcher.
 EGREP=$lt_EGREP
 
@@ -10437,11 +10411,11 @@ striplib=$lt_striplib
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
-predep_objects=\`echo $lt_predep_objects | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+predep_objects=$lt_predep_objects
 
 # Dependencies to place after the objects being linked to create a
 # shared library.
-postdep_objects=\`echo $lt_postdep_objects | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+postdep_objects=$lt_postdep_objects
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
@@ -10453,7 +10427,7 @@ postdeps=$lt_postdeps
 
 # The library search path used internally by the compiler when linking
 # a shared library.
-compiler_lib_search_path=\`echo $lt_compiler_lib_search_path | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+compiler_lib_search_path=$lt_compiler_lib_search_path
 
 # Method to check whether dependent libraries are shared objects.
 deplibs_check_method=$lt_deplibs_check_method
@@ -10533,7 +10507,7 @@ variables_saved_for_relink="$variables_saved_for_relink"
 link_all_deplibs=$link_all_deplibs
 
 # Compile-time system search path for libraries
-sys_lib_search_path_spec=\`echo $lt_sys_lib_search_path_spec | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+sys_lib_search_path_spec=$lt_sys_lib_search_path_spec
 
 # Run-time system search path for libraries
 sys_lib_dlsearch_path_spec=$lt_sys_lib_dlsearch_path_spec
@@ -12313,11 +12287,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12316: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12290: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12320: \$? = $ac_status" >&5
+   echo "$as_me:12294: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12417,11 +12391,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12420: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12394: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12424: \$? = $ac_status" >&5
+   echo "$as_me:12398: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -12949,31 +12923,10 @@ linux*)
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # find out which ABI we are using
-  libsuff=
-  case "$host_cpu" in
-  x86_64*|s390x*|powerpc64*)
-    echo '#line 12956 "configure"' > conftest.$ac_ext
-    if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-      case `/usr/bin/file conftest.$ac_objext` in
-      *64-bit*)
-        libsuff=64
-        sys_lib_search_path_spec="/lib${libsuff} /usr/lib${libsuff} /usr/local/lib${libsuff}"
-        ;;
-      esac
-    fi
-    rm -rf conftest*
-    ;;
-  esac
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
-    lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib${libsuff} /usr/lib${libsuff} $lt_ld_extra"
+    lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -13357,9 +13310,6 @@ CC=$lt_compiler_CXX
 # Is the compiler the GNU C compiler?
 with_gcc=$GCC_CXX
 
-gcc_dir=\`gcc -print-file-name=. | $SED 's,/\.$,,'\`
-gcc_ver=\`gcc -dumpversion\`
-
 # An ERE matcher.
 EGREP=$lt_EGREP
 
@@ -13493,11 +13443,11 @@ striplib=$lt_striplib
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
-predep_objects=\`echo $lt_predep_objects_CXX | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+predep_objects=$lt_predep_objects_CXX
 
 # Dependencies to place after the objects being linked to create a
 # shared library.
-postdep_objects=\`echo $lt_postdep_objects_CXX | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+postdep_objects=$lt_postdep_objects_CXX
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
@@ -13509,7 +13459,7 @@ postdeps=$lt_postdeps_CXX
 
 # The library search path used internally by the compiler when linking
 # a shared library.
-compiler_lib_search_path=\`echo $lt_compiler_lib_search_path_CXX | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+compiler_lib_search_path=$lt_compiler_lib_search_path_CXX
 
 # Method to check whether dependent libraries are shared objects.
 deplibs_check_method=$lt_deplibs_check_method
@@ -13589,7 +13539,7 @@ variables_saved_for_relink="$variables_saved_for_relink"
 link_all_deplibs=$link_all_deplibs_CXX
 
 # Compile-time system search path for libraries
-sys_lib_search_path_spec=\`echo $lt_sys_lib_search_path_spec | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+sys_lib_search_path_spec=$lt_sys_lib_search_path_spec
 
 # Run-time system search path for libraries
 sys_lib_dlsearch_path_spec=$lt_sys_lib_dlsearch_path_spec
@@ -14011,11 +13961,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14014: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13964: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14018: \$? = $ac_status" >&5
+   echo "$as_me:13968: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -14115,11 +14065,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14118: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14068: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14122: \$? = $ac_status" >&5
+   echo "$as_me:14072: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -15560,31 +15510,10 @@ linux*)
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # find out which ABI we are using
-  libsuff=
-  case "$host_cpu" in
-  x86_64*|s390x*|powerpc64*)
-    echo '#line 15567 "configure"' > conftest.$ac_ext
-    if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-      case `/usr/bin/file conftest.$ac_objext` in
-      *64-bit*)
-        libsuff=64
-        sys_lib_search_path_spec="/lib${libsuff} /usr/lib${libsuff} /usr/local/lib${libsuff}"
-        ;;
-      esac
-    fi
-    rm -rf conftest*
-    ;;
-  esac
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
-    lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib${libsuff} /usr/lib${libsuff} $lt_ld_extra"
+    lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -15968,9 +15897,6 @@ CC=$lt_compiler_F77
 # Is the compiler the GNU C compiler?
 with_gcc=$GCC_F77
 
-gcc_dir=\`gcc -print-file-name=. | $SED 's,/\.$,,'\`
-gcc_ver=\`gcc -dumpversion\`
-
 # An ERE matcher.
 EGREP=$lt_EGREP
 
@@ -16104,11 +16030,11 @@ striplib=$lt_striplib
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
-predep_objects=\`echo $lt_predep_objects_F77 | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+predep_objects=$lt_predep_objects_F77
 
 # Dependencies to place after the objects being linked to create a
 # shared library.
-postdep_objects=\`echo $lt_postdep_objects_F77 | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+postdep_objects=$lt_postdep_objects_F77
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
@@ -16120,7 +16046,7 @@ postdeps=$lt_postdeps_F77
 
 # The library search path used internally by the compiler when linking
 # a shared library.
-compiler_lib_search_path=\`echo $lt_compiler_lib_search_path_F77 | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+compiler_lib_search_path=$lt_compiler_lib_search_path_F77
 
 # Method to check whether dependent libraries are shared objects.
 deplibs_check_method=$lt_deplibs_check_method
@@ -16200,7 +16126,7 @@ variables_saved_for_relink="$variables_saved_for_relink"
 link_all_deplibs=$link_all_deplibs_F77
 
 # Compile-time system search path for libraries
-sys_lib_search_path_spec=\`echo $lt_sys_lib_search_path_spec | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+sys_lib_search_path_spec=$lt_sys_lib_search_path_spec
 
 # Run-time system search path for libraries
 sys_lib_dlsearch_path_spec=$lt_sys_lib_dlsearch_path_spec
@@ -16342,11 +16268,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16345: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16271: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16349: \$? = $ac_status" >&5
+   echo "$as_me:16275: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16610,11 +16536,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16613: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16539: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16617: \$? = $ac_status" >&5
+   echo "$as_me:16543: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16714,11 +16640,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16717: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16643: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16721: \$? = $ac_status" >&5
+   echo "$as_me:16647: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -18179,31 +18105,10 @@ linux*)
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # find out which ABI we are using
-  libsuff=
-  case "$host_cpu" in
-  x86_64*|s390x*|powerpc64*)
-    echo '#line 18186 "configure"' > conftest.$ac_ext
-    if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-      case `/usr/bin/file conftest.$ac_objext` in
-      *64-bit*)
-        libsuff=64
-        sys_lib_search_path_spec="/lib${libsuff} /usr/lib${libsuff} /usr/local/lib${libsuff}"
-        ;;
-      esac
-    fi
-    rm -rf conftest*
-    ;;
-  esac
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
-    lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib${libsuff} /usr/lib${libsuff} $lt_ld_extra"
+    lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -18587,9 +18492,6 @@ CC=$lt_compiler_GCJ
 # Is the compiler the GNU C compiler?
 with_gcc=$GCC_GCJ
 
-gcc_dir=\`gcc -print-file-name=. | $SED 's,/\.$,,'\`
-gcc_ver=\`gcc -dumpversion\`
-
 # An ERE matcher.
 EGREP=$lt_EGREP
 
@@ -18723,11 +18625,11 @@ striplib=$lt_striplib
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
-predep_objects=\`echo $lt_predep_objects_GCJ | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+predep_objects=$lt_predep_objects_GCJ
 
 # Dependencies to place after the objects being linked to create a
 # shared library.
-postdep_objects=\`echo $lt_postdep_objects_GCJ | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+postdep_objects=$lt_postdep_objects_GCJ
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
@@ -18739,7 +18641,7 @@ postdeps=$lt_postdeps_GCJ
 
 # The library search path used internally by the compiler when linking
 # a shared library.
-compiler_lib_search_path=\`echo $lt_compiler_lib_search_path_GCJ | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+compiler_lib_search_path=$lt_compiler_lib_search_path_GCJ
 
 # Method to check whether dependent libraries are shared objects.
 deplibs_check_method=$lt_deplibs_check_method
@@ -18819,7 +18721,7 @@ variables_saved_for_relink="$variables_saved_for_relink"
 link_all_deplibs=$link_all_deplibs_GCJ
 
 # Compile-time system search path for libraries
-sys_lib_search_path_spec=\`echo $lt_sys_lib_search_path_spec | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+sys_lib_search_path_spec=$lt_sys_lib_search_path_spec
 
 # Run-time system search path for libraries
 sys_lib_dlsearch_path_spec=$lt_sys_lib_dlsearch_path_spec
@@ -19071,9 +18973,6 @@ CC=$lt_compiler_RC
 # Is the compiler the GNU C compiler?
 with_gcc=$GCC_RC
 
-gcc_dir=\`gcc -print-file-name=. | $SED 's,/\.$,,'\`
-gcc_ver=\`gcc -dumpversion\`
-
 # An ERE matcher.
 EGREP=$lt_EGREP
 
@@ -19207,11 +19106,11 @@ striplib=$lt_striplib
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
-predep_objects=\`echo $lt_predep_objects_RC | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+predep_objects=$lt_predep_objects_RC
 
 # Dependencies to place after the objects being linked to create a
 # shared library.
-postdep_objects=\`echo $lt_postdep_objects_RC | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+postdep_objects=$lt_postdep_objects_RC
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
@@ -19223,7 +19122,7 @@ postdeps=$lt_postdeps_RC
 
 # The library search path used internally by the compiler when linking
 # a shared library.
-compiler_lib_search_path=\`echo $lt_compiler_lib_search_path_RC | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+compiler_lib_search_path=$lt_compiler_lib_search_path_RC
 
 # Method to check whether dependent libraries are shared objects.
 deplibs_check_method=$lt_deplibs_check_method
@@ -19303,7 +19202,7 @@ variables_saved_for_relink="$variables_saved_for_relink"
 link_all_deplibs=$link_all_deplibs_RC
 
 # Compile-time system search path for libraries
-sys_lib_search_path_spec=\`echo $lt_sys_lib_search_path_spec | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+sys_lib_search_path_spec=$lt_sys_lib_search_path_spec
 
 # Run-time system search path for libraries
 sys_lib_dlsearch_path_spec=$lt_sys_lib_dlsearch_path_spec
@@ -25123,6 +25022,8 @@ fi
 
 # Transport selection macro from xtrans.m4
 
+
+
  # Check whether --enable-unix-transport or --disable-unix-transport was given.
 if test "${enable_unix_transport+set}" = set; then
   enableval="$enable_unix_transport"
@@ -25650,6 +25551,29 @@ fi
 
 
  fi
+ case $host_os in
+	solaris*|sco*|sysv4*)	localdef="yes" ;;
+	*)			localdef="no"  ;;
+ esac
+ # Check whether --enable-local-transport or --disable-local-transport was given.
+if test "${enable_local_transport+set}" = set; then
+  enableval="$enable_local_transport"
+  LOCALCONN=$enableval
+else
+  LOCALCONN=$localdef
+fi;
+ echo "$as_me:$LINENO: checking if Xtrans should support os-specific local connections" >&5
+echo $ECHO_N "checking if Xtrans should support os-specific local connections... $ECHO_C" >&6
+ echo "$as_me:$LINENO: result: $LOCALCONN" >&5
+echo "${ECHO_T}$LOCALCONN" >&6
+ if test "$LOCALCONN" = "yes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define LOCALCONN 1
+_ACEOF
+
+ fi
+
 
 
 # Secure RPC detection macro from xtrans.m4
@@ -26113,9 +26037,12 @@ fi
 
 
 
-as_ac_File=`echo "ac_cv_file_$prefix/share/X11/sgml/defs.ent" | $as_tr_sh`
-echo "$as_me:$LINENO: checking for $prefix/share/X11/sgml/defs.ent" >&5
-echo $ECHO_N "checking for $prefix/share/X11/sgml/defs.ent... $ECHO_C" >&6
+XORG_SGML_PATH=$prefix/share/sgml
+HAVE_DEFS_ENT=
+
+as_ac_File=`echo "ac_cv_file_$XORG_SGML_PATH/X11/defs.ent" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $XORG_SGML_PATH/X11/defs.ent" >&5
+echo $ECHO_N "checking for $XORG_SGML_PATH/X11/defs.ent... $ECHO_C" >&6
 if eval "test \"\${$as_ac_File+set}\" = set"; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
@@ -26123,7 +26050,7 @@ else
   { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
 echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
    { (exit 1); exit 1; }; }
-if test -r "$prefix/share/X11/sgml/defs.ent"; then
+if test -r "$XORG_SGML_PATH/X11/defs.ent"; then
   eval "$as_ac_File=yes"
 else
   eval "$as_ac_File=no"
@@ -26132,10 +26059,7 @@ fi
 echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
 echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
 if test `eval echo '${'$as_ac_File'}'` = yes; then
-  DEFS_ENT_PATH=$prefix/share/X11/sgml
-else
-  DEFS_ENT_PATH=
-
+  HAVE_DEFS_ENT=yes
 fi
 
 
@@ -26221,7 +26145,7 @@ fi
 echo "$as_me:$LINENO: checking Whether to build documentation" >&5
 echo $ECHO_N "checking Whether to build documentation... $ECHO_C" >&6
 
-if test x$DEFS_ENT_PATH != x && test x$LINUXDOC != x ; then
+if test x$HAVE_DEFS_ENT != x && test x$LINUXDOC != x ; then
    BUILDDOC=yes
 else
    BUILDDOC=no
@@ -26244,7 +26168,7 @@ echo "${ECHO_T}$BUILDDOC" >&6
 echo "$as_me:$LINENO: checking Whether to build pdf documentation" >&5
 echo $ECHO_N "checking Whether to build pdf documentation... $ECHO_C" >&6
 
-if test x$PS2PDF != x ; then
+if test x$PS2PDF != x && test x$BUILD_PDFDOC != xno; then
    BUILDPDFDOC=yes
 else
    BUILDPDFDOC=no
@@ -26264,10 +26188,10 @@ fi
 echo "$as_me:$LINENO: result: $BUILDPDFDOC" >&5
 echo "${ECHO_T}$BUILDPDFDOC" >&6
 
-MAKE_TEXT="SGML_SEARCH_PATH=$DEFS_ENT_PATH GROFF_NO_SGR=y $LINUXDOC -B txt"
-MAKE_PS="SGML_SEARCH_PATH=$DEFS_ENT_PATH $LINUXDOC -B latex --papersize=letter --output=ps"
+MAKE_TEXT="SGML_SEARCH_PATH=$XORG_SGML_PATH GROFF_NO_SGR=y $LINUXDOC -B txt"
+MAKE_PS="SGML_SEARCH_PATH=$XORG_SGML_PATH $LINUXDOC -B latex --papersize=letter --output=ps"
 MAKE_PDF="$PS2PDF"
-MAKE_HTML="SGML_SEARCH_PATH=$DEFS_ENT_PATH $LINUXDOC  -B html --split=0"
+MAKE_HTML="SGML_SEARCH_PATH=$XORG_SGML_PATH $LINUXDOC  -B html --split=0"
 
 
 
@@ -26483,9 +26407,6 @@ echo "$as_me:$LINENO: checking for XLIB" >&5
 echo $ECHO_N "checking for XLIB... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XLIB_CFLAGS"; then
-        pkg_cv_XLIB_CFLAGS="$XLIB_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -26496,14 +26417,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XLIB_LIBS"; then
-        pkg_cv_XLIB_LIBS="$XLIB_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -26514,59 +26431,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XLIB_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11"`
-        else
-	        XLIB_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
-        fi
+	XLIB_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XLIB_PKG_ERRORS" >&5
+	echo "$XLIB_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (x11) were not met:
-
-$XLIB_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XLIB_CFLAGS
-and XLIB_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (x11) were not met:
-
-$XLIB_PKG_ERRORS
-
+Alternatively you may set the XLIB_CFLAGS and XLIB_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XLIB_CFLAGS
-and XLIB_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XLIB_CFLAGS and XLIB_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XLIB_CFLAGS
-and XLIB_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XLIB_CFLAGS and XLIB_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -26574,9 +26470,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XLIB_CFLAGS
-and XLIB_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XLIB_CFLAGS and XLIB_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -26594,9 +26490,6 @@ echo "$as_me:$LINENO: checking for GL" >&5
 echo $ECHO_N "checking for GL... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$GL_CFLAGS"; then
-        pkg_cv_GL_CFLAGS="$GL_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"glproto >= 1.4.7\"") >&5
   ($PKG_CONFIG --exists --print-errors "glproto >= 1.4.7") 2>&5
@@ -26607,14 +26500,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$GL_LIBS"; then
-        pkg_cv_GL_LIBS="$GL_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"glproto >= 1.4.7\"") >&5
   ($PKG_CONFIG --exists --print-errors "glproto >= 1.4.7") 2>&5
@@ -26625,59 +26514,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        GL_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "glproto >= 1.4.7"`
-        else
-	        GL_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glproto >= 1.4.7"`
-        fi
+	GL_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glproto >= 1.4.7"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$GL_PKG_ERRORS" >&5
+	echo "$GL_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (glproto >= 1.4.7) were not met:
-
-$GL_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (glproto >= 1.4.7) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables GL_CFLAGS
-and GL_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (glproto >= 1.4.7) were not met:
-
-$GL_PKG_ERRORS
-
+Alternatively you may set the GL_CFLAGS and GL_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (glproto >= 1.4.7) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables GL_CFLAGS
-and GL_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the GL_CFLAGS and GL_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables GL_CFLAGS
-and GL_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the GL_CFLAGS and GL_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -26685,9 +26553,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables GL_CFLAGS
-and GL_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the GL_CFLAGS and GL_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -26781,9 +26649,6 @@ echo "$as_me:$LINENO: checking for DRIPROTO" >&5
 echo $ECHO_N "checking for DRIPROTO... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DRIPROTO_CFLAGS"; then
-        pkg_cv_DRIPROTO_CFLAGS="$DRIPROTO_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xf86driproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "xf86driproto") 2>&5
@@ -26794,14 +26659,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DRIPROTO_LIBS"; then
-        pkg_cv_DRIPROTO_LIBS="$DRIPROTO_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xf86driproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "xf86driproto") 2>&5
@@ -26812,59 +26673,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DRIPROTO_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xf86driproto"`
-        else
-	        DRIPROTO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xf86driproto"`
-        fi
+	DRIPROTO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xf86driproto"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DRIPROTO_PKG_ERRORS" >&5
+	echo "$DRIPROTO_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xf86driproto) were not met:
-
-$DRIPROTO_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xf86driproto) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables DRIPROTO_CFLAGS
-and DRIPROTO_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xf86driproto) were not met:
-
-$DRIPROTO_PKG_ERRORS
-
+Alternatively you may set the DRIPROTO_CFLAGS and DRIPROTO_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xf86driproto) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables DRIPROTO_CFLAGS
-and DRIPROTO_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the DRIPROTO_CFLAGS and DRIPROTO_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables DRIPROTO_CFLAGS
-and DRIPROTO_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the DRIPROTO_CFLAGS and DRIPROTO_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -26872,9 +26712,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables DRIPROTO_CFLAGS
-and DRIPROTO_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the DRIPROTO_CFLAGS and DRIPROTO_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -26892,9 +26732,6 @@ echo "$as_me:$LINENO: checking for LIBDRM" >&5
 echo $ECHO_N "checking for LIBDRM... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$LIBDRM_CFLAGS"; then
-        pkg_cv_LIBDRM_CFLAGS="$LIBDRM_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"libdrm\"") >&5
   ($PKG_CONFIG --exists --print-errors "libdrm") 2>&5
@@ -26905,14 +26742,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$LIBDRM_LIBS"; then
-        pkg_cv_LIBDRM_LIBS="$LIBDRM_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"libdrm\"") >&5
   ($PKG_CONFIG --exists --print-errors "libdrm") 2>&5
@@ -26923,59 +26756,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        LIBDRM_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "libdrm"`
-        else
-	        LIBDRM_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "libdrm"`
-        fi
+	LIBDRM_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "libdrm"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$LIBDRM_PKG_ERRORS" >&5
+	echo "$LIBDRM_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (libdrm) were not met:
-
-$LIBDRM_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (libdrm) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables LIBDRM_CFLAGS
-and LIBDRM_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (libdrm) were not met:
-
-$LIBDRM_PKG_ERRORS
-
+Alternatively you may set the LIBDRM_CFLAGS and LIBDRM_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (libdrm) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables LIBDRM_CFLAGS
-and LIBDRM_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the LIBDRM_CFLAGS and LIBDRM_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables LIBDRM_CFLAGS
-and LIBDRM_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the LIBDRM_CFLAGS and LIBDRM_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -26983,9 +26795,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables LIBDRM_CFLAGS
-and LIBDRM_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the LIBDRM_CFLAGS and LIBDRM_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -27003,9 +26815,6 @@ echo "$as_me:$LINENO: checking for GL" >&5
 echo $ECHO_N "checking for GL... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$GL_CFLAGS"; then
-        pkg_cv_GL_CFLAGS="$GL_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"glproto >= 1.4.1\"") >&5
   ($PKG_CONFIG --exists --print-errors "glproto >= 1.4.1") 2>&5
@@ -27016,14 +26825,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$GL_LIBS"; then
-        pkg_cv_GL_LIBS="$GL_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"glproto >= 1.4.1\"") >&5
   ($PKG_CONFIG --exists --print-errors "glproto >= 1.4.1") 2>&5
@@ -27034,59 +26839,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        GL_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "glproto >= 1.4.1"`
-        else
-	        GL_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glproto >= 1.4.1"`
-        fi
+	GL_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glproto >= 1.4.1"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$GL_PKG_ERRORS" >&5
+	echo "$GL_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (glproto >= 1.4.1) were not met:
-
-$GL_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (glproto >= 1.4.1) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables GL_CFLAGS
-and GL_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (glproto >= 1.4.1) were not met:
-
-$GL_PKG_ERRORS
-
+Alternatively you may set the GL_CFLAGS and GL_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (glproto >= 1.4.1) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables GL_CFLAGS
-and GL_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the GL_CFLAGS and GL_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables GL_CFLAGS
-and GL_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the GL_CFLAGS and GL_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -27094,9 +26878,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables GL_CFLAGS
-and GL_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the GL_CFLAGS and GL_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -27374,9 +27158,6 @@ echo "$as_me:$LINENO: checking for XPRINTPROTO" >&5
 echo $ECHO_N "checking for XPRINTPROTO... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPRINTPROTO_CFLAGS"; then
-        pkg_cv_XPRINTPROTO_CFLAGS="$XPRINTPROTO_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"printproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "printproto") 2>&5
@@ -27387,14 +27168,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPRINTPROTO_LIBS"; then
-        pkg_cv_XPRINTPROTO_LIBS="$XPRINTPROTO_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"printproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "printproto") 2>&5
@@ -27405,31 +27182,16 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XPRINTPROTO_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "printproto"`
-        else
-	        XPRINTPROTO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "printproto"`
-        fi
+	XPRINTPROTO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "printproto"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XPRINTPROTO_PKG_ERRORS" >&5
+	echo "$XPRINTPROTO_PKG_ERRORS" 1>&5
 
-	echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-                XPRINT=no
+	XPRINT=no
 elif test $pkg_failed = untried; then
 	XPRINT=no
 else
@@ -27680,9 +27442,6 @@ echo "$as_me:$LINENO: checking for XDMCP" >&5
 echo $ECHO_N "checking for XDMCP... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XDMCP_CFLAGS"; then
-        pkg_cv_XDMCP_CFLAGS="$XDMCP_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xdmcp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xdmcp") 2>&5
@@ -27693,14 +27452,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XDMCP_LIBS"; then
-        pkg_cv_XDMCP_LIBS="$XDMCP_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xdmcp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xdmcp") 2>&5
@@ -27711,31 +27466,16 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XDMCP_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xdmcp"`
-        else
-	        XDMCP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xdmcp"`
-        fi
+	XDMCP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xdmcp"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XDMCP_PKG_ERRORS" >&5
+	echo "$XDMCP_PKG_ERRORS" 1>&5
 
-	echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-                have_libxdmcp="no"
+	have_libxdmcp="no"
 elif test $pkg_failed = untried; then
 	have_libxdmcp="no"
 else
@@ -28115,9 +27855,6 @@ echo "$as_me:$LINENO: checking for XSERVERCFLAGS" >&5
 echo $ECHO_N "checking for XSERVERCFLAGS... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XSERVERCFLAGS_CFLAGS"; then
-        pkg_cv_XSERVERCFLAGS_CFLAGS="$XSERVERCFLAGS_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"\$REQUIRED_MODULES \$REQUIRED_LIBS\"") >&5
   ($PKG_CONFIG --exists --print-errors "$REQUIRED_MODULES $REQUIRED_LIBS") 2>&5
@@ -28128,14 +27865,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XSERVERCFLAGS_LIBS"; then
-        pkg_cv_XSERVERCFLAGS_LIBS="$XSERVERCFLAGS_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"\$REQUIRED_MODULES \$REQUIRED_LIBS\"") >&5
   ($PKG_CONFIG --exists --print-errors "$REQUIRED_MODULES $REQUIRED_LIBS") 2>&5
@@ -28146,59 +27879,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XSERVERCFLAGS_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "$REQUIRED_MODULES $REQUIRED_LIBS"`
-        else
-	        XSERVERCFLAGS_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$REQUIRED_MODULES $REQUIRED_LIBS"`
-        fi
+	XSERVERCFLAGS_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$REQUIRED_MODULES $REQUIRED_LIBS"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XSERVERCFLAGS_PKG_ERRORS" >&5
+	echo "$XSERVERCFLAGS_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements ($REQUIRED_MODULES $REQUIRED_LIBS) were not met:
-
-$XSERVERCFLAGS_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements ($REQUIRED_MODULES $REQUIRED_LIBS) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XSERVERCFLAGS_CFLAGS
-and XSERVERCFLAGS_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements ($REQUIRED_MODULES $REQUIRED_LIBS) were not met:
-
-$XSERVERCFLAGS_PKG_ERRORS
-
+Alternatively you may set the XSERVERCFLAGS_CFLAGS and XSERVERCFLAGS_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements ($REQUIRED_MODULES $REQUIRED_LIBS) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XSERVERCFLAGS_CFLAGS
-and XSERVERCFLAGS_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XSERVERCFLAGS_CFLAGS and XSERVERCFLAGS_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XSERVERCFLAGS_CFLAGS
-and XSERVERCFLAGS_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XSERVERCFLAGS_CFLAGS and XSERVERCFLAGS_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -28206,9 +27918,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XSERVERCFLAGS_CFLAGS
-and XSERVERCFLAGS_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XSERVERCFLAGS_CFLAGS and XSERVERCFLAGS_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -28226,9 +27938,6 @@ echo "$as_me:$LINENO: checking for XSERVERLIBS" >&5
 echo $ECHO_N "checking for XSERVERLIBS... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XSERVERLIBS_CFLAGS"; then
-        pkg_cv_XSERVERLIBS_CFLAGS="$XSERVERLIBS_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"\$REQUIRED_LIBS\"") >&5
   ($PKG_CONFIG --exists --print-errors "$REQUIRED_LIBS") 2>&5
@@ -28239,14 +27948,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XSERVERLIBS_LIBS"; then
-        pkg_cv_XSERVERLIBS_LIBS="$XSERVERLIBS_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"\$REQUIRED_LIBS\"") >&5
   ($PKG_CONFIG --exists --print-errors "$REQUIRED_LIBS") 2>&5
@@ -28257,59 +27962,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XSERVERLIBS_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "$REQUIRED_LIBS"`
-        else
-	        XSERVERLIBS_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$REQUIRED_LIBS"`
-        fi
+	XSERVERLIBS_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$REQUIRED_LIBS"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XSERVERLIBS_PKG_ERRORS" >&5
+	echo "$XSERVERLIBS_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements ($REQUIRED_LIBS) were not met:
-
-$XSERVERLIBS_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements ($REQUIRED_LIBS) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XSERVERLIBS_CFLAGS
-and XSERVERLIBS_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements ($REQUIRED_LIBS) were not met:
-
-$XSERVERLIBS_PKG_ERRORS
-
+Alternatively you may set the XSERVERLIBS_CFLAGS and XSERVERLIBS_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements ($REQUIRED_LIBS) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XSERVERLIBS_CFLAGS
-and XSERVERLIBS_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XSERVERLIBS_CFLAGS and XSERVERLIBS_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XSERVERLIBS_CFLAGS
-and XSERVERLIBS_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XSERVERLIBS_CFLAGS and XSERVERLIBS_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -28317,9 +28001,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XSERVERLIBS_CFLAGS
-and XSERVERLIBS_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XSERVERLIBS_CFLAGS and XSERVERLIBS_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -28626,9 +28310,6 @@ echo "$as_me:$LINENO: checking for DMXMODULES" >&5
 echo $ECHO_N "checking for DMXMODULES... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DMXMODULES_CFLAGS"; then
-        pkg_cv_DMXMODULES_CFLAGS="$DMXMODULES_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xmuu xext x11 xrender xfont xi dmxproto xau \$XDMCP_MODULES\"") >&5
   ($PKG_CONFIG --exists --print-errors "xmuu xext x11 xrender xfont xi dmxproto xau $XDMCP_MODULES") 2>&5
@@ -28639,14 +28320,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DMXMODULES_LIBS"; then
-        pkg_cv_DMXMODULES_LIBS="$DMXMODULES_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xmuu xext x11 xrender xfont xi dmxproto xau \$XDMCP_MODULES\"") >&5
   ($PKG_CONFIG --exists --print-errors "xmuu xext x11 xrender xfont xi dmxproto xau $XDMCP_MODULES") 2>&5
@@ -28657,31 +28334,16 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DMXMODULES_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xmuu xext x11 xrender xfont xi dmxproto xau $XDMCP_MODULES"`
-        else
-	        DMXMODULES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xmuu xext x11 xrender xfont xi dmxproto xau $XDMCP_MODULES"`
-        fi
+	DMXMODULES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xmuu xext x11 xrender xfont xi dmxproto xau $XDMCP_MODULES"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DMXMODULES_PKG_ERRORS" >&5
+	echo "$DMXMODULES_PKG_ERRORS" 1>&5
 
-	echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-                have_dmx=no
+	have_dmx=no
 elif test $pkg_failed = untried; then
 	have_dmx=no
 else
@@ -29014,9 +28676,6 @@ echo "$as_me:$LINENO: checking for GL" >&5
 echo $ECHO_N "checking for GL... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$GL_CFLAGS"; then
-        pkg_cv_GL_CFLAGS="$GL_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"glproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "glproto") 2>&5
@@ -29027,14 +28686,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$GL_LIBS"; then
-        pkg_cv_GL_LIBS="$GL_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"glproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "glproto") 2>&5
@@ -29045,59 +28700,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        GL_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "glproto"`
-        else
-	        GL_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glproto"`
-        fi
+	GL_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glproto"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$GL_PKG_ERRORS" >&5
+	echo "$GL_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (glproto) were not met:
-
-$GL_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (glproto) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables GL_CFLAGS
-and GL_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (glproto) were not met:
-
-$GL_PKG_ERRORS
-
+Alternatively you may set the GL_CFLAGS and GL_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (glproto) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables GL_CFLAGS
-and GL_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the GL_CFLAGS and GL_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables GL_CFLAGS
-and GL_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the GL_CFLAGS and GL_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -29105,9 +28739,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables GL_CFLAGS
-and GL_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the GL_CFLAGS and GL_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -29126,9 +28760,6 @@ echo "$as_me:$LINENO: checking for XDMXCONFIG_DEP" >&5
 echo $ECHO_N "checking for XDMXCONFIG_DEP... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XDMXCONFIG_DEP_CFLAGS"; then
-        pkg_cv_XDMXCONFIG_DEP_CFLAGS="$XDMXCONFIG_DEP_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xaw7 xmu xt xpm x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "xaw7 xmu xt xpm x11") 2>&5
@@ -29139,14 +28770,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XDMXCONFIG_DEP_LIBS"; then
-        pkg_cv_XDMXCONFIG_DEP_LIBS="$XDMXCONFIG_DEP_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xaw7 xmu xt xpm x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "xaw7 xmu xt xpm x11") 2>&5
@@ -29157,59 +28784,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XDMXCONFIG_DEP_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xaw7 xmu xt xpm x11"`
-        else
-	        XDMXCONFIG_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xaw7 xmu xt xpm x11"`
-        fi
+	XDMXCONFIG_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xaw7 xmu xt xpm x11"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XDMXCONFIG_DEP_PKG_ERRORS" >&5
+	echo "$XDMXCONFIG_DEP_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xaw7 xmu xt xpm x11) were not met:
-
-$XDMXCONFIG_DEP_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xaw7 xmu xt xpm x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XDMXCONFIG_DEP_CFLAGS
-and XDMXCONFIG_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xaw7 xmu xt xpm x11) were not met:
-
-$XDMXCONFIG_DEP_PKG_ERRORS
-
+Alternatively you may set the XDMXCONFIG_DEP_CFLAGS and XDMXCONFIG_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xaw7 xmu xt xpm x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XDMXCONFIG_DEP_CFLAGS
-and XDMXCONFIG_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XDMXCONFIG_DEP_CFLAGS and XDMXCONFIG_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XDMXCONFIG_DEP_CFLAGS
-and XDMXCONFIG_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XDMXCONFIG_DEP_CFLAGS and XDMXCONFIG_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -29217,9 +28823,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XDMXCONFIG_DEP_CFLAGS
-and XDMXCONFIG_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XDMXCONFIG_DEP_CFLAGS and XDMXCONFIG_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -29239,9 +28845,6 @@ echo "$as_me:$LINENO: checking for DMXEXAMPLES_DEP" >&5
 echo $ECHO_N "checking for DMXEXAMPLES_DEP... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DMXEXAMPLES_DEP_CFLAGS"; then
-        pkg_cv_DMXEXAMPLES_DEP_CFLAGS="$DMXEXAMPLES_DEP_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"dmx xext x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "dmx xext x11") 2>&5
@@ -29252,14 +28855,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DMXEXAMPLES_DEP_LIBS"; then
-        pkg_cv_DMXEXAMPLES_DEP_LIBS="$DMXEXAMPLES_DEP_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"dmx xext x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "dmx xext x11") 2>&5
@@ -29270,59 +28869,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DMXEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "dmx xext x11"`
-        else
-	        DMXEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "dmx xext x11"`
-        fi
+	DMXEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "dmx xext x11"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DMXEXAMPLES_DEP_PKG_ERRORS" >&5
+	echo "$DMXEXAMPLES_DEP_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (dmx xext x11) were not met:
-
-$DMXEXAMPLES_DEP_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (dmx xext x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables DMXEXAMPLES_DEP_CFLAGS
-and DMXEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (dmx xext x11) were not met:
-
-$DMXEXAMPLES_DEP_PKG_ERRORS
-
+Alternatively you may set the DMXEXAMPLES_DEP_CFLAGS and DMXEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (dmx xext x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables DMXEXAMPLES_DEP_CFLAGS
-and DMXEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the DMXEXAMPLES_DEP_CFLAGS and DMXEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables DMXEXAMPLES_DEP_CFLAGS
-and DMXEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the DMXEXAMPLES_DEP_CFLAGS and DMXEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -29330,9 +28908,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables DMXEXAMPLES_DEP_CFLAGS
-and DMXEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the DMXEXAMPLES_DEP_CFLAGS and DMXEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -29351,9 +28929,6 @@ echo "$as_me:$LINENO: checking for DMXXMUEXAMPLES_DEP" >&5
 echo $ECHO_N "checking for DMXXMUEXAMPLES_DEP... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DMXXMUEXAMPLES_DEP_CFLAGS"; then
-        pkg_cv_DMXXMUEXAMPLES_DEP_CFLAGS="$DMXXMUEXAMPLES_DEP_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"dmx xmu xext x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "dmx xmu xext x11") 2>&5
@@ -29364,14 +28939,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DMXXMUEXAMPLES_DEP_LIBS"; then
-        pkg_cv_DMXXMUEXAMPLES_DEP_LIBS="$DMXXMUEXAMPLES_DEP_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"dmx xmu xext x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "dmx xmu xext x11") 2>&5
@@ -29382,59 +28953,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DMXXMUEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "dmx xmu xext x11"`
-        else
-	        DMXXMUEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "dmx xmu xext x11"`
-        fi
+	DMXXMUEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "dmx xmu xext x11"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DMXXMUEXAMPLES_DEP_PKG_ERRORS" >&5
+	echo "$DMXXMUEXAMPLES_DEP_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (dmx xmu xext x11) were not met:
-
-$DMXXMUEXAMPLES_DEP_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (dmx xmu xext x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables DMXXMUEXAMPLES_DEP_CFLAGS
-and DMXXMUEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (dmx xmu xext x11) were not met:
-
-$DMXXMUEXAMPLES_DEP_PKG_ERRORS
-
+Alternatively you may set the DMXXMUEXAMPLES_DEP_CFLAGS and DMXXMUEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (dmx xmu xext x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables DMXXMUEXAMPLES_DEP_CFLAGS
-and DMXXMUEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the DMXXMUEXAMPLES_DEP_CFLAGS and DMXXMUEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables DMXXMUEXAMPLES_DEP_CFLAGS
-and DMXXMUEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the DMXXMUEXAMPLES_DEP_CFLAGS and DMXXMUEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -29442,9 +28992,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables DMXXMUEXAMPLES_DEP_CFLAGS
-and DMXXMUEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the DMXXMUEXAMPLES_DEP_CFLAGS and DMXXMUEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -29463,9 +29013,6 @@ echo "$as_me:$LINENO: checking for DMXXIEXAMPLES_DEP" >&5
 echo $ECHO_N "checking for DMXXIEXAMPLES_DEP... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DMXXIEXAMPLES_DEP_CFLAGS"; then
-        pkg_cv_DMXXIEXAMPLES_DEP_CFLAGS="$DMXXIEXAMPLES_DEP_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"dmx xi xext x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "dmx xi xext x11") 2>&5
@@ -29476,14 +29023,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$DMXXIEXAMPLES_DEP_LIBS"; then
-        pkg_cv_DMXXIEXAMPLES_DEP_LIBS="$DMXXIEXAMPLES_DEP_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"dmx xi xext x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "dmx xi xext x11") 2>&5
@@ -29494,59 +29037,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DMXXIEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "dmx xi xext x11"`
-        else
-	        DMXXIEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "dmx xi xext x11"`
-        fi
+	DMXXIEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "dmx xi xext x11"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$DMXXIEXAMPLES_DEP_PKG_ERRORS" >&5
+	echo "$DMXXIEXAMPLES_DEP_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (dmx xi xext x11) were not met:
-
-$DMXXIEXAMPLES_DEP_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (dmx xi xext x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables DMXXIEXAMPLES_DEP_CFLAGS
-and DMXXIEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (dmx xi xext x11) were not met:
-
-$DMXXIEXAMPLES_DEP_PKG_ERRORS
-
+Alternatively you may set the DMXXIEXAMPLES_DEP_CFLAGS and DMXXIEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (dmx xi xext x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables DMXXIEXAMPLES_DEP_CFLAGS
-and DMXXIEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the DMXXIEXAMPLES_DEP_CFLAGS and DMXXIEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables DMXXIEXAMPLES_DEP_CFLAGS
-and DMXXIEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the DMXXIEXAMPLES_DEP_CFLAGS and DMXXIEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -29554,9 +29076,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables DMXXIEXAMPLES_DEP_CFLAGS
-and DMXXIEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the DMXXIEXAMPLES_DEP_CFLAGS and DMXXIEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -29575,9 +29097,6 @@ echo "$as_me:$LINENO: checking for XTSTEXAMPLES_DEP" >&5
 echo $ECHO_N "checking for XTSTEXAMPLES_DEP... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XTSTEXAMPLES_DEP_CFLAGS"; then
-        pkg_cv_XTSTEXAMPLES_DEP_CFLAGS="$XTSTEXAMPLES_DEP_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xtst xext x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "xtst xext x11") 2>&5
@@ -29588,14 +29107,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XTSTEXAMPLES_DEP_LIBS"; then
-        pkg_cv_XTSTEXAMPLES_DEP_LIBS="$XTSTEXAMPLES_DEP_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xtst xext x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "xtst xext x11") 2>&5
@@ -29606,59 +29121,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XTSTEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xtst xext x11"`
-        else
-	        XTSTEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xtst xext x11"`
-        fi
+	XTSTEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xtst xext x11"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XTSTEXAMPLES_DEP_PKG_ERRORS" >&5
+	echo "$XTSTEXAMPLES_DEP_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xtst xext x11) were not met:
-
-$XTSTEXAMPLES_DEP_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xtst xext x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XTSTEXAMPLES_DEP_CFLAGS
-and XTSTEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xtst xext x11) were not met:
-
-$XTSTEXAMPLES_DEP_PKG_ERRORS
-
+Alternatively you may set the XTSTEXAMPLES_DEP_CFLAGS and XTSTEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xtst xext x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XTSTEXAMPLES_DEP_CFLAGS
-and XTSTEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XTSTEXAMPLES_DEP_CFLAGS and XTSTEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XTSTEXAMPLES_DEP_CFLAGS
-and XTSTEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XTSTEXAMPLES_DEP_CFLAGS and XTSTEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -29666,9 +29160,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XTSTEXAMPLES_DEP_CFLAGS
-and XTSTEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XTSTEXAMPLES_DEP_CFLAGS and XTSTEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -29687,9 +29181,6 @@ echo "$as_me:$LINENO: checking for XRESEXAMPLES_DEP" >&5
 echo $ECHO_N "checking for XRESEXAMPLES_DEP... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XRESEXAMPLES_DEP_CFLAGS"; then
-        pkg_cv_XRESEXAMPLES_DEP_CFLAGS="$XRESEXAMPLES_DEP_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xres xext x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "xres xext x11") 2>&5
@@ -29700,14 +29191,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XRESEXAMPLES_DEP_LIBS"; then
-        pkg_cv_XRESEXAMPLES_DEP_LIBS="$XRESEXAMPLES_DEP_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xres xext x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "xres xext x11") 2>&5
@@ -29718,59 +29205,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XRESEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xres xext x11"`
-        else
-	        XRESEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xres xext x11"`
-        fi
+	XRESEXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xres xext x11"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XRESEXAMPLES_DEP_PKG_ERRORS" >&5
+	echo "$XRESEXAMPLES_DEP_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xres xext x11) were not met:
-
-$XRESEXAMPLES_DEP_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xres xext x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XRESEXAMPLES_DEP_CFLAGS
-and XRESEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xres xext x11) were not met:
-
-$XRESEXAMPLES_DEP_PKG_ERRORS
-
+Alternatively you may set the XRESEXAMPLES_DEP_CFLAGS and XRESEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xres xext x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XRESEXAMPLES_DEP_CFLAGS
-and XRESEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XRESEXAMPLES_DEP_CFLAGS and XRESEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XRESEXAMPLES_DEP_CFLAGS
-and XRESEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XRESEXAMPLES_DEP_CFLAGS and XRESEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -29778,9 +29244,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XRESEXAMPLES_DEP_CFLAGS
-and XRESEXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XRESEXAMPLES_DEP_CFLAGS and XRESEXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -29799,9 +29265,6 @@ echo "$as_me:$LINENO: checking for X11EXAMPLES_DEP" >&5
 echo $ECHO_N "checking for X11EXAMPLES_DEP... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$X11EXAMPLES_DEP_CFLAGS"; then
-        pkg_cv_X11EXAMPLES_DEP_CFLAGS="$X11EXAMPLES_DEP_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xext x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "xext x11") 2>&5
@@ -29812,14 +29275,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$X11EXAMPLES_DEP_LIBS"; then
-        pkg_cv_X11EXAMPLES_DEP_LIBS="$X11EXAMPLES_DEP_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xext x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "xext x11") 2>&5
@@ -29830,59 +29289,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        X11EXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xext x11"`
-        else
-	        X11EXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xext x11"`
-        fi
+	X11EXAMPLES_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xext x11"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$X11EXAMPLES_DEP_PKG_ERRORS" >&5
+	echo "$X11EXAMPLES_DEP_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xext x11) were not met:
-
-$X11EXAMPLES_DEP_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xext x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables X11EXAMPLES_DEP_CFLAGS
-and X11EXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xext x11) were not met:
-
-$X11EXAMPLES_DEP_PKG_ERRORS
-
+Alternatively you may set the X11EXAMPLES_DEP_CFLAGS and X11EXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xext x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables X11EXAMPLES_DEP_CFLAGS
-and X11EXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the X11EXAMPLES_DEP_CFLAGS and X11EXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables X11EXAMPLES_DEP_CFLAGS
-and X11EXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the X11EXAMPLES_DEP_CFLAGS and X11EXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -29890,9 +29328,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables X11EXAMPLES_DEP_CFLAGS
-and X11EXAMPLES_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the X11EXAMPLES_DEP_CFLAGS and X11EXAMPLES_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -29959,9 +29397,6 @@ echo "$as_me:$LINENO: checking for XNESTMODULES" >&5
 echo $ECHO_N "checking for XNESTMODULES... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XNESTMODULES_CFLAGS"; then
-        pkg_cv_XNESTMODULES_CFLAGS="$XNESTMODULES_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xfont xext x11 xau \$XDMCP_MODULES\"") >&5
   ($PKG_CONFIG --exists --print-errors "xfont xext x11 xau $XDMCP_MODULES") 2>&5
@@ -29972,14 +29407,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XNESTMODULES_LIBS"; then
-        pkg_cv_XNESTMODULES_LIBS="$XNESTMODULES_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xfont xext x11 xau \$XDMCP_MODULES\"") >&5
   ($PKG_CONFIG --exists --print-errors "xfont xext x11 xau $XDMCP_MODULES") 2>&5
@@ -29990,31 +29421,16 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XNESTMODULES_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xfont xext x11 xau $XDMCP_MODULES"`
-        else
-	        XNESTMODULES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xfont xext x11 xau $XDMCP_MODULES"`
-        fi
+	XNESTMODULES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xfont xext x11 xau $XDMCP_MODULES"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XNESTMODULES_PKG_ERRORS" >&5
+	echo "$XNESTMODULES_PKG_ERRORS" 1>&5
 
-	echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-                have_xnest=no
+	have_xnest=no
 elif test $pkg_failed = untried; then
 	have_xnest=no
 else
@@ -30069,9 +29485,6 @@ echo "$as_me:$LINENO: checking for XGLMODULES" >&5
 echo $ECHO_N "checking for XGLMODULES... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XGLMODULES_CFLAGS"; then
-        pkg_cv_XGLMODULES_CFLAGS="$XGLMODULES_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"glitz-glx >= 0.4.3\"") >&5
   ($PKG_CONFIG --exists --print-errors "glitz-glx >= 0.4.3") 2>&5
@@ -30082,14 +29495,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XGLMODULES_LIBS"; then
-        pkg_cv_XGLMODULES_LIBS="$XGLMODULES_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"glitz-glx >= 0.4.3\"") >&5
   ($PKG_CONFIG --exists --print-errors "glitz-glx >= 0.4.3") 2>&5
@@ -30100,31 +29509,16 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XGLMODULES_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "glitz-glx >= 0.4.3"`
-        else
-	        XGLMODULES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glitz-glx >= 0.4.3"`
-        fi
+	XGLMODULES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glitz-glx >= 0.4.3"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XGLMODULES_PKG_ERRORS" >&5
+	echo "$XGLMODULES_PKG_ERRORS" 1>&5
 
-	echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-                XGL=no
+	XGL=no
 elif test $pkg_failed = untried; then
 	XGL=no
 else
@@ -30190,9 +29584,6 @@ echo "$as_me:$LINENO: checking for XGLMODULES" >&5
 echo $ECHO_N "checking for XGLMODULES... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XGLMODULES_CFLAGS"; then
-        pkg_cv_XGLMODULES_CFLAGS="$XGLMODULES_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"glitz-glx >= 0.4.3\"") >&5
   ($PKG_CONFIG --exists --print-errors "glitz-glx >= 0.4.3") 2>&5
@@ -30203,14 +29594,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XGLMODULES_LIBS"; then
-        pkg_cv_XGLMODULES_LIBS="$XGLMODULES_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"glitz-glx >= 0.4.3\"") >&5
   ($PKG_CONFIG --exists --print-errors "glitz-glx >= 0.4.3") 2>&5
@@ -30221,31 +29608,16 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XGLMODULES_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "glitz-glx >= 0.4.3"`
-        else
-	        XGLMODULES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glitz-glx >= 0.4.3"`
-        fi
+	XGLMODULES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glitz-glx >= 0.4.3"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XGLMODULES_PKG_ERRORS" >&5
+	echo "$XGLMODULES_PKG_ERRORS" 1>&5
 
-	echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-                XEGL=no
+	XEGL=no
 elif test $pkg_failed = untried; then
 	XEGL=no
 else
@@ -30286,9 +29658,6 @@ echo "$as_me:$LINENO: checking for XGLXMODULES" >&5
 echo $ECHO_N "checking for XGLXMODULES... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XGLXMODULES_CFLAGS"; then
-        pkg_cv_XGLXMODULES_CFLAGS="$XGLXMODULES_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"glitz-glx >= 0.4.3 xrender\"") >&5
   ($PKG_CONFIG --exists --print-errors "glitz-glx >= 0.4.3 xrender") 2>&5
@@ -30299,14 +29668,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XGLXMODULES_LIBS"; then
-        pkg_cv_XGLXMODULES_LIBS="$XGLXMODULES_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"glitz-glx >= 0.4.3 xrender\"") >&5
   ($PKG_CONFIG --exists --print-errors "glitz-glx >= 0.4.3 xrender") 2>&5
@@ -30317,31 +29682,16 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XGLXMODULES_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "glitz-glx >= 0.4.3 xrender"`
-        else
-	        XGLXMODULES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glitz-glx >= 0.4.3 xrender"`
-        fi
+	XGLXMODULES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glitz-glx >= 0.4.3 xrender"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XGLXMODULES_PKG_ERRORS" >&5
+	echo "$XGLXMODULES_PKG_ERRORS" 1>&5
 
-	echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-                XGLX=no
+	XGLX=no
 elif test $pkg_failed = untried; then
 	XGLX=no
 else
@@ -31315,9 +30665,6 @@ echo "$as_me:$LINENO: checking for XPRINT" >&5
 echo $ECHO_N "checking for XPRINT... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPRINT_CFLAGS"; then
-        pkg_cv_XPRINT_CFLAGS="$XPRINT_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"printproto x11 xfont \$XDMCP_MODULES xau\"") >&5
   ($PKG_CONFIG --exists --print-errors "printproto x11 xfont $XDMCP_MODULES xau") 2>&5
@@ -31328,14 +30675,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPRINT_LIBS"; then
-        pkg_cv_XPRINT_LIBS="$XPRINT_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"printproto x11 xfont \$XDMCP_MODULES xau\"") >&5
   ($PKG_CONFIG --exists --print-errors "printproto x11 xfont $XDMCP_MODULES xau") 2>&5
@@ -31346,59 +30689,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XPRINT_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "printproto x11 xfont $XDMCP_MODULES xau"`
-        else
-	        XPRINT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "printproto x11 xfont $XDMCP_MODULES xau"`
-        fi
+	XPRINT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "printproto x11 xfont $XDMCP_MODULES xau"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XPRINT_PKG_ERRORS" >&5
+	echo "$XPRINT_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (printproto x11 xfont $XDMCP_MODULES xau) were not met:
-
-$XPRINT_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (printproto x11 xfont $XDMCP_MODULES xau) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XPRINT_CFLAGS
-and XPRINT_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (printproto x11 xfont $XDMCP_MODULES xau) were not met:
-
-$XPRINT_PKG_ERRORS
-
+Alternatively you may set the XPRINT_CFLAGS and XPRINT_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (printproto x11 xfont $XDMCP_MODULES xau) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XPRINT_CFLAGS
-and XPRINT_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XPRINT_CFLAGS and XPRINT_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XPRINT_CFLAGS
-and XPRINT_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XPRINT_CFLAGS and XPRINT_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -31406,9 +30728,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XPRINT_CFLAGS
-and XPRINT_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XPRINT_CFLAGS and XPRINT_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -31522,9 +30844,6 @@ echo "$as_me:$LINENO: checking for FREETYPE" >&5
 echo $ECHO_N "checking for FREETYPE... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$FREETYPE_CFLAGS"; then
-        pkg_cv_FREETYPE_CFLAGS="$FREETYPE_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"freetype2\"") >&5
   ($PKG_CONFIG --exists --print-errors "freetype2") 2>&5
@@ -31535,14 +30854,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$FREETYPE_LIBS"; then
-        pkg_cv_FREETYPE_LIBS="$FREETYPE_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"freetype2\"") >&5
   ($PKG_CONFIG --exists --print-errors "freetype2") 2>&5
@@ -31553,31 +30868,16 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        FREETYPE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "freetype2"`
-        else
-	        FREETYPE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "freetype2"`
-        fi
+	FREETYPE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "freetype2"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$FREETYPE_PKG_ERRORS" >&5
+	echo "$FREETYPE_PKG_ERRORS" 1>&5
 
-	echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-                freetype_config=yes
+	freetype_config=yes
 elif test $pkg_failed = untried; then
 	freetype_config=yes
 else
@@ -31691,9 +30991,6 @@ echo "$as_me:$LINENO: checking for XWINMODULES" >&5
 echo $ECHO_N "checking for XWINMODULES... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XWINMODULES_CFLAGS"; then
-        pkg_cv_XWINMODULES_CFLAGS="$XWINMODULES_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11 xdmcp xau xfont\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11 xdmcp xau xfont") 2>&5
@@ -31704,14 +31001,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XWINMODULES_LIBS"; then
-        pkg_cv_XWINMODULES_LIBS="$XWINMODULES_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11 xdmcp xau xfont\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11 xdmcp xau xfont") 2>&5
@@ -31722,59 +31015,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XWINMODULES_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11 xdmcp xau xfont"`
-        else
-	        XWINMODULES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11 xdmcp xau xfont"`
-        fi
+	XWINMODULES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11 xdmcp xau xfont"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XWINMODULES_PKG_ERRORS" >&5
+	echo "$XWINMODULES_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (x11 xdmcp xau xfont) were not met:
-
-$XWINMODULES_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (x11 xdmcp xau xfont) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XWINMODULES_CFLAGS
-and XWINMODULES_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (x11 xdmcp xau xfont) were not met:
-
-$XWINMODULES_PKG_ERRORS
-
+Alternatively you may set the XWINMODULES_CFLAGS and XWINMODULES_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (x11 xdmcp xau xfont) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XWINMODULES_CFLAGS
-and XWINMODULES_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XWINMODULES_CFLAGS and XWINMODULES_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XWINMODULES_CFLAGS
-and XWINMODULES_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XWINMODULES_CFLAGS and XWINMODULES_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -31782,9 +31054,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XWINMODULES_CFLAGS
-and XWINMODULES_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XWINMODULES_CFLAGS and XWINMODULES_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -31815,9 +31087,6 @@ echo "$as_me:$LINENO: checking for XWINMODULES" >&5
 echo $ECHO_N "checking for XWINMODULES... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XWINMODULES_CFLAGS"; then
-        pkg_cv_XWINMODULES_CFLAGS="$XWINMODULES_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11 xdmcp xau xfont\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11 xdmcp xau xfont") 2>&5
@@ -31828,14 +31097,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XWINMODULES_LIBS"; then
-        pkg_cv_XWINMODULES_LIBS="$XWINMODULES_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11 xdmcp xau xfont\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11 xdmcp xau xfont") 2>&5
@@ -31846,59 +31111,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XWINMODULES_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11 xdmcp xau xfont"`
-        else
-	        XWINMODULES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11 xdmcp xau xfont"`
-        fi
+	XWINMODULES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11 xdmcp xau xfont"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XWINMODULES_PKG_ERRORS" >&5
+	echo "$XWINMODULES_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (x11 xdmcp xau xfont) were not met:
-
-$XWINMODULES_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (x11 xdmcp xau xfont) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XWINMODULES_CFLAGS
-and XWINMODULES_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (x11 xdmcp xau xfont) were not met:
-
-$XWINMODULES_PKG_ERRORS
-
+Alternatively you may set the XWINMODULES_CFLAGS and XWINMODULES_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (x11 xdmcp xau xfont) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XWINMODULES_CFLAGS
-and XWINMODULES_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XWINMODULES_CFLAGS and XWINMODULES_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XWINMODULES_CFLAGS
-and XWINMODULES_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XWINMODULES_CFLAGS and XWINMODULES_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -31906,9 +31150,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XWINMODULES_CFLAGS
-and XWINMODULES_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XWINMODULES_CFLAGS and XWINMODULES_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -32442,9 +31686,6 @@ echo "$as_me:$LINENO: checking for TSLIB" >&5
 echo $ECHO_N "checking for TSLIB... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$TSLIB_CFLAGS"; then
-        pkg_cv_TSLIB_CFLAGS="$TSLIB_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"tslib-0.0\"") >&5
   ($PKG_CONFIG --exists --print-errors "tslib-0.0") 2>&5
@@ -32455,14 +31696,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$TSLIB_LIBS"; then
-        pkg_cv_TSLIB_LIBS="$TSLIB_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"tslib-0.0\"") >&5
   ($PKG_CONFIG --exists --print-errors "tslib-0.0") 2>&5
@@ -32473,31 +31710,16 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        TSLIB_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "tslib-0.0"`
-        else
-	        TSLIB_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "tslib-0.0"`
-        fi
+	TSLIB_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "tslib-0.0"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$TSLIB_PKG_ERRORS" >&5
+	echo "$TSLIB_PKG_ERRORS" 1>&5
 
-	echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-                HAVE_TSLIB="no"
+	HAVE_TSLIB="no"
 elif test $pkg_failed = untried; then
 	HAVE_TSLIB="no"
 else
@@ -32543,9 +31765,6 @@ echo "$as_me:$LINENO: checking for XEPHYR" >&5
 echo $ECHO_N "checking for XEPHYR... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XEPHYR_CFLAGS"; then
-        pkg_cv_XEPHYR_CFLAGS="$XEPHYR_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11 xext xfont xau xdmcp\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11 xext xfont xau xdmcp") 2>&5
@@ -32556,14 +31775,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XEPHYR_LIBS"; then
-        pkg_cv_XEPHYR_LIBS="$XEPHYR_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11 xext xfont xau xdmcp\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11 xext xfont xau xdmcp") 2>&5
@@ -32574,31 +31789,16 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XEPHYR_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11 xext xfont xau xdmcp"`
-        else
-	        XEPHYR_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11 xext xfont xau xdmcp"`
-        fi
+	XEPHYR_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11 xext xfont xau xdmcp"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XEPHYR_PKG_ERRORS" >&5
+	echo "$XEPHYR_PKG_ERRORS" 1>&5
 
-	echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-                xephyr="no"
+	xephyr="no"
 elif test $pkg_failed = untried; then
 	xephyr="no"
 else
@@ -33145,9 +32345,6 @@ echo "$as_me:$LINENO: checking for XORGCONFIG_DEP" >&5
 echo $ECHO_N "checking for XORGCONFIG_DEP... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XORGCONFIG_DEP_CFLAGS"; then
-        pkg_cv_XORGCONFIG_DEP_CFLAGS="$XORGCONFIG_DEP_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xkbfile x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "xkbfile x11") 2>&5
@@ -33158,14 +32355,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XORGCONFIG_DEP_LIBS"; then
-        pkg_cv_XORGCONFIG_DEP_LIBS="$XORGCONFIG_DEP_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xkbfile x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "xkbfile x11") 2>&5
@@ -33176,59 +32369,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XORGCONFIG_DEP_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xkbfile x11"`
-        else
-	        XORGCONFIG_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xkbfile x11"`
-        fi
+	XORGCONFIG_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xkbfile x11"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XORGCONFIG_DEP_PKG_ERRORS" >&5
+	echo "$XORGCONFIG_DEP_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xkbfile x11) were not met:
-
-$XORGCONFIG_DEP_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xkbfile x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XORGCONFIG_DEP_CFLAGS
-and XORGCONFIG_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xkbfile x11) were not met:
-
-$XORGCONFIG_DEP_PKG_ERRORS
-
+Alternatively you may set the XORGCONFIG_DEP_CFLAGS and XORGCONFIG_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xkbfile x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XORGCONFIG_DEP_CFLAGS
-and XORGCONFIG_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XORGCONFIG_DEP_CFLAGS and XORGCONFIG_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XORGCONFIG_DEP_CFLAGS
-and XORGCONFIG_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XORGCONFIG_DEP_CFLAGS and XORGCONFIG_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -33236,9 +32408,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XORGCONFIG_DEP_CFLAGS
-and XORGCONFIG_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XORGCONFIG_DEP_CFLAGS and XORGCONFIG_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -33267,9 +32439,6 @@ echo "$as_me:$LINENO: checking for XORGCFG_DEP" >&5
 echo $ECHO_N "checking for XORGCFG_DEP... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XORGCFG_DEP_CFLAGS"; then
-        pkg_cv_XORGCFG_DEP_CFLAGS="$XORGCFG_DEP_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xkbui >= 1.0.2 xkbfile xxf86misc xxf86vm xaw7 xmu xt xpm xext x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "xkbui >= 1.0.2 xkbfile xxf86misc xxf86vm xaw7 xmu xt xpm xext x11") 2>&5
@@ -33280,14 +32449,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XORGCFG_DEP_LIBS"; then
-        pkg_cv_XORGCFG_DEP_LIBS="$XORGCFG_DEP_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xkbui >= 1.0.2 xkbfile xxf86misc xxf86vm xaw7 xmu xt xpm xext x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "xkbui >= 1.0.2 xkbfile xxf86misc xxf86vm xaw7 xmu xt xpm xext x11") 2>&5
@@ -33298,59 +32463,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XORGCFG_DEP_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xkbui >= 1.0.2 xkbfile xxf86misc xxf86vm xaw7 xmu xt xpm xext x11"`
-        else
-	        XORGCFG_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xkbui >= 1.0.2 xkbfile xxf86misc xxf86vm xaw7 xmu xt xpm xext x11"`
-        fi
+	XORGCFG_DEP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xkbui >= 1.0.2 xkbfile xxf86misc xxf86vm xaw7 xmu xt xpm xext x11"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XORGCFG_DEP_PKG_ERRORS" >&5
+	echo "$XORGCFG_DEP_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xkbui >= 1.0.2 xkbfile xxf86misc xxf86vm xaw7 xmu xt xpm xext x11) were not met:
-
-$XORGCFG_DEP_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xkbui >= 1.0.2 xkbfile xxf86misc xxf86vm xaw7 xmu xt xpm xext x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XORGCFG_DEP_CFLAGS
-and XORGCFG_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xkbui >= 1.0.2 xkbfile xxf86misc xxf86vm xaw7 xmu xt xpm xext x11) were not met:
-
-$XORGCFG_DEP_PKG_ERRORS
-
+Alternatively you may set the XORGCFG_DEP_CFLAGS and XORGCFG_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xkbui >= 1.0.2 xkbfile xxf86misc xxf86vm xaw7 xmu xt xpm xext x11) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XORGCFG_DEP_CFLAGS
-and XORGCFG_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XORGCFG_DEP_CFLAGS and XORGCFG_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XORGCFG_DEP_CFLAGS
-and XORGCFG_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XORGCFG_DEP_CFLAGS and XORGCFG_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -33358,9 +32502,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XORGCFG_DEP_CFLAGS
-and XORGCFG_DEP_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XORGCFG_DEP_CFLAGS and XORGCFG_DEP_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -35273,7 +34417,6 @@ s,@host@,$host,;t t
 s,@host_cpu@,$host_cpu,;t t
 s,@host_vendor@,$host_vendor,;t t
 s,@host_os@,$host_os,;t t
-s,@SED@,$SED,;t t
 s,@EGREP@,$EGREP,;t t
 s,@ECHO@,$ECHO,;t t
 s,@AR@,$AR,;t t
