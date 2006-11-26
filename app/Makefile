@@ -5,11 +5,11 @@ SUBDIR= bdftopcf mkfontscale mkfontdir \
 	fstobdf	iceauth ico lbxproxy listres luit mkcfm oclock \
 	proxymngr rgb rstart scripts sessreg setxkbmap showfont \
 	smproxy twm viewres x11perf xauth xbiff xcalc \
-	xclipboard xclock xcmsdb xconsole xdbedizzy \
-	xditview xdm xdpyinfo  xdriinfo xedit xev xeyes xf86dga \
+	xclipboard xclock xcmsdb xconsole  \
+	xdm xdpyinfo  xdriinfo xedit xev xeyes xf86dga \
 	xfd  xfindproxy xfontsel xfs xfsinfo xfwp xgamma xgc xhost \
 	xinit xkbcomp xkbevd xkbprint xkbutils xkill xload xlogo \
-	xlsatoms xlsclients xlsfonts xmag xman xmessage xmh \
+	xlsatoms xlsclients xlsfonts xmag xman xmessage \
 	xmodmap xmore xphelloworld xplsprinters xpr xprehashprinterlist \
 	xprop xrandr xrdb xrefresh xset xsetmode xsetpointer \
 	xsetroot xsm xstdcmap xtrap xvidtune xvinfo xwd xwininfo \
