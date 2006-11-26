@@ -22,7 +22,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xsetpointer,[1.0.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xsetpointer)
+AC_INIT(xsetpointer,[1.0.0], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xsetpointer)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -32,7 +32,7 @@ AC_PROG_CC
 AC_PROG_INSTALL
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XSETPOINTER, xi x11 [inputproto >= 1.4])
+PKG_CHECK_MODULES(XSETPOINTER, xi x11)
 AC_SUBST(XSETPOINTER_CFLAGS)
 AC_SUBST(XSETPOINTER_LIBS)
 
