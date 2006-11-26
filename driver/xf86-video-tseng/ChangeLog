@@ -1,0 +1,259 @@
+2006-04-11  Luc Verhaegen  <libv@skynet.be>
+
+	* src/tseng_mode.c: (TsengSave), (TsengRestore):
+
+	Fix dotclock breakage on ET6000.
+	The fish crawled out of the swamp, but still had gills and fins.
+	The internal ramdac still has multiple dotclock registers, and the
+	previous change only fixed up the external ramdacs of ET4000W32ps.
+	(Reported by the other tseng owner: Adam Jackson)
+
+2006-03-08  Luc Verhaegen  <libv@skynet.be>
+
+	* src/tseng_mode.c: (STG1703Restore), (CH8398Store),
+	(TsengModeInit):
+
+	Remove daft dependance on mode->ClockIndex. We used it to tell
+	vgaHWInit to use clock 2, while ClockIndex = -1 is clock 3. So
+	just use clock 3 for the ramdacs and be done with.
+
+2006-01-31  Luc Verhaegen  <libv@skynet.be>
+
+	* src/tseng.h:
+	* src/tseng_driver.c: (TsengPreInit):
+	* src/tseng_mode.c: (STG1703Mode), (CH8398Mode),
+	(TsengSetupClockRange), (TsengSave), (TsengRestore),
+	(TsengModeInit):
+
+	Remove dual clockranges. ET4000W32p now always uses the dac bus
+	as 16bits wide.
+
+2006-01-29  Luc Verhaegen  <libv@skynet.be>
+
+	* src/tseng_driver.c: (TsengPreInit):
+	* src/tseng_mode.c: (STG1703Detect), (STG1703Restore),
+	(STG1703Clock), (STG1703Mode), (CH8398Detect), (CH8398PrintRegs),
+	(CH8398Store), (CH8398Restore), (CH8398Clock), (CH8398Mode),
+	(TsengRAMDACProbe), (TsengSave), (TsengRestore), (TsengModeInit):
+
+	Fully implement the Chrontel CH8398. This has the exact same
+        24bpp weirdness, so i guess this is an fb issue.
+
+2006-01-28  Luc Verhaegen  <libv@skynet.be>
+
+	* src/tseng.h:
+	* src/tseng_driver.c: (TsengGetRec), (TsengFreeRec),
+	(TsengPreInit):
+	* src/tseng_mode.c: (STG1703Detect), (STG1703PrintRegs),
+	(STG1703Store), (STG1703Restore), (STG1703Clock), (STG1703Mode),
+	(TsengRAMDACProbe), (tseng_set_ramdac_bpp), (TsengSave),
+	(TsengRestore), (TsengModeInit):
+
+	Fully implement the SGS-Thomson STG-1703. This is working great
+	except for 24bpp, where there seems to be an offset issue. Red is
+	blue, green is red, blue is green. Will dig that one out later on.
+	8bpp and 16bpp (both with 8 and 16bit dac bus) and 32bpp are great.
+
+2006-01-28  Luc Verhaegen  <libv@skynet.be>
+
+	* src/tseng.h:
+	* src/tseng_mode.c: (tseng_set_ramdac_bpp), (ET6000CalcClock),
+	(TsengSave), (TsengRestore), (TsengModeInit):
+	
+	- Remove pTseng->ModeReg
+	- Split ET6000 bpp, dotclock and ram clock handling from the 
+	  ET4000s ramdac code.
+
+2006-01-27  Luc Verhaegen  <libv@skynet.be>
+
+	* src/tseng.h:
+	* src/tseng_mode.c: (tseng_set_ramdac_bpp), (tseng_clock_setup),
+	(TsengModeInit):
+
+	Clear duplicate PrivFlag.
+
+2006-01-26  Luc Verhaegen  <libv@skynet.be>
+
+	* src/tseng.h:
+	* src/tseng_cursor.c: (ET4000CursorRead), (ET4000CursorWrite),
+	(TsengShowCursor), (TsengHideCursor), (TsengSetCursorPosition),
+	(TsengSetCursorColors), (TsengLoadCursorImage),
+	(TsengHWCursorInit), (TsengCursorStore), (TsengCursorRestore):
+	* src/tseng_driver.c: (TsengUnlock), (TsengLock),
+	(TsengPreInitPCI), (et6000_check_videoram), (TsengDetectMem),
+	(TsengProcessHibit), (TsengPreInit), (TsengEnterVT),
+	(TsengLeaveVT), (TsengSaveScreen):
+	* src/tseng_mode.c: (vgaHWReadDacReadAddr), (vgaHWWriteBank),
+	(vgaHWReadBank), (vgaHWWriteSegment), (vgaHWReadSegment),
+	(vgaHWWriteModeControl), (vgaHWHerculesSecondPage), (ET6000IORead),
+	(ET6000IOWrite), (TsengRAMDACProbe), (tseng_set_ramdac_bpp),
+	(TsengAdjustFrame), (TsengSave), (TsengRestore), (TsengModeInit),
+	(TsengCrtcDPMSSet), (TsengHVSyncDPMSSet):
+
+	Improve tseng driver transparency.
+	- move all VGA inbs/outbs to vgahw calls, provide our own when 
+	  relevant callbacks are missing.
+	- move ET4000 sprite accesses to ET4000CursorRead/Write.
+	- move ET6000 IO accesses to ET6000IORead/Write.
+	- fix regression with CH8398, introduced with the ramdac cleanup.
+
+2006-01-23  Luc Verhaegen  <libv@skynet.be>
+
+	* src/Makefile.am:
+	* src/tseng.h:
+	* src/tseng_accel.c: (tseng_terminate_acl),
+	(tseng_recover_timeout), (tseng_init_acl),
+	(TsengSubsequentScanlineCPUToScreenColorExpandFill),
+	(TsengSubsequentColorExpandScanline),
+	(TsengSubsequentColorExpandScanline_8bpp),
+	(TsengSubsequentColorExpandScanline_16bpp),
+	(TsengSubsequentColorExpandScanline_24bpp),
+	(TsengSubsequentColorExpandScanline_32bpp),
+	(TsengSetupForCPUToScreenColorExpandFill),
+	(TsengSubsequentCPUToScreenColorExpandFill),
+	(TsengSetupForScreenToScreenColorExpandFill),
+	(TsengSubsequentScreenToScreenColorExpandFill),
+	(TsengXAAInit_Colexp), (TsengXAAInit):
+	* src/tseng_accel.h:
+	* src/tseng_acl.c:
+	* src/tseng_acl.h:
+	* src/tseng_clock.c:
+	* src/tseng_colexp.c:
+	* src/tseng_dpms.c:
+	* src/tseng_driver.c: (TsengSaveScreen), (TsengSwitchMode):
+	* src/tseng_inline.h:
+	* src/tseng_mode.c: (vgaHWReadDacWriteAddr), (tsengSTG170xDetect),
+	(tsengCH8398Detect), (TsengRAMDACProbe), (tseng_set_ramdac_bpp),
+	(tseng_clock_setup), (TsengcommonCalcClock), (TsengAdjustFrame),
+	(TsengValidMode), (TsengSave), (TsengRestore), (TsengModeInit),
+	(TsengCrtcDPMSSet), (TsengHVSyncDPMSSet):
+	* src/tseng_ramdac.c:
+	
+	Reorganise code:
+	- move tseng_ramdac.c, tseng_clock.c, tseng_dpms.c, and
+	  TsengAdjustFrame, TsengValidMode, TsengSave, TsengRestore,
+	  TsengModeInit from tseng_driver.c into tseng_mode.c.
+	- move tseng_acl.c and tseng_colexp.c into tseng_accel.c
+	- move tseng_acl.h and tseng_inline.g into tseng_accel.h
+	- move all accel functions except for 2 to static, ifdef
+	  out unused ones.
+
+2006-01-22  Luc Verhaegen  <libv@skynet.be>
+
+	* .cvsignore:
+	* man/.cvsignore:
+	* src/tseng.h:
+	* src/tseng_clock.c: (tseng_clock_setup):
+	* src/tseng_driver.c: (TsengProcessOptions), (TsengPreInit),
+	(TsengModeInit), (TsengSave), (TsengRestore), (ET4000Probe), (if):
+	* src/tseng_ramdac.c: (vgaHWReadDacWriteAddr),
+	(tsengSTG170xDetect), (tsengCH8398Detect), (TsengRAMDACProbe),
+	(tseng_set_ramdac_bpp):
+
+	Clean up ramdac handling.
+	- Remove all ramdacs except STG1703 and CH8398. Both are in my
+	  possession, both are currently broken and have been for ages,
+	  but both will be fixed. ICS5341 is out there somewhere too,
+	  will be added when i get my hands on it.
+	- Cleanly split up ET4000 handling and ET6000 code, both for
+	  dotclock, memory clocking and ramdac.
+	- Limit driver to either 8, 16, 24 or 32bits.
+
+2006-01-22  Luc Verhaegen  <libv@skynet.be>
+
+	* src/Makefile.am:
+	* src/tseng.h:
+	* src/tseng_accel.c: (TsengXAAInit):
+	* src/tseng_acl.c: (tseng_init_acl):
+	* src/tseng_bank.c:
+	* src/tseng_colexp.c: (TsengXAAInit_Colexp):
+	* src/tseng_cursor.c: (TsengHWCursorInit):
+	* src/tseng_dga.c: (TsengDGAInit), (Tseng_OpenFramebuffer):
+	* src/tseng_driver.c: (TsengPreInitPCI), (TsengLimitMem),
+	(TsengProcessOptions), (TsengGetFbAddress), (TsengPreInit),
+	(TsengSetupAccelMemory), (TsengScreenInit), (TsengMapMem),
+	(TsengUnmapMem), (TsengModeInit):
+
+	Tseng in the PCI era: Remove banked memory.
+
+2006-01-22  Luc Verhaegen  <libv@skynet.be>
+
+	* configure.ac:
+	* src/tseng.h:
+	* src/tseng_accel.c: (TsengXAAInit), (Tseng_setup_screencopy):
+	* src/tseng_acl.c: (tseng_recover_timeout), (tseng_init_acl):
+	* src/tseng_acl.h:
+	* src/tseng_clock.c: (tseng_clock_setup),
+	(Tseng_ET4000ClockSelect):
+	* src/tseng_colexp.c: (TsengXAAInit_Colexp),
+	(TsengSubsequentScanlineCPUToScreenColorExpandFill):
+	* src/tseng_cursor.c: (TsengShowCursor), (TsengHideCursor),
+	(TsengSetCursorPosition), (TsengSetCursorColors),
+	(TsengLoadCursorImage):
+	* src/tseng_driver.c: (TsengIdentify), (TsengProbe),
+	(TsengPreInitPCI), (TsengLimitMem), (TsengDetectMem),
+	(TsengProcessOptions), (TsengGetLinFbAddress), (TsengPreInit),
+	(TsengScreenInit), (TsengSaveScreen), (TsengModeInit), (TsengSave):
+	* src/tseng_inline.h:
+	* src/tseng_ramdac.c: (Check_Tseng_Ramdac), (tseng_set_ramdac_bpp):
+
+	- -Wall and -pedantic are gccisms (Alan Coopersmith).
+	- Remove ET4000, ET4000W32 and ET4000W32I devices.
+	- Rework handling of remaining devices.
+	- Clean up Probe and PreInit to only handle pci devices.
+
+2006-01-21  Luc Verhaegen  <libv@skynet.be>
+
+	* configure.ac:
+	* src/tseng.h:
+	* src/tseng_driver.c: (TsengAssignFPtr), (TsengModeInit),
+	(TsengSave):
+	* src/tseng_ramdac.c: (tseng_set_ramdac_bpp):
+	It's 2006, maybe it's time to inform the tseng driver that humankind
+	survived the millenium bug.
+
+	First phase of changes:
+	- Fix a glaring problem that's been there since 1998: RegRec arrays
+	  used beyond their boundaries.
+	- Add -Wall and -pedantic to CFLAGS.
+	- Fix VERSION redefinition.
+	
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* man/Makefile.am:
+	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Remove extraneous AC_MSG_RESULT.
+
+2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Only build dlloader modules by default.
+
+2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC2 release.
+
+2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update pkgcheck dependencies to work with separate build roots.
