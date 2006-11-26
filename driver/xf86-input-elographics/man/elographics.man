@@ -1,0 +1,81 @@
+.\" $XFree86: xc/programs/Xserver/hw/xfree86/input/elographics/elographics.man,v 1.1 2001/01/24 00:06:36 dawes Exp $
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH elographics __drivermansuffix__ __vendorversion__
+.SH NAME
+elographics \- Elographics input driver
+.SH SYNOPSIS
+.B "Section \*qInputDevice\*q"
+.br
+.BI "  Identifier \*q" idevname \*q
+.br
+.B  "  Driver \*qelographics\*q"
+.br
+.BI "  Option \*qDevice\*q   \*q" devpath \*q
+.br
+\ \ ...
+.br
+.B EndSection
+.SH DESCRIPTION
+.B elographics 
+is an __xservername__ input driver for Elographics touchscreen devices.
+.PP
+The
+.B elographics
+driver functions as a pointer input device, and may be used as the
+X server's core pointer.
+.SH "SUPPORTED HARDWARE"
+E271\-2210 and E271\-2200 devices are supported.
+E281\-2310 and compatible devices are supported with some features
+unavailable.
+.SH "CONFIGURATION DETAILS"
+Please refer to __xconfigfile__(__filemansuffix__) for general configuration
+details and for options that can be used with all input drivers.  This
+section only covers configuration details specific to this driver.
+.PP
+The following driver options are supported:
+.TP
+.BI "Option \*qDevice\*q \*q" string \*q
+The device that is attached to the touchscreen interface. Default is
+"/dev/ttyS1".
+.TP
+.BI "Option \*qDeviceName\*q \*q" string \*q
+Set the X11 device name for the touchscreen. Default is "TOUCHSCREEN".
+.TP
+.BI "Option \*qMinX\*q \*q" integer \*q
+Set the minimum value for the touchscreen X axis. Default is 600.
+.TP
+.BI "Option \*qMaxX\*q \*q" integer \*q
+Set the maximum value for the touchscreen X axis. Default is 3000.
+.TP
+.BI "Option \*qMinY\*q \*q" integer \*q
+Set the minimum value for the touchscreen Y axis. Default is 600.
+.TP
+.BI "Option \*qMaxY\*q \*q" integer \*q
+Set the maximum value for the touchscreen Y axis. Default is 3000.
+.TP
+.BI "Option \*qScreenNo\*q \*q" integer \*q
+The screen to attach to the touchscreen when running with multiple screens.
+Default is screen 0.
+.TP
+.BI "Option \*qPortraitMode\*q \*q" string \*q
+Set the X/Y axis orientation. The default is "Landscape"
+but you can rotate clockwise ("Portrait") or
+counter\-clockwise ("PortraitCCW").
+.TP
+.BI "Option \*qSwapXY\*q \*q" boolean \*q
+Swap the X and Y axis on the display. Default is false.
+.TP
+.BI "Option \*qUntouchDelay\*q \*q" integer \*q
+The period that finger must be released for an untouch
+event to occur. Default: 5 (50ms).
+.TP
+.BI "Option \*qReportDelay\*q \*q" integer \*q
+Delay between report packets. Default: 1 (10ms).
+.SH "SEE ALSO"
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__).
+.SH AUTHORS
+Authors include:
+ Patrick Lecoanet
+.PP
+This manpage was written by Lee Maguire on behalf of the Debian Project.
