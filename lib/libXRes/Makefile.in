@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 # 
-#  $Id: Makefile.in,v 1.1.1.1 2006/11/25 16:50:24 matthieu Exp $
+#  $Id: Makefile.in,v 1.2 2006/11/26 13:42:45 matthieu Exp $
 # 
 #  Copyright © 2003 Keith Packard, Noah Levitt
 # 
@@ -170,7 +170,6 @@ PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 RESOURCEEXT_CFLAGS = @RESOURCEEXT_CFLAGS@
 RESOURCEEXT_LIBS = @RESOURCEEXT_LIBS@
-SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@

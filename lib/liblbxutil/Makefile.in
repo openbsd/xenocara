@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 # 
-#  $Id: Makefile.in,v 1.1.1.1 2006/11/25 18:20:30 matthieu Exp $
+#  $Id: Makefile.in,v 1.2 2006/11/26 13:42:52 matthieu Exp $
 # 
 #  Copyright © 2003 Keith Packard, Noah Levitt
 # 

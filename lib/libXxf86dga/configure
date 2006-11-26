@@ -8220,31 +8220,10 @@ linux*)
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # find out which ABI we are using
-  libsuff=
-  case "$host_cpu" in
-  x86_64*|s390x*|powerpc64*)
-    echo '#line 8227 "configure"' > conftest.$ac_ext
-    if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-      case `/usr/bin/file conftest.$ac_objext` in
-      *64-bit*)
-        libsuff=64
-        sys_lib_search_path_spec="/lib${libsuff} /usr/lib${libsuff} /usr/local/lib${libsuff}"
-        ;;
-      esac
-    fi
-    rm -rf conftest*
-    ;;
-  esac
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib${libsuff} /usr/lib${libsuff} $lt_ld_extra"
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -9121,7 +9100,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9124 "configure"
+#line 9103 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9221,7 +9200,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9224 "configure"
+#line 9203 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11561,11 +11540,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11564: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11543: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:11568: \$? = $ac_status" >&5
+   echo "$as_me:11547: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -11665,11 +11644,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11668: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11647: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:11672: \$? = $ac_status" >&5
+   echo "$as_me:11651: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -12197,31 +12176,10 @@ linux*)
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # find out which ABI we are using
-  libsuff=
-  case "$host_cpu" in
-  x86_64*|s390x*|powerpc64*)
-    echo '#line 12204 "configure"' > conftest.$ac_ext
-    if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-      case `/usr/bin/file conftest.$ac_objext` in
-      *64-bit*)
-        libsuff=64
-        sys_lib_search_path_spec="/lib${libsuff} /usr/lib${libsuff} /usr/local/lib${libsuff}"
-        ;;
-      esac
-    fi
-    rm -rf conftest*
-    ;;
-  esac
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib${libsuff} /usr/lib${libsuff} $lt_ld_extra"
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -13256,11 +13214,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13259: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13217: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13263: \$? = $ac_status" >&5
+   echo "$as_me:13221: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13360,11 +13318,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13363: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13321: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13367: \$? = $ac_status" >&5
+   echo "$as_me:13325: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14805,31 +14763,10 @@ linux*)
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # find out which ABI we are using
-  libsuff=
-  case "$host_cpu" in
-  x86_64*|s390x*|powerpc64*)
-    echo '#line 14812 "configure"' > conftest.$ac_ext
-    if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-      case `/usr/bin/file conftest.$ac_objext` in
-      *64-bit*)
-        libsuff=64
-        sys_lib_search_path_spec="/lib${libsuff} /usr/lib${libsuff} /usr/local/lib${libsuff}"
-        ;;
-      esac
-    fi
-    rm -rf conftest*
-    ;;
-  esac
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib${libsuff} /usr/lib${libsuff} $lt_ld_extra"
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -15584,11 +15521,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15587: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15524: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15591: \$? = $ac_status" >&5
+   echo "$as_me:15528: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -15852,11 +15789,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15855: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15792: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15859: \$? = $ac_status" >&5
+   echo "$as_me:15796: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -15956,11 +15893,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15959: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15896: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15963: \$? = $ac_status" >&5
+   echo "$as_me:15900: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -17421,31 +17358,10 @@ linux*)
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # find out which ABI we are using
-  libsuff=
-  case "$host_cpu" in
-  x86_64*|s390x*|powerpc64*)
-    echo '#line 17428 "configure"' > conftest.$ac_ext
-    if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-      case `/usr/bin/file conftest.$ac_objext` in
-      *64-bit*)
-        libsuff=64
-        sys_lib_search_path_spec="/lib${libsuff} /usr/lib${libsuff} /usr/local/lib${libsuff}"
-        ;;
-      esac
-    fi
-    rm -rf conftest*
-    ;;
-  esac
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib${libsuff} /usr/lib${libsuff} $lt_ld_extra"
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -18757,9 +18673,6 @@ echo "$as_me:$LINENO: checking for XXF86DGA" >&5
 echo $ECHO_N "checking for XXF86DGA... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XXF86DGA_CFLAGS"; then
-        pkg_cv_XXF86DGA_CFLAGS="$XXF86DGA_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto x11 xextproto xext xf86dgaproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto x11 xextproto xext xf86dgaproto") 2>&5
@@ -18770,14 +18683,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XXF86DGA_LIBS"; then
-        pkg_cv_XXF86DGA_LIBS="$XXF86DGA_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto x11 xextproto xext xf86dgaproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto x11 xextproto xext xf86dgaproto") 2>&5
@@ -18788,59 +18697,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XXF86DGA_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xproto x11 xextproto xext xf86dgaproto"`
-        else
-	        XXF86DGA_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto x11 xextproto xext xf86dgaproto"`
-        fi
+	XXF86DGA_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto x11 xextproto xext xf86dgaproto"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XXF86DGA_PKG_ERRORS" >&5
+	echo "$XXF86DGA_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xproto x11 xextproto xext xf86dgaproto) were not met:
-
-$XXF86DGA_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xproto x11 xextproto xext xf86dgaproto) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XXF86DGA_CFLAGS
-and XXF86DGA_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xproto x11 xextproto xext xf86dgaproto) were not met:
-
-$XXF86DGA_PKG_ERRORS
-
+Alternatively you may set the XXF86DGA_CFLAGS and XXF86DGA_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xproto x11 xextproto xext xf86dgaproto) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XXF86DGA_CFLAGS
-and XXF86DGA_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XXF86DGA_CFLAGS and XXF86DGA_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XXF86DGA_CFLAGS
-and XXF86DGA_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XXF86DGA_CFLAGS and XXF86DGA_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -18848,9 +18736,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XXF86DGA_CFLAGS
-and XXF86DGA_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XXF86DGA_CFLAGS and XXF86DGA_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -18940,75 +18828,47 @@ fi
 
 
 if test x$APP_MAN_SUFFIX = x    ; then
-    case $host_os in
-	linux*)	APP_MAN_SUFFIX=1x ;;
-	*)	APP_MAN_SUFFIX=1  ;;
-    esac
+    APP_MAN_SUFFIX=1
 fi
 if test x$APP_MAN_DIR = x    ; then
-    case $host_os in
-	linux*)	APP_MAN_DIR='$(mandir)/man1' ;;
-	*)	APP_MAN_DIR='$(mandir)/man$(APP_MAN_SUFFIX)' ;;
-    esac
+    APP_MAN_DIR='$(mandir)/man$(APP_MAN_SUFFIX)'
 fi
 
 if test x$LIB_MAN_SUFFIX = x    ; then
-    case $host_os in
-	linux*)	LIB_MAN_SUFFIX=3x ;;
-	*)	LIB_MAN_SUFFIX=3  ;;
-    esac
+    LIB_MAN_SUFFIX=3
 fi
 if test x$LIB_MAN_DIR = x    ; then
-    case $host_os in
-	linux*)	LIB_MAN_DIR='$(mandir)/man3' ;;
-	*)	LIB_MAN_DIR='$(mandir)/man$(LIB_MAN_SUFFIX)' ;;
-    esac
+    LIB_MAN_DIR='$(mandir)/man$(LIB_MAN_SUFFIX)'
 fi
 
 if test x$FILE_MAN_SUFFIX = x    ; then
     case $host_os in
-	linux*)		FILE_MAN_SUFFIX=5x ;;
 	solaris*)	FILE_MAN_SUFFIX=4  ;;
 	*)		FILE_MAN_SUFFIX=5  ;;
     esac
 fi
 if test x$FILE_MAN_DIR = x    ; then
-    case $host_os in
-	linux*)	FILE_MAN_DIR='$(mandir)/man5' ;;
-	*)	FILE_MAN_DIR='$(mandir)/man$(FILE_MAN_SUFFIX)' ;;
-    esac
+    FILE_MAN_DIR='$(mandir)/man$(FILE_MAN_SUFFIX)'
 fi
 
-# In Imake's linux.cf, the misc man suffix & dir was only changed for
-# LinuxDebian, not other Linuxes, so we leave it unchanged here
 if test x$MISC_MAN_SUFFIX = x    ; then
     case $host_os in
-#	linux*)		MISC_MAN_SUFFIX=7x ;;
 	solaris*)	MISC_MAN_SUFFIX=5  ;;
 	*)		MISC_MAN_SUFFIX=7  ;;
     esac
 fi
 if test x$MISC_MAN_DIR = x    ; then
-    case $host_os in
-#	linux*)	MISC_MAN_DIR='$(mandir)/man7' ;;
-	*)	MISC_MAN_DIR='$(mandir)/man$(MISC_MAN_SUFFIX)' ;;
-    esac
+    MISC_MAN_DIR='$(mandir)/man$(MISC_MAN_SUFFIX)'
 fi
 
-# In Imake's linux.cf, the driver man suffix & dir was only changed for
-# LinuxDebian, not other Linuxes, so we leave it unchanged here
 if test x$DRIVER_MAN_SUFFIX = x    ; then
     case $host_os in
-#	linux*)		DRIVER_MAN_SUFFIX=4x ;;
 	solaris*)	DRIVER_MAN_SUFFIX=7  ;;
 	*)		DRIVER_MAN_SUFFIX=4  ;;
     esac
 fi
 if test x$DRIVER_MAN_DIR = x    ; then
-    case $host_os in
-#	linux*)	DRIVER_MAN_DIR='$(mandir)/man4' ;;
-	*)	DRIVER_MAN_DIR='$(mandir)/man$(DRIVER_MAN_SUFFIX)' ;;
-    esac
+    DRIVER_MAN_DIR='$(mandir)/man$(DRIVER_MAN_SUFFIX)'
 fi
 
 if test x$ADMIN_MAN_SUFFIX = x    ; then

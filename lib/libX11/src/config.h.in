@@ -72,6 +72,9 @@
 /* Support IPv6 for TCP connections */
 #undef IPv6
 
+/* Support os-specific local connections */
+#undef LOCALCONN
+
 /* Disable XLOCALEDIR environment variable */
 #undef NO_XLOCALEDIR
 

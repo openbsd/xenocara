@@ -8225,31 +8225,10 @@ linux*)
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # find out which ABI we are using
-  libsuff=
-  case "$host_cpu" in
-  x86_64*|s390x*|powerpc64*)
-    echo '#line 8232 "configure"' > conftest.$ac_ext
-    if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-      case `/usr/bin/file conftest.$ac_objext` in
-      *64-bit*)
-        libsuff=64
-        sys_lib_search_path_spec="/lib${libsuff} /usr/lib${libsuff} /usr/local/lib${libsuff}"
-        ;;
-      esac
-    fi
-    rm -rf conftest*
-    ;;
-  esac
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib${libsuff} /usr/lib${libsuff} $lt_ld_extra"
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -9126,7 +9105,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9129 "configure"
+#line 9108 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9226,7 +9205,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9229 "configure"
+#line 9208 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11566,11 +11545,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11569: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11548: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:11573: \$? = $ac_status" >&5
+   echo "$as_me:11552: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -11670,11 +11649,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11673: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11652: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:11677: \$? = $ac_status" >&5
+   echo "$as_me:11656: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -12202,31 +12181,10 @@ linux*)
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # find out which ABI we are using
-  libsuff=
-  case "$host_cpu" in
-  x86_64*|s390x*|powerpc64*)
-    echo '#line 12209 "configure"' > conftest.$ac_ext
-    if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-      case `/usr/bin/file conftest.$ac_objext` in
-      *64-bit*)
-        libsuff=64
-        sys_lib_search_path_spec="/lib${libsuff} /usr/lib${libsuff} /usr/local/lib${libsuff}"
-        ;;
-      esac
-    fi
-    rm -rf conftest*
-    ;;
-  esac
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib${libsuff} /usr/lib${libsuff} $lt_ld_extra"
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -13261,11 +13219,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13264: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13222: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13268: \$? = $ac_status" >&5
+   echo "$as_me:13226: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13365,11 +13323,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13368: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13326: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13372: \$? = $ac_status" >&5
+   echo "$as_me:13330: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14810,31 +14768,10 @@ linux*)
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # find out which ABI we are using
-  libsuff=
-  case "$host_cpu" in
-  x86_64*|s390x*|powerpc64*)
-    echo '#line 14817 "configure"' > conftest.$ac_ext
-    if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-      case `/usr/bin/file conftest.$ac_objext` in
-      *64-bit*)
-        libsuff=64
-        sys_lib_search_path_spec="/lib${libsuff} /usr/lib${libsuff} /usr/local/lib${libsuff}"
-        ;;
-      esac
-    fi
-    rm -rf conftest*
-    ;;
-  esac
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib${libsuff} /usr/lib${libsuff} $lt_ld_extra"
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -15589,11 +15526,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15592: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15529: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15596: \$? = $ac_status" >&5
+   echo "$as_me:15533: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -15857,11 +15794,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15860: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15797: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15864: \$? = $ac_status" >&5
+   echo "$as_me:15801: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -15961,11 +15898,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15964: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15901: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15968: \$? = $ac_status" >&5
+   echo "$as_me:15905: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -17426,31 +17363,10 @@ linux*)
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # find out which ABI we are using
-  libsuff=
-  case "$host_cpu" in
-  x86_64*|s390x*|powerpc64*)
-    echo '#line 17433 "configure"' > conftest.$ac_ext
-    if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-      case `/usr/bin/file conftest.$ac_objext` in
-      *64-bit*)
-        libsuff=64
-        sys_lib_search_path_spec="/lib${libsuff} /usr/lib${libsuff} /usr/local/lib${libsuff}"
-        ;;
-      esac
-    fi
-    rm -rf conftest*
-    ;;
-  esac
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib${libsuff} /usr/lib${libsuff} $lt_ld_extra"
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -18814,9 +18730,6 @@ echo "$as_me:$LINENO: checking for XAW6" >&5
 echo $ECHO_N "checking for XAW6... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XAW6_CFLAGS"; then
-        pkg_cv_XAW6_CFLAGS="$XAW6_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto x11 xext xextproto xt xmu\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto x11 xext xextproto xt xmu") 2>&5
@@ -18827,14 +18740,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XAW6_LIBS"; then
-        pkg_cv_XAW6_LIBS="$XAW6_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto x11 xext xextproto xt xmu\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto x11 xext xextproto xt xmu") 2>&5
@@ -18845,59 +18754,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XAW6_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu"`
-        else
-	        XAW6_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu"`
-        fi
+	XAW6_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XAW6_PKG_ERRORS" >&5
+	echo "$XAW6_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xproto x11 xext xextproto xt xmu) were not met:
-
-$XAW6_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xproto x11 xext xextproto xt xmu) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XAW6_CFLAGS
-and XAW6_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xproto x11 xext xextproto xt xmu) were not met:
-
-$XAW6_PKG_ERRORS
-
+Alternatively you may set the XAW6_CFLAGS and XAW6_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xproto x11 xext xextproto xt xmu) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XAW6_CFLAGS
-and XAW6_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XAW6_CFLAGS and XAW6_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XAW6_CFLAGS
-and XAW6_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XAW6_CFLAGS and XAW6_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -18905,9 +18793,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XAW6_CFLAGS
-and XAW6_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XAW6_CFLAGS and XAW6_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -18942,9 +18830,6 @@ echo "$as_me:$LINENO: checking for XAW7" >&5
 echo $ECHO_N "checking for XAW7... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XAW7_CFLAGS"; then
-        pkg_cv_XAW7_CFLAGS="$XAW7_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto x11 xext xextproto xt xmu xpm\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto x11 xext xextproto xt xmu xpm") 2>&5
@@ -18955,14 +18840,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XAW7_LIBS"; then
-        pkg_cv_XAW7_LIBS="$XAW7_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto x11 xext xextproto xt xmu xpm\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto x11 xext xextproto xt xmu xpm") 2>&5
@@ -18973,59 +18854,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XAW7_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu xpm"`
-        else
-	        XAW7_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu xpm"`
-        fi
+	XAW7_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu xpm"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XAW7_PKG_ERRORS" >&5
+	echo "$XAW7_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xproto x11 xext xextproto xt xmu xpm) were not met:
-
-$XAW7_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xproto x11 xext xextproto xt xmu xpm) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XAW7_CFLAGS
-and XAW7_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xproto x11 xext xextproto xt xmu xpm) were not met:
-
-$XAW7_PKG_ERRORS
-
+Alternatively you may set the XAW7_CFLAGS and XAW7_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xproto x11 xext xextproto xt xmu xpm) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XAW7_CFLAGS
-and XAW7_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XAW7_CFLAGS and XAW7_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XAW7_CFLAGS
-and XAW7_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XAW7_CFLAGS and XAW7_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -19033,9 +18893,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XAW7_CFLAGS
-and XAW7_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XAW7_CFLAGS and XAW7_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -19070,9 +18930,6 @@ echo "$as_me:$LINENO: checking for XPRINT" >&5
 echo $ECHO_N "checking for XPRINT... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPRINT_CFLAGS"; then
-        pkg_cv_XPRINT_CFLAGS="$XPRINT_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xp") 2>&5
@@ -19083,14 +18940,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XPRINT_LIBS"; then
-        pkg_cv_XPRINT_LIBS="$XPRINT_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xp") 2>&5
@@ -19101,27 +18954,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XPRINT_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xp"`
-        else
-	        XPRINT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xp"`
-        fi
+	XPRINT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xp"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XPRINT_PKG_ERRORS" >&5
+	echo "$XPRINT_PKG_ERRORS" 1>&5
 
 	xprint_found=no
 elif test $pkg_failed = untried; then
@@ -19154,9 +18994,6 @@ echo "$as_me:$LINENO: checking for XAW8" >&5
 echo $ECHO_N "checking for XAW8... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XAW8_CFLAGS"; then
-        pkg_cv_XAW8_CFLAGS="$XAW8_CFLAGS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto x11 xext xextproto xt xmu xpm xp printproto xau\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto x11 xext xextproto xt xmu xpm xp printproto xau") 2>&5
@@ -19167,14 +19004,10 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$XAW8_LIBS"; then
-        pkg_cv_XAW8_LIBS="$XAW8_LIBS"
-    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto x11 xext xextproto xt xmu xpm xp printproto xau\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto x11 xext xextproto xt xmu xpm xp printproto xau") 2>&5
@@ -19185,59 +19018,38 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
 else
 	pkg_failed=untried
 fi
 
-
-
 if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        XAW8_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu xpm xp printproto xau"`
-        else
-	        XAW8_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu xpm xp printproto xau"`
-        fi
+	XAW8_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu xpm xp printproto xau"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$XAW8_PKG_ERRORS" >&5
+	echo "$XAW8_PKG_ERRORS" 1>&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xproto x11 xext xextproto xt xmu xpm xp printproto xau) were not met:
-
-$XAW8_PKG_ERRORS
-
+	{ { echo "$as_me:$LINENO: error: Package requirements (xproto x11 xext xextproto xt xmu xpm xp printproto xau) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XAW8_CFLAGS
-and XAW8_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
-echo "$as_me: error: Package requirements (xproto x11 xext xextproto xt xmu xpm xp printproto xau) were not met:
-
-$XAW8_PKG_ERRORS
-
+Alternatively you may set the XAW8_CFLAGS and XAW8_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&5
+echo "$as_me: error: Package requirements (xproto x11 xext xextproto xt xmu xpm xp printproto xau) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables XAW8_CFLAGS
-and XAW8_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+Alternatively you may set the XAW8_CFLAGS and XAW8_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XAW8_CFLAGS
-and XAW8_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XAW8_CFLAGS and XAW8_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -19245,9 +19057,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables XAW8_CFLAGS
-and XAW8_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
+Alternatively you may set the XAW8_CFLAGS and XAW8_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -19908,75 +19720,47 @@ fi
 
 
 if test x$APP_MAN_SUFFIX = x    ; then
-    case $host_os in
-	linux*)	APP_MAN_SUFFIX=1x ;;
-	*)	APP_MAN_SUFFIX=1  ;;
-    esac
+    APP_MAN_SUFFIX=1
 fi
 if test x$APP_MAN_DIR = x    ; then
-    case $host_os in
-	linux*)	APP_MAN_DIR='$(mandir)/man1' ;;
-	*)	APP_MAN_DIR='$(mandir)/man$(APP_MAN_SUFFIX)' ;;
-    esac
+    APP_MAN_DIR='$(mandir)/man$(APP_MAN_SUFFIX)'
 fi
 
 if test x$LIB_MAN_SUFFIX = x    ; then
-    case $host_os in
-	linux*)	LIB_MAN_SUFFIX=3x ;;
-	*)	LIB_MAN_SUFFIX=3  ;;
-    esac
+    LIB_MAN_SUFFIX=3
 fi
 if test x$LIB_MAN_DIR = x    ; then
-    case $host_os in
-	linux*)	LIB_MAN_DIR='$(mandir)/man3' ;;
-	*)	LIB_MAN_DIR='$(mandir)/man$(LIB_MAN_SUFFIX)' ;;
-    esac
+    LIB_MAN_DIR='$(mandir)/man$(LIB_MAN_SUFFIX)'
 fi
 
 if test x$FILE_MAN_SUFFIX = x    ; then
     case $host_os in
-	linux*)		FILE_MAN_SUFFIX=5x ;;
 	solaris*)	FILE_MAN_SUFFIX=4  ;;
 	*)		FILE_MAN_SUFFIX=5  ;;
     esac
 fi
 if test x$FILE_MAN_DIR = x    ; then
-    case $host_os in
-	linux*)	FILE_MAN_DIR='$(mandir)/man5' ;;
-	*)	FILE_MAN_DIR='$(mandir)/man$(FILE_MAN_SUFFIX)' ;;
-    esac
+    FILE_MAN_DIR='$(mandir)/man$(FILE_MAN_SUFFIX)'
 fi
 
-# In Imake's linux.cf, the misc man suffix & dir was only changed for
-# LinuxDebian, not other Linuxes, so we leave it unchanged here
 if test x$MISC_MAN_SUFFIX = x    ; then
     case $host_os in
-#	linux*)		MISC_MAN_SUFFIX=7x ;;
 	solaris*)	MISC_MAN_SUFFIX=5  ;;
 	*)		MISC_MAN_SUFFIX=7  ;;
     esac
 fi
 if test x$MISC_MAN_DIR = x    ; then
-    case $host_os in
-#	linux*)	MISC_MAN_DIR='$(mandir)/man7' ;;
-	*)	MISC_MAN_DIR='$(mandir)/man$(MISC_MAN_SUFFIX)' ;;
-    esac
+    MISC_MAN_DIR='$(mandir)/man$(MISC_MAN_SUFFIX)'
 fi
 
-# In Imake's linux.cf, the driver man suffix & dir was only changed for
-# LinuxDebian, not other Linuxes, so we leave it unchanged here
 if test x$DRIVER_MAN_SUFFIX = x    ; then
     case $host_os in
-#	linux*)		DRIVER_MAN_SUFFIX=4x ;;
 	solaris*)	DRIVER_MAN_SUFFIX=7  ;;
 	*)		DRIVER_MAN_SUFFIX=4  ;;
     esac
 fi
 if test x$DRIVER_MAN_DIR = x    ; then
-    case $host_os in
-#	linux*)	DRIVER_MAN_DIR='$(mandir)/man4' ;;
-	*)	DRIVER_MAN_DIR='$(mandir)/man$(DRIVER_MAN_SUFFIX)' ;;
-    esac
+    DRIVER_MAN_DIR='$(mandir)/man$(DRIVER_MAN_SUFFIX)'
 fi
 
 if test x$ADMIN_MAN_SUFFIX = x    ; then

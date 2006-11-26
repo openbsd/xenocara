@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 # 
-#  $Id: Makefile.in,v 1.1.1.1 2006/11/25 17:55:16 matthieu Exp $
+#  $Id: Makefile.in,v 1.2 2006/11/26 13:42:50 matthieu Exp $
 # 
 #  Copyright © 2003 Keith Packard, Noah Levitt
 # 
@@ -162,7 +162,6 @@ RANLIB = @RANLIB@
 RENDER_CFLAGS = @RENDER_CFLAGS@
 RENDER_LIBS = @RENDER_LIBS@
 RENDER_VERSION = @RENDER_VERSION@
-SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@

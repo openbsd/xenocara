@@ -61,12 +61,8 @@ DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
-AMCMDECHO = @AMCMDECHO@
-AMDEPSHOWCMDSAT = @AMDEPSHOWCMDSAT@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
-AMPRETTYECHO = @AMPRETTYECHO@
-AMSHOWCMDSAT = @AMSHOWCMDSAT@
 AMTAR = @AMTAR@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
@@ -99,7 +95,6 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
-GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_MAKESTRS_FALSE = @INSTALL_MAKESTRS_FALSE@
 INSTALL_MAKESTRS_TRUE = @INSTALL_MAKESTRS_TRUE@
@@ -114,7 +109,6 @@ LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
-LT_QUIET = @LT_QUIET@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
@@ -144,9 +138,13 @@ XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
 XT_CFLAGS = @XT_CFLAGS@
 XT_LIBS = @XT_LIBS@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_RANLIB = @ac_ct_RANLIB@
+ac_ct_STRIP = @ac_ct_STRIP@
+ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -164,30 +162,23 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
-datarootdir = @datarootdir@
-docdir = @docdir@
-dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
-htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
-localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
-pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
-psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -730,8 +721,7 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	@AMPRETTYECHO@ '  [AUTOMAKE  ]  man/Makefile'; \
-	@AMCMDECHO@ ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  man/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  man/Makefile'; \
 	cd $(top_srcdir) && \
 	  $(AUTOMAKE) --gnu  man/Makefile
 .PRECIOUS: Makefile
@@ -740,43 +730,34 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	  *config.status*) \
 	    cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh;; \
 	  *) \
-	    @AMPRETTYECHO@ '  [SH        ]  config.status $(subdir)/$@'; \
-	    @AMCMDECHO@ ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
+	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe);; \
 	esac;
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
-	@@AMPRETTYECHO@ '  [SH        ]  config.status'
-	@AMSHOWCMDSAT@cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
 $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
-	@@AMPRETTYECHO@ '  [AUTOCONF  ]  Regenerate'
-	@AMSHOWCMDSAT@cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
-	@@AMPRETTYECHO@ '  [ACLOCAL   ]  Regenerate'
-	@AMSHOWCMDSAT@cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
 mostlyclean-libtool:
-	@@AMPRETTYECHO@ '  [RM        ]  *.lo'
-	@AMSHOWCMDSAT@-rm -f *.lo
+	-rm -f *.lo
 
 clean-libtool:
-	@@AMPRETTYECHO@ '  [RM        ]  .libs _libs'
-	@AMSHOWCMDSAT@-rm -rf .libs _libs
+	-rm -rf .libs _libs
 
 distclean-libtool:
-	@@AMPRETTYECHO@ '  [RM        ]  libtool'
-	@AMSHOWCMDSAT@-rm -f libtool
+	-rm -f libtool
 uninstall-info-am:
 install-libmanDATA: $(libman_DATA)
 	@$(NORMAL_INSTALL)
-	@@AMPRETTYECHO@ '  [MKDIR     ]  $(DESTDIR)$(libmandir)'
-	@AMSHOWCMDSAT@test -z "$(libmandir)" || $(mkdir_p) "$(DESTDIR)$(libmandir)"
+	test -z "$(libmandir)" || $(mkdir_p) "$(DESTDIR)$(libmandir)"
 	@list='$(libman_DATA)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  @AMPRETTYECHO@ "  [INSTALL   ]  '$$d$$p' -> '$(DESTDIR)$(libmandir)/$$f'"; \
-	  @AMCMDECHO@ " $(libmanDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(libmandir)/$$f'"; \
+	  echo " $(libmanDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(libmandir)/$$f'"; \
 	  $(libmanDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(libmandir)/$$f"; \
 	done
 
@@ -784,8 +765,7 @@ uninstall-libmanDATA:
 	@$(NORMAL_UNINSTALL)
 	@list='$(libman_DATA)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
-	  @AMPRETTYECHO@ "  [RM        ]  $(DESTDIR)$(libmandir)/$$f"; \
-	  @AMCMDECHO@ " rm -f '$(DESTDIR)$(libmandir)/$$f'"; \
+	  echo " rm -f '$(DESTDIR)$(libmandir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(libmandir)/$$f"; \
 	done
 tags: TAGS
@@ -796,7 +776,6 @@ CTAGS:
 
 
 distdir: $(DISTFILES)
-	@@AMPRETTYECHO@ '  [MKDIR     ]  '
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -828,8 +807,8 @@ check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(DATA)
 installdirs:
-	@AMSHOWCMDSAT@for dir in "$(DESTDIR)$(libmandir)"; do \
-	  test -z "$$dir" || ( @AMPRETTYECHO@ "  [MKDIR     ]  $$dir"; $(mkdir_p) "$$dir" ); \
+	for dir in "$(DESTDIR)$(libmandir)"; do \
+	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-am
@@ -842,32 +821,28 @@ install-am: all-am
 
 installcheck: installcheck-am
 install-strip:
-	@AMSHOWCMDSAT@$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
 	  install_sh_PROGRAM="$(INSTALL_STRIP_PROGRAM)" INSTALL_STRIP_FLAG=-s \
 	  `test -z '$(STRIP)' || \
 	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
 mostlyclean-generic:
 
 clean-generic:
-	@@AMPRETTYECHO@ '  [RM        ]  $(CLEANFILES)'
 	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
-	@@AMPRETTYECHO@ '  [RM        ]  $(CONFIG_CLEAN_FILES)'
-	@AMSHOWCMDSAT@-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
+	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	@@AMPRETTYECHO@ '  [RM        ]  $(BUILT_SOURCES)'
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
-	@@AMPRETTYECHO@ '  [RM        ]  Makefile'
-	@AMSHOWCMDSAT@-rm -f Makefile
+	-rm -f Makefile
 distclean-am: clean-am distclean-generic distclean-libtool
 
 dvi: dvi-am
@@ -891,8 +866,7 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	@@AMPRETTYECHO@ '  [RM        ]  Makefile'
-	@AMSHOWCMDSAT@-rm -f Makefile
+	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am

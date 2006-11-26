@@ -77,24 +77,20 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) $(LT_QUIET) --tag=CC --mode=compile $(CC) \
-	$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
-LINK = $(LIBTOOL) $(LT_QUIET) --tag=CC --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libXmu_la_SOURCES) $(libXmuu_la_SOURCES)
 DIST_SOURCES = $(libXmu_la_SOURCES) $(libXmuu_la_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
-AMCMDECHO = @AMCMDECHO@
-AMDEPSHOWCMDSAT = @AMDEPSHOWCMDSAT@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
-AMPRETTYECHO = @AMPRETTYECHO@
-AMSHOWCMDSAT = @AMSHOWCMDSAT@
 AMTAR = @AMTAR@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
@@ -121,7 +117,6 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
-GREP = @GREP@
 HAS_SNPRINTF = @HAS_SNPRINTF@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -133,7 +128,6 @@ LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
-LT_QUIET = @LT_QUIET@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
@@ -156,9 +150,13 @@ XMUU_CFLAGS = @XMUU_CFLAGS@
 XMUU_LIBS = @XMUU_LIBS@
 XMU_CFLAGS = @XMU_CFLAGS@
 XMU_LIBS = @XMU_LIBS@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_RANLIB = @ac_ct_RANLIB@
+ac_ct_STRIP = @ac_ct_STRIP@
+ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -175,30 +173,23 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
-datarootdir = @datarootdir@
-docdir = @docdir@
-dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
-htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
-localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
-pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
-psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -277,8 +268,7 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	@AMPRETTYECHO@ '  [AUTOMAKE  ]  src/Makefile'; \
-	@AMCMDECHO@ ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
 	cd $(top_srcdir) && \
 	  $(AUTOMAKE) --gnu  src/Makefile
 .PRECIOUS: Makefile
@@ -287,30 +277,25 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	  *config.status*) \
 	    cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh;; \
 	  *) \
-	    @AMPRETTYECHO@ '  [SH        ]  config.status $(subdir)/$@'; \
-	    @AMCMDECHO@ ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
+	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe);; \
 	esac;
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
-	@@AMPRETTYECHO@ '  [SH        ]  config.status'
-	@AMSHOWCMDSAT@cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
 $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
-	@@AMPRETTYECHO@ '  [AUTOCONF  ]  Regenerate'
-	@AMSHOWCMDSAT@cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
-	@@AMPRETTYECHO@ '  [ACLOCAL   ]  Regenerate'
-	@AMSHOWCMDSAT@cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
-	@AMSHOWCMDSAT@test -z "$(libdir)" || ( @AMPRETTYECHO@ '  [MKDIR     ]  "$(DESTDIR)$(libdir)"'; $(mkdir_p) "$(DESTDIR)$(libdir)" )
+	test -z "$(libdir)" || $(mkdir_p) "$(DESTDIR)$(libdir)"
 	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
 	  if test -f $$p; then \
 	    f=$(am__strip_dir) \
-	    @AMPRETTYECHO@ "  [INSTALL   ]  $$p -> $(DESTDIR)$(libdir)/$$f"; \
-	    @AMCMDECHO@ " $(LIBTOOL) $(LT_QUIET) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(libdir)/$$f'"; \
-	    $(LIBTOOL) $(LT_QUIET) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(libdir)/$$f"; \
+	    echo " $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(libdir)/$$f'"; \
+	    $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(libdir)/$$f"; \
 	  else :; fi; \
 	done
 
@@ -318,36 +303,28 @@ uninstall-libLTLIBRARIES:
 	@$(NORMAL_UNINSTALL)
 	@set -x; list='$(lib_LTLIBRARIES)'; for p in $$list; do \
 	  p=$(am__strip_dir) \
-	  @AMPRETTYECHO@ "  [RM        ]  $(DESTDIR)$(libdir)/$$p"; \
-	  @AMCMDECHO@ " $(LIBTOOL) $(LT_QUIET) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$p'"; \
-	  $(LIBTOOL) $(LT_QUIET) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$p"; \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$p'"; \
+	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$p"; \
 	done
 
 clean-libLTLIBRARIES:
-	@AMSHOWCMDSAT@-test -z "$(lib_LTLIBRARIES)" || ( \
-	  @AMPRETTYECHO@ '  [RM        ]  $(lib_LTLIBRARIES)'; \
-	  rm -f $(lib_LTLIBRARIES) )
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
 	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
 	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
 	  test "$$dir" != "$$p" || dir=.; \
-	  @AMPRETTYECHO@ "  [RM        ] $${dir}/so_locations"; \
-	  @AMCMDECHO@ "rm -f \"$${dir}/so_locations\""; \
+	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
 libXmu.la: $(libXmu_la_OBJECTS) $(libXmu_la_DEPENDENCIES) 
-	@@AMPRETTYECHO@ '  [LD        ]  libXmu.la'
-	@AMSHOWCMDSAT@$(LINK) -rpath $(libdir) $(libXmu_la_LDFLAGS) $(libXmu_la_OBJECTS) $(libXmu_la_LIBADD) $(LIBS)
+	$(LINK) -rpath $(libdir) $(libXmu_la_LDFLAGS) $(libXmu_la_OBJECTS) $(libXmu_la_LIBADD) $(LIBS)
 libXmuu.la: $(libXmuu_la_OBJECTS) $(libXmuu_la_DEPENDENCIES) 
-	@@AMPRETTYECHO@ '  [LD        ]  libXmuu.la'
-	@AMSHOWCMDSAT@$(LINK) -rpath $(libdir) $(libXmuu_la_LDFLAGS) $(libXmuu_la_OBJECTS) $(libXmuu_la_LIBADD) $(LIBS)
+	$(LINK) -rpath $(libdir) $(libXmuu_la_LDFLAGS) $(libXmuu_la_OBJECTS) $(libXmuu_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
-	@@AMPRETTYECHO@ '  [RM        ]  *.$(OBJEXT)'
-	@AMSHOWCMDSAT@-rm -f *.$(OBJEXT)
+	-rm -f *.$(OBJEXT)
 
 distclean-compile:
-	@@AMPRETTYECHO@ '  [RM        ]  *.tab.c'
-	@AMSHOWCMDSAT@-rm -f *.tab.c
+	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AllCmap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Atoms.Plo@am__quote@
@@ -396,56 +373,49 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sharedlib.Plo@am__quote@
 
 .c.o:
-	@@AMPRETTYECHO@ '  [C         ]  $<'
-@am__fastdepCC_TRUE@	@AMSHOWCMDSAT@if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
+@am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
 @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	@AMSHOWCMDSAT@source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	@AMDEPSHOWCMDSAT@$(COMPILE) -c $<
+@am__fastdepCC_FALSE@	$(COMPILE) -c $<
 
 .c.obj:
-	@@AMPRETTYECHO@ '  [C         ]  $<'
-@am__fastdepCC_TRUE@	@AMSHOWCMDSAT@if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ `$(CYGPATH_W) '$<'`; \
+@am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ `$(CYGPATH_W) '$<'`; \
 @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	@AMSHOWCMDSAT@source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	@AMDEPSHOWCMDSAT@$(COMPILE) -c `$(CYGPATH_W) '$<'`
+@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
 
 .c.lo:
-	@@AMPRETTYECHO@ '  [C         ]  $<'
-@am__fastdepCC_TRUE@	@AMSHOWCMDSAT@if $(LTCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
+@am__fastdepCC_TRUE@	if $(LTCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
 @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Plo"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	@AMSHOWCMDSAT@source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	@AMDEPSHOWCMDSAT@$(LTCOMPILE) -c -o $@ $<
+@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
 mostlyclean-libtool:
-	@@AMPRETTYECHO@ '  [RM        ]  *.lo'
-	@AMSHOWCMDSAT@-rm -f *.lo
+	-rm -f *.lo
 
 clean-libtool:
-	@@AMPRETTYECHO@ '  [RM        ]  .libs _libs'
-	@AMSHOWCMDSAT@-rm -rf .libs _libs
+	-rm -rf .libs _libs
 
 distclean-libtool:
-	@@AMPRETTYECHO@ '  [RM        ]  libtool'
-	@AMSHOWCMDSAT@-rm -f libtool
+	-rm -f libtool
 uninstall-info-am:
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
-	@AMSHOWCMDSAT@list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
+	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
 	unique=`for i in $$list; do \
 	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
 	  done | \
 	  $(AWK) '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
-	@AMPRETTYECHO@ '  [MKID      ]  $$unique'; \
 	mkid -fID $$unique
 tags: TAGS
 
 TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
-	@AMSHOWCMDSAT@tags=; \
+	tags=; \
 	here=`pwd`; \
 	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
 	unique=`for i in $$list; do \
@@ -455,14 +425,13 @@ TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 	       END { for (i in files) print i; }'`; \
 	if test -z "$(ETAGS_ARGS)$$tags$$unique"; then :; else \
 	  test -n "$$unique" || unique=$$empty_fix; \
-	  @AMPRETTYECHO@ "  [ETAGS     ]  $$tags"; \
 	  $(ETAGS) $(ETAGSFLAGS) $(AM_ETAGSFLAGS) $(ETAGS_ARGS) \
 	    $$tags $$unique; \
 	fi
 ctags: CTAGS
 CTAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
-	@AMSHOWCMDSAT@tags=; \
+	tags=; \
 	here=`pwd`; \
 	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
 	unique=`for i in $$list; do \
@@ -471,23 +440,18 @@ CTAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 	  $(AWK) '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
 	test -z "$(CTAGS_ARGS)$$tags$$unique" \
-	  || ( \
-	     @AMPRETTYECHO@ "  [CTAGS     ]  $$tags"; \
-	     $(CTAGS) $(CTAGSFLAGS) $(AM_CTAGSFLAGS) $(CTAGS_ARGS) \
-	     $$tags $$unique )
+	  || $(CTAGS) $(CTAGSFLAGS) $(AM_CTAGSFLAGS) $(CTAGS_ARGS) \
+	     $$tags $$unique
 
 GTAGS:
-	@@AMPRETTYECHO@ '  [GTAGS     ]'
-	@AMSHOWCMDSAT@here=`$(am__cd) $(top_builddir) && pwd` \
+	here=`$(am__cd) $(top_builddir) && pwd` \
 	  && cd $(top_srcdir) \
 	  && gtags -i $(GTAGS_ARGS) $$here
 
 distclean-tags:
-	@@AMPRETTYECHO@ '  [RM        ]  TAGS ID GTAGS GRTAGS GSYMS GPATH tags'
-	@AMSHOWCMDSAT@-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
-	@@AMPRETTYECHO@ '  [MKDIR     ]  '
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -518,8 +482,8 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES)
 installdirs:
-	@AMSHOWCMDSAT@for dir in "$(DESTDIR)$(libdir)"; do \
-	  test -z "$$dir" || ( @AMPRETTYECHO@ "  [MKDIR     ]  $$dir"; $(mkdir_p) "$$dir" ); \
+	for dir in "$(DESTDIR)$(libdir)"; do \
+	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
 install-exec: install-exec-am
@@ -531,7 +495,7 @@ install-am: all-am
 
 installcheck: installcheck-am
 install-strip:
-	@AMSHOWCMDSAT@$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
 	  install_sh_PROGRAM="$(INSTALL_STRIP_PROGRAM)" INSTALL_STRIP_FLAG=-s \
 	  `test -z '$(STRIP)' || \
 	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
@@ -540,8 +504,7 @@ mostlyclean-generic:
 clean-generic:
 
 distclean-generic:
-	@@AMPRETTYECHO@ '  [RM        ]  $(CONFIG_CLEAN_FILES)'
-	@AMSHOWCMDSAT@-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
+	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -552,10 +515,8 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	@@AMPRETTYECHO@ '  [RM        ]  ./$(DEPDIR)'
-	@AMSHOWCMDSAT@-rm -rf ./$(DEPDIR)
-	@@AMPRETTYECHO@ '  [RM        ]  Makefile'
-	@AMSHOWCMDSAT@-rm -f Makefile
+	-rm -rf ./$(DEPDIR)
+	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-libtool distclean-tags
 
@@ -580,10 +541,8 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	@@AMPRETTYECHO@ '  [RM        ]  ./$(DEPDIR)'
-	@AMSHOWCMDSAT@-rm -rf ./$(DEPDIR)
-	@@AMPRETTYECHO@ '  [RM        ]  Makefile'
-	@AMSHOWCMDSAT@-rm -f Makefile
+	-rm -rf ./$(DEPDIR)
+	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am

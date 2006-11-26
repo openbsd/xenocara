@@ -1578,27 +1578,10 @@ linux*)
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # find out which ABI we are using
-  libsuff=
-  case "$host_cpu" in
-  x86_64*|s390x*|powerpc64*)
-    echo '[#]line __oline__ "configure"' > conftest.$ac_ext
-    if AC_TRY_EVAL(ac_compile); then
-      case `/usr/bin/file conftest.$ac_objext` in
-      *64-bit*)
-        libsuff=64
-        sys_lib_search_path_spec="/lib${libsuff} /usr/lib${libsuff} /usr/local/lib${libsuff}"
-        ;;
-      esac
-    fi
-    rm -rf conftest*
-    ;;
-  esac
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
-    lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \[$]2)); skip = 1; } { if (!skip) print \[$]0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib${libsuff} /usr/lib${libsuff} $lt_ld_extra"
+    lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s", \[$]2)); skip = 1; } { if (!skip) print \[$]0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;/^$/d' | tr '\n' ' '`
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -4305,9 +4288,6 @@ CC=$lt_[]_LT_AC_TAGVAR(compiler, $1)
 # Is the compiler the GNU C compiler?
 with_gcc=$_LT_AC_TAGVAR(GCC, $1)
 
-gcc_dir=\`gcc -print-file-name=. | $SED 's,/\.$,,'\`
-gcc_ver=\`gcc -dumpversion\`
-
 # An ERE matcher.
 EGREP=$lt_EGREP
 
@@ -4441,11 +4421,11 @@ striplib=$lt_striplib
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
-predep_objects=\`echo $lt_[]_LT_AC_TAGVAR(predep_objects, $1) | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+predep_objects=$lt_[]_LT_AC_TAGVAR(predep_objects, $1)
 
 # Dependencies to place after the objects being linked to create a
 # shared library.
-postdep_objects=\`echo $lt_[]_LT_AC_TAGVAR(postdep_objects, $1) | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+postdep_objects=$lt_[]_LT_AC_TAGVAR(postdep_objects, $1)
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
@@ -4457,7 +4437,7 @@ postdeps=$lt_[]_LT_AC_TAGVAR(postdeps, $1)
 
 # The library search path used internally by the compiler when linking
 # a shared library.
-compiler_lib_search_path=\`echo $lt_[]_LT_AC_TAGVAR(compiler_lib_search_path, $1) | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+compiler_lib_search_path=$lt_[]_LT_AC_TAGVAR(compiler_lib_search_path, $1)
 
 # Method to check whether dependent libraries are shared objects.
 deplibs_check_method=$lt_deplibs_check_method
@@ -4537,7 +4517,7 @@ variables_saved_for_relink="$variables_saved_for_relink"
 link_all_deplibs=$_LT_AC_TAGVAR(link_all_deplibs, $1)
 
 # Compile-time system search path for libraries
-sys_lib_search_path_spec=\`echo $lt_sys_lib_search_path_spec | \$SED -e "s@\${gcc_dir}@\\\${gcc_dir}@g;s@\${gcc_ver}@\\\${gcc_ver}@g"\`
+sys_lib_search_path_spec=$lt_sys_lib_search_path_spec
 
 # Run-time system search path for libraries
 sys_lib_dlsearch_path_spec=$lt_sys_lib_dlsearch_path_spec
@@ -6373,7 +6353,6 @@ do
     done
   done
 done
-IFS=$as_save_IFS
 lt_ac_max=0
 lt_ac_count=0
 # Add /usr/xpg4/bin/sed as it is typically found on Solaris
@@ -6406,7 +6385,6 @@ for lt_ac_sed in $lt_ac_sed_list /usr/xpg4/bin/sed; do
 done
 ])
 SED=$lt_cv_path_SED
-AC_SUBST([SED])
 AC_MSG_RESULT([$SED])
 ])
 
@@ -6443,7 +6421,7 @@ if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
 	AC_PATH_TOOL([PKG_CONFIG], [pkg-config])
 fi
 if test -n "$PKG_CONFIG"; then
-	_pkg_min_version=m4_default([$1], [0.9.0])
+	_pkg_min_version=m4_ifval([$1], [$1], [0.9.0])
 	AC_MSG_CHECKING([pkg-config is at least version $_pkg_min_version])
 	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
 		AC_MSG_RESULT([yes])
@@ -6479,29 +6457,13 @@ fi])
 # ---------------------------------------------
 m4_define([_PKG_CONFIG],
 [if test -n "$PKG_CONFIG"; then
-    if test -n "$$1"; then
-        pkg_cv_[]$1="$$1"
-    else
         PKG_CHECK_EXISTS([$3],
                          [pkg_cv_[]$1=`$PKG_CONFIG --[]$2 "$3" 2>/dev/null`],
 			 [pkg_failed=yes])
-    fi
 else
 	pkg_failed=untried
 fi[]dnl
 ])# _PKG_CONFIG
-
-# _PKG_SHORT_ERRORS_SUPPORTED
-# -----------------------------
-AC_DEFUN([_PKG_SHORT_ERRORS_SUPPORTED],
-[AC_REQUIRE([PKG_PROG_PKG_CONFIG])
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi[]dnl
-])# _PKG_SHORT_ERRORS_SUPPORTED
-
 
 # PKG_CHECK_MODULES(VARIABLE-PREFIX, MODULES, [ACTION-IF-FOUND],
 # [ACTION-IF-NOT-FOUND])
@@ -6524,39 +6486,29 @@ AC_MSG_CHECKING([for $1])
 _PKG_CONFIG([$1][_CFLAGS], [cflags], [$2])
 _PKG_CONFIG([$1][_LIBS], [libs], [$2])
 
-m4_define([_PKG_TEXT], [Alternatively, you may set the environment variables $1[]_CFLAGS
-and $1[]_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.])
-
 if test $pkg_failed = yes; then
-        _PKG_SHORT_ERRORS_SUPPORTED
-        if test $_pkg_short_errors_supported = yes; then
-	        $1[]_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "$2"`
-        else 
-	        $1[]_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$2"`
-        fi
+	$1[]_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$2"`
 	# Put the nasty error message in config.log where it belongs
-	echo "$$1[]_PKG_ERRORS" >&AS_MESSAGE_LOG_FD
+	echo "$$1[]_PKG_ERRORS" 1>&AS_MESSAGE_LOG_FD
 
 	ifelse([$4], , [AC_MSG_ERROR(dnl
-[Package requirements ($2) were not met:
-
-$$1_PKG_ERRORS
-
+[Package requirements ($2) were not met.
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-_PKG_TEXT
-])],
-		[AC_MSG_RESULT([no])
-                $4])
+Alternatively you may set the $1_CFLAGS and $1_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.])],
+		[$4])
 elif test $pkg_failed = untried; then
 	ifelse([$4], , [AC_MSG_FAILURE(dnl
 [The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-_PKG_TEXT
+Alternatively you may set the $1_CFLAGS and $1_LIBS environment variables
+to avoid the need to call pkg-config.  See the pkg-config man page for
+more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.])],
 		[$4])
@@ -6567,50 +6519,6 @@ else
 	ifelse([$3], , :, [$3])
 fi[]dnl
 ])# PKG_CHECK_MODULES
-
-dnl Copyright 2005 Red Hat, Inc
-dnl
-dnl Permission to use, copy, modify, distribute, and sell this software and its
-dnl documentation for any purpose is hereby granted without fee, provided that
-dnl the above copyright notice appear in all copies and that both that
-dnl copyright notice and this permission notice appear in supporting
-dnl documentation.
-dnl
-dnl The above copyright notice and this permission notice shall be included
-dnl in all copies or substantial portions of the Software.
-dnl
-dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-dnl IN NO EVENT SHALL THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR
-dnl OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-dnl ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-dnl OTHER DEALINGS IN THE SOFTWARE.
-dnl
-dnl Except as contained in this notice, the name of the copyright holders shall
-dnl not be used in advertising or otherwise to promote the sale, use or
-dnl other dealings in this Software without prior written authorization
-dnl from the copyright holders.
-dnl
-
-# XORG_RELEASE_VERSION
-# --------------------
-# Adds --with/without-release-string and changes the PACKAGE and
-# PACKAGE_TARNAME to use "$PACKAGE{_TARNAME}-$RELEASE_VERSION".  If
-# no option is given, PACKAGE and PACKAGE_TARNAME are unchanged.
- 
-AC_DEFUN([XORG_RELEASE_VERSION],[
-	AC_ARG_WITH(release-version,
-			AC_HELP_STRING([--with-release-version=STRING],
-				[Use release version string in package name]),
-			[RELEASE_VERSION="$withval"],
-			[RELEASE_VERSION=""])
-	if test "x$RELEASE_VERSION" != "x"; then
-		PACKAGE="$PACKAGE-$RELEASE_VERSION"
-		PACKAGE_TARNAME="$PACKAGE_TARNAME-$RELEASE_VERSION"
-		AC_MSG_NOTICE([Building with package name set to $PACKAGE])
-	fi
-])
 
 # Copyright (C) 2002, 2003, 2005  Free Software Foundation, Inc.
 #
@@ -7489,4 +7397,48 @@ AC_MSG_RESULT([$am_cv_prog_tar_$1])])
 AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
+
+dnl Copyright 2005 Red Hat, Inc
+dnl
+dnl Permission to use, copy, modify, distribute, and sell this software and its
+dnl documentation for any purpose is hereby granted without fee, provided that
+dnl the above copyright notice appear in all copies and that both that
+dnl copyright notice and this permission notice appear in supporting
+dnl documentation.
+dnl
+dnl The above copyright notice and this permission notice shall be included
+dnl in all copies or substantial portions of the Software.
+dnl
+dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+dnl IN NO EVENT SHALL THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR
+dnl OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+dnl ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+dnl OTHER DEALINGS IN THE SOFTWARE.
+dnl
+dnl Except as contained in this notice, the name of the copyright holders shall
+dnl not be used in advertising or otherwise to promote the sale, use or
+dnl other dealings in this Software without prior written authorization
+dnl from the copyright holders.
+dnl
+
+# XORG_RELEASE_VERSION
+# --------------------
+# Adds --with/without-release-string and changes the PACKAGE and
+# PACKAGE_TARNAME to use "$PACKAGE{_TARNAME}-$RELEASE_VERSION".  If
+# no option is given, PACKAGE and PACKAGE_TARNAME are unchanged.
+ 
+AC_DEFUN([XORG_RELEASE_VERSION],[
+	AC_ARG_WITH(release-version,
+			AC_HELP_STRING([--with-release-version=STRING],
+				[Use release version string in package name]),
+			[RELEASE_VERSION="$withval"],
+			[RELEASE_VERSION=""])
+	if test "x$RELEASE_VERSION" != "x"; then
+		PACKAGE="$PACKAGE-$RELEASE_VERSION"
+		PACKAGE_TARNAME="$PACKAGE_TARNAME-$RELEASE_VERSION"
+		AC_MSG_NOTICE([Building with package name set to $PACKAGE])
+	fi
+])
 

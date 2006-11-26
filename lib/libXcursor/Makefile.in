@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 # 
-#  $Id: Makefile.in,v 1.1.1.1 2006/11/25 17:00:27 matthieu Exp $
+#  $Id: Makefile.in,v 1.2 2006/11/26 13:42:46 matthieu Exp $
 # 
 #  Copyright © 2003 Keith Packard, Noah Levitt
 # 
@@ -175,7 +175,6 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
-SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@

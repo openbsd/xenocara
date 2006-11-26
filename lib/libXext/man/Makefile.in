@@ -125,10 +125,6 @@ PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
-
-# Rules for generating files using the C pre-processor
-# (Replaces CppFileTarget from Imake)
-SED = sed
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -223,6 +219,10 @@ CLEANFILES = $(libman_DATA) shadows.DONE
 
 # Generate man page shadow files (Replaces InstallManPageAliases from Imake)
 BUILT_SOURCES = shadows.DONE
+
+# Rules for generating files using the C pre-processor
+# (Replaces CppFileTarget from Imake)
+SED = sed
 SUFFIXES = .$(LIB_MAN_SUFFIX) .man
 
 # Translate XCOMM into pound sign with sed, rather than passing -DXCOMM=XCOMM
