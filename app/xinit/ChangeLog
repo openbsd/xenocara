@@ -1,0 +1,103 @@
+2006-06-20  Matthieu Herrb <matthieu.herrb@laas.fr>
+
+	* xinit.c:
+	Check setuid() return value. Bugzilla #7116.
+
+2006-05-27  Jeremy C. Reed  <reed@reedmedia.net>
+
+	* startx.cpp:
+	In comments, change contractions to be spelled out to fix
+	cpp "missing terminating" errors with single quotes.
+
+2006-04-30  Matthieu Herrb <matthieu.herrb@laas.fr>
+
+	* configure.ac:
+	Quote MCOOKIE to allow to specify a command with args (ie
+	MCOOKIE="/usr/sbin/openssl rand -hex 16" ./configure ...)
+
+2006-04-01  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Bump to 1.0.2.
+
+2006-02-25  Jeremy C. Reed  <reed@reedmedia.net>
+
+	* startx.cpp:
+	Bug #4449 <https://bugs.freedesktop.org/show_bug.cgi?id=4449>
+	Be more portable (for different /bin/sh shells) for
+	the arithmetic.
+
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for final X11R7 release candidate.
+
+2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* Makefile.am:
+	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Add m4 magic to allow AS_HELP_STRING to work with older versions
+	of autoconf 2.57.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-11-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* Makefile.am:
+	* configure.ac:
+	Make the programs used in the xinit scripts configurable.
+
+2005-11-09  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac: 
+	Add settings for SHELL_CMD & ARCHMANDEFS to match monolith
+	changes for bug #3180.
+
+	AC_DEFINE(XORG,...) so it is listed as available server in xinit
+	help output.
+
+	* Makefile.am:
+	Update cpp -D flags to match monolith changes for bug #3180.
+	
+2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC2 release.
+
+2005-10-18  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for RC1 release.
+
+2005-10-16  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac: 
+	* Makefile.am: 
+	Use cpp to substitute variables in man pages
+	
+2005-10-10  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* configure.ac: 
+	* Makefile.am:
+	Don't define HAS_COOKIE_MAKER if mcookie wasn't found.
+
+2005-08-29  Daniel Stone  <daniel@freedesktop.org>
+
+	Version 0.99.1.
+
+	* configure.ac:
+	* Makefile.am:
+	Define HAS_COOKIE_MAKER and search for mcookie so startx will generate
+	xauth tokens for the servers it starts.
