@@ -1,0 +1,112 @@
+2006-05-15  Matthias Hopf  <mhopf@suse.de>
+
+	* configure.ac,src/mouse.c:
+	Bump to 1.1.1.
+
+2006-04-21  Matthias Hopf  <mhopf@suse.de>
+
+	* man/mouse.man:
+	Fixed default for YAxisMapping.
+	Changed default for ZAxisMapping. Added short explanation.
+	* src/mouse.c: (MouseCommonOptions), (MouseReadInput):
+	Autodetect (one way only) single wheel only for EXPS2.
+	Use singlebit protocol for multiwheel EXPS2 mice.
+
+2006-04-20  Matthias Hopf  <mhopf@suse.de>
+
+	* src/mouse.c: (MousePostEvent):
+	Overhaul of wheel processing. Does work correctly with multibit
+	zaxis events now.
+
+2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/mouse.c:
+	* src/pnp.c:
+	Unlibcwrap.  Bump server version requirement.  Bump to 1.1.0.
+
+2006-03-09  Eric Anholt  <anholt@FreeBSD.org>
+
+	* src/mouse.c: (MouseCommonOptions):
+	Coverity #875: Correct several memory leaks in options parsing.
+
+2006-02-28  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/mouse.c:
+	Bump to 1.0.4.
+
+2006-02-02  Matthias Hopf  <mhopf@suse.de>
+
+	* man/mouse.man:
+	Fixed ButtonMapping default.
+
+2006-01-17  Matthias Hopf  <mhopf@suse.de>
+
+	* src/mouse.c: (MouseDoPostEvent):
+	Bug #5071: EmulateWheelTimeout didn't work as anticipated.
+
+2006-01-09  Daniel Stone  <daniel@freedesktop.org>
+
+	* src/mouse.c:
+	Remove #ifdef PNP_MOUSE blocks, as it was always defined in the
+	monolith.
+
+2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version for X11R7 release.
+
+2005-12-19  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* man/mouse.man:
+	Update URL for mouse docs online.
+	Add VUID to supported protocols (used on Solaris).
+
+	* README.sgml:
+	Update docs for X11R6.9 & 7.0 releases.
+	Add note about new ButtonMapping option.
+	Explain changes due to "virtual mouse" support in Solaris 10.
+	Change "mices" to "mice".
+
+2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	* src/mouse.c:
+	Update package version number for final X11R7 release candidate.
+	Bump driver version number.
+
+2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* man/Makefile.am:
+	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC3 release.
+
+2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Remove extraneous AC_MSG_RESULT.
+
+2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Only build dlloader modules by default.
+
+2005-11-22  Daniel Stone  <daniel@freedesktop.org>
+
+	* configure.ac:
+	Update dependency on xorg-server to >= 0.99.3, for MouseDriverRec changes.
+
+2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update package version number for X11R7 RC2 release.
+
+2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* configure.ac:
+	Update pkgcheck dependencies to work with separate build roots.
