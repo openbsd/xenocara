@@ -1,0 +1,143 @@
+.\" $OpenBSD: xidle.1,v 1.1.1.1 2006/11/26 10:57:44 matthieu Exp $
+.\"
+.\" Copyright (c) 2005 Federico G. Schwindt.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE OPENBSD PROJECT AND CONTRIBUTORS
+.\" ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+.\" LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+.\" A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE OPENBSD
+.\" PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+.\" SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+.\" LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+.\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd June 20, 2005
+.Dt XIDLE 1
+.Os
+.Sh NAME
+.Nm xidle
+.Nd run a program on X inactivity
+.Sh SYNOPSIS
+.Nm xidle
+.Bk -words
+.Op Fl area Ar pixels
+.Op Fl delay Ar secs
+.Op Fl display Ar display
+.Op Fl nw | ne | sw | se
+.Op Fl program Ar path
+.Op Fl timeout Ar secs
+.Ek
+.Sh DESCRIPTION
+.Nm
+uses the
+.Xr XScreenSaver 3
+extension to receive inactivity events when a timeout is specified, running
+a specific program after the elapsed time.
+.Nm
+also monitors the very corner of the given position for pointer activity
+and runs a program if the pointer sits there for more than the specified
+number of seconds.
+This behavior is always present, whether
+.Fl timeout
+is specified or not.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl area Ar pixels
+Specify the size, in pixels, of the corner area.
+The default is 2 pixels.
+.It Fl delay Ar secs
+Specify the number of seconds the pointer has to be in the given position
+before running the program.
+The default is 2 seconds.
+.It Fl display Ar display
+This argument allows you to specify the server to connect to; see
+.Xr X 7 .
+.It Fl nw | ne | sw | se
+Set the position to one of northwest, northeast, southwest, or southeast,
+respectively.
+If no position is specified,
+the default is northwest.
+.It Fl program Ar path
+Specify the full pathname of the program to run on any of the
+aforementioned events.
+Arguments to the program may also be specified, separated by whitespace.
+If
+.Fl program
+is not specified, the default is
+.Xr xlock 1 .
+.It Fl timeout Ar secs
+Set the timeout to the specified number of seconds.
+If
+.Fl timeout
+is not specified,
+.Nm
+won't run any program on inactivity.
+.El
+.Sh RESOURCES
+A few sets of application specific resources are supported and their values
+can be overriden by the command line options:
+.Bl -tag -width Ds
+.It Sy area No (class Sy Area )
+Specify the size, in pixels, of the corner area; see the
+.Fl area
+option.
+.It Sy delay No (class Sy Delay )
+Specify the number of seconds to wait before running the program; see the
+.Fl delay
+option.
+.It Sy position No (class Sy Position )
+Set the position to one of: "nw", "ne", "sw", or "se"; see descriptions of the
+.Fl nw ,
+.Fl ne ,
+.Fl sw ,
+and
+.Fl se
+options.
+.It Sy program No (class Sy Program )
+Specify the full pathname of the program to run; see the
+.Fl program
+option.
+.It Sy timeout No (class Sy Timeout )
+Set the timeout to the specified number of seconds; see the
+.Fl timeout
+option.
+.El
+.Pp
+The
+.Nm
+program resource class is
+.Sy XIdle .
+.Sh EXAMPLES
+Run
+.Xr xlock 1
+using the flying bats mode if no activity is detected in 300 seconds or the
+pointer sits in the southwest corner for more than 5 seconds:
+.Bd -literal -offset indent
+$ xidle -delay 5 -sw -program "/usr/X11R6/bin/xlock -mode bat" \e
+	-timeout 300
+.Ed
+.Sh SEE ALSO
+.Xr xlock 1 ,
+.Xr XScreenSaver 3 ,
+.Xr X 7
+.Sh AUTHORS
+The
+.Nm
+program was written by Federico Schwindt as an xautolock replacement.
+.Sh BUGS
+The maximum number of arguments for
+.Fl program ,
+including the executable file, is currently set to 9.

@@ -1,0 +1,87 @@
+.\"	$OpenBSD: xvctl.1,v 1.1.1.1 2006/11/26 10:59:22 matthieu Exp $
+.\"
+.\" Copyright (c) 2001 Marc Espie
+.\"
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE DEVELOPERS ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE DEVELOPERS BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd November 9, 2001
+.Dt XVCTL 1
+.Os
+.Sh NAME
+.Nm xvctl
+.Nd get or set xv extension values
+.Sh SYNOPSIS
+.Nm xvctl
+.Op Fl n
+.Op Fl d Ar display
+.Op Fl s Ar screen
+.Op Fl A Ar adaptor
+.Ar name ...
+.Nm xvctl
+.Op Fl n
+.Op Fl d Ar display
+.Op Fl s Ar screen
+.Op Fl A Ar adaptor
+.Fl w
+.Ar name=value ...
+.Nm xvctl
+.Op Fl n
+.Op Fl d Ar display
+.Op Fl s Ar screen
+.Op Fl A Ar adaptor
+.Fl a
+.Sh DESCRIPTION
+The
+.Nm
+utility retrieves the Xvideo extension attributes and
+allows the user to set them.
+.Pp
+For instance, this can be used to change the contrast or brightness of an
+external video program.
+
+The options are as follows:
+.Bl -tag -width xxx
+.It Fl d Ar display
+affect the display named
+.Ar display , 
+instead of the default display.
+.It Fl s Ar screen
+affect screen #
+.Ar screen .
+By default, the first screen with video adaptors will be chosen.
+.It Fl A Ar adaptor
+affect adaptor #
+.Ar adaptor .
+By default, the first display adaptor will be chosen.
+.It Fl a 
+list all the currently available gettable attributes.
+.It Fl n
+suppress printing of the field name, only output the field value.
+Useful for setting shell variables.
+.It Fl w
+required to set a variable. The name should be followed
+by an equal sign and the new value.
+.El
+.Sh SEE ALSO
+.Xr xvinfo 1 ,
+.Xr Xv 3x
