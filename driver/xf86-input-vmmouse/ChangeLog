@@ -1,0 +1,25 @@
+2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	* src/vmmouse.c:
+	* src/vmmouse_proto.h:
+	Unlibcwrap.  Bump server version requirement.  Bump to 12.4.0.
+
+2006-03-28  Philip Langdale  <plangdale@vmware.com>
+
+	* configure.ac:
+	* src/vmmouse.c: Bump PATCHLEVEL.
+	* src/vmmouse_proto.h: Use the right #define
+	when detecting a 64bit compilation. This fixes
+	the driver to actually work for 64bit builds.
+
+2006-01-16  Philip Langdale  <plangdale@vmware.com>
+
+	* configure.ac:
+	* src/vmmouse.c: Bump PATCHLEVEL.
+	* src/vmmouse_proto.c: push/pop ebx to keep
+	gcc4 happy when compiling with -fPIC.
+
+2006-01-06  Philip Langdale  <plangdale@vmware.com>
+
+	* Initial release.

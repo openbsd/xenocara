@@ -1,0 +1,53 @@
+VMMouse
+-------
+
+The VMMouse driver enables support for the special VMMouse protocol
+that is provided by VMware virtual machines to give absolute pointer
+positioning. 
+
+Installing the driver will improve the user experience when using the 
+mouse to interact with the guest operating system. In particular, use of 
+the driver improves mouse "lag", provides mouse speed and acceleration 
+consistent with the user's host operating system, and enables the 
+auto-grab/ungrab feature in VMware products without requiring the VMware 
+toolbox application.
+
+Using the driver
+----------------
+
+Assuming you have built and installed the driver in the standard way
+for autotools based packages (see INSTALL), or the driver was already
+installed by your distro, using it is simply a matter of changing the
+driver used for the mouse input device from "mouse" to "vmmouse".
+
+The vmmouse driver is capable of falling back to the standard "mouse"
+driver if a VMware virtual machine is not detected. This allows for
+dual-booting of an operating system from a virtual machine to real hardware
+without having to edit xorg.conf every time.
+
+Implementation
+--------------
+
+The following is not necessary reading for anyone who wants to use the
+driver, but should help anyone who wants to understand how it works or
+who wants to write a driver for a different target, whether it's another
+operating system, a linux kernel input driver or even gpm.
+
+The driver is composed of three different layers:
+
+1) The vmmouse protocol layer (vmmouse_proto.[c|h])
+   - This provides the call to read and write the port over which 
+     the vmmouse packets are transfered.
+
+2) The vmmouse client layer (vmmouse_client.[c|h])
+   - This builds on top of the protocol layer to provide higher
+     level calls for enabling/disabling the vmmouse mechanism
+     and for reading data.
+   - A new driver for a different target would use this interface.
+
+3) The Xorg vmmouse driver (vmmouse.c)
+   - This is the actual Xorg specific part of the driver.
+   - Note that interrupts indicating the presence of mouse data
+     are still transmitted on the PS/2 port so it is necessary
+     to be set up to receive those interrupts like a standard
+     PS/2 driver, but the actual data on the PS/2 port is ignored.
