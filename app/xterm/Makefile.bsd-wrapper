@@ -1,0 +1,13 @@
+# $Xenocara: Makefile.bsd-wrapper,v 1.4 2006/04/17 13:27:10 matthieu Exp $
+
+config.status:
+	AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
+	AUTOCONF_VERSION="$(AUTOCONF_VERSION)" \
+	ACLOCAL="aclocal -I ${X11BASE}/share/aclocal" \
+	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" \
+		sh ${.CURDIR}/configure --prefix=${X11BASE} \
+		--with-app-defaults=${X11BASE}/share/X11/app-defaults \
+		--with-utmp-setgid=utmp \
+		--mandir=${X11BASE}/share/man
+
+.include <bsd.xorg.mk>

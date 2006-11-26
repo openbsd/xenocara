@@ -1,0 +1,13 @@
+# $Xenocara: Makefile.bsd-wrapper,v 1.4 2006/04/17 13:27:10 matthieu Exp $
+
+config.status:
+	AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
+	AUTOCONF_VERSION="$(AUTOCONF_VERSION)" \
+	ACLOCAL="aclocal -I ${X11BASE}/share/aclocal" \
+	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" \
+		sh ${.CURDIR}/configure --prefix=${X11BASE} \
+		--enable-appdefaultdir=${X11BASE}/share/X11/app-defaults \
+		--enable-syslog --without-motif \
+		--without-gtk2 --without-gtk --without-esound
+
+.include <bsd.xorg.mk>

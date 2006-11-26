@@ -1,0 +1,33 @@
+# $Xenocara: Makefile,v 1.6 2006/04/17 20:21:00 matthieu Exp $
+
+SUBDIR= bdftopcf mkfontscale mkfontdir \
+	appres beforelight bitmap editres fonttosfnt fslsfonts \
+	fstobdf	iceauth ico lbxproxy listres luit mkcfm oclock \
+	proxymngr rgb rstart scripts sessreg setxkbmap showfont \
+	smproxy twm viewres x11perf xauth xbiff xcalc \
+	xclipboard xclock xcmsdb xconsole xdbedizzy \
+	xditview xdm xdpyinfo  xdriinfo xedit xev xeyes xf86dga \
+	xfd  xfindproxy xfontsel xfs xfsinfo xfwp xgamma xgc xhost \
+	xinit xkbcomp xkbevd xkbprint xkbutils xkill xload xlogo \
+	xlsatoms xlsclients xlsfonts xmag xman xmessage xmh \
+	xmodmap xmore xphelloworld xplsprinters xpr xprehashprinterlist \
+	xprop xrandr xrdb xrefresh xset xsetmode xsetpointer \
+	xsetroot xsm xstdcmap xtrap xvidtune xvinfo xwd xwininfo \
+	xwud
+
+# GL
+SUBDIR += glxgears glxinfo
+
+# extras
+SUBDIR += fvwm ssh-askpass wm2 xterm xidle xlockmore xvctl
+
+# External dependencies
+# xcursorgen 
+
+# Not yet autotoolized 
+#  makepsres  texteroids
+
+.include <bsd.subdir.mk>
+
+build:	_SUBDIRUSE
+update: _SUBDIRUSE
