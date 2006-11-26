@@ -1,0 +1,89 @@
+  Information for newport Users
+  Guido Guenther
+  24 February 2003
+  ____________________________________________________________
+
+  Table of Contents
+
+
+  1. Supported Hardware
+  2. Features
+  3. Notes
+  4. Configuration
+  5. Authors
+  6. Acknowledgements
+
+
+  ______________________________________________________________________
+
+  [1m1.  Supported Hardware[0m
+
+  This is an unaccelerated driver for the SGI newport cards (a.k.a. XL)
+  as found in the SGI Indy and Indigo2. Both the 8bit and 24bit versions
+  are tested and working.
+
+
+  [1m2.  Features[0m
+
+
+  +o  Support for 8 and 24 bit pixel depths
+
+  +o  Hardware cursor support to reduce flicker
+
+
+  [1m3.  Notes[0m
+
+
+  +o  X -configure does not generate a xorg.conf file.
+
+  +o  There's only a 1280x1024 mode.
+
+
+
+  [1m4.  Configuration[0m
+
+  The driver auto-detects all device information necessary to initialize
+  the card on the Indy. The only lines you need in the "Device" section
+  of your xorg.conf file are:
+
+         Section "Device"
+             Identifier "SGI newport"
+             Driver     "newport"
+         EndSection
+
+
+  Indigo2 users have to use the BusID option as documented below.
+
+  However, if you have problems with auto-detection, you can specify:
+
+  +o  bitplanes - number of physical bitplanes (8 or 24)
+
+  +o  HWCursor - enable or disable hardware cursor
+
+  +o  BusID - set this to "1" on the Indigo2 XL
+
+
+
+  [1m5.  Authors[0m
+
+
+  +o  Guido Guenther  <agx@sigxcpu.org>
+
+
+
+  [1m6.  Acknowledgements[0m
+
+
+  +o  Gleb O. Raiko  <raiko@niisi.msk.ru> for getting the beast to build
+
+  +o  Ralf Baechle  <ralf@oss.sgi.com> for his patience...
+
+  +o  Ulf Carlsson  <ulfc@calypso.engr.sgi.com> for comments and elf
+     loader code
+
+  +o  Nina A. Podolskaya  <nap@niisi.msk.ru> for elf loader code
+
+  +o  all the guys who wrote the newport_con linux kernel code
+
+
+
