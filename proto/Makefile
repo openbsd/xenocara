@@ -1,4 +1,4 @@
-# $OpenBSD
+# $OpenBSD: Makefile,v 1.2 2006/11/26 11:32:13 matthieu Exp $
 
 SUBDIR= bigreqsproto compositeproto dmxproto damageproto evieproto \
 	fixesproto fontcacheproto fontsproto glproto inputproto \
