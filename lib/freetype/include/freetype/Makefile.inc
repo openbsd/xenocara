@@ -1,7 +1,7 @@
 includes: ${INCS} incinstall _SUBDIRUSE
 
 incinstall:
-	@cd ${DIST}; for i in ${INCS}; do \
+	for i in ${INCS}; do \
 	    j="cmp -s $$i ${DESTDIR}${INCSDIR}/$$i || \
 		${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 \
 		$$i ${DESTDIR}${INCSDIR}"; \
