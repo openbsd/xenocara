@@ -1,4 +1,4 @@
-# $Xenocara: Makefile.bsd-wrapper,v 1.3 2006/04/17 13:55:36 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.2 2006/11/27 19:28:25 matthieu Exp $
 
 .include <bsd.xorg.mk>
 

@@ -1,4 +1,4 @@
-# $Xenocara: Makefile.bsd-wrapper,v 1.3 2006/04/17 13:25:40 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.2 2006/11/27 19:27:26 matthieu Exp $
 
 CONFIGURE_ARGS= --enable-privsep
 
