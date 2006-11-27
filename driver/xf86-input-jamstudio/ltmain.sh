@@ -2073,6 +2073,17 @@ EOF
 	;;
     esac
     for pass in $passes; do
+      # The preopen pass in lib mode reverses $deplibs; put it back here
+      # so that -L comes before libs that need it for instance...
+      if test "$linkmode,$pass" = "lib,link"; then
+	## FIXME: Find the place where the list is rebuilt in the wrong
+	##        order, and fix it there properly
+	tmp_deplibs=
+	for deplib in $deplibs; do
+	  tmp_deplibs="$deplib $tmp_deplibs"
+	done
+	deplibs="$tmp_deplibs"
+      fi
       if test "$linkmode,$pass" = "lib,link" ||
 	 test "$linkmode,$pass" = "prog,scan"; then
 	libs="$deplibs"
@@ -2334,20 +2345,20 @@ EOF
 	    # It is a libtool convenience library, so add in its objects.
 	    convenience="$convenience $ladir/$objdir/$old_library"
 	    old_convenience="$old_convenience $ladir/$objdir/$old_library"
-	    tmp_libs=
-	    for deplib in $dependency_libs; do
-	      deplibs="$deplib $deplibs"
-              if test "X$duplicate_deps" = "Xyes" ; then
-	        case "$tmp_libs " in
-	        *" $deplib "*) specialdeplibs="$specialdeplibs $deplib" ;;
-	        esac
-              fi
-	      tmp_libs="$tmp_libs $deplib"
-	    done
 	  elif test "$linkmode" != prog && test "$linkmode" != lib; then
 	    $echo "$modename: \`$lib' is not a convenience library" 1>&2
 	    exit $EXIT_FAILURE
 	  fi
+	  tmp_libs=
+	  for deplib in $dependency_libs; do
+	    deplibs="$deplib $deplibs"
+	    if test "X$duplicate_deps" = "Xyes" ; then
+	      case "$tmp_libs " in
+	      *" $deplib "*) specialdeplibs="$specialdeplibs $deplib" ;;
+	      esac
+	    fi
+	    tmp_libs="$tmp_libs $deplib"
+	  done
 	  continue
 	fi # $pass = conv
 
@@ -2542,7 +2553,7 @@ EOF
 	   { test "$use_static_libs" = no || test -z "$old_library"; }; then
 	  if test "$installed" = no; then
 	    notinst_deplibs="$notinst_deplibs $lib"
-	    need_relink=yes
+	    test -z "$DESTDIR" && need_relink=yes
 	  fi
 	  # This is a shared library
 
@@ -2741,7 +2752,7 @@ EOF
 	    add_dir=
 	    add=
 	    # Finalize command for both is simple: just hardcode it.
-	    if test "$hardcode_direct" = yes; then
+	    if test "$hardcode_direct" = yes && test -f $libdir/$linklib; then
 	      add="$libdir/$linklib"
 	    elif test "$hardcode_minus_L" = yes; then
 	      add_dir="-L$libdir"
@@ -3359,6 +3370,20 @@ EOF
 	  major=
 	  versuffix=
 	  verstring=""
+	else
+	  # XXX
+	  tmp=`echo $libname|sed -e 's,+,_,g' -e 's,-,_,g' -e 's,\.,_,g'`
+	  eval tmp2=\$${tmp}_ltversion
+	  if ! test -z "${SHARED_LIBS_LOG}"; then
+		  if ! test -f ${SHARED_LIBS_LOG}; then
+			  echo "# SHARED_LIBS+=	<libname>      <obsd version> # <orig version>" >${SHARED_LIBS_LOG}
+		  fi
+		  tmp4=`echo $libname|sed -e 's/^lib//'`
+		  printf "SHARED_LIBS +=\t%-20s %-8s # %s\n" "$tmp4" "$tmp2" "$versuffix" >>${SHARED_LIBS_LOG}
+	  fi
+	  if test -n "$versuffix" && test -n "$tmp2"; then
+	    versuffix=".$tmp2"
+	  fi
 	fi
 
 	# Check to see if the archive will have undefined symbols.
@@ -6257,40 +6282,6 @@ relink_command=\"$relink_command\""
     # Exit here if they wanted silent mode.
     test "$show" = : && exit $EXIT_SUCCESS
 
-    $echo "X----------------------------------------------------------------------" | $Xsed
-    $echo "Libraries have been installed in:"
-    for libdir in $libdirs; do
-      $echo "   $libdir"
-    done
-    $echo
-    $echo "If you ever happen to want to link against installed libraries"
-    $echo "in a given directory, LIBDIR, you must either use libtool, and"
-    $echo "specify the full pathname of the library, or use the \`-LLIBDIR'"
-    $echo "flag during linking and do at least one of the following:"
-    if test -n "$shlibpath_var"; then
-      $echo "   - add LIBDIR to the \`$shlibpath_var' environment variable"
-      $echo "     during execution"
-    fi
-    if test -n "$runpath_var"; then
-      $echo "   - add LIBDIR to the \`$runpath_var' environment variable"
-      $echo "     during linking"
-    fi
-    if test -n "$hardcode_libdir_flag_spec"; then
-      libdir=LIBDIR
-      eval flag=\"$hardcode_libdir_flag_spec\"
-
-      $echo "   - use the \`$flag' linker flag"
-    fi
-    if test -n "$admincmds"; then
-      $echo "   - have your system administrator run these commands:$admincmds"
-    fi
-    if test -f /etc/ld.so.conf; then
-      $echo "   - have your system administrator add LIBDIR to \`/etc/ld.so.conf'"
-    fi
-    $echo
-    $echo "See any operating system documentation about shared libraries for"
-    $echo "more information, such as the ld(1) and ld.so(8) manual pages."
-    $echo "X----------------------------------------------------------------------" | $Xsed
     exit $EXIT_SUCCESS
     ;;
 
