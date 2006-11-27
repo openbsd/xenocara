@@ -1,4 +1,4 @@
-# $Xenocara: Makefile,v 1.6 2006/04/17 20:21:00 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2006/11/27 20:21:05 matthieu Exp $
 
 SUBDIR= bdftopcf mkfontscale mkfontdir \
 	appres beforelight bitmap editres fonttosfnt fslsfonts \
@@ -19,13 +19,7 @@ SUBDIR= bdftopcf mkfontscale mkfontdir \
 SUBDIR += glxgears glxinfo
 
 # extras
-SUBDIR += fvwm ssh-askpass wm2 xterm xidle xlockmore xvctl
-
-# External dependencies
-# xcursorgen 
-
-# Not yet autotoolized 
-#  makepsres  texteroids
+SUBDIR += fvwm ssh-askpass wm2 xterm xidle xlockmore xsystrace xvctl
 
 .include <bsd.subdir.mk>
 
