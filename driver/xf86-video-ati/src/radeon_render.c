@@ -393,7 +393,7 @@ static Bool FUNC_NAME(R100SetupTexture)(
     ACCEL_PREAMBLE();
 
     /* render repeat is broken - fix in stable tree by falling back */
-    if (flags & XAA_RENDER_REPEAT)
+    if ((flags & XAA_RENDER_REPEAT) && ((width != 1) || (height != 1)))
 	return FALSE;
 
     if ((width > 2048) || (height > 2048))
@@ -730,7 +730,7 @@ static Bool FUNC_NAME(R200SetupTexture)(
     ACCEL_PREAMBLE();
 
     /* render repeat is broken - fix in stable tree by falling back */
-    if (flags & XAA_RENDER_REPEAT)
+    if ((flags & XAA_RENDER_REPEAT) && ((width != 1) || (height != 1)))
 	return FALSE;
 
     if ((width > 2048) || (height > 2048))
