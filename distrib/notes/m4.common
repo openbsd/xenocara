@@ -1,8 +1,8 @@
-dnl $OpenBSD: m4.common,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+dnl $OpenBSD: m4.common,v 1.2 2006/11/27 12:02:13 matthieu Exp $
 dnl
 changequote(`{:-',`-:}')dnl
 dnl
-define({:-XOrgVersion-:},{:-6.9.0-:})dnl
+define({:-XOrgVersion-:},{:-7.2-:})dnl
 dnl
 define({:-problem_blurb-:},
 {:-------------------------
