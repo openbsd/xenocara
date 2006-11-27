@@ -1,4 +1,4 @@
-#	$Xenocara
+#	$OpenBSD
 .include <bsd.own.mk>
 
 SUBDIR=	freetype

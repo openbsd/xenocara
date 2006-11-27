@@ -1,5 +1,5 @@
-# $Xenocara: Makefile,v 1.8 2006/04/17 21:40:34 matthieu Exp $
-# $OpenBSD: Makefile,v 1.1 2006/11/26 12:03:55 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2006/11/27 19:56:35 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2006/11/27 19:56:35 matthieu Exp $
 .include <bsd.own.mk>
 
 DIST= ${.CURDIR}

@@ -1,4 +1,4 @@
-#	$Xenocara: Makefile,v 1.8 2006/04/17 21:35:40 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2006/11/27 19:56:35 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 

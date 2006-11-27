@@ -1,4 +1,4 @@
-# $Xenocara: Makefile,v 1.3 2006/04/17 13:31:18 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2006/11/27 19:56:35 matthieu Exp $
 
 INPUT_DRV= \
 	xf86-input-acecad \

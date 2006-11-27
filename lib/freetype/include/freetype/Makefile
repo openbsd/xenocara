@@ -1,4 +1,4 @@
-#	$Xenocara: Makefile,v 1.5 2006/04/17 21:35:40 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2006/11/27 19:56:35 matthieu Exp $
 
 
 .include <bsd.xorg.mk>

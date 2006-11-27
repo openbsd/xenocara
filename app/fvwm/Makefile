@@ -1,4 +1,4 @@
-# $Xenocara: Makefile,v 1.2 2006/04/17 20:16:24 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2006/11/27 19:56:35 matthieu Exp $
 
 SUBDIR= libs fvwm sample.fvwmrc utils icons modules
 
