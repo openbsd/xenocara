@@ -1,0 +1,44 @@
+Post-installation instructions for X.Org on OpenBSD/amd64
+---------------------------------------------------------
+
+1. Make sure your system has support for X enabled:
+
+   You must have 'option APERTURE' in your kernel configuration and
+   uncomment the line that says:  
+
+      machdep.allowaperture=2
+
+   in /etc/sysctl.conf.  See xf86(4) for more details about security
+   issues related to this.  After changing this variable in sysctl.conf,
+   you will need to reboot for the change to take effect.
+
+2. Find out about your hardware:
+
+   Find out what chipset is used by your video board.  Write this
+   information down. The dmesg(8) command output is useful.
+
+   What kind of mouse do you have and which port is it connected to?
+   The 2 most common cases are a PS/2 style mouse or a USB mouse, for
+   which OpenBSD uses the wsmouse(4) protocol with the /dev/wsmouse
+   device.
+
+3. Create the xorg.conf(5) file for your server.
+
+   Run Xorg -configure as root and move the resulting
+   xorg.conf.new file to /etc/X11/xorg.conf. 
+   If needed, edit it to adjust the keyboard and mouse settings.
+
+4. Start either xdm(1) or startx(1).
+
+   a. Start xdm(1), the X display manager by activating the xdm_flags option
+      in /etc/rc.conf(8) or /etc/rc.conf.local(8).
+
+   b. Start startx(1) from a console shell.  It is the X script that starts
+      the X server and a few X applications, including a window manager.
+ 
+5. With X.Org XOrgVersion, you can use antialiased fonts in some applications. 
+   visit http://www.openbsd.org/faq/truetype.html for more information. 
+
+problem_blurb
+
+$OpenBSD: README.amd64,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $

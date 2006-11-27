@@ -1,0 +1,20 @@
+Post-installation instructions for X.Org on OpenBSD/mac68k
+----------------------------------------------------------
+
+OpenBSD 3.9 and later uses the X.Org X server on mac68k.
+
+An unaccelerated frame buffer driver, wsfb, is provided for all supported
+frame buffers. It uses whatever graphics mode the console is set to
+(by MacOS and/or the Booter) as a dumb unaccelerated framebuffer.
+
+The default /etc/X11/xorg.conf which is installed provides a ready-to-run
+configuration.
+
+To start xdm, the X display manager, activate the xdm_flags option in
+/etc/rc.conf. You will need to disable the console getty in /etc/ttys.
+
+Alternatively, you can log in on console and use `startx'.
+
+problem_blurb
+
+$OpenBSD: README.mac68k,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $

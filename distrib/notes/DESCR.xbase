@@ -1,0 +1,8 @@
+X11R6 Base package
+
+Includes all things specific to each machine:
+
+  o shared libs
+  o X client binaries
+  o machine specific client configurations
+  o machine specific fonts

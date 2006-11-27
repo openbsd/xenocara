@@ -1,0 +1,110 @@
+Post-installation instructions for X.Org on OpenBSD/i386
+--------------------------------------------------------
+
+Conventions used in this document:
+  - somename(1) implies that "somename" is a program, and there is a
+    manual page available in section 1 of the manual pages for further
+    reading, viewed by typing "man 1 somename".
+
+1. Make sure your system has support for X enabled:
+
+   You must have "option APERTURE" in your kernel configuration and
+   uncomment the line that says:  
+
+        machdep.allowaperture=1
+
+   or
+
+        machdep.allowaperture=2
+
+   in /etc/sysctl.conf.  See xf86(4) for more details about security
+   issues related to this.  After changing this variable in sysctl.conf,
+   you will need to reboot for the change to take effect. Most drivers for
+   X.Org XOrgVersion servers require this value to be set to 2, while
+   drivers for XFree86 3.3.6 require it only to be set to 1.
+
+2. Find out about your hardware:
+
+   Find out what chipset is used by your video board.  Write this
+   information down. The dmesg(8) command output is useful.
+
+   You need to decide if you can use the X.Org XOrgVersion server,
+   Xorg(1), or if you have some legacy VGA card supported only by
+   one of the old XFree86 3.3.6 servers:
+
+        XF86_3DLabs(1) XF86_Mach8(1)  XF86_S3(1)   XF86_VGA16(1)
+        XF86_I128(1)   XF86_Mach32(1) XF86_S3V(1)  XF86_SVGA(1)
+        XF86_8514(1)   XF86_Mach64(1) XF86_W32(1)  XF86_Mono(1)
+        XF86_P9000(1)  XF86_AGX(1)
+
+   If in doubt, try X.Org XOrgVersion first.
+
+   What kind of mouse do you have and which port is it connected to?
+   The two most common cases are a PS/2 style or USB mouse, for which
+   OpenBSD uses the wsmouse(4) protocol with the /dev/wsmouse device.
+   If you have a serial mouse, connected to /dev/tty00 (MS Windows
+   COM1: port) or /dev/tty01 (COM2: port) you probably want to try the
+   "auto" protocol first.
+
+3. Create the configuration file for your server.
+
+   For many users of X.Org's servers, an xorg.conf file is not needed,
+   simply start X, and it will automatically detect and use your
+   hardware.  If your hardware is not properly autodetected or supported
+   or not supported as you wish, you will have to create a configuration
+   file.
+
+   XFree86 3.3.6 will require an /etc/XF86Config file to be generated.
+
+   Please note the location of the configuration file listed below.
+   Both the location and the utilities that generate them are different.
+   You will not have great success mixing X.Org XOrgVersion xorg.conf(5)
+   files with XFree86 3.3.6 XF86Config files.
+
+    a. For the X.Org XOrgVersion server, run xorgcfg(1) or xorgconfig(1).
+       - The text mode of xorgcfg(1) is recommended, by typing
+         "xorgcfg -textmode".
+       - This will produce the /etc/X11/xorg.conf file.
+       - This will create /usr/X11R6/bin/X as a link to Xorg.
+       - If "xorgcfg -textmode" doesn't work on your hardware, try
+         the alternate program, xorgconfig(1).
+       - if neither of these alternatives produce a good file, try
+         "X -configure" as root.  This will produce a "best guess"
+         xorg.conf.new file, which can be used as a starting point
+         for your modifications.
+
+       See the X.Org XOrgVersion documentation available at:
+
+              /usr/X11R6/lib/X11/doc/
+
+       See also Xorg(1), xorg.conf(5).
+
+    b. For the XFree86 3.3.6 server, run XF86Setup(1) or xf86config3(1).
+
+       - This will make the /etc/XF86Config file.
+       - This will create /usr/X11R6/bin/X as a link to your XF86_* server,
+         one of the XFree86 3.3.6 servers listed in item 2 above.
+       - If for some reason XF86Setup(1) doesn't work on your hardware, try
+         the alternate program xf86config3(1).
+
+       See the XF86Config user's guide for XFree86 3.3.6 servers at:
+
+              /usr/X11R6/lib/X11/doc/XFree86-3.3.6/QuickStart.doc
+
+       For manual configuration information, see xf86config-3(5).
+
+4. Start either xdm(1) or startx(1).
+
+   a. Start xdm(1), the X display manager by activating the xdm_flags option
+      in /etc/rc.conf(8) or /etc/rc.conf.local(8).
+
+   b. Start startx(1) from a console shell.  It is the X script that starts
+      the X server and a few X applications, including a window manager.
+ 
+5. With X.Org XOrgVersion, you can use antialiased fonts in some applications. 
+   visit http://www.openbsd.org/faq/truetype.html for more information. 
+
+problem_blurb  For XFree86 3 documentation,
+visit http://www.xfree86.org/3.3.6/.
+
+$OpenBSD: README.i386,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $

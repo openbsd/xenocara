@@ -1,0 +1,4 @@
+./etc/X11/app-defaults/XOrgCfg
+./etc/X11/rc.xprint
+./etc/X11/xorg.conf
+./etc/X11/xserver/SecurityPolicy

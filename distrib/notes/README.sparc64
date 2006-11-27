@@ -1,0 +1,262 @@
+Post-installation instructions for X.Org on OpenBSD/sparc64
+-----------------------------------------------------------
+
+Contents
+--------
+	Single, unaccelerated display
+	Single, accelerated display
+	Dual, unaccelerated display
+
+Single, unaccelerated display
+-----------------------------
+This setup is by far the easiest to configure and is supported on just
+about every machine OpenBSD/sparc64 runs on (both PCI and SBus based
+machines).  A sample /etc/X11/xorg.conf is given at the end of this
+section, but it may need to be customized to fit the machine.  Mostly
+these just entails configuring where mouse input comes from.
+
+- For systems with serial mice on Zilog ports (zstty), the following
+'ServerLayout' section should be used in place of the one provided:
+
+Section "ServerLayout"
+	Identifier	"wsfb"
+	Screen 0	"Screen0" 0 0
+	InputDevice	"zsmouse0" "CorePointer"
+	InputDevice	"Keyboard0" "CoreKeyboard"
+EndSection
+
+- For systems with serial mice on 'com' ports, the following
+'ServerLayout' section should be used in place of the one provided:
+
+Section "ServerLayout"
+	Identifier	"wsfb"
+	Screen 0	"Screen0" 0 0
+	InputDevice	"commouse0" "CorePointer"
+	InputDevice	"Keyboard0" "CoreKeyboard"
+EndSection
+
+- For systems with USB mice or PS/2 mice, the following 'ServerLayout'
+section should be used in place of the one provided:
+
+Section "ServerLayout"
+	Identifier	"wsfb"
+	Screen 0	"Screen0" 0 0
+	InputDevice	"wsmouse0" "CorePointer"
+	InputDevice	"Keyboard0" "CoreKeyboard"
+EndSection
+
+- For systems with both UPA and VGA framebuffers, the device parameter
+in the "Device" section must match the wsdisplay device corresponding
+to the console (/dev/ttyC0 for wsdisplay0, /dev/ttyD0 for wsdisplay1,
+etc).
+
+- For systems with UPA Creator/Creator3D/Elite3D framebuffers use 
+	DefaultDepth 24
+  in the "Screen" section.
+
+- What follows is a  whole sample configuration file. Copy it to
+  /etc/X11/xorg.conf and customize it as described above. 
+
+-- Cut Here --
+#
+# Unaccelerated, single display configuration
+#
+Section "ServerLayout"
+	Identifier	"wsfb"
+	Screen	0	"Screen0" 0 0
+	InputDevice    "wsmouse0" "CorePointer"
+	InputDevice    "Keyboard0" "CoreKeyboard"
+EndSection
+	
+Section "Files"
+	RgbPath      "/usr/X11R6/lib/X11/rgb"
+	FontPath     "/usr/X11R6/lib/X11/fonts/misc/"
+	FontPath     "/usr/X11R6/lib/X11/fonts/Type1/"
+	FontPath     "/usr/X11R6/lib/X11/fonts/CID/"
+	FontPath     "/usr/X11R6/lib/X11/fonts/75dpi/"
+EndSection
+
+Section "Module"
+    Load        "type1"
+    Load        "freetype"
+    Load        "glx"
+    Load        "extmod"
+EndSection
+
+# All Sun keyboards (USB Type 6, Serial Type 3/4/5/6)
+Section "InputDevice"
+	Identifier  "Keyboard0"
+	Driver      "keyboard"
+	Option	    "Protocol" 	  "wskbd"
+	Option	    "Device" 	  "/dev/wskbd0"
+	Option	    "XkbRules" 	  "xorg"
+	Option	    "XkbLayout"   "us"
+EndSection
+
+# USB Mice
+Section "InputDevice"
+	Identifier	"wsmouse0"
+	Driver		"mouse"
+	Option		"Protocol" "wsmouse"
+	Option		"Device"   "/dev/wsmouse0"
+EndSection
+
+# Serial mice on zstty ports
+Section "InputDevice"
+	Identifier	"zsmouse0"
+	Driver		"mouse"
+	Option		"Protocol" "SunMouse"
+	Option		"Device" "/dev/ttyc"
+	Option		"Baudrate" "1200"
+EndSection
+
+# Serial mice on com ports
+Section "InputDevice"
+	Identifier	"commouse0"
+	Driver		"mouse"
+	Option		"Protocol" "SunMouse"
+	Option		"Device" "/dev/tty00"
+	Option		"Baudrate" "1200"
+EndSection
+
+# All monitors
+Section "Monitor"
+	Identifier   "Monitor"
+	VendorName   "Unknown"
+	ModelName    "Unknown"
+# Adjust those to your monitor before using another device than wsfb 
+# or you can destroy it !!
+	HorizSync    31.5-60
+	VertRefresh  50-70
+EndSection
+
+# All framebuffers
+Section "Device"
+	Identifier	"Wsdisplay0"
+	Driver		"wsfb"
+	Option		"device" "/dev/ttyC0"
+EndSection
+
+# All framebuffers
+Section "Screen"
+	Identifier "Screen0"
+	Device     "Wsdisplay0"
+	Monitor    "Monitor"
+	DefaultDepth 8
+	SubSection "Display"
+		Depth     8
+	EndSubSection
+	SubSection "Display"
+		Depth     16
+	EndSubSection
+	SubSection "Display"
+		Depth     24
+	EndSubSection
+EndSection
+#
+# EOF
+#
+-- Cut Here --
+
+Single, accelerated display
+---------------------------
+Accelerated access to the framebuffer is only supported on machines with
+PCI VGA framebuffers.  To use it, retrieve the PCI bus, device and function
+of the video card, eg:
+
+	blade$ dmesg | grep vgafb
+	vgafb0 at pci0 dev 19 function 0 "ATI Rage XL" rev 0x27
+	wsdisplay0 at vgafb0: console (std, sun emulation), using wskbd0
+
+The framebuffer is on bus 0, device 19, function 0.  Now, using the
+configuration in the first section as a guide, replace the "Device" section
+with something like the following (replace 0:19:0 with the bus:dev:func
+of the framebuffer):
+
+	Section "Device"
+		Identifier	"Card0"
+		Driver		"ati"
+		BusID		"PCI:0:19:0"
+		Option		"composite_sync" "True"
+	EndSection
+
+It is also important that you modify the Monitor section and change the
+HorizSync and VertRefresh parameters with those of the monitor in use.
+Finally, customization of the Screen section will allow switching of
+resolutions and setting the default bit depth, e.g.:
+
+Section "Screen"
+	Identifier	"Screen0"
+	Device		"Card0"
+	Monitor		"Monitor"
+	DefaultDepth	24
+	SubSection "Display"
+		Depth	8
+		Modes	"640x480" "800x600" "1024x768"
+	EndSubSection
+	SubSection "Display"
+		Depth	16
+		Modes	"640x480" "800x600" "1024x768"
+	EndSubSection
+	SubSection "Display"
+		Depth	24
+		Modes	"640x480" "800x600" "1024x768"
+	EndSubSection
+EndSection
+
+See xorg.conf(5) for more options.
+
+Dual, unaccelerated display
+---------------------------
+Dual-headed displays are only supported on machines with SBus framebuffers.
+Starting with the configuration in the first section, three additional
+sections are added for the second framebuffer:
+
+Section "Device"
+	Identifier      "Wsdisplay1"
+	Driver          "wsfb"
+	Option          "device" "/dev/ttyD0"
+EndSection
+
+Section "Monitor"
+	Identifier   "Monitor1"
+	VendorName   "Unknown"
+	ModelName    "Unknown"
+# Adjust those to your monitor before using another device than wsfb
+# or you can destroy it !!
+	HorizSync    31.5-60
+	VertRefresh  50-70
+EndSection
+
+Section "Screen"
+	Identifier "Screen1"
+	Device     "Wsdisplay1"
+	Monitor    "Monitor1"
+	DefaultDepth 8
+	SubSection "Display"
+		Depth     8
+	EndSubSection
+	SubSection "Display"
+		Depth     16
+	EndSubSection
+	SubSection "Display"
+		Depth     24
+	EndSubSection
+EndSection
+
+The ServerLayout section is also changed to include the second framebuffer
+and its logical location relative to the first, e.g.:
+
+Section "ServerLayout"
+	Identifier	"wsfb"
+	Screen  0       "Screen0"
+	Screen  1       "Screen1" RightOf "Screen0"
+	InputDevice	"zsmouse0" "CorePointer"
+	InputDevice	"Keyboard0" "CoreKeyboard"
+EndSection
+
+See xorg.conf(5) for more options.
+
+problem_blurb
+
+$OpenBSD: README.sparc64,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $

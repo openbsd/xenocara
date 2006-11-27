@@ -1,0 +1,52 @@
+Post-installation instructions for X.Org on OpenBSD/alpha
+---------------------------------------------------------
+
+OpenBSD 3.7 and later uses the X.Org X server on alpha. 
+
+Currently, TGA video hardware as well as a few VGA cards are
+supported.
+
+A special driver reproduces the functionality of Xtga in previous
+releases:  wsfb. It uses the TGA as a dumb framebuffer at 8 or 24 bits
+per pixel, depending on the card model. 
+A default /etc/X11/xorg.conf is installed that uses this driver. So
+you can just use 'startx' or xdm to start X without further
+configuration. 
+
+VGA cards support is available only on BWX based machines.
+The following cards have been successfully tested for now:
+
+* 3DFX Interactive Banshee
+* 3DLabs Permedia 2 (8, 15, 16 and 24 bits depth) 
+* ATI Rage Pro (works with 'Option "NoAccel"')
+* ATI Rage 128
+* Cirrus Logic CL5430 (works with 'Option "NoAccel"')
+* Cirrus Logic GD5446 (8, 16 and 24 bits depth)
+* Matrox MGA 2064 (8, 16 and 24 bits depth)
+
+Make sure your system has support for X enabled:
+
+You must have 'option APERTURE' in your kernel configuration and
+uncomment the line that says:  
+
+	machdep.allowaperture=1
+
+in /etc/sysctl.conf.  See xf86(4) for more details about security
+issues related to this.  After changing this variable in sysctl.conf,
+you will need to reboot for the change to take effect. 
+
+See the tga(4) manual page for instructions on setting
+the resolution of a TGA card.
+
+Start either xdm(1) or startx(1).
+
+   a. Start xdm(1), the X display manager by activating the xdm_flags option
+      in /etc/rc.conf(8) or /etc/rc.conf.local(8).  You need to disable
+      the getty process attached to /dev/ttyC0 if your video card is a TGA.
+
+   b. Start startx(1) from a console shell.  It is the X script that starts
+      the X server and a few X applications, including a window manager.
+
+problem_blurb
+
+$OpenBSD: README.alpha,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $

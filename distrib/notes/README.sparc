@@ -1,0 +1,76 @@
+Post-installation instructions for X.Org on OpenBSD/sparc
+---------------------------------------------------------
+
+1. Sun setup is easy:
+
+   Typical Xorg use on Sun sparc-based machines requires no special
+   configuration.  The provided /etc/X11/xorg.conf will work in most
+   setups.
+
+   However, multi-headed configurations will require some changes to this
+   file. Starting from the existing /etc/X11/xorg.conf, three additional
+   sections are added for the second framebuffer:
+
+	Section "Device"
+		Identifier      "Wsdisplay1"
+		Driver          "wsfb"
+		Option          "device" "/dev/ttyD0"
+	EndSection
+
+	Section "Monitor"
+		Identifier   "Monitor1"
+		VendorName   "Unknown"
+		ModelName    "Unknown"
+	# Adjust those to your monitor before using another device than wsfb
+	# or you can destroy it !!
+		HorizSync    31.5-60
+		VertRefresh  50-70
+	EndSection
+
+	Section "Screen"
+		Identifier "Screen1"
+		Device     "Wsdisplay1"
+		Monitor    "Monitor1"
+		SubSection "Display"
+			Depth     1
+		EndSubSection
+		SubSection "Display"
+			Depth     8
+		EndSubSection
+		SubSection "Display"
+			Depth     16
+		EndSubSection
+		SubSection "Display"
+			Depth     24
+		EndSubSection
+		SubSection "Display"
+			Depth     32
+		EndSubSection
+	EndSection
+   
+   The ServerLayout section is also changed to include the second framebuffer
+   and its logical location relative to the first, eg:
+
+	Section "ServerLayout"
+		Identifier	"wsfb"
+		Screen  0       "Screen0"
+		Screen  1       "Screen1" RightOf "Screen0"
+		InputDevice	"zsmouse0" "CorePointer"
+		InputDevice	"Keyboard0" "CoreKeyboard"
+	EndSection
+
+   See xorg.conf(5) for more options.
+
+2. Start either xdm(1) or startx(1).
+
+   a. Start xdm(1), the X display manager by activating the xdm_flags option
+      in /etc/rc.conf(8) or /etc/rc.conf.local(8).  You do not need to disable
+      the console getty.
+
+   b. Start startx(1) from a console shell.  It is the X script that starts
+      the X server and a few X applications, including a window manager.
+
+
+problem_blurb
+
+$OpenBSD: README.sparc,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $

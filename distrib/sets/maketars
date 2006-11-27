@@ -1,0 +1,40 @@
+#!/bin/sh
+#	$OpenBSD: maketars,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+
+# xy
+RELEASE=$1
+Release=$2
+# x.y
+
+if [ "X${RELEASE}" = "X" ]; then
+	echo "Usage: `basename $0` <OSREVISION>"
+	exit 1
+fi
+
+if [ "X${RELEASEDIR}" = "X" ]; then
+	echo RELEASEDIR must be set
+	exit 1
+fi
+
+if [ "X${DESTDIR}" = "X" ]; then
+	echo DESTDIR must be set
+	exit 1
+fi
+
+arch=${MACHINE}
+pwd=`pwd`
+listsdir=`pwd`/lists
+tardir=$RELEASEDIR
+
+lists=`sh ./genlists $arch`
+
+cd $DESTDIR
+
+for setname in $lists; do
+	echo -n "${setname}: "
+	(cd $pwd; sh gensetlist $setname $Release) | sort | \
+	    pax -w -d | gzip -9 > ${tardir}/${setname}${RELEASE}.tgz
+	echo    "done."
+done
+
+echo    "done."

@@ -1,0 +1,12 @@
+#!/bin/sh
+#	$OpenBSD: genlists,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+
+arch=$1
+lists="xbase xetc xserv xshare xfont"
+
+l=""
+for list in $lists  
+do
+	grep "$arch:$list" nocreate > /dev/null 2>&1 || l="$l $list"
+done
+echo $l

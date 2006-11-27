@@ -1,0 +1,8 @@
+Post-installation instructions for X.Org on OpenBSD/hppa
+--------------------------------------------------------
+
+There is no X server for hppa.  Only userland X.
+
+problem_blurb
+
+$OpenBSD: README.hppa,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $

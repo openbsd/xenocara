@@ -1,0 +1,11 @@
+dnl $OpenBSD: m4.common,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+dnl
+changequote(`{:-',`-:}')dnl
+dnl
+define({:-XOrgVersion-:},{:-6.9.0-:})dnl
+dnl
+define({:-problem_blurb-:},
+{:-------------------------
+If you encounter a problem, you can browse the entire documentation 
+in /usr/X11R6/lib/X11/doc.-:})dnl
+dnl

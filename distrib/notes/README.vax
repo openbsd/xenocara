@@ -1,0 +1,24 @@
+Post-installation instructions for X.Org on OpenBSD/vax
+-------------------------------------------------------
+
+Currently, an X server is supported on the VAXstation 4000 models
+with either lcg(4) or lcspx(4) frame buffers. Other frame buffers
+are not supported yet, even though some of them are supported by
+the OpenBSD kernel.
+
+Typical Xorg use on VAX machines requires no special configuration.
+The provided /etc/X11/xorg.conf will work in most setups.
+
+You can run the X server either with xdm(1) or startx(1).
+
+   a. Start xdm(1), the X display manager by activating the xdm_flags option
+      in /etc/rc.conf(8) or /etc/rc.conf.local(8).  You do not need to disable
+      the console getty.
+
+   b. Start startx(1) from a console shell.  It is the X script that starts
+      the X server and a few X applications, including a window manager.
+
+
+problem_blurb
+
+$OpenBSD: README.vax,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $

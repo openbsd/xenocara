@@ -1,0 +1,12 @@
+#!/bin/sh
+#	$OpenBSD: makeflist,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+
+arch=$MACHINE
+Release=$1
+listsdir=`pwd`/lists
+
+lists=`sh ./genlists $arch`
+for setname in $lists
+do
+	sh ./gensetlist $setname $Release
+done | sort

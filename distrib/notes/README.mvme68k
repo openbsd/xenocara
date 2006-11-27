@@ -1,0 +1,8 @@
+Post-installation instructions for X.Org on OpenBSD/mvme68k
+-----------------------------------------------------------
+
+There is no X server for mvme68k.  Only userland X.
+
+problem_blurb
+
+$OpenBSD: README.mvme68k,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $

@@ -1,0 +1,14 @@
+#!/bin/sh
+#	$OpenBSD: gensetlist,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+
+arch=$MACHINE
+listsdir=`pwd`/lists
+
+setname=$1
+Release=$2
+
+if [ "$setname" = "xfont" ]; then
+        arch=x11r6
+fi
+
+cat $listsdir/$setname/mi $listsdir/$setname/md.${arch} 
