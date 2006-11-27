@@ -1,4 +1,4 @@
-#     $OpenBSD: BSD.x11.dist,v 1.1.1.1 2006/11/25 14:57:28 matthieu Exp $
+#     $OpenBSD: BSD.x11.dist,v 1.2 2006/11/27 19:16:59 matthieu Exp $
 #     $FreeBSD: BSD.x11.dist,v 1.2 1997/06/10 07:55:10 asami Exp $
 #
 
@@ -56,6 +56,8 @@
     ..
     lib
         X11
+            app-defaults
+	    ..
             config
             ..
             doc
@@ -144,6 +146,48 @@
             ..
             xinit
             ..
+            xkb
+                compat
+                ..
+                compiled
+                ..
+                geometry
+                    digital
+                    ..
+                    sgi
+                    ..
+                ..
+                keycodes
+                    digital
+                    ..
+                    sgi
+                    ..
+                ..
+                keymap
+                    digital
+                    ..
+                    sgi
+                    ..
+                    sun
+                    ..
+                ..
+                rules
+                ..
+                semantics
+                ..
+                symbols
+                    digital
+                    ..
+                    fujitsu
+                    ..
+                    nec
+                    ..
+                    sony
+                    ..
+                    sun
+                    ..
+                ..
+	    ..
             xserver
             ..
             xsm
@@ -194,50 +238,6 @@
     ..
     share
 	X11
-            app-defaults
-            ..
-            xkb
-                compat
-                ..
-                compiled
-                ..
-                geometry
-                    digital
-                    ..
-                    sgi
-                    ..
-                ..
-                keycodes
-                    digital
-                    ..
-                    sgi
-                    ..
-                ..
-                keymap
-                    digital
-                    ..
-                    sgi
-                    ..
-                    sun
-                    ..
-                ..
-                rules
-                ..
-                semantics
-                ..
-                symbols
-                    digital
-                    ..
-                    fujitsu
-                    ..
-                    nec
-                    ..
-                    sony
-                    ..
-                    sun
-                    ..
-                ..
-	    ..
 	..
 	aclocal
 	..
