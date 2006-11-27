@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2006/11/27 20:35:21 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2006/11/27 20:39:39 matthieu Exp $
 
 PROG=	xsystrace
 MAN=	xsystrace.1
@@ -16,6 +16,7 @@ beforeinstall:
 	${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} \
 		${.CURDIR}/Xsystrace.ad ${PREFIX}/${LIBDIR}/X11/app-defaults/Xsystrace
 
+X11BASE?= /usr/X11R6
 MANDIR=	${X11BASE}/man/cat
 
 .include <bsd.prog.mk>
