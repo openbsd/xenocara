@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.1.1.1 2006/11/25 17:37:52 matthieu Exp $
+# $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 17:37:52 matthieu Exp $
 #
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 # 

@@ -1,5 +1,5 @@
 # 
-#  $Id: Makefile.am,v 1.1.1.1 2006/11/25 16:53:50 matthieu Exp $
+#  $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 16:53:50 matthieu Exp $
 # 
 #  Copyright © 2003 Keith Packard, Noah Levitt
 # 
