@@ -18618,7 +18618,7 @@ else
   build_v6=yes
 fi;
 
-if test "x$build_v6" = xyes; then
+# if test "x$build_v6" = xyes; then
 
 
 if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
@@ -18810,7 +18810,7 @@ fi
 
 
 
-fi
+# fi
 
 
 # Whether to build Xaw7
@@ -18823,7 +18823,7 @@ else
   build_v7=yes
 fi;
 
-if test "x$build_v7" = xyes; then
+# if test "x$build_v7" = xyes; then
 
 pkg_failed=no
 echo "$as_me:$LINENO: checking for XAW7" >&5
@@ -18910,7 +18910,7 @@ fi
 
 
 
-fi
+# fi
 
 
 # Whether to build Xaw8
