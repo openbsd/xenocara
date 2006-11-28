@@ -1,8 +1,9 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2006/11/28 15:41:12 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2006/11/28 20:13:42 matthieu Exp $
 
 PIXMAPDIR=/etc/X11/xdm/pixmaps
 
 CONFIGURE_ARGS= --enable-privsep \
+	--disable-dynamic-greeter \
 	--with-xdmlibdir=/etc/X11/xdm \
 	--with-pixmapdir=$(PIXMAPDIR) \
 	--with-bw-pixmap=OpenBSD_1bpp.xpm \
