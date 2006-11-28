@@ -1,4 +1,3 @@
-# $Id: Makefile.am,v 1.1.1.1 2006/11/25 20:29:54 matthieu Exp $
 # 
 #  Copyright 2005  Red Hat, Inc.
 # 
