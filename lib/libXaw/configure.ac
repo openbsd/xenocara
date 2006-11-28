@@ -51,12 +51,12 @@ AC_ARG_ENABLE(xaw6, AC_HELP_STRING([--disable-xaw6],
 				[Disable building of libXaw.so.6]),
 			[build_v6=$enableval], [build_v6=yes])
 
-if test "x$build_v6" = xyes; then
+# if test "x$build_v6" = xyes; then
    PKG_CHECK_MODULES(XAW6, xproto x11 xext xextproto xt xmu)
 
    AC_SUBST(XAW6_CFLAGS)
    AC_SUBST(XAW6_LIBS)
-fi
+# fi
 
 
 # Whether to build Xaw7
@@ -65,12 +65,12 @@ AC_ARG_ENABLE(xaw7, AC_HELP_STRING([--disable-xaw7],
 				[Disable building of libXaw.so.7]),
 			[build_v7=$enableval], [build_v7=yes])
 
-if test "x$build_v7" = xyes; then
+# if test "x$build_v7" = xyes; then
    PKG_CHECK_MODULES(XAW7, xproto x11 xext xextproto xt xmu xpm)
 
    AC_SUBST(XAW7_CFLAGS)
    AC_SUBST(XAW7_LIBS)
-fi
+# fi
 
 
 # Whether to build Xaw8
