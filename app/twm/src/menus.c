@@ -2155,8 +2155,8 @@ ExecuteFunction(int func, char *action, Window w, TwmWindow *tmp_win,
 	break;
 
     case F_FILE:
-	action = ExpandFilename(action);
-	fd = open(action, O_RDONLY);
+	ptr = ExpandFilename(action);
+	fd = open(ptr, O_RDONLY);
 	if (fd >= 0)
 	{
 	    count = read(fd, buff, MAX_FILE_SIZE - 1);
@@ -2168,8 +2168,9 @@ ExecuteFunction(int func, char *action, Window w, TwmWindow *tmp_win,
 	else
 	{
 	    fprintf (stderr, "%s:  unable to open file \"%s\"\n", 
-		     ProgramName, action);
+		     ProgramName, ptr);
 	}
+	if (ptr != action) free(ptr);
 	break;
 
     case F_REFRESH:
