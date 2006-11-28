@@ -1,4 +1,4 @@
-.\" $OpenBSD: wsfb.man,v 1.1.1.1 2006/11/26 20:22:11 matthieu Exp $
+.\" $OpenBSD: wsfb.man,v 1.2 2006/11/28 19:59:08 matthieu Exp $
 .\"
 .\" Copyright (c) 2001,2002 Matthieu Herrb
 .\" All rights reserved.
@@ -49,7 +49,7 @@ The following framebuffer depths are supported: 1, 8, 16 and 24, given
 that the wsdisplay device underneath supports them.
 .br
 A StaticGray monochrome visual is provided for depth 1,
-all visual types are supported for depth  8 and a TrueColor visual is
+all visual types are supported for depth 8 and a TrueColor visual is
 supported for the other depths.
 Multi-head configurations are supported.
 .SH SUPPORTED HARDWARE
@@ -89,8 +89,13 @@ See shadowfb(__drivermansuffix__) for further information.
 Default: on for depths were it is supported, off otherwise.
 .br
 ShadowFB is currently not supported on monochrome displays.
+.TP
+.BI "Option \*qRotate\*q \*q" string \*q
+Enable rotation of the display. The supported values are "CW" (clockwise,
+90 degrees), "UD" (upside down, 180 degrees) and "CCW" (counter clockwise,
+270 degrees). Implies use of the shadow framebuffer layer.   Default: off.
 .SH "SEE ALSO"
 XFree86(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1),
-X(__miscmansuffix__), fbdev(__drivermansuffix__)
+X(__miscmansuffix__), wsdisplay(__drivermansuffix__)
 .SH AUTHORS
 Authors include: Matthieu Herrb, Gerd Knorr, Michel Dänzer, Geert Uytterhoeven

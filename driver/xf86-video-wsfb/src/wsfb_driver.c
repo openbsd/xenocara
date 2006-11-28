@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.1.1.1 2006/11/26 20:22:11 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.2 2006/11/28 19:59:08 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -76,7 +76,7 @@
 #include <sys/mman.h>
 #endif
 
-#ifdef USE_PRIVSEP
+#ifdef X_PRIVSEP
 extern int priv_open_device(const char *);
 #else
 #define priv_open_device(n)    open(n,O_RDWR|O_NONBLOCK|O_EXCL)
@@ -114,6 +114,7 @@ static Bool WsfbScreenInit(int, ScreenPtr, int, char **);
 static Bool WsfbCloseScreen(int, ScreenPtr);
 static void *WsfbWindowLinear(ScreenPtr, CARD32, CARD32, int, CARD32 *,
 			      void *);
+static void WsfbPointerMoved(int, int, int);
 static Bool WsfbEnterVT(int, int);
 static void WsfbLeaveVT(int, int);
 static Bool WsfbSwitchMode(int, DisplayModePtr, int);
@@ -138,20 +139,26 @@ static Bool WsfbDriverFunc(ScrnInfoPtr pScrn, xorgDriverFuncOp op,
 static int wsfb_open(char *);
 static pointer wsfb_mmap(size_t, off_t, int);
 
+enum { WSFB_ROTATE_NONE = 0,
+       WSFB_ROTATE_CCW = 90,
+       WSFB_ROTATE_UD = 180,
+       WSFB_ROTATE_CW = 270
+};
+
 /*
  * This is intentionally screen-independent.  It indicates the binding
  * choice made in the first PreInit.
  */
 static int pix24bpp = 0;
 
-#define WSFB_VERSION		4000
+#define VERSION			4000
 #define WSFB_NAME		"wsfb"
 #define WSFB_DRIVER_NAME	"wsfb"
 #define WSFB_MAJOR_VERSION	0
 #define WSFB_MINOR_VERSION	1
 
-_X_EXPORT DriverRec WSFB = {
-	WSFB_VERSION,
+DriverRec WSFB = {
+	VERSION,
 	WSFB_DRIVER_NAME,
 	WsfbIdentify,
 	WsfbProbe,
@@ -170,10 +177,12 @@ static SymTabRec WsfbChipsets[] = {
 /* Supported options */
 typedef enum {
 	OPTION_SHADOW_FB,
+	OPTION_ROTATE
 } WsfbOpts;
 
 static const OptionInfoRec WsfbOptions[] = {
 	{ OPTION_SHADOW_FB, "ShadowFB", OPTV_BOOLEAN, {0}, FALSE},
+	{ OPTION_ROTATE, "Rotate", OPTV_STRING, {0}, FALSE},
 	{ -1, NULL, OPTV_NONE, {0}, FALSE}
 };
 
@@ -184,8 +193,12 @@ static const char *fbSymbols[] = {
 	NULL
 };
 static const char *shadowSymbols[] = {
+	"shadowAlloc",
 	"shadowInit",
+	"shadowUpdatePacked",
 	"shadowUpdatePackedWeak",
+	"shadowUpdateRotatePacked",
+	"shadowUpdateRotatePackedWeak",
 	NULL
 };
 
@@ -242,13 +255,13 @@ typedef struct {
 	unsigned char*		fbstart;
 	unsigned char*		fbmem;
 	size_t			fbmem_len;
+	unsigned char*		shadowmem;
+	int			rotate;
 	Bool			shadowFB;
 	CloseScreenProcPtr	CloseScreen;
+	void			(*PointerMoved)(int, int, int);
 	EntityInfoPtr		pEnt;
 	struct wsdisplay_cmap	saved_cmap;
-	unsigned char		saved_red[256];
-	unsigned char		saved_green[256];
-	unsigned char		saved_blue[256];
 
 #ifdef XFreeXDGA
 	/* DGA info */
@@ -401,7 +414,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 {
 	WsfbPtr fPtr;
 	int default_depth, wstype;
-	char *dev;
+	char *dev, *s;
 	char *mod = NULL;
 	const char *reqSym = NULL;
 	Gamma zeros = {0.0, 0.0, 0.0};
@@ -447,9 +460,51 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 			   strerror(errno));
 		return FALSE;
 	}
+	/*
+	 * Allocate room for saving the colormap 
+	 */
+	if (fPtr->info.cmsize != 0) {
+		fPtr->saved_cmap.red =
+		    (unsigned char *)xalloc(fPtr->info.cmsize);
+		if (fPtr->saved_cmap.red == NULL) {
+			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			    "Cannot malloc %d bytes\n", fPtr->info.cmsize);
+			return FALSE;
+		}
+		fPtr->saved_cmap.green =
+		    (unsigned char *)xalloc(fPtr->info.cmsize);
+		if (fPtr->saved_cmap.green == NULL) {
+			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			    "Cannot malloc %d bytes\n", fPtr->info.cmsize);
+			xfree(fPtr->saved_cmap.red);
+			return FALSE;
+		}
+		fPtr->saved_cmap.blue =
+		    (unsigned char *)xalloc(fPtr->info.cmsize);
+		if (fPtr->saved_cmap.blue == NULL) {
+			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			    "Cannot malloc %d bytes\n", fPtr->info.cmsize);
+			xfree(fPtr->saved_cmap.red);
+			xfree(fPtr->saved_cmap.green);
+			return FALSE;
+		}
+	}
 
-	/* Handle depth */
-	default_depth = fPtr->info.depth <= 24 ? fPtr->info.depth : 24;
+	/*
+	 * Handle depth
+	 */
+	if (fPtr->info.depth == 8) {
+		/*
+		 * We might run on a byte addressable frame buffer,
+		 * but with less than 8 bits per pixel. We can know this
+		 * from the colormap size.
+		 */
+		default_depth = 1;
+		while ((1 << default_depth) < fPtr->info.cmsize)
+			default_depth++;
+	} else
+		default_depth = fPtr->info.depth <= 24 ? fPtr->info.depth : 24;
+
 	if (!xf86SetDepthBpp(pScrn, default_depth, default_depth,
 		fPtr->info.depth,
 		fPtr->info.depth >= 24 ? Support24bppFb|Support32bppFb : 0))
@@ -473,18 +528,40 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	if (pScrn->depth > 8) {
 		rgb zeros = { 0, 0, 0 }, masks;
 
-		if (wstype == WSDISPLAY_TYPE_SUN24 ||
-		    wstype == WSDISPLAY_TYPE_SUNCG12 ||
-		    wstype == WSDISPLAY_TYPE_SUNCG14 ||
-		    wstype == WSDISPLAY_TYPE_SUNTCX ||
-		    wstype == WSDISPLAY_TYPE_SUNFFB) {
+		switch (wstype) {
+		case WSDISPLAY_TYPE_SUN24:
+		case WSDISPLAY_TYPE_SUNCG12:
+		case WSDISPLAY_TYPE_SUNCG14:
+		case WSDISPLAY_TYPE_SUNTCX:
+		case WSDISPLAY_TYPE_SUNFFB:
+		case WSDISPLAY_TYPE_AGTEN:
+		case WSDISPLAY_TYPE_XVIDEO:
+		case WSDISPLAY_TYPE_SUNLEO:
 			masks.red = 0x0000ff;
 			masks.green = 0x00ff00;
 			masks.blue = 0xff0000;
-		} else {
+			break;
+		case WSDISPLAY_TYPE_PXALCD:
+			masks.red = 0x1f << 11;
+			masks.green = 0x3f << 5;
+			masks.blue = 0x1f;
+			break;
+		case WSDISPLAY_TYPE_MAC68K:
+			if (pScrn->depth > 16) {
+				masks.red = 0x0000ff;
+				masks.green = 0x00ff00;
+				masks.blue = 0xff0000;
+			} else {
+				masks.red = 0x1f << 11;
+				masks.green = 0x3f << 5;
+				masks.blue = 0x1f;
+			}
+			break;
+		default:
 			masks.red = 0;
 			masks.green = 0;
 			masks.blue = 0;
+			break;
 		}
 
 		if (!xf86SetWeight(pScrn, zeros, masks))
@@ -507,10 +584,12 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	xf86SetGamma(pScrn,zeros);
 
 	pScrn->progClock = TRUE;
-	pScrn->rgbBits   = 8;
+	if (pScrn->depth == 8)
+		pScrn->rgbBits = 6;
+	else 
+		pScrn->rgbBits   = 8;
 	pScrn->chipset   = "wsfb";
-	pScrn->videoRam  = fPtr->linebytes * fPtr->info.height
-		* fPtr->info.depth;
+	pScrn->videoRam  = fPtr->linebytes * fPtr->info.height;
 
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Vidmem: %dk\n",
 		   pScrn->videoRam/1024);
@@ -531,9 +610,41 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 		if (xf86ReturnOptValBool(fPtr->Options,
 					 OPTION_SHADOW_FB, FALSE)) {
 			xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-				   "Shadow FB option ignored on depth 1");
+				   "Shadow FB option ignored on depth < 8");
 		}
 
+	/* rotation */
+	fPtr->rotate = WSFB_ROTATE_NONE;
+	if ((s = xf86GetOptValString(fPtr->Options, OPTION_ROTATE))) {
+		if (pScrn->depth >= 8) {
+			if (!xf86NameCmp(s, "CW")) {
+				fPtr->shadowFB = TRUE;
+				fPtr->rotate = WSFB_ROTATE_CW;
+				xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
+				    "Rotating screen clockwise\n");
+			} else if (!xf86NameCmp(s, "CCW")) {
+				fPtr->shadowFB = TRUE;
+				fPtr->rotate = WSFB_ROTATE_CCW;
+				xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
+				    "Rotating screen counter clockwise\n");
+			} else if (!xf86NameCmp(s, "UD")) {
+				fPtr->shadowFB = TRUE;
+				fPtr->rotate = WSFB_ROTATE_UD;
+				xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
+				    "Rotating screen upside down\n");
+			} else {
+				xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
+				    "\"%s\" is not a valid value for Option "
+				    "\"Rotate\"\n", s);
+				xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+				    "Valid options are \"CW\", \"CCW\","
+				    " or \"UD\"\n");
+			}
+		} else {
+			xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+			    "Option \"Rotate\" ignored on depth < 8");
+		}
+	}
 	/* fake video mode struct */
 	mode = (DisplayModePtr)xalloc(sizeof(DisplayModeRec));
 	mode->prev = mode;
@@ -612,7 +723,7 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
 	WsfbPtr fPtr = WSFBPTR(pScrn);
 	VisualPtr visual;
-	int ret, flags, width, height;
+	int ret, flags, width, height, ncolors;
 	int wsmode = WSDISPLAYIO_MODE_DUMBFB;
 	size_t len;
 
@@ -628,6 +739,7 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 #endif
 	switch (fPtr->info.depth) {
 	case 1:
+	case 4:
 	case 8:
 		len = fPtr->linebytes*fPtr->info.height;
 		break;
@@ -684,23 +796,42 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	if (!miSetPixmapDepths())
 		return FALSE;
 
-	height = pScrn->virtualY;
-	width = pScrn->virtualX;
+	if (fPtr->rotate == WSFB_ROTATE_CW 
+	    || fPtr->rotate == WSFB_ROTATE_CCW) {
+		height = pScrn->virtualX;
+		width = pScrn->displayWidth = pScrn->virtualY;
+	} else {
+		height = pScrn->virtualY;
+		width = pScrn->virtualX;
+	}
+	if (fPtr->rotate && !fPtr->PointerMoved) {
+		fPtr->PointerMoved = pScrn->PointerMoved;
+		pScrn->PointerMoved = WsfbPointerMoved;
+	}
 
-	fPtr->fbstart   = fPtr->fbmem;
+	/* shadowfb */
+	if (fPtr->shadowFB) {
+		if ((fPtr->shadowmem = shadowAlloc(width, height,
+						   pScrn->bitsPerPixel)) == NULL)
+		return FALSE;
 
+		fPtr->fbstart   = fPtr->shadowmem;
+	} else {
+		fPtr->shadowmem = NULL;
+		fPtr->fbstart   = fPtr->fbmem;
+	}
 	switch (pScrn->bitsPerPixel) {
 	case 1:
 		ret = xf1bppScreenInit(pScreen, fPtr->fbstart,
 				       width, height,
 				       pScrn->xDpi, pScrn->yDpi,
-				       pScrn->displayWidth);
+				       fPtr->linebytes * 8);
 		break;
 	case 4:
 		ret = xf4bppScreenInit(pScreen, fPtr->fbstart,
 				       width, height,
 				       pScrn->xDpi, pScrn->yDpi,
-				       pScrn->displayWidth);
+				       fPtr->linebytes * 2);
 		break;
 	case 8:
 	case 16:
@@ -736,7 +867,7 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		}
 	}
 
-	if (pScrn->bitsPerPixel > 8) {
+	if (pScrn->bitsPerPixel >= 8) {
 		if (!fbPictureInit(pScreen, NULL, 0))
 			xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 				   "RENDER extension initialisation failed.");
@@ -746,15 +877,33 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 				   "Shadow FB not available on < 8 depth");
 		} else {
-			if (!shadowInit(pScreen, shadowUpdatePackedWeak(),
-					WsfbWindowLinear))
-			return FALSE;
+			if (!shadowSetup(pScreen) ||
+			    !shadowAdd(pScreen, NULL,
+				fPtr->rotate ? shadowUpdateRotatePackedWeak() :
+				shadowUpdatePackedWeak(),
+				WsfbWindowLinear, fPtr->rotate, NULL)) {
+				xf86DrvMsg(scrnIndex, X_ERROR,
+				    "Shadow FB initialization failed\n");
+				return FALSE;
+			}
 		}
 	}
 
 #ifdef XFreeXDGA
-	WsfbDGAInit(pScrn, pScreen);
+	if (!fPtr->rotate) 
+		WsfbDGAInit(pScrn, pScreen);
+	else 
+		xf86DrvMsg(scrnIndex, X_INFO, "Rotated display, "
+		    "disabling DGA\n");
 #endif
+	if (fPtr->rotate) {
+		xf86DrvMsg(scrnIndex, X_INFO, "Enabling Driver Rotation, "
+		    "disabling RandR\n");
+		xf86DisableRandR();
+		if (pScrn->bitsPerPixel == 24) 
+			xf86DrvMsg(scrnIndex, X_WARNING, 
+			    "Rotation might be broken in 24 bpp\n");
+	}
 
 	xf86SetBlackWhitePixels(pScreen);
 	miInitializeBackingStore(pScreen);
@@ -763,11 +912,22 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	/* software cursor */
 	miDCInitialize(pScreen, xf86GetPointerScreenFuncs());
 
-	/* colormap */
+	/*
+	 * Colormap
+	 *
+	 * Note that, even on less than 8 bit depth frame buffers, we
+	 * expect the colormap to be programmable with 8 bit values.
+	 * As of now, this is indeed the case on all OpenBSD supported
+	 * graphics hardware.
+	 */
 	if (!miCreateDefColormap(pScreen))
 		return FALSE;
-		flags = CMAP_RELOAD_ON_MODE_SWITCH;
-	if(!xf86HandleColormaps(pScreen, 256, 8, WsfbLoadPalette,
+	flags = CMAP_RELOAD_ON_MODE_SWITCH;
+	ncolors = fPtr->info.cmsize;
+	/* on StaticGray visuals, fake a 256 entries colormap */
+	if (ncolors == 0)
+		ncolors = 256;
+	if(!xf86HandleColormaps(pScreen, ncolors, 8, WsfbLoadPalette,
 				NULL, flags))
 		return FALSE;
 
@@ -809,6 +969,8 @@ WsfbCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
 		fPtr->fbmem = NULL;
 	}
+	if (fPtr->shadowmem)
+		xfree(fPtr->shadowmem);
 #ifdef XFreeXDGA
 	if (fPtr->pDGAMode) {
 		xfree(fPtr->pDGAMode);
@@ -838,6 +1000,44 @@ WsfbWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
 		fPtr->linebytes = *size;
 	}
 	return ((CARD8 *)fPtr->fbmem + row *fPtr->linebytes + offset);
+}
+
+static void
+WsfbPointerMoved(int index, int x, int y)
+{
+    ScrnInfoPtr pScrn = xf86Screens[index];
+    WsfbPtr fPtr = WSFBPTR(pScrn);
+    int newX, newY;
+
+    switch (fPtr->rotate)
+    {
+    case WSFB_ROTATE_CW:
+	/* 90 degrees CW rotation. */
+	newX = pScrn->pScreen->height - y - 1;
+	newY = x;
+	break;
+
+    case WSFB_ROTATE_CCW:
+	/* 90 degrees CCW rotation. */
+	newX = y;
+	newY = pScrn->pScreen->width - x - 1;
+	break;
+
+    case WSFB_ROTATE_UD:
+	/* 180 degrees UD rotation. */
+	newX = pScrn->pScreen->width - x - 1;
+	newY = pScrn->pScreen->height - y - 1;
+	break;
+
+    default:
+	/* No rotation. */
+	newX = x;
+	newY = y;
+	break;
+    }
+
+    /* Pass adjusted pointer coordinates to wrapped PointerMoved function. */
+    (*fPtr->PointerMoved)(index, newX, newY);
 }
 
 static Bool
@@ -908,7 +1108,7 @@ WsfbLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
 		if (ioctl(fPtr->fd,WSDISPLAYIO_PUTCMAP, &cmap) == -1)
 			ErrorF("ioctl FBIOPUTCMAP: %s\n", strerror(errno));
 	} else {
-		/* Change all colors in 2 syscalls */
+		/* Change all colors in 2 ioctls */
 		/* and limit the data to be transfered */
 		for (i = 0; i < numColors; i++) {
 			if (indices[i] < indexMin)
@@ -964,11 +1164,12 @@ WsfbSave(ScrnInfoPtr pScrn)
 	WsfbPtr fPtr = WSFBPTR(pScrn);
 
 	TRACE_ENTER("WsfbSave");
+
+	if (fPtr->info.cmsize == 0)
+		return;
+
 	fPtr->saved_cmap.index = 0;
-	fPtr->saved_cmap.count = 256;
-	fPtr->saved_cmap.red = fPtr->saved_red;
-	fPtr->saved_cmap.green = fPtr->saved_green;
-	fPtr->saved_cmap.blue = fPtr->saved_blue;
+	fPtr->saved_cmap.count = fPtr->info.cmsize;
 	if (ioctl(fPtr->fd, WSDISPLAYIO_GETCMAP,
 		  &(fPtr->saved_cmap)) == -1) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -985,16 +1186,14 @@ WsfbRestore(ScrnInfoPtr pScrn)
 
 	TRACE_ENTER("WsfbRestore");
 
-	/* reset colormap for text mode */
-	fPtr->saved_cmap.index = 0;
-	fPtr->saved_cmap.count = 256;
-	fPtr->saved_cmap.red = fPtr->saved_red;
-	fPtr->saved_cmap.green = fPtr->saved_green;
-	fPtr->saved_cmap.blue = fPtr->saved_blue;
-	if (ioctl(fPtr->fd, WSDISPLAYIO_PUTCMAP,
-		  &(fPtr->saved_cmap)) == -1) {
-		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-			   "error restoring colormap %s\n", strerror(errno));
+	if (fPtr->info.cmsize != 0) {
+		/* reset colormap for text mode */
+		if (ioctl(fPtr->fd, WSDISPLAYIO_PUTCMAP,
+			  &(fPtr->saved_cmap)) == -1) {
+			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+				   "error restoring colormap %s\n",
+				   strerror(errno));
+		}
 	}
 
 	/* Clear the screen */
