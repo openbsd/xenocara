@@ -219,13 +219,15 @@ TRANS(ParseAddress) (char *address, char **protocol, char **host, char **port)
     char	*_protocol, *_host, *_port;
     char	hostnamebuf[256];
     int		_host_len;
+    size_t	len;
 
     PRMSG (3,"ParseAddress(%s)\n", address, 0, 0);
 
     /* Copy the string so it can be changed */
 
-    tmpptr = mybuf = (char *) xalloc (strlen (address) + 1);
-    strcpy (mybuf, address);
+    len = strlen (address) + 1;
+    tmpptr = mybuf = (char *) xalloc (len);
+    strlcpy (mybuf, address, len);
 
     /* Parse the string to get each component */
     
@@ -364,8 +366,8 @@ TRANS(ParseAddress) (char *address, char **protocol, char **host, char **port)
      * Now that we have all of the components, allocate new
      * string space for them.
      */
-
-    if ((*protocol = (char *) xalloc(strlen (_protocol) + 1)) == NULL)
+    len = strlen (_protocol) + 1;
+    if ((*protocol = (char *) xalloc(len)) == NULL)
     {
 	/* Malloc failed */
 	*port = NULL;
@@ -375,9 +377,10 @@ TRANS(ParseAddress) (char *address, char **protocol, char **host, char **port)
 	return 0;
     }
     else
-        strcpy (*protocol, _protocol);
+        strlcpy (*protocol, _protocol, len);
 
-    if ((*host = (char *) xalloc (strlen (_host) + 1)) == NULL)
+    len = strlen (_host) + 1;
+    if ((*host = (char *) xalloc (len)) == NULL)
     {
 	/* Malloc failed */
 	*port = NULL;
@@ -388,9 +391,10 @@ TRANS(ParseAddress) (char *address, char **protocol, char **host, char **port)
 	return 0;
 	}
     else
-        strcpy (*host, _host);
+        strlcpy (*host, _host, len);
 
-    if ((*port = (char *) xalloc (strlen (_port) + 1)) == NULL)
+    len = strlen (_port) + 1;
+    if ((*port = (char *) xalloc (len)) == NULL)
     {
 	/* Malloc failed */
 	*port = NULL;
@@ -402,7 +406,7 @@ TRANS(ParseAddress) (char *address, char **protocol, char **host, char **port)
 	return 0;
     }
     else
-        strcpy (*port, _port);
+        strlcpy (*port, _port, len);
 
     xfree (tmpptr);
 
@@ -522,6 +526,7 @@ TRANS(Reopen) (int type, int trans_id, int fd, char *port)
     Xtransport		*thistrans = NULL;
     char		*save_port;
     int			i;
+    size_t		len;
 
     PRMSG (2,"Reopen(%d,%d,%s)\n", trans_id, fd, port);
 
@@ -541,15 +546,16 @@ TRANS(Reopen) (int type, int trans_id, int fd, char *port)
 
 	return NULL;
     }
-
-    if ((save_port = (char *) xalloc (strlen (port) + 1)) == NULL)
+    
+    len = strlen (port) + 1;
+    if ((save_port = (char *) xalloc (len)) == NULL)
     {
 	PRMSG (1,"Reopen: Unable to malloc port string\n", 0, 0, 0);
 
 	return NULL;
     }
 
-    strcpy (save_port, port);
+    strlcpy (save_port, port, len);
 
     /* Get a new XtransConnInfo object */
 
@@ -664,18 +670,20 @@ TRANS(GetReopenInfo) (XtransConnInfo ciptr,
 
 {
     int i;
+    size_t len;
 
     for (i = 0; i < NUMTRANS; i++)
 	if (Xtransports[i].transport == ciptr->transptr)
 	{
 	    *trans_id = Xtransports[i].transport_id;
 	    *fd = ciptr->fd;
-
-	    if ((*port = (char *) xalloc (strlen (ciptr->port) + 1)) == NULL)
+	    
+	    len = strlen (ciptr->port) + 1;
+	    if ((*port = (char *) xalloc (len)) == NULL)
 		return 0;
 	    else
 	    {
-		strcpy (*port, ciptr->port);
+		strlcpy (*port, ciptr->port, len);
 		return 1;
 	    }
 	}

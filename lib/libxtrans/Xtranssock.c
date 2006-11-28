@@ -288,9 +288,6 @@ static int TRANS(SocketINETClose) (XtransConnInfo ciptr);
 #if defined(IPv6) && defined(AF_INET6)
 static const struct in6_addr local_in6addr_any = IN6ADDR_ANY_INIT;
 #pragma weak in6addr_any = local_in6addr_any
-#ifndef __USLC__
-#pragma weak getaddrinfo
-#endif
 static int haveIPv6 = 1;
 #endif
 
@@ -469,9 +466,6 @@ TRANS(SocketOpen) (int i, int type)
     PRMSG (3,"SocketOpen(%d,%d)\n", i, type, 0);
 
 #if defined(IPv6) && defined(AF_INET6)
-    if (getaddrinfo == NULL)
-	haveIPv6 = 0;
-
     if (!haveIPv6 && Sockettrans2devtab[i].family == AF_INET6)
 	return NULL;
 #endif
@@ -846,11 +840,11 @@ set_sun_path(const char *port, const char *upath, char *path)
     if (*port == '/') { /* a full pathname */
 	if (strlen(port) > maxlen)
 	    return -1;
-	sprintf(path, "%s", port);
+	snprintf(path, maxlen+1, "%s", port);
     } else {
 	if (strlen(port) + strlen(upath) > maxlen)
 	    return -1;
-	sprintf(path, "%s%s", upath, port);
+	snprintf(path, maxlen+1, "%s%s", upath, port);
     }
     return 0;
 }
@@ -972,7 +966,7 @@ TRANS(SocketINETCreateListener) (XtransConnInfo ciptr, char *port, unsigned int 
     {
 	/* fixup the server port address */
 	tmpport = X_TCP_PORT + strtol (port, (char**)NULL, 10);
-	sprintf (portbuf,"%lu", tmpport);
+	snprintf (portbuf, sizeof(portbuf), "%lu", tmpport);
 	port = portbuf;
     }
 #endif
@@ -1024,7 +1018,7 @@ TRANS(SocketINETCreateListener) (XtransConnInfo ciptr, char *port, unsigned int 
     } else {
 	namelen = sizeof (struct sockaddr_in6);
 #ifdef SIN6_LEN
-	((struct sockaddr_in6 *)&sockname)->sin6_len = sizeof(sockname);
+	((struct sockaddr_in6 *)&sockname)->sin6_len = (u_int8_t)sizeof(sockname);
 #endif
 	((struct sockaddr_in6 *)&sockname)->sin6_family = AF_INET6;
 	((struct sockaddr_in6 *)&sockname)->sin6_port = htons(sport);
@@ -1456,7 +1450,7 @@ TRANS(SocketINETConnect) (XtransConnInfo ciptr, char *host, char *port)
     if (is_numeric (port))
     {
 	tmpport = X_TCP_PORT + strtol (port, (char**)NULL, 10);
-	sprintf (portbuf, "%lu", tmpport);
+	snprintf (portbuf, sizeof(portbuf), "%lu", tmpport);
 	port = portbuf;
     }
 #endif
@@ -1812,11 +1806,6 @@ UnixHostReallyLocal (char *host)
 
 {
     char hostnamebuf[256];
-
-#if defined(IPv6) && defined(AF_INET6)
-    if (getaddrinfo == NULL)
-	haveIPv6 = 0;
-#endif
 
     TRANS(GetHostname) (hostnamebuf, sizeof (hostnamebuf));
 
