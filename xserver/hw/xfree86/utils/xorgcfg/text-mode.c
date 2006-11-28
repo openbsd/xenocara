@@ -50,12 +50,12 @@
 	(strcmp((X), "keyboard") == 0))
 
 #ifndef PROJECT_ROOT
-#define PROJECT_ROOT "/usr"
+#define PROJECT_ROOT "/usr/X11R6"
 #endif
 
 #ifndef XKB_RULES_DIR
 #ifndef __UNIXOS2__
-#define XKB_RULES_DIR PROJECT_ROOT "/share/X11/xkb/rules"
+#define XKB_RULES_DIR PROJECT_ROOT "/lib/X11/xkb/rules"
 #else
 #define XKB_RULES_DIR XF86CONFIGDIR "/xkb/rules"
 #endif
@@ -396,7 +396,7 @@ static char *protocols[] = {
 static int
 MouseConfig(void)
 {
-    int i, nlist, def, proto, emul;
+	int i, nlist, def, proto, emul, wheel;
     char **list = NULL, *device, *str;
     XF86ConfInputPtr *inputs = NULL;
     XF86ConfInputPtr input = XF86Config->conf_input_lst;
@@ -544,6 +544,17 @@ MouseConfig(void)
 	return (i);
     emul = !i;
 
+    ClearScreen();
+    refresh();
+    i = Dialog("Mouse Wheel configuration",
+	       "If your mouse has a wheel, you can enable it now.\n"
+	       "\n"
+	       "Do you want to enable the mouse wheel?",
+	       10, 60, " Yes ", " No ", def);
+    if (i < 0)
+	return (i);
+    wheel = !i;
+
     str = NULL;
     option = xf86findOption(input->inp_option_lst, "Device");
     if (option)
@@ -592,6 +603,15 @@ MouseConfig(void)
 	input->inp_option_lst = xf86addNewOption(input->inp_option_lst,
 		XtNewString("Emulate3Buttons"), NULL);
 
+    if (wheel) {
+	option = xf86findOption(input->inp_option_lst, "ZAxisMapping");
+	if (option) {
+	    XtFree((XtPointer)option->opt_val);
+	    option->opt_val = XtNewString("4 5");
+	} else 
+	    input->inp_option_lst = xf86addNewOption(input->inp_option_lst,
+		      XtNewString("ZAxisMapping"), XtNewString("4 5")); 
+    }
     option = xf86findOption(input->inp_option_lst, "Device");
     if (option) {
 	XtFree((XtPointer)option->opt_val);

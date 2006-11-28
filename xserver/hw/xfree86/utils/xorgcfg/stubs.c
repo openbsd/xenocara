@@ -40,7 +40,7 @@
 static char dummy;
 #endif
 
-#if !defined(USE_MODULES)
+#if 0
 /* these are defined in libdummy.a */
 int
 ErrorF(const char *fmt, ...)

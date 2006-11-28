@@ -1,0 +1,335 @@
+/* $OpenBSD: privsep.c,v 1.1 2006/11/28 20:29:32 matthieu Exp $ */
+/*
+ * Copyright 2001 Niels Provos <provos@citi.umich.edu>
+ * All rights reserved.
+ *
+ * Copyright (c) 2002 Matthieu Herrb
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *    - Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *    - Redistributions in binary form must reproduce the above
+ *      copyright notice, this list of conditions and the following
+ *      disclaimer in the documentation and/or other materials provided
+ *      with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+#include <sys/param.h>
+#include <sys/uio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <err.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+enum cmd_types {
+	PRIV_OPEN_DEVICE,
+	PRIV_SIG_PARENT,
+};
+
+/* Command parameters */
+typedef struct priv_cmd {
+	int cmd;
+	int _pad;
+	union {
+		struct _open {
+			char path[MAXPATHLEN];
+		} open;
+	} arg;
+} priv_cmd_t;
+
+
+static int priv_fd = -1;
+static pid_t parent_pid = -1;
+static const char * const allowed_devices[] = {
+	/* Serial devices */
+	"/dev/wsmouse",
+	"/dev/wsmouse0",
+	"/dev/wsmouse1",
+	"/dev/wsmouse2",
+	"/dev/wsmouse3",
+	"/dev/uhid0",
+	"/dev/uhid1",
+	"/dev/uhid2",
+	"/dev/uhid3",
+	"/dev/tty00",
+	"/dev/tty01",
+	"/dev/tty02",
+	"/dev/tty03",
+	"/dev/ttya",
+	"/dev/ttyb",
+	"/dev/ttyc",
+	"/dev/ttyd",
+	"/dev/wskbd",
+	"/dev/wskbd0",
+	"/dev/wskbd1",
+	"/dev/wskbd2",
+	"/dev/wskbd3",
+	"/dev/ttyC0",
+	"/dev/ttyC1",
+	"/dev/ttyC2",
+	"/dev/ttyC3",
+	"/dev/ttyC4",
+	"/dev/ttyC5",
+	"/dev/ttyC6",
+	"/dev/ttyC7",
+	"/dev/ttyD0",
+	"/dev/ttyD1",
+	"/dev/ttyD2",
+	"/dev/ttyD3",
+	"/dev/ttyD4",
+	"/dev/ttyD5",
+	"/dev/ttyD6",
+	"/dev/ttyD7",
+	"/dev/pci",
+	NULL
+};
+
+/* return 1 if allowed to open said path */
+static int
+open_ok(const char *path) 
+{
+	const char * const *p;
+	struct stat sb;
+
+	for (p = allowed_devices; *p != NULL; p++) {
+		if (strcmp(path, *p) == 0) {
+			if (stat(path, &sb) < 0) {
+				/* path is valid, but doesn't exist */
+				return 0;
+			}
+			if (sb.st_mode & S_IFCHR) {
+				/* File is a character device */
+				return 1;
+			}
+		}
+	}
+	/* path is not valid */
+	return 0;
+}
+
+static void
+send_fd(int socket, int fd)
+{
+	struct msghdr msg;
+	char tmp[CMSG_SPACE(sizeof(int))];
+	struct cmsghdr *cmsg;
+	struct iovec vec;
+	int result = 0;
+	ssize_t n;
+
+	memset(&msg, 0, sizeof(msg));
+
+	if (fd >= 0) {
+		msg.msg_control = (caddr_t)tmp;
+		msg.msg_controllen = CMSG_LEN(sizeof(int));
+		cmsg = CMSG_FIRSTHDR(&msg);
+		cmsg->cmsg_len = CMSG_LEN(sizeof(int));
+		cmsg->cmsg_level = SOL_SOCKET;
+		cmsg->cmsg_type = SCM_RIGHTS;
+		*(int *)CMSG_DATA(cmsg) = fd;
+	} else {
+		result = errno;
+	}
+
+	vec.iov_base = &result;
+	vec.iov_len = sizeof(int);
+	msg.msg_iov = &vec;
+	msg.msg_iovlen = 1;
+	
+	if ((n = sendmsg(socket, &msg, 0)) == -1)
+		warn("%s: sendmsg(%d)", __func__, socket);
+	if (n != sizeof(int))
+		warnx("%s: sendmsg: expected sent 1 got %ld",
+		    __func__, (long)n);
+}
+
+static int
+receive_fd(int socket)
+{
+	struct msghdr msg;
+	char tmp[CMSG_SPACE(sizeof(int))];
+	struct cmsghdr *cmsg;
+	struct iovec vec;
+	ssize_t n;
+	int result;
+	int fd;
+
+	memset(&msg, 0, sizeof(msg));
+	vec.iov_base = &result;
+	vec.iov_len = sizeof(int);
+	msg.msg_iov = &vec;
+	msg.msg_iovlen = 1;
+	msg.msg_control = tmp;
+	msg.msg_controllen = sizeof(tmp);
+
+	if ((n = recvmsg(socket, &msg, 0)) == -1)
+		warn("%s: recvmsg", __func__);
+	if (n != sizeof(int))
+		warnx("%s: recvmsg: expected received 1 got %ld",
+		    __func__, (long)n);
+	if (result == 0) {
+		cmsg = CMSG_FIRSTHDR(&msg);
+		if (cmsg == NULL) {
+			warnx("%s: no message header", __func__);
+			return -1;
+		}
+		if (cmsg->cmsg_type != SCM_RIGHTS)
+			warnx("%s: expected type %d got %d", __func__,
+			    SCM_RIGHTS, cmsg->cmsg_type);
+		fd = (*(int *)CMSG_DATA(cmsg));
+		return fd;
+	} else {
+		errno = result;
+		return -1;
+	}
+}
+
+int
+priv_init(uid_t uid, gid_t gid)
+{
+	int i, fd;
+	pid_t pid;
+	int socks[2];
+	priv_cmd_t cmd;
+
+	parent_pid = getppid();
+
+	/* Create sockets */
+	if (socketpair(AF_LOCAL, SOCK_STREAM, PF_UNSPEC, socks) == -1) {
+		return -1;
+	}
+	pid = fork();
+	if (pid < 0) {
+		/* can't fork */
+		return -1;
+	}
+	if (pid != 0) {
+		/* Father - drop privileges and return */
+		if (setgroups(1, &gid) == -1)
+			return -1;
+		if (setegid(gid) == -1)
+			return -1;
+		if (setgid(gid) == -1)
+			return -1;
+		if (seteuid(uid) == -1)
+			return -1;
+		if (setuid(uid) == -1) 
+			return -1;
+		close(socks[0]);
+		priv_fd = socks[1];
+		return 0;
+	}
+	/* son */
+	for (i = 1; i <= _NSIG; i++) 
+		signal(i, SIG_DFL);
+	setproctitle("[priv]");
+	close(socks[1]);
+
+	while (1) {
+		if (read(socks[0], &cmd, sizeof(cmd)) == 0) {
+			exit(0);
+		}
+		switch (cmd.cmd) {
+
+		case PRIV_OPEN_DEVICE:
+			if (open_ok(cmd.arg.open.path)) {
+				fd = open(cmd.arg.open.path, 
+					  O_RDWR | O_NONBLOCK | O_EXCL);
+				if (fd < 0) {
+					warn("%s: open %s", __func__,
+					     cmd.arg.open.path);
+				}
+			} else {
+				fd = -1;
+				errno = EPERM;
+			}
+			send_fd(socks[0], fd);
+			if (fd >= 0) 
+				close(fd);
+			break;
+		case PRIV_SIG_PARENT:
+			kill(parent_pid, SIGUSR1);
+			break;
+		default:
+			errx(1, "%s: unknown command %d", __func__, cmd.cmd);
+			break;
+		}
+	}
+	_exit(1);
+}
+
+/* Open file */
+int
+priv_open_device(const char *path)
+{
+	priv_cmd_t cmd;
+
+	if (priv_fd != -1) {
+		cmd.cmd = PRIV_OPEN_DEVICE;
+		strlcpy(cmd.arg.open.path, path, MAXPATHLEN);
+		write(priv_fd, &cmd, sizeof(cmd));
+		return receive_fd(priv_fd);
+	} else 
+		return open(path, O_RDWR | O_NONBLOCK | O_EXCL);
+}
+
+/* send signal to parent process */
+int 
+priv_signal_parent(void)
+{
+	priv_cmd_t cmd;
+
+	if (priv_fd != -1) {
+		if (parent_pid == -1) {
+			warnx("parent_pid == -1");
+			return -1;
+		}
+		cmd.cmd = PRIV_SIG_PARENT;
+		write(priv_fd, &cmd, sizeof(cmd));
+		return 0;
+	} else 
+		return kill(getppid(), SIGUSR1);
+}
+
+#ifdef TEST
+/* This is not a complete regression test */
+int
+main(int argc, char *argv[])
+{
+	int fd;
+
+	if (priv_init(getuid(), getgid()) < 0) {
+		err(1, "priv_init");
+	}
+	fd = priv_open_device("/dev/wsmouse");
+	if (fd < 0) {
+		err(1, "priv_open_device");
+	}
+	write(fd, "test\n", 5);
+	close(fd);
+	exit(0);
+}
+#endif

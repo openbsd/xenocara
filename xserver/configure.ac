@@ -1,4 +1,4 @@
-dnl $Id: configure.ac,v 1.1.1.1 2006/11/26 18:13:43 matthieu Exp $
+dnl $Id: configure.ac,v 1.2 2006/11/28 20:29:31 matthieu Exp $
 dnl
 dnl Copyright © 2003-2005 Keith Packard, Daniel Stone
 dnl
@@ -241,6 +241,8 @@ esac
 dnl BSD *_video.c selection
 AM_CONDITIONAL(ALPHA_VIDEO, [test "x$ALPHA_VIDEO" = xyes])
 AM_CONDITIONAL(ARM_VIDEO, [test "x$ARM_VIDEO" = xyes])
+AM_CONDITIONAL(HP300_VIDEO, [text "x$HP300_VIDEO" = xyes])
+AM_CONDITIONAL(HPPA_VIDEO, [text "x$HPPA_VIDEO" = xyes])
 AM_CONDITIONAL(I386_VIDEO, [test "x$I386_VIDEO" = xyes])
 AM_CONDITIONAL(PPC_VIDEO, [test "x$PPC_VIDEO" = xyes])
 AM_CONDITIONAL(SPARC64_VIDEO, [test "x$SPARC64_VIDEO" = xyes])
@@ -394,6 +396,16 @@ AC_ARG_ENABLE(install-libxf86config,
 				[Install libxf86config (default: disabled)]),
 				[INSTALL_LIBXF86CONFIG=$enableval],
 				[INSTALL_LIBXF86CONFIG=no])
+
+dnl Privsep
+AC_ARG_ENABLE(privsep,
+	AC_HELP_STRING([--enable-privsep],
+         [Build support for X server privilege separation (default is NO)]),
+	[ENABLE_PRIVSEP="$enableval"], [ENABLE_PRIVSEP="no"])
+if test x$ENABLE_PRIVSEP = xyes ; then
+	AC_DEFINE(X_PRIVSEP, 1, [Use X server privilege separation])
+fi
+AM_CONDITIONAL(X_PRIVSEP, [test x$ENABLE_PRIVSEP = xyes])
 
 dnl Extensions.
 AC_ARG_ENABLE(composite,      AS_HELP_STRING([--disable-composite], [Build Composite extension (default: enabled)]), [COMPOSITE=$enableval], [COMPOSITE=yes])
@@ -1173,7 +1185,7 @@ int main () {
 		XORG_OS_SUBDIR="bsd"
 		XORG_OS_KBD="BSD"
 		case $host_cpu in
-		  i*86|amd64*|x86_64*|ia64*)
+		  i*86|amd64*|x86_64*)
 			;;
 		  *)
 			xorg_bus_freebsdpci="yes"
@@ -1257,7 +1269,14 @@ int main () {
 		;;
 	  sparc*)
 		xorg_bus_sparcpci="yes"
-		xorg_bus_sparc="yes"
+		case $host_os in
+		  openbsd*)
+		    xorg_bus_sparc="no"
+		    ;;
+		  *)
+		    xorg_bus_sparc="yes"
+		    ;;
+		esac
 		;;
 	  x86_64*|amd64*)
 		case $host_os in

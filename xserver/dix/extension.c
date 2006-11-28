@@ -118,6 +118,7 @@ AddExtension(char *name, int NumEvents, int NumErrors,
 {
     int i;
     register ExtensionEntry *ext, **newexts;
+    size_t buflen;
 
     if (!MainProc || !SwappedMainProc || !CloseDownProc || !MinorOpcodeProc)
         return((ExtensionEntry *) NULL);
@@ -130,7 +131,8 @@ AddExtension(char *name, int NumEvents, int NumErrors,
 	return((ExtensionEntry *) NULL);
     bzero(ext, totalExtensionSize);
     InitExtensionPrivates(ext);
-    ext->name = (char *)xalloc(strlen(name) + 1);
+    buflen = strlen(name) + 1;
+    ext->name = (char *)xalloc(buflen);
     ext->num_aliases = 0;
     ext->aliases = (char **)NULL;
     if (!ext->name)
@@ -138,7 +140,7 @@ AddExtension(char *name, int NumEvents, int NumErrors,
 	xfree(ext);
 	return((ExtensionEntry *) NULL);
     }
-    strcpy(ext->name,  name);
+    strlcpy(ext->name,  name, buflen);
     i = NumExtensions;
     newexts = (ExtensionEntry **) xrealloc(extensions,
 					   (i + 1) * sizeof(ExtensionEntry *));
@@ -187,16 +189,18 @@ _X_EXPORT Bool AddExtensionAlias(char *alias, ExtensionEntry *ext)
 {
     char *name;
     char **aliases;
+    size_t buflen;
 
     aliases = (char **)xrealloc(ext->aliases,
 				(ext->num_aliases + 1) * sizeof(char *));
     if (!aliases)
 	return FALSE;
     ext->aliases = aliases;
-    name = (char *)xalloc(strlen(alias) + 1);
+    buflen = strlen(alias) + 1;
+    name = (char *)xalloc(buflen);
     if (!name)
 	return FALSE;
-    strcpy(name,  alias);
+    strlcpy(name,  alias, buflen);
     ext->aliases[ext->num_aliases] = name;
     ext->num_aliases++;
     return TRUE;
@@ -445,6 +449,7 @@ RegisterScreenProc(char *name, ScreenPtr pScreen, ExtensionLookupProc proc)
     register ScreenProcEntry *spentry;
     register ProcEntryPtr procEntry = (ProcEntryPtr)NULL;
     char *newname;
+    size_t buflen;
     int i;
 
     spentry = &AuxillaryScreenProcs[pScreen->myNum];
@@ -462,7 +467,8 @@ RegisterScreenProc(char *name, ScreenPtr pScreen, ExtensionLookupProc proc)
         procEntry->proc = proc;
     else
     {
-	newname = (char *)xalloc(strlen(name)+1);
+	buflen = strlen(name)+1;
+	newname = (char *)xalloc(buflen);
 	if (!newname)
 	    return FALSE;
 	procEntry = (ProcEntryPtr)
@@ -476,7 +482,7 @@ RegisterScreenProc(char *name, ScreenPtr pScreen, ExtensionLookupProc proc)
 	spentry->procList = procEntry;
         procEntry += spentry->num;
         procEntry->name = newname;
-        strcpy(newname, name);
+        strlcpy(newname, name, buflen);
         procEntry->proc = proc;
         spentry->num++;        
     }

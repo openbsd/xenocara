@@ -1,3 +1,4 @@
+/* $XFree86: xc/programs/Xserver/hw/xfree86/dummylib/xalloc.c,v 1.1 2000/02/13 03:06:39 dawes Exp $ */
 
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
@@ -12,7 +13,7 @@
  * Utility functions required by libxf86_os. 
  */
 
-_X_EXPORT pointer
+pointer
 Xalloc(unsigned long n)
 {
     if (!n)
@@ -20,7 +21,7 @@ Xalloc(unsigned long n)
     return malloc(n);
 }
 
-_X_EXPORT pointer
+pointer
 Xrealloc(pointer p, unsigned long n)
 {
     if (!n)
@@ -28,7 +29,7 @@ Xrealloc(pointer p, unsigned long n)
     return realloc(p, n);
 }
 
-_X_EXPORT pointer
+pointer
 Xcalloc(unsigned long n)
 {
     pointer r;
@@ -38,7 +39,7 @@ Xcalloc(unsigned long n)
     return r;
 }
 
-_X_EXPORT pointer
+pointer
 XNFalloc(unsigned long n)
 {
     pointer r;
@@ -50,7 +51,7 @@ XNFalloc(unsigned long n)
    
 }
 
-_X_EXPORT pointer
+pointer
 XNFrealloc(pointer p, unsigned long n)
 {
     pointer r;
@@ -62,7 +63,7 @@ XNFrealloc(pointer p, unsigned long n)
    
 }
 
-_X_EXPORT pointer
+pointer
 XNFcalloc(unsigned long n)
 {
     pointer r;
@@ -74,13 +75,13 @@ XNFcalloc(unsigned long n)
    
 }
 
-_X_EXPORT void
+void
 Xfree(pointer p)
 {
     free(p);
 }
 
-_X_EXPORT char *
+char *
 Xstrdup(const char *s)
 {
     char *sd;

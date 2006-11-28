@@ -203,7 +203,7 @@ lookup(char *name, int len, Bool create)
     {
       *prev = entry;
       entry->link = NULL;
-      strcpy( entry->name, name );
+      strlcpy( entry->name, name, len + 1 );
     }
 
   DEALLOCATE_LOCAL(name);
@@ -220,20 +220,23 @@ OsInitColors(void)
   char       name[BUFSIZ];
   int        red, green, blue, lineno = 0;
   dbEntryPtr entry;
+  size_t     len;
 
   static Bool was_here = FALSE;
 
   if (!was_here)
     {
 #ifndef __UNIXOS2__
-      path = (char*)ALLOCATE_LOCAL(strlen(rgbPath) +5);
-      strcpy(path, rgbPath);
-      strcat(path, ".txt");
+      len = strlen(rgbPath) +5;
+      path = (char*)ALLOCATE_LOCAL(len);
+      strlcpy(path, rgbPath, len);
+      strlcat(path, ".txt", len);
 #else
       char *tmp = (char*)__XOS2RedirRoot(rgbPath);
-      path = (char*)ALLOCATE_LOCAL(strlen(tmp) +5);
-      strcpy(path, tmp);
-      strcat(path, ".txt");
+      len = strlen(tmp) +5;
+      path = (char*)ALLOCATE_LOCAL(len);
+      strlcpy(path, tmp, len);
+      strlcat(path, ".txt", len);
 #endif
       if (!(rgb = fopen(path, "r")))
         {

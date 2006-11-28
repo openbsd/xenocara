@@ -90,6 +90,10 @@
 extern int XkbDfltRepeatDelay, XkbDfltRepeatInterval;
 #endif
 
+#ifdef X_PRIVSEP
+extern int priv_open_device(const char *);
+#endif
+
 extern Selection *CurrentSelections;
 extern int NumCurrentSelections;
 
@@ -341,6 +345,10 @@ _X_HIDDEN void *dixLookupTab[] = {
     SYMFUNC(AdjustWaitForDelay)
     SYMVAR(noTestExtensions)
     SYMFUNC(GiveUp)
+#ifdef X_PRIVSEP
+    /* privsep.c */
+    SYMFUNC(priv_open_device)
+#endif
 
 #ifdef BIGREQS
     SYMVAR(noBigReqExtension)

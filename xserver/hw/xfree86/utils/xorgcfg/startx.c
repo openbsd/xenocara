@@ -108,8 +108,15 @@ startx(void)
 	        XmuSnprintf(path, sizeof(path), "%s/"__XSERVERNAME__, XFree86_path);
 	    else
 	        XmuSnprintf(path, sizeof(path), "%s/bin/"__XSERVERNAME__, XFree86Dir);
-	    execl(path, "X", ":8", /*"+xinerama",*/ "+accessx","-allowMouseOpenFail",
+#ifndef X_PRIVSEP
+	    execl(path, "X", ":8", /*"+xinerama",*/ "+accessx",
+		"-allowMouseOpenFail", "-nolisten", "tcp",
 		  "-xf86config", XF86Config_path, (void *)NULL);
+#else
+	    execl(path, "X", ":8", /*"+xinerama",*/ "+accessx",
+		"-allowMouseOpenFail", "-keepPriv", "-nolisten", "tcp",
+		  "-xf86config", XF86Config_path, (void *)NULL);
+#endif
 	    exit(-127);
 	}   break;
 	case -1:

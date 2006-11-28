@@ -15,7 +15,7 @@ endif
 RES_SOURCES = $(srcdir)/../shared/stdResource.c
 
 if AGP
-AGP_SOURCES = $(srcdir)/../linux/lnx_agp.c
+AGP_SOURCES = bsd_agp.c
 else
 AGP_SOURCES = $(srcdir)/../shared/agp_noop.c
 endif
@@ -31,6 +31,14 @@ endif
 
 if ARM_VIDEO
 ARCH_SOURCES = arm_video.c
+endif
+
+if HP300_VIDEO
+ARCH_SOURCES = hp300_video.c
+endif 
+
+if HPPA_VIDEO
+ARCH_SOURCES = hppa_video.c
 endif
 
 if I386_VIDEO

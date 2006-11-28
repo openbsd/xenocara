@@ -112,4 +112,7 @@
 /* Have execinfo.h */
 #undef HAVE_EXECINFO_H
 
+/* Use X server privilege separation */
+#undef X_PRIVSEP
+
 #endif /* _XORG_CONFIG_H_ */

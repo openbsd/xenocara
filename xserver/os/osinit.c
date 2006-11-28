@@ -119,9 +119,9 @@ OsInit(void)
 	    FILE *err;
 
 	    if (strlen (display) + strlen (admpath) + 1 < sizeof fname)
-		sprintf (fname, admpath, display);
+		snprintf (fname, sizeof(fname), admpath, display);
 	    else
-		strcpy (fname, devnull);
+		strlcpy (fname, devnull, sizeof(fname));
 	    /*
 	     * uses stdio to avoid os dependencies here,
 	     * a real os would use

@@ -379,14 +379,16 @@ LockServer(void)
     FatalError("No TMP dir found\n");
 #endif
 
-  sprintf(port, "%d", atoi(display));
+  snprintf(port, sizeof(port), "%d", atoi(display));
   len = strlen(LOCK_PREFIX) > strlen(LOCK_TMP_PREFIX) ? strlen(LOCK_PREFIX) :
 						strlen(LOCK_TMP_PREFIX);
   len += strlen(tmppath) + strlen(port) + strlen(LOCK_SUFFIX) + 1;
   if (len > sizeof(LockFile))
     FatalError("Display name `%s' is too long\n", port);
-  (void)sprintf(tmp, "%s" LOCK_TMP_PREFIX "%s" LOCK_SUFFIX, tmppath, port);
-  (void)sprintf(LockFile, "%s" LOCK_PREFIX "%s" LOCK_SUFFIX, tmppath, port);
+  (void)snprintf(tmp, sizeof(tmp), 
+      "%s" LOCK_TMP_PREFIX "%s" LOCK_SUFFIX, tmppath, port);
+  (void)snprintf(LockFile, sizeof(LockFile), 
+      "%s" LOCK_PREFIX "%s" LOCK_SUFFIX, tmppath, port);
 
   /*
    * Create a temporary file containing our PID.  Attempt three times
@@ -416,8 +418,12 @@ LockServer(void)
   }
   if (lfd < 0)
     FatalError("Could not create lock file in %s\n", tmp);
-  (void) sprintf(pid_str, "%10ld\n", (long)getpid());
+  (void) snprintf(pid_str, sizeof(pid_str), "%10ld\n", (long)getpid());
   (void) write(lfd, pid_str, 11);
+#ifdef __OpenBSD__
+  /* if possible give away the lock file to the real uid/gid */
+  fchown(lfd, getuid(), getgid());
+#endif
 #ifndef __UNIXOS2__
 #ifndef USE_CHMOD
   (void) fchmod(lfd, 0444);
@@ -509,6 +515,14 @@ UnlockServer(void)
   (void) unlink(LockFile);
   }
 }
+
+#ifdef X_PRIVSEP
+int
+ChownLock(uid_t uid, gid_t gid)
+{
+	return chown(LockFile, uid, gid);
+}
+#endif
 #endif /* SERVER_LOCK */
 
 /* Force connections to close on SIGHUP from init */
@@ -812,9 +826,10 @@ ProcessCommandLine(int argc, char *argv[])
 	}
 	else if ( strcmp( argv[i], "-co") == 0)
 	{
-	    if(++i < argc)
-	        rgbPath = argv[i];
-	    else
+	    if(++i < argc) {
+		if (strlen(argv[i]) < MAXPATHLEN) 
+		    rgbPath = argv[i];
+	    } else
 		UseMsg();
 	}
 	else if ( strcmp( argv[i], "-core") == 0)
@@ -1506,13 +1521,15 @@ char *
 Xstrdup(const char *s)
 {
     char *sd;
+    size_t len;
 
     if (s == NULL)
 	return NULL;
-
-    sd = (char *)Xalloc(strlen(s) + 1);
+    
+    len = strlen(s) + 1;
+    sd = (char *)Xalloc(len);
     if (sd != NULL)
-	strcpy(sd, s);
+	strlcpy(sd, s, len);
     return sd;
 }
 
@@ -1521,12 +1538,14 @@ _X_EXPORT char *
 XNFstrdup(const char *s)
 {
     char *sd;
+    size_t len;
 
     if (s == NULL)
 	return NULL;
-
-    sd = (char *)XNFalloc(strlen(s) + 1);
-    strcpy(sd, s);
+    
+    len = strlen(s) + 1;
+    sd = (char *)XNFalloc(len);
+    strlcpy(sd, s, len);
     return sd;
 }
 

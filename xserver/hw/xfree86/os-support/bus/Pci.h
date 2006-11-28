@@ -250,9 +250,18 @@
 #  define INCLUDE_XF86_MAP_PCI_MEM
 #  define INCLUDE_XF86_NO_DOMAIN
 # endif
+# if defined(__OpenBSD__)
+#  define ARCH_PCI_INIT freebsdPciInit
+#  define INCLUDE_XF86_MAP_PCI_MEM
+#  define INCLUDE_XF86_NO_DOMAIN
+# endif
 #elif defined(__hppa__)
 # if defined(linux)
 #  define ARCH_PCI_INIT linuxPciInit
+#  define INCLUDE_XF86_MAP_PCI_MEM
+#  define INCLUDE_XF86_NO_DOMAIN
+# elif defined(__OpenBSD__)
+#  define ARCH_PCI_INIT freebsdPciInit
 #  define INCLUDE_XF86_MAP_PCI_MEM
 #  define INCLUDE_XF86_NO_DOMAIN
 # endif
@@ -267,7 +276,11 @@
 # endif
 # define XF86SCANPCI_WRAPPER ia64ScanPCIWrapper
 #elif defined(__i386__) || defined(i386)
-# define ARCH_PCI_INIT ix86PciInit
+# if defined(__OpenBSD__)
+#  define ARCH_PCI_INIT freebsdPciInit
+# else
+#  define ARCH_PCI_INIT ix86PciInit
+# endif
 # define INCLUDE_XF86_MAP_PCI_MEM
 # define INCLUDE_XF86_NO_DOMAIN
 # if defined(linux)
@@ -276,6 +289,16 @@
 #elif defined(__mc68000__)
 # if defined(linux)
 #  define ARCH_PCI_INIT linuxPciInit
+#  define INCLUDE_XF86_MAP_PCI_MEM
+#  define INCLUDE_XF86_NO_DOMAIN
+# elif defined(__OpenBSD__)
+#  define ARCH_PCI_INIT freebsdPciInit
+#  define INCLUDE_XF86_MAP_PCI_MEM
+#  define INCLUDE_XF86_NO_DOMAIN
+# endif
+#elif defined(__mc68020__)
+# if defined(__OpenBSD__)
+#  define ARCH_PCI_INIT freebsdPciInit
 #  define INCLUDE_XF86_MAP_PCI_MEM
 #  define INCLUDE_XF86_NO_DOMAIN
 # endif
@@ -327,8 +350,20 @@
 #  define INCLUDE_XF86_MAP_PCI_MEM
 #  define INCLUDE_XF86_NO_DOMAIN
 # endif
-# if !defined(__FreeBSD__)
+# if !defined(__FreeBSD__) && !defined(__OpenBSD__)
 #  define ARCH_PCI_PCI_BRIDGE sparcPciPciBridge
+# endif
+#elif defined(__sparc64__) 
+# if defined(__OpenBSD__)
+#  define ARCH_PCI_INIT freebsdPciInit
+#  define INCLUDE_XF86_MAP_PCI_MEM
+#  define INCLUDE_XF86_NO_DOMAIN
+# endif
+#elif defined(__vax__)
+# if defined(__OpenBSD__)
+#  define ARCH_PCI_INIT freebsdPciInit
+#  define INCLUDE_XF86_MAP_PCI_MEM
+#  define INCLUDE_XF86_NO_DOMAIN
 # endif
 #elif defined(__amd64__) || defined(__amd64)
 # if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)

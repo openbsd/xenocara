@@ -950,7 +950,7 @@ xf86PostMotionEvent(DeviceIntPtr	device,
 			}
 		    }
 		    else if (dx || dy) {
-			mult = pow((float)(dx*dx+dy*dy),
+			mult = pow((float)dx*(float)dx + (float)dy*(float)dy,
 				   ((float)(device->ptrfeed->ctrl.num) /
 				    (float)(device->ptrfeed->ctrl.den) - 1.0) / 
 				   2.0) / 2.0;

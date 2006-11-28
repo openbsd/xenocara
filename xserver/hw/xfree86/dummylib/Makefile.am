@@ -13,11 +13,16 @@ STRL_SRCS = $(top_srcdir)/os/strlcat.c $(top_srcdir)/os/strlcpy.c
 endif
 
 libdummy_nonserver_a_SOURCES = \
+	chownlock.c \
+	dispatchException.c \
 	fatalerror.c \
 	getvalidbios.c \
 	getemptypci.c \
 	logvwrite.c \
 	pcitestmulti.c \
+	privsep.c \
+	serverGeneration.c \
+	useMsg.c \
 	$(STRL_SRCS) \
 	verrorf.c \
 	xalloc.c \

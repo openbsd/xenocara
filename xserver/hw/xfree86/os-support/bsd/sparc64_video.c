@@ -110,3 +110,16 @@ xf86EnableInterrupts()
 
 	return;
 }
+
+#ifdef X_PRIVSEP
+/*
+ * Do all things that need root privileges early 
+ * and revoke those privileges 
+ */
+_X_EXPORT void
+xf86PrivilegedInit(void)
+{
+	pciInit();
+	xf86OpenConsole();
+}
+#endif

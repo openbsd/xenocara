@@ -248,6 +248,9 @@ extern int auditTrailLevel;
 #ifdef SERVER_LOCK
 extern void LockServer(void);
 extern void UnlockServer(void);
+#ifdef X_PRIVSEP
+extern int ChownLock(uid_t, gid_t);
+#endif
 #endif
 
 extern int OsLookupColor(

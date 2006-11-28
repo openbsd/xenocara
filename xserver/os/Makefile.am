@@ -11,6 +11,7 @@ XCSECURITY_SOURCES = secauth.c
 XDMCP_SOURCES = xdmcp.c
 STRLCAT_SOURCES = strlcat.c strlcpy.c
 XORG_SOURCES = log.c
+PRIVSEP_SOURCES = privsep.c
 
 libos_la_SOURCES = 	\
 	WaitFor.c	\
@@ -39,6 +40,10 @@ endif
 
 if NEED_STRLCAT
 libos_la_SOURCES += $(STRLCAT_SOURCES)
+endif
+
+if X_PRIVSEP
+libos_la_SOURCES += $(PRIVSEP_SOURCES)
 endif
 
 libcwrapper_la_SOURCES = \

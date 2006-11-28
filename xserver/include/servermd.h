@@ -120,12 +120,12 @@ SOFTWARE.
  *	Currently defined for SPARC.
  */
 
-#ifdef vax
+#if defined(vax) || defined(__vax__)
 
 #define IMAGE_BYTE_ORDER	LSBFirst        /* Values for the VAX only */
 #define BITMAP_BIT_ORDER	LSBFirst
-#define	GLYPHPADBYTES		1
-#define GETLEFTBITS_ALIGNMENT	4
+#define GLYPHPADBYTES		4	/* to make fb work */
+#define GETLEFTBITS_ALIGNMENT	1
 #define FAST_UNALIGNED_READS
 
 #endif /* vax */
@@ -151,7 +151,7 @@ SOFTWARE.
 
 #endif /* __arm32__ */
 
-#if defined (hpux) || defined __hppa__
+#if defined(hpux) || defined(__hppa__)
 
 #define IMAGE_BYTE_ORDER	MSBFirst
 #define BITMAP_BIT_ORDER	MSBFirst
@@ -494,6 +494,16 @@ SOFTWARE.
 #define GETLEFTBITS_ALIGNMENT  1
 
 #endif /* linux/m68k */
+
+#if defined (OpenBSD) && defined (__mc68020__)
+
+#define IMAGE_BYTE_ORDER       MSBFirst
+#define BITMAP_BIT_ORDER       MSBFirst
+#define FAST_UNALIGNED_READS
+#define GLYPHPADBYTES          4
+#define GETLEFTBITS_ALIGNMENT  1
+
+#endif /* OpenBSD/hp300 */
 
 #ifdef sgi
 

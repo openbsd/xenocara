@@ -1220,7 +1220,11 @@ configInputKbd(IDevPtr inputp)
 			 " the \"wskbd\" keyboard protocol");
 	 return FALSE;
      }
+#ifndef X_PRIVSEP
      xf86Info.kbdFd = open(s, O_RDWR | O_NONBLOCK | O_EXCL);
+#else
+     xf86Info.kbdFd = priv_open_device(s);
+#endif
      if (xf86Info.kbdFd == -1) {
        xf86ConfigError("cannot open \"%s\"", s);
        xfree(s);
@@ -1264,7 +1268,8 @@ configInputKbd(IDevPtr inputp)
 	     close(xf86Info.kbdFd);
 	     return FALSE;
      }
-#endif
+     close (xf86Info.kbdFd);
+#endif /* WSCONS_SUPPORT */
   } else {
     xf86ConfigError("\"%s\" is not a valid keyboard protocol name", s);
     xfree(s);

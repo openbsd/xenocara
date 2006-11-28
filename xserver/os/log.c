@@ -158,13 +158,15 @@ const char *
 LogInit(const char *fname, const char *backup)
 {
     char *logFileName = NULL;
+    size_t len1, len2;
 
     if (fname && *fname) {
 	/* xalloc() can't be used yet. */
-	logFileName = malloc(strlen(fname) + strlen(display) + 1);
+	len1 = strlen(fname) + strlen(display) + 1;
+	logFileName = malloc(len1);
 	if (!logFileName)
 	    FatalError("Cannot allocate space for the log file name\n");
-	sprintf(logFileName, fname, display);
+	snprintf(logFileName, len1, fname, display);
 
 	if (backup && *backup) {
 	    struct stat buf;
@@ -173,13 +175,15 @@ LogInit(const char *fname, const char *backup)
 		char *suffix;
 		char *oldLog;
 
-		oldLog = malloc(strlen(logFileName) + strlen(backup) +
-				strlen(display) + 1);
-		suffix = malloc(strlen(backup) + strlen(display) + 1);
+		len1 = strlen(logFileName) + strlen(backup) +
+		       strlen(display) + 1;
+		len2 = strlen(backup) + strlen(display) + 1;
+		oldLog = malloc(len1);
+		suffix = malloc(len2);
 		if (!oldLog || !suffix)
 		    FatalError("Cannot allocate space for the log file name\n");
-		sprintf(suffix, backup, display);
-		sprintf(oldLog, "%s%s", logFileName, suffix);
+		snprintf(suffix, len2, backup, display);
+		snprintf(oldLog, len1, "%s%s", logFileName, suffix);
 		free(suffix);
 #ifdef __UNIXOS2__
 		remove(oldLog);
@@ -267,21 +271,19 @@ LogVWrite(int verb, const char *f, va_list args)
 	len = strlen(tmpBuffer);
     }
     if ((verb < 0 || logVerbosity >= verb) && len > 0)
-	fwrite(tmpBuffer, len, 1, stderr);
+	write(2, tmpBuffer, len);
     if ((verb < 0 || logFileVerbosity >= verb) && len > 0) {
 	if (logFile) {
-	    fwrite(tmpBuffer, len, 1, logFile);
-	    if (logFlush) {
-		fflush(logFile);
+	    write(fileno(logFile), tmpBuffer, len);
 #ifndef WIN32
-		if (logSync)
-		    fsync(fileno(logFile));
+	    if (logFlush && logSync)
+		fsync(fileno(logFile));
 #endif
-	    }
 	} else if (needBuffer) {
 	    /*
 	     * Note, this code is used before OsInit() has been called, so
 	     * xalloc() and friends can't be used.
+	     * And it should not be called inside a signal handler.
 	     */
 	    if (len > bufferUnused) {
 		bufferSize += 1024;
@@ -314,7 +316,6 @@ _X_EXPORT void
 LogVMessageVerb(MessageType type, int verb, const char *format, va_list args)
 {
     const char *s  = X_UNKNOWN_STRING;
-    char *tmpBuf = NULL;
 
     /* Ignore verbosity for X_ERROR */
     if (logVerbosity >= verb || logFileVerbosity >= verb || type == X_ERROR) {
@@ -360,15 +361,29 @@ LogVMessageVerb(MessageType type, int verb, const char *format, va_list args)
 	 * Prefix the format string with the message type.  We do it this way
 	 * so that LogVWrite() is only called once per message.
 	 */
-	if (s) {
-	    tmpBuf = malloc(strlen(format) + strlen(s) + 1 + 1);
-	    /* Silently return if malloc fails here. */
-	    if (!tmpBuf)
-		return;
-	    sprintf(tmpBuf, "%s ", s);
-	    strcat(tmpBuf, format);
+	if (s != NULL) {
+	    char stackBuf[BUFSIZ];
+	    char *tmpBuf = NULL;
+	    size_t len;
+
+	    len = strlen(format) + strlen(s) + 1 + 1;
+	    if (len <= sizeof(stackBuf)) {
+		/*
+		 * avoid malloc() for short strings, since this may be called
+		 * from a signal handler 
+		 */
+		tmpBuf = stackBuf;
+	    } else {
+		tmpBuf = malloc(len);
+		/* Silently return if malloc fails here. */
+		if (tmpBuf == NULL) 
+		    return;
+	    }
+	    /* snprintf() is safe in signal handlers on OpenBSD */
+	    snprintf(tmpBuf, len, "%s %s", s, format);
 	    LogVWrite(verb, tmpBuf, args);
-	    free(tmpBuf);
+	    if (tmpBuf != stackBuf)
+		    free(tmpBuf);
 	} else
 	    LogVWrite(verb, format, args);
     }
@@ -601,13 +616,15 @@ Error(char *str)
 {
     char *err = NULL;
     int saveErrno = errno;
+    size_t len;
 
     if (str) {
-	err = malloc(strlen(strerror(saveErrno)) + strlen(str) + 2 + 1);
+	len = strlen(strerror(saveErrno)) + strlen(str) + 2 + 1;
+	err = malloc(len);
 	if (!err)
 	    return;
-	sprintf(err, "%s: ", str);
-	strcat(err, strerror(saveErrno));
+	snprintf(err, len, "%s: ", str);
+	strlcat(err, strerror(saveErrno), len);
 	LogWrite(-1, err);
     } else
 	LogWrite(-1, strerror(saveErrno));

@@ -511,6 +511,7 @@ xf86PostKbdEvent(unsigned key)
       }
     } else
 #endif /* i386 && SVR4 */
+#ifndef __OpenBSD__
     {
       switch (scanCode) {
       case 0x59:        scanCode = KEY_0x59; break;
@@ -543,6 +544,7 @@ xf86PostKbdEvent(unsigned key)
       case 0x76:        scanCode = KEY_0x76; break;
       }
     }
+#endif
   }
 
   else if (

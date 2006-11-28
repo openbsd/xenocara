@@ -1870,7 +1870,7 @@ xf86getpagesize()
 	if (pagesize == -1)
 		pagesize = getpagesize();
 #endif
-#ifdef PAGE_SIZE
+#if defined(PAGE_SIZE) && !defined(__OpenBSD__) /* XXX */
 	if (pagesize == -1)
 		pagesize = PAGE_SIZE;
 #endif

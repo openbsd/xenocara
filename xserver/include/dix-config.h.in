@@ -448,4 +448,7 @@
 /* Have a monotonic clock from clock_gettime() */
 #undef MONOTONIC_CLOCK
 
+/* Use X server privilege separation */
+#undef X_PRIVSEP
+
 #endif /* _DIX_CONFIG_H_ */

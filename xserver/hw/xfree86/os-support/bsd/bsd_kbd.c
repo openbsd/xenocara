@@ -27,6 +27,8 @@
 #include "atKeynames.h"
 #include "bsd_kbd.h"
 
+extern int priv_open_device(char *);
+
 extern Bool VTSwitchEnabled;
 #ifdef USE_VT_SYSREQ
 extern Bool VTSysreqToggle;
@@ -479,7 +481,11 @@ OpenKeyboard(InputInfoPtr pInfo)
            pKbd->consType = xf86Info.consType;
        }
     } else {
+#ifndef X_PRIVSEP
 	pInfo->fd = open(s, O_RDONLY | O_NONBLOCK | O_EXCL);
+#else
+	pInfo->fd = priv_open_device(s);
+#endif
        if (pInfo->fd == -1) {
            xf86Msg(X_ERROR, "%s: cannot open \"%s\"\n", pInfo->name, s);
            xfree(s);
@@ -526,12 +532,18 @@ OpenKeyboard(InputInfoPtr pInfo)
                break;
 #endif
 #ifdef WSKBD_TYPE_SUN5
-     case WSKBD_TYPE_SUN5:
-	     xf86Msg(X_PROBED, "Keyboard type: Sun5\n");
-	     break;
+           case WSKBD_TYPE_SUN5:
+               printWsType("Sun5", pInfo->name);
+               break;
 #endif
+           case WSKBD_TYPE_LK201:
+               printWsType("LK-201", pInfo->name);
+               break;
+           case WSKBD_TYPE_LK401:
+               printWsType("LK-401", pInfo->name);
+               break;
            default:
-               xf86Msg(X_ERROR, "%s: Unsupported wskbd type \"%d\"",
+               xf86Msg(X_ERROR, "%s: Unsupported wskbd type \"%d\"\n",
                                 pInfo->name, pKbd->wsKbdType);
                close(pInfo->fd);
                return FALSE;

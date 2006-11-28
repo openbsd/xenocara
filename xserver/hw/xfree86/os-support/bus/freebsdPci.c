@@ -118,7 +118,11 @@ static int pciFd = -1;
 void
 freebsdPciInit()
 {
+#ifndef X_PRIVSEP
 	pciFd = open("/dev/pci", O_RDWR);
+#else
+	pciFd = priv_open_device("/dev/pci");
+#endif
 	if (pciFd < 0)
 		return;
 

@@ -387,7 +387,12 @@ static __inline__ void stw_u(unsigned long r5, unsigned short * r11)
 }
 
 /* to flush the I-cache before jumping to code which just got loaded */
+#ifdef __FreeBSD__
 #    define PAL_imb 134
+#endif
+#ifdef __OpenBSD__
+#include <machine/pal.h>
+#endif
 #    define istream_mem_barrier() \
 	__asm__ __volatile__("call_pal %0 #imb" : : "i" (PAL_imb) : "memory")
 #    define mem_barrier()        __asm__ __volatile__("mb"  : : : "memory")
@@ -906,6 +911,13 @@ static __inline__ void stw_u(unsigned long val, unsigned short *p)
 #    else
 #     define PORT_SIZE short
 #    endif
+#    if defined(__arm32__) && defined(__OpenBSD__)
+/*
+#     include <machine/sysarch.h>
+*/
+	int arm_sync_icache(long addr, int len);
+#     define arm_flush_cache(addr)	arm_sync_icache((long)(addr), 4);
+#    endif
 
 unsigned int IOPortBase;  /* Memory mapped I/O port area */
 
@@ -1365,7 +1377,7 @@ do {									\
 #    define write_mem_barrier()   /* NOP */
 
 #    if !defined(__SUNPRO_C)
-#    if !defined(FAKEIT) && !defined(__mc68000__) && !defined(__arm__) && !defined(__sh__) && !defined(__hppa__)
+#    if !defined(FAKEIT) && !defined(__mc68000__) && !defined(__arm__) && !defined(__sh__) && !defined(__hppa__) && !defined(__vax__)
 #     ifdef GCCUSESGAS
 
 /*
@@ -1474,7 +1486,7 @@ inl(unsigned short port)
 
 #     endif /* GCCUSESGAS */
 
-#    else /* !defined(FAKEIT) && !defined(__mc68000__)  && !defined(__arm__) && !defined(__sh__) && !defined(__hppa__)*/
+#    else /* !defined(FAKEIT) && !defined(__mc68000__)  && !defined(__arm__) && !defined(__sh__) && !defined(__hppa__) && !defined(__vax__) */
 
 static __inline__ void
 outb(unsigned short port, unsigned char val)

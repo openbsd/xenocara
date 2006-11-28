@@ -147,6 +147,10 @@ static InputDriverRec XF86KEYBOARD = {
 };
 #endif
 
+#ifdef X_PRIVSEP
+static Bool xf86KeepPriv = FALSE;
+#endif 
+
 static Bool
 xf86CreateRootWindow(WindowPtr pWin)
 {
@@ -1139,9 +1143,14 @@ InitInput(argc, argv)
  *      OS/Vendor-specific initialisations.  Called from OsInit(), which
  *      is called by dix before establishing the well known sockets.
  */
+
+#ifdef X_PRIVSEP
+extern void xf86DropPriv(char *);
+extern void xf86PrivilegedInit(void);
+#endif
  
 void
-OsVendorInit()
+OsVendorInit(void)
 {
   static Bool beenHere = FALSE;
 
@@ -1181,6 +1190,12 @@ OsVendorInit()
     }
   }
 #endif
+#endif
+#if defined(X_PRIVSEP)
+  if (!beenHere && !xf86KeepPriv && geteuid() == 0) {
+	  xf86PrivilegedInit();
+	  xf86DropPriv(display);
+  }
 #endif
 
   beenHere = TRUE;
@@ -1349,8 +1364,9 @@ ddxProcessArgument(int argc, char **argv, int i)
       FatalError("Required argument to %s not specified\n", argv[i]);	\
     }
   
-  /* First the options that are only allowed for root */
-  if (getuid() == 0 || geteuid() != 0)
+  /* First the options that are only allowed for root 
+     or when the program is not privileged at all */
+  if (getuid() == 0 || !issetugid())
   {
     if (!strcmp(argv[i], "-modulepath"))
     {
@@ -1390,6 +1406,11 @@ ddxProcessArgument(int argc, char **argv, int i)
 	  argv[i], argv[i]);
     }
     xf86ConfigFile = argv[i + 1];
+#ifdef X_PRIVSEP
+    /* Cannot drop privs when -xf86config is used with unsafe path */
+    if (!xf86PathIsSafe(xf86ConfigFile))
+	    xf86KeepPriv = TRUE;
+#endif
     return 2;
   }
   if (!strcmp(argv[i],"-showunresolved"))
@@ -1646,18 +1667,35 @@ ddxProcessArgument(int argc, char **argv, int i)
   if (!strcmp(argv[i], "-probe"))
   {
     xf86DoProbe = TRUE;
+#if 0
+    DoProbe(argc, argv, i);
+#endif
     return 1;
   }
   if (!strcmp(argv[i], "-configure"))
   {
-    if (getuid() != 0 && geteuid() == 0) {
+    if (getuid() != 0 && issetugid()) {
 	ErrorF("The '-configure' option can only be used by root.\n");
 	exit(1);
     }
     xf86DoConfigure = TRUE;
     xf86AllowMouseOpenFail = TRUE;
+#ifdef X_PRIVSEP
+    xf86KeepPriv = TRUE;
+#endif
     return 1;
   }
+#ifdef X_PRIVSEP
+  if (!strcmp(argv[i], "-keepPriv")) 
+  {
+	  if (getuid() != 0) {
+		  ErrorF("The '-keepPriv' option can only be used by root.\n");
+		  exit(1);
+	  }
+	  xf86KeepPriv = TRUE;
+	  return 1;
+  }
+#endif
   if (!strcmp(argv[i], "-isolateDevice"))
   {
     int bus, device, func;
@@ -1737,6 +1775,9 @@ ddxUseMsg()
   ErrorF("-ignoreABI             make module ABI mismatches non-fatal\n");
   ErrorF("-isolateDevice bus_id  restrict device resets to bus_id (PCI only)\n");
   ErrorF("-version               show the server version\n");
+#ifdef X_PRIVSEP
+  ErrorF("-keepPriv		 don't revoque privs when running as root\n");
+#endif
   /* OS-specific usage */
   xf86UseMsg();
   ErrorF("\n");

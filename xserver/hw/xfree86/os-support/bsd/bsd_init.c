@@ -38,6 +38,10 @@
 
 #include <sys/utsname.h>
 #include <sys/ioctl.h>
+#ifdef X_PRIVSEP
+#include "os.h"
+#include <pwd.h>
+#endif
 #include <stdlib.h>
 #include <errno.h>
 
@@ -164,12 +168,18 @@ xf86OpenConsole()
     vtmode_t vtmode;
 #endif
     
+#ifdef X_PRIVSEP
+    if (xf86Info.consoleFd != -1) {
+	    return;
+    }
+#endif
     if (serverGeneration == 1)
     {
 	/* check if we are run with euid==0 */
-	if (geteuid() != 0)
+	if (geteuid() != 0 && issetugid())
 	{
-	    FatalError("xf86OpenConsole: Server must be suid root");
+	    FatalError("xf86OpenConsole: Server must either be suid root"
+			" or without privileges at all");
 	}
 
 	if (!KeepTty)
@@ -283,17 +293,17 @@ acquire_vt:
 	        xf86Msg(X_WARNING, "xf86OpenConsole: VT_WAITACTIVE failed\n");
 	    }
 
-	    signal(SIGUSR1, xf86VTRequest);
+	    signal(SIGUSR2, xf86VTRequest);
 
 	    vtmode.mode = VT_PROCESS;
-	    vtmode.relsig = SIGUSR1;
-	    vtmode.acqsig = SIGUSR1;
-	    vtmode.frsig = SIGUSR1;
+	    vtmode.relsig = SIGUSR2;
+	    vtmode.acqsig = SIGUSR2;
+	    vtmode.frsig = SIGUSR2;
 	    if (ioctl(xf86Info.consoleFd, VT_SETMODE, &vtmode) < 0) 
 	    {
 	        FatalError("xf86OpenConsole: VT_SETMODE VT_PROCESS failed");
 	    }
-#if !defined(USE_DEV_IO) && !defined(USE_I386_IOPL)
+#if !defined(OpenBSD) && !defined(USE_DEV_IO) && !defined(USE_I386_IOPL)
 	    if (ioctl(xf86Info.consoleFd, KDENABIO, 0) < 0)
 	    {
 	        FatalError("xf86OpenConsole: KDENABIO failed (%s)",
@@ -308,8 +318,7 @@ acquire_vt:
 #endif /* SYSCONS_SUPPORT || PCVT_SUPPORT */
 #ifdef WSCONS_SUPPORT
 	case WSCONS:
-	    fprintf(stderr, "xf86OpenConsole\n");
-	    /* xf86Info.consoleFd = open("/dev/wskbd0", 0); */
+	    /* Nothing to do */
    	    break; 
 #endif
         }
@@ -510,7 +519,12 @@ xf86OpenPcvt()
     vtprefix = "/dev/ttyC";
 #endif
 
-    fd = open(PCVT_CONSOLE_DEV, PCVT_CONSOLE_MODE, 0);
+    if (VTnum != -1) {
+	    snprintf(vtname, sizeof(vtname), "%s%x", vtprefix, VTnum - 1);
+	    fd  = open(vtname, PCVT_CONSOLE_MODE, 0);
+    } else {
+	    fd = open(PCVT_CONSOLE_DEV, PCVT_CONSOLE_MODE, 0);
+    }
 #ifdef WSCONS_PCVT_COMPAT_CONSOLE_DEV
     if (fd < 0)
     {
@@ -573,8 +587,14 @@ xf86OpenPcvt()
             sprintf(vtname, "%s%01x", vtprefix, xf86Info.vtno - 1);
 	    if ((fd = open(vtname, PCVT_CONSOLE_MODE, 0)) < 0)
 	    {
-		FatalError("xf86OpenPcvt: Cannot open %s (%s)",
+		ErrorF("xf86OpenPcvt: Cannot open %s (%s)",
 			   vtname, strerror(errno));
+		xf86Info.vtno = initialVT;
+	        sprintf(vtname, "%s%01x", vtprefix, xf86Info.vtno - 1);
+		if ((fd = open(vtname, PCVT_CONSOLE_MODE, 0)) < 0) {
+			FatalError("xf86OpenPcvt: Cannot open %s (%s)",
+			   	vtname, strerror(errno));
+		}
 	    }
 	    if (ioctl(fd, VT_GETMODE, &vtmode) < 0)
 	    {
@@ -583,8 +603,8 @@ xf86OpenPcvt()
 	    xf86Info.consType = PCVT;
 #ifdef WSCONS_SUPPORT
 	    xf86Msg(X_PROBED,
-		    "Using wscons driver in pcvt compatibility mode "
-		    "(version %d.%d)\n",
+		    "Using wscons driver on %s in pcvt compatibility mode "
+		    "(version %d.%d)\n", vtname,
 		    pcvt_version.rmajor, pcvt_version.rminor);
 #else
 	    xf86Msg(X_PROBED, "Using pcvt driver (version %d.%d)\n",
@@ -618,7 +638,7 @@ xf86OpenWScons()
 #if defined(__NetBSD__)
 	sprintf(ttyname, "/dev/ttyE%d", i);
 #elif defined(__OpenBSD__)
-	sprintf(ttyname, "/dev/ttyC%d", i);
+	sprintf(ttyname, "/dev/ttyC%x", i);
 #endif
 	if ((fd = open(ttyname, 2)) != -1)
 	    break;
@@ -660,7 +680,7 @@ xf86CloseConsole()
 	    VT.mode = VT_AUTO;
 	    ioctl(xf86Info.consoleFd, VT_SETMODE, &VT); /* dflt vt handling */
         }
-#if !defined(USE_DEV_IO) && !defined(USE_I386_IOPL)
+#if !defined(OpenBSD) && !defined(USE_DEV_IO) && !defined(USE_I386_IOPL)
         if (ioctl(xf86Info.consoleFd, KDDISABIO, 0) < 0)
         {
             xf86FatalError("xf86CloseConsole: KDDISABIO failed (%s)",
@@ -692,6 +712,9 @@ xf86CloseConsole()
 	}
     }
     close(xf86Info.consoleFd);
+#ifdef X_PRIVSEP
+    xf86Info.consoleFd = -1;
+#endif
     if (devConsoleFd >= 0)
 	close(devConsoleFd);
     return;
@@ -735,3 +758,39 @@ xf86UseMsg()
 	ErrorF("don't detach controlling tty (for debugging only)\n");
 	return;
 }
+
+#ifdef X_PRIVSEP
+/*
+ * Revoke privileges after init.
+ * If the X server is started as root (xdm case), then switch to _x11 
+ * if it exists.
+ * Otherwise use the real uid.
+ */
+void
+xf86DropPriv(char *disp)
+{
+	struct passwd *pw;
+
+	/* revoke privileges */
+	if (getuid() == 0) {
+		/* Running as root */
+		pw = getpwnam("_x11");
+		if (!pw)
+			return;
+		/* give away lock file to unpriviledged user */
+		if (ChownLock(pw->pw_uid, pw->pw_gid) == -1) {
+			FatalError("Chown Lock");
+		}
+		
+		/* Start privileged child */
+		if (priv_init(pw->pw_uid, pw->pw_gid) == -1) {
+			FatalError("priv_init");
+		}
+	} else {
+		/* Normal user */
+		if (priv_init(getuid(), getgid()) == -1) {
+			FatalError("priv_init");
+		}
+	}
+}
+#endif

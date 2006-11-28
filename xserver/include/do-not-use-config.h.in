@@ -608,6 +608,9 @@
 /* Endian order */
 #undef X_BYTE_ORDER
 
+/* Use X server privilege separation */
+#undef X_PRIVSEP
+
 /* Build Xv extension */
 #undef XvExtension
 

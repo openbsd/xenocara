@@ -63,6 +63,10 @@
 #include "xf86Priv.h"
 #include "xf86_OSlib.h"
 
+#ifdef X_PRIVSEP
+extern int priv_open_device(const char *);
+#endif
+
 static int 
 GetBaud (int baudrate)
 {
@@ -129,8 +133,11 @@ xf86OpenSerial (pointer options)
 		xf86Msg (X_ERROR, "xf86OpenSerial: No Device specified.\n");
 		return (-1);
 	}
-
+#ifndef X_PRIVSEP
 	SYSCALL (fd = open (dev, O_RDWR | O_NONBLOCK));
+#else
+	fd = priv_open_device (dev);
+#endif
 	if (fd == -1)
 	{
 		xf86Msg (X_ERROR,

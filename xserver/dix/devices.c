@@ -368,8 +368,10 @@ RegisterPointerDevice(DeviceIntPtr device)
     if (!device->name)
     {
 	char *p = "pointer";
-	device->name = (char *)xalloc(strlen(p) + 1);
-	strcpy(device->name, p);
+	size_t buflen = strlen(p) + 1;
+
+	device->name = (char *)xalloc(buflen);
+	strlcpy(device->name, p, buflen);
     }
 }
 
@@ -391,8 +393,9 @@ RegisterKeyboardDevice(DeviceIntPtr device)
     if (!device->name)
     {
 	char *k = "keyboard";
-	device->name = (char *)xalloc(strlen(k) + 1);
-	strcpy(device->name, k);
+	size_t buflen = strlen(k) + 1;
+	device->name = (char *)xalloc(buflen);
+	strlcpy(device->name, k, buflen);
     }
 }
 
