@@ -36,6 +36,7 @@
 #  PERFORMANCE OF THIS SOFTWARE.
 #
 
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -60,8 +61,8 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = twm$(EXEEXT)
 subdir = src
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in gram.c \
-	gram.h lex.c
+DIST_COMMON = $(dist_rc_DATA) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in gram.c gram.h lex.c
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -69,7 +70,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(rcdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_twm_OBJECTS = twm-add_window.$(OBJEXT) twm-cursor.$(OBJEXT) \
@@ -92,6 +93,14 @@ LEXCOMPILE = $(LEX) $(LFLAGS) $(AM_LFLAGS)
 YACCCOMPILE = $(YACC) $(YFLAGS) $(AM_YFLAGS)
 SOURCES = $(twm_SOURCES)
 DIST_SOURCES = $(twm_SOURCES)
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+dist_rcDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(dist_rc_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -196,7 +205,11 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AM_YFLAGS = -d
-twm_CFLAGS = $(TWM_CFLAGS) -DXVENDORNAME=\"The\ X.Org\ Foundation\" -DXORG_RELEASE=\"Release\ $(VERSION)\" -D_BSD_SOURCE
+rcdir = ${datadir}/X11/twm
+dist_rc_DATA = system.twmrc
+twm_CFLAGS = $(TWM_CFLAGS) -DXVENDORNAME=\"The\ X.Org\ Foundation\" \
+	-DXORG_RELEASE=\"Release\ $(VERSION)\" -D_BSD_SOURCE \
+	-DSYSTEM_INIT_FILE=\"${datadir}/X11/twm/system.twmrc\"
 twm_LDADD = $(TWM_LIBS)
 twm_SOURCES = \
         add_window.c \
@@ -597,6 +610,23 @@ twm-lex.obj: lex.c
 	sed '/^#/ s|y\.tab\.c|$@|' y.tab.c >$@t && mv $@t $@
 	rm -f y.tab.c
 uninstall-info-am:
+install-dist_rcDATA: $(dist_rc_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(rcdir)" || $(mkdir_p) "$(DESTDIR)$(rcdir)"
+	@list='$(dist_rc_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_rcDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(rcdir)/$$f'"; \
+	  $(dist_rcDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(rcdir)/$$f"; \
+	done
+
+uninstall-dist_rcDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_rc_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(rcdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(rcdir)/$$f"; \
+	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -676,9 +706,9 @@ distdir: $(DISTFILES)
 check-am: all-am
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(PROGRAMS) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(rcdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -731,7 +761,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-dist_rcDATA
 
 install-exec-am: install-binPROGRAMS
 
@@ -758,18 +788,20 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-info-am
+uninstall-am: uninstall-binPROGRAMS uninstall-dist_rcDATA \
+	uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-binPROGRAMS \
 	clean-generic ctags distclean distclean-compile \
 	distclean-generic distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-binPROGRAMS \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-binPROGRAMS uninstall-info-am
+	install-data install-data-am install-dist_rcDATA install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-dist_rcDATA uninstall-info-am
 
 
 gram.h: gram.c
