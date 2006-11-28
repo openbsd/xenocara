@@ -61,18 +61,21 @@ LIBRARIES = $(noinst_LIBRARIES)
 ARFLAGS = cru
 libdummy_nonserver_a_AR = $(AR) $(ARFLAGS)
 libdummy_nonserver_a_LIBADD =
-am__libdummy_nonserver_a_SOURCES_DIST = fatalerror.c getvalidbios.c \
-	getemptypci.c logvwrite.c pcitestmulti.c \
-	$(top_srcdir)/os/strlcat.c $(top_srcdir)/os/strlcpy.c \
+am__libdummy_nonserver_a_SOURCES_DIST = chownlock.c \
+	dispatchException.c fatalerror.c getvalidbios.c getemptypci.c \
+	logvwrite.c pcitestmulti.c privsep.c serverGeneration.c \
+	useMsg.c $(top_srcdir)/os/strlcat.c $(top_srcdir)/os/strlcpy.c \
 	verrorf.c xalloc.c xf86allocscripi.c xf86addrestolist.c \
 	xf86drvmsg.c xf86drvmsgverb.c xf86errorf.c xf86errorfverb.c \
 	xf86getpagesize.c xf86getverb.c xf86info.c xf86msg.c \
 	xf86msgverb.c xf86opt.c xf86screens.c xf86servisinit.c \
 	xf86verbose.c $(srcdir)/../os-support/shared/sigiostubs.c
 @NEED_STRLCAT_TRUE@am__objects_1 = strlcat.$(OBJEXT) strlcpy.$(OBJEXT)
-am_libdummy_nonserver_a_OBJECTS = fatalerror.$(OBJEXT) \
+am_libdummy_nonserver_a_OBJECTS = chownlock.$(OBJEXT) \
+	dispatchException.$(OBJEXT) fatalerror.$(OBJEXT) \
 	getvalidbios.$(OBJEXT) getemptypci.$(OBJEXT) \
-	logvwrite.$(OBJEXT) pcitestmulti.$(OBJEXT) $(am__objects_1) \
+	logvwrite.$(OBJEXT) pcitestmulti.$(OBJEXT) privsep.$(OBJEXT) \
+	serverGeneration.$(OBJEXT) useMsg.$(OBJEXT) $(am__objects_1) \
 	verrorf.$(OBJEXT) xalloc.$(OBJEXT) xf86allocscripi.$(OBJEXT) \
 	xf86addrestolist.$(OBJEXT) xf86drvmsg.$(OBJEXT) \
 	xf86drvmsgverb.$(OBJEXT) xf86errorf.$(OBJEXT) \
@@ -222,6 +225,10 @@ GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
 H3600_TS_FALSE = @H3600_TS_FALSE@
 H3600_TS_TRUE = @H3600_TS_TRUE@
+HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
+HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
+HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
+HPPA_VIDEO_TRUE = @HPPA_VIDEO_TRUE@
 I386_VIDEO_FALSE = @I386_VIDEO_FALSE@
 I386_VIDEO_TRUE = @I386_VIDEO_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -493,6 +500,8 @@ XWIN_SYSTEM_LIBS = @XWIN_SYSTEM_LIBS@
 XWIN_TRUE = @XWIN_TRUE@
 XWIN_XV_FALSE = @XWIN_XV_FALSE@
 XWIN_XV_TRUE = @XWIN_XV_TRUE@
+X_PRIVSEP_FALSE = @X_PRIVSEP_FALSE@
+X_PRIVSEP_TRUE = @X_PRIVSEP_TRUE@
 YACC = @YACC@
 __XCONFIGFILE__ = @__XCONFIGFILE__@
 ac_ct_AR = @ac_ct_AR@
@@ -555,11 +564,16 @@ INCLUDES = $(XORG_INCS)
 AM_CFLAGS = $(XORG_CFLAGS)
 @NEED_STRLCAT_TRUE@STRL_SRCS = $(top_srcdir)/os/strlcat.c $(top_srcdir)/os/strlcpy.c
 libdummy_nonserver_a_SOURCES = \
+	chownlock.c \
+	dispatchException.c \
 	fatalerror.c \
 	getvalidbios.c \
 	getemptypci.c \
 	logvwrite.c \
 	pcitestmulti.c \
+	privsep.c \
+	serverGeneration.c \
+	useMsg.c \
 	$(STRL_SRCS) \
 	verrorf.c \
 	xalloc.c \
@@ -628,14 +642,19 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chownlock.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dispatchException.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fatalerror.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getemptypci.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getvalidbios.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logvwrite.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcitestmulti.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/privsep.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/serverGeneration.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigiostubs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strlcat.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strlcpy.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/useMsg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/verrorf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xalloc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86addrestolist.Po@am__quote@

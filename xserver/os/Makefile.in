@@ -39,6 +39,7 @@ host_triplet = @host@
 @XCSECURITY_TRUE@am__append_1 = $(XCSECURITY_SOURCES)
 @XDMCP_TRUE@am__append_2 = $(XDMCP_SOURCES)
 @NEED_STRLCAT_TRUE@am__append_3 = $(STRLCAT_SOURCES)
+@X_PRIVSEP_TRUE@am__append_4 = $(PRIVSEP_SOURCES)
 subdir = os
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -64,7 +65,7 @@ libos_la_LIBADD =
 am__libos_la_SOURCES_DIST = WaitFor.c access.c auth.c connection.c \
 	io.c mitauth.c oscolor.c oscolor.h osdep.h osinit.c utils.c \
 	xdmauth.c xstrans.c xprintf.c log.c secauth.c xdmcp.c \
-	strlcat.c strlcpy.c
+	strlcat.c strlcpy.c privsep.c
 am__objects_1 = log.lo
 am__objects_2 = secauth.lo
 @XCSECURITY_TRUE@am__objects_3 = $(am__objects_2)
@@ -72,10 +73,12 @@ am__objects_4 = xdmcp.lo
 @XDMCP_TRUE@am__objects_5 = $(am__objects_4)
 am__objects_6 = strlcat.lo strlcpy.lo
 @NEED_STRLCAT_TRUE@am__objects_7 = $(am__objects_6)
+am__objects_8 = privsep.lo
+@X_PRIVSEP_TRUE@am__objects_9 = $(am__objects_8)
 am_libos_la_OBJECTS = WaitFor.lo access.lo auth.lo connection.lo io.lo \
 	mitauth.lo oscolor.lo osinit.lo utils.lo xdmauth.lo xstrans.lo \
 	xprintf.lo $(am__objects_1) $(am__objects_3) $(am__objects_5) \
-	$(am__objects_7)
+	$(am__objects_7) $(am__objects_9)
 libos_la_OBJECTS = $(am_libos_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -217,6 +220,10 @@ GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
 H3600_TS_FALSE = @H3600_TS_FALSE@
 H3600_TS_TRUE = @H3600_TS_TRUE@
+HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
+HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
+HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
+HPPA_VIDEO_TRUE = @HPPA_VIDEO_TRUE@
 I386_VIDEO_FALSE = @I386_VIDEO_FALSE@
 I386_VIDEO_TRUE = @I386_VIDEO_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -488,6 +495,8 @@ XWIN_SYSTEM_LIBS = @XWIN_SYSTEM_LIBS@
 XWIN_TRUE = @XWIN_TRUE@
 XWIN_XV_FALSE = @XWIN_XV_FALSE@
 XWIN_XV_TRUE = @XWIN_XV_TRUE@
+X_PRIVSEP_FALSE = @X_PRIVSEP_FALSE@
+X_PRIVSEP_TRUE = @X_PRIVSEP_TRUE@
 YACC = @YACC@
 __XCONFIGFILE__ = @__XCONFIGFILE__@
 ac_ct_AR = @ac_ct_AR@
@@ -556,10 +565,11 @@ XCSECURITY_SOURCES = secauth.c
 XDMCP_SOURCES = xdmcp.c
 STRLCAT_SOURCES = strlcat.c strlcpy.c
 XORG_SOURCES = log.c
+PRIVSEP_SOURCES = privsep.c
 libos_la_SOURCES = WaitFor.c access.c auth.c connection.c io.c \
 	mitauth.c oscolor.c oscolor.h osdep.h osinit.c utils.c \
 	xdmauth.c xstrans.c xprintf.c $(XORG_SOURCES) $(am__append_1) \
-	$(am__append_2) $(am__append_3)
+	$(am__append_2) $(am__append_3) $(am__append_4)
 libcwrapper_la_SOURCES = \
 	$(top_srcdir)/hw/xfree86/os-support/shared/libc_wrapper.c
 
@@ -634,6 +644,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mitauth.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/oscolor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osinit.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/privsep.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/secauth.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strlcat.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strlcpy.Plo@am__quote@
