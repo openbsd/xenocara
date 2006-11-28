@@ -265,14 +265,12 @@ ExpandFilename(char *name)
 
     if (name[0] != '~') return name;
 
-    newname = (char *) malloc (HomeLen + strlen(name) + 2);
+    asprintf(&newname, "%s/%s", Home, &name[1]);
     if (!newname) {
 	fprintf (stderr, 
 		 "%s:  unable to allocate %ld bytes to expand filename %s/%s\n",
 		 ProgramName, HomeLen + (unsigned long)strlen(name) + 2,
 		 Home, &name[1]);
-    } else {
-	(void) sprintf (newname, "%s/%s", Home, &name[1]);
     }
 
     return newname;
@@ -357,15 +355,13 @@ FindBitmap (char *name, unsigned *widthp, unsigned *heightp)
 	/*
 	 * Attempt to find icon in old IconDirectory (now obsolete)
 	 */
-	bigname = (char *) malloc (strlen(name) + strlen(Scr->IconDirectory) +
-				   2);
+	asprintf(&bigname, "%s/%s", Scr->IconDirectory, name);
 	if (!bigname) {
 	    fprintf (stderr,
 		     "%s:  unable to allocate memory for \"%s/%s\"\n",
 		     ProgramName, Scr->IconDirectory, name);
 	    return None;
 	}
-	(void) sprintf (bigname, "%s/%s", Scr->IconDirectory, name);
 	if (XReadBitmapFile (dpy, Scr->Root, bigname, widthp, heightp, &pm,
 			     &HotX, &HotY) != BitmapSuccess) {
 	    pm = None;
@@ -600,9 +596,9 @@ GetFont(MyFont *font)
 	    XFreeFontSet(dpy, font->fontset);
 	}
 
-	basename2 = (char *)malloc(strlen(font->name) + 3);
-	if (basename2) sprintf(basename2, "%s,*", font->name);
-	else basename2 = font->name;
+	asprintf(&basename2, "%s,*", font->name);
+	if (!basename2)
+	    basename2 = font->name;
 	if( (font->fontset = XCreateFontSet(dpy, basename2,
 					    &missing_charset_list_return,
 					    &missing_charset_count_return,

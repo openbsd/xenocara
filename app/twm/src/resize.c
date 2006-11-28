@@ -514,7 +514,7 @@ DisplaySize(TwmWindow *tmp_win, int width, int height)
         dheight /= tmp_win->hints.height_inc;
     }
 
-    (void) sprintf (str, " %4d x %-4d ", dwidth, dheight);
+    (void) snprintf (str, sizeof(str), " %4d x %-4d ", dwidth, dheight);
     XRaiseWindow(dpy, Scr->SizeWindow);
     MyFont_ChangeGC(Scr->DefaultC.fore, Scr->DefaultC.back, &Scr->SizeFont);
     MyFont_DrawImageString (dpy, Scr->SizeWindow, &Scr->SizeFont, 

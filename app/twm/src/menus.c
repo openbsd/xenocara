@@ -1983,8 +1983,8 @@ ExecuteFunction(int func, char *action, Window w, TwmWindow *tmp_win,
 	break;
 
     case F_CUT:
-	strcpy(tmp, action);
-	strcat(tmp, "\n");
+	strlcpy(tmp, action, sizeof(tmp));
+	strlcat(tmp, "\n", sizeof(tmp));
 	XStoreBytes(dpy, tmp, strlen(tmp));
 	break;
 
@@ -2155,8 +2155,8 @@ ExecuteFunction(int func, char *action, Window w, TwmWindow *tmp_win,
 	break;
 
     case F_FILE:
-	ptr = ExpandFilename(action);
-	fd = open(ptr, O_RDONLY);
+	action = ExpandFilename(action);
+	fd = open(action, O_RDONLY);
 	if (fd >= 0)
 	{
 	    count = read(fd, buff, MAX_FILE_SIZE - 1);
@@ -2168,9 +2168,8 @@ ExecuteFunction(int func, char *action, Window w, TwmWindow *tmp_win,
 	else
 	{
 	    fprintf (stderr, "%s:  unable to open file \"%s\"\n", 
-		     ProgramName, ptr);
+		     ProgramName, action);
 	}
-	if (ptr != action) free(ptr);
 	break;
 
     case F_REFRESH:
@@ -2358,7 +2357,11 @@ Execute(char *s)
     oldDisplay[0] = '\0';
     doisplay=getenv("DISPLAY");
     if (doisplay)
-	strcpy (oldDisplay, doisplay);
+	if (strlcpy (oldDisplay, doisplay, sizeof(oldDisplay)) >=
+	    sizeof(oldDisplay)) {
+	    /* some error report? */
+	    return;
+	}
 
     /*
      * Build a display string using the current screen number, so that
@@ -2368,8 +2371,8 @@ Execute(char *s)
      */
     colon = strrchr (ds, ':');
     if (colon) {			/* if host[:]:dpy */
-	strcpy (buf, "DISPLAY=");
-	strcat (buf, ds);
+	strlcpy (buf, "DISPLAY=", sizeof(buf));
+	strlcat (buf, ds, sizeof(buf));
 	colon = buf + 8 + (colon - ds);	/* use version in buf */
 	dot1 = strchr (colon, '.');	/* first period after colon */
 	if (!dot1) dot1 = colon + strlen (colon);  /* if not there, append */
@@ -2381,7 +2384,7 @@ Execute(char *s)
     (void) system (s);
 
     if (restorevar) {		/* why bother? */
-	(void) sprintf (buf, "DISPLAY=%s", oldDisplay);
+	(void) snprintf (buf, sizeof(buf), "DISPLAY=%s", oldDisplay);
 	putenv (buf);
     }
 }

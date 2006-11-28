@@ -73,6 +73,38 @@ Button2 = : iconmgr : f.iconify
 menu "defops"
 {
 "Twm"	f.title
+"XTerm"         !"xterm &"
+""		f.nop
+"Utilities"	f.menu "Utilities"
+""		f.nop
+"Window Ops"    f.menu "Window Ops"
+""		f.nop
+"Kill"		f.destroy
+"Delete"	f.delete
+""		f.nop
+"Refresh"	f.refresh
+""		f.nop
+"(Re)Start"	f.menu "Restart"
+"Exit"		f.menu "Quit"
+}
+
+menu "Utilities"
+{
+"Top"		!"xterm -T Top -n Top -e top &"
+"Calculator"	!"xcalc &"
+"Xman"		!"xman &"
+"Xmag"		!"xmag &"
+"Editres"	!"editres &"
+""		f.nop
+#"XEmacs"	!"xemacs &"
+#"Mail"		!"xmh -font fixed &"
+#""		f.nop
+"XLock"		!"xlock -mode random &"
+"Reset X defaults" !"xrdb -load $HOME/.Xdefaults"
+}
+
+menu "Window Ops"
+{
 "Iconify"	f.iconify
 "Resize"	f.resize
 "Move"		f.move
@@ -83,12 +115,24 @@ menu "defops"
 "Unfocus"	f.unfocus
 "Show Iconmgr"	f.showiconmgr
 "Hide Iconmgr"	f.hideiconmgr
-""		f.nop
-"Xterm"		f.exec "exec xterm &"
-""		f.nop
-"Kill"		f.destroy
-"Delete"	f.delete
-""		f.nop
+}
+
+menu "Restart"
+{
 "Restart"	f.restart
-"Exit"		f.quit
+""		f.nop
+"twm"		f.startwm "twm"
+"fvwm"		f.startwm "fvwm"
+"wm2"		f.startwm "wm2"
+"ctwm"		f.startwm "ctwm"
+"mwm"		f.startwm "mwm"
+"olwm"		f.startwm "olwm"
+""		f.nop
+"dummy"		f.startwm "xterm"
+}
+menu "Quit"
+{
+"Don't quit"	f.nop
+ ""		f.nop
+"Really Quit"	f.quit
 }
