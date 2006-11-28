@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.5 2006/11/27 12:03:10 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.6 2006/11/28 13:43:46 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -33,7 +33,7 @@ XENOCARA_TOP?=		/usr/xenocara
 # Where to install
 X11BASE?=		/usr/X11R6
 
-BINDIR=			${X11BASE}/bin
+BINDIR?=		${X11BASE}/bin
 LIBDIR=			${X11BASE}/lib
 INCSDIR=		${X11BASE}/include
 MANDIR=			${X11BASE}/man/cat
