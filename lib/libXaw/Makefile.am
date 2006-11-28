@@ -34,8 +34,3 @@ EXTRA_DIST = xaw6.pc.in \
 	xaw.m4 \
 	old-doc/Changelog \
 	old-doc/CHANGES
-
-if !PLATFORM_WIN32
-install-exec-hook:
-	cd $(DESTDIR)$(libdir) && rm -f libXaw.so && ln -s $(DEFAULT_LIB) libXaw.so
-endif
