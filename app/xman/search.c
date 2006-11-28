@@ -181,7 +181,7 @@ DoSearch(ManpageGlobals * man_globals, int type)
   if (type == APROPOS) {
     char label[BUFSIZ];
 
-    strcpy(tmp, MANTEMP);		/* get a temp file. */
+    strlcpy(tmp, MANTEMP, sizeof(tmp));		/* get a temp file. */
 #ifdef HAS_MKSTEMP
     fd = mkstemp(tmp);
     if (fd < 0) {
@@ -199,14 +199,14 @@ DoSearch(ManpageGlobals * man_globals, int type)
       if (!ReadManConfig(path))
 #endif
       {
-	strcpy(path,SYSMANPATH);
+	strlcpy(path,SYSMANPATH,sizeof(path));
 #ifdef LOCALMANPATH
-	strcat(path,":");
-	strcat(path,LOCALMANPATH);
+	strlcat(path,":",sizeof(path));
+	strlcat(path,LOCALMANPATH,sizeof(path));
 #endif
       }
     } else {
-      strcpy(path,manpath);
+      strlcpy(path,manpath,sizeof(path));
     }
 
     snprintf(label, sizeof(label), 
@@ -268,15 +268,15 @@ DoSearch(ManpageGlobals * man_globals, int type)
       return(NULL);
     }
   
-    snprintf(man_globals->manpage_title, sizeof(man_globals->manpage_title), 
-	     "%s", label);
+    snprintf(man_globals->manpage_title,sizeof(man_globals->manpage_title),
+	"%s", label);
     ChangeLabel(man_globals->label,label);
     fseek(file, 0L, SEEK_SET);		/* reset file to point at top. */
   }
   else {			/* MANUAL SEACH */
     file = DoManualSearch(man_globals, search_string);
     if (file == NULL) {
-      snprintf(string_buf, sizeof(string_buf), "No manual entry for %s.", search_string);
+      snprintf(string_buf,sizeof(string_buf),"No manual entry for %s.", search_string);
       ChangeLabel(man_globals->label, string_buf);
       if (man_globals->label == NULL)
 	PopupWarning(man_globals, string_buf);
