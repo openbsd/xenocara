@@ -182,6 +182,16 @@ AC_SUBST(RANDOMMANDEFS)
 # turned off everywhere but on OpenBSD.
 AM_CONDITIONAL(HAS_KERBEROS_FIVE, false)
 
+#
+# Privsep
+#
+AC_ARG_ENABLE(privsep,
+	AC_HELP_STRING([--enable-privsep],
+         [Build support for X server privilege separation (default is NO)]),
+	[ENABLE_PRIVSEP="$enableval"], [ENABLE_PRIVSEP="no"])
+if test x$ENABLE_PRIVSEP = xyes ; then
+	AC_DEFINE(X_PRIVSEP, 1, [Use X server privilege separation])
+fi
 
 # Figure out where everything goes in the filesystem
 

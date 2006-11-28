@@ -46,6 +46,9 @@ from The Open Group.
 #include "dm.h"
 #include "dm_auth.h"
 #include "dm_error.h"
+#ifdef X_PRIVSEP
+#include <pwd.h>
+#endif
 
 #include <errno.h>
 
@@ -284,7 +287,7 @@ static char authdir1[] = "authdir";
 static char authdir2[] = "authfiles";
 
 static int
-MakeServerAuthFile (struct display *d, FILE ** file)
+MakeServerAuthFile (struct display *d, FILE ** file, uid_t uid, gid_t gid)
 {
     int len;
 #if defined(SYSV) && !defined(SVR4)
@@ -320,8 +323,8 @@ MakeServerAuthFile (struct display *d, FILE ** file)
 	    sprintf (d->authFile, "%s/%s", authDir, authdir1);
 	    r = stat(d->authFile, &statb);
 	    if (r == 0) {
-		if (statb.st_uid != 0)
-		    (void) chown(d->authFile, 0, statb.st_gid);
+		if (statb.st_uid != uid)
+		    (void) chown(d->authFile, uid, statb.st_gid);
 		if ((statb.st_mode & 0077) != 0)
 		    (void) chmod(d->authFile, statb.st_mode & 0700);
 	    } else {
@@ -331,6 +334,8 @@ MakeServerAuthFile (struct display *d, FILE ** file)
 		    free (d->authFile);
 		    d->authFile = NULL;
 		    return FALSE;
+		} else {
+		    (void) chown(d->authFile, uid, gid);
 		}
 	    }
 	    sprintf (d->authFile, "%s/%s/%s", authDir, authdir1, authdir2);
@@ -339,6 +344,8 @@ MakeServerAuthFile (struct display *d, FILE ** file)
 		free (d->authFile);
 		d->authFile = NULL;
 		return FALSE;
+	    } else {
+		(void) chown(d->authFile, uid, gid);
 	    }
 	    sprintf (d->authFile, "%s/%s/%s/A%s-XXXXXX",
 		     authDir, authdir1, authdir2, cleanname);
@@ -356,6 +363,7 @@ MakeServerAuthFile (struct display *d, FILE ** file)
 	    return TRUE;
 #else
 	    (void) mktemp (d->authFile);
+	    (void) chown(d->authFile, uid, gid);
 #endif
 	}
     }
@@ -375,9 +383,29 @@ SaveServerAuthorizations (
     int		mask;
     int		ret;
     int		i;
+    uid_t	uid;
+    gid_t	gid;
+#ifdef X_PRIVSEP
+    struct passwd *x11;
+
+    /* Give read capability to group _x11 */
+    x11 = getpwnam("_x11");
+    if (x11 == NULL) {
+	LogError("Can't find _x11 user\n");
+	uid = getuid();
+	gid = getgid();
+    } else {
+	uid = x11->pw_uid;
+	gid = x11->pw_gid;
+    }
+#else
+    uid = getuid();
+    gid = getgid();
+#endif
+
 
     mask = umask (0077);
-    ret = MakeServerAuthFile(d, &auth_file);
+    ret = MakeServerAuthFile(d, &auth_file, uid, gid);
     umask (mask);
     if (!ret)
 	return FALSE;
@@ -390,6 +418,7 @@ SaveServerAuthorizations (
     }
     else
     {
+	fchown(fileno(auth_file), uid, gid);
     	Debug ("File: %s auth: %p\n", d->authFile, auths);
 	ret = TRUE;
 	for (i = 0; i < count; i++)
