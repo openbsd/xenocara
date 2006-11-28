@@ -578,6 +578,7 @@ PostKbdEvent(InputInfoPtr pInfo, unsigned int scanCode, Bool down)
   if (xf86inSuspend)
       return;
 
+#ifndef __OpenBSD__
   if (pKbd->sunKbd) {
      /*
       * XXX XXX XXX:
@@ -590,6 +591,7 @@ PostKbdEvent(InputInfoPtr pInfo, unsigned int scanCode, Bool down)
       scanCode--;
       goto sunKeyboards;
   }
+#endif
 
   /*
    * First do some special scancode remapping ...
