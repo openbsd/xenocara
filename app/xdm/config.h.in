@@ -168,6 +168,9 @@
 /* Define to pathname for xrdb program */
 #undef XRDB_PROGRAM
 
+/* Use X server privilege separation */
+#undef X_PRIVSEP
+
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
