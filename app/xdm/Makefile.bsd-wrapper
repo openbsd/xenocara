@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2006/11/28 20:13:42 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2006/11/29 12:11:47 matthieu Exp $
 
 PIXMAPDIR=/etc/X11/xdm/pixmaps
 
@@ -10,9 +10,9 @@ CONFIGURE_ARGS= --enable-privsep \
 	--with-color-pixmap=OpenBSD_15bpp.xpm
 
 extra-install:
-	$(INSTALL) -c ${.CURDIR}/config/OpenBSD_1bpp.xpm $(PIXMAPDIR)
-	$(INSTALL) -c ${.CURDIR}/config/OpenBSD_4bpp.xpm $(PIXMAPDIR)
-	$(INSTALL) -c ${.CURDIR}/config/OpenBSD_8bpp.xpm $(PIXMAPDIR)
-	$(INSTALL) -c ${.CURDIR}/config/OpenBSD_15bpp.xpm $(PIXMAPDIR)
+	$(INSTALL) -c ${.CURDIR}/config/OpenBSD_1bpp.xpm $(DESTDIR)$(PIXMAPDIR)
+	$(INSTALL) -c ${.CURDIR}/config/OpenBSD_4bpp.xpm $(DESTDIR)$(PIXMAPDIR)
+	$(INSTALL) -c ${.CURDIR}/config/OpenBSD_8bpp.xpm $(DESTDIR)$(PIXMAPDIR)
+	$(INSTALL) -c ${.CURDIR}/config/OpenBSD_15bpp.xpm $(DESTDIR)$(PIXMAPDIR)
 
 .include <bsd.xorg.mk>
