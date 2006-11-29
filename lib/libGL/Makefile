@@ -388,6 +388,7 @@ x86_xform2.o: matypes.h
 x86_xform3.o: matypes.h
 x86_xform4.o: matypes.h
 
+NOPROFILE=
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>

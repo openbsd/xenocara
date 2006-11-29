@@ -117,7 +117,7 @@ CPPFLAGS+=	-I${DIST}/include \
 		-I${GLU}/libnurbs/nurbtess \
 		-DLIBRARYBUILD -D_EXTENSIONS_
 
-
+NOPROFILE=
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>

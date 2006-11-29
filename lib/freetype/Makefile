@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2006/11/27 19:56:35 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.4 2006/11/29 18:03:09 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
@@ -53,6 +53,8 @@ freetype-config: freetype-config.in
 		-e 's%@ft_version@%9.7.3%' -e 's%@wl@%%' \
 		< ${.CURDIR}/builds/unix/freetype-config.in \
 		> freetype-config
+
+NOPROFILE=
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>

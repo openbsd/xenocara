@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2006/11/29 14:45:19 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2006/11/29 18:03:09 matthieu Exp $
 
 DIST=	${.CURDIR}/../../dist/Mesa
 GLW=	${DIST}/src/glw
@@ -25,6 +25,10 @@ includes:
 		echo "\tinstalling $$i"; \
 		eval "$$j"; \
 	done
+
+beforeinstall: includes
+
+NOPROFILE=
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
