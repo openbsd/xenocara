@@ -1,4 +1,5 @@
-# $Xenocara: Makefile,v 1.4 2006/04/17 13:26:32 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2006/11/29 11:30:05 matthieu Exp $
+
 .include	<bsd.own.mk>
 X11BASE?=	/usr/X11R6
 PROG=		ssh-askpass
@@ -27,6 +28,10 @@ $(CLASS)_ad.h: $(CLASS).ad
 $(CLASS).ad: $(APP_DEFAULTS)
 	rm -f $(CLASS).ad
 	ln -s $(.CURDIR)/$(APP_DEFAULTS) $(CLASS).ad
+
+afterinstall:
+	$(INSTALL) $(INSTALL_COPY) $(CLASS).ad \
+		$(DESTDIR)/etc/X11/app-defaults/$(CLASS)
 
 beforedepend: $(CLASS)_ad.h
 
