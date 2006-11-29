@@ -36,4 +36,72 @@ In addition Xenocara uses the following directories:
 - etc:	    mtree(8) data files
 - share:    make(1) configuration for xenocara
 
+At the top-level directory two files describe the individual
+components of xenocara:
 
+- MODULES  lists all X.Org components (imported from the X.Org
+	   distribution at http://xorg.freedesktop.org/archive/)
+- 3RDPARTY lists all 3rd party software components provided in Xenora,
+	   either as dependencies of the X.Org software, or as
+	   complements to it to provide a more useable default
+	   environment.
+
+o Compiling and installing
+  ------------------------
+
+Xenocara is made of more than three hundred of different
+independant packages that need to be build and installed in the right
+order, especially while bootstraping (while /usr/X11R6 is still
+empty). The xenocara Makefiles take care of that using the 'build'
+target.
+
+  Requirements
+
+A freshly checked out xenocara tree is buildable without any external
+tool. However if you start modifying things in the automake build
+system used by many packages, you will need to have the following
+GNU autools packages installed:
+
+    - automake 1.9 (devel/automake/1.9)
+    - autoconf 2.59 (devel/autoconf/2.59)
+    - pkg-config 0.19 (or later) (devel/pkgconfig)
+    - libtool 1.5.22 (or later) (devel/libtool)
+
+  Sudo
+
+If the SUDO variable points to your sudo(8) binary in /etc/mk.conf,
+'make build' can be run as a normal user. It will raise its privileges
+whenever needed with sudo. Otherwise, you need to run make build as
+root.
+
+If you have installed the full xenocara X sets on your system, you
+don't need to build all of xenocara to patch one element. You can go
+to any module sub-directory and run 'make build' from there. 
+
+  Objdirs
+
+Xenocara supports objdirs (and it's even the recommended way to build
+things). Just run 'make obj' at any level before 'make build' to make
+sure the object directory is created. 
+
+XXX support for objdirs need to be improved! XXX
+
+  Shadow trees 
+
+Alternatively, the old 'lndir(1)' method can still be used to build
+xenocara outside of its source tree. Just don't use 'make obj' in this
+case. 
+
+o Regenerating configure scripts
+  ------------------------------
+
+Whenever you touched an import file for GNU autotools (Makefile.am,
+configure.ac mostly), you need to rebuild the configure script and
+makefiles skeletons. For that use the following command:
+
+ env XENOCARA_RERUN_AUTOCONF=Yes make -f Makefile.bsd-wrapper build
+
+You can also set XENOCARA_RERUN_AUTOCONF in /etc/mk.conf to force
+regeneration of configure scripts in every component.
+
+$OpenBSD: README,v 1.2 2006/11/29 22:25:07 matthieu Exp $
