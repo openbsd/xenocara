@@ -1,9 +1,9 @@
-# $OpenBSD: Makefile,v 1.3 2006/11/29 21:52:18 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2006/11/29 22:45:03 matthieu Exp $
 .include <bsd.own.mk>
 
 X11BASE?=	/usr/X11R6
 
-SUBDIR= proto data/bitmaps lib app data/xkbdata xserver driver doc util
+SUBDIR= proto data/bitmaps lib app data/xkbdata xserver driver util doc
 .ifndef NOFONTS
 SUBDIR+= font
 .endif
