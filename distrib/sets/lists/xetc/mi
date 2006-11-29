@@ -1,6 +1,8 @@
+./etc/X11/app-defaults
 ./etc/X11/app-defaults/Beforelight
 ./etc/X11/app-defaults/Bitmap
 ./etc/X11/app-defaults/Bitmap-color
+./etc/X11/app-defaults/Bitmap-nocase
 ./etc/X11/app-defaults/Chooser
 ./etc/X11/app-defaults/Clock-color
 ./etc/X11/app-defaults/Editres
@@ -23,8 +25,6 @@
 ./etc/X11/app-defaults/XSm
 ./etc/X11/app-defaults/XTerm
 ./etc/X11/app-defaults/XTerm-color
-./etc/X11/app-defaults/Xditview
-./etc/X11/app-defaults/Xditview-chrtr
 ./etc/X11/app-defaults/Xedit
 ./etc/X11/app-defaults/Xedit-color
 ./etc/X11/app-defaults/Xfd
@@ -33,7 +33,6 @@
 ./etc/X11/app-defaults/Xman
 ./etc/X11/app-defaults/Xmessage
 ./etc/X11/app-defaults/Xmessage-color
-./etc/X11/app-defaults/Xmh
 ./etc/X11/app-defaults/Xsystrace
 ./etc/X11/app-defaults/Xvidtune
 ./etc/X11/fs/config
