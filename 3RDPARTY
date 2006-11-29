@@ -1,0 +1,104 @@
+# $OpenBSD: 3RDPARTY,v 1.1 2006/11/29 18:45:53 matthieu Exp $
+#
+
+Package: 	Freetype 
+Version:	2.1.9
+Current Vers:	2.2.1
+Maintainer:	Freetype.org
+Archive Site:	http://www.freetype.org/
+
+Package:	expat 
+Version:	2.0
+Current Vers:	2.0
+Maintainer:	
+Archive Site:	http://expat.sf.net/
+
+Package:	xterm 
+Version:	212 
+Current Vers:	222
+Maintainer:	Thomas E. Dickey
+Archive Site:	http://dickey.his.com/xterm/xterm.html
+
+Package:	Mesa
+Version		cvs
+Current Vers:	6.5.1
+Maintainer:	?
+Archive Site:	http://www.mesa3d.org/
+
+Package:	fontconfig
+Version:	2.4.1
+Current Vers:	2.4.1
+Maintainer:	Keith Packard
+Archive Site:	http://www.fontconfig.org/
+
+Package:	Bitstream Vera Fonts
+Version:	1.10
+Current Vers:	1.10
+Maintainer:	The Gnome Fundation
+Archive Site:	http://ftp.gnome.org/pub/GNOME/sources/ttf-bitstream-vera/
+
+Package:	xlockmore
+Version:	5.22
+Current Vers:	5.23
+Maintainer:	bagleyd@tux.org
+Archive Site:	http://www.tux.org/~bagleyd/latest/
+
+Package:	xkeyboard-config
+Version:	0.8
+Current Vers:	0.8
+Maintainer:	
+Archive Site:	http://www.freedesktop.org/wiki/Software_2fXKeyboardConfig
+
+Package:	fvwm
+Version:	2.2.5
+Current Vers:	
+Maintainer:
+Archive Site:
+
+Package:	ssh-ask-pass
+Version:
+Current Vers:
+Maintainer:
+Archive Site:
+
+Package:	wm2
+Version:
+Current Vers:
+Maintainer:
+Archive Site:
+
+Package:	xidle
+Version:
+Current Vers:
+Maintainer:	fgs@openbs.org
+Archive Site:
+
+Package:	xlockmore
+Version:
+Current Vers:
+Maintainer:
+Archive Site:
+
+Package:	xsystrace
+Version:
+Current Vers:
+Maintainer:	matthieu@openbsd.org
+Archive Site:
+
+Package:	xvctl
+Version:
+Current Vers:
+Maintainer:	espie@openbsd.org
+Archive Site:
+
+Package:	openbsd-input-usbtablet
+Version:
+Current Vers:
+Maintainer:	matthieu@openbsd.org
+Archive Site:
+
+Package:	openbsd-input-ws
+Version:
+Current Vers:
+Maintainer:	matthieu@openbsd.org
+Archive Site:

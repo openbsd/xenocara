@@ -1,0 +1,296 @@
+# $OpenBSD: MODULES,v 1.1 2006/11/29 18:45:53 matthieu Exp $
+#
+# X.Org maintained modules
+#
+# Last update 2006/11/27
+
+app/appres		1.0.0	7.0
+app/bdftopcf		1.0.0	7.0
+app/beforelight		1.0.1	7.0
+app/bitmap		1.0.2	7.1
+app/editres		1.0.1	7.0
+app/fonttosfnt		1.0.2	7.2RC1
+app/fslsfonts		1.0.1	7.0
+app/fstobdf		1.0.2 	7.1
+app/iceauth		1.0.1	7.0
+app/ico			1.0.1	7.0
+app/lbxproxy		1.0.1	7.0
+app/listres		1.0.1	7.0
+app/luit		1.0.2	7.2RC2	need-rel
+app/mkcfm		1.0.1	7.0
+app/mkfontdir		1.0.2	7.1
+app/mkfontscale		1.0.3	7.2RC2
+app/oclock		1.0.1	7.0
+app/proxymngr		1.0.1	7.0
+app/rgb			1.0.1	7.1
+app/rstart		1.0.2	7.1
+app/scripts		1.0.1	7.0
+app/sessreg		1.0.1	7.2RC2	needs-rel
+app/setxkbmap		1.0.3	7.2RC2
+app/showfont		1.0.1	7.0
+app/smproxy		1.0.2	7.1
+app/twm			1.0.2	7.2RC1
+app/viewres		1.0.1	7.0
+app/x11perf		1.4.1	7.1	
+app/xauth		1.0.1	7.0
+app/xbiff		1.0.1	7.0
+app/xcalc		1.0.1	7.0	need-rel
+app/xclipboard		1.0.1	7.0
+app/xclock		1.0.2	7.1
+app/xcmsdb		1.0.1	7.0
+app/xconsole		1.0.2	7.1 	need-rel
+app/xcursorgen		1.0.1	7.1	ports
+app/xdm			1.1.1	7.2RC2
+app/xdpyinfo		1.0.1	7.0
+app/xdriinfo		1.0.1	7.1
+app/xedit		1.0.2	7.1
+app/xev			1.0.2	7.2RC1
+app/xeyes		1.0.1	7.0
+app/xf86dga		1.0.2	7.2RC1
+app/xfd			1.0.1	7.0
+app/xfindproxy		1.0.1	7.0
+app/xfontsel		1.0.1	7.0
+app/xfs			1.0.3	7.2RC1
+app/xfsinfo		1.0.1	7.0
+app/xfwp		1.0.1	7.0
+app/xgamma		1.0.1	7.0
+app/xgc			1.0.1	7.0
+app/xhost		1.0.1	7.1
+app/xinit		1.0.3	7.2RC1
+app/xkbcomp		1.0.3	7.2RC2
+app/xkbevd		1.0.2	7.1
+app/xkbprint		1.0.1	7.0
+app/xkbutils		1.0.1	7.0
+app/xkill		1.0.1	7.0
+app/xload		1.0.1	7.0	need-rel
+app/xlogo		1.0.1	7.0
+app/xlsatoms		1.0.1	7.0
+app/xlsclients		1.0.1	7.0
+app/xlsfonts		1.0.1	7.0
+app/xmag		1.0.1	7.0
+app/xman		1.0.2	7.1
+app/xmessage		1.0.1	7.0
+app/xmh			1.0.1	7.0
+app/xmodmap		1.0.2	7.2RC1
+app/xmore		1.0.1	7.0
+app/xphelloworld	1.0.1	7.0	need-rel
+app/xplsprinters	1.0.1	7.0
+app/xpr			1.0.1	7.0
+app/xprehashprinterlist 1.0.1	7.0
+app/xprop		1.0.2	7.2RC1
+app/xrandr		1.0.2	7.1
+app/xrdb		1.0.2	7.1
+app/xrefresh		1.0.2	7.1
+app/xset		1.0.2	7.1
+app/xsetmode		1.0.0	7.0
+app/xsetpointer		1.0.0	7.0	not-branched
+app/xsetroot		1.0.1	7.1
+app/xsm			1.0.1	7.0
+app/xstdcmap		1.0.1	7.0
+app/xtrap		1.0.2	7.1
+app/xvidtune		1.0.1	7.0
+app/xvinfo		1.0.1	7.0
+app/xwd			1.0.1	7.0
+app/xwininfo		1.0.2	7.1
+app/xwud		1.0.1	7.0
+
+data/bitmaps		1.0.1	7.0
+data/xkbdata		1.0.1	7.0	obsolete
+
+doc/xorg-docs		1.3	7.2RC2
+doc/xorg-sgml-doctools	1.1.1	7.2RC2
+
+driver/xf86-input-acecad	1.1.0	7.1
+driver/xf86-input-aiptek	1.0.1	7.1
+driver/xf86-input-calcomp	1.1.0	7.1
+driver/xf86-input-citron	2.2.0	7.1
+driver/xf86-input-digitaledge	1.1.0	7.1	need-rel
+driver/xf86-input-dmc		1.1.0	7.1
+driver/xf86-input-dynapro	1.1.0	7.1
+driver/xf86-input-elo2300	1.1.0	7.1
+driver/xf86-input-elographics	1.1.0	7.2RC2
+driver/xf86-input-evdev		1.1.3	7.2RC1
+driver/xf86-input-fpit		1.1.0	7.1
+driver/xf86-input-hyperpen	1.1.0	7.1
+driver/xf86-input-jamstudio	1.1.0	7.1
+driver/xf86-input-joystick	1.1.0	7.1
+driver/xf86-input-keyboard	1.1.1	7.2RC1	not-branched
+driver/xf86-input-magellan	1.1.0	7.1
+driver/xf86-input-magictouch	1.0.0.5	7.0
+driver/xf86-input-microtouch	1.1.0	7.1
+driver/xf86-input-mouse		1.1.2	7.2RC1 not-branched
+driver/xf86-input-mutouch	1.1.0	7.1
+driver/xf86-input-palmax	1.1.0	7.1
+driver/xf86-input-penmount	1.1.0	7.1
+driver/xf86-input-spaceorb	1.1.0	7.1
+driver/xf86-input-summa		1.1.0	7.1
+driver/xf86-input-tek4957	1.1.0	7.1
+driver/xf86-input-ur98		1.1.0	7.1
+driver/xf86-input-vmmouse	12.4.0	7.1
+driver/xf86-input-void		1.1.0	7.1
+driver/xf86-video-apm		1.1.1	7.1
+driver/xf86-video-ark		0.6.0	7.1
+driver/xf86-video-ast		0.81.0	7.1	need-rel
+driver/xf86-video-ati		6.6.3 7.2RC1
+driver/xf86-video-chips		1.1.1	7.1
+driver/xf86-video-cirrus	1.1.0	7.1
+driver/xf86-video-cyrix		1.1.0	7.1
+driver/xf86-video-dummy		0.2.0	7.1
+driver/xf86-video-fbdev		0.3.0	7.1	need-rel
+driver/xf86-video-glint		1.1.1	7.1
+driver/xf86-video-i128		1.1.0.6	7.2RC1
+driver/xf86-video-i740		1.1.0	7.1
+driver/xf86-video-impact	0.2.0		need-rel
+driver/xf86-video-imstt		1.1.0	7.1
+driver/xf86-video-intel		1.7.2	7.2RC1	need-rel
+driver/xf86-video-mga		1.4.4	7.2RC1
+driver/xf86-video-neomagic	1.1.1	7.1
+driver/xf86-video-newport	0.2.1	7.2RC1
+driver/xf86-video-nsc		2.8.2	7.2RC1
+driver/xf86-video-nv		1.2.0	??	need-rel
+driver/xf86-video-rendition	4.1.2	7.2RC2
+driver/xf86-video-s3		0.4.1	7.1
+driver/xf86-video-s3virge	1.9.1	7.1
+driver/xf86-video-savage	2.1.2	7.2RC1
+driver/xf86-video-siliconmotion	1.4.2	7.2RC1
+driver/xf86-video-sis		0.9.2	7.2RC1
+driver/xf86-video-sisusb	0.8.1	7.1
+driver/xf86-video-sunbw2	1.1.0	7.1
+driver/xf86-video-suncg14	1.1.0	7.1
+driver/xf86-video-suncg3	1.1.0	7.1
+driver/xf86-video-suncg6	1.1.0	7.1
+driver/xf86-video-sunffb	1.1.0	7.1
+driver/xf86-video-sunleo	1.1.0	7.1
+driver/xf86-video-suntcx	1.1.0	7.1
+driver/xf86-video-tdfx		1.2.2	7.2RC1
+driver/xf86-video-tga		1.1.0	7.0
+driver/xf86-video-trident	1.2.3	7.2RC2
+driver/xf86-video-tseng		1.1.1	7.2RC1
+driver/xf86-video-v4l		0.1.1	7.1
+driver/xf86-video-vesa		1.2.2	7.2RC1
+driver/xf86-video-vga		4.1.0	7.1
+driver/xf86-video-via		0.2.2	7.2RC1
+driver/xf86-video-vmware	10.14.0	7.2RC2	need-rel
+driver/xf86-video-voodoo	1.1.1	7.2RC1
+driver/xf86-video-wsfb		0.2.0	7.2RC1	need-rel
+
+encodings			fonts/encodings 		1.0.2	7.2RC2
+font-adobe-100dpi		fonts/adobe-100dpi		1.0.0
+font-adobe-75dpi		fonts/adobe-75dpi		1.0.0
+font-adobe-utopia-100dpi	fonts/adobe-utopia-100dpi	1.0.1
+font-adobe-utopia-75dpi		fonts/adobe-utopia-75dpi	1.0.1
+font-adobe-utopia-type1		fonts/adobe-utopia-type1	1.0.1
+font-alias			fonts/alias			1.0.1
+font-arabic-misc		fonts/arabic-misc		1.0.0
+font-bh-100dpi			fonts/bh-100dpi			1.0.0
+font-bh-75dpi			fonts/bh-75dpi			1.0.0
+font-bh-lucidatypewriter-100dpi	fonts/bh-lucidatypewriter-100dpi	1.0.0
+font-bh-lucidatypewriter-75dpi	fonts/bh-lucidatypewriter-75dpi	1.0.0
+font-bh-ttf			fonts/bh-ttf			1.0.0
+font-bh-type1			fonts/bh-type1			1.0.0
+font-bitstream-100dpi		fonts/bitstream-100dpi		1.0.0
+font-bitstream-75dpi		fonts/bitstream-75dpi		1.0.0
+font-bitstream-speedo		fonts/bitstream-speedo		1.0.0
+font-bitstream-type1		fonts/bitstream-type1		1.0.0
+font-cronyx-cyrillic		fonts/cronyx-cyrillic		1.0.0
+font-cursor-misc		fonts/cursor-misc		1.0.0
+font-daewoo-misc		fonts/daewoo-misc		1.0.0
+font-dec-misc			fonts/dec-misc			1.0.0
+font-ibm-type1			fonts/ibm-type1			1.0.0
+font-isas-misc			fonts/isas-misc			1.0.0
+font-jis-misc			fonts/jis-misc			1.0.0
+font-micro-misc			fonts/micro-misc		1.0.0
+font-misc-cyrillic		fonts/misc-cyrillic		1.0.0
+font-misc-ethiopic		fonts/misc-ethiopic		1.0.0
+font-misc-meltho		fonts/misc-meltho		1.0.0
+font-misc-misc			fonts/misc-misc			1.0.0
+font-mutt-misc			fonts/mutt-misc			1.0.0
+font-schumacher-misc		fonts/schumacher-misc		1.0.0
+font-screen-cyrillic		fonts/screen-cyrillic		1.0.1
+font-sony-misc			fonts/sony-misc			1.0.0
+font-sun-misc			fonts/sun-misc			1.0.0
+font-util			fonts/util			1.0.1
+font-winitzki-cyrillic		fonts/winitzki-cyrillic		1.0.0
+font-xfree86-type1		fonts/xfree86-type1		1.0.0
+
+lib/libFS			1.0.0	7.0
+lib/libICE			1.0.2	7.2RC1
+lib/libSM			1.0.2	7.2RC1
+lib/libX11			1.1RC2	7.2RC2
+lib/libXRes			1.0.2	7.2RC1
+lib/libXScrnSaver		1.1.1	7.2RC1
+lib/libXTrap			1.0.0	7.0
+lib/libXau			1.0.2	7.2RC1	needs-rel
+lib/libXaw			1.0.2	7.1
+lib/libXcomposite		0.3.1	7.2RC1
+lib/libXcursor			1.1.8	7.2RC1
+lib/libXdamage			1.0.4	7.2RC2
+lib/libXdmcp			1.0.2	7.2RC1
+lib/libXevie			1.0.2	7.2RC1
+lib/libXext			1.0.2	7.2RC1	needs-rel
+lib/libXfixes			4.0.3	7.2RC2
+lib/libXfont			1.2.3	7.2RC1
+lib/libXfontcache		1.0.3	7.2RC1
+lib/libXft			2.1.11	7.2RC1
+lib/libXi			1.0.2	7.2RC2
+lib/libXinerama			1.0.1	7.0
+lib/libXmu			1.0.3	7.2RC2
+lib/libXp			1.0.0	7.0
+lib/libXpm			3.5.6	7.2RC1
+lib/libXprintAppUtil		1.0.1	7.0
+lib/libXprintUtil		1.0.1	7.0
+lib/libXrandr			1.1.2	7.2RC1
+lib/libXrender			0.9.2	7.2RC1
+lib/libXt			1.0.4	7.2RC2
+lib/libXtst			1.0.1	7.0
+lib/libXv			1.0.2	7.2RC1
+lib/libXvMC			1.0.3	7.2RC1
+lib/libXxf86dga			1.0.1	7.1
+lib/libXxf86misc		1.0.1	7.1
+lib/libXxf86vm			1.0.1	7.1
+lib/libdmx			1.0.2	7.1
+lib/libfontenc			1.0.3	7.2RC1
+lib/liblbxutil			1.0.1	7.1	still needed?
+lib/liboldX			1.0.1	7.0	still needed?
+lib/libxkbfile			1.0.4	7.2RC1
+lib/libxkbui			1.0.2	7.1
+lib/libxtrans			1.0.2	7.2RC1
+
+proto/bigreqsproto		1.0.2	7.0	needs-rel
+proto/compositeproto		0.3.1	7.1
+proto/damageproto		1.0.3	7.0
+proto/dmxproto			2.2.2	7.0
+proto/evieproto			1.0.2	7.0
+proto/fixesproto		4.0	7.1
+proto/fontcacheproto		0.1.2	7.0
+proto/fontsproto		2.0.2	7.0
+proto/glproto			1.4.8	7.2RC1
+proto/inputproto		1.3.2	7.0	not-branched
+proto/kbproto			1.0.3	7.2RC1
+proto/pmproto			1.0.2	7.0
+proto/printproto		1.0.3	7.0
+proto/randrproto		1.1.2	7.0
+proto/recordproto		1.13.2	7.0
+proto/renderproto		0.9.2	7.0
+proto/resourceproto		1.0.2	7.0
+proto/scrnsaverproto		1.1.0	7.1
+proto/trapproto			3.4.3	7.0
+proto/videoproto		2.2.2	7.0
+proto/x11proto			7.0.9	7.2RC1
+proto/xcmiscproto		1.1.2	7.0
+proto/xextproto			7.0.2	7.0
+proto/xf86bigfontproto		1.1.2	7.0
+proto/xf86dgaproto		2.0.2	7.0
+proto/xf86driproto		2.0.3	7.0
+proto/xf86miscproto		0.9.2	7.0
+proto/xf86rushproto		1.1.2	7.0
+proto/xf86vidmodeproto		2.2.2	7.0
+proto/xineramaproto		1.1.2	7.0
+
+util/cf				1.0.2
+util/gccmakedep			1.0.2
+util/imake			1.0.2
+util/macros			1.1.2	7.2RC2
+util/makedepend			1.0.0
+
+xserver				1.1.99.901	7.2RC1 needs-rel
