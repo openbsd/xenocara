@@ -21,12 +21,12 @@
 
 # rstartd server
 
-rstart_serverdir = $(libdir)/X11/rstart
+rstart_serverdir = $(datadir)/X11/rstart
 rstart_server_PROGRAMS = rstartd.real
 
 rstartd_real_CFLAGS = $(RSTART_CFLAGS)			\
 		-DSERVERNAME=\"rstart\"			\
-		-DDEFAULT_CONFIG=\"$(libdir)/X11/rstart/config\"
+		-DDEFAULT_CONFIG=\"$(rstart_serverdir)/config\"
 
 rstartd_real_LDADD = $(RSTART_LIBS)
 
@@ -50,7 +50,7 @@ CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
 
 # config data
 
-configdir = $(libdir)/X11/rstart
+configdir = $(datadir)/X11/rstart
 config_DATA = config
 
 config: config.cpp
@@ -99,7 +99,7 @@ CLEANFILES = rstart rstartd config $(appman_DATA)
 # FIXME: Someone who cares about rstart may want to look into sanitizing
 # the stuff below.
 
-DATA_DIR = $(libdir)/X11/rstart
+DATA_DIR = $(datadir)/X11/rstart
 
 install-data-hook:
 	for name in `find ${srcdir}/commands -print | grep -v CVS` ; do	\
