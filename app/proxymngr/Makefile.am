@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = proxymngr
 
-CONFIG_DIR = $(libdir)/X11/proxymngr
+CONFIG_DIR = $(datadir)/X11/proxymngr
 
 proxymngr_CFLAGS =					\
 	$(PROXYMNGR_CFLAGS)					\
