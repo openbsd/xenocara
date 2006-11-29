@@ -1,0 +1,20 @@
+#     $OpenBSD: BSD.x11-etc.dist,v 1.1 2006/11/29 21:50:18 matthieu Exp $
+
+/set type=dir uname=root gname=wheel mode=0755
+.
+  appdefaults
+  ..
+  fs
+  ..
+  rstart
+    contexts
+    ..
+    local
+    ..
+  ..
+  twm
+  ..
+  xdm
+  ..
+  xkb
+..

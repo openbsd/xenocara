@@ -1,4 +1,4 @@
-#     $OpenBSD: BSD.x11.dist,v 1.2 2006/11/27 19:16:59 matthieu Exp $
+#     $OpenBSD: BSD.x11.dist,v 1.3 2006/11/29 21:50:18 matthieu Exp $
 #     $FreeBSD: BSD.x11.dist,v 1.2 1997/06/10 07:55:10 asami Exp $
 #
 
@@ -41,8 +41,6 @@
 	..
 	freetype2
 	    freetype
-		cache
-		..
 		config
 		..
 		internal
@@ -52,17 +50,11 @@
 	    ..
 	..
     ..
-    info
-    ..
     lib
         X11
             app-defaults
 	    ..
             config
-            ..
-            doc
-            ..
-            etc
             ..
             fonts
                 100dpi
@@ -80,12 +72,8 @@
                 misc
                 ..
             ..
-            fs
-            ..
 	    fvwm
 	    ..
-            lbxproxy
-            ..
             locale
                 C
                 ..
@@ -130,67 +118,9 @@
             ..
             proxymngr
             ..
-            rstart
-                commands
-                    x11r6
-                    ..
-                ..
-                contexts
-                ..
-            ..
-            twm
-            ..
             x11perfcomp
             ..
-            xdm
-            ..
-            xinit
-            ..
-            xkb
-                compat
-                ..
-                compiled
-                ..
-                geometry
-                    digital
-                    ..
-                    sgi
-                    ..
-                ..
-                keycodes
-                    digital
-                    ..
-                    sgi
-                    ..
-                ..
-                keymap
-                    digital
-                    ..
-                    sgi
-                    ..
-                    sun
-                    ..
-                ..
-                rules
-                ..
-                semantics
-                ..
-                symbols
-                    digital
-                    ..
-                    fujitsu
-                    ..
-                    nec
-                    ..
-                    sony
-                    ..
-                    sun
-                    ..
-                ..
-	    ..
             xserver
-            ..
-            xsm
             ..
         ..
 	modules
@@ -221,8 +151,6 @@
         ..
         cat7
         ..
-        cat8
-        ..
         man1
         ..
         man3
@@ -232,8 +160,6 @@
         man5
         ..
         man7
-        ..
-        man8
         ..
     ..
     share
@@ -245,5 +171,3 @@
 	..
     ..
 ..
-
-
