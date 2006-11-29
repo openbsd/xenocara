@@ -1,0 +1,39 @@
+
+	Notes on building Xenocara for OpenBSD X hackers
+
+This document presents some techniques that can be useful for people
+wanting to hack the xenocara tree. It assumes some basic knowledge of
+the OpenBSD build system, as described in the release(8) manual page.
+
+o About Xenocara
+  --------------
+Xenocara is the name choosen for OpenBSD's version of X. It's
+currently based on X.Org 7.2 and its dependencies. The goal of
+Xenocara is to provide a framework to host local modifications and to
+automate the build of the modular X.Org components, including 3rd
+party packages and some software maintained by OpenBSD developpers.
+
+o Source tree
+  -----------
+
+The organisation of the xenocara directory follows the general
+organisation used in X.Org:
+
+- app:	     X applications and utilities
+- data:	     various data files (keyboard mappings and bitmaps)
+- doc:	     documentation
+- driver:    input and video drivers
+- font:	     fonts
+- lib:	     libraries
+- proto:     X protocol headers
+- util:	     utilities that don't fit anywhere else
+- xserver:   the source for the X servers 
+
+In addition Xenocara uses the following directories:
+
+- dist:	    contains the Mesa sources, shared by lib and xserver above
+- distrib:  all binary distribution related tools and data
+- etc:	    mtree(8) data files
+- share:    make(1) configuration for xenocara
+
+
