@@ -1,9 +1,9 @@
-# $OpenBSD: Makefile,v 1.1 2006/11/26 14:00:56 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2006/11/29 17:42:27 matthieu Exp $
 .include <bsd.own.mk>
 
 X11BASE?=	/usr/X11R6
 
-SUBDIR= proto data/bitmaps lib app data/xkbdata xserver driver util
+SUBDIR= proto data/bitmaps lib app data/xkbdata xserver driver doc util
 .ifndef NOFONTS
 SUBDIR+= font
 .endif
@@ -38,6 +38,11 @@ distrib-dirs:
 	fi
 	mtree -qdef ${.CURDIR}/etc/mtree/BSD.x11.dist \
 		-p ${DESTDIR}${X11BASE}/ -U
+	if [ ! -d ${DESTDIR}${X11ETC}/. ]; then \
+		${INSTALL} -d -o root -g wheel -m 755 ${DESTDIR}${X11ETC}/; \
+	fi
+	mtree -qdef ${.CURDIR}/etc/mtree/BSD.etc-x11.dist \
+		-p ${DESTDIR}${X11ETC}/ -U
 
 update: _SUBDIRUSE
 
