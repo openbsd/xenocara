@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2006/11/29 17:42:27 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2006/11/29 21:52:18 matthieu Exp $
 .include <bsd.own.mk>
 
 X11BASE?=	/usr/X11R6
@@ -30,7 +30,51 @@ beforeinstall:
 	${MAKE} distrib-dirs
 	${MAKE} includes
 
-release:
+install: instal-distrib
+	/usr/libexec/makewhatis ${DESTDIR}/usr/X11R6/man
+
+install-distrib:
+	cd distrib/notes; ${MAKE} install
+
+release: release-clean distrib-dirs release-install dist
+
+release-clean:
+.if ! ( defined(DESTDIR) && defined(RELEASEDIR) )
+	@echo You must set DESTDIR and RELEASEDIR for a release.; exit 255
+.endif
+	${RM} -rf ${DESTDIR}/usr/X11R6/* ${DESTDIR}/usr/X11R6/.[a-zA-Z0-9]*
+	${RM} -rf ${DESTDIR}/var/cache/*
+	${RM} -rf ${DESTDIR}/etc/X11/*
+	${RM} -rf ${DESTDIR}/etc/fonts/*
+	@if [ -d ${DESTDIR}/usr/X11R6 ] && [ "`cd ${DESTDIR}/usr/X11R6;ls`" ]; then \
+		echo "Files found in ${DESTDIR}/usr/X11R6:"; \
+		(cd ${DESTDIR}/usr/X11R6;/bin/pwd;ls -a); \
+		echo "Cleanup before proceeding."; \
+		exit 255; \
+	fi
+
+
+release-install:
+	@${MAKE} install
+.if ${MACHINE} == alpha || ${MACHINE} == hp300 || ${MACHINE} == mac68k || \
+    ${MACHINE} == macppc || ${MACHINE} == sparc || ${MACHINE} == vax || \
+    ${MACHINE} == zaurus
+	@if [ -f $(DESTDIR)/etc/X11/xorg.conf ]; then \
+	 echo "Not overwriting existing" $(DESTDIR)/etc/X11/xorg.conf; \
+	else set -x; \
+	 ${INSTALL} ${INSTALL_COPY} -o root -g wheel -m 644 \
+		${XCONFIG} ${DESTDIR}/etc/X11 ; \
+	fi
+.endif
+
+dist-rel:
+	${MAKE} RELEASEDIR=`pwd`/rel DESTDIR=`pwd`/dest dist 2>&1 | tee distlog
+
+dist:
+	cd distrib/sets && \
+		env MACHINE=${MACHINE} ksh ./maketars ${OSrev} ${OSREV} && \
+		(env MACHINE=${MACHINE} ksh ./checkflist ${OSREV} || true)
+
 
 distrib-dirs:
 	if [ ! -d ${DESTDIR}${X11BASE}/. ]; then \
