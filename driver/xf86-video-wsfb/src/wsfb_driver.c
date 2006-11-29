@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.2 2006/11/28 19:59:08 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.3 2006/11/29 20:07:10 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -413,7 +413,7 @@ static Bool
 WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 {
 	WsfbPtr fPtr;
-	int default_depth, wstype;
+	int defaultDepth, depths, flags24, wstype;
 	char *dev, *s;
 	char *mod = NULL;
 	const char *reqSym = NULL;
@@ -441,17 +441,100 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	if (fPtr->fd == -1) {
 		return FALSE;
 	}
-
-	if (ioctl(fPtr->fd, WSDISPLAYIO_GINFO, &fPtr->info) == -1) {
-		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-			   "ioctl WSDISPLAY_GINFO: %s\n",
-			   strerror(errno));
-		return FALSE;
-	}
 	if (ioctl(fPtr->fd, WSDISPLAYIO_GTYPE, &wstype) == -1) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			   "ioctl WSDISPLAY_GTYPE: %s\n",
 			   strerror(errno));
+		return FALSE;
+	}
+	/*
+	 * depth
+	 */
+	defaultDepth = 0;
+	if (ioctl(fPtr->fd, WSDISPLAYIO_GETSUPPORTEDDEPTH, 
+		&depths) == 0) {
+		/* Preferred order for default depth selection. */
+		if (depths & WSDISPLAYIO_DEPTH_16)
+			defaultDepth = 16;
+		else if (depths & WSDISPLAYIO_DEPTH_15)
+			defaultDepth = 15;
+		else if (depths & WSDISPLAYIO_DEPTH_8)
+			defaultDepth = 8;
+		else if (depths & WSDISPLAYIO_DEPTH_24)
+			defaultDepth = 24;
+		else if (depths & WSDISPLAYIO_DEPTH_4)
+			defaultDepth = 4;
+		else if (depths & WSDISPLAYIO_DEPTH_1)
+			defaultDepth = 1;
+		
+		flags24 = 0;
+		if (depths & WSDISPLAYIO_DEPTH_24_24)
+			flags24 |= Support24bppFb;
+		if (depths & WSDISPLAYIO_DEPTH_24_32)
+			flags24 |= Support32bppFb;
+		if (!flags24)
+			flags24 = Support24bppFb;
+	} else {
+		/* Old way */
+		if (ioctl(fPtr->fd, WSDISPLAYIO_GINFO, &fPtr->info) == -1) {
+			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			    "no way to get depth info: %s\n",
+			    strerror(errno));
+			return FALSE;
+		}
+		if (fPtr->info.depth == 8) {
+			/*
+			 * We might run on a byte addressable frame buffer,
+			 * but with less than 8 bits per pixel. 
+			 * We can know this from the colormap size.
+			 */
+			defaultDepth = 1;
+			while ((1 << defaultDepth) < fPtr->info.cmsize)
+				defaultDepth++;
+		} else
+			defaultDepth = 
+			    fPtr->info.depth <= 24 ? fPtr->info.depth : 24;
+
+		if (fPtr->info.depth >= 24)
+			flags24 = Support24bppFb|Support32bppFb;
+		else 
+			flags24 = 0;
+	}
+
+	/* Prefer 24bpp for fb since it potentially allows larger modes. */
+	if (flags24 & Support24bppFb)
+		flags24 |= SupportConvert32to24 | PreferConvert32to24;
+	
+	if (!xf86SetDepthBpp(pScrn, defaultDepth, 0, 0, flags24))
+		return FALSE;
+
+	if (wstype == WSDISPLAY_TYPE_PCIVGA) {
+		/* Set specified mode */
+		if (pScrn->display->modes != NULL &&
+		    pScrn->display->modes[0] != NULL) {
+			struct wsdisplay_gfx_mode gfxmode;
+			
+			if (sscanf(pScrn->display->modes[0], "%dx%d", 
+				&gfxmode.width, &gfxmode.height) != 2) {
+				xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+				    "Can't parse mode name %s\n", 
+				    pScrn->display->modes[0]);
+				return FALSE;
+			}
+			gfxmode.depth = pScrn->bitsPerPixel;
+			if (ioctl(fPtr->fd, WSDISPLAYIO_SETGFXMODE, 
+				&gfxmode) == -1) {
+				xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+				    "ioctl WSDISPLAY_SETGFXMODE: %s\n", 
+				    strerror(errno));
+				return FALSE;
+			}
+		}
+	}
+	if (ioctl(fPtr->fd, WSDISPLAYIO_GINFO, &fPtr->info) == -1) {
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		    "ioctl WSDISPLAY_GINFO: %s\n",
+		    strerror(errno));
 		return FALSE;
 	}
 	if (ioctl(fPtr->fd, WSDISPLAYIO_LINEBYTES, &fPtr->linebytes) == -1) {
@@ -490,25 +573,6 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 		}
 	}
 
-	/*
-	 * Handle depth
-	 */
-	if (fPtr->info.depth == 8) {
-		/*
-		 * We might run on a byte addressable frame buffer,
-		 * but with less than 8 bits per pixel. We can know this
-		 * from the colormap size.
-		 */
-		default_depth = 1;
-		while ((1 << default_depth) < fPtr->info.cmsize)
-			default_depth++;
-	} else
-		default_depth = fPtr->info.depth <= 24 ? fPtr->info.depth : 24;
-
-	if (!xf86SetDepthBpp(pScrn, default_depth, default_depth,
-		fPtr->info.depth,
-		fPtr->info.depth >= 24 ? Support24bppFb|Support32bppFb : 0))
-		return FALSE;
 
 	/* Check consistency */
 	if (pScrn->bitsPerPixel != fPtr->info.depth) {
@@ -551,6 +615,17 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 				masks.red = 0x0000ff;
 				masks.green = 0x00ff00;
 				masks.blue = 0xff0000;
+			} else {
+				masks.red = 0x1f << 11;
+				masks.green = 0x3f << 5;
+				masks.blue = 0x1f;
+			}
+			break;
+		case WSDISPLAY_TYPE_PCIVGA:
+			if (pScrn->depth > 16) {
+				masks.red = 0xff0000;
+				masks.green = 0x00ff00;
+				masks.blue = 0x0000ff;
 			} else {
 				masks.red = 0x1f << 11;
 				masks.green = 0x3f << 5;
@@ -645,6 +720,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 			    "Option \"Rotate\" ignored on depth < 8");
 		}
 	}
+	
 	/* fake video mode struct */
 	mode = (DisplayModePtr)xalloc(sizeof(DisplayModeRec));
 	mode->prev = mode;
@@ -664,10 +740,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	mode->VTotal = 0;
 	mode->VScan = 0;
 	mode->Flags = 0;
-	if (pScrn->modes != NULL) {
-		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		   "Ignoring mode specification from screen section\n");
-	}
+
 	pScrn->currentMode = pScrn->modes = mode;
 	pScrn->virtualX = fPtr->info.width;
 	pScrn->virtualY = fPtr->info.height;
@@ -730,7 +803,7 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	TRACE_ENTER("WsfbScreenInit");
 #if DEBUG
 	ErrorF("\tbitsPerPixel=%d, depth=%d, defaultVisual=%s\n"
-	       "\tmask: %x,%x,%x, offset: %d,%d,%d\n",
+	       "\tmask: %x,%x,%x, offset: %u,%u,%u\n",
 	       pScrn->bitsPerPixel,
 	       pScrn->depth,
 	       xf86GetVisualName(pScrn->defaultVisual),
@@ -746,6 +819,13 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	case 16:
 		if (fPtr->linebytes == fPtr->info.width) {
 			len = fPtr->info.width*fPtr->info.height*sizeof(short);
+		} else {
+			len = fPtr->linebytes*fPtr->info.height;
+		}
+		break;
+	case 24:
+		if (fPtr->linebytes == fPtr->info.width) {
+			len = fPtr->info.width*fPtr->info.height*3;
 		} else {
 			len = fPtr->linebytes*fPtr->info.height;
 		}
@@ -835,6 +915,7 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		break;
 	case 8:
 	case 16:
+	case 24:
 	case 32:
 		ret = fbScreenInit(pScreen,
 				   fPtr->fbstart,
@@ -849,8 +930,11 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		return FALSE;
 	} /* case */
 
-	if (!ret)
+	if (!ret) {
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		    "fbScreenInit error");
 		return FALSE;
+	}
 
 	if (pScrn->bitsPerPixel > 8) {
 		/* Fixup RGB ordering */
@@ -1044,20 +1128,34 @@ static Bool
 WsfbEnterVT(int scrnIndex, int flags)
 {
 	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	WsfbPtr fPtr = WSFBPTR(pScrn);
+	int wsmode = WSDISPLAYIO_MODE_DUMBFB;
 
 	TRACE_ENTER("EnterVT");
+	
+	/* Switch to graphics mode */
+	if (ioctl(fPtr->fd, WSDISPLAYIO_SMODE, &wsmode) == -1) {
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		    "ioctl WSDISPLAYIO_SMODE: %s\n",
+		    strerror(errno));
+		return FALSE;
+	}
+
 	pScrn->vtSema = TRUE;
+	TRACE_EXIT("EnterVT");
 	return TRUE;
 }
 
 static void
 WsfbLeaveVT(int scrnIndex, int flags)
 {
-#if DEBUG
 	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-#endif
 
 	TRACE_ENTER("LeaveVT");
+
+	WsfbRestore(pScrn);
+
+	TRACE_EXIT("LeaveVT");
 }
 
 static Bool
@@ -1134,6 +1232,7 @@ WsfbLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
 		if (ioctl(fPtr->fd,WSDISPLAYIO_PUTCMAP, &cmap) == -1)
 			ErrorF("ioctl FBIOPUTCMAP: %s\n", strerror(errno));
 	}
+	TRACE_EXIT("LoadPalette");
 }
 
 static Bool
