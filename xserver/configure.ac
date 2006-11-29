@@ -1,4 +1,4 @@
-dnl $Id: configure.ac,v 1.2 2006/11/28 20:29:31 matthieu Exp $
+dnl $Id: configure.ac,v 1.3 2006/11/29 22:28:29 matthieu Exp $
 dnl
 dnl Copyright © 2003-2005 Keith Packard, Daniel Stone
 dnl
@@ -1185,7 +1185,7 @@ int main () {
 		XORG_OS_SUBDIR="bsd"
 		XORG_OS_KBD="BSD"
 		case $host_cpu in
-		  i*86|amd64*|x86_64*)
+		  amd64*|x86_64*)
 			;;
 		  *)
 			xorg_bus_freebsdpci="yes"
@@ -1390,7 +1390,7 @@ if test "x$XPRINT" = xyes; then
 	AC_SUBST([XPRINT_CFLAGS])
 	AC_SUBST([XPRINT_LIBS])
 
-	xpconfigdir=$libdir/X11/xserver
+	xpconfigdir=$datadir/X11/xserver
 	AC_SUBST([xpconfigdir])
 
 	AC_PATH_PROG(MKFONTSCALE, mkfontscale)
