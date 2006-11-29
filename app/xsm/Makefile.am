@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xsm
 
-SYSTEM_INIT_DIR = $(libdir)/X11/xsm
+SYSTEM_INIT_DIR = $(datadir)/X11/xsm
 
 
 xsm_CFLAGS = $(XSM_CFLAGS) -DRSHCMD=\"@RSH@\" \
