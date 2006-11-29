@@ -217,7 +217,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-configdir = $(libdir)/X11/fs
+configdir = $(datadir)/X11/fs
 FONT_FLAGS = -DFONT_PCF -DFONT_FS -DFONT_SPEEDO
 AM_CFLAGS = $(XFS_CFLAGS) -I$(top_srcdir)/include -DXFSPIDDIR=\"/var/run\" \
 		-DDEFAULT_CONFIG_FILE=\"$(configdir)/config\" $(FONT_FLAGS) \
