@@ -1,0 +1,13 @@
+# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2006/11/29 17:41:32 matthieu Exp $
+
+all:	includes
+	$(MAKE)
+
+includes:
+	lndir ${.CURDIR}
+	$(X11BASE)/bin/xmkmf
+
+install:
+	$(MAKE) install.man
+
+.include <bsd.xorg.mk>

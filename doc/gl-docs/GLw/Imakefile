@@ -16,7 +16,7 @@ InstallManPage(GLwDrAMC,$(MANDIR))
 InstallManPage(GLwDrASB,$(MANDIR))
 #endif
 
-GLWMANDIR = $(OGLSAMPLESRCDIR)/main/doc/man/manglw
+GLWMANDIR = .
 
 LinkFile(GLwCMDrA.man, $(GLWMANDIR)/glwcreatemdrawingarea.gl)
 LinkFile(GLwDrawA.man, $(GLWMANDIR)/glwdrawingarea.gl)
