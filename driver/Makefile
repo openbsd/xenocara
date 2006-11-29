@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2006/11/27 19:56:35 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2006/11/29 13:26:12 matthieu Exp $
 
 INPUT_DRV= \
 	xf86-input-acecad \
@@ -28,7 +28,7 @@ INPUT_DRV+=openbsd-input-ws
 VIDEO_DRV= \
 	xf86-video-apm xf86-video-ark xf86-video-ati xf86-video-chips  \
 	xf86-video-cirrus xf86-video-cyrix xf86-video-dummy \
-	xf86-video-fbdev xf86-video-glint xf86-video-i128 \
+	xf86-video-glint xf86-video-i128 \
 	xf86-video-i740 xf86-video-intel xf86-video-imstt xf86-video-mga \
 	xf86-video-neomagic xf86-video-newport xf86-video-nsc \
 	xf86-video-nv xf86-video-rendition xf86-video-s3 \
