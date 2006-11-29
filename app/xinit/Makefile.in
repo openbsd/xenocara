@@ -230,7 +230,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-XINITDIR = $(libdir)/X11/xinit
+XINITDIR = $(datadir)/X11/xinit
 bin_SCRIPTS = startx
 xinit_CFLAGS = $(XINIT_CFLAGS) -DXINITDIR=\"$(XINITDIR)\" -DBINDIR=\"$(bindir)\"
 xinit_LDADD = $(XINIT_LIBS)

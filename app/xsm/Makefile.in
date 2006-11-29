@@ -226,7 +226,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SYSTEM_INIT_DIR = $(libdir)/X11/xsm
+SYSTEM_INIT_DIR = $(datadir)/X11/xsm
 xsm_CFLAGS = $(XSM_CFLAGS) -DRSHCMD=\"@RSH@\" \
 	-DSYSTEM_INIT_FILE=\"$(SYSTEM_INIT_DIR)/system.xsm\"
 
