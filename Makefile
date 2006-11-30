@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.5 2006/11/30 14:07:20 todd Exp $
+# $OpenBSD: Makefile,v 1.6 2006/11/30 17:12:58 matthieu Exp $
 .include <bsd.own.mk>
 
 X11BASE?=	/usr/X11R6
@@ -85,7 +85,7 @@ distrib-dirs:
 	if [ ! -d ${DESTDIR}${X11ETC}/. ]; then \
 		${INSTALL} -d -o root -g wheel -m 755 ${DESTDIR}${X11ETC}/; \
 	fi
-	mtree -qdef ${.CURDIR}/etc/mtree/BSD.x11-etc.dist \
+	mtree -qdef ${.CURDIR}/etc/mtree/BSD.etc-x11.dist \
 		-p ${DESTDIR}${X11ETC}/ -U
 
 update: _SUBDIRUSE
