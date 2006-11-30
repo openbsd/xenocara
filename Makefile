@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.6 2006/11/30 17:12:58 matthieu Exp $
+# $OpenBSD: Makefile,v 1.7 2006/11/30 23:22:15 matthieu Exp $
 .include <bsd.own.mk>
 
 X11BASE?=	/usr/X11R6
@@ -30,7 +30,7 @@ beforeinstall:
 	${MAKE} distrib-dirs
 	${MAKE} includes
 
-install: instal-distrib
+afterinstall: install-distrib
 	/usr/libexec/makewhatis ${DESTDIR}/usr/X11R6/man
 
 install-distrib:
