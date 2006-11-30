@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.1 2006/11/29 18:45:53 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.2 2006/11/30 17:58:48 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -70,7 +70,7 @@ Archive Site:
 Package:	xidle
 Version:
 Current Vers:
-Maintainer:	fgs@openbs.org
+Maintainer:	fgsch@openbsd.org
 Archive Site:
 
 Package:	xlockmore
