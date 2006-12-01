@@ -4,7 +4,7 @@ bin_PROGRAMS = Xprt
 
 Xprt_CFLAGS = @DIX_CFLAGS@ @XPRINT_CFLAGS@ \
 	-DXPRINT -DPRINT_ONLY_SERVER -D_XP_PRINT_SERVER_  \
-	-DXPRINTDIR=\"$(libdir)/X11/xserver\"    \
+	-DXPRINTDIR=\"$(datadir)/X11/xserver\"    \
 	-DXPRASTERDDX -DXPPCLDDX -DXPMONOPCLDDX -DXPPSDDX
 
 Xprt_LDFLAGS = -L$(top_srcdir)
