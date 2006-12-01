@@ -30072,7 +30072,7 @@ _ACEOF
 		XORG_OS_SUBDIR="bsd"
 		XORG_OS_KBD="BSD"
 		case $host_cpu in
-		  i*86|amd64*|x86_64*)
+		  amd64*|x86_64*)
 			;;
 		  *)
 			xorg_bus_freebsdpci="yes"
@@ -30801,7 +30801,7 @@ fi
 
 
 
-	xpconfigdir=$libdir/X11/xserver
+	xpconfigdir=$datadir/X11/xserver
 
 
 	# Extract the first word of "mkfontscale", so it can be a program name with args.
