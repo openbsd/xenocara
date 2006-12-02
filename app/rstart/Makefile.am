@@ -102,7 +102,8 @@ CLEANFILES = rstart rstartd config $(appman_DATA)
 DATA_DIR = $(datadir)/X11/rstart
 
 install-data-hook:
-	for name in `find ${srcdir}/commands -print | grep -v CVS` ; do	\
+	( cd ${srcdir};							\
+	for name in `find ./commands -print | grep -v CVS` ; do	\
 	    if test -f $$name; then					\
 	        sed							\
 		    -e 's,ENVPREFIX,RSTART,g'				\
@@ -120,7 +121,7 @@ install-data-hook:
 	    fi;								\
 	done;								\
 									\
-	for name in `find ${srcdir}/contexts -print | grep -v CVS` ; do	\
+	for name in `find ./contexts -print | grep -v CVS` ; do	\
 	    if test -f $$name; then					\
 	        sed							\
 	            -e 's,_PATH,$(DEFAULT_USER_PATH),g'			\
@@ -132,6 +133,7 @@ install-data-hook:
 	        fi ;							\
 	    fi ;							\
 	done;								\
+	);								\
 									\
 	cd $(DESTDIR)$(DATA_DIR)/contexts;				\
 	sed -e '/^$$/d' -e '/^#/d' ${srcdir}/contexts/@Aliases |	\
