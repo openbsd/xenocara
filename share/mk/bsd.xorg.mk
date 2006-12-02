@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.7 2006/11/29 21:51:46 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.8 2006/12/02 16:28:48 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -27,8 +27,8 @@ AUTOCONF_VERSION=	2.59
 # Where source lives
 XENOCARA_TOP?=		/usr/xenocara
 
-# Where to buid - not used?
-# XORG_BUILDDIR=	${XENOCARA_TOP}
+# Where to build
+XENOCARA_OBJDIR?=	/usr/obj/xenocara
 
 # Where to install
 X11BASE?=		/usr/X11R6
@@ -41,7 +41,7 @@ MANDIR=			${X11BASE}/man/cat
 
 PKG_CONFIG_PATH=	${X11BASE}/lib/pkgconfig
 
-_cache= --cache-file=${XENOCARA_TOP}/xorg-config.cache.${MACHINE}
+_cache= --cache-file=${XENOCARA_OBJDIR}/xorg-config.cache.${MACHINE}
 
 MAKE_ENV+=	AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 		AUTOCONF_VERSION="$(AUTOCONF_VERSION)" \
@@ -70,7 +70,7 @@ all:	config.status
 
 .if !target(config.status)
 .if defined(XENOCARA_RERUN_AUTOCONF) && ${XENOCARA_RERUN_AUTOCONF:L} == "yes"
-config.status:
+config.status: _xenocara_obj
 	cd ${.CURDIR}; ${MAKE_ENV} autoreconf -v --install --force
 	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" \
 		${CONFIGURE_ENV} ${.CURDIR}/configure \
@@ -80,7 +80,7 @@ config.status:
 		${_cache} \
 		${CONFIGURE_ARGS}
 .else
-config.status:
+config.status: _xenocara_obj
 	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" \
 		${CONFIGURE_ENV} ${.CURDIR}/configure --prefix=${X11BASE} \
 		--sysconfdir=/etc \
@@ -131,4 +131,61 @@ cleandir: clean
 	-@if [ -e Makefile ]; then ${MAKE_ENV} ${MAKE} distclean; fi
 .endif
 
-.include <bsd.obj.mk>
+#
+# Obj dir rules for xenocara
+#
+.if !target(_xenocara_obj)
+. if defined(NOOBJ)
+_xenocara_obj:
+. else
+
+. if defined(OBJMACHINE)
+__objdir=	obj.$(MACHINE)
+. else
+__objdir=	obj
+. endif
+
+. if defined(XENOCARA_OBJMACHINE)
+__xobjdir=	$(XENOCARA_OBJDIR).$(MACHINE)
+__xobjdirpf=
+. else
+__xobjdir=	$(XENOCARA_OBJDIR)
+.  if defined(OBJMACHINE)
+__xobjdirpf=	.$(MACHINE)
+.  else
+__xobjdirpf=
+.  endif
+. endif
+
+_SUBDIRUSE:
+
+_xenocara_obj! _SUBDIRUSE
+	@cd $(.CURDIR); \
+	here=`/bin/pwd`; xenocara_top=`cd $(XENOCARA_TOP); /bin/pwd`; \
+	subdir=$${here#$${xenocara_top}/}; \
+	if test $$here != $$subdir ; then \
+	    dest=${__xobjdir}/$$subdir${__xobjdirpf}; \
+	    echo "$$here/${__objdir} -> $$dest"; \
+	    if test ! -L ${__objdir} -o \
+		X`readlink ${__objdir}` != X$$dest; then \
+		    if  test -e ${__objdir}; then rm -rf ${__objdir}; fi; \
+		    ln -sf $$dest ${__objdir}; \
+	    fi; \
+	    if test -d ${__xobjdir} -a ! -d $$dest; then \
+		mkdir -p $$dest; \
+	    else \
+		true; \
+	    fi; \
+	else \
+	    dest=$$here/${__objdir}; \
+	    if test ! -d ${__objdir}; then \
+		echo "making $$dest"; \
+		mkdir $$dest; \
+	    fi ; \
+	fi
+. endif
+.endif
+
+.if !target(obj)
+obj:	_xenocara_obj
+.endif

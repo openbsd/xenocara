@@ -390,6 +390,8 @@ x86_xform4.o: matypes.h
 
 NOPROFILE=
 
+obj: _xenocara_obj
+
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
 

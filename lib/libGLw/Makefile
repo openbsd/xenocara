@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2006/11/29 18:03:09 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2006/12/02 16:28:48 matthieu Exp $
 
 DIST=	${.CURDIR}/../../dist/Mesa
 GLW=	${DIST}/src/glw
@@ -16,6 +16,8 @@ INCS= \
 	GLwDrawAP.h \
 	GLwMDrawA.h \
 	GLwMDrawAP.h
+
+obj: _xenocara_obj
 
 includes:
 	cd ${GLW}; for i in ${INCS}; do \

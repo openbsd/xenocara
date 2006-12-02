@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile,v 1.3 2006/11/29 18:03:09 matthieu Exp $
-# $OpenBSD: Makefile,v 1.3 2006/11/29 18:03:09 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2006/12/02 16:28:48 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2006/12/02 16:28:48 matthieu Exp $
 .include <bsd.own.mk>
 
 DIST= ${.CURDIR}
@@ -22,6 +22,8 @@ includes:
 	  ${INSTALL} ${INSTALL_COPY} -m 444 -o $(BINOWN) -g $(BINGRP) \
 	  ${DIST}/lib/expat_external.h \
 	  ${DESTDIR}${X11BASE}/include/expat_external.h
+
+obj: _xenocara_obj
 
 NOPROFILE=
 

@@ -12,7 +12,7 @@ CFLAGS+=	-I${X11BASE}/include -I${.CURDIR}/../.. -I${.CURDIR}/../../libs
 FVWMLIBDIR=	${X11BASE}/lib/X11/fvwm
 MANDIR=		${X11BASE}/man/cat
 
-.include <bsd.obj.mk>
+obj: _xenocara_obj
 
 .if exists(${.CURDIR}/../../libs/${__objdir})
 LDADD+=		-L${X11BASE}/lib -L${.CURDIR}/../../libs/${__objdir} -lfvwm

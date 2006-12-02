@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.5 2006/11/29 11:33:49 matthieu Exp $
+# $OpenBSD: Makefile,v 1.6 2006/12/02 16:28:48 matthieu Exp $
 
 PROG=	xsystrace
 MAN=	xsystrace.1
@@ -18,6 +18,8 @@ afterinstall:
 
 X11BASE?= /usr/X11R6
 MANDIR=	${X11BASE}/man/cat
+
+obj: _xenocara_obj
 
 .include <bsd.prog.mk>
 .include <bsd.xorg.mk>

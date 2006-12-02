@@ -119,14 +119,16 @@ CPPFLAGS+=	-I${DIST}/include \
 
 NOPROFILE=
 
-.include <bsd.lib.mk>
-.include <bsd.xorg.mk>
+obj: _xenocara_obj
 
 includes:
 	@cmp -s ${DIST}/include/GL/glu.h \
 		${DESTDIR}${X11BASE}/include/GL/glu.h \
 	|| ${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 \
 		${DIST}/include/GL/glu.h ${DESTDIR}${X11BASE}/include/GL 
+
+.include <bsd.lib.mk>
+.include <bsd.xorg.mk>
 
 .PATH:	${GLU}/libutil
 .PATH: ${GLU}/libtess

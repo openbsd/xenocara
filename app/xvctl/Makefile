@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1.1.1 2006/11/26 10:59:22 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2006/12/02 16:28:48 matthieu Exp $
 
 .include <bsd.own.mk>
 X11BASE?=	/usr/X11R6
@@ -10,6 +10,8 @@ CPPFLAGS+= -I${X11BASE}/include
 LDADD+=-L${X11BASE}/lib -lXv -lXext -lX11
 
 MANDIR= ${X11BASE}/man/cat
+
+obj: _xenocara_obj
 
 .include <bsd.prog.mk>
 .include <bsd.xorg.mk>

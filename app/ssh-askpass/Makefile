@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2006/11/29 11:33:14 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2006/12/02 16:28:48 matthieu Exp $
 
 .include	<bsd.own.mk>
 X11BASE?=	/usr/X11R6
@@ -34,6 +34,8 @@ afterinstall:
 		$(DESTDIR)/etc/X11/app-defaults/$(CLASS)
 
 beforedepend: $(CLASS)_ad.h
+
+obj: _xenocara_obj
 
 .include <bsd.prog.mk>
 .include <bsd.xorg.mk>

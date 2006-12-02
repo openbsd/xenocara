@@ -1,6 +1,8 @@
-# $OpenBSD: Makefile,v 1.2 2006/11/27 19:56:35 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2006/12/02 16:28:48 matthieu Exp $
 
 .include "../Makefile.inc"
+
+NOOBJ=Yes
 
 depend:
 

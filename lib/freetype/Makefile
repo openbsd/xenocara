@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2006/11/29 18:03:09 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.5 2006/12/02 16:28:48 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
@@ -18,9 +18,12 @@ CPPFLAGS+= -I${.CURDIR}/include -I${.CURDIR}/src/lzw -DFT2_BUILD_LIBRARY
 
 CLEANFILES+=	freetype-config freetype2.pc
 
+obj:	_xenocara_obj
+
 build:
 	cd ${.CURDIR} && ${MAKE} clean
 	cd ${.CURDIR} && ${SUDO} ${MAKE} includes
+	cd ${.CURDIR} && ${MAKE} depend
 	cd ${.CURDIR} && ${MAKE} all
 	cd ${.CURDIR} && ${SUDO} ${MAKE} install
 
