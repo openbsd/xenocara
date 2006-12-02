@@ -75,8 +75,9 @@ PROGRAMS = $(bin_PROGRAMS)
 fc_cache_SOURCES = fc-cache.c
 fc_cache_OBJECTS = fc-cache.$(OBJEXT)
 am__DEPENDENCIES_1 =
-fc_cache_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) ${top_builddir}/src/libfontconfig.la
+fc_cache_DEPENDENCIES = ${top_builddir}/src/libfontconfig.la \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -250,7 +251,7 @@ FC_CACHE_SRC = ${top_srcdir}/fc-cache
 SGML = ${FC_CACHE_SRC}/fc-cache.sgml
 INCLUDES = -I${top_srcdir} -I${top_srcdir}/src $(FREETYPE_CFLAGS) $(WARN_CFLAGS)
 EXTRA_DIST = fc-cache.sgml
-fc_cache_LDADD = $(FREETYPE_LIBS) $(LIBXML2_LIBS) $(EXPAT_LIBS) ${top_builddir}/src/libfontconfig.la
+fc_cache_LDADD = ${top_builddir}/src/libfontconfig.la $(FREETYPE_LIBS) $(LIBXML2_LIBS) $(EXPAT_LIBS)
 @USEDOCBOOK_TRUE@man_MANS = fc-cache.1
 all: all-am
 
