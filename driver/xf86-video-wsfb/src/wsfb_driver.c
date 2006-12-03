@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.5 2006/12/03 16:36:56 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.6 2006/12/03 17:04:08 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -157,7 +157,7 @@ static int pix24bpp = 0;
 #define WSFB_MAJOR_VERSION	0
 #define WSFB_MINOR_VERSION	2
 
-DriverRec WSFB = {
+_X_EXPORT DriverRec WSFB = {
 	WSFB_VERSION,
 	WSFB_DRIVER_NAME,
 	WsfbIdentify,
