@@ -911,7 +911,7 @@ static __inline__ void stw_u(unsigned long val, unsigned short *p)
 #    else
 #     define PORT_SIZE short
 #    endif
-#    if defined(__arm32__) && defined(__OpenBSD__)
+#    if defined(__arm__) && defined(__OpenBSD__)
 /*
 #     include <machine/sysarch.h>
 */

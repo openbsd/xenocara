@@ -85,6 +85,9 @@
 /* BSD i386 iopl */
 #undef USE_I386_IOPL
 
+/* OpenBSD/arm */
+#undef USE_ARM32_MMAP
+
 /* System is BSD-like */
 #undef CSRG_BASED
 

@@ -30,7 +30,8 @@ ARCH_SOURCES = \
 endif
 
 if ARM_VIDEO
-ARCH_SOURCES = arm_video.c
+ARCH_SOURCES = arm_video.c \
+	$(srcdir)/../shared/ioperm_noop.c
 endif
 
 if HP300_VIDEO
