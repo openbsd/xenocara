@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.4 2006/12/03 16:32:48 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.5 2006/12/03 16:36:56 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -208,7 +208,7 @@ static XF86ModuleVersionInfo WsfbVersRec = {
 	MODULEVENDORSTRING,
 	MODINFOSTRING1,
 	MODINFOSTRING2,
-	XF86_VERSION_CURRENT,
+	XORG_VERSION_CURRENT,
 	WSFB_MAJOR_VERSION, WSFB_MINOR_VERSION, 0,
 	ABI_CLASS_VIDEODRV,
 	ABI_VIDEODRV_VERSION,
