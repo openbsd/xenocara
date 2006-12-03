@@ -205,15 +205,15 @@ GetDrawableAttribute( Display *dpy, GLXDrawable drawable,
    unsigned int length;
    unsigned int i;
    unsigned int num_attributes;
+   GLboolean use_glx_1_3 = ((priv->majorVersion > 1)
+			    || (priv->minorVersion >= 3));
+
 
    if ( (dpy == NULL) || (drawable == 0) ) {
       return 0;
    }
 
    priv = __glXInitialize(dpy);
-   GLboolean use_glx_1_3 = ((priv->majorVersion > 1)
-			    || (priv->minorVersion >= 3));
-
    *value = 0;
 
 
