@@ -395,7 +395,7 @@ obj: _xenocara_obj
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
 
-.if ${MACHINE_ARCH} == powerpc
+.if ${MACHINE_ARCH} == powerpc || ${MACHINE_ARCH} == sparc
 PICFLAG = -fPIC
 .endif
 
