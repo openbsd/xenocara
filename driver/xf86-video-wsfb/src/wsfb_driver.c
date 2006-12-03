@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.3 2006/11/29 20:07:10 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.4 2006/12/03 16:32:48 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -151,14 +151,14 @@ enum { WSFB_ROTATE_NONE = 0,
  */
 static int pix24bpp = 0;
 
-#define VERSION			4000
+#define WSFB_VERSION 		4000
 #define WSFB_NAME		"wsfb"
 #define WSFB_DRIVER_NAME	"wsfb"
 #define WSFB_MAJOR_VERSION	0
-#define WSFB_MINOR_VERSION	1
+#define WSFB_MINOR_VERSION	2
 
 DriverRec WSFB = {
-	VERSION,
+	WSFB_VERSION,
 	WSFB_DRIVER_NAME,
 	WsfbIdentify,
 	WsfbProbe,
@@ -193,8 +193,8 @@ static const char *fbSymbols[] = {
 	NULL
 };
 static const char *shadowSymbols[] = {
-	"shadowAlloc",
-	"shadowInit",
+	"shadowAdd",
+	"shadowSetup",
 	"shadowUpdatePacked",
 	"shadowUpdatePackedWeak",
 	"shadowUpdateRotatePacked",
@@ -255,7 +255,6 @@ typedef struct {
 	unsigned char*		fbstart;
 	unsigned char*		fbmem;
 	size_t			fbmem_len;
-	unsigned char*		shadowmem;
 	int			rotate;
 	Bool			shadowFB;
 	CloseScreenProcPtr	CloseScreen;
@@ -386,7 +385,7 @@ WsfbProbe(DriverPtr drv, int flags)
 						   NULL,NULL,NULL,NULL);
 			if (pScrn != NULL) {
 				foundScreen = TRUE;
-				pScrn->driverVersion = VERSION;
+				pScrn->driverVersion = WSFB_VERSION;
 				pScrn->driverName = WSFB_DRIVER_NAME;
 				pScrn->name = WSFB_NAME;
 				pScrn->Probe = WsfbProbe;
@@ -889,17 +888,8 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		pScrn->PointerMoved = WsfbPointerMoved;
 	}
 
-	/* shadowfb */
-	if (fPtr->shadowFB) {
-		if ((fPtr->shadowmem = shadowAlloc(width, height,
-						   pScrn->bitsPerPixel)) == NULL)
-		return FALSE;
+	fPtr->fbstart = fPtr->fbmem;
 
-		fPtr->fbstart   = fPtr->shadowmem;
-	} else {
-		fPtr->shadowmem = NULL;
-		fPtr->fbstart   = fPtr->fbmem;
-	}
 	switch (pScrn->bitsPerPixel) {
 	case 1:
 		ret = xf1bppScreenInit(pScreen, fPtr->fbstart,
@@ -957,17 +947,28 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 				   "RENDER extension initialisation failed.");
 	}
 	if (fPtr->shadowFB) {
+		PixmapPtr pPixmap;
+
 		if (pScrn->bitsPerPixel < 8) {
 			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 				   "Shadow FB not available on < 8 depth");
 		} else {
-			if (!shadowSetup(pScreen) ||
-			    !shadowAdd(pScreen, NULL,
+			ErrorF("XXX w %d h %d d %d\n",
+			    pScreen->width, pScreen->height,
+			    pScreen->rootDepth);
+			pPixmap = pScreen->CreatePixmap(pScreen, 
+			    pScreen->width, pScreen->height,
+			    pScreen->rootDepth);
+			if (!pPixmap)
+				return FALSE;
+    			if (!shadowSetup(pScreen) ||
+			    !shadowAdd(pScreen, pPixmap,
 				fPtr->rotate ? shadowUpdateRotatePackedWeak() :
 				shadowUpdatePackedWeak(),
 				WsfbWindowLinear, fPtr->rotate, NULL)) {
 				xf86DrvMsg(scrnIndex, X_ERROR,
 				    "Shadow FB initialization failed\n");
+				pScreen->DestroyPixmap(pPixmap);
 				return FALSE;
 			}
 		}
@@ -1053,8 +1054,6 @@ WsfbCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
 		fPtr->fbmem = NULL;
 	}
-	if (fPtr->shadowmem)
-		xfree(fPtr->shadowmem);
 #ifdef XFreeXDGA
 	if (fPtr->pDGAMode) {
 		xfree(fPtr->pDGAMode);
