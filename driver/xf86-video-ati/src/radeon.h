@@ -144,7 +144,10 @@ typedef enum {
     OPTION_REVERSE_DDC,
     OPTION_LVDS_PROBE_PLL,
     OPTION_ACCELMETHOD,
-    OPTION_CONSTANTDPI
+    OPTION_CONSTANTDPI,
+#ifdef __powerpc__
+    OPTION_IBOOKHACKS
+#endif
 } RADEONOpts;
 
 /* ------- mergedfb support ------------- */

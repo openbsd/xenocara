@@ -211,6 +211,9 @@ static const OptionInfoRec RADEONOptions[] = {
     { OPTION_LVDS_PROBE_PLL, "LVDSProbePLL",     OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_ACCELMETHOD,    "AccelMethod",      OPTV_STRING,  {0}, FALSE },
     { OPTION_CONSTANTDPI,    "ConstantDPI",	 OPTV_BOOLEAN,	{0}, FALSE },
+#ifdef __powerpc__
+    { OPTION_IBOOKHACKS,     "iBookHacks",       OPTV_BOOLEAN, {0}, FALSE },
+#endif
     { -1,                    NULL,               OPTV_NONE,    {0}, FALSE }
 };
 
@@ -6688,6 +6691,14 @@ static void RADEONRestorePLLRegisters(ScrnInfoPtr pScrn,
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
 
+    /* 
+     * Never do it on Apple iBook to avoid a blank screen.
+     */
+#ifdef __powerpc__
+    if (xf86ReturnOptValBool(info->Options, OPTION_IBOOKHACKS, FALSE))
+        return;
+#endif
+
     if (info->IsMobility) {
         /* A temporal workaround for the occational blanking on certain laptop panels.
            This appears to related to the PLL divider registers (fail to lock?).
@@ -8533,7 +8544,16 @@ static void RADEONInitPLLRegisters(ScrnInfoPtr pScrn, RADEONInfoPtr info,
 	       save->post_div));
 
     save->ppll_ref_div   = pll->reference_div;
-    save->ppll_div_3     = (save->feedback_div | (post_div->bitvalue << 16));
+    /* 
+     * on iBooks the LCD pannel needs tweaked PLL timings 
+     */
+#ifdef __powerpc__
+    if (xf86ReturnOptValBool(info->Options, OPTION_IBOOKHACKS, FALSE))
+        save->ppll_div_3 = 0x000600ad;
+    else
+#endif
+        save->ppll_div_3 = (save->feedback_div | (post_div->bitvalue << 16));
+
     save->htotal_cntl    = 0;
 }
 
