@@ -29,6 +29,7 @@
 #include "glxclient.h"
 #include "indirect_vertex_array.h"
 #include <GL/glxproto.h>
+#include "glheader.h"
 
 static void
 do_vertex_attrib_enable( GLuint index, GLboolean val )

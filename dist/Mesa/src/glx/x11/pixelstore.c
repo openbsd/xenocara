@@ -36,6 +36,7 @@
 
 #include "glxclient.h"
 #include "indirect.h"
+#include "glheader.h"
 
 /**
  * Send glPixelStore command to the server
