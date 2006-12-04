@@ -9,6 +9,7 @@ X11BASE?=	/usr/X11R6
 
 CFLAGS+=	-I${X11BASE}/include -I${.CURDIR} -I${.CURDIR}/.. \
 		-I${.CURDIR}/../libs
+LDADD+=		-L${X11BASE}/lib
 
 FVWMLIBDIR=	${X11BASE}/lib/X11/fvwm
 MANDIR=		${X11BASE}/man/cat
@@ -16,7 +17,7 @@ MANDIR=		${X11BASE}/man/cat
 obj: _xenocara_obj
 
 .if exists(${.CURDIR}/../libs/${__objdir})
-LDADD+=		-L${X11BASE}/lib -L${.CURDIR}/../libs/${__objdir} -lfvwm
+LDADD+=		-L${.CURDIR}/../libs/${__objdir} -lfvwm
 DPADD+=		${.CURDIR}/../libs/${__objdir}/libfvwm.a
 .else
 LDADD+=		-L${.CURDIR}/../libs -lfvwm
