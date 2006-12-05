@@ -1,4 +1,6 @@
 ./etc
+./etc/X11
+./etc/X11/app-defaults
 ./etc/fonts
 ./etc/fonts/conf.avail
 ./etc/fonts/conf.avail/10-autohint.conf
@@ -317,7 +319,8 @@
 ./usr/X11R6/man/man1
 ./usr/X11R6/man/man3
 ./usr/X11R6/man/man4
-./usr/X11R6/man/man4/wsfb.4
+./usr/X11R6/man/man5
+./usr/X11R6/man/man7
 ./usr/X11R6/man/whatis.db
 ./usr/X11R6/share
 ./usr/X11R6/share/X11

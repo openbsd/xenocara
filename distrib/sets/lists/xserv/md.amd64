@@ -842,7 +842,6 @@
 ./etc/X11/xserver/tr_TR.UTF-8
 ./etc/X11/xserver/tr_TR.iso88599
 ./etc/X11/xserver/tr_TR.utf8
-./etc/X11/xserver/tsonga
 ./etc/X11/xserver/turkish
 ./etc/X11/xserver/uk_UA
 ./etc/X11/xserver/uk_UA.koi8u
@@ -851,7 +850,6 @@
 ./etc/X11/xserver/ur_PK.utf8
 ./etc/X11/xserver/uz_UZ
 ./etc/X11/xserver/uz_UZ.iso88591
-./etc/X11/xserver/venda
 ./etc/X11/xserver/vi_VN
 ./etc/X11/xserver/vi_VN.tcvn
 ./etc/X11/xserver/vi_VN.utf8
@@ -859,7 +857,6 @@
 ./etc/X11/xserver/wa_BE.iso88591
 ./etc/X11/xserver/wa_BE.iso885915@euro
 ./etc/X11/xserver/wa_BE@euro
-./etc/X11/xserver/xhosa
 ./etc/X11/xserver/yi_US
 ./etc/X11/xserver/yi_US.cp1255
 ./etc/X11/xserver/zh
@@ -1286,7 +1283,6 @@
 ./usr/X11R6/man/man1/xorgcfg.1
 ./usr/X11R6/man/man1/xorgconfig.1
 ./usr/X11R6/man/man4/acecad.4
-./usr/X11R6/man/man4/aiptek.4
 ./usr/X11R6/man/man4/apm.4
 ./usr/X11R6/man/man4/ati.4
 ./usr/X11R6/man/man4/chips.4
