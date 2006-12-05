@@ -345,7 +345,7 @@
 # elif defined(sun)
 #  define ARCH_PCI_INIT sparcPciInit
 #  define INCLUDE_XF86_MAP_PCI_MEM
-# elif (defined(__OpenBSD__) || defined(__FreeBSD__)) && defined(__sparc64__)
+# elif defined(__FreeBSD__) && defined(__sparc64__) || defined(__OpenBSD__)
 #  define  ARCH_PCI_INIT freebsdPciInit
 #  define INCLUDE_XF86_MAP_PCI_MEM
 #  define INCLUDE_XF86_NO_DOMAIN
