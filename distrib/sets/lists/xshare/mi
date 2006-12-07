@@ -2129,10 +2129,16 @@
 ./usr/X11R6/man/man3/XwcTextPerCharExtents.3
 ./usr/X11R6/man/man3/XwcTextPropertyToTextList.3
 ./usr/X11R6/man/man3/libXp.3
+./usr/X11R6/man/man7/Consortium.7
+./usr/X11R6/man/man7/Standards.7
 ./usr/X11R6/man/man7/X.7
 ./usr/X11R6/man/man7/XOrgFoundation.7
 ./usr/X11R6/man/man7/XProjectTeam.7
 ./usr/X11R6/man/man7/security.7
+./usr/X11R6/share/X11/XErrorDB
+./usr/X11R6/share/X11/XKeysymDB
+./usr/X11R6/share/X11/doc
+./usr/X11R6/share/X11/doc/MAINTAINERS
 ./usr/X11R6/share/X11/locale
 ./usr/X11R6/share/X11/locale/C
 ./usr/X11R6/share/X11/locale/C/Compose
@@ -2365,6 +2371,7 @@
 ./usr/X11R6/share/X11/locale/zh_TW/Compose
 ./usr/X11R6/share/X11/locale/zh_TW/XI18N_OBJS
 ./usr/X11R6/share/X11/locale/zh_TW/XLC_LOCALE
+./usr/X11R6/share/X11/rgb.txt
 ./usr/X11R6/share/aclocal
 ./usr/X11R6/share/aclocal/fontutil.m4
 ./usr/X11R6/share/aclocal/xaw.m4
