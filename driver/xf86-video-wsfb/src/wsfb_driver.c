@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.6 2006/12/03 17:04:08 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.7 2006/12/08 21:57:37 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -953,9 +953,6 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 				   "Shadow FB not available on < 8 depth");
 		} else {
-			ErrorF("XXX w %d h %d d %d\n",
-			    pScreen->width, pScreen->height,
-			    pScreen->rootDepth);
 			pPixmap = pScreen->CreatePixmap(pScreen, 
 			    pScreen->width, pScreen->height,
 			    pScreen->rootDepth);
