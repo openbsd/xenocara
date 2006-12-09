@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2006/11/27 19:56:35 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2006/12/09 15:31:01 matthieu Exp $
 
 .include "../Makefile.inc"
 
@@ -63,6 +63,8 @@ install:
 		${INSTALL} ${INSTALL_COPY} ${.CURDIR}/$$f \
 			${DESTDIR}${INCSDIR}/X11/pixmaps ; \
 	done 
+
+cleandir:
 
 .include <bsd.own.mk>
 .include <bsd.xorg.mk>
