@@ -55,6 +55,18 @@ order, especially while bootstrapping (while /usr/X11R6 is still
 empty). The Xenocara Makefiles take care of that using the 'build'
 target.
 
+  Quick startup guide
+
+The following steps will build and install everything for the first time.
+
+ mkdir -p /usr/obj/xenocara
+ cd xenorara
+ make bootstrap
+ make obj
+ make build
+
+If you want to use another obj directory see below.
+
   Requirements
 
 A freshly checked out xenocara tree is buildable without any external
@@ -83,6 +95,7 @@ to any module sub-directory and run 'make build' from there.
 Xenocara supports objdirs (and it's even the recommended way to build
 things). Just run 'make obj' at any level before 'make build' to make
 sure that the object directories are created. 
+XENOCARA_OBJDIR defines the default obj directory that is used.
 
   Shadow trees 
 
@@ -102,4 +115,4 @@ makefiles skeletons. For that use the following command:
 You can also set XENOCARA_RERUN_AUTOCONF in /etc/mk.conf to force
 regeneration of configure scripts in every component.
 
-$OpenBSD: README,v 1.4 2006/12/02 16:28:48 matthieu Exp $
+$OpenBSD: README,v 1.5 2006/12/12 21:07:25 matthieu Exp $
