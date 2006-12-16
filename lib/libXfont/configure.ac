@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.ac,v 1.1.1.2 2006/12/16 18:23:10 matthieu Exp $
+dnl  $Id: configure.ac,v 1.1.1.3 2006/12/16 21:44:25 matthieu Exp $
 dnl 
 dnl  Copyright © 2003 Keith Packard
 dnl 
@@ -26,7 +26,7 @@ dnl Process this file with autoconf to create configure.
 AC_PREREQ([2.57])
 
 AC_INIT([libXfont],
-	1.2.5,
+	1.2.6,
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
 	libXfont)
 dnl
@@ -106,7 +106,7 @@ AC_SUBST(FREETYPE_LIBS)
 AC_SUBST(FREETYPE_CFLAGS)
 AC_SUBST(FREETYPE_REQUIRES)
 
-AC_ARG_ENABLE(type1, [ --enable-type1 ], [XFONT_TYPE1=$enableval], [XFONT_TYPE1=no])
+AC_ARG_ENABLE(type1, [ --enable-type1 ], [XFONT_TYPE1=$enableval], [XFONT_TYPE1=yes])
 if test "x$XFONT_TYPE1" = xyes; then
 	AC_DEFINE(XFONT_TYPE1,1,[Support IBM Type 1 rasterizer for Type1 font files])
 	XFONT_FONTFILE=yes
