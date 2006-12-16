@@ -7413,16 +7413,16 @@ AC_DEFUN([XORG_RELEASE_VERSION],[
 		AC_MSG_NOTICE([Building with package name set to $PACKAGE])
 	fi
 	AC_DEFINE_UNQUOTED([PACKAGE_VERSION_MAJOR],
-		[`echo $PACKAGE_VERSION | sed -ne 's/^\([[^\.]]\+\).*/\1/p'`],
+		[`echo $PACKAGE_VERSION | cut -d . -f 1`],
 		[Major version of this package])
-	PVM=`echo $PACKAGE_VERSION | sed -ne 's/^\([[^\.]]\+\)\.\([[^\.]]\+\).*/\2/p'`
+	PVM=`echo $PACKAGE_VERSION | cut -d . -f 2`
 	if test "x$PVM" = "x"; then
 		PVM="0"
 	fi
 	AC_DEFINE_UNQUOTED([PACKAGE_VERSION_MINOR],
 		[$PVM],
 		[Minor version of this package])
-	PVP=`echo $PACKAGE_VERSION | sed -ne 's/^\([[^\.]]\+\)\.\([[^\.]]\+\)\.\([[^\.]]\+\).*/\3/p'`
+	PVP=`echo $PACKAGE_VERSION | cut -d . -f 3`
 	if test "x$PVP" = "x"; then
 		PVP="0"
 	fi
