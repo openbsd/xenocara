@@ -27,8 +27,8 @@ sometimes yield a modest decrease in file size for small character
 cell fonts (terminal fonts).
 .TP 
 .B \-b
-Write byte-aligned glyph data.  By default, bit-aligned data is
-written, which yields a smaller file size.
+Write byte-aligned glyph data.  By default, unaligned data is written,
+which yields a smaller file size.
 .TP
 .B \-r
 Do not reencode fonts.  By default, fonts are reencoded to Unicode
@@ -69,10 +69,9 @@ Some of the font-level values, notably sub- and superscript positions,
 are dummy values.
 .SH SEE ALSO
 X(7), Xserver(1), Xft(3x).
-.I Fonts in X.
+.I Fonts in X11.
 .SH AUTHOR
 The version of
 .B Fonttosfnt
-included in this X.Org Foundation release
-was originally written by Juliusz Chroboczek <jch@xfree86.org>
-for the XFree86 project.
+included in this X.Org Foundation release was originally written by
+Juliusz Chroboczek <jch@freedesktop.org> for the XFree86 project.
