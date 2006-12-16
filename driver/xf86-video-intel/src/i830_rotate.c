@@ -778,7 +778,7 @@ I830Rotate(ScrnInfoPtr pScrn, DisplayModePtr mode)
       
       /* Do heap teardown here
        */
-      {
+      if (pI8301->mmModeFlags & I830_KERNEL_TEX) {
 	 drmI830MemDestroyHeap destroy;
 	 destroy.region = I830_MEM_REGION_AGP;
 	 
@@ -790,10 +790,11 @@ I830Rotate(ScrnInfoPtr pScrn, DisplayModePtr mode)
 	 }
       }
       
-      
-      if (pI8301->TexMem.Key != -1)
-         xf86UnbindGARTMemory(pScrn1->scrnIndex, pI8301->TexMem.Key);
-      I830FreeVidMem(pScrn1, &(pI8301->TexMem));
+      if (pI8301->mmModeFlags & I830_KERNEL_TEX) {
+	 if (pI8301->TexMem.Key != -1)
+	    xf86UnbindGARTMemory(pScrn1->scrnIndex, pI8301->TexMem.Key);
+	 I830FreeVidMem(pScrn1, &(pI8301->TexMem));
+      }
       if (pI8301->StolenPool.Allocated.Key != -1) {
          xf86UnbindGARTMemory(pScrn1->scrnIndex, pI8301->StolenPool.Allocated.Key);
          xf86DeallocateGARTMemory(pScrn1->scrnIndex, pI8301->StolenPool.Allocated.Key);
@@ -943,9 +944,11 @@ I830Rotate(ScrnInfoPtr pScrn, DisplayModePtr mode)
 			      pI8301->disableTiling ? ALLOC_NO_TILING : 0))
          goto BAIL3;
 
-      if (!I830AllocateTextureMemory(pScrn1,
-			      pI8301->disableTiling ? ALLOC_NO_TILING : 0))
-         goto BAIL4;
+      if (pI8301->mmModeFlags & I830_KERNEL_TEX) {
+	 if (!I830AllocateTextureMemory(pScrn1,
+					pI8301->disableTiling ? ALLOC_NO_TILING : 0))
+	    goto BAIL4;
+      }
 
       I830DoPoolAllocation(pScrn1, &(pI8301->StolenPool));
 
@@ -958,8 +961,10 @@ I830Rotate(ScrnInfoPtr pScrn, DisplayModePtr mode)
          xf86BindGARTMemory(pScrn1->scrnIndex, pI8301->DepthBuffer.Key, pI8301->DepthBuffer.Offset);
       if (pI8301->StolenPool.Allocated.Key != -1)
          xf86BindGARTMemory(pScrn1->scrnIndex, pI8301->StolenPool.Allocated.Key, pI8301->StolenPool.Allocated.Offset);
-      if (pI8301->TexMem.Key != -1)
-         xf86BindGARTMemory(pScrn1->scrnIndex, pI8301->TexMem.Key, pI8301->TexMem.Offset);
+      if (pI8301->mmModeFlags & I830_KERNEL_TEX) {
+	 if (pI8301->TexMem.Key != -1)
+	    xf86BindGARTMemory(pScrn1->scrnIndex, pI8301->TexMem.Key, pI8301->TexMem.Offset);
+      }
       I830SetupMemoryTiling(pScrn1);
       /* update fence registers */
       for (i = 0; i < 8; i++) 
@@ -1031,7 +1036,6 @@ I830Rotate(ScrnInfoPtr pScrn, DisplayModePtr mode)
       pI830->AccelInfoRec->maxOffPixWidth = 1;
       pI830->AccelInfoRec->maxOffPixHeight = 1;
    }
-
    return TRUE;
 
 BAIL4:
@@ -1175,11 +1179,12 @@ BAIL0:
 			      pI8301->disableTiling ? ALLOC_NO_TILING : 0))
          xf86DrvMsg(pScrn1->scrnIndex, X_INFO, 
 		    "Oh dear, the depth buffer failed - badness\n");
-
-      if (!I830AllocateTextureMemory(pScrn1,
-			      pI8301->disableTiling ? ALLOC_NO_TILING : 0))
-         xf86DrvMsg(pScrn1->scrnIndex, X_INFO, 
-		    "Oh dear, the texture cache failed - badness\n");
+      if (pI8301->mmModeFlags & I830_KERNEL_TEX) {
+	 if (!I830AllocateTextureMemory(pScrn1,
+					pI8301->disableTiling ? ALLOC_NO_TILING : 0))
+	    xf86DrvMsg(pScrn1->scrnIndex, X_INFO, 
+		       "Oh dear, the texture cache failed - badness\n");
+      }
 
       I830DoPoolAllocation(pScrn1, &(pI8301->StolenPool));
 
@@ -1192,8 +1197,10 @@ BAIL0:
          xf86BindGARTMemory(pScrn1->scrnIndex, pI8301->DepthBuffer.Key, pI8301->DepthBuffer.Offset);
       if (pI8301->StolenPool.Allocated.Key != -1)
          xf86BindGARTMemory(pScrn1->scrnIndex, pI8301->StolenPool.Allocated.Key, pI8301->StolenPool.Allocated.Offset);
-      if (pI8301->TexMem.Key != -1)
-         xf86BindGARTMemory(pScrn1->scrnIndex, pI8301->TexMem.Key, pI8301->TexMem.Offset);
+      if (pI8301->mmModeFlags & I830_KERNEL_TEX) {
+	 if (pI8301->TexMem.Key != -1)
+	    xf86BindGARTMemory(pScrn1->scrnIndex, pI8301->TexMem.Key, pI8301->TexMem.Offset);
+      }
       I830SetupMemoryTiling(pScrn1);
       /* update fence registers */
       for (i = 0; i < 8; i++) 

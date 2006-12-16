@@ -1107,6 +1107,12 @@ I830ResetAllocations(ScrnInfoPtr pScrn, const int flags)
    pI830->MemoryAperture.Start = pI830->StolenMemory.End;
    pI830->MemoryAperture.End = pI830->FbMapSize;
    pI830->MemoryAperture.Size = pI830->FbMapSize - pI830->StolenMemory.Size;
+#ifdef XF86DRI
+   if (!pI830->directRenderingDisabled) {
+      pI830->MemoryAperture.End -= KB(pI830->mmSize);
+      pI830->MemoryAperture.Size -= KB(pI830->mmSize);
+   }
+#endif
    pI830->StolenPool.Fixed = pI830->StolenMemory;
    pI830->StolenPool.Total = pI830->StolenMemory;
 #if ALLOCATE_ALL_BIOSMEM
@@ -1286,37 +1292,41 @@ I830AllocateTextureMemory(ScrnInfoPtr pScrn, const int flags)
    /* Allocate the remaining space for textures. */
    memset(&(pI830->TexMem), 0, sizeof(pI830->TexMem));
    pI830->TexMem.Key = -1;
-   size = GetFreeSpace(pScrn);
-   if (dryrun && (size < MB(1)))
-      size = MB(1);
-   i = myLog2(size / I830_NR_TEX_REGIONS);
-   if (i < I830_LOG_MIN_TEX_REGION_SIZE)
-      i = I830_LOG_MIN_TEX_REGION_SIZE;
-   pI830->TexGranularity = i;
-   /* Truncate size */
-   size >>= i;
-   size <<= i;
-   if (size < KB(512)) {
-      if (!dryrun) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		"Less than 512 kBytes for texture space (real %ld kBytes).\n", 
-		size / 1024);
+
+   if (pI830->mmModeFlags & I830_KERNEL_TEX) {
+
+      size = GetFreeSpace(pScrn);
+      if (dryrun && (size < MB(1)))
+	 size = MB(1);
+      i = myLog2(size / I830_NR_TEX_REGIONS);
+      if (i < I830_LOG_MIN_TEX_REGION_SIZE)
+	 i = I830_LOG_MIN_TEX_REGION_SIZE;
+      pI830->TexGranularity = i;
+      /* Truncate size */
+      size >>= i;
+      size <<= i;
+      if (size < KB(512)) {
+	 if (!dryrun) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "Less than 512 kBytes for texture space (real %ld kBytes).\n", 
+		       size / 1024);
+	 }
+	 return FALSE;
       }
-      return FALSE;
-   }
-   alloced = I830AllocVidMem(pScrn, &(pI830->TexMem),
-			     &(pI830->StolenPool), size, GTT_PAGE_SIZE,
-			     flags | FROM_ANYWHERE | ALLOCATE_AT_TOP);
-   if (alloced < size) {
-      if (!dryrun) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "Failed to allocate texture space.\n");
+      alloced = I830AllocVidMem(pScrn, &(pI830->TexMem),
+				&(pI830->StolenPool), size, GTT_PAGE_SIZE,
+				flags | FROM_ANYWHERE | ALLOCATE_AT_TOP);
+      if (alloced < size) {
+	 if (!dryrun) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "Failed to allocate texture space.\n");
+	 }
+	 return FALSE;
       }
-      return FALSE;
+      xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
+		     "%sAllocated %ld kB for textures at 0x%lx\n", s,
+		     alloced / 1024, pI830->TexMem.Start);
    }
-   xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		  "%sAllocated %ld kB for textures at 0x%lx\n", s,
-		  alloced / 1024, pI830->TexMem.Start);
 
    return TRUE;
 }
@@ -1514,7 +1524,9 @@ I830FixupOffsets(ScrnInfoPtr pScrn)
       I830FixOffset(pScrn, &(pI830->ContextMem));
       I830FixOffset(pScrn, &(pI830->BackBuffer));
       I830FixOffset(pScrn, &(pI830->DepthBuffer));
-      I830FixOffset(pScrn, &(pI830->TexMem));
+      if (pI830->mmModeFlags & I830_KERNEL_TEX) {
+	 I830FixOffset(pScrn, &(pI830->TexMem));
+      }
    }
 #endif
    return TRUE;
@@ -1913,7 +1925,8 @@ I830BindAGPMemory(ScrnInfoPtr pScrn)
 	    return FALSE;
 	 if (!BindMemRange(pScrn, &(pI830->DepthBuffer)))
 	    return FALSE;
-	 if (!BindMemRange(pScrn, &(pI830->TexMem)))
+	 if ((pI830->mmModeFlags & I830_KERNEL_TEX) && 
+	     !BindMemRange(pScrn, &(pI830->TexMem)))
 	    return FALSE;
       }
 #endif
@@ -1997,7 +2010,8 @@ I830UnbindAGPMemory(ScrnInfoPtr pScrn)
 	    return FALSE;
 	 if (!UnbindMemRange(pScrn, &(pI830->DepthBuffer)))
 	    return FALSE;
-	 if (!UnbindMemRange(pScrn, &(pI830->TexMem)))
+	 if ((pI830->mmModeFlags & I830_KERNEL_TEX) && 
+	     !UnbindMemRange(pScrn, &(pI830->TexMem)))
 	    return FALSE;
       }
 #endif

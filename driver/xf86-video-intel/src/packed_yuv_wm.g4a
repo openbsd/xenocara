@@ -144,7 +144,7 @@ mac.sat (8) m8<1>F g15<8,8,1>F 1F { align1  };
     */
 mov (8) m1<1>UD g1<8,8,1>UD { align1 mask_disable };
    /* Send framebuffer write message: XXX: acc0? */
-send (16) 0 null g0<8,8,1>UW write (
+send (16) 0 acc0<1>UW g0<8,8,1>UW write (
 	0, /* binding table index 0 */
 	8, /* pixel scoreboard clear */
 	4, /* render target write */

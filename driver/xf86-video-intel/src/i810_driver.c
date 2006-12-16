@@ -313,6 +313,12 @@ const char *I810drmSymbols[] = {
    "drmGetLibVersion",
    "drmGetVersion",
    "drmRmMap",
+#ifdef XSERVER_LIBDRM_MM 
+   "drmMMInit",
+   "drmMMTakedown",
+   "drmMMLock",
+   "drmMMUnlock",
+#endif
    NULL
 };
 

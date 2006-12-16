@@ -394,7 +394,6 @@ CheckMode(ScrnInfoPtr pScrn, vbeInfoPtr pVbe, VbeInfoBlock *vbe, int id,
 	!I830CheckModeSupport(pScrn, mode->XResolution, mode->YResolution, id)) 
 	modeOK = FALSE;
 
-
     /*
      * Check if there's a valid monitor mode that this one can be matched
      * up with from the 'specified' modes list.
@@ -410,6 +409,9 @@ CheckMode(ScrnInfoPtr pScrn, vbeInfoPtr pVbe, VbeInfoBlock *vbe, int id,
 	    if (status == MODE_OK) {
 		modeOK = TRUE;
 		break;
+	    } else {
+    		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Not using mode \"%s\" (%s)\n", p->name,
+	       			xf86ModeStatusToString(status));
 	    }
 	}
 	if (p) {
@@ -442,6 +444,9 @@ CheckMode(ScrnInfoPtr pScrn, vbeInfoPtr pVbe, VbeInfoBlock *vbe, int id,
 			newMode = p;
 		}
 		modeOK = TRUE;
+	    } else {
+    		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Not using mode \"%s\" (%s)\n", p->name,
+	       			xf86ModeStatusToString(status));
 	    }
 	}
 	if (newMode) {
@@ -487,8 +492,11 @@ CheckMode(ScrnInfoPtr pScrn, vbeInfoPtr pVbe, VbeInfoBlock *vbe, int id,
 				modeOK = FALSE;
 			} else
 			    modeOK = TRUE;
-	            } else
+	            } else {
 	    	        modeOK = FALSE;
+    		   	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Not using mode \"%s\" (%s)\n", pMode->name,
+	       			xf86ModeStatusToString(status));
+	            }
   	            pMode->status = status;
 	        } else { 
 	            modeOK = FALSE;

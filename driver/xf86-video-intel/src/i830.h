@@ -107,6 +107,13 @@ typedef struct _VESARec {
 } VESARec, *VESAPtr;
 
 
+#ifdef XF86DRI
+#define I830_MM_MINPAGES 512
+#define I830_MM_MAXSIZE  (32*1024)
+#define I830_KERNEL_MM  (1 << 0) /* Initialize the kernel memory manager*/
+#define I830_KERNEL_TEX (1 << 1) /* Allocate texture memory pool */
+#endif
+
 typedef struct _I830Rec *I830Ptr;
 
 typedef void (*I830WriteIndexedByteFunc)(I830Ptr pI830, IOADDRESS addr,
@@ -285,6 +292,8 @@ typedef struct _I830Rec {
    int TexGranularity;
    int drmMinor;
    Bool have3DWindows;
+   int mmModeFlags;
+   int mmSize;
 
    unsigned int front_tiled;
    unsigned int back_tiled;
@@ -572,5 +581,11 @@ Rotation I830GetRotation(ScreenPtr pScreen);
 #define _855_DRAM_RW_CONTROL 0x58
 #define _845_DRAM_RW_CONTROL 0x90
 #define DRAM_WRITE    0x33330000
+
+/* 
+ * Xserver MM compatibility. Remove code guarded by this when the
+ * XServer contains the libdrm mm code
+ */
+#undef XSERVER_LIBDRM_MM
 
 #endif /* _I830_H_ */

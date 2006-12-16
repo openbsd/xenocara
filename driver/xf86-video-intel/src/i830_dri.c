@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/i810/i830_dri.c,v 1.15 2003/06/18 13:14:17 dawes Exp $ */
+/* $xfree86: xc/programs/Xserver/hw/xfree86/drivers/i810/i830_dri.c,v 1.15 2003/06/18 13:14:17 dawes Exp $ */
 /**************************************************************************
 
 Copyright 2001 VA Linux Systems Inc., Fremont, California.
@@ -84,8 +84,9 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "dristruct.h"
 
 static char I830KernelDriverName[] = "i915";
-static char I830ClientDriverName[] = "i915";
+static char I830ClientDriverName[] = "i915tex";
 static char I965ClientDriverName[] = "i965";
+static char I830LegacyClientDriverName[] = "i915";
 
 static Bool I830InitVisualConfigs(ScreenPtr pScreen);
 static Bool I830CreateContext(ScreenPtr pScreen, VisualPtr visual,
@@ -644,8 +645,29 @@ I830DRIScreenInit(ScreenPtr pScreen)
 	    return FALSE;
 	 }
 	 pI830->drmMinor = version->version_minor;
+	 if (!(pI830->mmModeFlags & I830_KERNEL_TEX)) {
+	    if ((version->version_major > 1) ||
+		((version->version_minor >= 7) && 
+		 (version->version_major == 1))) {
+	       pI830->mmModeFlags |= I830_KERNEL_MM;
+	    } else {
+	       pI830->mmModeFlags |= I830_KERNEL_TEX;
+	    }		
+	 } else {
+	    xf86DrvMsg(pScreen->myNum, X_INFO, 
+		       "Not enabling the DRM memory manager.\n");
+	 } 
 	 drmFreeVersion(version);
       }
+   }
+
+   /*
+    * Backwards compatibility
+    */
+
+   if ((pDRIInfo->clientDriverName == I830ClientDriverName) && 
+       (pI830->mmModeFlags & I830_KERNEL_TEX)) {
+      pDRIInfo->clientDriverName = I830LegacyClientDriverName;
    }
 
    return TRUE;
@@ -707,18 +729,20 @@ I830DRIMapScreenRegions(ScrnInfoPtr pScrn, drmI830Sarea *sarea)
    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "[drm] Depth Buffer = 0x%08x\n",
               (int)sarea->depth_handle);
 
-   if (drmAddMap(pI830->drmSubFD,
-		 (drm_handle_t)sarea->tex_offset + pI830->LinearAddr,
-		 sarea->tex_size, DRM_AGP, 0,
-		 (drmAddress) &sarea->tex_handle) < 0) {
-      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		 "[drm] drmAddMap(tex_handle) failed. Disabling DRI\n");
-      DRICloseScreen(pScreen);
-      return FALSE;
-   }
-   xf86DrvMsg(pScrn->scrnIndex, X_INFO, "[drm] textures = 0x%08x\n",
-	      (int)sarea->tex_handle);
+   if (pI830->mmModeFlags & I830_KERNEL_TEX) {
+      if (drmAddMap(pI830->drmSubFD,
+		    (drm_handle_t)sarea->tex_offset + pI830->LinearAddr,
+		    sarea->tex_size, DRM_AGP, 0,
+		    (drmAddress) &sarea->tex_handle) < 0) {
+	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		    "[drm] drmAddMap(tex_handle) failed. Disabling DRI\n");
+	 DRICloseScreen(pScreen);
+	 return FALSE;
+      }
 
+      xf86DrvMsg(pScrn->scrnIndex, X_INFO, "[drm] textures = 0x%08x\n",
+		 (int)sarea->tex_handle);
+   }
    return TRUE;
 }
 
@@ -1475,7 +1499,7 @@ I830UpdateDRIBuffers(ScrnInfoPtr pScrn, drmI830Sarea *sarea)
 
    success = I830DRIMapScreenRegions(pScrn, sarea);
 
-   if (success)
+   if (success && (pI830->mmModeFlags & I830_KERNEL_TEX))
       I830InitTextureHeap(pScrn, sarea);
 
    return success;

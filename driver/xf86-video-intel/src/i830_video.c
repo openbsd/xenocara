@@ -1,4 +1,3 @@
-#define VIDEO_DEBUG 0
 /***************************************************************************
  
 Copyright 2000 Intel Corporation.  All Rights Reserved. 
@@ -935,14 +934,16 @@ I830SetPortAttribute(ScrnInfoPtr pScrn,
       pPriv->brightness = value;
       overlay->OCLRC0 = (pPriv->contrast << 18) | (pPriv->brightness & 0xff);
       ErrorF("BRIGHTNESS\n");
-      OVERLAY_UPDATE;
+      if (*pI830->overlayOn)
+         OVERLAY_UPDATE;
    } else if (attribute == xvContrast) {
       if ((value < 0) || (value > 255))
 	 return BadValue;
       pPriv->contrast = value;
       overlay->OCLRC0 = (pPriv->contrast << 18) | (pPriv->brightness & 0xff);
       ErrorF("CONTRAST\n");
-      OVERLAY_UPDATE;
+      if (*pI830->overlayOn)
+         OVERLAY_UPDATE;
    } else if (pI830->Clone && attribute == xvPipe) {
       if ((value < 0) || (value > 1))
          return BadValue;
@@ -956,7 +957,8 @@ I830SetPortAttribute(ScrnInfoPtr pScrn,
       else 
          overlay->OCONFIG |= OVERLAY_PIPE_B;
       ErrorF("PIPE CHANGE\n");
-      OVERLAY_UPDATE;
+      if (*pI830->overlayOn)
+         OVERLAY_UPDATE;
    } else if (attribute == xvGamma0 && (IS_I9XX(pI830))) {
       pPriv->gamma0 = value; 
    } else if (attribute == xvGamma1 && (IS_I9XX(pI830))) {
@@ -983,7 +985,8 @@ I830SetPortAttribute(ScrnInfoPtr pScrn,
 	 break;
       }
       ErrorF("COLORKEY\n");
-      OVERLAY_UPDATE;
+      if (*pI830->overlayOn)
+         OVERLAY_UPDATE;
       REGION_EMPTY(pScrn->pScreen, &pPriv->clip);
    } else if(attribute == xvDoubleBuffer) {
       if ((value < 0) || (value > 1))
@@ -1001,13 +1004,8 @@ I830SetPortAttribute(ScrnInfoPtr pScrn,
         attribute == xvGamma3 ||
         attribute == xvGamma4 ||
         attribute == xvGamma5) && (IS_I9XX(pI830))) {
-	CARD32 r = overlay->OCMD & OVERLAY_ENABLE;
         ErrorF("GAMMA\n");
-        overlay->OCMD &= ~OVERLAY_ENABLE;
-        OVERLAY_UPDATE;
 	I830UpdateGamma(pScrn);
-        overlay->OCMD |= r;
-        OVERLAY_UPDATE;
    }
 
    return Success;

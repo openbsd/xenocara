@@ -65,6 +65,9 @@
 /* Version number of package */
 #undef VERSION
 
+/* Enable debug support */
+#undef VIDEO_DEBUG
+
 /* Enable DRI driver support */
 #undef XF86DRI
 

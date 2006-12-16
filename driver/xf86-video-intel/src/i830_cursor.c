@@ -520,11 +520,17 @@ I830SetCursorPosition(ScrnInfoPtr pScrn, int x, int y)
    x -= pScrn->frameX0;
    y -= pScrn->frameY0;
 
-   /* Clamp the cursor position to the visible screen area */
-   if (x >= pScrn->currentMode->HDisplay) x = pScrn->currentMode->HDisplay - 1;
-   if (y >= pScrn->currentMode->VDisplay) y = pScrn->currentMode->VDisplay - 1;
-   if (x <= -I810_CURSOR_X) x = -I810_CURSOR_X + 1;
-   if (y <= -I810_CURSOR_Y) y = -I810_CURSOR_Y + 1;
+   if (pScrn->currentMode) {
+      /* Clamp the cursor position to the visible screen area */
+      if (x >= pScrn->currentMode->HDisplay) x = pScrn->currentMode->HDisplay - 1;
+      if (y >= pScrn->currentMode->VDisplay) y = pScrn->currentMode->VDisplay - 1;
+      if (x <= -I810_CURSOR_X) x = -I810_CURSOR_X + 1;
+      if (y <= -I810_CURSOR_Y) y = -I810_CURSOR_Y + 1;
+   } else {
+      /* Can't ensure the cursor will be visible, so hide it */
+      hide = TRUE;
+      show = FALSE;
+   }
 
 #if 0
    /*

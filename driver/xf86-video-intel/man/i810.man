@@ -201,8 +201,32 @@ Default: 0 degrees.
 .BI "Option \*qLinearAlloc\*q \*q" integer \*q
 Allows more memory for the offscreen allocator. This usually helps in
 situations where HDTV movies are required to play but not enough offscreen
-memory is usually available. Set this to 6144 for upto 1920x1080 HDTV support.
+memory is usually available. Set this to 8160 for upto 1920x1080 HDTV support.
 Default 0KB (off).
+.TP
+.BI "Option \*qLegacy3D\*q \*q" boolean \*q
+Enable support for the legacy i915_dri.so 3D driver.
+This will, among other things, make the 2D driver tell libGL to
+load the 3D driver i915_dri.so instead of the newer i915tex_dri.so.
+This option is only used for chipsets in the range i830-i945. 
+Default for i830-i945 series: Enabled for i915 drm versions < 1.7.0. Otherwise
+disabled. 
+Default for i810: The option is not used.
+Default for i965: The option is always true.
+.TP
+.BI "Option \*qAperTexSize\*q \*q" integer \*q
+Give the size in kiB of the AGP aperture area that is reserved for the
+DRM memory manager present in i915 drm from version 1.7.0 and upwards,
+and that is used with the 3D driver in Mesa from version 6.5.2 and
+upwards. If the size is set too high to make room for pre-allocated
+VideoRam, the driver will try to reduce it automatically. If you use only
+older Mesa or DRM versions, you may set this value to zero, and
+atctivate the legacy texture pool (see 
+.B "Option \*qLegacy3D\*q"
+). If you run 3D programs with large texture memory requirements, you might
+gain some performance by increasing this value.
+Default: 32768.
+ 
 
 .SH "SEE ALSO"
 __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)

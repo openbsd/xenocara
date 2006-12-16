@@ -65,8 +65,10 @@ I915DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
    int nbox, dxo, dyo;
    Bool planar;
 
+#if 0
    ErrorF("I915DisplayVideo: %dx%d (pitch %d)\n", width, height,
 	  video_pitch);
+#endif
 
    switch (id) {
    case FOURCC_UYVY:
@@ -78,7 +80,9 @@ I915DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
       planar = TRUE;
       break;
    default:
+#if 0
       ErrorF("Unknown format 0x%x\n", id);
+#endif
       planar = FALSE;
       break;
    }
