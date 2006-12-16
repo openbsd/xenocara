@@ -27,7 +27,6 @@ editres_LDADD = $(EDITRES_LIBS)
 editres_SOURCES =	\
         actions.c \
         comm.c \
-        config.h \
         editres.c \
         editresP.h \
         geometry.c \
