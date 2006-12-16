@@ -630,21 +630,12 @@ static Bool xauth_locked = False;     /* if has been locked */
 static char *xauth_filename = NULL;
 static volatile Bool dieing = False;
 
-#ifdef RETSIGTYPE /* autoconf AC_TYPE_SIGNAL */
-# define _signal_t RETSIGTYPE
-#else /* Imake */
-#ifdef SIGNALRETURNSINT
-#define _signal_t int
-#else
-#define _signal_t void
-#endif
-#endif /* RETSIGTYPE */
 
 /* poor man's puts(), for under signal handlers */
 #define WRITES(fd, S) (void)write((fd), (S), strlen((S)))
 
 /* ARGSUSED */
-static _signal_t 
+static RETSIGTYPE 
 die(int sig)
 {
     dieing = True;
@@ -655,7 +646,7 @@ die(int sig)
 #endif
 }
 
-static _signal_t 
+static RETSIGTYPE 
 catchsig(int sig)
 {
 #ifdef SYSV

@@ -53,7 +53,7 @@ or \fI\.Xauthority\fP in the user's home directory.
 .TP 8
 .B \-q
 This option indicates that \fIxauth\fP should operate quietly and not print
-unsolicited status messages.  This is the default if an \fIxauth\fP command is
+unsolicited status messages.  This is the default if an \fIxauth\fP command
 is given on the command line or if the standard output is not directed to a
 terminal.
 .TP 8
