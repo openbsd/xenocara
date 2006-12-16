@@ -31,6 +31,7 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
 #include "sis.h"
 
 #if 0			/* Debug */
