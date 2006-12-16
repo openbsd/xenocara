@@ -81,10 +81,6 @@ FILE*		/* auth_file */,
 Xauth*		/* auth */
 );
 
-Xauth *XauGetAuthByName(
-_Xconst char*	/* display_name */
-);
-
 Xauth *XauGetAuthByAddr(
 #if NeedWidePrototypes
 unsigned int	/* family */,

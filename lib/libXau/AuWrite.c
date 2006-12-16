@@ -55,9 +55,7 @@ write_counted_string (unsigned short count, char *string, FILE *file)
 }
 
 int
-XauWriteAuth (auth_file, auth)
-FILE	*auth_file;
-Xauth	*auth;
+XauWriteAuth (FILE *auth_file, Xauth *auth)
 {
     if (write_short (auth->family, auth_file) == 0)
 	return 0;

@@ -1,5 +1,5 @@
 .\" $Xorg: Xau.man,v 1.3 2000/08/17 19:41:54 cpqbld Exp $
-.\" $XdotOrg: lib/Xau/Xau.man,v 1.2 2004/04/23 18:42:11 eich Exp $
+.\" $XdotOrg$
 .\"
 .\" Copyright (c) 1994  X Consortium
 .\" 

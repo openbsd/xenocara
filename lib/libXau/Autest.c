@@ -30,12 +30,16 @@ in this Software without prior written authorization from The Open Group.
 #include <config.h>
 #endif
 #include <X11/Xauth.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-main (argc, argv)
-char	**argv;
+int
+main (int argc, char **argv)
 {
     Xauth   test_data;
-    char    *name, *data, *file;
+    char    *name = "XAU-TEST-1";
+    char    *data = "Do not begin the test until instructed to do so.";
+    char    *file = NULL;
     int	    state = 0;
     FILE    *output;
 
@@ -50,10 +54,6 @@ char	**argv;
 	    ++state;
 	}
     }
-    if(!file) {
-	fprintf (stderr, "No file\n");
-	exit (1);
-    }
     test_data.family = 0;
     test_data.address_length = 0;
     test_data.address = "";
@@ -63,9 +63,14 @@ char	**argv;
     test_data.name = name;
     test_data.data_length = strlen (data);
     test_data.data = data;
-    output = fopen (file, "w");
+    if (!file) {
+	output = tmpfile();
+    } else {
+	output = fopen (file, "w");
+    }
     if (output) {
-	XauWriteAuth (output, &test_data);
+	state = XauWriteAuth (output, &test_data);
 	fclose (output);
     }
+    return (state = 1) ? 0 : 1;
 }

@@ -35,9 +35,9 @@ in this Software without prior written authorization from The Open Group.
 #include <stdlib.h>
 
 char *
-XauFileName ()
+XauFileName (void)
 {
-    char *slashDotXauthority = "/.Xauthority";
+    const char *slashDotXauthority = "/.Xauthority";
     char    *name;
     static char	*buf;
     static int	bsize;
@@ -58,7 +58,7 @@ XauFileName ()
 	}
 	if (!name)
 #endif
-	return 0;
+	return NULL;
     }
     size = strlen (name) + strlen(&slashDotXauthority[1]) + 2;
     if (size > bsize) {
@@ -66,7 +66,7 @@ XauFileName ()
 	    free (buf);
 	buf = malloc ((unsigned) size);
 	if (!buf)
-	    return 0;
+	    return NULL;
 	bsize = size;
     }
     strcpy (buf, name);

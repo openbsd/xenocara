@@ -71,12 +71,12 @@ _Xconst char*	name)
 
     auth_name = XauFileName ();
     if (!auth_name)
-	return 0;
+	return NULL;
     if (access (auth_name, R_OK) != 0)		/* checks REAL id */
-	return 0;
+	return NULL;
     auth_file = fopen (auth_name, "rb");
     if (!auth_file)
-	return 0;
+	return NULL;
     for (;;) {
 	entry = XauReadAuth (auth_file);
 	if (!entry)

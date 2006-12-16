@@ -34,8 +34,7 @@ in this Software without prior written authorization from The Open Group.
 #include <stdlib.h>
 
 void
-XauDisposeAuth (auth)
-Xauth	*auth;
+XauDisposeAuth (Xauth *auth)
 {
     if (auth) {
 	if (auth->address) (void) free (auth->address);
