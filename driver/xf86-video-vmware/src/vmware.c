@@ -82,7 +82,7 @@ char rcsId_vmware[] =
 #define VMWARE_DRIVER_NAME "vmware"
 #define VMWARE_MAJOR_VERSION	10
 #define VMWARE_MINOR_VERSION	14
-#define VMWARE_PATCHLEVEL	0
+#define VMWARE_PATCHLEVEL	1
 #define VMWARE_DRIVER_VERSION \
    (VMWARE_MAJOR_VERSION * 65536 + VMWARE_MINOR_VERSION * 256 + VMWARE_PATCHLEVEL)
 
@@ -433,7 +433,7 @@ VMWAREParseTopologyElement(ScrnInfoPtr pScrn,
                            Bool needTerminator,
                            unsigned int *outValue)
 {
-   char buf[10];
+   char buf[10] = {0, };
    size_t i = 0;
    int retVal = -1;
    const char *str = element;
