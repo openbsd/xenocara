@@ -1,15 +1,15 @@
-# $OpenBSD: MODULES,v 1.1 2006/11/29 18:45:53 matthieu Exp $
+# $OpenBSD: MODULES,v 1.2 2006/12/16 21:52:58 matthieu Exp $
 #
 # X.Org maintained modules
 #
-# Last update 2006/11/27
+# Last update 2006/12/15
 
 app/appres		1.0.0	7.0
 app/bdftopcf		1.0.0	7.0
-app/beforelight		1.0.1	7.0
+app/beforelight		1.0.2	7.2RC4
 app/bitmap		1.0.2	7.1
-app/editres		1.0.1	7.0
-app/fonttosfnt		1.0.2	7.2RC1
+app/editres		1.0.2	7.2RC4
+app/fonttosfnt		1.0.3	7.2RC4
 app/fslsfonts		1.0.1	7.0
 app/fstobdf		1.0.2 	7.1
 app/iceauth		1.0.1	7.0
@@ -25,14 +25,14 @@ app/proxymngr		1.0.1	7.0
 app/rgb			1.0.1	7.1
 app/rstart		1.0.2	7.1
 app/scripts		1.0.1	7.0
-app/sessreg		1.0.1	7.2RC2	needs-rel
+app/sessreg		1.0.2	7.2RC3
 app/setxkbmap		1.0.3	7.2RC2
 app/showfont		1.0.1	7.0
 app/smproxy		1.0.2	7.1
-app/twm			1.0.2	7.2RC1
+app/twm			1.0.3	7.2RC3
 app/viewres		1.0.1	7.0
 app/x11perf		1.4.1	7.1	
-app/xauth		1.0.1	7.0
+app/xauth		1.0.2	7.2RC4
 app/xbiff		1.0.1	7.0
 app/xcalc		1.0.1	7.0	need-rel
 app/xclipboard		1.0.1	7.0
@@ -50,7 +50,7 @@ app/xf86dga		1.0.2	7.2RC1
 app/xfd			1.0.1	7.0
 app/xfindproxy		1.0.1	7.0
 app/xfontsel		1.0.1	7.0
-app/xfs			1.0.3	7.2RC1
+app/xfs			1.0.4	7.2RC3
 app/xfsinfo		1.0.1	7.0
 app/xfwp		1.0.1	7.0
 app/xgamma		1.0.1	7.0
@@ -138,22 +138,22 @@ driver/xf86-video-cyrix		1.1.0	7.1
 driver/xf86-video-dummy		0.2.0	7.1
 driver/xf86-video-fbdev		0.3.0	7.1	need-rel
 driver/xf86-video-glint		1.1.1	7.1
-driver/xf86-video-i128		1.1.0.6	7.2RC1
+driver/xf86-video-i128		1.2.1	7.2RC3
 driver/xf86-video-i740		1.1.0	7.1
 driver/xf86-video-impact	0.2.0		need-rel
 driver/xf86-video-imstt		1.1.0	7.1
-driver/xf86-video-intel		1.7.2	7.2RC1	need-rel
-driver/xf86-video-mga		1.4.4	7.2RC1
+driver/xf86-video-intel		1.7.3	7.2RC3
+driver/xf86-video-mga		1.4.5	7.2RC3
 driver/xf86-video-neomagic	1.1.1	7.1
 driver/xf86-video-newport	0.2.1	7.2RC1
 driver/xf86-video-nsc		2.8.2	7.2RC1
-driver/xf86-video-nv		1.2.0	??	need-rel
+driver/xf86-video-nv		1.2.1	7.2RC3
 driver/xf86-video-rendition	4.1.2	7.2RC2
-driver/xf86-video-s3		0.4.1	7.1
+driver/xf86-video-s3		0.5.0	7.2RC3
 driver/xf86-video-s3virge	1.9.1	7.1
 driver/xf86-video-savage	2.1.2	7.2RC1
 driver/xf86-video-siliconmotion	1.4.2	7.2RC1
-driver/xf86-video-sis		0.9.2	7.2RC1
+driver/xf86-video-sis		0.9.3	7.2RC3
 driver/xf86-video-sisusb	0.8.1	7.1
 driver/xf86-video-sunbw2	1.1.0	7.1
 driver/xf86-video-suncg14	1.1.0	7.1
@@ -167,10 +167,10 @@ driver/xf86-video-tga		1.1.0	7.0
 driver/xf86-video-trident	1.2.3	7.2RC2
 driver/xf86-video-tseng		1.1.1	7.2RC1
 driver/xf86-video-v4l		0.1.1	7.1
-driver/xf86-video-vesa		1.2.2	7.2RC1
+driver/xf86-video-vesa		1.3.0	7.2RC3
 driver/xf86-video-vga		4.1.0	7.1
 driver/xf86-video-via		0.2.2	7.2RC1
-driver/xf86-video-vmware	10.14.0	7.2RC2	need-rel
+driver/xf86-video-vmware	10.14.1	7.2RC3
 driver/xf86-video-voodoo	1.1.1	7.2RC1
 driver/xf86-video-wsfb		0.2.0	7.2RC1	need-rel
 
@@ -214,13 +214,13 @@ font-winitzki-cyrillic		fonts/winitzki-cyrillic		1.0.0
 font-xfree86-type1		fonts/xfree86-type1		1.0.0
 
 lib/libFS			1.0.0	7.0
-lib/libICE			1.0.2	7.2RC1
+lib/libICE			1.0.3	7.2RC4
 lib/libSM			1.0.2	7.2RC1
-lib/libX11			1.1RC2	7.2RC2
+lib/libX11			1.1.1	7.2RC3
 lib/libXRes			1.0.2	7.2RC1
-lib/libXScrnSaver		1.1.1	7.2RC1
+lib/libXScrnSaver		1.1.2	7.2RC4
 lib/libXTrap			1.0.0	7.0
-lib/libXau			1.0.2	7.2RC1	needs-rel
+lib/libXau			1.0.3	7.2RC4
 lib/libXaw			1.0.2	7.1
 lib/libXcomposite		0.3.1	7.2RC1
 lib/libXcursor			1.1.8	7.2RC1
@@ -229,9 +229,9 @@ lib/libXdmcp			1.0.2	7.2RC1
 lib/libXevie			1.0.2	7.2RC1
 lib/libXext			1.0.2	7.2RC1	needs-rel
 lib/libXfixes			4.0.3	7.2RC2
-lib/libXfont			1.2.3	7.2RC1
+lib/libXfont			1.2.6	7.2RC4
 lib/libXfontcache		1.0.3	7.2RC1
-lib/libXft			2.1.11	7.2RC1
+lib/libXft			2.1.12	7.2RC4
 lib/libXi			1.0.2	7.2RC2
 lib/libXinerama			1.0.1	7.0
 lib/libXmu			1.0.3	7.2RC2
@@ -290,7 +290,7 @@ proto/xineramaproto		1.1.2	7.0
 util/cf				1.0.2
 util/gccmakedep			1.0.2
 util/imake			1.0.2
-util/macros			1.1.2	7.2RC2
+util/macros			1.1.3	7.2RC3
 util/makedepend			1.0.0
 
-xserver				1.1.99.901	7.2RC1 needs-rel
+xserver				1.1.99.903	7.2RC3
