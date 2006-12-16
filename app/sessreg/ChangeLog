@@ -1,14 +1,8 @@
-commit 82fbb553114e8d00b6b3886aee4554dfd178cb01
-Author: Alan Coopersmith <alan.coopersmith@sun.com>
-Date:   Wed Nov 8 13:51:50 2006 -0800
+commit 2989b28529b964f12a1bb3dcdf77b87ae8effaf0
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Nov 8 16:32:56 2006 +0200
 
-    Improve formatting of file names in sessreg.man
-
-commit 02379845b074cb252c0cb42d18c6cb8effcdc9f5
-Author: Alan Coopersmith <alan.coopersmith@sun.com>
-Date:   Wed Nov 8 13:48:05 2006 -0800
-
-    Fix builds when $(srcdir) != $(objdir)
+    bump to 1.0.1
 
 commit c472f5f9257e6dcb9e82042a99ef028e3390e93e
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
