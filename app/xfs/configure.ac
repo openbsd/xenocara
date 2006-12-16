@@ -22,7 +22,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xfs,[1.0.3], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xfs)
+AC_INIT(xfs,[1.0.4], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xfs)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -33,7 +33,7 @@ AC_PROG_INSTALL
 AC_CANONICAL_HOST
 
 case $host_os in
-    linux*)
+    linux*|gnu*|*-gnu)
         OS_CFLAGS="-D_XOPEN_SOURCE"
         ;;
     *)
