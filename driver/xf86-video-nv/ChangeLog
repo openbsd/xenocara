@@ -1,3 +1,37 @@
+commit 2d4b4bb06029e60e5c7b96d94b31c8aadac91843
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Nov 30 17:41:41 2006 -0800
+
+    Bump to 1.2.1.
+
+commit 558ef7e26e361529a05360610abc3cbcdb04fd67
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Nov 30 17:36:29 2006 -0800
+
+    Save and restore DAC0 register 608 when probing for connected CRTs.
+    
+    Adapted from a patch by Egbert Eich for Novell bug #220197.
+
+commit 08bb966abbca11c4581d666af3249e4922156e03
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Nov 30 17:14:38 2006 -0800
+
+    Use XORG_RELEASE_VERSION.
+
+commit 162391f8fb640184db3917f3842fbff0bc9ce606
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Oct 26 19:08:29 2006 -0700
+
+    Handle more than 1 digit in the version numbers.
+    
+    Based on a change by George Sapountzis <gsap7@yahoo.gr>.
+
+commit 98372d0f94a9d658a7257d2199ef37a2449b9961
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Aug 11 16:02:28 2006 -0400
+
+    Replace panel message + MODE_BAD with MODE_PANEL.
+
 commit 43ec66396f805aba87017d193d97a03372c29909
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Fri Jun 30 12:54:44 2006 -0700
@@ -560,4 +594,3 @@ Author: Kaleb Keithley <kaleb@freedesktop.org>
 Date:   Fri Nov 14 15:54:48 2003 +0000
 
     R6.6 is the Xorg base-line
-

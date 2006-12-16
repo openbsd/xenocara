@@ -35,15 +35,6 @@
 /* XV hooks take a DrawablePtr */
 #undef HAVE_XV_DRAWABLE
 
-/* Major version */
-#undef NV_MAJOR_VERSION
-
-/* Minor version */
-#undef NV_MINOR_VERSION
-
-/* Patch version */
-#undef NV_PATCHLEVEL
-
 /* Name of package */
 #undef PACKAGE
 
@@ -61,6 +52,15 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+/* Major version of this package */
+#undef PACKAGE_VERSION_MAJOR
+
+/* Minor version of this package */
+#undef PACKAGE_VERSION_MINOR
+
+/* Patch version of this package */
+#undef PACKAGE_VERSION_PATCHLEVEL
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS

@@ -458,7 +458,7 @@ static XF86ModuleVersionInfo nvVersRec =
     MODINFOSTRING1,
     MODINFOSTRING2,
     XORG_VERSION_CURRENT,
-    NV_MAJOR_VERSION, NV_MINOR_VERSION, NV_PATCHLEVEL,
+    PACKAGE_VERSION_MAJOR, PACKAGE_VERSION_MINOR, PACKAGE_VERSION_PATCHLEVEL,
     ABI_CLASS_VIDEODRV,                     /* This is a video driver */
     ABI_VIDEODRV_VERSION,
     MOD_CLASS_VIDEODRV,
@@ -953,14 +953,9 @@ NVValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
 {
     NVPtr pNv = NVPTR(xf86Screens[scrnIndex]);
 
-    if(pNv->fpWidth && pNv->fpHeight) {
-      if((pNv->fpWidth < mode->HDisplay) || (pNv->fpHeight < mode->VDisplay)) {
-         xf86DrvMsg(scrnIndex, X_INFO, "Mode \"%s\" is larger than "
-                    "BIOS programmed panel size of %d x %d.  Removing.\n",
-                     mode->name, pNv->fpWidth, pNv->fpHeight);
-         return (MODE_BAD);
-      }
-    }
+    if(pNv->fpWidth && pNv->fpHeight)
+      if((pNv->fpWidth < mode->HDisplay) || (pNv->fpHeight < mode->VDisplay))
+        return (MODE_PANEL);
 
     return (MODE_OK);
 }

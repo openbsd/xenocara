@@ -174,14 +174,17 @@ NVIsConnected (ScrnInfoPtr pScrn, int output)
 {
     NVPtr pNv = NVPTR(pScrn);
     volatile U032 *PRAMDAC = pNv->PRAMDAC0;
-    CARD32 reg52C, reg608;
+    CARD32 reg52C, reg608, dac0_reg608;
     Bool present;
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                "Probing for analog device on output %s...\n", 
                 output ? "B" : "A");
 
-    if(output) PRAMDAC += 0x800;
+    if(output) {
+        dac0_reg608 = PRAMDAC[0x0608/4];
+        PRAMDAC += 0x800;
+    }
 
     reg52C = PRAMDAC[0x052C/4];
     reg608 = PRAMDAC[0x0608/4];
@@ -204,7 +207,8 @@ NVIsConnected (ScrnInfoPtr pScrn, int output)
     else
        xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "  ...can't find one\n");
 
-    pNv->PRAMDAC0[0x0608/4] &= 0x0000EFFF;
+    if(output)
+        pNv->PRAMDAC0[0x0608/4] = dac0_reg608;
 
     PRAMDAC[0x052C/4] = reg52C;
     PRAMDAC[0x0608/4] = reg608;
