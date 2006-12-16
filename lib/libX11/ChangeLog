@@ -1,3 +1,128 @@
+commit f637a5b03164263a3af2e644cf655e52b015f1bb
+Author: Ross Combs <rocombs@cs.nmsu.edu>
+Date:   Sat Nov 25 14:45:17 2006 -0800
+
+    Debian bug #354315: Clarify return value in XGetWindowAttributes man page
+    
+    This man page does not discuss the actual return values of the
+    function, but says they are of type "Status".  One might assume
+    that this means you could compare it with the "Success" macro.
+    One would be wrong.
+    
+    The X functions seem to have two three types representing status.
+    If it is an "int" there are a number of error codes or "Success"
+    which can be compared against.  If it is a bool, the result can be
+    compared with "True" or "False".  If the return type is "Status" it
+    appears that the return type is either 0 or 1.  Unfortunately the
+    value for Success is zero, so it is important to distinguish
+    between the first two types of return values and the third;
+    otherwise the conditional will be inverted.
+    
+    XGetWindowAttributes() is one of the functions which returns zero
+    for failure.  The man page should make this clear.
+
+commit c6a0b0f18ed1242eeb908f5cf767ab8381edd456
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sat Nov 25 14:23:45 2006 -0800
+
+    Bug #9154: Always process an event for _XReadEvents, even if an error occurs
+    
+    Previously, process_responses (in the wait_for_first_event case called
+    from _XReadEvents) considered any return from xcb_wait_for_event
+    sufficient to think it had processed an event. If xcb_wait_for_event
+    returned an error, and no more events occurred before process_responses
+    called xcb_poll_for_event, process_responses would try to return with
+    dpy->head NULL, and would fail an assertion for the _XReadEvents
+    postcondition. Now, process_responses continues using xcb_wait_for_event
+    until it gets an event.
+
+commit d56e78acce9b2aa1dd1bf172afedaa3bccd5e1c8
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Nov 25 05:29:31 2006 -0800
+
+    Bug #9153: Fix access to freed memory.
+    
+    The fix for bug #8622 introduced a smaller bug where _XReply would
+    read memory shortly after freeing it. This patch caches the needed
+    value in a stack-allocated variable before the heap-allocated memory
+    is freed.
+
+commit 934ca763bbc0dd7ae460469bfc000ba101602bcc
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Fri Nov 24 19:57:58 2006 -0800
+
+    libx11 doesn't use inputproto in public headers; don't require it in x11.pc
+    
+    Based on a Debian patch.
+
+commit 4255997ef2d92740d51f6e63e9eabcfa089683f0
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Thu Nov 23 07:19:32 2006 -0800
+
+    Release libX11 1.1
+
+commit a1168e11ec9377307c51a7271faec3bf88a63a66
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Tue Nov 21 17:52:34 2006 -0800
+
+    Add note in man-page that XListFontsWithInfo is not thread-safe.
+    
+    _XReply drops the Display lock, so the value of dpy->request may change
+    before _XReply is called again.
+    
+    I discovered this by inspection a year or two ago. I'm pretty confident
+    in the claim, and nobody has come up with an argument for why it's safe
+    despite appearances.
+
+commit 67abe024268c6b1fdee516e5d3a046ccffd7e80a
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sat Nov 18 15:39:26 2006 -0800
+
+    Bug #8622: Fix response processing order for threaded apps
+    
+    Previously, process_responses (the common code for _XReply,
+    _XReadEvents, and _XEventsQueued) took the current request sequence
+    number as an argument, and did some highly complicated processing to
+    attempt to process responses in order across threads.  This didn't
+    actually work.
+    
+    Now, process_responses handles responses in order, by adding condition
+    variables to the list of outstanding requests in
+    dpy->xcb->pending_requests, and blocking on them when those requests
+    should get processed to allow _XReply to process them; if actually
+    called from _XReply, it returns when _XReply's request should get
+    processed.  _XReply broadcasts on the condition variable after it has
+    read its reply and re-acquired the display lock.
+    
+    Another great commit brought to you by Jamey Sharp, Josh Triplett, the
+    Gobby collaborative text editor, conspy, and ridiculous amounts of SSH
+    forwarding.
+    
+    Signed-off-by: Josh Triplett <josh@freedesktop.org>
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit 941f02ede63baa46f93ed8abccebe76fb29c0789
+Author: Lars Knoll <lars@trolltech.com>
+Date:   Wed Nov 8 12:17:41 2006 -0800
+
+    Don't hold the display lock around callbacks to the application.
+    
+    This fixes an XCB locking assertion failure, particularly with emacs.
+
+commit e494ecaac1ec8a22bd9a85f800fca74d02e9d358
+Author: Diego 'Flameeyes' Pettenò <flameeyes@gentoo.org>
+Date:   Tue Nov 7 09:32:00 2006 -0800
+
+    Add xcb-xlib dependency to x11.pc when built against XCB.
+
+commit 2302008a3793eb4df8ede777d54fe06505c47eaf
+Author: Eric Anholt <eric@anholt.net>
+Date:   Mon Nov 6 17:11:42 2006 -0800
+
+    XCB: Allocate the right amount of memory for dpy->lock_fns.
+    
+    Fixes a crash I was experiencing on startup of anything using gdk.
+
 commit 5f860655be88108b03ccd97470a0814819254bf0
 Author: Jamey Sharp <jamey@minilop.net>
 Date:   Thu Nov 2 17:55:31 2006 -0800

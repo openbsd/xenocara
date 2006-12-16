@@ -38,7 +38,7 @@ static void _XCBUnlockDisplay(Display *dpy)
 
 int _XCBInitDisplayLock(Display *dpy)
 {
-    if(!dpy->lock_fns && !(dpy->lock_fns = Xcalloc(1, sizeof(dpy->lock_fns))))
+    if(!dpy->lock_fns && !(dpy->lock_fns = Xcalloc(1, sizeof(*dpy->lock_fns))))
 	return 0;
     dpy->xcb->lock_fns.lock_display = dpy->lock_fns->lock_display;
     dpy->lock_fns->lock_display = _XCBLockDisplay;
@@ -146,6 +146,7 @@ static inline int issue_complete_request(Display *dpy, int veclen, struct iovec 
 	PendingRequest *req = malloc(sizeof(PendingRequest));
 	assert(req);
 	req->next = 0;
+	req->waiters = -1;
 	req->sequence = sequence;
 	*dpy->xcb->pending_requests_tail = req;
 	dpy->xcb->pending_requests_tail = &req->next;
