@@ -39,6 +39,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @KERBEROS_TRUE@am__append_1 = k5encode.c
+check_PROGRAMS = Autest$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/xau.pc.in $(top_srcdir)/configure \
@@ -61,7 +62,8 @@ am__vpath_adj = case $$p in \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(libmandir)" \
-	"$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(xauincludedir)"
+	"$(DESTDIR)$(lintlibdir)" "$(DESTDIR)$(pkgconfigdir)" \
+	"$(DESTDIR)$(xauincludedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
@@ -73,6 +75,9 @@ am_libXau_la_OBJECTS = AuDispose.lo AuFileName.lo AuGetAddr.lo \
 	AuGetBest.lo AuLock.lo AuRead.lo AuUnlock.lo AuWrite.lo \
 	$(am__objects_1)
 libXau_la_OBJECTS = $(am_libXau_la_OBJECTS)
+am_Autest_OBJECTS = Autest.$(OBJEXT)
+Autest_OBJECTS = $(am_Autest_OBJECTS)
+Autest_DEPENDENCIES = libXau.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -84,11 +89,12 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libXau_la_SOURCES)
-DIST_SOURCES = $(am__libXau_la_SOURCES_DIST)
+SOURCES = $(libXau_la_SOURCES) $(Autest_SOURCES)
+DIST_SOURCES = $(am__libXau_la_SOURCES_DIST) $(Autest_SOURCES)
 libmanDATA_INSTALL = $(INSTALL_DATA)
+lintlibDATA_INSTALL = $(INSTALL_DATA)
 pkgconfigDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(libman_DATA) $(pkgconfig_DATA)
+DATA = $(libman_DATA) $(lintlib_DATA) $(pkgconfig_DATA)
 xauincludeHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(xauinclude_HEADERS)
 ETAGS = etags
@@ -155,12 +161,19 @@ LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LINT = @LINT@
+LINTLIB = @LINTLIB@
+LINT_FALSE = @LINT_FALSE@
+LINT_FLAGS = @LINT_FLAGS@
+LINT_TRUE = @LINT_TRUE@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MAKE_LINT_LIB_FALSE = @MAKE_LINT_LIB_FALSE@
+MAKE_LINT_LIB_TRUE = @MAKE_LINT_LIB_TRUE@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 OBJDUMP = @OBJDUMP@
@@ -238,15 +251,23 @@ xauincludedir = $(includedir)/X11
 xauinclude_HEADERS = include/X11/Xauth.h
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xau.pc
+TESTS = Autest
+Autest_SOURCES = Autest.c
+Autest_LDADD = libXau.la
+@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+@LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS)
+
+@MAKE_LINT_LIB_TRUE@lintlibdir = $(libdir)
+@MAKE_LINT_LIB_TRUE@lintlib_DATA = $(LINTLIB)
 LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
 libmandir = $(LIB_MAN_DIR)
 libman_PRE = Xau.man
 BUILT_SOURCES = shadows.DONE
-CLEANFILES = $(libman_DATA)
+CLEANFILES = $(libman_DATA) $(BUILT_SOURCES) $(lintlib_DATA)
 libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
 	      $(Xau_shadows:=.@LIB_MAN_SUFFIX@)
 
-EXTRA_DIST = xau.pc.in Autest.c $(libman_PRE)
+EXTRA_DIST = xau.pc.in $(libman_PRE) ChangeLog
 Xau_shadows = \
     XauFileName                             \
     XauReadAuth                             \
@@ -346,6 +367,16 @@ clean-libLTLIBRARIES:
 libXau.la: $(libXau_la_OBJECTS) $(libXau_la_DEPENDENCIES) 
 	$(LINK) -rpath $(libdir) $(libXau_la_LDFLAGS) $(libXau_la_OBJECTS) $(libXau_la_LIBADD) $(LIBS)
 
+clean-checkPROGRAMS:
+	@list='$(check_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  echo " rm -f $$p $$f"; \
+	  rm -f $$p $$f ; \
+	done
+Autest$(EXEEXT): $(Autest_OBJECTS) $(Autest_DEPENDENCIES) 
+	@rm -f Autest$(EXEEXT)
+	$(LINK) $(Autest_LDFLAGS) $(Autest_OBJECTS) $(Autest_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -360,6 +391,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuRead.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuUnlock.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuWrite.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Autest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/k5encode.Plo@am__quote@
 
 .c.o:
@@ -408,6 +440,23 @@ uninstall-libmanDATA:
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(libmandir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(libmandir)/$$f"; \
+	done
+install-lintlibDATA: $(lintlib_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(lintlibdir)" || $(mkdir_p) "$(DESTDIR)$(lintlibdir)"
+	@list='$(lintlib_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(lintlibDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(lintlibdir)/$$f'"; \
+	  $(lintlibDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(lintlibdir)/$$f"; \
+	done
+
+uninstall-lintlibDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(lintlib_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(lintlibdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(lintlibdir)/$$f"; \
 	done
 install-pkgconfigDATA: $(pkgconfig_DATA)
 	@$(NORMAL_INSTALL)
@@ -492,6 +541,79 @@ GTAGS:
 distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
+check-TESTS: $(TESTS)
+	@failed=0; all=0; xfail=0; xpass=0; skip=0; \
+	srcdir=$(srcdir); export srcdir; \
+	list='$(TESTS)'; \
+	if test -n "$$list"; then \
+	  for tst in $$list; do \
+	    if test -f ./$$tst; then dir=./; \
+	    elif test -f $$tst; then dir=; \
+	    else dir="$(srcdir)/"; fi; \
+	    if $(TESTS_ENVIRONMENT) $${dir}$$tst; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *" $$tst "*) \
+		xpass=`expr $$xpass + 1`; \
+		failed=`expr $$failed + 1`; \
+		echo "XPASS: $$tst"; \
+	      ;; \
+	      *) \
+		echo "PASS: $$tst"; \
+	      ;; \
+	      esac; \
+	    elif test $$? -ne 77; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *" $$tst "*) \
+		xfail=`expr $$xfail + 1`; \
+		echo "XFAIL: $$tst"; \
+	      ;; \
+	      *) \
+		failed=`expr $$failed + 1`; \
+		echo "FAIL: $$tst"; \
+	      ;; \
+	      esac; \
+	    else \
+	      skip=`expr $$skip + 1`; \
+	      echo "SKIP: $$tst"; \
+	    fi; \
+	  done; \
+	  if test "$$failed" -eq 0; then \
+	    if test "$$xfail" -eq 0; then \
+	      banner="All $$all tests passed"; \
+	    else \
+	      banner="All $$all tests behaved as expected ($$xfail expected failures)"; \
+	    fi; \
+	  else \
+	    if test "$$xpass" -eq 0; then \
+	      banner="$$failed of $$all tests failed"; \
+	    else \
+	      banner="$$failed of $$all tests did not behave as expected ($$xpass unexpected passes)"; \
+	    fi; \
+	  fi; \
+	  dashes="$$banner"; \
+	  skipped=""; \
+	  if test "$$skip" -ne 0; then \
+	    skipped="($$skip tests were not run)"; \
+	    test `echo "$$skipped" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$skipped"; \
+	  fi; \
+	  report=""; \
+	  if test "$$failed" -ne 0 && test -n "$(PACKAGE_BUGREPORT)"; then \
+	    report="Please report to $(PACKAGE_BUGREPORT)"; \
+	    test `echo "$$report" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$report"; \
+	  fi; \
+	  dashes=`echo "$$dashes" | sed s/./=/g`; \
+	  echo "$$dashes"; \
+	  echo "$$banner"; \
+	  test -z "$$skipped" || echo "$$skipped"; \
+	  test -z "$$report" || echo "$$report"; \
+	  echo "$$dashes"; \
+	  test "$$failed" -eq 0; \
+	else :; fi
+
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
@@ -522,6 +644,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -620,11 +745,13 @@ distcleancheck: distclean
 	       $(distcleancheck_listfiles) ; \
 	       exit 1; } >&2
 check-am: all-am
+	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
+	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS) config.h
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(libmandir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(xauincludedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(libmandir)" "$(DESTDIR)$(lintlibdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(xauincludedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -656,8 +783,8 @@ maintainer-clean-generic:
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
-clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
-	mostlyclean-am
+clean-am: clean-checkPROGRAMS clean-generic clean-libLTLIBRARIES \
+	clean-libtool mostlyclean-am
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
@@ -676,8 +803,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-libmanDATA install-pkgconfigDATA \
-	install-xauincludeHEADERS
+install-data-am: install-libmanDATA install-lintlibDATA \
+	install-pkgconfigDATA install-xauincludeHEADERS
 
 install-exec-am: install-libLTLIBRARIES
 
@@ -708,36 +835,52 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
-	uninstall-libmanDATA uninstall-pkgconfigDATA \
-	uninstall-xauincludeHEADERS
-
-.PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
-	clean-generic clean-libLTLIBRARIES clean-libtool ctags dist \
-	dist-all dist-bzip2 dist-gzip dist-shar dist-tarZ dist-zip \
-	distcheck distclean distclean-compile distclean-generic \
-	distclean-hdr distclean-libtool distclean-tags distcleancheck \
-	distdir distuninstallcheck dvi dvi-am html html-am info \
-	info-am install install-am install-data install-data-am \
-	install-exec install-exec-am install-info install-info-am \
-	install-libLTLIBRARIES install-libmanDATA install-man \
-	install-pkgconfigDATA install-strip install-xauincludeHEADERS \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-info-am \
-	uninstall-libLTLIBRARIES uninstall-libmanDATA \
+	uninstall-libmanDATA uninstall-lintlibDATA \
 	uninstall-pkgconfigDATA uninstall-xauincludeHEADERS
 
+.PHONY: CTAGS GTAGS all all-am am--refresh check check-TESTS check-am \
+	clean clean-checkPROGRAMS clean-generic clean-libLTLIBRARIES \
+	clean-libtool ctags dist dist-all dist-bzip2 dist-gzip \
+	dist-hook dist-shar dist-tarZ dist-zip distcheck distclean \
+	distclean-compile distclean-generic distclean-hdr \
+	distclean-libtool distclean-tags distcleancheck distdir \
+	distuninstallcheck dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am install-exec \
+	install-exec-am install-info install-info-am \
+	install-libLTLIBRARIES install-libmanDATA install-lintlibDATA \
+	install-man install-pkgconfigDATA install-strip \
+	install-xauincludeHEADERS installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-info-am uninstall-libLTLIBRARIES \
+	uninstall-libmanDATA uninstall-lintlibDATA \
+	uninstall-pkgconfigDATA uninstall-xauincludeHEADERS
+
+
+@LINT_TRUE@lint:
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(libXau_la_SOURCES)
+
+@MAKE_LINT_LIB_TRUE@$(LINTLIB): $(libXau_la_SOURCES)
+@MAKE_LINT_LIB_TRUE@	$(LINT) -y -oXau -x $(ALL_LINT_FLAGS) $(libXau_la_SOURCES)
 
 shadows.DONE:
 	-rm -f $(Xau_shadows:=.@LIB_MAN_SUFFIX@)
 	(for i in $(Xau_shadows:=.@LIB_MAN_SUFFIX@) ; do \
 	 echo .so man$(LIB_MAN_DIR_SUFFIX)/Xau.$(LIB_MAN_SUFFIX) > $$i; \
 	 done)
+	touch shadows.DONE
 
 Xau.$(LIB_MAN_SUFFIX): $(srcdir)/Xau.man
 	sed 's/__xorgversion__/"$(XORGRELSTRING)" "$(XORGMANNAME)"/' \
 	< $(srcdir)/Xau.man > Xau.$(LIB_MAN_SUFFIX)
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
