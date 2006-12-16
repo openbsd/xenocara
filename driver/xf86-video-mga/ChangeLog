@@ -1,3 +1,73 @@
+commit 00efdc4959a0b240eb2dc7a3188c0ef64b2ad74a
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Nov 30 19:59:38 2006 +0200
+
+    bump to 1.4.5
+
+commit 5bbafd77678a2b0f82e820aa98337a014d284554
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Nov 26 18:06:12 2006 +0100
+
+    Made some XAA function static.
+
+commit 4778901bb13a950285c55ea6f058e94ee7b03652
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Nov 26 16:21:34 2006 +0100
+
+    Removed a duplicated register definition.
+
+commit f9d83ad601c8cba197e96f0b907f1dae6134953b
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Nov 26 16:17:12 2006 +0100
+
+    Replaced more magic values with register names.
+
+commit 6df85941ce077e1eee8b43945c51ab1b0906c758
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Nov 26 15:39:54 2006 +0100
+
+    Use register names in MGASaveScreenMerged() rather than magic numbers.
+
+commit b3ee69f6ac058e52d5175f611090baa76eed49f9
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Nov 26 15:24:46 2006 +0100
+
+    Register name tweak.
+    
+    The "DAC power down" register powers down the DAC when it's
+    set to zero, and enables it when it's set to one.
+    To avoid confusion, I renamed it.
+
+commit 0f8c42fe75c6da9e7ea4aeb33b71778551c61528
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Nov 25 17:08:15 2006 +0100
+
+    Removed some unused defines from mga_reg.h.
+
+commit 334c7237078652722d7dec1c74812af46bfd7c67
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Nov 25 16:42:49 2006 +0100
+
+    Removed some duplicated register definitions.
+
+commit be88d58968c604624617f40820dc9a50a92661be
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Nov 19 21:04:01 2006 +0100
+
+    Bug #2168: Fix graphics corruptions with Mystique rev 2.
+
+commit daeecb63567fb394654c9e66d64c3c53658f2c7d
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Nov 17 23:08:25 2006 +0100
+
+    Enabled the Exa composite hooks on G550.
+
+commit d69607fe8b2dfb6c539dbf9f2b2996d04a4a838a
+Author: David Nusinow <dnusinow@debian.org>
+Date:   Mon Nov 6 23:58:06 2006 -0500
+
+    Minor typofix that was causing configure to exit with a syntax error
+
 commit 1dd6e6995d7a37338dce6ee5b1aa4ee9dd848e1d
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Fri Oct 27 11:53:40 2006 -0700

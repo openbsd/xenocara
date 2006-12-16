@@ -355,7 +355,6 @@
 #define MGA1064_MUL_CTL_G16V16bits		0x06
 #define MGA1064_MUL_CTL_32_24bits		0x07
 
-#define MGAGDAC_XVREFCTRL		0x18
 #define MGA1064_PIX_CLK_CTL		0x1a
 #define MGA1064_PIX_CLK_CTL_CLK_DIS   		( 0x01 << 2 )
 #define MGA1064_PIX_CLK_CTL_CLK_POW_DOWN   	( 0x01 << 3 )
@@ -365,8 +364,9 @@
 #define MGA1064_PIX_CLK_CTL_SEL_MSK   		( 0x03 << 0 )
 
 #define MGA1064_GEN_CTL		0x1d
+#define MGA1064_GEN_CTL_SYNC_ON_GREEN_DIS      (0x01 << 5)
 #define MGA1064_MISC_CTL	0x1e
-#define MGA1064_MISC_CTL_DAC_POW_DN   		( 0x01 << 0 )
+#define MGA1064_MISC_CTL_DAC_EN                ( 0x01 << 0 )
 #define MGA1064_MISC_CTL_VGA   		( 0x01 << 1 )
 #define MGA1064_MISC_CTL_DIS_CON   		( 0x03 << 1 )
 #define MGA1064_MISC_CTL_MAFC   		( 0x02 << 1 )
@@ -402,10 +402,6 @@
 #define MGA1064_PIX_PLL_STAT	0x4f
 
 /*Added for G450 dual head*/
-/* Supported PLL*/
-#define __PIXEL_PLL                 1
-#define __SYSTEM_PLL                2
-#define __VIDEO_PLL                 3
 
 #define MGA1064_VID_PLL_P       0x8D
 #define MGA1064_VID_PLL_M       0x8E
@@ -436,10 +432,6 @@
 
 #define MGAREG_C2OFFSET         0x3c40
 #define MGAREG_C2DATACTL        0x3c4c
-
-#define MGA1064_DISP_CTL        0x8a
-#define MGA1064_SYNC_CTL        0x8b
-#define MGA1064_PWR_CTL         0xa0
 
 /* video register */
 

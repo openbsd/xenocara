@@ -141,7 +141,7 @@ static void mgaSubsequentDashedTwoPointLine( ScrnInfoPtr pScrn,
     int x1, int y1, int x2, int y2, int flags, int phase );
 #endif
 
-void mgaRestoreAccelState( ScrnInfoPtr pScrn );
+static void mgaRestoreAccelState( ScrnInfoPtr pScrn );
 
 #ifdef XF86DRI
 void mgaDRIInitBuffers(WindowPtr pWin, RegionPtr prgn, CARD32 index);
@@ -149,21 +149,21 @@ void mgaDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
     RegionPtr prgnSrc, CARD32 index);
 #endif
 
-extern void MGASetClippingRectangle(ScrnInfoPtr pScrn, int x1, int y1,
+static void MGASetClippingRectangle(ScrnInfoPtr pScrn, int x1, int y1,
 				int x2, int y2);
-extern void MGADisableClipping(ScrnInfoPtr pScrn);
-extern void MGAFillSolidRectsDMA(ScrnInfoPtr pScrn, int fg, int rop,
+static void MGADisableClipping(ScrnInfoPtr pScrn);
+static void MGAFillSolidRectsDMA(ScrnInfoPtr pScrn, int fg, int rop,
 				unsigned int planemask, int nBox, BoxPtr pBox);
-extern void MGAFillSolidSpansDMA(ScrnInfoPtr pScrn, int fg, int rop,
+static void MGAFillSolidSpansDMA(ScrnInfoPtr pScrn, int fg, int rop,
 				unsigned int planemask, int n, DDXPointPtr ppt,
  				int *pwidth, int fSorted);
-extern void MGAFillMono8x8PatternRectsTwoPass(ScrnInfoPtr pScrn, int fg, int bg,
+static void MGAFillMono8x8PatternRectsTwoPass(ScrnInfoPtr pScrn, int fg, int bg,
  				int rop, unsigned int planemask, int nBox,
  				BoxPtr pBox, int pattern0, int pattern1,
 				int xorigin, int yorigin);
-extern void MGAValidatePolyArc(GCPtr, unsigned long, DrawablePtr);
-extern void MGAValidatePolyPoint(GCPtr, unsigned long, DrawablePtr);
-extern void MGAFillCacheBltRects(ScrnInfoPtr, int, unsigned int, int, BoxPtr,
+static void MGAValidatePolyArc(GCPtr, unsigned long, DrawablePtr);
+static void MGAValidatePolyPoint(GCPtr, unsigned long, DrawablePtr);
+static void MGAFillCacheBltRects(ScrnInfoPtr, int, unsigned int, int, BoxPtr,
 				int, int, XAACacheInfoPtr);
 
 
@@ -220,8 +220,8 @@ static void MGASubsequentCPUToScreenTexture(ScrnInfoPtr pScrn, int dstx,
 #include "mipict.h"
 #include "dixstruct.h"
 
-CARD32 MGAAlphaTextureFormats[2] = {PICT_a8, 0};
-CARD32 MGATextureFormats[2] = {PICT_a8r8g8b8, 0};
+static CARD32 MGAAlphaTextureFormats[2] = {PICT_a8, 0};
+static CARD32 MGATextureFormats[2] = {PICT_a8r8g8b8, 0};
 
 static void
 RemoveLinear (FBLinearPtr linear)
@@ -1007,7 +1007,7 @@ Bool mgaAccelInit( ScreenPtr pScreen )
 
 
 /* Support for multiscreen */
-void mgaRestoreAccelState(ScrnInfoPtr pScrn)
+static void mgaRestoreAccelState(ScrnInfoPtr pScrn)
 {
    MGAPtr pMga = MGAPTR(pScrn);
    MGAFBLayout *pLayout = &pMga->CurrentLayout;
@@ -1089,8 +1089,8 @@ MGAStormSync(ScrnInfoPtr pScrn)
 
     CHECK_DMA_QUIESCENT(pMga, pScrn);
 
-    /* MGAISBUSY() reportedly causes a freeze for Mystique revision 2 and older */
-    if (!(pMga->Chipset == PCI_CHIP_MGA1064 && (pMga->ChipRev >= 0 && pMga->ChipRev <= 2)))
+    /* MGAISBUSY() reportedly causes a freeze for Mystique revisions 0 and 1 */
+    if (!(pMga->Chipset == PCI_CHIP_MGA1064 && (pMga->ChipRev >= 0 && pMga->ChipRev <= 1)))
 	while(MGAISBUSY());
     /* flush cache before a read (mga-1064g 5.1.6) */
     OUTREG8(MGAREG_CRTC_INDEX, 0);
@@ -1191,7 +1191,8 @@ void MGAStormEngineInit( ScrnInfoPtr pScrn )
 }
 
 
-void MGASetClippingRectangle(
+static void
+MGASetClippingRectangle(
    ScrnInfoPtr pScrn,
    int x1, int y1, int x2, int y2
 ){
@@ -1206,7 +1207,8 @@ void MGASetClippingRectangle(
     pMga->AccelFlags |= CLIPPER_ON;
 }
 
-void MGADisableClipping(ScrnInfoPtr pScrn)
+static void
+MGADisableClipping(ScrnInfoPtr pScrn)
 {
     MGAPtr pMga = MGAPTR(pScrn);
 
@@ -2212,7 +2214,7 @@ void mgaSubsequentScreenToScreenColorExpandFill( ScrnInfoPtr pScrn,
 }
 
 
-void
+static void
 MGAFillSolidRectsDMA(
     ScrnInfoPtr pScrn,
     int	fg, int rop,
@@ -2253,7 +2255,7 @@ MGAFillSolidRectsDMA(
     OUTREG(MGAREG_OPMODE, MGAOPM_DMA_BLIT);
 }
 
-void
+static void
 MGAFillSolidSpansDMA(
    ScrnInfoPtr pScrn,
    int fg, int rop,
@@ -2312,7 +2314,7 @@ MGAFillSolidSpansDMA(
 }
 
 
-void
+static void
 MGAFillMono8x8PatternRectsTwoPass(
     ScrnInfoPtr pScrn,
     int	fg, int bg, int rop,
@@ -2365,7 +2367,7 @@ SECOND_PASS:
 }
 
 
-void
+static void
 MGAValidatePolyArc(
    GCPtr 	pGC,
    unsigned long changes,
@@ -2452,7 +2454,7 @@ MGAPolyPoint (
 }
 
 
-void
+static void
 MGAValidatePolyPoint(
    GCPtr 	pGC,
    unsigned long changes,
@@ -2476,7 +2478,7 @@ MGAValidatePolyPoint(
 }
 
 
-void
+static void
 MGAFillCacheBltRects(
    ScrnInfoPtr pScrn,
    int rop,

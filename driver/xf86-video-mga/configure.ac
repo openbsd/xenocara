@@ -24,7 +24,7 @@ AC_PREREQ(2.57)
 
 # When the version number is modified here, also modify it in src/mga.h.
 AC_INIT([xf86-video-mga],
-        1.4.4,
+        1.4.5,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-mga)
 
@@ -55,7 +55,7 @@ AC_ARG_ENABLE(dri, AC_HELP_STRING([--disable-dri],
               [DRI=auto])
 AC_ARG_ENABLE(exa,
               AC_HELP_STRING([--disable-exa],
-                             [Disable EXA support [[default enabled]]]),
+                             [Disable EXA support [[default=enabled]]]),
               [EXA="$enableval"],
               [EXA=yes])
 

@@ -947,23 +947,28 @@ MGASaveScreenMerged(ScreenPtr pScreen, int mode)
     
     if (on) {
 /*        SetTimdeSinceLastInputEvent();*/
-       
+
         /* power on Dac1 */
-        reg = inMGAdac(0x1E);
-	outMGAdac(0x1E, reg | 1);
+        reg = inMGAdac(MGA1064_MISC_CTL);
+        reg |= MGA1064_MISC_CTL_DAC_EN;
+        outMGAdac(MGA1064_MISC_CTL, reg);
+
         /* power on Dac2 */
-        reg = inMGAdac(0xA0);
-	outMGAdac(0xA0, reg | 1);
-        
+        reg = inMGAdac(MGA1064_PWR_CTL);
+        reg |= 1;
+        outMGAdac(MGA1064_PWR_CTL, reg);
     } else {
         /* power off Dac1 */
-        reg = inMGAdac(0x1E);
-	outMGAdac(0x1E, reg & ~1);
-        /* power off Dac2 */
-        reg = inMGAdac(0xA0);
-	outMGAdac(0xA0, reg & ~1);
+        reg = inMGAdac(MGA1064_MISC_CTL);
+        reg &= ~MGA1064_MISC_CTL_DAC_EN;
+        outMGAdac(MGA1064_MISC_CTL, reg);
 
+        /* power off Dac2 */
+        reg = inMGAdac(MGA1064_PWR_CTL);
+        reg &= ~1;
+        outMGAdac(MGA1064_PWR_CTL, reg);
     }
+
     return TRUE;
 }
 

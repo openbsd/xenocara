@@ -797,7 +797,8 @@ mgaExaInit(ScreenPtr pScreen)
     pExa->Copy = mgaCopy;
     pExa->DoneCopy = mgaNoopDone;
 
-    if (pMga->Chipset == PCI_CHIP_MGAG400) {
+    if (pMga->Chipset == PCI_CHIP_MGAG400 ||
+        pMga->Chipset == PCI_CHIP_MGAG550) {
         pExa->CheckComposite = mgaCheckComposite;
         pExa->PrepareComposite = mgaPrepareComposite;
         pExa->Composite = mgaComposite;
