@@ -83,7 +83,7 @@
 #define VESA_NAME		"VESA"
 #define VESA_DRIVER_NAME	"vesa"
 #define VESA_MAJOR_VERSION	1
-#define VESA_MINOR_VERSION	2
+#define VESA_MINOR_VERSION	3
 #define VESA_PATCHLEVEL		0
 
 /*XXX*/
@@ -116,9 +116,13 @@ typedef struct _VESARec
     DGAModePtr pDGAMode;
     int nDGAMode;
     CloseScreenProcPtr CloseScreen;
+    CreateScreenResourcesProcPtr CreateScreenResources;
     OptionInfoPtr Options;
     IOADDRESS ioBase;
     Bool ModeSetClearScreen;
+    void *shadow;
+    ShadowUpdateProc update;
+    ShadowWindowProc window;
 } VESARec, *VESAPtr;
 
 

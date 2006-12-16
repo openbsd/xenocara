@@ -747,6 +747,23 @@ VESAPreInit(ScrnInfoPtr pScrn, int flags)
 }
 
 static Bool
+vesaCreateScreenResources(ScreenPtr pScreen)
+{
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    VESAPtr pVesa = VESAGetRec(pScrn);
+    Bool ret;
+
+    pScreen->CreateScreenResources = pVesa->CreateScreenResources;
+    ret = pScreen->CreateScreenResources(pScreen);
+    pScreen->CreateScreenResources = vesaCreateScreenResources;
+
+    shadowAdd(pScreen, pScreen->GetScreenPixmap(pScreen), pVesa->update,
+	      pVesa->window, 0, 0);
+
+    return ret;
+}
+
+static Bool
 VESAScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 {
     ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
@@ -787,6 +804,16 @@ VESAScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     /* Set bpp to 8 for depth 4 when using shadowfb. */
     if (pVesa->shadowFB && pScrn->bitsPerPixel == 4)
 	pScrn->bitsPerPixel = 8;
+
+    if (pVesa->shadowFB) {
+	pVesa->shadow = xcalloc(1, pScrn->displayWidth * pScrn->virtualY *
+				   ((pScrn->bitsPerPixel + 7) / 8));
+	if (!pVesa->shadow) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "Failed to allocate shadow buffer\n");
+	    return FALSE;
+	}
+    }
 
     /* save current video state */
     VESASaveRestore(pScrn, MODE_SAVE);
@@ -865,7 +892,7 @@ VESAScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		case 24:
 		case 32:
 		    if (!fbScreenInit(pScreen,
-				       pVesa->base,
+				pVesa->shadowFB ? pVesa->shadow : pVesa->base,
 				       pScrn->virtualX, pScrn->virtualY,
 				       pScrn->xDpi, pScrn->yDpi,
 				       pScrn->displayWidth, pScrn->bitsPerPixel))
@@ -901,27 +928,26 @@ VESAScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	fbPictureInit(pScreen, 0, 0);
 
     if (pVesa->shadowFB) {
-	ShadowUpdateProc update;
-	ShadowWindowProc window;
-
 	if (mode->MemoryModel == 3) {	/* Planar */
 	  if (pScrn->bitsPerPixel == 8)
-		update = shadowUpdatePlanar4x8Weak();
+		pVesa->update = shadowUpdatePlanar4x8Weak();
 	    else
-		update = shadowUpdatePlanar4Weak();
-	    window = VESAWindowPlanar;
+		pVesa->update = shadowUpdatePlanar4Weak();
+	    pVesa->window = VESAWindowPlanar;
 	}
 	else if (pVesa->mapPhys == 0xa0000) {	/* Windowed */
-	    update = shadowUpdatePackedWeak();
-	    window = VESAWindowWindowed;
+	    pVesa->update = shadowUpdatePackedWeak();
+	    pVesa->window = VESAWindowWindowed;
 	}
 	else {	/* Linear */
-	    update = shadowUpdatePackedWeak();
-	    window = VESAWindowLinear;
+	    pVesa->update = shadowUpdatePackedWeak();
+	    pVesa->window = VESAWindowLinear;
 	}
 
-	if (!shadowInit(pScreen, update, window))
-	    return (FALSE);
+	if (!shadowSetup(pScreen))
+	    return FALSE;
+	pVesa->CreateScreenResources = pScreen->CreateScreenResources;
+	pScreen->CreateScreenResources = vesaCreateScreenResources;
     }
     else if (pVesa->mapPhys == 0xa0000 && mode->MemoryModel != 0x3) {
 	unsigned int bankShift = 0;
@@ -1005,6 +1031,8 @@ VESACloseScreen(int scrnIndex, ScreenPtr pScreen)
 				 pVesa->savedPal, FALSE, TRUE);
 	VESAUnmapVidMem(pScrn);
     }
+    if (pVesa->shadowFB && pVesa->shadow)
+	xfree(pVesa->shadow);
     if (pVesa->pDGAMode) {
 	xfree(pVesa->pDGAMode);
 	pVesa->pDGAMode = NULL;
@@ -1012,6 +1040,7 @@ VESACloseScreen(int scrnIndex, ScreenPtr pScreen)
     }
     pScrn->vtSema = FALSE;
 
+    pScreen->CreateScreenResources = pVesa->CreateScreenResources;
     pScreen->CloseScreen = pVesa->CloseScreen;
     return pScreen->CloseScreen(scrnIndex, pScreen);
 }
