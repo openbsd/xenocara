@@ -1,5 +1,5 @@
 /*
- * $Id: Xft.h,v 1.1.1.1 2006/11/25 17:21:40 matthieu Exp $
+ * $Id: Xft.h,v 1.1.1.2 2006/12/16 21:12:48 matthieu Exp $
  *
  * Copyright © 2000 Keith Packard
  *
@@ -33,7 +33,7 @@
 
 #define XFT_MAJOR	2
 #define XFT_MINOR	1
-#define XFT_REVISION	9
+#define XFT_REVISION	12
 #define XFT_VERSION	((XFT_MAJOR * 10000) + (XFT_MINOR * 100) + (XFT_REVISION))
 #define XftVersion	XFT_VERSION
 

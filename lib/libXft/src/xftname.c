@@ -1,5 +1,5 @@
 /*
- * $Id: xftname.c,v 1.1.1.1 2006/11/25 17:21:38 matthieu Exp $
+ * $Id: xftname.c,v 1.1.1.2 2006/12/16 21:12:47 matthieu Exp $
  *
  * Copyright © 2000 Keith Packard
  *
@@ -50,7 +50,7 @@ _X_EXPORT FcPattern
     return FcNameParse ((FcChar8 *) name); 
 }
 
-_X_HIDDEN FcBool
+_X_EXPORT FcBool
 XftNameUnparse (FcPattern *pat, char *dest, int len)
 {
     FcChar8 *name;

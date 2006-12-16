@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.ac,v 1.1.1.1 2006/11/25 17:21:22 matthieu Exp $
+dnl  $Id: configure.ac,v 1.1.1.2 2006/12/16 21:12:18 matthieu Exp $
 dnl 
 dnl  Copyright © 2003 Keith Packard, Noah Levitt
 dnl 
@@ -32,7 +32,7 @@ dnl Yes, it is a pain to synchronize version numbers.  Unfortunately, it's
 dnl not possible to extract the version number here from Xft.h
 dnl Please bump the minor library number at each release as well.
 dnl
-AC_INIT(libXft, 2.1.11, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXft)
+AC_INIT(libXft, 2.1.12, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXft)
 AC_CONFIG_AUX_DIR(.)
 
 AM_INIT_AUTOMAKE([dist-bzip2])
