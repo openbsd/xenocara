@@ -28,23 +28,6 @@
  * SOFTWARE.
  * Author: Carol H. Thompson  IBM Almaden Research Center
  */
-/* Copyright (c) 1994-1999 Silicon Graphics, Inc. All Rights Reserved.
- *
- * The contents of this file are subject to the CID Font Code Public Licence
- * Version 1.0 (the "License"). You may not use this file except in compliance
- * with the Licence. You may obtain a copy of the License at Silicon Graphics,
- * Inc., attn: Legal Services, 2011 N. Shoreline Blvd., Mountain View, CA
- * 94043 or at http://www.sgi.com/software/opensource/cid/license.html.
- *
- * Software distributed under the License is distributed on an "AS IS" basis.
- * ALL WARRANTIES ARE DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED
- * WARRANTIES OF MERCHANTABILITY, OF FITNESS FOR A PARTICULAR PURPOSE OR OF
- * NON-INFRINGEMENT. See the License for the specific language governing
- * rights and limitations under the License.
- *
- * The Original Software is CID font code that was developed by Silicon
- * Graphics, Inc.
- */
 /* $XFree86: xc/lib/font/Type1/t1io.c,v 3.8 2001/01/17 19:43:23 dawes Exp $ */
 /*******************************************************************
 *  I/O package for Type 1 font reading
@@ -52,9 +35,6 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
-#ifdef BUILDCID
-#define XFONT_CID 1
 #endif
 
 #ifndef STATIC
@@ -92,14 +72,6 @@ STATIC unsigned char TheBuffer[F_BUFSIZ];
 static int T1Decrypt ( unsigned char *p, int len );
 static int T1Fill ( F_FILE *f );
 
-#if XFONT_CID
-void 
-resetDecrypt(void)
-{
-    Decrypt = 0;
-}
-#endif
- 
 /* -------------------------------------------------------------- */
 /*ARGSUSED*/
 F_FILE *
@@ -257,67 +229,6 @@ T1eexec(F_FILE *f)   /* Stream descriptor */
   Decrypt = 1;
   return (T1Feof(f))?NULL:f;
 } /* end eexec */
-
-#if XFONT_CID
-F_FILE *             /* Initialization */
-CIDeexec(F_FILE *f)  /* Stream descriptor */ 
-{
-  int i, c;
-  int H;
-  unsigned char *p;
-  unsigned char randomP[8];
- 
-  r = 55665;  /* initial key */
-  asc = 1;    /* indicate ASCII form */
- 
-  /* Consume the 4 random bytes, determining if we are also to
-     ASCIIDecodeHex as we process our input.  (See pages 63-64
-     of the Adobe Type 1 Font Format book.)  */
- 
-  /* Skip over any initial white space chars */
-  while (HighHexP[c=_XT1getc(f)] == HWHITE_SPACE) ;
- 
-  /* If ASCII, the next 7 chars are guaranteed consecutive */
-  randomP[0] = c;  /* store first non white space char */
-  T1Read((pointer)(randomP+1), 1, 3, f);  /* read 3 more, for a total of 4 */
-  /* store first four chars */
-  for (i=0,p=randomP; i<4; i++) {  /* Check 4 valid ASCIIEncode chars */
-    if (HighHexP[*p++] > LAST_HDIGIT) {  /* non-ASCII byte */
-      asc = 0;
-      break;
-    }
-  }
-  if (asc) {  /* ASCII form, convert first eight bytes to binary */
-    T1Read((pointer)(randomP+4), 1, 4, f);  /* Need four more */
-    for (i=0,p=randomP; i<4; i++) {  /* Convert */
-      H = HighHexP[*p++];
-      randomP[i] = H | LowHexP[*p++];
-    }
-  }
- 
-  /* Adjust our key */
-  for (i=0,p=randomP; i<4; i++) {
-    r = (*p++ + r) * c1 + c2;
-  }
- 
-  /* Decrypt up to, but not including, the first '%' sign */
-  if (f->b_cnt > 0) {
-      for (i = 0; i < f->b_cnt; i++)
-         if (*(f->b_ptr + i) == '%')
-             break;
-
-      if (i < f->b_cnt) {
-          if (i == 0)
-              f->b_cnt = 0;
-          else
-              f->b_cnt = T1Decrypt(f->b_ptr, i);
-      } else
-          f->b_cnt = T1Decrypt(f->b_ptr, f->b_cnt);
-  }
-  Decrypt = 1;
-  return (T1Feof(f))?NULL:f;
-} /* end eexec */
-#endif
 
 /* -------------------------------------------------------------- */
 STATIC int 

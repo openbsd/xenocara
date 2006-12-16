@@ -1,3 +1,35 @@
+commit da20e256b786eaa6357e3d55baa9e90e38f14614
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Dec 1 01:05:59 2006 +0200
+
+    bump to 1.2.5
+
+commit 16a0c282a673136c0bbb116f35e6e89d8b43a877
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Dec 1 01:05:40 2006 +0200
+
+    post-CID fixes
+    Curiously, make distcheck succeeded ... go figure.
+
+commit e47fb944a8f485c4ad6be9c2cf6a4866eff7a07f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Dec 1 00:35:48 2006 +0200
+
+    bump to 1.2.4
+
+commit 47084ba39920068030c3e59523701d1205161a9f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Dec 1 00:35:04 2006 +0200
+
+    remove CID font support (bug #5553)
+    Remove non-free CID font support, which was unused anyway.
+
+commit c4741cdd83bcdedcc6f7a072a73b16668fc905eb
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Oct 13 16:17:26 2006 -0400
+
+    Bump to 1.2.3
+
 commit 5dfff0eb0f532edb1f4a25daa5529e08dd832ecb
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Thu Oct 5 18:12:50 2006 -0700

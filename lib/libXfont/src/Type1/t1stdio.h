@@ -29,9 +29,6 @@
  */
 /* $XFree86: xc/lib/font/Type1/t1stdio.h,v 1.9 2001/01/17 19:43:24 dawes Exp $ */
 /* T1IO FILE structure and related stuff */
-#ifdef BUILDCID
-#define XFONT_CID 1
-#endif
 
 #ifdef XFree86LOADER
 #undef FILE
@@ -71,10 +68,6 @@ typedef struct F_FILE {
   )
  
 #define  T1Feof(f)          (((f)->flags & FIOEOF) && ((f)->b_cnt==0))
-
-#if XFONT_CID
-extern F_FILE *CIDeexec ( FILE *f );
-#endif
 
 extern FILE *T1Open ( char *fn, char *mode );
 extern int T1Getc ( FILE *f );

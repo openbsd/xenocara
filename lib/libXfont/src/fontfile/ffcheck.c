@@ -131,9 +131,6 @@ FontFileCheckRegisterFpeFunctions (void)
 #ifdef XFONT_TYPE1
     Type1RegisterFontFileFunctions();
 #endif
-#ifdef XFONT_CID
-    CIDRegisterFontFileFunctions();
-#endif
 #ifdef XFONT_FREETYPE
     FreeTypeRegisterFontFileFunctions();
 #endif

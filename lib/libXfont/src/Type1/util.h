@@ -27,31 +27,10 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* Copyright (c) 1994-1999 Silicon Graphics, Inc. All Rights Reserved.
- *
- * The contents of this file are subject to the CID Font Code Public Licence
- * Version 1.0 (the "License"). You may not use this file except in compliance
- * with the Licence. You may obtain a copy of the License at Silicon Graphics,
- * Inc., attn: Legal Services, 2011 N. Shoreline Blvd., Mountain View, CA
- * 94043 or at http://www.sgi.com/software/opensource/cid/license.html.
- *
- * Software distributed under the License is distributed on an "AS IS" basis.
- * ALL WARRANTIES ARE DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED
- * WARRANTIES OF MERCHANTABILITY, OF FITNESS FOR A PARTICULAR PURPOSE OR OF
- * NON-INFRINGEMENT. See the License for the specific language governing
- * rights and limitations under the License.
- *
- * The Original Software is CID font code that was developed by Silicon
- * Graphics, Inc.
- */
 /* $XFree86: xc/lib/font/Type1/util.h,v 1.4 1999/08/22 08:58:55 dawes Exp $ */
 
 #ifndef UTIL_H
 #define UTIL_H
- 
-#ifdef BUILDCID
-#define XFONT_CID 1
-#endif
  
 #ifndef boolean
 typedef int boolean;
@@ -81,15 +60,6 @@ typedef int boolean;
 #define MAX_STRING_LEN        (65535)
 #define MAX_NAME_LEN          (128)
  
-/* this is the size of memory allocated for reading fonts */
- 
-#if XFONT_CID
-#define VM_SIZE               (100*1024)
-#else
-#define VM_SIZE               (50*1024)
-#endif
-/***================================================================***/
- 
 #ifndef MIN
 #define   MIN(a,b)   (((a)<(b)) ? a : b )
 #endif
@@ -97,6 +67,8 @@ typedef int boolean;
 /***================================================================***/
 /*  Routines for managing virtual memory                              */
 /***================================================================***/
+
+#define VM_SIZE (50 * 1024)
 
 extern boolean  vm_init ( int cnt );
 extern long     vm_free;

@@ -4,12 +4,9 @@ INCLUDES =			\
 noinst_LTLIBRARIES = libtype1.la
 
 libtype1_la_SOURCES =			\
-		afm.c			\
-		AFM.h			\
 		arith.c			\
 		arith.h			\
 		blues.h			\
-		cidchar.c		\
 		cluts.h			\
 		curves.c		\
 		curves.h		\
@@ -27,7 +24,6 @@ libtype1_la_SOURCES =			\
 		paths.c			\
 		paths.h			\
 		pictures.h		\
-		range.h			\
 		regions.c		\
 		regions.h		\
 		scanfont.c		\

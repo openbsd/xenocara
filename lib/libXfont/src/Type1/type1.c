@@ -28,23 +28,6 @@
  * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* Copyright (c) 1994-1999 Silicon Graphics, Inc. All Rights Reserved.
- *
- * The contents of this file are subject to the CID Font Code Public Licence
- * Version 1.0 (the "License"). You may not use this file except in compliance
- * with the Licence. You may obtain a copy of the License at Silicon Graphics,
- * Inc., attn: Legal Services, 2011 N. Shoreline Blvd., Mountain View, CA
- * 94043 or at http://www.sgi.com/software/opensource/cid/license.html.
- *
- * Software distributed under the License is distributed on an "AS IS" basis.
- * ALL WARRANTIES ARE DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED
- * WARRANTIES OF MERCHANTABILITY, OF FITNESS FOR A PARTICULAR PURPOSE OR OF
- * NON-INFRINGEMENT. See the License for the specific language governing
- * rights and limitations under the License.
- *
- * The Original Software is CID font code that was developed by Silicon
- * Graphics, Inc.
- */
 /* $XFree86: xc/lib/font/Type1/type1.c,v 1.9tsi Exp $ */
  
 /*********************************************************************/
@@ -67,9 +50,6 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#ifdef BUILDCID
-#define XFONT_CID 1
-#endif
 
 #ifndef FONTMODULE
 #include  <stdio.h>          /* a system-dependent include, usually */
@@ -84,7 +64,6 @@
 #include  "paths.h"
 #include  "fonts.h"        /* understands about TEXTTYPEs */
 #include  "pictures.h"     /* understands about handles */
-#include  "range.h"
  
 typedef struct xobject xobject;
 #include  "util.h"       /* PostScript objects */
@@ -99,11 +78,7 @@ typedef struct xobject xobject;
 #define MAXPSFAKESTACK 32  /* Max depth of fake PostScript stack (local) */
 #define MAXSTRLEN 512      /* Max length of a Type 1 string (local) */
 #define MAXLABEL 256       /* Maximum number of new hints */
-#if XFONT_CID
-#define MAXSTEMS 500       /* Maximum number of VSTEM and HSTEM hints */
-#else
 #define MAXSTEMS 128       /* Maximum number of VSTEM and HSTEM hints */
-#endif
 #define EPS 0.001          /* Small number for comparisons */
  
 /************************************/
@@ -171,11 +146,6 @@ struct stem {                     /* representation of a STEM hint */
 struct xobject *Type1Char(char *env, struct XYspace *S, 
 			  psobj *charstrP, psobj *subrsP, psobj *osubrsP, 
 			  struct blues_struct *bluesP, int *modeP);
-#if XFONT_CID
-struct xobject *CIDChar(char *env, struct XYspace *S, 
-			psobj *charstrP, psobj *subrsP, psobj *osubrsP, 
-			struct blues_struct *bluesP, int *modeP);
-#endif
  
 static double escapementX, escapementY;
 static double sidebearingX, sidebearingY;
@@ -1150,14 +1120,7 @@ Escape(int Code)
       if (Top < Num+1) Error;
       for (i = 0; i < Num; i++) PSFakePush(Stack[Top - i - 2]);
       Top -= Num + 2;
-#if XFONT_CID
-      if ((int)Stack[Top + Num + 2] > 3)
-        ClearPSFakeStack();
-      else
-        CallOtherSubr((int)Stack[Top + Num + 2]);
-#else
       CallOtherSubr((int)Stack[Top + Num + 2]);
-#endif
       break;
     case POP: /* - POP number */
       /* Removes a number from the top of the */
@@ -1832,61 +1795,3 @@ Type1Char(char *env, struct XYspace *S, psobj *charstrP, psobj *subrsP,
 
   return((struct xobject *) path);
 }
-
-#if XFONT_CID
-struct xobject *
-CIDChar(char *env, struct XYspace *S, 
-	psobj *charstrP, psobj *subrsP, psobj *osubrsP, 
-	struct blues_struct *bluesP, /* FontID's ptr to the blues struct */
-	int *modeP)
-{
-  int Code;
-
-  path = NULL;
-  errflag = FALSE;
-
-  /* Make parameters available to all CID routines */
-  Environment = env;
-  CharSpace = S; /* used when creating path elements */
-  CharStringP = charstrP;
-  SubrsP = subrsP;
-
-  blues = bluesP;
-
-  /* compute the alignment zones */
-  ComputeAlignmentZones();
-
-  StartDecrypt();
-
-  ClearStack();
-  ClearPSFakeStack();
-  ClearCallStack();
-
-  InitStems();
-
-  currx = curry = 0;
-  escapementX = escapementY = 0;
-  sidebearingX = sidebearingY = 0;
-  accentoffsetX = accentoffsetY = 0;
-  wsoffsetX = wsoffsetY = 0;           /* No shift to preserve whitspace. */
-  wsset = 0;                           /* wsoffsetX,Y haven't been set yet. */
-
-  for (;;) {
-    if (!DoRead(&Code)) break;
-    Decode(Code);
-    if (errflag) break;
-  }
-
-  FinitStems();
-
-  /* Clean up if an error has occurred */
-  if (errflag) {
-    if (path != NULL) {
-      Destroy(path); /* Reclaim storage */
-      path = NULL;   /* Indicate that character could not be built */
-    }
-  }
-
-  return((struct xobject *) path);
-}
-#endif

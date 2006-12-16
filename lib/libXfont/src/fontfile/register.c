@@ -63,9 +63,6 @@ in this Software without prior written authorization from The Open Group.
 # endif
 #endif
 
-#ifdef BUILD_CID
-# define XFONT_CID 1
-#endif
 #ifdef BUILD_FREETYPE
 # define XFONT_FREETYPE 1
 #endif
@@ -83,9 +80,6 @@ FontFileRegisterFpeFunctions(void)
 #endif
 #ifdef XFONT_TYPE1
     Type1RegisterFontFileFunctions();
-#endif
-#ifdef XFONT_CID
-    CIDRegisterFontFileFunctions();
 #endif
 #ifdef XFONT_FREETYPE
     FreeTypeRegisterFontFileFunctions();
