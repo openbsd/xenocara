@@ -25,15 +25,14 @@ beforelight_CFLAGS = $(BEFORELIGHT_CFLAGS)
 beforelight_LDADD = $(BEFORELIGHT_LIBS)
 
 beforelight_SOURCES =	\
-        b4light.c \
-        config.h
+        b4light.c
 
 appman_PRE = \
         beforelight.man
 
 # App default files  (*.ad)
 
-appdefaultdir = @appdefaultdir@
+appdefaultdir = $(DESTDIR)@appdefaultdir@
 
 EXTRA_DIST = \
         Beforelight.ad
@@ -49,7 +48,6 @@ SUFFIXES = .ad
 appdefault_DATA = $(APPDEFAULTFILES)
 
 CLEANFILES = $(APPDEFAULTFILES)
-
 
 appmandir = $(APP_MAN_DIR)
 
