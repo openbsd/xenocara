@@ -48,10 +48,10 @@ CONFIG_HEADER = $(top_builddir)/config.h \
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libtype1_la_LIBADD =
-am_libtype1_la_OBJECTS = afm.lo arith.lo cidchar.lo curves.lo \
-	fontfcn.lo hints.lo lines.lo objects.lo paths.lo regions.lo \
-	scanfont.lo spaces.lo t1funcs.lo t1info.lo t1io.lo t1malloc.lo \
-	t1snap.lo t1stub.lo t1unicode.lo token.lo type1.lo util.lo
+am_libtype1_la_OBJECTS = arith.lo curves.lo fontfcn.lo hints.lo \
+	lines.lo objects.lo paths.lo regions.lo scanfont.lo spaces.lo \
+	t1funcs.lo t1info.lo t1io.lo t1malloc.lo t1snap.lo t1stub.lo \
+	t1unicode.lo token.lo type1.lo util.lo
 libtype1_la_OBJECTS = $(am_libtype1_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir) -I$(top_builddir)/include/X11/fonts
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -137,8 +137,6 @@ XFONT_BITMAP_TRUE = @XFONT_BITMAP_TRUE@
 XFONT_BUILTINS_FALSE = @XFONT_BUILTINS_FALSE@
 XFONT_BUILTINS_TRUE = @XFONT_BUILTINS_TRUE@
 XFONT_CFLAGS = @XFONT_CFLAGS@
-XFONT_CID_FALSE = @XFONT_CID_FALSE@
-XFONT_CID_TRUE = @XFONT_CID_TRUE@
 XFONT_FC_FALSE = @XFONT_FC_FALSE@
 XFONT_FC_TRUE = @XFONT_FC_TRUE@
 XFONT_FONTCACHE_FALSE = @XFONT_FONTCACHE_FALSE@
@@ -208,12 +206,9 @@ INCLUDES = \
 
 noinst_LTLIBRARIES = libtype1.la
 libtype1_la_SOURCES = \
-		afm.c			\
-		AFM.h			\
 		arith.c			\
 		arith.h			\
 		blues.h			\
-		cidchar.c		\
 		cluts.h			\
 		curves.c		\
 		curves.h		\
@@ -231,7 +226,6 @@ libtype1_la_SOURCES = \
 		paths.c			\
 		paths.h			\
 		pictures.h		\
-		range.h			\
 		regions.c		\
 		regions.h		\
 		scanfont.c		\
@@ -309,9 +303,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/afm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/arith.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cidchar.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/curves.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fontfcn.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hints.Plo@am__quote@
