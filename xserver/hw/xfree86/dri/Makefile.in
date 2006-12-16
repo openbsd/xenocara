@@ -151,6 +151,7 @@ DBE_FALSE = @DBE_FALSE@
 DBE_TRUE = @DBE_TRUE@
 DEBUG_FALSE = @DEBUG_FALSE@
 DEBUG_TRUE = @DEBUG_TRUE@
+DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
 DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
 DEFS = @DEFS@
@@ -553,14 +554,11 @@ libdri_la_CFLAGS = -I$(top_srcdir)/hw/xfree86/common \
                    -I$(top_builddir)/GL/include \
 		   -I@MESA_SOURCE@/include \
                    -DHAVE_XORG_CONFIG_H \
-		 \
-		 \
- \
                    @DRIPROTO_CFLAGS@ \
                    @LIBDRM_CFLAGS@ \
                    @GL_CFLAGS@
 
-libdri_la_LDFLAGS = -module -avoid-version
+libdri_la_LDFLAGS = -module -avoid-version @LIBDRM_LIBS@
 libdri_ladir = $(moduledir)/extensions
 libdri_la_SOURCES = \
 	dri.c \

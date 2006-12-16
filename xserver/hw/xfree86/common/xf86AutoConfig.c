@@ -99,6 +99,9 @@
 static const char **builtinConfig = NULL;
 static int builtinLines = 0;
 static const char *deviceList[] = {
+#ifdef __OpenBSD__
+	"wsfb",
+#endif
 	"fbdev",
 	"vesa",
 	"vga",

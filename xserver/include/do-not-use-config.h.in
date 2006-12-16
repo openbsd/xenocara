@@ -62,6 +62,9 @@
 /* Use GetTimeInMillis */
 #undef DDXTIME
 
+/* Default library install path */
+#undef DEFAULT_LIBRARY_PATH
+
 /* Default log location */
 #undef DEFAULT_LOGPREFIX
 
@@ -365,6 +368,15 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+/* Major version of this package */
+#undef PACKAGE_VERSION_MAJOR
+
+/* Minor version of this package */
+#undef PACKAGE_VERSION_MINOR
+
+/* Patch version of this package */
+#undef PACKAGE_VERSION_PATCHLEVEL
 
 /* Internal define for Xinerama */
 #undef PANORAMIX

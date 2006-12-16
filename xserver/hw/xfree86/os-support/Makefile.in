@@ -156,6 +156,7 @@ DBE_FALSE = @DBE_FALSE@
 DBE_TRUE = @DBE_TRUE@
 DEBUG_FALSE = @DEBUG_FALSE@
 DEBUG_TRUE = @DEBUG_TRUE@
+DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
 DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
 DEFS = @DEFS@
@@ -549,15 +550,14 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 xglmoduledir = @xglmoduledir@
 xpconfigdir = @xpconfigdir@
-@DRI_TRUE@DRI_SUBDIRS = drm
-SUBDIRS = bus @XORG_OS_SUBDIR@ misc $(DRI_SUBDIRS)
-DIST_SUBDIRS = bsd bus drm misc linux lynxos solaris sysv sco usl hurd
+SUBDIRS = bus @XORG_OS_SUBDIR@ misc
+DIST_SUBDIRS = bsd bus misc linux lynxos solaris sysv sco usl hurd
 sdk_HEADERS = xf86_OSproc.h xf86_OSlib.h xf86_ansic.h xf86_libc.h \
               assyntax.h xf86OSKbd.h xf86OSmouse.h
 
 
 # FIXME: These don't seem to be used anywhere
-EXTRA_DIST = int10Defines.h xf86OSpriv.h README.OS-lib xf86drm.h \
+EXTRA_DIST = int10Defines.h xf86OSpriv.h README.OS-lib \
 	shared/bios_devmem.c shared/inout.S shared/kbd.c
 
 # to get the grouping semantics right, you have to glom these three together
