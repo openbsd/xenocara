@@ -1,3 +1,17 @@
+commit e091014e3c7573a49ce51d67f359bd0f3d3e1893
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Nov 30 22:05:27 2006 +0200
+
+    bump to 1.1.3
+
+commit f15961997e9f5986857ed0b143cbaafda1a84cb8
+Author: Andres Salomon <dilinger@debian.org>
+Date:   Thu Nov 30 22:05:13 2006 +0200
+
+    xorgversion: automatic PACKAGE_VERSION_* (bug #8590)
+    Automatically define PACKAGE_VERSION_{MAJOR,MINOR,PATCHLEVEL} when
+    XORG_RELEASE_VERSION is called.
+
 commit 0d92c7e31df95c09a9cf1215e9ccb069da97f27a
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Wed Nov 8 16:38:16 2006 +0200
