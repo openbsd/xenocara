@@ -30,7 +30,6 @@ s3_drv_ladir = @moduledir@/drivers
 
 s3_drv_la_SOURCES = \
          newmmio.h \
-         s3_accel.c \
          s3_bios.c \
          s3_cursor.c \
          s3_dga.c \
@@ -41,3 +40,12 @@ s3_drv_la_SOURCES = \
          s3_Ti.c \
          s3_Trio64DAC.c \
          s3_video.c
+
+noinst_LTLIBRARIES = libs3_accel_newmmio.la libs3_accel_pio.la
+s3_drv_la_LIBADD = libs3_accel_newmmio.la libs3_accel_pio.la
+
+libs3_accel_newmmio_la_SOURCES = s3_accel.c
+libs3_accel_newmmio_la_CFLAGS = $(AM_CFLAGS) -DS3_NEWMMIO=1
+
+libs3_accel_pio_la_SOURCES = s3_accel.c
+libs3_accel_pio_la_CFLAGS = $(AM_CFLAGS)

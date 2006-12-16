@@ -1,4 +1,4 @@
-/* $XFree86: $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/s3/s3_reg.h,v 1.1 2001/07/02 10:46:04 alanh Exp $ */
 
 #ifndef _S3_REG_H
 #define _S3_REG_H

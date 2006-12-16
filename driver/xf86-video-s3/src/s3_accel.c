@@ -24,7 +24,7 @@
  *
  *
  */
-/* $XdotOrg: driver/xf86-video-s3/src/s3_accel.c,v 1.4 2005/07/11 02:29:58 ajax Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/drivers/s3/s3_accel.c,v 1.2 2004/04/23 19:43:14 eich Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/s3/s3_accel.c,v 1.2 2001/10/28 03:33:44 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
