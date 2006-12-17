@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.7 2006/11/30 23:22:15 matthieu Exp $
+# $OpenBSD: Makefile,v 1.8 2006/12/17 20:15:39 matthieu Exp $
 .include <bsd.own.mk>
 
 X11BASE?=	/usr/X11R6
@@ -87,8 +87,6 @@ distrib-dirs:
 	fi
 	mtree -qdef ${.CURDIR}/etc/mtree/BSD.etc-x11.dist \
 		-p ${DESTDIR}${X11ETC}/ -U
-
-update: _SUBDIRUSE
 
 .PHONY: all build beforeinstall install afterinstall release clean cleandir
 
