@@ -232,7 +232,7 @@ static int preInitW(Display *dpy)
      * Resolve functions that are not hw driver specific.
      */
 
-    void *handleZ = 0;
+    void *handleZ = NULL;
 
     wrapperPreInit = 1;
     xW.preInitialised = 0;
