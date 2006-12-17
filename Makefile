@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.8 2006/12/17 20:15:39 matthieu Exp $
+# $OpenBSD: Makefile,v 1.9 2006/12/17 20:41:36 matthieu Exp $
 .include <bsd.own.mk>
 
 X11BASE?=	/usr/X11R6
@@ -30,11 +30,11 @@ beforeinstall:
 	${MAKE} distrib-dirs
 	${MAKE} includes
 
-afterinstall: install-distrib
+afterinstall:
+	cd distrib/notes; ${MAKE} install
 	/usr/libexec/makewhatis ${DESTDIR}/usr/X11R6/man
 
-install-distrib:
-	cd distrib/notes; ${MAKE} install
+realinstall: _SUBDIRUSE
 
 release: release-clean distrib-dirs release-install dist
 
@@ -52,7 +52,6 @@ release-clean:
 		echo "Cleanup before proceeding."; \
 		exit 255; \
 	fi
-
 
 release-install:
 	@${MAKE} install
@@ -88,7 +87,7 @@ distrib-dirs:
 	mtree -qdef ${.CURDIR}/etc/mtree/BSD.etc-x11.dist \
 		-p ${DESTDIR}${X11ETC}/ -U
 
-.PHONY: all build beforeinstall install afterinstall release clean cleandir
+.PHONY: all build beforeinstall install afterinstall release clean cleandir \
+	distrib-dirs
 
-.include <bsd.subdir.mk>
 .include <bsd.xorg.mk>

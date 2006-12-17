@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.8 2006/12/02 16:28:48 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.9 2006/12/17 20:41:36 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -53,7 +53,7 @@ MAKE_ENV+=	AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 .endif
 
 .if !target(includes)
-includes:
+includes: _SUBDIRUSE
 .endif
 
 .if defined(SHARED_LIBS)
@@ -96,13 +96,20 @@ depend:
 .endif
 
 .if !target(install)
-install::
+.  if !target(beforeinstall)
+beforeinstall:
+.  endif
+.  if !target(afterinstall)
+afterinstall:
+.  endif
+.  if !target(realinstall)
+realinstall:
 	${MAKE_ENV} ${MAKE} ${_lt_libs} install
 .endif
-
-.if target(extra-install)
-install::
-	cd ${.CURDIR} && ${MAKE_ENV} ${MAKE} -f Makefile.bsd-wrapper extra-install
+install: maninstall
+maninstall: afterinstall
+afterinstall: realinstall
+realinstall: beforeinstall
 .endif
 
 .if !target(dist)
@@ -189,3 +196,5 @@ _xenocara_obj! _SUBDIRUSE
 .if !target(obj)
 obj:	_xenocara_obj
 .endif
+
+.include <bsd.subdir.mk>
