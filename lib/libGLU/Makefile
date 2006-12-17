@@ -1,5 +1,8 @@
 # $Xenocara$
 
+.include <bsd.own.mk>
+USE_GCC3?=No
+
 LIB=	GLU
 
 DIST=	${.CURDIR}/../../dist/Mesa
@@ -116,6 +119,9 @@ CPPFLAGS+=	-I${DIST}/include \
 		-I${GLU}/libnurbs/interface \
 		-I${GLU}/libnurbs/nurbtess \
 		-DLIBRARYBUILD -D_EXTENSIONS_
+.if ${USE_GCC3:L} == "yes"
+LDADD+=	-lsupc++
+.endif
 
 NOPROFILE=
 
