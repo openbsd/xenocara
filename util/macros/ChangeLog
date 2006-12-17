@@ -1,3 +1,16 @@
+commit 0a4aadbda211a5128bae1c2e860b781c95c4bbf5
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Dec 16 01:14:27 2006 +0200
+
+    bump to 1.1.4
+
+commit eb371188086824c4655840dd72831d16fbfb17ce
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Dec 6 19:02:46 2006 +0200
+
+    Makefile.am: make ChangeLog hook safer
+    Make ChangeLog hook as safe as possible.
+
 commit e091014e3c7573a49ce51d67f359bd0f3d3e1893
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Nov 30 22:05:27 2006 +0200
