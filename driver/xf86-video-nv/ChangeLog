@@ -1,3 +1,22 @@
+commit 10c7c54888d1dd4198c79e852c57420e8d52ccc5
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Dec 16 01:47:42 2006 +0200
+
+    bump to 1.2.2
+
+commit 6d02bdb71bb34205955e76a99939a7be34c676c7
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Dec 6 18:48:37 2006 +0200
+
+    Makefile.am: make ChangeLog hook safer
+    Make ChangeLog hook as safe as possible.
+
+commit 33e10132a87409bdfa77d5eef9f7044cb9ce1ac9
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Dec 4 12:52:55 2006 -0800
+
+    Remove redundant XORG_RELEASE_VERSION.
+
 commit 2d4b4bb06029e60e5c7b96d94b31c8aadac91843
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Thu Nov 30 17:41:41 2006 -0800

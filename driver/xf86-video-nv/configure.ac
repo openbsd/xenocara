@@ -22,11 +22,9 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-nv],
-        1.2.1,
+        1.2.2,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-nv)
-
-XORG_RELEASE_VERSION
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
