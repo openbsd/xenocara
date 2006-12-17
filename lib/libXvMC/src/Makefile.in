@@ -113,6 +113,10 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LINT = @LINT@
+LINT_FALSE = @LINT_FALSE@
+LINT_FLAGS = @LINT_FLAGS@
+LINT_TRUE = @LINT_TRUE@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -202,6 +206,9 @@ libXvMCW_la_CFLAGS = \
 
 libXvMC_la_LDFLAGS = -version-number 1:0:0 -no-undefined
 libXvMCW_la_LDFLAGS = -version-number 1:0:0 -no-undefined
+@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+@LINT_TRUE@                $(AM_CPPFLAGS) $(CPPFLAGS)
+
 all: all-am
 
 .SUFFIXES:
@@ -491,6 +498,10 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
 	tags uninstall uninstall-am uninstall-info-am \
 	uninstall-libLTLIBRARIES
 
+
+@LINT_TRUE@lint:
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(libXvMC_la_SOURCES) $(XVMC_LIBS)
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(libXvMCW_la_CFLAGS) $(libXvMCW_la_SOURCES) $(XVMC_LIBS)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
