@@ -1,3 +1,16 @@
+commit 20d07bb9ba2bca56e3f02b4b878377eded241059
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Dec 16 01:31:51 2006 +0200
+
+    bump to 1.0.3
+
+commit 2f0089d24ab28f3325a5da7a136873eefb0bd97f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Dec 6 19:00:07 2006 +0200
+
+    Makefile.am: make ChangeLog hook safer
+    Make ChangeLog hook as safe as possible.
+
 commit 978e98c43245671b4fdedb42371260f5fa139f14
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Sep 25 14:49:45 2006 -0700
