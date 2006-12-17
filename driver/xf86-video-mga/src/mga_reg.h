@@ -408,8 +408,29 @@
 #define MGA1064_VID_PLL_N       0x8F
 
 #define MGA1064_DISP_CTL        0x8a
+#define MGA1064_DISP_CTL_DAC1OUTSEL_MASK       0x01
+#define MGA1064_DISP_CTL_DAC1OUTSEL_DIS        0x00
+#define MGA1064_DISP_CTL_DAC1OUTSEL_EN         0x01
+#define MGA1064_DISP_CTL_DAC2OUTSEL_MASK       (0x03 << 2)
+#define MGA1064_DISP_CTL_DAC2OUTSEL_DIS        0x00
+#define MGA1064_DISP_CTL_DAC2OUTSEL_CRTC1      (0x01 << 2)
+#define MGA1064_DISP_CTL_DAC2OUTSEL_CRTC2      (0x02 << 2)
+#define MGA1064_DISP_CTL_DAC2OUTSEL_TVE        (0x03 << 2)
+#define MGA1064_DISP_CTL_PANOUTSEL_MASK        (0x03 << 5)
+#define MGA1064_DISP_CTL_PANOUTSEL_DIS         0x00
+#define MGA1064_DISP_CTL_PANOUTSEL_CRTC1       (0x01 << 5)
+#define MGA1064_DISP_CTL_PANOUTSEL_CRTC2RGB    (0x02 << 5)
+#define MGA1064_DISP_CTL_PANOUTSEL_CRTC2656    (0x03 << 5)
+
 #define MGA1064_SYNC_CTL        0x8b
+
 #define MGA1064_PWR_CTL         0xa0
+#define MGA1064_PWR_CTL_DAC2_EN                (0x01 << 0)
+#define MGA1064_PWR_CTL_VID_PLL_EN             (0x01 << 1)
+#define MGA1064_PWR_CTL_PANEL_EN               (0x01 << 2)
+#define MGA1064_PWR_CTL_RFIFO_EN               (0x01 << 3)
+#define MGA1064_PWR_CTL_CFIFO_EN               (0x01 << 4)
+
 #define MGA1064_PAN_CTL         0xa2
 
 /* Using crtc2 */
@@ -424,6 +445,29 @@
 #define MGAREG2_C2DATACTL        0x4c
 
 #define MGAREG_C2CTL            0x3c10
+#define MGAREG_C2CTL_C2_EN                     0x01
+
+#define MGAREG_C2_HIPRILVL_M                   (0x07 << 4)
+#define MGAREG_C2_MAXHIPRI_M                   (0x07 << 8)
+
+#define MGAREG_C2CTL_PIXCLKSEL_MASK            (0x03 << 1)
+#define MGAREG_C2CTL_PIXCLKSELH_MASK           (0x01 << 14)
+#define MGAREG_C2CTL_PIXCLKSEL_PCICLK          0x00
+#define MGAREG_C2CTL_PIXCLKSEL_VDOCLK          (0x01 << 1)
+#define MGAREG_C2CTL_PIXCLKSEL_PIXELPLL        (0x02 << 1)
+#define MGAREG_C2CTL_PIXCLKSEL_VIDEOPLL        (0x03 << 1)
+#define MGAREG_C2CTL_PIXCLKSEL_VDCLK           (0x01 << 14)
+
+#define MGAREG_C2CTL_PIXCLKSEL_CRISTAL         (0x01 << 1) | (0x01 << 14)
+#define MGAREG_C2CTL_PIXCLKSEL_SYSTEMPLL       (0x02 << 1) | (0x01 << 14)
+
+#define MGAREG_C2CTL_PIXCLKDIS_MASK            (0x01 << 3)
+#define MGAREG_C2CTL_PIXCLKDIS_DISABLE         (0x01 << 3)
+
+#define MGAREG_C2CTL_CRTCDACSEL_MASK           (0x01 << 20)
+#define MGAREG_C2CTL_CRTCDACSEL_CRTC1          0x00
+#define MGAREG_C2CTL_CRTCDACSEL_CRTC2          (0x01 << 20)
+
 #define MGAREG_C2HPARAM         0x3c14
 #define MGAREG_C2HSYNC          0x3c18
 #define MGAREG_C2VPARAM         0x3c1c

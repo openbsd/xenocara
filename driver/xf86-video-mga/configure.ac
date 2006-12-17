@@ -24,9 +24,11 @@ AC_PREREQ(2.57)
 
 # When the version number is modified here, also modify it in src/mga.h.
 AC_INIT([xf86-video-mga],
-        1.4.5,
+        1.4.6,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-mga)
+
+XORG_RELEASE_VERSION
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])

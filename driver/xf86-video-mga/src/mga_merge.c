@@ -955,7 +955,7 @@ MGASaveScreenMerged(ScreenPtr pScreen, int mode)
 
         /* power on Dac2 */
         reg = inMGAdac(MGA1064_PWR_CTL);
-        reg |= 1;
+        reg |= MGA1064_PWR_CTL_DAC2_EN;
         outMGAdac(MGA1064_PWR_CTL, reg);
     } else {
         /* power off Dac1 */
@@ -965,7 +965,7 @@ MGASaveScreenMerged(ScreenPtr pScreen, int mode)
 
         /* power off Dac2 */
         reg = inMGAdac(MGA1064_PWR_CTL);
-        reg &= ~1;
+        reg &= ~MGA1064_PWR_CTL_DAC2_EN;
         outMGAdac(MGA1064_PWR_CTL, reg);
     }
 

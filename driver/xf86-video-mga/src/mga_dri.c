@@ -987,9 +987,9 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
 	       ((pciConfigPtr)pMga->PciInfo->thisCard)->devnum,
 	       ((pciConfigPtr)pMga->PciInfo->thisCard)->funcnum );
    }
-   pDRIInfo->ddxDriverMajorVersion = MGA_MAJOR_VERSION;
-   pDRIInfo->ddxDriverMinorVersion = MGA_MINOR_VERSION;
-   pDRIInfo->ddxDriverPatchVersion = MGA_PATCHLEVEL;
+   pDRIInfo->ddxDriverMajorVersion = PACKAGE_VERSION_MAJOR;
+   pDRIInfo->ddxDriverMinorVersion = PACKAGE_VERSION_MINOR;
+   pDRIInfo->ddxDriverPatchVersion = PACKAGE_VERSION_PATCHLEVEL;
    pDRIInfo->frameBufferPhysicalAddress = (void *) pMga->FbAddress;
    pDRIInfo->frameBufferSize = pMga->FbMapSize;
    pDRIInfo->frameBufferStride = pScrn->displayWidth*(pScrn->bitsPerPixel/8);

@@ -1,3 +1,40 @@
+commit ede471a547a24e7f9688917fc3329a3d67fb2dc4
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Dec 16 01:44:49 2006 +0200
+
+    bump to 1.4.6
+
+commit 55d283a8c2347e809dadace3fb9a026bab6d57dd
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Dec 6 18:46:00 2006 +0200
+
+    Makefile.am: fix ChangeLog hook
+    Make ChangeLog hook safe for all situations I could think of, including
+    carrying the ChangeLog through for distcheck when objdir != srcdir.  It's
+    significantly more ugly, but eh.
+
+commit fbbbb853041ae4af36eeffb24188b9a5513ba7d5
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Dec 2 12:42:34 2006 +0100
+
+    Removed a duplicated register definition.
+
+commit 447aae84d07cab34987ab08ead9319e176ccd904
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Dec 1 20:19:13 2006 +0100
+
+    More janitoring work.
+    
+    Moved the XPWRCTRL, XDISPCTRL and C2CTL register definitions
+    to mga_reg.h.
+    Cleaned up the DAC2 routing.
+
+commit 10b2202c254b71b8d0da987a225d5e78a030bca4
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Dec 1 19:10:55 2006 +0100
+
+    Use the XORG_RELEASE_VERSION autoconf macro.
+
 commit 00efdc4959a0b240eb2dc7a3188c0ef64b2ad74a
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Nov 30 19:59:38 2006 +0200

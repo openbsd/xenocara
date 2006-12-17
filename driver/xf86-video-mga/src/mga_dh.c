@@ -26,36 +26,6 @@
 #define CLKSEL_MGA     0x0c
 #define PLLLOCK        0x40
 
-/* CRTC2 control field*/
-#define C2_EN_A                     0
-#define C2_EN_M                     (1 << C2_EN_A)
-#define C2_HIPRILVL_A               4
-#define C2_HIPRILVL_M               (7 << C2_HIPRILVL_A)
-#define C2_MAXHIPRI_A               8
-#define C2_MAXHIPRI_M               (7 << C2_MAXHIPRI_A)
-                                    
-#define C2CTL_PIXCLKSEL_SHIFT       1L
-#define C2CTL_PIXCLKSEL_MASK        (3L << C2CTL_PIXCLKSEL_SHIFT)
-#define C2CTL_PIXCLKSELH_SHIFT      14L
-#define C2CTL_PIXCLKSELH_MASK       (1L << C2CTL_PIXCLKSELH_SHIFT)
-#define C2CTL_PIXCLKSEL_PCICLK      0L
-#define C2CTL_PIXCLKSEL_VDOCLK      (1L << C2CTL_PIXCLKSEL_SHIFT)
-#define C2CTL_PIXCLKSEL_PIXELPLL    (2L << C2CTL_PIXCLKSEL_SHIFT)
-#define C2CTL_PIXCLKSEL_VIDEOPLL    (3L << C2CTL_PIXCLKSEL_SHIFT)
-#define C2CTL_PIXCLKSEL_VDCLK       (1L << C2CTL_PIXCLKSELH_SHIFT)
-
-#define C2CTL_PIXCLKSEL_CRISTAL     (1L << C2CTL_PIXCLKSEL_SHIFT) | (1L << C2CTL_PIXCLKSELH_SHIFT)
-#define C2CTL_PIXCLKSEL_SYSTEMPLL   (2L << C2CTL_PIXCLKSEL_SHIFT) | (1L << C2CTL_PIXCLKSELH_SHIFT)
-
-#define C2CTL_PIXCLKDIS_SHIFT       3L
-#define C2CTL_PIXCLKDIS_MASK        (1L << C2CTL_PIXCLKDIS_SHIFT)
-#define C2CTL_PIXCLKDIS_DISABLE     (1L << C2CTL_PIXCLKDIS_SHIFT)
-
-#define C2CTL_CRTCDACSEL_SHIFT      20L
-#define C2CTL_CRTCDACSEL_MASK       (1L << C2CTL_CRTCDACSEL_SHIFT)
-#define C2CTL_CRTCDACSEL_CRTC1       0
-#define C2CTL_CRTCDACSEL_CRTC2      (1L << C2CTL_CRTCDACSEL_SHIFT)
-
 /* Misc field*/
 #define IOADDSEL        0x01
 #define RAMMAPEN        0x02
@@ -100,39 +70,6 @@
 #define XSYNCCTRL_DAC2VSOFF_MASK                    (1 << XSYNCCTRL_DAC2VSOFF_SHIFT)
 #define XSYNCCTRL_DAC2VSOFF_OFF                     (1 << XSYNCCTRL_DAC2VSOFF_SHIFT)
 #define XSYNCCTRL_DAC2VSOFF_ON                      0
-
-
-/* XDISPCTRL field */
-#define XDISPCTRL_DAC1OUTSEL_SHIFT                  0L
-#define XDISPCTRL_DAC1OUTSEL_MASK                   1L
-#define XDISPCTRL_DAC1OUTSEL_DIS                    0L
-#define XDISPCTRL_DAC1OUTSEL_EN                     1L
-#define XDISPCTRL_DAC2OUTSEL_SHIFT                  2L
-#define XDISPCTRL_DAC2OUTSEL_MASK                   (3L << XDISPCTRL_DAC2OUTSEL_SHIFT)
-#define XDISPCTRL_DAC2OUTSEL_DIS                    0L
-#define XDISPCTRL_DAC2OUTSEL_CRTC1                  (1L << XDISPCTRL_DAC2OUTSEL_SHIFT)
-#define XDISPCTRL_DAC2OUTSEL_CRTC2                  (2L << XDISPCTRL_DAC2OUTSEL_SHIFT)
-#define XDISPCTRL_DAC2OUTSEL_TVE                    (3L << XDISPCTRL_DAC2OUTSEL_SHIFT)
-#define XDISPCTRL_PANOUTSEL_SHIFT                   5L
-#define XDISPCTRL_PANOUTSEL_MASK                    (3L << XDISPCTRL_PANOUTSEL_SHIFT)
-#define XDISPCTRL_PANOUTSEL_DIS                     0L
-#define XDISPCTRL_PANOUTSEL_CRTC1                   (1L << XDISPCTRL_PANOUTSEL_SHIFT)
-#define XDISPCTRL_PANOUTSEL_CRTC2RGB                (2L << XDISPCTRL_PANOUTSEL_SHIFT)
-#define XDISPCTRL_PANOUTSEL_CRTC2656                (3L << XDISPCTRL_PANOUTSEL_SHIFT)
-
-/* XPWRCTRL field*/
-#define XPWRCTRL_DAC2PDN_SHIFT                      0
-#define XPWRCTRL_DAC2PDN_MASK                       (1 << XPWRCTRL_DAC2PDN_SHIFT)
-#define XPWRCTRL_VIDPLLPDN_SHIFT                    1
-#define XPWRCTRL_VIDPLLPDN_MASK                     (1 << XPWRCTRL_VIDPLLPDN_SHIFT)
-#define XPWRCTRL_PANPDN_SHIFT                       2
-#define XPWRCTRL_PANPDN_MASK                        (1 << XPWRCTRL_PANPDN_SHIFT)
-#define XPWRCTRL_RFIFOPDN_SHIFT                     3
-#define XPWRCTRL_RFIFOPDN_MASK                      (1 << XPWRCTRL_RFIFOPDN_SHIFT)
-#define XPWRCTRL_CFIFOPDN_SHIFT                     4
-#define XPWRCTRL_CFIFOPDN_MASK                      (1 << XPWRCTRL_CFIFOPDN_SHIFT)
-
-
 
 #define POS_HSYNC                  0x00000004
 #define POS_VSYNC                  0x00000008
@@ -295,20 +232,23 @@ void MGAEnableSecondOutPut(ScrnInfoPtr pScrn, xMODEINFO *pModeInfo)
     ulC2CTL = INREG( MGAREG_C2CTL);
 
     /*--- Disable Pixel clock oscillations On Crtc1 */
-    OUTREG( MGAREG_C2CTL, ulC2CTL | C2CTL_PIXCLKDIS_MASK);
+    OUTREG( MGAREG_C2CTL, ulC2CTL | MGAREG_C2CTL_PIXCLKDIS_MASK);
     /*--- Have to wait minimum time (2 acces will be ok) */
     (void) INREG( MGAREG_Status);
     (void) INREG( MGAREG_Status);
     
     
-    ulC2CTL &= ~(C2CTL_PIXCLKSEL_MASK | C2CTL_PIXCLKSELH_MASK);
+    ulC2CTL &= ~MGAREG_C2CTL_PIXCLKSEL_MASK;
+    ulC2CTL &= ~MGAREG_C2CTL_PIXCLKSELH_MASK;
     
-    ulC2CTL |= C2CTL_PIXCLKSEL_VIDEOPLL; 
+    ulC2CTL |= MGAREG_C2CTL_PIXCLKSEL_VIDEOPLL;
 
     
     OUTREG( MGAREG_C2CTL, ulC2CTL);
+
     /*--- Enable Pixel clock oscillations on CRTC2*/
-    OUTREG( MGAREG_C2CTL, ulC2CTL & ~C2CTL_PIXCLKDIS_MASK);
+    ulC2CTL &= ~MGAREG_C2CTL_PIXCLKDIS_MASK;
+    OUTREG( MGAREG_C2CTL, ulC2CTL);
     
     
     /* We don't use MISC synch pol, must be 0*/
@@ -336,24 +276,21 @@ void MGAEnableSecondOutPut(ScrnInfoPtr pScrn, xMODEINFO *pModeInfo)
     ulC2CTL = INREG(MGAREG_C2CTL);
     ucXDispCtrl = inMGAdac(MGA1064_DISP_CTL);
 
-    ucXDispCtrl &= ~XDISPCTRL_DAC2OUTSEL_MASK;
-    ucXDispCtrl |=  XDISPCTRL_DAC2OUTSEL_CRTC2;
+    ucXDispCtrl &= ~MGA1064_DISP_CTL_DAC2OUTSEL_MASK;
 
     if (!pMga->SecondOutput) {
         /* Route Crtc2 on Output1 */
-        ucXDispCtrl &= ~XDISPCTRL_DAC2OUTSEL_MASK;
-        ucXDispCtrl |=  XDISPCTRL_DAC2OUTSEL_CRTC1;
-        ulC2CTL     |=  C2CTL_CRTCDACSEL_CRTC2; 
+        ucXDispCtrl |=  MGA1064_DISP_CTL_DAC2OUTSEL_CRTC1;
+        ulC2CTL |= MGAREG_C2CTL_CRTCDACSEL_CRTC2;
     }
     else {
         /* Route Crtc2 on Output2*/
-        ucXDispCtrl &= ~XDISPCTRL_DAC2OUTSEL_MASK;
-        ucXDispCtrl |=  XDISPCTRL_DAC2OUTSEL_CRTC2;
-        ulC2CTL     &= ~C2CTL_CRTCDACSEL_MASK;
+        ucXDispCtrl |=  MGA1064_DISP_CTL_DAC2OUTSEL_CRTC2;
+        ulC2CTL &= ~MGAREG_C2CTL_CRTCDACSEL_MASK;
     }
     
     /* Enable CRTC2*/
-    ulC2CTL |= C2_EN_M;
+    ulC2CTL |= MGAREG_C2CTL_C2_EN;
 
     pReg->dac2[ MGA1064_DISP_CTL - 0x80] =  ucXDispCtrl; 
 
@@ -377,15 +314,14 @@ void MGAEnableSecondOutPut(ScrnInfoPtr pScrn, xMODEINFO *pModeInfo)
     ucByte &= ~(XSYNCCTRL_DAC2HSOFF_MASK | XSYNCCTRL_DAC2VSOFF_MASK);
     pReg->dac2[ MGA1064_SYNC_CTL - 0x80] = ucByte;
 
-   /* Powerup DAC2*/
-    ucByte = inMGAdac( MGA1064_PWR_CTL);
-    pReg->dac2[ MGA1064_PWR_CTL - 0x80] = /*  0x0b; */ (ucByte | XPWRCTRL_DAC2PDN_MASK);
-               
-
-
-   /* Power up Fifo*/
-    ucByte = inMGAdac( MGA1064_PWR_CTL);
-    pReg->dac2[ MGA1064_PWR_CTL - 0x80] =   0x1b; /*   (ucByte | XPWRCTRL_CFIFOPDN_MASK) */;
+   /* Power up DAC2, Fifo.
+    * The TMDS is powered down here, which is likely wrong.
+    */
+    pReg->dac2[MGA1064_PWR_CTL - 0x80] =
+        MGA1064_PWR_CTL_DAC2_EN |
+        MGA1064_PWR_CTL_VID_PLL_EN |
+        MGA1064_PWR_CTL_RFIFO_EN |
+        MGA1064_PWR_CTL_CFIFO_EN;
 
     
 #ifdef DEBUG

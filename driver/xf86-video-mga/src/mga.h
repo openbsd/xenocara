@@ -154,9 +154,6 @@ void MGAdbg_outreg32(ScrnInfoPtr, int,int, char*);
 #define MGA_C_NAME MGA
 #define MGA_MODULE_DATA mgaModuleData
 #define MGA_DRIVER_NAME "mga"
-#define MGA_MAJOR_VERSION 1
-#define MGA_MINOR_VERSION 4
-#define MGA_PATCHLEVEL 4
 
 typedef struct {
     unsigned char	ExtVga[6];
