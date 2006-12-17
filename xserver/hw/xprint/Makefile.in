@@ -549,7 +549,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 xglmoduledir = @xglmoduledir@
 xpconfigdir = @xpconfigdir@
-SUBDIRS = doc pcl pcl-mono raster ps etc config
+SUBDIRS = doc pcl pcl-mono raster ps config
 Xprt_CFLAGS = @DIX_CFLAGS@ @XPRINT_CFLAGS@ \
 	-DXPRINT -DPRINT_ONLY_SERVER -D_XP_PRINT_SERVER_  \
 	-DXPRINTDIR=\"$(datadir)/X11/xserver\"    \
