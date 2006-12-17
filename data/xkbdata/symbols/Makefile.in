@@ -244,7 +244,8 @@ dist_xkbdata_symbols_DATA = \
 	us_intl \
 	uz \
 	vn \
-	yu
+	yu \
+	zaurus
 
 xkbdatadir = $(datadir)/X11/xkb
 xkbdata_DATA = symbols.dir
