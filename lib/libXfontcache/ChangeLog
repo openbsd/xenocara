@@ -1,3 +1,22 @@
+commit 0945a24c0470860f5d9cbc87cb28defd44144710
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Dec 16 01:22:56 2006 +0200
+
+    bump to 1.0.4
+
+commit b834a33035b0192b4213ff1d6198045b74ab65fe
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Dec 6 18:54:24 2006 +0200
+
+    Makefile.am: make ChangeLog hook safer
+    Make ChangeLog hook as safe as possible
+
+commit dbf918f5a95b73bd9652d520bb36eedee772c940
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Oct 13 16:14:25 2006 -0400
+
+    Bump to 1.0.3
+
 commit 49c76e1a9ff5fceb8ee33b6a0334942da643e286
 Author: Adam Jackson <ajax@benzedrine.nwnk.net>
 Date:   Thu Oct 12 18:51:35 2006 -0400
