@@ -1,4 +1,4 @@
-SUBDIRS = doc pcl pcl-mono raster ps etc config
+SUBDIRS = doc pcl pcl-mono raster ps config
 
 bin_PROGRAMS = Xprt
 
