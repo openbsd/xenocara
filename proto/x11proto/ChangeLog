@@ -1,3 +1,23 @@
+commit 5951f0355c6b1c591241bccb2023e6c4d493e701
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Dec 16 01:09:50 2006 +0200
+
+    bump to 7.0.10
+
+commit 0422755ef9373fbb6f69fbb599d791331837f747
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Dec 16 01:09:44 2006 +0200
+
+    don't distribute Xfuncproto.h and Xpoll.h
+    Don't distribute these two files, as they're generated during the build.
+
+commit cf44526713681ccfb6ef929a9c25ea650c5d1a32
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Dec 6 19:02:19 2006 +0200
+
+    Makefile.am: make ChangeLog hook safer
+    Make ChangeLog hook as safe as possible.
+
 commit 528e313fd1f1ae6f2303d3963afe41545f55ef88
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Oct 26 00:45:44 2006 +0300
