@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2006/11/26 11:32:13 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2006/12/17 19:52:56 matthieu Exp $
 
 SUBDIR= bigreqsproto compositeproto dmxproto damageproto evieproto \
 	fixesproto fontcacheproto fontsproto glproto inputproto \
@@ -11,4 +11,3 @@ SUBDIR= bigreqsproto compositeproto dmxproto damageproto evieproto \
 .include <bsd.subdir.mk>
 
 build: _SUBDIRUSE
-update: _SUBDIRUSE

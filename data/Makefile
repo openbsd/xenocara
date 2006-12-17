@@ -4,6 +4,5 @@
 SUBDIR= xkbdata
 
 build: _SUBDIRUSE
-update: _SUBDIRUSE
 
 .include <bsd.subdir.mk>

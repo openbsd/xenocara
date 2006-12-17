@@ -14,4 +14,3 @@ SUBDIR+= libGL libGLU libGLw
 .include <bsd.subdir.mk>
 
 build: _SUBDIRUSE
-update: _SUBDIRUSE

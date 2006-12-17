@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2006/11/29 14:38:08 matthieu Exp $
+# $OpenBSD: Makefile,v 1.5 2006/12/17 19:52:56 matthieu Exp $
 
 INPUT_DRV= \
 	xf86-input-acecad \
@@ -52,5 +52,3 @@ SUBDIR= ${INPUT_DRV} ${VIDEO_DRV}
 .include <bsd.subdir.mk>
 
 build: _SUBDIRUSE
-update: _SUBDIRUSE
-

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2006/11/26 17:37:04 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2006/12/17 19:52:56 matthieu Exp $
 
 # util must come 1st, alias must come last
 SUBDIR= util encodings \
@@ -18,5 +18,4 @@ EXTRAS=	bitstream-vera-ttf
 .include <bsd.subdir.mk>
 
 build: _SUBDIRUSE
-update: _SUBDIRUSE
 

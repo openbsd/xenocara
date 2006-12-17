@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2006/12/16 19:29:02 matthieu Exp $
+# $OpenBSD: Makefile,v 1.5 2006/12/17 19:52:56 matthieu Exp $
 
 SUBDIR= bdftopcf mkfontscale mkfontdir \
 	appres beforelight bitmap editres fonttosfnt fslsfonts \
@@ -24,4 +24,3 @@ SUBDIR += fvwm ssh-askpass wm2 xterm xidle xlockmore xsystrace xvctl
 .include <bsd.subdir.mk>
 
 build:	_SUBDIRUSE
-update: _SUBDIRUSE
