@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.9 2006/12/17 20:41:36 matthieu Exp $
+# $OpenBSD: Makefile,v 1.10 2006/12/17 22:47:35 matthieu Exp $
 .include <bsd.own.mk>
 
 X11BASE?=	/usr/X11R6
@@ -11,7 +11,7 @@ SUBDIR+= font
 SUBDIR+= share/mk
 .endif
 
-NOOBJS=
+NOOBJ=
 
 build: beforebuild _SUBDIRUSE
 
@@ -35,6 +35,8 @@ afterinstall:
 	/usr/libexec/makewhatis ${DESTDIR}/usr/X11R6/man
 
 realinstall: _SUBDIRUSE
+
+obj: _SUBDIRUSE
 
 release: release-clean distrib-dirs release-install dist
 
