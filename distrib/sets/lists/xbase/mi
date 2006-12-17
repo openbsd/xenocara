@@ -79,7 +79,6 @@
 ./usr/X11R6/bin/luit
 ./usr/X11R6/bin/makedepend
 ./usr/X11R6/bin/makestrs
-./usr/X11R6/bin/mkcfm
 ./usr/X11R6/bin/mkfontdir
 ./usr/X11R6/bin/mkfontscale
 ./usr/X11R6/bin/mkhtmlindex
@@ -181,11 +180,8 @@
 ./usr/X11R6/include/X11
 ./usr/X11R6/lib
 ./usr/X11R6/lib/X11
-./usr/X11R6/lib/X11/XErrorDB
-./usr/X11R6/lib/X11/XKeysymDB
 ./usr/X11R6/lib/X11/Xcms.txt
 ./usr/X11R6/lib/X11/app-defaults
-./usr/X11R6/lib/X11/fs
 ./usr/X11R6/lib/X11/fvwm
 ./usr/X11R6/lib/X11/fvwm/.fvwmrc
 ./usr/X11R6/lib/X11/fvwm/FvwmAuto
@@ -210,15 +206,8 @@
 ./usr/X11R6/lib/X11/fvwm/system.fvwm2rc
 ./usr/X11R6/lib/X11/fvwm/system.fvwm2rc-sample-1
 ./usr/X11R6/lib/X11/fvwm/system.fvwm2rc-sample-2
-./usr/X11R6/lib/X11/lbxproxy
 ./usr/X11R6/lib/X11/proxymngr
-./usr/X11R6/lib/X11/rgb.txt
-./usr/X11R6/lib/X11/twm
-./usr/X11R6/lib/X11/xdm
-./usr/X11R6/lib/X11/xinit
-./usr/X11R6/lib/X11/xkb
 ./usr/X11R6/lib/X11/xman.help
-./usr/X11R6/lib/X11/xsm
 ./usr/X11R6/lib/libFS.a
 ./usr/X11R6/lib/libFS.la
 ./usr/X11R6/lib/libICE.a
@@ -325,4 +314,3 @@
 ./usr/X11R6/share
 ./usr/X11R6/share/X11
 ./var
-./var/db

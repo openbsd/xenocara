@@ -782,7 +782,6 @@
 ./usr/X11R6/lib/X11/config/xorg.tmpl
 ./usr/X11R6/lib/X11/config/xorgsite.def
 ./usr/X11R6/lib/X11/config/xorgversion.def
-./usr/X11R6/lib/X11/rstart
 ./usr/X11R6/lib/X11/x11perfcomp
 ./usr/X11R6/lib/X11/x11perfcomp/Xmark
 ./usr/X11R6/lib/X11/x11perfcomp/fillblnk
@@ -937,7 +936,6 @@
 ./usr/X11R6/man/man1/makeg.1
 ./usr/X11R6/man/man1/makestrs.1
 ./usr/X11R6/man/man1/mergelib.1
-./usr/X11R6/man/man1/mkcfm.1
 ./usr/X11R6/man/man1/mkdirhier.1
 ./usr/X11R6/man/man1/mkfontdir.1
 ./usr/X11R6/man/man1/mkfontscale.1
@@ -2372,11 +2370,15 @@
 ./usr/X11R6/share/X11/locale/zh_TW/XI18N_OBJS
 ./usr/X11R6/share/X11/locale/zh_TW/XLC_LOCALE
 ./usr/X11R6/share/X11/rgb.txt
+./usr/X11R6/share/X11/xkb
+./usr/X11R6/share/X11/xkb/compiled
+./usr/X11R6/share/X11/xkb/compiled/README.compiled
 ./usr/X11R6/share/aclocal
 ./usr/X11R6/share/aclocal/fontutil.m4
 ./usr/X11R6/share/aclocal/xaw.m4
 ./usr/X11R6/share/aclocal/xorg-macros.m4
 ./usr/X11R6/share/aclocal/xorgversion.m4
+./usr/X11R6/share/aclocal/xorg-server.m4
 ./usr/X11R6/share/aclocal/xtrans.m4
 ./usr/X11R6/share/mk
 ./usr/X11R6/share/mk/bsd.xorg.mk
@@ -2386,4 +2388,3 @@
 ./usr/local/lib/X11/app-defaults
 ./var/cache
 ./var/cache/fontconfig
-./var/db/xdm
