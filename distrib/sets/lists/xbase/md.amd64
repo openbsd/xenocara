@@ -31,7 +31,6 @@
 ./etc/X11/xkb/compat/xfree86
 ./etc/X11/xkb/compat/xtest
 ./etc/X11/xkb/compiled
-./etc/X11/xkb/compiled/README.compiled
 ./etc/X11/xkb/geometry
 ./etc/X11/xkb/geometry.dir
 ./etc/X11/xkb/geometry/README
@@ -482,9 +481,9 @@
 ./usr/X11R6/lib/libXevie.so.1.0
 ./usr/X11R6/lib/libXext.so.9.0
 ./usr/X11R6/lib/libXfixes.so.4.1
-./usr/X11R6/lib/libXfont.so.5.0
+./usr/X11R6/lib/libXfont.so.6.0
 ./usr/X11R6/lib/libXfontcache.so.1.0
-./usr/X11R6/lib/libXft.so.6.0
+./usr/X11R6/lib/libXft.so.6.1
 ./usr/X11R6/lib/libXi.so.9.0
 ./usr/X11R6/lib/libXinerama.so.4.0
 ./usr/X11R6/lib/libXmu.so.9.0
@@ -1099,5 +1098,3 @@
 ./usr/X11R6/man/man3/XF86VidModeValidateModeLine.3
 ./usr/X11R6/man/man3/XFree86-DGA.3
 ./usr/X11R6/man/man7/Xprint.7
-./var/db/xkb
-./var/db/xkb/README

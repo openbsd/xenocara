@@ -402,7 +402,6 @@
 ./etc/X11/xkb/types/mousekeys
 ./etc/X11/xkb/types/numpad
 ./etc/X11/xkb/types/pc
-./etc/X11/xserver
 ./etc/X11/xsm
 ./usr/X11R6/bin/bdftruncate
 ./usr/X11R6/bin/dga
@@ -515,9 +514,6 @@
 ./usr/X11R6/lib/liboldX.so.9.0
 ./usr/X11R6/lib/libxkbfile.so.3.0
 ./usr/X11R6/lib/libxkbui.so.3.0
-./usr/X11R6/lib/modules
-./usr/X11R6/lib/xserver
-./usr/X11R6/lib/xserver/SecurityPolicy
 ./usr/X11R6/man/cat1/glxgears.0
 ./usr/X11R6/man/cat1/glxinfo.0
 ./usr/X11R6/man/cat3/GLwCreateMDrawingArea.0

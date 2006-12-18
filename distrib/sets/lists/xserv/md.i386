@@ -168,7 +168,7 @@
 ./usr/X11R6/include/xorg/xorgVersion.h
 ./usr/X11R6/include/xorg/xvdix.h
 ./usr/X11R6/include/xorg/xvmcext.h
-./usr/X11R6/lib/X11/xserver
+./usr/X11R6/lib/modules
 ./usr/X11R6/lib/modules/drivers
 ./usr/X11R6/lib/modules/drivers/apm_drv.la
 ./usr/X11R6/lib/modules/drivers/apm_drv.so
@@ -367,6 +367,8 @@
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.so
 ./usr/X11R6/lib/modules/v10002d.uc
 ./usr/X11R6/lib/modules/v20002d.uc
+./usr/X11R6/lib/xserver
+./usr/X11R6/lib/xserver/SecurityPolicy
 ./usr/X11R6/man/man1/Xnest.1
 ./usr/X11R6/man/man1/Xorg.1
 ./usr/X11R6/man/man1/Xprt.1
