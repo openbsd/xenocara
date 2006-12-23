@@ -1,7 +1,11 @@
-# $OpenBSD: Makefile,v 1.10 2006/12/17 22:47:35 matthieu Exp $
+# $OpenBSD: Makefile,v 1.11 2006/12/23 13:08:07 matthieu Exp $
 .include <bsd.own.mk>
 
 X11BASE?=	/usr/X11R6
+
+LOCALAPPD=/usr/local/lib/X11/app-defaults
+LOCALAPPX=/usr/local/lib/X11
+REALAPPD=/etc/X11/app-defaults
 
 SUBDIR= proto data/bitmaps lib app data/xkbdata xserver driver util doc
 .ifndef NOFONTS
@@ -30,13 +34,22 @@ beforeinstall:
 	${MAKE} distrib-dirs
 	${MAKE} includes
 
-afterinstall:
+afterinstall: fix-appd
 	cd distrib/notes; ${MAKE} install
 	/usr/libexec/makewhatis ${DESTDIR}/usr/X11R6/man
 
 realinstall: _SUBDIRUSE
 
-obj: _SUBDIRUSE
+fix-appd:
+	# Make sure /usr/local/lib/X11/app-defaults is a link
+	if [ ! -L $(DESTDIR)${LOCALAPPD} ]; then \
+	    if [ -d $(DESTDIR)${LOCALAPPD} ]; then \
+		mv $(DESTDIR)${LOCALAPPD}/* $(DESTDIR)${REALAPPD}; \
+		rmdir $(DESTDIR)${LOCALAPPD}; \
+	    fi; \
+	    mkdir -p ${DESTDIR}${LOCALAPPX}; \
+	    ln -s ${REALAPPD} ${DESTDIR}${LOCALAPPD}; \
+	fi
 
 release: release-clean distrib-dirs release-install dist
 
@@ -90,6 +103,7 @@ distrib-dirs:
 		-p ${DESTDIR}${X11ETC}/ -U
 
 .PHONY: all build beforeinstall install afterinstall release clean cleandir \
-	distrib-dirs
+	distrib-dirs fix-appd
 
+.include <bsd.subdir.mk>
 .include <bsd.xorg.mk>
