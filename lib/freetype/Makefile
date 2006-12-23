@@ -1,6 +1,8 @@
-#	$OpenBSD: Makefile,v 1.5 2006/12/02 16:28:48 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.6 2006/12/23 10:42:41 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
+
+FT_VERSION_INFO= 9.10.3 # Get it from builds/unix/configure.ac
 
 .ifmake includes
 SUBDIR=	include
@@ -42,8 +44,9 @@ includes:: freetype-config
 	${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP) \
 	freetype-config ${DESTDIR}${X11BASE}/bin
 
-freetype2.pc: freetype2.in
+freetype2.pc: freetype2.in Makefile
 	sed -e s%@prefix@%${X11BASE}% -e s%@exec_prefix@%${XORG_PREFIX}% \
+		-e s%@ft_version@%${FT_VERSION_INFO}% \
 		-e s%@includedir@%${INCSDIR}% -e s%@libdir@%${LIBDIR}% \
 		-e s%@LIBZ@%-lz% < ${.CURDIR}/builds/unix/freetype2.in \
 		> freetype2.pc
