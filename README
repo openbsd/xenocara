@@ -76,7 +76,7 @@ GNU autotools packages installed:
 
     - automake 1.9 (devel/automake/1.9)
     - autoconf 2.59 (devel/autoconf/2.59)
-    - pkg-config 0.19 (or later) (devel/pkgconfig)
+    - metaauto 0.6 (or later) (devel/metaauto)
     - libtool 1.5.22 (or later) (devel/libtool)
 
   Sudo
@@ -115,4 +115,4 @@ makefiles skeletons. For that use the following command:
 You can also set XENOCARA_RERUN_AUTOCONF in /etc/mk.conf to force
 regeneration of configure scripts in every component.
 
-$OpenBSD: README,v 1.5 2006/12/12 21:07:25 matthieu Exp $
+$OpenBSD: README,v 1.6 2006/12/29 18:34:58 matthieu Exp $
