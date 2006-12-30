@@ -257,6 +257,7 @@ CONF_FILES = \
 	90-synthetic.conf
 
 CONF_LINKS = \
+	10-autohint.conf \
 	20-fix-globaladvance.conf \
 	20-lohit-gujarati.conf \
 	20-unhint-small-vera.conf \
