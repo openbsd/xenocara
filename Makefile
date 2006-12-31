@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.13 2006/12/31 10:52:07 matthieu Exp $
+# $OpenBSD: Makefile,v 1.14 2006/12/31 13:55:44 matthieu Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
@@ -8,9 +8,6 @@ REALAPPD=/etc/X11/app-defaults
 SUBDIR= proto data/bitmaps lib app data/xkbdata xserver driver util doc
 .ifndef NOFONTS
 SUBDIR+= font
-.endif
-.ifmake(install)
-SUBDIR+= share/mk
 .endif
 
 NOOBJ=
@@ -32,11 +29,19 @@ beforeinstall:
 	${MAKE} distrib-dirs
 	${MAKE} includes
 
-afterinstall: fix-appd
+afterinstall: 
+	${MAKE} install-mk
+	${MAKE} fix-appd
 	cd distrib/notes; ${MAKE} install
 	/usr/libexec/makewhatis ${DESTDIR}/usr/X11R6/man
 
 realinstall: _SUBDIRUSE
+
+install-mk:
+.if defined(DESTDIR) && (${DESTDIR} != "" || ${DESTDIR} != "/")
+	cd ${.CURDIR}/share/mk \
+		&& ${MAKE} X11BASE=${X11BASE} install
+.endif
 
 fix-appd:
 	# Make sure /usr/local/lib/X11/app-defaults is a link
