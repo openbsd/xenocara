@@ -1,5 +1,5 @@
 /*
- * $Id: edit-sgml.c,v 1.1.1.1 2006/11/25 18:41:58 matthieu Exp $
+ * $Id: edit-sgml.c,v 1.1.1.2 2006/12/31 14:57:46 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -294,6 +294,11 @@ ReplaceRead (FILE *f)
 	ungetc (c, f);
     while (isspace (StringLast (r->text)))
 	StringDel (r->text);
+    if (StringLast(r->text) == '%')
+    {
+	StringDel (r->text);
+	StringAdd (r->text, ' ');
+    }
     return r;
 }
 

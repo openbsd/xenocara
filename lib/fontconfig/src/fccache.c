@@ -213,6 +213,17 @@ struct _FcCacheSkip {
 static FcCacheSkip	*fcCacheChains[FC_CACHE_MAX_LEVEL];
 static int		fcCacheMaxLevel;
 
+#if HAVE_RANDOM
+# define FcRandom()  random()
+#else
+# if HAVE_LRAND48
+#  define FcRandom()  lrand48()
+# else
+#  if HAVE_RAND
+#   define FcRandom()  rand()
+#  endif
+# endif
+#endif
 /*
  * Generate a random level number, distributed
  * so that each level is 1/4 as likely as the one before
@@ -223,7 +234,7 @@ static int
 random_level (void)
 {
     /* tricky bit -- each bit is '1' 75% of the time */
-    long int	bits = random () | random ();
+    long int	bits = FcRandom () | FcRandom ();
     int	level = 0;
 
     while (++level < FC_CACHE_MAX_LEVEL)
@@ -443,7 +454,8 @@ FcDirCacheMapFd (int fd, struct stat *fd_stat)
 					 PAGE_READONLY, 0, 0, NULL);
 	    if (hFileMap != NULL)
 	    {
-		cache = MapViewOfFile (hFileMap, FILE_MAP_READ, 0, 0, size);
+		cache = MapViewOfFile (hFileMap, FILE_MAP_READ, 0, 0, 
+				       fd_stat->st_size);
 		CloseHandle (hFileMap);
 	    }
 	}
@@ -678,6 +690,11 @@ bail1:
     return NULL;
 }
 
+
+#ifdef _WIN32
+#define mkdir(path,mode) _mkdir(path)
+#endif
+
 static FcBool
 FcMakeDirectory (const FcChar8 *dir)
 {
@@ -809,16 +826,17 @@ FcDirCacheWrite (FcCache *cache, FcConfig *config)
  * Hokey little macro trick to permit the definitions of C functions
  * with the same name as CPP macros
  */
-#define args(x...)	    (x)
+#define args1(x)	    (x)
+#define args2(x,y)	    (x,y)
 
 const FcChar8 *
-FcCacheDir args(const FcCache *c)
+FcCacheDir args1(const FcCache *c)
 {
     return FcCacheDir (c);
 }
 
 FcFontSet *
-FcCacheCopySet args(const FcCache *c)
+FcCacheCopySet args1(const FcCache *c)
 {
     FcFontSet	*old = FcCacheSet (c);
     FcFontSet	*new = FcFontSetCreate ();
@@ -841,19 +859,19 @@ FcCacheCopySet args(const FcCache *c)
 }
 
 const FcChar8 *
-FcCacheSubdir args(const FcCache *c, int i)
+FcCacheSubdir args2(const FcCache *c, int i)
 {
     return FcCacheSubdir (c, i);
 }
 
 int
-FcCacheNumSubdir args(const FcCache *c)
+FcCacheNumSubdir args1(const FcCache *c)
 {
     return c->dirs_count;
 }
 
 int
-FcCacheNumFont args(const FcCache *c)
+FcCacheNumFont args1(const FcCache *c)
 {
     return FcCacheSet(c)->nfont;
 }

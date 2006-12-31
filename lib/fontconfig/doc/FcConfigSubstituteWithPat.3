@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcConfigSubstituteWithPat" "3" "15 September 2006" "" ""
+.TH "FcConfigSubstituteWithPat" "3" "02 December 2006" "" ""
 
 .SH NAME
 FcConfigSubstituteWithPat \- Execute substitutions
@@ -11,7 +11,7 @@ FcConfigSubstituteWithPat \- Execute substitutions
 .sp
 \fB#include <fontconfig.h>
 .sp
-FcBool FcConfigSubstituteWithPat (FcConfig *\fIconfig\fB, FcPattern *\fIp\fB, FcPattern *\fIp_pat\fB, FcMatchKind\fIkind\fB);
+FcBool FcConfigSubstituteWithPat (FcConfig *\fIconfig\fB, FcPattern *\fIp\fB, FcPattern *\fIp_pat\fB, FcMatchKind \fIkind\fB);
 \fR
 .SH "DESCRIPTION"
 .PP
@@ -21,4 +21,4 @@ if \fIkind\fR is FcMatchFont, those tagged as font operations are applied and
 p_pat is used for <test> elements with target=pattern.
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.1
+Fontconfig version 2.4.2

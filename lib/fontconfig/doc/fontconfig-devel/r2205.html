@@ -2,7 +2,7 @@
 <HTML
 ><HEAD
 ><TITLE
->FcConfigFilename</TITLE
+>FcFontList</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
@@ -10,13 +10,13 @@ REL="HOME"
 HREF="index.html"><LINK
 REL="UP"
 TITLE="FcConfig"
-HREF="x93.html#AEN1653"><LINK
+HREF="x93.html#AEN1680"><LINK
 REL="PREVIOUS"
-TITLE="FcFontList"
-HREF="r2178.html"><LINK
+TITLE="FcFontRenderPrepare"
+HREF="r2174.html"><LINK
 REL="NEXT"
-TITLE="FcConfigParseAndLoad"
-HREF="r2229.html"></HEAD
+TITLE="FcConfigFilename"
+HREF="r2232.html"></HEAD
 ><BODY
 CLASS="REFENTRY"
 BGCOLOR="#FFFFFF"
@@ -44,7 +44,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="r2178.html"
+HREF="r2174.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -58,7 +58,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="r2229.html"
+HREF="r2232.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -69,9 +69,9 @@ ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><H1
 ><A
-NAME="FCCONFIGFILENAME"
+NAME="FCFONTLIST"
 ></A
->FcConfigFilename</H1
+>FcFontList</H1
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
@@ -79,7 +79,7 @@ NAME="AEN2209"
 ></A
 ><H2
 >Name</H2
->FcConfigFilename&nbsp;--&nbsp;Find a config file</DIV
+>FcFontList&nbsp;--&nbsp;List fonts</DIV
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
@@ -102,8 +102,8 @@ CLASS="FUNCSYNOPSISINFO"
 ><CODE
 ><CODE
 CLASS="FUNCDEF"
->char * FcConfigFilename</CODE
->(const char *name);</CODE
+>FcFontSet * FcFontList</CODE
+>(FcConfig *config, FcPattern *p, FcObjectSet *os);</CODE
 ></P
 ><P
 ></P
@@ -112,40 +112,30 @@ CLASS="FUNCDEF"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN2220"
+NAME="AEN2224"
 ></A
 ><H2
 >Description</H2
 ><P
->Given the specified external entity name, return the associated filename.
-This provides applications a way to convert various configuration file
-references into filename form.
-    </P
-><P
->A null or empty <CODE
+>Selects fonts matching <CODE
 CLASS="PARAMETER"
->name</CODE
-> indicates that the default configuration file should
-be used; which file this references can be overridden with the
-FC_CONFIG_FILE environment variable.  Next, if the name starts with <CODE
+>p</CODE
+>, creates patterns from those fonts containing
+only the objects in <CODE
 CLASS="PARAMETER"
->~</CODE
->, it
-refers to a file in the current users home directory.  Otherwise if the name
-doesn't start with '/', it refers to a file in the default configuration
-directory; the built-in default directory can be overridden with the
-FC_CONFIG_DIR environment variable.
+>os</CODE
+> and returns the set of unique such patterns.
 	    </P
 ></DIV
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN2226"
+NAME="AEN2229"
 ></A
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.4.1
+>Fontconfig version 2.4.2
 
 	    </P
 ></DIV
@@ -165,7 +155,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="r2178.html"
+HREF="r2174.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -183,7 +173,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="r2229.html"
+HREF="r2232.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -193,13 +183,13 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->FcFontList</TD
+>FcFontRenderPrepare</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x93.html#AEN1653"
+HREF="x93.html#AEN1680"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -207,7 +197,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->FcConfigParseAndLoad</TD
+>FcConfigFilename</TD
 ></TR
 ></TABLE
 ></DIV

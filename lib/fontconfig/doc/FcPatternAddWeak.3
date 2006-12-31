@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcPatternAddWeak" "3" "15 September 2006" "" ""
+.TH "FcPatternAddWeak" "3" "02 December 2006" "" ""
 
 .SH NAME
 FcPatternAddWeak \- Add a value to a pattern with weak binding
@@ -11,7 +11,7 @@ FcPatternAddWeak \- Add a value to a pattern with weak binding
 .sp
 \fB#include <fontconfig.h>
 .sp
-FcBool FcPatternAddWeak (FcPattern *\fIp\fB, const char *\fIobject\fB, FcValue\fIvalue\fB, FcBool\fIappend\fB);
+FcBool FcPatternAddWeak (FcPattern *\fIp\fB, const char *\fIobject\fB, FcValue \fIvalue\fB, FcBool \fIappend\fB);
 \fR
 .SH "DESCRIPTION"
 .PP
@@ -19,4 +19,4 @@ FcPatternAddWeak is essentially the same as FcPatternAdd except that any
 values added to the list have binding \fIweak\fR instead of \fIstrong\fR\&.
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.1
+Fontconfig version 2.4.2

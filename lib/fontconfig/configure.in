@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.in,v 1.1.1.1 2006/11/25 18:41:30 matthieu Exp $
+dnl  $Id: configure.in,v 1.1.1.2 2006/12/31 14:57:18 matthieu Exp $
 dnl 
 dnl  Copyright © 2003 Keith Packard
 dnl 
@@ -33,7 +33,7 @@ dnl This is the package version number, not the shared library
 dnl version.  This same version number must appear in fontconfig/fontconfig.h
 dnl Yes, it is a pain to synchronize version numbers.  Unfortunately, it's
 dnl not possible to extract the version number here from fontconfig.h
-AM_INIT_AUTOMAKE(fontconfig, 2.4.1)
+AM_INIT_AUTOMAKE(fontconfig, 2.4.2)
 AM_MAINTAINER_MODE
 
 dnl libtool versioning
@@ -41,11 +41,11 @@ dnl libtool versioning
 dnl bump revision when fixing bugs
 dnl bump current and age, reset revision to zero when adding APIs
 dnl bump current, leave age, reset revision to zero when changing/removing APIS
-LT_CURRENT=2
+LT_CURRENT=3
 LT_REVISION=0
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
-LT_AGE=1
+LT_AGE=2
 
 LT_VERSION_INFO="$LT_CURRENT:$LT_REVISION:$LT_AGE"
 AC_SUBST(LT_VERSION_INFO)
@@ -166,7 +166,7 @@ AC_TYPE_PID_T
 # Checks for library functions.
 AC_FUNC_VPRINTF
 AC_FUNC_MMAP
-AC_CHECK_FUNCS([geteuid getuid link memmove memset mkstemp strchr strrchr strtol getopt getopt_long sysconf ftruncate chsize rand_r])
+AC_CHECK_FUNCS([geteuid getuid link memmove memset mkstemp strchr strrchr strtol getopt getopt_long sysconf ftruncate chsize rand random lrand48])
 
 #
 # Checks for iconv
@@ -510,7 +510,7 @@ default_docs="yes"
 # Check if docs exist or can be created
 #
 if test x$HASDOCBOOK = xno; then
-	if test -f doc/fonts-conf.5; then
+	if test -f $srcdir/doc/fonts-conf.5; then
 		:
 	else
 		default_docs="no"
@@ -562,7 +562,6 @@ fc-glyphname/Makefile
 fc-case/Makefile
 fc-arch/Makefile
 src/Makefile
-src/fontconfig.def
 conf.d/Makefile
 fc-cache/Makefile
 fc-cat/Makefile

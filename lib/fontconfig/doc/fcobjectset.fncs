@@ -1,5 +1,5 @@
 /*
- * $Id: fcobjectset.fncs,v 1.1.1.1 2006/11/25 18:42:13 matthieu Exp $
+ * $Id: fcobjectset.fncs,v 1.1.1.2 2006/12/31 14:58:00 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -54,7 +54,7 @@ Destroys an object set.
 @RET+@		FcObjectSet *
 @FUNC+@		FcObjectSetVaBuild
 @TYPE1+@	const char *			@ARG1+@		first
-@TYPE2+@	va_list				@ARG2+@		va
+@TYPE2+@	va_list%			@ARG2+@		va
 @PURPOSE@	Build object set from args
 @DESC@
 These build an object set from a null-terminated list of property names.

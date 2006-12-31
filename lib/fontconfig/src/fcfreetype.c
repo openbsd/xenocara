@@ -1043,13 +1043,31 @@ FcStringInPatternElement (FcPattern *pat, const char *elt, FcChar8 *string)
     return FcFalse;
 }
 
+static const FT_UShort platform_order[] = {
+    TT_PLATFORM_MICROSOFT,
+    TT_PLATFORM_APPLE_UNICODE,
+    TT_PLATFORM_MACINTOSH,
+};
+#define NUM_PLATFORM_ORDER (sizeof (platform_order) / sizeof (platform_order[0]))
+
+static const FT_UShort nameid_order[] = {
+    TT_NAME_ID_PREFERRED_FAMILY,
+    TT_NAME_ID_FONT_FAMILY,
+    TT_NAME_ID_MAC_FULL_NAME,
+    TT_NAME_ID_FULL_NAME,
+    TT_NAME_ID_PREFERRED_SUBFAMILY,
+    TT_NAME_ID_FONT_SUBFAMILY,
+    TT_NAME_ID_TRADEMARK,
+    TT_NAME_ID_MANUFACTURER,
+};
+
+#define NUM_NAMEID_ORDER  (sizeof (nameid_order) / sizeof (nameid_order[0]))
 FcPattern *
-FcFreeTypeQuery (const FcChar8	*file,
-		 int		id,
-		 FcBlanks	*blanks,
-		 int		*count)
+FcFreeTypeQueryFace (const FT_Face  face,
+		     const FcChar8  *file,
+		     int	    id,
+		     FcBlanks	    *blanks)
 {
-    FT_Face	    face;
     FcPattern	    *pat;
     int		    slant = -1;
     int		    weight = -1;
@@ -1058,7 +1076,6 @@ FcFreeTypeQuery (const FcChar8	*file,
     int		    i;
     FcCharSet	    *cs;
     FcLangSet	    *ls;
-    FT_Library	    ftLibrary;
 #if 0
     FcChar8	    *family = 0;
 #endif
@@ -1083,18 +1100,12 @@ FcFreeTypeQuery (const FcChar8	*file,
     int		    nstyle_lang = 0;
     int		    nfullname = 0;
     int		    nfullname_lang = 0;
+    int		    p, platform;
+    int		    n, nameid;
 
     FcChar8	    *style = 0;
     int		    st;
     
-    if (FT_Init_FreeType (&ftLibrary))
-	return 0;
-    
-    if (FT_New_Face (ftLibrary, (char *) file, id, &face))
-	goto bail;
-
-    *count = face->num_faces;
-
     pat = FcPatternCreate ();
     if (!pat)
 	goto bail0;
@@ -1132,105 +1143,145 @@ FcFreeTypeQuery (const FcChar8	*file,
      * of them
      */
     snamec = FT_Get_Sfnt_Name_Count (face);
-    for (snamei = 0; snamei < snamec; snamei++)
+    for (p = 0; p <= NUM_PLATFORM_ORDER; p++)
     {
-	FcChar8		*utf8;
-	const FcChar8	*lang;
-	const char	*elt = 0, *eltlang = 0;
-	int		*np = 0, *nlangp = 0;
+	if (p < NUM_PLATFORM_ORDER)
+	    platform = platform_order[p];
+	else
+	    platform = 0xffff;
 
-	if (FT_Get_Sfnt_Name (face, snamei, &sname) != 0)
-	    continue;
-	
-	utf8 = FcSfntNameTranscode (&sname);
-	lang = FcSfntNameLanguage (&sname);
-
-	if (!utf8)
-	    continue;
-	
-	switch (sname.name_id) {
-	case TT_NAME_ID_FONT_FAMILY:
-#if 0	    
-	case TT_NAME_ID_PS_NAME:
-	case TT_NAME_ID_UNIQUE_ID:
-#endif
-	    if (FcDebug () & FC_DBG_SCANV)
-		printf ("found family (n %2d p %d e %d l 0x%04x) %s\n",
-		    sname.name_id, sname.platform_id,
-		    sname.encoding_id, sname.language_id,
-		    utf8);
-    
-	    elt = FC_FAMILY;
-	    eltlang = FC_FAMILYLANG;
-	    np = &nfamily;
-	    nlangp = &nfamily_lang;
-	    break;
-	case TT_NAME_ID_FULL_NAME:
-	case TT_NAME_ID_MAC_FULL_NAME:
-	    if (FcDebug () & FC_DBG_SCANV)
-		printf ("found full   (n %2d p %d e %d l 0x%04x) %s\n",
-		    sname.name_id, sname.platform_id,
-		    sname.encoding_id, sname.language_id,
-		    utf8);
-    
-	    elt = FC_FULLNAME;
-	    eltlang = FC_FULLNAMELANG;
-	    np = &nfullname;
-	    nlangp = &nfullname_lang;
-	    break;
-	case TT_NAME_ID_FONT_SUBFAMILY:
-	    if (FcDebug () & FC_DBG_SCANV)
-		printf ("found style  (n %2d p %d e %d l 0x%04x) %s\n",
-		    sname.name_id, sname.platform_id,
-		    sname.encoding_id, sname.language_id,
-		    utf8);
-    
-	    elt = FC_STYLE;
-	    eltlang = FC_STYLELANG;
-	    np = &nstyle;
-	    nlangp = &nstyle_lang;
-	    break;
-        case TT_NAME_ID_TRADEMARK:
-        case TT_NAME_ID_MANUFACTURER:
-	    /* If the foundry wasn't found in the OS/2 table, look here */
-            if(!foundry)
-                foundry = FcNoticeFoundry((FT_String *) utf8);
-            break;
-	}
-	if (elt)
+	/*
+	 * Order nameids so preferred names appear first
+	 * in the resulting list
+	 */
+	for (n = 0; n < NUM_NAMEID_ORDER; n++)
 	{
-	    if (FcStringInPatternElement (pat, elt, utf8))
-	    {
-		free (utf8);
-		continue;
-	    }
+	    nameid = nameid_order[n];
 
-	    /* add new element */
-	    if (!FcPatternAddString (pat, elt, utf8))
+	    for (snamei = 0; snamei < snamec; snamei++)
 	    {
-		free (utf8);
-		goto bail1;
-	    }
-	    free (utf8);
-	    if (lang)
-	    {
-		/* pad lang list with 'xx' to line up with elt */
-		while (*nlangp < *np)
+		FcChar8		*utf8;
+		const FcChar8	*lang;
+		const char	*elt = 0, *eltlang = 0;
+		int		*np = 0, *nlangp = 0;
+
+		if (FT_Get_Sfnt_Name (face, snamei, &sname) != 0)
+		    continue;
+		if (sname.name_id != nameid)
+		    continue;
+
+		/*
+		 * Sort platforms in preference order, accepting
+		 * all other platforms last
+		 */
+		if (p < NUM_PLATFORM_ORDER)
 		{
-		    if (!FcPatternAddString (pat, eltlang, (FcChar8 *) "xx"))
-			goto bail1;
-		    ++*nlangp;
+		    if (sname.platform_id != platform)
+			continue;
 		}
-		if (!FcPatternAddString (pat, eltlang, lang))
-		    goto bail1;
-		++*nlangp;
+		else
+		{
+		    int	    sp;
+
+		    for (sp = 0; sp < NUM_PLATFORM_ORDER; sp++)
+			if (sname.platform_id == platform_order[sp])
+			    break;
+		    if (sp != NUM_PLATFORM_ORDER)
+			continue;
+		}
+		utf8 = FcSfntNameTranscode (&sname);
+		lang = FcSfntNameLanguage (&sname);
+
+		if (!utf8)
+		    continue;
+
+		switch (sname.name_id) {
+		case TT_NAME_ID_PREFERRED_FAMILY:
+		case TT_NAME_ID_FONT_FAMILY:
+#if 0	    
+		case TT_NAME_ID_PS_NAME:
+		case TT_NAME_ID_UNIQUE_ID:
+#endif
+		    if (FcDebug () & FC_DBG_SCANV)
+			printf ("found family (n %2d p %d e %d l 0x%04x) %s\n",
+				sname.name_id, sname.platform_id,
+				sname.encoding_id, sname.language_id,
+				utf8);
+
+		    elt = FC_FAMILY;
+		    eltlang = FC_FAMILYLANG;
+		    np = &nfamily;
+		    nlangp = &nfamily_lang;
+		    break;
+		case TT_NAME_ID_MAC_FULL_NAME:
+		case TT_NAME_ID_FULL_NAME:
+		    if (FcDebug () & FC_DBG_SCANV)
+			printf ("found full   (n %2d p %d e %d l 0x%04x) %s\n",
+				sname.name_id, sname.platform_id,
+				sname.encoding_id, sname.language_id,
+				utf8);
+
+		    elt = FC_FULLNAME;
+		    eltlang = FC_FULLNAMELANG;
+		    np = &nfullname;
+		    nlangp = &nfullname_lang;
+		    break;
+		case TT_NAME_ID_PREFERRED_SUBFAMILY:
+		case TT_NAME_ID_FONT_SUBFAMILY:
+		    if (FcDebug () & FC_DBG_SCANV)
+			printf ("found style  (n %2d p %d e %d l 0x%04x) %s\n",
+				sname.name_id, sname.platform_id,
+				sname.encoding_id, sname.language_id,
+				utf8);
+
+		    elt = FC_STYLE;
+		    eltlang = FC_STYLELANG;
+		    np = &nstyle;
+		    nlangp = &nstyle_lang;
+		    break;
+		case TT_NAME_ID_TRADEMARK:
+		case TT_NAME_ID_MANUFACTURER:
+		    /* If the foundry wasn't found in the OS/2 table, look here */
+		    if(!foundry)
+			foundry = FcNoticeFoundry((FT_String *) utf8);
+		    break;
+		}
+		if (elt)
+		{
+		    if (FcStringInPatternElement (pat, elt, utf8))
+		    {
+			free (utf8);
+			continue;
+		    }
+
+		    /* add new element */
+		    if (!FcPatternAddString (pat, elt, utf8))
+		    {
+			free (utf8);
+			goto bail1;
+		    }
+		    free (utf8);
+		    if (lang)
+		    {
+			/* pad lang list with 'xx' to line up with elt */
+			while (*nlangp < *np)
+			{
+			    if (!FcPatternAddString (pat, eltlang, (FcChar8 *) "xx"))
+				goto bail1;
+			    ++*nlangp;
+			}
+			if (!FcPatternAddString (pat, eltlang, lang))
+			    goto bail1;
+			++*nlangp;
+		    }
+		    ++*np;
+		}
+		else
+		    free (utf8);
 	    }
-	    ++*np;
 	}
-        else
-	    free (utf8);
     }
-    
+
     if (!nfamily && face->family_name && 
 	FcStrCmpIgnoreBlanksAndCase ((FcChar8 *) face->family_name, (FcChar8 *) "") != 0)
     {
@@ -1724,12 +1775,6 @@ FcFreeTypeQuery (const FcChar8	*file,
      */
     FcCharSetDestroy (cs);
     
-    /*
-     * Deallocate family/style values
-     */
-    
-    FT_Done_Face (face);
-    FT_Done_FreeType (ftLibrary);
     return pat;
 
 bail2:
@@ -1737,12 +1782,34 @@ bail2:
 bail1:
     FcPatternDestroy (pat);
 bail0:
+    return NULL;
+}
+
+FcPattern *
+FcFreeTypeQuery(const FcChar8	*file,
+		int		id,
+		FcBlanks	*blanks,
+		int		*count)
+{
+    FT_Face	    face;
+    FT_Library	    ftLibrary;
+    FcPattern	    *pat = NULL;
+    
+    if (FT_Init_FreeType (&ftLibrary))
+	return NULL;
+    
+    if (FT_New_Face (ftLibrary, (char *) file, id, &face))
+	goto bail;
+
+    *count = face->num_faces;
+
+    pat = FcFreeTypeQueryFace (face, file, id, blanks);
+
     FT_Done_Face (face);
 bail:
     FT_Done_FreeType (ftLibrary);
-    return 0;
+    return pat;
 }
-
 
 /*
  * For our purposes, this approximation is sufficient

@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcPatternRemove" "3" "15 September 2006" "" ""
+.TH "FcPatternRemove" "3" "02 December 2006" "" ""
 
 .SH NAME
 FcPatternRemove \- Remove one object of the specified type from the pattern
@@ -11,7 +11,7 @@ FcPatternRemove \- Remove one object of the specified type from the pattern
 .sp
 \fB#include <fontconfig.h>
 .sp
-FcBool FcPatternRemove (FcPattern *\fIp\fB, const char *\fIobject\fB, int\fIid\fB);
+FcBool FcPatternRemove (FcPattern *\fIp\fB, const char *\fIobject\fB, int \fIid\fB);
 \fR
 .SH "DESCRIPTION"
 .PP
@@ -19,4 +19,4 @@ Removes the value associated with the property `object' at position `id', return
 whether the property existed and had a value at that position or not.
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.1
+Fontconfig version 2.4.2

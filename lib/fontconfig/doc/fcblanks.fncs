@@ -1,5 +1,5 @@
 /*
- * $Id: fcblanks.fncs,v 1.1.1.1 2006/11/25 18:42:13 matthieu Exp $
+ * $Id: fcblanks.fncs,v 1.1.1.2 2006/12/31 14:57:59 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -40,7 +40,7 @@ Destroys an FcBlanks object, freeing any associated memory.
 @RET@		FcBool
 @FUNC@		FcBlanksAdd
 @TYPE1@		FcBlanks *			@ARG1@		b
-@TYPE2@		FcChar32 			@ARG2@		ucs4
+@TYPE2@		FcChar32% 			@ARG2@		ucs4
 @PURPOSE@	Add a character to an FcBlanks
 @DESC@
 Adds a single character to an FcBlanks object, returning FcFalse
@@ -50,7 +50,7 @@ if this process ran out of memory.
 @RET@		FcBool
 @FUNC@		FcBlanksIsMember
 @TYPE1@		FcBlanks *			@ARG1@		b
-@TYPE2@		FcChar32 			@ARG2@		ucs4
+@TYPE2@		FcChar32% 			@ARG2@		ucs4
 @PURPOSE@	Query membership in an FcBlanks
 @DESC@
 Returns whether the specified FcBlanks object contains the indicated Unicode

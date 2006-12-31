@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcFontSort" "3" "15 September 2006" "" ""
+.TH "FcFontSort" "3" "02 December 2006" "" ""
 
 .SH NAME
 FcFontSort \- Return list of matching fonts
@@ -11,7 +11,7 @@ FcFontSort \- Return list of matching fonts
 .sp
 \fB#include <fontconfig.h>
 .sp
-FcFontSet * FcFontSort (FcConfig *\fIconfig\fB, FcPattern *\fIp\fB, FcBool\fItrim\fB, FcCharSet **\fIcsp\fB, FcResult *\fIresult\fB);
+FcFontSet * FcFontSort (FcConfig *\fIconfig\fB, FcPattern *\fIp\fB, FcBool \fItrim\fB, FcCharSet **\fIcsp\fB, FcResult *\fIresult\fB);
 \fR
 .SH "DESCRIPTION"
 .PP
@@ -30,4 +30,4 @@ FcFontRenderPrepare which combines them into a complete pattern.
 The FcFontSet returned by FcFontSort is destroyed by caling FcFontSetDestroy.
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.1
+Fontconfig version 2.4.2

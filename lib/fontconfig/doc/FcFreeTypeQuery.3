@@ -3,16 +3,16 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcFreeTypeQuery" "3" "15 September 2006" "" ""
+.TH "FcFreeTypeQuery" "3" "02 December 2006" "" ""
 
 .SH NAME
-FcFreeTypeQuery \- compute font file pattern
+FcFreeTypeQuery \- compute pattern from font file (and index)
 .SH SYNOPSIS
 .sp
 \fB#include <fontconfig.h>
 #include <fcfreetype.h>
 .sp
-FcPattern * FcFreeTypeQuery (const char *\fIfile\fB, int\fIid\fB, FcBlanks *\fIblanks\fB, int *\fIcount\fB);
+FcPattern * FcFreeTypeQuery (const char *\fIfile\fB, int \fIid\fB, FcBlanks *\fIblanks\fB, int *\fIcount\fB);
 \fR
 .SH "DESCRIPTION"
 .PP
@@ -20,4 +20,4 @@ Constructs a pattern representing the 'id'th font in 'file'.  The number
 of fonts in 'file' is returned in 'count'.
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.1
+Fontconfig version 2.4.2

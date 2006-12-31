@@ -2,7 +2,7 @@
 <HTML
 ><HEAD
 ><TITLE
->FcCharSetNextPage</TITLE
+>FcCharSetFirstPage</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
@@ -10,10 +10,13 @@ REL="HOME"
 HREF="index.html"><LINK
 REL="UP"
 TITLE="FcCharSet"
-HREF="x93.html#AEN1087"><LINK
+HREF="x93.html#AEN1114"><LINK
 REL="PREVIOUS"
-TITLE="FcCharSetFirstPage"
-HREF="r1404.html"></HEAD
+TITLE="FcCharSetIsSubset"
+HREF="r1406.html"><LINK
+REL="NEXT"
+TITLE="FcCharSetNextPage"
+HREF="r1458.html"></HEAD
 ><BODY
 CLASS="REFENTRY"
 BGCOLOR="#FFFFFF"
@@ -41,7 +44,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="r1404.html"
+HREF="r1406.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -54,7 +57,11 @@ VALIGN="bottom"
 WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
->&nbsp;</TD
+><A
+HREF="r1458.html"
+ACCESSKEY="N"
+>Next</A
+></TD
 ></TR
 ></TABLE
 ><HR
@@ -62,9 +69,9 @@ ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><H1
 ><A
-NAME="FCCHARSETNEXTPAGE"
+NAME="FCCHARSETFIRSTPAGE"
 ></A
->FcCharSetNextPage</H1
+>FcCharSetFirstPage</H1
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
@@ -72,7 +79,7 @@ NAME="AEN1435"
 ></A
 ><H2
 >Name</H2
->FcCharSetNextPage&nbsp;--&nbsp;Continue enumerating charset contents</DIV
+>FcCharSetFirstPage&nbsp;--&nbsp;Start enumerating charset contents</DIV
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
@@ -95,8 +102,8 @@ CLASS="FUNCSYNOPSISINFO"
 ><CODE
 ><CODE
 CLASS="FUNCDEF"
->FcChar32 FcCharSetNextPage</CODE
->(const FcCharSet *a, FcChar32[FC_CHARSET_MAP_SIZE]map, FcChar32 *next);</CODE
+>FcChar32 FcCharSetFirstPage</CODE
+>(const FcCharSet *a, FcChar32[FC_CHARSET_MAP_SIZE] map, FcChar32 *next);</CODE
 ></P
 ><P
 ></P
@@ -110,29 +117,26 @@ NAME="AEN1450"
 ><H2
 >Description</H2
 ><P
->Builds an array of bits marking the Unicode coverage of <CODE
-CLASS="PARAMETER"
->a</CODE
-> for page
+>Builds an array of bits marking the first page of Unicode coverage of
 <CODE
 CLASS="PARAMETER"
->*next</CODE
+>a</CODE
 >. Returns the base of the array. <CODE
 CLASS="PARAMETER"
 >next</CODE
-> contains the next page in
-the font.
+> contains the next page in the
+font.
 	    </P
 ></DIV
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN1456"
+NAME="AEN1455"
 ></A
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.4.1
+>Fontconfig version 2.4.2
 
 	    </P
 ></DIV
@@ -152,7 +156,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="r1404.html"
+HREF="r1406.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -169,20 +173,24 @@ ACCESSKEY="H"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->&nbsp;</TD
+><A
+HREF="r1458.html"
+ACCESSKEY="N"
+>Next</A
+></TD
 ></TR
 ><TR
 ><TD
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->FcCharSetFirstPage</TD
+>FcCharSetIsSubset</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x93.html#AEN1087"
+HREF="x93.html#AEN1114"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -190,7 +198,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->&nbsp;</TD
+>FcCharSetNextPage</TD
 ></TR
 ></TABLE
 ></DIV

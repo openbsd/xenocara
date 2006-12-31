@@ -1,5 +1,5 @@
 /*
- * $Id: fcfile.fncs,v 1.1.1.1 2006/11/25 18:42:00 matthieu Exp $
+ * $Id: fcfile.fncs,v 1.1.1.2 2006/12/31 14:57:47 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -29,7 +29,7 @@
 @TYPE3@		FcFileCache *			@ARG3@		cache	
 @TYPE4@		FcBlanks *			@ARG4@		blanks	
 @TYPE5@		const char *			@ARG5@		file	
-@TYPE6@		FcBool 				@ARG6@		force	
+@TYPE6@		FcBool% 				@ARG6@		force	
 @PURPOSE@	scan a font file
 @DESC@
 Scans a single file and adds all fonts found to <parameter>set</parameter>.
@@ -46,7 +46,7 @@ associated information is found in <parameter>cache</parameter>.  If
 @TYPE3@		FcFileCache *			@ARG3@		cache	
 @TYPE4@		FcBlanks *			@ARG4@		blanks	
 @TYPE5@		const char *			@ARG5@		dir	
-@TYPE6@		FcBool 				@ARG6@		force	
+@TYPE6@		FcBool% 				@ARG6@		force	
 @PURPOSE@	scan a font directory
 @DESC@
 Scans an entire directory and adds all fonts found to

@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcCharSetNextPage" "3" "15 September 2006" "" ""
+.TH "FcCharSetNextPage" "3" "02 December 2006" "" ""
 
 .SH NAME
 FcCharSetNextPage \- Continue enumerating charset contents
@@ -11,7 +11,7 @@ FcCharSetNextPage \- Continue enumerating charset contents
 .sp
 \fB#include <fontconfig.h>
 .sp
-FcChar32 FcCharSetNextPage (const FcCharSet *\fIa\fB, FcChar32[FC_CHARSET_MAP_SIZE]\fImap\fB, FcChar32 *\fInext\fB);
+FcChar32 FcCharSetNextPage (const FcCharSet *\fIa\fB, FcChar32[FC_CHARSET_MAP_SIZE] \fImap\fB, FcChar32 *\fInext\fB);
 \fR
 .SH "DESCRIPTION"
 .PP
@@ -20,4 +20,4 @@ Builds an array of bits marking the Unicode coverage of \fIa\fR for page
 the font.
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.1
+Fontconfig version 2.4.2

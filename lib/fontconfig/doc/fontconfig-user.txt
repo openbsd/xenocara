@@ -273,15 +273,15 @@ Configuration File Format
 <fontconfig>
 
    This is the top level element for a font configuration and can
-   contain dir, cache, include, match and alias elements in any
-   order.
+   contain <dir>, <cache>, <include>, <match> and <alias>
+   elements in any order.
 
-dir
+<dir>
 
    This element contains a directory name which will be scanned
    for font files to include in the set of available fonts.
 
-cache
+<cache>
 
    This element contains a file name for the per-user cache of
    font information. If it starts with '~', it refers to a file
@@ -289,10 +289,10 @@ cache
    information about fonts that isn't present in the
    per-directory cache files. It is automatically maintained by
    the fontconfig library. The default for this file is
-   ``~/.fonts.cache-version'', where version is the font
+   ``~/.fonts.cache-<version>'', where <version> is the font
    configuration file version number (currently 2).
 
-include ignore_missing="no"
+<include ignore_missing="no">
 
    This element contains the name of an additional configuration
    file or directory. If a directory, every file within that
@@ -305,36 +305,36 @@ include ignore_missing="no"
    instead of the default "no", a missing file or directory will
    elicit no warning message from the library.
 
-config
+<config>
 
    This element provides a place to consolidate additional
-   configuration information. config can contain blank and rescan
-   elements in any order.
+   configuration information. <config> can contain <blank> and
+   <rescan> elements in any order.
 
-blank
+<blank>
 
    Fonts often include "broken" glyphs which appear in the
    encoding but are drawn as blanks on the screen. Within the
-   blank element, place each Unicode characters which is supposed
-   to be blank in an int element. Characters outside of this set
-   which are drawn as blank will be elided from the set of
-   characters supported by the font.
+   <blank> element, place each Unicode characters which is
+   supposed to be blank in an <int> element. Characters outside
+   of this set which are drawn as blank will be elided from the
+   set of characters supported by the font.
 
-rescan
+<rescan>
 
-   The rescan element holds an int element which indicates the
-   default interval between automatic checks for font
+   The <rescan> element holds an <int> element which indicates
+   the default interval between automatic checks for font
    configuration changes. Fontconfig will validate all of the
    configuration files and directories and automatically rebuild
    the internal datastructures when this interval passes.
 
-selectfont
+<selectfont>
 
    This element is used to black/white list fonts from being
    listed or matched against. It holds acceptfont and rejectfont
    elements.
 
-acceptfont
+<acceptfont>
 
    Fonts matched by an acceptfont element are "whitelisted"; such
    fonts are explicitly included in the set of fonts used to
@@ -343,7 +343,7 @@ acceptfont
    element. Acceptfont elements include glob and pattern elements
    which are used to match fonts.
 
-rejectfont
+<rejectfont>
 
    Fonts matched by an rejectfont element are "blacklisted"; such
    fonts are excluded from the set of fonts used to resolve list
@@ -351,7 +351,7 @@ rejectfont
    Rejectfont elements include glob and pattern elements which
    are used to match fonts.
 
-glob
+<glob>
 
    Glob elements hold shell-style filename matching patterns
    (including ? and *) which match fonts based on their complete
@@ -361,7 +361,7 @@ glob
    filenaming conventions which can't be relied upon. Note that
    globs only apply to directories, not to individual fonts.
 
-pattern
+<pattern>
 
    Pattern elements perform list-style matching on incoming
    fonts; that is, they hold a list of elements and associated
@@ -371,17 +371,17 @@ pattern
    is a more reliable mechanism than using file extensions.
    Pattern elements include patelt elements.
 
-patelt name="property"
+<patelt name="property">
 
    Patelt elements hold a single pattern element and list of
    values. They must have a 'name' attribute which indicates the
    pattern element name. Patelt elements include int, double,
    string, matrix, bool, charset and const elements.
 
-match target="pattern"
+<match target="pattern">
 
-   This element holds first a (possibly empty) list of test
-   elements and then a (possibly empty) list of edit elements.
+   This element holds first a (possibly empty) list of <test>
+   elements and then a (possibly empty) list of <edit> elements.
    Patterns which match all of the tests are subjected to all the
    edits. If 'target' is set to "font" instead of the default
    "pattern", then this element applies to the font name
@@ -390,7 +390,7 @@ match target="pattern"
    applies when the font is scanned to build the fontconfig
    database.
 
-test qual="any" name="property" target="default" compare="eq"
+<test qual="any" name="property" target="default" compare="eq">
 
    This element contains a single value which is compared with
    the target ('pattern', 'font', 'scan' or 'default') property
@@ -405,13 +405,13 @@ test qual="any" name="property" target="default" compare="eq"
    matching the original pattern or the font. "default" selects
    whichever target the outer <match> element has selected.
 
-edit name="property" mode="assign" binding="weak"
+<edit name="property" mode="assign" binding="weak">
 
    This element contains a list of expression elements (any of
    the value or operator elements). The expression elements are
    evaluated at run-time and modify the property "property". The
    modification depends on whether "property" was matched by one
-   of the associated test elements, if so, the modification may
+   of the associated <test> elements, if so, the modification may
    affect the first matched value. Any values inserted into the
    property are given the indicated binding ("strong", "weak" or
    "same") with "same" binding using the value from the matched
@@ -428,26 +428,27 @@ t
   "append_last"           Append at end of list   Append at end of list
 
 
-int, double, string, bool
+<int>, <double>, <string>, <bool>
 
-   These elements hold a single value of the indicated type. bool
-   elements hold either true or false. An important limitation
-   exists in the parsing of floating point numbers -- fontconfig
-   requires that the mantissa start with a digit, not a decimal
-   point, so insert a leading zero for purely fractional values
-   (e.g. use 0.5 instead of .5 and -0.5 instead of -.5).
+   These elements hold a single value of the indicated type.
+   <bool> elements hold either true or false. An important
+   limitation exists in the parsing of floating point numbers --
+   fontconfig requires that the mantissa start with a digit, not
+   a decimal point, so insert a leading zero for purely
+   fractional values (e.g. use 0.5 instead of .5 and -0.5 instead
+   of -.5).
 
-matrix
+<matrix>
 
-   This element holds the four double elements of an affine
+   This element holds the four <double> elements of an affine
    transformation.
 
-name
+<name>
 
    Holds a property name. Evaluates to the first value from the
    property of the font, not the pattern.
 
-const
+<const>
 
    Holds the name of a constant; these are always integers and
    serve as symbolic names for common font values:
@@ -495,44 +496,44 @@ const
   hintfull        hintstyle       3
 
 
-or, and, plus, minus, times, divide
+<or>, <and>, <plus>, <minus>, <times>, <divide>
 
    These elements perform the specified operation on a list of
-   expression elements. or and and are boolean, not bitwise.
+   expression elements. <or> and <and> are boolean, not bitwise.
 
-eq, not_eq, less, less_eq, more, more_eq
+<eq>, <not_eq>, <less>, <less_eq>, <more>, <more_eq>
 
    These elements compare two values, producing a boolean result.
 
-not
+<not>
 
    Inverts the boolean sense of its one expression element
 
-if
+<if>
 
    This element takes three expression elements; if the value of
    the first is true, it produces the value of the second,
    otherwise it produces the value of the third.
 
-alias
+<alias>
 
    Alias elements provide a shorthand notation for the set of
    common match operations needed to substitute one font family
-   for another. They contain a family element followed by
-   optional prefer, accept and default elements. Fonts matching
-   the family element are edited to prepend the list of prefered
-   families before the matching family, append the acceptable
-   families after the matching family and append the default
-   families to the end of the family list.
+   for another. They contain a <family> element followed by
+   optional <prefer>, <accept> and <default> elements. Fonts
+   matching the <family> element are edited to prepend the list
+   of <prefer>ed families before the matching <family>, append
+   the <accept>able families after the matching <family> and
+   append the <default> families to the end of the family list.
 
-family
+<family>
 
    Holds a single font family name
 
-prefer, accept, default
+<prefer>, <accept>, <default>
 
-   These hold a list of family elements to be used by the alias
-   element. /article
+   These hold a list of <family> elements to be used by the
+   <alias> element.
 
 EXAMPLE CONFIGURATION FILE
 
@@ -681,4 +682,4 @@ See Also
 
 Version
 
-   Fontconfig version 2.4.1
+   Fontconfig version 2.4.2

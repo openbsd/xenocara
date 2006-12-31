@@ -2,7 +2,7 @@
 <HTML
 ><HEAD
 ><TITLE
->Fontconfig Developers Reference, Version 2.4.1
+>Fontconfig Developers Reference, Version 2.4.2
  </TITLE
 ><META
 NAME="GENERATOR"
@@ -25,7 +25,7 @@ CLASS="TITLEPAGE"
 CLASS="TITLE"
 ><A
 NAME="AEN1"
->Fontconfig Developers Reference, Version 2.4.1</A
+>Fontconfig Developers Reference, Version 2.4.2</A
 ></H1
 ><H3
 CLASS="AUTHOR"
@@ -385,579 +385,579 @@ HREF="r988.html"
 ><A
 HREF="r1011.html"
 >FcFreeTypeQuery</A
->&nbsp;--&nbsp;compute font file pattern</DT
+>&nbsp;--&nbsp;compute pattern from font file (and index)</DT
+><DT
+><A
+HREF="r1038.html"
+>FcFreeTypeQueryFace</A
+>&nbsp;--&nbsp;compute pattern from FT_Face</DT
 ></DL
 ></DD
 ><DT
 >4.6. <A
-HREF="x93.html#AEN1038"
+HREF="x93.html#AEN1065"
 >FcValue</A
 ></DT
 ><DD
 ><DL
 ><DT
 ><A
-HREF="r1042.html"
+HREF="r1069.html"
 >FcValueDestroy</A
 >&nbsp;--&nbsp;Free a value</DT
 ><DT
 ><A
-HREF="r1064.html"
+HREF="r1091.html"
 >FcValueSave</A
 >&nbsp;--&nbsp;Copy a value</DT
 ></DL
 ></DD
 ><DT
 >4.7. <A
-HREF="x93.html#AEN1087"
+HREF="x93.html#AEN1114"
 >FcCharSet</A
 ></DT
 ><DD
 ><DL
 ><DT
 ><A
-HREF="r1090.html"
+HREF="r1117.html"
 >FcCharSetCreate</A
 >&nbsp;--&nbsp;Create an empty character set</DT
 ><DT
 ><A
-HREF="r1112.html"
+HREF="r1139.html"
 >FcCharSetDestroy</A
 >&nbsp;--&nbsp;Destroy a character set</DT
 ><DT
 ><A
-HREF="r1135.html"
+HREF="r1162.html"
 >FcCharSetAddChar</A
 >&nbsp;--&nbsp;Add a character to a charset</DT
 ><DT
 ><A
-HREF="r1159.html"
+HREF="r1186.html"
 >FcCharSetCopy</A
 >&nbsp;--&nbsp;Copy a charset</DT
 ><DT
 ><A
-HREF="r1182.html"
+HREF="r1209.html"
 >FcCharSetEqual</A
 >&nbsp;--&nbsp;Compare two charsets</DT
 ><DT
 ><A
-HREF="r1207.html"
+HREF="r1234.html"
 >FcCharSetIntersect</A
 >&nbsp;--&nbsp;Intersect charsets</DT
 ><DT
 ><A
-HREF="r1232.html"
+HREF="r1259.html"
 >FcCharSetUnion</A
 >&nbsp;--&nbsp;Add charsets</DT
 ><DT
 ><A
-HREF="r1257.html"
+HREF="r1284.html"
 >FcCharSetSubtract</A
 >&nbsp;--&nbsp;Subtract charsets</DT
 ><DT
 ><A
-HREF="r1282.html"
+HREF="r1309.html"
 >FcCharSetHasChar</A
 >&nbsp;--&nbsp;Check a charset for a char</DT
 ><DT
 ><A
-HREF="r1307.html"
+HREF="r1334.html"
 >FcCharSetCount</A
 >&nbsp;--&nbsp;Count entries in a charset</DT
 ><DT
 ><A
-HREF="r1329.html"
+HREF="r1356.html"
 >FcCharSetIntersectCount</A
 >&nbsp;--&nbsp;Intersect and count charsets</DT
 ><DT
 ><A
-HREF="r1354.html"
+HREF="r1381.html"
 >FcCharSetSubtractCount</A
 >&nbsp;--&nbsp;Subtract and count charsets</DT
 ><DT
 ><A
-HREF="r1379.html"
+HREF="r1406.html"
 >FcCharSetIsSubset</A
 >&nbsp;--&nbsp;Test for charset inclusion</DT
 ><DT
 ><A
-HREF="r1404.html"
+HREF="r1431.html"
 >FcCharSetFirstPage</A
 >&nbsp;--&nbsp;Start enumerating charset contents</DT
 ><DT
 ><A
-HREF="r1431.html"
+HREF="r1458.html"
 >FcCharSetNextPage</A
 >&nbsp;--&nbsp;Continue enumerating charset contents</DT
 ></DL
 ></DD
 ><DT
 >4.8. <A
-HREF="x93.html#AEN1459"
+HREF="x93.html#AEN1486"
 >FcMatrix</A
 ></DT
 ><DD
 ><DL
 ><DT
 ><A
-HREF="r1462.html"
+HREF="r1489.html"
 >FcMatrixInit</A
 >&nbsp;--&nbsp;initialize an FcMatrix structure</DT
 ><DT
 ><A
-HREF="r1485.html"
+HREF="r1512.html"
 >FcMatrixCopy</A
 >&nbsp;--&nbsp;Copy a matrix</DT
 ><DT
 ><A
-HREF="r1508.html"
+HREF="r1535.html"
 >FcMatrixEqual</A
 >&nbsp;--&nbsp;Compare two matrices</DT
 ><DT
 ><A
-HREF="r1534.html"
+HREF="r1561.html"
 >FcMatrixMultiply</A
 >&nbsp;--&nbsp;Multiply matrices</DT
 ><DT
 ><A
-HREF="r1563.html"
+HREF="r1590.html"
 >FcMatrixRotate</A
 >&nbsp;--&nbsp;Rotate a matrix</DT
 ><DT
 ><A
-HREF="r1593.html"
+HREF="r1620.html"
 >FcMatrixScale</A
 >&nbsp;--&nbsp;Scale a matrix</DT
 ><DT
 ><A
-HREF="r1623.html"
+HREF="r1650.html"
 >FcMatrixShear</A
 >&nbsp;--&nbsp;Shear a matrix</DT
 ></DL
 ></DD
 ><DT
 >4.9. <A
-HREF="x93.html#AEN1653"
+HREF="x93.html#AEN1680"
 >FcConfig</A
 ></DT
 ><DD
 ><DL
 ><DT
 ><A
-HREF="r1656.html"
+HREF="r1683.html"
 >FcConfigCreate</A
 >&nbsp;--&nbsp;Create a configuration</DT
 ><DT
 ><A
-HREF="r1677.html"
+HREF="r1704.html"
 >FcConfigDestroy</A
 >&nbsp;--&nbsp;Destroy a configuration</DT
 ><DT
 ><A
-HREF="r1698.html"
+HREF="r1725.html"
 >FcConfigSetCurrent</A
 >&nbsp;--&nbsp;Set configuration as default</DT
 ><DT
 ><A
-HREF="r1720.html"
+HREF="r1747.html"
 >FcConfigGetCurrent</A
 >&nbsp;--&nbsp;Return current configuration</DT
 ><DT
 ><A
-HREF="r1741.html"
+HREF="r1768.html"
 >FcConfigUptoDate</A
 >&nbsp;--&nbsp;Check timestamps on config files</DT
 ><DT
 ><A
-HREF="r1763.html"
+HREF="r1790.html"
 >FcConfigBuildFonts</A
 >&nbsp;--&nbsp;Build font database</DT
 ><DT
 ><A
-HREF="r1784.html"
+HREF="r1811.html"
 >FcConfigGetConfigDirs</A
 >&nbsp;--&nbsp;Get config directories</DT
 ><DT
 ><A
-HREF="r1806.html"
+HREF="r1833.html"
 >FcConfigGetFontDirs</A
 >&nbsp;--&nbsp;Get font directories</DT
 ><DT
 ><A
-HREF="r1828.html"
+HREF="r1855.html"
 >FcConfigGetConfigFiles</A
 >&nbsp;--&nbsp;Get config files</DT
 ><DT
 ><A
-HREF="r1850.html"
+HREF="r1877.html"
 >FcConfigGetCache</A
 >&nbsp;--&nbsp;Get cache filename</DT
 ><DT
 ><A
-HREF="r1871.html"
+HREF="r1898.html"
 >FcConfigGetFonts</A
 >&nbsp;--&nbsp;Get config font set</DT
 ><DT
 ><A
-HREF="r1895.html"
+HREF="r1922.html"
 >FcConfigGetBlanks</A
 >&nbsp;--&nbsp;Get config blanks</DT
 ><DT
 ><A
-HREF="r1916.html"
+HREF="r1943.html"
 >FcConfigGetRescanInverval</A
 >&nbsp;--&nbsp;Get config rescan interval</DT
 ><DT
 ><A
-HREF="r1938.html"
+HREF="r1965.html"
 >FcConfigSetRescanInverval</A
 >&nbsp;--&nbsp;Set config rescan interval</DT
 ><DT
 ><A
-HREF="r1961.html"
+HREF="r1988.html"
 >FcConfigAppFontAddFile</A
 >&nbsp;--&nbsp;Add font file to font database</DT
 ><DT
 ><A
-HREF="r1984.html"
+HREF="r2011.html"
 >FcConfigAppFontAddDir</A
 >&nbsp;--&nbsp;Add fonts from directory to font database</DT
 ><DT
 ><A
-HREF="r2007.html"
+HREF="r2034.html"
 >FcConfigAppFontClear</A
 >&nbsp;--&nbsp;Remove all app fonts from font database</DT
 ><DT
 ><A
-HREF="r2028.html"
+HREF="r2055.html"
 >FcConfigSubstituteWithPat</A
 >&nbsp;--&nbsp;Execute substitutions</DT
 ><DT
 ><A
-HREF="r2057.html"
+HREF="r2084.html"
 >FcConfigSubstitute</A
 >&nbsp;--&nbsp;Execute substitutions</DT
 ><DT
 ><A
-HREF="r2082.html"
+HREF="r2109.html"
 >FcFontMatch</A
 >&nbsp;--&nbsp;Return best font</DT
 ><DT
 ><A
-HREF="r2110.html"
+HREF="r2137.html"
 >FcFontSort</A
 >&nbsp;--&nbsp;Return list of matching fonts</DT
 ><DT
 ><A
-HREF="r2147.html"
+HREF="r2174.html"
 >FcFontRenderPrepare</A
 >&nbsp;--&nbsp;Prepare pattern for loading font file</DT
 ><DT
 ><A
-HREF="r2178.html"
+HREF="r2205.html"
 >FcFontList</A
 >&nbsp;--&nbsp;List fonts</DT
 ><DT
 ><A
-HREF="r2205.html"
+HREF="r2232.html"
 >FcConfigFilename</A
 >&nbsp;--&nbsp;Find a config file</DT
 ><DT
 ><A
-HREF="r2229.html"
+HREF="r2256.html"
 >FcConfigParseAndLoad</A
 >&nbsp;--&nbsp;load a configuration file</DT
-><DT
-><A
-HREF="r2252.html"
->FcConfigNormalizeFontDir</A
->&nbsp;--&nbsp;normalize a font directory</DT
 ></DL
 ></DD
 ><DT
 >4.10. <A
-HREF="x93.html#AEN2275"
+HREF="x93.html#AEN2279"
 >FcObjectType</A
 ></DT
 ><DD
 ><DL
 ><DT
 ><A
-HREF="r2278.html"
+HREF="r2282.html"
 >FcNameRegisterObjectTypes</A
 >&nbsp;--&nbsp;Register object types</DT
 ><DT
 ><A
-HREF="r2302.html"
+HREF="r2306.html"
 >FcNameUnregisterObjectTypes</A
 >&nbsp;--&nbsp;Unregister object types</DT
 ><DT
 ><A
-HREF="r2326.html"
+HREF="r2330.html"
 >FcNameGetObjectType</A
 >&nbsp;--&nbsp;Lookup an object type</DT
 ></DL
 ></DD
 ><DT
 >4.11. <A
-HREF="x93.html#AEN2348"
+HREF="x93.html#AEN2352"
 >FcConstant</A
 ></DT
 ><DD
 ><DL
 ><DT
 ><A
-HREF="r2351.html"
+HREF="r2355.html"
 >FcNameRegisterConstants</A
 >&nbsp;--&nbsp;Register symbolic constants</DT
 ><DT
 ><A
-HREF="r2375.html"
+HREF="r2379.html"
 >FcNameUnregisterConstants</A
 >&nbsp;--&nbsp;Unregister symbolic constants</DT
 ><DT
 ><A
-HREF="r2399.html"
+HREF="r2403.html"
 >FcNameGetConstant</A
 >&nbsp;--&nbsp;Lookup symbolic constant</DT
 ><DT
 ><A
-HREF="r2421.html"
+HREF="r2425.html"
 >FcNameConstant</A
 >&nbsp;--&nbsp;Get the value for a symbolic constant</DT
 ></DL
 ></DD
 ><DT
 >4.12. <A
-HREF="x93.html#AEN2446"
+HREF="x93.html#AEN2450"
 >FcBlanks</A
 ></DT
 ><DD
 ><DL
 ><DT
 ><A
-HREF="r2449.html"
+HREF="r2453.html"
 >FcBlanksCreate</A
 >&nbsp;--&nbsp;Create an FcBlanks</DT
 ><DT
 ><A
-HREF="r2470.html"
+HREF="r2474.html"
 >FcBlanksDestroy</A
 >&nbsp;--&nbsp;Destroy and FcBlanks</DT
 ><DT
 ><A
-HREF="r2491.html"
+HREF="r2495.html"
 >FcBlanksAdd</A
 >&nbsp;--&nbsp;Add a character to an FcBlanks</DT
 ><DT
 ><A
-HREF="r2514.html"
+HREF="r2518.html"
 >FcBlanksIsMember</A
 >&nbsp;--&nbsp;Query membership in an FcBlanks</DT
 ></DL
 ></DD
 ><DT
 >4.13. <A
-HREF="x93.html#AEN2537"
+HREF="x93.html#AEN2541"
 >FcAtomic</A
 ></DT
 ><DD
 ><DL
 ><DT
 ><A
-HREF="r2540.html"
+HREF="r2544.html"
 >FcAtomicCreate</A
 >&nbsp;--&nbsp;create an FcAtomic object</DT
 ><DT
 ><A
-HREF="r2562.html"
+HREF="r2566.html"
 >FcAtomicLock</A
 >&nbsp;--&nbsp;lock a file</DT
 ><DT
 ><A
-HREF="r2584.html"
+HREF="r2588.html"
 >FcAtomicNewFile</A
 >&nbsp;--&nbsp;return new temporary file name</DT
 ><DT
 ><A
-HREF="r2606.html"
+HREF="r2610.html"
 >FcAtomicOrigFile</A
 >&nbsp;--&nbsp;return original file name</DT
 ><DT
 ><A
-HREF="r2628.html"
+HREF="r2632.html"
 >FcAtomicReplaceOrig</A
 >&nbsp;--&nbsp;replace original with new</DT
 ><DT
 ><A
-HREF="r2650.html"
+HREF="r2654.html"
 >FcAtomicDeleteNew</A
 >&nbsp;--&nbsp;delete new file</DT
 ><DT
 ><A
-HREF="r2671.html"
+HREF="r2675.html"
 >FcAtomicUnlock</A
 >&nbsp;--&nbsp;unlock a file</DT
 ><DT
 ><A
-HREF="r2692.html"
+HREF="r2696.html"
 >FcAtomicDestroy</A
 >&nbsp;--&nbsp;destroy an FcAtomic object</DT
 ></DL
 ></DD
 ><DT
 >4.14. <A
-HREF="x93.html#AEN2714"
+HREF="x93.html#AEN2718"
 >File and Directory routines</A
 ></DT
 ><DD
 ><DL
 ><DT
 ><A
-HREF="r2717.html"
+HREF="r2721.html"
 >FcFileScan</A
 >&nbsp;--&nbsp;scan a font file</DT
 ><DT
 ><A
-HREF="r2753.html"
+HREF="r2757.html"
 >FcDirScan</A
 >&nbsp;--&nbsp;scan a font directory</DT
 ><DT
 ><A
-HREF="r2788.html"
+HREF="r2792.html"
 >FcDirSave</A
 >&nbsp;--&nbsp;save a directory cache</DT
 ><DT
 ><A
-HREF="r2816.html"
+HREF="r2820.html"
 >FcDirCacheValid</A
 >&nbsp;--&nbsp;check directory cache timestamp</DT
 ></DL
 ></DD
 ><DT
 >4.15. <A
-HREF="x93.html#AEN2838"
+HREF="x93.html#AEN2842"
 >FcStrSet and FcStrList</A
 ></DT
 ><DD
 ><DL
 ><DT
 ><A
-HREF="r2841.html"
+HREF="r2845.html"
 >FcStrSetCreate</A
 >&nbsp;--&nbsp;create a string set</DT
 ><DT
 ><A
-HREF="r2862.html"
+HREF="r2866.html"
 >FcStrSetMember</A
 >&nbsp;--&nbsp;check set for membership</DT
 ><DT
 ><A
-HREF="r2887.html"
+HREF="r2891.html"
 >FcStrSetAdd</A
 >&nbsp;--&nbsp;add to a string set</DT
 ><DT
 ><A
-HREF="r2912.html"
+HREF="r2916.html"
 >FcStrSetAddFilename</A
 >&nbsp;--&nbsp;add a filename to a string set</DT
 ><DT
 ><A
-HREF="r2937.html"
+HREF="r2941.html"
 >FcStrSetDel</A
 >&nbsp;--&nbsp;delete from a string set</DT
 ><DT
 ><A
-HREF="r2963.html"
+HREF="r2967.html"
 >FcStrSetDestroy</A
 >&nbsp;--&nbsp;destroy a string set</DT
 ><DT
 ><A
-HREF="r2985.html"
+HREF="r2989.html"
 >FcStrListCreate</A
 >&nbsp;--&nbsp;create a string iterator</DT
 ><DT
 ><A
-HREF="r3007.html"
+HREF="r3011.html"
 >FcStrListNext</A
 >&nbsp;--&nbsp;get next string in iteration</DT
 ><DT
 ><A
-HREF="r3029.html"
+HREF="r3033.html"
 >FcStrListDone</A
 >&nbsp;--&nbsp;destroy a string iterator</DT
 ></DL
 ></DD
 ><DT
 >4.16. <A
-HREF="x93.html#AEN3051"
+HREF="x93.html#AEN3055"
 >String utilities</A
 ></DT
 ><DD
 ><DL
 ><DT
 ><A
-HREF="r3054.html"
+HREF="r3058.html"
 >FcUtf8ToUcs4</A
 >&nbsp;--&nbsp;convert UTF-8 to UCS4</DT
 ><DT
 ><A
-HREF="r3083.html"
+HREF="r3087.html"
 >FcUcs4ToUtf8</A
 >&nbsp;--&nbsp;convert UCS4 to UTF-8</DT
 ><DT
 ><A
-HREF="r3108.html"
+HREF="r3112.html"
 >FcUtf8Len</A
 >&nbsp;--&nbsp;count UTF-8 encoded chars</DT
 ><DT
 ><A
-HREF="r3140.html"
+HREF="r3144.html"
 >FcUtf16ToUcs4</A
 >&nbsp;--&nbsp;convert UTF-16 to UCS4</DT
 ><DT
 ><A
-HREF="r3173.html"
+HREF="r3177.html"
 >FcUtf16Len</A
 >&nbsp;--&nbsp;count UTF-16 encoded chars</DT
 ><DT
 ><A
-HREF="r3209.html"
+HREF="r3213.html"
 >FcStrCopy</A
 >&nbsp;--&nbsp;duplicate a string</DT
 ><DT
 ><A
-HREF="r3232.html"
+HREF="r3236.html"
 >FcStrDowncase</A
 >&nbsp;--&nbsp;create a lower case translation of a string</DT
 ><DT
 ><A
-HREF="r3254.html"
+HREF="r3258.html"
 >FcStrCopyFilename</A
 >&nbsp;--&nbsp;copy a string, expanding '~'</DT
 ><DT
 ><A
-HREF="r3277.html"
+HREF="r3281.html"
 >FcStrCmpIgnoreCase</A
 >&nbsp;--&nbsp;compare UTF-8 strings ignoring ASCII case</DT
 ><DT
 ><A
-HREF="r3302.html"
+HREF="r3306.html"
 >FcStrStr</A
 >&nbsp;--&nbsp;locate UTF-8 substring</DT
 ><DT
 ><A
-HREF="r3329.html"
+HREF="r3333.html"
 >FcStrStrIgnoreCase</A
 >&nbsp;--&nbsp;locate UTF-8 substring ignoring ASCII case</DT
 ><DT
 ><A
-HREF="r3356.html"
+HREF="r3360.html"
 >FcStrDirname</A
 >&nbsp;--&nbsp;directory part of filename</DT
 ><DT
 ><A
-HREF="r3378.html"
+HREF="r3382.html"
 >FcStrBasename</A
 >&nbsp;--&nbsp;last component of filename</DT
 ></DL

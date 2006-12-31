@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcPatternGet-Type" "3" "15 September 2006" "" ""
+.TH "FcPatternGet-Type" "3" "02 December 2006" "" ""
 
 .SH NAME
 FcPatternGetInteger, FcPatternGetDouble, FcPatternGetString, FcPatternGetMatrix, FcPatternGetCharSet, FcPatternGetBool \- Return a typed value from a pattern
@@ -11,17 +11,17 @@ FcPatternGetInteger, FcPatternGetDouble, FcPatternGetString, FcPatternGetMatrix,
 .sp
 \fB#include <fontconfig.h>
 .sp
-FcResult FcPatternGetInteger (FcPattern *\fIp\fB, const char *\fIobject\fB, int\fIn\fB, int *\fIi\fB);
+FcResult FcPatternGetInteger (FcPattern *\fIp\fB, const char *\fIobject\fB, int \fIn\fB, int *\fIi\fB);
 .sp
-FcResult FcPatternGetDouble (FcPattern *\fIp\fB, const char *\fIobject\fB, int\fIn\fB, double *\fId\fB);
+FcResult FcPatternGetDouble (FcPattern *\fIp\fB, const char *\fIobject\fB, int \fIn\fB, double *\fId\fB);
 .sp
-FcResult FcPatternGetString (FcPattern *\fIp\fB, const char *\fIobject\fB, int\fIn\fB, char **const\fIs\fB);
+FcResult FcPatternGetString (FcPattern *\fIp\fB, const char *\fIobject\fB, int \fIn\fB, char **const\fIs\fB);
 .sp
-FcResult FcPatternGetMatrix (FcPattern *\fIp\fB, const char *\fIobject\fB, int\fIn\fB, FcMatrix **\fIs\fB);
+FcResult FcPatternGetMatrix (FcPattern *\fIp\fB, const char *\fIobject\fB, int \fIn\fB, FcMatrix **\fIs\fB);
 .sp
-FcResult FcPatternGetCharSet (FcPattern *\fIp\fB, const char *\fIobject\fB, int\fIn\fB, FcCharSet **\fIc\fB);
+FcResult FcPatternGetCharSet (FcPattern *\fIp\fB, const char *\fIobject\fB, int \fIn\fB, FcCharSet **\fIc\fB);
 .sp
-FcResult FcPatternGetBool (FcPattern *\fIp\fB, const char *\fIobject\fB, int\fIn\fB, FcBool *\fIb\fB);
+FcResult FcPatternGetBool (FcPattern *\fIp\fB, const char *\fIobject\fB, int \fIn\fB, FcBool *\fIb\fB);
 \fR
 .SH "DESCRIPTION"
 .PP
@@ -32,4 +32,4 @@ copy of any data structure referenced by the return value.  Use these
 in preference to FcPatternGet to provide compile-time typechecking.
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.1
+Fontconfig version 2.4.2

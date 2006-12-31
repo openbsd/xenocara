@@ -377,21 +377,21 @@ CLASS="LITERAL"
 ></H3
 ><P
 >This is the top level element for a font configuration and can contain
-<CODE
-CLASS="SGMLTAG"
->dir</CODE
->, <CODE
-CLASS="SGMLTAG"
->cache</CODE
->, <CODE
-CLASS="SGMLTAG"
->include</CODE
->, <CODE
-CLASS="SGMLTAG"
->match</CODE
-> and <CODE
-CLASS="SGMLTAG"
->alias</CODE
+<TT
+CLASS="LITERAL"
+>&lt;dir&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;cache&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;include&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;match&gt;</TT
+> and <TT
+CLASS="LITERAL"
+>&lt;alias&gt;</TT
 > elements in any order.
   </P
 ></DIV
@@ -401,9 +401,9 @@ CLASS="REFSECT2"
 NAME="AEN67"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->dir</CODE
+><TT
+CLASS="LITERAL"
+>&lt;dir&gt;</TT
 ></H3
 ><P
 >This element contains a directory name which will be scanned for font files
@@ -416,9 +416,9 @@ CLASS="REFSECT2"
 NAME="AEN71"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->cache</CODE
+><TT
+CLASS="LITERAL"
+>&lt;cache&gt;</TT
 ></H3
 ><P
 >This element contains a file name for the per-user cache of font
@@ -426,12 +426,12 @@ information.  If it starts with '~', it refers to a file in the users
 home directory.  This file is used to hold information about fonts that
 isn't present in the per-directory cache files.  It is automatically
 maintained by the fontconfig library.  The default for this file 
-is ``~/.fonts.cache-<CODE
-CLASS="SGMLTAG"
->version</CODE
->'', where <CODE
-CLASS="SGMLTAG"
->version</CODE
+is ``~/.fonts.cache-<TT
+CLASS="LITERAL"
+>&lt;version&gt;</TT
+>'', where <TT
+CLASS="LITERAL"
+>&lt;version&gt;</TT
 > is the font configuration
 file version number (currently 2).
   </P
@@ -442,9 +442,9 @@ CLASS="REFSECT2"
 NAME="AEN77"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->include ignore_missing="no"</CODE
+><TT
+CLASS="LITERAL"
+>&lt;include ignore_missing="no"&gt;</TT
 ></H3
 ><P
 >This element contains the name of an additional configuration file or
@@ -463,21 +463,21 @@ CLASS="REFSECT2"
 NAME="AEN81"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->config</CODE
+><TT
+CLASS="LITERAL"
+>&lt;config&gt;</TT
 ></H3
 ><P
 >This element provides a place to consolidate additional configuration
-information.  <CODE
-CLASS="SGMLTAG"
->config</CODE
-> can contain <CODE
-CLASS="SGMLTAG"
->blank</CODE
-> and <CODE
-CLASS="SGMLTAG"
->rescan</CODE
+information.  <TT
+CLASS="LITERAL"
+>&lt;config&gt;</TT
+> can contain <TT
+CLASS="LITERAL"
+>&lt;blank&gt;</TT
+> and <TT
+CLASS="LITERAL"
+>&lt;rescan&gt;</TT
 > elements in any
 order.
   </P
@@ -488,19 +488,19 @@ CLASS="REFSECT2"
 NAME="AEN88"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->blank</CODE
+><TT
+CLASS="LITERAL"
+>&lt;blank&gt;</TT
 ></H3
 ><P
 >Fonts often include "broken" glyphs which appear in the encoding but are
-drawn as blanks on the screen.  Within the <CODE
-CLASS="SGMLTAG"
->blank</CODE
+drawn as blanks on the screen.  Within the <TT
+CLASS="LITERAL"
+>&lt;blank&gt;</TT
 > element, place each
-Unicode characters which is supposed to be blank in an <CODE
-CLASS="SGMLTAG"
->int</CODE
+Unicode characters which is supposed to be blank in an <TT
+CLASS="LITERAL"
+>&lt;int&gt;</TT
 > element.
 Characters outside of this set which are drawn as blank will be elided from
 the set of characters supported by the font.
@@ -512,17 +512,17 @@ CLASS="REFSECT2"
 NAME="AEN94"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->rescan</CODE
+><TT
+CLASS="LITERAL"
+>&lt;rescan&gt;</TT
 ></H3
 ><P
->The <CODE
-CLASS="SGMLTAG"
->rescan</CODE
-> element holds an <CODE
-CLASS="SGMLTAG"
->int</CODE
+>The <TT
+CLASS="LITERAL"
+>&lt;rescan&gt;</TT
+> element holds an <TT
+CLASS="LITERAL"
+>&lt;int&gt;</TT
 > element which indicates the default
 interval between automatic checks for font configuration changes.
 Fontconfig will validate all of the configuration files and directories and
@@ -535,9 +535,9 @@ CLASS="REFSECT2"
 NAME="AEN100"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->selectfont</CODE
+><TT
+CLASS="LITERAL"
+>&lt;selectfont&gt;</TT
 ></H3
 ><P
 >This element is used to black/white list fonts from being listed or matched
@@ -550,9 +550,9 @@ CLASS="REFSECT2"
 NAME="AEN104"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->acceptfont</CODE
+><TT
+CLASS="LITERAL"
+>&lt;acceptfont&gt;</TT
 ></H3
 ><P
 >Fonts matched by an acceptfont element are "whitelisted"; such fonts are
@@ -568,9 +568,9 @@ CLASS="REFSECT2"
 NAME="AEN108"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->rejectfont</CODE
+><TT
+CLASS="LITERAL"
+>&lt;rejectfont&gt;</TT
 ></H3
 ><P
 >Fonts matched by an rejectfont element are "blacklisted"; such fonts are
@@ -585,9 +585,9 @@ CLASS="REFSECT2"
 NAME="AEN112"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->glob</CODE
+><TT
+CLASS="LITERAL"
+>&lt;glob&gt;</TT
 ></H3
 ><P
 >Glob elements hold shell-style filename matching patterns (including ? and
@@ -604,9 +604,9 @@ CLASS="REFSECT2"
 NAME="AEN116"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->pattern</CODE
+><TT
+CLASS="LITERAL"
+>&lt;pattern&gt;</TT
 ></H3
 ><P
 >Pattern elements perform list-style matching on incoming fonts; that is,
@@ -623,9 +623,9 @@ CLASS="REFSECT2"
 NAME="AEN120"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->patelt name="property"</CODE
+><TT
+CLASS="LITERAL"
+>&lt;patelt name="property"&gt;</TT
 ></H3
 ><P
 >Patelt elements hold a single pattern element and list of values.  They must
@@ -640,18 +640,18 @@ CLASS="REFSECT2"
 NAME="AEN124"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->match target="pattern"</CODE
+><TT
+CLASS="LITERAL"
+>&lt;match target="pattern"&gt;</TT
 ></H3
 ><P
->This element holds first a (possibly empty) list of <CODE
-CLASS="SGMLTAG"
->test</CODE
+>This element holds first a (possibly empty) list of <TT
+CLASS="LITERAL"
+>&lt;test&gt;</TT
 > elements and then
-a (possibly empty) list of <CODE
-CLASS="SGMLTAG"
->edit</CODE
+a (possibly empty) list of <TT
+CLASS="LITERAL"
+>&lt;edit&gt;</TT
 > elements.  Patterns which match all of the
 tests are subjected to all the edits.  If 'target' is set to "font" instead
 of the default "pattern", then this element applies to the font name
@@ -666,9 +666,9 @@ CLASS="REFSECT2"
 NAME="AEN130"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->test qual="any" name="property" target="default" compare="eq"</CODE
+><TT
+CLASS="LITERAL"
+>&lt;test qual="any" name="property" target="default" compare="eq"&gt;</TT
 ></H3
 ><P
 >This element contains a single value which is compared with the target
@@ -689,17 +689,17 @@ CLASS="REFSECT2"
 NAME="AEN134"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->edit name="property" mode="assign" binding="weak"</CODE
+><TT
+CLASS="LITERAL"
+>&lt;edit name="property" mode="assign" binding="weak"&gt;</TT
 ></H3
 ><P
 >This element contains a list of expression elements (any of the value or
 operator elements).  The expression elements are evaluated at run-time and
 modify the property "property".  The modification depends on whether
-"property" was matched by one of the associated <CODE
-CLASS="SGMLTAG"
->test</CODE
+"property" was matched by one of the associated <TT
+CLASS="LITERAL"
+>&lt;test&gt;</TT
 > elements, if so, the
 modification may affect the first matched value.  Any values inserted into
 the property are given the indicated binding ("strong", "weak" or "same")
@@ -725,23 +725,23 @@ CLASS="REFSECT2"
 NAME="AEN140"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->int</CODE
->, <CODE
-CLASS="SGMLTAG"
->double</CODE
->, <CODE
-CLASS="SGMLTAG"
->string</CODE
->, <CODE
-CLASS="SGMLTAG"
->bool</CODE
+><TT
+CLASS="LITERAL"
+>&lt;int&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;double&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;string&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;bool&gt;</TT
 ></H3
 ><P
->These elements hold a single value of the indicated type.  <CODE
-CLASS="SGMLTAG"
->bool</CODE
+>These elements hold a single value of the indicated type.  <TT
+CLASS="LITERAL"
+>&lt;bool&gt;</TT
 >
 elements hold either true or false.  An important limitation exists in
 the parsing of floating point numbers -- fontconfig requires that
@@ -756,14 +756,14 @@ CLASS="REFSECT2"
 NAME="AEN148"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->matrix</CODE
+><TT
+CLASS="LITERAL"
+>&lt;matrix&gt;</TT
 ></H3
 ><P
->This element holds the four <CODE
-CLASS="SGMLTAG"
->double</CODE
+>This element holds the four <TT
+CLASS="LITERAL"
+>&lt;double&gt;</TT
 > elements of an affine
 transformation.
   </P
@@ -774,9 +774,9 @@ CLASS="REFSECT2"
 NAME="AEN153"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->name</CODE
+><TT
+CLASS="LITERAL"
+>&lt;name&gt;</TT
 ></H3
 ><P
 >Holds a property name.  Evaluates to the first value from the property of
@@ -789,9 +789,9 @@ CLASS="REFSECT2"
 NAME="AEN157"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->const</CODE
+><TT
+CLASS="LITERAL"
+>&lt;const&gt;</TT
 ></H3
 ><P
 >Holds the name of a constant; these are always integers and serve as
@@ -850,33 +850,33 @@ CLASS="REFSECT2"
 NAME="AEN162"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->or</CODE
->, <CODE
-CLASS="SGMLTAG"
->and</CODE
->, <CODE
-CLASS="SGMLTAG"
->plus</CODE
->, <CODE
-CLASS="SGMLTAG"
->minus</CODE
->, <CODE
-CLASS="SGMLTAG"
->times</CODE
->, <CODE
-CLASS="SGMLTAG"
->divide</CODE
+><TT
+CLASS="LITERAL"
+>&lt;or&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;and&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;plus&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;minus&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;times&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;divide&gt;</TT
 ></H3
 ><P
 >These elements perform the specified operation on a list of expression
-elements.  <CODE
-CLASS="SGMLTAG"
->or</CODE
-> and <CODE
-CLASS="SGMLTAG"
->and</CODE
+elements.  <TT
+CLASS="LITERAL"
+>&lt;or&gt;</TT
+> and <TT
+CLASS="LITERAL"
+>&lt;and&gt;</TT
 > are boolean, not bitwise.
       </P
 ></DIV
@@ -886,24 +886,24 @@ CLASS="REFSECT2"
 NAME="AEN173"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->eq</CODE
->, <CODE
-CLASS="SGMLTAG"
->not_eq</CODE
->, <CODE
-CLASS="SGMLTAG"
->less</CODE
->, <CODE
-CLASS="SGMLTAG"
->less_eq</CODE
->, <CODE
-CLASS="SGMLTAG"
->more</CODE
->, <CODE
-CLASS="SGMLTAG"
->more_eq</CODE
+><TT
+CLASS="LITERAL"
+>&lt;eq&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;not_eq&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;less&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;less_eq&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;more&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;more_eq&gt;</TT
 ></H3
 ><P
 >These elements compare two values, producing a boolean result.
@@ -915,9 +915,9 @@ CLASS="REFSECT2"
 NAME="AEN182"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->not</CODE
+><TT
+CLASS="LITERAL"
+>&lt;not&gt;</TT
 ></H3
 ><P
 >Inverts the boolean sense of its one expression element
@@ -929,9 +929,9 @@ CLASS="REFSECT2"
 NAME="AEN186"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->if</CODE
+><TT
+CLASS="LITERAL"
+>&lt;if&gt;</TT
 ></H3
 ><P
 >This element takes three expression elements; if the value of the first is
@@ -945,46 +945,46 @@ CLASS="REFSECT2"
 NAME="AEN190"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->alias</CODE
+><TT
+CLASS="LITERAL"
+>&lt;alias&gt;</TT
 ></H3
 ><P
 >Alias elements provide a shorthand notation for the set of common match
 operations needed to substitute one font family for another.  They contain a
-<CODE
-CLASS="SGMLTAG"
->family</CODE
-> element followed by optional <CODE
-CLASS="SGMLTAG"
->prefer</CODE
->, <CODE
-CLASS="SGMLTAG"
->accept</CODE
-> and <CODE
-CLASS="SGMLTAG"
->default</CODE
+<TT
+CLASS="LITERAL"
+>&lt;family&gt;</TT
+> element followed by optional <TT
+CLASS="LITERAL"
+>&lt;prefer&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;accept&gt;</TT
+> and <TT
+CLASS="LITERAL"
+>&lt;default&gt;</TT
 >
-elements.  Fonts matching the <CODE
-CLASS="SGMLTAG"
->family</CODE
+elements.  Fonts matching the <TT
+CLASS="LITERAL"
+>&lt;family&gt;</TT
 > element are edited to prepend the
-list of <CODE
-CLASS="SGMLTAG"
->prefer</CODE
->ed families before the matching <CODE
-CLASS="SGMLTAG"
->family</CODE
+list of <TT
+CLASS="LITERAL"
+>&lt;prefer&gt;</TT
+>ed families before the matching <TT
+CLASS="LITERAL"
+>&lt;family&gt;</TT
 >, append the
-<CODE
-CLASS="SGMLTAG"
->accept</CODE
->able families after the matching <CODE
-CLASS="SGMLTAG"
->family</CODE
-> and append the <CODE
-CLASS="SGMLTAG"
->default</CODE
+<TT
+CLASS="LITERAL"
+>&lt;accept&gt;</TT
+>able families after the matching <TT
+CLASS="LITERAL"
+>&lt;family&gt;</TT
+> and append the <TT
+CLASS="LITERAL"
+>&lt;default&gt;</TT
 >
 families to the end of the family list.
   </P
@@ -995,9 +995,9 @@ CLASS="REFSECT2"
 NAME="AEN204"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->family</CODE
+><TT
+CLASS="LITERAL"
+>&lt;family&gt;</TT
 ></H3
 ><P
 >Holds a single font family name
@@ -1009,42 +1009,38 @@ CLASS="REFSECT2"
 NAME="AEN208"
 ></A
 ><H3
-><CODE
-CLASS="SGMLTAG"
->prefer</CODE
->, <CODE
-CLASS="SGMLTAG"
->accept</CODE
->, <CODE
-CLASS="SGMLTAG"
->default</CODE
+><TT
+CLASS="LITERAL"
+>&lt;prefer&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;accept&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;default&gt;</TT
 ></H3
 ><P
->These hold a list of <CODE
-CLASS="SGMLTAG"
->family</CODE
-> elements to be used by the <CODE
-CLASS="SGMLTAG"
->alias</CODE
+>These hold a list of <TT
+CLASS="LITERAL"
+>&lt;family&gt;</TT
+> elements to be used by the <TT
+CLASS="LITERAL"
+>&lt;alias&gt;</TT
 > element.
-<CODE
-CLASS="SGMLTAG"
->/article</CODE
->
   </P
 ></DIV
 ></DIV
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN217"
+NAME="AEN216"
 ></A
 ><H2
 >EXAMPLE CONFIGURATION FILE</H2
 ><DIV
 CLASS="REFSECT2"
 ><A
-NAME="AEN219"
+NAME="AEN218"
 ></A
 ><H3
 >System configuration file</H3
@@ -1138,7 +1134,7 @@ CLASS="PROGRAMLISTING"
 ><DIV
 CLASS="REFSECT2"
 ><A
-NAME="AEN223"
+NAME="AEN222"
 ></A
 ><H3
 >User configuration file</H3
@@ -1173,7 +1169,7 @@ CLASS="PROGRAMLISTING"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN227"
+NAME="AEN226"
 ></A
 ><H2
 >Files</H2
@@ -1241,7 +1237,7 @@ per-directory caches.  This file is automatically maintained by fontconfig.
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN239"
+NAME="AEN238"
 ></A
 ><H2
 >See Also</H2
@@ -1252,12 +1248,12 @@ NAME="AEN239"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN242"
+NAME="AEN241"
 ></A
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.4.1
+>Fontconfig version 2.4.2
 
 	    </P
 ></DIV

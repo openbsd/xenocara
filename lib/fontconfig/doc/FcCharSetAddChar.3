@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcCharSetAddChar" "3" "15 September 2006" "" ""
+.TH "FcCharSetAddChar" "3" "02 December 2006" "" ""
 
 .SH NAME
 FcCharSetAddChar \- Add a character to a charset
@@ -11,7 +11,7 @@ FcCharSetAddChar \- Add a character to a charset
 .sp
 \fB#include <fontconfig.h>
 .sp
-FcBool FcCharSetAddChar (FcCharSet *\fIfcs\fB, FcChar32\fIucs4\fB);
+FcBool FcCharSetAddChar (FcCharSet *\fIfcs\fB, FcChar32 \fIucs4\fB);
 \fR
 .SH "DESCRIPTION"
 .PP
@@ -20,4 +20,4 @@ returning FcFalse on failure, either as a result of a constant set or from
 running out of memory.
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.1
+Fontconfig version 2.4.2
