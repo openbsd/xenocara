@@ -1834,7 +1834,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=fontconfig
- VERSION=2.4.1
+ VERSION=2.4.2
 
 
 cat >>confdefs.h <<_ACEOF
@@ -1990,11 +1990,11 @@ fi
 
 
 
-LT_CURRENT=2
+LT_CURRENT=3
 LT_REVISION=0
 
 
-LT_AGE=1
+LT_AGE=2
 
 LT_VERSION_INFO="$LT_CURRENT:$LT_REVISION:$LT_AGE"
 
@@ -20672,7 +20672,9 @@ rm -f conftest.mmap
 
 
 
-for ac_func in geteuid getuid link memmove memset mkstemp strchr strrchr strtol getopt getopt_long sysconf ftruncate chsize rand_r
+
+
+for ac_func in geteuid getuid link memmove memset mkstemp strchr strrchr strtol getopt getopt_long sysconf ftruncate chsize rand random lrand48
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $ac_func" >&5
@@ -22162,7 +22164,7 @@ default_docs="yes"
 # Check if docs exist or can be created
 #
 if test x$HASDOCBOOK = xno; then
-	if test -f doc/fonts-conf.5; then
+	if test -f $srcdir/doc/fonts-conf.5; then
 		:
 	else
 		default_docs="no"
@@ -22226,7 +22228,7 @@ fi
 
 
 
-                                                                                                                                                                                                        ac_config_files="$ac_config_files Makefile fontconfig/Makefile fc-lang/Makefile fc-glyphname/Makefile fc-case/Makefile fc-arch/Makefile src/Makefile src/fontconfig.def conf.d/Makefile fc-cache/Makefile fc-cat/Makefile fc-list/Makefile fc-match/Makefile doc/Makefile doc/version.sgml test/Makefile fontconfig.spec fontconfig.pc fonts.conf fontconfig-zip"
+                                                                                                                                                                                              ac_config_files="$ac_config_files Makefile fontconfig/Makefile fc-lang/Makefile fc-glyphname/Makefile fc-case/Makefile fc-arch/Makefile src/Makefile conf.d/Makefile fc-cache/Makefile fc-cat/Makefile fc-list/Makefile fc-match/Makefile doc/Makefile doc/version.sgml test/Makefile fontconfig.spec fontconfig.pc fonts.conf fontconfig-zip"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -22832,7 +22834,6 @@ do
   "fc-case/Makefile" ) CONFIG_FILES="$CONFIG_FILES fc-case/Makefile" ;;
   "fc-arch/Makefile" ) CONFIG_FILES="$CONFIG_FILES fc-arch/Makefile" ;;
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
-  "src/fontconfig.def" ) CONFIG_FILES="$CONFIG_FILES src/fontconfig.def" ;;
   "conf.d/Makefile" ) CONFIG_FILES="$CONFIG_FILES conf.d/Makefile" ;;
   "fc-cache/Makefile" ) CONFIG_FILES="$CONFIG_FILES fc-cache/Makefile" ;;
   "fc-cat/Makefile" ) CONFIG_FILES="$CONFIG_FILES fc-cat/Makefile" ;;

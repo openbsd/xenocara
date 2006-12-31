@@ -15,8 +15,6 @@
 @SET_MAKE@
 
 #
-# $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 18:42:23 matthieu Exp $
-#
 # Copyright © 2003 Keith Packard
 #
 # Permission to use, copy, modify, distribute, and sell this software and its
@@ -63,14 +61,14 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = src
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/fontconfig.def.in
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES = fontconfig.def
+CONFIG_CLEAN_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -81,9 +79,6 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libfontconfig_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
 am_libfontconfig_la_OBJECTS = fcatomic.lo fcblanks.lo fccache.lo \
 	fccfg.lo fccharset.lo fcdbg.lo fcdefault.lo fcdir.lo \
 	fcfreetype.lo fcfs.lo fcinit.lo fclang.lo fclist.lo fcmatch.lo \
@@ -258,6 +253,8 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 @OS_WIN32_TRUE@export_symbols = -export-symbols fontconfig.def
+@OS_WIN32_FALSE@fontconfig_def_dependency = 
+@OS_WIN32_TRUE@fontconfig_def_dependency = fontconfig.def
 
 # Microsoft import library install/uninstall
 @MS_LIB_AVAILABLE_TRUE@noinst_DATA = fontconfig.lib
@@ -271,7 +268,7 @@ INCLUDES = \
 	-DFC_CACHEDIR='"$(FC_CACHEDIR)"'                \
 	-DFONTCONFIG_PATH='"$(CONFDIR)"'
 
-EXTRA_DIST = fontconfig.def.in makealias
+EXTRA_DIST = makealias
 noinst_HEADERS = fcint.h
 ALIAS_FILES = fcalias.h fcaliastail.h
 BUILT_SOURCES = $(ALIAS_FILES)
@@ -304,6 +301,7 @@ libfontconfig_la_LDFLAGS = \
 	-version-info @LT_VERSION_INFO@ -no-undefined $(export_symbols)
 
 libfontconfig_la_LIBADD = $(ICONV_LIBS) $(FREETYPE_LIBS) $(LIBXML2_LIBS) $(EXPAT_LIBS)
+libfontconfig_la_DEPENDENCIES = $(fontconfig_def_dependency)
 PUBLIC_FILES = \
 	$(top_srcdir)/fontconfig/fontconfig.h \
 	$(top_srcdir)/fontconfig/fcfreetype.h \
@@ -344,8 +342,6 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-fontconfig.def: $(top_builddir)/config.status $(srcdir)/fontconfig.def.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
 	test -z "$(libdir)" || $(mkdir_p) "$(DESTDIR)$(libdir)"
@@ -643,6 +639,16 @@ fcaliastail.h: fcalias.h
 
 fcalias.h: $(top_srcdir)/src/makealias $(PUBLIC_FILES)
 	sh $(top_srcdir)/src/makealias "$(top_srcdir)/src" $(PUBLIC_FILES)
+
+fontconfig.def: $(PUBLIC_FILES)
+	echo Generating $@
+	(echo EXPORTS; \
+	(cat $(PUBLIC_FILES) || echo 'FcERROR ()' ) | \
+ 	grep '^Fc[^ ]* *(' | sed -e 's/ *(.*$$//' -e 's/^/	/' | \
+	sort; \
+	echo LIBRARY libfontconfig-@LT_CURRENT_MINUS_AGE@.dll; \
+	echo VERSION @LT_CURRENT@.@LT_REVISION@) >$@
+	@ ! grep -q FcERROR $@ || ($(RM) $@; false)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

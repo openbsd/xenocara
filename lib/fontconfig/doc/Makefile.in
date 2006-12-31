@@ -15,8 +15,6 @@
 @SET_MAKE@
 
 #
-# $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 18:41:58 matthieu Exp $
-#
 # Copyright © 2003 Keith Packard
 #
 # Permission to use, copy, modify, distribute, and sell this software and its
@@ -312,9 +310,10 @@ EXTRA_DIST = $(LOCAL_DOCS) $(SGML) $(DOC_FUNCS_FNCS) func.sgml confdir.sgml.in
 SUFFIXES = .fncs .sgml .txt .html
 @USEDOCBOOK_TRUE@STRIPNL = awk '{ if (NR > 1) printf ("\n"); printf ("%s", $$0); }'
 @USEDOCBOOK_TRUE@CLEANFILES = confdir.sgml local-fontconfig-user.sgml local-fontconfig-devel.sgml
+@USEDOCBOOK_FALSE@htmldoc_DATA = $(srcdir)/$(HTML_DIR)/*
+@USEDOCBOOK_TRUE@htmldoc_DATA = $(HTML_DIR)/*
 htmldocdir = $(docdir)/$(HTML_DIR)
 doc_DATA = $(DOC_FILES)
-htmldoc_DATA = $(HTML_DIR)/*
 all: all-am
 
 .SUFFIXES:
@@ -752,7 +751,7 @@ uninstall-man: uninstall-man3 uninstall-man5
 
 @USEDOCBOOK_TRUE@fontconfig-devel.pdf: local-fontconfig-devel.sgml $(DOC_FUNCS_SGML) version.sgml confdir.sgml
 @USEDOCBOOK_TRUE@	$(RM) $@
-@USEDOCBOOK_TRUE@	../missing --run $(DOC2PDF) $< && mv local-$@ $@ \
+@USEDOCBOOK_TRUE@	$(top_srcdir)/missing --run $(DOC2PDF) $< && mv local-$@ $@ \
 @USEDOCBOOK_TRUE@	|| echo Failed to generate $@ >&2; \
 @USEDOCBOOK_TRUE@	(test -f $@ || echo $(DOC2PDF) is required to generate this file >> $@)
 
@@ -770,16 +769,16 @@ uninstall-man: uninstall-man3 uninstall-man5
 
 @USEDOCBOOK_TRUE@fontconfig-user.pdf: local-fontconfig-user.sgml version.sgml confdir.sgml
 @USEDOCBOOK_TRUE@	$(RM) $@
-@USEDOCBOOK_TRUE@	../missing --run $(DOC2PDF) $< && mv local-$@ $@ \
+@USEDOCBOOK_TRUE@	$(top_srcdir)/missing --run $(DOC2PDF) $< && mv local-$@ $@ \
 @USEDOCBOOK_TRUE@	|| echo Failed to generate $@ >&2; \
 @USEDOCBOOK_TRUE@	(test -f $@ || echo $(DOC2PDF) is required to generate this file >> $@)
 @USEDOCBOOK_TRUE@confdir.sgml: ${DOC_SRC}/confdir.sgml.in
 @USEDOCBOOK_TRUE@	sed "s,@CONFDIR\@,${CONFDIR}," < ${DOC_SRC}/confdir.sgml.in | $(STRIPNL) > confdir.sgml
 
+@USEDOCBOOK_TRUE@$(HTML_DIR)/*: $(HTML_DIR)
+
 @USEDOCBOOK_FALSE@all-local:
 @USEDOCBOOK_FALSE@clean-local:
-
-$(HTML_DIR)/*: $(HTML_DIR)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
