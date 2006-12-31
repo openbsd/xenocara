@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.10 2006/12/31 10:55:41 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.11 2006/12/31 16:00:03 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -39,10 +39,13 @@ PKG_CONFIG_PATH=	${X11BASE}/lib/pkgconfig
 # Autoconf cache
 _cache= --cache-file=${XENOCARA_OBJDIR}/xorg-config.cache.${MACHINE}
 
+CFLAGS+=	$(COPTS)
+
 MAKE_ENV+=	AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 		AUTOCONF_VERSION="$(AUTOCONF_VERSION)" \
 		ACLOCAL="aclocal -I ${X11BASE}/share/aclocal" \
-		PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)"
+		PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" \
+		CFLAGS="$(CFLAGS:C/ *$//)"
 
 .if !target(.MAIN)
 .MAIN: all
@@ -69,7 +72,7 @@ config.status:
 .if defined(XENOCARA_RERUN_AUTOCONF) && ${XENOCARA_RERUN_AUTOCONF:L} == "yes"
 	cd ${.CURDIR}; ${MAKE_ENV} autoreconf -v --install --force
 .endif
-	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" \
+	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" CFLAGS="$(CFLAGS:C/ *$//)" \
 		${CONFIGURE_ENV} ${.CURDIR}/configure --prefix=${X11BASE} \
 		--sysconfdir=/etc \
 		--mandir=${X11BASE}/man \
