@@ -1,7 +1,5 @@
-# $OpenBSD: Makefile,v 1.11 2006/12/23 13:08:07 matthieu Exp $
+# $OpenBSD: Makefile,v 1.12 2006/12/31 10:40:23 matthieu Exp $
 .include <bsd.own.mk>
-
-X11BASE?=	/usr/X11R6
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
 LOCALAPPX=/usr/local/lib/X11
