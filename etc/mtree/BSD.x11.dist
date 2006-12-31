@@ -1,4 +1,4 @@
-#     $OpenBSD: BSD.x11.dist,v 1.5 2006/12/18 22:38:54 matthieu Exp $
+#     $OpenBSD: BSD.x11.dist,v 1.6 2006/12/31 10:17:17 matthieu Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 .              
@@ -258,10 +258,6 @@
                 zh_TW.UTF-8    
                 ..
                 zh_TW.big5     
-                ..
-            ..
-            xkb            
-                compiled       
                 ..
             ..
             xserver        
