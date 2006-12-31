@@ -1328,4 +1328,7 @@
 ./usr/X11R6/share/X11/xserver/zh_TW.big5
 ./usr/X11R6/share/X11/xserver/zh_TW.euctw
 ./usr/X11R6/share/X11/xserver/zh_TW.utf8
+./var/db
+./var/db/xkb
+./var/db/xkb/README.compiled
 ./var/log

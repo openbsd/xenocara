@@ -30,7 +30,6 @@
 ./etc/X11/xkb/compat/pc98
 ./etc/X11/xkb/compat/xfree86
 ./etc/X11/xkb/compat/xtest
-./etc/X11/xkb/compiled
 ./etc/X11/xkb/geometry
 ./etc/X11/xkb/geometry.dir
 ./etc/X11/xkb/geometry/README
