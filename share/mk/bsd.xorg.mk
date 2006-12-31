@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.9 2006/12/17 20:41:36 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.10 2006/12/31 10:55:41 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -15,8 +15,6 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-.include <bsd.own.mk>
-
 .if exists(${.CURDIR}/../Makefile.inc)
 .include "${.CURDIR}/../Makefile.inc"
 .endif
@@ -31,9 +29,6 @@ XENOCARA_TOP?=		/usr/xenocara
 XENOCARA_OBJDIR?=	/usr/obj/xenocara
 
 # Where to install
-X11BASE?=		/usr/X11R6
-X11ETC?=		/etc/X11
-
 BINDIR?=		${X11BASE}/bin
 LIBDIR=			${X11BASE}/lib
 INCSDIR=		${X11BASE}/include
@@ -41,6 +36,7 @@ MANDIR=			${X11BASE}/man/cat
 
 PKG_CONFIG_PATH=	${X11BASE}/lib/pkgconfig
 
+# Autoconf cache
 _cache= --cache-file=${XENOCARA_OBJDIR}/xorg-config.cache.${MACHINE}
 
 MAKE_ENV+=	AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
@@ -69,25 +65,16 @@ all:	config.status
 .endif
 
 .if !target(config.status)
+config.status:
 .if defined(XENOCARA_RERUN_AUTOCONF) && ${XENOCARA_RERUN_AUTOCONF:L} == "yes"
-config.status: _xenocara_obj
 	cd ${.CURDIR}; ${MAKE_ENV} autoreconf -v --install --force
-	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" \
-		${CONFIGURE_ENV} ${.CURDIR}/configure \
-		--enable-maintainer-mode --prefix=${X11BASE} \
-		--sysconfdir=/etc \
-		--mandir=${X11BASE}/man \
-		${_cache} \
-		${CONFIGURE_ARGS}
-.else
-config.status: _xenocara_obj
+.endif
 	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" \
 		${CONFIGURE_ENV} ${.CURDIR}/configure --prefix=${X11BASE} \
 		--sysconfdir=/etc \
 		--mandir=${X11BASE}/man \
 		${_cache} \
 		${CONFIGURE_ARGS}
-.endif
 .endif
 
 .if !target(depend)
