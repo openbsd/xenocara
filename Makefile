@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.12 2006/12/31 10:40:23 matthieu Exp $
+# $OpenBSD: Makefile,v 1.13 2006/12/31 10:52:07 matthieu Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
@@ -20,7 +20,7 @@ build: beforebuild _SUBDIRUSE
 bootstrap:
 	${SUDO} ${MAKE} distrib-dirs
 	cd ${.CURDIR}/share/mk \
-		&& ${SUDO} ${MAKE} install
+		&& ${SUDO} ${MAKE} X11BASE=${X11BASE} install
 
 beforebuild: bootstrap
 	cd ${.CURDIR}/util/macros \
