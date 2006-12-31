@@ -305,13 +305,13 @@ man3_MANS = $(DOCMAN3)
 edit_sgml_SOURCES = edit-sgml.c
 docdir = @DOCDIR@
 DOC_FILES = $(TXT) $(PDF) $(HTML_FILES)
-LOCAL_DOCS = $(man3_MANS) $(man5_MANS) $(DOC_FILES) $(HTML_DIR)/*
+LOCAL_DOCS = $(man3_MANS) $(man5_MANS) $(DOC_FILES) $(HTML_DIR)/*.html
 EXTRA_DIST = $(LOCAL_DOCS) $(SGML) $(DOC_FUNCS_FNCS) func.sgml confdir.sgml.in
 SUFFIXES = .fncs .sgml .txt .html
 @USEDOCBOOK_TRUE@STRIPNL = awk '{ if (NR > 1) printf ("\n"); printf ("%s", $$0); }'
 @USEDOCBOOK_TRUE@CLEANFILES = confdir.sgml local-fontconfig-user.sgml local-fontconfig-devel.sgml
-@USEDOCBOOK_FALSE@htmldoc_DATA = $(srcdir)/$(HTML_DIR)/*
-@USEDOCBOOK_TRUE@htmldoc_DATA = $(HTML_DIR)/*
+@USEDOCBOOK_FALSE@htmldoc_DATA = $(srcdir)/$(HTML_DIR)/*.html
+@USEDOCBOOK_TRUE@htmldoc_DATA = $(HTML_DIR)/*.html
 htmldocdir = $(docdir)/$(HTML_DIR)
 doc_DATA = $(DOC_FILES)
 all: all-am
