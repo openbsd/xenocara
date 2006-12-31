@@ -82,7 +82,7 @@ edit_sgml_SOURCES=edit-sgml.c
 docdir=@DOCDIR@
 
 DOC_FILES=$(TXT) $(PDF) $(HTML_FILES)
-LOCAL_DOCS=$(man3_MANS) $(man5_MANS) $(DOC_FILES) $(HTML_DIR)/*
+LOCAL_DOCS=$(man3_MANS) $(man5_MANS) $(DOC_FILES) $(HTML_DIR)/*.html
 
 EXTRA_DIST=$(LOCAL_DOCS) $(SGML) $(DOC_FUNCS_FNCS) func.sgml confdir.sgml.in
 
@@ -168,13 +168,13 @@ confdir.sgml: ${DOC_SRC}/confdir.sgml.in
 
 CLEANFILES=confdir.sgml local-fontconfig-user.sgml local-fontconfig-devel.sgml
 
-htmldoc_DATA = $(HTML_DIR)/*
+htmldoc_DATA = $(HTML_DIR)/*.html
 
 $(HTML_DIR)/*: $(HTML_DIR)
 
 else
 
-htmldoc_DATA = $(srcdir)/$(HTML_DIR)/*
+htmldoc_DATA = $(srcdir)/$(HTML_DIR)/*.html
 
 all-local:
 clean-local:
