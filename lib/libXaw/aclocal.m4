@@ -7010,6 +7010,35 @@ fi
 rmdir .tst 2>/dev/null
 AC_SUBST([am__leading_dot])])
 
+# Add --enable-maintainer-mode option to configure.         -*- Autoconf -*-
+# From Jim Meyering
+
+# Copyright (C) 1996, 1998, 2000, 2001, 2002, 2003, 2004, 2005
+# Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# serial 4
+
+AC_DEFUN([AM_MAINTAINER_MODE],
+[AC_MSG_CHECKING([whether to enable maintainer-specific portions of Makefiles])
+  dnl maintainer-mode is disabled by default
+  AC_ARG_ENABLE(maintainer-mode,
+[  --enable-maintainer-mode  enable make rules and dependencies not useful
+			  (and sometimes confusing) to the casual installer],
+      USE_MAINTAINER_MODE=$enableval,
+      USE_MAINTAINER_MODE=no)
+  AC_MSG_RESULT([$USE_MAINTAINER_MODE])
+  AM_CONDITIONAL(MAINTAINER_MODE, [test $USE_MAINTAINER_MODE = yes])
+  MAINT=$MAINTAINER_MODE_TRUE
+  AC_SUBST(MAINT)dnl
+]
+)
+
+AU_DEFUN([jm_MAINTAINER_MODE], [AM_MAINTAINER_MODE])
+
 # Check to see how 'make' treats includes.	            -*- Autoconf -*-
 
 # Copyright (C) 2001, 2002, 2003, 2005  Free Software Foundation, Inc.
@@ -7416,7 +7445,7 @@ AC_DEFUN([XORG_MACROS_VERSION],[
 	XORG_MACROS_needed_major=`echo $XORG_MACROS_needed_version | sed 's/\..*$//'`
 	XORG_MACROS_needed_minor=`echo $XORG_MACROS_needed_version | sed -e 's/^[0-9]*\.//' -e 's/\..*$//'`]
 	AC_MSG_CHECKING([if xorg-macros used to generate configure is at least ${XORG_MACROS_needed_major}.${XORG_MACROS_needed_minor}])
-	[XORG_MACROS_version=1.1.2
+	[XORG_MACROS_version=1.1.4
 	XORG_MACROS_major=`echo $XORG_MACROS_version | sed 's/\..*$//'`
 	XORG_MACROS_minor=`echo $XORG_MACROS_version | sed -e 's/^[0-9]*\.//' -e 's/\..*$//'`]
 	if test $XORG_MACROS_major -ne $XORG_MACROS_needed_major ; then
@@ -7820,7 +7849,8 @@ dnl
 # --------------------
 # Adds --with/without-release-string and changes the PACKAGE and
 # PACKAGE_TARNAME to use "$PACKAGE{_TARNAME}-$RELEASE_VERSION".  If
-# no option is given, PACKAGE and PACKAGE_TARNAME are unchanged.
+# no option is given, PACKAGE and PACKAGE_TARNAME are unchanged.  Also
+# defines PACKAGE_VERSION_{MAJOR,MINOR,PATCHLEVEL} for modules to use.
  
 AC_DEFUN([XORG_RELEASE_VERSION],[
 	AC_ARG_WITH(release-version,
@@ -7833,5 +7863,22 @@ AC_DEFUN([XORG_RELEASE_VERSION],[
 		PACKAGE_TARNAME="$PACKAGE_TARNAME-$RELEASE_VERSION"
 		AC_MSG_NOTICE([Building with package name set to $PACKAGE])
 	fi
+	AC_DEFINE_UNQUOTED([PACKAGE_VERSION_MAJOR],
+		[`echo $PACKAGE_VERSION | cut -d . -f 1`],
+		[Major version of this package])
+	PVM=`echo $PACKAGE_VERSION | cut -d . -f 2`
+	if test "x$PVM" = "x"; then
+		PVM="0"
+	fi
+	AC_DEFINE_UNQUOTED([PACKAGE_VERSION_MINOR],
+		[$PVM],
+		[Minor version of this package])
+	PVP=`echo $PACKAGE_VERSION | cut -d . -f 3`
+	if test "x$PVP" = "x"; then
+		PVP="0"
+	fi
+	AC_DEFINE_UNQUOTED([PACKAGE_VERSION_PATCHLEVEL],
+		[$PVP],
+		[Patch version of this package])
 ])
 
