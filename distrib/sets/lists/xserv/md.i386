@@ -234,6 +234,8 @@
 ./usr/X11R6/lib/modules/drivers/vesa_drv.so
 ./usr/X11R6/lib/modules/drivers/vga_drv.la
 ./usr/X11R6/lib/modules/drivers/vga_drv.so
+./usr/X11R6/lib/modules/drivers/via_drv.la
+./usr/X11R6/lib/modules/drivers/via_drv.so
 ./usr/X11R6/lib/modules/drivers/vmware_drv.la
 ./usr/X11R6/lib/modules/drivers/vmware_drv.so
 ./usr/X11R6/lib/modules/drivers/voodoo_drv.la
@@ -419,6 +421,7 @@
 ./usr/X11R6/man/man4/usbtablet.4
 ./usr/X11R6/man/man4/vesa.4
 ./usr/X11R6/man/man4/vga.4
+./usr/X11R6/man/man4/via.4
 ./usr/X11R6/man/man4/vmmouse.4
 ./usr/X11R6/man/man4/vmware.4
 ./usr/X11R6/man/man4/void.4
