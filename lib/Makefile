@@ -11,6 +11,13 @@ SUBDIR= freetype expat fontconfig libxtrans libXau libXdmcp \
 
 SUBDIR+= libGL libGLU libGLw
 
+DRM_ARCHES= alpha amd64 i386 macppc sparc64
+
+.for a in $(DRM_ARCHES)
+SUBDIR_$a+= libdrm
+.endfor
+SUBDIR+= $(SUBDIR_$(MACHINE))
+
 .include <bsd.subdir.mk>
 
 build: _SUBDIRUSE
