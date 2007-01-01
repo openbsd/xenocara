@@ -231,8 +231,6 @@
 ./usr/X11R6/lib/modules/drivers/vga_drv.so
 ./usr/X11R6/lib/modules/drivers/vmware_drv.la
 ./usr/X11R6/lib/modules/drivers/vmware_drv.so
-./usr/X11R6/lib/modules/drivers/wsfb_drv.la
-./usr/X11R6/lib/modules/drivers/wsfb_drv.so
 ./usr/X11R6/lib/modules/extensions
 ./usr/X11R6/lib/modules/extensions/libGLcore.la
 ./usr/X11R6/lib/modules/extensions/libGLcore.so
@@ -413,7 +411,6 @@
 ./usr/X11R6/man/man4/vmmouse.4
 ./usr/X11R6/man/man4/vmware.4
 ./usr/X11R6/man/man4/void.4
-./usr/X11R6/man/man4/wsfb.4
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/share/X11/xserver
 ./usr/X11R6/share/X11/xserver/C
