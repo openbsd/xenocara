@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.8 2007/01/02 13:54:05 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.9 2007/01/02 14:04:55 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -43,9 +43,6 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#include <sys/param.h>
-#include <sys/sysctl.h>
-#include <machine/cpu.h>
 #include <dev/wscons/wsconsio.h>
 
 /* all driver need this */
@@ -91,7 +88,7 @@ extern int priv_open_device(const char *);
 #define WSFB_DEFAULT_DEV "/dev/ttyC0"
 #endif
 
-#define DEBUG 1
+#define DEBUG 0
 
 #if DEBUG
 # define TRACE_ENTER(str)       ErrorF("wsfb: " str " %d\n",pScrn->scrnIndex)
@@ -364,8 +361,7 @@ wsfb_mmap(size_t len, off_t off, int fd)
 static Bool
 WsfbProbe(DriverPtr drv, int flags)
 {
-	int i, fd, entity, mib[2], allowaperture;
-	size_t len;
+	int i, fd, entity;
        	GDevPtr *devSections;
 	int numDevSections;
 	char *dev;
@@ -381,19 +377,6 @@ WsfbProbe(DriverPtr drv, int flags)
 					      &devSections)) <= 0)
 		return FALSE;
 
-#ifdef CPU_ALLOWAPERTURE
-	mib[0] = CTL_MACHDEP;
-	mib[1] = CPU_ALLOWAPERTURE;
-	len = sizeof(allowaperture);
-	if (sysctl(mib, 2, &allowaperture, &len, NULL, 0) == -1) {
-		ErrorF("sysctl: %s\n", strerror(errno));
-		return FALSE;
-	}
-	if (allowaperture > 0) {
-		/* Don't attach if aperture driver is active */
-		return FALSE;
-	}
-#endif
 	for (i = 0; i < numDevSections; i++) {
 		ScrnInfoPtr pScrn = NULL;
 
@@ -424,9 +407,6 @@ WsfbProbe(DriverPtr drv, int flags)
 	}
 	xfree(devSections);
 	TRACE("probe done");
-#if DEBUG
-	ErrorF("foundScreen: %d\n", foundScreen);
-#endif
 	return foundScreen;
 }
 
@@ -530,12 +510,10 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 		return FALSE;
 
 	if (wstype == WSDISPLAY_TYPE_PCIVGA) {
-		struct wsdisplay_gfx_mode gfxmode;
-	
-		gfxmode.depth = pScrn->bitsPerPixel;
 		/* Set specified mode */
 		if (pScrn->display->modes != NULL &&
 		    pScrn->display->modes[0] != NULL) {
+			struct wsdisplay_gfx_mode gfxmode;
 			
 			if (sscanf(pScrn->display->modes[0], "%dx%d", 
 				&gfxmode.width, &gfxmode.height) != 2) {
@@ -544,16 +522,14 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 				    pScrn->display->modes[0]);
 				return FALSE;
 			}
-		} else {
-			gfxmode.width = 1024;
-			gfxmode.height = 768;
-		}
-		if (ioctl(fPtr->fd, WSDISPLAYIO_SETGFXMODE, 
-			&gfxmode) == -1) {
-			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-			    "ioctl WSDISPLAY_SETGFXMODE: %s\n", 
-			    strerror(errno));
-			return FALSE;
+			gfxmode.depth = pScrn->bitsPerPixel;
+			if (ioctl(fPtr->fd, WSDISPLAYIO_SETGFXMODE, 
+				&gfxmode) == -1) {
+				xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+				    "ioctl WSDISPLAY_SETGFXMODE: %s\n", 
+				    strerror(errno));
+				return FALSE;
+			}
 		}
 	}
 	if (ioctl(fPtr->fd, WSDISPLAYIO_GINFO, &fPtr->info) == -1) {
