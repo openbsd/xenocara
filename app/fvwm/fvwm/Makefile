@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2006/12/04 14:01:25 todd Exp $
+# $OpenBSD: Makefile,v 1.5 2007/01/02 13:07:35 matthieu Exp $
 
 .include "../Makefile.inc"
 
@@ -18,6 +18,8 @@ LDADD+= -lXpm -lXt -lICE -lSM -lXext -lX11 -lXdmcp -lXau
 
 fvwm.1: fvwm2.1
 	sed -e "s,__projectroot__,${X11BASE}," ${.CURDIR}/fvwm2.1 > fvwm.1 
+
+CLEANFILES= fvwm.1
 
 .include <bsd.prog.mk>
 .include <bsd.xorg.mk>
