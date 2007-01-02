@@ -1612,7 +1612,7 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
 	xf86Msg(X_ERROR, "Cannot locate a core pointer device.\n");
 	return FALSE;
     }
-
+#if 0
     /*
      * always synthesize a 'mouse' section configured to send core
      * events, unless a 'void' section is found, in which case the user
@@ -1641,7 +1641,7 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
 	    servlayoutp->inputs = indp;
 	}
     }
-
+#endif
     confInput = NULL;
 
     /* 1. Check for the -keyboard command line option. */
