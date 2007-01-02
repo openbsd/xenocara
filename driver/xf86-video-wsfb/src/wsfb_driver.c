@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.7 2006/12/08 21:57:37 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.8 2007/01/02 13:54:05 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -43,6 +43,9 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#include <machine/cpu.h>
 #include <dev/wscons/wsconsio.h>
 
 /* all driver need this */
@@ -88,7 +91,7 @@ extern int priv_open_device(const char *);
 #define WSFB_DEFAULT_DEV "/dev/ttyC0"
 #endif
 
-#define DEBUG 0
+#define DEBUG 1
 
 #if DEBUG
 # define TRACE_ENTER(str)       ErrorF("wsfb: " str " %d\n",pScrn->scrnIndex)
@@ -257,7 +260,9 @@ typedef struct {
 	size_t			fbmem_len;
 	int			rotate;
 	Bool			shadowFB;
+	void *			shadow;
 	CloseScreenProcPtr	CloseScreen;
+	CreateScreenResourcesProcPtr CreateScreenResources;
 	void			(*PointerMoved)(int, int, int);
 	EntityInfoPtr		pEnt;
 	struct wsdisplay_cmap	saved_cmap;
@@ -359,7 +364,8 @@ wsfb_mmap(size_t len, off_t off, int fd)
 static Bool
 WsfbProbe(DriverPtr drv, int flags)
 {
-	int i, fd, entity;
+	int i, fd, entity, mib[2], allowaperture;
+	size_t len;
        	GDevPtr *devSections;
 	int numDevSections;
 	char *dev;
@@ -375,6 +381,19 @@ WsfbProbe(DriverPtr drv, int flags)
 					      &devSections)) <= 0)
 		return FALSE;
 
+#ifdef CPU_ALLOWAPERTURE
+	mib[0] = CTL_MACHDEP;
+	mib[1] = CPU_ALLOWAPERTURE;
+	len = sizeof(allowaperture);
+	if (sysctl(mib, 2, &allowaperture, &len, NULL, 0) == -1) {
+		ErrorF("sysctl: %s\n", strerror(errno));
+		return FALSE;
+	}
+	if (allowaperture > 0) {
+		/* Don't attach if aperture driver is active */
+		return FALSE;
+	}
+#endif
 	for (i = 0; i < numDevSections; i++) {
 		ScrnInfoPtr pScrn = NULL;
 
@@ -405,6 +424,9 @@ WsfbProbe(DriverPtr drv, int flags)
 	}
 	xfree(devSections);
 	TRACE("probe done");
+#if DEBUG
+	ErrorF("foundScreen: %d\n", foundScreen);
+#endif
 	return foundScreen;
 }
 
@@ -508,10 +530,12 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 		return FALSE;
 
 	if (wstype == WSDISPLAY_TYPE_PCIVGA) {
+		struct wsdisplay_gfx_mode gfxmode;
+	
+		gfxmode.depth = pScrn->bitsPerPixel;
 		/* Set specified mode */
 		if (pScrn->display->modes != NULL &&
 		    pScrn->display->modes[0] != NULL) {
-			struct wsdisplay_gfx_mode gfxmode;
 			
 			if (sscanf(pScrn->display->modes[0], "%dx%d", 
 				&gfxmode.width, &gfxmode.height) != 2) {
@@ -520,14 +544,16 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 				    pScrn->display->modes[0]);
 				return FALSE;
 			}
-			gfxmode.depth = pScrn->bitsPerPixel;
-			if (ioctl(fPtr->fd, WSDISPLAYIO_SETGFXMODE, 
-				&gfxmode) == -1) {
-				xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-				    "ioctl WSDISPLAY_SETGFXMODE: %s\n", 
-				    strerror(errno));
-				return FALSE;
-			}
+		} else {
+			gfxmode.width = 1024;
+			gfxmode.height = 768;
+		}
+		if (ioctl(fPtr->fd, WSDISPLAYIO_SETGFXMODE, 
+			&gfxmode) == -1) {
+			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			    "ioctl WSDISPLAY_SETGFXMODE: %s\n", 
+			    strerror(errno));
+			return FALSE;
 		}
 	}
 	if (ioctl(fPtr->fd, WSDISPLAYIO_GINFO, &fPtr->info) == -1) {
@@ -790,12 +816,52 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 }
 
 static Bool
+WsfbCreateScreenResources(ScreenPtr pScreen)
+{
+	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	WsfbPtr fPtr = WSFBPTR(pScrn);
+	PixmapPtr pPixmap;
+	Bool ret;
+
+	pScreen->CreateScreenResources = fPtr->CreateScreenResources;
+	ret = pScreen->CreateScreenResources(pScreen);
+	pScreen->CreateScreenResources = WsfbCreateScreenResources;
+
+	if (!ret)
+		return FALSE;
+
+	pPixmap = pScreen->GetScreenPixmap(pScreen);
+
+	if (!shadowAdd(pScreen, pPixmap, fPtr->rotate ?
+		shadowUpdateRotatePackedWeak() : shadowUpdatePackedWeak(),
+		WsfbWindowLinear, fPtr->rotate, NULL)) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+
+static Bool
+WsfbShadowInit(ScreenPtr pScreen)
+{
+	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	WsfbPtr fPtr = WSFBPTR(pScrn);
+
+	if (!shadowSetup(pScreen))
+		return FALSE;
+	fPtr->CreateScreenResources = pScreen->CreateScreenResources;
+	pScreen->CreateScreenResources = WsfbCreateScreenResources;
+
+	return TRUE;
+}
+
+static Bool
 WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 {
 	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
 	WsfbPtr fPtr = WSFBPTR(pScrn);
 	VisualPtr visual;
-	int ret, flags, width, height, ncolors;
+	int ret, flags, ncolors;
 	int wsmode = WSDISPLAYIO_MODE_DUMBFB;
 	size_t len;
 
@@ -877,11 +943,9 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
 	if (fPtr->rotate == WSFB_ROTATE_CW 
 	    || fPtr->rotate == WSFB_ROTATE_CCW) {
-		height = pScrn->virtualX;
-		width = pScrn->displayWidth = pScrn->virtualY;
-	} else {
-		height = pScrn->virtualY;
-		width = pScrn->virtualX;
+		int tmp = pScrn->virtualX;
+		pScrn->virtualX = pScrn->displayWidth = pScrn->virtualY;
+		pScrn->virtualY = tmp;
 	}
 	if (fPtr->rotate && !fPtr->PointerMoved) {
 		fPtr->PointerMoved = pScrn->PointerMoved;
@@ -890,16 +954,27 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
 	fPtr->fbstart = fPtr->fbmem;
 
+	if (fPtr->shadowFB) {
+		fPtr->shadow = xcalloc(1, pScrn->virtualX * pScrn->virtualY *
+		    pScrn->bitsPerPixel);
+		
+		if (!fPtr->shadow) {
+			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			    "Failed to allocate shadow framebuffer\n");
+			return FALSE;
+		}
+	}
+
 	switch (pScrn->bitsPerPixel) {
 	case 1:
 		ret = xf1bppScreenInit(pScreen, fPtr->fbstart,
-				       width, height,
+				       pScrn->virtualX, pScrn->virtualY,
 				       pScrn->xDpi, pScrn->yDpi,
 				       fPtr->linebytes * 8);
 		break;
 	case 4:
 		ret = xf4bppScreenInit(pScreen, fPtr->fbstart,
-				       width, height,
+				       pScrn->virtualX, pScrn->virtualY,
 				       pScrn->xDpi, pScrn->yDpi,
 				       fPtr->linebytes * 2);
 		break;
@@ -908,11 +983,10 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	case 24:
 	case 32:
 		ret = fbScreenInit(pScreen,
-				   fPtr->fbstart,
-				   width, height,
-				   pScrn->xDpi, pScrn->yDpi,
-				   pScrn->displayWidth,
-				   pScrn->bitsPerPixel);
+		    fPtr->shadowFB ? fPtr->shadow : fPtr->fbstart,
+		    pScrn->virtualX, pScrn->virtualY,
+		    pScrn->xDpi, pScrn->yDpi,
+		    pScrn->displayWidth, pScrn->bitsPerPixel);
 		break;
 	default:
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -946,29 +1020,10 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 			xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 				   "RENDER extension initialisation failed.");
 	}
-	if (fPtr->shadowFB) {
-		PixmapPtr pPixmap;
-
-		if (pScrn->bitsPerPixel < 8) {
-			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-				   "Shadow FB not available on < 8 depth");
-		} else {
-			pPixmap = pScreen->CreatePixmap(pScreen, 
-			    pScreen->width, pScreen->height,
-			    pScreen->rootDepth);
-			if (!pPixmap)
-				return FALSE;
-    			if (!shadowSetup(pScreen) ||
-			    !shadowAdd(pScreen, pPixmap,
-				fPtr->rotate ? shadowUpdateRotatePackedWeak() :
-				shadowUpdatePackedWeak(),
-				WsfbWindowLinear, fPtr->rotate, NULL)) {
-				xf86DrvMsg(scrnIndex, X_ERROR,
-				    "Shadow FB initialization failed\n");
-				pScreen->DestroyPixmap(pPixmap);
-				return FALSE;
-			}
-		}
+	if (fPtr->shadowFB && !WsfbShadowInit(pScreen)) {
+		xf86DrvMsg(scrnIndex, X_ERROR,
+		    "shadow framebuffer initialization failed\n");
+		return FALSE;
 	}
 
 #ifdef XFreeXDGA
