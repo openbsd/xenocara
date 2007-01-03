@@ -191,6 +191,7 @@ case $host_cpu in
 	ALPHA_VIDEO=yes
 	case $host_os in
 		*netbsd*)	AC_DEFINE(USE_ALPHA_PIO, 1, [NetBSD PIO alpha IO]) ;;
+		*openbsd*)	SYS_LIBS=-lalpha ;;
 	esac
 	;;
   arm*)

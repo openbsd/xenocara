@@ -43,7 +43,7 @@
 #  include <machine/sysarch.h>
 #endif
 
-#include "xf86Axp.h"
+#include "shared/xf86Axp.h"
 
 #include "xf86_OSlib.h"
 #include "xf86OSpriv.h"
