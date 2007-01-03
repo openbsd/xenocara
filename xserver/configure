@@ -24187,6 +24187,7 @@ cat >>confdefs.h <<\_ACEOF
 #define USE_ALPHA_PIO 1
 _ACEOF
  ;;
+		*openbsd*)	SYS_LIBS=-lalpha ;;
 	esac
 	;;
   arm*)
