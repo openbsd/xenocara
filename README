@@ -60,7 +60,7 @@ target.
 The following steps will build and install everything for the first time.
 
  mkdir -p /usr/obj/xenocara
- cd xenorara
+ cd xenocara
  make bootstrap
  make obj
  make build
@@ -115,4 +115,4 @@ makefiles skeletons. For that use the following command:
 You can also set XENOCARA_RERUN_AUTOCONF in /etc/mk.conf to force
 regeneration of configure scripts in every component.
 
-$OpenBSD: README,v 1.6 2006/12/29 18:34:58 matthieu Exp $
+$OpenBSD: README,v 1.7 2007/01/04 20:56:55 matthieu Exp $
