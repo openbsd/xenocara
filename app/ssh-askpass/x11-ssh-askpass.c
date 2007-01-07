@@ -55,6 +55,7 @@
 #include <X11/Intrinsic.h>
 #include <X11/Shell.h>
 #include <X11/Xos.h>
+#include <X11/extensions/Xinerama.h>
 #include "dynlist.h"
 #include "drawing.h"
 #include "resources.h"
@@ -569,7 +570,7 @@ void createDialog(AppInfo *app)
       /* Make sure the indicators can all fit on the screen.
        * 80% of the screen width seems fine.
        */
-      Dimension maxWidth = (WidthOfScreen(app->screen) * 8 / 10);
+      Dimension maxWidth = (app->screen_width * 8 / 10);
       Dimension extraSpace = ((2 * d->w3.horizontalSpacing) +
 			      (2 * d->w3.shadowThickness));
       
@@ -690,8 +691,8 @@ void createDialog(AppInfo *app)
    calcButtonLabelPosition(&(d->okButton));
    calcButtonLabelPosition(&(d->cancelButton));
 
-   d->w3.w.x = (WidthOfScreen(app->screen) - d->w3.w.width) / 2;
-   d->w3.w.y = (HeightOfScreen(app->screen) - d->w3.w.height) / 3;
+   d->w3.w.x = (app->screen_width - d->w3.w.width) / 2;
+   d->w3.w.y = (app->screen_height - d->w3.w.height) / 3;
    
    app->dialog = d;
 }
@@ -1437,6 +1438,8 @@ int main(int argc, char **argv)
 {
    AppInfo app;
    XEvent event;
+   XineramaScreenInfo *screens;
+   int nscreens, i;
 
    memset(&app, 0, sizeof(app));
    
@@ -1484,12 +1487,26 @@ int main(int argc, char **argv)
 	 exit(EXIT_STATUS_ERROR);
       }
    }
-   
+
+   app.screen_width = WidthOfScreen(app.screen);
+   app.screen_height = HeightOfScreen(app.screen);
+   if (XineramaIsActive(app.dpy) &&
+      (screens = XineramaQueryScreens(app.dpy, &nscreens)) != NULL) {
+      for (i = 0; i < nscreens; i++) {
+         if (!screens[i].width || !screens[i].height)
+            continue;
+         app.screen_width = screens[i].width;
+         app.screen_height = screens[i].height;
+         break;
+      }
+      XFree(screens);
+   }
+
    app.xResolution =
-      WidthOfScreen(app.screen) * 1000 / WidthMMOfScreen(app.screen);
+      app.screen_width * 1000 / WidthMMOfScreen(app.screen);
    app.yResolution =
-      HeightOfScreen(app.screen) * 1000 / HeightMMOfScreen(app.screen);
-   
+      app.screen_height * 1000 / HeightMMOfScreen(app.screen);
+
    createDialog(&app);
    createGCs(&app);
    
