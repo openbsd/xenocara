@@ -1439,7 +1439,7 @@ int main(int argc, char **argv)
    AppInfo app;
    XEvent event;
    XineramaScreenInfo *screens;
-   int nscreens, i;
+   int nscreens;
 
    memset(&app, 0, sizeof(app));
    
@@ -1491,14 +1491,10 @@ int main(int argc, char **argv)
    app.screen_width = WidthOfScreen(app.screen);
    app.screen_height = HeightOfScreen(app.screen);
    if (XineramaIsActive(app.dpy) &&
-      (screens = XineramaQueryScreens(app.dpy, &nscreens)) != NULL) {
-      for (i = 0; i < nscreens; i++) {
-         if (!screens[i].width || !screens[i].height)
-            continue;
-         app.screen_width = screens[i].width;
-         app.screen_height = screens[i].height;
-         break;
-      }
+      (screens = XineramaQueryScreens(app.dpy, &nscreens)) != NULL &&
+      nscreens) {
+      app.screen_width = screens[0].width;
+      app.screen_height = screens[0].height;
       XFree(screens);
    }
 
