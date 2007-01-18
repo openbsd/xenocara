@@ -9,6 +9,7 @@ GLX=	${.CURDIR}/../../dist/Mesa/src/glx/x11
 MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
 
 INCSDIR=	${X11BASE}/include/GL
+LDADD=		-L${X11BASE}/lib -lXext -lX11
 
 CPP=	cpp -notraditional
 DEBUG=	
