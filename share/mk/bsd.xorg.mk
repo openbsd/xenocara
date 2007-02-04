@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.11 2006/12/31 16:00:03 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.12 2007/02/04 23:15:27 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -34,7 +34,7 @@ LIBDIR=			${X11BASE}/lib
 INCSDIR=		${X11BASE}/include
 MANDIR=			${X11BASE}/man/cat
 
-PKG_CONFIG_PATH=	${X11BASE}/lib/pkgconfig
+PKG_CONFIG_LIBDIR=	${X11BASE}/lib/pkgconfig
 
 # Autoconf cache
 _cache= --cache-file=${XENOCARA_OBJDIR}/xorg-config.cache.${MACHINE}
@@ -44,7 +44,7 @@ CFLAGS+=	$(COPTS)
 MAKE_ENV+=	AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 		AUTOCONF_VERSION="$(AUTOCONF_VERSION)" \
 		ACLOCAL="aclocal -I ${X11BASE}/share/aclocal" \
-		PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" \
+		PKG_CONFIG_LIBDIR="$(PKG_CONFIG_LIBDIR)" \
 		CFLAGS="$(CFLAGS:C/ *$//)"
 
 .if !target(.MAIN)
