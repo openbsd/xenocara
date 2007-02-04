@@ -1030,6 +1030,7 @@ DoConfigure()
     ErrorF("To test the server, run 'X -config %s'\n\n", filename);
 
 bail:
+    CloseWellKnownConnections();
     OsCleanup(TRUE);
     AbortDDX();
     fflush(stderr);
