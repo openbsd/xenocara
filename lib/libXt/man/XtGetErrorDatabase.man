@@ -136,16 +136,13 @@ XrmDatabase *XtGetErrorDatabase(void);
 .HP
 void XtGetErrorDatabaseText(char *\fIname\fP, char *\fItype\fP, char
 *\fIclass\fP, char *\fIdefault\fP, char *\fIbuffer_return\fP, int
-\fInbytes\fP, XrmDatabase \fIdatabase\fP); 
+\fInbytes\fP); 
 .SH ARGUMENTS
 .IP \fIbuffer_return\fP 1i
 Specifies the buffer into which the error message is to be returned.
 .ds Cl \ of the error message
 .IP \fIclass\fP 1i
 Specifies the resource class\*(Cl.
-.IP \fIdatabase\fP 1i
-Specifies the name of the alternative database that is to be used
-or NULL if the application's database is to be used.
 .IP \fIdefault\fP 1i
 Specifies the default message to use\*(Dm.
 .IP \fIname\fP 1i
