@@ -1,6 +1,15 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2007/01/29 22:06:35 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2007/03/02 20:26:20 matthieu Exp $
 
 DIST= ${.CURDIR}
+
+# Machines for which we don't build the Xorg Xserver
+NO_XORG_MACHINES=	armish aviion hppa hppa64 landisk \
+			mvme68k mvme88k mvmeppc sgi solbourne 
+
+.for M in ${NO_XORG_MACHINES} 
+NO_XORG_${M} = --disable-xorg
+.endfor
+NO_XORG_OPTION=${NO_XORG_${MACHINE}}
 
 CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--with-xkb-path=/etc/X11/xkb \
@@ -8,6 +17,6 @@ CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--with-module-dir=${LIBDIR}/modules \
 		--with-mesa-source=${XENOCARA_TOP}/dist/Mesa \
 		--enable-install-setuid --enable-privsep \
-		--disable-dmx
+		--disable-dmx ${NO_XORG_MACHINE}
 
 .include <bsd.xorg.mk>
