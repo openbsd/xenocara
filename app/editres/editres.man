@@ -1,3 +1,4 @@
+'\" t
 .\" $Xorg: editres.man,v 1.4 2001/02/09 02:05:29 xorgcvs Exp $
 .\" Copyright 1993, 1994, 1998  The Open Group
 .\" 
@@ -121,34 +122,21 @@ their children, it is not possible to get to every widget this way,
 but this mechanism does give very useful feedback between the elements
 in the widget tree and those in the actual application.
 .IP "Select All" 
-.br
-.ns 
 .IP "Unselect All"
-.br
-.ns 
 .IP "Invert All" 
 These functions allow the user to select, unselect, or invert all
 widgets in the widget tree.
 .IP "Select Children"
-.br
-.ns 
 .IP "Select Parents"
 These functions select the immediate parent or children of each of the
 currently selected widgets.
 .IP "Select Descendants"
-.br
-.ns 
 .IP "Select Ancestors"
 These functions select all parents or children of each of the
 currently selected widgets.  This is a recursive search.
 .IP "Show Widget Names"
-.br
-.ns 
 .IP "Show Class Names"
-.br
-.ns .IP "Show Widget IDs"
-.br
-.ns 
+.IP "Show Widget IDs"
 .IP "Show Widget Windows"
 When the tree widget is initially displayed the labels of each widget
 in the tree correspond to the widget names.  These functions will
@@ -174,25 +162,25 @@ the widget tree, by flashing the corresponding widget in the
 application \fInumFlashes\fP (three by default) times in the
 \fIflashColor\fP.
 .sp
-.nf
-.TA .5i 1.5i 4.0i
-.ta .5i 1.5i 4.0i
-	\fBKey	Option	Translation Entry\fP
-
-	space	Unselect	Select(nothing)
-	w	Select	Select(widget)
-	s	Select	Select(all)
-	i	Invert	Select(invert)
-	c	Select Children	Select(children)
-	d	Select Descendants	Select(descendants)
-	p	Select Parent	Select(parent)
-	a	Select Ancestors	Select(ancestors)
-	N	Show Widget Names	Relabel(name)
-	C	Show Class Names	Relabel(class)
-	I	Show Widget IDs	Relabel(id)
-	W	Show Widget Windows	Relabel(window)
-	T	Toggle Widget/Class Name	Relabel(toggle)
-.fi
+.TS
+lb lb lb
+l l l.
+Key	Option	Translation Entry
+-
+space	Unselect	Select(nothing)
+w	Select	Select(widget)
+s	Select	Select(all)
+i	Invert	Select(invert)
+c	Select Children	Select(children)
+d	Select Descendants	Select(descendants)
+p	Select Parent	Select(parent)
+a	Select Ancestors	Select(ancestors)
+N	Show Widget Names	Relabel(name)
+C	Show Class Names	Relabel(class)
+I	Show Widget IDs	Relabel(id)
+W	Show Widget Windows	Relabel(window)
+T	Toggle Widget/Class Name	Relabel(toggle)
+.TE
 .sp
 Clicking button 1 on a widget adds it to the set of selected widgets.
 Clicking button 2 on a widget deselects all other widgets and then
@@ -219,7 +207,7 @@ which will generalize this level to match any widget.
 The last line contains a set of special buttons called \fBAny
 Widget Chain\fP which will turn the single level into something that
 matches zero or more levels.
-.IP ""
+.sp
 The initial state of this area is the most restrictive, using the
 resource names and the dot separator.  By selecting the other buttons
 in this area you can ease the restrictions to allow more and more widgets
@@ -237,18 +225,15 @@ This next area allows you to enter the resource value.  This value
 should be entered exactly as you would type a line into your resource file.
 Thus it should contain no unescaped new-lines.  There are a few
 special character sequences for this file:
-.IP ""
+.sp
 \\n - This will be replaced with a newline.
-.br
 .sp
 \\### - Where # is any octal digit.  This will be replaced with a
 single byte that contains this sequence interpreted as an octal number.
 For example, a value containing a NULL byte can be stored by
 specifying \\000.
-.br
 .sp
 \\<new-line> - This will compress to nothing.
-.br
 .sp
 \\\\ - This will compress to a single backslash.
 .IP "Command Area"
@@ -273,7 +258,7 @@ users to put an application in states it may not be willing to handle,
 a hook has been provided to allow specific applications to
 block these SetValues
 requests (see \fBBlocking Editres Requests\fP below).
-.IP ""
+.sp
 Unfortunately due to design constraints imposed on the widgets by the X
 Toolkit and the Resource Manager, trying to coerce an inherently
 static system into dynamic behavior can cause strange results.  There
