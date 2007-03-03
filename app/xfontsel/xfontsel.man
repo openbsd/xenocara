@@ -219,11 +219,11 @@ to stderr but otherwise nothing bad (or good) happens.
 The average-width menu is too large to be useful.
 .SH COPYRIGHT
 Copyright 1989, 1991,  X Consortium
-.br
+.PP
 See \fIX(__miscmansuffix__)\fP for a full statement of rights and permissions.
 .SH AUTHOR
 .PP
 Ralph R. Swick, Digital Equipment Corporation/MIT Project Athena
-.br
+.PP
 Mark Leisher <mleisher@crl.nmsu.edu> added the support for the UTF-8 sample
 text.
