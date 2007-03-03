@@ -34,7 +34,7 @@ CPPFLAGS+= \
 	-I${X11BASE}/include \
 	-DCSRG_BASED  \
 	-DUSE_GAS  \
-	-DGLXEXT  \
+	-DGLX_INDIRECT_RENDERING \
 	-DGLX_USE_MESA  \
 	-DXF86VIDMODE 
 
@@ -95,6 +95,7 @@ MAIN_SOURCES= \
 	light.c \
 	lines.c \
 	matrix.c \
+	mipmap.c \
 	mm.c \
 	occlude.c \
 	pixel.c \
