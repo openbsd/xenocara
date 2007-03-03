@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([libXext],
-        1.0.2,
+        1.0.3,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         libXext)
 

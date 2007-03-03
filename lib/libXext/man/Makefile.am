@@ -14,6 +14,7 @@ libman_PRE = \
 	DPMSQueryExtension.man \
 	DPMSSetTimeouts.man \
 	XShape.man \
+	XShm.man \
 	XcupGetReservedColormapEntries.man \
 	XcupQueryVersion.man \
 	XcupStoreColors.man \
@@ -31,11 +32,13 @@ libman_PRE = \
 
 XShape_man_aliases = XShapeQueryExtension XShapeQueryVersion XShapeCombineRegion XShapeCombineRectangles XShapeCombineMask XShapeCombineShape XShapeOffsetShape XShapeQueryExtents XShapeSelectInput XShapeInputSelected XShapeGetRectangles
 
+XShm_man_aliases = XShmQueryExtension XShmQueryVersion XShmPixmapFormat XShmAttach XShmDetach XShmCreateImage XShmPutImage XShmGetImage XShmCreatePixmap XShmGetEventBase
+
 Xmbuf_man_aliases = XmbufQueryExtension XmbufGetVersion XmbufCreateBuffers XmbufDestroyBuffers XmbufDisplayBuffers XmbufGetWindowAttributes XmbufChangeWindowAttributes XmbufGetBufferAttributes XmbufChangeBufferAttributes XmbufGetScreenInfo XmbufCreateStereoWindow
 
 Xevi_man_aliases = XeviQueryVersion XeviGetVisualInfo XeviQueryExtension
 
-all_aliases = $(XShape_man_aliases) $(Xmbuf_man_aliases) $(Xevi_man_aliases)
+all_aliases = $(XShape_man_aliases) $(XShm_man_aliases) $(Xmbuf_man_aliases) $(Xevi_man_aliases)
 
 libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
 	      $(all_aliases:=.@LIB_MAN_SUFFIX@)
@@ -51,6 +54,9 @@ shadows.DONE:
 	-rm -f $(all_aliases:=.@LIB_MAN_SUFFIX@)
 	(for i in $(XShape_man_aliases:=.@LIB_MAN_SUFFIX@) ; do \
 	echo .so man$(LIB_MAN_DIR_SUFFIX)/XShape.$(LIB_MAN_SUFFIX) > $$i; \
+	done)
+	(for i in $(XShm_man_aliases:=.@LIB_MAN_SUFFIX@) ; do \
+	echo .so man$(LIB_MAN_DIR_SUFFIX)/XShm.$(LIB_MAN_SUFFIX) > $$i; \
 	done)
 	(for i in $(Xmbuf_man_aliases:=.@LIB_MAN_SUFFIX@) ; do \
 	echo .so man$(LIB_MAN_DIR_SUFFIX)/Xmbuf.$(LIB_MAN_SUFFIX) > $$i; \
