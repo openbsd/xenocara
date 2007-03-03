@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  6.5.2
  *
- * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -38,6 +38,10 @@
  *
  * So either we advertise the GL_EXT_stencil_two_side extension, or OpenGL
  * 2.0, but not both.
+ *
+ * Also, note that GL_ATI_separate_stencil is different as well:
+ * glStencilFuncSeparateATI(GLenum frontfunc, GLenum backfunc, ...)  vs.
+ * glStencilFuncSeparate(GLenum face, GLenum func, ...).
  */
 
 
@@ -406,17 +410,16 @@ _mesa_StencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass)
 
    FLUSH_VERTICES(ctx, _NEW_STENCIL);
 
-   if (face == GL_FRONT || face == GL_FRONT_AND_BACK) {
+   if (face != GL_BACK) {
       ctx->Stencil.FailFunc[0] = fail;
       ctx->Stencil.ZFailFunc[0] = zfail;
       ctx->Stencil.ZPassFunc[0] = zpass;
    }
-   if (face == GL_BACK || face == GL_FRONT_AND_BACK) {
+   if (face != GL_FRONT) {
       ctx->Stencil.FailFunc[1] = fail;
       ctx->Stencil.ZFailFunc[1] = zfail;
       ctx->Stencil.ZPassFunc[1] = zpass;
    }
-
    if (ctx->Driver.StencilOpSeparate) {
       ctx->Driver.StencilOpSeparate(ctx, face, fail, zfail, zpass);
    }
@@ -465,7 +468,6 @@ _mesa_StencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
       ctx->Stencil.Ref[1] = ref;
       ctx->Stencil.ValueMask[1] = mask;
    }
-
    if (ctx->Driver.StencilFuncSeparate) {
       ctx->Driver.StencilFuncSeparate(ctx, face, func, ref, mask);
    }
@@ -486,13 +488,12 @@ _mesa_StencilMaskSeparate(GLenum face, GLuint mask)
 
    FLUSH_VERTICES(ctx, _NEW_STENCIL);
 
-   if (face == GL_FRONT || face == GL_FRONT_AND_BACK) {
+   if (face != GL_BACK) {
       ctx->Stencil.WriteMask[0] = mask;
    }
-   if (face == GL_BACK || face == GL_FRONT_AND_BACK) {
+   if (face != GL_FRONT) {
       ctx->Stencil.WriteMask[1] = mask;
    }
-
    if (ctx->Driver.StencilMaskSeparate) {
       ctx->Driver.StencilMaskSeparate(ctx, face, mask);
    }

@@ -39,6 +39,7 @@ MAIN_SOURCES = \
 	main/light.c \
 	main/lines.c \
 	main/matrix.c \
+	main/mipmap.c \
 	main/mm.c \
 	main/occlude.c \
 	main/pixel.c \
@@ -307,7 +308,7 @@ FBDEV_DRIVER_SOURCES =			\
 ALL_SOURCES = \
 	$(GLAPI_SOURCES)	\
 	$(SOLO_SOURCES)		\
-	$(X86_SOURCES)		\
+	$(ASM_SOURCES)		\
 	$(COMMON_DRIVER_SOURCES)\
 	$(X11_DRIVER_SOURCES)	\
 	$(FBDEV_DRIVER_SOURCES) \

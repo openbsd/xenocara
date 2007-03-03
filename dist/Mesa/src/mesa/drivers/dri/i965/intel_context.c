@@ -149,6 +149,10 @@ const struct dri_extension card_extensions[] =
     { "GL_ARB_texture_env_combine",        NULL },
     { "GL_ARB_texture_env_dot3",           NULL },
     { "GL_ARB_texture_mirrored_repeat",    NULL },
+    { "GL_ARB_texture_non_power_of_two",   NULL },
+    { "GL_ARB_texture_rectangle",          NULL },
+    { "GL_NV_texture_rectangle",           NULL },
+    { "GL_EXT_texture_rectangle",          NULL },
     { "GL_ARB_texture_rectangle",          NULL },
     { "GL_ARB_vertex_buffer_object",       GL_ARB_vertex_buffer_object_functions },
     { "GL_ARB_vertex_program",             GL_ARB_vertex_program_functions },
@@ -246,18 +250,14 @@ void intelInitDriverFunctions( struct dd_function_table *functions )
    functions->Finish = intelFinish;
    functions->GetString = intelGetString;
    functions->UpdateState = intelInvalidateState;
-   functions->CopyColorTable = _swrast_CopyColorTable;
-   functions->CopyColorSubTable = _swrast_CopyColorSubTable;
-   functions->CopyConvolutionFilter1D = _swrast_CopyConvolutionFilter1D;
-   functions->CopyConvolutionFilter2D = _swrast_CopyConvolutionFilter2D;
 
-   /* Pixel path fallbacks.
+   /* CopyPixels can be accelerated even with the current memory
+    * manager:
     */
-   functions->Accum = _swrast_Accum;
-   functions->Bitmap = _swrast_Bitmap;
-   functions->CopyPixels = _swrast_CopyPixels;
-   functions->ReadPixels = _swrast_ReadPixels;
-   functions->DrawPixels = _swrast_DrawPixels;
+   if (!getenv("INTEL_NO_BLIT")) {
+      functions->CopyPixels = intelCopyPixels;
+      functions->Bitmap = intelBitmap;
+   }
 
    intelInitTextureFuncs( functions );
    intelInitStateFuncs( functions );
@@ -320,6 +320,11 @@ GLboolean intelInitContext( struct intel_context *intel,
    ctx->Const.MaxPointSizeAA = 3.0;
    ctx->Const.PointSizeGranularity = 1.0;
 
+   /* reinitialize the context point state.
+    * It depend on constants in __GLcontextRec::Const
+    */
+   _mesa_init_point(ctx);
+
    /* Initialize the software rasterizer and helper modules. */
    _swrast_CreateContext( ctx );
    _ac_CreateContext( ctx );
@@ -370,8 +375,6 @@ GLboolean intelInitContext( struct intel_context *intel,
       exit(1);
    }
  
-   _math_matrix_ctr (&intel->ViewportMatrix);
-
    driInitExtensions( ctx, card_extensions, 
 		      GL_TRUE );
 
@@ -445,8 +448,6 @@ GLboolean intelInitContext( struct intel_context *intel,
 /* 			  DRI_TEXMGR_DO_TEXTURE_2D |  */
 /* 			  DRI_TEXMGR_DO_TEXTURE_RECT ); */
 
-
-   intel->prim.primitive = ~0;
 
    if (getenv("INTEL_NO_RAST")) {
       fprintf(stderr, "disabling 3D rasterization\n");
@@ -537,18 +538,13 @@ GLboolean intelMakeCurrent(__DRIcontextPrivate *driContextPriv,
 }
 
 
-static void lost_hardware( struct intel_context *intel )
-{
-   bm_fake_NotifyContendedLockTake( intel ); 
-   intel->vtbl.lost_hardware( intel );
-}
-
 static void intelContendedLock( struct intel_context *intel, GLuint flags )
 {
    __DRIdrawablePrivate *dPriv = intel->driDrawable;
    __DRIscreenPrivate *sPriv = intel->driScreen;
    volatile drmI830Sarea * sarea = intel->sarea;
    int me = intel->hHWContext;
+   int my_bufmgr = bmCtxId(intel);
 
    drmGetLock(intel->driFd, intel->hHWContext, flags);
 
@@ -562,12 +558,23 @@ static void intelContendedLock( struct intel_context *intel, GLuint flags )
 
 
    intel->locked = 1;
+   intel->need_flush = 1;
 
    /* Lost context?
     */
    if (sarea->ctxOwner != me) {
+      DBG("Lost Context: sarea->ctxOwner %x me %x\n", sarea->ctxOwner, me);
       sarea->ctxOwner = me;
-      lost_hardware(intel);
+      intel->vtbl.lost_hardware( intel );
+   }
+
+   /* As above, but don't evict the texture data on transitions
+    * between contexts which all share a local buffer manager.
+    */
+   if (sarea->texAge != my_bufmgr) {
+      DBG("Lost Textures: sarea->texAge %x my_bufmgr %x\n", sarea->ctxOwner, my_bufmgr);
+      sarea->texAge = my_bufmgr;
+      bm_fake_NotifyContendedLockTake( intel ); 
    }
 
    /* Drawable changed?
@@ -575,12 +582,6 @@ static void intelContendedLock( struct intel_context *intel, GLuint flags )
    if (dPriv && intel->lastStamp != dPriv->lastStamp) {
       intelWindowMoved( intel );
       intel->lastStamp = dPriv->lastStamp;
-
-      /* This works because the lock is always grabbed before emitting
-       * commands and commands are always flushed prior to releasing
-       * the lock.
-       */
-      intel->NewGLState |= _NEW_WINDOW_POS; 
    }
 }
 

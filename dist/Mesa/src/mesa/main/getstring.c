@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.3
+ * Version:  6.5.2
  *
- * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -54,11 +54,15 @@ _mesa_GetString( GLenum name )
    static const char *version_1_3 = "1.3 Mesa " MESA_VERSION_STRING;
    static const char *version_1_4 = "1.4 Mesa " MESA_VERSION_STRING;
    static const char *version_1_5 = "1.5 Mesa " MESA_VERSION_STRING;
-   static const char *version_2_0 = "1.5 Mesa " MESA_VERSION_STRING;/*XXX FIX*/
+   static const char *version_2_0 = "1.5 Mesa " MESA_VERSION_STRING;
+   static const char *version_2_1 = "1.5 Mesa " MESA_VERSION_STRING;
 
 #if FEATURE_ARB_shading_language_100
    static const char *sl_version_110 = "1.10 Mesa " MESA_VERSION_STRING;
 #endif
+
+   if (!ctx)
+      return NULL;
 
    ASSERT_OUTSIDE_BEGIN_END_WITH_RETVAL(ctx, NULL);
 
@@ -107,9 +111,18 @@ _mesa_GetString( GLenum name )
                    ctx->Extensions.EXT_shadow_funcs) {
                   if (ctx->Extensions.ARB_draw_buffers &&
                       ctx->Extensions.ARB_point_sprite &&
-                      ctx->Extensions.ARB_texture_non_power_of_two &&
-                      ctx->Extensions.EXT_stencil_two_side) {
-                     return (const GLubyte *) version_2_0;
+                      ctx->Extensions.ARB_shader_objects &&
+                      ctx->Extensions.ARB_vertex_shader &&
+                      ctx->Extensions.ARB_fragment_shader &&
+                      ctx->Extensions.ARB_texture_non_power_of_two) {
+                     if (ctx->Extensions.ARB_shading_language_120 &&
+                         ctx->Extensions.EXT_pixel_buffer_object &&
+                         ctx->Extensions.EXT_texture_sRGB) {
+                        return (const GLubyte *) version_2_1;
+                     }
+                     else {
+                        return (const GLubyte *) version_2_0;
+                     }
                   }
                   else {
                      return (const GLubyte *) version_1_5;

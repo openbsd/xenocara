@@ -10,7 +10,7 @@ CONFIG_NAME = default
 # Version info
 MESA_MAJOR=6
 MESA_MINOR=5
-MESA_TINY=1
+MESA_TINY=2
 
 # external projects.  This should be useless now that we use libdrm.
 DRM_SOURCE_PATH=$(TOP)/../drm
@@ -27,8 +27,7 @@ MKLIB_OPTIONS =
 MKDEP = makedepend
 MKDEP_OPTIONS = -fdepend
 MAKE = make
-INSTALL = install
-COPY_LIBS = cp -f -d
+INSTALL = $(TOP)/bin/minstall
 
 # Python and flags (generally only needed by the developers)
 PYTHON2 = python

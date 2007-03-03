@@ -77,12 +77,6 @@ struct arb_program
 };
 
 
-#ifndef __extension__
-#if !defined(__GNUC__) || (__GNUC__ < 2) || \
-    ((__GNUC__ == 2) && (__GNUC_MINOR__ <= 7))
-# define __extension__
-#endif
-#endif
 
 /* TODO:
  *    Fragment Program Stuff:
@@ -168,10 +162,11 @@ struct arb_program
 
 typedef GLubyte *production;
 
+
 /**
  * This is the text describing the rules to parse the grammar
  */
-__extension__ static char arb_grammar_text[] =
+LONGSTRING static char arb_grammar_text[] =
 #include "arbprogram_syn.h"
 ;
 
@@ -1815,7 +1810,7 @@ parse_param_elements (GLcontext * ctx, const GLubyte ** inst,
          parse_constant (inst, const_values, Program, use);
          idx = _mesa_add_named_constant(Program->Base.Parameters,
                                         (char *) param_var->name,
-                                        const_values);
+                                        const_values, 4);
          if (param_var->param_binding_begin == ~0U)
             param_var->param_binding_begin = idx;
          param_var->param_binding_length++;
@@ -2571,8 +2566,6 @@ parse_fp_vector_src_reg(GLcontext * ctx, const GLubyte ** inst,
 
    reg->File = file;
    reg->Index = index;
-   reg->Abs = 0;		/* NV only */
-   reg->NegateAbs = 0;		/* NV only */
    reg->NegateBase = negate;
    reg->Swizzle = MAKE_SWIZZLE4(swizzle[0], swizzle[1], swizzle[2], swizzle[3]);
    return 0;
@@ -2595,8 +2588,6 @@ parse_fp_dst_reg(GLcontext * ctx, const GLubyte ** inst,
    if (parse_masked_dst_reg (ctx, inst, vc_head, Program, &file, &idx, &mask))
       return 1;
 
-   reg->CondMask = 0;		/* NV only */
-   reg->CondSwizzle = 0;	/* NV only */
    reg->File = file;
    reg->Index = idx;
    reg->WriteMask = mask;
@@ -2632,8 +2623,6 @@ parse_fp_scalar_src_reg (GLcontext * ctx, const GLubyte ** inst,
 
    reg->File = File;
    reg->Index = Index;
-   reg->Abs = 0;		/* NV only */
-   reg->NegateAbs = 0;		/* NV only */
    reg->NegateBase = Negate;
    reg->Swizzle = (Swizzle[0] << 0);
 
@@ -2656,7 +2645,7 @@ parse_fp_instruction (GLcontext * ctx, const GLubyte ** inst,
    GLubyte instClass, type, code;
    GLboolean rel;
 
-   _mesa_init_instruction(fp);
+   _mesa_init_instructions(fp, 1);
 
    /* Record the position in the program string for debugging */
    fp->StringPos = Program->Position;
@@ -3148,7 +3137,7 @@ parse_vp_instruction (GLcontext * ctx, const GLubyte ** inst,
    /* The actual opcode name */
    code = *(*inst)++;
 
-   _mesa_init_instruction(vp);
+   _mesa_init_instructions(vp, 1);
    /* Record the position in the program string for debugging */
    vp->StringPos = Program->Position;
 
@@ -3690,7 +3679,7 @@ parse_instructions(GLcontext * ctx, const GLubyte * inst,
    /* Finally, tag on an OPCODE_END instruction */
    {
       const GLuint numInst = Program->Base.NumInstructions;
-      _mesa_init_instruction(Program->Base.Instructions + numInst);
+      _mesa_init_instructions(Program->Base.Instructions + numInst, 1);
       Program->Base.Instructions[numInst].Opcode = OPCODE_END;
       /* YYY Wrong Position in program, whatever, at least not random -> crash
 	 Program->Position = parse_position (&inst);
@@ -4059,7 +4048,8 @@ _mesa_parse_arb_fragment_program(GLcontext* ctx, GLenum target,
    program->Base.Parameters    = ap.Base.Parameters;
 
 #if DEBUG_FP
-   _mesa_print_program(&program.Base);
+   _mesa_printf("____________Fragment program %u ________\n", program->Base.ID);
+   _mesa_print_program(&program->Base);
 #endif
 }
 
@@ -4111,6 +4101,7 @@ _mesa_parse_arb_vertex_program(GLcontext *ctx, GLenum target,
    program->Base.Parameters = ap.Base.Parameters; 
 
 #if DEBUG_VP
+   _mesa_printf("____________Vertex program %u __________\n", program->Base.ID);
    _mesa_print_program(&program->Base);
 #endif
 }

@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
+ * Version:  6.5.2
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -43,6 +43,7 @@
 #include "convolve.h"
 #include "image.h"
 #include "macros.h"
+#include "mipmap.h"
 #include "texformat.h"
 #include "teximage.h"
 #include "texstore.h"
@@ -51,33 +52,37 @@
 #include "s_depth.h"
 #include "s_span.h"
 
-/*
+
+/**
  * Read an RGBA image from the frame buffer.
  * This is used by glCopyTex[Sub]Image[12]D().
- * Input:  ctx - the context
- *         x, y - lower left corner
- *         width, height - size of region to read
- * Return: pointer to block of GL_RGBA, GLchan data.
+ * \param x  window source x
+ * \param y  window source y
+ * \param width  image width
+ * \param height  image height
+ * \param type  datatype for returned GL_RGBA image
+ * \return pointer to image
  */
-static GLchan *
-read_color_image( GLcontext *ctx, GLint x, GLint y,
+static GLvoid *
+read_color_image( GLcontext *ctx, GLint x, GLint y, GLenum type,
                   GLsizei width, GLsizei height )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   const GLint stride = 4 * width;
-   GLint i;
-   GLchan *image, *dst;
+   struct gl_renderbuffer *rb = ctx->ReadBuffer->_ColorReadBuffer;
+   const GLint pixelSize = _mesa_bytes_per_pixel(GL_RGBA, type);
+   const GLint stride = width * pixelSize;
+   GLint row;
+   GLubyte *image, *dst;
 
-   image = (GLchan *) _mesa_malloc(width * height * 4 * sizeof(GLchan));
+   image = (GLubyte *) _mesa_malloc(width * height * pixelSize);
    if (!image)
       return NULL;
 
    RENDER_START(swrast, ctx);
 
    dst = image;
-   for (i = 0; i < height; i++) {
-      _swrast_read_rgba_span(ctx, ctx->ReadBuffer->_ColorReadBuffer,
-                             width, x, y + i, (GLchan (*)[4]) dst);
+   for (row = 0; row < height; row++) {
+      _swrast_read_rgba_span(ctx, rb, width, x, y + row, type, dst);
       dst += stride;
    }
 
@@ -249,7 +254,7 @@ _swrast_copy_teximage1d( GLcontext *ctx, GLenum target, GLint level,
    texUnit = &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
    texObj = _mesa_select_tex_object(ctx, texUnit, target);
    ASSERT(texObj);
-   texImage = _mesa_select_tex_image(ctx, texUnit, target, level);
+   texImage = _mesa_select_tex_image(ctx, texObj, target, level);
    ASSERT(texImage);
 
    ASSERT(ctx->Driver.TexImage1D);
@@ -284,15 +289,16 @@ _swrast_copy_teximage1d( GLcontext *ctx, GLenum target, GLint level,
    }
    else {
       /* read RGBA image from framebuffer */
-      GLchan *image = read_color_image(ctx, x, y, width, 1);
+      const GLenum format = GL_RGBA;
+      const GLenum type = ctx->ReadBuffer->_ColorReadBuffer->DataType;
+      GLvoid *image = read_color_image(ctx, x, y, type, width, 1);
       if (!image) {
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCopyTexImage1D");
          return;
       }
       /* call glTexImage1D to redefine the texture */
       ctx->Driver.TexImage1D(ctx, target, level, internalFormat,
-                             width, border,
-                             GL_RGBA, CHAN_TYPE, image,
+                             width, border, format, type, image,
                              &ctx->DefaultPacking, texObj, texImage);
       _mesa_free(image);
    }
@@ -325,7 +331,7 @@ _swrast_copy_teximage2d( GLcontext *ctx, GLenum target, GLint level,
    texUnit = &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
    texObj = _mesa_select_tex_object(ctx, texUnit, target);
    ASSERT(texObj);
-   texImage = _mesa_select_tex_image(ctx, texUnit, target, level);
+   texImage = _mesa_select_tex_image(ctx, texObj, target, level);
    ASSERT(texImage);
 
    ASSERT(ctx->Driver.TexImage2D);
@@ -359,15 +365,16 @@ _swrast_copy_teximage2d( GLcontext *ctx, GLenum target, GLint level,
    }
    else {
       /* read RGBA image from framebuffer */
-      GLchan *image = read_color_image(ctx, x, y, width, height);
+      const GLenum format = GL_RGBA;
+      const GLenum type = ctx->ReadBuffer->_ColorReadBuffer->DataType;
+      GLvoid *image = read_color_image(ctx, x, y, type, width, height);
       if (!image) {
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCopyTexImage2D");
          return;
       }
       /* call glTexImage2D to redefine the texture */
       ctx->Driver.TexImage2D(ctx, target, level, internalFormat,
-                             width, height, border,
-                             GL_RGBA, CHAN_TYPE, image,
+                             width, height, border, format, type, image,
                              &ctx->DefaultPacking, texObj, texImage);
       _mesa_free(image);
    }
@@ -393,7 +400,7 @@ _swrast_copy_texsubimage1d( GLcontext *ctx, GLenum target, GLint level,
    texUnit = &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
    texObj = _mesa_select_tex_object(ctx, texUnit, target);
    ASSERT(texObj);
-   texImage = _mesa_select_tex_image(ctx, texUnit, target, level);
+   texImage = _mesa_select_tex_image(ctx, texObj, target, level);
    ASSERT(texImage);
 
    ASSERT(ctx->Driver.TexImage1D);
@@ -427,14 +434,16 @@ _swrast_copy_texsubimage1d( GLcontext *ctx, GLenum target, GLint level,
    }
    else {
       /* read RGBA image from framebuffer */
-      GLchan *image = read_color_image(ctx, x, y, width, 1);
+      const GLenum format = GL_RGBA;
+      const GLenum type = ctx->ReadBuffer->_ColorReadBuffer->DataType;
+      GLvoid *image = read_color_image(ctx, x, y, type, width, 1);
       if (!image) {
          _mesa_error( ctx, GL_OUT_OF_MEMORY, "glCopyTexSubImage1D" );
          return;
       }
       /* now call glTexSubImage1D to do the real work */
       ctx->Driver.TexSubImage1D(ctx, target, level, xoffset, width,
-                                GL_RGBA, CHAN_TYPE, image,
+                                format, type, image,
                                 &ctx->DefaultPacking, texObj, texImage);
       _mesa_free(image);
    }
@@ -465,7 +474,7 @@ _swrast_copy_texsubimage2d( GLcontext *ctx,
    texUnit = &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
    texObj = _mesa_select_tex_object(ctx, texUnit, target);
    ASSERT(texObj);
-   texImage = _mesa_select_tex_image(ctx, texUnit, target, level);
+   texImage = _mesa_select_tex_image(ctx, texObj, target, level);
    ASSERT(texImage);
 
    ASSERT(ctx->Driver.TexImage2D);
@@ -500,7 +509,9 @@ _swrast_copy_texsubimage2d( GLcontext *ctx,
    }
    else {
       /* read RGBA image from framebuffer */
-      GLchan *image = read_color_image(ctx, x, y, width, height);
+      const GLenum format = GL_RGBA;
+      const GLenum type = ctx->ReadBuffer->_ColorReadBuffer->DataType;
+      GLvoid *image = read_color_image(ctx, x, y, type, width, height);
       if (!image) {
          _mesa_error( ctx, GL_OUT_OF_MEMORY, "glCopyTexSubImage2D" );
          return;
@@ -508,7 +519,7 @@ _swrast_copy_texsubimage2d( GLcontext *ctx,
       /* now call glTexSubImage2D to do the real work */
       ctx->Driver.TexSubImage2D(ctx, target, level,
                                 xoffset, yoffset, width, height,
-                                GL_RGBA, CHAN_TYPE, image,
+                                format, type, image,
                                 &ctx->DefaultPacking, texObj, texImage);
       _mesa_free(image);
    }
@@ -536,7 +547,7 @@ _swrast_copy_texsubimage3d( GLcontext *ctx,
    texUnit = &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
    texObj = _mesa_select_tex_object(ctx, texUnit, target);
    ASSERT(texObj);
-   texImage = _mesa_select_tex_image(ctx, texUnit, target, level);
+   texImage = _mesa_select_tex_image(ctx, texObj, target, level);
    ASSERT(texImage);
 
    ASSERT(ctx->Driver.TexImage3D);
@@ -571,7 +582,9 @@ _swrast_copy_texsubimage3d( GLcontext *ctx,
    }
    else {
       /* read RGBA image from framebuffer */
-      GLchan *image = read_color_image(ctx, x, y, width, height);
+      const GLenum format = GL_RGBA;
+      const GLenum type = ctx->ReadBuffer->_ColorReadBuffer->DataType;
+      GLvoid *image = read_color_image(ctx, x, y, type, width, height);
       if (!image) {
          _mesa_error( ctx, GL_OUT_OF_MEMORY, "glCopyTexSubImage3D" );
          return;
@@ -579,7 +592,7 @@ _swrast_copy_texsubimage3d( GLcontext *ctx,
       /* now call glTexSubImage3D to do the real work */
       ctx->Driver.TexSubImage3D(ctx, target, level,
                                 xoffset, yoffset, zoffset, width, height, 1,
-                                GL_RGBA, CHAN_TYPE, image,
+                                format, type, image,
                                 &ctx->DefaultPacking, texObj, texImage);
       _mesa_free(image);
    }

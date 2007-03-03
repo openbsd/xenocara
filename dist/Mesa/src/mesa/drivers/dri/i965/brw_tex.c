@@ -36,11 +36,14 @@
 #include "simple_list.h"
 #include "enums.h"
 #include "image.h"
+#include "teximage.h"
 #include "texstore.h"
 #include "texformat.h"
 #include "texmem.h"
 
+#include "intel_context.h"
 #include "intel_ioctl.h"
+#include "intel_regions.h"
 #include "brw_context.h"
 #include "brw_defines.h"
 
@@ -49,34 +52,57 @@
 
 static const struct gl_texture_format *
 brwChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
-			 GLenum format, GLenum type )
+			 GLenum srcFormat, GLenum srcType )
 {
    switch ( internalFormat ) {
    case 4:
    case GL_RGBA:
    case GL_COMPRESSED_RGBA:
+      if (srcFormat == GL_BGRA && srcType == GL_UNSIGNED_SHORT_4_4_4_4_REV)
+	 return &_mesa_texformat_argb4444;
+      else if (srcFormat == GL_BGRA && srcType == GL_UNSIGNED_SHORT_1_5_5_5_REV)
+	 return &_mesa_texformat_argb1555;
+      else if ((srcFormat == GL_RGBA && srcType == GL_UNSIGNED_INT_8_8_8_8_REV) ||
+	       (srcFormat == GL_RGBA && srcType == GL_UNSIGNED_BYTE) ||
+	       (srcFormat == GL_ABGR_EXT && srcType == GL_UNSIGNED_INT_8_8_8_8)) 
+	 return &_mesa_texformat_rgba8888_rev;
+      else
+	 return &_mesa_texformat_argb8888;
+
    case GL_RGBA8:
    case GL_RGB10_A2:
    case GL_RGBA12:
    case GL_RGBA16:
-   case GL_RGBA4:
-   case GL_RGBA2:
-   case GL_RGB5_A1:
       return &_mesa_texformat_argb8888; 
-/*       return &_mesa_texformat_rgba8888_rev; */
 
-   case 3:
-   case GL_RGB:
-   case GL_COMPRESSED_RGB:
    case GL_RGB8:
    case GL_RGB10:
    case GL_RGB12:
    case GL_RGB16:
-   case GL_RGB5:
-   case GL_RGB4:
-   case GL_R3_G3_B2:
-/*       return &_mesa_texformat_rgb888; */
+      /* Broadwater doesn't support RGB888 textures, so these must be
+       * stored as ARGB.
+       */
       return &_mesa_texformat_argb8888;
+
+   case 3:
+   case GL_COMPRESSED_RGB:
+   case GL_RGB:
+      if (srcFormat == GL_RGB &&
+	  srcType == GL_UNSIGNED_SHORT_5_6_5)
+	 return &_mesa_texformat_rgb565;
+      else
+	 return &_mesa_texformat_argb8888;
+
+
+   case GL_RGB5:
+   case GL_RGB5_A1:
+      return &_mesa_texformat_argb1555;
+
+   case GL_R3_G3_B2:
+   case GL_RGBA2:
+   case GL_RGBA4:
+   case GL_RGB4:
+      return &_mesa_texformat_argb4444;
 
    case GL_ALPHA:
    case GL_ALPHA4:
@@ -115,8 +141,8 @@ brwChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
       return &_mesa_texformat_i8;
 
    case GL_YCBCR_MESA:
-      if (type == GL_UNSIGNED_SHORT_8_8_MESA ||
-	  type == GL_UNSIGNED_BYTE)
+      if (srcType == GL_UNSIGNED_SHORT_8_8_MESA ||
+	  srcType == GL_UNSIGNED_BYTE)
          return &_mesa_texformat_ycbcr;
       else
          return &_mesa_texformat_ycbcr_rev;
@@ -155,4 +181,33 @@ brwChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
 void brwInitTextureFuncs( struct dd_function_table *functions )
 {
    functions->ChooseTextureFormat = brwChooseTextureFormat;
+}
+
+void brw_FrameBufferTexInit( struct brw_context *brw )
+{
+   struct intel_context *intel = &brw->intel;
+   GLcontext *ctx = &intel->ctx;
+   struct intel_region *region = intel->front_region;
+   struct gl_texture_object *obj;
+   struct gl_texture_image *img;
+   
+   intel->frame_buffer_texobj = obj =
+      ctx->Driver.NewTextureObject( ctx, (GLuint) -1, GL_TEXTURE_2D );
+
+   obj->MinFilter = GL_NEAREST;
+   obj->MagFilter = GL_NEAREST;
+
+   img = ctx->Driver.NewTextureImage( ctx );
+
+   _mesa_init_teximage_fields( ctx, GL_TEXTURE_2D, img,
+			       region->pitch, region->height, 1, 0,
+			       region->cpp == 4 ? GL_RGBA : GL_RGB );
+   
+   _mesa_set_tex_image( obj, GL_TEXTURE_2D, 0, img );
+}
+
+void brw_FrameBufferTexDestroy( struct brw_context *brw )
+{
+   brw->intel.ctx.Driver.DeleteTexture( &brw->intel.ctx,
+					brw->intel.frame_buffer_texobj );
 }

@@ -35,8 +35,7 @@ struct buffer;
 
 extern void intelCopyBuffer( const __DRIdrawablePrivate *dpriv,
 			     const drm_clip_rect_t *rect );
-extern void intelClearWithBlit(GLcontext *ctx, GLbitfield mask, GLboolean all,
-			     GLint cx1, GLint cy1, GLint cw, GLint ch);
+extern void intelClearWithBlit(GLcontext *ctx, GLbitfield mask);
 
 extern void intelEmitCopyBlit( struct intel_context *intel,
 			       GLuint cpp,
@@ -50,7 +49,8 @@ extern void intelEmitCopyBlit( struct intel_context *intel,
 			       GLboolean dst_tiled,
 			       GLshort srcx, GLshort srcy,
 			       GLshort dstx, GLshort dsty,
-			       GLshort w, GLshort h );
+			       GLshort w, GLshort h,
+			       GLenum logic_op );
 
 extern void intelEmitFillBlit( struct intel_context *intel,
 			       GLuint cpp,
@@ -62,5 +62,16 @@ extern void intelEmitFillBlit( struct intel_context *intel,
 			       GLshort w, GLshort h,
 			       GLuint color );
 
+void
+intelEmitImmediateColorExpandBlit(struct intel_context *intel,
+				  GLuint cpp,
+				  GLubyte *src_bits, GLuint src_size,
+				  GLuint fg_color,
+				  GLshort dst_pitch,
+				  struct buffer *dst_buffer,
+				  GLuint dst_offset,
+				  GLboolean dst_tiled,
+				  GLshort dst_x, GLshort dst_y, 
+				  GLshort w, GLshort h);
 
 #endif

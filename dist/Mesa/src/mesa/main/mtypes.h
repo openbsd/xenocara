@@ -392,9 +392,9 @@ struct gl_color_table
 {
    GLenum InternalFormat;      /**< The user-specified format */
    GLenum _BaseFormat;         /**< GL_ALPHA, GL_RGBA, GL_RGB, etc */
-   GLuint Size;           /**< number of entries (rows) in table */
-   GLvoid *Table;         /**< points to data of <Type> */
-   GLenum Type;           /**< GL_UNSIGNED_BYTE or GL_FLOAT */
+   GLuint Size;                /**< number of entries in table */
+   GLfloat *TableF;            /**< Color table, floating point values */
+   GLubyte *TableUB;           /**< Color table, ubyte values */
    GLubyte RedSize;
    GLubyte GreenSize;
    GLubyte BlueSize;
@@ -888,6 +888,7 @@ struct gl_light_attrib
    GLenum ColorMaterialMode;		/**< GL_AMBIENT, GL_DIFFUSE, etc */
    GLbitfield ColorMaterialBitmask;	/**< bitmask formed from Face and Mode */
    GLboolean ColorMaterialEnabled;
+   GLenum ClampVertexColor;
 
    struct gl_light EnabledList;         /**< List sentinel */
 
@@ -1809,18 +1810,6 @@ struct gl_evaluators
 
 
 /**
- * State used during execution of fragment programs.
- */
-struct fp_machine
-{
-   GLfloat Temporaries[MAX_NV_FRAGMENT_PROGRAM_TEMPS][4];
-   GLfloat Inputs[MAX_NV_FRAGMENT_PROGRAM_INPUTS][4];
-   GLfloat Outputs[MAX_NV_FRAGMENT_PROGRAM_OUTPUTS][4];
-   GLuint CondCodes[4];
-};
-
-
-/**
  * Names of the various vertex/fragment program register files, etc.
  * NOTE: first four tokens must fit into 2 bits (see t_vb_arbprogram.c)
  * All values should fit in a 4-bit field.
@@ -1925,29 +1914,24 @@ struct gl_program_state
 
 
 /**
- * State vars for GL_ARB/GL_NV_vertex_program
+ * Context state for vertex programs.
  */
 struct gl_vertex_program_state
 {
-   GLboolean Enabled;                  /**< GL_VERTEX_PROGRAM_ARB/NV */
-   GLboolean _Enabled;                 /**< Enabled and valid program? */
-   GLboolean PointSizeEnabled;         /**< GL_VERTEX_PROGRAM_POINT_SIZE_ARB/NV */
-   GLboolean TwoSideEnabled;           /**< GL_VERTEX_PROGRAM_TWO_SIDE_ARB/NV */
+   GLboolean Enabled;               /**< GL_VERTEX_PROGRAM_ARB/NV */
+   GLboolean _Enabled;              /**< Enabled and valid program? */
+   GLboolean PointSizeEnabled;      /**< GL_VERTEX_PROGRAM_POINT_SIZE_ARB/NV */
+   GLboolean TwoSideEnabled;        /**< GL_VERTEX_PROGRAM_TWO_SIDE_ARB/NV */
    struct gl_vertex_program *Current;  /**< ptr to currently bound program */
    const struct gl_vertex_program *_Current;    /**< ptr to currently bound
 					          program, including internal
 					          (t_vp_build.c) programs */
 
+   GLfloat Parameters[MAX_NV_VERTEX_PROGRAM_PARAMS][4]; /**< Env params */
+
+   /* For GL_NV_vertex_program only: */
    GLenum TrackMatrix[MAX_NV_VERTEX_PROGRAM_PARAMS / 4];
    GLenum TrackMatrixTransform[MAX_NV_VERTEX_PROGRAM_PARAMS / 4];
-
-   GLfloat Parameters[MAX_NV_VERTEX_PROGRAM_PARAMS][4]; /* Env params */
-   /* Only used during program execution (may be moved someday): */
-   GLfloat Temporaries[MAX_NV_VERTEX_PROGRAM_TEMPS][4];
-   GLfloat Inputs[MAX_NV_VERTEX_PROGRAM_INPUTS][4];
-   GLuint InputsSize[MAX_NV_VERTEX_PROGRAM_INPUTS];
-   GLfloat Outputs[MAX_NV_VERTEX_PROGRAM_OUTPUTS][4];
-   GLint AddressReg[4];
 
 #if FEATURE_MESA_program_debug
    GLprogramcallbackMESA Callback;
@@ -1959,18 +1943,17 @@ struct gl_vertex_program_state
 
 
 /**
- * Context state for GL_ARB/NV_fragment_program
+ * Context state for fragment programs.
  */
 struct gl_fragment_program_state
 {
-   GLboolean Enabled;                    /* GL_VERTEX_PROGRAM_NV */
-   GLboolean _Enabled;                   /* Enabled and valid program? */
-   GLboolean _Active;
-   struct gl_fragment_program *Current;  /* ptr to currently bound program */
-   const struct gl_fragment_program *_Current; /* ptr to currently active program 
+   GLboolean Enabled;     /**< User-set fragment program enable flag */
+   GLboolean _Enabled;    /**< Fragment program enabled and valid? */
+   GLboolean _Active;     /**< Is a user program or internal program active? */
+   struct gl_fragment_program *Current;  /**< User-bound program */
+   const struct gl_fragment_program *_Current; /**< currently active program 
 					       (including internal programs) */
-   struct fp_machine Machine;            /* machine state */
-   GLfloat Parameters[MAX_NV_FRAGMENT_PROGRAM_PARAMS][4]; /* Env params */
+   GLfloat Parameters[MAX_NV_FRAGMENT_PROGRAM_PARAMS][4]; /**< Env params */
 
 #if FEATURE_MESA_program_debug
    GLprogramcallbackMESA Callback;
@@ -1989,17 +1972,6 @@ struct gl_fragment_program_state
 
 struct atifs_instruction;
 struct atifs_setupinst;
-
-/**
- * State for executing ATI fragment shader.
- */
-struct atifs_machine
-{
-   GLfloat Registers[6][4];         /** six temporary registers */
-   GLfloat PrevPassRegisters[6][4];
-   GLfloat Inputs[2][4];   /** Primary, secondary input colors */
-};
-
 
 /**
  * ATI fragment shader
@@ -2031,7 +2003,6 @@ struct gl_ati_fragment_shader_state
    GLboolean _Enabled;                      /** enabled and valid shader? */
    GLboolean Compiling;
    GLfloat GlobalConstants[8][4];
-   struct atifs_machine Machine;            /* machine state */
    struct ati_fragment_shader *Current;
 };
 
@@ -2090,6 +2061,19 @@ struct gl_shared_state
    struct gl_texture_object *DefaultCubeMap;
    struct gl_texture_object *DefaultRect;
    /*@}*/
+
+   /**
+    * \name Thread safety and statechange notification for texture
+    * objects. 
+    *
+    * \todo Improve the granularity of locking.
+    */
+   /*@{*/
+   _glthread_Mutex TexMutex;		   /**< texobj thread safety */
+   GLuint TextureStateStamp;	           /**< state notification for shared tex  */
+   /*@}*/
+
+
 
    /**
     * \name Vertex/fragment programs
@@ -2340,6 +2324,8 @@ struct gl_program_constants
    GLuint MaxNativeTemps;
    GLuint MaxNativeAddressRegs; /* vertex program only, for now */
    GLuint MaxNativeParameters;
+   /* For shaders */
+   GLuint MaxUniformComponents;
 };
 
 
@@ -2389,6 +2375,9 @@ struct gl_constants
    /* GL_EXT_framebuffer_object */
    GLuint MaxColorAttachments;
    GLuint MaxRenderbufferSize;
+   /* GL_ARB_vertex_shader */
+   GLuint MaxVertexTextureImageUnits;
+   GLuint MaxVaryingFloats;
 };
 
 
@@ -2417,6 +2406,7 @@ struct gl_extensions
    GLboolean ARB_point_sprite;
    GLboolean ARB_shader_objects;
    GLboolean ARB_shading_language_100;
+   GLboolean ARB_shading_language_120;
    GLboolean ARB_shadow;
    GLboolean ARB_texture_border_clamp;
    GLboolean ARB_texture_compression;
@@ -2954,6 +2944,8 @@ struct __GLcontextRec
    GLboolean _NeedEyeCoords;
    GLboolean _ForceEyeCoords; 
    GLenum _CurrentProgram;    /* currently executing program */
+
+   GLuint TextureStateTimestamp; /* detect changes to shared state */
 
    struct gl_shine_tab *_ShineTable[2]; /**< Active shine tables */
    struct gl_shine_tab *_ShineTabList;  /**< MRU list of inactive shine tables */

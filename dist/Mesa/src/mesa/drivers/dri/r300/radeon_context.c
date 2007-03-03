@@ -47,11 +47,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "swrast/swrast.h"
 
 #include "radeon_screen.h"
-#include "r200_context.h"
 #include "radeon_ioctl.h"
 #include "radeon_macros.h"
 #include "radeon_reg.h"
-#include "r200_state.h"
 
 #include "r300_state.h"
 
@@ -100,28 +98,10 @@ static const GLubyte *radeonGetString(GLcontext * ctx, GLenum name)
 	}
 }
 
-
-/* Return the width and height of the given buffer.
- */
-static void radeonGetBufferSize(GLframebuffer * buffer,
-				GLuint * width, GLuint * height)
-{
-	GET_CURRENT_CONTEXT(ctx);
-	radeonContextPtr radeon = RADEON_CONTEXT(ctx);
-
-	LOCK_HARDWARE(radeon);
-	*width = radeon->dri.drawable->w;
-	*height = radeon->dri.drawable->h;
-	UNLOCK_HARDWARE(radeon);
-}
-
-
 /* Initialize the driver's misc functions.
  */
 static void radeonInitDriverFuncs(struct dd_function_table *functions)
 {
-	functions->GetBufferSize = radeonGetBufferSize;
-	functions->ResizeBuffers = _mesa_resize_framebuffer;
 	functions->GetString = radeonGetString;
 }
 
@@ -161,7 +141,8 @@ GLboolean radeonInitContext(radeonContextPtr radeon,
 	/* DRI fields */
 	radeon->dri.context = driContextPriv;
 	radeon->dri.screen = sPriv;
-	radeon->dri.drawable = NULL;	/* Set by XMesaMakeCurrent */
+	radeon->dri.drawable = NULL;
+	radeon->dri.readable = NULL;
 	radeon->dri.hwContext = driContextPriv->hHWContext;
 	radeon->dri.hwLock = &sPriv->pSAREA->lock;
 	radeon->dri.fd = sPriv->fd;
@@ -287,17 +268,17 @@ GLboolean radeonMakeCurrent(__DRIcontextPrivate * driContextPriv,
 
 		if (radeon->dri.drawable != driDrawPriv) {
 			driDrawableInitVBlank(driDrawPriv,
-					      radeon->vblank_flags);
+					      radeon->vblank_flags,
+					      &radeon->vbl_seq);
+		}
+
+		if (radeon->dri.drawable != driDrawPriv ||
+		    radeon->dri.readable != driReadPriv) {
 			radeon->dri.drawable = driDrawPriv;
-			
+			radeon->dri.readable = driReadPriv;
+
 			r300UpdateWindow(radeon->glCtx);
 			r300UpdateViewportOffset(radeon->glCtx);
-#if R200_MERGED
-			if (IS_R200_CLASS(radeon->radeonScreen)) {
-				r200UpdateWindow(radeon->glCtx);
-				r200UpdateViewportOffset(radeon->glCtx);
-			}
-#endif
 		}
 
 		_mesa_make_current(radeon->glCtx,
@@ -311,13 +292,7 @@ GLboolean radeonMakeCurrent(__DRIcontextPrivate * driContextPriv,
 					   driDrawPriv->w, driDrawPriv->h);
 		}
 
-		_mesa_update_state(radeon->glCtx);
-
-#if R200_MERGED
-		if (IS_R200_CLASS(radeon->radeonScreen))
-			r200ValidateState(radeon->glCtx);
-#endif
-		
+		_mesa_update_state(radeon->glCtx);		
 	} else {
 		if (RADEON_DEBUG & DEBUG_DRI)
 			fprintf(stderr, "%s ctx is null\n", __FUNCTION__);

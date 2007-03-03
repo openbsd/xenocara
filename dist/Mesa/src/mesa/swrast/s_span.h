@@ -32,19 +32,19 @@
 
 
 extern void
-_swrast_span_default_z( GLcontext *ctx, struct sw_span *span );
+_swrast_span_default_z( GLcontext *ctx, SWspan *span );
 
 extern void
-_swrast_span_interpolate_z( const GLcontext *ctx, struct sw_span *span );
+_swrast_span_interpolate_z( const GLcontext *ctx, SWspan *span );
 
 extern void
-_swrast_span_default_fog( GLcontext *ctx, struct sw_span *span );
+_swrast_span_default_fog( GLcontext *ctx, SWspan *span );
 
 extern void
-_swrast_span_default_color( GLcontext *ctx, struct sw_span *span );
+_swrast_span_default_color( GLcontext *ctx, SWspan *span );
 
 extern void
-_swrast_span_default_texcoords( GLcontext *ctx, struct sw_span *span );
+_swrast_span_default_texcoords( GLcontext *ctx, SWspan *span );
 
 extern GLfloat
 _swrast_compute_lambda(GLfloat dsdx, GLfloat dsdy, GLfloat dtdx, GLfloat dtdy,
@@ -52,16 +52,16 @@ _swrast_compute_lambda(GLfloat dsdx, GLfloat dsdy, GLfloat dtdx, GLfloat dtdy,
                        GLfloat s, GLfloat t, GLfloat q, GLfloat invQ);
 
 extern void
-_swrast_write_index_span( GLcontext *ctx, struct sw_span *span);
+_swrast_write_index_span( GLcontext *ctx, SWspan *span);
 
 
 extern void
-_swrast_write_rgba_span( GLcontext *ctx, struct sw_span *span);
+_swrast_write_rgba_span( GLcontext *ctx, SWspan *span);
 
 
 extern void
-_swrast_read_rgba_span( GLcontext *ctx, struct gl_renderbuffer *rb,
-                        GLuint n, GLint x, GLint y, GLchan rgba[][4] );
+_swrast_read_rgba_span(GLcontext *ctx, struct gl_renderbuffer *rb,
+                       GLuint n, GLint x, GLint y, GLenum type, GLvoid *rgba);
 
 extern void
 _swrast_read_index_span( GLcontext *ctx, struct gl_renderbuffer *rb,
@@ -81,5 +81,10 @@ extern void
 _swrast_get_row(GLcontext *ctx, struct gl_renderbuffer *rb,
                 GLuint count, GLint x, GLint y,
                 GLvoid *values, GLuint valueSize);
+
+
+extern void *
+_swrast_get_dest_rgba(GLcontext *ctx, struct gl_renderbuffer *rb,
+                      SWspan *span);
 
 #endif

@@ -1,11 +1,6 @@
-/**
- * \file buffers.c
- * Frame buffer management.
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  6.5.2
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -26,6 +21,13 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+
+/**
+ * \file buffers.c
+ * General framebuffer-related functions, like glClear, glScissor, etc.
+ */
+
 
 
 #include "glheader.h"
@@ -139,10 +141,6 @@ _mesa_Clear( GLbitfield mask )
    }
 
    if (ctx->RenderMode == GL_RENDER) {
-      const GLint x = ctx->DrawBuffer->_Xmin;
-      const GLint y = ctx->DrawBuffer->_Ymin;
-      const GLint height = ctx->DrawBuffer->_Ymax - ctx->DrawBuffer->_Ymin;
-      const GLint width  = ctx->DrawBuffer->_Xmax - ctx->DrawBuffer->_Xmin;
       GLbitfield bufferMask;
 
       /* don't clear depth buffer if depth writing disabled */
@@ -175,8 +173,7 @@ _mesa_Clear( GLbitfield mask )
       }
 
       ASSERT(ctx->Driver.Clear);
-      ctx->Driver.Clear( ctx, bufferMask, (GLboolean) !ctx->Scissor.Enabled,
-			 x, y, width, height );
+      ctx->Driver.Clear(ctx, bufferMask);
    }
 }
 
@@ -581,6 +578,9 @@ _mesa_ReadBuffer(GLenum buffer)
 #if _HAVE_FULL_GL
 
 /**
+ * XXX THIS IS OBSOLETE - drivers should take care of detecting window
+ * size changes and act accordingly, likely calling _mesa_resize_framebuffer().
+ *
  * GL_MESA_resize_buffers extension.
  *
  * When this function is called, we'll ask the window system how large
@@ -591,15 +591,17 @@ _mesa_ReadBuffer(GLenum buffer)
  * \note This function should only be called through the GL API, not
  * from device drivers (as was done in the past).
  */
-void GLAPIENTRY
-_mesa_ResizeBuffersMESA( void )
-{
-   GET_CURRENT_CONTEXT(ctx);
 
+void _mesa_resizebuffers( GLcontext *ctx )
+{
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH( ctx );
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glResizeBuffersMESA\n");
+
+   if (!ctx->Driver.GetBufferSize) {
+      return;
+   }
 
    if (ctx->WinSysDrawBuffer) {
       GLuint newWidth, newHeight;
@@ -635,6 +637,19 @@ _mesa_ResizeBuffersMESA( void )
    }
 
    ctx->NewState |= _NEW_BUFFERS;  /* to update scissor / window bounds */
+}
+
+
+/*
+ * XXX THIS IS OBSOLETE
+ */
+void GLAPIENTRY
+_mesa_ResizeBuffersMESA( void )
+{
+   GET_CURRENT_CONTEXT(ctx);
+
+   if (ctx->Extensions.MESA_resize_buffers)
+      _mesa_resizebuffers( ctx );
 }
 
 

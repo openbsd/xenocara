@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  6.5.2
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -49,7 +49,7 @@
 
 /**
  * \defgroup SpanFlags SPAN_XXX-flags
- * Bitmasks to indicate which span_arrays need to be computed
+ * Bitmasks to indicate which sw_span_arrays need to be computed
  * (sw_span::interpMask) or have already been filled in (sw_span::arrayMask)
  */
 /*@{*/
@@ -69,21 +69,52 @@
 #define SPAN_VARYING     0x2000
 /*@}*/
 
+#if 0
+/* alternate arrangement for code below */
+struct arrays2 {
+   union {
+      GLubyte  sz1[MAX_WIDTH][4]; /* primary color */
+      GLushort sz2[MAX_WIDTH][4];
+      GLfloat  sz4[MAX_WIDTH][4];
+   } rgba;
+   union {
+      GLubyte  sz1[MAX_WIDTH][4]; /* specular color and temp storage */
+      GLushort sz2[MAX_WIDTH][4];
+      GLfloat  sz4[MAX_WIDTH][4];
+   } spec;
+};
+#endif
+
 
 /**
- * \struct span_arrays 
+ * \sw_span_arrays 
  * \brief Arrays of fragment values.
  *
  * These will either be computed from the x/xStep values above or
  * filled in by glDraw/CopyPixels, etc.
  * These arrays are separated out of sw_span to conserve memory.
  */
-struct span_arrays {
-   /* XXX the next three fields could go into a union */
-   GLchan  rgb[MAX_WIDTH][3];
-   GLchan  rgba[MAX_WIDTH][4];
+typedef struct sw_span_arrays {
+   GLenum ChanType; /**< Color channel type, GL_UNSIGNED_BYTE, GL_FLOAT */
+   union {
+      struct {
+         GLubyte rgba[MAX_WIDTH][4]; /**< primary color */
+         GLubyte spec[MAX_WIDTH][4]; /**< specular color and temp storage */
+      } sz1;
+      struct {
+         GLushort rgba[MAX_WIDTH][4];
+         GLushort spec[MAX_WIDTH][4];
+      } sz2;
+      struct {
+         GLfloat rgba[MAX_WIDTH][4];
+         GLfloat spec[MAX_WIDTH][4];
+      } sz4;
+   } color;
+   /** XXX these are temporary fields, pointing into above color arrays */
+   GLchan (*rgba)[4];
+   GLchan (*spec)[4];
+
    GLuint  index[MAX_WIDTH];
-   GLchan  spec[MAX_WIDTH][4]; /* specular color */
    GLint   x[MAX_WIDTH];  /**< X/Y used for point/line rendering only */
    GLint   y[MAX_WIDTH];  /**< X/Y used for point/line rendering only */
    GLuint  z[MAX_WIDTH];
@@ -95,11 +126,11 @@ struct span_arrays {
 
    /** This mask indicates which fragments are alive or culled */
    GLubyte mask[MAX_WIDTH];
-};
+} SWspanarrays;
 
 
 /**
- * \struct sw_span
+ * \SWspan
  * \brief Contains data for either a horizontal line or a set of
  * pixels that are passed through a pipeline of functions before being
  * drawn.
@@ -120,7 +151,7 @@ struct span_arrays {
  * stream of these structures which would be consumed by one or more
  * span-processing threads which could run in parallel.
  */
-struct sw_span {
+typedef struct sw_span {
    GLint x, y;
 
    /** Only need to process pixels between start <= i < end */
@@ -197,8 +228,9 @@ struct sw_span {
     * a lot of memory.  The span_arrays struct is about 400KB while the
     * sw_span struct is only about 512 bytes.
     */
-   struct span_arrays *array;
-};
+   SWspanarrays *array;
+} SWspan;
+
 
 
 #define INIT_SPAN(S, PRIMITIVE, END, INTERP_MASK, ARRAY_MASK)	\
@@ -220,7 +252,8 @@ typedef void (*texture_sample_func)(GLcontext *ctx,
 
 typedef void (_ASMAPIP blend_func)( GLcontext *ctx, GLuint n,
                                     const GLubyte mask[],
-                                    GLchan src[][4], CONST GLchan dst[][4] );
+                                    GLvoid *src, const GLvoid *dst,
+                                    GLenum chanType);
 
 typedef void (*swrast_point_func)( GLcontext *ctx, const SWvertex *);
 
@@ -272,7 +305,7 @@ typedef void (*validate_texture_image_func)(GLcontext *ctx,
 
 /**
  * \struct SWcontext
- * \brief SWContext?
+ * \brief  Per-context state that's private to the software rasterizer module.
  */
 typedef struct
 {
@@ -293,7 +326,6 @@ typedef struct
    GLfloat _BackfaceSign;
    GLboolean _PreferPixelFog;    /* Compute fog blend factor per fragment? */
    GLboolean _AnyTextureCombine;
-   GLchan _FogColor[3];
    GLboolean _FogEnabled;
    GLenum _FogMode;  /* either GL_FOG_MODE or fragment program's fog mode */
 
@@ -356,12 +388,12 @@ typedef struct
     * this object is big and causes problems when allocated on the stack
     * on some systems.
     */
-   struct span_arrays *SpanArrays;
+   SWspanarrays *SpanArrays;
 
    /**
     * Used to buffer N GL_POINTS, instead of rendering one by one.
     */
-   struct sw_span PointSpan;
+   SWspan PointSpan;
 
    /** Internal hooks, kept up to date by the same mechanism as above.
     */
@@ -397,6 +429,16 @@ _swrast_validate_derived( GLcontext *ctx );
          (*(SWctx)->Driver.SpanRenderFinish)(GLctx);	\
       }							\
    } while (0)
+
+
+
+/**
+ * Size of an RGBA pixel, in bytes, for given datatype.
+ */
+#define RGBA_PIXEL_SIZE(TYPE)                                     \
+         ((TYPE == GL_UNSIGNED_BYTE) ? 4 * sizeof(GLubyte) :      \
+          ((TYPE == GL_UNSIGNED_SHORT) ? 4 * sizeof(GLushort)     \
+           : 4 * sizeof(GLfloat)))
 
 
 

@@ -1,4 +1,4 @@
-/* $Id: x86-64.c,v 1.1.1.1 2006/11/25 18:54:32 matthieu Exp $ */
+/* $Id: x86-64.c,v 1.1.1.2 2007/03/03 11:57:43 matthieu Exp $ */
 
 /*
  * Mesa 3-D graphics library
@@ -44,6 +44,9 @@
 
 DECLARE_XFORM_GROUP( x86_64, 4 )
 
+#else
+/* just to silence warning below */
+#include "x86-64.h"
 #endif
 
 /*
@@ -105,7 +108,7 @@ void _mesa_init_all_x86_64_transform_asm(void)
       _mesa_x86_64_transform_points4_2d;
    */
    
-#ifdef DEBUG
+#ifdef DEBUG_MATH
    _math_test_all_transform_functions("x86_64");
    _math_test_all_cliptest_functions("x86_64");
    _math_test_all_normal_transform_functions("x86_64");

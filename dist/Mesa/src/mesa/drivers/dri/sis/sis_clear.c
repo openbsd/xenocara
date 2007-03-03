@@ -95,27 +95,18 @@ sisUpdateZStencilPattern( sisContextPtr smesa, GLclampd z, GLint stencil )
 }
 
 void
-sisDDClear( GLcontext * ctx, GLbitfield mask, GLboolean all,
-	    GLint x, GLint y, GLint width, GLint height )
+sisDDClear( GLcontext * ctx, GLbitfield mask )
 {
-  sisContextPtr smesa = SIS_CONTEXT(ctx);
+   sisContextPtr smesa = SIS_CONTEXT(ctx);
 
-  GLint x1, y1, width1, height1;
+   GLint x1, y1, width1, height1;
 
-   if (all) {
-      GLframebuffer *buffer = ctx->DrawBuffer;
-
-      x1 = 0;
-      y1 = 0;
-      width1 = buffer->Width;
-      height1 = buffer->Height;
-   } else {
-      x1 = x;
-      y1 = Y_FLIP(y+height-1);
-      width1 = width;            
-      height1 = height;
-   }
-   /* XXX: Scissoring */
+   /* get region after locking: */
+   x1 = ctx->DrawBuffer->_Xmin;
+   y1 = ctx->DrawBuffer->_Ymin;
+   width1 = ctx->DrawBuffer->_Xmax - x1;
+   height1 = ctx->DrawBuffer->_Ymax - y1;
+   y1 = Y_FLIP(y1 + height1 - 1);
 
    /* Mask out any non-existent buffers */
    if (ctx->Visual.depthBits == 0 || !ctx->Depth.Mask)
@@ -153,7 +144,7 @@ sisDDClear( GLcontext * ctx, GLbitfield mask, GLboolean all,
    UNLOCK_HARDWARE();
 
    if (mask != 0)
-      _swrast_Clear( ctx, mask, all, x1, y1, width, height );
+      _swrast_Clear( ctx, mask);
 }
 
 
@@ -337,9 +328,7 @@ sis_clear_color_buffer( GLcontext *ctx, GLenum mask, GLint x, GLint y,
 			GLint width, GLint height )
 {
    sisContextPtr smesa = SIS_CONTEXT(ctx);
-
    int count;
-   GLuint depth = smesa->bytesPerPixel;
    drm_clip_rect_t *pExtents = NULL;
    GLint xx, yy;
    GLint x0, y0, width0, height0;
@@ -386,8 +375,6 @@ sis_clear_color_buffer( GLcontext *ctx, GLenum mask, GLint x, GLint y,
 
       if (width <= 0 || height <= 0)
 	continue;
-
-      int cmd;
 
       mWait3DCmdQueue (8);
       MMIO(REG_SRC_PITCH, (smesa->bytesPerPixel == 4) ? 

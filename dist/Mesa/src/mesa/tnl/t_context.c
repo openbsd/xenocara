@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  6.5.2
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -184,7 +184,8 @@ _tnl_InvalidateState( GLcontext *ctx, GLuint new_state )
 
    if (ctx->Fog.Enabled ||
        (ctx->FragmentProgram._Active &&
-       ctx->FragmentProgram._Current->FogOption != GL_NONE))
+        (ctx->FragmentProgram._Current->FogOption != GL_NONE ||
+         ctx->FragmentProgram._Current->Base.InputsRead & FRAG_BIT_FOGC)))
       RENDERINPUTS_SET( tnl->render_inputs_bitset, _TNL_ATTRIB_FOG );
 
    if (ctx->Polygon.FrontMode != GL_FILL || 
@@ -245,10 +246,7 @@ void
 _tnl_need_projected_coords( GLcontext *ctx, GLboolean mode )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
-   if (tnl->NeedNdcCoords != mode) {
-      tnl->NeedNdcCoords = mode;
-      _tnl_InvalidateState( ctx, _NEW_PROJECTION );
-   }
+   tnl->NeedNdcCoords = mode;
 }
 
 void

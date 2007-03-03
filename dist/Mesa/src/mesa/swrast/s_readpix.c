@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  6.5.2
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -193,79 +193,107 @@ read_stencil_pixels( GLcontext *ctx,
 
 
 /**
- * Optimized glReadPixels for particular pixel formats:
- *   GL_UNSIGNED_BYTE, GL_RGBA
- * when pixel scaling, biasing and mapping are disabled.
+ * Optimized glReadPixels for particular pixel formats when pixel
+ * scaling, biasing, mapping, etc. are disabled.
  */
 static GLboolean
-read_fast_rgba_pixels( GLcontext *ctx,
+fast_read_rgba_pixels( GLcontext *ctx,
                        GLint x, GLint y,
                        GLsizei width, GLsizei height,
                        GLenum format, GLenum type,
                        GLvoid *pixels,
-                       const struct gl_pixelstore_attrib *packing )
+                       const struct gl_pixelstore_attrib *packing,
+                       GLbitfield transferOps)
 {
    struct gl_renderbuffer *rb = ctx->ReadBuffer->_ColorReadBuffer;
 
-   /* can't do scale, bias, mapping, etc */
-   if (ctx->_ImageTransferState)
-       return GL_FALSE;
+   ASSERT(rb->_BaseFormat == GL_RGBA || rb->_BaseFormat == GL_RGB);
 
-   /* can't do fancy pixel packing */
-   if (packing->Alignment != 1 || packing->SwapBytes || packing->LsbFirst)
+   /* clipping should have already been done */
+   ASSERT(x + width <= rb->Width);
+   ASSERT(y + height <= rb->Height);
+
+   /* check for things we can't handle here */
+   if (transferOps ||
+       packing->SwapBytes ||
+       packing->LsbFirst) {
       return GL_FALSE;
+   }
 
-   {
-      GLint srcX = x;
-      GLint srcY = y;
-      GLint readWidth = width;           /* actual width read */
-      GLint readHeight = height;         /* actual height read */
-      GLint skipPixels = packing->SkipPixels;
-      GLint skipRows = packing->SkipRows;
-      GLint rowLength;
+   if (format == GL_RGBA && rb->DataType == type) {
+      const GLint dstStride = _mesa_image_row_stride(packing, width,
+                                                     format, type);
+      GLubyte *dest = _mesa_image_address2d(packing, pixels, width, height,
+                                            format, type, 0, 0);
+      GLint row;
+      ASSERT(rb->GetRow);
+      for (row = 0; row < height; row++) {
+         rb->GetRow(ctx, rb, width, x, y + row, dest);
+         dest += dstStride;
+      }
+      return GL_TRUE;
+   }
 
-      if (packing->RowLength > 0)
-         rowLength = packing->RowLength;
-      else
-         rowLength = width;
+   if (format == GL_RGB &&
+       rb->DataType == GL_UNSIGNED_BYTE &&
+       type == GL_UNSIGNED_BYTE) {
+      const GLint dstStride = _mesa_image_row_stride(packing, width,
+                                                     format, type);
+      GLubyte *dest = _mesa_image_address2d(packing, pixels, width, height,
+                                            format, type, 0, 0);
+      GLint row;
+      ASSERT(rb->GetRow);
+      for (row = 0; row < height; row++) {
+         GLubyte tempRow[MAX_WIDTH][4];
+         GLint col;
+         rb->GetRow(ctx, rb, width, x, y + row, tempRow);
+         /* convert RGBA to RGB */
+         for (col = 0; col < width; col++) {
+            dest[col * 3 + 0] = tempRow[col][0];
+            dest[col * 3 + 1] = tempRow[col][1];
+            dest[col * 3 + 2] = tempRow[col][2];
+         }
+         dest += dstStride;
+      }
+      return GL_TRUE;
+   }
 
-      /*
-       * Ready to read!
-       * The window region at (destX, destY) of size (readWidth, readHeight)
-       * will be read back.
-       * We'll write pixel data to buffer pointed to by "pixels" but we'll
-       * skip "skipRows" rows and skip "skipPixels" pixels/row.
+   /* not handled */
+   return GL_FALSE;
+}
+
+
+/**
+ * When we're using a low-precision color buffer (like 16-bit 5/6/5)
+ * we have to adjust our color values a bit to pass conformance.
+ * The problem is when a 5 or 6-bit color value is convert to an 8-bit
+ * value and then a floating point value, the floating point values don't
+ * increment uniformly as the 5 or 6-bit value is incremented.
+ *
+ * This function adjusts floating point values to compensate.
+ */
+static void
+adjust_colors(GLcontext *ctx, GLuint n, GLfloat rgba[][4])
+{
+   const GLuint rShift = 8 - ctx->Visual.redBits;
+   const GLuint gShift = 8 - ctx->Visual.greenBits;
+   const GLuint bShift = 8 - ctx->Visual.blueBits;
+   const GLfloat rScale = 1.0F / (GLfloat) ((1 << ctx->Visual.redBits  ) - 1);
+   const GLfloat gScale = 1.0F / (GLfloat) ((1 << ctx->Visual.greenBits) - 1);
+   const GLfloat bScale = 1.0F / (GLfloat) ((1 << ctx->Visual.blueBits ) - 1);
+   GLuint i;
+   for (i = 0; i < n; i++) {
+      GLint r, g, b;
+      /* convert float back to ubyte */
+      CLAMPED_FLOAT_TO_UBYTE(r, rgba[i][RCOMP]);
+      CLAMPED_FLOAT_TO_UBYTE(g, rgba[i][GCOMP]);
+      CLAMPED_FLOAT_TO_UBYTE(b, rgba[i][BCOMP]);
+      /* using only the N most significant bits of the ubyte value, convert to
+       * float in [0,1].
        */
-#if CHAN_BITS == 8
-      if (format == GL_RGBA && type == GL_UNSIGNED_BYTE)
-#elif CHAN_BITS == 16
-      if (format == GL_RGBA && type == GL_UNSIGNED_SHORT)
-#else
-      if (0)
-#endif
-      {
-         GLchan *dest = (GLchan *) pixels
-                      + (skipRows * rowLength + skipPixels) * 4;
-         GLint row;
-
-         if (packing->Invert) {
-            /* start at top and go down */
-            dest += (readHeight - 1) * rowLength * 4;
-            rowLength = -rowLength;
-         }
-
-         ASSERT(rb->GetRow);
-         for (row=0; row<readHeight; row++) {
-            rb->GetRow(ctx, rb, readWidth, srcX, srcY, dest);
-            dest += rowLength * 4;
-            srcY++;
-         }
-         return GL_TRUE;
-      }
-      else {
-         /* can't do this format/type combination */
-         return GL_FALSE;
-      }
+      rgba[i][RCOMP] = (GLfloat) (r >> rShift) * rScale;
+      rgba[i][GCOMP] = (GLfloat) (g >> gShift) * gScale;
+      rgba[i][BCOMP] = (GLfloat) (b >> bShift) * bScale;
    }
 }
 
@@ -281,14 +309,21 @@ read_rgba_pixels( GLcontext *ctx,
                   GLenum format, GLenum type, GLvoid *pixels,
                   const struct gl_pixelstore_attrib *packing )
 {
+   SWcontext *swrast = SWRAST_CONTEXT(ctx);
+   GLbitfield transferOps = ctx->_ImageTransferState;
    struct gl_framebuffer *fb = ctx->ReadBuffer;
    struct gl_renderbuffer *rb = fb->_ColorReadBuffer;
 
    ASSERT(rb);
 
+   if (type == GL_FLOAT && ((ctx->Color.ClampReadColor == GL_TRUE) ||
+                            (ctx->Color.ClampReadColor == GL_FIXED_ONLY_ARB &&
+                             rb->DataType != GL_FLOAT)))
+      transferOps |= IMAGE_CLAMP_BIT;
+
    /* Try optimized path first */
-   if (read_fast_rgba_pixels( ctx, x, y, width, height,
-                              format, type, pixels, packing )) {
+   if (fast_read_rgba_pixels(ctx, x, y, width, height,
+                             format, type, pixels, packing, transferOps)) {
       return; /* done! */
    }
 
@@ -296,7 +331,6 @@ read_rgba_pixels( GLcontext *ctx,
    ASSERT(width <= MAX_WIDTH);
 
    if (ctx->Pixel.Convolution2DEnabled || ctx->Pixel.Separable2DEnabled) {
-      const GLuint transferOps = ctx->_ImageTransferState;
       GLfloat *dest, *src, *tmpImage, *convImage;
       GLint row;
 
@@ -315,22 +349,21 @@ read_rgba_pixels( GLcontext *ctx,
       /* read full RGBA, FLOAT image */
       dest = tmpImage;
       for (row = 0; row < height; row++, y++) {
-         GLchan rgba[MAX_WIDTH][4];
          if (fb->Visual.rgbMode) {
-            _swrast_read_rgba_span(ctx, rb, width, x, y, rgba);
+            _swrast_read_rgba_span(ctx, rb, width, x, y, GL_FLOAT, dest);
          }
          else {
             GLuint index[MAX_WIDTH];
             ASSERT(rb->DataType == GL_UNSIGNED_INT);
             rb->GetRow(ctx, rb, width, x, y, index);
-            if (ctx->Pixel.IndexShift != 0 || ctx->Pixel.IndexOffset !=0 ) {
-               _mesa_map_ci(ctx, width, index);
-            }
-            _mesa_map_ci_to_rgba_chan(ctx, width, index, rgba);
+            _mesa_apply_ci_transfer_ops(ctx,
+                                        transferOps & IMAGE_SHIFT_OFFSET_BIT,
+                                        width, index);
+            _mesa_map_ci_to_rgba(ctx, width, index, (GLfloat (*)[4]) dest);
          }
-         _mesa_pack_rgba_span_chan(ctx, width, (const GLchan (*)[4]) rgba,
-                              GL_RGBA, GL_FLOAT, dest, &ctx->DefaultPacking,
-                              transferOps & IMAGE_PRE_CONVOLUTION_BITS);
+         _mesa_apply_rgba_transfer_ops(ctx, 
+                                      transferOps & IMAGE_PRE_CONVOLUTION_BITS,
+                                      width, (GLfloat (*)[4]) dest);
          dest += width * 4;
       }
 
@@ -350,8 +383,7 @@ read_rgba_pixels( GLcontext *ctx,
          GLvoid *dest;
          dest = _mesa_image_address2d(packing, pixels, width, height,
                                       format, type, row, 0);
-         _mesa_pack_rgba_span_float(ctx, width,
-                                    (const GLfloat (*)[4]) src,
+         _mesa_pack_rgba_span_float(ctx, width, (GLfloat (*)[4]) src,
                                     format, type, dest, packing,
                                     transferOps & IMAGE_POST_CONVOLUTION_BITS);
          src += width * 4;
@@ -360,45 +392,42 @@ read_rgba_pixels( GLcontext *ctx,
    }
    else {
       /* no convolution */
+      const GLint dstStride
+         = _mesa_image_row_stride(packing, width, format, type);
+      GLfloat (*rgba)[4] = swrast->SpanArrays->color.sz4.rgba;
       GLint row;
+      GLubyte *dst = _mesa_image_address2d(packing, pixels, width, height,
+                                           format, type, 0, 0);
+
       for (row = 0; row < height; row++, y++) {
-         GLchan rgba[MAX_WIDTH][4];
-         GLvoid *dst;
+
+         /* Get float rgba pixels */
          if (fb->Visual.rgbMode) {
-            _swrast_read_rgba_span(ctx, rb, width, x, y, rgba);
+            _swrast_read_rgba_span(ctx, rb, width, x, y, GL_FLOAT, rgba);
          }
          else {
+            /* read CI and convert to RGBA */
             GLuint index[MAX_WIDTH];
             ASSERT(rb->DataType == GL_UNSIGNED_INT);
             rb->GetRow(ctx, rb, width, x, y, index);
-            if (ctx->Pixel.IndexShift != 0 || ctx->Pixel.IndexOffset != 0) {
-               _mesa_map_ci(ctx, width, index);
-            }
-            _mesa_map_ci_to_rgba_chan(ctx, width, index, rgba);
+            _mesa_apply_ci_transfer_ops(ctx,
+                                        transferOps & IMAGE_SHIFT_OFFSET_BIT,
+                                        width, index);
+            _mesa_map_ci_to_rgba(ctx, width, index, rgba);
          }
-         dst = _mesa_image_address2d(packing, pixels, width, height,
-                                     format, type, row, 0);
-         if (fb->Visual.redBits < CHAN_BITS ||
-             fb->Visual.greenBits < CHAN_BITS ||
-             fb->Visual.blueBits < CHAN_BITS) {
-            /* Requantize the color values into floating point and go from
-             * there.  This fixes conformance failures with 5/6/5 color
-             * buffers, for example.
-             */
-            GLfloat rgbaf[MAX_WIDTH][4];
-            _mesa_chan_to_float_span(ctx, width,
-                                     (CONST GLchan (*)[4]) rgba, rgbaf);
-            _mesa_pack_rgba_span_float(ctx, width,
-                                       (CONST GLfloat (*)[4]) rgbaf,
-                                       format, type, dst, packing,
-                                       ctx->_ImageTransferState);
+
+         /* apply fudge factor for shallow color buffers */
+         if (fb->Visual.redBits < 8 ||
+             fb->Visual.greenBits < 8 ||
+             fb->Visual.blueBits < 8) {
+            adjust_colors(ctx, width, rgba);
          }
-         else {
-            /* GLubytes are fine */
-            _mesa_pack_rgba_span_chan(ctx, width, (CONST GLchan (*)[4]) rgba,
-                                 format, type, dst, packing,
-                                 ctx->_ImageTransferState);
-         }
+
+         /* pack the row of RGBA pixels into user's buffer */
+         _mesa_pack_rgba_span_float(ctx, width, rgba, format, type, dst,
+                                    packing, transferOps);
+
+         dst += dstStride;
       }
    }
 }
@@ -525,7 +554,7 @@ _swrast_ReadPixels( GLcontext *ctx,
    /* Do all needed clipping here, so that we can forget about it later */
    if (!_mesa_clip_readpixels(ctx, &x, &y, &width, &height, &clippedPacking)) {
       /* The ReadPixels region is totally outside the window bounds */
-      return;
+      goto end;
    }
 
    if (clippedPacking.BufferObj->Name) {

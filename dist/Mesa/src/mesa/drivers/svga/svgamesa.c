@@ -1,4 +1,4 @@
-/* $Id: svgamesa.c,v 1.1.1.1 2006/11/25 18:51:53 matthieu Exp $ */
+/* $Id: svgamesa.c,v 1.1.1.2 2007/03/03 11:56:58 matthieu Exp $ */
 
 /*
  * Mesa 3-D graphics library
@@ -213,10 +213,18 @@ static void get_buffer_size( GLframebuffer *buffer, GLuint *width, GLuint *heigh
    *height = SVGAMesa->height = vga_getydim();
 }
 
+/**
+ * We only implement this function as a mechanism to check if the
+ * framebuffer size has changed (and update corresponding state).
+ */
 static void viewport(GLcontext *ctx, GLint x, GLint y, GLsizei w, GLsizei h)
 {
-   /* poll for window size change and realloc software Z/stencil/etc if needed */
-   _mesa_ResizeBuffersMESA();
+   GLuint newWidth, newHeight;
+   GLframebuffer *buffer = ctx->WinSysDrawBuffer;
+   get_buffer_size( buffer, &newWidth, &newHeight );
+   if (buffer->Width != newWidth || buffer->Height != newHeight) {
+      _mesa_resize_framebuffer(ctx, buffer, newWidth, newHeight );
+   }
 }
 
 static void set_buffer( GLcontext *ctx, GLframebuffer *colorBuffer,

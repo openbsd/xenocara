@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  6.5.2
  *
- * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -62,8 +62,8 @@ struct parse_state {
    GLboolean isStateProgram;
    GLboolean isPositionInvariant;
    GLboolean isVersion1_1;
-   GLuint inputsRead;
-   GLuint outputsWritten;
+   GLbitfield inputsRead;
+   GLbitfield outputsWritten;
    GLboolean anyProgRegsWritten;
    GLuint numInst;                 /* number of instructions parsed */
 };
@@ -1143,7 +1143,7 @@ Parse_InstructionSequence(struct parse_state *parseState,
       struct prog_instruction *inst = program + parseState->numInst;
 
       /* Initialize the instruction */
-      _mesa_init_instruction(inst);
+      _mesa_init_instructions(inst, 1);
 
       if (Parse_String(parseState, "MOV")) {
          if (!Parse_UnaryOpInstruction(parseState, inst, OPCODE_MOV))
@@ -1395,6 +1395,8 @@ _mesa_parse_nv_vertex_program(GLcontext *ctx, GLenum dstTarget,
       }
       program->Base.Instructions = newInst;
       program->Base.InputsRead = parseState.inputsRead;
+      if (parseState.isPositionInvariant)
+         program->Base.InputsRead |= VERT_BIT_POS;
       program->Base.NumInstructions = parseState.numInst;
       program->Base.OutputsWritten = parseState.outputsWritten;
       program->IsPositionInvariant = parseState.isPositionInvariant;

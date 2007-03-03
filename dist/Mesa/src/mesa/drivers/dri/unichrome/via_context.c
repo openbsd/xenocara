@@ -147,10 +147,13 @@ viaRenderbufferStorage(GLcontext *ctx, struct gl_renderbuffer *rb,
 
 
 static void
-viaInitRenderbuffer(struct gl_renderbuffer *rb, GLenum format)
+viaInitRenderbuffer(struct via_renderbuffer *vrb, GLenum format,
+		    __DRIdrawablePrivate *dPriv)
 {
    const GLuint name = 0;
+   struct gl_renderbuffer *rb = & vrb->Base;
 
+   vrb->dPriv = dPriv;
    _mesa_init_renderbuffer(rb, name);
 
    /* Make sure we're using a null-valued GetPointer routine */
@@ -198,8 +201,9 @@ viaInitRenderbuffer(struct gl_renderbuffer *rb, GLenum format)
  * \sa AllocateBuffer
  */
 static GLboolean
-calculate_buffer_parameters( struct via_context *vmesa,
-                             struct gl_framebuffer *fb )
+calculate_buffer_parameters(struct via_context *vmesa,
+			    struct gl_framebuffer *fb,
+			    __DRIdrawablePrivate *dPriv)
 {
    const unsigned shift = vmesa->viaScreen->bitsPerPixel / 16;
    const unsigned extra = 32;
@@ -215,26 +219,28 @@ calculate_buffer_parameters( struct via_context *vmesa,
 
    if (!vmesa->front.Base.InternalFormat) {
       /* do one-time init for the renderbuffers */
-      viaInitRenderbuffer(&vmesa->front.Base, GL_RGBA);
+      viaInitRenderbuffer(&vmesa->front, GL_RGBA, dPriv);
       viaSetSpanFunctions(&vmesa->front, &fb->Visual);
       _mesa_add_renderbuffer(fb, BUFFER_FRONT_LEFT, &vmesa->front.Base);
 
       if (fb->Visual.doubleBufferMode) {
-         viaInitRenderbuffer(&vmesa->back.Base, GL_RGBA);
+         viaInitRenderbuffer(&vmesa->back, GL_RGBA, dPriv);
          viaSetSpanFunctions(&vmesa->back, &fb->Visual);
          _mesa_add_renderbuffer(fb, BUFFER_BACK_LEFT, &vmesa->back.Base);
       }
 
       if (vmesa->glCtx->Visual.depthBits > 0) {
-         viaInitRenderbuffer(&vmesa->depth.Base, 
+         viaInitRenderbuffer(&vmesa->depth,
                              (vmesa->glCtx->Visual.depthBits == 16
-                              ? GL_DEPTH_COMPONENT16 : GL_DEPTH_COMPONENT24));
+                              ? GL_DEPTH_COMPONENT16 : GL_DEPTH_COMPONENT24),
+			     dPriv);
          viaSetSpanFunctions(&vmesa->depth, &fb->Visual);
          _mesa_add_renderbuffer(fb, BUFFER_DEPTH, &vmesa->depth.Base);
       }
 
       if (vmesa->glCtx->Visual.stencilBits > 0) {
-         viaInitRenderbuffer(&vmesa->stencil.Base, GL_STENCIL_INDEX8_EXT);
+         viaInitRenderbuffer(&vmesa->stencil, GL_STENCIL_INDEX8_EXT,
+			     dPriv);
          viaSetSpanFunctions(&vmesa->stencil, &fb->Visual);
          _mesa_add_renderbuffer(fb, BUFFER_STENCIL, &vmesa->stencil.Base);
       }
@@ -243,11 +249,9 @@ calculate_buffer_parameters( struct via_context *vmesa,
    assert(vmesa->front.Base.InternalFormat);
    assert(vmesa->front.Base.AllocStorage);
    if (fb->Visual.doubleBufferMode) {
-      assert(fb->Attachment[BUFFER_BACK_LEFT].Renderbuffer);
-      assert(vmesa->front.Base.AllocStorage);
+      assert(vmesa->back.Base.AllocStorage);
    }
    if (fb->Visual.depthBits) {
-      assert(fb->Attachment[BUFFER_DEPTH].Renderbuffer);
       assert(vmesa->depth.Base.AllocStorage);
    }
 
@@ -352,17 +356,9 @@ void viaReAllocateBuffers(GLcontext *ctx, GLframebuffer *drawbuffer,
 {
     struct via_context *vmesa = VIA_CONTEXT(ctx);
 
-    calculate_buffer_parameters( vmesa, drawbuffer );
+    calculate_buffer_parameters(vmesa, drawbuffer, vmesa->driDrawable);
 
     _mesa_resize_framebuffer(ctx, drawbuffer, width, height);
-}
-
-static void viaBufferSize(GLframebuffer *buffer, GLuint *width, GLuint *height)
-{
-    GET_CURRENT_CONTEXT(ctx);
-    struct via_context *vmesa = VIA_CONTEXT(ctx);       
-    *width = vmesa->driDrawable->w;
-    *height = vmesa->driDrawable->h;
 }
 
 /* Extension strings exported by the Unichrome driver.
@@ -481,7 +477,7 @@ viaCreateContext(const __GLcontextModes *visual,
     /* Parse configuration files.
      */
     driParseConfigFiles (&vmesa->optionCache, &viaScreen->optionCache,
-			 sPriv->myNum, "via");
+			 sPriv->myNum, "unichrome");
 
     /* pick back buffer */
     vmesa->hasBack = visual->doubleBufferMode;
@@ -557,8 +553,12 @@ viaCreateContext(const __GLcontextModes *visual,
     driContextPriv->driverPrivate = vmesa;
 
     ctx = vmesa->glCtx;
-    
-    ctx->Const.MaxTextureLevels = 10;    
+
+    if (driQueryOptionb(&vmesa->optionCache, "excess_mipmap"))
+        ctx->Const.MaxTextureLevels = 11;
+    else
+        ctx->Const.MaxTextureLevels = 10;
+
     ctx->Const.MaxTextureUnits = 2;
     ctx->Const.MaxTextureImageUnits = ctx->Const.MaxTextureUnits;
     ctx->Const.MaxTextureCoordUnits = ctx->Const.MaxTextureUnits;
@@ -575,8 +575,6 @@ viaCreateContext(const __GLcontextModes *visual,
     ctx->Const.MaxPointSizeAA = 1.0;
     ctx->Const.PointSizeGranularity = 1.0;
 
-    ctx->Driver.GetBufferSize = viaBufferSize;
-/*    ctx->Driver.ResizeBuffers = _swrast_alloc_buffers;  *//* FIXME ?? */
     ctx->Driver.GetString = viaGetString;
 
     ctx->DriverCtx = (void *)vmesa;
@@ -657,19 +655,13 @@ viaCreateContext(const __GLcontextModes *visual,
        VIA_DEBUG = driParseDebugString( getenv( "VIA_DEBUG" ),
 					debug_control );
 
-    if (getenv("VIA_NO_RAST"))
+    if (getenv("VIA_NO_RAST") ||
+        driQueryOptionb(&vmesa->optionCache, "no_rast"))
        FALLBACK(vmesa, VIA_FALLBACK_USER_DISABLE, 1);
 
-    /* I don't understand why this isn't working:
-     */
     vmesa->vblank_flags =
        vmesa->viaScreen->irqEnabled ?
         driGetDefaultVBlankFlags(&vmesa->optionCache) : VBLANK_FLAG_NO_IRQ;
-
-    /* Hack this up in its place:
-     */
-    vmesa->vblank_flags = (getenv("VIA_VSYNC") ? 
-			   VBLANK_FLAG_SYNC : VBLANK_FLAG_NO_IRQ);
 
     if (getenv("VIA_PAGEFLIP"))
        vmesa->allowPageFlip = 1;
@@ -728,57 +720,81 @@ viaDestroyContext(__DRIcontextPrivate *driContextPriv)
 	assert (is_empty_list(&vmesa->tex_image_list[VIA_MEM_SYSTEM]));
 	assert (is_empty_list(&vmesa->freed_tex_buffers));
 
-        FREE(vmesa);
+	driDestroyOptionCache(&vmesa->optionCache);
+
+	FREE(vmesa);
     }
 }
 
 
 void viaXMesaWindowMoved(struct via_context *vmesa)
 {
-   __DRIdrawablePrivate *dPriv = vmesa->driDrawable;
+   __DRIdrawablePrivate *const drawable = vmesa->driDrawable;
+   __DRIdrawablePrivate *const readable = vmesa->driReadable;
+   struct via_renderbuffer *const draw_buffer = 
+     (struct via_renderbuffer *) drawable->driverPrivate;
+   struct via_renderbuffer *const read_buffer =
+     (struct via_renderbuffer *) readable->driverPrivate;
    GLuint bytePerPixel = vmesa->viaScreen->bitsPerPixel >> 3;
 
-   if (!dPriv)
+   if (!drawable)
       return;
    
    switch (vmesa->glCtx->DrawBuffer->_ColorDrawBufferMask[0]) {
    case BUFFER_BIT_BACK_LEFT: 
-      if (dPriv->numBackClipRects == 0) {
-	 vmesa->numClipRects = dPriv->numClipRects;
-	 vmesa->pClipRects = dPriv->pClipRects;
+      if (drawable->numBackClipRects == 0) {
+	 vmesa->numClipRects = drawable->numClipRects;
+	 vmesa->pClipRects = drawable->pClipRects;
       } 
       else {
-	 vmesa->numClipRects = dPriv->numBackClipRects;
-	 vmesa->pClipRects = dPriv->pBackClipRects;
+	 vmesa->numClipRects = drawable->numBackClipRects;
+	 vmesa->pClipRects = drawable->pBackClipRects;
       }
       break;
    case BUFFER_BIT_FRONT_LEFT:
-      vmesa->numClipRects = dPriv->numClipRects;
-      vmesa->pClipRects = dPriv->pClipRects;
+      vmesa->numClipRects = drawable->numClipRects;
+      vmesa->pClipRects = drawable->pClipRects;
       break;
    default:
       vmesa->numClipRects = 0;
       break;
    }
 
-   if (vmesa->drawW != dPriv->w ||
-       vmesa->drawH != dPriv->h) 
-      calculate_buffer_parameters( vmesa, vmesa->glCtx->DrawBuffer );
+   if ((draw_buffer->drawW != drawable->w) 
+       || (draw_buffer->drawH != drawable->h)) {
+      calculate_buffer_parameters(vmesa, vmesa->glCtx->DrawBuffer,
+				  drawable);
+   }
 
-   vmesa->drawXoff = (GLuint)(((dPriv->x * bytePerPixel) & 0x1f) / 
+   draw_buffer->drawXoff = (GLuint)(((drawable->x * bytePerPixel) & 0x1f) / 
 			      bytePerPixel);  
-   vmesa->drawX = dPriv->x - vmesa->drawXoff;
-   vmesa->drawY = dPriv->y;
-   vmesa->drawW = dPriv->w;
-   vmesa->drawH = dPriv->h;
+   draw_buffer->drawX = drawable->x - draw_buffer->drawXoff;
+   draw_buffer->drawY = drawable->y;
+   draw_buffer->drawW = drawable->w;
+   draw_buffer->drawH = drawable->h;
+
+   if (drawable != readable) {
+      if ((read_buffer->drawW != readable->w) 
+	  || (read_buffer->drawH != readable->h)) {
+	 calculate_buffer_parameters(vmesa, vmesa->glCtx->ReadBuffer,
+				     readable);
+      }
+
+      read_buffer->drawXoff = (GLuint)(((readable->x * bytePerPixel) & 0x1f) / 
+				       bytePerPixel);  
+      read_buffer->drawX = readable->x - read_buffer->drawXoff;
+      read_buffer->drawY = readable->y;
+      read_buffer->drawW = readable->w;
+      read_buffer->drawH = readable->h;
+   }
 
    vmesa->front.orig = (vmesa->front.offset + 
-			vmesa->drawY * vmesa->front.pitch + 
-			vmesa->drawX * bytePerPixel);
+			draw_buffer->drawY * vmesa->front.pitch + 
+			draw_buffer->drawX * bytePerPixel);
 
    vmesa->front.origMap = (vmesa->front.map + 
-			   vmesa->drawY * vmesa->front.pitch + 
-			   vmesa->drawX * bytePerPixel);
+			   draw_buffer->drawY * vmesa->front.pitch + 
+			   draw_buffer->drawX * bytePerPixel);
 
    vmesa->back.orig = vmesa->back.offset;
    vmesa->depth.orig = vmesa->depth.offset;   
@@ -814,13 +830,40 @@ viaMakeCurrent(__DRIcontextPrivate *driContextPriv,
         drawBuffer = (GLframebuffer *)driDrawPriv->driverPrivate;
         readBuffer = (GLframebuffer *)driReadPriv->driverPrivate;
 
-	if ( vmesa->driDrawable != driDrawPriv ) {
-	   driDrawableInitVBlank( driDrawPriv, vmesa->vblank_flags );
-	   vmesa->driDrawable = driDrawPriv;
-	   if ( ! calculate_buffer_parameters( vmesa, drawBuffer ) ) {
-	      return GL_FALSE;
-	   }
+	if (vmesa->driDrawable != driDrawPriv) {
+	   driDrawableInitVBlank(driDrawPriv, vmesa->vblank_flags,
+				 &vmesa->vbl_seq);
 	}
+
+       if ((vmesa->driDrawable != driDrawPriv)
+	   || (vmesa->driReadable != driReadPriv)) {
+	  vmesa->driDrawable = driDrawPriv;
+	  vmesa->driReadable = driReadPriv;
+
+	  if ((drawBuffer->Width != driDrawPriv->w) 
+	      || (drawBuffer->Height != driDrawPriv->h)) {
+	     _mesa_resize_framebuffer(ctx, drawBuffer,
+				      driDrawPriv->w, driDrawPriv->h);
+	     drawBuffer->Initialized = GL_TRUE;
+	  }
+
+	  if (!calculate_buffer_parameters(vmesa, drawBuffer, driDrawPriv)) {
+	     return GL_FALSE;
+	  }
+
+	  if (driDrawPriv != driReadPriv) {
+	     if ((readBuffer->Width != driReadPriv->w)
+		 || (readBuffer->Height != driReadPriv->h)) {
+		_mesa_resize_framebuffer(ctx, readBuffer,
+					 driReadPriv->w, driReadPriv->h);
+		readBuffer->Initialized = GL_TRUE;
+	     }
+
+	     if (!calculate_buffer_parameters(vmesa, readBuffer, driReadPriv)) {
+		return GL_FALSE;
+	     }
+	  }
+       }
 
         _mesa_make_current(vmesa->glCtx, drawBuffer, readBuffer);
 
@@ -847,7 +890,10 @@ void viaGetLock(struct via_context *vmesa, GLuint flags)
 
     drmGetLock(vmesa->driFd, vmesa->hHWContext, flags);
 
-    DRI_VALIDATE_DRAWABLE_INFO( sPriv, dPriv );
+    DRI_VALIDATE_DRAWABLE_INFO(sPriv, dPriv);
+    if (dPriv != vmesa->driReadable) {
+	DRI_VALIDATE_DRAWABLE_INFO(sPriv, vmesa->driReadable);
+    }
 
     if (vmesa->sarea->ctxOwner != vmesa->hHWContext) {
        vmesa->sarea->ctxOwner = vmesa->hHWContext;

@@ -87,15 +87,15 @@ typedef struct __DRIutilversionRec2    __DRIutilversion2;
 #define DRI_VALIDATE_DRAWABLE_INFO(psp, pdp)                            \
 do {                                                                    \
     while (*(pdp->pStamp) != pdp->lastStamp) {                          \
-	DRM_UNLOCK(psp->fd, &psp->pSAREA->lock,                         \
-		   pdp->driContextPriv->hHWContext);                    \
+        register unsigned int hwContext = psp->pSAREA->lock.lock &      \
+		     ~(DRM_LOCK_HELD | DRM_LOCK_CONT);                  \
+	DRM_UNLOCK(psp->fd, &psp->pSAREA->lock, hwContext);             \
                                                                         \
 	DRM_SPINLOCK(&psp->pSAREA->drawable_lock, psp->drawLockID);     \
 	DRI_VALIDATE_DRAWABLE_INFO_ONCE(pdp);                           \
 	DRM_SPINUNLOCK(&psp->pSAREA->drawable_lock, psp->drawLockID);   \
                                                                         \
-	DRM_LIGHT_LOCK(psp->fd, &psp->pSAREA->lock,                     \
-		       pdp->driContextPriv->hHWContext);                \
+	DRM_LIGHT_LOCK(psp->fd, &psp->pSAREA->lock, hwContext);         \
     }                                                                   \
 } while (0)
 
@@ -355,9 +355,14 @@ struct __DRIcontextPrivateRec {
     __DRInativeDisplay *display;
 
     /**
-     * Pointer to drawable currently bound to this context.
+     * Pointer to drawable currently bound to this context for drawing.
      */
     __DRIdrawablePrivate *driDrawablePriv;
+
+    /**
+     * Pointer to drawable currently bound to this context for reading.
+     */
+    __DRIdrawablePrivate *driReadablePriv;
 
     /**
      * Pointer to screen on which this context was created.

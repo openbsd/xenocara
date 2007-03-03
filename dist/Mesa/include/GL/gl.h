@@ -2162,45 +2162,14 @@ typedef void (APIENTRYP PFNGLMULTITEXCOORD4SVARBPROC) (GLenum target, const GLsh
 #define GL_DEBUG_ASSERT_MESA              0x875B
 
 GLAPI GLhandleARB APIENTRY glCreateDebugObjectMESA (void);
-GLAPI GLvoid APIENTRY glClearDebugLogMESA (GLhandleARB obj, GLenum logType, GLenum shaderType);
-GLAPI GLvoid APIENTRY glGetDebugLogMESA (GLhandleARB obj, GLenum logType, GLenum shaderType, GLsizei maxLength,
+GLAPI void APIENTRY glClearDebugLogMESA (GLhandleARB obj, GLenum logType, GLenum shaderType);
+GLAPI void APIENTRY glGetDebugLogMESA (GLhandleARB obj, GLenum logType, GLenum shaderType, GLsizei maxLength,
                                          GLsizei *length, GLcharARB *debugLog);
 GLAPI GLsizei APIENTRY glGetDebugLogLengthMESA (GLhandleARB obj, GLenum logType, GLenum shaderType);
 
 #endif /* GL_MESA_shader_debug */
 
 #endif /* GL_ARB_shader_objects */
-
-
-/*
- * ???. GL_MESA_trace
- * XXX obsolete
- */
-#ifndef GL_MESA_trace
-#define GL_MESA_trace 1
-
-#define GL_TRACE_ALL_BITS_MESA			0xFFFF
-#define GL_TRACE_OPERATIONS_BIT_MESA		0x0001
-#define GL_TRACE_PRIMITIVES_BIT_MESA		0x0002
-#define GL_TRACE_ARRAYS_BIT_MESA		0x0004
-#define GL_TRACE_TEXTURES_BIT_MESA		0x0008
-#define GL_TRACE_PIXELS_BIT_MESA		0x0010
-#define GL_TRACE_ERRORS_BIT_MESA		0x0020
-#define GL_TRACE_MASK_MESA			0x8755
-#define GL_TRACE_NAME_MESA			0x8756
-
-GLAPI void GLAPIENTRY glEnableTraceMESA( GLbitfield mask );
-GLAPI void GLAPIENTRY glDisableTraceMESA( GLbitfield mask );
-GLAPI void GLAPIENTRY glNewTraceMESA( GLbitfield mask, const GLubyte * traceName );
-GLAPI void GLAPIENTRY glEndTraceMESA( void );
-GLAPI void GLAPIENTRY glTraceAssertAttribMESA( GLbitfield attribMask );
-GLAPI void GLAPIENTRY glTraceCommentMESA( const GLubyte * comment );
-GLAPI void GLAPIENTRY glTraceTextureMESA( GLuint name, const GLubyte* comment );
-GLAPI void GLAPIENTRY glTraceListMESA( GLuint name, const GLubyte* comment );
-GLAPI void GLAPIENTRY glTracePointerMESA( GLvoid* pointer, const GLubyte* comment );
-GLAPI void GLAPIENTRY glTracePointerRangeMESA( const GLvoid* first, const GLvoid* last, const GLubyte* comment );
-
-#endif /* GL_MESA_trace */
 
 
 /*

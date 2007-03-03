@@ -32,9 +32,10 @@
 # define NULL 0
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char UniformMatrix3fvARB_names[] = 
     "iiip\0" /* Parameter signature */
+    "glUniformMatrix3fv\0"
     "glUniformMatrix3fvARB\0"
     "";
 #endif
@@ -75,6 +76,13 @@ static const char PointParameteriNV_names[] =
     "ii\0" /* Parameter signature */
     "glPointParameteri\0"
     "glPointParameteriNV\0"
+    "";
+#endif
+
+#if defined(need_GL_VERSION_2_0)
+static const char GetProgramiv_names[] = 
+    "iip\0" /* Parameter signature */
+    "glGetProgramiv\0"
     "";
 #endif
 
@@ -129,14 +137,6 @@ static const char BlitFramebufferEXT_names[] =
 static const char VertexAttrib4ubvNV_names[] = 
     "ip\0" /* Parameter signature */
     "glVertexAttrib4ubvNV\0"
-    "";
-#endif
-
-#if defined(need_GL_SGI_color_table) || defined(need_GL_EXT_paletted_texture)
-static const char GetColorTableParameterfvSGI_names[] = 
-    "iip\0" /* Parameter signature */
-    "glGetColorTableParameterfvSGI\0"
-    "glGetColorTableParameterfvEXT\0"
     "";
 #endif
 
@@ -239,16 +239,17 @@ static const char TexCoord2fColor4ubVertex3fvSUN_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
-static const char ProgramEnvParameter4dvARB_names[] = 
-    "iip\0" /* Parameter signature */
-    "glProgramEnvParameter4dvARB\0"
+#if defined(need_GL_VERSION_2_0)
+static const char AttachShader_names[] = 
+    "ii\0" /* Parameter signature */
+    "glAttachShader\0"
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib2fARB_names[] = 
     "iff\0" /* Parameter signature */
+    "glVertexAttrib2f\0"
     "glVertexAttrib2fARB\0"
     "";
 #endif
@@ -260,16 +261,10 @@ static const char GetDebugLogLengthMESA_names[] =
     "";
 #endif
 
-#if defined(need_GL_EXT_histogram)
-static const char GetHistogramParameterivEXT_names[] = 
-    "iip\0" /* Parameter signature */
-    "glGetHistogramParameterivEXT\0"
-    "";
-#endif
-
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib3fARB_names[] = 
     "ifff\0" /* Parameter signature */
+    "glVertexAttrib3f\0"
     "glVertexAttrib3fARB\0"
     "";
 #endif
@@ -320,16 +315,25 @@ static const char CompressedTexSubImage2DARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_NV_register_combiners)
+static const char CombinerOutputNV_names[] = 
+    "iiiiiiiiii\0" /* Parameter signature */
+    "glCombinerOutputNV\0"
+    "";
+#endif
+
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform2fARB_names[] = 
     "iff\0" /* Parameter signature */
+    "glUniform2f\0"
     "glUniform2fARB\0"
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib1svARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib1sv\0"
     "glVertexAttrib1svARB\0"
     "";
 #endif
@@ -341,9 +345,10 @@ static const char VertexAttribs1dvNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform2ivARB_names[] = 
     "iip\0" /* Parameter signature */
+    "glUniform2iv\0"
     "glUniform2ivARB\0"
     "";
 #endif
@@ -359,6 +364,13 @@ static const char GetImageTransformParameterfvHP_names[] =
 static const char WeightubvARB_names[] = 
     "ip\0" /* Parameter signature */
     "glWeightubvARB\0"
+    "";
+#endif
+
+#if defined(need_GL_NV_vertex_program)
+static const char VertexAttrib1fvNV_names[] = 
+    "ip\0" /* Parameter signature */
+    "glVertexAttrib1fvNV\0"
     "";
 #endif
 
@@ -392,9 +404,10 @@ static const char BlendColor_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char UniformMatrix4fvARB_names[] = 
     "iiip\0" /* Parameter signature */
+    "glUniformMatrix4fv\0"
     "glUniformMatrix4fvARB\0"
     "";
 #endif
@@ -413,6 +426,13 @@ static const char ReadInstrumentsSGIX_names[] =
     "";
 #endif
 
+#if defined(need_GL_VERSION_2_1)
+static const char UniformMatrix2x4fv_names[] = 
+    "iiip\0" /* Parameter signature */
+    "glUniformMatrix2x4fv\0"
+    "";
+#endif
+
 #if defined(need_GL_SUN_vertex)
 static const char Color4ubVertex3fvSUN_names[] = 
     "pp\0" /* Parameter signature */
@@ -427,9 +447,10 @@ static const char GetListParameterivSGIX_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib4NusvARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib4Nusv\0"
     "glVertexAttrib4NusvARB\0"
     "";
 #endif
@@ -455,10 +476,10 @@ static const char FragmentLightModelivSGIX_names[] =
     "";
 #endif
 
-#if defined(need_GL_ATI_fragment_shader)
-static const char ColorFragmentOp3ATI_names[] = 
-    "iiiiiiiiiiiii\0" /* Parameter signature */
-    "glColorFragmentOp3ATI\0"
+#if defined(need_GL_VERSION_2_1)
+static const char UniformMatrix4x3fv_names[] = 
+    "iiip\0" /* Parameter signature */
+    "glUniformMatrix4x3fv\0"
     "";
 #endif
 
@@ -551,9 +572,10 @@ static const char ProgramParameter4dvNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char DisableVertexAttribArrayARB_names[] = 
     "i\0" /* Parameter signature */
+    "glDisableVertexAttribArray\0"
     "glDisableVertexAttribArrayARB\0"
     "";
 #endif
@@ -580,9 +602,18 @@ static const char CompressedTexImage3DARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_EXT_convolution)
+static const char GetConvolutionParameteriv_names[] = 
+    "iip\0" /* Parameter signature */
+    "glGetConvolutionParameteriv\0"
+    "glGetConvolutionParameterivEXT\0"
+    "";
+#endif
+
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib1fARB_names[] = 
     "if\0" /* Parameter signature */
+    "glVertexAttrib1f\0"
     "glVertexAttrib1fARB\0"
     "";
 #endif
@@ -695,16 +726,25 @@ static const char VertexAttrib2dNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0)
+static const char GetProgramInfoLog_names[] = 
+    "iipp\0" /* Parameter signature */
+    "glGetProgramInfoLog\0"
+    "";
+#endif
+
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib4NbvARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib4Nbv\0"
     "glVertexAttrib4NbvARB\0"
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_shader)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_shader)
 static const char GetActiveAttribARB_names[] = 
     "iiipppp\0" /* Parameter signature */
+    "glGetActiveAttrib\0"
     "glGetActiveAttribARB\0"
     "";
 #endif
@@ -720,13 +760,6 @@ static const char VertexAttrib4ubNV_names[] =
 static const char TexCoord2fColor4fNormal3fVertex3fSUN_names[] = 
     "ffffffffffff\0" /* Parameter signature */
     "glTexCoord2fColor4fNormal3fVertex3fSUN\0"
-    "";
-#endif
-
-#if defined(need_GL_EXT_histogram)
-static const char GetMinmaxEXT_names[] = 
-    "iiiip\0" /* Parameter signature */
-    "glGetMinmaxEXT\0"
     "";
 #endif
 
@@ -877,9 +910,10 @@ static const char ReplacementCodeubvSUN_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform3iARB_names[] = 
     "iiii\0" /* Parameter signature */
+    "glUniform3i\0"
     "glUniform3iARB\0"
     "";
 #endif
@@ -891,10 +925,10 @@ static const char GetFragmentMaterialfvSGIX_names[] =
     "";
 #endif
 
-#if defined(need_GL_EXT_coordinate_frame)
-static const char Binormal3fEXT_names[] = 
-    "fff\0" /* Parameter signature */
-    "glBinormal3fEXT\0"
+#if defined(need_GL_VERSION_2_0)
+static const char GetShaderInfoLog_names[] = 
+    "iipp\0" /* Parameter signature */
+    "glGetShaderInfoLog\0"
     "";
 #endif
 
@@ -1012,9 +1046,10 @@ static const char TexSubImage1D_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib1sARB_names[] = 
     "ii\0" /* Parameter signature */
+    "glVertexAttrib1s\0"
     "glVertexAttrib1sARB\0"
     "";
 #endif
@@ -1023,13 +1058,6 @@ static const char VertexAttrib1sARB_names[] =
 static const char FinalCombinerInputNV_names[] = 
     "iiii\0" /* Parameter signature */
     "glFinalCombinerInputNV\0"
-    "";
-#endif
-
-#if defined(need_GL_EXT_histogram)
-static const char GetHistogramParameterfvEXT_names[] = 
-    "iip\0" /* Parameter signature */
-    "glGetHistogramParameterfvEXT\0"
     "";
 #endif
 
@@ -1047,10 +1075,19 @@ static const char ReplacementCodeuiTexCoord2fVertex3fSUN_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform1fARB_names[] = 
     "if\0" /* Parameter signature */
+    "glUniform1f\0"
     "glUniform1fARB\0"
+    "";
+#endif
+
+#if defined(need_GL_EXT_texture_object)
+static const char AreTexturesResident_names[] = 
+    "ipp\0" /* Parameter signature */
+    "glAreTexturesResident\0"
+    "glAreTexturesResidentEXT\0"
     "";
 #endif
 
@@ -1119,13 +1156,6 @@ static const char SecondaryColor3bvEXT_names[] =
     "";
 #endif
 
-#if defined(need_GL_EXT_histogram)
-static const char GetHistogramEXT_names[] = 
-    "iiiip\0" /* Parameter signature */
-    "glGetHistogramEXT\0"
-    "";
-#endif
-
 #if defined(need_GL_IBM_vertex_array_lists)
 static const char VertexPointerListIBM_names[] = 
     "iiipi\0" /* Parameter signature */
@@ -1182,9 +1212,10 @@ static const char GetFragmentLightivSGIX_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char UniformMatrix2fvARB_names[] = 
     "iiip\0" /* Parameter signature */
+    "glUniformMatrix2fv\0"
     "glUniformMatrix2fvARB\0"
     "";
 #endif
@@ -1228,9 +1259,10 @@ static const char MapParameterfvNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib3dvARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib3dv\0"
     "glVertexAttrib3dvARB\0"
     "";
 #endif
@@ -1321,9 +1353,10 @@ static const char GetAttachedObjectsARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform3fvARB_names[] = 
     "iip\0" /* Parameter signature */
+    "glUniform3fv\0"
     "glUniform3fvARB\0"
     "";
 #endif
@@ -1364,9 +1397,10 @@ static const char GetHandleARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char GetVertexAttribivARB_names[] = 
     "iip\0" /* Parameter signature */
+    "glGetVertexAttribiv\0"
     "glGetVertexAttribivARB\0"
     "";
 #endif
@@ -1378,10 +1412,10 @@ static const char GetCombinerInputParameterfvNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_SUN_vertex)
-static const char ReplacementCodeuiNormal3fVertex3fvSUN_names[] = 
-    "ppp\0" /* Parameter signature */
-    "glReplacementCodeuiNormal3fVertex3fvSUN\0"
+#if defined(need_GL_VERSION_2_0)
+static const char CreateProgram_names[] = 
+    "\0" /* Parameter signature */
+    "glCreateProgram\0"
     "";
 #endif
 
@@ -1390,6 +1424,14 @@ static const char LoadTransposeMatrixdARB_names[] =
     "p\0" /* Parameter signature */
     "glLoadTransposeMatrixd\0"
     "glLoadTransposeMatrixdARB\0"
+    "";
+#endif
+
+#if defined(need_GL_EXT_histogram)
+static const char GetMinmax_names[] = 
+    "iiiip\0" /* Parameter signature */
+    "glGetMinmax\0"
+    "glGetMinmaxEXT\0"
     "";
 #endif
 
@@ -1551,13 +1593,6 @@ static const char AlphaFragmentOp2ATI_names[] =
     "";
 #endif
 
-#if defined(need_GL_EXT_convolution)
-static const char GetSeparableFilterEXT_names[] = 
-    "iiippp\0" /* Parameter signature */
-    "glGetSeparableFilterEXT\0"
-    "";
-#endif
-
 #if defined(need_GL_VERSION_1_3)
 static const char MultiTexCoord4sARB_names[] = 
     "iiiii\0" /* Parameter signature */
@@ -1618,9 +1653,10 @@ static const char VertexAttrib3dNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib3dARB_names[] = 
     "iddd\0" /* Parameter signature */
+    "glVertexAttrib3d\0"
     "glVertexAttrib3dARB\0"
     "";
 #endif
@@ -1632,9 +1668,10 @@ static const char ReplacementCodeuiTexCoord2fColor4fNormal3fVertex3fvSUN_names[]
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib4fARB_names[] = 
     "iffff\0" /* Parameter signature */
+    "glVertexAttrib4f\0"
     "glVertexAttrib4fARB\0"
     "";
 #endif
@@ -1683,9 +1720,10 @@ static const char SecondaryColorPointerEXT_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib4fvARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib4fv\0"
     "glVertexAttrib4fvARB\0"
     "";
 #endif
@@ -1697,9 +1735,10 @@ static const char ColorPointerListIBM_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char GetActiveUniformARB_names[] = 
     "iiipppp\0" /* Parameter signature */
+    "glGetActiveUniform\0"
     "glGetActiveUniformARB\0"
     "";
 #endif
@@ -1738,6 +1777,13 @@ static const char DeleteFencesNV_names[] =
 static const char DeformationMap3dSGIX_names[] = 
     "iddiiddiiddiip\0" /* Parameter signature */
     "glDeformationMap3dSGIX\0"
+    "";
+#endif
+
+#if defined(need_GL_VERSION_2_0)
+static const char IsShader_names[] = 
+    "i\0" /* Parameter signature */
+    "glIsShader\0"
     "";
 #endif
 
@@ -1785,9 +1831,10 @@ static const char ResizeBuffersMESA_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char GetUniformivARB_names[] = 
     "iip\0" /* Parameter signature */
+    "glGetUniformiv\0"
     "glGetUniformivARB\0"
     "";
 #endif
@@ -1879,10 +1926,10 @@ static const char MultiTexCoord3iARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_EXT_convolution)
-static const char GetConvolutionFilterEXT_names[] = 
-    "iiip\0" /* Parameter signature */
-    "glGetConvolutionFilterEXT\0"
+#if defined(need_GL_VERSION_2_0)
+static const char IsProgram_names[] = 
+    "i\0" /* Parameter signature */
+    "glIsProgram\0"
     "";
 #endif
 
@@ -1918,6 +1965,14 @@ static const char FramebufferRenderbufferEXT_names[] =
 static const char VertexAttrib1dvNV_names[] = 
     "ip\0" /* Parameter signature */
     "glVertexAttrib1dvNV\0"
+    "";
+#endif
+
+#if defined(need_GL_EXT_texture_object)
+static const char GenTextures_names[] = 
+    "ip\0" /* Parameter signature */
+    "glGenTextures\0"
+    "glGenTexturesEXT\0"
     "";
 #endif
 
@@ -2016,9 +2071,10 @@ static const char PointParameterivNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform2fvARB_names[] = 
     "iip\0" /* Parameter signature */
+    "glUniform2fv\0"
     "glUniform2fvARB\0"
     "";
 #endif
@@ -2045,10 +2101,10 @@ static const char DeleteObjectARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
-static const char UseProgramObjectARB_names[] = 
-    "i\0" /* Parameter signature */
-    "glUseProgramObjectARB\0"
+#if defined(need_GL_ARB_matrix_palette)
+static const char MatrixIndexPointerARB_names[] = 
+    "iiip\0" /* Parameter signature */
+    "glMatrixIndexPointerARB\0"
     "";
 #endif
 
@@ -2073,10 +2129,18 @@ static const char BindFramebufferEXT_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
-static const char VertexAttrib4usvARB_names[] = 
-    "ip\0" /* Parameter signature */
-    "glVertexAttrib4usvARB\0"
+#if defined(need_GL_SGIX_reference_plane)
+static const char ReferencePlaneSGIX_names[] = 
+    "p\0" /* Parameter signature */
+    "glReferencePlaneSGIX\0"
+    "";
+#endif
+
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
+static const char ValidateProgramARB_names[] = 
+    "i\0" /* Parameter signature */
+    "glValidateProgram\0"
+    "glValidateProgramARB\0"
     "";
 #endif
 
@@ -2118,9 +2182,10 @@ static const char CopyTexSubImage3D_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib2dARB_names[] = 
     "idd\0" /* Parameter signature */
+    "glVertexAttrib2d\0"
     "glVertexAttrib2dARB\0"
     "";
 #endif
@@ -2132,11 +2197,28 @@ static const char TextureColorMaskSGIS_names[] =
     "";
 #endif
 
+#if defined(need_GL_SGI_color_table) || defined(need_GL_EXT_paletted_texture)
+static const char GetColorTable_names[] = 
+    "iiip\0" /* Parameter signature */
+    "glGetColorTable\0"
+    "glGetColorTableSGI\0"
+    "glGetColorTableEXT\0"
+    "";
+#endif
+
 #if defined(need_GL_SGI_color_table)
 static const char CopyColorTable_names[] = 
     "iiiii\0" /* Parameter signature */
     "glCopyColorTable\0"
     "glCopyColorTableSGI\0"
+    "";
+#endif
+
+#if defined(need_GL_EXT_histogram)
+static const char GetHistogramParameterfv_names[] = 
+    "iip\0" /* Parameter signature */
+    "glGetHistogramParameterfv\0"
+    "glGetHistogramParameterfvEXT\0"
     "";
 #endif
 
@@ -2170,9 +2252,10 @@ static const char MultiTexCoord2sARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib1dvARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib1dv\0"
     "glVertexAttrib1dvARB\0"
     "";
 #endif
@@ -2227,9 +2310,10 @@ static const char DeformSGIX_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char GetVertexAttribfvARB_names[] = 
     "iip\0" /* Parameter signature */
+    "glGetVertexAttribfv\0"
     "glGetVertexAttribfvARB\0"
     "";
 #endif
@@ -2239,6 +2323,13 @@ static const char SecondaryColor3ivEXT_names[] =
     "p\0" /* Parameter signature */
     "glSecondaryColor3iv\0"
     "glSecondaryColor3ivEXT\0"
+    "";
+#endif
+
+#if defined(need_GL_VERSION_2_1)
+static const char UniformMatrix4x2fv_names[] = 
+    "iiip\0" /* Parameter signature */
+    "glUniformMatrix4x2fv\0"
     "";
 #endif
 
@@ -2253,6 +2344,13 @@ static const char GetDetailTexFuncSGIS_names[] =
 static const char GetCombinerStageParameterfvNV_names[] = 
     "iip\0" /* Parameter signature */
     "glGetCombinerStageParameterfvNV\0"
+    "";
+#endif
+
+#if defined(need_GL_EXT_coordinate_frame)
+static const char Binormal3fEXT_names[] = 
+    "fff\0" /* Parameter signature */
+    "glBinormal3fEXT\0"
     "";
 #endif
 
@@ -2278,9 +2376,10 @@ static const char SampleMaskSGIS_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_shader)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_shader)
 static const char GetAttribLocationARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glGetAttribLocation\0"
     "glGetAttribLocationARB\0"
     "";
 #endif
@@ -2329,9 +2428,10 @@ static const char ProgramEnvParameter4fARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform3ivARB_names[] = 
     "iip\0" /* Parameter signature */
+    "glUniform3iv\0"
     "glUniform3ivARB\0"
     "";
 #endif
@@ -2366,10 +2466,10 @@ static const char MultiTexCoord4ivARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_EXT_gpu_program_parameters)
-static const char ProgramLocalParameters4fvEXT_names[] = 
-    "iiip\0" /* Parameter signature */
-    "glProgramLocalParameters4fvEXT\0"
+#if defined(need_GL_VERSION_2_0)
+static const char GetVertexAttribPointervARB_names[] = 
+    "iip\0" /* Parameter signature */
+    "glGetVertexAttribPointerv\0"
     "";
 #endif
 
@@ -2380,9 +2480,10 @@ static const char GetMapAttribParameterfvNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib4sARB_names[] = 
     "iiiii\0" /* Parameter signature */
+    "glVertexAttrib4s\0"
     "glVertexAttrib4sARB\0"
     "";
 #endif
@@ -2409,23 +2510,10 @@ static const char GenRenderbuffersEXT_names[] =
     "";
 #endif
 
-#if defined(need_GL_EXT_convolution)
-static const char GetConvolutionParameterfvEXT_names[] = 
-    "iip\0" /* Parameter signature */
-    "glGetConvolutionParameterfvEXT\0"
-    "";
-#endif
-
-#if defined(need_GL_EXT_histogram)
-static const char GetMinmaxParameterfvEXT_names[] = 
-    "iip\0" /* Parameter signature */
-    "glGetMinmaxParameterfvEXT\0"
-    "";
-#endif
-
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib2dvARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib2dv\0"
     "glVertexAttrib2dvARB\0"
     "";
 #endif
@@ -2451,9 +2539,10 @@ static const char WeightbvARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib2fvARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib2fv\0"
     "glVertexAttrib2fvARB\0"
     "";
 #endif
@@ -2487,17 +2576,18 @@ static const char InstrumentsBufferSGIX_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib4NivARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib4Niv\0"
     "glVertexAttrib4NivARB\0"
     "";
 #endif
 
-#if defined(need_GL_SUN_triangle_list)
-static const char ReplacementCodeuivSUN_names[] = 
-    "p\0" /* Parameter signature */
-    "glReplacementCodeuivSUN\0"
+#if defined(need_GL_VERSION_2_0)
+static const char GetAttachedShaders_names[] = 
+    "iipp\0" /* Parameter signature */
+    "glGetAttachedShaders\0"
     "";
 #endif
 
@@ -2512,6 +2602,13 @@ static const char GenVertexArraysAPPLE_names[] =
 static const char ProgramEnvParameters4fvEXT_names[] = 
     "iiip\0" /* Parameter signature */
     "glProgramEnvParameters4fvEXT\0"
+    "";
+#endif
+
+#if defined(need_GL_SUN_vertex)
+static const char TexCoord2fColor4fNormal3fVertex3fvSUN_names[] = 
+    "pppp\0" /* Parameter signature */
+    "glTexCoord2fColor4fNormal3fVertex3fvSUN\0"
     "";
 #endif
 
@@ -2554,17 +2651,26 @@ static const char GetProgramStringARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char CompileShaderARB_names[] = 
     "i\0" /* Parameter signature */
+    "glCompileShader\0"
     "glCompileShaderARB\0"
     "";
 #endif
 
-#if defined(need_GL_NV_register_combiners)
-static const char CombinerOutputNV_names[] = 
-    "iiiiiiiiii\0" /* Parameter signature */
-    "glCombinerOutputNV\0"
+#if defined(need_GL_VERSION_2_0)
+static const char DeleteShader_names[] = 
+    "i\0" /* Parameter signature */
+    "glDeleteShader\0"
+    "";
+#endif
+
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
+static const char Uniform3fARB_names[] = 
+    "ifff\0" /* Parameter signature */
+    "glUniform3f\0"
+    "glUniform3fARB\0"
     "";
 #endif
 
@@ -2626,9 +2732,10 @@ static const char WindowPos4sMESA_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib4NuivARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib4Nuiv\0"
     "glVertexAttrib4NuivARB\0"
     "";
 #endif
@@ -2655,9 +2762,10 @@ static const char ReplacementCodeusvSUN_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform4fARB_names[] = 
     "iffff\0" /* Parameter signature */
+    "glUniform4f\0"
     "glUniform4fARB\0"
     "";
 #endif
@@ -2713,6 +2821,14 @@ static const char Binormal3bvEXT_names[] =
     "";
 #endif
 
+#if defined(need_GL_EXT_texture_object)
+static const char IsTexture_names[] = 
+    "i\0" /* Parameter signature */
+    "glIsTexture\0"
+    "glIsTextureEXT\0"
+    "";
+#endif
+
 #if defined(need_GL_EXT_vertex_weighting)
 static const char VertexWeightfvEXT_names[] = 
     "p\0" /* Parameter signature */
@@ -2720,9 +2836,10 @@ static const char VertexWeightfvEXT_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib1dARB_names[] = 
     "id\0" /* Parameter signature */
+    "glVertexAttrib1d\0"
     "glVertexAttrib1dARB\0"
     "";
 #endif
@@ -2763,13 +2880,6 @@ static const char CurrentPaletteMatrixARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_NV_vertex_program)
-static const char VertexAttrib4sNV_names[] = 
-    "iiiii\0" /* Parameter signature */
-    "glVertexAttrib4sNV\0"
-    "";
-#endif
-
 #if defined(need_GL_SGIS_multisample) || defined(need_GL_EXT_multisample)
 static const char SamplePatternSGIS_names[] = 
     "i\0" /* Parameter signature */
@@ -2793,9 +2903,17 @@ static const char ReplacementCodeuiColor4ubVertex3fSUN_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_ARB_vertex_program)
+static const char VertexAttrib4usvARB_names[] = 
+    "ip\0" /* Parameter signature */
+    "glVertexAttrib4usvARB\0"
+    "";
+#endif
+
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char LinkProgramARB_names[] = 
     "i\0" /* Parameter signature */
+    "glLinkProgram\0"
     "glLinkProgramARB\0"
     "";
 #endif
@@ -2807,9 +2925,10 @@ static const char VertexAttrib2fNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char ShaderSourceARB_names[] = 
     "iipp\0" /* Parameter signature */
+    "glShaderSource\0"
     "glShaderSourceARB\0"
     "";
 #endif
@@ -2821,9 +2940,10 @@ static const char FragmentMaterialiSGIX_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib3svARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib3sv\0"
     "glVertexAttrib3svARB\0"
     "";
 #endif
@@ -2852,17 +2972,27 @@ static const char IsFramebufferEXT_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform4ivARB_names[] = 
     "iip\0" /* Parameter signature */
+    "glUniform4iv\0"
     "glUniform4ivARB\0"
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char GetVertexAttribdvARB_names[] = 
     "iip\0" /* Parameter signature */
+    "glGetVertexAttribdv\0"
     "glGetVertexAttribdvARB\0"
+    "";
+#endif
+
+#if defined(need_GL_EXT_convolution)
+static const char GetSeparableFilter_names[] = 
+    "iiippp\0" /* Parameter signature */
+    "glGetSeparableFilter\0"
+    "glGetSeparableFilterEXT\0"
     "";
 #endif
 
@@ -2916,9 +3046,10 @@ static const char MultiDrawElementsEXT_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform1ivARB_names[] = 
     "iip\0" /* Parameter signature */
+    "glUniform1iv\0"
     "glUniform1ivARB\0"
     "";
 #endif
@@ -2962,16 +3093,18 @@ static const char SecondaryColor3ubvEXT_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib4dvARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib4dv\0"
     "glVertexAttrib4dvARB\0"
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_shader)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_shader)
 static const char BindAttribLocationARB_names[] = 
     "iip\0" /* Parameter signature */
+    "glBindAttribLocation\0"
     "glBindAttribLocationARB\0"
     "";
 #endif
@@ -2998,14 +3131,6 @@ static const char LightEnviSGIX_names[] =
     "";
 #endif
 
-#if defined(need_GL_SGI_color_table) || defined(need_GL_EXT_paletted_texture)
-static const char GetColorTableParameterivSGI_names[] = 
-    "iip\0" /* Parameter signature */
-    "glGetColorTableParameterivSGI\0"
-    "glGetColorTableParameterivEXT\0"
-    "";
-#endif
-
 #if defined(need_GL_SUN_triangle_list)
 static const char ReplacementCodeuiSUN_names[] = 
     "i\0" /* Parameter signature */
@@ -3024,6 +3149,13 @@ static const char FramebufferTexture2DEXT_names[] =
 static const char VertexAttribPointerNV_names[] = 
     "iiiip\0" /* Parameter signature */
     "glVertexAttribPointerNV\0"
+    "";
+#endif
+
+#if defined(need_GL_EXT_gpu_program_parameters)
+static const char ProgramLocalParameters4fvEXT_names[] = 
+    "iiip\0" /* Parameter signature */
+    "glProgramLocalParameters4fvEXT\0"
     "";
 #endif
 
@@ -3049,13 +3181,6 @@ static const char PixelTransformParameteriEXT_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
-static const char ValidateProgramARB_names[] = 
-    "i\0" /* Parameter signature */
-    "glValidateProgramARB\0"
-    "";
-#endif
-
 #if defined(need_GL_SUN_vertex)
 static const char TexCoord2fColor4ubVertex3fSUN_names[] = 
     "ffiiiifff\0" /* Parameter signature */
@@ -3063,16 +3188,18 @@ static const char TexCoord2fColor4ubVertex3fSUN_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform1iARB_names[] = 
     "ii\0" /* Parameter signature */
+    "glUniform1i\0"
     "glUniform1iARB\0"
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttribPointerARB_names[] = 
     "iiiiip\0" /* Parameter signature */
+    "glVertexAttribPointer\0"
     "glVertexAttribPointerARB\0"
     "";
 #endif
@@ -3089,6 +3216,13 @@ static const char MultiTexCoord4fvARB_names[] =
     "ip\0" /* Parameter signature */
     "glMultiTexCoord4fv\0"
     "glMultiTexCoord4fvARB\0"
+    "";
+#endif
+
+#if defined(need_GL_VERSION_2_1)
+static const char UniformMatrix2x3fv_names[] = 
+    "iiip\0" /* Parameter signature */
+    "glUniformMatrix2x3fv\0"
     "";
 #endif
 
@@ -3134,16 +3268,18 @@ static const char Normal3fVertex3fvSUN_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib4NsvARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib4Nsv\0"
     "glVertexAttrib4NsvARB\0"
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib3fvARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib3fv\0"
     "glVertexAttrib3fvARB\0"
     "";
 #endif
@@ -3206,10 +3342,19 @@ static const char PixelTexGenParameterfSGIS_names[] =
     "";
 #endif
 
-#if defined(need_GL_SUN_vertex)
-static const char TexCoord2fColor4fNormal3fVertex3fvSUN_names[] = 
-    "pppp\0" /* Parameter signature */
-    "glTexCoord2fColor4fNormal3fVertex3fvSUN\0"
+#if defined(need_GL_VERSION_2_0)
+static const char CreateShader_names[] = 
+    "i\0" /* Parameter signature */
+    "glCreateShader\0"
+    "";
+#endif
+
+#if defined(need_GL_SGI_color_table) || defined(need_GL_EXT_paletted_texture)
+static const char GetColorTableParameterfv_names[] = 
+    "iip\0" /* Parameter signature */
+    "glGetColorTableParameterfv\0"
+    "glGetColorTableParameterfvSGI\0"
+    "glGetColorTableParameterfvEXT\0"
     "";
 #endif
 
@@ -3263,16 +3408,17 @@ static const char FragmentLightfvSGIX_names[] =
     "";
 #endif
 
-#if defined(need_GL_NV_vertex_program)
-static const char VertexAttrib3sNV_names[] = 
-    "iiii\0" /* Parameter signature */
-    "glVertexAttrib3sNV\0"
+#if defined(need_GL_VERSION_2_0)
+static const char DetachShader_names[] = 
+    "ii\0" /* Parameter signature */
+    "glDetachShader\0"
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib4NubARB_names[] = 
     "iiiii\0" /* Parameter signature */
+    "glVertexAttrib4Nub\0"
     "glVertexAttrib4NubARB\0"
     "";
 #endif
@@ -3298,9 +3444,10 @@ static const char VertexAttrib3svNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform4fvARB_names[] = 
     "iip\0" /* Parameter signature */
+    "glUniform4fv\0"
     "glUniform4fvARB\0"
     "";
 #endif
@@ -3320,9 +3467,10 @@ static const char ColorFragmentOp1ATI_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char GetUniformfvARB_names[] = 
     "iip\0" /* Parameter signature */
+    "glGetUniformfv\0"
     "glGetUniformfvARB\0"
     "";
 #endif
@@ -3416,6 +3564,14 @@ static const char GetProgramivNV_names[] =
     "";
 #endif
 
+#if defined(need_GL_EXT_histogram)
+static const char GetMinmaxParameteriv_names[] = 
+    "iip\0" /* Parameter signature */
+    "glGetMinmaxParameteriv\0"
+    "glGetMinmaxParameterivEXT\0"
+    "";
+#endif
+
 #if defined(need_GL_EXT_copy_texture)
 static const char CopyTexImage1D_names[] = 
     "iiiiiii\0" /* Parameter signature */
@@ -3459,9 +3615,10 @@ static const char GetMapParameterivNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform4iARB_names[] = 
     "iiiii\0" /* Parameter signature */
+    "glUniform4i\0"
     "glUniform4iARB\0"
     "";
 #endif
@@ -3489,6 +3646,22 @@ static const char ConvolutionParameterf_names[] =
     "";
 #endif
 
+#if defined(need_GL_SGI_color_table) || defined(need_GL_EXT_paletted_texture)
+static const char GetColorTableParameteriv_names[] = 
+    "iip\0" /* Parameter signature */
+    "glGetColorTableParameteriv\0"
+    "glGetColorTableParameterivSGI\0"
+    "glGetColorTableParameterivEXT\0"
+    "";
+#endif
+
+#if defined(need_GL_ARB_vertex_program)
+static const char ProgramEnvParameter4dvARB_names[] = 
+    "iip\0" /* Parameter signature */
+    "glProgramEnvParameter4dvARB\0"
+    "";
+#endif
+
 #if defined(need_GL_NV_vertex_program)
 static const char VertexAttribs2fvNV_names[] = 
     "iip\0" /* Parameter signature */
@@ -3496,10 +3669,11 @@ static const char VertexAttribs2fvNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_matrix_palette)
-static const char MatrixIndexPointerARB_names[] = 
-    "iiip\0" /* Parameter signature */
-    "glMatrixIndexPointerARB\0"
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
+static const char UseProgramObjectARB_names[] = 
+    "i\0" /* Parameter signature */
+    "glUseProgram\0"
+    "glUseProgramObjectARB\0"
     "";
 #endif
 
@@ -3517,10 +3691,10 @@ static const char PassTexCoordATI_names[] =
     "";
 #endif
 
-#if defined(need_GL_NV_vertex_program)
-static const char VertexAttrib1fvNV_names[] = 
-    "ip\0" /* Parameter signature */
-    "glVertexAttrib1fvNV\0"
+#if defined(need_GL_VERSION_2_0)
+static const char DeleteProgram_names[] = 
+    "i\0" /* Parameter signature */
+    "glDeleteProgram\0"
     "";
 #endif
 
@@ -3566,14 +3740,6 @@ static const char MultiTexCoord4dARB_names[] =
     "idddd\0" /* Parameter signature */
     "glMultiTexCoord4d\0"
     "glMultiTexCoord4dARB\0"
-    "";
-#endif
-
-#if defined(need_GL_SGI_color_table) || defined(need_GL_EXT_paletted_texture)
-static const char GetColorTableSGI_names[] = 
-    "iiip\0" /* Parameter signature */
-    "glGetColorTableSGI\0"
-    "glGetColorTableEXT\0"
     "";
 #endif
 
@@ -3631,17 +3797,11 @@ static const char MultiTexCoord1dvARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform2iARB_names[] = 
     "iii\0" /* Parameter signature */
+    "glUniform2i\0"
     "glUniform2iARB\0"
-    "";
-#endif
-
-#if defined(need_GL_EXT_convolution)
-static const char GetConvolutionParameterivEXT_names[] = 
-    "iip\0" /* Parameter signature */
-    "glGetConvolutionParameterivEXT\0"
     "";
 #endif
 
@@ -3703,13 +3863,6 @@ static const char ResetMinmax_names[] =
     "";
 #endif
 
-#if defined(need_GL_EXT_texture_object)
-static const char GenTexturesEXT_names[] = 
-    "ip\0" /* Parameter signature */
-    "glGenTexturesEXT\0"
-    "";
-#endif
-
 #if defined(need_GL_SGIX_sprite)
 static const char SpriteParameterfSGIX_names[] = 
     "if\0" /* Parameter signature */
@@ -3717,10 +3870,18 @@ static const char SpriteParameterfSGIX_names[] =
     "";
 #endif
 
-#if defined(need_GL_EXT_histogram)
-static const char GetMinmaxParameterivEXT_names[] = 
+#if defined(need_GL_NV_vertex_program)
+static const char VertexAttrib4sNV_names[] = 
+    "iiiii\0" /* Parameter signature */
+    "glVertexAttrib4sNV\0"
+    "";
+#endif
+
+#if defined(need_GL_EXT_convolution)
+static const char GetConvolutionParameterfv_names[] = 
     "iip\0" /* Parameter signature */
-    "glGetMinmaxParameterivEXT\0"
+    "glGetConvolutionParameterfv\0"
+    "glGetConvolutionParameterfvEXT\0"
     "";
 #endif
 
@@ -3731,9 +3892,10 @@ static const char VertexAttribs4dvNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib4dARB_names[] = 
     "idddd\0" /* Parameter signature */
+    "glVertexAttrib4d\0"
     "glVertexAttrib4dARB\0"
     "";
 #endif
@@ -3827,11 +3989,27 @@ static const char GetProgramLocalParameterdvARB_names[] =
     "";
 #endif
 
+#if defined(need_GL_EXT_histogram)
+static const char GetHistogramParameteriv_names[] = 
+    "iip\0" /* Parameter signature */
+    "glGetHistogramParameteriv\0"
+    "glGetHistogramParameterivEXT\0"
+    "";
+#endif
+
 #if defined(need_GL_VERSION_1_3)
 static const char MultiTexCoord1iARB_names[] = 
     "ii\0" /* Parameter signature */
     "glMultiTexCoord1i\0"
     "glMultiTexCoord1iARB\0"
+    "";
+#endif
+
+#if defined(need_GL_EXT_convolution)
+static const char GetConvolutionFilter_names[] = 
+    "iiip\0" /* Parameter signature */
+    "glGetConvolutionFilter\0"
+    "glGetConvolutionFilterEXT\0"
     "";
 #endif
 
@@ -3879,10 +4057,10 @@ static const char Binormal3dvEXT_names[] =
     "";
 #endif
 
-#if defined(need_GL_EXT_texture_object)
-static const char AreTexturesResidentEXT_names[] = 
-    "ipp\0" /* Parameter signature */
-    "glAreTexturesResidentEXT\0"
+#if defined(need_GL_NV_fence)
+static const char FinishFenceNV_names[] = 
+    "i\0" /* Parameter signature */
+    "glFinishFenceNV\0"
     "";
 #endif
 
@@ -3893,9 +4071,10 @@ static const char GetFogFuncSGIS_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char GetUniformLocationARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glGetUniformLocation\0"
     "glGetUniformLocationARB\0"
     "";
 #endif
@@ -3915,10 +4094,18 @@ static const char CombinerInputNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib3sARB_names[] = 
     "iiii\0" /* Parameter signature */
+    "glVertexAttrib3s\0"
     "glVertexAttrib3sARB\0"
+    "";
+#endif
+
+#if defined(need_GL_SUN_vertex)
+static const char ReplacementCodeuiNormal3fVertex3fvSUN_names[] = 
+    "ppp\0" /* Parameter signature */
+    "glReplacementCodeuiNormal3fVertex3fvSUN\0"
     "";
 #endif
 
@@ -3933,6 +4120,13 @@ static const char ProgramStringARB_names[] =
 static const char TexCoord4fVertex4fvSUN_names[] = 
     "pp\0" /* Parameter signature */
     "glTexCoord4fVertex4fvSUN\0"
+    "";
+#endif
+
+#if defined(need_GL_NV_vertex_program)
+static const char VertexAttrib3sNV_names[] = 
+    "iiii\0" /* Parameter signature */
+    "glVertexAttrib3sNV\0"
     "";
 #endif
 
@@ -3965,6 +4159,14 @@ static const char VertexWeightPointerEXT_names[] =
     "";
 #endif
 
+#if defined(need_GL_EXT_histogram)
+static const char GetHistogram_names[] = 
+    "iiiip\0" /* Parameter signature */
+    "glGetHistogram\0"
+    "glGetHistogramEXT\0"
+    "";
+#endif
+
 #if defined(need_GL_EXT_stencil_two_side)
 static const char ActiveStencilFaceEXT_names[] = 
     "i\0" /* Parameter signature */
@@ -3972,9 +4174,10 @@ static const char ActiveStencilFaceEXT_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char GetShaderSourceARB_names[] = 
     "iipp\0" /* Parameter signature */
+    "glGetShaderSource\0"
     "glGetShaderSourceARB\0"
     "";
 #endif
@@ -4089,9 +4292,10 @@ static const char WeightsvARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char Uniform1fvARB_names[] = 
     "iip\0" /* Parameter signature */
+    "glUniform1fv\0"
     "glUniform1fvARB\0"
     "";
 #endif
@@ -4134,9 +4338,17 @@ static const char VertexAttribs3svNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_SUN_triangle_list)
+static const char ReplacementCodeuivSUN_names[] = 
+    "p\0" /* Parameter signature */
+    "glReplacementCodeuivSUN\0"
+    "";
+#endif
+
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char EnableVertexAttribArrayARB_names[] = 
     "i\0" /* Parameter signature */
+    "glEnableVertexAttribArray\0"
     "glEnableVertexAttribArrayARB\0"
     "";
 #endif
@@ -4162,13 +4374,6 @@ static const char WindowPos3ivMESA_names[] =
     "glWindowPos3iv\0"
     "glWindowPos3ivARB\0"
     "glWindowPos3ivMESA\0"
-    "";
-#endif
-
-#if defined(need_GL_NV_fence)
-static const char FinishFenceNV_names[] = 
-    "i\0" /* Parameter signature */
-    "glFinishFenceNV\0"
     "";
 #endif
 
@@ -4201,10 +4406,10 @@ static const char Tangent3bvEXT_names[] =
     "";
 #endif
 
-#if defined(need_GL_SGIX_reference_plane)
-static const char ReferencePlaneSGIX_names[] = 
-    "p\0" /* Parameter signature */
-    "glReferencePlaneSGIX\0"
+#if defined(need_GL_VERSION_2_1)
+static const char UniformMatrix3x4fv_names[] = 
+    "iiip\0" /* Parameter signature */
+    "glUniformMatrix3x4fv\0"
     "";
 #endif
 
@@ -4212,13 +4417,6 @@ static const char ReferencePlaneSGIX_names[] =
 static const char Binormal3fvEXT_names[] = 
     "p\0" /* Parameter signature */
     "glBinormal3fvEXT\0"
-    "";
-#endif
-
-#if defined(need_GL_EXT_texture_object)
-static const char IsTextureEXT_names[] = 
-    "i\0" /* Parameter signature */
-    "glIsTextureEXT\0"
     "";
 #endif
 
@@ -4297,9 +4495,10 @@ static const char BindProgramNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib4svARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib4sv\0"
     "glVertexAttrib4svARB\0"
     "";
 #endif
@@ -4311,10 +4510,10 @@ static const char CreateDebugObjectMESA_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_shader_objects)
-static const char Uniform3fARB_names[] = 
-    "ifff\0" /* Parameter signature */
-    "glUniform3fARB\0"
+#if defined(need_GL_VERSION_2_0)
+static const char GetShaderiv_names[] = 
+    "iip\0" /* Parameter signature */
+    "glGetShaderiv\0"
     "";
 #endif
 
@@ -4370,9 +4569,17 @@ static const char GetFinalCombinerInputParameterfvNV_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_ATI_fragment_shader)
+static const char ColorFragmentOp3ATI_names[] = 
+    "iiiiiiiiiiiii\0" /* Parameter signature */
+    "glColorFragmentOp3ATI\0"
+    "";
+#endif
+
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib2svARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib2sv\0"
     "glVertexAttrib2svARB\0"
     "";
 #endif
@@ -4415,9 +4622,10 @@ static const char PollInstrumentsSGIX_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib4NubvARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib4Nubv\0"
     "glVertexAttrib4NubvARB\0"
     "";
 #endif
@@ -4522,9 +4730,10 @@ static const char WeightuivARB_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib2sARB_names[] = 
     "iii\0" /* Parameter signature */
+    "glVertexAttrib2s\0"
     "glVertexAttrib2sARB\0"
     "";
 #endif
@@ -4572,9 +4781,25 @@ static const char EdgeFlagPointerListIBM_names[] =
     "";
 #endif
 
-#if defined(need_GL_ARB_vertex_program)
+#if defined(need_GL_VERSION_2_1)
+static const char UniformMatrix3x2fv_names[] = 
+    "iiip\0" /* Parameter signature */
+    "glUniformMatrix3x2fv\0"
+    "";
+#endif
+
+#if defined(need_GL_EXT_histogram)
+static const char GetMinmaxParameterfv_names[] = 
+    "iip\0" /* Parameter signature */
+    "glGetMinmaxParameterfv\0"
+    "glGetMinmaxParameterfvEXT\0"
+    "";
+#endif
+
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_vertex_program)
 static const char VertexAttrib1fvARB_names[] = 
     "ip\0" /* Parameter signature */
+    "glVertexAttrib1fv\0"
     "glVertexAttrib1fvARB\0"
     "";
 #endif
@@ -4681,9 +4906,9 @@ static const struct dri_extension_function GL_ARB_draw_buffers_functions[] = {
 static const struct dri_extension_function GL_ARB_matrix_palette_functions[] = {
     { MatrixIndexusvARB_names, MatrixIndexusvARB_remap_index, -1 },
     { MatrixIndexuivARB_names, MatrixIndexuivARB_remap_index, -1 },
+    { MatrixIndexPointerARB_names, MatrixIndexPointerARB_remap_index, -1 },
     { CurrentPaletteMatrixARB_names, CurrentPaletteMatrixARB_remap_index, -1 },
     { MatrixIndexubvARB_names, MatrixIndexubvARB_remap_index, -1 },
-    { MatrixIndexPointerARB_names, MatrixIndexPointerARB_remap_index, -1 },
     { NULL, 0, 0 }
 };
 #endif
@@ -4736,26 +4961,26 @@ static const struct dri_extension_function GL_ARB_shader_objects_functions[] = {
     { GetUniformivARB_names, GetUniformivARB_remap_index, -1 },
     { Uniform2fvARB_names, Uniform2fvARB_remap_index, -1 },
     { DeleteObjectARB_names, DeleteObjectARB_remap_index, -1 },
-    { UseProgramObjectARB_names, UseProgramObjectARB_remap_index, -1 },
+    { ValidateProgramARB_names, ValidateProgramARB_remap_index, -1 },
     { Uniform3ivARB_names, Uniform3ivARB_remap_index, -1 },
     { CompileShaderARB_names, CompileShaderARB_remap_index, -1 },
+    { Uniform3fARB_names, Uniform3fARB_remap_index, -1 },
     { Uniform4fARB_names, Uniform4fARB_remap_index, -1 },
     { LinkProgramARB_names, LinkProgramARB_remap_index, -1 },
     { ShaderSourceARB_names, ShaderSourceARB_remap_index, -1 },
     { Uniform4ivARB_names, Uniform4ivARB_remap_index, -1 },
     { Uniform1ivARB_names, Uniform1ivARB_remap_index, -1 },
-    { ValidateProgramARB_names, ValidateProgramARB_remap_index, -1 },
     { Uniform1iARB_names, Uniform1iARB_remap_index, -1 },
     { Uniform4fvARB_names, Uniform4fvARB_remap_index, -1 },
     { GetUniformfvARB_names, GetUniformfvARB_remap_index, -1 },
     { DetachObjectARB_names, DetachObjectARB_remap_index, -1 },
     { Uniform4iARB_names, Uniform4iARB_remap_index, -1 },
+    { UseProgramObjectARB_names, UseProgramObjectARB_remap_index, -1 },
     { Uniform2iARB_names, Uniform2iARB_remap_index, -1 },
     { GetObjectParameterivARB_names, GetObjectParameterivARB_remap_index, -1 },
     { GetUniformLocationARB_names, GetUniformLocationARB_remap_index, -1 },
     { GetShaderSourceARB_names, GetShaderSourceARB_remap_index, -1 },
     { Uniform1fvARB_names, Uniform1fvARB_remap_index, -1 },
-    { Uniform3fARB_names, Uniform3fARB_remap_index, -1 },
     { GetObjectParameterfvARB_names, GetObjectParameterfvARB_remap_index, -1 },
     { GetInfoLogARB_names, GetInfoLogARB_remap_index, -1 },
     { NULL, 0, 0 }
@@ -4820,7 +5045,6 @@ static const struct dri_extension_function GL_ARB_vertex_buffer_object_functions
 
 #if defined(need_GL_ARB_vertex_program)
 static const struct dri_extension_function GL_ARB_vertex_program_functions[] = {
-    { ProgramEnvParameter4dvARB_names, ProgramEnvParameter4dvARB_remap_index, -1 },
     { VertexAttrib2fARB_names, VertexAttrib2fARB_remap_index, -1 },
     { VertexAttrib3fARB_names, VertexAttrib3fARB_remap_index, -1 },
     { VertexAttrib1svARB_names, VertexAttrib1svARB_remap_index, -1 },
@@ -4840,7 +5064,6 @@ static const struct dri_extension_function GL_ARB_vertex_program_functions[] = {
     { VertexAttrib4fARB_names, VertexAttrib4fARB_remap_index, -1 },
     { VertexAttrib4fvARB_names, VertexAttrib4fvARB_remap_index, -1 },
     { ProgramLocalParameter4dvARB_names, ProgramLocalParameter4dvARB_remap_index, -1 },
-    { VertexAttrib4usvARB_names, VertexAttrib4usvARB_remap_index, -1 },
     { VertexAttrib2dARB_names, VertexAttrib2dARB_remap_index, -1 },
     { VertexAttrib1dvARB_names, VertexAttrib1dvARB_remap_index, -1 },
     { GetVertexAttribfvARB_names, GetVertexAttribfvARB_remap_index, -1 },
@@ -4855,6 +5078,7 @@ static const struct dri_extension_function GL_ARB_vertex_program_functions[] = {
     { IsProgramNV_names, IsProgramNV_remap_index, -1 },
     { ProgramEnvParameter4dARB_names, ProgramEnvParameter4dARB_remap_index, -1 },
     { VertexAttrib1dARB_names, VertexAttrib1dARB_remap_index, -1 },
+    { VertexAttrib4usvARB_names, VertexAttrib4usvARB_remap_index, -1 },
     { VertexAttrib3svARB_names, VertexAttrib3svARB_remap_index, -1 },
     { GetVertexAttribdvARB_names, GetVertexAttribdvARB_remap_index, -1 },
     { VertexAttrib4dvARB_names, VertexAttrib4dvARB_remap_index, -1 },
@@ -4863,6 +5087,7 @@ static const struct dri_extension_function GL_ARB_vertex_program_functions[] = {
     { VertexAttrib3fvARB_names, VertexAttrib3fvARB_remap_index, -1 },
     { VertexAttrib4NubARB_names, VertexAttrib4NubARB_remap_index, -1 },
     { GetProgramEnvParameterfvARB_names, GetProgramEnvParameterfvARB_remap_index, -1 },
+    { ProgramEnvParameter4dvARB_names, ProgramEnvParameter4dvARB_remap_index, -1 },
     { ProgramLocalParameter4fvARB_names, ProgramLocalParameter4fvARB_remap_index, -1 },
     { DeleteProgramsNV_names, DeleteProgramsNV_remap_index, -1 },
     { GetVertexAttribPointervNV_names, GetVertexAttribPointervNV_remap_index, -1 },
@@ -4933,7 +5158,6 @@ static const struct dri_extension_function GL_ATI_draw_buffers_functions[] = {
 
 #if defined(need_GL_ATI_fragment_shader)
 static const struct dri_extension_function GL_ATI_fragment_shader_functions[] = {
-    { ColorFragmentOp3ATI_names, ColorFragmentOp3ATI_remap_index, -1 },
     { ColorFragmentOp2ATI_names, ColorFragmentOp2ATI_remap_index, -1 },
     { DeleteFragmentShaderATI_names, DeleteFragmentShaderATI_remap_index, -1 },
     { SetFragmentShaderConstantATI_names, SetFragmentShaderConstantATI_remap_index, -1 },
@@ -4945,6 +5169,7 @@ static const struct dri_extension_function GL_ATI_fragment_shader_functions[] = 
     { PassTexCoordATI_names, PassTexCoordATI_remap_index, -1 },
     { BeginFragmentShaderATI_names, BeginFragmentShaderATI_remap_index, -1 },
     { BindFragmentShaderATI_names, BindFragmentShaderATI_remap_index, -1 },
+    { ColorFragmentOp3ATI_names, ColorFragmentOp3ATI_remap_index, -1 },
     { GenFragmentShadersATI_names, GenFragmentShadersATI_remap_index, -1 },
     { EndFragmentShaderATI_names, EndFragmentShaderATI_remap_index, -1 },
     { NULL, 0, 0 }
@@ -4999,16 +5224,16 @@ static const struct dri_extension_function GL_EXT_compiled_vertex_array_function
 static const struct dri_extension_function GL_EXT_convolution_functions[] = {
     { ConvolutionFilter1D_names, -1, 348 },
     { CopyConvolutionFilter1D_names, -1, 354 },
+    { GetConvolutionParameteriv_names, -1, 358 },
     { ConvolutionFilter2D_names, -1, 349 },
     { ConvolutionParameteriv_names, -1, 353 },
     { ConvolutionParameterfv_names, -1, 351 },
-    { GetSeparableFilterEXT_names, GetSeparableFilterEXT_remap_index, -1 },
-    { GetConvolutionFilterEXT_names, GetConvolutionFilterEXT_remap_index, -1 },
-    { GetConvolutionParameterfvEXT_names, GetConvolutionParameterfvEXT_remap_index, -1 },
+    { GetSeparableFilter_names, -1, 359 },
     { SeparableFilter2D_names, -1, 360 },
     { ConvolutionParameteri_names, -1, 352 },
     { ConvolutionParameterf_names, -1, 350 },
-    { GetConvolutionParameterivEXT_names, GetConvolutionParameterivEXT_remap_index, -1 },
+    { GetConvolutionParameterfv_names, -1, 357 },
+    { GetConvolutionFilter_names, -1, 356 },
     { CopyConvolutionFilter2D_names, -1, 355 },
     { NULL, 0, 0 }
 };
@@ -5016,11 +5241,11 @@ static const struct dri_extension_function GL_EXT_convolution_functions[] = {
 
 #if defined(need_GL_EXT_coordinate_frame)
 static const struct dri_extension_function GL_EXT_coordinate_frame_functions[] = {
-    { Binormal3fEXT_names, Binormal3fEXT_remap_index, -1 },
     { TangentPointerEXT_names, TangentPointerEXT_remap_index, -1 },
     { Binormal3ivEXT_names, Binormal3ivEXT_remap_index, -1 },
     { Tangent3sEXT_names, Tangent3sEXT_remap_index, -1 },
     { Tangent3fvEXT_names, Tangent3fvEXT_remap_index, -1 },
+    { Binormal3fEXT_names, Binormal3fEXT_remap_index, -1 },
     { Tangent3dvEXT_names, Tangent3dvEXT_remap_index, -1 },
     { Binormal3bvEXT_names, Binormal3bvEXT_remap_index, -1 },
     { Binormal3dEXT_names, Binormal3dEXT_remap_index, -1 },
@@ -5118,8 +5343,8 @@ static const struct dri_extension_function GL_EXT_framebuffer_object_functions[]
 
 #if defined(need_GL_EXT_gpu_program_parameters)
 static const struct dri_extension_function GL_EXT_gpu_program_parameters_functions[] = {
-    { ProgramLocalParameters4fvEXT_names, ProgramLocalParameters4fvEXT_remap_index, -1 },
     { ProgramEnvParameters4fvEXT_names, ProgramEnvParameters4fvEXT_remap_index, -1 },
+    { ProgramLocalParameters4fvEXT_names, ProgramLocalParameters4fvEXT_remap_index, -1 },
     { NULL, 0, 0 }
 };
 #endif
@@ -5127,15 +5352,15 @@ static const struct dri_extension_function GL_EXT_gpu_program_parameters_functio
 #if defined(need_GL_EXT_histogram)
 static const struct dri_extension_function GL_EXT_histogram_functions[] = {
     { Histogram_names, -1, 367 },
-    { GetHistogramParameterivEXT_names, GetHistogramParameterivEXT_remap_index, -1 },
     { ResetHistogram_names, -1, 369 },
-    { GetMinmaxEXT_names, GetMinmaxEXT_remap_index, -1 },
-    { GetHistogramParameterfvEXT_names, GetHistogramParameterfvEXT_remap_index, -1 },
-    { GetHistogramEXT_names, GetHistogramEXT_remap_index, -1 },
-    { GetMinmaxParameterfvEXT_names, GetMinmaxParameterfvEXT_remap_index, -1 },
+    { GetMinmax_names, -1, 364 },
+    { GetHistogramParameterfv_names, -1, 362 },
+    { GetMinmaxParameteriv_names, -1, 366 },
     { ResetMinmax_names, -1, 370 },
-    { GetMinmaxParameterivEXT_names, GetMinmaxParameterivEXT_remap_index, -1 },
+    { GetHistogramParameteriv_names, -1, 363 },
+    { GetHistogram_names, -1, 361 },
     { Minmax_names, -1, 368 },
+    { GetMinmaxParameterfv_names, -1, 365 },
     { NULL, 0, 0 }
 };
 #endif
@@ -5181,10 +5406,10 @@ static const struct dri_extension_function GL_EXT_multisample_functions[] = {
 
 #if defined(need_GL_EXT_paletted_texture)
 static const struct dri_extension_function GL_EXT_paletted_texture_functions[] = {
-    { GetColorTableParameterfvSGI_names, GetColorTableParameterfvSGI_remap_index, -1 },
     { ColorTable_names, -1, 339 },
-    { GetColorTableParameterivSGI_names, GetColorTableParameterivSGI_remap_index, -1 },
-    { GetColorTableSGI_names, GetColorTableSGI_remap_index, -1 },
+    { GetColorTable_names, -1, 343 },
+    { GetColorTableParameterfv_names, -1, 344 },
+    { GetColorTableParameteriv_names, -1, 345 },
     { NULL, 0, 0 }
 };
 #endif
@@ -5263,11 +5488,11 @@ static const struct dri_extension_function GL_EXT_texture3D_functions[] = {
 #if defined(need_GL_EXT_texture_object)
 static const struct dri_extension_function GL_EXT_texture_object_functions[] = {
     { PrioritizeTextures_names, -1, 331 },
+    { AreTexturesResident_names, -1, 322 },
+    { GenTextures_names, -1, 328 },
     { DeleteTextures_names, -1, 327 },
-    { GenTexturesEXT_names, GenTexturesEXT_remap_index, -1 },
-    { AreTexturesResidentEXT_names, AreTexturesResidentEXT_remap_index, -1 },
+    { IsTexture_names, -1, 330 },
     { BindTexture_names, -1, 307 },
-    { IsTextureEXT_names, IsTextureEXT_remap_index, -1 },
     { NULL, 0, 0 }
 };
 #endif
@@ -5459,12 +5684,12 @@ static const struct dri_extension_function GL_NV_point_sprite_functions[] = {
 
 #if defined(need_GL_NV_register_combiners)
 static const struct dri_extension_function GL_NV_register_combiners_functions[] = {
+    { CombinerOutputNV_names, CombinerOutputNV_remap_index, -1 },
     { CombinerParameterfvNV_names, CombinerParameterfvNV_remap_index, -1 },
     { GetCombinerOutputParameterfvNV_names, GetCombinerOutputParameterfvNV_remap_index, -1 },
     { FinalCombinerInputNV_names, FinalCombinerInputNV_remap_index, -1 },
     { GetCombinerInputParameterfvNV_names, GetCombinerInputParameterfvNV_remap_index, -1 },
     { GetCombinerOutputParameterivNV_names, GetCombinerOutputParameterivNV_remap_index, -1 },
-    { CombinerOutputNV_names, CombinerOutputNV_remap_index, -1 },
     { CombinerParameteriNV_names, CombinerParameteriNV_remap_index, -1 },
     { GetFinalCombinerInputParameterivNV_names, GetFinalCombinerInputParameterivNV_remap_index, -1 },
     { CombinerInputNV_names, CombinerInputNV_remap_index, -1 },
@@ -5498,6 +5723,7 @@ static const struct dri_extension_function GL_NV_vertex_program_functions[] = {
     { VertexAttrib4ubvNV_names, VertexAttrib4ubvNV_remap_index, -1 },
     { VertexAttrib4svNV_names, VertexAttrib4svNV_remap_index, -1 },
     { VertexAttribs1dvNV_names, VertexAttribs1dvNV_remap_index, -1 },
+    { VertexAttrib1fvNV_names, VertexAttrib1fvNV_remap_index, -1 },
     { ProgramParameter4dvNV_names, ProgramParameter4dvNV_remap_index, -1 },
     { VertexAttrib4fNV_names, VertexAttrib4fNV_remap_index, -1 },
     { VertexAttrib2dNV_names, VertexAttrib2dNV_remap_index, -1 },
@@ -5524,14 +5750,12 @@ static const struct dri_extension_function GL_NV_vertex_program_functions[] = {
     { VertexAttrib2svNV_names, VertexAttrib2svNV_remap_index, -1 },
     { VertexAttribs1fvNV_names, VertexAttribs1fvNV_remap_index, -1 },
     { IsProgramNV_names, IsProgramNV_remap_index, -1 },
-    { VertexAttrib4sNV_names, VertexAttrib4sNV_remap_index, -1 },
     { VertexAttrib2fNV_names, VertexAttrib2fNV_remap_index, -1 },
     { RequestResidentProgramsNV_names, RequestResidentProgramsNV_remap_index, -1 },
     { ExecuteProgramNV_names, ExecuteProgramNV_remap_index, -1 },
     { VertexAttribPointerNV_names, VertexAttribPointerNV_remap_index, -1 },
     { TrackMatrixNV_names, TrackMatrixNV_remap_index, -1 },
     { GetProgramParameterdvNV_names, GetProgramParameterdvNV_remap_index, -1 },
-    { VertexAttrib3sNV_names, VertexAttrib3sNV_remap_index, -1 },
     { GetTrackMatrixivNV_names, GetTrackMatrixivNV_remap_index, -1 },
     { VertexAttrib3svNV_names, VertexAttrib3svNV_remap_index, -1 },
     { ProgramParameters4fvNV_names, ProgramParameters4fvNV_remap_index, -1 },
@@ -5539,12 +5763,13 @@ static const struct dri_extension_function GL_NV_vertex_program_functions[] = {
     { GetVertexAttribdvNV_names, GetVertexAttribdvNV_remap_index, -1 },
     { VertexAttrib3fvNV_names, VertexAttrib3fvNV_remap_index, -1 },
     { VertexAttribs2fvNV_names, VertexAttribs2fvNV_remap_index, -1 },
-    { VertexAttrib1fvNV_names, VertexAttrib1fvNV_remap_index, -1 },
     { DeleteProgramsNV_names, DeleteProgramsNV_remap_index, -1 },
     { GetVertexAttribPointervNV_names, GetVertexAttribPointervNV_remap_index, -1 },
     { GetProgramStringNV_names, GetProgramStringNV_remap_index, -1 },
+    { VertexAttrib4sNV_names, VertexAttrib4sNV_remap_index, -1 },
     { VertexAttribs4dvNV_names, VertexAttribs4dvNV_remap_index, -1 },
     { ProgramParameters4dvNV_names, ProgramParameters4dvNV_remap_index, -1 },
+    { VertexAttrib3sNV_names, VertexAttrib3sNV_remap_index, -1 },
     { VertexAttrib1fNV_names, VertexAttrib1fNV_remap_index, -1 },
     { VertexAttrib4dNV_names, VertexAttrib4dNV_remap_index, -1 },
     { VertexAttribs4ubvNV_names, VertexAttribs4ubvNV_remap_index, -1 },
@@ -5768,13 +5993,13 @@ static const struct dri_extension_function GL_SGIX_tag_sample_buffer_functions[]
 
 #if defined(need_GL_SGI_color_table)
 static const struct dri_extension_function GL_SGI_color_table_functions[] = {
-    { GetColorTableParameterfvSGI_names, GetColorTableParameterfvSGI_remap_index, -1 },
     { ColorTableParameteriv_names, -1, 341 },
     { ColorTable_names, -1, 339 },
+    { GetColorTable_names, -1, 343 },
     { CopyColorTable_names, -1, 342 },
     { ColorTableParameterfv_names, -1, 340 },
-    { GetColorTableParameterivSGI_names, GetColorTableParameterivSGI_remap_index, -1 },
-    { GetColorTableSGI_names, GetColorTableSGI_remap_index, -1 },
+    { GetColorTableParameterfv_names, -1, 344 },
+    { GetColorTableParameteriv_names, -1, 345 },
     { NULL, 0, 0 }
 };
 #endif
@@ -5811,11 +6036,11 @@ static const struct dri_extension_function GL_SUN_mesh_array_functions[] = {
 static const struct dri_extension_function GL_SUN_triangle_list_functions[] = {
     { ReplacementCodeubSUN_names, ReplacementCodeubSUN_remap_index, -1 },
     { ReplacementCodeubvSUN_names, ReplacementCodeubvSUN_remap_index, -1 },
-    { ReplacementCodeuivSUN_names, ReplacementCodeuivSUN_remap_index, -1 },
     { ReplacementCodeusvSUN_names, ReplacementCodeusvSUN_remap_index, -1 },
     { ReplacementCodePointerSUN_names, ReplacementCodePointerSUN_remap_index, -1 },
     { ReplacementCodeusSUN_names, ReplacementCodeusSUN_remap_index, -1 },
     { ReplacementCodeuiSUN_names, ReplacementCodeuiSUN_remap_index, -1 },
+    { ReplacementCodeuivSUN_names, ReplacementCodeuivSUN_remap_index, -1 },
     { NULL, 0, 0 }
 };
 #endif
@@ -5837,7 +6062,6 @@ static const struct dri_extension_function GL_SUN_vertex_functions[] = {
     { ReplacementCodeuiTexCoord2fVertex3fSUN_names, ReplacementCodeuiTexCoord2fVertex3fSUN_remap_index, -1 },
     { TexCoord2fNormal3fVertex3fSUN_names, TexCoord2fNormal3fVertex3fSUN_remap_index, -1 },
     { Color3fVertex3fSUN_names, Color3fVertex3fSUN_remap_index, -1 },
-    { ReplacementCodeuiNormal3fVertex3fvSUN_names, ReplacementCodeuiNormal3fVertex3fvSUN_remap_index, -1 },
     { Color3fVertex3fvSUN_names, Color3fVertex3fvSUN_remap_index, -1 },
     { Color4fNormal3fVertex3fvSUN_names, Color4fNormal3fVertex3fvSUN_remap_index, -1 },
     { ReplacementCodeuiTexCoord2fColor4fNormal3fVertex3fvSUN_names, ReplacementCodeuiTexCoord2fColor4fNormal3fVertex3fvSUN_remap_index, -1 },
@@ -5848,18 +6072,19 @@ static const struct dri_extension_function GL_SUN_vertex_functions[] = {
     { Color4ubVertex2fvSUN_names, Color4ubVertex2fvSUN_remap_index, -1 },
     { Normal3fVertex3fSUN_names, Normal3fVertex3fSUN_remap_index, -1 },
     { ReplacementCodeuiColor4fNormal3fVertex3fSUN_names, ReplacementCodeuiColor4fNormal3fVertex3fSUN_remap_index, -1 },
+    { TexCoord2fColor4fNormal3fVertex3fvSUN_names, TexCoord2fColor4fNormal3fVertex3fvSUN_remap_index, -1 },
     { TexCoord2fVertex3fvSUN_names, TexCoord2fVertex3fvSUN_remap_index, -1 },
     { Color4ubVertex2fSUN_names, Color4ubVertex2fSUN_remap_index, -1 },
     { ReplacementCodeuiColor4ubVertex3fSUN_names, ReplacementCodeuiColor4ubVertex3fSUN_remap_index, -1 },
     { TexCoord2fColor4ubVertex3fSUN_names, TexCoord2fColor4ubVertex3fSUN_remap_index, -1 },
     { Normal3fVertex3fvSUN_names, Normal3fVertex3fvSUN_remap_index, -1 },
     { Color4fNormal3fVertex3fSUN_names, Color4fNormal3fVertex3fSUN_remap_index, -1 },
-    { TexCoord2fColor4fNormal3fVertex3fvSUN_names, TexCoord2fColor4fNormal3fVertex3fvSUN_remap_index, -1 },
     { ReplacementCodeuiTexCoord2fColor4fNormal3fVertex3fSUN_names, ReplacementCodeuiTexCoord2fColor4fNormal3fVertex3fSUN_remap_index, -1 },
     { ReplacementCodeuiColor4ubVertex3fvSUN_names, ReplacementCodeuiColor4ubVertex3fvSUN_remap_index, -1 },
     { ReplacementCodeuiColor3fVertex3fSUN_names, ReplacementCodeuiColor3fVertex3fSUN_remap_index, -1 },
     { TexCoord4fVertex4fSUN_names, TexCoord4fVertex4fSUN_remap_index, -1 },
     { TexCoord2fColor3fVertex3fvSUN_names, TexCoord2fColor3fVertex3fvSUN_remap_index, -1 },
+    { ReplacementCodeuiNormal3fVertex3fvSUN_names, ReplacementCodeuiNormal3fVertex3fvSUN_remap_index, -1 },
     { TexCoord4fVertex4fvSUN_names, TexCoord4fVertex4fvSUN_remap_index, -1 },
     { ReplacementCodeuiVertex3fSUN_names, ReplacementCodeuiVertex3fSUN_remap_index, -1 },
     { NULL, 0, 0 }
@@ -5996,11 +6221,106 @@ static const struct dri_extension_function GL_VERSION_1_5_functions[] = {
 
 #if defined(need_GL_VERSION_2_0)
 static const struct dri_extension_function GL_VERSION_2_0_functions[] = {
+    { UniformMatrix3fvARB_names, UniformMatrix3fvARB_remap_index, -1 },
+    { GetProgramiv_names, GetProgramiv_remap_index, -1 },
     { BlendEquationSeparateEXT_names, BlendEquationSeparateEXT_remap_index, -1 },
+    { AttachShader_names, AttachShader_remap_index, -1 },
+    { VertexAttrib2fARB_names, VertexAttrib2fARB_remap_index, -1 },
+    { VertexAttrib3fARB_names, VertexAttrib3fARB_remap_index, -1 },
+    { Uniform2fARB_names, Uniform2fARB_remap_index, -1 },
+    { VertexAttrib1svARB_names, VertexAttrib1svARB_remap_index, -1 },
+    { Uniform2ivARB_names, Uniform2ivARB_remap_index, -1 },
+    { UniformMatrix4fvARB_names, UniformMatrix4fvARB_remap_index, -1 },
+    { VertexAttrib4NusvARB_names, VertexAttrib4NusvARB_remap_index, -1 },
+    { DisableVertexAttribArrayARB_names, DisableVertexAttribArrayARB_remap_index, -1 },
     { StencilMaskSeparate_names, StencilMaskSeparate_remap_index, -1 },
+    { VertexAttrib1fARB_names, VertexAttrib1fARB_remap_index, -1 },
+    { GetProgramInfoLog_names, GetProgramInfoLog_remap_index, -1 },
+    { VertexAttrib4NbvARB_names, VertexAttrib4NbvARB_remap_index, -1 },
+    { GetActiveAttribARB_names, GetActiveAttribARB_remap_index, -1 },
+    { Uniform3iARB_names, Uniform3iARB_remap_index, -1 },
+    { GetShaderInfoLog_names, GetShaderInfoLog_remap_index, -1 },
+    { VertexAttrib1sARB_names, VertexAttrib1sARB_remap_index, -1 },
+    { Uniform1fARB_names, Uniform1fARB_remap_index, -1 },
     { StencilOpSeparate_names, StencilOpSeparate_remap_index, -1 },
+    { UniformMatrix2fvARB_names, UniformMatrix2fvARB_remap_index, -1 },
+    { VertexAttrib3dvARB_names, VertexAttrib3dvARB_remap_index, -1 },
+    { Uniform3fvARB_names, Uniform3fvARB_remap_index, -1 },
+    { GetVertexAttribivARB_names, GetVertexAttribivARB_remap_index, -1 },
+    { CreateProgram_names, CreateProgram_remap_index, -1 },
     { StencilFuncSeparate_names, StencilFuncSeparate_remap_index, -1 },
+    { VertexAttrib3dARB_names, VertexAttrib3dARB_remap_index, -1 },
+    { VertexAttrib4fARB_names, VertexAttrib4fARB_remap_index, -1 },
+    { VertexAttrib4fvARB_names, VertexAttrib4fvARB_remap_index, -1 },
+    { GetActiveUniformARB_names, GetActiveUniformARB_remap_index, -1 },
+    { IsShader_names, IsShader_remap_index, -1 },
+    { GetUniformivARB_names, GetUniformivARB_remap_index, -1 },
+    { IsProgram_names, IsProgram_remap_index, -1 },
+    { Uniform2fvARB_names, Uniform2fvARB_remap_index, -1 },
+    { ValidateProgramARB_names, ValidateProgramARB_remap_index, -1 },
+    { VertexAttrib2dARB_names, VertexAttrib2dARB_remap_index, -1 },
+    { VertexAttrib1dvARB_names, VertexAttrib1dvARB_remap_index, -1 },
+    { GetVertexAttribfvARB_names, GetVertexAttribfvARB_remap_index, -1 },
+    { GetAttribLocationARB_names, GetAttribLocationARB_remap_index, -1 },
+    { Uniform3ivARB_names, Uniform3ivARB_remap_index, -1 },
+    { GetVertexAttribPointervARB_names, GetVertexAttribPointervARB_remap_index, -1 },
+    { VertexAttrib4sARB_names, VertexAttrib4sARB_remap_index, -1 },
+    { VertexAttrib2dvARB_names, VertexAttrib2dvARB_remap_index, -1 },
+    { VertexAttrib2fvARB_names, VertexAttrib2fvARB_remap_index, -1 },
+    { VertexAttrib4NivARB_names, VertexAttrib4NivARB_remap_index, -1 },
+    { GetAttachedShaders_names, GetAttachedShaders_remap_index, -1 },
+    { CompileShaderARB_names, CompileShaderARB_remap_index, -1 },
+    { DeleteShader_names, DeleteShader_remap_index, -1 },
+    { Uniform3fARB_names, Uniform3fARB_remap_index, -1 },
+    { VertexAttrib4NuivARB_names, VertexAttrib4NuivARB_remap_index, -1 },
+    { Uniform4fARB_names, Uniform4fARB_remap_index, -1 },
+    { VertexAttrib1dARB_names, VertexAttrib1dARB_remap_index, -1 },
+    { LinkProgramARB_names, LinkProgramARB_remap_index, -1 },
+    { ShaderSourceARB_names, ShaderSourceARB_remap_index, -1 },
+    { VertexAttrib3svARB_names, VertexAttrib3svARB_remap_index, -1 },
+    { Uniform4ivARB_names, Uniform4ivARB_remap_index, -1 },
+    { GetVertexAttribdvARB_names, GetVertexAttribdvARB_remap_index, -1 },
+    { Uniform1ivARB_names, Uniform1ivARB_remap_index, -1 },
+    { VertexAttrib4dvARB_names, VertexAttrib4dvARB_remap_index, -1 },
+    { BindAttribLocationARB_names, BindAttribLocationARB_remap_index, -1 },
+    { Uniform1iARB_names, Uniform1iARB_remap_index, -1 },
+    { VertexAttribPointerARB_names, VertexAttribPointerARB_remap_index, -1 },
+    { VertexAttrib4NsvARB_names, VertexAttrib4NsvARB_remap_index, -1 },
+    { VertexAttrib3fvARB_names, VertexAttrib3fvARB_remap_index, -1 },
+    { CreateShader_names, CreateShader_remap_index, -1 },
+    { DetachShader_names, DetachShader_remap_index, -1 },
+    { VertexAttrib4NubARB_names, VertexAttrib4NubARB_remap_index, -1 },
+    { Uniform4fvARB_names, Uniform4fvARB_remap_index, -1 },
+    { GetUniformfvARB_names, GetUniformfvARB_remap_index, -1 },
+    { Uniform4iARB_names, Uniform4iARB_remap_index, -1 },
+    { UseProgramObjectARB_names, UseProgramObjectARB_remap_index, -1 },
+    { DeleteProgram_names, DeleteProgram_remap_index, -1 },
+    { Uniform2iARB_names, Uniform2iARB_remap_index, -1 },
+    { VertexAttrib4dARB_names, VertexAttrib4dARB_remap_index, -1 },
+    { GetUniformLocationARB_names, GetUniformLocationARB_remap_index, -1 },
+    { VertexAttrib3sARB_names, VertexAttrib3sARB_remap_index, -1 },
+    { GetShaderSourceARB_names, GetShaderSourceARB_remap_index, -1 },
     { DrawBuffersARB_names, DrawBuffersARB_remap_index, -1 },
+    { Uniform1fvARB_names, Uniform1fvARB_remap_index, -1 },
+    { EnableVertexAttribArrayARB_names, EnableVertexAttribArrayARB_remap_index, -1 },
+    { VertexAttrib4svARB_names, VertexAttrib4svARB_remap_index, -1 },
+    { GetShaderiv_names, GetShaderiv_remap_index, -1 },
+    { VertexAttrib2svARB_names, VertexAttrib2svARB_remap_index, -1 },
+    { VertexAttrib4NubvARB_names, VertexAttrib4NubvARB_remap_index, -1 },
+    { VertexAttrib2sARB_names, VertexAttrib2sARB_remap_index, -1 },
+    { VertexAttrib1fvARB_names, VertexAttrib1fvARB_remap_index, -1 },
+    { NULL, 0, 0 }
+};
+#endif
+
+#if defined(need_GL_VERSION_2_1)
+static const struct dri_extension_function GL_VERSION_2_1_functions[] = {
+    { UniformMatrix2x4fv_names, UniformMatrix2x4fv_remap_index, -1 },
+    { UniformMatrix4x3fv_names, UniformMatrix4x3fv_remap_index, -1 },
+    { UniformMatrix4x2fv_names, UniformMatrix4x2fv_remap_index, -1 },
+    { UniformMatrix2x3fv_names, UniformMatrix2x3fv_remap_index, -1 },
+    { UniformMatrix3x4fv_names, UniformMatrix3x4fv_remap_index, -1 },
+    { UniformMatrix3x2fv_names, UniformMatrix3x2fv_remap_index, -1 },
     { NULL, 0, 0 }
 };
 #endif

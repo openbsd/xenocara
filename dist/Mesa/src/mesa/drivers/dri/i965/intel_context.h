@@ -86,7 +86,6 @@ struct intel_texture_object
 
 
 
-
 struct intel_context
 {
    GLcontext ctx;		/* the parent class */
@@ -148,9 +147,14 @@ struct intel_context
 
       void (*meta_depth_replace)( struct intel_context *intel );
 
+      void (*meta_texture_blend_replace) (struct intel_context * intel);
+      
       void (*meta_no_stencil_write)( struct intel_context *intel );
       void (*meta_no_depth_write)( struct intel_context *intel );
       void (*meta_no_texture)( struct intel_context *intel );
+      void (*meta_import_pixel_state) (struct intel_context * intel);
+      void (*meta_frame_buffer_texture)( struct intel_context *intel,
+					 GLint xoff, GLint yoff );
 
       void (*meta_draw_quad)(struct intel_context *intel, 
 			     GLfloat x0, GLfloat x1,
@@ -176,16 +180,6 @@ struct intel_context
 
    struct intel_batchbuffer *batch;
 
-   struct {
-      GLuint id;
-      GLuint primitive;
-      GLubyte *start_ptr;      
-      void (*flush)( struct intel_context * );
-   } prim;
-
-   GLboolean locked;
-   GLboolean strict_conformance;
-
    GLubyte clear_chan[4];
    GLuint ClearColor;
    GLuint ClearDepth;
@@ -201,6 +195,10 @@ struct intel_context
    GLboolean no_hw;
    GLboolean no_rast;
    GLboolean thrashing;
+   GLboolean locked;
+   GLboolean strict_conformance;
+   GLboolean need_flush;
+
 
    
    /* AGP memory buffer manager:
@@ -210,25 +208,13 @@ struct intel_context
 
    /* State for intelvb.c and inteltris.c.
     */
-   GLuint RenderIndex;
-   GLmatrix ViewportMatrix;
    GLenum render_primitive;
    GLenum reduced_primitive;
-   GLuint vertex_size;
-   GLubyte *verts;			/* points to tnl->clipspace.vertex_buf */
-
 
    struct intel_region *front_region;
    struct intel_region *back_region;
    struct intel_region *draw_region;
    struct intel_region *depth_region;
-
-
-   /* Fallback rasterization functions 
-    */
-   intel_point_func draw_point;
-   intel_line_func draw_line;
-   intel_tri_func draw_tri;
 
    /* These refer to the current draw (front vs. back) buffer:
     */
@@ -236,6 +222,7 @@ struct intel_context
    int drawY;
    GLuint numClipRects;		/* cliprects for that buffer */
    drm_clip_rect_t *pClipRects;
+   struct gl_texture_object *frame_buffer_texobj;
 
    GLboolean scissor;
    drm_clip_rect_t draw_rect;
@@ -347,8 +334,8 @@ static inline void * __memcpy(void * to, const void * from, size_t n)
  */
 static inline void *do_memcpy( void *dest, const void *src, size_t n )
 {
-   if ( (((unsigned)src) & 63) ||
-	(((unsigned)dest) & 63)) {
+   if ( (((unsigned long)src) & 63) ||
+	(((unsigned long)dest) & 63)) {
       return  __memcpy(dest, src, n);	
    }
    else
@@ -496,6 +483,21 @@ extern GLboolean intel_intersect_cliprects( drm_clip_rect_t *dest,
 					    const drm_clip_rect_t *b );
 
 
+/* ================================================================
+ * intel_pixel_copy.c:
+ */
+void intelCopyPixels(GLcontext * ctx,
+                     GLint srcx, GLint srcy,
+                     GLsizei width, GLsizei height,
+                     GLint destx, GLint desty, GLenum type);
+
+GLboolean intel_check_blit_fragment_ops(GLcontext * ctx);
+
+void intelBitmap(GLcontext * ctx,
+		 GLint x, GLint y,
+		 GLsizei width, GLsizei height,
+		 const struct gl_pixelstore_attrib *unpack,
+		 const GLubyte * pixels);
 
 #define _NEW_WINDOW_POS 0x40000000
 

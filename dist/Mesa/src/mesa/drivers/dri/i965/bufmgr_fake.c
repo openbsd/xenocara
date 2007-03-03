@@ -117,6 +117,7 @@ struct bufmgr {
    struct block fenced;		/* after bmFenceBuffers (mi_flush, emit irq, write dword) */
                                 /* then to pool->lru or free() */
 
+   unsigned ctxId;
    unsigned last_fence;
    unsigned free_on_hardware;
 
@@ -578,6 +579,12 @@ struct bufmgr *bm_fake_intel_Attach( struct intel_context *intel )
       make_empty_list(&bm.referenced);
       make_empty_list(&bm.fenced);
       make_empty_list(&bm.on_hardware);
+      
+      /* The context id of any of the share group.  This won't be used
+       * in communication with the kernel, so it doesn't matter if
+       * this context is eventually deleted.
+       */
+      bm.ctxId = intel->hHWContext;
    }
 
    nr_attach++;
@@ -1242,7 +1249,6 @@ void bmReleaseBuffers( struct intel_context *intel )
    LOCK(bm);
    {
       struct block *block, *tmp;
-      assert(intel->locked);
 
       foreach_s (block, tmp, &bm->referenced) {
 
@@ -1301,7 +1307,7 @@ unsigned bmSetFence( struct intel_context *intel )
       GLuint dword[2];
       dword[0] = intel->vtbl.flush_cmd();
       dword[1] = 0;
-      intel_cmd_ioctl(intel, (char *)&dword, sizeof(dword), GL_TRUE);
+      intel_cmd_ioctl(intel, (char *)&dword, sizeof(dword));
       
       intel->bm->last_fence = intelEmitIrqLocked( intel );
       
@@ -1431,4 +1437,10 @@ GLboolean bmError( struct intel_context *intel )
    UNLOCK(bm);
 
    return retval;
+}
+
+
+GLuint bmCtxId( struct intel_context *intel )
+{
+   return intel->bm->ctxId;
 }

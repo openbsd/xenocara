@@ -123,11 +123,19 @@ fxDDGetBufferSize(GLframebuffer *buffer, GLuint *width, GLuint *height)
 }
 
 
+/**
+ * We only implement this function as a mechanism to check if the
+ * framebuffer size has changed (and update corresponding state).
+ */
 static void
 fxDDViewport(GLcontext *ctx, GLint x, GLint y, GLsizei w, GLsizei h)
 {
-   /* poll for window size change and realloc software Z/stencil/etc if needed */
-   _mesa_ResizeBuffersMESA();
+   GLuint newWidth, newHeight;
+   GLframebuffer *buffer = ctx->WinSysDrawBuffer;
+   fxDDGetBufferSize( buffer, &newWidth, &newHeight );
+   if (buffer->Width != newWidth || buffer->Height != newHeight) {
+      _mesa_resize_framebuffer(ctx, buffer, newWidth, newHeight );
+   }
 }
 
 
@@ -154,9 +162,7 @@ fxDDClearColor(GLcontext * ctx, const GLfloat color[4])
 
 
 /* Clear the color and/or depth buffers */
-static void fxDDClear( GLcontext *ctx,
-			GLbitfield mask, GLboolean all,
-			GLint x, GLint y, GLint width, GLint height )
+static void fxDDClear( GLcontext *ctx, GLbitfield mask )
 {
    fxMesaContext fxMesa = FX_CONTEXT(ctx);
    GLbitfield softwareMask = mask & (BUFFER_BIT_ACCUM);
@@ -165,8 +171,7 @@ static void fxDDClear( GLcontext *ctx,
    const FxU8 clearS = (FxU8) (ctx->Stencil.Clear & 0xff);
 
    if ( TDFX_DEBUG & MESA_VERBOSE ) {
-      fprintf( stderr, "fxDDClear( %d, %d, %d, %d )\n",
-	               (int) x, (int) y, (int) width, (int) height );
+      fprintf( stderr, "fxDDClear\n");
    }
 
    /* we can't clear accum buffers nor stereo */
@@ -381,7 +386,7 @@ static void fxDDClear( GLcontext *ctx,
    grRenderBuffer(fxMesa->currentFB);
 
    if (softwareMask)
-      _swrast_Clear( ctx, softwareMask, all, x, y, width, height );
+      _swrast_Clear( ctx, softwareMask );
 }
 
 

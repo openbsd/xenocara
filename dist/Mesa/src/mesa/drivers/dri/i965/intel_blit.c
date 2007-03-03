@@ -39,6 +39,7 @@
 #include "intel_context.h"
 #include "intel_blit.h"
 #include "intel_regions.h"
+#include "intel_structs.h"
 
 #include "bufmgr.h"
 
@@ -74,9 +75,6 @@ void intelCopyBuffer( const __DRIdrawablePrivate *dPriv,
 
    if (!rect)
    {
-      /* This is a really crappy way to do wait-for-vblank.  I guess
-       * it sortof works in the single-application case.
-       */
        UNLOCK_HARDWARE( intel );
        driWaitForVBlank( dPriv, &intel->vbl_seq, intel->vblank_flags, & missed_target );
        LOCK_HARDWARE( intel );
@@ -223,6 +221,29 @@ void intelEmitFillBlit( struct intel_context *intel,
    ADVANCE_BATCH();
 }
 
+static GLuint translate_raster_op(GLenum logicop)
+{
+   switch(logicop) {
+   case GL_CLEAR: return 0x00;
+   case GL_AND: return 0x88;
+   case GL_AND_REVERSE: return 0x44;
+   case GL_COPY: return 0xCC;
+   case GL_AND_INVERTED: return 0x22;
+   case GL_NOOP: return 0xAA;
+   case GL_XOR: return 0x66;
+   case GL_OR: return 0xEE;
+   case GL_NOR: return 0x11;
+   case GL_EQUIV: return 0x99;
+   case GL_INVERT: return 0x55;
+   case GL_OR_REVERSE: return 0xDD;
+   case GL_COPY_INVERTED: return 0x33;
+   case GL_OR_INVERTED: return 0xBB;
+   case GL_NAND: return 0x77;
+   case GL_SET: return 0xFF;
+   default: return 0;
+   }
+}
+
 
 /* Copy BitBlt
  */
@@ -238,7 +259,8 @@ void intelEmitCopyBlit( struct intel_context *intel,
 			GLboolean dst_tiled,
 			GLshort src_x, GLshort src_y,
 			GLshort dst_x, GLshort dst_y,
-			GLshort w, GLshort h )
+			GLshort w, GLshort h,
+			GLenum logic_op )
 {
    GLuint CMD, BR13;
    int dst_y2 = dst_y + h;
@@ -246,12 +268,15 @@ void intelEmitCopyBlit( struct intel_context *intel,
    BATCH_LOCALS;
 
 
-   DBG("%s src:buf(%d)/%d %d,%d dst:buf(%d)/%d %d,%d sz:%dx%d\n",
+   DBG("%s src:buf(%d)/%d %d,%d dst:buf(%d)/%d %d,%d sz:%dx%d op:%d\n",
        __FUNCTION__,
        src_buffer, src_pitch, src_x, src_y,
        dst_buffer, dst_pitch, dst_x, dst_y,
-       w,h);
+       w,h,logic_op);
 
+   assert( logic_op - GL_CLEAR >= 0 );
+   assert( logic_op - GL_CLEAR < 0x10 );
+      
    src_pitch *= cpp;
    dst_pitch *= cpp;
 
@@ -259,11 +284,12 @@ void intelEmitCopyBlit( struct intel_context *intel,
    case 1: 
    case 2: 
    case 3: 
-      BR13 = (0xCC << 16) | (1<<24);
+      BR13 = (translate_raster_op(logic_op) << 16) | (1<<24);
       CMD = XY_SRC_COPY_BLT_CMD;
       break;
    case 4:
-      BR13 = (0xCC << 16) | (1<<24) | (1<<25);
+      BR13 = (translate_raster_op(logic_op) << 16) | (1<<24) |
+	  (1<<25);
       CMD = (XY_SRC_COPY_BLT_CMD | XY_SRC_COPY_BLT_WRITE_ALPHA |
 	     XY_SRC_COPY_BLT_WRITE_RGB);
       break;
@@ -291,8 +317,12 @@ void intelEmitCopyBlit( struct intel_context *intel,
 
    /* Initial y values don't seem to work with negative pitches.  If
     * we adjust the offsets manually (below), it seems to work fine.
+    *
+    * On the other hand, if we always adjust, the hardware doesn't
+    * know which blit directions to use, so overlapping copypixels get
+    * the wrong result.
     */
-   if (0) {
+   if (dst_pitch > 0 && src_pitch > 0) {
       BEGIN_BATCH(8, INTEL_BATCH_NO_CLIPRECTS);
       OUT_BATCH( CMD );
       OUT_BATCH( dst_pitch | BR13 );
@@ -320,14 +350,14 @@ void intelEmitCopyBlit( struct intel_context *intel,
 
 
 
-void intelClearWithBlit(GLcontext *ctx, GLbitfield flags, GLboolean all,
-		      GLint cx1, GLint cy1, GLint cw, GLint ch)
+void intelClearWithBlit(GLcontext *ctx, GLbitfield flags)
 {
    struct intel_context *intel = intel_context( ctx );
    intelScreenPrivate *intelScreen = intel->intelScreen;
    GLuint clear_depth, clear_color;
-   GLint cx, cy;
+   GLint cx, cy, cw, ch;
    GLint cpp = intelScreen->cpp;
+   GLboolean all;
    GLint i;
    struct intel_region *front = intel->front_region;
    struct intel_region *back = intel->back_region;
@@ -374,21 +404,16 @@ void intelClearWithBlit(GLcontext *ctx, GLbitfield flags, GLboolean all,
    intelFlush( &intel->ctx );
    LOCK_HARDWARE( intel );
    {
-      /* Refresh the cx/y/w/h values as they may have been invalidated
-       * by a new window position or size picked up when we did
-       * LOCK_HARDWARE above.  The values passed by mesa are not
-       * reliable.
-       */
-      {
-	  cx = ctx->DrawBuffer->_Xmin;
-	  cy = ctx->DrawBuffer->_Ymin;
-	  ch = ctx->DrawBuffer->_Ymax - ctx->DrawBuffer->_Ymin;
-	  cw  = ctx->DrawBuffer->_Xmax - ctx->DrawBuffer->_Xmin;
-      }
+      /* get clear bounds after locking */
+      cx = ctx->DrawBuffer->_Xmin;
+      cy = ctx->DrawBuffer->_Ymin;
+      ch = ctx->DrawBuffer->_Ymax - ctx->DrawBuffer->_Ymin;
+      cw = ctx->DrawBuffer->_Xmax - ctx->DrawBuffer->_Xmin;
+      all = (cw == ctx->DrawBuffer->Width && ch == ctx->DrawBuffer->Height);
 
       /* flip top to bottom */
-      cy = intel->driDrawable->h-cy1-ch;
-      cx = cx1 + intel->drawX;
+      cy = intel->driDrawable->h - cy - ch;
+      cx = cx + intel->drawX;
       cy += intel->drawY;
 
       /* adjust for page flipping */
@@ -491,4 +516,99 @@ void intelClearWithBlit(GLcontext *ctx, GLbitfield flags, GLboolean all,
    UNLOCK_HARDWARE( intel );
 }
 
+
+
+#define BR13_565  0x1
+#define BR13_8888 0x3
+
+
+void
+intelEmitImmediateColorExpandBlit(struct intel_context *intel,
+				  GLuint cpp,
+				  GLubyte *src_bits, GLuint src_size,
+				  GLuint fg_color,
+				  GLshort dst_pitch,
+				  struct buffer *dst_buffer,
+				  GLuint dst_offset,
+				  GLboolean dst_tiled,
+				  GLshort x, GLshort y, 
+				  GLshort w, GLshort h)
+{
+   struct xy_setup_blit setup;
+   struct xy_text_immediate_blit text;
+   int dwords = ((src_size + 7) & ~7) / 4;
+
+
+   if (w < 0 || h < 0) 
+      return;
+
+   dst_pitch *= cpp;
+
+   if (dst_tiled) 
+      dst_pitch /= 4;
+
+   DBG("%s dst:buf(%p)/%d+%d %d,%d sz:%dx%d, %d bytes %d dwords\n",
+       __FUNCTION__,
+       dst_buffer, dst_pitch, dst_offset, x, y, w, h, src_size, dwords);
+
+   memset(&setup, 0, sizeof(setup));
+   
+   setup.br0.client = CLIENT_2D;
+   setup.br0.opcode = OPCODE_XY_SETUP_BLT;
+   setup.br0.write_alpha = (cpp == 4);
+   setup.br0.write_rgb = (cpp == 4);
+   setup.br0.dst_tiled = dst_tiled;
+   setup.br0.length = (sizeof(setup) / sizeof(int)) - 2;
+      
+   setup.br13.dest_pitch = dst_pitch;
+   setup.br13.rop = 0xcc;
+   setup.br13.color_depth = (cpp == 4) ? BR13_8888 : BR13_565;
+   setup.br13.clipping_enable = 0;
+   setup.br13.mono_source_transparency = 1;
+
+   setup.dw2.clip_y1 = 0;
+   setup.dw2.clip_x1 = 0;
+   setup.dw3.clip_y2 = 100;
+   setup.dw3.clip_x2 = 100;
+
+   setup.dest_base_addr = bmBufferOffset(intel, dst_buffer) + dst_offset;
+   setup.background_color = 0;
+   setup.foreground_color = fg_color;
+   setup.pattern_base_addr = 0;
+
+   memset(&text, 0, sizeof(text));
+   text.dw0.client = CLIENT_2D;
+   text.dw0.opcode = OPCODE_XY_TEXT_IMMEDIATE_BLT;
+   text.dw0.pad0 = 0;
+   text.dw0.byte_packed = 1;	/* ?maybe? */
+   text.dw0.pad1 = 0;
+   text.dw0.dst_tiled = dst_tiled;
+   text.dw0.pad2 = 0;
+   text.dw0.length = (sizeof(text)/sizeof(int)) - 2 + dwords;
+   text.dw1.dest_y1 = y;	/* duplicates info in setup blit */
+   text.dw1.dest_x1 = x;
+   text.dw2.dest_y2 = y + h;
+   text.dw2.dest_x2 = x + w;
+
+   intel_batchbuffer_require_space( intel->batch,
+				    sizeof(setup) + 
+				    sizeof(text) + 
+				    dwords,
+				    INTEL_BATCH_NO_CLIPRECTS );
+
+   intel_batchbuffer_data( intel->batch,
+			   &setup,
+			   sizeof(setup),
+			   INTEL_BATCH_NO_CLIPRECTS );
+
+   intel_batchbuffer_data( intel->batch,
+			   &text,
+			   sizeof(text),
+			   INTEL_BATCH_NO_CLIPRECTS );
+
+   intel_batchbuffer_data( intel->batch,
+			   src_bits,
+			   dwords * 4,
+			   INTEL_BATCH_NO_CLIPRECTS );
+}
 

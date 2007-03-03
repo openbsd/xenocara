@@ -33,8 +33,8 @@ default:
 		$(MAKE) beos ; \
 	elif [ "$(DRIVER_DIRS)" = "directfb" ]; then \
 		$(MAKE) directfb ; \
-	elif [ "$(DRIVER_DIRS)" = "fbdev" ]; then \
-		$(MAKE) fbdev ; \
+	elif [ "$(DRIVER_DIRS)" = "fbdev osmesa" ]; then \
+		$(MAKE) fbdev ; $(MAKE) osmesa-only ; \
 	else \
 		$(MAKE) stand-alone ; \
 	fi
@@ -141,7 +141,7 @@ $(TOP)/$(LIB_DIR)/$(OSMESA_LIB_NAME): $(OSMESA_DRIVER_OBJECTS) $(OSMESA16_OBJECT
 depend: $(ALL_SOURCES)
 	@ echo "running $(MKDEP)"
 	@ touch depend
-	$(MKDEP) $(MKDEP_OPTIONS) $(DEFINES) $(INCLUDE_DIRS) $(ALL_SOURCES) \
+	@$(MKDEP) $(MKDEP_OPTIONS) $(DEFINES) $(INCLUDE_DIRS) $(ALL_SOURCES) \
 		> /dev/null 
 
 
@@ -154,14 +154,19 @@ install: default
 	$(INSTALL) -d $(INSTALL_DIR)/include/GL
 	$(INSTALL) -d $(INSTALL_DIR)/$(LIB_DIR)
 	$(INSTALL) -m 644 $(TOP)/include/GL/*.h $(INSTALL_DIR)/include/GL
-	$(COPY_LIBS) $(TOP)/$(LIB_DIR)/libGL.* $(INSTALL_DIR)/$(LIB_DIR)
+	@if [ -e $(TOP)/$(LIB_DIR)/$(GL_LIB_NAME) ]; then \
+		$(INSTALL) $(TOP)/$(LIB_DIR)/libGL* $(INSTALL_DIR)/$(LIB_DIR); \
+	fi
+	@if [ -e $(TOP)/$(LIB_DIR)/$(OSMESA_LIB_NAME) ]; then \
+		$(INSTALL) $(TOP)/$(LIB_DIR)/libOSMesa* $(INSTALL_DIR)/$(LIB_DIR); \
+	fi
 	@if [ "${DRIVER_DIRS}" = "dri" ] ; then \
 		cd drivers/dri ; $(MAKE) install ; \
 	fi
 
-	## NOT YET:
-	## $(INSTALL) -d $(INSTALL_DIR)/include/GLES
-	## $(INSTALL) -m 644 include/GLES/*.h $(INSTALL_DIR)/include/GLES
+## NOT INSTALLED YET:
+## $(INSTALL) -d $(INSTALL_DIR)/include/GLES
+## $(INSTALL) -m 644 include/GLES/*.h $(INSTALL_DIR)/include/GLES
 
 
 # Emacs tags

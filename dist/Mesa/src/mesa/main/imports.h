@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
+ * Version:  6.5.2
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -53,6 +53,15 @@ extern "C" {
 
 #ifndef NULL
 #define NULL 0
+#endif
+
+
+/** gcc -pedantic warns about long string literals, LONGSTRING silences that */
+#if !defined(__GNUC__) || (__GNUC__ < 2) || \
+    ((__GNUC__ == 2) && (__GNUC_MINOR__ <= 7))
+# define LONGSTRING
+#else
+# define LONGSTRING __extension__
 #endif
 
 /*@}*/
@@ -602,6 +611,17 @@ do {                                                                    \
 #define START_FAST_MATH(x)  x = 0
 #define END_FAST_MATH(x)  (void)(x)
 #endif
+
+
+/**
+ * Return 1 if this is a little endian machine, 0 if big endian.
+ */
+static INLINE GLboolean
+_mesa_little_endian(void)
+{
+   const GLuint ui = 1; /* intentionally not static */
+   return *((const GLubyte *) &ui);
+}
 
 
 

@@ -35,6 +35,7 @@
 #include "context.h"
 #include "convolve.h"
 #include "image.h"
+#include "mipmap.h"
 #include "texcompress.h"
 #include "texformat.h"
 #include "texstore.h"
@@ -104,7 +105,7 @@ texstore_rgb_fxt1(TEXSTORE_PARAMS)
    }
 
    dst = _mesa_compressed_image_address(dstXoffset, dstYoffset, 0,
-                                        GL_COMPRESSED_RGB_FXT1_3DFX,
+                                        dstFormat->MesaFormat,
                                         texWidth, (GLubyte *) dstAddr);
 
    fxt1_encode(srcWidth, srcHeight, 3, pixels, srcRowStride,
@@ -161,7 +162,7 @@ texstore_rgba_fxt1(TEXSTORE_PARAMS)
    }
 
    dst = _mesa_compressed_image_address(dstXoffset, dstYoffset, 0,
-                                        GL_COMPRESSED_RGBA_FXT1_3DFX,
+                                        dstFormat->MesaFormat,
                                         texWidth, (GLubyte *) dstAddr);
 
    fxt1_encode(srcWidth, srcHeight, 4, pixels, srcRowStride,

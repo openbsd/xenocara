@@ -41,6 +41,7 @@
 
 #include "enums.h"
 #include "image.h"
+#include "mipmap.h"
 #include "texcompress.h"
 #include "texformat.h"
 #include "teximage.h"
@@ -593,12 +594,10 @@ tdfxIsTextureResident(GLcontext *ctx, struct gl_texture_object *tObj)
 static GrTexTable_t
 convertPalette(FxU32 data[256], const struct gl_color_table *table)
 {
-    const GLubyte *tableUB = (const GLubyte *) table->Table;
+    const GLubyte *tableUB = table->TableUB;
     GLint width = table->Size;
     FxU32 r, g, b, a;
     GLint i;
-
-    ASSERT(table->Type == GL_UNSIGNED_BYTE);
 
     switch (table->_BaseFormat) {
     case GL_INTENSITY:
@@ -671,7 +670,7 @@ tdfxUpdateTexturePalette(GLcontext * ctx, struct gl_texture_object *tObj)
         tdfxTexInfo *ti;
         
         /* This might be a proxy texture. */
-        if (!tObj->Palette.Table)
+        if (!tObj->Palette.TableUB)
             return;
             
         if (!tObj->DriverData)
@@ -1405,7 +1404,6 @@ tdfxTexImage2D(GLcontext *ctx, GLenum target, GLint level,
          GLint mipWidth, mipHeight;
          tdfxMipMapLevel *mip;
          struct gl_texture_image *mipImage;
-         const struct gl_texture_unit *texUnit = &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
          const GLint maxLevels = _mesa_max_texture_levels(ctx, texObj->Target);
    
          assert(!texImage->IsCompressed);
@@ -1426,7 +1424,7 @@ tdfxTexImage2D(GLcontext *ctx, GLenum target, GLint level,
                              mipWidth, mipHeight, border,
                              format, type,
                              NULL);
-            mipImage = _mesa_select_tex_image(ctx, texUnit, target, level);
+            mipImage = _mesa_select_tex_image(ctx, texObj, target, level);
             mip = TDFX_TEXIMAGE_DATA(mipImage);
             _mesa_halve2x2_teximage2d(ctx,
                                       texImage,
@@ -1515,7 +1513,6 @@ tdfxTexSubImage2D(GLcontext *ctx, GLenum target, GLint level,
       GLint mipWidth, mipHeight;
       tdfxMipMapLevel *mip;
       struct gl_texture_image *mipImage;
-      const struct gl_texture_unit *texUnit = &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
       const GLint maxLevels = _mesa_max_texture_levels(ctx, texObj->Target);
 
       assert(!texImage->IsCompressed);
@@ -1535,7 +1532,7 @@ tdfxTexSubImage2D(GLcontext *ctx, GLenum target, GLint level,
             break;
          }
          ++level;
-         mipImage = _mesa_select_tex_image(ctx, texUnit, target, level);
+         mipImage = _mesa_select_tex_image(ctx, texObj, target, level);
          mip = TDFX_TEXIMAGE_DATA(mipImage);
          _mesa_halve2x2_teximage2d(ctx,
                                    texImage,
@@ -1758,7 +1755,7 @@ tdfxCompressedTexSubImage2D( GLcontext *ctx, GLenum target,
     for (i = 0; i < rows; i++) {
        MEMCPY(dest, data, srcRowStride);
        dest += destRowStride;
-       data = (GLvoid *)((GLuint)data + (GLuint)srcRowStride);
+       data = (GLvoid *)((intptr_t)data + (intptr_t)srcRowStride);
     }
 
     /* [dBorca] Hack alert:

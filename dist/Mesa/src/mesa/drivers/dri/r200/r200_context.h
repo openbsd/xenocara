@@ -102,10 +102,16 @@ typedef void (*r200_point_func)( r200ContextPtr,
 struct r200_vertex_program {
         struct gl_vertex_program mesa_program; /* Must be first */
         int translated;
-        VERTEX_SHADER_INSTRUCTION instr[R200_VSF_MAX_INST + 3];
+        /* need excess instr: 1 for late loop checking, 2 for 
+           additional instr due to instr/attr, 3 for fog */
+        VERTEX_SHADER_INSTRUCTION instr[R200_VSF_MAX_INST + 6];
         int pos_end;
         int inputs[VERT_ATTRIB_MAX];
+        int rev_inputs[16];
+        int gen_inputs_mapped;
         int native;
+        int fogpidx;
+        int fogmode;
 };
 
 struct r200_colorbuffer_state {
@@ -445,9 +451,29 @@ struct r200_state_atom {
 
 /* SPR - point sprite state
  */
-#define SPR_CMD_0             0
-#define SPR_POINT_SPRITE_CNTL 1
-#define SPR_STATE_SIZE        2
+#define SPR_CMD_0              0
+#define SPR_POINT_SPRITE_CNTL  1
+#define SPR_STATE_SIZE         2
+
+#define PTP_CMD_0              0
+#define PTP_VPORT_SCALE_0      1
+#define PTP_VPORT_SCALE_1      2
+#define PTP_VPORT_SCALE_PTSIZE 3
+#define PTP_VPORT_SCALE_3      4
+#define PTP_CMD_1              5
+#define PTP_ATT_CONST_QUAD     6
+#define PTP_ATT_CONST_LIN      7
+#define PTP_ATT_CONST_CON      8
+#define PTP_ATT_CONST_3        9
+#define PTP_EYE_X             10
+#define PTP_EYE_Y             11
+#define PTP_EYE_Z             12
+#define PTP_EYE_3             13
+#define PTP_CLAMP_MIN         14
+#define PTP_CLAMP_MAX         15
+#define PTP_CLAMP_2           16
+#define PTP_CLAMP_3           17
+#define PTP_STATE_SIZE        18
 
 #define VTX_COLOR(v,n)   (((v)>>(R200_VTX_COLOR_0_SHIFT+(n)*2))&\
                          R200_VTX_COLOR_MASK)
@@ -614,6 +640,7 @@ struct r200_hw_state {
    struct r200_state_atom vpp[2];
    struct r200_state_atom atf;
    struct r200_state_atom spr;
+   struct r200_state_atom ptp;
 
    int max_state_size;	/* Number of bytes necessary for a full state emit. */
    GLboolean is_dirty, all_dirty;
@@ -674,6 +701,7 @@ struct r200_dri_mirror {
    __DRIcontextPrivate	*context;	/* DRI context */
    __DRIscreenPrivate	*screen;	/* DRI screen */
    __DRIdrawablePrivate	*drawable;	/* DRI drawable bound to this ctx */
+   __DRIdrawablePrivate	*readable;	/* DRI readable bound to this ctx */
 
    drm_context_t hwContext;
    drm_hw_lock_t *hwLock;
@@ -700,8 +728,8 @@ struct r200_tcl_info {
    GLint last_offset;
    GLuint hw_primitive;
 
-/* FIXME: what's the maximum number of components? */
-   struct r200_dma_region *aos_components[11];
+/* hw can handle 12 components max */
+   struct r200_dma_region *aos_components[12];
    GLuint nr_aos_components;
 
    GLuint *Elts;
@@ -713,6 +741,7 @@ struct r200_tcl_info {
    struct r200_dma_region fog;
    struct r200_dma_region tex[R200_MAX_TEXTURE_UNITS];
    struct r200_dma_region norm;
+   struct r200_dma_region generic[16];
 };
 
 

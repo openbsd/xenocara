@@ -33,9 +33,8 @@
 #define DBG 0
 
 #define LOCAL_VARS						\
-   savageContextPtr imesa = SAVAGE_CONTEXT(ctx);		\
-   __DRIdrawablePrivate *dPriv = imesa->driDrawable;		\
    driRenderbuffer *drb = (driRenderbuffer *) rb;		\
+   __DRIdrawablePrivate *const dPriv = drb->dPriv;		\
    GLuint cpp   = drb->cpp;					\
    GLuint pitch = drb->pitch;					\
    GLuint height = dPriv->h;					\
@@ -44,9 +43,8 @@
    (void) p
 
 #define LOCAL_DEPTH_VARS					\
-   savageContextPtr imesa = SAVAGE_CONTEXT(ctx);		\
-   __DRIdrawablePrivate *dPriv = imesa->driDrawable;		\
    driRenderbuffer *drb = (driRenderbuffer *) rb;		\
+   __DRIdrawablePrivate *const dPriv = drb->dPriv;		\
    GLuint zpp   = drb->cpp;					\
    GLuint pitch = drb->pitch;					\
    GLuint height = dPriv->h;					\
@@ -234,10 +232,7 @@ void savageDDInitSpanFuncs( GLcontext *ctx )
    struct swrast_device_driver *swdd = _swrast_GetDeviceDriverReference(ctx);
    swdd->SpanRenderStart = savageSpanRenderStart;
 
-   /* Pixel path fallbacks.
-    */
-   ctx->Driver.Accum = _swrast_Accum;
-   ctx->Driver.Bitmap = _swrast_Bitmap;
+   /* XXX these should probably be plugged in elsewhere */
    ctx->Driver.CopyPixels = savageCopyPixels;
    ctx->Driver.DrawPixels = savageDrawPixels;
    ctx->Driver.ReadPixels = savageReadPixels;

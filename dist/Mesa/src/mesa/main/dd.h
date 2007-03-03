@@ -5,9 +5,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  6.5.2
  *
- * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -52,8 +52,7 @@ struct mesa_display_list;
 struct dd_function_table {
    /**
     * Return a string as needed by glGetString().
-    *
-    * Only the GL_RENDERER token must be implemented.  Otherwise, NULL can be
+    * Only the GL_RENDERER query must be implemented.  Otherwise, NULL can be
     * returned.
     */
    const GLubyte * (*GetString)( GLcontext *ctx, GLenum name );
@@ -70,19 +69,20 @@ struct dd_function_table {
     * Get the width and height of the named buffer/window.
     *
     * Mesa uses this to determine when the driver's window size has changed.
+    * XXX OBSOLETE: this function will be removed in the future.
     */
    void (*GetBufferSize)( GLframebuffer *buffer,
                           GLuint *width, GLuint *height );
 
    /**
     * Resize the given framebuffer to the given size.
+    * XXX OBSOLETE: this function will be removed in the future.
     */
    void (*ResizeBuffers)( GLcontext *ctx, GLframebuffer *fb,
                           GLuint width, GLuint height);
 
    /**
     * Called whenever an error is generated.  
-    *
     * __GLcontextRec::ErrorValue contains the error value.
     */
    void (*Error)( GLcontext *ctx );
@@ -99,40 +99,24 @@ struct dd_function_table {
 
    /**
     * Clear the color/depth/stencil/accum buffer(s).
-    *
-    * \param mask a bitmask of the DD_*_BIT values defined above that indicates
-    * which buffers need to be cleared.
-    * \param all if true then clear the whole buffer, else clear only the
-    * region defined by <tt>(x, y, width, height)</tt>.
-    * 
-    * This function must obey the glColorMask(), glIndexMask() and
-    * glStencilMask() settings!
-    * Software Mesa can do masked clears if the device driver can't.
+    * \param buffers  a bitmask of BUFFER_BIT_* flags indicating which
+    *                 renderbuffers need to be cleared.
     */
-   void (*Clear)( GLcontext *ctx, GLbitfield mask, GLboolean all,
-		  GLint x, GLint y, GLint width, GLint height );
+   void (*Clear)( GLcontext *ctx, GLbitfield buffers );
+
+   /**
+    * Execute glAccum command.
+    */
+   void (*Accum)( GLcontext *ctx, GLenum op, GLfloat value );
 
 
    /**
-    * \name For hardware accumulation buffer
-    */
-   /*@{*/
-   /**
-    * Execute glAccum command within the given scissor region.
-    */
-   void (*Accum)( GLcontext *ctx, GLenum op, GLfloat value,
-		  GLint xpos, GLint ypos, GLint width, GLint height );
-   /*@}*/
-
-
-   /**
-    * \name glDraw(), glRead(), glCopyPixels() and glBitmap() functions
+    * \name Image-related functions
     */
    /*@{*/
 
    /**
-    * This is called by glDrawPixels().
-    *
+    * Called by glDrawPixels().
     * \p unpack describes how to unpack the source image data.
     */
    void (*DrawPixels)( GLcontext *ctx,
@@ -151,19 +135,14 @@ struct dd_function_table {
 		       GLvoid *dest );
 
    /**
-    * Do a glCopyPixels().  
-    *
-    * This function must respect all rasterization state, glPixelTransfer(),
-    * glPixelZoom(), etc.
+    * Called by glCopyPixels().  
     */
    void (*CopyPixels)( GLcontext *ctx, GLint srcx, GLint srcy,
                        GLsizei width, GLsizei height,
                        GLint dstx, GLint dsty, GLenum type );
 
    /**
-    * This is called by glBitmap().  
-    *
-    * Works the same as dd_function_table::DrawPixels, above.
+    * Called by glBitmap().  
     */
    void (*Bitmap)( GLcontext *ctx,
 		   GLint x, GLint y, GLsizei width, GLsizei height,
@@ -591,8 +570,9 @@ struct dd_function_table {
    /** Notify driver that a program string has been specified. */
    void (*ProgramStringNotify)(GLcontext *ctx, GLenum target, 
 			       struct gl_program *prog);
-   
-
+   /** Get value of a fragment program register during program execution. */
+   void (*GetFragmentProgramRegister)(GLcontext *ctx, enum register_file file,
+                                      GLuint index, GLfloat val[4]);
 
    /** Query if program can be loaded onto hardware */
    GLboolean (*IsProgramNative)(GLcontext *ctx, GLenum target, 

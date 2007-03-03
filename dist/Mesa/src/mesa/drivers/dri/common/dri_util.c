@@ -323,6 +323,7 @@ static GLboolean DoBindContext(__DRInativeDisplay *dpy,
 
     /* Bind the drawable to the context */
     pcp->driDrawablePriv = pdp;
+    pcp->driReadablePriv = prp;
     pdp->driContextPriv = pcp;
     pdp->refcount++;
     if ( pdp != prp ) {
@@ -336,6 +337,12 @@ static GLboolean DoBindContext(__DRInativeDisplay *dpy,
     if (!pdp->pStamp || *pdp->pStamp != pdp->lastStamp) {
 	DRM_SPINLOCK(&psp->pSAREA->drawable_lock, psp->drawLockID);
 	__driUtilUpdateDrawableInfo(pdp);
+	DRM_SPINUNLOCK(&psp->pSAREA->drawable_lock, psp->drawLockID);
+    }
+
+    if ((pdp != prp) && (!pdp->pStamp || *pdp->pStamp != pdp->lastStamp)) {
+	DRM_SPINLOCK(&psp->pSAREA->drawable_lock, psp->drawLockID);
+	__driUtilUpdateDrawableInfo(prp);
 	DRM_SPINUNLOCK(&psp->pSAREA->drawable_lock, psp->drawLockID);
     }
 
@@ -402,14 +409,20 @@ __driUtilUpdateDrawableInfo(__DRIdrawablePrivate *pdp)
     __DRIscreenPrivate *psp;
     __DRIcontextPrivate *pcp = pdp->driContextPriv;
     
-    if (!pcp || (pdp != pcp->driDrawablePriv)) {
-	/* ERROR!!! */
-	return;
+    if (!pcp 
+	|| ((pdp != pcp->driDrawablePriv) && (pdp != pcp->driReadablePriv))) {
+	/* ERROR!!! 
+	 * ...but we must ignore it. There can be many contexts bound to a
+	 * drawable.
+	 */
     }
 
     psp = pdp->driScreenPriv;
     if (!psp) {
 	/* ERROR!!! */
+       _mesa_problem("Warning! Possible infinite loop due to bug "
+		     "in file %s, line %d\n",
+		     __FILE__, __LINE__);
 	return;
     }
 
@@ -841,7 +854,7 @@ static void driDestroyScreen(__DRInativeDisplay *dpy, int scrn, void *screenPriv
 	(void)drmUnmap((drmAddress)psp->pSAREA, SAREA_MAX);
 	(void)drmUnmap((drmAddress)psp->pFB, psp->fbSize);
 	_mesa_free(psp->pDevPriv);
-	(void)drmClose(psp->fd);
+	(void)drmCloseOnce(psp->fd);
 	if ( psp->modes != NULL ) {
 	    (*dri_interface->destroyContextModes)( psp->modes );
 	}

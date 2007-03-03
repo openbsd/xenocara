@@ -154,16 +154,17 @@ ultrix-gcc:
 
 # Rules for making release tarballs
 
-DIRECTORY = Mesa-6.5.1
-LIB_NAME = MesaLib-6.5.1
-DEMO_NAME = MesaDemos-6.5.1
-GLUT_NAME = MesaGLUT-6.5.1
+DIRECTORY = Mesa-6.5.2
+LIB_NAME = MesaLib-6.5.2
+DEMO_NAME = MesaDemos-6.5.2
+GLUT_NAME = MesaGLUT-6.5.2
 
 MAIN_FILES = \
 	$(DIRECTORY)/Makefile*						\
 	$(DIRECTORY)/descrip.mms					\
 	$(DIRECTORY)/mms-config.					\
 	$(DIRECTORY)/bin/mklib						\
+	$(DIRECTORY)/bin/minstall					\
 	$(DIRECTORY)/configs/[a-z]*					\
 	$(DIRECTORY)/docs/*.html					\
 	$(DIRECTORY)/docs/COPYING					\
@@ -173,7 +174,6 @@ MAIN_FILES = \
 	$(DIRECTORY)/include/GL/internal/glcore.h			\
 	$(DIRECTORY)/include/GL/amesa.h					\
 	$(DIRECTORY)/include/GL/dmesa.h					\
-	$(DIRECTORY)/include/GL/directfbgl.h				\
 	$(DIRECTORY)/include/GL/fxmesa.h				\
 	$(DIRECTORY)/include/GL/ggimesa.h				\
 	$(DIRECTORY)/include/GL/gl.h					\
@@ -204,25 +204,35 @@ MAIN_FILES = \
 	$(DIRECTORY)/src/mesa/depend					\
 	$(DIRECTORY)/src/mesa/main/*.[chS]				\
 	$(DIRECTORY)/src/mesa/main/descrip.mms				\
+	$(DIRECTORY)/src/mesa/main/sources				\
 	$(DIRECTORY)/src/mesa/glapi/*.[chS]				\
 	$(DIRECTORY)/src/mesa/glapi/descrip.mms				\
+	$(DIRECTORY)/src/mesa/glapi/sources				\
 	$(DIRECTORY)/src/mesa/array_cache/*.[ch]			\
 	$(DIRECTORY)/src/mesa/array_cache/descrip.mms			\
+	$(DIRECTORY)/src/mesa/array_cache/sources			\
 	$(DIRECTORY)/src/mesa/math/*.[ch]				\
 	$(DIRECTORY)/src/mesa/math/descrip.mms				\
+	$(DIRECTORY)/src/mesa/math/sources				\
 	$(DIRECTORY)/src/mesa/shader/*.[ch]				\
 	$(DIRECTORY)/src/mesa/shader/descrip.mms			\
+	$(DIRECTORY)/src/mesa/shader/sources				\
 	$(DIRECTORY)/src/mesa/shader/grammar/*.[ch]			\
 	$(DIRECTORY)/src/mesa/shader/grammar/descrip.mms		\
+	$(DIRECTORY)/src/mesa/shader/grammar/sources			\
 	$(DIRECTORY)/src/mesa/shader/slang/*.[ch]			\
 	$(DIRECTORY)/src/mesa/shader/slang/descrip.mms			\
+	$(DIRECTORY)/src/mesa/shader/slang/sources			\
 	$(DIRECTORY)/src/mesa/shader/slang/library/*.[ch]		\
 	$(DIRECTORY)/src/mesa/swrast/*.[ch]				\
 	$(DIRECTORY)/src/mesa/swrast/descrip.mms			\
+	$(DIRECTORY)/src/mesa/swrast/sources				\
 	$(DIRECTORY)/src/mesa/swrast_setup/*.[ch]			\
 	$(DIRECTORY)/src/mesa/swrast_setup/descrip.mms			\
+	$(DIRECTORY)/src/mesa/swrast_setup/sources			\
 	$(DIRECTORY)/src/mesa/tnl/*.[chS]				\
 	$(DIRECTORY)/src/mesa/tnl/descrip.mms				\
+	$(DIRECTORY)/src/mesa/tnl/sources				\
 	$(DIRECTORY)/src/mesa/tnl_dd/*.[ch]				\
 	$(DIRECTORY)/src/mesa/tnl_dd/imm/*.[ch]				\
 	$(DIRECTORY)/src/mesa/tnl_dd/imm/NOTES.imm			\
@@ -230,6 +240,7 @@ MAIN_FILES = \
 	$(DIRECTORY)/src/mesa/drivers/beos/Makefile			\
 	$(DIRECTORY)/src/mesa/drivers/common/*.[ch]			\
 	$(DIRECTORY)/src/mesa/drivers/common/descrip.mms		\
+	$(DIRECTORY)/src/mesa/drivers/common/sources			\
 	$(DIRECTORY)/src/mesa/drivers/directfb/*.[ch]			\
 	$(DIRECTORY)/src/mesa/drivers/directfb/Makefile			\
 	$(DIRECTORY)/src/mesa/drivers/dos/*.[chS]			\
@@ -250,6 +261,7 @@ MAIN_FILES = \
 	$(DIRECTORY)/src/mesa/drivers/windows/*/*.[ch]			\
 	$(DIRECTORY)/src/mesa/drivers/windows/*/*.def			\
 	$(DIRECTORY)/src/mesa/drivers/x11/descrip.mms			\
+	$(DIRECTORY)/src/mesa/drivers/x11/sources			\
 	$(DIRECTORY)/src/mesa/drivers/x11/*.[ch]			\
 	$(DIRECTORY)/src/mesa/ppc/*.[ch]				\
 	$(DIRECTORY)/src/mesa/sparc/*.[chS]				\

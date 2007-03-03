@@ -87,7 +87,7 @@ intelMapScreenRegions(__DRIscreenPrivate *sPriv)
        * the renderbuffer address to point to the beginning of the
        * renderbuffer.
        */
-      intelScreen->front.map = sPriv->pFB;
+      intelScreen->front.map = (char *)sPriv->pFB;
       if (intelScreen->front.map == NULL) {
 	 fprintf(stderr, "Failed to find framebuffer mapping\n");
 	 return GL_FALSE;
@@ -272,7 +272,7 @@ static GLboolean intelInitDriver(__DRIscreenPrivate *sPriv)
    volatile drmI830Sarea *sarea;
 
    if (sPriv->devPrivSize != sizeof(I830DRIRec)) {
-      fprintf(stderr,"\nERROR!  sizeof(I830DRIRec) (%d) does not match passed size from device driver (%d)\n", sizeof(I830DRIRec), sPriv->devPrivSize);
+      fprintf(stderr,"\nERROR!  sizeof(I830DRIRec) (%ld) does not match passed size from device driver (%d)\n", (unsigned long)sizeof(I830DRIRec), sPriv->devPrivSize);
       return GL_FALSE;
    }
 

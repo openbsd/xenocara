@@ -42,12 +42,19 @@
 					  */
 #define VBLANK_FLAG_NO_IRQ    (1U << 7)  /* DRM has no IRQ to wait on.
 					  */
+#define VBLANK_FLAG_SECONDARY (1U << 8)  /* Wait for secondary vblank.
+					  */
 
 extern int driGetMSC32( __DRIscreenPrivate * priv, int64_t * count );
 extern int driWaitForMSC32( __DRIdrawablePrivate *priv,
     int64_t target_msc, int64_t divisor, int64_t remainder, int64_t * msc );
 extern GLuint driGetDefaultVBlankFlags( const driOptionCache *optionCache );
-extern void driDrawableInitVBlank ( __DRIdrawablePrivate *priv, GLuint flags );
+extern void driDrawableInitVBlank ( __DRIdrawablePrivate *priv, GLuint flags,
+				    GLuint *vbl_seq );
+extern unsigned driGetVBlankInterval( const  __DRIdrawablePrivate *priv,
+				      GLuint flags );
+extern void driGetCurrentVBlank( const  __DRIdrawablePrivate *priv,
+				 GLuint flags, GLuint *vbl_seq );
 extern int driWaitForVBlank( const __DRIdrawablePrivate *priv,
     GLuint * vbl_seq, GLuint flags, GLboolean * missed_deadline );
 

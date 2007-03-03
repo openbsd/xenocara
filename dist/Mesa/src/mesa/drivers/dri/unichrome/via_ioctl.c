@@ -182,8 +182,8 @@ static void viaFillBuffer(struct via_context *vmesa,
    GLuint i;
 
    for (i = 0; i < nboxes ; i++) {        
-      int x = pbox[i].x1 - vmesa->drawX;
-      int y = pbox[i].y1 - vmesa->drawY;
+      int x = pbox[i].x1 - buffer->drawX;
+      int y = pbox[i].y1 - buffer->drawY;
       int w = pbox[i].x2 - pbox[i].x1;
       int h = pbox[i].y2 - pbox[i].y1;
 
@@ -202,11 +202,12 @@ static void viaFillBuffer(struct via_context *vmesa,
 
 
 
-static void viaClear(GLcontext *ctx, GLbitfield mask, GLboolean all,
-                     GLint cx, GLint cy, GLint cw, GLint ch)
+static void viaClear(GLcontext *ctx, GLbitfield mask)
 {
    struct via_context *vmesa = VIA_CONTEXT(ctx);
    __DRIdrawablePrivate *dPriv = vmesa->driDrawable;
+   struct via_renderbuffer *const vrb = 
+     (struct via_renderbuffer *) dPriv->driverPrivate;
    int flag = 0;
    GLuint i = 0;
    GLuint clear_depth_mask = 0xf << 28;
@@ -261,13 +262,22 @@ static void viaClear(GLcontext *ctx, GLbitfield mask, GLboolean all,
    if (flag) {
       drm_clip_rect_t *boxes, *tmp_boxes = 0;
       int nr = 0;
+      GLint cx, cy, cw, ch;
+      GLboolean all;
 
       LOCK_HARDWARE(vmesa);
 	    
+      /* get region after locking: */
+      cx = ctx->DrawBuffer->_Xmin;
+      cy = ctx->DrawBuffer->_Ymin;
+      cw = ctx->DrawBuffer->_Xmax - cx;
+      ch = ctx->DrawBuffer->_Ymax - cy;
+      all = (cw == ctx->DrawBuffer->Width && ch == ctx->DrawBuffer->Height);
+
       /* flip top to bottom */
       cy = dPriv->h - cy - ch;
-      cx += vmesa->drawX + vmesa->drawXoff;
-      cy += vmesa->drawY;
+      cx += vrb->drawX + vrb->drawXoff;
+      cy += vrb->drawY;
         
       if (!all) {
 	 drm_clip_rect_t *b = vmesa->pClipRects;	 
@@ -328,7 +338,7 @@ static void viaClear(GLcontext *ctx, GLbitfield mask, GLboolean all,
    }
    
    if (mask)
-      _swrast_Clear(ctx, mask, all, cx, cy, cw, ch);
+      _swrast_Clear(ctx, mask);
 }
 
 
@@ -344,8 +354,8 @@ static void viaDoSwapBuffers(struct via_context *vmesa,
    GLuint i;
         
    for (i = 0; i < nbox; i++, b++) {        
-      GLint x = b->x1 - vmesa->drawX;
-      GLint y = b->y1 - vmesa->drawY;
+      GLint x = b->x1 - back->drawX;
+      GLint y = b->y1 - back->drawY;
       GLint w = b->x2 - b->x1;
       GLint h = b->y2 - b->y1;
 	
@@ -758,7 +768,7 @@ static void via_emit_cliprect(struct via_context *vmesa,
    vb[4] = (HC_SubA_HDBBasL << 24) | (offset & 0xFFFFFF);
    vb[5] = (HC_SubA_HDBBasH << 24) | ((offset & 0xFF000000) >> 24); 
 
-   vb[6] = (HC_SubA_HSPXYOS << 24) | ((31-vmesa->drawXoff) << HC_HSPXOS_SHIFT);
+   vb[6] = (HC_SubA_HSPXYOS << 24) | ((31 - buffer->drawXoff) << HC_HSPXOS_SHIFT);
    vb[7] = (HC_SubA_HDBFM << 24) | HC_HDBLoc_Local | format | pitch;
 }
 
@@ -873,21 +883,25 @@ void viaFlushDmaLocked(struct via_context *vmesa, GLuint flags)
    }
    else if (vmesa->numClipRects) {
       drm_clip_rect_t *pbox = vmesa->pClipRects;
-      
+      __DRIdrawablePrivate *dPriv = vmesa->driDrawable;
+      struct via_renderbuffer *const vrb = 
+	(struct via_renderbuffer *) dPriv->driverPrivate;
+
+
       for (i = 0; i < vmesa->numClipRects; i++) {
 	 drm_clip_rect_t b;
 
-	 b.x1 = pbox[i].x1 - (vmesa->drawX + vmesa->drawXoff);
-	 b.x2 = pbox[i].x2 - (vmesa->drawX + vmesa->drawXoff);
-	 b.y1 = pbox[i].y1 - vmesa->drawY;
-	 b.y2 = pbox[i].y2 - vmesa->drawY;
+	 b.x1 = pbox[i].x1 - (vrb->drawX + vrb->drawXoff);
+	 b.x2 = pbox[i].x2 - (vrb->drawX + vrb->drawXoff);
+	 b.y1 = pbox[i].y1 - vrb->drawY;
+	 b.y2 = pbox[i].y2 - vrb->drawY;
 
 	 if (vmesa->scissor &&
 	     !intersect_rect(&b, &b, &vmesa->scissorRect)) 
 	    continue;
 
-	 b.x1 += vmesa->drawXoff;
-	 b.x2 += vmesa->drawXoff;
+	 b.x1 += vrb->drawXoff;
+	 b.x2 += vrb->drawXoff;
 
 	 via_emit_cliprect(vmesa, &b);
 

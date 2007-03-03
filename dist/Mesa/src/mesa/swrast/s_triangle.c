@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  6.5.2
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -163,6 +163,7 @@ _swrast_culltriangle( GLcontext *ctx,
 
 #define RENDER_SPAN( span )						\
    GLuint i;								\
+   GLchan rgb[MAX_WIDTH][3];						\
    span.intTex[0] -= FIXED_HALF; /* off-by-one error? */		\
    span.intTex[1] -= FIXED_HALF;					\
    for (i = 0; i < span.end; i++) {					\
@@ -170,13 +171,13 @@ _swrast_culltriangle( GLcontext *ctx,
       GLint t = FixedToInt(span.intTex[1]) & tmask;			\
       GLint pos = (t << twidth_log2) + s;				\
       pos = pos + pos + pos;  /* multiply by 3 */			\
-      span.array->rgb[i][RCOMP] = texture[pos];				\
-      span.array->rgb[i][GCOMP] = texture[pos+1];			\
-      span.array->rgb[i][BCOMP] = texture[pos+2];			\
+      rgb[i][RCOMP] = texture[pos];					\
+      rgb[i][GCOMP] = texture[pos+1];					\
+      rgb[i][BCOMP] = texture[pos+2];					\
       span.intTex[0] += span.intTexStep[0];				\
       span.intTex[1] += span.intTexStep[1];				\
    }									\
-   rb->PutRowRGB(ctx, rb, span.end, span.x, span.y, span.array->rgb, NULL);
+   rb->PutRowRGB(ctx, rb, span.end, span.x, span.y, rgb, NULL);
 
 #include "s_tritemp.h"
 
@@ -214,6 +215,7 @@ _swrast_culltriangle( GLcontext *ctx,
 
 #define RENDER_SPAN( span )						\
    GLuint i;				    				\
+   GLchan rgb[MAX_WIDTH][3];						\
    span.intTex[0] -= FIXED_HALF; /* off-by-one error? */		\
    span.intTex[1] -= FIXED_HALF;					\
    for (i = 0; i < span.end; i++) {					\
@@ -223,9 +225,9 @@ _swrast_culltriangle( GLcontext *ctx,
          GLint t = FixedToInt(span.intTex[1]) & tmask;			\
          GLint pos = (t << twidth_log2) + s;				\
          pos = pos + pos + pos;  /* multiply by 3 */			\
-         span.array->rgb[i][RCOMP] = texture[pos];			\
-         span.array->rgb[i][GCOMP] = texture[pos+1];			\
-         span.array->rgb[i][BCOMP] = texture[pos+2];			\
+         rgb[i][RCOMP] = texture[pos];					\
+         rgb[i][GCOMP] = texture[pos+1];				\
+         rgb[i][BCOMP] = texture[pos+2];				\
          zRow[i] = z;							\
          span.array->mask[i] = 1;					\
       }									\
@@ -236,8 +238,7 @@ _swrast_culltriangle( GLcontext *ctx,
       span.intTex[1] += span.intTexStep[1];				\
       span.z += span.zStep;						\
    }									\
-   rb->PutRowRGB(ctx, rb, span.end, span.x, span.y,			\
-                 span.array->rgb, span.array->mask);
+   rb->PutRowRGB(ctx, rb, span.end, span.x, span.y, rgb, span.array->mask);
 
 #include "s_tritemp.h"
 
@@ -278,7 +279,7 @@ ilerp_2d(GLint ia, GLint ib, GLint v00, GLint v10, GLint v01, GLint v11)
  * texture env modes.
  */
 static INLINE void
-affine_span(GLcontext *ctx, struct sw_span *span,
+affine_span(GLcontext *ctx, SWspan *span,
             struct affine_info *info)
 {
    GLchan sample[4];  /* the filtered texture sample */
@@ -601,7 +602,7 @@ struct persp_info
 
 
 static INLINE void
-fast_persp_span(GLcontext *ctx, struct sw_span *span,
+fast_persp_span(GLcontext *ctx, SWspan *span,
 		struct persp_info *info)
 {
    GLchan sample[4];  /* the filtered texture sample */
@@ -1072,7 +1073,7 @@ _swrast_choose_triangle( GLcontext *ctx )
          }
       }
 
-      if (ctx->Texture._EnabledCoordUnits || ctx->FragmentProgram._Active ||
+      if (ctx->Texture._EnabledCoordUnits || ctx->FragmentProgram._Enabled ||
           ctx->ATIFragmentShader._Enabled || ctx->ShaderObjects._FragmentShaderPresent) {
          /* Ugh, we do a _lot_ of tests to pick the best textured tri func */
          const struct gl_texture_object *texObj2D;
@@ -1088,7 +1089,7 @@ _swrast_choose_triangle( GLcontext *ctx )
 
          /* First see if we can use an optimized 2-D texture function */
          if (ctx->Texture._EnabledCoordUnits == 0x1
-             && !ctx->FragmentProgram._Active
+             && !ctx->FragmentProgram._Enabled
              && !ctx->ATIFragmentShader._Enabled
              && !ctx->ShaderObjects._FragmentShaderPresent
              && ctx->Texture.Unit[0]._ReallyEnabled == TEXTURE_2D_BIT

@@ -33,12 +33,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include <string.h>
 
-#include "r200_context.h"
 #include "radeon_lock.h"
-#if R200_MERGED
-#include "r200_tex.h"
-#endif
-#include "r200_state.h"
 #include "radeon_ioctl.h"
 #include "radeon_state.h"
 #include "r300_context.h"
@@ -79,64 +74,31 @@ static void radeonUpdatePageFlipping(radeonContextPtr radeon)
 /**
  * Called by radeonGetLock() after the lock has been obtained.
  */
-#if R200_MERGED
-static void r200RegainedLock(r200ContextPtr r200)
-{
-	__DRIdrawablePrivate *dPriv = r200->radeon.dri.drawable;
-	int i;
-
-	if (r200->radeon.lastStamp != dPriv->lastStamp) {
-		radeonUpdatePageFlipping(&r200->radeon);
-		R200_STATECHANGE(r200, ctx);
-		r200->hw.ctx.cmd[CTX_RB3D_COLOROFFSET] =
-			r200->radeon.state.color.drawOffset
-			+ r200->radeon.radeonScreen->fbLocation;
-		r200->hw.ctx.cmd[CTX_RB3D_COLORPITCH] =
-			r200->radeon.state.color.drawPitch;
-
-		if (r200->radeon.glCtx->DrawBuffer->_ColorDrawBufferMask[0] == BUFFER_BIT_BACK_LEFT)
-			radeonSetCliprects(&r200->radeon, GL_BACK_LEFT);
-		else
-			radeonSetCliprects(&r200->radeon, GL_FRONT_LEFT);
-		r200UpdateViewportOffset(r200->radeon.glCtx);
-		r200->radeon.lastStamp = dPriv->lastStamp;
-	}
-
-	for (i = 0; i < r200->nr_heaps; i++) {
-		DRI_AGE_TEXTURES(r200->texture_heaps[i]);
-	}
-}
-#endif
-
 static void r300RegainedLock(radeonContextPtr radeon)
-{
-	__DRIdrawablePrivate *dPriv = radeon->dri.drawable;
+{	
 	int i;
+	__DRIdrawablePrivate *const drawable = radeon->dri.drawable;
 	r300ContextPtr r300 = (r300ContextPtr)radeon;
+	drm_radeon_sarea_t *sarea = radeon->sarea;
 
-	if (radeon->lastStamp != dPriv->lastStamp) {
-		_mesa_resize_framebuffer(radeon->glCtx,
-			(GLframebuffer*)dPriv->driverPrivate,
-			dPriv->w, dPriv->h);
-
+	if ( radeon->lastStamp != drawable->lastStamp ) {
 		radeonUpdatePageFlipping(radeon);
-
-		if (radeon->glCtx->DrawBuffer->_ColorDrawBufferMask[0] == BUFFER_BIT_BACK_LEFT)
-			radeonSetCliprects(radeon, GL_BACK_LEFT);
-		else
-			radeonSetCliprects(radeon, GL_FRONT_LEFT);
-
+		radeonSetCliprects(radeon);
 #if 1
 		r300UpdateViewportOffset( radeon->glCtx );
-		driUpdateFramebufferSize(radeon->glCtx, dPriv);
+		driUpdateFramebufferSize(radeon->glCtx, drawable);
 #else
 		radeonUpdateScissor(radeon->glCtx);
 #endif
-		radeon->lastStamp = dPriv->lastStamp;
+		radeon->lastStamp = drawable->lastStamp;
 	}
 
-	for (i = 0; i < r300->nr_heaps; i++) {
-		DRI_AGE_TEXTURES(r300->texture_heaps[i]);
+	if (sarea->ctx_owner != radeon->dri.hwContext) {
+		sarea->ctx_owner = radeon->dri.hwContext;
+
+		for (i = 0; i < r300->nr_heaps; i++) {
+			DRI_AGE_TEXTURES(r300->texture_heaps[i]);
+		}
 	}
 }
 
@@ -150,11 +112,11 @@ static void r300RegainedLock(radeonContextPtr radeon)
  */
 void radeonGetLock(radeonContextPtr radeon, GLuint flags)
 {
-	__DRIdrawablePrivate *dPriv = radeon->dri.drawable;
+	__DRIdrawablePrivate *const drawable = radeon->dri.drawable;
+	__DRIdrawablePrivate *const readable = radeon->dri.readable;
 	__DRIscreenPrivate *sPriv = radeon->dri.screen;
-	drm_radeon_sarea_t *sarea = radeon->sarea;
 	
-	assert (dPriv != NULL);
+	assert (drawable != NULL);
 
 	drmGetLock(radeon->dri.fd, radeon->dri.hwContext, flags);
 
@@ -166,17 +128,13 @@ void radeonGetLock(radeonContextPtr radeon, GLuint flags)
 	 * Since the hardware state depends on having the latest drawable
 	 * clip rects, all state checking must be done _after_ this call.
 	 */
-	DRI_VALIDATE_DRAWABLE_INFO(sPriv, dPriv);
-
-	if (sarea->ctx_owner != radeon->dri.hwContext)
-		sarea->ctx_owner = radeon->dri.hwContext;
+	DRI_VALIDATE_DRAWABLE_INFO( sPriv, drawable );
+	if (drawable != readable) {
+		DRI_VALIDATE_DRAWABLE_INFO( sPriv, readable );
+	}
 
 	if (IS_R300_CLASS(radeon->radeonScreen))
 		r300RegainedLock(radeon);
-#if R200_MERGED
-	else
-		r200RegainedLock((r200ContextPtr)radeon);
-#endif
 	
 	radeon->lost_context = GL_TRUE;
 }

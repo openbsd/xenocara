@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
+ * Version:  6.5.2
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -337,6 +337,8 @@ _mesa_PushAttrib(GLbitfield mask)
    if (mask & GL_TEXTURE_BIT) {
       struct gl_texture_attrib *attr;
       GLuint u;
+
+      _mesa_lock_context_textures(ctx);
       /* Bump the texture object reference counts so that they don't
        * inadvertantly get deleted.
        */
@@ -362,6 +364,9 @@ _mesa_PushAttrib(GLbitfield mask)
          _mesa_copy_texture_object(&attr->Unit[u].SavedRect,
                                    attr->Unit[u].CurrentRect);
       }
+
+      _mesa_unlock_context_textures(ctx);
+
       newnode = new_attrib_node( GL_TEXTURE_BIT );
       newnode->data = attr;
       newnode->next = head;
@@ -1004,9 +1009,6 @@ _mesa_PopAttrib(void)
                                  (GLfloat) light->Model.TwoSide);
                _mesa_LightModelf(GL_LIGHT_MODEL_COLOR_CONTROL,
                                  (GLfloat) light->Model.ColorControl);
-               /* materials */
-               MEMCPY(&ctx->Light.Material, &light->Material,
-                      sizeof(struct gl_material));
                /* shade model */
                _mesa_ShadeModel(light->ShadeModel);
                /* color material */
@@ -1014,6 +1016,9 @@ _mesa_PopAttrib(void)
                                    light->ColorMaterialMode);
                _mesa_set_enable(ctx, GL_COLOR_MATERIAL,
                                 light->ColorMaterialEnabled);
+               /* materials */
+               MEMCPY(&ctx->Light.Material, &light->Material,
+                      sizeof(struct gl_material));
             }
             break;
          case GL_LINE_BIT:

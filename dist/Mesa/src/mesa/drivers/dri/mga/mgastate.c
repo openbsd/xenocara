@@ -24,7 +24,6 @@
  * Authors:
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
-/* $XFree86: xc/lib/GL/mesa/src/drv/mga/mgastate.c,v 1.13 2002/10/30 12:51:36 alanh Exp $ */
 
 
 #include "mtypes.h"
@@ -49,6 +48,8 @@
 #include "swrast_setup/swrast_setup.h"
 
 #include "xmlpool.h"
+#include "drirenderbuffer.h"
+
 
 static void updateSpecularLighting( GLcontext *ctx );
 
@@ -113,14 +114,15 @@ static void mgaDDAlphaFunc(GLcontext *ctx, GLenum func, GLfloat ref)
 static void updateBlendLogicOp(GLcontext *ctx)
 {
    mgaContextPtr mmesa = MGA_CONTEXT(ctx);
+   GLboolean logicOp = RGBA_LOGICOP_ENABLED(ctx);
 
    MGA_STATECHANGE( mmesa, MGA_UPLOAD_CONTEXT );
 
    mmesa->hw.blend_func_enable =
-      (ctx->Color.BlendEnabled && !ctx->Color._LogicOpEnabled) ? ~0 : 0;
+      (ctx->Color.BlendEnabled && !logicOp) ? ~0 : 0;
 
    FALLBACK( ctx, MGA_FALLBACK_BLEND,
-             ctx->Color.BlendEnabled && !ctx->Color._LogicOpEnabled &&
+             ctx->Color.BlendEnabled && !logicOp &&
              mmesa->hw.blend_func == (AC_src_src_alpha_sat | AC_dst_zero) );
 }
 
@@ -195,7 +197,7 @@ static void mgaDDBlendFuncSeparate( GLcontext *ctx, GLenum sfactorRGB,
    mmesa->hw.blend_func = (src | dst);
 
    FALLBACK( ctx, MGA_FALLBACK_BLEND,
-             ctx->Color.BlendEnabled && !ctx->Color._LogicOpEnabled &&
+             ctx->Color.BlendEnabled && !RGBA_LOGICOP_ENABLED(ctx) &&
              mmesa->hw.blend_func == (AC_src_src_alpha_sat | AC_dst_zero) );
 }
 
@@ -744,32 +746,12 @@ static void mgaDDLogicOp( GLcontext *ctx, GLenum opcode )
 }
 
 
-static void mgaXMesaSetFrontClipRects( mgaContextPtr mmesa )
+static void mga_set_cliprects(mgaContextPtr mmesa)
 {
    __DRIdrawablePrivate *driDrawable = mmesa->driDrawable;
 
-   if (driDrawable->numClipRects == 0) {
-       static drm_clip_rect_t zeroareacliprect = {0,0,0,0};
-       mmesa->numClipRects = 1;
-       mmesa->pClipRects = &zeroareacliprect;
-   } else {
-       mmesa->numClipRects = driDrawable->numClipRects;
-       mmesa->pClipRects = driDrawable->pClipRects;
-   }
-   mmesa->drawX = driDrawable->x;
-   mmesa->drawY = driDrawable->y;
-
-   mmesa->setup.dstorg = mmesa->drawOffset;
-   mmesa->dirty |= MGA_UPLOAD_CONTEXT | MGA_UPLOAD_CLIPRECTS;
-}
-
-
-static void mgaXMesaSetBackClipRects( mgaContextPtr mmesa )
-{
-   __DRIdrawablePrivate *driDrawable = mmesa->driDrawable;
-
-   if (driDrawable->numBackClipRects == 0)
-   {
+   if ((mmesa->draw_buffer != MGA_FRONT)
+       || (driDrawable->numBackClipRects == 0)) {
       if (driDrawable->numClipRects == 0) {
 	  static drm_clip_rect_t zeroareacliprect = {0,0,0,0};
 	  mmesa->numClipRects = 1;
@@ -794,25 +776,25 @@ static void mgaXMesaSetBackClipRects( mgaContextPtr mmesa )
 
 void mgaUpdateRects( mgaContextPtr mmesa, GLuint buffers )
 {
-   __DRIdrawablePrivate *driDrawable = mmesa->driDrawable;
+   __DRIdrawablePrivate *const driDrawable = mmesa->driDrawable;
+   __DRIdrawablePrivate *const driReadable = mmesa->driReadable;
    drm_mga_sarea_t *sarea = mmesa->sarea;
 
 
-   DRI_VALIDATE_DRAWABLE_INFO(mmesa->driScreen, driDrawable); 
    mmesa->dirty_cliprects = 0;	
 
-   if (mmesa->draw_buffer == MGA_FRONT)
-      mgaXMesaSetFrontClipRects( mmesa );
-   else
-      mgaXMesaSetBackClipRects( mmesa );
+   driUpdateFramebufferSize(mmesa->glCtx, driDrawable);
+   if (driDrawable != driReadable) {
+      driUpdateFramebufferSize(mmesa->glCtx, driReadable);
+   }
+
+   mga_set_cliprects(mmesa);
 
    sarea->req_drawable = driDrawable->draw;
    sarea->req_draw_buffer = mmesa->draw_buffer;
 
    mgaUpdateClipping( mmesa->glCtx );
    mgaCalcViewport( mmesa->glCtx );
-
-   mmesa->dirty |= MGA_UPLOAD_CLIPRECTS;
 }
 
 
@@ -828,23 +810,21 @@ static void mgaDDDrawBuffer(GLcontext *ctx, GLenum mode )
    switch ( ctx->DrawBuffer->_ColorDrawBufferMask[0] ) {
    case BUFFER_BIT_FRONT_LEFT:
       mmesa->setup.dstorg = mmesa->mgaScreen->frontOffset;
-      mmesa->dirty |= MGA_UPLOAD_CONTEXT;
       mmesa->draw_buffer = MGA_FRONT;
-      mgaXMesaSetFrontClipRects( mmesa );
-      FALLBACK( ctx, MGA_FALLBACK_DRAW_BUFFER, GL_FALSE );
       break;
    case BUFFER_BIT_BACK_LEFT:
       mmesa->setup.dstorg = mmesa->mgaScreen->backOffset;
       mmesa->draw_buffer = MGA_BACK;
-      mmesa->dirty |= MGA_UPLOAD_CONTEXT;
-      mgaXMesaSetBackClipRects( mmesa );
-      FALLBACK( ctx, MGA_FALLBACK_DRAW_BUFFER, GL_FALSE );
       break;
    default:
       /* GL_NONE or GL_FRONT_AND_BACK or stereo left&right, etc */
       FALLBACK( ctx, MGA_FALLBACK_DRAW_BUFFER, GL_TRUE );
       return;
    }
+
+   mmesa->dirty |= MGA_UPLOAD_CONTEXT;
+   mga_set_cliprects(mmesa);
+   FALLBACK(ctx, MGA_FALLBACK_DRAW_BUFFER, GL_FALSE);
 }
 
 
@@ -987,7 +967,7 @@ void mgaEmitHwStateLocked( mgaContextPtr mmesa )
 	  ? mmesa->hw.zmode : (DC_zmode_nozcmp | DC_atype_i);
 
       mmesa->setup.dwgctl &= DC_bop_MASK;
-      mmesa->setup.dwgctl |= (ctx->Color._LogicOpEnabled)
+      mmesa->setup.dwgctl |= RGBA_LOGICOP_ENABLED(ctx)
 	  ? mmesa->hw.rop : mgarop_NoBLK[ GL_COPY & 0x0f ];
 
       mmesa->setup.alphactrl &= AC_src_MASK & AC_dst_MASK & AC_atmode_MASK
@@ -1220,13 +1200,6 @@ void mgaDDInitStateFuncs( GLcontext *ctx )
 
    ctx->Driver.ClearIndex = 0;
    ctx->Driver.IndexMask = 0;
-
-   /* Swrast hooks for imaging extensions:
-    */
-   ctx->Driver.CopyColorTable = _swrast_CopyColorTable;
-   ctx->Driver.CopyColorSubTable = _swrast_CopyColorSubTable;
-   ctx->Driver.CopyConvolutionFilter1D = _swrast_CopyConvolutionFilter1D;
-   ctx->Driver.CopyConvolutionFilter2D = _swrast_CopyConvolutionFilter2D;
 
    TNL_CONTEXT(ctx)->Driver.RunPipeline = mgaRunPipeline;
 }
