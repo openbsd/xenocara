@@ -39,7 +39,7 @@
 #endif
 
 #include <string.h>
-#if HAVE_STDINT_T
+#if HAVE_STDINT_H
 #include <stdint.h>
 #elif !defined(UINT32_MAX)
 #define UINT32_MAX 0xffffffffU
