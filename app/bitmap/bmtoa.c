@@ -1,5 +1,5 @@
 /* $Xorg: bmtoa.c,v 1.4 2001/02/09 02:05:28 xorgcvs Exp $ */
-/* $XdotOrg: app/bitmap/bmtoa.c,v 1.3 2005/07/16 22:07:12 alanc Exp $ */
+/* $XdotOrg: $ */
 /*
 
 Copyright 1988, 1993, 1998  The Open Group

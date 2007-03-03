@@ -88,23 +88,18 @@ Grid tolerance.  If the square dimensions fall below the specified
 value, grid will be automatically turned off.
 .TP 4
 .B \-grid, +grid
-./&.B \-grid\fI on/off\fP
 Turns on or off the grid lines.
 .TP 4
 .B \-axes, +axes
-./&./&.B \-axes\fI on/off\fP
 Turns on or off the major axes.
 .TP 4
 .B \-dashed, +dashed
-./&.B \-dashed\fI on/off\fP
 Turns on or off dashing for the frame and grid lines.
 .TP 4
-.B \-stippled, +stippled 
-./&.B \-stippled\fI on/off\fP
+.B \-stippled, +stippled
 Turns on or off stippling of highlighted squares.
 .TP 4
-.B \-proportional, +proportional\fI 
-./&.B \-proportional\fI on/off\fP
+.B \-proportional, +proportional
 Turns proportional mode on or off.  If proportional mode is on, 
 square width is equal to square height.  If proportional mode is
 off,\fI bitmap\fP will use the smaller square dimension, if they 
