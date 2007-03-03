@@ -1,5 +1,5 @@
 /*
- * $Id: compext.c,v 1.1.1.1 2006/11/26 18:16:16 matthieu Exp $
+ * $Id: compext.c,v 1.1.1.2 2007/03/03 11:11:32 matthieu Exp $
  *
  *
  * Copyright © 2006 Sun Microsystems
@@ -269,7 +269,10 @@ ProcCompositeNameWindowPixmap (ClientPtr client)
 	client->errorValue = stuff->window;
 	return BadWindow;
     }
-    
+
+    if (!pWin->viewable)
+	return BadMatch;
+
     LEGAL_NEW_RESOURCE (stuff->pixmap, client);
     
     cw = GetCompWindow (pWin);
