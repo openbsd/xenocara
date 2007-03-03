@@ -1,3 +1,7 @@
+2006-06-28  Kristian Høgsberg  <krh@redhat.com>
+
+	* glxproto.h (__GLX_NUMBER_ERRORS): There are 13 GLX errors.
+
 2006-04-30  Adam Jackson  <ajax@freedesktop.org>
 
 	* glxtokens.h:

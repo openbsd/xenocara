@@ -57,7 +57,7 @@
 #define GLXBadCurrentDrawable	11
 #define GLXBadWindow		12
 
-#define __GLX_NUMBER_ERRORS 12
+#define __GLX_NUMBER_ERRORS 13
 
 /*
 ** Events.
@@ -2369,6 +2369,8 @@ typedef struct {
 /* Opcodes for GLX vendor private commands */
 
 #define X_GLXvop_QueryContextInfoEXT            1024
+#define X_GLXvop_BindTexImageEXT                1330
+#define X_GLXvop_ReleaseTexImageEXT             1331
 #define X_GLXvop_SwapIntervalSGI                65536
 #define X_GLXvop_MakeCurrentReadSGI             65537
 #define X_GLXvop_CreateGLXVideoSourceSGIX       65538
@@ -2387,8 +2389,6 @@ typedef struct {
 #define X_GLXvop_QueryHyperpipeConfigSGIX       65551
 #define X_GLXvop_HyperpipeConfigSGIX            65552
 #define X_GLXvop_DestroyHyperpipeConfigSGIX     65553
-#define X_GLXvop_BindTexImageEXT                5152
-#define X_GLXvop_ReleaseTexImageEXT             5153
 
 /* ARB extension opcodes */
 
