@@ -63,12 +63,12 @@ nodist_libmain_la_OBJECTS = accum.lo api_arrayelt.lo api_loopback.lo \
 	drawpix.lo enable.lo enums.lo eval.lo execmem.lo extensions.lo \
 	fbobject.lo feedback.lo fog.lo framebuffer.lo get.lo \
 	getstring.lo hash.lo hint.lo histogram.lo image.lo imports.lo \
-	light.lo lines.lo matrix.lo mm.lo occlude.lo pixel.lo \
-	points.lo polygon.lo rastpos.lo rbadaptors.lo renderbuffer.lo \
-	state.lo stencil.lo texcompress.lo texcompress_fxt1.lo \
-	texcompress_s3tc.lo texenvprogram.lo texformat.lo teximage.lo \
-	texobj.lo texrender.lo texstate.lo texstore.lo varray.lo \
-	$(am__objects_1) vtxfmt.lo
+	light.lo lines.lo matrix.lo mipmap.lo mm.lo occlude.lo \
+	pixel.lo points.lo polygon.lo rastpos.lo rbadaptors.lo \
+	renderbuffer.lo state.lo stencil.lo texcompress.lo \
+	texcompress_fxt1.lo texcompress_s3tc.lo texenvprogram.lo \
+	texformat.lo teximage.lo texobj.lo texrender.lo texstate.lo \
+	texstore.lo varray.lo $(am__objects_1) vtxfmt.lo
 libmain_la_OBJECTS = $(nodist_libmain_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -233,6 +233,8 @@ INT10_X86EMU_FALSE = @INT10_X86EMU_FALSE@
 INT10_X86EMU_TRUE = @INT10_X86EMU_TRUE@
 KDRIVEFBDEV_FALSE = @KDRIVEFBDEV_FALSE@
 KDRIVEFBDEV_TRUE = @KDRIVEFBDEV_TRUE@
+KDRIVELINUX_FALSE = @KDRIVELINUX_FALSE@
+KDRIVELINUX_TRUE = @KDRIVELINUX_TRUE@
 KDRIVEVESA_FALSE = @KDRIVEVESA_FALSE@
 KDRIVEVESA_TRUE = @KDRIVEVESA_TRUE@
 KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
@@ -603,6 +605,7 @@ nodist_libmain_la_SOURCES = accum.c \
                     light.c \
                     lines.c \
                     matrix.c \
+                    mipmap.c \
                     mm.c \
                     occlude.c \
                     pixel.c \
@@ -716,6 +719,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/light.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lines.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/matrix.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mipmap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/occlude.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixel.Plo@am__quote@

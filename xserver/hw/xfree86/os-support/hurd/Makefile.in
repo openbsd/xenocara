@@ -56,9 +56,9 @@ CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libhurd_la_LIBADD =
 am_libhurd_la_OBJECTS = hurd_init.lo hurd_mmap.lo hurd_mouse.lo \
-	hurd_video.lo VTsw_noop.lo posix_tty.lo libc_wrapper.lo \
-	stdResource.lo stdPci.lo sigiostubs.lo pm_noop.lo kmod_noop.lo \
-	agp_noop.lo
+	hurd_video.lo hurd_io.lo hurd_kbd.lo VTsw_noop.lo posix_tty.lo \
+	libc_wrapper.lo stdResource.lo stdPci.lo sigiostubs.lo \
+	pm_noop.lo kmod_noop.lo agp_noop.lo at_scancode.lo
 libhurd_la_OBJECTS = $(am_libhurd_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -223,6 +223,8 @@ INT10_X86EMU_FALSE = @INT10_X86EMU_FALSE@
 INT10_X86EMU_TRUE = @INT10_X86EMU_TRUE@
 KDRIVEFBDEV_FALSE = @KDRIVEFBDEV_FALSE@
 KDRIVEFBDEV_TRUE = @KDRIVEFBDEV_TRUE@
+KDRIVELINUX_FALSE = @KDRIVELINUX_FALSE@
+KDRIVELINUX_TRUE = @KDRIVELINUX_TRUE@
 KDRIVEVESA_FALSE = @KDRIVEVESA_FALSE@
 KDRIVEVESA_TRUE = @KDRIVEVESA_TRUE@
 KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
@@ -537,7 +539,7 @@ xglmoduledir = @xglmoduledir@
 xpconfigdir = @xpconfigdir@
 noinst_LTLIBRARIES = libhurd.la
 libhurd_la_SOURCES = hurd_init.c hurd_mmap.c \
-		hurd_mouse.c hurd_video.c \
+		hurd_mouse.c hurd_video.c hurd_io.c hurd_kbd.c \
 		$(srcdir)/../shared/VTsw_noop.c \
 		$(srcdir)/../shared/posix_tty.c \
 		$(srcdir)/../shared/libc_wrapper.c \
@@ -546,9 +548,10 @@ libhurd_la_SOURCES = hurd_init.c hurd_mmap.c \
 		$(srcdir)/../shared/sigiostubs.c \
 		$(srcdir)/../shared/pm_noop.c \
 		$(srcdir)/../shared/kmod_noop.c \
-		$(srcdir)/../shared/agp_noop.c
+		$(srcdir)/../shared/agp_noop.c \
+		$(srcdir)/../shared/at_scancode.c
 
-AM_CFLAGS = -DUSESTDRES -DHAVE_SYSV_IPC $(XORG_CFLAGS) @SERVER_DEFINES@ @LOADER_DEFINES@
+AM_CFLAGS = -DUSESTDRES -DHAVE_SYSV_IPC $(XORG_CFLAGS)
 INCLUDES = $(XORG_INCS)
 all: all-am
 
@@ -603,7 +606,10 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/VTsw_noop.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/agp_noop.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/at_scancode.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hurd_init.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hurd_io.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hurd_kbd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hurd_mmap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hurd_mouse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hurd_video.Plo@am__quote@
@@ -698,6 +704,13 @@ agp_noop.lo: $(srcdir)/../shared/agp_noop.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(srcdir)/../shared/agp_noop.c' object='agp_noop.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o agp_noop.lo `test -f '$(srcdir)/../shared/agp_noop.c' || echo '$(srcdir)/'`$(srcdir)/../shared/agp_noop.c
+
+at_scancode.lo: $(srcdir)/../shared/at_scancode.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT at_scancode.lo -MD -MP -MF "$(DEPDIR)/at_scancode.Tpo" -c -o at_scancode.lo `test -f '$(srcdir)/../shared/at_scancode.c' || echo '$(srcdir)/'`$(srcdir)/../shared/at_scancode.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/at_scancode.Tpo" "$(DEPDIR)/at_scancode.Plo"; else rm -f "$(DEPDIR)/at_scancode.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(srcdir)/../shared/at_scancode.c' object='at_scancode.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o at_scancode.lo `test -f '$(srcdir)/../shared/at_scancode.c' || echo '$(srcdir)/'`$(srcdir)/../shared/at_scancode.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

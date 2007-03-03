@@ -633,14 +633,8 @@
    `char[]'. */
 #undef YYTEXT_POINTER
 
-/* BSD-compliant source */
-#undef _BSD_SOURCE
-
-/* POSIX-compliant source */
-#undef _POSIX_SOURCE
-
-/* X/Open-compliant source */
-#undef _XOPEN_SOURCE
+/* Enable GNU and other extensions to the C environment for glibc */
+#undef _GNU_SOURCE
 
 /* Define to 1 if unsigned long is 64 bits. */
 #undef _XSERVER64
