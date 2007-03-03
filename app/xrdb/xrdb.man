@@ -1,4 +1,4 @@
-.\" $XdotOrg: app/xrdb/xrdb.man,v 1.3 2006/03/29 02:20:46 alanc Exp $
+.\" $XdotOrg: $
 .\" $Xorg: xrdb.man,v 1.4 2001/02/09 02:05:56 xorgcvs Exp $
 .\" Copyright 1991, Digital Equipment Corporation.
 .\" Copyright 1991, 1994, 1998  The Open Group
@@ -279,7 +279,7 @@ to generate a backup file.
 .B \-D\fIname[=value]\fP
 This option is passed through to the preprocessor and is used to define 
 symbols for use with conditionals such as
-.I# ifdef.
+.I #ifdef.
 .TP 8
 .B \-U\fIname\fP
 This option is passed through to the preprocessor and is used to remove

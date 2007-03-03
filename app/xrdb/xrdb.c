@@ -2,7 +2,7 @@
  * xrdb - X resource manager database utility
  *
  * $Xorg: xrdb.c,v 1.6 2000/08/17 19:54:56 cpqbld Exp $
- * $XdotOrg: app/xrdb/xrdb.c,v 1.6 2006/04/03 20:32:20 alanc Exp $
+ * $XdotOrg: app/xrdb/xrdb.c,v 1.5 2006/04/03 18:23:14 alanc Exp $
  */
 
 /*
