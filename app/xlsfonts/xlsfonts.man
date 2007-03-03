@@ -1,23 +1,14 @@
 .\" -*- coding: us-ascii -*-
-.TH xlsfonts __appmansuffix__ "25 October 2004"  
+.TH xlsfonts __appmansuffix__ __xorgversion__
 .SH NAME
 xlsfonts \- server font list displayer for X
 .SH SYNOPSIS
 .ad l
-\fBxlsfonts\fR \kx
-.if (\nxu > (\n(.lu / 2)) .nr x (\n(.lu / 5)
-'in \n(.iu+\nxu
+\fBxlsfonts\fR
 [\fB\-display \fBhost:dpy\fR\fR] [\fB\-l\fR] [\fB\-ll\fR] [\fB\-lll\fR] [\fB\-m\fR] [\fB\-C\fR] [\fB\-1\fR] [\fB\-w \fBwidth\fR\fR] [\fB\-n \fBcolumns\fR\fR] [\fB\-u\fR] [\fB\-o\fR] [\fB\-fn \fBpattern\fR\fR]
-'in \n(.iu-\nxu
-.ad b
-.PP
-.ad l
-\fBxlsfonts\fR \kx
-.if (\nxu > (\n(.lu / 2)) .nr x (\n(.lu / 5)
-'in \n(.iu+\nxu
+.br
+\fBxlsfonts\fR
 \fB\-printer \fBprintername\fR\fR [\fB\-l\fR] [\fB\-ll\fR] [\fB\-lll\fR] [\fB\-m\fR] [\fB\-C\fR] [\fB\-1\fR] [\fB\-w \fBwidth\fR\fR] [\fB\-n \fBcolumns\fR\fR] [\fB\-u\fR] [\fB\-o\fR] [\fB\-r \fBresolution\fR\fR] [\fB\-b\fR] [\fB\-B\fR] [\fB\-g\fR] [\fB\-G\fR] [\fB\-x \fBmode\fR\fR] [\fB\-X \fBmode\fR\fR] [\fB\-fn \fBpattern\fR\fR]
-'in \n(.iu-\nxu
-.ad b
 .SH DESCRIPTION
 xlsfonts lists the fonts that match the given pattern.
 The wildcard character "*" may be used to match any sequence of characters
