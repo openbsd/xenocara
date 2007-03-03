@@ -30,7 +30,7 @@
 appres \- list X application resource database
 .SH SYNOPSIS
 .B "appres"
-[[class [instance]] [\-1] [toolkitoptions] 
+[class [instance]] [\-1] [toolkitoptions] 
 .SH DESCRIPTION
 .PP
 The \fIappres\fP program prints the resources seen by an application
