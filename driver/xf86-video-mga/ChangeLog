@@ -1,6 +1,13 @@
-commit ede471a547a24e7f9688917fc3329a3d67fb2dc4
+commit 0ce8f522a207dd0fa21ebf41b82f6af930cd7e54
 Author: Daniel Stone <daniel@fooishbar.org>
-Date:   Sat Dec 16 01:44:49 2006 +0200
+Date:   Sun Dec 24 06:24:56 2006 +0200
+
+    bump to 1.4.6.1 (respin)
+    No code changes, just built with a better util-macros.
+
+commit 74d21b74774c81d3d96ff3017763c25e3660dde0
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Dec 24 06:23:43 2006 +0200
 
     bump to 1.4.6
 
