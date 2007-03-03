@@ -10,7 +10,7 @@
 
 #define I810_MAJOR_VERSION 1
 #define I810_MINOR_VERSION 7
-#define I810_PATCHLEVEL 3
+#define I810_PATCHLEVEL 4
 
 typedef struct {
    drm_handle_t regs;
