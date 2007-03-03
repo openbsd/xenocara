@@ -48,7 +48,7 @@ APPDEFAULTFILES = \
         Editres-color \
         Editres
 
-EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad)
+EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad) ChangeLog autogen.sh
 
 SUFFIXES = .ad 
 
@@ -58,7 +58,12 @@ SUFFIXES = .ad
 appdefault_DATA = $(APPDEFAULTFILES)
 
 CLEANFILES = $(APPDEFAULTFILES)
+MAINTAINERCLEANFILES=ChangeLog
 
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 
 appmandir = $(APP_MAN_DIR)
 
