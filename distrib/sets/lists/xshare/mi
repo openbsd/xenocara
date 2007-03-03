@@ -1721,6 +1721,17 @@
 ./usr/X11R6/man/man3/XShapeQueryExtents.3
 ./usr/X11R6/man/man3/XShapeQueryVersion.3
 ./usr/X11R6/man/man3/XShapeSelectInput.3
+./usr/X11R6/man/man3/XShm.3
+./usr/X11R6/man/man3/XShmAttach.3
+./usr/X11R6/man/man3/XShmCreateImage.3
+./usr/X11R6/man/man3/XShmCreatePixmap.3
+./usr/X11R6/man/man3/XShmDetach.3
+./usr/X11R6/man/man3/XShmGetEventBase.3
+./usr/X11R6/man/man3/XShmGetImage.3
+./usr/X11R6/man/man3/XShmPixmapFormat.3
+./usr/X11R6/man/man3/XShmPutImage.3
+./usr/X11R6/man/man3/XShmQueryExtension.3
+./usr/X11R6/man/man3/XShmQueryVersion.3
 ./usr/X11R6/man/man3/XShrinkRegion.3
 ./usr/X11R6/man/man3/XSizeHints.3
 ./usr/X11R6/man/man3/XStandardColormap.3
