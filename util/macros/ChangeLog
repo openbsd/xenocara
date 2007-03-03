@@ -1,3 +1,18 @@
+commit f2ddb356d86225a8ff6d1d1397fb2156cebd360f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Dec 24 06:17:44 2006 +0200
+
+    bump to 1.1.5
+
+commit e8b485d9252ffbb357a0b987ab1488d4033b555c
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Dec 18 18:25:25 2006 -0800
+
+    Bug 9368: non portable sed usage in xorgversion.m4
+    
+    Bugzilla #9368 <https://bugs.freedesktop.org/show_bug.cgi?id=9368>
+    Patch #8140 <https://bugs.freedesktop.org/attachment.cgi?id=8140>
+
 commit 0a4aadbda211a5128bae1c2e860b781c95c4bbf5
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Dec 16 01:14:27 2006 +0200
