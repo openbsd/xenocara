@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.9 2007/01/02 14:04:55 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.10 2007/03/03 09:44:22 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -154,8 +154,6 @@ static int pix24bpp = 0;
 #define WSFB_VERSION 		4000
 #define WSFB_NAME		"wsfb"
 #define WSFB_DRIVER_NAME	"wsfb"
-#define WSFB_MAJOR_VERSION	0
-#define WSFB_MINOR_VERSION	2
 
 _X_EXPORT DriverRec WSFB = {
 	WSFB_VERSION,
@@ -209,7 +207,9 @@ static XF86ModuleVersionInfo WsfbVersRec = {
 	MODINFOSTRING1,
 	MODINFOSTRING2,
 	XORG_VERSION_CURRENT,
-	WSFB_MAJOR_VERSION, WSFB_MINOR_VERSION, 0,
+	PACKAGE_VERSION_MAJOR, 
+	PACKAGE_VERSION_MINOR, 
+	PACKAGE_VERSION_PATCHLEVEL,
 	ABI_CLASS_VIDEODRV,
 	ABI_VIDEODRV_VERSION,
 	NULL,
