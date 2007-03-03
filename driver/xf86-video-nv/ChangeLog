@@ -1,3 +1,10 @@
+commit 96bd57b0597dbbda0ca5c46c2135e5813c80d79f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Dec 24 06:34:31 2006 +0200
+
+    configure.ac: bump to 1.2.2.1 (respin)
+    No code changes, just built with an updated util-macros.
+
 commit 10c7c54888d1dd4198c79e852c57420e8d52ccc5
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Dec 16 01:47:42 2006 +0200
