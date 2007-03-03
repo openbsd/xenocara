@@ -62,7 +62,7 @@ FontFileReadDirectory (char *directory, FontDirectoryPtr *pdir)
     char	*ptr;
     FILE       *file;
     int         count,
-                i,
+                num_fonts,
                 status;
     struct stat	statb;
     static char format[24] = "";
@@ -90,8 +90,6 @@ FontFileReadDirectory (char *directory, FontDirectoryPtr *pdir)
     strcat(dir_file, FontDirFile);
     file = fopen(dir_file, "rt");
     if (file) {
-	Bool found_font = FALSE;
-
 #ifndef WIN32        
 	if (fstat (fileno(file), &statb) == -1)
 #else
@@ -101,12 +99,12 @@ FontFileReadDirectory (char *directory, FontDirectoryPtr *pdir)
             fclose(file);
 	    return BadFontPath;
         }
-	count = fscanf(file, "%d\n", &i);
+	count = fscanf(file, "%d\n", &num_fonts);
 	if ((count == EOF) || (count != 1)) {
 	    fclose(file);
 	    return BadFontPath;
 	}
-	dir = FontFileMakeDir(directory, i);
+	dir = FontFileMakeDir(directory, num_fonts);
 	if (dir == NULL) {
 	    fclose(file);
 	    return BadFontPath;
@@ -128,13 +126,13 @@ FontFileReadDirectory (char *directory, FontDirectoryPtr *pdir)
 		fclose(file);
 		return BadFontPath;
 	    }
-	    if (FontFileAddFontFile (dir, font_name, file_name))
-		found_font = TRUE;
-	}
-	if (!found_font) {
-	    FontFileFreeDir (dir);
-	    fclose(file);
-	    return BadFontPath;
+
+	    /*
+	     * We blindly try to load all the font files specified.
+	     * In theory, we might want to warn that some of the fonts
+	     * couldn't be loaded.
+	     */
+	    FontFileAddFontFile (dir, font_name, file_name);
 	}
 	fclose(file);
 	

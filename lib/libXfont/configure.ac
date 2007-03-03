@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.ac,v 1.1.1.3 2006/12/16 21:44:25 matthieu Exp $
+dnl  $Id: configure.ac,v 1.1.1.4 2007/03/03 10:09:47 matthieu Exp $
 dnl 
 dnl  Copyright © 2003 Keith Packard
 dnl 
@@ -26,7 +26,7 @@ dnl Process this file with autoconf to create configure.
 AC_PREREQ([2.57])
 
 AC_INIT([libXfont],
-	1.2.6,
+	1.2.7,
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
 	libXfont)
 dnl

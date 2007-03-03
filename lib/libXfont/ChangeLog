@@ -1,3 +1,28 @@
+commit 9509d5c7ee5d5e78c6eef54e8faceede5ca5f24e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Jan 22 18:24:19 2007 -0500
+
+    Bump to 1.2.7.
+
+commit 63af35b908b51690a6c12fd42b54cf4ee08c762a
+Author: Simon Law <sfllaw@debian.org>
+Date:   Fri Jan 19 08:50:39 2007 +1100
+
+    fontfile: accept empty (but valid) font paths (bug #3091)
+    If a path has a valid fonts.dir or fonts.alias, but does not contain any
+    fonts (either fonts.dir specifies zero fonts, or fonts could not be
+    loaded), load it as a valid font path anyway.
+
+commit 931b777108526dd0761f948dcd9f1603ac02efc8
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Jan 17 17:19:53 2007 -0500
+
+    Add stubs for the scalable renderer callbacks.
+    
+    Trying to scale a bitmap font provided by the built-in backend will
+    crash the X server as it calls into a NULL pointer.  This patch
+    adds "return BadFont;" stubs to prevent the crash.
+
 commit 2e4ae1b524a0149479c46f3f12a9ce2413092442
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Dec 16 00:53:43 2006 +0200
