@@ -118,7 +118,7 @@ The syntax for string-list file is (items in square brackets are optional):
 <text>
 .RE
 .RS 4
-...
+\&...
 .RE
 .RS 4
 <text>
@@ -130,25 +130,25 @@ The syntax for string-list file is (items in square brackets are optional):
 <text>
 .RE
 .RS 4
-...
+\&...
 .RE
 .RS 4
 <text>
 .RE
 .RS 4
- ...
+\& ...
 .RE
 .RS 4
 \&#table <tablename>
 .RE
 .RS 4
- ...]
+\& ...]
 .RE
 .RS 4
 [#file <filename>
 .RE
 .RS 4
- ...]
+\& ...]
 .RE
 .LP
 In words you may have one or more #file directives. Each #file may have

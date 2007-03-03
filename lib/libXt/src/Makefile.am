@@ -98,8 +98,8 @@ $(BUILT_HEADER): $(BUILT_SOURCE)
 
 $(BUILT_SOURCE):
 	$(top_builddir)/util/makestrs -i $(top_srcdir) $(STRINGSABIOPTIONS) < $(STRING_LIST) > StringDefs.c
-	$(INSTALL) -d $(top_builddir)/src
-	$(INSTALL) -d $(top_builddir)/include/X11
-	$(install_sh_DATA) StringDefs.h $(top_builddir)/include/X11
-	$(install_sh_DATA) Shell.h $(top_builddir)/include/X11
+	mkdir -p $(top_builddir)/src
+	mkdir -p $(top_builddir)/include/X11
+	cp StringDefs.h $(top_builddir)/include/X11
+	cp Shell.h $(top_builddir)/include/X11
 	rm StringDefs.h Shell.h
