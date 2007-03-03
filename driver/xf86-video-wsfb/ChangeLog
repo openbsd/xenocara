@@ -1,3 +1,56 @@
+commit 1ac8c63bba9a65a706334aa98d8bdbc489cc2ab6
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Jan 2 15:54:14 2007 +0100
+
+    Use PACKAGE_VERSION_* macros provided by xorg-macros.
+
+commit 3b71a8e000abab9106c53324a65743f0d2e3951b
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Jan 2 15:36:52 2007 +0100
+
+    Fix shadow framebuffer, and by extension rotation.
+    
+    Based on similar fixes in xf86-video-fbdev and xf86-video-vesa.
+
+commit 579e15946892894f4ee75576855767dae27292d3
+Author: Jeremy C. Reed <reed@glacier.reedmedia.net>
+Date:   Thu Dec 21 05:53:21 2006 -0600
+
+    "framebuffer size is linebytes * height, not linebytes * height *
+    depth" Noticed in recent NetBSD CVS commit. Also in OpenBSD's CVS.
+    Okayed by Matthieu.  Before my system said: "(II) wsfb(0): Vidmem: 24576k".
+    Now says: "(II) wsfb(0): Vidmem: 1536k"
+
+commit b5d1de955b4bf40edd1ff08fc4d562590a4e1f98
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Dec 3 18:07:02 2006 +0100
+
+    Pull code from OpenBSD 4.0 version.
+    
+        - rotation support
+        - only allocate space for colormap save/restore at 8bpp
+        - switch on render extension at 8bpp
+
+commit ab847a95a8ae9cd2d0001ebb612c8387b0784ad5
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Dec 1 13:12:44 2006 -0800
+
+    Add *~ to .gitignore
+
+commit c2d87cdd9230eda0de7f64e2db0a9e789af7a497
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Dec 1 13:12:22 2006 -0800
+
+    Change XF86_VERSION_CURRENT to XORG_VERSION_CURRENT in WsfbVersRec
+
+commit 6babc377334b4bdba945bed5ca0e60c6b3f1ab06
+Author: Jeremy C. Reed <reed@glacier.reedmedia.net>
+Date:   Wed Oct 18 15:02:26 2006 -0500
+
+    Replace stub with real license found in man page and wsfb_driver.c.
+    
+    It is based on fbdev.c so include its generic XFree86 license for that too.
+
 commit f4fe4cd560d7380ec18de383e55671bce8b2139d
 Author: Jeremy C. Reed <reed@glacier.reedmedia.net>
 Date:   Tue Oct 17 09:14:55 2006 -0500
@@ -131,4 +184,3 @@ Date:   Sun Sep 26 17:06:45 2004 +0000
     Hook the wsfb driver and resynchonize with OpenBSD's version.
     Add wsfb, a Net- and OpenBSD specific driver for dumb bitmapped wsdisplay
         screens.
-
