@@ -25,6 +25,7 @@ PROGS = \
 	fire \
 	fogcoord \
 	fplight \
+	fslight \
 	gamma \
 	gearbox \
 	gears \
@@ -47,6 +48,7 @@ PROGS = \
 	renormal \
 	shadowtex \
 	singlebuffer \
+	streaming_rect \
 	spectex \
 	spriteblast \
 	stex3d \
