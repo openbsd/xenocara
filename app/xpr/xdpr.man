@@ -57,7 +57,6 @@ Be sure that type of the printer matches the type specified
 with the \fI\-device\fP option.
 .TP
 .B \-display \fIhost:display\fP[\fI.screen\fP]
-.cm .IB host : display
 Normally,
 .I xdpr
 gets the host and display number to use from the environment
@@ -73,9 +72,9 @@ Specifies the device on which the file will be printed.  Currently supported:
 Digital LA100
 .TP
 .B ljet
-\s-1HP\s+1 LaserJet series and other monochrome PCL devices
+HP LaserJet series and other monochrome PCL devices
 such as ThinkJet, QuietJet, RuggedWriter, \s-1HP\s+12560 series,
-and \s-1HP\s+12930 series printers
+and HP 2930 series printers
 .TP
 .B ln03
 Digital LN03
@@ -126,7 +125,7 @@ which display to use by default.
 PRINTER
 which printer to use by default.
 .SH COPYRIGHT
-Copyright ([\d,\s]*) X Consortium
+Copyright X Consortium
 .br
 See \fIX(1)\fP for a full statement of rights and permissions.
 .SH AUTHORS
