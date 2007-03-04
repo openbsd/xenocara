@@ -24276,7 +24276,7 @@ fi
 
 
 
-if text "x$HP300_VIDEO" = xyes; then
+if test "x$HP300_VIDEO" = xyes; then
   HP300_VIDEO_TRUE=
   HP300_VIDEO_FALSE='#'
 else
@@ -24286,7 +24286,7 @@ fi
 
 
 
-if text "x$HPPA_VIDEO" = xyes; then
+if test "x$HPPA_VIDEO" = xyes; then
   HPPA_VIDEO_TRUE=
   HPPA_VIDEO_FALSE='#'
 else
