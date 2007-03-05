@@ -1689,7 +1689,8 @@ USED static Bool MakeContextCurrent(Display *dpy, GLXDrawable draw,
 	    gc->currentReadable = read;
 
             if (!gc->isDirect) {
-               if (!IndirectAPI)
+	       __GLXattribute *state;
+	       if (!IndirectAPI)
                   IndirectAPI = __glXNewIndirectAPI();
                _glapi_set_dispatch(IndirectAPI);
 
@@ -1700,7 +1701,7 @@ USED static Bool MakeContextCurrent(Display *dpy, GLXDrawable draw,
                } while (0);
 #endif
 
-		__GLXattribute *state = 
+		state = 
 		  (__GLXattribute *)(gc->client_state_private);
 
 		gc->currentContextTag = reply.contextTag;
