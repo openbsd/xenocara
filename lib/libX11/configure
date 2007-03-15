@@ -23622,6 +23622,29 @@ fi;
 echo "$as_me: Building with package name set to $PACKAGE" >&6;}
 	fi
 
+cat >>confdefs.h <<_ACEOF
+#define PACKAGE_VERSION_MAJOR `echo $PACKAGE_VERSION | cut -d . -f 1`
+_ACEOF
+
+	PVM=`echo $PACKAGE_VERSION | cut -d . -f 2`
+	if test "x$PVM" = "x"; then
+		PVM="0"
+	fi
+
+cat >>confdefs.h <<_ACEOF
+#define PACKAGE_VERSION_MINOR $PVM
+_ACEOF
+
+	PVP=`echo $PACKAGE_VERSION | cut -d . -f 3`
+	if test "x$PVP" = "x"; then
+		PVP="0"
+	fi
+
+cat >>confdefs.h <<_ACEOF
+#define PACKAGE_VERSION_PATCHLEVEL $PVP
+_ACEOF
+
+
 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ac_config_files="$ac_config_files Makefile include/Makefile man/Makefile src/Makefile src/util/Makefile src/xcms/Makefile src/xlibi18n/Makefile modules/Makefile modules/im/Makefile modules/im/ximcp/Makefile modules/lc/Makefile modules/lc/def/Makefile modules/lc/gen/Makefile modules/lc/Utf8/Makefile modules/lc/xlocale/Makefile modules/om/Makefile modules/om/generic/Makefile src/xkb/Makefile nls/Makefile nls/armscii-8/Makefile nls/C/Makefile nls/el_GR.UTF-8/Makefile nls/en_US.UTF-8/Makefile nls/georgian-academy/Makefile nls/georgian-ps/Makefile nls/ibm-cp1133/Makefile nls/iscii-dev/Makefile nls/isiri-3342/Makefile nls/iso8859-1/Makefile nls/iso8859-10/Makefile nls/iso8859-11/Makefile nls/iso8859-13/Makefile nls/iso8859-14/Makefile nls/iso8859-15/Makefile nls/iso8859-2/Makefile nls/iso8859-3/Makefile nls/iso8859-4/Makefile nls/iso8859-5/Makefile nls/iso8859-6/Makefile nls/iso8859-7/Makefile nls/iso8859-8/Makefile nls/iso8859-9/Makefile nls/iso8859-9e/Makefile nls/ja/Makefile nls/ja.JIS/Makefile nls/ja_JP.UTF-8/Makefile nls/ja.S90/Makefile nls/ja.SJIS/Makefile nls/ja.U90/Makefile nls/ko/Makefile nls/koi8-c/Makefile nls/koi8-r/Makefile nls/koi8-u/Makefile nls/ko_KR.UTF-8/Makefile nls/microsoft-cp1251/Makefile nls/microsoft-cp1255/Makefile nls/microsoft-cp1256/Makefile nls/mulelao-1/Makefile nls/nokhchi-1/Makefile nls/pt_BR.UTF-8/Makefile nls/tatar-cyr/Makefile nls/th_TH/Makefile nls/th_TH.UTF-8/Makefile nls/tscii-0/Makefile nls/vi_VN.tcvn/Makefile nls/vi_VN.viscii/Makefile nls/zh_CN/Makefile nls/zh_CN.gb18030/Makefile nls/zh_CN.gbk/Makefile nls/zh_CN.UTF-8/Makefile nls/zh_HK.big5/Makefile nls/zh_HK.big5hkscs/Makefile nls/zh_HK.UTF-8/Makefile nls/zh_TW/Makefile nls/zh_TW.big5/Makefile nls/zh_TW.UTF-8/Makefile x11.pc x11-xcb.pc"
 cat >confcache <<\_ACEOF
