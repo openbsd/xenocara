@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.6 2007/01/01 10:36:43 matthieu Exp $
+# $OpenBSD: Makefile,v 1.7 2007/03/16 23:30:27 matthieu Exp $
 
 # Broken
 # xf86-input-calcomp  xf86-input-citron  xf86-input-dmc
@@ -7,6 +7,7 @@
 
 INPUT_DRV_DEFAULT= \
 	openbsd-input-usbtablet \
+	openbsd-input-ws \
 	xf86-input-keyboard \
 	xf86-input-mouse \
 	xf86-input-void
@@ -36,7 +37,7 @@ INPUT_DRV_sgi=
 
 INPUT_DRV_sparc64= ${INPUT_DRV_COMMON}
 
-INPUT_DRV_zaurus= ${INPUT_DRV_DEFAULT} openbsd-input-ws
+INPUT_DRV_zaurus= ${INPUT_DRV_DEFAULT}
 
 .if defined(INPUT_DRV_${MACHINE})
 INPUT_DRV= ${INPUT_DRV_${MACHINE}}
