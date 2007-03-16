@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.15 2007/03/16 21:04:42 todd Exp $
+# $OpenBSD: Makefile,v 1.16 2007/03/16 23:54:43 todd Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
@@ -107,7 +107,7 @@ distrib-dirs:
 		-p ${DESTDIR}${X11ETC}/ -U
 
 .PHONY: all build beforeinstall install afterinstall release clean cleandir \
-	distrib-dirs fix-appd
+	dist distrib-dirs fix-appd
 
 .include <bsd.subdir.mk>
 .include <bsd.xorg.mk>
