@@ -39,6 +39,15 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Major version of this package */
+#undef PACKAGE_VERSION_MAJOR
+
+/* Minor version of this package */
+#undef PACKAGE_VERSION_MINOR
+
+/* Patch version of this package */
+#undef PACKAGE_VERSION_PATCHLEVEL
+
 /* Default system man page search path (default: none) */
 #undef SYSMANPATH
 
