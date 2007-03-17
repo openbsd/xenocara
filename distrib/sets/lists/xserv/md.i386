@@ -168,7 +168,6 @@
 ./usr/X11R6/include/xorg/xorgVersion.h
 ./usr/X11R6/include/xorg/xvdix.h
 ./usr/X11R6/include/xorg/xvmcext.h
-./usr/X11R6/lib/modules
 ./usr/X11R6/lib/modules/drivers
 ./usr/X11R6/lib/modules/drivers/apm_drv.la
 ./usr/X11R6/lib/modules/drivers/apm_drv.so
@@ -301,6 +300,8 @@
 ./usr/X11R6/lib/modules/input/vmmouse_drv.so
 ./usr/X11R6/lib/modules/input/void_drv.la
 ./usr/X11R6/lib/modules/input/void_drv.so
+./usr/X11R6/lib/modules/input/ws_drv.la
+./usr/X11R6/lib/modules/input/ws_drv.so
 ./usr/X11R6/lib/modules/libafb.la
 ./usr/X11R6/lib/modules/libafb.so
 ./usr/X11R6/lib/modules/libcfb.la
@@ -426,6 +427,7 @@
 ./usr/X11R6/man/man4/vmware.4
 ./usr/X11R6/man/man4/void.4
 ./usr/X11R6/man/man4/voodoo.4
+./usr/X11R6/man/man4/ws.4
 ./usr/X11R6/man/man4/wsfb.4
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/share/X11/xserver
