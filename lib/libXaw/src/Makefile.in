@@ -1745,8 +1745,8 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
 @BUILD_XAW7_TRUE@@PLATFORM_WIN32_FALSE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.so.10.0 libXaw.so.10.0)
 
 @BUILD_XAW8_TRUE@@PLATFORM_WIN32_FALSE@install-exec-hook::
-@BUILD_XAW8_TRUE@@PLATFORM_WIN32_FALSE@	-rm -f $(DESTDIR)$(libdir)/libXaw.so.11.0
-@BUILD_XAW8_TRUE@@PLATFORM_WIN32_FALSE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw8.so.11.0 libXaw.so.11.0)
+@BUILD_XAW8_TRUE@@PLATFORM_WIN32_FALSE@	-rm -f $(DESTDIR)$(libdir)/libXaw.so.12.0
+@BUILD_XAW8_TRUE@@PLATFORM_WIN32_FALSE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw8.so.12.0 libXaw.so.12.0)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
