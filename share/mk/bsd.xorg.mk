@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.12 2007/02/04 23:15:27 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.13 2007/03/17 19:32:41 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -67,10 +67,28 @@ all:	config.status
 	${MAKE_ENV} ${MAKE} ${_lt_libs}
 .endif
 
+
+REORDER_DEPENDENCIES += ${X11BASE}/share/mk/automake.dep
+
 .if !target(config.status)
 config.status:
 .if defined(XENOCARA_RERUN_AUTOCONF) && ${XENOCARA_RERUN_AUTOCONF:L} == "yes"
 	cd ${.CURDIR}; ${MAKE_ENV} autoreconf -v --install --force
+.else
+	@sed -e '/^#/d' ${REORDER_DEPENDENCIES} | \
+	  tsort -r|while read f; do \
+	    cd ${.CURDIR}; \
+		case $$f in \
+		/*) \
+			find . -name $${f#/} -print| while read i; \
+				do echo "Touching $$i"; touch $$i; done \
+			;; \
+		*) \
+			if test -e $$f ; then \
+				echo "Touching $$f"; touch $$f; \
+			fi \
+			;; \
+		esac; done
 .endif
 	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" CFLAGS="$(CFLAGS:C/ *$//)" \
 		${CONFIGURE_ENV} ${.CURDIR}/configure --prefix=${X11BASE} \
