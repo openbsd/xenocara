@@ -578,18 +578,18 @@ install : install-program install-man install-ad
 	@ $(ECHO) ""
 
 install-program : xlock
-	$(top_srcdir)/mkinstalldirs $(DESTDIR)$(bindir)
+	$(SHELL) $(top_srcdir)/mkinstalldirs $(DESTDIR)$(bindir)
 	$(INSTALL_PROGRAM) $(INSTPGMFLAGS) $(UTILOBJDIR)xlock$(E) $(DESTDIR)$(bindir)
 	@MODULES@mkdir -p $(DESTDIR)$(DEF_MODULEPATH)
 	@MODULES@cp *.xlk $(DESTDIR)$(DEF_MODULEPATH)
 	@MODULES@cp glx/*.xlk $(DESTDIR)$(DEF_MODULEPATH)
 
 install-man :
-	$(top_srcdir)/mkinstalldirs $(DESTDIR)$(mandir)
+	$(SHELL) $(top_srcdir)/mkinstalldirs $(DESTDIR)$(mandir)
 	$(INSTALL_DATA) $(UTILDIR)xlock.man $(DESTDIR)$(mandir)/xlock.1
 
 install-ad :
-	$(top_srcdir)/mkinstalldirs $(DESTDIR)$(xapploaddir)
+	$(SHELL) $(top_srcdir)/mkinstalldirs $(DESTDIR)$(xapploaddir)
 	$(INSTALL_DATA) $(UTILDIR)XLock.ad $(DESTDIR)$(xapploaddir)/XLock
 
 uninstall : uninstall-program uninstall-man uninstall-ad
