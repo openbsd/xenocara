@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.13 2007/03/17 19:32:41 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.14 2007/03/18 10:27:58 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -91,7 +91,7 @@ config.status:
 		esac; done
 .endif
 	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" CFLAGS="$(CFLAGS:C/ *$//)" \
-		${CONFIGURE_ENV} ${.CURDIR}/configure --prefix=${X11BASE} \
+		${CONFIGURE_ENV} sh ${.CURDIR}/configure --prefix=${X11BASE} \
 		--sysconfdir=/etc \
 		--mandir=${X11BASE}/man \
 		${_cache} \
