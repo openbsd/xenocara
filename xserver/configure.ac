@@ -597,6 +597,8 @@ if test "x$GLX" = xyes && ! test "x$MESA_SOURCE" = x; then
 	case $host_os in
 	  solaris*) 	
 		SYMLINK_MESA="/usr/bin/bash $srcdir/GL/symlink-mesa.sh"	;;
+	  openbsd*)
+		SYMLINK_MESA="/bin/ksh $srcdir/GL/symlink-mesa.sh"	;;
 	  *)	SYMLINK_MESA=$srcdir/GL/symlink-mesa.sh ;;
 	esac
 	$SYMLINK_MESA $MESA_SOURCE GL/
