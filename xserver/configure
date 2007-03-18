@@ -2140,7 +2140,7 @@ else
   if test -f "$ac_aux_dir/mkinstalldirs"; then
     mkdir_p='$(mkinstalldirs)'
   else
-    mkdir_p='$(install_sh) -d'
+    mkdir_p='$(SHELL) $(install_sh) -d'
   fi
 fi
 
@@ -26625,6 +26625,8 @@ _ACEOF
 	case $host_os in
 	  solaris*)
 		SYMLINK_MESA="/usr/bin/bash $srcdir/GL/symlink-mesa.sh"	;;
+	  openbsd*)
+		SYMLINK_MESA="/bin/ksh $srcdir/GL/symlink-mesa.sh"	;;
 	  *)	SYMLINK_MESA=$srcdir/GL/symlink-mesa.sh ;;
 	esac
 	$SYMLINK_MESA $MESA_SOURCE GL/

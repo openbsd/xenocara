@@ -1526,7 +1526,7 @@ else
   if test -f "$ac_aux_dir/mkinstalldirs"; then
     mkdir_p='$(mkinstalldirs)'
   else
-    mkdir_p='$(install_sh) -d'
+    mkdir_p='$(SHELL) $(install_sh) -d'
   fi
 fi
 
