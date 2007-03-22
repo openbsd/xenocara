@@ -240,6 +240,8 @@
 ./usr/X11R6/lib/modules/input/usbtablet_drv.so
 ./usr/X11R6/lib/modules/input/void_drv.la
 ./usr/X11R6/lib/modules/input/void_drv.so
+./usr/X11R6/lib/modules/input/ws_drv.la
+./usr/X11R6/lib/modules/input/ws_drv.so
 ./usr/X11R6/lib/modules/libafb.la
 ./usr/X11R6/lib/modules/libafb.so
 ./usr/X11R6/lib/modules/libcfb.la
@@ -338,6 +340,7 @@
 ./usr/X11R6/man/man4/tek4957.4
 ./usr/X11R6/man/man4/usbtablet.4
 ./usr/X11R6/man/man4/void.4
+./usr/X11R6/man/man4/ws.4
 ./usr/X11R6/man/man4/wsfb.4
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/share/X11/xserver
