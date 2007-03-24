@@ -71,7 +71,7 @@ appsdir		= @appsdir@
 
 #### End of system configuration section. ####
 
-DESTDIR		=
+DESTDIR		?=
 BINDIR		= $(DESTDIR)$(bindir)
 LIBDIR		= $(DESTDIR)$(libdir)
 MANDIR		= $(DESTDIR)$(mandir)
