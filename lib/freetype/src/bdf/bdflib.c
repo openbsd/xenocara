@@ -1478,6 +1478,7 @@
         goto Exit;
       p->cnt = font->glyphs_size = _bdf_atoul( p->list.field[1], 0, 10 );
 
+      printf("XXX %lu\n", p->cnt);
       /* Make sure the number of glyphs is non-zero. */
       if ( p->cnt == 0 )
         font->glyphs_size = 64;
