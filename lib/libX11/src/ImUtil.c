@@ -385,8 +385,6 @@ Status XInitImage (image)
     XImage *image;
 {
 	if (image->depth == 0 || image->depth > 32 ||
-	    image->bits_per_pixel > 32 || image->bitmap_unit > 32 ||
-	    image->bits_per_pixel < 0 || image->bitmap_unit < 0 ||
 	    (image->format != XYBitmap &&
 	     image->format != XYPixmap &&
 	     image->format != ZPixmap) ||

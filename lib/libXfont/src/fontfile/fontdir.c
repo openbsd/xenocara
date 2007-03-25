@@ -38,17 +38,9 @@ in this Software without prior written authorization from The Open Group.
 #include    <X11/fonts/fntfilst.h>
 #include    <X11/keysym.h>
 
-#if HAVE_STDINT_H
-#include <stdint.h>
-#elif !defined(INT32_MAX)
-#define INT32_MAX 0x7fffffff
-#endif
-
 Bool
 FontFileInitTable (FontTablePtr table, int size)
 {
-    if (size < 0 || (size > INT32_MAX/sizeof(FontEntryRec))) 
-	return FALSE;
     if (size)
     {
 	table->entries = (FontEntryPtr) xalloc(sizeof(FontEntryRec) * size);
