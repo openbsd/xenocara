@@ -1,15 +1,19 @@
-# $OpenBSD: Makefile,v 1.3 2006/12/02 16:28:48 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2007/03/25 19:35:56 aanriot Exp $
 
 .include "../Makefile.inc"
 
 NOOBJ=Yes
+OSRELEASE=`/sbin/sysctl -n kern.osrelease 2>&1`
+RM?=rm
 
 depend:
 
 all:
+	@sed -e "s,__osrelease__,${OSRELEASE}," \
+		${.CURDIR}/system.fvwmrc > .fvwmrc
 
 install:
-	${INSTALL} ${INSTALL_COPY} ${.CURDIR}/system.fvwmrc \
+	${INSTALL} ${INSTALL_COPY} .fvwmrc \
 		${DESTDIR}${FVWMLIBDIR}/.fvwmrc
 	${INSTALL} ${INSTALL_COPY} ${.CURDIR}/system.fvwm2rc \
 		${DESTDIR}${FVWMLIBDIR}
@@ -23,6 +27,7 @@ install:
 		${DESTDIR}${FVWMLIBDIR}
 
 clean:
+	${RM} -f .fvwmrc
 
 cleandir:
 

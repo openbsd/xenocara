@@ -351,7 +351,7 @@ Key F8		A	M	CirculateDown
 *FvwmPagerFore white
 *FvwmPagerHilight #2d2d2d
 *FvwmPagerGeometry 80x60-1-1
-*FvwmPagerLabel 0 "OpenBSD 4.1"
+*FvwmPagerLabel 0 "OpenBSD __osrelease__"
 *FvwmPagerLabel 1 Maker
 *FvwmPagerLabel 2 Mail
 *FvwmPagerLabel 3 Matlab
