@@ -1,9 +1,12 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.9 2007/03/05 17:55:55 dim Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.10 2007/03/26 12:15:47 matthieu Exp $
 
 PIXMAPDIR=/etc/X11/xdm/pixmaps
 
 .if ${MACHINE} == i386 || ${MACHINE} == amd64
 DEFAULT_VT= --with-default-vt=vt05
+.endif
+.if ${MACHINE_ARCH} == arm
+DEFAULT_VT=  --with-default-vt=vt02
 .endif
 
 CONFIGURE_ARGS= --enable-privsep \
