@@ -2902,6 +2902,11 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	info->ChipFamily == CHIP_FAMILY_RS200)
 	    info->ChipErrata |= CHIP_ERRATA_PLL_DELAY;
 
+    /* Clear bit for M6 Chipsets */
+    if (info->Chipset == PCI_CHIP_RADEON_LY ||
+	info->Chipset == PCI_CHIP_RADEON_LZ) 
+	    info->ChipErrata &= ~CHIP_ERRATA_PLL_DELAY;
+
 #ifdef XF86DRI
 				/* AGP/PCI */
     /* Proper autodetection of an AGP capable device requires examining
