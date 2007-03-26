@@ -1,3 +1,4 @@
+./etc/X11/xorg.conf
 ./usr/X11R6/bin/X
 ./usr/X11R6/bin/Xnest
 ./usr/X11R6/bin/Xorg
