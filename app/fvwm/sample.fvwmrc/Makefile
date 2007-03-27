@@ -1,8 +1,7 @@
-# $OpenBSD: Makefile,v 1.4 2007/03/25 19:35:56 aanriot Exp $
+# $OpenBSD: Makefile,v 1.5 2007/03/27 19:49:43 matthieu Exp $
 
 .include "../Makefile.inc"
 
-NOOBJ=Yes
 OSRELEASE=`/sbin/sysctl -n kern.osrelease 2>&1`
 RM?=rm
 
