@@ -2325,9 +2325,9 @@
 ./usr/X11R6/share/X11/locale/iso8859-10/XI18N_OBJS
 ./usr/X11R6/share/X11/locale/iso8859-10/XLC_LOCALE
 ./usr/X11R6/share/X11/locale/iso8859-11
-./usr/X11R6/share/X11/locale/iso8859-11/XLC_LOCALE
 ./usr/X11R6/share/X11/locale/iso8859-11/Compose
 ./usr/X11R6/share/X11/locale/iso8859-11/XI18N_OBJS
+./usr/X11R6/share/X11/locale/iso8859-11/XLC_LOCALE
 ./usr/X11R6/share/X11/locale/iso8859-13
 ./usr/X11R6/share/X11/locale/iso8859-13/Compose
 ./usr/X11R6/share/X11/locale/iso8859-13/XI18N_OBJS
@@ -2515,8 +2515,8 @@
 ./usr/X11R6/share/aclocal/fontutil.m4
 ./usr/X11R6/share/aclocal/xaw.m4
 ./usr/X11R6/share/aclocal/xorg-macros.m4
-./usr/X11R6/share/aclocal/xorgversion.m4
 ./usr/X11R6/share/aclocal/xorg-server.m4
+./usr/X11R6/share/aclocal/xorgversion.m4
 ./usr/X11R6/share/aclocal/xtrans.m4
 ./usr/X11R6/share/doc
 ./usr/X11R6/share/doc/fontconfig

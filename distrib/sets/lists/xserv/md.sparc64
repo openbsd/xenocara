@@ -237,6 +237,8 @@
 ./usr/X11R6/lib/modules/input/usbtablet_drv.so
 ./usr/X11R6/lib/modules/input/void_drv.la
 ./usr/X11R6/lib/modules/input/void_drv.so
+./usr/X11R6/lib/modules/input/ws_drv.la
+./usr/X11R6/lib/modules/input/ws_drv.so
 ./usr/X11R6/lib/modules/libafb.la
 ./usr/X11R6/lib/modules/libafb.so
 ./usr/X11R6/lib/modules/libcfb.la
