@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.15 2007/03/25 16:52:54 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.16 2007/03/28 19:38:57 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -41,11 +41,13 @@ _cache= --cache-file=${XENOCARA_OBJDIR}/xorg-config.cache.${MACHINE}
 
 CFLAGS+=	$(COPTS)
 
-MAKE_ENV+=	AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
+CONFIGURE_ENV=	PKG_CONFIG_LIBDIR="$(PKG_CONFIG_LIBDIR)" \
+		CFLAGS="$(CFLAGS:C/ *$//)"
+
+AUTOTOOLS_ENV=  AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 		AUTOCONF_VERSION="$(AUTOCONF_VERSION)" \
 		ACLOCAL="aclocal -I ${X11BASE}/share/aclocal" \
-		PKG_CONFIG_LIBDIR="$(PKG_CONFIG_LIBDIR)" \
-		CFLAGS="$(CFLAGS:C/ *$//)"
+		$(CONFIGURE_ENV)
 
 .if !target(.MAIN)
 .MAIN: all
@@ -64,7 +66,7 @@ _lt_libs+=lib${_n:S/+/_/g:S/-/_/g:S/./_/g}_ltversion=${_v}
 
 .if !target(all)
 all:	config.status
-	${MAKE_ENV} ${MAKE} ${_lt_libs}
+	exec ${MAKE} ${_lt_libs}
 .endif
 
 
@@ -73,7 +75,7 @@ REORDER_DEPENDENCIES += ${X11BASE}/share/mk/automake.dep
 .if !target(config.status)
 config.status:
 .if defined(XENOCARA_RERUN_AUTOCONF) && ${XENOCARA_RERUN_AUTOCONF:L} == "yes"
-	cd ${.CURDIR}; ${MAKE_ENV} autoreconf -v --install --force
+	cd ${.CURDIR}; ${AUTOTOOLS_ENV} exec autoreconf -v --install --force
 .else
 	@sed -e '/^#/d' ${REORDER_DEPENDENCIES} | \
 	  tsort -r|while read f; do \
@@ -90,8 +92,7 @@ config.status:
 			;; \
 		esac; done
 .endif
-	PKG_CONFIG_LIBDIR="$(PKG_CONFIG_LIBDIR)" CFLAGS="$(CFLAGS:C/ *$//)" \
-		${CONFIGURE_ENV} sh ${.CURDIR}/configure --prefix=${X11BASE} \
+	${CONFIGURE_ENV} exec sh ${.CURDIR}/configure --prefix=${X11BASE} \
 		--sysconfdir=/etc \
 		--mandir=${X11BASE}/man \
 		${_cache} \
@@ -112,7 +113,7 @@ afterinstall:
 .  endif
 .  if !target(realinstall)
 realinstall:
-	${MAKE_ENV} ${MAKE} ${_lt_libs} install
+	exec ${MAKE} ${_lt_libs} install
 .endif
 install: maninstall
 maninstall: afterinstall
@@ -120,30 +121,25 @@ afterinstall: realinstall
 realinstall: beforeinstall
 .endif
 
-.if !target(dist)
-dist:
-	${MAKE_ENV} ${MAKE} ${_lt_libs} dist
-.endif
-
 .if !target(build)
 .if exists(Makefile.bsd-wrapper)
 _wrapper = -f Makefile.bsd-wrapper
 .endif
 build:
-	cd ${.CURDIR} && ${MAKE_ENV} ${MAKE} ${_wrapper} cleandir
-	cd ${.CURDIR} && ${MAKE_ENV} ${MAKE} ${_wrapper} depend
-	cd ${.CURDIR} && ${MAKE_ENV} ${MAKE} ${_wrapper} all
-	cd ${.CURDIR} && ${MAKE_ENV} ${SUDO} ${MAKE} ${_wrapper} install
+	cd ${.CURDIR} && exec ${MAKE} ${_wrapper} cleandir
+	cd ${.CURDIR} && exec ${MAKE} ${_wrapper} depend
+	cd ${.CURDIR} && exec ${MAKE} ${_wrapper} all
+	cd ${.CURDIR} && exec ${SUDO} ${MAKE} ${_wrapper} install
 .endif
 
 .if !target(clean)
 clean:
-	-@if [ -e Makefile ]; then ${MAKE_ENV} ${MAKE} clean; fi
+	-@if [ -e Makefile ]; then exec ${MAKE} clean; fi
 .endif
 
 .if !target(cleandir)
 cleandir: clean
-	-@if [ -e Makefile ]; then ${MAKE_ENV} ${MAKE} distclean; fi
+	-@if [ -e Makefile ]; then exec ${MAKE} distclean; fi
 .endif
 
 #
