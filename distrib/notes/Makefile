@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2007/03/28 00:22:04 todd Exp $
+# $OpenBSD: Makefile,v 1.3 2007/03/28 20:05:15 todd Exp $
 
 FILE= README.${MACHINE}
 
@@ -25,5 +25,8 @@ install: ${FILE}.generated
 
 clean:
 	rm -f *.generated
+
+includes:
+	@echo No includes here.
 
 .include <bsd.xorg.mk>
