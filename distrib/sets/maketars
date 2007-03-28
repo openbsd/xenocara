@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$OpenBSD: maketars,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+#	$OpenBSD: maketars,v 1.2 2007/03/28 20:07:23 todd Exp $
 
 # xy
 RELEASE=$1
@@ -26,14 +26,21 @@ pwd=`pwd`
 listsdir=`pwd`/lists
 tardir=$RELEASEDIR
 
+TMPDIR=`mktemp -d /tmp/_maketarsx.XXXXXXXXXX`
+trap 'rm -f $TMP1 $TMP2; rmdir $TMPDIR; exit 1' 1 15
+TMP1=$TMPDIR/one
+TMP2=$TMPDIR/two
+
 lists=`sh ./genlists $arch`
 
 cd $DESTDIR
 
 for setname in $lists; do
 	echo -n "${setname}: "
-	(cd $pwd; sh gensetlist $setname $Release) | sort | \
-	    pax -w -d | gzip -9 > ${tardir}/${setname}${RELEASE}.tgz
+	(cd $pwd; sh gensetlist $setname $Release) | sort > $TMP1
+	grep    '^./usr/X11R6/lib' $TMP1 > $TMP2
+	grep -v '^./usr/X11R6/lib' $TMP1 >> $TMP2
+	pax -w -d < $TMP2 | gzip -9 > ${tardir}/${setname}${RELEASE}.tgz
 	echo    "done."
 done
 
