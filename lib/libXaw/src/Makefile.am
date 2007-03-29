@@ -101,8 +101,8 @@ libXaw7_la_LIBADD = $(XAW7_LIBS)
 
 if !PLATFORM_WIN32
 install-exec-hook::
-	-rm -f $(DESTDIR)$(libdir)/libXaw.so.10.0
-	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.so.10.0 libXaw.so.10.0)
+	-rm -f $(DESTDIR)$(libdir)/libXaw.so.11.0
+	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.so.11.0 libXaw.so.11.0)
 endif
 
 endif
