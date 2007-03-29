@@ -18771,6 +18771,9 @@ echo "$as_me:$LINENO: checking for XAW6" >&5
 echo $ECHO_N "checking for XAW6... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XAW6_CFLAGS"; then
+        pkg_cv_XAW6_CFLAGS="$XAW6_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto x11 xext xextproto xt xmu\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto x11 xext xextproto xt xmu") 2>&5
@@ -18781,10 +18784,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XAW6_LIBS"; then
+        pkg_cv_XAW6_LIBS="$XAW6_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto x11 xext xextproto xt xmu\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto x11 xext xextproto xt xmu") 2>&5
@@ -18795,38 +18802,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	XAW6_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XAW6_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu"`
+        else
+	        XAW6_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$XAW6_PKG_ERRORS" 1>&5
+	echo "$XAW6_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xproto x11 xext xextproto xt xmu) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (xproto x11 xext xextproto xt xmu) were not met:
+
+$XAW6_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XAW6_CFLAGS and XAW6_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (xproto x11 xext xextproto xt xmu) were not met.
+Alternatively, you may set the environment variables XAW6_CFLAGS
+and XAW6_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (xproto x11 xext xextproto xt xmu) were not met:
+
+$XAW6_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XAW6_CFLAGS and XAW6_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables XAW6_CFLAGS
+and XAW6_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XAW6_CFLAGS and XAW6_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XAW6_CFLAGS
+and XAW6_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -18834,9 +18862,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XAW6_CFLAGS and XAW6_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XAW6_CFLAGS
+and XAW6_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -18871,6 +18899,9 @@ echo "$as_me:$LINENO: checking for XAW7" >&5
 echo $ECHO_N "checking for XAW7... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XAW7_CFLAGS"; then
+        pkg_cv_XAW7_CFLAGS="$XAW7_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto x11 xext xextproto xt xmu xpm\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto x11 xext xextproto xt xmu xpm") 2>&5
@@ -18881,10 +18912,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XAW7_LIBS"; then
+        pkg_cv_XAW7_LIBS="$XAW7_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto x11 xext xextproto xt xmu xpm\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto x11 xext xextproto xt xmu xpm") 2>&5
@@ -18895,38 +18930,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	XAW7_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu xpm"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XAW7_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu xpm"`
+        else
+	        XAW7_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu xpm"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$XAW7_PKG_ERRORS" 1>&5
+	echo "$XAW7_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xproto x11 xext xextproto xt xmu xpm) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (xproto x11 xext xextproto xt xmu xpm) were not met:
+
+$XAW7_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XAW7_CFLAGS and XAW7_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (xproto x11 xext xextproto xt xmu xpm) were not met.
+Alternatively, you may set the environment variables XAW7_CFLAGS
+and XAW7_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (xproto x11 xext xextproto xt xmu xpm) were not met:
+
+$XAW7_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XAW7_CFLAGS and XAW7_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables XAW7_CFLAGS
+and XAW7_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XAW7_CFLAGS and XAW7_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XAW7_CFLAGS
+and XAW7_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -18934,9 +18990,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XAW7_CFLAGS and XAW7_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XAW7_CFLAGS
+and XAW7_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -18971,6 +19027,9 @@ echo "$as_me:$LINENO: checking for XPRINT" >&5
 echo $ECHO_N "checking for XPRINT... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XPRINT_CFLAGS"; then
+        pkg_cv_XPRINT_CFLAGS="$XPRINT_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xp") 2>&5
@@ -18981,10 +19040,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XPRINT_LIBS"; then
+        pkg_cv_XPRINT_LIBS="$XPRINT_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xp") 2>&5
@@ -18995,16 +19058,31 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
-if test $pkg_failed = yes; then
-	XPRINT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xp"`
-	# Put the nasty error message in config.log where it belongs
-	echo "$XPRINT_PKG_ERRORS" 1>&5
 
-	xprint_found=no
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XPRINT_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xp"`
+        else
+	        XPRINT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xp"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$XPRINT_PKG_ERRORS" >&5
+
+	echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+                xprint_found=no
 elif test $pkg_failed = untried; then
 	xprint_found=no
 else
@@ -19035,6 +19113,9 @@ echo "$as_me:$LINENO: checking for XAW8" >&5
 echo $ECHO_N "checking for XAW8... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XAW8_CFLAGS"; then
+        pkg_cv_XAW8_CFLAGS="$XAW8_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto x11 xext xextproto xt xmu xpm xp printproto xau\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto x11 xext xextproto xt xmu xpm xp printproto xau") 2>&5
@@ -19045,10 +19126,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XAW8_LIBS"; then
+        pkg_cv_XAW8_LIBS="$XAW8_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto x11 xext xextproto xt xmu xpm xp printproto xau\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto x11 xext xextproto xt xmu xpm xp printproto xau") 2>&5
@@ -19059,38 +19144,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	XAW8_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu xpm xp printproto xau"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XAW8_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu xpm xp printproto xau"`
+        else
+	        XAW8_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto x11 xext xextproto xt xmu xpm xp printproto xau"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$XAW8_PKG_ERRORS" 1>&5
+	echo "$XAW8_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xproto x11 xext xextproto xt xmu xpm xp printproto xau) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (xproto x11 xext xextproto xt xmu xpm xp printproto xau) were not met:
+
+$XAW8_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XAW8_CFLAGS and XAW8_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (xproto x11 xext xextproto xt xmu xpm xp printproto xau) were not met.
+Alternatively, you may set the environment variables XAW8_CFLAGS
+and XAW8_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (xproto x11 xext xextproto xt xmu xpm xp printproto xau) were not met:
+
+$XAW8_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XAW8_CFLAGS and XAW8_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables XAW8_CFLAGS
+and XAW8_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XAW8_CFLAGS and XAW8_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XAW8_CFLAGS
+and XAW8_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -19098,9 +19204,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XAW8_CFLAGS and XAW8_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XAW8_CFLAGS
+and XAW8_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
