@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2007/03/30 03:55:28 todd Exp $
 
 # Various list maintenance functions
 
@@ -13,13 +13,13 @@ all: sort
 
 sort:
 	@for f in */m*; do echo "===> sorting $$f"; \
-		sort $$f | uniq > $$f.tmp; \
+		sed 's/[ ]*$$//' $$f | sort | uniq > $$f.tmp; \
 		diff -u $$f $$f.tmp || true; \
 		cat $$f.tmp > $$f && rm $$f.tmp; \
-	done;
+	done
 
-archs  = alpha amd64 cats hp300 hppa i386 mac68k macppc \
-	mvme68k mvme88k sparc sparc64 vax
+basefiles!= cd xbase;echo md.*
+archs  = ${basefiles:S/md\.//}
 
 mdtomi:
 	@echo "Checking for common md file lines for migration to mi files:"
