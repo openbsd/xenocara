@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.5 2007/03/27 19:49:43 matthieu Exp $
+# $OpenBSD: Makefile,v 1.6 2007/03/30 17:24:12 aanriot Exp $
 
 .include "../Makefile.inc"
 
@@ -12,17 +12,17 @@ all:
 		${.CURDIR}/system.fvwmrc > .fvwmrc
 
 install:
-	${INSTALL} ${INSTALL_COPY} .fvwmrc \
+	${INSTALL_DATA} .fvwmrc \
 		${DESTDIR}${FVWMLIBDIR}/.fvwmrc
-	${INSTALL} ${INSTALL_COPY} ${.CURDIR}/system.fvwm2rc \
+	${INSTALL_DATA} ${.CURDIR}/system.fvwm2rc \
 		${DESTDIR}${FVWMLIBDIR}
-	${INSTALL} ${INSTALL_COPY} ${.CURDIR}/decor_examples \
+	${INSTALL_DATA} ${.CURDIR}/decor_examples \
 		${DESTDIR}${FVWMLIBDIR}
-	${INSTALL} ${INSTALL_COPY} ${.CURDIR}/new-features \
+	${INSTALL_DATA} ${.CURDIR}/new-features \
 		${DESTDIR}${FVWMLIBDIR}
-	${INSTALL} ${INSTALL_COPY} ${.CURDIR}/system.fvwm2rc-sample-1 \
+	${INSTALL_DATA} ${.CURDIR}/system.fvwm2rc-sample-1 \
 		${DESTDIR}${FVWMLIBDIR}
-	${INSTALL} ${INSTALL_COPY} ${.CURDIR}/system.fvwm2rc-sample-2 \
+	${INSTALL_DATA} ${.CURDIR}/system.fvwm2rc-sample-2 \
 		${DESTDIR}${FVWMLIBDIR}
 
 clean:

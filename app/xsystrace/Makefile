@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.6 2006/12/02 16:28:48 matthieu Exp $
+# $OpenBSD: Makefile,v 1.7 2007/03/30 17:24:13 aanriot Exp $
 
 PROG=	xsystrace
 MAN=	xsystrace.1
@@ -13,7 +13,7 @@ LDADD+=		-L${X11BASE}/lib -lXaw -lXt -lXmu -lX11 -lXext
 SRCS=		main.c interface.c callbacks.c policy.c
 
 afterinstall:
-	${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} \
+	${INSTALL_DATA} \
 		${.CURDIR}/Xsystrace.ad ${DESTDIR}/etc/X11/app-defaults/Xsystrace
 
 X11BASE?= /usr/X11R6

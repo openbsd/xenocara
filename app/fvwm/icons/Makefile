@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2006/12/09 15:31:01 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2007/03/30 17:24:12 aanriot Exp $
 
 .include "../Makefile.inc"
 
@@ -52,15 +52,15 @@ all:
 
 install:
 	@for f in ${BITMAPS}; do \
-		echo "${INSTALL} ${INSTALL_COPY} $$f \
+		echo "${INSTALL_DATA} $$f \
 			${DESTDIR}${INCSDIR}/X11/bitmaps" ; \
-		${INSTALL} ${INSTALL_COPY} ${.CURDIR}/$$f \
+		${INSTALL_DATA} ${.CURDIR}/$$f \
 			${DESTDIR}${INCSDIR}/X11/bitmaps ; \
 	done 
 	@for f in ${PIXMAPS}; do \
-		echo "${INSTALL} ${INSTALL_COPY} $$f \
+		echo "${INSTALL_DATA} $$f \
 			${DESTDIR}${INCSDIR}/X11/pixmaps" ; \
-		${INSTALL} ${INSTALL_COPY} ${.CURDIR}/$$f \
+		${INSTALL_DATA} ${.CURDIR}/$$f \
 			${DESTDIR}${INCSDIR}/X11/pixmaps ; \
 	done 
 

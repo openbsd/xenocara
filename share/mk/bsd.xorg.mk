@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.17 2007/03/30 07:11:06 espie Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.18 2007/03/30 17:24:12 aanriot Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -35,6 +35,9 @@ INCSDIR=		${X11BASE}/include
 MANDIR=			${X11BASE}/man/cat
 
 PKG_CONFIG_LIBDIR=	${X11BASE}/lib/pkgconfig
+
+# A few aliases for *-install targets
+INSTALL_DATA = ${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 644
 
 # Autoconf cache
 _cache= --cache-file=${XENOCARA_OBJDIR}/xorg-config.cache.${MACHINE}

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.5 2007/01/07 14:04:46 matthieu Exp $
+# $OpenBSD: Makefile,v 1.6 2007/03/30 17:24:13 aanriot Exp $
 
 .include	<bsd.own.mk>
 X11BASE?=	/usr/X11R6
@@ -30,7 +30,7 @@ $(CLASS).ad: $(APP_DEFAULTS)
 	ln -s $(.CURDIR)/$(APP_DEFAULTS) $(CLASS).ad
 
 afterinstall:
-	$(INSTALL) $(INSTALL_COPY)  -o $(BINOWN) -g $(BINGRP) $(CLASS).ad \
+	${INSTALL_DATA} $(CLASS).ad \
 		$(DESTDIR)/etc/X11/app-defaults/$(CLASS)
 
 beforedepend: $(CLASS)_ad.h
