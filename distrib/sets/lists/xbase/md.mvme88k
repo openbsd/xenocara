@@ -401,6 +401,9 @@
 ./usr/X11R6/lib/X11/xkb/types/numpad
 ./usr/X11R6/lib/X11/xkb/types/pc
 ./usr/X11R6/lib/X11/xkb/xkbcomp
+./usr/X11R6/lib/libXaw.so.11.0
+./usr/X11R6/lib/libXaw7.so.11.0
+./usr/X11R6/lib/libXfontcache.so.4.0
 ./usr/X11R6/lib/libXxf86dga.a
 ./usr/X11R6/man/cat1/XDarwin.0
 ./usr/X11R6/man/cat1/bdftruncate.0

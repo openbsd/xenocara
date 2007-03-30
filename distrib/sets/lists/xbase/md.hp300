@@ -583,6 +583,7 @@
 ./usr/X11R6/lib/libXaw.so.11.0
 ./usr/X11R6/lib/libXaw6.so.9.0
 ./usr/X11R6/lib/libXaw7.so.10.0
+./usr/X11R6/lib/libXaw7.so.11.0
 ./usr/X11R6/lib/libXcomposite.so.2.0
 ./usr/X11R6/lib/libXcursor.so.3.0
 ./usr/X11R6/lib/libXdamage.so.2.0
@@ -591,6 +592,7 @@
 ./usr/X11R6/lib/libXext.so.9.0
 ./usr/X11R6/lib/libXfixes.so.4.0
 ./usr/X11R6/lib/libXfont.so.4.0
+./usr/X11R6/lib/libXfontcache.so.4.0
 ./usr/X11R6/lib/libXft.so.6.0
 ./usr/X11R6/lib/libXft1.so.4.0
 ./usr/X11R6/lib/libXi.so.9.0
