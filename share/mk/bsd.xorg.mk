@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.16 2007/03/28 19:38:57 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.17 2007/03/30 07:11:06 espie Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -71,6 +71,7 @@ all:	config.status
 
 
 REORDER_DEPENDENCIES += ${X11BASE}/share/mk/automake.dep
+ECHO_REORDER ?= :
 
 .if !target(config.status)
 config.status:
@@ -83,11 +84,11 @@ config.status:
 		case $$f in \
 		/*) \
 			find . -name $${f#/} -print| while read i; \
-				do echo "Touching $$i"; touch $$i; done \
+				do ${ECHO_REORDER} "Touching $$i"; touch $$i; done \
 			;; \
 		*) \
 			if test -e $$f ; then \
-				echo "Touching $$f"; touch $$f; \
+				${ECHO_REORDER} "Touching $$f"; touch $$f; \
 			fi \
 			;; \
 		esac; done
