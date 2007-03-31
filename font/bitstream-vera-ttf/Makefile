@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2006/11/26 18:03:16 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2007/03/31 16:41:11 matthieu Exp $
 
 FONT_FILES= \
 	Vera.ttf \
@@ -24,8 +24,8 @@ cleandir:
 
 install:
 	@for f in ${FONT_FILES}; do \
-		echo "${INSTALL} -c ${.CURDIR}/$$f ${DESTDIR}${fontdir}" ; \
-		${INSTALL} -c ${.CURDIR}/$$f ${DESTDIR}${fontdir} ; \
+		echo "${INSTALL_DATA} -c ${.CURDIR}/$$f ${DESTDIR}${fontdir}" ; \
+		${INSTALL_DATA} -c ${.CURDIR}/$$f ${DESTDIR}${fontdir} ; \
 	done
 	@rm -f ${DESTDIR}${fontdir}/fonts.scale
 	mkfontscale ${DESTDIR}${fontdir}
