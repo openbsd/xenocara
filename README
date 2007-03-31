@@ -79,6 +79,10 @@ GNU autotools packages installed:
     - metaauto 0.6 (or later) (devel/metaauto)
     - libtool 1.5.22 (or later) (devel/libtool)
 
+  Path
+
+To build Xenocara, you need to have /usr/X11R6/bin in your PATH. 
+
   Sudo
 
 If the SUDO variable points to your sudo(8) binary in /etc/mk.conf,
@@ -90,12 +94,18 @@ If you have installed the full Xenocara X sets on your system, you
 don't need to build all of Xenocara to patch one element. You can go
 to any module sub-directory and run 'make build' from there. 
 
+  Source directory
+
+The variable XSRCDIR can be set either in the environment or in
+/etc/mk.cof to point to the xenocara source tree, in case you keep it
+in a non-standard directory (the default is /usr/xenocara).
+
   Objdirs
 
 Xenocara supports objdirs (and it's even the recommended way to build
 things). Just run 'make obj' at any level before 'make build' to make
 sure that the object directories are created. 
-XENOCARA_OBJDIR defines the default obj directory that is used.
+XOBJDIR defines the default obj directory that is used.
 
   Shadow trees 
 
@@ -115,4 +125,4 @@ makefiles skeletons. For that use the following command:
 You can also set XENOCARA_RERUN_AUTOCONF in /etc/mk.conf to force
 regeneration of configure scripts in every component.
 
-$OpenBSD: README,v 1.7 2007/01/04 20:56:55 matthieu Exp $
+$OpenBSD: README,v 1.8 2007/03/31 20:25:53 matthieu Exp $

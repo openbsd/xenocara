@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.10 2007/03/28 20:44:34 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.11 2007/03/31 20:25:53 matthieu Exp $
 
 DIST= ${.CURDIR}
 
@@ -15,7 +15,7 @@ CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--with-xkb-path=/etc/X11/xkb \
 		--with-xkb-output=/var/db/xkb \
 		--with-module-dir=${LIBDIR}/modules \
-		--with-mesa-source=${XENOCARA_TOP}/dist/Mesa \
+		--with-mesa-source=${XSRCDIR}/dist/Mesa \
 		--enable-install-setuid --enable-privsep \
 		--disable-dmx ${NO_XORG_OPTION}
 

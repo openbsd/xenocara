@@ -1,10 +1,10 @@
-# $OpenBSD: Makefile,v 1.19 2007/03/28 19:41:15 matthieu Exp $
+# $OpenBSD: Makefile,v 1.20 2007/03/31 20:25:53 matthieu Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
 LOCALAPPX=/usr/local/lib/X11
 REALAPPD=/etc/X11/app-defaults
-XCONFIG=${XENOCARA_TOP}/etc/X11.${MACHINE}/xorg.conf
+XCONFIG=${XSRCDIR}/etc/X11.${MACHINE}/xorg.conf
 RM?=rm
 
 SUBDIR= proto data/bitmaps lib app data/xkbdata xserver driver util doc

@@ -1,7 +1,7 @@
 # $Xenocara$
 .include <bsd.own.mk>
 X11BASE?=	/usr/X11R6
-DIST=		${XENOCARA_TOP}/dist/Mesa
+DIST=		${XSRCDIR}/dist/Mesa
 GLXGEARS=	${DIST}/progs/xdemos
 MANDIR=		${X11BASE}/man/cat
 

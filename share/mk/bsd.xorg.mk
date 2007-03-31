@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.18 2007/03/30 17:24:12 aanriot Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.19 2007/03/31 20:25:53 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -23,10 +23,10 @@ AUTOMAKE_VERSION=	1.9
 AUTOCONF_VERSION=	2.59
 
 # Where source lives
-XENOCARA_TOP?=		/usr/xenocara
+XSRCDIR?=		/usr/src/xenocara
 
 # Where to build
-XENOCARA_OBJDIR?=	/usr/obj/xenocara
+XOBJDIR?=	/usr/xobj
 
 # Where to install
 BINDIR?=		${X11BASE}/bin
@@ -40,7 +40,7 @@ PKG_CONFIG_LIBDIR=	${X11BASE}/lib/pkgconfig
 INSTALL_DATA = ${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 644
 
 # Autoconf cache
-_cache= --cache-file=${XENOCARA_OBJDIR}/xorg-config.cache.${MACHINE}
+_cache= --cache-file=${XOBJDIR}/xorg-config.cache.${MACHINE}
 
 CFLAGS+=	$(COPTS)
 
@@ -160,11 +160,11 @@ __objdir=	obj.$(MACHINE)
 __objdir=	obj
 . endif
 
-. if defined(XENOCARA_OBJMACHINE)
-__xobjdir=	$(XENOCARA_OBJDIR).$(MACHINE)
+. if defined(XOBJMACHINE)
+__xobjdir=	$(XOBJDIR).$(MACHINE)
 __xobjdirpf=
 . else
-__xobjdir=	$(XENOCARA_OBJDIR)
+__xobjdir=	$(XOBJDIR)
 .  if defined(OBJMACHINE)
 __xobjdirpf=	.$(MACHINE)
 .  else
@@ -176,8 +176,8 @@ _SUBDIRUSE:
 
 _xenocara_obj! _SUBDIRUSE
 	@cd $(.CURDIR); \
-	here=`/bin/pwd`; xenocara_top=`cd $(XENOCARA_TOP); /bin/pwd`; \
-	subdir=$${here#$${xenocara_top}/}; \
+	here=`/bin/pwd`; xsrcdir=`cd $(XSRCDIR); /bin/pwd`; \
+	subdir=$${here#$${xsrcdir}/}; \
 	if test $$here != $$subdir ; then \
 	    dest=${__xobjdir}/$$subdir${__xobjdirpf}; \
 	    echo "$$here/${__objdir} -> $$dest"; \
