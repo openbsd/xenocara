@@ -98,7 +98,7 @@ to any module sub-directory and run 'make build' from there.
 
 The variable XSRCDIR can be set either in the environment or in
 /etc/mk.conf to point to the xenocara source tree, in case you keep it
-in a non-standard directory (the default is /usr/xenocara).
+in a non-standard directory (the default is /usr/src/xenocara).
 
   Objdirs
 
@@ -125,4 +125,4 @@ makefiles skeletons. For that use the following command:
 You can also set XENOCARA_RERUN_AUTOCONF in /etc/mk.conf to force
 regeneration of configure scripts in every component.
 
-$OpenBSD: README,v 1.9 2007/04/01 19:04:58 matthieu Exp $
+$OpenBSD: README,v 1.10 2007/04/01 21:24:57 matthieu Exp $
