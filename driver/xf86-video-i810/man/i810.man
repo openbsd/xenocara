@@ -1,0 +1,214 @@
+.\" $XFree86: xc/programs/Xserver/hw/xfree86/drivers/i810/i810.man,v 1.5 2003/10/18 02:27:07 dawes Exp $ 
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH I810 __drivermansuffix__ __vendorversion__
+.SH NAME
+i810 \- Intel 8xx integrated graphics chipsets
+.SH SYNOPSIS
+.nf
+.B "Section \*qDevice\*q"
+.BI "  Identifier \*q"  devname \*q
+.B  "  Driver \*qi810\*q"
+\ \ ...
+.B EndSection
+.fi
+.SH DESCRIPTION
+.B i810
+is an __xservername__ driver for Intel integrated graphics chipsets.
+The driver supports depths 8, 15, 16 and 24.  All visual types are
+supported in depth 8.  For the i810/i815 other depths support the
+TrueColor and DirectColor visuals.  For the 830M and later, only the
+TrueColor visual is supported for depths greater than 8.  The driver
+supports hardware accelerated 3D via the Direct Rendering Infrastructure
+(DRI), but only in depth 16 for the i810/i815 and depths 16 and 24 for
+the 830M and later.
+.SH SUPPORTED HARDWARE
+.B i810
+supports the i810, i810-DC100, i810e, i815, 830M, 845G, 852GM, 855GM,
+865G, 915G and 915GM chipsets.
+
+.SH CONFIGURATION DETAILS
+Please refer to __xconfigfile__(__filemansuffix__) for general configuration
+details.  This section only covers configuration details specific to this
+driver.
+.PP
+The Intel 8xx family of integrated graphics chipsets has a unified memory
+architecture and uses system memory for video ram.  For the i810 and
+i815 family of chipset, operating system support for allocating system
+memory for video use is required in order to use this driver.  For the
+830M and later, this is required in order for the driver to use more
+video ram than has been pre-allocated at boot time by the BIOS.  This
+is usually achieved with an "agpgart" or "agp" kernel driver.  Linux,
+and recent versions of FreeBSD, OpenBSD and NetBSD have such kernel
+drivers available.
+.PP
+By default 8 Megabytes
+of system memory are used for graphics.  For the 830M and later, the
+default is 8 Megabytes when DRI is not enabled and 32 Megabytes with
+DRI is enabled.  This amount may be changed with the
+.B VideoRam
+entry in the config file
+.B "Device"
+section.  It may be set to any reasonable value up to 64MB for older
+chipsets or 128MB for newer chipets.  It is advisable to check the
+__xservername__
+log file to check if any features have been disabled because of insufficient
+video memory.  In particular, DRI support or tiling mode may be disabled
+with insufficient video memory.  Either of these being disabled will
+reduce performance for 3D applications.  Note however, that increasing
+this value too much will reduce the amount of system memory available
+for other applications.
+.PP
+The driver makes use of the video BIOS to program video modes for the 830M
+and later.  This limits the video modes that can be used to those provided
+by the video BIOS, and to those that will fit into the amount of video memory
+that the video BIOS is aware of.
+.PP
+The following driver
+.B Options
+are supported
+.TP
+.BI "Option \*qNoAccel\*q \*q" boolean \*q
+Disable or enable acceleration.  Default: acceleration is enabled.
+.TP
+.BI "Option \*qSWCursor\*q \*q" boolean \*q
+Disable or enable software cursor.  Default: software cursor is disable
+and a hardware cursor is used for configurations where the hardware cursor
+is available.
+.TP
+.BI "Option \*qColorKey\*q \*q" integer \*q
+This sets the default pixel value for the YUV video overlay key.
+Default: undefined.
+.TP
+.BI "Option \*qCacheLines\*q \*q" integer \*q
+This allows the user to change the amount of graphics memory used for
+2D acceleration and video.  Decreasing this amount leaves more for 3D
+textures.  Increasing it can improve 2D performance at the expense of
+3D performance.
+Default: depends on the resolution, depth, and available video memory.  The
+driver attempts to allocate at least enough to hold two DVD-sized YUV buffers
+by default.  The default used for a specific configuration can be found
+by examining the __xservername__ log file.
+.TP
+.BI "Option \*qDRI\*q \*q" boolean \*q
+Disable or enable DRI support.
+Default: DRI is enabled for configurations where it is supported.
+
+.PP
+The following driver
+.B Options
+are supported for the i810 and i815 chipsets:
+.TP
+.BI "Option \*qDDC\*q \*q" boolean \*q
+Disable or enable DDC support.
+Default: enabled.
+.TP
+.BI "Option \*qDac6Bit\*q \*q" boolean \*q
+Enable or disable 6-bits per RGB for 8-bit modes.
+Default: 8-bits per RGB for 8-bit modes.
+.TP
+.BI "Option \*qXvMCSurfaces\*q \*q" integer \*q
+This option enables XvMC.  The integer parameter specifies the number of
+surfaces to use.  Valid values are 6 and 7.
+Default: XvMC is disabled.
+
+.PP
+The following driver
+.B Options
+are supported for the 830M and later chipsets:
+.TP
+.BI "Option \*qVBERestore\*q \*q" boolean \*q
+Enable or disable the use of VBE save/restore for saving and restoring
+the initial text mode.  This is disabled by default because it causes
+lockups on some platforms.  However, there are some cases where it must
+enabled for the correct restoration of the initial video mode.  If you are
+having a problem with that, try enabling this option.  Default: Disabled.
+.TP
+.BI "Option \*qVideoKey\*q \*q" integer \*q
+This is the same as the
+.B \*qColorKey\*q
+option described above.  It is provided for compatibility with most
+other drivers.
+.TP
+.BI "Option \*qXVideo\*q \*q" boolean \*q
+Disable or enable XVideo support.
+Default: XVideo is enabled for configurations where it is supported.
+.TP
+.BI "Option \*qMonitorLayout\*q \*q" anystr \*q
+Allow different monitor configurations. e.g. \*qCRT,LFP\*q will 
+configure a CRT on Pipe A and an LFP on Pipe B. Regardless of the 
+primary heads' pipe it is always configured as \*q<PIPEA>,<PIPEB>\*q. 
+Additionally you can add different configurations such as 
+\*qCRT+DFP,LFP\*q which would put a digital flat panel and a CRT 
+on pipe A, and a local flat panel on pipe B.
+For single pipe configurations you can just specify the monitors types
+on Pipe A, such as \*qCRT+DFP\*q which will enable the CRT and DFP
+on Pipe A.
+Valid monitors are CRT, LFP, DFP, TV, CRT2, LFP2, DFP2, TV2 and NONE.
+NOTE: Some configurations of monitor types may fail, this depends on
+the Video BIOS and system configuration.
+Default: Not configured, and will use the current head's pipe and monitor.
+.TP
+.BI "Option \*qClone\*q \*q" boolean \*q
+Enable Clone mode on pipe B. This will setup the second head as a complete
+mirror of the monitor attached to pipe A. 
+NOTE: Video overlay functions will not work on the second head in this mode.
+If you require this, then use the MonitorLayout above and do (as an example)
+\*qCRT+DFP,NONE\*q to configure both a CRT and DFP on Pipe A to achieve
+local mirroring and disable the use of this option.
+Default: Clone mode on pipe B is disabled.
+.TP
+.BI "Option \*qCloneRefresh\*q \*q" integer \*q
+When the Clone option is specified we can drive the second monitor at a
+different refresh rate than the primary. 
+Default: 60Hz.
+.TP
+.BI "Option \*qCheckLid\*q \*q" boolean \*q
+On mobile platforms it's desirable to monitor the lid status and switch
+the outputs accordingly when the lid is opened or closed. By default this
+option is on, but may incur a very minor performance penalty as we need
+to poll a register on the card to check for this activity. It can be
+turned off using this option. This only works with the 830M, 852GM and 855GM
+systems.
+Default: enabled.
+.TP
+.BI "Option \*qFlipPrimary\*q \*q" boolean \*q
+When using a dual pipe system, it may be preferable to switch the primary
+screen to the alternate pipe to display on the other monitor connection.
+NOTE: Using this option may cause text mode to be restored incorrectly,
+and thus should be used with caution.
+Default: disabled.
+.TP
+.BI "Option \*qDisplayInfo\*q \*q" boolean \*q
+It has been found that a certain BIOS call can lockup the Xserver because
+of a problem in the Video BIOS. The log file will identify if you are
+suffering from this problem and tell you to turn this option off.
+Default: enabled
+.TP
+.BI "Option \*qDevicePresence\*q \*q" boolean \*q
+Tell the driver to perform an active detect of the currently connected
+monitors. This option is useful if the monitor was not connected when
+the machine has booted, but unfortunately it doesn't always work and
+is extremely dependent upon the Video BIOS.
+Default: disabled
+.TP
+.BI "Option \*qRotate\*q \*qCW\*q"
+.TP
+.BI "Option \*qRotate\*q \*qCCW\*q"
+Rotate the desktop 90 degrees clockwise or counterclockwise.  This option 
+forces the ShadowFB option on, and disables acceleration.
+Default: no rotation.
+.TP
+.BI "Option \*qShadowFB\*q \*q" boolean \*q
+Enable or disable use of the shadow framebuffer layer.  This option
+disables acceleration.  Default: off.
+
+.SH "SEE ALSO"
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+.SH AUTHORS
+Authors include: Keith Whitwell, and also Jonathan Bian, Matthew J Sottek, 
+Jeff Hartmann, Mark Vojkovich, Alan Hourihane, H. J. Lu.  830M and 845G
+support reworked for XFree86 4.3 by David Dawes and Keith Whitwell.
+852GM, 855GM, and 865G support added by David Dawes and Keith Whitwell.
+915G and 915GM support added by Alan Hourihane and Keith Whitwell.
+Dual Head, Clone and lid status support added by Alan Hourihane.
