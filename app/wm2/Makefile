@@ -1,4 +1,4 @@
-# $Xenocara$
+# $OpenBSD: Makefile,v 1.3 2007/04/04 22:33:46 david Exp $
 .include <bsd.own.mk>
 X11BASE?= /usr/X11R6
 

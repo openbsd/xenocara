@@ -1,4 +1,4 @@
-# $Xenocara$
+# $OpenBSD: Makefile,v 1.7 2007/04/04 22:33:46 david Exp $
 
 all: ${OBJS}
 LIB=	GL

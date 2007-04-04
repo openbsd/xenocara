@@ -1,4 +1,4 @@
-# $Xenocara: Makefile,v 1.6 2006/04/17 13:37:46 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2007/04/04 22:33:46 david Exp $
 
 SUBDIR= freetype expat fontconfig libxtrans libXau libXdmcp \
 	libX11  libXext  libXrender libXft libdmx libfontenc \

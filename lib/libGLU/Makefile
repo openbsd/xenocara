@@ -1,4 +1,4 @@
-# $Xenocara$
+# $OpenBSD: Makefile,v 1.5 2007/04/04 22:33:46 david Exp $
 
 .include <bsd.own.mk>
 USE_GCC3?=No

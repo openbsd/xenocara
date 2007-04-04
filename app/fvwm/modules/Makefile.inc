@@ -1,5 +1,5 @@
 # -*- makefile -*- 
-# $Xenocara: Makefile.inc,v 1.2 2006/04/17 20:16:24 matthieu Exp $
+# $OpenBSD: Makefile.inc,v 1.4 2007/04/04 22:33:46 david Exp $
 
 .ifndef FVWM_MAKEFILE_INC
 FVWM_MAKEFILE_INC = done
