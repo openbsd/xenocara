@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2007/03/28 20:05:15 todd Exp $
+# $OpenBSD: Makefile,v 1.4 2007/04/04 15:24:27 aanriot Exp $
 
 FILE= README.${MACHINE}
 
@@ -25,6 +25,8 @@ install: ${FILE}.generated
 
 clean:
 	rm -f *.generated
+
+distclean: clean
 
 includes:
 	@echo No includes here.
