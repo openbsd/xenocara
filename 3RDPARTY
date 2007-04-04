@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.9 2007/03/03 12:02:10 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.10 2007/04/04 22:27:22 david Exp $
 #
 
 Package: 	Freetype 
@@ -34,7 +34,7 @@ Archive Site:	http://www.fontconfig.org/
 Package:	Bitstream Vera Fonts
 Version:	1.10
 Current Vers:	1.10
-Maintainer:	The Gnome Fundation
+Maintainer:	The Gnome Foundation
 Archive Site:	http://ftp.gnome.org/pub/GNOME/sources/ttf-bitstream-vera/
 
 Package:	xlockmore
