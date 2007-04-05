@@ -77,8 +77,7 @@ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_xdriinfo_OBJECTS = xdriinfo-xdriinfo.$(OBJEXT)
 xdriinfo_OBJECTS = $(am_xdriinfo_OBJECTS)
-am__DEPENDENCIES_1 =
-xdriinfo_DEPENDENCIES = $(am__DEPENDENCIES_1)
+xdriinfo_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -206,8 +205,6 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 xdriinfo_CFLAGS = $(XDRIINFO_CFLAGS)
-# mesa should really use pkg-config ...
-xdriinfo_LDADD = $(XDRIINFO_LIBS)
 xdriinfo_SOURCES = \
         xdriinfo.c
 
