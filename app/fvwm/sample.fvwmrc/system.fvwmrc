@@ -284,10 +284,10 @@ Key Up		A	C	Scroll +0   -100
 Key Down	A	C	Scroll +0   +100 
  
 # press arrow + meta key, and scroll by 1/10 of a page 
-Key Left	A	M	Scroll -10 +0 
-Key Right	A	M	Scroll +10 +0 
-Key Up		A	M	Scroll +0   -10 
-Key Down	A	M	Scroll +0   +10 
+#Key Left	A	M	Scroll -10 +0 
+#Key Right	A	M	Scroll +10 +0 
+#Key Up		A	M	Scroll +0   -10 
+#Key Down	A	M	Scroll +0   +10 
  
 # press shift arrow + control anywhere, and move the pointer by 1% of a page 
 Key Left	A	SC	CursorMove -1 0 
