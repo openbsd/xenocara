@@ -46,6 +46,7 @@ AC_SEARCH_LIBS([glXGetProcAddressARB], [GL], [],
 	AC_MSG_FAILURE([cannot find GL library - make sure Mesa or other OpenGL package is installed]),
 	[$XDRIINFO_LIBS])
 
+LIBS="$LIBS $XDRIINFO_LIBS"
 
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
