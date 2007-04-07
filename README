@@ -119,11 +119,13 @@ o Regenerating configure scripts
 
 Whenever you touched an import file for GNU autotools (Makefile.am,
 configure.ac mostly), you need to rebuild the configure script and
-makefiles skeletons. For that use the following command:
+makefiles skeletons. For that use the following command in the 
+directory where you edited the autotools source files:
 
  env XENOCARA_RERUN_AUTOCONF=Yes make -f Makefile.bsd-wrapper build
 
-You can also set XENOCARA_RERUN_AUTOCONF in /etc/mk.conf to force
-regeneration of configure scripts in every component.
+You can also set XENOCARA_RERUN_AUTOCONF in /etc/mk.conf or in the 
+environment to force the regeneration of configure scripts 
+in every component during a make build.
 
-$OpenBSD: README,v 1.13 2007/04/07 13:18:40 matthieu Exp $
+$OpenBSD: README,v 1.14 2007/04/07 13:21:12 matthieu Exp $
