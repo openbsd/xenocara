@@ -1,9 +1,10 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2007/02/04 21:07:34 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2007/04/07 15:45:13 matthieu Exp $
 
 config.status:
 	AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 	AUTOCONF_VERSION="$(AUTOCONF_VERSION)" \
 	ACLOCAL="aclocal -I ${X11BASE}/share/aclocal" \
+	CFLAGS="${CFLAGS}" \
 	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" \
 		sh ${.CURDIR}/configure --prefix=${X11BASE} \
 		--enable-appdefaultdir=/etc/X11/app-defaults \
