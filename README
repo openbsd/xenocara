@@ -105,7 +105,8 @@ in a non-standard directory (the default is /usr/src/xenocara).
 Xenocara supports objdirs (and it's even the recommended way to build
 things). Just run 'make obj' at any level before 'make build' to make
 sure that the object directories are created. 
-XOBJDIR defines the default obj directory that is used.
+XOBJDIR defines the obj directory that is used (defaults to /usr/xobj). 
+It should be created before running 'make obj'.
 
   Shadow trees 
 
@@ -125,4 +126,4 @@ makefiles skeletons. For that use the following command:
 You can also set XENOCARA_RERUN_AUTOCONF in /etc/mk.conf to force
 regeneration of configure scripts in every component.
 
-$OpenBSD: README,v 1.12 2007/04/07 11:02:37 jsg Exp $
+$OpenBSD: README,v 1.13 2007/04/07 13:18:40 matthieu Exp $
