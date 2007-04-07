@@ -133,7 +133,7 @@ o Cleaning in packages managed by autotools
 
 One common problem when building xenocara is the case where the obj
 directory didn't exist (or the symbolic link pointed to a non-existent
-directort) when the source was first build. After fixing this problem, 
+directory) when the source was first built. After fixing this problem, 
 'configure' will refuse to work in the obj dir, because the source 
 is already configured. 
 
@@ -153,10 +153,10 @@ or from the root of the xenocara tree:
  make obj
  make build
 
-for more desesperate cases, remove all files from XSRCDIR not in CVS:
+for more desperate cases, remove all files from XSRCDIR not in CVS:
 
  cd XSRCDIR
  cvs -q update -PAd -I - | awk '$1=="?" {print $2}' | xargs rm -f
 
 -- 
-$OpenBSD: README,v 1.15 2007/04/07 13:35:06 matthieu Exp $
+$OpenBSD: README,v 1.16 2007/04/07 16:07:41 matthieu Exp $
