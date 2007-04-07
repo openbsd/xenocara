@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.10 2007/03/26 12:15:47 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.11 2007/04/07 17:58:02 matthieu Exp $
 
 PIXMAPDIR=/etc/X11/xdm/pixmaps
 
@@ -10,6 +10,7 @@ DEFAULT_VT=  --with-default-vt=vt02
 .endif
 
 CONFIGURE_ARGS= --enable-privsep \
+	--enable-bsdauth \
 	$(DEFAULT_VT) \
 	--disable-dynamic-greeter \
 	--with-xdmlibdir=/etc/X11/xdm \

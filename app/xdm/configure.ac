@@ -193,6 +193,16 @@ if test x$ENABLE_PRIVSEP = xyes ; then
 	AC_DEFINE(X_PRIVSEP, 1, [Use X server privilege separation])
 fi
 
+#
+# BSD auth
+AC_ARG_ENABLE(bsdauth,
+	AC_HELP_STRING([--enable-bsdauth],
+	 [Build support for BSD authentification (default is NO)]),
+	[ENABLE_BSDAUTH="$enableval"], [ENABLE_BSDAUTH="no"])
+if test x$ENABLE_BSDAUTH = xyes ; then
+	AC_DEFINE(USE_BSDAUTH, 1, [Use BSD authentification])
+fi
+
 # Figure out where everything goes in the filesystem
 
 AC_ARG_WITH(xdmlibdir,
