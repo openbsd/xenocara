@@ -1,7 +1,8 @@
-# $OpenBSD: Makefile,v 1.5 2007/04/04 22:33:46 david Exp $
+# $OpenBSD: Makefile,v 1.6 2007/04/07 15:37:50 matthieu Exp $
 
 .include <bsd.own.mk>
 USE_GCC3?=No
+DEBUG?=
 
 LIB=	GLU
 

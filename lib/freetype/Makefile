@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2006/12/23 10:42:41 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.7 2007/04/07 15:37:50 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
@@ -7,6 +7,8 @@ FT_VERSION_INFO= 9.10.3 # Get it from builds/unix/configure.ac
 .ifmake includes
 SUBDIR=	include
 .endif
+
+DEBUG?=
 
 LIB=	freetype
 

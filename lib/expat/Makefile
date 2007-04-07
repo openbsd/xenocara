@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile,v 1.4 2006/12/02 16:28:48 matthieu Exp $
-# $OpenBSD: Makefile,v 1.4 2006/12/02 16:28:48 matthieu Exp $
+# $OpenBSD: Makefile,v 1.5 2007/04/07 15:37:50 matthieu Exp $
+# $OpenBSD: Makefile,v 1.5 2007/04/07 15:37:50 matthieu Exp $
 .include <bsd.own.mk>
 
 DIST= ${.CURDIR}
@@ -8,6 +8,7 @@ LIB=		expat
 SRCS=		xmlparse.c xmltok.c xmlrole.c
 CFLAGS+=	-I${.CURDIR}
 CPPFLAGS+=	-DHAVE_EXPAT_CONFIG_H
+DEBUG?=
 
 test:
 	@echo "dist $(DIST)/lib"

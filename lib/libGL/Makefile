@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.7 2007/04/04 22:33:46 david Exp $
+# $OpenBSD: Makefile,v 1.8 2007/04/07 15:37:50 matthieu Exp $
 
 all: ${OBJS}
 LIB=	GL
@@ -12,7 +12,7 @@ INCSDIR=	${X11BASE}/include/GL
 LDADD=		-L${X11BASE}/lib -lXext -lX11
 
 CPP=	cpp -notraditional
-DEBUG=	
+DEBUG?=
 
 CPPFLAGS+= \
 	-I. \

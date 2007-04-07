@@ -1,7 +1,9 @@
-# $OpenBSD: Makefile,v 1.4 2006/12/02 16:28:48 matthieu Exp $
+# $OpenBSD: Makefile,v 1.5 2007/04/07 15:37:50 matthieu Exp $
 
 DIST=	${.CURDIR}/../../dist/Mesa
 GLW=	${DIST}/src/glw
+
+DEBUG?=
 
 LIB= GLw
 
