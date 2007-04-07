@@ -128,4 +128,35 @@ You can also set XENOCARA_RERUN_AUTOCONF in /etc/mk.conf or in the
 environment to force the regeneration of configure scripts 
 in every component during a make build.
 
-$OpenBSD: README,v 1.14 2007/04/07 13:21:12 matthieu Exp $
+o Cleaning in packages managed by autotools
+  -----------------------------------------
+
+One common problem when building xenocara is the case where the obj
+directory didn't exist (or the symbolic link pointed to a non-existent
+directort) when the source was first build. After fixing this problem, 
+'configure' will refuse to work in the obj dir, because the source 
+is already configured. 
+
+To recover from this in one package:
+
+ rm -f obj
+ make -f Makefile.bsd-wrapper cleandir
+ mkdir XOBJDIR
+ make -f Makefile.bsd-wrapper obj
+ make -f Makefile.bsd-wrapper build
+
+or from the root of the xenocara tree:
+
+ find . -type l -name obj | xargs rm -f 
+ make cleandir
+ mkdir XOBJDIR
+ make obj
+ make build
+
+for more desesperate cases, remove all files from XSRCDIR not in CVS:
+
+ cd XSRCDIR
+ cvs -q update -PAd -I - | awk '$1=="?" {print $2}' | xargs rm -f
+
+-- 
+$OpenBSD: README,v 1.15 2007/04/07 13:35:06 matthieu Exp $
