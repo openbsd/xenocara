@@ -322,6 +322,11 @@ extern int I810_DEBUG;
 #define PCI_CHIP_I945_G_BRIDGE 0x2770
 #endif
 
+#ifndef PCI_CHIP_I945_GM
+#define PCI_CHIP_I945_GM        0x27A2
+#define PCI_CHIP_I945_GM_BRIDGE 0x27A0
+#endif
+
 #define IS_I810(pI810) (pI810->PciInfo->chipType == PCI_CHIP_I810 ||	\
 			pI810->PciInfo->chipType == PCI_CHIP_I810_DC100 || \
 			pI810->PciInfo->chipType == PCI_CHIP_I810_E)
@@ -332,11 +337,14 @@ extern int I810_DEBUG;
 #define IS_I852(pI810)  (pI810->PciInfo->chipType == PCI_CHIP_I855_GM && (pI810->variant == I852_GM || pI810->variant == I852_GME))
 #define IS_I855(pI810)  (pI810->PciInfo->chipType == PCI_CHIP_I855_GM && (pI810->variant == I855_GM || pI810->variant == I855_GME))
 #define IS_I865G(pI810) (pI810->PciInfo->chipType == PCI_CHIP_I865_G)
+
 #define IS_I915G(pI810) (pI810->PciInfo->chipType == PCI_CHIP_I915_G || pI810->PciInfo->chipType == PCI_CHIP_E7221_G)
 #define IS_I915GM(pI810) (pI810->PciInfo->chipType == PCI_CHIP_I915_GM)
 #define IS_I945G(pI810) (pI810->PciInfo->chipType == PCI_CHIP_I945_G)
+#define IS_I945GM(pI810) (pI810->PciInfo->chipType == PCI_CHIP_I945_GM)
+#define IS_I9XX(pI810) (IS_I915G(pI810) || IS_I915GM(pI810) || IS_I945G(pI810) || IS_I945GM(pI810))
 
-#define IS_MOBILE(pI810) (IS_I830(pI810) || IS_I85X(pI810) || IS_I915GM(pI810))
+#define IS_MOBILE(pI810) (IS_I830(pI810) || IS_I85X(pI810) || IS_I915GM(pI810) || IS_I945GM(pI810))
 
 #define GTT_PAGE_SIZE			KB(4)
 #define ROUND_TO(x, y)			(((x) + (y) - 1) / (y) * (y))

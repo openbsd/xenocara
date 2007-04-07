@@ -196,6 +196,7 @@ static SymTabRec I830BIOSChipsets[] = {
    {PCI_CHIP_E7221_G,		"E7221 (i915)"},
    {PCI_CHIP_I915_GM,		"915GM"},
    {PCI_CHIP_I945_G,		"945G"},
+   {PCI_CHIP_I945_GM,		"945GM"},
    {-1,				NULL}
 };
 
@@ -208,6 +209,7 @@ static PciChipsets I830BIOSPciChipsets[] = {
    {PCI_CHIP_E7221_G,		PCI_CHIP_E7221_G,	RES_SHARED_VGA},
    {PCI_CHIP_I915_GM,		PCI_CHIP_I915_GM,	RES_SHARED_VGA},
    {PCI_CHIP_I945_G,		PCI_CHIP_I945_G,	RES_SHARED_VGA},
+   {PCI_CHIP_I945_GM,		PCI_CHIP_I945_GM,	RES_SHARED_VGA},
    {-1,				-1,			RES_UNDEFINED}
 };
 
@@ -1323,7 +1325,7 @@ I830DetectMemory(ScrnInfoPtr pScrn)
     * The GTT varying according the the FbMapSize and the popup is 4KB */
    range = (pI830->FbMapSize / (1024*1024)) + 4;
 
-   if (IS_I85X(pI830) || IS_I865G(pI830) || IS_I915G(pI830) || IS_I915GM(pI830) || IS_I945G(pI830)) {
+   if (IS_I85X(pI830) || IS_I865G(pI830) || IS_I9XX(pI830)) {
       switch (gmch_ctrl & I830_GMCH_GMS_MASK) {
       case I855_GMCH_GMS_STOLEN_1M:
 	 memsize = MB(1) - KB(range);
@@ -1341,11 +1343,11 @@ I830DetectMemory(ScrnInfoPtr pScrn)
 	 memsize = MB(32) - KB(range);
 	 break;
       case I915G_GMCH_GMS_STOLEN_48M:
-	 if (IS_I915G(pI830) || IS_I915GM(pI830) || IS_I945G(pI830))
+	 if (IS_I9XX(pI830))
 	    memsize = MB(48) - KB(range);
 	 break;
       case I915G_GMCH_GMS_STOLEN_64M:
-	 if (IS_I915G(pI830) || IS_I915GM(pI830) || IS_I945G(pI830))
+	 if (IS_I9XX(pI830))
 	    memsize = MB(64) - KB(range);
 	 break;
       }
@@ -2090,6 +2092,9 @@ I830BIOSPreInit(ScrnInfoPtr pScrn, int flags)
    case PCI_CHIP_I945_G:
       chipname = "945G";
       break;
+   case PCI_CHIP_I945_GM:
+      chipname = "945GM";
+      break;
    default:
       chipname = "unknown chipset";
       break;
@@ -2127,7 +2132,7 @@ I830BIOSPreInit(ScrnInfoPtr pScrn, int flags)
       pI830->LinearAddr = pI830->pEnt->device->MemBase;
       from = X_CONFIG;
    } else {
-      if (IS_I915G(pI830) || IS_I915GM(pI830) || IS_I945G(pI830)) {
+      if (IS_I9XX(pI830)) {
 	 pI830->LinearAddr = pI830->PciInfo->memBase[2] & 0xF0000000;
 	 from = X_PROBED;
       } else if (pI830->PciInfo->memBase[1] != 0) {
@@ -2149,7 +2154,7 @@ I830BIOSPreInit(ScrnInfoPtr pScrn, int flags)
       pI830->MMIOAddr = pI830->pEnt->device->IOBase;
       from = X_CONFIG;
    } else {
-      if (IS_I915G(pI830) || IS_I915GM(pI830) || IS_I945G(pI830)) {
+      if (IS_I9XX(pI830)) {
 	 pI830->MMIOAddr = pI830->PciInfo->memBase[0] & 0xFFF80000;
 	 from = X_PROBED;
       } else if (pI830->PciInfo->memBase[1]) {
@@ -2194,7 +2199,7 @@ I830BIOSPreInit(ScrnInfoPtr pScrn, int flags)
 	 pI830->FbMapSize = 0x4000000; /* 64MB - has this been tested ?? */
       }
    } else {
-      if (IS_I915G(pI830) || IS_I915GM(pI830) || IS_I945G(pI830)) {
+      if (IS_I9XX(pI830)) {
 	 if (pI830->PciInfo->memBase[2] & 0x08000000)
 	    pI830->FbMapSize = 0x8000000;	/* 128MB aperture */
 	 else
@@ -2227,7 +2232,7 @@ I830BIOSPreInit(ScrnInfoPtr pScrn, int flags)
    if (pI830->PciInfo->chipType == PCI_CHIP_E7221_G)
       pI830->availablePipes = 1;
    else
-   if (IS_MOBILE(pI830) || IS_I915G(pI830) || IS_I945G(pI830))
+   if (IS_MOBILE(pI830) || IS_I9XX(pI830))
       pI830->availablePipes = 2;
    else
       pI830->availablePipes = 1;
@@ -2872,7 +2877,7 @@ I830BIOSPreInit(ScrnInfoPtr pScrn, int flags)
    }
 
    /* Check if the HW cursor needs physical address. */
-   if (IS_MOBILE(pI830) || IS_I915G(pI830) || IS_I945G(pI830))
+   if (IS_MOBILE(pI830) || IS_I9XX(pI830))
       pI830->CursorNeedsPhysical = TRUE;
    else
       pI830->CursorNeedsPhysical = FALSE;
