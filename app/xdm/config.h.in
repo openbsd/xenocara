@@ -162,6 +162,9 @@
 /* Define to 1 if you have the shadow password functions. */
 #undef USESHADOW
 
+/* Use BSD authentification */
+#undef USE_BSDAUTH
+
 /* Use PAM for authentication */
 #undef USE_PAM
 
