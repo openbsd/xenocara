@@ -23,7 +23,7 @@ configdir = $(datadir)/X11/fs
 
 bin_PROGRAMS = xfs
 
-FONT_FLAGS = -DFONT_PCF -DFONT_FS -DFONT_SPEEDO
+FONT_FLAGS = -DFONT_PCF -DFONT_FS -DFONT_SPEEDO -DFONTCACHE
 
 AM_CFLAGS = $(XFS_CFLAGS) -I$(top_srcdir)/include -DXFSPIDDIR=\"/var/run\" \
 		-DDEFAULT_CONFIG_FILE=\"$(configdir)/config\" $(FONT_FLAGS) \
