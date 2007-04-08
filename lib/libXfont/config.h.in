@@ -51,6 +51,9 @@
 /* Support IPv6 for TCP connections */
 #undef IPv6
 
+/* Support dynamically loaded font modules */
+#undef LOADABLEFONTS
+
 /* Support os-specific local connections */
 #undef LOCALCONN
 

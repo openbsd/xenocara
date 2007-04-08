@@ -49,9 +49,10 @@ CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libstubs_la_LIBADD =
 am_libstubs_la_OBJECTS = cauthgen.lo csignal.lo delfntcid.lo errorf.lo \
-	fatalerror.lo findoldfnt.lo getcres.lo getdefptsize.lo \
-	getnewfntcid.lo gettime.lo initfshdl.lo regfpefunc.lo \
-	rmfshdl.lo servclient.lo setfntauth.lo stfntcfnt.lo xpstubs.lo
+	fatalerror.lo findoldfnt.lo fontmod.lo getcres.lo \
+	getdefptsize.lo getnewfntcid.lo gettime.lo initfshdl.lo \
+	regfpefunc.lo rmfshdl.lo servclient.lo setfntauth.lo \
+	stfntcfnt.lo xpstubs.lo
 libstubs_la_OBJECTS = $(am_libstubs_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir) -I$(top_builddir)/include/X11/fonts
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -212,6 +213,7 @@ libstubs_la_SOURCES = \
 	errorf.c		\
 	fatalerror.c		\
 	findoldfnt.c		\
+	fontmod.c		\
 	getcres.c		\
 	getdefptsize.c		\
 	getnewfntcid.c		\
@@ -282,6 +284,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/errorf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fatalerror.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/findoldfnt.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fontmod.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getcres.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getdefptsize.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getnewfntcid.Plo@am__quote@

@@ -5976,8 +5976,8 @@ relink_command=\"$relink_command\""
 	  test -n "$relink_command" && srcname="$realname"T
 
 	  # Install the shared library and build the symlinks.
-	  $show "$install_prog $dir/$srcname $destdir/$realname"
-	  $run eval "$install_prog $dir/$srcname $destdir/$realname" || exit $?
+	  $show "$install_prog -m 644 $dir/$srcname $destdir/$realname"
+	  $run eval "$install_prog -m 644 $dir/$srcname $destdir/$realname" || exit $?
 	  if test -n "$stripme" && test -n "$striplib"; then
 	    $show "$striplib $destdir/$realname"
 	    $run eval "$striplib $destdir/$realname" || exit $?
@@ -6022,8 +6022,8 @@ relink_command=\"$relink_command\""
 	# Install the pseudo-library for information purposes.
 	name=`$echo "X$file" | $Xsed -e 's%^.*/%%'`
 	instname="$dir/$name"i
-	$show "$install_prog $instname $destdir/$name"
-	$run eval "$install_prog $instname $destdir/$name" || exit $?
+	$show "$install_prog -m 644 $instname $destdir/$name"
+	$run eval "$install_prog -m 644 $instname $destdir/$name" || exit $?
 
 	# Maybe install the static library, too.
 	test -n "$old_library" && staticlibs="$staticlibs $dir/$old_library"
@@ -6058,8 +6058,8 @@ relink_command=\"$relink_command\""
 
 	# Install the libtool object if requested.
 	if test -n "$destfile"; then
-	  $show "$install_prog $file $destfile"
-	  $run eval "$install_prog $file $destfile" || exit $?
+	  $show "$install_prog -m 644 $file $destfile"
+	  $run eval "$install_prog -m 644 $file $destfile" || exit $?
 	fi
 
 	# Install the old object if enabled.
@@ -6067,8 +6067,8 @@ relink_command=\"$relink_command\""
 	  # Deduce the name of the old-style object file.
 	  staticobj=`$echo "X$file" | $Xsed -e "$lo2o"`
 
-	  $show "$install_prog $staticobj $staticdest"
-	  $run eval "$install_prog \$staticobj \$staticdest" || exit $?
+	  $show "$install_prog -m 644 $staticobj $staticdest"
+	  $run eval "$install_prog -m 644 \$staticobj \$staticdest" || exit $?
 	fi
 	exit $EXIT_SUCCESS
 	;;
