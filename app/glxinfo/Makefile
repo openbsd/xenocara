@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2007/04/04 22:33:46 david Exp $
+# $OpenBSD: Makefile,v 1.5 2007/04/08 21:53:14 matthieu Exp $
 .include <bsd.own.mk>
 X11BASE?=	/usr/X11R6
 DIST=		${XSRCDIR}/dist/Mesa
@@ -8,7 +8,7 @@ MANDIR=		${X11BASE}/man/cat
 PROG=	glxinfo
 
 CPPFLAGS+=	-I${X11BASE}/include
-LDADD+=		-L${X11BASE}/lib -lGL -lXext -lX11 -lm
+LDADD+=		-L${X11BASE}/lib -lGL -lXext -lX11 -lXau -lXdmcp -lm
 
 obj: _xenocara_obj
 
