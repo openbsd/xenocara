@@ -3,6 +3,11 @@
 #endif
 #include "stubs.h"
 
+#ifdef __SUNPRO_C
+#pragma weak XpClientIsBitmapClient
+#pragma weak XpClientIsPrintClient
+#endif
+
 weak Bool
 XpClientIsBitmapClient(ClientPtr client)
 {

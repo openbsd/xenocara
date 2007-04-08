@@ -3,6 +3,10 @@
 #endif
 #include "stubs.h"
 
+#ifdef __SUNPRO_C
+#pragma weak RegisterFPEFunctions
+#endif
+
 weak int 
 RegisterFPEFunctions(NameCheckFunc name_func, 
 		     InitFpeFunc init_func, 

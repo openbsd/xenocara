@@ -3,6 +3,10 @@
 #endif
 #include "stubs.h"
 
+#ifdef __SUNPRO_C
+#pragma weak GetTimeInMillis
+#endif
+
 weak unsigned long
 GetTimeInMillis (void)
 {

@@ -42,10 +42,7 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/fonts/fontmisc.h>
 #include <X11/fonts/fntfilst.h>
 #include <X11/fonts/bitmap.h>
-
-#ifdef LOADABLEFONTS
 #include <X11/fonts/fontmod.h>
-#endif
 
 /*
  * Translate monolithic build symbols to modular build symbols.
@@ -67,36 +64,59 @@ in this Software without prior written authorization from The Open Group.
 # define XFONT_FREETYPE 1
 #endif
 
+/* Font renderers to initialize when not linked into something like
+   Xorg that provides its own module configuration options */
+static const FontModule builtinFontModuleList[] = {
+#ifdef XFONT_SPEEDO
+    {
+	SpeedoRegisterFontFileFunctions,
+	"speedo",
+	NULL
+    },
+#endif
+#ifdef XFONT_TYPE1
+    {
+	Type1RegisterFontFileFunctions,
+	"type1",
+	NULL
+    },
+#endif
+#ifdef XFONT_FREETYPE    
+    {
+	FreeTypeRegisterFontFileFunctions,
+	"freetype",
+	NULL
+    },
+#endif
+    /* List terminator - must be last entry */
+    {	NULL, NULL, NULL }
+};
+
 void
 FontFileRegisterFpeFunctions(void)
 {
-#ifndef LOADABLEFONTS
+    FontModule *fmlist = builtinFontModuleList;
 
 #ifdef XFONT_BITMAP
+    /* bitmap is always builtin to libXfont now */
     BitmapRegisterFontFileFunctions ();
 #endif
-#ifdef XFONT_SPEEDO
-    SpeedoRegisterFontFileFunctions ();
-#endif
-#ifdef XFONT_TYPE1
-    Type1RegisterFontFileFunctions();
-#endif
-#ifdef XFONT_FREETYPE
-    FreeTypeRegisterFontFileFunctions();
-#endif
 
-#else
-    {
+#ifdef LOADABLEFONTS
+    if (FontModuleList) {
+	fmlist = FontModuleList;
+    }
+#endif    
+
+    if (fmlist) {
 	int i;
 
-	if (FontModuleList) {
-	    for (i = 0; FontModuleList[i].name; i++) {
-		if (FontModuleList[i].initFunc)
-		    FontModuleList[i].initFunc();
+	for (i = 0; fmlist[i].name; i++) {
+	    if (fmlist[i].initFunc) {
+		fmlist[i].initFunc();
 	    }
 	}
     }
-#endif
     
     FontFileRegisterLocalFpeFunctions ();
 }

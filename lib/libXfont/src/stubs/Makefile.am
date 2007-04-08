@@ -10,6 +10,7 @@ libstubs_la_SOURCES = 		\
 	errorf.c		\
 	fatalerror.c		\
 	findoldfnt.c		\
+	fontmod.c		\
 	getcres.c		\
 	getdefptsize.c		\
 	getnewfntcid.c		\

@@ -146,6 +146,10 @@ NameEqual (const char *a, const char *b, int l)
     return TRUE;
 }
 
+#ifdef __SUNPRO_C
+#pragma weak MakeAtom
+#endif
+
 weak Atom 
 MakeAtom(char *string, unsigned len, int makeit)
 {
@@ -219,11 +223,19 @@ MakeAtom(char *string, unsigned len, int makeit)
     return a->atom;
 }
 
+#ifdef __SUNPRO_C
+#pragma weak ValidAtom
+#endif
+
 weak int 
 ValidAtom(Atom atom)
 {
     return (atom != None) && (atom <= lastAtom);
 }
+
+#ifdef __SUNPRO_C
+#pragma weak NameForAtom
+#endif
 
 weak char *
 NameForAtom(Atom atom)

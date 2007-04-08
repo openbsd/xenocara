@@ -40,8 +40,18 @@ from The Open Group.
 #define XK_LATIN1
 #include    <X11/keysymdef.h>
 
-/* make sure everything initializes themselves at least once */
 
+#ifdef __SUNPRO_C
+#pragma weak serverGeneration
+#pragma weak Xalloc
+#pragma weak Xrealloc
+#pragma weak Xfree
+#pragma weak Xcalloc
+#pragma weak CopyISOLatin1Lowered
+#pragma weak register_fpe_functions
+#endif
+
+/* make sure everything initializes themselves at least once */
 weak long serverGeneration = 1;
 
 weak void *

@@ -1,3 +1,47 @@
+commit 87db45f5eb7880395735f7bf3a8ee2d89b7e0122
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Apr 4 17:05:13 2007 -0700
+
+    Version bump: 1.2.8
+
+commit 224fb6403a328e70b370540cc5cefd74421fafac
+Merge: e7a59cf... 0fbb37c...
+Author: Matthieu Herrb <matthieu@roadrock.(none)>
+Date:   Tue Apr 3 16:05:48 2007 +0200
+
+    Merge branch 'master' of git+ssh://herrb@git.freedesktop.org/git/xorg/lib/libXfont
+
+commit e7a59cfb5d442d2965cfcffeff405a4b05591190
+Author: Matthieu Herrb <matthieu@roadrock.(none)>
+Date:   Tue Apr 3 15:45:21 2007 +0200
+
+    Integer overflow vulnerabilities
+    
+    CVE-2007-1351: BDFFont Parsing Integer Overflow
+    CVE-2007-1352: fonts.dir File Parsing Integer Overflow
+
+commit 0fbb37ccc630ced42d6a973c81d947870cca7637
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Apr 2 17:40:19 2007 -0700
+
+    Add #pragma weak for Sun cc where needed
+
+commit cc824e4f2c9a53a00b36a6f83bf065c363027087
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Mar 23 15:57:29 2007 -0700
+
+    Actually use loadable font modules
+    
+    Loadable font modules were not being initialized, and all font renderers
+    known at build time were always being initialized, regardless of Xorg
+    module configuration.
+
+commit fc6e22f238d34918156ded34148730075b7b9cc2
+Author: Ben Byer <bbyer@bbyer.(none)>
+Date:   Tue Feb 20 00:20:23 2007 -0800
+
+    added -flat_namespace to CFLAGS for Darwin
+
 commit 9509d5c7ee5d5e78c6eef54e8faceede5ca5f24e
 Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Mon Jan 22 18:24:19 2007 -0500
