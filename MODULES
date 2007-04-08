@@ -1,8 +1,8 @@
-# $OpenBSD: MODULES,v 1.4 2007/03/04 08:20:47 matthieu Exp $
+# $OpenBSD: MODULES,v 1.5 2007/04/08 18:18:15 matthieu Exp $
 #
 # X.Org maintained modules
 #
-# Last update 2007/03/03
+# Last update 2007/04/08
 
 app/appres		1.0.1	7.2
 app/bdftopcf		1.0.0	7.0
@@ -227,7 +227,7 @@ lib/libXdmcp			1.0.2	7.2RC1
 lib/libXevie			1.0.2	7.2RC1
 lib/libXext			1.0.3	7.2+
 lib/libXfixes			4.0.3	7.2RC2
-lib/libXfont			1.2.7	7.2
+lib/libXfont			1.2.8	7.2+
 lib/libXfontcache		1.0.4	7.2RC4
 lib/libXft			2.1.12	7.2RC4
 lib/libXi			1.0.2	7.2RC2
