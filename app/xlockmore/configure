@@ -8532,7 +8532,7 @@ echo $ECHO_N "checking for GL >=1.1... $ECHO_C" >&6
 ac_save_CFLAGS="$CFLAGS"
 ac_save_LIBS="$LIBS"
 CFLAGS="${CFLAGS} ${XLOCKINC}"
-LIBS="${XLOCKLIBPATHS} ${XLOCKLIBS} -lX11 -lXext -lm"
+LIBS="${XLOCKLIBPATHS} ${XLOCKLIBS} -lX11 -lXext -lXau -lXdmcp -lm"
 if test "${ac_cv_c_gl1_1+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
@@ -12906,7 +12906,7 @@ case "${canonical}" in
     XGLOCKLIBPATHS="-L/usr/lib32 ${XGLOCKLIBPATHS}"
   ;;
 esac
-XLOCKLIBS="${XLOCKLIBPATHS} ${XLOCKLIBS} -lX11 -lXext -lm"
+XLOCKLIBS="${XLOCKLIBPATHS} ${XLOCKLIBS} -lX11 -lXext -lXau -lXdmcp -lm"
 XMLOCKLIBS="${XMLOCKLIBPATHS} ${XMLOCKLIBS} -lX11"
 XGLOCKLIBS="${XGLOCKLIBPATHS} ${XGLOCKLIBS} ${GTK_LIBS}"
 
