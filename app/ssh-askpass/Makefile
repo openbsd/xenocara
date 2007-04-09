@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.6 2007/03/30 17:24:13 aanriot Exp $
+# $OpenBSD: Makefile,v 1.7 2007/04/09 10:33:47 matthieu Exp $
 
 .include	<bsd.own.mk>
 X11BASE?=	/usr/X11R6
@@ -12,7 +12,7 @@ DATE=		February 14, 2001
 APP_DEFAULTS=	$(CLASS)-default.ad
 
 CPPFLAGS+=	-I${X11BASE}/include -I.
-LDADD+=		-L${X11BASE}/lib -lXt -lSM -lICE -lX11 -lXau -lXdmcp -lXinerama
+LDADD+=		-L${X11BASE}/lib -lXt -lSM -lICE -lXinerama -lX11 -lXau -lXdmcp -lXext
 
 CLEANFILES+=	${CLASS}.ad ${CLASS}_ad.h ssh-askpass.1
 
