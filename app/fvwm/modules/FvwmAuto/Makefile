@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2006/11/28 19:05:40 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2007/04/09 18:59:57 matthieu Exp $
 
 .include "../Makefile.inc"
 
@@ -7,7 +7,7 @@
 PROG=	FvwmAuto
 SRCS=	FvwmAuto.c
 
-LDADD+= -lXpm -lX11
+LDADD+= -lXpm ${XLIB}
 BINDIR= ${FVWMLIBDIR}
 
 .include <bsd.prog.mk>

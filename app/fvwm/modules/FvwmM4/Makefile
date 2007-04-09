@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2006/11/27 19:56:35 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2007/04/09 18:59:57 matthieu Exp $
 
 .include "../Makefile.inc"
 
@@ -10,7 +10,7 @@ SRCS=	FvwmM4.c
 CPPFLAGS+= -DFVWM_MODULEDIR=\"$(FVWMLIBDIR)\" \
 	-DFVWM_CONFIGDIR=\"$(FVWMLIBDIR)\" \
 
-LDADD+= -lX11
+LDADD+= ${XLIB}
 BINDIR= ${FVWMLIBDIR}
 
 .include <bsd.prog.mk>

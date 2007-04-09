@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2006/11/27 19:56:35 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2007/04/09 18:59:57 matthieu Exp $
 
 .include "../Makefile.inc"
 
@@ -7,7 +7,7 @@
 PROG=	FvwmPager
 SRCS=	FvwmPager.c x_pager.c
 
-LDADD+= -lXpm -lX11
+LDADD+= -lXpm ${XLIB}
 BINDIR= ${FVWMLIBDIR}
 
 .include <bsd.prog.mk>
