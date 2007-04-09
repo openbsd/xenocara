@@ -1,4 +1,4 @@
 .if exists(Makefile.am)
-install:
+realinstall:
 	exec ${MAKE_ENV} ${MAKE} install-strip
 .endif
