@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2006/12/02 16:28:48 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2007/04/09 11:14:25 matthieu Exp $
 
 .include <bsd.own.mk>
 X11BASE?=	/usr/X11R6
@@ -7,7 +7,7 @@ PROG=	xidle
 
 CPPFLAGS+= -I${X11BASE}/include
 CFLAGS+= -Wall
-LDADD+=	-L${X11BASE}/lib -lXss -lXext -lX11
+LDADD+=	-L${X11BASE}/lib -lXss -lXext -lX11 -lXau -lXdmcp
 
 MANDIR=	${X11BASE}/man/cat
 
