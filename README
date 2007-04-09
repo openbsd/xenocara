@@ -79,6 +79,11 @@ GNU autotools packages installed:
     - metaauto 0.6 (or later) (devel/metaauto)
     - libtool 1.5.22 (or later) (devel/libtool)
 
+If you have your source tree on an NFS partition, make sure the clock
+of your server and client are properly synchronised. A test run by
+configure will fail if the drift is more than one second. And larger 
+drifts will cause other problems during builds anyways. 
+
   Path
 
 To build Xenocara, you need to have /usr/X11R6/bin in your PATH. 
@@ -159,4 +164,4 @@ for more desperate cases, remove all files from XSRCDIR not in CVS:
  cvs -q update -PAd -I - | awk '$1=="?" {print $2}' | xargs rm -f
 
 -- 
-$OpenBSD: README,v 1.16 2007/04/07 16:07:41 matthieu Exp $
+$OpenBSD: README,v 1.17 2007/04/09 18:58:23 matthieu Exp $
