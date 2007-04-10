@@ -1115,5 +1115,3 @@
 ./usr/X11R6/man/man3/XF86VidModeValidateModeLine.3
 ./usr/X11R6/man/man3/XFree86-DGA.3
 ./usr/X11R6/man/man7/Xprint.7
-./var/db/xdm
-./var/db/xkb/README

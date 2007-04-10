@@ -179,6 +179,7 @@
 ./usr/X11R6/lib/libXTrap.la
 ./usr/X11R6/lib/libXau.a
 ./usr/X11R6/lib/libXau.la
+./usr/X11R6/lib/libXaw.a
 ./usr/X11R6/lib/libXaw7.a
 ./usr/X11R6/lib/libXaw7.la
 ./usr/X11R6/lib/libXaw8.a
