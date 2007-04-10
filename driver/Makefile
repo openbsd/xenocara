@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.8 2007/04/04 20:34:08 matthieu Exp $
+# $OpenBSD: Makefile,v 1.9 2007/04/10 13:23:52 todd Exp $
 
 # Broken
 # xf86-input-calcomp  xf86-input-citron  xf86-input-dmc
@@ -26,6 +26,8 @@ INPUT_DRV_COMMON= \
 INPUT_DRV_alpha= ${INPUT_DRV_COMMON}
 
 INPUT_DRV_amd64= ${INPUT_DRV_COMMON} xf86-input-vmmouse
+
+INPUT_DRV_hppa=
 
 INPUT_DRV_i386= ${INPUT_DRV_COMMON} xf86-input-vmmouse
 
