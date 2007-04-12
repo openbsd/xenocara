@@ -904,11 +904,13 @@
 ./usr/X11R6/man/cat1/FvwmTalk.0
 ./usr/X11R6/man/cat1/FvwmWinList.0
 ./usr/X11R6/man/cat1/fvwm.0
+./usr/X11R6/man/cat1/resize.0
 ./usr/X11R6/man/cat1/ssh-askpass.0
 ./usr/X11R6/man/cat1/wm2.0
 ./usr/X11R6/man/cat1/xidle.0
 ./usr/X11R6/man/cat1/xpmroot.0
 ./usr/X11R6/man/cat1/xsystrace.0
+./usr/X11R6/man/cat1/xterm.0
 ./usr/X11R6/man/cat1/xvctl.0
 ./usr/X11R6/man/cat3
 ./usr/X11R6/man/man1/Xmark.1
@@ -942,7 +944,6 @@
 ./usr/X11R6/man/man1/mkhtmlindex.1
 ./usr/X11R6/man/man1/oclock.1
 ./usr/X11R6/man/man1/proxymngr.1
-./usr/X11R6/man/man1/resize.1
 ./usr/X11R6/man/man1/revpath.1
 ./usr/X11R6/man/man1/rstart.1
 ./usr/X11R6/man/man1/rstartd.1
@@ -1015,7 +1016,6 @@
 ./usr/X11R6/man/man1/xsetroot.1
 ./usr/X11R6/man/man1/xsm.1
 ./usr/X11R6/man/man1/xstdcmap.1
-./usr/X11R6/man/man1/xterm.1
 ./usr/X11R6/man/man1/xtrap.1
 ./usr/X11R6/man/man1/xtrapchar.1
 ./usr/X11R6/man/man1/xtrapin.1

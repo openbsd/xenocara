@@ -1,6 +1,7 @@
 ./usr/X11R6/bin/Xnest
 ./usr/X11R6/bin/Xprt
 ./usr/X11R6/bin/Xvfb
+./usr/X11R6/include/xorg
 ./usr/X11R6/lib/libxkbui.so.4.0
 ./usr/X11R6/lib/modules
 ./usr/X11R6/lib/modules/drivers
@@ -11,7 +12,6 @@
 ./usr/X11R6/lib/modules/multimedia
 ./usr/X11R6/lib/xserver
 ./usr/X11R6/lib/xserver/SecurityPolicy
-./usr/X11R6/man/cat1/XDarwin.0
 ./usr/X11R6/man/man1/Xnest.1
 ./usr/X11R6/man/man1/Xprt.1
 ./usr/X11R6/man/man1/Xserver.1
