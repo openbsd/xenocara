@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2007/04/09 19:11:43 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2007/04/14 16:11:13 matthieu Exp $
 
 SUBDIR=	resize
 
@@ -48,6 +48,3 @@ obj: _xenocara_obj
 
 .include <bsd.prog.mk>
 .include <bsd.xorg.mk>
-
-
-
