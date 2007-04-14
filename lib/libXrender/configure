@@ -18698,6 +18698,9 @@ echo "$as_me:$LINENO: checking for X" >&5
 echo $ECHO_N "checking for X... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$X_CFLAGS"; then
+        pkg_cv_X_CFLAGS="$X_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -18708,10 +18711,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$X_LIBS"; then
+        pkg_cv_X_LIBS="$X_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -18722,38 +18729,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	X_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        X_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11"`
+        else
+	        X_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$X_PKG_ERRORS" 1>&5
+	echo "$X_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (x11) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (x11) were not met:
+
+$X_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the X_CFLAGS and X_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (x11) were not met.
+Alternatively, you may set the environment variables X_CFLAGS
+and X_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (x11) were not met:
+
+$X_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the X_CFLAGS and X_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables X_CFLAGS
+and X_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the X_CFLAGS and X_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables X_CFLAGS
+and X_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -18761,9 +18789,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the X_CFLAGS and X_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables X_CFLAGS
+and X_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -18798,6 +18826,9 @@ echo "$as_me:$LINENO: checking for RENDER" >&5
 echo $ECHO_N "checking for RENDER... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$RENDER_CFLAGS"; then
+        pkg_cv_RENDER_CFLAGS="$RENDER_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"renderproto >= \$RENDER_VERSION\"") >&5
   ($PKG_CONFIG --exists --print-errors "renderproto >= $RENDER_VERSION") 2>&5
@@ -18808,10 +18839,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$RENDER_LIBS"; then
+        pkg_cv_RENDER_LIBS="$RENDER_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"renderproto >= \$RENDER_VERSION\"") >&5
   ($PKG_CONFIG --exists --print-errors "renderproto >= $RENDER_VERSION") 2>&5
@@ -18822,38 +18857,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	RENDER_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "renderproto >= $RENDER_VERSION"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        RENDER_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "renderproto >= $RENDER_VERSION"`
+        else
+	        RENDER_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "renderproto >= $RENDER_VERSION"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$RENDER_PKG_ERRORS" 1>&5
+	echo "$RENDER_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (renderproto >= $RENDER_VERSION) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (renderproto >= $RENDER_VERSION) were not met:
+
+$RENDER_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the RENDER_CFLAGS and RENDER_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (renderproto >= $RENDER_VERSION) were not met.
+Alternatively, you may set the environment variables RENDER_CFLAGS
+and RENDER_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (renderproto >= $RENDER_VERSION) were not met:
+
+$RENDER_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the RENDER_CFLAGS and RENDER_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables RENDER_CFLAGS
+and RENDER_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the RENDER_CFLAGS and RENDER_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables RENDER_CFLAGS
+and RENDER_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -18861,9 +18917,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the RENDER_CFLAGS and RENDER_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables RENDER_CFLAGS
+and RENDER_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}

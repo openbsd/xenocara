@@ -19717,6 +19717,9 @@ echo "$as_me:$LINENO: checking for XPROTO" >&5
 echo $ECHO_N "checking for XPROTO... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XPROTO_CFLAGS"; then
+        pkg_cv_XPROTO_CFLAGS="$XPROTO_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto >= 7.0.6\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto >= 7.0.6") 2>&5
@@ -19727,10 +19730,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XPROTO_LIBS"; then
+        pkg_cv_XPROTO_LIBS="$XPROTO_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xproto >= 7.0.6\"") >&5
   ($PKG_CONFIG --exists --print-errors "xproto >= 7.0.6") 2>&5
@@ -19741,38 +19748,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	XPROTO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto >= 7.0.6"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XPROTO_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xproto >= 7.0.6"`
+        else
+	        XPROTO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xproto >= 7.0.6"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$XPROTO_PKG_ERRORS" 1>&5
+	echo "$XPROTO_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xproto >= 7.0.6) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (xproto >= 7.0.6) were not met:
+
+$XPROTO_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XPROTO_CFLAGS and XPROTO_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (xproto >= 7.0.6) were not met.
+Alternatively, you may set the environment variables XPROTO_CFLAGS
+and XPROTO_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (xproto >= 7.0.6) were not met:
+
+$XPROTO_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XPROTO_CFLAGS and XPROTO_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables XPROTO_CFLAGS
+and XPROTO_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XPROTO_CFLAGS and XPROTO_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XPROTO_CFLAGS
+and XPROTO_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -19780,9 +19808,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XPROTO_CFLAGS and XPROTO_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XPROTO_CFLAGS
+and XPROTO_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -19805,6 +19833,9 @@ echo "$as_me:$LINENO: checking for XDMCP" >&5
 echo $ECHO_N "checking for XDMCP... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XDMCP_CFLAGS"; then
+        pkg_cv_XDMCP_CFLAGS="$XDMCP_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xdmcp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xdmcp") 2>&5
@@ -19815,10 +19846,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XDMCP_LIBS"; then
+        pkg_cv_XDMCP_LIBS="$XDMCP_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xdmcp\"") >&5
   ($PKG_CONFIG --exists --print-errors "xdmcp") 2>&5
@@ -19829,38 +19864,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	XDMCP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xdmcp"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XDMCP_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xdmcp"`
+        else
+	        XDMCP_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xdmcp"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$XDMCP_PKG_ERRORS" 1>&5
+	echo "$XDMCP_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xdmcp) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (xdmcp) were not met:
+
+$XDMCP_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XDMCP_CFLAGS and XDMCP_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (xdmcp) were not met.
+Alternatively, you may set the environment variables XDMCP_CFLAGS
+and XDMCP_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (xdmcp) were not met:
+
+$XDMCP_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XDMCP_CFLAGS and XDMCP_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables XDMCP_CFLAGS
+and XDMCP_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XDMCP_CFLAGS and XDMCP_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XDMCP_CFLAGS
+and XDMCP_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -19868,9 +19924,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XDMCP_CFLAGS and XDMCP_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XDMCP_CFLAGS
+and XDMCP_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -19976,6 +20032,9 @@ echo "$as_me:$LINENO: checking for X11" >&5
 echo $ECHO_N "checking for X11... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$X11_CFLAGS"; then
+        pkg_cv_X11_CFLAGS="$X11_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xextproto xtrans \$X11_REQUIRES\"") >&5
   ($PKG_CONFIG --exists --print-errors "xextproto xtrans $X11_REQUIRES") 2>&5
@@ -19986,10 +20045,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$X11_LIBS"; then
+        pkg_cv_X11_LIBS="$X11_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xextproto xtrans \$X11_REQUIRES\"") >&5
   ($PKG_CONFIG --exists --print-errors "xextproto xtrans $X11_REQUIRES") 2>&5
@@ -20000,38 +20063,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	X11_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xextproto xtrans $X11_REQUIRES"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        X11_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xextproto xtrans $X11_REQUIRES"`
+        else
+	        X11_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xextproto xtrans $X11_REQUIRES"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$X11_PKG_ERRORS" 1>&5
+	echo "$X11_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xextproto xtrans $X11_REQUIRES) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (xextproto xtrans $X11_REQUIRES) were not met:
+
+$X11_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the X11_CFLAGS and X11_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (xextproto xtrans $X11_REQUIRES) were not met.
+Alternatively, you may set the environment variables X11_CFLAGS
+and X11_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (xextproto xtrans $X11_REQUIRES) were not met:
+
+$X11_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the X11_CFLAGS and X11_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables X11_CFLAGS
+and X11_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the X11_CFLAGS and X11_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables X11_CFLAGS
+and X11_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -20039,9 +20123,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the X11_CFLAGS and X11_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables X11_CFLAGS
+and X11_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -22546,6 +22630,9 @@ echo "$as_me:$LINENO: checking for BIGFONT" >&5
 echo $ECHO_N "checking for BIGFONT... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$BIGFONT_CFLAGS"; then
+        pkg_cv_BIGFONT_CFLAGS="$BIGFONT_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xf86bigfontproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "xf86bigfontproto") 2>&5
@@ -22556,10 +22643,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$BIGFONT_LIBS"; then
+        pkg_cv_BIGFONT_LIBS="$BIGFONT_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xf86bigfontproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "xf86bigfontproto") 2>&5
@@ -22570,16 +22661,31 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
-if test $pkg_failed = yes; then
-	BIGFONT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xf86bigfontproto"`
-	# Put the nasty error message in config.log where it belongs
-	echo "$BIGFONT_PKG_ERRORS" 1>&5
 
-	XF86BIGFONT="no"
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        BIGFONT_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xf86bigfontproto"`
+        else
+	        BIGFONT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xf86bigfontproto"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$BIGFONT_PKG_ERRORS" >&5
+
+	echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+                XF86BIGFONT="no"
 elif test $pkg_failed = untried; then
 	XF86BIGFONT="no"
 else
@@ -22718,6 +22824,9 @@ echo "$as_me:$LINENO: checking for XKBPROTO" >&5
 echo $ECHO_N "checking for XKBPROTO... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XKBPROTO_CFLAGS"; then
+        pkg_cv_XKBPROTO_CFLAGS="$XKBPROTO_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"kbproto inputproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "kbproto inputproto") 2>&5
@@ -22728,10 +22837,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XKBPROTO_LIBS"; then
+        pkg_cv_XKBPROTO_LIBS="$XKBPROTO_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"kbproto inputproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "kbproto inputproto") 2>&5
@@ -22742,38 +22855,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	XKBPROTO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "kbproto inputproto"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XKBPROTO_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "kbproto inputproto"`
+        else
+	        XKBPROTO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "kbproto inputproto"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$XKBPROTO_PKG_ERRORS" 1>&5
+	echo "$XKBPROTO_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (kbproto inputproto) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (kbproto inputproto) were not met:
+
+$XKBPROTO_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XKBPROTO_CFLAGS and XKBPROTO_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (kbproto inputproto) were not met.
+Alternatively, you may set the environment variables XKBPROTO_CFLAGS
+and XKBPROTO_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (kbproto inputproto) were not met:
+
+$XKBPROTO_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XKBPROTO_CFLAGS and XKBPROTO_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables XKBPROTO_CFLAGS
+and XKBPROTO_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XKBPROTO_CFLAGS and XKBPROTO_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XKBPROTO_CFLAGS
+and XKBPROTO_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -22781,9 +22915,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XKBPROTO_CFLAGS and XKBPROTO_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XKBPROTO_CFLAGS
+and XKBPROTO_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}

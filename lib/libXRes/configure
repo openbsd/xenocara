@@ -18672,6 +18672,9 @@ echo "$as_me:$LINENO: checking for XRES" >&5
 echo $ECHO_N "checking for XRES... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XRES_CFLAGS"; then
+        pkg_cv_XRES_CFLAGS="$XRES_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11 xext xextproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11 xext xextproto") 2>&5
@@ -18682,10 +18685,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XRES_LIBS"; then
+        pkg_cv_XRES_LIBS="$XRES_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11 xext xextproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11 xext xextproto") 2>&5
@@ -18696,38 +18703,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	XRES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11 xext xextproto"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XRES_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11 xext xextproto"`
+        else
+	        XRES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11 xext xextproto"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$XRES_PKG_ERRORS" 1>&5
+	echo "$XRES_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (x11 xext xextproto) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (x11 xext xextproto) were not met:
+
+$XRES_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XRES_CFLAGS and XRES_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (x11 xext xextproto) were not met.
+Alternatively, you may set the environment variables XRES_CFLAGS
+and XRES_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (x11 xext xextproto) were not met:
+
+$XRES_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XRES_CFLAGS and XRES_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables XRES_CFLAGS
+and XRES_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XRES_CFLAGS and XRES_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XRES_CFLAGS
+and XRES_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -18735,9 +18763,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XRES_CFLAGS and XRES_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XRES_CFLAGS
+and XRES_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -18763,6 +18791,9 @@ echo "$as_me:$LINENO: checking for RESOURCEEXT" >&5
 echo $ECHO_N "checking for RESOURCEEXT... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$RESOURCEEXT_CFLAGS"; then
+        pkg_cv_RESOURCEEXT_CFLAGS="$RESOURCEEXT_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"resourceproto >= \$RES_VERSION\"") >&5
   ($PKG_CONFIG --exists --print-errors "resourceproto >= $RES_VERSION") 2>&5
@@ -18773,10 +18804,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$RESOURCEEXT_LIBS"; then
+        pkg_cv_RESOURCEEXT_LIBS="$RESOURCEEXT_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"resourceproto >= \$RES_VERSION\"") >&5
   ($PKG_CONFIG --exists --print-errors "resourceproto >= $RES_VERSION") 2>&5
@@ -18787,38 +18822,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	RESOURCEEXT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "resourceproto >= $RES_VERSION"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        RESOURCEEXT_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "resourceproto >= $RES_VERSION"`
+        else
+	        RESOURCEEXT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "resourceproto >= $RES_VERSION"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$RESOURCEEXT_PKG_ERRORS" 1>&5
+	echo "$RESOURCEEXT_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (resourceproto >= $RES_VERSION) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (resourceproto >= $RES_VERSION) were not met:
+
+$RESOURCEEXT_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the RESOURCEEXT_CFLAGS and RESOURCEEXT_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (resourceproto >= $RES_VERSION) were not met.
+Alternatively, you may set the environment variables RESOURCEEXT_CFLAGS
+and RESOURCEEXT_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (resourceproto >= $RES_VERSION) were not met:
+
+$RESOURCEEXT_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the RESOURCEEXT_CFLAGS and RESOURCEEXT_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables RESOURCEEXT_CFLAGS
+and RESOURCEEXT_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the RESOURCEEXT_CFLAGS and RESOURCEEXT_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables RESOURCEEXT_CFLAGS
+and RESOURCEEXT_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -18826,9 +18882,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the RESOURCEEXT_CFLAGS and RESOURCEEXT_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables RESOURCEEXT_CFLAGS
+and RESOURCEEXT_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}

@@ -5822,6 +5822,10 @@ relink_command=\"$relink_command\""
       esac
       install_prog="$install_prog $arg"
     done
+    case " $install_prog " in
+    *[\\\ /]cp\ *) extra_mode=;;
+    *) extra_mode='-m 644';;
+    esac
 
     if test -z "$install_prog"; then
       $echo "$modename: you must specify an install program" 1>&2
@@ -5976,8 +5980,8 @@ relink_command=\"$relink_command\""
 	  test -n "$relink_command" && srcname="$realname"T
 
 	  # Install the shared library and build the symlinks.
-	  $show "$install_prog -m 644 $dir/$srcname $destdir/$realname"
-	  $run eval "$install_prog -m 644 $dir/$srcname $destdir/$realname" || exit $?
+	  $show "$install_prog $extra_mode $dir/$srcname $destdir/$realname"
+	  $run eval "$install_prog $extra_mode $dir/$srcname $destdir/$realname" || exit $?
 	  if test -n "$stripme" && test -n "$striplib"; then
 	    $show "$striplib $destdir/$realname"
 	    $run eval "$striplib $destdir/$realname" || exit $?
@@ -6022,8 +6026,8 @@ relink_command=\"$relink_command\""
 	# Install the pseudo-library for information purposes.
 	name=`$echo "X$file" | $Xsed -e 's%^.*/%%'`
 	instname="$dir/$name"i
-	$show "$install_prog -m 644 $instname $destdir/$name"
-	$run eval "$install_prog -m 644 $instname $destdir/$name" || exit $?
+	$show "$install_prog $extra_mode $instname $destdir/$name"
+	$run eval "$install_prog $extra_mode $instname $destdir/$name" || exit $?
 
 	# Maybe install the static library, too.
 	test -n "$old_library" && staticlibs="$staticlibs $dir/$old_library"
@@ -6058,8 +6062,8 @@ relink_command=\"$relink_command\""
 
 	# Install the libtool object if requested.
 	if test -n "$destfile"; then
-	  $show "$install_prog -m 644 $file $destfile"
-	  $run eval "$install_prog -m 644 $file $destfile" || exit $?
+	  $show "$install_prog $extra_mode $file $destfile"
+	  $run eval "$install_prog $extra_mode $file $destfile" || exit $?
 	fi
 
 	# Install the old object if enabled.
@@ -6067,8 +6071,8 @@ relink_command=\"$relink_command\""
 	  # Deduce the name of the old-style object file.
 	  staticobj=`$echo "X$file" | $Xsed -e "$lo2o"`
 
-	  $show "$install_prog -m 644 $staticobj $staticdest"
-	  $run eval "$install_prog -m 644 \$staticobj \$staticdest" || exit $?
+	  $show "$install_prog $extra_mode $staticobj $staticdest"
+	  $run eval "$install_prog $extra_mode \$staticobj \$staticdest" || exit $?
 	fi
 	exit $EXIT_SUCCESS
 	;;

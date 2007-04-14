@@ -18720,6 +18720,9 @@ echo "$as_me:$LINENO: checking for XRENDER" >&5
 echo $ECHO_N "checking for XRENDER... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XRENDER_CFLAGS"; then
+        pkg_cv_XRENDER_CFLAGS="$XRENDER_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xrender >= 0.8.2\"") >&5
   ($PKG_CONFIG --exists --print-errors "xrender >= 0.8.2") 2>&5
@@ -18730,10 +18733,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XRENDER_LIBS"; then
+        pkg_cv_XRENDER_LIBS="$XRENDER_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xrender >= 0.8.2\"") >&5
   ($PKG_CONFIG --exists --print-errors "xrender >= 0.8.2") 2>&5
@@ -18744,16 +18751,31 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
-if test $pkg_failed = yes; then
-	XRENDER_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xrender >= 0.8.2"`
-	# Put the nasty error message in config.log where it belongs
-	echo "$XRENDER_PKG_ERRORS" 1>&5
 
-	xrender_found_with_pkgconfig=no
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XRENDER_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xrender >= 0.8.2"`
+        else
+	        XRENDER_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xrender >= 0.8.2"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$XRENDER_PKG_ERRORS" >&5
+
+	echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+                xrender_found_with_pkgconfig=no
 elif test $pkg_failed = untried; then
 	xrender_found_with_pkgconfig=no
 else
@@ -18771,6 +18793,9 @@ echo "$as_me:$LINENO: checking for XRENDER" >&5
 echo $ECHO_N "checking for XRENDER... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XRENDER_CFLAGS"; then
+        pkg_cv_XRENDER_CFLAGS="$XRENDER_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xrender >= 0\"") >&5
   ($PKG_CONFIG --exists --print-errors "xrender >= 0") 2>&5
@@ -18781,10 +18806,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XRENDER_LIBS"; then
+        pkg_cv_XRENDER_LIBS="$XRENDER_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xrender >= 0\"") >&5
   ($PKG_CONFIG --exists --print-errors "xrender >= 0") 2>&5
@@ -18795,16 +18824,31 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
-if test $pkg_failed = yes; then
-	XRENDER_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xrender >= 0"`
-	# Put the nasty error message in config.log where it belongs
-	echo "$XRENDER_PKG_ERRORS" 1>&5
 
-	old_xrender_found_with_pkgconfig=no
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XRENDER_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xrender >= 0"`
+        else
+	        XRENDER_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xrender >= 0"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$XRENDER_PKG_ERRORS" >&5
+
+	echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+                old_xrender_found_with_pkgconfig=no
 elif test $pkg_failed = untried; then
 	old_xrender_found_with_pkgconfig=no
 else
@@ -19347,6 +19391,9 @@ echo "$as_me:$LINENO: checking for FREETYPE" >&5
 echo $ECHO_N "checking for FREETYPE... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$FREETYPE_CFLAGS"; then
+        pkg_cv_FREETYPE_CFLAGS="$FREETYPE_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"freetype2\"") >&5
   ($PKG_CONFIG --exists --print-errors "freetype2") 2>&5
@@ -19357,10 +19404,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$FREETYPE_LIBS"; then
+        pkg_cv_FREETYPE_LIBS="$FREETYPE_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"freetype2\"") >&5
   ($PKG_CONFIG --exists --print-errors "freetype2") 2>&5
@@ -19371,16 +19422,31 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
-if test $pkg_failed = yes; then
-	FREETYPE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "freetype2"`
-	# Put the nasty error message in config.log where it belongs
-	echo "$FREETYPE_PKG_ERRORS" 1>&5
 
-	freetype_config=yes
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        FREETYPE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "freetype2"`
+        else
+	        FREETYPE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "freetype2"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$FREETYPE_PKG_ERRORS" >&5
+
+	echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+                freetype_config=yes
 elif test $pkg_failed = untried; then
 	freetype_config=yes
 else
@@ -19454,6 +19520,9 @@ echo "$as_me:$LINENO: checking for FONTCONFIG" >&5
 echo $ECHO_N "checking for FONTCONFIG... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$FONTCONFIG_CFLAGS"; then
+        pkg_cv_FONTCONFIG_CFLAGS="$FONTCONFIG_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"fontconfig >= 2.2\"") >&5
   ($PKG_CONFIG --exists --print-errors "fontconfig >= 2.2") 2>&5
@@ -19464,10 +19533,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$FONTCONFIG_LIBS"; then
+        pkg_cv_FONTCONFIG_LIBS="$FONTCONFIG_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"fontconfig >= 2.2\"") >&5
   ($PKG_CONFIG --exists --print-errors "fontconfig >= 2.2") 2>&5
@@ -19478,38 +19551,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	FONTCONFIG_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "fontconfig >= 2.2"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        FONTCONFIG_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "fontconfig >= 2.2"`
+        else
+	        FONTCONFIG_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "fontconfig >= 2.2"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$FONTCONFIG_PKG_ERRORS" 1>&5
+	echo "$FONTCONFIG_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (fontconfig >= 2.2) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (fontconfig >= 2.2) were not met:
+
+$FONTCONFIG_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the FONTCONFIG_CFLAGS and FONTCONFIG_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (fontconfig >= 2.2) were not met.
+Alternatively, you may set the environment variables FONTCONFIG_CFLAGS
+and FONTCONFIG_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (fontconfig >= 2.2) were not met:
+
+$FONTCONFIG_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the FONTCONFIG_CFLAGS and FONTCONFIG_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables FONTCONFIG_CFLAGS
+and FONTCONFIG_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the FONTCONFIG_CFLAGS and FONTCONFIG_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables FONTCONFIG_CFLAGS
+and FONTCONFIG_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -19517,9 +19611,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the FONTCONFIG_CFLAGS and FONTCONFIG_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables FONTCONFIG_CFLAGS
+and FONTCONFIG_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}

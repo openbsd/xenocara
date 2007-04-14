@@ -18687,6 +18687,9 @@ echo "$as_me:$LINENO: checking for XPRINTAPPUTIL" >&5
 echo $ECHO_N "checking for XPRINTAPPUTIL... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XPRINTAPPUTIL_CFLAGS"; then
+        pkg_cv_XPRINTAPPUTIL_CFLAGS="$XPRINTAPPUTIL_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11 xp xprintutil printproto xau\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11 xp xprintutil printproto xau") 2>&5
@@ -18697,10 +18700,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XPRINTAPPUTIL_LIBS"; then
+        pkg_cv_XPRINTAPPUTIL_LIBS="$XPRINTAPPUTIL_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11 xp xprintutil printproto xau\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11 xp xprintutil printproto xau") 2>&5
@@ -18711,38 +18718,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	XPRINTAPPUTIL_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11 xp xprintutil printproto xau"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XPRINTAPPUTIL_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11 xp xprintutil printproto xau"`
+        else
+	        XPRINTAPPUTIL_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11 xp xprintutil printproto xau"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$XPRINTAPPUTIL_PKG_ERRORS" 1>&5
+	echo "$XPRINTAPPUTIL_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (x11 xp xprintutil printproto xau) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (x11 xp xprintutil printproto xau) were not met:
+
+$XPRINTAPPUTIL_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XPRINTAPPUTIL_CFLAGS and XPRINTAPPUTIL_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (x11 xp xprintutil printproto xau) were not met.
+Alternatively, you may set the environment variables XPRINTAPPUTIL_CFLAGS
+and XPRINTAPPUTIL_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (x11 xp xprintutil printproto xau) were not met:
+
+$XPRINTAPPUTIL_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XPRINTAPPUTIL_CFLAGS and XPRINTAPPUTIL_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables XPRINTAPPUTIL_CFLAGS
+and XPRINTAPPUTIL_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XPRINTAPPUTIL_CFLAGS and XPRINTAPPUTIL_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XPRINTAPPUTIL_CFLAGS
+and XPRINTAPPUTIL_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -18750,9 +18778,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XPRINTAPPUTIL_CFLAGS and XPRINTAPPUTIL_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XPRINTAPPUTIL_CFLAGS
+and XPRINTAPPUTIL_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}

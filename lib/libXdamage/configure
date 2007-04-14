@@ -18702,6 +18702,9 @@ echo "$as_me:$LINENO: checking for X" >&5
 echo $ECHO_N "checking for X... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$X_CFLAGS"; then
+        pkg_cv_X_CFLAGS="$X_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -18712,10 +18715,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$X_LIBS"; then
+        pkg_cv_X_LIBS="$X_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -18726,16 +18733,31 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
-if test $pkg_failed = yes; then
-	X_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
-	# Put the nasty error message in config.log where it belongs
-	echo "$X_PKG_ERRORS" 1>&5
 
-	x_found_with_pkgconfig=no
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        X_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11"`
+        else
+	        X_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$X_PKG_ERRORS" >&5
+
+	echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+                x_found_with_pkgconfig=no
 elif test $pkg_failed = untried; then
 	x_found_with_pkgconfig=no
 else
@@ -20216,6 +20238,9 @@ echo "$as_me:$LINENO: checking for XDAMAGE" >&5
 echo $ECHO_N "checking for XDAMAGE... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XDAMAGE_CFLAGS"; then
+        pkg_cv_XDAMAGE_CFLAGS="$XDAMAGE_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"damageproto >= \$DAMAGEEXT_VERSION xfixes fixesproto xextproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "damageproto >= $DAMAGEEXT_VERSION xfixes fixesproto xextproto") 2>&5
@@ -20226,10 +20251,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XDAMAGE_LIBS"; then
+        pkg_cv_XDAMAGE_LIBS="$XDAMAGE_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"damageproto >= \$DAMAGEEXT_VERSION xfixes fixesproto xextproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "damageproto >= $DAMAGEEXT_VERSION xfixes fixesproto xextproto") 2>&5
@@ -20240,38 +20269,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	XDAMAGE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "damageproto >= $DAMAGEEXT_VERSION xfixes fixesproto xextproto"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XDAMAGE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "damageproto >= $DAMAGEEXT_VERSION xfixes fixesproto xextproto"`
+        else
+	        XDAMAGE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "damageproto >= $DAMAGEEXT_VERSION xfixes fixesproto xextproto"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$XDAMAGE_PKG_ERRORS" 1>&5
+	echo "$XDAMAGE_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (damageproto >= $DAMAGEEXT_VERSION xfixes fixesproto xextproto) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (damageproto >= $DAMAGEEXT_VERSION xfixes fixesproto xextproto) were not met:
+
+$XDAMAGE_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XDAMAGE_CFLAGS and XDAMAGE_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (damageproto >= $DAMAGEEXT_VERSION xfixes fixesproto xextproto) were not met.
+Alternatively, you may set the environment variables XDAMAGE_CFLAGS
+and XDAMAGE_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (damageproto >= $DAMAGEEXT_VERSION xfixes fixesproto xextproto) were not met:
+
+$XDAMAGE_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XDAMAGE_CFLAGS and XDAMAGE_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables XDAMAGE_CFLAGS
+and XDAMAGE_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XDAMAGE_CFLAGS and XDAMAGE_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XDAMAGE_CFLAGS
+and XDAMAGE_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -20279,9 +20329,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XDAMAGE_CFLAGS and XDAMAGE_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XDAMAGE_CFLAGS
+and XDAMAGE_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}

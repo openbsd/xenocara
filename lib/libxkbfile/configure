@@ -18788,6 +18788,9 @@ echo "$as_me:$LINENO: checking for XKBFILE" >&5
 echo $ECHO_N "checking for XKBFILE... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XKBFILE_CFLAGS"; then
+        pkg_cv_XKBFILE_CFLAGS="$XKBFILE_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11 kbproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11 kbproto") 2>&5
@@ -18798,10 +18801,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XKBFILE_LIBS"; then
+        pkg_cv_XKBFILE_LIBS="$XKBFILE_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11 kbproto\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11 kbproto") 2>&5
@@ -18812,38 +18819,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	XKBFILE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11 kbproto"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XKBFILE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11 kbproto"`
+        else
+	        XKBFILE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11 kbproto"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$XKBFILE_PKG_ERRORS" 1>&5
+	echo "$XKBFILE_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (x11 kbproto) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (x11 kbproto) were not met:
+
+$XKBFILE_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XKBFILE_CFLAGS and XKBFILE_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (x11 kbproto) were not met.
+Alternatively, you may set the environment variables XKBFILE_CFLAGS
+and XKBFILE_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (x11 kbproto) were not met:
+
+$XKBFILE_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XKBFILE_CFLAGS and XKBFILE_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables XKBFILE_CFLAGS
+and XKBFILE_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XKBFILE_CFLAGS and XKBFILE_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XKBFILE_CFLAGS
+and XKBFILE_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -18851,9 +18879,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XKBFILE_CFLAGS and XKBFILE_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XKBFILE_CFLAGS
+and XKBFILE_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
