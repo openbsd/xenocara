@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.11 2007/03/31 20:25:53 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.12 2007/04/15 17:42:08 matthieu Exp $
 
 DIST= ${.CURDIR}
 
@@ -6,10 +6,17 @@ DIST= ${.CURDIR}
 NO_XORG_MACHINES=	aviion hppa hppa64 landisk \
 			mvme68k mvme88k mvmeppc sgi solbourne 
 
+NO_XF86UTIL_MACHINES=	hp300 mac68k sparc vax
+
 .for M in ${NO_XORG_MACHINES} 
 NO_XORG_${M} = --disable-xorg
 .endfor
 NO_XORG_OPTION=${NO_XORG_${MACHINE}}
+
+.for M in ${NO_XF86UTIL_MACHINES}
+NO_XF86_UTIL_${M} = --disable-xfree86-utils
+.endfor
+NO_XF86_UTIL_OPTION=${NO_XF86_UTIL_${MACHINE}}
 
 CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--with-xkb-path=/etc/X11/xkb \
@@ -17,6 +24,6 @@ CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--with-module-dir=${LIBDIR}/modules \
 		--with-mesa-source=${XSRCDIR}/dist/Mesa \
 		--enable-install-setuid --enable-privsep \
-		--disable-dmx ${NO_XORG_OPTION}
+		--disable-dmx ${NO_XORG_OPTION} ${NO_XF86_UTIL_OPTION}
 
 .include <bsd.xorg.mk>
