@@ -2674,6 +2674,7 @@ RADEONDisplayVideo(
    switch(id){
         case FOURCC_UYVY:
 		scale_cntl |= RADEON_SCALER_SOURCE_YVYU422;
+		break;
         case FOURCC_RGB24:
         case FOURCC_RGBA32:
 		scale_cntl |= RADEON_SCALER_SOURCE_32BPP | RADEON_SCALER_LIN_TRANS_BYPASS;
