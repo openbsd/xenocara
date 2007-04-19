@@ -612,7 +612,7 @@ update_color_draw_buffers(GLcontext *ctx, struct gl_framebuffer *fb)
          const GLuint bufferBit = 1 << i;
          if (bufferBit & bufferMask) {
             struct gl_renderbuffer *rb = fb->Attachment[i].Renderbuffer;
-            if (rb) {
+            if (rb && rb->Width > 0 && rb->Height > 0) {
                fb->_ColorDrawBuffers[output][count] = rb;
                count++;
             }
@@ -635,7 +635,9 @@ static void
 update_color_read_buffer(GLcontext *ctx, struct gl_framebuffer *fb)
 {
    (void) ctx;
-   if (fb->_ColorReadBufferIndex == -1) {
+   if (fb->_ColorReadBufferIndex == -1 ||
+       fb->Width == 0 ||
+       fb->Height == 0) {
       fb->_ColorReadBuffer = NULL; /* legal! */
    }
    else {
