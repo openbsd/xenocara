@@ -59,7 +59,6 @@ target.
 
 The following steps will build and install everything for the first time.
 
- mkdir -p /usr/xobj
  cd xenocara
  make bootstrap
  make obj
@@ -164,4 +163,4 @@ for more desperate cases, remove all files from XSRCDIR not in CVS:
  cvs -q update -PAd -I - | awk '$1=="?" {print $2}' | xargs rm -f
 
 -- 
-$OpenBSD: README,v 1.17 2007/04/09 18:58:23 matthieu Exp $
+$OpenBSD: README,v 1.18 2007/04/23 08:52:58 ajacoutot Exp $
