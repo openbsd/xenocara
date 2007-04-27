@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: calmwm.h,v 1.1.1.1 2007/04/27 17:58:48 bernd Exp $
+ * $Id: calmwm.h,v 1.2 2007/04/27 18:08:14 bernd Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -378,6 +378,7 @@ int   grab_drag(struct client_ctx *);
 void  grab_menuinit(struct screen_ctx *);
 void *grab_menu(XButtonEvent *, struct menu_q *);
 void  grab_label(struct client_ctx *);
+void  grab_exec(void);
 
 void  xfree(void *);
 void *xmalloc(size_t);
@@ -425,6 +426,7 @@ void kbfunc_client_nogroup(struct client_ctx *, void *);
 void kbfunc_client_maximize(struct client_ctx *, void *);
 void kbfunc_client_vmaximize(struct client_ctx *, void *);
 void kbfunc_menu_search(struct client_ctx *, void *);
+void kbfunc_exec(struct client_ctx *, void *);
 void kbfunc_term(struct client_ctx *cc, void *arg);
 void kbfunc_lock(struct client_ctx *cc, void *arg);
 

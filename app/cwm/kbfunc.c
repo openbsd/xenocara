@@ -4,7 +4,7 @@
  *  Copyright (c) 2004 Martin Murray <mmurray@monkey.org>
  *  All rights reserved.
  *
- * $Id: kbfunc.c,v 1.1.1.1 2007/04/27 17:58:48 bernd Exp $
+ * $Id: kbfunc.c,v 1.2 2007/04/27 18:08:14 bernd Exp $
  */
 
 #include "headers.h"
@@ -120,6 +120,12 @@ kbfunc_lock(struct client_ctx *cc, void *arg)
 {
 	conf_cmd_refresh(&G_conf);
 	u_spawn(G_conf.lockpath);
+}
+
+void
+kbfunc_exec(struct client_ctx *scratch, void *arg)
+{
+	grab_exec();
 }
 
 void

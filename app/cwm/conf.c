@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: conf.c,v 1.1.1.1 2007/04/27 17:58:48 bernd Exp $
+ * $Id: conf.c,v 1.2 2007/04/27 18:08:14 bernd Exp $
  */
 
 #include "headers.h"
@@ -185,6 +185,7 @@ conf_setup(struct conf *c)
 		    XK_Return, ControlMask|Mod1Mask, 0, NULL);
 		conf_bindkey(c, kbfunc_lock,
 		    XK_Delete, ControlMask|Mod1Mask, 0, NULL);
+		conf_bindkey(c, kbfunc_exec, XK_question, Mod1Mask, 0, NULL);
 		conf_bindkey(c, kbfunc_client_hide,
 		    XK_Return, Mod1Mask, KBFLAG_NEEDCLIENT, 0);
 		conf_bindkey(c, kbfunc_client_lower,
