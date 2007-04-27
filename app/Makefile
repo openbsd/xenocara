@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.6 2007/03/25 11:33:49 matthieu Exp $
+# $OpenBSD: Makefile,v 1.7 2007/04/27 18:19:00 bernd Exp $
 
 .if ${MACHINE} != landisk
 MKFONTSCALE= mkfontscale
@@ -23,7 +23,7 @@ SUBDIR= bdftopcf $(MKFONTSCALE)  mkfontdir \
 SUBDIR += glxgears glxinfo
 
 # extras
-SUBDIR += fvwm ssh-askpass wm2 xterm xidle xlockmore xsystrace xvctl
+SUBDIR += cwm fvwm ssh-askpass wm2 xterm xidle xlockmore xsystrace xvctl
 
 .include <bsd.subdir.mk>
 
