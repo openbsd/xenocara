@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: grab.c,v 1.2 2007/04/27 18:08:14 bernd Exp $
+ * $Id: grab.c,v 1.3 2007/04/27 18:10:39 bernd Exp $
  */
 
 #include "headers.h"
@@ -378,7 +378,7 @@ grab_label(struct client_ctx *cc)
 		switch (e.type) {
 		case KeyPress:
 			if (input_keycodetrans(e.xkey.keycode, e.xkey.state,
-				&ctl, &chr, 1) < 0)
+				&ctl, &chr, 0) < 0)
 				continue;
 
 			switch (ctl) {
