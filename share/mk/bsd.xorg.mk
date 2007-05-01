@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.19 2007/03/31 20:25:53 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.20 2007/05/01 08:31:47 espie Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -186,10 +186,14 @@ _xenocara_obj! _SUBDIRUSE
 		    if  test -e ${__objdir}; then rm -rf ${__objdir}; fi; \
 		    ln -sf $$dest ${__objdir}; \
 	    fi; \
-	    if test -d ${__xobjdir} -a ! -d $$dest; then \
-		mkdir -p $$dest; \
+	    if test -d ${__xobjdir}; then \
+		    test -d $$dest || mkdir -p $$dest; \
 	    else \
-		true; \
+		    if test -e ${__xobjdir}; then \
+			    echo "${__xobjdir} is not a directory"; \
+		    else \
+			    echo "${__xobjdir} does not exist"; \
+		    fi; \
 	    fi; \
 	else \
 	    dest=$$here/${__objdir}; \
