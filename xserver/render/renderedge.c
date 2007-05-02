@@ -1,5 +1,5 @@
 /*
- * $Id: renderedge.c,v 1.1.1.1 2006/11/26 18:16:21 matthieu Exp $
+ * $Id: renderedge.c,v 1.2 2007/05/02 09:56:36 matthieu Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -143,6 +143,7 @@ RenderEdgeInit (RenderEdge	*e,
     dx = x_bot - x_top;
     dy = y_bot - y_top;
     e->dy = dy;
+    e->dx = 0;
     if (dy)
     {
 	if (dx >= 0)

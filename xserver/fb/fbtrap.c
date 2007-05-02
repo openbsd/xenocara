@@ -1,5 +1,5 @@
 /*
- * $Id: fbtrap.c,v 1.1.1.1 2006/11/26 18:15:38 matthieu Exp $
+ * $Id: fbtrap.c,v 1.2 2007/05/02 09:56:36 matthieu Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -115,6 +115,9 @@ fbRasterizeTrapezoid (PicturePtr    pPicture,
     RenderEdge	l, r;
     xFixed	t, b;
     
+    if (!xTrapezoidValid (trap))
+	return;
+
     fbGetDrawable (pPicture->pDrawable, buf, stride, bpp, pxoff, pyoff);
 
     width = pPicture->pDrawable->width;
