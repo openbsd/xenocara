@@ -15,6 +15,7 @@
 ./usr/X11R6/bin/bmtoa
 ./usr/X11R6/bin/ccmakedep
 ./usr/X11R6/bin/cleanlinks
+./usr/X11R6/bin/cwm
 ./usr/X11R6/bin/cxpm
 ./usr/X11R6/bin/editres
 ./usr/X11R6/bin/fc-cache
@@ -53,7 +54,6 @@
 ./usr/X11R6/bin/twm
 ./usr/X11R6/bin/uxterm
 ./usr/X11R6/bin/viewres
-./usr/X11R6/bin/wm2
 ./usr/X11R6/bin/x11perf
 ./usr/X11R6/bin/xauth
 ./usr/X11R6/bin/xauth_switch_to_sun-des-1
@@ -99,6 +99,7 @@
 ./usr/X11R6/bin/xmag
 ./usr/X11R6/bin/xman
 ./usr/X11R6/bin/xmessage
+./usr/X11R6/bin/xmlwf
 ./usr/X11R6/bin/xmodmap
 ./usr/X11R6/bin/xmore
 ./usr/X11R6/bin/xphelloworld

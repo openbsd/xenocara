@@ -588,6 +588,7 @@
 ./usr/X11R6/lib/libXxf86misc.so.4.0
 ./usr/X11R6/lib/libXxf86vm.so.4.0
 ./usr/X11R6/lib/libexpat.so.5.0
+./usr/X11R6/lib/libexpat.so.8.0
 ./usr/X11R6/lib/libfontconfig.so.3.0
 ./usr/X11R6/lib/libfontenc.so.3.0
 ./usr/X11R6/lib/libfreetype.so.13.1

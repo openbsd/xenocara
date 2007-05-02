@@ -903,11 +903,12 @@
 ./usr/X11R6/man/cat1/FvwmScroll.0
 ./usr/X11R6/man/cat1/FvwmTalk.0
 ./usr/X11R6/man/cat1/FvwmWinList.0
+./usr/X11R6/man/cat1/cwm.0
 ./usr/X11R6/man/cat1/fvwm.0
 ./usr/X11R6/man/cat1/resize.0
 ./usr/X11R6/man/cat1/ssh-askpass.0
-./usr/X11R6/man/cat1/wm2.0
 ./usr/X11R6/man/cat1/xidle.0
+./usr/X11R6/man/cat1/xmlwf.0
 ./usr/X11R6/man/cat1/xpmroot.0
 ./usr/X11R6/man/cat1/xsystrace.0
 ./usr/X11R6/man/cat1/xterm.0
