@@ -35,9 +35,9 @@ EXTRA_DIST=fc-cat.sgml
 
 fc_cat_LDADD = ${top_builddir}/src/libfontconfig.la $(FREETYPE_LIBS) $(LIBXML2_LIBS) $(EXPAT_LIBS)
 
-if USEDOCBOOK
-
 man_MANS=fc-cat.1
+
+if USEDOCBOOK
 
 ${man_MANS}: ${SGML}	
 	$(RM) $@

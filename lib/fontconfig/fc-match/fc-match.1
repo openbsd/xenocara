@@ -1,0 +1,93 @@
+...\" $Header: /home/cvs/xenocara/lib/fontconfig/fc-match/Attic/fc-match.1,v 1.1 2007/05/05 10:32:29 matthieu Exp $
+...\"
+...\"	transcript compatibility for postscript use.
+...\"
+...\"	synopsis:  .P! <file.ps>
+...\"
+.de P!
+\\&.
+.fl			\" force out current output buffer
+\\!%PB
+\\!/showpage{}def
+...\" the following is from Ken Flowers -- it prevents dictionary overflows
+\\!/tempdict 200 dict def tempdict begin
+.fl			\" prolog
+.sy cat \\$1\" bring in postscript file
+...\" the following line matches the tempdict above
+\\!end % tempdict %
+\\!PE
+\\!.
+.sp \\$2u	\" move below the image
+..
+.de pF
+.ie     \\*(f1 .ds f1 \\n(.f
+.el .ie \\*(f2 .ds f2 \\n(.f
+.el .ie \\*(f3 .ds f3 \\n(.f
+.el .ie \\*(f4 .ds f4 \\n(.f
+.el .tm ? font overflow
+.ft \\$1
+..
+.de fP
+.ie     !\\*(f4 \{\
+.	ft \\*(f4
+.	ds f4\"
+'	br \}
+.el .ie !\\*(f3 \{\
+.	ft \\*(f3
+.	ds f3\"
+'	br \}
+.el .ie !\\*(f2 \{\
+.	ft \\*(f2
+.	ds f2\"
+'	br \}
+.el .ie !\\*(f1 \{\
+.	ft \\*(f1
+.	ds f1\"
+'	br \}
+.el .tm ? font underflow
+..
+.ds f1\"
+.ds f2\"
+.ds f3\"
+.ds f4\"
+.ta 8n 16n 24n 32n 40n 48n 56n 64n 72n  
+.TH "fc-match" "1" 
+.SH "NAME" 
+fc-match \(em match available fonts 
+.SH "SYNOPSIS" 
+.PP 
+\fBfc-match\fR [\fB-svV?\fP]  [\fB\-\-sort\fP]  [\fB\-\-verbose\fP]  [\fB\-\-version\fP]  [\fB\-\-help\fP]  [\fB\fIfont-pattern\fR\fP]  
+.SH "DESCRIPTION" 
+.PP 
+\fBfc-match\fR matches font-pattern (empty 
+pattern by default) using the normal fontconfig matching rules to find 
+the best font available\&.  If \-\-sort is given, the sorted list of best 
+matching fonts is displayed\&.  With \-\-verbose, the whole font pattern 
+for each match is printed, otherwise only the file, family and style 
+are printed\&.\&. 
+.SH "OPTIONS" 
+.PP 
+This program follows the usual GNU command line syntax, 
+with long options starting with two dashes (`\-\&')\&.  A summary of 
+options is included below\&. 
+.IP "\fB-v\fP           \fB\-\-verbose\fP         " 10 
+Print whole font pattern for each match\&. 
+.IP "\fB-?\fP           \fB\-\-help\fP         " 10 
+Show summary of options\&. 
+.IP "\fB-V\fP           \fB\-\-version\fP         " 10 
+Show version of the program and exit\&. 
+.IP "\fB-s\fP           \fB\-\-sort\fP         " 10 
+Displays sorted list of best matching fonts\&. 
+.IP "\fB\fIfont-pattern\fR\fP         " 10 
+Displays fonts matching 
+\fIfont-pattern\fR (uses empty pattern by default)\&. 
+.SH "SEE ALSO" 
+.PP 
+\fBfc-list\fR (1)\&. 
+.PP 
+The fontconfig user\&'s guide, in HTML format: 
+\fB/usr/share/doc/fontconfig/fontconfig-user\&.html\fP\&. 
+.SH "AUTHOR" 
+.PP 
+This manual page was updated by Patrick Lam plam@csail\&.mit\&.edu\&. 
+...\" created by instant / docbook-to-man, Sat 05 May 2007, 11:44 

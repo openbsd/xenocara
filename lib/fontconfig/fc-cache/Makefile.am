@@ -41,9 +41,9 @@ EXTRA_DIST=fc-cache.sgml
 
 fc_cache_LDADD = ${top_builddir}/src/libfontconfig.la $(FREETYPE_LIBS) $(LIBXML2_LIBS) $(EXPAT_LIBS)
 
-if USEDOCBOOK
-
 man_MANS=fc-cache.1
+
+if USEDOCBOOK
 
 ${man_MANS}: ${SGML}	
 	$(RM) $@
