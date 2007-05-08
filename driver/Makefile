@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.10 2007/04/20 10:23:52 matthieu Exp $
+# $OpenBSD: Makefile,v 1.11 2007/05/08 14:46:39 todd Exp $
 
 # Broken
 # xf86-input-calcomp  xf86-input-citron  xf86-input-dmc
@@ -78,6 +78,7 @@ VIDEO_DRV_macppc= \
 VIDEO_DRV_mvme68k=
 VIDEO_DRV_mvme88k=
 VIDEO_DRV_sgi=
+VIDEO_DRV_hppa=
 
 VIDEO_DRV_sparc64= \
 	xf86-video-ati xf86-video-wsfb
