@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: calmwm.h,v 1.2 2007/04/27 18:08:14 bernd Exp $
+ * $Id: calmwm.h,v 1.3 2007/05/10 17:23:49 jasper Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -285,7 +285,7 @@ struct mwm_hints {
 int input_keycodetrans(KeyCode, u_int, enum ctltype *, char *, int);
 
 int   x_errorhandler(Display *, XErrorEvent *);
-void  x_setup(void);
+void  x_setup(char *display_name);
 char *x_screenname(int);
 void  x_loop(void);
 int   x_setupscreen(struct screen_ctx *, u_int);

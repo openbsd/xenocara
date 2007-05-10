@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwm.1,v 1.2 2007/04/27 18:08:14 bernd Exp $
+.\"	$OpenBSD: cwm.1,v 1.3 2007/05/10 17:23:49 jasper Exp $
 .\"
 .\" The following requests are required for all man pages.
 .Dd July 10, 2004
@@ -10,6 +10,7 @@
 .Sh SYNOPSIS
 .\" For a program:  program [-abc] file ...
 .Nm cwm
+.Op Fl d Ar display
 .Op Fl s 
 .Op Fl f Ar fontname
 .Sh DESCRIPTION
@@ -104,6 +105,8 @@ The options for
 .Nm
 are as follows:
 .Bl -tag -width Ds
+.It Fl d Ar display
+Specify the display to use.
 .It Fl s
 Set sticky group mode on.
 The default behavior for new windows is to not assign any group.
@@ -203,6 +206,14 @@ above.  The defaults for these are
 and 
 .Xr xlock 1 ,
 respectively.
+
+.Sh ENVIRONMENT
+.TP
+DISPLAY
+.Nm
+starts on this display unless the
+.Fl d
+option is given.
 
 .Sh ACKNOWLEDGEMENTS
 .Nm

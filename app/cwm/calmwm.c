@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: calmwm.c,v 1.1.1.1 2007/04/27 17:58:48 bernd Exp $
+ * $Id: calmwm.c,v 1.2 2007/05/10 17:23:49 jasper Exp $
  */
 
 #include "headers.h"
@@ -55,10 +55,15 @@ main(int argc, char **argv)
 	int ch;
 	int conf_flags = 0;
 
+	char *display_name = NULL;
+
 	DefaultFontName = "sans-serif:pixelsize=14:bold";
 
-	while ((ch = getopt(argc, argv, "sf:")) != -1) {
+	while ((ch = getopt(argc, argv, "d:sf:")) != -1) {
 		switch (ch) {
+		case 'd':
+			display_name = optarg;
+			break;
 		case 's':
 			conf_flags |= CONF_STICKY_GROUPS;
 			break;
@@ -69,6 +74,8 @@ main(int argc, char **argv)
 			errx(1, "Unknown option '%c'", ch);
 		}
 	}
+	argc -= optind;
+	argv +- optind;
 
 	/* Ignore a few signals. */
         if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
@@ -83,7 +90,7 @@ main(int argc, char **argv)
 	conf_setup(&G_conf);
 	G_conf.flags |= conf_flags;
 	client_setup();
-	x_setup();
+	x_setup(display_name);
 	G_starting = 0;
 
 	xev_init();
@@ -108,7 +115,7 @@ main(int argc, char **argv)
 }
 
 void
-x_setup(void)
+x_setup(char *display_name)
 {
 	int i;
 	struct screen_ctx *sc;
@@ -116,7 +123,7 @@ x_setup(void)
 
 	TAILQ_INIT(&G_screenq);
 
-	if ((G_dpy = XOpenDisplay("")) == NULL)
+	if ((G_dpy = XOpenDisplay(display_name)) == NULL)
 		errx(1, "%s:%d XOpenDisplay()", __FILE__, __LINE__);
 
 	XSetErrorHandler(x_errorhandler);
