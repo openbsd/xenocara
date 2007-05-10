@@ -33,8 +33,10 @@ AC_PROG_INSTALL
 AC_CHECK_LIB(z, gzopen, [], 
 	[AC_MSG_ERROR([zlib is required, but was not found.])])
 
+			
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(MKFONTSCALE, fontenc freetype2)
+
 AC_SUBST(MKFONTSCALE_CFLAGS)
 AC_SUBST(MKFONTSCALE_LIBS)
 
@@ -43,5 +45,13 @@ AC_SUBST(X11_CFLAGS)
 
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
+
+if test $host_cpu = sh; then
+	case $host_os in
+		openbsd*)
+		CFLAGS="-O0 -pipe"
+		;;
+	esac
+fi
 
 AC_OUTPUT([Makefile])
