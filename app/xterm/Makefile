@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2007/04/14 16:11:13 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2007/05/11 06:42:50 matthieu Exp $
 
 SUBDIR=	resize
 
@@ -12,7 +12,7 @@ CPPFLAGS+=	-I${.CURDIR} -I${X11BASE}/include \
 		-I${X11BASE}/include/freetype2 \
 		-DHAVE_CONFIG_H -DCSRG_BASED \
 		-DFUNCPROTO=15 -DNARROWPROTO -DXFREE86_FT2 -DUTMP
-LDADD+=		-L${X11BASE}/lib -lXaw -lXt -lSM -lICE \
+LDADD+=		-L${X11BASE}/lib -lXaw -lXpm -lXt -lSM -lICE \
 		-lXmu -lXft -lXrender -lX11 -lXext -lXau -lXdmcp \
 		-lfontconfig -lexpat -lfreetype -lutil -ltermcap -lz
 
