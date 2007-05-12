@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.13 2007/05/10 19:35:29 matthieu Exp $
+# $OpenBSD: Makefile,v 1.14 2007/05/12 14:24:59 matthieu Exp $
 
 # Broken
 # xf86-input-calcomp  xf86-input-citron  xf86-input-dmc
@@ -40,6 +40,8 @@ INPUT_DRV_mvme88k=
 INPUT_DRV_sgi=
 
 INPUT_DRV_sparc64= ${INPUT_DRV_COMMON}
+
+INPUT_DRV_vax=
 
 INPUT_DRV_zaurus= ${INPUT_DRV_DEFAULT}
 
@@ -87,6 +89,8 @@ VIDEO_DRV_sgi=
 
 VIDEO_DRV_sparc64= \
 	xf86-video-ati xf86-video-wsfb
+
+VIDEO_DRV_vax=
 
 .if defined(VIDEO_DRV_${MACHINE})
 VIDEO_DRV= ${VIDEO_DRV_${MACHINE}}

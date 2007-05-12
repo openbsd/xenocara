@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2007/04/04 22:33:46 david Exp $
+# $OpenBSD: Makefile,v 1.5 2007/05/12 14:24:59 matthieu Exp $
 
 SUBDIR= freetype expat fontconfig libxtrans libXau libXdmcp \
 	libX11  libXext  libXrender libXft libdmx libfontenc \
@@ -9,7 +9,9 @@ SUBDIR= freetype expat fontconfig libxtrans libXau libXdmcp \
 	libXprintAppUtil libXrandr libXRes libXScrnSaver libXTrap \
 	libXtst libXv libXvMC libXxf86dga libXxf86misc libXxf86vm
 
+.if ${MACHINE} != "sgi" && ${MACHINE} != "vax"
 SUBDIR+= libGL libGLU libGLw
+.endif
 
 DRM_ARCHES= alpha amd64 i386 macppc sparc64
 
