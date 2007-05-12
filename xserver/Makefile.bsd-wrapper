@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.13 2007/05/12 14:24:59 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.14 2007/05/12 14:54:57 matthieu Exp $
 
 DIST= ${.CURDIR}
 
@@ -24,7 +24,7 @@ NO_XF86_UTIL_${M} = --disable-xfree86-utils
 .endfor
 NO_XF86_UTIL_OPTION=${NO_XF86_UTIL_${MACHINE}}
 
-.if ${MACHINE} != "sgi" && ${MACHINE} != "vax"
+.if ${MACHINE} != "landisk" && ${MACHINE} != "sgi" && ${MACHINE} != "vax"
 MESA_SOURCE=	--with-mesa-source=${XSRCDIR}/dist/Mesa
 .endif
 
