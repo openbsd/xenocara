@@ -34,7 +34,7 @@ AC_PROG_CC
 AC_PROG_LIBTOOL
 
 # Check for dependencies
-PKG_CHECK_MODULES(XKBUI, x11 xt xkbfile)
+PKG_CHECK_MODULES(XKBUI, x11 xkbfile)
 AC_SEARCH_LIBS(hypot, [m])
 
 AC_SUBST(XKBUI_CFLAGS)

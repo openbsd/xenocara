@@ -7,6 +7,6 @@ Name: xkbui
 Description: The xkbui Library
 Version: @PACKAGE_VERSION@
 Requires: x11 kbproto
-Requires.private: x11 xt
+Requires.private: x11
 Cflags: -I${includedir}
 Libs: -L${libdir} -lxkbui
