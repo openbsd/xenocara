@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: calmwm.c,v 1.2 2007/05/10 17:23:49 jasper Exp $
+ * $Id: calmwm.c,v 1.3 2007/05/21 07:53:11 jasper Exp $
  */
 
 #include "headers.h"
@@ -75,7 +75,7 @@ main(int argc, char **argv)
 		}
 	}
 	argc -= optind;
-	argv +- optind;
+	argv += optind;
 
 	/* Ignore a few signals. */
         if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
