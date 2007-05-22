@@ -1,4 +1,4 @@
-.\" $OpenBSD: xtsscale.1,v 1.1 2007/05/20 14:43:12 robert Exp $
+.\" $OpenBSD: xtsscale.1,v 1.2 2007/05/22 09:43:22 robert Exp $
 .\"
 .\" Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
 .\"
@@ -46,6 +46,11 @@ will exit and provide on standard output a result like the following:
 .Pp
 .Dl mouse.scale=200,3400,312,3672,1,1024,768
 .Pp
+This result should be placed into
+.Pa /etc/wsconsctl.conf
+for further use, or can be immediately applied using:
+.Pp
+.Dl # wsconsctl mouse.scale=200,3400,312,3672,1,1024,768
 .Sh SEE ALSO
 .Xr ioctl 2 ,
 .Xr uts 4 ,
