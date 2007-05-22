@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: headers.h,v 1.1.1.1 2007/04/27 17:58:48 bernd Exp $
+ * $Id: headers.h,v 1.2 2007/05/22 17:59:17 jasper Exp $
  */
 
 #ifndef _CALMWM_HEADERS_H_
@@ -42,10 +42,6 @@
 #include <X11/Intrinsic.h>
 #include <X11/Xos.h>
 #include <X11/Xft/Xft.h>
-
-#ifdef USE_XOSD
-#include <xosd.h>
-#endif /* USE_XOSD */
 
 #include <err.h>
 
