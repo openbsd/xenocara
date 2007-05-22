@@ -4,17 +4,13 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: headers.h,v 1.2 2007/05/22 17:59:17 jasper Exp $
+ * $Id: headers.h,v 1.3 2007/05/22 22:14:42 jasper Exp $
  */
 
 #ifndef _CALMWM_HEADERS_H_
 #define _CALMWM_HEADERS_H_
 
 #include <sys/types.h>
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif /* HAVE_CONFIG_H */
 
 #include <sys/queue.h>
 #include <sys/wait.h>
