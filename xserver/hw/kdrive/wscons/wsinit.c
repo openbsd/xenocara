@@ -1,4 +1,4 @@
-/* $OpenBSD: wsinit.c,v 1.1 2007/05/25 15:33:32 matthieu Exp $ */
+/* $OpenBSD: wsinit.c,v 1.2 2007/05/25 19:10:43 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -23,23 +23,28 @@
 #include "kdrive.h"
 #include "wsfb.h"
 
+#define DBG(x) ErrorF x
+
 void
 InitCard(char *name)
 {
 	KdCardAttr attr;
 
+	DBG(("InitCard\n"));
 	KdCardInfoAdd(&wsfbFuncs, &attr, 0);
 }
 
 void
 InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
 {
+	DBG(("InitOutput\n"));
 	KdInitOutput(pScreenInfo, argc, argv);
 }
 
 void
 InitInput(int argc, char **argv)
 {
+	DBG(("InitInput\n"));
 	KdInitInput(&WsconsMouseFuncs, &WsconsKeyboardFuncs);
 }
 
@@ -55,6 +60,7 @@ ddxUseMsg(void)
 int
 ddxProcessArgument(int argc, char **argv, int i)
 {
+	DBG(("ddxProcessArgument\n"));
 	return KdProcessArgument(argc, argv, i);
 }
 

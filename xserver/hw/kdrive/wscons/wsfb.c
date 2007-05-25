@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb.c,v 1.1 2007/05/25 15:33:32 matthieu Exp $ */
+/* $OpenBSD: wsfb.c,v 1.2 2007/05/25 19:10:43 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -25,9 +25,12 @@
 
 #include "wsfb.h"
 
+#define DBG(x) ErrorF x
+
 Bool
 wsfbInitialize(KdCardInfo *card, WsfbPriv *priv)
 {
+	DBG(("wsfbInitialize\n"));
 	return TRUE;
 }
 
@@ -36,6 +39,7 @@ wsfbCardInit(KdCardInfo *card)
 {
 	WsfbPriv *priv;
 
+	DBG(("wsfbCardInit\n"));
 	priv = (WsfbPriv *)xalloc(sizeof(WsfbPriv));
 	if (priv == NULL)
 		return FALSE;
@@ -51,6 +55,7 @@ wsfbCardInit(KdCardInfo *card)
 Bool
 wsfbScreenInitialize(KdScreenInfo *screen, WsfbScrPriv *scrpriv)
 {
+	DBG(("wsfbScreenInitialize\n"));
 	return TRUE;
 }
     
@@ -59,6 +64,7 @@ wsfbScreenInit(KdScreenInfo *screen)
 {
 	WsfbScrPriv *scrPriv;
 
+	DBG(("wsfbScreenInit\n"));
 	scrPriv = (WsfbScrPriv *)xalloc(sizeof(WsfbScrPriv));
 	if (scrPriv == NULL)
 		return FALSE;
@@ -75,6 +81,7 @@ wsfbScreenInit(KdScreenInfo *screen)
 Bool
 wsfbInitScreen(ScreenPtr pScreen)
 {
+	DBG(("wsfbInitScreen\n"));
 	pScreen->CreateColormap = wsfbCreateColormap;
 	return TRUE;
 }
@@ -83,6 +90,7 @@ wsfbInitScreen(ScreenPtr pScreen)
 Bool
 wsfbFinishInitScreen(ScreenPtr pScreen)
 {
+	DBG(("wsfbFinishInitScreen\n"));
 	if (!shadowSetup(pScreen))
 		return FALSE;
 #ifdef RANDR
@@ -95,40 +103,47 @@ wsfbFinishInitScreen(ScreenPtr pScreen)
 Bool
 wsfbCreateResources(ScreenPtr pScreen)
 {
+	DBG(("wsfbCreateResources\n"));
 	return wsfbSetShadow(pScreen);
 }
 
 void
 wsfbPreserve(KdCardInfo *card)
 {
+	DBG(("wsfbPreserve\n"));
 }
 
 
 Bool
 wsfbEnable(ScreenPtr pScreen)
 {
+	DBG(("wsfbEnable\n"));
 	return TRUE;
 }
 
 Bool
 wsfbDPMS(ScreenPtr pScreen, int mode)
 {
+	DBG(("wsfb DPMS %d\n", mode));
 	return TRUE;
 }
 
 void
 wsfbDisable(ScreenPtr pScreen)
 {
+	DBG(("wsfbDisable\n"));
 }
 
 void
 wsfbRestore(KdCardInfo *card)
 {
+	DBG(("wsfbRestore\n"));
 }
 
 void
 wsfbScreenFini(KdScreenInfo *screen)
 {
+	DBG(("wsfbScreenFini\n"));
 }
 
 void
@@ -136,6 +151,7 @@ wsfbCardFini(KdCardInfo *card)
 {
 	WsfbPriv *priv = card->driver;
 
+	DBG(("wsfbCardFini\n"));
 	/* unmap framebuffer */
 	/* close fd */
 	xfree(priv);
@@ -144,11 +160,13 @@ wsfbCardFini(KdCardInfo *card)
 void
 wsfbGetColors(ScreenPtr pScreen, int fb, int n, xColorItem *pdefs)
 {
+	DBG(("wsfbGetColors %d\n", n));
 }
 
 void
 wsfbPutColors(ScreenPtr pScreen, int fb, int n, xColorItem *pdefs)
 {
+	DBG(("wsfbPutColors %d\n", n));
 }
 
 Bool
@@ -158,6 +176,7 @@ wsfbMapFramebuffer(KdScreenInfo *screen)
 	KdMouseMatrix m;
 	WsfbPriv *priv = screen->card->driver;
 
+	DBG(("wsfbMapFrameBuffer\n"));
 	if (scrPriv->randr != RR_Rotate_0)
 		scrPriv->shadow = TRUE;
 	else
@@ -171,7 +190,7 @@ wsfbMapFramebuffer(KdScreenInfo *screen)
 	/* screen->width = priv->var.xres;
 	   screen->height = priv->var.yres; */
 	screen->memory_base = (CARD8 *)(priv->fb);
-	/* screen->memory_size = priv->fix.smem_len; */
+	/* screen->memoryG_size = priv->fix.smem_len; */
 	
 	if (scrPriv->shadow) {
 		if (!KdShadowFbAlloc(screen, 0,
@@ -197,17 +216,20 @@ wsfbWindowLinear(ScreenPtr	pScreen,
 		   CARD32	*size,
 		   void		*closure)
 {
+	DBG(("wsfbWindowLinear\n"));
 	return NULL;
 }
 
 void
 wsfbSetScreenSizes(ScreenPtr pScreen)
 {
+	DBG(("wsfbSetScreenSizes\n"));
 }
 
 Bool
 wsfbUnmapFramebuffer(KdScreenInfo *screen)
 {
+	DBG(("wsfbUnmapFramebuffer\n"));
 	KdShadowFbFree(screen, 0);
 	return TRUE;
 }
@@ -215,12 +237,14 @@ wsfbUnmapFramebuffer(KdScreenInfo *screen)
 Bool
 wsfbSetShadow(ScreenPtr pScreen)
 {
+	DBG(("wsfbSetShadow\n"));
 	return TRUE;
 }
 
 Bool
 wsfbCreateColormap(ColormapPtr pmap)
 {
+	DBG(("wsfbCreateColormap\n"));
 	return TRUE;
 }
 
@@ -228,6 +252,7 @@ wsfbCreateColormap(ColormapPtr pmap)
 Bool
 wsfbRandRGetInfo(ScreenPtr pScreen, Rotation *rotations)
 {
+	DBG(("wsfbRandRGetInfo\n"));
 	return TRUE;
 }
 
@@ -237,12 +262,14 @@ wsfbRandRSetConfig(ScreenPtr		pScreen,
 		     int		rate,
 		     RRScreenSizePtr	pSize)
 {
+	DBG(("wsfbRandRSetConfig\n"));
 	return TRUE;
 }
 
 Bool
 wsfbRandRInit(ScreenPtr pScreen)
 {
+	DBG(("wsfbRandRInit\n"));
 	return TRUE;
 }
 #endif /* RANDR */
