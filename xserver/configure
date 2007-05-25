@@ -465,7 +465,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CCAS CCASFLAGS LN_S build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL PKG_CONFIG ac_pt_PKG_CONFIG LEX LEXLIB LEX_OUTPUT_ROOT YACC RAWCPP RAWCPPFLAGS ALLOCA NEED_STRLCAT_TRUE NEED_STRLCAT_FALSE NEED_VSNPRINTF_TRUE NEED_VSNPRINTF_FALSE AGP_TRUE AGP_FALSE LNXAPM_TRUE LNXAPM_FALSE FBDEVHW_TRUE FBDEVHW_FALSE FREEBSD_KLDLOAD_TRUE FREEBSD_KLDLOAD_FALSE BSD_APM_TRUE BSD_APM_FALSE BSD_KQUEUE_APM_TRUE BSD_KQUEUE_APM_FALSE ALPHA_VIDEO_TRUE ALPHA_VIDEO_FALSE ARM_VIDEO_TRUE ARM_VIDEO_FALSE HP300_VIDEO_TRUE HP300_VIDEO_FALSE HPPA_VIDEO_TRUE HPPA_VIDEO_FALSE I386_VIDEO_TRUE I386_VIDEO_FALSE PPC_VIDEO_TRUE PPC_VIDEO_FALSE SPARC64_VIDEO_TRUE SPARC64_VIDEO_FALSE KDRIVE_HW_TRUE KDRIVE_HW_FALSE MMX_CAPABLE_TRUE MMX_CAPABLE_FALSE X_PRIVSEP_TRUE X_PRIVSEP_FALSE INSTALL_SETUID_TRUE INSTALL_SETUID_FALSE INT10_VM86_TRUE INT10_VM86_FALSE INT10_X86EMU_TRUE INT10_X86EMU_FALSE INT10_STUB_TRUE INT10_STUB_FALSE BUILDDOCS_TRUE BUILDDOCS_FALSE LINUXDOC PS2PDF BUILD_LINUXDOC_TRUE BUILD_LINUXDOC_FALSE BUILD_PDFDOC_TRUE BUILD_PDFDOC_FALSE MAKE_TEXT MAKE_PS MAKE_PDF MAKE_HTML INSTALL_LIBXF86CONFIG_TRUE INSTALL_LIBXF86CONFIG_FALSE XV_TRUE XV_FALSE XVMC_TRUE XVMC_FALSE DGA_TRUE DGA_FALSE COMPOSITE_TRUE COMPOSITE_FALSE MITSHM_TRUE MITSHM_FALSE XTRAP_TRUE XTRAP_FALSE RECORD_TRUE RECORD_FALSE SCREENSAVER_TRUE SCREENSAVER_FALSE RES_TRUE RES_FALSE XLIB_CFLAGS XLIB_LIBS GL_CFLAGS GL_LIBS GLX_TRUE GLX_FALSE MESA_SOURCE AIGLX_TRUE AIGLX_FALSE GLX_DEFINES DRI_TRUE DRI_FALSE DRIPROTO_CFLAGS DRIPROTO_LIBS LIBDRM_CFLAGS LIBDRM_LIBS XINERAMA_TRUE XINERAMA_FALSE XACE_TRUE XACE_FALSE XCSECURITY_TRUE XCSECURITY_FALSE XEVIE_TRUE XEVIE_FALSE APPGROUP_TRUE APPGROUP_FALSE CUP_TRUE CUP_FALSE EVI_TRUE EVI_FALSE MULTIBUFFER_TRUE MULTIBUFFER_FALSE FONTCACHE_TRUE FONTCACHE_FALSE DBE_TRUE DBE_FALSE XF86BIGFONT_TRUE XF86BIGFONT_FALSE DPMSExtension_TRUE DPMSExtension_FALSE XPRINTPROTO_CFLAGS XPRINTPROTO_LIBS XPRINT_TRUE XPRINT_FALSE XCALIBRATE_TRUE XCALIBRATE_FALSE XINPUT_TRUE XINPUT_FALSE XF86UTILS_TRUE XF86UTILS_FALSE XDMCP_CFLAGS XDMCP_LIBS XDMCP_TRUE XDMCP_FALSE XDMAUTH_TRUE XDMAUTH_FALSE USE_RGB_BUILTIN_TRUE USE_RGB_BUILTIN_FALSE COMPILEDDEFAULTFONTPATH RGB_DB BASE_FONT_PATH DRI_DRIVER_PATH VENDOR_STRING VENDOR_STRING_SHORT VENDOR_RELEASE VENDOR_MAN_VERSION DEBUG_TRUE DEBUG_FALSE XSERVERCFLAGS_CFLAGS XSERVERCFLAGS_LIBS XSERVERLIBS_CFLAGS XSERVERLIBS_LIBS SYS_LIBS XSERVER_LIBS DMXMODULES_CFLAGS DMXMODULES_LIBS DMX_TRUE DMX_FALSE XDMX_LIBS XDMXCONFIG_DEP_CFLAGS XDMXCONFIG_DEP_LIBS DMXEXAMPLES_DEP_CFLAGS DMXEXAMPLES_DEP_LIBS DMXXMUEXAMPLES_DEP_CFLAGS DMXXMUEXAMPLES_DEP_LIBS DMXXIEXAMPLES_DEP_CFLAGS DMXXIEXAMPLES_DEP_LIBS XTSTEXAMPLES_DEP_CFLAGS XTSTEXAMPLES_DEP_LIBS XRESEXAMPLES_DEP_CFLAGS XRESEXAMPLES_DEP_LIBS X11EXAMPLES_DEP_CFLAGS X11EXAMPLES_DEP_LIBS DMX_BUILD_LNX_TRUE DMX_BUILD_LNX_FALSE DMX_BUILD_USB_TRUE DMX_BUILD_USB_FALSE XVFB_TRUE XVFB_FALSE XVFB_LIBS XNESTMODULES_CFLAGS XNESTMODULES_LIBS XNEST_TRUE XNEST_FALSE XNEST_LIBS XGLMODULES_CFLAGS XGLMODULES_LIBS XGL_TRUE XGL_FALSE XGL_LIBS xglmoduledir XGL_MODULE_PATH XEGLMODULES_CFLAGS XEGLMODULES_LIBS XEGL_TRUE XEGL_FALSE XEGL_LIBS XGLXMODULES_CFLAGS XGLXMODULES_LIBS XGLX_TRUE XGLX_FALSE XGLX_LIBS XORG_CORE_LIBS SOLARIS_INOUT_ARCH SOLARIS_ASM_CFLAGS XORG_LIBS XORG_INCS XORG_OS XORG_OS_SUBDIR XORG_OS_KBD PERL XORG_CFLAGS LD_EXPORT_SYMBOLS_FLAG __XCONFIGFILE__ XF86CONFIGFILE DEFAULT_MODULE_PATH DEFAULT_LIBRARY_PATH DEFAULT_LOGPREFIX moduledir driverdir sdkdir extdir logdir XORG_TRUE XORG_FALSE XORG_BUS_LINUXPCI_TRUE XORG_BUS_LINUXPCI_FALSE XORG_BUS_FREEBSDPCI_TRUE XORG_BUS_FREEBSDPCI_FALSE XORG_BUS_NETBSDPCI_TRUE XORG_BUS_NETBSDPCI_FALSE XORG_BUS_IX86PCI_TRUE XORG_BUS_IX86PCI_FALSE XORG_BUS_PPCPCI_TRUE XORG_BUS_PPCPCI_FALSE XORG_BUS_SPARCPCI_TRUE XORG_BUS_SPARCPCI_FALSE XORG_BUS_SPARC_TRUE XORG_BUS_SPARC_FALSE XORG_LOADER_SPARC_TRUE XORG_LOADER_SPARC_FALSE LINUX_IA64_TRUE LINUX_IA64_FALSE LINUX_ALPHA_TRUE LINUX_ALPHA_FALSE LNXACPI_TRUE LNXACPI_FALSE SOLARIS_USL_CONSOLE_TRUE SOLARIS_USL_CONSOLE_FALSE SOLARIS_ASM_INLINE_TRUE SOLARIS_ASM_INLINE_FALSE MFB_TRUE MFB_FALSE CFB_TRUE CFB_FALSE AFB_TRUE AFB_FALSE XPRINT_CFLAGS XPRINT_LIBS xpconfigdir MKFONTSCALE MKFONTDIR FREETYPE_CFLAGS FREETYPE_LIBS ft_config FREETYPE_REQUIRES XP_USE_FREETYPE_TRUE XP_USE_FREETYPE_FALSE XWIN_LIBS XWINMODULES_CFLAGS XWINMODULES_LIBS XWIN_SERVER_NAME XWIN_SYSTEM_LIBS XWIN_TRUE XWIN_FALSE XWIN_MULTIWINDOW_TRUE XWIN_MULTIWINDOW_FALSE XWIN_MULTIWINDOWEXTWM_TRUE XWIN_MULTIWINDOWEXTWM_FALSE XWIN_CLIPBOARD_TRUE XWIN_CLIPBOARD_FALSE XWIN_GLX_WINDOWS_TRUE XWIN_GLX_WINDOWS_FALSE XWIN_NATIVEGDI_TRUE XWIN_NATIVEGDI_FALSE XWIN_PRIMARYFB_TRUE XWIN_PRIMARYFB_FALSE XWIN_RANDR_TRUE XWIN_RANDR_FALSE XWIN_XV_TRUE XWIN_XV_FALSE KDRIVE_TRUE KDRIVE_FALSE TSLIB_CFLAGS TSLIB_LIBS XEPHYR_CFLAGS XEPHYR_LIBS KDRIVE_INCS KDRIVE_PURE_INCS KDRIVE_CFLAGS KDRIVE_PURE_LIBS KDRIVE_LIBS KDRIVELINUX_TRUE KDRIVELINUX_FALSE TSLIB_TRUE TSLIB_FALSE H3600_TS_TRUE H3600_TS_FALSE KDRIVEVESA_TRUE KDRIVEVESA_FALSE KDRIVEFBDEV_TRUE KDRIVEFBDEV_FALSE XEPHYR_TRUE XEPHYR_FALSE XEPHYR_INCS XSDLSERVER_TRUE XSDLSERVER_FALSE XSDL_LIBS XSDL_INCS XKB_BASE_DIRECTORY XKB_BIN_DIRECTORY XKM_OUTPUT_DIR XKB_COMPILED_DIR PROJECTROOT XORGCONFIG_DEP_CFLAGS XORGCONFIG_DEP_LIBS XORGCFG_DEP_CFLAGS XORGCFG_DEP_LIBS APPDEFAULTDIR BUILD_XORGCFG_TRUE BUILD_XORGCFG_FALSE USE_CURSES_TRUE USE_CURSES_FALSE BUILD_KBD_MODE_TRUE BUILD_KBD_MODE_FALSE BSD_KBD_MODE_TRUE BSD_KBD_MODE_FALSE SUN_KBD_MODE_TRUE SUN_KBD_MODE_FALSE BUILD_DATE DIX_CFLAGS libdir exec_prefix prefix APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CCAS CCASFLAGS LN_S build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL PKG_CONFIG ac_pt_PKG_CONFIG LEX LEXLIB LEX_OUTPUT_ROOT YACC RAWCPP RAWCPPFLAGS ALLOCA NEED_STRLCAT_TRUE NEED_STRLCAT_FALSE NEED_VSNPRINTF_TRUE NEED_VSNPRINTF_FALSE AGP_TRUE AGP_FALSE LNXAPM_TRUE LNXAPM_FALSE FBDEVHW_TRUE FBDEVHW_FALSE FREEBSD_KLDLOAD_TRUE FREEBSD_KLDLOAD_FALSE BSD_APM_TRUE BSD_APM_FALSE BSD_KQUEUE_APM_TRUE BSD_KQUEUE_APM_FALSE ALPHA_VIDEO_TRUE ALPHA_VIDEO_FALSE ARM_VIDEO_TRUE ARM_VIDEO_FALSE HP300_VIDEO_TRUE HP300_VIDEO_FALSE HPPA_VIDEO_TRUE HPPA_VIDEO_FALSE I386_VIDEO_TRUE I386_VIDEO_FALSE PPC_VIDEO_TRUE PPC_VIDEO_FALSE SPARC64_VIDEO_TRUE SPARC64_VIDEO_FALSE KDRIVE_HW_TRUE KDRIVE_HW_FALSE MMX_CAPABLE_TRUE MMX_CAPABLE_FALSE X_PRIVSEP_TRUE X_PRIVSEP_FALSE INSTALL_SETUID_TRUE INSTALL_SETUID_FALSE INT10_VM86_TRUE INT10_VM86_FALSE INT10_X86EMU_TRUE INT10_X86EMU_FALSE INT10_STUB_TRUE INT10_STUB_FALSE BUILDDOCS_TRUE BUILDDOCS_FALSE LINUXDOC PS2PDF BUILD_LINUXDOC_TRUE BUILD_LINUXDOC_FALSE BUILD_PDFDOC_TRUE BUILD_PDFDOC_FALSE MAKE_TEXT MAKE_PS MAKE_PDF MAKE_HTML INSTALL_LIBXF86CONFIG_TRUE INSTALL_LIBXF86CONFIG_FALSE XV_TRUE XV_FALSE XVMC_TRUE XVMC_FALSE DGA_TRUE DGA_FALSE COMPOSITE_TRUE COMPOSITE_FALSE MITSHM_TRUE MITSHM_FALSE XTRAP_TRUE XTRAP_FALSE RECORD_TRUE RECORD_FALSE SCREENSAVER_TRUE SCREENSAVER_FALSE RES_TRUE RES_FALSE XLIB_CFLAGS XLIB_LIBS GL_CFLAGS GL_LIBS GLX_TRUE GLX_FALSE MESA_SOURCE AIGLX_TRUE AIGLX_FALSE GLX_DEFINES DRI_TRUE DRI_FALSE DRIPROTO_CFLAGS DRIPROTO_LIBS LIBDRM_CFLAGS LIBDRM_LIBS XINERAMA_TRUE XINERAMA_FALSE XACE_TRUE XACE_FALSE XCSECURITY_TRUE XCSECURITY_FALSE XEVIE_TRUE XEVIE_FALSE APPGROUP_TRUE APPGROUP_FALSE CUP_TRUE CUP_FALSE EVI_TRUE EVI_FALSE MULTIBUFFER_TRUE MULTIBUFFER_FALSE FONTCACHE_TRUE FONTCACHE_FALSE DBE_TRUE DBE_FALSE XF86BIGFONT_TRUE XF86BIGFONT_FALSE DPMSExtension_TRUE DPMSExtension_FALSE XPRINTPROTO_CFLAGS XPRINTPROTO_LIBS XPRINT_TRUE XPRINT_FALSE XCALIBRATE_TRUE XCALIBRATE_FALSE XINPUT_TRUE XINPUT_FALSE XF86UTILS_TRUE XF86UTILS_FALSE XDMCP_CFLAGS XDMCP_LIBS XDMCP_TRUE XDMCP_FALSE XDMAUTH_TRUE XDMAUTH_FALSE USE_RGB_BUILTIN_TRUE USE_RGB_BUILTIN_FALSE COMPILEDDEFAULTFONTPATH RGB_DB BASE_FONT_PATH DRI_DRIVER_PATH VENDOR_STRING VENDOR_STRING_SHORT VENDOR_RELEASE VENDOR_MAN_VERSION DEBUG_TRUE DEBUG_FALSE XSERVERCFLAGS_CFLAGS XSERVERCFLAGS_LIBS XSERVERLIBS_CFLAGS XSERVERLIBS_LIBS SYS_LIBS XSERVER_LIBS DMXMODULES_CFLAGS DMXMODULES_LIBS DMX_TRUE DMX_FALSE XDMX_LIBS XDMXCONFIG_DEP_CFLAGS XDMXCONFIG_DEP_LIBS DMXEXAMPLES_DEP_CFLAGS DMXEXAMPLES_DEP_LIBS DMXXMUEXAMPLES_DEP_CFLAGS DMXXMUEXAMPLES_DEP_LIBS DMXXIEXAMPLES_DEP_CFLAGS DMXXIEXAMPLES_DEP_LIBS XTSTEXAMPLES_DEP_CFLAGS XTSTEXAMPLES_DEP_LIBS XRESEXAMPLES_DEP_CFLAGS XRESEXAMPLES_DEP_LIBS X11EXAMPLES_DEP_CFLAGS X11EXAMPLES_DEP_LIBS DMX_BUILD_LNX_TRUE DMX_BUILD_LNX_FALSE DMX_BUILD_USB_TRUE DMX_BUILD_USB_FALSE XVFB_TRUE XVFB_FALSE XVFB_LIBS XNESTMODULES_CFLAGS XNESTMODULES_LIBS XNEST_TRUE XNEST_FALSE XNEST_LIBS XGLMODULES_CFLAGS XGLMODULES_LIBS XGL_TRUE XGL_FALSE XGL_LIBS xglmoduledir XGL_MODULE_PATH XEGLMODULES_CFLAGS XEGLMODULES_LIBS XEGL_TRUE XEGL_FALSE XEGL_LIBS XGLXMODULES_CFLAGS XGLXMODULES_LIBS XGLX_TRUE XGLX_FALSE XGLX_LIBS XORG_CORE_LIBS SOLARIS_INOUT_ARCH SOLARIS_ASM_CFLAGS XORG_LIBS XORG_INCS XORG_OS XORG_OS_SUBDIR XORG_OS_KBD PERL XORG_CFLAGS LD_EXPORT_SYMBOLS_FLAG __XCONFIGFILE__ XF86CONFIGFILE DEFAULT_MODULE_PATH DEFAULT_LIBRARY_PATH DEFAULT_LOGPREFIX moduledir driverdir sdkdir extdir logdir XORG_TRUE XORG_FALSE XORG_BUS_LINUXPCI_TRUE XORG_BUS_LINUXPCI_FALSE XORG_BUS_FREEBSDPCI_TRUE XORG_BUS_FREEBSDPCI_FALSE XORG_BUS_NETBSDPCI_TRUE XORG_BUS_NETBSDPCI_FALSE XORG_BUS_IX86PCI_TRUE XORG_BUS_IX86PCI_FALSE XORG_BUS_PPCPCI_TRUE XORG_BUS_PPCPCI_FALSE XORG_BUS_SPARCPCI_TRUE XORG_BUS_SPARCPCI_FALSE XORG_BUS_SPARC_TRUE XORG_BUS_SPARC_FALSE XORG_LOADER_SPARC_TRUE XORG_LOADER_SPARC_FALSE LINUX_IA64_TRUE LINUX_IA64_FALSE LINUX_ALPHA_TRUE LINUX_ALPHA_FALSE LNXACPI_TRUE LNXACPI_FALSE SOLARIS_USL_CONSOLE_TRUE SOLARIS_USL_CONSOLE_FALSE SOLARIS_ASM_INLINE_TRUE SOLARIS_ASM_INLINE_FALSE MFB_TRUE MFB_FALSE CFB_TRUE CFB_FALSE AFB_TRUE AFB_FALSE XPRINT_CFLAGS XPRINT_LIBS xpconfigdir MKFONTSCALE MKFONTDIR FREETYPE_CFLAGS FREETYPE_LIBS ft_config FREETYPE_REQUIRES XP_USE_FREETYPE_TRUE XP_USE_FREETYPE_FALSE XWIN_LIBS XWINMODULES_CFLAGS XWINMODULES_LIBS XWIN_SERVER_NAME XWIN_SYSTEM_LIBS XWIN_TRUE XWIN_FALSE XWIN_MULTIWINDOW_TRUE XWIN_MULTIWINDOW_FALSE XWIN_MULTIWINDOWEXTWM_TRUE XWIN_MULTIWINDOWEXTWM_FALSE XWIN_CLIPBOARD_TRUE XWIN_CLIPBOARD_FALSE XWIN_GLX_WINDOWS_TRUE XWIN_GLX_WINDOWS_FALSE XWIN_NATIVEGDI_TRUE XWIN_NATIVEGDI_FALSE XWIN_PRIMARYFB_TRUE XWIN_PRIMARYFB_FALSE XWIN_RANDR_TRUE XWIN_RANDR_FALSE XWIN_XV_TRUE XWIN_XV_FALSE KDRIVE_TRUE KDRIVE_FALSE TSLIB_CFLAGS TSLIB_LIBS XEPHYR_CFLAGS XEPHYR_LIBS KDRIVE_INCS KDRIVE_PURE_INCS KDRIVE_CFLAGS KDRIVE_PURE_LIBS KDRIVE_LIBS KDRIVELINUX_TRUE KDRIVELINUX_FALSE KDRIVEOPENBSD_TRUE KDRIVEOPENBSD_FALSE TSLIB_TRUE TSLIB_FALSE H3600_TS_TRUE H3600_TS_FALSE KDRIVEVESA_TRUE KDRIVEVESA_FALSE KDRIVEFBDEV_TRUE KDRIVEFBDEV_FALSE KDRIVEWSCONS_TRUE KDRIVEWSCONS_FALSE XEPHYR_TRUE XEPHYR_FALSE XEPHYR_INCS XSDLSERVER_TRUE XSDLSERVER_FALSE XSDL_LIBS XSDL_INCS XKB_BASE_DIRECTORY XKB_BIN_DIRECTORY XKM_OUTPUT_DIR XKB_COMPILED_DIR PROJECTROOT XORGCONFIG_DEP_CFLAGS XORGCONFIG_DEP_LIBS XORGCFG_DEP_CFLAGS XORGCFG_DEP_LIBS APPDEFAULTDIR BUILD_XORGCFG_TRUE BUILD_XORGCFG_FALSE USE_CURSES_TRUE USE_CURSES_FALSE BUILD_KBD_MODE_TRUE BUILD_KBD_MODE_FALSE BSD_KBD_MODE_TRUE BSD_KBD_MODE_FALSE SUN_KBD_MODE_TRUE SUN_KBD_MODE_FALSE BUILD_DATE DIX_CFLAGS libdir exec_prefix prefix APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -23342,6 +23342,157 @@ fi
 
 
 
+for ac_header in dev/wscons/wsconsio.h
+do
+as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+else
+  # Is the header compilable?
+echo "$as_me:$LINENO: checking $ac_header usability" >&5
+echo $ECHO_N "checking $ac_header usability... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$ac_includes_default
+#include <$ac_header>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_header_compiler=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_header_compiler=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+echo "${ECHO_T}$ac_header_compiler" >&6
+
+# Is the header present?
+echo "$as_me:$LINENO: checking $ac_header presence" >&5
+echo $ECHO_N "checking $ac_header presence... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <$ac_header>
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_c_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  ac_header_preproc=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+  ac_header_preproc=no
+fi
+rm -f conftest.err conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+echo "${ECHO_T}$ac_header_preproc" >&6
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in
+  yes:no: )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
+echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the compiler's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the compiler's result" >&2;}
+    ac_header_preproc=yes
+    ;;
+  no:yes:* )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: present but cannot be compiled" >&5
+echo "$as_me: WARNING: $ac_header: present but cannot be compiled" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header:     check for missing prerequisite headers?" >&5
+echo "$as_me: WARNING: $ac_header:     check for missing prerequisite headers?" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: see the Autoconf documentation" >&5
+echo "$as_me: WARNING: $ac_header: see the Autoconf documentation" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header:     section \"Present But Cannot Be Compiled\"" >&5
+echo "$as_me: WARNING: $ac_header:     section \"Present But Cannot Be Compiled\"" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: in the future, the compiler will take precedence" >&5
+echo "$as_me: WARNING: $ac_header: in the future, the compiler will take precedence" >&2;}
+    (
+      cat <<\_ASBOX
+## ---------------------------------------------------------------------- ##
+## Report this to https://bugs.freedesktop.org/enter_bug.cgi?product=xorg ##
+## ---------------------------------------------------------------------- ##
+_ASBOX
+    ) |
+      sed "s/^/$as_me: WARNING:     /" >&2
+    ;;
+esac
+echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  eval "$as_ac_Header=\$ac_header_preproc"
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+
+fi
+if test `eval echo '${'$as_ac_Header'}'` = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+
+done
+
+
+
 for ac_header in asm/mtrr.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
@@ -24714,6 +24865,7 @@ cat >>confdefs.h <<\_ACEOF
 #define WSCONS_SUPPORT 1
 _ACEOF
 
+	KDRIVE_HW=yes
 	;;
   *linux*)
 	DRI=yes
@@ -32861,6 +33013,10 @@ _ACEOF
 	    KDRIVE_OS_LIB='$(top_builddir)/hw/kdrive/linux/liblinux.a'
             KDRIVELINUX=yes
 	    ;;
+	*openbsd*)
+	    KDRIVE_OS_LIB='$(top_builddir)/hw/kdrive/openbsd/libopenbsd.a'
+	    KDRIVEOPENBSD=yes
+	    ;;
     esac
     KDRIVE_STUB_LIB='$(top_builddir)/hw/kdrive/src/libkdrivestubs.a'
     KDRIVE_LIBS="$DIX_LIB $KDRIVE_LIB $KDRIVE_OS_LIB $KDRIVE_PURE_LIBS $KDRIVE_STUB_LIB $TSLIB_LIBS"
@@ -33110,6 +33266,16 @@ fi
 
 
 
+if test "x$KDRIVEOPENBSD" = xyes; then
+  KDRIVEOPENBSD_TRUE=
+  KDRIVEOPENBSD_FALSE='#'
+else
+  KDRIVEOPENBSD_TRUE='#'
+  KDRIVEOPENBSD_FALSE=
+fi
+
+
+
 if test "x$HAVE_TSLIB" = xyes; then
   TSLIB_TRUE=
   TSLIB_FALSE='#'
@@ -33146,6 +33312,16 @@ if test x"$ac_cv_header_linux_fb_h" = xyes; then
 else
   KDRIVEFBDEV_TRUE='#'
   KDRIVEFBDEV_FALSE=
+fi
+
+
+
+if test x"$ac_cv_header_dev_wscons_wsconsio_h" = xyes; then
+  KDRIVEWSCONS_TRUE=
+  KDRIVEWSCONS_FALSE='#'
+else
+  KDRIVEWSCONS_TRUE='#'
+  KDRIVEWSCONS_FALSE=
 fi
 
 
@@ -34086,7 +34262,7 @@ _ACEOF
 
 
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ac_config_files="$ac_config_files Makefile GL/Makefile GL/glx/Makefile GL/mesa/Makefile GL/mesa/array_cache/Makefile GL/mesa/glapi/Makefile GL/mesa/main/Makefile GL/mesa/math/Makefile GL/mesa/shader/Makefile GL/mesa/shader/grammar/Makefile GL/mesa/shader/slang/Makefile GL/mesa/swrast/Makefile GL/mesa/swrast_setup/Makefile GL/mesa/tnl/Makefile GL/mesa/X/Makefile include/Makefile afb/Makefile composite/Makefile damageext/Makefile dbe/Makefile dix/Makefile doc/Makefile fb/Makefile record/Makefile XTrap/Makefile mfb/Makefile cfb/Makefile cfb32/Makefile mi/Makefile miext/Makefile miext/damage/Makefile miext/shadow/Makefile miext/cw/Makefile miext/rootless/Makefile os/Makefile randr/Makefile render/Makefile xkb/Makefile Xext/Makefile Xi/Makefile xfixes/Makefile exa/Makefile hw/Makefile hw/xfree86/Makefile hw/xfree86/common/Makefile hw/xfree86/common/xf86Build.h hw/xfree86/ddc/Makefile hw/xfree86/dixmods/Makefile hw/xfree86/dixmods/extmod/Makefile hw/xfree86/doc/Makefile hw/xfree86/doc/devel/Makefile hw/xfree86/doc/man/Makefile hw/xfree86/doc/sgml/Makefile hw/xfree86/dri/Makefile hw/xfree86/dummylib/Makefile hw/xfree86/exa/Makefile hw/xfree86/fbdevhw/Makefile hw/xfree86/i2c/Makefile hw/xfree86/int10/Makefile hw/xfree86/loader/Makefile hw/xfree86/os-support/Makefile hw/xfree86/os-support/bsd/Makefile hw/xfree86/os-support/bus/Makefile hw/xfree86/os-support/hurd/Makefile hw/xfree86/os-support/misc/Makefile hw/xfree86/os-support/linux/Makefile hw/xfree86/os-support/lynxos/Makefile hw/xfree86/os-support/sco/Makefile hw/xfree86/os-support/solaris/Makefile hw/xfree86/os-support/sysv/Makefile hw/xfree86/os-support/usl/Makefile hw/xfree86/parser/Makefile hw/xfree86/rac/Makefile hw/xfree86/ramdac/Makefile hw/xfree86/scanpci/Makefile hw/xfree86/shadowfb/Makefile hw/xfree86/vbe/Makefile hw/xfree86/vgahw/Makefile hw/xfree86/x86emu/Makefile hw/xfree86/xaa/Makefile hw/xfree86/xf1bpp/Makefile hw/xfree86/xf4bpp/Makefile hw/xfree86/xf8_16bpp/Makefile hw/xfree86/xf8_32bpp/Makefile hw/xfree86/utils/Makefile hw/xfree86/utils/cvt/Makefile hw/xfree86/utils/gtf/Makefile hw/xfree86/utils/ioport/Makefile hw/xfree86/utils/kbd_mode/Makefile hw/xfree86/utils/pcitweak/Makefile hw/xfree86/utils/scanpci/Makefile hw/xfree86/utils/xorgcfg/Makefile hw/xfree86/utils/xorgconfig/Makefile hw/dmx/config/Makefile hw/dmx/doc/Makefile hw/dmx/examples/Makefile hw/dmx/input/Makefile hw/dmx/glxProxy/Makefile hw/dmx/Makefile hw/vfb/Makefile hw/xgl/Makefile hw/xgl/egl/Makefile hw/xgl/egl/module/Makefile hw/xgl/glx/Makefile hw/xgl/glx/module/Makefile hw/xgl/glxext/Makefile hw/xgl/glxext/module/Makefile hw/xnest/Makefile hw/xwin/Makefile hw/darwin/Makefile hw/kdrive/Makefile hw/kdrive/ati/Makefile hw/kdrive/chips/Makefile hw/kdrive/ephyr/Makefile hw/kdrive/epson/Makefile hw/kdrive/fake/Makefile hw/kdrive/fbdev/Makefile hw/kdrive/i810/Makefile hw/kdrive/linux/Makefile hw/kdrive/mach64/Makefile hw/kdrive/mga/Makefile hw/kdrive/neomagic/Makefile hw/kdrive/nvidia/Makefile hw/kdrive/pm2/Makefile hw/kdrive/r128/Makefile hw/kdrive/sdl/Makefile hw/kdrive/sis300/Makefile hw/kdrive/smi/Makefile hw/kdrive/src/Makefile hw/kdrive/vesa/Makefile hw/kdrive/via/Makefile hw/xprint/Makefile hw/xprint/doc/Makefile hw/xprint/pcl/Makefile hw/xprint/pcl-mono/Makefile hw/xprint/raster/Makefile hw/xprint/ps/Makefile hw/xprint/etc/Makefile hw/xprint/etc/Xsession.d/Makefile hw/xprint/etc/init.d/Makefile hw/xprint/etc/profile.d/Makefile hw/xprint/config/Makefile hw/xprint/config/C/print/attributes/Makefile hw/xprint/config/C/print/ddx-config/Makefile hw/xprint/config/C/print/ddx-config/raster/Makefile hw/xprint/config/C/print/models/CANONBJ10E-GS/Makefile hw/xprint/config/C/print/models/PSdefault/fonts/Makefile hw/xprint/config/C/print/models/PSdefault/Makefile hw/xprint/config/C/print/models/PSspooldir/Makefile hw/xprint/config/C/print/models/SPSPARC2/Makefile hw/xprint/config/C/print/models/SPSPARC2/fonts/Makefile hw/xprint/config/C/print/models/GSdefault/Makefile hw/xprint/config/C/print/models/HPLJ4050-PS/Makefile hw/xprint/config/C/print/models/HPLJ4050-PS/fonts/Makefile hw/xprint/config/C/print/models/Makefile hw/xprint/config/C/print/models/PS2PDFspooldir-GS/Makefile hw/xprint/config/C/print/models/CANONC3200-PS/Makefile hw/xprint/config/C/print/models/CANONC3200-PS/fonts/Makefile hw/xprint/config/C/print/models/HPLJ4family/fonts/Makefile hw/xprint/config/C/print/models/HPLJ4family/Makefile hw/xprint/config/C/print/models/HPDJ1600C/Makefile hw/xprint/config/C/print/models/HPDJ1600C/fonts/Makefile hw/xprint/config/C/print/Makefile hw/xprint/config/C/Makefile hw/xprint/config/en_US/print/attributes/Makefile hw/xprint/config/en_US/print/Makefile hw/xprint/config/en_US/Makefile xorg-server.pc"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ac_config_files="$ac_config_files Makefile GL/Makefile GL/glx/Makefile GL/mesa/Makefile GL/mesa/array_cache/Makefile GL/mesa/glapi/Makefile GL/mesa/main/Makefile GL/mesa/math/Makefile GL/mesa/shader/Makefile GL/mesa/shader/grammar/Makefile GL/mesa/shader/slang/Makefile GL/mesa/swrast/Makefile GL/mesa/swrast_setup/Makefile GL/mesa/tnl/Makefile GL/mesa/X/Makefile include/Makefile afb/Makefile composite/Makefile damageext/Makefile dbe/Makefile dix/Makefile doc/Makefile fb/Makefile record/Makefile XTrap/Makefile mfb/Makefile cfb/Makefile cfb32/Makefile mi/Makefile miext/Makefile miext/damage/Makefile miext/shadow/Makefile miext/cw/Makefile miext/rootless/Makefile os/Makefile randr/Makefile render/Makefile xkb/Makefile Xext/Makefile Xi/Makefile xfixes/Makefile exa/Makefile hw/Makefile hw/xfree86/Makefile hw/xfree86/common/Makefile hw/xfree86/common/xf86Build.h hw/xfree86/ddc/Makefile hw/xfree86/dixmods/Makefile hw/xfree86/dixmods/extmod/Makefile hw/xfree86/doc/Makefile hw/xfree86/doc/devel/Makefile hw/xfree86/doc/man/Makefile hw/xfree86/doc/sgml/Makefile hw/xfree86/dri/Makefile hw/xfree86/dummylib/Makefile hw/xfree86/exa/Makefile hw/xfree86/fbdevhw/Makefile hw/xfree86/i2c/Makefile hw/xfree86/int10/Makefile hw/xfree86/loader/Makefile hw/xfree86/os-support/Makefile hw/xfree86/os-support/bsd/Makefile hw/xfree86/os-support/bus/Makefile hw/xfree86/os-support/hurd/Makefile hw/xfree86/os-support/misc/Makefile hw/xfree86/os-support/linux/Makefile hw/xfree86/os-support/lynxos/Makefile hw/xfree86/os-support/sco/Makefile hw/xfree86/os-support/solaris/Makefile hw/xfree86/os-support/sysv/Makefile hw/xfree86/os-support/usl/Makefile hw/xfree86/parser/Makefile hw/xfree86/rac/Makefile hw/xfree86/ramdac/Makefile hw/xfree86/scanpci/Makefile hw/xfree86/shadowfb/Makefile hw/xfree86/vbe/Makefile hw/xfree86/vgahw/Makefile hw/xfree86/x86emu/Makefile hw/xfree86/xaa/Makefile hw/xfree86/xf1bpp/Makefile hw/xfree86/xf4bpp/Makefile hw/xfree86/xf8_16bpp/Makefile hw/xfree86/xf8_32bpp/Makefile hw/xfree86/utils/Makefile hw/xfree86/utils/cvt/Makefile hw/xfree86/utils/gtf/Makefile hw/xfree86/utils/ioport/Makefile hw/xfree86/utils/kbd_mode/Makefile hw/xfree86/utils/pcitweak/Makefile hw/xfree86/utils/scanpci/Makefile hw/xfree86/utils/xorgcfg/Makefile hw/xfree86/utils/xorgconfig/Makefile hw/dmx/config/Makefile hw/dmx/doc/Makefile hw/dmx/examples/Makefile hw/dmx/input/Makefile hw/dmx/glxProxy/Makefile hw/dmx/Makefile hw/vfb/Makefile hw/xgl/Makefile hw/xgl/egl/Makefile hw/xgl/egl/module/Makefile hw/xgl/glx/Makefile hw/xgl/glx/module/Makefile hw/xgl/glxext/Makefile hw/xgl/glxext/module/Makefile hw/xnest/Makefile hw/xwin/Makefile hw/darwin/Makefile hw/kdrive/Makefile hw/kdrive/ati/Makefile hw/kdrive/chips/Makefile hw/kdrive/ephyr/Makefile hw/kdrive/epson/Makefile hw/kdrive/fake/Makefile hw/kdrive/fbdev/Makefile hw/kdrive/i810/Makefile hw/kdrive/linux/Makefile hw/kdrive/mach64/Makefile hw/kdrive/mga/Makefile hw/kdrive/neomagic/Makefile hw/kdrive/nvidia/Makefile hw/kdrive/openbsd/Makefile hw/kdrive/pm2/Makefile hw/kdrive/r128/Makefile hw/kdrive/sdl/Makefile hw/kdrive/sis300/Makefile hw/kdrive/smi/Makefile hw/kdrive/src/Makefile hw/kdrive/vesa/Makefile hw/kdrive/via/Makefile hw/kdrive/wscons/Makefile hw/xprint/Makefile hw/xprint/doc/Makefile hw/xprint/pcl/Makefile hw/xprint/pcl-mono/Makefile hw/xprint/raster/Makefile hw/xprint/ps/Makefile hw/xprint/etc/Makefile hw/xprint/etc/Xsession.d/Makefile hw/xprint/etc/init.d/Makefile hw/xprint/etc/profile.d/Makefile hw/xprint/config/Makefile hw/xprint/config/C/print/attributes/Makefile hw/xprint/config/C/print/ddx-config/Makefile hw/xprint/config/C/print/ddx-config/raster/Makefile hw/xprint/config/C/print/models/CANONBJ10E-GS/Makefile hw/xprint/config/C/print/models/PSdefault/fonts/Makefile hw/xprint/config/C/print/models/PSdefault/Makefile hw/xprint/config/C/print/models/PSspooldir/Makefile hw/xprint/config/C/print/models/SPSPARC2/Makefile hw/xprint/config/C/print/models/SPSPARC2/fonts/Makefile hw/xprint/config/C/print/models/GSdefault/Makefile hw/xprint/config/C/print/models/HPLJ4050-PS/Makefile hw/xprint/config/C/print/models/HPLJ4050-PS/fonts/Makefile hw/xprint/config/C/print/models/Makefile hw/xprint/config/C/print/models/PS2PDFspooldir-GS/Makefile hw/xprint/config/C/print/models/CANONC3200-PS/Makefile hw/xprint/config/C/print/models/CANONC3200-PS/fonts/Makefile hw/xprint/config/C/print/models/HPLJ4family/fonts/Makefile hw/xprint/config/C/print/models/HPLJ4family/Makefile hw/xprint/config/C/print/models/HPDJ1600C/Makefile hw/xprint/config/C/print/models/HPDJ1600C/fonts/Makefile hw/xprint/config/C/print/Makefile hw/xprint/config/C/Makefile hw/xprint/config/en_US/print/attributes/Makefile hw/xprint/config/en_US/print/Makefile hw/xprint/config/en_US/Makefile xorg-server.pc"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -34871,6 +35047,13 @@ echo "$as_me: error: conditional \"KDRIVELINUX\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${KDRIVEOPENBSD_TRUE}" && test -z "${KDRIVEOPENBSD_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"KDRIVEOPENBSD\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"KDRIVEOPENBSD\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 if test -z "${TSLIB_TRUE}" && test -z "${TSLIB_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"TSLIB\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
@@ -34896,6 +35079,13 @@ if test -z "${KDRIVEFBDEV_TRUE}" && test -z "${KDRIVEFBDEV_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"KDRIVEFBDEV\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"KDRIVEFBDEV\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${KDRIVEWSCONS_TRUE}" && test -z "${KDRIVEWSCONS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"KDRIVEWSCONS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"KDRIVEWSCONS\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -35515,6 +35705,7 @@ do
   "hw/kdrive/mga/Makefile" ) CONFIG_FILES="$CONFIG_FILES hw/kdrive/mga/Makefile" ;;
   "hw/kdrive/neomagic/Makefile" ) CONFIG_FILES="$CONFIG_FILES hw/kdrive/neomagic/Makefile" ;;
   "hw/kdrive/nvidia/Makefile" ) CONFIG_FILES="$CONFIG_FILES hw/kdrive/nvidia/Makefile" ;;
+  "hw/kdrive/openbsd/Makefile" ) CONFIG_FILES="$CONFIG_FILES hw/kdrive/openbsd/Makefile" ;;
   "hw/kdrive/pm2/Makefile" ) CONFIG_FILES="$CONFIG_FILES hw/kdrive/pm2/Makefile" ;;
   "hw/kdrive/r128/Makefile" ) CONFIG_FILES="$CONFIG_FILES hw/kdrive/r128/Makefile" ;;
   "hw/kdrive/sdl/Makefile" ) CONFIG_FILES="$CONFIG_FILES hw/kdrive/sdl/Makefile" ;;
@@ -35523,6 +35714,7 @@ do
   "hw/kdrive/src/Makefile" ) CONFIG_FILES="$CONFIG_FILES hw/kdrive/src/Makefile" ;;
   "hw/kdrive/vesa/Makefile" ) CONFIG_FILES="$CONFIG_FILES hw/kdrive/vesa/Makefile" ;;
   "hw/kdrive/via/Makefile" ) CONFIG_FILES="$CONFIG_FILES hw/kdrive/via/Makefile" ;;
+  "hw/kdrive/wscons/Makefile" ) CONFIG_FILES="$CONFIG_FILES hw/kdrive/wscons/Makefile" ;;
   "hw/xprint/Makefile" ) CONFIG_FILES="$CONFIG_FILES hw/xprint/Makefile" ;;
   "hw/xprint/doc/Makefile" ) CONFIG_FILES="$CONFIG_FILES hw/xprint/doc/Makefile" ;;
   "hw/xprint/pcl/Makefile" ) CONFIG_FILES="$CONFIG_FILES hw/xprint/pcl/Makefile" ;;
@@ -36039,6 +36231,8 @@ s,@KDRIVE_PURE_LIBS@,$KDRIVE_PURE_LIBS,;t t
 s,@KDRIVE_LIBS@,$KDRIVE_LIBS,;t t
 s,@KDRIVELINUX_TRUE@,$KDRIVELINUX_TRUE,;t t
 s,@KDRIVELINUX_FALSE@,$KDRIVELINUX_FALSE,;t t
+s,@KDRIVEOPENBSD_TRUE@,$KDRIVEOPENBSD_TRUE,;t t
+s,@KDRIVEOPENBSD_FALSE@,$KDRIVEOPENBSD_FALSE,;t t
 s,@TSLIB_TRUE@,$TSLIB_TRUE,;t t
 s,@TSLIB_FALSE@,$TSLIB_FALSE,;t t
 s,@H3600_TS_TRUE@,$H3600_TS_TRUE,;t t
@@ -36047,6 +36241,8 @@ s,@KDRIVEVESA_TRUE@,$KDRIVEVESA_TRUE,;t t
 s,@KDRIVEVESA_FALSE@,$KDRIVEVESA_FALSE,;t t
 s,@KDRIVEFBDEV_TRUE@,$KDRIVEFBDEV_TRUE,;t t
 s,@KDRIVEFBDEV_FALSE@,$KDRIVEFBDEV_FALSE,;t t
+s,@KDRIVEWSCONS_TRUE@,$KDRIVEWSCONS_TRUE,;t t
+s,@KDRIVEWSCONS_FALSE@,$KDRIVEWSCONS_FALSE,;t t
 s,@XEPHYR_TRUE@,$XEPHYR_TRUE,;t t
 s,@XEPHYR_FALSE@,$XEPHYR_FALSE,;t t
 s,@XEPHYR_INCS@,$XEPHYR_INCS,;t t

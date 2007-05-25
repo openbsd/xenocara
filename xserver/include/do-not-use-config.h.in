@@ -153,6 +153,9 @@
 /* Define to 1 if you have the <dbm.h> header file. */
 #undef HAVE_DBM_H
 
+/* Define to 1 if you have the <dev/wscons/wsconsio.h> header file. */
+#undef HAVE_DEV_WSCONS_WSCONSIO_H
+
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
 #undef HAVE_DIRENT_H
