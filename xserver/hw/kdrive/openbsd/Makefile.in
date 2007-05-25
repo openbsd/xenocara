@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# $OpenBSD: Makefile.in,v 1.1 2007/05/25 16:46:59 matthieu Exp $
+# $OpenBSD: Makefile.in,v 1.2 2007/05/25 18:19:55 matthieu Exp $
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -59,8 +59,8 @@ LIBRARIES = $(noinst_LIBRARIES)
 ARFLAGS = cru
 libopenbsd_a_AR = $(AR) $(ARFLAGS)
 libopenbsd_a_LIBADD =
-am__libopenbsd_a_SOURCES_DIST = kopenbsd.h agp.c agp.h openbsd.c
-@KDRIVE_HW_TRUE@am__objects_1 = agp.$(OBJEXT) openbsd.$(OBJEXT)
+am__libopenbsd_a_SOURCES_DIST = kopenbsd.h openbsd.c
+@KDRIVE_HW_TRUE@am__objects_1 = openbsd.$(OBJEXT)
 am_libopenbsd_a_OBJECTS = $(am__objects_1)
 libopenbsd_a_OBJECTS = $(am_libopenbsd_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
@@ -555,8 +555,6 @@ INCLUDES = \
 AM_CFLAGS = -DHAVE_DIX_CONFIG_H
 noinst_LIBRARIES = libopenbsd.a
 @KDRIVE_HW_TRUE@KDRIVE_HW_SOURCES = \
-@KDRIVE_HW_TRUE@	agp.c 	\
-@KDRIVE_HW_TRUE@	agp.h	\
 @KDRIVE_HW_TRUE@	openbsd.c
 
 libopenbsd_a_SOURCES = \
@@ -564,7 +562,6 @@ libopenbsd_a_SOURCES = \
 	$(KDRIVE_HW_SOURCES)
 
 libopenbsd_a_DEPENDENCIES = \
-	agp.c \
 	openbsd.c
 
 all: all-am
@@ -614,7 +611,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/agp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openbsd.Po@am__quote@
 
 .c.o:
