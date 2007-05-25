@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.14 2007/05/12 14:54:57 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.15 2007/05/25 16:15:41 matthieu Exp $
 
 DIST= ${.CURDIR}
 
@@ -16,8 +16,9 @@ NO_XORG_${M} = --disable-xorg
 NO_XORG_OPTION=${NO_XORG_${MACHINE}}
 
 .for M in ${NO_XPRINT_MACHINES}
-NO_XPRINT_OPTION= --disable-xprint
+NO_XPRINT_${M}= --disable-xprint
 .endfor
+NO_XPRINT_OPTION=${NO_XPRINT_${MACHINE}}
 
 .for M in ${NO_XF86UTIL_MACHINES}
 NO_XF86_UTIL_${M} = --disable-xfree86-utils
