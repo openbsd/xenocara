@@ -117,6 +117,9 @@ dnl fbdev header
 AC_CHECK_HEADERS([linux/fb.h], FBDEV=yes)
 AM_CONDITIONAL(FBDEVHW, [test "x$FBDEV" = xyes])
 
+dnl NetBSD/OpenBSD wscons header
+AC_CHECK_HEADERS([dev/wscons/wsconsio.h])
+
 dnl MTRR header
 AC_CHECK_HEADERS([asm/mtrr.h], ac_cv_asm_mtrr_h=yes)
 if test "x$ac_cv_asm_mtrr_h" = xyes; then
@@ -281,6 +284,7 @@ case $host_os in
 	AC_DEFINE(CSRG_BASED, 1, [System is BSD-like])
 	AC_DEFINE(PCVT_SUPPORT, 1, [System has PC console])
 	AC_DEFINE(WSCONS_SUPPORT, 1, [System has wscons console])
+	KDRIVE_HW=yes
 	;;
   *linux*)
 	DRI=yes
@@ -1565,6 +1569,10 @@ if test "$KDRIVE" = yes; then
 	    KDRIVE_OS_LIB='$(top_builddir)/hw/kdrive/linux/liblinux.a'
             KDRIVELINUX=yes
 	    ;;
+	*openbsd*)
+	    KDRIVE_OS_LIB='$(top_builddir)/hw/kdrive/openbsd/libopenbsd.a'
+	    KDRIVEOPENBSD=yes
+	    ;;
     esac
     KDRIVE_STUB_LIB='$(top_builddir)/hw/kdrive/src/libkdrivestubs.a'
     KDRIVE_LIBS="$DIX_LIB $KDRIVE_LIB $KDRIVE_OS_LIB $KDRIVE_PURE_LIBS $KDRIVE_STUB_LIB $TSLIB_LIBS"
@@ -1584,10 +1592,12 @@ AC_SUBST(KDRIVE_CFLAGS)
 AC_SUBST(KDRIVE_PURE_LIBS)
 AC_SUBST(KDRIVE_LIBS)
 AM_CONDITIONAL(KDRIVELINUX, [test "x$KDRIVELINUX" = xyes])
+AM_CONDITIONAL(KDRIVEOPENBSD, [test "x$KDRIVEOPENBSD" = xyes])
 AM_CONDITIONAL(TSLIB, [test "x$HAVE_TSLIB" = xyes])
 AM_CONDITIONAL(H3600_TS, false)
 AM_CONDITIONAL(KDRIVEVESA, [test x"$ac_cv_header_sys_vm86_h" = xyes])
 AM_CONDITIONAL(KDRIVEFBDEV, [test x"$ac_cv_header_linux_fb_h" = xyes])
+AM_CONDITIONAL(KDRIVEWSCONS, [test x"$ac_cv_header_dev_wscons_wsconsio_h" = xyes])
 
 # Xephyr needs nanosleep() which is in librt on Solaris
 AC_CHECK_FUNC([nanosleep], [],
@@ -1835,6 +1845,7 @@ hw/kdrive/mach64/Makefile
 hw/kdrive/mga/Makefile
 hw/kdrive/neomagic/Makefile
 hw/kdrive/nvidia/Makefile
+hw/kdrive/openbsd/Makefile
 hw/kdrive/pm2/Makefile
 hw/kdrive/r128/Makefile
 hw/kdrive/sdl/Makefile
@@ -1843,6 +1854,7 @@ hw/kdrive/smi/Makefile
 hw/kdrive/src/Makefile
 hw/kdrive/vesa/Makefile
 hw/kdrive/via/Makefile
+hw/kdrive/wscons/Makefile
 hw/xprint/Makefile
 hw/xprint/doc/Makefile
 hw/xprint/pcl/Makefile

@@ -783,6 +783,10 @@ extern KdMouseFuncs	VxWorksMouseFuncs;
 extern KdKeyboardFuncs	VxWorksKeyboardFuncs;
 extern KdOsFuncs	VxWorksFuncs;
 
+extern KdMouseFuncs	WsconsMouseFuncs;
+extern KdKeyboardFuncs	WsconsKeyboardFuncs;
+extern KdOsFuncs	OpenBSDFuncs;
+
 /* kmap.c */
 
 #define KD_MAPPED_MODE_REGISTERS    0

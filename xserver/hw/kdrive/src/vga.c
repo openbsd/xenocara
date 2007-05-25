@@ -58,6 +58,14 @@
 
 #endif
 
+#ifdef __OpenBSD__
+#define _VgaInb(r) 0
+#define _VgaOutb(v,r) 0
+
+#define _VgaByteAddr(a) ((VGAVOL8 *)((VGA32)(a)^3))
+#define _VgaBytePort(a)	0
+#endif
+
 #undef VGA_DEBUG_REGISTERS
 #ifdef VGA_DEBUG_REGISTERS
 #define VGA_DEBUG(a)	fprintf a
