@@ -1,4 +1,4 @@
-.\"	$OpenBSD: ws.man,v 1.1.1.1 2006/11/26 22:27:26 matthieu Exp $
+.\"	$OpenBSD: ws.man,v 1.2 2007/05/26 17:24:45 matthieu Exp $
 .\"
 .\" Copyright (c) 2005 Matthieu Herrb
 .\"
@@ -34,6 +34,7 @@ WS \- wscons pointer input driver for *BSD
 .BI "    Option \*qRotate\*q \*q" string \*q
 .BI "    Option \*qSwapXY\*q \*q" boolean \*q
 .BI "    Option \*qZAxisMapping\*q \*q" "N1 N2" \*q
+.BI "    Option \*qWAxisMapping\*q \*q" "N1 N2" \*q
 .B EndSection
 .fi
 .SH DESCRIPTION
@@ -92,6 +93,14 @@ number
 is mapped to the negative Z axis motion and button
 .I N2
 is mapped to the positive Z axis motion.
+Default: no mapping.
+.B Option \fI"WAxisMapping"\fP \fI"N1 N2"\fP
+Set the mapping for the W axis (horizontal wheel) motion to buttons. Button
+number
+.I N1
+is mapped to the negative W axis motion and button
+.I N2
+is mapped to the positive W axis motion.
 Default: no mapping.
 .SH "SEE ALSO"
 Xorg(1), xorg.conf(__filemansuffix__), zts(4), sysctl(8), ztsscale(8).

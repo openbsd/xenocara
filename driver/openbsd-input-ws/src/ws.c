@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.1.1.1 2006/11/26 22:27:26 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.2 2007/05/26 17:24:45 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -56,6 +56,7 @@ typedef struct WSDevice {
 	int num, den, threshold; /* relative accel params */
 	pointer buffer;
 	int negativeZ, positiveZ; /* mappings for Z axis */
+	int negativeW, positiveW; /* mappings for W axis */
 } WSDeviceRec, *WSDevicePtr;
 
 #ifdef XFree86LOADER
@@ -245,6 +246,33 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		priv->buttons = priv->positiveZ;
 		buttons_from = X_CONFIG;
 	}
+	priv->negativeW =  priv->positiveW = WS_NOZMAP;
+	s = xf86SetStrOption(pInfo->options, "WAxisMapping", NULL);	
+	if (s) {
+		int b1, b2;
+
+		if (sscanf(s, "%d %d", &b1, &b2) == 2 && 
+		    b1 > 0 && b1 <= NBUTTONS &&
+		    b2 > 0 && b2 <= NBUTTONS) {
+			priv->negativeW = b1;
+			priv->positiveW = b2;
+			xf86Msg(X_CONFIG, 
+			    "%s: WAxisMapping: buttons %d and %d\n", 
+			    pInfo->name, b1, b2);
+		} else {
+			xf86Msg(X_WARNING, "%s: invalid WAxisMapping value: "
+			    "\"%s\"\n", pInfo->name, s);
+		}
+	}
+	if (priv->negativeW > priv->buttons) {
+		priv->buttons = priv->negativeW;
+		buttons_from = X_CONFIG;
+	}
+	if (priv->positiveW > priv->buttons) {
+		priv->buttons = priv->positiveW;
+		buttons_from = X_CONFIG;
+	}
+
 	priv->screen_no = xf86SetIntOption(pInfo->options, "ScreenNo", 0);
 	xf86Msg(X_CONFIG, "%s associated screen: %d\n", 
 	    dev->identifier, priv->screen_no);  
@@ -430,8 +458,8 @@ wsReadInput(InputInfoPtr pInfo)
 	n /= sizeof(struct wscons_event);
 	while( n-- ) {
 		int buttons = priv->lastButtons;
-		int dx = 0, dy = 0, dz = 0;
-		int zbutton = 0;
+		int dx = 0, dy = 0, dz, dw = 0;
+		int zbutton = 0, wbutton = 0;
 
 		ax = 0; ay = 0;
 		switch (event->type) {
@@ -481,6 +509,12 @@ wsReadInput(InputInfoPtr pInfo)
 			continue;
 			break;
 #endif
+#ifdef WSCONS_EVENT_MOUSE_DELTA_W
+		case WSCONS_EVENT_MOUSE_DELTA_W:
+			DBG(4, ErrorF("Relative W %d\n", event->value));
+			dw = event->value;
+			break;
+#endif
 		default:
 			xf86Msg(X_WARNING, "%s: bad wsmouse event type=%d\n", 
 			    pInfo->name, event->type);
@@ -520,6 +554,21 @@ wsReadInput(InputInfoPtr pInfo)
 			}
 			buttons |= zbutton;
 			dz = 0;
+		}
+		if (dw && priv->negativeW != WS_NOZMAP
+		    && priv->positiveW != WS_NOZMAP) {
+			buttons &= ~(priv->negativeW | priv->positiveW);
+			if (dw < 0) {
+				DBG(4, ErrorF("W -> button %d\n",
+					priv->negativeW));
+				wbutton = 1 << (priv->negativeW - 1);
+			} else {
+				DBG(4, ErrorF("W -> button %d\n",
+					priv->positiveW));
+				wbutton = 1 << (priv->positiveW - 1);
+			}
+			buttons |= wbutton;
+			dw = 0;
 		}
 		if (priv->lastButtons != buttons) {
 			/* button event */
