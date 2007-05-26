@@ -442,6 +442,11 @@ wsconsReadInput(InputInfoPtr pInfo)
 	    dz = event->value;
 	    break;
 #endif
+#ifdef WSCONS_EVENT_MOUSE_DELTA_W
+	case WSCONS_EVENT_MOUSE_DELTA_W:
+	    dw = event->value;
+	    break;
+#endif
 	default:
 	    xf86Msg(X_WARNING, "%s: bad wsmouse event type=%d\n", pInfo->name,
 		    event->type);
@@ -503,6 +508,7 @@ typedef struct _UsbMseRec {
     hid_item_t loc_x;		/* x locator item */
     hid_item_t loc_y;		/* y locator item */
     hid_item_t loc_z;		/* z (wheel) locator item */
+    hid_item_t loc_w;		/* z (wheel) locator item */
     hid_item_t loc_btn[MSE_MAXBUTTONS]; /* buttons locator items */
    unsigned char *buffer;
 } UsbMseRec, *UsbMsePtr;
@@ -622,6 +628,7 @@ usbReadInput(InputInfoPtr pInfo)
     dx = hid_get_data(pBuf, &pUsbMse->loc_x);
     dy = hid_get_data(pBuf, &pUsbMse->loc_y);
     dz = hid_get_data(pBuf, &pUsbMse->loc_z);
+    dw = hid_get_data(pBuf, &pUsbMse->loc_w);
 
     buttons = 0;
     for (n = 0; n < pMse->buttons; n++) {
