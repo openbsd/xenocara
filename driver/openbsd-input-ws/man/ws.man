@@ -1,4 +1,4 @@
-.\"	$OpenBSD: ws.man,v 1.2 2007/05/26 17:24:45 matthieu Exp $
+.\"	$OpenBSD: ws.man,v 1.3 2007/05/26 17:29:26 matthieu Exp $
 .\"
 .\" Copyright (c) 2005 Matthieu Herrb
 .\"
@@ -103,4 +103,4 @@ is mapped to the negative W axis motion and button
 is mapped to the positive W axis motion.
 Default: no mapping.
 .SH "SEE ALSO"
-Xorg(1), xorg.conf(__filemansuffix__), zts(4), sysctl(8), ztsscale(8).
+Xorg(1), xorg.conf(__filemansuffix__), uts(4), zts(4), sysctl(8), xtsscale(8), ztsscale(8).
