@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# $OpenBSD: Makefile.in,v 1.2 2007/05/25 18:19:55 matthieu Exp $
+#
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
