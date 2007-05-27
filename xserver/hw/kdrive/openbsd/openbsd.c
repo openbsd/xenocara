@@ -1,4 +1,4 @@
-/* $OpenBSD: openbsd.c,v 1.2 2007/05/25 19:10:43 matthieu Exp $ */
+/* $OpenBSD: openbsd.c,v 1.3 2007/05/27 00:53:47 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -111,10 +111,16 @@ OpenBSDDisable(void)
 static void
 OpenBSDFini(void)
 {
+	int mode = WSDISPLAYIO_MODE_EMUL;
+
 	DBG(("OpenBSDFini\n"));
 	if (WsconsConsoleFd < 0)
 		return;
+
 	/* switch back to initial VT */
+	if (ioctl(WsconsConsoleFd, WSDISPLAYIO_SMODE, &mode) == -1) {
+		ErrorF("WSDISPLAYIO_SMODE(EMUL): %s\n", strerror(errno));
+	}
 }
 
 KdOsFuncs OpenBSDFuncs = {
