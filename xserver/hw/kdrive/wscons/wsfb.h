@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb.h,v 1.1 2007/05/25 18:13:35 matthieu Exp $ */
+/* $OpenBSD: wsfb.h,v 1.2 2007/05/27 00:56:29 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -31,6 +31,11 @@
 #endif
 
 typedef struct _wsfbPriv {
+	int wstype;
+	struct wsdisplay_fbinfo info;
+	int linebytes;
+	int supportedDepths;
+	int bpp;
 	char *fb;
 	char *fb_base;
 } WsfbPriv;
@@ -43,10 +48,8 @@ typedef struct _wsfbScrPriv {
 
 extern KdCardFuncs wsfbFuncs;
 
-Bool wsfbInitialize(KdCardInfo *, WsfbPriv *priv);
 Bool wsfbCardInit(KdCardInfo *);
 Bool wsfbScreenInit(KdScreenInfo *);
-Bool wsfbScreenInitialize(KdScreenInfo *, WsfbScrPriv *);
 Bool wsfbInitScreen(ScreenPtr);
 Bool wsfbFinishInitScreen(ScreenPtr);
 Bool wsfbCreateResources(ScreenPtr);

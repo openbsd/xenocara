@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb.c,v 1.2 2007/05/25 19:10:43 matthieu Exp $ */
+/* $OpenBSD: wsfb.c,v 1.3 2007/05/27 00:56:29 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -19,18 +19,105 @@
 #include <kdrive-config.h>
 #endif
 #include <dev/wscons/wsconsio.h>
+#include <sys/mman.h>
+#include <errno.h>
 
 #include <X11/X.h>
 #include <X11/Xdefs.h>
 
 #include "wsfb.h"
 
+#define DEBUG 1
 #define DBG(x) ErrorF x
 
+extern int WsconsConsoleFd;
+
+/* Map the framebuffer's memory */
+static void *
+wsfbMmap(size_t len, off_t off, int fd)
+{
+	int pagemask, mapsize;
+	caddr_t addr;
+	pointer mapaddr;
+
+	pagemask = getpagesize() - 1;
+	mapsize = ((int) len + pagemask) & ~pagemask;
+	addr = 0;
+
+	mapaddr = (pointer) mmap(addr, mapsize,
+				 PROT_READ | PROT_WRITE, MAP_SHARED,
+				 fd, off);
+	if (mapaddr == (pointer) -1) {
+		mapaddr = NULL;
+	}
+#if DEBUG
+	ErrorF("mmap returns: addr %p len 0x%x\n", mapaddr, mapsize);
+#endif
+	return mapaddr;
+}
+
 Bool
+wsfbMapFramebuffer(KdScreenInfo *screen)
+{
+	WsfbScrPriv *scrPriv = screen->driver;
+	KdMouseMatrix m;
+	WsfbPriv *priv = screen->card->driver;
+	size_t len;
+
+	DBG(("wsfbMapFrameBuffer\n"));
+	if (scrPriv->randr != RR_Rotate_0)
+		scrPriv->shadow = TRUE;
+	else
+		scrPriv->shadow = FALSE;
+
+	KdComputeMouseMatrix(&m, scrPriv->randr, 
+	    screen->width, screen->height);
+	KdSetMouseMatrix(&m);
+	
+	DBG(("screen->width %d\n", screen->width));
+	DBG(("screen->height %d\n", screen->height));
+	len = priv->linebytes * screen->height;
+	priv->fb = wsfbMmap(len, 0, WsconsConsoleFd);
+
+	screen->memory_base = (CARD8 *)(priv->fb);
+	screen->memory_size = len;
+	
+	if (scrPriv->shadow) {
+		if (!KdShadowFbAlloc(screen, 0,
+			scrPriv->randr & (RR_Rotate_90|RR_Rotate_270)))
+			return FALSE;
+		screen->off_screen_base = screen->memory_size;
+	} else {
+		screen->fb[0].byteStride = priv->linebytes;
+		screen->fb[0].pixelStride = priv->linebytes * 8 / priv->bpp;
+		screen->fb[0].frameBuffer = (CARD8 *)(priv->fb);
+		screen->off_screen_base = 
+		    screen->fb[0].byteStride * screen->height;
+	}
+	return TRUE;
+}
+
+static Bool
 wsfbInitialize(KdCardInfo *card, WsfbPriv *priv)
 {
+
 	DBG(("wsfbInitialize\n"));
+	if (WsconsConsoleFd == -1) {
+		ErrorF("wsfbInitialize: WsconsConsoleFd == -1\n");
+		return FALSE;
+	}
+	if (ioctl(WsconsConsoleFd, WSDISPLAYIO_GTYPE, &priv->wstype) == -1) {
+		ErrorF("wsfbInitialize: WSDISPLAY_GTYPE: %s\n",
+		    strerror(errno));
+		return FALSE;
+	}
+	if (ioctl(WsconsConsoleFd, WSDISPLAYIO_GETSUPPORTEDDEPTH,
+		&priv->supportedDepths) == -1) {
+		ErrorF("wsfbInitialize: WSDISPLAYIO_GETSUPPORTEDDEPTH: %s\n",
+		    strerror(errno));
+		return FALSE;
+	}
+	
 	return TRUE;
 }
 
@@ -43,6 +130,7 @@ wsfbCardInit(KdCardInfo *card)
 	priv = (WsfbPriv *)xalloc(sizeof(WsfbPriv));
 	if (priv == NULL)
 		return FALSE;
+	bzero(priv, sizeof(WsfbPriv));
 	if (!wsfbInitialize(card, priv)) {
 		xfree(priv);
 		return FALSE;
@@ -52,10 +140,76 @@ wsfbCardInit(KdCardInfo *card)
 	return TRUE;
 }
 
-Bool
+static Bool
 wsfbScreenInitialize(KdScreenInfo *screen, WsfbScrPriv *scrpriv)
 {
+	struct wsdisplay_gfx_mode gfxmode;
+	WsfbPriv *priv;
+	int depth, bpp;
+
+	priv = screen->card->driver;
+
 	DBG(("wsfbScreenInitialize\n"));
+	DBG(("  screen dimensions %dx%d\n", screen->width, screen->height));
+	DBG(("  screen depth %d\n", screen->fb[0].depth));
+	DBG(("  randr %d\n", screen->randr));
+	if (screen->width == 0 || screen->height == 0) {
+		ErrorF("wsfbScreenInitialize: forcing 640x480\n");
+		screen->width = 640;
+		screen->height = 480;
+	}
+	if (screen->fb[0].depth == 0) {
+		ErrorF("wsfbScreenInitialize: forcing depth 16\n");
+		depth = screen->fb[0].depth = 16;
+	}
+	DBG(("  wstype: %d\n", priv->wstype));
+	if (priv->wstype == WSDISPLAY_TYPE_PCIVGA) {
+		gfxmode.depth = screen->fb[0].depth;
+		gfxmode.width = screen->width;
+		gfxmode.height = screen->height;
+		if (ioctl(WsconsConsoleFd, WSDISPLAYIO_SETGFXMODE, 
+			&gfxmode) == -1) {
+			ErrorF("wsfbScreenInitialize: "
+			    "WSDISPLAYIO_SETGFXMODE: %s\n", strerror(errno));
+			return FALSE;
+		}
+	}
+	if (ioctl(WsconsConsoleFd, WSDISPLAYIO_GINFO, &priv->info) == -1) {
+		ErrorF("wsfbInitialize: WSDISPLAY_GINFO: %s\n",
+		    strerror(errno));
+		return FALSE;
+	}
+	if (ioctl(WsconsConsoleFd, WSDISPLAYIO_LINEBYTES, 
+		&priv->linebytes) == -1) {
+		ErrorF("wsfbInitialize: WSDISPLAYIO_LINEBYTES: %s\n",
+		    strerror(errno));
+		return FALSE;
+	}
+	switch (depth) {
+	case 16:
+		screen->fb[0].visuals =  (1 << TrueColor);
+		screen->fb[0].redMask = 0x1f << 11;
+		screen->fb[0].greenMask = 0x3f << 5;
+		screen->fb[0].blueMask = 0x1f;
+		break;
+	case 24:
+		screen->fb[0].visuals =  (1 << TrueColor);
+		screen->fb[0].redMask = 0xff0000;
+		screen->fb[0].greenMask = 0x00ff00;
+		screen->fb[0].blueMask = 0x0000ff;
+		break;
+	default:
+		screen->fb[0].redMask = 0;
+		screen->fb[0].greenMask = 0;
+		screen->fb[0].blueMask = 0;
+		break;
+	}
+	screen->fb[0].bitsPerPixel = depth;
+	priv->bpp = depth;	/* XXX */
+	screen->dumb = TRUE;
+	screen->rate = 72;
+	scrpriv->randr = screen->randr;
+	DBG(("wsfbScreenInitialize: done\n"));
 	return TRUE;
 }
     
@@ -71,6 +225,7 @@ wsfbScreenInit(KdScreenInfo *screen)
 	bzero(scrPriv, sizeof(WsfbScrPriv));
 	screen->driver = scrPriv;
 	if (!wsfbScreenInitialize(screen, scrPriv)) {
+		ErrorF("wsfbScreenInitialize: failed to initialize screen\n");
 		screen->driver = NULL;
 		xfree(scrPriv);
 		return FALSE;
@@ -91,6 +246,7 @@ Bool
 wsfbFinishInitScreen(ScreenPtr pScreen)
 {
 	DBG(("wsfbFinishInitScreen\n"));
+
 	if (!shadowSetup(pScreen))
 		return FALSE;
 #ifdef RANDR
@@ -117,7 +273,23 @@ wsfbPreserve(KdCardInfo *card)
 Bool
 wsfbEnable(ScreenPtr pScreen)
 {
+	KdScreenPriv(pScreen);
+	KdScreenInfo *screen = pScreenPriv->screen;
+	WsfbPriv *priv  = pScreenPriv->card->driver;
+	size_t len;
+	int wsmode = WSDISPLAYIO_MODE_DUMBFB;	
+
 	DBG(("wsfbEnable\n"));
+	/* Switch to graphics mode - required before mmap */
+	if (ioctl(WsconsConsoleFd, WSDISPLAYIO_SMODE, &wsmode) == -1) {
+		ErrorF("ioctl WSDISPLAYIO_SMODE: %s\n", strerror(errno));
+		return FALSE;
+	}
+	if (!wsfbMapFramebuffer(screen)) {
+		ErrorF("wsfbEnale: can't map framebuffer\n");
+		return FALSE;
+	}
+	DBG(("wsfbEnable done.\n"));
 	return TRUE;
 }
 
@@ -137,13 +309,22 @@ wsfbDisable(ScreenPtr pScreen)
 void
 wsfbRestore(KdCardInfo *card)
 {
+	int mode = WSDISPLAYIO_MODE_EMUL;
+
 	DBG(("wsfbRestore\n"));
+
+	if (ioctl(WsconsConsoleFd, WSDISPLAYIO_SMODE, &mode) == -1) {
+		ErrorF("WSDISPLAYIO_SMODE(EMUL): %s\n", strerror(errno));
+	}
 }
 
 void
 wsfbScreenFini(KdScreenInfo *screen)
 {
+	int mode = WSDISPLAYIO_MODE_EMUL;
+
 	DBG(("wsfbScreenFini\n"));
+	wsfbUnmapFramebuffer(screen);
 }
 
 void
@@ -169,45 +350,6 @@ wsfbPutColors(ScreenPtr pScreen, int fb, int n, xColorItem *pdefs)
 	DBG(("wsfbPutColors %d\n", n));
 }
 
-Bool
-wsfbMapFramebuffer(KdScreenInfo *screen)
-{
-	WsfbScrPriv *scrPriv = screen->driver;
-	KdMouseMatrix m;
-	WsfbPriv *priv = screen->card->driver;
-
-	DBG(("wsfbMapFrameBuffer\n"));
-	if (scrPriv->randr != RR_Rotate_0)
-		scrPriv->shadow = TRUE;
-	else
-		scrPriv->shadow = FALSE;
-
-	KdComputeMouseMatrix(&m, scrPriv->randr, 
-	    screen->width, screen->height);
-	KdSetMouseMatrix(&m);
-	
-	/* ?? */
-	/* screen->width = priv->var.xres;
-	   screen->height = priv->var.yres; */
-	screen->memory_base = (CARD8 *)(priv->fb);
-	/* screen->memoryG_size = priv->fix.smem_len; */
-	
-	if (scrPriv->shadow) {
-		if (!KdShadowFbAlloc(screen, 0,
-			scrPriv->randr & (RR_Rotate_90|RR_Rotate_270)))
-			return FALSE;
-		screen->off_screen_base = screen->memory_size;
-	} else {
-		/* screen->fb[0].byteStride = priv->fix.line_length;
-		   screen->fb[0].pixelStride = (prif->fix.line_length * 8 /
-		   priv->var.bits_per_pixel); */
-		screen->fb[0].frameBuffer = (CARD8 *)(priv->fb);
-		screen->off_screen_base = 
-		    screen->fb[0].byteStride * screen->height;
-	}
-	return TRUE;
-}
-
 void *
 wsfbWindowLinear(ScreenPtr	pScreen,
 		   CARD32	row,
@@ -216,8 +358,15 @@ wsfbWindowLinear(ScreenPtr	pScreen,
 		   CARD32	*size,
 		   void		*closure)
 {
+	KdScreenPriv(pScreen);
+	WsfbPriv *priv = pScreenPriv->card->driver;
+
 	DBG(("wsfbWindowLinear\n"));
-	return NULL;
+	
+	if (!pScreenPriv->enabled)
+		return NULL;
+	*size = priv->linebytes;
+	return (CARD8 *)priv->fb + row * priv->linebytes + offset;
 }
 
 void
@@ -229,6 +378,7 @@ wsfbSetScreenSizes(ScreenPtr pScreen)
 Bool
 wsfbUnmapFramebuffer(KdScreenInfo *screen)
 {
+
 	DBG(("wsfbUnmapFramebuffer\n"));
 	KdShadowFbFree(screen, 0);
 	return TRUE;
@@ -237,22 +387,82 @@ wsfbUnmapFramebuffer(KdScreenInfo *screen)
 Bool
 wsfbSetShadow(ScreenPtr pScreen)
 {
+	KdScreenPriv(pScreen);
+	KdScreenInfo *screen = pScreenPriv->screen;
+	WsfbScrPriv *scrPriv = screen->driver;
+	WsfbPriv *priv = screen->card->driver;
+	ShadowUpdateProc update;
+	ShadowWindowProc window;
+	int useXY = 0;
+
 	DBG(("wsfbSetShadow\n"));
-	return TRUE;
+	window = wsfbWindowLinear;
+	update = NULL;
+	if (scrPriv->randr) 
+		if (priv->bpp == 16) {
+			switch(scrPriv->randr) {
+			case RR_Rotate_90:
+				if (useXY) 
+					update = shadowUpdateRotate16_90YX;
+				else
+					update = shadowUpdateRotate16_90;
+				break;
+			case RR_Rotate_180:
+				update = shadowUpdateRotate16_180;
+				break;
+			case RR_Rotate_270:
+				if (useXY)
+					update = shadowUpdateRotate16_270YX;
+				else
+					update = shadowUpdateRotate16_270;
+				break;
+			default:
+				update = shadowUpdateRotate16;
+				break;
+			}
+		} else {
+			update = shadowUpdateRotatePacked;
+		}
+	else
+		update = shadowUpdateRotatePacked;
+	
+	return KdShadowSet(pScreen, scrPriv->randr, update, window);
 }
 
 Bool
 wsfbCreateColormap(ColormapPtr pmap)
 {
 	DBG(("wsfbCreateColormap\n"));
-	return TRUE;
+	return fbInitializeColormap(pmap);
 }
 
 #ifdef RANDR
 Bool
 wsfbRandRGetInfo(ScreenPtr pScreen, Rotation *rotations)
 {
+	KdScreenPriv(pScreen);
+	KdScreenInfo *screen = pScreenPriv->screen;
+	WsfbScrPriv *scrPriv = screen->driver;
+	RRScreenSizePtr pSize;
+	Rotation randr;
+	int n;
+
 	DBG(("wsfbRandRGetInfo\n"));
+	*rotations = RR_Rotate_All|RR_Reflect_All;
+	
+	for (n = 0; n < pScreen->numDepths; n++)
+		if (pScreen->allowedDepths[n].numVids != 0)
+			break;
+	if (n == pScreen->numDepths)
+		return FALSE;
+	pSize = RRRegisterSize(pScreen,
+	    screen->width,
+	    screen->height,
+	    screen->width_mm,
+	    screen->height_mm);
+	randr = KdSubRotation(scrPriv->randr, screen->randr);
+	RRSetCurrentConfig(pScreen, randr, 0, pSize);
+	    
 	return TRUE;
 }
 
@@ -269,7 +479,16 @@ wsfbRandRSetConfig(ScreenPtr		pScreen,
 Bool
 wsfbRandRInit(ScreenPtr pScreen)
 {
+	rrScrPrivPtr    pScrPriv;
+	
 	DBG(("wsfbRandRInit\n"));
+    
+	if (!RRScreenInit (pScreen))
+		return FALSE;
+	
+	pScrPriv = rrGetScrPriv(pScreen);
+	pScrPriv->rrGetInfo = wsfbRandRGetInfo;
+	pScrPriv->rrSetConfig = wsfbRandRSetConfig;
 	return TRUE;
 }
 #endif /* RANDR */
