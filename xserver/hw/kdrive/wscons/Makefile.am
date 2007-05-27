@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.am,v 1.1 2007/05/25 15:33:32 matthieu Exp $
+#
 
 INCLUDES = \
 	@KDRIVE_INCS@ \
