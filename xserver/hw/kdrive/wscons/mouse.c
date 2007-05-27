@@ -1,4 +1,4 @@
-/* $OpenBSD: mouse.c,v 1.3 2007/05/27 00:55:09 matthieu Exp $ */
+/* $OpenBSD: mouse.c,v 1.4 2007/05/27 05:17:06 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -29,6 +29,8 @@
 #include "scrnintstr.h"
 #include "kdrive.h"
 
+#define DBG(x) ErrorF x
+
 #define NUMEVENTS 64
 
 static unsigned long kdbuttons[] = {
@@ -38,7 +40,7 @@ static unsigned long kdbuttons[] = {
 };
 
 static void
-MouseRead(int mousePort, void *closure)
+wsmouseRead(int mousePort, void *closure)
 {
 	static struct wscons_event eventList[NUMEVENTS];
 	struct wscons_event *event = eventList;
@@ -75,7 +77,7 @@ MouseRead(int mousePort, void *closure)
 			dy = event->value;
 			break;
 		default:
-			ErrorF("MouseRead: bad wsmouse event type=%d\n",
+			ErrorF("wsmouseRead: bad wsmouse event type=%d\n",
 			    event->type);
 			continue;
 		} /* case */
@@ -86,31 +88,34 @@ MouseRead(int mousePort, void *closure)
 int MouseInputType;
 
 static Bool
-MouseInit(void)
+wsmouseInit(void)
 {
 	char *device = "/dev/wsmouse";
 	int port;
+
+	DBG(("wsmouseInit\n"));
 
 	if (!MouseInputType)
 		MouseInputType = KdAllocInputType();
 
 	port = open(device, O_RDWR | O_NONBLOCK);
 	if (port == -1) {
-		ErrorF("MouseInit: couldn't open %s (%d)\n", device, errno);
+		ErrorF("wsmouseInit: couldn't open %s (%d)\n", device, errno);
 		return FALSE;
 	}
-	return KdRegisterFd(MouseInputType, port, MouseRead, NULL);
+	return KdRegisterFd(MouseInputType, port, wsmouseRead, NULL);
 }
 		
 static void
-MouseFini(void)
+wsmouseFini(void)
 {
 	KdMouseInfo *mi;
-	
+
+	DBG(("wsmouseFini\n"));
 	KdUnregisterFds(MouseInputType, TRUE);
 }
 
 KdMouseFuncs WsconsMouseFuncs = {
-	MouseInit,
-	MouseFini
+	wsmouseInit,
+	wsmouseFini
 };
