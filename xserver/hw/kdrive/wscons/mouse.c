@@ -1,4 +1,4 @@
-/* $OpenBSD: mouse.c,v 1.2 2007/05/25 19:10:43 matthieu Exp $ */
+/* $OpenBSD: mouse.c,v 1.3 2007/05/27 00:55:09 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -42,7 +42,6 @@ MouseRead(int mousePort, void *closure)
 {
 	static struct wscons_event eventList[NUMEVENTS];
 	struct wscons_event *event = eventList;
-	KdMouseInfo *mi;
 	int n;
 
 	n = read(mousePort, &eventList, 
@@ -80,7 +79,7 @@ MouseRead(int mousePort, void *closure)
 			    event->type);
 			continue;
 		} /* case */
-		KdEnqueueMouseEvent(mi, flags, dx, dy);
+		KdEnqueueMouseEvent(kdMouseInfo, flags, dx, dy);
 	}	
 }
 
