@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: conf.c,v 1.2 2007/04/27 18:08:14 bernd Exp $
+ * $Id: conf.c,v 1.3 2007/05/27 09:23:12 jasper Exp $
  */
 
 #include "headers.h"
@@ -229,6 +229,8 @@ conf_setup(struct conf *c)
 		    XK_Right, Mod1Mask, 0, 0);
 		conf_bindkey(c, kbfunc_client_prevgroup,
 		    XK_Left, Mod1Mask, 0, 0);
+                conf_bindkey(c, kbfunc_client_maximize,
+		    XK_f, ControlMask|Mod1Mask, KBFLAG_NEEDCLIENT, 0);
 		conf_bindkey(c, kbfunc_client_vmaximize,
 		    XK_equal, ControlMask|Mod1Mask, KBFLAG_NEEDCLIENT, 0);
         }
@@ -410,7 +412,7 @@ conf_parsekeys(struct conf *c, char *filename)
 
 		substring = strchr(ent->d_name, '-') + 1;
 
-		// if there is no '-' in name, continue as is
+		/* If there is no '-' in name, continue as is */
 		if (strchr(ent->d_name, '-') == NULL)
 			substring = ent->d_name;
 

@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: calmwm.h,v 1.3 2007/05/10 17:23:49 jasper Exp $
+ * $Id: calmwm.h,v 1.4 2007/05/27 09:23:12 jasper Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -192,7 +192,7 @@ TAILQ_HEAD(xevent_q, xevent);
 enum kbtype {
 	KB_DELETE, KB_NEWTERM0, KB_NEWTERM1, KB_HIDE,
 	KB_LOWER, KB_RAISE, KB_SEARCH, KB_CYCLE, KB_LABEL,
-	KB_GROUPSELECT, KB_VERTMAXIMIZE,
+	KB_GROUPSELECT, KB_VERTMAXIMIZE, KB_MAXIMIZE,
 
 	/* Group numbers need to be in order. */
 	KB_GROUP_1, KB_GROUP_2, KB_GROUP_3, KB_GROUP_4, KB_GROUP_5,
