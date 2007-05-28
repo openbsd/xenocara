@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: conf.c,v 1.4 2007/05/28 18:34:27 jasper Exp $
+ * $Id: conf.c,v 1.5 2007/05/28 21:11:39 jasper Exp $
  */
 
 #include "headers.h"
@@ -149,6 +149,9 @@ conf_cmd_populate(struct conf *c, char *path)
 		/* Add a dynamic entry to the command menu */
 		conf_cmd_add(c, fullname, filename, 0);
 	}
+
+	closedir(dir);
+
 }
 
 void
@@ -531,4 +534,7 @@ conf_parseautogroups(struct conf *c, char *filename)
 
 		TAILQ_INSERT_TAIL(&c->autogroupq, aw, entry);
 	}
+
+	closedir(dir);
+
 }
