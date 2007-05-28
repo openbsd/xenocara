@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: input.c,v 1.2 2007/04/27 18:10:39 bernd Exp $
+ * $Id: input.c,v 1.3 2007/05/28 18:34:27 jasper Exp $
  */
 
 #include "headers.h"
@@ -20,9 +20,9 @@ input_keycodetrans(KeyCode kc, u_int state,
 	*chr = '\0';
 
 	if (state & ShiftMask)
-		ks = XKeycodeToKeysym(G_dpy, kc, 1);
+		ks = XKeycodeToKeysym(X_Dpy, kc, 1);
 	else
-		ks = XKeycodeToKeysym(G_dpy, kc, 0);
+		ks = XKeycodeToKeysym(X_Dpy, kc, 0);
 
 	/* Look for control characters. */
 	switch (ks) {

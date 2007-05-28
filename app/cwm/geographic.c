@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: geographic.c,v 1.1.1.1 2007/04/27 17:58:48 bernd Exp $
+ * $Id: geographic.c,v 1.2 2007/05/28 18:34:27 jasper Exp $
  */
 
 #include "headers.h"
@@ -33,7 +33,7 @@ _visible(struct client_ctx *this_cc)
 	if (cc->flags & CLIENT_HIDDEN)
 		return (0);
 
-	TAILQ_FOREACH(cc, &G_clientq, entry) {
+	TAILQ_FOREACH(cc, &Clientq, entry) {
 		if (cc->flags & CLIENT_HIDDEN)
 			continue;
 
