@@ -1,6 +1,8 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.12 2007/05/16 19:59:15 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.13 2007/05/28 17:36:57 matthieu Exp $
+.include <bsd.own.mk>
 
-PIXMAPDIR=/etc/X11/xdm/pixmaps
+XDMCONFIGDIR=/etc/X11/xdm
+PIXMAPDIR=$(XDMCONFIGDIR)/pixmaps
 
 .if ${MACHINE} == i386 || ${MACHINE} == amd64
 DEFAULT_VT= --with-default-vt=vt05
@@ -13,15 +15,47 @@ CONFIGURE_ARGS= --enable-privsep \
 	--enable-bsdauth \
 	$(DEFAULT_VT) \
 	--disable-dynamic-greeter \
-	--with-xdmlibdir=/etc/X11/xdm \
+	--with-xdmlibdir=$(XDMCONFIGDIR) \
 	--with-pixmapdir=$(PIXMAPDIR) \
 	--with-bw-pixmap=OpenBSD_1bpp.xpm \
 	--with-color-pixmap=OpenBSD_15bpp.xpm
+
+# avoid clobbering installed config files
+realinstall:
+	exec ${MAKE} ${_lt_libs} install \
+		dist_xdmconfigDATA_INSTALL=: \
+		dist_xdmscriptSCRIPT_INSTALL=: \
+		xdmscriptSCRIPT_INSTALL=: \
+		xdmconfigDATA_INSTALL=:
+
+XDMCONFIGFILES= \
+	xdm-config Xresources Xservers Xaccess 
+XDMCONFIGSCRIPTS= \
+	Xsession GiveConsole TakeConsole Xsetup_0 Xstartup Xreset Xwilling
 
 afterinstall:
 	$(INSTALL_DATA) ${.CURDIR}/config/OpenBSD_1bpp.xpm $(DESTDIR)$(PIXMAPDIR)
 	$(INSTALL_DATA) ${.CURDIR}/config/OpenBSD_4bpp.xpm $(DESTDIR)$(PIXMAPDIR)
 	$(INSTALL_DATA) ${.CURDIR}/config/OpenBSD_8bpp.xpm $(DESTDIR)$(PIXMAPDIR)
 	$(INSTALL_DATA) ${.CURDIR}/config/OpenBSD_15bpp.xpm $(DESTDIR)$(PIXMAPDIR)
+	@cd config ; for f in $(XDMCONFIGFILES); do \
+	  if ! test -f $(DESTDIR)$(XDMCONFIGDIR)/$$f ; then \
+	    if test -f $$f; then d=; else d="$(.CURDIR)/config/"; fi; \
+	    echo "$(INSTALL_DATA) $$d$$f $(DESTDIR)$(XDMCONFIGDIR)"; \
+	    $(INSTALL_DATA) $$d$$f $(DESTDIR)$(XDMCONFIGDIR) ;\
+	  else \
+	    echo "not overwriting $(DESTDIR)$(XDMCONFIGDIR)/$$f" ;\
+	  fi \
+	done
+	@cd config ; for f in $(XDMCONFIGSCRIPTS); do \
+	  if ! test -f $(DESTDIR)$(XDMCONFIGDIR)/$$f ; then \
+	    if test -f $$f; then d=; else d="$(.CURDIR)/config/"; fi; \
+	    echo "$(INSTALL) $$f $(DESTDIR)$(XDMCONFIGDIR)"; \
+	    $(INSTALL) $$d$$f $(DESTDIR)$(XDMCONFIGDIR) ;\
+	  else \
+	    echo "not overwriting $(DESTDIR)$(XDMCONFIGDIR)/$$f" ;\
+	  fi \
+	done
+
 
 .include <bsd.xorg.mk>
