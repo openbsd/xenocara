@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: client.c,v 1.3 2007/05/29 22:35:04 jasper Exp $
+ * $Id: client.c,v 1.4 2007/05/29 22:38:44 jasper Exp $
  */
 
 #include "headers.h"
@@ -409,7 +409,11 @@ client_ptrwarp(struct client_ctx *cc)
 		y = cc->geom.height / 2;
 	}
 
-	client_raise(cc);
+	if (cc->state == IconicState)
+		client_unhide(cc);
+	else
+		client_raise(cc);
+
 	xu_ptr_setpos(cc->pwin, x, y);
 }
 
