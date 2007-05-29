@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: client.c,v 1.2 2007/05/28 18:34:27 jasper Exp $
+ * $Id: client.c,v 1.3 2007/05/29 22:35:04 jasper Exp $
  */
 
 #include "headers.h"
@@ -464,8 +464,6 @@ client_draw_border(struct client_ctx *cc)
 			    cc->geom.width + cc->bwidth,
 			    cc->geom.height + cc->bwidth);
 	} else {
-		XSetWindowBackgroundPixmap(X_Dpy, cc->pwin,
-		    client_bg_pixmap(cc));
 		if (cc->bwidth > 1)
 			XSetWindowBackgroundPixmap(X_Dpy,
 			    cc->pwin, client_bg_pixmap(cc));
