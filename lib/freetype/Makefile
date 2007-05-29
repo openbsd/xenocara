@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2007/04/07 15:37:50 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.8 2007/05/29 15:37:57 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
@@ -47,14 +47,14 @@ includes:: freetype-config
 	freetype-config ${DESTDIR}${X11BASE}/bin
 
 freetype2.pc: freetype2.in Makefile
-	sed -e s%@prefix@%${X11BASE}% -e s%@exec_prefix@%${XORG_PREFIX}% \
+	sed -e s%@prefix@%${X11BASE}% -e s%@exec_prefix@%${X11BASE}% \
 		-e s%@ft_version@%${FT_VERSION_INFO}% \
 		-e s%@includedir@%${INCSDIR}% -e s%@libdir@%${LIBDIR}% \
 		-e s%@LIBZ@%-lz% < ${.CURDIR}/builds/unix/freetype2.in \
 		> freetype2.pc
 
 freetype-config: freetype-config.in
-	sed -e s%@prefix@%${X11BASE}% -e s%@exec_prefix@%${XORG_PREFIX}% \
+	sed -e s%@prefix@%${X11BASE}% -e s%@exec_prefix@%${X11BASE}% \
 		-e s%@includedir@%${INCSDIR}% -e s%@libdir@%${LIBDIR}% \
 		-e s%@LIBZ@%-lz% -e s%@enable_shared@%yes% \
 		-e 's%@hardcode_libdir_flag_spec@%%' \
