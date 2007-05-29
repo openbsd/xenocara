@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb.c,v 1.3 2007/05/27 00:56:29 matthieu Exp $ */
+/* $OpenBSD: wsfb.c,v 1.4 2007/05/29 20:14:43 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -13,6 +13,26 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+/* Copyright © 1999 Keith Packard
+ *
+ * Permission to use, copy, modify, distribute, and sell this software and its
+ * documentation for any purpose is hereby granted without fee, provided that
+ * the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
+ * documentation, and that the name of Keith Packard not be used in
+ * advertising or publicity pertaining to distribution of the software without
+ * specific, written prior permission.  Keith Packard makes no
+ * representations about the suitability of this software for any purpose.  It
+ * is provided "as is" without express or implied warranty.
+ *
+ * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+ * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -65,6 +85,9 @@ wsfbMapFramebuffer(KdScreenInfo *screen)
 	size_t len;
 
 	DBG(("wsfbMapFrameBuffer\n"));
+	
+	if (scrPriv->mapped)
+		return TRUE;
 	if (scrPriv->randr != RR_Rotate_0)
 		scrPriv->shadow = TRUE;
 	else
@@ -78,6 +101,8 @@ wsfbMapFramebuffer(KdScreenInfo *screen)
 	DBG(("screen->height %d\n", screen->height));
 	len = priv->linebytes * screen->height;
 	priv->fb = wsfbMmap(len, 0, WsconsConsoleFd);
+	if (priv->fb == NULL)
+		FatalError("Can't mmap framebuffer\n");
 
 	screen->memory_base = (CARD8 *)(priv->fb);
 	screen->memory_size = len;
@@ -94,6 +119,7 @@ wsfbMapFramebuffer(KdScreenInfo *screen)
 		screen->off_screen_base = 
 		    screen->fb[0].byteStride * screen->height;
 	}
+	scrPriv->mapped = TRUE;
 	return TRUE;
 }
 
@@ -289,6 +315,13 @@ wsfbEnable(ScreenPtr pScreen)
 		ErrorF("wsfbEnale: can't map framebuffer\n");
 		return FALSE;
 	}
+	(*pScreen->ModifyPixmapHeader) (fbGetScreenPixmap (pScreen),
+					pScreen->width,
+					pScreen->height,
+					screen->fb[0].depth,
+					screen->fb[0].bitsPerPixel,
+					screen->fb[0].byteStride,
+					screen->fb[0].frameBuffer);
 	DBG(("wsfbEnable done.\n"));
 	return TRUE;
 }
@@ -342,6 +375,13 @@ void
 wsfbGetColors(ScreenPtr pScreen, int fb, int n, xColorItem *pdefs)
 {
 	DBG(("wsfbGetColors %d\n", n));
+
+	while (n--) {
+		pdefs->red = 0;
+		pdefs->green = 0;
+		pdefs->blue = 0;
+		pdefs++;
+	}
 }
 
 void
@@ -372,16 +412,36 @@ wsfbWindowLinear(ScreenPtr	pScreen,
 void
 wsfbSetScreenSizes(ScreenPtr pScreen)
 {
+	KdScreenPriv(pScreen);
+	KdScreenInfo	*screen = pScreenPriv->screen;
+	WsfbScrPriv	*scrpriv = screen->driver;
+	WsfbPriv	*priv = screen->card->driver;
+
 	DBG(("wsfbSetScreenSizes\n"));
+	
+	if (scrpriv->randr & (RR_Rotate_0|RR_Rotate_180)) {
+		pScreen->width = priv->info.width;
+		pScreen->height = priv->info.height;
+		pScreen->mmWidth = screen->width_mm;
+		pScreen->mmHeight = screen->height_mm;
+	} else {
+		pScreen->width = priv->info.height;
+		pScreen->height = priv->info.width;
+		pScreen->mmWidth = screen->height_mm;
+		pScreen->mmHeight = screen->width_mm;
+	}
 }
 
-Bool
+void
 wsfbUnmapFramebuffer(KdScreenInfo *screen)
 {
+	WsfbScrPriv *scrPriv = screen->driver;
 
 	DBG(("wsfbUnmapFramebuffer\n"));
+	if (!scrPriv->mapped)
+		return;
 	KdShadowFbFree(screen, 0);
-	return TRUE;
+	return;
 }
 
 Bool
@@ -472,8 +532,88 @@ wsfbRandRSetConfig(ScreenPtr		pScreen,
 		     int		rate,
 		     RRScreenSizePtr	pSize)
 {
+	KdScreenPriv(pScreen);
+	KdScreenInfo	*screen = pScreenPriv->screen;
+	WsfbScrPriv	*scrpriv = screen->driver;
+	Bool		wasEnabled = pScreenPriv->enabled;
+	WsfbScrPriv	oldscr;
+	int		oldwidth;
+	int		oldheight;
+	int		oldmmwidth;
+	int		oldmmheight;
+	int		newwidth, newheight;
+
 	DBG(("wsfbRandRSetConfig\n"));
+	
+	if (screen->randr & (RR_Rotate_0|RR_Rotate_180)) {
+		newwidth = pSize->width;
+		newheight = pSize->height;
+	} else {
+		newwidth = pSize->height;
+		newheight = pSize->width;
+	}
+	
+	if (wasEnabled)
+		KdDisableScreen (pScreen);
+	
+	oldscr = *scrpriv;
+	
+	oldwidth = screen->width;
+	oldheight = screen->height;
+	oldmmwidth = pScreen->mmWidth;
+	oldmmheight = pScreen->mmHeight;
+	
+	/*
+	 * Set new configuration
+	 */
+	
+	scrpriv->randr = KdAddRotation (screen->randr, randr);
+	
+	KdOffscreenSwapOut (screen->pScreen);
+	
+	wsfbUnmapFramebuffer (screen);
+	
+	if (!wsfbMapFramebuffer (screen))
+		goto bail4;
+	
+	KdShadowUnset (screen->pScreen);
+	
+	if (!wsfbSetShadow (screen->pScreen))
+		goto bail4;
+	
+	wsfbSetScreenSizes (screen->pScreen);
+	
+	/*
+	 * Set frame buffer mapping
+	 */
+	(*pScreen->ModifyPixmapHeader) (fbGetScreenPixmap (pScreen),
+	    pScreen->width,
+	    pScreen->height,
+	    screen->fb[0].depth,
+	    screen->fb[0].bitsPerPixel,
+	    screen->fb[0].byteStride,
+	    screen->fb[0].frameBuffer);
+	
+	/* set the subpixel order */
+	
+	KdSetSubpixelOrder (pScreen, scrpriv->randr);
+	if (wasEnabled)
+		KdEnableScreen (pScreen);
+	
 	return TRUE;
+	
+bail4:
+	wsfbUnmapFramebuffer (screen);
+	*scrpriv = oldscr;
+	(void) wsfbMapFramebuffer (screen);
+	pScreen->width = oldwidth;
+	pScreen->height = oldheight;
+	pScreen->mmWidth = oldmmwidth;
+	pScreen->mmHeight = oldmmheight;
+	
+	if (wasEnabled)
+		KdEnableScreen (pScreen);
+	return FALSE;
 }
 
 Bool

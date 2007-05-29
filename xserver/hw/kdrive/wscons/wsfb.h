@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb.h,v 1.2 2007/05/27 00:56:29 matthieu Exp $ */
+/* $OpenBSD: wsfb.h,v 1.3 2007/05/29 20:14:43 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -41,6 +41,7 @@ typedef struct _wsfbPriv {
 } WsfbPriv;
 
 typedef struct _wsfbScrPriv {
+	int mapped;
 	Rotation randr;
 	Bool shadow;
 	PixmapPtr pShadow;
@@ -66,7 +67,7 @@ void wsfbPutColors(ScreenPtr, int, int, xColorItem *);
 Bool wsfbMapFramebuffer(KdScreenInfo *);
 void *wsfbWindowLinear(ScreenPtr, CARD32, CARD32, int, CARD32 *, void *);
 void wsfbSetScreenSizes(ScreenPtr);
-Bool wsfbUnmapFramebuffer(KdScreenInfo *);
+void wsfbUnmapFramebuffer(KdScreenInfo *);
 Bool wsfbSetShadow(ScreenPtr);
 Bool wsfbCreateColormap(ColormapPtr);
 
