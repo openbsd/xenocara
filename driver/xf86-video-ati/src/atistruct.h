@@ -352,8 +352,8 @@ typedef struct _ATIRec
     CARD32 *ExpansionBitmapScanlinePtr[2];
     int ExpansionBitmapWidth;
 #endif
-#ifdef USE_EXA
     Bool RenderAccelEnabled;
+#ifdef USE_EXA
     Mach64ContextRegs3D m3d;
 #endif
 
