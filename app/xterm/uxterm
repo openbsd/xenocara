@@ -79,4 +79,4 @@ fi
 # for testing:
 #test -f ./xterm && XTERM_PROGRAM=./xterm
 
-exec $XTERM_PROGRAM -class UXTerm -title 'uxterm' -u8 "$@"
+exec $XTERM_PROGRAM -class UXTerm -title 'uxterm' -en UTF-8 "$@"
