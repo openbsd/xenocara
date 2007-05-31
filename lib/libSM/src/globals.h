@@ -34,27 +34,8 @@ in this Software without prior written authorization from The Open Group.
 extern void _SmcDefaultErrorHandler ();
 extern void _SmsDefaultErrorHandler ();
 
-extern IcePoAuthStatus _IcePoMagicCookie1Proc ();
-extern IcePaAuthStatus _IcePaMagicCookie1Proc ();
-
-extern void _SmcProcessMessage ();
-extern void _SmsProcessMessage ();
-
 int 	_SmcOpcode = 0;
 int 	_SmsOpcode = 0;
-
-int	_SmVersionCount = 1;
-
-IcePoVersionRec	_SmcVersions[] = {
-	  	    {SmProtoMajor, SmProtoMinor, _SmcProcessMessage}};
-
-IcePaVersionRec _SmsVersions[] = {
-	  	    {SmProtoMajor, SmProtoMinor, _SmsProcessMessage}};
-
-int		_SmAuthCount = 1;
-char		*_SmAuthNames[] = {"MIT-MAGIC-COOKIE-1"};
-IcePoAuthProc 	_SmcAuthProcs[] = {_IcePoMagicCookie1Proc};
-IcePaAuthProc 	_SmsAuthProcs[] = {_IcePaMagicCookie1Proc};
 
 #ifndef __UNIXOS2__
 SmsNewClientProc _SmsNewClientProc;

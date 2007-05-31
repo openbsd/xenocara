@@ -499,15 +499,6 @@ struct _SmsConn {
 extern int     _SmcOpcode;
 extern int     _SmsOpcode;
 
-extern int		_SmVersionCount;
-extern IcePoVersionRec	_SmcVersions[];
-extern IcePaVersionRec	_SmsVersions[];
-
-extern int	        _SmAuthCount;
-extern char		*_SmAuthNames[];
-extern IcePoAuthProc	_SmcAuthProcs[];
-extern IcePaAuthProc	_SmsAuthProcs[];
-
 extern SmsNewClientProc	_SmsNewClientProc;
 extern SmPointer	_SmsNewClientData;
 

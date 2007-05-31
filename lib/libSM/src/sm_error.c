@@ -59,7 +59,7 @@ SmPointer 	values;
 
 {
     char *pData = (char *) values;
-    char *str;
+    const char *str;
 
     switch (offendingMinorOpcode)
     {
@@ -191,7 +191,7 @@ SmPointer 	values;
 
 {
     char *pData = (char *) values;
-    char *str;
+    const char *str;
 
     switch (offendingMinorOpcode)
     {

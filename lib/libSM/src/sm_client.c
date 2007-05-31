@@ -38,6 +38,8 @@ in this Software without prior written authorization from The Open Group.
 #include "SMlibint.h"
 #include "globals.h"
 
+extern IcePoAuthStatus _IcePoMagicCookie1Proc ();
+extern void _SmcProcessMessage ();
 static void set_callbacks();
 
 
@@ -73,6 +75,16 @@ char 		*errorStringRet;
     _SmcRegisterClientReply	reply;
     Bool			gotReply, ioErrorOccured;
 
+    const char *auth_names[] = {"MIT-MAGIC-COOKIE-1"};
+    IcePoAuthProc auth_procs[] = {_IcePoMagicCookie1Proc};
+    int auth_count = 1;
+
+    IcePoVersionRec versions[] = {
+        {SmProtoMajor, SmProtoMinor, _SmcProcessMessage}
+    };
+    int version_count = 1;
+
+
     *clientIdRet = NULL;
 
     if (errorStringRet && errorLength > 0)
@@ -83,13 +95,13 @@ char 		*errorStringRet;
 	/*
 	 * For now, there is only one version of XSMP, so we don't
 	 * have to check {xsmpMajorRev, xsmpMinorRev}.  In the future,
-	 * we will check against _SmcVersions and generate the list
+	 * we will check against versions and generate the list
 	 * of versions the application actually supports.
 	 */
 
 	if ((_SmcOpcode = IceRegisterForProtocolSetup ("XSMP",
-	    SmVendorString, SmReleaseString, _SmVersionCount, _SmcVersions,
-            _SmAuthCount, _SmAuthNames, _SmcAuthProcs, NULL)) < 0)
+	    SmVendorString, SmReleaseString, version_count, versions,
+            auth_count, auth_names, auth_procs, NULL)) < 0)
 	{
 	    if (errorStringRet && errorLength > 0) {
 		strncpy (errorStringRet,
