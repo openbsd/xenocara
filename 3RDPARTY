@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.12 2007/05/31 03:28:57 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.13 2007/05/31 03:30:12 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -92,7 +92,7 @@ Maintainer:	matthieu@openbsd.org
 Archive Site:
 
 Package:	openbsd-input-ws
-Version:
-Current Vers:
+Version:	1.1
+Current Vers:	1.1
 Maintainer:	matthieu@openbsd.org
-Archive Site:
+Archive Site:	http://www.xenocara.org/src
