@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.10 2007/04/04 22:27:22 david Exp $
+# $OpenBSD: 3RDPARTY,v 1.11 2007/05/31 03:26:36 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -15,7 +15,7 @@ Archive Site:	http://expat.sf.net/
 
 Package:	xterm 
 Version:	216
-Current Vers:	223
+Current Vers:	225
 Maintainer:	Thomas E. Dickey
 Archive Site:	http://dickey.his.com/xterm/xterm.html
 
