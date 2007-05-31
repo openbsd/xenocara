@@ -1,11 +1,11 @@
-# $OpenBSD: MODULES,v 1.5 2007/04/08 18:18:15 matthieu Exp $
+# $OpenBSD: MODULES,v 1.6 2007/05/31 03:37:07 matthieu Exp $
 #
 # X.Org maintained modules
 #
-# Last update 2007/04/08
+# Last update 2007/05/30
 
 app/appres		1.0.1	7.2
-app/bdftopcf		1.0.0	7.0
+app/bdftopcf		1.0.1	7.2+	needs-update
 app/beforelight		1.0.2	7.2RC4
 app/bitmap		1.0.3	7.2+
 app/editres		1.0.3	7.2+
@@ -99,7 +99,7 @@ data/xkbdata		1.0.1	7.0	obsolete
 doc/xorg-docs		1.3	7.2RC2
 doc/xorg-sgml-doctools	1.1.1	7.2RC2
 
-driver/xf86-input-acecad	1.1.0	7.1
+driver/xf86-input-acecad	1.2.0	7.2+	needs-update
 driver/xf86-input-calcomp	1.1.0	7.1
 driver/xf86-input-citron	2.2.0	7.1
 driver/xf86-input-digitaledge	1.1.0	7.1	need-rel
@@ -111,7 +111,7 @@ driver/xf86-input-evdev		1.1.3	7.2RC1
 driver/xf86-input-fpit		1.1.0	7.1
 driver/xf86-input-hyperpen	1.1.0	7.1
 driver/xf86-input-jamstudio	1.1.0	7.1
-driver/xf86-input-joystick	1.1.0	7.1
+driver/xf86-input-joystick	1.2.1	7.2+	needs-update
 driver/xf86-input-keyboard	1.1.1	7.2RC1	not-branched
 driver/xf86-input-magellan	1.1.0	7.1
 driver/xf86-input-magictouch	1.0.0.5	7.0
@@ -129,7 +129,7 @@ driver/xf86-input-void		1.1.0	7.1
 driver/xf86-video-apm		1.1.1	7.1
 driver/xf86-video-ark		0.6.0	7.1
 driver/xf86-video-ast		0.81.0	7.1	need-rel
-driver/xf86-video-ati		6.6.3 7.2RC1
+driver/xf86-video-ati		6.6.192 7.2+	needs-update
 driver/xf86-video-chips		1.1.1	7.1
 driver/xf86-video-cirrus	1.1.0	7.1
 driver/xf86-video-cyrix		1.1.0	7.1
@@ -140,12 +140,12 @@ driver/xf86-video-i128		1.2.1	7.2RC3
 driver/xf86-video-i740		1.1.0	7.1
 driver/xf86-video-impact	0.2.0		need-rel
 driver/xf86-video-imstt		1.1.0	7.1
-driver/xf86-video-intel		1.7.4	7.2
+driver/xf86-video-intel		2.0.0	7.2+	needs-update
 driver/xf86-video-mga		1.4.6.1	7.2
 driver/xf86-video-neomagic	1.1.1	7.1
 driver/xf86-video-newport	0.2.1	7.2RC1
 driver/xf86-video-nsc		2.8.2	7.2RC1
-driver/xf86-video-nv		1.2.2.1	7.2
+driver/xf86-video-nv		2.0.96	7.2+	needs-update
 driver/xf86-video-rendition	4.1.3	7.2RC4
 driver/xf86-video-s3		0.5.0	7.2RC3
 driver/xf86-video-s3virge	1.9.1	7.1
@@ -213,7 +213,7 @@ font-xfree86-type1		fonts/xfree86-type1		1.0.0
 
 lib/libFS			1.0.0	7.0
 lib/libICE			1.0.3	7.2RC4
-lib/libSM			1.0.2	7.2RC1
+lib/libSM			1.0.3	7.2+		needs-update
 lib/libX11			1.1.1	7.2RC3
 lib/libXRes			1.0.3	7.2RC4
 lib/libXScrnSaver		1.1.2	7.2RC4
@@ -230,7 +230,7 @@ lib/libXfixes			4.0.3	7.2RC2
 lib/libXfont			1.2.8	7.2+
 lib/libXfontcache		1.0.4	7.2RC4
 lib/libXft			2.1.12	7.2RC4
-lib/libXi			1.0.2	7.2RC2
+lib/libXi			1.0.4	7.2+		needs-update
 lib/libXinerama			1.0.1	7.0
 lib/libXmu			1.0.3	7.2RC2
 lib/libXp			1.0.0	7.0
@@ -291,4 +291,4 @@ util/imake			1.0.2
 util/macros			1.1.5	7.2
 util/makedepend			1.0.0
 
-xserver				1.2.0	7.2
+xserver				1.3.0	7.2+	needs update
