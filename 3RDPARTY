@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.14 2007/05/31 15:21:32 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.15 2007/05/31 15:25:07 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -21,7 +21,7 @@ Archive Site:	http://dickey.his.com/xterm/xterm.html
 
 Package:	Mesa
 Version		6.5.2
-Current Vers:	6.5.2
+Current Vers:	6.5.3
 Maintainer:	?
 Archive Site:	http://www.mesa3d.org/
 
@@ -39,15 +39,15 @@ Archive Site:	http://ftp.gnome.org/pub/GNOME/sources/ttf-bitstream-vera/
 
 Package:	xlockmore
 Version:	5.22
-Current Vers:	5.23
+Current Vers:	5.24
 Maintainer:	bagleyd@tux.org
 Archive Site:	http://www.tux.org/~bagleyd/latest/
 
 Package:	xkeyboard-config
-Version:	0.8
-Current Vers:	0.8
-Maintainer:	
-Archive Site:	http://www.freedesktop.org/wiki/Software_2fXKeyboardConfig
+Version:	
+Current Vers:	0.9
+Maintainer:	xkb@listserv.bat.ru
+Archive Site:	http://www.freedesktop.org/wiki/Software/XKeyboardConfig
 
 Package:	fvwm
 Version:	2.2.5
@@ -56,10 +56,10 @@ Maintainer:
 Archive Site:
 
 Package:	ssh-ask-pass
-Version:
-Current Vers:
-Maintainer:
-Archive Site:
+Version:	1.2.4.1
+Current Vers:	1.2.4.1
+Maintainer:	Jim Knoble
+Archive Site:	http://www.jmknoble.net/software/x11-ssh-askpass/
 
 Package:	cwm
 Version:	3
