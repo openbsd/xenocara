@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.bsd-wrapper,v 1.8 2007/05/31 15:53:10 matthieu Exp $
+#	$OpenBSD: Makefile.bsd-wrapper,v 1.9 2007/05/31 21:18:47 matthieu Exp $
 
 SHARED_LIBS=	fontconfig 5.1
 
@@ -9,6 +9,6 @@ CONFIGURE_ARGS= --with-expat=${X11BASE} --sysconfdir=/etc \
 	--with-add-fonts=/usr/local/lib/X11/fonts
 
 realinstall:
-	exec ${MAKE} RUN_FC_CACHE_TEST=false install-strip
+	exec ${MAKE} RUN_FC_CACHE_TEST=false install
 
 .include <bsd.xorg.mk>
