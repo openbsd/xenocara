@@ -148,6 +148,10 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LINT = @LINT@
+LINT_FALSE = @LINT_FALSE@
+LINT_FLAGS = @LINT_FLAGS@
+LINT_TRUE = @LINT_TRUE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -212,7 +216,7 @@ bdftopcf_SOURCES = bdftopcf.c
 appman_PRE = bdftopcf.man
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) ChangeLog
 CLEANFILES = $(appman_DATA)
 SED = sed
 
@@ -233,6 +237,9 @@ MAN_SUBSTS = \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
+@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+@LINT_TRUE@                $(AM_CPPFLAGS) $(CPPFLAGS) $(bdftopcf_CFLAGS)
+
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -446,6 +453,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -630,8 +640,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-data \
@@ -646,6 +656,14 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
+
+@LINT_TRUE@lint:
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(bdftopcf_SOURCES)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
