@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.13 2007/05/28 17:36:57 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.14 2007/05/31 15:55:45 matthieu Exp $
 .include <bsd.own.mk>
 
 XDMCONFIGDIR=/etc/X11/xdm
@@ -22,7 +22,7 @@ CONFIGURE_ARGS= --enable-privsep \
 
 # avoid clobbering installed config files
 realinstall:
-	exec ${MAKE} ${_lt_libs} install \
+	exec ${MAKE} ${_lt_libs} install-strip \
 		dist_xdmconfigDATA_INSTALL=: \
 		dist_xdmscriptSCRIPT_INSTALL=: \
 		xdmscriptSCRIPT_INSTALL=: \
