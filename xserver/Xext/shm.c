@@ -433,13 +433,11 @@ ProcShmAttach(client)
 	shmdesc = (ShmDescPtr) xalloc(sizeof(ShmDescRec));
 	if (!shmdesc)
 	    return BadAlloc;
-	ErrorF("shmat %u\n", stuff->shmid);
 	shmdesc->addr = shmat(stuff->shmid, 0,
 			      stuff->readOnly ? SHM_RDONLY : 0);
 	if ((shmdesc->addr == ((char *)-1)) ||
 	    shmctl(stuff->shmid, IPC_STAT, &buf))
 	{
-	    ErrorF("shmat fails shmid: %u\n", stuff->shmid);
 	    xfree(shmdesc);
 	    return BadAccess;
 	}
