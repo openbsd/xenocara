@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2007/03/31 16:41:11 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2007/06/01 01:05:25 matthieu Exp $
 
 FONT_FILES= \
 	Vera.ttf \
@@ -31,6 +31,5 @@ install:
 	mkfontscale ${DESTDIR}${fontdir}
 	@rm -f ${DESTDIR}${fontdir}/fonts.dir
 	mkfontdir ${DESTDIR}${fontdir}
-	fc-cache -v ${DESTDIR}${fontdir}
 
 .include <bsd.xorg.mk>

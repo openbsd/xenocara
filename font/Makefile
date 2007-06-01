@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2006/12/17 19:52:56 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2007/06/01 01:05:25 matthieu Exp $
 
 # util must come 1st, alias must come last
 SUBDIR= util encodings \
@@ -14,6 +14,12 @@ SUBDIR= util encodings \
 	alias
 
 EXTRAS=	bitstream-vera-ttf
+
+afterinstall:
+	@if test -z "$(DESTDIR)"; then \
+		echo "running fc-cache";\
+		fc-cache -s -v ;\
+	fi
 
 .include <bsd.subdir.mk>
 
