@@ -162,5 +162,48 @@ for more desperate cases, remove all files from XSRCDIR not in CVS:
  cd XSRCDIR
  cvs -q update -PAd -I - | awk '$1=="?" {print $2}' | xargs rm -f
 
+o How to build something with debug information?
+  ----------------------------------------------
+
+You can use "env CFLAGS=-g make -f Makefile.bsd-wrapper build" to
+build any module with debugging information, but you'll need to remove
+XOBJDIR/xorg-config.cache.${MACHINE} before doing that because
+autoconf caches the value of CFLAGS in its cache.
+
+o How to get a core file out of the X server?
+  -------------------------------------------
+
+Several things are needed:
+
+1) set kern.nosuidcoredump=2 in /etc/sysctl.conf
+2) put 
+
+        Option  "NoTrapSignals" "true"
+
+   in the "ServerFlags" section of /etc/X11/xorg.conf. If such a section 
+   doesn't exist, it can be added as follow:
+
+   Section "ServerFlags"
+        Option  "NoTrapSignals" "true"
+   EndSection
+
+   anywhere in the configuration file. 
+
+3) start the X server as root, with the -keepPriv option. A regular
+   user is not allowed to use this option. If you use xdm, you can add
+   the option in /etc/X11/xdm/Xservers. If you want to use startx, you
+   need to run it as root, like this:
+
+   startx -- /usr/X11R6/bin/X -keepPriv
+
+Now the X server will dump core when catching a fatal signal. But it
+will also not be able to restore the text mode on exit. So be prepared
+to log in remotely (serial terminal or ssh) to reboot your machine or
+to restart X.
+
+The core dump will be in /var/crash.
+
+See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
+
 -- 
-$OpenBSD: README,v 1.18 2007/04/23 08:52:58 ajacoutot Exp $
+$OpenBSD: README,v 1.19 2007/06/01 00:19:52 matthieu Exp $
