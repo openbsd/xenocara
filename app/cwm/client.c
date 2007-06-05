@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: client.c,v 1.4 2007/05/29 22:38:44 jasper Exp $
+ * $Id: client.c,v 1.5 2007/06/05 19:03:20 jasper Exp $
  */
 
 #include "headers.h"
@@ -604,13 +604,22 @@ match:
  */
 
 struct client_ctx *
-client_cyclenext(struct client_ctx *cc, int reverse)
+client_cyclenext(int reverse)
 {
-	struct screen_ctx *sc = CCTOSC(cc);
+	struct screen_ctx *sc;
+	struct client_ctx *cc;
 	struct client_ctx *(*iter)(struct client_ctx *) =
 	    reverse ? &client_mruprev : &client_mrunext;
 
 	/* TODO: maybe this should just be a CIRCLEQ. */
+
+	if (!(cc = _curcc)) {
+		if (TAILQ_EMPTY(&Clientq))
+			return(NULL);
+		cc = TAILQ_FIRST(&Clientq);
+	}
+
+	sc = CCTOSC(cc);
 
 	/* if altheld; then reset the iterator to the beginning */
 	if (!sc->altpersist || sc->cycle_client == NULL)

@@ -4,7 +4,7 @@
  *  Copyright (c) 2004 Martin Murray <mmurray@monkey.org>
  *  All rights reserved.
  *
- * $Id: kbfunc.c,v 1.3 2007/05/28 18:34:27 jasper Exp $
+ * $Id: kbfunc.c,v 1.4 2007/06/05 19:03:20 jasper Exp $
  */
 
 #include "headers.h"
@@ -85,15 +85,15 @@ kbfunc_menu_search(struct client_ctx *scratch, void *arg)
 }
 
 void
-kbfunc_client_cycle(struct client_ctx *cc, void *arg)
+kbfunc_client_cycle(struct client_ctx *scratch, void *arg)
 {
-	client_cyclenext(cc, 0);
+	client_cyclenext(0);
 }
 
 void
-kbfunc_client_rcycle(struct client_ctx *cc, void *arg)
+kbfunc_client_rcycle(struct client_ctx *scratch, void *arg)
 {
-	client_cyclenext(cc, 1);
+	client_cyclenext(1);
 }
 
 void

@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: calmwm.h,v 1.5 2007/05/28 18:34:27 jasper Exp $
+ * $Id: calmwm.h,v 1.6 2007/06/05 19:03:20 jasper Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -320,7 +320,7 @@ u_long             client_bg_pixel(struct client_ctx *);
 Pixmap             client_bg_pixmap(struct client_ctx *);
 void               client_map(struct client_ctx *cc);
 void               client_mtf(struct client_ctx *cc);
-struct client_ctx *client_cyclenext(struct client_ctx *cc, int reverse);
+struct client_ctx *client_cyclenext(int reverse);
 void               client_cycleinfo(struct client_ctx *cc);
 void               client_altrelease();
 struct client_ctx *client_mrunext(struct client_ctx *cc);
