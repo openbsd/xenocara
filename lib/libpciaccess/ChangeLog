@@ -1,0 +1,98 @@
+2006-05-09  Ian Romanick  <idr@us.ibm.com>
+
+	* src/linux_sysfs.c: (pci_device_linux_sysfs_probe):
+	Fix foolish endianess bug.
+
+	* src/Makefile.am:
+	Bump to version 0.4.1.
+
+2006-04-12  Ian Romanick  <idr@us.ibm.com>
+
+	* configure.ac:
+	* src/Makefile.am:
+	Bump to version 0.4.0.
+
+	* include/pciaccess.h:
+	Add multiple-inclusion protection.
+
+	* src/common_interface.c: (pci_device_cfg_write_bits):
+	Add new function to write masked bits to PCI config space.
+	This mirrors functionality currently available in X.org that is slated
+	to be removed.
+
+	* src/common_iterator.c: (pci_slot_match_iterator_create),
+	(pci_id_match_iterator_create), (pci_iterator_destroy),
+	(pci_device_next), (pci_device_find_by_slot):
+	Gut old regex based search mechanism with a new mechanism that is
+	modeled after the Linux kernel.  In addition to searching for
+	devices by device / vendor ID, it is possible to search for devices
+	by their domain / bus / slot / function.
+
+	* src/linux_sysfs.c: (pci_device_linux_sysfs_read_rom),
+	(pci_device_linux_sysfs_map_region),
+	(pci_device_linux_sysfs_unmap_region):
+	Fix serious bugs in the reading of ROMs and in the unmapping of
+	regions.  The main point is that the map routine depens on the
+	pci_mem_region::memory pointer being non-NULL only when the region
+	is mapped.  Therefore, the unmap routine should set it to NULL after
+	unmapping.
+
+	* src/scanpci.c: (main):
+	Update to use new search API.
+
+2006-03-27  Ian Romanick  <idr@us.ibm.com>
+
+	* Makefile.am:
+	Remove src/pcils.c and src/Makefile.foo.  Add src/scanpci.c.
+
+	* configure.ac:
+	* src/Makefile.am:
+	Bump version to 0.3.0.
+
+	* include/pciaccess.h:
+	* src/common_device_name.c: (pci_get_strings):
+	Replace pci_get_name with pci_get_strings.  This function
+	matches the functionality provided by the Xorg scanpci module
+	almost identically.
+
+2006-03-24  Ian D. Romanick  <idr@us.ibm.com>
+
+	* src/Makefile.foo: Drop from CVS.
+
+2006-03-20  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/Makefile.am (noinst_PROGRAMS): Add scanpci as a noinst target.
+	* src/Makefile.in: Drop from CVS.
+
+2006-03-17  Ian D. Romanick  <idr@us.ibm.com>
+
+	* configure.ac, src/common_device_name.c
+	Added configure option (--with-pciids-path) to set the default
+	place to look for the pci.ids file.
+
+2006-03-16  Ian D. Romanick  <idr@us.ibm.com>
+
+	* src/pcils.c, src/scanpci.c, src/Makefile.foo
+	Made pcils more like XFree86's scanpci utility than lspci.  Changed
+	the name of the source file from pcils.c to scanpci.c.  Eventually
+	this will be it's own project somewhere else (or it will whither and
+	die).
+
+2006-03-15  Ian D. Romanick  <idr@us.ibm.com>
+
+	* First round of autotools madness.
+
+2006-02-24  Ian D. Romanick  <idr@us.ibm.com>
+
+	* common_device_name.c, pciaccess.h, pcils.c:
+	Add interfaces for querying the device, vendor, subdevice, and
+	subvendor name strings from pci.ids.
+
+2006-02-20  Ian D. Romanick  <idr@us.ibm.com>
+
+	* common_agp.c:
+	Removed this file.  It was an old version of what became
+	common_capability.c.
+
+	* common_capability.c:
+	Fixed an issue with AGP rate detection for AGP3 devices.

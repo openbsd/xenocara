@@ -1,0 +1,190 @@
+/*
+ * (C) Copyright IBM Corporation 2006
+ * All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * on the rights to use, copy, modify, merge, publish, distribute, sub
+ * license, and/or sell copies of the Software, and to permit persons to whom
+ * the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.  IN NO EVENT SHALL
+ * IBM AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "pciaccess.h"
+
+
+static void
+print_pci_bridge( const struct pci_bridge_info * info )
+{
+    printf( "  Bus: primary=%02x, secondary=%02x, subordinate=%02x, "
+	    "sec-latency=%u\n",
+	    info->primary_bus,
+	    info->secondary_bus,
+	    info->subordinate_bus,
+	    info->secondary_latency_timer );
+    printf( "  I/O behind bridge: %08x-%08x\n",
+	    info->io_base,
+	    info->io_limit );
+    printf( "  Memory behind bridge: %08x-%08x\n",
+	    info->mem_base,
+	    info->mem_limit );
+    printf( "  Prefetchable memory behind bridge: %08llx-%08llx\n",
+	    info->prefetch_mem_base,
+	    info->prefetch_mem_limit );
+}
+
+static void
+print_pci_device( struct pci_device * dev, int verbose )
+{
+    const char * dev_name;
+    const char * vend_name;
+
+    vend_name = pci_device_get_vendor_name( dev );
+    dev_name = pci_device_get_device_name( dev );
+    if ( dev_name == NULL ) {
+	dev_name = "Device unknown";
+    }
+
+    printf("\npci bus 0x%04x cardnum 0x%02x function 0x%02x:"
+	   " vendor 0x%04x device 0x%04x\n",
+	   dev->bus, 
+	   dev->dev,
+	   dev->func,
+	   dev->vendor_id,
+	   dev->device_id );
+    if ( vend_name != NULL ) {
+	printf( " %s %s\n", vend_name, dev_name );
+    }
+    else {
+	printf( " %s\n", dev_name );
+    }
+    
+    if ( verbose ) {
+	unsigned   i;
+	uint16_t  command, status;
+	uint8_t   bist;
+	uint8_t   header_type;
+	uint8_t   latency_timer;
+	uint8_t   cache_line_size;
+	uint8_t   max_latency;
+	uint8_t   min_grant;
+	uint8_t   int_pin;
+
+
+	vend_name = pci_device_get_subvendor_name( dev );
+	dev_name = pci_device_get_subdevice_name( dev );
+	if ( dev_name == NULL ) {
+	    dev_name = "Card unknown";
+	}
+
+	printf( " CardVendor 0x%04x card 0x%04x (",
+		dev->subvendor_id,
+		dev->subdevice_id );
+	if ( vend_name != NULL ) {
+	    printf( "%s, %s)\n", vend_name, dev_name );
+	}
+	else {
+	    printf( "%s)\n", dev_name );
+	}
+
+	pci_device_cfg_read_u16( dev, & command, 4 );
+	pci_device_cfg_read_u16( dev, & status,  6 );
+	printf( "  STATUS    0x%04x  COMMAND 0x%04x\n", 
+		status,
+		command );
+	printf( "  CLASS     0x%02x 0x%02x 0x%02x  REVISION 0x%02x\n",
+		(dev->device_class >> 16) & 0x0ff,
+		(dev->device_class >>  8) & 0x0ff,
+		(dev->device_class >>  0) & 0x0ff,
+		dev->revision );
+
+	pci_device_cfg_read_u8( dev, & cache_line_size, 12 );
+	pci_device_cfg_read_u8( dev, & latency_timer, 13 );
+	pci_device_cfg_read_u8( dev, & header_type, 14 );
+	pci_device_cfg_read_u8( dev, & bist, 15 );
+
+	printf( "  BIST      0x%02x  HEADER 0x%02x  LATENCY 0x%02x  CACHE 0x%02x\n",
+		bist,
+		header_type,
+		latency_timer,
+		cache_line_size );
+	
+	pci_device_probe( dev );
+	for ( i = 0 ; i < 6 ; i++ ) {
+	    if ( dev->regions[i].base_addr != 0 ) {
+		printf( "  BASE%u     0x%08x  addr 0x%08x  %s",
+			i,
+			0,
+			(intptr_t) dev->regions[i].base_addr,
+			(dev->regions[i].is_IO) ? "I/O" : "MEM" );
+
+		if ( ! dev->regions[i].is_IO ) {
+		    if ( dev->regions[i].is_prefetchable ) {
+			printf( " PREFETCHABLE" );
+		    }
+		}
+		
+		printf( "\n" );
+	    }
+	}
+
+	if ( dev->rom_size ) {
+	    printf( "  BASEROM   0x%08x  addr 0x%08x\n",
+		    0, 0 );
+	}
+
+	pci_device_cfg_read_u8( dev, & int_pin, 61 );
+	pci_device_cfg_read_u8( dev, & min_grant, 62 );
+	pci_device_cfg_read_u8( dev, & max_latency, 63 );
+
+	printf( "  MAX_LAT   0x%02x  MIN_GNT 0x%02x  INT_PIN 0x%02x  INT_LINE 0x%02x\n",
+		max_latency,
+		min_grant,
+		int_pin,
+		dev->irq );
+
+	if ( (dev->device_class >> 16) == 0x06 ) {
+	    const void * info;
+
+	    if ( (info = pci_device_get_bridge_info(dev)) != NULL ) {
+		print_pci_bridge( (const struct pci_bridge_info *) info );
+	    }
+	    else if ( (info = pci_device_get_pcmcia_bridge_info(dev)) != NULL ) {
+		/* Nothing yet. */
+	    }
+	}
+    }
+}
+
+
+int main( int argc, char ** argv )
+{
+    struct pci_device_iterator * iter;
+    struct pci_device * dev;
+
+    pci_system_init();
+
+    iter = pci_slot_match_iterator_create( NULL );
+
+    while ( (dev = pci_device_next( iter )) != NULL ) {
+	print_pci_device( dev, 1 );
+    }
+
+    pci_system_cleanup();
+    return 0;
+}
