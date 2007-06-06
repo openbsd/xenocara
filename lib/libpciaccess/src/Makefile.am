@@ -33,6 +33,10 @@ if FREEBSD
 OS_SUPPORT = freebsd_pci.c
 endif
 
+if OPENBSD
+OS_SUPPORT = openbsd_pci.c
+endif
+
 libpciaccess_la_SOURCES = common_bridge.c \
 	common_iterator.c \
 	common_init.c \

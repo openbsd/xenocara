@@ -56,6 +56,8 @@ pci_system_init( void )
     err = pci_system_linux_sysfs_create();
 #elif defined(__FreeBSD__)
     err = pci_system_freebsd_create();
+#elif defined(__OpenBSD__)
+    err = pci_system_openbsd_create();
 #endif
 
     return err;
