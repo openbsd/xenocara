@@ -86,7 +86,9 @@ libpciaccess_la_DEPENDENCIES =
 am__libpciaccess_la_SOURCES_DIST = common_bridge.c common_iterator.c \
 	common_init.c common_interface.c common_capability.c \
 	common_device_name.c pciaccess_private.h freebsd_pci.c \
-	linux_sysfs.c
+	linux_sysfs.c openbsd_pci.c
+@FREEBSD_FALSE@@LINUX_FALSE@@OPENBSD_TRUE@am__objects_1 =  \
+@FREEBSD_FALSE@@LINUX_FALSE@@OPENBSD_TRUE@	openbsd_pci.lo
 @FREEBSD_FALSE@@LINUX_TRUE@am__objects_1 = linux_sysfs.lo
 @FREEBSD_TRUE@am__objects_1 = freebsd_pci.lo
 am_libpciaccess_la_OBJECTS = common_bridge.lo common_iterator.lo \
@@ -163,6 +165,8 @@ MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 OBJEXT = @OBJEXT@
+OPENBSD_FALSE = @OPENBSD_FALSE@
+OPENBSD_TRUE = @OPENBSD_TRUE@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -225,6 +229,7 @@ AM_CFLAGS = @PCIACCESS_CFLAGS@
 lib_LTLIBRARIES = libpciaccess.la
 @FREEBSD_TRUE@OS_SUPPORT = freebsd_pci.c
 @LINUX_TRUE@OS_SUPPORT = linux_sysfs.c
+@OPENBSD_TRUE@OS_SUPPORT = openbsd_pci.c
 libpciaccess_la_SOURCES = common_bridge.c \
 	common_iterator.c \
 	common_init.c \
@@ -330,6 +335,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_iterator.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freebsd_pci.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/linux_sysfs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openbsd_pci.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scanpci.Po@am__quote@
 
 .c.o:
