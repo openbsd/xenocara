@@ -119,29 +119,25 @@ extern void I830DPRINTF_stub(const char *filename, int line,
       ErrorF( "OUT_RING %lx: %x, (mask %x)\n",				\
 		(unsigned long)(outring), (unsigned int)(n), ringmask);	\
    *(volatile unsigned int *)(virt + outring) = n;			\
-   outring += 4;							\
+   outring += 4; ringused += 4;							\
    outring &= ringmask;							\
 } while (0)
 
-#if 1
 #define ADVANCE_LP_RING() do {						\
+   if (ringused > needed)          \
+      FatalError("%s: ADVANCE_LP_RING: exceeded allocation %d/%d\n ",	\
+	     __FUNCTION__, ringused, needed);   			\
+   else if (ringused < needed)						\
+      FatalError("%s: ADVANCE_LP_RING: under-used allocation %d/%d\n ",	\
+	     __FUNCTION__, ringused, needed);   			\
    RecPtr->LpRing->tail = outring;					\
+   RecPtr->LpRing->space -= ringused;					\
    if (outring & 0x07)							\
-      ErrorF("ADVANCE_LP_RING: "					\
-	     "outring (0x%x) isn't on a QWord boundary", outring);	\
+      FatalError("%s: ADVANCE_LP_RING: "					\
+	     "outring (0x%x) isn't on a QWord boundary\n",		\
+	     __FUNCTION__, outring);					\
    OUTREG(LP_RING + RING_TAIL, outring);				\
 } while (0)
-#else
-#define ADVANCE_LP_RING() {						\
-   RecPtr->LpRing->tail = outring;					\
-   if (outring & 0x07)							\
-      ErrorF("ADVANCE_LP_RING: "					\
-	     "outring (0x%x) isn't on a QWord boundary", outring);	\
-   ErrorF("head is %d, tail is %d [%d]\n", INREG(LP_RING + RING_HEAD), INREG(LP_RING + RING_TAIL), outring); \
-   OUTREG(LP_RING + RING_TAIL, outring);				\
-   ErrorF("head is %d, tail is %d [%d]\n", INREG(LP_RING + RING_HEAD), INREG(LP_RING + RING_TAIL), outring); \
-}
-#endif
 
 /*
  * XXX Note: the head/tail masks are different for 810 and i830.
@@ -158,54 +154,9 @@ extern void I830DPRINTF_stub(const char *filename, int line,
    } while (_head != _tail);						\
 } while( 0)
 
-/*
- * This is for debugging a potential problem writing the tail pointer
- * close to the end of the ring buffer.
- */
-#ifndef AVOID_TAIL_END
-#define AVOID_TAIL_END 0
-#endif
-#ifndef AVOID_SIZE
-#define AVOID_SIZE 64
-#endif
-
-#if AVOID_TAIL_END
 
 #define BEGIN_LP_RING(n)						\
-   unsigned int outring, ringmask;					\
-   volatile unsigned char *virt;					\
-   int needed;							\
-   if ((n) & 1)								\
-      ErrorF("BEGIN_LP_RING called with odd argument: %d\n", n);	\
-   if ((n) > 2 && (I810_DEBUG&DEBUG_ALWAYS_SYNC))			\
-      DO_RING_IDLE();							\
-   needed = (n) * 4;							\
-   if ((RecPtr->LpRing->tail > RecPtr->LpRing->tail_mask - AVOID_SIZE) ||	\
-       (RecPtr->LpRing->tail + needed) >				\
-	RecPtr->LpRing->tail_mask - AVOID_SIZE) {			\
-      needed += RecPtr->LpRing->tail_mask + 1 - RecPtr->LpRing->tail;	\
-      ErrorF("BEGIN_LP_RING: skipping last 64 bytes of "		\
-	     "ring (%d vs %d)\n", needed, (n) * 4);			\
-   }									\
-   if (RecPtr->LpRing->space < needed)					\
-      WaitRingFunc(pScrn, needed, 0);					\
-   RecPtr->LpRing->space -= needed;					\
-   outring = RecPtr->LpRing->tail;					\
-   ringmask = RecPtr->LpRing->tail_mask;				\
-   virt = RecPtr->LpRing->virtual_start;				\
-   while (needed > (n) * 4) {						\
-      ErrorF("BEGIN_LP_RING: putting MI_NOOP at 0x%x (remaining %d)\n",	\
-	     outring, needed - (n) * 4);				\
-      OUT_RING(MI_NOOP);						\
-      needed -= 4;							\
-   }									\
-   if (I810_DEBUG & DEBUG_VERBOSE_RING)					\
-      ErrorF( "BEGIN_LP_RING %d in %s\n", n, FUNCTION_NAME);
-
-#else /* AVOID_TAIL_END */
-
-#define BEGIN_LP_RING(n)						\
-   unsigned int outring, ringmask;					\
+   unsigned int outring, ringmask, ringused = 0;			\
    volatile unsigned char *virt;					\
    int needed;								\
    if ((n) & 1)								\
@@ -215,14 +166,12 @@ extern void I830DPRINTF_stub(const char *filename, int line,
    needed = (n) * 4;							\
    if (RecPtr->LpRing->space < needed)					\
       WaitRingFunc(pScrn, needed, 0);					\
-   RecPtr->LpRing->space -= needed;					\
    outring = RecPtr->LpRing->tail;					\
    ringmask = RecPtr->LpRing->tail_mask;				\
    virt = RecPtr->LpRing->virtual_start;				\
    if (I810_DEBUG & DEBUG_VERBOSE_RING)					\
       ErrorF( "BEGIN_LP_RING %d in %s\n", n, FUNCTION_NAME);
 
-#endif /* AVOID_TAIL_END */
 
 
 /* Memory mapped register access macros */
