@@ -152,6 +152,8 @@ RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SUPPORT_G80_FALSE = @SUPPORT_G80_FALSE@
+SUPPORT_G80_TRUE = @SUPPORT_G80_TRUE@
 VERSION = @VERSION@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
@@ -210,6 +212,8 @@ SED = sed
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
 XORGMANNAME = X Version 11
+@SUPPORT_G80_FALSE@MAN_SUPPORT_G80 = 0
+@SUPPORT_G80_TRUE@MAN_SUPPORT_G80 = 1
 MAN_SUBSTS = \
 	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
@@ -220,7 +224,8 @@ MAN_SUBSTS = \
 	-e 's|__drivermansuffix__|$(DRIVER_MAN_SUFFIX)|g' \
 	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
+	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g' \
+	-e 's|__support_g80__|$(MAN_SUPPORT_G80)|g'
 
 SUFFIXES = .$(DRIVER_MAN_SUFFIX) .man
 all: all-am

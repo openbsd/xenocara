@@ -71,20 +71,29 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(nv_drv_ladir)" \
-	"$(DESTDIR)$(riva128_ladir)"
+am__installdirs = "$(DESTDIR)$(nv_drv_ladir)"
 nv_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
-riva128_laLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(nv_drv_la_LTLIBRARIES) $(riva128_la_LTLIBRARIES)
+LTLIBRARIES = $(nv_drv_la_LTLIBRARIES)
 nv_drv_la_LIBADD =
-am_nv_drv_la_OBJECTS = nv_cursor.lo nv_dac.lo nv_dga.lo nv_driver.lo \
-	nv_hw.lo nv_setup.lo nv_shadow.lo nv_video.lo nv_xaa.lo
+am__nv_drv_la_SOURCES_DIST = nv_const.h nv_cursor.c nv_dac.c nv_dga.c \
+	nv_dma.h nv_driver.c nv_hw.c nv_include.h nv_local.h \
+	nv_proto.h nvreg.h nv_setup.c nv_shadow.c nv_type.h nvvga.h \
+	nv_video.c nv_xaa.c riva_const.h riva_cursor.c riva_dac.c \
+	riva_dga.c riva_driver.c riva_hw.c riva_hw.h riva_include.h \
+	riva_local.h riva_proto.h riva_setup.c riva_shadow.c \
+	riva_tbl.h riva_type.h riva_xaa.c g80_cursor.c g80_cursor.h \
+	g80_ddc.c g80_ddc.h g80_display.c g80_display.h g80_dma.c \
+	g80_dma.h g80_driver.c g80_type.h g80_xaa.c g80_xaa.h
+am__objects_1 = nv_cursor.lo nv_dac.lo nv_dga.lo nv_driver.lo nv_hw.lo \
+	nv_setup.lo nv_shadow.lo nv_video.lo nv_xaa.lo
+am__objects_2 = riva_cursor.lo riva_dac.lo riva_dga.lo riva_driver.lo \
+	riva_hw.lo riva_setup.lo riva_shadow.lo riva_xaa.lo
+@SUPPORT_G80_TRUE@am__objects_3 = g80_cursor.lo g80_ddc.lo \
+@SUPPORT_G80_TRUE@	g80_display.lo g80_dma.lo g80_driver.lo \
+@SUPPORT_G80_TRUE@	g80_xaa.lo
+am_nv_drv_la_OBJECTS = $(am__objects_1) $(am__objects_2) \
+	$(am__objects_3)
 nv_drv_la_OBJECTS = $(am_nv_drv_la_OBJECTS)
-riva128_la_LIBADD =
-am_riva128_la_OBJECTS = riva_cursor.lo riva_dac.lo riva_dga.lo \
-	riva_driver.lo riva_hw.lo riva_setup.lo riva_shadow.lo \
-	riva_xaa.lo
-riva128_la_OBJECTS = $(am_riva128_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -96,8 +105,8 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(nv_drv_la_SOURCES) $(riva128_la_SOURCES)
-DIST_SOURCES = $(nv_drv_la_SOURCES) $(riva128_la_SOURCES)
+SOURCES = $(nv_drv_la_SOURCES)
+DIST_SOURCES = $(am__nv_drv_la_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -170,6 +179,8 @@ RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SUPPORT_G80_FALSE = @SUPPORT_G80_FALSE@
+SUPPORT_G80_TRUE = @SUPPORT_G80_TRUE@
 VERSION = @VERSION@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
@@ -228,7 +239,8 @@ AM_CFLAGS = @XORG_CFLAGS@
 nv_drv_la_LTLIBRARIES = nv_drv.la
 nv_drv_la_LDFLAGS = -module -avoid-version
 nv_drv_ladir = @moduledir@/drivers
-nv_drv_la_SOURCES = \
+nv_drv_la_SOURCES = $(nv_sources) $(riva_sources) $(g80_sources)
+nv_sources = \
          nv_const.h \
          nv_cursor.c \
          nv_dac.c \
@@ -247,10 +259,7 @@ nv_drv_la_SOURCES = \
          nv_video.c \
          nv_xaa.c
 
-riva128_la_LTLIBRARIES = riva128.la
-riva128_la_LDFLAGS = -module -avoid-version
-riva128_ladir = @moduledir@/drivers
-riva128_la_SOURCES = \
+riva_sources = \
          riva_const.h \
          riva_cursor.c \
          riva_dac.c \
@@ -266,6 +275,20 @@ riva128_la_SOURCES = \
          riva_tbl.h \
          riva_type.h \
          riva_xaa.c
+
+@SUPPORT_G80_TRUE@g80_sources = \
+@SUPPORT_G80_TRUE@         g80_cursor.c \
+@SUPPORT_G80_TRUE@         g80_cursor.h \
+@SUPPORT_G80_TRUE@         g80_ddc.c \
+@SUPPORT_G80_TRUE@         g80_ddc.h \
+@SUPPORT_G80_TRUE@         g80_display.c \
+@SUPPORT_G80_TRUE@         g80_display.h \
+@SUPPORT_G80_TRUE@         g80_dma.c \
+@SUPPORT_G80_TRUE@         g80_dma.h \
+@SUPPORT_G80_TRUE@         g80_driver.c \
+@SUPPORT_G80_TRUE@         g80_type.h \
+@SUPPORT_G80_TRUE@         g80_xaa.c \
+@SUPPORT_G80_TRUE@         g80_xaa.h
 
 all: all-am
 
@@ -327,37 +350,8 @@ clean-nv_drv_laLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-install-riva128_laLTLIBRARIES: $(riva128_la_LTLIBRARIES)
-	@$(NORMAL_INSTALL)
-	test -z "$(riva128_ladir)" || $(mkdir_p) "$(DESTDIR)$(riva128_ladir)"
-	@list='$(riva128_la_LTLIBRARIES)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    f=$(am__strip_dir) \
-	    echo " $(LIBTOOL) --mode=install $(riva128_laLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(riva128_ladir)/$$f'"; \
-	    $(LIBTOOL) --mode=install $(riva128_laLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(riva128_ladir)/$$f"; \
-	  else :; fi; \
-	done
-
-uninstall-riva128_laLTLIBRARIES:
-	@$(NORMAL_UNINSTALL)
-	@set -x; list='$(riva128_la_LTLIBRARIES)'; for p in $$list; do \
-	  p=$(am__strip_dir) \
-	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(riva128_ladir)/$$p'"; \
-	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(riva128_ladir)/$$p"; \
-	done
-
-clean-riva128_laLTLIBRARIES:
-	-test -z "$(riva128_la_LTLIBRARIES)" || rm -f $(riva128_la_LTLIBRARIES)
-	@list='$(riva128_la_LTLIBRARIES)'; for p in $$list; do \
-	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
-	  test "$$dir" != "$$p" || dir=.; \
-	  echo "rm -f \"$${dir}/so_locations\""; \
-	  rm -f "$${dir}/so_locations"; \
-	done
 nv_drv.la: $(nv_drv_la_OBJECTS) $(nv_drv_la_DEPENDENCIES) 
 	$(LINK) -rpath $(nv_drv_ladir) $(nv_drv_la_LDFLAGS) $(nv_drv_la_OBJECTS) $(nv_drv_la_LIBADD) $(LIBS)
-riva128.la: $(riva128_la_OBJECTS) $(riva128_la_DEPENDENCIES) 
-	$(LINK) -rpath $(riva128_ladir) $(riva128_la_LDFLAGS) $(riva128_la_OBJECTS) $(riva128_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -365,6 +359,12 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_cursor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_ddc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_display.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_dma.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_driver.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_xaa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nv_cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nv_dac.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nv_dga.Plo@am__quote@
@@ -493,7 +493,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES)
 installdirs:
-	for dir in "$(DESTDIR)$(nv_drv_ladir)" "$(DESTDIR)$(riva128_ladir)"; do \
+	for dir in "$(DESTDIR)$(nv_drv_ladir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -523,7 +523,7 @@ maintainer-clean-generic:
 clean: clean-am
 
 clean-am: clean-generic clean-libtool clean-nv_drv_laLTLIBRARIES \
-	clean-riva128_laLTLIBRARIES mostlyclean-am
+	mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -541,8 +541,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-nv_drv_laLTLIBRARIES \
-	install-riva128_laLTLIBRARIES
+install-data-am: install-nv_drv_laLTLIBRARIES
 
 install-exec-am:
 
@@ -570,23 +569,20 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-nv_drv_laLTLIBRARIES \
-	uninstall-riva128_laLTLIBRARIES
+uninstall-am: uninstall-info-am uninstall-nv_drv_laLTLIBRARIES
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-nv_drv_laLTLIBRARIES \
-	clean-riva128_laLTLIBRARIES ctags distclean distclean-compile \
-	distclean-generic distclean-libtool distclean-tags distdir dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man \
-	install-nv_drv_laLTLIBRARIES install-riva128_laLTLIBRARIES \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
-	pdf pdf-am ps ps-am tags uninstall uninstall-am \
-	uninstall-info-am uninstall-nv_drv_laLTLIBRARIES \
-	uninstall-riva128_laLTLIBRARIES
+	clean-libtool clean-nv_drv_laLTLIBRARIES ctags distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-nv_drv_laLTLIBRARIES install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-info-am \
+	uninstall-nv_drv_laLTLIBRARIES
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
