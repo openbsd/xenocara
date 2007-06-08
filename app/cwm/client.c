@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: client.c,v 1.5 2007/06/05 19:03:20 jasper Exp $
+ * $Id: client.c,v 1.6 2007/06/08 16:29:19 jasper Exp $
  */
 
 #include "headers.h"
@@ -162,8 +162,13 @@ client_new(Window win, struct screen_ctx *sc, int mapped)
 	/* Notify client of its configuration. */
 	xev_reconfig(cc);
 
-	XMapRaised(X_Dpy, cc->pwin);
-	XMapWindow(X_Dpy, cc->win);
+	if (state == IconicState)
+		client_hide(cc);
+	else {
+		XMapRaised(X_Dpy, cc->pwin);
+		XMapWindow(X_Dpy, cc->win);
+	}
+
 	xu_setstate(cc, cc->state);
 
 	XSync(X_Dpy, False);
