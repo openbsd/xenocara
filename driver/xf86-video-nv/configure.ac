@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-nv],
-        1.2.2.1,
+        2.0.2,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-nv)
 
@@ -59,9 +59,23 @@ PKG_CHECK_EXISTS([xorg-server >= 1.0.99.901],
                  [AC_DEFINE(HAVE_XV_DRAWABLE,1,[XV hooks take a DrawablePtr])],
                  [AC_DEFINE(USE_LIBC_WRAPPER,1,[Use the libc wrapper])])
 
+PKG_CHECK_EXISTS([xorg-server >= 1.1.99.901],
+                 [AC_DEFINE(USE_CVTMODE_FUNC,1,[Use xf86CVTMode func])])
+
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XORG, [xorg-server xproto fontsproto $REQUIRED_MODULES])
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
+
+# Check for optional compile-time support
+AC_ARG_ENABLE(g80, AC_HELP_STRING([--disable-g80],
+                                  [Disable G80 support [[default=no]]]),
+              [SUPPORT_G80="$enableval"],
+              [SUPPORT_G80=yes])
+AM_CONDITIONAL(SUPPORT_G80, test x$SUPPORT_G80 = xyes)
+if test "$SUPPORT_G80" = yes; then
+        AC_DEFINE(SUPPORT_G80,1,[Enable G80 support])
+        echo "Enabling G80 support"
+fi
 
 # Checks for libraries.
 

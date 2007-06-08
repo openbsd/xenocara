@@ -58,6 +58,12 @@ NV40, NV41, NV43, NV44, NV45, C51
 .TP 22
 .B GeForce 7XXX
 G70, G71, G72, G73
+.de G8
+.TP 22
+.B GeForce 8XXX
+G80
+..
+.if __support_g80__ .G8
 
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
@@ -69,7 +75,7 @@ present for all chips.
 .PP
 The following driver
 .B Options
-are supported:
+are supported for pre-G80 hardware:
 .TP
 .BI "Option \*qHWCursor\*q \*q" boolean \*q
 Enable or disable the HW cursor.  Default: on.
@@ -128,42 +134,54 @@ Default: no rotation support.
 .TP
 .BI "Option \*qShadowFB\*q \*q" boolean \*q
 Enable or disable use of the shadow framebuffer layer.  Default: off.
+.
+.\" ******************** begin G80 section ********************
+.de G8
+.PP
+The following driver
+.B Options
+are available for G80:
+.TP
+.BI "Option \*qHWCursor\*q \*q" boolean \*q
+Enable or disable the hardware cursor.  Default: on.
+.TP
+.BI "Option \*qNoAccel\*q \*q" boolean \*q
+Disable or enable acceleration.  Default: acceleration is enabled.
+.TP
+.BI "Option \*qBackendMode\*q \*q" mode \*q
+Designate a mode to be used as the physical mode driving the display.
+The screen will be scaled to fit the requested mode.
+For example, if
+.B Option \*qBackendMode\*q \*q1280x1024\*q
+is specified, the monitor will always display the 1280x1024 mode and the screen will be scaled to match.
+..
+.if __support_g80__ .G8
+.\" ******************** end G80 section ********************
+.
 .SH "SEE ALSO"
 __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
 .SH AUTHORS
 Authors include: David McKay, Jarno Paananen, Chas Inman, Dave Schmenk, 
-Mark Vojkovich
+Mark Vojkovich, Aaron Plattner
 .SH COPYRIGHT
 .LP
-NOTICE TO USER:   The source code  is copyrighted under  U.S. and
-international laws.  Users and possessors of this source code are
-hereby granted a nonexclusive,  royalty-free copyright license to
-use this code in individual and commercial software.
+Copyright (c) 2003 - 2007 NVIDIA, Corporation
 .LP
-Any use of this source code must include,  in the user documentation and
-internal comments to the code,  notices to the end user as follows:
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
 .LP
-Copyright 1993-2003 NVIDIA, Corporation.  All rights reserved.
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
 .LP
-NVIDIA, CORPORATION MAKES NO REPRESENTATION ABOUT THE SUITABILITY
-OF  THIS SOURCE  CODE  FOR ANY PURPOSE.  IT IS  PROVIDED  "AS IS"
-WITHOUT EXPRESS OR IMPLIED WARRANTY OF ANY KIND.  NVIDIA, CORPORATION 
-DISCLAIMS ALL WARRANTIES  WITH REGARD  TO THIS SOURCE CODE,
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT,  
-AND FITNESS  FOR A PARTICULAR PURPOSE.   IN NO EVENT SHALL
-NVIDIA, CORPORATION  BE LIABLE FOR ANY SPECIAL,  INDIRECT,  INCIDENTAL, 
-OR CONSEQUENTIAL DAMAGES,  OR ANY DAMAGES  WHATSOEVER RESULTING FROM 
-LOSS OF USE,  DATA OR PROFITS,  WHETHER IN AN ACTION
-OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,  ARISING OUT OF
-OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOURCE CODE.
-.LP
-U.S. Government  End  Users.   This source code  is a "commercial
-item,"  as that  term is  defined at  48 C.F.R. 2.101 (OCT 1995),
-consisting  of "commercial  computer  software"  and  "commercial
-computer  software  documentation,"  as such  terms  are  used in
-48 C.F.R. 12.212 (SEPT 1995)  and is provided to the U.S. Government 
-only as  a commercial end item.   Consistent with  48 C.F.R.
-12.212 and  48 C.F.R. 227.7202-1 through  227.7202-4 (JUNE 1995),
-all U.S. Government End Users  acquire the source code  with only
-those rights set forth herein.                                   
-
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

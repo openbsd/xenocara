@@ -6,6 +6,7 @@
 #if !USE_LIBC_WRAPPER
 #include <string.h>
 #include <math.h>
+#include <unistd.h>
 #endif
 
 /* All drivers should typically include these */
@@ -55,7 +56,6 @@
 #include "vgaHW.h"
 
 #include "xf86Cursor.h"
-#include "xf86DDC.h"
 
 #include "region.h"
 

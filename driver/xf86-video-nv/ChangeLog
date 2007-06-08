@@ -1,3 +1,130 @@
+commit b4e26dfcc01b2816b6f8445fa8e9388b5e254df9
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Apr 17 15:00:24 2007 -0700
+
+    Bump to 2.0.2.
+
+commit b23eeec2bebbbe1939366a8296565ae0120ea6da
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Apr 17 14:59:41 2007 -0700
+
+    G80: Add a basic README.
+
+commit b68f3ada7bd857095c7652c175a0ba18bf45801f
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Apr 17 12:47:11 2007 -0700
+
+    Add GeForce 8600 and 8500 PCI IDs.
+
+commit 0126c809544cb3a0242fc3bce7ad82d4962aaf1c
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sun Apr 1 01:17:31 2007 -0700
+
+    Remove extraneous DisplayModeRec allocation.
+    
+    Thanks to Luc Verhaegen for pointing this out.
+
+commit d569934c3de326483347db00d34268b02101599c
+Author: Henry Zhao <henryz@localhost.localdomain>
+Date:   Sat Mar 31 18:47:30 2007 -0800
+
+    10360: Need to inject a mode corresponding panel width/height for validation
+
+commit 4d929d383abe064b5334847eb466321a6bf30999
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Mar 27 15:56:52 2007 -0700
+
+    REALLY bump to 2.0.1.
+    
+    I need more caffeine, or something.
+
+commit 0953f081d1592b123dc27fb82d1cfecca079d5de
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Mar 27 15:46:38 2007 -0700
+
+    Fix warnings and bump to 2.0.1.
+
+commit 7c2a31dec3d04111eaee5292c156753c316d52a9
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Mar 27 14:45:17 2007 -0700
+
+    Fix broken prototype.
+
+commit 16f51977d49e52079754b62f4a13754e56da1c9c
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Mar 19 12:00:36 2007 -0700
+
+    NVSync hangs in EnterVT, so don't call it there.
+
+commit ac84f228de689c6cb85eae827ec2443fabe67786
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sun Mar 18 20:53:46 2007 -0700
+
+    Bump to 2.0.0.
+
+commit 4d15dd2c490cce739f2eb1474019c723da8ce32b
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Mar 16 16:14:00 2007 -0700
+
+    Avoid hanging when switching modes on some nv4x cards.
+    
+    SUSE bug #235171.
+
+commit 90c53c5322e50bce06996e3c857e6bf7531235d4
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Mar 15 17:07:25 2007 -0700
+
+    Fix GXxor corruption on nv4x.
+    
+    SUSE bug #246421.
+
+commit 9763b9dcef144f649ccbcfd302601769bc940ffb
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Mar 15 14:39:07 2007 -0700
+
+    Hide the cursor in CloseScreen.
+    
+    Otherwise, if we're restoring a graphical framebuffer mode the cursor will still
+    be visible.
+
+commit 9d65abab153cdf3ab2b7e3e2843d573b22ea6769
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Mar 14 21:16:04 2007 -0700
+
+    Fix VGA output with vesafb on nv4x and G7x GPUs.
+    
+    SuSE bug #160812.
+
+commit 26a9f1fa5a92eba7d4b6ddfa47c0517e604be130
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Mar 12 14:56:10 2007 -0700
+
+    Get rid of non-portable := assignments.
+
+commit 8b2c7bc457d34b7ed59cd08719bec8754ebf6fb8
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Mar 9 12:43:12 2007 -0800
+
+    Use DAC load detection to decide which OR to use instead of trusting the EDID.
+
+commit 06b168ced3cc4aa47cdad21a2351cca674fa26e0
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Mar 8 18:12:43 2007 -0800
+
+    Enable G80 support by default.
+
+commit 23383c2c2e1aa590f69197b1860053d5cb710cf7
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Feb 16 16:11:13 2007 -0800
+
+    Initial G80 support.  Bump to 1.99.1.
+
+commit dd305c3f64f9267d54324d734f1028bfc00e474f
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Jan 17 21:41:06 2007 -0800
+
+    Remove the riva128 submodule.  Link Riva support into nv_drv.so directly.
+
 commit 96bd57b0597dbbda0ca5c46c2135e5813c80d79f
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sun Dec 24 06:34:31 2006 +0200

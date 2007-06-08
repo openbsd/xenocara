@@ -37,6 +37,7 @@
 
 const   OptionInfoRec * RivaAvailableOptions(int chipid, int busid);
 Bool    RivaGetScrnInfoRec(PciChipsets *chips, int chip);
+Bool    G80GetScrnInfoRec(PciChipsets *chips, int chip);
 
 /*
  * Forward definitions for the functions that make up the driver.
@@ -332,6 +333,16 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE0244, "GeForce Go 6150" },
   { 0x10DE0247, "GeForce Go 6100" },
 
+#if SUPPORT_G80
+  { 0x10DE0191, "GeForce 8800 GTX" },
+  { 0x10DE0193, "GeForce 8800 GTS" },
+  { 0x10DE019D, "Quadro FX 5600" },
+  { 0x10DE019E, "Quadro FX 4600" },
+  { 0x10DE0400, "GeForce 8600 GTS" },
+  { 0x10DE0402, "GeForce 8600 GT" },
+  { 0x10DE0421, "GeForce 8500 GT" },
+#endif
+
   {-1, NULL}
 };
 
@@ -437,12 +448,6 @@ static const char *fbdevHWSymbols[] = {
 static const char *int10Symbols[] = {
     "xf86FreeInt10",
     "xf86InitInt10",
-    NULL
-};
-
-static const char *rivaSymbols[] = {
-   "RivaGetScrnInfoRec",
-   "RivaAvailableOptions",
     NULL
 };
 
@@ -558,7 +563,7 @@ nvSetup(pointer module, pointer opts, int *errmaj, int *errmin)
          * might refer to.
          */
         LoaderRefSymLists(vgahwSymbols, xaaSymbols, fbSymbols,
-                          ramdacSymbols, shadowSymbols, rivaSymbols,
+                          ramdacSymbols, shadowSymbols,
                           i2cSymbols, ddcSymbols, vbeSymbols,
                           fbdevHWSymbols, int10Symbols, NULL);
 
@@ -580,10 +585,7 @@ static const OptionInfoRec *
 NVAvailableOptions(int chipid, int busid)
 {
     if(chipid == 0x12D20018) {
-	if (!xf86LoadOneModule("riva128", NULL)) {
-	    return NULL;
-	} else
-	    return RivaAvailableOptions(chipid, busid);
+        return RivaAvailableOptions(chipid, busid);
     }
     
     return NVOptions;
@@ -656,6 +658,20 @@ NVGetPCIXpressChip (pciVideoPtr pVideo)
     return pciid;
 }
 
+#if SUPPORT_G80
+static Bool
+NVIsG80(int chipType)
+{
+    switch(chipType & 0xfff0) {
+        case 0x0190:
+        case 0x0400:
+        case 0x0420:
+            return TRUE;
+    }
+
+    return FALSE;
+}
+#endif
 
 /* Mandatory */
 static Bool
@@ -709,6 +725,8 @@ NVProbe(DriverPtr drv, int flags)
                NVPciChipsets[numUsed].resList = RES_SHARED_VGA;
                numUsed++;
             } else if ((*ppPci)->vendor == PCI_VENDOR_NVIDIA) {
+               Bool canHandle = FALSE;
+
                /* look for a compatible devices which may be newer than 
                   the NVKnownChipsets list above.  */
                switch(token & 0xfff0) {
@@ -734,14 +752,23 @@ NVProbe(DriverPtr drv, int flags)
                case 0x0290:
                case 0x0390:
                case 0x03D0:
+                   canHandle = TRUE;
+                   break;
+               default:  break;  /* we don't recognize it */
+               }
+
+#if SUPPORT_G80
+               if(NVIsG80((*ppPci)->chipType))
+                   canHandle = TRUE;
+#endif
+
+               if(canHandle) {
                    NVChipsets[numUsed].token = pciid;
                    NVChipsets[numUsed].name = "Unknown NVIDIA chip";
                    NVPciChipsets[numUsed].numChipset = pciid;
                    NVPciChipsets[numUsed].PCIid = pciid;
                    NVPciChipsets[numUsed].resList = RES_SHARED_VGA;
                    numUsed++;
-                   break;
-               default:  break;  /* we don't recognize it */
                }
             }
         }
@@ -769,12 +796,13 @@ NVProbe(DriverPtr drv, int flags)
 
         pPci = xf86GetPciInfoForEntity(usedChips[i]);
         if(pPci->vendor == PCI_VENDOR_NVIDIA_SGS) {
-            if (!xf86LoadDrvSubModule(drv, "riva128")) {
-                  continue;
-            }
-            xf86LoaderReqSymLists(rivaSymbols, NULL);
             if(RivaGetScrnInfoRec(NVPciChipsets, usedChips[i]))
                 foundScreen = TRUE;
+#if SUPPORT_G80
+        } else if (NVIsG80(pPci->chipType)) {
+            if(G80GetScrnInfoRec(NVPciChipsets, usedChips[i]))
+                foundScreen = TRUE;
+#endif
         } else {
             if(NVGetScrnInfoRec(NVPciChipsets, usedChips[i])) 
 	        foundScreen = TRUE;
@@ -791,7 +819,10 @@ NVProbe(DriverPtr drv, int flags)
 Bool
 NVSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
 {
-    return NVModeInit(xf86Screens[scrnIndex], mode);
+    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+
+    NVSync(pScrn);
+    return NVModeInit(pScrn, mode);
 }
 
 /*
@@ -993,6 +1024,33 @@ Bool NVI2CInit(ScrnInfoPtr pScrn)
     return FALSE;
 }
 
+
+#ifdef USE_CVTMODE_FUNC
+/* Copied from ddc/Property.c */
+static DisplayModePtr
+NVModesAdd(DisplayModePtr Modes, DisplayModePtr Additions)
+{
+    if (!Modes) {
+        if (Additions)
+            return Additions;
+        else
+            return NULL;
+    }
+
+    if (Additions) {
+        DisplayModePtr Mode = Modes;
+
+        while (Mode->next)
+            Mode = Mode->next;
+        
+        Mode->next = Additions;
+        Additions->prev = Mode;
+    }
+
+    return Modes;
+}
+#endif
+
 /* Mandatory */
 Bool
 NVPreInit(ScrnInfoPtr pScrn, int flags)
@@ -1002,6 +1060,9 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
     int i, max_width, max_height;
     ClockRangePtr clockRanges;
     const char *s;
+#ifdef USE_CVTMODE_FUNC
+    int config_mon_rates;
+#endif
 
     if (flags & PROBE_DETECT) {
         EntityInfoPtr pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
@@ -1459,6 +1520,14 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
     pNv->alphaCursor = (pNv->Architecture >= NV_ARCH_10) &&
                        ((pNv->Chipset & 0x0ff0) != 0x0100);
 
+#ifdef USE_CVTMODE_FUNC
+    if ((pScrn->monitor->nHsync == 0) && 
+	(pScrn->monitor->nVrefresh == 0))
+	config_mon_rates = FALSE;
+    else
+	config_mon_rates = TRUE;
+#endif
+
     NVCommonSetup(pScrn);
 
     if (pNv->FBDev) {
@@ -1527,6 +1596,37 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
        max_width = (pScrn->bitsPerPixel > 16) ? 4080 : 4096;
        max_height = 4096;
     }
+
+#ifdef USE_CVTMODE_FUNC
+    /* If DFP, add a modeline corresponding to its panel size */
+    if (pNv->FlatPanel && !pNv->Television && pNv->fpWidth && pNv->fpHeight) {
+	DisplayModePtr Mode;
+
+	Mode = xf86CVTMode(pNv->fpWidth, pNv->fpHeight, 60.00, TRUE, FALSE);
+	Mode->type = M_T_DRIVER;
+	pScrn->monitor->Modes = NVModesAdd(pScrn->monitor->Modes, Mode);
+
+	if (!config_mon_rates) {
+	    if (!Mode->HSync)
+            	Mode->HSync = ((float) Mode->Clock ) / ((float) Mode->HTotal);
+            if (!Mode->VRefresh)
+            	Mode->VRefresh = (1000.0 * ((float) Mode->Clock)) /
+                    ((float) (Mode->HTotal * Mode->VTotal));
+
+ 	    if (Mode->HSync < pScrn->monitor->hsync[0].lo)
+            	pScrn->monitor->hsync[0].lo = Mode->HSync;
+            if (Mode->HSync > pScrn->monitor->hsync[0].hi)
+            	pScrn->monitor->hsync[0].hi = Mode->HSync;
+            if (Mode->VRefresh < pScrn->monitor->vrefresh[0].lo)
+            	pScrn->monitor->vrefresh[0].lo = Mode->VRefresh;
+            if (Mode->VRefresh > pScrn->monitor->vrefresh[0].hi)
+            	pScrn->monitor->vrefresh[0].hi = Mode->VRefresh;
+
+	    pScrn->monitor->nHsync = 1;
+	    pScrn->monitor->nVrefresh = 1;
+	}
+    }
+#endif
 
     /*
      * xf86ValidateModes will check that the mode HTotal and VTotal values
@@ -1766,6 +1866,8 @@ NVRestore(ScrnInfoPtr pScrn)
     NVPtr pNv = NVPTR(pScrn);
     NVRegPtr nvReg = &pNv->SavedReg;
 
+    if(pNv->HWCursor)
+        NVShowHideCursor(pNv, 0);
     NVLockUnlock(pNv, 0);
 
     if(pNv->twoHeads) {

@@ -878,6 +878,10 @@ void NVCalcStateExt (
             state->general  = bpp == 16 ? 0x00101100 : 0x00100100;
             state->repaint1 = hDisplaySize < 1280 ? 0x04 : 0x00;
             break;
+        case NV_ARCH_40:
+            if(!pNv->FlatPanel)
+                state->control = pNv->PRAMDAC0[0x0580/4] & 0xeffffeff;
+            /* fallthrough */
         case NV_ARCH_10:
         case NV_ARCH_20:
         case NV_ARCH_30:
@@ -1186,6 +1190,7 @@ void NVLoadStateExt (
               pNv->PGRAPH[0x008C/4] = 0x60de8051;
               pNv->PGRAPH[0x0090/4] = 0x00008000;
               pNv->PGRAPH[0x0610/4] = 0x00be3c5f;
+              pNv->PGRAPH[0x0bc4/4] |= 0x00008000;
 
               j = pNv->REGS[0x1540/4] & 0xff;
               if(j) {
@@ -1475,6 +1480,10 @@ void NVLoadStateExt (
     VGA_WR08(pNv->PCIO, 0x03D5, state->interlace);
 
     if(!pNv->FlatPanel) {
+       if(pNv->Architecture >= NV_ARCH_40) {
+           pNv->PRAMDAC0[0x0580/4] = state->control;
+       }
+
        pNv->PRAMDAC0[0x050C/4] = state->pllsel;
        pNv->PRAMDAC0[0x0508/4] = state->vpll;
        if(pNv->twoHeads)
@@ -1540,6 +1549,10 @@ void NVUnloadStateExt
     state->general      = pNv->PRAMDAC[0x0600/4];
     state->scale        = pNv->PRAMDAC[0x0848/4];
     state->config       = pNv->PFB[0x0200/4];
+
+    if(pNv->Architecture >= NV_ARCH_40 && !pNv->FlatPanel) {
+        state->control  = pNv->PRAMDAC0[0x0580/4];
+    }
 
     if(pNv->Architecture >= NV_ARCH_10) {
         if(pNv->twoHeads) {

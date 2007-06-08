@@ -65,6 +65,12 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* Enable G80 support */
+#undef SUPPORT_G80
+
+/* Use xf86CVTMode func */
+#undef USE_CVTMODE_FUNC
+
 /* Use the libc wrapper */
 #undef USE_LIBC_WRAPPER
 

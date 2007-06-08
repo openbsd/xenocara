@@ -56,6 +56,7 @@ typedef struct _riva_hw_state
     U032 vpllB;
     U032 vpll2B;
     U032 pllsel;
+    U032 control;
     U032 general;
     U032 crtcOwner;
     U032 head;
