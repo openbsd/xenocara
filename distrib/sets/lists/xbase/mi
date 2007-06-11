@@ -128,6 +128,7 @@
 ./usr/X11R6/bin/xtrapproto
 ./usr/X11R6/bin/xtrapreset
 ./usr/X11R6/bin/xtrapstats
+./usr/X11R6/bin/xtsscale
 ./usr/X11R6/bin/xvctl
 ./usr/X11R6/bin/xvidtune
 ./usr/X11R6/bin/xvinfo
@@ -261,6 +262,7 @@
 ./usr/X11R6/lib/libxkbui.la
 ./usr/X11R6/man
 ./usr/X11R6/man/cat1
+./usr/X11R6/man/cat1/xtsscale.0
 ./usr/X11R6/man/cat4
 ./usr/X11R6/man/cat5
 ./usr/X11R6/man/cat7
