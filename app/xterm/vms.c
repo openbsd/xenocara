@@ -77,14 +77,14 @@ struct mem_region
   TT_BUF_STRUCT *end;
 } ret_addr;
 
-int read_stopped = FALSE;
-int write_stopped = FALSE;
+int read_stopped = False;
+int write_stopped = False;
 
 int tt_width;
 int tt_length;
 int tt_changed;
-int tt_pasting=FALSE;         /* drm */
-int tt_new_output=FALSE;      /* Cleared by flushlog(), set whenever something new
+int tt_pasting=False;         /* drm */
+int tt_new_output=False;      /* Cleared by flushlog(), set whenever something new
    goes to the screen through tt_write */
 
 int trnlnm(char *in,int id,char *out);
@@ -148,7 +148,7 @@ void spawn (void)
   int                  status;
   static $DESCRIPTOR   (dtime, "0 00:00:00.01");
   static int           delta[2];
-  register TScreen     *screen = &term->screen;
+  register TScreen     *screen = TScreenOf(term);
   static struct IOSB   iosb;
   static unsigned int  flags;
   static unsigned int  uic;
@@ -483,7 +483,7 @@ void tt_start_read(void)
       }
   else
     {
-      read_stopped = TRUE;
+      read_stopped = True;
     }
   return;
 }
@@ -511,7 +511,7 @@ int tt_read(char *buffer)
        len = read_buff->length;
        memmove(buffer,&read_buff->data,len);
        freeBuff(read_buff);
-       tt_new_output=TRUE; /* DRM something will be written */
+       tt_new_output=True; /* DRM something will be written */
      }
    else
      CloseDown(status);
@@ -526,7 +526,7 @@ int tt_read(char *buffer)
 
 static void send_xon(void)
 {
-  write_stopped = FALSE;
+  write_stopped = False;
 }
 
 
@@ -535,7 +535,7 @@ static void send_xon(void)
  */
 static void send_xoff(void)
 {
-  write_stopped = TRUE;
+  write_stopped = True;
 }
 
 
@@ -578,7 +578,7 @@ static void char_change(void)
 	  tt_length = tt_mode.length;
 	  tt_width =  tt_mode.page_width;
 
-	  tt_changed = TRUE;
+	  tt_changed = True;
 
 	}
     }
@@ -606,7 +606,7 @@ static void freeBuff (TT_BUF_STRUCT *buff_addr)
 			 &buff_addr->status, VMS_TERM_BUFFER_SIZE);
       if (status & SS$_NORMAL)
 	{
-	  read_stopped = FALSE;
+	  read_stopped = False;
 	}
       else
 	{

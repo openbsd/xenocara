@@ -1,4 +1,4 @@
-/* $XTermId: resize.c,v 1.99 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: resize.c,v 1.101 2007/03/19 23:39:10 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/resize.c,v 3.62 2006/02/13 01:14:59 dickey Exp $ */
 
@@ -193,33 +193,7 @@ static int checkdigits(char *str);
 static void Usage(void);
 static void readstring(FILE *fp, char *buf, char *str);
 
-#undef US			/* may conflict with curses.h */
-
-#ifdef USE_TERMCAP
-#ifdef HAVE_TERMCAP_H
-#include <termcap.h>
-#if defined(NCURSES_VERSION)
-	/* The tgetent emulation function in SVr4-style curses implementations
-	 * (e.g., ncurses) ignores the buffer, so TERMCAP can't be set from it.
-	 * Instead, just use terminfo.
-	 */
-#undef USE_TERMCAP
-#include <curses.h>
-#endif
-#else
-#undef ERR			/* workaround for glibc 2.1.3 */
-#include <curses.h>
-#ifdef NCURSES_VERSION
-#ifdef HAVE_NCURSES_TERM_H
-#include <ncurses/term.h>
-#else
-#include <term.h>		/* tgetent() */
-#endif /*CYGWIN */
-#endif
-#endif /* HAVE_TERMCAP_H  */
-#endif
-
-#define TERMCAP_SIZE 1500	/* 1023 is standard; 'screen' exceeds */
+#include <xtermcap.h>
 
 #ifdef USE_TERMCAP
 static void

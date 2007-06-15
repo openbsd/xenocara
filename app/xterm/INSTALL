@@ -1,7 +1,7 @@
--- $XTermId: INSTALL,v 1.107 2006/07/15 12:10:28 tom Exp $
+-- $XTermId: INSTALL,v 1.113 2007/03/18 22:46:21 tom Exp $
 -- $XFree86: xc/programs/xterm/INSTALL,v 3.42 2006/02/13 01:14:57 dickey Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2005,2006 by Thomas E. Dickey
+-- Copyright 1997-2006,2007 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -240,17 +240,19 @@ The options (in alphabetic order):
 
   --disable-session-mgt   enable support for session management
 
-	Do not compile-in code which adds simple session management hooks which
-	are used when closing an xterm.  Normally the code is compiled-in,
-	except for systems which do not support it.
+	Do not compile-in code which adds simple session management hooks
+	which are used when closing an xterm.  Normally the code is
+	compiled-in, except for systems which do not support it.
 
-  --disable-setuid        disable setuid/setgid
+  --disable-setgid        disable setgid
 
-	Do not install xterm using setuid or setgid permissions.  Drop setuid
-	and setgid permissions on startup.  This is done if you have linked
-	xterm with the utempter library, but may also be useful for systems
-	where the pseudoterminal and utmp interfaces are wrapped so that xterm
-	does not require these permissions.
+	Do not install xterm using setuid/setgid permissions.  Drop setgid
+	permissions on startup.
+
+  --disable-setuid        disable setuid
+
+	Do not install xterm using setuid/setgid permissions.  Drop setuid
+	permissions on startup.
 
   --disable-tek4014       disable tek4014 emulation
 
@@ -312,6 +314,14 @@ The options (in alphabetic order):
 
 	This allows the xterm mouse to be used with applications that use the
 	DEC Locator sequences, such as VAX Tpu, or SMG$ based applications.
+
+  --enable-exec-xterm     enable "spawn-new-terminal" action
+
+  	If your platform supports the process filesystem "cwd" link,
+	compile-in support for the "spawn-new-terminal" action, which
+	allows you to define a key translation that runs a new xterm
+	using the same working directory as the current process within
+	xterm.
 
   --enable-hp-fkeys       enable support for HP-style function keys
 
@@ -383,6 +393,10 @@ The options (in alphabetic order):
 
 	(See --enable-paste64, which fits xterm's protocol better).
 
+  --enable-rectangles     enable VT420 rectangle support
+
+	Compile-in code to support VT420 rectangle control-sequences.
+
   --enable-sco-fkeys      enable support for SCO-style function keys
 
   	Compile-in code to support SCO-style function keys.
@@ -390,6 +404,12 @@ The options (in alphabetic order):
   --enable-sun-fkeys      enable support for Sun-style function keys
 
   	Compile-in code to support Sun-style function keys.
+
+  --enable-tcap-fkeys     enable termcap function-keys
+
+	Compile-in code to support experimental feature which directs xterm
+	to use the function-key definitions from the termcap/terminfo entry
+	which it used to set the $TERM variable on startup.
 
   --enable-tcap-query     enable termcap query/report
 
@@ -577,7 +597,7 @@ The options (in alphabetic order):
 	On systems with Unix98 pty's, xterm can use this library when
 	available so it need not be installed set-uid.
 
-  --with-utmp-setgid      use setgid for access to utmp
+  --with-utmp-setgid=XXX  use setgid for access to utmp
 
 	The option value specifies a group to use when installing.
 	xterm will be installed with setgid privilege to this group.
@@ -585,3 +605,5 @@ The options (in alphabetic order):
 	after opening the pseudo-terminal, and will have only the
 	group privilege needed to access the utmp file.  This relies
 	on having POSIX setuid behavior.
+
+-- vile:txtmode

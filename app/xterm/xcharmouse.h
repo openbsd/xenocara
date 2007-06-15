@@ -1,6 +1,4 @@
-/*
- * $XFree86: xc/programs/xterm/xcharmouse.h,v 1.3 2002/08/24 18:54:39 dickey Exp $
- */
+/* $XTermId: xcharmouse.h,v 1.10 2007/02/07 23:32:03 tom Exp $ */
 
 /************************************************************
 
@@ -43,6 +41,10 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define SET_VT200_HIGHLIGHT_MOUSE   1001
 #define SET_BTN_EVENT_MOUSE         1002
 #define SET_ANY_EVENT_MOUSE         1003
+
+#if OPT_FOCUS_EVENT
+#define SET_FOCUS_EVENT_MOUSE       1004 /* can be combined with above */
+#endif
 
 #define SET_BUTTON1_MOVE_POINT      2001 /* click1 emit Esc seq to move point*/
 #define SET_BUTTON2_MOVE_POINT      2002 /* press2 emit Esc seq to move point*/

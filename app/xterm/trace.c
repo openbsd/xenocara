@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.67 2006/07/15 12:00:58 tom Exp $ */
+/* $XTermId: trace.c,v 1.72 2007/03/17 15:45:12 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/trace.c,v 3.23 2005/09/18 23:48:13 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1997-2005,2006 by Thomas E. Dickey
+Copyright 1997-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -116,7 +116,7 @@ Trace(char *fmt,...)
 void
 TraceIds(const char *fname, int lnum)
 {
-    Trace("process %d ", getpid());
+    Trace("process %d ", (int) getpid());
 #ifdef HAVE_UNISTD_H
     Trace("real (%u/%u) effective (%u/%u)",
 	  (unsigned) getuid(), (unsigned) getgid(),
@@ -205,7 +205,82 @@ visibleKeyboardType(xtermKeyboardType type)
 	CASETYPE(keyboardIsHP);
 	CASETYPE(keyboardIsSCO);
 	CASETYPE(keyboardIsSun);
+	CASETYPE(keyboardIsTermcap);
 	CASETYPE(keyboardIsVT220);
+    }
+    return result;
+}
+
+const char *
+visibleEventType(int type)
+{
+    const char *result = "?";
+    switch (type) {
+	CASETYPE(KeyPress);
+	CASETYPE(KeyRelease);
+	CASETYPE(ButtonPress);
+	CASETYPE(ButtonRelease);
+	CASETYPE(MotionNotify);
+	CASETYPE(EnterNotify);
+	CASETYPE(LeaveNotify);
+	CASETYPE(FocusIn);
+	CASETYPE(FocusOut);
+	CASETYPE(KeymapNotify);
+	CASETYPE(Expose);
+	CASETYPE(GraphicsExpose);
+	CASETYPE(NoExpose);
+	CASETYPE(VisibilityNotify);
+	CASETYPE(CreateNotify);
+	CASETYPE(DestroyNotify);
+	CASETYPE(UnmapNotify);
+	CASETYPE(MapNotify);
+	CASETYPE(MapRequest);
+	CASETYPE(ReparentNotify);
+	CASETYPE(ConfigureNotify);
+	CASETYPE(ConfigureRequest);
+	CASETYPE(GravityNotify);
+	CASETYPE(ResizeRequest);
+	CASETYPE(CirculateNotify);
+	CASETYPE(CirculateRequest);
+	CASETYPE(PropertyNotify);
+	CASETYPE(SelectionClear);
+	CASETYPE(SelectionRequest);
+	CASETYPE(SelectionNotify);
+	CASETYPE(ColormapNotify);
+	CASETYPE(ClientMessage);
+	CASETYPE(MappingNotify);
+    }
+    return result;
+}
+
+const char *
+visibleXError(int code)
+{
+    static char temp[80];
+    const char *result = "?";
+    switch (code) {
+	CASETYPE(Success);
+	CASETYPE(BadRequest);
+	CASETYPE(BadValue);
+	CASETYPE(BadWindow);
+	CASETYPE(BadPixmap);
+	CASETYPE(BadAtom);
+	CASETYPE(BadCursor);
+	CASETYPE(BadFont);
+	CASETYPE(BadMatch);
+	CASETYPE(BadDrawable);
+	CASETYPE(BadAccess);
+	CASETYPE(BadAlloc);
+	CASETYPE(BadColor);
+	CASETYPE(BadGC);
+	CASETYPE(BadIDChoice);
+	CASETYPE(BadName);
+	CASETYPE(BadLength);
+	CASETYPE(BadImplementation);
+    default:
+	sprintf(temp, "%d", code);
+	result = temp;
+	break;
     }
     return result;
 }
@@ -241,14 +316,11 @@ TraceSizeHints(XSizeHints * hints)
 void
 TraceWMSizeHints(XtermWidget xw)
 {
-    XSizeHints sizehints;
-    long supp = 0;
+    XSizeHints sizehints = xw->hints;
 
-    bzero(&sizehints, sizeof(sizehints));
-    if (!XGetWMNormalHints(xw->screen.display, XtWindow(SHELL_OF(xw)),
-			   &sizehints, &supp))
-	bzero(&sizehints, sizeof(sizehints));
-    TraceSizeHints(&sizehints);
+    getXtermSizeHints(xw);
+    TraceSizeHints(&xw->hints);
+    xw->hints = sizehints;
 }
 
 /*

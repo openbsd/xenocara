@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.208 2006/07/23 22:06:22 tom Exp $ */
+/* $XTermId: screen.c,v 1.210 2006/11/26 19:12:44 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -376,7 +376,7 @@ ChangeToWide(XtermWidget xw)
 	    SwitchBufPtrs(screen);
 
 	update_font_utf8_mode();
-	SetVTFont(xw, screen->menu_font_number, TRUE, NULL);
+	SetVTFont(xw, screen->menu_font_number, True, NULL);
     }
     TRACE(("...ChangeToWide\n"));
 }
@@ -1661,7 +1661,7 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 	XTermRect target;
 	xtermParseRect(xw,
 		       ((nparam > 3) ? 2 : (nparam - 1)),
-		       params + 1,
+		       params,
 		       &target);
 	if (validRect(xw, &target)) {
 	    unsigned high = (source->bottom - source->top) + 1;

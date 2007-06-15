@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
  *****************************************************************************
- * Copyright 1996-2005,2006 by Thomas E. Dickey                              *
+ * Copyright 1996-2006,2007 by Thomas E. Dickey                              *
  * All Rights Reserved.                                                      *
  *                                                                           *
  * Permission to use, copy, modify, and distribute this software and its     *
@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.460 2006/08/03 23:58:30 tom Exp $
+  $XTermId: xterm.log.html,v 1.545 2007/03/24 00:15:59 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -31,7 +31,7 @@
 </HEAD>
 <BODY>
 <HR>
-Copyright 1997-2005,2006 by <A
+Copyright &copy; 1997-2006,2007 by <A
 HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <HR>
 <H1>Contents</H1>
@@ -46,6 +46,15 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_225">Patch #225 - 2007/3/24</A>
+<LI><A HREF="#xterm_224">Patch #224 - 2007/2/11</A>
+<LI><A HREF="#xterm_223">Patch #223 - 2006/11/30</A>
+<LI><A HREF="#xterm_222">Patch #222 - 2006/10/17</A>
+<LI><A HREF="#xterm_221">Patch #221 - 2006/10/1</A>
+<LI><A HREF="#xterm_220">Patch #220 - 2006/9/10</A>
+<LI><A HREF="#xterm_219">Patch #219 - 2006/9/4</A>
+<LI><A HREF="#xterm_218">Patch #218 - 2006/8/27</A>
+<LI><A HREF="#xterm_217">Patch #217 - 2006/8/20</A>
 <LI><A HREF="#xterm_216">Patch #216 - 2006/8/3</A>
 <LI><A HREF="#xterm_215">Patch #215 - 2006/6/19 - XFree86 4.6.99.2</A>
 <LI><A HREF="#xterm_214">Patch #214 - 2006/6/18 - XFree86 4.6.99.2</A>
@@ -265,6 +274,319 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
+<H1><A NAME="xterm_225">Patch #225 - 2007/3/24</A></H1>
+<ul>
+	<li>add <code>useClipping</code> resource to allow clipping to be
+	    disabled.
+
+	<li>use <code>XftDrawSetClipRectangles</code>
+	    to work around Xft pixel-trash (report by Reuben Thomas).
+
+	<li>add configure option <code>--enable-tcap-fkeys</code>, and
+	    resource <code>tcapFunctionKeys</code>, which can be used
+	    to tell xterm to use function-key definitions from the termcap
+	    (or terminfo) which it uses to set $TERM on startup.
+
+	<li>add resources <code>altIsNotMeta</code> and
+	    <code>altSendsEscape</code> to allow one to use Alt-keys like the
+	    meta-key even if they are bound to different keycodes (prompted by
+	    discussion with Daniel Jacobowitz).
+
+	<li>revert a change from <a href="#xterm_216">patch #216</a>
+	    that unnecessarily made the meta modifier override
+	    the <code>eightBitInput</code> resource if the alt- and
+	    meta-modifiers happened to overlap
+	    (report/patch by Daniel Jacobowitz).
+
+	<li>correct associated font for active icon for colored text
+	    (broken in <a href="#xterm_224">patch #224</a>).
+
+	<li>correct ifdef's for Darwin (patch by Emanuele Giaquinta).
+
+	<li>add <code>highlightTextColor</code> resource, and options
+	    <code>-selfg</code>, <code>-selbg</code> like <code>xwsh</code>
+	    (adapted from patch by Victor Vaile).
+
+	<li>revise <code>find_closest_color()</code> function to address
+	    concern about borrowing from <code>Tcl/Tk</code>
+	    (request by Dan McNichol).
+
+	<li>add "spawn-new-terminal" action, which can be assigned to key
+	    translation, allowing one to spawn a new copy of xterm using
+	    the current process' working directory (adapted from patch
+	    by Daniel Colascio).
+
+	<li>improve select/paste between UTF-8 and Latin1 xterms by adapting
+	    the translations from <a href="#xterm_185">patch #185</a>.
+	    Extend that to include Unicode fullwidth forms FF00-FF5E.
+	    Also modify select/paste of DEC line-drawing characters in
+	    Latin1 mode to use ASCII characters.
+
+	<li>add "Enable Bell Urgency" to VT Options menu, removed "Enable
+	    Margin Bell".
+
+	<li>add <code>bellIsUrgent</code> resource to control whether the
+	    Urgency hint is set/reset.
+
+	<li>modify to set Urgency window manager hint on bell, reset it on
+	    Focus-In event (patch by Emanuele Giaquinta).
+
+	<li>add <code>--disable-setgid</code> configure option (request by
+	    Miroslav Lichvar).
+
+	<li>fix a possible infinite loop in last change to
+	    <code>dabbrev-expand()</code> (patch by Emanuele Giaquinta).
+
+	<li>modify initialization to set the pty erase value if the
+	    <code>erase</code> is set in the <code>ttyModes</code> resource. 
+	    This overrides the <code>ptyInitialErase</code> setting (request by
+	    Llu&#237;s Batlle i Rossell).
+
+	<li>add <code>initialFont</code> resource to xterm widget, like
+	    tek-widget (Debian #299669).
+
+	<li>amend change to <code>boldMode</code> from
+	    <a href="#xterm_223">patch #223</a> for Debian #347790.
+	    As noted in Debian #412599, that made xterm
+	    no longer match the documented behavior.
+	    Add new resource <code>alwaysBoldMode</code>
+	    to allow overriding the comparison
+	    between normal/bold fonts when deciding whether to use overstriking
+	    to simulate bold fonts.
+
+	<li>restore background color in ClearCurBackground(), omitted in
+	    changes for <a href="#xterm_223">patch #223</a> (report by
+	    Miroslav Lichvar).
+
+	<li>correct logic for repainting double-width TrueType characters
+	    (prompted by test-case for Novell #246573).
+
+	<li>add a check to avoid trying to repeat a multibyte character
+	    (report by Sami Farin).
+
+	<li>modify parameter to <code>XftNameParse()</code> to select wide
+	    face-name as needed, to make <code>-fd</code> option work (patch by
+	    Mike Fabian, Novell #246573).
+
+	<li>correct logic for mouse highlight tracking's abort sequence,
+	    broken in a restructuring modification from
+	    <a href="#xterm_224">patch #224</a>
+	    (report by Thomas Wolff).
+
+	<li>revert the simplification of blinking cursor, since that broke
+	    the xor'ing introduced in <a href="#xterm_193">patch #193</a>
+	    (report by Thomas Wolff).
+</ul>
+
+<H1><A NAME="xterm_224">Patch #224 - 2007/2/11</A></H1>
+<ul>
+	<li>simplify code for set/reset mode for blinking cursor 
+	    (patch by Emanuele Giaquinta).
+
+	<li>modify <code>dabbrev-expand()</code> to restart after the last
+	    match (patch by Emanuele Giaquinta).
+
+	<li>add control sequences for enabling/disabling focus in/out event
+	    reporting (request by Bram Moolenaar).
+
+	<li>improve startup performance of menus by adding resource setting
+	    <code>menuLocale</code> which can be set to override X's
+	    lengthy initialization of fontsets - which are seldom used
+	    for the <code>Xaw</code> popup menus (adapted from patch by
+	    Dave Coffin).
+
+	<li>modify do_precomposition() function and make-compose.sh to handle
+	    21-bit codes vs the 16-bit codes those were written for, and
+	    fix a few mis-sorted codes
+	    (patch by Thomas Wolff).
+
+	<li>handle special case in <code>-cjk_width</code>
+	    which unexpectedly caused a character's width to change when
+	    a combining character
+	    (patch by Thomas Wolff)
+
+	<li>fix build for GNU/KFreeBSD (Debian #40111).
+
+	<li>consolidate GC creation/updating into a single module to reduce GC
+	    manipulation (prompted by Debian #389476, though a complete fix
+	    would involve optimizing the scrolling behavior).
+
+	<li>fix ifdef of xtermCellWidth(), which broke for a case without
+	    TrueType and without wide-character support (report by Martin
+	    Pirker).
+
+	<li>undo a comparison in <code>handle_translated_exposure</code> which
+	    did not work due to X server optimization.  That caused the
+	    inner border to be repainted with unexpected colors when handling
+	    a repaint, e.g., after switching to/from another workspace
+	    (Debian #401726, Redhat Bugzilla #223027).
+
+	<li>allow <code>-cr</code> option to override cursor color when
+	    <code>-ah</code> option is used (Debian #406502).
+
+	<li>add a note in xterm's manpage explaining that the <code>-bw</code>
+	    (or <code>-w</code>) option is only used by the window manager,
+	    if at all (Debian #405043).
+
+	<li>make <code>Selection</code> of <code>VT&nbsp;Fonts</code> work with
+	    <code>selectToClipboard</code> resource.
+
+	<li>correct length calculation for <code>Selection</code> entry of
+	    <code>VT&nbsp;Fonts</code> menu, broken since it ignored the
+	    actual selection length since X11R4.
+
+	<li>fixes for fontsize changes with <code>-fa</code> option (Redhat
+	    Bugzilla #222340).
+</ul>
+
+<H1><A NAME="xterm_223">Patch #223 - 2006/11/30</A></H1>
+<ul>
+	<li>add <code>--enable-rectangles</code> configure option (request by
+	    Martin Pirker).
+
+	<li>correct default value for <code>--with-symlink</code> configure
+	    option.
+
+	<li>fixes configure script macros that use <code>$X_EXTRA_LIBS</code>.
+
+	<li>modify configure script to provide support for pre-package config
+	    versions of Xft (FreeType).
+
+	<li>add the Xaw scrollbar translations resource to the xterm manpage,
+	    add an example showing how to change the mouse button assignments
+	    (Debian #382225).
+
+	<li>amend a change from <a href="#xterm_216">patch #216</a>,
+	    which omitted modifiers for control, meta, etc., if they were
+	    mixed with any other modifiers.  The intent of the change was
+	    to avoid confusion with
+	    <code>XK_Mode_switch</code>
+            and <code>XK_ISO_Level3_Shift</code>;
+	    the check is now done explicitly (report by Daniel Jacobowitz).
+
+	<li>interpret a negative value for <code>modifyCursorKeys</code>
+	    or <code>modifyFunctionKeys</code> resources to disable the
+	    respective features (prompted by Novell #220728).
+
+	<li>amend cell-width computation for FreeType from
+	    <a href="#xterm_217">patch #217</a>, which did not work
+	    for VT100 line-drawing characters (Debian #399638, GenToo #147111).
+
+	<li>amend a change from <a href="#xterm_216">patch #216</a>,
+	    which made alt-modifier on a cursor-key send a modifier parameter
+	    (Novell #220728).
+
+	<li>correct an off-by-one that made DECCRA not work (report/patch by
+	    Martin Pirker).
+
+	<li>revert an optimization in SGR_Foreground() and SGR_Background
+	    from <a href="#xterm_209">patch #209</a> (Debian #347722,
+	    analysis by Pierre Lombard).
+
+	<li>fix for <code>boldMode</code> (Debian #347790, patch by Tim Pope).
+
+	<li>amend fix for <code>-iconic</code> in
+	    <a href="#xterm_208">patch #208</a>,
+	    which broke the positioning part of <code>-geom</code> with toolbar
+	    configuration.
+
+	<li>fix to prevent indexing error in regular expressions (patch
+	    by Dennis Schneider).
+
+	<li>fixes to make the internalBorder area not change color due to
+	    reverseVideo and/or related exposure events.  The latter was a very
+	    old bug exposed in <a href="#xterm_196">patch #196</a> (report by
+	    Neil Hoggarth, also Debian #397624).
+</ul>
+
+<H1><A NAME="xterm_222">Patch #222 - 2006/10/17</A></H1>
+<ul>
+	<li>minor optimization for recoloring cursor via dynamic colors.
+
+	<li>fix a bug caused by restructuring of tek4014 widget (report by Paul
+	    Schenkeveld)
+</ul>
+
+<H1><A NAME="xterm_221">Patch #221 - 2006/10/1</A></H1>
+<ul>
+	<li>fix for regular expressions:  the code which converted the column
+	    offset within a line did not check properly for the end of a line,
+	    and if allowed to match the whole line, would select the beginning
+	    of the following line.  If the following line were empty, in turn
+	    it would select from the next, etc.  (report by Sean
+	    Reifschneider).
+
+	<li>minor optimization of color allocation to avoid repainting the
+	    screen if the corresponding color had not been allocated.
+
+	<li>fixes for vttests/256colors.pl (report by Egmont Koblinger).
+
+	<li>add terminfo building block entries for modifiers of the 6-key
+	    editing keypad.
+
+	<li>fix for initialization of tek4014 which broke on QNX 6.1
+</ul>
+
+<H1><A NAME="xterm_220">Patch #220 - 2006/9/10</A></H1>
+<ul>
+	<li>make "xterm -t -iconic" work as expected, i.e., start in tek4014
+	    mode, but iconified.
+</ul>
+
+<H1><A NAME="xterm_219">Patch #219 - 2006/9/4</A></H1>
+<ul>
+	<li>some internal restructuring to separate data for vt100 and tek4014
+	    widgets.
+
+	<li>fix a few cases where form-events would be seen by the vt100
+	    widget when built with the toolbar configuration.
+</ul>
+
+<H1><A NAME="xterm_218">Patch #218 - 2006/8/27</A></H1>
+<ul>
+	<li>change behavior when encountering an illegal character in a title
+	    string.  Rather than reject the string, translate illegal
+	    characters into "?" and use the string (requested by Thomas Wolff).
+
+	<li>improve checks for nonprinting characters in title strings
+	    (report by Samuel Thibault).
+
+	<li>correct typo in menu labels, changing <code>print-redirect</code>
+	    to <code>print-redir</code>, making it follow the manpage and
+	    match the usage for the actions table (report by Samuel Thibault).
+
+	<li>correct a typo that prevents building with some older systems such
+	    as Solaris 2.6 (report by Julian Bridle).
+</ul>
+
+<H1><A NAME="xterm_217">Patch #217 - 2006/8/20</A></H1>
+<ul>
+	<li>minor improvements to FreeType font layout and drawing.
+
+	<li>add a check in the ptyInitialErase logic to ensure that the
+	    termcap was read (Redhat Bugzilla #201246).
+
+	<li>limit changes for reverse-video from
+	    <a href="#xterm_216">patch #216</a> to cases where the
+	    reverse-video command-line option is used
+	    (report by Zdenek Sekera).
+
+	<li>correct bitmap-derived pointsizes for TrueType fonts; they should
+	    be proportional to the square root of the area of the bitmap
+	    fonts.
+
+	<li>add resources to specify pointsize of TrueType fonts (request
+	    by Reuben Thomas).
+
+	<li>improve install of terminfo by filtering out harmless messages
+	    related to extended capabilities.  At the same time, use ncurses
+	    tic to compile the extended capabilities if possible
+	    (report by Zdenek Sekera).
+
+	<li>update "xterm+pcfkeys" terminfo entry to correspond to
+	    <a href="#xterm_216">patch #216</a>.
+</ul>
+
 <H1><A NAME="xterm_216">Patch #216 - 2006/8/3</A></H1>
 <ul>
 	<li>improve handling of <code>ConfigureNotify</code> events by checking
@@ -357,7 +679,7 @@ is the latest version of this file.
 	    colors inconsistent.
 
 	<li>corrected calls used for <code>--disable-setuid</code> option,
-	    add debugging traces to help diagnose this area. 
+	    add debugging traces to help diagnose this area.
 
 	<li>modify configure script to ensure that <code>USE_UTMP_SETGID</code>
 	    is defined only if the check for POSIX saved-ids succeeds, or
@@ -435,7 +757,7 @@ is the latest version of this file.
 	<li>minor optimization to cell layout; will use that to simplify some
 	    logic and allow for more than two combining characters in another
 	    patch.
-	    
+
 	<li>add <code>utf8Latin1</code> resource to make optional the
 	    feature from <a href="#xterm_209">patch #209</a> which
 	    allowed ISO-8859-1 fonts to be used in cases
@@ -527,7 +849,7 @@ is the latest version of this file.
 	<li>add vttests/paste64.pl script to test experimental option for
 	    setting/getting selection data.
 
-	<li>add some error-checking in fontutils.c 
+	<li>add some error-checking in fontutils.c
 	    (prompted by David Dawes commit message for XFree86).
 
 	<li>change xterm manpage to show the actual color resource names
@@ -569,7 +891,7 @@ is the latest version of this file.
 	    "Select To Clipboard").
 
 	<li>add resource <code>selectToClipboard</code>,
-	    action <code>set-select</code> and a menu entry to allow 
+	    action <code>set-select</code> and a menu entry to allow
 	    users to switch between PRIMARY and CLIPBOARD for select/paste.
 
 	<li>allow cursor to have the same color as foreground (text), since it
@@ -787,7 +1109,7 @@ is the latest version of this file.
 	<li>modify parsing of control sequence <code>CSI&nbsp;T</code>
 	    to allow scroll-down
 	    to be sent while mouse tracking is enabled (request by
-	    D Hugh Redelmeier). 
+	    D Hugh Redelmeier).
 
 	<li>correct termcap "me" (mode-end) string so it does not modify the
 	    alternate character set (report by Andrey Chernov).
@@ -3632,7 +3954,7 @@ is the latest version of this file.
 	  Jim Knoble &lt;jmknoble@pobox.com&gt;).
 
 	<li>correct ifdef'ing for conflict between definitions in AIX's
-	  &lt;sys/select.h&gt; and &lt;X11/XPoll.h&gt; (reported by Clint
+	  &lt;sys/select.h&gt; and &lt;X11/Xpoll.h&gt; (reported by Clint
 	  Olsen).
 
 	<li>add checks for return-values of getutid(), initgroups() and
@@ -4019,12 +4341,12 @@ is the latest version of this file.
 	  (prompted by a problem report for <code>-C</code> by Jeremie Petit
 	  &lt;Jeremie.Petit@digital.com&gt;).
 
-	<li>add workaround for conflict between &lt;X11/XPoll.h&gt; and
+	<li>add workaround for conflict between &lt;X11/Xpoll.h&gt; and
 	  &lt;sys/select.h&gt; on AIX 4.3 (Richard Griswold
 	  &lt;griswold@acm.org&gt;).
 
 	<li>add configure script test to resolve conflict between between
-	  &lt;X11/XPoll.h&gt; and &lt;sys/select.h&gt;
+	  &lt;X11/Xpoll.h&gt; and &lt;sys/select.h&gt;
 
 	<li>modify translation of UTF-8 sequences to reject "overly long"
 	  variations (patch by Markus Kuhn).

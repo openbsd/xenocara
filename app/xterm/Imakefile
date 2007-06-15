@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.99 2006/07/21 00:11:15 tom Exp $
+XCOMM $XTermId: Imakefile,v 1.101 2007/03/18 21:06:18 tom Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -192,16 +192,16 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
        TRACESRC = trace.c
        TRACEOBJ = trace.o
 #endif
-          SRCS1 = button.c charproc.c charsets.c cursor.c \
+          SRCS1 = button.c cachedGCs.c charproc.c charsets.c cursor.c \
 		  data.c doublechr.c fontutils.c input.c \
 		  menu.c misc.c print.c ptydata.c \
-		  screen.c scrollbar.c tabs.c util.c xstrings.c \
+		  screen.c scrollbar.c tabs.c util.c xstrings.c xtermcap.c \
 		  TekPrsTbl.c Tekproc.c VTPrsTbl.c \
 		  $(MAINSRC) $(EXTRASRC) $(UTF8SRC) $(TRACESRC)
-          OBJS1 = button.o charproc.o charsets.o cursor.o \
+          OBJS1 = button.o cachedGCs.o charproc.o charsets.o cursor.o \
 		  data.o doublechr.o fontutils.o input.o \
 		  menu.o misc.o print.o ptydata.o \
-		  screen.o scrollbar.o tabs.o util.o xstrings.o \
+		  screen.o scrollbar.o tabs.o util.o xstrings.o xtermcap.o \
 		  TekPrsTbl.o Tekproc.o VTPrsTbl.o \
 		  $(MAINOBJ) $(EXTRAOBJ) $(UTF8OBJ) $(TRACEOBJ)
           SRCS2 = resize.c xstrings.c

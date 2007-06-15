@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.77 2006/07/23 22:06:23 tom Exp $ */
+/* $XTermId: print.c,v 1.80 2007/03/19 23:49:51 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/print.c,v 1.24 2006/06/19 00:36:51 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1997-2005,2006 by Thomas E. Dickey
+Copyright 1997-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -76,7 +76,7 @@ closePrinter(void)
 {
     if (xtermHasPrinter() != 0) {
 #ifdef VMS
-	TScreen *screen = &term->screen;
+	TScreen *screen = TScreenOf(term);
 
 	char pcommand[256];
 	(void) sprintf(pcommand, "%s %s;",
@@ -105,7 +105,7 @@ closePrinter(void)
 static void
 printCursorLine(void)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     TRACE(("printCursorLine\n"));
     printLine(screen->cur_row, '\n');
@@ -121,7 +121,7 @@ printCursorLine(void)
 static void
 printLine(int row, unsigned chr)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     int inx = ROW2INX(screen, row);
     Char *c = SCRN_BUF_CHARS(screen, inx);
     Char *a = SCRN_BUF_ATTRS(screen, inx);
@@ -208,7 +208,7 @@ printLine(int row, unsigned chr)
 		cs = CSET_IN;
 	    else
 #endif
-		cs = (ch >= ' ' && ch != DEL) ? CSET_IN : CSET_OUT;
+		cs = (ch >= ' ' && ch != ANSI_DEL) ? CSET_IN : CSET_OUT;
 	    if (last_cs != cs) {
 		if (screen->print_attributes) {
 		    charToPrinter((unsigned) ((cs == CSET_OUT)
@@ -224,7 +224,7 @@ printLine(int row, unsigned chr)
 	     * into the CSETS array.
 	     */
 	    charToPrinter(((cs == CSET_OUT)
-			   ? (ch == DEL ? 0x5f : (ch + 0x5f))
+			   ? (ch == ANSI_DEL ? 0x5f : (ch + 0x5f))
 			   : ch));
 	    if_OPT_WIDE_CHARS(screen, {
 		int off;
@@ -250,7 +250,7 @@ void
 xtermPrintScreen(Bool use_DECPEX)
 {
     if (XtIsRealized((Widget) term)) {
-	TScreen *screen = &term->screen;
+	TScreen *screen = TScreenOf(term);
 	Bool extent = (use_DECPEX && screen->printer_extent);
 	int top = extent ? 0 : screen->top_marg;
 	int bot = extent ? screen->max_row : screen->bot_marg;
@@ -279,7 +279,7 @@ xtermPrintScreen(Bool use_DECPEX)
 static void
 xtermPrintEverything(void)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     int top = 0;
     int bot = screen->max_row;
     int was_open = initialized;
@@ -302,7 +302,7 @@ static void
 send_CharSet(int row)
 {
 #if OPT_DEC_CHRSET
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     char *msg = 0;
 
     switch (SCRN_BUF_CSETS(screen, row)[0]) {
@@ -366,7 +366,7 @@ send_SGR(unsigned attr, unsigned fg, unsigned bg)
 static void
 charToPrinter(unsigned chr)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     if (!initialized && xtermHasPrinter()) {
 #if defined(VMS)
@@ -500,7 +500,7 @@ xtermMediaControl(int param, int private_seq)
 void
 xtermAutoPrint(unsigned chr)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     if (screen->printer_controlmode == 1) {
 	TRACE(("AutoPrint %d\n", chr));
@@ -525,16 +525,16 @@ xtermAutoPrint(unsigned chr)
 int
 xtermPrinterControl(int chr)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     /* *INDENT-OFF* */
     static struct {
 	Char seq[5];
 	int active;
     } tbl[] = {
-	{ { CSI, '5', 'i'      }, 2 },
-	{ { CSI, '4', 'i'      }, 0 },
-	{ { ESC, LB,  '5', 'i' }, 2 },
-	{ { ESC, LB,  '4', 'i' }, 0 },
+	{ { ANSI_CSI, '5', 'i'      }, 2 },
+	{ { ANSI_CSI, '4', 'i'      }, 0 },
+	{ { ANSI_ESC, LB,  '5', 'i' }, 2 },
+	{ { ANSI_ESC, LB,  '4', 'i' }, 0 },
     };
     /* *INDENT-ON* */
 
@@ -550,8 +550,8 @@ xtermPrinterControl(int chr)
     case CTRL('S'):
 	return 0;		/* ignored by application */
 
-    case CSI:
-    case ESC:
+    case ANSI_CSI:
+    case ANSI_ESC:
     case '[':
     case '4':
     case '5':
@@ -592,7 +592,7 @@ xtermPrinterControl(int chr)
 Bool
 xtermHasPrinter(void)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     return (strlen(screen->printer_command) != 0);
 }

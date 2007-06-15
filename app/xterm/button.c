@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.252 2006/07/23 18:37:20 tom Exp $ */
+/* $XTermId: button.c,v 1.272 2007/03/19 23:42:48 tom Exp $ */
 
 /*
- * Copyright 1999-2005,2006 by Thomas E. Dickey
+ * Copyright 1999-2006,2007 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -69,6 +69,7 @@ button.c	Handles button events in the terminal emulator.
 #include <X11/Xmu/StdSel.h>
 
 #include <xutf8.h>
+#include <fontutils.h>
 
 #include <data.h>
 #include <error.h>
@@ -280,7 +281,7 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
      * ESCAPE '[' event ; mask ; row ; column '&' 'w'
      */
     memset(&reply, 0, sizeof(reply));
-    reply.a_type = CSI;
+    reply.a_type = ANSI_CSI;
 
     if (oor) {
 	reply.a_nparam = 1;
@@ -398,7 +399,7 @@ GetLocatorPosition(XtermWidget xw)
     }
 
     memset(&reply, 0, sizeof(reply));
-    reply.a_type = CSI;
+    reply.a_type = ANSI_CSI;
 
     if (screen->send_mouse_pos == DEC_LOCATOR) {
 	ret = XQueryPointer(screen->display, VWindow(screen), &root,
@@ -468,7 +469,7 @@ InitLocatorFilter(XtermWidget xw)
 	     * report immediately with no coordinates.
 	     */
 	    memset(&reply, 0, sizeof(reply));
-	    reply.a_type = CSI;
+	    reply.a_type = ANSI_CSI;
 	    reply.a_nparam = 1;
 	    reply.a_param[0] = 0;	/* Event - 0 = locator unavailable */
 	    reply.a_inters = '&';
@@ -534,7 +535,7 @@ InitLocatorFilter(XtermWidget xw)
 	ButtonState(state, mask);
 
 	memset(&reply, 0, sizeof(reply));
-	reply.a_type = CSI;
+	reply.a_type = ANSI_CSI;
 	reply.a_nparam = 4;
 	reply.a_param[0] = 10;	/* Event - 10 = locator outside filter */
 	reply.a_param[1] = state;
@@ -585,7 +586,7 @@ CheckLocatorPosition(XtermWidget xw, XEvent * event)
 	MotionOff(screen, xw);
 
 	memset(&reply, 0, sizeof(reply));
-	reply.a_type = CSI;
+	reply.a_type = ANSI_CSI;
 	if (oor) {
 	    reply.a_nparam = 1;
 	    reply.a_param[0] = 0;	/* Event - 0 = locator unavailable */
@@ -767,9 +768,9 @@ ReadLineMovePoint(TScreen * screen, int col, int ldelta)
     if (col == 0)
 	return 0;
     if (screen->control_eight_bits) {
-	line[count++] = CSI;
+	line[count++] = ANSI_CSI;
     } else {
-	line[count++] = ESC;
+	line[count++] = ANSI_ESC;
 	line[count++] = '[';	/* XXX maybe sometimes O is better? */
     }
     line[count++] = (col > 0 ? 'C' : 'D');
@@ -811,7 +812,7 @@ DiredButton(Widget w,
 	    line = (event->xbutton.y - screen->border) / FontHeight(screen);
 	    col = (event->xbutton.x - OriginX(screen)) / FontWidth(screen);
 	    Line[0] = CONTROL('X');
-	    Line[1] = ESC;
+	    Line[1] = ANSI_ESC;
 	    Line[2] = 'G';
 	    Line[3] = ' ' + col;
 	    Line[4] = ' ' + line;
@@ -873,7 +874,7 @@ ReadLineButton(Widget w,
 	    / FontWidth(screen) - screen->cur_col + ldelta * MaxCols(screen);
 	if (col == 0)
 	    goto finish;
-	Line[0] = ESC;
+	Line[0] = ANSI_ESC;
 	/* XXX: sometimes it is better to send '['? */
 	Line[1] = 'O';
 	Line[2] = (col > 0 ? 'C' : 'D');
@@ -907,7 +908,7 @@ ViButton(Widget w,
 	    line = screen->cur_row -
 		((event->xbutton.y - screen->border) / FontHeight(screen));
 	    if (line != 0) {
-		Line[0] = ESC;	/* force an exit from insert-mode */
+		Line[0] = ANSI_ESC;	/* force an exit from insert-mode */
 		v_write(pty, Line, 1);
 
 		if (line < 0) {
@@ -939,7 +940,7 @@ HandleSelectExtend(Widget w,
 	CELL cell;
 
 	screen->selection_time = event->xmotion.time;
-	switch (eventMode) {
+	switch (screen->eventMode) {
 	    /* If not in one of the DEC mouse-reporting modes */
 	case LEFTEXTENSION:
 	case RIGHTEXTENSION:
@@ -982,11 +983,11 @@ do_select_end(XtermWidget xw,
 {
 #if OPT_READLINE
     int ldelta1, ldelta2;
-    TScreen *screen = &xw->screen;
 #endif
+    TScreen *screen = &xw->screen;
 
-    xw->screen.selection_time = event->xbutton.time;
-    switch (eventMode) {
+    screen->selection_time = event->xbutton.time;
+    switch (screen->eventMode) {
     case NORMAL:
 	(void) SendMousePosition(xw, event);
 	break;
@@ -1038,8 +1039,18 @@ struct _SelectionList {
     Time time;
 };
 
+static int
+DECtoASCII(int ch)
+{
+    if (ch < 32) {
+	ch = "###########+++++##-##++++|######"[ch];
+	/*    01234567890123456789012345678901 */
+    }
+    return ch;
+}
 /*
- * Convert a UTF-8 string to Latin-1, replacing non Latin-1 characters by `#'.
+ * Convert a UTF-8 string to Latin-1, replacing non Latin-1 characters by `#',
+ * or ASCII/Latin-1 equivalents for special cases.
  */
 #if OPT_WIDE_CHARS
 static Char *
@@ -1048,37 +1059,44 @@ UTF8toLatin1(Char * s, unsigned len, unsigned long *result)
     static Char *buffer;
     static size_t used;
 
-    Char *p = s;
     Char *q;
 
     if (used == 0) {
-	buffer = (Char *) XtMalloc(used = len);
+	buffer = (Char *) XtMalloc(1 + (used = len));
     } else if (len > used) {
-	buffer = (Char *) XtRealloc((char *) buffer, used = len);
+	buffer = (Char *) XtRealloc((char *) buffer, 1 + (used = len));
     }
-    q = buffer;
 
-    /* We're assuming that the xterm widget never contains Unicode
-       control characters. */
+    if (buffer != 0) {
+	PtyData data;
 
-    while (p < s + len) {
-	if ((*p & 0x80) == 0) {
-	    *q++ = *p++;
-	} else if ((*p & 0x7C) == 0x40 && p < s + len - 1) {
-	    *q++ = ((*p & 0x03) << 6) | (p[1] & 0x3F);
-	    p += 2;
-	} else if ((*p & 0x60) == 0x40) {
-	    *q++ = '#';
-	    p += 2;
-	} else if ((*p & 0x50) == 0x40) {
-	    *q++ = '#';
-	    p += 3;
-	} else {		/* this cannot happen */
-	    *q++ = '#';
-	    p++;
+	q = buffer;
+	fakePtyData(&data, s, s + len);
+	while (decodeUtf8(&data)) {
+	    IChar value = skipPtyData(&data);
+	    if (value == UCS_REPL) {
+		*q++ = '#';
+	    } else if (value < 256) {
+		*q++ = value;
+	    } else {
+		unsigned eqv = ucs2dec(value);
+		if (eqv < 32) {
+		    *q++ = DECtoASCII(eqv);
+		} else {
+		    eqv = AsciiEquivs(value);
+		    if (eqv == value)
+			eqv = '#';
+		    *q++ = eqv;
+		    if (iswide(value))
+			*q++ = ' ';
+		}
+	    }
 	}
+	*q = 0;
+	*result = q - buffer;
+    } else {
+	*result = 0;
     }
-    *result = q - buffer;
     return buffer;
 }
 #endif /* OPT_WIDE_CHARS */
@@ -1093,7 +1111,7 @@ _SelectionTargets(Widget w)
     if (!IsXtermWidget(w))
 	return NULL;
 
-    screen = &((XtermWidget) w)->screen;
+    screen = TScreenOf((XtermWidget) w);
 
 #if OPT_WIDE_CHARS
     if (screen->wide_chars) {
@@ -1519,9 +1537,9 @@ _WriteKey(TScreen * screen, Char * in)
     unsigned length = strlen((char *) in);
 
     if (screen->control_eight_bits) {
-	line[count++] = CSI;
+	line[count++] = ANSI_CSI;
     } else {
-	line[count++] = ESC;
+	line[count++] = ANSI_ESC;
 	line[count++] = '[';
     }
     while (length--)
@@ -1554,7 +1572,7 @@ SelectionReceived(Widget w,
 
     if (!IsXtermWidget(w))
 	return;
-    screen = &((XtermWidget) w)->screen;
+    screen = TScreenOf((XtermWidget) w);
     dpy = XtDisplay(w);
 
     if (*type == 0		/*XT_CONVERT_FAIL */
@@ -1569,9 +1587,9 @@ SelectionReceived(Widget w,
 
 #if OPT_WIDE_CHARS
     if (screen->wide_chars) {
-	if (*type == XA_UTF8_STRING(XtDisplay(w)) ||
+	if (*type == XA_UTF8_STRING(dpy) ||
 	    *type == XA_STRING ||
-	    *type == XA_COMPOUND_TEXT(XtDisplay(w))) {
+	    *type == XA_COMPOUND_TEXT(dpy)) {
 	    GettingSelection(dpy, *type, line, *length);
 	    if (Xutf8TextPropertyToTextList(dpy, &text_prop,
 					    &text_list,
@@ -1585,16 +1603,32 @@ SelectionReceived(Widget w,
     {
 	/* Convert the selection to locale's multibyte encoding. */
 
-	/* There's no need to special-case UTF8_STRING.  If Xlib
-	   doesn't know about it, we didn't request it.  If a broken
-	   selection holder sends it anyhow, the conversion function
-	   will fail. */
-
-	if (*type == XA_UTF8_STRING(XtDisplay(w)) ||
+	if (*type == XA_UTF8_STRING(dpy) ||
 	    *type == XA_STRING ||
-	    *type == XA_COMPOUND_TEXT(XtDisplay(w))) {
+	    *type == XA_COMPOUND_TEXT(dpy)) {
 	    Status rc;
+
 	    GettingSelection(dpy, *type, line, *length);
+
+#if OPT_WIDE_CHARS
+	    if (*type == XA_UTF8_STRING(dpy)) {
+		rc = Xutf8TextPropertyToTextList(dpy, &text_prop,
+						 &text_list, &text_list_count);
+		if (text_list != NULL && text_list_count != 0) {
+		    int i;
+		    Char *data;
+		    unsigned long size;
+		    for (i = 0; i < text_list_count; ++i) {
+			data = (Char *) text_list[i];
+			size = strlen(text_list[i]);
+			data = UTF8toLatin1(data, size, &size);
+			XFree(text_list[i]);
+			text_list[i] = XtMalloc(size + 1);
+			memcpy(text_list[i], data, size + 1);
+		    }
+		}
+	    } else
+#endif
 	    if (*type == XA_STRING && screen->brokenSelections) {
 		rc = XTextPropertyToStringList(&text_prop,
 					       &text_list, &text_list_count);
@@ -1784,7 +1818,7 @@ TrackDown(XtermWidget xw, XButtonEvent * event)
 	screen->replyToEmacs = True;
 	StartSelect(xw, &cell);
     } else {
-	waitingForTrackInfo = True;
+	screen->waitingForTrackInfo = True;
 	EditorButton(xw, (XButtonEvent *) event);
     }
 }
@@ -1801,10 +1835,12 @@ TrackMouse(XtermWidget xw,
 	   int firstrow,
 	   int lastrow)
 {
-    if (waitingForTrackInfo) {	/* if Timed, ignore */
-	waitingForTrackInfo = False;
+    TScreen *screen = &(xw->screen);
+
+    if (screen->waitingForTrackInfo) {	/* if Timed, ignore */
+	screen->waitingForTrackInfo = False;
+
 	if (func != 0) {
-	    TScreen *screen = &(xw->screen);
 	    CELL first = *start;
 
 	    boundsCheck(first.row);
@@ -1834,10 +1870,10 @@ StartSelect(XtermWidget xw, const CELL * cell)
     screen->saveStartR = screen->startExt = screen->rawPos;
     screen->saveEndR = screen->endExt = screen->rawPos;
     if (Coordinate(screen, cell) < Coordinate(screen, &(screen->rawPos))) {
-	eventMode = LEFTEXTENSION;
+	screen->eventMode = LEFTEXTENSION;
 	screen->startExt = *cell;
     } else {
-	eventMode = RIGHTEXTENSION;
+	screen->eventMode = RIGHTEXTENSION;
 	screen->endExt = *cell;
     }
     ComputeSelect(xw, &(screen->startExt), &(screen->endExt), False);
@@ -1866,9 +1902,9 @@ EndExtend(XtermWidget xw,
 	if (screen->replyToEmacs) {
 	    count = 0;
 	    if (screen->control_eight_bits) {
-		line[count++] = CSI;
+		line[count++] = ANSI_CSI;
 	    } else {
-		line[count++] = ESC;
+		line[count++] = ANSI_ESC;
 		line[count++] = '[';
 	    }
 	    if (isSameCELL(&(screen->rawPos), &(screen->startSel))
@@ -1892,7 +1928,7 @@ EndExtend(XtermWidget xw,
 	}
     }
     SelectSet(xw, event, params, num_params);
-    eventMode = NORMAL;
+    screen->eventMode = NORMAL;
 }
 
 void
@@ -1981,11 +2017,11 @@ do_start_extend(XtermWidget xw,
 	< Abs(coord - Coordinate(screen, &(screen->endSel)))
 	|| coord < Coordinate(screen, &(screen->startSel))) {
 	/* point is close to left side of selection */
-	eventMode = LEFTEXTENSION;
+	screen->eventMode = LEFTEXTENSION;
 	screen->startExt = cell;
     } else {
 	/* point is close to left side of selection */
-	eventMode = RIGHTEXTENSION;
+	screen->eventMode = RIGHTEXTENSION;
 	screen->endExt = cell;
     }
     ComputeSelect(xw, &(screen->startExt), &(screen->endExt), True);
@@ -2003,19 +2039,19 @@ ExtendExtend(XtermWidget xw, const CELL * cell)
     int coord = Coordinate(screen, cell);
 
     TRACE(("ExtendExtend row=%d, col=%d\n", cell->row, cell->col));
-    if (eventMode == LEFTEXTENSION
+    if (screen->eventMode == LEFTEXTENSION
 	&& ((coord + (screen->selectUnit != Select_CHAR))
 	    > Coordinate(screen, &(screen->endSel)))) {
 	/* Whoops, he's changed his mind.  Do RIGHTEXTENSION */
-	eventMode = RIGHTEXTENSION;
+	screen->eventMode = RIGHTEXTENSION;
 	screen->startExt = screen->saveStartR;
-    } else if (eventMode == RIGHTEXTENSION
+    } else if (screen->eventMode == RIGHTEXTENSION
 	       && coord < Coordinate(screen, &(screen->startSel))) {
 	/* Whoops, he's changed his mind.  Do LEFTEXTENSION */
-	eventMode = LEFTEXTENSION;
+	screen->eventMode = LEFTEXTENSION;
 	screen->endExt = screen->saveEndR;
     }
-    if (eventMode == LEFTEXTENSION) {
+    if (screen->eventMode == LEFTEXTENSION) {
 	screen->startExt = *cell;
     } else {
 	screen->endExt = *cell;
@@ -2491,6 +2527,14 @@ columnToCell(TScreen * screen, int row, int col, CELL * cell)
 	if (col <= last) {
 	    break;
 	}
+	/*
+	 * Stop if the current row does not wrap (does not continue the current
+	 * line).
+	 */
+	if (!ScrnTstWrapped(screen, row)) {
+	    col = last + 1;
+	    break;
+	}
 	col -= (last + 1);
 	++row;
     }
@@ -2517,7 +2561,8 @@ cellToColumn(TScreen * screen, CELL * cell)
 static void
 do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 {
-    char *expr = screen->selectExpr[screen->numberOfClicks - 1];
+    int inx = ((screen->numberOfClicks - 1) % screen->maxClicks);
+    char *expr = screen->selectExpr[inx];
     regex_t preg;
     regmatch_t match;
     char *search;
@@ -3059,11 +3104,12 @@ _ConvertSelectionHelper(Widget w,
 			XICCEncodingStyle conversion_style)
 {
     if (IsXtermWidget(w)) {
-	Display *d = XtDisplay(w);
-	TScreen *screen = &((XtermWidget) w)->screen;
+	Display *dpy = XtDisplay(w);
+	TScreen *screen = TScreenOf((XtermWidget) w);
 	XTextProperty textprop;
+	char *the_data = (char *) screen->selection_data;
 
-	if (conversion_function(d, (char **) &screen->selection_data, 1,
+	if (conversion_function(dpy, &the_data, 1,
 				conversion_style,
 				&textprop) >= Success) {
 	    *value = (XtPointer) textprop.value;
@@ -3085,25 +3131,25 @@ ConvertSelection(Widget w,
 		 unsigned long *length,
 		 int *format)
 {
-    Display *d = XtDisplay(w);
+    Display *dpy = XtDisplay(w);
     TScreen *screen;
     Bool result = False;
 
     if (!IsXtermWidget(w))
 	return False;
 
-    screen = &((XtermWidget) w)->screen;
+    screen = TScreenOf((XtermWidget) w);
 
     if (screen->selection_data == NULL)
 	return False;		/* can this happen? */
 
-    if (*target == XA_TARGETS(d)) {
+    if (*target == XA_TARGETS(dpy)) {
 	Atom *targetP;
 	Atom *std_targets;
 	XPointer std_return = 0;
 	unsigned long std_length;
 
-	TRACE(("ConvertSelection XA_TARGETS(d)\n"));
+	TRACE(("ConvertSelection XA_TARGETS(dpy)\n"));
 	if (XmuConvertStandardSelection(w, screen->selection_time, selection,
 					target, type, &std_return,
 					&std_length, format)) {
@@ -3112,19 +3158,19 @@ ConvertSelection(Widget w,
 	    targetP = (Atom *) XtMalloc(sizeof(Atom) * (*length));
 	    *value = (XtPointer) targetP;
 	    *targetP++ = XA_STRING;
-	    *targetP++ = XA_TEXT(d);
+	    *targetP++ = XA_TEXT(dpy);
 #ifdef X_HAVE_UTF8_STRING
-	    *targetP++ = XA_COMPOUND_TEXT(d);
-	    *targetP++ = XA_UTF8_STRING(d);
+	    *targetP++ = XA_COMPOUND_TEXT(dpy);
+	    *targetP++ = XA_UTF8_STRING(dpy);
 #else
-	    *targetP = XA_COMPOUND_TEXT(d);
+	    *targetP = XA_COMPOUND_TEXT(dpy);
 	    if_OPT_WIDE_CHARS(screen, {
-		*targetP = XA_UTF8_STRING(d);
+		*targetP = XA_UTF8_STRING(dpy);
 	    });
 	    targetP++;
 #endif
-	    *targetP++ = XA_LENGTH(d);
-	    *targetP++ = XA_LIST_LENGTH(d);
+	    *targetP++ = XA_LENGTH(dpy);
+	    *targetP++ = XA_LIST_LENGTH(dpy);
 	    memcpy(targetP, std_targets, sizeof(Atom) * std_length);
 	    XtFree((char *) std_targets);
 	    *type = XA_ATOM;
@@ -3140,22 +3186,22 @@ ConvertSelection(Widget w,
 				    type, value, length, format,
 				    Xutf8TextListToTextProperty,
 				    XStringStyle);
-    } else if (screen->wide_chars && *target == XA_UTF8_STRING(d)) {
-	TRACE(("ConvertSelection XA_UTF8_STRING(d) - wide\n"));
+    } else if (screen->wide_chars && *target == XA_UTF8_STRING(dpy)) {
+	TRACE(("ConvertSelection XA_UTF8_STRING(dpy) - wide\n"));
 	result =
 	    _ConvertSelectionHelper(w,
 				    type, value, length, format,
 				    Xutf8TextListToTextProperty,
 				    XUTF8StringStyle);
-    } else if (screen->wide_chars && *target == XA_TEXT(d)) {
-	TRACE(("ConvertSelection XA_TEXT(d) - wide\n"));
+    } else if (screen->wide_chars && *target == XA_TEXT(dpy)) {
+	TRACE(("ConvertSelection XA_TEXT(dpy) - wide\n"));
 	result =
 	    _ConvertSelectionHelper(w,
 				    type, value, length, format,
 				    Xutf8TextListToTextProperty,
 				    XStdICCTextStyle);
-    } else if (screen->wide_chars && *target == XA_COMPOUND_TEXT(d)) {
-	TRACE(("ConvertSelection XA_COMPOUND_TEXT(d) - wide\n"));
+    } else if (screen->wide_chars && *target == XA_COMPOUND_TEXT(dpy)) {
+	TRACE(("ConvertSelection XA_COMPOUND_TEXT(dpy) - wide\n"));
 	result =
 	    _ConvertSelectionHelper(w,
 				    type, value, length, format,
@@ -3177,15 +3223,15 @@ ConvertSelection(Widget w,
 	*length = screen->selection_length;
 	*format = 8;
 	result = True;
-    } else if (*target == XA_TEXT(d)) {		/* not wide_chars */
-	TRACE(("ConvertSelection XA_TEXT(d)\n"));
+    } else if (*target == XA_TEXT(dpy)) {	/* not wide_chars */
+	TRACE(("ConvertSelection XA_TEXT(dpy)\n"));
 	result =
 	    _ConvertSelectionHelper(w,
 				    type, value, length, format,
 				    XmbTextListToTextProperty,
 				    XStdICCTextStyle);
-    } else if (*target == XA_COMPOUND_TEXT(d)) {	/* not wide_chars */
-	TRACE(("ConvertSelection XA_COMPOUND_TEXT(d)\n"));
+    } else if (*target == XA_COMPOUND_TEXT(dpy)) {	/* not wide_chars */
+	TRACE(("ConvertSelection XA_COMPOUND_TEXT(dpy)\n"));
 	result =
 	    _ConvertSelectionHelper(w,
 				    type, value, length, format,
@@ -3193,8 +3239,8 @@ ConvertSelection(Widget w,
 				    XCompoundTextStyle);
     }
 #ifdef X_HAVE_UTF8_STRING
-    else if (*target == XA_UTF8_STRING(d)) {	/* not wide_chars */
-	TRACE(("ConvertSelection XA_UTF8_STRING(d)\n"));
+    else if (*target == XA_UTF8_STRING(dpy)) {	/* not wide_chars */
+	TRACE(("ConvertSelection XA_UTF8_STRING(dpy)\n"));
 	result =
 	    _ConvertSelectionHelper(w,
 				    type, value, length, format,
@@ -3202,8 +3248,8 @@ ConvertSelection(Widget w,
 				    XUTF8StringStyle);
     }
 #endif
-    else if (*target == XA_LIST_LENGTH(d)) {
-	TRACE(("ConvertSelection XA_LIST_LENGTH(d)\n"));
+    else if (*target == XA_LIST_LENGTH(dpy)) {
+	TRACE(("ConvertSelection XA_LIST_LENGTH(dpy)\n"));
 	*value = XtMalloc(4);
 	if (sizeof(long) == 4)
 	     *(long *) *value = 1;
@@ -3215,8 +3261,8 @@ ConvertSelection(Widget w,
 	*length = 1;
 	*format = 32;
 	result = True;
-    } else if (*target == XA_LENGTH(d)) {
-	TRACE(("ConvertSelection XA_LENGTH(d)\n"));
+    } else if (*target == XA_LENGTH(dpy)) {
+	TRACE(("ConvertSelection XA_LENGTH(dpy)\n"));
 	/* This value is wrong if we have UTF-8 text */
 	*value = XtMalloc(4);
 	if (sizeof(long) == 4) {
@@ -3251,7 +3297,7 @@ LoseSelection(Widget w, Atom * selection)
     if (!IsXtermWidget(w))
 	return;
 
-    screen = &((XtermWidget) w)->screen;
+    screen = TScreenOf((XtermWidget) w);
     for (i = 0, atomP = screen->selection_atoms;
 	 i < screen->selection_count; i++, atomP++) {
 	if (*selection == *atomP)
@@ -3475,10 +3521,7 @@ SaveText(TScreen * screen,
 	    if (c == 0) {
 		c = E2A(' ');
 	    } else if (c < E2A(' ')) {
-		if (c == XPOUND)
-		    c = 0x23;	/* char on screen is pound sterling */
-		else
-		    c += 0x5f;	/* char is from DEC drawing set */
+		c = DECtoASCII(c);
 	    } else if (c == 0x7f) {
 		c = 0x5f;
 	    }
@@ -3538,6 +3581,7 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
     int row, col;
     int button;
     unsigned count = 0;
+    Boolean changed = True;
 
     /* If button event, get button # adjusted for DEC compatibility */
     button = event->button - 1;
@@ -3565,9 +3609,9 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 
     /* Build key sequence starting with \E[M */
     if (screen->control_eight_bits) {
-	line[count++] = CSI;
+	line[count++] = ANSI_CSI;
     } else {
-	line[count++] = ESC;
+	line[count++] = ANSI_ESC;
 	line[count++] = '[';
     }
 #if OPT_SCO_FUNC_KEYS
@@ -3605,55 +3649,55 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 	     * events only if character cell has changed.
 	     */
 	    if ((row == screen->mouse_row)
-		&& (col == screen->mouse_col))
-		return;
-	    line[count++] = BtnCode(event, screen->mouse_button);
+		&& (col == screen->mouse_col)) {
+		changed = False;
+	    } else {
+		line[count++] = BtnCode(event, screen->mouse_button);
+	    }
 	    break;
 	default:
-	    return;
+	    changed = False;
+	    break;
 	}
     }
 
-    screen->mouse_row = row;
-    screen->mouse_col = col;
+    if (changed) {
+	screen->mouse_row = row;
+	screen->mouse_col = col;
 
-    /* Add pointer position to key sequence */
-    line[count++] = ' ' + col + 1;
-    line[count++] = ' ' + row + 1;
+	/* Add pointer position to key sequence */
+	line[count++] = ' ' + col + 1;
+	line[count++] = ' ' + row + 1;
 
-    TRACE(("mouse at %d,%d button+mask = %#x\n", row, col,
-	   (screen->control_eight_bits) ? line[2] : line[3]));
+	TRACE(("mouse at %d,%d button+mask = %#x\n", row, col,
+	       (screen->control_eight_bits) ? line[2] : line[3]));
 
-    /* Transmit key sequence to process running under xterm */
-    v_write(pty, line, count);
+	/* Transmit key sequence to process running under xterm */
+	v_write(pty, line, count);
+    }
+    return;
 }
 
-/*ARGSUSED*/
-#if OPT_TEK4014
+#if OPT_FOCUS_EVENT
 void
-HandleGINInput(Widget w GCC_UNUSED,
-	       XEvent * event GCC_UNUSED,
-	       String * param_list,
-	       Cardinal *nparamsp)
+SendFocusButton(XtermWidget xw, XFocusChangeEvent * event)
 {
-    if (term->screen.TekGIN && *nparamsp == 1) {
-	int c = param_list[0][0];
-	switch (c) {
-	case 'l':
-	case 'm':
-	case 'r':
-	case 'L':
-	case 'M':
-	case 'R':
-	    break;
-	default:
-	    Bell(XkbBI_MinorError, 0);	/* let them know they goofed */
-	    c = 'l';		/* provide a default */
+    TScreen *screen = &(xw->screen);
+
+    if (screen->send_focus_pos) {
+	ANSI reply;
+
+	memset(&reply, 0, sizeof(reply));
+	reply.a_type = ANSI_CSI;
+
+#if OPT_SCO_FUNC_KEYS
+	if (xw->keyboard.type == keyboardIsSCO) {
+	    reply.a_pintro = '>';
 	}
-	TekEnqMouse(c | 0x80);
-	TekGINoff();
-    } else {
-	Bell(XkbBI_MinorError, 0);
+#endif
+	reply.a_final = (event->type == FocusIn) ? 'I' : 'O';
+	unparseseq(xw, &reply);
     }
+    return;
 }
-#endif /* OPT_TEK4014 */
+#endif /* OPT_FOCUS_EVENT */

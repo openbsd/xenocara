@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.33 2006/07/02 17:28:50 tom Exp $ */
+/* $XTermId: charsets.c,v 1.36 2007/03/19 23:47:00 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/charsets.c,v 1.12 2005/01/14 01:50:02 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1998-2005,2006 by Thomas E. Dickey
+Copyright 1998-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -247,7 +247,7 @@ unsigned xtermCharSetIn(unsigned code, int charset)
 int xtermCharSetOut(IChar *buf, IChar *ptr, int leftset)
 {
 	IChar *s;
-	register TScreen *screen = &term->screen;
+	register TScreen *screen = TScreenOf(term);
 	int count = 0;
 	int rightset = screen->gsets[(int)(screen->curgr)];
 
@@ -268,8 +268,9 @@ int xtermCharSetOut(IChar *buf, IChar *ptr, int leftset)
 		case 'A':	/* United Kingdom set (or Latin 1)	*/
 			if ((term->flags & NATIONAL)
 			 || (screen->vtXX_level <= 1)) {
-				if (chr == 0x23)
-					chr = XPOUND;	/* UK pound sign*/
+				if (chr == 0x23) {
+					chr = XTERM_POUND;	/* UK pound sign*/
+				}
 			} else {
 				chr = (seven | 0x80);
 			}
@@ -453,7 +454,7 @@ int xtermCharSetOut(IChar *buf, IChar *ptr, int leftset)
 		 * nonspacing character.  If we have DEL now, simply render
 		 * it as a blank.
 		 */
-		if (chr == DEL)
+		if (chr == ANSI_DEL)
 		    chr = ' ';
 		*s = A2E(chr);
 	}

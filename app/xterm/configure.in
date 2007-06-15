@@ -1,10 +1,10 @@
-dnl $XTermId: configure.in,v 1.218 2006/07/15 12:21:26 tom Exp $
+dnl $XTermId: configure.in,v 1.226 2007/03/18 23:37:06 tom Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/configure.in,v 3.77 2006/06/19 00:36:51 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2005,2006 by Thomas E. Dickey
+dnl Copyright 1997-2006,2007 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -70,6 +70,7 @@ CF_SIGWINCH
 AC_CHECK_HEADERS( \
 ncurses/term.h \
 stdlib.h \
+term.h \
 termios.h \
 unistd.h \
 wchar.h \
@@ -146,6 +147,7 @@ AC_ARG_WITH(xterm-symlink,
 	[with_symlink=$withval],
 	[with_symlink=xterm])
 AC_MSG_RESULT($with_symlink)
+test "$with_symlink" = yes && with_symlink=xterm
 test -n "$with_symlink" && \
 	test "$with_symlink" != no && \
 	test "$with_symlink" != $cf_name && \
@@ -154,9 +156,17 @@ fi
 
 AC_MSG_CHECKING(if you want to disable setuid)
 CF_ARG_DISABLE(setuid,
-	[  --disable-setuid        disable setuid in xterm, do not install setuid],
+	[  --disable-setuid        disable setuid in xterm, do not install setuid/setgid],
 	[disable_setuid=yes],
 	[disable_setuid=no],
+	no)
+AC_MSG_RESULT($disable_setuid)
+
+AC_MSG_CHECKING(if you want to disable setgid)
+CF_ARG_DISABLE(setgid,
+	[  --disable-setgid        disable setgid in xterm, do not install setuid/setgid],
+	[disable_setgid=yes],
+	[disable_setgid=no],
 	no)
 AC_MSG_RESULT($disable_setuid)
 
@@ -458,6 +468,22 @@ CF_ARG_DISABLE(boxchars,
 AC_MSG_RESULT($enable_boxchars)
 test "$enable_boxchars" = no && AC_DEFINE(OPT_BOX_CHARS,0)
 
+AC_MSG_CHECKING(if you want to allow spawning new xterms)
+CF_ARG_ENABLE(exec-xterm,
+	[  --enable-exec-xterm     enable "spawn-new-terminal" action],
+	[enable_exec_xterm=yes],
+	[enable_exec_xterm=no])
+AC_MSG_RESULT($enable_exec_xterm)
+if test "$enable_exec_xterm" = yes ; then
+	CF_PROCFS_CWD
+	if test "$cf_cv_procfs_cwd" = no ; then
+		AC_MSG_WARN(no suitable proc filesystem found)
+	else
+		AC_DEFINE_UNQUOTED(PROCFS_ROOT,"$cf_cv_procfs_cwd")
+		AC_DEFINE(OPT_EXEC_XTERM)
+	fi
+fi
+
 AC_MSG_CHECKING(if you want to use FreeType library)
 CF_ARG_DISABLE(freetype,
 	[  --disable-freetype      disable freetype library-support],
@@ -656,6 +682,14 @@ CF_ARG_DISABLE(session-mgt,
 AC_MSG_RESULT($enable_session_mgt)
 test "$enable_session_mgt" = no && AC_DEFINE(OPT_SESSION_MGT,0)
 
+AC_MSG_CHECKING(if you want to use termcap function-keys)
+CF_ARG_ENABLE(tcap-fkeys,
+	[  --enable-tcap-fkeys     compile-in termcap function-keys support],
+	[enable_tcap_fkeys=yes],
+	[enable_tcap_fkeys=no])
+AC_MSG_RESULT($enable_tcap_fkeys)
+test "$enable_tcap_fkeys" = yes && AC_DEFINE(OPT_TCAP_FKEYS,1)
+
 AC_MSG_CHECKING(if you want to use termcap-query/report)
 CF_ARG_ENABLE(tcap-query,
 	[  --enable-tcap-query     compile-in termcap-query support],
@@ -751,6 +785,16 @@ if test "$enable_dec_locator" = yes ; then
 	AC_DEFINE(OPT_DEC_LOCATOR,1)
 fi
 
+AC_MSG_CHECKING(if you want VT420 rectangle support)
+CF_ARG_ENABLE(rectangles,
+	[  --enable-rectangles     enable VT420 rectangle support],
+	[enable_rectangles=yes],
+	[enable_rectangles=no])
+AC_MSG_RESULT($enable_rectangles)
+if test "$enable_rectangles" = yes ; then
+	AC_DEFINE(OPT_DEC_RECTOPS,1)
+fi
+
 AC_MSG_CHECKING(if you want -ziconbeep option)
 CF_ARG_DISABLE(ziconbeep,
 	[  --disable-ziconbeep     disable -ziconbeep option],
@@ -818,10 +862,15 @@ AC_SUBST(EXTRAHDRS)
 AC_SUBST(EXTRASRCS)
 AC_SUBST(EXTRAOBJS)
 
+test "$disable_setuid" = yes && AC_DEFINE(DISABLE_SETUID)
+test "$disable_setgid" = yes && AC_DEFINE(DISABLE_SETGID)
+
 if test $disable_setuid = yes ; then
 	MAY_SETUID="#"
 	NOT_SETUID=
-	AC_DEFINE(DISABLE_SETUID)
+elif test $disable_setgid = yes ; then
+	MAY_SETUID="#"
+	NOT_SETUID=
 else
 	MAY_SETUID=
 	NOT_SETUID="#"

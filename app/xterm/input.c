@@ -1,9 +1,9 @@
-/* $XTermId: input.c,v 1.262 2006/08/03 00:08:35 tom Exp $ */
+/* $XTermId: input.c,v 1.283 2007/03/19 23:58:54 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/input.c,v 3.76 2006/06/19 00:36:51 dickey Exp $ */
 
 /*
- * Copyright 1999-2005,2006 by Thomas E. Dickey
+ * Copyright 1999-2006,2007 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -79,6 +79,7 @@
 
 #include <data.h>
 #include <fontutils.h>
+#include <xtermcap.h>
 
 /*
  * Xutil.h has no macro to check for the complete set of function- and
@@ -100,8 +101,6 @@
 #define IsPrivateKeypadKey(k) (0)
 #endif
 
-#define XK_Fn(n)	(XK_F1 + (n) - 1)
-
 #define IsBackarrowToggle(keyboard, keysym, state) \
 	((((keyboard->flags & MODE_DECBKM) == 0) \
 	    ^ ((state & ControlMask) != 0)) \
@@ -110,6 +109,8 @@
 #define MAP(from, to) case from: result = to; break
 
 #define KEYSYM_FMT "0x%04lX"	/* simplify matching <X11/keysymdef.h> */
+
+#define TEK4014_GIN(tw) (tw != 0 && tw->screen.TekGIN)
 
 typedef struct {
     KeySym keysym;
@@ -169,10 +170,12 @@ ModifierName(unsigned modifier)
 #endif
 
 static void
-AdjustAfterInput(TScreen * screen)
+AdjustAfterInput(XtermWidget xw)
 {
+    TScreen *screen = &(xw->screen);
+
     if (screen->scrollkey && screen->topline != 0)
-	WindowScroll(screen, 0);
+	WindowScroll(xw, 0);
     if (screen->marginbell) {
 	int col = screen->max_col - screen->nmarginbell;
 	if (screen->bellarmed >= 0) {
@@ -220,7 +223,7 @@ IsEditFunctionKey(KeySym keysym)
 }
 
 #if OPT_MOD_FKEYS
-#define IS_CTRL(n) ((n) < 0x20 || ((n) >= 0x7f && (n) <= 0x9f))
+#define IS_CTRL(n) ((n) < ANSI_SPA || ((n) >= 0x7f && (n) <= 0x9f))
 
 /*
  * Return true if the keysym corresponds to one of the control characters,
@@ -301,19 +304,13 @@ allowModifierParm(XtermWidget xw, KEY_DATA * kd)
     Bool result = False;
 
     (void) screen;
-    if (1
-#if OPT_SUNPC_KBD || OPT_VT52
-	&& !(((IsKeypadKey(kd->keysym) && keypad_mode)
-	      || kd->is_fkey)
-	     && (0
+    if (!(IsKeypadKey(kd->keysym) && keypad_mode)
 #if OPT_SUNPC_KBD
-		 || (keyboard->type == keyboardIsVT220)
+	&& keyboard->type != keyboardIsVT220
 #endif
 #if OPT_VT52_MODE
-		 || (screen->vtXX_level == 0)
+	&& screen->vtXX_level != 0
 #endif
-	     ))
-#endif /* OPT_SUNPC_KBD || OPT_VT52 */
 	) {
 	result = True;
     }
@@ -339,12 +336,17 @@ allowModifierParm(XtermWidget xw, KEY_DATA * kd)
 *       Meta+Ctrl+Alt        15 = 1(None)+8(Meta)+2(Alt)+4(Ctrl)
 *       Meta+Ctrl+Alt+Shift  16 = 1(None)+8(Meta)+1(Shift)+2(Alt)+4(Ctrl)
 */
+
+#undef CTRL
+
 #define	UNMOD	1
 #define	SHIFT	1
 #define	ALT	2
 #define	CTRL	4
 #define	META	8
+
 #define MODIFIER_NAME(parm, name) (((parm - UNMOD) & name) ? " "#name : "")
+
 static short
 computeModifierParm(XtermWidget xw, int state)
 {
@@ -380,6 +382,42 @@ computeModifierParm(XtermWidget xw, int state)
 	   MODIFIER_NAME(modify_parm, META)));
     return modify_parm;
 }
+
+#if OPT_NUM_LOCK
+static unsigned
+filterAltMeta(unsigned result, unsigned mask, Boolean enable, KEY_DATA * kd)
+{
+    if ((result & mask) != 0) {
+	/*
+	 * metaSendsEscape makes the meta key independent of
+	 * modifyOtherKeys.
+	 */
+	if (enable) {
+	    result &= ~mask;
+	}
+	/*
+	 * A bare meta-modifier is independent of modifyOtherKeys.  If it
+	 * is combined with other modifiers, make it depend.
+	 */
+	if ((result & ~(mask)) == 0) {
+	    result &= ~mask;
+	}
+	/*
+	 * Check for special cases of control+meta which are used by some
+	 * applications, e.g., emacs.
+	 */
+	if ((IsControlInput(kd)
+	     || IsControlOutput(kd))
+	    && (result & ControlMask) != 0) {
+	    result &= ~(mask | ControlMask);
+	}
+	if (kd->keysym == XK_Return || kd->keysym == XK_Tab) {
+	    result &= ~(mask | ControlMask);
+	}
+    }
+    return result;
+}
+#endif /* OPT_NUM_LOCK */
 
 /*
  * Single characters (not function-keys) are allowed fewer modifiers when
@@ -426,33 +464,13 @@ allowedCharModifiers(XtermWidget xw, unsigned state, KEY_DATA * kd)
 	    }
 	}
 #if OPT_NUM_LOCK
-	if ((result & xw->misc.meta_mods) != 0) {
-	    /*
-	     * metaSendsEscape makes the meta key independent of
-	     * modifyOtherKeys.
-	     */
-	    if (xw->screen.meta_sends_esc) {
-		result &= ~xw->misc.meta_mods;
-	    }
-	    /*
-	     * A bare meta-modifier is independent of modifyOtherKeys.  If it
-	     * is combined with other modifiers, make it depend.
-	     */
-	    if ((result & ~(xw->misc.meta_mods)) == 0) {
-		result &= ~xw->misc.meta_mods;
-	    }
-	    /*
-	     * Check for special cases of control+meta which are used by some
-	     * applications, e.g., emacs.
-	     */
-	    if ((IsControlInput(kd)
-		 || IsControlOutput(kd))
-		&& (result & ControlMask) != 0) {
-		result &= ~(xw->misc.meta_mods | ControlMask);
-	    }
-	    if (kd->keysym == XK_Return || kd->keysym == XK_Tab) {
-		result &= ~(xw->misc.meta_mods | ControlMask);
-	    }
+	result = filterAltMeta(result,
+			       xw->misc.meta_mods,
+			       xw->screen.meta_sends_esc, kd);
+	if (xw->screen.alt_is_not_meta) {
+	    result = filterAltMeta(result,
+				   xw->misc.alt_mods,
+				   xw->screen.alt_sends_esc, kd);
 	}
 #endif
     }
@@ -598,7 +616,7 @@ modifyOtherKey(ANSI * reply, int input_char, int modify_parm)
     Bool result = False;
 
     if (input_char >= 0) {
-	reply->a_type = CSI;
+	reply->a_type = ANSI_CSI;
 	APPEND_PARM(27);
 	APPEND_PARM(modify_parm);
 	APPEND_PARM(input_char);
@@ -610,11 +628,14 @@ modifyOtherKey(ANSI * reply, int input_char, int modify_parm)
 }
 
 static void
-modifyCursorKey(ANSI * reply, int modify, int modify_parm)
+modifyCursorKey(ANSI * reply, int modify, int *modify_parm)
 {
-    if (modify_parm > 1) {
-	if (modify) {
-	    reply->a_type = CSI;	/* SS3 should not have params */
+    if (*modify_parm > 1) {
+	if (modify < 0) {
+	    *modify_parm = 0;
+	}
+	if (modify > 0) {
+	    reply->a_type = ANSI_CSI;	/* SS3 should not have params */
 	}
 	if (modify > 1 && reply->a_nparam == 0) {
 	    APPEND_PARM(1);	/* force modifier to 2nd param */
@@ -679,13 +700,13 @@ TranslateFromSUNPC(KeySym keysym)
 
 #define VT52_KEYPAD \
 	if_OPT_VT52_MODE(screen,{ \
-		reply.a_type = ESC; \
+		reply.a_type = ANSI_ESC; \
 		reply.a_pintro = '?'; \
 		})
 
 #define VT52_CURSOR_KEYS \
 	if_OPT_VT52_MODE(screen,{ \
-		reply.a_type = ESC; \
+		reply.a_type = ANSI_ESC; \
 		})
 
 #undef  APPEND_PARM
@@ -744,7 +765,7 @@ Input(XtermWidget xw,
     int key = False;
     ANSI reply;
     int dec_code;
-    short modify_parm = 0;
+    int modify_parm = 0;
     int keypad_mode = ((keyboard->flags & MODE_DECKPAM) != 0);
     unsigned evt_state = event->state;
     unsigned mod_state;
@@ -899,7 +920,7 @@ Input(XtermWidget xw,
     /* VT300 & up: backarrow toggle */
     if ((kd.nbytes == 1)
 	&& IsBackarrowToggle(keyboard, kd.keysym, evt_state)) {
-	kd.strbuf[0] = DEL;
+	kd.strbuf[0] = ANSI_DEL;
 	TRACE(("...Input backarrow changed to %d\n", kd.strbuf[0]));
     }
 #if OPT_SUNPC_KBD
@@ -1001,6 +1022,12 @@ Input(XtermWidget xw,
     case keyboardIsSun:
 	sunfuncvalue(&reply, &kd);
 	break;
+    case keyboardIsTermcap:
+#if OPT_TCAP_FKEYS
+	if (xtermcapString(xw, kd.keysym, evt_state))
+	    return;
+#endif
+	break;
     case keyboardIsDefault:
     case keyboardIsLegacy:
     case keyboardIsVT220:
@@ -1018,7 +1045,7 @@ Input(XtermWidget xw,
 			  || IsEditFunctionKey(kd.keysym))
 			 ? keyboard->modify_now.function_keys
 			 : keyboard->modify_now.cursor_keys),
-			modify_parm);
+			&modify_parm);
 	MODIFIER_PARM;
 	unparseseq(xw, &reply);
     } else if (((kd.is_fkey
@@ -1046,18 +1073,18 @@ Input(XtermWidget xw,
 	 */
 	else if (keyboard->type != keyboardIsLegacy
 		 && (dec_code >= 11 && dec_code <= 14)) {
-	    reply.a_type = SS3;
+	    reply.a_type = ANSI_SS3;
 	    VT52_CURSOR_KEYS;
 	    reply.a_final = A2E(dec_code - 11 + E2A('P'));
 	    modifyCursorKey(&reply,
 			    keyboard->modify_now.function_keys,
-			    modify_parm);
+			    &modify_parm);
 	    MODIFIER_PARM;
 	    unparseseq(xw, &reply);
 	}
 #endif
 	else {
-	    reply.a_type = CSI;
+	    reply.a_type = ANSI_CSI;
 	    reply.a_final = 0;
 
 #ifdef XK_ISO_Left_Tab
@@ -1077,7 +1104,7 @@ Input(XtermWidget xw,
 		if (kd.is_fkey) {
 		    modifyCursorKey(&reply,
 				    keyboard->modify_now.function_keys,
-				    modify_parm);
+				    &modify_parm);
 		}
 		MODIFIER_PARM;
 #endif
@@ -1090,7 +1117,7 @@ Input(XtermWidget xw,
 	}
 	key = True;
     } else if (IsPFKey(kd.keysym)) {
-	reply.a_type = SS3;
+	reply.a_type = ANSI_SS3;
 	reply.a_final = kd.keysym - XK_KP_F1 + 'P';
 	VT52_CURSOR_KEYS;
 	MODIFIER_PARM;
@@ -1098,7 +1125,7 @@ Input(XtermWidget xw,
 	key = True;
     } else if (IsKeypadKey(kd.keysym)) {
 	if (keypad_mode) {
-	    reply.a_type = SS3;
+	    reply.a_type = ANSI_SS3;
 	    reply.a_final = kypd_apl[kd.keysym - XK_KP_Space];
 	    VT52_KEYPAD;
 	    MODIFIER_PARM;
@@ -1109,11 +1136,11 @@ Input(XtermWidget xw,
 	key = True;
     } else if (IsCursorKey(kd.keysym)) {
 	if (keyboard->flags & MODE_DECCKM) {
-	    reply.a_type = SS3;
+	    reply.a_type = ANSI_SS3;
 	} else {
-	    reply.a_type = CSI;
+	    reply.a_type = ANSI_CSI;
 	}
-	modifyCursorKey(&reply, keyboard->modify_now.cursor_keys, modify_parm);
+	modifyCursorKey(&reply, keyboard->modify_now.cursor_keys, &modify_parm);
 	reply.a_final = curfinal[kd.keysym - XK_Home];
 	VT52_CURSOR_KEYS;
 	MODIFIER_PARM;
@@ -1123,9 +1150,9 @@ Input(XtermWidget xw,
 	int prefix = 0;
 
 #if OPT_TEK4014
-	if (screen->TekGIN) {
-	    TekEnqMouse(kd.strbuf[0]);
-	    TekGINoff();
+	if (TEK4014_GIN(tekWidget)) {
+	    TekEnqMouse(tekWidget, kd.strbuf[0]);
+	    TekGINoff(tekWidget);
 	    kd.nbytes--;
 	    for (j = 0; j < kd.nbytes; ++j) {
 		kd.strbuf[j] = kd.strbuf[j + 1];
@@ -1170,19 +1197,28 @@ Input(XtermWidget xw,
 	     * Like eightBitInput, except that it is not associated with
 	     * terminal settings.
 	     */
-	    if (kd.nbytes != 0
-		&& screen->meta_sends_esc
-		&& (evt_state & xw->misc.meta_mods) != 0) {
-		TRACE(("...input-char is modified by META\n"));
-		/*
-		 * If we cannot distinguish between the Alt/Meta keys, disallow
-		 * the corresponding shift for eightBitInput that would happen
-		 * in the next chunk of code.
-		 */
-		if ((evt_state & xw->misc.alt_mods & xw->misc.meta_mods) != 0)
+	    if (kd.nbytes != 0) {
+		if (screen->meta_sends_esc
+		    && (evt_state & xw->misc.meta_mods) != 0) {
+		    TRACE(("...input-char is modified by META\n"));
+		    evt_state &= ~xw->misc.meta_mods;
 		    eightbit = False;
-		prefix = ESC;
-		evt_state &= ~xw->misc.meta_mods;
+		    prefix = ANSI_ESC;
+		} else if (eightbit) {
+		    /* it might be overridden, but this helps for debugging */
+		    TRACE(("...input-char is shifted by META\n"));
+		}
+		if (screen->alt_is_not_meta
+		    && (evt_state & xw->misc.alt_mods) != 0) {
+		    evt_state &= ~xw->misc.alt_mods;
+		    if (screen->alt_sends_esc) {
+			TRACE(("...input-char is modified by ALT\n"));
+			prefix = ANSI_ESC;
+		    } else if (!eightbit) {
+			TRACE(("...input-char is shifted by ALT\n"));
+			eightbit = True;
+		    }
+		}
 	    }
 #endif
 	    /*
@@ -1238,10 +1274,10 @@ Input(XtermWidget xw,
 			   CharOf(cmp)));
 		    kd.strbuf[0] = cmp;
 		} else if (eightbit) {
-		    prefix = ESC;
+		    prefix = ANSI_ESC;
 		} else if (kd.strbuf[0] == '?'
 			   && (evt_state & ControlMask) != 0) {
-		    kd.strbuf[0] = DEL;
+		    kd.strbuf[0] = ANSI_DEL;
 		    evt_state &= ~ControlMask;
 		}
 	    }
@@ -1254,8 +1290,8 @@ Input(XtermWidget xw,
     }
     unparse_end(xw);
 
-    if (key && !TEK4014_ACTIVE(screen))
-	AdjustAfterInput(screen);
+    if (key && !TEK4014_ACTIVE(xw))
+	AdjustAfterInput(xw);
 
     return;
 }
@@ -1263,22 +1299,20 @@ Input(XtermWidget xw,
 void
 StringInput(XtermWidget xw, Char * string, size_t nbytes)
 {
-    TScreen *screen = &(xw->screen);
-
     TRACE(("InputString (%s,%d)\n",
 	   visibleChars(PAIRED_CHARS(string, 0), nbytes),
 	   nbytes));
 #if OPT_TEK4014
-    if (nbytes && screen->TekGIN) {
-	TekEnqMouse(*string++);
-	TekGINoff();
+    if (nbytes && TEK4014_GIN(tekWidget)) {
+	TekEnqMouse(tekWidget, *string++);
+	TekGINoff(tekWidget);
 	nbytes--;
     }
 #endif
     while (nbytes-- != 0)
 	unparseputc(xw, *string++);
-    if (!TEK4014_ACTIVE(screen))
-	AdjustAfterInput(screen);
+    if (!TEK4014_ACTIVE(xw))
+	AdjustAfterInput(xw);
     unparse_end(xw);
 }
 
@@ -1393,7 +1427,7 @@ hpfuncvalue(ANSI * reply, KEY_DATA * kd)
 	}
     }
     if (result > 0) {
-	reply->a_type = ESC;
+	reply->a_type = ANSI_ESC;
 	reply->a_final = result;
     }
 #else
@@ -1483,7 +1517,7 @@ scofuncvalue(ANSI * reply, KEY_DATA * kd)
 	}
     }
     if (result > 0) {
-	reply->a_type = CSI;
+	reply->a_type = ANSI_CSI;
 	reply->a_final = result;
     }
 #else
@@ -1495,7 +1529,7 @@ scofuncvalue(ANSI * reply, KEY_DATA * kd)
 static void
 sunfuncvalue(ANSI * reply, KEY_DATA * kd)
 {
-#ifdef OPT_SUN_FUNC_KEYS
+#if OPT_SUN_FUNC_KEYS
     int result;
 
     if (kd->is_fkey) {
@@ -1575,12 +1609,12 @@ sunfuncvalue(ANSI * reply, KEY_DATA * kd)
 	}
     }
     if (result > 0) {
-	reply->a_type = CSI;
+	reply->a_type = ANSI_CSI;
 	reply->a_nparam = 1;
 	reply->a_param[0] = result;
 	reply->a_final = 'z';
     } else if (IsCursorKey(kd->keysym)) {
-	reply->a_type = SS3;
+	reply->a_type = ANSI_SS3;
 	reply->a_final = curfinal[kd->keysym - XK_Home];
     }
 #else
@@ -1715,7 +1749,11 @@ VTInitModifiers(XtermWidget xw)
 			} else if (mask == LockMask
 				   && (keysym == XK_Caps_Lock)) {
 			    ;	/* ignore */
-			} else {
+			} else if (keysym == XK_Mode_switch
+#ifdef XK_ISO_Level3_Shift
+				   || keysym == XK_ISO_Level3_Shift
+#endif
+			    ) {
 			    SaveMask(other_mods);
 			}
 		    }
@@ -1754,210 +1792,3 @@ VTInitModifiers(XtermWidget xw)
     }
 }
 #endif /* OPT_NUM_LOCK */
-
-#if OPT_TCAP_QUERY
-static int
-hex2int(int c)
-{
-    if (c >= '0' && c <= '9')
-	return c - '0';
-    if (c >= 'a' && c <= 'f')
-	return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F')
-	return c - 'A' + 10;
-    return -1;
-}
-
-/*
- * Parse the termcap/terminfo name from the string, returning a positive number
- * (the keysym) if found, otherwise -1.  Update the string pointer.
- * Returns the (shift, control) state in *state.
- *
- * This does not attempt to construct control/shift modifiers to construct
- * function-key values.  Instead, it sets the *fkey flag to pass to Input()
- * and bypass the lookup of keysym altogether.
- */
-int
-xtermcapKeycode(XtermWidget xw, char **params, unsigned *state, Bool * fkey)
-{
-    /* *INDENT-OFF* */
-#define DATA(tc,ti,x,y) { tc, ti, x, y }
-    static struct {
-	char *tc;
-	char *ti;
-	int code;
-	unsigned state;
-    } table[] = {
-	/*	tcap	terminfo	keycode		masks */
-	DATA(	"%1",	"khlp",		XK_Help,	0		),
-	DATA(	"#1",	"kHLP",		XK_Help,	ShiftMask	),
-	DATA(	"@0",	"kfnd",		XK_Find,	0		),
-	DATA(	"*0",	"kFND",		XK_Find,	ShiftMask	),
-	DATA(	"*6",	"kslt",		XK_Select,	0		),
-	DATA(	"#6",	"kSLT",		XK_Select,	ShiftMask	),
-
-	DATA(	"kh",	"khome",	XK_Home,	0		),
-	DATA(	"#2",	"kHOM",		XK_Home,	ShiftMask	),
-	DATA(	"@7",	"kend",		XK_End,		0		),
-	DATA(	"*7",	"kEND",		XK_End,		ShiftMask	),
-
-	DATA(	"kl",	"kcub1",	XK_Left,	0		),
-	DATA(	"kr",	"kcuf1",	XK_Right,	0		),
-	DATA(	"ku",	"kcuu1",	XK_Up,		0		),
-	DATA(	"kd",	"kcud1",	XK_Down,	0		),
-
-	DATA(	"#4",	"kLFT",		XK_Left,	ShiftMask	),
-	DATA(	"%i",	"kRIT",		XK_Right,	ShiftMask	),
-	DATA(	"%e",	"kPRV",		XK_Up,		ShiftMask	),
-	DATA(	"%c",	"kNXT",		XK_Down,	ShiftMask	),
-
-	DATA(	"k1",	"kf1",		XK_Fn(1),	0		),
-	DATA(	"k2",	"kf2",		XK_Fn(2),	0		),
-	DATA(	"k3",	"kf3",		XK_Fn(3),	0		),
-	DATA(	"k4",	"kf4",		XK_Fn(4),	0		),
-	DATA(	"k5",	"kf5",		XK_Fn(5),	0		),
-	DATA(	"k6",	"kf6",		XK_Fn(6),	0		),
-	DATA(	"k7",	"kf7",		XK_Fn(7),	0		),
-	DATA(	"k8",	"kf8",		XK_Fn(8),	0		),
-	DATA(	"k9",	"kf9",		XK_Fn(9),	0		),
-	DATA(	"k;",	"kf10",		XK_Fn(10),	0		),
-
-	DATA(	"F1",	"kf11",		XK_Fn(11),	0		),
-	DATA(	"F2",	"kf12",		XK_Fn(12),	0		),
-	DATA(	"F3",	"kf13",		XK_Fn(13),	0		),
-	DATA(	"F4",	"kf14",		XK_Fn(14),	0		),
-	DATA(	"F5",	"kf15",		XK_Fn(15),	0		),
-	DATA(	"F6",	"kf16",		XK_Fn(16),	0		),
-	DATA(	"F7",	"kf17",		XK_Fn(17),	0		),
-	DATA(	"F8",	"kf18",		XK_Fn(18),	0		),
-	DATA(	"F9",	"kf19",		XK_Fn(19),	0		),
-	DATA(	"FA",	"kf20",		XK_Fn(20),	0		),
-	DATA(	"FB",	"kf21",		XK_Fn(21),	0		),
-	DATA(	"FC",	"kf22",		XK_Fn(22),	0		),
-	DATA(	"FD",	"kf23",		XK_Fn(23),	0		),
-	DATA(	"FE",	"kf24",		XK_Fn(24),	0		),
-	DATA(	"FF",	"kf25",		XK_Fn(25),	0		),
-	DATA(	"FG",	"kf26",		XK_Fn(26),	0		),
-	DATA(	"FH",	"kf27",		XK_Fn(27),	0		),
-	DATA(	"FI",	"kf28",		XK_Fn(28),	0		),
-	DATA(	"FJ",	"kf29",		XK_Fn(29),	0		),
-	DATA(	"FK",	"kf30",		XK_Fn(30),	0		),
-	DATA(	"FL",	"kf31",		XK_Fn(31),	0		),
-	DATA(	"FM",	"kf32",		XK_Fn(32),	0		),
-	DATA(	"FN",	"kf33",		XK_Fn(33),	0		),
-	DATA(	"FO",	"kf34",		XK_Fn(34),	0		),
-	DATA(	"FP",	"kf35",		XK_Fn(35),	0		),
-
-	DATA(	"FQ",	"kf36",		-36,		0		),
-	DATA(	"FR",	"kf37",		-37,		0		),
-	DATA(	"FS",	"kf38",		-38,		0		),
-	DATA(	"FT",	"kf39",		-39,		0		),
-	DATA(	"FU",	"kf40",		-40,		0		),
-	DATA(	"FV",	"kf41",		-41,		0		),
-	DATA(	"FW",	"kf42",		-42,		0		),
-	DATA(	"FX",	"kf43",		-43,		0		),
-	DATA(	"FY",	"kf44",		-44,		0		),
-	DATA(	"FZ",	"kf45",		-45,		0		),
-	DATA(	"Fa",	"kf46",		-46,		0		),
-	DATA(	"Fb",	"kf47",		-47,		0		),
-	DATA(	"Fc",	"kf48",		-48,		0		),
-	DATA(	"Fd",	"kf49",		-49,		0		),
-	DATA(	"Fe",	"kf50",		-50,		0		),
-	DATA(	"Ff",	"kf51",		-51,		0		),
-	DATA(	"Fg",	"kf52",		-52,		0		),
-	DATA(	"Fh",	"kf53",		-53,		0		),
-	DATA(	"Fi",	"kf54",		-54,		0		),
-	DATA(	"Fj",	"kf55",		-55,		0		),
-	DATA(	"Fk",	"kf56",		-56,		0		),
-	DATA(	"Fl",	"kf57",		-57,		0		),
-	DATA(	"Fm",	"kf58",		-58,		0		),
-	DATA(	"Fn",	"kf59",		-59,		0		),
-	DATA(	"Fo",	"kf60",		-60,		0		),
-	DATA(	"Fp",	"kf61",		-61,		0		),
-	DATA(	"Fq",	"kf62",		-62,		0		),
-	DATA(	"Fr",	"kf63",		-63,		0		),
-
-	DATA(	"K1",	"ka1",		XK_KP_Home,	0		),
-	DATA(	"K4",	"kc1",		XK_KP_End,	0		),
-
-#ifdef XK_ISO_Left_Tab
-	DATA(	"kB",	"kcbt",		XK_ISO_Left_Tab, 0		),
-#endif
-	DATA(	"kC",	"kclr",		XK_Clear,	0		),
-	DATA(	"kD",	"kdch1",	XK_Delete,	0		),
-	DATA(	"kI",	"kich1",	XK_Insert,	0		),
-	DATA(	"kN",	"knp",		XK_Next,	0		),
-	DATA(	"kP",	"kpp",		XK_Prior,	0		),
-	DATA(	"kb",	"kbs",		XK_BackSpace,	0		),
-# if OPT_ISO_COLORS
-	/* XK_COLORS is a fake code. */
-	DATA(	"Co",	"colors",	XK_COLORS,	0		),
-# endif
-    };
-    /* *INDENT-ON* */
-
-    Cardinal n;
-    unsigned len = 0;
-    int code = -1;
-#define MAX_TNAME_LEN 6
-    char name[MAX_TNAME_LEN + 1];
-    char *p;
-
-    TRACE(("xtermcapKeycode(%s)\n", *params));
-
-    /* Convert hex encoded name to ascii */
-    for (p = *params; hex2int(p[0]) >= 0 && hex2int(p[1]) >= 0; p += 2) {
-	if (len >= MAX_TNAME_LEN)
-	    break;
-	name[len++] = (hex2int(p[0]) << 4) + hex2int(p[1]);
-    }
-    name[len] = 0;
-    *params = p;
-
-    *state = 0;
-    *fkey = False;
-
-    if (*p == 0 || *p == ';') {
-	for (n = 0; n < XtNumber(table); n++) {
-	    if (!strcmp(table[n].ti, name) || !strcmp(table[n].tc, name)) {
-		code = table[n].code;
-		*state = table[n].state;
-		if (IsFunctionKey(code)) {
-		    *fkey = True;
-		} else if (code < 0) {
-		    *fkey = True;
-		    code = XK_Fn((-code));
-		}
-#ifdef OPT_SUN_FUNC_KEYS
-		if (*fkey && xw->keyboard.type == keyboardIsSun) {
-		    int num = code - XK_Fn(0);
-
-		    /* match function-key case in sunfuncvalue() */
-		    if (num > 20) {
-			if (num <= 30 || num > 47) {
-			    code = -1;
-			} else {
-			    code -= 10;
-			    switch (num) {
-			    case 37:	/* khome */
-			    case 39:	/* kpp */
-			    case 41:	/* kb2 */
-			    case 43:	/* kend */
-			    case 45:	/* knp */
-				code = -1;
-				break;
-			    }
-			}
-		    }
-		}
-#endif
-		break;
-	    }
-	}
-    }
-
-    TRACE(("... xtermcapKeycode(%s, %u, %d) -> %#06x\n",
-	   name, *state, *fkey, code));
-    return code;
-}
-#endif

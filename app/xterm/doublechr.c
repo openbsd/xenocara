@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.48 2006/07/23 22:06:23 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.54 2007/03/12 23:44:08 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/doublechr.c,v 3.18 2006/02/13 01:14:58 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1997-2005,2006 by Thomas E. Dickey
+Copyright 1997-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -42,6 +42,8 @@ authorization.
 
 #include <assert.h>
 
+#define WhichCgsId(flag) (flag & BOLD ? gcCBold : gcCNorm)
+
 /*
  * The first column is all that matters for double-size characters (since the
  * controls apply to a whole line).  However, it's easier to maintain the
@@ -51,9 +53,9 @@ authorization.
 
 #if OPT_DEC_CHRSET
 static void
-repaint_line(unsigned newChrSet)
+repaint_line(XtermWidget xw, unsigned newChrSet)
 {
-    register TScreen *screen = &term->screen;
+    register TScreen *screen = &xw->screen;
     int curcol = screen->cur_col;
     int currow = screen->cur_row;
     unsigned len = MaxCols(screen);
@@ -85,7 +87,7 @@ repaint_line(unsigned newChrSet)
      * single-size and double-size font.  So we paint our own.
      */
     if (CSET_DOUBLE(oldChrSet) != CSET_DOUBLE(newChrSet)) {
-	ClearCurBackground(term,
+	ClearCurBackground(xw,
 			   CursorY(screen, currow),
 			   CurCursorX(screen, currow, 0),
 			   (unsigned) FontHeight(screen),
@@ -96,7 +98,7 @@ repaint_line(unsigned newChrSet)
     memset(SCRN_BUF_CSETS(screen, currow), (Char) newChrSet, len);
 
     set_cur_col(screen, 0);
-    ScrnUpdate(term, currow, 0, 1, (int) len, True);
+    ScrnUpdate(xw, currow, 0, 1, (int) len, True);
     set_cur_col(screen, curcol);
 }
 #endif
@@ -106,10 +108,10 @@ repaint_line(unsigned newChrSet)
  * we'll be using it for the top (true) or bottom (false) of the line.
  */
 void
-xterm_DECDHL(Bool top)
+xterm_DECDHL(XtermWidget xw GCC_UNUSED, Bool top)
 {
 #if OPT_DEC_CHRSET
-    repaint_line((unsigned) (top ? CSET_DHL_TOP : CSET_DHL_BOT));
+    repaint_line(xw, (unsigned) (top ? CSET_DHL_TOP : CSET_DHL_BOT));
 #else
     (void) top;
 #endif
@@ -119,10 +121,10 @@ xterm_DECDHL(Bool top)
  * Set the line to single-width characters (the normal state).
  */
 void
-xterm_DECSWL(void)
+xterm_DECSWL(XtermWidget xw GCC_UNUSED)
 {
 #if OPT_DEC_CHRSET
-    repaint_line(CSET_SWL);
+    repaint_line(xw, CSET_SWL);
 #endif
 }
 
@@ -130,38 +132,34 @@ xterm_DECSWL(void)
  * Set the line to double-width characters
  */
 void
-xterm_DECDWL(void)
+xterm_DECDWL(XtermWidget xw GCC_UNUSED)
 {
 #if OPT_DEC_CHRSET
-    repaint_line(CSET_DWL);
+    repaint_line(xw, CSET_DWL);
 #endif
 }
 
 #if OPT_DEC_CHRSET
 static void
-discard_font(TScreen * screen, XTermFonts * data)
+discard_font(XtermWidget xw, XTermFonts * data)
 {
     TRACE(("discard_font chrset=%d %s\n", data->chrset,
 	   (data->fn != 0) ? data->fn : "<no-name>"));
 
     data->chrset = 0;
     data->flags = 0;
-    if (data->gc != 0) {
-	XFreeGC(screen->display, data->gc);
-	data->gc = 0;
-    }
     if (data->fn != 0) {
 	free(data->fn);
 	data->fn = 0;
     }
-    data->fs = xtermCloseFont(screen, data->fs);
+    data->fs = xtermCloseFont(xw, data->fs);
 }
 
 int
-xterm_Double_index(unsigned chrset, unsigned flags)
+xterm_Double_index(XtermWidget xw, unsigned chrset, unsigned flags)
 {
     int n;
-    TScreen *screen = &term->screen;
+    TScreen *screen = &xw->screen;
     XTermFonts *data = screen->double_fonts;
 
     flags &= BOLD;
@@ -187,7 +185,7 @@ xterm_Double_index(unsigned chrset, unsigned flags)
     /* Not, found, push back existing fonts and create a new entry */
     if (screen->fonts_used >= screen->cache_doublesize) {
 	TRACE(("...xterm_Double_index: discard oldest\n"));
-	discard_font(screen, &(data[screen->fonts_used - 1]));
+	discard_font(xw, &(data[screen->fonts_used - 1]));
     } else {
 	screen->fonts_used += 1;
     }
@@ -200,7 +198,6 @@ xterm_Double_index(unsigned chrset, unsigned flags)
     data[0].flags = flags;
     data[0].fn = 0;
     data[0].fs = 0;
-    data[0].gc = 0;
     return 0;
 }
 
@@ -209,58 +206,67 @@ xterm_Double_index(unsigned chrset, unsigned flags)
  * NUM_CHRSET values.
  */
 GC
-xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc)
+xterm_DoubleGC(XtermWidget xw, unsigned chrset, unsigned flags, GC old_gc)
 {
-    XGCValues gcv;
-    register TScreen *screen = &term->screen;
-    unsigned long mask = (GCForeground | GCBackground | GCFont);
+    TScreen *screen = &(xw->screen);
+    VTwin *cgsWin = WhichVWin(screen);
     int n;
     char *name;
     XTermFonts *data;
+    GC result = 0;
 
-    if ((name = xtermSpecialFont(screen, flags, chrset)) == 0)
-	return 0;
+    if ((name = xtermSpecialFont(screen, flags, chrset)) != 0) {
+	CgsEnum cgsId = WhichCgsId(flags);
+	Boolean found = False;
 
-    n = xterm_Double_index(chrset, flags);
-    data = &(screen->double_fonts[n]);
-    if (data->fn != 0) {
-	if (!strcmp(data->fn, name)) {
-	    if (data->fs != 0) {
-		XCopyGC(screen->display, old_gc, (unsigned long) (~GCFont), data->gc);
-		return data->gc;
+	n = xterm_Double_index(xw, chrset, flags);
+	data = &(screen->double_fonts[n]);
+	if (data->fn != 0) {
+	    if (!strcmp(data->fn, name)
+		&& data->fs != 0) {
+		found = True;
+	    } else {
+		discard_font(xw, data);
+		data->chrset = chrset;
+		data->flags = flags & BOLD;
+		data->fn = name;
 	    }
+	} else {
+	    data->fn = name;
 	}
-	discard_font(screen, data);
-	data->chrset = chrset;
-	data->flags = flags & BOLD;
-    }
-    data->fn = name;
 
-    TRACE(("xterm_DoubleGC %s %d: %s\n", flags & BOLD ? "BOLD" : "NORM", n, name));
+	if (!found) {
+	    TRACE(("xterm_DoubleGC %s %d: %s\n",
+		   flags & BOLD ? "BOLD" : "NORM", n, name));
 
-    if ((data->fs = xtermOpenFont(screen, name)) == 0) {
-	/* Retry with * in resolutions */
-	char *nname = xtermSpecialFont(screen, flags | NORESOLUTION, chrset);
+	    if ((data->fs = xtermOpenFont(xw, name)) == 0) {
+		/* Retry with * in resolutions */
+		char *nname = xtermSpecialFont(screen, flags | NORESOLUTION, chrset);
 
-	if (!nname)
-	    return 0;
-	if ((data->fs = xtermOpenFont(screen, nname)) == 0) {
-	    XtFree(nname);
-	    return 0;
+		if (nname != 0) {
+		    if ((data->fs = xtermOpenFont(xw, nname)) == 0) {
+			XtFree(nname);
+		    } else {
+			XtFree(name);
+			data->fn = nname;
+			found = True;
+		    }
+		}
+	    } else {
+		found = True;
+	    }
+
+	    TRACE(("-> %s\n", found ? "OK" : "FAIL"));
 	}
-	XtFree(name);
-	data->fn = nname;
+
+	if (found) {
+	    setCgsCSet(xw, cgsWin, cgsId, chrset);
+	    setCgsFont(xw, cgsWin, cgsId, data->fs);
+	    setCgsFore(xw, cgsWin, cgsId, getCgsFore(xw, cgsWin, old_gc));
+	    setCgsBack(xw, cgsWin, cgsId, getCgsBack(xw, cgsWin, old_gc));
+	    result = getCgsGC(xw, cgsWin, cgsId);
+	}
     }
-
-    TRACE(("-> OK\n"));
-
-    gcv.graphics_exposures = TRUE;	/* default */
-    gcv.font = data->fs->fid;
-    gcv.foreground = T_COLOR(screen, TEXT_FG);
-    gcv.background = T_COLOR(screen, TEXT_BG);
-
-    data->gc = XCreateGC(screen->display, VWindow(screen), mask, &gcv);
-    XCopyGC(screen->display, old_gc, (unsigned long) (~GCFont), data->gc);
-    return data->gc;
+    return result;
 }
 #endif

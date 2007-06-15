@@ -1,9 +1,9 @@
-/* $XTermId: data.c,v 1.79 2006/02/13 01:14:58 tom Exp $ */
+/* $XTermId: data.c,v 1.84 2007/01/18 23:38:49 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.c,v 3.34 2006/02/13 01:14:58 dickey Exp $ */
 
 /*
- * Copyright 2002-2005,2006 by Thomas E. Dickey
+ * Copyright 2002-2006,2007 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -60,7 +60,7 @@ Widget toplevel;		/* top-most widget in xterm */
 #if OPT_TEK4014
 Char *Tpushb;
 Char *Tpushback;
-TekLink *TekRefresh;
+TekLink *tekRefreshList;
 TekWidget tekWidget;
 Widget tekshellwidget;
 int T_lastx = -1;
@@ -73,12 +73,10 @@ char *ProgramName;
 
 Arg ourTopLevelShellArgs[] =
 {
-    {XtNallowShellResize, (XtArgVal) TRUE},
-    {XtNinput, (XtArgVal) TRUE},
+    {XtNallowShellResize, (XtArgVal) True},
+    {XtNinput, (XtArgVal) True},
 };
 Cardinal number_ourTopLevelShellArgs = 2;
-
-Bool waiting_for_initial_map;
 
 Atom wm_delete_window;		/* for ICCCM delete window */
 
@@ -97,19 +95,7 @@ XtermWidget term;		/* master data structure for client */
 char *xterm_name;		/* argv[0] */
 
 int hold_screen;
-SIG_ATOMIC_T need_cleanup = FALSE;
-
-#if OPT_ZICONBEEP
-int zIconBeep;			/* non-zero means beep; see charproc.c for details -IAN! */
-Boolean zIconBeep_flagged;	/* True if the icon name has been changed */
-#endif /* OPT_ZICONBEEP */
-
-#if OPT_SAME_NAME
-Boolean sameName;		/* Don't change the title or icon name if it
-				   is the same.  This prevents flicker on the
-				   screen at the cost of an extra request to
-				   the server */
-#endif
+SIG_ATOMIC_T need_cleanup = False;
 
 int am_slave = -1;		/* set to file-descriptor if we're a slave process */
 int max_plus1;
@@ -118,6 +104,3 @@ PtySelect X_mask;
 PtySelect pty_mask;
 char *ptydev;
 char *ttydev;
-
-Boolean waitingForTrackInfo = False;
-EventMode eventMode = NORMAL;

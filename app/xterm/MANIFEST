@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-216
+MANIFEST for xterm-225, version xterm-225
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -25,6 +25,7 @@ XTerm-col.ad                    color resource definitions for XTerm class
 XTerm.ad                        resource definitions for XTerm class
 aclocal.m4                      configure script: custom macros
 button.c                        mouse button and selection processing
+cachedGCs.c                     maintain cache of GC's
 charclass.c                     compact character-class module
 charclass.h                     interface of charclass.c
 charproc.c                      VT100 parser functions
@@ -67,6 +68,7 @@ ptydata.c                       functions to manipulate data read from pty
 ptyx.h                          structure-definitions for 'xterm'
 resize.c                        program to compute/modify xterm's window size
 resize.man                      manual page for 'resize'
+run-tic.sh                      run tic, filtering out harmless messages
 screen.c                        VT100 screen update functions
 scrollbar.c                     VT100 scrollbar support functions
 sinstall.sh                     install setuid if existing program was
@@ -92,6 +94,8 @@ xterm.log.html                  changelog for xterm
 xterm.man                       manual page for 'xterm'
 xterm_axp.opt                   linker options file for VMS port of 'xterm'
 xterm_io.h                      split-out definitions of termio/termios/sgtty and winsize from main.c, os2main.c, screen.c and resize.c
+xtermcap.c                      termcap-related functions.
+xtermcap.h                      interface of xtermcap.c
 xtermcfg.hin                    configure script: template for xtermcfg.h
 xutf8.c                         JC's cleanup of UTF8
 xutf8.h                         JC's cleanup of UTF8
@@ -120,6 +124,7 @@ vttests/8colors.sh              test-script to illustrate 8-colors
 vttests/acolors.sh              demonstrate changing the ANSI colors
 vttests/doublechars.sh          test script to demonstrate doublesize chars
 vttests/dynamic.sh              script to illustrate the dynamic colors control sequence
+vttests/dynamic2.sh             complete example of dynamic colors
 vttests/fonts.sh                script to demonstrate font-switching sequences
 vttests/paste64.pl              script to test base64-selection option
 vttests/resize.pl               translated resize.sh to perl since it is easy to test, and I needed
