@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.522 2006/08/03 22:20:15 tom Exp $ */
+/* $XTermId: main.c,v 1.557 2007/03/24 15:26:47 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -15,7 +15,7 @@
 
 /***********************************************************
 
-Copyright 2002-2005,2006 by Thomas E. Dickey
+Copyright 2002-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -120,6 +120,7 @@ SOFTWARE.
 #include <menu.h>
 #include <main.h>
 #include <xstrings.h>
+#include <xtermcap.h>
 #include <xterm_io.h>
 
 #if OPT_WIDE_CHARS
@@ -269,7 +270,8 @@ static Bool IsPts = False;
 #else
 #define USE_SYSV_PGRP
 extern __inline__
-ttyslot()
+int
+ttyslot(void)
 {
     return 1;			/* yuk */
 }
@@ -443,19 +445,9 @@ extern char *ttyname();
 extern char *ptsname(int);
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-    extern int tgetent(char *ptr, char *name);
-    extern char *tgetstr(char *name, char **ptr);
-
-#ifdef __cplusplus
-}
-#endif
 #ifndef VMS
 static SIGNAL_T reapchild(int n);
-static int spawn(void);
+static int spawnXTerm(XtermWidget /* xw */ );
 static void remove_termcap_entry(char *buf, char *str);
 #ifdef USE_PTY_SEARCH
 static int pty_search(int *pty);
@@ -463,8 +455,7 @@ static int pty_search(int *pty);
 #endif /* ! VMS */
 
 static int get_pty(int *pty, char *from);
-static void get_terminal(void);
-static void resize(TScreen * s, char *oldtc, char *newtc);
+static void resize_termcap(XtermWidget xw, char *newtc);
 static void set_owner(char *device, uid_t uid, gid_t gid, mode_t mode);
 
 static Bool added_utmp_entry = False;
@@ -491,7 +482,7 @@ static char *explicit_shname = NULL;
 ** Ordinarily it should be okay to omit the assignment in the following
 ** statement. Apparently the c89 compiler on AIX 4.1.3 has a bug, or does
 ** it? Without the assignment though the compiler will init command_to_exec
-** to 0xffffffff instead of NULL; and subsequent usage, e.g. in spawn() to
+** to 0xffffffff instead of NULL; and subsequent usage, e.g. in spawnXTerm() to
 ** SEGV.
 */
 static char **command_to_exec = NULL;
@@ -758,6 +749,7 @@ static XtResource application_resources[] =
     Bres("messages", "Messages", messages, True),
     Ires("minBufSize", "MinBufSize", minBufSize, 4096),
     Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
+    Sres("menuLocale", "MenuLocale", menuLocale, ""),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
 #if OPT_SUNPC_KBD
     Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
@@ -770,6 +762,9 @@ static XtResource application_resources[] =
 #endif
 #if OPT_SUN_FUNC_KEYS
     Bres("sunFunctionKeys", "SunFunctionKeys", sunFunctionKeys, False),
+#endif
+#if OPT_TCAP_FKEYS
+    Bres("tcapFunctionKeys", "TcapFunctionKeys", termcapKeys, False),
 #endif
 #if OPT_INITIAL_ERASE
 #ifndef __OpenBSD__
@@ -870,6 +865,8 @@ static XrmOptionDescRec optionDescList[] = {
 #endif
 #if OPT_HIGHLIGHT_COLOR
 {"-hc",		"*highlightColor", XrmoptionSepArg,	(caddr_t) NULL},
+{"-selfg",	"*highlightTextColor", XrmoptionSepArg,	(caddr_t) NULL},
+{"-selbg",	"*highlightColor", XrmoptionSepArg,	(caddr_t) NULL},
 #endif
 #if OPT_HP_FUNC_KEYS
 {"-hf",		"*hpFunctionKeys",XrmoptionNoArg,	(caddr_t) "on"},
@@ -1052,7 +1049,8 @@ static OptionHelp xtermOptions[] = {
 { "-/+cu",                 "turn on/off curses emulation" },
 { "-/+dc",                 "turn off/on dynamic color selection" },
 #if OPT_HIGHLIGHT_COLOR
-{ "-hc color",             "selection background color" },
+{ "-selbg color",          "selection background color" },
+{ "-selfg color",          "selection foreground color" },
 #endif
 #if OPT_HP_FUNC_KEYS
 { "-/+hf",                 "turn on/off HP Function Key escape codes" },
@@ -1179,7 +1177,7 @@ decode_keyvalue(char **ptr, int termcap)
     if (*string == '^') {
 	switch (*++string) {
 	case '?':
-	    value = A2E(DEL);
+	    value = A2E(ANSI_DEL);
 	    break;
 	case '-':
 	    if (!termcap) {
@@ -1221,36 +1219,6 @@ decode_keyvalue(char **ptr, int termcap)
     }
     *ptr = string;
     return value;
-}
-
-/*
- * If we're linked to terminfo, tgetent() will return an empty buffer.  We
- * cannot use that to adjust the $TERMCAP variable.
- */
-static Bool
-get_termcap(char *name, char *buffer, char *resized)
-{
-    TScreen *screen = &term->screen;
-
-    *buffer = 0;		/* initialize, in case we're using terminfo's tgetent */
-
-    if (name != 0) {
-	if (tgetent(buffer, name) == 1) {
-	    TRACE(("get_termcap(%s) succeeded (%s)\n", name,
-		   (*buffer
-		    ? "ok:termcap, we can update $TERMCAP"
-		    : "assuming this is terminfo")));
-	    if (*buffer) {
-		if (!TEK4014_ACTIVE(screen)) {
-		    resize(screen, buffer, resized);
-		}
-	    }
-	    return True;
-	} else {
-	    *buffer = 0;	/* just in case */
-	}
-    }
-    return False;
 }
 
 static int
@@ -1363,7 +1331,7 @@ DeleteWindow(Widget w,
 {
 #if OPT_TEK4014
     if (w == toplevel) {
-	if (term->screen.Tshow)
+	if (TEK4014_SHOWN(term))
 	    hide_vt_window();
 	else
 	    do_hangup(w, (XtPointer) 0, (XtPointer) 0);
@@ -1588,32 +1556,38 @@ posix_signal(int signo, sigfunc func)
 static void
 disableSetUid(void)
 {
-    TRACE(("disableSetUid\n"));
+    TRACE(("process %d disableSetUid\n", (int) getpid()));
     if (setuid(save_ruid) == -1) {
 	fprintf(stderr, "%s: unable to reset uid\n", ProgramName);
 	exit(1);
     }
     TRACE_IDS;
 }
-#endif
+#else
+#define disableSetUid()		/* nothing */
+#endif /* DISABLE_SETUID */
 
-#if defined(USE_UTMP_SETGID)
+#if defined(DISABLE_SETGID) || defined(USE_UTMP_SETGID)
 static void
 disableSetGid(void)
 {
-    TRACE(("disableSetGid\n"));
+    TRACE(("process %d disableSetGid\n", (int) getpid()));
     if (setegid(save_rgid) == -1) {
 	fprintf(stderr, "%s: unable to reset effective gid\n", ProgramName);
 	exit(1);
     }
     TRACE_IDS;
 }
-#endif /* USE_UTMP_SETGID */
+#else
+#define disableSetGid()		/* nothing */
+#endif /* DISABLE_SETGID */
 
-#if defined(HAVE_POSIX_SAVED_IDS) && !defined(USE_UTEMPTER)
+#if defined(HAVE_POSIX_SAVED_IDS)
+#if (!defined(USE_UTEMPTER) || !defined(DISABLE_SETGID))
 static void
 setEffectiveGroup(gid_t group)
 {
+    TRACE(("process %d setEffectiveGroup(%d)\n", (int) getpid(), (int) group));
     if (setegid(group) == -1) {
 #ifdef __MVS__
 	if (!(errno == EMVSERR))	/* could happen if _BPX_SHAREAS=REUSE */
@@ -1625,11 +1599,13 @@ setEffectiveGroup(gid_t group)
     }
     TRACE_IDS;
 }
+#endif
 
-#if !defined(USE_UTMP_SETGID)
+#if !defined(USE_UTMP_SETGID) && (!defined(USE_UTEMPTER) || !defined(DISABLE_SETUID))
 static void
 setEffectiveUser(uid_t user)
 {
+    TRACE(("process %d setEffectiveUser(%d)\n", (int) getpid(), (int) user));
     if (seteuid(user) == -1) {
 #ifdef __MVS__
 	if (!(errno == EMVSERR))
@@ -1641,7 +1617,7 @@ setEffectiveUser(uid_t user)
     }
     TRACE_IDS;
 }
-#endif /* !USE_UTMP_SETGID */
+#endif
 #endif /* HAVE_POSIX_SAVED_IDS */
 
 int
@@ -1653,6 +1629,9 @@ main(int argc, char *argv[]ENVP_ARG)
     int mode;
     char *my_class = DEFCLASS;
     Window winToEmbedInto = None;
+#if OPT_COLOR_RES
+    Bool reversed = False;
+#endif
 
     ProgramName = argv[0];
 
@@ -1664,8 +1643,13 @@ main(int argc, char *argv[]ENVP_ARG)
     save_ruid = getuid();
     save_rgid = getgid();
 
-#ifdef DISABLE_SETUID
+#if defined(DISABLE_SETUID) || defined(DISABLE_SETGID)
+#if defined(DISABLE_SETUID)
     disableSetUid();
+#endif
+#if defined(DISABLE_SETGID)
+    disableSetGid();
+#endif
     TRACE_IDS;
 #endif
 
@@ -1718,6 +1702,14 @@ main(int argc, char *argv[]ENVP_ARG)
 		}
 		unique = 3;
 	    } else {
+#if OPT_COLOR_RES
+		if (abbrev(argv[n], "-reverse", 2)
+		    || !strcmp("-rv", argv[n])) {
+		    reversed = True;
+		} else if (!strcmp("+rv", argv[n])) {
+		    reversed = False;
+		}
+#endif
 		quit = False;
 		unique = 3;
 	    }
@@ -1829,7 +1821,7 @@ main(int argc, char *argv[]ENVP_ARG)
     d_tio.c_cflag &= ~(HUPCL | PARENB);
 #endif
     d_tio.c_cc[VINTR] = CONTROL('C');	/* '^C' */
-    d_tio.c_cc[VERASE] = DEL;	/* DEL  */
+    d_tio.c_cc[VERASE] = ANSI_DEL;	/* DEL  */
     d_tio.c_cc[VKILL] = CONTROL('U');	/* '^U' */
     d_tio.c_cc[VQUIT] = CQUIT;	/* '^\' */
     d_tio.c_cc[VEOF] = CEOF;	/* '^D' */
@@ -1993,14 +1985,18 @@ main(int argc, char *argv[]ENVP_ARG)
 				  XtNumber(application_resources), NULL, 0);
 	TRACE_XRES();
 
-#if defined(HAVE_POSIX_SAVED_IDS) && !defined(USE_UTMP_SETGID) && !defined(DISABLE_SETUID)
+#if defined(HAVE_POSIX_SAVED_IDS) && !defined(USE_UTMP_SETGID)
+#if !defined(DISABLE_SETUID) || !defined(DISABLE_SETGID)
+#if !defined(DISABLE_SETUID)
 	setEffectiveUser(save_euid);
+#endif
+#if !defined(DISABLE_SETGID)
 	setEffectiveGroup(save_egid);
+#endif
 	TRACE_IDS;
 #endif
+#endif
     }
-
-    waiting_for_initial_map = resource.wait_for_map;
 
     /*
      * ICCCM delete_window.
@@ -2020,17 +2016,12 @@ main(int argc, char *argv[]ENVP_ARG)
 	}
     }
 #if OPT_ZICONBEEP
-    zIconBeep = resource.zIconBeep;
-    zIconBeep_flagged = False;
-    if (zIconBeep > 100 || zIconBeep < -100) {
-	zIconBeep = 0;		/* was 100, but I prefer to defaulting off. */
+    if (resource.zIconBeep > 100 || resource.zIconBeep < -100) {
+	resource.zIconBeep = 0;	/* was 100, but I prefer to defaulting off. */
 	fprintf(stderr,
 		"a number between -100 and 100 is required for zIconBeep.  0 used by default\n");
     }
 #endif /* OPT_ZICONBEEP */
-#if OPT_SAME_NAME
-    sameName = resource.sameName;
-#endif
     hold_screen = resource.hold_screen ? 1 : 0;
     xterm_name = resource.xterm_name;
     if (strcmp(xterm_name, "-") == 0)
@@ -2159,7 +2150,7 @@ main(int argc, char *argv[]ENVP_ARG)
 						 (XtPointer) 0);
     decode_keyboard_type(term, &resource);
 
-    screen = &term->screen;
+    screen = TScreenOf(term);
     screen->inhibit = 0;
 
 #ifdef ALLOWLOGGING
@@ -2178,9 +2169,9 @@ main(int argc, char *argv[]ENVP_ARG)
      */
 #if OPT_TEK4014
     if (screen->inhibit & I_TEK)
-	screen->TekEmu = False;
+	TEK4014_ACTIVE(term) = False;
 
-    if (screen->TekEmu && !TekInit())
+    if (TEK4014_ACTIVE(term) && !TekInit())
 	SysError(ERROR_INIT);
 #endif
 
@@ -2277,10 +2268,7 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 #endif /* DEBUG */
 
-    /* open a terminal for client */
-    get_terminal();
-
-    spawn();
+    spawnXTerm(term);
 
 #ifndef VMS
     /* Child process is out there, let's catch its termination */
@@ -2296,7 +2284,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	char buf[80];
 
 	buf[0] = '\0';
-	sprintf(buf, "%lx\n", XtWindow(SHELL_OF(CURRENT_EMU(screen))));
+	sprintf(buf, "%lx\n", XtWindow(SHELL_OF(CURRENT_EMU())));
 	write(screen->respond, buf, strlen(buf));
     }
 #ifdef AIXV3
@@ -2342,6 +2330,7 @@ main(int argc, char *argv[]ENVP_ARG)
 #else
     screen->dabbrev_erase_char = d_sg.sg_erase;
 #endif
+    TRACE(("set dabbrev erase_char %#x\n", screen->dabbrev_erase_char));
 #endif
 
     FD_ZERO(&pty_mask);
@@ -2387,7 +2376,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	   NonNull(term->screen.Tcolors[TEXT_FG].resource),
 	   NonNull(term->screen.Tcolors[TEXT_BG].resource)));
 
-    if ((term->misc.re_verse)
+    if ((reversed && term->misc.re_verse0)
 	&& ((term->screen.Tcolors[TEXT_FG].resource
 	     && (x_strcasecmp(term->screen.Tcolors[TEXT_FG].resource,
 			      XtDefaultForeground) != 0)
@@ -2402,7 +2391,7 @@ main(int argc, char *argv[]ENVP_ARG)
 
     for (;;) {
 #if OPT_TEK4014
-	if (screen->TekEmu)
+	if (TEK4014_ACTIVE(term))
 	    TekRun();
 	else
 #endif
@@ -2464,8 +2453,8 @@ get_pty(int *pty, char *from GCC_UNUSED)
 
        Since we can open either a /dev/ttyp? or a /dev/pts??? device,
        the flag "IsPts" is set here so that we know which type of
-       device we're dealing with in routine spawn().  That's the reason
-       for the "if (IsPts)" statement in spawn(); we have two different
+       device we're dealing with in routine spawnXTerm().  That's the reason
+       for the "if (IsPts)" statement in spawnXTerm(); we have two different
        device types which need to be handled differently.
      */
     result = pty_search(pty);
@@ -2692,19 +2681,6 @@ pty_search(int *pty)
 #endif /* USE_PTY_SEARCH */
 
 /*
- * sets up X and initializes the terminal structure except for term.buf.fildes.
- */
-static void
-get_terminal(void)
-{
-    TScreen *screen = &term->screen;
-
-    screen->arrow = make_colored_cursor(XC_left_ptr,
-					T_COLOR(screen, MOUSE_FG),
-					T_COLOR(screen, MOUSE_BG));
-}
-
-/*
  * The only difference in /etc/termcap between 4014 and 4015 is that
  * the latter has support for switching character sets.  We support the
  * 4015 protocol, but ignore the character switches.  Therefore, we
@@ -2812,7 +2788,7 @@ void
 first_map_occurred(void)
 {
     handshake_t handshake;
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     handshake.status = PTY_EXEC;
     handshake.rows = screen->max_row;
@@ -2820,7 +2796,7 @@ first_map_occurred(void)
     write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
     close(cp_pipe[0]);
     close(pc_pipe[1]);
-    waiting_for_initial_map = False;
+    resource.wait_for_map = False;
 }
 #else
 /*
@@ -2935,18 +2911,21 @@ find_utmp(struct UTMP_STR *tofind)
  *  If slave, the pty named in passedPty is already open for use
  */
 static int
-spawn(void)
+spawnXTerm(XtermWidget xw)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(xw);
 #if OPT_PTY_HANDSHAKE
     handshake_t handshake;
     int done;
 #endif
 #if OPT_INITIAL_ERASE
     int initial_erase = VAL_INITIAL_ERASE;
+    Bool setInitialErase;
 #endif
     int rc = 0;
     int ttyfd = -1;
+    Bool ok_termcap;
+    char *newtc;
 
 #ifdef TERMIO_STRUCT
     TERMIO_STRUCT tio;
@@ -2972,8 +2951,6 @@ spawn(void)
 #endif /* sony */
 #endif /* TERMIO_STRUCT */
 
-    char termcap[TERMCAP_SIZE];
-    char newtc[TERMCAP_SIZE];
     char *ptr, *shname, *shname_minus;
     int i, no_dev_tty = False;
     char **envnew;		/* new environment */
@@ -3009,9 +2986,6 @@ spawn(void)
     screen->uid = save_ruid;
     screen->gid = save_rgid;
 
-    termcap[0] = '\0';
-    newtc[0] = '\0';
-
 #ifdef SIGTTOU
     /* so that TIOCSWINSZ || TIOCSIZE doesn't block */
     signal(SIGTTOU, SIG_IGN);
@@ -3045,6 +3019,7 @@ spawn(void)
 	    ttyfd = -1;
 	    errno = ENXIO;
 	}
+	pw = NULL;
 #if OPT_INITIAL_ERASE
 	initial_erase = VAL_INITIAL_ERASE;
 #endif
@@ -3172,12 +3147,12 @@ spawn(void)
     }
 
     /* avoid double MapWindow requests */
-    XtSetMappedWhenManaged(SHELL_OF(CURRENT_EMU(screen)), False);
+    XtSetMappedWhenManaged(SHELL_OF(CURRENT_EMU()), False);
 
     wm_delete_window = XInternAtom(XtDisplay(toplevel), "WM_DELETE_WINDOW",
 				   False);
 
-    if (!TEK4014_ACTIVE(screen))
+    if (!TEK4014_ACTIVE(xw))
 	VTInit();		/* realize now so know window size for tty driver */
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
     if (Console) {
@@ -3188,20 +3163,20 @@ spawn(void)
 	XmuGetHostname(mit_console_name + MIT_CONSOLE_LEN, 255);
 	mit_console = XInternAtom(screen->display, mit_console_name, False);
 	/* the user told us to be the console, so we can use CurrentTime */
-	XtOwnSelection(SHELL_OF(CURRENT_EMU(screen)),
+	XtOwnSelection(SHELL_OF(CURRENT_EMU()),
 		       mit_console, CurrentTime,
 		       ConvertConsoleSelection, NULL, NULL);
     }
 #endif
 #if OPT_TEK4014
-    if (screen->TekEmu) {
+    if (TEK4014_ACTIVE(xw)) {
 	envnew = tekterm;
-	ptr = newtc;
+	newtc = TekScreenOf(tekWidget)->tcapbuf;
     } else
 #endif
     {
 	envnew = vtterm;
-	ptr = termcap;
+	newtc = screen->tcapbuf;
     }
 
     /*
@@ -3210,18 +3185,24 @@ spawn(void)
      * the program to proceed (but not to set $TERMCAP) if the termcap
      * entry is not found.
      */
-    if (!get_termcap(TermName = resource.term_name, ptr, newtc)) {
+    ok_termcap = True;
+    if (!get_termcap(TermName = resource.term_name, newtc)) {
 	char *last = NULL;
 	TermName = *envnew;
+	ok_termcap = False;
 	while (*envnew != NULL) {
 	    if ((last == NULL || strcmp(last, *envnew))
-		&& get_termcap(*envnew, ptr, newtc)) {
+		&& get_termcap(*envnew, newtc)) {
 		TermName = *envnew;
+		ok_termcap = True;
 		break;
 	    }
 	    last = *envnew;
 	    envnew++;
 	}
+    }
+    if (ok_termcap) {
+	resize_termcap(xw, newtc);
     }
 
     /*
@@ -3231,12 +3212,19 @@ spawn(void)
 #if OPT_INITIAL_ERASE
     TRACE(("resource ptyInitialErase is %sset\n",
 	   resource.ptyInitialErase ? "" : "not "));
-    if (!resource.ptyInitialErase) {
+    setInitialErase = False;
+    if (override_tty_modes && ttymodelist[XTTYMODE_erase].set) {
+	initial_erase = ttymodelist[XTTYMODE_erase].value;
+	setInitialErase = True;
+    } else if (resource.ptyInitialErase) {
+	;
+    } else if (ok_termcap) {
 	char temp[1024], *p = temp;
 	char *s = tgetstr(TERMCAP_ERASE, &p);
 	TRACE(("...extracting initial_erase value from termcap\n"));
 	if (s != 0) {
 	    initial_erase = decode_keyvalue(&s, True);
+	    setInitialErase = True;
 	}
     }
     TRACE(("...initial_erase:%d\n", initial_erase));
@@ -3244,28 +3232,28 @@ spawn(void)
     TRACE(("resource backarrowKeyIsErase is %sset\n",
 	   resource.backarrow_is_erase ? "" : "not "));
     if (resource.backarrow_is_erase) {	/* see input.c */
-	if (initial_erase == DEL) {
-	    term->keyboard.flags &= ~MODE_DECBKM;
+	if (initial_erase == ANSI_DEL) {
+	    xw->keyboard.flags &= ~MODE_DECBKM;
 	} else {
-	    term->keyboard.flags |= MODE_DECBKM;
-	    term->keyboard.reset_DECBKM = 1;
+	    xw->keyboard.flags |= MODE_DECBKM;
+	    xw->keyboard.reset_DECBKM = 1;
 	}
 	TRACE(("...sets DECBKM %s\n",
-	       (term->keyboard.flags & MODE_DECBKM) ? "on" : "off"));
+	       (xw->keyboard.flags & MODE_DECBKM) ? "on" : "off"));
     } else {
-	term->keyboard.reset_DECBKM = 2;
+	xw->keyboard.reset_DECBKM = 2;
     }
 #endif /* OPT_INITIAL_ERASE */
 
 #ifdef TTYSIZE_STRUCT
     /* tell tty how big window is */
 #if OPT_TEK4014
-    if (TEK4014_ACTIVE(screen)) {
+    if (TEK4014_ACTIVE(xw)) {
 	TTYSIZE_ROWS(ts) = 38;
 	TTYSIZE_COLS(ts) = 81;
 #if defined(USE_STRUCT_WINSIZE)
-	ts.ws_xpixel = TFullWidth(screen);
-	ts.ws_ypixel = TFullHeight(screen);
+	ts.ws_xpixel = TFullWidth(&(tekWidget->screen));
+	ts.ws_ypixel = TFullHeight(&(tekWidget->screen));
 #endif
     } else
 #endif
@@ -3306,6 +3294,10 @@ spawn(void)
 	    SysError(ERROR_FORK);
 
 	if (screen->pid == 0) {
+#ifdef USE_USG_PTYS
+	    int ptyfd;
+	    char *pty_name;
+#endif
 	    /*
 	     * now in child process
 	     */
@@ -3318,10 +3310,10 @@ spawn(void)
 
 #ifdef USE_USG_PTYS
 #ifdef USE_ISPTS_FLAG
-	    if (IsPts) {	/* SYSV386 supports both, which did we open? */
+		if (IsPts) {	/* SYSV386 supports both, which did we open? */
 #endif
-		int ptyfd = 0;
-		char *pty_name = 0;
+		ptyfd = 0;
+		pty_name = 0;
 
 		setpgrp();
 		grantpt(screen->respond);
@@ -3358,12 +3350,12 @@ spawn(void)
 #ifdef TTYSIZE_STRUCT
 		/* tell tty how big window is */
 #if OPT_TEK4014
-		if (TEK4014_ACTIVE(screen)) {
+		if (TEK4014_ACTIVE(xw)) {
 		    TTYSIZE_ROWS(ts) = 24;
 		    TTYSIZE_COLS(ts) = 80;
 #ifdef USE_STRUCT_WINSIZE
-		    ts.ws_xpixel = TFullWidth(screen);
-		    ts.ws_ypixel = TFullHeight(screen);
+		    ts.ws_xpixel = TFullWidth(&(tekWidget->screen));
+		    ts.ws_ypixel = TFullHeight(&(tekWidget->screen));
 #endif
 		} else
 #endif /* OPT_TEK4014 */
@@ -3454,7 +3446,7 @@ spawn(void)
 			    /* make /dev/tty work */
 			    ioctl(ttyfd, TCSETCTTY, 0);
 #endif
-#if defined(__GNU__) && defined(TIOCSCTTY)
+#if ((defined(__GLIBC__) && defined(__FreeBSD_kernel__)) || defined(__GNU__)) && defined(TIOCSCTTY)
 			    /* make /dev/tty work */
 			    ioctl(ttyfd, TIOCSCTTY, 0);
 #endif
@@ -3821,23 +3813,18 @@ spawn(void)
 	    signal(SIGTERM, SIG_DFL);
 
 	    /*
-	     * If we're not asked to make the parent process set the
-	     * terminal's erase mode, and if we had no ttyModes resource,
-	     * then set the terminal's erase mode from our best guess.
+	     * If we're not asked to let the parent process set the terminal's
+	     * erase mode, or if we had the ttyModes erase resource, then set
+	     * the terminal's erase mode from our best guess.
 	     */
 #if OPT_INITIAL_ERASE
 	    TRACE(("check if we should set erase to %d:%s\n\tptyInitialErase:%d,\n\toveride_tty_modes:%d,\n\tXTTYMODE_erase:%d\n",
 		   initial_erase,
-		   (!resource.ptyInitialErase
-		    && !override_tty_modes
-		    && !ttymodelist[XTTYMODE_erase].set)
-		   ? "YES" : "NO",
+		   setInitialErase ? "YES" : "NO",
 		   resource.ptyInitialErase,
 		   override_tty_modes,
 		   ttymodelist[XTTYMODE_erase].set));
-	    if (!resource.ptyInitialErase
-		&& !override_tty_modes
-		&& !ttymodelist[XTTYMODE_erase].set) {
+	    if (setInitialErase) {
 #if OPT_TRACE
 		int old_erase;
 #endif
@@ -3890,7 +3877,7 @@ spawn(void)
 		*newtc = 0;
 
 	    sprintf(buf, "%lu",
-		    ((unsigned long) XtWindow(SHELL_OF(CURRENT_EMU(screen)))));
+		    ((unsigned long) XtWindow(SHELL_OF(CURRENT_EMU()))));
 	    xtermSetenv("WINDOWID=", buf);
 
 	    /* put the display into the environment of the shell */
@@ -4073,13 +4060,13 @@ spawn(void)
 	    }
 #ifdef WTMP
 #if defined(WTMPX_FILE) && (defined(SVR4) || defined(__SCO__))
-	    if (term->misc.login_shell)
+	    if (xw->misc.login_shell)
 		updwtmpx(WTMPX_FILE, &utmp);
 #elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
-	    if (term->misc.login_shell)
+	    if (xw->misc.login_shell)
 		call_updwtmp(etc_wtmp, &utmp);
 #else
-	    if (term->misc.login_shell &&
+	    if (xw->misc.login_shell &&
 		(i = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
 		write(i, (char *) &utmp, sizeof(utmp));
 		close(i);
@@ -4113,14 +4100,14 @@ spawn(void)
 		    close(i);
 		    added_utmp_entry = True;
 #if defined(WTMP)
-		    if (term->misc.login_shell &&
+		    if (xw->misc.login_shell &&
 			(i = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
 			int status;
 			status = write(i, (char *) &utmp, sizeof(utmp));
 			status = close(i);
 		    }
 #elif defined(MNX_LASTLOG)
-		    if (term->misc.login_shell &&
+		    if (xw->misc.login_shell &&
 			(i = open(_U_LASTLOG, O_WRONLY)) >= 0) {
 			lseek(i, (long) (screen->uid *
 					 sizeof(utmp)), 0);
@@ -4143,7 +4130,7 @@ spawn(void)
 #endif /* USE_SYSV_UTMP */
 
 #ifdef USE_LASTLOGX
-	    if (term->misc.login_shell) {
+	    if (xw->misc.login_shell) {
 		bzero((char *) &lastlogx, sizeof(lastlogx));
 		(void) strncpy(lastlogx.ll_line,
 			       my_pty_name(ttydev),
@@ -4155,7 +4142,7 @@ spawn(void)
 #endif
 
 #ifdef USE_LASTLOG
-	    if (term->misc.login_shell &&
+	    if (xw->misc.login_shell &&
 		(i = open(etc_lastlog, O_WRONLY)) >= 0) {
 		size_t size = sizeof(struct lastlog);
 		off_t offset = (screen->uid * size);
@@ -4221,7 +4208,7 @@ spawn(void)
 		(void) strcpy(handshake.buffer, ttydev);
 		(void) write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
 
-		if (waiting_for_initial_map) {
+		if (resource.wait_for_map) {
 		    i = read(pc_pipe[0], (char *) &handshake,
 			     sizeof(handshake));
 		    if (i != sizeof(handshake) ||
@@ -4265,11 +4252,8 @@ spawn(void)
 	    xtermSetenv("TERMINFO=", OWN_TERMINFO_DIR);
 #endif
 #else /* USE_SYSV_ENVVARS */
-	    if (!TEK4014_ACTIVE(screen) && *newtc) {
-		strcpy(termcap, newtc);
-		resize(screen, termcap, newtc);
-	    }
-	    if (term->misc.titeInhibit && !term->misc.tiXtraScroll) {
+	    resize_termcap(xw, newtc);
+	    if (xw->misc.titeInhibit && !xw->misc.tiXtraScroll) {
 		remove_termcap_entry(newtc, "ti=");
 		remove_termcap_entry(newtc, "te=");
 	    }
@@ -4370,11 +4354,11 @@ spawn(void)
 #endif /* !TERMIO_STRUCT */
 
 #ifdef USE_LOGIN_DASH_P
-	    if (term->misc.login_shell && pw && added_utmp_entry)
+	    if (xw->misc.login_shell && pw && added_utmp_entry)
 		execl(bin_login, "login", "-p", "-f", login_name, (void *) 0);
 #endif
 	    execlp(ptr,
-		   (term->misc.login_shell ? shname_minus : shname),
+		   (xw->misc.login_shell ? shname_minus : shname),
 		   (void *) 0);
 
 	    /* Exec failed. */
@@ -4457,7 +4441,7 @@ spawn(void)
 		}
 	    }
 	    /* close our sides of the pipes */
-	    if (!waiting_for_initial_map) {
+	    if (!resource.wait_for_map) {
 		close(cp_pipe[0]);
 		close(pc_pipe[1]);
 	    }
@@ -4516,12 +4500,12 @@ spawn(void)
 #endif /* USE_SYSV_SIGNALS and not SIGTSTP */
 
     return 0;
-}				/* end spawn */
+}				/* end spawnXTerm */
 
 SIGNAL_T
 Exit(int n)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
 #ifdef USE_UTEMPTER
     if (!resource.utmpInhibit && added_utmp_entry)
@@ -4677,46 +4661,52 @@ Exit(int n)
 
 /* ARGSUSED */
 static void
-resize(TScreen * screen, char *oldtc, char *newtc)
+resize_termcap(XtermWidget xw, char *newtc)
 {
 #ifndef USE_SYSV_ENVVARS
-    char *ptr1, *ptr2;
-    size_t i;
-    int li_first = 0;
-    char *temp;
+    if (!TEK4014_ACTIVE(xw) && *newtc) {
+	TScreen *screen = TScreenOf(xw);
+	char *ptr1, *ptr2;
+	size_t i;
+	int li_first = 0;
+	char *temp;
+	char oldtc[TERMCAP_SIZE];
 
-    TRACE(("resize %s\n", oldtc));
-    if ((ptr1 = x_strindex(oldtc, "co#")) == NULL) {
-	strcat(oldtc, "co#80:");
-	ptr1 = x_strindex(oldtc, "co#");
+	strcpy(oldtc, newtc);
+	TRACE(("resize %s\n", oldtc));
+	if ((ptr1 = x_strindex(oldtc, "co#")) == NULL) {
+	    strcat(oldtc, "co#80:");
+	    ptr1 = x_strindex(oldtc, "co#");
+	}
+	if ((ptr2 = x_strindex(oldtc, "li#")) == NULL) {
+	    strcat(oldtc, "li#24:");
+	    ptr2 = x_strindex(oldtc, "li#");
+	}
+	if (ptr1 > ptr2) {
+	    li_first++;
+	    temp = ptr1;
+	    ptr1 = ptr2;
+	    ptr2 = temp;
+	}
+	ptr1 += 3;
+	ptr2 += 3;
+	strncpy(newtc, oldtc, i = ptr1 - oldtc);
+	temp = newtc + i;
+	sprintf(temp, "%d", (li_first
+			     ? MaxRows(screen)
+			     : MaxCols(screen)));
+	temp += strlen(temp);
+	ptr1 = strchr(ptr1, ':');
+	strncpy(temp, ptr1, i = ptr2 - ptr1);
+	temp += i;
+	sprintf(temp, "%d", (li_first
+			     ? MaxCols(screen)
+			     : MaxRows(screen)));
+	ptr2 = strchr(ptr2, ':');
+	strcat(temp, ptr2);
+	TRACE(("   ==> %s\n", newtc));
+	TRACE(("   new size %dx%d\n", MaxRows(screen), MaxCols(screen)));
     }
-    if ((ptr2 = x_strindex(oldtc, "li#")) == NULL) {
-	strcat(oldtc, "li#24:");
-	ptr2 = x_strindex(oldtc, "li#");
-    }
-    if (ptr1 > ptr2) {
-	li_first++;
-	temp = ptr1;
-	ptr1 = ptr2;
-	ptr2 = temp;
-    }
-    ptr1 += 3;
-    ptr2 += 3;
-    strncpy(newtc, oldtc, i = ptr1 - oldtc);
-    temp = newtc + i;
-    sprintf(temp, "%d", (li_first
-			 ? MaxRows(screen)
-			 : MaxCols(screen)));
-    temp += strlen(temp);
-    ptr1 = strchr(ptr1, ':');
-    strncpy(temp, ptr1, i = ptr2 - ptr1);
-    temp += i;
-    sprintf(temp, "%d", (li_first
-			 ? MaxCols(screen)
-			 : MaxRows(screen)));
-    ptr2 = strchr(ptr2, ':');
-    strcat(temp, ptr2);
-    TRACE(("   ==> %s\n", newtc));
 #endif /* USE_SYSV_ENVVARS */
 }
 
@@ -4775,7 +4765,7 @@ reapchild(int n GCC_UNUSED)
 		fputs("Exiting\n", stderr);
 #endif
 	    if (!hold_screen)
-		need_cleanup = TRUE;
+		need_cleanup = True;
 	}
     } while ((pid = nonblocking_wait()) > 0);
 

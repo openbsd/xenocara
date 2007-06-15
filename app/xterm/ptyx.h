@@ -1,9 +1,9 @@
-/* $XTermId: ptyx.h,v 1.439 2006/07/23 16:39:41 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.484 2007/03/20 23:56:09 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
 /*
- * Copyright 1999-2005,2006 by Thomas E. Dickey
+ * Copyright 1999-2006,2007 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -135,7 +135,7 @@
 #define USE_PTY_DEVICE 1
 #define USE_PTY_SEARCH 1
 
-#if defined(__osf__) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1)) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#if defined(__osf__) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1)) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 #undef USE_PTY_DEVICE
 #undef USE_PTY_SEARCH
 #define USE_PTS_DEVICE 1
@@ -264,7 +264,7 @@
  * mouse events into the proper routines. */
 
 typedef enum {
-    NORMAL
+    NORMAL = 0
     , LEFTEXTENSION
     , RIGHTEXTENSION
 } EventMode;
@@ -294,32 +294,23 @@ typedef struct {
 /*
  * ANSI emulation, special character codes
  */
-#define INQ	0x05
-#define BEL	0x07
-#define	FF	0x0C			/* C0, C1 control names		*/
-#define	LS1	0x0E
-#define	LS0	0x0F
-#define	NAK	0x15
-#define	CAN	0x18
-#define	SUB	0x1A
-#define	ESC	0x1B
-#define XPOUND	0x1E			/* internal mapping for '#'	*/
-#define US	0x1F
-#define	DEL	0x7F
-#define	RI	0x8D
-#define	SS2	0x8E
-#define	SS3	0x8F
-#define	DCS	0x90
-#define	SPA	0x96
-#define	EPA	0x97
-#define	SOS	0x98
-#define	OLDID	0x9A			/* ESC Z			*/
-#define	CSI	0x9B
-#define	ST	0x9C
-#define	OSC	0x9D
-#define	PM	0x9E
-#define	APC	0x9F
-#define	RDEL	0xFF
+#define ANSI_BEL	0x07
+#define	ANSI_FF		0x0C		/* C0, C1 control names		*/
+#define	ANSI_NAK	0x15
+#define	ANSI_CAN	0x18
+#define	ANSI_ESC	0x1B
+#define	ANSI_SPA	0x20
+#define XTERM_POUND	0x1E		/* internal mapping for '#'	*/
+#define	ANSI_DEL	0x7F
+#define	ANSI_SS2	0x8E
+#define	ANSI_SS3	0x8F
+#define	ANSI_DCS	0x90
+#define	ANSI_SOS	0x98
+#define	ANSI_CSI	0x9B
+#define	ANSI_ST		0x9C
+#define	ANSI_OSC	0x9D
+#define	ANSI_PM		0x9E
+#define	ANSI_APC	0x9F
 
 #define MIN_DECID  52			/* can emulate VT52 */
 #define MAX_DECID 420			/* ...through VT420 */
@@ -476,6 +467,14 @@ typedef struct {
 #endif
 #endif
 
+#ifndef OPT_EXEC_XTERM
+#define OPT_EXEC_XTERM 0 /* true if xterm can fork/exec copies of itself */
+#endif
+
+#ifndef OPT_FOCUS_EVENT
+#define OPT_FOCUS_EVENT	1 /* focus in/out events */
+#endif
+
 #ifndef OPT_HP_FUNC_KEYS
 #define OPT_HP_FUNC_KEYS 0 /* true if xterm supports HP-style function keys */
 #endif
@@ -608,6 +607,10 @@ typedef struct {
 #define OPT_SUNPC_KBD	1 /* true if xterm supports Sun/PC keyboard map */
 #endif
 
+#ifndef OPT_TCAP_FKEYS
+#define OPT_TCAP_FKEYS	0 /* true for experimental termcap function-keys */
+#endif
+
 #ifndef OPT_TCAP_QUERY
 #define OPT_TCAP_QUERY	0 /* true for experimental termcap query */
 #endif
@@ -711,22 +714,57 @@ typedef enum {
     , fMAX
 } VTFontEnum;
 
+/*
+ * Indices for cachedGCs.c (unrelated to VTFontEnum).
+ */
+typedef enum {
+    gcNorm = 0
+    , gcBold
+    , gcNormReverse
+    , gcBoldReverse
+#if OPT_BOX_CHARS
+    , gcLine
+    , gcDots
+#endif
+#if OPT_DEC_CHRSET
+    , gcCNorm
+    , gcCBold
+#endif
+#if OPT_WIDE_CHARS
+    , gcWide
+    , gcWBold
+    , gcWideReverse
+    , gcWBoldReverse
+#endif
+    , gcVTcursNormal
+    , gcVTcursFilled
+    , gcVTcursReverse
+    , gcVTcursOutline
+#if OPT_TEK4014
+    , gcTKcurs
+#endif
+    , gcMAX
+} CgsEnum;
+
+#define for_each_text_gc(n) for (n = gcNorm; n < gcVTcursNormal; ++n)
+#define for_each_curs_gc(n) for (n = gcVTcursNormal; n <= gcVTcursOutline; ++n)
+#define for_each_gc(n)      for (n = gcNorm; n < gcMAX; ++n)
+
 /* indices for the normal terminal colors in screen.Tcolors[] */
 typedef enum {
     TEXT_FG = 0			/* text foreground */
-    , TEXT_BG = 1		/* text background */
-    , TEXT_CURSOR = 2		/* text cursor */
-    , MOUSE_FG = 3		/* mouse foreground */
-    , MOUSE_BG = 4		/* mouse background */
+    , TEXT_BG			/* text background */
+    , TEXT_CURSOR		/* text cursor */
+    , MOUSE_FG			/* mouse foreground */
+    , MOUSE_BG			/* mouse background */
 #if OPT_TEK4014
-    , TEK_FG = 5		/* tektronix foreground */
-    , TEK_BG = 6		/* tektronix background */
+    , TEK_FG			/* tektronix foreground */
+    , TEK_BG			/* tektronix background */
+    , TEK_CURSOR		/* tektronix cursor */
 #endif
 #if OPT_HIGHLIGHT_COLOR
-    , HIGHLIGHT_BG = 7		/* highlight background */
-#endif
-#if OPT_TEK4014
-    , TEK_CURSOR = 8		/* tektronix cursor */
+    , HIGHLIGHT_BG		/* highlight background */
+    , HIGHLIGHT_FG		/* highlight foreground */
 #endif
     , NCOLORS			/* total number of colors */
 } TermColors;
@@ -797,7 +835,7 @@ typedef enum {
 #define COLOR_RV	(NUM_ANSI_COLORS+3)	/* REVERSE */
 #define MAXCOLORS	(NUM_ANSI_COLORS+4)
 #ifndef DFT_COLORMODE
-#define DFT_COLORMODE TRUE	/* default colorMode resource */
+#define DFT_COLORMODE True	/* default colorMode resource */
 #endif
 
 #define ReverseOrHilite(screen,flags,hilite) \
@@ -808,7 +846,7 @@ typedef enum {
 
 /* Define a fake XK code, we need it for the fake color response in
  * xtermcapKeycode(). */
-#if OPT_TCAP_QUERY
+#if OPT_TCAP_QUERY && OPT_ISO_COLORS
 # define XK_COLORS 0x0003
 #endif
 
@@ -925,13 +963,15 @@ extern int A2E(int);
 /***====================================================================***/
 
 #if OPT_TEK4014
-#define TEK4014_ACTIVE(screen) ((screen)->TekEmu)
-#define CURRENT_EMU_VAL(screen,tek,vt) (TEK4014_ACTIVE(screen) ? tek : vt)
-#define CURRENT_EMU(screen) CURRENT_EMU_VAL(screen, (Widget)tekWidget, (Widget)term)
+#define TEK4014_ACTIVE(xw)      ((xw)->misc.TekEmu)
+#define TEK4014_SHOWN(xw)       ((xw)->misc.Tshow)
+#define CURRENT_EMU_VAL(tek,vt) (TEK4014_ACTIVE(term) ? tek : vt)
+#define CURRENT_EMU()           CURRENT_EMU_VAL((Widget)tekWidget, (Widget)term)
 #else
-#define TEK4014_ACTIVE(screen) 0
-#define CURRENT_EMU_VAL(screen,tek,vt) (vt)
-#define CURRENT_EMU(screen) ((Widget)term)
+#define TEK4014_ACTIVE(screen)  0
+#define TEK4014_SHOWN(xw)       0
+#define CURRENT_EMU_VAL(tek,vt) (vt)
+#define CURRENT_EMU()           ((Widget)term)
 #endif
 
 /***====================================================================***/
@@ -1090,7 +1130,6 @@ typedef struct {
 	unsigned	chrset;
 	unsigned	flags;
 	XFontStruct *	fs;
-	GC		gc;
 	char *		fn;
 } XTermFonts;
 
@@ -1129,6 +1168,9 @@ typedef enum {
 	DP_X_X10MSE,
 #if OPT_BLINK_CURS
 	DP_CRS_BLINK,
+#endif
+#if OPT_FOCUS_EVENT
+	DP_X_FOCUS,
 #endif
 #if OPT_TOOLBAR
 	DP_TOOLBAR,
@@ -1205,7 +1247,7 @@ typedef struct {
 #define VT100_TB_INFO(name) screen.fullVwin.tb_info.name
 #endif
 
-struct _vtwin {
+typedef struct {
 	Window		window;		/* X window id			*/
 	int		width;		/* width of columns		*/
 	int		height;		/* height of rows		*/
@@ -1216,24 +1258,20 @@ struct _vtwin {
 	int		f_ascent;	/* ascent of font in pixels	*/
 	int		f_descent;	/* descent of font in pixels	*/
 	SbInfo		sb_info;
-	GC		normalGC;	/* normal painting		*/
-	GC		reverseGC;	/* reverse painting		*/
-	GC		normalboldGC;	/* normal painting, bold font	*/
-	GC		reverseboldGC;	/* reverse painting, bold font	*/
 #if OPT_TOOLBAR
 	Boolean		active;		/* true if toolbars are used	*/
 	TbInfo		tb_info;	/* toolbar information		*/
 #endif
-};
+} VTwin;
 
-struct _tekwin {
+typedef struct {
 	Window		window;		/* X window id			*/
 	int		width;		/* width of columns		*/
 	int		height;		/* height of rows		*/
 	Dimension	fullwidth;	/* full width of window		*/
 	Dimension	fullheight;	/* full height of window	*/
 	double		tekscale;	/* scale factor Tek -> vs100	*/
-};
+} TKwin;
 
 typedef struct {
 /* These parameters apply to both windows */
@@ -1251,10 +1289,6 @@ typedef struct {
 	pid_t		pid;		/* pid of process on far side   */
 	uid_t		uid;		/* user id of actual person	*/
 	gid_t		gid;		/* group id of actual person	*/
-	GC		cursorGC;	/* normal cursor painting	*/
-	GC		fillCursorGC;	/* special cursor painting	*/
-	GC		reversecursorGC;/* reverse cursor painting	*/
-	GC		cursoroutlineGC;/* for painting lines around    */
 	ColorRes	Tcolors[NCOLORS]; /* terminal colors		*/
 #if OPT_ISO_COLORS
 	ColorRes	Acolors[MAXCOLORS]; /* ANSI color emulation	*/
@@ -1306,14 +1340,14 @@ typedef struct {
 #endif
 	int		border;		/* inner border			*/
 	int		scrollBarBorder; /* scrollBar border		*/
-	Cursor		arrow;		/* arrow cursor			*/
 	unsigned long	event_mask;
 	unsigned short	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
+	Boolean		send_focus_pos; /* user wants focus in/out info */
 #if OPT_PASTE64
 	int		base64_paste;	/* set to send paste in base64	*/
 	int		base64_final;	/* string-terminator for paste	*/
-	/* _qWriteSelectionData expects these to be initialized to zero. 
+	/* _qWriteSelectionData expects these to be initialized to zero.
 	 * base64_flush() is the last step of the conversion, it clears these
 	 * variables.
 	 */
@@ -1363,10 +1397,10 @@ typedef struct {
 
 /* VT window parameters */
 	Boolean		Vshow;		/* VT window showing		*/
-	struct _vtwin	fullVwin;
+	VTwin		fullVwin;
 #ifndef NO_ACTIVE_ICON
-	struct _vtwin	iconVwin;
-	struct _vtwin *	whichVwin;
+	VTwin		iconVwin;
+	VTwin		*whichVwin;
 #endif /* NO_ACTIVE_ICON */
 
 	Cursor	pointer_cursor;		/* pointer cursor in window	*/
@@ -1411,6 +1445,9 @@ typedef struct {
 	int		blink_off;	/* cursor off time (msecs)	*/
 	XtIntervalId	blink_timer;	/* timer-id for cursor-proc	*/
 #endif
+#if OPT_ZICONBEEP
+	Boolean		zIconBeep_flagged; /* True if icon name was changed */
+#endif /* OPT_ZICONBEEP */
 	int		cursor_GC;	/* see ShowCursor()		*/
 	int		cursor_set;	/* requested state		*/
 	CELL		cursorp;	/* previous cursor row/column	*/
@@ -1494,12 +1531,13 @@ typedef struct {
 	int		vtXX_level;	/* 0=vt52, 1,2,3 = vt100 ... vt320 */
 	int		ansi_level;	/* levels 1,2,3			*/
 	int		protected_mode;	/* 0=off, 1=DEC, 2=ISO		*/
-	Boolean		old_fkeys;	/* true for compatible fkeys	*/
+	Boolean		always_bold_mode; /* compare normal/bold font	*/
+	Boolean		always_highlight; /* whether to highlight cursor */
+	Boolean		bold_mode;	/* use bold font or overstrike	*/
 	Boolean		delete_is_del;	/* true for compatible Delete key */
 	Boolean		jumpscroll;	/* whether we should jumpscroll */
-	Boolean		always_highlight; /* whether to highlight cursor */
+	Boolean		old_fkeys;	/* true for compatible fkeys	*/
 	Boolean		underline;	/* whether to underline text	*/
-	Boolean		bold_mode;	/* whether to use bold font	*/
 
 #if OPT_MAXIMIZE
 	Boolean		restore_data;
@@ -1524,43 +1562,20 @@ typedef struct {
 	Boolean		move_sgr_ok;	/* SGR is reset on move		*/
 #endif
 
-#if OPT_TEK4014
-/* Tektronix window parameters */
-	GC		TnormalGC;	/* normal painting		*/
-	GC		TcursorGC;	/* normal cursor painting	*/
-
-	Boolean		Tshow;		/* Tek window showing		*/
-	Boolean		waitrefresh;	/* postpone refresh		*/
-	struct _tekwin	fullTwin;
-#ifndef NO_ACTIVE_ICON
-	struct _tekwin	iconTwin;
-	struct _tekwin *whichTwin;
-#endif /* NO_ACTIVE_ICON */
-
-	GC		linepat[TEKNUMLINES]; /* line patterns		*/
-	Boolean		TekEmu;		/* true if Tektronix emulation	*/
-	int		cur_X;		/* current x			*/
-	int		cur_Y;		/* current y			*/
-	Tmodes		cur;		/* current tek modes		*/
-	Tmodes		page;		/* starting tek modes on page	*/
-	int		margin;		/* 0 -> margin 1, 1 -> margin 2	*/
-	int		pen;		/* current Tektronix pen 0=up, 1=dn */
-	char		*TekGIN;	/* nonzero if Tektronix GIN mode*/
-	int		gin_terminator; /* Tek strap option */
-#endif /* OPT_TEK4014 */
-
 	/*
 	 * Bell
 	 */
 	int		visualBellDelay; /* msecs to delay for visibleBell */
 	int		bellSuppressTime; /* msecs after Bell before another allowed */
 	Boolean		bellInProgress; /* still ringing/flashing prev bell? */
+	Boolean		bellIsUrgent;	/* set XUrgency WM hint on bell */
 	/*
 	 * Select/paste state.
 	 */
 	Boolean		selectToClipboard; /* primary vs clipboard */
 	String		*mappedSelect;	/* mapping for "SELECT" to "PRIMARY" */
 
+	Boolean		waitingForTrackInfo;
 	int		numberOfClicks;
 	int		maxClicks;
 	int		multiClickTime;	/* time between multiclick selects */
@@ -1579,6 +1594,7 @@ typedef struct {
 	Char		*selection_data; /* the current selection */
 	int		selection_size; /* size of allocated buffer */
 	int		selection_length; /* number of significant bytes */
+	EventMode	eventMode;
 	Time		selection_time;	/* latest event timestamp */
 	Time		lastButtonUpTime;
 
@@ -1611,15 +1627,21 @@ typedef struct {
 	Boolean		output_eight_bits; /* honor all bits or strip */
 	Boolean		control_eight_bits; /* send CSI as 8-bits */
 	Boolean		backarrow_key;		/* backspace/delete */
+	Boolean		alt_is_not_meta;	/* use both Alt- and Meta-key */
+	Boolean		alt_sends_esc;		/* Alt-key sends ESC prefix */
 	Boolean		meta_sends_esc;		/* Meta-key sends ESC prefix */
 	/*
 	 * Fonts
 	 */
 	Pixmap		menu_item_bitmap;	/* mask for checking items */
+	String		initial_font;
 	String		menu_font_names[NMENUFONTS][fMAX];
 #define MenuFontName(n) menu_font_names[n][fNorm]
 	long		menu_font_sizes[NMENUFONTS];
 	int		menu_font_number;
+#if OPT_CLIP_BOLD
+	Boolean		use_clipping;
+#endif
 #if OPT_RENDERFONT
 	XftFont *	renderFontNorm[NMENUFONTS];
 	XftFont *	renderFontBold[NMENUFONTS];
@@ -1639,6 +1661,11 @@ typedef struct {
 	int		dabbrev_working;	/* nonzero during dabbrev process */
 	unsigned char	dabbrev_erase_char;	/* used for deleting inserted completion */
 #endif
+	char		tcapbuf[TERMCAP_SIZE];
+#if OPT_TCAP_FKEYS
+	char **		tcap_fkeys;
+	char		tcap_area[TERMCAP_SIZE];
+#endif
 } TScreen;
 
 typedef struct _TekPart {
@@ -1650,6 +1677,31 @@ typedef struct _TekPart {
 	TbInfo		tb_info;	/* toolbar information		*/
 #endif
 } TekPart;
+
+/* Tektronix window parameters */
+typedef struct _TekScreen {
+	GC		TnormalGC;	/* normal painting		*/
+	GC		TcursorGC;	/* normal cursor painting	*/
+
+	Boolean		waitrefresh;	/* postpone refresh		*/
+	TKwin		fullTwin;
+#ifndef NO_ACTIVE_ICON
+	TKwin		iconTwin;
+	TKwin		*whichTwin;
+#endif /* NO_ACTIVE_ICON */
+
+	Cursor		arrow;		/* arrow cursor			*/
+	GC		linepat[TEKNUMLINES]; /* line patterns		*/
+	int		cur_X;		/* current x			*/
+	int		cur_Y;		/* current y			*/
+	Tmodes		cur;		/* current tek modes		*/
+	Tmodes		page;		/* starting tek modes on page	*/
+	int		margin;		/* 0 -> margin 1, 1 -> margin 2	*/
+	int		pen;		/* current Tektronix pen 0=up, 1=dn */
+	char		*TekGIN;	/* nonzero if Tektronix GIN mode*/
+	int		gin_terminator; /* Tek strap option */
+	char		tcapbuf[TERMCAP_SIZE];
+} TekScreen;
 
 #if OPT_READLINE
 #define SCREEN_FLAG(screenp,f)		(1&(screenp)->f)
@@ -1674,6 +1726,7 @@ typedef enum {
     keyboardIsHP,
     keyboardIsSCO,
     keyboardIsSun,
+    keyboardIsTermcap,
     keyboardIsVT220
 } xtermKeyboardType;
 
@@ -1708,7 +1761,13 @@ typedef enum {			/* legal values for screen.utf8_mode */
 #define NAME_VT220_KT /*nothing*/
 #endif
 
-#define KEYBOARD_TYPES NAME_HP_KT NAME_SCO_KT NAME_SUN_KT NAME_VT220_KT
+#if OPT_TCAP_FKEYS
+#define NAME_TCAP_KT " tcap"
+#else
+#define NAME_TCAP_KT /*nothing*/
+#endif
+
+#define KEYBOARD_TYPES NAME_TCAP_KT NAME_HP_KT NAME_SCO_KT NAME_SUN_KT NAME_VT220_KT
 
 #if OPT_TRACE
 extern	const char * visibleKeyboardType(xtermKeyboardType);
@@ -1777,6 +1836,8 @@ typedef struct _Misc {
 #if OPT_TEK4014
     Boolean tekInhibit;
     Boolean tekSmall;		/* start tek window in small size */
+    Boolean TekEmu;		/* true if Tektronix emulation	*/
+    Boolean Tshow;		/* Tek window showing		*/
 #endif
     Boolean scrollbar;
 #ifdef SCROLLBAR_RIGHT
@@ -1819,7 +1880,7 @@ typedef struct _Misc {
 #if OPT_RENDERFONT
     char *face_name;
     char *face_wide_name;
-    float face_size;
+    float face_size[NMENUFONTS];
     Boolean render_font;
 #endif
 } Misc;
@@ -1840,6 +1901,11 @@ typedef struct _TekClassRec {
     CoreClassPart core_class;
     TekClassPart tek_class;
 } TekClassRec;
+
+extern WidgetClass tekWidgetClass;
+
+#define IsTekWidget(w) (XtClass(w) == tekWidgetClass)
+
 #endif
 
 /* define masks for keyboard.flags */
@@ -1886,7 +1952,8 @@ typedef struct _XtermWidgetRec {
 #if OPT_TEK4014
 typedef struct _TekWidgetRec {
     CorePart	core;
-    TekPart	tek;
+    TekPart	tek;		/* contains resources */
+    TekScreen	screen;		/* contains working data (no resources) */
     Bool	init_menu;
     XSizeHints	hints;
 } TekWidgetRec, *TekWidget;
@@ -1974,6 +2041,9 @@ typedef struct _TekWidgetRec {
 #define DEC_PROTECT 1
 #define ISO_PROTECT 2
 
+#define TScreenOf(xw)	(&(xw)->screen)
+#define TekScreenOf(tw) (&(tw)->screen)
+
 #ifdef SCROLLBAR_RIGHT
 #define OriginX(screen) (((term->misc.useRight)?0:ScrollbarWidth(screen)) + screen->border)
 #else
@@ -2019,6 +2089,8 @@ typedef struct _TekWidgetRec {
 
 #endif /* NO_ACTIVE_ICON */
 
+#define okFont(font) ((font) != 0 && (font)->fid != 0)
+
 /*
  * Macro to check if we are iconified; do not use render for that case.
  */
@@ -2042,11 +2114,17 @@ typedef struct _TekWidgetRec {
 #define NormalFont(screen)	WhichVFont(screen, fnts[fNorm])
 #define BoldFont(screen)	WhichVFont(screen, fnts[fBold])
 
+#if OPT_WIDE_CHARS
+#define NormalWFont(screen)	WhichVFont(screen, fnts[fWide])
+#define BoldWFont(screen)	WhichVFont(screen, fnts[fWBold])
+#endif
+
 #define ScrollbarWidth(screen)	WhichVWin(screen)->sb_info.width
-#define NormalGC(screen)	WhichVWin(screen)->normalGC
-#define ReverseGC(screen)	WhichVWin(screen)->reverseGC
-#define NormalBoldGC(screen)	WhichVWin(screen)->normalboldGC
-#define ReverseBoldGC(screen)	WhichVWin(screen)->reverseboldGC
+
+#define NormalGC(w,sp)		getCgsGC(w, WhichVWin(sp), gcNorm)
+#define ReverseGC(w,sp)		getCgsGC(w, WhichVWin(sp), gcNormReverse)
+#define NormalBoldGC(w,sp)	getCgsGC(w, WhichVWin(sp), gcBold)
+#define ReverseBoldGC(w,sp)	getCgsGC(w, WhichVWin(sp), gcBoldReverse)
 
 #define TWidth(screen)		WhichTWin(screen)->width
 #define THeight(screen)		WhichTWin(screen)->height

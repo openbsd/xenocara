@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2007/05/11 06:42:50 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2007/06/15 19:34:50 matthieu Exp $
 
 SUBDIR=	resize
 
@@ -20,7 +20,9 @@ SRCS=	TekPrsTbl.c  charproc.c	  fontutils.c  precompose.c scrollbar.c \
 	Tekproc.c    charsets.c	  input.c      print.c	    tabs.c \
 	VTPrsTbl.c   cursor.c	  main.c       ptydata.c    util.c \
 	button.c     data.c	  menu.c       wcwidth.c \
-	charclass.c  doublechr.c  misc.c       screen.c	    xstrings.c
+	cachedGCs.c \
+	charclass.c  doublechr.c  misc.c       screen.c	    xstrings.c \
+	xtermcap.c
 
 X11BASE?=	/usr/X11R6
 MANDIR=		${X11BASE}/man/cat

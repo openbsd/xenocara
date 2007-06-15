@@ -1,9 +1,9 @@
-/* $XTermId: data.h,v 1.95 2006/07/15 12:05:25 tom Exp $ */
+/* $XTermId: data.h,v 1.101 2007/03/16 23:46:24 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.h,v 3.39 2006/02/13 01:14:58 dickey Exp $ */
 
 /*
- * Copyright 2002-2005,2006 by Thomas E. Dickey
+ * Copyright 2002-2006,2007 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -80,7 +80,7 @@ extern struct q_head read_queue;
 #if OPT_TEK4014
 extern Char *Tpushb;
 extern Char *Tpushback;
-extern TekLink *TekRefresh;
+extern TekLink *tekRefreshList;
 extern TekWidget tekWidget;
 extern Widget tekshellwidget;
 extern int T_lastx;
@@ -94,15 +94,6 @@ extern char *ttydev;
 extern char *xterm_name;
 extern int hold_screen;
 
-#if OPT_ZICONBEEP
-extern int zIconBeep;
-extern Boolean zIconBeep_flagged;
-#endif
-
-#if OPT_SAME_NAME
-extern Boolean sameName;
-#endif
-
 extern PtyData *VTbuffer;
 extern int am_slave;
 extern int max_plus1;
@@ -115,10 +106,6 @@ extern int debug;
 extern PtySelect Select_mask;
 extern PtySelect X_mask;
 extern PtySelect pty_mask;
-
-extern Boolean waitingForTrackInfo;
-
-extern EventMode eventMode;
 
 extern XtermWidget term;
 
@@ -141,7 +128,6 @@ extern SIG_ATOMIC_T need_cleanup;
 extern char *ProgramName;
 extern Arg ourTopLevelShellArgs[];
 extern Cardinal number_ourTopLevelShellArgs;
-extern Bool waiting_for_initial_map;
 extern Atom wm_delete_window;
 
 typedef struct XTERM_RESOURCE {
@@ -160,6 +146,8 @@ typedef struct XTERM_RESOURCE {
     Boolean utmpDisplayId;
     Boolean messages;
 
+    String menuLocale;
+
     String keyboardType;
 #if OPT_SUNPC_KBD
     Boolean sunKeyboard;
@@ -172,6 +160,9 @@ typedef struct XTERM_RESOURCE {
 #endif
 #if OPT_SUN_FUNC_KEYS
     Boolean sunFunctionKeys;	/* %%% should be VT100 widget resource? */
+#endif
+#if OPT_TCAP_FKEYS
+    Boolean termcapKeys;
 #endif
 
 #if OPT_INITIAL_ERASE

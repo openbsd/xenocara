@@ -1,5 +1,5 @@
 /* xtermcfg.h.  Generated automatically by configure.  */
-/* $XTermId: xtermcfg.hin,v 1.154 2006/07/15 12:10:03 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.163 2007/03/21 22:05:18 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.61 2006/06/19 00:36:52 dickey Exp $
@@ -7,7 +7,7 @@
 
 /************************************************************
 
-Copyright 1997-2005,2006 by Thomas E. Dickey
+Copyright 1997-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -42,6 +42,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* #undef DFT_COLORMODE */		/* AC_ARG_WITH(default-color-mode) */
 #define DFT_DECID "100"		/* AC_ARG_WITH(default-terminal-id) */
 #define DFT_TERMTYPE "xterm"		/* AC_ARG_WITH(default-term-type) */
+/* #undef DISABLE_SETGID */		/* CF_ARG_DISABLE(setgid) */
 /* #undef DISABLE_SETUID */		/* CF_ARG_DISABLE(setuid) */
 #define HAVE_GETHOSTNAME 1		/* AC_CHECK_FUNCS(gethostname) */
 #define HAVE_GETLOGIN 1		/* AC_CHECK_FUNCS(getlogin) */
@@ -67,6 +68,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define HAVE_TERMCAP_H 1		/* AC_CHECK_HEADERS(termcap.h) */
 #define HAVE_TERMIOS_H 1		/* AC_CHECK_HEADERS(termios.h) */
 /* #undef HAVE_TERMIO_C_ISPEED */	/* CF_TERMIO_C_ISPEED */
+#define HAVE_TERM_H 1		/* AC_CHECK_HEADERS(term.h) */
 #define HAVE_UNISTD_H 1		/* AC_CHECK_HEADERS(unistd.h) */
 #define HAVE_UTMP 1		/* CF_UTMP */
 #define HAVE_UTMP_UT_HOST 1	/* CF_UTMP_UT_HOST */
@@ -80,6 +82,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define HAVE_X11_DECKEYSYM_H 1	/* AC_CHECK_HEADERS(X11/DECkeysym.h) */
 #define HAVE_X11_SUNKEYSYM_H 1	/* AC_CHECK_HEADERS(X11/Sunkeysym.h) */
 #define HAVE_X11_XPOLL_H 1		/* AC_CHECK_HEADERS(X11/Xpoll.h) */
+#define HAVE_XFTDRAWSETCLIP 1	/* CF_X_FREETYPE */
+#define HAVE_XFTDRAWSETCLIPRECTANGLES 1 /* CF_X_FREETYPE */
 #define HAVE_XKB_BELL_EXT 1	/* CF_XKB_BELL_EXT */
 #define LUIT_PATH "/usr/X11R6/bin/luit"		/* CF_ARG_ENABLE(luit) */
 /* #undef NO_ACTIVE_ICON */		/* CF_ARG_DISABLE(active-icon) */
@@ -97,6 +101,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* #undef OPT_DABBREV */		/* CF_ARG_ENABLE(dabbrev) */
 /* #undef OPT_DEC_CHRSET */		/* CF_ARG_DISABLE(doublechars) */
 /* #undef OPT_DEC_LOCATOR */		/* CF_ARG_ENABLE(dec-locator) */
+/* #undef OPT_DEC_RECTOPS */		/* CF_ARG_ENABLE(rectangles) */
+/* #undef OPT_EXEC_XTERM */		/* CF_ARG_ENABLE(exec-xterm) */
 /* #undef OPT_HIGHLIGHT_COLOR */	/* CF_ARG_DISABLE(highlighting) */
 /* #undef OPT_HP_FUNC_KEYS */		/* CF_ARG_ENABLE(hp-fkeys) */
 /* #undef OPT_I18N_SUPPORT */		/* CF_ARG_DISABLE(i18n) */
@@ -116,15 +122,16 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define OPT_SELECT_REGEX 1		/* CF_ARG_DISABLE(regex) */
 /* #undef OPT_SESSION_MGT */		/* CF_ARG_DISABLE(session-mgt) */
 /* #undef OPT_SUN_FUNC_KEYS */	/* CF_ARG_ENABLE(sun-fkeys) */
+/* #undef OPT_TCAP_FKEYS */		/* CF_ARG_ENABLE(tcap-fkeys) */
 /* #undef OPT_TCAP_QUERY */		/* CF_ARG_ENABLE(tcap-query) */
 /* #undef OPT_TEK4014 */		/* CF_ARG_DISABLE(tek4014) */
 /* #undef OPT_TOOLBAR */		/* CF_ARG_ENABLE(toolbar) */
-/* #undef OPT_TRACE */		/* CF_ARG_ENABLE(trace) */
 /* #undef OPT_VT52_MODE */		/* CF_ARG_DISABLE(vt52) */
 #define OPT_WIDE_CHARS 1		/* CF_ARG_OPTION(wide-chars) */
 /* #undef OPT_XMC_GLITCH */		/* CF_ARG_ENABLE(xmc-glitch) */
 /* #undef OPT_ZICONBEEP */		/* CF_ARG_DISABLE(ziconbeep) */
 /* #undef OWN_TERMINFO_DIR */		/* AC_ARG_WITH(own-terminfo) */
+/* #undef PROCFS_ROOT */		/* CF_ARG_ENABLE(exec-xterm) */
 #define SCROLLBAR_RIGHT 1		/* CF_ARG_ENABLE(rightbar) */
 #define SIG_ATOMIC_T volatile sig_atomic_t		/* CF_SIG_ATOMIC_T */
 /* #undef SVR4 */			/* CF_SVR4, imake */
@@ -158,6 +165,13 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* #undef ut_xtime */			/* CF_UTMP_UT_XTIME */
 
 /*
+ * Ifdef'd to make it simple to override.
+ */
+#ifndef OPT_TRACE
+/* #undef OPT_TRACE */		/* CF_ARG_ENABLE(trace) */
+#endif
+
+/*
  * g++ support for __attribute__() is haphazard.
  */
 #ifndef __cplusplus
@@ -183,4 +197,6 @@ extern char *my_strerror(int n);
 #define NO_XPOLL_H	/* X11R6.1 & up use Xpoll.h for select() definitions */
 #endif
 
+/* vile:cmode
+ */
 #endif /* included_xtermcfg_h */

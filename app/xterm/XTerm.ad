@@ -1,4 +1,4 @@
-! $XTermId: XTerm.ad,v 1.81 2006/06/24 14:34:45 tom Exp $
+! $XTermId: XTerm.ad,v 1.83 2007/03/18 22:41:40 tom Exp $
 ! $XFree86: xc/programs/xterm/XTerm.ad,v 3.37 2006/04/10 00:34:36 dickey Exp $
 
 *scrollBar: true
@@ -31,6 +31,7 @@
 *mainMenu*sunKeyboard*Label: VT220 Keyboard
 *mainMenu*hpFunctionKeys*Label: HP Function-Keys
 *mainMenu*scoFunctionKeys*Label: SCO Function-Keys
+*mainMenu*tcapFunctionKeys*Label: Termcap Function-Keys
 *mainMenu*suspend*Label:  Send STOP Signal
 *mainMenu*continue*Label:  Send CONT Signal
 *mainMenu*interrupt*Label:  Send INT Signal
@@ -54,8 +55,8 @@
 *vtMenu*selectToClipboard*Label: Select to Clipboard
 *vtMenu*cursesemul*Label:  Enable Curses Emulation
 *vtMenu*visualbell*Label:  Enable Visual Bell
+*vtMenu*bellIsUrgent*Label:  Enable Bell Urgency
 *vtMenu*poponbell*Label:  Enable Pop on Bell
-*vtMenu*marginbell*Label:  Enable Margin Bell
 *vtMenu*cursorblink*Label: Enable Blinking Cursor
 *vtMenu*titeInhibit*Label:  Enable Alternate Screen Switching
 *vtMenu*activeicon*Label: Enable Active Icon

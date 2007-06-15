@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.135 2006/08/03 21:15:53 tom Exp $
+## $XTermId: Makefile.in,v 1.145 2007/03/24 00:09:52 tom Exp $
 ##
 ## $XFree86: xc/programs/xterm/Makefile.in,v 3.56 2006/06/19 00:36:50 dickey Exp $ ##
 ##
-## Copyright 2002-2005,2006 by Thomas E. Dickey
+## Copyright 2002-2006,2007 by Thomas E. Dickey
 ##
 ##                         All Rights Reserved
 ##
@@ -48,9 +48,6 @@ INSTALL_SCRIPT	= @INSTALL_SCRIPT@
 INSTALL_DATA	= @INSTALL_DATA@
 transform	= @program_transform_name@
 
-X_LIBS		= @X_LIBS@
-X_EXTRA_LIBS	= @X_EXTRA_LIBS@
-
 EXTRA_CFLAGS	= @EXTRA_CFLAGS@
 EXTRA_CPPFLAGS	= @EXTRA_CPPFLAGS@
 EXTRA_LOADFLAGS	= @IMAKE_LOADFLAGS@
@@ -84,27 +81,27 @@ EXTRAHDR	= @EXTRAHDRS@
 EXTRASRC	= @EXTRASRCS@
 EXTRAOBJ	= @EXTRAOBJS@
 
-          SRCS1 = button.c charproc.c charsets.c cursor.c \
+          SRCS1 = button.c cachedGCs.c charproc.c charsets.c cursor.c \
 	  	  data.c doublechr.c fontutils.c input.c \
 		  $(MAINSRC) menu.c misc.c print.c ptydata.c \
-		  screen.c scrollbar.c tabs.c util.c xstrings.c \
+		  screen.c scrollbar.c tabs.c util.c xstrings.c xtermcap.c \
 		  VTPrsTbl.c $(EXTRASRC)
-          OBJS1 = button$o charproc$o charsets$o cursor$o \
+          OBJS1 = button$o cachedGCs$o charproc$o charsets$o cursor$o \
 	  	  data$o doublechr$o fontutils$o input$o \
 		  main$o menu$o misc$o print$o ptydata$o \
-		  screen$o scrollbar$o tabs$o util$o xstrings$o \
+		  screen$o scrollbar$o tabs$o util$o xstrings$o xtermcap$o \
 		  VTPrsTbl$o $(EXTRAOBJ)
           SRCS2 = resize.c xstrings.c
           OBJS2 = resize$o xstrings$o
            SRCS = $(SRCS1) $(SRCS2)
            OBJS = $(OBJS1) $(OBJS2)
            HDRS = VTparse.h data.h error.h main.h menu.h proto.h \
-                  ptyx.h version.h xstrings.h xterm.h $(EXTRAHDR)
+                  ptyx.h version.h xstrings.h xterm.h xtermcap.h $(EXTRAHDR)
        PROGRAMS = xterm$x resize$x
 
 all :	$(PROGRAMS)
-
-.SUFFIXES : .i .def .hin
+################################################################################
+.SUFFIXES : .i .def .hin .html .$(manext) .ms .man .ps .pdf .txt
 
 .c$o :
 @RULE_CC@
@@ -117,6 +114,30 @@ all :	$(PROGRAMS)
 .def.hin :
 	grep '^CASE_' $< | $(AWK) '{printf "#define %s %d\n", $$1, n++}' >$@
 
+.man.$(manext) :
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/xterm.man $@ $(appsdir)
+
+.$(manext).html :
+	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -Thtml -man" >$@
+
+.$(manext).ps :
+	$(SHELL) -c "tbl $*.$(manext) | groff -man" >$@
+
+.$(manext).txt :
+	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | nroff -Tascii -man | col -bx" >$@
+
+.ms.html :
+	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.ms | groff -Thtml -ms" >$@
+
+.ms.ps :
+	$(SHELL) -c "tbl $*.ms | groff -ms" >$@
+
+.ms.txt :
+	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.ms | nroff -Tascii -ms | col -bx" >$@
+
+.ps.pdf :
+	ps2pdf $*.ps
+################################################################################
 main$o : main.h
 misc$o : version.h
 
@@ -124,10 +145,10 @@ $(OBJS1) : xterm.h ptyx.h xtermcfg.h
 main$o resize$o screen$o : xterm_io.h
 
 xterm$x : $(OBJS1)
-	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LOADFLAGS)
+	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(LIBS) $(EXTRA_LOADFLAGS)
 
 resize$x : $(OBJS2)
-	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS)
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(LIBS)
 
 256colres.h :
 	-rm -f $@
@@ -138,7 +159,7 @@ resize$x : $(OBJS2)
 	perl $(srcdir)/88colres.pl > $@
 
 charproc$o : main.h @CHARPROC_DEPS@
-
+################################################################################
 actual_xterm  = `echo xterm|    sed '$(transform)'`
 actual_resize = `echo resize|   sed '$(transform)'`
 actual_uxterm = `echo uxterm|   sed '$(transform)'`
@@ -162,18 +183,18 @@ install-full :: xterm$x resize$x $(BINDIR)
 		else \
 			$(INSTALL_SCRIPT) -m  755 $(srcdir)/uxterm $(BINDIR)/$(binary_uxterm); \
 		fi'
-	@-$(SHELL) -c "(test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && rm -f @XTERM_SYMLINK@) || exit 0"
-	@-$(SHELL) -c "(test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && $(LN_S) $(binary_xterm) @XTERM_SYMLINK@) || exit 0"
-	@-$(SHELL) -c "(test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && echo '... created symbolic link:' && ls -l $(binary_xterm) @XTERM_SYMLINK@) || exit 0"
+	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && rm -f @XTERM_SYMLINK@ ; fi"
+	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && $(LN_S) $(binary_xterm) @XTERM_SYMLINK@ ; fi"
+	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && echo '... created symbolic link:' && ls -l $(binary_xterm) @XTERM_SYMLINK@ ; fi"
 
 install \
 install-man \
 install-full :: $(MANDIR)
 	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)  $(appsdir)
 	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext) $(appsdir)
-	@-$(SHELL) -c "(test @XTERM_SYMLINK@ != NONE && cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext)) || exit 0"
-	@-$(SHELL) -c "(test @XTERM_SYMLINK@ != NONE && cd $(MANDIR) && $(LN_S) $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext)) || exit 0"
-	@-$(SHELL) -c "(test @XTERM_SYMLINK@ != NONE && cd $(MANDIR) && echo '... created symbolic link:' && ls -l $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext)) || exit 0"
+	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext) ; fi"
+	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && $(LN_S) $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
+	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && echo '... created symbolic link:' && ls -l $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
 
 @no_appsdir@install \
 @no_appsdir@install-app \
@@ -198,29 +219,29 @@ SET_TERMINFO = @SET_TERMINFO@
 
 install-full \
 install-ti :: $(TERMINFO_DIR)
-	$(SET_TERMINFO) tic $(srcdir)/terminfo
+	@$(SHELL) -c "$(SET_TERMINFO) $(srcdir)/run-tic.sh $(srcdir)/terminfo"
 	@echo 'Completed installation of terminfo description.'
 
 install-full \
 install-tc ::
-	@test -f /etc/termcap && echo 'You must install the termcap entry manually by editing /etc/termcap'
+	@-$(SHELL) -c "test -f /etc/termcap && echo 'You must install the termcap entry manually by editing /etc/termcap'"
 
 installdirs : $(INSTALL_DIRS)
-
+################################################################################
 uninstall \
 uninstall-bin \
 uninstall-full ::
 	-$(RM) $(BINDIR)/$(binary_xterm)
 	-$(RM) $(BINDIR)/$(binary_resize)
 	-$(RM) $(BINDIR)/$(binary_uxterm)
-	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && rm -f @XTERM_SYMLINK@"
+	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && rm -f @XTERM_SYMLINK@; fi"
 
 uninstall \
 uninstall-man \
 uninstall-full ::
 	-$(RM) $(MANDIR)/$(actual_xterm).$(manext)
 	-$(RM) $(MANDIR)/$(actual_resize).$(manext)
-	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext)"
+	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext); fi"
 
 @no_appsdir@uninstall \
 @no_appsdir@uninstall-app \
@@ -228,7 +249,7 @@ uninstall-full ::
 @no_appsdir@	-$(RM) $(APPSDIR)/$(CLASS)
 @no_appsdir@	-$(RM) $(APPSDIR)/$(CLASS)-color
 @no_appsdir@	-$(RM) $(APPSDIR)/UXTerm
-
+################################################################################
 mostlyclean :
 	-$(RM) *$o *.[is] XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
 
@@ -237,22 +258,26 @@ clean : mostlyclean
 
 distclean : clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
+	-$(RM) *.ps *.pdf *.png
+	-$(RM) xterm.html xterm.$(manext) xterm.txt
+	-$(RM) ctlseqs.html ctlseqs.$(manext)
 
 realclean : distclean
-	-$(RM) tags TAGS ctlseqs.ps ctlseqs.txt
+	-$(RM) tags TAGS
 
 maintainer-clean : realclean
 	-$(RM) 256colres.h 88colres.h
-
+################################################################################
 ctlseqs.html : ctlseqs.ms
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl ctlseqs.ms | groff -Thtml -ms" >$@
-
-ctlseqs.txt : ctlseqs.ms
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl ctlseqs.ms | nroff -Tascii -ms | col -bx" >$@
-
+ctlseqs.pdf : ctlseqs.ps
 ctlseqs.ps : ctlseqs.ms
-	tbl ctlseqs.ms | groff -ms >$@
-
+ctlseqs.txt : ctlseqs.ms
+################################################################################
+xterm.html : xterm.$(manext)
+xterm.pdf : xterm.ps
+xterm.ps : xterm.$(manext)
+xterm.txt : xterm.$(manext)
+################################################################################
 lint :
 	$(LINT) $(CPPFLAGS) $(SRCS1)
 	$(LINT) $(CPPFLAGS) $(SRCS2)
