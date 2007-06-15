@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2007/06/15 19:34:50 matthieu Exp $
+# $OpenBSD: Makefile,v 1.5 2007/06/15 19:43:57 matthieu Exp $
 
 SUBDIR=	resize
 
@@ -16,13 +16,11 @@ LDADD+=		-L${X11BASE}/lib -lXaw -lXpm -lXt -lSM -lICE \
 		-lXmu -lXft -lXrender -lX11 -lXext -lXau -lXdmcp \
 		-lfontconfig -lexpat -lfreetype -lutil -ltermcap -lz
 
-SRCS=	TekPrsTbl.c  charproc.c	  fontutils.c  precompose.c scrollbar.c \
-	Tekproc.c    charsets.c	  input.c      print.c	    tabs.c \
-	VTPrsTbl.c   cursor.c	  main.c       ptydata.c    util.c \
-	button.c     data.c	  menu.c       wcwidth.c \
-	cachedGCs.c \
-	charclass.c  doublechr.c  misc.c       screen.c	    xstrings.c \
-	xtermcap.c
+SRCS=	TekPrsTbl.c Tekproc.c VTPrsTbl.c button.c cachedGCs.c \
+	charclass.c xtermcap.c charproc.c charsets.c cursor.c \
+	data.c doublechr.c fontutils.c input.c main.c menu.c \
+	misc.c precompose.c print.c ptydata.c wcwidth.c screen.c \
+	scrollbar.c tabs.c util.c xstrings.c
 
 X11BASE?=	/usr/X11R6
 MANDIR=		${X11BASE}/man/cat
