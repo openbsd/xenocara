@@ -48,7 +48,13 @@
 # define HTOLE_16(x)   (x)
 # define LETOH_32(x)   (x)
 # define HTOLE_32(x)   (x)
-#endif
+#endif /* linux */
+
+#elif defined(__sun)
+#define	LETOH_16(x)	(x)
+#define	HTOLE_16(x)	(x)
+#define	LETOH_32(x)	(x)
+#define	HTOLE_32(x)	(x)
 
 #elif defined(__OpenBSD__)
 
@@ -68,7 +74,7 @@
 #define LETOH_32(x)	le32toh(x)
 #define HTOLE_32(x)	htole32(x)
 
-#endif
+#endif /* others */
 
 /**
  * Read a device's expansion ROM.

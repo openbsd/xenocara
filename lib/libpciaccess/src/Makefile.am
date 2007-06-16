@@ -37,6 +37,10 @@ if OPENBSD
 OS_SUPPORT = openbsd_pci.c
 endif
 
+if SOLARIS
+OS_SUPPORT = solx_devfs.c
+endif
+
 libpciaccess_la_SOURCES = common_bridge.c \
 	common_iterator.c \
 	common_init.c \
@@ -59,4 +63,8 @@ libpciaccessinclude_HEADERS = \
 noinst_PROGRAMS = scanpci
 
 scanpci_SOURCES = scanpci.c
+if SOLARIS
+scanpci_LDADD = libpciaccess.la -ldevinfo
+else
 scanpci_LDADD = libpciaccess.la
+endif

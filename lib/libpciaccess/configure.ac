@@ -81,11 +81,15 @@ case $host_os in
 	*openbsd*)
 		openbsd=yes
 		;;
+	*solaris*)
+		solaris=yes
+		;;
 esac
 
 AM_CONDITIONAL(LINUX, [test "x$linux" = xyes])
 AM_CONDITIONAL(FREEBSD, [test "x$freebsd" = xyes])
 AM_CONDITIONAL(OPENBSD, [test "x$openbsd" = xyes])
+AM_CONDITIONAL(SOLARIS, [test "x$solaris" = xyes])
 
 AC_SUBST(PCIACCESS_CFLAGS)
 AC_SUBST(PCIACCESS_LIBS)

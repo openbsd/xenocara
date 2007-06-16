@@ -86,7 +86,8 @@ libpciaccess_la_DEPENDENCIES =
 am__libpciaccess_la_SOURCES_DIST = common_bridge.c common_iterator.c \
 	common_init.c common_interface.c common_capability.c \
 	common_device_name.c pciaccess_private.h freebsd_pci.c \
-	linux_sysfs.c openbsd_pci.c
+	linux_sysfs.c openbsd_pci.c solx_devfs.c
+@FREEBSD_FALSE@@LINUX_FALSE@@OPENBSD_FALSE@@SOLARIS_TRUE@am__objects_1 = solx_devfs.lo
 @FREEBSD_FALSE@@LINUX_FALSE@@OPENBSD_TRUE@am__objects_1 =  \
 @FREEBSD_FALSE@@LINUX_FALSE@@OPENBSD_TRUE@	openbsd_pci.lo
 @FREEBSD_FALSE@@LINUX_TRUE@am__objects_1 = linux_sysfs.lo
@@ -98,7 +99,8 @@ libpciaccess_la_OBJECTS = $(am_libpciaccess_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_scanpci_OBJECTS = scanpci.$(OBJEXT)
 scanpci_OBJECTS = $(am_scanpci_OBJECTS)
-scanpci_DEPENDENCIES = libpciaccess.la
+@SOLARIS_FALSE@scanpci_DEPENDENCIES = libpciaccess.la
+@SOLARIS_TRUE@scanpci_DEPENDENCIES = libpciaccess.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -180,6 +182,8 @@ PCIIDS_PATH = @PCIIDS_PATH@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+SOLARIS_FALSE = @SOLARIS_FALSE@
+SOLARIS_TRUE = @SOLARIS_TRUE@
 STRIP = @STRIP@
 VERSION = @VERSION@
 ac_ct_AR = @ac_ct_AR@
@@ -230,6 +234,7 @@ lib_LTLIBRARIES = libpciaccess.la
 @FREEBSD_TRUE@OS_SUPPORT = freebsd_pci.c
 @LINUX_TRUE@OS_SUPPORT = linux_sysfs.c
 @OPENBSD_TRUE@OS_SUPPORT = openbsd_pci.c
+@SOLARIS_TRUE@OS_SUPPORT = solx_devfs.c
 libpciaccess_la_SOURCES = common_bridge.c \
 	common_iterator.c \
 	common_init.c \
@@ -247,7 +252,8 @@ libpciaccessinclude_HEADERS = \
     $(top_srcdir)/include/pciaccess.h
 
 scanpci_SOURCES = scanpci.c
-scanpci_LDADD = libpciaccess.la
+@SOLARIS_FALSE@scanpci_LDADD = libpciaccess.la
+@SOLARIS_TRUE@scanpci_LDADD = libpciaccess.la -ldevinfo
 all: all-am
 
 .SUFFIXES:
@@ -337,6 +343,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/linux_sysfs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openbsd_pci.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scanpci.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solx_devfs.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
