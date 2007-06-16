@@ -1,0 +1,8 @@
+.deps
+.libs
+*.lo
+*.o
+libpciaccess.la
+Makefile
+Makefile.in
+scanpci
