@@ -128,18 +128,27 @@ XCOMM $XFree86: xc/config/cf/Imake.cf,v 3.88 2003/12/16 21:30:21 herrb Exp $
 #   define Sparc64Architecture
 #  endif
 #  undef sparc
+#  undef sparc64
 # endif
 # if defined(__mips__) || defined(mips)
 #   define MipsArchitecture
+#   ifdef __LP64__
+#     define Mips64Architecture
+#   endif
 #   ifdef arc
 #     define ArcArchitecture
 #     undef arc
+#   endif
+#   ifdef sgi
+#     define SGIArchitecture
+#     undef sgi
 #   endif
 #   ifdef pmax
 #     define PmaxArchitecture
 #     undef pmax
 #   endif
 #   undef mips
+#   undef __mips__
 # endif
 # if defined(__alpha__) || defined(alpha)
 #   define AlphaArchitecture
@@ -151,6 +160,14 @@ XCOMM $XFree86: xc/config/cf/Imake.cf,v 3.88 2003/12/16 21:30:21 herrb Exp $
 #   undef __amd64__
 #   undef __x86_64__
 #   undef amd64
+# endif
+# if defined(__arm__)
+#   define Arm32Architecture
+#   undef __arm__
+#   if defined(zaurus)
+#     undef zaurus
+#     define ZaurusArchitecture
+#   endif
 # endif
 # if defined(__mc68020__) || defined(mc68020)
 #  define Mc68020Architecture
@@ -176,11 +193,19 @@ XCOMM $XFree86: xc/config/cf/Imake.cf,v 3.88 2003/12/16 21:30:21 herrb Exp $
 #  endif
 #  undef mc68000
 # endif
+# if defined(__m88k__) || defined(m88k)
+#  define Mc88000Architecture
+#  undef m88k
+# endif
 # ifdef __powerpc__
 #  define PpcArchitecture
 #  undef __powerpc__
 #  undef __macppc__
 #  undef macppc
+# endif
+# ifdef __sh__
+#  undef __sh__
+#  define SuperHArchitecture
 # endif
 # ifdef __vax__
 #  undef vax
