@@ -41,7 +41,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = Xwscons$(EXEEXT)
 subdir = hw/kdrive/wscons
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in TODO
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.ac
