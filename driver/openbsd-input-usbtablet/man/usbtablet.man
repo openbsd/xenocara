@@ -1,4 +1,4 @@
-.\" $OpenBSD: usbtablet.man,v 1.1.1.1 2006/11/26 22:29:39 matthieu Exp $
+.\" $OpenBSD: usbtablet.man,v 1.2 2007/06/24 16:33:15 mk Exp $
 .\"
 .\" Copyright (c) 1999-2004 Matthieu Herrb and Lennart Augustsson
 .\"
@@ -34,6 +34,7 @@ usbtablet \- USB tablet input driver for *BSD
 .BI "  Identifier \*q" idevname \*q
 .B  "  Driver \*qusbtablet\*q"
 .BI "  Option \*qDevice\*q   \*q" devpath \*q
+.BI "  Option \*qType\*q   \*q" type \*q
 \ \ ...
 .B EndSection
 .fi
@@ -58,11 +59,11 @@ supports the following entries:
 .RS 8
 .TP 4
 .B Option \fI"Type"\fP \fI"stylus"|"eraser"|"cursor"\fP
-sets the type of tool the device represent. This option is mandatory.
+sets the type of tool the device represents. This option is mandatory.
 .TP 4
 .B Option \fI"Device"\fP \fI"path"\fP
 sets the path to the special file which represents serial line where
-the tablet is plugged.  You have to specify it for each subsection with
+the tablet is plugged in.  You have to specify it for each subsection with
 the same value if you want to have multiple devices with the same tablet.
 This option is mandatory.
 .TP 4
