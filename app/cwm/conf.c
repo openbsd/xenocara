@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: conf.c,v 1.6 2007/06/05 19:03:20 jasper Exp $
+ * $Id: conf.c,v 1.7 2007/06/26 19:34:26 niallo Exp $
  */
 
 #include "headers.h"
@@ -189,6 +189,7 @@ conf_setup(struct conf *c)
 		conf_bindkey(c, kbfunc_lock,
 		    XK_Delete, ControlMask|Mod1Mask, 0, NULL);
 		conf_bindkey(c, kbfunc_exec, XK_question, Mod1Mask, 0, NULL);
+		conf_bindkey(c, kbfunc_ssh, XK_period, Mod1Mask, 0, NULL);
 		conf_bindkey(c, kbfunc_client_hide,
 		    XK_Return, Mod1Mask, KBFLAG_NEEDCLIENT, 0);
 		conf_bindkey(c, kbfunc_client_lower,

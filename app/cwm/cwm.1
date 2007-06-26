@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwm.1,v 1.6 2007/06/06 22:08:02 jasper Exp $
+.\"	$OpenBSD: cwm.1,v 1.7 2007/06/26 19:34:26 niallo Exp $
 .\"
 .\" The following requests are required for all man pages.
 .Dd July 10, 2004
@@ -87,6 +87,10 @@ Toggle full-screen size of window.
 Toggle vertical maximization of window.
 .It Fa M-?
 Spawn \&"Exec program\&" dialog.
+.It Fa M-.
+Spawn \&"Ssh to\&" dialog.
+This parses your $HOME/.ssh/known_hosts file to provide host auto-completion.
+Ssh will be executed via the configured terminal emulator.
 .El
 .Pp
 The mouse bindings are also important, they are:
