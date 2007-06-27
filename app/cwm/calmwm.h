@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: calmwm.h,v 1.7 2007/06/26 19:34:26 niallo Exp $
+ * $Id: calmwm.h,v 1.8 2007/06/27 13:28:22 todd Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -202,6 +202,11 @@ enum kbtype {
 	KB_MOVE_WEST, KB_MOVE_EAST, KB_MOVE_NORTH, KB_MOVE_SOUTH,
 
 	KB__LAST
+};
+
+#define CWM_BIGMOVE	0x1000
+enum directions {
+	CWM_UP=0, CWM_DOWN, CWM_LEFT, CWM_RIGHT,
 };
 
 #define KBFLAG_NEEDCLIENT 0x01
@@ -426,6 +431,7 @@ void kbfunc_client_prevgroup(struct client_ctx *, void *);
 void kbfunc_client_nogroup(struct client_ctx *, void *);
 void kbfunc_client_maximize(struct client_ctx *, void *);
 void kbfunc_client_vmaximize(struct client_ctx *, void *);
+void kbfunc_client_move(struct client_ctx *, void *);
 void kbfunc_menu_search(struct client_ctx *, void *);
 void kbfunc_exec(struct client_ctx *, void *);
 void kbfunc_ssh(struct client_ctx *, void *);

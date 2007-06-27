@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: conf.c,v 1.7 2007/06/26 19:34:26 niallo Exp $
+ * $Id: conf.c,v 1.8 2007/06/27 13:28:22 todd Exp $
  */
 
 #include "headers.h"
@@ -19,6 +19,7 @@
 
 #define CONF_MAX_WINTITLE 256
 #define CONF_IGNORECASE   0x01
+
 
 /*
  * Match a window.
@@ -237,6 +238,26 @@ conf_setup(struct conf *c)
 		    XK_f, ControlMask|Mod1Mask, KBFLAG_NEEDCLIENT, 0);
 		conf_bindkey(c, kbfunc_client_vmaximize,
 		    XK_equal, ControlMask|Mod1Mask, KBFLAG_NEEDCLIENT, 0);
+		conf_bindkey(c, kbfunc_client_move,
+		    XK_k, Mod1Mask, KBFLAG_NEEDCLIENT, (void *)CWM_UP);
+		conf_bindkey(c, kbfunc_client_move,
+		    XK_j, Mod1Mask, KBFLAG_NEEDCLIENT, (void *)CWM_DOWN);
+		conf_bindkey(c, kbfunc_client_move,
+		    XK_l, Mod1Mask, KBFLAG_NEEDCLIENT, (void *)CWM_RIGHT);
+		conf_bindkey(c, kbfunc_client_move,
+		    XK_h, Mod1Mask, KBFLAG_NEEDCLIENT, (void *)CWM_LEFT);
+		conf_bindkey(c, kbfunc_client_move,
+		    XK_K, Mod1Mask, KBFLAG_NEEDCLIENT,
+		    (void *)(CWM_UP|CWM_BIGMOVE));
+		conf_bindkey(c, kbfunc_client_move,
+		    XK_J, Mod1Mask, KBFLAG_NEEDCLIENT,
+		    (void *)(CWM_DOWN|CWM_BIGMOVE));
+		conf_bindkey(c, kbfunc_client_move,
+		    XK_L, Mod1Mask, KBFLAG_NEEDCLIENT,
+		    (void *)(CWM_RIGHT|CWM_BIGMOVE));
+		conf_bindkey(c, kbfunc_client_move,
+		    XK_H, Mod1Mask, KBFLAG_NEEDCLIENT,
+		    (void *)(CWM_LEFT|CWM_BIGMOVE));
         }
 
  	snprintf(dir_settings, sizeof(dir_settings),
