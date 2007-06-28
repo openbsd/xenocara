@@ -1,10 +1,6 @@
-# $OpenBSD: Makefile,v 1.10 2007/05/22 09:23:09 robert Exp $
+# $OpenBSD: Makefile,v 1.11 2007/06/28 18:48:49 matthieu Exp $
 
-.if ${MACHINE} != landisk
-MKFONTSCALE= mkfontscale
-.endif
-
-SUBDIR= bdftopcf $(MKFONTSCALE)  mkfontdir \
+SUBDIR= bdftopcf mkfontscale mkfontdir \
 	appres beforelight bitmap editres fonttosfnt fslsfonts \
 	fstobdf	iceauth ico lbxproxy listres luit oclock \
 	proxymngr rgb rstart scripts sessreg setxkbmap showfont \
