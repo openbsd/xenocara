@@ -1341,7 +1341,14 @@ int main () {
 	fi
 	case $host_os in
 		openbsd*)
-		LD_EXPORT_SYMBOLS_FLAG="-Wl,--export-dynamic"
+		case $host_cpu in
+		m68k|m88k|vax)
+			LD_EXPORT_SYMBOLS_FLAGS=""
+			;;
+		*)
+			LD_EXPORT_SYMBOLS_FLAG="-Wl,--export-dynamic"
+			;;
+		esac
 		;;
 	esac
 	AC_SUBST([XORG_CFLAGS])
