@@ -407,6 +407,7 @@
 ./usr/X11R6/bin/glxgears
 ./usr/X11R6/bin/glxinfo
 ./usr/X11R6/bin/xdriinfo
+./usr/X11R6/bin/xfs
 ./usr/X11R6/include/GL
 ./usr/X11R6/include/GL/GLwDrawA.h
 ./usr/X11R6/include/GL/GLwDrawAP.h
@@ -487,9 +488,11 @@
 ./usr/X11R6/lib/libXxf86vm.so.5.0
 ./usr/X11R6/lib/libdmx.so.1.0
 ./usr/X11R6/lib/libexpat.so.8.0
+./usr/X11R6/lib/libexpat_pic.a
 ./usr/X11R6/lib/libfontconfig.so.5.1
 ./usr/X11R6/lib/libfontenc.so.3.0
 ./usr/X11R6/lib/libfreetype.so.14.0
+./usr/X11R6/lib/libfreetype_pic.a
 ./usr/X11R6/lib/liblbxutil.so.1.0
 ./usr/X11R6/lib/liboldX.so.10.0
 ./usr/X11R6/lib/libxkbfile.so.4.0
@@ -1020,4 +1023,5 @@
 ./usr/X11R6/man/cat3/gluTessProperty.0
 ./usr/X11R6/man/cat3/gluTessVertex.0
 ./usr/X11R6/man/cat3/gluUnProject.0
+./usr/X11R6/man/man1/xfs.1
 ./var/db/xkb

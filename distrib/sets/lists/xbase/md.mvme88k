@@ -15,6 +15,7 @@
 ./usr/X11R6/bin/bdftruncate
 ./usr/X11R6/bin/dga
 ./usr/X11R6/bin/ucs2any
+./usr/X11R6/bin/xfs
 ./usr/X11R6/include/X11/extensions/xf86dga.h
 ./usr/X11R6/include/X11/extensions/xf86dga1.h
 ./usr/X11R6/include/X11/extensions/xf86dga1str.h
@@ -405,6 +406,8 @@
 ./usr/X11R6/lib/libXaw7.so.11.0
 ./usr/X11R6/lib/libXfontcache.so.4.0
 ./usr/X11R6/lib/libXxf86dga.a
+./usr/X11R6/lib/libexpat_pic.a
+./usr/X11R6/lib/libfreetype_pic.a
 ./usr/X11R6/man/cat1/XDarwin.0
 ./usr/X11R6/man/cat1/bdftruncate.0
 ./usr/X11R6/man/cat1/dga.0
@@ -474,3 +477,4 @@
 ./usr/X11R6/man/cat4/ur98.0
 ./usr/X11R6/man/cat4/v4l.0
 ./usr/X11R6/man/cat7/Xprint.0
+./usr/X11R6/man/man1/xfs.1

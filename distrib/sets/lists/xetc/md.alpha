@@ -1,2 +1,3 @@
 ./etc/X11/app-defaults/XOrgCfg
+./etc/X11/fs/config
 ./etc/X11/xorg.conf

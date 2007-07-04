@@ -18,6 +18,7 @@
 ./usr/X11R6/bin/glxinfo
 ./usr/X11R6/bin/ucs2any
 ./usr/X11R6/bin/xdriinfo
+./usr/X11R6/bin/xfs
 ./usr/X11R6/bin/xrx
 ./usr/X11R6/include/GL
 ./usr/X11R6/include/GL/GLwDrawA.h
@@ -447,9 +448,11 @@
 ./usr/X11R6/lib/libXxf86vm.so.4.0
 ./usr/X11R6/lib/libexpat.so.5.0
 ./usr/X11R6/lib/libexpat.so.8.0
+./usr/X11R6/lib/libexpat_pic.a
 ./usr/X11R6/lib/libfontconfig.so.3.0
 ./usr/X11R6/lib/libfontenc.so.3.0
 ./usr/X11R6/lib/libfreetype.so.13.1
+./usr/X11R6/lib/libfreetype_pic.a
 ./usr/X11R6/lib/liboldX.so.9.0
 ./usr/X11R6/lib/libxkbfile.so.3.0
 ./usr/X11R6/lib/libxkbui.so.3.0
@@ -1053,3 +1056,4 @@
 ./usr/X11R6/man/cat4/ur98.0
 ./usr/X11R6/man/cat4/v4l.0
 ./usr/X11R6/man/cat7/Xprint.0
+./usr/X11R6/man/man1/xfs.1
