@@ -1,9 +1,9 @@
-# $OpenBSD: Makefile,v 1.5 2007/06/15 19:43:57 matthieu Exp $
+# $OpenBSD: Makefile,v 1.6 2007/07/05 22:09:06 matthieu Exp $
 
 SUBDIR=	resize
 
 PROG=	xterm
-MAN=	xterm.1
+MAN=	xterm.1tbl
 
 BINGRP=		utmp
 BINMODE=	2755
@@ -26,13 +26,13 @@ X11BASE?=	/usr/X11R6
 MANDIR=		${X11BASE}/man/cat
 XETC?=		/etc/X11
 
-xterm.1: xterm.man
+xterm.1tbl: xterm.man
 	sed -e 's#__vendorversion__#"X Window System"#g' \
 	    -e 's#__miscmansuffix__#1#g' \
             -e 's#__apploaddir__#${X11ETC}/app-defaults#g' \
 	< ${.CURDIR}/xterm.man > $@
 
-CLEANFILES+=	xterm.1
+CLEANFILES+=	xterm.1tbl
 
 afterinstall:
 	${INSTALL} ${INSTALL_COPY} -m 755 ${.CURDIR}/uxterm \
