@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.5 2007/01/02 13:07:35 matthieu Exp $
+# $OpenBSD: Makefile,v 1.6 2007/07/05 22:20:55 matthieu Exp $
 
 .include "../Makefile.inc"
 
@@ -16,10 +16,10 @@ CPPFLAGS+= -DFVWM_MODULEDIR=\"$(FVWMLIBDIR)\" \
 
 LDADD+= -lXpm -lXt -lICE -lSM -lXext -lX11 -lXdmcp -lXau
 
-fvwm.1: fvwm2.1
-	sed -e "s,__projectroot__,${X11BASE}," ${.CURDIR}/fvwm2.1 > fvwm.1 
+fvwm.1tbl: fvwm2.1
+	sed -e "s,__projectroot__,${X11BASE}," ${.CURDIR}/fvwm2.1 > fvwm.1tbl
 
-CLEANFILES= fvwm.1
+CLEANFILES= fvwm.1tbl
 
 .include <bsd.prog.mk>
 .include <bsd.xorg.mk>
