@@ -50,7 +50,7 @@ o Compiling and installing
   ------------------------
 
 Xenocara is made up of more than three hundred different
-independent packages that need to be build and installed in the right
+independent packages that need to be built and installed in the right
 order, especially while bootstrapping (while /usr/X11R6 is still
 empty). The Xenocara Makefiles take care of that using the 'build'
 target.
@@ -206,4 +206,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.19 2007/06/01 00:19:52 matthieu Exp $
+$OpenBSD: README,v 1.20 2007/07/14 11:20:10 jolan Exp $
