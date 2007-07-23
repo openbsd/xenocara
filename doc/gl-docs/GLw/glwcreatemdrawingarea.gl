@@ -17,7 +17,7 @@
 .iX "creation functions"
 .sp 1
 .SH SYNOPSIS
-\fB#include <X11/GLw/GLwMDrawA.h>\fP
+\fB#include <GL/GLwMDrawA.h>\fP
 .br
 Widget \fBGLwCreateMDrawingArea\fP( Widget \fIparent\fP,
                               String \fIname\fP,

@@ -17,11 +17,11 @@
 .iX "widget class" "OpenGL" "Draw"
 .sp 1
 .SH SYNOPSIS
-\fB#include <X11/GLw/GLwDrawA.h>
+\fB#include <GL/GLwDrawA.h>
 .br
 \fBld ... -lGLw -lGL -l<anywidgetlibrary> -lXext -lXt -lX11 -lm
 .sp
-\fB#include <X11/GLw/GLwMDrawA.h>
+\fB#include <GL/GLwMDrawA.h>
 .br
 \fBld ... -lGLw -lGL -lXm -lXext -lXt -lX11 -lm
 .sp 1
@@ -399,7 +399,7 @@ the appropriate callbacks.
 .nf
 \f(CW
    #include <stdlib.h>
-   #include <X11/GLw/GLwDrawA.h>
+   #include <GL/GLwDrawA.h>
    static GLXContext glx_context;  /* assume only one context */
    . . .
 
