@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.2 2007/05/26 17:24:45 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.3 2007/07/27 06:49:39 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -458,7 +458,7 @@ wsReadInput(InputInfoPtr pInfo)
 	n /= sizeof(struct wscons_event);
 	while( n-- ) {
 		int buttons = priv->lastButtons;
-		int dx = 0, dy = 0, dz, dw = 0;
+		int dx = 0, dy = 0, dz = 0, dw = 0;
 		int zbutton = 0, wbutton = 0;
 
 		ax = 0; ay = 0;
