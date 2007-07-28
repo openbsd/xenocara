@@ -1,17 +1,17 @@
-# $OpenBSD: Makefile,v 1.5 2007/04/07 15:37:50 matthieu Exp $
-
-DIST=	${.CURDIR}/../../dist/Mesa
-GLW=	${DIST}/src/glw
+# $OpenBSD: Makefile,v 1.6 2007/07/28 13:50:48 matthieu Exp $
 
 DEBUG?=
 
 LIB= GLw
 
-CPPFLAGS += -I${DIST}/include \
-	-I${X11BASE}/include
+CPPFLAGS += -I${X11BASE}/include \
+	-I${.CURDIR} -DUSE_XM_STUBS
 
 SRCS= \
-	GLwDrawA.c
+	GLwDrawA.c \
+	GLwDAUtil.c \
+	GLwM1DrawA.c \
+	GLwM2DrawA.c
 
 INCS= \
 	GLwDrawA.h \
@@ -22,7 +22,7 @@ INCS= \
 obj: _xenocara_obj
 
 includes:
-	cd ${GLW}; for i in ${INCS}; do \
+	cd ${.CURDIR}; for i in ${INCS}; do \
 	    j="cmp -s $$i ${DESTDIR}${INCSDIR}/GL/$$i || \
 		${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 \
 		$$i ${DESTDIR}${INCSDIR}/GL"; \
@@ -37,4 +37,3 @@ NOPROFILE=
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
 
-.PATH: ${GLW}
