@@ -1,11 +1,11 @@
-# $OpenBSD: Makefile,v 1.6 2007/07/28 13:50:48 matthieu Exp $
+# $OpenBSD: Makefile,v 1.7 2007/07/29 08:32:45 matthieu Exp $
 
 DEBUG?=
 
 LIB= GLw
 
 CPPFLAGS += -I${X11BASE}/include \
-	-I${.CURDIR} -DUSE_XM_STUBS
+	-I${.CURDIR}
 
 SRCS= \
 	GLwDrawA.c \
