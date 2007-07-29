@@ -1604,6 +1604,7 @@ EOF
 	compiler_flags="$compiler_flags $arg"
 	compile_command="$compile_command $arg"
 	finalize_command="$finalize_command $arg"
+	deplibs="$deplibs $arg"
 	continue
 	;;
 
@@ -2111,6 +2112,7 @@ EOF
 	    finalize_deplibs="$deplib $finalize_deplibs"
 	  else
 	    compiler_flags="$compiler_flags $deplib"
+	    test "$linkmode" = lib && newdependency_libs="$deplib $newdependency_libs"
 	  fi
 	  continue
 	  ;;
