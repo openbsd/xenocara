@@ -1450,6 +1450,47 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
 echo "$as_me:$LINENO: checking whether build environment is sane" >&5
 echo $ECHO_N "checking whether build environment is sane... $ECHO_C" >&6
+# Just in case
+sleep 1
+echo timestamp > conftest.file
+# Do `set' in a subshell so we don't clobber the current shell's
+# arguments.  Must try -L first in case configure is actually a
+# symlink; some systems play weird games with the mod time of symlinks
+# (eg FreeBSD returns the mod time of the symlink's containing
+# directory).
+if (
+   set X `ls -Lt $srcdir/configure conftest.file 2> /dev/null`
+   if test "$*" = "X"; then
+      # -L didn't work.
+      set X `ls -t $srcdir/configure conftest.file`
+   fi
+   rm -f conftest.file
+   if test "$*" != "X $srcdir/configure conftest.file" \
+      && test "$*" != "X conftest.file $srcdir/configure"; then
+
+      # If neither matched, then we have a broken ls.  This can happen
+      # if, for instance, CONFIG_SHELL is bash and it inherits a
+      # broken ls alias from the environment.  This has actually
+      # happened.  Such a system could not be considered "sane".
+      { { echo "$as_me:$LINENO: error: ls -t appears to fail.  Make sure there is not a broken
+alias in your environment" >&5
+echo "$as_me: error: ls -t appears to fail.  Make sure there is not a broken
+alias in your environment" >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+
+   test "$2" = conftest.file
+   )
+then
+   # Ok.
+   :
+else
+   { { echo "$as_me:$LINENO: error: newly created file is older than distributed files!
+Check your system clock" >&5
+echo "$as_me: error: newly created file is older than distributed files!
+Check your system clock" >&2;}
+   { (exit 1); exit 1; }; }
+fi
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
 test "$program_prefix" != NONE &&
@@ -3166,6 +3207,9 @@ echo "$as_me:$LINENO: checking for XCLOCK_X11" >&5
 echo $ECHO_N "checking for XCLOCK_X11... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XCLOCK_X11_CFLAGS"; then
+        pkg_cv_XCLOCK_X11_CFLAGS="$XCLOCK_X11_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -3176,10 +3220,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XCLOCK_X11_LIBS"; then
+        pkg_cv_XCLOCK_X11_LIBS="$XCLOCK_X11_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"x11\"") >&5
   ($PKG_CONFIG --exists --print-errors "x11") 2>&5
@@ -3190,38 +3238,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	XCLOCK_X11_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XCLOCK_X11_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11"`
+        else
+	        XCLOCK_X11_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$XCLOCK_X11_PKG_ERRORS" 1>&5
+	echo "$XCLOCK_X11_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (x11) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (x11) were not met:
+
+$XCLOCK_X11_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XCLOCK_X11_CFLAGS and XCLOCK_X11_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (x11) were not met.
+Alternatively, you may set the environment variables XCLOCK_X11_CFLAGS
+and XCLOCK_X11_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (x11) were not met:
+
+$XCLOCK_X11_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XCLOCK_X11_CFLAGS and XCLOCK_X11_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables XCLOCK_X11_CFLAGS
+and XCLOCK_X11_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XCLOCK_X11_CFLAGS and XCLOCK_X11_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XCLOCK_X11_CFLAGS
+and XCLOCK_X11_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -3229,9 +3298,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XCLOCK_X11_CFLAGS and XCLOCK_X11_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XCLOCK_X11_CFLAGS
+and XCLOCK_X11_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -3271,6 +3340,9 @@ echo "$as_me:$LINENO: checking for TMP_XAW" >&5
 echo $ECHO_N "checking for TMP_XAW... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$TMP_XAW_CFLAGS"; then
+        pkg_cv_TMP_XAW_CFLAGS="$TMP_XAW_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"\$TMP_CHECK1\"") >&5
   ($PKG_CONFIG --exists --print-errors "$TMP_CHECK1") 2>&5
@@ -3281,10 +3353,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$TMP_XAW_LIBS"; then
+        pkg_cv_TMP_XAW_LIBS="$TMP_XAW_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"\$TMP_CHECK1\"") >&5
   ($PKG_CONFIG --exists --print-errors "$TMP_CHECK1") 2>&5
@@ -3295,16 +3371,31 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
-if test $pkg_failed = yes; then
-	TMP_XAW_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$TMP_CHECK1"`
-	# Put the nasty error message in config.log where it belongs
-	echo "$TMP_XAW_PKG_ERRORS" 1>&5
 
-	success=no
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        TMP_XAW_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "$TMP_CHECK1"`
+        else
+	        TMP_XAW_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$TMP_CHECK1"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$TMP_XAW_PKG_ERRORS" >&5
+
+	echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+                success=no
 elif test $pkg_failed = untried; then
 	success=no
 else
@@ -3322,6 +3413,9 @@ echo "$as_me:$LINENO: checking for TMP_XAW" >&5
 echo $ECHO_N "checking for TMP_XAW... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$TMP_XAW_CFLAGS"; then
+        pkg_cv_TMP_XAW_CFLAGS="$TMP_XAW_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"\$TMP_CHECK2\"") >&5
   ($PKG_CONFIG --exists --print-errors "$TMP_CHECK2") 2>&5
@@ -3332,10 +3426,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$TMP_XAW_LIBS"; then
+        pkg_cv_TMP_XAW_LIBS="$TMP_XAW_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"\$TMP_CHECK2\"") >&5
   ($PKG_CONFIG --exists --print-errors "$TMP_CHECK2") 2>&5
@@ -3346,16 +3444,31 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
-if test $pkg_failed = yes; then
-	TMP_XAW_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$TMP_CHECK2"`
-	# Put the nasty error message in config.log where it belongs
-	echo "$TMP_XAW_PKG_ERRORS" 1>&5
 
-	success=no
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        TMP_XAW_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "$TMP_CHECK2"`
+        else
+	        TMP_XAW_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$TMP_CHECK2"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$TMP_XAW_PKG_ERRORS" >&5
+
+	echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+                success=no
 elif test $pkg_failed = untried; then
 	success=no
 else
@@ -3407,6 +3520,9 @@ echo "$as_me:$LINENO: checking for XFT" >&5
 echo $ECHO_N "checking for XFT... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XFT_CFLAGS"; then
+        pkg_cv_XFT_CFLAGS="$XFT_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xrender xft\"") >&5
   ($PKG_CONFIG --exists --print-errors "xrender xft") 2>&5
@@ -3417,10 +3533,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XFT_LIBS"; then
+        pkg_cv_XFT_LIBS="$XFT_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xrender xft\"") >&5
   ($PKG_CONFIG --exists --print-errors "xrender xft") 2>&5
@@ -3431,38 +3551,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	XFT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xrender xft"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XFT_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xrender xft"`
+        else
+	        XFT_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xrender xft"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$XFT_PKG_ERRORS" 1>&5
+	echo "$XFT_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xrender xft) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (xrender xft) were not met:
+
+$XFT_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XFT_CFLAGS and XFT_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (xrender xft) were not met.
+Alternatively, you may set the environment variables XFT_CFLAGS
+and XFT_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (xrender xft) were not met:
+
+$XFT_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XFT_CFLAGS and XFT_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables XFT_CFLAGS
+and XFT_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XFT_CFLAGS and XFT_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XFT_CFLAGS
+and XFT_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -3470,9 +3611,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XFT_CFLAGS and XFT_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XFT_CFLAGS
+and XFT_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -3639,6 +3780,9 @@ echo "$as_me:$LINENO: checking for XKB" >&5
 echo $ECHO_N "checking for XKB... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XKB_CFLAGS"; then
+        pkg_cv_XKB_CFLAGS="$XKB_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xkbfile\"") >&5
   ($PKG_CONFIG --exists --print-errors "xkbfile") 2>&5
@@ -3649,10 +3793,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XKB_LIBS"; then
+        pkg_cv_XKB_LIBS="$XKB_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xkbfile\"") >&5
   ($PKG_CONFIG --exists --print-errors "xkbfile") 2>&5
@@ -3663,38 +3811,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	XKB_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xkbfile"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XKB_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xkbfile"`
+        else
+	        XKB_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xkbfile"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$XKB_PKG_ERRORS" 1>&5
+	echo "$XKB_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xkbfile) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (xkbfile) were not met:
+
+$XKB_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XKB_CFLAGS and XKB_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (xkbfile) were not met.
+Alternatively, you may set the environment variables XKB_CFLAGS
+and XKB_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (xkbfile) were not met:
+
+$XKB_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XKB_CFLAGS and XKB_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables XKB_CFLAGS
+and XKB_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XKB_CFLAGS and XKB_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XKB_CFLAGS
+and XKB_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -3702,9 +3871,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XKB_CFLAGS and XKB_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XKB_CFLAGS
+and XKB_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
@@ -3734,6 +3903,9 @@ echo "$as_me:$LINENO: checking for APPDEFS" >&5
 echo $ECHO_N "checking for APPDEFS... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$APPDEFS_CFLAGS"; then
+        pkg_cv_APPDEFS_CFLAGS="$APPDEFS_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xt\"") >&5
   ($PKG_CONFIG --exists --print-errors "xt") 2>&5
@@ -3744,10 +3916,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$APPDEFS_LIBS"; then
+        pkg_cv_APPDEFS_LIBS="$APPDEFS_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xt\"") >&5
   ($PKG_CONFIG --exists --print-errors "xt") 2>&5
@@ -3758,38 +3934,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	APPDEFS_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xt"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        APPDEFS_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xt"`
+        else
+	        APPDEFS_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xt"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$APPDEFS_PKG_ERRORS" 1>&5
+	echo "$APPDEFS_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xt) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (xt) were not met:
+
+$APPDEFS_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the APPDEFS_CFLAGS and APPDEFS_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (xt) were not met.
+Alternatively, you may set the environment variables APPDEFS_CFLAGS
+and APPDEFS_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (xt) were not met:
+
+$APPDEFS_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the APPDEFS_CFLAGS and APPDEFS_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables APPDEFS_CFLAGS
+and APPDEFS_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the APPDEFS_CFLAGS and APPDEFS_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables APPDEFS_CFLAGS
+and APPDEFS_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -3797,9 +3994,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the APPDEFS_CFLAGS and APPDEFS_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables APPDEFS_CFLAGS
+and APPDEFS_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}

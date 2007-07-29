@@ -1415,6 +1415,47 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
 echo "$as_me:$LINENO: checking whether build environment is sane" >&5
 echo $ECHO_N "checking whether build environment is sane... $ECHO_C" >&6
+# Just in case
+sleep 1
+echo timestamp > conftest.file
+# Do `set' in a subshell so we don't clobber the current shell's
+# arguments.  Must try -L first in case configure is actually a
+# symlink; some systems play weird games with the mod time of symlinks
+# (eg FreeBSD returns the mod time of the symlink's containing
+# directory).
+if (
+   set X `ls -Lt $srcdir/configure conftest.file 2> /dev/null`
+   if test "$*" = "X"; then
+      # -L didn't work.
+      set X `ls -t $srcdir/configure conftest.file`
+   fi
+   rm -f conftest.file
+   if test "$*" != "X $srcdir/configure conftest.file" \
+      && test "$*" != "X conftest.file $srcdir/configure"; then
+
+      # If neither matched, then we have a broken ls.  This can happen
+      # if, for instance, CONFIG_SHELL is bash and it inherits a
+      # broken ls alias from the environment.  This has actually
+      # happened.  Such a system could not be considered "sane".
+      { { echo "$as_me:$LINENO: error: ls -t appears to fail.  Make sure there is not a broken
+alias in your environment" >&5
+echo "$as_me: error: ls -t appears to fail.  Make sure there is not a broken
+alias in your environment" >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+
+   test "$2" = conftest.file
+   )
+then
+   # Ok.
+   :
+else
+   { { echo "$as_me:$LINENO: error: newly created file is older than distributed files!
+Check your system clock" >&5
+echo "$as_me: error: newly created file is older than distributed files!
+Check your system clock" >&2;}
+   { (exit 1); exit 1; }; }
+fi
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
 test "$program_prefix" != NONE &&
@@ -3049,6 +3090,9 @@ echo "$as_me:$LINENO: checking for TMP_XAW" >&5
 echo $ECHO_N "checking for TMP_XAW... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$TMP_XAW_CFLAGS"; then
+        pkg_cv_TMP_XAW_CFLAGS="$TMP_XAW_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"\$TMP_CHECK1\"") >&5
   ($PKG_CONFIG --exists --print-errors "$TMP_CHECK1") 2>&5
@@ -3059,10 +3103,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$TMP_XAW_LIBS"; then
+        pkg_cv_TMP_XAW_LIBS="$TMP_XAW_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"\$TMP_CHECK1\"") >&5
   ($PKG_CONFIG --exists --print-errors "$TMP_CHECK1") 2>&5
@@ -3073,16 +3121,31 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
-if test $pkg_failed = yes; then
-	TMP_XAW_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$TMP_CHECK1"`
-	# Put the nasty error message in config.log where it belongs
-	echo "$TMP_XAW_PKG_ERRORS" 1>&5
 
-	success=no
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        TMP_XAW_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "$TMP_CHECK1"`
+        else
+	        TMP_XAW_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$TMP_CHECK1"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$TMP_XAW_PKG_ERRORS" >&5
+
+	echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+                success=no
 elif test $pkg_failed = untried; then
 	success=no
 else
@@ -3100,6 +3163,9 @@ echo "$as_me:$LINENO: checking for TMP_XAW" >&5
 echo $ECHO_N "checking for TMP_XAW... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$TMP_XAW_CFLAGS"; then
+        pkg_cv_TMP_XAW_CFLAGS="$TMP_XAW_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"\$TMP_CHECK2\"") >&5
   ($PKG_CONFIG --exists --print-errors "$TMP_CHECK2") 2>&5
@@ -3110,10 +3176,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$TMP_XAW_LIBS"; then
+        pkg_cv_TMP_XAW_LIBS="$TMP_XAW_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"\$TMP_CHECK2\"") >&5
   ($PKG_CONFIG --exists --print-errors "$TMP_CHECK2") 2>&5
@@ -3124,16 +3194,31 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
-if test $pkg_failed = yes; then
-	TMP_XAW_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$TMP_CHECK2"`
-	# Put the nasty error message in config.log where it belongs
-	echo "$TMP_XAW_PKG_ERRORS" 1>&5
 
-	success=no
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        TMP_XAW_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "$TMP_CHECK2"`
+        else
+	        TMP_XAW_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$TMP_CHECK2"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$TMP_XAW_PKG_ERRORS" >&5
+
+	echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+                success=no
 elif test $pkg_failed = untried; then
 	success=no
 else
@@ -3173,6 +3258,9 @@ echo "$as_me:$LINENO: checking for XBIFF" >&5
 echo $ECHO_N "checking for XBIFF... $ECHO_C" >&6
 
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XBIFF_CFLAGS"; then
+        pkg_cv_XBIFF_CFLAGS="$XBIFF_CFLAGS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xbitmaps xext\"") >&5
   ($PKG_CONFIG --exists --print-errors "xbitmaps xext") 2>&5
@@ -3183,10 +3271,14 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
+    if test -n "$XBIFF_LIBS"; then
+        pkg_cv_XBIFF_LIBS="$XBIFF_LIBS"
+    else
         if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xbitmaps xext\"") >&5
   ($PKG_CONFIG --exists --print-errors "xbitmaps xext") 2>&5
@@ -3197,38 +3289,59 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
+    fi
 else
 	pkg_failed=untried
 fi
 
+
+
 if test $pkg_failed = yes; then
-	XBIFF_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xbitmaps xext"`
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XBIFF_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xbitmaps xext"`
+        else
+	        XBIFF_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xbitmaps xext"`
+        fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$XBIFF_PKG_ERRORS" 1>&5
+	echo "$XBIFF_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xbitmaps xext) were not met.
+	{ { echo "$as_me:$LINENO: error: Package requirements (xbitmaps xext) were not met:
+
+$XBIFF_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XBIFF_CFLAGS and XBIFF_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&5
-echo "$as_me: error: Package requirements (xbitmaps xext) were not met.
+Alternatively, you may set the environment variables XBIFF_CFLAGS
+and XBIFF_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (xbitmaps xext) were not met:
+
+$XBIFF_PKG_ERRORS
+
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively you may set the XBIFF_CFLAGS and XBIFF_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details." >&2;}
+Alternatively, you may set the environment variables XBIFF_CFLAGS
+and XBIFF_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
 	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XBIFF_CFLAGS and XBIFF_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XBIFF_CFLAGS
+and XBIFF_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&5
@@ -3236,9 +3349,9 @@ echo "$as_me: error: The pkg-config script could not be found or is too old.  Ma
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively you may set the XBIFF_CFLAGS and XBIFF_LIBS environment variables
-to avoid the need to call pkg-config.  See the pkg-config man page for
-more details.
+Alternatively, you may set the environment variables XBIFF_CFLAGS
+and XBIFF_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
 
 To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details." >&2;}
