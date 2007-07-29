@@ -205,8 +205,6 @@
 ./usr/X11R6/lib/modules/drivers/radeon_drv.so
 ./usr/X11R6/lib/modules/drivers/rendition_drv.la
 ./usr/X11R6/lib/modules/drivers/rendition_drv.so
-./usr/X11R6/lib/modules/drivers/riva128.la
-./usr/X11R6/lib/modules/drivers/riva128.so
 ./usr/X11R6/lib/modules/drivers/s3_drv.la
 ./usr/X11R6/lib/modules/drivers/s3_drv.so
 ./usr/X11R6/lib/modules/drivers/s3virge_drv.la

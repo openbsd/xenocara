@@ -179,8 +179,6 @@
 ./usr/X11R6/lib/modules/drivers/r128_drv.so
 ./usr/X11R6/lib/modules/drivers/radeon_drv.la
 ./usr/X11R6/lib/modules/drivers/radeon_drv.so
-./usr/X11R6/lib/modules/drivers/riva128.la
-./usr/X11R6/lib/modules/drivers/riva128.so
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.la
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.so
 ./usr/X11R6/lib/modules/extensions
