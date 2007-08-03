@@ -402,8 +402,6 @@
 ./etc/X11/xkb/types/numpad
 ./etc/X11/xkb/types/pc
 ./etc/X11/xsm
-./usr/X11R6/bin/Xnest
-./usr/X11R6/bin/Xvfb
 ./usr/X11R6/bin/bdftruncate
 ./usr/X11R6/bin/dga
 ./usr/X11R6/bin/glxgears
