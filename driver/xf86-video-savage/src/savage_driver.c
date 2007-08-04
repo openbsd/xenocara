@@ -3536,6 +3536,7 @@ static Bool SavageModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 
         /* do it! */
         SavageWriteMode(pScrn, vganew, new, TRUE);
+	pScrn->currentMode = mode;
 
         if (psav->FBStart2nd) {
 	    SavageStreamsOn(pScrn);
@@ -3798,6 +3799,7 @@ static Bool SavageModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 
     /* do it! */
     SavageWriteMode(pScrn, vganew, new, TRUE);
+    pScrn->currentMode = mode;
 
     if (psav->FBStart2nd) {
         SavageStreamsOn(pScrn);
