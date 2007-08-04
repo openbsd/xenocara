@@ -171,7 +171,7 @@ Edummy(const char *dummy, ...)
 	 OUT_RING(MI_NOOP);						\
 	 OUT_RING(MI_OVERLAY_FLIP | MI_OVERLAY_FLIP_CONTINUE);		\
       }									\
-      if (IS_I965G(pI830)) 						\
+      if (IS_I96X(pI830)) 						\
          OUT_RING(pI830->OverlayMem->Start | OFC_UPDATE); 		\
       else								\
 	 OUT_RING(pI830->OverlayMem->Physical | OFC_UPDATE);		\
@@ -189,7 +189,7 @@ Edummy(const char *dummy, ...)
          OUT_RING(MI_FLUSH | MI_WRITE_DIRTY_STATE);                   	\
          OUT_RING(MI_NOOP);    						\
 	 OUT_RING(MI_OVERLAY_FLIP | MI_OVERLAY_FLIP_OFF);		\
-         if (IS_I965G(pI830)) 						\
+         if (IS_I96X(pI830)) 						\
             OUT_RING(pI830->OverlayMem->Start | OFC_UPDATE); 		\
          else								\
 	    OUT_RING(pI830->OverlayMem->Physical | OFC_UPDATE);		\
@@ -446,7 +446,7 @@ I830InitVideo(ScreenPtr pScreen)
    xvContrast = MAKE_ATOM("XV_CONTRAST");
 
    /* Set up overlay video if we can do it at this depth. */
-   if (!IS_I965G(pI830) && pScrn->bitsPerPixel != 8) {
+   if (!IS_I96X(pI830) && pScrn->bitsPerPixel != 8) {
       overlayAdaptor = I830SetupImageVideoOverlay(pScreen);
       if (overlayAdaptor != NULL) {
 	 adaptors[num_adaptors++] = overlayAdaptor;
@@ -461,7 +461,7 @@ I830InitVideo(ScreenPtr pScreen)
    /* Set up textured video if we can do it at this depth and we are on
     * supported hardware.
     */
-   if (pScrn->bitsPerPixel >= 16 && (IS_I9XX(pI830) || IS_I965G(pI830))) {
+   if (pScrn->bitsPerPixel >= 16 && (IS_I9XX(pI830) || IS_I96X(pI830))) {
       texturedAdaptor = I830SetupImageVideoTextured(pScreen);
       if (texturedAdaptor != NULL) {
 	 adaptors[num_adaptors++] = texturedAdaptor;
@@ -1847,7 +1847,7 @@ I830DisplayVideo(ScrnInfoPtr pScrn, int id, short width, short height,
 			dstBox->x2, dstBox->y2);
 
    /* buffer locations */
-   if (IS_I965G(pI830))
+   if (IS_I96X(pI830))
    {
       overlay->OBUF_0Y = 0;
       overlay->OBUF_0U = 0;
@@ -2995,7 +2995,7 @@ I830PutImage(ScrnInfoPtr pScrn,
    if (pPriv->textured) {
       pitchAlignMask = 3;
    } else {
-      if (IS_I965G(pI830))
+      if (IS_I96X(pI830))
 	 pitchAlignMask = 255;
       else
 	 pitchAlignMask = 63;
@@ -3031,7 +3031,7 @@ I830PutImage(ScrnInfoPtr pScrn,
    ErrorF("srcPitch: %d, dstPitch: %d, size: %d\n", srcPitch, dstPitch, size);
 #endif
 
-   if (IS_I965G(pI830))
+   if (IS_I96X(pI830))
       extraLinear = BRW_LINEAR_EXTRA;
    else
       extraLinear = 0;
@@ -3145,7 +3145,7 @@ I830PutImage(ScrnInfoPtr pScrn,
 
       I830DisplayVideo(pScrn, destId, width, height, dstPitch,
 		       x1, y1, x2, y2, &dstBox, src_w, src_h, drw_w, drw_h);
-   } else if (IS_I965G(pI830)) {
+   } else if (IS_I96X(pI830)) {
       BroadwaterDisplayVideoTextured (pScrn, pPriv, destId, clipBoxes, width, height,
 				      dstPitch, x1, y1, x2, y2,
 				      src_w, src_h, drw_w, drw_h, pDraw);
@@ -3619,7 +3619,7 @@ I830VideoSwitchModeAfter(ScrnInfoPtr pScrn, DisplayModePtr mode)
       }
    }
 
-   if (!IS_I965G(pI830)) {
+   if (!IS_I96X(pI830)) {
       if (pPriv->pipe == 0) {
          if (INREG(PIPEACONF) & PIPEACONF_DOUBLE_WIDE) {
             xf86DrvMsg(pScrn->scrnIndex, X_WARNING,

@@ -286,7 +286,7 @@ I830_Sync(ScrnInfoPtr pScrn)
    if (pI830->noAccel) 
       return;
 
-   if (IS_I965G(pI830))
+   if (IS_I96X(pI830))
       flags = 0;
 
    BEGIN_LP_RING(2);

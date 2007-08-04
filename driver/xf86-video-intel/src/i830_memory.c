@@ -1706,7 +1706,7 @@ MakeTiles(ScrnInfoPtr pScrn, I830MemRange *pMem, unsigned int fence)
 
    pitch = pScrn->displayWidth * pI830->cpp;
 
-   if (IS_I965G(pI830)) {
+   if (IS_I96X(pI830)) {
       I830RegPtr i830Reg = &pI830->ModeReg;
 
       switch (fence) {

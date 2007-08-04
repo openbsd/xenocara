@@ -148,7 +148,7 @@ I830Sync(ScrnInfoPtr pScrn)
 
    if (pI830->entityPrivate && !pI830->entityPrivate->RingRunning) return;
 
-   if (IS_I965G(pI830))
+   if (IS_I96X(pI830))
       flags = 0;
 
    /* Send a flush instruction and then wait till the ring is empty.
@@ -175,7 +175,7 @@ I830EmitFlush(ScrnInfoPtr pScrn)
    I830Ptr pI830 = I830PTR(pScrn);
    int flags = MI_WRITE_DIRTY_STATE | MI_INVALIDATE_MAP_CACHE;
 
-   if (IS_I965G(pI830))
+   if (IS_I96X(pI830))
       flags = 0;
 
    BEGIN_LP_RING(2);
@@ -403,7 +403,7 @@ CheckTiling(ScrnInfoPtr pScrn)
    unsigned int tiled = 0;
 
     /* Check tiling */
-   if (IS_I965G(pI830)) {
+   if (IS_I96X(pI830)) {
       if (pI830->bufferOffset == pScrn->fbOffset && pI830->front_tiled == FENCE_XMAJOR)
          tiled = 1;
       if (pI830->bufferOffset == pI830->RotatedMem.Start && pI830->rotated_tiled == FENCE_XMAJOR)
@@ -475,7 +475,7 @@ I830SubsequentSolidFillRect(ScrnInfoPtr pScrn, int x, int y, int w, int h)
       ADVANCE_LP_RING();
    }
 
-   if (IS_I965G(pI830))
+   if (IS_I96X(pI830))
       I830EmitFlush(pScrn);
 }
 
@@ -544,7 +544,7 @@ I830SubsequentScreenToScreenCopy(ScrnInfoPtr pScrn, int src_x1, int src_y1,
       ADVANCE_LP_RING();
    }
 
-   if (IS_I965G(pI830))
+   if (IS_I96X(pI830))
       I830EmitFlush(pScrn);
 }
 
@@ -628,7 +628,7 @@ I830SubsequentMono8x8PatternFillRect(ScrnInfoPtr pScrn, int pattx, int patty,
       ADVANCE_LP_RING();
    }
 
-   if (IS_I965G(pI830))
+   if (IS_I96X(pI830))
       I830EmitFlush(pScrn);
 }
 
@@ -753,7 +753,7 @@ I830SubsequentColorExpandScanline(ScrnInfoPtr pScrn, int bufno)
    pI830->BR[9] += pScrn->displayWidth * pI830->cpp;
    I830GetNextScanlineColorExpandBuffer(pScrn);
 
-   if (IS_I965G(pI830))
+   if (IS_I96X(pI830))
       I830EmitFlush(pScrn);
 }
 

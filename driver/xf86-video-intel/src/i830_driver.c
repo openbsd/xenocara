@@ -220,6 +220,7 @@ static SymTabRec I830BIOSChipsets[] = {
    {PCI_CHIP_I965_G_1,		"965G"},
    {PCI_CHIP_I965_Q,		"965Q"},
    {PCI_CHIP_I946_GZ,		"946GZ"},
+   {PCI_CHIP_I965_GM,		"965GM"},
    {-1,				NULL}
 };
 
@@ -237,6 +238,7 @@ static PciChipsets I830BIOSPciChipsets[] = {
    {PCI_CHIP_I965_G_1,		PCI_CHIP_I965_G_1,	RES_SHARED_VGA},
    {PCI_CHIP_I965_Q,		PCI_CHIP_I965_Q,	RES_SHARED_VGA},
    {PCI_CHIP_I946_GZ,		PCI_CHIP_I946_GZ,	RES_SHARED_VGA},
+   {PCI_CHIP_I965_GM,		PCI_CHIP_I965_GM,	RES_SHARED_VGA},
    {-1,				-1,			RES_UNDEFINED}
 };
 
@@ -3109,7 +3111,7 @@ I830DetectMemory(ScrnInfoPtr pScrn)
 
    /* We need to reduce the stolen size, by the GTT and the popup.
     * The GTT varying according the the FbMapSize and the popup is 4KB. */
-   if (IS_I965G(pI830))
+   if (IS_I96X(pI830))
       range = 512 + 4; /* Fixed 512KB size for i965 */
    else
       range = (pI830->FbMapSize / MB(1)) + 4;
@@ -3631,7 +3633,7 @@ I830LoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
    OUTREG(dspbase, INREG(dspbase));
    OUTREG(dspreg, temp | DISPPLANE_GAMMA_ENABLE);
    OUTREG(dspbase, INREG(dspbase));
-   if (IS_I965G(pI830)) 
+   if (IS_I96X(pI830)) 
       OUTREG(dspsurf, INREG(dspsurf));
 
    /* It seems that an initial read is needed. */
@@ -4076,6 +4078,9 @@ I830BIOSPreInit(ScrnInfoPtr pScrn, int flags)
    case PCI_CHIP_I946_GZ:
       chipname = "946GZ";
       break;
+   case PCI_CHIP_I965_GM:
+      chipname = "965GM";
+      break;
    default:
       chipname = "unknown chipset";
       break;
@@ -4186,14 +4191,12 @@ I830BIOSPreInit(ScrnInfoPtr pScrn, int flags)
 	 pI830->FbMapSize = 0x4000000; /* 64MB - has this been tested ?? */
       }
    } else {
-      if (IS_I9XX(pI830)) {
+      if (IS_I9XX(pI830) && !IS_I965GM(pI830) &&
+	  pI830->PciInfo->chipType != PCI_CHIP_E7221_G) {
 	 if (pI830->PciInfo->memBase[2] & 0x08000000)
 	    pI830->FbMapSize = 0x8000000;	/* 128MB aperture */
 	 else
 	    pI830->FbMapSize = 0x10000000;	/* 256MB aperture */
-
-   	 if (pI830->PciInfo->chipType == PCI_CHIP_E7221_G)
-	    pI830->FbMapSize = 0x8000000;	/* 128MB aperture */
       } else
 	 /* 128MB aperture for later chips */
 	 pI830->FbMapSize = 0x8000000;
@@ -4280,7 +4283,7 @@ I830BIOSPreInit(ScrnInfoPtr pScrn, int flags)
       if (!pI830->directRenderingDisabled) {
 	 Bool tmp = FALSE;
 
-	 if (IS_I965G(pI830))
+	 if (IS_I96X(pI830))
 	    pI830->mmModeFlags |= I830_KERNEL_TEX;
 
 	 from = X_PROBED;
@@ -4970,7 +4973,7 @@ I830BIOSPreInit(ScrnInfoPtr pScrn, int flags)
    else
       pI830->CursorNeedsPhysical = FALSE;
 
-   if (IS_I965G(pI830))
+   if (IS_I96X(pI830))
       pI830->CursorNeedsPhysical = FALSE;
 
    /* Force ring buffer to be in low memory for all chipsets */
@@ -5729,7 +5732,7 @@ CheckInheritedState(ScrnInfoPtr pScrn)
 
 #if 0
    if (errors) {
-      if (IS_I965G(pI830))
+      if (IS_I96X(pI830))
          I965PrintErrorState(pScrn);
       else
          I830PrintErrorState(pScrn);
@@ -5763,7 +5766,7 @@ ResetState(ScrnInfoPtr pScrn, Bool flush)
       pI830->entityPrivate->RingRunning = 0;
 
    /* Reset the fence registers to 0 */
-   if (IS_I965G(pI830)) {
+   if (IS_I96X(pI830)) {
       for (i = 0; i < FENCE_NEW_NR; i++) {
 	 OUTREG(FENCE_NEW + i * 8, 0);
 	 OUTREG(FENCE_NEW + 4 + i * 8, 0);
@@ -5801,7 +5804,7 @@ SetFenceRegs(ScrnInfoPtr pScrn)
 
    if (!I830IsPrimary(pScrn)) return;
 
-   if (IS_I965G(pI830)) {
+   if (IS_I96X(pI830)) {
       for (i = 0; i < FENCE_NEW_NR; i++) {
          OUTREG(FENCE_NEW + i * 8, pI830->ModeReg.Fence[i]);
          OUTREG(FENCE_NEW + 4 + i * 8, pI830->ModeReg.Fence[i+FENCE_NEW_NR]);
@@ -5917,7 +5920,7 @@ SaveHWState(ScrnInfoPtr pScrn)
 
    pVesa = pI830->vesa;
 
-   if (IS_I965G(pI830)) {
+   if (IS_I96X(pI830)) {
       pI830->savedAsurf = INREG(DSPASURF);
       pI830->savedBsurf = INREG(DSPBSURF);
    }
@@ -6032,7 +6035,7 @@ RestoreHWState(ScrnInfoPtr pScrn)
 
    VBESetDisplayStart(pVbe, pVesa->x, pVesa->y, TRUE);
 
-   if (IS_I965G(pI830)) {
+   if (IS_I96X(pI830)) {
       OUTREG(DSPASURF, pI830->savedAsurf);
       OUTREG(DSPBSURF, pI830->savedBsurf);
    }
@@ -6307,7 +6310,7 @@ I830VESASetMode(ScrnInfoPtr pScrn, DisplayModePtr pMode)
    }
 
 #if 0
-   { /* I965G ENABLE TILING */
+   { /* I96X ENABLE TILING */
       planeA = INREG(DSPACNTR) | 1<<10;
       OUTREG(DSPACNTR, planeA);
       /* flush the change. */
@@ -6315,7 +6318,7 @@ I830VESASetMode(ScrnInfoPtr pScrn, DisplayModePtr pMode)
       OUTREG(DSPABASE, temp);
    }
 #else
-   { /* I965G DISABLE TILING */
+   { /* I96X DISABLE TILING */
       planeA = INREG(DSPACNTR) & ~1<<10;
       OUTREG(DSPACNTR, planeA);
       /* flush the change. */
@@ -6384,7 +6387,7 @@ I830VESASetMode(ScrnInfoPtr pScrn, DisplayModePtr pMode)
       /* flush the change. */
       temp = INREG(DSPABASE);
       OUTREG(DSPABASE, temp);
-      if (IS_I965G(pI830)) {
+      if (IS_I96X(pI830)) {
          temp = INREG(DSPASURF);
          OUTREG(DSPASURF, temp);
       }
@@ -6398,7 +6401,7 @@ I830VESASetMode(ScrnInfoPtr pScrn, DisplayModePtr pMode)
       /* flush the change. */
       temp = INREG(DSPBADDR);
       OUTREG(DSPBADDR, temp);
-      if (IS_I965G(pI830)) {
+      if (IS_I96X(pI830)) {
          temp = INREG(DSPBSURF);
          OUTREG(DSPBSURF, temp);
       }
@@ -6448,7 +6451,7 @@ I830VESASetMode(ScrnInfoPtr pScrn, DisplayModePtr pMode)
          /* Trigger update */
          temp = INREG(basereg);
          OUTREG(basereg, temp);
-         if (IS_I965G(pI830)) {
+         if (IS_I96X(pI830)) {
             temp = INREG(surfreg);
             OUTREG(surfreg, temp);
          }
@@ -6471,7 +6474,7 @@ I830VESASetMode(ScrnInfoPtr pScrn, DisplayModePtr pMode)
             /* Trigger update */
             temp = INREG(basereg);
             OUTREG(basereg, temp);
-            if (IS_I965G(pI830)) {
+            if (IS_I96X(pI830)) {
                temp = INREG(surfreg);
                OUTREG(surfreg, temp);
             }
@@ -6495,7 +6498,7 @@ I830VESASetMode(ScrnInfoPtr pScrn, DisplayModePtr pMode)
          /* Trigger update */
          temp = INREG(basereg);
          OUTREG(basereg, temp);
-         if (IS_I965G(pI830)) {
+         if (IS_I96X(pI830)) {
             temp = INREG(surfreg);
             OUTREG(surfreg, temp);
          }
@@ -6516,7 +6519,7 @@ I830VESASetMode(ScrnInfoPtr pScrn, DisplayModePtr pMode)
          /* Trigger update */
          temp = INREG(basereg);
          OUTREG(basereg, temp);
-         if (IS_I965G(pI830)) {
+         if (IS_I96X(pI830)) {
             temp = INREG(surfreg);
             OUTREG(surfreg, temp);
          }
@@ -6557,7 +6560,7 @@ I830VESASetMode(ScrnInfoPtr pScrn, DisplayModePtr pMode)
 	 /* Trigger update */
 	 temp = INREG(basereg);
 	 OUTREG(basereg, temp);
-         if (IS_I965G(pI830)) {
+         if (IS_I96X(pI830)) {
             temp = INREG(surfreg);
             OUTREG(surfreg, temp);
          }
@@ -6664,7 +6667,7 @@ I830VESASetMode(ScrnInfoPtr pScrn, DisplayModePtr pMode)
 #endif
 
 #if 0
-   if (IS_I965G(pI830))
+   if (IS_I96X(pI830))
       I965PrintErrorState(pScrn);
    else
       I830PrintErrorState(pScrn);
@@ -7103,7 +7106,7 @@ IntelEmitInvarientState(ScrnInfoPtr pScrn)
       ADVANCE_LP_RING();
    }
 
-   if (!IS_I965G(pI830))
+   if (!IS_I96X(pI830))
    {
       if (IS_I9XX(pI830))
          I915EmitInvarientState(pScrn);
@@ -7635,8 +7638,8 @@ I830BIOSScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
       xf86DisableRandR(); /* Disable built-in RandR extension */
       shadowSetup(pScreen);
       /* support all rotations */
-      if (IS_I965G(pI830)) {
-	 I830RandRInit(pScreen, RR_Rotate_0); /* only 0 degrees for I965G */
+      if (IS_I96X(pI830)) {
+	 I830RandRInit(pScreen, RR_Rotate_0); /* only 0 degrees for I96X */
       } else {
 	 I830RandRInit(pScreen, RR_Rotate_0 | RR_Rotate_90 | RR_Rotate_180 | RR_Rotate_270);
       }
@@ -7659,7 +7662,7 @@ I830BIOSScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
    I830_dump_registers(pScrn);
 #endif
 
-   if (IS_I965G(pI830)) {
+   if (IS_I96X(pI830)) {
       /* turn off clock gating */
 #if 0
       OUTREG(0x6204, 0x70804000);
@@ -7795,14 +7798,14 @@ I830AdjustFrame(int scrnIndex, int x, int y, int flags)
 
    if (pI830->Clone) {
       if (!pI830->pipe == 0) {
-         if (!IS_I965G(pI830)) {
+         if (!IS_I96X(pI830)) {
             OUTREG(DSPABASE, Start + ((y * pScrn->displayWidth + x) * pI830->cpp));
          } else {
             OUTREG(DSPABASE, 0);
             OUTREG(DSPASURF, Start + ((y * pScrn->displayWidth + x) * pI830->cpp));
          }
       } else {
-         if (!IS_I965G(pI830)) {
+         if (!IS_I96X(pI830)) {
             OUTREG(DSPBBASE, Start + ((y * pScrn->displayWidth + x) * pI830->cpp));
          } else {
             OUTREG(DSPBBASE, 0);
@@ -7812,14 +7815,14 @@ I830AdjustFrame(int scrnIndex, int x, int y, int flags)
    }
 
    if (pI830->pipe == 0) {
-      if (!IS_I965G(pI830)) {
+      if (!IS_I96X(pI830)) {
          OUTREG(DSPABASE, Start + ((y * pScrn->displayWidth + x) * pI830->cpp));
       } else {
          OUTREG(DSPABASE, 0);
          OUTREG(DSPASURF, Start + ((y * pScrn->displayWidth + x) * pI830->cpp));
       }
    } else {
-      if (!IS_I965G(pI830)) {
+      if (!IS_I96X(pI830)) {
          OUTREG(DSPBBASE, Start + ((y * pScrn->displayWidth + x) * pI830->cpp));
       } else {
          OUTREG(DSPBBASE, 0);
@@ -8428,7 +8431,7 @@ I830BIOSSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
     */
    if ( (!WindowTable[pScrn->scrnIndex] || pspix->devPrivate.ptr == NULL) &&
          !pI830->DGAactive && (pScrn->PointerMoved == I830PointerMoved) &&
-	 !IS_I965G(pI830)) {
+	 !IS_I96X(pI830)) {
       if (!I830Rotate(pScrn, mode))
          ret = FALSE;
    }
@@ -8494,7 +8497,7 @@ I830BIOSSaveScreen(ScreenPtr pScreen, int mode)
 	 /* Flush changes */
 	 temp = INREG(base);
 	 OUTREG(base, temp);
-	 if (IS_I965G(pI830)) {
+	 if (IS_I96X(pI830)) {
             temp = INREG(surf);
             OUTREG(surf, temp);
          }
@@ -8967,7 +8970,7 @@ I830CheckDevicesTimer(OsTimerPtr timer, CARD32 now, pointer arg)
             offset = pI8301->FrontBuffer2.Start + ((pScrn->frameY0 * pI830->displayWidth + pScrn->frameX0) * pI830->cpp);
 	 }
 
-         if (IS_I965G(pI830)) {
+         if (IS_I96X(pI830)) {
             if (pI830->pipe == 0)
                adjust = INREG(DSPASURF);
             else 

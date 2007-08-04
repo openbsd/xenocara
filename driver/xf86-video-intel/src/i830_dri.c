@@ -481,7 +481,7 @@ I830DRIScreenInit(ScreenPtr pScreen)
    pI830->LockHeld = 0;
 
    pDRIInfo->drmDriverName = I830KernelDriverName;
-   if (IS_I965G(pI830))
+   if (IS_I96X(pI830))
       pDRIInfo->clientDriverName = I965ClientDriverName;
    else 
       pDRIInfo->clientDriverName = I830ClientDriverName;
@@ -684,10 +684,10 @@ I830DRIMapScreenRegions(ScrnInfoPtr pScrn, drmI830Sarea *sarea)
 					     pScrn->virtualY * pI830->cpp);
 #endif
 
-   /* The I965G isn't ready for the front buffer mapping to be moved around,
+   /* The I965 isn't ready for the front buffer mapping to be moved around,
     * because of issues with rmmap, it seems.
     */
-   if (!IS_I965G(pI830)) {
+   if (!IS_I96X(pI830)) {
       xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		 "[drm] Mapping front buffer\n");
       if (drmAddMap(pI830->drmSubFD,
@@ -1232,7 +1232,7 @@ I830DRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 
       I830SelectBuffer(pScrn, I830_SELECT_BACK);
       I830SubsequentScreenToScreenCopy(pScrn, x1, y1, destx, desty, w, h);
-      if (!IS_I965G(pI830)) {
+      if (!IS_I96X(pI830)) {
          I830SelectBuffer(pScrn, I830_SELECT_DEPTH);
          I830SubsequentScreenToScreenCopy(pScrn, x1, y1, destx, desty, w, h);
       }
