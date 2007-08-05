@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# $XdotOrg: app/xdm/config/Makefile.am,v 1.9 2006/03/18 03:43:18 alanc Exp $
+# $XdotOrg: $
 #
 
 #							-*- Makefile -*-
@@ -155,6 +155,10 @@ LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LINT = @LINT@
+LINT_FALSE = @LINT_FALSE@
+LINT_FLAGS = @LINT_FLAGS@
+LINT_TRUE = @LINT_TRUE@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -206,6 +210,8 @@ XDM_LDFLAGS = @XDM_LDFLAGS@
 XDM_LIBS = @XDM_LIBS@
 XDM_PIXMAP = @XDM_PIXMAP@
 XDM_PIXMAPDIR = @XDM_PIXMAPDIR@
+XFT_CFLAGS = @XFT_CFLAGS@
+XFT_LIBS = @XFT_LIBS@
 XINERAMA_CFLAGS = @XINERAMA_CFLAGS@
 XINERAMA_LIBS = @XINERAMA_LIBS@
 XLIB_CFLAGS = @XLIB_CFLAGS@
@@ -291,22 +297,22 @@ xdmconfig_DATA = \
 	Xservers
 
 xdmscript_SCRIPTS = \
-	Xsession
+	Xreset \
+	Xsession \
+	Xstartup
 
 dist_xdmscript_SCRIPTS = \
 	GiveConsole \
 	TakeConsole \
 	Xsetup_0 \
-	Xstartup \
-	Xreset \
 	Xwilling
 
 pixmapdir = $(XDM_PIXMAPDIR)
 dist_pixmap_DATA = xorg-bw.xpm xorg.xpm
-BUILT_SOURCES = Xservers.ws xdm-config Xresources Xsession
+BUILT_SOURCES = Xservers.ws xdm-config Xreset Xresources Xsession Xstartup
 CLEANFILES = $(BUILT_SOURCES) Xservers
 EXTRA_DIST = Xservers.ws.cpp Xservers.fs \
-	xdm-config.cpp Xresources.cpp Xsession.cpp
+	xdm-config.cpp Xreset.cpp Xresources.cpp Xsession.cpp Xstartup.cpp
 
 
 # Defines used when cpp'ing config files to replace settings in the files
@@ -320,11 +326,12 @@ XPMDEFINES = -DXPM -DBITMAPDIR=$(XDM_PIXMAPDIR) -DXDM_PIXMAP=$(XDM_PIXMAP) \
 #if HAVE_MKTEMP_COMMAND
 MKTEMP_DEFINES = -DMKTEMP_COMMAND=$(MKTEMP_COMMAND)
 #endif
-CPP_FILES_FLAGS = -DBINDIR=$(bindir) -DDEFAULTVT=$(DEFAULTVT) \
-    -DXDMDIR=$(XDMLIBDIR) -DXDMLOGDIR=$(XDMLOGDIR) -DXDMPIDDIR=$(XDMPIDDIR) \
-    -DXDMCONFIGDIR=$(XDMCONFIGDIR) -DXDMSCRIPTDIR=$(XDMSCRIPTDIR) \
-    -DSU=$(SU) -DCHOOSERPATH=$(XDMLIBDIR)/chooser $(XPMDEFINES) \
-    -DSHELL_CMD=$(SHELL_CMD) $(MKTEMP_DEFINES)
+CPP_FILES_FLAGS = -DBINDIR="$(bindir)" -DDEFAULTVT="$(DEFAULTVT)" \
+    -DXDMDIR="$(XDMLIBDIR)" -DXDMLOGDIR="$(XDMLOGDIR)" \
+    -DXDMPIDDIR="$(XDMPIDDIR)" -DXDMCONFIGDIR="$(XDMCONFIGDIR)" \
+    -DXDMSCRIPTDIR="$(XDMSCRIPTDIR)" -DSU="$(SU)" \
+    -DCHOOSERPATH="$(XDMLIBDIR)/chooser" $(XPMDEFINES) \
+    -DSHELL_CMD="$(SHELL_CMD)" $(MKTEMP_DEFINES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am

@@ -260,6 +260,10 @@ LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LINT = @LINT@
+LINT_FALSE = @LINT_FALSE@
+LINT_FLAGS = @LINT_FLAGS@
+LINT_TRUE = @LINT_TRUE@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -311,6 +315,8 @@ XDM_LDFLAGS = @XDM_LDFLAGS@
 XDM_LIBS = @XDM_LIBS@
 XDM_PIXMAP = @XDM_PIXMAP@
 XDM_PIXMAPDIR = @XDM_PIXMAPDIR@
+XFT_CFLAGS = @XFT_CFLAGS@
+XFT_LIBS = @XFT_LIBS@
 XINERAMA_CFLAGS = @XINERAMA_CFLAGS@
 XINERAMA_LIBS = @XINERAMA_LIBS@
 XLIB_CFLAGS = @XLIB_CFLAGS@
@@ -393,7 +399,8 @@ appmandir = $(APP_MAN_DIR)
 appman_PRE = xdm.man.cpp
 appman_DATA = $(appman_PRE:man.cpp=@APP_MAN_SUFFIX@)
 CLEANFILES = $(appman_DATA) $(APPDEFAULTFILES)
-EXTRA_DIST = $(appman_PRE) $(APPDEFAULTFILES:%=%.ad)
+EXTRA_DIST = $(appman_PRE) ChangeLog $(APPDEFAULTFILES:%=%.ad)
+MAINTAINERCLEANFILES = ChangeLog
 SED = sed
 SUFFIXES = .cpp .$(APP_MAN_SUFFIX) .man.cpp .ad
 WCHAR32_FLAGS = -DWCHAR32=@WCHAR32@
@@ -444,6 +451,9 @@ chooser_SOURCES = \
 
 APPDEFAULTFILES = Chooser
 appdefault_DATA = $(APPDEFAULTFILES)
+@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+@LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
+
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -1263,6 +1273,9 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -1393,6 +1406,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-recursive
 
 clean-am: clean-binPROGRAMS clean-generic clean-libtool \
@@ -1455,8 +1469,8 @@ uninstall-info: uninstall-info-recursive
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am am--refresh check \
 	check-am clean clean-binPROGRAMS clean-generic clean-libtool \
 	clean-recursive clean-xdmlibPROGRAMS ctags ctags-recursive \
-	dist dist-all dist-bzip2 dist-gzip dist-shar dist-tarZ \
-	dist-zip distcheck distclean distclean-compile \
+	dist dist-all dist-bzip2 dist-gzip dist-hook dist-shar \
+	dist-tarZ dist-zip distcheck distclean distclean-compile \
 	distclean-generic distclean-hdr distclean-libtool \
 	distclean-recursive distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
@@ -1482,6 +1496,19 @@ uninstall-info: uninstall-info-recursive
 
 .ad:
 	cp $< $@
+
+@LINT_TRUE@lint:
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(xdm_CFLAGS) $(xdm_SOURCES) $(xdm_LDADD)
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(xdmshell_CFLAGS) $(xdmshell_SOURCES)
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(chooser_CFLAGS) $(chooser_SOURCES) $(chooser_LDADD)
+@LINT_TRUE@	(cd greeter && $(MAKE) $(AM_MAKEFLAGS) lint)
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

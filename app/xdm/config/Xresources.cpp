@@ -1,5 +1,5 @@
 ! $Xorg: Xresources,v 1.3 2000/08/17 19:54:17 cpqbld Exp $
-! $OpenBSD: Xresources.cpp,v 1.2 2006/11/28 15:41:12 matthieu Exp $
+! $OpenBSD: Xresources.cpp,v 1.3 2007/08/05 19:37:40 matthieu Exp $
 !
 !
 !
@@ -33,11 +33,19 @@ xlogin*greetFont: -adobe-helvetica-bold-o-normal--24-240-75-75-p-138-iso8859-1
 xlogin*font: -adobe-helvetica-medium-r-normal--18-180-75-75-p-98-iso8859-1
 xlogin*promptFont: -adobe-helvetica-bold-r-normal--18-180-75-75-p-103-iso8859-1
 xlogin*failFont: -adobe-helvetica-bold-r-normal--18-180-75-75-p-103-iso8859-1
+xlogin*greetFace:	Sans-24:bold:italic
+xlogin*face: 		Sans-18
+xlogin*promptFace: 	Sans-18:bold
+xlogin*failFace: 	Sans-18:bold
 XHASHelse
 xlogin*greetFont: -adobe-helvetica-bold-o-normal--17-120-100-100-p-92-iso8859-1
 xlogin*font: -adobe-helvetica-medium-r-normal--12-120-75-75-p-67-iso8859-1
 xlogin*promptFont: -adobe-helvetica-bold-r-normal--12-120-75-75-p-70-iso8859-1
 xlogin*failFont: -adobe-helvetica-bold-o-normal--14-140-75-75-p-82-iso8859-1
+xlogin*greetFace:	Sans-16:bold:italic
+xlogin*face: 		Sans-12
+xlogin*promptFace: 	Sans-12:bold
+xlogin*failFace: 	Sans-12:bold
 XHASHendif
 #endif /* XPM */
 
@@ -141,15 +149,13 @@ xlogin*logoPadding: 10
 ! comment out to disable root logins
 xlogin.Login.allowRootLogin:	true
 
-XConsole.text.geometry:	480x130
-XConsole.verbose:	true
-XConsole*iconic:	true
-#ifdef XPM
 XConsole*background:	black
 XConsole*foreground:	white
 XConsole*borderWidth:	2
 XConsole*borderColor:   grey
-#endif /* XPM */
+XConsole.text.geometry:	480x130
+XConsole.verbose:	true
+XConsole*iconic:	true
 XConsole*font:		fixed
 
 Chooser*geometry:		700x500+300+200

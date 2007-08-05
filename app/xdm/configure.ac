@@ -21,10 +21,10 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-dnl $XdotOrg: app/xdm/configure.ac,v 1.40 2006/04/27 21:21:15 alanc Exp $
+dnl $XdotOrg: app/xdm/configure.ac,v 1.42 2006/06/03 01:01:21 alanc Exp $
 
 AC_PREREQ([2.57])
-AC_INIT(xdm,[1.0.4],[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xdm)
+AC_INIT(xdm,[1.1.4],[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xdm)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -76,8 +76,9 @@ if test "x$HAS_SETUSERCONTEXT" = "xyes" ; then
 		[Define to 1 if you have the 'setusercontext' function.])
 fi
 
-AC_CHECK_FUNCS([daemon])
+AC_CHECK_FUNCS([daemon sigaction])
 AC_CHECK_HEADERS([grp.h])
+AC_TYPE_SIGNAL
 
 XTRANS_CONNECTION_FLAGS
 dnl Sets $SECURE_RPC to "yes" or "no"
@@ -121,7 +122,7 @@ fi
 
 
 case $host_os in
-    linux*)
+    linux*|gnu*|*-gnu)
         OS_CFLAGS="-D_XOPEN_SOURCE"
 	SU="su"
         ;;
@@ -271,6 +272,21 @@ PKG_CHECK_EXISTS(xinerama, [
 	GREETER_CFLAGS="$GREETER_CFLAGS $XINERAMA_CFLAGS"
 	GREETER_LIBS="$GREETER_LIBS $XINERAMA_LIBS"
 ])
+
+# Xft text drawing for the greeter screen
+AC_ARG_WITH(xft, 
+    	AC_HELP_STRING([--with-xft], 
+			[Use Xft to draw text (default is YES if installed)]),
+	[USE_XFT="$withval"], 
+	PKG_CHECK_EXISTS(xft, [USE_XFT="yes"], [USE_XFT="no"]))
+
+if test "x$USE_XFT" = "xyes" ; then
+	PKG_CHECK_MODULES(XFT, xft)
+	GREETER_CFLAGS="$GREETER_CFLAGS $XFT_CFLAGS"
+	GREETER_LIBS="$GREETER_LIBS $XFT_LIBS"
+	AC_DEFINE([USE_XFT], 1, 
+	    [Define to 1 to use Xft for text on greeter screen])
+fi
 
 # XPM logos for the greeter screen
 AC_ARG_ENABLE(xpm-logos, 
@@ -511,6 +527,7 @@ appdefaultdir=$(pkg-config --variable=appdefaultdir xt)
 AC_SUBST(appdefaultdir)
 AC_SUBST(MKTEMP_COMMAND)
 
+XORG_WITH_LINT
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
 

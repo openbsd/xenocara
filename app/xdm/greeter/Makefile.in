@@ -161,6 +161,10 @@ LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LINT = @LINT@
+LINT_FALSE = @LINT_FALSE@
+LINT_FLAGS = @LINT_FLAGS@
+LINT_TRUE = @LINT_TRUE@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -212,6 +216,8 @@ XDM_LDFLAGS = @XDM_LDFLAGS@
 XDM_LIBS = @XDM_LIBS@
 XDM_PIXMAP = @XDM_PIXMAP@
 XDM_PIXMAPDIR = @XDM_PIXMAPDIR@
+XFT_CFLAGS = @XFT_CFLAGS@
+XFT_LIBS = @XFT_LIBS@
 XINERAMA_CFLAGS = @XINERAMA_CFLAGS@
 XINERAMA_LIBS = @XINERAMA_LIBS@
 XLIB_CFLAGS = @XLIB_CFLAGS@
@@ -279,6 +285,9 @@ target_alias = @target_alias@
 @DYNAMIC_GREETER_TRUE@libXdmGreet_la_LIBADD = $(XDMGREET_LIBS)
 @DYNAMIC_GREETER_TRUE@AM_CFLAGS = $(XDMGREET_CFLAGS) -I$(top_srcdir)
 @DYNAMIC_GREETER_TRUE@libXdmGreet_la_LDFLAGS = -module -avoid-version
+@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+@LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
+
 all: all-am
 
 .SUFFIXES:
@@ -553,6 +562,9 @@ uninstall-am: uninstall-info-am uninstall-xdmlibLTLIBRARIES
 	tags uninstall uninstall-am uninstall-info-am \
 	uninstall-xdmlibLTLIBRARIES
 
+
+@LINT_TRUE@lint:
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(libXdmGreet_la_SOURCES)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
