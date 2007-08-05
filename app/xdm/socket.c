@@ -1,4 +1,4 @@
-/* $XdotOrg: app/xdm/socket.c,v 1.6 2006/03/11 04:07:00 alanc Exp $ */
+/* $XdotOrg: app/xdm/socket.c,v 1.5 2006/03/10 00:48:16 alanc Exp $ */
 /* $Xorg: socket.c,v 1.4 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 

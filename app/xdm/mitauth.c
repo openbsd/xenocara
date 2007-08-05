@@ -64,9 +64,9 @@ MitGetAuth (unsigned short namelen, char *name)
 	return (Xauth *) 0;
     new->family = FamilyWild;
     new->address_length = 0;
-    new->address = 0;
+    new->address = NULL;
     new->number_length = 0;
-    new->number = 0;
+    new->number = NULL;
 
     new->data = (char *) malloc (AUTH_DATA_LEN);
     if (!new->data)

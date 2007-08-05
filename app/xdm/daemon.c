@@ -1,4 +1,4 @@
-/* $XdotOrg: app/xdm/daemon.c,v 1.4 2006/03/30 21:14:31 alanc Exp $ */
+/* $XdotOrg: app/xdm/daemon.c,v 1.3 2006/03/16 21:46:55 alanc Exp $ */
 /* $Xorg: daemon.c,v 1.4 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 

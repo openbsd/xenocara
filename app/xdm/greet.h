@@ -78,10 +78,12 @@ struct dlfuncs {
     void (*_endgrent)(void);		/* no longer used */
 #ifdef USESHADOW
     struct spwd *(*_getspnam)(GETSPNAM_ARGS);
+# ifndef QNX4
     void (*_endspent)(void);
+# endif /* QNX4 doesn't use endspent */
 #endif
     struct passwd *(*_getpwnam)(GETPWNAM_ARGS);
-#ifdef linux
+#if defined(linux) || defined(__GLIBC__)
     void (*_endpwent)(void);
 #endif
     char *(*_crypt)(CRYPT_ARGS);
@@ -160,10 +162,12 @@ extern	struct group    *(*__xdm_getgrent)(void);
 extern	void    (*__xdm_endgrent)(void);
 #ifdef USESHADOW
 extern	struct spwd   *(*__xdm_getspnam)(GETSPNAM_ARGS);
+# ifndef QNX4
 extern	void    (*__xdm_endspent)(void);
+# endif /* QNX4 doesn't use endspent */
 #endif
 extern	struct passwd   *(*__xdm_getpwnam)(GETPWNAM_ARGS);
-#ifdef linux
+#if defined(linux) || defined(__GLIBC__)
 extern  void    (*__xdm_endpwent)(void);
 #endif
 extern	char    *(*__xdm_crypt)(CRYPT_ARGS);
@@ -199,14 +203,18 @@ extern  pam_handle_t    **(*__xdm_thepamhp)(void);
 #define	getgrent	(*__xdm_getgrent)
 #define	endgrent	(*__xdm_endgrent)
 #ifdef USESHADOW
-#define	getspnam	(*__xdm_getspnam)
-#define	endspent	(*__xdm_endspent)
-#endif
-#ifdef linux
-#define endpwent	(*__xdm_endpwent)
+# define getspnam	(*__xdm_getspnam)
+# ifndef QNX4
+#  define endspent	(*__xdm_endspent)
+# endif /* QNX4 doesn't use endspent */
 #endif
 #define	getpwnam	(*__xdm_getpwnam)
+#if defined(linux) || defined(__GLIBC__)
+# define endpwent	(*__xdm_endpwent)
+#endif
 #define	crypt		(*__xdm_crypt)
-#define thepamhp	(*__xdm_thepamhp)
+#ifdef USE_PAM
+# define thepamhp	(*__xdm_thepamhp)
+#endif
 
 #endif /* GREET_LIB */

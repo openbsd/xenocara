@@ -1,5 +1,5 @@
 /* $Xorg: greet.c,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $ */
-/* $XdotOrg: $ */
+/* $XdotOrg: app/xdm/greeter/greet.c,v 1.5 2006/06/03 01:13:44 alanc Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -27,6 +27,34 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
+/* Copyright 2006 Sun Microsystems, Inc.  All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, and/or sell copies of the Software, and to permit persons
+ * to whom the Software is furnished to do so, provided that the above
+ * copyright notice(s) and this permission notice appear in all copies of
+ * the Software and that both the above copyright notice(s) and this
+ * permission notice appear in supporting documentation.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+ * OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+ * HOLDERS INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL
+ * INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING
+ * FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+ * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
+ * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * Except as contained in this notice, the name of a copyright holder
+ * shall not be used in advertising or otherwise to promote the sale, use
+ * or other dealings in this Software without prior written authorization
+ * of the copyright holder.
+ */
+
 /* $XFree86: xc/programs/xdm/greeter/greet.c,v 3.16tsi Exp $ */
 
 /*
@@ -93,10 +121,12 @@ struct group    *(*__xdm_getgrent)(void) = NULL;
 void    (*__xdm_endgrent)(void) = NULL;
 #ifdef USESHADOW
 struct spwd   *(*__xdm_getspnam)(GETSPNAM_ARGS) = NULL;
+# ifndef QNX4
 void   (*__xdm_endspent)(void) = NULL;
+# endif /* QNX4 doesn't use endspent */
 #endif
 struct passwd   *(*__xdm_getpwnam)(GETPWNAM_ARGS) = NULL;
-#ifdef linux
+#if defined(linux) || defined(__GLIBC__)
 void   (*__xdm_endpwent)(void) = NULL;
 #endif
 char     *(*__xdm_crypt)(CRYPT_ARGS) = NULL;
@@ -118,11 +148,33 @@ pam_handle_t **(*__xdm_thepamhp)(void) = NULL;
 extern Display	*dpy;
 
 static int	done, code;
-static char	name[128], password[128];
+#ifndef USE_PAM
+static char	name[NAME_LEN], password[PASSWORD_LEN];
+#endif
 static Widget		toplevel;
 static Widget		login;
 static XtAppContext	context;
 static XtIntervalId	pingTimeout;
+
+#ifdef USE_PAM
+static int pamconv(int num_msg,
+#ifndef sun
+		   const
+#endif		   
+		   struct pam_message **msg,
+		   struct pam_response **response, void *appdata_ptr);
+
+# define PAM_ERROR_PRINT(pamfunc, pamh)	\
+	LogError("%s failure: %s\n", pamfunc, pam_strerror(pamh, pam_error))
+
+
+struct myconv_data {
+    struct display *d;
+    struct greet_info *greet;
+    char *username_display;
+};
+#endif
+
 
 /*ARGSUSED*/
 static void
@@ -150,11 +202,12 @@ GreetDone (
 	    data->name, strlen (data->passwd));
     switch (status) {
     case NOTIFY_OK:
+#ifndef USE_PAM
 	strncpy (name, data->name, sizeof(name));
 	name[sizeof(name)-1] = '\0';
 	strncpy (password, data->passwd, sizeof(password));
 	password[sizeof(password)-1] = '\0';
-	bzero (data->passwd, PASSWORD_LEN);
+#endif
 	code = 0;
 	done = 1;
 	break;
@@ -174,6 +227,12 @@ GreetDone (
 	done = 1;
 	break;
     }
+#ifndef USE_PAM
+    if (done) {
+	bzero (data->name, NAME_LEN);
+	bzero (data->passwd, PASSWORD_LEN);
+    }
+#endif
 }
 
 static Display *
@@ -183,7 +242,7 @@ InitGreet (struct display *d)
     int		i;
     static int	argc;
     Screen		*scrn;
-    static char	*argv[] = { "xlogin", 0 };
+    static char	*argv[] = { "xlogin", NULL };
     Display		*dpy;
 #ifdef USE_XINERAMA
     XineramaScreenInfo *screens;
@@ -194,11 +253,11 @@ InitGreet (struct display *d)
     argc = 1;
     XtToolkitInitialize ();
     context = XtCreateApplicationContext();
-    dpy = XtOpenDisplay (context, d->name, "xlogin", "Xlogin", 0,0,
+    dpy = XtOpenDisplay (context, d->name, "xlogin", "Xlogin", NULL, 0,
 			 &argc, argv);
 
     if (!dpy)
-	return 0;
+	return NULL;
 
 #ifdef XKB
     {
@@ -316,6 +375,7 @@ Greet (struct display *d, struct greet_info *greet)
     Debug ("Done dispatch %s\n", d->name);
     if (code == 0)
     {
+#ifndef USE_PAM
 	char *ptr;
 	unsigned int c,state = WHITESPACE;
  
@@ -334,6 +394,7 @@ Greet (struct display *d, struct greet_info *greet)
 
 	greet->name = ptr;
 	greet->password = password;
+#endif  /* USE_PAM */
 	XtSetArg (arglist[0], XtNsessionArgument, (char *) &(greet->string));
 	XtSetArg (arglist[1], XtNallowNullPasswd, (char *) &(greet->allow_null_passwd));
 	XtSetArg (arglist[2], XtNallowRootLogin, (char *) &(greet->allow_root_login));
@@ -355,11 +416,13 @@ FailedLogin (struct display *d, struct greet_info *greet)
 	   d->name, greet->name);
 #endif
     DrawFail (login);
+#ifndef USE_PAM
     bzero (greet->name, strlen(greet->name));
     bzero (greet->password, strlen(greet->password));
+#endif
 }
 
-
+_X_EXPORT
 greet_user_rtn GreetUser(
     struct display          *d,
     Display                 ** dpy,
@@ -397,10 +460,12 @@ greet_user_rtn GreetUser(
     __xdm_endgrent = dlfuncs->_endgrent;
 #ifdef USESHADOW
     __xdm_getspnam = dlfuncs->_getspnam;
+# ifndef QNX4
     __xdm_endspent = dlfuncs->_endspent;
+# endif /* QNX4 doesn't use endspent */
 #endif
     __xdm_getpwnam = dlfuncs->_getpwnam;
-#ifdef linux
+#if defined(linux) || defined(__GLIBC__)
     __xdm_endpwent = dlfuncs->_endpwent;
 #endif
     __xdm_crypt = dlfuncs->_crypt;
@@ -423,7 +488,110 @@ greet_user_rtn GreetUser(
 #ifdef __OpenBSD__
     openlog("xdm", LOG_ODELAY, LOG_AUTH);
 #endif
+
     for (;;) {
+#ifdef USE_PAM
+
+	/* Run PAM conversation */
+	pam_handle_t 	**pamhp		= thepamhp();
+	int		  pam_error;
+	unsigned int	  pam_flags 	= 0;
+	struct myconv_data pcd		= { d, greet, NULL };
+	struct pam_conv   pc 		= { pamconv, &pcd };
+	const char *	  pam_fname;
+	char *		  username;
+	const char *	  login_prompt;
+
+
+	SetPrompt(login, 0, NULL, LOGIN_PROMPT_NOT_SHOWN, False);
+	login_prompt  = GetPrompt(login, LOGIN_PROMPT_USERNAME);
+	SetPrompt(login, 1, NULL, LOGIN_PROMPT_NOT_SHOWN, False);
+	
+#define RUN_AND_CHECK_PAM_ERROR(function, args)			\
+	    do { 						\
+		pam_error = function args;			\
+		if (pam_error != PAM_SUCCESS) {			\
+		    PAM_ERROR_PRINT(#function, *pamhp);		\
+		    goto pam_done;				\
+		} 						\
+	    } while (0) 
+	    
+
+	RUN_AND_CHECK_PAM_ERROR(pam_start,
+				("xdm", NULL, &pc, pamhp));
+
+	/* Set default login prompt to xdm's default from Xresources */
+	if (login_prompt != NULL) {
+	    RUN_AND_CHECK_PAM_ERROR(pam_set_item,
+				    (*pamhp, PAM_USER_PROMPT, login_prompt));
+	}
+
+	if (d->name[0] != ':') {	/* Displaying to remote host */
+	    char *hostname = strdup(d->name);
+
+	    if (hostname == NULL) {
+		LogOutOfMem("GreetUser");
+	    } else {
+		char *colon = strrchr(hostname, ':');
+		
+		if (colon != NULL)
+		    *colon = '\0';
+	    
+		RUN_AND_CHECK_PAM_ERROR(pam_set_item,
+					(*pamhp, PAM_RHOST, hostname));
+		free(hostname);
+	    }
+	} else
+	    RUN_AND_CHECK_PAM_ERROR(pam_set_item, (*pamhp, PAM_TTY, d->name));
+ 
+	if (!greet->allow_null_passwd) {
+	    pam_flags |= PAM_DISALLOW_NULL_AUTHTOK;
+	}
+	RUN_AND_CHECK_PAM_ERROR(pam_authenticate,
+				(*pamhp, pam_flags));
+				
+	/* handle expired passwords */
+	pam_error = pam_acct_mgmt(*pamhp, pam_flags);
+	pam_fname = "pam_acct_mgmt";
+	if (pam_error == PAM_NEW_AUTHTOK_REQD) {
+	    ShowChangePasswdMessage(login);
+	    do {
+		pam_error = pam_chauthtok(*pamhp, PAM_CHANGE_EXPIRED_AUTHTOK);
+	    } while ((pam_error == PAM_AUTHTOK_ERR) ||
+		     (pam_error == PAM_TRY_AGAIN));
+	    pam_fname = "pam_chauthtok";
+	}
+	if (pam_error != PAM_SUCCESS) {
+	    PAM_ERROR_PRINT(pam_fname, *pamhp);
+	    goto pam_done;
+	}
+	
+	RUN_AND_CHECK_PAM_ERROR(pam_setcred,
+				(*pamhp, 0));
+	RUN_AND_CHECK_PAM_ERROR(pam_get_item,
+				(*pamhp, PAM_USER, (void *) &username));
+	if (username != NULL) {
+	    Debug("PAM_USER: %s\n", username);
+	    greet->name = username;
+	    greet->password = NULL;
+	}
+	    
+      pam_done:
+	if (code != 0)
+	{
+	    CloseGreet (d);
+	    SessionExit (d, code, FALSE);
+	}
+	if ((pam_error == PAM_SUCCESS) && (Verify (d, greet, verify))) {
+	    SetPrompt (login, 1, "Login Successful", LOGIN_TEXT_INFO, False);
+	    SetValue (login, 1, NULL);
+	    break;
+	} else {
+	    RUN_AND_CHECK_PAM_ERROR(pam_end,
+				    (*pamhp, pam_error));
+	    FailedLogin (d, greet);
+	}
+#else /* not PAM */
 	/*
 	 * Greet user, requesting name/password
 	 */
@@ -440,6 +608,7 @@ greet_user_rtn GreetUser(
 	    break;
 	else
 	    FailedLogin (d, greet);
+#endif
     }
     DeleteXloginResources (d, *dpy);
     CloseGreet (d);
@@ -496,3 +665,104 @@ greet_user_rtn GreetUser(
 
     return Greet_Success;
 }
+
+
+#ifdef USE_PAM
+static int pamconv(int num_msg,
+#ifndef sun
+		   const
+#endif		   
+		   struct pam_message **msg,
+		   struct pam_response **response, void *appdata_ptr)
+{
+    int i;
+    int greetCode;
+    int status = PAM_SUCCESS;
+    const char *pam_msg_styles[5]
+	= { "<invalid pam msg style>",
+	    "PAM_PROMPT_ECHO_OFF", "PAM_PROMPT_ECHO_ON",
+	    "PAM_ERROR_MSG", "PAM_TEXT_INFO" } ;
+    
+    struct pam_message      *m;
+    struct pam_response     *r;
+
+    struct myconv_data	    *d = (struct myconv_data *) appdata_ptr;
+
+    pam_handle_t	    **pamhp = thepamhp();
+    
+    *response = calloc(num_msg, sizeof (struct pam_response));
+    if (*response == NULL)
+	return (PAM_BUF_ERR);
+
+    m = *msg;
+    r = *response;
+
+    for (i = 0; i < num_msg; i++ , m++ , r++) {
+	char *username;
+	int promptId = 0;
+	loginPromptState pStyle = LOGIN_PROMPT_ECHO_OFF;
+
+	if ((pam_get_item(*pamhp, PAM_USER, (void *) &username) == PAM_SUCCESS)
+	    && (username != NULL) && (*username != '\0')) {
+	    SetPrompt(login, LOGIN_PROMPT_USERNAME,
+		      NULL, LOGIN_TEXT_INFO, False);
+	    SetValue(login, LOGIN_PROMPT_USERNAME, username);
+	    promptId = 1;
+	} 
+	
+	Debug("pam_msg: %s (%d): '%s'\n",
+	      ((m->msg_style > 0) && (m->msg_style <= 4)) ?
+	       pam_msg_styles[m->msg_style] : pam_msg_styles[0],
+	       m->msg_style, m->msg);
+
+	switch (m->msg_style) {
+	  case PAM_ERROR_MSG:
+	      ErrorMessage(login, m->msg, True);
+	      break;
+
+	  case PAM_TEXT_INFO:
+	      SetPrompt (login, promptId, m->msg, LOGIN_TEXT_INFO, True);
+	      SetValue (login, promptId, NULL);
+	      break;
+	      
+          case PAM_PROMPT_ECHO_ON:
+	      pStyle = LOGIN_PROMPT_ECHO_ON;
+	      /* FALLTHROUGH */
+          case PAM_PROMPT_ECHO_OFF:
+	      SetPrompt (login, promptId, m->msg, pStyle, False);
+	      SetValue (login, promptId, NULL);
+	      greetCode = Greet (d->d, d->greet);
+	      if (greetCode != 0) {
+		  status = PAM_CONV_ERR;
+		  goto pam_error;
+	      } else {
+		  r->resp = strdup(GetValue(login, promptId));
+		  SetValue(login, promptId, NULL);
+		  if (r->resp == NULL) {
+		      status = PAM_BUF_ERR;
+		      goto pam_error;
+		  }
+		  /* Debug("pam_resp: '%s'\n", r->resp); */
+	      }
+	      break;
+
+	  default:
+	      LogError("Unknown PAM msg_style: %d\n", m->msg_style);
+	}
+    }
+  pam_error:    
+    if (status != PAM_SUCCESS) {
+	/* free responses */
+	r = *response;
+	for (i = 0; i < num_msg; i++, r++) {
+	    if (r->resp) {
+		bzero(r->resp, strlen(r->resp));
+		free(r->resp);
+	    }
+	}
+	free(*response);
+	*response = NULL;
+    }
+    return status;
+}
+#endif

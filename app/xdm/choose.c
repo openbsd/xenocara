@@ -148,7 +148,7 @@ ForgetIndirectClient (
 {
     IndirectUsersPtr	i, prev;
 
-    prev = 0;
+    prev = NULL;
     for (i = indirectUsers; i; i = i->next)
     {
 	if (XdmcpARRAY8Equal (clientAddress, &i->client) &&
@@ -254,7 +254,7 @@ IndirectChoice (
     Time_t	now;
 
     now = time ((Time_t*)0);
-    prev = 0;
+    prev = NULL;
     for (c = choices; c; c = next)
     {
 	next = c->next;
@@ -280,7 +280,7 @@ IndirectChoice (
 	    prev = c;
 	}
     }
-    return 0;
+    return NULL;
 }
 
 static int
@@ -339,7 +339,7 @@ RegisterIndirectChoice (
 	c->next = choices;
 	choices = c;
     }
-    c->time = time (0);
+    c->time = time ((Time_t *) 0);
     return 1;
 }
 
@@ -479,9 +479,9 @@ ProcessChooserSocket (int fd)
     	buffer.size = sizeof (buf);
     	buffer.count = len;
     	buffer.pointer = 0;
-	clientAddress.data = 0;
+	clientAddress.data = NULL;
 	clientAddress.length = 0;
-	choice.data = 0;
+	choice.data = NULL;
 	choice.length = 0;
 	if (XdmcpReadARRAY8 (&buffer, &clientAddress)) {
 	    if (XdmcpReadCARD16 (&buffer, &connectionType)) {

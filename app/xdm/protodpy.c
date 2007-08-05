@@ -142,7 +142,7 @@ DisposeProtoDisplay (pdpy)
 {
     struct protoDisplay	*p, *prev;
 
-    prev = 0;
+    prev = NULL;
     for (p = protoDisplays; p; p=p->next)
     {
 	if (p == pdpy)

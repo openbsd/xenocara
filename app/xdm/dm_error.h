@@ -50,7 +50,6 @@ extern void LogError     (char * fmt, ...) GCC_PRINTFLIKE(1,2);
 extern void LogInfo      (char * fmt, ...) GCC_PRINTFLIKE(1,2);
 extern void LogOutOfMem  (char * fmt, ...) GCC_PRINTFLIKE(1,2);
 extern void LogPanic     (char * fmt, ...) GCC_PRINTFLIKE(1,2);
-extern void Panic        (char * mesg);
 
 
 #endif /* _DM_ERROR_H_ */

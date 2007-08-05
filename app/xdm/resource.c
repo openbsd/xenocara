@@ -468,7 +468,7 @@ ReinitResources (void)
 	LogPanic ("no space for argument realloc\n");
     for (argc = 0; argc < originalArgc; argc++)
 	argv[argc] = originalArgv[argc];
-    argv[argc] = 0;
+    argv[argc] = NULL;
     if (DmResourceDB)
 	XrmDestroyDatabase (DmResourceDB);
     DmResourceDB = XrmGetStringDatabase ("");

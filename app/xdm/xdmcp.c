@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/xdm/xdmcp.c,v 1.4 2004/08/07 19:22:01 alanc Exp $ */
+/* $XdotOrg: app/xdm/xdmcp.c,v 1.6 2006/06/20 01:50:35 alanc Exp $ */
 /* $Xorg: xdmcp.c,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $ */
 /*
 
@@ -413,7 +413,7 @@ WaitForSomething (void)
     Debug ("WaitForSomething\n");
     if (AnyWellKnownSockets () && !ChildReady) {
 	reads = WellKnownSocketsMask;
-	nready = select (WellKnownSocketsMax + 1, &reads, 0, 0, 0);
+	nready = select (WellKnownSocketsMax + 1, &reads, NULL, NULL, NULL);
 	Debug ("select returns %d.  Rescan: %d  ChildReady: %d\n",
 		nready, Rescan, ChildReady);
 	if (nready > 0)
@@ -578,8 +578,11 @@ NetworkAddressToName(
 	    {
 		if (!strcmp (localhost, hostname))
 		{
-		    if (!getString (name, 10))
-			return 0;
+		    if (!getString (name, 10)) {
+			if (ai)
+			    freeaddrinfo(ai);
+			return NULL;
+		    }
 		    sprintf (name, ":%d", displayNumber);
 		}
 		else
@@ -605,15 +608,21 @@ NetworkAddressToName(
 			}
 		    }
 
-		    if (!getString (name, strlen (hostname) + 10))
-			return 0;
+		    if (!getString (name, strlen (hostname) + 10)) {
+			if (ai)
+			    freeaddrinfo(ai);
+			return NULL;
+		    }
 		    sprintf (name, "%s:%d", hostname, displayNumber);
 		}
 	    }
 	    else
 	    {
-		if (!getString (name, INET6_ADDRSTRLEN + 10))
-		    return 0;
+		if (!getString (name, INET6_ADDRSTRLEN + 10)) {
+		    if (ai)
+			freeaddrinfo(ai);
+		    return NULL;
+		}
 		if (multiHomed) {
 		    if (connectionType == FamilyInternet) {
 			data = (CARD8 *) 
@@ -626,7 +635,9 @@ NetworkAddressToName(
 		}
 		if (inet_ntop(type, data, name, INET6_ADDRSTRLEN) == NULL) {
 		    free(name);
-		    return 0;
+		    if (ai)
+			freeaddrinfo(ai);
+		    return NULL;
 		} 
 		sprintf(name + strlen(name), ":%d", displayNumber);
 	    }
@@ -734,11 +745,11 @@ forward_respond (
     
     Debug ("Forward respond %d\n", length);
     clientAddress.length = 0;
-    clientAddress.data = 0;
+    clientAddress.data = NULL;
     clientPort.length = 0;
-    clientPort.data = 0;
+    clientPort.data = NULL;
     authenticationNames.length = 0;
-    authenticationNames.data = 0;
+    authenticationNames.data = NULL;
     if (XdmcpReadARRAY8 (&buffer, &clientAddress) &&
 	XdmcpReadARRAY8 (&buffer, &clientPort) &&
 	XdmcpReadARRAYofARRAY8 (&buffer, &authenticationNames))
@@ -801,7 +812,7 @@ forward_respond (
 		    in6_addr.sin6_len = sizeof(in6_addr);
 #endif
 		    in6_addr.sin6_family = AF_INET6;
-		    memmove(&in6_addr,clientAddress.data,clientAddress.length);
+		    memmove(&in6_addr.sin6_addr,clientAddress.data,clientAddress.length);
 		    memmove((char *) &in6_addr.sin6_port, clientPort.data, 2);
 		    client = (struct sockaddr *) &in6_addr;
 		    clientlen = sizeof (in6_addr);
@@ -916,7 +927,7 @@ void init_session_id(void)
      * incarnation so we don't say "Alive" to those displays.
      * Start with low digits 0 to make debugging easier.
      */
-    globalSessionID = (time((Time_t)0)&0x7fff) * 16000;
+    globalSessionID = (time((Time_t *)0)&0x7fff) * 16000;
 }
     
 static ARRAY8 outOfMemory = { (CARD16) 13, (CARD8Ptr) "Out of memory" };
@@ -938,29 +949,30 @@ request_respond (
     ARRAY8	    authenticationData;
     ARRAYofARRAY8   authorizationNames;
     ARRAY8	    manufacturerDisplayID;
-    ARRAY8Ptr	    reason = 0;
+    ARRAY8Ptr	    reason = NULL;
     int		    expectlen;
     int		    i, j;
-    struct protoDisplay  *pdpy;
+    struct protoDisplay  *pdpy = NULL;
     ARRAY8	    authorizationName, authorizationData;
     ARRAY8Ptr	    connectionAddress;
 
     Debug ("Request respond %d\n", length);
     connectionTypes.length = 0;
-    connectionTypes.data = 0;
+    connectionTypes.data = NULL;
     connectionAddresses.length = 0;
-    connectionAddresses.data = 0;
+    connectionAddresses.data = NULL;
     authenticationName.length = 0;
-    authenticationName.data = 0;
+    authenticationName.data = NULL;
     authenticationData.length = 0;
-    authenticationData.data = 0;
+    authenticationData.data = NULL;
     authorizationNames.length = 0;
-    authorizationNames.data = 0;
+    authorizationNames.data = NULL;
     authorizationName.length = 0;
-    authorizationName.data = 0;
+    authorizationName.data = NULL;
     authorizationData.length = 0;
-    authorizationData.data = 0;
-    manufacturerDisplayID.data = 0;
+    authorizationData.data = NULL;
+    manufacturerDisplayID.length = 0;
+    manufacturerDisplayID.data = NULL;
     if (XdmcpReadCARD16 (&buffer, &displayNumber) &&
 	XdmcpReadARRAY16 (&buffer, &connectionTypes) &&
 	XdmcpReadARRAYofARRAY8 (&buffer, &connectionAddresses) &&
@@ -990,7 +1002,6 @@ request_respond (
 	    connectionAddresses.length != connectionTypes.length)
 	{
 	    reason = &noValidAddr;
-	    pdpy = 0;
 	    goto decline;
 	}
 	pdpy = FindProtoDisplay ((XdmcpNetaddr) from, fromlen, displayNumber);
@@ -1157,7 +1168,7 @@ manage (
     CARD16		connectionType;
 
     Debug ("Manage %d\n", length);
-    displayClass.data = 0;
+    displayClass.data = NULL;
     displayClass.length = 0;
     if (XdmcpReadCARD32 (&buffer, &sessionID) &&
 	XdmcpReadCARD16 (&buffer, &displayNumber) &&
@@ -1283,7 +1294,7 @@ manage (
 		}
 		d->authorizations[0] = pdpy->fileAuthorization;
 		d->authNum = 1;
-		pdpy->fileAuthorization = 0;
+		pdpy->fileAuthorization = NULL;
 	    }
 	    DisposeProtoDisplay (pdpy);
 	    Debug ("Starting display %s,%s\n", d->name, d->class);
@@ -1434,20 +1445,28 @@ NetworkAddressToHostname (
 		struct addrinfo	*ai = NULL, *nai;
 		if (getaddrinfo(hostent->h_name, NULL, NULL, &ai) == 0) {
 		    for (nai = ai; nai != NULL; nai = nai->ai_next) {
-			if ((af_type == nai->ai_family) &&
-			  (connectionAddress->length == nai->ai_addrlen) &&
-			  (memcmp(connectionAddress->data,nai->ai_addr,
-			    nai->ai_addrlen) == 0) ) {
+			if ((af_type == nai->ai_family) && (
+			  ((nai->ai_family == AF_INET) &&
+			    (connectionAddress->length == sizeof(struct in_addr)) &&
+			    (memcmp(connectionAddress->data,
+				    &((struct sockaddr_in *)nai->ai_addr)->sin_addr,
+				    connectionAddress->length) == 0)) ||
+			  ((nai->ai_family == AF_INET6) &&
+			    (connectionAddress->length == sizeof(struct in6_addr)) &&
+			    (memcmp(connectionAddress->data,
+				    &((struct sockaddr_in6 *)nai->ai_addr)->sin6_addr,
+				    connectionAddress->length) == 0))))
 			    break;
-			}
 		    }
-		    if (ai == NULL) {
+		    if (nai == NULL) {
 			inet_ntop(af_type, connectionAddress->data, 
 			  dotted, sizeof(dotted));
 
-			LogError("Possible DNS spoof attempt %s->%s.", dotted,
+			LogError("Possible DNS spoof attempt %s->%s.\n", dotted,
 			  hostent->h_name);
 			hostent = NULL;
+		    } else {
+		      local_name = hostent->h_name;
 		    }
 		    freeaddrinfo(ai);
 		} else {
@@ -1458,7 +1477,7 @@ NetworkAddressToHostname (
 		if ((hostent = gethostbyname(s))) {
 			if (memcmp((char*)connectionAddress->data, hostent->h_addr,
 			    hostent->h_length) != 0) {
-				LogError("Possible DNS spoof attempt.");
+				LogError("Possible DNS spoof attempt.\n");
 				hostent = NULL; /* so it enters next if() */
 			} else {
 				local_name = hostent->h_name;

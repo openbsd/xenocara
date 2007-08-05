@@ -1,3 +1,4 @@
+/* $XdotOrg: $ */
 /* $Xorg: dm.c,v 1.5 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 
@@ -67,7 +68,9 @@ from The Open Group.
 # include	<sys/stat.h>
 # include	<errno.h>
 # include	<X11/Xfuncproto.h>
+# include	<X11/Xatom.h>
 # include	<stdarg.h>
+# include	<stdint.h>
 
 #ifndef F_TLOCK
 #ifndef X_NOT_POSIX
@@ -87,7 +90,7 @@ static void	ScanServers (void);
 static void	SetAccessFileTime (void);
 static void	SetConfigFileTime (void);
 static void	StartDisplays (void);
-static void	TerminateProcess (int pid, int signal);
+static void	TerminateProcess (pid_t pid, int signal);
 
 volatile int	Rescan;
 static long	ServersModTime, ConfigModTime, AccessFileModTime;
@@ -105,12 +108,13 @@ static SIGVAL ChildNotify (int n);
 
 static int StorePid (void);
 
-static int parent_pid = -1; 	/* PID of parent xdm process */
+static pid_t parent_pid = -1; 	/* PID of parent xdm process */
 
 int
 main (int argc, char **argv)
 {
-    int	oldpid, oldumask;
+    int	oldpid;
+    mode_t oldumask;
     char cmdbuf[1024];
 
     /* make sure at least world write access is disabled */
@@ -420,7 +424,7 @@ ChildNotify (int n)
 void
 WaitForChild (void)
 {
-    int		pid;
+    pid_t		pid;
     struct display	*d;
     waitType	status;
 #if !defined(X_NOT_POSIX) && !defined(__UNIXOS2__)
@@ -455,11 +459,7 @@ WaitForChild (void)
 #else
     sigsetmask (omask);
 #endif
-#ifndef X_NOT_POSIX
     while ((pid = waitpid (-1, &status, WNOHANG)) > 0)
-#else
-    while ((pid = wait3 (&status, WNOHANG, (struct rusage *) 0)) > 0)
-#endif
 #endif
     {
 	Debug ("Manager wait returns pid: %d sig %d core %d code %d\n",
@@ -624,10 +624,82 @@ StartDisplays (void)
     ForEachDisplay (CheckDisplayStatus);
 }
 
+static void
+SetWindowPath(struct display *d)
+{
+	/* setting WINDOWPATH for clients */
+	Atom prop;
+	Atom actualtype;
+	int actualformat;
+	unsigned long nitems;
+	unsigned long bytes_after;
+	unsigned char *buf;
+	const char *windowpath;
+	char *newwindowpath;
+	unsigned long num;
+	char nums[10];
+	int numn;
+
+	prop = XInternAtom(d->dpy, "XFree86_VT", False);
+	if (prop == None) {
+		fprintf(stderr, "no XFree86_VT atom\n");
+		return;
+	}
+	if (XGetWindowProperty(d->dpy, DefaultRootWindow(d->dpy), prop, 0, 1, 
+		False, AnyPropertyType, &actualtype, &actualformat, 
+		&nitems, &bytes_after, &buf)) {
+		fprintf(stderr, "no XFree86_VT property\n");
+		return;
+	}
+	if (nitems != 1) {
+		fprintf(stderr, "%lu items in XFree86_VT property!\n", nitems);
+		XFree(buf);
+		return;
+	}
+	switch (actualtype) {
+	case XA_CARDINAL:
+	case XA_INTEGER:
+	case XA_WINDOW:
+		switch (actualformat) {
+		case  8:
+			num = (*(uint8_t  *)(void *)buf);
+			break;
+		case 16:
+			num = (*(uint16_t *)(void *)buf);
+			break;
+		case 32:
+			num = (*(uint32_t *)(void *)buf);
+			break;
+		default:
+			fprintf(stderr, "format %d in XFree86_VT property!\n", actualformat);
+			XFree(buf);
+			return;
+		}
+		break;
+	default:
+		fprintf(stderr, "type %lx in XFree86_VT property!\n", actualtype);
+		XFree(buf);
+		return;
+	}
+	XFree(buf);
+	windowpath = getenv("WINDOWPATH");
+	numn = snprintf(nums, sizeof(nums), "%lu", num);
+	if (!windowpath) {
+		newwindowpath = malloc(numn + 1);
+		sprintf(newwindowpath, "%s", nums);
+	} else {
+		newwindowpath = malloc(strlen(windowpath) + 1 + numn + 1);
+		sprintf(newwindowpath, "%s:%s", windowpath, nums);
+	}
+	if (d->windowPath)
+		free(d->windowPath);
+	d->windowPath = newwindowpath;
+}
+
 void
 StartDisplay (struct display *d)
 {
-    int	pid;
+    pid_t	pid;
 
     Debug ("StartDisplay %s\n", d->name);
     LoadServerResources (d);
@@ -679,6 +751,7 @@ StartDisplay (struct display *d)
 	SetAuthorization (d);
 	if (!WaitForServer (d))
 	    exit (OPENFAILED_DISPLAY);
+	SetWindowPath(d);
 #ifdef XDMCP
 	if (d->useChooser)
 	    RunChooser (d);
@@ -697,7 +770,7 @@ StartDisplay (struct display *d)
 }
 
 static void
-TerminateProcess (int pid, int signal)
+TerminateProcess (pid_t pid, int signal)
 {
     kill (pid, signal);
 #ifdef SIGCONT

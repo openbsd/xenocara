@@ -65,7 +65,7 @@ splitIntoWords (char *s)
     char    *wordStart;
     int	    nargs;
 
-    args = 0;
+    args = NULL;
     nargs = 0;
     while (*s)
     {
@@ -234,7 +234,7 @@ static struct displayMatch {
 } displayTypes[] = {
 	{ "local",		{ Local, Permanent, FromFile } },
 	{ "foreign",		{ Foreign, Permanent, FromFile } },
-	{ 0,			{ Local, Permanent, FromFile } },
+	{ NULL,			{ Local, Permanent, FromFile } },
 };
 
 DisplayType

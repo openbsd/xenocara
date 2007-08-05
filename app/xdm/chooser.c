@@ -299,7 +299,7 @@ HostnameCompare (const void *a, const void *b)
 static void
 RebuildTable (int size)
 {
-    char	**newTable = 0;
+    char	**newTable = NULL;
     HostName	*names;
     int		i;
 
@@ -399,7 +399,7 @@ AddHostname (ARRAY8Ptr hostname, ARRAY8Ptr status, struct sockaddr *addr, int wi
 	new->hostname = *hostname;
 
     	*names = new;
-    	new->next = 0;
+    	new->next = NULL;
 	NameTableSize++;
     }
     else
@@ -474,7 +474,7 @@ EmptyHostnames (void)
 	DisposeHostname (hosts);
     }
     NameTableSize = 0;
-    hostNamedb = 0;
+    hostNamedb = NULL;
     RebuildTable (NameTableSize);
 }
 
@@ -502,9 +502,9 @@ ReceivePacket (XtPointer closure, int *source, XtInputId *id)
 	return;
     if (header.version != XDM_PROTOCOL_VERSION)
 	return;
-    hostname.data = 0;
-    status.data = 0;
-    authenticationName.data = 0;
+    hostname.data = NULL;
+    status.data = NULL;
+    authenticationName.data = NULL;
     switch (header.opcode) {
     case WILLING:
     	if (XdmcpReadARRAY8 (&buffer, &authenticationName) &&
@@ -742,6 +742,7 @@ RegisterHostname (char *name)
 			}
 		    }
 		}
+		freeaddrinfo(ai);
 	    }
 	}
 #else

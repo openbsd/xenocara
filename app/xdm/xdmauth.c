@@ -92,9 +92,9 @@ XdmGetAuthHelper (unsigned short namelen, char *name, int includeRho)
 	return (Xauth *) 0;
     new->family = FamilyWild;
     new->address_length = 0;
-    new->address = 0;
+    new->address = NULL;
     new->number_length = 0;
-    new->number = 0;
+    new->number = NULL;
     if (includeRho)
 	new->data_length = 16;
     else

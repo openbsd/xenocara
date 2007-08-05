@@ -104,7 +104,8 @@ appman_PRE = xdm.man.cpp
 appman_DATA = $(appman_PRE:man.cpp=@APP_MAN_SUFFIX@)
 
 CLEANFILES = $(appman_DATA)
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
 
 include $(top_srcdir)/cpprules.in
 
@@ -164,3 +165,22 @@ appdefault_DATA = $(APPDEFAULTFILES)
 CLEANFILES += $(APPDEFAULTFILES)
 
 EXTRA_DIST += $(APPDEFAULTFILES:%=%.ad)
+
+if LINT
+ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
+
+lint:
+	$(LINT) $(ALL_LINT_FLAGS) $(xdm_CFLAGS) $(xdm_SOURCES) $(xdm_LDADD)
+	$(LINT) $(ALL_LINT_FLAGS) $(xdmshell_CFLAGS) $(xdmshell_SOURCES)
+	$(LINT) $(ALL_LINT_FLAGS) $(chooser_CFLAGS) $(chooser_SOURCES) $(chooser_LDADD)
+	(cd greeter && $(MAKE) $(AM_MAKEFLAGS) lint)
+endif LINT
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
+

@@ -1,5 +1,5 @@
 /*
- * $XdotOrg$
+ * $XdotOrg: app/xdm/access.c,v 1.2 2004/04/23 19:54:42 eich Exp $
  * $Xorg: access.c,v 1.5 2001/02/09 02:05:40 xorgcvs Exp $
  *
 Copyright 1990, 1998  The Open Group
@@ -198,7 +198,7 @@ FreeAccessDatabase (void)
 	next = d->next;
 	FreeDisplayEntry (d);
     }
-    database = 0;
+    database = NULL;
 }
 
 #define WORD_LEN    256
@@ -310,7 +310,7 @@ tryagain:
 	void *addr=NULL;
 	size_t addr_length=0;
 #if defined(IPv6) && defined(AF_INET6)
-	struct addrinfo *ai;
+	struct addrinfo *ai = NULL;
 #else
 	struct hostent  *hostent = gethostbyname (hostOrAlias);
 #endif	
@@ -346,17 +346,26 @@ tryagain:
 	    Debug ("No such host %s\n", hostOrAlias);
 	    LogError ("Access file \"%s\", host \"%s\" not found\n", accessFile, hostOrAlias);
 	    free ((char *) h);
+#if defined(IPv6) && defined(AF_INET6)
+	    if (ai)
+		freeaddrinfo(ai);
+#endif
 	    goto tryagain;
 	}
 	if (!XdmcpAllocARRAY8 (&h->entry.hostAddress, addr_length))
 	{
 	    LogOutOfMem ("ReadHostEntry\n");
 	    free ((char *) h);
+#if defined(IPv6) && defined(AF_INET6)
+	    if (ai)
+		freeaddrinfo(ai);
+#endif
 	    return NULL;
 	}
 	memmove( h->entry.hostAddress.data, addr, addr_length);
 #if defined(IPv6) && defined(AF_INET6)
-	freeaddrinfo(ai);
+	if (ai)
+	    freeaddrinfo(ai);
 #endif
     }
     return h;
@@ -430,7 +439,7 @@ ReadDisplayEntry (FILE *file)
 	    int addrtype = 0;
 
 #if defined(IPv6) && defined(AF_INET6)
-	    struct addrinfo *ai;
+	    struct addrinfo *ai = NULL;
 
 	    if (getaddrinfo(displayOrAlias, NULL, NULL, &ai) == 0) {
 		addrtype = ai->ai_addr->sa_family;
@@ -457,6 +466,10 @@ ReadDisplayEntry (FILE *file)
 	    {
 		LogError ("Access file %s, display %s unknown\n", accessFile, displayOrAlias);
 		free ((char *) d);
+#if defined(IPv6) && defined(AF_INET6)
+		if (ai)
+		    freeaddrinfo(ai);
+#endif
 		return NULL;
 	    }
 	    d->type = DISPLAY_ADDRESS;
@@ -464,9 +477,17 @@ ReadDisplayEntry (FILE *file)
 	    if (!XdmcpAllocARRAY8 (&display->clientAddress, addr_length))
 	    {
 	    	free ((char *) d);
+#if defined(IPv6) && defined(AF_INET6)
+		if (ai)
+		    freeaddrinfo(ai);
+#endif
 	    	return NULL;
 	    }
 	    memmove( display->clientAddress.data, addr, addr_length);
+#if defined(IPv6) && defined(AF_INET6)
+	    if (ai)
+		freeaddrinfo(ai);
+#endif
 	    switch (addrtype)
 	    {
 #ifdef AF_UNIX

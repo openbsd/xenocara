@@ -72,7 +72,7 @@ makeEnv (char *name, char *value)
 	result = malloc ((unsigned) (strlen (name) + strlen (value) + 2));
 	if (!result) {
 		LogOutOfMem ("makeEnv");
-		return 0;
+		return NULL;
 	}
 	sprintf (result, "%s=%s", name, value);
 	return result;
@@ -83,7 +83,7 @@ getEnv (char **e, char *name)
 {
 	int	l = strlen (name);
 
-	if (!e) return 0;
+	if (!e) return NULL;
 
 	while (*e) {
 		if ((int)strlen (*e) > l && !strncmp (*e, name, l) &&
@@ -91,7 +91,7 @@ getEnv (char **e, char *name)
 			return (*e) + l + 1;
 		++e;
 	}
-	return 0;
+	return NULL;
 }
 
 char **
@@ -130,7 +130,7 @@ setEnv (char **e, char *name, char *value)
 		return e;
 	}
 	new[envsize] = newe;
-	new[envsize+1] = 0;
+	new[envsize+1] = NULL;
 	return new;
 }
 
@@ -189,7 +189,7 @@ parseArgs (char **argv, char *string)
 		argv = (char **) malloc (sizeof (char *));
 		if (!argv) {
 			LogOutOfMem ("parseArgs");
-			return 0;
+			return NULL;
 		}
 	}
 	word = string;
@@ -204,7 +204,7 @@ parseArgs (char **argv, char *string)
 					free ((char *) argv);
 					if (save)
 						free (save);
-					return 0;
+					return NULL;
 				} else {
 				    argv = newargv;
 				}
@@ -218,7 +218,7 @@ parseArgs (char **argv, char *string)
 		}
 		++string;
 	}
-	argv[i] = 0;
+	argv[i] = NULL;
 	return argv;
 }
 
@@ -265,14 +265,14 @@ localHostname (void)
 
 SIGVAL (*Signal (int sig, SIGFUNC handler))(int)
 {
-#if !defined(X_NOT_POSIX) && !defined(__UNIXOS2__)
+#ifdef HAVE_SIGACTION
     struct sigaction sigact, osigact;
     sigact.sa_handler = handler;
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
     sigaction(sig, &sigact, &osigact);
     return osigact.sa_handler;
-#else
+#else /* __UNIXOS2__ */
     return signal(sig, handler);
 #endif
 }

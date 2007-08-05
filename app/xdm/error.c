@@ -104,17 +104,6 @@ void LogOutOfMem (char * fmt, ...)
     fflush (stderr);
 }
 
-void Panic (char *mesg)
-{
-    int	i;
-
-    i = creat ("/dev/console", 0666);
-    write (i, "panic: ", 7);
-    write (i, mesg, strlen (mesg));
-    exit (1);
-}
-
-
 void Debug (char * fmt, ...)
 {
     char buf[1024];

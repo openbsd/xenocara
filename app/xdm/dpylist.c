@@ -65,29 +65,29 @@ FindDisplayByName (char *name)
 	for (d = displays; d; d = d->next)
 		if (!strcmp (name, d->name))
 			return d;
-	return 0;
+	return NULL;
 }
 
 struct display *
-FindDisplayByPid (int pid)
+FindDisplayByPid (pid_t pid)
 {
 	struct display	*d;
 
 	for (d = displays; d; d = d->next)
 		if (pid == d->pid)
 			return d;
-	return 0;
+	return NULL;
 }
 
 struct display *
-FindDisplayByServerPid (int serverPid)
+FindDisplayByServerPid (pid_t serverPid)
 {
 	struct display	*d;
 
 	for (d = displays; d; d = d->next)
 		if (serverPid == d->serverPid)
 			return d;
-	return 0;
+	return NULL;
 }
 
 #ifdef XDMCP
@@ -100,7 +100,7 @@ FindDisplayBySessionID (CARD32 sessionID)
     for (d = displays; d; d = d->next)
 	if (sessionID == d->sessionID)
 	    return d;
-    return 0;
+    return NULL;
 }
 
 struct display *
@@ -115,7 +115,7 @@ FindDisplayByAddress (XdmcpNetaddr addr, int addrlen, CARD16 displayNumber)
 	{
 	    return d;
 	}
-    return 0;
+    return NULL;
 }
 
 #endif /* XDMCP */
@@ -129,7 +129,7 @@ RemoveDisplay (struct display *old)
     char		**x;
     int			i;
 
-    p = 0;
+    p = NULL;
     for (d = displays; d; d = d->next) {
 	if (d == old) {
 	    if (p)
@@ -172,6 +172,7 @@ RemoveDisplay (struct display *old)
 	    IfFree (d->from);
 	    XdmcpDisposeARRAY8 (&d->clientAddr);
 #endif
+	    IfFree (d->windowPath);
 	    free ((char *) d);
 	    break;
 	}
@@ -184,17 +185,17 @@ NewDisplay (char *name, char *class)
 {
     struct display	*d;
 
-    d = (struct display *) malloc (sizeof (struct display));
+    d = (struct display *) calloc (1, sizeof (struct display));
     if (!d) {
 	LogOutOfMem ("NewDisplay");
-	return 0;
+	return NULL;
     }
     d->next = displays;
     d->name = malloc ((unsigned) (strlen (name) + 1));
     if (!d->name) {
 	LogOutOfMem ("NewDisplay");
 	free ((char *) d);
-	return 0;
+	return NULL;
     }
     strcpy (d->name, name);
     if (class)
@@ -204,7 +205,7 @@ NewDisplay (char *name, char *class)
 	    LogOutOfMem ("NewDisplay");
 	    free (d->name);
 	    free ((char *) d);
-	    return 0;
+	    return NULL;
 	}
 	strcpy (d->class, class);
     }
@@ -213,7 +214,7 @@ NewDisplay (char *name, char *class)
 	d->class = (char *) 0;
     }
     /* initialize every field to avoid possible problems */
-    d->argv = 0;
+    d->argv = NULL;
     d->status = notRunning;
     d->pid = -1;
     d->serverPid = -1;
@@ -249,9 +250,9 @@ NewDisplay (char *name, char *class)
     d->grabTimeout = 0;
 #ifdef XDMCP
     d->sessionID = 0;
-    d->peer = 0;
+    d->peer = NULL;
     d->peerlen = 0;
-    d->from = 0;
+    d->from = NULL;
     d->fromlen = 0;
     d->displayNumber = 0;
     d->useChooser = 0;
@@ -261,6 +262,9 @@ NewDisplay (char *name, char *class)
     d->xdmcpFd = -1;
 #endif
     d->version = 1;		/* registered with The Open Group */
+    d->willing = NULL;
+    d->dpy = NULL;
+    d->windowPath = NULL;
     displays = d;
     return d;
 }

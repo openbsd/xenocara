@@ -1,5 +1,5 @@
 /* $Xorg: verify.c,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $ */
-/* $XdotOrg: app/xdm/greeter/verify.c,v 1.8 2006/04/14 20:17:31 alanc Exp $ */
+/* $XdotOrg: app/xdm/greeter/verify.c,v 1.9 2006/06/03 00:05:24 alanc Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -120,77 +120,8 @@ userEnv (struct display *d, int useSystemPath, char *user, char *home, char *she
     return env;
 }
 
-#ifdef USE_PAM
-static char *PAM_password;
-static int pam_error;
-
-static int PAM_conv (int num_msg,
-#ifdef sun
-		     struct pam_message **msg,
-#else
-		     const struct pam_message **msg,
-#endif
-		     struct pam_response **resp,
-		     void *appdata_ptr) {
-	int count = 0, replies = 0;
-	struct pam_response *reply = NULL;
-
-#define PAM_RESPONSE_SIZE	sizeof(struct pam_response)
-	size_t size = PAM_RESPONSE_SIZE;
-
-#define COPY_STRING(s) (s) ? strdup(s) : (char*)NULL
-
-	for (count = 0; count < num_msg; count++) {
-		switch (msg[count]->msg_style) {
-		case PAM_PROMPT_ECHO_ON:
-			/* user name given to PAM already */
-			return PAM_CONV_ERR;
-		case PAM_PROMPT_ECHO_OFF:
-			/* wants password */
-			if (reply) {
-				void *r2 = reply;
-				if (! (reply = realloc(reply, size))) {
-					free (r2);
-					return PAM_CONV_ERR;
-				}
-				bzero(reply + size - PAM_RESPONSE_SIZE, PAM_RESPONSE_SIZE);
-			} else {
-				if (! (reply = (struct pam_response*)malloc(size)))
-					return PAM_CONV_ERR;
-				bzero(reply, size);
-			}
-
-			if (!reply)
-				return PAM_CONV_ERR;
-
-			size += PAM_RESPONSE_SIZE;
-			
-			reply[replies].resp_retcode = PAM_SUCCESS;
-			reply[replies].resp = COPY_STRING(PAM_password);
-			/* PAM frees resp */
-			break;
-		case PAM_TEXT_INFO:
-			/* ignore the informational mesage */
-			break;
-		default:
-			/* unknown or PAM_ERROR_MSG */
-			if (reply) free (reply);
-			return PAM_CONV_ERR;
-		}
-	}
-
-#undef COPY_STRING
-	if (reply) *resp = reply;
-	return PAM_SUCCESS;
-}
-
-static struct pam_conv PAM_conversation = {
-	PAM_conv,
-	NULL
-};
-#endif /* USE_PAM */
-
 #ifdef USE_BSDAUTH
+_X_INTERNAL
 int
 Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 {
@@ -305,6 +236,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
  */
 struct smp_user_info *userp = 0;
 
+_X_INTERNAL
 int
 Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 {
@@ -391,13 +323,12 @@ smp_fail:
     }
   }
 #else /* !USE_BSDAUTH && !USESECUREWARE */
+_X_INTERNAL
 int
 Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 {
 	struct passwd	*p;
-#ifdef USE_PAM
-	pam_handle_t **pamhp = thepamhp();
-#else
+#ifndef USE_PAM
 #ifdef USESHADOW
 	struct spwd	*sp;
 #endif
@@ -417,7 +348,8 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 
 	if (!p || strlen (greet->name) == 0) {
 		Debug ("getpwnam() failed.\n");
-		bzero(greet->password, strlen(greet->password));
+		if (greet->password != NULL)
+		    bzero(greet->password, strlen(greet->password));
 		return 0;
 	}
 
@@ -448,11 +380,12 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 		  (strncmp(d->name,":0",2) != 0) )
 		{
                         Debug("Not on system console\n");
-                        bzero(greet->password, strlen(greet->password));
-             		XFree(console); 
+			if (greet->password != NULL)
+			    bzero(greet->password, strlen(greet->password));
+             		free(console);
 	                return 0;
                 }
-		XFree(console);	
+		free(console);
 	    }
 	    else
 	    {
@@ -461,7 +394,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	}
 #endif    
 
-#ifndef USE_PAM
+#ifndef USE_PAM /* PAM authentication happened in GreetUser already */
 #ifdef linux
 	if (!strcmp(p->pw_passwd, "!") || !strcmp(p->pw_passwd, "*")) {
 	    Debug ("The account is locked, no login allowed.\n");
@@ -470,7 +403,6 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	}
 #endif
 	user_pass = p->pw_passwd;
-#endif
 #ifdef KERBEROS
 	if(strcmp(greet->name, "root") != 0){
 		char name[ANAME_SZ];
@@ -510,7 +442,6 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 		}
 	}
 #endif
-#ifndef USE_PAM
 #ifdef USESHADOW
 	errno = 0;
 	sp = getspnam(greet->name);
@@ -522,7 +453,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 #ifndef QNX4
 	endspent();
 #endif  /* QNX4 doesn't need endspent() to end shadow passwd ops */
-#endif
+#endif /* USESHADOW */
 #if defined(ultrix) || defined(__ultrix__)
 	if (authenticate_user(p, greet->password, NULL) < 0)
 #else
@@ -588,40 +519,6 @@ done:
 #endif /* __OpenBSD__ */
 	bzero(user_pass, strlen(user_pass)); /* in case shadow password */
 
-#else /* USE_PAM */
-#define PAM_BAIL	\
-	if (pam_error != PAM_SUCCESS) goto pam_failed;
-
-	PAM_password = greet->password;
-	pam_error = pam_start("xdm", greet->name, &PAM_conversation, pamhp);
-	PAM_BAIL;
-	pam_error = pam_set_item(*pamhp, PAM_TTY, d->name);
-	PAM_BAIL;
-	pam_error = pam_set_item(*pamhp, PAM_RHOST, "");
-	PAM_BAIL;
-	pam_error = pam_authenticate(*pamhp, 0);
-	PAM_BAIL;
-	pam_error = pam_acct_mgmt(*pamhp, 0);
-	/* really should do password changing, but it doesn't fit well */
-	PAM_BAIL;
-	pam_error = pam_setcred(*pamhp, 0);
-	PAM_BAIL;
-	p = getpwnam (greet->name);
-	endpwent();
-
-	if (!p || strlen (greet->name) == 0) {
-		Debug ("getpwnam() failed.\n");
-		bzero(greet->password, strlen(greet->password));
-		return 0;
-	}
-
-	if (pam_error != PAM_SUCCESS) {
-	pam_failed:
-		pam_end(*pamhp, PAM_SUCCESS);
-		*pamhp = NULL;
-		return 0;
-	}
-#undef PAM_BAIL
 #endif /* USE_PAM */
 #endif /* USE_BSDAUTH */
 
@@ -632,7 +529,7 @@ done:
 	verify->gid = p->pw_gid;
 	home = p->pw_dir;
 	shell = p->pw_shell;
-	argv = 0;
+	argv = NULL;
 	if (d->session)
 		argv = parseArgs (argv, d->session);
 	if (greet->string)

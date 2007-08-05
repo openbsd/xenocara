@@ -170,7 +170,7 @@ Accept (
     int		    fromlen,
     CARD16	    displayNumber)
 {
-    return 0;
+    return NULL;
 }
 
 /*ARGSUSED*/

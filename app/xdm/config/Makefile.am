@@ -1,4 +1,4 @@
-# $XdotOrg: app/xdm/config/Makefile.am,v 1.9 2006/03/18 03:43:18 alanc Exp $
+# $XdotOrg: $
 #
 
 include $(top_srcdir)/cpprules.in
@@ -15,26 +15,26 @@ xdmconfig_DATA = \
 	Xservers
 
 xdmscript_SCRIPTS = \
-	Xsession
+	Xreset \
+	Xsession \
+	Xstartup
 
 dist_xdmscript_SCRIPTS = \
 	GiveConsole \
 	TakeConsole \
 	Xsetup_0 \
-	Xstartup \
-	Xreset \
 	Xwilling
 
 pixmapdir = $(XDM_PIXMAPDIR)
 
 dist_pixmap_DATA = xorg-bw.xpm xorg.xpm
 
-BUILT_SOURCES = Xservers.ws xdm-config Xresources Xsession
+BUILT_SOURCES = Xservers.ws xdm-config Xreset Xresources Xsession Xstartup
 
 CLEANFILES = $(BUILT_SOURCES) Xservers
 
 EXTRA_DIST = Xservers.ws.cpp Xservers.fs \
-	xdm-config.cpp Xresources.cpp Xsession.cpp
+	xdm-config.cpp Xreset.cpp Xresources.cpp Xsession.cpp Xstartup.cpp
 
 Xservers: Xservers.$(SERVERSTYPE)
 	ln -s Xservers.$(SERVERSTYPE) Xservers
@@ -50,11 +50,12 @@ XPMDEFINES = -DXPM -DBITMAPDIR=$(XDM_PIXMAPDIR) -DXDM_PIXMAP=$(XDM_PIXMAP) \
 MKTEMP_DEFINES = -DMKTEMP_COMMAND=$(MKTEMP_COMMAND)
 #endif
 
-CPP_FILES_FLAGS = -DBINDIR=$(bindir) -DDEFAULTVT=$(DEFAULTVT) \
-    -DXDMDIR=$(XDMLIBDIR) -DXDMLOGDIR=$(XDMLOGDIR) -DXDMPIDDIR=$(XDMPIDDIR) \
-    -DXDMCONFIGDIR=$(XDMCONFIGDIR) -DXDMSCRIPTDIR=$(XDMSCRIPTDIR) \
-    -DSU=$(SU) -DCHOOSERPATH=$(XDMLIBDIR)/chooser $(XPMDEFINES) \
-    -DSHELL_CMD=$(SHELL_CMD) $(MKTEMP_DEFINES)
+CPP_FILES_FLAGS = -DBINDIR="$(bindir)" -DDEFAULTVT="$(DEFAULTVT)" \
+    -DXDMDIR="$(XDMLIBDIR)" -DXDMLOGDIR="$(XDMLOGDIR)" \
+    -DXDMPIDDIR="$(XDMPIDDIR)" -DXDMCONFIGDIR="$(XDMCONFIGDIR)" \
+    -DXDMSCRIPTDIR="$(XDMSCRIPTDIR)" -DSU="$(SU)" \
+    -DCHOOSERPATH="$(XDMLIBDIR)/chooser" $(XPMDEFINES) \
+    -DSHELL_CMD="$(SHELL_CMD)" $(MKTEMP_DEFINES)
 
 Xservers.ws: $(srcdir)/Xservers.ws.cpp
 	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/Xservers.ws.cpp | $(CPP_SED_MAGIC) > $@
