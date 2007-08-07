@@ -464,7 +464,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL PLATFORM_WIN32_TRUE PLATFORM_WIN32_FALSE PKG_CONFIG ac_pt_PKG_CONFIG XAW6_CFLAGS XAW6_LIBS XAW7_CFLAGS XAW7_LIBS XPRINT_CFLAGS XPRINT_LIBS XAW8_CFLAGS XAW8_LIBS BUILD_XAW6_TRUE BUILD_XAW6_FALSE BUILD_XAW7_TRUE BUILD_XAW7_FALSE BUILD_XAW8_TRUE BUILD_XAW8_FALSE APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL PLATFORM_WIN32_TRUE PLATFORM_WIN32_FALSE SHARED_LIBS_TRUE SHARED_LIBS_FALSE PKG_CONFIG ac_pt_PKG_CONFIG XAW6_CFLAGS XAW6_LIBS XAW7_CFLAGS XAW7_LIBS XPRINT_CFLAGS XPRINT_LIBS XAW8_CFLAGS XAW8_LIBS BUILD_XAW6_TRUE BUILD_XAW6_FALSE BUILD_XAW7_TRUE BUILD_XAW7_FALSE BUILD_XAW8_TRUE BUILD_XAW8_FALSE APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -18649,6 +18649,18 @@ else
 fi
 
 
+# some platforms don't even have shared libs
+
+
+if test -f /usr/libexec/ld.so; then
+  SHARED_LIBS_TRUE=
+  SHARED_LIBS_FALSE='#'
+else
+  SHARED_LIBS_TRUE='#'
+  SHARED_LIBS_FALSE=
+fi
+
+
 # Whether to build Xaw6
 
 # Check whether --enable-xaw6 or --disable-xaw6 was given.
@@ -20101,6 +20113,13 @@ echo "$as_me: error: conditional \"PLATFORM_WIN32\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${SHARED_LIBS_TRUE}" && test -z "${SHARED_LIBS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"SHARED_LIBS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"SHARED_LIBS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 if test -z "${BUILD_XAW6_TRUE}" && test -z "${BUILD_XAW6_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"BUILD_XAW6\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
@@ -20727,6 +20746,8 @@ s,@ac_ct_F77@,$ac_ct_F77,;t t
 s,@LIBTOOL@,$LIBTOOL,;t t
 s,@PLATFORM_WIN32_TRUE@,$PLATFORM_WIN32_TRUE,;t t
 s,@PLATFORM_WIN32_FALSE@,$PLATFORM_WIN32_FALSE,;t t
+s,@SHARED_LIBS_TRUE@,$SHARED_LIBS_TRUE,;t t
+s,@SHARED_LIBS_FALSE@,$SHARED_LIBS_FALSE,;t t
 s,@PKG_CONFIG@,$PKG_CONFIG,;t t
 s,@ac_pt_PKG_CONFIG@,$ac_pt_PKG_CONFIG,;t t
 s,@XAW6_CFLAGS@,$XAW6_CFLAGS,;t t
@@ -21601,6 +21622,13 @@ echo "$as_me: error: conditional \"PLATFORM_WIN32\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${SHARED_LIBS_TRUE}" && test -z "${SHARED_LIBS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"SHARED_LIBS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"SHARED_LIBS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 if test -z "${BUILD_XAW6_TRUE}" && test -z "${BUILD_XAW6_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"BUILD_XAW6\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
@@ -22228,6 +22256,8 @@ s,@ac_ct_F77@,$ac_ct_F77,;t t
 s,@LIBTOOL@,$LIBTOOL,;t t
 s,@PLATFORM_WIN32_TRUE@,$PLATFORM_WIN32_TRUE,;t t
 s,@PLATFORM_WIN32_FALSE@,$PLATFORM_WIN32_FALSE,;t t
+s,@SHARED_LIBS_TRUE@,$SHARED_LIBS_TRUE,;t t
+s,@SHARED_LIBS_FALSE@,$SHARED_LIBS_FALSE,;t t
 s,@PKG_CONFIG@,$PKG_CONFIG,;t t
 s,@ac_pt_PKG_CONFIG@,$ac_pt_PKG_CONFIG,;t t
 s,@XAW6_CFLAGS@,$XAW6_CFLAGS,;t t
@@ -23103,6 +23133,13 @@ echo "$as_me: error: conditional \"PLATFORM_WIN32\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${SHARED_LIBS_TRUE}" && test -z "${SHARED_LIBS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"SHARED_LIBS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"SHARED_LIBS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 if test -z "${BUILD_XAW6_TRUE}" && test -z "${BUILD_XAW6_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"BUILD_XAW6\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
@@ -23731,6 +23768,8 @@ s,@ac_ct_F77@,$ac_ct_F77,;t t
 s,@LIBTOOL@,$LIBTOOL,;t t
 s,@PLATFORM_WIN32_TRUE@,$PLATFORM_WIN32_TRUE,;t t
 s,@PLATFORM_WIN32_FALSE@,$PLATFORM_WIN32_FALSE,;t t
+s,@SHARED_LIBS_TRUE@,$SHARED_LIBS_TRUE,;t t
+s,@SHARED_LIBS_FALSE@,$SHARED_LIBS_FALSE,;t t
 s,@PKG_CONFIG@,$PKG_CONFIG,;t t
 s,@ac_pt_PKG_CONFIG@,$ac_pt_PKG_CONFIG,;t t
 s,@XAW6_CFLAGS@,$XAW6_CFLAGS,;t t
@@ -24606,6 +24645,13 @@ echo "$as_me: error: conditional \"PLATFORM_WIN32\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${SHARED_LIBS_TRUE}" && test -z "${SHARED_LIBS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"SHARED_LIBS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"SHARED_LIBS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 if test -z "${BUILD_XAW6_TRUE}" && test -z "${BUILD_XAW6_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"BUILD_XAW6\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
@@ -25235,6 +25281,8 @@ s,@ac_ct_F77@,$ac_ct_F77,;t t
 s,@LIBTOOL@,$LIBTOOL,;t t
 s,@PLATFORM_WIN32_TRUE@,$PLATFORM_WIN32_TRUE,;t t
 s,@PLATFORM_WIN32_FALSE@,$PLATFORM_WIN32_FALSE,;t t
+s,@SHARED_LIBS_TRUE@,$SHARED_LIBS_TRUE,;t t
+s,@SHARED_LIBS_FALSE@,$SHARED_LIBS_FALSE,;t t
 s,@PKG_CONFIG@,$PKG_CONFIG,;t t
 s,@ac_pt_PKG_CONFIG@,$ac_pt_PKG_CONFIG,;t t
 s,@XAW6_CFLAGS@,$XAW6_CFLAGS,;t t
