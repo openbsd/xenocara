@@ -75,12 +75,13 @@ libXaw6_la_SOURCES = \
 libXaw6_la_LDFLAGS = -version-info 6:1:0 -no-undefined
 libXaw6_la_LIBADD = $(XAW6_LIBS)
 
+if SHARED_LIBS
 if !PLATFORM_WIN32
 install-exec-hook::
 	-rm -f $(DESTDIR)$(libdir)/libXaw.so.9.0
 	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.so.9.0 libXaw.so.9.0)
 endif
-
+endif
 endif
 
 if BUILD_XAW7
@@ -99,12 +100,13 @@ libXaw7_la_SOURCES = \
 libXaw7_la_LDFLAGS = -version-info 7:0:0 -no-undefined
 libXaw7_la_LIBADD = $(XAW7_LIBS)
 
+if SHARED_LIBS
 if !PLATFORM_WIN32
 install-exec-hook::
 	-rm -f $(DESTDIR)$(libdir)/libXaw.so.11.0
 	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.so.11.0 libXaw.so.11.0)
 endif
-
+endif
 endif
 
 if BUILD_XAW8
@@ -123,12 +125,13 @@ libXaw8_la_SOURCES = \
 libXaw8_la_LDFLAGS = -version-info 8:0:0 -no-undefined
 libXaw8_la_LIBADD = $(XAW8_LIBS)
 
+if SHARED_LIBS
 if !PLATFORM_WIN32
 install-exec-hook::
 	-rm -f $(DESTDIR)$(libdir)/libXaw.so.12.0
 	(cd $(DESTDIR)$(libdir) && ln -s libXaw8.so.12.0 libXaw.so.12.0)
 endif
-
+endif
 endif
 
 EXTRA_DIST = sharedlib.c
