@@ -178,6 +178,8 @@ of the framebuffer):
 		Driver		"ati"
 		BusID		"PCI:0:19:0"
 		Option		"composite_sync" "True"
+		# Use the following option on Blade-100 
+		# Option	"reference_clock" "29.5MHz"
 	EndSection
 
 It is also important that you modify the Monitor section and change the
@@ -259,4 +261,4 @@ See xorg.conf(5) for more options.
 
 problem_blurb
 
-$OpenBSD: README.sparc64,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+$OpenBSD: README.sparc64,v 1.2 2007/08/07 08:46:25 matthieu Exp $
