@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.16 2007/08/22 20:27:06 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.17 2007/08/22 21:06:30 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -8,8 +8,8 @@ Maintainer:	Freetype.org
 Archive Site:	http://download.savannah.gnu.org/releases/freetype/
 
 Package:	expat 
-Version:	2.0
-Current Vers:	2.0
+Version:	2.0.0
+Current Vers:	2.0.1
 Maintainer:	
 Archive Site:	http://expat.sf.net/
 
