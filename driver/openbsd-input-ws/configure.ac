@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([openbsd-input-ws],
-        1.1,
+        1.2,
         [http://www.openbsd.org/],
         openbsd-input-ws)
 
