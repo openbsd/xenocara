@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.3 2007/07/27 06:49:39 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.4 2007/08/23 19:10:33 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -371,8 +371,18 @@ wsProc(DeviceIntPtr pWS, int what)
 			map[i + 1] = i + 1;
 		InitPointerDeviceStruct((DevicePtr)pWS, map,
 				min(priv->buttons, NBUTTONS),
-		    miPointerGetMotionEvents, wsControlProc,
-		    miPointerGetMotionBufferSize());
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
+		    miPointerGetMotionEvents,
+#else
+		    GetMotionHistory, 
+#endif
+		    wsControlProc, 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
+		    miPointerGetMotionBufferSize()
+#else
+		    GetMotionHistorySize(), NAXES
+#endif
+		    );
 		xf86InitValuatorAxisStruct(pWS, 0, 0, -1, 1, 0, 1);
 		xf86InitValuatorDefaults(pWS, 0);
 		
