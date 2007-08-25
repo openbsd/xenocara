@@ -1,5 +1,4 @@
-# $OpenBSD: Makefile,v 1.6 2007/04/26 11:55:28 bernd Exp $
-# $OpenBSD: Makefile,v 1.6 2007/04/26 11:55:28 bernd Exp $
+# $OpenBSD: Makefile,v 1.7 2007/08/25 17:56:54 matthieu Exp $
 .include <bsd.own.mk>
 
 DIST= ${.CURDIR}
