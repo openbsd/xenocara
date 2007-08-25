@@ -38,8 +38,9 @@ EndSection
 Section "Files"
 	RgbPath      "/usr/X11R6/lib/X11/rgb"
 	FontPath     "/usr/X11R6/lib/X11/fonts/misc/"
+	FontPath     "/usr/X11R6/lib/X11/fonts/TTF/"
+	FontPath     "/usr/X11R6/lib/X11/fonts/OTF"
 	FontPath     "/usr/X11R6/lib/X11/fonts/Type1/"
-	FontPath     "/usr/X11R6/lib/X11/fonts/CID/"
 	FontPath     "/usr/X11R6/lib/X11/fonts/75dpi/"
 EndSection
 
@@ -176,4 +177,4 @@ button 2 and mouse button 3 respectively.
 
 problem_blurb
 
-$OpenBSD: README.macppc,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+$OpenBSD: README.macppc,v 1.2 2007/08/25 23:00:07 aanriot Exp $
