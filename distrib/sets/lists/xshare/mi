@@ -572,12 +572,16 @@
 ./usr/X11R6/include/X11/pixmaps/xpaint.xpm
 ./usr/X11R6/include/X11/pixmaps/xterm-axp.xpm
 ./usr/X11R6/include/X11/pixmaps/xterm-blank.xpm
+./usr/X11R6/include/X11/pixmaps/xterm-color_32x32.xpm
+./usr/X11R6/include/X11/pixmaps/xterm-color_48x48.xpm
 ./usr/X11R6/include/X11/pixmaps/xterm-dec.xpm
 ./usr/X11R6/include/X11/pixmaps/xterm-linux.xpm
 ./usr/X11R6/include/X11/pixmaps/xterm-sgi.xpm
 ./usr/X11R6/include/X11/pixmaps/xterm-sol.xpm
 ./usr/X11R6/include/X11/pixmaps/xterm-sun.xpm
 ./usr/X11R6/include/X11/pixmaps/xterm.xpm
+./usr/X11R6/include/X11/pixmaps/xterm_32x32.xpm
+./usr/X11R6/include/X11/pixmaps/xterm_48x48.xpm
 ./usr/X11R6/include/X11/pixmaps/xv.xpm
 ./usr/X11R6/include/X11/pixmaps/xv2.xpm
 ./usr/X11R6/include/X11/xpm.h
