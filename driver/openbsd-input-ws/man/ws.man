@@ -1,4 +1,4 @@
-.\"	$OpenBSD: ws.man,v 1.3 2007/05/26 17:29:26 matthieu Exp $
+.\"	$OpenBSD: ws.man,v 1.4 2007/08/25 10:24:15 mbalmer Exp $
 .\"
 .\" Copyright (c) 2005 Matthieu Herrb
 .\"
@@ -40,10 +40,11 @@ WS \- wscons pointer input driver for *BSD
 .SH DESCRIPTION
 .B ws
 is an XFree86/X.Org input driver for pointer devices (mouse, tablet,
-touchscreen,...) drived by the wscons console driver on
+touchscreen,...) driven by the wscons console driver on
 OpenBSD.
 .SH "SUPPORTED HARDWARE"
-This driver supports zts(4) the touchscreen of Zaurus machines.
+This driver supports zts(4), the touchscreen of Zaurus machines, and
+uts(4), USB touchscreens.
 .SH "CONFIGURATION DETAILS"
 Please refer to xorg.conf(__filemansuffix__) for general configuration
 details and for options that can be used with all input drivers.
@@ -56,7 +57,7 @@ In cases where the number of buttons cannot be auto-detected, the
 default value is 3.
 .TP 4
 .BI "Option \*qDebugLevel\*q \*q" integer \*q
-This option sets the verbosith level of the driver.
+This option sets the verbosity level of the driver.
 It defaults to 0, which means no extra debug output.
 .TP 4
 .BI "Option \*qDevice\*q \*q" path \*q
