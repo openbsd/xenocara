@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile,v 1.6 2007/07/05 22:09:06 matthieu Exp $
+# $OpenBSD: Makefile,v 1.7 2007/08/25 19:17:16 matthieu Exp $
 
-SUBDIR=	resize
+SUBDIR=	icons resize
 
 PROG=	xterm
 MAN=	xterm.1tbl
