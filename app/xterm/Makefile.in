@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.145 2007/03/24 00:09:52 tom Exp $
+## $XTermId: Makefile.in,v 1.148 2007/06/16 18:47:51 tom Exp $
 ##
 ## $XFree86: xc/programs/xterm/Makefile.in,v 3.56 2006/06/19 00:36:50 dickey Exp $ ##
 ##
@@ -65,6 +65,7 @@ bindir		= @bindir@
 libdir		= @libdir@
 mandir		= @mandir@/man$(manext)
 appsdir		= @appsdir@
+icondir		= @icondir@
 
 #### End of system configuration section. ####
 
@@ -73,8 +74,9 @@ BINDIR		= $(DESTDIR)$(bindir)
 LIBDIR		= $(DESTDIR)$(libdir)
 MANDIR		= $(DESTDIR)$(mandir)
 APPSDIR		= $(DESTDIR)$(appsdir)
+ICONDIR		= $(DESTDIR)$(icondir)
 
-INSTALL_DIRS    = $(BINDIR) $(APPSDIR) $(MANDIR)
+INSTALL_DIRS    = $(BINDIR) $(APPSDIR) $(ICONDIR) $(MANDIR)
 
 CLASS		= XTerm
 EXTRAHDR	= @EXTRAHDRS@
@@ -209,6 +211,16 @@ install-full :: $(MANDIR)
 @no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/UXTerm.ad >XTerm.tmp
 @no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/UXTerm
 @no_appsdir@	@rm -f XTerm.tmp
+@no_icondir@	@echo "... installed app-defaults"
+
+@no_icondir@install \
+@no_icondir@install-icon \
+@no_icondir@install-full :: $(ICONDIR)
+@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm-color_32x32.xpm $(ICONDIR)
+@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm-color_48x48.xpm $(ICONDIR)
+@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm_32x32.xpm $(ICONDIR)
+@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm_48x48.xpm $(ICONDIR)
+@no_icondir@	@echo "... installed icons"
 
 install ::
 	@echo 'Completed installation of executables and documentation.'
@@ -249,6 +261,21 @@ uninstall-full ::
 @no_appsdir@	-$(RM) $(APPSDIR)/$(CLASS)
 @no_appsdir@	-$(RM) $(APPSDIR)/$(CLASS)-color
 @no_appsdir@	-$(RM) $(APPSDIR)/UXTerm
+
+@no_icondir@uninstall \
+@no_icondir@uninstall-icon \
+@no_icondir@uninstall-full ::
+@no_icondir@	-$(RM) $(ICONDIR)/xterm-color_32x32.xpm
+@no_icondir@	-$(RM) $(ICONDIR)/xterm_48x48.xpm
+@no_icondir@	-$(RM) $(ICONDIR)/xterm-color_32x32.xpm
+@no_icondir@	-$(RM) $(ICONDIR)/xterm_48x48.xpm
+################################################################################
+# Desktop-utils does not provide an uninstall, and is not uniformly available.
+@desktop_utils@DESKTOP_FLAGS = @DESKTOP_FLAGS@
+@desktop_utils@install-desktop \
+@desktop_utils@install-full ::
+@desktop_utils@	desktop-file-install $(DESKTOP_FLAGS) xterm.desktop
+@desktop_utils@	desktop-file-install $(DESKTOP_FLAGS) uxterm.desktop
 ################################################################################
 mostlyclean :
 	-$(RM) *$o *.[is] XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp

@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.101 2007/03/16 23:46:24 tom Exp $ */
+/* $XTermId: data.h,v 1.105 2007/07/22 16:03:16 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.h,v 3.39 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -107,6 +107,8 @@ extern PtySelect Select_mask;
 extern PtySelect X_mask;
 extern PtySelect pty_mask;
 
+extern int ice_fd;
+
 extern XtermWidget term;
 
 
@@ -129,6 +131,19 @@ extern char *ProgramName;
 extern Arg ourTopLevelShellArgs[];
 extern Cardinal number_ourTopLevelShellArgs;
 extern Atom wm_delete_window;
+
+#if HANDLE_STRUCT_NOTIFY
+/* Flag icon name with "*** "  on window output when iconified.
+ * I'd like to do something like reverse video, but I don't
+ * know how to tell this to window managers in general.
+ *
+ * mapstate can be IsUnmapped, !IsUnmapped, or -1;
+ * -1 means no change; the other two are set by event handlers
+ * and indicate a new mapstate.  !IsMapped is done in the handler.
+ * we worry about IsUnmapped when output occurs.  -IAN!
+ */
+extern int mapstate;
+#endif /* HANDLE_STRUCT_NOTIFY */
 
 typedef struct XTERM_RESOURCE {
     char *xterm_name;
@@ -169,13 +184,15 @@ typedef struct XTERM_RESOURCE {
     Boolean ptyInitialErase;	/* if true, use pty's sense of erase char */
     Boolean backarrow_is_erase;	/* override backspace/delete */
 #endif
-    Boolean wait_for_map;
     Boolean useInsertMode;
 #if OPT_ZICONBEEP
     int zIconBeep;		/* beep level when output while iconified */
 #endif
 #if OPT_PTY_HANDSHAKE
+    Boolean wait_for_map;
+    Boolean wait_for_map0;	/* ...initial value of .wait_for_map */
     Boolean ptyHandshake;	/* use pty-handshaking */
+    Boolean ptySttySize;	/* reset TTY size after pty handshake */
 #endif
 #if OPT_SAME_NAME
     Boolean sameName;		/* Don't change the title or icon name if it is

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.484 2007/03/20 23:56:09 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.494 2007/07/17 21:08:07 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -89,7 +89,7 @@
 #define TypeCalloc(type)	TypeCalloc(type,1)
 
 #define TypeMallocN(type,n)	(type *)malloc(sizeof(type) * (n))
-#define TypeMalloc(type)	TypeMallocN(type,0)
+#define TypeMalloc(type)	TypeMallocN(type,1)
 
 #define TypeRealloc(type,n,p)	(type *)realloc(p, (n) * sizeof(type))
 
@@ -471,6 +471,10 @@ typedef struct {
 #define OPT_EXEC_XTERM 0 /* true if xterm can fork/exec copies of itself */
 #endif
 
+#ifndef OPT_EXTRA_PASTE
+#define OPT_EXTRA_PASTE 1
+#endif
+
 #ifndef OPT_FOCUS_EVENT
 #define OPT_FOCUS_EVENT	1 /* focus in/out events */
 #endif
@@ -625,6 +629,10 @@ typedef struct {
 
 #ifndef OPT_TRACE
 #define OPT_TRACE       0 /* true if we're using debugging traces */
+#endif
+
+#ifndef OPT_TRACE_FLAGS
+#define OPT_TRACE_FLAGS 0 /* additional tracing used for SCRN_BUF_FLAGS */
 #endif
 
 #ifndef OPT_VT52_MODE
@@ -1102,6 +1110,13 @@ typedef enum {
 #define ROW2INX(screen, row)	((row) + (screen)->topline)
 #define INX2ROW(screen, inx)	((inx) - (screen)->topline)
 
+#define ROW2ABS(screen, row)	((row) + (screen)->savedlines)
+#define INX2ABS(screen, inx)	ROW2ABS(screen, INX2ROW(screen, inx))
+
+#define okScrnRow(screen, row) \
+	((row) <= (screen)->max_row \
+      && (row) >= -((screen)->savedlines))
+
 	/* ScrnBuf-level macros */
 #define BUFFER_PTR(buf, row, off) (buf[MAX_PTRS * (row) + off])
 
@@ -1290,6 +1305,9 @@ typedef struct {
 	uid_t		uid;		/* user id of actual person	*/
 	gid_t		gid;		/* group id of actual person	*/
 	ColorRes	Tcolors[NCOLORS]; /* terminal colors		*/
+#if OPT_HIGHLIGHT_COLOR
+	Boolean		hilite_reverse;	/* hilite overrides reverse	*/
+#endif
 #if OPT_ISO_COLORS
 	ColorRes	Acolors[MAXCOLORS]; /* ANSI color emulation	*/
 	int		veryBoldColors;	/* modifier for boldColors	*/
@@ -1382,8 +1400,10 @@ typedef struct {
 	Boolean		visualbell;	/* visual bell mode		*/
 	Boolean		poponbell;	/* pop on bell mode		*/
 	Boolean		allowSendEvents;/* SendEvent mode		*/
+	Boolean		allowTitleOps;	/* TitleOps mode		*/
 	Boolean		allowWindowOps;	/* WindowOps mode		*/
 	Boolean		allowSendEvent0;/* initial SendEvent mode	*/
+	Boolean		allowTitleOp0;	/* initial TitleOps mode	*/
 	Boolean		allowWindowOp0;	/* initial WindowOps mode	*/
 	Boolean		awaitInput;	/* select-timeout mode		*/
 	Boolean		grabbedKbd;	/* keyboard is grabbed		*/
@@ -1642,6 +1662,10 @@ typedef struct {
 #if OPT_CLIP_BOLD
 	Boolean		use_clipping;
 #endif
+	void *		main_cgs_cache;
+#ifndef NO_ACTIVE_ICON
+	void *		icon_cgs_cache;
+#endif
 #if OPT_RENDERFONT
 	XftFont *	renderFontNorm[NMENUFONTS];
 	XftFont *	renderFontBold[NMENUFONTS];
@@ -1785,7 +1809,10 @@ typedef struct
 typedef struct
 {
     xtermKeyboardType type;
-    unsigned	flags;
+    unsigned flags;
+    char *shell_translations;
+    char *xterm_translations;
+    char *extra_translations;
 #if OPT_INITIAL_ERASE
     int	reset_DECBKM;		/* reset should set DECBKM */
 #endif
@@ -1811,6 +1838,8 @@ typedef struct _Misc {
 #if OPT_WIDE_CHARS
     Boolean cjk_width;		/* true for built-in CJK wcwidth() */
     Boolean mk_width;		/* true for simpler built-in wcwidth() */
+    int mk_samplesize;
+    int mk_samplepass;
 #endif
 #if OPT_LUIT_PROG
     Boolean callfilter;		/* true to invoke luit */
@@ -2029,6 +2058,13 @@ typedef struct _TekWidgetRec {
 				 * around and lines that have ended naturally
 				 * with a CR at column max_col.
 				 */
+
+#if OPT_ZICONBEEP || OPT_TOOLBAR
+#define HANDLE_STRUCT_NOTIFY 1
+#else
+#define HANDLE_STRUCT_NOTIFY 0
+#endif
+
 /*
  * If we've set protected attributes with the DEC-style DECSCA, then we'll have
  * to use DECSED or DECSEL to erase preserving protected text.  (The normal ED,

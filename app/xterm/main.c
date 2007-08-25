@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.557 2007/03/24 15:26:47 tom Exp $ */
+/* $XTermId: main.c,v 1.574 2007/07/22 20:02:22 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -560,10 +560,12 @@ static char **command_to_exec_with_luit = NULL;
 #define TERMIO_STRUCT struct termio
 #define ttySetAttr(fd, datap) ioctl(fd, TCSETA, datap)
 #define ttyGetAttr(fd, datap) ioctl(fd, TCGETA, datap)
+#define ttyFlush(fd)          ioctl(fd, TCFLSH, 1)
 #elif defined(USE_POSIX_TERMIOS)
 #define TERMIO_STRUCT struct termios
 #define ttySetAttr(fd, datap) tcsetattr(fd, TCSANOW, datap)
 #define ttyGetAttr(fd, datap) tcgetattr(fd, datap)
+#define ttyFlush(fd)          tcflush(fd, TCOFLUSH)
 #endif /* USE_ANY_SYSV_TERMIO */
 
 #ifndef VMS
@@ -669,6 +671,7 @@ static struct _xttymodes {
 
 static int parse_tty_modes(char *s, struct _xttymodes *modelist);
 
+#ifndef USE_UTEMPTER
 #ifdef USE_SYSV_UTMP
 #if (defined(AIXV3) && (OSMAJORVERSION < 4)) && !(defined(getutid))
 extern struct utmp *getutid();
@@ -678,7 +681,6 @@ extern struct utmp *getutid();
 static char etc_utmp[] = UTMP_FILENAME;
 #endif /* USE_SYSV_UTMP */
 
-#ifndef USE_UTEMPTER
 #if defined(USE_LASTLOG) && defined(USE_STRUCT_LASTLOG)
 static char etc_lastlog[] = LASTLOG_FILENAME;
 #else
@@ -775,13 +777,14 @@ static XtResource application_resources[] =
     Bres("backarrowKeyIsErase", "BackarrowKeyIsErase", backarrow_is_erase, DEF_BACKARO_ERASE),
 #endif
 #endif
-    Bres("waitForMap", "WaitForMap", wait_for_map, False),
     Bres("useInsertMode", "UseInsertMode", useInsertMode, False),
 #if OPT_ZICONBEEP
     Ires("zIconBeep", "ZIconBeep", zIconBeep, 0),
 #endif
 #if OPT_PTY_HANDSHAKE
+    Bres("waitForMap", "WaitForMap", wait_for_map, False),
     Bres("ptyHandshake", "PtyHandshake", ptyHandshake, True),
+    Bres("ptySttySize", "PtySttySize", ptySttySize, DEF_PTY_STTY_SIZE),
 #endif
 #if OPT_SAME_NAME
     Bres("sameName", "SameName", sameName, True),
@@ -1317,6 +1320,22 @@ save_callback(Widget w GCC_UNUSED,
     /* we have nothing to save */
     token->save_success = True;
 }
+
+static void
+icewatch(IceConn iceConn,
+	 IcePointer clientData GCC_UNUSED,
+	 Bool opening,
+	 IcePointer * watchData GCC_UNUSED)
+{
+    if (opening) {
+	ice_fd = IceConnectionNumber(iceConn);
+	TRACE(("got IceConnectionNumber %d\n", ice_fd));
+    } else {
+	ice_fd = -1;
+	TRACE(("reset IceConnectionNumber\n"));
+    }
+}
+
 #endif /* OPT_SESSION_MGT */
 
 /*
@@ -1971,6 +1990,7 @@ main(int argc, char *argv[]ENVP_ARG)
 				     &argc, argv, fallback_resources,
 				     sessionShellWidgetClass,
 				     NULL, 0);
+	IceAddConnectionWatch(icewatch, NULL);
 #else
 	toplevel = XtAppInitialize(&app_con, my_class,
 				   optionDescList,
@@ -1984,6 +2004,9 @@ main(int argc, char *argv[]ENVP_ARG)
 				  application_resources,
 				  XtNumber(application_resources), NULL, 0);
 	TRACE_XRES();
+#if OPT_PTY_HANDSHAKE
+	resource.wait_for_map0 = resource.wait_for_map;
+#endif
 
 #if defined(HAVE_POSIX_SAVED_IDS) && !defined(USE_UTMP_SETGID)
 #if !defined(DISABLE_SETUID) || !defined(DISABLE_SETGID)
@@ -2580,6 +2603,7 @@ set_pty_permissions(uid_t uid, gid_t gid, mode_t mode)
     endgrent();
 #endif /* USE_TTY_GROUP */
 
+    TRACE_IDS;
     set_owner(ttydev, uid, gid, mode);
 }
 
@@ -2735,13 +2759,12 @@ hungtty(int i GCC_UNUSED)
     SIGNAL_RETURN;
 }
 
-/*
- * declared outside OPT_PTY_HANDSHAKE so HsSysError() callers can use
- */
-static int cp_pipe[2];		/* this pipe is used for child to parent transfer */
-
 #if OPT_PTY_HANDSHAKE
-static int pc_pipe[2];		/* this pipe is used for parent to child transfer */
+#define NO_FDS {-1, -1}
+
+static int cp_pipe[2] = NO_FDS;	/* this pipe is used for child to parent transfer */
+static int pc_pipe[2] = NO_FDS;	/* this pipe is used for parent to child transfer */
+
 typedef enum {			/* c == child, p == parent                        */
     PTY_BAD,			/* c->p: can't open pty slave for some reason     */
     PTY_FATALERROR,		/* c->p: we had a fatal error with the pty        */
@@ -2763,6 +2786,49 @@ typedef struct {
     char buffer[1024];
 } handshake_t;
 
+#if OPT_TRACE
+static void
+trace_handshake(const char *tag, handshake_t * data)
+{
+    const char *status = "?";
+    switch (data->status) {
+    case PTY_BAD:
+	status = "PTY_BAD";
+	break;
+    case PTY_FATALERROR:
+	status = "PTY_FATALERROR";
+	break;
+    case PTY_GOOD:
+	status = "PTY_GOOD";
+	break;
+    case PTY_NEW:
+	status = "PTY_NEW";
+	break;
+    case PTY_NOMORE:
+	status = "PTY_NOMORE";
+	break;
+    case UTMP_ADDED:
+	status = "UTMP_ADDED";
+	break;
+    case UTMP_TTYSLOT:
+	status = "UTMP_TTYSLOT";
+	break;
+    case PTY_EXEC:
+	status = "PTY_EXEC";
+	break;
+    }
+    TRACE(("handshake %s %s errno=%d, error=%d device \"%s\"\n",
+	   tag,
+	   status,
+	   data->error,
+	   data->fatal_error,
+	   data->buffer));
+}
+#define TRACE_HANDSHAKE(tag, data) trace_handshake(tag, data)
+#else
+#define TRACE_HANDSHAKE(tag, data)	/* nothing */
+#endif
+
 /* HsSysError()
  *
  * This routine does the equivalent of a SysError but it handshakes
@@ -2772,48 +2838,68 @@ typedef struct {
  */
 
 static void
-HsSysError(int pf, int error)
+HsSysError(int error)
 {
     handshake_t handshake;
 
+    memset(&handshake, 0, sizeof(handshake));
     handshake.status = PTY_FATALERROR;
     handshake.error = errno;
     handshake.fatal_error = error;
     strcpy(handshake.buffer, ttydev);
-    write(pf, (char *) &handshake, sizeof(handshake));
+
+    if (resource.ptyHandshake && (cp_pipe[1] >= 0)) {
+	TRACE(("HsSysError errno=%d, error=%d device \"%s\"\n",
+	       handshake.error,
+	       handshake.fatal_error,
+	       handshake.buffer));
+	TRACE_HANDSHAKE("writing", &handshake);
+	write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
+    } else {
+	fprintf(stderr,
+		"%s: fatal pty error errno=%d, error=%d device \"%s\"\n",
+		ProgramName,
+		handshake.error,
+		handshake.fatal_error,
+		handshake.buffer);
+	fprintf(stderr, "%s\n", SysErrorMsg(handshake.error));
+	fprintf(stderr, "Reason: %s\n", SysReasonMsg(handshake.fatal_error));
+    }
     exit(error);
 }
 
 void
 first_map_occurred(void)
 {
-    handshake_t handshake;
-    TScreen *screen = TScreenOf(term);
+    if (resource.wait_for_map) {
+	handshake_t handshake;
+	TScreen *screen = TScreenOf(term);
 
-    handshake.status = PTY_EXEC;
-    handshake.rows = screen->max_row;
-    handshake.cols = screen->max_col;
-    write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
-    close(cp_pipe[0]);
-    close(pc_pipe[1]);
-    resource.wait_for_map = False;
+	memset(&handshake, 0, sizeof(handshake));
+	handshake.status = PTY_EXEC;
+	handshake.rows = screen->max_row;
+	handshake.cols = screen->max_col;
+
+	if (pc_pipe[1] >= 0) {
+	    TRACE(("first_map_occurred: %dx%d\n", handshake.rows, handshake.cols));
+	    TRACE_HANDSHAKE("writing", &handshake);
+	    write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
+	    close(cp_pipe[0]);
+	    close(pc_pipe[1]);
+	}
+	resource.wait_for_map = False;
+    }
 }
 #else
 /*
  * temporary hack to get xterm working on att ptys
  */
 static void
-HsSysError(int pf GCC_UNUSED, int error)
+HsSysError(int error)
 {
     fprintf(stderr, "%s: fatal pty error %d (errno=%d) on tty %s\n",
-	    xterm_name, error, errno, ttydev);
+	    ProgramName, error, errno, ttydev);
     exit(error);
-}
-
-void
-first_map_occurred(void)
-{
-    return;
 }
 #endif /* OPT_PTY_HANDSHAKE else !OPT_PTY_HANDSHAKE */
 
@@ -2823,6 +2909,7 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 {
     int why;
 
+    TRACE_IDS;
     TRACE(("set_owner(%s, uid=%d, gid=%d, mode=%#o\n", device, uid, gid, mode));
 
     if (chown(device, uid, gid) < 0) {
@@ -2915,6 +3002,7 @@ spawnXTerm(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
 #if OPT_PTY_HANDSHAKE
+    Bool got_handshake_size = False;
     handshake_t handshake;
     int done;
 #endif
@@ -2954,7 +3042,6 @@ spawnXTerm(XtermWidget xw)
     char *ptr, *shname, *shname_minus;
     int i, no_dev_tty = False;
     char **envnew;		/* new environment */
-    int envsize;		/* elements in new environment */
     char buf[64];
     char *TermName = NULL;
 #ifdef TTYSIZE_STRUCT
@@ -2991,6 +3078,10 @@ spawnXTerm(XtermWidget xw)
     signal(SIGTTOU, SIG_IGN);
 #endif
 
+#if OPT_PTY_HANDSHAKE
+    memset(&handshake, 0, sizeof(handshake));
+#endif
+
     if (am_slave >= 0) {
 	screen->respond = am_slave;
 	set_pty_id(ttydev, passedPty);
@@ -3020,6 +3111,9 @@ spawnXTerm(XtermWidget xw)
 	    errno = ENXIO;
 	}
 	pw = NULL;
+#if OPT_PTY_HANDSHAKE
+	got_handshake_size = False;
+#endif /* OPT_PTY_HANDSHAKE */
 #if OPT_INITIAL_ERASE
 	initial_erase = VAL_INITIAL_ERASE;
 #endif
@@ -3329,7 +3423,7 @@ spawnXTerm(XtermWidget xw)
 		    SysError(ERROR_PTEM);
 		}
 #if !defined(SVR4) && !(defined(SYSV) && defined(i386))
-		if (!getenv("CONSEM") && ioctl(ptyfd, I_PUSH, "consem") < 0) {
+		if (!x_getenv("CONSEM") && ioctl(ptyfd, I_PUSH, "consem") < 0) {
 		    SysError(ERROR_CONSEM);
 		}
 #endif /* !SVR4 */
@@ -3473,6 +3567,7 @@ spawnXTerm(XtermWidget xw)
 			handshake.status = PTY_BAD;
 			handshake.error = errno;
 			strcpy(handshake.buffer, ttydev);
+			TRACE_HANDSHAKE("writing", &handshake);
 			write(cp_pipe[1], (char *) &handshake,
 			      sizeof(handshake));
 
@@ -3709,14 +3804,14 @@ spawnXTerm(XtermWidget xw)
 		    ltc.t_werasc = ltc.t_lnextc = _POSIX_VDISABLE;
 #endif /* __hpux */
 		if (ioctl(ttyfd, TIOCSLTC, &ltc) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCSETC);
+		    HsSysError(ERROR_TIOCSETC);
 #endif /* HAS_LTCHARS */
 #ifdef TIOCLSET
 		if (ioctl(ttyfd, TIOCLSET, (char *) &lmode) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCLSET);
+		    HsSysError(ERROR_TIOCLSET);
 #endif /* TIOCLSET */
 		if (ttySetAttr(ttyfd, &tio) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCSETP);
+		    HsSysError(ERROR_TIOCSETP);
 
 		/* ignore errors here - some platforms don't work */
 		tio.c_cflag &= ~CSIZE;
@@ -3765,20 +3860,20 @@ spawnXTerm(XtermWidget xw)
 		}
 
 		if (ioctl(ttyfd, TIOCSETP, (char *) &sg) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCSETP);
+		    HsSysError(ERROR_TIOCSETP);
 		if (ioctl(ttyfd, TIOCSETC, (char *) &tc) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCSETC);
+		    HsSysError(ERROR_TIOCSETC);
 		if (ioctl(ttyfd, TIOCSETD, (char *) &discipline) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCSETD);
+		    HsSysError(ERROR_TIOCSETD);
 		if (ioctl(ttyfd, TIOCSLTC, (char *) &ltc) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCSLTC);
+		    HsSysError(ERROR_TIOCSLTC);
 		if (ioctl(ttyfd, TIOCLSET, (char *) &lmode) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCLSET);
+		    HsSysError(ERROR_TIOCLSET);
 #ifdef sony
 		if (ioctl(ttyfd, TIOCKSET, (char *) &jmode) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCKSET);
+		    HsSysError(ERROR_TIOCKSET);
 		if (ioctl(ttyfd, TIOCKSETC, (char *) &jtc) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCKSETC);
+		    HsSysError(ERROR_TIOCKSETC);
 #endif /* sony */
 #endif /* TERMIO_STRUCT */
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
@@ -3787,13 +3882,13 @@ spawnXTerm(XtermWidget xw)
 		    int on = 1;
 		    if (ioctl(ttyfd, TIOCCONS, (char *) &on) == -1)
 			fprintf(stderr, "%s: cannot open console: %s\n",
-				xterm_name, strerror(errno));
+				ProgramName, strerror(errno));
 #endif
 #ifdef SRIOCSREDIR
 		    int fd = open("/dev/console", O_RDWR);
 		    if (fd == -1 || ioctl(fd, SRIOCSREDIR, ttyfd) == -1)
 			fprintf(stderr, "%s: cannot open console: %s\n",
-				xterm_name, strerror(errno));
+				ProgramName, strerror(errno));
 		    (void) close(fd);
 #endif
 		}
@@ -3850,40 +3945,21 @@ spawnXTerm(XtermWidget xw)
 	    }
 #endif
 
-	    /* copy the environment before Setenv'ing */
-	    for (i = 0; environ[i] != NULL; i++) ;
-	    /* compute number of xtermSetenv() calls below */
-	    envsize = 1;	/* (NULL terminating entry) */
-	    envsize += 5;	/* TERM, WINDOWID, DISPLAY, _SHELL, _VERSION */
-#ifdef HAVE_UTMP
-	    envsize += 1;	/* LOGNAME */
-#endif /* HAVE_UTMP */
-#ifdef USE_SYSV_ENVVARS
-	    envsize += 2;	/* COLUMNS, LINES */
-#ifdef HAVE_UTMP
-	    envsize += 2;	/* HOME, SHELL */
-#endif /* HAVE_UTMP */
-#ifdef OWN_TERMINFO_DIR
-	    envsize += 1;	/* TERMINFO */
-#endif
-#else /* USE_SYSV_ENVVARS */
-	    envsize += 1;	/* TERMCAP */
-#endif /* USE_SYSV_ENVVARS */
-	    envnew = TypeCallocN(char *, (unsigned) i + envsize);
-	    memmove((char *) envnew, (char *) environ, i * sizeof(char *));
-	    environ = envnew;
-	    xtermSetenv("TERM=", TermName);
+	    xtermCopyEnv(environ);
+
+	    xtermSetenv("TERM", TermName);
 	    if (!TermName)
 		*newtc = 0;
 
 	    sprintf(buf, "%lu",
 		    ((unsigned long) XtWindow(SHELL_OF(CURRENT_EMU()))));
-	    xtermSetenv("WINDOWID=", buf);
+	    xtermSetenv("WINDOWID", buf);
 
 	    /* put the display into the environment of the shell */
-	    xtermSetenv("DISPLAY=", XDisplayString(screen->display));
+	    xtermSetenv("DISPLAY", XDisplayString(screen->display));
 
-	    xtermSetenv("XTERM_VERSION=", xtermVersion());
+	    xtermSetenv("XTERM_VERSION", xtermVersion());
+	    xtermSetenv("XTERM_LOCALE", xtermEnvLocale());
 
 	    signal(SIGTERM, SIG_DFL);
 
@@ -3959,8 +4035,8 @@ spawnXTerm(XtermWidget xw)
 		 * from the user's $LOGNAME or $USER environment variables.
 		 */
 		if (((login_name = getlogin()) != NULL
-		     || (login_name = getenv("LOGNAME")) != NULL
-		     || (login_name = getenv("USER")) != NULL)
+		     || (login_name = x_getenv("LOGNAME")) != NULL
+		     || (login_name = x_getenv("USER")) != NULL)
 		    && strcmp(login_name, pw->pw_name)) {
 		    struct passwd *pw2 = getpwnam(login_name);
 		    if (pw2 != 0) {
@@ -3979,7 +4055,7 @@ spawnXTerm(XtermWidget xw)
 		    login_name = x_strdup(login_name);
 	    }
 	    if (login_name != NULL) {
-		xtermSetenv("LOGNAME=", login_name);	/* for POSIX */
+		xtermSetenv("LOGNAME", login_name);	/* for POSIX */
 	    }
 #ifndef USE_UTEMPTER
 #ifdef USE_UTMP_SETGID
@@ -4173,6 +4249,7 @@ spawnXTerm(XtermWidget xw)
 		handshake.status = UTMP_ADDED;
 		handshake.error = 0;
 		strcpy(handshake.buffer, ttydev);
+		TRACE_HANDSHAKE("writing", &handshake);
 		(void) write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
 	    }
 #endif /* OPT_PTY_HANDSHAKE */
@@ -4206,6 +4283,7 @@ spawnXTerm(XtermWidget xw)
 		handshake.status = PTY_GOOD;
 		handshake.error = 0;
 		(void) strcpy(handshake.buffer, ttydev);
+		TRACE_HANDSHAKE("writing", &handshake);
 		(void) write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
 
 		if (resource.wait_for_map) {
@@ -4217,9 +4295,12 @@ spawnXTerm(XtermWidget xw)
 			exit(ERROR_PTY_EXEC);
 		    }
 		    if (handshake.rows > 0 && handshake.cols > 0) {
+			TRACE(("handshake ttysize: %dx%d\n",
+			       handshake.rows, handshake.cols));
 			set_max_row(screen, handshake.rows);
 			set_max_col(screen, handshake.cols);
 #ifdef TTYSIZE_STRUCT
+			got_handshake_size = True;
 			TTYSIZE_ROWS(ts) = MaxRows(screen);
 			TTYSIZE_COLS(ts) = MaxCols(screen);
 #if defined(USE_STRUCT_WINSIZE)
@@ -4236,20 +4317,20 @@ spawnXTerm(XtermWidget xw)
 	    {
 		char numbuf[12];
 		sprintf(numbuf, "%d", MaxCols(screen));
-		xtermSetenv("COLUMNS=", numbuf);
+		xtermSetenv("COLUMNS", numbuf);
 		sprintf(numbuf, "%d", MaxRows(screen));
-		xtermSetenv("LINES=", numbuf);
+		xtermSetenv("LINES", numbuf);
 	    }
 #ifdef HAVE_UTMP
 	    if (pw) {		/* SVR4 doesn't provide these */
-		if (!getenv("HOME"))
-		    xtermSetenv("HOME=", pw->pw_dir);
-		if (!getenv("SHELL"))
-		    xtermSetenv("SHELL=", pw->pw_shell);
+		if (!x_getenv("HOME"))
+		    xtermSetenv("HOME", pw->pw_dir);
+		if (!x_getenv("SHELL"))
+		    xtermSetenv("SHELL", pw->pw_shell);
 	    }
 #endif /* HAVE_UTMP */
 #ifdef OWN_TERMINFO_DIR
-	    xtermSetenv("TERMINFO=", OWN_TERMINFO_DIR);
+	    xtermSetenv("TERMINFO", OWN_TERMINFO_DIR);
 #endif
 #else /* USE_SYSV_ENVVARS */
 	    resize_termcap(xw, newtc);
@@ -4279,16 +4360,23 @@ spawnXTerm(XtermWidget xw)
 			TERMCAP_ERASE,
 			CharOf(initial_erase));
 #endif
-		xtermSetenv("TERMCAP=", newtc);
+		xtermSetenv("TERMCAP", newtc);
 	    }
 #endif /* USE_SYSV_ENVVARS */
 
-	    /* need to reset after all the ioctl bashing we did above */
 #if OPT_PTY_HANDSHAKE
-	    if (resource.ptyHandshake) {
+	    /*
+	     * Need to reset after all the ioctl bashing we did above.
+	     *
+	     * If we expect the waitForMap logic to set the handshake-size,
+	     * use that to prevent races.
+	     */
+	    if (resource.ptyHandshake
+		&& resource.ptySttySize
+		&& (got_handshake_size || !resource.wait_for_map0)) {
 #ifdef TTYSIZE_STRUCT
 		i = SET_TTYSIZE(0, ts);
-		TRACE(("spawn SET_TTYSIZE %dx%d return %d\n",
+		TRACE(("ptyHandshake SET_TTYSIZE %dx%d return %d\n",
 		       TTYSIZE_ROWS(ts),
 		       TTYSIZE_COLS(ts), i));
 #endif /* TTYSIZE_STRUCT */
@@ -4297,15 +4385,15 @@ spawnXTerm(XtermWidget xw)
 	    signal(SIGHUP, SIG_DFL);
 
 	    if ((ptr = explicit_shname) == NULL) {
-		if (((ptr = getenv("SHELL")) == NULL || *ptr == 0) &&
+		if (((ptr = x_getenv("SHELL")) == NULL) &&
 		    ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL) ||
 		     *(ptr = pw->pw_shell) == 0)) {
 		    ptr = "/bin/sh";
 		}
 	    } else {
-		xtermSetenv("SHELL=", explicit_shname);
+		xtermSetenv("SHELL", explicit_shname);
 	    }
-	    xtermSetenv("XTERM_SHELL=", ptr);
+	    xtermSetenv("XTERM_SHELL", ptr);
 
 	    shname = x_basename(ptr);
 	    TRACE(("shell path '%s' leaf '%s'\n", ptr, shname));
@@ -4317,19 +4405,19 @@ spawnXTerm(XtermWidget xw)
 	     * to command that the user gave anyway.
 	     */
 	    if (command_to_exec_with_luit) {
-		xtermSetenv("XTERM_SHELL=",
+		xtermSetenv("XTERM_SHELL",
 			    xtermFindShell(*command_to_exec_with_luit, False));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec_with_luit));
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s: %s\n",
-			xterm_name, *command_to_exec_with_luit, strerror(errno));
+			ProgramName, *command_to_exec_with_luit, strerror(errno));
 		fprintf(stderr, "%s: cannot support your locale.\n",
-			xterm_name);
+			ProgramName);
 	    }
 #endif
 	    if (command_to_exec) {
-		xtermSetenv("XTERM_SHELL=",
+		xtermSetenv("XTERM_SHELL",
 			    xtermFindShell(*command_to_exec, False));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec));
 		execvp(*command_to_exec, command_to_exec);
@@ -4337,7 +4425,7 @@ spawnXTerm(XtermWidget xw)
 		    execlp(ptr, shname, "-c", command_to_exec[0], (void *) 0);
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s: %s\n",
-			xterm_name, *command_to_exec, strerror(errno));
+			ProgramName, *command_to_exec, strerror(errno));
 	    }
 #ifdef USE_SYSV_SIGHUP
 	    /* fix pts sh hanging around */
@@ -4362,7 +4450,7 @@ spawnXTerm(XtermWidget xw)
 		   (void *) 0);
 
 	    /* Exec failed. */
-	    fprintf(stderr, "%s: Could not exec %s: %s\n", xterm_name,
+	    fprintf(stderr, "%s: Could not exec %s: %s\n", ProgramName,
 		    ptr, strerror(errno));
 	    (void) sleep(5);
 	    exit(ERROR_EXEC);
@@ -4389,6 +4477,7 @@ spawnXTerm(XtermWidget xw)
 		    break;
 		}
 
+		TRACE_HANDSHAKE("read", &handshake);
 		switch (handshake.status) {
 		case PTY_GOOD:
 		    /* Success!  Let's free up resources and
@@ -4406,13 +4495,15 @@ spawnXTerm(XtermWidget xw)
 			/* no more ptys! */
 			fprintf(stderr,
 				"%s: child process can find no available ptys: %s\n",
-				xterm_name, strerror(errno));
+				ProgramName, strerror(errno));
 			handshake.status = PTY_NOMORE;
+			TRACE_HANDSHAKE("writing", &handshake);
 			write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
 			exit(ERROR_PTYS);
 		    }
 		    handshake.status = PTY_NEW;
 		    (void) strcpy(handshake.buffer, ttydev);
+		    TRACE_HANDSHAKE("writing", &handshake);
 		    write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
 		    break;
 
@@ -4434,9 +4525,13 @@ spawnXTerm(XtermWidget xw)
 		    free(ttydev);
 		    ttydev = x_strdup(handshake.buffer);
 		    break;
+		case PTY_NEW:
+		case PTY_NOMORE:
+		case UTMP_TTYSLOT:
+		case PTY_EXEC:
 		default:
 		    fprintf(stderr, "%s: unexpected handshake status %d\n",
-			    xterm_name,
+			    ProgramName,
 			    (int) handshake.status);
 		}
 	    }
@@ -4618,19 +4713,31 @@ Exit(int n)
 #endif /* USE_SYSV_UTMP */
 #endif /* HAVE_UTMP */
 
-    close(screen->respond);	/* close explicitly to avoid race with slave side */
-#ifdef ALLOWLOGGING
-    if (screen->logging)
-	CloseLog(screen);
-#endif
+    /*
+     * Flush pending data before releasing ownership, so nobody else can write
+     * in the middle of the data.
+     */
+    ttyFlush(screen->respond);
 
     if (am_slave < 0) {
+	TRACE_IDS;
 	/* restore ownership of tty and pty */
 	set_owner(ttydev, 0, 0, 0666U);
 #if (defined(USE_PTY_DEVICE) && !defined(__sgi) && !defined(__hpux))
 	set_owner(ptydev, 0, 0, 0666U);
 #endif
     }
+
+    /*
+     * Close after releasing ownership to avoid race condition: other programs 
+     * grabbing it, and *then* having us release ownership....
+     */
+    close(screen->respond);	/* close explicitly to avoid race with slave side */
+#ifdef ALLOWLOGGING
+    if (screen->logging)
+	CloseLog(screen);
+#endif
+
 #ifdef NO_LEAKS
     if (n == 0) {
 	TRACE(("Freeing memory leaks\n"));
@@ -4647,8 +4754,12 @@ Exit(int n)
 #if OPT_WIDE_CHARS
 	    noleaks_CharacterClass();
 #endif
+	    /* XrmSetDatabase(dpy, 0); increases leaks ;-) */
 	    XtCloseDisplay(dpy);
 	    XtDestroyApplicationContext(app_con);
+#if OPT_SESSION_MGT
+	    IceRemoveConnectionWatch(icewatch, NULL);
+#endif
 	    TRACE(("closed display\n"));
 	}
 	TRACE((0));

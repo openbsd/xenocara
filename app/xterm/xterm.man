@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.380 2007/03/24 00:05:57 tom Exp $
+.\" $XTermId: xterm.man,v 1.392 2007/07/22 17:14:09 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -354,7 +354,7 @@ Otherwise, they have a column width of 1.
 This may be useful for some legacy CJK text
 terminal-based programs assuming box drawings and others to have a column
 width of 2.
-It also has to be turned on when you specify a TrueType
+It also should be turned on when you specify a TrueType
 CJK double-width (bi-width/monospace) font either with \fB-fa\fP at
 the command line or \fBfaceName\fP resource.
 The default is ``false''
@@ -451,6 +451,9 @@ This corresponds to the \fBfaceName\fP resource.
 When a CJK
 double-width font is specified, you also need to turn
 on the \fBcjkWidth\fP resource.
+See also the \fBrenderFont\fP resource,
+which combines with this to determine whether FreeType fonts are
+initially active.
 .TP 8
 .BI -fbb
 This option indicates that \fIxterm\fP should compare normal and bold fonts bounding
@@ -944,6 +947,16 @@ color rather than with underlining.
 This option enables the display of characters with underline attribute as
 color rather than with underlining.
 .TP 8
+.B "-ulit"
+This option, corresponding to the \fBitalicULMode\fP resource,
+disables the display of characters with underline attribute as
+italics rather than with underlining.
+.TP 8
+.B "+ulit"
+This option, corresponding to the \fBitalicULMode\fP resource,
+enables the display of characters with underline attribute as
+italics rather than with underlining.
+.TP 8
 .B -ut
 This option indicates that \fIxterm\fP should not write a record into the
 the system \fIutmp\fP log file.
@@ -1216,6 +1229,10 @@ You cannot set this to a value less than 64.
 If ``true'', \fIxterm\fP will perform handshaking during initialization
 to ensure that the parent and child processes update the \fButmp\fP
 and \fBstty\fP state.
+See also \fBwaitForMap\fP which waits for the pseudo-terminal's notion
+of the screen size,
+and \fBptySttySize\fP which resets the screen size after other terminal
+initialization is complete.
 The default is ``true''.
 .TP 8
 .B "ptyInitialErase (\fPclass\fB PtyInitialErase)"
@@ -1228,6 +1245,18 @@ In either case, the result is applied to the TERMCAP variable
 which \fIxterm\fP sets.
 See also the \fBttyModes\fP resource, which may modify this.
 The default is ``false''.
+.TP 8
+.B "ptySttySize (\fPclass\fB PtySttySize)
+If ``true'', \fIxterm\fP will reset the screen size after
+terminal initialization is complete.
+This is needed for some systems whose pseudo-terminals cannot
+propagate terminal characteristics.
+Where it is not needed, it can interfere with other methods for
+setting the intial screen size, e.g., via window manager interaction.
+See also \fBwaitForMap\fP which waits for a handshake-message
+giving the pseudo-terminal's notion of the screen size.
+The default is ``false'' on Linux and OS X systems,
+``true'' otherwise.
 .TP 8
 .B "sameName (\fPclass\fB SameName)"
 If the value of this resource is ``true'', \fIxterm\fP does not send
@@ -1356,6 +1385,14 @@ The default is ``false.''
 .B "waitForMap (\fPclass\fB WaitForMap)"
 Specifies whether or not \fIxterm\fP should wait for the initial window map
 before starting the subprocess.
+This is part of the
+.B ptyHandshake
+logic.
+When \fIxterm\fP is directed to wait in this fashion,
+it passes the terminal size from the display end of the pseudo-terminal
+to the terminal I/O connection, e.g., according to the window manager.
+Otherwise, it uses the size as given in resource values or command-line
+option \fB-geom\fP.
 The default is ``false.''
 .TP 8
 .B "zIconBeep (\fPclass\fB ZIconBeep)"
@@ -1401,9 +1438,14 @@ Note that allowing
 such events creates a very large security hole.
 The default is ``false.''
 .TP
+.B "allowTitleOps (\fPclass\fB AllowTitleOps)"
+Specifies whether control sequences that modify the window title or icon name
+should be allowed.
+The default is ``true.''
+.TP
 .B "allowWindowOps (\fPclass\fB AllowWindowOps)"
 Specifies whether extended window control sequences (as used in dtterm)
-for should be allowed.
+should be allowed.
 The default is ``true.''
 .TP 8
 .B "altIsNotMeta (\fPclass\fB AltIsNotMeta\fP)"
@@ -1624,6 +1666,8 @@ When turned on, characters with East Asian Ambiguous (A) category in UTR
 You may have to set this option to ``true''
 if you have some old East Asian terminal based programs that assume that
 line-drawing characters have a column width of 2.
+If this resource is false, the \fBmkWidth\fP resource controls the
+choice between the system's \fBwcwidth\fP and \fIxterm\fP's built-in tables.
 The default is ``false.''
 .TP 8
 .B "color0 (\fPclass\fB Color0)"
@@ -2012,6 +2056,15 @@ Specifies the color to use for the background of selected (highlighted) text.
 If not specified (i.e., matching the default foreground), reverse video is used.
 The default is ``XtDefaultForeground.''
 .TP 8
+.B "highlightReverse (\fPclass\fB HighlightReverse)"
+Specifies whether \fIxterm\fP should reverse the selection foreground
+and background colors when selecting text with reverse-video attribute.
+This applies only to
+the \fBhighlightColor\fP and \fBhighlightTextColor\fP resources,
+e.g., to match the color scheme of \fIxwsh\fP.
+If ``true'', \fIxterm\fP reverses the colors,
+The default is ``true.''
+.TP 8
 .B "highlightSelection (\fPclass\fB HighlightSelection)"
 If ``false'', selecting with the mouse highlights all positions on the screen
 between the beginning of the selection and the current position.
@@ -2078,6 +2131,7 @@ The default is 2.
 .B "italicULMode (\fPclass\fB ColorAttrMode)"
 Specifies whether characters with the underline attribute should be displayed
 in an italic font or as underlined characters.
+It is implemented only for TrueType fonts.
 .TP 8
 .B "jumpScroll (\fPclass\fB JumpScroll)"
 Specifies whether or not jump scroll should be used.
@@ -2181,10 +2235,38 @@ If ``false'', Meta characters input from the keyboard are handled according
 to the \fBeightBitInput\fP resource.
 The default is ``false.''
 .TP 8
+.B "mkSamplePass (\fPclass\fB MkSamplePass)"
+If \fBmkSampleSize\fP is nonzero,
+and \fBmkWidth\fP (and \fBcjkWidth\fP) are false,
+on startup \fIxterm\fP compares its built-in tables to the system's
+wide character width data to decide if it will use the system's data.
+It tests the first \fBmkSampleSize\fP character values,
+and allows up to \fBmkSamplePass\fP mismatches before the test fails.
+The default (for the allowed number of mismatches) is 256.
+.TP 8
+.B "mkSampleSize (\fPclass\fB MkSampleSize)"
+With \fBmkSamplePass\fP, this specifies a startup test used for
+initializing wide character width calculations.
+The default (number of characters to check) is 1024.
+.TP 8
 .B "mkWidth (\fPclass\fB MkWidth)"
 Specifies whether \fIxterm\fP should use a built-in version of the wide
 character width calculation.
+See also the \fBcjkWidth\fP resource which can override this.
 The default is ``false.''
+.IP
+Here is a summary of the resources which control the choice of
+wide character width calculation:
+.TS
+l l l
+_ _ _
+l l l.
+\fIcjkWidth\fR	\fImkWidth\fR	\fIAction\fP
+false	false	use system tables subject to \fBmkSamplePass\fP
+false	true	use built-in tables
+true	false	use built-in CJK tables
+true	true	use built-in CJK tables
+.TE
 .TP 8
 .B "modifyCursorKeys (\fPclass\fB ModifyCursorKeys\fP)"
 Tells how to handle the special case where
@@ -2281,7 +2363,7 @@ bell should be rung, when enabled by the \fBmarginBell\fP resource.
 The default is 10.
 .TP 8
 .B "numLock (\fPclass\fB NumLock)"
-If ``true'', \fIxterm\fR checks if NumLock is used as a modifier (see \fIxmodmap\fP(1)).
+If ``true'', \fIxterm\fR checks if NumLock is used as a modifier (see \fIxmodmap\fP(__mansuffix__)).
 If so, this modifier is used to simplify the logic when implementing special
 NumLock for the \fBsunKeyboard\fP resource.
 Also (when \fBsunKeyboard\fP is false), similar logic is used to find the
@@ -2897,7 +2979,7 @@ This entry toggles active icons on and off if this feature was
 compiled into \fIxterm\fP.
 It is enabled only if \fIxterm\fP
 was started with the command line option +ai or the \fBactiveIcon\fP
-resource is set to ``True.''
+resource is set to ``true.''
 .TP 8
 .B "softreset (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsoft-reset()\fP action.
@@ -3660,7 +3742,7 @@ run under \fIxdm\fP,
 are capable of using a ``magic cookie'' authorization
 scheme that can provide a reasonable level of security for many people.
 If your server is only using a host-based mechanism to control access to
-the server (see \fIxhost(1)\fP), then if you enable access for a host and
+the server (see \fIxhost(__mansuffix__)\fP), then if you enable access for a host and
 other users are also permitted to run clients on that same host,
 it is possible that someone can run an application which uses the
 basic services of the X protocol to snoop on your activities,
@@ -4248,7 +4330,7 @@ indicate the normal and bold fonts that have been set through escape codes
 (or specified as the second and third action arguments, respectively), and
 .HP
 \fIs\fP or \fIS\fP indicate the font selection (as made by programs such as
-\fIxfontsel(1)\fP) indicated by the second action argument.
+\fIxfontsel(__mansuffix__)\fP) indicated by the second action argument.
 .RE
 .IP
 If \fIxterm\fR is configured to support wide characters, an
@@ -4273,7 +4355,7 @@ Use the "cwd" process entry, e.g., /proc/12345/cwd to obtain the
 working directory of the process which is running in the current \fIxterm\fP.
 .IP
 On systems which have the "exe" process entry, e.g., /proc/12345/exe,
-use this to obtain the actual executable. 
+use this to obtain the actual executable.
 Otherwise, use the $PATH variable to find \fIxterm\fP.
 .IP
 If parameters are given in the action,
@@ -4347,6 +4429,8 @@ which is set by the \fBselectToClipboard\fP resource:
          Shift <KeyPress> Select:select-cursor-start() \\\&
                                  select-cursor-end(SELECT, CUT_BUFFER0) \\n\\\&
          Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
+            <KeyPress> XF86Paste:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
+             <KeyPress> SunPaste:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
     Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \\n\\\&
     Shift Ctrl <KeyPress> KP_Add:smaller-vt-font() \\n\\\&
     Shift <KeyPress> KP_Subtract:smaller-vt-font() \\n\\\&
@@ -4484,6 +4568,10 @@ a reference.
 .TP 5
 WINDOWID
 is set to the X window id number of the \fIxterm\fP window.
+.TP 5
+XTERM_LOCALE
+shows the locale which was used by \fIxterm\fP on startup.
+Some shell initialization scripts may set a different locale.
 .TP 5
 XTERM_SHELL
 is set to the pathname of the program which is invoked.
@@ -4815,7 +4903,7 @@ There needs to be a dialog box to allow entry of the Tek COPY file name.
 .
 .
 .SH "SEE ALSO"
-resize(1), luit(1), X(__miscmansuffix__), pty(4), tty(4)
+resize(__mansuffix__), luit(__mansuffix__), X(__miscmansuffix__), pty(4), tty(4)
 .br
 \fIXterm Control Sequences\fP
 (this is the file ctlseqs.ms).
