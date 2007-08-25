@@ -1,0 +1,10 @@
+# $XTermId: uxterm.desktop,v 1.5 2007/06/17 00:54:49 tom Exp $
+[Desktop Entry]
+Name=UXTerm
+Comment=standard terminal emulator for the X window system
+Exec=uxterm
+Terminal=false
+Type=Application
+Encoding=UTF-8
+Icon=xterm-color_48x48.xpm
+Categories=System;

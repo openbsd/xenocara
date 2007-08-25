@@ -1,8 +1,8 @@
 #!/bin/sh
-# $XFree86: xc/programs/xterm/minstall.sh,v 1.5 2006/04/10 00:34:37 dickey Exp $
+# $XTermId: minstall.sh,v 1.12 2007/08/12 15:29:02 tom Exp $
 #
 # Install manpages, substituting a reasonable section value since XFree86 4.x
-# doesn't use constants...
+# and derived imakes do not use constants...
 #
 # Parameters:
 #	$1 = program to invoke as "install"
@@ -11,18 +11,32 @@
 #	$4 = app-defaults directory
 #
 
+# override locale...
+LANG=C;		export LANG
+LANGUAGE=C;	export LANGUAGE
+LC_ALL=C;	export LC_ALL
+LC_CTYPE=C;	export LC_CTYPE
+
+# get parameters
 MINSTALL="$1"
 OLD_FILE="$2"
 END_FILE="$3"
 APPS_DIR="$4"
 
-suffix=`echo "$END_FILE" | sed -e 's%^[^.]*.%%'`
+suffix=`echo "$END_FILE" | sed -e 's%^.*\.%%'`
 NEW_FILE=temp$$
+
+MY_MANSECT=$suffix
+
+# "X" is usually in the miscellaneous section, along with "undocumented".
+# Use that to guess an appropriate section.
+X_MANSECT=`man X 2>&1 | tr '\012' '\020' | sed -e 's/^[^0123456789]*\([^) ][^) ]*\).*/\1/'`
+test -z "$X_MANSECT" && X_MANSECT=$suffix
 
 sed	-e 's%__vendorversion__%"X Window System"%' \
 	-e s%__apploaddir__%$APPS_DIR% \
-	-e s%__mansuffix__%$suffix%g \
-	-e s%__miscmansuffix__%$suffix%g \
+	-e s%__mansuffix__%$MY_MANSECT%g \
+	-e s%__miscmansuffix__%$X_MANSECT%g \
 	$OLD_FILE >$NEW_FILE
 
 echo "$MINSTALL $OLD_FILE $END_FILE"

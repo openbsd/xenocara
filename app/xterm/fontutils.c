@@ -1,8 +1,4 @@
-/* $XTermId: fontutils.c,v 1.246 2007/03/22 00:20:06 tom Exp $ */
-
-/*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.60 2006/04/30 21:55:39 dickey Exp $
- */
+/* $XTermId: fontutils.c,v 1.251 2007/08/05 00:11:55 tom Exp $ */
 
 /************************************************************
 
@@ -850,7 +846,6 @@ xtermLoadFont(XtermWidget xw,
 		fnts[fWBold] = xtermCloseFont(xw, fnts[fWBold]);
 	    }
 	    if (fnts[fWBold] == 0) {
-		free(myfonts.f_wb);
 		myfonts.f_wb = myfonts.f_w;
 		fnts[fWBold] = fnts[fWide];
 		TRACE(("...cannot load wide-bold, use wide %s\n", NonNull(myfonts.f_w)));
@@ -1349,16 +1344,16 @@ xtermOpenXft(Display * dpy, XftPattern * pat, const char *tag GCC_UNUSED)
  * Don't make a dependency on the math library for a single function.
  * (Newton Raphson).
  */
-static float
-mySquareRoot(float value)
+static double
+mySquareRoot(double value)
 {
-    float result = 0.0;
+    double result = 0.0;
     if (value > 0.0) {
 	int n;
-	float older = value;
+	double older = value;
 	for (n = 0; n < 10; ++n) {
-	    float delta = (older * older - value) / (2.0 * older);
-	    float newer = older - delta;
+	    double delta = (older * older - value) / (2.0 * older);
+	    double newer = older - delta;
 	    older = newer;
 	    result = newer;
 	    if (delta > -0.001 && delta < 0.001)
@@ -1477,7 +1472,7 @@ xtermComputeFontInfo(XtermWidget xw,
 		if (fontnum == fontMenu_default) {
 		    face_size = 14.0;
 		} else {
-		    float ratio;
+		    double ratio;
 		    int num = screen->menu_font_sizes[fontnum];
 		    int den = screen->menu_font_sizes[0];
 
@@ -1517,26 +1512,42 @@ xtermComputeFontInfo(XtermWidget xw,
 		xw->misc.face_size[fontnum] = face_size;
 	    }
 
+	    /*
+	     * By observation (there is no documentation), XftPatternBuild is
+	     * cumulative.  Build the bold- and italic-patterns on top of the
+	     * normal pattern.
+	     */
+#define NormXftPattern \
+	    XFT_FAMILY, XftTypeString, "mono", \
+	    XFT_SIZE, XftTypeDouble, face_size, \
+	    XFT_SPACING, XftTypeInteger, XFT_MONO
+
+#define BoldXftPattern(norm) \
+	    XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD, \
+	    XFT_CHAR_WIDTH, XftTypeInteger, norm->max_advance_width
+
+#define ItalXftPattern(norm) \
+	    XFT_SLANT, XftTypeInteger, XFT_SLANT_ITALIC, \
+	    XFT_CHAR_WIDTH, XftTypeInteger, norm->max_advance_width
+
 	    if ((pat = XftNameParse(xw->misc.face_name)) != 0) {
 		XftPatternBuild(pat,
-				XFT_FAMILY, XftTypeString, "mono",
-				XFT_SIZE, XftTypeDouble, face_size,
-				XFT_SPACING, XftTypeInteger, XFT_MONO,
+				NormXftPattern,
 				(void *) 0);
 		norm = xtermOpenXft(dpy, pat, "normal");
 
 		if (norm != 0) {
 		    XftPatternBuild(pat,
-				    XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD,
-				    XFT_CHAR_WIDTH, XftTypeInteger, norm->max_advance_width,
+				    BoldXftPattern(norm),
 				    (void *) 0);
 		    bold = xtermOpenXft(dpy, pat, "bold");
 
 #if OPT_ISO_COLORS
-		    if (screen->italicULMode) {
+		    if (screen->italicULMode
+			&& (pat = XftNameParse(xw->misc.face_name)) != 0) {
 			XftPatternBuild(pat,
-					XFT_SLANT, XftTypeInteger, XFT_SLANT_ITALIC,
-					XFT_CHAR_WIDTH, XftTypeInteger, norm->max_advance_width,
+					NormXftPattern,
+					ItalXftPattern(norm),
 					(void *) 0);
 			ital = xtermOpenXft(dpy, pat, "italic");
 		    }
@@ -1574,33 +1585,31 @@ xtermComputeFontInfo(XtermWidget xw,
 		       face_name,
 		       char_width));
 
+#define WideXftPattern \
+		XFT_FAMILY, XftTypeString, "mono", \
+		XFT_SIZE, XftTypeDouble, face_size, \
+		XFT_SPACING, XftTypeInteger, XFT_MONO
+
 		if ((pat = XftNameParse(face_name)) != 0) {
 		    XftPatternBuild(pat,
-				    XFT_FAMILY, XftTypeString, "mono",
-				    XFT_SIZE, XftTypeDouble, face_size,
-				    XFT_SPACING, XftTypeInteger, XFT_MONO,
+				    WideXftPattern,
 				    XFT_CHAR_WIDTH, XftTypeInteger, char_width,
 				    (void *) 0);
 		    wnorm = xtermOpenXft(dpy, pat, "wide");
 
 		    if (wnorm != 0) {
 			XftPatternBuild(pat,
-					XFT_FAMILY, XftTypeString, face_name,
-					XFT_SIZE, XftTypeDouble, face_size,
-					XFT_SPACING, XftTypeInteger, XFT_MONO,
-					XFT_CHAR_WIDTH, XftTypeInteger, char_width,
-					XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD,
+					WideXftPattern,
+					BoldXftPattern(wnorm),
 					(void *) 0);
 			wbold = xtermOpenXft(dpy, pat, "wide-bold");
 
 #if OPT_ISO_COLORS
-			if (screen->italicULMode) {
+			if (screen->italicULMode
+			    && (pat = XftNameParse(face_name)) != 0) {
 			    XftPatternBuild(pat,
-					    XFT_FAMILY, XftTypeString, face_name,
-					    XFT_SIZE, XftTypeDouble, face_size,
-					    XFT_SPACING, XftTypeInteger, XFT_MONO,
-					    XFT_CHAR_WIDTH, XftTypeInteger, char_width,
-					    XFT_SLANT, XftTypeInteger, XFT_SLANT_ITALIC,
+					    WideXftPattern,
+					    ItalXftPattern(wnorm),
 					    (void *) 0);
 			    wital = xtermOpenXft(dpy, pat, "wide-italic");
 			}
@@ -2535,6 +2544,8 @@ SetVTFont(XtermWidget xw,
 	    FindFontSelection(xw, myfonts.f_n, False);
 	    return;
 	} else {
+	    int oldFont = screen->menu_font_number;
+
 #define USE_CACHED(field, name) \
 	    if (myfonts.field == 0) { \
 		myfonts.field = screen->menu_font_names[which][name]; \
@@ -2553,6 +2564,10 @@ SetVTFont(XtermWidget xw,
 			      &myfonts,
 			      doresize, which)) {
 		return;
+	    } else {
+		xtermLoadFont(xw,
+			      xtermFontName(screen->MenuFontName(oldFont)),
+			      doresize, oldFont);
 	    }
 	}
     }

@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.226 2007/03/18 23:37:06 tom Exp $
+dnl $XTermId: configure.in,v 1.236 2007/07/22 18:51:36 tom Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/configure.in,v 3.77 2006/06/19 00:36:51 dickey Exp $
 dnl
@@ -121,6 +121,34 @@ no_appsdir=
 test "$appsdir" = no && no_appsdir="#"
 AC_SUBST(no_appsdir)
 
+AC_MSG_CHECKING(for directory to install icons)
+CF_WITH_PATH(icondir,
+	[  --with-icondir=DIR      directory in which to install icons],
+	[icondir],[EPREFIX/share/pixmaps],
+	['\$(exec_prefix)/share/pixmaps'])
+AC_MSG_RESULT($icondir)
+AC_SUBST(icondir)
+
+no_icondir=
+test "$icondir" = no && no_icondir="#"
+AC_SUBST(no_icondir)
+
+# Comment-out the install-desktop rule if the desktop-utils are not found.
+AC_MSG_CHECKING(if you want to install desktop files)
+CF_ARG_OPTION(desktop,
+	[  --disable-desktop       disable install of xterm desktop files],
+	[enable_desktop=$enableval],
+	[enable_desktop=$enableval],yes)
+AC_MSG_RESULT($enable_desktop)
+
+desktop_utils=
+if test "$enable_desktop" = yes ; then
+AC_CHECK_PROG(desktop_utils,desktop-file-install,yes,no)
+fi
+
+test "$desktop_utils" = yes && desktop_utils= || desktop_utils="#"
+AC_SUBST(DESKTOP_FLAGS)
+
 # inherit SINSTALL_OPTS from environment to allow packager to customize it.
 
 AC_MSG_CHECKING(for install-permissions reference)
@@ -168,7 +196,7 @@ CF_ARG_DISABLE(setgid,
 	[disable_setgid=yes],
 	[disable_setgid=no],
 	no)
-AC_MSG_RESULT($disable_setuid)
+AC_MSG_RESULT($disable_setgid)
 
 AC_MSG_CHECKING(if you want to run xterm setuid to a given user)
 AC_ARG_WITH(setuid,
@@ -217,7 +245,18 @@ AC_MSG_RESULT($use_utempter)
 
 if test "$use_utempter" = yes ; then
 	CF_UTEMPTER
-	test "$cf_cv_have_utempter" = yes && disable_setuid=yes
+	test "$cf_cv_have_utempter" != yes && use_utempter=no
+else
+	use_utempter=no
+fi
+
+# Some configurations permit (or require) either setuid or setgid mode.
+# Let the user decide.
+if test "$use_utempter" = yes ; then
+	if test "${enable_setuid+set}" != set ; then
+		disable_setuid=yes
+		CF_VERBOSE([No --disable-setuid option given, force to yes])
+	fi
 fi
 
 ###	checks for external data
@@ -234,6 +273,7 @@ CF_X_TOOLKIT
 AC_CHECK_HEADERS( \
 	X11/DECkeysym.h \
 	X11/Sunkeysym.h \
+	X11/XF86keysym.h \
 	X11/Xpoll.h \
 	)
 
@@ -852,7 +892,7 @@ AC_MSG_RESULT($with_warnings)
 if test "$with_warnings" = yes
 then
 	CF_GCC_ATTRIBUTES
-	CF_GCC_WARNINGS
+	CF_GCC_WARNINGS(Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum)
 fi
 fi
 

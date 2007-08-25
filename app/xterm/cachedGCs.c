@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.35 2007/03/21 23:21:50 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.38 2007/06/09 00:08:39 tom Exp $ */
 
 /************************************************************
 
@@ -245,26 +245,36 @@ tracePixel(XtermWidget xw, Pixel value)
 #endif /* OPT_TRACE > 1 */
 #endif /* OPT_TRACE */
 
+static CgsCache *
+allocCache(void **cache_pointer)
+{
+    if (*cache_pointer == 0) {
+	*cache_pointer = TypeCallocN(CgsCache, gcMAX);
+	TRACE(("allocCache %p\n", cache_pointer));
+    }
+    return *((CgsCache **) cache_pointer);
+}
+
 /*
- * FIXME: move the cache into XtermWidget
+ * Returns the appropriate cache pointer.
  */
 static CgsCache *
-myCache(XtermWidget xw GCC_UNUSED, VTwin * cgsWin GCC_UNUSED, CgsEnum cgsId)
+myCache(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId)
 {
-    static CgsCache *main_cache;
-    CgsCache *my_cache;
     CgsCache *result = 0;
 
-    if (main_cache == 0)
-	main_cache = (CgsCache *) calloc(gcMAX, sizeof(CgsCache));
-    my_cache = main_cache;
     if ((int) cgsId >= 0 && cgsId < gcMAX) {
-#ifndef NO_ACTIVE_ICON
-	static CgsCache icon_cache[gcMAX];
+#ifdef NO_ACTIVE_ICON
+	(void) xw;
+	(void) cgsWin;
+#else
 	if (cgsWin == &(xw->screen.iconVwin))
-	    my_cache = icon_cache;
+	    result = allocCache(&(xw->screen.icon_cgs_cache));
+	else
 #endif
-	result = my_cache + cgsId;
+	    result = allocCache(&(xw->screen.main_cgs_cache));
+
+	result += cgsId;
 	if (result->data == 0) {
 	    result->data = result->list;
 	}
@@ -803,3 +813,14 @@ freeCgs(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId)
     }
     return 0;
 }
+
+#ifdef NO_LEAKS
+void
+noleaks_cachedCgs(XtermWidget xw)
+{
+#ifndef NO_ACTIVE_ICON
+    free(xw->screen.icon_cgs_cache);
+#endif
+    free(xw->screen.main_cgs_cache);
+}
+#endif

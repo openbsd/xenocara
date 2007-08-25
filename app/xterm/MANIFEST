@@ -1,4 +1,4 @@
-MANIFEST for xterm-225, version xterm-225
+MANIFEST for xterm-229, version xterm-229
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -80,6 +80,7 @@ trace.c                         debugging trace functions for 'xterm'
 trace.h                         interface of trace.c
 util.c                          miscellaneous utility functions for 'xterm'
 uxterm                          wrapper script to make unicode-xterm
+uxterm.desktop                  sample desktop file for uxterm
 version.h                       version of xterm
 vms.c                           VMS version of xterm's spawn(), etc.
 vms.h                           system headers and definitions for vms.c
@@ -89,6 +90,7 @@ xcharmouse.h                    Jason Bacon's mouse-defs, cleaned up a little
 xstrings.c                      a few common string functions
 xstrings.h                      interface of xstrings.c
 xterm.dat                       application defaults for VMS port of 'xterm'
+xterm.desktop                   sample desktop file for xterm.
 xterm.h                         common includes, definitions and prototypes for 'xterm'
 xterm.log.html                  changelog for xterm
 xterm.man                       manual page for 'xterm'
@@ -99,6 +101,15 @@ xtermcap.h                      interface of xtermcap.c
 xtermcfg.hin                    configure script: template for xtermcfg.h
 xutf8.c                         JC's cleanup of UTF8
 xutf8.h                         JC's cleanup of UTF8
+icons                           subdirectory
+icons/xterm-color_32x32.xcf     gimp file for editing 32x32 icon
+icons/xterm-color_32x32.xpm     32x32 color icon
+icons/xterm-color_48x48.xcf     gimp file for editing 48x48 icon
+icons/xterm-color_48x48.xpm     48x48 color icon
+icons/xterm_32x32.xcf           gimp file, for editing 32x32 icon
+icons/xterm_32x32.xpm           32x32 monochrome icon
+icons/xterm_48x48.xcf           gimp file, for editing 48x48 icon
+icons/xterm_48x48.xpm           48x48 monochrome icon
 tektests                        subdirectory
 tektests/aitest.tek             tek4014 demo: draw a globe
 tektests/dmerc.tek              tek4014 demo: draws a Mercator projection with orbit

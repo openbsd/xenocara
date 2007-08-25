@@ -1,10 +1,10 @@
-/* $XTermId: xstrings.c,v 1.25 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.26 2007/06/09 13:43:00 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xstrings.c,v 1.10 2006/02/13 01:14:59 dickey Exp $ */
 
 /************************************************************
 
-Copyright 2000-2005,2006 by Thomas E. Dickey
+Copyright 2000-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -53,6 +53,31 @@ x_basename(char *name)
 	cp = strrchr(name, '\\');
 #endif
     return (cp ? cp + 1 : name);
+}
+
+char *
+x_getenv(const char *name)
+{
+    return x_nonempty(getenv(name));
+}
+
+/*
+ * Check if the given string is nonnull/nonempty.  If so, return a pointer
+ * to the beginning of its content, otherwise return null.
+ */
+char *
+x_nonempty(char *s)
+{
+    if (s != 0) {
+	if (*s == '\0') {
+	    s = 0;
+	} else {
+	    s = x_skip_blanks(s);
+	    if (*s == '\0')
+		s = 0;
+	}
+    }
+    return s;
 }
 
 char *

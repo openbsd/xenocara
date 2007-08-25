@@ -1,9 +1,9 @@
-/* $XTermId: cursor.c,v 1.42 2006/07/23 20:23:52 tom Exp $ */
+/* $XTermId: cursor.c,v 1.43 2007/07/07 12:14:51 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/cursor.c,v 3.20 2006/02/13 01:14:58 dickey Exp $ */
 
 /*
- * Copyright 2002-2005,2006 by Thomas E. Dickey
+ * Copyright 2002-2006,2007 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -114,8 +114,10 @@ CursorBack(XtermWidget xw, int n)
 	    }
 	    set_cur_row(screen, i / j);
 	    set_cur_col(screen, i % j);
-	} else
+	    do_xevents();
+	} else {
 	    set_cur_col(screen, 0);
+	}
     }
     screen->do_wrap = 0;
 }
@@ -235,6 +237,7 @@ CarriageReturn(TScreen * screen)
 {
     set_cur_col(screen, 0);
     screen->do_wrap = 0;
+    do_xevents();
 }
 
 /*

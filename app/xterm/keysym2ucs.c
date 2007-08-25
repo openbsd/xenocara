@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/keysym2ucs.c,v 1.5 2001/06/18 19:09:26 dickey Exp $
+/* $XTermId: keysym2ucs.c,v 1.15 2007/06/13 00:16:56 tom Exp $
  * This module converts keysym values into the corresponding ISO 10646
  * (UCS, Unicode) values.
  *
@@ -286,6 +286,7 @@ static struct codepair {
   { 0x06aa, 0x045a }, /*                Cyrillic_nje њ CYRILLIC SMALL LETTER NJE */
   { 0x06ab, 0x045b }, /*                Serbian_tshe ћ CYRILLIC SMALL LETTER TSHE */
   { 0x06ac, 0x045c }, /*               Macedonia_kje ќ CYRILLIC SMALL LETTER KJE */
+  { 0x06ad, 0x0491 }, /*   Ukrainian_ghe_with_upturn ґ CYRILLIC SMALL LETTER GHE WITH UPTURN */
   { 0x06ae, 0x045e }, /*         Byelorussian_shortu ў CYRILLIC SMALL LETTER SHORT U */
   { 0x06af, 0x045f }, /*               Cyrillic_dzhe џ CYRILLIC SMALL LETTER DZHE */
   { 0x06b0, 0x2116 }, /*                  numerosign № NUMERO SIGN */
@@ -301,6 +302,7 @@ static struct codepair {
   { 0x06ba, 0x040a }, /*                Cyrillic_NJE Њ CYRILLIC CAPITAL LETTER NJE */
   { 0x06bb, 0x040b }, /*                Serbian_TSHE Ћ CYRILLIC CAPITAL LETTER TSHE */
   { 0x06bc, 0x040c }, /*               Macedonia_KJE Ќ CYRILLIC CAPITAL LETTER KJE */
+  { 0x06bd, 0x0490 }, /*   Ukrainian_GHE_WITH_UPTURN Ґ CYRILLIC CAPITAL LETTER GHE WITH UPTURN */
   { 0x06be, 0x040e }, /*         Byelorussian_SHORTU Ў CYRILLIC CAPITAL LETTER SHORT U */
   { 0x06bf, 0x040f }, /*               Cyrillic_DZHE Џ CYRILLIC CAPITAL LETTER DZHE */
   { 0x06c0, 0x044e }, /*                 Cyrillic_yu ю CYRILLIC SMALL LETTER YU */
@@ -438,22 +440,22 @@ static struct codepair {
   { 0x07f7, 0x03c7 }, /*                   Greek_chi χ GREEK SMALL LETTER CHI */
   { 0x07f8, 0x03c8 }, /*                   Greek_psi ψ GREEK SMALL LETTER PSI */
   { 0x07f9, 0x03c9 }, /*                 Greek_omega ω GREEK SMALL LETTER OMEGA */
-  { 0x08a1, 0x23b7 }, /*                 leftradical ⎷ ??? */
+  { 0x08a1, 0x23b7 }, /*                 leftradical ⎷ RADICAL SYMBOL BOTTOM */
   { 0x08a2, 0x250c }, /*              topleftradical ┌ BOX DRAWINGS LIGHT DOWN AND RIGHT */
   { 0x08a3, 0x2500 }, /*              horizconnector ─ BOX DRAWINGS LIGHT HORIZONTAL */
   { 0x08a4, 0x2320 }, /*                 topintegral ⌠ TOP HALF INTEGRAL */
   { 0x08a5, 0x2321 }, /*                 botintegral ⌡ BOTTOM HALF INTEGRAL */
   { 0x08a6, 0x2502 }, /*               vertconnector │ BOX DRAWINGS LIGHT VERTICAL */
-  { 0x08a7, 0x23a1 }, /*            topleftsqbracket ⎡ ??? */
-  { 0x08a8, 0x23a3 }, /*            botleftsqbracket ⎣ ??? */
-  { 0x08a9, 0x23a4 }, /*           toprightsqbracket ⎤ ??? */
-  { 0x08aa, 0x23a6 }, /*           botrightsqbracket ⎦ ??? */
-  { 0x08ab, 0x239b }, /*               topleftparens ⎛ ??? */
-  { 0x08ac, 0x239d }, /*               botleftparens ⎝ ??? */
-  { 0x08ad, 0x239e }, /*              toprightparens ⎞ ??? */
-  { 0x08ae, 0x23a0 }, /*              botrightparens ⎠ ??? */
-  { 0x08af, 0x23a8 }, /*        leftmiddlecurlybrace ⎨ ??? */
-  { 0x08b0, 0x23ac }, /*       rightmiddlecurlybrace ⎬ ??? */
+  { 0x08a7, 0x23a1 }, /*            topleftsqbracket ⎡ LEFT SQUARE BRACKET UPPER CORNER */
+  { 0x08a8, 0x23a3 }, /*            botleftsqbracket ⎣ LEFT SQUARE BRACKET LOWER CORNER */
+  { 0x08a9, 0x23a4 }, /*           toprightsqbracket ⎤ RIGHT SQUARE BRACKET UPPER CORNER */
+  { 0x08aa, 0x23a6 }, /*           botrightsqbracket ⎦ RIGHT SQUARE BRACKET LOWER CORNER */
+  { 0x08ab, 0x239b }, /*               topleftparens ⎛ LEFT PARENTHESIS UPPER HOOK */
+  { 0x08ac, 0x239d }, /*               botleftparens ⎝ LEFT PARENTHESIS LOWER HOOK */
+  { 0x08ad, 0x239e }, /*              toprightparens ⎞ RIGHT PARENTHESIS UPPER HOOK */
+  { 0x08ae, 0x23a0 }, /*              botrightparens ⎠ RIGHT PARENTHESIS LOWER HOOK */
+  { 0x08af, 0x23a8 }, /*        leftmiddlecurlybrace ⎨ LEFT CURLY BRACKET MIDDLE PIECE */
+  { 0x08b0, 0x23ac }, /*       rightmiddlecurlybrace ⎬ RIGHT CURLY BRACKET MIDDLE PIECE */
 /*  0x08b1                          topleftsummation ? ??? */
 /*  0x08b2                          botleftsummation ? ??? */
 /*  0x08b3                 topvertsummationconnector ? ??? */
@@ -487,7 +489,7 @@ static struct codepair {
   { 0x08fc, 0x2191 }, /*                     uparrow ↑ UPWARDS ARROW */
   { 0x08fd, 0x2192 }, /*                  rightarrow → RIGHTWARDS ARROW */
   { 0x08fe, 0x2193 }, /*                   downarrow ↓ DOWNWARDS ARROW */
-/*  0x09df                                     blank ? ??? */
+  { 0x09df, 0x2422 }, /*                       blank ␢ BLANK SYMBOL */
   { 0x09e0, 0x25c6 }, /*                soliddiamond ◆ BLACK DIAMOND */
   { 0x09e1, 0x2592 }, /*                checkerboard ▒ MEDIUM SHADE */
   { 0x09e2, 0x2409 }, /*                          ht ␉ SYMBOL FOR HORIZONTAL TABULATION */
@@ -501,11 +503,11 @@ static struct codepair {
   { 0x09ec, 0x250c }, /*                upleftcorner ┌ BOX DRAWINGS LIGHT DOWN AND RIGHT */
   { 0x09ed, 0x2514 }, /*               lowleftcorner └ BOX DRAWINGS LIGHT UP AND RIGHT */
   { 0x09ee, 0x253c }, /*               crossinglines ┼ BOX DRAWINGS LIGHT VERTICAL AND HORIZONTAL */
-  { 0x09ef, 0x23ba }, /*              horizlinescan1 ⎺ HORIZONTAL SCAN LINE-1 (Unicode 3.2 draft) */
-  { 0x09f0, 0x23bb }, /*              horizlinescan3 ⎻ HORIZONTAL SCAN LINE-3 (Unicode 3.2 draft) */
+  { 0x09ef, 0x23ba }, /*              horizlinescan1 ⎺ HORIZONTAL SCAN LINE-1 */
+  { 0x09f0, 0x23bb }, /*              horizlinescan3 ⎻ HORIZONTAL SCAN LINE-3 */
   { 0x09f1, 0x2500 }, /*              horizlinescan5 ─ BOX DRAWINGS LIGHT HORIZONTAL */
-  { 0x09f2, 0x23bc }, /*              horizlinescan7 ⎼ HORIZONTAL SCAN LINE-7 (Unicode 3.2 draft) */
-  { 0x09f3, 0x23bd }, /*              horizlinescan9 ⎽ HORIZONTAL SCAN LINE-9 (Unicode 3.2 draft) */
+  { 0x09f2, 0x23bc }, /*              horizlinescan7 ⎼ HORIZONTAL SCAN LINE-7 */
+  { 0x09f3, 0x23bd }, /*              horizlinescan9 ⎽ HORIZONTAL SCAN LINE-9 */
   { 0x09f4, 0x251c }, /*                       leftt ├ BOX DRAWINGS LIGHT VERTICAL AND RIGHT */
   { 0x09f5, 0x2524 }, /*                      rightt ┤ BOX DRAWINGS LIGHT VERTICAL AND LEFT */
   { 0x09f6, 0x2534 }, /*                        bott ┴ BOX DRAWINGS LIGHT UP AND HORIZONTAL */
@@ -521,7 +523,7 @@ static struct codepair {
   { 0x0aa8, 0x200a }, /*                   hairspace   HAIR SPACE */
   { 0x0aa9, 0x2014 }, /*                      emdash — EM DASH */
   { 0x0aaa, 0x2013 }, /*                      endash – EN DASH */
-/*  0x0aac                               signifblank ? ??? */
+  { 0x0aac, 0x2423 }, /*                 signifblank ␣ OPEN BOX */
   { 0x0aae, 0x2026 }, /*                    ellipsis … HORIZONTAL ELLIPSIS */
   { 0x0aaf, 0x2025 }, /*             doubbaselinedot ‥ TWO DOT LEADER */
   { 0x0ab0, 0x2153 }, /*                    onethird ⅓ VULGAR FRACTION ONE THIRD */
@@ -535,7 +537,7 @@ static struct codepair {
   { 0x0ab8, 0x2105 }, /*                      careof ℅ CARE OF */
   { 0x0abb, 0x2012 }, /*                     figdash ‒ FIGURE DASH */
   { 0x0abc, 0x2329 }, /*            leftanglebracket 〈 LEFT-POINTING ANGLE BRACKET */
-/*  0x0abd                              decimalpoint ? ??? */
+  { 0x0abd, 0x002e }, /*                decimalpoint . FULL STOP */
   { 0x0abe, 0x232a }, /*           rightanglebracket 〉 RIGHT-POINTING ANGLE BRACKET */
 /*  0x0abf                                    marker ? ??? */
   { 0x0ac3, 0x215b }, /*                   oneeighth ⅛ VULGAR FRACTION ONE EIGHTH */
@@ -699,7 +701,7 @@ static struct codepair {
   { 0x0dd8, 0x0e38 }, /*                  Thai_sarau ุ THAI CHARACTER SARA U */
   { 0x0dd9, 0x0e39 }, /*                 Thai_sarauu ู THAI CHARACTER SARA UU */
   { 0x0dda, 0x0e3a }, /*                Thai_phinthu ฺ THAI CHARACTER PHINTHU */
-/*  0x0dde                    Thai_maihanakat_maitho ? ??? */
+  { 0x0dde, 0x0e3e }, /*      Thai_maihanakat_maitho ฾ ??? */
   { 0x0ddf, 0x0e3f }, /*                   Thai_baht ฿ THAI CURRENCY SYMBOL BAHT */
   { 0x0de0, 0x0e40 }, /*                  Thai_sarae เ THAI CHARACTER SARA E */
   { 0x0de1, 0x0e41 }, /*                 Thai_saraae แ THAI CHARACTER SARA AE */
@@ -820,6 +822,18 @@ static struct codepair {
   { 0x13bc, 0x0152 }, /*                          OE Œ LATIN CAPITAL LIGATURE OE */
   { 0x13bd, 0x0153 }, /*                          oe œ LATIN SMALL LIGATURE OE */
   { 0x13be, 0x0178 }, /*                  Ydiaeresis Ÿ LATIN CAPITAL LETTER Y WITH DIAERESIS */
+  { 0x20a0, 0x20a0 }, /*                     EcuSign ₠ EURO-CURRENCY SIGN */
+  { 0x20a1, 0x20a1 }, /*                   ColonSign ₡ COLON SIGN */
+  { 0x20a2, 0x20a2 }, /*                CruzeiroSign ₢ CRUZEIRO SIGN */
+  { 0x20a3, 0x20a3 }, /*                  FFrancSign ₣ FRENCH FRANC SIGN */
+  { 0x20a4, 0x20a4 }, /*                    LiraSign ₤ LIRA SIGN */
+  { 0x20a5, 0x20a5 }, /*                    MillSign ₥ MILL SIGN */
+  { 0x20a6, 0x20a6 }, /*                   NairaSign ₦ NAIRA SIGN */
+  { 0x20a7, 0x20a7 }, /*                  PesetaSign ₧ PESETA SIGN */
+  { 0x20a8, 0x20a8 }, /*                   RupeeSign ₨ RUPEE SIGN */
+  { 0x20a9, 0x20a9 }, /*                     WonSign ₩ WON SIGN */
+  { 0x20aa, 0x20aa }, /*               NewSheqelSign ₪ NEW SHEQEL SIGN */
+  { 0x20ab, 0x20ab }, /*                    DongSign ₫ DONG SIGN */
   { 0x20ac, 0x20ac }, /*                    EuroSign € EURO SIGN */
 };
 

@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.77 2007/03/12 23:42:49 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.78 2007/04/15 20:37:16 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/ptydata.c,v 1.25 2006/02/13 01:14:59 dickey Exp $
@@ -121,7 +121,7 @@ decodeUtf8(PtyData * data)
 		if ((utf_char >= 0xd800 &&
 		     utf_char <= 0xdfff) ||
 		    (utf_char == 0xfffe) ||
-		    (utf_char == 0xffff)) {
+		    (utf_char == HIDDEN_CHAR)) {
 		    utf_char = UCS_REPL;
 		}
 		utf_count--;

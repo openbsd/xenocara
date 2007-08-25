@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.232 2007/03/18 23:05:54 tom Exp $ */
+/* $XTermId: menu.c,v 1.237 2007/07/22 20:34:04 tom Exp $ */
 
 /*
 
@@ -46,7 +46,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.68 2006/04/10 00:34:36 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -412,7 +411,7 @@ static MenuList tek_shell[NUM_POPUP_MENUS];
 #endif
 
 static String
-setMenuLocale(Boolean before, String substitute)
+setMenuLocale(Bool before, String substitute)
 {
     String result;
 
@@ -657,7 +656,7 @@ domenu(Widget w,
 	    update_selectToClipboard();
 	    update_visualbell();
 	    update_poponbell();
-	    update_marginbell();
+	    update_bellIsUrgent();
 	    update_cursorblink();
 	    update_altscreen();
 	    update_titeInhibit();
@@ -728,12 +727,13 @@ domenu(Widget w,
 
 #if OPT_TEK4014
     case tekMenu:
-	if (created) {
+	if (created && tekWidget) {
 	    set_tekfont_menu_item(tekWidget->screen.cur.fontsize, True);
 	    update_vtshow();
 	}
 	break;
 #endif
+    case noMenu:
     default:
 	break;
     }
@@ -1119,7 +1119,7 @@ do_quit(Widget gw GCC_UNUSED,
 	XtPointer closure GCC_UNUSED,
 	XtPointer data GCC_UNUSED)
 {
-    Cleanup(0);
+    Cleanup(SIGHUP);
 }
 
 /*

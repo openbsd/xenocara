@@ -1,7 +1,21 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
+# $XTermId: convmap.pl,v 1.13 2007/06/11 23:30:44 tom Exp $
+#
 # Generate keysym2ucs.c file
 #
+# See also:
+# http://mail.nl.linux.org/linux-utf8/2001-04/msg00248.html
+#
 # $XFree86: xc/programs/xterm/unicode/convmap.pl,v 1.5 2000/01/24 22:22:05 dawes Exp $
+
+use strict;
+
+our $keysym;
+our %name;
+our %keysym_to_ucs;
+our %keysym_to_keysymname;
+
+sub utf8 ($);
 
 sub utf8 ($) {
     my $c = shift(@_);
@@ -42,7 +56,7 @@ sub utf8 ($) {
     }
 }
 
-$unicodedata = "UnicodeData-Latest.txt";
+my $unicodedata = "UnicodeData-Latest.txt";
 
 # read list of all Unicode names
 if (!open(UDATA, $unicodedata) && !open(UDATA, "$unicodedata")) {
@@ -51,7 +65,7 @@ if (!open(UDATA, $unicodedata) && !open(UDATA, "$unicodedata")) {
          "ftp://ftp.unicode.org/Public/UNIDATA/UnicodeData-Latest.txt\n");
 }
 while (<UDATA>) {
-    if (/^([0-9,A-F]{4});([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*)$/) {
+    if (/^([0-9,A-F]{4,6});([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*)$/) {
         $name{hex($1)} = $2;
     } else {
         die("Syntax error in line '$_' in file '$unicodedata'");
@@ -63,9 +77,12 @@ close(UDATA);
 open(LIST, "<keysym.map") || die ("Can't open map file:\n$!\n");
 while (<LIST>) {
     if (/^0x([0-9a-f]{4})\s+U([0-9a-f]{4})\s*(\#.*)?$/){
-        $keysym = hex($1);
-        $ucs = hex($2);
+        my $keysym = hex($1);
+        my $ucs = hex($2);
+	my $comment = $3;
+	$comment =~ s/^#\s*//;
         $keysym_to_ucs{$keysym} = $ucs;
+	$keysym_to_keysymname{$keysym} = $comment;
     } elsif (/^\s*\#/ || /^\s*$/) {
     } else {
         die("Syntax error in 'list' in line\n$_\n");
@@ -78,16 +95,16 @@ open(LIST, "</usr/include/X11/keysymdef.h") || die ("Can't open keysymdef.h:\n$!
 while (<LIST>) {
     if (/^\#define\s+XK_([A-Za-z_0-9]+)\s+0x([0-9a-fA-F]+)\s*(\/.*)?$/) {
 	next if /\/\* deprecated \*\//;
-	$keysymname = $1;
-	$keysym = hex($2);
+	my $keysymname = $1;
+	my $keysym = hex($2);
 	$keysym_to_keysymname{$keysym} = $keysymname;
     }
 }
 close(LIST);
 
 print <<EOT;
-/* \$XFree86\$
- * This module converts keysym values into the corresponding ISO 10646-1
+/* \$XTermId\$
+ * This module converts keysym values into the corresponding ISO 10646
  * (UCS, Unicode) values.
  *
  * The array keysymtab[] contains pairs of X11 keysym values for graphical
@@ -99,36 +116,47 @@ print <<EOT;
  * by Xlib via XmbLookupString() and should ideally not have to be
  * done in X applications. But we are not there yet.
  *
- * We allow to represent any UCS character in the range U+00000000 to
- * U+00FFFFFF by a keysym value in the range 0x01000000 to 0x01ffffff.
+ * We allow to represent any UCS character in the range U-00000000 to
+ * U-00FFFFFF by a keysym value in the range 0x01000000 to 0x01ffffff.
  * This admittedly does not cover the entire 31-bit space of UCS, but
- * it does cover all of the characters up to U+10FFFF, which can be
+ * it does cover all of the characters up to U-10FFFF, which can be
  * represented by UTF-16, and more, and it is very unlikely that higher
  * UCS codes will ever be assigned by ISO. So to get Unicode character
- * U+ABCD you can directly use keysym 0x1000abcd.
+ * U+ABCD you can directly use keysym 0x0100abcd.
  *
  * NOTE: The comments in the table below contain the actual character
  * encoded in UTF-8, so for viewing and editing best use an editor in
  * UTF-8 mode.
  *
- * Author: Markus G. Kuhn <mkuhn\@acm.org>, University of Cambridge, June 1999
+ * Author: Markus G. Kuhn <mkuhn\@acm.org>, University of Cambridge, April 2001
  *
  * Special thanks to Richard Verhoeven <river\@win.tue.nl> for preparing
  * an initial draft of the mapping table.
  *
  * This software is in the public domain. Share and enjoy!
+ *
+ * AUTOMATICALLY GENERATED FILE, DO NOT EDIT !!! (unicode/convmap.pl)
  */
 
-#include <keysym2ucs.h>
+#ifndef KEYSYM2UCS_INCLUDED
+  
+#include "keysym2ucs.h"
+#define VISIBLE /* */
 
-struct codepair {
+#else
+
+#define VISIBLE static
+
+#endif
+
+static struct codepair {
   unsigned short keysym;
   unsigned short ucs;
 } keysymtab[] = {
 EOT
 
 for $keysym (sort {$a <=> $b} keys(%keysym_to_keysymname)) {
-    $ucs = $keysym_to_ucs{$keysym};
+    my $ucs = $keysym_to_ucs{$keysym};
     next if $keysym >= 0xf000 || $keysym < 0x100;
     if ($ucs) {
 	printf("  { 0x%04x, 0x%04x }, /*%28s %s %s */\n",
@@ -143,6 +171,7 @@ for $keysym (sort {$a <=> $b} keys(%keysym_to_keysymname)) {
 print <<EOT;
 };
 
+VISIBLE
 long keysym2ucs(KeySym keysym)
 {
     int min = 0;

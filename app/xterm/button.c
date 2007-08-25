@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.272 2007/03/19 23:42:48 tom Exp $ */
+/* $XTermId: button.c,v 1.277 2007/07/22 20:37:11 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -51,7 +51,6 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.88 2006/06/19 00:36:50 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -1039,8 +1038,8 @@ struct _SelectionList {
     Time time;
 };
 
-static int
-DECtoASCII(int ch)
+static unsigned
+DECtoASCII(unsigned ch)
 {
     if (ch < 32) {
 	ch = "###########+++++##-##++++|######"[ch];
@@ -1087,7 +1086,7 @@ UTF8toLatin1(Char * s, unsigned len, unsigned long *result)
 		    if (eqv == value)
 			eqv = '#';
 		    *q++ = eqv;
-		    if (iswide(value))
+		    if (iswide((wchar_t) value))
 			*q++ = ' ';
 		}
 	    }
@@ -1611,7 +1610,8 @@ SelectionReceived(Widget w,
 	    GettingSelection(dpy, *type, line, *length);
 
 #if OPT_WIDE_CHARS
-	    if (*type == XA_UTF8_STRING(dpy)) {
+	    if (*type == XA_UTF8_STRING(dpy) &&
+		!(screen->wide_chars || screen->c1_printable)) {
 		rc = Xutf8TextPropertyToTextList(dpy, &text_prop,
 						 &text_list, &text_list_count);
 		if (text_list != NULL && text_list_count != 0) {
@@ -2612,17 +2612,23 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 			}
 		    }
 		    if (best_col >= 0) {
+			int best_nxt = best_col + best_len;
 			columnToCell(screen, firstRow, best_col, startc);
-			columnToCell(screen, firstRow, best_col + best_len, endc);
+			columnToCell(screen, firstRow, best_nxt, endc);
 			TRACE(("search::%s\n", search));
 			TRACE(("indexed:%d..%d -> %d..%d\n",
-			       best_col, best_col + best_len,
+			       best_col, best_nxt,
 			       indexed[best_col],
-			       indexed[best_col + best_len]));
-			TRACE(("matched:%.*s\n",
-			       indexed[best_col + best_len] + 1 -
+			       indexed[best_nxt]));
+			TRACE(("matched:%d:%s\n",
+			       indexed[best_nxt] + 1 -
 			       indexed[best_col],
-			       search + indexed[best_col]));
+			       visibleChars(PAIRED_CHARS((Char *) (search +
+								   indexed[best_col]),
+							 0),
+					    (unsigned) (indexed[best_nxt] +
+							1 -
+							indexed[best_col]))));
 		    }
 		    free(search);
 		}
@@ -2990,7 +2996,9 @@ SaltTextAway(XtermWidget xw,
     }
     *lp = '\0';			/* make sure we have end marked */
 
-    TRACE(("Salted TEXT:%d:%.*s\n", lp - line, lp - line, line));
+    TRACE(("Salted TEXT:%d:%s\n", lp - line,
+	   visibleChars(PAIRED_CHARS(line, 0), (unsigned) (lp - line))));
+
     screen->selection_length = (lp - line);
     _OwnSelection(xw, params, num_params);
 }
@@ -3492,7 +3500,7 @@ SaveText(TScreen * screen,
 	       are in memory attached to the HIDDEN_CHAR */
 	    if_OPT_WIDE_CHARS(screen, {
 		if (screen->utf8_mode != uFalse) {
-		    int ch;
+		    unsigned ch;
 		    int off;
 		    for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
 			if ((ch = XTERM_CELLC(row, i, off)) == 0)
@@ -3507,7 +3515,7 @@ SaveText(TScreen * screen,
 	if (screen->utf8_mode != uFalse) {
 	    lp = convertToUTF8(lp, (c != 0) ? c : ' ');
 	    if_OPT_WIDE_CHARS(screen, {
-		int ch;
+		unsigned ch;
 		int off;
 		for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
 		    if ((ch = XTERM_CELLC(row, i, off)) == 0)

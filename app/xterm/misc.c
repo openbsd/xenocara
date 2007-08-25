@@ -1,6 +1,4 @@
-/* $XTermId: misc.c,v 1.359 2007/03/21 22:13:32 tom Exp $ */
-
-/* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
+/* $XTermId: misc.c,v 1.370 2007/07/22 20:34:04 tom Exp $ */
 
 /*
  *
@@ -67,6 +65,7 @@
 
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
+#include <X11/Xlocale.h>
 
 #include <X11/Xmu/Error.h>
 #include <X11/Xmu/SysUtil.h>
@@ -125,7 +124,7 @@ static char *
 Readlink(const char *filename)
 {
     char *buf = NULL;
-    int size = 100;
+    unsigned size = 100;
     int n;
 
     for (;;) {
@@ -138,7 +137,7 @@ Readlink(const char *filename)
 	    return NULL;
 	}
 
-	if (n < size) {
+	if ((unsigned) n < size) {
 	    return buf;
 	}
 
@@ -246,7 +245,7 @@ DoSpecialLeaveNotify(XtermWidget xw, XEnterWindowEvent * ev)
 #endif
 
 static void
-setXUrgency(TScreen * screen, Boolean enable)
+setXUrgency(TScreen * screen, Bool enable)
 {
     if (screen->bellIsUrgent) {
 	XWMHints *h = XGetWMHints(screen->display, VShellWindow);
@@ -497,22 +496,18 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 	    || setgid(screen->gid) == -1) {
 	    fprintf(stderr, "Cannot reset uid/gid\n");
 	} else {
-	    if (nparams != 0) {
-		int myargc = *nparams + 1;
-		char **myargv = TypeMallocN(char *, myargc + 1);
-		if (myargv != 0) {
-		    int n = 0;
-		    myargv[n++] = child_exe;
-		    while (n <= myargc) {
-			myargv[n] = params[n - 1];
-			++n;
-		    }
-		    myargv[n] = 0;
-		    execv(child_exe, myargv);
-		}
-	    } else {
-		execl(child_exe, child_exe, NULL);
+	    int myargc = *nparams + 1;
+	    char **myargv = TypeMallocN(char *, myargc + 1);
+	    int n = 0;
+
+	    myargv[n++] = child_exe;
+
+	    while (n < myargc) {
+		myargv[n++] = *params++;
 	    }
+
+	    myargv[n] = 0;
+	    execv(child_exe, myargv);
 
 	    /* If we get here, we've failed */
 	    fprintf(stderr, "exec of '%s': %s\n", child_exe, SysErrorMsg(errno));
@@ -1435,7 +1430,7 @@ StartLog(TScreen * screen)
 	    close(ConnectionNumber(screen->display));
 	    close(screen->respond);
 
-	    if ((((cp = getenv("SHELL")) == NULL || *cp == 0)
+	    if ((((cp = x_getenv("SHELL")) == NULL)
 		 && ((pw = getpwuid(screen->uid)) == NULL
 		     || *(cp = pw->pw_shell) == 0))
 		|| (shell = CastMallocN(char, strlen(cp))) == 0) {
@@ -1874,13 +1869,11 @@ xtermIsPrintable(TScreen * screen, Char ** bufp, Char * last)
 #if OPT_WIDE_CHARS
     if (xtermEnvUTF8() && screen->utf8_title) {
 	PtyData data;
-	Boolean controls = True;
 
 	if (decodeUtf8(fakePtyData(&data, cp, last))) {
 	    if (data.utf_data != UCS_REPL
 		&& (data.utf_data >= 128 ||
 		    ansi_table[data.utf_data] == CASE_PRINT)) {
-		controls = False;
 		next += (data.utf_size - 1);
 		result = True;
 	    } else {
@@ -2140,7 +2133,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 {
     TScreen *screen = &(xw->screen);
     int mode;
-    Char *cp, *c2;
+    Char *cp;
     int state = 0;
     char *buf = 0;
 
@@ -2178,7 +2171,6 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	    state = 3;
 	    /* FALLTHRU */
 	default:
-	    c2 = cp;
 	    if (!xtermIsPrintable(screen, &cp, oscbuf + len)) {
 		switch (mode) {
 		case 0:
@@ -2792,7 +2784,8 @@ ChangeGroup(String attribute, char *value)
 
     TRACE(("ChangeGroup(attribute=%s, value=%s)\n", attribute, name));
 
-    (void) screen;
+    if (!screen->allowTitleOps)
+	return;
 
     /*
      * Ignore titles that are too long to be plausible requests.
@@ -2803,7 +2796,7 @@ ChangeGroup(String attribute, char *value)
     for (cp = c1; *cp != 0; ++cp) {
 	Char *c2 = cp;
 	if (!xtermIsPrintable(screen, &cp, c1 + limit)) {
-	    memset(c2, '?', cp + 1 - c2);
+	    memset(c2, '?', (unsigned) (cp + 1 - c2));
 	}
     }
 
@@ -3017,90 +3010,91 @@ Panic(char *s GCC_UNUSED, int a GCC_UNUSED)
 #endif /* DEBUG */
 }
 
-char *
-SysErrorMsg(int n)
+const char *
+SysErrorMsg(int code)
 {
     static char unknown[] = "unknown error";
-    char *s = strerror(n);
+    char *s = strerror(code);
     return s ? s : unknown;
 }
 
-void
-SysError(int i)
+const char *
+SysReasonMsg(int code)
 {
-    static const char *table[] =
-    {
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	,"main: ioctl() failed on FIONBIO"	/* 11 */
-	,"main: ioctl() failed on F_GETFL"	/* 12 */
-	,"main: ioctl() failed on F_SETFL"	/* 13 */
-	,"spawn: open() failed on /dev/tty"	/* 14 */
-	,"spawn: ioctl() failed on TIOCGETP"	/* 15 */
-	,0
-	,"spawn: ptsname() failed"	/* 17 */
-	,"spawn: open() failed on ptsname"	/* 18 */
-	,"spawn: ioctl() failed on I_PUSH/\"ptem\""	/* 19 */
-	,"spawn: ioctl() failed on I_PUSH/\"consem\""	/* 20 */
-	,"spawn: ioctl() failed on I_PUSH/\"ldterm\""	/* 21 */
-	,"spawn: ioctl() failed on I_PUSH/\"ttcompat\""		/* 22 */
-	,"spawn: ioctl() failed on TIOCSETP"	/* 23 */
-	,"spawn: ioctl() failed on TIOCSETC"	/* 24 */
-	,"spawn: ioctl() failed on TIOCSETD"	/* 25 */
-	,"spawn: ioctl() failed on TIOCSLTC"	/* 26 */
-	,"spawn: ioctl() failed on TIOCLSET"	/* 27 */
-	,"spawn: initgroups() failed"	/* 28 */
-	,"spawn: fork() failed"	/* 29 */
-	,"spawn: exec() failed"	/* 30 */
-	,0
-	,"get_pty: not enough ptys"	/* 32 */
-	,0
-	,"waiting for initial map"	/* 34 */
-	,"spawn: setuid() failed"	/* 35 */
-	,"spawn: can't initialize window"	/* 36 */
-	,0, 0, 0, 0, 0, 0, 0, 0, 0
-	,"spawn: ioctl() failed on TIOCKSET"	/* 46 */
-	,"spawn: ioctl() failed on TIOCKSETC"	/* 47 */
-	,"spawn: realloc of ttydev failed"	/* 48 */
-	,"luit: command-line malloc failed"	/* 49 */
-	,"in_put: select() failed"	/* 50 */
-	,0, 0, 0
-	,"VTInit: can't initialize window"	/* 54 */
-	,0, 0
-	,"HandleKeymapChange: malloc failed"	/* 57 */
-	,0, 0
-	,"Tinput: select() failed"	/* 60 */
-	,0, 0, 0
-	,"TekInit: can't initialize window"	/* 64 */
-	,0, 0, 0, 0, 0, 0
-	,"SaltTextAway: malloc() failed"	/* 71 */
-	,0, 0, 0, 0, 0, 0, 0, 0
-	,"StartLog: exec() failed"	/* 80 */
-	,0, 0
-	,"xerror: XError event"	/* 83 */
-	,"xioerror: X I/O error"	/* 84 */
-	,0, 0, 0, 0, 0
-	,"Alloc: calloc() failed on base"	/* 90 */
-	,"Alloc: calloc() failed on rows"	/* 91 */
-	,"ScreenResize: realloc() failed on alt base"	/* 92 */
-	,0, 0, 0
-	,"ScreenResize: malloc() or realloc() failed"	/* 96 */
-	,0, 0, 0, 0, 0
-	,"ScrnPointers: malloc/realloc() failed"	/* 102 */
-	,0, 0, 0, 0, 0, 0, 0
-	,"ScrollBarOn: realloc() failed on base"	/* 110 */
-	,"ScrollBarOn: realloc() failed on rows"	/* 111 */
-	,0, 0, 0, 0, 0, 0, 0, 0, 0
-	,"my_memmove: malloc/realloc failed"	/* 121 */
+    /* *INDENT-OFF* */
+    static const struct {
+	int code;
+	const char *name;
+    } table[] = {
+	{ ERROR_FIONBIO,	"main:  ioctl() failed on FIONBIO" },
+	{ ERROR_F_GETFL,	"main: ioctl() failed on F_GETFL" },
+	{ ERROR_F_SETFL,	"main: ioctl() failed on F_SETFL", },
+	{ ERROR_OPDEVTTY,	"spawn: open() failed on /dev/tty", },
+	{ ERROR_TIOCGETP,	"spawn: ioctl() failed on TIOCGETP", },
+	{ ERROR_PTSNAME,	"spawn: ptsname() failed", },
+	{ ERROR_OPPTSNAME,	"spawn: open() failed on ptsname", },
+	{ ERROR_PTEM,		"spawn: ioctl() failed on I_PUSH/\"ptem\"" },
+	{ ERROR_CONSEM,		"spawn: ioctl() failed on I_PUSH/\"consem\"" },
+	{ ERROR_LDTERM,		"spawn: ioctl() failed on I_PUSH/\"ldterm\"" },
+	{ ERROR_TTCOMPAT,	"spawn: ioctl() failed on I_PUSH/\"ttcompat\"" },
+	{ ERROR_TIOCSETP,	"spawn: ioctl() failed on TIOCSETP" },
+	{ ERROR_TIOCSETC,	"spawn: ioctl() failed on TIOCSETC" },
+	{ ERROR_TIOCSETD,	"spawn: ioctl() failed on TIOCSETD" },
+	{ ERROR_TIOCSLTC,	"spawn: ioctl() failed on TIOCSLTC" },
+	{ ERROR_TIOCLSET,	"spawn: ioctl() failed on TIOCLSET" },
+	{ ERROR_INIGROUPS,	"spawn: initgroups() failed" },
+	{ ERROR_FORK,		"spawn: fork() failed" },
+	{ ERROR_EXEC,		"spawn: exec() failed" },
+	{ ERROR_PTYS,		"get_pty: not enough ptys" },
+	{ ERROR_PTY_EXEC,	"waiting for initial map" },
+	{ ERROR_SETUID,		"spawn: setuid() failed" },
+	{ ERROR_INIT,		"spawn: can't initialize window" },
+	{ ERROR_TIOCKSET,	"spawn: ioctl() failed on TIOCKSET" },
+	{ ERROR_TIOCKSETC,	"spawn: ioctl() failed on TIOCKSETC" },
+	{ ERROR_SPREALLOC,	"spawn: realloc of ttydev failed" },
+	{ ERROR_LUMALLOC,	"luit: command-line malloc failed" },
+	{ ERROR_SELECT,		"in_put: select() failed" },
+	{ ERROR_VINIT,		"VTInit: can't initialize window" },
+	{ ERROR_KMMALLOC1,	"HandleKeymapChange: malloc failed" },
+	{ ERROR_TSELECT,	"Tinput: select() failed" },
+	{ ERROR_TINIT,		"TekInit: can't initialize window" },
+	{ ERROR_BMALLOC2,	"SaltTextAway: malloc() failed" },
+	{ ERROR_LOGEXEC,	"StartLog: exec() failed" },
+	{ ERROR_XERROR,		"xerror: XError event" },
+	{ ERROR_XIOERROR,	"xioerror: X I/O error" },
+	{ ERROR_SCALLOC,	"Alloc: calloc() failed on base" },
+	{ ERROR_SCALLOC2,	"Alloc: calloc() failed on rows" },
+	{ ERROR_SREALLOC,	"ScreenResize: realloc() failed on alt base" },
+	{ ERROR_RESIZE,		"ScreenResize: malloc() or realloc() failed" },
+	{ ERROR_SAVE_PTR,	"ScrnPointers: malloc/realloc() failed" },
+	{ ERROR_SBRALLOC,	"ScrollBarOn: realloc() failed on base" },
+	{ ERROR_SBRALLOC2,	"ScrollBarOn: realloc() failed on rows" },
+	{ ERROR_MMALLOC,	"my_memmove: malloc/realloc failed" },
     };
-    int oerrno;
+    /* *INDENT-ON* */
 
-    oerrno = errno;
-    fprintf(stderr, "%s: Error %d, errno %d: ", xterm_name, i, oerrno);
-    fprintf(stderr, "%s\n", SysErrorMsg(oerrno));
-    if ((Cardinal) i < XtNumber(table) && table[i] != 0) {
-	fprintf(stderr, "Reason: %s\n", table[i]);
+    Cardinal n;
+    const char *result = "?";
+
+    for (n = 0; n < XtNumber(table); ++n) {
+	if (code == table[n].code) {
+	    result = table[n].name;
+	    break;
+	}
     }
-    Cleanup(i);
+    return result;
+}
+
+void
+SysError(int code)
+{
+    int oerrno = errno;
+
+    fprintf(stderr, "%s: Error %d, errno %d: ", xterm_name, code, oerrno);
+    fprintf(stderr, "%s\n", SysErrorMsg(oerrno));
+    fprintf(stderr, "Reason: %s\n", SysReasonMsg(code));
+
+    Cleanup(code);
 }
 
 /*
@@ -3160,7 +3154,7 @@ xtermFindShell(char *leaf, Bool warning)
     TRACE(("xtermFindShell(%s)\n", leaf));
     if (*result != '\0' && strchr("+/-", *result) == 0) {
 	/* find it in $PATH */
-	if ((s = getenv("PATH")) != 0) {
+	if ((s = x_getenv("PATH")) != 0) {
 	    if ((tmp = TypeMallocN(char, strlen(leaf) + strlen(s) + 1)) != 0) {
 		Bool found = False;
 		while (*s != '\0') {
@@ -3203,6 +3197,26 @@ xtermFindShell(char *leaf, Bool warning)
 }
 #endif /* VMS */
 
+#define ENV_HUNK(n)	((((n) + 1) | 31) + 1)
+
+/*
+ * copy the environment before Setenv'ing.
+ */
+void
+xtermCopyEnv(char **oldenv)
+{
+    unsigned size;
+    char **newenv;
+
+    for (size = 0; oldenv[size] != NULL; size++) {
+	;
+    }
+
+    newenv = TypeCallocN(char *, ENV_HUNK(size));
+    memmove(newenv, oldenv, size * sizeof(char *));
+    environ = newenv;
+}
+
 /*
  * sets the value of var to be arg in the Unix 4.2 BSD environment env.
  * Var should end with '=' (bindings are of the form "var=value").
@@ -3214,28 +3228,48 @@ void
 xtermSetenv(char *var, char *value)
 {
     if (value != 0) {
+	char *test;
 	int envindex = 0;
 	size_t len = strlen(var);
+	int found = -1;
 
-	TRACE(("xtermSetenv(var=%s, value=%s)\n", var, value));
+	TRACE(("xtermSetenv(%s=%s)\n", var, value));
 
-	while (environ[envindex] != NULL) {
-	    if (strncmp(environ[envindex], var, len) == 0) {
-		/* found it */
-		environ[envindex] = CastMallocN(char, len + strlen(value));
-		strcpy(environ[envindex], var);
-		strcat(environ[envindex], value);
-		return;
+	while ((test = environ[envindex]) != NULL) {
+	    if (strncmp(test, var, len) == 0 && test[len] == '=') {
+		found = envindex;
+		break;
 	    }
 	    envindex++;
 	}
 
-	TRACE(("...expanding env to %d\n", envindex + 1));
+	if (found < 0) {
+	    unsigned need = ENV_HUNK(envindex + 1);
+	    unsigned have = ENV_HUNK(envindex);
 
-	environ[envindex] = CastMallocN(char, len + strlen(value));
-	(void) strcpy(environ[envindex], var);
-	strcat(environ[envindex], value);
-	environ[++envindex] = NULL;
+	    if (need > have) {
+		char **newenv;
+		newenv = TypeMallocN(char *, need);
+		if (newenv == 0) {
+		    fprintf(stderr, "Cannot increase environment\n");
+		    return;
+		}
+		memmove(newenv, environ, have * sizeof(*newenv));
+		free(environ);
+		environ = newenv;
+	    }
+
+	    found = envindex;
+	    environ[found + 1] = NULL;
+	    environ = environ;
+	}
+
+	environ[found] = CastMallocN(char, 1 + len + strlen(value));
+	if (environ[found] == 0) {
+	    fprintf(stderr, "Cannot allocate environment %s\n", var);
+	    return;
+	}
+	sprintf(environ[found], "%s=%s", var, value);
     }
 }
 
@@ -3267,14 +3301,12 @@ xioerror(Display * dpy)
 void
 xt_error(String message)
 {
-    char *ptr;
-
     (void) fprintf(stderr, "%s Xt error: %s\n", ProgramName, message);
 
     /*
      * Check for the obvious - Xt does a poor job of reporting this.
      */
-    if ((ptr = getenv("DISPLAY")) == 0 || *x_strtrim(ptr) == '\0') {
+    if (x_getenv("DISPLAY") == 0) {
 	fprintf(stderr, "%s:  DISPLAY is not set\n", ProgramName);
     }
     exit(1);
@@ -3577,7 +3609,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 }
 
 /*
- * Report the locale that xterm was started in.
+ * Report the character-type locale that xterm was started in.
  */
 char *
 xtermEnvLocale(void)
@@ -3585,10 +3617,9 @@ xtermEnvLocale(void)
     static char *result;
 
     if (result == 0) {
-	if ((result = getenv("LC_ALL")) == 0 || *result == '\0')
-	    if ((result = getenv("LC_CTYPE")) == 0 || *result == '\0')
-		if ((result = getenv("LANG")) == 0 || *result == '\0')
-		    result = "";
+	if ((result = x_nonempty(setlocale(LC_CTYPE, 0))) == 0) {
+	    result = "C";
+	}
 	TRACE(("xtermEnvLocale ->%s\n", result));
     }
     return result;
@@ -3604,7 +3635,7 @@ xtermEnvEncoding(void)
 	result = nl_langinfo(CODESET);
 #else
 	char *locale = xtermEnvLocale();
-	if (*locale == 0 || !strcmp(locale, "C") || !strcmp(locale, "POSIX")) {
+	if (!strcmp(locale, "C") || !strcmp(locale, "POSIX")) {
 	    result = "ASCII";
 	} else {
 	    result = "ISO-8859-1";

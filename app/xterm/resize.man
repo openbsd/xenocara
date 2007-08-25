@@ -1,4 +1,4 @@
-.\" $XTermId: resize.man,v 1.15 2006/02/13 01:14:59 tom Exp $
+.\" $XTermId: resize.man,v 1.16 2007/05/24 21:44:06 tom Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, 1998-2002.
 .\"
@@ -73,7 +73,7 @@ for the base termcap entry to modify.
 ~/.cshrc
 user's alias for the command.
 .SH "SEE ALSO"
-csh(1), tset(1), xterm(1)
+csh(1), tset(1), xterm(__mansuffix__)
 .SH AUTHORS
 Mark Vandevoorde (MIT-Athena), Edward Moy (Berkeley)
 .br

@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.113 2007/03/18 22:46:21 tom Exp $
+-- $XTermId: INSTALL,v 1.115 2007/06/17 13:44:39 tom Exp $
 -- $XFree86: xc/programs/xterm/INSTALL,v 3.42 2006/02/13 01:14:57 dickey Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2006,2007 by Thomas E. Dickey
@@ -127,6 +127,15 @@ The options (in alphabetic order):
   	Do not compile-in code that sets the default value of the colorMode
 	resource to ``true''.
 
+  --disable-desktop       disable install of xterm desktop files
+
+	Do not install the xterm desktop files, used in menus.
+	These use the icons installed in the --with-icondir option.
+	Use the environment variable $DESKTOP_FLAGS to supply options
+	required by desktop-file-install.
+
+	Note: If desktop-utils is not found they will not be installed anyway.
+
   --disable-doublechars   disable support for double-size chars
 
   	Do not compile-in code that supports font-manipulation needed to
@@ -253,6 +262,10 @@ The options (in alphabetic order):
 
 	Do not install xterm using setuid/setgid permissions.  Drop setuid
 	permissions on startup.
+
+  --disable-sun-fkeys
+
+  	Do not compile-in code to support Sun-style function keys.
 
   --disable-tek4014       disable tek4014 emulation
 
@@ -487,6 +500,9 @@ The options (in alphabetic order):
 	/usr/local, you should use this option to customize the location to
 	match your system configuration.
 
+	Use --without-app-defaults or --with-app-defaults=no to disable the
+	feature.
+
   --with-freetype-cflags  -D/-I options for compiling with FreeType library
 
 	Override options provided by xft-config or freetype-config.
@@ -494,6 +510,19 @@ The options (in alphabetic order):
   --with-freetype-libs    -L/-l options for linking with FreeType library
 
 	Override options provided by xft-config or freetype-config.
+
+  --with-icondir=DIR directory in which to install icon files (default: EPREFIX/share/pixmaps)
+
+	The X libraries may automatically search these locations:
+
+	$HOME/.icons
+	$XDG_DATA_DIRS/icons
+	/usr/share/pixmaps
+
+	See also
+	http://standards.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html
+
+	Use --without-icondir or --with-icondir=no to disable the feature.
 
   --with-neXtaw           link with neXT Athena library
 

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.72 2007/03/17 15:45:12 tom Exp $ */
+/* $XTermId: trace.c,v 1.81 2007/07/22 16:27:25 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/trace.c,v 3.23 2005/09/18 23:48:13 dickey Exp $
@@ -43,6 +43,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <assert.h>
 
 #ifdef HAVE_X11_TRANSLATEI_H
 #include <X11/TranslateI.h>
@@ -130,6 +131,34 @@ TraceIds(const char *fname, int lnum)
     }
 }
 
+static void
+formatAscii(char *dst, unsigned value)
+{
+    switch (value) {
+    case '\\':
+	sprintf(dst, "\\\\");
+	break;
+    case '\b':
+	sprintf(dst, "\\b");
+	break;
+    case '\n':
+	sprintf(dst, "\\n");
+	break;
+    case '\r':
+	sprintf(dst, "\\r");
+	break;
+    case '\t':
+	sprintf(dst, "\\t");
+	break;
+    default:
+	if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
+	    sprintf(dst, "\\%03o", value);
+	else
+	    sprintf(dst, "%c", CharOf(value));
+	break;
+    }
+}
+
 char *
 visibleChars(PAIRED_CHARS(Char * buf, Char * buf2), unsigned len)
 {
@@ -155,10 +184,7 @@ visibleChars(PAIRED_CHARS(Char * buf, Char * buf2), unsigned len)
 	    sprintf(dst, "\\u+%04X", value);
 	else
 #endif
-	if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
-	    sprintf(dst, "\\%03o", value);
-	else
-	    sprintf(dst, "%c", CharOf(value));
+	    formatAscii(dst, value);
 	dst += strlen(dst);
     }
     return result;
@@ -184,10 +210,7 @@ visibleIChar(IChar * buf, unsigned len)
 	    sprintf(dst, "\\u+%04X", value);
 	else
 #endif
-	if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
-	    sprintf(dst, "\\%03o", value);
-	else
-	    sprintf(dst, "%c", CharOf(value));
+	    formatAscii(dst, value);
 	dst += strlen(dst);
     }
     return result;
@@ -284,6 +307,98 @@ visibleXError(int code)
     }
     return result;
 }
+
+#if OPT_TRACE_FLAGS
+#define isScrnFlag(flag) ((flag) == LINEWRAPPED)
+
+static char *
+ScrnText(TScreen * screen, int row)
+{
+    Char *chars = SCRN_BUF_CHARS(screen, row);
+#if OPT_WIDE_CHARS
+    Char *widec = 0;
+#endif
+
+    if_OPT_WIDE_CHARS(screen, {
+	widec = SCRN_BUF_WIDEC(screen, row);
+    });
+    return visibleChars(PAIRED_CHARS(chars, widec), screen->max_col + 1);
+}
+
+#if OPT_TRACE_FLAGS > 1
+#define DETAILED_FLAGS(name) \
+    Trace("TEST " #name " %d [%d..%d] top %d chars %p (%d)\n", \
+    	  row, \
+	  -screen->savedlines, \
+	  screen->max_row, \
+	  screen->topline, \
+	  SCRN_BUF_CHARS(screen, row), \
+	  (&(SCRN_BUF_FLAGS(screen, row)) - screen->visbuf) / MAX_PTRS)
+#else
+#define DETAILED_FLAGS(name)	/* nothing */
+#endif
+
+#define SHOW_BAD_ROW(name, screen, row) \
+	Trace("OOPS " #name " bad row %d [%d..%d]\n", \
+	      row, -(screen->savedlines), screen->max_row)
+
+#define SHOW_SCRN_FLAG(name,code) \
+	Trace(#name " {%d, top=%d, saved=%d}%05d%s:%s\n", \
+	      row, screen->topline, screen->savedlines, \
+	      ROW2ABS(screen, row), \
+	      code ? "*" : "", \
+	      ScrnText(screen, row))
+
+void
+ScrnClrFlag(TScreen * screen, int row, int flag)
+{
+    DETAILED_FLAGS(ScrnClrFlag);
+    if (!okScrnRow(screen, row)) {
+	SHOW_BAD_ROW(ScrnClrFlag, screen, row);
+	assert(0);
+    } else if (isScrnFlag(flag)) {
+	SHOW_SCRN_FLAG(ScrnClrFlag, 0);
+    }
+
+    SCRN_BUF_FLAGS(screen, row) =
+	(Char *) ((long) SCRN_BUF_FLAGS(screen, row) & ~(flag));
+}
+
+void
+ScrnSetFlag(TScreen * screen, int row, int flag)
+{
+    DETAILED_FLAGS(ScrnSetFlag);
+    if (!okScrnRow(screen, row)) {
+	SHOW_BAD_ROW(ScrnSetFlag, screen, row);
+	assert(0);
+    } else if (isScrnFlag(flag)) {
+	SHOW_SCRN_FLAG(ScrnSetFlag, 1);
+    }
+
+    SCRN_BUF_FLAGS(screen, row) =
+	(Char *) (((long) SCRN_BUF_FLAGS(screen, row) | (flag)));
+}
+
+int
+ScrnTstFlag(TScreen * screen, int row, int flag)
+{
+    int code = 0;
+    if (!okScrnRow(screen, row)) {
+	SHOW_BAD_ROW(ScrnTstFlag, screen, row);
+    } else {
+	code = ((long) SCRN_BUF_FLAGS(screen, row) & (flag)) != 0;
+
+	DETAILED_FLAGS(ScrnTstFlag);
+	if (!okScrnRow(screen, row)) {
+	    SHOW_BAD_ROW(ScrnSetFlag, screen, row);
+	    assert(0);
+	} else if (isScrnFlag(flag)) {
+	    SHOW_SCRN_FLAG(ScrnTstFlag, code);
+	}
+    }
+    return code;
+}
+#endif /* OPT_TRACE_FLAGS */
 
 void
 TraceSizeHints(XSizeHints * hints)
@@ -395,13 +510,14 @@ TraceXtermResources(void)
     XRES_B(ptyInitialErase);
     XRES_B(backarrow_is_erase);
 #endif
-    XRES_B(wait_for_map);
     XRES_B(useInsertMode);
 #if OPT_ZICONBEEP
     XRES_I(zIconBeep);
 #endif
 #if OPT_PTY_HANDSHAKE
+    XRES_B(wait_for_map);
     XRES_B(ptyHandshake);
+    XRES_B(ptySttySize);
 #endif
 #if OPT_SAME_NAME
     XRES_B(sameName);
@@ -564,6 +680,11 @@ TraceOptions(OptionHelp * options, XrmOptionDescRec * resources, Cardinal res_co
 	case XrmoptionSkipLine:
 	    TRACE(("  %-28s {remainder of line}\n", res_array[j].option));
 	    break;
+	case XrmoptionIsArg:
+	case XrmoptionNoArg:
+	case XrmoptionResArg:
+	case XrmoptionSepArg:
+	case XrmoptionStickyArg:
 	default:
 	    break;
 	}
