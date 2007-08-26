@@ -69,19 +69,11 @@ Section "ServerLayout"
 EndSection
 	
 Section "Files"
-	RgbPath      "/usr/X11R6/lib/X11/rgb"
 	FontPath     "/usr/X11R6/lib/X11/fonts/misc/"
 	FontPath     "/usr/X11R6/lib/X11/fonts/TTF/"
 	FontPath     "/usr/X11R6/lib/X11/fonts/OTF"
 	FontPath     "/usr/X11R6/lib/X11/fonts/Type1/"
 	FontPath     "/usr/X11R6/lib/X11/fonts/75dpi/"
-EndSection
-
-Section "Module"
-    Load        "type1"
-    Load        "freetype"
-    Load        "glx"
-    Load        "extmod"
 EndSection
 
 # All Sun keyboards (USB Type 6, Serial Type 3/4/5/6)
@@ -262,4 +254,4 @@ See xorg.conf(5) for more options.
 
 problem_blurb
 
-$OpenBSD: README.sparc64,v 1.3 2007/08/25 23:00:07 aanriot Exp $
+$OpenBSD: README.sparc64,v 1.4 2007/08/26 07:38:37 matthieu Exp $
