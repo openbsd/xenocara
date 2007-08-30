@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.1 2007/05/20 14:43:12 robert Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.2 2007/08/30 19:45:25 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  *
@@ -75,8 +75,8 @@ unsigned int    width, height;	/* window size */
 char           *progname;
 int             evfd;
 
-unsigned int    cx[5], cy[5];
-unsigned int    x[5], y[5];
+int    cx[5], cy[5];
+int    x[5], y[5];
 
 void
 get_events(int i)
@@ -348,6 +348,16 @@ calib:
 		XClearWindow(display, win);
 	}
 
+	/* Check if  X and Y should be swapped */
+	if (fabs(x[0] - x[1]) > fabs(y[0] - y[1])) {
+		wmcoords.swapxy = 1;
+		for (i = 0; i < 5; i++) {
+			int t = x[i];
+			x[i] = y[i];
+			y[i] = t;
+		}
+	}
+
 	/* get touch pad resolution to screen resolution ratio */
 	a1 = (double) (x[4] - x[0]) / (double) (cx[4] - cx[0]);
 	a2 = (double) (x[3] - x[1]) / (double) (cx[3] - cx[1]);
@@ -376,12 +386,12 @@ calib:
 	a = (a1 + a2) / 2.0;
 	b = (b1 + b2) / 2.0;
 	yerr = a * height / 2 + b - y[2];
-	if (fabs(yerr) > (a * height + b)) {
+	if (fabs(yerr) > (a * height + b) * 0.01) {
 		fprintf(stderr, "Y error (%.2f) too high, try again\n",
 			fabs(yerr));
 		goto calib;
 	}
-	ts.ts_miny = (int) (b + 0.5) / 4;
+	ts.ts_miny = (int) (b + 0.5);
 	ts.ts_maxy = (int) (a * height + b + 0.5);
 
 	XFlush(display);
