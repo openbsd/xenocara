@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.4 2007/08/31 20:59:33 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.5 2007/08/31 21:17:33 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  *
@@ -29,6 +29,9 @@
 #include <X11/Xos.h>
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
+#include <X11/Xft/Xft.h>
+#include <X11/extensions/Xrender.h>
+
 
 #include <sys/param.h>
 #include <sys/ioctl.h>
@@ -40,21 +43,13 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define FONT_NAME		"9x15"
 
-#define Background		cWHITE
-#define TouchCross		cBLACK
-#define PromptText		cBLACK
+#define FONT_NAME		"mono"
+#define FONT_SIZE		14
 
-#define N_Colors		3
-
-static char     colors[N_Colors][10] =
-{"BLACK", "WHITE"};
-
-static unsigned long pixels[N_Colors];
-
-#define cBLACK			(pixels[0])
-#define cWHITE			(pixels[1])
+#define Background		"white"
+#define TouchCross	        "black"
+#define PromptText		"black"
 
 /* where the calibration points are placed */
 #define SCREEN_DIVIDE	16
@@ -67,10 +62,11 @@ char           *deviceName;
 
 Display        *display;
 int             screen;
-GC              gc;
 Window          root;
 Window          win;
-XFontStruct    *font_info;
+XftFont	       *font;
+XftColor	cross, promptColor, bg;
+XftDraw	       *draw;
 unsigned int    width, height;	/* window size */
 char           *progname;
 int             evfd;
@@ -116,89 +112,122 @@ get_events(int i)
 void
 cleanup_exit()
 {
-	XUnloadFont(display, font_info->fid);
 	XUngrabServer(display);
 	XUngrabKeyboard(display, CurrentTime);
-	XFreeGC(display, gc);
 	XCloseDisplay(display);
 	close(evfd);
 }
 
-
 void
-load_font(XFontStruct ** font_info)
+render_init(void)
 {
-	char           *fontname = FONT_NAME;
-
-	if ((*font_info = XLoadQueryFont(display, fontname)) == NULL) {
-		printf("Cannot open %s font\n", FONT_NAME);
-		exit(1);
+	font = XftFontOpen(display, screen,
+	    XFT_FAMILY, XftTypeString, FONT_NAME,
+	    XFT_SIZE, XftTypeInteger, FONT_SIZE,
+	    NULL);
+	if (!XftColorAllocName(display, XDefaultVisual(display, screen),
+		DefaultColormap(display, screen), TouchCross, &cross)) {
+		fprintf(stderr, "cannot get color");
+		exit(2);
 	}
+	if (!XftColorAllocName(display, XDefaultVisual(display, screen),
+		DefaultColormap(display, screen), PromptText, &promptColor)) {
+		fprintf(stderr, "cannot get color");
+		exit(2);
+	}
+	if (!XftColorAllocName(display, XDefaultVisual(display, screen),
+		DefaultColormap(display, screen), Background, &bg)) {
+		fprintf(stderr, "cannot get bg color");
+		exit(2);
+	}
+	draw = XftDrawCreate(display, win, DefaultVisual(display, screen),
+	    DefaultColormap(display, screen));
 }
 
-
 void
-draw_point(int x, int y, int width, int size, unsigned long color)
+draw_point(int x, int y, int width, int size, XftColor *color)
 {
-	XSetForeground(display, gc, color);
-	XSetLineAttributes(display, gc, width, LineSolid,
-			   CapRound, JoinRound);
-	XDrawLine(display, win, gc, x - size, y, x + size, y);
-	XDrawLine(display, win, gc, x, y - size, x, y + size);
+	XPointDouble p[4];
+
+	p[0].x = x - size;
+	p[0].y = y - 1;
+	p[1].x = x - size;
+	p[1].y = y + 1;
+	p[2].x = x + size;
+	p[2].y = y + 1;
+	p[3].x = x + size;
+	p[3].y = y - 1;
+
+	XRenderCompositeDoublePoly(display, PictOpOver,
+	    XftDrawSrcPicture(draw, color),
+	    XftDrawPicture(draw),
+	    XRenderFindStandardFormat(display, PictStandardA8),
+	    0, 0, 0, 0, p, 4, 0);
+	p[0].x = x - 1;
+	p[0].y = y - size;
+	p[1].x = x + 1;
+	p[1].y = y - size;
+	p[2].x = x + 1;
+	p[2].y = y + size;
+	p[3].x = x - 1;
+	p[3].y = y + size;
+	XRenderCompositeDoublePoly(display, PictOpOver,
+	    XftDrawSrcPicture(draw, color),
+	    XftDrawPicture(draw),
+	    XRenderFindStandardFormat(display, PictStandardA8),
+	    0, 0, 0, 0, p, 4, 0);
 }
 
 void
 draw_text()
 {
 	static char    *prompt[] = {
-		"    TOUCH SCREEN CALIBRATION",
+		"TOUCH SCREEN CALIBRATION",
 		"Press on the cross hairs please..."
 	};
 
 #define num	(sizeof(prompt) / sizeof(prompt[0]))
 	static int      init = 0;
 	static int      p_len[num];
-	static int      p_width[num];
-	static int      p_height;
+	static int      p_xpos[num];
+	static int      p_height = 0;
 	static int      p_maxwidth = 0;
 	int             i, x, y;
 	int             line_height;
+	XGlyphInfo	extents;
 
 	if (!init) {
 		for (i = 0; i < num; i++) {
 			p_len[i] = strlen(prompt[i]);
-			p_width[i] = XTextWidth(font_info, prompt[i], p_len[i]);
-			if (p_width[i] > p_maxwidth)
-				p_maxwidth = p_width[i];
+			XftTextExtents8(display, font, prompt[i],
+			    p_len[i], &extents);
+			p_xpos[i] = (width - extents.width)/2;
+			if (extents.width > p_maxwidth)
+				p_maxwidth = extents.width;
+			if (extents.height > p_height)
+				p_height = extents.height;
 		}
-		p_height = font_info->ascent + font_info->descent;
+		
 		init = 1;
 	}
-	line_height = p_height + 5;
-	x = (width - p_maxwidth) / 2;
+	line_height = p_height * 1.5;
 	y = height / 2 - 6 * line_height;
 
-	XSetForeground(display, gc, PromptText);
-	XClearArea(display, win, x - 11, y - 8 - p_height,
-		   p_maxwidth + 11 * 2, num * line_height + 8 * 2, False);
-	XSetLineAttributes(display, gc, 3, FillSolid,
-			   CapRound, JoinRound);
-
 	for (i = 0; i < num; i++) {
-		XDrawString(display, win, gc, x, y + i * line_height, prompt[i],
-			    p_len[i]);
+		XftDrawString8(draw, &promptColor, font,
+		    p_xpos[i], y+i*line_height, prompt[i], p_len[i]);
+
 	}
 #undef num
 }
 
-
 void
 draw_graphics(int i, int j, int n)
 {
-	unsigned long   color;
+	XftColor   *color;
 
 	draw_text();
-	color = TouchCross;
+	color = &cross;
 
 	if (n == 2) {
 		cx[n] = width / 2;
@@ -209,46 +238,6 @@ draw_graphics(int i, int j, int n)
 	}
 	draw_point(cx[n], cy[n], width / 200, width / 64, color);
 }
-
-void
-get_gc(Window win, GC * gc, XFontStruct * font_info)
-{
-	unsigned long   valuemask = 0;	/* ignore XGCvalues and use defaults */
-	XGCValues       values;
-	unsigned int    line_width = 5;
-	int             line_style = LineSolid;
-	int             cap_style = CapRound;
-	int             join_style = JoinRound;
-
-	*gc = XCreateGC(display, win, valuemask, &values);
-
-	XSetFont(display, *gc, font_info->fid);
-
-	XSetLineAttributes(display, *gc, line_width, line_style,
-			   cap_style, join_style);
-}
-
-
-int
-get_color()
-{
-	int             default_depth;
-	Colormap        default_cmap;
-	XColor          my_color;
-	int             i;
-
-	default_depth = DefaultDepth(display, screen);
-	default_cmap = DefaultColormap(display, screen);
-
-	for (i = 0; i < N_Colors; i++) {
-		XParseColor(display, default_cmap, colors[i], &my_color);
-		XAllocColor(display, default_cmap, &my_color);
-		pixels[i] = my_color.pixel;
-	}
-
-	return 0;
-}
-
 
 Cursor
 create_empty_cursor()
@@ -274,10 +263,10 @@ main(int argc, char *argv[], char *env[])
 	double          a, a1, a2, b, b1, b2, xerr, yerr;
 	struct		wsmouse_calibcoords wmcoords;
 	extern char	*__progname;
-	
+
 	/* Crosshair placement */
 	int		cpx[] = { 0, 0, 1, 1, 1 };
-	int		cpy[] = { 0, 1, 0, 0, 1 }; 
+	int		cpy[] = { 0, 1, 0, 0, 1 };
 
 	if (argc != 2) {
 		fprintf(stderr, "usage: %s <device>\n", __progname);
@@ -312,15 +301,12 @@ main(int argc, char *argv[], char *env[])
 			    CopyFromParent, InputOutput, CopyFromParent,
 			    CWOverrideRedirect | CWBackPixel | CWEventMask |
 			    CWCursor, &xswa);
+	render_init();
 	XMapWindow(display, win);
 	XGrabKeyboard(display, win, False, GrabModeAsync, GrabModeAsync,
 		      CurrentTime);
 	XGrabServer(display);
-	load_font(&font_info);
-	get_gc(win, &gc, font_info);
-	get_color();
 
-	XSetWindowBackground(display, win, Background);
 	XClearWindow(display, win);
 
         if (ioctl(evfd, WSMOUSEIO_GCALIBCOORDS, &wmcoords) < 0)
@@ -333,11 +319,13 @@ main(int argc, char *argv[], char *env[])
                 err(1, "WSMOUSEIO_SCALIBCOORDS");
 
 calib:
+	XftDrawRect(draw, &bg, 0, 0, width, height);
+
 	for (i = 0; i < 5; i++) {
 		draw_graphics(cpx[i], cpy[i], i);
 		XFlush(display);
 		get_events(i);
-		XClearWindow(display, win);
+		XftDrawRect(draw, &bg, 0, 0, width, height);
 	}
 
 	/* Check if  X and Y should be swapped */
