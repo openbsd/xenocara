@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.5 2007/08/31 21:17:33 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.6 2007/08/31 21:53:55 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  *
@@ -50,6 +50,7 @@
 #define Background		"white"
 #define TouchCross	        "black"
 #define PromptText		"black"
+#define Error			"red"
 
 /* where the calibration points are placed */
 #define SCREEN_DIVIDE	16
@@ -65,7 +66,7 @@ int             screen;
 Window          root;
 Window          win;
 XftFont	       *font;
-XftColor	cross, promptColor, bg;
+XftColor	cross, errorColor, promptColor, bg;
 XftDraw	       *draw;
 unsigned int    width, height;	/* window size */
 char           *progname;
@@ -73,6 +74,18 @@ int             evfd;
 
 int    cx[5], cy[5];
 int    x[5], y[5];
+
+static char    *prompt_message[] = {
+	"TOUCH SCREEN CALIBRATION",
+	"Press on the cross hairs please...",
+	NULL
+};
+
+static char *error_message[] = {
+	"Not accurate enough.",
+	"Try again...",
+	NULL
+};
 
 void
 get_events(int i)
@@ -140,6 +153,11 @@ render_init(void)
 		fprintf(stderr, "cannot get bg color");
 		exit(2);
 	}
+	if (!XftColorAllocName(display, XDefaultVisual(display, screen),
+		DefaultColormap(display, screen), Error, &errorColor)) {
+		fprintf(stderr, "cannot get color");
+		exit(2);
+	}
 	draw = XftDrawCreate(display, win, DefaultVisual(display, screen),
 	    DefaultColormap(display, screen));
 }
@@ -179,55 +197,29 @@ draw_point(int x, int y, int width, int size, XftColor *color)
 }
 
 void
-draw_text()
+draw_text(char **message, XftColor *color)
 {
-	static char    *prompt[] = {
-		"TOUCH SCREEN CALIBRATION",
-		"Press on the cross hairs please..."
-	};
-
-#define num	(sizeof(prompt) / sizeof(prompt[0]))
-	static int      init = 0;
-	static int      p_len[num];
-	static int      p_xpos[num];
-	static int      p_height = 0;
-	static int      p_maxwidth = 0;
+	int      	len;
 	int             i, x, y;
-	int             line_height;
 	XGlyphInfo	extents;
 
-	if (!init) {
-		for (i = 0; i < num; i++) {
-			p_len[i] = strlen(prompt[i]);
-			XftTextExtents8(display, font, prompt[i],
-			    p_len[i], &extents);
-			p_xpos[i] = (width - extents.width)/2;
-			if (extents.width > p_maxwidth)
-				p_maxwidth = extents.width;
-			if (extents.height > p_height)
-				p_height = extents.height;
-		}
-		
-		init = 1;
+	i = 0;
+	y = height / 3;
+	while (message[i] != NULL) {
+		len = strlen(message[i]);
+		XftTextExtents8(display, font, message[i], len, &extents);
+		x = (width - extents.width)/2;
+		XftDrawString8(draw, color, font, x, y, message[i], len);
+		y += extents.height * 1.5;
+		i++;
 	}
-	line_height = p_height * 1.5;
-	y = height / 2 - 6 * line_height;
-
-	for (i = 0; i < num; i++) {
-		XftDrawString8(draw, &promptColor, font,
-		    p_xpos[i], y+i*line_height, prompt[i], p_len[i]);
-
-	}
-#undef num
 }
 
 void
 draw_graphics(int i, int j, int n)
 {
-	XftColor   *color;
 
-	draw_text();
-	color = &cross;
+	draw_text(prompt_message, &promptColor);
 
 	if (n == 2) {
 		cx[n] = width / 2;
@@ -236,7 +228,7 @@ draw_graphics(int i, int j, int n)
 		cx[n] = (MARK_POINT[i] * width) / SCREEN_MAX;
 		cy[n] = (MARK_POINT[j] * height) / SCREEN_MAX;
 	}
-	draw_point(cx[n], cy[n], width / 200, width / 64, color);
+	draw_point(cx[n], cy[n], width / 200, width / 64, &cross);
 }
 
 Cursor
@@ -351,7 +343,7 @@ calib:
 	if (fabs(xerr) > fabs(a * width * .01)) {
 		fprintf(stderr, "X error (%.2f) too high, try again\n",
 			fabs(xerr));
-		goto calib;
+		goto err;
 	}
 	wmcoords.minx = (int) (b + 0.5);
 	wmcoords.maxx = (int) (a * width + b + 0.5);
@@ -369,7 +361,7 @@ calib:
 	if (fabs(yerr) > fabs(a * height * 0.01)) {
 		fprintf(stderr, "Y error (%.2f) too high, try again\n",
 			fabs(yerr));
-		goto calib;
+		goto err;
 	}
 	wmcoords.miny = (int) (b + 0.5);
 	wmcoords.maxy = (int) (a * height + b + 0.5);
@@ -390,4 +382,9 @@ calib:
 	    wmcoords.resx, wmcoords.resy);
 
 	return 0;
+err:
+	draw_text(error_message, &errorColor);
+	XFlush(display);
+	sleep(2);
+	goto calib;
 }
