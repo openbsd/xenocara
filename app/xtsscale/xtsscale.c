@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.3 2007/08/31 20:28:18 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.4 2007/08/31 20:59:33 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  *
@@ -279,14 +279,6 @@ main(int argc, char *argv[], char *env[])
 	int		cpx[] = { 0, 0, 1, 1, 1 };
 	int		cpy[] = { 0, 1, 0, 0, 1 }; 
 
-	struct tsscale {
-		int             ts_minx;
-		int             ts_maxx;
-		int             ts_miny;
-		int             ts_maxy;
-		int             ts_swapxy;
-	} ts;
-
 	if (argc != 2) {
 		fprintf(stderr, "usage: %s <device>\n", __progname);
 		return 1;
@@ -373,8 +365,8 @@ calib:
 			fabs(xerr));
 		goto calib;
 	}
-	ts.ts_minx = (int) (b + 0.5);
-	ts.ts_maxx = (int) (a * width + b + 0.5);
+	wmcoords.minx = (int) (b + 0.5);
+	wmcoords.maxx = (int) (a * width + b + 0.5);
 
 	/* get touch pad resolution to screen resolution ratio */
 	a1 = (double) (y[4] - y[0]) / (double) (cy[4] - cy[0]);
@@ -391,19 +383,23 @@ calib:
 			fabs(yerr));
 		goto calib;
 	}
-	ts.ts_miny = (int) (b + 0.5);
-	ts.ts_maxy = (int) (a * height + b + 0.5);
+	wmcoords.miny = (int) (b + 0.5);
+	wmcoords.maxy = (int) (a * height + b + 0.5);
 
 	XFlush(display);
 
         wmcoords.samplelen = orawmode;
+	wmcoords.resx = width;
+	wmcoords.resy = height;
 
         if (ioctl(evfd, WSMOUSEIO_SCALIBCOORDS, &wmcoords) < 0)
                 err(1, "WSMOUSEIO_SCALIBCOORDS");
 
 	printf("mouse.scale=%d,%d,%d,%d,%d,%d,%d\n",
-	    ts.ts_minx, ts.ts_maxx, ts.ts_miny,
-	    ts.ts_maxy, wmcoords.swapxy, width, height);
-		 
+	    wmcoords.minx, wmcoords.maxx,
+	    wmcoords.miny, wmcoords.maxy,
+	    wmcoords.swapxy,
+	    wmcoords.resx, wmcoords.resy);
+
 	return 0;
 }
