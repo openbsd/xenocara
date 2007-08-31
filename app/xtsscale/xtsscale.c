@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.2 2007/08/30 19:45:25 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.3 2007/08/31 20:28:18 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  *
@@ -368,7 +368,7 @@ calib:
 	a = (a1 + a2) / 2.0;
 	b = (b1 + b2) / 2.0;
 	xerr = a * width / 2 + b - x[2];
-	if (fabs(xerr) > (a * width + b) * .01) {
+	if (fabs(xerr) > fabs(a * width * .01)) {
 		fprintf(stderr, "X error (%.2f) too high, try again\n",
 			fabs(xerr));
 		goto calib;
@@ -386,7 +386,7 @@ calib:
 	a = (a1 + a2) / 2.0;
 	b = (b1 + b2) / 2.0;
 	yerr = a * height / 2 + b - y[2];
-	if (fabs(yerr) > (a * height + b) * 0.01) {
+	if (fabs(yerr) > fabs(a * height * 0.01)) {
 		fprintf(stderr, "Y error (%.2f) too high, try again\n",
 			fabs(yerr));
 		goto calib;
