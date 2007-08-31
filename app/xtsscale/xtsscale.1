@@ -1,4 +1,4 @@
-.\" $OpenBSD: xtsscale.1,v 1.3 2007/08/31 21:14:04 matthieu Exp $
+.\" $OpenBSD: xtsscale.1,v 1.4 2007/08/31 22:02:51 matthieu Exp $
 .\"
 .\" Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
 .\"
@@ -51,6 +51,22 @@ This result should be placed into
 for further use, or can be immediately applied using:
 .Pp
 .Dl # wsconsctl mouse.scale=200,3400,312,3672,0,1024,768
+.Sh NOTES
+To use 
+.Nm
+a special 
+.Pa /etc/X11/xorg.conf
+X configuration file is needed, in which the input device driver is
+replaced by the
+.Xr void 4
+driver so that the device to calibrate is not opened by X during the
+calibration.
+.Pp
+.Pa /etc/wsconsctl.conf
+cannot currently be used to set the calibration data of a device
+that is not the first device. (
+.Pa /dev/wsmouse0
+)
 .Sh SEE ALSO
 .Xr ioctl 2 ,
 .Xr uts 4 ,
