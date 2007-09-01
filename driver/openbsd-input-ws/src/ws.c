@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.4 2007/08/23 19:10:33 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.5 2007/09/01 09:45:39 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -138,6 +138,7 @@ InputDriverRec WS = {
 	"ws",
 	NULL,
 	wsPreInit,
+	NULL,
 	NULL,
 	0
 };
