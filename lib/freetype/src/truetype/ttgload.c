@@ -702,7 +702,7 @@
     FT_GlyphLoader  gloader = loader->gloader;
     FT_Error        error   = TT_Err_Ok;
     FT_Outline*     outline;
-    FT_Int          n_points;
+    FT_UInt         n_points;
 
 
     outline  = &gloader->current.outline;
@@ -729,7 +729,7 @@
       /* Deltas apply to the unscaled data. */
       FT_Vector*  deltas;
       FT_Memory   memory = loader->face->memory;
-      FT_Int      i;
+      FT_UInt     i;
 
 
       error = TT_Vary_Get_Glyph_Deltas( (TT_Face)(loader->face),
