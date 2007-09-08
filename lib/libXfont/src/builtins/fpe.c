@@ -29,21 +29,20 @@
 #include <config.h>
 #endif
 #include    <X11/fonts/fntfilst.h>
+#include "builtin.h"
 
 static int  font_file_type;
 
-const char	builtin_fonts[] = "built-ins";
+static const char builtin_fonts[] = "built-ins";
 
-int
-BuiltinNameCheck (name)
-    char    *name;
+static int
+BuiltinNameCheck (char *name)
 {
     return (strcmp (name, builtin_fonts) == 0);
 }
 
-int
-BuiltinInitFPE (fpe)
-    FontPathElementPtr	fpe;
+static int
+BuiltinInitFPE (FontPathElementPtr fpe)
 {
     int			status;
     FontDirectoryPtr	dir;
@@ -56,9 +55,8 @@ BuiltinInitFPE (fpe)
 }
 
 /* ARGSUSED */
-int
-BuiltinResetFPE (fpe)
-    FontPathElementPtr	fpe;
+static int
+BuiltinResetFPE (FontPathElementPtr fpe)
 {
     FontDirectoryPtr	dir;
 
@@ -67,9 +65,8 @@ BuiltinResetFPE (fpe)
     return Successful;
 }
 
-int
-BuiltinFreeFPE (fpe)
-    FontPathElementPtr	fpe;
+static int
+BuiltinFreeFPE (FontPathElementPtr fpe)
 {
     FontFileFreeDir ((FontDirectoryPtr) fpe->private);
     return Successful;

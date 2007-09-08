@@ -43,8 +43,8 @@ static char const * const releaseID =
 #include <config.h>
 #endif
 #include <X11/fonts/fontmisc.h>
-#ifndef FONTMODULE
 #include <string.h>
+#ifndef FONTMODULE
 #include <ctype.h>
 #include <math.h>
 #else
@@ -150,6 +150,164 @@ numOfCorrespondRelations
 /**************************************************************************
   Functions
  */
+
+/* get property record type by record name */
+static Bool /* True == Found, False == Not Found */
+get_record_type_by_name(SPropertyRecord const ** const refRefRecord, /*result*/
+                        char const *strName)
+{
+    Bool result = False;
+    int i;
+    
+    *refRefRecord = NULL;
+    for (i=0; i<numOfValidRecords; i++) {
+        if (!strcasecmp(validRecords[i].strRecordName, strName)) {
+            result = True;
+            *refRefRecord = &validRecords[i];
+            break;
+        }
+    }
+    
+    return result;
+}
+
+/* Add Property Record Value */
+static Bool /* True == Error, False == Success */
+SPropRecValList_add_record(SDynPropRecValList *pThisList,
+                           char const * const recordName,
+                           char const * const strValue)
+{
+    Bool result = False;
+    SPropRecValContainerEntityP tmpContainerE;
+
+    if (get_record_type_by_name(&tmpContainerE.refRecordType, recordName)) {
+        switch (tmpContainerE.refRecordType->recordType) {
+        case eRecTypeInteger:
+            {
+                int val;
+                char *endPtr;
+                    
+                val = strtol(strValue, &endPtr, 0);
+                if ('\0' != *endPtr) {
+                    fprintf(stderr,
+                            "truetype font property : "
+                            "%s record needs integer value.\n",
+                            recordName);
+                    result = True;
+                    goto quit;
+                }
+                SPropContainer_value_int(&tmpContainerE) = val;
+            }
+            break;
+        case eRecTypeDouble:
+            {
+                double val;
+                char *endPtr;
+                    
+                val = strtod(strValue, &endPtr);
+                if ('\0' != *endPtr) {
+                    fprintf(stderr,
+                            "truetype font property : "
+                            "%s record needs floating point value.\n",
+                            recordName);
+                    result = True;
+                    goto quit;
+                }
+                SPropContainer_value_dbl(&tmpContainerE) = val;
+            }
+            break;
+        case eRecTypeBool:
+            {
+                Bool val;
+                
+                if (!strcasecmp(strValue, "yes"))
+                    val = True;
+                else if (!strcasecmp(strValue, "y"))
+                    val = True;
+                else if (!strcasecmp(strValue, "on"))
+                    val = True;
+                else if (!strcasecmp(strValue, "true"))
+                    val = True;
+                else if (!strcasecmp(strValue, "t"))
+                    val = True;
+                else if (!strcasecmp(strValue, "ok"))
+                    val = True;
+                else if (!strcasecmp(strValue, "no"))
+                    val = False;
+                else if (!strcasecmp(strValue, "n"))
+                    val = False;
+                else if (!strcasecmp(strValue, "off"))
+                    val = False;
+                else if (!strcasecmp(strValue, "false"))
+                    val = False;
+                else if (!strcasecmp(strValue, "f"))
+                    val = False;
+                else if (!strcasecmp(strValue, "bad"))
+                    val = False;
+                else {
+                    fprintf(stderr,
+                            "truetype font property : "
+                            "%s record needs boolean value.\n",
+                            recordName);
+                    result = True;
+                    goto quit;
+                }
+                SPropContainer_value_bool(&tmpContainerE) = val;
+            }
+            break;
+        case eRecTypeString:
+            {
+                char *p;
+                    
+                if (NULL == (p = (char *)xalloc(strlen(strValue)+1))) {
+                    fprintf(stderr,
+                            "truetype font property : "
+                            "cannot allocate memory.\n");
+                    result = True;
+                    goto quit;
+                }
+                strcpy(p, strValue);
+                SPropContainer_value_str(&tmpContainerE) = p;
+            }
+            break;
+        case eRecTypeVoid:
+            if ('\0' != *strValue) {
+                fprintf(stderr,
+                        "truetype font property : "
+                        "%s record needs void.\n", recordName);
+                result = True;
+            }
+            break;
+        }
+        {
+            /* add to list */
+            SPropRecValListNodeP *newNode;
+            
+            if (NULL == (newNode =
+                         (SPropRecValListNodeP *)xalloc(sizeof(*newNode)))) {
+                fprintf(stderr,
+                        "truetype font property : "
+                        "cannot allocate memory.\n");
+                result = True;
+                goto quit;
+            }
+            newNode->nextNode = pThisList->headNode;
+            newNode->containerE = tmpContainerE;
+            tmpContainerE.refRecordType = NULL; /* invalidate --
+                                                   disown value handle. */
+            pThisList->headNode = newNode;
+        }
+    } else {
+        /* invalid record name */
+        fprintf(stderr,
+                "truetype font : "
+                "invalid record name \"%s.\"\n", recordName);
+        result = True;
+    }
+
+ quit:
+    return result;
+}
 
 #ifdef USE_TTP_FILE
 
@@ -393,62 +551,11 @@ SPropRecValList_read_prop_file(SDynPropRecValList *pThisList,
 }
 #endif /* USE_TTP_FILE */
 
-/* get property record type by record name */
-static Bool /* True == Found, False == Not Found */
-get_record_type_by_name(SPropertyRecord const ** const refRefRecord, /*result*/
-                        char const *strName)
-{
-    Bool result = False;
-    int i;
-    
-    *refRefRecord = NULL;
-    for (i=0; i<numOfValidRecords; i++) {
-        if (!mystrcasecmp(validRecords[i].strRecordName, strName)) {
-            result = True;
-            *refRefRecord = &validRecords[i];
-            break;
-        }
-    }
-    
-    return result;
-}
-
 /* Constructor for Container Node */
 Bool /* True == Error, False == Success */
 SPropRecValList_new(SDynPropRecValList *pThisList)
 {
     Bool result = False;
-    
-    pThisList->headNode = NULL;
-
-    return result;
-}
-
-/* Destructor for Container List */
-Bool /* True == Error, False == Success */
-SPropRecValList_delete(SDynPropRecValList *pThisList)
-{
-    Bool result = False;
-    SPropRecValListNodeP *p, *np;
-
-    for (p=pThisList->headNode; NULL!=p; p=np) {
-        np = p->nextNode;
-        switch (p->containerE.refRecordType->recordType) {
-        case eRecTypeInteger:
-            break;
-        case eRecTypeDouble:
-            break;
-        case eRecTypeBool:
-            break;
-        case eRecTypeString:
-            if (SPropContainer_value_str(&p->containerE))
-                xfree((void*)SPropContainer_value_str(&p->containerE));
-            break;
-        case eRecTypeVoid:
-            break;
-        }
-        xfree(p);
-    }
     
     pThisList->headNode = NULL;
 
@@ -492,144 +599,6 @@ SPropRecValList_dump(SRefPropRecValList *pThisList)
 }
 #endif
 
-/* Add Property Record Value */
-extern Bool /* True == Error, False == Success */
-SPropRecValList_add_record(SDynPropRecValList *pThisList,
-                           char const * const recordName,
-                           char const * const strValue)
-{
-    Bool result = False;
-    SPropRecValContainerEntityP tmpContainerE;
-
-    if (get_record_type_by_name(&tmpContainerE.refRecordType, recordName)) {
-        switch (tmpContainerE.refRecordType->recordType) {
-        case eRecTypeInteger:
-            {
-                int val;
-                char *endPtr;
-                    
-                val = strtol(strValue, &endPtr, 0);
-                if ('\0' != *endPtr) {
-                    fprintf(stderr,
-                            "truetype font property : "
-                            "%s record needs integer value.\n",
-                            recordName);
-                    result = True;
-                    goto quit;
-                }
-                SPropContainer_value_int(&tmpContainerE) = val;
-            }
-            break;
-        case eRecTypeDouble:
-            {
-                double val;
-                char *endPtr;
-                    
-                val = strtod(strValue, &endPtr);
-                if ('\0' != *endPtr) {
-                    fprintf(stderr,
-                            "truetype font property : "
-                            "%s record needs floating point value.\n",
-                            recordName);
-                    result = True;
-                    goto quit;
-                }
-                SPropContainer_value_dbl(&tmpContainerE) = val;
-            }
-            break;
-        case eRecTypeBool:
-            {
-                Bool val;
-                
-                if (!mystrcasecmp(strValue, "yes"))
-                    val = True;
-                else if (!mystrcasecmp(strValue, "y"))
-                    val = True;
-                else if (!mystrcasecmp(strValue, "on"))
-                    val = True;
-                else if (!mystrcasecmp(strValue, "true"))
-                    val = True;
-                else if (!mystrcasecmp(strValue, "t"))
-                    val = True;
-                else if (!mystrcasecmp(strValue, "ok"))
-                    val = True;
-                else if (!mystrcasecmp(strValue, "no"))
-                    val = False;
-                else if (!mystrcasecmp(strValue, "n"))
-                    val = False;
-                else if (!mystrcasecmp(strValue, "off"))
-                    val = False;
-                else if (!mystrcasecmp(strValue, "false"))
-                    val = False;
-                else if (!mystrcasecmp(strValue, "f"))
-                    val = False;
-                else if (!mystrcasecmp(strValue, "bad"))
-                    val = False;
-                else {
-                    fprintf(stderr,
-                            "truetype font property : "
-                            "%s record needs boolean value.\n",
-                            recordName);
-                    result = True;
-                    goto quit;
-                }
-                SPropContainer_value_bool(&tmpContainerE) = val;
-            }
-            break;
-        case eRecTypeString:
-            {
-                char *p;
-                    
-                if (NULL == (p = (char *)xalloc(strlen(strValue)+1))) {
-                    fprintf(stderr,
-                            "truetype font property : "
-                            "cannot allocate memory.\n");
-                    result = True;
-                    goto quit;
-                }
-                strcpy(p, strValue);
-                SPropContainer_value_str(&tmpContainerE) = p;
-            }
-            break;
-        case eRecTypeVoid:
-            if ('\0' != *strValue) {
-                fprintf(stderr,
-                        "truetype font property : "
-                        "%s record needs void.\n", recordName);
-                result = True;
-            }
-            break;
-        }
-        {
-            /* add to list */
-            SPropRecValListNodeP *newNode;
-            
-            if (NULL == (newNode =
-                         (SPropRecValListNodeP *)xalloc(sizeof(*newNode)))) {
-                fprintf(stderr,
-                        "truetype font property : "
-                        "cannot allocate memory.\n");
-                result = True;
-                goto quit;
-            }
-            newNode->nextNode = pThisList->headNode;
-            newNode->containerE = tmpContainerE;
-            tmpContainerE.refRecordType = NULL; /* invalidate --
-                                                   disown value handle. */
-            pThisList->headNode = newNode;
-        }
-    } else {
-        /* invalid record name */
-        fprintf(stderr,
-                "truetype font : "
-                "invalid record name \"%s.\"\n", recordName);
-        result = True;
-    }
-
- quit:
-    return result;
-}
-
 
 /* Search Property Record */
 Bool /* True == Hit, False == Miss */
@@ -642,7 +611,7 @@ SPropRecValList_search_record(SRefPropRecValList *pThisList,
     
     *refRecValue = NULL;
     for (p=pThisList->headNode; NULL!=p; p=p->nextNode) {
-        if (!mystrcasecmp(p->containerE.refRecordType->strRecordName,
+        if (!strcasecmp(p->containerE.refRecordType->strRecordName,
                           recordName)) {
             *refRecValue = &p->containerE;
             result = True;
@@ -713,7 +682,7 @@ SPropRecValList_add_by_font_cap(SDynPropRecValList *pThisList,
                     value = &duplicated[nextColon-strCapHead];
             
                 for (i=0; i<numOfCorrespondRelations; i++) {
-                    if (!mystrcasecmp(correspondRelations[i].capVariable,
+                    if (!strcasecmp(correspondRelations[i].capVariable,
                                       duplicated)) {
                         if (SPropRecValList_add_record(pThisList,
                                                         correspondRelations[i]
@@ -744,39 +713,6 @@ SPropRecValList_add_by_font_cap(SDynPropRecValList *pThisList,
   Functions (xttmisc)
  */
 
-/* compare strings, ignoring case */
-Bool /* False == equal, True == not equal */
-mystrcasecmp(char const *s1, char const *s2)
-{
-    Bool result = True;
-    
-#if (defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) ||\
-     defined(__bsdi__)) && !defined(FONTMODULE)
-    /* 4.4BSD has strcasecmp function. */
-    result = strcasecmp(s1, s2) != 0;
-#else
-    {
-        unsigned int len1 = strlen(s1);
-        
-        if (len1 == strlen(s2)) {
-            int i;
-            for (i=0; i<len1; i++) {
-                if (toupper(*s1++) != toupper(*s2++))
-                    goto quit;
-            }
-            result = False;
-        } else
-            /* len1 != len2 -> not equal*/
-            ;
-    }
-  quit:
-    ;
-#endif
-
-    return result;
-}
-
-
 /* strdup clone with using the allocator of X server */
 char *
 XttXstrdup(char const *str)
@@ -791,19 +727,5 @@ XttXstrdup(char const *str)
     return result;
 }
 
-
-#if 0
-int main()
-{
-    SDynPropRecValList list;
-    
-    SPropRecValList_new(&list);
-    SPropRecValList_read_prop_file(&list, "-");
-    SPropRecValList_dump(&list);
-    SPropRecValList_delete(&list);
-    
-    return 0;
-}
-#endif
 
 /* end of file */

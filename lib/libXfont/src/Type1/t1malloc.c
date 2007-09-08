@@ -171,8 +171,8 @@ asked for.
 :h3.Some Flags for Debug
 */
  
-long AvailableWords = 0;     /* number of words available in memory          */
-char mallocdebug = 0;        /* a flag that enables some chatty printf's     */
+static long AvailableWords = 0; /* number of words available in memory */
+static char mallocdebug = 0;    /* a flag that enables some chatty printf's */
 
 /*
 :h3.Prototypes of static functions

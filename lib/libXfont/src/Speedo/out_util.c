@@ -40,7 +40,103 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 /* absolute value function */
 #define   ABS(X)     ( (X < 0) ? -X : X)
 #if INCL_BLACK || INCL_2D || INCL_SCREEN
-
+
+static FUNCTION void restart_intercepts_out(void)
+GDECL
+/*  Called by sp_make_char when a new sub character is started
+ *  Freezes current sorted lists
+ */
+{
+#if DEBUG
+printf("    Restart intercepts:\n");
+#endif
+sp_globals.first_offset = sp_globals.next_offset;
+}
+
+static FUNCTION void set_first_band_out(
+GDECL
+point_t Pmin,
+point_t Pmax)
+{
+
+sp_globals.ymin = Pmin.y;
+sp_globals.ymax = Pmax.y;
+
+sp_globals.ymin = (sp_globals.ymin - sp_globals.onepix + 1) >> sp_globals.pixshift;
+sp_globals.ymax = (sp_globals.ymax + sp_globals.onepix - 1) >> sp_globals.pixshift;
+
+#if INCL_CLIPPING
+    switch(sp_globals.tcb0.xtype)
+       {
+       case 1: /* 180 degree rotation */
+	    if (sp_globals.specs.flags & CLIP_TOP)
+               {
+               sp_globals.clip_ymin = (fix31)((fix31)EM_TOP * sp_globals.tcb0.yppo + ((1<<sp_globals.multshift)/2));
+               sp_globals.clip_ymin = sp_globals.clip_ymin >> sp_globals.multshift;
+	       sp_globals.clip_ymin = -1* sp_globals.clip_ymin;
+	       if (sp_globals.ymin < sp_globals.clip_ymin)
+		    sp_globals.ymin = sp_globals.clip_ymin;
+	       }
+            if (sp_globals.specs.flags & CLIP_BOTTOM)
+	       {
+               sp_globals.clip_ymax = (fix31)((fix31)(-1 * EM_BOT) * sp_globals.tcb0.yppo + ((1<<sp_globals.multshift)/2));
+               sp_globals.clip_ymax = sp_globals.clip_ymax >> sp_globals.multshift;
+	       if (sp_globals.ymax > sp_globals.clip_ymax)
+		    sp_globals.ymax = sp_globals.clip_ymax;
+               }
+               break;
+       case 2: /* 90 degree rotation */
+            sp_globals.clip_ymax = 0;
+            if ((sp_globals.specs.flags & CLIP_TOP) &&
+                (sp_globals.ymax > sp_globals.clip_ymax))
+                 sp_globals.ymax = sp_globals.clip_ymax;
+            sp_globals.clip_ymin = ((sp_globals.set_width.y+32768L) >> 16);
+            if ((sp_globals.specs.flags & CLIP_BOTTOM) &&
+                (sp_globals.ymin < sp_globals.clip_ymin))
+                 sp_globals.ymin = sp_globals.clip_ymin;
+            break;
+       case 3: /* 270 degree rotation */
+               sp_globals.clip_ymax = ((sp_globals.set_width.y+32768L) >> 16);
+               if ((sp_globals.specs.flags & CLIP_TOP) &&
+                   (sp_globals.ymax > sp_globals.clip_ymax))
+                    sp_globals.ymax = sp_globals.clip_ymax;
+               sp_globals.clip_ymin = 0;
+               if ((sp_globals.specs.flags & CLIP_BOTTOM) &&
+                   (sp_globals.ymin < sp_globals.clip_ymin))
+                    sp_globals.ymin = sp_globals.clip_ymin;
+               break;
+       default: /* this is for zero degree rotation and arbitrary rotation */
+	    if (sp_globals.specs.flags & CLIP_TOP)
+               {
+	       sp_globals.clip_ymax = (fix31)((fix31)EM_TOP * sp_globals.tcb0.yppo +  ((1<<sp_globals.multshift)/2));
+               sp_globals.clip_ymax = sp_globals.clip_ymax >> sp_globals.multshift;
+	       if (sp_globals.ymax > sp_globals.clip_ymax)
+		    sp_globals.ymax = sp_globals.clip_ymax;
+	       }
+            if (sp_globals.specs.flags & CLIP_BOTTOM)
+	       {
+	       sp_globals.clip_ymin = (fix31)((fix31)(-1 * EM_BOT) * sp_globals.tcb0.yppo +  ((1<<sp_globals.multshift)/2));
+               sp_globals.clip_ymin = sp_globals.clip_ymin >> sp_globals.multshift;
+	       sp_globals.clip_ymin = - sp_globals.clip_ymin;
+	       if (sp_globals.ymin < sp_globals.clip_ymin)
+		    sp_globals.ymin = sp_globals.clip_ymin;
+               }
+               break;
+       }
+#endif
+sp_globals.y_band.band_min = sp_globals.ymin;
+sp_globals.y_band.band_max = sp_globals.ymax - 1; 
+
+sp_globals.xmin = (Pmin.x + sp_globals.pixrnd) >> sp_globals.pixshift;
+sp_globals.xmax = (Pmax.x + sp_globals.pixrnd) >> sp_globals.pixshift;
+
+
+#if INCL_2D
+sp_globals.x_band.band_min = sp_globals.xmin - 1; /* subtract one pixel of "safety margin" */
+sp_globals.x_band.band_max = sp_globals.xmax /* - 1 + 1 */; /* Add one pixel of "safety margin" */
+#endif
+}
+
 FUNCTION  void init_char_out(
 GDECL
 point_t Psw, point_t Pmin, point_t Pmax)
@@ -203,106 +299,8 @@ sp_intercepts.inttype[sp_globals.no_y_lists-1] = END_INT;
 }
 
 
-FUNCTION void restart_intercepts_out()
-GDECL
-
-/*  Called by sp_make_char when a new sub character is started
- *  Freezes current sorted lists
- */
-
-{
-
-#if DEBUG
-printf("    Restart intercepts:\n");
-#endif
-sp_globals.first_offset = sp_globals.next_offset;
-}
 
 
-
-FUNCTION void set_first_band_out(
-GDECL
-point_t Pmin,
-point_t Pmax)
-{
-
-sp_globals.ymin = Pmin.y;
-sp_globals.ymax = Pmax.y;
-
-sp_globals.ymin = (sp_globals.ymin - sp_globals.onepix + 1) >> sp_globals.pixshift;
-sp_globals.ymax = (sp_globals.ymax + sp_globals.onepix - 1) >> sp_globals.pixshift;
-
-#if INCL_CLIPPING
-    switch(sp_globals.tcb0.xtype)
-       {
-       case 1: /* 180 degree rotation */
-	    if (sp_globals.specs.flags & CLIP_TOP)
-               {
-               sp_globals.clip_ymin = (fix31)((fix31)EM_TOP * sp_globals.tcb0.yppo + ((1<<sp_globals.multshift)/2));
-               sp_globals.clip_ymin = sp_globals.clip_ymin >> sp_globals.multshift;
-	       sp_globals.clip_ymin = -1* sp_globals.clip_ymin;
-	       if (sp_globals.ymin < sp_globals.clip_ymin)
-		    sp_globals.ymin = sp_globals.clip_ymin;
-	       }
-            if (sp_globals.specs.flags & CLIP_BOTTOM)
-	       {
-               sp_globals.clip_ymax = (fix31)((fix31)(-1 * EM_BOT) * sp_globals.tcb0.yppo + ((1<<sp_globals.multshift)/2));
-               sp_globals.clip_ymax = sp_globals.clip_ymax >> sp_globals.multshift;
-	       if (sp_globals.ymax > sp_globals.clip_ymax)
-		    sp_globals.ymax = sp_globals.clip_ymax;
-               }
-               break;
-       case 2: /* 90 degree rotation */
-            sp_globals.clip_ymax = 0;
-            if ((sp_globals.specs.flags & CLIP_TOP) &&
-                (sp_globals.ymax > sp_globals.clip_ymax))
-                 sp_globals.ymax = sp_globals.clip_ymax;
-            sp_globals.clip_ymin = ((sp_globals.set_width.y+32768L) >> 16);
-            if ((sp_globals.specs.flags & CLIP_BOTTOM) &&
-                (sp_globals.ymin < sp_globals.clip_ymin))
-                 sp_globals.ymin = sp_globals.clip_ymin;
-            break;
-       case 3: /* 270 degree rotation */
-               sp_globals.clip_ymax = ((sp_globals.set_width.y+32768L) >> 16);
-               if ((sp_globals.specs.flags & CLIP_TOP) &&
-                   (sp_globals.ymax > sp_globals.clip_ymax))
-                    sp_globals.ymax = sp_globals.clip_ymax;
-               sp_globals.clip_ymin = 0;
-               if ((sp_globals.specs.flags & CLIP_BOTTOM) &&
-                   (sp_globals.ymin < sp_globals.clip_ymin))
-                    sp_globals.ymin = sp_globals.clip_ymin;
-               break;
-       default: /* this is for zero degree rotation and arbitrary rotation */
-	    if (sp_globals.specs.flags & CLIP_TOP)
-               {
-	       sp_globals.clip_ymax = (fix31)((fix31)EM_TOP * sp_globals.tcb0.yppo +  ((1<<sp_globals.multshift)/2));
-               sp_globals.clip_ymax = sp_globals.clip_ymax >> sp_globals.multshift;
-	       if (sp_globals.ymax > sp_globals.clip_ymax)
-		    sp_globals.ymax = sp_globals.clip_ymax;
-	       }
-            if (sp_globals.specs.flags & CLIP_BOTTOM)
-	       {
-	       sp_globals.clip_ymin = (fix31)((fix31)(-1 * EM_BOT) * sp_globals.tcb0.yppo +  ((1<<sp_globals.multshift)/2));
-               sp_globals.clip_ymin = sp_globals.clip_ymin >> sp_globals.multshift;
-	       sp_globals.clip_ymin = - sp_globals.clip_ymin;
-	       if (sp_globals.ymin < sp_globals.clip_ymin)
-		    sp_globals.ymin = sp_globals.clip_ymin;
-               }
-               break;
-       }
-#endif
-sp_globals.y_band.band_min = sp_globals.ymin;
-sp_globals.y_band.band_max = sp_globals.ymax - 1; 
-
-sp_globals.xmin = (Pmin.x + sp_globals.pixrnd) >> sp_globals.pixshift;
-sp_globals.xmax = (Pmax.x + sp_globals.pixrnd) >> sp_globals.pixshift;
-
-
-#if INCL_2D
-sp_globals.x_band.band_min = sp_globals.xmin - 1; /* subtract one pixel of "safety margin" */
-sp_globals.x_band.band_max = sp_globals.xmax /* - 1 + 1 */; /* Add one pixel of "safety margin" */
-#endif
-}
 
 
 

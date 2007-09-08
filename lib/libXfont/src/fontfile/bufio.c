@@ -147,6 +147,14 @@ BufFileRawFlush (int c, BufFilePtr f)
     return c;
 }
 
+static int
+BufFileFlush (BufFilePtr f, int doClose)
+{
+    if (f->bufp != f->buffer)
+	return (*f->output) (BUFFILEEOF, f);
+    return 0;
+}
+
 BufFilePtr
 BufFileOpenWrite (int fd)
 {
@@ -189,24 +197,10 @@ BufFileWrite (BufFilePtr f, char *b, int n)
 }
 
 int
-BufFileFlush (BufFilePtr f, int doClose)
-{
-    if (f->bufp != f->buffer)
-	return (*f->output) (BUFFILEEOF, f);
-    return 0;
-}
-
-int
 BufFileClose (BufFilePtr f, int doClose)
 {
     int ret;
     ret = (*f->close) (f, doClose);
     xfree (f);
     return ret;
-}
-
-void
-BufFileFree (BufFilePtr f)
-{
-    xfree (f);
 }

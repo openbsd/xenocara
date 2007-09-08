@@ -133,18 +133,11 @@ typedef struct _fs_fpe_data {
 extern Bool _fs_reopen_server ( FSFpePtr conn );
 extern int _fs_write ( FSFpePtr conn, char *data, long size );
 extern int _fs_write_pad ( FSFpePtr conn, char *data, long len );
-extern int _fs_data_ready ( FSFpePtr conn );
 extern int _fs_wait_for_readable ( FSFpePtr conn, int ms );
-extern int _fs_set_bit ( fd_set * mask, int fd );
-extern int _fs_is_bit_set ( fd_set * mask, int fd );
-extern void _fs_bit_clear ( fd_set * mask, int fd );
-extern int  _fs_any_bit_set ( fd_set * mask );
-extern void _fs_or_bits ( fd_set * dst, fd_set * m1, fd_set * m2 );
 extern long _fs_pad_length (long len);
 
 extern void _fs_connection_died ( FSFpePtr conn );
 
-extern int  _fs_fill (FSFpePtr conn);
 extern int  _fs_flush (FSFpePtr conn);
 extern void _fs_mark_block (FSFpePtr conn, CARD32 mask);
 extern void _fs_unmark_block (FSFpePtr conn, CARD32 mask);

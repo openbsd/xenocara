@@ -44,7 +44,6 @@ extern int Type1OpenScalable ( FontPathElementPtr fpe, FontPtr *ppFont,
 			       fsBitmapFormatMask fmask,
 			       FontPtr non_cachable_font );
 extern void Type1CloseFont ( FontPtr pFont );
-extern int Type1ReturnCodeToXReturnCode ( int rc );
 
 /* t1info.c */
 extern int Type1GetInfoScalable ( FontPathElementPtr fpe, FontInfoPtr pInfo, 

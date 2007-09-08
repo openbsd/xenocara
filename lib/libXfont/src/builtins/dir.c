@@ -30,9 +30,7 @@
 #include "builtin.h"
 
 int
-BuiltinReadDirectory (directory, pdir)
-    char		*directory;
-    FontDirectoryPtr	*pdir;
+BuiltinReadDirectory (char *directory, FontDirectoryPtr *pdir)
 {
     FontDirectoryPtr	dir;
     int			i;

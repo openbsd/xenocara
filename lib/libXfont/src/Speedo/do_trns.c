@@ -401,9 +401,7 @@ switch(format & 0x03)
 case 0:                           /* Index to controlled oru */
     edge = NEXT_BYTE(pointer);
     sp_globals.x_orus = sp_plaid.orus[edge];
-#if INCL_RULES
     sp_globals.x_pix = sp_plaid.pix[edge];
-#endif
     break;
 
 case 1:                           /* 2 byte interpolated oru value */
@@ -413,9 +411,7 @@ case 1:                           /* 2 byte interpolated oru value */
 case 2:                           /* 1 byte signed oru increment */
     sp_globals.x_orus += (fix15)((fix7)NEXT_BYTE(pointer));
 L1: 
-#if INCL_RULES
     sp_globals.x_pix = TRANS(sp_globals.x_orus, sp_plaid.mult[sp_globals.x_int], sp_plaid.offset[sp_globals.x_int], sp_globals.mpshift);
-#endif
     break;
 
 default:                          /* No change in X value */
@@ -428,9 +424,7 @@ switch((format >> 2) & 0x03)
 case 0:                           /* Index to controlled oru */
     edge = sp_globals.Y_edge_org + NEXT_BYTE(pointer);
     sp_globals.y_orus = sp_plaid.orus[edge];
-#if INCL_RULES
     sp_globals.y_pix = sp_plaid.pix[edge];
-#endif
     break;
 
 case 1:                           /* 2 byte interpolated oru value */
@@ -440,16 +434,13 @@ case 1:                           /* 2 byte interpolated oru value */
 case 2:                           /* 1 byte signed oru increment */
     sp_globals.y_orus += (fix15)((fix7)NEXT_BYTE(pointer));
 L2: 
-#if INCL_RULES
     sp_globals.y_pix = TRANS(sp_globals.y_orus, sp_plaid.mult[sp_globals.y_int], sp_plaid.offset[sp_globals.y_int], sp_globals.mpshift);
-#endif
     break;
 
 default:                          /* No change in X value */
     break;
     }
 
-#if INCL_RULES
 switch(sp_globals.tcb.xmode)
     {
 case 0:                           /* X mode 0 */
@@ -469,11 +460,9 @@ case 3:                           /* X mode 3 */
     break;
 
 default:                          /* X mode 4 */
-#endif
     pP->x = (MULT16(sp_globals.x_orus, sp_globals.tcb.xxmult) + 
              MULT16(sp_globals.y_orus, sp_globals.tcb.xymult) + 
              sp_globals.tcb.xoffset) >> sp_globals.mpshift;
-#if INCL_RULES
     break;
     }
 
@@ -496,14 +485,11 @@ case 3:                           /* Y mode 3 */
     break;
 
 default:                          /* Y mode 4 */
-#endif
     pP->y = (MULT16(sp_globals.x_orus, sp_globals.tcb.yxmult) + 
              MULT16(sp_globals.y_orus, sp_globals.tcb.yymult) + 
              sp_globals.tcb.yoffset) >> sp_globals.mpshift;
-#if INCL_RULES
     break;
     }
-#endif
 
 return pointer;
 }

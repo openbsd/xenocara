@@ -176,7 +176,6 @@ sp_globals.pchar_dir = sp_globals.font_org + offcd;
 sp_globals.first_char_idx = read_word_u(sp_globals.font_org + FH_FCHRF);
 
 /* Register font name with sp_globals.constraint mechanism */
-#if INCL_RULES
 font_id = read_word_u(sp_globals.font_org + FH_FNTID);
 if (!(sp_globals.constr.font_id_valid) || (sp_globals.constr.font_id != font_id))
     {
@@ -186,7 +185,6 @@ if (!(sp_globals.constr.font_id_valid) || (sp_globals.constr.font_id != font_id)
     }
 sp_globals.constr.org = sp_globals.font_org + ofcns;
 sp_globals.constr.active = ((sp_globals.pspecs->flags & CONSTR_OFF) == 0);
-#endif
 
 /* Set up sliding point constants */
 /* Set pixel shift to accomodate largest transformed pixel value */
@@ -291,14 +289,6 @@ sp_globals.curves_out = sp_globals.pspecs->flags & CURVES_OUT;
 if (sp_globals.pspecs->flags & BOGUS_MODE) /* Linear transformation requested? */
     {
     sp_globals.tcb0.xtype = sp_globals.tcb0.ytype = 4;
-    }
-else                           /* Intelligent transformation requested? */
-    {
-#if INCL_RULES
-#else
-    report_error(7);           /* Rules requested; not supported */
-    return FALSE;
-#endif
     }
 
 if ((sp_globals.pspecs->flags & SQUEEZE_LEFT) ||

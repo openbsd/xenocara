@@ -66,6 +66,60 @@ static void FindIfcn ( double cx, double cy,
 			      iconvertFunc *fcnP );
 
 /*
+:h3.MatrixMultiply() - Implements Multiplication of Two Matrices
+ 
+Implements matrix multiplication, A * B = C.
+ 
+To remind myself, matrix multiplication goes rows of A times columns
+of B.
+The output matrix may be the same as one of the input matrices.
+*/
+static void 
+MatrixMultiply(double A[2][2], double B[2][2], /* input matrices             */
+	       double C[2][2])                 /* output matrix              */
+{
+       register double txx,txy,tyx,tyy;
+ 
+       txx = A[0][0] * B[0][0] + A[0][1] * B[1][0];
+       txy = A[1][0] * B[0][0] + A[1][1] * B[1][0];
+       tyx = A[0][0] * B[0][1] + A[0][1] * B[1][1];
+       tyy = A[1][0] * B[0][1] + A[1][1] * B[1][1];
+ 
+       C[0][0] = txx;
+       C[1][0] = txy;
+       C[0][1] = tyx;
+       C[1][1] = tyy;
+}
+
+/*
+:h3.MatrixInvert() - Invert a Matrix
+ 
+My reference for matrix inversion was :hp1/Elementary Linear Algebra/
+by Paul C. Shields, Worth Publishers, Inc., 1968.
+*/
+static void 
+MatrixInvert(double M[2][2],      /* input matrix                            */
+	     double Mprime[2][2]) /* output inverted matrix                  */
+{
+       register double D;    /* determinant of matrix M                      */
+       register double txx,txy,tyx,tyy;
+ 
+       txx = M[0][0];
+       txy = M[1][0];
+       tyx = M[0][1];
+       tyy = M[1][1];
+ 
+       D = M[1][1] * M[0][0] - M[1][0] * M[0][1];
+       if (D == 0.0)
+               Abort("MatrixInvert:  can't");
+ 
+       Mprime[0][0] = tyy / D;
+       Mprime[1][0] = -txy / D;
+       Mprime[0][1] = -tyx / D;
+       Mprime[1][1] = txx / D;
+}
+
+/*
 :h3.Entry Points Provided to the TYPE1IMAGER User
 */
  
@@ -544,6 +598,32 @@ FillOutFcns(struct XYspace *S)    /* functions will be set in this structure */
        if (S->ixconvert == NULL || S->iyconvert == NULL)
                 S->iconvert = ForceFloat;
 }
+
+/*
+:h3.PseudoSpace() - Build a Coordinate Space from a Matrix
+ 
+Since we have built all this optimized code that, given an (x,y) and
+a coordinate space, yield transformed (x,y), it seems a shame not to
+use the same logic when we need to multiply an (x,y) by an arbitrary
+matrix that is not (initially) part of a coordinate space.  This
+subroutine takes the arbitrary matrix and builds a coordinate
+space, with all its nifty function pointers.
+*/
+ 
+static void 
+PseudoSpace(struct XYspace *S, /* coordinate space structure to fill out     */
+	    double M[2][2])    /* matrix that will become 'tofract.normal'   */
+{
+       S->type = SPACETYPE;
+       S->flag = ISPERMANENT(ON) + ISIMMORTAL(ON);
+       S->references = 2;   /* 3-26-91 added PNM  */
+       S->tofract.normal[0][0] = M[0][0];
+       S->tofract.normal[1][0] = M[1][0];
+       S->tofract.normal[0][1] = M[0][1];
+       S->tofract.normal[1][1] = M[1][1];
+ 
+       FillOutFcns(S);
+}
  
 /*
 :h4.FindFfcn() - Subroutine of FillOutFcns() to Fill Out Floating Functions
@@ -678,7 +758,7 @@ get the same result if we did S, then R, then T on the space and mapping
 an unmodified font through that space.
 */
  
-struct xobject *
+static struct xobject *
 t1_Xform(struct xobject *obj,   /* object to transform                       */
 	 double M[2][2])        /* transformation matrix                     */
 {
@@ -759,24 +839,6 @@ t1_Transform(struct xobject *obj,
        ConsiderContext(obj, M);
        return(Xform(obj, M));
 }
-/*
-:h3.Scale() - Special Case of Transform()
- 
-This is a user operator.
-*/
- 
-struct xobject *
-t1_Scale(struct xobject *obj,  /* object to scale                            */
-	 double sx, double sy) /* scale factors in x and y                   */
-{
-       double M[2][2];
-
-       M[0][0] = sx;
-       M[1][1] = sy;
-       M[1][0] = M[0][1] = 0.0;
-       ConsiderContext(obj, M);
-       return(Xform(obj, M));
-}
  
 /*
 :h3 id=rotate.Rotate() - Special Case of Transform()
@@ -799,31 +861,6 @@ xiRotate(struct xobject *obj, /* object to be transformed                    */
 }
 #endif
  
-/*
-:h3.PseudoSpace() - Build a Coordinate Space from a Matrix
- 
-Since we have built all this optimized code that, given an (x,y) and
-a coordinate space, yield transformed (x,y), it seems a shame not to
-use the same logic when we need to multiply an (x,y) by an arbitrary
-matrix that is not (initially) part of a coordinate space.  This
-subroutine takes the arbitrary matrix and builds a coordinate
-space, with all its nifty function pointers.
-*/
- 
-void 
-PseudoSpace(struct XYspace *S, /* coordinate space structure to fill out     */
-	    double M[2][2])    /* matrix that will become 'tofract.normal'   */
-{
-       S->type = SPACETYPE;
-       S->flag = ISPERMANENT(ON) + ISIMMORTAL(ON);
-       S->references = 2;   /* 3-26-91 added PNM  */
-       S->tofract.normal[0][0] = M[0][0];
-       S->tofract.normal[1][0] = M[1][0];
-       S->tofract.normal[0][1] = M[0][1];
-       S->tofract.normal[1][1] = M[1][1];
- 
-       FillOutFcns(S);
-}
  
 /*
 :h2 id=matrixa.Matrix Arithmetic
@@ -847,58 +884,6 @@ transposed, equally often in the literature.
 */
  
 /*
-:h3.MatrixMultiply() - Implements Multiplication of Two Matrices
- 
-Implements matrix multiplication, A * B = C.
- 
-To remind myself, matrix multiplication goes rows of A times columns
-of B.
-The output matrix may be the same as one of the input matrices.
-*/
-void 
-MatrixMultiply(double A[2][2], double B[2][2], /* input matrices             */
-	       double C[2][2])                 /* output matrix              */
-{
-       register double txx,txy,tyx,tyy;
- 
-       txx = A[0][0] * B[0][0] + A[0][1] * B[1][0];
-       txy = A[1][0] * B[0][0] + A[1][1] * B[1][0];
-       tyx = A[0][0] * B[0][1] + A[0][1] * B[1][1];
-       tyy = A[1][0] * B[0][1] + A[1][1] * B[1][1];
- 
-       C[0][0] = txx;
-       C[1][0] = txy;
-       C[0][1] = tyx;
-       C[1][1] = tyy;
-}
-/*
-:h3.MatrixInvert() - Invert a Matrix
- 
-My reference for matrix inversion was :hp1/Elementary Linear Algebra/
-by Paul C. Shields, Worth Publishers, Inc., 1968.
-*/
-void 
-MatrixInvert(double M[2][2],      /* input matrix                            */
-	     double Mprime[2][2]) /* output inverted matrix                  */
-{
-       register double D;    /* determinant of matrix M                      */
-       register double txx,txy,tyx,tyy;
- 
-       txx = M[0][0];
-       txy = M[1][0];
-       tyx = M[0][1];
-       tyy = M[1][1];
- 
-       D = M[1][1] * M[0][0] - M[1][0] * M[0][1];
-       if (D == 0.0)
-               Abort("MatrixInvert:  can't");
- 
-       Mprime[0][0] = tyy / D;
-       Mprime[1][0] = -txy / D;
-       Mprime[0][1] = -tyx / D;
-       Mprime[1][1] = txx / D;
-}
-/*
 :h2.Initialization, Queries, and Debug
 */
 /*
@@ -908,7 +893,7 @@ For compatibility, we initialize a coordinate space called USER which
 maps 72nds of an inch to pels on the default device.
 */
  
-struct XYspace *USER = &identity;
+static struct XYspace *USER = &identity;
  
 void 
 InitSpaces(void)
@@ -953,46 +938,4 @@ QuerySpace(struct XYspace *S,          /* space asked about                  */
        *cxyP = M[1][0];
        *cyxP = M[0][1];
        *cyyP = M[1][1];
-}
- 
-/*
-:h3.FormatFP() - Format a Fixed Point Pel
- 
-We format the pel as "dddd.XXXX", where XX's are hexidecimal digits,
-and the dd's are decimal digits.  This might be a little confusing
-mixing hexidecimal and decimal like that, but it is convenient
-to use for debug.
- 
-We make sure we have N (FRACTBITS/4) digits past the decimal point.
-*/
-#define  FRACTMASK   ((1<<FRACTBITS)-1)  /* mask for fractional part         */
- 
-void 
-FormatFP(char *string,         /* output string                              */
-	 fractpel fpel)        /* fractional pel input                       */
-{
-       char temp[8];
-       register char *s;
-       register char *sign;
- 
-       if (fpel < 0) {
-               sign = "-";
-               fpel = -fpel;
-       }
-       else
-               sign = "";
- 
-       sprintf(temp, "000%lx", fpel & FRACTMASK);
-       s = temp + strlen(temp) - (FRACTBITS/4);
- 
-       sprintf(string, "%s%d.%sx", sign, (int)(fpel >> FRACTBITS), s);
-}
- 
-/*
-:h3.DumpSpace() - Display a Coordinate Space
-*/
-/*ARGSUSED*/
-void 
-DumpSpace(struct XYspace *S)
-{
 }

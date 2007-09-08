@@ -66,7 +66,7 @@ static int  bit_order,
             byte_order,
             scan;
 
-unsigned long
+static unsigned long
 sp_compute_data_size(
     FontPtr     pfont,
     int         mappad,

@@ -74,9 +74,7 @@ sp_globals.key6 = KEY6;
 sp_globals.key7 = KEY7;
 sp_globals.key8 = KEY8;
 
-#if INCL_RULES
 sp_globals.constr.font_id_valid = FALSE;
-#endif
 
 #if INCL_MULTIDEV
 #if INCL_BLACK || INCL_SCREEN || INCL_2D

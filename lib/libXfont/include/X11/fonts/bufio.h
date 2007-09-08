@@ -72,10 +72,8 @@ extern BufFilePtr BufFilePushCompressed ( BufFilePtr );
 extern BufFilePtr BufFilePushZIP ( BufFilePtr );
 #endif
 extern int BufFileClose ( BufFilePtr, int );
-extern int BufFileFlush ( BufFilePtr, int );
 extern int BufFileRead ( BufFilePtr, char*, int );
 extern int BufFileWrite ( BufFilePtr, char*, int );
-extern void BufFileFree ( BufFilePtr );
 
 #define BufFileGet(f)	((f)->left-- ? *(f)->bufp++ : ((f)->eof = (*(f)->input) (f)))
 #define BufFilePut(c,f)	(--(f)->left ? *(f)->bufp++ = ((unsigned char)(c)) : (*(f)->output) ((unsigned char)(c),f))

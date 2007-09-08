@@ -86,7 +86,8 @@ a macro for "strcpy" that diverts it to "my_strcpy".
 #include  "strokes.h"
 #include  "cluts.h"
 
-
+static char LineIOTrace    INITIALIZED(TRUE);
+static char MustCrash      INITIALIZED(TRUE);
 static char *TypeFmt(int type);
 
 /*
@@ -366,6 +367,59 @@ Free(pointer objPtr)
  
        xiFree((long *)obj);
 }
+
+/*
+:h3.Copy() - Make a New Copy of an Object
+ 
+This is the generic Copy() where the object type is unknown.  There
+are specific Copyxxx functions for known object types.
+ 
+Copy will create a NEW temporary object, and WILL NOT simply bump the
+reference count.
+ 
+Sometimes duplicating an object is just as simple as Allocating with it
+as a template.  But other objects are complicated linked lists.  So, we
+let each module provide us a routine (or macro) that duplicates the
+objects it knows about.
+*/
+ 
+static struct xobject *
+t1_Copy(pointer objPtr)
+{
+       register struct xobject *obj 
+	   = (struct xobject *)objPtr;  /* object to be  Copy'ed              */
+       if (obj == NULL)
+               return(NULL);
+ 
+       if (ISPATHTYPE(obj->type))
+               obj = (struct xobject *) CopyPath((struct segment *)obj);
+       else
+               switch (obj->type) {
+                   case SPACETYPE:
+                       obj = (struct xobject *) 
+			     CopySpace((struct XYspace *)obj); 
+		       break;
+                   case FONTTYPE:
+                       obj = (struct xobject *) CopyFont(obj); break;
+                   case REGIONTYPE:
+                       obj = (struct xobject *) 
+			     CopyRegion((struct region *)obj); 
+		       break;
+                   case PICTURETYPE:
+                       obj = (struct xobject *) CopyPicture(obj); break;
+                   case LINESTYLETYPE:
+                       obj = (struct xobject *) CopyLineStyle(obj); break;
+                   case STROKEPATHTYPE:
+                       obj = (struct xobject *) CopyStrokePath(obj); break;
+                   case CLUTTYPE:
+                       obj = (struct xobject *) CopyCLUT(obj); break;
+                   default:
+                       return(ArgErr("Copy: invalid object", obj, NULL));
+               }
+ 
+        return(obj);
+}
+ 
  
 /*
 :h3.Permanent() - Makes an Object Permanent
@@ -510,58 +564,6 @@ t1_Dup(pointer objPtr)
        if (ISPERMANENT(oldflag))
                obj = Permanent(obj);
        return(obj);
-}
- 
-/*
-:h3.Copy() - Make a New Copy of an Object
- 
-This is the generic Copy() where the object type is unknown.  There
-are specific Copyxxx functions for known object types.
- 
-Copy will create a NEW temporary object, and WILL NOT simply bump the
-reference count.
- 
-Sometimes duplicating an object is just as simple as Allocating with it
-as a template.  But other objects are complicated linked lists.  So, we
-let each module provide us a routine (or macro) that duplicates the
-objects it knows about.
-*/
- 
-struct xobject *
-t1_Copy(pointer objPtr)
-{
-       register struct xobject *obj 
-	   = (struct xobject *)objPtr;  /* object to be  Copy'ed              */
-       if (obj == NULL)
-               return(NULL);
- 
-       if (ISPATHTYPE(obj->type))
-               obj = (struct xobject *) CopyPath((struct segment *)obj);
-       else
-               switch (obj->type) {
-                   case SPACETYPE:
-                       obj = (struct xobject *) 
-			     CopySpace((struct XYspace *)obj); 
-		       break;
-                   case FONTTYPE:
-                       obj = (struct xobject *) CopyFont(obj); break;
-                   case REGIONTYPE:
-                       obj = (struct xobject *) 
-			     CopyRegion((struct region *)obj); 
-		       break;
-                   case PICTURETYPE:
-                       obj = (struct xobject *) CopyPicture(obj); break;
-                   case LINESTYLETYPE:
-                       obj = (struct xobject *) CopyLineStyle(obj); break;
-                   case STROKEPATHTYPE:
-                       obj = (struct xobject *) CopyStrokePath(obj); break;
-                   case CLUTTYPE:
-                       obj = (struct xobject *) CopyCLUT(obj); break;
-                   default:
-                       return(ArgErr("Copy: invalid object", obj, NULL));
-               }
- 
-        return(obj);
 }
  
 /*
@@ -769,128 +771,6 @@ have to handle that with #defines too.
 static char *ErrorMessage = NULL;
  
 /*
-:h3.Pragmatics() - Set/Reset Debug Flags
- 
-We provide a controlled way for the TYPE1IMAGER user to set and reset
-our debugging and tracing:
-*/
-void 
-Pragmatics(char *username,   /* name of the flag                             */
-	   int value)        /* value to set it to                           */
-{
-       register char *p;     /* temporary loop variable                      */
-#define    NAMESIZE   40
-       char name[NAMESIZE];  /* buffer to store my copy of 'username'        */
- 
-       if (strlen(username) >= (unsigned)NAMESIZE)
-               Abort("Pragmatics name too large");
-       strcpy(name, username);
-       for (p = name; *p != '\0'; p++)
-               *p = toupper(*p);
- 
-       if (!strcmp(name, "ALL"))
-               MustTraceCalls = InternalTrace = /* MustCrash = */
-                    LineIOTrace = value;
- 
-       else if (!strcmp(name, "LINEIOTRACE"))
-               LineIOTrace = value;
- 
-       else if (!strcmp(name, "TRACECALLS"))
-               MustTraceCalls = value;
- 
-       else if (!strcmp(name, "CHECKARGS"))
-               MustCheckArgs = value;
- 
-       else if (!strcmp(name, "PROCESSHINTS"))
-               ProcessHints = value;
- 
-       else if (!strcmp(name, "SAVEFONTPATHS"))
-               SaveFontPaths = value;
- 
-       else if (!strcmp(name, "CRASTERCOMPRESSIONTYPE"))
-               CRASTERCompressionType = value;
- 
-       else if (!strcmp(name, "CRASHONUSERERROR"))
-               MustCrash = value;
- 
-       else if (!strcmp(name, "DEBUG"))
-               StrokeDebug = SpaceDebug = PathDebug = ConicDebug = LineDebug =
-                          RegionDebug = MemoryDebug = FontDebug =
-                          HintDebug = ImageDebug = OffPageDebug = value;
- 
-       else if (!strcmp(name, "CONICDEBUG"))
-               ConicDebug = value;
- 
-       else if (!strcmp(name, "LINEDEBUG"))
-               LineDebug = value;
- 
-       else if (!strcmp(name, "REGIONDEBUG"))
-               RegionDebug = value;
- 
-       else if (!strcmp(name, "PATHDEBUG"))
-               PathDebug = value;
- 
-       else if (!strcmp(name, "SPACEDEBUG"))
-               SpaceDebug = value;
- 
-       else if (!strcmp(name, "STROKEDEBUG"))
-               StrokeDebug = value;
- 
-       else if (!strcmp(name, "MEMORYDEBUG"))
-               MemoryDebug = value;
- 
-       else if (!strcmp(name, "FONTDEBUG"))
-               FontDebug = value;
- 
-       else if (!strcmp(name, "HINTDEBUG"))
-               HintDebug = value;
- 
-       else if (!strcmp(name, "IMAGEDEBUG"))
-               ImageDebug = value;
- 
-       else if (!strcmp(name, "OFFPAGEDEBUG"))
-               OffPageDebug = value;
- 
-#ifdef  MC68000
-/*
-The following pragmatics flag turns on or off instruction histograming
-for performance analysis.  It is only defined in the Delta card
-environment.
-*/
-       else if (!strcmp(name, "PROFILE")) {
-               if (value)
-                       StartProfile();
-               else
-                       StopProfile();
-       }
-#endif
-       else if (!strcmp(name, "FLUSHCACHE")) {
-#ifdef notdef
-               while (GimeSpace()) { ; }
-#endif
-       }
- 
-       else if (!strcmp(name, "CACHEDCHARS"))
-               CachedChars = (value <= 0) ? 1 : value;
- 
-       else if (!strcmp(name, "CACHEDFONTS"))
-               CachedFonts = (value <= 0) ? 1 : value;
- 
-       else if (!strcmp(name, "CACHEBLIMIT"))
-               CacheBLimit = value;
- 
-       else if (!strcmp(name, "CONTINUITY"))
-               Continuity = value;
- 
- 
-       else {
-               printf("Pragmatics flag = '%s'\n", name);
-               ArgErr("Pragmatics:  flag not known", NULL, NULL);
-       }
-       return;
-}
- 
-/*
 :h3.Consume() - Consume a List of Arguments
  
 This general purpose routine is provided in the case where the object
@@ -1033,22 +913,6 @@ Defined in objects.h to be FatalError(), the server's abort routine.
 */
  
 /*
-:h3.REAL Miscellaneous Stuff
- 
-:h4.ErrorMsg() - Return the User an Error Message
-*/
- 
-char *
-ErrorMsg(void)
-{
-       register char *r;
- 
-       r = ErrorMessage;
-       ErrorMessage = NULL;
-       return(r);
-}
- 
-/*
 :h4.InitImager() - Initialize TYPE1IMAGER
  
 We check that a short is 16 bits and a long 32 bits; we have made
@@ -1078,24 +942,3 @@ In some environments, constants and/or exception handling need to be
 */
        LibInit();
 }
-/*
-:h4.TermImager() - Terminate TYPE1IMAGER
- 
-This only makes sense in a server environment; true TYPE1IMAGER needs do
-nothing.
-*/
-void 
-TermImager(void)
-{
-       return;
-}
-#ifdef notused
-/*
-:h4.reportusage() - A Stub to Get a Clean Link with Portable PMP
-*/
-void 
-reportusage(void)
-{
-       return;
-}
-#endif

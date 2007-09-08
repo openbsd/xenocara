@@ -65,7 +65,7 @@ from The Open Group.
 
 #include <stdarg.h>
 
-void
+static void
 snfError(const char* message, ...)
 {
     va_list args;

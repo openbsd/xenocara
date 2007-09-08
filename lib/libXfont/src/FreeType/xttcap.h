@@ -93,11 +93,6 @@ SPropRecValList_delete(SDynPropRecValList *pThisList);
 extern Bool /* True == Error, False == Success */
 SPropRecValList_read_prop_file(SDynPropRecValList *pThisList,
                                char const * const strFileName);
-/* Add Property Record Value */
-extern Bool /* True == Error, False == Success */
-SPropRecValList_add_record(SDynPropRecValList *pThisList,
-                           char const * const recordName,
-                           char const * const strValue);
 /* Search Property Record */
 extern Bool /* True == Hit, False == Miss */
 SPropRecValList_search_record(SRefPropRecValList *pThisList,

@@ -31,9 +31,7 @@
 /*SHARED*/
  
 #define   StepLine(R,x1,y1,x2,y2)   t1_StepLine(R,x1,y1,x2,y2)
-#define   Bresenham(e,x1,y1,x2,y2)  t1_Bresenham(e,x1,y1,x2,y2)
  
 extern void t1_StepLine ( struct region *R, fractpel x1, fractpel y1, fractpel x2, fractpel y2 );
-extern void t1_Bresenham ( pel *edgeP, fractpel x1, fractpel y1, fractpel x2, fractpel y2 );
  
 /*END SHARED*/

@@ -180,6 +180,5 @@ extern void SnfSetFormat ( int bit, int byte, int glyph, int scan );
 extern int snfReadFont ( FontPtr pFont, FontFilePtr file, 
 			 int bit, int byte, int glyph, int scan );
 extern int snfReadFontInfo ( FontInfoPtr pFontInfo, FontFilePtr file );
-extern void snfError( const char* message, ... );
 
 #endif				/* SNFSTR_H */

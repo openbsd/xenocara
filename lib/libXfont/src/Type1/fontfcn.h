@@ -107,8 +107,6 @@ extern int scan_font ( psfont *FontP );
 #define EXPANSIONFACTOR 16
 
 extern int SearchDictName ( psdict *dictP, psobj *keyP );
-extern boolean initFont ( int cnt );
-extern int readFont ( char *env );
 extern struct xobject *fontfcnB ( struct XYspace *S, unsigned char *code, 
                                   int *lenP, int *mode );
 extern Bool fontfcnA ( char *env, int *mode );

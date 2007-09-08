@@ -92,6 +92,9 @@ extern int FontFileOpenBitmap ( FontPathElementPtr fpe, FontPtr *pFont,
 extern int FontFileListFonts ( pointer client, FontPathElementPtr fpe, 
 			       char *pat, int len, int max, 
 			       FontNamesPtr names );
+extern int FontFileStartListFonts ( pointer client, FontPathElementPtr fpe, 
+				    char *pat, int len, int max, 
+				    pointer *privatep, int mark_aliases );
 extern int FontFileStartListFontsWithInfo ( pointer client, 
 					    FontPathElementPtr fpe, 
 					    char *pat, int len, int max, 
@@ -111,6 +114,7 @@ extern int FontFileListNextFontOrAlias ( pointer client,
 					 char **resolvedp, int *resolvedlenp, 
 					 pointer private );
 extern void FontFileRegisterLocalFpeFunctions ( void );
+extern void CatalogueRegisterLocalFpeFunctions ( void );
 
 
 extern FontEntryPtr FontFileAddEntry ( FontTablePtr table, 

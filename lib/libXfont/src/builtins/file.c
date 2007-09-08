@@ -35,8 +35,7 @@ typedef struct _BuiltinIO {
 } BuiltinIORec, *BuiltinIOPtr;
 
 static int
-BuiltinFill (f)
-    BufFilePtr	f;
+BuiltinFill (BufFilePtr	f)
 {
     int	    left, len;
     BuiltinIOPtr    io = ((BuiltinIOPtr) f->private);
@@ -58,15 +57,12 @@ BuiltinFill (f)
 }
 
 static int
-BuiltinSkip (f, count)
-    BufFilePtr	f;
-    int		count;
+BuiltinSkip (BufFilePtr	f, int count)
 {
     BuiltinIOPtr    io = ((BuiltinIOPtr) f->private);
     int	    curoff;
     int	    fileoff;
     int	    todo;
-    int	    left;
 
     curoff = f->bufp - f->buffer;
     fileoff = curoff + f->left;
@@ -86,8 +82,7 @@ BuiltinSkip (f, count)
 }
 
 static int
-BuiltinClose (f, doClose)
-    BufFilePtr	f;
+BuiltinClose (BufFilePtr f, int unused)
 {
     BuiltinIOPtr    io = ((BuiltinIOPtr) f->private);
     
@@ -97,8 +92,7 @@ BuiltinClose (f, doClose)
 
 
 FontFilePtr
-BuiltinFileOpen (name)
-    char    *name;
+BuiltinFileOpen (char *name)
 {
     int		    i;
     BuiltinIOPtr    io;
@@ -121,7 +115,7 @@ BuiltinFileOpen (name)
 	xfree (io);
 	return NULL;
     }
-    if (cooked = BufFilePushZIP (raw))
+    if ((cooked = BufFilePushZIP (raw)))
 	raw = cooked;
     else
     {
@@ -132,8 +126,7 @@ BuiltinFileOpen (name)
 }
 
 int
-BuiltinFileClose (f)
-    FontFilePtr	f;
+BuiltinFileClose (FontFilePtr f, int unused)
 {
     return BufFileClose ((BufFilePtr) f, TRUE);
 }

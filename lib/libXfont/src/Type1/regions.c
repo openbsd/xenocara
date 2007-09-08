@@ -138,20 +138,6 @@ set.  The flag is used to optimize some paths.
 */
  
 /*SHARED LINE(S) ORIGINATED HERE*/
-/*
-:h4."TT_INFINITY" - A Constant Region Structure of Infinite Extent
- 
-Infinity is the complement of a null area:
-Note - removed the refcount = 1 init, replaced with references = 2 3-26-91 PNM
-*/
-static struct region _infinity = { REGIONTYPE,
-                           ISCOMPLEMENT(ON)+ISINFINITE(ON)+ISPERMANENT(ON)+ISIMMORTAL(ON), 2,
-                           {0, 0}, {0, 0},
-                           0, 0, 0, 0,
-                           NULL, NULL,
-                           0, 0, 0, 0, 0, NULL, NULL,
-                           NULL, 0, NULL, NULL };
-struct region *TT_INFINITY = &_infinity;
  
 /*
 :h4."EmptyRegion" - A Region Structure with Zero Area
@@ -162,7 +148,7 @@ Note - replaced refcount = 1 init with references = 2 3-26-91 PNM
 */
  
 /*SHARED LINE(S) ORIGINATED HERE*/
-struct region EmptyRegion = { REGIONTYPE,
+static struct region EmptyRegion = { REGIONTYPE,
                            ISPERMANENT(ON)+ISIMMORTAL(ON), 2,
                            {0, 0}, {0, 0},
                            MAXPEL, MAXPEL, MINPEL, MINPEL,
@@ -753,52 +739,7 @@ chain:
                R->lastedge = R->firstedge = NULL;
        }
 }
-/*
-:h3 id=newfill.newfilledge() - Called When We Have a New Edge While Filling
- 
-This is the prototypical "newedge" function passed to "Rasterize" and
-stored in "newedgefcn" in the region being built.
- 
-If the edge is non-null, we sort it onto the list of edges we are
-building at "anchor".
- 
-This function also has to keep the bounding box of the region
-up to date.
-*/
- 
-static void 
-newfilledge(struct region *R,  /* region being built                         */
-	    fractpel xmin, fractpel xmax, /* X range of this edge            */
-	    fractpel ymin, fractpel ymax, /* Y range of this edge            */
-	    int isdown)      /* flag:  TRUE means edge goes down, else up    */
-{
- 
-       register pel pelxmin,pelymin,pelxmax,pelymax;  /* pel versions of bounds */
-       register struct edgelist *edge;  /* newly created edge                */
- 
-       pelymin = NEARESTPEL(ymin);
-       pelymax = NEARESTPEL(ymax);
-       if (pelymin == pelymax)
-               return;
- 
-       pelxmin = NEARESTPEL(xmin);
-       pelxmax = NEARESTPEL(xmax);
- 
-       if (pelxmin < R->xmin)  R->xmin = pelxmin;
-       if (pelxmax > R->xmax)  R->xmax = pelxmax;
-       if (pelymin < R->ymin)  R->ymin = pelymin;
-       if (pelymax > R->ymax)  R->ymax = pelymax;
- 
-       edge = NewEdge(pelxmin, pelxmax, pelymin, pelymax, &R->edge[pelymin], isdown);
-       edge->subpath = R->lastedge;
-       R->lastedge = edge;
-       if (R->firstedge == NULL)
-               R->firstedge = edge;
- 
-       R->anchor = SortSwath(R->anchor, edge, swathxsort);
- 
-}
- 
+
 /*
 :h2.Sorting Edges
  
@@ -823,7 +764,7 @@ exactly where the bottom part belongs.
 #define   TOP(e)      ((e)->ymin)  /* the top of an edge (for readability    */
 #define   BOTTOM(e)   ((e)->ymax)  /* the bottom of an edge (for readability */
  
-struct edgelist *
+static struct edgelist *
 SortSwath(struct edgelist *anchor,   /* list being built                     */
 	  struct edgelist *edge,     /* incoming edge or pair of edges       */
 	  SwathFunc swathfcn)        /* horizontal sorter                    */
@@ -912,6 +853,52 @@ contains all the edges before.  Whew!  A simple matter now of adding
  
        edge->link = after;
        return(base.link);
+}
+ 
+/*
+:h3 id=newfill.newfilledge() - Called When We Have a New Edge While Filling
+ 
+This is the prototypical "newedge" function passed to "Rasterize" and
+stored in "newedgefcn" in the region being built.
+ 
+If the edge is non-null, we sort it onto the list of edges we are
+building at "anchor".
+ 
+This function also has to keep the bounding box of the region
+up to date.
+*/
+ 
+static void 
+newfilledge(struct region *R,  /* region being built                         */
+	    fractpel xmin, fractpel xmax, /* X range of this edge            */
+	    fractpel ymin, fractpel ymax, /* Y range of this edge            */
+	    int isdown)      /* flag:  TRUE means edge goes down, else up    */
+{
+ 
+       register pel pelxmin,pelymin,pelxmax,pelymax;  /* pel versions of bounds */
+       register struct edgelist *edge;  /* newly created edge                */
+ 
+       pelymin = NEARESTPEL(ymin);
+       pelymax = NEARESTPEL(ymax);
+       if (pelymin == pelymax)
+               return;
+ 
+       pelxmin = NEARESTPEL(xmin);
+       pelxmax = NEARESTPEL(xmax);
+ 
+       if (pelxmin < R->xmin)  R->xmin = pelxmin;
+       if (pelxmax > R->xmax)  R->xmax = pelxmax;
+       if (pelymin < R->ymin)  R->ymin = pelymin;
+       if (pelymax > R->ymax)  R->ymax = pelymax;
+ 
+       edge = NewEdge(pelxmin, pelxmax, pelymin, pelymax, &R->edge[pelymin], isdown);
+       edge->subpath = R->lastedge;
+       R->lastedge = edge;
+       if (R->firstedge == NULL)
+               R->firstedge = edge;
+ 
+       R->anchor = SortSwath(R->anchor, edge, swathxsort);
+ 
 }
  
 /*
@@ -1088,7 +1075,7 @@ fun comes in they overlap the existing edges.  Then some edges
 will disappear.
 */
  
-struct edgelist *
+static struct edgelist *
 SwathUnion(struct edgelist *before0,   /* edge before the swath              */
 	   struct edgelist *edge)      /* list of two edges to be unioned    */
 {
@@ -1284,28 +1271,6 @@ crosses(int h, pel *left, pel *right)
        return(h);
 }
 /*
-:h3.cedgemin() - Stores the Mininum of an Edge and an X Value
-*/
- 
-static void 
-cedgemin(int h, pel *e1, pel x)
-{
-       for (; --h >= 0; e1++)
-               if (*e1 > x)
-                       *e1 = x;
-}
-/*
-:h3.cedgemax() - Stores the Maximum of an Edge and an X Value
-*/
- 
-static void 
-cedgemax(int h, pel *e1, pel x)
-{
-       for (; --h >= 0; e1++)
-               if (*e1 < x)
-                       *e1 = x;
-}
-/*
 :h3.edgemin() - Stores the Mininum of Two Edges in First Edge
 */
  
@@ -1327,124 +1292,6 @@ edgemax(int h, pel *e1, pel *e2)
                if (*e1 < *e2)
                        *e1 = *e2;
 }
- 
-/*
-:h2.Changing the Representation of Regions
- 
-For convenience and/or performance, we sometimes like to change the way
-regions are represented.  This does not change the object itself, just
-the representation, so these transformations can be made on a permanent
-region.
- 
-*/
- 
-void
-MoveEdges(struct region *R,      /* region to modify                         */
-	  fractpel dx, fractpel dy) /* delta X and Y to move edge list by    */
-{
-       register struct edgelist *edge;  /* for looping through edges         */
- 
-       R->origin.x += dx;
-       R->origin.y += dy;
-       R->ending.x += dx;
-       R->ending.y += dy;
-       if (R->thresholded != NULL) {
-               R->thresholded->origin.x -= dx;
-               R->thresholded->origin.y -= dy;
-       }
-/*
-From now on we will deal with dx and dy as integer pel values:
-*/
-       dx = NEARESTPEL(dx);
-       dy = NEARESTPEL(dy);
-       if (dx == 0 && dy == 0)
-               return;
- 
-       R->xmin += dx;
-       R->xmax += dx;
-       R->ymin += dy;
-       R->ymax += dy;
- 
-       for (edge = R->anchor; VALIDEDGE(edge); edge = edge->link) {
-               edge->ymin += dy;
-               edge->ymax += dy;
-               if (dx != 0) {
-                       register int h;  /* loop index; height of edge        */
-                       register pel *Xp;  /* loop pointer to X values        */
- 
-                       edge->xmin += dx;
-                       edge->xmax += dx;
-                       for (Xp = edge->xvalues, h = edge->ymax - edge->ymin;
-                                     --h >= 0; )
-                               *Xp++ += dx;
-               }
-       }
-}
- 
-/*
-:h3.UnJumble() - Sort a Region Top to Bottom
- 
-It is an open question whether it pays in general to do this.
-*/
- 
-void 
-UnJumble(struct region *region) /* region to sort                            */
-{
-       register struct edgelist *anchor;  /* new lists built here            */
-       register struct edgelist *edge;  /* edge pointer for loop             */
-       register struct edgelist *next;  /* ditto                             */
- 
-       anchor = NULL;
- 
-       for (edge=region->anchor; VALIDEDGE(edge); edge=next) {
-               if (edge->link == NULL)
-                       Abort("UnJumble:  unpaired edge?");
-               next = edge->link->link;
-               edge->link->link = NULL;
-               anchor = SortSwath(anchor, edge, t1_SwathUnion);
-       }
- 
-       if (edge != NULL)
-               vertjoin(anchor, edge);
- 
-       region->anchor = anchor;
-       region->flag &= ~ISJUMBLED(ON);
-}
- 
-/*
-*/
-#ifdef notused 
-static void
-OptimizeRegion(struct region *R) /* region to optimize                       */
-{
-       register pel *xP;     /* pel pointer for inner loop                   */
-       register int x;       /* holds X value                                */
-       register int xmin,xmax;  /* holds X range                             */
-       register int h;       /* loop counter                                 */
-       register struct edgelist *e;  /* edgelist pointer for loop            */
- 
-       R->flag |= ISRECTANGULAR(ON);
- 
-       for (e = R->anchor; VALIDEDGE(e); e=e->link) {
-               xmin = MAXPEL;
-               xmax = MINPEL;
-               for (h = e->ymax - e->ymin, xP = e->xvalues; --h >= 0;) {
-                         x = *xP++;
-                         if (x < xmin)  xmin = x;
-                         if (x > xmax)  xmax = x;
-               }
-               if (xmin != xmax || (xmin != R->xmin && xmax != R->xmax))
-                       R->flag &= ~ISRECTANGULAR(ON);
-               if (xmin < e->xmin || xmax > e->xmax)
-                       Abort("Tighten: existing edge bound was bad");
-               if (xmin < R->xmin || xmax > R->xmax)
-                       Abort("Tighten: existing region bound was bad");
-               e->xmin = xmin;
-               e->xmax = xmax;
-       }
-       R->flag |= ISOPTIMIZED(ON);
-}
-#endif
 
 /*
 :h2.Miscelaneous Routines
@@ -1478,174 +1325,4 @@ MoreWorkArea(struct region *R, /* region we are generating                   */
                currentsize = idy;
        }
        ChangeDirection(CD_CONTINUE, R, x1, y1, y2 - y1);
-}
- 
-/*
-:h3.BoxClip() - Clip a Region to a Rectangle
- 
-BoxClip also duplicates the region if it is permanent.  Note the
-clipping box is specified in REGION coordinates, that is, in
-coordinates relative to the region (0,0) point
-*/
- 
-struct region *
-BoxClip(struct region *R,       /* region to clip                            */
-	pel xmin, pel ymin,     /* upper left hand corner of rectangle       */
-	pel xmax, pel ymax)     /* lower right hand corner                   */
-{
-       struct edgelist anchor;  /* pretend edgelist to facilitate discards   */
-       register struct edgelist *e,*laste;
- 
-       R = UniqueRegion(R);
- 
-       if (xmin > R->xmin) {
-               R->xmin = xmin;
-       }
-       if (xmax < R->xmax) {
-               R->xmax = xmax;
-       }
- 
-       if (ymin > R->ymin) {
-               R->ymin = ymin;
-       }
-       if (ymax < R->ymax) {
-               R->ymax = ymax;
-       }
- 
- 
-       laste = &anchor;
-       anchor.link = R->anchor;
- 
-       for (e = R->anchor; VALIDEDGE(e); e = e->link) {
-               if (TOP(e) < ymin) {
-                       e->xvalues += ymin - e->ymin;
-                       e->ymin = ymin;
-               }
-               if (BOTTOM(e) > ymax)
-                       e->ymax = ymax;
-               if (TOP(e) >= BOTTOM(e)) {
-                       discard(laste, e->link->link);
-                       e = laste;
-                       continue;
-               }
-               if (e->xmin < xmin) {
-                       cedgemax(BOTTOM(e) - TOP(e), e->xvalues, xmin);
-                       e->xmin = xmin;
-                       e->xmax = MAX(e->xmax, xmin);
-               }
-               if (e->xmax > xmax) {
-                       cedgemin(BOTTOM(e) - TOP(e), e->xvalues, xmax);
-                       e->xmin = MIN(e->xmin, xmax);
-                       e->xmax = xmax;
-               }
-               laste = e;
-       }
- 
-       R->anchor = anchor.link;
- 
-       return(R);
-}
- 
-#ifdef notdef
-/*
-:h3.CoerceRegion() - Force a TextPath Structure to Become a Region
- 
-We also save the newly created region in the textpath structure, if the
-structure was permanent.  Then we don't have to do this again.  Why not
-save it all the time?  Well, we certainly could, but I suspect it
-wouldn't pay.  We would have to make this region permanent (because we
-couldn't have it be consumed) and this would probably require
-unnecessary CopyRegions in most cases.
-*/
- 
-struct region *
-CoerceRegion(struct textpath *tp) /* input TEXTTYPE                          */
-{
-       struct segment *path; /* temporary character path                     */
-       struct region *R;     /* returned region                              */
- 
- 
-       R = Interior(path, EVENODDRULE);
-       return(R);
-}
-#endif
- 
-/*
-:h3.RegionBounds() - Returns Bounding Box of a Region
-*/
- 
-struct segment *
-RegionBounds(struct region *R)
-{
-       register struct segment *path;  /* returned path                      */
- 
-       path = BoxPath(IDENTITY, R->ymax - R->ymin, R->xmax - R->xmin);
-       path = Join(PathSegment(MOVETYPE, R->origin.x + TOFRACTPEL(R->xmin),
-                                         R->origin.y + TOFRACTPEL(R->ymin) ),
-                   path);
-       return(path);
-}
- 
-/*
-:h2.Formatting/Dump Routines for Debug
- 
-:h3.DumpArea() - Display a Region
-*/
-void 
-DumpArea(struct region *area)
-{
-       DumpEdges(area->anchor);
-}
- 
-#define  INSWATH(p, y0, y1)  (p != NULL && p->ymin == y0 && p->ymax == y1)
-/*
-:h3.DumpEdges() - Display Run End Lists (Edge Lists)
-*/
-
-/*
-:h3.edgecheck() - For Debug, Verify that an Edge Obeys the Rules
-*/
- 
-/*ARGSUSED*/
-static void
-edgecheck(struct edgelist *edge, int oldmin, int oldmax)
-{
-       if (edge->type != EDGETYPE)
-               Abort("EDGE ERROR: non EDGETYPE in list");
-/*
-The following check is not valid if the region is jumbled so I took it
-out:
-*/
-/*     if (edge->ymin < oldmax && edge->ymin != oldmin)
-               Abort("EDGE ERROR: overlapping swaths"); */
-}
- 
-void 
-DumpEdges(struct edgelist *edges)
-{
-       register struct edgelist *p,*p2;
-       register pel ymin = MINPEL;
-       register pel ymax = MINPEL;
- 
-       if (edges == NULL) {
-               return;
-       }
-       if (RegionDebug <= 1) {
-               for (p=edges; p != NULL; p = p->link) {
-                       edgecheck(p, ymin, ymax);
-                       ymin = p->ymin;  ymax = p->ymax;
-               }
-       }
-       else {
- 
-               for (p2=edges; p2 != NULL; ) {
- 
-                       edgecheck(p2, ymin, ymax);
-                       ymin = p2->ymin;
-                       ymax = p2->ymax;
- 
-                       while (INSWATH(p2, ymin, ymax))
-                               p2 = p2->link;
-               }
-       }
 }

@@ -422,7 +422,7 @@ static EncodingTable ISO8859Enc[] = {
 };
 
 static psobj *StdEncArrayP = NULL;
-psobj *ISOLatin1EncArrayP = NULL; 
+static psobj *ISOLatin1EncArrayP = NULL; 
  
 static psobj *
 MakeEncodingArrayP(EncodingTable *encodingTable)

@@ -79,27 +79,6 @@ extern void t1_MoreWorkArea ( struct region *R, fractpel x1, fractpel y1,
 extern struct region *t1_CopyRegion ( struct region *area );
 /* destroy a region                             */
 extern void t1_KillRegion ( struct region *area );
-/* clip a region to a rectangle                 */
-extern struct region *t1_BoxClip ( struct region *R, pel xmin, pel ymin, 
-				   pel xmax, pel ymax );
-/* sort edges onto growing edge list        */
-extern struct edgelist *t1_SortSwath ( struct edgelist *anchor, 
-				       struct edgelist *edge, 
-				       SwathFunc swathfcn );
-/* 'union' two edges into a swath          */
-extern struct edgelist *t1_SwathUnion ( struct edgelist *before0, 
-					struct edgelist *edge );
-/* returns bounding box of a region       */
-extern struct segment *t1_RegionBounds ( struct region *R );
-#ifdef notdef
-/* force text to become a true region      */
-struct region *t1_CoerceRegion(struct textpath *tp);  
-#endif
-/* moves the edge values in a region            */
-extern void t1_MoveEdges ( struct region *R, fractpel dx, fractpel dy );
-/* sort the edges and reset the jumbled flag    */
-extern void t1_UnJumble ( struct region *region );
- 
 
 /*END SHARED*/
 /*SHARED*/
@@ -243,8 +222,3 @@ Interior() rule enumerations:
 #define   CONTINUITY  0x80   /* can be added to above rules; e.g. WINDINGRULE+CONTINUITY */
  
 /*END SHARED*/
-
-/* dump a region structure                     */
-extern void t1_DumpArea ( struct region *area );
-/* dump a region's edge list                   */
-extern void t1_DumpEdges ( struct edgelist *edges );

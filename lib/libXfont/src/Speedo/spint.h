@@ -161,8 +161,6 @@ extern void sp_make_header(SpeedoFontPtr, FontInfoPtr);
 extern void sp_compute_bounds(SpeedoFontPtr, FontInfoPtr, unsigned long, long *);
 extern void sp_compute_props(SpeedoFontPtr, char *, FontInfoPtr, long);
 extern int  sp_build_all_bitmaps(FontPtr, fsBitmapFormat, fsBitmapFormatMask);
-extern unsigned long sp_compute_data_size(FontPtr, int, int, unsigned long,
-						unsigned long);
 
 extern int SpeedoFontLoad(FontPtr *, char *, char *, FontEntryPtr,
 			  FontScalablePtr, fsBitmapFormat, fsBitmapFormatMask,

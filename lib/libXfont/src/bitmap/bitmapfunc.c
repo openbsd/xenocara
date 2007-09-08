@@ -103,6 +103,72 @@ static BitmapFileFunctionsRec readers[] = {
 
 #define CAPABILITIES (CAP_MATRIX | CAP_CHARSUBSETTING)
 
+static int
+BitmapOpenBitmap (FontPathElementPtr fpe, FontPtr *ppFont, int flags, 
+		  FontEntryPtr entry, char *fileName, 
+		  fsBitmapFormat format, fsBitmapFormatMask fmask,
+		  FontPtr non_cachable_font) /* We don't do licensing */
+{
+    FontFilePtr	file;
+    FontPtr     pFont;
+    int         i;
+    int         ret;
+    int         bit,
+                byte,
+                glyph,
+                scan,
+		image;
+
+    i = BitmapGetRenderIndex(entry->u.bitmap.renderer);
+    file = FontFileOpen (fileName);
+    if (!file)
+	return BadFontName;
+    if (!(pFont = CreateFontRec())) {
+	fprintf(stderr, "Error: Couldn't allocate pFont (%ld)\n",
+		(unsigned long)sizeof(FontRec));
+	FontFileClose (file);
+	return AllocError;
+    }
+    /* set up default values */
+    FontDefaultFormat(&bit, &byte, &glyph, &scan);
+    /* get any changes made from above */
+    ret = CheckFSFormat(format, fmask, &bit, &byte, &scan, &glyph, &image);
+
+    /* Fill in font record. Data format filled in by reader. */
+    pFont->refcnt = 0;
+
+    ret = (*readers[i].ReadFont) (pFont, file, bit, byte, glyph, scan);
+
+    FontFileClose (file);
+    if (ret != Successful) {
+	xfree(pFont);
+    } else {
+	*ppFont = pFont;
+    }
+    return ret;
+}
+
+static int
+BitmapGetInfoBitmap (FontPathElementPtr fpe, FontInfoPtr pFontInfo, 
+		     FontEntryPtr entry, char *fileName)
+{
+    FontFilePtr file;
+    int		i;
+    int		ret;
+    FontRendererPtr renderer;
+
+    renderer = FontFileMatchRenderer (fileName);
+    if (!renderer)
+	return BadFontName;
+    i = BitmapGetRenderIndex(renderer);
+    file = FontFileOpen (fileName);
+    if (!file)
+	return BadFontName;
+    ret = (*readers[i].ReadInfo) (pFontInfo, file);
+    FontFileClose (file);
+    return ret;
+}
+
 static FontRendererRec	renderers[] = {
 #if XFONT_PCFFORMAT
     { ".pcf", 4, BitmapOpenBitmap, BitmapOpenScalable,
@@ -150,72 +216,6 @@ static FontRendererRec	renderers[] = {
 	CAPABILITIES }
 #endif
 };
-
-int
-BitmapOpenBitmap (FontPathElementPtr fpe, FontPtr *ppFont, int flags, 
-		  FontEntryPtr entry, char *fileName, 
-		  fsBitmapFormat format, fsBitmapFormatMask fmask,
-		  FontPtr non_cachable_font) /* We don't do licensing */
-{
-    FontFilePtr	file;
-    FontPtr     pFont;
-    int         i;
-    int         ret;
-    int         bit,
-                byte,
-                glyph,
-                scan,
-		image;
-
-    i = BitmapGetRenderIndex(entry->u.bitmap.renderer);
-    file = FontFileOpen (fileName);
-    if (!file)
-	return BadFontName;
-    if (!(pFont = CreateFontRec())) {
-	fprintf(stderr, "Error: Couldn't allocate pFont (%ld)\n",
-		(unsigned long)sizeof(FontRec));
-	FontFileClose (file);
-	return AllocError;
-    }
-    /* set up default values */
-    FontDefaultFormat(&bit, &byte, &glyph, &scan);
-    /* get any changes made from above */
-    ret = CheckFSFormat(format, fmask, &bit, &byte, &scan, &glyph, &image);
-
-    /* Fill in font record. Data format filled in by reader. */
-    pFont->refcnt = 0;
-
-    ret = (*readers[i].ReadFont) (pFont, file, bit, byte, glyph, scan);
-
-    FontFileClose (file);
-    if (ret != Successful) {
-	xfree(pFont);
-    } else {
-	*ppFont = pFont;
-    }
-    return ret;
-}
-
-int
-BitmapGetInfoBitmap (FontPathElementPtr fpe, FontInfoPtr pFontInfo, 
-		     FontEntryPtr entry, char *fileName)
-{
-    FontFilePtr file;
-    int		i;
-    int		ret;
-    FontRendererPtr renderer;
-
-    renderer = FontFileMatchRenderer (fileName);
-    if (!renderer)
-	return BadFontName;
-    i = BitmapGetRenderIndex(renderer);
-    file = FontFileOpen (fileName);
-    if (!file)
-	return BadFontName;
-    ret = (*readers[i].ReadInfo) (pFontInfo, file);
-    FontFileClose (file);
-    return ret;
-}
 
 #define numRenderers	(sizeof renderers / sizeof renderers[0])
 

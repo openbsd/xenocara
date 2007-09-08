@@ -150,6 +150,31 @@ extern psobj *ISOLatin1EncArrayP;
 static void fill ( char *dest, int h, int w, struct region *area, int byte, 
 		   int bit, int wordsize );
 
+static int 
+Type1ReturnCodeToXReturnCode(int rc)
+{
+    switch(rc) {
+    case SCAN_OK:
+	return Successful;
+    case SCAN_FILE_EOF:
+	/* fall through to BadFontFormat */
+    case SCAN_ERROR:
+	return BadFontFormat;
+    case SCAN_OUT_OF_MEMORY:
+	return AllocError;
+    case SCAN_FILE_OPEN_ERROR:
+	return BadFontName;
+    case SCAN_TRUE:
+    case SCAN_FALSE:
+    case SCAN_END:
+	/* fall through */
+    default:
+	/* this should not happen */
+	ErrorF("Type1 return code not convertable to X return code: %d\n", rc);
+	return rc;
+    }
+}
+
 /*ARGSUSED*/
 int 
 Type1OpenScalable (FontPathElementPtr fpe, 
@@ -726,29 +751,4 @@ Type1RegisterFontFileFunctions(void)
     T1InitStdProps();
     for (i=0; i < sizeof(renderers) / sizeof(FontRendererRec); i++)
             FontFilePriorityRegisterRenderer(&renderers[i], -10);
-}
-
-int 
-Type1ReturnCodeToXReturnCode(int rc)
-{
-    switch(rc) {
-    case SCAN_OK:
-	return Successful;
-    case SCAN_FILE_EOF:
-	/* fall through to BadFontFormat */
-    case SCAN_ERROR:
-	return BadFontFormat;
-    case SCAN_OUT_OF_MEMORY:
-	return AllocError;
-    case SCAN_FILE_OPEN_ERROR:
-	return BadFontName;
-    case SCAN_TRUE:
-    case SCAN_FALSE:
-    case SCAN_END:
-	/* fall through */
-    default:
-	/* this should not happen */
-	ErrorF("Type1 return code not convertable to X return code: %d\n", rc);
-	return rc;
-    }
 }

@@ -66,12 +66,6 @@ typedef struct {
 }
 #endif
 
-extern void DLmult ( doublelong *product, unsigned long u, unsigned long v );
-extern void DLdiv ( doublelong *quotient, unsigned long divisor );
-extern void DLadd ( doublelong *u, doublelong *v );
-extern void DLsub ( doublelong *u, doublelong *v );
 extern fractpel FPmult ( fractpel u, fractpel v );
-extern fractpel FPdiv ( fractpel dividend, fractpel divisor );
-extern fractpel FPstarslash ( fractpel a, fractpel b, fractpel c );
 
 /*END SHARED*/

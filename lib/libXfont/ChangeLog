@@ -1,3 +1,117 @@
+commit e3642d9b2c0819a607d4cce413b9f0541285545b
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Jul 2 15:01:05 2007 -0400
+
+    Bump version to 1.3.0.
+
+commit f33f9361086db3cf1d09cec067f38fe751ed22eb
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Jul 2 14:59:11 2007 -0400
+
+    Fix crash when no attributes are present for symlink.
+
+commit 8d47483711be6076e7bfefab14aa890c5f37e1aa
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Jun 21 21:44:02 2007 -0400
+
+    Bump version to 1.2.9.
+
+commit c5ab59762c4ad5def68436d55937a2bd558d5c99
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Jun 19 10:38:02 2007 -0400
+
+    Add a new 'catalogue' FPE, which takes font paths from symlinks in a dir.
+    
+    This patch adds a new FPE type, which will match font path elements of the
+    form
+    
+    	catalogue:<dir>
+    
+    The dir specified after the catalogue: prefix will be scanned for symlinks
+    and each symlink destination will be added as a local fontfile FPE.
+    The symlink can be suffixed by attributes, such as 'unscaled', which
+    will be passed through to the underlying fontfile FPE.  Except the new
+    attribute 'pri' which will be used for ordering the fontfile FPEs.
+    
+    An example configuration:
+    
+    	75dpi:unscaled:pri=20 -> /usr/share/X11/fonts/75dpi
+    	ghostscript:pri=60 -> /usr/share/fonts/default/ghostscript
+    	misc:unscaled:pri=10 -> /usr/share/X11/fonts/misc
+    	type1:pri=40 -> /usr/share/X11/fonts/Type1
+    	type1:pri=50 -> /usr/share/fonts/default/Type1
+    
+    will add /usr/share/X11/fonts/misc as the first FPE with the attribute
+    'unscaled', second FPE will be /usr/share/X11/fonts/75dpi, also with
+    the attribute unscaled etc.  This is functionally equivalent to setting
+    the following font path:
+    
+    	/usr/share/X11/fonts/misc:unscaled,
+    	/usr/share/X11/fonts/75dpi:unscaled,
+    	/usr/share/X11/fonts/Type1,
+    	/usr/share/fonts/default/Type1,
+    	/usr/share/fonts/default/ghostscript
+    
+    The motivation is to let font packages add a symlink to the new font
+    directory they provide instead of rewriting either the Xorg config file
+    or the xfs config file.
+
+commit 1a690feaf7c416da9b01861af381d15a661e5f52
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Thu Jun 7 16:01:03 2007 -0400
+
+    Minor fontfile cleanup.
+
+commit 3b1bcd7676fe810ce60d6a4758067b571796cceb
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Thu Jun 7 15:54:51 2007 -0400
+
+    Dead code cull from fontserver code.
+
+commit 6257af0e547095483331b8c8ed588e5467852671
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Thu Jun 7 15:41:19 2007 -0400
+
+    Static markup over bitmap and builtins.
+
+commit 8c31fadabd706af63381007d666e685a66b58fd9
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Thu Jun 7 15:28:09 2007 -0400
+
+    Dead code cull from FreeType.
+
+commit fabf5458f1acbfc967bdaea3b89d707c22b97364
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Thu Jun 7 15:17:16 2007 -0400
+
+    Death to open-coded strcasecmp.
+    
+    Seriously, if you don't already have this, you've already lost.
+
+commit d50de26430c1a114a22597de40a3e5ac3c8e1ab7
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Thu Jun 7 15:13:44 2007 -0400
+
+    Dead code cull from Speedo.
+
+commit 3fd7a510b5467479d6e2559819b96b222c7328e8
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Thu Jun 7 14:39:03 2007 -0400
+
+    One more missed static in Type1
+
+commit 440166a027b78eb53d7686937148b755ad51f7f9
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Thu Jun 7 14:24:46 2007 -0400
+
+    Dead code removal and static markup for Type1.
+
+commit 9739e750a7ca4b86ddb89674b104e9b9a8b61014
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Thu Jun 7 14:20:27 2007 -0400
+
+    Warning cleanup.
+
 commit 87db45f5eb7880395735f7bf3a8ee2d89b7e0122
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed Apr 4 17:05:13 2007 -0700

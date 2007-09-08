@@ -26,4 +26,5 @@ libfontfile_la_SOURCES = 	\
 	gunzip.c		\
 	printerfont.c		\
 	register.c		\
-	renderers.c
+	renderers.c		\
+	catalogue.c

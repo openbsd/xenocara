@@ -150,7 +150,7 @@ _fs_connect(char *servername, int *err)
     return trans_conn;
 }
 
-int
+static int
 _fs_fill (FSFpePtr conn)
 {
     long    avail;
@@ -422,19 +422,6 @@ _fs_write_pad(FSFpePtr conn, char *data, long len)
     return _fs_do_write (conn, data, len, len + padlength[len & 3]);
 }
 
-/*
- * returns the amount of data waiting to be read
- */
-int
-_fs_data_ready(FSFpePtr conn)
-{
-    BytesReadable_t readable;
-
-    if (_FontTransBytesReadable(conn->trans_conn, &readable) < 0)
-	return -1;
-    return readable;
-}
-
 int
 _fs_wait_for_readable(FSFpePtr conn, int ms)
 {
@@ -466,51 +453,4 @@ _fs_wait_for_readable(FSFpePtr conn, int ms)
 	    return FSIO_READY;
 	return FSIO_ERROR;
     }
-}
-
-int
-_fs_set_bit(fd_set *mask, int fd)
-{
-    FD_SET(fd, mask);
-    return fd;
-}
-
-int
-_fs_is_bit_set(fd_set *mask, int fd)
-{
-    return FD_ISSET(fd, mask);
-}
-
-void
-_fs_bit_clear(fd_set *mask, int fd)
-{
-    FD_CLR(fd, mask);
-}
-
-int
-_fs_any_bit_set(fd_set *mask)
-{
-    return XFD_ANYSET(mask);
-}
-
-void
-_fs_or_bits(fd_set *dst, fd_set *m1, fd_set *m2)
-{
-#ifdef WIN32
-    int i;
-    if (dst != m1) {
-	for (i = m1->fd_count; --i >= 0; ) {
-	    if (!FD_ISSET(m1->fd_array[i], dst))
-		FD_SET(m1->fd_array[i], dst);
-	}
-    }
-    if (dst != m2) {
-	for (i = m2->fd_count; --i >= 0; ) {
-	    if (!FD_ISSET(m2->fd_array[i], dst))
-		FD_SET(m2->fd_array[i], dst);
-	}
-    }
-#else
-    XFD_ORSET(dst, m1, m2);
-#endif
 }

@@ -39,7 +39,6 @@ libtype1_la_SOURCES =			\
 		t1malloc.c		\
 		t1snap.c		\
 		t1stdio.h		\
-		t1stub.c		\
 		t1unicode.c		\
 		t1unicode.h		\
 		token.c			\

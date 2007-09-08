@@ -65,12 +65,6 @@ extern struct xobject *t1_Dup ( pointer obj );
 
 
 extern void t1_InitImager ( void ); /* initialize TYPE1IMAGER                */
-extern void t1_TermImager ( void ); /* terminate TYPE1IMAGER                 */
-/* set debug flags, etc.                       */
-extern void t1_Pragmatics ( char *username, int value ); 
-
-/* return last TYPE1IMAGER error message       */
-extern char *t1_ErrorMsg ( void ); 
  
 /*END SHARED*/
 /*SHARED*/
@@ -119,10 +113,6 @@ extern struct xobject *t1_TypeErr ( char *name,  pointer obj,
 
 /* consume a variable number of arguments      */
 extern void t1_Consume ( int n, ... );
-
-/* make a new copy, not reference bump PNM     */
-extern struct xobject *t1_Copy ( pointer obj );
-
  
 /*END SHARED*/
 /*SHARED*/
@@ -281,33 +271,10 @@ struct xobject {
  
 #endif
  
-extern char MustCheckArgs  INITIALIZED(TRUE);
-extern char MustTraceCalls INITIALIZED(FALSE);
-extern char MustCrash      INITIALIZED(TRUE);
-extern char InternalTrace  INITIALIZED(TRUE);
-extern char LineIOTrace    INITIALIZED(TRUE);
- 
 extern char ProcessHints   INITIALIZED(TRUE);
  
-extern char SaveFontPaths  INITIALIZED(TRUE);
- 
-extern short CRASTERCompressionType   INITIALIZED(1);
- 
-extern char ConicDebug     INITIALIZED(0);
-extern char LineDebug      INITIALIZED(0);
 extern char RegionDebug    INITIALIZED(0);
-extern char PathDebug      INITIALIZED(0);
-extern char FontDebug      INITIALIZED(0);
-extern char SpaceDebug     INITIALIZED(0);
-extern char StrokeDebug    INITIALIZED(0);
-extern char MemoryDebug    INITIALIZED(0);
-extern char HintDebug      INITIALIZED(0);
-extern char ImageDebug     INITIALIZED(0);
-extern char OffPageDebug   INITIALIZED(0);
  
-extern short CachedChars   INITIALIZED(0x7FFF);
-extern short CachedFonts   INITIALIZED(0x7FFF);
-extern int   CacheBLimit   INITIALIZED(12500);
 extern char  Continuity    INITIALIZED(2);
  
 #ifdef extern
@@ -318,13 +285,9 @@ extern char  Continuity    INITIALIZED(2);
 We define other routines formatting parameters
 */
 #define    DumpArea(area)    t1_DumpArea(area)
-#define    DumpText(text)    t1_DumpText(text)
 #define    DumpPath(path)    t1_DumpPath(path)
 #define    DumpSpace(space)  t1_DumpSpace(space)
 #define    DumpEdges(e)      t1_DumpEdges(e)
 #define    FormatFP(s,p)     t1_FormatFP(s,p)
- 
-/* dump a textpath structure                   */
-extern void t1_DumpText(void);
  
 /*END SHARED*/

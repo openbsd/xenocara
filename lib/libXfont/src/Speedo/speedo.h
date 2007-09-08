@@ -350,11 +350,9 @@ typedef struct intercepts_tag
 typedef struct plaid_tag
 	{
 	fix15    orus[MAX_CTRL_ZONES];   /* Controlled coordinate table (orus) */
-#if INCL_RULES
 	fix15    pix[MAX_CTRL_ZONES];    /* Controlled coordinate table (sub-pixels) */
 	fix15    mult[MAX_INT_ZONES];    /* Interpolation multiplier table */
 	fix31    offset[MAX_INT_ZONES];  /* Interpolation offset table */
-#endif
 	} plaid_t;
 #endif
 
@@ -519,22 +517,18 @@ typedef struct speedo_global_data
          plaid_t STACKFAR  *plaid;
 #else                                                                /* if not reentrant */
          fix15    orus[MAX_CTRL_ZONES];   /* Controlled coordinate table (orus) */
-#if INCL_RULES
          fix15    pix[MAX_CTRL_ZONES];    /* Controlled coordinate table (sub-pixels) */
          fix15    mult[MAX_INT_ZONES];    /* Interpolation multiplier table */
          fix31    offset[MAX_INT_ZONES];  /* Interpolation offset table */
-#endif                                                               /* endif incl_rules */
 #endif                                                               /* endif not reentrant */
 
          fix15    no_X_orus;              /* Number of X controlled coordinates */
          fix15    no_Y_orus;              /* Number of Y controlled coordinates */
          ufix16   Y_constr_org;           /* Origin of constraint table in font data */
 
-#if INCL_RULES
          constr_t constr;                 /* Constraint data state */
          boolean  c_act[MAX_CONSTR];      /* TRUE if constraint currently active */
          fix15    c_pix[MAX_CONSTR];      /* Size of constrained zone if active */
-#endif                                                            
 #if  INCL_ISW       
          boolean import_setwidth_act;     /* boolean to indicate imported setwidth */
 	 boolean isw_modified_constants;
@@ -724,7 +718,6 @@ EXTERN SPEEDO_GLOBALS GLOBALFAR *sp_global_ptr;
  ***********************************************************************************/
 
 /*  do_char.c functions */
-ufix16 sp_get_char_id(PROTO_DECL2 ufix16 char_index);
 boolean sp_make_char(PROTO_DECL2 ufix16 char_index);
 #if  INCL_ISW       
 fix31 sp_compute_isw_scale(PROTO_DECL2);
@@ -738,8 +731,6 @@ static void sp_preview_bounding_box(PROTO_DECL2 ufix8 FONTFAR  *pointer,ufix8   
 
 #if INCL_METRICS                 /* Metrics functions supported? */
 fix31 sp_get_char_width(PROTO_DECL2 ufix16 char_index);
-fix15 sp_get_track_kern(PROTO_DECL2 fix15 track,fix15 point_size);
-fix31 sp_get_pair_kern(PROTO_DECL2 ufix16 char_index1,ufix16 char_index2);
 boolean sp_get_char_bbox(PROTO_DECL2 ufix16 char_index, bbox_t *bbox);
 #endif
 
@@ -762,8 +753,6 @@ boolean sp_init_screen(PROTO_DECL2 specs_t GLOBALFAR *specsarg);
 boolean sp_begin_char_screen(PROTO_DECL2 point_t Psw,point_t Pmin,point_t Pmax);
 void sp_begin_contour_screen(PROTO_DECL2 point_t P1,boolean outside);
 void sp_curve_screen(PROTO_DECL2 point_t P1,point_t P2,point_t P3, fix15 depth);
-void sp_scan_curve_screen(PROTO_DECL2 fix31 X0,fix31 Y0,fix31 X1,fix31 Y1,fix31 X2,fix31 Y2,fix31 X3,fix31 Y3);
-void sp_vert_line_screen(PROTO_DECL2   fix31 x, fix15 y1, fix15 y2);
 void sp_line_screen(PROTO_DECL2 point_t P1);
 void sp_end_contour_screen(PROTO_DECL1);
 boolean sp_end_char_screen(PROTO_DECL1);
@@ -809,8 +798,6 @@ void sp_curve_out(PROTO_DECL2 point_t P1, point_t P2, point_t P3, fix15 depth);
 void sp_end_contour_out(PROTO_DECL1);
 void sp_end_sub_char_out(PROTO_DECL1);
 void sp_init_intercepts_out(PROTO_DECL1);
-void sp_restart_intercepts_out(PROTO_DECL1);
-void sp_set_first_band_out(PROTO_DECL2 point_t Pmin, point_t Pmax);
 void sp_reduce_band_size_out(PROTO_DECL1);
 boolean sp_next_band_out(PROTO_DECL1);
 #endif
@@ -838,10 +825,7 @@ fix15 sp_read_word_u(PROTO_DECL2 ufix8 FONTFAR *pointer);
 void sp_init_tcb(PROTO_DECL1);
 void sp_scale_tcb(PROTO_DECL2 tcb_t GLOBALFAR *ptcb,fix15 x_pos,fix15 y_pos,fix15 x_scale,fix15 y_scale);
 ufix8 FONTFAR *sp_plaid_tcb(PROTO_DECL2 ufix8 FONTFAR *pointer,ufix8 format);
-ufix8 FONTFAR *sp_skip_interpolation_table(PROTO_DECL2 ufix8 FONTFAR *pointer, ufix8 format);
-ufix8 FONTFAR *sp_skip_control_zone(PROTO_DECL2 ufix8 FONTFAR *pointer, ufix8 format);
 
-ufix8 FONTFAR *sp_read_oru_table(PROTO_DECL2 ufix8 FONTFAR *pointer);
 #if INCL_SQUEEZING || INCL_ISW
 static void sp_calculate_x_pix(PROTO_DECL2 ufix8 start_edge,ufix8 end_edge,ufix16 constr_nr,fix31 x_scale,fix31 x_offset,fix31 ppo,fix15 setwidth_pix);
 #endif

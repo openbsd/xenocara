@@ -93,13 +93,6 @@ extern void bitmapComputeFontInkBounds ( FontPtr pFont );
 extern Bool bitmapAddInkMetrics ( FontPtr pFont );
 extern int bitmapComputeWeight ( FontPtr pFont );
 
-extern int BitmapOpenBitmap ( FontPathElementPtr fpe, FontPtr *ppFont, 
-			      int flags, FontEntryPtr entry, char *fileName, 
-			      fsBitmapFormat format, fsBitmapFormatMask fmask,
-			      FontPtr non_cachable_font );
-extern int BitmapGetInfoBitmap ( FontPathElementPtr fpe, 
-				 FontInfoPtr pFontInfo, FontEntryPtr entry, 
-				 char *fileName );
 extern void BitmapRegisterFontFileFunctions ( void );
 extern int BitmapGetRenderIndex ( FontRendererPtr renderer );
 

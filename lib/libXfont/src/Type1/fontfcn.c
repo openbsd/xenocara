@@ -56,11 +56,10 @@ extern struct segment *Type1Char ( char *env, XYspace S,
 /***================================================================***/
 /*   GLOBALS                                                          */
 /***================================================================***/
-char CurFontName[120];
-char *CurFontEnv;
-char *vm_base = NULL;
+static char CurFontName[120];
+static char *vm_base = NULL;
 psfont *FontP = NULL;
-psfont TheCurrentFont;
+static psfont TheCurrentFont;
 
 /***================================================================***/
 /*   SearchDict - look for  name                                      */
@@ -88,7 +87,7 @@ SearchDictName(psdict *dictP, psobj *keyP)
   return(0);
 }
 
-boolean 
+static boolean 
 initFont(int cnt)
 {
 
@@ -122,7 +121,7 @@ resetFont(char *env)
  
 }
 
-int 
+static int 
 readFont(char *env)
 {
   int rcode;

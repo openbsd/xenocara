@@ -36,6 +36,8 @@ from The Open Group.
 #ifndef _PCF_H_
 #define _PCF_H_
 
+#include <X11/fonts/fntfilio.h>
+
 /*
  * Information used to read/write PCF fonts
  */

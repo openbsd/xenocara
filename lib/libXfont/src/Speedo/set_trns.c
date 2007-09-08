@@ -113,101 +113,80 @@ ptcb->yoffset = MULT16(yx_mult, x_pos) + MULT16(yy_mult, y_pos) + y_offset;
 type_tcb(ptcb); /* Reclassify transformation types */
 }
 
-FUNCTION ufix8 FONTFAR *skip_interpolation_table(
-GDECL
-ufix8 FONTFAR *pointer,  /* Pointer to next byte in char data */
-ufix8    format)    /* Character format byte */
-{
-fix15 i,n;
-ufix8 intsize[9];
-
-intsize[0] = 1;
-intsize[1] = 2;
-intsize[2] = 3;
-intsize[3] = 1;
-intsize[4] = 2;
-intsize[5] = 1;
-intsize[6] = 2;
-intsize[7] = 0;
-intsize[8] = 0;
-
-n =  ((format & BIT6)? (fix15)NEXT_BYTE(pointer): 0);
-n += ((format & BIT7)? (fix15)NEXT_BYTE(pointer): 0);
-for (i = 0; i < n; i++)          /* For each entry in int table ... */
-    {
-    format = NEXT_BYTE(pointer); /* Read format byte */
-    if (format & BIT7)           /* Short Start/End point spec? */
-        {
-        pointer++;               /* Skip Start/End point byte */
-        }
-    else
-        {
-        pointer += intsize[format & 0x7];  /* Skip Start point spec */
-        pointer += intsize[(format >> 3) & 0x7]; /* Skip End point spec */
-        }
-    }
-return pointer;
-}
-FUNCTION ufix8 FONTFAR *skip_control_zone(
-GDECL
-ufix8 FONTFAR *pointer,  /* Pointer to next byte in char data */
-ufix8    format)    /* Character format byte */
-{
-fix15    i,n;
-ufix16   tmpufix16;
-
-n = sp_globals.no_X_orus + sp_globals.no_Y_orus - 2;
-for (i = 0; i < n; i++)          /* For each entry in control table ... */
-    {
-    if (format & BIT4)
-        pointer++;               /* Skip short form From/To fields */
-    else
-        pointer += 2;            /* Skip FROM and TO fields */
-    /* skip constraints field */
-    NEXT_BYTES (pointer, tmpufix16);
-
-    }
-return pointer;
-}
 
-#if INCL_RULES
-#else
-FUNCTION ufix8 FONTFAR *plaid_tcb(
+static FUNCTION ufix8 FONTFAR *read_oru_table(
 GDECL
-ufix8 FONTFAR *pointer,  /* Pointer to next byte in char data */
-ufix8    format)    /* Character format byte */
-/* 
- * Called by make_simp_char() and make_comp_char() to set up the controlled
- * coordinate table and skip all other intelligent scaling rules embedded
- * in the character data.
- * Updates pointer to first byte after plaid data.
- * This is used only if intelligent scaling is not supported in the
- * configuration definitions.
+ufix8 FONTFAR *pointer)   /* Pointer to first byte in controlled coord table */
+/*
+ * Called by plaid_tcb() to read the controlled coordinate table from the
+ * character data in the font. 
+ * Updates the pointer to the byte following the controlled coordinate
+ * data.
  */
 {
-fix15  i, n;
+fix15    i, j, k, n;
+boolean  zero_not_in;
+boolean  zero_added;
+fix15    oru;
 
+fix15    pos;
 
+i = 0;
+n = sp_globals.no_X_orus;
+pos = sp_globals.tcb.xpos;
+for (j = 0; ; j++)
+    {
+    zero_not_in = TRUE;
+    zero_added = FALSE;
+    for (k = 0; k < n; k++)
+        {
+        oru = NEXT_WORD(pointer);
+        if (zero_not_in && (oru >= 0)) /* First positive oru value? */
+            {
+            sp_plaid.pix[i] = pos;        /* Insert position in pix array */
+            if (oru != 0)        /* Zero oru value omitted? */
+                {
+                sp_plaid.orus[i++] = 0;   /* Insert zero value in oru array */
+                zero_added = TRUE; /* Remember to increment size of array */
+                }
+            zero_not_in = FALSE; /* Inhibit further testing for zero ins */
+            }
+        sp_plaid.orus[i++] = oru;         /* Add specified oru value to array */
+        }
+    if (zero_not_in)             /* All specified oru values negative? */
+        {
+        sp_plaid.pix[i] = pos;            /* Insert position in pix array */
+        sp_plaid.orus[i++] = 0;           /* Add zero oru value */
+        zero_added = TRUE;       /* Remember to increment size of array */
+        }
+    if (j)                       /* Both X and Y orus read? */
+        break;
+    if (zero_added)                                 
+        sp_globals.no_X_orus++;             /* Increment X array size */
+    n = sp_globals.no_Y_orus;               /* Prepare to read Y oru values */
+    pos = sp_globals.tcb.ypos;
+    }
+if (zero_added)                  /* Zero Y oru value added to array? */
+    sp_globals.no_Y_orus++;                 /* Increment Y array size */
 
-sp_globals.no_X_orus = (format & BIT2)?
-    (fix15)NEXT_BYTE(pointer):
-    0;
-sp_globals.no_Y_orus = (format & BIT3)?
-    (fix15)NEXT_BYTE(pointer):
-    0;
-pointer = read_oru_table(pointer);        /* Updates no_X/Y/orus */
-sp_globals.Y_edge_org = sp_globals.no_X_orus;
-
-/* Skip over control zone table */
-pointer = skip_control_zone(pointer,format);
-
-/* Skip over interpolation table */
-pointer = skip_interpolation_table(pointer,format);
-return pointer;
-}
+#if DEBUG
+printf("\nX ORUS\n");
+n = sp_globals.no_X_orus;
+for (i = 0; i < n; i++)
+    {
+    printf("%2d %4d\n", i, sp_plaid.orus[i]);
+    }
+printf("\nY ORUS\n");
+n = sp_globals.no_Y_orus;
+for (i = 0; i < n; i++)
+    {
+    printf("%2d %4d\n", i, sp_plaid.orus[i + sp_globals.no_X_orus]);
+    }
 #endif
-
-#if INCL_RULES
+
+return pointer;             /* Update pointer */
+}
+
 FUNCTION ufix8 FONTFAR *plaid_tcb(
 GDECL
 ufix8 FONTFAR *pointer,  /* Pointer to next byte in char data */
@@ -266,9 +245,7 @@ end_plaid_data();
 
 return pointer;
 }
-#endif
-
-#if INCL_RULES
+
 FUNCTION static void sp_constr_update()
 GDECL
 /*
@@ -437,90 +414,7 @@ for (i = 0; i < n; i++)
 #endif
 
 }
-#endif
 
-FUNCTION ufix8 FONTFAR *read_oru_table(
-GDECL
-ufix8 FONTFAR *pointer)   /* Pointer to first byte in controlled coord table */
-/*
- * Called by plaid_tcb() to read the controlled coordinate table from the
- * character data in the font. 
- * Updates the pointer to the byte following the controlled coordinate
- * data.
- */
-{
-fix15    i, j, k, n;
-boolean  zero_not_in;
-boolean  zero_added;
-fix15    oru;
-
-#if INCL_RULES
-fix15    pos;
-#endif
-
-i = 0;
-n = sp_globals.no_X_orus;
-#if INCL_RULES
-pos = sp_globals.tcb.xpos;
-#endif
-for (j = 0; ; j++)
-    {
-    zero_not_in = TRUE;
-    zero_added = FALSE;
-    for (k = 0; k < n; k++)
-        {
-        oru = NEXT_WORD(pointer);
-        if (zero_not_in && (oru >= 0)) /* First positive oru value? */
-            {
-#if INCL_RULES
-            sp_plaid.pix[i] = pos;        /* Insert position in pix array */
-#endif
-            if (oru != 0)        /* Zero oru value omitted? */
-                {
-                sp_plaid.orus[i++] = 0;   /* Insert zero value in oru array */
-                zero_added = TRUE; /* Remember to increment size of array */
-                }
-            zero_not_in = FALSE; /* Inhibit further testing for zero ins */
-            }
-        sp_plaid.orus[i++] = oru;         /* Add specified oru value to array */
-        }
-    if (zero_not_in)             /* All specified oru values negative? */
-        {
-#if INCL_RULES
-        sp_plaid.pix[i] = pos;            /* Insert position in pix array */
-#endif
-        sp_plaid.orus[i++] = 0;           /* Add zero oru value */
-        zero_added = TRUE;       /* Remember to increment size of array */
-        }
-    if (j)                       /* Both X and Y orus read? */
-        break;
-    if (zero_added)                                 
-        sp_globals.no_X_orus++;             /* Increment X array size */
-    n = sp_globals.no_Y_orus;               /* Prepare to read Y oru values */
-#if INCL_RULES
-    pos = sp_globals.tcb.ypos;
-#endif
-    }
-if (zero_added)                  /* Zero Y oru value added to array? */
-    sp_globals.no_Y_orus++;                 /* Increment Y array size */
-
-#if DEBUG
-printf("\nX ORUS\n");
-n = sp_globals.no_X_orus;
-for (i = 0; i < n; i++)
-    {
-    printf("%2d %4d\n", i, sp_plaid.orus[i]);
-    }
-printf("\nY ORUS\n");
-n = sp_globals.no_Y_orus;
-for (i = 0; i < n; i++)
-    {
-    printf("%2d %4d\n", i, sp_plaid.orus[i + sp_globals.no_X_orus]);
-    }
-#endif
-
-return pointer;             /* Update pointer */
-}
 #if INCL_SQUEEZING || INCL_ISW
 FUNCTION static void calculate_x_pix(
 GDECL
@@ -921,7 +815,6 @@ return TRUE;
 }
 #endif
 
-#if INCL_RULES
 FUNCTION static ufix8 FONTFAR *sp_setup_pix_table(
 GDECL
 ufix8 FONTFAR *pointer,   /* Pointer to first byte in control zone table */
@@ -1149,10 +1042,8 @@ for (i = 0; i < n; i++)
 
 return pointer;
 }
-#endif
 
 
-#if INCL_RULES
 FUNCTION static ufix8 FONTFAR *sp_setup_int_table(
 GDECL
 ufix8 FONTFAR *pointer,   /* Pointer to first byte in interpolation zone table */
@@ -1307,7 +1198,6 @@ for (i = 0; i < n; i++)
 
 return pointer;
 }
-#endif
 #if INCL_ISW
 FUNCTION fix31 compute_isw_scale()
 GDECL

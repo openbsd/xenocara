@@ -795,9 +795,9 @@ FontFileListFonts (pointer client, FontPathElementPtr fpe, char *pat,
 }
 
 int
-FontFileStartListFontsWithInfo(pointer client, FontPathElementPtr fpe, 
-			       char *pat, int len, int max, 
-			       pointer *privatep)
+FontFileStartListFonts(pointer client, FontPathElementPtr fpe, 
+		       char *pat, int len, int max, 
+		       pointer *privatep, int mark_aliases)
 {
     LFWIDataPtr	data;
     int		ret;
@@ -811,7 +811,8 @@ FontFileStartListFontsWithInfo(pointer client, FontPathElementPtr fpe,
 	xfree (data);
 	return AllocError;
     }
-    ret = FontFileListFonts (client, fpe, pat, len, max, data->names);
+    ret = _FontFileListFonts (client, fpe, pat, len,
+			      max, data->names, mark_aliases);
     if (ret != Successful)
     {
 	FreeFontNames (data->names);
@@ -821,6 +822,15 @@ FontFileStartListFontsWithInfo(pointer client, FontPathElementPtr fpe,
     data->current = 0;
     *privatep = (pointer) data;
     return Successful;
+}
+
+
+int
+FontFileStartListFontsWithInfo(pointer client, FontPathElementPtr fpe, 
+			       char *pat, int len, int max, 
+			       pointer *privatep)
+{
+    return FontFileStartListFonts(client, fpe, pat, len, max, privatep, 0);
 }
 
 /* ARGSUSED */
@@ -1076,28 +1086,7 @@ FontFileStartListFontsAndAliases(pointer client, FontPathElementPtr fpe,
 				 char *pat, int len, int max, 
 				 pointer *privatep)
 {
-    LFWIDataPtr	data;
-    int		ret;
-
-    data = (LFWIDataPtr) xalloc (sizeof *data);
-    if (!data)
-	return AllocError;
-    data->names = MakeFontNamesRecord (0);
-    if (!data->names)
-    {
-	xfree (data);
-	return AllocError;
-    }
-    ret = _FontFileListFonts (client, fpe, pat, len, max, data->names, 1);
-    if (ret != Successful)
-    {
-	FreeFontNames (data->names);
-	xfree (data);
-	return ret;
-    }
-    data->current = 0;
-    *privatep = (pointer) data;
-    return Successful;
+    return FontFileStartListFonts(client, fpe, pat, len, max, privatep, 1);
 }
 
 int

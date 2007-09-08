@@ -73,33 +73,9 @@ struct conicsegment *t1_ArcCA(); /* ditto, with center point and angle        */
 /* Bezier third order curve path segment  */
 extern struct beziersegment *t1_Bezier ( struct segment *B, struct segment *C, 
 					 struct segment *D );
-/* produce a font 'hint' path segment         */
-extern struct hintsegment *t1_Hint ( struct XYspace *S, float ref, float width,
-				     char orientation, char hinttype, 
-				     char adjusttype, char direction, 
-				     int label );
-/* reverse the complete order of paths          */
-extern struct segment *t1_Reverse ( struct segment *p );
-/* reverse only sub-paths; moves unchanged */
-extern struct segment *t1_ReverseSubPaths ( struct segment *p );
-/* subtract two location objects                */
-extern struct segment *t1_SubLoc ( struct segment *p1, struct segment *p2 );
-/* Drop the first segment in a path        */
-extern struct segment *t1_DropSegment ( struct segment *path );
-/* return the first segment in a path      */
-extern struct segment *t1_HeadSegment ( struct segment *path );
 /* Query location; return its (x,y)             */
 extern void t1_QueryLoc ( struct segment *P, struct XYspace *S, double *xP, 
 			  double *yP );
-/* Query segment at head of a path              */
-extern void t1_QueryPath ( struct segment *path, int *typeP, 
-			   struct segment **Bp, struct segment **Cp, 
-			   struct segment **Dp, double *fP );
-/* Query the bounding box of a path             */
-extern void t1_QueryBounds ( struct segment *p0, struct XYspace *S, 
-			     double *xminP, double *yminP, 
-			     double *xmaxP, double *ymaxP );
- 
 /*END SHARED*/
 /*SHARED*/
  
@@ -111,7 +87,6 @@ extern void t1_QueryBounds ( struct segment *p0, struct XYspace *S,
 #define   PathSegment(t,x,y)      t1_PathSegment(t,(fractpel)x,(fractpel)y)
 #define   JoinSegment(b,t,x,y,a)  t1_JoinSegment(b,t,(fractpel)x,(fractpel)y,a)
 #define   Hypoteneuse(dx,dy)      t1_Hypoteneuse(dx,dy)
-#define   BoxPath(S,h,w)          t1_BoxPath(S,h,w)
   
 /* duplicate a path                            */
 extern struct segment *t1_CopyPath ( struct segment *p0 );
@@ -121,17 +96,10 @@ extern void t1_KillPath ( struct segment *p );
 extern struct segment *t1_PathXform ( struct segment *p0, struct XYspace *S );
 /* calculate the ending point of a path         */
 extern void t1_PathDelta ( struct segment *p, struct fractpoint *pt );
-/* */
-extern struct segment *t1_BoundingBox ( pel h, pel w );
 /* produce a MOVE or LINE segment           */
 extern struct segment *t1_PathSegment ( int type, fractpel x, fractpel y );
 /* join a MOVE or LINE segment to a path    */
 extern struct segment *t1_JoinSegment ( struct segment *before, int type, fractpel x, fractpel y, struct segment *after );
-#if 0
-double t1_Hypoteneuse();      /* returns the length of a line                 */
-#endif
-/* returns a rectangular path                 */
-extern struct segment *t1_BoxPath ( struct XYspace *S, int h, int w );
  
 /*END SHARED*/
 /*SHARED*/
@@ -235,5 +203,3 @@ is also used by the STROKES module.)
        p2->last = NULL; }    /* only first segment has non-NULL "last"       */
  
 /*END SHARED*/
-/* dump a path list                            */
-extern void t1_DumpPath ( struct segment *p );

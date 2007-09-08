@@ -103,7 +103,7 @@ typedef FontPtr (*ScaleFunc) ( FontPtr /* pf */,
 			       FontScalablePtr /* vals */);
 
 /* These next two arrays must be kept in step with the renderer array */
-ScaleFunc scale[] =
+static const ScaleFunc scale[] =
 {
 #if XFONT_PCFFORMAT
     BitmapScaleBitmaps,
@@ -153,7 +153,7 @@ typedef FontEntryPtr (*FindToScale) (FontPathElementPtr fpe,
 				     double *dxp, double *dyp, 
 				     double *sdxp, double *sdyp, 
 				     FontPathElementPtr *fpep);
-FindToScale find_scale[] =
+static const FindToScale find_scale[] =
 {
 #if XFONT_PCFFORMAT
     FindBestToScale,
@@ -1840,7 +1840,7 @@ BitmapOpenScalable (FontPathElementPtr fpe,
 			dy, sdy,
 			savedX, savedY;
     FontPropPtr		props;
-    char		*isStringProp;
+    char		*isStringProp = NULL;
     int			propCount;
     int			status;
     long		sWidth;

@@ -129,6 +129,103 @@ sp_globals.y_pxl = (sp_globals.y0_spxl + sp_globals.pixrnd) >> sp_globals.pixshi
 #endif
 
 #if INCL_SCREEN
+
+static FUNCTION void vert_line_screen(
+GDECL
+fix31 x,
+fix15 y1, fix15 y2)
+{                                                 
+
+#ifdef DBGCRV
+printf("VERT_LINE_SCREEN(%6.4f, %6.4f, %6.4f)\n",
+    (real)(x - 32768) / 65536.0, 
+    (real)(y1 - 32768) / 65536.0,
+    (real)(y2 - 32768) / 65536.0);
+#endif
+
+if (sp_globals.intercept_oflo) 
+    return;
+
+if (y1 > y2)                                   /* Line goes downwards ? */
+	{
+    if (y1 > (sp_globals.y_band.band_max + 1)) /* Start point above top of band? */
+        y1 = sp_globals.y_band.band_max + 1;   /* Adjust start point to top of band */
+    if (y2 < sp_globals.y_band.band_min)       /* End point below bottom of band? */
+        y2 = sp_globals.y_band.band_min;       /* Adjust end point bottom of band */
+
+	y1 -= sp_globals.y_band.band_min;          /* Translate start point to band origin */
+	y2 -= sp_globals.y_band.band_min;          /* Translate end point to band origin */
+
+	while (y2 < y1)                            /* At least one intercept left? */
+		{
+		sp_add_intercept_screen(--y1, x);           /* Add intercept */
+		}
+	}
+else if (y2 > y1)                              /* Line goes upwards ? */
+	{
+    if (y1 < sp_globals.y_band.band_min)       /* Start point below bottom of band? */
+        y1 = sp_globals.y_band.band_min;       /* Adjust start point to bottom of band */
+    if (y2 > (sp_globals.y_band.band_max + 1)) /* End point above top of band? */
+        y2 = sp_globals.y_band.band_max + 1;   /* Adjust end point to top of band */
+
+	y1 -= sp_globals.y_band.band_min;          /* Translate start point to band origin */
+	y2 -= sp_globals.y_band.band_min;          /* Translate end point to band origin */
+
+	while (y1 < y2)                            /* At least one intercept left? */
+		{
+		sp_add_intercept_screen(y1++, x);           /* Add intercept */
+		}
+	}
+
+
+}
+
+static FUNCTION void scan_curve_screen(
+GDECL
+fix31 X0, fix31 Y0, fix31 X1, fix31 Y1, fix31 X2, fix31 Y2, fix31 X3, fix31 Y3)
+/* Called for each curve in the transformed character if curves out enabled
+ */
+{
+fix31 Pmidx;
+fix31 Pmidy;
+fix31 Pctrl1x;
+fix31 Pctrl1y;
+fix31 Pctrl2x;
+fix31 Pctrl2y;
+
+#ifdef DBGCRV
+printf("SCAN_CURVE_SCREEN(%6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f)\n", 
+    (real)(X0-32768) / 65536.0, (real)(Y0-32768) / 65536.0,
+    (real)(X1-32768) / 65536.0, (real)(Y1-32768) / 65536.0,
+    (real)(X2-32768) / 65536.0, (real)(Y2-32768) / 65536.0,
+    (real)(X3-32768) / 65536.0, (real)(Y3-32768) / 65536.0);
+#endif
+
+if (((Y3 >> 16)) == (Y0 >> 16) || (Y3+1) == Y0 || Y3 == (Y0+1))
+    {
+	return;
+    }
+if ((X3 >> 16) == (X0 >> 16))
+    {
+    vert_line_screen(X3,(fix15)(Y0>>16),(fix15)(Y3>>16));
+	return;
+    }
+Pmidx = (X0 + (X1 + X2) * 3 + X3 + 4 ) >> 3;
+Pmidy = (Y0 + (Y1 + Y2) * 3 + Y3 + 4 ) >> 3;
+
+Pctrl1x = (X0 + X1 + 1 ) >> 1;
+Pctrl1y = (Y0 + Y1 + 1) >> 1;
+Pctrl2x = (X0 + (X1 << 1) + X2 + 2 ) >> 2;
+Pctrl2y = (Y0 + (Y1 << 1) + Y2 + 2 ) >> 2;
+scan_curve_screen(X0,Y0, Pctrl1x, Pctrl1y, Pctrl2x,Pctrl2y, Pmidx,Pmidy);
+
+Pctrl1x = (X1 + (X2 << 1) + X3 + 2 ) >> 2;
+Pctrl1y = (Y1 + (Y2 << 1) + Y3 + 2 ) >> 2;
+Pctrl2x = (X2 + X3 + 1 ) >> 1;
+Pctrl2y = (Y2 + Y3 + 1 ) >> 1;
+scan_curve_screen(Pmidx,Pmidy, Pctrl1x,Pctrl1y, Pctrl2x,Pctrl2y, X3,Y3);
+}             
+
 FUNCTION void curve_screen(
 GDECL
 point_t P1, point_t P2, point_t P3,
@@ -185,103 +282,6 @@ sp_globals.x0_spxl = P3.x;
 sp_globals.y0_spxl = P3.y;
 sp_globals.y_pxl = (P3.y + sp_globals.pixrnd) >> sp_globals.pixshift;   /* calculate new end-scan sp_globals.line */
 }
-
-FUNCTION void scan_curve_screen(
-GDECL
-fix31 X0, fix31 Y0, fix31 X1, fix31 Y1, fix31 X2, fix31 Y2, fix31 X3, fix31 Y3)
-/* Called for each curve in the transformed character if curves out enabled
- */
-{
-fix31 Pmidx;
-fix31 Pmidy;
-fix31 Pctrl1x;
-fix31 Pctrl1y;
-fix31 Pctrl2x;
-fix31 Pctrl2y;
-
-#ifdef DBGCRV
-printf("SCAN_CURVE_SCREEN(%6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f)\n", 
-    (real)(X0-32768) / 65536.0, (real)(Y0-32768) / 65536.0,
-    (real)(X1-32768) / 65536.0, (real)(Y1-32768) / 65536.0,
-    (real)(X2-32768) / 65536.0, (real)(Y2-32768) / 65536.0,
-    (real)(X3-32768) / 65536.0, (real)(Y3-32768) / 65536.0);
-#endif
-
-if (((Y3 >> 16)) == (Y0 >> 16) || (Y3+1) == Y0 || Y3 == (Y0+1))
-    {
-	return;
-    }
-if ((X3 >> 16) == (X0 >> 16))
-    {
-    vert_line_screen(X3,(fix15)(Y0>>16),(fix15)(Y3>>16));
-	return;
-    }
-Pmidx = (X0 + (X1 + X2) * 3 + X3 + 4 ) >> 3;
-Pmidy = (Y0 + (Y1 + Y2) * 3 + Y3 + 4 ) >> 3;
-
-Pctrl1x = (X0 + X1 + 1 ) >> 1;
-Pctrl1y = (Y0 + Y1 + 1) >> 1;
-Pctrl2x = (X0 + (X1 << 1) + X2 + 2 ) >> 2;
-Pctrl2y = (Y0 + (Y1 << 1) + Y2 + 2 ) >> 2;
-scan_curve_screen(X0,Y0, Pctrl1x, Pctrl1y, Pctrl2x,Pctrl2y, Pmidx,Pmidy);
-
-Pctrl1x = (X1 + (X2 << 1) + X3 + 2 ) >> 2;
-Pctrl1y = (Y1 + (Y2 << 1) + Y3 + 2 ) >> 2;
-Pctrl2x = (X2 + X3 + 1 ) >> 1;
-Pctrl2y = (Y2 + Y3 + 1 ) >> 1;
-scan_curve_screen(Pmidx,Pmidy, Pctrl1x,Pctrl1y, Pctrl2x,Pctrl2y, X3,Y3);
-}             
-
-FUNCTION void vert_line_screen(
-GDECL
-fix31 x,
-fix15 y1, fix15 y2)
-{                                                 
-
-#ifdef DBGCRV
-printf("VERT_LINE_SCREEN(%6.4f, %6.4f, %6.4f)\n",
-    (real)(x - 32768) / 65536.0, 
-    (real)(y1 - 32768) / 65536.0,
-    (real)(y2 - 32768) / 65536.0);
-#endif
-
-if (sp_globals.intercept_oflo) 
-    return;
-
-if (y1 > y2)                                   /* Line goes downwards ? */
-	{
-    if (y1 > (sp_globals.y_band.band_max + 1)) /* Start point above top of band? */
-        y1 = sp_globals.y_band.band_max + 1;   /* Adjust start point to top of band */
-    if (y2 < sp_globals.y_band.band_min)       /* End point below bottom of band? */
-        y2 = sp_globals.y_band.band_min;       /* Adjust end point bottom of band */
-
-	y1 -= sp_globals.y_band.band_min;          /* Translate start point to band origin */
-	y2 -= sp_globals.y_band.band_min;          /* Translate end point to band origin */
-
-	while (y2 < y1)                            /* At least one intercept left? */
-		{
-		sp_add_intercept_screen(--y1, x);           /* Add intercept */
-		}
-	}
-else if (y2 > y1)                              /* Line goes upwards ? */
-	{
-    if (y1 < sp_globals.y_band.band_min)       /* Start point below bottom of band? */
-        y1 = sp_globals.y_band.band_min;       /* Adjust start point to bottom of band */
-    if (y2 > (sp_globals.y_band.band_max + 1)) /* End point above top of band? */
-        y2 = sp_globals.y_band.band_max + 1;   /* Adjust end point to top of band */
-
-	y1 -= sp_globals.y_band.band_min;          /* Translate start point to band origin */
-	y2 -= sp_globals.y_band.band_min;          /* Translate end point to band origin */
-
-	while (y1 < y2)                            /* At least one intercept left? */
-		{
-		sp_add_intercept_screen(y1++, x);           /* Add intercept */
-		}
-	}
-
-
-}
-	
 #endif
 
 

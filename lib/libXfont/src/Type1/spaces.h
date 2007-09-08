@@ -48,14 +48,6 @@ extern struct XYspace *Context(pointer device, double units);
 /* transform an object                       */
 extern struct xobject *t1_Transform ( struct xobject *obj, double cxx, 
 				      double cyx, double cxy, double cyy );
-#if 0
-struct xobject *t1_Rotate();  /* rotate an object                             */
-#endif
-/* scale an object                              */
-extern struct xobject *t1_Scale ( struct xobject *obj, double sx, double sy );
-#if 0
-struct xobject *t1_Warp();    /* transform like delta of two spaces           */
-#endif
 /* returns coordinate space matrix              */
 extern void t1_QuerySpace ( struct XYspace *S, double *cxxP, double *cyxP, 
 			    double *cxyP, double *cyyP );
@@ -145,17 +137,9 @@ struct XYspace {
 extern void t1_InitSpaces ( void );
 /* duplicate a coordinate space               */
 extern struct XYspace *t1_CopySpace ( struct XYspace *S );
-/* transform object by matrix                   */
-extern struct xobject *t1_Xform ( struct xobject *obj, double M[2][2] );
 /* return user coordinates from device coordinates */
 extern void t1_UnConvert ( struct XYspace *S, struct fractpoint *pt, 
 			   double *xp, double *yp );
-/* multiply two matrices                        */
-extern void t1_MMultiply ( double A[2][2], double B[2][2], double C[2][2] );
-/* invert a matrix                              */
-extern void t1_MInvert ( double M[2][2], double Mprime[2][2] );
-/* force a coordinate space from a matrix       */
-extern void t1_PseudoSpace ( struct XYspace *S, double M[2][2] );
 /* return the "context" represented by a matrix */
 int t1_FindContext(double M[2][2]);          
 
@@ -165,8 +149,3 @@ int t1_FindContext(double M[2][2]);
 #define  NULLCONTEXT   0
  
 /*END SHARED*/
- 
-/* dump a coordinate space structure           */
-extern void t1_DumpSpace ( struct XYspace *S );
-/* dump a format a "fractpel" coordinate       */
-extern void t1_FormatFP ( char *string, fractpel fpel );

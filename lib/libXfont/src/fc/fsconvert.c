@@ -43,8 +43,6 @@
 
 extern char _fs_glyph_undefined;
 extern char _fs_glyph_requested;
-extern char _fs_glyph_zero_length;
-
 
 /*
  * converts data from font server form to X server form
@@ -400,41 +398,7 @@ _fs_clean_aborted_loadglyphs(FontPtr pfont, int num_expected_ranges,
     }
 }
 
-
-/*
- * figures out what extents to request
- * this is where lots of extra
- * smarts wants to live
- */
-/* ARGSUSED */
-int
-_fs_check_extents(FontPtr pfont, Mask flags, int nranges, fsRange *range, 
-		  FSBlockDataPtr blockrec)
-{
-/* XXX -- either fill in the requested info if we have it somewhere
- * and return AccessDone, or else return Successful
- */
-    return Successful;
-}
-
-/*
- * figures out what glyphs to request
- * this is where lots of extra
- * smarts wants to live
- */
-/* ARGSUSED */
-int
-_fs_check_bitmaps(FontPtr pfont, fsBitmapFormat format, 
-		  Mask flags, int nranges, fsRange *range, 
-		  FSBlockDataPtr blockrec)
-{
-/* XXX -- either fill in the requested info if we have it somewhere
- * and return AccessDone, or else return Successful
- */
-    return Successful;
-}
-
-int
+static int
 _fs_get_glyphs(FontPtr pFont, unsigned long count, unsigned char *chars, 
 	       FontEncoding charEncoding, 
 	       unsigned long *glyphCount, /* RETURN */
@@ -640,7 +604,7 @@ _fs_get_metrics(FontPtr pFont, unsigned long count, unsigned char *chars,
 }
 
 
-void
+static void
 _fs_unload_font(FontPtr pfont)
 {
     FSFontPtr	    fsdata = (FSFontPtr) pfont->fontPrivate;

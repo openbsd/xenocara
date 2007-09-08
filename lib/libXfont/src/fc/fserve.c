@@ -130,11 +130,11 @@ static void fs_cleanup_bfont (FSBlockedFontPtr bfont);
 
 char _fs_glyph_undefined;
 char _fs_glyph_requested;
-char _fs_glyph_zero_length;
+static char _fs_glyph_zero_length;
 
 static int  generationCount;
 
-int FontServerRequestTimeout = 30 * 1000;
+static int FontServerRequestTimeout = 30 * 1000;
 
 static void
 _fs_close_server (FSFpePtr conn);
@@ -2046,41 +2046,7 @@ extern pointer serverClient;	/* This could be any number that
 				   doesn't conflict with existing
 				   client values. */
 
-int
-fs_load_all_glyphs(FontPtr pfont)
-{
-    int		err;
-    FSFpePtr	conn = (FSFpePtr) pfont->fpe->private;
-
-    /*
-     * The purpose of this procedure is to load all glyphs in the event
-     * that we're dealing with someone who doesn't understand the finer
-     * points of glyph caching...  it is called from _fs_get_glyphs() if
-     * the latter is called to get glyphs that have not yet been loaded.
-     * We assume that the caller will not know how to handle a return
-     * value of Suspended (usually the case for a GetGlyphs() caller),
-     * so this procedure hangs around, freezing the server, for the
-     * request to complete.  This is an unpleasant kluge called to
-     * perform an unpleasant job that, we hope, will never be required.
-     */
-
-    while ((err = _fs_load_glyphs(serverClient, pfont, TRUE, 0, 0, NULL)) ==
-	   Suspended)
-    {
-	if (fs_await_reply (conn) != FSIO_READY)
-	{
-	    /* Get rid of blockrec */
-	    fs_client_died(serverClient, pfont->fpe);
-	    err = BadCharRange;
-	    break;
-	}
-	fs_read_reply (pfont->fpe, serverClient);
-    }
-    return err;
-}
-
-
-int
+static int
 _fs_load_glyphs(pointer client, FontPtr pfont, Bool range_flag, 
 		unsigned int nchars, int item_size, unsigned char *data)
 {
@@ -2228,6 +2194,39 @@ _fs_load_glyphs(pointer client, FontPtr pfont, Bool range_flag,
     }
 
     return fs_send_load_glyphs(client, pfont, nranges, ranges);
+}
+
+int
+fs_load_all_glyphs(FontPtr pfont)
+{
+    int		err;
+    FSFpePtr	conn = (FSFpePtr) pfont->fpe->private;
+
+    /*
+     * The purpose of this procedure is to load all glyphs in the event
+     * that we're dealing with someone who doesn't understand the finer
+     * points of glyph caching...  it is called from _fs_get_glyphs() if
+     * the latter is called to get glyphs that have not yet been loaded.
+     * We assume that the caller will not know how to handle a return
+     * value of Suspended (usually the case for a GetGlyphs() caller),
+     * so this procedure hangs around, freezing the server, for the
+     * request to complete.  This is an unpleasant kluge called to
+     * perform an unpleasant job that, we hope, will never be required.
+     */
+
+    while ((err = _fs_load_glyphs(serverClient, pfont, TRUE, 0, 0, NULL)) ==
+	   Suspended)
+    {
+	if (fs_await_reply (conn) != FSIO_READY)
+	{
+	    /* Get rid of blockrec */
+	    fs_client_died(serverClient, pfont->fpe);
+	    err = BadCharRange;
+	    break;
+	}
+	fs_read_reply (pfont->fpe, serverClient);
+    }
+    return err;
 }
 
 static int
@@ -2779,7 +2778,7 @@ _fs_send_conn_client_prefix (FSFpePtr conn)
 static int
 _fs_recv_conn_setup (FSFpePtr conn)
 {
-    int			ret;
+    int			ret = FSIO_ERROR;
     fsConnSetup		*setup;
     FSFpeAltPtr		alts;
     int			i, alt_len;

@@ -119,5 +119,6 @@ FontFileRegisterFpeFunctions(void)
     }
     
     FontFileRegisterLocalFpeFunctions ();
+    CatalogueRegisterLocalFpeFunctions ();
 }
 

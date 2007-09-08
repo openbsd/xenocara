@@ -29,20 +29,17 @@
 #include <config.h>
 #endif
 #include    <X11/fonts/fntfilst.h>
+#include    <X11/fonts/fontutil.h>
+#include    <X11/fonts/pcf.h>
 #include    "builtin.h"
 
-BuiltinOpenBitmap (fpe, ppFont, flags, entry, fileName, format, fmask)
-    FontPathElementPtr	fpe;
-    FontPtr		*ppFont;
-    int			flags;
-    FontEntryPtr	entry;
-    char		*fileName;
-    fsBitmapFormat	format;
-    fsBitmapFormatMask	fmask;
+static int
+BuiltinOpenBitmap (FontPathElementPtr fpe, FontPtr *ppFont, int	flags,
+		   FontEntryPtr entry, char *fileName, fsBitmapFormat format,
+		   fsBitmapFormatMask fmask, FontPtr unused)
 {
     FontFilePtr	file;
     FontPtr     pFont;
-    int         i;
     int         ret;
     int         bit,
                 byte,
@@ -55,7 +52,7 @@ BuiltinOpenBitmap (fpe, ppFont, flags, entry, fileName, format, fmask)
 	return BadFontName;
     pFont = (FontPtr) xalloc(sizeof(FontRec));
     if (!pFont) {
-	BuiltinFileClose (file);
+	BuiltinFileClose (file, 0);
 	return AllocError;
     }
     /* set up default values */
@@ -70,7 +67,7 @@ BuiltinOpenBitmap (fpe, ppFont, flags, entry, fileName, format, fmask)
 
     ret = pcfReadFont (pFont, file, bit, byte, glyph, scan);
 
-    BuiltinFileClose (file);
+    BuiltinFileClose (file, 0);
     if (ret != Successful)
 	xfree(pFont);
     else
@@ -78,22 +75,18 @@ BuiltinOpenBitmap (fpe, ppFont, flags, entry, fileName, format, fmask)
     return ret;
 }
 
-BuiltinGetInfoBitmap (fpe, pFontInfo, entry, fileName)
-    FontPathElementPtr	fpe;
-    FontInfoPtr		pFontInfo;
-    FontEntryPtr	entry;
-    char		*fileName;
+static int
+BuiltinGetInfoBitmap (FontPathElementPtr fpe, FontInfoPtr pFontInfo,
+		      FontEntryPtr entry, char *fileName)
 {
     FontFilePtr file;
-    int		i;
     int		ret;
-    FontRendererPtr renderer;
 
     file = BuiltinFileOpen (fileName);
     if (!file)
 	return BadFontName;
     ret = pcfReadFontInfo (pFontInfo, file);
-    BuiltinFileClose (file);
+    BuiltinFileClose (file, 0);
     return ret;
 }
 
@@ -123,12 +116,12 @@ BuiltinGetInfoScalable (FontPathElementPtr fpe,
 }
 
 static FontRendererRec renderers[] = {
-    ".builtin", 8,
+    { ".builtin", 8,
     BuiltinOpenBitmap,
     BuiltinOpenScalable,
     BuiltinGetInfoBitmap,
     BuiltinGetInfoScalable,
-    0
+    0 }
 };
 
 #define numRenderers	(sizeof renderers / sizeof renderers[0])

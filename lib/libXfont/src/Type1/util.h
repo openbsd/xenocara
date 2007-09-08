@@ -186,4 +186,5 @@ extern void objFormatString ( psobj *objP, int length, char *valueP );
 extern void objFormatName ( psobj *objP, int length, char *valueP );
 extern void objFormatFile ( psobj *objP, FILE *valueP );
 
+extern void T1InitStdProps(void);
 #endif
