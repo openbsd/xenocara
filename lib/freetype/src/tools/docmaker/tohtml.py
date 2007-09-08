@@ -1,3 +1,6 @@
+#  ToHTML (c) 2002, 2003, 2005, 2006, 2007
+#    David Turner <david@freetype.org>
+
 from sources import *
 from content import *
 from formatter import *
@@ -106,6 +109,16 @@ source_footer = "\n</pre></table><br>"
 chapter_header = '<br><table align=center width="75%"><tr><td><h2>'
 chapter_inter  = '</h2><ul class="empty"><li>'
 chapter_footer = '</li></ul></td></tr></table>'
+
+# Index footer.
+index_footer_start = """\
+<hr>
+<table><tr><td width="100%"></td>
+<td><font size=-2>[<a href="
+"""
+index_footer_end = """\
+">TOC</a>]</font></td></tr></table>
+"""
 
 
 # source language keyword coloration/styling
@@ -360,7 +373,7 @@ class HtmlFormatter(Formatter):
 
         # block_index already contains the sorted list of index names
         count = len( self.block_index )
-        rows  = (count + self.columns - 1)/self.columns
+        rows  = (count + self.columns - 1) / self.columns
 
         print "<table align=center border=0 cellpadding=0 cellspacing=0>"
         for r in range(rows):
@@ -377,7 +390,11 @@ class HtmlFormatter(Formatter):
             print line
 
         print "</table>"
-        print self.html_footer
+
+        print index_footer_start + \
+              self.file_prefix + "toc.html" + \
+              index_footer_end
+
         self.index_items = {}
 
     def  index_dump( self, index_filename = None ):
@@ -518,3 +535,4 @@ class HtmlFormatter(Formatter):
         for section in self.sections:
             self.section_dump( section, self.file_prefix + section.name + '.html' )
 
+# eof

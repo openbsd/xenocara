@@ -25,6 +25,13 @@ O  := lo
 SO := o
 
 
+# The executable file extension.  Although most Unix platforms use no
+# extension, we copy the extension detected by autoconf.  Useful for cross
+# building on Unix systems for non-Unix systems.
+#
+E := @EXEEXT@
+
+
 # The library file extension (for standard and static libraries).  This can
 # be .a, .lib, etc., depending on the platform.
 #
@@ -88,17 +95,19 @@ CC    := $(LIBTOOL) --mode=compile $(CCraw)
 LDFLAGS := @LDFLAGS@
 
 
-# export symbols (XXX: HOW TO DEAL WITH CROSS COMPILATION ?)
+# export symbols
 #
+CCraw_build  := @CC_BUILD@	# native CC of building system
+E_BUILD      := @EXEEXT_BUILD@	# extension for exexutable on building system
 EXPORTS_LIST := $(OBJ_DIR)/ftexport.sym
-CCexe        := $(CCraw)   # used to compile "apinames" only
+CCexe        := $(CCraw_build)	# used to compile `apinames' only
 
 
 # Library linking
 #
 LINK_LIBRARY = $(LIBTOOL) --mode=link $(CCraw) -o $@ $(OBJECTS_LIST) \
                           -rpath $(libdir) -version-info $(version_info) \
-                          $(LDFLAGS) \
-                          # -export-symbols $(EXPORTS_LIST) -no-undefined
+                          $(LDFLAGS) -no-undefined \
+                          # -export-symbols $(EXPORTS_LIST)
 
 # EOF

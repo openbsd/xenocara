@@ -460,12 +460,12 @@
       for ( nSettings = 0;
             featreg_table[i].setting_name[nSettings];
             nSettings++)
-        ;                           	/* Do nothing */
+        ;                                   /* Do nothing */
 
       printf( "    {%1d, %1d, %1d, %2d},   /* %s */\n",
               feat_name ? 1 : 0,
               ( feat_name                                                  &&
-                ( ft_strncmp( feat_name, 
+                ( ft_strncmp( feat_name,
                               APPLE_RESERVED, APPLE_RESERVED_LENGTH ) == 0 )
               ) ? 1 : 0,
               featreg_table[i].exclusive ? 1 : 0,

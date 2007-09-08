@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.2.1 API Reference</title>
+<title>FreeType-2.3.5 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -29,7 +29,7 @@
 </style>
 </head>
 <body>
-<center><h1>FreeType-2.2.1 API Reference</h1></center>
+<center><h1>FreeType-2.3.5 API Reference</h1></center>
 
 <center><h1>
 Base Interface
@@ -199,8 +199,8 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
   {
     <a href="ft2-base_interface.html#FT_ENC_TAG">FT_ENC_TAG</a>( <a href="ft2-base_interface.html#FT_Encoding">FT_ENCODING_NONE</a>, 0, 0, 0, 0 ),
 
-    <a href="ft2-base_interface.html#FT_ENC_TAG">FT_ENC_TAG</a>( <a href="ft2-base_interface.html#FT_Encoding">FT_ENCODING_MS_SYMBOL</a>,  's', 'y', 'm', 'b' ),
-    <a href="ft2-base_interface.html#FT_ENC_TAG">FT_ENC_TAG</a>( <a href="ft2-base_interface.html#FT_Encoding">FT_ENCODING_UNICODE</a>,    'u', 'n', 'i', 'c' ),
+    <a href="ft2-base_interface.html#FT_ENC_TAG">FT_ENC_TAG</a>( <a href="ft2-base_interface.html#FT_Encoding">FT_ENCODING_MS_SYMBOL</a>, 's', 'y', 'm', 'b' ),
+    <a href="ft2-base_interface.html#FT_ENC_TAG">FT_ENC_TAG</a>( <a href="ft2-base_interface.html#FT_Encoding">FT_ENCODING_UNICODE</a>,   'u', 'n', 'i', 'c' ),
 
     <a href="ft2-base_interface.html#FT_ENC_TAG">FT_ENC_TAG</a>( <a href="ft2-base_interface.html#FT_Encoding">FT_ENCODING_SJIS</a>,    's', 'j', 'i', 's' ),
     <a href="ft2-base_interface.html#FT_ENC_TAG">FT_ENC_TAG</a>( <a href="ft2-base_interface.html#FT_Encoding">FT_ENCODING_GB2312</a>,  'g', 'b', ' ', ' ' ),
@@ -309,7 +309,7 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 <p>FT_ENCODING_NONE is set if &lsquo;platform_id&rsquo; is <a href="ft2-type1_tables.html#TT_PLATFORM_XXX">TT_PLATFORM_MACINTOSH</a> and &lsquo;encoding_id&rsquo; is not <a href="ft2-type1_tables.html#TT_MAC_ID_XXX">TT_MAC_ID_ROMAN</a> (otherwise it is set to FT_ENCODING_APPLE_ROMAN).</p>
 <p>If &lsquo;platform_id&rsquo; is <a href="ft2-type1_tables.html#TT_PLATFORM_XXX">TT_PLATFORM_MACINTOSH</a>, use the function c <a href="ft2-truetype_tables.html#FT_Get_CMap_Language_ID">FT_Get_CMap_Language_ID</a> to query the Mac language ID which may be needed to be able to distinguish Apple encoding variants. See</p>
 <p>http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/README.TXT</p>
-<p>to get an idea how to do that. Basically, if the language ID is 0, dont use it, otherwise subtract 1 from the language ID. Then examine &lsquo;encoding_id&rsquo;. If, for example, &lsquo;encoding_id&rsquo; is <a href="ft2-type1_tables.html#TT_MAC_ID_XXX">TT_MAC_ID_ROMAN</a> and the language ID (minus 1) is &lsquo;TT_MAC_LANGID_GREEK&rsquo;, it is the Greek encoding, not Roman. <a href="ft2-type1_tables.html#TT_MAC_ID_XXX">TT_MAC_ID_ARABIC</a> with &lsquo;TT_MAC_LANGID_FARSI&rsquo; means the Farsi variant the Arabic encoding.</p>
+<p>to get an idea how to do that. Basically, if the language ID is 0, don't use it, otherwise subtract 1 from the language ID. Then examine &lsquo;encoding_id&rsquo;. If, for example, &lsquo;encoding_id&rsquo; is <a href="ft2-type1_tables.html#TT_MAC_ID_XXX">TT_MAC_ID_ROMAN</a> and the language ID (minus 1) is &lsquo;TT_MAC_LANGID_GREEK&rsquo;, it is the Greek encoding, not Roman. <a href="ft2-type1_tables.html#TT_MAC_ID_XXX">TT_MAC_ID_ARABIC</a> with &lsquo;TT_MAC_LANGID_FARSI&rsquo; means the Farsi variant the Arabic encoding.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -632,7 +632,9 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 
     <a href="ft2-basic_types.html#FT_Generic">FT_Generic</a>        generic;
 
-    /*# the following are only relevant to scalable outlines */
+    /*# The following member variables (down to `underline_thickness') */
+    /*# are only relevant to scalable outlines; cf. @<a href="ft2-base_interface.html#FT_Bitmap_Size">FT_Bitmap_Size</a>    */
+    /*# for bitmap fonts.                                              */
     <a href="ft2-basic_types.html#FT_BBox">FT_BBox</a>           bbox;
 
     <a href="ft2-basic_types.html#FT_UShort">FT_UShort</a>         units_per_EM;
@@ -1129,6 +1131,7 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 <p>The scaling values, if relevant, are determined first during a size changing operation. The remaining fields are then set by the driver. For scalable formats, they are usually set to scaled values of the corresponding fields in <a href="ft2-base_interface.html#FT_FaceRec">FT_FaceRec</a>.</p>
 <p>Note that due to glyph hinting, these values might not be exact for certain fonts. Thus they must be treated as unreliable with an error margin of at least one pixel!</p>
 <p>Indeed, the only way to get the exact metrics is to render <i>all</i> glyphs. As this would be a definite performance hit, it is up to client applications to perform such computations.</p>
+<p>The FT_Size_Metrics structure is valid for bitmap fonts also.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -1403,7 +1406,7 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
-<p>Destroy a given FreeType library object and all of its childs, including resources, drivers, faces, sizes, etc.</p>
+<p>Destroy a given FreeType library object and all of its children, including resources, drivers, faces, sizes, etc.</p>
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
 <table cellpadding=3 border=0>
@@ -1580,6 +1583,7 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 <p>Otherwise, if the &lsquo;FT_OPEN_PATHNAME&rsquo; bit is set, assume that this is a normal file and use &lsquo;pathname&rsquo; to open it.</p>
 <p>If the &lsquo;FT_OPEN_DRIVER&rsquo; bit is set, <a href="ft2-base_interface.html#FT_Open_Face">FT_Open_Face</a> only tries to open the file with the driver whose handler is in &lsquo;driver&rsquo;.</p>
 <p>If the &lsquo;FT_OPEN_PARAMS&rsquo; bit is set, the parameters given by &lsquo;num_params&rsquo; and &lsquo;params&rsquo; is used. They are ignored otherwise.</p>
+<p>Ideally, both the &lsquo;pathname&rsquo; and &lsquo;params&rsquo; fields should be tagged as &lsquo;const&rsquo;; this is missing for API backwards compatibility. With other words, applications should treat them as read-only.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -1682,6 +1686,9 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
 <p>FreeType error code. 0 means success.</p>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+<p>You must not deallocate the memory before calling <a href="ft2-base_interface.html#FT_Done_Face">FT_Done_Face</a>.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -2075,7 +2082,9 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 <p>FreeType error code. 0 means success.</p>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
-<p>If either the horizontal or vertical resolution is zero, it is set to a default value of 72dpi.</p>
+<p>If either the character width or height is zero, it is set equal to the other value.</p>
+<p>If either the horizontal or vertical resolution is zero, it is set equal to the other value.</p>
+<p>A character width or height smaller than 1pt is set to 1pt; if both resolution values are zero, they are set to 72dpi.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -2290,7 +2299,7 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_LOAD_IGNORE_TRANSFORM</b></td></tr>
 <tr valign=top><td></td><td>
-<p>Indicates that the tranform matrix set by <a href="ft2-base_interface.html#FT_Set_Transform">FT_Set_Transform</a> should be ignored.</p>
+<p>Indicates that the transform matrix set by <a href="ft2-base_interface.html#FT_Set_Transform">FT_Set_Transform</a> should be ignored.</p>
 </td></tr>
 <tr valign=top><td><b>FT_LOAD_MONOCHROME</b></td><td>
 <p>This flag is used with <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_RENDER</a> to indicate that you want to render an outline glyph to a 1-bit monochrome bitmap glyph, with 8 pixels packed into each byte of the bitmap data.</p>
@@ -2744,7 +2753,7 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
-<p>Retrieve the ASCII name of a given glyph in a face. This only works for those faces where <a href="ft2-base_interface.html#FT_HAS_GLYPH_NAMES">FT_HAS_GLYPH_NAMES</a>(face) returns TRUE.</p>
+<p>Retrieve the ASCII name of a given glyph in a face. This only works for those faces where <a href="ft2-base_interface.html#FT_HAS_GLYPH_NAMES">FT_HAS_GLYPH_NAMES</a>(face) returns 1.</p>
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
 <table cellpadding=3 border=0>
@@ -2845,6 +2854,7 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>This function returns an error if no charmap in the face corresponds to the encoding queried here.</p>
+<p>Because many fonts contain more than a single cmap for Unicode encoding, this function has some special code to select the one which covers Unicode best. It is thus preferable to <a href="ft2-base_interface.html#FT_Set_Charmap">FT_Set_Charmap</a> in this case.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">

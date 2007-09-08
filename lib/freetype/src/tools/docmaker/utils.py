@@ -1,3 +1,6 @@
+#  Utils (c) 2002, 2004, 2007  David Turner <david@freetype.org>
+#
+
 import string, sys, os, glob
 
 # current output directory
@@ -115,7 +118,7 @@ def make_file_list( args = None ):
                             # of the order of files
         else:
             newpath = [pathname]
-            
+
         file_list.extend( newpath )
 
     if len( file_list ) == 0:
@@ -123,6 +126,7 @@ def make_file_list( args = None ):
     else:
         # now filter the file list to remove non-existing ones
         file_list = filter( file_exists, file_list )
-    
+
     return file_list
 
+# eof

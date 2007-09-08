@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Unix-specific FreeType low-level system interface (body).            */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004, 2005, 2006 by                         */
+/*  Copyright 1996-2001, 2002, 2004, 2005, 2006, 2007 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -266,7 +266,23 @@
       goto Fail_Map;
     }
 
-    stream->size = stat_buf.st_size;
+    /* XXX: TODO -- real 64bit platform support                        */
+    /*                                                                 */
+    /* `stream->size' is typedef'd to unsigned long (in                */
+    /* freetype/ftsystem.h); `stat_buf.st_size', however, is usually   */
+    /* typedef'd to off_t (in sys/stat.h).                             */
+    /* On some platforms, the former is 32bit and the latter is 64bit. */
+    /* To avoid overflow caused by fonts in huge files larger than     */
+    /* 2GB, do a test.  Temporary fix proposed by Sean McBride.        */
+    /*                                                                 */
+    if ( stat_buf.st_size > LONG_MAX )
+    {
+      FT_ERROR(( "FT_Stream_Open: file is too big" ));
+      goto Fail_Map;
+    }
+
+    /* This cast potentially truncates a 64bit to 32bit! */
+    stream->size = (unsigned long)stat_buf.st_size;
     stream->pos  = 0;
     stream->base = (unsigned char *)mmap( NULL,
                                           stream->size,
@@ -275,7 +291,8 @@
                                           file,
                                           0 );
 
-    if ( (long)stream->base != -1 )
+    /* on some RTOS, mmap might return 0 */
+    if ( (long)stream->base != -1 && stream->base != NULL )
       stream->close = ft_close_stream_by_munmap;
     else
     {

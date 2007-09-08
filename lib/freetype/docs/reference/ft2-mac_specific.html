@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.2.1 API Reference</title>
+<title>FreeType-2.3.5 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -29,16 +29,16 @@
 </style>
 </head>
 <body>
-<center><h1>FreeType-2.2.1 API Reference</h1></center>
+<center><h1>FreeType-2.3.5 API Reference</h1></center>
 
 <center><h1>
 Mac Specific Interface
 </h1></center>
 <h2>Synopsis</h2>
 <table align=center cellspacing=5 cellpadding=0 border=0>
-<tr><td></td><td><a href="#FT_New_Face_From_FOND">FT_New_Face_From_FOND</a></td><td></td><td><a href="#FT_New_Face_From_FSSpec">FT_New_Face_From_FSSpec</a></td></tr>
-<tr><td></td><td><a href="#FT_GetFile_From_Mac_Name">FT_GetFile_From_Mac_Name</a></td><td></td><td><a href="#FT_New_Face_From_FSRef">FT_New_Face_From_FSRef</a></td></tr>
-<tr><td></td><td><a href="#FT_GetFile_From_Mac_ATS_Name">FT_GetFile_From_Mac_ATS_Name</a></td><td></td><td></td></tr>
+<tr><td></td><td><a href="#FT_New_Face_From_FOND">FT_New_Face_From_FOND</a></td><td></td><td><a href="#FT_GetFilePath_From_Mac_ATS_Name">FT_GetFilePath_From_Mac_ATS_Name</a></td></tr>
+<tr><td></td><td><a href="#FT_GetFile_From_Mac_Name">FT_GetFile_From_Mac_Name</a></td><td></td><td><a href="#FT_New_Face_From_FSSpec">FT_New_Face_From_FSSpec</a></td></tr>
+<tr><td></td><td><a href="#FT_GetFile_From_Mac_ATS_Name">FT_GetFile_From_Mac_ATS_Name</a></td><td></td><td><a href="#FT_New_Face_From_FSRef">FT_New_Face_From_FSRef</a></td></tr>
 </table><br><br>
 
 <table align=center width="87%"><tr><td>
@@ -107,7 +107,8 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_GetFile_From_Mac_Name</b>( <span class="keyword">const</span> <span class="keyword">char</span>*  fontName,
                             FSSpec*      pathSpec,
-                            <a href="ft2-basic_types.html#FT_Long">FT_Long</a>*     face_index );
+                            <a href="ft2-basic_types.html#FT_Long">FT_Long</a>*     face_index )
+                          FT_DEPRECATED_ATTRIBUTE;
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
@@ -123,10 +124,10 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>output</b></em></td></tr><tr><td>
 <table cellpadding=3 border=0>
 <tr valign=top><td><b>pathSpec</b></td><td>
-<p>FSSpec to the file. For passing to <a href="ft2-base_interface.html#FT_New_Face">FT_New_Face</a>.</p>
+<p>FSSpec to the file. For passing to <a href="ft2-mac_specific.html#FT_New_Face_From_FSSpec">FT_New_Face_From_FSSpec</a>.</p>
 </td></tr>
 <tr valign=top><td><b>face_index</b></td><td>
-<p>Index of the face. For passing to <a href="ft2-base_interface.html#FT_New_Face">FT_New_Face</a>.</p>
+<p>Index of the face. For passing to <a href="ft2-mac_specific.html#FT_New_Face_From_FSSpec">FT_New_Face_From_FSSpec</a>.</p>
 </td></tr>
 </table>
 </td></tr></table>
@@ -148,7 +149,8 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_GetFile_From_Mac_ATS_Name</b>( <span class="keyword">const</span> <span class="keyword">char</span>*  fontName,
                                 FSSpec*      pathSpec,
-                                <a href="ft2-basic_types.html#FT_Long">FT_Long</a>*     face_index );
+                                <a href="ft2-basic_types.html#FT_Long">FT_Long</a>*     face_index )
+                              FT_DEPRECATED_ATTRIBUTE;
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
@@ -164,7 +166,52 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>output</b></em></td></tr><tr><td>
 <table cellpadding=3 border=0>
 <tr valign=top><td><b>pathSpec</b></td><td>
-<p>FSSpec to the file. For passing to <a href="ft2-base_interface.html#FT_New_Face">FT_New_Face</a>.</p>
+<p>FSSpec to the file. For passing to <a href="ft2-mac_specific.html#FT_New_Face_From_FSSpec">FT_New_Face_From_FSSpec</a>.</p>
+</td></tr>
+<tr valign=top><td><b>face_index</b></td><td>
+<p>Index of the face. For passing to <a href="ft2-mac_specific.html#FT_New_Face_From_FSSpec">FT_New_Face_From_FSSpec</a>.</p>
+</td></tr>
+</table>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
+<p>FreeType error code. 0 means success.</p>
+</td></tr></table>
+</td></tr></table>
+<hr width="75%">
+<table align=center width="75%"><tr><td><font size=-2>[<a href="
+ft2-index.html">Index</a>]</font></td>
+<td width="100%"></td>
+<td><font size=-2>[<a href="
+ft2-toc.html">TOC</a>]</font></td></tr></table>
+
+<table align=center width="75%"><tr><td>
+<h4><a name="FT_GetFilePath_From_Mac_ATS_Name">FT_GetFilePath_From_Mac_ATS_Name</a></h4>
+<table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
+
+  FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
+  <b>FT_GetFilePath_From_Mac_ATS_Name</b>( <span class="keyword">const</span> <span class="keyword">char</span>*  fontName,
+                                    UInt8*       path,
+                                    UInt32       maxPathSize,
+                                    <a href="ft2-basic_types.html#FT_Long">FT_Long</a>*     face_index );
+
+</pre></table><br>
+<table align=center width="87%"><tr><td>
+<p>Return a pathname of the disk file and face index for given font name which is handled by ATS framework.</p>
+</td></tr></table><br>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
+<table cellpadding=3 border=0>
+<tr valign=top><td><b>fontName</b></td><td>
+<p>Mac OS name of the font in ATS framework.</p>
+</td></tr>
+</table>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>output</b></em></td></tr><tr><td>
+<table cellpadding=3 border=0>
+<tr valign=top><td><b>path</b></td><td>
+<p>Buffer to store pathname of the file. For passing to <a href="ft2-base_interface.html#FT_New_Face">FT_New_Face</a>. The client must allocate this buffer before calling this function.</p>
+</td></tr>
+<tr valign=top><td><b>maxPathSize</b></td><td>
+<p>Lengths of the buffer &lsquo;path&rsquo; that client allocated.</p>
 </td></tr>
 <tr valign=top><td><b>face_index</b></td><td>
 <p>Index of the face. For passing to <a href="ft2-base_interface.html#FT_New_Face">FT_New_Face</a>.</p>
@@ -190,7 +237,8 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
   <b>FT_New_Face_From_FSSpec</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>     library,
                            <span class="keyword">const</span> FSSpec  *spec,
                            <a href="ft2-basic_types.html#FT_Long">FT_Long</a>        face_index,
-                           <a href="ft2-base_interface.html#FT_Face">FT_Face</a>       *aface );
+                           <a href="ft2-base_interface.html#FT_Face">FT_Face</a>       *aface )
+                         FT_DEPRECATED_ATTRIBUTE;
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
@@ -242,7 +290,8 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
   <b>FT_New_Face_From_FSRef</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>    library,
                           <span class="keyword">const</span> FSRef  *ref,
                           <a href="ft2-basic_types.html#FT_Long">FT_Long</a>       face_index,
-                          <a href="ft2-base_interface.html#FT_Face">FT_Face</a>      *aface );
+                          <a href="ft2-base_interface.html#FT_Face">FT_Face</a>      *aface )
+                        FT_DEPRECATED_ATTRIBUTE;
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (body).                                        */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -372,12 +372,13 @@
 
 
   /* this function is used to select the locals subrs array */
-  FT_LOCAL_DEF( void )
+  FT_LOCAL_DEF( FT_Error )
   cff_decoder_prepare( CFF_Decoder*  decoder,
                        FT_UInt       glyph_index )
   {
-    CFF_Font     cff = (CFF_Font)decoder->builder.face->extra.data;
-    CFF_SubFont  sub = &cff->top_font;
+    CFF_Font     cff   = (CFF_Font)decoder->builder.face->extra.data;
+    CFF_SubFont  sub   = &cff->top_font;
+    FT_Error     error = CFF_Err_Ok;
 
 
     /* manage CID fonts */
@@ -386,6 +387,13 @@
       FT_Byte  fd_index = cff_fd_select_get( &cff->fd_select, glyph_index );
 
 
+      if ( fd_index >= cff->num_subfonts )
+      {
+        FT_TRACE4(( "cff_decoder_prepare: invalid CID subfont index\n" ));
+        error = CFF_Err_Invalid_File_Format;
+        goto Exit;
+      }
+        
       sub = cff->subfonts[fd_index];
     }
 
@@ -395,6 +403,9 @@
 
     decoder->glyph_width   = sub->private_dict.default_width;
     decoder->nominal_width = sub->private_dict.nominal_width;
+
+  Exit:
+    return error;
   }
 
 
@@ -1563,7 +1574,7 @@
                  check_points( builder, 6 )               )
               goto Fail;
 
-            /* Record the starting point's y postion for later use */
+            /* Record the starting point's y position for later use */
             start_y = y;
 
             /* first control point */
@@ -1666,7 +1677,7 @@
                  check_points( builder, 6 )               )
               goto Fail;
 
-            /* record the starting point's x, y postion for later use */
+            /* record the starting point's x, y position for later use */
             start_x = x;
             start_y = y;
 
@@ -2071,7 +2082,7 @@
             if ( idx >= decoder->num_locals )
             {
               FT_ERROR(( "cff_decoder_parse_charstrings:" ));
-              FT_ERROR(( "  invalid local subr index\n" ));
+              FT_ERROR(( " invalid local subr index\n" ));
               goto Syntax_Error;
             }
 
@@ -2089,7 +2100,7 @@
             zone->limit  = decoder->locals[idx + 1];
             zone->cursor = zone->base;
 
-            if ( !zone->base )
+            if ( !zone->base || zone->limit == zone->base )
             {
               FT_ERROR(( "cff_decoder_parse_charstrings:"
                          " invoking empty subrs!\n" ));
@@ -2131,7 +2142,7 @@
             zone->limit  = decoder->globals[idx + 1];
             zone->cursor = zone->base;
 
-            if ( !zone->base )
+            if ( !zone->base || zone->limit == zone->base )
             {
               FT_ERROR(( "cff_decoder_parse_charstrings:"
                          " invoking empty subrs!\n" ));
@@ -2249,9 +2260,11 @@
                                   &charstring, &charstring_len );
       if ( !error )
       {
-        cff_decoder_prepare( &decoder, glyph_index );
-        error = cff_decoder_parse_charstrings( &decoder,
-                                               charstring, charstring_len );
+        error = cff_decoder_prepare( &decoder, glyph_index );
+        if ( !error )
+          error = cff_decoder_parse_charstrings( &decoder,
+                                                 charstring,
+                                                 charstring_len );
 
         cff_free_glyph_data( face, &charstring, &charstring_len );
       }
@@ -2275,15 +2288,28 @@
                  FT_UInt        glyph_index,
                  FT_Int32       load_flags )
   {
-    FT_Error      error;
-    CFF_Decoder   decoder;
-    TT_Face       face     = (TT_Face)glyph->root.face;
-    FT_Bool       hinting;
-    CFF_Font      cff      = (CFF_Font)face->extra.data;
+    FT_Error     error;
+    CFF_Decoder  decoder;
+    TT_Face      face     = (TT_Face)glyph->root.face;
+    FT_Bool      hinting;
+    CFF_Font     cff      = (CFF_Font)face->extra.data;
 
-    FT_Matrix     font_matrix;
-    FT_Vector     font_offset;
+    FT_Matrix    font_matrix;
+    FT_Vector    font_offset;
 
+
+    /* in a CID-keyed font, consider `glyph_index' as a CID and map */
+    /* it immediately to the real glyph_index -- if it isn't a      */
+    /* subsetted font, glyph_indices and CIDs are identical, though */
+    if ( cff->top_font.font_dict.cid_registry != 0xFFFFU &&
+         cff->charset.cids )
+    {
+      glyph_index = cff_charset_cid_to_gindex( &cff->charset, glyph_index );
+      if ( glyph_index == 0 )
+        return CFF_Err_Invalid_Argument;
+    }
+    else if ( glyph_index >= cff->num_glyphs )
+      return CFF_Err_Invalid_Argument;
 
     if ( load_flags & FT_LOAD_NO_RECURSE )
       load_flags |= FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING;
@@ -2376,18 +2402,6 @@
       FT_ULong  charstring_len;
 
 
-      /* in a CID-keyed font, consider `glyph_index' as a CID and map */
-      /* it immediately to the real glyph_index -- if it isn't a      */
-      /* subsetted font, glyph_indices and CIDs are identical, though */
-      if ( cff->top_font.font_dict.cid_registry != 0xFFFFU &&
-           cff->charset.cids )
-      {
-        if ( glyph_index < cff->charset.max_cid )
-          glyph_index = cff->charset.cids[glyph_index];
-        else
-          glyph_index = 0;
-      }
-
       cff_decoder_init( &decoder, face, size, glyph, hinting,
                         FT_LOAD_TARGET_MODE( load_flags ) );
 
@@ -2399,35 +2413,41 @@
                                   &charstring, &charstring_len );
       if ( !error )
       {
-        cff_decoder_prepare( &decoder, glyph_index );
-        error = cff_decoder_parse_charstrings( &decoder,
-                                               charstring, charstring_len );
+        error = cff_decoder_prepare( &decoder, glyph_index );
+        if ( !error )
+        {
+          error = cff_decoder_parse_charstrings( &decoder,
+                                                 charstring,
+                                                 charstring_len );
 
-        cff_free_glyph_data( face, &charstring, charstring_len );
+          cff_free_glyph_data( face, &charstring, charstring_len );
 
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
-        /* Control data and length may not be available for incremental   */
-        /* fonts.                                                         */
-        if ( face->root.internal->incremental_interface )
-        {
-          glyph->root.control_data = 0;
-          glyph->root.control_len = 0;
-        }
-        else
+          /* Control data and length may not be available for incremental */
+          /* fonts.                                                       */
+          if ( face->root.internal->incremental_interface )
+          {
+            glyph->root.control_data = 0;
+            glyph->root.control_len = 0;
+          }
+          else
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
 
-        /* We set control_data and control_len if charstrings is loaded.  */
-        /* See how charstring loads at cff_index_access_element() in      */
-        /* cffload.c.                                                     */
-        {
-          CFF_IndexRec csindex = cff->charstrings_index;
+          /* We set control_data and control_len if charstrings is loaded. */
+          /* See how charstring loads at cff_index_access_element() in     */
+          /* cffload.c.                                                    */
+          {
+            CFF_Index  csindex = &cff->charstrings_index;
 
 
-          glyph->root.control_data =
-            csindex.bytes + csindex.offsets[glyph_index] - 1;
-          glyph->root.control_len =
-            charstring_len;
+            if ( csindex->offsets )
+            {
+              glyph->root.control_data = csindex->bytes +
+                                           csindex->offsets[glyph_index] - 1;
+              glyph->root.control_len  = charstring_len;
+            }
+          }
         }
       }
 
@@ -2459,25 +2479,27 @@
 
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
 
-    if ( cff->num_subfonts >= 1 )
-    {
-      FT_Byte  fd_index = cff_fd_select_get( &cff->fd_select, glyph_index );
-
-
-      font_matrix = cff->subfonts[fd_index]->font_dict.font_matrix;
-      font_offset = cff->subfonts[fd_index]->font_dict.font_offset;
-    }
-    else
-    {
-      font_matrix = cff->top_font.font_dict.font_matrix;
-      font_offset = cff->top_font.font_dict.font_offset;
-    }
-
-    /* Now, set the metrics -- this is rather simple, as   */
-    /* the left side bearing is the xMin, and the top side */
-    /* bearing the yMax.                                   */
     if ( !error )
     {
+      if ( cff->num_subfonts >= 1 )
+      {
+        FT_Byte  fd_index = cff_fd_select_get( &cff->fd_select,
+                                               glyph_index );
+
+
+        font_matrix = cff->subfonts[fd_index]->font_dict.font_matrix;
+        font_offset = cff->subfonts[fd_index]->font_dict.font_offset;
+      }
+      else
+      {
+        font_matrix = cff->top_font.font_dict.font_matrix;
+        font_offset = cff->top_font.font_dict.font_offset;
+      }
+
+      /* Now, set the metrics -- this is rather simple, as   */
+      /* the left side bearing is the xMin, and the top side */
+      /* bearing the yMax.                                   */
+
       /* For composite glyphs, return only left side bearing and */
       /* advance width.                                          */
       if ( load_flags & FT_LOAD_NO_RECURSE )
@@ -2544,11 +2566,16 @@
         glyph->root.outline.flags |= FT_OUTLINE_REVERSE_FILL;
 
         /* apply the font matrix */
-        FT_Outline_Transform( &glyph->root.outline, &font_matrix );
+        if ( !( font_matrix.xx == 0x10000L &&
+                font_matrix.yy == 0x10000L &&
+                font_matrix.xy == 0        &&
+                font_matrix.yx == 0        ) )
+          FT_Outline_Transform( &glyph->root.outline, &font_matrix );
 
-        FT_Outline_Translate( &glyph->root.outline,
-                              font_offset.x,
-                              font_offset.y );
+        if ( !( font_offset.x == 0 &&
+                font_offset.y == 0 ) )
+          FT_Outline_Translate( &glyph->root.outline,
+                                font_offset.x, font_offset.y );
 
         advance.x = metrics->horiAdvance;
         advance.y = 0;

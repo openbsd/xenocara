@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType CharMap cache (body)                                        */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006 by                   */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -305,9 +305,13 @@
      *  more than a few charmaps, so if the index is very large...
      *
      *  It is also very unlikely that a rogue client is interested
-     *  in Unicode values 0 to 3.
+     *  in Unicode values 0 to 15.
+     *
+     *  NOTE: The original threshold was 4, but we found a font from the
+     *        Adobe Acrobat Reader Pack, named `KozMinProVI-Regular.otf',
+     *        which contains more than 5 charmaps.
      */
-    if ( cmap_index >= 4 )
+    if ( cmap_index >= 16 )
     {
       FTC_OldCMapDesc  desc = (FTC_OldCMapDesc) face_id;
 
@@ -337,7 +341,6 @@
 
           return FT_Get_Char_Index( face, char_code );
         }
-        break;
 
       default:
         return 0;

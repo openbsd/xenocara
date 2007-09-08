@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType incremental loading (specification).                        */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2006 by                                          */
+/*  Copyright 2002, 2003, 2006, 2007 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -149,7 +149,7 @@ FT_BEGIN_HEADER
   *   FreeType error code.  0 means success.
   *
   * @note:
-  *   If this function returns succesfully the method
+  *   If this function returns successfully the method
   *   @FT_Incremental_FreeGlyphDataFunc will be called later to release
   *   the data bytes.
   *
@@ -229,11 +229,11 @@ FT_BEGIN_HEADER
    *
    * @struct:
    *   FT_Incremental_FuncsRec
-   * 
+   *
    * @description:
    *   A table of functions for accessing fonts that load data
    *   incrementally.  Used in @FT_Incremental_InterfaceRec.
-   * 
+   *
    * @fields:
    *   get_glyph_data ::
    *     The function to get glyph data.  Must not be null.
@@ -243,7 +243,7 @@ FT_BEGIN_HEADER
    *
    *   get_glyph_metrics ::
    *     The function to get glyph metrics.  May be null if the font does
-   *     not provide overriding glyph metrics. 
+   *     not provide overriding glyph metrics.
    */
   typedef struct  FT_Incremental_FuncsRec_
   {
@@ -293,7 +293,7 @@ FT_BEGIN_HEADER
   {
     const FT_Incremental_FuncsRec*  funcs;
     FT_Incremental                  object;
-  
+
   } FT_Incremental_InterfaceRec;
 
 
@@ -321,7 +321,7 @@ FT_BEGIN_HEADER
   */
 #define FT_PARAM_TAG_INCREMENTAL  FT_MAKE_TAG( 'i', 'n', 'c', 'r' )
 
- /* */  
+ /* */
 
 FT_END_HEADER
 

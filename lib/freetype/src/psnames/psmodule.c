@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PSNames module implementation (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2005, 2006 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2005, 2006, 2007 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -32,7 +32,7 @@
 #ifdef FT_CONFIG_OPTION_ADOBE_GLYPH_LIST
 
 
-#define VARIANT_BIT         ( 1L << 31 )
+#define VARIANT_BIT         0x80000000UL
 #define BASE_GLYPH( code )  ( (code) & ~VARIANT_BIT )
 
 
@@ -92,12 +92,12 @@
         if ( *p == '\0' )
           return value;
         if ( *p == '.' )
-          return value ^ VARIANT_BIT;
+          return value | VARIANT_BIT;
       }
     }
 
     /* If the name begins with `u', followed by four to six uppercase */
-    /* hexadicimal digits, it is a hard-coded unicode character code. */
+    /* hexadecimal digits, it is a hard-coded unicode character code. */
     if ( glyph_name[0] == 'u' )
     {
       FT_Int       count;
@@ -132,7 +132,7 @@
         if ( *p == '\0' )
           return value;
         if ( *p == '.' )
-          return value ^ VARIANT_BIT;
+          return value | VARIANT_BIT;
       }
     }
 
@@ -156,7 +156,7 @@
       if ( !dot )
         return ft_get_adobe_glyph_index( glyph_name, p );
       else
-        return ft_get_adobe_glyph_index( glyph_name, dot ) ^ VARIANT_BIT;
+        return ft_get_adobe_glyph_index( glyph_name, dot ) | VARIANT_BIT;
     }
   }
 
@@ -182,11 +182,12 @@
 
   /* Build a table that maps Unicode values to glyph indices. */
   static FT_Error
-  ps_unicodes_init( FT_Memory          memory,
-                    PS_Unicodes        table,
-                    FT_UInt            num_glyphs,
-                    PS_Glyph_NameFunc  get_glyph_name,
-                    FT_Pointer         glyph_data )
+  ps_unicodes_init( FT_Memory             memory,
+                    PS_Unicodes           table,
+                    FT_UInt               num_glyphs,
+                    PS_GetGlyphNameFunc   get_glyph_name,
+                    PS_FreeGlyphNameFunc  free_glyph_name,
+                    FT_Pointer            glyph_data )
   {
     FT_Error  error;
 
@@ -220,6 +221,9 @@
             map->glyph_index = n;
             map++;
           }
+
+          if ( free_glyph_name )
+            free_glyph_name( glyph_data, gname );
         }
       }
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR cmap handling (body).                                   */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2002, 2007 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,7 +16,7 @@
 /***************************************************************************/
 
 
-#include "pfrcmap.h" 
+#include "pfrcmap.h"
 #include "pfrobjs.h"
 #include FT_INTERNAL_DEBUG_H
 
@@ -24,26 +24,31 @@
   FT_CALLBACK_DEF( FT_Error )
   pfr_cmap_init( PFR_CMap  cmap )
   {
-    PFR_Face  face = (PFR_Face)FT_CMAP_FACE( cmap );
+    FT_Error  error = PFR_Err_Ok;
+    PFR_Face  face  = (PFR_Face)FT_CMAP_FACE( cmap );
 
 
     cmap->num_chars = face->phy_font.num_chars;
     cmap->chars     = face->phy_font.chars;
-    
+
     /* just for safety, check that the character entries are correctly */
     /* sorted in increasing character code order                       */
     {
       FT_UInt  n;
-      
+
 
       for ( n = 1; n < cmap->num_chars; n++ )
       {
         if ( cmap->chars[n - 1].char_code >= cmap->chars[n].char_code )
-          FT_ASSERT( 0 );
+        {
+          error = PFR_Err_Invalid_Table;
+          goto Exit;
+        }
       }
     }
-    
-    return 0;
+
+  Exit:
+    return error;
   }
 
 

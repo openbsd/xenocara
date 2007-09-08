@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.2.1 API Reference</title>
+<title>FreeType-2.3.5 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -29,7 +29,7 @@
 </style>
 </head>
 <body>
-<center><h1>FreeType-2.2.1 API Reference</h1></center>
+<center><h1>FreeType-2.3.5 API Reference</h1></center>
 
 <center><h1>
 Outline Processing
@@ -136,7 +136,7 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_OUTLINE_REVERSE_FILL</b></td></tr>
 <tr valign=top><td></td><td>
-<p>By default, outside contours of an outline are oriented in clock-wise direction, as defined in the TrueType specification. This flag is set if the outline uses the opposite direction (typically for Type 1 fonts). This flag is ignored by the scan-converter. However, it is very important for the auto-hinter.</p>
+<p>By default, outside contours of an outline are oriented in clock-wise direction, as defined in the TrueType specification. This flag is set if the outline uses the opposite direction (typically for Type 1 fonts). This flag is ignored by the scan-converter.</p>
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_OUTLINE_IGNORE_DROPOUTS</b></td></tr>
 <tr valign=top><td></td><td>
@@ -809,7 +809,7 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 </table>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
-<p>FreeType error code. 0 means sucess.</p>
+<p>FreeType error code. 0 means success.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -889,7 +889,7 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>This function does NOT CREATE the bitmap, it only renders an outline image within the one you pass to it!</p>
-<p>It will use the raster correponding to the default glyph format.</p>
+<p>It will use the raster corresponding to the default glyph format.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -955,7 +955,7 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
     <a href="ft2-outline_processing.html#FT_Orientation">FT_ORIENTATION_FILL_RIGHT</a> = <a href="ft2-outline_processing.html#FT_Orientation">FT_ORIENTATION_TRUETYPE</a>,
     <a href="ft2-outline_processing.html#FT_Orientation">FT_ORIENTATION_FILL_LEFT</a>  = <a href="ft2-outline_processing.html#FT_Orientation">FT_ORIENTATION_POSTSCRIPT</a>,
     <a href="ft2-outline_processing.html#FT_Orientation">FT_ORIENTATION_NONE</a>
-  
+
   } <b>FT_Orientation</b>;
 
 </pre></table><br>

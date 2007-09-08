@@ -1,0 +1,628 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+          "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=iso-8859-1">
+  <meta name="Author"
+        content="David Turner">
+  <link rel="stylesheet"
+        href="../../freetype.css">
+  <title>FreeType&nbsp;2 FAQ</title>
+</head>
+
+<body text="#000000"
+      bgcolor="#FFFFFF"
+      link="#0000EF"
+      vlink="#51188E"
+      alink="#FF0000">
+
+
+<font size=1>http://www.freetype.org</font><p>
+
+<h1 align=center>
+  <a href="../../index2.html">
+  <img src="../../image/freetype.jpg"
+       width=550 height=105
+       alt="The FreeType Project"
+       border=0></a>
+  <h1>The FreeType&nbsp;2 FAQ</h1>
+</h1>
+
+<table width="80%" align="center">
+<tr><td>
+
+  <hr>
+
+  <ul>
+    <li><a href="#general">General</a>
+      <ul><p>
+        <li>
+          <a href="#general-what">What is FreeType&nbsp;2?</a>
+        </li>
+        <li>
+          <a href="#general-uses">What can I do with FreeType&nbsp;2?</a>
+        </li>
+        <li>
+          <a href="#general-donts">What can I not do with
+          FreeType&nbsp;2?</a>
+        </li>
+        <li>
+          <a href="#general-portability">How portable is
+          FreeType&nbsp;2?</a>
+        </li>
+        <li>
+          <a href="#general-freetype1">What are the differences between
+          FreeType&nbsp;1.x and FreeType&nbsp;2?</a>
+        </li>
+        <li>
+          <a href="#general-ft1">Is FreeType&nbsp;2 backwards compatible
+          to FreeType&nbsp;1.x?</a>
+        </li>
+        <li>
+          <a href="#general-edit">Can I use FreeType&nbsp;2 to edit fonts
+          or create new ones?</a>
+        </li>
+      </p></ul>
+    </li>
+
+    <li><a href="#builds">Compilation &amp; Configuration</a>
+      <ul><p>
+        <li>
+          <a href="#builds-compile">How do I compile the FreeType&nbsp;2
+          library?</a>
+        </li>
+        <li>
+          <a href="#builds-problems">I've tried to compile FreeType&nbsp;2,
+          but I'm having problems.  What can I do?</a>
+        </li>
+        <li>
+          <a href="#builds-config">How do I configure my library build?</a>
+        </li>
+      </p></ul>
+    </li>
+
+    <li>
+      <a href="#autohint">The FreeType&nbsp;2 auto-hinter</a>
+      <ul><p>
+        <li>
+          <a href="#autohint-work">How does the auto-hinter work?
+        </li>
+        <li>
+          <a href="#autohint-other-scripts">Why doesn't the auto-hinter work
+          well with my script?</a>
+        </li>
+      </p></ul>
+    </li>
+
+    <li>
+      <a href="#other">Other questions</a>
+      <ul><p>
+        <li>
+          <a href="#other-depth">Can I use FreeType to draw text on a pixmap
+          with arbitrary depth?</a>
+        </li>
+        <li>
+          <a href="#other-color">How can I set the colour of text rendered
+          by FreeType?</a>
+        </li>
+        <li>
+          <a href="#other-size">I set the pixel size to 8&times;8, but the
+          resulting glyphs are larger (or smaller) than that.  Why?</a>
+        </li>
+        <li>
+          <a href="#other-bbox">How can I compute the bounding box of a text
+          string without loading its glyphs before?</a>
+        </li>
+        <li>
+          <a href="#other-antialias">Which anti-aliasing algorithm is
+          used by FreeType&nbsp;2?</a>
+        </li>
+        <li>
+          <a href="#other-opentype">When will FreeType&nbsp;2 support
+          OpenType?</a>
+        </li>
+      </p></ul>
+    </li>
+  </ul>
+
+  <p></p>
+
+  <table width="100%">
+    <tr bgcolor="#CCCCEE">
+      <td>
+        <a name="general"></a>
+        <h2 align=center>General questions &amp; answers</h2>
+      </td>
+    </tr>
+    <tr>
+      <td>
+
+
+        <a name="general-what"></a>
+        <h3>
+          What is FreeType&nbsp;2?
+        </h3>
+
+        <p>It is a software library that can be used by all kinds of
+        applications to access the contents of font files.  Most notably, it
+        supports the following &lsquo;features&rsquo;:</p>
+
+        <ul>
+          <li><p>
+            It provides a uniform interface to access font files.  It
+            supports both bitmap and scalable formats, including TrueType,
+            OpenType, Type1, CID, CFF, Windows FON/FNT, X11 PCF, and others.
+          </p></li>
+
+          <li><p>
+            It supports high-speed anti-aliased glyph bitmap generation with
+            256 gray levels.
+          </p></li>
+
+          <li><p>
+            It is extremely modular, each font format being supported by a
+            specific module.  A build of the library can be tailored to
+            support only the formats you need, thus reducing code size (a
+            minimal anti-aliasing build of FreeType can be less than 30KB)
+          </p></li>
+        </ul>
+
+
+        <hr><a name="general-uses"></a>
+
+        <h3>
+          What can I do with FreeType&nbsp;2?
+        </h3>
+
+        <p>FreeType&nbsp;2 is already used in many products.  For example,
+        it serves as a font rendering engine</p>
+
+        <ul>
+          <li>
+            in graphics subsystem and libraries to display text
+          </li>
+          <li>
+            in text layout and pagination services to measure and eventually
+            render text
+          </li>
+          <li>
+            in font inspection and conversion tools
+          </li>
+        </ul>
+
+        <p>Generally speaking, the library allows you to access and manage
+        the contents of font files in a very easy way.</p>
+
+
+        <hr><a name="general-donts"></a>
+
+        <h3>
+          What can I not do with FreeType&nbsp;2?
+        </h3>
+
+        <p>FreeType&nbsp;2 doesn't try to perform a number of sophisticated
+        things, because it focuses on being an excellent <em>font
+        service</em>.</p>
+
+        <p>This means that the following features are not supported directly
+        by the library, even though they can be more or less implemented on
+        top of it, or by using it:</p>
+
+        <ul>
+          <li>
+            <p><b>rendering glyphs to arbitrary surfaces</b><br>
+            FreeType&nbsp;2 doesn't try to be a graphics library and thus
+            only supports two pixel formats when rendering glyphs:
+            monochrome 1-bit bitmaps, or 8-bit gray-level pixmaps.</p>
+
+            <p>If you need to draw glyphs to other kinds of surfaces (for
+            example, a 24-bit RGB pixmap), you need to use your favorite
+            graphics library to do just that.</p>
+
+            <p><em>Note however that in the case of rendering scalable glyph
+            outlines to anti-aliased pixmaps, an application can also
+            provide its own rendering callback in order to draw or compose
+            directly the anti-aliased glyph on any target surface.</em></p>
+          </li>
+
+          <li>
+            <p><b>glyph caching</b><br>
+            Each time you request a glyph image from a font, FreeType&nbsp;2
+            does it by parsing the relevant portion of the font file or font
+            stream and interpreting it according to its font format.  This
+            can be very slow for certain formats, including scalable ones
+            like TrueType or Type&nbsp;1.</p>
+
+            <p>Any decent text-rendering sub-system must thus be capable of
+            caching glyph data in order to reach appropriate rendering
+            speed.</p>
+
+            <p><em>Note that we provide a caching sub-system with
+            FreeType&nbsp;2 since version 2.0.1 which has become quite
+            stable at the time of this writing (version 2.2.1).  However, it
+            might not suit your needs.</em></p>
+          </li>
+
+          <li>
+            <p><b>text layout</b><br>
+            The library doesn't support text layout operations.
+            Sophisticated features like glyph substitution, positioning
+            (kerning), justification, bi-directional ordering, etc.m are not
+            part of a <em>font service</em> in itself.  They must be handled
+            one level higher.</p>
+          </li>
+        </ul>
+
+
+        <hr><a name="general-portability"></a>
+
+        <h3>
+          How portable is FreeType&nbsp;2?
+        </h3>
+
+        <p>The FreeType 2 source code is <em>extremely</em> portable for the
+        following reasons:</p>
+
+        <ul>
+          <li>
+            Everything is written in standard ANSI&nbsp;C.
+          </li>
+          <li>
+            We are very pedantic to avoid any kinds of compiler warnings.
+            The current source code has been compiled with many compilers
+            without producing a single warning.
+          </li>
+          <li>
+            The library doesn't use any static writable data at all, making
+            it an ideal choice on various embedded systems (e.g., it can be
+            run from ROM directly).  It is completely thread-safe too.
+          </li>
+        </ul>
+
+        <p>We have made great efforts to ensure that the library is
+        efficient, compact, and customizable.</p>
+
+
+        <hr><a name="general-freetype1"></a>
+
+        <h3>
+          What are the differences between FreeType&nbsp;1.x and
+          FreeType&nbsp;2?
+        </h3>
+
+        <p>The biggest differences are as follows.</p>
+
+        <ul>
+          <li>
+            <p>FreeType&nbsp;1 only supports the TrueType format, while
+            FreeType&nbsp;2 supports a lot more.</p>
+          </li>
+
+          <li>
+            <p>The FreeType&nbsp;2 API is simpler as well as more powerful than the
+            FreeType&nbsp;1 API.</p>
+          </li>
+
+          <li>
+            <p>FreeType&nbsp;1 includes an extension to support OpenType
+            text layout processing.  This support hasn't become part of
+            FreeType&nbsp;2; a much improved version is now part of the <a
+            href="http:///www.pango.org">Pango<a/> library.</p>
+          </li>
+        </ul>
+
+
+        <hr><a name="general-ft1"></a>
+
+        <h3>
+          Is FreeType&nbsp;2 backwards compatible with FreeType&nbsp;1.x?
+        </h3>
+
+        <p>Short answer: No.  However, transition from 1.x to&nbsp;2 should
+        be rather straightforward.</p>
+
+        <p>The FreeType&nbsp;2 API is a lot simpler than the one in&nbsp;1.x
+        while being much more powerful.  We thus encourage you to adapt your
+        source code to it as this should not involve much work.</p>
+
+
+        <hr><a name="general-edit"></a>
+
+        <h3>
+          Can I use FreeType&nbsp;2 to edit fonts or create new ones?
+        </h3>
+
+        <p>No.  The library has been specifically designed to <em>read</em>
+        font files with small code size and very low memory usage.</p>
+
+        <p>A good, freely available font editor is <a
+        href="http://fontforge.sf.net">FontForge</a>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p></p>
+
+  <table width="100%">
+    <tr bgcolor="#CCCCEE">
+      <td>
+        <a name="builds"></a>
+        <h2 align=center>Compilation &amp; Configuration</h2>
+      </td>
+    </tr>
+    <tr>
+      <td>
+
+
+        <a name="builds-compile"></a>
+        <h3>
+          How do I compile the FreeType&nbsp;2 library?
+        </h3>
+
+        <p>The library can be compiled in various ways, and detailed
+        documentation is available in documentation directory of the
+        FreeType&nbsp;2 source tree.</p>
+
+        <p>For compilation on the command line, GNU make is necessary; other
+        build tools won't work.  The source bundle also comes with project
+        files for some graphical IDEs like Visual C; note, however, that
+        those files are sometimes not up to date since it is contributed
+        code not used by the core developers.</p>
+
+
+        <hr><a name="builds-config"></a>
+
+        <h3>
+          How do I configure my build of the library?
+        </h3>
+
+        <p>This is fully described in the file <tt>CUSTOMIZATION</tt> in
+        FreeType's documentation directory.  Basically, you have to edit the
+        header file <tt>ftoption.h</tt> for compile-time options and to
+        select the modules with the file <tt>modules.cfg</tt>.  Finally, it
+        is possible to replace the standard system interface (dealing with
+        memory allocation and stream I/O) with a custom one.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p></p>
+
+  <table width="100%">
+    <tr bgcolor="#CCCCEE">
+      <td>
+        <a name="autohint"></a>
+        <h2 align=center>The FreeType&nbsp;2 auto-hinter</h2>
+      </td>
+    </tr>
+    <tr>
+      <td>
+
+
+        <a name="autohint-work"></a>
+
+        <h3>
+          How does the auto-hinter work?
+        </h3>
+
+        <p><em>Please note that the name of auto-hinter module is
+        <b>autofit</b>, which is a reimplementation of the old autohint
+        module.</em></p>
+
+        <p>A rather complete description of the hinting algorithm (which is
+        slightly out of date regarding the internal structures) can be found
+        in the TUG-boat article <a
+        href="http://www.tug.org/TUGboat/Articles/tb24-3/lemberg.pdf">Real-Time
+        Grid Fitting of Typographic Outlines</a>.</p>
+
+        <p>The auto-hinter performs grid-fitting on scalable font formats
+        that use B&eacute;zier outlines as their primary glyph image format
+        (this means nearly all scalable font formats today).  If a given
+        font driver doesn't provide its own hinter, the auto-hinter is used
+        by default.  If a format-specific hinter is provided, it is still
+        possible to use the auto-hinter using the
+        <tt>FT_LOAD_FORCE_AUTOHINT</tt> bit flag when calling
+        <tt>FT_Load_Glyph()</tt>.</p>
+
+        <p>Currently, the auto-hinter doesn't use external hints to do its
+        job, as it automatically computes global metrics (when it
+        &lsquo;opens&rsquo; a font for the first time) and glyph
+        &lsquo;hints&rsquo; from their outline.
+
+        <p><hr></p>
+
+        <a name="autohint-other-scripts"></a>
+        <h3>
+          Why doesn't the auto-hinter work well with my script?
+        </h3>
+
+        <p>The auto-hinter was first designed to manage and hint Latin-based
+        fonts, as they consist of most of the fonts available today.  It now
+        supports Asian fonts, but not other complex scripts like Arabic.
+
+        Hinting various scripts isn't really more difficult than Latin, just
+        different, with a set of different constraints, which must be
+        hard-coded into the autofit module.  Volunteers welcome!</p>
+      </td>
+    </tr>
+  </table>
+
+  <p></p>
+
+  <table width="100%">
+    <tr bgcolor="#CCCCEE">
+      <td>
+        <a name="other"></a>
+        <h2 align=center>Other questions</h2>
+      </td>
+    </tr>
+    <tr>
+      <td>
+
+        <a name="other-depth"></a>
+        <h3>
+          Can I use FreeType to draw text on a pixmap with arbitrary depth?
+        </h3>
+
+        <p>Not directly, as FreeType is a font library, not a
+        general-purpose graphics library or text rendering service.
+        However, note that the anti-aliased renderer allows you to convert a
+        vectorial glyph outline into a list of &lsquo;spans&rsquo; (i.e.,
+        horizontal pixel segments with the same coverage) that can be
+        rendered through user-provided callbacks.</p>
+
+        <p>By providing the appropriate span callback, you can render
+        anti-aliased text to any kind of surface.  You can also use any
+        colour, fill pattern or fill image if you want to.  This process is
+        called <em>direct rendering</em>.
+
+        <font color="blue">
+        <pre>
+    FT_Raster_Params  params;
+    FT_Outline        outline;
+
+
+    ... load vectorial glyph in &lsquo;outline&rsquo; ...
+
+    params.flags      = FT_RASTER_FLAG_AA | FT_RASTER_FLAG_DIRECT;
+    params.gray_spans = (FT_Raster_Span_Func)your_own_span_function;
+    params.user       = your_own_data_pointer;
+
+    error = FT_Outline_Render( library, &amp;outline, &amp;params );</pre>
+        </font>
+
+        <p>Note that direct rendering is <em>not</em> available with
+        monochrome output, as the current renderer uses a two-pass algorithm
+        to generate glyphs with correct drop-out control.</p>
+
+
+        <hr><a name="other-color"></a>
+
+        <h3>
+          How can I set the colour of text rendered by FreeType?
+        </h3>
+
+        <p>Basically, you can't do that, because FreeType is simply a font
+        library.  In general, you need to use your favorite graphics library
+        to draw the FreeType glyphs with the appropriate colour.</p>
+
+        <p>Note that for anti-aliased glyphs, you can &lsquo;set the
+        colour&rsquo; by using <em>direct rendering</em> as described in <a
+        href="#other-depth">this answer</a>.</p>
+
+
+        <hr><a name="other-size"></a>
+
+        <h3>
+          I set the pixel size to 8&times;8, but the resulting glyphs are
+          larger (or smaller) than that.  Why?
+        </h3>
+
+        <p>A lot of people have difficulties to understand this topic, because
+        they think of glyphs as fixed-width or fixed-height
+        &lsquo;cells&rsquo;, like those of fonts used in terminals/consoles.
+        This assumption is not valid with most &lsquo;modern&rsquo; font
+        formats, even for bitmapped-based ones like <b>PCF</b> or
+        <b>BDF</b>.</p>
+
+        <p>Be aware that the <em>character size</em> that is set either
+        through <tt>FT_Set_Char_Size()</tt> or <tt>FT_Set_Pixel_Sizes()</tt>
+        isn't directly related to the dimension of the generated glyph
+        bitmaps!</p>
+
+        <p>Rather, the character size is indeed the size of <em>an abstract
+        square</em>, called the <em>EM</em>, used by typographers to design
+        fonts.  Scaling two distinct fonts to the same character size, be it
+        expressed in points or pixels, generally results in bitmaps with
+        <em>distinct dimensions</em>!</p>
+
+        <p>Note that historically, the EM corresponded to the width of a
+        capital &lsquo;M&rsquo; in Latin typefaces.  However, later
+        improvements in typography led to designs that greatly deviate from
+        this rule.  Today, it is not possible to connect the EM size to a
+        specific font &lsquo;feature&rsquo; in a reliable way.</p>
+
+
+        <hr><a name="other-bbox"></a>
+
+        <h3>
+          How can I compute the bounding box of a text string without
+          loading its glyphs before?
+        </h3>
+
+        <p>This is not possible in general.  Reason is that hinting distorts
+        the glyph shape for optimal rasterization, and this process
+        sometimes creates outlines which have considerably different
+        metrics.  The TrueType format provides the (optional)
+        &lsquo;hdmx&rsquo; table which contains device horizontal metrics
+        for selected pixel sizes, but even here the vertical metrics are
+        missing.</p>
+
+        <p>It is probably best to use both a glyph and a metrics cache to
+        avoid recomputation.</p>
+
+
+        <hr><a name="other-antialias"></a>
+
+        <h3>
+          Which anti-aliasing algorithm is used by FreeType&nbsp;2?
+        </h3>
+
+        <p>The algorithm has been specifically designed for FreeType.  It is
+        based on ideas that were originally found in the implementation of
+        the <a href="http://www.levien.com/libart">libArt</a> graphics
+        library to compute the <em>exact pixel coverage</em> of a vector
+        image with no sub-sampling and filtering.</p>
+
+        <p>However, these two implementations are radically distinct and use
+        vastly different models.  The FreeType&nbsp;2 renderer is optimized
+        specifically for rendering small complex shapes, like glyphs, at
+        very high speed while using very few memory.  On the other hand,
+        libArt has been designed for general shape and polygon processing,
+        especially large ones.</p>
+
+        <p>The FreeType&nbsp;2 anti-aliasing renderer is indeed
+        <em>faster</em> than the monochrome renderer for small character
+        sizes (typically &lt;20&nbsp;pixels).  The reason is that the
+        monochrome renderer must perform two passes on the outline in order
+        to perform drop-out control according to the TrueType
+        specification.</p>
+
+
+        <hr><a name="other-opentype"></a>
+
+        <h3>
+          When will FreeType&nbsp;2 support OpenType?
+        </h3>
+
+        <p>Well, the engine already reads OpenType/CFF files perfectly.
+        What it doesn't do is handling &lsquo;OpenType Layout&rsquo;
+        tables.</p>
+
+        <p>FreeType&nbsp;1 comes with a set of extensions that are used to
+        load and manage OpenType Layout tables.  It even has a demonstration
+        program named <tt>ftstrtto</tt> to show its capabilities.  However,
+        this code is no longer maintained, and we strongly advise to not use
+        it.</p>
+
+        <p>For FreeType&nbsp;2, we have decided that the layout operations
+        provided through these tables are better placed in a specific
+        text-layout library like <a
+        href="http://www.pango.org">Pango</a>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p><hr></p>
+
+  <a href="../../index2.html">Back to FreeType homepage</a><p>
+
+</td></tr>
+</table>
+
+<p><font size=-3>Last update: 28-Jul-2006</font></p>
+
+</body>
+</html>

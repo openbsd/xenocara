@@ -5,7 +5,7 @@
 /*    TrueType and OpenType embedded bitmap support (body).                */
 /*    This is a heap-optimized version.                                    */
 /*                                                                         */
-/*  Copyright 2005, 2006 by                                                */
+/*  Copyright 2005, 2006, 2007 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -15,6 +15,9 @@
 /*  understand and accept it fully.                                        */
 /*                                                                         */
 /***************************************************************************/
+
+
+/* This file is included by ttsbit.c */
 
 
 #include <ft2build.h>
@@ -137,7 +140,7 @@
      *  paranoid there and don't trust the data.
      */
     count = (FT_UInt)num_strikes;
-    if ( 8 +48UL * count > table_size )
+    if ( 8 + 48UL * count > table_size )
       count = (FT_UInt)( ( p_limit - p ) / 48 );
 
     face->sbit_num_strikes = count;
@@ -180,7 +183,7 @@
                                FT_Size_Metrics*  metrics )
   {
     FT_Byte*         strike;
-    
+
 
     if ( strike_index >= (FT_ULong)face->sbit_num_strikes )
       return SFNT_Err_Invalid_Argument;
@@ -232,7 +235,7 @@
                         TT_SBit_MetricsRec*  metrics )
   {
     FT_Error   error;
-    FT_Stream  stream     = face->root.stream;
+    FT_Stream  stream = face->root.stream;
     FT_ULong   ebdt_size;
 
 
@@ -258,14 +261,27 @@
 
     /* now find the strike corresponding to the index */
     {
-      FT_Byte*  p = decoder->eblc_base + 8 + 48 * strike_index;
+      FT_Byte*  p;
 
+
+      if ( 8 + 48 * strike_index + 3 * 4 + 34 + 1 > face->sbit_table_size )
+      {
+        error = SFNT_Err_Invalid_File_Format;
+        goto Exit;
+      }
+
+      p = decoder->eblc_base + 8 + 48 * strike_index;
 
       decoder->strike_index_array = FT_NEXT_ULONG( p );
       p                          += 4;
       decoder->strike_index_count = FT_NEXT_ULONG( p );
       p                          += 34;
       decoder->bit_depth          = *p;
+
+      if ( decoder->strike_index_array > face->sbit_table_size             ||
+           decoder->strike_index_array + 8 * decoder->strike_index_count >
+             face->sbit_table_size                                         )
+        error = SFNT_Err_Invalid_File_Format;
     }
 
   Exit:
@@ -639,9 +655,9 @@
 
     for ( nn = 0; nn < num_components; nn++ )
     {
-      FT_UInt   gindex = FT_NEXT_USHORT( p );
-      FT_Byte   dx     = FT_NEXT_BYTE( p );
-      FT_Byte   dy     = FT_NEXT_BYTE( p );
+      FT_UInt  gindex = FT_NEXT_USHORT( p );
+      FT_Byte  dx     = FT_NEXT_BYTE( p );
+      FT_Byte  dy     = FT_NEXT_BYTE( p );
 
 
       /* NB: a recursive call */
@@ -772,9 +788,6 @@
     FT_ULong  image_start = 0, image_end = 0, image_offset;
 
 
-    if ( p + 8 * num_ranges > p_limit )
-      goto NoBitmap;
-
     for ( ; num_ranges > 0; num_ranges-- )
     {
       start = FT_NEXT_USHORT( p );
@@ -789,6 +802,12 @@
 
   FoundRange:
     image_offset = FT_NEXT_ULONG( p );
+
+    /* overflow check */
+    if ( decoder->eblc_base + decoder->strike_index_array + image_offset <
+           decoder->eblc_base )
+      goto Failure;
+
     p = decoder->eblc_base + decoder->strike_index_array + image_offset;
     if ( p + 8 > p_limit )
       goto NoBitmap;
@@ -828,7 +847,7 @@
           goto NoBitmap;
 
         image_start = image_size * ( glyph_index - start );
-        image_end   = image_start  + image_size;
+        image_end   = image_start + image_size;
       }
       break;
 
@@ -855,6 +874,11 @@
           goto NoBitmap;
 
         num_glyphs = FT_NEXT_ULONG( p );
+
+        /* overflow check */
+        if ( p + ( num_glyphs + 1 ) * 4 < p )
+          goto Failure;
+
         if ( p + ( num_glyphs + 1 ) * 4 > p_limit )
           goto NoBitmap;
 
@@ -892,6 +916,11 @@
           goto NoBitmap;
 
         num_glyphs = FT_NEXT_ULONG( p );
+
+        /* overflow check */
+        if ( p + 2 * num_glyphs < p )
+          goto Failure;
+
         if ( p + 2 * num_glyphs > p_limit )
           goto NoBitmap;
 
@@ -907,7 +936,7 @@
         if ( mm >= num_glyphs )
           goto NoBitmap;
 
-        image_start = image_size*mm;
+        image_start = image_size * mm;
         image_end   = image_start + image_size;
       }
       break;
@@ -928,6 +957,9 @@
                                         image_end,
                                         x_pos,
                                         y_pos );
+
+  Failure:
+    return SFNT_Err_Invalid_Table;
 
   NoBitmap:
     return SFNT_Err_Invalid_Argument;

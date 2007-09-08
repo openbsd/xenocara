@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType objects manager (body).                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -207,13 +207,13 @@
     {
       CFF_Face      cffface = (CFF_Face)size->face;
       SFNT_Service  sfnt    = (SFNT_Service)cffface->sfnt;
-      FT_ULong      index;
+      FT_ULong      strike_index;
 
 
-      if ( sfnt->set_sbit_strike( cffface, req, &index ) )
+      if ( sfnt->set_sbit_strike( cffface, req, &strike_index ) )
         cffsize->strike_index = 0xFFFFFFFFUL;
       else
-        return cff_size_select( size, index );
+        return cff_size_select( size, strike_index );
     }
 
 #endif /* TT_CONFIG_OPTION_EMBEDDED_BITMAPS */
@@ -285,17 +285,10 @@
               const FT_String*  source )
   {
     FT_Error    error;
-    FT_String*  result = 0;
-    FT_Int      len = (FT_Int)ft_strlen( source );
+    FT_String*  result;
 
 
-    if ( !FT_ALLOC( result, len + 1 ) )
-    {
-      FT_MEM_COPY( result, source, len );
-      result[len] = 0;
-    }
-
-    FT_UNUSED( error );
+    result = ft_mem_strdup( memory, source, &error );
 
     return result;
   }

@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.2.1 API Reference</title>
+<title>FreeType-2.3.5 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -29,7 +29,7 @@
 </style>
 </head>
 <body>
-<center><h1>FreeType-2.2.1 API Reference</h1></center>
+<center><h1>FreeType-2.3.5 API Reference</h1></center>
 
 <center><h1>
 TrueType Tables
@@ -41,8 +41,8 @@ TrueType Tables
 <tr><td></td><td><a href="#TT_VertHeader">TT_VertHeader</a></td><td></td><td><a href="#FT_Load_Sfnt_Table">FT_Load_Sfnt_Table</a></td></tr>
 <tr><td></td><td><a href="#TT_OS2">TT_OS2</a></td><td></td><td><a href="#FT_Sfnt_Table_Info">FT_Sfnt_Table_Info</a></td></tr>
 <tr><td></td><td><a href="#TT_Postscript">TT_Postscript</a></td><td></td><td><a href="#FT_Get_CMap_Language_ID">FT_Get_CMap_Language_ID</a></td></tr>
-<tr><td></td><td><a href="#TT_PCLT">TT_PCLT</a></td><td></td><td><a href="#FT_PARAM_TAG_UNPATENTED_HINTING">FT_PARAM_TAG_UNPATENTED_HINTING</a></td></tr>
-<tr><td></td><td><a href="#TT_MaxProfile">TT_MaxProfile</a></td><td></td><td></td></tr>
+<tr><td></td><td><a href="#TT_PCLT">TT_PCLT</a></td><td></td><td><a href="#FT_Get_CMap_Format">FT_Get_CMap_Format</a></td></tr>
+<tr><td></td><td><a href="#TT_MaxProfile">TT_MaxProfile</a></td><td></td><td><a href="#FT_PARAM_TAG_UNPATENTED_HINTING">FT_PARAM_TAG_UNPATENTED_HINTING</a></td></tr>
 </table><br><br>
 
 <table align=center width="87%"><tr><td>
@@ -734,6 +734,35 @@ ft2-toc.html">TOC</a>]</font></td></tr></table>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
 <p>The language ID of &lsquo;charmap&rsquo;. If &lsquo;charmap&rsquo; doesn't belong to a TrueType/sfnt face, just return 0 as the default value.</p>
+</td></tr></table>
+</td></tr></table>
+<hr width="75%">
+<table align=center width="75%"><tr><td><font size=-2>[<a href="
+ft2-index.html">Index</a>]</font></td>
+<td width="100%"></td>
+<td><font size=-2>[<a href="
+ft2-toc.html">TOC</a>]</font></td></tr></table>
+
+<table align=center width="75%"><tr><td>
+<h4><a name="FT_Get_CMap_Format">FT_Get_CMap_Format</a></h4>
+<table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
+
+  FT_EXPORT( <a href="ft2-basic_types.html#FT_Long">FT_Long</a> )
+  <b>FT_Get_CMap_Format</b>( <a href="ft2-base_interface.html#FT_CharMap">FT_CharMap</a>  charmap );
+
+</pre></table><br>
+<table align=center width="87%"><tr><td>
+<p>Return TrueType/sfnt specific cmap format.</p>
+</td></tr></table><br>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
+<table cellpadding=3 border=0>
+<tr valign=top><td><b>charmap</b></td><td>
+<p>The target charmap.</p>
+</td></tr>
+</table>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
+<p>The format of &lsquo;charmap&rsquo;. If &lsquo;charmap&rsquo; doesn't belong to a TrueType/sfnt face, return -1.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">

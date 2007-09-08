@@ -5,7 +5,7 @@
 /*    Support for the FT_Outline type used to store glyph shapes of        */
 /*    most scalable font formats (specification).                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2005, 2006 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2005, 2006, 2007 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -103,7 +103,7 @@ FT_BEGIN_HEADER
   /*                      decomposition.                                   */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means sucess.                              */
+  /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Outline_Decompose( FT_Outline*              outline,
@@ -393,7 +393,7 @@ FT_BEGIN_HEADER
   /*    This function does NOT CREATE the bitmap, it only renders an       */
   /*    outline image within the one you pass to it!                       */
   /*                                                                       */
-  /*    It will use the raster correponding to the default glyph format.   */
+  /*    It will use the raster corresponding to the default glyph format.  */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Outline_Get_Bitmap( FT_Library        library,
@@ -442,13 +442,13 @@ FT_BEGIN_HEADER
   *
   * @enum:
   *   FT_Orientation
-  *  
+  *
   * @description:
   *   A list of values used to describe an outline's contour orientation.
   *
   *   The TrueType and Postscript specifications use different conventions
   *   to determine whether outline contours should be filled or unfilled.
-  *   
+  *
   * @values:
   *   FT_ORIENTATION_TRUETYPE ::
   *     According to the TrueType specification, clockwise contours must
@@ -480,7 +480,7 @@ FT_BEGIN_HEADER
     FT_ORIENTATION_FILL_RIGHT = FT_ORIENTATION_TRUETYPE,
     FT_ORIENTATION_FILL_LEFT  = FT_ORIENTATION_POSTSCRIPT,
     FT_ORIENTATION_NONE
-  
+
   } FT_Orientation;
 
 
@@ -488,7 +488,7 @@ FT_BEGIN_HEADER
   *
   * @function:
   *   FT_Outline_Get_Orientation
-  *  
+  *
   * @description:
   *   This function analyzes a glyph outline and tries to compute its
   *   fill orientation (see @FT_Orientation).  This is done by computing

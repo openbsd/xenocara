@@ -1,14 +1,17 @@
+#  Formatter (c) 2002, 2004, 2007 David Turner <david@freetype.org>
+#
+
 from sources import *
 from content import *
 from utils   import *
 
-# This is the base Formatter class. its purpose is to convert
-# a content processor's data into specific documents (i.e. table of
+# This is the base Formatter class.  Its purpose is to convert
+# a content processor's data into specific documents (i.e., table of
 # contents, global index, and individual API reference indices).
 #
-# You'll need to sub-class it to output anything sensible.  For example,
+# You need to sub-class it to output anything sensible.  For example,
 # the file tohtml.py contains the definition of the HtmlFormatter sub-class
-# used to output, you guessed it, HTML.
+# used to output -- you guessed it -- HTML.
 #
 
 class Formatter:
@@ -26,7 +29,7 @@ class Formatter:
         for section in self.sections:
             for block in section.blocks.values():
                 self.add_identifier( block.name, block )
-                    
+
                 # add enumeration values to the index, since this is useful
                 for markup in block.markups:
                     if markup.tag == 'values':
@@ -47,7 +50,7 @@ class Formatter:
                self.identifiers[ name ].location() + "\n" )
         else:
             self.identifiers[name] = block
-              
+
 
     #
     #  Formatting the table of contents
@@ -55,50 +58,50 @@ class Formatter:
 
     def  toc_enter( self ):
         pass
-    
+
     def  toc_chapter_enter( self, chapter ):
         pass
-    
+
     def  toc_section_enter( self, section ):
         pass
-        
+
     def  toc_section_exit( self, section ):
         pass
-        
+
     def  toc_chapter_exit( self, chapter ):
         pass
 
     def  toc_index( self, index_filename ):
         pass
-    
+
     def  toc_exit( self ):
         pass
 
     def  toc_dump( self, toc_filename = None, index_filename = None ):
-        
+
         output = None
         if toc_filename:
             output = open_output( toc_filename )
-        
+
         self.toc_enter()
-    
+
         for chap in self.processor.chapters:
-    
+
             self.toc_chapter_enter( chap )
-    
+
             for section in chap.sections:
                 self.toc_section_enter( section )
                 self.toc_section_exit( section )
-    
+
             self.toc_chapter_exit ( chap )
-    
+
         self.toc_index( index_filename )
-    
+
         self.toc_exit()
 
         if output:
             close_output( output )
-    
+
     #
     #  Formatting the index
     #
@@ -116,7 +119,7 @@ class Formatter:
         pass
 
     def  index_dump( self, index_filename = None ):
-        
+
         output = None
         if index_filename:
             output = open_output( index_filename )
@@ -128,31 +131,31 @@ class Formatter:
             self.index_name_exit ( name )
 
         self.index_exit()
-     
+
         if output:
             close_output( output )
-     
+
     #
     #  Formatting a section
     #
     def  section_enter( self, section ):
         pass
-    
+
     def  block_enter( self, block ):
         pass
-    
+
     def  markup_enter( self, markup, block = None ):
         pass
-    
+
     def  field_enter( self, field, markup = None, block = None ):
         pass
-        
+
     def  field_exit( self, field, markup = None, block = None ):
         pass
-    
+
     def  markup_exit( self, markup, block = None ):
         pass
-        
+
     def  block_exit( self, block ):
         pass
 
@@ -161,11 +164,11 @@ class Formatter:
 
 
     def  section_dump( self, section, section_filename = None ):
-        
+
         output = None
         if section_filename:
             output = open_output( section_filename )
-        
+
         self.section_enter( section )
 
         for name in section.block_names:
@@ -198,6 +201,4 @@ class Formatter:
     #  Formatting a block
     #
 
-
-
-
+# eof

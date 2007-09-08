@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    FreeType's TrueTypeGX/AAT validation module implementation (body).   */
 /*                                                                         */
-/*  Copyright 2004, 2005 by suzuki toshiya, Masatake YAMATO, Red Hat K.K., */
+/*  Copyright 2004, 2005, 2006                                             */
+/*  by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -47,10 +48,10 @@
 
 
   static FT_Error
-  gxv_load_table( FT_Face    face,
-                  FT_Tag     tag,
-                  FT_Byte**  table,
-                  FT_ULong*  table_len )
+  gxv_load_table( FT_Face             face,
+                  FT_Tag              tag,
+                  FT_Byte* volatile*  table,
+                  FT_ULong*           table_len )
   {
     FT_Error   error;
     FT_Memory  memory = FT_FACE_MEMORY( face );
@@ -72,9 +73,9 @@
   }
 
 
-#define GXV_TABLE_DECL( _sfnt )           \
-          FT_Byte   *_sfnt        = NULL; \
-          FT_ULong  len_ ## _sfnt = 0
+#define GXV_TABLE_DECL( _sfnt )                     \
+          FT_Byte* volatile  _sfnt          = NULL; \
+          FT_ULong            len_ ## _sfnt = 0
 
 #define GXV_TABLE_LOAD( _sfnt )                                     \
           if ( ( FT_VALIDATE_ ## _sfnt ## _INDEX < table_count ) && \
@@ -91,7 +92,7 @@
           {                                                          \
             ft_validator_init( &valid, _sfnt, _sfnt + len_ ## _sfnt, \
                                FT_VALIDATE_DEFAULT );                \
-            if ( ft_validator_run( &valid ) == 0 )                   \
+            if ( ft_setjmp( valid.jump_buffer ) == 0 )               \
               gxv_ ## _sfnt ## _validate( _sfnt, face, &valid );     \
             error = valid.error;                                     \
             if ( error )                                             \
@@ -109,10 +110,10 @@
                 FT_Bytes  tables[FT_VALIDATE_GX_LENGTH],
                 FT_UInt   table_count )
   {
-    FT_Memory        memory = FT_FACE_MEMORY( face );
+    FT_Memory volatile        memory = FT_FACE_MEMORY( face );
 
-    FT_Error         error = GXV_Err_Ok;
-    FT_ValidatorRec  valid;
+    FT_Error                  error = GXV_Err_Ok;
+    FT_ValidatorRec volatile  valid;
 
     FT_UInt  i;
 
@@ -191,13 +192,16 @@
                          FT_UInt    ckern_flags,
                          FT_Bytes*  ckern_table )
   {
-    FT_Memory        memory = FT_FACE_MEMORY( face );
+    FT_Memory volatile        memory = FT_FACE_MEMORY( face );
 
-    FT_Byte*         ckern     = NULL;
-    FT_ULong         len_ckern = 0;
+    FT_Byte* volatile         ckern     = NULL;
+    FT_ULong                  len_ckern = 0;
 
-    FT_Error         error = GXV_Err_Ok;
-    FT_ValidatorRec  valid;
+    /* without volatile on `error' GCC 4.1.1. emits:                         */
+    /*  warning: variable 'error' might be clobbered by 'longjmp' or 'vfork' */
+    /* this warning seems spurious but ---                                   */
+    FT_Error volatile         error = GXV_Err_Ok;
+    FT_ValidatorRec volatile  valid;
 
 
     *ckern_table = NULL;
@@ -210,7 +214,7 @@
     {
       ft_validator_init( &valid, ckern, ckern + len_ckern,
                          FT_VALIDATE_DEFAULT );
-      if ( ft_validator_run( &valid ) == 0 )
+      if ( ft_setjmp( valid.jump_buffer ) == 0 )
         gxv_kern_validate_classic( ckern, face,
                                    ckern_flags & FT_VALIDATE_CKERN, &valid );
       error = valid.error;

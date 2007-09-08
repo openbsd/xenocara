@@ -18,11 +18,11 @@
 /*                                                                         */
 /***************************************************************************/
 
-/* Development of this service is support of 
+/* Development of this service is support of
    Information-technology Promotion Agency, Japan. */
 
 #ifndef __SVTTCMAP_H__
-#define __SVTTCMAP_H__ 
+#define __SVTTCMAP_H__
 
 #include FT_INTERNAL_SERVICE_H
 #include FT_TRUETYPE_TABLES_H
@@ -52,6 +52,7 @@ FT_BEGIN_HEADER
   typedef struct  TT_CMapInfo_
   {
     FT_ULong language;
+    FT_Long  format;
 
   } TT_CMapInfo;
 
@@ -64,8 +65,8 @@ FT_BEGIN_HEADER
   FT_DEFINE_SERVICE( TTCMaps )
   {
     TT_CMap_Info_GetFunc  get_cmap_info;
-  }; 
-  
+  };
+
   /* */
 
 
