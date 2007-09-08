@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    User-selectable configuration macros (specification only).           */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -73,6 +73,26 @@ FT_BEGIN_HEADER
   /****                                                                 ****/
   /*************************************************************************/
   /*************************************************************************/
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* Uncomment the line below if you want to activate sub-pixel rendering  */
+  /* (a.k.a. LCD rendering, or ClearType) in this build of the library.    */
+  /*                                                                       */
+  /* Note that this feature is covered by several Microsoft patents        */
+  /* and should not be activated in any default build of the library.      */
+  /*                                                                       */
+  /* This macro has no impact on the FreeType API, only on its             */
+  /* _implementation_.  For example, using FT_RENDER_MODE_LCD when calling */
+  /* FT_Render_Glyph still generates a bitmap that is 3 times larger than  */
+  /* the original size; the difference will be that each triplet of        */
+  /* subpixels has R=G=B.                                                  */
+  /*                                                                       */
+  /* This is done to allow FreeType clients to run unmodified, forcing     */
+  /* them to display normal gray-level anti-aliased glyphs.                */
+  /*                                                                       */
+/* #define FT_CONFIG_OPTION_SUBPIXEL_RENDERING */
 
 
   /*************************************************************************/
@@ -282,7 +302,9 @@ FT_BEGIN_HEADER
   /* The size in bytes of the render pool used by the scan-line converter  */
   /* to do all of its work.                                                */
   /*                                                                       */
-  /* This must be greater than 4KByte.                                     */
+  /* This must be greater than 4KByte if you use FreeType to rasterize     */
+  /* glyphs; otherwise, you may set it to zero to avoid unnecessary        */
+  /* allocation of the render pool.                                        */
   /*                                                                       */
 #define FT_RENDER_POOL_SIZE  16384L
 
@@ -441,12 +463,47 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* Define TT_CONFIG_OPTION_UNPATENTED_HINTING (in addition to            */
-  /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER) to compile the unpatented      */
-  /* work-around hinting system.  Note that for the moment, the algorithm  */
-  /* is only used when selected at runtime through the parameter tag       */
-  /* FT_PARAM_TAG_UNPATENTED_HINTING; or when the debug hook               */
-  /* FT_DEBUG_HOOK_UNPATENTED_HINTING is globally activated.               */
+  /* If you define TT_CONFIG_OPTION_UNPATENTED_HINTING, a special version  */
+  /* of the TrueType bytecode interpreter is used that doesn't implement   */
+  /* any of the patented opcodes and algorithms.  Note that the            */
+  /* the TT_CONFIG_OPTION_UNPATENTED_HINTING macro is *ignored* if you     */
+  /* define TT_CONFIG_OPTION_BYTECODE_INTERPRETER; with other words,       */
+  /* either define TT_CONFIG_OPTION_BYTECODE_INTERPRETER or                */
+  /* TT_CONFIG_OPTION_UNPATENTED_HINTING but not both at the same time.    */
+  /*                                                                       */
+  /* This macro is only useful for a small number of font files (mostly    */
+  /* for Asian scripts) that require bytecode interpretation to properly   */
+  /* load glyphs.  For all other fonts, this produces unpleasant results,  */
+  /* thus the unpatented interpreter is never used to load glyphs from     */
+  /* TrueType fonts unless one of the following two options is used.       */
+  /*                                                                       */
+  /*   - The unpatented interpreter is explicitly activated by the user    */
+  /*     through the FT_PARAM_TAG_UNPATENTED_HINTING parameter tag         */
+  /*     when opening the FT_Face.                                         */
+  /*                                                                       */
+  /*   - FreeType detects that the FT_Face corresponds to one of the       */
+  /*     `trick' fonts (e.g., `Mingliu') it knows about.  The font engine  */
+  /*     contains a hard-coded list of font names and other matching       */
+  /*     parameters (see function `tt_face_init' in file                   */
+  /*     `src/truetype/ttobjs.c').                                         */
+  /*                                                                       */
+  /* Here a sample code snippet for using FT_PARAM_TAG_UNPATENTED_HINTING. */
+  /*                                                                       */
+  /*   {                                                                   */
+  /*     FT_Parameter  parameter;                                          */
+  /*     FT_Open_Args  open_args;                                          */
+  /*                                                                       */
+  /*                                                                       */
+  /*     parameter.tag = FT_PARAM_TAG_UNPATENTED_HINTING;                  */
+  /*                                                                       */
+  /*     open_args.flags      = FT_OPEN_PATHNAME | FT_OPEN_PARAMS;         */
+  /*     open_args.pathname   = my_font_pathname;                          */
+  /*     open_args.num_params = 1;                                         */
+  /*     open_args.params     = &parameter;                                */
+  /*                                                                       */
+  /*     error = FT_Open_Face( library, &open_args, index, &face );        */
+  /*     ...                                                               */
+  /*   }                                                                   */
   /*                                                                       */
 #define TT_CONFIG_OPTION_UNPATENTED_HINTING
 
@@ -571,14 +628,13 @@ FT_BEGIN_HEADER
   /*                                                                       */
 #define AF_CONFIG_OPTION_CJK
 
+  /*************************************************************************/
+  /*                                                                       */
+  /* Compile autofit module with Indic script support.                     */
+  /*                                                                       */
+#define AF_CONFIG_OPTION_INDIC
 
- /* */
-
-  /*
-   * This temporary macro is used to control various optimizations for
-   * reducing the heap footprint of memory-mapped TrueType files.
-   */
-#define FT_OPTIMIZE_MEMORY
+  /* */
 
 
   /*
@@ -593,6 +649,16 @@ FT_BEGIN_HEADER
    */
 #define FT_CONFIG_OPTION_OLD_INTERNALS
 
+
+  /*
+   * This variable is defined if either unpatented or native TrueType
+   * hinting is requested by the definitions above.
+   */
+#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+#define  TT_USE_BYTECODE_INTERPRETER
+#elif defined TT_CONFIG_OPTION_UNPATENTED_HINTING
+#define  TT_USE_BYTECODE_INTERPRETER
+#endif
 
 FT_END_HEADER
 

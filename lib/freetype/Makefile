@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.8 2007/05/29 15:37:57 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.9 2007/09/08 16:39:54 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
@@ -12,11 +12,14 @@ DEBUG?=
 
 LIB=	freetype
 
-SRCS=   ftapi.c ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftglyph.c \
+SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c ftgasp.c \
+	ftglyph.c \
+	ftgxval.c ftlcdfil.c ftotval.c ftpatent.c \
         ftinit.c ftlzw.c ftmm.c ftpfr.c ftstroke.c ftsynth.c ftsystem.c \
         fttype1.c ftwinfnt.c ftxf86.c autofit.c bdf.c cff.c \
         type1cid.c ftgzip.c pcf.c pfr.c psaux.c pshinter.c psnames.c \
-        raster.c sfnt.c smooth.c truetype.c type1.c type42.c winfnt.c
+        raster.c sfnt.c smooth.c truetype.c type1.c type1cid.c type42.c \
+	winfnt.c
 
 CPPFLAGS+= -I${.CURDIR}/include -I${.CURDIR}/src/lzw -DFT2_BUILD_LIBRARY
 
@@ -50,13 +53,14 @@ freetype2.pc: freetype2.in Makefile
 	sed -e s%@prefix@%${X11BASE}% -e s%@exec_prefix@%${X11BASE}% \
 		-e s%@ft_version@%${FT_VERSION_INFO}% \
 		-e s%@includedir@%${INCSDIR}% -e s%@libdir@%${LIBDIR}% \
-		-e s%@LIBZ@%-lz% < ${.CURDIR}/builds/unix/freetype2.in \
-		> freetype2.pc
+		-e s%@LIBZ@%-lz% -e s%@FT2_EXTRA_LIBS@%% \
+		< ${.CURDIR}/builds/unix/freetype2.in > freetype2.pc
 
 freetype-config: freetype-config.in
 	sed -e s%@prefix@%${X11BASE}% -e s%@exec_prefix@%${X11BASE}% \
 		-e s%@includedir@%${INCSDIR}% -e s%@libdir@%${LIBDIR}% \
-		-e s%@LIBZ@%-lz% -e s%@enable_shared@%yes% \
+		-e s%@LIBZ@%-lz% -e s%@FT2_EXTRA_LIBS@%% \
+		-e s%@enable_shared@%yes% \
 		-e 's%@hardcode_libdir_flag_spec@%%' \
 		-e 's%@ft_version@%9.7.3%' -e 's%@wl@%%' \
 		< ${.CURDIR}/builds/unix/freetype-config.in \
@@ -70,6 +74,7 @@ NOPROFILE=
 .PATH:	${FREETYPESRC}/autofit
 .PATH:  ${FREETYPESRC}/base
 .PATH:  ${FREETYPESRC}/bdf
+.PATH:	${FREETYPESRC}/cache
 .PATH:  ${FREETYPESRC}/cff
 .PATH:  ${FREETYPESRC}/cid
 .PATH:  ${FREETYPESRC}/gzip
