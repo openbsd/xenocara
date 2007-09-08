@@ -50,7 +50,7 @@ LTLIBRARIES = $(noinst_LTLIBRARIES)
 libtype1_la_LIBADD =
 am_libtype1_la_OBJECTS = arith.lo curves.lo fontfcn.lo hints.lo \
 	lines.lo objects.lo paths.lo regions.lo scanfont.lo spaces.lo \
-	t1funcs.lo t1info.lo t1io.lo t1malloc.lo t1snap.lo t1stub.lo \
+	t1funcs.lo t1info.lo t1io.lo t1malloc.lo t1snap.lo \
 	t1unicode.lo token.lo type1.lo util.lo
 libtype1_la_OBJECTS = $(am_libtype1_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir) -I$(top_builddir)/include/X11/fonts
@@ -241,7 +241,6 @@ libtype1_la_SOURCES = \
 		t1malloc.c		\
 		t1snap.c		\
 		t1stdio.h		\
-		t1stub.c		\
 		t1unicode.c		\
 		t1unicode.h		\
 		token.c			\
@@ -318,7 +317,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t1io.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t1malloc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t1snap.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t1stub.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t1unicode.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/token.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/type1.Plo@am__quote@

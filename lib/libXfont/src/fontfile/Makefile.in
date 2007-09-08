@@ -52,7 +52,7 @@ libfontfile_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_libfontfile_la_OBJECTS = bitsource.lo bufio.lo decompress.lo \
 	defaults.lo dirfile.lo ffcheck.lo fileio.lo filewr.lo \
 	fontdir.lo fontencc.lo fontfile.lo fontscale.lo gunzip.lo \
-	printerfont.lo register.lo renderers.lo
+	printerfont.lo register.lo renderers.lo catalogue.lo
 libfontfile_la_OBJECTS = $(am_libfontfile_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir) -I$(top_builddir)/include/X11/fonts
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -228,7 +228,8 @@ libfontfile_la_SOURCES = \
 	gunzip.c		\
 	printerfont.c		\
 	register.c		\
-	renderers.c
+	renderers.c		\
+	catalogue.c
 
 all: all-am
 
@@ -283,6 +284,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bitsource.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bufio.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/catalogue.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/decompress.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/defaults.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dirfile.Plo@am__quote@
