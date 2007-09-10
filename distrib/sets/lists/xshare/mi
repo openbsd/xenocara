@@ -607,8 +607,10 @@
 ./usr/X11R6/include/freetype2/freetype/ftchapters.h
 ./usr/X11R6/include/freetype2/freetype/fterrdef.h
 ./usr/X11R6/include/freetype2/freetype/fterrors.h
+./usr/X11R6/include/freetype2/freetype/ftgasp.h
 ./usr/X11R6/include/freetype2/freetype/ftglyph.h
 ./usr/X11R6/include/freetype2/freetype/ftimage.h
+./usr/X11R6/include/freetype2/freetype/ftlcdfil.h
 ./usr/X11R6/include/freetype2/freetype/ftlist.h
 ./usr/X11R6/include/freetype2/freetype/ftlzw.h
 ./usr/X11R6/include/freetype2/freetype/ftmac.h
@@ -654,6 +656,7 @@
 ./usr/X11R6/include/freetype2/freetype/internal/services/svsfnt.h
 ./usr/X11R6/include/freetype2/freetype/internal/services/svttcmap.h
 ./usr/X11R6/include/freetype2/freetype/internal/services/svtteng.h
+./usr/X11R6/include/freetype2/freetype/internal/services/svttglyf.h
 ./usr/X11R6/include/freetype2/freetype/internal/services/svwinfnt.h
 ./usr/X11R6/include/freetype2/freetype/internal/services/svxf86nm.h
 ./usr/X11R6/include/freetype2/freetype/internal/sfnt.h

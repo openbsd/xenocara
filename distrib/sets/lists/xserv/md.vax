@@ -8,6 +8,7 @@
 ./usr/X11R6/lib/modules/linux
 ./usr/X11R6/lib/modules/multimedia
 ./usr/X11R6/lib/xserver
+./usr/X11R6/lib/xserver/SecurityPolicy
 ./usr/X11R6/man/man1/Xnest.1
 ./usr/X11R6/man/man1/Xserver.1
 ./usr/X11R6/man/man1/Xvfb.1
@@ -40,4 +41,3 @@
 ./var/db
 ./var/db/xkb
 ./var/db/xkb/README.compiled
-./usr/X11R6/lib/xserver/SecurityPolicy

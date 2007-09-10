@@ -248,6 +248,7 @@
 ./etc/X11/xkb/symbols/mk
 ./etc/X11/xkb/symbols/ml
 ./etc/X11/xkb/symbols/mm
+./etc/X11/xkb/symbols/mn
 ./etc/X11/xkb/symbols/mt
 ./etc/X11/xkb/symbols/mt_us
 ./etc/X11/xkb/symbols/nec
@@ -391,6 +392,7 @@
 ./etc/X11/xkb/types.dir
 ./etc/X11/xkb/types/README
 ./etc/X11/xkb/types/basic
+./etc/X11/xkb/types/cancel
 ./etc/X11/xkb/types/caps
 ./etc/X11/xkb/types/complete
 ./etc/X11/xkb/types/default
@@ -1002,5 +1004,3 @@
 ./usr/X11R6/man/man3/XF86VidModeValidateModeLine.3
 ./usr/X11R6/man/man3/XFree86-DGA.3
 ./usr/X11R6/man/man7/Xprint.7
-./etc/X11/xkb/symbols/mn
-./etc/X11/xkb/types/cancel

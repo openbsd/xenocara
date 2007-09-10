@@ -481,7 +481,7 @@
 ./usr/X11R6/lib/libXevie.so.2.0
 ./usr/X11R6/lib/libXext.so.10.0
 ./usr/X11R6/lib/libXfixes.so.5.0
-./usr/X11R6/lib/libXfont.so.6.0
+./usr/X11R6/lib/libXfont.so.7.0
 ./usr/X11R6/lib/libXfontcache.so.4.0
 ./usr/X11R6/lib/libXft.so.7.0
 ./usr/X11R6/lib/libXi.so.10.0
@@ -510,7 +510,7 @@
 ./usr/X11R6/lib/libexpat_pic.a
 ./usr/X11R6/lib/libfontconfig.so.5.1
 ./usr/X11R6/lib/libfontenc.so.3.0
-./usr/X11R6/lib/libfreetype.so.14.0
+./usr/X11R6/lib/libfreetype.so.15.0
 ./usr/X11R6/lib/libfreetype_pic.a
 ./usr/X11R6/lib/liblbxutil.so.1.0
 ./usr/X11R6/lib/liboldX.so.10.0
