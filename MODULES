@@ -1,47 +1,48 @@
-# $OpenBSD: MODULES,v 1.6 2007/05/31 03:37:07 matthieu Exp $
+# $OpenBSD: MODULES,v 1.7 2007/09/10 21:33:43 matthieu Exp $
 #
 # X.Org maintained modules
 #
 # Last update 2007/05/30
 
 app/appres		1.0.1	7.2
-app/bdftopcf		1.0.1	7.2+	needs-update
+app/bdftopcf		1.0.1	7.3	needs-update
 app/beforelight		1.0.2	7.2RC4
 app/bitmap		1.0.3	7.2+
 app/editres		1.0.3	7.2+
 app/fonttosfnt		1.0.3	7.2RC4
 app/fslsfonts		1.0.1	7.0
 app/fstobdf		1.0.2 	7.1
-app/iceauth		1.0.1	7.0
-app/ico			1.0.1	7.0
+app/iceauth		1.0.2	7.3	needs-update
+app/ico			1.0.2	7.3	needs-update
 app/lbxproxy		1.0.1	7.0
 app/listres		1.0.1	7.0
 app/luit		1.0.2	7.2RC2	need-rel
-app/mkfontdir		1.0.2	7.1
+app/mkfontdir		1.0.3	7.3	needs-update
 app/mkfontscale		1.0.3	7.2RC2
 app/oclock		1.0.1	7.0
 app/proxymngr		1.0.1	7.0
 app/rgb			1.0.1	7.1
 app/rstart		1.0.2	7.1
 app/scripts		1.0.1	7.0
-app/sessreg		1.0.2	7.2RC3
-app/setxkbmap		1.0.3	7.2RC2
+app/sessreg		1.0.3	7.3	needs-update
+app/setxkbmap		1.0.4	7.3	needs-update
 app/showfont		1.0.1	7.0
 app/smproxy		1.0.2	7.1
 app/twm			1.0.3	7.2RC3
 app/viewres		1.0.1	7.0
 app/x11perf		1.4.1	7.1	
 app/xauth		1.0.2	7.2RC4
+app/xbacklight		1.1	7.3	needs-import
 app/xbiff		1.0.1	7.0
-app/xcalc		1.0.1	7.0	need-rel
+app/xcalc		1.0.2	7.3	needs-update
 app/xclipboard		1.0.1	7.0
-app/xclock		1.0.2	7.1
+app/xclock		1.0.3	7.3	needs-update
 app/xcmsdb		1.0.1	7.0
-app/xconsole		1.0.2	7.1 	need-rel
-app/xcursorgen		1.0.1	7.1	ports
-app/xdm			1.1.1	7.2RC2
+app/xconsole		1.0.3	7.3 	needs-update
+app/xcursorgen		1.0.2	7.3	ports - needs-update
+app/xdm			1.1.6	7.3	needs-update
 app/xdpyinfo		1.0.1	7.0
-app/xdriinfo		1.0.1	7.1
+app/xdriinfo		1.0.2	7.3	needs-update
 app/xedit		1.0.2	7.1
 app/xev			1.0.2	7.2RC1
 app/xeyes		1.0.1	7.0
@@ -52,45 +53,45 @@ app/xfontsel		1.0.2	7.2+
 app/xfs			1.0.4	7.2RC3
 app/xfsinfo		1.0.1	7.0
 app/xfwp		1.0.1	7.0
-app/xgamma		1.0.1	7.0
+app/xgamma		1.0.2	7.3	needs-update
 app/xgc			1.0.1	7.0
-app/xhost		1.0.1	7.1
-app/xinit		1.0.3	7.2RC1
+app/xhost		1.0.2	7.3	needs-update
+app/xinit		1.0.5	7.3	needs-update
 app/xkbcomp		1.0.3	7.2RC2
 app/xkbevd		1.0.2	7.1
 app/xkbprint		1.0.1	7.0
 app/xkbutils		1.0.1	7.0
 app/xkill		1.0.1	7.0
-app/xload		1.0.1	7.0	need-rel
+app/xload		1.0.2	7.3	need-update
 app/xlogo		1.0.1	7.0
 app/xlsatoms		1.0.1	7.0
 app/xlsclients		1.0.1	7.0
 app/xlsfonts		1.0.2	7.2+
-app/xmag		1.0.1	7.0
-app/xman		1.0.2	7.1
-app/xmessage		1.0.1	7.0
+app/xmag		1.0.2	7.3	needs-update
+app/xman		1.0.3	7.3	needs-update
+app/xmessage		1.0.2	7.3	needs-update
 app/xmh			1.0.1	7.0
-app/xmodmap		1.0.2	7.2RC1
+app/xmodmap		1.0.3	7.3	needs-update
 app/xmore		1.0.1	7.0
 app/xphelloworld	1.0.1	7.0	need-rel
 app/xplsprinters	1.0.1	7.0
 app/xpr			1.0.2	7.2+
 app/xprehashprinterlist 1.0.1	7.0
-app/xprop		1.0.2	7.2RC1
-app/xrandr		1.0.2	7.1
-app/xrdb		1.0.3	7.2+
+app/xprop		1.0.3	7.3	needs-update
+app/xrandr		1.2.2	7.3	needs-update
+app/xrdb		1.0.4	7.3	needs-update
 app/xrefresh		1.0.2	7.1
-app/xset		1.0.2	7.1
+app/xset		1.0.3	7.3	needs-update
 app/xsetmode		1.0.0	7.0
 app/xsetpointer		1.0.0	7.0	not-branched
-app/xsetroot		1.0.1	7.1
+app/xsetroot		1.0.2	7.3	needs-update
 app/xsm			1.0.1	7.0
 app/xstdcmap		1.0.1	7.0
 app/xtrap		1.0.2	7.1
 app/xvidtune		1.0.1	7.0
-app/xvinfo		1.0.1	7.0
+app/xvinfo		1.0.2	7.3	needs-update
 app/xwd			1.0.1	7.0
-app/xwininfo		1.0.2	7.1
+app/xwininfo		1.0.3	7.3	needs-update
 app/xwud		1.0.1	7.0
 
 data/bitmaps		1.0.1	7.0
@@ -99,7 +100,7 @@ data/xkbdata		1.0.1	7.0	obsolete
 doc/xorg-docs		1.3	7.2RC2
 doc/xorg-sgml-doctools	1.1.1	7.2RC2
 
-driver/xf86-input-acecad	1.2.0	7.2+	needs-update
+driver/xf86-input-acecad	1.2.0	7.3	needs-update
 driver/xf86-input-calcomp	1.1.0	7.1
 driver/xf86-input-citron	2.2.0	7.1
 driver/xf86-input-digitaledge	1.1.0	7.1	need-rel
@@ -111,12 +112,12 @@ driver/xf86-input-evdev		1.1.3	7.2RC1
 driver/xf86-input-fpit		1.1.0	7.1
 driver/xf86-input-hyperpen	1.1.0	7.1
 driver/xf86-input-jamstudio	1.1.0	7.1
-driver/xf86-input-joystick	1.2.1	7.2+	needs-update
-driver/xf86-input-keyboard	1.1.1	7.2RC1	not-branched
+driver/xf86-input-joystick	1.2.3	7.3	needs-update
+driver/xf86-input-keyboard	1.2.2	7.3	needs-update
 driver/xf86-input-magellan	1.1.0	7.1
 driver/xf86-input-magictouch	1.0.0.5	7.0
 driver/xf86-input-microtouch	1.1.0	7.1
-driver/xf86-input-mouse		1.1.2	7.2RC1 not-branched
+driver/xf86-input-mouse		1.2.2	7.3	needs-update
 driver/xf86-input-mutouch	1.1.0	7.1
 driver/xf86-input-palmax	1.1.0	7.1
 driver/xf86-input-penmount	1.1.0	7.1
@@ -124,7 +125,7 @@ driver/xf86-input-spaceorb	1.1.0	7.1
 driver/xf86-input-summa		1.1.0	7.1
 driver/xf86-input-tek4957	1.1.0	7.1
 driver/xf86-input-ur98		1.1.0	7.1
-driver/xf86-input-vmmouse	12.4.0	7.1
+driver/xf86-input-vmmouse	12.4.1	7.3	needs-update
 driver/xf86-input-void		1.1.0	7.1
 driver/xf86-video-apm		1.1.1	7.1
 driver/xf86-video-ark		0.6.0	7.1
@@ -140,16 +141,16 @@ driver/xf86-video-i128		1.2.1	7.2RC3
 driver/xf86-video-i740		1.1.0	7.1
 driver/xf86-video-impact	0.2.0		need-rel
 driver/xf86-video-imstt		1.1.0	7.1
-driver/xf86-video-intel		2.0.0	7.2+	needs-update
+driver/xf86-video-intel		2.1.1	7.3	needs-update
 driver/xf86-video-mga		1.4.6.1	7.2
 driver/xf86-video-neomagic	1.1.1	7.1
 driver/xf86-video-newport	0.2.1	7.2RC1
-driver/xf86-video-nsc		2.8.2	7.2RC1
-driver/xf86-video-nv		2.0.96	7.2+	needs-update
+driver/xf86-video-nsc		2.8.3	7.3	needs-update
+driver/xf86-video-nv		2.1.3	7.3	needs-update
 driver/xf86-video-rendition	4.1.3	7.2RC4
 driver/xf86-video-s3		0.5.0	7.2RC3
 driver/xf86-video-s3virge	1.9.1	7.1
-driver/xf86-video-savage	2.1.2	7.2RC1
+driver/xf86-video-savage	2.1.3	7.3	needs-update
 driver/xf86-video-siliconmotion	1.4.2	7.2RC1
 driver/xf86-video-sis		0.9.3	7.2RC3
 driver/xf86-video-sisusb	0.8.1	7.1
@@ -171,6 +172,8 @@ driver/xf86-video-via		0.2.2	7.2RC1
 driver/xf86-video-vmware	10.14.1	7.2RC3
 driver/xf86-video-voodoo	1.1.1	7.2RC1
 driver/xf86-video-wsfb		0.2.1	7.2
+
+doc/xorg-docs			1.4	7.3	needs-update
 
 encodings			fonts/encodings 		1.0.2	7.2RC2
 font-adobe-100dpi		fonts/adobe-100dpi		1.0.0
@@ -212,38 +215,38 @@ font-winitzki-cyrillic		fonts/winitzki-cyrillic		1.0.0
 font-xfree86-type1		fonts/xfree86-type1		1.0.0
 
 lib/libFS			1.0.0	7.0
-lib/libICE			1.0.3	7.2RC4
-lib/libSM			1.0.3	7.2+		needs-update
-lib/libX11			1.1.1	7.2RC3
+lib/libICE			1.0.4	7.3		needs-update
+lib/libSM			1.0.3	7.3		needs-update
+lib/libX11			1.1.3	7.3		needs-update
 lib/libXRes			1.0.3	7.2RC4
 lib/libXScrnSaver		1.1.2	7.2RC4
 lib/libXTrap			1.0.0	7.0
 lib/libXau			1.0.3	7.2RC4
-lib/libXaw			1.0.2	7.1
-lib/libXcomposite		0.3.1	7.2RC1
-lib/libXcursor			1.1.8	7.2RC1
-lib/libXdamage			1.0.4	7.2RC2
+lib/libXaw			1.0.4	7.3		needs-update
+lib/libXcomposite		0.4.0	7.3		needs-update
+lib/libXcursor			1.1.9	7.3		needs-update
+lib/libXdamage			1.1	7.3		needs-update
 lib/libXdmcp			1.0.2	7.2RC1
 lib/libXevie			1.0.2	7.2RC1
 lib/libXext			1.0.3	7.2+
 lib/libXfixes			4.0.3	7.2RC2
-lib/libXfont			1.2.8	7.2+
+lib/libXfont			1.3.1	7.3		needs-update
 lib/libXfontcache		1.0.4	7.2RC4
 lib/libXft			2.1.12	7.2RC4
-lib/libXi			1.0.4	7.2+		needs-update
-lib/libXinerama			1.0.1	7.0
+lib/libXi			1.1.3	7.3		needs-update
+lib/libXinerama			1.0.2	7.3		needs-update
 lib/libXmu			1.0.3	7.2RC2
 lib/libXp			1.0.0	7.0
-lib/libXpm			3.5.6	7.2RC1
+lib/libXpm			3.5.7	7.3		needs-update
 lib/libXprintAppUtil		1.0.1	7.0
 lib/libXprintUtil		1.0.1	7.0
-lib/libXrandr			1.1.2	7.2RC1
-lib/libXrender			0.9.2	7.2RC1
+lib/libXrandr			1.2.2	7.3		needs-update
+lib/libXrender			0.9.4	7.3		needs-update
 lib/libXt			1.0.5	7.2+
-lib/libXtst			1.0.1	7.0
+lib/libXtst			1.0.3	7.3		needs-update
 lib/libXv			1.0.3	7.2RC4
 lib/libXvMC			1.0.4	7.2RC4
-lib/libXxf86dga			1.0.1	7.1
+lib/libXxf86dga			1.0.2	7.3		needs-update
 lib/libXxf86misc		1.0.1	7.1
 lib/libXxf86vm			1.0.1	7.1
 lib/libdmx			1.0.2	7.1
@@ -252,24 +255,24 @@ lib/liblbxutil			1.0.4	7.2RC4
 lib/liboldX			1.0.1	7.0	still needed?
 lib/libxkbfile			1.0.4	7.2RC1
 lib/libxkbui			1.0.2	7.1
-lib/libxtrans			1.0.3	7.2RC4
+lib/libxtrans			1.0.4	7.3		needs-update
 
 proto/bigreqsproto		1.0.2	7.0	needs-rel
-proto/compositeproto		0.3.1	7.1
-proto/damageproto		1.0.3	7.0
+proto/compositeproto		0.4	7.3	needs-update
+proto/damageproto		1.1.0	7.3	needs-update
 proto/dmxproto			2.2.2	7.0
 proto/evieproto			1.0.2	7.0
 proto/fixesproto		4.0	7.1
 proto/fontcacheproto		0.1.2	7.0
 proto/fontsproto		2.0.2	7.0
 proto/glproto			1.4.8	7.2
-proto/inputproto		1.3.2	7.0	not-branched
+proto/inputproto		1.4.2.1	7.3	needs-update
 proto/kbproto			1.0.3	7.2RC1
 proto/pmproto			1.0.2	7.0
 proto/printproto		1.0.3	7.0
-proto/randrproto		1.1.2	7.0
+proto/randrproto		1.2.1	7.3	needs-update
 proto/recordproto		1.13.2	7.0
-proto/renderproto		0.9.2	7.0
+proto/renderproto		0.9.3	7.3	needs-update
 proto/resourceproto		1.0.2	7.0
 proto/scrnsaverproto		1.1.0	7.1
 proto/trapproto			3.4.3	7.0
@@ -278,7 +281,7 @@ proto/x11proto			7.0.10	7.2RC4
 proto/xcmiscproto		1.1.2	7.0
 proto/xextproto			7.0.2	7.0
 proto/xf86bigfontproto		1.1.2	7.0
-proto/xf86dgaproto		2.0.2	7.0
+proto/xf86dgaproto		2.0.3	7.3	needs-update
 proto/xf86driproto		2.0.3	7.0
 proto/xf86miscproto		0.9.2	7.0
 proto/xf86rushproto		1.1.2	7.0
@@ -289,6 +292,6 @@ util/cf				1.0.2
 util/gccmakedep			1.0.2
 util/imake			1.0.2
 util/macros			1.1.5	7.2
-util/makedepend			1.0.0
+util/makedepend			1.0.1	7.3	needs-update
 
-xserver				1.3.0	7.2+	needs update
+xserver				1.4.0	7.3	needs update
