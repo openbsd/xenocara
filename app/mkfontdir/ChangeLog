@@ -1,3 +1,9 @@
+2007-03-21  Jeremy C. Reed  <reed@reedmedia.net>
+
+	* configure.ac:
+	Bump version number. (No changes, but source tarball will
+	use recent util macros.)
+
 2006-04-01  Adam Jackson  <ajax@freedesktop.org>
 
 	* configure.ac:
