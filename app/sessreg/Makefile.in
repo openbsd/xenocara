@@ -75,7 +75,7 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_sessreg_OBJECTS = sessreg-sessreg.$(OBJEXT)
+am_sessreg_OBJECTS = sessreg.$(OBJEXT)
 sessreg_OBJECTS = $(am_sessreg_OBJECTS)
 sessreg_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
@@ -210,7 +210,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-sessreg_CFLAGS = $(SESSREG_CFLAGS)
+AM_CFLAGS = $(SESSREG_CFLAGS)
 sessreg_SOURCES = \
 	sessreg.h	\
         sessreg.c
@@ -331,7 +331,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sessreg-sessreg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sessreg.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -346,20 +346,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-sessreg-sessreg.o: sessreg.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sessreg_CFLAGS) $(CFLAGS) -MT sessreg-sessreg.o -MD -MP -MF "$(DEPDIR)/sessreg-sessreg.Tpo" -c -o sessreg-sessreg.o `test -f 'sessreg.c' || echo '$(srcdir)/'`sessreg.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/sessreg-sessreg.Tpo" "$(DEPDIR)/sessreg-sessreg.Po"; else rm -f "$(DEPDIR)/sessreg-sessreg.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sessreg.c' object='sessreg-sessreg.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sessreg_CFLAGS) $(CFLAGS) -c -o sessreg-sessreg.o `test -f 'sessreg.c' || echo '$(srcdir)/'`sessreg.c
-
-sessreg-sessreg.obj: sessreg.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sessreg_CFLAGS) $(CFLAGS) -MT sessreg-sessreg.obj -MD -MP -MF "$(DEPDIR)/sessreg-sessreg.Tpo" -c -o sessreg-sessreg.obj `if test -f 'sessreg.c'; then $(CYGPATH_W) 'sessreg.c'; else $(CYGPATH_W) '$(srcdir)/sessreg.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/sessreg-sessreg.Tpo" "$(DEPDIR)/sessreg-sessreg.Po"; else rm -f "$(DEPDIR)/sessreg-sessreg.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sessreg.c' object='sessreg-sessreg.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sessreg_CFLAGS) $(CFLAGS) -c -o sessreg-sessreg.obj `if test -f 'sessreg.c'; then $(CYGPATH_W) 'sessreg.c'; else $(CYGPATH_W) '$(srcdir)/sessreg.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)

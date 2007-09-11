@@ -55,6 +55,7 @@
 
 #include "config.h"
 
+#include <sys/types.h>
 #include <time.h>
 #include <utmp.h>
 

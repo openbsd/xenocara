@@ -20,7 +20,7 @@
 
 bin_PROGRAMS = sessreg
 
-sessreg_CFLAGS = $(SESSREG_CFLAGS)
+AM_CFLAGS = $(SESSREG_CFLAGS)
 
 sessreg_SOURCES =	\
 	sessreg.h	\
