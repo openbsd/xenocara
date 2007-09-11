@@ -1,8 +1,60 @@
-commit 2989b28529b964f12a1bb3dcdf77b87ae8effaf0
-Author: Daniel Stone <daniel@fooishbar.org>
-Date:   Wed Nov 8 16:32:56 2006 +0200
+commit da1b5f42fcb1bd0bc9b80f6f1ab7ebb9eb506554
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Aug 17 14:30:31 2007 -0700
 
-    bump to 1.0.1
+    Version bump: 1.0.3
+
+commit 12982c07b44c15a621fc548a4448f9a04bf5907e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Aug 16 17:17:06 2007 -0700
+
+    Change sessreg_CFLAGS to AM_CFLAGS to make automake-1.10 happier
+
+commit 136525f01e4ce8e60e8c78b44654d8f6861233d2
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Jun 11 16:38:00 2007 -0700
+
+    X.Org Bug #9887: sessreg should include sys/types.h on FreeBSD
+    
+    X.Org Bugzilla #9887: <https://bugs.freedesktop.org/show_bug.cgi?id=9887>
+
+commit 9b2ddf6c779553c2cb5e185d2046e8817a89e03e
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Nov 30 19:44:25 2006 +0200
+
+    bump to 1.0.3
+
+commit 05d36d40bb2018a96cdd1345a390db3fbff0fd65
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Nov 19 17:32:07 2006 +0100
+
+    include <time.h> before <utmp.h>. Required on some systems.
+
+commit 37e89cbf2bc3b6266fa47ff1f956d173658bb9a5
+Author: Jürg Billeter <j@bitron.ch>
+Date:   Thu Nov 9 13:21:55 2006 +0100
+
+    Fix grep pattern in Makefile.am
+    
+    Don't escape | in basic regex mode as it breaks build with GNU grep.
+
+commit 6fc58644148039261c21f699a14c839356f501ed
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Nov 8 15:38:21 2006 -0800
+
+    Version bump to 1.0.1
+
+commit 82fbb553114e8d00b6b3886aee4554dfd178cb01
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Nov 8 13:51:50 2006 -0800
+
+    Improve formatting of file names in sessreg.man
+
+commit 02379845b074cb252c0cb42d18c6cb8effcdc9f5
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Nov 8 13:48:05 2006 -0800
+
+    Fix builds when $(srcdir) != $(objdir)
 
 commit c472f5f9257e6dcb9e82042a99ef028e3390e93e
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
