@@ -62,8 +62,7 @@ bin_PROGRAMS = iceauth$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh missing \
-	mkinstalldirs
+	config.guess config.sub depcomp install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -71,14 +70,13 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_iceauth_OBJECTS = iceauth-iceauth.$(OBJEXT) \
-	iceauth-process.$(OBJEXT)
+am_iceauth_OBJECTS = iceauth.$(OBJEXT) process.$(OBJEXT)
 iceauth_OBJECTS = $(am_iceauth_OBJECTS)
 am__DEPENDENCIES_1 =
 iceauth_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -150,6 +148,10 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LINT = @LINT@
+LINT_FALSE = @LINT_FALSE@
+LINT_FLAGS = @LINT_FLAGS@
+LINT_TRUE = @LINT_TRUE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -208,7 +210,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-iceauth_CFLAGS = $(ICEAUTH_CFLAGS)
+AM_CFLAGS = $(ICEAUTH_CFLAGS)
 iceauth_LDADD = $(ICEAUTH_LIBS)
 iceauth_SOURCES = \
         iceauth.c \
@@ -220,8 +222,9 @@ appman_PRE = \
 
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) ChangeLog autogen.sh
 CLEANFILES = $(appman_DATA)
+MAINTAINERCLEANFILES = ChangeLog
 SED = sed
 
 # Strings to replace in man pages
@@ -241,6 +244,9 @@ MAN_SUBSTS = \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
+@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+@LINT_TRUE@                $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
+
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -329,8 +335,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iceauth-iceauth.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iceauth-process.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iceauth.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/process.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -345,34 +351,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-iceauth-iceauth.o: iceauth.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(iceauth_CFLAGS) $(CFLAGS) -MT iceauth-iceauth.o -MD -MP -MF "$(DEPDIR)/iceauth-iceauth.Tpo" -c -o iceauth-iceauth.o `test -f 'iceauth.c' || echo '$(srcdir)/'`iceauth.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/iceauth-iceauth.Tpo" "$(DEPDIR)/iceauth-iceauth.Po"; else rm -f "$(DEPDIR)/iceauth-iceauth.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='iceauth.c' object='iceauth-iceauth.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(iceauth_CFLAGS) $(CFLAGS) -c -o iceauth-iceauth.o `test -f 'iceauth.c' || echo '$(srcdir)/'`iceauth.c
-
-iceauth-iceauth.obj: iceauth.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(iceauth_CFLAGS) $(CFLAGS) -MT iceauth-iceauth.obj -MD -MP -MF "$(DEPDIR)/iceauth-iceauth.Tpo" -c -o iceauth-iceauth.obj `if test -f 'iceauth.c'; then $(CYGPATH_W) 'iceauth.c'; else $(CYGPATH_W) '$(srcdir)/iceauth.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/iceauth-iceauth.Tpo" "$(DEPDIR)/iceauth-iceauth.Po"; else rm -f "$(DEPDIR)/iceauth-iceauth.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='iceauth.c' object='iceauth-iceauth.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(iceauth_CFLAGS) $(CFLAGS) -c -o iceauth-iceauth.obj `if test -f 'iceauth.c'; then $(CYGPATH_W) 'iceauth.c'; else $(CYGPATH_W) '$(srcdir)/iceauth.c'; fi`
-
-iceauth-process.o: process.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(iceauth_CFLAGS) $(CFLAGS) -MT iceauth-process.o -MD -MP -MF "$(DEPDIR)/iceauth-process.Tpo" -c -o iceauth-process.o `test -f 'process.c' || echo '$(srcdir)/'`process.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/iceauth-process.Tpo" "$(DEPDIR)/iceauth-process.Po"; else rm -f "$(DEPDIR)/iceauth-process.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='process.c' object='iceauth-process.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(iceauth_CFLAGS) $(CFLAGS) -c -o iceauth-process.o `test -f 'process.c' || echo '$(srcdir)/'`process.c
-
-iceauth-process.obj: process.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(iceauth_CFLAGS) $(CFLAGS) -MT iceauth-process.obj -MD -MP -MF "$(DEPDIR)/iceauth-process.Tpo" -c -o iceauth-process.obj `if test -f 'process.c'; then $(CYGPATH_W) 'process.c'; else $(CYGPATH_W) '$(srcdir)/process.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/iceauth-process.Tpo" "$(DEPDIR)/iceauth-process.Po"; else rm -f "$(DEPDIR)/iceauth-process.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='process.c' object='iceauth-process.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(iceauth_CFLAGS) $(CFLAGS) -c -o iceauth-process.obj `if test -f 'process.c'; then $(CYGPATH_W) 'process.c'; else $(CYGPATH_W) '$(srcdir)/process.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
@@ -469,6 +447,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -598,6 +579,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -653,8 +635,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-data \
@@ -667,8 +649,17 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 	uninstall-info-am
 
 
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
+
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+@LINT_TRUE@lint:
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(iceauth_SOURCES)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
