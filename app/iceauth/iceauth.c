@@ -37,7 +37,7 @@ in this Software without prior written authorization from The Open Group.
 /*
  * global data
  */
-char *ProgramName;			/* argv[0], set at top of main() */
+const char *ProgramName;		/* argv[0], set at top of main() */
 int verbose = -1;			/* print certain messages */
 Bool ignore_locks = False;		/* for error recovery */
 Bool break_locks = False;		/* for error recovery */
@@ -49,7 +49,7 @@ Bool break_locks = False;		/* for error recovery */
 static char *authfilename = NULL;	/* filename of cookie file */
 static char *defcmds[] = { "source", "-", NULL };  /* default command */
 static int ndefcmds = 2;
-static char *defsource = "(stdin)";
+static const char *defsource = "(stdin)";
 
 
 /*
@@ -57,35 +57,25 @@ static char *defsource = "(stdin)";
  */
 static void usage (void)
 {
-    static char *prefixmsg[] = {
-"",
-"where options include:",
-"    -f authfilename                name of authority file to use",
-"    -v                             turn on extra messages",
-"    -q                             turn off extra messages",
-"    -i                             ignore locks on authority file",
-"    -b                             break locks on authority file",
-"",
-"and commands have the following syntax:",
-"",
-NULL };
-    static char *suffixmsg[] = {
-"A dash may be used with the \"merge\" and \"source\" to read from the",
-"standard input.  Commands beginning with \"n\" use numeric format.",
-"",
-NULL };
-    char **msg;
+    static const char prefixmsg[] = 
+"\n"
+"where options include:\n"
+"    -f authfilename                name of authority file to use\n"
+"    -v                             turn on extra messages\n"
+"    -q                             turn off extra messages\n"
+"    -i                             ignore locks on authority file\n"
+"    -b                             break locks on authority file\n"
+"\n"
+"and commands have the following syntax:\n";
+    static const char suffixmsg[] = 
+"A dash may be used with the \"merge\" and \"source\" to read from the\n"
+"standard input.  Commands beginning with \"n\" use numeric format.\n";
 
     fprintf (stderr, "usage:  %s [-options ...] [command arg ...]\n",
 	     ProgramName);
-    for (msg = prefixmsg; *msg; msg++) {
-	fprintf (stderr, "%s\n", *msg);
-    }
+    fprintf (stderr, "%s\n", prefixmsg);
     print_help (stderr, "    ");	/* match prefix indentation */
-    fprintf (stderr, "\n");
-    for (msg = suffixmsg; *msg; msg++) {
-	fprintf (stderr, "%s\n", *msg);
-    }
+    fprintf (stderr, "\n%s\n", suffixmsg);
     exit (1);
 }
 
@@ -97,7 +87,7 @@ int
 main (int argc, char *argv[])
 {
     int i;
-    char *sourcename = defsource;
+    const char *sourcename = defsource;
     char **arglist = defcmds;
     int nargs = ndefcmds;
     int status;
