@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xcalc
 
-xcalc_CFLAGS = $(XCALC_CFLAGS)
+AM_CFLAGS = $(XCALC_CFLAGS)
 xcalc_LDADD = $(XCALC_LIBS) -lm
 
 xcalc_SOURCES =	\
@@ -50,10 +50,18 @@ SUFFIXES = .ad
 
 appdefault_DATA = $(APPDEFAULTFILES)
 
-EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad)
+EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad) ChangeLog autogen.sh
 
 CLEANFILES = $(APPDEFAULTFILES)
 
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 
 appmandir = $(APP_MAN_DIR)
 
