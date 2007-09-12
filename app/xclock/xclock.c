@@ -1,5 +1,5 @@
 /* $Xorg: xclock.c,v 1.4 2001/02/09 02:05:39 xorgcvs Exp $ */
-/* $XdotOrg: app/xclock/xclock.c,v 1.4 2005/07/16 17:31:45 alanc Exp $ */
+/* $XdotOrg: $ */
 
 /*
  * xclock --  Hacked from Tony Della Fera's much hacked clock program.
@@ -55,6 +55,10 @@ in this Software without prior written authorization from The Open Group.
 #ifndef NO_I18N
 #include <locale.h> /* for setlocale() */
 Boolean no_locale = True; /* if True, use old behavior */
+#endif
+
+#ifdef HAVE_GETPID
+# include <unistd.h>
 #endif
 
 /* Command line options table.  Only resources are entered here...there is a
@@ -208,6 +212,17 @@ main(int argc, char *argv[])
 				    False);
     (void) XSetWMProtocols (XtDisplay(toplevel), XtWindow(toplevel),
 			    &wm_delete_window, 1);
+
+#ifdef HAVE_GETPID
+    {
+	pid_t pid = getpid();
+	XChangeProperty(XtDisplay(toplevel), XtWindow(toplevel),
+			XInternAtom(XtDisplay(toplevel), "_NET_WM_PID", False),
+			XA_CARDINAL, 32, PropModeReplace,
+			(unsigned char *) &pid, 1);
+    }
+#endif
+    
     XtAppMainLoop (app_con);
     exit(0);
 }

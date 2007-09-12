@@ -22,7 +22,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xclock,[1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xclock)
+AC_INIT(xclock,[1.0.3], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xclock)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -31,7 +31,10 @@ AM_CONFIG_HEADER(config.h)
 AC_PROG_CC
 AC_PROG_INSTALL
 
-AC_CHECK_FUNCS([strlcpy])
+AC_CHECK_FUNCS([strlcpy getpid])
+
+AC_SEARCH_LIBS([iconv], [iconv], 
+	[AC_DEFINE(HAVE_ICONV, 1, [Define to 1 if iconv() is available.])])
 
 dnl Required dependencies
 PKG_CHECK_MODULES(XCLOCK_X11, x11)

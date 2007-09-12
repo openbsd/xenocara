@@ -30,10 +30,11 @@
 xclock \- analog / digital clock for X
 .SH SYNOPSIS
 .ta 8n
-\fBxclock\fP [ \fB\-help\fP ] [ \fB\-analog\fP ] [ \fB\-digital\fP ]
+\fBxclock\fP [ \fB\-help\fP ] [ \fB\-analog\fP | \fB\-digital\fP ]
 [ \fB\-brief\fP ] [ \fB\-chime\fP ] [ \fB\-hd\fP \fIcolor\fP ]
 [ \fB\-hl\fP \fIcolor\fP ] [ \fB\-update\fP \fIseconds\fP ]
 [ \fB\-strftime\fP \fIformat\fP ]
+[ \fB\-twelve\fP | \fB-twentyfour\fP | \fB-utime\fP ]
 [ \fB\-padding\fP \fInumber\fP ]
 [ \fB\-norender\fP ]
 [ \fB\-render\fP ]
@@ -64,7 +65,7 @@ This option indicates that a 24 hour digital clock should be used.
 This option indicates that the digital clock should only display the hours
 and minutes fields.  The default is to show the full time and date information.
 .TP 8
-\fB\-utime\fP or \fB\-d\fP
+\fB\-utime\fP
 This option indicates that a digital clock should display seconds since
 the Epoch (in format '970012340 seconds since Epoch' instead of a standard
 24-hour time.
@@ -122,7 +123,11 @@ the Xrender extension.
 .TP 8
 .B \-face \fIpattern\fP
 This option specifies the font to use in digital mode when the
-Xrender extension is used. 
+Xrender extension is used.  Patterns are specified using the
+fontconfig face format described in the 
+.I Font Names
+section of
+.IR fonts.conf (__filemansuffix__).
 .SH X DEFAULTS
 This program uses the 
 .I Clock
@@ -193,7 +198,11 @@ understood:
 .TP 8
 .B face (\fPclass\fB FaceName)
 Specify the pattern for the font to be used for the digital clock when
-Xrender is used. 
+Xrender is used.   Patterns are specified using the fontconfig face format
+described in the 
+.I Font Names
+section of
+.IR fonts.conf (__filemansuffix__).
 .TP 8
 .B sharp (\fPclass\fB Boolean)
 Specifies if sharp edges should be used when rendering the clock. 
@@ -249,7 +258,7 @@ stored in the RESOURCE_MANAGER property.
 .I __apploaddir__/XClock
 specifies required resources
 .SH "SEE ALSO"
-X(__miscmansuffix__), xrdb(1), time(3C)
+X(__miscmansuffix__), xrdb(1), time(3C), fonts.conf (__filemansuffix__).
 .SH BUGS
 .I Xclock
 believes the system clock.
