@@ -23,7 +23,7 @@ bin_PROGRAMS = setxkbmap
 
 XKBCONFIGROOT=@XKBCONFIGROOT@
 
-setxkbmap_CFLAGS = $(SETXKBMAP_CFLAGS) \
+AM_CFLAGS = $(SETXKBMAP_CFLAGS) \
 	-D__XKBDEFRULES__='"xorg"' \
 	-DDFLT_XKB_CONFIG_ROOT=\"$(XKBCONFIGROOT)\"
 setxkbmap_LDADD = $(SETXKBMAP_LIBS)
@@ -38,8 +38,13 @@ appmandir = $(APP_MAN_DIR)
 
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) ChangeLog
 CLEANFILES = $(appman_DATA)
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 
 SED = sed
 
@@ -48,6 +53,7 @@ XORGRELSTRING = @PACKAGE_STRING@
   XORGMANNAME = X Version 11
 
 MAN_SUBSTS = \
+	-e 's|__xkbconfigroot__|"$(XKBCONFIGROOT)"|' \
 	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xservername__|Xorg|g' \
@@ -64,3 +70,11 @@ SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+if LINT
+ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
+
+lint:
+	$(LINT) $(ALL_LINT_FLAGS) $(setxkbmap_SOURCES)
+endif LINT
