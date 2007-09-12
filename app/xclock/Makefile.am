@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xclock
 
-xclock_CFLAGS = $(XCLOCK_CFLAGS)
+AM_CFLAGS = $(XCLOCK_CFLAGS)
 xclock_LDADD = $(XCLOCK_LIBS)
 
 xclock_SOURCES =	\
@@ -50,6 +50,7 @@ SUFFIXES = .ad
 appdefault_DATA = $(APPDEFAULTFILES)
 
 EXTRA_DIST = \
+	ChangeLog \
 	$(APPDEFAULTFILES:%=%.ad) \
 	clmask.bit \
 	clock.bit
@@ -62,6 +63,15 @@ appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
 EXTRA_DIST += $(appman_PRE)
 CLEANFILES += $(appman_DATA)
+
+MAINTAINERCLEANFILES=ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 
 SED = sed
 

@@ -1,5 +1,11 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define to 1 if you have the `getpid' function. */
+#undef HAVE_GETPID
+
+/* Define to 1 if iconv() is available. */
+#undef HAVE_ICONV
+
 /* Define to 1 if you have the `strlcpy' function. */
 #undef HAVE_STRLCPY
 
