@@ -62,7 +62,7 @@ bin_PROGRAMS = setxkbmap$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh missing
+	config.guess config.sub depcomp install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -76,7 +76,7 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_setxkbmap_OBJECTS = setxkbmap-setxkbmap.$(OBJEXT)
+am_setxkbmap_OBJECTS = setxkbmap.$(OBJEXT)
 setxkbmap_OBJECTS = $(am_setxkbmap_OBJECTS)
 am__DEPENDENCIES_1 =
 setxkbmap_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -146,6 +146,10 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LINT = @LINT@
+LINT_FALSE = @LINT_FALSE@
+LINT_FLAGS = @LINT_FLAGS@
+LINT_TRUE = @LINT_TRUE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -207,7 +211,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-setxkbmap_CFLAGS = $(SETXKBMAP_CFLAGS) \
+AM_CFLAGS = $(SETXKBMAP_CFLAGS) \
 	-D__XKBDEFRULES__='"xorg"' \
 	-DDFLT_XKB_CONFIG_ROOT=\"$(XKBCONFIGROOT)\"
 
@@ -220,7 +224,7 @@ appman_PRE = \
 
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) ChangeLog
 CLEANFILES = $(appman_DATA)
 SED = sed
 
@@ -228,6 +232,7 @@ SED = sed
 XORGRELSTRING = @PACKAGE_STRING@
 XORGMANNAME = X Version 11
 MAN_SUBSTS = \
+	-e 's|__xkbconfigroot__|"$(XKBCONFIGROOT)"|' \
 	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xservername__|Xorg|g' \
@@ -241,6 +246,9 @@ MAN_SUBSTS = \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
+@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+@LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
+
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -329,7 +337,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/setxkbmap-setxkbmap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/setxkbmap.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -344,20 +352,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-setxkbmap-setxkbmap.o: setxkbmap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(setxkbmap_CFLAGS) $(CFLAGS) -MT setxkbmap-setxkbmap.o -MD -MP -MF "$(DEPDIR)/setxkbmap-setxkbmap.Tpo" -c -o setxkbmap-setxkbmap.o `test -f 'setxkbmap.c' || echo '$(srcdir)/'`setxkbmap.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/setxkbmap-setxkbmap.Tpo" "$(DEPDIR)/setxkbmap-setxkbmap.Po"; else rm -f "$(DEPDIR)/setxkbmap-setxkbmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='setxkbmap.c' object='setxkbmap-setxkbmap.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(setxkbmap_CFLAGS) $(CFLAGS) -c -o setxkbmap-setxkbmap.o `test -f 'setxkbmap.c' || echo '$(srcdir)/'`setxkbmap.c
-
-setxkbmap-setxkbmap.obj: setxkbmap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(setxkbmap_CFLAGS) $(CFLAGS) -MT setxkbmap-setxkbmap.obj -MD -MP -MF "$(DEPDIR)/setxkbmap-setxkbmap.Tpo" -c -o setxkbmap-setxkbmap.obj `if test -f 'setxkbmap.c'; then $(CYGPATH_W) 'setxkbmap.c'; else $(CYGPATH_W) '$(srcdir)/setxkbmap.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/setxkbmap-setxkbmap.Tpo" "$(DEPDIR)/setxkbmap-setxkbmap.Po"; else rm -f "$(DEPDIR)/setxkbmap-setxkbmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='setxkbmap.c' object='setxkbmap-setxkbmap.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(setxkbmap_CFLAGS) $(CFLAGS) -c -o setxkbmap-setxkbmap.obj `if test -f 'setxkbmap.c'; then $(CYGPATH_W) 'setxkbmap.c'; else $(CYGPATH_W) '$(srcdir)/setxkbmap.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
@@ -454,6 +448,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -638,8 +635,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-data \
@@ -652,8 +649,16 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 	uninstall-info-am
 
 
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
+
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+@LINT_TRUE@lint:
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(setxkbmap_SOURCES)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
