@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.8 2007/09/11 16:19:58 matthieu Exp $
+# $OpenBSD: MODULES,v 1.9 2007/09/13 21:17:32 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -25,7 +25,7 @@ app/rgb			1.0.1	7.1
 app/rstart		1.0.2	7.1
 app/scripts		1.0.1	7.0
 app/sessreg		1.0.3	7.3
-app/setxkbmap		1.0.4	7.3	needs-update
+app/setxkbmap		1.0.4	7.3
 app/showfont		1.0.1	7.0
 app/smproxy		1.0.2	7.1
 app/twm			1.0.3	7.2RC3
@@ -34,11 +34,11 @@ app/x11perf		1.4.1	7.1
 app/xauth		1.0.2	7.2RC4
 app/xbacklight		1.1	7.3	needs-import
 app/xbiff		1.0.1	7.0
-app/xcalc		1.0.2	7.3	needs-update
+app/xcalc		1.0.2	7.3
 app/xclipboard		1.0.1	7.0
-app/xclock		1.0.3	7.3	needs-update
+app/xclock		1.0.3	7.3
 app/xcmsdb		1.0.1	7.0
-app/xconsole		1.0.3	7.3 	needs-update
+app/xconsole		1.0.3	7.3
 app/xcursorgen		1.0.2	7.3	ports - needs-update
 app/xdm			1.1.6	7.3	needs-update
 app/xdpyinfo		1.0.1	7.0
