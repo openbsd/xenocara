@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xconsole
 
-xconsole_CFLAGS = $(XCONSOLE_CFLAGS)
+AM_CFLAGS = $(XCONSOLE_CFLAGS)
 xconsole_LDADD = $(XCONSOLE_LIBS)
 
 xconsole_SOURCES =	\

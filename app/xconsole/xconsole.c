@@ -73,13 +73,13 @@ extern char *_XawTextGetSTRING(TextWidget ctx, XawTextPosition left,
 #  include <pty.h>
 # endif
 #endif
-#ifdef USE_PRIVSEP
-# include <pwd.h>
-#endif
 
+#ifdef USE_PRIVSEP
+#include <pwd.h>
 extern int priv_init(uid_t, gid_t);
 extern int priv_openpty(int *, int *);
 extern int priv_set_console(int);
+#endif
 
 /* Fix ISC brain damage.  When using gcc fdopen isn't declared in <stdio.h>. */
 #if defined(ISC) && __STDC__ && !defined(ISC30)
@@ -294,14 +294,13 @@ OpenConsole(void)
 		{
 # ifdef TIOCCONS
 		    int on = 1;
-#ifdef USE_PRIVSEP
+#  ifdef USE_PRIVSEP
 		    if (priv_set_console(tty_fd) != -1)
  			input = fdopen (pty_fd, "r");
-#else
+#  else
 		    if (ioctl (tty_fd, TIOCCONS, (char *) &on) != -1)
 			input = fdopen (pty_fd, "r");
-#endif
-
+#  endif
 # else
 #  ifndef Lynx
 		    int consfd = open("/dev/console", O_RDONLY);
@@ -670,7 +669,6 @@ main(int argc, char *argv[])
 {
     Arg arglist[10];
     Cardinal num_args;
-
 #ifdef USE_PRIVSEP
     struct passwd *pw;
 #endif
@@ -680,6 +678,7 @@ main(int argc, char *argv[])
 			&argc, argv);
     XtGetApplicationResources (top, (XtPointer)&app_resources, resources,
 			       XtNumber (resources), NULL, 0);
+
 #ifdef USE_PRIVSEP
     /* Revoke privileges if any */
     if (getuid() == 0) {

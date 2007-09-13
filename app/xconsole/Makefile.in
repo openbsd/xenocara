@@ -65,7 +65,7 @@ bin_PROGRAMS = xconsole$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh missing
+	config.guess config.sub depcomp install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -81,8 +81,8 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" \
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am__xconsole_SOURCES_DIST = xconsole.c privsep.c
-@USE_PRIVSEP_TRUE@am__objects_1 = xconsole-privsep.$(OBJEXT)
-am_xconsole_OBJECTS = xconsole-xconsole.$(OBJEXT) $(am__objects_1)
+@USE_PRIVSEP_TRUE@am__objects_1 = privsep.$(OBJEXT)
+am_xconsole_OBJECTS = xconsole.$(OBJEXT) $(am__objects_1)
 xconsole_OBJECTS = $(am_xconsole_OBJECTS)
 am__DEPENDENCIES_1 =
 xconsole_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -227,7 +227,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-xconsole_CFLAGS = $(XCONSOLE_CFLAGS)
+AM_CFLAGS = $(XCONSOLE_CFLAGS)
 xconsole_LDADD = $(XCONSOLE_LIBS)
 xconsole_SOURCES = xconsole.c $(am__append_1)
 appman_PRE = \
@@ -348,8 +348,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xconsole-privsep.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xconsole-xconsole.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/privsep.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xconsole.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -364,34 +364,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xconsole-xconsole.o: xconsole.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xconsole_CFLAGS) $(CFLAGS) -MT xconsole-xconsole.o -MD -MP -MF "$(DEPDIR)/xconsole-xconsole.Tpo" -c -o xconsole-xconsole.o `test -f 'xconsole.c' || echo '$(srcdir)/'`xconsole.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xconsole-xconsole.Tpo" "$(DEPDIR)/xconsole-xconsole.Po"; else rm -f "$(DEPDIR)/xconsole-xconsole.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xconsole.c' object='xconsole-xconsole.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xconsole_CFLAGS) $(CFLAGS) -c -o xconsole-xconsole.o `test -f 'xconsole.c' || echo '$(srcdir)/'`xconsole.c
-
-xconsole-xconsole.obj: xconsole.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xconsole_CFLAGS) $(CFLAGS) -MT xconsole-xconsole.obj -MD -MP -MF "$(DEPDIR)/xconsole-xconsole.Tpo" -c -o xconsole-xconsole.obj `if test -f 'xconsole.c'; then $(CYGPATH_W) 'xconsole.c'; else $(CYGPATH_W) '$(srcdir)/xconsole.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xconsole-xconsole.Tpo" "$(DEPDIR)/xconsole-xconsole.Po"; else rm -f "$(DEPDIR)/xconsole-xconsole.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xconsole.c' object='xconsole-xconsole.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xconsole_CFLAGS) $(CFLAGS) -c -o xconsole-xconsole.obj `if test -f 'xconsole.c'; then $(CYGPATH_W) 'xconsole.c'; else $(CYGPATH_W) '$(srcdir)/xconsole.c'; fi`
-
-xconsole-privsep.o: privsep.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xconsole_CFLAGS) $(CFLAGS) -MT xconsole-privsep.o -MD -MP -MF "$(DEPDIR)/xconsole-privsep.Tpo" -c -o xconsole-privsep.o `test -f 'privsep.c' || echo '$(srcdir)/'`privsep.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xconsole-privsep.Tpo" "$(DEPDIR)/xconsole-privsep.Po"; else rm -f "$(DEPDIR)/xconsole-privsep.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='privsep.c' object='xconsole-privsep.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xconsole_CFLAGS) $(CFLAGS) -c -o xconsole-privsep.o `test -f 'privsep.c' || echo '$(srcdir)/'`privsep.c
-
-xconsole-privsep.obj: privsep.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xconsole_CFLAGS) $(CFLAGS) -MT xconsole-privsep.obj -MD -MP -MF "$(DEPDIR)/xconsole-privsep.Tpo" -c -o xconsole-privsep.obj `if test -f 'privsep.c'; then $(CYGPATH_W) 'privsep.c'; else $(CYGPATH_W) '$(srcdir)/privsep.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xconsole-privsep.Tpo" "$(DEPDIR)/xconsole-privsep.Po"; else rm -f "$(DEPDIR)/xconsole-privsep.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='privsep.c' object='xconsole-privsep.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xconsole_CFLAGS) $(CFLAGS) -c -o xconsole-privsep.obj `if test -f 'privsep.c'; then $(CYGPATH_W) 'privsep.c'; else $(CYGPATH_W) '$(srcdir)/privsep.c'; fi`
 uninstall-info-am:
 install-appdefaultDATA: $(appdefault_DATA)
 	@$(NORMAL_INSTALL)
