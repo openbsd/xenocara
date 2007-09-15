@@ -32,6 +32,14 @@ xgamma - Alter a monitor's gamma correction through the X server
 .B xgamma
 allows X users to query and alter the gamma correction of a monitor via
 the X video mode extension (XFree86-VidModeExtension).
+.PP
+If no value for the gamma correction is given via the
+.I -gamma 
+or 
+.IR -rgamma / -ggamma / -bgamma
+options,
+.B xgamma
+prints the current gamma correction of the display.
 .SH OPTIONS
 .PP
 .TP 8
@@ -56,10 +64,7 @@ Print out the `Usage:' command syntax summary.
 .B "-gamma f.f"
 The gamma correction can either be defined as a single value, or
 separately for the red, green and blue components. This argument
-specifies the gamma correction as a single value. If no value for
-the gamma correction is given
-.B xgamma
-returns the current gamma correction of the display.
+specifies the gamma correction as a single value. 
 .PP
 .TP 8
 .B "-rgamma f.f"
