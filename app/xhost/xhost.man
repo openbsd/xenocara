@@ -1,5 +1,5 @@
 .\" $Xorg: xhost.man,v 1.4 2001/02/09 02:05:46 xorgcvs Exp $
-.\" $XdotOrg: app/xhost/xhost.man,v 1.2 2004/04/23 19:54:49 eich Exp $
+.\" $XdotOrg$
 .\"
 .\" Copyright 1988, 1998  The Open Group
 .\" Copyright 2004 Sun Microsystems, Inc.
@@ -50,7 +50,7 @@ implement the user-based mechanism or use the hooks in the
 protocol for passing other authentication data to the server.
 .SH OPTIONS
 \fIXhost\fP accepts the following command line options described below.  For
-security, the options that effect access control may only be run from the
+security, the options that affect access control may only be run from the
 "controlling host".  For workstations, this is the same machine as the
 server.  For X terminals, it is the login host.
 .TP 8
@@ -119,7 +119,9 @@ the access list in the appropriate inet or inet6 family.
 Server interpreted addresses consist of a case-sensitive type tag and a
 string representing a given value, separated by a colon.  For example,
 "si:hostname:almas" is a server interpreted address of type \fIhostname\fP,
-with a value of \fIalmas\fP.
+with a value of \fIalmas\fP.   For more information on the available forms
+of server interpreted addresses, see the \fIXsecurity\fP(__miscmansuffix__)
+manual page.
 .SH DIAGNOSTICS
 For each name added to the access control list,
 a line of the form "\fIname\fP being added to access control list"

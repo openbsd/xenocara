@@ -1,5 +1,5 @@
 /* $Xorg: xhost.c,v 1.4 2001/02/09 02:05:46 xorgcvs Exp $ */
-/* $XdotOrg: app/xhost/xhost.c,v 1.5 2006/04/15 00:10:10 ajax Exp $ */
+/* $XdotOrg: app/xhost/xhost.c,v 1.4 2005/06/18 08:03:35 alanc Exp $ */
 /*
 
 Copyright 1985, 1986, 1987, 1998  The Open Group
