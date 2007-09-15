@@ -21,7 +21,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xdriinfo, [1.0.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xdriinfo)
+AC_INIT(xdriinfo, [1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xdriinfo)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -45,8 +45,6 @@ AC_SUBST(XDRIINFO_LIBS)
 AC_SEARCH_LIBS([glXGetProcAddressARB], [GL], [],
 	AC_MSG_FAILURE([cannot find GL library - make sure Mesa or other OpenGL package is installed]),
 	[$XDRIINFO_LIBS])
-
-LIBS="$LIBS $XDRIINFO_LIBS"
 
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
