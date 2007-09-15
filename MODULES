@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.9 2007/09/13 21:17:32 matthieu Exp $
+# $OpenBSD: MODULES,v 1.10 2007/09/15 17:25:51 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -39,10 +39,10 @@ app/xclipboard		1.0.1	7.0
 app/xclock		1.0.3	7.3
 app/xcmsdb		1.0.1	7.0
 app/xconsole		1.0.3	7.3
-app/xcursorgen		1.0.2	7.3	ports - needs-update
-app/xdm			1.1.6	7.3	needs-update
+app/xcursorgen		1.0.2	7.3	ports
+app/xdm			1.1.6	7.3
 app/xdpyinfo		1.0.1	7.0
-app/xdriinfo		1.0.2	7.3	needs-update
+app/xdriinfo		1.0.2	7.3
 app/xedit		1.0.2	7.1
 app/xev			1.0.2	7.2RC1
 app/xeyes		1.0.1	7.0
@@ -53,21 +53,21 @@ app/xfontsel		1.0.2	7.2+
 app/xfs			1.0.4	7.2RC3
 app/xfsinfo		1.0.1	7.0
 app/xfwp		1.0.1	7.0
-app/xgamma		1.0.2	7.3	needs-update
+app/xgamma		1.0.2	7.3
 app/xgc			1.0.1	7.0
-app/xhost		1.0.2	7.3	needs-update
-app/xinit		1.0.5	7.3	needs-update
+app/xhost		1.0.2	7.3
+app/xinit		1.0.6	7.3+
 app/xkbcomp		1.0.3	7.2RC2
 app/xkbevd		1.0.2	7.1
 app/xkbprint		1.0.1	7.0
 app/xkbutils		1.0.1	7.0
 app/xkill		1.0.1	7.0
-app/xload		1.0.2	7.3	need-update
+app/xload		1.0.2	7.3
 app/xlogo		1.0.1	7.0
 app/xlsatoms		1.0.1	7.0
 app/xlsclients		1.0.1	7.0
 app/xlsfonts		1.0.2	7.2+
-app/xmag		1.0.2	7.3	needs-update
+app/xmag		1.0.2	7.3
 app/xman		1.0.3	7.3	needs-update
 app/xmessage		1.0.2	7.3	needs-update
 app/xmh			1.0.1	7.0
