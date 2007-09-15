@@ -62,8 +62,7 @@ bin_PROGRAMS = xmag$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh missing \
-	mkinstalldirs
+	config.guess config.sub depcomp install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -71,15 +70,15 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" \
 	"$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xmag_OBJECTS = xmag-CutPaste.$(OBJEXT) xmag-RootWin.$(OBJEXT) \
-	xmag-Scale.$(OBJEXT) xmag-xmag.$(OBJEXT)
+am_xmag_OBJECTS = CutPaste.$(OBJEXT) RootWin.$(OBJEXT) Scale.$(OBJEXT) \
+	xmag.$(OBJEXT)
 xmag_OBJECTS = $(am_xmag_OBJECTS)
 am__DEPENDENCIES_1 =
 xmag_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -219,7 +218,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-xmag_CFLAGS = $(XMAG_CFLAGS)
+AM_CFLAGS = $(XMAG_CFLAGS)
 xmag_LDADD = $(XMAG_LIBS) -lm
 xmag_SOURCES = \
         CutPaste.c \
@@ -243,7 +242,7 @@ appdefault_DATA = $(APPDEFAULTFILES)
 
 # Developer documentation for Scale widget in Scale.c
 EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad) Scale.txt xmag.icon \
-	$(appman_PRE)
+	$(appman_PRE) ChangeLog
 CLEANFILES = $(APPDEFAULTFILES) $(appman_DATA)
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
@@ -265,6 +264,7 @@ MAN_SUBSTS = \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
+MAINTAINERCLEANFILES = ChangeLog
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -353,10 +353,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmag-CutPaste.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmag-RootWin.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmag-Scale.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmag-xmag.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CutPaste.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/RootWin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Scale.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmag.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -371,62 +371,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xmag-CutPaste.o: CutPaste.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -MT xmag-CutPaste.o -MD -MP -MF "$(DEPDIR)/xmag-CutPaste.Tpo" -c -o xmag-CutPaste.o `test -f 'CutPaste.c' || echo '$(srcdir)/'`CutPaste.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmag-CutPaste.Tpo" "$(DEPDIR)/xmag-CutPaste.Po"; else rm -f "$(DEPDIR)/xmag-CutPaste.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='CutPaste.c' object='xmag-CutPaste.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -c -o xmag-CutPaste.o `test -f 'CutPaste.c' || echo '$(srcdir)/'`CutPaste.c
-
-xmag-CutPaste.obj: CutPaste.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -MT xmag-CutPaste.obj -MD -MP -MF "$(DEPDIR)/xmag-CutPaste.Tpo" -c -o xmag-CutPaste.obj `if test -f 'CutPaste.c'; then $(CYGPATH_W) 'CutPaste.c'; else $(CYGPATH_W) '$(srcdir)/CutPaste.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmag-CutPaste.Tpo" "$(DEPDIR)/xmag-CutPaste.Po"; else rm -f "$(DEPDIR)/xmag-CutPaste.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='CutPaste.c' object='xmag-CutPaste.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -c -o xmag-CutPaste.obj `if test -f 'CutPaste.c'; then $(CYGPATH_W) 'CutPaste.c'; else $(CYGPATH_W) '$(srcdir)/CutPaste.c'; fi`
-
-xmag-RootWin.o: RootWin.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -MT xmag-RootWin.o -MD -MP -MF "$(DEPDIR)/xmag-RootWin.Tpo" -c -o xmag-RootWin.o `test -f 'RootWin.c' || echo '$(srcdir)/'`RootWin.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmag-RootWin.Tpo" "$(DEPDIR)/xmag-RootWin.Po"; else rm -f "$(DEPDIR)/xmag-RootWin.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='RootWin.c' object='xmag-RootWin.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -c -o xmag-RootWin.o `test -f 'RootWin.c' || echo '$(srcdir)/'`RootWin.c
-
-xmag-RootWin.obj: RootWin.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -MT xmag-RootWin.obj -MD -MP -MF "$(DEPDIR)/xmag-RootWin.Tpo" -c -o xmag-RootWin.obj `if test -f 'RootWin.c'; then $(CYGPATH_W) 'RootWin.c'; else $(CYGPATH_W) '$(srcdir)/RootWin.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmag-RootWin.Tpo" "$(DEPDIR)/xmag-RootWin.Po"; else rm -f "$(DEPDIR)/xmag-RootWin.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='RootWin.c' object='xmag-RootWin.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -c -o xmag-RootWin.obj `if test -f 'RootWin.c'; then $(CYGPATH_W) 'RootWin.c'; else $(CYGPATH_W) '$(srcdir)/RootWin.c'; fi`
-
-xmag-Scale.o: Scale.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -MT xmag-Scale.o -MD -MP -MF "$(DEPDIR)/xmag-Scale.Tpo" -c -o xmag-Scale.o `test -f 'Scale.c' || echo '$(srcdir)/'`Scale.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmag-Scale.Tpo" "$(DEPDIR)/xmag-Scale.Po"; else rm -f "$(DEPDIR)/xmag-Scale.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Scale.c' object='xmag-Scale.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -c -o xmag-Scale.o `test -f 'Scale.c' || echo '$(srcdir)/'`Scale.c
-
-xmag-Scale.obj: Scale.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -MT xmag-Scale.obj -MD -MP -MF "$(DEPDIR)/xmag-Scale.Tpo" -c -o xmag-Scale.obj `if test -f 'Scale.c'; then $(CYGPATH_W) 'Scale.c'; else $(CYGPATH_W) '$(srcdir)/Scale.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmag-Scale.Tpo" "$(DEPDIR)/xmag-Scale.Po"; else rm -f "$(DEPDIR)/xmag-Scale.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Scale.c' object='xmag-Scale.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -c -o xmag-Scale.obj `if test -f 'Scale.c'; then $(CYGPATH_W) 'Scale.c'; else $(CYGPATH_W) '$(srcdir)/Scale.c'; fi`
-
-xmag-xmag.o: xmag.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -MT xmag-xmag.o -MD -MP -MF "$(DEPDIR)/xmag-xmag.Tpo" -c -o xmag-xmag.o `test -f 'xmag.c' || echo '$(srcdir)/'`xmag.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmag-xmag.Tpo" "$(DEPDIR)/xmag-xmag.Po"; else rm -f "$(DEPDIR)/xmag-xmag.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xmag.c' object='xmag-xmag.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -c -o xmag-xmag.o `test -f 'xmag.c' || echo '$(srcdir)/'`xmag.c
-
-xmag-xmag.obj: xmag.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -MT xmag-xmag.obj -MD -MP -MF "$(DEPDIR)/xmag-xmag.Tpo" -c -o xmag-xmag.obj `if test -f 'xmag.c'; then $(CYGPATH_W) 'xmag.c'; else $(CYGPATH_W) '$(srcdir)/xmag.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmag-xmag.Tpo" "$(DEPDIR)/xmag-xmag.Po"; else rm -f "$(DEPDIR)/xmag-xmag.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xmag.c' object='xmag-xmag.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmag_CFLAGS) $(CFLAGS) -c -o xmag-xmag.obj `if test -f 'xmag.c'; then $(CYGPATH_W) 'xmag.c'; else $(CYGPATH_W) '$(srcdir)/xmag.c'; fi`
 uninstall-info-am:
 install-appdefaultDATA: $(appdefault_DATA)
 	@$(NORMAL_INSTALL)
@@ -540,6 +484,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -669,6 +616,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -724,8 +672,8 @@ uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appdefaultDATA install-appmanDATA install-binPROGRAMS \
@@ -743,6 +691,13 @@ uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
