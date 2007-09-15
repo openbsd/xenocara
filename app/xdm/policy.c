@@ -140,8 +140,9 @@ Willing (
 	    if ((fd = popen(willing, "r")))
 	    {
 		char *s = NULL;
+		errno = 0;
 		while(!(s = fgets(statusBuf, 256, fd)) && errno == EINTR)
-			;
+			errno = 0;
 		if (s && strlen(statusBuf) > 0)
 			statusBuf[strlen(statusBuf)-1] = 0; /* chop newline */
 		else

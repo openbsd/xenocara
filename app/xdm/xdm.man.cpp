@@ -196,7 +196,7 @@ run during the progress of the session.
 .IP "\fB\-resources\fP \fIresource_file\fP"
 Specifies the value for the \fBDisplayManager*resources\fP resource.  This file
 is loaded using
-.I xrdb
+.IR xrdb (__appmansuffix__)
 to specify configuration parameters for the
 authentication widget.
 .IP "\fB\-server\fP \fIserver_entry\fP"
@@ -931,19 +931,47 @@ Here is a sample \fIXsetup\fP script:
 
 .fi
 .SH "AUTHENTICATION WIDGET"
-The authentication widget reads a name/password pair
-from the keyboard.  Nearly every imaginable
+The authentication widget prompts the user for the username, password, and/or
+other required authentication data from the keyboard.  Nearly every imaginable
 parameter can be controlled with a resource.  Resources for this widget
 should be put into the file named by
 \fBDisplayManager.\fP\fIDISPLAY\fP\fB.resources\fP.  All of these have reasonable
 default values, so it is not necessary to specify any of them.
+.PP
+The resource file is loaded with
+.IR xrdb (__appmansuffix__)
+so it may use the substitutions defined by that program such as CLIENTHOST
+for the client hostname in the login message, or C pre-processor #ifdef
+statements to produce different displays depending on color depth or other
+variables.
+.PP
+.I Xdm
+can be compiled with support for the 
+.IR Xft (__libmansuffix__) 
+library for font rendering.   If this support is present, font faces are 
+specified using the resources with names ending in "face" in the
+fontconfig face format described in the 
+.I Font Names
+section of
+.IR fonts.conf (__filemansuffix__).
+If not, then fonts are specified using the resources with names ending in 
+"font" in the traditional 
+.I X Logical Font Description 
+format described in the 
+.I Font Names
+section of 
+.IR X (__miscmansuffix__).
 .IP "\fBxlogin.Login.width, xlogin.Login.height, xlogin.Login.x, xlogin.Login.y\fP"
 The geometry of the Login widget is normally computed automatically.  If you
 wish to position it elsewhere, specify each of these resources.
 .IP "\fBxlogin.Login.foreground\fP"
-The color used to display the typed-in user name.
+The color used to display the input typed by the user.
+.IP "\fBxlogin.Login.face\fP"
+The face used to display the input typed by the user when built with Xft 
+support.  The default is ``Serif-18''.
 .IP "\fBxlogin.Login.font\fP"
-The font used to display the typed-in user name.
+The font used to display the input typed by the user when not built with Xft
+support.
 .IP "\fBxlogin.Login.greeting\fP"
 A string which identifies this window.
 The default is ``X Window System.''
@@ -951,8 +979,11 @@ The default is ``X Window System.''
 When X authorization is requested in the configuration file for this
 display and none is in use, this greeting replaces the standard
 greeting.  The default is ``This is an unsecure session''
+.IP "\fBxlogin.Login.greetFace\fP"
+The face used to display the greeting when built with Xft support.
+The default is ``Serif-24:italic''.
 .IP "\fBxlogin.Login.greetFont\fP"
-The font used to display the greeting.
+The font used to display the greeting when not built with Xft support.
 .IP "\fBxlogin.Login.greetColor\fP"
 The color used to display the greeting.
 .IP "\fBxlogin.Login.namePrompt\fP"
@@ -962,22 +993,62 @@ strips trailing white space from resource values, so to add spaces at
 the end of the prompt (usually a nice thing), add spaces escaped with
 backslashes.  The default is ``Login:  ''
 .IP "\fBxlogin.Login.passwdPrompt\fP"
-The string displayed to prompt for a password.
+The string displayed to prompt for a password, when not using an authentication
+system such as PAM that provides its own prompts.
 The default is ``Password:  ''
+.IP "\fBxlogin.Login.promptFace\fP"
+The face used to display prompts when built with Xft support.
+The default is ``Serif-18:bold''.
 .IP "\fBxlogin.Login.promptFont\fP"
-The font used to display both prompts.
+The font used to display prompts when not built with Xft support.
 .IP "\fBxlogin.Login.promptColor\fP"
-The color used to display both prompts.
+The color used to display prompts.
+.IP "\fBxlogin.Login.changePasswdMessage\fP"
+A message which is displayed when the users password has expired.
+The default is ``Password Change Required''
 .IP "\fBxlogin.Login.fail\fP"
-A message which is displayed when the authentication fails.
+A message which is displayed when the authentication fails, when not using an
+authentication system such as PAM that provides its own prompts.
 The default is ``Login incorrect''
+.IP "\fBxlogin.Login.failFace\fP"
+The face used to display the failure message when built with Xft support.
+The default is ``Serif-18:bold''.
 .IP "\fBxlogin.Login.failFont\fP"
-The font used to display the failure message.
+The font used to display the failure message when not built with Xft support.
 .IP "\fBxlogin.Login.failColor\fP"
 The color used to display the failure message.
 .IP "\fBxlogin.Login.failTimeout\fP"
 The number of seconds that the failure message is displayed.
-The default is 30.
+The default is 10.
+.IP "\fBxlogin.Login.logoFileName\fP"
+Name of an XPM format pixmap to display in the greeter window, if built with
+XPM support.   The default is no pixmap.
+.IP "\fBxlogin.Login.logoPadding\fP"
+Number of pixels of space between the logo pixmap and other elements of the
+greeter window, if the pixmap is displayed.
+The default is 5.
+.IP "\fBxlogin.Login.useShape\fP"
+If set to ``true'', when built with XPM support, attempt to use the
+X Non-Rectangular Window Shape Extension to set the window shape.
+The default is ``true''.
+.IP "\fBxlogin.Login.hiColor\fP, \fBxlogin.Login.shdColor\fP"
+Raised appearance bezels may be drawn around
+the greeter frame and text input boxes by setting these resources.  hiColor
+is the highlight color, used on the top and left sides of the frame, and the
+bottom and right sides of text input areas.   shdColor is the shadow color,
+used on the bottom and right sides of the frame, and the top and left sides
+of text input areas.
+The default for both is the foreground color, providing a flat appearance.
+.IP "\fBxlogin.Login.frameWidth\fP"
+frameWidth is the width in pixels of the area
+around the greeter frame drawn in hiColor and shdColor.
+.IP "\fBxlogin.Login.innerFramesWidth\fP"
+innerFramesWidth is the width in pixels of the 
+area around text input areas drawn in hiColor and shdColor.
+.IP "\fBxlogin.Login.sepWidth\fP"
+sepWidth is the width in pixels of the 
+bezeled line between the greeting and input areas
+drawn in hiColor and shdColor.
 .IP "\fBxlogin.Login.allowRootLogin\fP"
 If set to ``false'', don't allow root (and any other user with uid = 0) to
 log in directly.
@@ -1156,7 +1227,6 @@ a file \fI\.xsession,\fP
 which contains commands that each user would like to use as a session.
 \fIXsession\fP should also
 implement a system default session if no user-specified session exists.
-See the section \fBTypical Usage\fP.
 .PP
 An argument may be passed to this program from the authentication widget
 using the `set-session-argument' action.  This can be used to select
@@ -1368,13 +1438,15 @@ the default place for authorization files
 Kerberos credentials cache
 .SH "SEE ALSO"
 .IR X (__miscmansuffix__),
-.IR xinit (1),
-.IR xauth (1),
+.IR xinit (__appmansuffix__),
+.IR xauth (__appmansuffix__),
+.IR xrdb (__appmansuffix__),
 .IR Xsecurity (__miscmansuffix__),
-.IR sessreg (1),
-.IR Xserver (1),
-.\" .IR chooser (1), \" except that there isn't a manual for it yet
-.\" .IR xdmshell (1), \" except that there isn't a manual for it yet
+.IR sessreg (__appmansuffix__),
+.IR Xserver (__appmansuffix__),
+.\" .IR chooser (__appmansuffix__), \" except that there isn't a manual for it yet
+.\" .IR xdmshell (__appmansuffix__), \" except that there isn't a manual for it yet
+.IR fonts.conf (__filemansuffix__).
 .br
 .I "X Display Manager Control Protocol"
 .SH AUTHOR

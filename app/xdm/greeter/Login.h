@@ -114,29 +114,30 @@ from The Open Group.
 # define XtRXftFont		"XftFont"
 # define XtRXftColor		"XftColor"
 
-#ifdef XPM
 /* added by Amit Margalit Oct 1996 */
 # define XtNhiColor		"hiColor"
 # define XtNshdColor		"shdColor"
 # define XtNframeWidth		"frameWidth"
+# define XtCFrameWidth		"FrameWidth"
 # define XtNinnerFramesWidth	"innerFramesWidth"
 # define XtNsepWidth		"sepWidth"
 
+#ifdef DANCING
 /* caolan begin */
 #define XtNlastEventTime "lastEventTime"
 #define XtCLastEventTime "LastEventTime"
 /* caolan end */
+#endif /* DANCING */
 
+#ifdef XPM
 #define XtNuseShape "useShape"
 #define XtCUseShape "UseShape"
 #define XtNlogoFileName "logoFileName"
 #define XtCLogoFileName "LogoFileName"
 #define XtNlogoPadding "logoPadding"
 #define XtCLogoPadding "LogoPadding"
-
-# define XtCFrameWidth		"FrameWidth"
-
 #endif /* XPM */
+
 # define XtCGreeting		"Greeting"
 # define XtCNamePrompt		"NamePrompt"
 # define XtCPasswdPrompt	"PasswdPrompt"

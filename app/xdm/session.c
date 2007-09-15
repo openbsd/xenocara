@@ -627,6 +627,8 @@ StartClient (
 	    return (0);
 	}
 #endif   /* QNX4 doesn't support multi-groups, no initgroups() */
+#endif /* !HAS_SETUSERCONTEXT */
+
 #ifdef USE_PAM
 	if (pamh) {
 	    long i;
@@ -647,6 +649,8 @@ StartClient (
 
 	}
 #endif
+
+#ifndef HAS_SETUSERCONTEXT
 	if (setuid(verify->uid) < 0) {
 	    LogError ("setuid %d (user \"%s\") failed, errno=%d\n",
 		     verify->uid, name, errno);

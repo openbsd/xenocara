@@ -67,9 +67,7 @@ from The Open Group.
 #include "Login.h"
 #include <X11/IntrinsicP.h>
 #include <X11/CoreP.h>
-#ifdef XPM
 #include <X11/Xlib.h>
-#endif /* XPM */
 #ifdef USE_XFT
 # include <X11/Xft/Xft.h>
 #endif
@@ -103,10 +101,8 @@ typedef struct {
 	Pixel		greetpixel;	/* greeting pixel */
 	Pixel		failpixel;	/* failure pixel */
 #endif
-#ifdef XPM
 	Pixel		hipixel;	/* frame hilite pixel */
 	Pixel		shdpixel;	/* shadow frame pixel */
-#endif /* XPM */
 	GC		textGC;		/* pointer to GraphicsContext */
 	GC		bgGC;		/* pointer to GraphicsContext */
 	GC		xorGC;		/* pointer to GraphicsContext */
@@ -115,10 +111,8 @@ typedef struct {
 	GC		greetGC;
 	GC		failGC;
 #endif
-#ifdef XPM
 	GC		hiGC;		/* for hilight part of frame */
 	GC		shdGC;		/* for shaded part of frame */
-#endif /* XPM */
 	char		*greeting;	/* greeting */
 	char		*unsecure_greet;/* message displayed when insecure */
 	char		*namePrompt;	/* name prompt */
@@ -147,14 +141,18 @@ typedef struct {
 	XIC		xic;		/* input method of input context */
 	loginPromptData	prompts[NUM_PROMPTS];
     	time_t 		msgTimeout;
-#ifdef XPM
+
+#ifdef DANCING
 	/*caolan begin*/
-	int lastEventTime;
+	int 		lastEventTime;
 	/*caolan end*/
+#endif /* DANCING */
+    
 	int		outframewidth;	/* outer frame thickness */
 	int		inframeswidth;	/* inner frames thickness */
 	int		sepwidth;	/* width of separator line */
 
+#ifdef XPM    
         char *logoFileName;
         unsigned int logoWidth, logoHeight, logoPadding, logoBorderWidth;
         int logoX, logoY;

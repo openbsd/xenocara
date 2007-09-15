@@ -85,8 +85,9 @@ from The Open Group.
 #include <X11/Xlib.h>
 #include <X11/xpm.h>
 #include <X11/extensions/shape.h>
-#include <X11/cursorfont.h>
 #endif /* XPM */
+
+#include <X11/cursorfont.h>
 
 #ifdef USE_XINERAMA
 #include <X11/extensions/Xinerama.h>
@@ -135,12 +136,14 @@ static XtResource resources[] = {
 	offset(failpixel), XtRString,	XtDefaultForeground},
 #endif
 
-#ifdef XPM
+#ifdef DANCING
 /* added by Caolan McNamara */
 	{XtNlastEventTime, XtCLastEventTime, XtRInt , sizeof (int),
 	offset(lastEventTime), XtRImmediate,	(XtPointer)0},
 /* end (caolan) */
+#endif /* DANCING */
 
+#ifdef XPM    
 /* added by Ivan Griffin (ivan.griffin@ul.ie) */
         {XtNlogoFileName, XtCLogoFileName, XtRString, sizeof(char*),
         offset(logoFileName), XtRImmediate, (XtPointer)0},
@@ -149,7 +152,7 @@ static XtResource resources[] = {
         {XtNlogoPadding, XtCLogoPadding, XtRInt, sizeof(int),
         offset(logoPadding), XtRImmediate, (XtPointer) 5},
 /* end (ivan) */
-
+#endif /* XPM */
 
 /* added by Amit Margalit */
     {XtNhiColor, XtCForeground, XtRPixel, sizeof (Pixel),
@@ -163,7 +166,6 @@ static XtResource resources[] = {
     {XtNsepWidth, XtCFrameWidth, XtRInt, sizeof(int),
         offset(sepwidth), XtRImmediate, (XtPointer) 1},
 /* end (amit) */
-#endif /* XPM */
 
 #ifndef USE_XFT    
     {XtNfont, XtCFont, XtRFontStruct, sizeof (XFontStruct *),
@@ -298,11 +300,8 @@ XmuXftTextWidth(Display *dpy, XftFont *font, FcChar8 *string, int len);
 # define STRING_WIDTH(f, s) 	TEXT_WIDTH (f, s, strlen(s))
 
 
-#ifndef XPM
-# define TEXT_PROMPT_W(w, m) STRING_WIDTH(prompt, m)
-#else
+
 # define TEXT_PROMPT_W(w, m) (STRING_WIDTH(prompt, m) + w->login.inframeswidth)
-#endif /* XPM */
 
 # define DEF_PROMPT_W(w,n) TEXT_PROMPT_W(w, w->login.prompts[n].defaultPrompt)
 # define CUR_PROMPT_W(w,n)  (max(MAX_DEF_PROMPT_W(w), PROMPT_TEXT(w,n) ? \
@@ -330,11 +329,8 @@ XmuXftTextWidth(Display *dpy, XftFont *font, FcChar8 *string, int len);
 # define PROMPT_W(w)	(w->core.width - (2 * TEXT_X_INC(w)))
 # define PROMPT_H(w)	(3 * Y_INC(w) / 2)
 # define VALUE_X(w,n)	(PROMPT_X(w) + CUR_PROMPT_W(w,n))
-#ifndef XPM
-# define PROMPT_SPACE_Y(w)	(8 * Y_INC(w) / 5)
-#else
 # define PROMPT_SPACE_Y(w)	(10 * Y_INC(w) / 5)
-#endif /* XPM */
+
 # define ERROR_X(w,m)	((int)(w->core.width - STRING_WIDTH (fail, m)) / 2)
 # define FAIL_X(w)	ERROR_X(w, w->login.fail)
 # define FAIL_Y(w)	(PROMPT_Y(w,1) + 2 * FAIL_Y_INC (w) + F_ASCENT(fail))
@@ -373,10 +369,10 @@ realizeValue (LoginWidget w, int cursor, int promptNum, GC gc)
     height = PROMPT_H(w);
     width = PROMPT_W(w) - x - 3;
 
-#ifdef XPM
     height -= (w->login.inframeswidth * 2);
-    width -= (w->login.inframeswidth * 2) +
-	(w->login.logoWidth + 2*(w->login.logoPadding));
+    width -= (w->login.inframeswidth * 2);
+#ifdef XPM
+    width -= (w->login.logoWidth + 2*(w->login.logoPadding));
 #endif
     if (cursor > VALUE_SHOW_START(w, promptNum))
 	curoff = TEXT_WIDTH (text, text, cursor);
@@ -402,14 +398,14 @@ realizeValue (LoginWidget w, int cursor, int promptNum, GC gc)
 	    offset = VALUE_SHOW_START(w, promptNum);
 	    textlen = strlen (text + offset);
 
-	    do
+	    while ((textlen > 0) && (textwidth > width))
 	    {
 		if (offset < PROMPT_CURSOR(w, promptNum)) {
 		    offset++;
 		}
 		textlen--;
 		textwidth = TEXT_WIDTH (text, text + offset, textlen);
-	    } while ((textlen > 0) && (textwidth > width));
+	    } 
 
 	    VALUE_SHOW_START(w, promptNum) = offset;
 	    VALUE_SHOW_END(w, promptNum) = offset + textlen;
@@ -435,11 +431,11 @@ static void
 DrawValue (LoginWidget w, int cursor, int promptNum)
 {
     realizeValue(w, cursor, promptNum, w->login.textGC);
-#ifdef XPM
+#ifdef DANCING
     /*as good a place as any Caolan begin*/
     w->login.lastEventTime = time(NULL);
     /*as good a place as any Caolan end*/
-#endif /* XPM */
+#endif /* DANCING */
 }
 
 static void
@@ -482,10 +478,6 @@ realizeCursor (LoginWidget w, GC gc)
 	break;
     }
     
-#ifndef XPM
-    XFillRectangle (XtDisplay (w), XtWindow (w), gc,
-		    x, y - F_ASCENT(text), width, height);
-#else
     XFillRectangle (XtDisplay (w), XtWindow (w), gc,
 		    x, y+1 - F_ASCENT(text), width, height-1);
     XDrawPoint     (XtDisplay (w), XtWindow (w), gc,
@@ -504,7 +496,6 @@ realizeCursor (LoginWidget w, GC gc)
     		    x-2 , y - F_ASCENT(text)+height);
     XDrawPoint     (XtDisplay (w), XtWindow (w), gc,
     		    x+2 , y - F_ASCENT(text)+height);
-#endif /* XPM */
 
 #ifdef FORCE_CURSOR_FLASH
     /* Force cursor to flash briefly to give user feedback */
@@ -708,14 +699,11 @@ static void
 draw_it (LoginWidget w)
 {
     int p;
-#ifdef XPM
     int i;
     int gr_line_x, gr_line_y, gr_line_w;
-#endif /* XPM */
 
     EraseCursor (w);
 
-#ifdef XPM
     if( (w->login.outframewidth) < 1 )
       w->login.outframewidth = 1;
     for(i=1;i<=(w->login.outframewidth);i++)
@@ -731,11 +719,15 @@ draw_it (LoginWidget w)
     }
     
     /* make separator line */
-    gr_line_x = w->login.outframewidth + w->login.logoPadding;
+    gr_line_x = w->login.outframewidth;
     gr_line_y = GREET_Y(w) + GREET_Y_INC(w);
-    gr_line_w = w->core.width - 2*(w->login.outframewidth) -
-        (w->login.logoWidth + 3*(w->login.logoPadding));
- 
+    gr_line_w = w->core.width - 2*(w->login.outframewidth);
+
+#ifdef XPM
+    gr_line_x += w->login.logoPadding;
+    gr_line_w -= w->login.logoWidth + (3 * (w->login.logoPadding));
+#endif /* XPM */
+
     for(i=1;i<=(w->login.sepwidth);i++)
     {
       XDrawLine(XtDisplay (w), XtWindow (w), w->login.shdGC,
@@ -752,11 +744,14 @@ draw_it (LoginWidget w)
 	int in_frame_y
 	    = PROMPT_Y(w,p) - w->login.inframeswidth - 1 - TEXT_Y_INC(w);
  
-	int in_width = PROMPT_W(w) - VALUE_X(w,p) -
-	    (w->login.logoWidth + 2*(w->login.logoPadding));
+	int in_width = PROMPT_W(w) - VALUE_X(w,p);
 	int in_height = PROMPT_H(w) + w->login.inframeswidth + 2;
 	
 	GC topLeftGC, botRightGC;
+
+#ifdef XPM	
+	in_width -= (w->login.logoWidth + 2*(w->login.logoPadding));
+#endif /* XPM */
 	
 	if ((PROMPT_STATE(w, p) == LOGIN_PROMPT_ECHO_ON) ||
 	    (PROMPT_STATE(w, p) == LOGIN_PROMPT_ECHO_OFF)) {
@@ -787,15 +782,12 @@ draw_it (LoginWidget w)
 		      in_frame_x + in_width-i,  in_frame_y + in_height-i);
 	}
     }
-#endif /* XPM */
 
     if (GREETING(w)[0]) {
-	int gx;
+	int gx = GREET_X(w);
 
 #ifdef XPM
-	gx = GREET_X(w) - ((w->login.logoWidth/2) + w->login.logoPadding);
-#else
-	gx = GREET_X(w);
+	gx -= ((w->login.logoWidth/2) + w->login.logoPadding);
 #endif	
 	DRAW_STRING (greet, gx, GREET_Y(w), GREETING(w), strlen (GREETING(w)));
     }
@@ -1696,8 +1688,6 @@ static void Initialize (
     XineramaScreenInfo *screens;
     int                 s_num;
 #endif
-
-#ifdef XPM
     int 	rv = 0;
     
     myXGCV.foreground = w->login.hipixel;
@@ -1709,7 +1699,6 @@ static void Initialize (
     myXGCV.background = w->core.background_pixel;
     valuemask = GCForeground | GCBackground;
     w->login.shdGC = XtGetGC(gnew, valuemask, &myXGCV);
-#endif /* XPM */
 
     myXGCV.foreground = TEXT_COLOR(text);
     myXGCV.background = w->core.background_pixel;
@@ -1898,10 +1887,9 @@ static void Realize (
      XtValueMask *valueMask,
      XSetWindowAttributes *attrs)
 {
-#ifdef XPM
     LoginWidget	w = (LoginWidget) gw;
     Cursor cursor;
-#endif /* XPM */
+
     XtCreateWindow( gw, (unsigned)InputOutput, (Visual *)CopyFromParent,
 		     *valueMask, attrs );
     InitI18N(gw);
@@ -1913,10 +1901,10 @@ static void Realize (
 
 #endif
 
-#ifdef XPM
     cursor = XCreateFontCursor(XtDisplay(gw), XC_left_ptr);
-    XDefineCursor(XtDisplay(gw), XtWindow(gw), cursor);
+    XDefineCursor(XtDisplay(gw), DefaultRootWindow(XtDisplay(gw)), cursor);
 
+#ifdef XPM
     /* 
      * Check if Pixmap was valid
      */
@@ -1990,10 +1978,10 @@ static void Destroy (Widget gw)
     XtReleaseGC(gw, w->login.greetGC);
     XtReleaseGC(gw, w->login.failGC);
 #endif
-#ifdef XPM
     XtReleaseGC(gw, w->login.hiGC);
     XtReleaseGC(gw, w->login.shdGC);
 
+#ifdef XPM
     if (True == w->login.logoValid)
     {
         if (w->login.logoPixmap != 0)
@@ -2101,11 +2089,7 @@ LoginClassRec loginClassRec = {
     /* expose			*/	Redisplay,
     /* set_values		*/	SetValues,
     /* set_values_hook		*/	NULL,
-#ifndef XPM
-    /* set_values_almost	*/	NULL,
-#else
     /* set_values_almost	*/	XtInheritSetValuesAlmost,
-#endif /* XPM */
     /* get_values_hook		*/	NULL,
     /* accept_focus		*/	NULL,
     /* version			*/	XtVersion,
