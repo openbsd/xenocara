@@ -1,11 +1,12 @@
 ! $Xorg: Xresources,v 1.3 2000/08/17 19:54:17 cpqbld Exp $
-! $OpenBSD: Xresources.cpp,v 1.3 2007/08/05 19:37:40 matthieu Exp $
+! $OpenBSD: Xresources.cpp,v 1.4 2007/09/15 15:22:59 matthieu Exp $
 !
 !
 !
 !
 ! $XFree86: xc/programs/xdm/config/Xres.cpp,v 1.6 2003/01/04 03:11:31 dawes Exp $
 !
+
 #define BS \ /* cpp can be trickier than m4 */
 #define NLBS \n\ /* don't remove these comments */
 xlogin*login.translations: #override BS
@@ -19,15 +20,11 @@ xlogin*login.translations: #override BS
 	<Key>KP_Enter: set-session-argument() finish-field()NLBS
 	Ctrl<Key>Return: set-session-argument(failsafe) finish-field()NLBS
 	<Key>Return: set-session-argument() finish-field()
-#ifndef XPM
-xlogin*greeting: CLIENTHOST
-xlogin*namePrompt: login:\040
-#else
+
 xlogin*greeting: Welcome to CLIENTHOST
 xlogin*namePrompt: \040\040\040\040\040\040\040Login:
-#endif /* XPM */
 xlogin*fail: Login incorrect
-#ifdef XPM
+
 XHASHif WIDTH > 800
 xlogin*greetFont: -adobe-helvetica-bold-o-normal--24-240-75-75-p-138-iso8859-1
 xlogin*font: -adobe-helvetica-medium-r-normal--18-180-75-75-p-98-iso8859-1
@@ -47,7 +44,6 @@ xlogin*face: 		Sans-12
 xlogin*promptFace: 	Sans-12:bold
 xlogin*failFace: 	Sans-12:bold
 XHASHendif
-#endif /* XPM */
 
 XHASHif !(defined(bpp1) || defined(bpp4) || defined(bpp8) || defined(bpp15))
 XHASH if PLANES < 4 || defined(Hp300Architecture)
@@ -74,9 +70,6 @@ XHASH endif
 XHASHendif  //**/* If manual override */**//
 
 XHASHifndef bpp1
-#ifndef XPM
-xlogin*greetColor: CadetBlue
-#else
 xlogin*borderWidth: 2
 xlogin*frameWidth: 5
 xlogin*innerFramesWidth: 2
@@ -89,7 +82,6 @@ xlogin*shdColor: #384c70
 
 ! 'Welcome to..' text color
 xlogin*greetColor: #000000
-#endif /* XPM */
 XHASHif defined(bpp4) || defined(bpp8) || defined(bpp15)
 ! flood fill
 !xlogin*background: #2559a5
@@ -103,7 +95,6 @@ xlogin*failColor: red
 ! border/shadow
 *Background: #000000
 XHASHelse
-#ifdef XPM
 xlogin*borderWidth: 3
 xlogin*frameWidth: 5
 xlogin*innerFramesWidth: 1
@@ -115,13 +106,7 @@ xlogin*failColor: white
 xlogin*promptColor: white
 *Foreground: white
 *Background: black
-#else
-xlogin*borderWidth: 3
-xlogin*Foreground: black
-xlogin*Background: white
-#endif /* XPM */
 XHASHendif
-#if defined(XPM)
 XHASHifdef bpp1
 xlogin*logoFileName: BITMAPDIR/**//OpenBSD_1bpp.xpm
 XHASHendif
@@ -144,7 +129,6 @@ XHASHendif
 xlogin*useShape: true
 xlogin*logoPadding: 10
 #endif /* Hp300Architecture */
-#endif /* XPM */
 
 ! comment out to disable root logins
 xlogin.Login.allowRootLogin:	true

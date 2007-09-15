@@ -24,13 +24,14 @@ dnl Process this file with autoconf to create configure.
 dnl $XdotOrg: app/xdm/configure.ac,v 1.42 2006/06/03 01:01:21 alanc Exp $
 
 AC_PREREQ([2.57])
-AC_INIT(xdm,[1.1.4],[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xdm)
+AC_INIT(xdm,[1.1.6],[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xdm)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_C_INLINE
 AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
@@ -112,7 +113,7 @@ if test "x$USE_PAM" != "xno" ; then
 	AC_CHECK_FUNC(pam_open_session, 
 		[AC_DEFINE(USE_PAM,1,[Use PAM for authentication])],
 		[if test "x$USE_PAM" != "xtry" ; then
-			AC_MSG_ERROR(["PAM support requested, but pam_open_session not found."])
+			AC_MSG_ERROR([PAM support requested, but pam_open_session not found.])
 		 fi])
 fi
 
@@ -155,7 +156,7 @@ if test x$RANDOM_DEVICE = xyes -o x$RANDOM_DEVICE = xtry ; then
 	AC_CHECK_FILE([/dev/urandom], [RANDOM_DEVICE=/dev/urandom],
 		AC_CHECK_FILE([/dev/random], [RANDOM_DEVICE=/dev/random]))
 	if test x$RANDOM_DEVICE = xyes ; then
-		AC_MSG_ERROR(["random device support requested, but no random device was found."])		
+		AC_MSG_ERROR([random device support requested, but no random device was found.])		
 	else 
 		if test x$RANDOM_DEVICE = xtry ; then
 			RANDOM_DEVICE="no"
@@ -390,9 +391,18 @@ XDM_CFLAGS="$XDM_CFLAGS $DMCP_CFLAGS $XLIB_CFLAGS $OS_CFLAGS $AUTH_CFLAGS"
 XDM_LIBS="$XDM_LIBS $DMCP_LIBS"
 
 AC_CHECK_LIB(Xdmcp, XdmcpWrap, [xdmauth="yes"], [xdmauth="no"], [$DMCP_LIBS])
-AC_SEARCH_LIBS(crypt, crypt)
 
-AM_CONDITIONAL(HAS_XDM_AUTH, test x$xdmauth = xyes)
+AC_ARG_ENABLE(xdm-auth,
+	AC_HELP_STRING([--enable-xdm-auth],
+       [Support XDM-AUTHENTICATION-1 and XDM-AUTHORIZATION-1 (default: auto)]),
+	[xdmauth_enable="$enableval"], [xdmauth_enable="auto"])
+if test "x$xdmauth_enable" = "xyes" -a "x$xdmauth" = "xno" ; then
+	AC_MSG_ERROR([XDM-AUTH support requested, but XdmcpWrap not found in libXdmcp.])
+fi
+
+AM_CONDITIONAL(HAS_XDM_AUTH, test x$xdmauth = xyes -a x$xdmauth_enable != xno)
+
+AC_SEARCH_LIBS(crypt, crypt)
 
 AC_SUBST(XDM_CFLAGS)
 AC_SUBST(XDM_LIBS)
@@ -433,11 +443,17 @@ AC_DEFINE_DIR(DEF_SERVER_LINE, DEF_SERVER_LINE,
 	[Define to default Xserver file entry for local X server])
 
 # -DXRDB_PROGRAM="$(BINDIR)/xrdb"
-AC_DEFINE_DIR(XRDB_PROGRAM, bindir/xrdb, 
+AC_ARG_WITH(xrdb, AC_HELP_STRING([--with-xrdb=path],
+			[Use path for xrdb (default: bindir/xrdb)]),
+	    [XRDB=$withval], [XRDB=${bindir}/xrdb])
+AC_DEFINE_DIR(XRDB_PROGRAM, XRDB, 
 	[Define to pathname for xrdb program])
 
 # -DDEF_SESSION="$(BINDIR)/xterm -ls"
-AC_DEFINE_DIR(DEF_SESSION, bindir/xterm -ls,
+AC_ARG_WITH(default-session, AC_HELP_STRING([--with-default-session=command],
+		[Use command for default session (default: bindir/xterm -ls)]),
+	    [DEF_SESSION=$withval], [DEF_SESSION="${bindir}/xterm -ls"])
+AC_DEFINE_DIR(DEF_SESSION, DEF_SESSION,
 	[Define to default command to start X session])
 
 # -DDEF_USER_PATH="$(DEF_USER_PATH)"

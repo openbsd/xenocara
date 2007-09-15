@@ -1,4 +1,127 @@
-2006-04-27  Alan Coopersmith  <alan.coopersmith@sun.com>
+commit e775ab1778850663a755279470d3ad6a2c9c0054
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Aug 16 14:47:17 2007 -0700
+
+    Version bump: 1.1.6
+
+commit 298811a10ee1b72c553d18cc40bdfde17afb14e8
+Author: Luca Capello <luca@pca.it>
+Date:   Sun Jul 2 18:57:05 2006 +0200
+
+    Debian Bug #376391: xdm manpage refers to non-existent section 'Typical Usage'
+
+commit 593788896cdba598ceaa5fbf9e4d214583ffb6ed
+Author: Brice Goglin <Brice.Goglin@ens-lyon.org>
+Date:   Wed Aug 15 18:38:53 2007 -0700
+
+    Debian Bug #437961: loading Xresources fails because bindir/xrdb does not exist
+    
+    <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=437961>
+
+commit ef1be3254966018fede7c33dea2f41b9351ef699
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Aug 10 10:43:10 2007 -0700
+
+    Version bump: 1.1.5
+
+commit 3ed70d13a6957c2434753f32d388888eae079d82
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jul 25 17:07:33 2007 -0700
+
+    Update AC_DEFINE_DIR to autoconf-2.60-compatible version
+
+commit dd05076f290b1995f71627324cc74053c870ac21
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jul 25 17:03:56 2007 -0700
+
+    Add AM_PROG_CC_C_O to clear automake-1.10 warning
+    
+    Makefile.am:149: compiling `chooser.c' with per-target flags requires `AM_PROG_CC_C_O' in `configure.ac'
+
+commit 29dc5825782adf929bce41a18e6a6881ef975d22
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jul 25 17:00:39 2007 -0700
+
+    Bug #10530: xdm's path to xrdb could be configurable at compile time
+    
+    Add --with-xrdb=path & --with-default-session=command configure options
+    X.Org Bug #10530: <https://bugs.freedesktop.org/show_bug.cgi?id=10530>
+
+commit 2719e18c3782c5b21f712711b4198a5bb55f5473
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jun 15 20:14:21 2007 -0700
+
+    Set default cursor for entire root window, not just greeter
+
+commit d0d4581be22aba9021c5a672bd9e5ba719961e29
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jun 15 19:43:46 2007 -0700
+
+    Make #ifdef XPM only control whether XPM pixmap logo is shown
+    
+    Make 3D look-and-feel independent of XPM
+
+commit 188415ebf07ff8a25ac663c37615269cd1a741a4
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jun 15 19:23:05 2007 -0700
+
+    Set Xcursor theme to whiteglass in default login screen resources
+
+commit f8585c60831a8e5ddebce18bdd7e78d217a822c5
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jun 15 18:36:15 2007 -0700
+
+    X.Org Bug #10992: xlogin crashes if window size is too small
+    
+    X.Org Bugzilla #10992 <https://bugs.freedesktop.org/show_bug.cgi?id=10992>
+
+commit 0ce4128e19f9fac9a565cce42a6a575486d371a5
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jun 15 14:24:59 2007 -0700
+
+    Add --enable-xdm-auth/--disable-xdm-auth to configure options
+
+commit 8e0b23e24556fb6c6b9943bf3747e70b245fc7aa
+Author: Chip Coldwell <coldwell@physics.harvard.edu>
+Date:   Thu Jun 24 09:56:19 2004 -0700
+
+    X.Org Bug 10632 / Debian Bug 256299: race condition in policy.c:Willing()
+    
+    X.Org Bugzilla #10632 <https://bugs.freedesktop.org/show_bug.cgi?id=10632>
+    Reported upstream from
+    Debian Bug #256299 <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=256299>
+
+commit a8927ee05efba3afe955731bab5d633879c39833
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu May 31 17:11:15 2007 -0700
+
+    Document more of the greeter resources in xdm man page
+
+commit 35f563369470139665498640f4cda23d1227073b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue May 29 19:57:29 2007 -0700
+
+    Bug #11096: xdm(1) manpage should document Xft-related properties
+    
+    X.Org Bugzilla #11096 <https://bugs.freedesktop.org/show_bug.cgi?id=11096>
+    
+    Added descriptions of the Xft *face resources and changed the core fonts
+    *font resource descriptions to match.   Also cleaned up various other
+    descriptions to make it easier for users customizing the look of the login
+    screen.
+
+commit e7f1c433dc0bd8e864cec68dbc120f27696bbba6
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu May 24 10:32:32 2007 -0700
+
+    Bug #11020: xdm doesn't set SSH_AUTH_SOCK even though using with pam_ssh
+    
+    Wasn't calling pam_setcred()/pam_getenvlist() if setusercontext() was present
+    X.Org Bugzilla #11020: <https://bugs.freedesktop.org/show_bug.cgi?id=11020>
+
+commit 677d028e41e890103679eec92b58044420b9b4c5
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Feb 6 11:45:41 2007 -0800
 
 	* configure.ac: 
 	Version bump: 1.0.4
