@@ -39,6 +39,8 @@ startx \- initialize an X session
 .B \-\^\-
 [
 .I server
+] [
+.I display
 ]
 .I options
 \&.\|.\|. ]
