@@ -64,6 +64,7 @@ MANDEFS =  \
 	-D__miscmansuffix__=$(MISC_MAN_SUFFIX) \
 	-D__XSERVERNAME__=Xorg -D__XCONFIGFILE__=xorg.conf \
 	-D__xinitdir__=$(XINITDIR) \
+	-D__bindir__=$(bindir) \
 	-DSHELL_CMD=$(SHELL_CMD) $(ARCHMANDEFS)
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
@@ -100,5 +101,9 @@ xinitrc_DATA = xinitrc
 CLEANFILES = xinitrc startx $(appman_DATA)
 
 EXTRA_DIST = xinitrc.cpp startx.cpp $(appman_PRE)	\
-		startx.cmd xinitrc.cmd xinit.def
+		startx.cmd xinitrc.cmd xinit.def ChangeLog autogen.sh
 
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog

@@ -170,7 +170,6 @@ fi
 
 removelist=
 
-#if defined(HAS_COOKIE_MAKER) && defined(MK_COOKIE)
 XCOMM set up default Xauth info for this machine
 case `uname` in
 Linux*)
@@ -186,7 +185,15 @@ Linux*)
 esac
 
 authdisplay=${display:-:0}
+#if defined(HAS_COOKIE_MAKER) && defined(MK_COOKIE)
 mcookie=`MK_COOKIE`
+#else
+mcookie=`dd if=/dev/random bs=16 count=1 2>/dev/null | hexdump -e \\"%08x\\"`
+if test x"$mcookie" = x; then
+                echo "Couldn't create cookie"
+                exit 1
+fi
+#endif
 dummy=0
 
 XCOMM create a file with auth information for the server. ':0' is a dummy.
@@ -215,8 +222,6 @@ add :$dummy . $authcookie
 EOF
     fi
 done
-
-#endif
 
 #if defined(__SCO__) || defined(__UNIXWARE__)
 if [ "$REMOTE_SERVER" = "TRUE" ]; then

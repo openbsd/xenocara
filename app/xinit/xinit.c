@@ -1,6 +1,6 @@
 /* $Xorg: xinit.c,v 1.5 2001/02/09 02:05:49 xorgcvs Exp $ */
 /* $XdotOrg: xc/programs/xinit/xinit.c,v 1.4 2005/10/04 01:27:34 ajax Exp $ */
-/* $OpenBSD: xinit.c,v 1.2 2006/11/26 17:17:57 matthieu Exp $ */
+/* $OpenBSD: xinit.c,v 1.3 2007/09/15 17:12:01 matthieu Exp $ */
 
 /*
 
@@ -35,8 +35,10 @@ in this Software without prior written authorization from The Open Group.
 
 #include <X11/Xlib.h>
 #include <X11/Xos.h>
+#include <X11/Xatom.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <stdint.h>
 #include <sys/param.h>
 
 #ifdef X_POSIX_C_SOURCE
@@ -79,25 +81,26 @@ char **envsave;	/* to circumvent an UNIXOS2 problem */
 #include <stdlib.h>
 extern char **environ;
 char **newenviron = NULL;
+char **newenvironlast = NULL;
 
 #ifndef SHELL
 #define SHELL "sh"
 #endif
 
-#if !defined(HAS_VFORK) /* Imake */ && !defined(HAVE_WORKING_VFORK) /* autoconf*/
-#ifndef vfork
-#define vfork() fork()
-#endif
+#ifndef HAVE_WORKING_VFORK
+# ifndef vfork
+#  define vfork() fork()
+# endif
 #else
-#if (defined(sun) && !defined(SVR4)) || defined(HAVE_VFORK_H)
-#include <vfork.h>
-#endif
+# ifdef HAVE_VFORK_H
+#  include <vfork.h>
+# endif
 #endif
 
 /* A/UX setpgid incorrectly removes the controlling terminal.
    Per Posix, only setsid should do that. */
-#if !defined(X_NOT_POSIX) && !defined(macII)
-#define setpgrp setpgid
+#ifdef macII
+#define setpgid setpgrp
 #endif
 
 #ifdef __UNIXOS2__
@@ -110,12 +113,12 @@ char **newenviron = NULL;
 #define Execvpe(path, argv, envp) execvp(path, argv)
 #endif
 
-char *bindir = BINDIR;
-char *server_names[] = {
+const char *bindir = BINDIR;
+const char * const server_names[] = {
 #if defined(ultrix) && defined(mips)
     "Xdec        Digital color display on DECstation",
 #endif
-#ifdef sun				/* Sun */
+#if defined(sun) && !defined(XORG)	/* Sun */
     "Xsun        Sun BW2, CG2, CG3, CG4, or CG6 on Sun 2, 3, 4, or 386i",
     "Xsunmono    Sun BW2 on Sun 2, 3, 4, or 386i ",
     "Xsun24      Sun BW2, CG2, CG3, CG4, CG6, or CG8 on Sun 4",
@@ -133,14 +136,16 @@ char *server_names[] = {
     "XFree86     XFree86 displays",
 #endif
 #ifdef XORG
-    "Xorg	 X.Org displays",
+    "Xorg        Common X server for most displays",
 #endif
 #ifdef __DARWIN__
     "XDarwin         Darwin/Mac OS X IOKit displays",
     "XDarwinQuartz   Mac OS X Quartz displays",
     "XDarwinStartup  Auto-select between XDarwin and XDarwinQuartz",
 #endif
-    
+    "Xvfb        Virtual frame buffer",
+    "Xnest       X server nested in a window on another X server",
+    "Xephyr      kdrive-based nested X server",
     NULL};
 
 #ifndef XINITRC
@@ -180,9 +185,7 @@ union wait	status;
 #endif /* SYSV */
 int serverpid = -1;
 int clientpid = -1;
-#ifndef X_NOT_POSIX
 volatile int gotSignal = 0;
-#endif
 
 static void Execute ( char **vec, char **envp );
 static Bool waitforserver ( void );
@@ -197,43 +200,13 @@ static void Error ( char *fmt, ... );
 
 #ifdef RETSIGTYPE /* autoconf AC_TYPE_SIGNAL */
 # define SIGVAL RETSIGTYPE
-#else /* Imake */
-#ifdef SIGNALRETURNSINT
-#define SIGVAL int
-#else
-#define SIGVAL void
-#endif
 #endif /* RETSIGTYPE */
-
-#ifdef X_NOT_POSIX
-/* Can't use Error() in signal handlers */
-#ifndef STDERR_FILENO
-#define WRITES(s) write(STDERR_FILENO, (s), strlen(s))
-#else
-#define WRITES(s) write(fileno(stderr), (s), strlen(s))
-#endif
-#endif
 
 static SIGVAL 
 sigCatch(int sig)
 {
-#ifdef X_NOT_POSIX
-	char buf[1024];
-
-	signal(SIGTERM, SIG_IGN);
-	signal(SIGQUIT, SIG_IGN);
-	signal(SIGINT, SIG_IGN);
-	signal(SIGHUP, SIG_IGN);
-	signal(SIGPIPE, SIG_IGN);
-	snprintf(buf, sizeof buf, "%s: unexpected signal %d\r\n", 
-		 program, sig);
-	WRITES(buf);
-	shutdown();
-	_exit(ERR_EXIT);
-#else
 	/* On system with POSIX signals, just interrupt the system call */
 	gotSignal = sig;
-#endif
 }
 
 static SIGVAL 
@@ -283,9 +256,7 @@ main(int argc, char *argv[], char *envp[])
 	int client_given = 0, server_given = 0;
 	int client_args_given = 0, server_args_given = 0;
 	int start_of_client_args, start_of_server_args;
-#ifndef X_NOT_POSIX
 	struct sigaction sa;
-#endif
 
 #ifdef __UNIXOS2__
 	envsave = envp;	/* circumvent an EMX problem */
@@ -475,13 +446,7 @@ main(int argc, char *argv[], char *envp[])
 #ifdef SIGCHLD
 	signal(SIGCHLD, SIG_DFL);	/* Insurance */
 #endif
-#ifdef X_NOT_POSIX
-	signal(SIGTERM, sigCatch);
-	signal(SIGQUIT, sigCatch);
-	signal(SIGINT, sigCatch);
-	signal(SIGHUP, sigCatch);
-	signal(SIGPIPE, sigCatch);
-#else
+
 	/* Let those signal interrupt the wait() call in the main loop */
 	memset(&sa, 0, sizeof sa);
 	sa.sa_handler = sigCatch;
@@ -493,16 +458,14 @@ main(int argc, char *argv[], char *envp[])
 	sigaction(SIGINT, &sa, NULL);
 	sigaction(SIGHUP, &sa, NULL);
 	sigaction(SIGPIPE, &sa, NULL);
-#endif
+
 	signal(SIGALRM, sigAlarm);
 	signal(SIGUSR1, sigUsr1);
 	if (startServer(server) > 0
 	 && startClient(client) > 0) {
 		pid = -1;
 		while (pid != clientpid && pid != serverpid
-#ifndef X_NOT_POSIX
 		       && gotSignal == 0
-#endif
 			)
 			pid = wait(NULL);
 	}
@@ -513,12 +476,12 @@ main(int argc, char *argv[], char *envp[])
 	signal(SIGPIPE, SIG_IGN);
 
 	shutdown();
-#ifndef X_NOT_POSIX
+
 	if (gotSignal != 0) {
 		Error("unexpected signal %d.\n", gotSignal);
 		exit(ERR_EXIT);
 	}
-#endif
+
 	if (serverpid < 0 )
 		Fatal("Server error.\n");
 	if (clientpid < 0)
@@ -596,32 +559,21 @@ processTimeout(int timeout, char *string)
 static int
 startServer(char *server[])
 {
-#if !defined(X_NOT_POSIX)
 	sigset_t mask, old;
-#else
-	int old;
-#endif
 #ifdef __UNIXOS2__
 	sigset_t pendings;
 #endif
 
-#if !defined(X_NOT_POSIX)
 	sigemptyset(&mask);
 	sigaddset(&mask, SIGUSR1);
 	sigprocmask(SIG_BLOCK, &mask, &old);
-#else
-	old = sigblock (sigmask (SIGUSR1));
-#endif
+
 	serverpid = fork(); 
 
 	switch(serverpid) {
 	case 0:
 		/* Unblock */
-#ifndef X_NOT_POSIX
 		sigprocmask(SIG_SETMASK, &old, NULL);
-#else
-		sigsetmask (old);
-#endif
 
 		/*
 		 * don't hang on read/write to control tty
@@ -643,12 +595,12 @@ startServer(char *server[])
 		 * if client is xterm -L
 		 */
 #ifndef __UNIXOS2__
-		setpgrp(0,getpid());
+		setpgid(0,getpid());
 #endif
 		Execute (server, environ);
 		Error ("no server \"%s\" in PATH\n", server[0]);
 		{
-		    char **cpp;
+		    const char * const *cpp;
 
 		    fprintf (stderr,
 "\nUse the -- option, or make sure that %s is in your path and\n",
@@ -691,7 +643,6 @@ startServer(char *server[])
 		 */
 		alarm (15);
 
-#ifndef X_NOT_POSIX
 #ifdef __UNIXOS2__
 		/*
 		 * fg2003/05/06: work around a problem in EMX: sigsuspend()
@@ -706,11 +657,6 @@ startServer(char *server[])
 		sigsuspend(&old);
 		alarm (0);
 		sigprocmask(SIG_SETMASK, &old, NULL);
-#else
-		sigpause (old);
-		alarm (0);
-		sigsetmask (old);
-#endif
 
 		if (waitforserver() == 0) {
 			Error("unable to connect to X server\r\n");
@@ -723,15 +669,96 @@ startServer(char *server[])
 	return(serverpid);
 }
 
+static void
+setWindowPath(void)
+{
+	/* setting WINDOWPATH for clients */
+	Atom prop;
+	Atom actualtype;
+	int actualformat;
+	unsigned long nitems;
+	unsigned long bytes_after;
+	unsigned char *buf;
+	const char *windowpath;
+	char *newwindowpath;
+	unsigned long num;
+	char nums[10];
+	int numn;
+	prop = XInternAtom(xd, "XFree86_VT", False);
+	if (prop == None) {
+#ifdef DEBUG
+		fprintf(stderr, "no XFree86_VT atom\n");
+#endif
+		return;
+	}
+	if (XGetWindowProperty(xd, DefaultRootWindow(xd), prop, 0, 1, 
+		False, AnyPropertyType, &actualtype, &actualformat, 
+		&nitems, &bytes_after, &buf)) {
+#ifdef DEBUG
+		fprintf(stderr, "no XFree86_VT property\n");
+#endif
+		return;
+	}
+	if (nitems != 1) {
+#ifdef DEBUG
+		fprintf(stderr, "%lu items in XFree86_VT property!\n", nitems);
+#endif
+		XFree(buf);
+		return;
+	}
+	switch (actualtype) {
+	case XA_CARDINAL:
+	case XA_INTEGER:
+	case XA_WINDOW:
+		switch (actualformat) {
+		case  8:
+			num = (*(uint8_t  *)(void *)buf);
+			break;
+		case 16:
+			num = (*(uint16_t *)(void *)buf);
+			break;
+		case 32:
+			num = (*(uint32_t *)(void *)buf);
+			break;
+		default:
+#ifdef DEBUG
+			fprintf(stderr, "format %d in XFree86_VT property!\n", actualformat);
+#endif
+			XFree(buf);
+			return;
+		}
+		break;
+	default:
+#ifdef DEBUG	    
+		fprintf(stderr, "type %lx in XFree86_VT property!\n", actualtype);
+#endif
+		XFree(buf);
+		return;
+	}
+	XFree(buf);
+	windowpath = getenv("WINDOWPATH");
+	numn = snprintf(nums, sizeof(nums), "%lu", num);
+	if (!windowpath) {
+		newwindowpath = malloc(10 + 1 + numn + 1);
+		sprintf(newwindowpath, "WINDOWPATH=%s", nums);
+	} else {
+		newwindowpath = malloc(10 + 1 + strlen(windowpath) + 1 + numn + 1);
+		sprintf(newwindowpath, "WINDOWPATH=%s:%s", windowpath, nums);
+	}
+	*newenvironlast++ = newwindowpath;
+	*newenvironlast = NULL;
+}
+
 static int
 startClient(char *client[])
 {
+	setWindowPath();
 	if ((clientpid = vfork()) == 0) {
 		if (setuid(getuid()) == -1) {
 			Error("cannot change uid: %s\n", strerror(errno));
 			_exit(ERR_EXIT);
 		}
-		setpgrp(0, getpid());
+		setpgid(0, getpid());
 		environ = newenviron;
 #ifdef __UNIXOS2__
 #undef environ
@@ -750,7 +777,7 @@ startClient(char *client[])
 	return (clientpid);
 }
 
-#if !defined(X_NOT_POSIX) || defined(SYSV) || defined(__UNIXOS2__)
+#ifndef HAVE_KILLPG
 #define killpg(pgrp, sig) kill(-(pgrp), sig)
 #endif
 
@@ -830,11 +857,11 @@ set_environment(void)
     for (oldPtr = environ; *oldPtr; oldPtr++) ;
 
     nenvvars = (oldPtr - environ);
-    newenviron = (char **) malloc ((nenvvars + 2) * sizeof(char **));
+    newenviron = (char **) malloc ((nenvvars + 3) * sizeof(char **));
     if (!newenviron) {
 	fprintf (stderr,
 		 "%s:  unable to allocate %d pointers for environment\n",
-		 program, nenvvars + 2);
+		 program, nenvvars + 3);
 	exit (1);
     }
 
@@ -846,11 +873,13 @@ set_environment(void)
 
     /* copy pointers to other variables */
     for (oldPtr = environ; *oldPtr; oldPtr++) {
-	if (strncmp (*oldPtr, "DISPLAY=", 8) != 0) {
+	if (strncmp (*oldPtr, "DISPLAY=", 8) != 0
+	 && strncmp (*oldPtr, "WINDOWPATH=", 11) != 0) {
 	    *newPtr++ = *oldPtr;
 	}
     }
     *newPtr = NULL;
+    newenvironlast=newPtr;
     return;
 }
 
