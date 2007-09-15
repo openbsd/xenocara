@@ -28,6 +28,11 @@ directly then no X connection is needed.
 .B DISPLAY
 The default display.
 .SH "SEE ALSO"
-.IR glxinfo (1x)
+.IR X (__miscmansuffix__), 
+.IR xdpyinfo (__appmansuffix__), 
+.IR xwininfo (__appmansuffix__),
+.IR xvinfo (__appmansuffix__), 
+.IR glxinfo (__appmansuffix__), 
+.IR xprop (__appmansuffix__)
 .SH AUTHOR
 Felix Kuehling
