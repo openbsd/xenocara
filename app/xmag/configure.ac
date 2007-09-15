@@ -22,7 +22,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xmag,[1.0.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xmag)
+AC_INIT(xmag,[1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xmag)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -30,6 +30,8 @@ AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
 AC_PROG_INSTALL
+
+AC_CHECK_FUNCS([nanosleep poll select])
 
 # Checks for pkg-config packages
 XAW_CHECK_XPRINT_SUPPORT(XMAG)

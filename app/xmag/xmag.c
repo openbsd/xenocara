@@ -28,6 +28,7 @@ from The Open Group.
 */
 /* $XFree86: xmag.c,v 1.13 2003/05/27 22:27:07 tsi Exp $ */
 
+#include "config.h"
 
 #include <stdlib.h>		/* for exit() and abs() */
 #include <stdio.h>
@@ -53,8 +54,33 @@ from The Open Group.
 
 
 
-/* highlight interval */
-#define HLINTERVAL  10		
+/* highlight interval (in milliseconds) */
+#define HLINTERVAL  100
+
+/* sleep between draw & erase of highlight
+ * 20 milliseconds - enough for screen refresh - not too long to annoy users
+ *  since we hold a server grab during this time
+ */
+#define HLSLEEPINTERVAL 20 /* milliseconds */
+
+#ifdef HAVE_NANOSLEEP
+#include <time.h>
+#define HLSLEEP	    do { \
+	struct timespec sleeptime = { 0 , HLSLEEPINTERVAL * 1000000 } ;	\
+	nanosleep(&sleeptime, NULL); \
+    } while(0)
+#elif defined(HAVE_POLL)
+#include <poll.h>
+#define HLSLEEP	    poll(NULL, 0, HLSLEEPINTERVAL)
+#elif defined(HAVE_SELECT)
+#include <X11/Xpoll.h>
+#define HLSLEEP	    do { \
+	struct timeval sleeptime = { 0 , HLSLEEPINTERVAL * 1000 } ;	\
+	select(0, NULL, NULL, NULL, &sleeptime); \
+    } while(0)
+#else
+#define HLSLEEP	XSync(dpy, False)
+#endif
 
 /* highlight mode */
 typedef enum { drag, resize, done } hlMode; 
@@ -427,6 +453,8 @@ HighlightTO(XtPointer closure, XtIntervalId *id)	/* ARGSUSED */
   if (data->selectMode == drag) {
     XDrawRectangle(dpy, DefaultRootWindow(dpy), data->gc, 
 		   data->x, data->y, data->width, data->height);
+    XFlush(dpy);
+    HLSLEEP;
     XDrawRectangle(dpy, DefaultRootWindow(dpy), data->gc, 
 		   data->x, data->y, data->width, data->height);
   }
@@ -438,6 +466,8 @@ HighlightTO(XtPointer closure, XtIntervalId *id)	/* ARGSUSED */
     CheckPoints(&x1, &x2, &y1, &y2);
     XDrawRectangle(dpy, DefaultRootWindow(dpy), data->gc, 
 		   x1, y1, x2 - x1, y2 - y1);
+    XFlush(dpy);
+    HLSLEEP;
     XDrawRectangle(dpy, DefaultRootWindow(dpy), data->gc, 
 		   x1, y1, x2 - x1, y2 - y1);
   }
@@ -517,7 +547,7 @@ static void
 SetupGC(void)
 {
     selectGCV.function = GXxor;
-    selectGCV.foreground = 1L;
+    selectGCV.foreground = 0xffffffff;
     selectGCV.subwindow_mode = IncludeInferiors;
     selectGC = XtGetGC(toplevel, GCFunction|GCForeground|GCSubwindowMode,
 		       &selectGCV);

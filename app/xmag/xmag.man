@@ -56,7 +56,7 @@ or ``^C'' in the enlargement window exits the program.  The application has
 region for this magnification instance.
 \fINew\fP brings up the rubber band
 selector to create a new magnification instance.
-\fICut\fP puts the magnification image into the primary selection.
+\fISelect\fP puts the magnification image into the primary selection.
 \fIPaste\fP copies the primary selection buffer into \fIxmag\fP.
 Note that you can cut and paste between \fIxmag\fP and the \fIbitmap\fP
 program.  Resizing \fIxmag\fP resizes the magnification area.
