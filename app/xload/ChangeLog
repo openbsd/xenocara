@@ -1,3 +1,13 @@
+2007-03-21  Jeremy C. Reed  <reed@reedmedia.net>
+
+	* configure.ac
+	Update version for another release.
+
+2006-06-20  Matthieu Herrb <matthieu.herrb@laas.fr>
+
+	* xload.c:
+	Check setuid() return value. Bugzilla #7116.
+
 2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
 
 	* configure.ac:
