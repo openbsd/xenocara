@@ -35,7 +35,7 @@ XORG_MACROS_VERSION(1.1)
 AC_PROG_CC
 AC_PROG_INSTALL
 
-AC_CHECK_HEADERS_ONCE([wchar.h wctype.h])
+AC_CHECK_HEADERS([wchar.h wctype.h])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XPROP, xmuu x11)
