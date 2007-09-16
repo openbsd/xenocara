@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xset
 
-xset_CFLAGS = $(XSET_CFLAGS) -D_BSD_SOURCE
+AM_CFLAGS = $(XSET_CFLAGS) -D_BSD_SOURCE
 xset_LDADD = $(XSET_LIBS)
 
 xset_SOURCES =	\
@@ -35,8 +35,16 @@ appmandir = $(APP_MAN_DIR)
 
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) ChangeLog autogen.sh
 CLEANFILES = $(appman_DATA)
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 
 SED = sed
 

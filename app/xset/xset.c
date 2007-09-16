@@ -87,8 +87,10 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #undef BOOL
 #endif
-#if defined(SVR4) && defined(sun)
-#include <sys/syscall.h>
+#ifndef HAVE_USLEEP
+# if defined(SVR4) && defined(sun)
+#  include <sys/syscall.h>
+# endif
 #endif
 #endif /* DPMSExtension */
 
@@ -575,6 +577,9 @@ for (i = 1; i < argc; ) {
 	       *
 	       * On OS/2, use _sleep2()
 	       */
+#ifdef HAVE_USLEEP
+# define Usleep(us) usleep((us))
+#else
 #ifdef SVR4
 # ifdef sun
 /* Anything to avoid linking with -lposix4 */
@@ -610,6 +615,7 @@ for (i = 1; i < argc; ) {
 #  define Usleep(us) usleep((us))
 # endif
 #endif
+#endif /* HAVE_USLEEP */
 
 	      if (strcmp(arg, "on") == 0) {
 		  DPMSEnable(dpy);

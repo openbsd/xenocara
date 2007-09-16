@@ -31,17 +31,41 @@ xset - user preference utility for X
 .SH SYNOPSIS
 .B xset
 [-display \fIdisplay\fP]
-[-b] [b on/off] [b [\fIvolume\fP [\fIpitch\fP [\fIduration\fP]]]
-[[-]bc]
-[-c] [c on/off] [c [\fIvolume\fP]]
-[[+-]dpms] [dpms \fIstandby\fP [\fI suspend\fP [\fI off\fP]]] [dpms force standby/suspend/off/on]
-[[-+]fp[-+=] \fIpath\fP[,\fIpath\fP[,...]]] [fp default] [fp rehash]
-[[-]led [\fIinteger\fP]] [led on/off]
-[m[ouse] [\fIaccel_mult\fP[/\fIaccel_div\fP] [\fIthreshold\fP]]] [m[ouse] default]
+.br
+[-b] [b {on|off}] [b [\fIvolume\fP [\fIpitch\fP [\fIduration\fP]]]]
+.br
+[-bc] [bc]
+.br
+[-c] [c {on|off}] [c [\fIvolume\fP]]
+.br
+[+dpms] [-dpms]
+.br
+	[dpms \fIstandby\fP [\fI suspend\fP [\fI off\fP]]] 
+	[dpms force {standby|suspend|off|on}]
+.br
+[fp=\fIpathlist\fP] 
+[-fp=\fIpathlist\fP] 
+[+fp=\fIpathlist\fP] 
+[fp-\fIpathlist\fP] 
+[fp+\fIpathlist\fP] 
+.br
+[fp default] [fp rehash]
+.br
+[-led [\fIinteger\fP]] 
+[+led [\fIinteger\fP]]
+.br 
+[led {on|off}]
+.br
+[mouse [\fIaccel_mult\fP[/\fIaccel_div\fP] [\fIthreshold\fP]]] [mouse default]
+.br
 [p \fIpixel\fP \fIcolor\fP]
-[[-]r [keycode]] [r on/off] [r rate \fIdelay\fP [\fIrate\fP]]
-[s [\fIlength\fP [\fIperiod\fP]]] [s blank/noblank]
-[s expose/noexpose] [s on/off] [s default] [s activate] [s reset]
+.br
+[-r [keycode]]  [r [keycode]] 
+[r {on|off}] [r rate \fIdelay\fP [\fIrate\fP]]
+.br
+[s [\fIlength\fP [\fIperiod\fP]]] [s {blank|noblank}]
+[s {expose|noexpose}] [s {on|off}] [s default] [s activate] [s reset]
+.br
 [q]
 .SH DESCRIPTION
 This program is used to set various user preference options of the display.
@@ -158,8 +182,9 @@ The particular LED values may refer to different LEDs on different
 hardware.
 .PP
 .TP 8
-.B m
-The \fBm\fP option controls the mouse parameters.
+.B mouse
+The \fBm\fP option controls the mouse parameters; it may be
+abbreviated to 'm'.
 The parameters for the mouse are `acceleration' and `threshold'.
 The acceleration can be specified as an integer, or as a simple
 fraction.
