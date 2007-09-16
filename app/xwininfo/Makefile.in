@@ -62,7 +62,7 @@ bin_PROGRAMS = xwininfo$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh missing
+	config.guess config.sub depcomp install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -76,8 +76,7 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xwininfo_OBJECTS = xwininfo-dsimple.$(OBJEXT) \
-	xwininfo-xwininfo.$(OBJEXT)
+am_xwininfo_OBJECTS = dsimple.$(OBJEXT) xwininfo.$(OBJEXT)
 xwininfo_OBJECTS = $(am_xwininfo_OBJECTS)
 am__DEPENDENCIES_1 =
 xwininfo_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -207,7 +206,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-xwininfo_CFLAGS = $(XWININFO_CFLAGS)
+AM_CFLAGS = $(XWININFO_CFLAGS)
 xwininfo_LDADD = $(XWININFO_LIBS)
 xwininfo_SOURCES = \
         dsimple.c \
@@ -219,8 +218,9 @@ appman_PRE = \
 
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) ChangeLog autogen.sh
 CLEANFILES = $(appman_DATA)
+MAINTAINERCLEANFILES = ChangeLog
 SED = sed
 
 # Strings to replace in man pages
@@ -328,8 +328,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xwininfo-dsimple.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xwininfo-xwininfo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsimple.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xwininfo.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -344,34 +344,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xwininfo-dsimple.o: dsimple.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xwininfo_CFLAGS) $(CFLAGS) -MT xwininfo-dsimple.o -MD -MP -MF "$(DEPDIR)/xwininfo-dsimple.Tpo" -c -o xwininfo-dsimple.o `test -f 'dsimple.c' || echo '$(srcdir)/'`dsimple.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xwininfo-dsimple.Tpo" "$(DEPDIR)/xwininfo-dsimple.Po"; else rm -f "$(DEPDIR)/xwininfo-dsimple.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dsimple.c' object='xwininfo-dsimple.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xwininfo_CFLAGS) $(CFLAGS) -c -o xwininfo-dsimple.o `test -f 'dsimple.c' || echo '$(srcdir)/'`dsimple.c
-
-xwininfo-dsimple.obj: dsimple.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xwininfo_CFLAGS) $(CFLAGS) -MT xwininfo-dsimple.obj -MD -MP -MF "$(DEPDIR)/xwininfo-dsimple.Tpo" -c -o xwininfo-dsimple.obj `if test -f 'dsimple.c'; then $(CYGPATH_W) 'dsimple.c'; else $(CYGPATH_W) '$(srcdir)/dsimple.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xwininfo-dsimple.Tpo" "$(DEPDIR)/xwininfo-dsimple.Po"; else rm -f "$(DEPDIR)/xwininfo-dsimple.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dsimple.c' object='xwininfo-dsimple.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xwininfo_CFLAGS) $(CFLAGS) -c -o xwininfo-dsimple.obj `if test -f 'dsimple.c'; then $(CYGPATH_W) 'dsimple.c'; else $(CYGPATH_W) '$(srcdir)/dsimple.c'; fi`
-
-xwininfo-xwininfo.o: xwininfo.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xwininfo_CFLAGS) $(CFLAGS) -MT xwininfo-xwininfo.o -MD -MP -MF "$(DEPDIR)/xwininfo-xwininfo.Tpo" -c -o xwininfo-xwininfo.o `test -f 'xwininfo.c' || echo '$(srcdir)/'`xwininfo.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xwininfo-xwininfo.Tpo" "$(DEPDIR)/xwininfo-xwininfo.Po"; else rm -f "$(DEPDIR)/xwininfo-xwininfo.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xwininfo.c' object='xwininfo-xwininfo.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xwininfo_CFLAGS) $(CFLAGS) -c -o xwininfo-xwininfo.o `test -f 'xwininfo.c' || echo '$(srcdir)/'`xwininfo.c
-
-xwininfo-xwininfo.obj: xwininfo.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xwininfo_CFLAGS) $(CFLAGS) -MT xwininfo-xwininfo.obj -MD -MP -MF "$(DEPDIR)/xwininfo-xwininfo.Tpo" -c -o xwininfo-xwininfo.obj `if test -f 'xwininfo.c'; then $(CYGPATH_W) 'xwininfo.c'; else $(CYGPATH_W) '$(srcdir)/xwininfo.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xwininfo-xwininfo.Tpo" "$(DEPDIR)/xwininfo-xwininfo.Po"; else rm -f "$(DEPDIR)/xwininfo-xwininfo.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xwininfo.c' object='xwininfo-xwininfo.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xwininfo_CFLAGS) $(CFLAGS) -c -o xwininfo-xwininfo.obj `if test -f 'xwininfo.c'; then $(CYGPATH_W) 'xwininfo.c'; else $(CYGPATH_W) '$(srcdir)/xwininfo.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
@@ -468,6 +440,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -597,6 +572,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -652,8 +628,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-data \
@@ -665,6 +641,13 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 	uninstall-am uninstall-appmanDATA uninstall-binPROGRAMS \
 	uninstall-info-am
 
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
