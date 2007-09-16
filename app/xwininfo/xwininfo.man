@@ -188,11 +188,16 @@ xwininfo: Window id: 0x60000f "xterm"
 .B DISPLAY
 To get the default host and display number.
 .SH SEE ALSO
-X(__miscmansuffix__), xprop(1)
+.IR X (__miscmansuffix__), 
+.IR xprop (__appmansuffix__),
+.IR xdpyinfo (__appmansuffix__), 
+.IR xdriinfo (__appmansuffix__),
+.IR xvinfo (__appmansuffix__), 
+.IR glxinfo (__appmansuffix__)
 .SH BUGS
 Using \fB\-stats \-bits\fP shows some redundant information.
 .PP
-The -geometry string displayed must make assumptions about the
+The \fB-geometry\fP string displayed must make assumptions about the
 window's border width and the behavior of the application and the
 window manager.  As a result, the location given is not always
 correct.
