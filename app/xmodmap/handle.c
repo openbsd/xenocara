@@ -28,6 +28,7 @@ from The Open Group.
 */
 /* $XFree86: xc/programs/xmodmap/handle.c,v 3.6 2001/07/25 15:05:27 dawes Exp $ */
 
+#include "config.h"
 #include <X11/Xos.h>
 #include <X11/Xlib.h>
 #include <stdio.h>
@@ -78,7 +79,7 @@ KeysymToKeycodes(Display *dpy, KeySym keysym, int *pnum_kcs)
 }
 
 static char *
-copy_to_scratch(char *s, int len)
+copy_to_scratch(const char *s, int len)
 {
     static char *buf = NULL;
     static int buflen = 0;
@@ -121,19 +122,19 @@ initialize_map (void)
 
 static void do_keycode ( char *line, int len );
 static void do_keysym ( char *line, int len );
-static void finish_keycodes ( char *line, int len, KeyCode *keycodes, 
+static void finish_keycodes ( const char *line, int len, KeyCode *keycodes, 
 			      int count );
 static void do_add ( char *line, int len );
 static void do_remove ( char *line, int len );
 static void do_clear ( char *line, int len );
 static void do_pointer ( char *line, int len );
-static int get_keysym_list ( char *line, int len, int *np, KeySym **kslistp );
+static int get_keysym_list ( const char *line, int len, int *np, KeySym **kslistp );
 
 static void print_opcode(union op *op);
 
-static int skip_word ( char *s, int len );
-static int skip_chars ( char *s, int len );
-static int skip_space ( char *s, int len );
+static int skip_word ( const char *s, int len );
+static int skip_chars ( const char *s, int len );
+static int skip_space ( const char *s, int len );
 
 static struct dt {
     char *command;			/* name of input command */
@@ -188,7 +189,7 @@ handle_line(char *line,		/* string to parse */
  */ 
 
 static int 
-skip_word (char *s, int len)
+skip_word (const char *s, int len)
 {
     register int n;
 
@@ -197,7 +198,7 @@ skip_word (char *s, int len)
 }
 
 static int 
-skip_chars(char *s, int len)
+skip_chars(const char *s, int len)
 {
     register int i;
 
@@ -210,7 +211,7 @@ skip_chars(char *s, int len)
 }
 
 static int 
-skip_space(char *s, int len)
+skip_space(const char *s, int len)
 {
     register int i;
 
@@ -224,7 +225,7 @@ skip_space(char *s, int len)
 
 
 static int 
-skip_until_char(char *s, int len, char c)
+skip_until_char(const char *s, int len, char c)
 {
     register int i;
 
@@ -234,24 +235,6 @@ skip_until_char(char *s, int len, char c)
     return (i);
 }
 
-#if 0
-static int 
-skip_until_chars(char *s, int len, char *cs, int cslen)
-{
-    int i;
-
-    for (i = 0; i < len; i++) {
-	register int j;
-	register char c = s[i];
-
-	for (j = 0; j < cslen; j++) {
-	    if (c == cs[j]) goto done;
-	}
-    }
-  done:
-    return (i);
-}
-#endif
 
 /*
  * The action routines.
@@ -284,23 +267,8 @@ add_to_work_queue(union op *p)	/* this can become a macro someday */
     return;
 }
 
-#if 0
-static char *
-copystring(char *s, int len)
-{
-    char *retval;
-
-    retval = (char *) malloc (len+1);
-    if (retval) {
-	strncpy (retval, s, len);
-	retval[len] = '\0';
-    }
-    return (retval);
-}
-#endif
-
 static Bool 
-parse_number(char *str, unsigned long *val)
+parse_number(const char *str, unsigned long *val)
 {
     char *fmt = "%ld";
 
@@ -320,7 +288,7 @@ parse_number(char *str, unsigned long *val)
 }
 
 static Bool 
-parse_keysym(char *line, int n, char **name, KeySym *keysym)
+parse_keysym(const char *line, int n, char **name, KeySym *keysym)
 {
     *name = copy_to_scratch (line, n);
     if (!strcmp(*name, "NoSymbol")) {
@@ -433,7 +401,7 @@ do_keysym(char *line, int len)
 }
 
 static void 
-finish_keycodes(char *line, int len, KeyCode *keycodes, int count)
+finish_keycodes(const char *line, int len, KeyCode *keycodes, int count)
 {
     int n;
     KeySym *kslist;
@@ -824,8 +792,9 @@ do_clear(char *line, int len)
     add_to_work_queue (uop);
 }
 
+#ifndef HAVE_STRNCASECMP
 static int 
-strncmp_nocase(char *a, char *b, int n)
+strncasecmp(const char *a, const char *b, int n)
 {
     int i;
     int a1, b1;
@@ -842,7 +811,7 @@ strncmp_nocase(char *a, char *b, int n)
     }
     return 0;
 }
-
+#endif
 
 /*
  * do_pointer = get list of numbers of the form
@@ -884,7 +853,7 @@ do_pointer(char *line, int len)
     line += n, len -= n;
 
     i = 0;
-    if (len < 7 || strncmp_nocase (line, "default", 7) != 0) {
+    if (len < 7 || strncasecmp (line, "default", 7) != 0) {
 	while (len > 0) {
 	    n = skip_space (line, len);
 	    line += n, len -= n;
@@ -941,7 +910,7 @@ do_pointer(char *line, int len)
  */
 
 static int 
-get_keysym_list(char *line, int len, int *np, KeySym **kslistp)
+get_keysym_list(const char *line, int len, int *np, KeySym **kslistp)
 {
     int havesofar, maxcanhave;
     KeySym *keysymlist;
@@ -972,6 +941,7 @@ get_keysym_list(char *line, int len, int *np, KeySym **kslistp)
 	n = skip_chars (line, len);
 	if (n < 0) {
 	    badmsg0 ("keysym name list");
+	    free(keysymlist);
 	    return (-1);
 	}
 
@@ -990,12 +960,14 @@ get_keysym_list(char *line, int len, int *np, KeySym **kslistp)
 
 	/* grow the list bigger if necessary */
 	if (havesofar >= maxcanhave) {
+	    KeySym *origkeysymlist = keysymlist;
 	    maxcanhave *= 2;
 	    keysymlist = (KeySym *) realloc (keysymlist,
 					     maxcanhave * sizeof (KeySym));
 	    if (!keysymlist) {
 		badmsg ("attempt to grow keysym list to %ld bytes",
 			(long) (maxcanhave * sizeof (KeySym)));
+		free(origkeysymlist);
 		return (-1);
 	    }
 	}

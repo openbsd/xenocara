@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xmodmap
 
-xmodmap_CFLAGS = $(DEP_CFLAGS)
+AM_CFLAGS = $(DEP_CFLAGS)
 xmodmap_LDADD = $(DEP_LIBS)
 
 xmodmap_SOURCES =	\
@@ -36,6 +36,8 @@ appman_PRE = \
         xmodmap.man
 
 EXTRA_DIST = \
+	ChangeLog \
+	autogen.sh \
 	swap.km
 
 appmandir = $(APP_MAN_DIR)
@@ -68,3 +70,20 @@ SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
+
+if LINT
+ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+		$(AM_CPPFLAGS) $(CPPFLAGS)
+
+lint:
+	$(LINT) $(ALL_LINT_FLAGS) $(AM_CFLAGS) $(xmodmap_SOURCES)
+endif LINT

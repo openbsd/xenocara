@@ -89,7 +89,8 @@ may be specified from the command line.
 .TP 8
 .B \-pm
 This option indicates that the current modifier map should be printed on the
-standard output.
+standard output.   This is the default mode of operation if no other mode
+options are specified.
 .TP 8
 .B \-pk
 This option indicates that the current keymap table should be printed on the

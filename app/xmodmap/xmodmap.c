@@ -35,7 +35,7 @@ from The Open Group.
 #include <ctype.h>
 #include "xmodmap.h"
 
-char *ProgramName;
+const char *ProgramName;
 Display *dpy = NULL;
 int min_keycode, max_keycode;
 Bool verbose = False;
@@ -62,66 +62,56 @@ chk_malloc(size_t n_bytes)
     return buf;
 }
 
-static char *help_message[] = {
-"\nwhere options include:",
-"    -display host:dpy            X server to use",
-"    -verbose, -quiet             turn logging on or off",
-"    -n                           don't execute changes, just show like make",
-"    -e expression                execute string",
-"    -pm                          print modifier map",
-"    -pk                          print keymap table",
-"    -pke                         print keymap table as expressions",
-"    -pp                          print pointer map",
-"    -grammar                     print out short help on allowable input",
-"    -                            read standard input",
-"",
-NULL};
+static const char help_message[] = 
+"\nwhere options include:\n"
+"    -display host:dpy            X server to use\n"
+"    -verbose, -quiet             turn logging on or off\n"
+"    -n                           don't execute changes, just show like make\n"
+"    -e expression                execute string\n"
+"    -pm                          print modifier map\n"
+"    -pk                          print keymap table\n"
+"    -pke                         print keymap table as expressions\n"
+"    -pp                          print pointer map\n"
+"    -grammar                     print out short help on allowable input\n"
+"    -                            read standard input\n"
+"\n";
 
 
 static void 
 usage(void)
 {
-    char **cpp;
-
     fprintf (stderr, "usage:  %s [-options ...] [filename]\n", ProgramName);
-    for (cpp = help_message; *cpp; cpp++) {
-	fprintf (stderr, "%s\n", *cpp);
-    }
+    fprintf (stderr, "%s\n", help_message);
     Exit (1);
 }
 
-static char *grammar_message[] = {
-"    pointer = default              reset pointer buttons to default",
-"    pointer = NUMBER ...           set pointer button codes",
-"    keycode NUMBER = [KEYSYM ...]  map keycode to given keysyms",
-"    keysym KEYSYM = [KEYSYM ...]   look up keysym and do a keycode operation",
-"    clear MODIFIER                 remove all keys for this modifier",
-"    add MODIFIER = KEYSYM ...      add the keysyms to the modifier",
-"    remove MODIFIER = KEYSYM ...   remove the keysyms from the modifier",
-"",
-"where NUMBER is a decimal, octal, or hex constant; KEYSYM is a valid",
-"Key Symbol name; and MODIFIER is one of the eight modifier names:  Shift,",
-"Lock, Control, Mod1, Mod2, Mod3, Mod4, or Mod5.  Lines beginning with",
-"an exclamation mark (!) are taken as comments.  Case is significant except",
-"for MODIFIER names.",
-"",
-"Keysyms on the left hand side of the = sign are looked up before any changes",
-"are made; keysyms on the right are looked up after all of those on the left",
-"have been resolved.  This makes it possible to swap modifier keys.",
-"",
-NULL };
+static const char grammar_message[] = 
+"    pointer = default              reset pointer buttons to default\n"
+"    pointer = NUMBER ...           set pointer button codes\n"
+"    keycode NUMBER = [KEYSYM ...]  map keycode to given keysyms\n"
+"    keysym KEYSYM = [KEYSYM ...]   look up keysym and do a keycode operation\n"
+"    clear MODIFIER                 remove all keys for this modifier\n"
+"    add MODIFIER = KEYSYM ...      add the keysyms to the modifier\n"
+"    remove MODIFIER = KEYSYM ...   remove the keysyms from the modifier\n"
+"\n"
+"where NUMBER is a decimal, octal, or hex constant; KEYSYM is a valid\n"
+"Key Symbol name; and MODIFIER is one of the eight modifier names:  Shift,\n"
+"Lock, Control, Mod1, Mod2, Mod3, Mod4, or Mod5.  Lines beginning with\n"
+"an exclamation mark (!) are taken as comments.  Case is significant except\n"
+"for MODIFIER names.\n"
+"\n"
+"Keysyms on the left hand side of the = sign are looked up before any changes\n"
+"are made; keysyms on the right are looked up after all of those on the left\n"
+"have been resolved.  This makes it possible to swap modifier keys.\n"
+"\n";
 
 
 static void 
 grammar_usage(void)
 {
-    char **cpp;
-
     fprintf (stderr, "%s accepts the following input expressions:\n\n",
 	     ProgramName);
-    for (cpp = grammar_message; *cpp; cpp++) {
-	fprintf (stderr, "%s\n", *cpp);
-    }
+    fprintf (stderr, "%s\n", grammar_message);
     Exit (0);
 }
 

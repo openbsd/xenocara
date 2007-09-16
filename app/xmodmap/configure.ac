@@ -22,7 +22,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xmodmap,[1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xmodmap)
+AC_INIT(xmodmap,[1.0.3], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xmodmap)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -31,10 +31,15 @@ AM_CONFIG_HEADER(config.h)
 AC_PROG_CC
 AC_PROG_INSTALL
 
+AC_CHECK_FUNCS([strncasecmp])
+
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(DEP, x11)
 AC_SUBST(DEP_CFLAGS)
 AC_SUBST(DEP_LIBS)
+
+dnl Allow checking code with lint, sparse, etc.
+XORG_WITH_LINT
 
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION

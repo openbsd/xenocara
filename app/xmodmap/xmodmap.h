@@ -28,17 +28,17 @@ from The Open Group.
 */
 /* $XFree86: xc/programs/xmodmap/xmodmap.h,v 1.4 2001/01/17 23:46:21 dawes Exp $ */
 
-extern char *ProgramName;
+extern const char *ProgramName;
 extern Display *dpy;
 extern int min_keycode, max_keycode;
 extern Bool verbose;
 extern Bool dontExecute;
-extern char *inputFilename;
+extern const char *inputFilename;
 extern int lineno;
 extern int parse_errors;
 
 extern void initialize_map(void);
-extern void process_file(char *filename);
+extern void process_file(const char *filename);
 extern void process_line(char *buffer);
 extern void handle_line(char *line, int len);
 extern void print_work_queue(void);
