@@ -62,7 +62,7 @@ bin_PROGRAMS = xset$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh missing
+	config.guess config.sub depcomp install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -76,7 +76,7 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xset_OBJECTS = xset-xset.$(OBJEXT)
+am_xset_OBJECTS = xset.$(OBJEXT)
 xset_OBJECTS = $(am_xset_OBJECTS)
 am__DEPENDENCIES_1 =
 xset_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -218,7 +218,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-xset_CFLAGS = $(XSET_CFLAGS) -D_BSD_SOURCE
+AM_CFLAGS = $(XSET_CFLAGS) -D_BSD_SOURCE
 xset_LDADD = $(XSET_LIBS)
 xset_SOURCES = \
         xset.c
@@ -228,8 +228,9 @@ appman_PRE = \
 
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) ChangeLog autogen.sh
 CLEANFILES = $(appman_DATA)
+MAINTAINERCLEANFILES = ChangeLog
 SED = sed
 
 # Strings to replace in man pages
@@ -337,7 +338,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xset-xset.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xset.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -352,20 +353,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xset-xset.o: xset.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xset_CFLAGS) $(CFLAGS) -MT xset-xset.o -MD -MP -MF "$(DEPDIR)/xset-xset.Tpo" -c -o xset-xset.o `test -f 'xset.c' || echo '$(srcdir)/'`xset.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xset-xset.Tpo" "$(DEPDIR)/xset-xset.Po"; else rm -f "$(DEPDIR)/xset-xset.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xset.c' object='xset-xset.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xset_CFLAGS) $(CFLAGS) -c -o xset-xset.o `test -f 'xset.c' || echo '$(srcdir)/'`xset.c
-
-xset-xset.obj: xset.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xset_CFLAGS) $(CFLAGS) -MT xset-xset.obj -MD -MP -MF "$(DEPDIR)/xset-xset.Tpo" -c -o xset-xset.obj `if test -f 'xset.c'; then $(CYGPATH_W) 'xset.c'; else $(CYGPATH_W) '$(srcdir)/xset.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xset-xset.Tpo" "$(DEPDIR)/xset-xset.Po"; else rm -f "$(DEPDIR)/xset-xset.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xset.c' object='xset-xset.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xset_CFLAGS) $(CFLAGS) -c -o xset-xset.obj `if test -f 'xset.c'; then $(CYGPATH_W) 'xset.c'; else $(CYGPATH_W) '$(srcdir)/xset.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
@@ -462,6 +449,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -591,6 +581,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -646,8 +637,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-data \
@@ -659,6 +650,13 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 	uninstall-am uninstall-appmanDATA uninstall-binPROGRAMS \
 	uninstall-info-am
 
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@

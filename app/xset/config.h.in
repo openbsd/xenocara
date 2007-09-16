@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define to 1 if you have the `usleep' function. */
+#undef HAVE_USLEEP
+
 /* Define to 1 if you have the <X11/extensions/dpms.h> header file. */
 #undef HAVE_X11_EXTENSIONS_DPMS_H
 
