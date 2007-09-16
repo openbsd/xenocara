@@ -1,8 +1,8 @@
-# $OpenBSD: MODULES,v 1.10 2007/09/15 17:25:51 matthieu Exp $
+# $OpenBSD: MODULES,v 1.11 2007/09/16 17:33:02 matthieu Exp $
 #
 # X.Org maintained modules
 #
-# Last update 2007/05/30
+# Last update 2007/09/16
 
 app/appres		1.0.1	7.2
 app/bdftopcf		1.0.1	7.3
@@ -68,30 +68,29 @@ app/xlsatoms		1.0.1	7.0
 app/xlsclients		1.0.1	7.0
 app/xlsfonts		1.0.2	7.2+
 app/xmag		1.0.2	7.3
-app/xman		1.0.3	7.3	needs-update
-app/xmessage		1.0.2	7.3	needs-update
-app/xmh			1.0.1	7.0
-app/xmodmap		1.0.3	7.3	needs-update
+app/xman		1.0.3	7.3
+app/xmessage		1.0.2	7.3
+app/xmodmap		1.0.3	7.3
 app/xmore		1.0.1	7.0
 app/xphelloworld	1.0.1	7.0	need-rel
 app/xplsprinters	1.0.1	7.0
 app/xpr			1.0.2	7.2+
 app/xprehashprinterlist 1.0.1	7.0
-app/xprop		1.0.3	7.3	needs-update
+app/xprop		1.0.3	7.3
 app/xrandr		1.2.2	7.3	needs-update
-app/xrdb		1.0.4	7.3	needs-update
+app/xrdb		1.0.4	7.3
 app/xrefresh		1.0.2	7.1
-app/xset		1.0.3	7.3	needs-update
+app/xset		1.0.3	7.3
 app/xsetmode		1.0.0	7.0
 app/xsetpointer		1.0.0	7.0	not-branched
-app/xsetroot		1.0.2	7.3	needs-update
+app/xsetroot		1.0.2	7.3
 app/xsm			1.0.1	7.0
 app/xstdcmap		1.0.1	7.0
 app/xtrap		1.0.2	7.1
 app/xvidtune		1.0.1	7.0
-app/xvinfo		1.0.2	7.3	needs-update
+app/xvinfo		1.0.2	7.3
 app/xwd			1.0.1	7.0
-app/xwininfo		1.0.3	7.3	needs-update
+app/xwininfo		1.0.3	7.3
 app/xwud		1.0.1	7.0
 
 data/bitmaps		1.0.1	7.0
