@@ -30,6 +30,7 @@ from the X Consortium.
 */
 /* $XFree86: xc/programs/xmessage/xmessage.c,v 1.4 2000/02/17 16:53:03 dawes Exp $ */
 
+#include <assert.h>
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
@@ -152,6 +153,60 @@ default_exit_action(Widget w, XEvent *event, String *params,
 {
     if (default_exitstatus >= 0)
 	exit(default_exitstatus);
+}
+
+/* Convert tabs to spaces in *messagep,*lengthp, copying to a new block of
+   memory.  */
+void
+detab (char **messagep, int *lengthp)
+{
+  int   i, n, col, psize;
+  char  *p;
+  
+  /* count how many tabs there are */
+  n = 0;
+  for (i = 0; i < *lengthp; i++)
+    if ((*messagep)[i] == '\t')
+      n++;
+
+  /* length increases by at most seven extra spaces for each tab */
+  psize = *lengthp + n*7 + 1;
+  p = XtMalloc (psize);
+
+  /* convert tabs to spaces, copying into p */
+  n = 0;
+  col = 0;
+  for (i = 0; i < *lengthp; i++)
+    {
+      switch ((*messagep)[i]) {
+      case '\n':
+        p[n++] = '\n';
+        col = 0;
+        break;
+      case '\t':
+        do
+          {
+            p[n++] = ' ';
+            col++;
+          }
+        while ((col % 8) != 0);
+        break;
+      default:
+        p[n++] = (*messagep)[i];
+        col++;
+        break;
+      }
+    }
+
+  assert (n < psize);
+
+  /* null-terminator needed by Label widget */
+  p[n] = '\0';
+
+  free (*messagep);
+
+  *messagep = p;
+  *lengthp = n;
 }
 
 static XtActionsRec actions_list[] = {
@@ -303,6 +358,8 @@ main (int argc, char *argv[])
     wm_delete_window = XInternAtom(XtDisplay(top), "WM_DELETE_WINDOW", False);
     XtAppAddActions(app_con, actions_list, XtNumber(actions_list));
     XtOverrideTranslations(top, XtParseTranslationTable(top_trans));
+
+    detab (&message_str, &message_len);
 
     /*
      * create the query form; this is where most of the real work is done
