@@ -29,6 +29,7 @@ from The Open Group.
 */
 /* $XFree86: xc/programs/xprop/xprop.c,v 1.15 2003/09/24 02:43:38 dawes Exp $ */
 
+#include "config.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xos.h>
@@ -37,15 +38,15 @@ from The Open Group.
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#ifdef HAS_WCHAR_H
+#ifdef HAVE_WCHAR_H
 #include <wchar.h>
 #endif
-#ifdef HAS_WCTYPE_H
+#ifdef HAVE_WCTYPE_H
 #include <wctype.h>
 #endif
 #include <locale.h>
 
-#ifndef HAS_WCTYPE_H
+#ifndef HAVE_WCTYPE_H
 #define iswprint(x) isprint(x)
 #endif
 
@@ -54,7 +55,7 @@ from The Open Group.
 
 #include "dsimple.h"
 
-#define MAXSTR 10000
+#define MAXSTR 500000
 #define MAXELEMENTS 64
 
 #ifndef min
@@ -583,21 +584,21 @@ static char _formatting_buffer2[21];
 static const char *
 Format_Hex (long wrd)
 {
-    sprintf(_formatting_buffer2, "0x%lx", wrd);
+    snprintf(_formatting_buffer2, sizeof(_formatting_buffer2), "0x%lx", wrd);
     return _formatting_buffer2;
 }
 
 static const char *
 Format_Unsigned (long wrd)
 {
-    sprintf(_formatting_buffer2, "%lu", wrd);
+    snprintf(_formatting_buffer2, sizeof(_formatting_buffer2), "%lu", wrd);
     return _formatting_buffer2;
 }
 
 static const char *
 Format_Signed (long wrd)
 {
-    sprintf(_formatting_buffer2, "%ld", wrd);
+    snprintf(_formatting_buffer2, sizeof(_formatting_buffer2), "%ld", wrd);
     return _formatting_buffer2;
 }
 
@@ -622,7 +623,8 @@ Format_Atom (Atom atom)
     name = XGetAtomName(dpy, atom);
     XSetErrorHandler(handler);
     if (! name)
-	sprintf(_formatting_buffer, "undefined atom # 0x%lx", atom);
+	snprintf(_formatting_buffer, sizeof(_formatting_buffer),
+		 "undefined atom # 0x%lx", atom);
     else {
 	int namelen = strlen(name);
 	if (namelen > MAXSTR) namelen = MAXSTR;
@@ -669,11 +671,12 @@ static int _buf_len;
 static void
 _put_char (char c)
 {
-    if (--_buf_len < 0) {
+    if (_buf_len <= 0) {
 	_buf_ptr[0] = '\0';
 	return;
     }
     _buf_ptr++[0] = c;
+    _buf_len--;
 }
 
 static void
@@ -696,7 +699,7 @@ _format_char (char c)
       default:
 	if (!c_isprint(c)) {
 	    _put_char('\\');
-	    sprintf(_buf_ptr, "%03o", (unsigned char) c);
+	    snprintf(_buf_ptr, _buf_len, "%03o", (unsigned char) c);
 	    _buf_ptr += 3;
 	    _buf_len -= 3;
 	} else
@@ -770,7 +773,7 @@ Format_Len_Text (const char *string, int len, Atom encoding)
 		    len -= n;
 		} else {
 		    _put_char('\\');
-		    sprintf(_buf_ptr, "%03o", (unsigned char) *string);
+		    snprintf(_buf_ptr, _buf_len, "%03o", (unsigned char) *string);
 		    _buf_ptr += 3;
 		    _buf_len -= 3;
 		    string++;
@@ -779,7 +782,7 @@ Format_Len_Text (const char *string, int len, Atom encoding)
 	    }
 	    count--;
 	    if (count > 0) {
-		sprintf(_buf_ptr, "\\000");
+		snprintf(_buf_ptr, _buf_len, "\\000");
 	        _buf_ptr += 4;
 		_buf_len -= 4;
 	    }
@@ -1287,13 +1290,13 @@ Handle_Prop_Requests (int argc, char **argv)
     char *format, *dformat, *prop;
     thunk *thunks, t;
 
-    thunks = Create_Thunk_List();
-
     /* if no prop referenced, by default list all properties for given window */
     if (!argc) {
 	Show_All_Props();
 	return NULL;
     }
+
+    thunks = Create_Thunk_List();
 
     while (argc > 0) {
 	format = NULL;
@@ -1513,33 +1516,29 @@ Set_Property (Display *dpy, Window w, const char *propname, const char *value)
 void
 usage (void)
 {
-    char **cpp;
-    static char *help_message[] = {
-"where options include:",
-"    -grammar                       print out full grammar for command line",
-"    -display host:dpy              the X server to contact",
-"    -id id                         resource id of window to examine",
-"    -name name                     name of window to examine",
-"    -font name                     name of font to examine",
-"    -remove propname               remove a property",
-"    -set propname value            set a property to a given value",
-"    -root                          examine the root window",
-"    -len n                         display at most n bytes of any property",
-"    -notype                        do not display the type field",
-"    -fs filename                   where to look for formats for properties",
-"    -frame                         don't ignore window manager frames",
-"    -f propname format [dformat]   formats to use for property of given name",
-"    -spy                           examine window properties forever",
-NULL};
+    static const char help_message[] = 
+"where options include:\n"
+"    -grammar                       print out full grammar for command line\n"
+"    -display host:dpy              the X server to contact\n"
+"    -id id                         resource id of window to examine\n"
+"    -name name                     name of window to examine\n"
+"    -font name                     name of font to examine\n"
+"    -remove propname               remove a property\n"
+"    -set propname value            set a property to a given value\n"
+"    -root                          examine the root window\n"
+"    -len n                         display at most n bytes of any property\n"
+"    -notype                        do not display the type field\n"
+"    -fs filename                   where to look for formats for properties\n"
+"    -frame                         don't ignore window manager frames\n"
+"    -f propname format [dformat]   formats to use for property of given name\n"
+"    -spy                           examine window properties forever\n";
+
 
     fflush (stdout);
     fprintf (stderr,
 	     "usage:  %s [-options ...] [[format [dformat]] atom] ...\n\n", 
 	     program_name);
-    for (cpp = help_message; *cpp; cpp++) {
-	fprintf (stderr, "%s\n", *cpp);
-    }
-    fprintf (stderr, "\n");
+    fprintf (stderr, "%s\n", help_message);
     exit (1);
 }
 

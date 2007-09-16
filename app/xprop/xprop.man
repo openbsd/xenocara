@@ -339,6 +339,7 @@ To get default display.
 Specifies the name of a file from which additional formats are to be obtained.
 .PP
 .SH SEE ALSO
-X(__miscmansuffix__), xwininfo(1)
+X(__miscmansuffix__), xdpyinfo(__appmansuffix__), xwininfo(__appmansuffix__),
+xdriinfo(__appmansuffix__), glxinfo(__appmansuffix__), xvinfo(__appmansuffix__)
 .SH AUTHOR
 Mark Lillibridge, MIT Project Athena

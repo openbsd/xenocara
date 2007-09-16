@@ -22,20 +22,27 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xprop,[1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xprop)
+AC_INIT(xprop,[1.0.3], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xprop)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER(config.h)
 
+# Require xorg-macros version 1.1.0 or newer for XORG_WITH_LINT macro
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.1 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.1)
+
 AC_PROG_CC
 AC_PROG_INSTALL
+
+AC_CHECK_HEADERS_ONCE([wchar.h wctype.h])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XPROP, xmuu x11)
 AC_SUBST(XPROP_CFLAGS)
 AC_SUBST(XPROP_LIBS)
 
+XORG_WITH_LINT
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
 
