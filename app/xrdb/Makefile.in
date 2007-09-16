@@ -62,7 +62,7 @@ bin_PROGRAMS = xrdb$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh missing
+	config.guess config.sub depcomp install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -76,7 +76,7 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xrdb_OBJECTS = xrdb-xrdb.$(OBJEXT)
+am_xrdb_OBJECTS = xrdb.$(OBJEXT)
 xrdb_OBJECTS = $(am_xrdb_OBJECTS)
 am__DEPENDENCIES_1 =
 xrdb_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -209,7 +209,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-xrdb_CFLAGS = $(XRDB_CFLAGS)
+AM_CFLAGS = $(XRDB_CFLAGS)
 xrdb_LDADD = $(XRDB_LIBS)
 xrdb_SOURCES = \
         xrdb.c
@@ -329,7 +329,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xrdb-xrdb.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xrdb.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -344,20 +344,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xrdb-xrdb.o: xrdb.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xrdb_CFLAGS) $(CFLAGS) -MT xrdb-xrdb.o -MD -MP -MF "$(DEPDIR)/xrdb-xrdb.Tpo" -c -o xrdb-xrdb.o `test -f 'xrdb.c' || echo '$(srcdir)/'`xrdb.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xrdb-xrdb.Tpo" "$(DEPDIR)/xrdb-xrdb.Po"; else rm -f "$(DEPDIR)/xrdb-xrdb.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xrdb.c' object='xrdb-xrdb.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xrdb_CFLAGS) $(CFLAGS) -c -o xrdb-xrdb.o `test -f 'xrdb.c' || echo '$(srcdir)/'`xrdb.c
-
-xrdb-xrdb.obj: xrdb.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xrdb_CFLAGS) $(CFLAGS) -MT xrdb-xrdb.obj -MD -MP -MF "$(DEPDIR)/xrdb-xrdb.Tpo" -c -o xrdb-xrdb.obj `if test -f 'xrdb.c'; then $(CYGPATH_W) 'xrdb.c'; else $(CYGPATH_W) '$(srcdir)/xrdb.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xrdb-xrdb.Tpo" "$(DEPDIR)/xrdb-xrdb.Po"; else rm -f "$(DEPDIR)/xrdb-xrdb.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xrdb.c' object='xrdb-xrdb.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xrdb_CFLAGS) $(CFLAGS) -c -o xrdb-xrdb.obj `if test -f 'xrdb.c'; then $(CYGPATH_W) 'xrdb.c'; else $(CYGPATH_W) '$(srcdir)/xrdb.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
