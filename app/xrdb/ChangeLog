@@ -1,3 +1,27 @@
+commit 13917748af3288ae188cbe9c05742411d53ec34f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Aug 15 15:35:00 2007 -0700
+
+    Version bump: 1.0.4
+
+commit 6202638b9962dceb4f72357bff76896e23c8fe5e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Aug 15 15:31:16 2007 -0700
+
+    Change xrdb_CFLAGS to AM_CFLAGS to make automake-1.10 happier
+    
+    Makefile.am:27: compiling `xrdb.c' with per-target flags requires `AM_PROG_CC_C_O' in `configure.ac'
+
+commit 0b2171f2af1a5790753bb6516ac32411b1b89ef3
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Apr 11 15:33:56 2007 -0700
+
+    Bug #10616: Man page grammar fix: s/This never be/This should never be/
+    
+    X.Org Bugzilla #10616: <https://bugs.freedesktop.org/show_bug.cgi?id=10616>
+    Reported upstream from
+    Debian bug #354923 <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=354923>
+
 commit a2b12134c2216dc29581dd849a89e48187ddf66f
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Jan 23 17:47:28 2007 -0800

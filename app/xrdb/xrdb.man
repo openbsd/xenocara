@@ -262,7 +262,7 @@ from the server.
 .TP 8
 .B \-retain
 This option indicates that the server should be instructed not to reset if
-\fIxrdb\fP is the first client.  This never be necessary under normal
+\fIxrdb\fP is the first client.  This should never be necessary under normal
 conditions, since \fIxdm\fP and \fIxinit\fP always act as the first client.
 .TP 8
 .B \-edit \fIfilename\fP

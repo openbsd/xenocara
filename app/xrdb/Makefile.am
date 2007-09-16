@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xrdb
 
-xrdb_CFLAGS = $(XRDB_CFLAGS)
+AM_CFLAGS = $(XRDB_CFLAGS)
 xrdb_LDADD = $(XRDB_LIBS)
 
 xrdb_SOURCES =	\
