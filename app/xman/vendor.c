@@ -40,7 +40,7 @@ typedef struct sectionName {
     char *	suffix;
 } SectionNameRec;
 
-#if defined(SYSV) || defined(__osf__) || defined(SVR4) && !defined(sun)
+#if (defined(SYSV) || defined(__osf__) || defined(SVR4)) && !defined(sun)
 
 static SectionNameRec SectionNames[] = {
     {"(1) User Commands",		"1"},

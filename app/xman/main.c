@@ -1,5 +1,5 @@
 /* $XConsortium: main.c,v 1.23 94/04/17 20:43:55 rws Exp $ */
-/* $XdotOrg: app/xman/main.c,v 1.4 2006/01/06 22:39:24 alanc Exp $ */
+/* $XdotOrg: $ */
 /*
 
 Copyright (c) 1987, 1988  X Consortium

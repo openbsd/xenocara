@@ -1,5 +1,5 @@
 /* $XConsortium: vendor.h,v 1.12 94/04/17 20:44:00 rws Exp $ */
-/* $XdotOrg: app/xman/vendor.h,v 1.7 2005/11/08 06:33:33 jkj Exp $ */
+/* $XdotOrg: xc/programs/xman/vendor.h,v 1.4 2004/10/18 14:21:47 eich Exp $ */
 /*
 
 Copyright (c) 1991  X Consortium
@@ -59,7 +59,7 @@ from the X Consortium.
 #  define SEARCHDIR  MAN
 #endif
 
-#if ( defined(sgi) || (defined(i386) && (defined(SYSV) || defined(SVR4))) || (defined(BSD) && (BSD >= 199103)) || defined(linux) )
+#if ( defined(sgi) || (defined(i386) && (defined(SYSV) || defined(SVR4))  && !defined(sun)) || (defined(BSD) && (BSD >= 199103)) || defined(linux) )
 # define SEARCHOTHER CAT
 #endif
 
@@ -83,7 +83,7 @@ from the X Consortium.
 #  define SYSMANPATH "/usr/share/man"
 #elif defined(hcx)
 #  define SYSMANPATH "/usr/catman/local_man:/usr/catman/u_man:/usr/catman/a_man:/usr/catman/p_man:/usr/catman/ada_man"
-#elif defined(SYSV) && defined(i386) && !defined(__SCO__)
+#elif defined(SYSV) && defined(i386) && !defined(__SCO__) && !defined(sun)
 #  define SYSMANPATH "/usr/catman/u_man:/usr/catman/p_man"
 #elif defined(sgi)
 #  define SYSMANPATH "/usr/catman/a_man:/usr/catman/g_man:/usr/catman/p_man:/usr/catman/u_man:/usr/man/p_man:/usr/man/u_man:/usr/man"
@@ -101,7 +101,7 @@ from the X Consortium.
 
 #if defined( macII ) || defined( hcx ) || \
 	(defined(SYSV) && defined(i386) && !defined(ISC) && \
-	!defined(__UNIXWARE__) && !defined(__SCO__)) || defined(sgi)
+	!defined(__UNIXWARE__) && !defined(__SCO__) && !defined(sun)) || defined(sgi)
 #  define COMPRESSION_EXTENSION   "z"
 #  define UNCOMPRESS_FORMAT       "pcat %s > %s"
 #  define NO_COMPRESS		/* mac can't handle using pack as a filter and
@@ -217,7 +217,7 @@ from the X Consortium.
  * "man" directories.
  */
 #if (defined(macII) || defined(CRAY) || defined(hcx) || \
-	(defined(SYSV) && defined(i386))) && !defined(SCO)
+	(defined(SYSV) && defined(i386))) && !defined(SCO) && !defined(sun)
 #  define CAT MAN
 #elif defined(SCO)
 #  define CAT "cat."

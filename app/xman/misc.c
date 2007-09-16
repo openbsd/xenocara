@@ -1,5 +1,5 @@
 /* $XConsortium: misc.c,v 1.31 94/12/16 21:36:53 gildea Exp $ */
-/* $XdotOrg: app/xman/misc.c,v 1.8 2005/11/08 06:33:33 jkj Exp $ */
+/* $XdotOrg: xc/programs/xman/misc.c,v 1.6 2004/09/02 08:40:33 kem Exp $ */
 /*
 
 Copyright (c) 1987, 1988  X Consortium
