@@ -62,7 +62,7 @@ bin_PROGRAMS = xmodmap$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh missing
+	config.guess config.sub depcomp install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -76,8 +76,8 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xmodmap_OBJECTS = xmodmap-exec.$(OBJEXT) xmodmap-handle.$(OBJEXT) \
-	xmodmap-pf.$(OBJEXT) xmodmap-xmodmap.$(OBJEXT)
+am_xmodmap_OBJECTS = exec.$(OBJEXT) handle.$(OBJEXT) pf.$(OBJEXT) \
+	xmodmap.$(OBJEXT)
 xmodmap_OBJECTS = $(am_xmodmap_OBJECTS)
 am__DEPENDENCIES_1 =
 xmodmap_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -149,6 +149,10 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LINT = @LINT@
+LINT_FALSE = @LINT_FALSE@
+LINT_FLAGS = @LINT_FLAGS@
+LINT_TRUE = @LINT_TRUE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -207,7 +211,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-xmodmap_CFLAGS = $(DEP_CFLAGS)
+AM_CFLAGS = $(DEP_CFLAGS)
 xmodmap_LDADD = $(DEP_LIBS)
 xmodmap_SOURCES = \
         exec.c \
@@ -220,7 +224,7 @@ xmodmap_SOURCES = \
 appman_PRE = \
         xmodmap.man
 
-EXTRA_DIST = swap.km $(appman_PRE)
+EXTRA_DIST = ChangeLog autogen.sh swap.km $(appman_PRE)
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 CLEANFILES = $(appman_DATA)
@@ -243,6 +247,10 @@ MAN_SUBSTS = \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
+MAINTAINERCLEANFILES = ChangeLog
+@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+@LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS)
+
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -331,10 +339,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmodmap-exec.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmodmap-handle.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmodmap-pf.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmodmap-xmodmap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exec.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/handle.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmodmap.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -349,62 +357,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xmodmap-exec.o: exec.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -MT xmodmap-exec.o -MD -MP -MF "$(DEPDIR)/xmodmap-exec.Tpo" -c -o xmodmap-exec.o `test -f 'exec.c' || echo '$(srcdir)/'`exec.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmodmap-exec.Tpo" "$(DEPDIR)/xmodmap-exec.Po"; else rm -f "$(DEPDIR)/xmodmap-exec.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='exec.c' object='xmodmap-exec.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -c -o xmodmap-exec.o `test -f 'exec.c' || echo '$(srcdir)/'`exec.c
-
-xmodmap-exec.obj: exec.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -MT xmodmap-exec.obj -MD -MP -MF "$(DEPDIR)/xmodmap-exec.Tpo" -c -o xmodmap-exec.obj `if test -f 'exec.c'; then $(CYGPATH_W) 'exec.c'; else $(CYGPATH_W) '$(srcdir)/exec.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmodmap-exec.Tpo" "$(DEPDIR)/xmodmap-exec.Po"; else rm -f "$(DEPDIR)/xmodmap-exec.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='exec.c' object='xmodmap-exec.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -c -o xmodmap-exec.obj `if test -f 'exec.c'; then $(CYGPATH_W) 'exec.c'; else $(CYGPATH_W) '$(srcdir)/exec.c'; fi`
-
-xmodmap-handle.o: handle.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -MT xmodmap-handle.o -MD -MP -MF "$(DEPDIR)/xmodmap-handle.Tpo" -c -o xmodmap-handle.o `test -f 'handle.c' || echo '$(srcdir)/'`handle.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmodmap-handle.Tpo" "$(DEPDIR)/xmodmap-handle.Po"; else rm -f "$(DEPDIR)/xmodmap-handle.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='handle.c' object='xmodmap-handle.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -c -o xmodmap-handle.o `test -f 'handle.c' || echo '$(srcdir)/'`handle.c
-
-xmodmap-handle.obj: handle.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -MT xmodmap-handle.obj -MD -MP -MF "$(DEPDIR)/xmodmap-handle.Tpo" -c -o xmodmap-handle.obj `if test -f 'handle.c'; then $(CYGPATH_W) 'handle.c'; else $(CYGPATH_W) '$(srcdir)/handle.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmodmap-handle.Tpo" "$(DEPDIR)/xmodmap-handle.Po"; else rm -f "$(DEPDIR)/xmodmap-handle.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='handle.c' object='xmodmap-handle.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -c -o xmodmap-handle.obj `if test -f 'handle.c'; then $(CYGPATH_W) 'handle.c'; else $(CYGPATH_W) '$(srcdir)/handle.c'; fi`
-
-xmodmap-pf.o: pf.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -MT xmodmap-pf.o -MD -MP -MF "$(DEPDIR)/xmodmap-pf.Tpo" -c -o xmodmap-pf.o `test -f 'pf.c' || echo '$(srcdir)/'`pf.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmodmap-pf.Tpo" "$(DEPDIR)/xmodmap-pf.Po"; else rm -f "$(DEPDIR)/xmodmap-pf.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pf.c' object='xmodmap-pf.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -c -o xmodmap-pf.o `test -f 'pf.c' || echo '$(srcdir)/'`pf.c
-
-xmodmap-pf.obj: pf.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -MT xmodmap-pf.obj -MD -MP -MF "$(DEPDIR)/xmodmap-pf.Tpo" -c -o xmodmap-pf.obj `if test -f 'pf.c'; then $(CYGPATH_W) 'pf.c'; else $(CYGPATH_W) '$(srcdir)/pf.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmodmap-pf.Tpo" "$(DEPDIR)/xmodmap-pf.Po"; else rm -f "$(DEPDIR)/xmodmap-pf.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pf.c' object='xmodmap-pf.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -c -o xmodmap-pf.obj `if test -f 'pf.c'; then $(CYGPATH_W) 'pf.c'; else $(CYGPATH_W) '$(srcdir)/pf.c'; fi`
-
-xmodmap-xmodmap.o: xmodmap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -MT xmodmap-xmodmap.o -MD -MP -MF "$(DEPDIR)/xmodmap-xmodmap.Tpo" -c -o xmodmap-xmodmap.o `test -f 'xmodmap.c' || echo '$(srcdir)/'`xmodmap.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmodmap-xmodmap.Tpo" "$(DEPDIR)/xmodmap-xmodmap.Po"; else rm -f "$(DEPDIR)/xmodmap-xmodmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xmodmap.c' object='xmodmap-xmodmap.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -c -o xmodmap-xmodmap.o `test -f 'xmodmap.c' || echo '$(srcdir)/'`xmodmap.c
-
-xmodmap-xmodmap.obj: xmodmap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -MT xmodmap-xmodmap.obj -MD -MP -MF "$(DEPDIR)/xmodmap-xmodmap.Tpo" -c -o xmodmap-xmodmap.obj `if test -f 'xmodmap.c'; then $(CYGPATH_W) 'xmodmap.c'; else $(CYGPATH_W) '$(srcdir)/xmodmap.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmodmap-xmodmap.Tpo" "$(DEPDIR)/xmodmap-xmodmap.Po"; else rm -f "$(DEPDIR)/xmodmap-xmodmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xmodmap.c' object='xmodmap-xmodmap.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmodmap_CFLAGS) $(CFLAGS) -c -o xmodmap-xmodmap.obj `if test -f 'xmodmap.c'; then $(CYGPATH_W) 'xmodmap.c'; else $(CYGPATH_W) '$(srcdir)/xmodmap.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
@@ -501,6 +453,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -630,6 +585,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -685,8 +641,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-data \
@@ -701,6 +657,16 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
+
+@LINT_TRUE@lint:
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(AM_CFLAGS) $(xmodmap_SOURCES)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
