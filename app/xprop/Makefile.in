@@ -62,7 +62,7 @@ bin_PROGRAMS = xprop$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh missing
+	config.guess config.sub depcomp install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -76,7 +76,7 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xprop_OBJECTS = xprop-dsimple.$(OBJEXT) xprop-xprop.$(OBJEXT)
+am_xprop_OBJECTS = dsimple.$(OBJEXT) xprop.$(OBJEXT)
 xprop_OBJECTS = $(am_xprop_OBJECTS)
 am__DEPENDENCIES_1 =
 xprop_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -125,6 +125,7 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
@@ -134,6 +135,7 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
@@ -146,6 +148,10 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LINT = @LINT@
+LINT_FALSE = @LINT_FALSE@
+LINT_FLAGS = @LINT_FLAGS@
+LINT_TRUE = @LINT_TRUE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -206,7 +212,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-xprop_CFLAGS = $(XPROP_CFLAGS)
+AM_CFLAGS = $(XPROP_CFLAGS)
 xprop_LDADD = $(XPROP_LIBS)
 xprop_SOURCES = \
         dsimple.c \
@@ -218,8 +224,9 @@ appman_PRE = \
 
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) ChangeLog autogen.sh
 CLEANFILES = $(appman_DATA)
+MAINTAINERCLEANFILES = ChangeLog
 SED = sed
 
 # Strings to replace in man pages
@@ -239,6 +246,9 @@ MAN_SUBSTS = \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
+@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+@LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
+
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -327,8 +337,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xprop-dsimple.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xprop-xprop.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsimple.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xprop.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -343,34 +353,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xprop-dsimple.o: dsimple.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xprop_CFLAGS) $(CFLAGS) -MT xprop-dsimple.o -MD -MP -MF "$(DEPDIR)/xprop-dsimple.Tpo" -c -o xprop-dsimple.o `test -f 'dsimple.c' || echo '$(srcdir)/'`dsimple.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xprop-dsimple.Tpo" "$(DEPDIR)/xprop-dsimple.Po"; else rm -f "$(DEPDIR)/xprop-dsimple.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dsimple.c' object='xprop-dsimple.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xprop_CFLAGS) $(CFLAGS) -c -o xprop-dsimple.o `test -f 'dsimple.c' || echo '$(srcdir)/'`dsimple.c
-
-xprop-dsimple.obj: dsimple.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xprop_CFLAGS) $(CFLAGS) -MT xprop-dsimple.obj -MD -MP -MF "$(DEPDIR)/xprop-dsimple.Tpo" -c -o xprop-dsimple.obj `if test -f 'dsimple.c'; then $(CYGPATH_W) 'dsimple.c'; else $(CYGPATH_W) '$(srcdir)/dsimple.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xprop-dsimple.Tpo" "$(DEPDIR)/xprop-dsimple.Po"; else rm -f "$(DEPDIR)/xprop-dsimple.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dsimple.c' object='xprop-dsimple.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xprop_CFLAGS) $(CFLAGS) -c -o xprop-dsimple.obj `if test -f 'dsimple.c'; then $(CYGPATH_W) 'dsimple.c'; else $(CYGPATH_W) '$(srcdir)/dsimple.c'; fi`
-
-xprop-xprop.o: xprop.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xprop_CFLAGS) $(CFLAGS) -MT xprop-xprop.o -MD -MP -MF "$(DEPDIR)/xprop-xprop.Tpo" -c -o xprop-xprop.o `test -f 'xprop.c' || echo '$(srcdir)/'`xprop.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xprop-xprop.Tpo" "$(DEPDIR)/xprop-xprop.Po"; else rm -f "$(DEPDIR)/xprop-xprop.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xprop.c' object='xprop-xprop.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xprop_CFLAGS) $(CFLAGS) -c -o xprop-xprop.o `test -f 'xprop.c' || echo '$(srcdir)/'`xprop.c
-
-xprop-xprop.obj: xprop.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xprop_CFLAGS) $(CFLAGS) -MT xprop-xprop.obj -MD -MP -MF "$(DEPDIR)/xprop-xprop.Tpo" -c -o xprop-xprop.obj `if test -f 'xprop.c'; then $(CYGPATH_W) 'xprop.c'; else $(CYGPATH_W) '$(srcdir)/xprop.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xprop-xprop.Tpo" "$(DEPDIR)/xprop-xprop.Po"; else rm -f "$(DEPDIR)/xprop-xprop.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xprop.c' object='xprop-xprop.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xprop_CFLAGS) $(CFLAGS) -c -o xprop-xprop.obj `if test -f 'xprop.c'; then $(CYGPATH_W) 'xprop.c'; else $(CYGPATH_W) '$(srcdir)/xprop.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
@@ -467,6 +449,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -596,6 +581,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -651,8 +637,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-data \
@@ -665,8 +651,18 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 	uninstall-info-am
 
 
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
+
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+@LINT_TRUE@lint:
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(xprop_SOURCES)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
