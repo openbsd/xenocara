@@ -1,6 +1,4 @@
 .\"
-.\" $Id: Xcursor.man,v 1.1.1.1 2006/11/25 17:00:29 matthieu Exp $
-.\"
 .\" Copyright © 2002 Keith Packard
 .\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
@@ -26,7 +24,7 @@
 .ns
 .TP \\$1
 ..
-.TH XCURSOR __LIB_MAN_SUFFIX__ __xorgversion__ "Keith Packard"
+.TH XCURSOR __libmansuffix__ __xorgversion__ "Keith Packard"
 
 .SH NAME
 XCURSOR \- Cursor management library
@@ -142,8 +140,7 @@ Images look like:
 
 .SS THEMES
 Xcursor (mostly) follows the freedesktop.org spec for theming icons.  The
-default search path it uses is $HOME/.icons, __prefix__/share/icons,
-__prefix__/share/pixmaps, __ICONDIR__.  Within each of these
+default search path it uses is __XCURSORPATH__.  Within each of these
 directories, it searches for a directory using the theme name.  Within the
 theme directory, it looks for cursor files in the 'cursors' subdirectory.
 It uses the first cursor file found along  the path.
@@ -358,7 +355,7 @@ mapped to a core X cursor.
 .TP
 XcursorBool XcursorSetDefaultSize (Display *dpy, int size)
 Sets the default size for cursors on the specified display. When loading
-cursors, those who's nominal size is closest to this size will be preferred.
+cursors, those whose nominal size is closest to this size will be preferred.
 
 .TP
 int XcursorGetDefaultSize (Display *dpy)
@@ -371,6 +368,12 @@ Sets the current theme name.
 .TP
 char *XcursorGetTheme (Display *dpy)
 Gets the current theme name.
+
+.SH "ENVIRONMENT VARIABLES"
+.TP 15
+.B XCURSOR_PATH
+This variable sets the list of paths to look for cursors in.   
+Directories in this path are separated by colons (:).
 
 .SH RESTRICTIONS
 .B Xcursor

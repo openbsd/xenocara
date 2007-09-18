@@ -1,5 +1,5 @@
 /*
- * $Id: library.c,v 1.1.1.1 2006/11/25 17:00:28 matthieu Exp $
+ * $Id: library.c,v 1.1.1.2 2007/09/18 21:09:55 matthieu Exp $
  *
  * Copyright © 2002 Keith Packard
  *
@@ -385,39 +385,98 @@ XcursorLibraryLoadCursors (Display *dpy, const char *file)
     return cursors;
 }
 
-const static char   *_XcursorStandardNames[] = {
-    /* 0 */
-    "X_cursor",		"arrow",	    "based_arrow_down",     "based_arrow_up", 
-    "boat",		"bogosity",	    "bottom_left_corner",   "bottom_right_corner", 
-    "bottom_side",	"bottom_tee",	    "box_spiral",	    "center_ptr", 
-    "circle",		"clock",	    "coffee_mug",	    "cross", 
-    
-    /* 32 */
-    "cross_reverse",	"crosshair",	    "diamond_cross",	    "dot",
-    "dotbox",		"double_arrow",	    "draft_large",	    "draft_small",
-    "draped_box",	"exchange",	    "fleur",		    "gobbler",
-    "gumby",		"hand1",	    "hand2",		    "heart",
-    
-    /* 64 */
-    "icon",		"iron_cross",	    "left_ptr",		    "left_side", 
-    "left_tee",		"leftbutton",	    "ll_angle",		    "lr_angle", 
-    "man",		"middlebutton",     "mouse",		    "pencil", 
-    "pirate",		"plus",		    "question_arrow",	    "right_ptr", 
-    
-    /* 96 */
-    "right_side",	"right_tee",	    "rightbutton",	    "rtl_logo", 
-    "sailboat",		"sb_down_arrow",    "sb_h_double_arrow",    "sb_left_arrow", 
-    "sb_right_arrow",	"sb_up_arrow",	    "sb_v_double_arrow",    "shuttle", 
-    "sizing",		"spider",	    "spraycan",		    "star", 
-    
-    /* 128 */
-    "target",		"tcross",	    "top_left_arrow",	    "top_left_corner", 
-    "top_right_corner",	"top_side",	    "top_tee",		    "trek", 
-    "ul_angle",		"umbrella",	    "ur_angle",		    "watch", 
-    "xterm", 
+static const char _XcursorStandardNames[] =
+	"X_cursor\0"
+	"arrow\0"
+	"based_arrow_down\0"
+	"based_arrow_up\0"
+	"boat\0"
+	"bogosity\0"
+	"bottom_left_corner\0"
+	"bottom_right_corner\0"
+	"bottom_side\0"
+	"bottom_tee\0"
+	"box_spiral\0"
+	"center_ptr\0"
+	"circle\0"
+	"clock\0"
+	"coffee_mug\0"
+	"cross\0"
+	"cross_reverse\0"
+	"crosshair\0"
+	"diamond_cross\0"
+	"dot\0"
+	"dotbox\0"
+	"double_arrow\0"
+	"draft_large\0"
+	"draft_small\0"
+	"draped_box\0"
+	"exchange\0"
+	"fleur\0"
+	"gobbler\0"
+	"gumby\0"
+	"hand1\0"
+	"hand2\0"
+	"heart\0"
+	"icon\0"
+	"iron_cross\0"
+	"left_ptr\0"
+	"left_side\0"
+	"left_tee\0"
+	"leftbutton\0"
+	"ll_angle\0"
+	"lr_angle\0"
+	"man\0"
+	"middlebutton\0"
+	"mouse\0"
+	"pencil\0"
+	"pirate\0"
+	"plus\0"
+	"question_arrow\0"
+	"right_ptr\0"
+	"right_side\0"
+	"right_tee\0"
+	"rightbutton\0"
+	"rtl_logo\0"
+	"sailboat\0"
+	"sb_down_arrow\0"
+	"sb_h_double_arrow\0"
+	"sb_left_arrow\0"
+	"sb_right_arrow\0"
+	"sb_up_arrow\0"
+	"sb_v_double_arrow\0"
+	"shuttle\0"
+	"sizing\0"
+	"spider\0"
+	"spraycan\0"
+	"star\0"
+	"target\0"
+	"tcross\0"
+	"top_left_arrow\0"
+	"top_left_corner\0"
+	"top_right_corner\0"
+	"top_side\0"
+	"top_tee\0"
+	"trek\0"
+	"ul_angle\0"
+	"umbrella\0"
+	"ur_angle\0"
+	"watch\0"
+	"xterm";
+
+static const unsigned short _XcursorStandardNameOffsets[] = {
+	0, 9, 15, 32, 47, 52, 61, 80, 100, 112, 123, 134, 145, 152, 158,
+	169, 175, 189, 199, 213, 217, 224, 237, 249, 261, 272, 281, 287,
+	295, 301, 307, 313, 319, 324, 335, 344, 354, 363, 374, 383, 392,
+	396, 409, 415, 422, 429, 434, 449, 459, 470, 480, 492, 501, 510,
+	524, 542, 556, 571, 583, 601, 609, 616, 623, 632, 637, 644, 651,
+	666, 682, 699, 708, 716, 721, 730, 739, 748, 754
 };
 
-#define NUM_STANDARD_NAMES  (sizeof _XcursorStandardNames / sizeof _XcursorStandardNames[0])
+#define NUM_STANDARD_NAMES  (sizeof _XcursorStandardNameOffsets / sizeof _XcursorStandardNameOffsets[0])
+
+#define STANDARD_NAME(id) \
+    _XcursorStandardNames + _XcursorStandardNameOffsets[id]
 
 XcursorImage *
 XcursorShapeLoadImage (unsigned int shape, const char *theme, int size)
@@ -425,8 +484,7 @@ XcursorShapeLoadImage (unsigned int shape, const char *theme, int size)
     unsigned int    id = shape >> 1;
 
     if (id < NUM_STANDARD_NAMES)
-	return XcursorLibraryLoadImage (_XcursorStandardNames[id],
-					theme, size);
+	return XcursorLibraryLoadImage (STANDARD_NAME (id), theme, size);
     else
 	return NULL;
 }
@@ -437,8 +495,7 @@ XcursorShapeLoadImages (unsigned int shape, const char *theme, int size)
     unsigned int    id = shape >> 1;
 
     if (id < NUM_STANDARD_NAMES)
-	return XcursorLibraryLoadImages (_XcursorStandardNames[id],
-					 theme, size);
+	return XcursorLibraryLoadImages (STANDARD_NAME (id), theme, size);
     else
 	return NULL;
 }
@@ -449,7 +506,7 @@ XcursorShapeLoadCursor (Display *dpy, unsigned int shape)
     unsigned int    id = shape >> 1;
 
     if (id < NUM_STANDARD_NAMES)
-	return XcursorLibraryLoadCursor (dpy, _XcursorStandardNames[id]);
+	return XcursorLibraryLoadCursor (dpy, STANDARD_NAME (id));
     else
 	return 0;
 }
@@ -460,7 +517,7 @@ XcursorShapeLoadCursors (Display *dpy, unsigned int shape)
     unsigned int    id = shape >> 1;
 
     if (id < NUM_STANDARD_NAMES)
-	return XcursorLibraryLoadCursors (dpy, _XcursorStandardNames[id]);
+	return XcursorLibraryLoadCursors (dpy, STANDARD_NAME (id));
     else
 	return NULL;
 }
@@ -477,7 +534,7 @@ XcursorLibraryShape (const char *library)
     while (low < high - 1)
     {
 	mid = (low + high) >> 1;
-	c = strcmp (library, _XcursorStandardNames[mid]);
+	c = strcmp (library, STANDARD_NAME (mid));
 	if (c == 0)
 	    return (mid << 1);
 	if (c > 0)
@@ -487,7 +544,7 @@ XcursorLibraryShape (const char *library)
     }
     while (low <= high)
     {
-	if (!strcmp (library, _XcursorStandardNames[low]))
+	if (!strcmp (library, STANDARD_NAME (low)))
 	    return (low << 1);
 	low++;
     }
