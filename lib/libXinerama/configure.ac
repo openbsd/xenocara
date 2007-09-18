@@ -22,11 +22,15 @@ dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
 
-AC_INIT(libXinerama, 1.0.1, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXinerama)
+AC_INIT(libXinerama, 1.0.2, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXinerama)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER(config.h)
+
+# Require xorg-macros version 1.1.0 or newer for XORG_WITH_LINT macro
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.1 or later])])
+XORG_MACROS_VERSION(1.1)
 
 # Check for progs
 AC_PROG_CC
@@ -37,10 +41,16 @@ PKG_CHECK_MODULES(XINERAMA, x11 xext xextproto xineramaproto)
 
 AC_SUBST(XINERAMA_CFLAGS)
 AC_SUBST(XINERAMA_LIBS)
+
+dnl Allow checking code with lint, sparse, etc.
+XORG_WITH_LINT
+LINT_FLAGS="${LINT_FLAGS} ${XINERAMA_CFLAGS}"
 		  
 XORG_CHECK_MALLOC_ZERO
+XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile
 	   src/Makefile
+	   man/Makefile
            xinerama.pc])

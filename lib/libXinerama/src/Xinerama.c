@@ -45,7 +45,8 @@ static /* const */ char *panoramiX_extension_name = PANORAMIX_PROTOCOL_NAME;
 #define PanoramiXSimpleCheckExtension(dpy,i) \
   XextSimpleCheckExtension (dpy, i, panoramiX_extension_name)
 
-static int close_display();
+static int close_display(Display *dpy, XExtCodes *codes);
+
 static /* const */ XExtensionHooks panoramiX_extension_hooks = {
     NULL,				/* create_gc */
     NULL,				/* copy_gc */
@@ -266,8 +267,6 @@ Bool XineramaIsActive(Display *dpy)
     return rep.state;
 }
 
-#include <stdio.h>
-
 XineramaScreenInfo * 
 XineramaQueryScreens(
    Display *dpy,
@@ -279,7 +278,7 @@ XineramaQueryScreens(
     xXineramaQueryScreensReq	*req;
     XineramaScreenInfo		*scrnInfo = NULL;
 
-    PanoramiXCheckExtension (dpy, info, 0);
+    PanoramiXCheckExtension (dpy, info, NULL);
 
     LockDisplay (dpy);
     GetReq (XineramaQueryScreens, req);
