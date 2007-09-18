@@ -58,7 +58,7 @@ static /* const */ char *xtest_extension_name = XTestExtensionName;
  *                                                                           *
  *****************************************************************************/
 
-static int close_display();
+static int close_display(Display *dpy, XExtCodes *codes);
 static /* const */ XExtensionHooks xtest_extension_hooks = {
     NULL,				/* create_gc */
     NULL,				/* copy_gc */
@@ -74,8 +74,7 @@ static /* const */ XExtensionHooks xtest_extension_hooks = {
 };
 
 static XPointer
-get_xinput_base(dpy)
-    Display *dpy;
+get_xinput_base(Display *dpy)
 {
     int major_opcode, first_event, first_error;
     first_event = 0;
@@ -272,14 +271,14 @@ XTestFakeRelativeMotionEvent(dpy, dx, dy, delay)
 }
 
 static void
-send_axes(dpy, info, req, dev, first_axis, axes, n_axes)
-    Display *dpy;
-    XExtDisplayInfo *info;
-    xXTestFakeInputReq *req;
-    XDevice *dev;
-    int first_axis;
-    int *axes;
-    int n_axes;
+send_axes(
+    Display *dpy,
+    XExtDisplayInfo *info,
+    xXTestFakeInputReq *req,
+    XDevice *dev,
+    int first_axis,
+    int *axes,
+    int n_axes)
 {
     deviceValuator ev;
     int n;

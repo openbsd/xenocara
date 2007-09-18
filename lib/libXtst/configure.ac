@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
 
-AC_INIT(libXtst, 1.0.1, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXtst)
+AC_INIT(libXtst, 1.0.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXtst)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -33,14 +33,27 @@ AM_CONFIG_HEADER(config.h)
 AC_PROG_CC
 AC_PROG_LIBTOOL
 
+# Check for xmlto for man page conversion 
+# (only needed by people building tarballs)
+AC_ARG_VAR([XMLTO], [Path to xmlto command])
+AC_PATH_PROG([XMLTO], [xmlto])
+AM_CONDITIONAL([HAVE_XMLTO], [test "x$XMLTO" != "x"])
+
 # Check for dependencies
 PKG_CHECK_MODULES(XTST, x11 xext recordproto xextproto inputproto)
 
+dnl Allow checking code with lint, sparse, etc.
+XORG_WITH_LINT
+XORG_LINT_LIBRARY([Xtst])
+LINT_FLAGS="${LINT_FLAGS} ${XTST_CFLAGS}"
+
 AC_SUBST(XTST_CFLAGS)
 AC_SUBST(XTST_LIBS)
-		  
+
+XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile
+	   man/Makefile
 	   src/Makefile
            xtst.pc])

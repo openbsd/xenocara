@@ -19,10 +19,20 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
-SUBDIRS = src
+SUBDIRS = src man
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xtst.pc
 
-EXTRA_DIST = xtst.pc.in autogen.sh
+EXTRA_DIST = xtst.pc.in autogen.sh ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
 
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
+
+if LINT
+lint:
+	(cd src && $(MAKE) $(MFLAGS) lint)
+endif LINT
