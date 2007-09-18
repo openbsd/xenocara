@@ -132,6 +132,7 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XCURSORPATH = @XCURSORPATH@
+XCURSORPATH_LIST = @XCURSORPATH_LIST@
 XCURSOR_CFLAGS = @XCURSOR_CFLAGS@
 XCURSOR_LIBS = @XCURSOR_LIBS@
 ac_ct_AR = @ac_ct_AR@
@@ -180,14 +181,62 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 libmandir = $(LIB_MAN_DIR)
 libman_PRE = Xcursor.man
-libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@)
+libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
+	$(Xcursor_shadows:=.@LIB_MAN_SUFFIX@)
 EXTRA_DIST = $(libman_PRE)
-CLEANFILES = $(libman_DATA)
+CLEANFILES = $(libman_DATA) shadows.DONE
 SUFFIXES = .$(LIB_MAN_SUFFIX) .man
 
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
-all: all-am
+MAN_SUBSTS = \
+	-e 's|__xorgversion__|"$(XORGRELSTRING)"|' \
+	-e 's|__XCURSORPATH__|$(XCURSORPATH_LIST)|g' \
+	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
+	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
+	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
+	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
+	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
+
+
+# Generate man page shadow files
+LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
+BUILT_SOURCES = shadows.DONE
+Xcursor_shadows = \
+	XcursorImageCreate \
+	XcursorImageDestroy \
+	XcursorImagesCreate \
+	XcursorImagesDestroy \
+	XcursorCursorsCreate \
+	XcursorCursorsDestroy \
+	XcursorXcFileLoadImage \
+	XcursorXcFileLoadImages \
+	XcursorXcFileLoadAllImages \
+	XcursorXcFileLoad \
+	XcursorXcFileSave \
+	XcursorFilenameLoadImage \
+	XcursorFilenameLoadImages \
+	XcursorFilenameLoadAllImages \
+	XcursorFilenameLoad \
+	XcursorFilenameSaveImages \
+	XcursorFilenameSave \
+	XcursorLibraryLoadImage \
+	XcursorLibraryLoadImages \
+	XcursorFilenameLoadCursor \
+	XcursorLibraryLoadCursor \
+	XcursorLibraryLoadCursors \
+	XcursorShapeLoadImage \
+	XcursorShapeLoadImages \
+	XcursorShapeLoadCursor \
+	XcursorShapeLoadCursors \
+	XcursorSupportsARGB \
+	XcursorSetDefaultSize \
+	XcursorGetDefaultSize \
+	XcursorSetTheme \
+	XcursorGetTheme
+
+all: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
 .SUFFIXES: .$(LIB_MAN_SUFFIX) .man
@@ -282,13 +331,15 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: check-am
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(DATA) all-local
 installdirs:
 	for dir in "$(DESTDIR)$(libmandir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
-install: install-am
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -313,6 +364,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -375,7 +427,13 @@ all-local: $(libman_DATA)
 
 .man.$(LIB_MAN_SUFFIX):
 	-rm -f $@
-	sed 's/__xorgversion__/"$(XORGRELSTRING)"/;  s/__LIB_MAN_SUFFIX__/$(LIB_MAN_SUFFIX)/; s%__prefix__%$(prefix)%g; s%__ICONDIR__%$(ICONDIR)%g' < $< > $@
+	sed $(MAN_SUBSTS) < $< > $@
+
+shadows.DONE:
+	-rm -f $(Xcursor_shadows:=.@LIB_MAN_SUFFIX@)
+	(for i in $(Xcursor_shadows:=.@LIB_MAN_SUFFIX@) ; do \
+	 echo .so man$(LIB_MAN_DIR_SUFFIX)/Xcursor.$(LIB_MAN_SUFFIX) > $$i; \
+	 done)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
