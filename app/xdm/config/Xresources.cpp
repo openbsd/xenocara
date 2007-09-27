@@ -1,5 +1,5 @@
 ! $Xorg: Xresources,v 1.3 2000/08/17 19:54:17 cpqbld Exp $
-! $OpenBSD: Xresources.cpp,v 1.4 2007/09/15 15:22:59 matthieu Exp $
+! $OpenBSD: Xresources.cpp,v 1.5 2007/09/27 19:21:13 matthieu Exp $
 !
 !
 !
@@ -130,8 +130,8 @@ xlogin*useShape: true
 xlogin*logoPadding: 10
 #endif /* Hp300Architecture */
 
-! comment out to disable root logins
-xlogin.Login.allowRootLogin:	true
+! uncomment to disable logins
+! xlogin.Login.allowRootLogin:	false
 
 XConsole*background:	black
 XConsole*foreground:	white
