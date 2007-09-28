@@ -188,7 +188,7 @@ authdisplay=${display:-:0}
 #if defined(HAS_COOKIE_MAKER) && defined(MK_COOKIE)
 mcookie=`MK_COOKIE`
 #else
-mcookie=`dd if=/dev/arandom bs=16 count=1 2>/dev/null | hexdump -e \\"%08x\\"`
+mcookie=`dd if=/dev/random bs=16 count=1 2>/dev/null | hexdump -e \\"%08x\\"`
 if test x"$mcookie" = x; then
                 echo "Couldn't create cookie"
                 exit 1
