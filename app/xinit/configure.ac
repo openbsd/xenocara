@@ -120,7 +120,7 @@ AC_PATH_PROGS(MCOOKIE, [mcookie], [$MCOOKIE],
 
 case $host_os in
 	*openbsd*)
-	MCOOKIE='dd if=/dev/urandom bs=16 count=1 2>/dev/null | hexdump -e \\\"%08x\\\"'
+	MCOOKIE='dd if=/dev/arandom bs=16 count=1 2>/dev/null | hexdump -e \\\"%08x\\\"'
 	;;
 esac
 
