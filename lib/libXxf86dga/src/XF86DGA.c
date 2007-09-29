@@ -98,7 +98,7 @@ Bool XF86DGAQueryVersion(
 Bool XF86DGAGetVideoLL(
     Display* dpy,
     int screen,
-    int *offset,
+    unsigned int *offset,
     int *width, 
     int *bank_size, 
     int *ram_size
@@ -120,7 +120,7 @@ Bool XF86DGAGetVideoLL(
 	return False;
     }
 
-    *offset = /*(char *)*/rep.offset;
+    *offset = rep.offset;
     *width = rep.width;
     *bank_size = rep.bank_size;
     *ram_size = rep.ram_size;
@@ -678,7 +678,7 @@ XF86DGAGetVideo(
     int *bank, 
     int *ram
 ){
-    /*unsigned long*/ int offset;
+    unsigned int offset;
     static int beenHere = 0;
     ScrPtr sp;
     MapPtr mp;
