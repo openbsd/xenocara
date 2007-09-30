@@ -28,8 +28,18 @@
 .\"
 .\" $XFree86: xc/lib/Xaw/Xaw.man,v 1.7 2001/11/04 21:16:39 paulo Exp $
 .\"
+.de EX
+.sp
+.nf
+.ft CW
+..
+.de EE
+.ft R
+.fi
+.sp
+..
 .de TQ
-.br
+.\".br
 .ns
 .TP \\$1
 ..
@@ -67,32 +77,36 @@ a variable, otherwise, they indicate a resource name.
 This action allows the evaluation of a boolean expression in the first
 parameter before calling a action procedure.  The procedure is only called
 if the expression evaluates as true.  Example:
-.br
-.I call-proc("$inside & $pressed", notify)
+.EX
+call-proc("$inside & $pressed", notify)
+.EE
 .TP 8
 .B declare \fP(\fIboolean-expression\fP, \fIvariable\fP, \fIvalue\fP, ...)
 This action is used to create new variables or change their values.  Any
 number of variable-value tuples may be specified.  Example:
-.br
-.I declare(1, $pressed, 1)
+.EX
+declare(1, $pressed, 1)
+.EE
 .TP 8
 .B get-values \fP(\fIboolean-expression\fP, \fIvariable\fP, \fIvalue\fP, ...)
 This action reads a widget resource value into a variable.  Any number of
 variable-value tuples may be specified.  Example:
-.br
-.I get-values(1, $fg, foreground, $bg, background)
+.EX
+get-values(1, $fg, foreground, $bg, background)
+.EE
 .TP 8
 .B set-values \fP(\fIboolean-expression\fP, \fIvariable\fP, \fIvalue\fP, ...)
 This action sets a widget resource to the given value, which may be a
 variable.  Any number of variable-value tuples may be specified.  Example:
-.br
-.I set-values(1, foreground, $bg, background, $fg)
+.EX
+set-values(1, foreground, $bg, background, $fg)
+.EE
 .PP
 Here is a sample translation to make a label widget behave like a button:
 .PP
 .nf
-<Map>:      get-values(1, $fg, foreground, $bg, background)\\n\\
-<Btn1Down>: set-values(1, foreground, yellow, background, gray30)\\n\\
+<Map>:      get-values(1, $fg, foreground, $bg, background)\en\e
+<Btn1Down>: set-values(1, foreground, yellow, background, gray30)\en\e
 <Btn1Up>:   set-values(1, foreground, $fg, background, $bg)
 .fi
 .SH DISPLAY LISTS
@@ -101,7 +115,7 @@ All of the \fBXaw\fP widgets have now the additional resource
 using commands embedded in a resource string.  The displayList resource has
 the syntax:
 .PP
-\fI[class-name:]function-name arguments[[{;\\n}]...]\fP
+\fI[class-name:]function-name arguments[[{;\en}]...]\fP
 .PP
 \fBClass-name\fP is any registered set of functions to draw in the widget.
 Currently the only existing class is \fIxlib\fP, which provides access to
@@ -123,35 +137,40 @@ called. When the function requires a coordinate, the syntax is
 .B arc-mode \fPmode
 Sets the arc mode.  Accepted \fImode\fPs are "pieslice" and "chord", which
 set the arc to ArcPieSlice or ArcChord, respectively.  Example:
-.br
-.I arc-mode chord
+.EX
+arc-mode chord
+.EE
 .TP 8
 .B bg \fPcolor-spec
 .TQ
 .B background \fPcolor-spec
 Sets the  background color.  \fIcolor-spec\fP must a valid color
 specification.  Example:
-.br
-.I background red
+.EX
+background red
+.EE
 .TP 8
 .B cap-style \fPstyle
 Sets the cap style.  Accepted \fIstyle\fPs are "notlast", "butt", "round",
 and "projecting", which set the cap style to CapNotLast, CapBut, CapRound
 or CapProjecting, respectively.  Example:
-.br
-.I cap-style round
+.EX
+cap-style round
+.EE
 .TP 8
 .B clip-mask \fPpixmap-spec
 Sets the pixmap for the clip mask.  Requires a pixmap parameter, as
 described in the \fBPIXMAPS\fP section below.  Example:
-.br
-.I clip-mask xlogo11
+.EX
+clip-mask xlogo11
+.EE
 .TP 8
 .B clip-origin \fPx,y
 Sets the clip x and y origin.  Requires two arguments, the x and y
 coordinates.  Example:
-.br
-.I clip-origin 10,10
+.EX
+clip-origin 10,10
+.EE
 .TP 8
 .B clip-rects \fPx1,y1,x2,y2 [...,xn,yn]
 .TQ
@@ -159,16 +178,18 @@ coordinates.  Example:
 Sets a list of rectangles to the clip mask.  The number of arguments must
 be a multiple of four.  The arguments are coordinates.  The parser
 calculates the width and height of the rectangles.  Example:
-.br
-.I clip-rects 0,0,10,20, 20,10,30,30
+.EX
+clip-rects 0,0,10,20, 20,10,30,30
+.EE
 .TP 8
 .B coord-mode \fPmode
 Changes the coord mode for \fIfill-polygon\fP, \fIdraw-lines\fP, and
 \fIdraw-points\fP.  Accepted parameters are "modeorigin" and "previous",
 that sets the coord mode to CoordModeOrigin or CoordModePrevious,
 respectively.  Example:
-.br
-.I coord-mode previous
+.EX
+coord-mode previous
+.EE
 .TP 8
 .B copy-area \fP{pixmap-spec|.},dstx,dsty[,x2,y2,srcx,srcy]
 Calls XCopyArea.  The character \fI.\fP means copy the window contents;
@@ -176,8 +197,9 @@ pixmap-spec is as defined in the \fBPIXMAPS\fP section below.  \fIX2\fP and
 \fIy2\fP are the coordinates of the end copy, not the width and height; if
 not defined, the parser calculates them. \fIsrc_x\fP and \fIsrc_y\fP
 default to zero.  Example:
-.br
-.I copy-area Term,10,10
+.EX
+copy-area Term,10,10
+.EE
 .TP 8
 .B copy-plane \fP{pixmap-spec|.},dstx,dsty[,x2,y2,srcx,srcy,plane]
 Calls XCopyPlane. The character \fI.\fP means copy the window contents;
@@ -185,90 +207,102 @@ pixmap-spec is as defined in the \fBPIXMAPS\fP section below.  \fIX2\fP and
 \fIy2\fP are the coordinates of the end copy, not the width and height; if
 not defined, the parser calculates them.  \fIsrc_x\fP and \fIsrc_y\fP
 default to zero. \fIPlane\fP defaults to one.  Example:
-.br
-.I copy-plane star,10,10
+.EX
+copy-plane star,10,10
+.EE
 .TP 8
 .B dashes \fPi1[...,in]
 Sets the dashes for line drawing.  Accepts up to 127 arguments.  Example:
-.br
-.I dashes 3,7 9,10
+.EX
+dashes 3,7 9,10
+.EE
 .TP 8
 .B draw-arc \fPx1,y1,x2,y2[,start-angle,end-angle]
 Draws an arc.  The four first arguments are the rectangle enclosing the
 arc.  The two remaining arguments, if specified, are the start and end
 angle, in degrees.  Example:
-.br
-.I draw-arc +0,+0,-1,-1,0,90
+.EX
+draw-arc +0,+0,-1,-1,0,90
+.EE
 .TP 8
 .B draw-rect \fPx1,y1,x2,y2
 .TQ
 .B draw-rectangle \fPx1,y1,x2,y2
 Draws a rectangle.  Requires four arguments, which are the start and end
 coordinate pairs.  Example:
-.br
-.I draw-rect +1,+1,-5,-5
+.EX
+draw-rect +1,+1,-5,-5
+.EE
 .TP 8
 .B draw-string \fPx,y,"string"
 Draws a text string.  Requires three arguments, a x coordinate, a y
 coordinate, and a string.  Strings that have white space can be quoted with
-the \fI"\fP character; the backslash character \fI\\\fP can also be used,
+the \fI"\fP character; the backslash character \fI\e\fP can also be used,
 but it will be necessary escape it twice.  Example:
-.br
-\fI draw-string 10,10, "Hello world!"\fP
+.EX
+ draw-string 10,10, "Hello world!"\fP
+.EE
 .TP 8
 .B exposures \fPboolean
 Sets graphics exposures in the GC.  Allowed parameters are a integer or the
 strings "true", "false", "on" and "off".  Example:
-.br
-.I exposures true
+.EX
+exposures true
+.EE
 .TP 8
 .B fill-arc \fPx1,y1,x2,y2[,start-angle,end-angle]
 Like \fIdraw-arc\fP, but fills the contents of the arc with the currently
 selected foreground.  Example:
-.br
-.I fill-arc +0,+0,-1,-1,0,180
+.EX
+fill-arc +0,+0,-1,-1,0,180
+.EE
 .TP 8
 .B fill-poly \fPx1,y1 [...,xn,yn]
 .TQ
 .B fill-polygon \fPx1,y1 [...,xn,yn]
 Like \fIdraw-lines\fP, but fills the enclosed polygon and joins the first
 and last point, if they are not at the same position.  Example:
-.br
-.I fill-poly +0,+10, +10,+20, +30,+0
+.EX
+fill-poly +0,+10, +10,+20, +30,+0
+.EE
 .TP
 .B fill-rect \fPx1,y1,x2,y2
 .TQ
 .B fill-rectangle \fPx1,y1,x2,y2
 Like \fIdraw-rect\fP, but fills the contents of the rectangle with the
 selected foreground color.  Example:
-.br
-.I fill-rect +10,+10,-20,-20
+.EX
+fill-rect +10,+10,-20,-20
+.EE
 .TP 8
 .B fill-rule \fPrule
 Sets the fill rule.  Accepted parameters are "evenodd" and "winding", which
 set the fill rule to EvenOddRule or WindingRule, respectively.  Example:
-.br
-.I
+.EX
 fill-rule winding
+.EE
 .TP 8
 .B fill-style \fPstyle
 Sets the fill style.  Allowed parameters are "solid", "tiled", "stippled" and
 "opaquestippled", which set the fill style to FillSolid, FillTiled,
 FillStippled or FillOpaqueStippled, respectively.  Example:
-.br
-.I fill-style tiled
+.EX
+fill-style tiled
+.EE
 .TP 8
 .B font \fPfont-spec
 Sets the font for text functions.  Example:
-.br
-.I font -*-*-*-R-*-*-*-120-*-*-*-*-ISO8859-1
+.EX
+font -*-*-*-R-*-*-*-120-*-*-*-*-ISO8859-1
+.EE
 .TP 8
 .B fg \fPcolor-spec
 .TQ
 .B foreground \fPcolor-spec
 Like \fIbackground\fP, but sets the current foreground color.  Example:
-.br
-.I foreground blue
+.EX
+foreground blue
+.EE
 .TP 8
 .B mask
 This command is useful when you want to draw only in the region that really
@@ -281,15 +315,17 @@ Sets the specific GC function.  Allowed parameters are "set", "clear", "and",
 GXset, GXclear, GXand, GXandReverse, GXcopy, GXandInverted, GXnoop, GXxor,
 GXor, GXnor, GXequiv, GXinvert, GXorReverse, GXcopyInverted or GXnand,
 respectively.  Example:
-.br
-.I function xor
+.EX
+function xor
+.EE
 .TP 8
 .B join-style \fPstyle
 Sets the join style.  Allowed parameters are "miter", "round" and "bevel",
 which set the join style to JoinMiter, JoinRound and JoinBevel,
 respectively.  Example:
-.br
-.I join-style round
+.EX
+join-style round
+.EE
 .TP 8
 .B image \fP{pixmap-spec},xs,ys,[xe,ye]
 This function is implemented as a way to quickly compose complex
@@ -298,112 +334,127 @@ decorations in widgets.  \fIPixmap-spec\fP is as defined in the
 where to start copying the pixmap; \fIxe\fP and \fIye\fP are optional (they
 default to xs + pixmap.width and ys + pixmap.height, respectively).  If the
 pixmap has a mask, the copy is masked accordingly.  Example:
-.br
-.I image pixmap.xpm,0,0,20,20
+.EX
+image pixmap.xpm,0,0,20,20
+.EE
 .TP 8
 .B line \fPx1,y1,x2,y2
 .TQ
 .B draw-line \fPx1,y1,x2,y2
 Draws a line with the current foreground color.  Requires four arguments,
 the starting and ending coordinate pairs.  Example:
-.br
-.I line +0,+0, -1,-1
+.EX
+line +0,+0, -1,-1
+.EE
 .TP 8
 .B line-width \fPinteger
 Selects a line width for drawing.  Example:
-.br
-.I line-width 2
+.EX
+line-width 2
+.EE
 .TP 8
 .B line-style \fPstyle
 Sets the line style.  Accepted parameters are "solid", "onoffdash" and
 "doubledash", which set the line style to LineSolid, LineOnOffDash or
 LineDoubleDash, respectively.  Example:
-.br
-.I line-style onoffdash
+.EX
+line-style onoffdash
+.EE
 .TP 8
 .B lines \fPx1,y1,x2,y2 [...,xn,yn]
 .TQ
 .B draw-lines \fPx1,y1,x2,y2 [...,xn,yn]
 Draws a list of lines. Any number of argument pairs may be supplied.
 Example:
-.br
-.I lines +0,-1, -1,-1, -1,+0
+.EX
+lines +0,-1, -1,-1, -1,+0
+.EE
 .TP 8
 .B paint-string \fPx,y,"string"
 Identical to draw-string, but also uses the background color.  Example:
-.br
-\fI paint-string 10,20, "Sample text"\fP
+.EX
+ paint-string 10,20, "Sample text"\fP
+.EE
 .TP 8
 .B point \fPx,y
 .TQ
 .B draw-point \fPx,y
 Draws a point.  Requires two arguments, a coordinate pair.  Example:
-.br
-.I point +10,+10
+.EX
+point +10,+10
+.EE
 .TP 8
 .B plane-mask \fPinteger
 Sets the plane mask.  Requires an integer parameter.  Example:
-.br
-.I plane-mask -1
+.EX
+plane-mask -1
+.EE
 .TP 8
 .B points \fPx1,y1 [...,xn,yn]
 .TQ
 .B draw-points \fPx1,y1 [...,xn,yn]
 Draws a list of points at the specified coordinates.  Example:
-.br
-.I points +1,+2, +1,+4, +1,+6
+.EX
+points +1,+2, +1,+4, +1,+6
+.EE
 .TP 8
 .B segments \fPx1,y1,x2,y2 [...,xn,yn]
 .TQ
 .B draw-segments \fPx1,y1,x2,y2 [...,xn,yn]
 Draws a list of segment lines.  The number of parameters must be multiple
 of 4.  Example:
-.br
-.I segments +1,+2,+1,-3, +2,-2,-3,-2
+.EX
+segments +1,+2,+1,-3, +2,-2,-3,-2
+.EE
 .TP 8
 .B shape-mode \fPmode
 Sets the shape mode used in \fIfill-polygon\fP.  Accepted parameters are
 "complex", "convex" or "nonconvex", which set the shape mode to Complex,
 Convex or Nonconvex, accordingly.  Example:
-.br
-.I shape-mode convex
+.EX
+shape-mode convex
+.EE
 .TP 8
 .B stipple \fPpixmap-spec
 Sets the pixmap for a stipple.  Requires a pixmap parameter, as described
 in the \fBPIXMAPS\fP section below.  Example:
-.br
-.I stipple plaid
+.EX
+stipple plaid
+.EE
 .TP 8
 .B subwindow-mode \fPmode
 Sets the subwindow mode in the GC.  Accepted parameters are
 "includeinferiors" and "clipbychildren", which set the subwindow mode to
 IncludeInferiors or ClipByChildren, respectively.  Example:
-.br
-.I subwindow-mode includeinferiors
+.EX
+subwindow-mode includeinferiors
+.EE
 .TP 8
 .B tile \fPpixmap-spec
 Sets the pixmap for a tile.  Requires a pixmap parameter, as described
 in the \fBPIXMAPS\fP section below.  Example:
-.br
-.I tile xlogo11?foreground=red&background=gray80
+.EX
+tile xlogo11?foreground=red&background=gray80
+.EE
 .TP 8
 .B ts-origin \fPx,y
 Sets the tile stipple x and y origin.  Requires two arguments, a x and y
 coordinate.  Example:
-.br
-.I ts-origin 10,10
+.EX
+ts-origin 10,10
+.EE
 .TP 8
 .B umask
 Disables the GC mask, if it has been set with the command \fImask\fP.
 Requires no arguments.
 .PP
 Example for drawing a shadow effect in a widget:
-.nf
-foreground gray30;\\
-draw-lines +1,-1,-1,-1,-1,+1;\\
-foreground gray85;\\
+.EX
+foreground gray30;\e
+draw-lines +1,-1,-1,-1,-1,+1;\e
+foreground gray85;\e
 draw-lines -1,+0,+0,+0,+0,-1
-.fi
+.EE
 .SH PIXMAPS
 A String to Pixmap converter has been  added to \fBXaw\fP.  This converter
 is meant to be extended, and has enough abstraction to allow loading

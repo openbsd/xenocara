@@ -96,9 +96,13 @@ _Xaw_iswspace(wchar_t w)
 int
 _Xaw_iswalnum(wchar_t ch)
 {
-    unsigned char mb[sizeof(wchar_t)];
+#ifdef HAVE_ISWALNUM
+    return iswalnum(ch);
+#else
+    unsigned char mb[MB_LEN_MAX];
 
     wctomb((char*)mb, ch);
 
     return (isalnum(*mb));
+#endif    
 }
