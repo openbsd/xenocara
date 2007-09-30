@@ -1,5 +1,5 @@
 /*
- * $Id: composite.h,v 1.1.1.1 2006/11/25 15:43:21 matthieu Exp $
+ * $Id: composite.h,v 1.1.1.2 2007/09/30 06:10:14 matthieu Exp $
  *
  * Copyright © 2006 Sun Microsystems
  *
@@ -49,7 +49,7 @@
 
 #define COMPOSITE_NAME				"Composite"
 #define COMPOSITE_MAJOR				0
-#define COMPOSITE_MINOR				3
+#define COMPOSITE_MINOR				4
 
 #define CompositeRedirectAutomatic		0
 #define CompositeRedirectManual			1
@@ -65,5 +65,7 @@
 #define X_CompositeReleaseOverlayWindow         8
 
 #define CompositeNumberRequests	    (X_CompositeReleaseOverlayWindow + 1)
+
+#define CompositeNumberEvents			0
 
 #endif /* _COMPOSITE_H_ */
