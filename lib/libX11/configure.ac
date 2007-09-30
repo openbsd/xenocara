@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([libX11],
-        1.1.1,
+        1.1.3,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         libX11)
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -173,6 +173,9 @@ if test x$xthreads = xyes ; then
     case $host_os in
     linux*|openbsd*|gnu*|k*bsd*-gnu)
         XTHREADLIB=-lpthread ;;
+    netbsd*)
+	XTHREAD_CFLAGS="-D_POSIX_THREAD_SAFE_FUNCTIONS"
+	XTHREADLIB="-lpthread" ;;
     freebsd*)
         XTHREAD_CFLAGS="-D_THREAD_SAFE"
         XTHREADLIB="-pthread" ;;
@@ -326,6 +329,14 @@ if test "x$GCC" = "xyes"; then
 	X11_CFLAGS="$GCC_WARNINGS $X11_CFLAGS"
 fi
 
+AC_TRY_COMPILE([
+#include <features.h>
+#ifndef __GLIBC__
+#error not glibc
+#endif
+], [], [AC_DEFINE(_GNU_SOURCE, 1,
+    [ Enable GNU and other extensions to the C environment for glibc])])
+
 X11_DATADIR="${datadir}/X11"
 AC_DEFINE_DIR(X11_DATADIR, X11_DATADIR, [Location of libX11 data])
 AC_SUBST(X11_DATADIR)
@@ -371,6 +382,7 @@ XORG_RELEASE_VERSION
 AC_OUTPUT([Makefile
            include/Makefile
 	   man/Makefile
+           man/xkb/Makefile	   
            src/Makefile
            src/util/Makefile
 	   src/xcms/Makefile
@@ -447,6 +459,11 @@ AC_OUTPUT([Makefile
 	   x11.pc
 	   x11-xcb.pc])
 
+man_pages_suffix=$LIBMAN_SUFFIX
+if test -z "$man_pages_suffix"; then
+    man_pages_suffix=none
+fi
+
 echo ""
 echo "X11 will be built with the following settings:"
 echo " Loadable i18n module support:            "$XLIB_LOADABLE_I18N
@@ -460,6 +477,6 @@ echo " Internationalization support:            "$XLOCALE
 echo " XF86BigFont support:                     "$XF86BIGFONT
 echo " XKB support:                             "$XKB
 echo " XLOCALEDIR environment variable support: "$ENABLE_XLOCALEDIR
-echo " Manual pages installed:                  "$LIBMAN_SUFFIX
+echo " Manual pages suffix:                     "$man_pages_suffix
 echo " Compose table cache enabled:             "$COMPOSECACHE
 echo ""

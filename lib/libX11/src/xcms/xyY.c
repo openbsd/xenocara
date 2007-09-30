@@ -160,7 +160,7 @@ CIExyY_ParseString(
 	    &pColor->spec.CIExyY.Y) != 3) {
         char *s; /* Maybe failed due to locale */
         int f;
-        if (s = strdup(spec)) {
+        if ((s = strdup(spec))) {
             for (f = 0; s[f]; ++f)
                 if (s[f] == '.')
                     s[f] = ',';
@@ -235,11 +235,11 @@ XcmsCIExyY_ValidSpec(
  *	SYNOPSIS
  */
 Status
-XcmsCIExyYToCIEXYZ(ccc, pxyY_WhitePt, pColors_in_out, nColors)
-    XcmsCCC ccc;
-    XcmsColor *pxyY_WhitePt;
-    XcmsColor *pColors_in_out;
-    unsigned int nColors;
+XcmsCIExyYToCIEXYZ(
+    XcmsCCC ccc,
+    XcmsColor *pxyY_WhitePt,
+    XcmsColor *pColors_in_out,
+    unsigned int nColors)
 /*
  *	DESCRIPTION
  *		Converts color specifications in an array of XcmsColor
@@ -342,11 +342,11 @@ XcmsCIExyYToCIEXYZ(ccc, pxyY_WhitePt, pColors_in_out, nColors)
  */
 /* ARGSUSED */
 Status
-XcmsCIEXYZToCIExyY(ccc, pxyY_WhitePt, pColors_in_out, nColors)
-    XcmsCCC ccc;
-    XcmsColor *pxyY_WhitePt;
-    XcmsColor *pColors_in_out;
-    unsigned int nColors;
+XcmsCIEXYZToCIExyY(
+    XcmsCCC ccc,
+    XcmsColor *pxyY_WhitePt,
+    XcmsColor *pColors_in_out,
+    unsigned int nColors)
 /*
  *	DESCRIPTION
  *		Converts color specifications in an array of XcmsColor

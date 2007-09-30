@@ -167,7 +167,7 @@ CIELuv_ParseString(
 	    &pColor->spec.CIELuv.v_star) != 3) {
         char *s; /* Maybe failed due to locale */
         int f;
-        if (s = strdup(spec)) {
+        if ((s = strdup(spec))) {
             for (f = 0; s[f]; ++f)
                 if (s[f] == '.')
                     s[f] = ',';
@@ -233,11 +233,11 @@ XcmsCIELuv_ValidSpec(
  *	SYNOPSIS
  */
 Status
-XcmsCIELuvToCIEuvY(ccc, pLuv_WhitePt, pColors_in_out, nColors)
-    XcmsCCC ccc;
-    XcmsColor *pLuv_WhitePt;
-    XcmsColor *pColors_in_out;
-    unsigned int nColors;
+XcmsCIELuvToCIEuvY(
+    XcmsCCC ccc,
+    XcmsColor *pLuv_WhitePt,
+    XcmsColor *pColors_in_out,
+    unsigned int nColors)
 /*
  *	DESCRIPTION
  *		Converts color specifications in an array of XcmsColor
@@ -325,11 +325,11 @@ XcmsCIELuvToCIEuvY(ccc, pLuv_WhitePt, pColors_in_out, nColors)
  *	SYNOPSIS
  */
 Status
-XcmsCIEuvYToCIELuv(ccc, pLuv_WhitePt, pColors_in_out, nColors)
-    XcmsCCC ccc;
-    XcmsColor *pLuv_WhitePt;
-    XcmsColor *pColors_in_out;
-    unsigned int nColors;
+XcmsCIEuvYToCIELuv(
+    XcmsCCC ccc,
+    XcmsColor *pLuv_WhitePt,
+    XcmsColor *pColors_in_out,
+    unsigned int nColors)
 /*
  *	DESCRIPTION
  *		Converts color specifications in an array of XcmsColor

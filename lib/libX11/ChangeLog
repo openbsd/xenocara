@@ -1,3 +1,506 @@
+commit ac00a44b4875de70382da5a40dd87f976e5b9327
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Aug 1 20:36:03 2007 +0200
+
+    Bumped version to 1.1.3.
+
+commit 76fae9cba1e9bdf7f0eb2ff2b90153d622136cf0
+Author: Joerg Sonnenberger <joerg@netbsd.org>
+Date:   Fri Jul 27 11:15:47 2007 -0700
+
+    Fail properly on errors in recursive make.
+
+commit 1a18319b3bde08dd9ef69c7cd735a76000cf3177
+Author: Brice Goglin <Brice.Goglin@ens-lyon.org>
+Date:   Thu Jul 26 23:31:15 2007 +0200
+
+    Add missing override parameter in XrmCombineDatabase prototype in the manpage
+    
+    Reported by Arnaud Giersch <arnaud.giersch@iut-bm.univ-fcomte.fr>
+    in http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=393434
+    and https://bugs.freedesktop.org/show_bug.cgi?id=9948
+    
+    Also add the type of the second argument in XrmMergeDatabases.
+
+commit 6f0764d4b56f64786b4980839ca262f10a51af6f
+Author: Brice Goglin <Brice.Goglin@ens-lyon.org>
+Date:   Thu Jul 26 22:53:52 2007 +0200
+
+    Clarify return value of XGetCommand in case of error in the manpage
+    
+    Reported by Sean Perry <shalehperry@attbi.com>
+    in http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=133348
+    and https://bugs.freedesktop.org/show_bug.cgi?id=9828
+
+commit b8bef57342632cc2d25580bb7daa3839bae04d89
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jul 25 17:44:06 2007 -0700
+
+    Include comment/copyright/license for AC_DEFINE_DIR in acinclude.m4
+
+commit 590cde811a79375231c59ed8583e02b111ed567c
+Author: Kean Johnston <kean@armory.com>
+Date:   Thu Jul 19 16:44:20 2007 -0700
+
+    Reset hostname when falling back from :0 to hostname/localhost:0 as well
+
+commit d334665e619e9db657a2ea2764a8b852401d4a3f
+Author: Kean Johnston <kean@armory.com>
+Date:   Tue Jul 17 16:34:30 2007 -0700
+
+    LOCALCONN fallback changes DisplayString() output, breaks KDE
+    
+    See <http://lists.freedesktop.org/archives/xorg/2007-July/026443.html>
+
+commit 8e76bcf3cafda85058ce5f35f1f81929f4772f72
+Author: Olivier Blin <blino@mandriva.org>
+Date:   Mon Jun 11 18:32:09 2007 +1000
+
+    fix XGetMotionEvents arguments order - Fixes bug 11222
+
+commit c2f88cdf5cd9c94b77e5bfdac572b5ac06ab4aa8
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sun Jun 10 16:19:59 2007 -0700
+
+    Fix locking in _XimGetWindowEventmask.
+    
+    Now that XFilterEvent drops the Display lock before invoking callback
+    functions, _XimGetWindowEventmask is called without the lock held. So
+    when it called _XGetWindowAttributes, a variant of XGetWindowAttributes
+    that does not lock the Display, Xlib/XCB would assert:
+    
+    xcb_xlib.c:50: xcb_xlib_unlock: Assertion `c->xlib.lock' failed.
+    
+    Should fix Gentoo #156367, Ubuntu #87947, Debian #427296. And others?
+
+commit 65f0ab5d46d80d55fc04d4eb14fa05f130eb8b9c
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sun Jun 3 21:41:47 2007 -0700
+
+    Move security fixes to the top of NEWS, and fix spacing.
+    
+    Commit by Josh Triplett and Jamey Sharp.
+
+commit a549a258b8fcb1ba9d0c1b01b72967e385f67cab
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sun Jun 3 21:29:40 2007 -0700
+
+    Add NEWS item for bugfix in commit e2c1d788d1fe7bd2d34756493951552441e59b8c.
+    
+    Commit by Josh Triplett and Jamey Sharp
+
+commit 5123b77a3d32d3ad479462f319762c328278aed9
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sun Jun 3 21:24:54 2007 -0700
+
+    Xlib/XCB: Inline and simplify handle_event, since only process_responses calls it now.
+    
+    Commit by Josh Triplett and Jamey Sharp.
+
+commit 582ca690ea4f3ffd2b94826c4db97229bd3c7238
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sun Jun 3 20:59:12 2007 -0700
+
+    Xlib/XCB: Fix _XReadEvents to always enqueue a new event, even if an error occurs
+    
+    Commit c337f9de7cfd89f983f83956b7457a274dd412f3 broke the invariant that
+    _XReadEvents always enqueues at least one event even if an error occurred,
+    because the one call to xcb_wait_for_event would then return an error, not an
+    event, and nothing else ensured that process_responses would obtain an event.
+    Fix this by reverting most of c337f9de7cfd89f983f83956b7457a274dd412f3 and
+    f417570735aac865eb6b576d1ea76b5bfcd8573b and implementing the correct fix.  In
+    process_responses, wait_for_first_event now serves as a flag, cleared when
+    actually handling an event.
+    
+    Commit by Josh Triplett and Jamey Sharp.
+
+commit e2c1d788d1fe7bd2d34756493951552441e59b8c
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sun Jun 3 17:33:23 2007 -0700
+
+    Xlib/XCB: Only remove pending_requests when there are provably no more responses.
+
+commit 7a6dbd4b07ca0a49c30ca7a1d2437eafb2e15eab
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Sun Jun 3 15:39:39 2007 -0700
+
+    Bump version number to 1.1.2, and add NEWS entry for 1.1.2
+    
+    Signed-off-by: Josh Triplett <josh@freedesktop.org>
+
+commit 416f38f2e67ee1979b3d2feac6f06b3670238804
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Sun Jun 3 12:13:44 2007 -0700
+
+    Revert "Revert "include: don't distribute XlibConf.h""
+    
+    This reverts commit 79fa3d8070d95b960ba486f2439225872471dadd.
+    
+    Re-revert the XlibConf.h change, which prevented distribution, not
+    installation.
+
+commit 79fa3d8070d95b960ba486f2439225872471dadd
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Sat Jun 2 22:05:16 2007 -0700
+
+    Revert "include: don't distribute XlibConf.h"
+    
+    This reverts commit c9e28e05ae01ce8a29bea09df759b6271865b44c.
+    
+    The installed XlibInt.h includes XlibConf.h , so libX11 should ship
+    XlibConf.h.  (Commit c9e28e05ae01ce8a29bea09df759b6271865b44c didn't actually
+    prevent automake from shipping XlibConf.h, because it used
+    nodist_x11include_HEADERS rather than nodist_HEADERS.)
+
+commit f417570735aac865eb6b576d1ea76b5bfcd8573b
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sat Jun 2 17:59:15 2007 -0700
+
+    Xlib/XCB: inline wait_or_poll_for_event, which now had only one caller.
+    
+    Commit by Josh Triplett and Jamey Sharp.
+
+commit c337f9de7cfd89f983f83956b7457a274dd412f3
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sat Jun 2 17:46:41 2007 -0700
+
+    Xlib/XCB: Ensure _XReadEvents reads at least one new event and blocks for exactly one event.
+    
+    Commit by Jamey Sharp and Josh Triplett.
+
+commit 7f66c897f04806b75e574b55b48921b48045e3f9
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sat Jun 2 16:43:39 2007 -0700
+
+    Update _XReply's copy of _XCBUnlockDisplay's guts.
+    
+    We introduced this bug in 6b81cbbedfb521ce046b77ee3cc54e884a1dc0c5.
+    
+    Also add a comment in _XCBUnlockDisplay to discourage this problem from
+    respawning.
+    
+    Commit by Josh Triplett and Jamey Sharp.
+
+commit 740ead23512f8d2eaafaa69e514f1ebafad475b9
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sat Jun 2 16:01:01 2007 -0700
+
+    Xlib/XCB: Avoid re-crashing after _XIOError.
+    
+    Commit by Josh Triplett and Jamey Sharp.
+
+commit 6b81cbbedfb521ce046b77ee3cc54e884a1dc0c5
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sat Jun 2 12:30:30 2007 -0700
+
+    Hold XCB's Xlib lock even when only the user lock (XLockDisplay) is held.
+    
+    An Xlib client can query Display state, such as with NextRequest, while
+    it holds only the Xlib user lock (between XLockDisplay and
+    XUnlockDisplay), so XCB requests in other threads should be blocked when
+    the Xlib user lock is held.
+    
+    We acquire the lock even when XInitThreads was not called, so that pure
+    XCB code can use multiple threads even in an otherwise single-threaded
+    Xlib application.
+    
+    Commit by Josh Triplett and Jamey Sharp.
+
+commit 95523387d619af5b400748898d722e080b5ce1a6
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sat Jun 2 11:57:39 2007 -0700
+
+    Allow re-entrant Xlib calls from _XIOError.
+    
+    Some libraries try to clean up X resources from atexit handlers, _fini,
+    or C++ destructors. To make these work, the Display lock should be
+    downgraded to a user lock (as in XLockDisplay) before calling exit(3).
+    This blocks Xlib calls from threads other than the one calling exit(3)
+    while still allowing the exit handlers to call Xlib.
+    
+    This assumes that the thread calling exit will call any atexit handlers.
+    If this does not hold, then an alternate solution would involve
+    registering an atexit handler to take over the lock, which would only
+    assume that the same thread calls all the atexit handlers.
+    
+    Commit by Josh Triplett and Jamey Sharp.
+
+commit 91b02b8064f4e0bcc56019f0722914850008a597
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu May 17 19:07:34 2007 +0200
+
+    More constification.
+
+commit a4f3841940158351f9424c3f59b305cce877177d
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu May 17 00:29:43 2007 +0200
+
+    Constified composite text charset table.
+
+commit 0581c0aa6039e6b2abb9f7b0a4f9904d8e01f00e
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed May 16 23:19:22 2007 +0200
+
+    Have the compiler fill in hexTable so we don't have to do it at runtime.
+
+commit 0e8d9ca47dab0d069e305d5784d05f2ade04f0a8
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed May 16 19:36:23 2007 +0200
+
+    More constification.
+
+commit 6d2bed8f04942b4de086a519ac693e729c9fdeea
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed May 16 19:18:20 2007 +0200
+
+    Constify and clean up token table.
+
+commit 6c508eab5df5d517f7e4cbe6087308cd53a564b2
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed May 16 18:24:42 2007 +0200
+
+    Constified more tables.
+
+commit e699c4231c205ef00d687b6412308d031b99806b
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed May 16 18:01:23 2007 +0200
+
+    Constified error list.
+
+commit c76d30253f1483ac8200ad5c032a818907e65030
+Author: Jan Willem Stumpel <jstumpel@planet.nl>
+Date:   Fri May 4 12:00:49 2007 -0700
+
+    Update el_GR.UTF-8/Compose.pre to match changes in xkeyboard-config cvs
+    
+    Cf:
+    
+      https://bugs.freedesktop.org/show_bug.cgi?id=10851
+      https://bugs.freedesktop.org/show_bug.cgi?id=10824
+      http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=386385
+    
+    The greek keyboard definition was changed to replace dead_horn and
+    dead_ogonek with U0313 COMBINING COMMA ABOVE (aka Psili) and U0314
+    COMBINING REVERSED COMMA ABOVE (aka Dasia).
+    
+    This patch modifies the Greek Compose.pre to match.
+    
+    It is generated by the script Jan Willem Stumpel <jstumpel@planet.nl>
+    posted to 386385@bugs.debian.org:
+    
+    #!/usr/bin/perl
+    while (<>) {
+      print $_;
+      if (/dead_horn/) {
+        s/dead_horn/U0313/;
+        print $_;
+      }
+      elsif (/dead_ogonek/) {
+        s/dead_ogonek/U0314/;
+        print $_;
+      }
+    }
+
+commit a48386ce6b5f8fd2d9dc11a966c9bf5da59f3831
+Author: Magnus Kessler <Magnus.Kessler@gmx.net>
+Date:   Tue May 1 15:20:08 2007 +0200
+
+    Switched function definitions from K&R to ANSI style.
+
+commit 605d357074d556a05a3fba2e85cbea36a3204248
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Tue May 1 14:47:03 2007 +0200
+
+    Tweaked configure output about the man pages suffix.
+
+commit 9824b40d2af4ca2376512c1be7743da0d5065900
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Apr 28 00:42:18 2007 -0700
+
+    Fix typo in nroff macro in XkbAddGeomOverlayKey.man
+
+commit f93849dcc68bd5042ea0884e5190dc7c35b31d68
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Apr 28 00:30:55 2007 -0700
+
+    Protect C comments and #defines in XKB man pages from being mangled by cpp
+
+commit f2f27d4763c7665e422fab10b96b4cf5ad6c0a6f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Apr 28 00:14:50 2007 -0700
+
+    Add Makefile to process/install XKB man pages
+
+commit d9954c6f6f3a8c406b946acd0d034ff83c656156
+Author: Dennis Arellano <Dennis.Arellano@Sun.COM>
+Date:   Thu Aug 19 00:00:00 1999 -0700
+
+    Add man pages for XKB API's
+    
+    Man pages originally written for X11R6.4 integration to Solaris 7 11/99
+    Sun bug id 4258344: Add new XKB API manpages for 6.4 upgrade
+    <http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=4258344>
+    
+    (Volunteer needed to convert prototypes in man pages to ANSI C style...)
+
+commit f640a49b5e2ebf29f9d655df544c63bf826f619a
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Apr 20 18:39:59 2007 +0200
+
+    Markup tweak for XOpenIM.
+
+commit e972b0bb255af4f3258217852542faf5afa60b28
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Apr 20 18:35:09 2007 +0200
+
+    Bug #9695: Fixed a few argument types in the XOpenIM manpage.
+
+commit b4e2276f329fa42397cb8609cfcd34ebafd3d96b
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Apr 20 18:28:52 2007 +0200
+
+    Bug #9697: Fixed documentation of XVisualInfo struct.
+    
+    The "depth" member was said to be unsigned int, but it's signed.
+
+commit 4068f3dae01c630f825002673b1d3a047ad61863
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Apr 20 16:41:21 2007 +0200
+
+    Bug #9696: refer to XDefineCursor() instead of XDefineCusor().
+
+commit 603c2f88d4e57ce1a3c16e8b6246866e6edd8fa8
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Apr 7 14:42:55 2007 +0200
+
+    Use unistd.h to get getresuid() and friends.
+    
+    This works since we now have _GNU_SOURCE defined.
+
+commit 0300f295bbd3a0c7c46baac8e0a27aeaf53c9d9b
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Apr 7 14:27:12 2007 +0200
+
+    Bug #10562: Define _GNU_SOURCE on glibc systems.
+
+commit a225a0be48770beb689d5ac5da97073634f7deab
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Apr 6 12:46:25 2007 +0200
+
+    For nls/*.pre, allow people to comment lines by starting them with '##'.
+    
+    This fixes a bunch of cpp warnings from nls/en_US.UTF-8/Compose.pre.
+    Fixing that file would have been a larger diff, and using ## may be
+    nicer to use anyway.
+
+commit 1c75a9479011e5f1ad01c950628d0ef5a302d8b6
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Apr 6 11:59:31 2007 +0200
+
+    Bug #10475: Fixed lots of char*/const char* mixups.
+    
+    I didn't fix all of them, as that would require touching
+    public headers.
+
+commit 680dd50193b5b3fcabdd3f1fcbd6a889d5a95c54
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Apr 5 11:53:18 2007 +0200
+
+    Fix 64bit issues with reallocation.
+
+commit 4d38aeaca42d0bdfe34a833a142ee4d895de03bf
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Apr 4 18:41:18 2007 +0200
+
+    Fixed a few warnings.
+
+commit 7dc7ef398b6ad90ccd1680ed9cd1cfdd47312f5a
+Author: Matthieu Herrb <matthieu@roadrock.(none)>
+Date:   Tue Apr 3 15:39:52 2007 +0200
+
+    Multiple integer overflows in the XGetPixel() and XInitImage functions
+    
+    CVE-2007-1667
+
+commit 0284b144340a455a4b5b5011d81ac5a610372291
+Author: David Baron <dbaron@dbaron.org>
+Date:   Fri Mar 30 17:07:46 2007 +0200
+
+    Bug #7703: Fixed XSetSizeHints() et al wrt use of uninitialized data.
+    
+    Now only those fields of the respective hint struct are set that
+    are actually valid in the input data.
+    The changed functions are:
+    XSetSizeHints(), XSetWMHints() and XSetWMSizeHints().
+
+commit 0994faa0c76c45b106442db461b8a30a3e1c9395
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Mar 29 17:31:25 2007 +0200
+
+    Fixed the change from the previous SendEvent commit.
+    
+    Testing a different patch than the one you commit is bad, right?
+
+commit 398d75528a84f4b8414eb0e363cf53b1b16f6fdf
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Mar 28 22:23:44 2007 +0200
+
+    Bug #10292: Fixed a memory leak related to XOpenDisplay() in the XCB code.
+
+commit ab0bcd07957cecc8e7c0e75d5160a625e91264fe
+Author: David Baron <dbaron@dbaron.org>
+Date:   Wed Mar 28 22:21:40 2007 +0200
+
+    Bug #7713: Initialize all of the event's fields before sending it.
+
+commit bc80f9fe3ccce40ee41246b97470c4f0519756ad
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Mar 18 13:14:48 2007 +0100
+
+    Bug #9279: Fixed a file descriptor leak.
+
+commit c9e28e05ae01ce8a29bea09df759b6271865b44c
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Dec 16 00:45:19 2006 +0200
+
+    include: don't distribute XlibConf.h
+    
+    Since XlibConf.h is built by configure, don't distribute it.
+
+commit dd1705ced2cac6b4b6b21e79272fcf9bed4bf376
+Merge: 129bbb9... 769b985...
+Author: Jeremy C. Reed <reed@glacier.reedmedia.net>
+Date:   Thu Dec 14 14:23:20 2006 -0600
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/lib/libX11
+
+commit 129bbb9f9114a571556fa3a24f15ba58a5cdb2de
+Author: Jeremy C. Reed <reed@glacier.reedmedia.net>
+Date:   Thu Dec 14 14:21:19 2006 -0600
+
+    For NetBSD, define the XTHREADLIB and XTHREAD_CFLAGS.
+
+commit 769b9854f7eb1d6d20dd0b4a1c1215ad8e1b77b6
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Dec 6 18:53:00 2006 +0200
+
+    Makefile.am: make ChangeLog hook safer
+    
+    Make ChangeLog hook as safe as possible.
+    (cherry picked from f5d6a3d24095c7ffed86705995d0874c885e7676 commit)
+
+commit 8a8185a649e93b90ffa820387ffdca831227f5a9
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Thu Nov 30 18:33:13 2006 -0800
+
+    Add autogen.sh to EXTRA_DIST.
+
+commit efe817f95ef8d05e863c83147e903140bc860de4
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Thu Nov 30 17:58:35 2006 -0800
+
+    Release libX11 1.1.1.
+
 commit f637a5b03164263a3af2e644cf655e52b015f1bb
 Author: Ross Combs <rocombs@cs.nmsu.edu>
 Date:   Sat Nov 25 14:45:17 2006 -0800

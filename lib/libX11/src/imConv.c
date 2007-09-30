@@ -67,11 +67,11 @@ typedef int (*ucstocsConvProc)(
 );
 
 struct SubstRec {
-    char*  encoding_name;
-    char*  charset_name;
+    const char encoding_name[8];
+    const char charset_name[12];
 };
 
-static struct SubstRec SubstTable[] = {
+static const struct SubstRec SubstTable[] = {
     {"STRING", "ISO8859-1"},
     {"TIS620", "TIS620-0"},
     {"UTF-8",  "ISO10646-1"}
@@ -158,13 +158,13 @@ static int lookup_string(
 #define BUF_SIZE (20)
 
 int
-_XimLookupMBText(ic, event, buffer, nbytes, keysym, status)
-    Xic			 ic;
-    XKeyEvent*		event;
-    char*		buffer;
-    int			nbytes;
-    KeySym*		keysym;
-    XComposeStatus*	status;
+_XimLookupMBText(
+    Xic			 ic,
+    XKeyEvent*		event,
+    char*		buffer,
+    int			nbytes,
+    KeySym*		keysym,
+    XComposeStatus*	status)
 {
     int count;
     KeySym symbol;
@@ -229,13 +229,13 @@ _XimLookupMBText(ic, event, buffer, nbytes, keysym, status)
 }
 
 int
-_XimLookupWCText(ic, event, buffer, nbytes, keysym, status)
-    Xic			 ic;
-    XKeyEvent*		event;
-    wchar_t*		buffer;
-    int			nbytes;
-    KeySym*		keysym;
-    XComposeStatus*	status;
+_XimLookupWCText(
+    Xic			 ic,
+    XKeyEvent*		event,
+    wchar_t*		buffer,
+    int			nbytes,
+    KeySym*		keysym,
+    XComposeStatus*	status)
 {
     int count;
     KeySym symbol;
@@ -301,13 +301,13 @@ _XimLookupWCText(ic, event, buffer, nbytes, keysym, status)
 }
 
 int
-_XimLookupUTF8Text(ic, event, buffer, nbytes, keysym, status)
-    Xic			 ic;
-    XKeyEvent*		event;
-    char*		buffer;
-    int			nbytes;
-    KeySym*		keysym;
-    XComposeStatus*	status;
+_XimLookupUTF8Text(
+    Xic			 ic,
+    XKeyEvent*		event,
+    char*		buffer,
+    int			nbytes,
+    KeySym*		keysym,
+    XComposeStatus*	status)
 {
     int count;
     KeySym symbol;

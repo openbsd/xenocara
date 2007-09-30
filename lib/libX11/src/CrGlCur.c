@@ -82,10 +82,10 @@ open_library (void)
 }
 
 static void *
-fetch_symbol (XModuleType module, char *under_symbol)
+fetch_symbol (XModuleType module, const char *under_symbol)
 {
     void *result = NULL;
-    char *symbol = under_symbol + 1;
+    const char *symbol = under_symbol + 1;
 #if defined(hpux)
     int getsyms_cnt, i;
     struct shl_symbol *symbols;
@@ -220,14 +220,14 @@ _XTryShapeBitmapCursor (Display		*dpy,
 }
 #endif
 
-Cursor XCreateGlyphCursor(dpy, source_font, mask_font,
-		   source_char, mask_char,
-		   foreground, background)
-     register Display *dpy;
-     Font source_font, mask_font;
-     unsigned int source_char, mask_char;
-     XColor _Xconst *foreground, *background;
-
+Cursor XCreateGlyphCursor(
+     register Display *dpy,
+     Font source_font,
+     Font mask_font,
+     unsigned int source_char,
+     unsigned int mask_char,
+     XColor _Xconst *foreground,
+     XColor _Xconst *background)
 {       
     Cursor cid;
     register xCreateGlyphCursorReq *req;

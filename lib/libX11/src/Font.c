@@ -126,9 +126,9 @@ XFontStruct *XLoadQueryFont(
     return font_result;
 }
 
-XFontStruct *XQueryFont (dpy, fid)
-    register Display *dpy;
-    Font fid;
+XFontStruct *XQueryFont (
+    register Display *dpy,
+    Font fid)
 {
     XFontStruct *font_result;
 #ifdef USE_XF86BIGFONT
@@ -150,9 +150,9 @@ XFontStruct *XQueryFont (dpy, fid)
 }
 
 int
-XFreeFont(dpy, fs)
-    register Display *dpy;
-    XFontStruct *fs;
+XFreeFont(
+    register Display *dpy,
+    XFontStruct *fs)
 { 
     register xResourceReq *req;
     register _XExtension *ext;
@@ -678,7 +678,7 @@ int _XF86LoadQueryLocaleFont(
    Font *fidp)
 {
     int l;
-    char *charset, *p;
+    const char *charset, *p;
     char buf[256];
     XFontStruct *fs;
     XLCd lcd;
