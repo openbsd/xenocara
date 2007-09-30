@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.ac,v 1.1.1.1 2006/11/25 16:58:06 matthieu Exp $
+dnl  $Id: configure.ac,v 1.1.1.2 2007/09/30 06:12:46 matthieu Exp $
 dnl 
 dnl  Copyright © 2003 Keith Packard, Noah Levitt
 dnl 
@@ -34,7 +34,7 @@ dnl protocol, so Xcomposite version l.n.m corresponds to protocol version l.n
 dnl that 'revision' number appears in Xcomposite.h and has to be manually
 dnl synchronized.
 dnl
-AC_INIT(libXcomposite, 0.3.1, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXcomposite)
+AC_INIT(libXcomposite, 0.4.0, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXcomposite)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -43,6 +43,13 @@ AM_CONFIG_HEADER(config.h)
 # Check for progs
 AC_PROG_CC
 AC_PROG_LIBTOOL
+
+AC_ARG_VAR([XMLTO], [Path to xmlto command])
+AC_PATH_PROG([XMLTO], [xmlto])
+AM_CONDITIONAL([HAVE_XMLTO], [test "x$XMLTO" != "x"])
+if test "x$XMLTO" = "x" -a ! -f $srcdir/man/Xcomposite.man ; then
+	AC_MSG_WARN([xmlto not found - cannot create man pages without it])
+fi
 
 # Check compositeext configuration, strip extra digits from package version to
 # find the required protocol version
@@ -56,9 +63,11 @@ PKG_CHECK_MODULES(XCOMPOSITE, [compositeproto >= $COMPOSITEEXT_VERSION] x11 xfix
 AC_SUBST(XCOMPOSITE_CFLAGS)
 AC_SUBST(XCOMPOSITE_LIBS)
 
+XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile
 	   src/Makefile
+	   man/Makefile
            xcomposite.pc])
 
