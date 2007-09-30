@@ -464,8 +464,9 @@ uninstall-am: uninstall-dist_x11thislocaleDATA uninstall-info-am \
 	uninstall-x11thislocaleDATA
 
 
+# Allow people to comment out lines by starting them with '##'
 .pre:
-	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
+	$(SED) -e '/^\#\#/d' $< | $(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) | $(CPP_SED_MAGIC) > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

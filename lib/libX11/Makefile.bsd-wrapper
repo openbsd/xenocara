@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2007/03/15 22:23:39 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2007/09/30 10:35:10 matthieu Exp $
 
-SHARED_LIBS=	X11 10.0
+SHARED_LIBS=	X11 11.0
 
 CONFIGURE_ARGS= --without-xcb --enable-tcp-transport --enable-unix-transport --enable-IPv6 
 

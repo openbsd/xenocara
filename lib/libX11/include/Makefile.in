@@ -51,19 +51,20 @@ CONFIG_HEADER = $(top_builddir)/src/config.h \
 CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
-am__x11include_HEADERS_DIST = X11/XKBlib.h X11/Xcms.h X11/Xlib.h \
-	X11/Xlibint.h X11/Xlocale.h X11/Xresource.h X11/Xutil.h \
-	X11/cursorfont.h X11/Xregion.h X11/ImUtil.h X11/XlibConf.h \
-	X11/Xlib-xcb.h
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(x11includedir)"
+am__installdirs = "$(DESTDIR)$(x11includedir)" \
+	"$(DESTDIR)$(x11includedir)"
+nodist_x11includeHEADERS_INSTALL = $(INSTALL_HEADER)
+am__x11include_HEADERS_DIST = X11/XKBlib.h X11/Xcms.h X11/Xlib.h \
+	X11/Xlibint.h X11/Xlocale.h X11/Xresource.h X11/Xutil.h \
+	X11/cursorfont.h X11/Xregion.h X11/ImUtil.h X11/Xlib-xcb.h
 x11includeHEADERS_INSTALL = $(INSTALL_HEADER)
-HEADERS = $(x11include_HEADERS)
+HEADERS = $(nodist_x11include_HEADERS) $(x11include_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -239,7 +240,10 @@ target_alias = @target_alias@
 x11includedir = ${includedir}/X11
 x11include_HEADERS = X11/XKBlib.h X11/Xcms.h X11/Xlib.h X11/Xlibint.h \
 	X11/Xlocale.h X11/Xresource.h X11/Xutil.h X11/cursorfont.h \
-	X11/Xregion.h X11/ImUtil.h X11/XlibConf.h $(am__append_1)
+	X11/Xregion.h X11/ImUtil.h $(am__append_1)
+nodist_x11include_HEADERS = \
+	X11/XlibConf.h
+
 EXTRA_DIST = \
 	X11/XlibConf.h.in
 
@@ -285,6 +289,23 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
+install-nodist_x11includeHEADERS: $(nodist_x11include_HEADERS)
+	@$(NORMAL_INSTALL)
+	test -z "$(x11includedir)" || $(mkdir_p) "$(DESTDIR)$(x11includedir)"
+	@list='$(nodist_x11include_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(nodist_x11includeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(x11includedir)/$$f'"; \
+	  $(nodist_x11includeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(x11includedir)/$$f"; \
+	done
+
+uninstall-nodist_x11includeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(nodist_x11include_HEADERS)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(x11includedir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(x11includedir)/$$f"; \
+	done
 install-x11includeHEADERS: $(x11include_HEADERS)
 	@$(NORMAL_INSTALL)
 	test -z "$(x11includedir)" || $(mkdir_p) "$(DESTDIR)$(x11includedir)"
@@ -383,7 +404,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(x11includedir)"; do \
+	for dir in "$(DESTDIR)$(x11includedir)" "$(DESTDIR)$(x11includedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -429,7 +450,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-x11includeHEADERS
+install-data-am: install-nodist_x11includeHEADERS \
+	install-x11includeHEADERS
 
 install-exec-am:
 
@@ -455,19 +477,21 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-x11includeHEADERS
+uninstall-am: uninstall-info-am uninstall-nodist_x11includeHEADERS \
+	uninstall-x11includeHEADERS
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
 	clean-libtool ctags distclean distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-man install-strip \
-	install-x11includeHEADERS installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
-	ps ps-am tags uninstall uninstall-am uninstall-info-am \
-	uninstall-x11includeHEADERS
+	install-info-am install-man install-nodist_x11includeHEADERS \
+	install-strip install-x11includeHEADERS installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-info-am \
+	uninstall-nodist_x11includeHEADERS uninstall-x11includeHEADERS
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

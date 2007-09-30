@@ -661,8 +661,9 @@ uninstall-info: uninstall-info-recursive
 	uninstall-x11localeDATA
 
 
+# Allow people to comment out lines by starting them with '##'
 .pre:
-	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
+	$(SED) -e '/^\#\#/d' $< | $(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) | $(CPP_SED_MAGIC) > $@
 
 locale.alias: locale.alias.pre
 	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/locale.alias.pre | $(CPP_SED_MAGIC) > locale.alias.l1

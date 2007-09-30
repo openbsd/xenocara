@@ -173,3 +173,6 @@
 
 /* Whether libX11 needs to use MT safe API's */
 #undef XUSE_MTSAFE_API
+
+/* Enable GNU and other extensions to the C environment for glibc */
+#undef _GNU_SOURCE

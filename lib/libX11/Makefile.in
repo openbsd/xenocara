@@ -260,7 +260,7 @@ target_alias = @target_alias@
 SUBDIRS = include $(ORDER) nls man
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = x11.pc $(am__append_1)
-EXTRA_DIST = x11.pc.in x11-xcb.pc.in ChangeLog
+EXTRA_DIST = x11.pc.in x11-xcb.pc.in ChangeLog autogen.sh
 MAINTAINERCLEANFILES = ChangeLog
 
 # Check source code with tools like lint & sparse
@@ -733,7 +733,7 @@ uninstall-info: uninstall-info-recursive
 .PHONY: ChangeLog
 
 ChangeLog:
-	GIT_DIR=${srcdir}/.git git-log > ChangeLog
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
 
 dist-hook: ChangeLog
 
