@@ -46,6 +46,7 @@
 #define PictFormat  CARD32
 #define Fixed	    INT32
 #define Glyphset    CARD32
+#define Glyph	    CARD32
 
 /*
  * data structures
@@ -659,5 +660,6 @@ typedef struct {
 #undef PictFormat
 #undef Fixed
 #undef Glyphset
+#undef Glyph
 
 #endif /* _XRENDERP_H_ */
