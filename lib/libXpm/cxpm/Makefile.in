@@ -38,10 +38,12 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = cxpm$(EXEEXT)
+@USE_GETTEXT_TRUE@am__append_1 = cxpm.po
 subdir = cxpm
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -50,7 +52,7 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_cxpm_OBJECTS = cxpm-cxpm.$(OBJEXT)
+am_cxpm_OBJECTS = cxpm.$(OBJEXT)
 cxpm_OBJECTS = $(am_cxpm_OBJECTS)
 cxpm_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -73,7 +75,7 @@ am__vpath_adj = case $$p in \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 appmanDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(appman_DATA)
+DATA = $(appman_DATA) $(noinst_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -127,6 +129,7 @@ LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LN_S = @LN_S@
+LOCALEDIR = @LOCALEDIR@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -149,6 +152,8 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 SXPM_CFLAGS = @SXPM_CFLAGS@
 SXPM_LIBS = @SXPM_LIBS@
+USE_GETTEXT_FALSE = @USE_GETTEXT_FALSE@
+USE_GETTEXT_TRUE = @USE_GETTEXT_TRUE@
 VERSION = @VERSION@
 XPM_CFLAGS = @XPM_CFLAGS@
 XPM_LIBS = @XPM_LIBS@
@@ -196,7 +201,8 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-cxpm_CFLAGS = $(XPM_CFLAGS) -I$(top_srcdir)/src -I$(top_srcdir)/include/X11
+AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/include/X11
+AM_CFLAGS = $(XPM_CFLAGS)
 cxpm_SOURCES = cxpm.c
 
 # Man page
@@ -204,7 +210,7 @@ appmandir = $(APP_MAN_DIR)
 appman_PRE = cxpm.man
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 EXTRA_DIST = $(appman_PRE)
-CLEANFILES = $(appman_DATA)
+CLEANFILES = $(appman_DATA) $(am__append_1)
 SED = sed
 
 # Strings to replace in man pages
@@ -224,6 +230,7 @@ MAN_SUBSTS = \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g' 
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
+@USE_GETTEXT_TRUE@noinst_DATA = cxpm.po
 all: all-am
 
 .SUFFIXES:
@@ -295,7 +302,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cxpm-cxpm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cxpm.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -317,20 +324,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
-
-cxpm-cxpm.o: cxpm.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cxpm_CFLAGS) $(CFLAGS) -MT cxpm-cxpm.o -MD -MP -MF "$(DEPDIR)/cxpm-cxpm.Tpo" -c -o cxpm-cxpm.o `test -f 'cxpm.c' || echo '$(srcdir)/'`cxpm.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/cxpm-cxpm.Tpo" "$(DEPDIR)/cxpm-cxpm.Po"; else rm -f "$(DEPDIR)/cxpm-cxpm.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cxpm.c' object='cxpm-cxpm.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cxpm_CFLAGS) $(CFLAGS) -c -o cxpm-cxpm.o `test -f 'cxpm.c' || echo '$(srcdir)/'`cxpm.c
-
-cxpm-cxpm.obj: cxpm.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cxpm_CFLAGS) $(CFLAGS) -MT cxpm-cxpm.obj -MD -MP -MF "$(DEPDIR)/cxpm-cxpm.Tpo" -c -o cxpm-cxpm.obj `if test -f 'cxpm.c'; then $(CYGPATH_W) 'cxpm.c'; else $(CYGPATH_W) '$(srcdir)/cxpm.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/cxpm-cxpm.Tpo" "$(DEPDIR)/cxpm-cxpm.Po"; else rm -f "$(DEPDIR)/cxpm-cxpm.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cxpm.c' object='cxpm-cxpm.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cxpm_CFLAGS) $(CFLAGS) -c -o cxpm-cxpm.obj `if test -f 'cxpm.c'; then $(CYGPATH_W) 'cxpm.c'; else $(CYGPATH_W) '$(srcdir)/cxpm.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -533,6 +526,9 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+@USE_GETTEXT_TRUE@cxpm.po: $(cxpm_SOURCES:%=$(srcdir)/%)
+@USE_GETTEXT_TRUE@	xgettext -c"L10N_Comments" -d cxpm -n $(cxpm_SOURCES:%=$(srcdir)/%)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

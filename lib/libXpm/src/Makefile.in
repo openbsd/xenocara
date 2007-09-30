@@ -43,7 +43,8 @@ subdir = src
 DIST_COMMON = $(libXpminclude_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -136,6 +137,7 @@ LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LN_S = @LN_S@
+LOCALEDIR = @LOCALEDIR@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -158,6 +160,8 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 SXPM_CFLAGS = @SXPM_CFLAGS@
 SXPM_LIBS = @SXPM_LIBS@
+USE_GETTEXT_FALSE = @USE_GETTEXT_FALSE@
+USE_GETTEXT_TRUE = @USE_GETTEXT_TRUE@
 VERSION = @VERSION@
 XPM_CFLAGS = @XPM_CFLAGS@
 XPM_LIBS = @XPM_LIBS@
@@ -206,10 +210,8 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LTLIBRARIES = libXpm.la
-AM_CFLAGS = -I.						\
-	    -I$(top_srcdir)/include/X11/		\
-            $(XPM_CFLAGS)
-
+AM_CPPFLAGS = -I. -I$(top_srcdir)/include/X11/
+AM_CFLAGS = $(XPM_CFLAGS)
 libXpm_la_LDFLAGS = -version-number 4:11:0 -no-undefined
 libXpm_la_LIBADD = $(XPM_LIBS)
 libXpm_la_SOURCES = \
