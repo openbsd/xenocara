@@ -37,8 +37,6 @@
 |*                                                                           *|
  \***************************************************************************/
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/nv_cursor.c,v 1.13 2004/03/13 22:07:05 mvojkovi Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

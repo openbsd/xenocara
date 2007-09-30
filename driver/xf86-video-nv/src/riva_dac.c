@@ -23,8 +23,6 @@
 /* Hacked together from mga driver and 3.3.4 NVIDIA driver by Jarno Paananen
    <jpaana@s2.org> */
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/riva_dac.c,v 1.1 2003/07/31 20:24:29 mvojkovi Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -281,4 +279,3 @@ RivaDACi2cInit(ScrnInfoPtr pScrn)
     }
     return TRUE;
 }
-

@@ -37,8 +37,6 @@
 |*                                                                           *|
  \***************************************************************************/
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/nv_setup.c,v 1.48 2005/09/14 02:28:03 mvojkovi Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -174,7 +172,7 @@ NVIsConnected (ScrnInfoPtr pScrn, int output)
 {
     NVPtr pNv = NVPTR(pScrn);
     volatile U032 *PRAMDAC = pNv->PRAMDAC0;
-    CARD32 reg52C, reg608, dac0_reg608;
+    CARD32 reg52C, reg608, dac0_reg608 = 0;
     Bool present;
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -300,6 +298,24 @@ static void nv10GetConfig (NVPtr pNv)
     }
 #endif
 
+#if XSERVER_LIBPCIACCESS
+    {
+    /* [AGP]: I don't know if this is correct */
+    struct pci_device *dev = pci_device_find_by_slot(0, 0, 0, 1);
+
+    if(implementation == 0x01a0) {
+        uint32_t amt;
+        pci_device_cfg_read_u32(dev, &amt, 0x7C);
+        pNv->RamAmountKBytes = (((amt >> 6) & 31) + 1) * 1024;
+    } else if(implementation == 0x01f0) {
+        uint32_t amt;
+        pci_device_cfg_read_u32(dev, &amt, 0x84);
+        pNv->RamAmountKBytes = (((amt >> 4) & 127) + 1) * 1024;
+    } else {
+        pNv->RamAmountKBytes = (pNv->PFB[0x020C/4] & 0xFFF00000) >> 10;
+    }
+    }
+#else
     if(implementation == 0x01a0) {
         int amt = pciReadLong(pciTag(0, 0, 1), 0x7C);
         pNv->RamAmountKBytes = (((amt >> 6) & 31) + 1) * 1024;
@@ -309,6 +325,7 @@ static void nv10GetConfig (NVPtr pNv)
     } else {
         pNv->RamAmountKBytes = (pNv->PFB[0x020C/4] & 0xFFF00000) >> 10;
     }
+#endif
 
     if(pNv->RamAmountKBytes > 256*1024)
         pNv->RamAmountKBytes = 256*1024;
@@ -339,6 +356,7 @@ NVCommonSetup(ScrnInfoPtr pScrn)
     Bool tvB = FALSE;
     int FlatPanel = -1;   /* really means the CRTC is slaved */
     Bool Television = FALSE;
+    void *tmp;
     
     /*
      * Override VGA I/O routines.
@@ -367,10 +385,15 @@ NVCommonSetup(ScrnInfoPtr pScrn)
      */
     pVga->MMIOBase   = (CARD8 *)pNv;
     pVga->MMIOOffset = 0;
-    
-    pNv->REGS = xf86MapPciMem(pScrn->scrnIndex, 
-                              VIDMEM_MMIO | VIDMEM_READSIDEEFFECT, 
-                              pNv->PciTag, pNv->IOAddress, 0x01000000);
+
+#if XSERVER_LIBPCIACCESS
+    pci_device_map_range(pNv->PciInfo, pNv->IOAddress, 0x01000000,
+                         PCI_DEV_MAP_FLAG_WRITABLE, &tmp);
+#else
+    tmp = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO | VIDMEM_READSIDEEFFECT,
+                        pNv->PciTag, pNv->IOAddress, 0x01000000);
+#endif
+    pNv->REGS = tmp;
 
     pNv->PRAMIN   = pNv->REGS + (0x00710000/4);
     pNv->PCRTC0   = pNv->REGS + (0x00600000/4);
@@ -687,6 +710,7 @@ NVCommonSetup(ScrnInfoPtr pScrn)
     if(pNv->FlatPanel && !pNv->Television) {
        pNv->fpWidth = pNv->PRAMDAC[0x0820/4] + 1;
        pNv->fpHeight = pNv->PRAMDAC[0x0800/4] + 1;
+       pNv->fpVTotal = pNv->PRAMDAC[0x804/4] + 1;
        pNv->fpSyncs = pNv->PRAMDAC[0x0848/4] & 0x30000033;
        xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "Panel size is %i x %i\n",
                   pNv->fpWidth, pNv->fpHeight);
@@ -707,4 +731,3 @@ NVCommonSetup(ScrnInfoPtr pScrn)
                    pNv->LVDS ? "LVDS" : "TMDS");
     }
 }
-

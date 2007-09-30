@@ -20,8 +20,6 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/nvvga.h,v 1.2 2001/11/19 15:33:41 tsi Exp $ */
-
 #ifndef __NVVGA_H__
 #define __NVVGA_H__
 
@@ -79,4 +77,4 @@ typedef struct {
   }regs;
 } vgaNVRec, *vgaNVPtr;
 
-#endif
+#endif /* __NVVGA_H__ */

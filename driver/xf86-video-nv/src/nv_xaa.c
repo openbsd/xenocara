@@ -37,8 +37,6 @@
 |*                                                                           *|
  \***************************************************************************/
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/nv_xaa.c,v 1.35 2004/03/20 16:25:18 mvojkovi Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -729,4 +727,3 @@ NVAccelInit(ScreenPtr pScreen)
 
    return (XAAInit(pScreen, accel));
 }
-

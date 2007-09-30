@@ -2,7 +2,6 @@
    Copyright (c) 1999,  The XFree86 Project Inc. 
    Written by Mark Vojkovich <markv@valinux.com>
 */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/riva_shadow.c $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -193,6 +192,3 @@ RivaRefreshArea32(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 	pbox++;
     }
 }
-
-
-

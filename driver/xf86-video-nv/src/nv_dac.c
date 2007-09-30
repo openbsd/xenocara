@@ -1,6 +1,6 @@
  /***************************************************************************\
 |*                                                                           *|
-|*       Copyright 2003 NVIDIA, Corporation.  All rights reserved.           *|
+|*       Copyright 2007 NVIDIA, Corporation.  All rights reserved.           *|
 |*                                                                           *|
 |*     NOTICE TO USER:   The source code  is copyrighted under  U.S. and     *|
 |*     international laws.  Users and possessors of this source code are     *|
@@ -36,8 +36,6 @@
 |*     those rights set forth herein.                                        *|
 |*                                                                           *|
  \***************************************************************************/
-
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/nv_dac.c,v 1.45 2005/07/09 00:53:00 mvojkovi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -118,7 +116,9 @@ NVDACInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
        vertBlankStart = vertStart;
        horizStart = horizTotal - 5;
        horizEnd = horizTotal - 2;   
-       horizBlankEnd = horizTotal + 4;    
+       horizBlankEnd = horizTotal + 4;
+       if(pNv->Architecture == NV_ARCH_30)
+           horizTotal += 2;
     }
 
     pVga->CRTC[0x0]  = Set8Bits(horizTotal);
@@ -221,6 +221,7 @@ NVDACInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
        }
        nvReg->crtcSync = pNv->PRAMDAC[0x0828/4];
        nvReg->crtcSync += NVDACPanelTweaks(pNv, nvReg);
+       nvReg->crtcVSync = pNv->fpVTotal - 6;
     }
 
     nvReg->vpll = nvReg->pll;
@@ -430,4 +431,3 @@ NVDACi2cInit(ScrnInfoPtr pScrn)
     }
     return TRUE;
 }
-

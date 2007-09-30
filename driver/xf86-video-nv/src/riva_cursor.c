@@ -23,8 +23,6 @@
 /* Rewritten with reference from mga driver and 3.3.4 NVIDIA driver by
    Jarno Paananen <jpaana@s2.org> */
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/riva_cursor.c $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

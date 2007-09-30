@@ -36,8 +36,6 @@
 |*     those rights set forth herein.                                        *|
 |*                                                                           *|
  \***************************************************************************/
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/riva_tbl.h,v 1.10 2003/07/31 20:24:31 mvojkovi Exp $ */
-
 
 /*
  * RIVA Fixed Functionality Init Tables.
@@ -251,4 +249,3 @@ static unsigned nv3TablePRAMIN_32BPP[][2] =
     {0x00000D1C, 0x10419208},
     {0x00000D30, 0x10118201}
 };
-

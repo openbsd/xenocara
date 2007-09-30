@@ -31,7 +31,7 @@
 #include "g80_dma.h"
 #include "g80_xaa.h"
 
-static void
+void
 G80Sync(ScrnInfoPtr pScrn)
 {
     G80Ptr pNv = G80PTR(pScrn);
@@ -47,7 +47,7 @@ G80Sync(ScrnInfoPtr pScrn)
     while(*pSync);
 }
 
-static void
+void
 G80DMAKickoffCallback(ScrnInfoPtr pScrn)
 {
     G80Ptr pNv = G80PTR(pScrn);
@@ -56,7 +56,7 @@ G80DMAKickoffCallback(ScrnInfoPtr pScrn)
     pNv->DMAKickoffCallback = NULL;
 }
 
-static void
+void
 G80SetPattern(G80Ptr pNv, int bg, int fg, int pat0, int pat1)
 {
     G80DmaStart(pNv, 0x2f0, 4);
@@ -66,7 +66,7 @@ G80SetPattern(G80Ptr pNv, int bg, int fg, int pat0, int pat1)
     G80DmaNext (pNv, pat1);
 }
 
-static void
+void
 G80SetRopSolid(G80Ptr pNv, CARD32 rop, CARD32 planemask)
 {
     static const int rops[] = {
@@ -95,7 +95,7 @@ G80SetRopSolid(G80Ptr pNv, CARD32 rop, CARD32 planemask)
     }
 }
 
-static void inline
+void inline
 G80SetClip(G80Ptr pNv, int x, int y, int w, int h)
 {
     G80DmaStart(pNv, 0x280, 4);

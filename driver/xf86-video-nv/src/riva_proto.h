@@ -1,5 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/riva_proto.h $ */
-
 #ifndef __RIVA_PROTO_H__
 #define __RIVA_PROTO_H__
 
@@ -38,4 +36,3 @@ Bool    RivaDGAInit(ScreenPtr pScreen);
 
 
 #endif /* __RIVA_PROTO_H__ */
-

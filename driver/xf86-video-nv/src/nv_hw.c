@@ -36,7 +36,6 @@
 |*     those rights set forth herein.                                        *|
 |*                                                                           *|
  \***************************************************************************/
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/nv_hw.c,v 1.21 2006/06/16 00:19:33 mvojkovi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -678,6 +677,16 @@ static void nForceUpdateArbitrationSettings (
     NVPtr        pNv
 )
 {
+#if XSERVER_LIBPCIACCESS
+    struct pci_device *const dev1 = pci_device_find_by_slot(0, 0, 0, 1);
+    struct pci_device *const dev2 = pci_device_find_by_slot(0, 0, 0, 2);
+    struct pci_device *const dev3 = pci_device_find_by_slot(0, 0, 0, 3);
+    struct pci_device *const dev5 = pci_device_find_by_slot(0, 0, 0, 5);
+    uint32_t tmp;
+    #define READ_LONG(num, offset) ({ pci_device_cfg_read_u32(dev##num, &tmp, (offset)); tmp; })
+#else
+    #define READ_LONG(num, offset) pciReadLong(pciTag(0, 0, num), (offset))
+#endif
     nv10_fifo_info fifo_data;
     nv10_sim_state sim_data;
     unsigned int M, N, P, pll, MClk, NVClk, memctrl;
@@ -685,11 +694,11 @@ static void nForceUpdateArbitrationSettings (
     if((pNv->Chipset & 0x0FF0) == 0x01A0) {
        unsigned int uMClkPostDiv;
 
-       uMClkPostDiv = (pciReadLong(pciTag(0, 0, 3), 0x6C) >> 8) & 0xf;
+       uMClkPostDiv = (READ_LONG(3, 0x6C) >> 8) & 0xf;
        if(!uMClkPostDiv) uMClkPostDiv = 4; 
        MClk = 400000 / uMClkPostDiv;
     } else {
-       MClk = pciReadLong(pciTag(0, 0, 5), 0x4C) / 1000;
+       MClk = READ_LONG(5, 0x4C) / 1000;
     }
 
     pll = pNv->PRAMDAC0[0x0500/4];
@@ -698,17 +707,17 @@ static void nForceUpdateArbitrationSettings (
     sim_data.pix_bpp        = (char)pixelDepth;
     sim_data.enable_video   = 0;
     sim_data.enable_mp      = 0;
-    sim_data.memory_type    = (pciReadLong(pciTag(0, 0, 1), 0x7C) >> 12) & 1;
+    sim_data.memory_type    = (READ_LONG(1, 0x7C) >> 12) & 1;
     sim_data.memory_width   = 64;
 
-    memctrl = pciReadLong(pciTag(0, 0, 3), 0x00) >> 16;
+    memctrl = READ_LONG(3, 0x00) >> 16;
 
     if((memctrl == 0x1A9) || (memctrl == 0x1AB) || (memctrl == 0x1ED)) {
         int dimm[3];
 
-        dimm[0] = (pciReadLong(pciTag(0, 0, 2), 0x40) >> 8) & 0x4F;
-        dimm[1] = (pciReadLong(pciTag(0, 0, 2), 0x44) >> 8) & 0x4F;
-        dimm[2] = (pciReadLong(pciTag(0, 0, 2), 0x48) >> 8) & 0x4F;
+        dimm[0] = (READ_LONG(2, 0x40) >> 8) & 0x4F;
+        dimm[1] = (READ_LONG(2, 0x44) >> 8) & 0x4F;
+        dimm[2] = (READ_LONG(2, 0x48) >> 8) & 0x4F;
 
         if((dimm[0] + dimm[1]) != dimm[2]) {
              ErrorF("WARNING: "
@@ -731,6 +740,8 @@ static void nForceUpdateArbitrationSettings (
         while (b >>= 1) (*burst)++;
         *lwm   = fifo_data.graphics_lwm >> 3;
     }
+
+#undef READ_LONG
 }
 
 
@@ -844,7 +855,7 @@ void NVCalcStateExt (
     int		   flags 
 )
 {
-    int pixelDepth, VClk;
+    int pixelDepth, VClk = 0;
     /*
      * Save mode parameters.
      */
@@ -948,7 +959,8 @@ void NVLoadStateExt (
     pNv->PTIMER[0x0100] = 0xFFFFFFFF;
 
     if(pNv->Architecture == NV_ARCH_04) {
-        pNv->PFB[0x0200/4] = state->config;
+        if (state)
+            pNv->PFB[0x0200/4] = state->config;
     } else 
     if((pNv->Architecture < NV_ARCH_40) ||
        ((pNv->Chipset & 0xfff0) == 0x0040))
@@ -1411,6 +1423,11 @@ void NVLoadStateExt (
     pNv->PFIFO[0x0495] = 0x00000001;
     pNv->PFIFO[0x0140] = 0x00000001;
 
+    if(!state) {
+        pNv->CurrentState = NULL;
+        return;
+    }
+
     if(pNv->Architecture >= NV_ARCH_10) {
         if(pNv->twoHeads) {
            pNv->PCRTC0[0x0860/4] = state->head;
@@ -1495,6 +1512,7 @@ void NVLoadStateExt (
     } else {
        pNv->PRAMDAC[0x0848/4] = state->scale;
        pNv->PRAMDAC[0x0828/4] = state->crtcSync;
+       pNv->PRAMDAC[0x0808/4] = state->crtcVSync;
     }
     pNv->PRAMDAC[0x0600/4] = state->general;
 
@@ -1582,6 +1600,7 @@ void NVUnloadStateExt
 
     if(pNv->FlatPanel) {
        state->crtcSync = pNv->PRAMDAC[0x0828/4];
+       state->crtcVSync = pNv->PRAMDAC[0x0808/4];
     }
 }
 
@@ -1590,7 +1609,10 @@ void NVSetStartAddress (
     CARD32 start
 )
 {
-    pNv->PCRTC[0x800/4] = start;
+    if (pNv->VBEDualhead) {
+        pNv->PCRTC0[0x800/4] = start;
+        pNv->PCRTC0[0x2800/4] = start + pNv->vbeCRTC1Offset;
+    } else {
+        pNv->PCRTC[0x800/4] = start;
+    }
 }
-
-

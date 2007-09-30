@@ -23,7 +23,7 @@
 # -avoid-version prevents gratuitous .0.0.0 version numbers on the end
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
-AM_CFLAGS = @XORG_CFLAGS@
+AM_CFLAGS = @XMODES_CFLAGS@ @XORG_CFLAGS@
 nv_drv_la_LTLIBRARIES = nv_drv.la
 nv_drv_la_LDFLAGS = -module -avoid-version
 nv_drv_ladir = @moduledir@/drivers
@@ -66,18 +66,41 @@ riva_sources = \
          riva_type.h \
          riva_xaa.c
 
-if SUPPORT_G80
 g80_sources = \
          g80_cursor.c \
          g80_cursor.h \
-         g80_ddc.c \
-         g80_ddc.h \
+         g80_dac.c \
          g80_display.c \
          g80_display.h \
          g80_dma.c \
          g80_dma.h \
          g80_driver.c \
+         g80_exa.c \
+         g80_exa.h \
+         g80_output.c \
+         g80_output.h \
+         g80_sor.c \
          g80_type.h \
          g80_xaa.c \
          g80_xaa.h
+
+xmode_sources = \
+         @parser_dir@/xf86Parser.h \
+         @parser_dir@/xf86Optrec.h \
+         @modes_dir@/xf86Modes.h \
+         @modes_dir@/xf86Modes.c \
+         @modes_dir@/xf86cvt.c \
+         @modes_dir@/xf86Crtc.h \
+         @modes_dir@/xf86Crtc.c \
+         @modes_dir@/xf86Cursors.c \
+         @modes_dir@/xf86EdidModes.c \
+         @modes_dir@/xf86RandR12.c \
+         @modes_dir@/xf86RandR12.h \
+         @modes_dir@/xf86Rename.h \
+         @modes_dir@/xf86Rotate.c \
+         @modes_dir@/xf86DiDGA.c
+
+if BUILD_XMODES
+EXTRA_nv_drv_la_SOURCES = local_xf86Rename.h
+nodist_nv_drv_la_SOURCES = $(xmode_sources)
 endif

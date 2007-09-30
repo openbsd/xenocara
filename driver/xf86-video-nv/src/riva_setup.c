@@ -23,8 +23,6 @@
 /* Hacked together from mga driver and 3.3.4 NVIDIA driver by Jarno Paananen
    <jpaana@s2.org> */
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/riva_setup.c $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -189,7 +187,6 @@ Riva3Setup(ScrnInfoPtr pScrn)
     CARD32 regBase = pRiva->IOAddress;
     CARD32 frameBase = pRiva->FbAddress;
     xf86MonPtr monitor;
-    int mmioFlags;
     
     pRiva->Save = RivaDACSave;
     pRiva->Restore = RivaDACRestore;
@@ -231,40 +228,39 @@ Riva3Setup(ScrnInfoPtr pScrn)
     pRiva->riva.EnableIRQ = 0;
     pRiva->riva.IO      = VGA_IOBASE_COLOR;
 
-    mmioFlags = VIDMEM_MMIO | VIDMEM_READSIDEEFFECT;
+#if XSERVER_LIBPCIACCESS
+#define MAP(ptr, offset, size) { \
+    void *tmp; \
+    pci_device_map_range(pRiva->PciInfo, (offset), (size), \
+                         PCI_DEV_MAP_FLAG_WRITABLE, &tmp); \
+    pRiva->riva.ptr = tmp; \
+ }
+#else
+#define MAP(ptr, offset, size) \
+    pRiva->riva.ptr = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO | \
+                                    VIDMEM_READSIDEEFFECT, pRiva->PciTag, \
+                                    (offset), (size));
+#endif
 
-    pRiva->riva.PRAMDAC = xf86MapPciMem(pScrn->scrnIndex, mmioFlags, pRiva->PciTag,
-                                      regBase+0x00680000, 0x00003000);
-    pRiva->riva.PFB     = xf86MapPciMem(pScrn->scrnIndex, mmioFlags, pRiva->PciTag,
-                                      regBase+0x00100000, 0x00001000);
-    pRiva->riva.PFIFO   = xf86MapPciMem(pScrn->scrnIndex, mmioFlags, pRiva->PciTag,
-                                      regBase+0x00002000, 0x00002000);
-    pRiva->riva.PGRAPH  = xf86MapPciMem(pScrn->scrnIndex, mmioFlags, pRiva->PciTag,
-                                      regBase+0x00400000, 0x00002000);
-    pRiva->riva.PEXTDEV = xf86MapPciMem(pScrn->scrnIndex, mmioFlags, pRiva->PciTag,
-                                      regBase+0x00101000, 0x00001000);
-    pRiva->riva.PTIMER  = xf86MapPciMem(pScrn->scrnIndex, mmioFlags, pRiva->PciTag,
-                                      regBase+0x00009000, 0x00001000);
-    pRiva->riva.PMC     = xf86MapPciMem(pScrn->scrnIndex, mmioFlags, pRiva->PciTag,
-                                      regBase+0x00000000, 0x00009000);
-    pRiva->riva.FIFO    = xf86MapPciMem(pScrn->scrnIndex, mmioFlags, pRiva->PciTag,
-                                      regBase+0x00800000, 0x00010000);
-    pRiva->riva.PRAMIN = xf86MapPciMem(pScrn->scrnIndex, mmioFlags, pRiva->PciTag,
-                                     frameBase+0x00C00000, 0x00008000);
+    MAP(PRAMDAC, regBase + 0x00680000, 0x00003000);
+    MAP(PFB,     regBase + 0x00100000, 0x00001000);
+    MAP(PFIFO,   regBase + 0x00002000, 0x00002000);
+    MAP(PGRAPH,  regBase + 0x00400000, 0x00002000);
+    MAP(PEXTDEV, regBase + 0x00101000, 0x00001000);
+    MAP(PTIMER,  regBase + 0x00009000, 0x00001000);
+    MAP(PMC,     regBase + 0x00000000, 0x00009000);
+    MAP(FIFO,    regBase + 0x00800000, 0x00010000);
+    MAP(PRAMIN,  frameBase+0x00C00000, 0x00008000);
 
     /*
      * These registers are read/write as 8 bit values.  Probably have to map
      * sparse on alpha.
      */
-    pRiva->riva.PCIO = (U008 *)xf86MapPciMem(pScrn->scrnIndex, mmioFlags,
-                                           pRiva->PciTag, regBase+0x00601000,
-                                           0x00003000);
-    pRiva->riva.PDIO = (U008 *)xf86MapPciMem(pScrn->scrnIndex, mmioFlags,
-                                           pRiva->PciTag, regBase+0x00681000,
-                                           0x00003000);
-    pRiva->riva.PVIO = (U008 *)xf86MapPciMem(pScrn->scrnIndex, mmioFlags,
-                                           pRiva->PciTag, regBase+0x000C0000,
-                                           0x00001000);
+    MAP(PCIO, regBase + 0x00601000, 0x00003000);
+    MAP(PDIO, regBase + 0x00681000, 0x00003000);
+    MAP(PVIO, regBase + 0x000C0000, 0x00001000);
+
+#undef MAP
 
     pRiva->riva.PCRTC = pRiva->riva.PGRAPH;
 

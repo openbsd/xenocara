@@ -23,12 +23,11 @@
 /* Hacked together from mga driver and 3.3.4 NVIDIA driver by Jarno Paananen
    <jpaana@s2.org> */
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/riva_driver.c,v 1.5 2003/11/03 05:11:26 tsi Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
+#include "nv_const.h"
 #include "riva_include.h"
 
 #include "xf86int10.h"
@@ -481,8 +480,10 @@ RivaPreInit(ScrnInfoPtr pScrn, int flags)
  
     /* Find the PCI info for this screen */
     pRiva->PciInfo = xf86GetPciInfoForEntity(pRiva->pEnt->index);
+#if !XSERVER_LIBPCIACCESS
     pRiva->PciTag = pciTag(pRiva->PciInfo->bus, pRiva->PciInfo->device,
 			  pRiva->PciInfo->func);
+#endif
 
     pRiva->Primary = xf86IsPrimaryPci(pRiva->PciInfo);
 
@@ -501,8 +502,9 @@ RivaPreInit(ScrnInfoPtr pScrn, int flags)
     /* Set pScrn->monitor */
     pScrn->monitor = pScrn->confScreen->monitor;
 
-    pRiva->ChipRev = pRiva->PciInfo->chipRev;
-    if((pRiva->PciInfo->vendor != 0x12D2) || (pRiva->PciInfo->chipType != 0x0018))
+    pRiva->ChipRev = CHIP_REVISION(pRiva->PciInfo);
+    if(VENDOR_ID(pRiva->PciInfo) != PCI_VENDOR_NVIDIA_SGS ||
+       DEVICE_ID(pRiva->PciInfo) != PCI_CHIP_RIVA128)
     {
         xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "This is not a RIVA 128\n");
         xf86FreeInt10(pRiva->pInt);
@@ -692,8 +694,8 @@ RivaPreInit(ScrnInfoPtr pScrn, int flags)
     } else {
 	int i = 1;
 	pRiva->FbBaseReg = i;
-	if (pRiva->PciInfo->memBase[i] != 0) {
-	    pRiva->FbAddress = pRiva->PciInfo->memBase[i] & 0xff800000;
+	if (MEMBASE(pRiva->PciInfo, i) != 0) {
+	    pRiva->FbAddress = MEMBASE(pRiva->PciInfo, i) & 0xff800000;
 	    from = X_PROBED;
 	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -720,8 +722,8 @@ RivaPreInit(ScrnInfoPtr pScrn, int flags)
 	from = X_CONFIG;
     } else {
 	int i = 0;
-	if (pRiva->PciInfo->memBase[i] != 0) {
-	    pRiva->IOAddress = pRiva->PciInfo->memBase[i] & 0xffffc000;
+	if (MEMBASE(pRiva->PciInfo, i) != 0) {
+	    pRiva->IOAddress = MEMBASE(pRiva->PciInfo, i) & 0xffffc000;
 	    from = X_PROBED;
 	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -918,22 +920,34 @@ RivaPreInit(ScrnInfoPtr pScrn, int flags)
 static Bool
 RivaMapMem(ScrnInfoPtr pScrn)
 {
-    RivaPtr pRiva;
-        
-    pRiva = RivaPTR(pScrn);
+    RivaPtr pRiva = RivaPTR(pScrn);
 
     /*
      * Map IO registers to virtual address space
      */ 
+#if XSERVER_LIBPCIACCESS
+    void *tmp;
+
+    pci_device_map_range(pRiva->PciInfo, pRiva->IOAddress, 0x1000000,
+                         PCI_DEV_MAP_FLAG_WRITABLE, &tmp);
+    pRiva->IOBase = tmp;
+    pci_device_map_range(pRiva->PciInfo, pRiva->FbAddress, pRiva->FbMapSize,
+                         PCI_DEV_MAP_FLAG_WRITABLE |
+                         PCI_DEV_MAP_FLAG_WRITE_COMBINE,
+                         &tmp);
+    pRiva->FbBase = tmp;
+#else
     pRiva->IOBase = xf86MapPciMem(pScrn->scrnIndex,
                                 VIDMEM_MMIO | VIDMEM_READSIDEEFFECT,
                                 pRiva->PciTag, pRiva->IOAddress, 0x1000000);
-    if (pRiva->IOBase == NULL)
-	return FALSE;
-
     pRiva->FbBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
 				 pRiva->PciTag, pRiva->FbAddress,
 				 pRiva->FbMapSize);
+#endif
+
+    if (pRiva->IOBase == NULL)
+	return FALSE;
+
     if (pRiva->FbBase == NULL)
 	return FALSE;
 
@@ -976,10 +990,15 @@ RivaUnmapMem(ScrnInfoPtr pScrn)
     /*
      * Unmap IO registers to virtual address space
      */ 
+#if XSERVER_LIBPCIACCESS
+    pci_device_unmap_range(pRiva->PciInfo, pRiva->IOBase, 0x1000000);
+    pci_device_unmap_range(pRiva->PciInfo, pRiva->FbBase, pRiva->FbMapSize);
+#else
     xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pRiva->IOBase, 0x1000000);
-    pRiva->IOBase = NULL;
-
     xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pRiva->FbBase, pRiva->FbMapSize);
+#endif
+
+    pRiva->IOBase = NULL;
     pRiva->FbBase = NULL;
     pRiva->FbStart = NULL;
 
@@ -1342,4 +1361,3 @@ RivaSave(ScrnInfoPtr pScrn)
 
     (*pRiva->Save)(pScrn, vgaReg, rivaReg, pRiva->Primary);
 }
-

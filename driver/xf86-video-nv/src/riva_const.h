@@ -1,5 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/riva_const.h $ */
-
 #ifndef __RIVA_CONST_H__
 #define __RIVA_CONST_H__
 
@@ -8,4 +6,3 @@
 #define RIVA_DRIVER_NAME "riva128"
 
 #endif /* __RIVA_CONST_H__ */
-          

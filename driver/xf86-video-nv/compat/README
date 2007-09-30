@@ -1,0 +1,7 @@
+This directory contains a copy of the mode and parser code from RandR 1.2.
+
+If you are building from git and you don't have xorg-server-1.3 or higher or you
+want to be able to make dist, you should create symlinks to the modes and parser
+directories from a RandR 1.2-enabled server here:
+
+  $ ln -s /path/to/xorg/xserver/hw/xfree86/{modes,parser} .

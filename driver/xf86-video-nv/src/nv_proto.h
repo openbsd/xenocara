@@ -1,5 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/nv_proto.h,v 1.11 2004/03/20 01:52:16 mvojkovi Exp $ */
-
 #ifndef __NV_PROTO_H__
 #define __NV_PROTO_H__
 
@@ -58,4 +56,3 @@ void NVRefreshArea32(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void NVPointerMoved(int index, int x, int y);
 
 #endif /* __NV_PROTO_H__ */
-

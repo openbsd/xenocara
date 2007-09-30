@@ -36,7 +36,6 @@
 |*     those rights set forth herein.                                        *|
 |*                                                                           *|
  \***************************************************************************/
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/riva_hw.c,v 1.51tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -659,7 +658,7 @@ static void CalcStateExt
     int		   flags 
 )
 {
-    int pixelDepth, VClk, m, n, p;
+    int pixelDepth, VClk = 0, m = 0, n = 0, p = 0;
     /*
      * Save mode parameters.
      */
@@ -990,4 +989,3 @@ int RivaGetConfig
     chip->Line   = (RivaLine                *)&(chip->FIFO[0x0000C000/4]);
     return (0);
 }
-

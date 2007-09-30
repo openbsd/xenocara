@@ -1,4 +1,3 @@
-/* $XConsortium: nvreg.h /main/2 1996/10/28 05:13:41 kaleb $ */
 /*
  * Copyright 1996-1997  David J. McKay
  *
@@ -20,8 +19,6 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/nvreg.h,v 1.6 2002/01/25 21:56:06 tsi Exp $ */
 
 #ifndef __NVREG_H_
 #define __NVREG_H_
@@ -195,6 +192,4 @@ typedef enum {NV1,NV3,NV4,NV10,NumNVChips} NVChipType;
 NVChipType GetChipType(void);
 
 
-#endif
-
-
+#endif /* __NVREG_H_ */

@@ -36,7 +36,6 @@
 |*     those rights set forth herein.                                        *|
 |*                                                                           *|
 \***************************************************************************/
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/riva_hw.h,v 1.26 2003/07/31 20:24:31 mvojkovi Exp $ */
 #ifndef __RIVA_HW_H__
 #define __RIVA_HW_H__
 
@@ -363,4 +362,3 @@ typedef struct _riva_hw_state
    while ((hwinst).Busy(&(hwinst))); \
 }
 #endif /* __RIVA_HW_H__ */
-

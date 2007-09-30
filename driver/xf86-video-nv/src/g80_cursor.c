@@ -21,7 +21,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -36,36 +35,10 @@
 
 #define CURSOR_PTR ((CARD32*)pNv->mem + pNv->videoRam * 256 - 0x1000)
 
-static void G80SetCursorColors(ScrnInfoPtr pScrn, int bg, int fg)
+void G80SetCursorPosition(xf86CrtcPtr crtc, int x, int y)
 {
-    G80Ptr pNv = G80PTR(pScrn);
-    CARD32 *dst = CURSOR_PTR;
-    CARD32 *src = pNv->tmpCursor;
-    int i, j;
-
-    fg |= 0xff000000;
-    bg |= 0xff000000;
-
-    for(i = 0; i < 128; i++) {
-        CARD32 b = *src++;
-        CARD32 m = *src++;
-
-        for(j = 0; j < 32; j++) {
-            if(m & 1)
-                *dst = (b & 1) ? fg : bg;
-            else
-                *dst = 0;
-            b >>= 1;
-            m >>= 1;
-            dst++;
-        }
-    }
-}
-
-static void G80SetCursorPosition(ScrnInfoPtr pScrn, int x, int y)
-{
-    G80Ptr pNv = G80PTR(pScrn);
-    const int headOff = 0x1000*pNv->head;
+    G80Ptr pNv = G80PTR(crtc->scrn);
+    const int headOff = 0x1000*G80CrtcGetHead(crtc);
 
     x &= 0xffff;
     y &= 0xffff;
@@ -73,113 +46,58 @@ static void G80SetCursorPosition(ScrnInfoPtr pScrn, int x, int y)
     pNv->reg[(0x00647080 + headOff)/4] = 0;
 }
 
-static void G80LoadCursorImage(ScrnInfoPtr pScrn, unsigned char *bits)
+void G80LoadCursorARGB(xf86CrtcPtr crtc, CARD32 *src)
+{
+    G80Ptr pNv = G80PTR(crtc->scrn);
+    CARD32 *dst = CURSOR_PTR;
+
+    /* Assume cursor is 64x64 */
+    memcpy(dst, src, 64 * 64 * 4);
+}
+
+Bool G80CursorAcquire(ScrnInfoPtr pScrn)
 {
     G80Ptr pNv = G80PTR(pScrn);
-    memcpy(pNv->tmpCursor, bits, sizeof(pNv->tmpCursor));
-}
-
-static void G80HideCursor(ScrnInfoPtr pScrn)
-{
-    G80Ptr pNv = G80PTR(pScrn);
-
-    pNv->cursorVisible = FALSE;
-    G80DispHideCursor(G80PTR(pScrn), TRUE);
-}
-
-static void G80ShowCursor(ScrnInfoPtr pScrn)
-{
-    G80Ptr pNv = G80PTR(pScrn);
-
-    pNv->cursorVisible = TRUE;
-    G80DispShowCursor(G80PTR(pScrn), TRUE);
-}
-
-static Bool G80UseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
-{
-    return TRUE;
-}
-
-#ifdef ARGB_CURSOR
-static Bool G80UseHWCursorARGB(ScreenPtr pScreen, CursorPtr pCurs)
-{
-    if((pCurs->bits->width <= 64) && (pCurs->bits->height <= 64))
-        return TRUE;
-
-    return FALSE;
-}
-
-static void G80LoadCursorARGB(ScrnInfoPtr pScrn, CursorPtr pCurs)
-{
-    G80Ptr pNv = G80PTR(pScrn);
-    CARD32 *dst = CURSOR_PTR, *src = pCurs->bits->argb;
-    int y;
-
-    for(y = 0; y < pCurs->bits->height; y++) {
-        memcpy(dst, src, pCurs->bits->width * 4);
-        memset(dst + pCurs->bits->width, 0, (64 - pCurs->bits->width) * 4);
-        src += pCurs->bits->width;
-        dst += 64;
-    }
-
-    memset(dst, 0, (64 - y) * 64 * 4);
-}
-#endif
-
-Bool G80CursorAcquire(G80Ptr pNv)
-{
-    const int headOff = 0x10 * pNv->head;
+    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+    int i;
 
     if(!pNv->HWCursor) return TRUE;
 
-    pNv->reg[(0x00610270+headOff)/4] = 0x2000;
-    while(pNv->reg[(0x00610270+headOff)/4] & 0x30000);
+    /* Initialize the cursor on each head */
+    for(i = 0; i < xf86_config->num_crtc; i++) {
+        const int headOff = 0x10 * G80CrtcGetHead(xf86_config->crtc[i]);
 
-    pNv->reg[(0x00610270+headOff)/4] = 1;
-    while((pNv->reg[(0x00610270+headOff)/4] & 0x30000) != 0x10000);
+        pNv->reg[(0x00610270+headOff)/4] = 0x2000;
+        while(pNv->reg[(0x00610270+headOff)/4] & 0x30000);
+
+        pNv->reg[(0x00610270+headOff)/4] = 1;
+        while((pNv->reg[(0x00610270+headOff)/4] & 0x30000) != 0x10000);
+    }
 
     return TRUE;
 }
 
-void G80CursorRelease(G80Ptr pNv)
+void G80CursorRelease(ScrnInfoPtr pScrn)
 {
-    const int headOff = 0x10 * pNv->head;
+    G80Ptr pNv = G80PTR(pScrn);
+    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+    int i;
 
     if(!pNv->HWCursor) return;
 
-    pNv->reg[(0x00610270+headOff)/4] = 0;
-    while(pNv->reg[(0x00610270+headOff)/4] & 0x30000);
+    /* Release the cursor on each head */
+    for(i = 0; i < xf86_config->num_crtc; i++) {
+        const int headOff = 0x10 * G80CrtcGetHead(xf86_config->crtc[i]);
+
+        pNv->reg[(0x00610270+headOff)/4] = 0;
+        while(pNv->reg[(0x00610270+headOff)/4] & 0x30000);
+    }
 }
 
 Bool G80CursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-    G80Ptr pNv = G80PTR(pScrn);
-    xf86CursorInfoPtr infoPtr;
-
-    if(!pNv->HWCursor)
-        return TRUE;
-
-    infoPtr = xf86CreateCursorInfoRec();
-    if(!infoPtr) return FALSE;
-
-    pNv->CursorInfo = infoPtr;
-    pNv->cursorVisible = FALSE;
-
-    infoPtr->MaxWidth = infoPtr->MaxHeight = 64;
-    infoPtr->Flags = HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
-                     HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_32;
-    infoPtr->SetCursorColors = G80SetCursorColors;
-    infoPtr->SetCursorPosition = G80SetCursorPosition;
-    infoPtr->LoadCursorImage = G80LoadCursorImage;
-    infoPtr->HideCursor = G80HideCursor;
-    infoPtr->ShowCursor = G80ShowCursor;
-    infoPtr->UseHWCursor = G80UseHWCursor;
-
-#ifdef ARGB_CURSOR
-    infoPtr->UseHWCursorARGB = G80UseHWCursorARGB;
-    infoPtr->LoadCursorARGB = G80LoadCursorARGB;
-#endif
-
-    return xf86InitCursor(pScreen, infoPtr);
+    return xf86_cursors_init(pScreen, 64, 64,
+            HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
+            HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_32 |
+            HARDWARE_CURSOR_ARGB);
 }

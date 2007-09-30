@@ -3,12 +3,7 @@ series of graphics processors.
 
 There are a few caveats of which to be aware:
  - The XVideo extension is not supported.
- - With X servers prior to version 1.2.0 (X.org 7.2.0) on 64-bit Linux or most
-   non-Linux platforms, the driver may fail to restore the console due to bugs
-   in the server's x86 emulator.
  - The RENDER extension is not accelerated by this driver.
- - Only one output can be used at a time.  Work is in progress in the randr-1.2
-   branch to support dual-head output.
 
 Bugs should be reported at http://bugs.freedesktop.org/ under the "xorg"
 product, "Driver/nVidia (open)" component.  Please be sure to fill out the

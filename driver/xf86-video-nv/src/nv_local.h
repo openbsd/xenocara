@@ -36,7 +36,6 @@
 |*     those rights set forth herein.                                        *|
 |*                                                                           *|
  \***************************************************************************/
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/nv_local.h,v 1.8tsi Exp $ */
 
 #ifndef __NV_LOCAL_H__
 #define __NV_LOCAL_H__
@@ -46,9 +45,6 @@
  * HW.  Put all affected includes, typdefs, etc. here so the riva_hw.* files
  * can stay generic in nature.
  */ 
-#if USE_LIBC_WRAPPER
-#include "xf86_ansic.h"
-#endif
 #include "compiler.h"
 #include "xf86_OSproc.h"
 

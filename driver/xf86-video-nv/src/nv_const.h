@@ -1,5 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/nv_const.h,v 1.6 2001/12/07 00:09:55 mvojkovi Exp $ */
-
 #ifndef __NV_CONST_H__
 #define __NV_CONST_H__
 
@@ -7,5 +5,17 @@
 #define NV_NAME "NV"
 #define NV_DRIVER_NAME "nv"
 
+/* libpciaccess gratuitous API changes */
+#if XSERVER_LIBPCIACCESS
+ #define MEMBASE(p,n)     (p)->regions[n].base_addr
+ #define VENDOR_ID(p)     (p)->vendor_id
+ #define DEVICE_ID(p)     (p)->device_id
+ #define CHIP_REVISION(p) (p)->revision
+#else
+ #define MEMBASE(p,n)     (p)->memBase[n]
+ #define VENDOR_ID(p)     (p)->vendor
+ #define DEVICE_ID(p)     (p)->chipType
+ #define CHIP_REVISION(p) (p)->chipRev
+#endif
+
 #endif /* __NV_CONST_H__ */
-          

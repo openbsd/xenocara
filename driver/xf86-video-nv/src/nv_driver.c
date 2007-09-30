@@ -1,5 +1,3 @@
-/* $XdotOrg: driver/xf86-video-nv/src/nv_driver.c,v 1.21 2006/01/24 16:45:29 aplattner Exp $ */
-/* $XConsortium: nv_driver.c /main/3 1996/10/28 05:13:37 kaleb $ */
 /*
  * Copyright 1996-1997  David J. McKay
  *
@@ -29,11 +27,10 @@
 /* Hacked together from mga driver and 3.3.4 NVIDIA driver by Jarno Paananen
    <jpaana@s2.org> */
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nv/nv_driver.c,v 1.144 2006/06/16 00:19:32 mvojkovi Exp $ */
-
 #include "nv_include.h"
 
 #include "xf86int10.h"
+#include "vbeModes.h"
 
 const   OptionInfoRec * RivaAvailableOptions(int chipid, int busid);
 Bool    RivaGetScrnInfoRec(PciChipsets *chips, int chip);
@@ -45,7 +42,11 @@ Bool    G80GetScrnInfoRec(PciChipsets *chips, int chip);
 /* Mandatory functions */
 static const OptionInfoRec * NVAvailableOptions(int chipid, int busid);
 static void    NVIdentify(int flags);
+#if XSERVER_LIBPCIACCESS
+static Bool    NVPciProbe(DriverPtr, int entity, struct pci_device*, intptr_t data);
+#else
 static Bool    NVProbe(DriverPtr drv, int flags);
+#endif
 static Bool    NVPreInit(ScrnInfoPtr pScrn, int flags);
 static Bool    NVScreenInit(int Index, ScreenPtr pScreen, int argc,
                             char **argv);
@@ -70,9 +71,20 @@ static Bool	NVMapMem(ScrnInfoPtr pScrn);
 static Bool	NVMapMemFBDev(ScrnInfoPtr pScrn);
 static Bool	NVUnmapMem(ScrnInfoPtr pScrn);
 static void	NVSave(ScrnInfoPtr pScrn);
+static void	NVSaveRestoreVBE(ScrnInfoPtr, vbeSaveRestoreFunction);
 static void	NVRestore(ScrnInfoPtr pScrn);
 static Bool	NVModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
+static Bool	NVSetModeVBE(ScrnInfoPtr pScrn, DisplayModePtr pMode);
 
+#if XSERVER_LIBPCIACCESS
+/* For now, just match any NVIDIA PCI device and sort through them in the probe
+ * routine */
+static const struct pci_id_match NVPciIdMatchList[] = {
+    { PCI_VENDOR_NVIDIA, PCI_MATCH_ANY, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0, 0 },
+    { PCI_VENDOR_NVIDIA_SGS, PCI_MATCH_ANY, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0, 0},
+    { 0, 0, 0 }
+};
+#endif
 
 /*
  * This contains the functions needed by the server after loading the
@@ -86,13 +98,22 @@ _X_EXPORT DriverRec NV = {
         NV_VERSION,
 	NV_DRIVER_NAME,
         NVIdentify,
+#if XSERVER_LIBPCIACCESS
+        NULL,
+#else
         NVProbe,
+#endif
 	NVAvailableOptions,
         NULL,
-        0
+        0,
+        NULL,
+#if XSERVER_LIBPCIACCESS
+        NVPciIdMatchList,
+        NVPciProbe,
+#endif
 };
 
-/* Known cards as of 2006/06/16 */
+/* Known cards as of 2007/07/24 */
 
 static SymTabRec NVKnownChipsets[] =
 {
@@ -333,15 +354,35 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE0244, "GeForce Go 6150" },
   { 0x10DE0247, "GeForce Go 6100" },
 
-#if SUPPORT_G80
+/*************** G8x ***************/
   { 0x10DE0191, "GeForce 8800 GTX" },
   { 0x10DE0193, "GeForce 8800 GTS" },
+  { 0x10DE0194, "GeForce 8800 Ultra" },
   { 0x10DE019D, "Quadro FX 5600" },
   { 0x10DE019E, "Quadro FX 4600" },
   { 0x10DE0400, "GeForce 8600 GTS" },
   { 0x10DE0402, "GeForce 8600 GT" },
+  { 0x10DE0404, "GeForce 8400 GS" },
+  { 0x10DE0407, "GeForce 8600M GT" },
+  { 0x10DE0409, "GeForce 8700M GT" },
+  { 0x10DE040A, "Quadro FX 370" },
+  { 0x10DE040B, "Quadro NVS 320M" },
+  { 0x10DE040C, "Quadro FX 570M" },
+  { 0x10DE040D, "Quadro FX 1600M" },
+  { 0x10DE040E, "Quadro FX 570" },
+  { 0x10DE040F, "Quadro FX 1700" },
   { 0x10DE0421, "GeForce 8500 GT" },
-#endif
+  { 0x10DE0422, "GeForce 8400 GS" },
+  { 0x10DE0423, "GeForce 8300 GS" },
+  { 0x10DE0425, "GeForce 8600M GS" },
+  { 0x10DE0426, "GeForce 8400M GT" },
+  { 0x10DE0427, "GeForce 8400M GS" },
+  { 0x10DE0428, "GeForce 8400M G" },
+  { 0x10DE0429, "Quadro NVS 140M" },
+  { 0x10DE042A, "Quadro NVS 130M" },
+  { 0x10DE042B, "Quadro NVS 135M" },
+  { 0x10DE042D, "Quadro FX 360M" },
+  { 0x10DE042F, "Quadro NVS 290" },
 
   {-1, NULL}
 };
@@ -406,6 +447,17 @@ static const char *vbeSymbols[] = {
     "VBEInit",
     "vbeFree",
     "vbeDoEDID",
+    NULL
+};
+
+static const char *vbeModeSymbols[] = {
+    "VBEExtendedInit",
+    "VBEGetVBEInfo",
+    "VBEGetModePool",
+    "VBEValidateModes",
+    "VBESetModeParameters",
+    "VBEGetVBEMode",
+    "VBESetVBEMode",
     NULL
 };
 #endif
@@ -486,7 +538,8 @@ typedef enum {
     OPTION_FP_DITHER,
     OPTION_CRTC_NUMBER,
     OPTION_FP_SCALE,
-    OPTION_FP_TWEAK
+    OPTION_FP_TWEAK,
+    OPTION_DUALHEAD,
 } NVOpts;
 
 
@@ -503,6 +556,7 @@ static const OptionInfoRec NVOptions[] = {
     { OPTION_CRTC_NUMBER,	"CrtcNumber",	OPTV_INTEGER,	{0}, FALSE },
     { OPTION_FP_SCALE,          "FPScale",      OPTV_BOOLEAN,   {0}, FALSE },
     { OPTION_FP_TWEAK,          "FPTweak",      OPTV_INTEGER,   {0}, FALSE },
+    { OPTION_DUALHEAD,          "DualHead",     OPTV_BOOLEAN,   {0}, FALSE },
     { -1,                       NULL,           OPTV_NONE,      {0}, FALSE }
 };
 
@@ -551,7 +605,13 @@ nvSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 
     if (!setupDone) {
         setupDone = TRUE;
-        xf86AddDriver(&NV, module, 0);
+        xf86AddDriver(&NV, module,
+#if XSERVER_LIBPCIACCESS
+            HaveDriverFuncs
+#else
+            0
+#endif
+        );
 
         /*
          * Modules that this driver always requires may be loaded here
@@ -614,7 +674,9 @@ NVGetScrnInfoRec(PciChipsets *chips, int chip)
     pScrn->driverName       = NV_DRIVER_NAME;
     pScrn->name             = NV_NAME;
 
+#if !XSERVER_LIBPCIACCESS
     pScrn->Probe            = NVProbe;
+#endif
     pScrn->PreInit          = NVPreInit;
     pScrn->ScreenInit       = NVScreenInit;
     pScrn->SwitchMode       = NVSwitchMode;
@@ -631,9 +693,29 @@ NVGetScrnInfoRec(PciChipsets *chips, int chip)
 
 
 static CARD32 
+#if XSERVER_LIBPCIACCESS
+NVGetPCIXpressChip (struct pci_device *dev)
+#else
 NVGetPCIXpressChip (pciVideoPtr pVideo)
+#endif
 {
     volatile CARD32 *regs;
+#if XSERVER_LIBPCIACCESS
+    uint32_t pciid, pcicmd;
+    void *tmp;
+
+    pci_device_cfg_read_u32(dev, &pcicmd, PCI_CMD_STAT_REG);
+    pci_device_cfg_write_u32(dev, pcicmd | PCI_CMD_MEM_ENABLE,
+                             PCI_CMD_STAT_REG);
+
+    pci_device_map_range(dev, dev->regions[0].base_addr, 0x2000,
+                         PCI_DEV_MAP_FLAG_WRITABLE, &tmp);
+    regs = tmp;
+    pciid = regs[0x1800/4];
+    pci_device_unmap_range(dev, tmp, 0x2000);
+
+    pci_device_cfg_write_u32(dev, pcicmd, PCI_CMD_STAT_REG);
+#else
     CARD32 pciid, pcicmd;
     PCITAG Tag = ((pciConfigPtr)(pVideo->thisCard))->tag;
 
@@ -647,6 +729,7 @@ NVGetPCIXpressChip (pciVideoPtr pVideo)
     xf86UnMapVidMem(-1, (pointer)regs, 0x2000);
 
     pciWriteLong(Tag, PCI_CMD_STAT_REG, pcicmd);
+#endif
 
     if((pciid & 0x0000ffff) == 0x000010DE) 
        pciid = 0x10DE0000 | (pciid >> 16);
@@ -658,7 +741,6 @@ NVGetPCIXpressChip (pciVideoPtr pVideo)
     return pciid;
 }
 
-#if SUPPORT_G80
 static Bool
 NVIsG80(int chipType)
 {
@@ -671,9 +753,83 @@ NVIsG80(int chipType)
 
     return FALSE;
 }
-#endif
+
+static Bool
+NVIsSupported(CARD32 id)
+{
+    /* look for a compatible devices which may be newer than
+       the NVKnownChipsets list above.  */
+    switch(id & 0xfff0) {
+    case 0x0170:
+    case 0x0180:
+    case 0x0250:
+    case 0x0280:
+    case 0x0300:
+    case 0x0310:
+    case 0x0320:
+    case 0x0330:
+    case 0x0340:
+    case 0x0040:
+    case 0x00C0:
+    case 0x0120:
+    case 0x0140:
+    case 0x0160:
+    case 0x01D0:
+    case 0x0090:
+    case 0x0210:
+    case 0x0220:
+    case 0x0240:
+    case 0x0290:
+    case 0x0390:
+    case 0x03D0:
+        return TRUE;
+    }
+
+    return FALSE;
+}
 
 /* Mandatory */
+#if XSERVER_LIBPCIACCESS
+static Bool
+NVPciProbe(DriverPtr drv, int entity, struct pci_device *dev, intptr_t data)
+{
+    const CARD32 id = ((dev->device_id & 0xfff0) == 0x00F0 ||
+                       (dev->device_id & 0xfff0) == 0x02E0) ?
+                      NVGetPCIXpressChip(dev) : dev->vendor_id << 16 | dev->device_id;
+    const char *name = xf86TokenToString(NVKnownChipsets, id);
+
+    if(dev->vendor_id == PCI_VENDOR_NVIDIA && !name &&
+       !NVIsSupported(id) && !NVIsG80(id)) {
+        /* See if pci.ids knows what the heck this thing is */
+        name = pci_device_get_device_name(dev);
+        if(name)
+            xf86DrvMsg(0, X_WARNING,
+                       NV_NAME ": Ignoring unsupported device 0x%x (%s) at %2.2x@%2.2x:%2.2x:%1.1x\n",
+                       id, name, dev->bus, dev->domain, dev->dev, dev->func);
+        else
+            xf86DrvMsg(0, X_WARNING,
+                       NV_NAME ": Ignoring unsupported device 0x%x at %2.2x@%2.2x:%2.2x:%1.1x\n",
+                       id, dev->bus, dev->domain, dev->dev, dev->func);
+        return FALSE;
+    }
+
+    if(!name)
+        name = pci_device_get_device_name(dev);
+    if(!name)
+        name = "Unknown GPU";
+
+    xf86DrvMsg(0, X_PROBED,
+               NV_NAME ": Found NVIDIA %s at %2.2x@%2.2x:%2.2x:%1.1x\n",
+               name, dev->bus, dev->domain, dev->dev, dev->func);
+
+    if(NVIsG80(id))
+        return G80GetScrnInfoRec(NULL, entity);
+    else if(dev->vendor_id == PCI_VENDOR_NVIDIA_SGS)
+        return RivaGetScrnInfoRec(NULL, entity);
+    else
+        return NVGetScrnInfoRec(NULL, entity);
+}
+#else
 static Bool
 NVProbe(DriverPtr drv, int flags)
 {
@@ -717,59 +873,15 @@ NVProbe(DriverPtr drv, int flags)
                nvchips++;
             }
 
-            if(nvchips->name) { /* found one */
+            if(nvchips->name ||
+               ((*ppPci)->vendor == PCI_VENDOR_NVIDIA &&
+                (NVIsSupported(token) || NVIsG80((*ppPci)->chipType)))) {
                NVChipsets[numUsed].token = pciid;
-               NVChipsets[numUsed].name = nvchips->name;
-               NVPciChipsets[numUsed].numChipset = pciid; 
+               NVChipsets[numUsed].name = nvchips->name ? nvchips->name : "Unknown NVIDIA chip";
+               NVPciChipsets[numUsed].numChipset = pciid;
                NVPciChipsets[numUsed].PCIid = pciid;
                NVPciChipsets[numUsed].resList = RES_SHARED_VGA;
                numUsed++;
-            } else if ((*ppPci)->vendor == PCI_VENDOR_NVIDIA) {
-               Bool canHandle = FALSE;
-
-               /* look for a compatible devices which may be newer than 
-                  the NVKnownChipsets list above.  */
-               switch(token & 0xfff0) {
-               case 0x0170:   
-               case 0x0180:
-               case 0x0250:
-               case 0x0280:
-               case 0x0300:
-               case 0x0310:
-               case 0x0320:
-               case 0x0330:
-               case 0x0340:
-               case 0x0040:
-               case 0x00C0:
-               case 0x0120:
-               case 0x0140:
-               case 0x0160:
-               case 0x01D0:
-               case 0x0090:
-               case 0x0210:
-               case 0x0220:
-               case 0x0240:
-               case 0x0290:
-               case 0x0390:
-               case 0x03D0:
-                   canHandle = TRUE;
-                   break;
-               default:  break;  /* we don't recognize it */
-               }
-
-#if SUPPORT_G80
-               if(NVIsG80((*ppPci)->chipType))
-                   canHandle = TRUE;
-#endif
-
-               if(canHandle) {
-                   NVChipsets[numUsed].token = pciid;
-                   NVChipsets[numUsed].name = "Unknown NVIDIA chip";
-                   NVPciChipsets[numUsed].numChipset = pciid;
-                   NVPciChipsets[numUsed].PCIid = pciid;
-                   NVPciChipsets[numUsed].resList = RES_SHARED_VGA;
-                   numUsed++;
-               }
             }
         }
         ppPci++;
@@ -798,11 +910,9 @@ NVProbe(DriverPtr drv, int flags)
         if(pPci->vendor == PCI_VENDOR_NVIDIA_SGS) {
             if(RivaGetScrnInfoRec(NVPciChipsets, usedChips[i]))
                 foundScreen = TRUE;
-#if SUPPORT_G80
         } else if (NVIsG80(pPci->chipType)) {
             if(G80GetScrnInfoRec(NVPciChipsets, usedChips[i]))
                 foundScreen = TRUE;
-#endif
         } else {
             if(NVGetScrnInfoRec(NVPciChipsets, usedChips[i])) 
 	        foundScreen = TRUE;
@@ -814,6 +924,7 @@ NVProbe(DriverPtr drv, int flags)
 
     return foundScreen;
 }
+#endif /* XSERVER_LIBPCIACCESS */
 
 /* Usually mandatory */
 Bool
@@ -823,6 +934,27 @@ NVSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
 
     NVSync(pScrn);
     return NVModeInit(pScrn, mode);
+}
+
+Bool
+NVSwitchModeVBE(int scrnIndex, DisplayModePtr mode, int flags)
+{
+    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    NVPtr pNv = NVPTR(pScrn);
+    const Bool disableAccess = pNv->accessEnabled;
+
+    if(disableAccess)
+        pScrn->EnableDisableFBAccess(scrnIndex, FALSE);
+
+    NVSync(pScrn);
+    if (!NVSetModeVBE(pScrn, mode))
+        return FALSE;
+    NVAdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+
+    if(disableAccess)
+        pScrn->EnableDisableFBAccess(scrnIndex, TRUE);
+
+    return TRUE;
 }
 
 /*
@@ -873,6 +1005,17 @@ NVEnterVTFBDev(int scrnIndex, int flags)
     return TRUE;
 }
 
+static Bool
+NVEnterVTVBE(int scrnIndex, int flags)
+{
+    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+
+    if (!NVSetModeVBE(pScrn, pScrn->currentMode))
+        return FALSE;
+    NVAdjustFrame(scrnIndex, 0, 0, 0);
+    return TRUE;
+}
+
 /*
  * This is called when VT switching away from the X server.  Its job is
  * to restore the previous (text) mode.
@@ -892,7 +1035,14 @@ NVLeaveVT(int scrnIndex, int flags)
     NVLockUnlock(pNv, 1);
 }
 
+static void
+NVLeaveVTVBE(int scrnIndex, int flags)
+{
+    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
 
+    NVSync(pScrn);
+    NVSaveRestoreVBE(pScrn, MODE_RESTORE);
+}
 
 static void 
 NVBlockHandler (
@@ -934,9 +1084,15 @@ NVCloseScreen(int scrnIndex, ScreenPtr pScreen)
     NVPtr pNv = NVPTR(pScrn);
 
     if (pScrn->vtSema) {
-        NVSync(pScrn);
-        NVRestore(pScrn);
-        NVLockUnlock(pNv, 1);
+        if (!pNv->NoAccel)
+            NVSync(pScrn);
+
+        if (pNv->VBEDualhead) {
+            NVSaveRestoreVBE(pScrn, MODE_RESTORE);
+        } else {
+            NVRestore(pScrn);
+            NVLockUnlock(pNv, 1);
+        }
     }
 
     NVUnmapMem(pScrn);
@@ -959,6 +1115,16 @@ NVCloseScreen(int scrnIndex, ScreenPtr pScreen)
     pScreen->BlockHandler = pNv->BlockHandler;
     return (*pScreen->CloseScreen)(scrnIndex, pScreen);
 }
+
+static void
+NVEnableDisableFBAccess(int scrnIndex, Bool enable)
+{
+    NVPtr pNv = NVPTR(xf86Screens[scrnIndex]);
+
+    pNv->accessEnabled = enable;
+    pNv->EnableDisableFBAccess(scrnIndex, enable);
+}
+
 
 /* Free up any persistent data structures */
 
@@ -1025,7 +1191,6 @@ Bool NVI2CInit(ScrnInfoPtr pScrn)
 }
 
 
-#ifdef USE_CVTMODE_FUNC
 /* Copied from ddc/Property.c */
 static DisplayModePtr
 NVModesAdd(DisplayModePtr Modes, DisplayModePtr Additions)
@@ -1049,7 +1214,6 @@ NVModesAdd(DisplayModePtr Modes, DisplayModePtr Additions)
 
     return Modes;
 }
-#endif
 
 /* Mandatory */
 Bool
@@ -1060,9 +1224,7 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
     int i, max_width, max_height;
     ClockRangePtr clockRanges;
     const char *s;
-#ifdef USE_CVTMODE_FUNC
-    int config_mon_rates;
-#endif
+    Bool config_mon_rates;
 
     if (flags & PROBE_DETECT) {
         EntityInfoPtr pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
@@ -1107,8 +1269,10 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
  
     /* Find the PCI info for this screen */
     pNv->PciInfo = xf86GetPciInfoForEntity(pNv->pEnt->index);
+#if !XSERVER_LIBPCIACCESS
     pNv->PciTag = pciTag(pNv->PciInfo->bus, pNv->PciInfo->device,
 			  pNv->PciInfo->func);
+#endif
 
     pNv->Primary = xf86IsPrimaryPci(pNv->PciInfo);
 
@@ -1144,7 +1308,7 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 		   pNv->Chipset);
     } else {
 	from = X_PROBED;
-	pNv->Chipset = (pNv->PciInfo->vendor << 16) | pNv->PciInfo->chipType;
+	pNv->Chipset = VENDOR_ID(pNv->PciInfo) << 16 | DEVICE_ID(pNv->PciInfo);
 
         if(((pNv->Chipset & 0xfff0) == 0x00F0) ||
            ((pNv->Chipset & 0xfff0) == 0x02E0))
@@ -1163,7 +1327,7 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ChipRev override: %d\n",
 		   pNv->ChipRev);
     } else {
-	pNv->ChipRev = pNv->PciInfo->chipRev;
+	pNv->ChipRev = CHIP_REVISION(pNv->PciInfo);
     }
 
     /*
@@ -1412,7 +1576,43 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
     } else {
         pNv->usePanelTweak = FALSE;
     }
-    
+
+    if (xf86ReturnOptValBool(pNv->Options, OPTION_DUALHEAD, FALSE)) {
+        if (pNv->FBDev)
+            xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+                       "FBDev and Dualhead are incompatible.\n");
+        else
+            pNv->VBEDualhead = TRUE;
+    }
+
+    if (pNv->VBEDualhead) {
+        if (!xf86LoadSubModule(pScrn, "vbe")) {
+            xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                       "Couldn't load the VBE module and Dualhead is "
+                       "enabled.\n");
+            return FALSE;
+        }
+        xf86LoaderReqSymLists(vbeModeSymbols, NULL);
+        pNv->pVbe = VBEExtendedInit(NULL, pNv->pEnt->index,
+                                    SET_BIOS_SCRATCH | RESTORE_BIOS_SCRATCH);
+        if (!pNv->pVbe) return FALSE;
+
+        pNv->pVbeInfo = VBEGetVBEInfo(pNv->pVbe);
+        if (!pNv->pVbeInfo) return FALSE;
+
+        xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
+                   "Using VBE dual-head mode.\n");
+
+        xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                   "Using software cursor.\n");
+        pNv->HWCursor = FALSE;
+
+        pScrn->SwitchMode    = NVSwitchModeVBE;
+        pScrn->EnterVT       = NVEnterVTVBE;
+        pScrn->LeaveVT       = NVLeaveVTVBE;
+        pScrn->ValidMode     = NULL;
+    }
+
     if (pNv->pEnt->device->MemBase != 0) {
 	/* Require that the config file value matches one of the PCI values. */
 	if (!xf86CheckPciMemBase(pNv->PciInfo, pNv->pEnt->device->MemBase)) {
@@ -1426,8 +1626,8 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 	pNv->FbAddress = pNv->pEnt->device->MemBase;
 	from = X_CONFIG;
     } else {
-	if (pNv->PciInfo->memBase[1] != 0) {
-	    pNv->FbAddress = pNv->PciInfo->memBase[1] & 0xff800000;
+	if (MEMBASE(pNv->PciInfo, 1) != 0) {
+	    pNv->FbAddress = MEMBASE(pNv->PciInfo, 1) & 0xff800000;
 	    from = X_PROBED;
 	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -1453,8 +1653,8 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 	pNv->IOAddress = pNv->pEnt->device->IOBase;
 	from = X_CONFIG;
     } else {
-	if (pNv->PciInfo->memBase[0] != 0) {
-	    pNv->IOAddress = pNv->PciInfo->memBase[0] & 0xffffc000;
+	if (MEMBASE(pNv->PciInfo, 0) != 0) {
+	    pNv->IOAddress = MEMBASE(pNv->PciInfo, 0) & 0xffffc000;
 	    from = X_PROBED;
 	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -1520,13 +1720,11 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
     pNv->alphaCursor = (pNv->Architecture >= NV_ARCH_10) &&
                        ((pNv->Chipset & 0x0ff0) != 0x0100);
 
-#ifdef USE_CVTMODE_FUNC
     if ((pScrn->monitor->nHsync == 0) && 
 	(pScrn->monitor->nVrefresh == 0))
 	config_mon_rates = FALSE;
     else
 	config_mon_rates = TRUE;
-#endif
 
     NVCommonSetup(pScrn);
 
@@ -1597,7 +1795,6 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
        max_height = 4096;
     }
 
-#ifdef USE_CVTMODE_FUNC
     /* If DFP, add a modeline corresponding to its panel size */
     if (pNv->FlatPanel && !pNv->Television && pNv->fpWidth && pNv->fpHeight) {
 	DisplayModePtr Mode;
@@ -1626,7 +1823,6 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 	    pScrn->monitor->nVrefresh = 1;
 	}
     }
-#endif
 
     /*
      * xf86ValidateModes will check that the mode HTotal and VTotal values
@@ -1634,14 +1830,31 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
      * pScrn->maxVValue are set.  Since our NVValidMode() already takes
      * care of this, we don't worry about setting them here.
      */
-    i = xf86ValidateModes(pScrn, pScrn->monitor->Modes,
-                          pScrn->display->modes, clockRanges,
-                          NULL, 256, max_width,
-                          512, 128, max_height,
-                          pScrn->display->virtualX,
-                          pScrn->display->virtualY,
-                          pNv->ScratchBufferStart,
-                          LOOKUP_BEST_REFRESH);
+    if (pNv->VBEDualhead) {
+        pScrn->modePool = VBEGetModePool(pScrn, pNv->pVbe, pNv->pVbeInfo,
+                                         V_MODETYPE_VBE);
+
+        VBESetModeNames(pScrn->modePool);
+        i = VBEValidateModes(pScrn, pScrn->monitor->Modes,
+                             pScrn->display->modes, clockRanges,
+                             NULL, 256, max_width,
+                             512, 128, max_height,
+                             pScrn->display->virtualX,
+                             pScrn->display->virtualY,
+                             pNv->ScratchBufferStart,
+                             LOOKUP_BEST_REFRESH);
+        if (i > 0)
+            VBESetModeParameters(pScrn, pNv->pVbe);
+    } else {
+        i = xf86ValidateModes(pScrn, pScrn->monitor->Modes,
+                              pScrn->display->modes, clockRanges,
+                              NULL, 256, max_width,
+                              512, 128, max_height,
+                              pScrn->display->virtualX,
+                              pScrn->display->virtualY,
+                              pNv->ScratchBufferStart,
+                              LOOKUP_BEST_REFRESH);
+    }
 
     if (i < 1 && pNv->FBDev) {
 	fbdevHWUseBuildinMode(pScrn);
@@ -1673,6 +1886,22 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
      * are not pre-initialised at all.
      */
     xf86SetCrtcForModes(pScrn, 0);
+
+    if (pNv->VBEDualhead) {
+        DisplayModePtr p = pScrn->modes;
+
+        /*
+         * Loop through modes and double their widths.  Stash the real width in
+         * CrtcHDisplay.  Also adjust the screen dimensions.
+         */
+        do {
+            p->CrtcHDisplay = p->HDisplay;
+            p->HDisplay *= 2;
+        } while ((p = p->next) != pScrn->modes);
+
+        pScrn->virtualX *= 2;
+        pScrn->displayWidth *= 2;
+    }
 
     /* Set the current mode to the first in the list */
     pScrn->currentMode = pScrn->modes;
@@ -1749,13 +1978,20 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 static Bool
 NVMapMem(ScrnInfoPtr pScrn)
 {
-    NVPtr pNv;
-        
-    pNv = NVPTR(pScrn);
+    NVPtr pNv = NVPTR(pScrn);
 
+#if XSERVER_LIBPCIACCESS
+    void *tmp;
+
+    pci_device_map_range(pNv->PciInfo, pNv->FbAddress, pNv->FbMapSize,
+                         PCI_DEV_MAP_FLAG_WRITABLE |
+                         PCI_DEV_MAP_FLAG_WRITE_COMBINE, &tmp);
+    pNv->FbBase = tmp;
+#else
     pNv->FbBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
 				 pNv->PciTag, pNv->FbAddress,
 				 pNv->FbMapSize);
+#endif
     if (pNv->FbBase == NULL)
 	return FALSE;
 
@@ -1791,7 +2027,11 @@ NVUnmapMem(ScrnInfoPtr pScrn)
     
     pNv = NVPTR(pScrn);
 
+#if XSERVER_LIBPCIACCESS
+    pci_device_unmap_range(pNv->PciInfo, pNv->FbBase, pNv->FbMapSize);
+#else
     xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pNv->FbBase, pNv->FbMapSize);
+#endif
     pNv->FbBase = NULL;
     pNv->FbStart = NULL;
 
@@ -1851,6 +2091,32 @@ NVModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
     vgaHWProtect(pScrn, FALSE);
 
     pNv->CurrentLayout.mode = mode;
+
+    return TRUE;
+}
+
+static Bool
+NVSetModeVBE(ScrnInfoPtr pScrn, DisplayModePtr pMode)
+{
+    NVPtr pNv = NVPTR(pScrn);
+    VbeModeInfoData *data;
+    int mode;
+
+    data = (VbeModeInfoData*)pMode->Private;
+    mode = data->mode | 1 << 14;
+
+    if(!VBESetVBEMode(pNv->pVbe, mode, data->block))
+        return FALSE;
+    pNv->PCRTC0[0x820/4] = pNv->PCRTC0[0x2820/4] =
+        pScrn->displayWidth * (pScrn->bitsPerPixel / 8);
+    pNv->vbeCRTC1Offset = pMode->CrtcHDisplay * (pScrn->bitsPerPixel / 8);
+
+    pScrn->vtSema = TRUE;
+
+    NVLoadStateExt(pNv, NULL);
+    NVResetGraphics(pScrn);
+
+    pNv->CurrentLayout.mode = pMode;
 
     return TRUE;
 }
@@ -2027,6 +2293,10 @@ NVScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	fbdevHWSave(pScrn);
 	if (!fbdevHWModeInit(pScrn, pScrn->currentMode))
 	    return FALSE;
+    } else if (pNv->VBEDualhead) {
+        NVSaveRestoreVBE(pScrn, MODE_SAVE);
+        if (!NVSetModeVBE(pScrn, pScrn->currentMode))
+            return FALSE;
     } else {
 	/* Save the current state */
 	NVSave(pScrn);
@@ -2222,6 +2492,10 @@ NVScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     pNv->BlockHandler = pScreen->BlockHandler;
     pScreen->BlockHandler = NVBlockHandler;
 
+    pNv->accessEnabled = TRUE;
+    pNv->EnableDisableFBAccess = pScrn->EnableDisableFBAccess;
+    pScrn->EnableDisableFBAccess = NVEnableDisableFBAccess;
+
 #ifdef RANDR
     /* Install our DriverFunc.  We have to do it this way instead of using the
      * HaveDriverFuncs argument to xf86AddDriver, because InitOutput clobbers
@@ -2258,6 +2532,20 @@ NVSave(ScrnInfoPtr pScrn)
     }
 
     NVDACSave(pScrn, vgaReg, nvReg, pNv->Primary);
+}
+
+static void
+NVSaveRestoreVBE(ScrnInfoPtr pScrn, vbeSaveRestoreFunction function)
+{
+    NVPtr pNv = NVPTR(pScrn);
+
+    if (function == MODE_SAVE) {
+        VBEGetVBEMode(pNv->pVbe, &pNv->vbeMode);
+        NVSave(pScrn);
+    } else if (function == MODE_RESTORE) {
+        NVRestore(pScrn);
+        VBESetVBEMode(pNv->pVbe, pNv->vbeMode, NULL);
+    }
 }
 
 #ifdef RANDR
@@ -2320,4 +2608,4 @@ NVDriverFunc(ScrnInfoPtr pScrn, xorgDriverFuncOp op, pointer data)
 
     return FALSE;
 }
-#endif
+#endif /* RANDR */

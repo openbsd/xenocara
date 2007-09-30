@@ -58,12 +58,9 @@ NV40, NV41, NV43, NV44, NV45, C51
 .TP 22
 .B GeForce 7XXX
 G70, G71, G72, G73
-.de G8
 .TP 22
 .B GeForce 8XXX
-G80
-..
-.if __support_g80__ .G8
+G80, G84, G86
 
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
@@ -95,6 +92,11 @@ which one the monitor is connected to.  In the case that autodetection picks
 the wrong one, this option may be used to force usage of a particular output. 
 The options are "0" or "1".
 Default: autodetected.
+.TP
+.BI "Option \*qDualhead\*q \*q" boolean \*q
+Enables simple VBE-based dual head mode.
+This sets the same resolution on both outputs and lays them out side-by-side.
+The screens will be panned together as one big metamode if the virtual desktop is larger than both screens combined.
 .TP
 .BI "Option \*qFlatPanel\*q \*q" boolean \*q
 The driver usually can autodetect the presence of a digital flat panel.  In
@@ -136,11 +138,10 @@ Default: no rotation support.
 Enable or disable use of the shadow framebuffer layer.  Default: off.
 .
 .\" ******************** begin G80 section ********************
-.de G8
 .PP
 The following driver
 .B Options
-are available for G80:
+are available for G80 and higher:
 .TP
 .BI "Option \*qHWCursor\*q \*q" boolean \*q
 Enable or disable the hardware cursor.  Default: on.
@@ -148,18 +149,42 @@ Enable or disable the hardware cursor.  Default: on.
 .BI "Option \*qNoAccel\*q \*q" boolean \*q
 Disable or enable acceleration.  Default: acceleration is enabled.
 .TP
-.BI "Option \*qBackendMode\*q \*q" mode \*q
-Designate a mode to be used as the physical mode driving the display.
-The screen will be scaled to fit the requested mode.
-For example, if
-.B Option \*qBackendMode\*q \*q1280x1024\*q
-is specified, the monitor will always display the 1280x1024 mode and the screen will be scaled to match.
-..
-.if __support_g80__ .G8
+.BI "Option \*qAccelMethod\*q \*q" string \*q
+Choose acceleration architecture, either \*qXAA\*q or \*qEXA\*q.
+XAA is the old but stable architecture.
+EXA is newer and supports resizing the desktop larger than it started out with RandR 1.2.
+If you choose to use EXA, you might also consider setting
+.B Option \*qMigrationHeuristic\*q \*qgreedy\*q
+to improve performance.
+Default: XAA.
+.TP
+.BI "Option \*qFPDither\*q \*q" boolean \*q
+Enable or disable flat panel dithering by default.
+Dithering can also be enabled or disabled using the RandR 1.2 \*qdither\*q output property.
+Default: off.
+.
+.\" RandR 1.2
+.PP
+The following RandR 1.2 properties are available for flat panels on G80 and higher GPUs:
+.TP
+.B dither
+Enable or disable flat panel dithering.
+Valid values:
+.BR 0 " (off), " 1 " (on)."
+.TP
+.B scale
+Control how the image is scaled to fit the flat panel.
+Note that some flat panels perform their own scaling, overriding this option.
+.RB \*q off \*q
+is not valid for laptop flat panels (LVDS).
+Valid values:
+.RB \*q off "\*q, \*q" aspect "\*q, \*q" fill "\*q, and \*q" center \*q.
+Default:
+.RB \*q aspect \*q.
 .\" ******************** end G80 section ********************
 .
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__), xrandr(__appmansuffix__)
 .SH AUTHORS
 Authors include: David McKay, Jarno Paananen, Chas Inman, Dave Schmenk, 
 Mark Vojkovich, Aaron Plattner

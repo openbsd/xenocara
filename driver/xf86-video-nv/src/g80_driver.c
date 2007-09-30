@@ -30,6 +30,7 @@
 
 #include <xf86_OSproc.h>
 #include <xf86Resources.h>
+#include <xf86RandR12.h>
 #include <mipointer.h>
 #include <mibstore.h>
 #include <micmap.h>
@@ -42,8 +43,9 @@
 #include "g80_type.h"
 #include "g80_cursor.h"
 #include "g80_display.h"
-#include "g80_ddc.h"
 #include "g80_dma.h"
+#include "g80_output.h"
+#include "g80_exa.h"
 #include "g80_xaa.h"
 
 #define G80_REG_SIZE (1024 * 1024 * 16)
@@ -62,6 +64,13 @@ static const char *xaaSymbols[] = {
     "XAAFallbackOps",
     "XAAInit",
     "XAAPatternROP",
+    NULL
+};
+
+static const char *exaSymbols[] = {
+    "exaDriverAlloc",
+    "exaDriverInit",
+    "exaDriverFini",
     NULL
 };
 
@@ -95,13 +104,15 @@ static const char *int10Symbols[] = {
 typedef enum {
     OPTION_HW_CURSOR,
     OPTION_NOACCEL,
-    OPTION_BACKEND_MODE,
+    OPTION_ACCEL_METHOD,
+    OPTION_FP_DITHER,
 } G80Opts;
 
 static const OptionInfoRec G80Options[] = {
     { OPTION_HW_CURSOR,         "HWCursor",     OPTV_BOOLEAN,   {0}, FALSE },
     { OPTION_NOACCEL,           "NoAccel",      OPTV_BOOLEAN,   {0}, FALSE },
-    { OPTION_BACKEND_MODE,      "BackendMode",  OPTV_ANYSTR,    {0}, FALSE },
+    { OPTION_ACCEL_METHOD,      "AccelMethod",  OPTV_STRING,    {0}, FALSE },
+    { OPTION_FP_DITHER,         "FPDither",     OPTV_BOOLEAN,   {0}, FALSE },
     { -1,                       NULL,           OPTV_NONE,      {0}, FALSE }
 };
 
@@ -122,20 +133,76 @@ G80FreeRec(ScrnInfoPtr pScrn)
 }
 
 static Bool
+G80ResizeScreen(ScrnInfoPtr pScrn, int width, int height)
+{
+    ScreenPtr pScreen = pScrn->pScreen;
+    G80Ptr pNv = G80PTR(pScrn);
+    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+    int pitch = width * (pScrn->bitsPerPixel / 8);
+    int i;
+
+    pitch = (pitch + 255) & ~255;
+
+    pScrn->virtualX = width;
+    pScrn->virtualY = height;
+
+    /* Can resize if XAA is disabled or EXA is enabled */
+    if(!pNv->xaa || pNv->exa) {
+        (*pScrn->pScreen->GetScreenPixmap)(pScrn->pScreen)->devKind = pitch;
+        pScrn->displayWidth = pitch / (pScrn->bitsPerPixel / 8);
+
+        /* Re-set the modes so the new pitch is taken into account */
+        for(i = 0; i < xf86_config->num_crtc; i++) {
+            xf86CrtcPtr crtc = xf86_config->crtc[i];
+            if(crtc->enabled)
+                xf86CrtcSetMode(crtc, &crtc->mode, crtc->rotation, crtc->x, crtc->y);
+        }
+    }
+
+    /*
+     * If EXA is enabled, use exaOffscreenAlloc to carve out a chunk of memory
+     * for the screen.
+     */
+    if(pNv->exa) {
+        if(pNv->exaScreenArea)
+            exaOffscreenFree(pScreen, pNv->exaScreenArea);
+        pNv->exaScreenArea = exaOffscreenAlloc(pScreen, pitch * pScrn->virtualY,
+                                               256, TRUE, NULL, NULL);
+        if(!pNv->exaScreenArea || pNv->exaScreenArea->offset != 0) {
+            xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+                       "Failed to reserve EXA memory for the screen or EXA "
+                       "returned an area with a nonzero offset.  Don't be "
+                       "surprised if your screen is corrupt.\n");
+        }
+    }
+
+    return TRUE;
+}
+
+static const xf86CrtcConfigFuncsRec randr12_screen_funcs = {
+    .resize = G80ResizeScreen,
+};
+
+static Bool
 G80PreInit(ScrnInfoPtr pScrn, int flags)
 {
     G80Ptr pNv;
     EntityInfoPtr pEnt;
+#if XSERVER_LIBPCIACCESS
+    struct pci_device *pPci;
+    int err;
+    void *p;
+#else
     pciVideoPtr pPci;
     PCITAG pcitag;
-    ClockRangePtr clockRanges;
+#endif
     MessageType from;
     Bool primary;
-    int i;
-    char *s;
     const rgb zeros = {0, 0, 0};
     const Gamma gzeros = {0.0, 0.0, 0.0};
+    char *s;
     CARD32 tmp;
+    memType BAR1sizeKB;
 
     if(flags & PROBE_DETECT) {
         xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -157,13 +224,22 @@ G80PreInit(ScrnInfoPtr pScrn, int flags)
     pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
     if(pEnt->location.type != BUS_PCI) goto fail;
     pPci = xf86GetPciInfoForEntity(pEnt->index);
-    pcitag = pciTag(pPci->bus, pPci->device, pPci->func);
+#if XSERVER_LIBPCIACCESS
+    /* Need this to unmap */
+    pNv->pPci = pPci;
+#endif
     primary = xf86IsPrimaryPci(pPci);
 
     /* The ROM size sometimes isn't read correctly, so fix it up here. */
+#if XSERVER_LIBPCIACCESS
+    if(pPci->rom_size == 0)
+        /* The BIOS is 64k */
+        pPci->rom_size = 64 * 1024;
+#else
     if(pPci->biosSize == 0)
         /* The BIOS is 64k */
         pPci->biosSize = 16;
+#endif
 
     pNv->int10 = NULL;
     pNv->int10Mode = 0;
@@ -243,6 +319,18 @@ G80PreInit(ScrnInfoPtr pScrn, int flags)
         pNv->NoAccel = TRUE;
         xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Acceleration disabled\n");
     }
+    s = xf86GetOptValString(pNv->Options, OPTION_ACCEL_METHOD);
+    if(!s || !strcasecmp(s, "xaa"))
+        pNv->AccelMethod = XAA;
+    else if(!strcasecmp(s, "exa"))
+        pNv->AccelMethod = EXA;
+    else {
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Unrecognized AccelMethod "
+        "\"%s\".\n", s);
+        goto fail;
+    }
+
+    pNv->Dither = xf86ReturnOptValBool(pNv->Options, OPTION_FP_DITHER, FALSE);
 
     /* Set the bits per RGB for 8bpp mode */
     if(pScrn->depth == 8)
@@ -250,29 +338,25 @@ G80PreInit(ScrnInfoPtr pScrn, int flags)
 
     if(!xf86SetGamma(pScrn, gzeros)) goto fail;
 
-    /*
-     * Setup the ClockRanges, which describe what clock ranges are available,
-     * and what sort of modes they can be used for.
-     */
-    clockRanges = xnfcalloc(sizeof(ClockRange), 1);
-    clockRanges->next = NULL;
-    clockRanges->minClock = 0;
-    clockRanges->maxClock = 400000;
-    clockRanges->clockIndex = -1;       /* programmable */
-    clockRanges->doubleScanAllowed = TRUE;
-    clockRanges->interlaceAllowed = TRUE;
-
     /* Map memory */
-    xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "MMIO registers at 0x%lx\n",
-               pPci->memBase[0]);
-    xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "Linear framebuffer at 0x%lx\n",
-               pPci->memBase[1]);
-    pScrn->memPhysBase = pPci->memBase[1];
+    pScrn->memPhysBase = MEMBASE(pPci, 1);
     pScrn->fbOffset = 0;
 
+#if XSERVER_LIBPCIACCESS
+    err = pci_device_map_range(pPci, pPci->regions[0].base_addr, G80_REG_SIZE,
+                               PCI_DEV_MAP_FLAG_WRITABLE, &p);
+    if(err) {
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                   "Failed to map MMIO registers: %s\n", strerror(err));
+        goto fail;
+    }
+    pNv->reg = p;
+#else
+    pcitag = pciTag(pPci->bus, pPci->device, pPci->func);
     pNv->reg = xf86MapPciMem(pScrn->scrnIndex,
                              VIDMEM_MMIO | VIDMEM_READSIDEEFFECT,
                              pcitag, pPci->memBase[0], G80_REG_SIZE);
+#endif
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "MMIO registers mapped at %p\n",
                (void*)pNv->reg);
 
@@ -285,21 +369,56 @@ G80PreInit(ScrnInfoPtr pScrn, int flags)
     pNv->architecture = pNv->reg[0] >> 20 & 0x1ff;
     pNv->RamAmountKBytes = pNv->RamAmountKBytes = (pNv->reg[0x0010020C/4] & 0xFFF00000) >> 10;
     pNv->videoRam = pNv->RamAmountKBytes;
-    /* Limit videoRam to the max BAR1 size of 256MB */
-    if(pNv->videoRam <= 1024) {
+
+    /* Determine the size of BAR1 */
+    /* Some configs have BAR1 < total RAM < 256 MB */
+#if XSERVER_LIBPCIACCESS
+    BAR1sizeKB = pPci->regions[1].size / 1024;
+#else
+    BAR1sizeKB = 1UL << (pPci->size[1] - 10);
+#endif
+    if(BAR1sizeKB > 256 * 1024) {
+        xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "BAR1 is > 256 MB, which is "
+                   "probably wrong.  Clamping to 256 MB.\n");
+        BAR1sizeKB = 256 * 1024;
+    }
+
+    /* Limit videoRam to the size of BAR1 */
+    if(pNv->videoRam <= 1024 || BAR1sizeKB == 0) {
         xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Failed to determine the amount of "
                    "available video memory\n");
         goto fail;
     }
     pNv->videoRam -= 1024;
-    if(pNv->videoRam > 256 * 1024)
-        pNv->videoRam = 256 * 1024;
+    if(pNv->videoRam > BAR1sizeKB)
+        pNv->videoRam = BAR1sizeKB;
+
     pScrn->videoRam = pNv->videoRam;
-    xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "Mapping %.1f of %.1f MB of video RAM\n",
-               pScrn->videoRam / 1024.0, pNv->RamAmountKBytes / 1024.0);
+
+    xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "Total video RAM: %.1f MB\n",
+               pNv->RamAmountKBytes / 1024.0);
+    xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "      BAR1 size: %.1f MB\n",
+               BAR1sizeKB / 1024.0);
+    xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "  Mapped memory: %.1f MB\n",
+               pScrn->videoRam / 1024.0);
+
+#if XSERVER_LIBPCIACCESS
+    err = pci_device_map_range(pPci, pPci->regions[1].base_addr,
+                               pScrn->videoRam * 1024,
+                               PCI_DEV_MAP_FLAG_WRITABLE |
+                               PCI_DEV_MAP_FLAG_WRITE_COMBINE,
+                               &p);
+    if(err) {
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                   "Failed to map framebuffer: %s\n", strerror(err));
+        goto fail;
+    }
+    pNv->mem = p;
+#else
     pNv->mem = xf86MapPciMem(pScrn->scrnIndex,
                              VIDMEM_MMIO | VIDMEM_READSIDEEFFECT,
                              pcitag, pPci->memBase[1], pScrn->videoRam * 1024);
+#endif
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Linear framebuffer mapped at %p\n",
                (void*)pNv->mem);
 
@@ -310,70 +429,55 @@ G80PreInit(ScrnInfoPtr pScrn, int flags)
     else
         pNv->table1 -= 0x10000;
 
-    /* Probe DDC */
-    /* If no DDC info found, try DAC load detection */
+    xf86CrtcConfigInit(pScrn, &randr12_screen_funcs);
+    xf86CrtcSetSizeRange(pScrn, 320, 200, 8192, 8192);
+
     if(!xf86LoadSubModule(pScrn, "i2c")) goto fail;
     if(!xf86LoadSubModule(pScrn, "ddc")) goto fail;
     xf86LoaderReqSymLists(i2cSymbols, ddcSymbols, NULL);
-    if(!G80ProbeDDC(pScrn) && !G80LoadDetect(pScrn)) {
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "No display devices found\n");
-        goto fail;
-    }
-    /* Hardcode HEAD0 for now.  RandR 1.2 will move this into a Crtc struct. */
-    pNv->head = 0;
 
-    i = xf86ValidateModes(pScrn, pScrn->monitor->Modes,
-                          pScrn->display->modes, clockRanges,
-                          NULL, 256, 8192,
-                          512, 128, 8192,
-                          pScrn->display->virtualX,
-                          pScrn->display->virtualY,
-                          pNv->videoRam * 1024 - G80_RESERVED_VIDMEM,
-                          LOOKUP_BEST_REFRESH);
-    if(i == -1) goto fail;
-    xf86PruneDriverModes(pScrn);
-    if(i == 0 || !pScrn->modes) {
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "No valid modes found\n");
+    if(!G80DispPreInit(pScrn)) goto fail;
+    /* Read the DDC routing table and create outputs */
+    if(!G80CreateOutputs(pScrn)) goto fail;
+    /* Create the crtcs */
+    G80DispCreateCrtcs(pScrn);
+
+    /* We can grow the desktop if XAA is disabled */
+    if(!xf86InitialConfiguration(pScrn, pNv->NoAccel || pNv->AccelMethod == EXA)) {
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+            "No valid initial configuration found\n");
         goto fail;
     }
-    xf86SetCrtcForModes(pScrn, 0);
+    pScrn->displayWidth = (pScrn->virtualX + 255) & ~255;
+
+    if(!xf86RandR12PreInit(pScrn)) {
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "RandR initialization failure\n");
+        goto fail;
+    }
+    if(!pScrn->modes) {
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "No modes\n");
+        goto fail;
+    }
 
     pScrn->currentMode = pScrn->modes;
     xf86PrintModes(pScrn);
     xf86SetDpi(pScrn, 0, 0);
-
-    /* Custom backend timings */
-    pNv->BackendMode = NULL;
-    if((s = xf86GetOptValString(pNv->Options, OPTION_BACKEND_MODE))) {
-        DisplayModePtr mode;
-
-        for(mode = pScrn->modes; ; mode = mode->next) {
-            if(!strcmp(mode->name, s))
-                break;
-            if(mode->next == pScrn->modes) {
-                mode = NULL;
-                break;
-            }
-        }
-
-        pNv->BackendMode = mode;
-
-        if(mode)
-            xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "BackendMode: Using mode "
-                       "\"%s\" for display timings\n", mode->name);
-        else
-            xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "Cannot honor "
-                       "\"BackendMode\" option: no mode named \"%s\" "
-                       "found.\n", s);
-    }
 
     /* Load fb */
     if(!xf86LoadSubModule(pScrn, "fb")) goto fail;
     xf86LoaderReqSymLists(fbSymbols, NULL);
 
     if(!pNv->NoAccel) {
-        if(!xf86LoadSubModule(pScrn, "xaa")) goto fail;
-        xf86LoaderReqSymLists(xaaSymbols, NULL);
+        switch(pNv->AccelMethod) {
+        case XAA:
+            if(!xf86LoadSubModule(pScrn, "xaa")) goto fail;
+            xf86LoaderReqSymLists(xaaSymbols, NULL);
+            break;
+        case EXA:
+            if(!xf86LoadSubModule(pScrn, "exa")) goto fail;
+            xf86LoaderReqSymLists(exaSymbols, NULL);
+            break;
+        }
     }
 
     /* Load ramdac if needed */
@@ -401,15 +505,11 @@ fail:
 static Bool
 AcquireDisplay(ScrnInfoPtr pScrn)
 {
-    G80Ptr pNv = G80PTR(pScrn);
-
     if(!G80DispInit(pScrn))
         return FALSE;
-    if(!G80CursorAcquire(pNv))
+    if(!G80CursorAcquire(pScrn))
         return FALSE;
-    if(!G80DispSetMode(pScrn, pScrn->currentMode))
-        return FALSE;
-    G80DispDPMSSet(pScrn, DPMSModeOn, 0);
+    xf86SetDesiredModes(pScrn);
 
     return TRUE;
 }
@@ -422,7 +522,7 @@ ReleaseDisplay(ScrnInfoPtr pScrn)
 {
     G80Ptr pNv = G80PTR(pScrn);
 
-    G80CursorRelease(pNv);
+    G80CursorRelease(pScrn);
     G80DispShutdown(pScrn);
 
     if(pNv->int10 && pNv->int10Mode) {
@@ -450,13 +550,24 @@ G80CloseScreen(int scrnIndex, ScreenPtr pScreen)
 
     if(pNv->xaa)
         XAADestroyInfoRec(pNv->xaa);
-    if(pNv->HWCursor)
-        xf86DestroyCursorInfoRec(pNv->CursorInfo);
+    if(pNv->exa) {
+        if(pNv->exaScreenArea) {
+            exaOffscreenFree(pScreen, pNv->exaScreenArea);
+            pNv->exaScreenArea = NULL;
+        }
+        exaDriverFini(pScrn->pScreen);
+    }
+    xf86_cursors_fini(pScreen);
 
     if(xf86ServerIsExiting()) {
         if(pNv->int10) xf86FreeInt10(pNv->int10);
+#if XSERVER_LIBPCIACCESS
+        pci_device_unmap_range(pNv->pPci, pNv->mem, pNv->videoRam * 1024);
+        pci_device_unmap_range(pNv->pPci, (void*)pNv->reg, G80_REG_SIZE);
+#else
         xf86UnMapVidMem(pScrn->scrnIndex, pNv->mem, pNv->videoRam * 1024);
         xf86UnMapVidMem(pScrn->scrnIndex, (void*)pNv->reg, G80_REG_SIZE);
+#endif
         pNv->reg = NULL;
         pNv->mem = NULL;
     }
@@ -477,6 +588,8 @@ G80BlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
     if(pNv->DMAKickoffCallback)
         (*pNv->DMAKickoffCallback)(pScrnInfo);
 
+    G80OutputResetCachedStatus(pScrnInfo);
+
     pScreen->BlockHandler = pNv->BlockHandler;
     (*pScreen->BlockHandler) (i, blockData, pTimeout, pReadmask);
     pScreen->BlockHandler = G80BlockHandler;
@@ -485,13 +598,7 @@ G80BlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
 static Bool
 G80SaveScreen(ScreenPtr pScreen, int mode)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-
-    if(!pScrn->vtSema) return FALSE;
-
-    G80DispBlankScreen(pScrn, !xf86IsUnblank(mode));
-
-    return TRUE;
+    return FALSE;
 }
 
 static void
@@ -712,7 +819,7 @@ G80ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     ScrnInfoPtr pScrn;
     G80Ptr pNv;
     CARD32 pitch;
-    int visualMask;
+    int visualMask, i;
     BoxRec AvailFBArea;
 
     /* First get the ScrnInfoRec */
@@ -731,8 +838,6 @@ G80ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     /* pad the screen pitch to 256 bytes */
     pitch = pScrn->displayWidth * (pScrn->bitsPerPixel / 8);
-    pitch = (pitch + 0xff) & ~0xff;
-    pScrn->displayWidth = pitch / (pScrn->bitsPerPixel / 8);
 
     /* fb init */
     if(!fbScreenInit(pScreen, pNv->mem,
@@ -774,12 +879,27 @@ G80ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     AvailFBArea.y2 = pNv->offscreenHeight;
     xf86InitFBManager(pScreen, &AvailFBArea);
 
+    pNv->reg[0x00001708/4] = 0;
+    for(i = 0; i < 8; i++)
+        pNv->reg[0x00001900/4 + i] = 0;
+
     if(!pNv->NoAccel) {
         G80InitHW(pScrn);
-        if(!G80XAAInit(pScreen)) {
-            xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-                       "Hardware acceleration initialization failed\n");
-            pNv->NoAccel = FALSE;
+        switch(pNv->AccelMethod) {
+        case XAA:
+            if(!G80XAAInit(pScreen)) {
+                xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                           "XAA hardware acceleration initialization failed\n");
+                return FALSE;
+            }
+            break;
+        case EXA:
+            if(!G80ExaInit(pScreen, pScrn)) {
+                xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                           "EXA hardware acceleration initialization failed\n");
+                return FALSE;
+            }
+            break;
         }
     }
 
@@ -808,7 +928,7 @@ G80ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
                             CMAP_PALETTED_TRUECOLOR))
         return FALSE;
 
-    xf86DPMSInit(pScreen, G80DispDPMSSet, 0);
+    xf86DPMSInit(pScreen, xf86DPMSSet, 0);
 
     /* Clear the screen */
     if(pNv->xaa) {
@@ -834,6 +954,9 @@ G80ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     pNv->BlockHandler = pScreen->BlockHandler;
     pScreen->BlockHandler = G80BlockHandler;
 
+    if(!xf86CrtcScreenInit(pScreen))
+        return FALSE;
+
     return TRUE;
 }
 
@@ -847,22 +970,12 @@ static Bool
 G80SwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
 {
     ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-
-    return G80DispSetMode(pScrn, mode);
+    return xf86SetSingleMode(pScrn, mode, RR_Rotate_0);
 }
 
 static void
 G80AdjustFrame(int scrnIndex, int x, int y, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-    G80Ptr pNv = G80PTR(pScrn);
-
-    if(x + pScrn->currentMode->HDisplay > pScrn->virtualX ||
-       y + pScrn->currentMode->VDisplay > pScrn->virtualY ||
-       x < 0 || y < 0)
-        /* Ignore bogus panning */
-        return;
-    G80DispAdjustFrame(pNv, x, y);
 }
 
 static Bool
