@@ -1,7 +1,8 @@
 /*
- * $Id: damageproto.h,v 1.1.1.1 2006/11/25 15:44:45 matthieu Exp $
+ * $Id: damageproto.h,v 1.1.1.2 2007/09/30 06:41:27 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
+ * Copyright © 2007 Eric Anholt
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -114,6 +115,16 @@ typedef struct {
 } xDamageSubtractReq;
 
 #define sz_xDamageSubtractReq		16
+
+typedef struct {
+    CARD8	reqType;
+    CARD8	damageReqType;
+    CARD16	length B16;
+    Drawable	drawable B32;
+    Region	region B32;
+} xDamageAddReq;
+
+#define sz_xDamageAddReq		12
 
 /* Events */
 
