@@ -61,8 +61,8 @@ MAN_SUBSTS = \
 
 SUFFIXES = .$(LIB_MAN_SUFFIX) .man .xml
 
-.man.$(LIB_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+Xcomposite.$(LIB_MAN_SUFFIX): Xcomposite.man
+	sed $(MAN_SUBSTS) < ${srcdir}/Xcomposite.man > Xcomposite.${LIB_MAN_SUFFIX}
 
 # Generate nroff sources from DocBook/xml
 
