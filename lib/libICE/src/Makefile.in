@@ -120,12 +120,19 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LINT = @LINT@
+LINTLIB = @LINTLIB@
+LINT_FALSE = @LINT_FALSE@
+LINT_FLAGS = @LINT_FLAGS@
+LINT_TRUE = @LINT_TRUE@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MAKE_LINT_LIB_FALSE = @MAKE_LINT_LIB_FALSE@
+MAKE_LINT_LIB_TRUE = @MAKE_LINT_LIB_TRUE@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -223,6 +230,9 @@ iceinclude_HEADERS = \
 	$(top_srcdir)/include/X11/ICE/ICEmsg.h \
 	$(top_srcdir)/include/X11/ICE/ICEproto.h \
 	$(top_srcdir)/include/X11/ICE/ICEutil.h
+
+@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+@LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
 
 all: all-am
 
@@ -534,6 +544,9 @@ uninstall-am: uninstall-iceincludeHEADERS uninstall-info-am \
 	uninstall-iceincludeHEADERS uninstall-info-am \
 	uninstall-libLTLIBRARIES
 
+
+@LINT_TRUE@lint:
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(libICE_la_SOURCES) $(XINERAMA_LIBS)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
