@@ -277,6 +277,7 @@ Picture XRenderCreateLinearGradient(Display *dpy,
     XRenderExtDisplayInfo	    *info = XRenderFindDisplay (dpy);
     Picture		    pid;
     xRenderCreateLinearGradientReq *req;
+    long			   len;
 
     RenderCheckExtension (dpy, info, 0);
     LockDisplay(dpy);
@@ -291,9 +292,10 @@ Picture XRenderCreateLinearGradient(Display *dpy,
     req->p2.y = gradient->p2.y;
 
     req->nStops = nStops;
+    len = (long) nStops * 3;
+    SetReqLen (req, len, 6);
     DataInt32(dpy, stops, nStops * 4);
     Data16(dpy, colors, nStops * 8);
-    req->length += nStops*3;
 
     UnlockDisplay(dpy);
     SyncHandle();
@@ -309,6 +311,7 @@ Picture XRenderCreateRadialGradient(Display *dpy,
     XRenderExtDisplayInfo	    *info = XRenderFindDisplay (dpy);
     Picture		    pid;
     xRenderCreateRadialGradientReq *req;
+    long			   len;
 
     RenderCheckExtension (dpy, info, 0);
     LockDisplay(dpy);
@@ -325,9 +328,10 @@ Picture XRenderCreateRadialGradient(Display *dpy,
     req->outer_radius = gradient->outer.radius;
 
     req->nStops = nStops;
+    len = (long) nStops * 3;
+    SetReqLen (req, len, 6);
     DataInt32(dpy, stops, nStops * 4);
     Data16(dpy, colors, nStops * 8);
-    req->length += nStops*3;
 
     UnlockDisplay(dpy);
     SyncHandle();
@@ -343,6 +347,7 @@ Picture XRenderCreateConicalGradient(Display *dpy,
     XRenderExtDisplayInfo	    *info = XRenderFindDisplay (dpy);
     Picture		    pid;
     xRenderCreateConicalGradientReq *req;
+    long			    len;
 
     RenderCheckExtension (dpy, info, 0);
     LockDisplay(dpy);
@@ -356,9 +361,10 @@ Picture XRenderCreateConicalGradient(Display *dpy,
     req->angle = gradient->angle;
 
     req->nStops = nStops;
+    len = (long) nStops * 3;
+    SetReqLen (req, len, 6);
     DataInt32(dpy, stops, nStops * 4);
     Data16(dpy, colors, nStops * 8);
-    req->length += nStops*3;
 
     UnlockDisplay(dpy);
     SyncHandle();
