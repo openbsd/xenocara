@@ -96,6 +96,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_XMODES_FALSE = @BUILD_XMODES_FALSE@
+BUILD_XMODES_TRUE = @BUILD_XMODES_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -147,14 +149,15 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
+PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-SUPPORT_G80_FALSE = @SUPPORT_G80_FALSE@
-SUPPORT_G80_TRUE = @SUPPORT_G80_TRUE@
 VERSION = @VERSION@
+XMODES_CFLAGS = @XMODES_CFLAGS@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 ac_ct_AR = @ac_ct_AR@
@@ -194,8 +197,10 @@ libexecdir = @libexecdir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
+modes_dir = @modes_dir@
 moduledir = @moduledir@
 oldincludedir = @oldincludedir@
+parser_dir = @parser_dir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
@@ -212,8 +217,6 @@ SED = sed
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
 XORGMANNAME = X Version 11
-@SUPPORT_G80_FALSE@MAN_SUPPORT_G80 = 0
-@SUPPORT_G80_TRUE@MAN_SUPPORT_G80 = 1
 MAN_SUBSTS = \
 	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
@@ -224,8 +227,7 @@ MAN_SUBSTS = \
 	-e 's|__drivermansuffix__|$(DRIVER_MAN_SUFFIX)|g' \
 	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g' \
-	-e 's|__support_g80__|$(MAN_SUPPORT_G80)|g'
+	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
 SUFFIXES = .$(DRIVER_MAN_SUFFIX) .man
 all: all-am

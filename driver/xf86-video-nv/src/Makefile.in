@@ -75,25 +75,20 @@ am__installdirs = "$(DESTDIR)$(nv_drv_ladir)"
 nv_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(nv_drv_la_LTLIBRARIES)
 nv_drv_la_LIBADD =
-am__nv_drv_la_SOURCES_DIST = nv_const.h nv_cursor.c nv_dac.c nv_dga.c \
-	nv_dma.h nv_driver.c nv_hw.c nv_include.h nv_local.h \
-	nv_proto.h nvreg.h nv_setup.c nv_shadow.c nv_type.h nvvga.h \
-	nv_video.c nv_xaa.c riva_const.h riva_cursor.c riva_dac.c \
-	riva_dga.c riva_driver.c riva_hw.c riva_hw.h riva_include.h \
-	riva_local.h riva_proto.h riva_setup.c riva_shadow.c \
-	riva_tbl.h riva_type.h riva_xaa.c g80_cursor.c g80_cursor.h \
-	g80_ddc.c g80_ddc.h g80_display.c g80_display.h g80_dma.c \
-	g80_dma.h g80_driver.c g80_type.h g80_xaa.c g80_xaa.h
 am__objects_1 = nv_cursor.lo nv_dac.lo nv_dga.lo nv_driver.lo nv_hw.lo \
 	nv_setup.lo nv_shadow.lo nv_video.lo nv_xaa.lo
 am__objects_2 = riva_cursor.lo riva_dac.lo riva_dga.lo riva_driver.lo \
 	riva_hw.lo riva_setup.lo riva_shadow.lo riva_xaa.lo
-@SUPPORT_G80_TRUE@am__objects_3 = g80_cursor.lo g80_ddc.lo \
-@SUPPORT_G80_TRUE@	g80_display.lo g80_dma.lo g80_driver.lo \
-@SUPPORT_G80_TRUE@	g80_xaa.lo
+am__objects_3 = g80_cursor.lo g80_dac.lo g80_display.lo g80_dma.lo \
+	g80_driver.lo g80_exa.lo g80_output.lo g80_sor.lo g80_xaa.lo
 am_nv_drv_la_OBJECTS = $(am__objects_1) $(am__objects_2) \
 	$(am__objects_3)
-nv_drv_la_OBJECTS = $(am_nv_drv_la_OBJECTS)
+am__EXTRA_nv_drv_la_SOURCES_DIST = local_xf86Rename.h
+am__objects_4 = xf86Modes.lo xf86cvt.lo xf86Crtc.lo xf86Cursors.lo \
+	xf86EdidModes.lo xf86RandR12.lo xf86Rotate.lo xf86DiDGA.lo
+@BUILD_XMODES_TRUE@nodist_nv_drv_la_OBJECTS = $(am__objects_4)
+nv_drv_la_OBJECTS = $(am_nv_drv_la_OBJECTS) \
+	$(nodist_nv_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -105,8 +100,10 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(nv_drv_la_SOURCES)
-DIST_SOURCES = $(am__nv_drv_la_SOURCES_DIST)
+SOURCES = $(nv_drv_la_SOURCES) $(EXTRA_nv_drv_la_SOURCES) \
+	$(nodist_nv_drv_la_SOURCES)
+DIST_SOURCES = $(nv_drv_la_SOURCES) \
+	$(am__EXTRA_nv_drv_la_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -123,6 +120,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_XMODES_FALSE = @BUILD_XMODES_FALSE@
+BUILD_XMODES_TRUE = @BUILD_XMODES_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -174,14 +173,15 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
+PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-SUPPORT_G80_FALSE = @SUPPORT_G80_FALSE@
-SUPPORT_G80_TRUE = @SUPPORT_G80_TRUE@
 VERSION = @VERSION@
+XMODES_CFLAGS = @XMODES_CFLAGS@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 ac_ct_AR = @ac_ct_AR@
@@ -221,8 +221,10 @@ libexecdir = @libexecdir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
+modes_dir = @modes_dir@
 moduledir = @moduledir@
 oldincludedir = @oldincludedir@
+parser_dir = @parser_dir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
@@ -235,7 +237,7 @@ target_alias = @target_alias@
 # -avoid-version prevents gratuitous .0.0.0 version numbers on the end
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
-AM_CFLAGS = @XORG_CFLAGS@
+AM_CFLAGS = @XMODES_CFLAGS@ @XORG_CFLAGS@
 nv_drv_la_LTLIBRARIES = nv_drv.la
 nv_drv_la_LDFLAGS = -module -avoid-version
 nv_drv_ladir = @moduledir@/drivers
@@ -276,20 +278,42 @@ riva_sources = \
          riva_type.h \
          riva_xaa.c
 
-@SUPPORT_G80_TRUE@g80_sources = \
-@SUPPORT_G80_TRUE@         g80_cursor.c \
-@SUPPORT_G80_TRUE@         g80_cursor.h \
-@SUPPORT_G80_TRUE@         g80_ddc.c \
-@SUPPORT_G80_TRUE@         g80_ddc.h \
-@SUPPORT_G80_TRUE@         g80_display.c \
-@SUPPORT_G80_TRUE@         g80_display.h \
-@SUPPORT_G80_TRUE@         g80_dma.c \
-@SUPPORT_G80_TRUE@         g80_dma.h \
-@SUPPORT_G80_TRUE@         g80_driver.c \
-@SUPPORT_G80_TRUE@         g80_type.h \
-@SUPPORT_G80_TRUE@         g80_xaa.c \
-@SUPPORT_G80_TRUE@         g80_xaa.h
+g80_sources = \
+         g80_cursor.c \
+         g80_cursor.h \
+         g80_dac.c \
+         g80_display.c \
+         g80_display.h \
+         g80_dma.c \
+         g80_dma.h \
+         g80_driver.c \
+         g80_exa.c \
+         g80_exa.h \
+         g80_output.c \
+         g80_output.h \
+         g80_sor.c \
+         g80_type.h \
+         g80_xaa.c \
+         g80_xaa.h
 
+xmode_sources = \
+         @parser_dir@/xf86Parser.h \
+         @parser_dir@/xf86Optrec.h \
+         @modes_dir@/xf86Modes.h \
+         @modes_dir@/xf86Modes.c \
+         @modes_dir@/xf86cvt.c \
+         @modes_dir@/xf86Crtc.h \
+         @modes_dir@/xf86Crtc.c \
+         @modes_dir@/xf86Cursors.c \
+         @modes_dir@/xf86EdidModes.c \
+         @modes_dir@/xf86RandR12.c \
+         @modes_dir@/xf86RandR12.h \
+         @modes_dir@/xf86Rename.h \
+         @modes_dir@/xf86Rotate.c \
+         @modes_dir@/xf86DiDGA.c
+
+@BUILD_XMODES_TRUE@EXTRA_nv_drv_la_SOURCES = local_xf86Rename.h
+@BUILD_XMODES_TRUE@nodist_nv_drv_la_SOURCES = $(xmode_sources)
 all: all-am
 
 .SUFFIXES:
@@ -360,10 +384,13 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_cursor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_ddc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_dac.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_display.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_dma.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_driver.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_exa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_output.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_sor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g80_xaa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nv_cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nv_dac.Plo@am__quote@
@@ -382,6 +409,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/riva_setup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/riva_shadow.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/riva_xaa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Crtc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Cursors.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86DiDGA.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86EdidModes.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Modes.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86RandR12.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Rotate.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86cvt.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -403,6 +438,62 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+xf86Modes.lo: @modes_dir@/xf86Modes.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86Modes.lo -MD -MP -MF "$(DEPDIR)/xf86Modes.Tpo" -c -o xf86Modes.lo `test -f '@modes_dir@/xf86Modes.c' || echo '$(srcdir)/'`@modes_dir@/xf86Modes.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86Modes.Tpo" "$(DEPDIR)/xf86Modes.Plo"; else rm -f "$(DEPDIR)/xf86Modes.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='@modes_dir@/xf86Modes.c' object='xf86Modes.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86Modes.lo `test -f '@modes_dir@/xf86Modes.c' || echo '$(srcdir)/'`@modes_dir@/xf86Modes.c
+
+xf86cvt.lo: @modes_dir@/xf86cvt.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86cvt.lo -MD -MP -MF "$(DEPDIR)/xf86cvt.Tpo" -c -o xf86cvt.lo `test -f '@modes_dir@/xf86cvt.c' || echo '$(srcdir)/'`@modes_dir@/xf86cvt.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86cvt.Tpo" "$(DEPDIR)/xf86cvt.Plo"; else rm -f "$(DEPDIR)/xf86cvt.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='@modes_dir@/xf86cvt.c' object='xf86cvt.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86cvt.lo `test -f '@modes_dir@/xf86cvt.c' || echo '$(srcdir)/'`@modes_dir@/xf86cvt.c
+
+xf86Crtc.lo: @modes_dir@/xf86Crtc.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86Crtc.lo -MD -MP -MF "$(DEPDIR)/xf86Crtc.Tpo" -c -o xf86Crtc.lo `test -f '@modes_dir@/xf86Crtc.c' || echo '$(srcdir)/'`@modes_dir@/xf86Crtc.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86Crtc.Tpo" "$(DEPDIR)/xf86Crtc.Plo"; else rm -f "$(DEPDIR)/xf86Crtc.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='@modes_dir@/xf86Crtc.c' object='xf86Crtc.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86Crtc.lo `test -f '@modes_dir@/xf86Crtc.c' || echo '$(srcdir)/'`@modes_dir@/xf86Crtc.c
+
+xf86Cursors.lo: @modes_dir@/xf86Cursors.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86Cursors.lo -MD -MP -MF "$(DEPDIR)/xf86Cursors.Tpo" -c -o xf86Cursors.lo `test -f '@modes_dir@/xf86Cursors.c' || echo '$(srcdir)/'`@modes_dir@/xf86Cursors.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86Cursors.Tpo" "$(DEPDIR)/xf86Cursors.Plo"; else rm -f "$(DEPDIR)/xf86Cursors.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='@modes_dir@/xf86Cursors.c' object='xf86Cursors.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86Cursors.lo `test -f '@modes_dir@/xf86Cursors.c' || echo '$(srcdir)/'`@modes_dir@/xf86Cursors.c
+
+xf86EdidModes.lo: @modes_dir@/xf86EdidModes.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86EdidModes.lo -MD -MP -MF "$(DEPDIR)/xf86EdidModes.Tpo" -c -o xf86EdidModes.lo `test -f '@modes_dir@/xf86EdidModes.c' || echo '$(srcdir)/'`@modes_dir@/xf86EdidModes.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86EdidModes.Tpo" "$(DEPDIR)/xf86EdidModes.Plo"; else rm -f "$(DEPDIR)/xf86EdidModes.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='@modes_dir@/xf86EdidModes.c' object='xf86EdidModes.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86EdidModes.lo `test -f '@modes_dir@/xf86EdidModes.c' || echo '$(srcdir)/'`@modes_dir@/xf86EdidModes.c
+
+xf86RandR12.lo: @modes_dir@/xf86RandR12.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86RandR12.lo -MD -MP -MF "$(DEPDIR)/xf86RandR12.Tpo" -c -o xf86RandR12.lo `test -f '@modes_dir@/xf86RandR12.c' || echo '$(srcdir)/'`@modes_dir@/xf86RandR12.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86RandR12.Tpo" "$(DEPDIR)/xf86RandR12.Plo"; else rm -f "$(DEPDIR)/xf86RandR12.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='@modes_dir@/xf86RandR12.c' object='xf86RandR12.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86RandR12.lo `test -f '@modes_dir@/xf86RandR12.c' || echo '$(srcdir)/'`@modes_dir@/xf86RandR12.c
+
+xf86Rotate.lo: @modes_dir@/xf86Rotate.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86Rotate.lo -MD -MP -MF "$(DEPDIR)/xf86Rotate.Tpo" -c -o xf86Rotate.lo `test -f '@modes_dir@/xf86Rotate.c' || echo '$(srcdir)/'`@modes_dir@/xf86Rotate.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86Rotate.Tpo" "$(DEPDIR)/xf86Rotate.Plo"; else rm -f "$(DEPDIR)/xf86Rotate.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='@modes_dir@/xf86Rotate.c' object='xf86Rotate.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86Rotate.lo `test -f '@modes_dir@/xf86Rotate.c' || echo '$(srcdir)/'`@modes_dir@/xf86Rotate.c
+
+xf86DiDGA.lo: @modes_dir@/xf86DiDGA.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86DiDGA.lo -MD -MP -MF "$(DEPDIR)/xf86DiDGA.Tpo" -c -o xf86DiDGA.lo `test -f '@modes_dir@/xf86DiDGA.c' || echo '$(srcdir)/'`@modes_dir@/xf86DiDGA.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86DiDGA.Tpo" "$(DEPDIR)/xf86DiDGA.Plo"; else rm -f "$(DEPDIR)/xf86DiDGA.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='@modes_dir@/xf86DiDGA.c' object='xf86DiDGA.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86DiDGA.lo `test -f '@modes_dir@/xf86DiDGA.c' || echo '$(srcdir)/'`@modes_dir@/xf86DiDGA.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
