@@ -80,7 +80,7 @@ Default: hardware cursor.
 .TP
 .BI "Option \*qNoAccel\*q \*q" boolean \*q
 Disable or enable acceleration.  Default: acceleration is enabled.
-TP
+.TP
 .BI "Option \*qAccelMethod\*q \*q" "string" \*q
 Chooses between available acceleration architectures.  Valid options are
 .B XAA
@@ -95,13 +95,18 @@ possibly unstable.  The default is
 .BI "Option \*qRotate\*q \*qCW\*q"
 .TP
 .BI "Option \*qRotate\*q \*qCCW\*q"
-Rotate the desktop 90 degrees clockwise or counterclockwise.  This option 
-forces the ShadowFB option on, and disables acceleration.
+Rotate the desktop 90 degrees clockwise or counterclockwise.
+This option forces the ShadowFB option on, and disables acceleration and
+the RandR extension.
 Default: no rotation.
 .TP
 .BI "Option \*qShadowFB\*q \*q" boolean \*q
-Enable or disable use of the shadow framebuffer layer.  This option
-disables acceleration.  Default: off.
+Enable or disable use of the shadow framebuffer layer.
+.\" See
+.\" .BR shadowfb (__drivermansuffix__)
+.\" for further information.
+This option disables acceleration.
+Default: off.
 .TP
 .BI "Option \*qLCDClock\*q \*q" frequency \*q
 Override the maximum dot clock.  Some LCD panels produce incorrect results if
@@ -216,6 +221,10 @@ on an AGP card the AGP bus speed is not set and no AGP aperture is
 allocated. This implies
 .BI DmaType
 \*qPCI\*q.
+.TP
+.BI "Option \*qDRI\*q \*q" boolean \*q
+Enable DRI support.  This option allows you to enable or disable the DRI.
+Default: \*qon\*q (enable DRI).
 .SH FILES
 savage_drv.o
 .SH "SEE ALSO"

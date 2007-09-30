@@ -95,29 +95,30 @@ static int SavageGetCopyROP(int rop) {
 
 }
 
-static int SavageGetCopyROP_PM(int rop) {
+static int SavageGetSolidROP(int rop) {
 
-    int ALUCopyROP_PM[16] =
+    int ALUSolidROP[16] =
     {
-       0x00, /*ROP_0*/		/* not used */
-       0x75, /*ROP_DSPnoa*/
-       0x45, /*ROP_DPSnaon*/
-       0xCA, /*ROP_DPSDxax*/
-       0xD5, /*ROP_DPSana*/
-       0xAA, /*ROP_D*/		/* not used */
-       0x6A, /*ROP_DPSax*/
-       0xEA, /*ROP_DPSao*/
-       0x15, /*ROP_DPSaon*/
-       0x95, /*ROP_DPSaxn*/
-       0x55, /*ROP_Dn*/		/* not used */
-       0xD5, /*ROP_DPSanan*/
-       0x2E, /*ROP_PSDPxox*/		/* is that correct ? */
-       0xBA, /*ROP_DPSnao*/
-       0x75, /*ROP_DSPnoan*/
-       0xFF, /*ROP_1*/		/* not used */
+    /* GXclear      */      0x00,         /* 0 */
+    /* GXand        */      0xA0,         /* src AND dst */
+    /* GXandReverse */      0x50,         /* src AND NOT dst */
+    /* GXcopy       */      0xF0,         /* src */
+    /* GXandInverted*/      0x0A,         /* NOT src AND dst */
+    /* GXnoop       */      0xAA,         /* dst */
+    /* GXxor        */      0x5A,         /* src XOR dst */
+    /* GXor         */      0xFA,         /* src OR dst */
+    /* GXnor        */      0x05,         /* NOT src AND NOT dst */
+    /* GXequiv      */      0xA5,         /* NOT src XOR dst */
+    /* GXinvert     */      0x55,         /* NOT dst */
+    /* GXorReverse  */      0xF5,         /* src OR NOT dst */
+    /* GXcopyInverted*/     0x0F,         /* NOT src */
+    /* GXorInverted */      0xAF,         /* NOT src OR dst */
+    /* GXnand       */      0x5F,         /* NOT src OR NOT dst */
+    /* GXset        */      0xFF,         /* 1 */
+
     };
 
-    return (ALUCopyROP_PM[rop]);
+    return (ALUSolidROP[rop]);
 
 }
 
@@ -171,14 +172,14 @@ SavageEXAInit(ScreenPtr pScreen)
 
     if (psav->Chipset == S3_SAVAGE2000 ||
 	psav->Chipset == S3_SUPERSAVAGE) {
-	psav->EXADriverPtr->pixmapOffsetAlign = 128; /* octword */
+	psav->EXADriverPtr->pixmapOffsetAlign = 16; /* octword */
     } else {
-	psav->EXADriverPtr->pixmapOffsetAlign = 64; /* qword */
+	psav->EXADriverPtr->pixmapOffsetAlign = 8; /* quadword */
     }
 
     /* engine has 12 bit coordinates */
-    psav->EXADriverPtr->maxX = 4095;
-    psav->EXADriverPtr->maxY = 4095;
+    psav->EXADriverPtr->maxX = 4096;
+    psav->EXADriverPtr->maxY = 4096;
 
     /* Sync */
     psav->EXADriverPtr->WaitMarker = SavageEXASync;
@@ -200,7 +201,7 @@ SavageEXAInit(ScreenPtr pScreen)
     /* host data blit */
     psav->EXADriverPtr->UploadToScreen = SavageUploadToScreen;
 #endif
-#if 1
+#if 0
     psav->EXADriverPtr->DownloadFromScreen = SavageDownloadFromScreen;
 #endif
 
@@ -272,17 +273,52 @@ SavagePrepareSolid(PixmapPtr pPixmap, int alu, Pixel planemask, Pixel fg)
 {
     ScrnInfoPtr pScrn = xf86Screens[pPixmap->drawable.pScreen->myNum];
     SavagePtr psav = SAVPTR(pScrn);
-    int cmd;
+    int cmd, rop;
     BCI_GET_PTR;
 
-    /*ErrorF("in preparesolid\n");*/
+    /* HW seems to ignore alpha */
+    if (pPixmap->drawable.bitsPerPixel == 32)
+	return FALSE;
 
     cmd = BCI_CMD_RECT
         | BCI_CMD_RECT_XP | BCI_CMD_RECT_YP
-        | BCI_CMD_DEST_PBD_NEW | BCI_CMD_SRC_SOLID
-	| BCI_CMD_SEND_COLOR;
-	
-    BCI_CMD_SET_ROP( cmd, SavageGetCopyROP(alu) );
+        | BCI_CMD_DEST_PBD /*BCI_CMD_DEST_PBD_NEW*/
+	| BCI_CMD_SRC_SOLID;
+
+#if 0
+    if (alu == 3 /*GXcopy*/) {
+	if (fg == 0)
+	    alu = 0 /*GXclear*/;
+	else if (fg == planemask)
+	    alu = 15 /*GXset*/;
+    }
+
+    if (EXA_PM_IS_SOLID(&pPixmap->drawable, planemask)) {
+	if (!((alu == 5 /*GXnoop*/) || (alu == 15 /*GXset*/) || (alu == 0 /*GXclear*/) || (alu == 10 /*GXinvert*/))) 
+	   cmd |= BCI_CMD_SEND_COLOR;
+	rop = SavageGetCopyROP(alu);
+    } else {	
+	switch(alu) {
+	case 5  /*GXnoop*/:
+	    break;
+	case 15 /*GXset*/:
+	case 0  /*GXclear*/:
+	case 10 /*GXinvert*/:
+	    cmd |= BCI_CMD_SEND_COLOR;
+	    fg = planemask;
+	    break;
+	default:
+	    cmd |= BCI_CMD_SEND_COLOR;
+	    break;
+	}
+	rop = SavageGetSolidROP(alu);
+    }
+#else
+    cmd |= BCI_CMD_SEND_COLOR;
+    rop = SavageGetSolidROP(alu);
+#endif
+
+    BCI_CMD_SET_ROP( cmd, rop );
 
     psav->pbd_offset = exaGetPixmapOffset(pPixmap);
     psav->pbd_high = SavageSetBD(psav, pPixmap);
@@ -290,17 +326,18 @@ SavagePrepareSolid(PixmapPtr pPixmap, int alu, Pixel planemask, Pixel fg)
     psav->SavedBciCmd = cmd;
     psav->SavedFgColor = fg;
 
-    psav->WaitQueue(psav,6);
+    psav->WaitQueue(psav,5);
 
     BCI_SEND(BCI_SET_REGISTER
 	     | BCI_SET_REGISTER_COUNT(1)
 	     | BCI_BITPLANE_WRITE_MASK);
     BCI_SEND(planemask);
 
-    BCI_SEND(psav->SavedBciCmd);
+    BCI_SEND(BCI_SET_REGISTER
+	     | BCI_SET_REGISTER_COUNT(2)
+	     | BCI_PBD_1);
     BCI_SEND(psav->pbd_offset);
     BCI_SEND(psav->pbd_high);
-    BCI_SEND(psav->SavedFgColor);
 
     return TRUE;
 }
@@ -313,11 +350,17 @@ SavageSolid(PixmapPtr pPixmap, int x1, int y1, int x2, int y2)
     int w = x2 - x1;
     int h = y2 - y1;
     BCI_GET_PTR;
-    
-    if( !w || !h )
-	return;
 
-    psav->WaitQueue(psav,2);
+    /* yes, it has to be done this way... */
+    psav->WaitQueue(psav,4);
+    BCI_SEND(psav->SavedBciCmd);
+    /*BCI_SEND(psav->pbd_offset);
+    BCI_SEND(psav->pbd_high);*/
+#if 0
+    if ( psav->SavedBciCmd & BCI_CMD_SEND_COLOR )
+	BCI_SEND(psav->SavedFgColor);
+#endif
+    BCI_SEND(psav->SavedFgColor);
     BCI_SEND(BCI_X_Y(x1, y1));
     BCI_SEND(BCI_W_H(w, h));
 
@@ -412,18 +455,19 @@ SavageUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int 
     ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
     SavagePtr psav = SAVPTR(pScrn);
     BCI_GET_PTR;
-    int i, j, dwords, Bpp;
+    int i, j, dwords, queue, Bpp;
     unsigned int cmd;
     CARD32 * srcp; 
     
     Bpp = pDst->drawable.bitsPerPixel / 8;
-    dwords = ((w * Bpp) + 3) >> 2;
+    dwords = (((w * Bpp) + 3) >> 2) * h;
 
     psav->sbd_offset = exaGetPixmapOffset(pDst);
     psav->sbd_high = SavageSetBD(psav, pDst);
 
     cmd = BCI_CMD_RECT
 	| BCI_CMD_RECT_XP | BCI_CMD_RECT_YP
+        | BCI_CMD_CLIP_LR
         | BCI_CMD_DEST_SBD_NEW
         | BCI_CMD_SRC_COLOR; /* host color data */
 
@@ -442,16 +486,20 @@ SavageUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int 
     BCI_SEND(BCI_X_Y(x, y));
     BCI_SEND(BCI_W_H(w, h));
     
-    for (i = 0; i < h; i++) {
-	srcp = (CARD32 *)src;
-	BCI_RESET;
-	for (j = dwords; j > 0; j--) {
-	    CARD32 dw = *srcp;
-	    BCI_SEND(dw);
-	    srcp++;
+    srcp = (CARD32 *)src;
+    queue = 120 * 1024;
+    while (dwords) {
+	if (queue < 4) {
+	    BCI_RESET;
+	    queue = 120 * 1024;
 	}
-	src += src_pitch;
+	BCI_SEND(*srcp);
+	queue -= 4;
+	dwords--;
+	srcp++;
     }
+
+    /*exaWaitSync(pDst->drawable.pScreen);*/
 
     return TRUE;
 }

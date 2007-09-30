@@ -1378,39 +1378,7 @@ SavageAllocateMemory(
 	}
 	offset = linear->offset * cpp;
     }
-#if 0
-    if(area) {
-	if((area->box.y2 - area->box.y1) >= numlines) 
-	   return area;
-        
-        if(xf86ResizeOffscreenArea(area, pScrn->displayWidth, numlines))
-	   return area;
 
-	xf86FreeOffscreenArea(area);
-    }
-
-    pScreen = screenInfo.screens[pScrn->scrnIndex];
-
-    xf86PurgeUnlockedOffscreenAreas(pScreen);
-    new_area = xf86AllocateOffscreenArea(pScreen, pScrn->displayWidth, 
-				numlines, 0, NULL, NULL, NULL);
-
-    if(!new_area) {
-	int max_w, max_h;
-
-	xf86QueryLargestOffscreenArea(pScreen, &max_w, &max_h, 0,
-			FAVOR_WIDTH_THEN_AREA, PRIORITY_EXTREME);
-	
-	if((max_w < pScrn->displayWidth) || (max_h < numlines))
-	   return NULL;
-
-	xf86PurgeUnlockedOffscreenAreas(pScreen);
-	new_area = xf86AllocateOffscreenArea(pScreen, pScrn->displayWidth, 
-				numlines, 0, NULL, NULL, NULL);
-    }
-
-    return new_area;
-#endif
     return offset;
 }
 

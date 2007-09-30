@@ -178,10 +178,10 @@ typedef struct
 #define SAVAGE_TV_ON	4
 
 #define SAVAGE_DRIVER_NAME	"savage"
-#define SAVAGE_DRIVER_VERSION	"2.1.2"
-#define SAVAGE_VERSION_MAJOR	2
-#define SAVAGE_VERSION_MINOR	1
-#define SAVAGE_PATCHLEVEL	2
+#define SAVAGE_DRIVER_VERSION	PACKAGE_VERSION
+#define SAVAGE_VERSION_MAJOR	PACKAGE_VERSION_MAJOR
+#define SAVAGE_VERSION_MINOR	PACKAGE_VERSION_MINOR
+#define SAVAGE_PATCHLEVEL	PACKAGE_VERSION_PATCHLEVEL
 #define SAVAGE_VERSION	((SAVAGE_VERSION_MAJOR << 24) | \
 			 (SAVAGE_VERSION_MINOR << 16) | \
 			 SAVAGE_PATCHLEVEL)
@@ -444,7 +444,7 @@ typedef struct _Savage {
     __GLXvisualConfig*	pVisualConfigs;
     SAVAGEConfigPrivPtr 	pVisualConfigsPriv;
     SAVAGEDRIServerPrivatePtr DRIServerInfo;
-    ScreenWakeupHandlerProcPtr coreWakeupHandler;
+    ScreenWakeupHandlerProcPtr coreWakeupHandler;
     ScreenBlockHandlerProcPtr  coreBlockHandler;
 
 #if 0

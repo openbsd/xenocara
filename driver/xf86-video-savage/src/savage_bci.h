@@ -118,6 +118,12 @@
 #define BCI_SET_REGISTER_COUNT(count) ((count) << 16)
 #define BCI_BITPLANE_WRITE_MASK	     0xD7
 #define BCI_BITPLANE_READ_MASK	     0xD8
+#define BCI_GBD_1		     0xE0
+#define BCI_GBD_2		     0xE1
+#define BCI_PBD_1		     0xE2
+#define BCI_PBD_2		     0xE3
+#define BCI_SBD_1		     0xE4
+#define BCI_SBD_2		     0xE5
 
 #define BCI_W_H(w, h)                ((((h) << 16) | (w)) & 0x0FFF0FFF)
 #define BCI_X_Y(x, y)                ((((y) << 16) | (x)) & 0x0FFF0FFF)
