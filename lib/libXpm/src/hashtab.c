@@ -209,6 +209,7 @@ xpmHashTableInit(table)
     table->size = INITIAL_HASH_SIZE;
     table->limit = table->size / 3;
     table->used = 0;
+    table->atomTable = NULL;
     if (table->size >= UINT_MAX / sizeof(*atomTable))
 	return (XpmNoMemory);
     atomTable = (xpmHashAtom *) XpmMalloc(table->size * sizeof(*atomTable));

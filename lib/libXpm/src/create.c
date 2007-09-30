@@ -2080,12 +2080,12 @@ xpmParseDataAndCreate(display, data, image_return, shapeimage_return,
 	xpmGetCmt(data, &hints_cmt);
 
     /*
-     * init the hastable
+     * init the hashtable
      */
     if (USE_HASHTABLE) {
 	ErrorStatus = xpmHashTableInit(&hashtable);
 	if (ErrorStatus != XpmSuccess)
-	    return (ErrorStatus);
+	    RETURN(ErrorStatus);
     }
 
     /*

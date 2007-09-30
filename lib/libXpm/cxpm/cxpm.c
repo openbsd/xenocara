@@ -34,7 +34,16 @@
 
 #define CXPMPROG
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #include "XpmI.h"
+#ifdef USE_GETTEXT
+#include <locale.h>
+#include <libintl.h>
+#else
+#define gettext(a) (a)
+#endif
 
 #undef xpmGetC
 #define xpmGetC(data) sGetc(data, data->stream.file)
@@ -86,9 +95,9 @@ sUngetc(data, c, file)
 #include "Image.c"
 
 void
-ErrorMessage(ErrorStatus, data)
-    int ErrorStatus;
-    xpmData *data;
+ErrorMessage(
+    int ErrorStatus,
+    xpmData *data)
 
 {
     char *error = NULL;
@@ -97,23 +106,36 @@ ErrorMessage(ErrorStatus, data)
     case XpmSuccess:
 	return;
     case XpmOpenFailed:
-	error = "Cannot open file";
+	/* L10N_Comments : Error produced when filename does not exist 
+	   or insufficient permissions to open (i.e. cxpm /no/such/file ) */
+	error = gettext("Cannot open file");
 	break;
     case XpmFileInvalid:
-	error = "Invalid XPM file";
+	/* L10N_Comments : Error produced when filename can be read, but
+	   is not an XPM file (i.e. cxpm /dev/null ) */
+	error = gettext("Invalid XPM file");
 	break;
     case XpmNoMemory:
-	error = "Not enough memory";
+	/* L10N_Comments : Error produced when filename can be read, but
+	   is too big for memory 
+	   (i.e. limit datasize 32 ; cxpm /usr/dt/backdrops/Crochet.pm ) */
+	error = gettext("Not enough memory");
 	break;
     case XpmColorFailed:
-	error = "Failed to parse color";
+	/* L10N_Comments : Error produced when filename can be read, but
+	   contains an invalid color specification (need to create test case)*/
+	error = gettext("Failed to parse color");
 	break;
     }
 
     if (error) {
-	fprintf(stderr, "Xpm Error: %s.\n", error);
+	/* L10N_Comments : Wrapper around above Xpm errors - %s is
+	   replaced with the contents of the error message retrieved above */
+	fprintf(stderr, gettext("Xpm Error: %s.\n"), error);
 	if (ErrorStatus == XpmFileInvalid && data)
-	  fprintf(stderr, "Error found line %d near character %d\n",
+	/* L10N_Comments : Error produced when filename can be read, but
+	   is not an XPM file (i.e. cxpm /dev/null ) */
+	  fprintf(stderr, gettext("Error found line %d near character %d\n"),
 		  data->lineNum + 1,
 		  data->charNum + 1);
 	exit(1);
@@ -130,9 +152,17 @@ main(argc, argv)
     int ErrorStatus;
     xpmData data;
 
+#ifdef USE_GETTEXT
+    setlocale(LC_ALL,"");
+    bindtextdomain("cxpm",LOCALEDIR);
+    textdomain("cxpm");
+#endif
+
     if (argc > 1) {
         if (!strcmp(argv[1], "-?") || !strncmp(argv[1], "-h", 2)) {
-	    fprintf(stderr, "Usage: %s [filename]\n", argv[0]);
+	    /* L10N_Comments : Usage message produced by running cxpm -h
+		%s will be replaced by argv[0] (program name) */
+	    fprintf(stderr, gettext("Usage: %s [filename]\n"), argv[0]);
 	    exit(1);
 	}
         filename = argv[1];

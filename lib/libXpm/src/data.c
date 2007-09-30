@@ -422,7 +422,7 @@ xpmParseHeader(data)
 	    if (!l)
 		return (XpmFileInvalid);
 	    buf[l] = '\0';
-	    ptr = rindex(buf, '_');
+	    ptr = strrchr(buf, '_');
 	    if (!ptr || strncmp("_format", ptr, l - (ptr - buf)))
 		return XpmFileInvalid;
 	    /* this is definitely an XPM 1 file */

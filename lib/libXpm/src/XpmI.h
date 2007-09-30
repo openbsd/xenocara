@@ -58,9 +58,13 @@
 extern FILE *popen();
 #endif
 
+#ifdef FOR_MSW
+#include "simx.h"
+#else
 #include <X11/Xos.h>
 #include <X11/Xfuncs.h>
 #include <X11/Xmd.h>
+#endif
 
 #ifdef VMS
 #include <unixio.h>

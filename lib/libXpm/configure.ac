@@ -1,7 +1,7 @@
-# $Id: configure.ac,v 1.1.1.1 2006/11/25 17:32:09 matthieu Exp $
+# $Id: configure.ac,v 1.1.1.2 2007/09/30 08:38:09 matthieu Exp $
 
 AC_PREREQ(2.57)
-AC_INIT([libXpm], 3.5.5, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXpm)
+AC_INIT([libXpm], 3.5.7, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXpm)
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([dist-bzip2])
 
@@ -32,6 +32,26 @@ if test "x$GCC" = "xyes"; then
 	-Wnested-externs -fno-strict-aliasing"
 	CFLAGS="$GCC_WARNINGS $CFLAGS"
 fi
+
+# Internationalization & localization support
+AC_SEARCH_LIBS([gettext], [intl], [USE_GETTEXT="yes"], [USE_GETTEXT="no"])
+AC_MSG_CHECKING([where to install localized messages])
+AC_ARG_WITH([localedir], AC_HELP_STRING([--with-localedir=<path>],
+	[Path to install message files in (default: datadir/locale)]),
+	[LOCALEDIR=${withval}], [LOCALEDIR=${datadir}/locale])
+AC_DEFINE_DIR([LOCALEDIR], [LOCALEDIR], [Location of translated messages])
+if test "x$LOCALEDIR" = "xno" -o "x$USE_GETTEXT" = "xno" ; then
+	AC_MSG_RESULT([nowhere])
+	USE_GETTEXT="no"
+else
+	AC_MSG_RESULT([$LOCALEDIR])
+fi
+
+if test "x$USE_GETTEXT" = "xyes" ; then
+	AC_DEFINE([USE_GETTEXT], 1, 
+		  [Define to 1 if you want to use the gettext() function.])
+fi
+AM_CONDITIONAL(USE_GETTEXT, test "x$USE_GETTEXT" = "xyes")
 
 # Optional feature: When ___.xpm is requested, also look for ___.xpm.Z & .gz
 # Replaces ZFILEDEF = -DSTAT_ZFILE in old Imakefile

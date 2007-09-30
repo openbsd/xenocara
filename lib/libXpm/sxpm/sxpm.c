@@ -32,6 +32,10 @@
 *  Developed by Arnaud Le Hors                                                *
 \*****************************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <X11/StringDefs.h>
@@ -46,6 +50,13 @@
 #endif
 
 #include <X11/xpm.h>
+
+#ifdef USE_GETTEXT
+#include <locale.h>
+#include <libintl.h>
+#else
+#define gettext(a) (a)
+#endif
 
 /* XPM */
 /* plaid pixmap */
@@ -158,11 +169,19 @@ main(argc, argv)
     char *buffer;
 #endif
 
+#ifdef USE_GETTEXT
+    XtSetLanguageProc(NULL,NULL,NULL);
+    bindtextdomain("sxpm",LOCALEDIR);
+    textdomain("sxpm");
+#endif
+
     topw = XtInitialize(argv[0], "Sxpm",
 			options, XtNumber(options), &argc, argv);
 
     if (!topw) {
-	fprintf(stderr, "Sxpm Error... [ Undefined DISPLAY ]\n");
+	/* L10N_Comments : Error if no $DISPLAY or $DISPLAY can't be opened.
+	   Not normally reached as Xt exits before we get here. */
+	fprintf(stderr, gettext("Sxpm Error... [ Undefined DISPLAY ]\n"));
 	exit(1);
     }
     colormap = XDefaultColormapOfScreen(XtScreen(topw));
@@ -467,7 +486,9 @@ main(argc, argv)
 	    unsigned int i, j;
 
 	    for (i = 0; i < view.attributes.nextensions; i++) {
-		fprintf(stderr, "Xpm extension : %s\n",
+		/* L10N_Comments : Output when -v & file has extensions 
+		   %s is replaced by extension name */
+		fprintf(stderr, gettext("Xpm extension : %s\n"),
 			view.attributes.extensions[i].name);
 		for (j = 0; j < view.attributes.extensions[i].nlines; j++)
 		    fprintf(stderr, "\t\t%s\n",
@@ -559,8 +580,10 @@ main(argc, argv)
 void
 Usage()
 {
-    fprintf(stderr, "\nUsage:  %s [options...]\n", command[0]);
-    fprintf(stderr, "Where options are:\n\
+    /* L10N_Comments : Usage message (sxpm -h) in two parts. 
+       In the first part %s is replaced by the command name. */
+    fprintf(stderr, gettext("\nUsage:  %s [options...]\n"), command[0]);
+    fprintf(stderr, gettext("Where options are:\n\
 \n\
 [-d host:display]            Display to connect to.\n\
 [-g geom]                    Geometry of window.\n\
@@ -587,7 +610,7 @@ Usage()
 [-version]                   Print out program's version number\n\
                              and library's version number if different.\n\
 if no input is specified sxpm reads from standard input.\n\
-\n");
+\n"));
     exit(0);
 }
 
@@ -604,27 +627,48 @@ ErrorMessage(ErrorStatus, tag)
     case XpmSuccess:
 	return;
     case XpmColorError:
-	warning = "Could not parse or alloc requested color";
+/* L10N_Comments : The following set of messages are classified as 
+   either errors or warnings.  Based on the class of message, different
+   wrappers are selected at the end to state the message source & class. 
+
+	   L10N_Comments : WARNING produced when filename can be read, but
+	   contains an invalid color specification (need to create test case)*/
+	warning = gettext("Could not parse or alloc requested color");
 	break;
     case XpmOpenFailed:
-	error = "Cannot open file";
+	/* L10N_Comments : ERROR produced when filename does not exist 
+	   or insufficient permissions to open (i.e. sxpm /no/such/file ) */
+	error = gettext("Cannot open file");
 	break;
     case XpmFileInvalid:
-	error = "Invalid XPM file";
+	/* L10N_Comments : ERROR produced when filename can be read, but
+	   is not an XPM file (i.e. sxpm /dev/null ) */
+	error = gettext("Invalid XPM file");
 	break;
     case XpmNoMemory:
-	error = "Not enough memory";
+	/* L10N_Comments : ERROR produced when filename can be read, but
+	   is too big for memory 
+	   (i.e. limit datasize 32 ; sxpm /usr/dt/backdrops/Crochet.pm ) */
+	error = gettext("Not enough memory");
 	break;
     case XpmColorFailed:
-	error = "Failed to parse or alloc some color";
+	/* L10N_Comments : ERROR produced when filename can be read, but
+	   contains an invalid color specification (need to create test case)*/
+	error = gettext("Failed to parse or alloc some color");
 	break;
     }
 
     if (warning)
-	fprintf(stderr, "%s Xpm Warning: %s.\n", tag, warning);
+	/* L10N_Comments : Wrapper around above WARNING messages.
+	   First %s is the tag for the operation that produced the warning.
+	   Second %s is the message selected from the above set. */
+	fprintf(stderr, gettext("%s Xpm Warning: %s.\n"), tag, warning);
 
     if (error) {
-	fprintf(stderr, "%s Xpm Error: %s.\n", tag, error);
+	/* L10N_Comments : Wrapper around above ERROR messages.
+	   First %s is the tag for the operation that produced the error.
+	   Second %s is the message selected from the above set */
+	fprintf(stderr, gettext("%s Xpm Error: %s.\n"), tag, error);
 	Punt(1);
     }
 }
@@ -695,15 +739,16 @@ VersionInfo()
     char libminor;
 
     GetNumbers(XpmIncludeVersion, &format, &libmajor, &libminor);
-    fprintf(stderr, "sxpm version: %d.%d%c\n",
+    /* L10N_Comments : sxpm -version output */
+    fprintf(stderr, gettext("sxpm version: %d.%d%c\n"),
 	    format, libmajor, libminor);
-    /*
+    /* L10N_Comments :
      * if we are linked to an XPM library different from the one we've been
-     * compiled with, print its own number too.
+     * compiled with, print its own number too when sxpm -version is called.
      */
     if (XpmIncludeVersion != XpmLibraryVersion()) {
 	GetNumbers(XpmLibraryVersion(), &format, &libmajor, &libminor);
-	fprintf(stderr, "using the XPM library version: %d.%d%c\n",
+	fprintf(stderr, gettext("using the XPM library version: %d.%d%c\n"),
 		format, libmajor, libminor);
     }
 }

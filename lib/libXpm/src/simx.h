@@ -40,6 +40,9 @@
 #ifdef FOR_MSW
 
 #include "windows.h"			/* MS windows GDI types */
+#define _XFUNCPROTOBEGIN
+#define _XFUNCPROTOEND
+#define NO_ZPIPE
 
 /*
  * minimal portability layer between ansi and KR C
@@ -101,7 +104,7 @@ extern "C" {
 
 /* color related */
     FUNC(XParseColor, int, (Display *, Colormap *, char *, XColor *));
-    FUNC(XAllocColor, int, (Display *, Colormap *, XColor *));
+    FUNC(XAllocColor, int, (Display *, Colormap, XColor *));
     FUNC(XQueryColors, void, (Display *display, Colormap *colormap,
 			      XColor *xcolors, int ncolors));
     FUNC(XFreeColors, int, (Display *d, Colormap cmap,
@@ -133,6 +136,18 @@ typedef BOOL Bool;		/* take MSW bool */
 /* make these local here, simx.c gets the same from xpm.h */
 #undef LFUNC
 #undef FUNC
+
+/* Some functions and constants that have non-standard names in the
+   MS library.  */
+#define bzero(addr,sz) memset(addr, 0, sz)
+#define close _close
+#define fdopen _fdopen
+#define index strchr
+#define open _open
+#define O_RDONLY _O_RDONLY
+#define rindex strrchr
+#define strdup _strdup
+
 
 #endif /* def FOR_MSW */
 

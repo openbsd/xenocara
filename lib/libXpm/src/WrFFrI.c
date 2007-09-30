@@ -117,9 +117,9 @@ XpmWriteFileFromXpmImage(filename, image, info)
 #ifdef VMS
 	name = filename;
 #else
-	if (!(name = rindex(filename, '/'))
+	if (!(name = strrchr(filename, '/'))
 #ifdef AMIGA
-	    && !(name = rindex(filename, ':'))
+	    && !(name = strrchr(filename, ':'))
 #endif
      )
 	    name = filename;
@@ -127,24 +127,25 @@ XpmWriteFileFromXpmImage(filename, image, info)
 	    name++;
 #endif
 	/* let's try to make a valid C syntax name */
-	if (index(name, '.')) {
+	if (strchr(name, '.')) {
 	    strncpy(new_name, name, sizeof(new_name));
 	    new_name[sizeof(new_name)-1] = '\0';
 	    /* change '.' to '_' */
 	    name = s = new_name;
-	    while ((dot = index(s, '.'))) {
+	    while ((dot = strchr(s, '.'))) {
 		*dot = '_';
 		s = dot;
 	    }
 	}
-	if (index(name, '-')) {
+	if (strchr(name, '-')) {
 	    if (name != new_name) {
-		strcpy(new_name, name);
+		strncpy(new_name, name, sizeof(new_name));
+		new_name[sizeof(new_name)-1] = '\0';
 		name = new_name;
 	    }
 	    /* change '-' to '_' */
 	    s = name;
-	    while ((dot = index(s, '-'))) {
+	    while ((dot = strchr(s, '-'))) {
 		*dot = '_';
 		s = dot;
 	    }

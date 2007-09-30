@@ -138,7 +138,7 @@ xpmParseValues(data, width, height, ncolors, cpp,
 	    ptr = buf;
 	    got_one = False;
 	    while (!got_one) {
-		ptr = index(ptr, '_');
+		ptr = strchr(ptr, '_');
 		if (!ptr)
 		    return (XpmFileInvalid);
 		switch (l - (ptr - buf)) {
@@ -702,12 +702,12 @@ xpmParseData(data, image, info)
 	xpmGetCmt(data, &hints_cmt);
 
     /*
-     * init the hastable
+     * init the hashtable
      */
     if (USE_HASHTABLE) {
 	ErrorStatus = xpmHashTableInit(&hashtable);
 	if (ErrorStatus != XpmSuccess)
-	    return (ErrorStatus);
+	    RETURN(ErrorStatus);
     }
 
     /*

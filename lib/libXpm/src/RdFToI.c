@@ -44,6 +44,10 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#else
+#ifdef FOR_MSW
+#include <fcntl.h>
+#endif
 #endif
 
 LFUNC(OpenReadFile, int, (char *filename, xpmData *mdata));
