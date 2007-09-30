@@ -1,3 +1,15 @@
+commit de93d67f6d48c7c08f2554cb85515bcf7dfbffb2
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Aug 21 17:54:23 2007 -0700
+
+    Version bump: 1.0.4
+
+commit 5e16b0ebccb233f7aeaf3928a853ee966b7cbb39
+Author: Kean Johnston <kean@armory.com>
+Date:   Wed Jul 18 09:27:06 2007 -0700
+
+    Fix typo in Xtranslcl.c (sprintf with size argument should be snprintf)
+
 commit 1abc981349140260d6fb643d29cf2b851fc06ac9
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Dec 16 01:15:21 2006 +0200
