@@ -1,5 +1,5 @@
 /*
- * $Id: Xdamage.h,v 1.1.1.1 2006/11/25 17:01:38 matthieu Exp $
+ * $Id: Xdamage.h,v 1.1.1.2 2007/09/30 06:44:31 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -28,6 +28,8 @@
 #include <X11/extensions/damagewire.h>
 #include <X11/extensions/Xfixes.h>
 #include <X11/Xfuncproto.h>
+
+#define XDAMAGE_1_1_INTERFACE
 
 typedef XID Damage;
 
@@ -62,6 +64,9 @@ XDamageDestroy (Display *dpy, Damage damage);
 void
 XDamageSubtract (Display *dpy, Damage damage, 
 		 XserverRegion repair, XserverRegion parts);
+
+void
+XDamageAdd (Display *dpy, Drawable drawable, XserverRegion region);
 
 _XFUNCPROTOEND
 

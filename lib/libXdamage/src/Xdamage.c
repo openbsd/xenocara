@@ -1,7 +1,8 @@
 /*
- * $Id: Xdamage.c,v 1.1.1.1 2006/11/25 17:01:38 matthieu Exp $
+ * $Id: Xdamage.c,v 1.1.1.2 2007/09/30 06:44:31 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
+ * Copyright © 2007 Eric Anholt
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -359,6 +360,25 @@ XDamageSubtract (Display *dpy, Damage damage,
     req->damage = damage;
     req->repair = repair;
     req->parts = parts;
+    UnlockDisplay (dpy);
+    SyncHandle ();
+}
+
+void
+XDamageAdd (Display *dpy, Drawable drawable, XserverRegion region)
+{
+    XDamageExtDisplayInfo	*info = XDamageFindDisplay (dpy);
+    xDamageAddReq		*req;
+    int				len;
+
+    XDamageSimpleCheckExtension (dpy, info);
+    LockDisplay (dpy);
+    GetReq (DamageAdd, req);
+    req->reqType = info->codes->major_opcode;
+    req->damageReqType = X_DamageAdd;
+    req->drawable = drawable;
+    req->region = region;
+
     UnlockDisplay (dpy);
     SyncHandle ();
 }
