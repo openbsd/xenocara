@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([libICE],
-        1.0.3,
+        1.0.4,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         libICE)
 
@@ -35,6 +35,11 @@ AC_DEFINE(ICE_t, 1, [Xtrans transport type])
 
 # Checks for header files.
 AC_HEADER_STDC
+
+dnl Allow checking code with lint, sparse, etc.
+XORG_WITH_LINT
+XORG_LINT_LIBRARY([ICE])
+LINT_FLAGS="${LINT_FLAGS} ${ICE_CFLAGS} ${XTRANS_CFLAGS}"
 
 if test "x$GCC" = "xyes"; then
 	GCC_WARNINGS="-Wall -Wpointer-arith -Wstrict-prototypes \

@@ -55,12 +55,12 @@ extern unsigned	sleep ();
 #endif
 #endif
 
-static Status read_short ();
-static Status read_string ();
-static Status read_counted_string ();
-static Status write_short ();
-static Status write_string ();
-static Status write_counted_string ();
+static Status read_short (FILE *file, unsigned short *shortp);
+static Status read_string (FILE *file, char **stringp);
+static Status read_counted_string (FILE *file, unsigned short *countp, char **stringp);
+static Status write_short (FILE *file, unsigned short s);
+static Status write_string (FILE *file, char *string);
+static Status write_counted_string (FILE *file, unsigned short count, char *string);
 
 
 
@@ -71,7 +71,7 @@ static Status write_counted_string ();
  */
 
 char *
-IceAuthFileName ()
+IceAuthFileName (void)
 
 {
     static char slashDotICEauthority[] = "/.ICEauthority";
@@ -393,11 +393,7 @@ char	*auth_name;
  */
 
 static Status
-read_short (file, shortp)
-
-FILE		*file;
-unsigned short	*shortp;
-
+read_short (FILE *file, unsigned short *shortp)
 {
     unsigned char   file_short[2];
 
@@ -410,10 +406,7 @@ unsigned short	*shortp;
 
 
 static Status
-read_string (file, stringp)
-
-FILE	*file;
-char	**stringp;
+read_string (FILE *file, char **stringp)
 
 {
     unsigned short  len;
@@ -445,12 +438,7 @@ char	**stringp;
 
 
 static Status
-read_counted_string (file, countp, stringp)
-
-FILE	*file;
-unsigned short	*countp;
-char	**stringp;
-
+read_counted_string (FILE *file, unsigned short	*countp, char **stringp)
 {
     unsigned short  len;
     char	    *data;
@@ -484,11 +472,7 @@ char	**stringp;
 
 
 static Status
-write_short (file, s)
-
-FILE		*file;
-unsigned short	s;
-
+write_short (FILE *file, unsigned short s)
 {
     unsigned char   file_short[2];
 
@@ -503,11 +487,7 @@ unsigned short	s;
 
 
 static Status
-write_string (file, string)
-
-FILE		*file;
-char		*string;
-
+write_string (FILE *file, char *string)
 {
     unsigned short count = strlen (string);
 
@@ -522,12 +502,7 @@ char		*string;
 
 
 static Status
-write_counted_string (file, count, string)
-
-FILE		*file;
-unsigned short	count;
-char		*string;
-
+write_counted_string (FILE *file, unsigned short count, char *string)
 {
     if (!write_short (file, count))
 	return (0);

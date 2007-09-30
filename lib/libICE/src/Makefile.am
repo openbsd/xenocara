@@ -38,3 +38,11 @@ iceinclude_HEADERS=\
 	$(top_srcdir)/include/X11/ICE/ICEmsg.h \
 	$(top_srcdir)/include/X11/ICE/ICEproto.h \
 	$(top_srcdir)/include/X11/ICE/ICEutil.h
+
+if LINT
+ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
+
+lint:
+	$(LINT) $(ALL_LINT_FLAGS) $(libICE_la_SOURCES) $(XINERAMA_LIBS)
+endif LINT

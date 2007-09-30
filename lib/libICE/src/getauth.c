@@ -35,7 +35,8 @@ Author: Ralph Mor, X Consortium
 #include "ICElibint.h"
 #include <X11/ICE/ICEutil.h>
 
-static Bool auth_valid ();
+static Bool auth_valid (const char *auth_name, int num_auth_names,
+			char **auth_names, int *index_ret);
 
 extern int		_IcePaAuthDataEntryCount;
 extern IceAuthDataEntry _IcePaAuthDataEntries[];
@@ -244,12 +245,8 @@ int	*indices_ret;		/* in/out arg */
  */
 
 static Bool
-auth_valid (auth_name, num_auth_names, auth_names, index_ret)
-
-char	*auth_name;
-int	num_auth_names;
-char	**auth_names;
-int	*index_ret;
+auth_valid (const char *auth_name, int num_auth_names,
+	    char **auth_names, int *index_ret)
 
 {
     /*

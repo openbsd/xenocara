@@ -38,7 +38,7 @@ Author: Ralph Mor, X Consortium
 #include <time.h>
 #define Time_t time_t
 
-static int binaryEqual ();
+static int binaryEqual (const char *a, const char *b, unsigned len);
 
 static int was_called_state;
 
@@ -135,12 +135,10 @@ char    	**errorStringRet;
 
 	if (!data)
 	{
-	    char *tempstr =
+	    const char *tempstr =
 		"Could not find correct MIT-MAGIC-COOKIE-1 authentication";
 
-	    *errorStringRet = (char *) malloc (strlen (tempstr) + 1);
-	    if (*errorStringRet)
-		strcpy (*errorStringRet, tempstr);
+	    *errorStringRet = strdup(tempstr);
 
 	    return (IcePoAuthFailed);
 	}
@@ -161,11 +159,10 @@ char    	**errorStringRet;
 	 * a single pass authentication method.
 	 */
 
-	char *tempstr = "MIT-MAGIC-COOKIE-1 authentication internal error";
+	const char *tempstr =
+	    "MIT-MAGIC-COOKIE-1 authentication internal error";
 
-	*errorStringRet = (char *) malloc (strlen (tempstr) + 1);
-	if (*errorStringRet)
-	    strcpy (*errorStringRet, tempstr);
+	*errorStringRet = strdup(tempstr);
 
 	return (IcePoAuthFailed);
     }
@@ -226,11 +223,10 @@ char    	**errorStringRet;
 	    }
 	    else
 	    {
-		char *tempstr = "MIT-MAGIC-COOKIE-1 authentication rejected";
+		const char *tempstr
+		    = "MIT-MAGIC-COOKIE-1 authentication rejected";
 
-		*errorStringRet = (char *) malloc (strlen (tempstr) + 1);
-		if (*errorStringRet)
-		    strcpy (*errorStringRet, tempstr);
+		*errorStringRet = strdup(tempstr);
 
 		stat = IcePaAuthRejected;
 	    }
@@ -246,12 +242,10 @@ char    	**errorStringRet;
 	     * always find a valid entry.
 	     */
 
-	    char *tempstr =
+	    const char *tempstr =
 		"MIT-MAGIC-COOKIE-1 authentication internal error";
 
-	    *errorStringRet = (char *) malloc (strlen (tempstr) + 1);
-	    if (*errorStringRet)
-		strcpy (*errorStringRet, tempstr);
+	    *errorStringRet = strdup(tempstr);
 
 	    return (IcePaAuthFailed);
 	}
@@ -265,10 +259,7 @@ char    	**errorStringRet;
  */
 
 static int
-binaryEqual (a, b, len)
-
-register char		*a, *b;
-register unsigned	len;
+binaryEqual (const char *a, const char *b, unsigned len)
 
 {
     while (len--)

@@ -615,7 +615,7 @@ IceReplyWaitInfo *replyWait;
 	    _IceConnectionError *errorReply =
 	        &(((_IceReply *) (replyWait->reply))->connection_error);
 	    char *errorStr = NULL;
-	    char *tempstr;
+	    const char *tempstr;
 	    char *prefix, *temp;
 
 	    invokeHandler = 0;
@@ -627,16 +627,14 @@ IceReplyWaitInfo *replyWait;
 
 		tempstr =
 		    "None of the ICE versions specified are supported";
-		errorStr = (char *) malloc (strlen (tempstr) + 1);
-		strcpy (errorStr, tempstr);
+		errorStr = strdup(tempstr);
 		break;
 
 	    case IceNoAuth:
 
 		tempstr =
 		    "None of the authentication protocols specified are supported";
-		errorStr = (char *) malloc (strlen (tempstr) + 1);
-		strcpy (errorStr, tempstr);
+		errorStr = strdup(tempstr);
 		break;
 
 	    case IceSetupFailed:
@@ -697,16 +695,14 @@ IceReplyWaitInfo *replyWait;
 
 	        temp =
 		    "None of the protocol versions specified are supported";
-		errorStr = (char *) malloc (strlen (temp) + 1);
-		strcpy (errorStr, temp);
+		errorStr = strdup(temp);
 		break;
 
 	    case IceNoAuth:
 
 		temp =
 		    "None of the authentication protocols specified are supported";
-		errorStr = (char *) malloc (strlen (temp) + 1);
-		strcpy (errorStr, temp);
+		errorStr = strdup(temp);
 		break;
 
 	    case IceSetupFailed:
@@ -1129,11 +1125,11 @@ IceReplyWaitInfo	*replyWait;
 	    _IceConnectionError *errorReply =
 	        &(((_IceReply *) (replyWait->reply))->connection_error);
 
-	    char *tempstr = "Received bad authIndex in the AuthRequired message";
+	    const char *tempstr
+		= "Received bad authIndex in the AuthRequired message";
 	    char errIndex = (int) message->authIndex;
 
-	    errorString = (char *) malloc (strlen (tempstr) + 1);
-	    strcpy (errorString, tempstr);
+	    errorString = strdup(tempstr);
 
 	    errorReply->type = ICE_CONNECTION_ERROR;
 	    errorReply->error_message = errorString;
@@ -1159,11 +1155,11 @@ IceReplyWaitInfo	*replyWait;
 	    _IceProtocolError *errorReply =
 	        &(((_IceReply *) (replyWait->reply))->protocol_error);
 
-	    char *tempstr = "Received bad authIndex in the AuthRequired message";
+	    const char *tempstr
+		= "Received bad authIndex in the AuthRequired message";
 	    char errIndex = (int) message->authIndex;
 
-	    errorString = (char *) malloc (strlen (tempstr) + 1);
-	    strcpy (errorString, tempstr);
+	    errorString = strdup(tempstr);
 
 	    errorReply->type = ICE_PROTOCOL_ERROR;
 	    errorReply->error_message = errorString;

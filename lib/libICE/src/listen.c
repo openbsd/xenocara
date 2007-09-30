@@ -123,8 +123,10 @@ char		*errorStringRet;
 			free ((char *) (*listenObjsRet)[j]);
 
 		    free ((char *) *listenObjsRet);
+		    *listenObjsRet = NULL;
 
 		    status = 0;
+		    break;
 		}
 		else
 		{
@@ -175,14 +177,7 @@ IceGetListenConnectionString (listenObj)
 IceListenObj listenObj;
 
 {
-    char *networkId;
-
-    networkId = (char *) malloc (strlen (listenObj->network_id) + 1);
-
-    if (networkId)
-	strcpy (networkId, listenObj->network_id);
-
-    return (networkId);
+    return strdup(listenObj->network_id);
 }
 
 

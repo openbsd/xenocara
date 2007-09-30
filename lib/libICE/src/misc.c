@@ -129,12 +129,7 @@ IceVendor (iceConn)
 IceConn iceConn;
 
 {
-    char *string = (char *) malloc (strlen (iceConn->vendor) + 1);
-
-    if (string)
-	strcpy (string, iceConn->vendor);
-
-    return (string);
+    return strdup(iceConn->vendor);
 }
 
 
@@ -144,12 +139,7 @@ IceRelease (iceConn)
 IceConn iceConn;
 
 {
-    char *string = (char *) malloc (strlen (iceConn->release) + 1);
-
-    if (string)
-	strcpy (string, iceConn->release);
-
-    return (string);
+    return strdup(iceConn->release);
 }
 
 
@@ -191,13 +181,7 @@ IceConn iceConn;
 {
     if (iceConn->connection_string)
     {
-	char *string = (char *) malloc (
-	    strlen (iceConn->connection_string) + 1);
-
-	if (string)
-	    strcpy (string, iceConn->connection_string);
-
-	return (string);
+	return strdup(iceConn->connection_string);
     }
     else
 	return (NULL);

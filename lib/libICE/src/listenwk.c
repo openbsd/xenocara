@@ -127,8 +127,10 @@ char		*errorStringRet;
 			free ((char *) (*listenObjsRet)[j]);
 
 		    free ((char *) *listenObjsRet);
+		    *listenObjsRet = NULL;
 
 		    status = 0;
+		    break;
 		}
 		else
 		{

@@ -92,8 +92,7 @@ IceAcceptStatus	*statusRet;
     iceConn->send_sequence = 0;
     iceConn->receive_sequence = 0;
 
-    iceConn->connection_string = (char *) malloc (
-	strlen (listenObj->network_id) + 1);
+    iceConn->connection_string = strdup(listenObj->network_id);
 
     if (iceConn->connection_string == NULL)
     {
@@ -102,8 +101,6 @@ IceAcceptStatus	*statusRet;
 	*statusRet = IceAcceptBadMalloc;
 	return (NULL);
     }
-    else
-	strcpy (iceConn->connection_string, listenObj->network_id);
 
     iceConn->vendor = NULL;
     iceConn->release = NULL;
