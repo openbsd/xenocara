@@ -3,7 +3,7 @@ dnl Process this file with autoconf to create configure.
 AC_PREREQ([2.57])
 
 AC_INIT([libXaw],
-	1.0.2,
+	1.0.4,
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
 	libXaw)
 
@@ -14,6 +14,10 @@ AM_CONFIG_HEADER(config.h)
 # Check for progs
 AC_PROG_CC
 AC_PROG_LIBTOOL
+
+# Need to call this explicitly since the first call to PKG_CHECK_MODULES
+# is in an if statement, and later calls would break if it's skipped.
+PKG_PROG_PKG_CONFIG
 
 #
 # fix libtool to set SONAME to libXaw.so.$major
@@ -116,6 +120,9 @@ AC_CHECK_HEADER(wchar.h,
 AC_CHECK_HEADER(widec.h, [],
        	AC_DEFINE([NO_WIDEC_H],1,
 			[Define to 1 if you DO NOT have the <widec.h> header file.]))
+
+# Checks for functions
+AC_CHECK_FUNCS([iswalnum])
 
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION

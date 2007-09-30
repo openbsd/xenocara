@@ -33,4 +33,19 @@ EXTRA_DIST = xaw6.pc.in \
 	autogen.sh \
 	xaw.m4 \
 	old-doc/Changelog \
-	old-doc/CHANGES
+	old-doc/CHANGES \
+	ChangeLog
+
+if !PLATFORM_WIN32
+install-exec-hook:
+	cd $(DESTDIR)$(libdir) && rm -f libXaw.so && ln -s $(DEFAULT_LIB) libXaw.so
+endif
+
+MAINTAINERCLEANFILES=ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog

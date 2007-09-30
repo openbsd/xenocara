@@ -1,4 +1,3 @@
-# $Xorg: Makefile.am,v 1.5 2005/11/28 22:03:05 alanc Exp $
 #
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 # 
