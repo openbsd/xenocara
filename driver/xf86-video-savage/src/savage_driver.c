@@ -245,6 +245,7 @@ typedef enum {
     ,OPTION_DMA_MODE
     ,OPTION_AGP_MODE
     ,OPTION_AGP_SIZE
+    ,OPTION_DRI
 } SavageOpts;
 
 
@@ -277,6 +278,7 @@ static const OptionInfoRec SavageOptions[] =
     { OPTION_DMA_MODE,  "DmaMode",	OPTV_ANYSTR,  {0}, FALSE },
     { OPTION_AGP_MODE,	"AGPMode",	OPTV_INTEGER, {0}, FALSE },
     { OPTION_AGP_SIZE,	"AGPSize",	OPTV_INTEGER, {0}, FALSE },
+    { OPTION_DRI,       "DRI",          OPTV_BOOLEAN, {0}, TRUE },
 #endif
     { -1,		NULL,		OPTV_NONE,    {0}, FALSE }
 };
@@ -764,9 +766,9 @@ static void SavageFreeRec(ScrnInfoPtr pScrn)
     TRACE(( "SavageFreeRec(%x)\n", pScrn->driverPrivate ));
     if (!pScrn->driverPrivate)
 	return;
+    SavageUnmapMem(pScrn, 1);
     xfree(pScrn->driverPrivate);
     pScrn->driverPrivate = NULL;
-    SavageUnmapMem(pScrn, 1);
 }
 
 
@@ -931,6 +933,63 @@ static void SavageDoDDC(ScrnInfoPtr pScrn)
                 }
             }
         }
+    }
+}
+
+/* Copied from ddc/Property.c via nv */
+static DisplayModePtr
+SavageModesAdd(DisplayModePtr Modes, DisplayModePtr Additions)
+{
+    if (!Modes) {
+        if (Additions)
+            return Additions;
+        else
+            return NULL;
+    }
+
+    if (Additions) {
+        DisplayModePtr Mode = Modes;
+
+        while (Mode->next)
+            Mode = Mode->next;
+        
+        Mode->next = Additions;
+        Additions->prev = Mode;
+    }
+
+    return Modes;
+}
+
+/* borrowed from nv */
+static void
+SavageAddPanelMode(ScrnInfoPtr pScrn)
+{
+    SavagePtr psav= SAVPTR(pScrn);
+    DisplayModePtr  Mode  = NULL;
+
+    Mode = xf86CVTMode(psav->PanelX, psav->PanelY, 60.00, TRUE, FALSE);
+    Mode->type = M_T_DRIVER | M_T_PREFERRED;
+    pScrn->monitor->Modes = SavageModesAdd(pScrn->monitor->Modes, Mode);
+
+    if ((pScrn->monitor->nHsync == 0) && 
+        (pScrn->monitor->nVrefresh == 0)) {
+	if (!Mode->HSync)
+	    Mode->HSync = ((float) Mode->Clock ) / ((float) Mode->HTotal);
+	if (!Mode->VRefresh)
+	    Mode->VRefresh = (1000.0 * ((float) Mode->Clock)) /
+		((float) (Mode->HTotal * Mode->VTotal));
+
+	if (Mode->HSync < pScrn->monitor->hsync[0].lo)
+	    pScrn->monitor->hsync[0].lo = Mode->HSync;
+	if (Mode->HSync > pScrn->monitor->hsync[0].hi)
+	    pScrn->monitor->hsync[0].hi = Mode->HSync;
+	if (Mode->VRefresh < pScrn->monitor->vrefresh[0].lo)
+	    pScrn->monitor->vrefresh[0].lo = Mode->VRefresh;
+	if (Mode->VRefresh > pScrn->monitor->vrefresh[0].hi)
+	    pScrn->monitor->vrefresh[0].hi = Mode->VRefresh;
+
+	pScrn->monitor->nHsync = 1;
+	pScrn->monitor->nVrefresh = 1;
     }
 }
 
@@ -1165,15 +1224,23 @@ static Bool SavagePreInit(ScrnInfoPtr pScrn, int flags)
     if ((s = xf86GetOptValString(psav->Options, OPTION_ROTATE))) {
 	if(!xf86NameCmp(s, "CW")) {
 	    /* accel is disabled below for shadowFB */
+             /* RandR is disabled when the Rotate option is used (does
+              * not work well together and scrambles the screen) */
+
 	    psav->shadowFB = TRUE;
 	    psav->rotate = 1;
+            xf86DisableRandR();
 	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, 
-		       "Rotating screen clockwise - acceleration disabled\n");
+		       "Rotating screen clockwise"
+                       "- acceleration and RandR disabled\n");
 	} else if(!xf86NameCmp(s, "CCW")) {
 	    psav->shadowFB = TRUE;
 	    psav->rotate = -1;
-	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,  "Rotating screen"
-		       "counter clockwise - acceleration disabled\n");
+            xf86DisableRandR();
+            xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
+                   "Rotating screen counter clockwise"
+                   " - acceleration and RandR disabled\n");
+
 	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "\"%s\" is not a valid"
 		       "value for Option \"Rotate\"\n", s);
@@ -1942,6 +2009,7 @@ static Bool SavagePreInit(ScrnInfoPtr pScrn, int flags)
     if(psav->DisplayType == MT_LCD)
     {
 	SavageGetPanelInfo(pScrn);
+	SavageAddPanelMode(pScrn);
     }
   
 #if 0
@@ -3088,6 +3156,9 @@ static Bool SavageScreenInit(int scrnIndex, ScreenPtr pScreen,
  
     SavageEnableMMIO(pScrn);
 
+    if (!SavageMapMem(pScrn))
+	return FALSE;
+
     psav->FBStart2nd = 0;
 
     if (psav->overlayDepth) {
@@ -3109,8 +3180,12 @@ static Bool SavageScreenInit(int scrnIndex, ScreenPtr pScreen,
     vgaHWBlankScreen(pScrn, TRUE);
 
 #ifdef XF86DRI
-    if (psav->IsSecondary) {
-	    psav->directRenderingEnabled = FALSE;
+    if (!xf86ReturnOptValBool(psav->Options, OPTION_DRI, TRUE)) {
+	psav->directRenderingEnabled = FALSE;
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		   "Direct rendering forced off\n");
+    } else if (psav->IsSecondary) {
+	psav->directRenderingEnabled = FALSE;
     } else if (xf86IsEntityShared(psav->pEnt->index)) {
 	    /* Xinerama has sync problem with DRI, disable it for now */
 	    psav->directRenderingEnabled = FALSE;
@@ -3825,6 +3900,8 @@ static Bool SavageCloseScreen(int scrnIndex, ScreenPtr pScreen)
 #ifdef XF86DRI
     if (psav->directRenderingEnabled) {
         SAVAGEDRICloseScreen(pScreen);
+	/* reset shadow values */
+	SavageInitShadowStatus(pScrn);
         psav->directRenderingEnabled=FALSE;
     }
 #endif
@@ -3900,7 +3977,6 @@ void
 SavageDoAdjustFrame(ScrnInfoPtr pScrn, int x, int y, int crtc2)
 {
     SavagePtr psav = SAVPTR(pScrn);
-    DisplayModePtr currentMode = pScrn->currentMode;    
     int address=0,top=0,left=0,tile_height,tile_size;
     
     TRACE(("SavageDoAdjustFrame(%d,%d,%x)\n", x, y, flags));
@@ -3930,15 +4006,6 @@ SavageDoAdjustFrame(ScrnInfoPtr pScrn, int x, int y, int crtc2)
     }
     
     address += pScrn->fbOffset;
-
-    /*
-     * because we align the viewport to the width and height of one tile
-     * we should update the locate of frame
-     */
-    pScrn->frameX0 = left;
-    pScrn->frameY0 = top;
-    pScrn->frameX1 = left + currentMode->HDisplay - 1;
-    pScrn->frameY1 = top + currentMode->VDisplay - 1;
 
     if (psav->Chipset == S3_SAVAGE_MX) {
 	if (!crtc2) {
@@ -4158,9 +4225,6 @@ void SavageLoadPaletteSavage4(ScrnInfoPtr pScrn, int numColors, int *indicies,
 }
 
 static void SavageCalcClock(long freq, int min_m, int min_n1, int max_n1,
-
-	/* Make sure linear addressing is enabled after the BIOS call. */
-	/* Note that we must use an I/O port to do this. */
 			   int min_n2, int max_n2, long freq_min,
 			   long freq_max, unsigned int *mdiv,
 			   unsigned int *ndiv, unsigned int *r)
