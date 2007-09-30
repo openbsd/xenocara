@@ -1,7 +1,7 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nsc/panel.c,v 1.2 2002/12/11 22:51:00 dawes Exp $ */
 /*
  * $Workfile: panel.c $
- * $Revision: 1.1.1.1 $
+ * $Revision: 1.1.1.2 $
  * $Author: matthieu $
  *
  * File Contents: This file contailns the panel include files and 
@@ -142,25 +142,6 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
-
-#if defined(linux)			/* Linux */
-
-#ifdef __KERNEL__
-
-#include <linux/string.h>
-#include <asm/io.h>
-
-#elif !defined(XFree86Server)
-
-#include <linux/fs.h>
-#include <asm/mman.h>
-
-#endif /* __KERNEL__ */
-#elif defined(_WIN32)			/* windows */
-
-#include <windows.h>
-
 #endif
 
 #include "panel.h"

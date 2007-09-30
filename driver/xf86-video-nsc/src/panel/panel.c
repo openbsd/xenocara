@@ -1,7 +1,7 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/nsc/panel/panel.c,v 1.2 2002/12/11 22:51:02 dawes Exp $ */
 /*
  * $Workfile: panel.c $
- * $Revision: 1.1.1.1 $
+ * $Revision: 1.1.1.2 $
  *
  * File Contents: This file contains the file inclusions, macro definitions      
  *                for the panel. 
@@ -138,25 +138,6 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  *
  * END_NSC_LIC_GPL */
-
-#if defined(linux)			/* Linux */
-
-#ifdef __KERNEL__
-
-#include <linux/string.h>
-#include <asm/io.h>
-
-#elif !defined(XFree86Server)
-
-#include <linux/fs.h>
-#include <asm/mman.h>
-
-#endif /* __KERNEL__ */
-#elif defined(_WIN32)			/* windows */
-
-#include <windows.h>
-
-#endif
 
 #include "panel.h"
 #include "gfx_defs.h"
