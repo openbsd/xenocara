@@ -933,6 +933,13 @@ ProcQueryXExtents(ClientPtr client)
     }
     item_size = (stuff->reqType == FS_QueryXExtents8) ? 1 : 2;
 
+    if (stuff->num_ranges >
+	 ((stuff->length << 2) - SIZEOF(fsQueryXExtents8Req))/item_size) {
+	int num_ranges = stuff->num_ranges;
+	SendErrToClient(client, FSBadLength, (pointer)&num_ranges);
+	return FSBadLength;
+    }
+		
     /* get the extents */
     err = QueryExtents(client, cfp, item_size,
 		       stuff->num_ranges, stuff->range,
@@ -969,6 +976,12 @@ ProcQueryXBitmaps(ClientPtr client)
     assert((stuff->reqType == FS_QueryXBitmaps8) || (stuff->reqType == FS_QueryXBitmaps16));
     item_size = (stuff->reqType == FS_QueryXBitmaps8) ? 1 : 2;
 
+    if (stuff->num_ranges > 
+	((stuff->length << 2) - SIZEOF(fsQueryXBitmaps8Req))/item_size) {
+	int num_ranges = stuff->num_ranges;
+	SendErrToClient(client, FSBadLength, (pointer)&num_ranges);
+	return FSBadLength;
+    }
     /* get the glyphs */
     err = QueryBitmaps(client, cfp, item_size, stuff->format,
 		       stuff->num_ranges, stuff->range,

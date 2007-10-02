@@ -62,6 +62,21 @@ in this Software without prior written authorization from The Open Group.
 #include	<swapreq.h>
 #include	<swaprep.h>
 
+#ifdef HAVE_CONFIG_H
+#include	<config.h>
+#endif
+#ifdef HAVE_STDINT_H
+#include	<stdint.h>
+#endif
+#include	<limits.h>
+#ifndef SIZE_MAX
+# ifdef ULONG_MAX
+#  define SIZE_MAX ULONG_MAX
+# else
+#  define SIZE_MAX UINT_MAX
+# endif
+#endif
+
 void
 CopyCharInfo(
     CharInfoPtr ci,
@@ -181,6 +196,8 @@ build_range(
 	    return new;
 	}
 
+	if (src_num >= SIZE_MAX / sizeof(fsRange) * 2 - 1) 
+		return NULL;
 	np = new = (fsRange *) fsalloc(sizeof(fsRange) * (src_num + 1) / 2);
 	if (!np)
 	    return np;
@@ -210,6 +227,8 @@ build_range(
 	unsigned char      *pp = src;
 
 	src_num = *num;
+	if (src_num >= SIZE_MAX / sizeof(fsRange)) 
+		return NULL;
 	np = new = (fsRange *) fsalloc(SIZEOF(fsRange) * src_num);
 	if (!np)
 	    return np;

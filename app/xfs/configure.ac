@@ -22,7 +22,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xfs,[1.0.4], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xfs)
+AC_INIT(xfs,[1.0.5], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xfs)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -40,6 +40,8 @@ case $host_os in
         OS_CFLAGS=
         ;;
 esac
+
+AC_CHECK_HEADERS([stdint.h])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XFS, libfs xfont xtrans)

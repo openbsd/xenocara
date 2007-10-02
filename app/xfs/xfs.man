@@ -124,9 +124,10 @@ Recognized keywords include:
 .\" Size in bytes of the font server cache.
 .IP "catalogue (list of string)"
 Ordered list of font path element names.
-Use of the keyword "catalogue" is very misleading at present,
-the current implementation only supports a single catalogue ("all"),
-containing all of the specified fonts.
+The current implementation only supports a single catalogue ("all")
+containing all of the specified fonts. A special directory with
+symlinks to font paths can be specified using a catalogue:<dir>
+entry. See the CATALOGUE DIR section below for details.
 .IP "alternate-servers (list of string)"
 List of alternate servers for this font server.
 .IP "client-limit (cardinal)"
@@ -167,6 +168,38 @@ enabled for all fonts, and "16", meaning it is enabled only for
 .\" Those clients the fontserver will talk to.  Others
 .\" will be refused for the initial connection.  An empty
 .\" list means the server will talk to any client.
+.SH "CATALOGUE DIR"
+You can specify a special kind of font path in the form \fBcatalogue:<dir>\fR.
+The directory specified after the catalogue: prefix will be scanned for symlinks
+and each symlink destination will be added as a local fontfile FPE.
+.PP
+The symlink can be suffixed by attributes such as '\fBunscaled\fR', which
+will be passed through to the underlying fontfile FPE. The only exception is
+the newly introduced '\fBpri\fR' attribute, which will be used for ordering
+the font paths specified by the symlinks.
+
+An example configuration:
+
+.nf
+    75dpi:unscaled:pri=20 \-> /usr/share/X11/fonts/75dpi
+    ghostscript:pri=60 \-> /usr/share/fonts/default/ghostscript
+    misc:unscaled:pri=10 \-> /usr/share/X11/fonts/misc
+    type1:pri=40 \-> /usr/share/X11/fonts/Type1
+    type1:pri=50 \-> /usr/share/fonts/default/Type1
+.fi
+
+This will add /usr/share/X11/fonts/misc as the first FPE with the attribute
+'unscaled', second FPE will be /usr/share/X11/fonts/75dpi, also with
+the attribute unscaled etc. This is functionally equivalent to setting
+the following font path:
+
+.nf
+    /usr/share/X11/fonts/misc:unscaled,
+    /usr/share/X11/fonts/75dpi:unscaled,
+    /usr/share/X11/fonts/Type1,
+    /usr/share/fonts/default/Type1,
+    /usr/share/fonts/default/ghostscript
+.fi
 .SH "EXAMPLE"
 .nf
 XCOMM
