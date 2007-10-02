@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: search.c,v 1.3 2007/06/26 19:34:26 niallo Exp $
+ * $Id: search.c,v 1.4 2007/10/02 18:01:45 jasper Exp $
  */
 
 #include "headers.h"
@@ -239,6 +239,11 @@ search_start(struct menu_q *menuq,
 			}
 			if (y + dy >= ymax) {
 				y = ymax - dy;
+				/* If the menu is too high, never hide the
+				 * top of the menu.
+				 */
+				if (y < 0)
+					y = 0;
 				warp = 1;
 			}
 
