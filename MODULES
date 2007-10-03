@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.13 2007/10/03 05:40:04 matthieu Exp $
+# $OpenBSD: MODULES,v 1.14 2007/10/03 21:25:49 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -255,6 +255,7 @@ lib/liboldX			1.0.1	7.0	still needed?
 lib/libxkbfile			1.0.4	7.2RC1
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.0.4	7.3
+lib/pixman			0.9.5	7.3
 
 proto/bigreqsproto		1.0.2	7.0	needs-rel
 proto/compositeproto		0.4	7.3
