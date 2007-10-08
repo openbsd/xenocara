@@ -36,11 +36,6 @@ EXTRA_DIST = xaw6.pc.in \
 	old-doc/CHANGES \
 	ChangeLog
 
-if !PLATFORM_WIN32
-install-exec-hook:
-	cd $(DESTDIR)$(libdir) && rm -f libXaw.so && ln -s $(DEFAULT_LIB) libXaw.so
-endif
-
 MAINTAINERCLEANFILES=ChangeLog
 
 .PHONY: ChangeLog
