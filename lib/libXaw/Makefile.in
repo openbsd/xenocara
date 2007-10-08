@@ -652,7 +652,6 @@ maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
 	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
-@PLATFORM_WIN32_TRUE@install-exec-hook:
 clean: clean-recursive
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -676,8 +675,6 @@ info-am:
 install-data-am: install-aclocalDATA install-pkgconfigDATA
 
 install-exec-am:
-	@$(NORMAL_INSTALL)
-	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 
 install-info: install-info-recursive
 
@@ -716,8 +713,8 @@ uninstall-info: uninstall-info-recursive
 	distclean-recursive distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
 	install install-aclocalDATA install-am install-data \
-	install-data-am install-exec install-exec-am install-exec-hook \
-	install-info install-info-am install-man install-pkgconfigDATA \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-man install-pkgconfigDATA \
 	install-strip installcheck installcheck-am installdirs \
 	installdirs-am maintainer-clean maintainer-clean-generic \
 	maintainer-clean-recursive mostlyclean mostlyclean-generic \
@@ -725,9 +722,6 @@ uninstall-info: uninstall-info-recursive
 	tags tags-recursive uninstall uninstall-aclocalDATA \
 	uninstall-am uninstall-info-am uninstall-pkgconfigDATA
 
-
-@PLATFORM_WIN32_FALSE@install-exec-hook:
-@PLATFORM_WIN32_FALSE@	cd $(DESTDIR)$(libdir) && rm -f libXaw.so && ln -s $(DEFAULT_LIB) libXaw.so
 
 .PHONY: ChangeLog
 
