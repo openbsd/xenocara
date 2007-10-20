@@ -585,8 +585,6 @@
 ./usr/X11R6/include/X11/pixmaps/xv.xpm
 ./usr/X11R6/include/X11/pixmaps/xv2.xpm
 ./usr/X11R6/include/X11/xpm.h
-./usr/X11R6/include/expat.h
-./usr/X11R6/include/expat_external.h
 ./usr/X11R6/include/fontconfig
 ./usr/X11R6/include/fontconfig/fcfreetype.h
 ./usr/X11R6/include/fontconfig/fcprivate.h
@@ -915,7 +913,6 @@
 ./usr/X11R6/man/cat1/resize.0
 ./usr/X11R6/man/cat1/ssh-askpass.0
 ./usr/X11R6/man/cat1/xidle.0
-./usr/X11R6/man/cat1/xmlwf.0
 ./usr/X11R6/man/cat1/xpmroot.0
 ./usr/X11R6/man/cat1/xsystrace.0
 ./usr/X11R6/man/cat1/xterm.0
