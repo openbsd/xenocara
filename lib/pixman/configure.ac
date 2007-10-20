@@ -117,7 +117,8 @@ AM_CONDITIONAL(USE_MMX, test $have_mmx_intrinsics = yes)
 
 dnl ========================================================
 
-PKG_CHECK_MODULES(GTK, [gtk+-2.0], [HAVE_GTK=yes], [HAVE_GTK=no])
+#PKG_CHECK_MODULES(GTK, [gtk+-2.0], [HAVE_GTK=yes], [HAVE_GTK=no])
+HAVE_GTK=no
 AM_CONDITIONAL(HAVE_GTK, [test "x$HAVE_GTK" = xyes])
 
 AC_SUBST(GTK_CFLAGS)
