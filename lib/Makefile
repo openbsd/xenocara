@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile,v 1.5 2007/05/12 14:24:59 matthieu Exp $
+# $OpenBSD: Makefile,v 1.6 2007/10/20 12:36:29 matthieu Exp $
 
-SUBDIR= freetype expat fontconfig libxtrans libXau libXdmcp \
+SUBDIR= freetype fontconfig libxtrans libXau libXdmcp \
 	libX11  libXext  libXrender libXft libdmx libfontenc \
 	libFS libICE liblbxutil liboldX libSM libXt \
 	libXmu libXpm libXp libXaw libXfixes libXcomposite \
