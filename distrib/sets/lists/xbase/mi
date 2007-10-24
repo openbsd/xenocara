@@ -270,3 +270,5 @@
 ./usr/X11R6/share
 ./usr/X11R6/share/X11
 ./var
+./var/cache
+./var/cache/fontconfig
