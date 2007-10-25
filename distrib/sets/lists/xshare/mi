@@ -592,6 +592,7 @@
 ./usr/X11R6/include/freetype2
 ./usr/X11R6/include/freetype2/freetype
 ./usr/X11R6/include/freetype2/freetype/config
+./usr/X11R6/include/freetype2/freetype/config/ftconfig.h
 ./usr/X11R6/include/freetype2/freetype/config/ftheader.h
 ./usr/X11R6/include/freetype2/freetype/config/ftmodule.h
 ./usr/X11R6/include/freetype2/freetype/config/ftoption.h
@@ -664,7 +665,8 @@
 ./usr/X11R6/include/freetype2/freetype/tttables.h
 ./usr/X11R6/include/freetype2/freetype/tttags.h
 ./usr/X11R6/include/freetype2/freetype/ttunpat.h
-./usr/X11R6/include/ftconfig.h
+./usr/X11R6/include/pixman-1
+./usr/X11R6/include/pixman-1/pixman.h
 ./usr/X11R6/lib/X11/config
 ./usr/X11R6/lib/X11/config/Amoeba.cf
 ./usr/X11R6/lib/X11/config/DGUX.cf
@@ -833,6 +835,7 @@
 ./usr/X11R6/lib/pkgconfig/lbxutil.pc
 ./usr/X11R6/lib/pkgconfig/libfs.pc
 ./usr/X11R6/lib/pkgconfig/oldx.pc
+./usr/X11R6/lib/pkgconfig/pixman-1.pc
 ./usr/X11R6/lib/pkgconfig/printproto.pc
 ./usr/X11R6/lib/pkgconfig/randrproto.pc
 ./usr/X11R6/lib/pkgconfig/recordproto.pc
