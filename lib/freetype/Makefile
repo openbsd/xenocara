@@ -1,8 +1,8 @@
-#	$OpenBSD: Makefile,v 1.9 2007/09/08 16:39:54 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.10 2007/10/27 07:09:48 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
-FT_VERSION_INFO= 9.10.3 # Get it from builds/unix/configure.ac
+FT_VERSION_INFO= 9.16.3 # Get it from builds/unix/configure.ac
 
 .ifmake includes
 SUBDIR=	include
@@ -21,7 +21,7 @@ SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c ftgasp.c \
         raster.c sfnt.c smooth.c truetype.c type1.c type1cid.c type42.c \
 	winfnt.c
 
-CPPFLAGS+= -I${.CURDIR}/include -I${.CURDIR}/src/lzw -DFT2_BUILD_LIBRARY
+CPPFLAGS+= -I${.CURDIR}/include -I${.CURDIR}/builds/unix -I${.CURDIR}/src/lzw -DFT2_BUILD_LIBRARY
 
 CLEANFILES+=	freetype-config freetype2.pc
 
@@ -40,6 +40,13 @@ includes:: _SUBDIRUSE
 	  ${INSTALL} ${INSTALL_COPY} -m 444 -o $(BINOWN) -g $(BINGRP) \
 	  ${.CURDIR}/builds/unix/ft2unix.h \
 	  ${DESTDIR}${X11BASE}/include/ft2build.h
+
+includes::
+	@cmp -s ${DESTDIR}${X11BASE}/include/freetype2/freetype/config/ftconfig.h \
+	  ${.CURDIR}/builds/unix/ftconfig.h || \
+	  ${INSTALL} ${INSTALL_COPY} -m 444 -o $(BINOWN) -g $(BINGRP) \
+	  ${.CURDIR}/builds/unix/ftconfig.h \
+	  ${DESTDIR}${X11BASE}/include/freetype2/freetype/config/ftconfig.h
 
 includes:: freetype2.pc
 	${INSTALL} ${INSTALL_COPY} -m 444 -o $(BINOWN) -g $(BINGRP) \
@@ -71,6 +78,7 @@ NOPROFILE=
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
 
+.PATH:	${.CURDIR}/builds/unix
 .PATH:	${FREETYPESRC}/autofit
 .PATH:  ${FREETYPESRC}/base
 .PATH:  ${FREETYPESRC}/bdf
@@ -91,9 +99,6 @@ NOPROFILE=
 .PATH:  ${FREETYPESRC}/type1
 .PATH:  ${FREETYPESRC}/type42
 .PATH:  ${FREETYPESRC}/winfonts
-.PATH:		${.CURDIR}
-.PATH:		${.CURDIR}/builds/unix
-
 
 .include <bsd.subdir.mk>
 
