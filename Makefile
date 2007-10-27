@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.21 2007/06/11 15:27:51 todd Exp $
+# $OpenBSD: Makefile,v 1.22 2007/10/27 20:01:23 matthieu Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
@@ -35,6 +35,7 @@ beforeinstall:
 afterinstall: 
 	${MAKE} install-mk
 	${MAKE} fix-appd
+	${MAKE} font-cache
 	/usr/libexec/makewhatis ${DESTDIR}/usr/X11R6/man
 
 realinstall: _SUBDIRUSE
@@ -44,6 +45,14 @@ install-mk:
 	cd ${.CURDIR}/share/mk \
 		&& ${MAKE} X11BASE=${X11BASE} install
 .endif
+
+font-cache:
+	@echo "running fc-cache"
+	if test -z "$(DESTDIR)"; then \
+		fc-cache -s -v ;\
+	else\
+		fc-cache -c ${DESTDIR} -s -v ;\
+	fi
 
 fix-appd:
 	# Make sure /usr/local/lib/X11/app-defaults is a link
