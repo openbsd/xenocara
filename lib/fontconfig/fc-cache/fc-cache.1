@@ -1,4 +1,4 @@
-...\" $Header: /home/cvs/xenocara/lib/fontconfig/fc-cache/Attic/fc-cache.1,v 1.1 2007/05/05 10:32:29 matthieu Exp $
+...\" $Header: /home/cvs/xenocara/lib/fontconfig/fc-cache/Attic/fc-cache.1,v 1.2 2007/10/27 20:00:20 matthieu Exp $
 ...\"
 ...\"	transcript compatibility for postscript use.
 ...\"
@@ -56,7 +56,7 @@
 fc-cache \(em build font information cache files 
 .SH "SYNOPSIS" 
 .PP 
-\fBfc-cache\fR [\fB-fsvV?\fP]  [\fB\-\-force\fP]  [\fB\-\-system-only\fP]  [\fB\-\-verbose\fP]  [\fB\-\-version\fP]  [\fB\-\-help\fP]  [\fB\fIdirs\fR\fP]  
+\fBfc-cache\fR [\fB-cfsvV?\fP]  [\fB\-\-chroot root\fP]  [\fB\-\-force\fP]  [\fB\-\-system-only\fP]  [\fB\-\-verbose\fP]  [\fB\-\-version\fP]  [\fB\-\-help\fP]  [\fB\fIdirs\fR\fP]  
 .SH "DESCRIPTION" 
 .PP 
 \fBfc-cache\fR scans the font directories on 
@@ -82,6 +82,9 @@ architecture\&.
 This program follows the usual GNU command line syntax, 
 with long options starting with two dashes (`\-\&')\&.  A summary of 
 options is included below\&. 
+.IP "\fB-c root\fP 	  \fB\-\-chroot root\fP 	" 10 
+Change root directory into root  
+before starting\&. 
 .IP "\fB-f\fP           \fB\-\-force\fP         " 10 
 Force re-generation of apparently up-to-date cache files, 
 overriding the timestamp checking\&. 
@@ -111,4 +114,4 @@ The fontconfig user\&'s guide, in HTML format:
 .PP 
 This manual page was written by Keith Packard 
 keithp@keithp\&.com and Josselin Mouette joss@debian\&.org\&. 
-...\" created by instant / docbook-to-man, Sat 05 May 2007, 11:42 
+...\" created by instant / docbook-to-man, Tue 16 Oct 2007, 23:05 
