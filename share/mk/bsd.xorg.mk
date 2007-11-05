@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.20 2007/05/01 08:31:47 espie Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.21 2007/11/05 16:51:37 espie Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -45,7 +45,8 @@ _cache= --cache-file=${XOBJDIR}/xorg-config.cache.${MACHINE}
 CFLAGS+=	$(COPTS)
 
 CONFIGURE_ENV=	PKG_CONFIG_LIBDIR="$(PKG_CONFIG_LIBDIR)" \
-		CFLAGS="$(CFLAGS:C/ *$//)"
+		CFLAGS="$(CFLAGS:C/ *$//)" \
+		MAKE="${MAKE}"
 
 AUTOTOOLS_ENV=  AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 		AUTOCONF_VERSION="$(AUTOCONF_VERSION)" \
