@@ -4,7 +4,7 @@
  *  Copyright (c) 2004 Martin Murray <mmurray@monkey.org>
  *  All rights reserved.
  *
- * $Id: kbfunc.c,v 1.8 2007/11/07 21:58:03 oga Exp $
+ * $Id: kbfunc.c,v 1.9 2007/11/07 22:02:04 oga Exp $
  */
 
 #include <paths.h>
@@ -14,7 +14,7 @@
 
 #define KNOWN_HOSTS ".ssh/known_hosts"
 #define HASH_MARKER "|1|"
-#define MOVE_AMOUNT 10
+#define MOVE_AMOUNT 1
 
 void
 kbfunc_client_lower(struct client_ctx *cc, void *arg)
