@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: calmwm.h,v 1.10 2007/11/13 23:08:49 todd Exp $
+ * $Id: calmwm.h,v 1.11 2007/11/13 23:26:04 todd Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -405,6 +405,7 @@ int   conf_get_int(struct client_ctx *, enum conftype);
 void  conf_client(struct client_ctx *);
 void  conf_bindkey(struct conf *, void (*)(struct client_ctx *, void *),
           int, int, int, void *);
+void  conf_bindname(struct conf *, char *, char *);
 void  conf_parsekeys(struct conf *, char *);
 void  conf_parsesettings(struct conf *, char *);
 void  conf_parseignores(struct conf *, char *);
