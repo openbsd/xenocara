@@ -4,7 +4,7 @@
  *  Copyright (c) 2004 Martin Murray <mmurray@monkey.org>
  *  All rights reserved.
  *
- * $Id: kbfunc.c,v 1.9 2007/11/07 22:02:04 oga Exp $
+ * $Id: kbfunc.c,v 1.10 2007/11/13 23:08:49 todd Exp $
  */
 
 #include <paths.h>
@@ -110,6 +110,44 @@ kbfunc_client_resize(struct client_ctx *cc, void *arg)
 	cc->ptr.x = -1;
 	cc->ptr.y = -1;
 	client_ptrwarp(cc);
+}
+
+void
+kbfunc_ptrmove(struct client_ctx *cc, void *arg)
+{
+	int px,py,mx,my,flags,amt;
+	struct screen_ctx *sc = screen_current();
+	my = mx = 0;
+
+	flags = (int)arg;
+	amt = MOVE_AMOUNT;
+
+	if (flags & CWM_BIGMOVE) {
+		flags -= CWM_BIGMOVE;
+		amt = amt * 10;
+	}
+	switch(flags) {
+	case CWM_UP:
+		my -= amt;
+		break;
+	case CWM_DOWN: 
+		my += amt;
+		break;
+	case CWM_RIGHT:
+		mx += amt;
+		break;
+	case CWM_LEFT:
+		mx -= amt;
+		break;
+	}
+
+	if (cc) {
+		xu_ptr_getpos(cc->pwin, &px, &py);
+		xu_ptr_setpos(cc->pwin, px + mx, py + my);
+	} else {
+		xu_ptr_getpos(sc->rootwin, &px, &py);
+		xu_ptr_setpos(sc->rootwin, px + mx, py + my);
+	}
 }
 
 void
