@@ -38,7 +38,7 @@
 
 #include <misc.h>
 #include <xf86.h>
-#define NEED_XF86_TYPES
+#define NEED_XF86_TYPES 1
 #if !defined(DGUX)
 #include <xisb.h>
 #endif
@@ -283,8 +283,10 @@ xf86VoidInit(InputDriverPtr	drv,
     pInfo->flags = XI86_KEYBOARD_CAPABLE | XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
     pInfo->device_control = xf86VoidControlProc;
     pInfo->read_input = NULL;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
     pInfo->motion_history_proc = xf86GetMotionEvents;
     pInfo->history_size = 0;
+#endif    
     pInfo->control_proc = NULL;
     pInfo->close_proc = NULL;
     pInfo->switch_mode = NULL;
@@ -293,7 +295,7 @@ xf86VoidInit(InputDriverPtr	drv,
     pInfo->fd = -1;
     pInfo->dev = NULL;
     pInfo->private_flags = 0;
-    pInfo->always_core_feedback = 0;
+    pInfo->always_core_feedback = NULL;
     pInfo->conf_idev = dev;
 
     /* Collect the options, and process the common options. */
@@ -358,7 +360,7 @@ static XF86ModuleVersionInfo xf86VoidVersionRec =
     MODINFOSTRING1,
     MODINFOSTRING2,
     XORG_VERSION_CURRENT,
-    1, 1, 0,
+    PACKAGE_VERSION_MAJOR, PACKAGE_VERSION_MINOR, PACKAGE_VERSION_PATCHLEVEL,
     ABI_CLASS_XINPUT,
     ABI_XINPUT_VERSION,
     MOD_CLASS_XINPUT,
