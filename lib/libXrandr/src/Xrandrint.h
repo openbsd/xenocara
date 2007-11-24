@@ -84,4 +84,20 @@ typedef struct _XRandRInfo {
   Bool has_rates;			/* Server supports refresh rates */
 } XRandRInfo;
 
+typedef struct _randrVersionState {
+    unsigned long   version_seq;
+    Bool	    error;
+    int		    major_version;
+    int		    minor_version;
+} _XRRVersionState;
+
+extern char XRRExtensionName[];
+
+Bool
+_XRRVersionHandler (Display	*dpy,
+		    xReply	*rep,
+		    char	*buf,
+		    int		len,
+		    XPointer    data);
+
 #endif /* _XRANDRINT_H_ */
