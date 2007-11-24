@@ -110,6 +110,8 @@ void __glXScreenInitVisuals(__GLXscreen *screen);
 extern __GLXcontext *__glXLastContext;
 extern __GLXcontext *__glXForceCurrent(__GLXclientState*, GLXContextTag, int*);
 
+extern ClientPtr __pGlxClient;
+
 int __glXError(int error);
 
 /*
@@ -131,10 +133,10 @@ struct __GLXprovider {
 
 void GlxPushProvider(__GLXprovider *provider);
 
-void __glXsetEnterLeaveServerFuncs(void (*enter)(void),
-				   void (*leave)(void));
-void __glXenterServer(void);
-void __glXleaveServer(void);
+void __glXsetEnterLeaveServerFuncs(void (*enter)(GLboolean),
+				   void (*leave)(GLboolean));
+void __glXenterServer(GLboolean rendering);
+void __glXleaveServer(GLboolean rendering);
 
 void glxSuspendClients(void);
 void glxResumeClients(void);

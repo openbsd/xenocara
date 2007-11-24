@@ -1,5 +1,3 @@
-/* $Id: ddraw.h,v 1.1.1.1 2006/11/26 18:22:30 matthieu Exp $ */
-
 #ifndef __XWIN_DDRAW_H
 #define __XWIN_DDRAW_H
 

@@ -1,6 +1,4 @@
 /*
- * $Id: mouse.c,v 1.1.1.1 2006/11/26 18:21:49 matthieu Exp $
- *
  * Copyright © 2004 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -35,19 +33,35 @@
 #include "scrnintstr.h"
 #include "kdrive.h"
 
-static Bool
-MouseInit (void)
+static Status
+MouseInit (KdPointerInfo *pi)
 {
-    return TRUE;
+    return Success;
+}
+
+static Status
+MouseEnable (KdPointerInfo *pi)
+{
+    return Success;
 }
 
 static void
-MouseFini (void)
+MouseDisable (KdPointerInfo *pi)
 {
+    return;
+}
+
+static void
+MouseFini (KdPointerInfo *pi)
+{
+    return;
 }
 
 
-KdMouseFuncs FakeMouseFuncs = {
+KdPointerDriver FakePointerDriver = {
+    "fake",
     MouseInit,
+    MouseEnable,
+    MouseDisable,
     MouseFini,
 };

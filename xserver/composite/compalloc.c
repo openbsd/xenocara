@@ -1,6 +1,4 @@
 /*
- * $Id: compalloc.c,v 1.1.1.1 2006/11/26 18:16:14 matthieu Exp $
- *
  * Copyright © 2006 Sun Microsystems
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -48,7 +46,7 @@
 
 #include "compint.h"
 
-void
+static void
 compReportDamage (DamagePtr pDamage, RegionPtr pRegion, void *closure)
 {
     WindowPtr	    pWin = (WindowPtr) closure;
@@ -206,7 +204,7 @@ compFreeClientWindow (WindowPtr pWin, XID id)
 	    EnableMapUnmapEvents (pWin);
 	}
     
-	if (pWin->redirectDraw)
+	if (pWin->redirectDraw != RedirectDrawNone)
 	    compFreePixmap (pWin);
 
 	if (cw->damage)
@@ -218,10 +216,11 @@ compFreeClientWindow (WindowPtr pWin, XID id)
 	xfree (cw);
     }
     else if (cw->update == CompositeRedirectAutomatic &&
-	     !cw->damageRegistered && pWin->redirectDraw)
+	     !cw->damageRegistered && pWin->redirectDraw != RedirectDrawNone)
     {
 	DamageRegister (&pWin->drawable, cw->damage);
 	cw->damageRegistered = TRUE;
+	pWin->redirectDraw = RedirectDrawAutomatic;
 	DamageDamageRegion (&pWin->drawable, &pWin->borderSize);
     }
     if (wasMapped && !pWin->mapped)
@@ -462,7 +461,6 @@ compNewPixmap (WindowPtr pWin, int x, int y, int w, int h)
     ScreenPtr	    pScreen = pWin->drawable.pScreen;
     WindowPtr	    pParent = pWin->parent;
     PixmapPtr	    pPixmap;
-    GCPtr	    pGC;
 
     pPixmap = (*pScreen->CreatePixmap) (pScreen, w, h, pWin->drawable.depth);
 
@@ -472,25 +470,63 @@ compNewPixmap (WindowPtr pWin, int x, int y, int w, int h)
     pPixmap->screen_x = x;
     pPixmap->screen_y = y;
     
-    pGC = GetScratchGC (pWin->drawable.depth, pScreen);
-    
-    /*
-     * Copy bits from the parent into the new pixmap so that it will
-     * have "reasonable" contents in case for background None areas.
-     */
-    if (pGC)
+    if (pParent->drawable.depth == pWin->drawable.depth)
     {
-	XID val = IncludeInferiors;
+	GCPtr	pGC = GetScratchGC (pWin->drawable.depth, pScreen);
 	
-	ValidateGC(&pPixmap->drawable, pGC);
-	dixChangeGC (serverClient, pGC, GCSubwindowMode, &val, NULL);
-	(*pGC->ops->CopyArea) (&pParent->drawable,
-			       &pPixmap->drawable,
-			       pGC,
-			       x - pParent->drawable.x,
-			       y - pParent->drawable.y,
-			       w, h, 0, 0);
-	FreeScratchGC (pGC);
+	/*
+	 * Copy bits from the parent into the new pixmap so that it will
+	 * have "reasonable" contents in case for background None areas.
+	 */
+	if (pGC)
+	{
+	    XID val = IncludeInferiors;
+	    
+	    ValidateGC(&pPixmap->drawable, pGC);
+	    dixChangeGC (serverClient, pGC, GCSubwindowMode, &val, NULL);
+	    (*pGC->ops->CopyArea) (&pParent->drawable,
+				   &pPixmap->drawable,
+				   pGC,
+				   x - pParent->drawable.x,
+				   y - pParent->drawable.y,
+				   w, h, 0, 0);
+	    FreeScratchGC (pGC);
+	}
+    }
+    else
+    {
+	PictFormatPtr	pSrcFormat = compWindowFormat (pParent);
+	PictFormatPtr	pDstFormat = compWindowFormat (pWin);
+	XID		inferiors = IncludeInferiors;
+	int		error;
+
+	PicturePtr	pSrcPicture = CreatePicture (None,
+						     &pParent->drawable,
+						     pSrcFormat,
+						     CPSubwindowMode,
+						     &inferiors,
+						     serverClient, &error);
+						    
+	PicturePtr	pDstPicture = CreatePicture (None,
+						     &pPixmap->drawable,
+						     pDstFormat,
+						     0, 0,
+						     serverClient, &error);
+
+	if (pSrcPicture && pDstPicture)
+	{
+	    CompositePicture (PictOpSrc,
+			      pSrcPicture,
+			      NULL,
+			      pDstPicture,
+			      x - pParent->drawable.x,
+			      y - pParent->drawable.y,
+			      0, 0, 0, 0, w, h);
+	}
+	if (pSrcPicture)
+	    FreePicture (pSrcPicture, 0);
+	if (pDstPicture)
+	    FreePicture (pDstPicture, 0);
     }
     return pPixmap;
 }
@@ -508,7 +544,11 @@ compAllocPixmap (WindowPtr pWin)
 
     if (!pPixmap)
 	return FALSE;
-    pWin->redirectDraw = TRUE;
+    if (cw->update == CompositeRedirectAutomatic)
+	pWin->redirectDraw = RedirectDrawAutomatic;
+    else
+	pWin->redirectDraw = RedirectDrawManual;
+
     compSetPixmap (pWin, pPixmap);
     cw->oldx = COMP_ORIGIN_INVALID;
     cw->oldy = COMP_ORIGIN_INVALID;
@@ -543,7 +583,7 @@ compFreePixmap (WindowPtr pWin)
     REGION_COPY (pScreen, &pWin->borderClip, &cw->borderClip);
     pRedirectPixmap = (*pScreen->GetWindowPixmap) (pWin);
     pParentPixmap = (*pScreen->GetWindowPixmap) (pWin->parent);
-    pWin->redirectDraw = FALSE;
+    pWin->redirectDraw = RedirectDrawNone;
     compSetPixmap (pWin, pParentPixmap);
     (*pScreen->DestroyPixmap) (pRedirectPixmap);
 }
@@ -564,7 +604,7 @@ compReallocPixmap (WindowPtr pWin, int draw_x, int draw_y,
     int		    pix_x, pix_y;
     int		    pix_w, pix_h;
 
-    assert (cw && pWin->redirectDraw);
+    assert (cw && pWin->redirectDraw != RedirectDrawNone);
     cw->oldx = pOld->screen_x;
     cw->oldy = pOld->screen_y;
     pix_x = draw_x - bw;

@@ -9,6 +9,7 @@ MSB_3_FIXED = mf3-xaaBitmap.c mf3-xaaStipple.c
 POLYSEG = s-xaaLine.c s-xaaDashLine.c
 
 libxaa_la_LDFLAGS = -avoid-version
+libxaa_la_LIBADD = $(top_builddir)/miext/cw/libcw.la
 
 module_LTLIBRARIES = libxaa.la
 libxaa_la_SOURCES = xaaInit.c xaaGC.c xaaInitAccel.c xaaFallback.c \
@@ -68,4 +69,4 @@ EXTRA_DIST = xaacexp.h xaawrap.h xaaLine.c xaaDashLine.c \
 
 INCLUDES = $(XORG_INCS)
 
-AM_CFLAGS = $(XORG_CFLAGS)
+AM_CFLAGS = $(DIX_CFLAGS) $(XORG_CFLAGS)

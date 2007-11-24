@@ -1,6 +1,4 @@
 /*************************************************************************************
- * $Id: uda1380.c,v 1.1.1.1 2006/11/26 18:17:37 matthieu Exp $
- * 
  * Copyright (C) 2005 Bogdan D. bogdand@users.sourceforge.net
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this 

@@ -1,6 +1,4 @@
 /*
- * $Id: xcalibrate.c,v 1.1.1.1 2006/11/26 18:14:51 matthieu Exp $
- *
  * Copyright © 2003 Philip Blundell
  *
  * Permission to use, copy, modify, distribute, and sell this software and its

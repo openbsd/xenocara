@@ -19,7 +19,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/* $RCSId: xc/programs/Xserver/hw/kdrive/vesa/vbe.c,v 1.9 2001/05/29 04:54:12 keithp Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <kdrive-config.h>
@@ -101,7 +100,7 @@ VbeReportVib(Vm86InfoPtr vi, VbeInfoBlock *vib)
     }
     ErrorF(")\n");
     ErrorF("DAC is %s, controller is %sVGA compatible%s\n",
-           (vib->Capabilities[0]&1)?"fixed":"switchable",
+           (vib->Capabilities[0]&1)?"switchable":"fixed",
            (vib->Capabilities[0]&2)?"not ":"",
            (vib->Capabilities[0]&3)?", RAMDAC causes snow":"");
     ErrorF("Total memory: %lu kilobytes\n", 64L*vib->TotalMemory);

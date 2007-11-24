@@ -68,7 +68,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $XConsortium: ppcPixmap.c /main/5 1996/02/21 17:58:00 kaleb $ */
 
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
@@ -120,12 +119,8 @@ xf4bppCreatePixmap( pScreen, width, height, depth )
     pPixmap->devKind = size;
     pPixmap->refcnt = 1 ;
     size = height * pPixmap->devKind ;
-#ifdef PIXPRIV
     pPixmap->devPrivate.ptr = (pointer) (((CARD8*)pPixmap)
 					 + pScreen->totalPixmapSize);
-#else
-    pPixmap->devPrivate.ptr = (pointer) (pPixmap + 1);
-#endif
     bzero( (char *) pPixmap->devPrivate.ptr, size ) ;
     return pPixmap ;
 }

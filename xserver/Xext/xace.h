@@ -20,6 +20,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef _XACE_H
 #define _XACE_H
 
+/* Hook return codes */
+#define XaceErrorOperation  0
+#define XaceAllowOperation  1
+#define XaceIgnoreOperation 2
+
+#ifdef XACE
+
 #define XACE_EXTENSION_NAME		"XAccessControlExtension"
 #define XACE_MAJOR_VERSION		1
 #define XACE_MINOR_VERSION		0
@@ -75,21 +82,6 @@ extern int XaceHook(
 /* From the original Security extension...
  */
 
-/* Hook return codes */
-#define SecurityAllowOperation  0
-#define SecurityIgnoreOperation 1
-#define SecurityErrorOperation  2
-
-/* Proc vectors for untrusted clients, swapped and unswapped versions.
- * These are the same as the normal proc vectors except that extensions
- * that haven't declared themselves secure will have ProcBadRequest plugged
- * in for their major opcode dispatcher.  This prevents untrusted clients
- * from guessing extension major opcodes and using the extension even though
- * the extension can't be listed or queried.
- */
-extern int (*UntrustedProcVector[256])(ClientPtr client);
-extern int (*SwappedUntrustedProcVector[256])(ClientPtr client);
-
 extern void XaceCensorImage(
     ClientPtr client,
     RegionPtr pVisibleRegion,
@@ -99,5 +91,19 @@ extern void XaceCensorImage(
     unsigned int format,
     char * pBuf
     );
+
+#else /* XACE */
+
+/* Define calls away when XACE is not being built. */
+
+#ifdef __GNUC__
+#define XaceHook(args...) XaceAllowOperation
+#define XaceCensorImage(args...) { ; }
+#else
+#define XaceHook(...) XaceAllowOperation
+#define XaceCensorImage(...) { ; }
+#endif
+
+#endif /* XACE */
 
 #endif /* _XACE_H */

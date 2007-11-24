@@ -44,7 +44,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $XFree86$ */
 
 #ifndef PIXMAPSTRUCT_H
 #define PIXMAPSTRUCT_H
@@ -86,9 +85,7 @@ typedef struct _Pixmap {
     int			refcnt;
     int			devKind;
     DevUnion		devPrivate;
-#ifdef PIXPRIV
     DevUnion		*devPrivates; /* real devPrivates like gcs & windows */
-#endif
 #ifdef COMPOSITE
     short		screen_x;
     short		screen_y;

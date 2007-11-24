@@ -38,7 +38,7 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <X11/Xproto.h>
 #include <X11/keysym.h>
 #include "inputstr.h"
-#include <X11/extensions/XKBsrv.h>
+#include <xkbsrv.h>
 #if !defined(WIN32) && !defined(Lynx)
 #include <sys/time.h>
 #endif
@@ -52,9 +52,9 @@ pointer	XkbLastRepeatEvent=	NULL;
 
 unsigned short	XkbDfltAccessXTimeout= 	120;
 unsigned int	XkbDfltAccessXTimeoutMask= DFLT_TIMEOUT_CTRLS;
-unsigned int	XkbDfltAccessXTimeoutValues= 0;
-unsigned int	XkbDfltAccessXTimeoutOptionsMask= DFLT_TIMEOUT_OPTS;
-unsigned int	XkbDfltAccessXTimeoutOptionsValues= 0;
+static unsigned int XkbDfltAccessXTimeoutValues= 0;
+static unsigned int XkbDfltAccessXTimeoutOptionsMask= DFLT_TIMEOUT_OPTS;
+static unsigned int XkbDfltAccessXTimeoutOptionsValues= 0;
 unsigned int	XkbDfltAccessXFeedback= XkbAccessXFeedbackMask;
 unsigned short	XkbDfltAccessXOptions=  XkbAX_AllOptionsMask & ~(XkbAX_IndicatorFBMask|XkbAX_SKReleaseFBMask|XkbAX_SKRejectFBMask);
 
@@ -361,10 +361,7 @@ XkbControlsPtr	ctrls;
 	if (keybd->kbdfeed->ctrl.autoRepeat && 
 	    ((xkbi->slowKey != xkbi->mouseKey) || (!xkbi->mouseKeysAccel)) &&
 	     (ctrls->enabled_ctrls&XkbRepeatKeysMask)) {
-#ifndef AIXV3
-	    if (BitIsOn(keybd->kbdfeed->ctrl.autoRepeats,xkbi->slowKey))
-#endif
-	    {
+	    if (BitIsOn(keybd->kbdfeed->ctrl.autoRepeats,xkbi->slowKey)) {
 		xkbi->repeatKey = xkbi->slowKey;
 		xkbi->repeatKeyTimer= TimerSet(xkbi->repeatKeyTimer,
 					0, ctrls->repeat_delay,
@@ -530,10 +527,7 @@ KeySym *	sym = XkbKeySymsPtr(xkbi->desc,key);
 	if ((keybd->kbdfeed->ctrl.autoRepeat) &&
 		((ctrls->enabled_ctrls&(XkbSlowKeysMask|XkbRepeatKeysMask))==
 							XkbRepeatKeysMask)) {
-#ifndef AIXV3
-	    if (BitIsOn(keybd->kbdfeed->ctrl.autoRepeats,key))
-#endif
-	    {
+	    if (BitIsOn(keybd->kbdfeed->ctrl.autoRepeats,key)) {
 #ifdef DEBUG
 		if (xkbDebugFlags&0x10)
 		    ErrorF("Starting software autorepeat...\n");

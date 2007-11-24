@@ -1,4 +1,3 @@
-/* $TOG: InitOutput.c /main/20 1998/02/10 13:23:56 kaleb $ */
 /*
 
 Copyright 1993, 1998  The Open Group
@@ -44,7 +43,7 @@ from The Open Group.
 #include <mntent.h>
 #endif
 #if defined(XKB) && defined(WIN32)
-#include <X11/extensions/XKBsrv.h>
+#include <xkbsrv.h>
 #endif
 #ifdef RELOCATE_PROJECTROOT
 #include <shlobj.h>

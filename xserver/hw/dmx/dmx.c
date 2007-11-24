@@ -1,4 +1,3 @@
-/* $XFree86$ */
 /*
  * Copyright 2002-2004 Red Hat Inc., Durham, North Carolina.
  *
@@ -282,12 +281,12 @@ static int ProcDMXForceWindowCreation(ClientPtr client)
         int          i;
 
         if (!(win = SecurityLookupIDByType(client, stuff->window, XRT_WINDOW,
-                                           SecurityReadAccess)))
+                                           DixReadAccess)))
             return -1;           /* BadWindow */
 
         FOR_NSCREENS(i) {
-            if (!(pWin = SecurityLookupWindow(win->info[i].id, client,
-                                              SecurityReadAccess)))
+            if (Success != dixLookupWindow(&pWin, win->info[i].id, client,
+					   DixReadAccess))
                 return -1;       /* BadWindow */
 
             dmxForceWindowCreation(pWin);
@@ -296,8 +295,8 @@ static int ProcDMXForceWindowCreation(ClientPtr client)
     }
 #endif
 
-    if (!(pWin = SecurityLookupWindow(stuff->window, client,
-                                      SecurityReadAccess)))
+    if (Success != dixLookupWindow(&pWin, stuff->window, client,
+				   DixReadAccess))
         return -1;               /* BadWindow */
 
     dmxForceWindowCreation(pWin);
@@ -556,12 +555,12 @@ static int dmxPopulatePanoramiX(ClientPtr client, Window window,
     DMXWindowAttributesRec attr;
     
     if (!(win = SecurityLookupIDByType(client, window, XRT_WINDOW,
-                                       SecurityReadAccess)))
+                                       DixReadAccess)))
         return -1;               /* BadWindow */
     
     FOR_NSCREENS(i) {
-        if (!(pWin = SecurityLookupWindow(win->info[i].id, client,
-                                          SecurityReadAccess)))
+        if (Success != dixLookupWindow(&pWin, win->info[i].id, client,
+				       DixReadAccess))
             return -1;          /* BadWindow */
         if (dmxGetWindowAttributes(pWin, &attr)) {
             screens[count] = attr.screen;
@@ -587,7 +586,7 @@ static int dmxPopulate(ClientPtr client, Window window, CARD32 *screens,
                                     pos, vis);
 #endif
     
-    if (!(pWin = SecurityLookupWindow(window, client, SecurityReadAccess)))
+    if (Success != dixLookupWindow(&pWin, window, client, DixReadAccess))
         return -1;               /* BadWindow */
 
     dmxGetWindowAttributes(pWin, &attr);

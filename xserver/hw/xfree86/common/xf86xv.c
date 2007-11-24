@@ -110,7 +110,7 @@ static void xf86XVAdjustFrame(int index, int x, int y, int flags);
 static Bool xf86XVInitAdaptors(ScreenPtr, XF86VideoAdaptorPtr*, int);
 
 
-int XF86XVWindowIndex = -1;
+static int XF86XVWindowIndex = -1;
 int XF86XvScreenIndex = -1;
 static unsigned long XF86XVGeneration = 0;
 static unsigned long PortResource = 0;
@@ -974,10 +974,14 @@ xf86XVEnlistPortInWindow(WindowPtr pWin, XvPortRecPrivatePtr portPriv)
    if(!winPriv) {
 	winPriv = xalloc(sizeof(XF86XVWindowRec));
 	if(!winPriv) return BadAlloc;
+	memset(winPriv, 0, sizeof(XF86XVWindowRec));
 	winPriv->PortRec = portPriv;
 	winPriv->next = PrivRoot;
 	pWin->devPrivates[XF86XVWindowIndex].ptr = (pointer)winPriv;
    }
+
+   portPriv->pDraw = (DrawablePtr)pWin;
+
    return Success;
 }
 
@@ -1026,6 +1030,9 @@ xf86XVDestroyWindow(WindowPtr pWin)
 
      pPriv->pDraw = NULL;
      tmp = WinPriv;
+     if(WinPriv->pGC) {
+       FreeGC(WinPriv->pGC, 0);
+     }
      WinPriv = WinPriv->next;
      xfree(tmp);
   }
@@ -1118,6 +1125,8 @@ xf86XVClipNotify(WindowPtr pWin, int dx, int dy)
   while(WinPriv) {
      pPriv = WinPriv->PortRec;
 
+     if(!pPriv) goto next;
+ 
      if(pPriv->pCompositeClip && pPriv->FreeCompositeClip)
 	REGION_DESTROY(pScreen, pPriv->pCompositeClip);
 
@@ -1148,6 +1157,7 @@ xf86XVClipNotify(WindowPtr pWin, int dx, int dy)
 	}
      }
 
+next:
      pPrev = WinPriv;
      WinPriv = WinPriv->next;
   }
@@ -1368,7 +1378,6 @@ xf86XVPutVideo(
   result =  xf86XVEnlistPortInWindow((WindowPtr)pDraw, portPriv);
   if(result != Success) return result;
 
-  portPriv->pDraw = pDraw;
   portPriv->type = XvInputMask;
 
   /* save a copy of these parameters */
@@ -1472,7 +1481,6 @@ xf86XVPutStill(
 
      xf86XVEnlistPortInWindow((WindowPtr)pDraw, portPriv);
      portPriv->isOn = XV_ON;
-     portPriv->pDraw = pDraw;
      portPriv->drw_x = drw_x;  portPriv->drw_y = drw_y;
      portPriv->drw_w = drw_w;  portPriv->drw_h = drw_h;
      portPriv->type = 0;  /* no mask means it's transient and should
@@ -1522,7 +1530,6 @@ xf86XVGetVideo(
   result =  xf86XVEnlistPortInWindow((WindowPtr)pDraw, portPriv);
   if(result != Success) return result;
 
-  portPriv->pDraw = pDraw;
   portPriv->type = XvOutputMask;
 
   /* save a copy of these parameters */
@@ -1739,9 +1746,13 @@ xf86XVPutImage(
      REGION_UNINIT(pScreen, &VPReg);
   }
 
-  if(portPriv->pDraw) {
+  /* If we are changing windows, unregister our port in the old window */
+  if(portPriv->pDraw && (portPriv->pDraw != pDraw))
      xf86XVRemovePortFromWindow((WindowPtr)(portPriv->pDraw), portPriv);
-  }
+
+  /* Register our port with the new window */
+  ret =  xf86XVEnlistPortInWindow((WindowPtr)pDraw, portPriv);
+  if(ret != Success) goto PUT_IMAGE_BAILOUT;
 
   if(!REGION_NOTEMPTY(pScreen, &ClipRegion)) {
      clippedAway = TRUE;
@@ -1772,9 +1783,7 @@ xf86XVPutImage(
   if((ret == Success) &&
 	(portPriv->AdaptorRec->flags & VIDEO_OVERLAID_IMAGES)) {
 
-     xf86XVEnlistPortInWindow((WindowPtr)pDraw, portPriv);
      portPriv->isOn = XV_ON;
-     portPriv->pDraw = pDraw;
      portPriv->drw_x = drw_x;  portPriv->drw_y = drw_y;
      portPriv->drw_w = drw_w;  portPriv->drw_h = drw_h;
      portPriv->type = 0;  /* no mask means it's transient and should
@@ -1813,11 +1822,14 @@ xf86XVQueryImageAttributes(
 			format->id, width, height, pitches, offsets);
 }
 
+
 _X_EXPORT void
-xf86XVFillKeyHelper (ScreenPtr pScreen, CARD32 key, RegionPtr clipboxes)
+xf86XVFillKeyHelperDrawable (DrawablePtr pDraw, CARD32 key, RegionPtr clipboxes)
 {
-   XF86XVScreenPtr ScreenPriv = GET_XF86XV_SCREEN(pScreen);
-   DrawablePtr root = &WindowTable[pScreen->myNum]->drawable;
+   ScreenPtr pScreen = pDraw->pScreen;
+   WindowPtr pWin = (WindowPtr)pDraw;
+   XF86XVWindowPtr pPriv = GET_XF86XV_WINDOW(pWin);
+   GCPtr pGC = NULL;
    XID pval[2];
    BoxPtr pbox = REGION_RECTS(clipboxes);
    int i, nbox = REGION_NUM_RECTS(clipboxes);
@@ -1825,19 +1837,24 @@ xf86XVFillKeyHelper (ScreenPtr pScreen, CARD32 key, RegionPtr clipboxes)
 
    if(!xf86Screens[pScreen->myNum]->vtSema) return;
 
-   if(!ScreenPriv->videoGC) {
+   if(pPriv)
+      pGC = pPriv->pGC;
+
+   if(!pGC) {
        int status;
        pval[0] = key;
        pval[1] = IncludeInferiors;
-       ScreenPriv->videoGC = CreateGC(root, GCForeground | GCSubwindowMode,
-				      pval, &status);
-       if(!ScreenPriv->videoGC) return;
-       ValidateGC(root, ScreenPriv->videoGC);
-   } else if (key != ScreenPriv->videoGC->fgPixel){
+       pGC = CreateGC(pDraw, GCForeground | GCSubwindowMode, pval, &status);
+       if(!pGC) return;
+       ValidateGC(pDraw, pGC);
+       if (pPriv) pPriv->pGC = pGC;
+   } else if (key != pGC->fgPixel){
        pval[0] = key;
-       ChangeGC(ScreenPriv->videoGC, GCForeground, pval);
-       ValidateGC(root, ScreenPriv->videoGC);
+       ChangeGC(pGC, GCForeground, pval);
+       ValidateGC(pDraw, pGC);
    }
+
+   REGION_TRANSLATE(pDraw->pScreen, clipboxes, -pDraw->x, -pDraw->y);
 
    rects = ALLOCATE_LOCAL(nbox * sizeof(xRectangle));
 
@@ -1848,10 +1865,45 @@ xf86XVFillKeyHelper (ScreenPtr pScreen, CARD32 key, RegionPtr clipboxes)
       rects[i].height = pbox->y2 - pbox->y1;
    }
 
-   (*ScreenPriv->videoGC->ops->PolyFillRect)(
-			     root, ScreenPriv->videoGC, nbox, rects);
+   (*pGC->ops->PolyFillRect)(pDraw, pGC, nbox, rects);
+
+   if (!pPriv) FreeGC(pGC, 0);
 
    DEALLOCATE_LOCAL(rects);
+}
+
+_X_EXPORT void
+xf86XVFillKeyHelper (ScreenPtr pScreen, CARD32 key, RegionPtr clipboxes)
+{
+   DrawablePtr root = &WindowTable[pScreen->myNum]->drawable;
+   XID pval[2];
+   BoxPtr pbox = REGION_RECTS(clipboxes);
+   int i, nbox = REGION_NUM_RECTS(clipboxes);
+   xRectangle *rects;
+   GCPtr gc;
+
+   if(!xf86Screens[pScreen->myNum]->vtSema) return;
+
+   gc = GetScratchGC(root->depth, pScreen);
+   pval[0] = key;
+   pval[1] = IncludeInferiors;
+   (void) ChangeGC(gc, GCForeground|GCSubwindowMode, pval);
+   ValidateGC(root, gc);
+
+   rects = xalloc (nbox * sizeof(xRectangle));
+
+   for(i = 0; i < nbox; i++, pbox++) 
+   {
+      rects[i].x = pbox->x1;
+      rects[i].y = pbox->y1;
+      rects[i].width = pbox->x2 - pbox->x1;
+      rects[i].height = pbox->y2 - pbox->y1;
+   }
+   
+   (*gc->ops->PolyFillRect)(root, gc, nbox, rects);
+   
+   xfree (rects);
+   FreeScratchGC (gc);
 }
 
 /* xf86XVClipVideoHelper -

@@ -1,8 +1,8 @@
-SUBDIRS = bus @XORG_OS_SUBDIR@ misc
+SUBDIRS = bus @XORG_OS_SUBDIR@ misc $(DRI_SUBDIRS)
 DIST_SUBDIRS = bsd bus misc linux lynxos solaris sysv sco usl hurd
 
 sdk_HEADERS = xf86_OSproc.h xf86_OSlib.h xf86_ansic.h xf86_libc.h \
-              assyntax.h xf86OSKbd.h xf86OSmouse.h
+              assyntax.h xf86OSmouse.h
 
 EXTRA_DIST = int10Defines.h xf86OSpriv.h README.OS-lib
 
@@ -15,6 +15,8 @@ libxorgos_la_LIBADD = @XORG_OS_SUBDIR@/lib@XORG_OS_SUBDIR@.la \
                       bus/libbus.la \
                       misc/libmisc.la
 
+AM_CFLAGS = $(DIX_CFLAGS) 
+
 xorgos.c:
 	touch $@
 
@@ -23,5 +25,4 @@ DISTCLEANFILES = xorgos.c
 # FIXME: These don't seem to be used anywhere
 EXTRA_DIST += \
 	shared/bios_devmem.c \
-	shared/inout.S \
-	shared/kbd.c
+	shared/inout.S

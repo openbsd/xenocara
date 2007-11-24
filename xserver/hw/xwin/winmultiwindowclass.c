@@ -27,7 +27,6 @@
  *
  * Authors:     Earle F. Philhower, III
  */
-/* $XFree86$ */
 
 #ifdef HAVE_XWIN_CONFIG_H
 #include <xwin-config.h>
@@ -264,7 +263,7 @@ winMultiWindowGetTransientFor (WindowPtr pWin, WindowPtr *ppDaddy)
       if (prop->propertyName == XA_WM_TRANSIENT_FOR)
         {
           if (ppDaddy)
-            memcpy (*ppDaddy, prop->data, sizeof (WindowPtr *));
+            memcpy (*ppDaddy, prop->data, sizeof (WindowPtr));
           return 1;
         }
       else

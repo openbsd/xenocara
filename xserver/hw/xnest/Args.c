@@ -11,7 +11,6 @@ the suitability of this software for any purpose.  It is provided "as
 is" without express or implied warranty.
 
 */
-/* $XFree86$ */
 
 #ifdef HAVE_XNEST_CONFIG_H
 #include <xnest-config.h>
@@ -53,18 +52,21 @@ Window xnestParentWindow = 0;
 /* ddxInitGlobals - called by |InitGlobals| from os/util.c */
 void ddxInitGlobals(void)
 {
-}
-
-int
-ddxProcessArgument (int argc, char *argv[], int i)
-{
-
 #ifdef COMPOSITE
     /* XXX terrible hack */
     extern Bool noCompositeExtension;
     noCompositeExtension = TRUE;
 #endif
 
+#ifdef XKB
+    extern Bool noXkbExtension;
+    noXkbExtension = TRUE;
+#endif
+}
+
+int
+ddxProcessArgument (int argc, char *argv[], int i)
+{
   if (!strcmp(argv[i], "-display")) {
     if (++i < argc) {
       xnestDisplayName = argv[i];

@@ -24,7 +24,9 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
-
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
 #include "quartzCommon.h"
 
 #define NEED_REPLIES
@@ -43,7 +45,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <X11/Xatom.h>
 #include "darwin.h"
 #define _APPLEWM_SERVER_
-#include "applewmstr.h"
+#include "X11/extensions/applewmstr.h"
 #include "applewmExt.h"
 
 #define DEFINE_ATOM_HELPER(func,atom_name)                      \
@@ -268,7 +270,7 @@ ProcAppleWMSelectInput (client)
 
     REQUEST_SIZE_MATCH (xAppleWMSelectInputReq);
     pHead = (WMEventPtr *)SecurityLookupIDByType(client,
-                        eventResource, EventType, SecurityWriteAccess);
+                        eventResource, EventType, DixWriteAccess);
     if (stuff->mask != 0) {
         if (pHead) {
             /* check for existing entry. */
@@ -444,7 +446,11 @@ ProcAppleWMSetWindowMenu(
         }
     }
 
+#ifdef INXQUARTZ
+    X11ApplicationSetWindowMenu (nitems, items, shortcuts);
+#else
     QuartzSetWindowMenu (nitems, items, shortcuts);
+#endif
 
     free(items);
     free(shortcuts);
@@ -460,10 +466,12 @@ ProcAppleWMSetWindowMenuCheck(
     REQUEST(xAppleWMSetWindowMenuCheckReq);
 
     REQUEST_SIZE_MATCH(xAppleWMSetWindowMenuCheckReq);
-
+#ifdef INXQUARTZ
+    X11ApplicationSetWindowMenuCheck(stuff->index);
+#else
     QuartzMessageMainThread(kQuartzSetWindowMenuCheck, &stuff->index,
                             sizeof(stuff->index));
-
+#endif
     return (client->noClientException);
 }
 
@@ -473,9 +481,11 @@ ProcAppleWMSetFrontProcess(
 )
 {
     REQUEST_SIZE_MATCH(xAppleWMSetFrontProcessReq);
-
+#ifdef INXQUARTZ
+    X11ApplicationSetFrontProcess();
+#else
     QuartzMessageMainThread(kQuartzSetFrontProcess, NULL, 0);
-
+#endif
     return (client->noClientException);
 }
 
@@ -490,11 +500,9 @@ ProcAppleWMSetWindowLevel(
 
     REQUEST_SIZE_MATCH(xAppleWMSetWindowLevelReq);
 
-    if (!(pWin = SecurityLookupWindow((Drawable)stuff->window,
-                                      client, SecurityReadAccess)))
-    {
+    if (Success != dixLookupWindow(&pWin, stuff->window, client,
+				   DixReadAccess))
         return BadValue;
-    }
 
     if (stuff->level < 0 || stuff->level >= AppleWMNumWindowLevels) {
         return BadValue;
@@ -516,9 +524,12 @@ ProcAppleWMSetCanQuit(
     REQUEST(xAppleWMSetCanQuitReq);
 
     REQUEST_SIZE_MATCH(xAppleWMSetCanQuitReq);
-
+#ifdef INXQUARTZ
+    X11ApplicationSetCanQuit(stuff->state);
+#else
     QuartzMessageMainThread(kQuartzSetCanQuit, &stuff->state,
                             sizeof(stuff->state));
+#endif
 
     return (client->noClientException);
 }
@@ -602,11 +613,9 @@ ProcAppleWMFrameDraw(
 
     REQUEST_AT_LEAST_SIZE(xAppleWMFrameDrawReq);
 
-    if (!(pWin = SecurityLookupWindow((Drawable)stuff->window,
-                                      client, SecurityReadAccess)))
-    {
+    if (Success != dixLookupWindow(&pWin, stuff->window, client,
+				   DixReadAccess))
         return BadValue;
-    }
 
     ir = make_box (stuff->ix, stuff->iy, stuff->iw, stuff->ih);
     or = make_box (stuff->ox, stuff->oy, stuff->ow, stuff->oh);

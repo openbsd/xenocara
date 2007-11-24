@@ -19,8 +19,6 @@ bin_PROGRAMS = Xneomagic
 noinst_LIBRARIES = libneomagic.a
 
 libneomagic_a_SOURCES =         \
-	backend.h                   \
-	backend.c                   \
 	neomagic.c                  \
 	neomagic.h                  \
 	neo_draw.c
@@ -39,8 +37,9 @@ Xneomagic_LDADD = \
 	@KDRIVE_LIBS@               \
 	@XSERVER_LIBS@		  
 
-
-Xneomagic_DEPENDENCIES =                 \
+Xneomagic_DEPENDENCIES =	\
 	libneomagic.a               \
-	${FBDEV_LIBS}               \
-	${VESA_LIBS}                
+	@KDRIVE_LOCAL_LIBS@
+
+relink:
+	rm -f $(bin_PROGRAMS) && make $(bin_PROGRAMS)

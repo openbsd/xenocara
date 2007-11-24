@@ -51,14 +51,7 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#if defined(_XOPEN_SOURCE) || defined(__QNXNTO__) \
-	|| (defined(sun) && defined(__SVR4))
 #include <math.h>
-#else
-#define _XOPEN_SOURCE	/* to get prototype for hypot on some systems */
-#include <math.h>
-#undef _XOPEN_SOURCE
-#endif
 #include <X11/X.h>
 #include <X11/Xprotostr.h>
 #include "misc.h"
@@ -75,10 +68,16 @@ static double miDsin(double a);
 static double miDcos(double a);
 static double miDasin(double v);
 static double miDatan2(double dy, double dx);
-double	cbrt(double);
 
-#ifdef ICEILTEMPDECL
-ICEILTEMPDECL
+#ifndef HAVE_CBRT
+static double
+cbrt(double x)
+{
+    if (x > 0.0)
+	return pow(x, 1.0/3.0);
+    else
+	return -pow(-x, 1.0/3.0);
+}
 #endif
 
 /*
@@ -104,36 +103,15 @@ ICEILTEMPDECL
 #undef max
 #undef min
 
-#if defined (__GNUC__) && !defined (__STRICT_ANSI__)
-#define USE_INLINE
-#endif
-
-#ifdef USE_INLINE
-inline static int max (const int x, const int y)
+_X_INLINE static int max (const int x, const int y)
 {
 	return x>y? x:y;
 }
 
-inline static int min (const int x, const int y)
+_X_INLINE static int min (const int x, const int y)
 {
 	return x<y? x:y;
 }
-
-#else
-
-static int
-max (int x, int y)
-{
-	return x>y? x:y;
-}
-
-static int
-min (int x, int y)
-{
-	return x<y? x:y;
-}
-
-#endif
 
 struct bound {
 	double	min, max;
@@ -246,7 +224,7 @@ typedef struct _miPolyArc {
 static CARD32 gcvals[6];
 
 static void fillSpans(DrawablePtr pDrawable, GCPtr pGC);
-static void newFinalSpan(int y, register int xmin, register int xmax);
+static void newFinalSpan(int y, int xmin, int xmax);
 static void drawArc(xArc *tarc, int l, int a0, int a1, miArcFacePtr right,
 		    miArcFacePtr left);
 static void drawZeroArc(DrawablePtr pDraw, GCPtr pGC, xArc *tarc, int lw,
@@ -284,7 +262,7 @@ miArcSegment(
 {
     int l = pGC->lineWidth;
     int a0, a1, startAngle, endAngle;
-    miArcFacePtr	temp;
+    miArcFacePtr temp;
 
     if (!l)
 	l = 1;
@@ -425,15 +403,8 @@ static unsigned long lrustamp;
 static arcCacheRec *lastCacheHit = &arcCache[0];
 static RESTYPE cacheType;
 
-/*
- * External so it can be called when low on memory.
- * Call with a zero ID in that case.
- */
-/*ARGSUSED*/
-int
-miFreeArcCache (data, id)
-    pointer	    data;
-    XID		    id;
+static int
+miFreeArcCache (pointer data, XID id)
 {
     int k;
     arcCacheRec *cent;
@@ -461,11 +432,11 @@ miComputeCircleSpans(
     xArc *parc,
     miArcSpanData *spdata)
 {
-    register miArcSpan *span;
+    miArcSpan *span;
     int doinner;
-    register int x, y, e;
+    int x, y, e;
     int xk, yk, xm, ym, dx, dy;
-    register int slw, inslw;
+    int slw, inslw;
     int inx = 0, iny, ine = 0;
     int inxk = 0, inyk = 0, inxm = 0, inym = 0;
 
@@ -529,7 +500,7 @@ miComputeEllipseSpans(
     xArc *parc,
     miArcSpanData *spdata)
 {
-    register miArcSpan *span;
+    miArcSpan *span;
     double w, h, r, xorg;
     double Hs, Hf, WH, K, Vk, Nk, Fk, Vr, N, Nc, Z, rs;
     double A, T, b, d, x, y, t, inx, outx = 0.0, hepp, hepm;
@@ -859,13 +830,13 @@ tailX(
 
 static miArcSpanData *
 miComputeWideEllipse(
-    int		   lw,
-    register xArc *parc,
-    Bool	  *mustFree)
+    int  lw,
+    xArc *parc,
+    Bool *mustFree)
 {
-    register miArcSpanData *spdata;
-    register arcCacheRec *cent, *lruent;
-    register int k;
+    miArcSpanData *spdata;
+    arcCacheRec *cent, *lruent;
+    int k;
     arcCacheRec fakeent;
 
     if (!lw)
@@ -943,14 +914,14 @@ miFillWideEllipse(
     xArc	*parc)
 {
     DDXPointPtr points;
-    register DDXPointPtr pts;
+    DDXPointPtr pts;
     int *widths;
-    register int *wids;
+    int *wids;
     miArcSpanData *spdata;
     Bool mustFree;
-    register miArcSpan *span;
-    register int xorg, yorgu, yorgl;
-    register int n;
+    miArcSpan *span;
+    int xorg, yorgu, yorgl;
+    int n;
 
     yorgu = parc->height + pGC->lineWidth;
     n = (sizeof(int) * 2) * yorgu;
@@ -1077,20 +1048,20 @@ miPolyArc(pDraw, pGC, narcs, parcs)
     int		narcs;
     xArc	*parcs;
 {
-    register int		i;
-    xArc			*parc;
-    int				xMin, xMax, yMin, yMax;
-    int				pixmapWidth = 0, pixmapHeight = 0;
-    int				xOrg = 0, yOrg = 0;
-    int				width;
-    Bool			fTricky;
-    DrawablePtr			pDrawTo;
-    CARD32			fg, bg;
-    GCPtr			pGCTo;
-    miPolyArcPtr		polyArcs;
-    int				cap[2], join[2];
-    int				iphase;
-    int				halfWidth;
+    int		i;
+    xArc	*parc;
+    int		xMin, xMax, yMin, yMax;
+    int		pixmapWidth = 0, pixmapHeight = 0;
+    int		xOrg = 0, yOrg = 0;
+    int		width;
+    Bool	fTricky;
+    DrawablePtr	pDrawTo;
+    CARD32	fg, bg;
+    GCPtr	pGCTo;
+    miPolyArcPtr polyArcs;
+    int		cap[2], join[2];
+    int		iphase;
+    int		halfWidth;
 
     width = pGC->lineWidth;
     if(width == 0 && pGC->lineStyle == LineSolid)
@@ -3136,12 +3107,12 @@ struct finalSpanChunk {
 
 static struct finalSpanChunk	*chunks;
 
-struct finalSpan *
-realAllocSpan ()
+static struct finalSpan *
+realAllocSpan (void)
 {
-	register struct finalSpanChunk	*newChunk;
-	register struct finalSpan	*span;
-	register int			i;
+	struct finalSpanChunk	*newChunk;
+	struct finalSpan	*span;
+	int			i;
 
 	newChunk = (struct finalSpanChunk *) xalloc (sizeof (struct finalSpanChunk));
 	if (!newChunk)
@@ -3179,14 +3150,14 @@ fillSpans (
     DrawablePtr	pDrawable,
     GCPtr	pGC)
 {
-	register struct finalSpan	*span;
-	register DDXPointPtr		xSpan;
-	register int			*xWidth;
-	register int			i;
-	register struct finalSpan	**f;
-	register int			spany;
-	DDXPointPtr			xSpans;
-	int				*xWidths;
+	struct finalSpan	*span;
+	DDXPointPtr		xSpan;
+	int			*xWidth;
+	int			i;
+	struct finalSpan	**f;
+	int			spany;
+	DDXPointPtr		xSpans;
+	int			*xWidths;
 
 	if (nspans == 0)
 		return;
@@ -3280,13 +3251,13 @@ realFindSpan (int y)
 static void
 newFinalSpan (
     int		y,
-    register int	xmin,
-    register int	xmax)
+    int	xmin,
+    int	xmax)
 {
-	register struct finalSpan	*x;
-	register struct finalSpan	**f;
-	struct finalSpan		*oldx;
-	struct finalSpan		*prev;
+	struct finalSpan	*x;
+	struct finalSpan	**f;
+	struct finalSpan	*oldx;
+	struct finalSpan	*prev;
 
 	f = findSpan (y);
 	if (!f)

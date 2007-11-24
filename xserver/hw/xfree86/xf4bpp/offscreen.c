@@ -40,7 +40,6 @@
  * SOFTWARE.
  *
 */
-/* $XConsortium: offscreen.c /main/4 1996/02/21 17:56:55 kaleb $ */
 
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
@@ -298,25 +297,6 @@ DoMono
 			}
 		}
 	}
-}
-
-void
-xf4bppOffDrawMonoImage( pWin, data, x, y, w, h, fg, alu, planes )
-WindowPtr pWin; /* GJA */
-unsigned char *data;
-int x, y, w, h ;
-unsigned long int fg ;
-int alu ;
-unsigned long int planes;
-{
-
-	if ( ( alu == GXnoop ) || !( planes &= VGA_ALLPLANES ) )
-		return ;
-
-	DoMono( pWin, w, x, y, (const unsigned char *) data, h,
-		      w, ( ( w + 31 ) & ~31 ) >> 3, h, 0, 0, alu,
-		      (int)planes, (int)fg) ;
-
 }
 
 void

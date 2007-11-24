@@ -17,10 +17,6 @@ INCLUDES = 					\
 
 bin_PROGRAMS = Xsis
 
-if TSLIB
-TSLIB_FLAG = -lts
-endif
-
 noinst_LIBRARIES = libsis.a
 
 libsis_a_SOURCES = 	\
@@ -43,4 +39,9 @@ Xsis_LDADD = \
 	@KDRIVE_LIBS@                          \
 	$(TSLIB_FLAG)
 
-Xsis_DEPENDENCIES = $(SIS_LIBS)
+Xsis_DEPENDENCIES =	\
+	libsis.a 			\
+	@KDRIVE_LOCAL_LIBS@
+
+relink:
+	rm -f $(bin_PROGRAMS) && make $(bin_PROGRAMS)

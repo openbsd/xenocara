@@ -1,4 +1,3 @@
-/* $TOG: InitInput.c /main/12 1998/02/10 13:23:52 kaleb $ */
 /*
 
   Copyright 1993, 1998  The Open Group
@@ -79,7 +78,7 @@ extern winDispatchProcPtr	winProcQueryTreeOrig;
  */
 
 Bool
-LegalModifier (unsigned int uiKey, DevicePtr pDevice)
+LegalModifier (unsigned int uiKey, DeviceIntPtr pDevice)
 {
   return TRUE;
 }

@@ -1,4 +1,3 @@
-/* $XFree86$ */
 /*
  * Copyright 2001,2002 Red Hat Inc., Durham, North Carolina.
  *
@@ -154,7 +153,7 @@ typedef enum {
 
 extern void          dmxGetGlobalPosition(int *x, int *y);
 extern DMXScreenInfo *dmxFindFirstScreen(int x, int y);
-extern void          dmxCoreMotion(int x, int y, int delta,
+extern void          dmxCoreMotion(DevicePtr pDev, int x, int y, int delta,
                                    DMXBlockType block);
 
 /* Support for dynamic addition of inputs.  This functions is defined in

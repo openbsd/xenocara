@@ -35,6 +35,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
 #define NEED_REPLIES
 #define NEED_EVENTS
 #include <X11/X.h>
@@ -213,6 +216,7 @@ ProcAppleDRICreateSurface(
     DrawablePtr pDrawable;
     xp_surface_id sid;
     unsigned int key[2];
+    int rc;
 
     REQUEST(xAppleDRICreateSurfaceReq);
     REQUEST_SIZE_MATCH(xAppleDRICreateSurfaceReq);
@@ -220,12 +224,10 @@ ProcAppleDRICreateSurface(
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
 
-    if (!(pDrawable = (DrawablePtr)SecurityLookupDrawable(
-                                                (Drawable)stuff->drawable,
-                                                client, 
-                                                SecurityReadAccess))) {
-        return BadValue;
-    }
+    rc = dixLookupDrawable(&pDrawable, stuff->drawable, client, 0,
+			   DixReadAccess);
+    if (rc != Success)
+	return rc;
 
     rep.key_0 = rep.key_1 = rep.uid = 0;
 
@@ -252,13 +254,12 @@ ProcAppleDRIDestroySurface(
     REQUEST(xAppleDRIDestroySurfaceReq);
     DrawablePtr pDrawable;
     REQUEST_SIZE_MATCH(xAppleDRIDestroySurfaceReq);
+    int rc;
 
-    if (!(pDrawable = (DrawablePtr)SecurityLookupDrawable(
-                                                (Drawable)stuff->drawable,
-                                                client, 
-                                                SecurityReadAccess))) {
-        return BadValue;
-    }
+    rc = dixLookupDrawable(&pDrawable, stuff->drawable, client, 0,
+			   DixReadAccess);
+    if (rc != Success)
+	return rc;
 
     if (!DRIDestroySurface( screenInfo.screens[stuff->screen], 
                             (Drawable)stuff->drawable,

@@ -1,6 +1,4 @@
 /*
- * $Id: damagestr.h,v 1.1.1.1 2006/11/26 18:15:05 matthieu Exp $
- *
  * Copyright © 2003 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -48,6 +46,9 @@ typedef struct _damage {
     
     DamageReportFunc	damageReport;
     DamageDestroyFunc	damageDestroy;
+
+    Bool		reportAfter;
+    RegionRec		pendingDamage;
 } DamageRec;
 
 typedef struct _damageScrPriv {
@@ -79,11 +80,7 @@ typedef struct _damageGCPriv {
     GCFuncs *funcs;
 } DamageGCPrivRec, *DamageGCPrivPtr;
 
-extern int damageScrPrivateIndex;
-extern int damagePixPrivateIndex;
-extern int damageGCPrivateIndex;
-extern int damageWinPrivateIndex;
-
+/* XXX should move these into damage.c, damageScrPrivateIndex is static */
 #define damageGetScrPriv(pScr) \
     ((DamageScrPrivPtr) (pScr)->devPrivates[damageScrPrivateIndex].ptr)
 

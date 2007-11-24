@@ -113,7 +113,7 @@ void
 xf86BusProbe(void)
 {
     xf86PciProbe();
-#if defined(__sparc__) && !defined(__OpenBSD__)
+#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
     xf86SbusProbe();
 #endif
 }
@@ -1791,6 +1791,15 @@ convertRange2Host(int entityIndex, resRange *pRange)
     }
 }
 
+static void
+xf86ConvertListToHost(int entityIndex, resPtr list)
+{
+    while (list) {
+	convertRange2Host(entityIndex, &list->val);
+	list = list->next;
+    }
+}
+
 /*
  * xf86RegisterResources() -- attempts to register listed resources.
  * If list is NULL it tries to obtain resources implicitly. Function
@@ -2373,7 +2382,7 @@ xf86PostProbe(void)
 
     if (fbSlotClaimed) {
         if (pciSlotClaimed || isaSlotClaimed 
-#if defined(__sparc__) && !defined(__OpenBSD__)
+#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
 	    || sbusSlotClaimed
 #endif
 	    ) { 
@@ -2836,18 +2845,7 @@ xf86IsSubsetOf(resRange range, resPtr list)
     return ret;
 }
 
-Bool
-xf86IsListSubsetOf(resPtr list, resPtr BaseList)
-{
-    while (list) {
-	if (! xf86IsSubsetOf(list->val,BaseList))
-	    return FALSE;
-	list = list->next;
-    }
-    return TRUE;
-}
-
-resPtr
+static resPtr
 findIntersect(resRange Range, resPtr list)
 {
     resRange range;
@@ -3006,7 +3004,7 @@ xf86FindPrimaryDevice()
     
 }
 
-#if !defined(__sparc__) && !defined(__powerpc__) && !defined(__mips__)
+#if !defined(__sparc) && !defined(__sparc__) && !defined(__powerpc__) && !defined(__mips__) && !defined(__arm__)
 #include "vgaHW.h"
 #include "compiler.h"
 #endif
@@ -3018,7 +3016,7 @@ static void
 CheckGenericGA()
 {
 /* This needs to be changed for multiple domains */
-#if !defined(__sparc__) && !defined(__powerpc__) && !defined(__mips__) && !defined(__ia64__) && !defined(__arm__) && !defined(__s390__)
+#if !defined(__sparc__) && !defined(__sparc) && !defined(__powerpc__) && !defined(__mips__) && !defined(__ia64__) && !defined(__arm__) && !defined(__s390__)
     IOADDRESS GenericIOBase = VGAHW_GET_IOBASE();
     CARD8 CurrentValue, TestValue;
 
@@ -3069,15 +3067,6 @@ xf86NoSharedResources(int screenIndex,resType res)
       }
     }
     return TRUE;
-}
-
-void
-xf86ConvertListToHost(int entityIndex, resPtr list)
-{
-    while (list) {
-	convertRange2Host(entityIndex, &list->val);
-	list = list->next;
-    }
 }
 
 _X_EXPORT void

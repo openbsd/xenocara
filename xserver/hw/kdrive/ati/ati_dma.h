@@ -19,7 +19,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $Header: /home/cvs/xenocara/xserver/hw/kdrive/ati/Attic/ati_dma.h,v 1.1.1.1 2006/11/26 18:22:13 matthieu Exp $ */
 
 #ifndef _ATI_DMA_H_
 #define _ATI_DMA_H_

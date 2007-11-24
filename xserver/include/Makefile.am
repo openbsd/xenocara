@@ -7,6 +7,7 @@ sdk_HEADERS =		\
 	closure.h	\
 	colormap.h	\
 	colormapst.h	\
+	hotplug.h	\
 	cursor.h	\
 	cursorstr.h	\
 	dix.h		\
@@ -46,6 +47,7 @@ sdk_HEADERS =		\
 	validate.h	\
 	window.h	\
 	windowstr.h	\
+	xkbsrv.h	\
 	xorg-server.h
 endif
 

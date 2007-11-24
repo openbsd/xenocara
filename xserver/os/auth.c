@@ -35,9 +35,6 @@ from The Open Group.
 #include <dix-config.h>
 #endif
 
-#ifdef K5AUTH
-# include   <krb5/krb5.h>
-#endif
 # include   <X11/X.h>
 # include   <X11/Xauth.h>
 # include   "misc.h"
@@ -87,15 +84,6 @@ static struct protocol   protocols[] = {
 {   (unsigned short) 9,    "SUN-DES-1",
 		SecureRPCAdd,	SecureRPCCheck,	SecureRPCReset,
 		SecureRPCToID,	SecureRPCFromID,SecureRPCRemove,
-#ifdef XCSECURITY
-		NULL
-#endif
-},
-#endif
-#ifdef K5AUTH
-{   (unsigned short) 14, "MIT-KERBEROS-5",
-		K5Add, K5Check, K5Reset,
-		K5ToID, K5FromID, K5Remove,
 #ifdef XCSECURITY
 		NULL
 #endif
@@ -253,26 +241,6 @@ ResetAuthorization (void)
 	if (protocols[i].Reset)
 	    (*protocols[i].Reset)();
     ShouldLoadAuth = TRUE;
-}
-
-XID
-AuthorizationToID (
-	unsigned short	name_length,
-	char		*name,
-	unsigned short	data_length,
-	char		*data)
-{
-    int	i;
-
-    for (i = 0; i < NUM_AUTHORIZATION; i++) {
-    	if (protocols[i].name_length == name_length &&
-	    memcmp (protocols[i].name, name, (int) name_length) == 0 &&
-	    protocols[i].ToID)
-    	{
-	    return (*protocols[i].ToID) (data_length, data);
-    	}
-    }
-    return (XID) ~0L;
 }
 
 int

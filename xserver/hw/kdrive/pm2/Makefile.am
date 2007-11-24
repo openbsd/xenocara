@@ -26,7 +26,9 @@ Xpm2_LDADD = \
 	@KDRIVE_LIBS@                          \
 	@XSERVER_LIBS@			
 
-
-Xpm2_DEPENDENCIES = 				\
+Xpm2_DEPENDENCIES =	\
 	libpm2.a 				\
-	$(top_builddir)/hw/kdrive/vesa/libvesa.a 
+	@KDRIVE_LOCAL_LIBS@
+
+relink:
+	rm -f $(bin_PROGRAMS) && make $(bin_PROGRAMS)

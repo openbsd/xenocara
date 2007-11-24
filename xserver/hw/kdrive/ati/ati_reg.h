@@ -19,7 +19,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $Header: /home/cvs/xenocara/xserver/hw/kdrive/ati/Attic/ati_reg.h,v 1.1.1.1 2006/11/26 18:22:10 matthieu Exp $ */
 
 /* Many of the Radeon and Rage 128 registers are the same.
  * ATI_ should denote registers and values that are common for R128 and Radeon.

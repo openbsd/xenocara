@@ -1,4 +1,3 @@
-/* $Header: /home/cvs/xenocara/xserver/hw/kdrive/epson/Attic/epson13806draw.c,v 1.1.1.1 2006/11/26 18:22:02 matthieu Exp $ */
 /*
  * Copyright 2004 by Costas Stylianou <costas.stylianou@psion.com> +44(0)7850 394095
  *

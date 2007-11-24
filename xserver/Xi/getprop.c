@@ -79,9 +79,9 @@ extern int ExtEventIndex;
  */
 
 int
-SProcXGetDeviceDontPropagateList(register ClientPtr client)
+SProcXGetDeviceDontPropagateList(ClientPtr client)
 {
-    register char n;
+    char n;
 
     REQUEST(xGetDeviceDontPropagateListReq);
     swaps(&stuff->length, n);
@@ -97,10 +97,10 @@ SProcXGetDeviceDontPropagateList(register ClientPtr client)
  */
 
 int
-ProcXGetDeviceDontPropagateList(register ClientPtr client)
+ProcXGetDeviceDontPropagateList(ClientPtr client)
 {
     CARD16 count = 0;
-    int i;
+    int i, rc;
     XEventClass *buf = NULL, *tbuf;
     WindowPtr pWin;
     xGetDeviceDontPropagateListReply rep;
@@ -115,11 +115,10 @@ ProcXGetDeviceDontPropagateList(register ClientPtr client)
     rep.length = 0;
     rep.count = 0;
 
-    pWin = (WindowPtr) LookupWindow(stuff->window, client);
-    if (!pWin) {
-	client->errorValue = stuff->window;
+    rc = dixLookupWindow(&pWin, stuff->window, client, DixUnknownAccess);
+    if (rc != Success) {
 	SendErrorToClient(client, IReqCode, X_GetDeviceDontPropagateList, 0,
-			  BadWindow);
+			  rc);
 	return Success;
     }
 
@@ -188,7 +187,7 @@ void
 SRepXGetDeviceDontPropagateList(ClientPtr client, int size,
 				xGetDeviceDontPropagateListReply * rep)
 {
-    register char n;
+    char n;
 
     swaps(&rep->sequenceNumber, n);
     swapl(&rep->length, n);

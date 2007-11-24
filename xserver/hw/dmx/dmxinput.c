@@ -1,4 +1,3 @@
-/* $XFree86$ */
 /*
  * Copyright 2001,2002 Red Hat Inc., Durham, North Carolina.
  *
@@ -49,11 +48,12 @@
 
 #include "inputstr.h"
 #include "input.h"
+#include "mi.h"
 
 /** Returns TRUE if the key is a valid modifier.  For PC-class
  * keyboards, all keys can be used as modifiers, so return TRUE
  * always. */
-Bool LegalModifier(unsigned int key, DevicePtr pDev)
+Bool LegalModifier(unsigned int key, DeviceIntPtr pDev)
 {
     return TRUE;
 }
@@ -75,6 +75,8 @@ void InitInput(int argc, char **argv)
         dmxLog(dmxWarning, "Use keyboard/mouse pair with the first -input\n");
         dmxLog(dmxFatal,   "At least one core keyboard/mouse pair required\n");
     }
+
+    mieqInit();
 }
 
 /** Called from dix/dispatch.c in Dispatch() whenever input events

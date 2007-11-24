@@ -1,6 +1,4 @@
 /*
- * $RCSId: xc/programs/Xserver/hw/kdrive/linux/bus.c,v 1.2 2001/06/29 14:00:41 keithp Exp $
- *
  * Copyright © 2000 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -55,7 +53,7 @@ BusRead (int adbPort, void *closure)
 	    flags |= KD_BUTTON_2;
 	if ((buf[0] & 1) == 0)
 	    flags |= KD_BUTTON_3;
-        KdEnqueueMouseEvent (kdMouseInfo, flags, dx, dy);
+        KdEnqueuePointerEvent (closure, flags, dx, dy, 0);
     }
 }
 
@@ -66,36 +64,71 @@ char	*BusNames[] = {
 
 #define NUM_BUS_NAMES	(sizeof (BusNames) / sizeof (BusNames[0]))
 
-int	BusInputType;
+static int
+BusInit (KdPointerInfo *pi)
+{
+    int	    i, fd = 0;
+
+    if (!pi->path || (strcmp(pi->path, "auto") == 0))
+    {
+        for (i = 0; i < NUM_BUS_NAMES; i++)
+        {
+            if ((fd = open (BusNames[i], 0)) > 0)
+            {
+                close(fd);
+                if (pi->path)
+                    xfree(pi->path);
+                pi->path = KdSaveString(BusNames[i]);
+                return Success;
+            }
+        }
+    }
+    else
+    {
+        if ((fd = open(pi->path, 0)) > 0)
+        {
+            close(fd);
+            return Success;
+        }
+    }
+
+    return !Success;
+}
 
 static int
-BusInit (void)
+BusEnable (KdPointerInfo *pi)
 {
-    int	    i;
-    int	    busPort;
-    int	    n = 0;
+    int fd = open(pi->path, 0);
 
-    if (!BusInputType)
-	BusInputType = KdAllocInputType ();
-    
-    for (i = 0; i < NUM_BUS_NAMES; i++)
+    if (fd > 0)
     {
-	busPort = open (BusNames[i], 0);
-	{
-	    KdRegisterFd (BusInputType, busPort, BusRead, 0);
-	    n++;
-	}
+        KdRegisterFd(fd, BusRead, pi);
+        pi->driverPrivate = (void *)fd;
+        return Success;
     }
-    return n;
+    else
+    {
+        return !Success;
+    }
 }
 
 static void
-BusFini (void)
+BusDisable (KdPointerInfo *pi)
 {
-    KdUnregisterFds (BusInputType, TRUE);
+    KdUnregisterFd(pi, (int)pi->driverPrivate, TRUE);
 }
 
-KdMouseFuncs BusMouseFuncs = {
+static void
+BusFini (KdPointerInfo *pi)
+{
+    return;
+}
+
+KdPointerDriver BusMouseDriver = {
+    "bus",
     BusInit,
-    BusFini
+    BusEnable,
+    BusDisable,
+    BusFini,
+    NULL
 };

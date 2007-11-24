@@ -1,4 +1,3 @@
-/* $XFree86$ */
 /*
  * Copyright 2001-2004 Red Hat Inc., Durham, North Carolina.
  *
@@ -70,9 +69,7 @@ static unsigned long *dmxCursorGeneration;
 
 int dmxGCPrivateIndex;          /**< Private index for GCs       */
 int dmxWinPrivateIndex;         /**< Private index for Windows   */
-#ifdef PIXPRIV
 int dmxPixPrivateIndex;         /**< Private index for Pixmaps   */
-#endif
 int dmxFontPrivateIndex;        /**< Private index for Fonts     */
 int dmxScreenPrivateIndex;      /**< Private index for Screens   */
 int dmxColormapPrivateIndex;    /**< Private index for Colormaps */
@@ -233,14 +230,10 @@ Bool dmxScreenInit(int idx, ScreenPtr pScreen, int argc, char *argv[])
 	if (dmxWinPrivateIndex == -1)
 	    return FALSE;
 
-#ifdef PIXPRIV
 	/* Allocate pixmap private index */
 	dmxPixPrivateIndex = AllocatePixmapPrivateIndex();
 	if (dmxPixPrivateIndex == -1)
 	    return FALSE;
-#else
-#error Must define PIXPRIV to compile DMX X server
-#endif
 
 	/* Allocate font private index */
 	dmxFontPrivateIndex = AllocateFontPrivateIndex();

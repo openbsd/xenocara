@@ -1,4 +1,3 @@
-/* $XFree86$ */
 /*
  * Copyright 2002 Red Hat Inc., Durham, North Carolina.
  *
@@ -79,7 +78,9 @@ void dmxDummyMouGetInfo(DevicePtr pDev, DMXLocalInitInfoPtr info)
     info->valuatorClass    = 1;
     info->numRelAxes       = 2;
     info->minval[0]        = 0;
+    info->minval[1]        = 0;
     info->maxval[0]        = 0;
+    info->maxval[1]        = 0;
     info->res[0]           = 1;
     info->minres[0]        = 0;
     info->maxres[0]        = 1;

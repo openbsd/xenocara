@@ -55,12 +55,8 @@ SOFTWARE.
 #include "pixmapstr.h"
 #include "mifpoly.h"
 
-static int GetFPolyYBounds(register SppPointPtr pts, int n, double yFtrans,
+static int GetFPolyYBounds(SppPointPtr pts, int n, double yFtrans,
 			   int *by, int *ty);
-
-#ifdef ICEILTEMPDECL
-ICEILTEMPDECL
-#endif
 
 /*
  *	Written by Todd Newman; April. 1987.
@@ -101,7 +97,7 @@ miFillSppPoly(dst, pgc, count, ptsIn, xTrans, yTrans, xFtrans, yFtrans)
     			*width,
     			*FirstWidth,    /* output buffer */
     	 		*Marked;	/* set if this vertex has been used */
-    register int	left, right,	/* indices to first endpoints */
+    int			left, right,	/* indices to first endpoints */
     			nextleft,
                  	nextright;	/* indices to second endpoints */
     DDXPointPtr 	ptsOut,
@@ -251,13 +247,13 @@ miFillSppPoly(dst, pgc, count, ptsIn, xTrans, yTrans, xFtrans, yFtrans)
 static
 int
 GetFPolyYBounds(
-    register SppPointPtr	pts,
+    SppPointPtr			pts,
     int 			n,
     double			yFtrans,
     int 			*by,
     int				*ty)
 {
-    register SppPointPtr	ptMin;
+    SppPointPtr			ptMin;
     double 			ymin, ymax;
     SppPointPtr			ptsStart = pts;
 

@@ -19,7 +19,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $Header: /home/cvs/xenocara/xserver/miext/cw/Attic/cw_render.c,v 1.1.1.1 2006/11/26 18:15:06 matthieu Exp $ */
 
 #ifdef HAVE_DIX_CONFIG_H
 #include <dix-config.h>

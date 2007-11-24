@@ -1,5 +1,4 @@
 /* 
- * 
  * Copyright (c) 1997  Metro Link Incorporated
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -106,17 +105,13 @@ static int pushToken = LOCK_TOKEN;
 static int eol_seen = 0;		/* private state to handle comments */
 LexRec val;
 
-#ifdef __UNIXOS2__
-extern char *__XOS2RedirRoot(char *path);
-#endif
-
 /* 
  * xf86strToUL --
  *
  *  A portable, but restricted, version of strtoul().  It only understands
  *  hex, octal, and decimal.  But it's good enough for our needs.
  */
-unsigned int
+static unsigned int
 xf86strToUL (char *str)
 {
 	int base = 10;
@@ -523,10 +518,6 @@ xf86pathIsAbsolute(const char *path)
 {
 	if (path && path[0] == '/')
 		return 1;
-#ifdef __UNIXOS2__
-	if (path && (path[0] == '\\' || (path[1] == ':')))
-		return 1;
-#endif
 	return 0;
 }
 
@@ -571,7 +562,6 @@ xf86pathIsSafe(const char *path)
  *    %P    projroot
  *    %M    major version number
  *    %%    %
- *    %&    UNIXOS2 only: prepend X11ROOT env var
  */
 
 #ifndef XCONFIGFILE
@@ -625,9 +615,6 @@ DoSubstitution(const char *template, const char *cmdline, const char *projroot,
 	static const char *env = NULL, *home = NULL;
 	static char *hostname = NULL;
 	static char majorvers[3] = "";
-#ifdef __UNIXOS2__
-	static char *x11root = NULL;
-#endif
 
 	if (!template)
 		return NULL;
@@ -744,16 +731,6 @@ DoSubstitution(const char *template, const char *cmdline, const char *projroot,
 				result[l++] = '%';
 				CHECK_LENGTH;
 				break;
-#ifdef __UNIXOS2__
-			case '&':
-				if (!x11root)
-					x11root = getenv("X11ROOT");
-				if (x11root)
-					APPEND_STR(x11root);
-				else
-					BAIL_OUT;
-				break;
-#endif
 			default:
 				fprintf(stderr, "invalid escape %%%c found in path template\n",
 						template[i]);
@@ -913,20 +890,6 @@ xf86parseError (char *format,...)
 	va_list ap;
 
 	ErrorF ("Parse error on line %d of section %s in file %s\n\t",
-		 configLineNo, configSection, configPath);
-	va_start (ap, format);
-	VErrorF (format, ap);
-	va_end (ap);
-
-	ErrorF ("\n");
-}
-
-void
-xf86parseWarning (char *format,...)
-{
-	va_list ap;
-
-	ErrorF ("Parse warning on line %d of section %s in file %s\n\t",
 		 configLineNo, configSection, configPath);
 	va_start (ap, format);
 	VErrorF (format, ap);

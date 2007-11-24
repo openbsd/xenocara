@@ -70,7 +70,7 @@ SOFTWARE.
 #include <X11/Xtrans/Xtrans.h>
 #include <X11/Xmd.h>
 #include <errno.h>
-#if !defined(__UNIXOS2__) && !defined(WIN32)
+#if !defined(WIN32)
 #ifndef Lynx
 #include <sys/uio.h>
 #else
@@ -90,10 +90,14 @@ SOFTWARE.
 _X_EXPORT CallbackListPtr       ReplyCallback;
 _X_EXPORT CallbackListPtr       FlushCallback;
 
+static ConnectionInputPtr AllocateInputBuffer(void);
+static ConnectionOutputPtr AllocateOutputBuffer(void);
+static xReqPtr PeekNextRequest(xReqPtr req, ClientPtr client, Bool readmore);
+static void SkipRequests(xReqPtr req, ClientPtr client, int numskipped);
+
 /* check for both EAGAIN and EWOULDBLOCK, because some supposedly POSIX
  * systems are broken and return EWOULDBLOCK when they should return EAGAIN
  */
-#ifndef __UNIXOS2__
 #ifndef WIN32
 #if defined(EAGAIN) && defined(EWOULDBLOCK)
 #define ETEST(err) (err == EAGAIN || err == EWOULDBLOCK)
@@ -107,15 +111,12 @@ _X_EXPORT CallbackListPtr       FlushCallback;
 #else /* WIN32 The socket errorcodes differ from the normal errors*/
 #define ETEST(err) (err == EAGAIN || err == WSAEWOULDBLOCK)
 #endif
-#else /* __UNIXOS2__  Writing to full pipes may return ENOSPC */
-#define ETEST(err) (err == EAGAIN || err == EWOULDBLOCK || err == ENOSPC)
-#endif
 
-Bool CriticalOutputPending;
-int timesThisConnection = 0;
-ConnectionInputPtr FreeInputs = (ConnectionInputPtr)NULL;
-ConnectionOutputPtr FreeOutputs = (ConnectionOutputPtr)NULL;
-OsCommPtr AvailableInput = (OsCommPtr)NULL;
+static Bool CriticalOutputPending;
+static int timesThisConnection = 0;
+static ConnectionInputPtr FreeInputs = (ConnectionInputPtr)NULL;
+static ConnectionOutputPtr FreeOutputs = (ConnectionOutputPtr)NULL;
+static OsCommPtr AvailableInput = (OsCommPtr)NULL;
 
 #define get_req_len(req,cli) ((cli)->swapped ? \
 			      lswaps((req)->length) : (req)->length)
@@ -303,12 +304,14 @@ ReadRequestFromClient(ClientPtr client)
 	 */
 
 	oci->lenLastReq = 0;
-	if (needed > MAXBUFSIZE)
+#ifdef BIGREQS
+	if (needed > maxBigRequestSize << 2)
 	{
 	    /* request is too big for us to handle */
 	    YieldControlDeath();
 	    return -1;
 	}
+#endif
 	if ((gotnow == 0) ||
 	    ((oci->bufptr - oci->buffer + needed) > oci->size))
 	{
@@ -635,7 +638,7 @@ ResetCurrentRequest(ClientPtr client)
  *
  **********************/
 
-xReqPtr
+static xReqPtr
 PeekNextRequest(
     xReqPtr req,	/* request we're starting from */
     ClientPtr client,	/* client whose requests we're skipping */
@@ -697,7 +700,7 @@ PeekNextRequest(
 
 _X_EXPORT CallbackListPtr SkippedRequestsCallback = NULL;
 
-void
+static void
 SkipRequests(
     xReqPtr req,	/* last request being skipped */
     ClientPtr client,   /* client whose requests we're skipping */
@@ -1165,7 +1168,7 @@ FlushClient(ClientPtr who, OsCommPtr oc, char *extraBuf, int extraCount)
     return extraCount; /* return only the amount explicitly requested */
 }
 
-ConnectionInputPtr
+static ConnectionInputPtr
 AllocateInputBuffer(void)
 {
     ConnectionInputPtr oci;
@@ -1186,7 +1189,7 @@ AllocateInputBuffer(void)
     return oci;
 }
 
-ConnectionOutputPtr
+static ConnectionOutputPtr
 AllocateOutputBuffer(void)
 {
     ConnectionOutputPtr oco;

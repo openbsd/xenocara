@@ -36,7 +36,7 @@ is" without express or implied warranty.
 
 #ifdef XKB
 #include <X11/extensions/XKB.h>
-#include <X11/extensions/XKBsrv.h>
+#include <xkbsrv.h>
 #include <X11/extensions/XKBconfig.h>
 
 extern Bool
@@ -89,6 +89,12 @@ DeviceIntPtr xnestKeyboardDevice = NULL;
 
 void
 xnestBell(int volume, DeviceIntPtr pDev, pointer ctrl, int cls)
+{
+  XBell(xnestDisplay, volume);
+}
+
+void
+DDXRingBell(int volume, int pitch, int duration)
 {
   XBell(xnestDisplay, volume);
 }
@@ -253,7 +259,7 @@ XkbError:
 }
 
 Bool
-LegalModifier(unsigned int key, DevicePtr pDev)
+LegalModifier(unsigned int key, DeviceIntPtr pDev)
 {
   return TRUE;
 }

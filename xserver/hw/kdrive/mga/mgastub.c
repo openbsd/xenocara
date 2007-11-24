@@ -1,6 +1,4 @@
 /*
- * $Id: mgastub.c,v 1.1.1.1 2006/11/26 18:22:17 matthieu Exp $
- *
  * Copyright © 2003 Anders Carlsson
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -21,7 +19,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $Header: /home/cvs/xenocara/xserver/hw/kdrive/mga/Attic/mgastub.c,v 1.1.1.1 2006/11/26 18:22:17 matthieu Exp $ */
 #ifdef HAVE_CONFIG_H
 #include <kdrive-config.h>
 #endif
@@ -45,7 +42,8 @@ InitOutput (ScreenInfo *pScreenInfo, int argc, char **argv)
 void
 InitInput (int argc, char **argv)
 {
-    KdInitInput (&LinuxMouseFuncs, &LinuxKeyboardFuncs);
+    KdOsAddInputDrivers ();
+    KdInitInput ();
 }
 
 void

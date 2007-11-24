@@ -1,6 +1,4 @@
 /*
- * Id: kinfo.c,v 1.1 1999/11/02 03:54:46 keithp Exp $
- *
  * Copyright © 1999 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -21,7 +19,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $RCSId: xc/programs/Xserver/hw/kdrive/kinfo.c,v 1.2 2000/02/23 20:29:53 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <kdrive-config.h>
@@ -101,7 +98,7 @@ KdScreenInfoDispose (KdScreenInfo *si)
     KdCardInfo	    *ci = si->card;
     KdScreenInfo    **prev;
 
-    for (prev = &ci->screenList; *prev; prev = &(*prev)->next)
+    for (prev = &ci->screenList; *prev; prev = &(*prev)->next) {
 	if (*prev == si)
 	{
 	    *prev = si->next;
@@ -110,38 +107,67 @@ KdScreenInfoDispose (KdScreenInfo *si)
 		KdCardInfoDispose (ci);
 	    break;
 	}
+    }
 }
 
-KdMouseInfo *kdMouseInfo;
-
-KdMouseInfo *
-KdMouseInfoAdd (void)
+KdPointerInfo *
+KdNewPointer (void)
 {
-    KdMouseInfo	*mi, **prev;
+    KdPointerInfo *pi;
+    int i;
 
-    mi = (KdMouseInfo *) xalloc (sizeof (KdMouseInfo));
-    if (!mi)
-	return 0;
-    bzero (mi, sizeof (KdMouseInfo));
-    for (prev = &kdMouseInfo; *prev; prev = &(*prev)->next);
-    *prev = mi;
-    return mi;
+    pi = (KdPointerInfo *)xcalloc(1, sizeof(KdPointerInfo));
+    if (!pi)
+        return NULL;
+
+    pi->name = KdSaveString("Generic Pointer");
+    pi->path = NULL;
+    pi->inputClass = KD_MOUSE;
+    pi->driver = NULL;
+    pi->driverPrivate = NULL;
+    pi->next = NULL;
+    pi->options = NULL;
+    pi->nAxes = 3;
+    pi->nButtons = KD_MAX_BUTTON;
+    for (i = 1; i < KD_MAX_BUTTON; i++)
+        pi->map[i] = i;
+
+    return pi;
 }
 
 void
-KdMouseInfoDispose (KdMouseInfo *mi)
+KdFreePointer(KdPointerInfo *pi)
 {
-    KdMouseInfo	**prev;
+    InputOption *option, *prev = NULL;
 
-    for (prev = &kdMouseInfo; *prev; prev = &(*prev)->next)
-	if (*prev == mi)
-	{
-	    *prev = mi->next;
-	    if (mi->name)
-		xfree (mi->name);
-	    if (mi->prot)
-		xfree (mi->prot);
-	    xfree (mi);
-	    break;
-	}
+    if (pi->name)
+        xfree(pi->name);
+    if (pi->path)
+        xfree(pi->path);
+
+    for (option = pi->options; option; option = option->next) {
+        if (prev)
+            xfree(prev);
+        if (option->key)
+            xfree(option->key);
+        if (option->value)
+            xfree(option->value);
+        prev = option;
+    }
+
+    if (prev)
+        xfree(prev);
+    
+    xfree(pi);
+}
+ 
+void
+KdFreeKeyboard(KdKeyboardInfo *ki)
+{
+    if (ki->name)
+        xfree(ki->name);
+    if (ki->path)
+        xfree(ki->path);
+    ki->next = NULL;
+    xfree(ki);
 }

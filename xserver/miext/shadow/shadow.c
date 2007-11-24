@@ -1,6 +1,4 @@
 /*
- * $Id: shadow.c,v 1.1.1.1 2006/11/26 18:15:06 matthieu Exp $
- *
  * Copyright © 2000 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its

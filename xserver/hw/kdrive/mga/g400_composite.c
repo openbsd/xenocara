@@ -1,6 +1,4 @@
 /*
- * $Id: g400_composite.c,v 1.1.1.1 2006/11/26 18:22:17 matthieu Exp $
- *
  * Copyright © 2004 Damien Ciabrini
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -21,7 +19,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $Header: /home/cvs/xenocara/xserver/hw/kdrive/mga/Attic/g400_composite.c,v 1.1.1.1 2006/11/26 18:22:17 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <kdrive-config.h>
@@ -286,10 +283,8 @@ mgaCheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskPicture,
     if (pMaskPicture->componentAlpha)
 	MGA_FALLBACK(("Component alpha unsupported"));
 
-    switch (pDstPicture->format) {
-    case PICT_a8:
+    if (pDstPicture->format == PICT_a8)
 	MGA_FALLBACK(("render to A8 unsupported"));
-    }
 
     return TRUE;
 }

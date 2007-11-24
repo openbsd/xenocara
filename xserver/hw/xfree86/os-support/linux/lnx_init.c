@@ -22,7 +22,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  */
-/* $XConsortium: lnx_init.c /main/7 1996/10/23 18:46:30 kaleb $ */
 
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
@@ -245,15 +244,15 @@ xf86OpenConsole(void)
 	    lnx_savefont();
 #endif
 	    /*
-	     * now get the VT
+	     * now get the VT.  This _must_ succeed, or else fail completely.
 	     */
 	    if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, xf86Info.vtno) < 0)
-	        xf86Msg(X_WARNING, "xf86OpenConsole: VT_ACTIVATE failed: %s\n",
-		        strerror(errno));
+	        FatalError("xf86OpenConsole: VT_ACTIVATE failed: %s\n",
+		           strerror(errno));
 
 	    if (ioctl(xf86Info.consoleFd, VT_WAITACTIVE, xf86Info.vtno) < 0)
-	        xf86Msg(X_WARNING, "xf86OpenConsole: VT_WAITACTIVE failed: %s\n",
-		    strerror(errno));
+	        FatalError("xf86OpenConsole: VT_WAITACTIVE failed: %s\n",
+			   strerror(errno));
 
 	    if (ioctl(xf86Info.consoleFd, VT_GETMODE, &VT) < 0)
 	        FatalError("xf86OpenConsole: VT_GETMODE failed %s\n",
@@ -350,6 +349,10 @@ xf86CloseConsole()
 	    if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, activeVT) < 0)
 	        xf86Msg(X_WARNING, "xf86CloseConsole: VT_ACTIVATE failed: %s\n",
 		        strerror(errno));
+	    if (ioctl(xf86Info.consoleFd, VT_WAITACTIVE, activeVT) < 0)
+		xf86Msg(X_WARNING,
+			"xf86CloseConsole: VT_WAITACTIVE failed: %s\n",
+			strerror(errno));
 	    activeVT = -1;
         }
 

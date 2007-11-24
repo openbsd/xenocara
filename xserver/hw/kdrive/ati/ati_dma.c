@@ -19,7 +19,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $Header: /home/cvs/xenocara/xserver/hw/kdrive/ati/Attic/ati_dma.c,v 1.1.1.1 2006/11/26 18:22:11 matthieu Exp $ */
 
 #include <sys/time.h>
 
@@ -43,6 +42,7 @@ extern CARD32 radeon_cp_microcode[][2];
 extern CARD32 r200_cp_microcode[][2];
 extern CARD32 r300_cp_microcode[][2];
 
+#if DEBUG_FIFO
 static void
 ATIDebugFifo(ATIScreenInfo *atis)
 {
@@ -69,6 +69,7 @@ ATIDebugFifo(ATIScreenInfo *atis)
 		    MMIO_IN32(mmio, R128_REG_PC_NGUI_CTLSTAT));
 	}
 }
+#endif
 
 static void
 ATIUploadMicrocode(ATIScreenInfo *atis)
@@ -788,7 +789,7 @@ ATIPseudoDMAInit(ScreenPtr pScreen)
 		atis->cce_pri_size = MMIO_IN32(mmio, RADEON_REG_CP_CSQ_CNTL) &
 		    R200_CSQ_CNT_PRIMARY_MASK;
 		MMIO_OUT32(mmio, RADEON_REG_ME_CNTL, RADEON_ME_MODE_FREE_RUN);
-	} if (atic->is_radeon) {
+	} else if (atic->is_radeon) {
 		MMIO_OUT32(mmio, RADEON_REG_CP_CSQ_CNTL,
 		    RADEON_CSQ_PRIPIO_INDDIS);
 		atis->cce_pri_size = MMIO_IN32(mmio, RADEON_REG_CP_CSQ_CNTL) &

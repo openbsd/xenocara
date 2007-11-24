@@ -1,6 +1,4 @@
 /*
- * $Id: damageext.h,v 1.1.1.1 2006/11/26 18:14:42 matthieu Exp $
- *
  * Copyright © 2002 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its

@@ -45,39 +45,53 @@ in this Software without prior written authorization from The Open Group.
 # include   "pixmapstr.h"
 # include   "inputstr.h"
 # include   "mi.h"
+# include   "mipointer.h"
 # include   "scrnintstr.h"
+# include   <X11/extensions/XI.h>
+# include   <X11/extensions/XIproto.h>
+# include   "extinit.h"
+# include   "exglobals.h"
 
-#define QUEUE_SIZE  256
+#ifdef DPMSExtension
+# include "dpmsproc.h"
+# define DPMS_SERVER
+# include <X11/extensions/dpms.h>
+#endif
+
+#define QUEUE_SIZE  512
 
 typedef struct _Event {
-    xEvent	event;
-    ScreenPtr	pScreen;
+    xEvent          event[7];
+    int             nevents;
+    ScreenPtr	    pScreen;
+    DeviceIntPtr    pDev; /* device this event _originated_ from */
 } EventRec, *EventPtr;
 
 typedef struct _EventQueue {
-    HWEventQueueType	head, tail;	    /* long for SetInputCheck */
-    CARD32	lastEventTime;	    /* to avoid time running backwards */
-    Bool	lastMotion;
-    EventRec	events[QUEUE_SIZE]; /* static allocation for signals */
-    DevicePtr	pKbd, pPtr;	    /* device pointer, to get funcs */
-    ScreenPtr	pEnqueueScreen;	    /* screen events are being delivered to */
-    ScreenPtr	pDequeueScreen;	    /* screen events are being dispatched to */
+    HWEventQueueType head, tail;         /* long for SetInputCheck */
+    CARD32           lastEventTime;      /* to avoid time running backwards */
+    int              lastMotion;         /* device ID if last event motion? */
+    EventRec         events[QUEUE_SIZE]; /* static allocation for signals */
+    ScreenPtr        pEnqueueScreen;     /* screen events are being delivered to */
+    ScreenPtr        pDequeueScreen;     /* screen events are being dispatched to */
+    mieqHandler      handlers[128];      /* custom event handler */
 } EventQueueRec, *EventQueuePtr;
 
 static EventQueueRec miEventQueue;
 
 Bool
-mieqInit (pKbd, pPtr)
-    DevicePtr	pKbd, pPtr;
+mieqInit(void)
 {
+    int i;
+
     miEventQueue.head = miEventQueue.tail = 0;
     miEventQueue.lastEventTime = GetTimeInMillis ();
-    miEventQueue.pKbd = pKbd;
-    miEventQueue.pPtr = pPtr;
     miEventQueue.lastMotion = FALSE;
     miEventQueue.pEnqueueScreen = screenInfo.screens[0];
     miEventQueue.pDequeueScreen = miEventQueue.pEnqueueScreen;
-    SetInputCheck (&miEventQueue.head, &miEventQueue.tail);
+    for (i = 0; i < 128; i++)
+        miEventQueue.handlers[i] = NULL;
+    SetInputCheck(&miEventQueue.head, &miEventQueue.tail);
     return TRUE;
 }
 
@@ -89,106 +103,150 @@ mieqInit (pKbd, pPtr)
  */
 
 void
-mieqEnqueue (e)
-    xEvent	*e;
+mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
 {
-    HWEventQueueType	oldtail, newtail;
-    Bool    isMotion;
+    unsigned int           oldtail = miEventQueue.tail, newtail;
+    int                    isMotion = 0;
+    deviceValuator         *v = (deviceValuator *) e;
+    EventPtr               laste = &miEventQueue.events[(oldtail - 1) %
+							QUEUE_SIZE];
+    deviceKeyButtonPointer *lastkbp = (deviceKeyButtonPointer *)
+                                      &laste->event[0];
 
-    oldtail = miEventQueue.tail;
-    isMotion = e->u.u.type == MotionNotify;
-    if (isMotion && miEventQueue.lastMotion && oldtail != miEventQueue.head)
-    {
-	if (oldtail == 0)
-	    oldtail = QUEUE_SIZE;
-	oldtail = oldtail - 1;
+    if (e->u.u.type == MotionNotify)
+        isMotion = inputInfo.pointer->id;
+    else if (e->u.u.type == DeviceMotionNotify)
+        isMotion = pDev->id;
+
+    /* We silently steal valuator events: just tack them on to the last
+     * motion event they need to be attached to.  Sigh. */
+    if (e->u.u.type == DeviceValuator) {
+        if (laste->nevents > 6) {
+            ErrorF("mieqEnqueue: more than six valuator events; dropping.\n");
+            return;
+        }
+        if (oldtail == miEventQueue.head ||
+            !(lastkbp->type == DeviceMotionNotify ||
+              lastkbp->type == DeviceButtonPress ||
+              lastkbp->type == DeviceButtonRelease) ||
+            ((lastkbp->deviceid & DEVICE_BITS) !=
+             (v->deviceid & DEVICE_BITS))) {
+            ErrorF("mieqEnequeue: out-of-order valuator event; dropping.\n");
+            return;
+        }
+        memcpy(&(laste->event[laste->nevents++]), e, sizeof(xEvent));
+        return;
     }
-    else
-    {
-    	newtail = oldtail + 1;
-    	if (newtail == QUEUE_SIZE)
-	    newtail = 0;
-    	/* Toss events which come in late */
-    	if (newtail == miEventQueue.head)
+
+    if (isMotion && isMotion == miEventQueue.lastMotion &&
+        oldtail != miEventQueue.head) {
+	oldtail = (oldtail - 1) % QUEUE_SIZE;
+    }
+    else {
+    	newtail = (oldtail + 1) % QUEUE_SIZE;
+    	/* Toss events which come in late.  Usually this means your server's
+         * stuck in an infinite loop somewhere, but SIGIO is still getting
+         * handled. */
+    	if (newtail == miEventQueue.head) {
+            ErrorF("tossed event which came in late\n");
 	    return;
+        }
 	miEventQueue.tail = newtail;
     }
-    miEventQueue.lastMotion = isMotion;
-    miEventQueue.events[oldtail].event = *e;
-    /*
-     * Make sure that event times don't go backwards - this
-     * is "unnecessary", but very useful
-     */
+
+    memcpy(&(miEventQueue.events[oldtail].event[0]), e, sizeof(xEvent));
+    miEventQueue.events[oldtail].nevents = 1;
+
+    /* Make sure that event times don't go backwards - this
+     * is "unnecessary", but very useful. */
     if (e->u.keyButtonPointer.time < miEventQueue.lastEventTime &&
 	miEventQueue.lastEventTime - e->u.keyButtonPointer.time < 10000)
-    {
-	miEventQueue.events[oldtail].event.u.keyButtonPointer.time =
+	miEventQueue.events[oldtail].event[0].u.keyButtonPointer.time =
 	    miEventQueue.lastEventTime;
-    }
+
     miEventQueue.lastEventTime =
-	miEventQueue.events[oldtail].event.u.keyButtonPointer.time;
+	miEventQueue.events[oldtail].event[0].u.keyButtonPointer.time;
     miEventQueue.events[oldtail].pScreen = miEventQueue.pEnqueueScreen;
+    miEventQueue.events[oldtail].pDev = pDev;
+
+    miEventQueue.lastMotion = isMotion;
 }
 
 void
-mieqSwitchScreen (pScreen, fromDIX)
-    ScreenPtr	pScreen;
-    Bool	fromDIX;
+mieqSwitchScreen(ScreenPtr pScreen, Bool fromDIX)
 {
     miEventQueue.pEnqueueScreen = pScreen;
     if (fromDIX)
 	miEventQueue.pDequeueScreen = pScreen;
 }
 
-/*
- * Call this from ProcessInputEvents()
- */
-
-void mieqProcessInputEvents ()
+void
+mieqSetHandler(int event, mieqHandler handler)
 {
-    EventRec	*e;
-    int		x, y;
-    xEvent	xe;
+    if (handler && miEventQueue.handlers[event])
+        ErrorF("mieq: warning: overriding existing handler %p with %p for "
+               "event %d\n", miEventQueue.handlers[event], handler, event);
 
-    while (miEventQueue.head != miEventQueue.tail)
-    {
-	if (screenIsSaved == SCREEN_SAVER_ON)
-	    SaveScreens (SCREEN_SAVER_OFF, ScreenSaverReset);
+    miEventQueue.handlers[event] = handler;
+}
 
-	e = &miEventQueue.events[miEventQueue.head];
-	/*
-	 * Assumption - screen switching can only occur on motion events
-	 */
-	if (e->pScreen != miEventQueue.pDequeueScreen)
-	{
-	    miEventQueue.pDequeueScreen = e->pScreen;
-	    x = e->event.u.keyButtonPointer.rootX;
-	    y = e->event.u.keyButtonPointer.rootY;
-	    if (miEventQueue.head == QUEUE_SIZE - 1)
-	    	miEventQueue.head = 0;
-	    else
-	    	++miEventQueue.head;
-	    NewCurrentScreen (miEventQueue.pDequeueScreen, x, y);
-	}
-	else
-	{
-	    xe = e->event;
-	    if (miEventQueue.head == QUEUE_SIZE - 1)
-	    	miEventQueue.head = 0;
-	    else
-	    	++miEventQueue.head;
-	    switch (xe.u.u.type) 
-	    {
-	    case KeyPress:
-	    case KeyRelease:
-	    	(*miEventQueue.pKbd->processInputProc)
-				(&xe, (DeviceIntPtr)miEventQueue.pKbd, 1);
-	    	break;
-	    default:
-	    	(*miEventQueue.pPtr->processInputProc)
-				(&xe, (DeviceIntPtr)miEventQueue.pPtr, 1);
-	    	break;
-	    }
-	}
+/* Call this from ProcessInputEvents(). */
+void
+mieqProcessInputEvents(void)
+{
+    EventRec *e = NULL;
+    int x = 0, y = 0;
+    DeviceIntPtr dev = NULL;
+
+    while (miEventQueue.head != miEventQueue.tail) {
+        if (screenIsSaved == SCREEN_SAVER_ON)
+            SaveScreens (SCREEN_SAVER_OFF, ScreenSaverReset);
+#ifdef DPMSExtension
+        else if (DPMSPowerLevel != DPMSModeOn)
+            SetScreenSaverTimer();
+
+        if (DPMSPowerLevel != DPMSModeOn)
+            DPMSSet(DPMSModeOn);
+#endif
+
+        e = &miEventQueue.events[miEventQueue.head];
+        /* Assumption - screen switching can only occur on motion events. */
+        miEventQueue.head = (miEventQueue.head + 1) % QUEUE_SIZE;
+
+        if (e->pScreen != miEventQueue.pDequeueScreen) {
+            miEventQueue.pDequeueScreen = e->pScreen;
+            x = e->event[0].u.keyButtonPointer.rootX;
+            y = e->event[0].u.keyButtonPointer.rootY;
+            NewCurrentScreen (miEventQueue.pDequeueScreen, x, y);
+        }
+        else {
+            /* If someone's registered a custom event handler, let them
+             * steal it. */
+            if (miEventQueue.handlers[e->event->u.u.type]) {
+                miEventQueue.handlers[e->event->u.u.type](miEventQueue.pDequeueScreen->myNum,
+                                                          e->event, dev,
+                                                          e->nevents);
+                return;
+            }
+
+            /* If this is a core event, make sure our keymap, et al, is
+             * changed to suit. */
+            if (e->event[0].u.u.type == KeyPress ||
+                e->event[0].u.u.type == KeyRelease) {
+                SwitchCoreKeyboard(e->pDev);
+                dev = inputInfo.keyboard;
+            }
+            else if (e->event[0].u.u.type == MotionNotify ||
+                     e->event[0].u.u.type == ButtonPress ||
+                     e->event[0].u.u.type == ButtonRelease) {
+                SwitchCorePointer(e->pDev);
+                dev = inputInfo.pointer;
+            }
+            else {
+                dev = e->pDev;
+            }
+
+            dev->public.processInputProc(e->event, dev, e->nevents);
+        }
     }
 }

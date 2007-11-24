@@ -1,5 +1,4 @@
 /* x-list.c
-   $Id: x-list.c,v 1.1.1.1 2006/11/26 18:16:44 matthieu Exp $
 
    Copyright (c) 2002 Apple Computer, Inc. All rights reserved.
 
@@ -27,7 +26,9 @@
    copyright holders shall not be used in advertising or otherwise to
    promote the sale, use or other dealings in this Software without
    prior written authorization. */
-
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
 #include "x-list.h"
 #include <stdlib.h>
 #include <assert.h>

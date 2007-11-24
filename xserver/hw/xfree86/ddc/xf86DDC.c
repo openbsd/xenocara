@@ -15,48 +15,6 @@
 
 static const OptionInfoRec *DDCAvailableOptions(void *unused);
 
-static MODULESETUPPROTO(ddcSetup);
-
-static XF86ModuleVersionInfo ddcVersRec =
-{
-    "ddc",
-    MODULEVENDORSTRING,
-    MODINFOSTRING1,
-    MODINFOSTRING2,
-    XORG_VERSION_CURRENT,
-    1, 0, 0,
-    ABI_CLASS_VIDEODRV,		/* needs the video driver ABI */
-    ABI_VIDEODRV_VERSION,
-    MOD_CLASS_NONE,
-    {0,0,0,0}
-};
-
-_X_EXPORT XF86ModuleData ddcModuleData = { &ddcVersRec, ddcSetup, NULL };
-
-ModuleInfoRec DDC = {
-    1,
-    "DDC",
-    NULL,
-    0,
-    DDCAvailableOptions,
-};
-
-static pointer
-ddcSetup(pointer module, pointer opts, int *errmaj, int *errmin)
-{
-    static Bool setupDone = FALSE;
-
-    if (!setupDone) {
-	setupDone = TRUE;
-	xf86AddModuleInfo(&DDC, module);
-    } 
-    /*
-     * The return value must be non-NULL on success even though there
-     * is no TearDownProc.
-     */
-    return (pointer)1;
-}
-
 #define RETRIES 4
 
 static unsigned char *EDIDRead_DDC1(
@@ -78,12 +36,6 @@ static unsigned int *FetchEDID_DDC1(
 static unsigned char* EDID1Read_DDC2(
     int scrnIndex, 
     I2CBusPtr pBus
-);
-
-static unsigned char * VDIFRead(
-    int scrnIndex, 
-    I2CBusPtr pBus, 
-    int start
 );
 
 static unsigned char * DDCRead_DDC2(
@@ -180,7 +132,6 @@ xf86DoEDID_DDC2(int scrnIndex, I2CBusPtr pBus)
 {
     ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     unsigned char *EDID_block = NULL;
-    unsigned char *VDIF_Block = NULL;
     xf86MonPtr tmp = NULL;
     /* Default DDC and DDC2 to enabled. */
     Bool noddc = FALSE, noddc2 = FALSE;
@@ -213,11 +164,6 @@ xf86DoEDID_DDC2(int scrnIndex, I2CBusPtr pBus)
     else
         ErrorF("Sections to follow: %i\n",tmp->no_sections);
 #endif
-    if (tmp) {
-        VDIF_Block = 
-            VDIFRead(scrnIndex, pBus, EDID1_LEN * (tmp->no_sections + 1));    
-        tmp->vdif = xf86InterpretVdif(VDIF_Block);
-    }
     
     return tmp;
 }
@@ -295,35 +241,6 @@ EDID1Read_DDC2(int scrnIndex, I2CBusPtr pBus)
     return  DDCRead_DDC2(scrnIndex, pBus, 0, EDID1_LEN);
 }
 
-static unsigned char*
-VDIFRead(int scrnIndex, I2CBusPtr pBus, int start)
-{
-    unsigned char * Buffer, *v_buffer = NULL, *v_bufferp = NULL;
-    int i, num = 0;
-
-    /* read VDIF length in 64 byte blocks */
-    Buffer = DDCRead_DDC2(scrnIndex, pBus,start,64);
-    if (Buffer == NULL)
-	return NULL;
-#ifdef DEBUG
-    ErrorF("number of 64 bit blocks: %i\n",Buffer[0]);
-#endif
-    if ((num = Buffer[0]) > 0)
-	v_buffer = v_bufferp = xalloc(sizeof(unsigned char) * 64 * num);
-
-    for (i = 0; i < num; i++) {
-	Buffer = DDCRead_DDC2(scrnIndex, pBus,start,64);
-	if (Buffer == NULL) {
-	    xfree (v_buffer);
-	    return NULL;
-	}
-	memcpy(v_bufferp,Buffer,63); /* 64th byte is checksum */
-	xfree(Buffer);
-	v_bufferp += 63;
-    }
-    return v_buffer;
-}
-
 static unsigned char *
 DDCRead_DDC2(int scrnIndex, I2CBusPtr pBus, int start, int len)
 {
@@ -333,6 +250,12 @@ DDCRead_DDC2(int scrnIndex, I2CBusPtr pBus, int start, int len)
     unsigned char *R_Buffer;
     int i;
     
+    /*
+     * Slow down the bus so that older monitors don't 
+     * miss things.
+     */
+    pBus->RiseFallTime = 20;
+    
     if (!(dev = xf86I2CFindDev(pBus, 0x00A0))) {
 	dev = xf86CreateI2CDevRec();
 	dev->DevName = "ddc2";
@@ -340,7 +263,6 @@ DDCRead_DDC2(int scrnIndex, I2CBusPtr pBus, int start, int len)
 	dev->ByteTimeout = 2200; /* VESA DDC spec 3 p. 43 (+10 %) */
 	dev->StartTimeout = 550;
 	dev->BitTimeout = 40;
-	dev->ByteTimeout = 40;
 	dev->AcknTimeout = 40;
 
 	dev->pI2CBus = pBus;

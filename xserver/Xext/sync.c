@@ -243,6 +243,11 @@ SyncInitServerTime(
     void
 );
 
+static void
+SyncInitIdleTime(
+    void
+);
+
 static void 
 SyncResetProc(
     ExtensionEntry * /* extEntry */
@@ -436,7 +441,7 @@ SyncInitTrigger(client, pTrigger, counter, changes)
 	if (counter == None)
 	    pCounter = NULL;
 	else if (!(pCounter = (SyncCounter *)SecurityLookupIDByType(
-			client, counter, RTCounter, SecurityReadAccess)))
+			client, counter, RTCounter, DixReadAccess)))
 	{
 	    client->errorValue = counter;
 	    return SyncErrorBase + XSyncBadCounter;
@@ -1452,15 +1457,17 @@ ProcSyncSetPriority(client)
 {
     REQUEST(xSyncSetPriorityReq);
     ClientPtr priorityclient;
+    int rc;
 
     REQUEST_SIZE_MATCH(xSyncSetPriorityReq);
 
     if (stuff->id == None)
 	priorityclient = client;
-    else if (!(priorityclient = LookupClient(stuff->id, client)))
-    {
-	client->errorValue = stuff->id;
-	return BadMatch;
+    else {
+	rc = dixLookupClient(&priorityclient, stuff->id, client,
+			     DixUnknownAccess);
+	if (rc != Success)
+	    return rc;
     }
 
     if (priorityclient->priority != stuff->priority)
@@ -1487,15 +1494,17 @@ ProcSyncGetPriority(client)
     REQUEST(xSyncGetPriorityReq);
     xSyncGetPriorityReply rep;
     ClientPtr priorityclient;
+    int rc;
 
     REQUEST_SIZE_MATCH(xSyncGetPriorityReq);
 
     if (stuff->id == None)
 	priorityclient = client;
-    else if (!(priorityclient = LookupClient(stuff->id, client)))
-    {
-	client->errorValue = stuff->id;
-	return BadMatch;
+    else {
+	rc = dixLookupClient(&priorityclient, stuff->id, client,
+			     DixUnknownAccess);
+	if (rc != Success)
+	    return rc;
     }
 
     rep.type = X_Reply;
@@ -1550,7 +1559,7 @@ ProcSyncSetCounter(client)
     REQUEST_SIZE_MATCH(xSyncSetCounterReq);
 
     pCounter = (SyncCounter *)SecurityLookupIDByType(client, stuff->cid,
-					   RTCounter, SecurityWriteAccess);
+					   RTCounter, DixWriteAccess);
     if (pCounter == NULL)
     {
 	client->errorValue = stuff->cid;
@@ -1583,7 +1592,7 @@ ProcSyncChangeCounter(client)
     REQUEST_SIZE_MATCH(xSyncChangeCounterReq);
 
     pCounter = (SyncCounter *) SecurityLookupIDByType(client, stuff->cid,
-					    RTCounter, SecurityWriteAccess);
+					    RTCounter, DixWriteAccess);
     if (pCounter == NULL)
     {
 	client->errorValue = stuff->cid;
@@ -1621,7 +1630,7 @@ ProcSyncDestroyCounter(client)
     REQUEST_SIZE_MATCH(xSyncDestroyCounterReq);
 
     pCounter = (SyncCounter *)SecurityLookupIDByType(client, stuff->counter,
-					   RTCounter, SecurityDestroyAccess);
+					   RTCounter, DixDestroyAccess);
     if (pCounter == NULL)
     {
 	client->errorValue = stuff->counter;
@@ -1767,7 +1776,7 @@ ProcSyncQueryCounter(client)
     REQUEST_SIZE_MATCH(xSyncQueryCounterReq);
 
     pCounter = (SyncCounter *)SecurityLookupIDByType(client, stuff->counter,
-					    RTCounter, SecurityReadAccess);
+					    RTCounter, DixReadAccess);
     if (pCounter == NULL)
     {
 	client->errorValue = stuff->counter;
@@ -1896,7 +1905,7 @@ ProcSyncChangeAlarm(client)
     REQUEST_AT_LEAST_SIZE(xSyncChangeAlarmReq);
 
     if (!(pAlarm = (SyncAlarm *)SecurityLookupIDByType(client, stuff->alarm,
-					      RTAlarm, SecurityWriteAccess)))
+					      RTAlarm, DixWriteAccess)))
     {
 	client->errorValue = stuff->alarm;
 	return SyncErrorBase + XSyncBadAlarm;
@@ -1937,7 +1946,7 @@ ProcSyncQueryAlarm(client)
     REQUEST_SIZE_MATCH(xSyncQueryAlarmReq);
 
     pAlarm = (SyncAlarm *)SecurityLookupIDByType(client, stuff->alarm,
-						RTAlarm, SecurityReadAccess);
+						RTAlarm, DixReadAccess);
     if (!pAlarm)
     {
 	client->errorValue = stuff->alarm;
@@ -1997,7 +2006,7 @@ ProcSyncDestroyAlarm(client)
     REQUEST_SIZE_MATCH(xSyncDestroyAlarmReq);
 
     if (!((SyncAlarm *)SecurityLookupIDByType(client, stuff->alarm,
-					      RTAlarm, SecurityDestroyAccess)))
+					      RTAlarm, DixDestroyAccess)))
     {
 	client->errorValue = stuff->alarm;
 	return SyncErrorBase + XSyncBadAlarm;
@@ -2396,6 +2405,7 @@ SyncExtensionInit(INITARGS)
      * because there is always a servertime counter.
      */
     SyncInitServerTime();
+    SyncInitIdleTime();
 
 #ifdef DEBUG
     fprintf(stderr, "Sync Extension %d.%d\n",
@@ -2505,7 +2515,7 @@ ServertimeBracketValues(pCounter, pbracket_less, pbracket_greater)
 }
 
 static void
-SyncInitServerTime()
+SyncInitServerTime(void)
 {
     CARD64 resolution;
 
@@ -2515,4 +2525,118 @@ SyncInitServerTime()
 			    XSyncCounterNeverDecreases,
 			    ServertimeQueryValue, ServertimeBracketValues);
     pnext_time = NULL;
+}
+
+
+
+/*
+ * IDLETIME implementation
+ */
+
+static pointer IdleTimeCounter;
+static XSyncValue *pIdleTimeValueLess;
+static XSyncValue *pIdleTimeValueGreater;
+
+static void
+IdleTimeQueryValue (pointer pCounter, CARD64 *pValue_return)
+{
+    CARD32 idle = GetTimeInMillis() - lastDeviceEventTime.milliseconds;
+    XSyncIntsToValue (pValue_return, idle, 0);
+}
+
+static void
+IdleTimeBlockHandler (pointer env,
+                      struct timeval **wt,
+                      pointer LastSelectMask)
+{
+    XSyncValue idle;
+
+    if (!pIdleTimeValueLess && !pIdleTimeValueGreater)
+	return;
+
+    IdleTimeQueryValue (NULL, &idle);
+
+    if (pIdleTimeValueLess &&
+        XSyncValueLessOrEqual (idle, *pIdleTimeValueLess))
+    {
+	AdjustWaitForDelay (wt, 0);
+    }
+    else if (pIdleTimeValueGreater)
+    {
+	unsigned long timeout = 0;
+
+	if (XSyncValueLessThan (idle, *pIdleTimeValueGreater))
+	{
+	    XSyncValue value;
+	    Bool overflow;
+
+	    XSyncValueSubtract (&value, *pIdleTimeValueGreater,
+	                        idle, &overflow);
+	    timeout = XSyncValueLow32 (value);
+	}
+
+	AdjustWaitForDelay (wt, timeout);
+    }
+}
+
+static void
+IdleTimeWakeupHandler (pointer env,
+                       int rc,
+                       pointer LastSelectMask)
+{
+    XSyncValue idle;
+
+    if (!pIdleTimeValueLess && !pIdleTimeValueGreater)
+	return;
+
+    IdleTimeQueryValue (NULL, &idle);
+
+    if ((pIdleTimeValueGreater &&
+         XSyncValueGreaterOrEqual (idle, *pIdleTimeValueGreater)) ||
+        (pIdleTimeValueLess &&
+	 XSyncValueLessOrEqual (idle, *pIdleTimeValueLess)))
+    {
+	SyncChangeCounter (IdleTimeCounter, idle);
+    }
+}
+
+static void
+IdleTimeBracketValues (pointer pCounter,
+                       CARD64 *pbracket_less,
+                       CARD64 *pbracket_greater)
+{
+    Bool registered = (pIdleTimeValueLess || pIdleTimeValueGreater);
+
+    if (registered && !pbracket_less && !pbracket_greater)
+    {
+	RemoveBlockAndWakeupHandlers(IdleTimeBlockHandler,
+	                             IdleTimeWakeupHandler,
+	                             NULL);
+    }
+    else if (!registered && (pbracket_less || pbracket_greater))
+    {
+	RegisterBlockAndWakeupHandlers(IdleTimeBlockHandler,
+	                               IdleTimeWakeupHandler,
+	                               NULL);
+    }
+
+    pIdleTimeValueGreater = pbracket_greater;
+    pIdleTimeValueLess    = pbracket_less;
+}
+
+static void
+SyncInitIdleTime (void)
+{
+    CARD64 resolution;
+    XSyncValue idle;
+
+    IdleTimeQueryValue (NULL, &idle);
+    XSyncIntToValue (&resolution, 4);
+
+    IdleTimeCounter = SyncCreateSystemCounter ("IDLETIME", idle, resolution,
+                                               XSyncCounterUnrestricted,
+                                               IdleTimeQueryValue,
+                                               IdleTimeBracketValues);
+
+    pIdleTimeValueLess = pIdleTimeValueGreater = NULL;
 }

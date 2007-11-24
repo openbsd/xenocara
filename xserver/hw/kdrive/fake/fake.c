@@ -1,6 +1,4 @@
 /*
- * $Id: fake.c,v 1.1.1.1 2006/11/26 18:21:49 matthieu Exp $
- *
  * Copyright © 2004 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -158,7 +156,7 @@ Bool
 fakeMapFramebuffer (KdScreenInfo *screen)
 {
     FakeScrPriv	*scrpriv = screen->driver;
-    KdMouseMatrix	m;
+    KdPointerMatrix	m;
     FakePriv		*priv = screen->card->driver;
 
     if (scrpriv->randr != RR_Rotate_0)
@@ -166,9 +164,9 @@ fakeMapFramebuffer (KdScreenInfo *screen)
     else
 	scrpriv->shadow = FALSE;
     
-    KdComputeMouseMatrix (&m, scrpriv->randr, screen->width, screen->height);
+    KdComputePointerMatrix (&m, scrpriv->randr, screen->width, screen->height);
     
-    KdSetMouseMatrix (&m);
+    KdSetPointerMatrix (&m);
     
     priv->bytes_per_line = ((screen->width * screen->fb[0].bitsPerPixel + 31) >> 5) << 2;
     if (priv->base)

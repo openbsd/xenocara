@@ -19,7 +19,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $Header: /home/cvs/xenocara/xserver/miext/cw/Attic/cw.c,v 1.1.1.1 2006/11/26 18:15:05 matthieu Exp $ */
 
 #ifdef HAVE_DIX_CONFIG_H
 #include <dix-config.h>
@@ -50,7 +49,6 @@ int cwWindowIndex;
 #ifdef RENDER
 int cwPictureIndex;
 #endif
-static Bool cwDisabled[MAXSCREENS];
 static unsigned long cwGeneration = 0;
 extern GCOps cwGCOps;
 
@@ -619,9 +617,9 @@ void
 miInitializeCompositeWrapper(ScreenPtr pScreen)
 {
     cwScreenPtr pScreenPriv;
-
-    if (cwDisabled[pScreen->myNum])
-	return;
+#ifdef RENDER
+    Bool has_render = GetPictureScreenIfSet(pScreen) != NULL;
+#endif
 
     if (cwGeneration != serverGeneration)
     {
@@ -631,7 +629,8 @@ miInitializeCompositeWrapper(ScreenPtr pScreen)
 	cwGCIndex = AllocateGCPrivateIndex();
 	cwWindowIndex = AllocateWindowPrivateIndex();
 #ifdef RENDER
-	cwPictureIndex = AllocatePicturePrivateIndex();
+	if (has_render)
+	    cwPictureIndex = AllocatePicturePrivateIndex();
 #endif
 	cwGeneration = serverGeneration;
     }
@@ -640,8 +639,10 @@ miInitializeCompositeWrapper(ScreenPtr pScreen)
     if (!AllocateWindowPrivate(pScreen, cwWindowIndex, 0))
 	return;
 #ifdef RENDER
-    if (!AllocatePicturePrivate(pScreen, cwPictureIndex, 0))
-	return;
+    if (has_render) {
+	if (!AllocatePicturePrivate(pScreen, cwPictureIndex, 0))
+	    return;
+    }
 #endif
     pScreenPriv = (cwScreenPtr)xalloc(sizeof(cwScreenRec));
     if (!pScreenPriv)
@@ -661,15 +662,9 @@ miInitializeCompositeWrapper(ScreenPtr pScreen)
     SCREEN_EPILOGUE(pScreen, GetWindowPixmap, cwGetWindowPixmap);
 
 #ifdef RENDER
-    if (GetPictureScreen (pScreen))
+    if (has_render)
 	cwInitializeRender(pScreen);
 #endif
-}
-
-_X_EXPORT void
-miDisableCompositeWrapper(ScreenPtr pScreen)
-{
-    cwDisabled[pScreen->myNum] = TRUE;
 }
 
 static Bool

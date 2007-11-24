@@ -1,6 +1,4 @@
 /*
- * $Id: mga.h,v 1.1.1.1 2006/11/26 18:22:17 matthieu Exp $
- *
  * Copyright © 2003-2004 Anders Carlsson
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -21,7 +19,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $Header: /home/cvs/xenocara/xserver/hw/kdrive/mga/Attic/mga.h,v 1.1.1.1 2006/11/26 18:22:17 matthieu Exp $ */
 
 #ifndef _MGA_H_
 #define _MGA_H_

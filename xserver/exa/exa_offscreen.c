@@ -54,7 +54,7 @@ ExaOffscreenValidate (ScreenPtr pScreen)
 	assert (area->offset >= area->base_offset &&
 		area->offset < (area->base_offset + area->size));
 	if (prev)
-	    assert (prev->base_offset + prev->area.size == area->base_offset);
+	    assert (prev->base_offset + prev->size == area->base_offset);
 	prev = area;
     }
     assert (prev->base_offset + prev->size == pExaScr->info->memorySize);
@@ -81,15 +81,14 @@ ExaOffscreenKickOut (ScreenPtr pScreen, ExaOffscreenArea *area)
  * @param save callback for when the area is evicted from memory
  * @param privdata private data for the save callback.
  *
- * Allocates offscreen memory from the device associated with pScreen.  size and
- * align deteremine where and how large the allocated area is, and locked will
- * mark whether it should be held in card memory.  privdata may be any pointer
- * for the save callback when the area is removed.
+ * Allocates offscreen memory from the device associated with pScreen.  size
+ * and align deteremine where and how large the allocated area is, and locked
+ * will mark whether it should be held in card memory.  privdata may be any
+ * pointer for the save callback when the area is removed.
  *
- * Note that locked areas do get evicted on VT switch, because during that time
- * all offscreen memory becomes inaccessible.  This may change in the future,
- * but drivers should be aware of this and provide a callback to mark that their
- * locked allocation was evicted, and then restore it if necessary on EnterVT.
+ * Note that locked areas do get evicted on VT switch unless the driver
+ * requested version 2.1 or newer behavior.  In that case, the save callback is
+ * still called.
  */
 ExaOffscreenArea *
 exaOffscreenAlloc (ScreenPtr pScreen, int size, int align,
@@ -256,6 +255,9 @@ exaOffscreenAlloc (ScreenPtr pScreen, int size, int align,
     return area;
 }
 
+/**
+ * Ejects all offscreen areas, and uninitializes the offscreen memory manager.
+ */
 void
 ExaOffscreenSwapOut (ScreenPtr pScreen)
 {
@@ -283,23 +285,73 @@ ExaOffscreenSwapOut (ScreenPtr pScreen)
     ExaOffscreenFini (pScreen);
 }
 
+/** Ejects all pixmaps managed by EXA. */
+static void
+ExaOffscreenEjectPixmaps (ScreenPtr pScreen)
+{
+    ExaScreenPriv (pScreen);
+
+    ExaOffscreenValidate (pScreen);
+    /* loop until a single free area spans the space */
+    for (;;)
+    {
+	ExaOffscreenArea *area;
+
+	for (area = pExaScr->info->offScreenAreas; area != NULL;
+	     area = area->next)
+	{
+	    if (area->state == ExaOffscreenRemovable &&
+		area->save == exaPixmapSave)
+	    {
+		(void) ExaOffscreenKickOut (pScreen, area);
+		ExaOffscreenValidate (pScreen);
+		break;
+	    }
+	}
+	if (area == NULL)
+	    break;
+    }
+    ExaOffscreenValidate (pScreen);
+}
+
 void
 ExaOffscreenSwapIn (ScreenPtr pScreen)
 {
     exaOffscreenInit (pScreen);
 }
 
+/**
+ * Prepares EXA for disabling of FB access, or restoring it.
+ *
+ * In version 2.1, the disabling results in pixmaps being ejected, while other
+ * allocations remain.  With this plus the prevention of migration while
+ * swappedOut is set, EXA by itself should not cause any access of the
+ * framebuffer to occur while swapped out.  Any remaining issues are the
+ * responsibility of the driver.
+ *
+ * Prior to version 2.1, all allocations, including locked ones, are ejected
+ * when access is disabled, and the allocator is torn down while swappedOut
+ * is set.  This is more drastic, and caused implementation difficulties for
+ * many drivers that could otherwise handle the lack of FB access while
+ * swapped out.
+ */
 void
 exaEnableDisableFBAccess (int index, Bool enable)
 {
     ScreenPtr pScreen = screenInfo.screens[index];
     ExaScreenPriv (pScreen);
 
-    if (!enable) {
-	ExaOffscreenSwapOut (pScreen);
+    if (!enable && pExaScr->disableFbCount++ == 0) {
+	if (pExaScr->info->exa_minor < 1)
+	    ExaOffscreenSwapOut (pScreen);
+	else
+	    ExaOffscreenEjectPixmaps (pScreen);
 	pExaScr->swappedOut = TRUE;
-    } else {
-	ExaOffscreenSwapIn (pScreen);
+    }
+    
+    if (enable && --pExaScr->disableFbCount == 0) {
+	if (pExaScr->info->exa_minor < 1)
+	    ExaOffscreenSwapIn (pScreen);
 	pExaScr->swappedOut = FALSE;
     }
 }
@@ -377,7 +429,7 @@ ExaOffscreenMarkUsed (PixmapPtr pPixmap)
     ExaScreenPriv (pPixmap->drawable.pScreen);
     static int iter = 0;
 
-    if (!pExaPixmap->area)
+    if (!pExaPixmap || !pExaPixmap->area)
 	return;
 
     /* The numbers here are arbitrary.  We may want to tune these. */
@@ -390,6 +442,7 @@ ExaOffscreenMarkUsed (PixmapPtr pPixmap)
 	    if (area->state == ExaOffscreenRemovable)
 		area->score = (area->score * 7) / 8;
 	}
+	iter = 0;
     }
 }
 

@@ -45,17 +45,4 @@ void SendEventToAllWindows(DeviceIntPtr /* dev */ ,
 			   int	/* count */
     );
 
-void FindInterestedChildren(	/* FIXME: could be static? */
-			       DeviceIntPtr /* dev */ ,
-			       WindowPtr /* p1 */ ,
-			       Mask /* mask */ ,
-			       xEvent * /* ev */ ,
-			       int	/* count */
-    );
-
-void SRepXChangePointerDevice(ClientPtr /* client */ ,
-			      int /* size */ ,
-			      xChangePointerDeviceReply *	/* rep */
-    );
-
 #endif /* CHGPTR_H */

@@ -77,7 +77,7 @@ typedef struct {
 #define AUTHID(client) \
     (((SecurityClientStateRec*)STATEPTR(client))->authId)
 
-CallbackListPtr SecurityValidateGroupCallback = NULL;  /* see security.h */
+static CallbackListPtr SecurityValidateGroupCallback = NULL;
 
 RESTYPE SecurityAuthorizationResType; /* resource type for authorizations */
 
@@ -600,7 +600,7 @@ ProcSecurityRevokeAuthorization(
     REQUEST_SIZE_MATCH(xSecurityRevokeAuthorizationReq);
 
     pAuth = (SecurityAuthorizationPtr)SecurityLookupIDByType(client,
-	stuff->authId, SecurityAuthorizationResType, SecurityDestroyAccess);
+	stuff->authId, SecurityAuthorizationResType, DixDestroyAccess);
     if (!pAuth)
 	return SecurityErrorBase + XSecurityBadAuthorization;
 
@@ -946,10 +946,10 @@ SecurityAuditResourceIDAccess(
  *	rtype is its type or class.
  *	access_mode represents the intended use of the resource; see
  *	  resource.h.
- *	rval is a pointer to the resource structure for this resource.
+ *	res is a pointer to the resource structure for this resource.
  *
  * Returns:
- *	If access is granted, the value of rval that was passed in, else NULL.
+ *	If access is granted, the value of rval that was passed in, else FALSE.
  *
  * Side Effects:
  *	Disallowed resource accesses are audited.
@@ -966,7 +966,7 @@ CALLBACK(SecurityCheckResourceIDAccess)
     int cid, reqtype;
 
     if (TRUSTLEVEL(client) == XSecurityClientTrusted ||
-	SecurityUnknownAccess == access_mode)
+	DixUnknownAccess == access_mode)
 	return;       /* for compatibility, we have to allow access */
 
     cid = CLIENT_ID(id);
@@ -1187,6 +1187,7 @@ CALLBACK(SecurityCheckMapAccess)
     if (STATEPTR(rec->client) &&
 	(TRUSTLEVEL(rec->client) != XSecurityClientTrusted) &&
 	(pWin->drawable.class == InputOnly) &&
+	pWin->parent && pWin->parent->parent &&
 	(TRUSTLEVEL(wClient(pWin->parent)) == XSecurityClientTrusted))
 
 	rec->rval = FALSE;
@@ -1217,7 +1218,7 @@ CALLBACK(SecurityCheckHostlistAccess)
     if (TRUSTLEVEL(rec->client) != XSecurityClientTrusted)
     {
 	rec->rval = FALSE;
-	if (rec->access_mode == SecurityWriteAccess)
+	if (rec->access_mode == DixWriteAccess)
 	    SecurityAudit("client %d attempted to change host access\n",
 			  rec->client->index);
 	else
@@ -1251,7 +1252,7 @@ typedef struct _PropertyAccessRec {
 } PropertyAccessRec, *PropertyAccessPtr;
 
 static PropertyAccessPtr PropertyAccessList = NULL;
-static char SecurityDefaultAction = SecurityErrorOperation;
+static char SecurityDefaultAction = XaceErrorOperation;
 static char *SecurityPolicyFile = DEFAULTPOLICYFILE;
 static ATOM SecurityMaxPropertyName = 0;
 
@@ -1284,11 +1285,7 @@ SecurityFreePropertyAccessList(void)
     }
 } /* SecurityFreePropertyAccessList */
 
-#ifndef __UNIXOS2__
 #define SecurityIsWhitespace(c) ( (c == ' ') || (c == '\t') || (c == '\n') )
-#else
-#define SecurityIsWhitespace(c) ( (c == ' ') || (c == '\t') || (c == '\n') || (c == '\r') )
-#endif
 
 static char *
 SecuritySkipWhitespace(
@@ -1410,9 +1407,9 @@ SecurityParsePropertyAccessRule(
     {
 	switch (c)
 	{
-	    case 'i': action = SecurityIgnoreOperation; break;
-	    case 'a': action = SecurityAllowOperation;  break;
-	    case 'e': action = SecurityErrorOperation;  break;
+	    case 'i': action = XaceIgnoreOperation; break;
+	    case 'a': action = XaceAllowOperation;  break;
+	    case 'e': action = XaceErrorOperation;  break;
 
 	    case 'r': readAction    = action; break;
 	    case 'w': writeAction   = action; break;
@@ -1566,11 +1563,7 @@ SecurityLoadPropertyAccessList(void)
     if (!SecurityPolicyFile)
 	return;
 
-#ifndef __UNIXOS2__
     f = fopen(SecurityPolicyFile, "r");
-#else
-    f = fopen((char*)__XOS2RedirRoot(SecurityPolicyFile), "r");
-#endif    
     if (!f)
     {
 	ErrorF("error opening security policy file %s\n",
@@ -1797,22 +1790,22 @@ CALLBACK(SecurityCheckPropertyAccess)
 	     * If pacl doesn't apply, something above should have
 	     * executed a continue, which will skip the follwing code.
 	     */
-	    action = SecurityAllowOperation;
-	    if (access_mode & SecurityReadAccess)
+	    action = XaceAllowOperation;
+	    if (access_mode & DixReadAccess)
 		action = max(action, pacl->readAction);
-	    if (access_mode & SecurityWriteAccess)
+	    if (access_mode & DixWriteAccess)
 		action = max(action, pacl->writeAction);
-	    if (access_mode & SecurityDestroyAccess)
+	    if (access_mode & DixDestroyAccess)
 		action = max(action, pacl->destroyAction);
 	    break;
 	} /* end for each pacl */
     } /* end if propertyName <= SecurityMaxPropertyName */
 
-    if (SecurityAllowOperation != action)
+    if (XaceAllowOperation != action)
     { /* audit the access violation */
 	int cid = CLIENT_ID(pWin->drawable.id);
 	int reqtype = ((xReq *)client->requestBuffer)->reqType;
-	char *actionstr = (SecurityIgnoreOperation == action) ?
+	char *actionstr = (XaceIgnoreOperation == action) ?
 							"ignored" : "error";
 	SecurityAudit("client %d attempted request %d with window 0x%x property %s (atom 0x%x) of client %d, %s\n",
 		client->index, reqtype, pWin->drawable.id,

@@ -1,4 +1,3 @@
-/* $XFree86$ */
 /* Portions of this file were derived from the following files:
  *
  **********************************************************************
@@ -164,7 +163,9 @@
 #include <sys/kd.h>
 #include <termios.h>
 #include "atKeynames.h"
+#if 00
 #include "xf86Keymap.h"
+#endif
 #include <linux/keyboard.h>
 
 #define NUM_AT2LNX (sizeof(at2lnx) / sizeof(at2lnx[0]))
@@ -800,7 +801,12 @@ static void kbdLinuxReadKernelMapping(int fd, KeySymsPtr pKeySyms)
   tbl[2] = 8;	/* alt */
   tbl[3] = tbl[2] | 1;
 
+#if 00/*BP*/
   k = map+GLYPHS_PER_KEY;
+#else
+  ErrorF("kbdLinuxReadKernelMapping() is broken/no-op'd\n");
+  return;
+#endif
   maxkey = NUM_AT2LNX;
 
   for (i = 0; i < maxkey; ++i) {
@@ -927,8 +933,13 @@ static void kbdLinuxGetMap(DevicePtr pDev, KeySymsPtr pKeySyms, CARD8 *pModMap)
     char          type;
     int           i;
 
+#if 00/*BP*/
     mapCopy = xalloc(sizeof(map));
     memcpy(mapCopy, map, sizeof(map));
+#else
+    ErrorF("kbdLinuxGetMap() is broken/no-op'd\n");
+    return;
+#endif
 
     kbdLinuxReadKernelMapping(priv->fd, pKeySyms);
 

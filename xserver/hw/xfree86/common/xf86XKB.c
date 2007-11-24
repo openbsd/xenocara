@@ -1,4 +1,3 @@
-/* $XConsortium: xf86XKB.c /main/4 1996/02/04 09:28:04 kaleb $ */
 /************************************************************
 Copyright (c) 1993 by Silicon Graphics Computer Systems, Inc.
 
@@ -73,7 +72,7 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define XF86_OS_PRIVS
 #include "xf86_OSlib.h"
 
-#include <X11/extensions/XKBsrv.h>
+#include <xkbsrv.h>
 
 void
 xf86InitXkb(void)

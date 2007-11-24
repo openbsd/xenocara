@@ -1,7 +1,4 @@
 /*
- * $Id: compext.c,v 1.1.1.2 2007/03/03 11:11:32 matthieu Exp $
- *
- *
  * Copyright © 2006 Sun Microsystems
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -49,11 +46,14 @@
 
 #include "compint.h"
 
+#define SERVER_COMPOSITE_MAJOR	0
+#define SERVER_COMPOSITE_MINOR	4
+
 static CARD8	CompositeReqCode;
-int		CompositeClientPrivateIndex;
+static int	CompositeClientPrivateIndex;
 RESTYPE		CompositeClientWindowType;
 RESTYPE		CompositeClientSubwindowsType;
-RESTYPE		CompositeClientOverlayType;
+static RESTYPE	CompositeClientOverlayType;
 
 static void deleteCompOverlayClient (CompOverlayClientPtr pOcToDel, 
 				     ScreenPtr pScreen);
@@ -133,16 +133,12 @@ ProcCompositeQueryVersion (ClientPtr client)
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
-    if (stuff->majorVersion < COMPOSITE_MAJOR) {
+    if (stuff->majorVersion < SERVER_COMPOSITE_MAJOR) {
 	rep.majorVersion = stuff->majorVersion;
 	rep.minorVersion = stuff->minorVersion;
     } else {
-	rep.majorVersion = COMPOSITE_MAJOR;
-	if (stuff->majorVersion == COMPOSITE_MAJOR && 
-	    stuff->minorVersion < COMPOSITE_MINOR)
-	    rep.minorVersion = stuff->minorVersion;
-	else
-	    rep.minorVersion = COMPOSITE_MINOR;
+	rep.majorVersion = SERVER_COMPOSITE_MAJOR;
+        rep.minorVersion = SERVER_COMPOSITE_MINOR;
     }
     pCompositeClient->major_version = rep.majorVersion;
     pCompositeClient->minor_version = rep.minorVersion;
@@ -423,7 +419,7 @@ createOverlayWindow (ScreenPtr pScreen)
     return pWin;
 }
 
-int
+static int
 ProcCompositeGetOverlayWindow (ClientPtr client)
 {
     REQUEST(xCompositeGetOverlayWindowReq); 
@@ -477,7 +473,7 @@ ProcCompositeGetOverlayWindow (ClientPtr client)
     return client->noClientException;
 }
 
-int
+static int
 ProcCompositeReleaseOverlayWindow (ClientPtr client)
 {
     REQUEST(xCompositeReleaseOverlayWindowReq); 
@@ -515,7 +511,7 @@ ProcCompositeReleaseOverlayWindow (ClientPtr client)
     return client->noClientException;
 }
 
-int (*ProcCompositeVector[CompositeNumberRequests])(ClientPtr) = {
+static int (*ProcCompositeVector[CompositeNumberRequests])(ClientPtr) = {
     ProcCompositeQueryVersion,
     ProcCompositeRedirectWindow,
     ProcCompositeRedirectSubwindows,
@@ -625,7 +621,7 @@ SProcCompositeNameWindowPixmap (ClientPtr client)
     return (*ProcCompositeVector[stuff->compositeReqType]) (client);
 }
 
-int
+static int
 SProcCompositeGetOverlayWindow (ClientPtr client)
 {
     int n;
@@ -637,7 +633,7 @@ SProcCompositeGetOverlayWindow (ClientPtr client)
     return (*ProcCompositeVector[stuff->compositeReqType]) (client);
 }
 
-int
+static int
 SProcCompositeReleaseOverlayWindow (ClientPtr client)
 {
     int n;
@@ -649,7 +645,7 @@ SProcCompositeReleaseOverlayWindow (ClientPtr client)
     return (*ProcCompositeVector[stuff->compositeReqType]) (client);
 }
 
-int (*SProcCompositeVector[CompositeNumberRequests])(ClientPtr) = {
+static int (*SProcCompositeVector[CompositeNumberRequests])(ClientPtr) = {
     SProcCompositeQueryVersion,
     SProcCompositeRedirectWindow,
     SProcCompositeRedirectSubwindows,
@@ -677,6 +673,32 @@ CompositeExtensionInit (void)
 {
     ExtensionEntry  *extEntry;
     int		    s;
+
+    for (s = 0; s < screenInfo.numScreens; s++) {
+	ScreenPtr pScreen = screenInfo.screens[s];
+	VisualPtr vis;
+
+	/* Composite on 8bpp pseudocolor root windows appears to fail, so
+	 * just disable it on anything pseudocolor for safety.
+	 */
+	for (vis = pScreen->visuals; vis->vid != pScreen->rootVisual; vis++)
+	    ;
+	if ((vis->class | DynamicClass) == PseudoColor)
+	    return;
+
+	/* Ensure that Render is initialized, which is required for automatic
+	 * compositing.
+	 */
+	if (GetPictureScreenIfSet(pScreen) == NULL)
+	    return;
+    }
+#ifdef PANORAMIX
+    /* Xinerama's rewriting of window drawing before Composite gets to it
+     * breaks Composite.
+     */
+    if (!noPanoramiXExtension)
+	return;
+#endif
 
     CompositeClientWindowType = CreateNewResourceType (FreeCompositeClientWindow);
     if (!CompositeClientWindowType)

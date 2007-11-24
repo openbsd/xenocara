@@ -29,7 +29,6 @@
  *
  * Authors: Alexander Gottwald	
  */
-/* $Id: winconfig.h,v 1.1.1.1 2006/11/26 18:22:26 matthieu Exp $ */
 
 #include "win.h"
 #ifdef XWIN_XF86CONFIG

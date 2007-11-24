@@ -47,8 +47,6 @@
  * authorization from the copyright holder(s) and author(s).
  */
 
-/* $XConsortium: atKeynames.h /main/11 1996/03/09 11:17:41 kaleb $ */
-
 #ifndef _ATKEYNAMES_H
 #define _ATKEYNAMES_H
 
@@ -68,7 +66,7 @@
 #define KanaMask	Mod4Mask
 #define ScrollLockMask	Mod5Mask
 
-#define KeyPressed(k) (keyc->down[k >> 3] & (1 << (k & 7)))
+#define KeyPressed(k) (keyc->postdown[k >> 3] & (1 << (k & 7)))
 #define ModifierDown(k) ((keyc->state & (k)) == (k))
 
 /*

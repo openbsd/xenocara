@@ -1,6 +1,4 @@
 /*
- * $Id: koffscreen.c,v 1.1.1.1 2006/11/26 18:21:54 matthieu Exp $
- *
  * Copyright © 2003 Anders Carlsson
  *
  * Permission to use, copy, modify, distribute, and sell this software and its

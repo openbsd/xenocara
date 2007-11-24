@@ -78,11 +78,11 @@ SOFTWARE.
  */
 
 int
-SProcXChangeDeviceDontPropagateList(register ClientPtr client)
+SProcXChangeDeviceDontPropagateList(ClientPtr client)
 {
-    register char n;
-    register long *p;
-    register int i;
+    char n;
+    long *p;
+    int i;
 
     REQUEST(xChangeDeviceDontPropagateListReq);
     swaps(&stuff->length, n);
@@ -104,9 +104,9 @@ SProcXChangeDeviceDontPropagateList(register ClientPtr client)
  */
 
 int
-ProcXChangeDeviceDontPropagateList(register ClientPtr client)
+ProcXChangeDeviceDontPropagateList(ClientPtr client)
 {
-    int i;
+    int i, rc;
     WindowPtr pWin;
     struct tmask tmp[EMASKSIZE];
     OtherInputMasks *others;
@@ -121,11 +121,10 @@ ProcXChangeDeviceDontPropagateList(register ClientPtr client)
 	return Success;
     }
 
-    pWin = (WindowPtr) LookupWindow(stuff->window, client);
-    if (!pWin) {
-	client->errorValue = stuff->window;
+    rc = dixLookupWindow(&pWin, stuff->window, client, DixUnknownAccess);
+    if (rc != Success) {
 	SendErrorToClient(client, IReqCode, X_ChangeDeviceDontPropagateList, 0,
-			  BadWindow);
+			  rc);
 	return Success;
     }
 

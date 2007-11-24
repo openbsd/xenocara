@@ -7,10 +7,6 @@ bin_PROGRAMS = Xnvidia
 
 noinst_LIBRARIES = libnvidia.a
 
-if TSLIB
-TSLIB_FLAG = -lts
-endif
-
 #	nvidiavideo.c
 
 libnvidia_a_SOURCES = 	\
@@ -32,6 +28,9 @@ Xnvidia_LDADD = \
 	@KDRIVE_LIBS@				\
 	@XSERVER_LIBS@			
 
-Xnvidia_DEPENDENCIES = 				\
+Xnvidia_DEPENDENCIES =	\
 	libnvidia.a 				\
-	$(top_builddir)/hw/kdrive/vesa/libvesa.a 
+	@KDRIVE_LOCAL_LIBS@
+
+relink:
+	rm -f $(bin_PROGRAMS) && make $(bin_PROGRAMS)

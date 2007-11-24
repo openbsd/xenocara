@@ -1,5 +1,4 @@
 /* 
- * 
  * Copyright (c) 1997  Metro Link Incorporated
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -81,7 +80,7 @@ extern int sys_nerr;
 #if defined(SVR4) || defined(__linux__) || defined(CSRG_BASED)
 #define HAS_SAVED_IDS_AND_SETEUID
 #endif
-#if defined(__UNIXOS2__) || defined(WIN32)
+#if defined(WIN32)
 #define HAS_NO_UIDS
 #endif
 
@@ -107,13 +106,19 @@ doWriteConfigFile (const char *filename, XF86ConfigPtr cptr)
 
 	xf86printLayoutSection (cf, cptr->conf_layout_lst);
 
-	fprintf (cf, "Section \"Files\"\n");
-	xf86printFileSection (cf, cptr->conf_files);
-	fprintf (cf, "EndSection\n\n");
+	if (cptr->conf_files != NULL)
+	{
+		fprintf (cf, "Section \"Files\"\n");
+		xf86printFileSection (cf, cptr->conf_files);
+		fprintf (cf, "EndSection\n\n");
+	}
 
-	fprintf (cf, "Section \"Module\"\n");
-	xf86printModuleSection (cf, cptr->conf_modules);
-	fprintf (cf, "EndSection\n\n");
+	if (cptr->conf_modules != NULL)
+	{
+		fprintf (cf, "Section \"Module\"\n");
+		xf86printModuleSection (cf, cptr->conf_modules);
+		fprintf (cf, "EndSection\n\n");
+	}
 
 	xf86printVendorSection (cf, cptr->conf_vendor_lst);
 

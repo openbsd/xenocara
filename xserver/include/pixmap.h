@@ -44,7 +44,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $XFree86$ */
 
 #ifndef PIXMAP_H
 #define PIXMAP_H
@@ -57,6 +56,16 @@ SOFTWARE.
 #define DRAWABLE_PIXMAP 1
 #define UNDRAWABLE_WINDOW 2
 #define DRAWABLE_BUFFER 3
+
+/* corresponding type masks for dixLookupDrawable() */
+#define M_DRAWABLE_WINDOW	(1<<0)
+#define M_DRAWABLE_PIXMAP	(1<<1)
+#define M_UNDRAWABLE_WINDOW	(1<<2)
+#define M_DRAWABLE_BUFFER	(1<<3)
+#define M_ANY			(-1)
+#define M_WINDOW	(M_DRAWABLE_WINDOW|M_UNDRAWABLE_WINDOW)
+#define M_DRAWABLE	(M_DRAWABLE_WINDOW|M_DRAWABLE_PIXMAP|M_DRAWABLE_BUFFER)
+#define M_UNDRAWABLE	(M_UNDRAWABLE_WINDOW)
 
 /* flags to PaintWindow() */
 #define PW_BACKGROUND 0

@@ -1,6 +1,4 @@
 /*
- * Id: fbdev.c,v 1.1 1999/11/02 03:54:46 keithp Exp $
- *
  * Copyright © 1999 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -21,7 +19,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $RCSId: xc/programs/Xserver/hw/kdrive/fbdev/fbdev.c,v 1.31 2002/10/14 18:01:40 keithp Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <kdrive-config.h>
@@ -331,7 +328,7 @@ Bool
 fbdevMapFramebuffer (KdScreenInfo *screen)
 {
     FbdevScrPriv	*scrpriv = screen->driver;
-    KdMouseMatrix	m;
+    KdPointerMatrix	m;
     FbdevPriv		*priv = screen->card->driver;
 
     if (scrpriv->randr != RR_Rotate_0)
@@ -339,9 +336,9 @@ fbdevMapFramebuffer (KdScreenInfo *screen)
     else
 	scrpriv->shadow = FALSE;
     
-    KdComputeMouseMatrix (&m, scrpriv->randr, screen->width, screen->height);
+    KdComputePointerMatrix (&m, scrpriv->randr, screen->width, screen->height);
     
-    KdSetMouseMatrix (&m);
+    KdSetPointerMatrix (&m);
     
     screen->width = priv->var.xres;
     screen->height = priv->var.yres;

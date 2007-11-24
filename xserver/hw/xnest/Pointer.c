@@ -11,7 +11,6 @@ the suitability of this software for any purpose.  It is provided "as
 is" without express or implied warranty.
 
 */
-/* $XFree86$ */
 
 #ifdef HAVE_XNEST_CONFIG_H
 #include <xnest-config.h>
@@ -57,9 +56,9 @@ xnestPointerProc(DeviceIntPtr pDev, int onoff)
       for (i = 0; i <= nmap; i++)
 	map[i] = i; /* buttons are already mapped */
       InitPointerDeviceStruct(&pDev->public, map, nmap,
-			      miPointerGetMotionEvents,
+			      GetMotionHistory,
 			      xnestChangePointerControl,
-			      miPointerGetMotionBufferSize());
+			      GetMotionHistorySize(), 2);
       break;
     case DEVICE_ON: 
       xnestEventMask |= XNEST_POINTER_EVENT_MASK;

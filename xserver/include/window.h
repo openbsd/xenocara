@@ -44,7 +44,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $XFree86$ */
 
 #ifndef WINDOW_H
 #define WINDOW_H
@@ -92,14 +91,6 @@ extern Bool CreateRootWindow(
 
 extern void InitRootWindow(
     WindowPtr /*pWin*/);
-
-extern void ClippedRegionFromBox(
-    WindowPtr /*pWin*/,
-    RegionPtr /*Rgn*/,
-    int /*x*/,
-    int /*y*/,
-    int /*w*/,
-    int /*h*/);
 
 typedef WindowPtr (* RealChildHeadProc) (WindowPtr pWin);
 
@@ -205,12 +196,6 @@ extern void UnmapSubwindows(
 extern void HandleSaveSet(
     ClientPtr /*client*/);
 
-extern Bool VisibleBoundingBoxFromPoint(
-    WindowPtr /*pWin*/,
-    int /*x*/,
-    int /*y*/,
-    BoxPtr /*box*/);
-
 extern Bool PointInWindowIsVisible(
     WindowPtr /*pWin*/,
     int /*x*/,
@@ -233,9 +218,6 @@ extern void CheckWindowOptionalNeed(
     WindowPtr /*w*/);
 
 extern Bool MakeWindowOptional(
-    WindowPtr /*pWin*/);
-
-extern void DisposeWindowOptional(
     WindowPtr /*pWin*/);
 
 extern WindowPtr MoveWindowInStack(
@@ -270,8 +252,6 @@ extern RegionPtr CreateClipShape(
 extern void DisableMapUnmapEvents(
     WindowPtr /* pWin */ );
 extern void EnableMapUnmapEvents(
-    WindowPtr /* pWin */ );
-extern Bool MapUnmapEventsEnabled(
     WindowPtr /* pWin */ );
 
 #endif /* WINDOW_H */

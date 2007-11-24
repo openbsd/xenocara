@@ -19,7 +19,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/* $Id: vesa.c,v 1.1.1.1 2006/11/26 18:22:04 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <kdrive-config.h>
@@ -871,7 +870,7 @@ vesaComputeFramebufferMapping (KdScreenInfo *screen)
     VesaScreenPrivPtr	pscr = screen->driver;
     int			depth, bpp, fbbpp;
     Pixel		allbits;
-    KdMouseMatrix	m;
+    KdPointerMatrix	m;
 
     if (vesa_linear_fb)
     {
@@ -970,10 +969,10 @@ vesaComputeFramebufferMapping (KdScreenInfo *screen)
 	pscr->mapping = VESA_WINDOWED;
 	pscr->shadow = TRUE;
     }
-    KdComputeMouseMatrix (&m, pscr->randr, 
-			  pscr->mode.XResolution, pscr->mode.YResolution);
+    KdComputePointerMatrix (&m, pscr->randr, 
+                            pscr->mode.XResolution, pscr->mode.YResolution);
     
-    KdSetMouseMatrix (&m);
+    KdSetPointerMatrix (&m);
     
     screen->width = pscr->mode.XResolution;
     screen->height = pscr->mode.YResolution;

@@ -85,15 +85,6 @@ symlink_mesa_math() {
     done
 }
 
-symlink_mesa_ac() {
-    src_dir src/mesa/array_cache
-    dst_dir mesa/array_cache
-
-    for src in $REAL_SRC_DIR/*.c $REAL_SRC_DIR/*.h; do
-        action `basename $src`
-    done
-}
-
 symlink_mesa_swrast() {
     src_dir src/mesa/swrast
     dst_dir mesa/swrast
@@ -157,6 +148,15 @@ symlink_mesa_shader_slang_library() {
     done
 }        
 
+symlink_mesa_vbo() {
+    src_dir src/mesa/vbo
+    dst_dir mesa/vbo
+
+    for src in $REAL_SRC_DIR/*.c $REAL_SRC_DIR/*.h; do
+        action `basename $src`
+    done
+}
+
 symlink_mesa_x() {
     src_dir src/mesa/drivers/x11
     dst_dir mesa/X
@@ -168,6 +168,8 @@ symlink_mesa_x() {
     action xm_api.c
     action xm_buffer.c
     action xm_dd.c
+    action xm_image.c
+    action xm_image.h
     action xm_line.c
     action xm_span.c
     action xm_tri.c
@@ -203,7 +205,6 @@ symlink_mesa_x8664() {
 symlink_mesa() {
     symlink_mesa_main
     symlink_mesa_math
-    symlink_mesa_ac
     symlink_mesa_swrast
     symlink_mesa_ss
     symlink_mesa_tnl
@@ -215,6 +216,7 @@ symlink_mesa() {
     symlink_mesa_glapi
     symlink_mesa_ppc
     symlink_mesa_sparc
+    symlink_mesa_vbo
     symlink_mesa_x86
     symlink_mesa_x8664
 }
@@ -225,9 +227,6 @@ symlink_glx() {
     dst_dir glx
 
     action indirect_size.h
-
-    src_dir src/mesa/drivers/dri/common
-
     action glcontextmodes.c
     action glcontextmodes.h
 
@@ -289,9 +288,9 @@ action() {
 }
 
 usage() {
-    echo symlink.sh src-dir dst-dir
-    echo src-dir: the xc directory of the monolithic source tree
-    echo dst-dir: the modular source tree containing proto, app, lib, ...
+    echo symlink-mesa.sh src-dir dst-dir
+    echo src-dir: the Mesa source directory
+    echo dst-dir: the GL subdirectory of the Xserver modular tree
 }
 
 # Check commandline args

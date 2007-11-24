@@ -30,6 +30,8 @@
 
 extern Window EphyrPreExistingHostWin;
 extern Bool   EphyrWantGrayScale;
+extern Bool   kdHasPointer;
+extern Bool   kdHasKbd;
 
 void
 InitCard (char *name)
@@ -51,7 +53,35 @@ InitOutput (ScreenInfo *pScreenInfo, int argc, char **argv)
 void
 InitInput (int argc, char **argv)
 {
-  KdInitInput (&EphyrMouseFuncs, &EphyrKeyboardFuncs);
+  KdKeyboardInfo *ki;
+  KdPointerInfo *pi;
+        
+  KdAddKeyboardDriver(&EphyrKeyboardDriver);
+#ifdef linux
+  KdAddKeyboardDriver(&LinuxEvdevKeyboardDriver);
+#endif
+  KdAddPointerDriver(&EphyrMouseDriver);
+#ifdef linux
+  KdAddPointerDriver(&LinuxEvdevMouseDriver);
+#endif
+
+  if (!kdHasKbd) {
+    ki = KdNewKeyboard();
+    if (!ki)
+      FatalError("Couldn't create Xephyr keyboard\n");
+    ki->driver = &EphyrKeyboardDriver;
+    KdAddKeyboard(ki);
+  }
+
+  if (!kdHasPointer) {
+    pi = KdNewPointer();
+    if (!pi)
+      FatalError("Couldn't create Xephyr pointer\n");
+    pi->driver = &EphyrMouseDriver;
+    KdAddPointer(pi);
+  }
+
+  KdInitInput();
 }
 
 void
@@ -64,7 +94,7 @@ ddxUseMsg (void)
   ErrorF("-host-cursor  Re-use exisiting X host server cursor\n");
   ErrorF("-fullscreen   Attempt to run Xephyr fullscreen\n");
   ErrorF("-grayscale    Simulate 8bit grayscale\n");
-  ErrorF("-fakexa	Simulate acceleration using software rendering\n");
+  ErrorF("-fakexa       Simulate acceleration using software rendering\n");
   ErrorF("\n");
 
   exit(1);

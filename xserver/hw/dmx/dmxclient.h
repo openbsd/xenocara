@@ -1,4 +1,3 @@
-/* $XFree86$ */
 /*
  * Copyright (c) 1995  X Consortium
  * Copyright 2004 Red Hat Inc., Durham, North Carolina.
@@ -126,7 +125,7 @@ typedef XID           KeySym64;
 #undef KeySym
 #endif
 
-/* These are in exglobals.h, but that conflicts with X11/extensions/XKBsrv.h */
+/* These are in exglobals.h, but that conflicts with xkbsrv.h */
 extern int ProximityIn;
 extern int ProximityOut;
 extern int DeviceValuator;
@@ -144,7 +143,7 @@ extern int ChangeDeviceNotify;
 #ifndef XKB_IN_SERVER
 #define XKB_IN_SERVER
 #endif
-#include <X11/extensions/XKBsrv.h>
+#include <xkbsrv.h>
 #undef XPointer
 #endif
 #include <X11/extensions/XIproto.h>

@@ -67,9 +67,6 @@ SOFTWARE.
 #include <X11/X.h>
 #include "misc.h"
 
-#ifdef __UNIXOS2__
-#define select(n,r,w,x,t) os2PseudoSelect(n,r,w,x,t)
-#endif
 #include "osdep.h"
 #include <X11/Xpoll.h>
 #include "dixstruct.h"
@@ -125,7 +122,7 @@ struct _OsTimerRec {
 };
 
 static void DoTimer(OsTimerPtr timer, CARD32 now, OsTimerPtr *prev);
-static void CheckAllTimers(CARD32 now);
+static void CheckAllTimers(void);
 static OsTimerPtr timers = NULL;
 
 /*****************
@@ -204,7 +201,7 @@ WaitForSomething(int *pClientsReady)
 	    timeout = timers->expires - now;
             if (timeout > 0 && timeout > timers->delta + 250) {
                 /* time has rewound.  reset the timers. */
-                CheckAllTimers(now);
+                CheckAllTimers();
             }
 
 	    if (timers) {
@@ -337,10 +334,7 @@ WaitForSomething(int *pClientsReady)
 	    if (XFD_ANYSET(&tmp_set))
 		QueueWorkProc(EstablishNewConnections, NULL,
 			      (pointer)&LastSelectMask);
-#ifdef DPMSExtension
-	    if (XFD_ANYSET (&devicesReadable) && (DPMSPowerLevel != DPMSModeOn))
-		DPMSSet(DPMSModeOn);
-#endif
+
 	    if (XFD_ANYSET (&devicesReadable) || XFD_ANYSET (&clientsReadable))
 		break;
 #ifdef WIN32
@@ -439,11 +433,14 @@ ANYSET(FdMask *src)
 /* If time has rewound, re-run every affected timer.
  * Timers might drop out of the list, so we have to restart every time. */
 static void
-CheckAllTimers(CARD32 now)
+CheckAllTimers(void)
 {
     OsTimerPtr timer;
+    CARD32 now;
 
 start:
+    now = GetTimeInMillis();
+
     for (timer = timers; timer; timer = timer->next) {
         if (timer->expires - now > timer->delta + 250) {
             TimerForce(timer);

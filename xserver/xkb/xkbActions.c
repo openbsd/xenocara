@@ -36,14 +36,14 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <X11/keysym.h>
 #include "misc.h"
 #include "inputstr.h"
-#include <X11/extensions/XKBsrv.h>
+#include <xkbsrv.h>
 #include "xkb.h"
 #include <ctype.h>
 
 static unsigned int _xkbServerGeneration;
-int xkbDevicePrivateIndex = -1;
+static int xkbDevicePrivateIndex = -1;
 
-void
+static void
 xkbUnwrapProc(DeviceIntPtr device, DeviceHandleProc proc,
                    pointer data)
 {
@@ -216,7 +216,7 @@ static XkbAction 	fake;
     return fake;
 }
 
-XkbAction
+static XkbAction
 XkbGetButtonAction(DeviceIntPtr kbd,DeviceIntPtr dev,int button)
 {
 XkbAction fake;
@@ -867,6 +867,10 @@ int		x,y;
 XkbStateRec	old;
 unsigned	mods,mask,oldCoreState = 0,oldCorePrevState = 0;
 xkbDeviceInfoPtr xkbPrivPtr = XKBDEVICEINFO(xkbi->device);
+
+    /* never actually used uninitialised, but gcc isn't smart enough
+     * to work that out. */
+    memset(&old, 0, sizeof(old));
 
     if ((filter->keycode!=0)&&(filter->keycode!=keycode))
 	return 1;

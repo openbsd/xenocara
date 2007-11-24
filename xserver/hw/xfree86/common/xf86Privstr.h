@@ -67,38 +67,11 @@ typedef enum {
  */
 
 typedef struct {
-
-    /* keyboard part */
-    DeviceIntPtr	pKeyboard;
-    DeviceProc		kbdProc;		/* procedure for initializing */
-    void		(* kbdEvents)(void);	/* proc for processing events */
     int			consoleFd;
-    int			kbdFd;
     int			vtno;
-    int			kbdType;		/* AT84 / AT101 */
-    int			kbdRate;
-    int			kbdDelay;
-    int			bell_pitch;
-    int			bell_duration;
-    Bool		autoRepeat;
-    unsigned long	leds;
-    unsigned long	xleds;
     char *		vtinit;
-    int			scanPrefix;		/* scancode-state */
-    Bool		capsLock;
-    Bool		numLock;
-    Bool		scrollLock;
-    Bool		modeSwitchLock;
-    Bool		composeLock;
     Bool		vtSysreq;
     SpecialKeysInDDX	ddxSpecialKeys;
-    Bool		ActionKeyBindingsSet;
-#if defined(SVR4) && defined(i386)
-    Bool		panix106;
-#endif  /* SVR4 && i386 */
-#if defined(__OpenBSD__) || defined(__NetBSD__)
-    int                 wsKbdType;
-#endif
 
     /* mouse part */
     DeviceIntPtr	pMouse;
@@ -125,25 +98,6 @@ typedef struct {
     int			consType;	/* Which console driver? */
 #endif
 
-#ifdef XKB
-    /* 
-     * would like to use an XkbComponentNamesRec here but can't without
-     * pulling in a bunch of header files. :-(
-     */
-    char *		xkbkeymap;
-    char *		xkbkeycodes;
-    char *		xkbtypes;
-    char *		xkbcompat;
-    char *		xkbsymbols;
-    char *		xkbgeometry;
-    Bool		xkbcomponents_specified;
-    char *		xkbrules;
-    char *		xkbmodel;
-    char *		xkblayout;
-    char *		xkbvariant;
-    char *		xkboptions;
-#endif
-
     /* Other things */
     Bool		allowMouseOpenFail;
     Bool		vidModeEnabled;		/* VidMode extension enabled */
@@ -166,6 +120,8 @@ typedef struct {
     MessageType		randRFrom;
     Bool		aiglx;
     MessageType		aiglxFrom;
+    Bool		useDefaultFontPath;
+    MessageType		useDefaultFontPathFrom;
     Bool        ignoreABI;
     struct {
 	Bool		disabled;		/* enable/disable deactivating
@@ -179,6 +135,12 @@ typedef struct {
 	Bool		allowClosedown;
 	ServerGrabInfoRec server;
     } grabInfo;
+
+    Bool        allowEmptyInput;  /* Allow the server to start with no input
+                                   * devices. */
+    Bool        autoAddDevices; /* Whether to succeed NIDR, or ignore. */
+    Bool        autoEnableDevices; /* Whether to enable, or let the client
+                                    * control. */
 } xf86InfoRec, *xf86InfoPtr;
 
 #ifdef DPMSExtension

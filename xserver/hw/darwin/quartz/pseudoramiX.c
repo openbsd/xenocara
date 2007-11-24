@@ -34,7 +34,9 @@ Equipment Corporation.
 ******************************************************************/
 
 #include "pseudoramiX.h"
-
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
 #include "extnsionst.h"
 #include "dixstruct.h"
 #include "window.h"
@@ -170,12 +172,13 @@ static int ProcPseudoramiXGetState(ClientPtr client)
     REQUEST(xPanoramiXGetStateReq);
     WindowPtr pWin;
     xPanoramiXGetStateReply rep;
-    register int n;
+    register int n, rc;
 
     REQUEST_SIZE_MATCH(xPanoramiXGetStateReq);
-    pWin = LookupWindow (stuff->window, client);
-    if (!pWin)
-        return BadWindow;
+    rc = dixLookupWindow(&pWin, stuff->window, client, DixUnknownAccess);
+    if (rc != Success)
+	return rc;
+
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
@@ -196,12 +199,13 @@ static int ProcPseudoramiXGetScreenCount(ClientPtr client)
     REQUEST(xPanoramiXGetScreenCountReq);
     WindowPtr pWin;
     xPanoramiXGetScreenCountReply rep;
-    register int n;
+    register int n, rc;
 
     REQUEST_SIZE_MATCH(xPanoramiXGetScreenCountReq);
-    pWin = LookupWindow (stuff->window, client);
-    if (!pWin)
-        return BadWindow;
+    rc = dixLookupWindow(&pWin, stuff->window, client, DixUnknownAccess);
+    if (rc != Success)
+	return rc;
+
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
@@ -222,12 +226,13 @@ static int ProcPseudoramiXGetScreenSize(ClientPtr client)
     REQUEST(xPanoramiXGetScreenSizeReq);
     WindowPtr			pWin;
     xPanoramiXGetScreenSizeReply	rep;
-    register int			n;
+    register int			n, rc;
 
     REQUEST_SIZE_MATCH(xPanoramiXGetScreenSizeReq);
-    pWin = LookupWindow (stuff->window, client);
-    if (!pWin)
-        return BadWindow;
+    rc = dixLookupWindow(&pWin, stuff->window, client, DixUnknownAccess);
+    if (rc != Success)
+	return rc;
+
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;

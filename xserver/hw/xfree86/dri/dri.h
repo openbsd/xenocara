@@ -107,8 +107,11 @@ typedef struct {
  */
 
 #define DRIINFO_MAJOR_VERSION   5
-#define DRIINFO_MINOR_VERSION   0
+#define DRIINFO_MINOR_VERSION   4
 #define DRIINFO_PATCH_VERSION   0
+
+typedef unsigned long long (*DRITexOffsetStartProcPtr)(PixmapPtr pPix);
+typedef void (*DRITexOffsetFinishProcPtr)(PixmapPtr pPix);
 
 typedef struct {
     /* driver call back functions
@@ -173,8 +176,29 @@ typedef struct {
     /* New with DRI version 4.1.0 */
     void        (*TransitionSingleToMulti3D)(ScreenPtr pScreen);
     void        (*TransitionMultiToSingle3D)(ScreenPtr pScreen);
+
+    /* New with DRI version 5.1.0 */
+    void        (*ClipNotify)(ScreenPtr pScreen, WindowPtr *ppWin, int num);
+
+    /* New with DRI version 5.2.0 */
+    Bool                allocSarea;
+    Bool                keepFDOpen;
+
+    /* New with DRI version 5.3.0 */
+    DRITexOffsetStartProcPtr  texOffsetStart;
+    DRITexOffsetFinishProcPtr texOffsetFinish;
+
+    /* New with DRI version 5.4.0 */
+    int			dontMapFrameBuffer;
+    drm_handle_t   	hFrameBuffer; /* Handle to framebuffer, either
+				       * mapped by DDX driver or DRI */
+    
 } DRIInfoRec, *DRIInfoPtr;
 
+
+extern Bool DRIOpenDRMMaster(ScrnInfoPtr pScrn, unsigned long sAreaSize,
+			     const char *busID,
+			     const char *drmDriverName);
 
 extern Bool DRIScreenInit(ScreenPtr pScreen,
                           DRIInfoPtr pDRIInfo,
@@ -213,12 +237,12 @@ extern Bool DRIDestroyContext(ScreenPtr pScreen, XID context);
 extern Bool DRIContextPrivDelete(pointer pResource, XID id);
 
 extern Bool DRICreateDrawable(ScreenPtr pScreen,
-                              Drawable id,
+                              ClientPtr client,
                               DrawablePtr pDrawable,
                               drm_drawable_t * hHWDrawable);
 
 extern Bool DRIDestroyDrawable(ScreenPtr pScreen, 
-                               Drawable id,
+			       ClientPtr client,
                                DrawablePtr pDrawable);
 
 extern Bool DRIDrawablePrivDelete(pointer pResource,
@@ -281,6 +305,8 @@ extern void DRIWindowExposures(WindowPtr pWin,
                               RegionPtr prgn,
                               RegionPtr bsreg);
 
+extern Bool DRIDestroyWindow(WindowPtr pWin);
+
 extern void DRICopyWindow(WindowPtr pWin,
                           DDXPointRec ptOldOrg,
                           RegionPtr prgnSrc);
@@ -341,6 +367,16 @@ extern char *DRICreatePCIBusID(pciVideoPtr PciInfo);
 
 extern int drmInstallSIGIOHandler(int fd, void (*f)(int, void *, void *));
 extern int drmRemoveSIGIOHandler(int fd);
+extern int DRIMasterFD(ScrnInfoPtr pScrn);
+
+extern void *DRIMasterSareaPointer(ScrnInfoPtr pScrn);
+
+extern drm_handle_t DRIMasterSareaHandle(ScrnInfoPtr pScrn);
+
+extern void DRIGetTexOffsetFuncs(ScreenPtr pScreen,
+				 DRITexOffsetStartProcPtr *texOffsetStartFunc,
+				 DRITexOffsetFinishProcPtr *texOffsetFinishFunc);
+
 #define _DRI_H_
 
 #endif

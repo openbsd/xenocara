@@ -16,12 +16,17 @@ GLX_INCS = -I$(top_srcdir)/hw/xfree86/dixmods/extmod \
 GLX_DEFS = @GL_CFLAGS@ 
 endif
 
-# It's essential that fbcmap.c be compiled with this flag for DMX to work!!
-DMX_CFLAGS = -DXFree86Server=1
-
 if BUILDDOCS
 SUBDIRS += doc
 endif
+
+AM_CFLAGS = \
+      -DHAVE_DMX_CONFIG_H \
+      $(DIX_CFLAGS) \
+      $(GLX_INCS) \
+      $(GLX_DEFS) \
+      $(DMX_CFLAGS) \
+      @DMXMODULES_CFLAGS@
 
 Xdmx_SOURCES = dmx.c \
                dmxcb.c \
@@ -67,8 +72,8 @@ Xdmx_SOURCES = dmx.c \
                dmxvisual.h \
                dmxwindow.c \
                dmxwindow.h \
-               $(top_srcdir)/fb/fbcmap.c \
                $(top_srcdir)/mi/miinitext.c \
+               $(top_srcdir)/fb/fbcmap_mi.c \
                $(GLX_SRCS) 
 
 
@@ -83,14 +88,6 @@ Xdmx_LDADD = $(XORG_CORE_LIBS) \
              input/libdmxinput.a \
              config/libdmxconfig.a \
              @DMXMODULES_LIBS@
-
-Xdmx_CFLAGS = \
-              -DHAVE_DMX_CONFIG_H \
-              $(DIX_CFLAGS) \
-              $(GLX_INCS) \
-              $(GLX_DEFS) \
-              $(DMX_CFLAGS) \
-              @DMXMODULES_CFLAGS@
 
 # Man page
 appmandir = $(APP_MAN_DIR)

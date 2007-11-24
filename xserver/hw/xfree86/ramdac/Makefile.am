@@ -1,8 +1,6 @@
-module_LTLIBRARIES = libramdac.la
+noinst_LIBRARIES = libramdac.a
 
-libramdac_la_LDFLAGS = -avoid-version
-
-libramdac_la_SOURCES = xf86RamDacMod.c xf86RamDac.c xf86RamDacCmap.c \
+libramdac_a_SOURCES = xf86RamDac.c xf86RamDacCmap.c \
                       xf86Cursor.c xf86HWCurs.c IBM.c BT.c TI.c \
 		      xf86BitOrder.c
 
@@ -13,7 +11,7 @@ EXTRA_DIST = BTPriv.h IBMPriv.h TIPriv.h xf86CursorPriv.h xf86RamDacPriv.h \
 	CURSOR.NOTES
 
 AM_CFLAGS = -DXAAReverseBitOrder=xf86ReverseBitOrder -DRAMDAC_MODULE \
-            $(XORG_CFLAGS)
+            $(DIX_CFLAGS) $(XORG_CFLAGS)
 INCLUDES = $(XORG_INCS)
 
 xf86BitOrder.c:

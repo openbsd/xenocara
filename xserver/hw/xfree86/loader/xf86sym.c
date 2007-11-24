@@ -46,8 +46,6 @@
  * authorization from the copyright holder(s) and author(s).
  */
 
-#define INCLUDE_DEPRECATED 1
-
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif
@@ -70,7 +68,6 @@
 # include "xf86Xinput.h"
 #endif
 #include "xf86OSmouse.h"
-#include "xf86OSKbd.h"
 #include "xf86xv.h"
 #include "xf86xvmc.h"
 #include "xf86cmap.h"
@@ -90,6 +87,18 @@
 #include "xf86sbusBus.h"
 #endif
 #include "compiler.h"
+#include "xf86Crtc.h"
+#include "xf86Modes.h"
+#ifdef RANDR
+#include "xf86RandR12.h"
+#endif
+#include "xf86DDC.h"
+#include "edid.h"
+#include "xf86Cursor.h"
+#include "xf86RamDac.h"
+#include "BT.h"
+#include "IBM.h"
+#include "TI.h"
 
 #ifndef HAS_GLIBC_SIGSETJMP
 #if defined(setjmp) && defined(__GNU_LIBRARY__) && \
@@ -139,9 +148,7 @@ extern void _Qp_uitoq(unsigned int *, unsigned int);
 #endif
 
 #if defined(__GNUC__)
-#ifndef __UNIXOS2__
 extern long __div64(long, long);
-#endif
 extern long __divdf3(long, long);
 extern long __divdi3(long, long);
 extern long __divsf3(long, long);
@@ -149,9 +156,7 @@ extern long __divsi3(long, long);
 extern long __moddi3(long, long);
 extern long __modsi3(long, long);
 
-#ifndef __UNIXOS2__
 extern long __mul64(long, long);
-#endif
 extern long __muldf3(long, long);
 extern long __muldi3(long, long);
 extern long __mulsf3(long, long);
@@ -161,18 +166,14 @@ extern long __udivsi3(long, long);
 extern long __umoddi3(long, long);
 extern long __umodsi3(long, long);
 
-#ifndef __UNIXOS2__
 #pragma weak __div64
-#endif
 #pragma weak __divdf3
 #pragma weak __divdi3
 #pragma weak __divsf3
 #pragma weak __divsi3
 #pragma weak __moddi3
 #pragma weak __modsi3
-#ifndef __UNIXOS2__
 #pragma weak __mul64
-#endif
 #pragma weak __muldf3
 #pragma weak __muldi3
 #pragma weak __mulsf3
@@ -258,6 +259,7 @@ _X_HIDDEN void *xfree86LookupTab[] = {
     SYMFUNC(xf86UDelay)
     SYMFUNC(xf86IODelay)
     SYMFUNC(xf86SlowBcopy)
+    SYMFUNC(xf86SetReallySlowBcopy)
 #ifdef __alpha__
     SYMFUNC(xf86SlowBCopyToBus)
     SYMFUNC(xf86SlowBCopyFromBus)
@@ -280,7 +282,6 @@ _X_HIDDEN void *xfree86LookupTab[] = {
     SYMFUNC(xf86SerialModemClearBits)
     SYMFUNC(xf86LoadKernelModule)
     SYMFUNC(xf86OSMouseInit)
-    SYMFUNC(xf86OSKbdPreInit)
     SYMFUNC(xf86AgpGARTSupported)
     SYMFUNC(xf86GetAGPInfo)
     SYMFUNC(xf86AcquireGART)
@@ -290,10 +291,8 @@ _X_HIDDEN void *xfree86LookupTab[] = {
     SYMFUNC(xf86BindGARTMemory)
     SYMFUNC(xf86UnbindGARTMemory)
     SYMFUNC(xf86EnableAGP)
-    SYMFUNC(xf86SoundKbdBell)
     SYMFUNC(xf86GARTCloseScreen)
 #ifdef XINPUT
-    /* XISB routines  (Merged from Metrolink tree) */
     SYMFUNC(XisbNew)
     SYMFUNC(XisbFree)
     SYMFUNC(XisbRead)
@@ -350,9 +349,6 @@ _X_HIDDEN void *xfree86LookupTab[] = {
     SYMFUNC(xf86FindScreenForEntity)
     SYMFUNC(xf86FindPciDeviceVendor)
     SYMFUNC(xf86FindPciClass)
-#ifdef INCLUDE_DEPRECATED
-    SYMFUNC(xf86EnablePciBusMaster)
-#endif
     SYMFUNC(xf86RegisterStateChangeNotificationCallback)
     SYMFUNC(xf86DeregisterStateChangeNotificationCallback)
     SYMFUNC(xf86NoSharedResources)
@@ -503,7 +499,7 @@ _X_HIDDEN void *xfree86LookupTab[] = {
     SYMFUNC(xf86AddModuleInfo)
     SYMFUNC(xf86DeleteModuleInfo)
 
-#if defined(__sparc__) && !defined(__OpenBSD__)
+#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
     /* xf86sbusBus.c */
     SYMFUNC(xf86MatchSbusInstances)
     SYMFUNC(xf86GetSbusInfoForEntity)
@@ -625,6 +621,7 @@ _X_HIDDEN void *xfree86LookupTab[] = {
     SYMFUNC(xf86XVAllocateVideoAdaptorRec)
     SYMFUNC(xf86XVFreeVideoAdaptorRec)
     SYMFUNC(xf86XVFillKeyHelper)
+    SYMFUNC(xf86XVFillKeyHelperDrawable)
     SYMFUNC(xf86XVClipVideoHelper)
     SYMFUNC(xf86XVCopyYUV12ToPacked)
     SYMFUNC(xf86XVCopyPacked)
@@ -695,37 +692,21 @@ _X_HIDDEN void *xfree86LookupTab[] = {
     /* xf86Xinput.c */
 #ifdef XINPUT
     SYMFUNC(xf86ProcessCommonOptions)
-    SYMFUNC(xf86IsCorePointer)
     SYMFUNC(xf86PostMotionEvent)
     SYMFUNC(xf86PostProximityEvent)
     SYMFUNC(xf86PostButtonEvent)
     SYMFUNC(xf86PostKeyEvent)
     SYMFUNC(xf86PostKeyboardEvent)
-    SYMFUNC(xf86GetMotionEvents)
-    SYMFUNC(xf86MotionHistoryAllocate)
     SYMFUNC(xf86FirstLocalDevice)
-    SYMFUNC(xf86eqEnqueue)
     SYMFUNC(xf86ActivateDevice)
-/* The following segment merged from Metrolink tree */
     SYMFUNC(xf86XInputSetScreen)
     SYMFUNC(xf86ScaleAxis)
-    SYMFUNC(xf86XInputSetSendCoreEvents)
-/* End merged segment */
 #endif
 #ifdef DPMSExtension
     SYMFUNC(DPMSGet)
     SYMFUNC(DPMSSet)
     SYMFUNC(DPMSSupported)
 #endif
-/* xf86Debug.c */
-#ifdef BUILDDEBUG
-    SYMFUNC(xf86Break1)
-    SYMFUNC(xf86Break2)
-    SYMFUNC(xf86Break3)
-    SYMFUNC(xf86SPTimestamp)
-    SYMFUNC(xf86STimestamp)
-#endif
-
     SYMFUNC(pciFindFirst)
     SYMFUNC(pciFindNext)
     SYMFUNC(pciWriteByte)
@@ -1064,7 +1045,7 @@ _X_HIDDEN void *xfree86LookupTab[] = {
 # endif
 #endif
 #if defined(__GNUC__)
-#if !defined(__UNIXOS2__) && !defined(Lynx)
+#if !defined(Lynx)
     SYMFUNC(__div64)
 #endif
 #if !defined(Lynx)	/* FIXME: test on others than x86 and !3.1.0a/x86 */
@@ -1079,7 +1060,7 @@ _X_HIDDEN void *xfree86LookupTab[] = {
 #if !defined(Lynx)
     SYMFUNC(__modsi3)
 #endif
-#if !defined(__UNIXOS2__) && !defined(Lynx)
+#if !defined(Lynx)
     SYMFUNC(__mul64)
 #endif
 #if !defined(Lynx)
@@ -1138,13 +1119,6 @@ _X_HIDDEN void *xfree86LookupTab[] = {
     SYMVAR(xf86Screens)
     SYMVAR(byte_reversed)
     SYMVAR(xf86inSuspend)
-    /* debugging variables */
-#ifdef BUILDDEBUG
-    SYMVAR(xf86p8bit)
-    SYMVAR(xf86DummyVar1)
-    SYMVAR(xf86DummyVar2)
-    SYMVAR(xf86DummyVar3)
-#endif
 
     /* predefined resource lists from xf86Bus.h */
     SYMVAR(resVgaExclusive)
@@ -1171,4 +1145,147 @@ _X_HIDDEN void *xfree86LookupTab[] = {
 
     /* Pci.c */
     SYMVAR(pciNumBuses)
+
+    /* modes */
+    SYMVAR(xf86CrtcConfigPrivateIndex)
+    SYMFUNC(xf86CrtcConfigInit)
+    SYMFUNC(xf86CrtcConfigPrivateIndex)
+    SYMFUNC(xf86CrtcCreate)
+    SYMFUNC(xf86CrtcDestroy)
+    SYMFUNC(xf86CrtcInUse)
+    SYMFUNC(xf86CrtcSetScreenSubpixelOrder)
+    SYMFUNC(xf86RotateCloseScreen)
+    SYMFUNC(xf86CrtcRotate)
+    SYMFUNC(xf86CrtcSetMode)
+    SYMFUNC(xf86CrtcSetSizeRange)
+    SYMFUNC(xf86CrtcScreenInit)
+    SYMFUNC(xf86CVTMode)
+    SYMFUNC(xf86DisableUnusedFunctions)
+    SYMFUNC(xf86DPMSSet)
+    SYMFUNC(xf86DuplicateMode)
+    SYMFUNC(xf86DuplicateModes)
+    SYMFUNC(xf86GetDefaultModes)
+    SYMFUNC(xf86GetMonitorModes)
+    SYMFUNC(xf86InitialConfiguration)
+    SYMFUNC(xf86ModeHSync)
+    SYMFUNC(xf86ModesAdd)
+    SYMFUNC(xf86ModesEqual)
+    SYMFUNC(xf86ModeVRefresh)
+    SYMFUNC(xf86ModeWidth)
+    SYMFUNC(xf86ModeHeight)
+    SYMFUNC(xf86OutputCreate)
+    SYMFUNC(xf86OutputDestroy)
+    SYMFUNC(xf86OutputGetEDID)
+    SYMFUNC(xf86ConnectorGetName)
+    SYMFUNC(xf86OutputGetEDIDModes)
+    SYMFUNC(xf86OutputRename)
+    SYMFUNC(xf86OutputUseScreenMonitor)
+    SYMFUNC(xf86OutputSetEDID)
+    SYMFUNC(xf86OutputFindClosestMode)
+    SYMFUNC(xf86PrintModeline)
+    SYMFUNC(xf86ProbeOutputModes)
+    SYMFUNC(xf86PruneInvalidModes)
+    SYMFUNC(xf86SetModeCrtc)
+    SYMFUNC(xf86SetModeDefaultName)
+    SYMFUNC(xf86SetScrnInfoModes)
+    SYMFUNC(xf86SetDesiredModes)
+    SYMFUNC(xf86SetSingleMode)
+    SYMFUNC(xf86ValidateModesClocks)
+    SYMFUNC(xf86ValidateModesFlags)
+    SYMFUNC(xf86ValidateModesSize)
+    SYMFUNC(xf86ValidateModesSync)
+    SYMFUNC(xf86ValidateModesUserConfig)
+    SYMFUNC(xf86DiDGAInit)
+    SYMFUNC(xf86DiDGAReInit)
+    SYMFUNC(xf86DDCGetModes)
+    SYMFUNC(xf86SaveScreen)
+#ifdef RANDR
+    SYMFUNC(xf86RandR12CreateScreenResources)
+    SYMFUNC(xf86RandR12GetOriginalVirtualSize)
+    SYMFUNC(xf86RandR12GetRotation)
+    SYMFUNC(xf86RandR12Init)
+    SYMFUNC(xf86RandR12PreInit)
+    SYMFUNC(xf86RandR12SetConfig)
+    SYMFUNC(xf86RandR12SetRotations)
+    SYMFUNC(xf86RandR12TellChanged)
+#endif
+    SYMFUNC(xf86_cursors_init)
+    SYMFUNC(xf86_reload_cursors)
+    SYMFUNC(xf86_show_cursors)
+    SYMFUNC(xf86_hide_cursors)
+    SYMFUNC(xf86_cursors_fini)
+    SYMFUNC(xf86_crtc_clip_video_helper)
+
+    SYMFUNC(xf86DoEDID_DDC1)
+    SYMFUNC(xf86DoEDID_DDC2)
+    SYMFUNC(xf86InterpretEDID)
+    SYMFUNC(xf86PrintEDID)
+    SYMFUNC(xf86DDCMonitorSet)
+    SYMFUNC(xf86SetDDCproperties)
+
+    SYMFUNC(xf86CreateI2CBusRec)
+    SYMFUNC(xf86CreateI2CDevRec)
+    SYMFUNC(xf86DestroyI2CBusRec)
+    SYMFUNC(xf86DestroyI2CDevRec)
+    SYMFUNC(xf86I2CBusInit)
+    SYMFUNC(xf86I2CDevInit)
+    SYMFUNC(xf86I2CFindBus)
+    SYMFUNC(xf86I2CFindDev)
+    SYMFUNC(xf86I2CGetScreenBuses)
+    SYMFUNC(xf86I2CProbeAddress)
+    SYMFUNC(xf86I2CReadByte)
+    SYMFUNC(xf86I2CReadBytes)
+    SYMFUNC(xf86I2CReadStatus)
+    SYMFUNC(xf86I2CReadWord)
+    SYMFUNC(xf86I2CWriteByte)
+    SYMFUNC(xf86I2CWriteBytes)
+    SYMFUNC(xf86I2CWriteRead)
+    SYMFUNC(xf86I2CWriteVec)
+    SYMFUNC(xf86I2CWriteWord)
+
+    /* ramdac/xf86RamDac.c */
+    SYMFUNC(RamDacCreateInfoRec)
+    SYMFUNC(RamDacHelperCreateInfoRec)
+    SYMFUNC(RamDacDestroyInfoRec)
+    SYMFUNC(RamDacHelperDestroyInfoRec)
+    SYMFUNC(RamDacInit)
+    SYMFUNC(RamDacHandleColormaps)
+    SYMFUNC(RamDacFreeRec)
+    SYMFUNC(RamDacGetHWIndex)
+    SYMVAR(RamDacHWPrivateIndex)
+    SYMVAR(RamDacScreenPrivateIndex)
+
+    /* ramdac/xf86Cursor.c */
+    SYMFUNC(xf86InitCursor)
+    SYMFUNC(xf86CreateCursorInfoRec)
+    SYMFUNC(xf86DestroyCursorInfoRec)
+    SYMFUNC(xf86ForceHWCursor)
+
+    /* ramdac/BT.c */
+    SYMFUNC(BTramdacProbe)
+    SYMFUNC(BTramdacSave)
+    SYMFUNC(BTramdacRestore)
+    SYMFUNC(BTramdacSetBpp)
+
+    /* ramdac/IBM.c */
+    SYMFUNC(IBMramdacProbe)
+    SYMFUNC(IBMramdacSave)
+    SYMFUNC(IBMramdacRestore)
+    SYMFUNC(IBMramdac526SetBpp)
+    SYMFUNC(IBMramdac640SetBpp)
+    SYMFUNC(IBMramdac526CalculateMNPCForClock)
+    SYMFUNC(IBMramdac640CalculateMNPCForClock)
+    SYMFUNC(IBMramdac526HWCursorInit)
+    SYMFUNC(IBMramdac640HWCursorInit)
+    SYMFUNC(IBMramdac526SetBppWeak)
+
+    /* ramdac/TI.c */
+    SYMFUNC(TIramdacCalculateMNPForClock)
+    SYMFUNC(TIramdacProbe)
+    SYMFUNC(TIramdacSave)
+    SYMFUNC(TIramdacRestore)
+    SYMFUNC(TIramdac3026SetBpp)
+    SYMFUNC(TIramdac3030SetBpp)
+    SYMFUNC(TIramdacHWCursorInit)
+    SYMFUNC(TIramdacLoadPalette)
 };

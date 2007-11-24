@@ -50,7 +50,7 @@
 
 #ifdef XKB
 #include <X11/extensions/XKB.h>
-#include <X11/extensions/XKBsrv.h>
+#include <xkbsrv.h>
 #include <X11/extensions/XKBconfig.h>
 
 extern Bool
@@ -1243,7 +1243,7 @@ xglxKeybdProc (DeviceIntPtr pDevice,
 
 Bool
 xglxLegalModifier (unsigned int key,
-		   DevicePtr    pDev)
+		   DeviceIntPtr pDev)
 {
     return TRUE;
 }

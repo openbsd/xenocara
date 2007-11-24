@@ -544,7 +544,7 @@ xf86GetPciDomain(PCITAG Tag)
     pPCI = xf86GetPciHostConfigFromTag(Tag);
 
     if (pPCI && (result = PCI_DOM_FROM_BUS(pPCI->busnum)))
-	return result;
+	return result + 1;
 
     if (!pPCI || pPCI->fakeDevice)
 	return 1;		/* Domain 0 is reserved */
@@ -570,7 +570,8 @@ linuxMapPci(int ScreenNum, int Flags, PCITAG Tag,
 
 	xf86InitVidMem();
 
-	if (((fd = linuxPciOpenFile(Tag ,FALSE)) < 0) ||
+       prot = ((Flags & VIDMEM_READONLY) == 0);
+       if (((fd = linuxPciOpenFile(Tag, prot)) < 0) ||
 	    (ioctl(fd, mmap_ioctl, 0) < 0))
 	    break;
 
@@ -657,7 +658,7 @@ linuxOpenLegacy(PCITAG Tag, char *name)
 	    return fd;
 	}
 
-	pBusInfo = pciBusInfo[bus];
+	pBusInfo = pciBusInfo[PCI_BUS_FROM_TAG(Tag)];
 	if (!pBusInfo || (bridge == pBusInfo->bridge) ||
 		!(bridge = pBusInfo->bridge)) {
 	    xfree(path);
@@ -683,28 +684,28 @@ xf86MapDomainMemory(int ScreenNum, int Flags, PCITAG Tag,
 		    ADDRESS Base, unsigned long Size)
 {
     int domain = xf86GetPciDomain(Tag);
-    int fd;
+    int fd = -1;
     pointer addr;
 
     /*
      * We use /proc/bus/pci on non-legacy addresses or if the Linux sysfs
      * legacy_mem interface is unavailable.
      */
-    if (Base > 1024*1024)
-	return linuxMapPci(ScreenNum, Flags, Tag, Base, Size,
+    if (Base >= 1024*1024)
+	addr = linuxMapPci(ScreenNum, Flags, Tag, Base, Size,
 			   PCIIOC_MMAP_IS_MEM);
-
-    if ((fd = linuxOpenLegacy(Tag, "legacy_mem")) < 0)
-	return linuxMapPci(ScreenNum, Flags, Tag, Base, Size,
+    else if ((fd = linuxOpenLegacy(Tag, "legacy_mem")) < 0)
+	addr = linuxMapPci(ScreenNum, Flags, Tag, Base, Size,
 			   PCIIOC_MMAP_IS_MEM);
+    else
+	addr = mmap(NULL, Size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, Base);
 
-    addr = mmap(NULL, Size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, Base);
-    if (addr == MAP_FAILED) {
-	close (fd);
+    if (fd >= 0)
+	close(fd);
+    if (addr == NULL || addr == MAP_FAILED) {
 	perror("mmap failure");
 	FatalError("xf86MapDomainMem():  mmap() failure\n");
     }
-    close(fd);
     return addr;
 }
 
@@ -772,8 +773,8 @@ xf86ReadDomainMemory(PCITAG Tag, ADDRESS Base, int Len, unsigned char *Buf)
     bus  = PCI_BUS_NO_DOMAIN(PCI_BUS_FROM_TAG(Tag));
     dev  = PCI_DEV_FROM_TAG(Tag);
     func = PCI_FUNC_FROM_TAG(Tag);
-    sprintf(file, "/sys/devices/pci%04x:%02x/%04x:%02x:%02x.%1x/rom",
-	    dom, bus, dom, bus, dev, func);
+    sprintf(file, "/sys/bus/pci/devices/%04x:%02x:%02x.%1x/rom",
+	    dom, bus, dev, func);
 
     /*
      * If the caller wants the ROM and the sysfs rom interface exists,
@@ -787,8 +788,10 @@ xf86ReadDomainMemory(PCITAG Tag, ADDRESS Base, int Len, unsigned char *Buf)
 	write(fd, "1", 2);
 	lseek(fd, 0, SEEK_SET);
 
+    len = min(Len, st.st_size);
+
         /* copy the ROM until we hit Len, EOF or read error */
-        for (i = 0; i < Len && read(fd, Buf, 1) > 0; Buf++, i++)
+        for (; len && (size = read(fd, Buf, len)) > 0 ; Buf+=size, len-=size)
             ;
 
 	write(fd, "0", 2);
@@ -1071,7 +1074,63 @@ ia64linuxPciFindNext(void)
 	}
 
 	if (sscanf(entry->d_name, "%02x . %01x", &dev, &func) == 2) {
-	    pciDeviceTag = PCI_MAKE_TAG(PCI_MAKE_BUS(domain, bus), dev, func);
+	    CARD32 tmp;
+	    int sec_bus, pri_bus;
+	    unsigned char base_class, sub_class;
+
+	    int pciBusNum = PCI_MAKE_BUS(domain, bus);
+	    pciDeviceTag = PCI_MAKE_TAG(pciBusNum, dev, func);
+
+	    /*
+	     * Before checking for a specific devid, look for enabled
+	     * PCI to PCI bridge devices.  If one is found, create and
+	     * initialize a bus info record (if one does not already exist).
+	     */
+	    tmp = pciReadLong(pciDeviceTag, PCI_CLASS_REG);
+	    base_class = PCI_CLASS_EXTRACT(tmp);
+	    sub_class = PCI_SUBCLASS_EXTRACT(tmp);
+	    if ((base_class == PCI_CLASS_BRIDGE) &&
+		((sub_class == PCI_SUBCLASS_BRIDGE_PCI) ||
+		 (sub_class == PCI_SUBCLASS_BRIDGE_CARDBUS))) {
+		tmp = pciReadLong(pciDeviceTag, PCI_PCI_BRIDGE_BUS_REG);
+		sec_bus = PCI_SECONDARY_BUS_EXTRACT(tmp, pciDeviceTag);
+		pri_bus = PCI_PRIMARY_BUS_EXTRACT(tmp, pciDeviceTag);
+#ifdef DEBUGPCI
+		ErrorF("ia64linuxPciFindNext: pri_bus %d sec_bus %d\n",
+		       pri_bus, sec_bus);
+#endif
+		if (pciBusNum != pri_bus) {
+		    /* Some bridges do not implement the primary bus register */
+		    if ((PCI_BUS_NO_DOMAIN(pri_bus) != 0) ||
+			(sub_class != PCI_SUBCLASS_BRIDGE_CARDBUS))
+			xf86Msg(X_WARNING,
+				"ia64linuxPciFindNext:  primary bus mismatch on PCI"
+				" bridge 0x%08lx (0x%02x, 0x%02x)\n",
+				pciDeviceTag, pciBusNum, pri_bus);
+		    pri_bus = pciBusNum;
+	        }
+		if ((pri_bus < sec_bus) && (sec_bus < pciMaxBusNum) &&
+		    pciBusInfo[pri_bus]) {
+		    /*
+		     * Found a secondary PCI bus
+		     */
+		    if (!pciBusInfo[sec_bus]) {
+			pciBusInfo[sec_bus] = xnfalloc(sizeof(pciBusInfo_t));
+
+			/* Copy parents settings... */
+			*pciBusInfo[sec_bus] = *pciBusInfo[pri_bus];
+		    }
+
+		    /* ...but not everything same as parent */
+		    pciBusInfo[sec_bus]->primary_bus = pri_bus;
+		    pciBusInfo[sec_bus]->secondary = TRUE;
+		    pciBusInfo[sec_bus]->numDevices = 32;
+
+		    if (pciNumBuses <= sec_bus)
+			pciNumBuses = sec_bus + 1;
+		}
+	    }
+
 	    devid = pciReadLong(pciDeviceTag, PCI_ID_REG);
 	    if ((devid & pciDevidMask) == pciDevid)
 		/* Yes - Return it.  Otherwise, next device */

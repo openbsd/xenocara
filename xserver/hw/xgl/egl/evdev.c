@@ -1,6 +1,4 @@
 /*
- * $Id: evdev.c,v 1.1.1.1 2006/11/26 18:23:53 matthieu Exp $
- *
  * Copyright © 2004 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its

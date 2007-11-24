@@ -73,6 +73,25 @@ static xf86ConfigSymTabRec TopLevelTab[] =
 
 #define CLEANUP xf86freeConfig
 
+/* 
+ * This function resolves name references and reports errors if the named
+ * objects cannot be found.
+ */
+static int
+xf86validateConfig (XF86ConfigPtr p)
+{
+	if (!xf86validateDevice (p))
+		return FALSE;
+	if (!xf86validateScreen (p))
+		return FALSE;
+	if (!xf86validateInput (p))
+		return FALSE;
+	if (!xf86validateLayout (p))
+		return FALSE;
+
+	return (TRUE);
+}
+
 XF86ConfigPtr
 xf86readConfigFile (void)
 {
@@ -111,13 +130,6 @@ xf86readConfigFile (void)
 				xf86conffree(val.str);
 				val.str = NULL;
 				HANDLE_RETURN (conf_flags, xf86parseFlagsSection ());
-			}
-			else if (xf86nameCompare (val.str, "keyboard") == 0)
-			{
-				xf86conffree(val.str);
-				val.str = NULL;
-				HANDLE_LIST (conf_input_lst, xf86parseKeyboardSection,
-							 XF86ConfInputPtr);
 			}
 			else if (xf86nameCompare (val.str, "pointer") == 0)
 			{
@@ -224,25 +236,6 @@ xf86readConfigFile (void)
 }
 
 #undef CLEANUP
-
-/* 
- * This function resolves name references and reports errors if the named
- * objects cannot be found.
- */
-int
-xf86validateConfig (XF86ConfigPtr p)
-{
-	if (!xf86validateDevice (p))
-		return FALSE;
-	if (!xf86validateScreen (p))
-		return FALSE;
-	if (!xf86validateInput (p))
-		return FALSE;
-	if (!xf86validateLayout (p))
-		return FALSE;
-
-	return (TRUE);
-}
 
 /* 
  * adds an item to the end of the linked list. Any record whose first field

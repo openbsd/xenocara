@@ -100,7 +100,6 @@ extern int xf86NumModuleInfos;
 extern int xf86NumDrivers;
 extern Bool xf86Resetting;
 extern Bool xf86Initialising;
-extern Bool xf86ProbeFailed;
 extern int xf86NumScreens;
 extern pciVideoPtr *xf86PciVideoInfo;
 extern xf86CurrentAccessRec xf86CurrentAccess;
@@ -155,7 +154,6 @@ extern int pciTestMultiDeviceCard(int bus, int dev, int func, PCITAG** pTag);
 
 /* xf86Config.c */
 
-Bool xf86PathIsAbsolute(const char *path);
 Bool xf86PathIsSafe(const char *path);
 
 /* xf86DefaultModes */
@@ -176,9 +174,6 @@ void xf86PostKbdEvent(unsigned key);
 void xf86PostMseEvent(DeviceIntPtr device, int buttons, int dx, int dy);
 void xf86Wakeup(pointer blockData, int err, pointer pReadmask);
 void xf86SigHandler(int signo);
-#ifdef MEMDEBUG
-void xf86SigMemDebug(int signo);
-#endif
 void xf86HandlePMEvents(int fd, pointer data);
 extern int (*xf86PMGetEventFromOs)(int fd,pmEvent *events,int num);
 extern pmWait (*xf86PMConfirmEventToOs)(int fd,pmEvent event);
@@ -193,20 +188,6 @@ Bool xf86LoadModules(char **list, pointer *optlist);
 int xf86SetVerbosity(int verb);
 int xf86SetLogVerbosity(int verb);
 
-/* xf86Io.c */
-
-void xf86KbdBell(int percent, DeviceIntPtr pKeyboard, pointer ctrl,
-		 int unused);
-void xf86KbdLeds(void);
-void xf86UpdateKbdLeds(void);
-void xf86KbdCtrl(DevicePtr pKeyboard, KeybdCtrl *ctrl); 
-void xf86InitKBD(Bool init);  
-int xf86KbdProc(DeviceIntPtr pKeyboard, int what);
-
-/* xf86Kbd.c */ 
-
-void xf86KbdGetMapping(KeySymsPtr pKeySyms, CARD8 *pModMap);
-
 /* xf86Lock.c */
 
 #ifdef USE_XF86_SERVERLOCK
@@ -216,6 +197,9 @@ void xf86UnlockServer(void);
 /* xf86XKB.c */
 
 void xf86InitXkb(void);
+
+/* xf86Xinput.c */
+extern xEvent *xf86Events;
 
 #endif /* _NO_XF86_PROTOTYPES */
 

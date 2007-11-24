@@ -79,9 +79,9 @@ extern CARD8 event_base[];
  */
 
 int
-SProcXOpenDevice(register ClientPtr client)
+SProcXOpenDevice(ClientPtr client)
 {
-    register char n;
+    char n;
 
     REQUEST(xOpenDeviceReq);
     swaps(&stuff->length, n);
@@ -95,10 +95,9 @@ SProcXOpenDevice(register ClientPtr client)
  */
 
 int
-ProcXOpenDevice(register ClientPtr client)
+ProcXOpenDevice(ClientPtr client)
 {
     xInputClassInfo evbase[numInputClasses];
-    Bool enableit = FALSE;
     int j = 0;
     int status = Success;
     xOpenDeviceReply rep;
@@ -121,7 +120,6 @@ ProcXOpenDevice(register ClientPtr client)
 	    SendErrorToClient(client, IReqCode, X_OpenDevice, 0, BadDevice);
 	    return Success;
 	}
-	enableit = TRUE;
     }
 
     OpenInputDevice(dev, client, &status);
@@ -129,8 +127,6 @@ ProcXOpenDevice(register ClientPtr client)
 	SendErrorToClient(client, IReqCode, X_OpenDevice, 0, status);
 	return Success;
     }
-    if (enableit && dev->inited && dev->startup)
-	(void)EnableDevice(dev);
 
     rep.repType = X_Reply;
     rep.RepType = X_OpenDevice;
@@ -179,7 +175,7 @@ ProcXOpenDevice(register ClientPtr client)
 void
 SRepXOpenDevice(ClientPtr client, int size, xOpenDeviceReply * rep)
 {
-    register char n;
+    char n;
 
     swaps(&rep->sequenceNumber, n);
     swapl(&rep->length, n);

@@ -1,6 +1,4 @@
 /*
- * $Id: damageext.c,v 1.1.1.1 2006/11/26 18:14:42 matthieu Exp $
- *
  * Copyright © 2002 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -28,12 +26,19 @@
 
 #include "damageextint.h"
 
-unsigned char	DamageReqCode;
-int		DamageEventBase;
-int		DamageErrorBase;
-int		DamageClientPrivateIndex;
-RESTYPE		DamageExtType;
-RESTYPE		DamageExtWinType;
+static unsigned char	DamageReqCode;
+static int		DamageEventBase;
+static int		DamageErrorBase;
+static int		DamageClientPrivateIndex;
+static RESTYPE		DamageExtType;
+static RESTYPE		DamageExtWinType;
+
+/* Version of the damage extension supported by the server, as opposed to the
+ * DAMAGE_* defines from damageproto for what version the proto header
+ * supports.
+ */
+#define SERVER_DAMAGE_MAJOR	1
+#define SERVER_DAMAGE_MINOR	1
 
 #define prScreen	screenInfo.screens[0]
 
@@ -143,16 +148,16 @@ ProcDamageQueryVersion(ClientPtr client)
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
-    if (stuff->majorVersion < DAMAGE_MAJOR) {
+    if (stuff->majorVersion < SERVER_DAMAGE_MAJOR) {
 	rep.majorVersion = stuff->majorVersion;
 	rep.minorVersion = stuff->minorVersion;
     } else {
-	rep.majorVersion = DAMAGE_MAJOR;
-	if (stuff->majorVersion == DAMAGE_MAJOR && 
-	    stuff->minorVersion < DAMAGE_MINOR)
+	rep.majorVersion = SERVER_DAMAGE_MAJOR;
+	if (stuff->majorVersion == SERVER_DAMAGE_MAJOR && 
+	    stuff->minorVersion < SERVER_DAMAGE_MINOR)
 	    rep.minorVersion = stuff->minorVersion;
 	else
-	    rep.minorVersion = DAMAGE_MINOR;
+	    rep.minorVersion = SERVER_DAMAGE_MINOR;
     }
     pDamageClient->major_version = rep.majorVersion;
     pDamageClient->minor_version = rep.minorVersion;
@@ -173,13 +178,17 @@ ProcDamageCreate (ClientPtr client)
     DamageExtPtr	pDamageExt;
     DamageReportLevel	level;
     RegionPtr		pRegion;
+    int			rc;
     
     REQUEST(xDamageCreateReq);
 
     REQUEST_SIZE_MATCH(xDamageCreateReq);
     LEGAL_NEW_RESOURCE(stuff->damage, client);
-    SECURITY_VERIFY_DRAWABLE (pDrawable, stuff->drawable, client,
-			      SecurityReadAccess);
+    rc = dixLookupDrawable(&pDrawable, stuff->drawable, client, 0,
+			   DixReadAccess);
+    if (rc != Success)
+	return rc;
+
     switch (stuff->level) {
     case XDamageReportRawRectangles:
 	level = DamageReportRawRegion;
@@ -237,7 +246,7 @@ ProcDamageDestroy (ClientPtr client)
     DamageExtPtr    pDamageExt;
 
     REQUEST_SIZE_MATCH(xDamageDestroyReq);
-    VERIFY_DAMAGEEXT(pDamageExt, stuff->damage, client, SecurityWriteAccess);
+    VERIFY_DAMAGEEXT(pDamageExt, stuff->damage, client, DixWriteAccess);
     FreeResource (stuff->damage, RT_NONE);
     return (client->noClientException);
 }
@@ -251,9 +260,9 @@ ProcDamageSubtract (ClientPtr client)
     RegionPtr	    pParts;
 
     REQUEST_SIZE_MATCH(xDamageSubtractReq);
-    VERIFY_DAMAGEEXT(pDamageExt, stuff->damage, client, SecurityWriteAccess);
-    VERIFY_REGION_OR_NONE(pRepair, stuff->repair, client, SecurityWriteAccess);
-    VERIFY_REGION_OR_NONE(pParts, stuff->parts, client, SecurityWriteAccess);
+    VERIFY_DAMAGEEXT(pDamageExt, stuff->damage, client, DixWriteAccess);
+    VERIFY_REGION_OR_NONE(pRepair, stuff->repair, client, DixWriteAccess);
+    VERIFY_REGION_OR_NONE(pParts, stuff->parts, client, DixWriteAccess);
 
     if (pDamageExt->level != DamageReportRawRegion)
     {
@@ -275,20 +284,47 @@ ProcDamageSubtract (ClientPtr client)
     return (client->noClientException);
 }
 
+static int
+ProcDamageAdd (ClientPtr client)
+{
+    REQUEST(xDamageAddReq);
+    DrawablePtr	    pDrawable;
+    RegionPtr	    pRegion;
+    int		    rc;
+
+    REQUEST_SIZE_MATCH(xDamageAddReq);
+    VERIFY_REGION(pRegion, stuff->region, client, DixWriteAccess);
+    rc = dixLookupDrawable(&pDrawable, stuff->drawable, client, 0,
+			   DixReadAccess);
+    if (rc != Success)
+	return rc;
+
+    /* The region is relative to the drawable origin, so translate it out to
+     * screen coordinates like damage expects.
+     */
+    REGION_TRANSLATE(pScreen, pRegion, pDrawable->x, pDrawable->y);
+    DamageDamageRegion(pDrawable, pRegion);
+    REGION_TRANSLATE(pScreen, pRegion, -pDrawable->x, -pDrawable->y);
+
+    return (client->noClientException);
+}
+
 /* Major version controls available requests */
 static const int version_requests[] = {
     X_DamageQueryVersion,	/* before client sends QueryVersion */
-    X_DamageSubtract,		/* Version 1 */
+    X_DamageAdd,		/* Version 1 */
 };
 
 #define NUM_VERSION_REQUESTS	(sizeof (version_requests) / sizeof (version_requests[0]))
     
-int	(*ProcDamageVector[XDamageNumberRequests])(ClientPtr) = {
+static int (*ProcDamageVector[XDamageNumberRequests])(ClientPtr) = {
 /*************** Version 1 ******************/
     ProcDamageQueryVersion,
     ProcDamageCreate,
     ProcDamageDestroy,
     ProcDamageSubtract,
+/*************** Version 1.1 ****************/
+    ProcDamageAdd,
 };
 
 
@@ -357,12 +393,27 @@ SProcDamageSubtract (ClientPtr client)
     return (*ProcDamageVector[stuff->damageReqType]) (client);
 }
 
-int	(*SProcDamageVector[XDamageNumberRequests])(ClientPtr) = {
+static int
+SProcDamageAdd (ClientPtr client)
+{
+    register int n;
+    REQUEST(xDamageAddReq);
+
+    swaps (&stuff->length, n);
+    REQUEST_SIZE_MATCH(xDamageSubtractReq);
+    swapl (&stuff->drawable, n);
+    swapl (&stuff->region, n);
+    return (*ProcDamageVector[stuff->damageReqType]) (client);
+}
+
+static int (*SProcDamageVector[XDamageNumberRequests])(ClientPtr) = {
 /*************** Version 1 ******************/
     SProcDamageQueryVersion,
     SProcDamageCreate,
     SProcDamageDestroy,
     SProcDamageSubtract,
+/*************** Version 1.1 ****************/
+    SProcDamageAdd,
 };
 
 static int
@@ -425,7 +476,7 @@ FreeDamageExtWin (pointer value, XID wid)
     return Success;
 }
 
-void
+static void
 SDamageNotifyEvent (xDamageNotifyEvent *from,
 		    xDamageNotifyEvent *to)
 {

@@ -1,6 +1,4 @@
 /*
- * $Id: g400_common.h,v 1.1.1.1 2006/11/26 18:22:16 matthieu Exp $
- *
  * Copyright © 2004 Damien Ciabrini
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -21,7 +19,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $Header: /home/cvs/xenocara/xserver/hw/kdrive/mga/Attic/g400_common.h,v 1.1.1.1 2006/11/26 18:22:16 matthieu Exp $ */
 
 #ifndef __G400_COMMON_H__
 #define __G400_COMMON_H__

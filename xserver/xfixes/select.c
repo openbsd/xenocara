@@ -1,6 +1,4 @@
 /*
- * $Id: select.c,v 1.1.1.1 2006/11/26 18:15:08 matthieu Exp $
- *
  * Copyright © 2002 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -78,7 +76,9 @@ XFixesSelectionCallback (CallbackListPtr *callbacks, pointer data, pointer args)
     }
     for (e = selectionEvents; e; e = e->next)
     {
-	if (e->selection == selection->selection && (e->eventMask & eventMask))
+	if (e->selection == selection->selection && 
+	    (e->eventMask & eventMask) &&
+	    !e->pClient->clientGone)
 	{
 	    xXFixesSelectionNotifyEvent	ev;
 
@@ -193,12 +193,12 @@ ProcXFixesSelectSelectionInput (ClientPtr client)
 {
     REQUEST (xXFixesSelectSelectionInputReq);
     WindowPtr	pWin;
+    int		rc;
 
     REQUEST_SIZE_MATCH (xXFixesSelectSelectionInputReq);
-    pWin = (WindowPtr)SecurityLookupWindow(stuff->window, client,
-					   SecurityReadAccess);
-    if (!pWin)
-        return(BadWindow);
+    rc = dixLookupWindow(&pWin, stuff->window, client, DixReadAccess);
+    if (rc != Success)
+        return rc;
     if (stuff->eventMask & ~SelectionAllEvents)
     {
 	client->errorValue = stuff->eventMask;

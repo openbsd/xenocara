@@ -1,6 +1,4 @@
 /*
- * $Id: ati.h,v 1.1.1.1 2006/11/26 18:22:13 matthieu Exp $
- *
  * Copyright © 2003 Eric Anholt
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -21,7 +19,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $Header: /home/cvs/xenocara/xserver/hw/kdrive/ati/Attic/ati.h,v 1.1.1.1 2006/11/26 18:22:13 matthieu Exp $ */
 
 #ifndef _ATI_H_
 #define _ATI_H_

@@ -33,6 +33,8 @@
 #ifndef _xf86_config_h
 #define _xf86_config_h
 
+#include "xf86Optrec.h"
+
 #ifdef HAVE_PARSER_DECLS
 /*
  * global structure that holds the result of parsing the config file
@@ -46,6 +48,23 @@ typedef enum _ConfigStatus {
     CONFIG_NOFILE
 } ConfigStatus;
 
+typedef struct _ModuleDefault {
+    char *name;
+    Bool toLoad;
+    XF86OptionPtr load_opt;
+} ModuleDefault;
+
+static ModuleDefault ModuleDefaults[] = {
+    {.name = "extmod",   .toLoad = TRUE,    .load_opt=NULL},
+    {.name = "dbe",      .toLoad = TRUE,    .load_opt=NULL},
+    {.name = "glx",      .toLoad = TRUE,    .load_opt=NULL},
+    {.name = "freetype", .toLoad = TRUE,    .load_opt=NULL},
+    {.name = "type1",    .toLoad = TRUE,    .load_opt=NULL},
+    {.name = "record",   .toLoad = TRUE,    .load_opt=NULL},
+    {.name = "dri",      .toLoad = TRUE,    .load_opt=NULL},
+    {.name = NULL,       .toLoad = FALSE,   .load_opt=NULL}
+};
+
 /*
  * prototypes
  */
@@ -53,7 +72,6 @@ char ** xf86ModulelistFromConfig(pointer **);
 char ** xf86DriverlistFromConfig(void);
 char ** xf86DriverlistFromCompile(void);
 char ** xf86InputDriverlistFromConfig(void);
-char ** xf86InputDriverlistFromCompile(void);
 Bool xf86BuiltinInputDriver(const char *);
 ConfigStatus xf86HandleConfigFile(Bool);
 

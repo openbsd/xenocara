@@ -39,7 +39,7 @@
 #include "fb.h"
 
 #define EXA_VERSION_MAJOR   2
-#define EXA_VERSION_MINOR   0
+#define EXA_VERSION_MINOR   2
 #define EXA_VERSION_RELEASE 0
 
 typedef struct _ExaOffscreenArea ExaOffscreenArea;
@@ -73,8 +73,8 @@ struct _ExaOffscreenArea {
 typedef struct _ExaDriver {
     /**
      * exa_major and exa_minor should be set by the driver to the version of
-     * EXA which the driver was compiled for (or configures itself at runtime to
-     * support).  This allows EXA to extend the structure for new features
+     * EXA which the driver was compiled for (or configures itself at runtime
+     * to support).  This allows EXA to extend the structure for new features
      * without breaking ABI for drivers compiled against older versions.
      */
     int exa_major, exa_minor;
@@ -229,7 +229,7 @@ typedef struct _ExaDriver {
      * @{
      */
     /**
-     * PrepareCopy() sets up the driver for doing a copy within offscreen
+     * PrepareCopy() sets up the driver for doing a copy within video 
      * memory.
      *
      * @param pSrcPixmap source pixmap
@@ -636,6 +636,23 @@ typedef struct _ExaDriver {
      */
     void	(*FinishAccess)(PixmapPtr pPix, int index);
 
+    /**
+     * PixmapIsOffscreen() is an optional driver replacement to
+     * exaPixmapIsOffscreen(). Set to NULL if you want the standard behaviour
+     * of exaPixmapIsOffscreen().
+     *
+     * @param pPix the pixmap
+     * @return TRUE if the given drawable is in framebuffer memory.
+     *
+     * exaPixmapIsOffscreen() is used to determine if a pixmap is in offscreen
+     * memory, meaning that acceleration could probably be done to it, and that it
+     * will need to be wrapped by PrepareAccess()/FinishAccess() when accessing it
+     * with the CPU.
+     *
+     *
+     */
+    Bool	(*PixmapIsOffscreen)(PixmapPtr pPix);
+
 	/** @name PrepareAccess() and FinishAccess() indices
 	 * @{
 	 */
@@ -704,6 +721,9 @@ exaOffscreenAlloc(ScreenPtr pScreen, int size, int align,
 ExaOffscreenArea *
 exaOffscreenFree(ScreenPtr pScreen, ExaOffscreenArea *area);
 
+void
+ExaOffscreenMarkUsed (PixmapPtr pPixmap);
+
 unsigned long
 exaGetPixmapOffset(PixmapPtr pPix);
 
@@ -715,6 +735,12 @@ exaGetPixmapSize(PixmapPtr pPix);
 
 void
 exaEnableDisableFBAccess (int index, Bool enable);
+
+void
+exaMoveInPixmap (PixmapPtr pPixmap);
+
+void
+exaMoveOutPixmap (PixmapPtr pPixmap);
 
 /**
  * Returns TRUE if the given planemask covers all the significant bits in the

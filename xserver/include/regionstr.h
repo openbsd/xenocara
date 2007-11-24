@@ -48,7 +48,7 @@ SOFTWARE.
 #ifndef REGIONSTRUCT_H
 #define REGIONSTRUCT_H
 
-typedef struct _Region RegionRec, *RegionPtr;
+typedef struct pixman_region16 RegionRec, *RegionPtr;
 
 #include "miscstruct.h"
 
@@ -64,16 +64,7 @@ typedef struct _Region RegionRec, *RegionPtr;
  *   clip region
  */
 
-typedef struct _RegData {
-    long	size;
-    long 	numRects;
-/*  BoxRec	rects[size];   in memory but not explicitly declared */
-} RegDataRec, *RegDataPtr;
-
-struct _Region {
-    BoxRec 	extents;
-    RegDataPtr	data;
-};
+typedef struct pixman_region16_data RegDataRec, *RegDataPtr;
 
 extern BoxRec miEmptyBox;
 extern RegDataRec miEmptyData;
@@ -234,6 +225,8 @@ extern RegDataRec miBrokenData;
 
 /* moved from mi.h */
 
+extern void InitRegions (void);
+
 extern RegionPtr miRegionCreate(
     BoxPtr /*rect*/,
     int /*size*/);
@@ -319,6 +312,9 @@ extern void miRegionEmpty(
     RegionPtr /*pReg*/);
 
 extern BoxPtr miRegionExtents(
+    RegionPtr /*pReg*/);
+
+extern void miPrintRegion(
     RegionPtr /*pReg*/);
 
 #endif /* REGIONSTRUCT_H */

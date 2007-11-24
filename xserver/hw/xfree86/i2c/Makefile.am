@@ -1,4 +1,4 @@
-module_LTLIBRARIES = libi2c.la
+noinst_LIBRARIES = libi2c.a
 
 multimediadir = $(moduledir)/multimedia
 multimedia_LTLIBRARIES =	\
@@ -10,12 +10,11 @@ multimedia_LTLIBRARIES =	\
 	tda9885_drv.la		\
 	uda1380_drv.la
 
-libi2c_la_LDFLAGS = -avoid-version
-libi2c_la_SOURCES = xf86i2c.c xf86i2cmodule.c
+libi2c_a_SOURCES = xf86i2c.c
 
 INCLUDES = $(XORG_INCS)
 
-AM_CFLAGS = $(XORG_CFLAGS)
+AM_CFLAGS = $(DIX_CFLAGS) $(XORG_CFLAGS)
 
 sdk_HEADERS = xf86i2c.h bt829.h fi1236.h msp3430.h tda8425.h tda9850.h tda9885.h uda1380.h i2c_def.h
 

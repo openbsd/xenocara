@@ -42,6 +42,10 @@
 
 #include <damage.h>
 
+#ifdef XF86DRI
+#include <GL/internal/dri_interface.h>
+#endif
+
 typedef struct {
 
     DrawablePtr pDraw;
@@ -50,7 +54,13 @@ typedef struct {
     ScreenPtr pScreen;
     Bool idExists;
     int refcnt;
+    GLenum target;
+#ifdef XF86DRI
     DamagePtr pDamage;
+    __DRIcontext *pDRICtx;
+    GLint texname;
+    unsigned long offset;
+#endif
 } __GLXpixmap;
 
 struct __GLXdrawable {

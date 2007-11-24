@@ -29,7 +29,6 @@
  *     Header file for DIX-related DBE
  *
  *****************************************************************************/
-/* $XFree86$ */
 
 #ifndef DBE_STRUCT_H
 #define DBE_STRUCT_H
@@ -220,11 +219,6 @@ typedef struct _DbeScreenPrivRec
 );
     void	(*ResetProc)(
 		ScreenPtr /*pScreen*/
-);
-    void	(*ValidateBuffer)(
-		WindowPtr /*pWin*/,
-		XID /*bufId*/,
-		Bool /*dstbuffer*/
 );
 
     /* Device-specific private information.

@@ -43,17 +43,22 @@
 #include "servermd.h"
 #include "micmap.h"
 #ifdef XKB
-#include <X11/extensions/XKBsrv.h>
+#include <xkbsrv.h>
 #endif
 #include "xf86Xinput.h"
 
+#include "mi.h"
+
 static unsigned long DGAGeneration = 0;
 static int DGAScreenIndex = -1;
+static int mieq_installed = 0;
 
 static Bool DGACloseScreen(int i, ScreenPtr pScreen);
 static void DGADestroyColormap(ColormapPtr pmap);
 static void DGAInstallColormap(ColormapPtr pmap);
 static void DGAUninstallColormap(ColormapPtr pmap);
+static void DGAHandleEvent(int screen_num, xEvent *event,
+                           DeviceIntPtr device, int nevents);
 
 static void
 DGACopyModeInfo(
@@ -93,7 +98,6 @@ typedef struct {
    Bool			grabMouse;
    Bool			grabKeyboard;
 } DGAScreenRec, *DGAScreenPtr;
-
 
 _X_EXPORT Bool
 DGAInit(
@@ -144,7 +148,6 @@ DGAInit(
 	    modes[i].flags &= ~DGA_PIXMAP_AVAILABLE;
 #endif
 
-
     pScreen->devPrivates[DGAScreenIndex].ptr = (pointer)pScreenPriv;
     pScreenPriv->CloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = DGACloseScreen;
@@ -155,11 +158,6 @@ DGAInit(
     pScreenPriv->UninstallColormap = pScreen->UninstallColormap;
     pScreen->UninstallColormap = DGAUninstallColormap;
 
-    /*
-     * This is now set in InitOutput().
-     *
-    pScrn->SetDGAMode = xf86SetDGAMode;
-     */
 
     return TRUE;
 }
@@ -245,11 +243,18 @@ FreeMarkedVisuals(ScreenPtr pScreen)
     }
 }
 
-
 static Bool 
 DGACloseScreen(int i, ScreenPtr pScreen)
 {
    DGAScreenPtr pScreenPriv = DGA_GET_SCREEN_PRIV(pScreen);
+
+   if (XDGAEventBase) {
+       mieqSetHandler(*XDGAEventBase + MotionNotify, NULL);
+       mieqSetHandler(*XDGAEventBase + ButtonPress, NULL);
+       mieqSetHandler(*XDGAEventBase + ButtonRelease, NULL);
+       mieqSetHandler(*XDGAEventBase + KeyPress, NULL);
+       mieqSetHandler(*XDGAEventBase + KeyRelease, NULL);
+    }
 
    FreeMarkedVisuals(pScreen);
 
@@ -460,6 +465,15 @@ DGASetInputMode(int index, Bool keyboard, Bool mouse)
    {
       pScreenPriv->grabMouse = mouse;
       pScreenPriv->grabKeyboard = keyboard;
+
+      if (!mieq_installed) {
+          mieqSetHandler(*XDGAEventBase + MotionNotify, DGAHandleEvent);
+          mieqSetHandler(*XDGAEventBase + ButtonPress, DGAHandleEvent);
+          mieqSetHandler(*XDGAEventBase + ButtonRelease, DGAHandleEvent);
+          mieqSetHandler(*XDGAEventBase + KeyPress, DGAHandleEvent);
+          mieqSetHandler(*XDGAEventBase + KeyRelease, DGAHandleEvent);
+          mieq_installed = 1;
+      }
    }
 }
 
@@ -901,66 +915,92 @@ DGAVTSwitch(void)
    return TRUE;
 }
 
-
-/* We have the power to steal or modify events that are about to get queued */
-
 Bool
-DGAStealKeyEvent(int index, xEvent *e)
+DGAStealKeyEvent(int index, int key_code, int is_down)
 {
    DGAScreenPtr pScreenPriv;
-    dgaEvent	de;
-
+   dgaEvent    de;
+    
    if(DGAScreenIndex < 0) /* no DGA */
-	return FALSE;
+        return FALSE;
 
    pScreenPriv = DGA_GET_SCREEN_PRIV(screenInfo.screens[index]);
 
    if(!pScreenPriv || !pScreenPriv->grabKeyboard) /* no direct mode */
-	return FALSE;
+        return FALSE; 
 
-    de.u.u.type = e->u.u.type + *XDGAEventBase;
-    de.u.u.detail = e->u.u.detail;
-    de.u.event.time = e->u.keyButtonPointer.time;
-    xf86eqEnqueue ((xEvent *) &de);
+    de.u.u.type = *XDGAEventBase + (is_down ? KeyPress : KeyRelease);
+    de.u.u.detail = key_code;
+    de.u.event.time = GetTimeInMillis();
+    mieqEnqueue (inputInfo.keyboard, (xEvent *) &de);
+
    return TRUE;
-}
+}  
 
 static int  DGAMouseX, DGAMouseY;
 
 Bool
-DGAStealMouseEvent(int index, xEvent *e, int dx, int dy)
+DGAStealMotionEvent(int index, int dx, int dy)
 {
    DGAScreenPtr pScreenPriv;
-    dgaEvent	de;
+    dgaEvent    de;
 
    if(DGAScreenIndex < 0) /* no DGA */
-	return FALSE;
-
+        return FALSE;
+    
    pScreenPriv = DGA_GET_SCREEN_PRIV(screenInfo.screens[index]);
 
    if(!pScreenPriv || !pScreenPriv->grabMouse) /* no direct mode */
-	return FALSE;
-    
+        return FALSE;
+
     DGAMouseX += dx;
     if (DGAMouseX < 0)
-	DGAMouseX = 0;
+        DGAMouseX = 0;
     else if (DGAMouseX > screenInfo.screens[index]->width)
-	DGAMouseX = screenInfo.screens[index]->width;
+        DGAMouseX = screenInfo.screens[index]->width;
     DGAMouseY += dy;
     if (DGAMouseY < 0)
-	DGAMouseY = 0;
+        DGAMouseY = 0;
     else if (DGAMouseY > screenInfo.screens[index]->height)
-	DGAMouseY = screenInfo.screens[index]->height;
-    de.u.u.type = e->u.u.type + *XDGAEventBase;
-    de.u.u.detail = e->u.u.detail;
-    de.u.event.time = e->u.keyButtonPointer.time;
+        DGAMouseY = screenInfo.screens[index]->height;
+    de.u.u.type = *XDGAEventBase + MotionNotify;
+    de.u.u.detail = 0;
+    de.u.event.time = GetTimeInMillis();
     de.u.event.dx = dx;
     de.u.event.dy = dy;
     de.u.event.pad1 = DGAMouseX;
     de.u.event.pad2 = DGAMouseY;
-    xf86eqEnqueue ((xEvent *) &de);
+    mieqEnqueue (inputInfo.pointer, (xEvent *) &de);
     return TRUE;
 }
+
+Bool
+DGAStealButtonEvent(int index, int button, int is_down)
+{
+    DGAScreenPtr pScreenPriv;
+    dgaEvent de;
+
+    if (DGAScreenIndex < 0)
+        return FALSE;
+    
+    pScreenPriv = DGA_GET_SCREEN_PRIV(screenInfo.screens[index]);
+
+    if (!pScreenPriv || !pScreenPriv->grabMouse)
+        return FALSE;
+
+    de.u.u.type = *XDGAEventBase + (is_down ? ButtonPress : ButtonRelease);
+    de.u.u.detail = button;
+    de.u.event.time = GetTimeInMillis();
+    de.u.event.dx = 0;
+    de.u.event.dy = 0;
+    de.u.event.pad1 = DGAMouseX;
+    de.u.event.pad2 = DGAMouseY;
+    mieqEnqueue (inputInfo.pointer, (xEvent *) &de);
+
+    return TRUE;
+}
+
+/* We have the power to steal or modify events that are about to get queued */
 
 Bool
 DGAIsDgaEvent (xEvent *e)
@@ -1168,39 +1208,6 @@ DGAProcessPointerEvent (ScreenPtr pScreen, dgaEvent *de, DeviceIntPtr mouse)
     }
 }
 
-Bool
-DGADeliverEvent (ScreenPtr pScreen, xEvent *e)
-{
-    dgaEvent	    *de = (dgaEvent *) e;
-    DGAScreenPtr    pScreenPriv;
-    int		    coreEquiv;
-
-    /* no DGA */
-    if (DGAScreenIndex < 0 || XDGAEventBase == 0)
-	return FALSE;
-    pScreenPriv = DGA_GET_SCREEN_PRIV(pScreen);
-    
-    /* DGA not initialized on this screen */
-    if (!pScreenPriv)
-	return FALSE;
-    
-    coreEquiv = de->u.u.type - *XDGAEventBase;
-    /* Not a DGA event */
-    if (coreEquiv < KeyPress || coreEquiv > MotionNotify)
-	return FALSE;
-    
-    switch (coreEquiv) {
-    case KeyPress:
-    case KeyRelease:
-	DGAProcessKeyboardEvent (pScreen, de, inputInfo.keyboard);
-	break;
-    default:
-	DGAProcessPointerEvent (pScreen, de, inputInfo.pointer);
-	break;
-    }
-    return TRUE;
-}
-
 _X_EXPORT Bool 
 DGAOpenFramebuffer(
    int index,
@@ -1259,3 +1266,35 @@ DGAGetOldDGAMode(int index)
    return 0;
 }
 
+static void
+DGAHandleEvent(int screen_num, xEvent *event, DeviceIntPtr device, int nevents)
+{
+    dgaEvent	    *de = (dgaEvent *) event;
+    ScreenPtr       pScreen = screenInfo.screens[screen_num];
+    DGAScreenPtr    pScreenPriv;
+    int		    coreEquiv;
+
+    /* no DGA */
+    if (DGAScreenIndex < 0 || XDGAEventBase == 0)
+	return;
+    pScreenPriv = DGA_GET_SCREEN_PRIV(pScreen);
+    
+    /* DGA not initialized on this screen */
+    if (!pScreenPriv)
+	return;
+    
+    coreEquiv = de->u.u.type - *XDGAEventBase;
+    /* Not a DGA event; shouldn't happen, but you never know. */
+    if (coreEquiv < KeyPress || coreEquiv > MotionNotify)
+	return;
+    
+    switch (coreEquiv) {
+    case KeyPress:
+    case KeyRelease:
+	DGAProcessKeyboardEvent (pScreen, de, inputInfo.keyboard);
+	break;
+    default:
+	DGAProcessPointerEvent (pScreen, de, inputInfo.pointer);
+	break;
+    }
+}

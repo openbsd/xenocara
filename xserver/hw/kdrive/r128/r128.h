@@ -1,6 +1,4 @@
 /*
- * $Id: r128.h,v 1.1.1.1 2006/11/26 18:21:49 matthieu Exp $
- *
  * Copyright © 2003 Anders Carlsson
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -21,7 +19,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $Header: /home/cvs/xenocara/xserver/hw/kdrive/r128/Attic/r128.h,v 1.1.1.1 2006/11/26 18:21:49 matthieu Exp $ */
 
 #ifndef _R128_H_
 #define _R128_H_
