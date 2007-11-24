@@ -43,13 +43,6 @@
 #include FT_TRUETYPE_IDS_H
 #include "ft.h"
 
-/* backward compatibility hack */
-#if (FREETYPE_VERSION < 2001008)
-# ifndef ft_isdigit
-#  define ft_isdigit isdigit
-# endif
-#endif
-
 #ifndef LSBFirst
 #define LSBFirst 0
 #define MSBFirst 1

@@ -136,6 +136,7 @@ CatalogueRescan (FontPathElementPtr fpe)
     DIR			*dir;
     struct dirent	*entry;
     int			len;
+    int			pathlen;
 
     path = fpe->name + strlen(CataloguePrefix);
     if (stat(path, &statbuf) < 0 || !S_ISDIR(statbuf.st_mode))
@@ -158,6 +159,17 @@ CatalogueRescan (FontPathElementPtr fpe)
 	len = readlink(link, dest, sizeof dest);
 	if (len < 0)
 	    continue;
+
+	dest[len] = '\0';
+
+	if (dest[0] != '/')
+	{
+	   pathlen = strlen(path);
+	   memmove(dest + pathlen + 1, dest, sizeof dest - pathlen - 1);
+	   memcpy(dest, path, pathlen);
+	   memcpy(dest + pathlen, "/", 1);
+	   len += pathlen + 1;
+	}
 
 	attrib = strchr(link, ':');
 	if (attrib && len + strlen(attrib) < sizeof dest)
@@ -205,6 +217,8 @@ CatalogueRescan (FontPathElementPtr fpe)
 	    continue;
 	}
     }
+
+    closedir(dir);
 
     qsort(cat->fpeList,
 	  cat->fpeCount, sizeof cat->fpeList[0], ComparePriority);

@@ -1,3 +1,61 @@
+commit aca95d12a8b35de7ae914632fc9e8a723d58a860
+Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
+Date:   Sat Aug 25 23:32:54 2007 +0200
+
+    Kill unused macro definition.
+
+commit 3c3b47bf6f080ddb700886de3e5bfa42c2f0774e
+Merge: 9f86614... 32d2d33...
+Author: Dodji Seketeli <dodji@openedhand.com>
+Date:   Sat Aug 11 23:09:50 2007 +0200
+
+    Merge branch 'master' of ssh://dodji@git.freedesktop.org/git/xorg/lib/libXfont
+
+commit 9f86614394af81bc484cf00f3e9996510d3718cb
+Author: Ademar de Souza Reis Jr <ademar@mandriva.com.br>
+Date:   Mon Jul 30 14:36:21 2007 -0400
+
+    Fix dirfd leak on CatalogueRescan().
+
+commit 87f50267181887ed9214536608bd2035d2dd70f7
+Author: Ademar de Souza Reis Jr <ademar@mandriva.com.br>
+Date:   Mon Jul 30 14:35:01 2007 -0400
+
+    Support relative paths in catalogue:<dir> symlinks.
+    
+    Relative symlinks are common inside the catalogue directory and
+    should be supported as well.
+
+commit 32d2d335eacd1b55980323a71ef35cdf7c22366d
+Author: Ademar de Souza Reis Jr <ademar@mandriva.com.br>
+Date:   Mon Jul 30 14:36:21 2007 -0400
+
+    Fix dirfd leak on CatalogueRescan().
+
+commit 0a5b31a40c4933f4c69157c61d4d4890af2205b1
+Author: Ademar de Souza Reis Jr <ademar@mandriva.com.br>
+Date:   Mon Jul 30 14:35:01 2007 -0400
+
+    Support relative paths in catalogue:<dir> symlinks.
+    
+    Relative symlinks are common inside the catalogue directory and
+    should be supported as well.
+
+commit 7670d4a2720c61fbc7b989fed14c676f04ac3ad1
+Author: Dodji Seketeli <dodji@seketeli.org>
+Date:   Mon Jul 16 12:24:34 2007 +0200
+
+    Remove side effects from BuiltinReadDirectory()
+    
+    The first time BuiltinReadDirectory() is called,
+    save the content of builtin_dir and builtin_alias,
+    before calling FontFileAddFontFile(), because that fonction
+    will modify those.
+    
+    Then, in subsequent calls to BuiltinReadDirectory(), restore
+    builtin_dir and builtin_alias so that the side effect incurred
+    by the first call disappears.
+
 commit e3642d9b2c0819a607d4cce413b9f0541285545b
 Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Mon Jul 2 15:01:05 2007 -0400
