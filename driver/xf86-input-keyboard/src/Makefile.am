@@ -18,20 +18,35 @@
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+driverdir = @inputdir@
+driver_LTLIBRARIES = kbd_drv.la
+kbd_drv_la_LDFLAGS = -avoid-version -module
+kbd_drv_la_SOURCES = kbd.c xf86OSKbd.h xf86Keymap.h
 
-# this is obnoxious:
-# -module lets us name the module exactly how we want
-# -avoid-version prevents gratuitous .0.0.0 version numbers on the end
-# _ladir passes a dummy rpath to libtool so the thing will actually link
-# TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
-@DRIVER_NAME@_drv_la_LTLIBRARIES = @DRIVER_NAME@_drv.la
-@DRIVER_NAME@_drv_la_LDFLAGS = -module -avoid-version
-@DRIVER_NAME@_drv_ladir = @inputdir@
+BSD_SRCS = bsd_KbdMap.c bsd_kbd.c bsd_kbd.h at_scancode.c
+HURD_SRCS = hurd_kbd.c at_scancode.c
+LINUX_SRCS = lnx_KbdMap.c lnx_kbd.c lnx_kbd.h at_scancode.c
+SCO_SRCS = sco_KbdMap.c sco_kbd.c sco_kbd.h
+SOLARIS_SRCS = sun_kbd.c sun_kbd.h sun_kbdMap.c
 
-@DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c
+if BSD
+kbd_drv_la_SOURCES += $(BSD_SRCS)
+endif
 
-@COMPAT_DRIVER_NAME@_drv_la_LTLIBRARIES = @COMPAT_DRIVER_NAME@_drv.la
-@COMPAT_DRIVER_NAME@_drv_la_LDFLAGS = -module -avoid-version
-@COMPAT_DRIVER_NAME@_drv_ladir = @inputdir@
+if SOLARIS
+kbd_drv_la_SOURCES += $(SOLARIS_SRCS)
+endif
 
-@COMPAT_DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c
+if LINUX
+kbd_drv_la_SOURCES += $(LINUX_SRCS)
+endif
+
+if SCO
+kbd_drv_la_SOURCES += $(SCO_SRCS)
+endif
+
+if HURD
+kbd_drv_la_SOURCES += $(HURD_SRCS)
+endif
+
+EXTRA_DIST = $(BSD_SRCS) $(HURD_SRCS) $(LINUX_SRCS) $(SCO_SRCS) $(SOLARIS_SRCS)

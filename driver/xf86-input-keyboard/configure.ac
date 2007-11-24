@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-keyboard],
-        1.1.1,
+        1.2.2,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-keyboard)
 
@@ -35,9 +35,6 @@ AM_MAINTAINER_MODE
 DRIVER_NAME=kbd
 AC_SUBST([DRIVER_NAME])
 
-COMPAT_DRIVER_NAME=keyboard
-AC_SUBST([COMPAT_DRIVER_NAME])
-
 AM_CONFIG_HEADER([config.h])
 
 # Checks for programs.
@@ -49,30 +46,52 @@ AH_TOP([#include "xorg-server.h"])
 
 m4_ifdef([AS_HELP_STRING], , [m4_define([AS_HELP_STRING], m4_defn([AC_HELP_STRING]))])
 
-#AC_DEFINE(XFree86LOADER,1,[Stub define for loadable drivers])
-#
-#AC_ARG_ENABLE(XINPUT, AS_HELP_STRING([--enable-xinput],
-#              [Build XInput support (default: yes)]),
-#              [XINPUT=$enableval],[XINPUT=yes])
-#AM_CONDITIONAL(XINPUT, test "x$XINPUT" = "xyes")
-#if test "x$XINPUT" = "xyes" ; then
-#    AC_DEFINE(XINPUT,1,[Enable XInput support])
-#fi
-#
-#AC_ARG_ENABLE(XKB, AS_HELP_STRING([--enable-xkb],
-#              [Build XKB support (default: yes)]),
-#              [XKB=$enableval],[XKB=yes])
-#AM_CONDITIONAL(XKB, test "x$XKB" = "xyes")
-#if test "x$XKB" = "xyes" ; then
-#    AC_DEFINE(XKB,1,[Enable XKB support])
-#fi
+case $host_os in
+  linux*)
+    IS_LINUX="yes"
+    # check whether struct kbd_repeat has the 'period' field.
+    # on kernels < 2.5.42 it's called 'rate' instead.
+    AC_TRY_COMPILE([
+#include <linux/kd.h>
+#ifdef __sparc__
+#include <asm/param.h>
+#include <asm/kbio.h>
+#endif
+],[
+int main () {
+        struct kbd_repeat k;
+        k.period = 0;
+        return 0;
+}],
+    [period_field="period"],
+    [period_field="rate"])
+    AC_DEFINE_UNQUOTED(LNX_KBD_PERIOD_NAME, [$period_field],
+                       [Name of the period field in struct kbd_repeat])
+    ;;
 
-AC_ARG_ENABLE(depkbd, AS_HELP_STRING([--enable-depkbd],
-              [Use deprecated keyboard driver [[default=no]]]),
-              [DEPKBD=$enableval],[DEPKBD=no])
-if test "x$DEPKBD" = "xyes" ; then
-    AC_DEFINE(USE_DEPRECATED_KEYBOARD_DRIVER,1,[Use deprecated keyboard driver])
-fi
+  freebsd* | kfreebsd-gnu* | netbsd* | openbsd*)
+    IS_BSD="yes"
+    ;;
+
+  solaris*)
+    IS_SOLARIS="yes"
+    ;;
+
+  gnu*)
+    IS_HURD="yes"
+    ;;
+
+  *)
+    AC_MSG_ERROR([Your operating system is not supported by the kbd driver.
+                  Contact xorg@lists.freedesktop.org if you are interested in
+                  porting it.])
+    ;;
+esac
+AM_CONDITIONAL(LINUX, [test "x$IS_LINUX" = xyes])
+AM_CONDITIONAL(BSD, [test "x$IS_BSD" = xyes])
+AM_CONDITIONAL(SOLARIS, [test "x$IS_SOLARIS" = xyes])
+AM_CONDITIONAL(HURD, [test "x$IS_HURD" = xyes])
+AM_CONDITIONAL(SCO, [test "x$IS_SCO" = xyes])
 
 AC_ARG_WITH(xorg-module-dir,
             AC_HELP_STRING([--with-xorg-module-dir=DIR],
@@ -88,7 +107,7 @@ XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
 XORG_DRIVER_CHECK_EXT(XKB, kbproto)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901] xproto $REQUIRED_MODULES)
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.2.99.0] xproto $REQUIRED_MODULES)
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 CFLAGS="$CFLAGS $XORG_CFLAGS "' -I$(top_srcdir)/src'
