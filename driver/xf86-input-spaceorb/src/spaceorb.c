@@ -76,7 +76,7 @@ static XF86ModuleVersionInfo VersionRec =
 	MODINFOSTRING1,
 	MODINFOSTRING2,
 	XORG_VERSION_CURRENT,
-	1, 1, 0,
+	PACKAGE_VERSION_MAJOR, PACKAGE_VERSION_MINOR, PACKAGE_VERSION_PATCHLEVEL,
 	ABI_CLASS_XINPUT,
 	ABI_XINPUT_VERSION,
 	MOD_CLASS_XINPUT,
@@ -231,7 +231,6 @@ SpaceorbPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
         }
 	
 	priv->buffer = XisbNew (pInfo->fd, 200);
-	DBG (9, XisbTrace (priv->buffer, 1));
 
 	/* 
 	 * Verify the hardware is attached and functional
