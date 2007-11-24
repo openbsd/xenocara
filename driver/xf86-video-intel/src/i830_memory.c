@@ -50,11 +50,57 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *   Alan Hourihane <alanh@tungstengraphics.com>
  */
 
+/**
+ * @file i830_memory.c
+ *
+ * This is the video memory allocator.  Our memory allocation is different from
+ * other graphics chips, where you have a fixed amount of graphics memory
+ * available that you want to put to the best use.  Instead, we have almost no
+ * memory pre-allocated, and we have to choose an appropriate amount of sytem
+ * memory to use.
+ *
+ * The allocations we might do:
+ *
+ * - Ring buffer
+ * - HW cursor block (either one block or four)
+ * - Overlay registers
+ * - XAA linear allocator (optional)
+ * - EXA 965 state buffer
+ * - XAA scratch (screen 1)
+ * - XAA scratch (screen 2, only in zaphod mode)
+ * - Front buffer (screen 1, more is better for XAA)
+ * - Front buffer (screen 2, only in zaphod mode, more is better for XAA)
+ * - Back/depth buffer (3D only)
+ * - Compatibility texture pool (optional, more is always better)
+ * - New texture pool (optional, more is always better.  aperture allocation
+ *     only)
+ * - EXA offscreen pool (more is always better)
+ *
+ * We also want to be able to resize the front/back/depth buffers, and then
+ * resize the EXA and texture memory pools appropriately.
+ *
+ * The user may request a specific amount of memory to be used
+ * (pI830->pEnt->videoRam != 0), in which case allocations have to fit within
+ * that much aperture.  If not, the individual allocations will be
+ * automatically sized, and will be fit within the maximum aperture size.
+ * Only the actual memory used (not alignment padding) will get actual AGP
+ * memory allocated.
+ *
+ * Given that the allocations listed are generally a page or more than a page,
+ * our allocator will only return page-aligned offsets, simplifying the memory
+ * binding process.  For smaller allocations, the acceleration architecture's
+ * linear allocator is preferred.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
+#include <assert.h>
 #include <string.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/mman.h>
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -62,1983 +108,1888 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "i830.h"
 #include "i810_reg.h"
 
-static int nextTile = 0;
-static unsigned int tileGeneration = -1;
+#define ALIGN(i,m)    (((i) + (m) - 1) & ~((m) - 1))
 
-#ifndef ALLOCATE_ALL_BIOSMEM
-#define ALLOCATE_ALL_BIOSMEM 1
-#endif
+/* Our hardware status area is just a single page */
+#define HWSTATUS_PAGE_SIZE GTT_PAGE_SIZE
 
-static unsigned long
-GetBestTileAlignment(unsigned long size)
-{
-   unsigned long i;
+static i830_memory *
+i830_allocate_aperture(ScrnInfoPtr pScrn, const char *name,
+		       long size, unsigned long alignment, int flags);
 
-   for (i = KB(512); i < size; i <<= 1)
-      ;
+static int i830_set_tiling(ScrnInfoPtr pScrn, unsigned int offset,
+			   unsigned int pitch, unsigned int size,
+			   enum tile_format tile_format);
 
-   if (i > MB(64))
-      i = MB(64);
+static void i830_clear_tiling(ScrnInfoPtr pScrn, unsigned int fence_nr);
 
-   return i;
-}
-
-/*
- * Allocate memory from the given pool.  Grow the pool if needed and if
- * possible.
+/**
+ * Returns the fence size for a tiled area of the given size.
  */
 static unsigned long
-AllocFromPool(ScrnInfoPtr pScrn, I830MemRange *result, I830MemPool *pool,
-	      long size, unsigned long alignment, int flags)
+i830_get_fence_size(ScrnInfoPtr pScrn, unsigned long size)
 {
-   I830Ptr pI830 = I830PTR(pScrn);
-   long needed, start, end;
-   Bool dryrun = ((flags & ALLOCATE_DRY_RUN) != 0);
+    I830Ptr pI830 = I830PTR(pScrn);
+    unsigned long i;
+    unsigned long start;
 
-   if (!result || !pool || !size)
-      return 0;
+    if (IS_I965G(pI830)) {
+	/* The 965 can have fences at any page boundary. */
+	return ALIGN(size, GTT_PAGE_SIZE);
+    } else {
+	/* Align the size to a power of two greater than the smallest fence
+	 * size.
+	 */
+	if (IS_I9XX(pI830))
+	    start = MB(1);
+	else
+	    start = KB(512);
 
-   /* Calculate how much space is needed. */
-   if (alignment <= GTT_PAGE_SIZE)
-      needed = size;
-   else {
-      if (flags & ALLOCATE_AT_BOTTOM) {
-	 start = ROUND_TO(pool->Free.Start, alignment);
-	 if (flags & ALIGN_BOTH_ENDS)
-	    end = ROUND_TO(start + size, alignment);
-	 else
-	    end = start + size;
-	 needed = end - pool->Free.Start;
-      } else {				/* allocate at top */
-	 if (flags & ALIGN_BOTH_ENDS)
-	    end = ROUND_DOWN_TO(pool->Free.End, alignment);
-	 else
-	    end = pool->Free.End;
+	for (i = start; i < size; i <<= 1)
+	    ;
 
-	 start = ROUND_DOWN_TO(end - size, alignment);
-	 needed = end - start;
-      }
-   }
-   if (needed > pool->Free.Size) {
-      long extra;
-      /* See if the pool can be grown. */
-      if (pI830->StolenOnly && !dryrun)
-	 return 0;
-      extra = needed - pool->Free.Size;
-      extra = ROUND_TO_PAGE(extra);
-      if (extra > pI830->FreeMemory) {
-	 if (dryrun)
-	    pI830->FreeMemory = extra;
-	 else
-	    return 0;
-      }
-
-      if (!dryrun && ((long)extra > pI830->MemoryAperture.Size))
-	 return 0;
-
-      pool->Free.Size += extra;
-      pool->Free.End += extra;
-      pool->Total.Size += extra;
-      pool->Total.End += extra;
-      pI830->FreeMemory -= extra;
-      pI830->MemoryAperture.Start += extra;
-      pI830->MemoryAperture.Size -= extra;
-   }
-   if (flags & ALLOCATE_AT_BOTTOM) {
-      result->Start = ROUND_TO(pool->Free.Start, alignment);
-      pool->Free.Start += needed;
-      result->End = pool->Free.Start;
-   } else {
-      result->Start = ROUND_DOWN_TO(pool->Free.End - size, alignment);
-      pool->Free.End -= needed;
-      result->End = result->Start + needed;
-   }
-   pool->Free.Size = pool->Free.End - pool->Free.Start;
-   result->Size = result->End - result->Start;
-   result->Pool = pool;
-   result->Alignment = alignment;
-   return needed;
+	return i;
+    }
 }
 
-static unsigned long
-AllocFromAGP(ScrnInfoPtr pScrn, I830MemRange *result, long size,
-	     unsigned long alignment, int flags)
+static Bool
+i830_bind_memory(ScrnInfoPtr pScrn, i830_memory *mem)
 {
-   I830Ptr pI830 = I830PTR(pScrn);
-   unsigned long start, end;
-   unsigned long newApStart, newApEnd;
-   Bool dryrun = ((flags & ALLOCATE_DRY_RUN) != 0);
+    I830Ptr pI830 = I830PTR(pScrn);
 
-   if (!result || !size)
-      return 0;
+    if (mem == NULL || mem->bound)
+	return TRUE;
 
-   if ((flags & ALLOCATE_AT_BOTTOM) && pI830->StolenMemory.Size != 0) {
-      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		 "AllocFromAGP(): can't allocate from "
-		 "bottom when there is stolen memory\n");
-      return 0;
-   }
+#ifdef XF86DRI_MM
+    if (mem->bo.size != 0) {
+	I830Ptr pI830 = I830PTR(pScrn);
+	int ret;
 
-   if (size > pI830->FreeMemory) {
-      if (dryrun)
-	 pI830->FreeMemory = size;
-      else
-	 return 0;
-   }
+	ret = drmBOSetStatus(pI830->drmSubFD, &mem->bo,
+			     DRM_BO_FLAG_MEM_VRAM |
+			     DRM_BO_FLAG_MEM_TT |
+			     DRM_BO_FLAG_READ |
+			     DRM_BO_FLAG_WRITE |
+			     DRM_BO_FLAG_NO_EVICT,
+			     DRM_BO_MASK_MEM |
+			     DRM_BO_FLAG_READ |
+			     DRM_BO_FLAG_WRITE |
+			     DRM_BO_FLAG_NO_EVICT,
+			     0, 0, 0);
+	if (ret != 0)
+	    return FALSE;
 
-   /* Calculate offset */
-   if (flags & ALLOCATE_AT_BOTTOM) {
-      start = ROUND_TO(pI830->MemoryAperture.Start, alignment);
-      if (flags & ALIGN_BOTH_ENDS)
-	 end = ROUND_TO(start + size, alignment);
-      else
-	 end = start + size;
-      newApStart = end;
-      newApEnd = pI830->MemoryAperture.End;
-   } else {
-      if (flags & ALIGN_BOTH_ENDS)
-	 end = ROUND_DOWN_TO(pI830->MemoryAperture.End, alignment);
-      else
-	 end = pI830->MemoryAperture.End;
-      start = ROUND_DOWN_TO(end - size, alignment);
-      newApStart = pI830->MemoryAperture.Start;
-      newApEnd = start;
-   }
+	mem->bound = TRUE;
+	mem->offset = mem->bo.offset;
+	mem->end = mem->bo.offset + mem->size;
+    }
+#endif
 
-   if (!dryrun) {
-      if (newApStart > newApEnd)
-	 return 0;
+    if (!mem->bound) {
+	if (!pI830->gtt_acquired)
+	    return TRUE;
 
-      if (flags & NEED_PHYSICAL_ADDR) 
-	 result->Key = xf86AllocateGARTMemory(pScrn->scrnIndex, size, 2,
-					      &(result->Physical));
-      else 
-	 result->Key = xf86AllocateGARTMemory(pScrn->scrnIndex, size, 0, NULL);
+	if (mem->key != -1 && 
+	    !xf86BindGARTMemory(pScrn->scrnIndex, mem->key, mem->agp_offset))
+	{
+	    return FALSE;
+	}
 
-      if (result->Key == -1)
-	 return 0;
-   }
+	mem->bound = TRUE;
+    }
 
-   pI830->allocatedMemory += size;
-   pI830->MemoryAperture.Start = newApStart;
-   pI830->MemoryAperture.End = newApEnd;
-   pI830->MemoryAperture.Size = newApEnd - newApStart;
-   pI830->FreeMemory -= size;
-   result->Start = start;
-   result->End = start + size;
-   result->Size = size;
-   result->Offset = start;
-   result->Alignment = alignment;
-   result->Pool = NULL;
+    if (mem->tiling != TILE_NONE) {
+	mem->fence_nr = i830_set_tiling(pScrn, mem->offset, mem->pitch,
+					mem->allocated_size, mem->tiling);
+    }
 
-   return size;
+    /* Mark the pages accessible now that they're bound. */
+    if (mprotect(pI830->FbBase + mem->offset, ALIGN(mem->size, GTT_PAGE_SIZE),
+		 PROT_READ | PROT_WRITE) != 0) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "Failed to mprotect %s: %s\n", mem->name, strerror(errno));
+    }
+
+    return TRUE;
+}
+
+static Bool
+i830_unbind_memory(ScrnInfoPtr pScrn, i830_memory *mem)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+
+    if (mem == NULL || !mem->bound)
+	return TRUE;
+
+    /* Mark the pages accessible now that they're bound. */
+    if (mprotect(pI830->FbBase + mem->offset, ALIGN(mem->size, GTT_PAGE_SIZE),
+		 PROT_NONE) != 0) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "Failed to mprotect %s: %s\n", mem->name, strerror(errno));
+    }
+
+    if (mem->tiling != TILE_NONE)
+	i830_clear_tiling(pScrn, mem->fence_nr);
+
+#ifdef XF86DRI_MM
+    if (mem->bo.size != 0) {
+	I830Ptr pI830 = I830PTR(pScrn);
+	int ret;
+
+	ret = drmBOSetStatus(pI830->drmSubFD, &mem->bo,
+			     0, DRM_BO_FLAG_NO_EVICT,
+			     0, 0, 0);
+
+	if (ret == 0) {
+	    mem->bound = FALSE;
+	    /* Give buffer obviously wrong offset/end until it's re-pinned. */
+	    mem->offset = -1;
+	    mem->end = -1;
+	    return TRUE;
+	} else {
+	    return FALSE;
+	}
+    }
+#endif
+
+    if (mem->key == -1 || xf86UnbindGARTMemory(pScrn->scrnIndex, mem->key)) {
+	mem->bound = FALSE;
+	return TRUE;
+    } else {
+	return FALSE;
+    }
 }
 
 void
-I830FreeVidMem(ScrnInfoPtr pScrn, I830MemRange *range)
+i830_free_memory(ScrnInfoPtr pScrn, i830_memory *mem)
 {
-   I830Ptr pI830 = I830PTR(pScrn);
+    if (mem == NULL)
+	return;
 
-   if (!range || range->Size == 0)
-      return;
+    /* Free any AGP memory. */
+    i830_unbind_memory(pScrn, mem);
 
-   if (range->Key != -1)
-      xf86DeallocateGARTMemory(pScrn->scrnIndex, range->Key);
+#ifdef XF86DRI_MM
+    if (mem->bo.size != 0) {
+	I830Ptr pI830 = I830PTR(pScrn);
 
-   if (range->Pool) {
-      /* 
-       * This code essentially resets what I830DoPoolAllocation() did.
-       * And if things are freed in the wrong order this can break wildly!
-       * USE CAUTION when changing anything here...
-       */
-      I830MemPool *Pool = range->Pool;
-      if (pI830->overrideBIOSMemSize &&
-          pI830->BIOSMemorySize > pI830->StolenMemory.Size) 
-         Pool->Total.End = pI830->BIOSMemorySize;
-      else 
-         Pool->Total.End = pI830->StolenMemory.End;
+	drmBOUnreference(pI830->drmSubFD, &mem->bo);
+	if (pI830->bo_list == mem)
+	    pI830->bo_list = mem->next;
+	if (mem->next)
+	    mem->next->prev = NULL;
+	if (mem->prev)
+	    mem->prev->next = NULL;
+	xfree(mem->name);
+	xfree(mem);
+	return;
+    }
+#endif
+	    /* Disconnect from the list of allocations */
+    if (mem->prev != NULL)
+	mem->prev->next = mem->next;
+    if (mem->next != NULL)
+	mem->next->prev = mem->prev;
 
-      if (pI830->StolenOnly)
-         Pool->Free.End += range->Size;
-      else
-         Pool->Free.End = Pool->Total.End;
+    if (mem->key != -1) {
+	xf86DeallocateGARTMemory(pScrn->scrnIndex, mem->key);
+	mem->key = -1;
+    }
 
-      if (Pool->Free.End < Pool->Free.Start) {
-         Pool->Free.End = Pool->Free.Start;
-      }
-
-      Pool->Free.Size = Pool->Free.End - Pool->Free.Start;
-      Pool->Total.Size = Pool->Total.End - Pool->Total.Start;
-
-      if (!pI830->StolenOnly) {
-         pI830->FreeMemory -= Pool->Free.Size;
-         pI830->MemoryAperture.Start -= (range->Size - Pool->Free.Size);
-         pI830->MemoryAperture.Size += (range->Size - Pool->Free.Size);
-      }
-   } else {
-      if (range->Alignment == GTT_PAGE_SIZE)
-         pI830->MemoryAperture.End = range->End;
-      else
-         pI830->MemoryAperture.End = range->End - range->Size + range->Alignment;
-      pI830->MemoryAperture.Size = pI830->MemoryAperture.End - pI830->MemoryAperture.Start;
-   }
-
-   if (!pI830->StolenOnly)
-      pI830->FreeMemory += range->Size;
-   pI830->allocatedMemory -= range->Size;
+    xfree(mem->name);
+    xfree(mem);
 }
 
-unsigned long
-I830AllocVidMem(ScrnInfoPtr pScrn, I830MemRange *result, I830MemPool *pool,
-		long size, unsigned long alignment, int flags)
+/* Resets the state of the aperture allocator, freeing all memory that had
+ * been allocated.
+ */
+void
+i830_reset_allocations(ScrnInfoPtr pScrn)
 {
-   I830Ptr pI830 = I830PTR(pScrn);
-   Bool dryrun = ((flags & ALLOCATE_DRY_RUN) != 0);
+    I830Ptr pI830 = I830PTR(pScrn);
+    int	    p;
 
-   if (!result)
-      return 0;
+    /* While there is any memory between the start and end markers, free it. */
+    while (pI830->memory_list->next->next != NULL) {
+	i830_memory *mem = pI830->memory_list->next;
 
-   /* Make sure these are initialised. */
-   result->Size = 0;
-   result->Key = -1;
+#ifdef XF86DRI
+	/* Don't reset BO allocator, which we set up at init. */
+	if (pI830->memory_manager == mem) {
+	    mem = mem->next;
+	    if (mem->next == NULL)
+		break;
+	}
+#endif	
 
-   if (!size) {
-      return 0;
-   }
+	i830_free_memory(pScrn, mem);
+    }
 
-   switch (flags & FROM_MASK) {
-   case FROM_POOL_ONLY:
-      return AllocFromPool(pScrn, result, pool, size, alignment, flags);
-   case FROM_NEW_ONLY:
-      if (!dryrun && (pI830->StolenOnly || (pI830->FreeMemory <= 0)))
-	 return 0;
-      return AllocFromAGP(pScrn, result, size, alignment, flags);
-   case FROM_ANYWHERE:
-      if ((!(flags & ALLOCATE_AT_BOTTOM) && (pI830->FreeMemory >= size)) ||
-	  (flags & NEED_PHYSICAL_ADDR))
-	 return AllocFromAGP(pScrn, result, size, alignment, flags);
-      else
-	 return AllocFromPool(pScrn, result, pool, size, alignment, flags);
-   default:
-      /* Shouldn't happen. */
-      return 0;
-   }
+    /* Free any allocations in buffer objects */
+#ifdef XF86DRI_MM
+    if (pI830->memory_manager) {
+	while (pI830->bo_list != NULL)
+	    i830_free_memory(pScrn, pI830->bo_list);
+    }
+#endif
+
+    /* Null out the pointers for all the allocations we just freed.  This is
+     * kind of gross, but at least it's just one place now.
+     */
+    pI830->cursor_mem = NULL;
+    for (p = 0; p < 2; p++) {
+	pI830->cursor_mem_classic[p] = NULL;
+	pI830->cursor_mem_argb[p] = NULL;
+    }
+    pI830->front_buffer = NULL;
+    pI830->front_buffer_2 = NULL;
+    pI830->xaa_scratch = NULL;
+    pI830->xaa_scratch_2 = NULL;
+    pI830->exa_offscreen = NULL;
+    pI830->exa_965_state = NULL;
+    pI830->overlay_regs = NULL;
+    pI830->logical_context = NULL;
+#ifdef XF86DRI
+    pI830->back_buffer = NULL;
+    pI830->third_buffer = NULL;
+    pI830->depth_buffer = NULL;
+    pI830->textures = NULL;
+#endif
+    pI830->LpRing->mem = NULL;
+}
+
+void
+i830_free_3d_memory(ScrnInfoPtr pScrn)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+
+#ifdef XF86DRI
+    i830_free_memory(pScrn, pI830->back_buffer);
+    pI830->back_buffer = NULL;
+    i830_free_memory(pScrn, pI830->third_buffer);
+    pI830->third_buffer = NULL;
+    i830_free_memory(pScrn, pI830->depth_buffer);
+    pI830->depth_buffer = NULL;
+    i830_free_memory(pScrn, pI830->textures);
+    pI830->textures = NULL;
+#endif
+}
+
+/**
+ * Initialize's the driver's video memory allocator to allocate in the
+ * given range.
+ *
+ * This sets up the kernel memory manager to manage as much of the memory
+ * as we think it can, while leaving enough to us to fulfill our non-TTM
+ * static allocations.  Some of these exist because of the need for physical
+ * addresses to reference.
+ */
+Bool
+i830_allocator_init(ScrnInfoPtr pScrn, unsigned long offset, unsigned long size)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+    i830_memory *start, *end;
+#ifdef XF86DRI_MM
+    int dri_major, dri_minor, dri_patch;
+#endif
+
+    start = xcalloc(1, sizeof(*start));
+    if (start == NULL)
+	return FALSE;
+    start->name = xstrdup("start marker");
+    if (start->name == NULL) {
+	xfree(start);
+	return FALSE;
+    }
+    end = xcalloc(1, sizeof(*end));
+    if (end == NULL) {
+	xfree(start->name);
+	xfree(start);
+	return FALSE;
+    }
+    end->name = xstrdup("end marker");
+    if (end->name == NULL) {
+	xfree(start->name);
+	xfree(start);
+	xfree(end);
+	return FALSE;
+    }
+
+    start->key = -1;
+    start->offset = offset;
+    start->end = start->offset;
+    start->size = 0;
+    start->next = end;
+    end->key = -1;
+    end->offset = offset + size;
+    end->end = end->offset;
+    end->size = 0;
+    end->prev = start;
+
+    pI830->memory_list = start;
+
+#ifdef XF86DRI_MM
+    DRIQueryVersion(&dri_major, &dri_minor, &dri_patch);
+
+    /* Now that we have our manager set up, initialize the kernel MM if
+     * possible, covering almost all of the aperture.  We need libdri interface
+     * 5.4 or newer so we can rely on the lock being held after DRIScreenInit,
+     * rather than after DRIFinishScreenInit.
+     */
+    if (pI830->directRenderingEnabled && pI830->drmMinor >= 7 &&
+	(dri_major > 5 || (dri_major == 5 && dri_minor >= 4)))
+    {
+	int mmsize;
+
+	/* Take over all of the graphics aperture minus enough to for
+	 * physical-address allocations of cursor/overlay registers.
+	 */
+	mmsize = size;
+
+	/* EXA area is fixed. */
+	if (pI830->useEXA) {
+	    mmsize -= ROUND_TO_PAGE(3 * pScrn->displayWidth * pI830->cpp *
+				    pScrn->virtualY);
+	}
+	/* Classic textures are fixed. */
+	if (pI830->allocate_classic_textures)
+	    mmsize -= MB(32);
+	/* Overlay and cursors, if physical, need to be allocated outside
+	 * of the kernel memory manager.
+	 */
+	if (!OVERLAY_NOPHYSICAL(pI830) && !IS_I965G(pI830)) {
+	    mmsize -= ROUND_TO(OVERLAY_SIZE, GTT_PAGE_SIZE);
+	}
+	if (pI830->CursorNeedsPhysical) {
+	    mmsize -= 2 * (ROUND_TO(HWCURSOR_SIZE, GTT_PAGE_SIZE) +
+		    ROUND_TO(HWCURSOR_SIZE_ARGB, GTT_PAGE_SIZE));
+	}
+	if (pI830->fb_compression)
+	    mmsize -= MB(6);
+	/* Can't do TTM on stolen memory */
+	mmsize -= pI830->stolen_size;
+
+	/* Create the aperture allocation */
+	pI830->memory_manager =
+	    i830_allocate_aperture(pScrn, "DRI memory manager",
+				   mmsize, GTT_PAGE_SIZE,
+				   ALIGN_BOTH_ENDS | NEED_NON_STOLEN);
+
+	if (pI830->memory_manager != NULL) {
+	    int ret;
+
+	    /* Tell the kernel to manage it */
+	    ret = drmMMInit(pI830->drmSubFD,
+			    pI830->memory_manager->offset / GTT_PAGE_SIZE,
+			    pI830->memory_manager->size / GTT_PAGE_SIZE,
+			    DRM_BO_MEM_TT);
+	    if (ret != 0) {
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			   "Failed to initialize kernel memory manager\n");
+		i830_free_memory(pScrn, pI830->memory_manager);
+		pI830->memory_manager = NULL;
+	    }
+	} else {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "Failed to allocate space for kernel memory manager\n");
+	    i830_free_memory(pScrn, pI830->memory_manager);
+	    pI830->memory_manager = NULL;
+	}
+    }
+#endif /* XF86DRI_MM */
+
+    return TRUE;
+}
+
+void
+i830_allocator_fini(ScrnInfoPtr pScrn)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+
+    /* Free most of the allocations */
+    i830_reset_allocations(pScrn);
+
+#ifdef XF86DRI_MM
+    /* The memory manager is more special */
+    if (pI830->memory_manager) {
+	 drmMMTakedown(pI830->drmSubFD, DRM_BO_MEM_TT);
+	 i830_free_memory(pScrn, pI830->memory_manager);
+	 pI830->memory_manager = NULL;
+    }
+#endif /* XF86DRI_MM */
+
+    /* Free the start/end markers */
+    free(pI830->memory_list->next);
+    free(pI830->memory_list);
+    pI830->memory_list = NULL;
+}
+
+/**
+ * Reads a GTT entry for the memory at the given offset and returns the
+ * physical address.
+ *
+ * \return physical address if successful.
+ * \return (uint64_t)-1 if unsuccessful.
+ */
+static uint64_t
+i830_get_gtt_physical(ScrnInfoPtr pScrn, unsigned long offset)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+    CARD32 gttentry;
+
+    /* We don't have GTTBase set up on i830 yet. */
+    if (pI830->GTTBase == NULL)
+	return -1;
+
+    gttentry = INGTT(offset / 1024);
+
+    /* Mask out these reserved bits on this hardware. */
+    if (!IS_I9XX(pI830) || IS_I915G(pI830) || IS_I915GM(pI830) ||
+	IS_I945G(pI830) || IS_I945GM(pI830))
+    {
+	gttentry &= ~PTE_ADDRESS_MASK_HIGH;
+    }
+
+    /* If it's not a mapping type we know, then bail. */
+    if ((gttentry & PTE_MAPPING_TYPE_MASK) != PTE_MAPPING_TYPE_UNCACHED &&
+	(gttentry & PTE_MAPPING_TYPE_MASK) != PTE_MAPPING_TYPE_CACHED)
+    {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "Unusable physical mapping type 0x%08x\n",
+		   (unsigned int)(gttentry & PTE_MAPPING_TYPE_MASK));
+	return -1;
+    }
+    assert((gttentry & PTE_VALID) != 0);
+
+    return (gttentry & PTE_ADDRESS_MASK) |
+	((uint64_t)(gttentry & PTE_ADDRESS_MASK_HIGH) << (32 - 4));
+}
+
+/**
+ * Reads the GTT entries for stolen memory at the given offset, returning the
+ * physical address.
+ *
+ * \return physical address if successful.
+ * \return (uint64_t)-1 if unsuccessful.
+ */
+static uint64_t
+i830_get_stolen_physical(ScrnInfoPtr pScrn, unsigned long offset,
+			 unsigned long size)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+    uint64_t physical;
+    unsigned long scan;
+
+    /* Check that the requested region is within stolen memory. */
+    if (offset + size >= pI830->stolen_size)
+	return -1;
+
+    physical = i830_get_gtt_physical(pScrn, offset);
+    if (physical == -1)
+	return -1;
+
+    /* Check that the following pages in our allocation follow the first page
+     * contiguously.
+     */
+    for (scan = offset + 4096; scan < offset + size; scan += 4096) {
+	uint64_t scan_physical = i830_get_gtt_physical(pScrn, scan);
+
+	if ((scan - offset) != (scan_physical - physical)) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "Non-contiguous GTT entries: (%ld,0x16%llx) vs "
+		       "(%ld,0x%16llx)\n",
+		       scan, scan_physical, offset, physical);
+	    return -1;
+	}
+    }
+
+    return physical;
+}
+
+/* Allocate aperture space for the given size and alignment, and returns the
+ * memory allocation.
+ *
+ * Allocations are a minimum of a page, and will be at least page-aligned.
+ */
+static i830_memory *
+i830_allocate_aperture(ScrnInfoPtr pScrn, const char *name,
+		       long size, unsigned long alignment, int flags)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+    i830_memory *mem, *scan;
+
+    mem = xcalloc(1, sizeof(*mem));
+    if (mem == NULL)
+	return NULL;
+
+    /* No memory allocated to back the region */
+    mem->key = -1;
+
+    mem->name = xstrdup(name);
+    if (mem->name == NULL) {
+	xfree(mem);
+	return NULL;
+    }
+    /* Only allocate page-sized increments. */
+    size = ALIGN(size, GTT_PAGE_SIZE);
+    mem->size = size;
+    mem->allocated_size = size;
+
+    if (alignment < GTT_PAGE_SIZE)
+	alignment = GTT_PAGE_SIZE;
+
+    for (scan = pI830->memory_list; scan->next != NULL; scan = scan->next) {
+	mem->offset = ROUND_TO(scan->end, alignment);
+	if ((flags & NEED_PHYSICAL_ADDR) && mem->offset < pI830->stolen_size) {
+	    /* If the allocation is entirely within stolen memory, and we're
+	     * able to get the physical addresses out of the GTT and check that
+	     * it's contiguous (it ought to be), then we can do our physical
+	     * allocations there and not bother the kernel about it.  This
+	     * helps avoid aperture fragmentation from our physical
+	     * allocations.
+	     */
+	    mem->bus_addr = i830_get_stolen_physical(pScrn, mem->offset,
+						     mem->size);
+
+	    if (mem->bus_addr == ((uint64_t)-1)) {
+		/* Move the start of the allocation to just past the end of
+		 * stolen memory.
+		 */
+		mem->offset = ROUND_TO(pI830->stolen_size, alignment);
+	    }
+	}
+	if ((flags & NEED_NON_STOLEN) && mem->offset < pI830->stolen_size) {
+	    mem->offset = ROUND_TO(pI830->stolen_size, alignment);
+	}
+
+	mem->end = mem->offset + size;
+	if (flags & ALIGN_BOTH_ENDS)
+	    mem->end = ROUND_TO(mem->end, alignment);
+	if (mem->end <= scan->next->offset)
+	    break;
+    }
+    if (scan->next == NULL) {
+	/* Reached the end of the list, and didn't find space */
+	xfree(mem->name);
+	xfree(mem);
+	return NULL;
+    }
+    /* Insert new allocation into the list */
+    mem->prev = scan;
+    mem->next = scan->next;
+    scan->next = mem;
+    mem->next->prev = mem;
+
+    return mem;
+}
+
+/**
+ * Allocates the AGP memory necessary for the part of a memory allocation not
+ * already covered by the stolen memory.
+ *
+ * The memory is automatically bound if we have the VT.
+ */
+static Bool
+i830_allocate_agp_memory(ScrnInfoPtr pScrn, i830_memory *mem, int flags)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+    unsigned long size;
+
+    if (mem->key != -1)
+	return TRUE;
+
+    if (mem->offset + mem->size <= pI830->stolen_size)
+	return TRUE;
+
+    if (mem->offset < pI830->stolen_size)
+	mem->agp_offset = pI830->stolen_size;
+    else
+	mem->agp_offset = mem->offset;
+
+    size = mem->size - (mem->agp_offset - mem->offset);
+
+    if (flags & NEED_PHYSICAL_ADDR) {
+	unsigned long agp_bus_addr;
+
+	mem->key = xf86AllocateGARTMemory(pScrn->scrnIndex, size, 2,
+					  &agp_bus_addr);
+	mem->bus_addr = agp_bus_addr;
+    } else {
+	mem->key = xf86AllocateGARTMemory(pScrn->scrnIndex, size, 0, NULL);
+    }
+    if (mem->key == -1 || ((flags & NEED_PHYSICAL_ADDR) && mem->bus_addr == 0))
+    {
+	return FALSE;
+    }
+
+    if (!i830_bind_memory(pScrn, mem)) {
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
+#ifdef XF86DRI_MM
+static i830_memory *
+i830_allocate_memory_bo(ScrnInfoPtr pScrn, const char *name,
+			unsigned long size, unsigned long align, int flags)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+    i830_memory *mem;
+    unsigned long mask;
+    int ret;
+
+    assert((flags & NEED_PHYSICAL_ADDR) == 0);
+
+    /* Only allocate page-sized increments. */
+    size = ALIGN(size, GTT_PAGE_SIZE);
+    align = ROUND_TO(align, GTT_PAGE_SIZE);
+
+    mem = xcalloc(1, sizeof(*mem));
+    if (mem == NULL)
+	return NULL;
+
+    mem->name = xstrdup(name);
+    if (name == NULL) {
+	xfree(mem);
+	return NULL;
+    }
+
+    /*
+     * Create buffers in local memory to avoid having the creation order
+     * determine the TT offset. Driver acceleration
+     * cannot handle changed front buffer TT offsets yet ,
+     * so let's keep our fingers crossed.
+     */
+
+    mask = DRM_BO_FLAG_READ | DRM_BO_FLAG_WRITE | DRM_BO_FLAG_MAPPABLE |
+	DRM_BO_FLAG_MEM_LOCAL;
+    if (flags & ALLOW_SHARING)
+	mask |= DRM_BO_FLAG_SHAREABLE;
+
+    ret = drmBOCreate(pI830->drmSubFD, size, align / GTT_PAGE_SIZE, NULL,
+		      mask, 0, &mem->bo);
+    if (ret) {
+	xfree(mem->name);
+	xfree(mem);
+	return NULL;
+    }
+    /* Give buffer obviously wrong offset/end until it's pinned. */
+    mem->offset = -1;
+    mem->end = -1;
+    mem->size = size;
+    mem->allocated_size = size;
+    if (flags & NEED_LIFETIME_FIXED)
+	mem->lifetime_fixed_offset = TRUE;
+
+    /* Bind it if we currently control the VT */
+    if (pScrn->vtSema) {
+	if (!i830_bind_memory(pScrn, mem)) {
+	    drmBOUnreference(pI830->drmSubFD, &mem->bo);
+	    xfree(mem->name);
+	    xfree(mem);
+	    return NULL;
+	}
+    }
+
+    /* Insert new allocation into the list */
+    mem->prev = NULL;
+    mem->next = pI830->bo_list;
+    if (pI830->bo_list != NULL)
+	pI830->bo_list->prev = mem;
+    pI830->bo_list = mem;
+
+    return mem;
+}
+#endif /* XF86DRI_MM */
+
+/* Allocates video memory at the given size and alignment.
+ *
+ * The memory will be bound automatically when the driver is in control of the
+ * VT.  When the kernel memory manager is available and compatible with flags
+ * (that is, flags doesn't say that the allocation must include a physical
+ * address), that will be used for the allocation.
+ *
+ * flags:
+ * - NEED_PHYSICAL_ADDR: Allocates the memory physically contiguous, and return
+ *   the bus address for that memory.
+ * - ALIGN_BOTH_ENDS: after choosing the alignment, align the end offset to
+ *   @alignment as well.
+ * - NEED_NON-STOLEN: don't allow any part of the memory allocation to lie
+ *   within stolen memory
+ * - NEED_LIFETIME_FIXED: don't allow the buffer object to move throughout
+ *   the entire Screen lifetime.  This means not using buffer objects, which
+ *   get their offsets chosen at each EnterVT time.
+ */
+i830_memory *
+i830_allocate_memory(ScrnInfoPtr pScrn, const char *name,
+		     unsigned long size, unsigned long alignment, int flags)
+{
+    i830_memory *mem;
+
+#ifdef XF86DRI_MM
+    I830Ptr pI830 = I830PTR(pScrn);
+
+    if (pI830->memory_manager && !(flags & NEED_PHYSICAL_ADDR) &&
+	!(flags & NEED_LIFETIME_FIXED))
+    {
+	return i830_allocate_memory_bo(pScrn, name, size, alignment, flags);
+    } else
+#endif	
+    {
+	mem = i830_allocate_aperture(pScrn, name, size, alignment, flags);
+	if (mem == NULL)
+	    return NULL;
+
+	if (!i830_allocate_agp_memory(pScrn, mem, flags)) {
+	    i830_free_memory(pScrn, mem);
+	    return NULL;
+	}
+    }
+
+    mem->tiling = TILE_NONE;
+
+    return mem;
+}
+
+/* Allocate a tiled region with the given size and pitch.
+ *
+ * As is, we might miss out on tiling some allocations on older hardware with
+ * large framebuffer size and a small aperture size, where the first
+ * allocations use a large alignment even though we've got fences to spare, and
+ * the later allocations can't find enough aperture space left.  We could do
+ * some search across all allocation options to fix this, probably, but that
+ * would be another rewrite.
+ */
+i830_memory *
+i830_allocate_memory_tiled(ScrnInfoPtr pScrn, const char *name,
+			   unsigned long size, unsigned long pitch,
+			   unsigned long alignment, int flags,
+			   enum tile_format tile_format)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+    unsigned long aper_size;
+    unsigned long aper_align;
+    i830_memory *mem;
+
+    if (tile_format == TILE_NONE)
+	return i830_allocate_memory(pScrn, name, size, alignment, flags);
+
+    /* Only allocate page-sized increments. */
+    size = ALIGN(size, GTT_PAGE_SIZE);
+
+    /* Check for maximum tiled region size */
+    if (IS_I9XX(pI830)) {
+	if (size > MB(128))
+	    return NULL;
+    } else {
+	if (size > MB(64))
+	    return NULL;
+    }
+
+    aper_size = i830_get_fence_size(pScrn, size);
+    if (IS_I965G(pI830)) {
+	aper_align = GTT_PAGE_SIZE;
+    } else {
+	/* The offset has to be aligned to at least the size of the fence
+	 * region.
+	 */
+	aper_align = aper_size;
+    }
+    if (aper_align < alignment)
+	aper_align = alignment;
+
+    mem = i830_allocate_memory(pScrn, name, aper_size, aper_align, flags);
+    if (mem == NULL)
+	return NULL;
+    mem->size = size;
+    mem->tiling = tile_format;
+    mem->pitch = pitch;
+    mem->fence_nr = -1;
+
+    return mem;
+}
+
+void
+i830_describe_allocations(ScrnInfoPtr pScrn, int verbosity, const char *prefix)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+    i830_memory *mem;
+
+    if (pI830->memory_list == NULL) {
+	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
+		       "%sMemory allocator not initialized\n", prefix);
+	return;
+    }
+
+    if (pI830->memory_list->next->next == NULL) {
+	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
+		       "%sNo memory allocations\n", prefix);
+	return;
+    }
+
+    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
+		   "%sFixed memory allocation layout:\n", prefix);
+
+    for (mem = pI830->memory_list->next; mem->next != NULL; mem = mem->next) {
+	char phys_suffix[32] = "";
+	char *tile_suffix = "";
+
+	if (mem->offset >= pI830->stolen_size &&
+	    mem->prev->offset < pI830->stolen_size)
+	{
+	    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
+			   "%s0x%08lx:            end of stolen memory\n",
+			   prefix, pI830->stolen_size);
+	}
+
+	if (mem->bus_addr != 0)
+	    snprintf(phys_suffix, sizeof(phys_suffix),
+		    ", 0x%016llx physical\n", mem->bus_addr);
+	if (mem->tiling == TILE_XMAJOR)
+	    tile_suffix = " X tiled";
+	else if (mem->tiling == TILE_YMAJOR)
+	    tile_suffix = " Y tiled";
+
+	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
+		       "%s0x%08lx-0x%08lx: %s (%ld kB%s)%s\n", prefix,
+		       mem->offset, mem->end - 1, mem->name,
+		       mem->size / 1024, phys_suffix, tile_suffix);
+    }
+    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
+		   "%s0x%08lx:            end of aperture\n",
+		   prefix, pI830->FbMapSize);
+
+#ifdef XF86DRI_MM
+    if (pI830->memory_manager) {
+	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
+		       "%sBO memory allocation layout:\n", prefix);
+	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
+		       "%s0x%08lx:            start of memory manager\n",
+		       prefix, pI830->memory_manager->offset);
+	for (mem = pI830->bo_list; mem != NULL; mem = mem->next) {
+	    char *tile_suffix = "";
+
+	    if (mem->tiling == TILE_XMAJOR)
+		tile_suffix = " X tiled";
+	    else if (mem->tiling == TILE_YMAJOR)
+		tile_suffix = " Y tiled";
+
+	    if (mem->bound) {
+		xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
+			       "%s0x%08lx-0x%08lx: %s (%ld kB)%s\n", prefix,
+			       mem->offset, mem->end - 1, mem->name,
+			       mem->size / 1024, tile_suffix);
+	    } else {
+		xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
+			       "%sunpinned          : %s (%ld kB)%s\n", prefix,
+			       mem->name, mem->size / 1024, tile_suffix);
+	    }
+	}
+	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
+		       "%s0x%08lx:            end of memory manager\n",
+		       prefix, pI830->memory_manager->end);
+    }
+#endif /* XF86DRI_MM */
 }
 
 static Bool
-AllocateRingBuffer(ScrnInfoPtr pScrn, int flags)
+i830_allocate_ringbuffer(ScrnInfoPtr pScrn)
 {
-   I830Ptr pI830 = I830PTR(pScrn);
-   unsigned long size, alloced;
-   Bool dryrun = ((flags & ALLOCATE_DRY_RUN) != 0);
-   int verbosity = dryrun ? 4 : 1;
-   const char *s = dryrun ? "[dryrun] " : "";
+    I830Ptr pI830 = I830PTR(pScrn);
 
-   /* Clear ring buffer  info */
-   memset(pI830->LpRing, 0, sizeof(I830RingBuffer));
-   pI830->LpRing->mem.Key = -1;
+    if (pI830->noAccel || pI830->LpRing->mem != NULL)
+	return TRUE;
 
-   if (pI830->noAccel)
-      return TRUE;
+    /* We don't have any mechanism in the DRM yet to alert it that we've moved
+     * the ringbuffer since init time, so allocate it fixed for its lifetime.
+     */
+    pI830->LpRing->mem = i830_allocate_memory(pScrn, "ring buffer",
+					      PRIMARY_RINGBUFFER_SIZE,
+					      GTT_PAGE_SIZE,
+					      NEED_LIFETIME_FIXED);
+    if (pI830->LpRing->mem == NULL) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "Failed to allocate Ring Buffer space\n");
+	return FALSE;
+    }
 
-   /* Ring buffer */
-   size = PRIMARY_RINGBUFFER_SIZE;
-   if (flags & FORCE_LOW)
-      flags |= FROM_POOL_ONLY | ALLOCATE_AT_BOTTOM;
-   else
-      flags |= FROM_ANYWHERE | ALLOCATE_AT_TOP;
-
-   alloced = I830AllocVidMem(pScrn, &(pI830->LpRing->mem),
-				&(pI830->StolenPool), size,
-				GTT_PAGE_SIZE, flags);
-   if (alloced < size) {
-      if (!dryrun) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "Failed to allocate Ring Buffer space\n");
-      }
-      return FALSE;
-   }
-   xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		  "%sAllocated %ld kB for the ring buffer at 0x%lx\n", s,
-		  alloced / 1024, pI830->LpRing->mem.Start);
-   pI830->LpRing->tail_mask = pI830->LpRing->mem.Size - 1;
-   return TRUE;
+    pI830->LpRing->tail_mask = pI830->LpRing->mem->size - 1;
+    return TRUE;
 }
 
 #ifdef I830_XV
-/*
- * Note, the FORCE_LOW flag is currently not used or supported.
+/**
+ * Allocate space for overlay registers and XAA linear allocator (if
+ * requested)
  */
 static Bool
-AllocateOverlay(ScrnInfoPtr pScrn, int flags)
+i830_allocate_overlay(ScrnInfoPtr pScrn)
 {
-   I830Ptr pI830 = I830PTR(pScrn);
-   unsigned long size, alloced;
-   Bool dryrun = ((flags & ALLOCATE_DRY_RUN) != 0);
-   int verbosity = dryrun ? 4 : 1;
-   const char *s = dryrun ? "[dryrun] " : "";
+    I830Ptr pI830 = I830PTR(pScrn);
+    int flags = 0;
 
-   /* Clear overlay info */
-   memset(pI830->OverlayMem, 0, sizeof(I830MemRange));
-   pI830->OverlayMem->Key = -1;
+    /* Only allocate if overlay is going to be enabled. */
+    if (!pI830->XvEnabled)
+	return TRUE;
 
-   if (!pI830->XvEnabled)
-      return TRUE;
+    if (!OVERLAY_NOPHYSICAL(pI830))
+	flags |= NEED_PHYSICAL_ADDR;
 
-   /*
-    * The overlay register space needs a physical address in
-    * system memory.  We get this from the agpgart module using
-    * a special memory type.
-    */
+    if (!IS_I965G(pI830)) {
+	pI830->overlay_regs = i830_allocate_memory(pScrn, "overlay registers",
+						   OVERLAY_SIZE, GTT_PAGE_SIZE,
+						   flags);
+	if (pI830->overlay_regs == NULL) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		       "Failed to allocate Overlay register space.\n");
+	    /* This failure isn't fatal. */
+	}
+    }
 
-   size = OVERLAY_SIZE;
-   if (flags & FORCE_LOW)
-      flags |= FROM_POOL_ONLY | ALLOCATE_AT_BOTTOM | NEED_PHYSICAL_ADDR;
-   else
-      flags |= FROM_ANYWHERE | ALLOCATE_AT_TOP | NEED_PHYSICAL_ADDR;
-
-   alloced = I830AllocVidMem(pScrn, pI830->OverlayMem,
-			     &(pI830->StolenPool), size, GTT_PAGE_SIZE, flags);
-
-   /*
-    * XXX For testing only.  Don't enable this unless you know how to set
-    * physBase.
-    */
-   if (flags & FORCE_LOW) {
-      ErrorF("AllocateOverlay() doesn't support setting FORCE_LOW\n");
-      return FALSE;
-   }
-
-   if (!dryrun && (alloced < size)) {
-      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		 "Failed to allocate Overlay register space.\n");
-	 /* This failure isn't fatal. */
-   } else {
-      xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		     "%sAllocated %ld kB for Overlay registers at 0x%lx "
-		     "(0x%08lx).\n", s,
-		     alloced / 1024, pI830->OverlayMem->Start,
-		     pI830->OverlayMem->Physical);
-   }
-
-   /* Clear linearmem info */
-   if (pI830->LinearAlloc) {
-      memset(&(pI830->LinearMem), 0, sizeof(I830MemRange));
-      pI830->LinearMem.Key = -1;
-
-      size = KB(pI830->LinearAlloc);
-      alloced = I830AllocVidMem(pScrn, &(pI830->LinearMem), &(pI830->StolenPool),
-				size, GTT_PAGE_SIZE,
-				FROM_ANYWHERE | ALLOCATE_AT_TOP);
-      if (alloced < size) {
-         if (!dryrun) {
-            xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		       "Failed to allocate linear buffer space\n");
-         }
-      } else
-         xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		    "%sAllocated %ld kB for the linear buffer at 0x%lx\n", s,
-		    alloced / 1024, pI830->LinearMem.Start);
-   }
-
-   return TRUE;
+    return TRUE;
 }
 #endif
 
 static Bool
-IsTileable(int pitch)
+IsTileable(ScrnInfoPtr pScrn, int pitch)
 {
-   /*
-    * Allow tiling for pitches that are a power of 2 multiple of 128 bytes,
-    * up to 64 * 128 (= 8192) bytes.
-    */
-   switch (pitch) {
-   case 128 * 1:
-   case 128 * 2:
-   case 128 * 4:
-   case 128 * 8:
-   case 128 * 16:
-   case 128 * 32:
-   case 128 * 64:
-      return TRUE;
-   default:
-      return FALSE;
-   }
+    I830Ptr pI830 = I830PTR(pScrn);
+
+    if (IS_I965G(pI830)) {
+	if (pitch / 512 * 512 == pitch && pitch <= KB(128))
+	    return TRUE;
+	else
+	    return FALSE;
+    }
+
+    /*
+     * Allow tiling for pitches that are a power of 2 multiple of 128 bytes,
+     * up to 64 * 128 (= 8192) bytes.
+     */
+    switch (pitch) {
+    case 128:
+    case 256:
+	if (IS_I945G(pI830) || IS_I945GM(pI830) || IS_G33CLASS(pI830))
+	    return TRUE;
+	else
+	    return FALSE;
+    case 512:
+    case KB(1):
+    case KB(2):
+    case KB(4):
+    case KB(8):
+	return TRUE;
+    default:
+	return FALSE;
+    }
 }
 
-Bool
-I830AllocateRotatedBuffer(ScrnInfoPtr pScrn, int flags)
+/* This is the 2D rendering vertical coordinate limit.  We can ignore
+ * the 3D rendering limits in our 2d pixmap cache allocation, because XAA
+ * doesn't do any 3D rendering to/from the cache lines when using an offset
+ * at the start of framebuffer.
+ */
+#define MAX_2D_HEIGHT		65536
+
+/**
+ * Allocates a framebuffer for a screen.
+ *
+ * Used once for each X screen, so once with RandR 1.2 and twice with classic
+ * dualhead.
+ *
+ * \param pScrn ScrnInfoPtr for the screen being allocated
+ * \param pI830 I830Ptr for the screen being allocated.
+ * \param FbMemBox
+ */
+static i830_memory *
+i830_allocate_framebuffer(ScrnInfoPtr pScrn, I830Ptr pI830, BoxPtr FbMemBox,
+			  Bool secondary)
 {
-   I830Ptr pI830 = I830PTR(pScrn);
-   unsigned long size, alloced;
-   Bool dryrun = ((flags & ALLOCATE_DRY_RUN) != 0);
-   int verbosity = dryrun ? 4 : 1;
-   const char *s = dryrun ? "[dryrun] " : "";
-   int align;
-   Bool tileable;
-   int lines;
-   int height = (pI830->rotation & (RR_Rotate_0 | RR_Rotate_180)) ? pScrn->virtualY : pScrn->virtualX;
+    unsigned int pitch = pScrn->displayWidth * pI830->cpp;
+    unsigned long minspace, avail;
+    int cacheLines, maxCacheLines;
+    int align;
+    long size, fb_height;
+    char *name;
+    int flags;
+    i830_memory *front_buffer = NULL;
+    Bool tiling;
 
-   /* Rotated Buffer */
-   memset(&(pI830->RotatedMem), 0, sizeof(I830MemRange));
-   pI830->RotatedMem.Key = -1;
-   tileable = !(flags & ALLOC_NO_TILING) &&
-	      IsTileable(pScrn->displayWidth * pI830->cpp);
-   if (tileable) {
-      /* Make the height a multiple of the tile height (16) */
-      lines = (height + 15) / 16 * 16;
-   } else {
-      lines = height;
-   }
+    flags = ALLOW_SHARING;
 
-   size = ROUND_TO_PAGE(pScrn->displayWidth * lines * pI830->cpp);
-   /*
-    * Try to allocate on the best tile-friendly boundaries.
-    */
-   alloced = 0;
-   if (tileable) {
-      align = GetBestTileAlignment(size);
-      for (align = GetBestTileAlignment(size); align >= (IS_I9XX(pI830) ? MB(1) : KB(512)); align >>= 1) {
-	 alloced = I830AllocVidMem(pScrn, &(pI830->RotatedMem),
-				   &(pI830->StolenPool), size, align,
-				   flags | FROM_ANYWHERE | ALLOCATE_AT_TOP |
-				   ALIGN_BOTH_ENDS);
-	 if (alloced >= size)
-	    break;
-      }
-   }
-   if (alloced < size) {
-      /* Give up on trying to tile */
-      tileable = FALSE;
-      size = ROUND_TO_PAGE(pScrn->displayWidth * height * pI830->cpp);
-      align = GTT_PAGE_SIZE;
-      alloced = I830AllocVidMem(pScrn, &(pI830->RotatedMem),
-				&(pI830->StolenPool), size, align,
-				flags | FROM_ANYWHERE | ALLOCATE_AT_TOP);
-   }
-   if (alloced < size) {
-      if (!dryrun) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "Failed to allocate rotated buffer space.\n");
-      }
-      return FALSE;
-   }
-   xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		  "%sAllocated %ld kB for the rotated buffer at 0x%lx.\n", s,
-		  alloced / 1024, pI830->RotatedMem.Start);
-   return TRUE;
+    /* Clear everything first. */
+    memset(FbMemBox, 0, sizeof(*FbMemBox));
+
+    /* We'll allocate the fb such that the root window will fit regardless of
+     * rotation.
+     */
+    if (pScrn->virtualX > pScrn->virtualY)
+	fb_height = pScrn->virtualX;
+    else
+	fb_height = pScrn->virtualY;
+
+    FbMemBox->x1 = 0;
+    FbMemBox->x2 = pScrn->displayWidth;
+    FbMemBox->y1 = 0;
+    FbMemBox->y2 = fb_height;
+
+    /* Calculate how much framebuffer memory to allocate.  For the
+     * initial allocation, calculate a reasonable minimum.  This is
+     * enough for the virtual screen size, plus some pixmap cache
+     * space if we're using XAA.
+     */
+    minspace = pitch * pScrn->virtualY;
+    avail = pScrn->videoRam * 1024;
+
+    if (!pI830->useEXA) {
+	maxCacheLines = (avail - minspace) / pitch;
+	/* This shouldn't happen. */
+	if (maxCacheLines < 0) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "Internal Error: "
+		       "maxCacheLines < 0 in i830_allocate_2d_memory()\n");
+	    maxCacheLines = 0;
+	}
+	if (maxCacheLines > (MAX_2D_HEIGHT - pScrn->virtualY))
+	    maxCacheLines = MAX_2D_HEIGHT - pScrn->virtualY;
+
+	if (pI830->CacheLines >= 0) {
+	    cacheLines = pI830->CacheLines;
+	} else {
+	    int size;
+
+	    size = 3 * pitch * pScrn->virtualY;
+	    size = ROUND_TO_PAGE(size);
+
+	    cacheLines = (size + pitch - 1) / pitch;
+	}
+	if (cacheLines > maxCacheLines)
+	    cacheLines = maxCacheLines;
+
+	FbMemBox->y2 += cacheLines;
+
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		   "Allocating %d scanlines for pixmap cache\n",
+		   cacheLines);
+    } else {
+	/* For EXA, we have a separate allocation for the linear allocator
+	 * which also does the pixmap cache.
+	 */
+	cacheLines = 0;
+    }
+
+    size = pitch * (fb_height + cacheLines);
+    size = ROUND_TO_PAGE(size);
+
+    name = secondary ? "secondary front buffer" : "front buffer";
+
+    /* Front buffer tiling has to be disabled with G965 XAA because some of the
+     * acceleration operations (non-XY COLOR_BLT) can't be done to tiled
+     * buffers.
+     */
+    if (!pI830->useEXA && IS_I965G(pI830))
+	tiling = FALSE;
+    else
+	tiling = pI830->tiling;
+
+    /* Attempt to allocate it tiled first if we have page flipping on. */
+    if (tiling && IsTileable(pScrn, pitch)) {
+	/* XXX: probably not the case on 965 */
+	if (IS_I9XX(pI830))
+	    align = MB(1);
+	else
+	    align = KB(512);
+	front_buffer = i830_allocate_memory_tiled(pScrn, name, size,
+						  pitch, align, flags,
+						  TILE_XMAJOR);
+    }
+
+    /* If not, attempt it linear */
+    if (front_buffer == NULL) {
+	front_buffer = i830_allocate_memory(pScrn, name, size, KB(64), flags);
+    }
+
+    if (front_buffer == NULL) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Failed to allocate "
+		   "%sframebuffer. Is your VideoRAM set too low?\n",
+		   secondary ? "secondary " : "");
+	return NULL;
+    }
+
+    if (pI830->FbBase)
+	memset (pI830->FbBase + front_buffer->offset, 0, size);
+    return front_buffer;
 }
 
-Bool
-I830AllocateRotated2Buffer(ScrnInfoPtr pScrn, int flags)
+static Bool
+i830_allocate_cursor_buffers(ScrnInfoPtr pScrn)
 {
-   I830Ptr pI830 = I830PTR(pScrn);
-   unsigned long size, alloced;
-   Bool dryrun = ((flags & ALLOCATE_DRY_RUN) != 0);
-   int verbosity = dryrun ? 4 : 1;
-   const char *s = dryrun ? "[dryrun] " : "";
-   int align;
-   Bool tileable;
-   int lines;
-   I830EntPtr pI830Ent = pI830->entityPrivate;
-   I830Ptr pI8302 = I830PTR(pI830Ent->pScrn_2);
-   int height = (pI8302->rotation & (RR_Rotate_0 | RR_Rotate_180)) ? pI830Ent->pScrn_2->virtualY : pI830Ent->pScrn_2->virtualX;
+    I830Ptr pI830 = I830PTR(pScrn);
+    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+    int flags = pI830->CursorNeedsPhysical ? NEED_PHYSICAL_ADDR : 0;
+    int i;
+    long size;
 
-   /* Rotated Buffer */
-   memset(&(pI830->RotatedMem2), 0, sizeof(I830MemRange));
-   pI830->RotatedMem2.Key = -1;
-   tileable = !(flags & ALLOC_NO_TILING) &&
-	      IsTileable(pI830Ent->pScrn_2->displayWidth * pI8302->cpp);
-   if (tileable) {
-      /* Make the height a multiple of the tile height (16) */
-      lines = (height + 15) / 16 * 16;
-   } else {
-      lines = height;
-   }
+    /* Try to allocate one big blob for our cursor memory.  This works
+     * around a limitation in the FreeBSD AGP driver that allows only one
+     * physical allocation larger than a page, and could allow us
+     * to pack the cursors smaller.
+     */
+    size = xf86_config->num_crtc * (HWCURSOR_SIZE + HWCURSOR_SIZE_ARGB);
 
-   size = ROUND_TO_PAGE(pI830Ent->pScrn_2->displayWidth * lines * pI8302->cpp);
-   /*
-    * Try to allocate on the best tile-friendly boundaries.
-    */
-   alloced = 0;
-   if (tileable) {
-      align = GetBestTileAlignment(size);
-      for (align = GetBestTileAlignment(size); align >= (IS_I9XX(pI830) ? MB(1) : KB(512)); align >>= 1) {
-	 alloced = I830AllocVidMem(pScrn, &(pI830->RotatedMem2),
-				   &(pI830->StolenPool), size, align,
-				   flags | FROM_ANYWHERE | ALLOCATE_AT_TOP |
-				   ALIGN_BOTH_ENDS);
-	 if (alloced >= size)
-	    break;
-      }
-   }
-   if (alloced < size) {
-      /* Give up on trying to tile */
-      tileable = FALSE;
-      size = ROUND_TO_PAGE(pI830Ent->pScrn_2->displayWidth * height * pI8302->cpp);
-      align = GTT_PAGE_SIZE;
-      alloced = I830AllocVidMem(pScrn, &(pI830->RotatedMem2),
-				&(pI830->StolenPool), size, align,
-				flags | FROM_ANYWHERE | ALLOCATE_AT_TOP);
-   }
-   if (alloced < size) {
-      if (!dryrun) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "Failed to allocate rotated2 buffer space.\n");
-      }
-      return FALSE;
-   }
-   xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		  "%sAllocated %ld kB for the rotated2 buffer at 0x%lx.\n", s,
-		  alloced / 1024, pI830->RotatedMem2.Start);
-   return TRUE;
+    pI830->cursor_mem = i830_allocate_memory(pScrn, "HW cursors",
+					     size, GTT_PAGE_SIZE,
+					     flags);
+    if (pI830->cursor_mem != NULL)
+	return TRUE;
+
+    /*
+     * Allocate four separate buffers when the kernel doesn't support
+     * large allocations as on Linux. If any of these fail, just
+     * bail back to software cursors everywhere
+     */
+    for (i = 0; i < xf86_config->num_crtc; i++)
+    {
+	pI830->cursor_mem_classic[i] = i830_allocate_memory (pScrn, 
+							     "Core cursor",
+							     HWCURSOR_SIZE,
+							     GTT_PAGE_SIZE,
+							     flags);
+	if (!pI830->cursor_mem_classic[i])
+	    return FALSE;
+	pI830->cursor_mem_argb[i] = i830_allocate_memory (pScrn, "ARGB cursor",
+							  HWCURSOR_SIZE_ARGB,
+							  GTT_PAGE_SIZE,
+							  flags);
+	if (!pI830->cursor_mem_argb[i])
+	    return FALSE;
+
+    }
+    return TRUE;
 }
 
-static unsigned long
-GetFreeSpace(ScrnInfoPtr pScrn)
+static void i830_setup_fb_compression(ScrnInfoPtr pScrn)
 {
-   I830Ptr pI830 = I830PTR(pScrn);
-   unsigned long extra = 0;
+    I830Ptr pI830 = I830PTR(pScrn);
 
-   /* First check for free space in StolenPool. */
-   if (pI830->StolenPool.Free.Size > 0)
-      extra = pI830->StolenPool.Free.Size;
-   /* Next check for unallocated space. */
-   if (pI830->FreeMemory > 0)
-      extra += pI830->FreeMemory;
+    /* Only mobile chips since 845 support this feature */
+    if (!IS_MOBILE(pI830)) {
+	pI830->fb_compression = FALSE;
+	goto out;
+    }
 
-   return extra;
+    /* Clear out any stale state */
+    OUTREG(FBC_CFB_BASE, 0);
+    OUTREG(FBC_LL_BASE, 0);
+    OUTREG(FBC_CONTROL2, 0);
+    OUTREG(FBC_CONTROL, 0);
+
+    /*
+     * Compressed framebuffer limitations:
+     *   - contiguous, physical, uncached memory
+     *   - ideally as large as the front buffer(s), smaller sizes cache less
+     *   - uncompressed buffer must be tiled w/pitch 2k-16k
+     *   - uncompressed fb is <= 2048 in width, 0 mod 8
+     *   - uncompressed fb is <= 1536 in height, 0 mod 2
+     *   - compressed fb stride is <= uncompressed stride
+     *   - SR display watermarks must be equal between 16bpp and 32bpp?
+     *   - both compressed and line buffers must be in stolen memory
+     */
+    pI830->compressed_front_buffer =
+	i830_allocate_memory(pScrn, "compressed frame buffer",
+			     MB(6), KB(4), NEED_PHYSICAL_ADDR);
+
+    if (!pI830->compressed_front_buffer) {
+	pI830->fb_compression = FALSE;
+	goto out;
+    }
+
+    pI830->compressed_ll_buffer =
+	i830_allocate_memory(pScrn, "compressed ll buffer",
+			     FBC_LL_SIZE + FBC_LL_PAD, KB(4),
+			     NEED_PHYSICAL_ADDR);
+    if (!pI830->compressed_ll_buffer) {
+	i830_free_memory(pScrn, pI830->compressed_front_buffer);
+	pI830->fb_compression = FALSE;
+	goto out;
+    }
+
+out:
+    if (!pI830->fb_compression)
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "Allocation error, framebuffer"
+		   " compression disabled\n");
+	
+    return;
 }
-
 /*
  * Allocate memory for 2D operation.  This includes the (front) framebuffer,
  * ring buffer, scratch memory, HW cursor.
  */
-
 Bool
-I830Allocate2DMemory(ScrnInfoPtr pScrn, const int flags)
+i830_allocate_2d_memory(ScrnInfoPtr pScrn)
 {
-   I830Ptr pI830 = I830PTR(pScrn);
-   long size, alloced;
-   Bool dryrun = ((flags & ALLOCATE_DRY_RUN) != 0);
-   int verbosity = dryrun ? 4 : 1;
-   const char *s = dryrun ? "[dryrun] " : "";
-   Bool tileable;
-   int align, alignflags;
+    I830Ptr pI830 = I830PTR(pScrn);
+    unsigned int pitch = pScrn->displayWidth * pI830->cpp;
+    long size;
 
-   DPRINTF(PFX, "I830Allocate2DMemory: inital is %s\n",
-	   BOOLTOSTRING(flags & ALLOC_INITIAL));
+    if (!pI830->StolenOnly &&
+	(!xf86AgpGARTSupported() || !xf86AcquireGART(pScrn->scrnIndex))) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "AGP GART support is either not available or cannot "
+		   "be used.\n"
+		   "\tMake sure your kernel has agpgart support or has\n"
+		   "\tthe agpgart module loaded.\n");
+	return FALSE;
+    }
 
-   if (!pI830->StolenOnly &&
-       (!xf86AgpGARTSupported() || !xf86AcquireGART(pScrn->scrnIndex))) {
-      if (!dryrun) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "AGP GART support is either not available or cannot "
-		    "be used.\n"
-		    "\tMake sure your kernel has agpgart support or has the\n"
-		    "\tagpgart module loaded.\n");
-      }
-      return FALSE;
-   }
+    /* Allocate the ring buffer first, so it ends up in stolen mem. */
+    i830_allocate_ringbuffer(pScrn);
 
+    if (pI830->fb_compression)
+	i830_setup_fb_compression(pScrn);
 
-   /*
-    * The I830 is slightly different from the I830/I815, it has no
-    * dcache and it has stolen memory by default in its gtt.  All
-    * additional memory must go after it.
-    */
+    /* Next, allocate other fixed-size allocations we have. */
+    if (!pI830->SWCursor && !i830_allocate_cursor_buffers(pScrn)) {
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		   "Disabling HW cursor because the cursor memory "
+		   "allocation failed.\n");
+	pI830->SWCursor = TRUE;
+    }
 
-   DPRINTF(PFX,
-	   "size == %luk (%lu bytes == pScrn->videoRam)\n"
-	   "pI830->StolenSize == %luk (%lu bytes)\n",
-	   pScrn->videoRam, pScrn->videoRam * 1024,
-	   pI830->StolenPool.Free.Size / 1024,
-	   pI830->StolenPool.Free.Size);
+    /* Space for the X Server's 3D context.  32k is fine for right now. */
+    pI830->logical_context = i830_allocate_memory(pScrn, "logical 3D context",
+						  KB(32), GTT_PAGE_SIZE, 0);
+    if (pI830->logical_context == NULL) {
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		   "Failed to allocate logical context space.\n");
+	return FALSE;
+    }
 
-   if (flags & ALLOC_INITIAL) {
-      unsigned long minspace, avail, lineSize;
-      int cacheLines, maxCacheLines;
-
-      if (pI830->NeedRingBufferLow)
-	 AllocateRingBuffer(pScrn, flags | FORCE_LOW);
-
-      /* Unfortunately this doesn't run on the DRY_RUN pass because our
-       * second head hasn't been created yet..... */
-      if (pI830->entityPrivate && pI830->entityPrivate->pScrn_2) {
-         I830EntPtr pI830Ent = pI830->entityPrivate;
-         I830Ptr pI8302 = I830PTR(pI830Ent->pScrn_2);
-
-         /* Clear everything first. */
-         memset(&(pI830->FbMemBox2), 0, sizeof(pI830->FbMemBox2));
-         memset(&(pI830->FrontBuffer2), 0, sizeof(pI830->FrontBuffer2));
-         pI830->FrontBuffer2.Key = -1;
-
-#if 1 /* ROTATION */
-         pI830->FbMemBox2.x1 = 0;
-         pI830->FbMemBox2.x2 = pI830Ent->pScrn_2->displayWidth;
-         pI830->FbMemBox2.y1 = 0;
-         if (pI830Ent->pScrn_2->virtualX > pI830Ent->pScrn_2->virtualY)
-            pI830->FbMemBox2.y2 = pI830Ent->pScrn_2->virtualX;
-         else
-            pI830->FbMemBox2.y2 = pI830Ent->pScrn_2->virtualY;
-#else
-         pI830->FbMemBox2.x1 = 0;
-         pI830->FbMemBox2.x2 = pI830Ent->pScrn_2->displayWidth;
-         pI830->FbMemBox2.y1 = 0;
-         pI830->FbMemBox2.y2 = pI830Ent->pScrn_2->virtualY;
-#endif
-
-         /*
-          * Calculate how much framebuffer memory to allocate.  For the
-          * initial allocation, calculate a reasonable minimum.  This is
-          * enough for the virtual screen size, plus some pixmap cache
-          * space.
-          */
-
-         lineSize = pI830Ent->pScrn_2->displayWidth * pI8302->cpp;
-         minspace = lineSize * pI830Ent->pScrn_2->virtualY;
-         avail = pI830Ent->pScrn_2->videoRam * 1024;
-         maxCacheLines = (avail - minspace) / lineSize;
-         /* This shouldn't happen. */
-         if (maxCacheLines < 0) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "Internal Error: "
-		    "maxCacheLines < 0 in I830Allocate2DMemory()\n");
-	    maxCacheLines = 0;
-         }
-         if (maxCacheLines > (MAX_DISPLAY_HEIGHT - pI830Ent->pScrn_2->virtualY))
-	    maxCacheLines = MAX_DISPLAY_HEIGHT - pI830Ent->pScrn_2->virtualY;
-
-         if (pI8302->CacheLines >= 0) {
-	    cacheLines = pI8302->CacheLines;
-         } else {
-#if 1
-	    /* Make sure there is enough for two DVD sized YUV buffers */
-	    cacheLines = (pI830Ent->pScrn_2->depth == 24) ? 256 : 384;
-	    if (pI830Ent->pScrn_2->displayWidth <= 1024)
-	       cacheLines *= 2;
-#else
-	    /*
-	     * Make sure there is enough for two DVD sized YUV buffers.
-	     * Make that 1.5MB, which is around what was allocated with
-	     * the old algorithm
-	     */
-	    cacheLines = (MB(1) + KB(512)) / pI8302->cpp / pI830Ent->pScrn_2->displayWidth;
-#endif
-         }
-         if (cacheLines > maxCacheLines)
-	    cacheLines = maxCacheLines;
-
-         pI830->FbMemBox2.y2 += cacheLines;
-
-         xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		     "%sAllocating at least %d scanlines for pixmap cache\n",
-		     s, cacheLines);
-
-         tileable = !(flags & ALLOC_NO_TILING) && pI8302->allowPageFlip &&
-		 IsTileable(pI830Ent->pScrn_2->displayWidth * pI8302->cpp);
-         if (tileable) {
-            if (IS_I9XX(pI830))
-               align = MB(1);
-            else
-	       align = KB(512);
-	    alignflags = ALIGN_BOTH_ENDS;
-         } else {
-	    align = KB(64);
-	    alignflags = 0;
-         }
-
-#if 1 /* ROTATION */
-         if (pI830Ent->pScrn_2->virtualX > pI830Ent->pScrn_2->virtualY)
-            size = lineSize * (pI830Ent->pScrn_2->virtualX + cacheLines);
-         else 
-            size = lineSize * (pI830Ent->pScrn_2->virtualY + cacheLines);
-         size = ROUND_TO_PAGE(size);
-#else
-         size = lineSize * (pI830Ent->pScrn_2->virtualY + cacheLines);
-         size = ROUND_TO_PAGE(size);
-#endif
-         xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		     "%sSecondary framebuffer allocation size: %ld kByte\n", s,
-		     size / 1024);
-         alloced = I830AllocVidMem(pScrn, &(pI830->FrontBuffer2),
-				&(pI830->StolenPool), size, align,
-				flags | alignflags |
-				FROM_ANYWHERE | ALLOCATE_AT_BOTTOM);
-         if (alloced < size) {
-	    if (!dryrun) {
-	       xf86DrvMsg(pI830Ent->pScrn_2->scrnIndex, X_ERROR,
-		       "Failed to allocate secondary framebuffer.\n");
-	    }
-            return FALSE;
-         }
-      }
-
-      /* Clear everything first. */
-      memset(&(pI830->FbMemBox), 0, sizeof(pI830->FbMemBox));
-      memset(&(pI830->FrontBuffer), 0, sizeof(pI830->FrontBuffer));
-      pI830->FrontBuffer.Key = -1;
-
-#if 1 /* ROTATION */
-      pI830->FbMemBox.x1 = 0;
-      pI830->FbMemBox.x2 = pScrn->displayWidth;
-      pI830->FbMemBox.y1 = 0;
-      if (!pI830->MergedFB && pScrn->virtualX > pScrn->virtualY)
-         pI830->FbMemBox.y2 = pScrn->virtualX;
-      else
-         pI830->FbMemBox.y2 = pScrn->virtualY;
-#else
-      pI830->FbMemBox.x1 = 0;
-      pI830->FbMemBox.x2 = pScrn->displayWidth;
-      pI830->FbMemBox.y1 = 0;
-      pI830->FbMemBox.y2 = pScrn->virtualY;
-#endif
-
-      /*
-       * Calculate how much framebuffer memory to allocate.  For the
-       * initial allocation, calculate a reasonable minimum.  This is
-       * enough for the virtual screen size, plus some pixmap cache
-       * space.
-       */
-
-      lineSize = pScrn->displayWidth * pI830->cpp;
-      minspace = lineSize * pScrn->virtualY;
-      avail = pScrn->videoRam * 1024;
-      maxCacheLines = (avail - minspace) / lineSize;
-      /* This shouldn't happen. */
-      if (maxCacheLines < 0) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "Internal Error: "
-		    "maxCacheLines < 0 in I830Allocate2DMemory()\n");
-	 maxCacheLines = 0;
-      }
-      if (maxCacheLines > (MAX_DISPLAY_HEIGHT - pScrn->virtualY))
-	 maxCacheLines = MAX_DISPLAY_HEIGHT - pScrn->virtualY;
-
-      if (pI830->CacheLines >= 0) {
-	 cacheLines = pI830->CacheLines;
-      } else {
-#if 1
-	 /* Make sure there is enough for two DVD sized YUV buffers */
-	 cacheLines = (pScrn->depth == 24) ? 256 : 384;
-	 if (pScrn->displayWidth <= 1024)
-	    cacheLines *= 2;
-#else
-	 /*
-	  * Make sure there is enough for two DVD sized YUV buffers.
-	  * Make that 1.5MB, which is around what was allocated with
-	  * the old algorithm
-	  */
-	 cacheLines = (MB(1) + KB(512)) / pI830->cpp / pScrn->displayWidth;
-#endif
-      }
-      if (cacheLines > maxCacheLines)
-	 cacheLines = maxCacheLines;
-
-      pI830->FbMemBox.y2 += cacheLines;
-
-      xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		     "%sAllocating at least %d scanlines for pixmap cache\n",
-		     s, cacheLines);
-
-      tileable = !(flags & ALLOC_NO_TILING) && pI830->allowPageFlip &&
-		 IsTileable(pScrn->displayWidth * pI830->cpp);
-      if (tileable) {
-         if (IS_I9XX(pI830))
-            align = MB(1);
-         else
-	    align = KB(512);
-	 alignflags = ALIGN_BOTH_ENDS;
-      } else {
-	 align = KB(64);
-	 alignflags = 0;
-      }
-
-#if 1 /* ROTATION */
-      if (!pI830->MergedFB && pScrn->virtualX > pScrn->virtualY)
-         size = lineSize * (pScrn->virtualX + cacheLines);
-      else 
-         size = lineSize * (pScrn->virtualY + cacheLines);
-      size = ROUND_TO_PAGE(size);
-#else
-      size = lineSize * (pScrn->virtualY + cacheLines);
-      size = ROUND_TO_PAGE(size);
-#endif
-      xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		     "%sInitial framebuffer allocation size: %ld kByte\n", s,
-		     size / 1024);
-      alloced = I830AllocVidMem(pScrn, &(pI830->FrontBuffer),
-				&(pI830->StolenPool), size, align,
-				flags | alignflags |
-				FROM_ANYWHERE | ALLOCATE_AT_BOTTOM);
-      if (alloced < size) {
-	 if (!dryrun) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Failed to allocate "
-	    		"framebuffer. Is your VideoRAM set too low ??\n");
-	 }
-	 return FALSE;
-      }
-   } else {
-      long lineSize;
-      long extra = 0;
-      long maxFb = 0;
-
-      /*
-       * XXX Need to "free" up any 3D allocations if the DRI ended up
-       * and make them available for 2D.  The best way to do this would
-       * be position all of those regions contiguously at the end of the
-       * StolenPool.
-       */
-      extra = GetFreeSpace(pScrn);
-
-      if (extra == 0)
-	 return TRUE;
-
-      maxFb = pI830->FrontBuffer.Size + extra;
-      lineSize = pScrn->displayWidth * pI830->cpp;
-      maxFb = ROUND_DOWN_TO(maxFb, lineSize);
-      if (maxFb > lineSize * MAX_DISPLAY_HEIGHT)
-	 maxFb = lineSize * MAX_DISPLAY_HEIGHT;
-      if (0/*maxFb > pI830->FrontBuffer.Size*/) {
-	 unsigned long oldsize;
-	 /*
-	  * Sanity check -- the fb should be the last thing allocated at
-	  * the bottom of the stolen pool.
-	  */
-	 if (pI830->StolenPool.Free.Start != pI830->FrontBuffer.End) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		       "Internal error in I830Allocate2DMemory():\n\t"
-		       "Framebuffer isn't the last allocation at the bottom"
-		       " of StolenPool\n\t(%lx != %lx).\n",
-		       pI830->FrontBuffer.End,
-		       pI830->StolenPool.Free.Start);
+    /* even in XAA, 965G needs state mem buffer for rendering */
+    if (IS_I965G(pI830) && !pI830->noAccel && pI830->exa_965_state == NULL) {
+	pI830->exa_965_state =
+	    i830_allocate_memory(pScrn, "exa G965 state buffer",
+		    EXA_LINEAR_EXTRA, GTT_PAGE_SIZE, 0);
+	if (pI830->exa_965_state == NULL) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		    "Failed to allocate exa state buffer for 965.\n");
 	    return FALSE;
-	 }
-	 /*
-	  * XXX Maybe should have a "Free" function.  This should be
-	  * the only place where a region is resized, and we know that
-	  * the fb is always at the bottom of the aperture/stolen pool,
-	  * and is the only region that is allocated bottom-up.
-	  * Allowing for more general realloction would require a smarter
-	  * allocation system.
-	  */
-	 oldsize = pI830->FrontBuffer.Size;
-	 pI830->StolenPool.Free.Size += pI830->FrontBuffer.Size;
-	 pI830->StolenPool.Free.Start -= pI830->FrontBuffer.Size;
-	 xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-			"%sUpdated framebuffer allocation size from %ld "
-			"to %ld kByte\n", s, oldsize / 1024, maxFb / 1024);
-	 xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-			"%sUpdated pixmap cache from %ld scanlines to %ld "
-			"scanlines\n", s,
-			oldsize / lineSize - pScrn->virtualY,
-			maxFb / lineSize - pScrn->virtualY);
-	 pI830->FbMemBox.y2 = maxFb / lineSize;
-	 tileable = !(flags & ALLOC_NO_TILING) && pI830->allowPageFlip &&
-		 IsTileable(pScrn->displayWidth * pI830->cpp);
-	 if (tileable) {
-            if (IS_I9XX(pI830))
-               align = MB(1);
-            else
-	       align = KB(512);
-	    alignflags = ALIGN_BOTH_ENDS;
-	 } else {
-	    align = KB(64);
-	    alignflags = 0;
-	 }
-	 alloced = I830AllocVidMem(pScrn, &(pI830->FrontBuffer),
-				   &(pI830->StolenPool), maxFb, align,
-				   flags | alignflags |
-				   FROM_ANYWHERE | ALLOCATE_AT_BOTTOM);
-	 if (alloced < maxFb) {
-	    if (!dryrun) {
-	       xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-			  "Failed to re-allocate framebuffer\n");
-	    }
-	    return FALSE;
-	 }
-      }
-      return TRUE;
-   }
-
-#if REMAP_RESERVED
-   /*
-    * Allocate a dummy page to pass when attempting to rebind the
-    * pre-allocated region.
-    */
-   if (!dryrun) {
-      memset(&(pI830->Dummy), 0, sizeof(pI830->Dummy));
-      pI830->Dummy.Key = xf86AllocateGARTMemory(pScrn->scrnIndex, size, 0, NULL);
-      pI830->Dummy.Offset = 0;
-   }
-#endif
-
-   /* Clear cursor info */
-   memset(pI830->CursorMem, 0, sizeof(I830MemRange));
-   pI830->CursorMem->Key = -1;
-   memset(pI830->CursorMemARGB, 0, sizeof(I830MemRange));
-   pI830->CursorMemARGB->Key = -1;
-
-   if (!pI830->SWCursor) {
-      int cursFlags = 0;
-      /*
-       * Mouse cursor -- The i810-i830 need a physical address in system
-       * memory from which to upload the cursor.  We get this from
-       * the agpgart module using a special memory type.
-       */
-
-      size = HWCURSOR_SIZE;
-      cursFlags = FROM_ANYWHERE | ALLOCATE_AT_TOP;
-      if (pI830->CursorNeedsPhysical)
-	 cursFlags |= NEED_PHYSICAL_ADDR;
-
-      alloced = I830AllocVidMem(pScrn, pI830->CursorMem,
-				&(pI830->StolenPool), size,
-				GTT_PAGE_SIZE, flags | cursFlags);
-      if (alloced < size) {
-	 if (!dryrun) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		       "Failed to allocate HW cursor space.\n");
-	 }
-      } else {
-	 xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-			"%sAllocated %ld kB for HW cursor at 0x%lx", s,
-			alloced / 1024, pI830->CursorMem->Start);
-	 if (pI830->CursorNeedsPhysical)
-	    xf86ErrorFVerb(verbosity, " (0x%08lx)", pI830->CursorMem->Physical);
-	 xf86ErrorFVerb(verbosity, "\n");
-      }
-
-      size = HWCURSOR_SIZE_ARGB;
-      cursFlags = FROM_ANYWHERE | ALLOCATE_AT_TOP;
-      if (pI830->CursorNeedsPhysical)
-	 cursFlags |= NEED_PHYSICAL_ADDR;
-
-      alloced = I830AllocVidMem(pScrn, pI830->CursorMemARGB,
-				&(pI830->StolenPool), size,
-				GTT_PAGE_SIZE, flags | cursFlags);
-      if (alloced < size) {
-	 if (!dryrun) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		       "Failed to allocate HW (ARGB) cursor space.\n");
-	 }
-      } else {
-	 xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-			"%sAllocated %ld kB for HW (ARGB) cursor at 0x%lx", s,
-			alloced / 1024, pI830->CursorMemARGB->Start);
-	 if (pI830->CursorNeedsPhysical)
-	    xf86ErrorFVerb(verbosity, " (0x%08lx)", pI830->CursorMemARGB->Physical);
-	 xf86ErrorFVerb(verbosity, "\n");
-      }
-   }
+	}
+    }
 
 #ifdef I830_XV
-   AllocateOverlay(pScrn, flags);
+    /* Allocate overlay register space and optional XAA linear allocator
+     * space.  The second head in zaphod mode will share the space.
+     */
+    if (I830IsPrimary(pScrn))
+	i830_allocate_overlay(pScrn);
 #endif
 
-   if (!pI830->NeedRingBufferLow)
-      AllocateRingBuffer(pScrn, flags);
+    if (pI830->entityPrivate && pI830->entityPrivate->pScrn_2) {
+	I830EntPtr pI830Ent = pI830->entityPrivate;
+	I830Ptr pI8302 = I830PTR(pI830Ent->pScrn_2);
 
-   /* Clear scratch info */
-   memset(&(pI830->Scratch), 0, sizeof(I830MemRange));
-   pI830->Scratch.Key = -1;
-   memset(&(pI830->Scratch2), 0, sizeof(I830MemRange));
-   pI830->Scratch2.Key = -1;
-
-   if (!pI830->noAccel) {
-      size = MAX_SCRATCH_BUFFER_SIZE;
-      alloced = I830AllocVidMem(pScrn, &(pI830->Scratch), &(pI830->StolenPool),
-				size, GTT_PAGE_SIZE,
-				flags | FROM_ANYWHERE | ALLOCATE_AT_TOP);
-      if (alloced < size) {
-	 size = MIN_SCRATCH_BUFFER_SIZE;
-         alloced = I830AllocVidMem(pScrn, &(pI830->Scratch),
-				   &(pI830->StolenPool), size,
-				   GTT_PAGE_SIZE,
-				   flags | FROM_ANYWHERE | ALLOCATE_AT_TOP);
-      }
-      if (alloced < size) {
-	 if (!dryrun) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		       "Failed to allocate scratch buffer space\n");
-	 }
-	 return FALSE;
-      }
-      xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		    "%sAllocated %ld kB for the scratch buffer at 0x%lx\n", s,
-		    alloced / 1024, pI830->Scratch.Start);
-
-      /* Let's allocate another scratch buffer for the second head */
-      /* Again, this code won't execute on the dry run pass */
-      if (pI830->entityPrivate && pI830->entityPrivate->pScrn_2) {
-         size = MAX_SCRATCH_BUFFER_SIZE;
-         alloced = I830AllocVidMem(pScrn, &(pI830->Scratch2), 
-				&(pI830->StolenPool),
-				size, GTT_PAGE_SIZE,
-				flags | FROM_ANYWHERE | ALLOCATE_AT_TOP);
-         if (alloced < size) {
-	    size = MIN_SCRATCH_BUFFER_SIZE;
-            alloced = I830AllocVidMem(pScrn, &(pI830->Scratch2),
-				   &(pI830->StolenPool), size,
-				   GTT_PAGE_SIZE,
-				   flags | FROM_ANYWHERE | ALLOCATE_AT_TOP);
-         }
-         if (alloced < size) {
-	    if (!dryrun) {
-	       xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		       "Failed to allocate second scratch buffer space\n");
-	    }
+	pI830->front_buffer_2 =
+	    i830_allocate_framebuffer(pI830Ent->pScrn_2, pI8302,
+				      &pI830->FbMemBox2, TRUE);
+	if (pI830->front_buffer_2 == NULL)
 	    return FALSE;
-         }
-         xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-	      "%sAllocated %ld kB for the second scratch buffer at 0x%lx\n", s,
-	      alloced / 1024, pI830->Scratch2.Start);
-      }
-   }
+    }
+    pI830->front_buffer =
+	i830_allocate_framebuffer(pScrn, pI830, &pI830->FbMemBox, FALSE);
+    if (pI830->front_buffer == NULL)
+	return FALSE;
 
-   return TRUE;
-}
+#ifdef I830_USE_EXA
+    if (pI830->useEXA) {
+	if (pI830->exa_offscreen == NULL) {
+	    /* Default EXA to having 3 screens worth of offscreen memory space
+	     * (for pixmaps).
+	     *
+	     * XXX: It would be nice to auto-size it larger if the user
+	     * specified a larger size, or to fit along with texture and FB
+	     * memory if a low videoRam is specified.
+	     */
+	    size = 3 * pitch * pScrn->virtualY;
+	    size = ROUND_TO_PAGE(size);
 
-void
-I830ResetAllocations(ScrnInfoPtr pScrn, const int flags)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
+	    /* EXA has no way to tell it that the offscreen memory manager has
+	     * moved its base and all the contents with it, so we have to have
+	     * it locked in place for the whole driver instance.
+	     */
+	    pI830->exa_offscreen =
+		i830_allocate_memory(pScrn, "exa offscreen",
+				     size, 1, NEED_LIFETIME_FIXED);
+	    if (pI830->exa_offscreen == NULL) {
+		xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+			   "Failed to allocate EXA offscreen memory.\n");
+		return FALSE;
+	    }
+	}
+    }
+#endif /* I830_USE_EXA */
 
-   pI830->MemoryAperture.Start = pI830->StolenMemory.End;
-   pI830->MemoryAperture.End = pI830->FbMapSize;
-   pI830->MemoryAperture.Size = pI830->FbMapSize - pI830->StolenMemory.Size;
-#ifdef XF86DRI
-   if (!pI830->directRenderingDisabled) {
-      pI830->MemoryAperture.End -= KB(pI830->mmSize);
-      pI830->MemoryAperture.Size -= KB(pI830->mmSize);
-   }
-#endif
-   pI830->StolenPool.Fixed = pI830->StolenMemory;
-   pI830->StolenPool.Total = pI830->StolenMemory;
-#if ALLOCATE_ALL_BIOSMEM
-   if (pI830->overrideBIOSMemSize &&
-       pI830->BIOSMemorySize > pI830->StolenMemory.Size) {
-      pI830->StolenPool.Total.End = pI830->BIOSMemorySize;
-      pI830->StolenPool.Total.Size = pI830->BIOSMemorySize;
-   }
-#endif
-   pI830->StolenPool.Free = pI830->StolenPool.Total;
-   pI830->FreeMemory = pI830->TotalVideoRam - pI830->StolenPool.Total.Size;
-   pI830->allocatedMemory = 0;
-}
+    if (!pI830->noAccel && !pI830->useEXA) {
+	/* The lifetime fixed offset of xaa scratch is probably not required,
+	 * but we do some setup using it at XAAInit() time.  And XAA may not
+	 * end up being supported with TTM anyway.
+	 */
+	pI830->xaa_scratch =
+	    i830_allocate_memory(pScrn, "xaa scratch", MAX_SCRATCH_BUFFER_SIZE,
+				 GTT_PAGE_SIZE, NEED_LIFETIME_FIXED);
+	if (pI830->xaa_scratch == NULL) {
+	    pI830->xaa_scratch =
+		i830_allocate_memory(pScrn, "xaa scratch",
+				     MIN_SCRATCH_BUFFER_SIZE, GTT_PAGE_SIZE,
+				     NEED_LIFETIME_FIXED);
+	    if (pI830->xaa_scratch == NULL) {
+		xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+			   "Failed to allocate scratch buffer space\n");
+		return FALSE;
+	    }
+	}
 
-long
-I830GetExcessMemoryAllocations(ScrnInfoPtr pScrn)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-   long allocated;
+	/* Let's allocate another scratch buffer for the second head */
+	/* Again, this code won't execute on the dry run pass */
+	if (pI830->entityPrivate && pI830->entityPrivate->pScrn_2)
+	{
+	    pI830->xaa_scratch_2 =
+		i830_allocate_memory(pScrn, "xaa scratch 2",
+				     MAX_SCRATCH_BUFFER_SIZE, GTT_PAGE_SIZE,
+				     NEED_LIFETIME_FIXED);
+	    if (pI830->xaa_scratch_2 == NULL) {
+		pI830->xaa_scratch_2 =
+		    i830_allocate_memory(pScrn, "xaa scratch 2",
+					 MIN_SCRATCH_BUFFER_SIZE,
+					 GTT_PAGE_SIZE, NEED_LIFETIME_FIXED);
+		if (pI830->xaa_scratch_2 == NULL) {
+		    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+			       "Failed to allocate secondary scratch "
+			       "buffer space\n");
+		    return FALSE;
+		}
+	    }
+	}
+    }
 
-   allocated = pI830->StolenPool.Total.Size + pI830->allocatedMemory;
-   if (allocated > pI830->TotalVideoRam)
-      return allocated - pI830->TotalVideoRam;
-   else
-      return 0;
+    return TRUE;
 }
 
 #ifdef XF86DRI
 static unsigned int
 myLog2(unsigned int n)
 {
-   unsigned int log2 = 1;
+    unsigned int log2 = 1;
 
-   while (n > 1) {
-      n >>= 1;
-      log2++;
-   }
-   return log2;
-}
-
-Bool
-I830AllocateBackBuffer(ScrnInfoPtr pScrn, const int flags)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-   unsigned long size, alloced, align = 0;
-   Bool tileable;
-   Bool dryrun = ((flags & ALLOCATE_DRY_RUN) != 0);
-   int verbosity = dryrun ? 4 : 1;
-   const char *s = dryrun ? "[dryrun] " : "";
-   int lines;
-   int height = (pI830->rotation & (RR_Rotate_0 | RR_Rotate_180)) ? pScrn->virtualY : pScrn->virtualX;
-
-   /* Back Buffer */
-   memset(&(pI830->BackBuffer), 0, sizeof(pI830->BackBuffer));
-   pI830->BackBuffer.Key = -1;
-   tileable = !(flags & ALLOC_NO_TILING) &&
-	      IsTileable(pScrn->displayWidth * pI830->cpp);
-   if (tileable) {
-      /* Make the height a multiple of the tile height (16) */
-      lines = (height + 15) / 16 * 16;
-   } else {
-      lines = height;
-   }
-
-   size = ROUND_TO_PAGE(pScrn->displayWidth * lines * pI830->cpp);
-   /*
-    * Try to allocate on the best tile-friendly boundaries.
-    */
-   alloced = 0;
-   if (tileable) {
-      align = GetBestTileAlignment(size);
-      for (align = GetBestTileAlignment(size); align >= (IS_I9XX(pI830) ? MB(1) : KB(512)); align >>= 1) {
-	 alloced = I830AllocVidMem(pScrn, &(pI830->BackBuffer),
-				   &(pI830->StolenPool), size, align,
-				   flags | FROM_ANYWHERE | ALLOCATE_AT_TOP |
-				   ALIGN_BOTH_ENDS);
-	 if (alloced >= size)
-	    break;
-      }
-   }
-   if (alloced < size) {
-      /* Give up on trying to tile */
-      tileable = FALSE;
-      size = ROUND_TO_PAGE(pScrn->displayWidth * height * pI830->cpp);
-      align = GTT_PAGE_SIZE;
-      alloced = I830AllocVidMem(pScrn, &(pI830->BackBuffer),
-				&(pI830->StolenPool), size, align,
-				flags | FROM_ANYWHERE | ALLOCATE_AT_TOP);
-   }
-   if (alloced < size) {
-      if (!dryrun) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "Failed to allocate back buffer space.\n");
-      }
-      return FALSE;
-   }
-   xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		  "%sAllocated %ld kB for the back buffer at 0x%lx.\n", s,
-		  alloced / 1024, pI830->BackBuffer.Start);
-
-   return TRUE;
-}
-
-Bool
-I830AllocateDepthBuffer(ScrnInfoPtr pScrn, const int flags)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-   unsigned long size, alloced, align = 0;
-   Bool tileable;
-   Bool dryrun = ((flags & ALLOCATE_DRY_RUN) != 0);
-   int verbosity = dryrun ? 4 : 1;
-   const char *s = dryrun ? "[dryrun] " : "";
-   int lines;
-   int height = (pI830->rotation & (RR_Rotate_0 | RR_Rotate_180)) ? pScrn->virtualY : pScrn->virtualX;
-
-   /* Depth Buffer -- same size as the back buffer */
-   memset(&(pI830->DepthBuffer), 0, sizeof(pI830->DepthBuffer));
-   pI830->DepthBuffer.Key = -1;
-   tileable = !(flags & ALLOC_NO_TILING) &&
-	      IsTileable(pScrn->displayWidth * pI830->cpp);
-   if (tileable) {
-      /* Make the height a multiple of the tile height (16) */
-      lines = (height + 15) / 16 * 16;
-   } else {
-      lines = height;
-   }
-
-   size = ROUND_TO_PAGE(pScrn->displayWidth * lines * pI830->cpp);
-   /*
-    * Try to allocate on the best tile-friendly boundaries.
-    */
-   alloced = 0;
-   if (tileable) {
-      align = GetBestTileAlignment(size);
-      for (align = GetBestTileAlignment(size); align >= (IS_I9XX(pI830) ? MB(1) : KB(512)); align >>= 1) {
-	 alloced = I830AllocVidMem(pScrn, &(pI830->DepthBuffer),
-				   &(pI830->StolenPool), size, align,
-				   flags | FROM_ANYWHERE | ALLOCATE_AT_TOP |
-				   ALIGN_BOTH_ENDS);
-	 if (alloced >= size)
-	    break;
-      }
-   }
-   if (alloced < size) {
-      /* Give up on trying to tile */
-      tileable = FALSE;
-      size = ROUND_TO_PAGE(pScrn->displayWidth * height * pI830->cpp);
-      align = GTT_PAGE_SIZE;
-      alloced = I830AllocVidMem(pScrn, &(pI830->DepthBuffer),
-				&(pI830->StolenPool), size, align,
-				flags | FROM_ANYWHERE | ALLOCATE_AT_TOP);
-   }
-   if (alloced < size) {
-      if (!dryrun) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "Failed to allocate depth buffer space.\n");
-      }
-      return FALSE;
-   }
-   xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		  "%sAllocated %ld kB for the depth buffer at 0x%lx.\n", s,
-		  alloced / 1024, pI830->DepthBuffer.Start);
-
-   return TRUE;
-}
-
-Bool
-I830AllocateTextureMemory(ScrnInfoPtr pScrn, const int flags)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-   unsigned long size, alloced;
-   int i;
-   Bool dryrun = ((flags & ALLOCATE_DRY_RUN) != 0);
-   int verbosity = dryrun ? 4 : 1;
-   const char *s = dryrun ? "[dryrun] " : "";
-
-   /* Allocate the remaining space for textures. */
-   memset(&(pI830->TexMem), 0, sizeof(pI830->TexMem));
-   pI830->TexMem.Key = -1;
-
-   if (pI830->mmModeFlags & I830_KERNEL_TEX) {
-
-      size = GetFreeSpace(pScrn);
-      if (dryrun && (size < MB(1)))
-	 size = MB(1);
-      i = myLog2(size / I830_NR_TEX_REGIONS);
-      if (i < I830_LOG_MIN_TEX_REGION_SIZE)
-	 i = I830_LOG_MIN_TEX_REGION_SIZE;
-      pI830->TexGranularity = i;
-      /* Truncate size */
-      size >>= i;
-      size <<= i;
-      if (size < KB(512)) {
-	 if (!dryrun) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		       "Less than 512 kBytes for texture space (real %ld kBytes).\n", 
-		       size / 1024);
-	 }
-	 return FALSE;
-      }
-      alloced = I830AllocVidMem(pScrn, &(pI830->TexMem),
-				&(pI830->StolenPool), size, GTT_PAGE_SIZE,
-				flags | FROM_ANYWHERE | ALLOCATE_AT_TOP);
-      if (alloced < size) {
-	 if (!dryrun) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		       "Failed to allocate texture space.\n");
-	 }
-	 return FALSE;
-      }
-      xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		     "%sAllocated %ld kB for textures at 0x%lx\n", s,
-		     alloced / 1024, pI830->TexMem.Start);
-   }
-
-   return TRUE;
-}
-
-Bool
-I830Allocate3DMemory(ScrnInfoPtr pScrn, const int flags)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-   unsigned long size, alloced;
-   Bool dryrun = ((flags & ALLOCATE_DRY_RUN) != 0);
-   int verbosity = dryrun ? 4 : 1;
-   const char *s = dryrun ? "[dryrun] " : "";
-
-   DPRINTF(PFX, "I830Allocate3DMemory\n");
-
-   /* Space for logical context.  32k is fine for right now. */
-   memset(&(pI830->ContextMem), 0, sizeof(pI830->ContextMem));
-   pI830->ContextMem.Key = -1;
-   size = KB(32);
-   alloced = I830AllocVidMem(pScrn, &(pI830->ContextMem),
-			     &(pI830->StolenPool), size, GTT_PAGE_SIZE,
-			     flags | FROM_ANYWHERE | ALLOCATE_AT_TOP);
-   if (alloced < size) {
-      if (!dryrun) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "Failed to allocate logical context space.\n");
-      }
-      return FALSE;
-   }
-   xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, verbosity,
-		  "%sAllocated %ld kB for the logical context at 0x%lx.\n", s,
-		  alloced / 1024, pI830->ContextMem.Start);
-
-   if (!I830AllocateBackBuffer(pScrn, flags))
-      return FALSE;
-
-   if (!I830AllocateDepthBuffer(pScrn, flags))
-      return FALSE;
-
-   if (!I830AllocateTextureMemory(pScrn, flags))
-      return FALSE;
-
-   return TRUE;
-}
-#endif
-
-/* Allocate pool space that isn't pre-allocated */
-Bool
-I830DoPoolAllocation(ScrnInfoPtr pScrn, I830MemPool *pool)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-
-   DPRINTF(PFX, "I830DoPoolAllocation\n");
-
-   if (!pool)
-      return FALSE;
-
-   /*
-    * Sanity check: there shouldn't be an allocation required when
-    * there is only stolen memory.
-    */
-   if (pI830->StolenOnly && (pool->Total.Size > pool->Fixed.Size)) {
-      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		 "I830DoPoolAllocation(): pool size is greater than the "
-		 "preallocated size,\n\t"
-		 "and there is no allocatable memory.\n");
-      return FALSE;
-   }
-
-   if (pool->Total.Size > pool->Fixed.Size) {
-      pool->Allocated.Size = pool->Total.Size - pool->Fixed.Size;
-      pool->Allocated.Key = xf86AllocateGARTMemory(pScrn->scrnIndex, 
-				   pool->Allocated.Size, 0, NULL);
-      if (pool->Allocated.Key == -1) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Pool allocation failed\n");
-	 return FALSE;
-      }
-      pool->Allocated.Start = pool->Fixed.End;
-      pool->Allocated.End = pool->Total.Size;
-      pool->Allocated.Offset = pool->Allocated.Start;
-   } else
-      pool->Allocated.Key = -1;
-   return TRUE;
-}
-
-static unsigned long topOfMem = 0;
-
-/*
- * These modify the way memory is positioned within the aperture.
- *
- * By default, memory allocated from the bottom or specifically within
- * the pool at the bottom gets allocated from the "stolen pool", which is
- * actually the stolen memory plus any extra allocated to make it a larger
- * contiguous region.  Memory allocated from the AGP is allocated top-down
- * from the end of the aperture space.  Memory allocated "from top" defaults
- * to AGP if there is enough "free space".  The total allocation (stolen +
- * extra) doesn't exceed the orignal pScrn->videoRam amount (this isn't true
- * when memory allocated from AGP gets moved into the pool by one of the
- * following options.
- *
- * XXX Write a better description.
- *
- */
-#define PACK_RANGES 0
-#define POOL_RANGES 0
-
-Bool
-I830FixOffset(ScrnInfoPtr pScrn, I830MemRange *mem)
-{
-#if POOL_RANGES
-   I830Ptr pI830 = I830PTR(pScrn);
-#endif
-
-   if (!mem)
-      return FALSE;
-
-   if (mem->Pool && mem->Key == -1 && mem->Start < 0) {
-      mem->Start = mem->Pool->Total.End + mem->Start;
-      mem->End = mem->Start + mem->Size;
-   }
-#if PACK_RANGES
-   /*
-    * Map AGP-allocated areas at the top of the stolen area, resulting in
-    * a contiguous region in the aperture.  Normally most AGP-allocated areas
-    * will be at the top of the aperture, making alignment requirements
-    * easier to achieve.  This optin is primarily for debugging purposes,
-    * and using this option can break any special alignment requirements.
-    */
-   if (!mem->Pool && mem->Start != 0 && mem->Key != -1 && mem->Physical == 0 &&
-	mem->Offset != 0) {
-      long diff;
-      if (mem->Offset != mem->Start)
-	 ErrorF("mem %p, Offset != Start\n", mem);
-      diff = mem->Offset - topOfMem;
-      mem->Start -= diff;
-      mem->End -= diff;
-      mem->Offset -= diff;
-      topOfMem += mem->Size;
-   }
-#elif POOL_RANGES
-   /*
-    * Move AGP-allocated regions (that don't need a physical address) into
-    * the pre-allocated pool when there's enough space to do so.  Note: the
-    * AGP-allocated areas aren't freed.  This option is primarily for
-    * debugging purposes, and using it can break any special alignment
-    * requirements.
-    */
-   if (!mem->Pool && mem->Start >= pI830->StolenPool.Free.End &&
-       mem->Key != -1 && mem->Physical == 0 && mem->Offset != 0 &&
-       pI830->StolenPool.Free.Size >= mem->Size) {
-      long diff;
-      if (mem->Offset != mem->Start)
-	 ErrorF("mem %p, Offset != Start\n", mem);
-      diff = mem->Offset - pI830->StolenPool.Free.Start;
-      mem->Start -= diff;
-      mem->End -= diff;
-      mem->Offset -= diff;
-      mem->Key = -1;
-      pI830->StolenPool.Free.Start += mem->Size;
-      pI830->StolenPool.Free.Size -= mem->Size;
-   }
-#endif
-   xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-	      "%p: Memory at offset 0x%08lx, size %ld kBytes\n", (void *)mem,
-	      mem->Start, mem->Size / 1024);
-   return TRUE;
-}
-
-Bool
-I830FixupOffsets(ScrnInfoPtr pScrn)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-
-   DPRINTF(PFX, "I830FixupOffsets\n");
-
-   topOfMem = pI830->StolenPool.Total.End;
-   if (pI830->entityPrivate && pI830->entityPrivate->pScrn_2)
-      I830FixOffset(pScrn, &(pI830->FrontBuffer2));
-   I830FixOffset(pScrn, &(pI830->FrontBuffer));
-   I830FixOffset(pScrn, pI830->CursorMem);
-   I830FixOffset(pScrn, pI830->CursorMemARGB);
-   I830FixOffset(pScrn, &(pI830->LpRing->mem));
-   I830FixOffset(pScrn, &(pI830->Scratch));
-   if (pI830->entityPrivate && pI830->entityPrivate->pScrn_2)
-      I830FixOffset(pScrn, &(pI830->Scratch2));
-#ifdef I830_XV
-   if (pI830->XvEnabled) {
-      I830FixOffset(pScrn, pI830->OverlayMem);
-      if (pI830->LinearAlloc)
-         I830FixOffset(pScrn, &(pI830->LinearMem));
-   }
-#endif
-#ifdef XF86DRI
-   if (pI830->directRenderingEnabled) {
-      I830FixOffset(pScrn, &(pI830->ContextMem));
-      I830FixOffset(pScrn, &(pI830->BackBuffer));
-      I830FixOffset(pScrn, &(pI830->DepthBuffer));
-      if (pI830->mmModeFlags & I830_KERNEL_TEX) {
-	 I830FixOffset(pScrn, &(pI830->TexMem));
-      }
-   }
-#endif
-   return TRUE;
-}
-
-#ifdef XF86DRI
-/* Tiled memory is good... really, really good...
- *
- * Need to make it less likely that we miss out on this - probably
- * need to move the frontbuffer away from the 'guarenteed' alignment
- * of the first memory segment, or perhaps allocate a discontigous
- * framebuffer to get more alignment 'sweet spots'.
- */
-static void
-SetFence(ScrnInfoPtr pScrn, int nr, unsigned int start, unsigned int pitch,
-         unsigned int size)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-   I830RegPtr i830Reg = &pI830->ModeReg;
-   CARD32 val;
-   CARD32 fence_mask = 0;
-   unsigned int fence_pitch;
-
-   DPRINTF(PFX, "SetFence: %d, 0x%08x, %d, %d kByte\n",
-	   nr, start, pitch, size / 1024);
-
-   if (nr < 0 || nr > 7) {
-      xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		 "SetFence: fence %d out of range\n",nr);
-      return;
-   }
-
-   i830Reg->Fence[nr] = 0;
-
-   if (IS_I9XX(pI830))
-   	fence_mask = ~I915G_FENCE_START_MASK;
-   else
-   	fence_mask = ~I830_FENCE_START_MASK;
-
-   if (start & fence_mask) {
-      xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		 "SetFence: %d: start (0x%08x) is not %s aligned\n",
-		 nr, start, (IS_I9XX(pI830)) ? "1MB" : "512k");
-      return;
-   }
-
-   if (start % size) {
-      xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		 "SetFence: %d: start (0x%08x) is not size (%dk) aligned\n",
-		 nr, start, size / 1024);
-      return;
-   }
-
-   if (pitch & 127) {
-      xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		 "SetFence: %d: pitch (%d) not a multiple of 128 bytes\n",
-		 nr, pitch);
-      return;
-   }
-
-   val = (start | FENCE_X_MAJOR | FENCE_VALID);
-
-   if (IS_I9XX(pI830)) {
-   	switch (size) {
-	   case MB(1):
-      		val |= I915G_FENCE_SIZE_1M;
-      		break;
-   	   case MB(2):
-      		val |= I915G_FENCE_SIZE_2M;
-      		break;
-   	   case MB(4):
-      		val |= I915G_FENCE_SIZE_4M;
-      		break;
-   	   case MB(8):
-      		val |= I915G_FENCE_SIZE_8M;
-      		break;
-   	   case MB(16):
-      		val |= I915G_FENCE_SIZE_16M;
-      		break;
-   	   case MB(32):
-      		val |= I915G_FENCE_SIZE_32M;
-      		break;
-   	   case MB(64):
-      		val |= I915G_FENCE_SIZE_64M;
-      		break;
-   	   default:
-      		xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		 "SetFence: %d: illegal size (%d kByte)\n", nr, size / 1024);
-      		return;
-   	}
-    } else {
-   	switch (size) {
-	   case KB(512):
-      		val |= FENCE_SIZE_512K;
-      		break;
-	   case MB(1):
-      		val |= FENCE_SIZE_1M;
-      		break;
-   	   case MB(2):
-      		val |= FENCE_SIZE_2M;
-      		break;
-   	   case MB(4):
-      		val |= FENCE_SIZE_4M;
-      		break;
-   	   case MB(8):
-      		val |= FENCE_SIZE_8M;
-      		break;
-   	   case MB(16):
-      		val |= FENCE_SIZE_16M;
-      		break;
-   	   case MB(32):
-      		val |= FENCE_SIZE_32M;
-      		break;
-   	   case MB(64):
-      		val |= FENCE_SIZE_64M;
-      		break;
-   	   default:
-      		xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		 "SetFence: %d: illegal size (%d kByte)\n", nr, size / 1024);
-      		return;
-   	}
-   }
-
-   if (IS_I9XX(pI830))
-	fence_pitch = pitch / 512;
-   else
-	fence_pitch = pitch / 128;
-
-   switch (fence_pitch) {
-   case 1:
-      val |= FENCE_PITCH_1;
-      break;
-   case 2:
-      val |= FENCE_PITCH_2;
-      break;
-   case 4:
-      val |= FENCE_PITCH_4;
-      break;
-   case 8:
-      val |= FENCE_PITCH_8;
-      break;
-   case 16:
-      val |= FENCE_PITCH_16;
-      break;
-   case 32:
-      val |= FENCE_PITCH_32;
-      break;
-   case 64:
-      val |= FENCE_PITCH_64;
-      break;
-   default:
-      xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		 "SetFence: %d: illegal pitch (%d)\n", nr, pitch);
-      return;
-   }
-
-   i830Reg->Fence[nr] = val;
+    while (n > 1) {
+	n >>= 1;
+	log2++;
+    }
+    return log2;
 }
 
 static Bool
-MakeTiles(ScrnInfoPtr pScrn, I830MemRange *pMem, unsigned int fence)
+i830_allocate_backbuffer(ScrnInfoPtr pScrn, i830_memory **buffer,
+			 const char *name)
 {
-   I830Ptr pI830 = I830PTR(pScrn);
-   int pitch, ntiles, i;
+    I830Ptr pI830 = I830PTR(pScrn);
+    unsigned int pitch = pScrn->displayWidth * pI830->cpp;
+    unsigned long size;
+    int height;
 
-#if 0
-   /* Hack to "improve" the alignment of the front buffer.
-    */
-   while (!(pMem->Start & ~pMem->Alignment) && pMem->Alignment < 0x00400000 )
-      pMem->Alignment <<= 1;
+    if (pI830->rotation & (RR_Rotate_0 | RR_Rotate_180))
+	height = pScrn->virtualY;
+    else
+	height = pScrn->virtualX;
+
+    /* Try to allocate on the best tile-friendly boundaries. */
+    if (pI830->tiling && IsTileable(pScrn, pitch))
+    {
+	size = ROUND_TO_PAGE(pitch * ALIGN(height, 16));
+	*buffer = i830_allocate_memory_tiled(pScrn, name, size, pitch,
+					     GTT_PAGE_SIZE,
+					     ALIGN_BOTH_ENDS |
+					     ALLOW_SHARING,
+					     TILE_XMAJOR);
+    }
+
+    /* Otherwise, just allocate it linear.  The offset must stay constant
+     * currently because we don't ever update the DRI maps after screen init.
+     */
+    if (*buffer == NULL) {
+	size = ROUND_TO_PAGE(pitch * height);
+	*buffer = i830_allocate_memory(pScrn, name, size, GTT_PAGE_SIZE,
+				       ALIGN_BOTH_ENDS |
+				       ALLOW_SHARING);
+    }
+
+    if (*buffer == NULL) {
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		   "Failed to allocate %s space.\n", name);
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
+static Bool
+i830_allocate_depthbuffer(ScrnInfoPtr pScrn)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+    unsigned long size;
+    unsigned int pitch = pScrn->displayWidth * pI830->cpp;
+    int height;
+
+    /* XXX: this rotation stuff is bogus */
+    if (pI830->rotation & (RR_Rotate_0 | RR_Rotate_180))
+	height = pScrn->virtualY;
+    else
+	height = pScrn->virtualX;
+
+    /* First try allocating it tiled */
+    if (pI830->tiling && IsTileable(pScrn, pitch))
+    {
+	enum tile_format tile_format;
+
+	size = ROUND_TO_PAGE(pitch * ALIGN(height, 16));
+
+	/* The 965 requires that the depth buffer be in Y Major format, while
+	 * the rest appear to fail when handed that format.
+	 */
+	tile_format = IS_I965G(pI830) ? TILE_YMAJOR: TILE_XMAJOR;
+
+	pI830->depth_buffer =
+	    i830_allocate_memory_tiled(pScrn, "depth buffer", size, pitch,
+				       GTT_PAGE_SIZE,
+				       ALIGN_BOTH_ENDS |
+				       ALLOW_SHARING,
+				       tile_format);
+    }
+
+    /* Otherwise, allocate it linear. The offset must stay constant
+     * currently because we don't ever update the DRI maps after screen init.
+     */
+    if (pI830->depth_buffer == NULL) {
+	size = ROUND_TO_PAGE(pitch * height);
+	pI830->depth_buffer =
+	    i830_allocate_memory(pScrn, "depth buffer", size, GTT_PAGE_SIZE,
+				 ALLOW_SHARING);
+    }
+
+    if (pI830->depth_buffer == NULL) {
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		   "Failed to allocate depth buffer space.\n");
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
+Bool
+i830_allocate_texture_memory(ScrnInfoPtr pScrn)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+    unsigned long size;
+    int i;
+
+    if (pI830->allocate_classic_textures) {
+	/* XXX: auto-sizing */
+	size = MB(32);
+	i = myLog2(size / I830_NR_TEX_REGIONS);
+	if (i < I830_LOG_MIN_TEX_REGION_SIZE)
+	    i = I830_LOG_MIN_TEX_REGION_SIZE;
+	pI830->TexGranularity = i;
+	/* Truncate size */
+	size >>= i;
+	size <<= i;
+	if (size < KB(512)) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "Less than 512 kBytes for texture space (real %ld"
+		       "kBytes).\n",
+		       size / 1024);
+	    return FALSE;
+	}
+	/* The offset must stay constant currently because we don't ever update
+	 * the DRI maps after screen init.
+	 */
+	pI830->textures = i830_allocate_memory(pScrn, "classic textures", size,
+					       GTT_PAGE_SIZE,
+					       ALLOW_SHARING |
+					       NEED_LIFETIME_FIXED);
+	if (pI830->textures == NULL) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		       "Failed to allocate texture space.\n");
+	    return FALSE;
+	}
+    }
+
+    return TRUE;
+}
+
+static Bool
+i830_allocate_hwstatus(ScrnInfoPtr pScrn)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+
+    /* The current DRM will leak the HWS mapping if we update the address
+     * after init (at best), so allocate it fixed for its lifetime
+     * (i.e. not through buffer objects).
+     */
+    pI830->hw_status = i830_allocate_memory(pScrn, "G33 hw status",
+	    HWSTATUS_PAGE_SIZE, GTT_PAGE_SIZE, NEED_LIFETIME_FIXED);
+    if (pI830->hw_status == NULL) {
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		"Failed to allocate hw status page for G33.\n");
+	return FALSE;
+    }
+    return TRUE;
+}
+
+Bool
+i830_allocate_3d_memory(ScrnInfoPtr pScrn)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+
+    DPRINTF(PFX, "i830_allocate_3d_memory\n");
+
+    if (IS_G33CLASS(pI830)) {
+	if (!i830_allocate_hwstatus(pScrn))
+	    return FALSE;
+    }
+
+    if (!i830_allocate_backbuffer(pScrn, &pI830->back_buffer, "back buffer"))
+	return FALSE;
+
+    if (pI830->TripleBuffer && !i830_allocate_backbuffer(pScrn,
+							 &pI830->third_buffer,
+							 "third buffer")) {
+       xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		  "Failed to allocate third buffer, triple buffering "
+		  "inactive\n");
+    }
+
+    if (!i830_allocate_depthbuffer(pScrn))
+	return FALSE;
+
+    if (!i830_allocate_texture_memory(pScrn))
+	return FALSE;
+
+    return TRUE;
+}
 #endif
 
-   if (tileGeneration != serverGeneration) {
-      tileGeneration = serverGeneration;
-      nextTile = 0;
-   }
+/**
+ * Sets up tiled surface registers ("fences") for the hardware.
+ *
+ * The fences control automatic tiled address swizzling for CPU access of the
+ * framebuffer, and may be used in many rendering operations instead of
+ * manually supplying tiling enables per surface.
+ */
+static int
+i830_set_tiling(ScrnInfoPtr pScrn, unsigned int offset,
+		unsigned int pitch, unsigned int size,
+		enum tile_format tile_format)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+    CARD32 val;
+    CARD32 fence_mask = 0;
+    unsigned int fence_pitch;
+    unsigned int max_fence;
+    unsigned int fence_nr;
 
-   pitch = pScrn->displayWidth * pI830->cpp;
+    DPRINTF(PFX, "i830_set_tiling(): 0x%08x, %d, %d kByte\n",
+	    offset, pitch, size / 1024);
 
-   if (IS_I96X(pI830)) {
-      I830RegPtr i830Reg = &pI830->ModeReg;
+    assert(tile_format != TILE_NONE);
 
-      switch (fence) {
-         case FENCE_XMAJOR:
-            i830Reg->Fence[nextTile] = (((pitch / 128) - 1) << 2) | pMem->Start | 1;
+    if (IS_I965G(pI830))
+	max_fence = FENCE_NEW_NR;
+    else
+	max_fence = FENCE_NR;
+
+    for (fence_nr = 0; fence_nr < max_fence; fence_nr++) {
+	if (!pI830->fence_used[fence_nr])
+	    break;
+    }
+    if (fence_nr == max_fence)
+	FatalError("Ran out of fence registers at %d\n", fence_nr);
+
+    pI830->fence_used[fence_nr] = TRUE;
+
+    if (IS_I965G(pI830)) {
+	uint32_t fence_start, fence_end;
+
+	switch (tile_format) {
+	case TILE_XMAJOR:
+	    fence_start = (((pitch / 128) - 1) << 2) | offset | 1;
+	    fence_start |= I965_FENCE_X_MAJOR;
             break;
-         case FENCE_YMAJOR:
+	case TILE_YMAJOR:
             /* YMajor can be 128B aligned but the current code dictates
              * otherwise. This isn't a problem apart from memory waste.
              * FIXME */
-            i830Reg->Fence[nextTile] = (((pitch / 128) - 1) << 2) | pMem->Start | 1;
-	    i830Reg->Fence[nextTile] |= (1<<1);
+	    fence_start = (((pitch / 128) - 1) << 2) | offset | 1;
+	    fence_start |= I965_FENCE_Y_MAJOR;
             break;
-         default:
-         case FENCE_LINEAR:
-            break;
-      }
+	default:
+	    return -1;
+	}
 
-      i830Reg->Fence[nextTile+FENCE_NEW_NR] = pMem->End;
-      nextTile++;
-      return TRUE;
-   }
+	/* The end marker is the address of the last page in the allocation. */
+	fence_end = offset + size - 4096;
 
-   /*
-    * Simply try to break the region up into at most four pieces of size
-    * equal to the alignment.
-    */
-   ntiles = ROUND_TO(pMem->Size, pMem->Alignment) / pMem->Alignment;
-   if (ntiles >= 4) {
-      return FALSE;
-   }
+	OUTREG(FENCE_NEW + fence_nr * 8, fence_start);
+	OUTREG(FENCE_NEW + fence_nr * 8 + 4, fence_end);
+    } else {
+	if (IS_I9XX(pI830))
+	    fence_mask = ~I915G_FENCE_START_MASK;
+	else
+	    fence_mask = ~I830_FENCE_START_MASK;
 
-   for (i = 0; i < ntiles; i++, nextTile++) {
-      SetFence(pScrn, nextTile, pMem->Start + i * pMem->Alignment,
-	       pitch, pMem->Alignment);
-   }
-   return TRUE;
+	if (offset & fence_mask) {
+	    FatalError("i830_set_tiling(): %d: offset (0x%08x) is not %s "
+		       "aligned\n",
+		       fence_nr, offset, (IS_I9XX(pI830)) ? "1MB" : "512k");
+	}
+
+	if (offset % size) {
+	    FatalError("i830_set_tiling(): %d: offset (0x%08x) is not "
+		       "size (%dk) aligned\n",
+		       fence_nr, offset, size / 1024);
+	}
+
+	if (pitch & 127) {
+	    FatalError("i830_set_tiling(): %d: pitch (%d) not a multiple of "
+		       "128 bytes\n",
+		       fence_nr, pitch);
+	}
+
+	val = offset | FENCE_VALID;
+
+	switch (tile_format) {
+	case TILE_XMAJOR:
+	    val |= FENCE_X_MAJOR;
+	    break;
+	case TILE_YMAJOR:
+	    val |= FENCE_Y_MAJOR;
+	    break;
+	case TILE_NONE:
+	    break;
+	}
+
+	if (IS_I9XX(pI830)) {
+	    switch (size) {
+	    case MB(1):
+		val |= I915G_FENCE_SIZE_1M;
+		break;
+	    case MB(2):
+		val |= I915G_FENCE_SIZE_2M;
+		break;
+	    case MB(4):
+		val |= I915G_FENCE_SIZE_4M;
+		break;
+	    case MB(8):
+		val |= I915G_FENCE_SIZE_8M;
+		break;
+	    case MB(16):
+		val |= I915G_FENCE_SIZE_16M;
+		break;
+	    case MB(32):
+		val |= I915G_FENCE_SIZE_32M;
+		break;
+	    case MB(64):
+		val |= I915G_FENCE_SIZE_64M;
+		break;
+	    default:
+		FatalError("i830_set_tiling(): %d: illegal size (%d kByte)\n",
+			   fence_nr, size / 1024);
+	    }
+	} else {
+	    switch (size) {
+	    case KB(512):
+		val |= FENCE_SIZE_512K;
+		break;
+	    case MB(1):
+		val |= FENCE_SIZE_1M;
+		break;
+	    case MB(2):
+		val |= FENCE_SIZE_2M;
+		break;
+	    case MB(4):
+		val |= FENCE_SIZE_4M;
+		break;
+	    case MB(8):
+		val |= FENCE_SIZE_8M;
+		break;
+	    case MB(16):
+		val |= FENCE_SIZE_16M;
+		break;
+	    case MB(32):
+		val |= FENCE_SIZE_32M;
+		break;
+	    case MB(64):
+		val |= FENCE_SIZE_64M;
+		break;
+	    default:
+		FatalError("i830_set_tiling(): %d: illegal size (%d kByte)\n",
+			   fence_nr, size / 1024);
+	    }
+	}
+
+	if ((IS_I945G(pI830) || IS_I945GM(pI830) || IS_G33CLASS(pI830)) &&
+	    tile_format == TILE_YMAJOR)
+	    fence_pitch = pitch / 128;
+	else if (IS_I9XX(pI830))
+	    fence_pitch = pitch / 512;
+	else
+	    fence_pitch = pitch / 128;
+
+	switch (fence_pitch) {
+	case 1:
+	    val |= FENCE_PITCH_1;
+	    break;
+	case 2:
+	    val |= FENCE_PITCH_2;
+	    break;
+	case 4:
+	    val |= FENCE_PITCH_4;
+	    break;
+	case 8:
+	    val |= FENCE_PITCH_8;
+	    break;
+	case 16:
+	    val |= FENCE_PITCH_16;
+	    break;
+	case 32:
+	    val |= FENCE_PITCH_32;
+	    break;
+	case 64:
+	    val |= FENCE_PITCH_64;
+	    break;
+	default:
+	    FatalError("i830_set_tiling(): %d: illegal pitch (%d)\n",
+		       fence_nr, pitch);
+	}
+
+	OUTREG(FENCE + fence_nr * 4, val);
+    }
+
+    return fence_nr;
 }
 
-void
-I830SetupMemoryTiling(ScrnInfoPtr pScrn)
+static void
+i830_clear_tiling(ScrnInfoPtr pScrn, unsigned int fence_nr)
 {
-   I830Ptr pI830 = I830PTR(pScrn);
-   int i;
+    I830Ptr pI830 = I830PTR(pScrn);
 
-   /* Clear out */
-   for (i = 0; i < 8; i++)
-      pI830->ModeReg.Fence[i] = 0;
-
-   nextTile = 0;
-   tileGeneration = -1;
-
-   /* We currently only attempt to tile the back and depth buffers. */
-   if (!pI830->directRenderingEnabled)
-      return;
-
-   if (!IsTileable(pScrn->displayWidth * pI830->cpp)) {
-      xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		 "I830SetupMemoryTiling: Not tileable 0x%x\n",
-		 pScrn->displayWidth * pI830->cpp);
-      pI830->allowPageFlip = FALSE;
-      return;
-   }
-
-   pI830->front_tiled = FENCE_LINEAR;
-   pI830->back_tiled = FENCE_LINEAR;
-   pI830->depth_tiled = FENCE_LINEAR;
-   pI830->rotated_tiled = FENCE_LINEAR;
-   pI830->rotated2_tiled = FENCE_LINEAR;
-
-   if (pI830->allowPageFlip) {
-      if (pI830->allowPageFlip && pI830->FrontBuffer.Alignment >= KB(512)) {
-	 if (MakeTiles(pScrn, &(pI830->FrontBuffer), FENCE_XMAJOR)) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		       "Activating tiled memory for the front buffer\n");
-            pI830->front_tiled = FENCE_XMAJOR;
-	 } else {
-	    pI830->allowPageFlip = FALSE;
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		       "MakeTiles failed for the front buffer\n");
-	 }
-      } else {
-	 pI830->allowPageFlip = FALSE;
-	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		 "Alignment bad for the front buffer\n");
-      }
-   }
-
-   /*
-    * We tried to get the best alignment during the allocation.  Check
-    * the alignment values to tell.  If well-aligned allocations were
-    * successful, the address range reserved is a multiple of the align
-    * value.
-    */
-   if (pI830->BackBuffer.Alignment >= KB(512)) {
-      if (MakeTiles(pScrn, &(pI830->BackBuffer), FENCE_XMAJOR)) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		    "Activating tiled memory for the back buffer.\n");
-         pI830->back_tiled = FENCE_XMAJOR;
-      } else {
-	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		    "MakeTiles failed for the back buffer.\n");
-	 pI830->allowPageFlip = FALSE;
-      }
-   }
-
-   if (pI830->DepthBuffer.Alignment >= KB(512)) {
-      if (MakeTiles(pScrn, &(pI830->DepthBuffer), FENCE_YMAJOR)) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-	 	    "Activating tiled memory for the depth buffer.\n");
-         pI830->depth_tiled = FENCE_YMAJOR;
-      } else {
-	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		    "MakeTiles failed for the depth buffer.\n");
-      }
-   }
-	
-   if (pI830->RotatedMem.Alignment >= KB(512)) {
-      if (MakeTiles(pScrn, &(pI830->RotatedMem), FENCE_XMAJOR)) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		    "Activating tiled memory for the rotated buffer.\n");
-         pI830->rotated_tiled = FENCE_XMAJOR;
-      } else {
-	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		    "MakeTiles failed for the rotated buffer.\n");
-      }
-   }
-
-#if 0
-   if (pI830->RotatedMem2.Alignment >= KB(512)) {
-      if (MakeTiles(pScrn, &(pI830->RotatedMem2), FENCE_XMAJOR)) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		    "Activating tiled memory for the rotated2 buffer.\n");
-         pI830->rotated2_tiled = FENCE_XMAJOR;
-      } else {
-	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		    "MakeTiles failed for the rotated buffer.\n");
-      }
-   }
-#endif
-}
-#endif /* XF86DRI */
-
-static Bool
-BindMemRange(ScrnInfoPtr pScrn, I830MemRange *mem)
-{
-   if (!mem)
-      return FALSE;
-
-   if (mem->Key == -1)
-      return TRUE;
-
-   return xf86BindGARTMemory(pScrn->scrnIndex, mem->Key, mem->Offset);
+    if (IS_I965G(pI830)) {
+	OUTREG(FENCE_NEW + fence_nr * 8, 0);
+	OUTREG(FENCE_NEW + fence_nr * 8 + 4, 0);
+    } else {
+	OUTREG(FENCE + fence_nr * 4, 0);
+    }
+    pI830->fence_used[fence_nr] = FALSE;
 }
 
+/**
+ * Called at EnterVT to grab the AGP GART and bind our allocations.
+ *
+ * In zaphod mode, this will walk the list trying to bind twice, since each
+ * pI830 points to the same allocation list, but the bind_memory will just
+ * no-op then.
+ */
 Bool
-I830BindAGPMemory(ScrnInfoPtr pScrn)
+i830_bind_all_memory(ScrnInfoPtr pScrn)
 {
-   I830Ptr pI830 = I830PTR(pScrn);
+    I830Ptr pI830 = I830PTR(pScrn);
 
-   DPRINTF(PFX,
-	   "I830BindAGPMemory: StolenOnly is %s, pI830->GttBound is %s\n",
-	   BOOLTOSTRING(pI830->StolenOnly), BOOLTOSTRING(pI830->GttBound));
+    if (pI830->StolenOnly == TRUE || pI830->memory_list == NULL)
+	return TRUE;
 
-   if (pI830->StolenOnly == TRUE)
-      return TRUE;
+    if (xf86AgpGARTSupported() && !pI830->gtt_acquired) {
+	i830_memory *mem;
 
-   if (xf86AgpGARTSupported() && !pI830->GttBound) {
-      if (!xf86AcquireGART(pScrn->scrnIndex))
-	 return FALSE;
+	if (!xf86AcquireGART(pScrn->scrnIndex))
+	    return FALSE;
 
-#if REMAP_RESERVED
-      /* Rebind the pre-allocated region. */
-      BindMemRange(pScrn, &(pI830->Dummy));
+	pI830->gtt_acquired = TRUE;
+
+	for (mem = pI830->memory_list->next; mem->next != NULL;
+	     mem = mem->next)
+	{
+	    if (!i830_bind_memory(pScrn, mem)) {
+		/* This shouldn't happen */
+		FatalError("Couldn't bind memory for %s\n", mem->name);
+	    }
+	}
+#ifdef XF86DRI_MM
+	for (mem = pI830->bo_list; mem != NULL; mem = mem->next) {
+	    if (!mem->lifetime_fixed_offset && !i830_bind_memory(pScrn, mem))
+		FatalError("Couldn't bind memory for BO %s\n", mem->name);
+	}
 #endif
+    }
+    i830_update_cursor_offsets(pScrn);
 
-      if (!BindMemRange(pScrn, &(pI830->StolenPool.Allocated)))
-	 return FALSE;
-      if (pI830->entityPrivate && pI830->entityPrivate->pScrn_2)
-         if (!BindMemRange(pScrn, &(pI830->FrontBuffer2)))
-	    return FALSE;
-      if (!BindMemRange(pScrn, &(pI830->FrontBuffer)))
-	 return FALSE;
-      if (!BindMemRange(pScrn, pI830->CursorMem))
-	 return FALSE;
-      if (!BindMemRange(pScrn, pI830->CursorMemARGB))
-	 return FALSE;
-      if (!BindMemRange(pScrn, &(pI830->LpRing->mem)))
-	 return FALSE;
-      if (!BindMemRange(pScrn, &(pI830->Scratch)))
-	 return FALSE;
-      if (pI830->entityPrivate && pI830->entityPrivate->pScrn_2)
-         if (!BindMemRange(pScrn, &(pI830->Scratch2)))
-	    return FALSE;
-#ifdef I830_XV
-      if (pI830->XvEnabled) {
-         if (!BindMemRange(pScrn, pI830->OverlayMem))
-	    return FALSE;
-         if (pI830->LinearAlloc)
-            if (!BindMemRange(pScrn, &(pI830->LinearMem)))
-	       return FALSE;
-      }
-#endif
-      if (pI830->RotatedMem.Start)
-         if (!BindMemRange(pScrn, &(pI830->RotatedMem)))
-	    return FALSE;
-      if (pI830->entityPrivate && pI830->entityPrivate->pScrn_2 &&
-	  pI830->RotatedMem2.Start)
-         if (!BindMemRange(pScrn, &(pI830->RotatedMem2)))
-	    return FALSE;
-#ifdef XF86DRI
-      if (pI830->directRenderingEnabled) {
-	 if (!BindMemRange(pScrn, &(pI830->ContextMem)))
-	    return FALSE;
-	 if (!BindMemRange(pScrn, &(pI830->BackBuffer)))
-	    return FALSE;
-	 if (!BindMemRange(pScrn, &(pI830->DepthBuffer)))
-	    return FALSE;
-	 if ((pI830->mmModeFlags & I830_KERNEL_TEX) && 
-	     !BindMemRange(pScrn, &(pI830->TexMem)))
-	    return FALSE;
-      }
-#endif
-      pI830->GttBound = 1;
-   }
-
-   return TRUE;
+    return TRUE;
 }
 
-static Bool
-UnbindMemRange(ScrnInfoPtr pScrn, I830MemRange *mem)
-{
-   if (!mem)
-      return FALSE;
-
-   if (mem->Key == -1)
-      return TRUE;
-
-   return xf86UnbindGARTMemory(pScrn->scrnIndex, mem->Key);
-}
-
-
+/** Called at LeaveVT, to unbind all of our AGP allocations. */
 Bool
-I830UnbindAGPMemory(ScrnInfoPtr pScrn)
+i830_unbind_all_memory(ScrnInfoPtr pScrn)
 {
-   I830Ptr pI830 = I830PTR(pScrn);
+    I830Ptr pI830 = I830PTR(pScrn);
 
-   DPRINTF(PFX,
-	   "I830UnbindAGPMemory: StolenOnly is %s, pI830->GttBound is %s\n",
-	   BOOLTOSTRING(pI830->StolenOnly), BOOLTOSTRING(pI830->GttBound));
+    if (pI830->StolenOnly == TRUE)
+	return TRUE;
 
-   if (pI830->StolenOnly == TRUE)
-      return TRUE;
+    if (xf86AgpGARTSupported() && pI830->gtt_acquired) {
+	i830_memory *mem;
 
-   if (xf86AgpGARTSupported() && pI830->GttBound) {
-
-#if REMAP_RESERVED
-      /* "unbind" the pre-allocated region. */
-      UnbindMemRange(pScrn, &(pI830->Dummy));
+	for (mem = pI830->memory_list->next; mem->next != NULL;
+	     mem = mem->next)
+	{
+	    i830_unbind_memory(pScrn, mem);
+	}
+#ifdef XF86DRI_MM
+	for (mem = pI830->bo_list; mem != NULL; mem = mem->next) {
+	    /* Don't unpin objects which require that their offsets never
+	     * change.
+	     */
+	    if (!mem->lifetime_fixed_offset)
+		i830_unbind_memory(pScrn, mem);
+	}
 #endif
 
-      if (!UnbindMemRange(pScrn, &(pI830->StolenPool.Allocated)))
-	 return FALSE;
-      if (pI830->entityPrivate && pI830->entityPrivate->pScrn_2)
-         if (!UnbindMemRange(pScrn, &(pI830->FrontBuffer2)))
-	    return FALSE;
-      if (!UnbindMemRange(pScrn, &(pI830->FrontBuffer)))
-	 return FALSE;
-      if (!UnbindMemRange(pScrn, pI830->CursorMem))
-	 return FALSE;
-      if (!UnbindMemRange(pScrn, pI830->CursorMemARGB))
-	 return FALSE;
-      if (!UnbindMemRange(pScrn, &(pI830->LpRing->mem)))
-	 return FALSE;
-      if (!UnbindMemRange(pScrn, &(pI830->Scratch)))
-	 return FALSE;
-      if (pI830->entityPrivate && pI830->entityPrivate->pScrn_2)
-         if (!UnbindMemRange(pScrn, &(pI830->Scratch2)))
-	    return FALSE;
-#ifdef I830_XV
-      if (pI830->XvEnabled) {
-         if (!UnbindMemRange(pScrn, pI830->OverlayMem))
-	    return FALSE;
-         if (pI830->LinearAlloc)
-            if (!UnbindMemRange(pScrn, &(pI830->LinearMem)))
-   	       return FALSE;
-      }
-#endif
-      if (pI830->RotatedMem.Start)
-         if (!UnbindMemRange(pScrn, &(pI830->RotatedMem)))
-	    return FALSE;
-      if (pI830->entityPrivate && pI830->entityPrivate->pScrn_2 &&
-	  pI830->RotatedMem2.Start)
-         if (!UnbindMemRange(pScrn, &(pI830->RotatedMem2)))
-	    return FALSE;
-#ifdef XF86DRI
-      if (pI830->directRenderingEnabled) {
-	 if (!UnbindMemRange(pScrn, &(pI830->ContextMem)))
-	    return FALSE;
-	 if (!UnbindMemRange(pScrn, &(pI830->BackBuffer)))
-	    return FALSE;
-	 if (!UnbindMemRange(pScrn, &(pI830->DepthBuffer)))
-	    return FALSE;
-	 if ((pI830->mmModeFlags & I830_KERNEL_TEX) && 
-	     !UnbindMemRange(pScrn, &(pI830->TexMem)))
-	    return FALSE;
-      }
-#endif
-      if (!xf86ReleaseGART(pScrn->scrnIndex))
-	 return FALSE;
+	pI830->gtt_acquired = FALSE;
 
-      pI830->GttBound = 0;
-   }
+	if (!xf86ReleaseGART(pScrn->scrnIndex))
+	    return FALSE;
+    }
 
-   return TRUE;
+    return TRUE;
 }
 
+/**
+ * Returns the amount of system memory that could potentially be allocated
+ * from AGP, in kB.
+ */
 long
 I830CheckAvailableMemory(ScrnInfoPtr pScrn)
 {
-   AgpInfoPtr agpinf;
-   int maxPages;
+    AgpInfoPtr agpinf;
+    int maxPages;
 
-   if (!xf86AgpGARTSupported() ||
-       !xf86AcquireGART(pScrn->scrnIndex) ||
-       (agpinf = xf86GetAGPInfo(pScrn->scrnIndex)) == NULL ||
-       !xf86ReleaseGART(pScrn->scrnIndex))
-      return -1;
+    if (!xf86AgpGARTSupported() ||
+	!xf86AcquireGART(pScrn->scrnIndex) ||
+	(agpinf = xf86GetAGPInfo(pScrn->scrnIndex)) == NULL ||
+	!xf86ReleaseGART(pScrn->scrnIndex))
+	return -1;
 
-   maxPages = agpinf->totalPages - agpinf->usedPages;
-   xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, 2, "%s: %d kB available\n",
-		  "I830CheckAvailableMemory", maxPages * 4);
+    maxPages = agpinf->totalPages - agpinf->usedPages;
+    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, 2, "%s: %d kB available\n",
+		   "I830CheckAvailableMemory", maxPages * 4);
 
-   return maxPages * 4;
+    return maxPages * 4;
 }

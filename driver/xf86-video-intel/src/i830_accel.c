@@ -7,10 +7,6 @@
 #include "config.h"
 #endif
 
-#ifndef DO_SCANLINE_IMAGE_WRITE
-#define DO_SCANLINE_IMAGE_WRITE 0
-#endif
-
 /**************************************************************************
 
 Copyright 1998-1999 Precision Insight, Inc., Cedar Park, Texas.
@@ -62,6 +58,37 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "xaarop.h"
 #include "i830.h"
 #include "i810_reg.h"
+#include "i830_debug.h"
+
+unsigned long
+intel_get_pixmap_offset(PixmapPtr pPix)
+{
+    ScreenPtr pScreen = pPix->drawable.pScreen;
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    I830Ptr pI830 = I830PTR(pScrn);
+
+#ifdef I830_USE_EXA
+    if (pI830->useEXA)
+	return exaGetPixmapOffset(pPix);
+#endif
+    return (unsigned long)pPix->devPrivate.ptr - (unsigned long)pI830->FbBase;
+}
+
+unsigned long
+intel_get_pixmap_pitch(PixmapPtr pPix)
+{
+    ScreenPtr pScreen = pPix->drawable.pScreen;
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    I830Ptr pI830 = I830PTR(pScrn);
+
+#ifdef I830_USE_EXA
+    if (pI830->useEXA)
+	return exaGetPixmapPitch(pPix);
+#endif
+#ifdef I830_USE_XAA
+    return (unsigned long)pPix->devKind;
+#endif
+}
 
 int
 I830WaitLpRing(ScrnInfoPtr pScrn, int n, int timeout_millis)
@@ -69,10 +96,10 @@ I830WaitLpRing(ScrnInfoPtr pScrn, int n, int timeout_millis)
    I830Ptr pI830 = I830PTR(pScrn);
    I830RingBuffer *ring = pI830->LpRing;
    int iters = 0;
-   int start = 0;
-   int now = 0;
+   unsigned int start = 0;
+   unsigned int now = 0;
    int last_head = 0;
-   int first = 0;
+   unsigned int first = 0;
 
    /* If your system hasn't moved the head pointer in 2 seconds, I'm going to
     * call it crashed.
@@ -90,7 +117,7 @@ I830WaitLpRing(ScrnInfoPtr pScrn, int n, int timeout_millis)
       ring->space = ring->head - (ring->tail + 8);
 
       if (ring->space < 0)
-	 ring->space += ring->mem.Size;
+	 ring->space += ring->mem->size;
 
       iters++;
       now = GetTimeInMillis();
@@ -101,9 +128,12 @@ I830WaitLpRing(ScrnInfoPtr pScrn, int n, int timeout_millis)
 	 start = now;
 	 last_head = ring->head;
       } else if (now - start > timeout_millis) {
-	 ErrorF("Error in I830WaitLpRing(), now is %d, start is %d\n", now,
-		start);
-	 I830PrintErrorState(pScrn);
+	 ErrorF("Error in I830WaitLpRing(), timeout for %d seconds\n",
+		timeout_millis/1000);
+	 if (IS_I965G(pI830))
+	     i965_dump_error_state(pScrn);
+	 else
+	     i830_dump_error_state(pScrn);
 	 ErrorF("space: %d wanted %d\n", ring->space, n);
 #ifdef XF86DRI
 	 if (pI830->directRenderingEnabled) {
@@ -111,7 +141,12 @@ I830WaitLpRing(ScrnInfoPtr pScrn, int n, int timeout_millis)
 	    DRICloseScreen(screenInfo.screens[pScrn->scrnIndex]);
 	 }
 #endif
+#ifdef I830_USE_XAA
 	 pI830->AccelInfoRec = NULL;	/* Stops recursive behavior */
+#endif
+#ifdef I830_USE_EXA
+	 pI830->EXADriverPtr = NULL;
+#endif
 	 FatalError("lockup\n");
       }
 
@@ -121,7 +156,7 @@ I830WaitLpRing(ScrnInfoPtr pScrn, int n, int timeout_millis)
    if (I810_DEBUG & DEBUG_VERBOSE_ACCEL) {
       now = GetTimeInMillis();
       if (now - first) {
-	 ErrorF("Elapsed %d ms\n", now - first);
+	 ErrorF("Elapsed %u ms\n", now - first);
 	 ErrorF("space: %d wanted %d\n", ring->space, n);
       }
    }
@@ -163,9 +198,9 @@ I830Sync(ScrnInfoPtr pScrn)
       ADVANCE_LP_RING();
    }
 
-   I830WaitLpRing(pScrn, pI830->LpRing->mem.Size - 8, 0);
+   I830WaitLpRing(pScrn, pI830->LpRing->mem->size - 8, 0);
 
-   pI830->LpRing->space = pI830->LpRing->mem.Size - 8;
+   pI830->LpRing->space = pI830->LpRing->mem->size - 8;
    pI830->nextColorExpandBuf = 0;
 }
 
@@ -178,10 +213,12 @@ I830EmitFlush(ScrnInfoPtr pScrn)
    if (IS_I96X(pI830))
       flags = 0;
 
-   BEGIN_LP_RING(2);
-   OUT_RING(MI_FLUSH | flags);
-   OUT_RING(MI_NOOP);		/* pad to quadword */
-   ADVANCE_LP_RING();
+   {
+       BEGIN_LP_RING(2);
+       OUT_RING(MI_FLUSH | flags);
+       OUT_RING(MI_NOOP);		/* pad to quadword */
+       ADVANCE_LP_RING();
+   }
 }
 
 void
@@ -192,10 +229,13 @@ I830SelectBuffer(ScrnInfoPtr pScrn, int buffer)
    switch (buffer) {
 #ifdef XF86DRI
    case I830_SELECT_BACK:
-      pI830->bufferOffset = pI830->BackBuffer.Start;
+      pI830->bufferOffset = pI830->back_buffer->offset;
+      break;
+   case I830_SELECT_THIRD:
+      pI830->bufferOffset = pI830->third_buffer->offset;
       break;
    case I830_SELECT_DEPTH:
-      pI830->bufferOffset = pI830->DepthBuffer.Start;
+      pI830->bufferOffset = pI830->depth_buffer->offset;
       break;
 #endif
    default:
@@ -209,57 +249,6 @@ I830SelectBuffer(ScrnInfoPtr pScrn, int buffer)
 	     buffer, pI830->bufferOffset);
 }
 
-void
-I830RefreshRing(ScrnInfoPtr pScrn)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-
-   pI830->LpRing->head = INREG(LP_RING + RING_HEAD) & I830_HEAD_MASK;
-   pI830->LpRing->tail = INREG(LP_RING + RING_TAIL);
-   pI830->LpRing->space = pI830->LpRing->head - (pI830->LpRing->tail + 8);
-   if (pI830->LpRing->space < 0)
-      pI830->LpRing->space += pI830->LpRing->mem.Size;
-
-   if (pI830->AccelInfoRec)
-      pI830->AccelInfoRec->NeedToSync = TRUE;
-}
-
-/* I830 Accel Functions */
-
-static void I830SetupForMono8x8PatternFill(ScrnInfoPtr pScrn,
-					   int pattx, int patty,
-					   int fg, int bg, int rop,
-					   unsigned int planemask);
-static void I830SubsequentMono8x8PatternFillRect(ScrnInfoPtr pScrn,
-						 int pattx, int patty,
-						 int x, int y, int w, int h);
-
-static void I830SetupForScanlineCPUToScreenColorExpandFill(ScrnInfoPtr pScrn,
-							   int fg, int bg,
-							   int rop,
-							   unsigned int mask);
-
-static void I830SubsequentScanlineCPUToScreenColorExpandFill(ScrnInfoPtr
-							     pScrn, int x,
-							     int y, int w,
-							     int h,
-							     int skipleft);
-
-static void I830SubsequentColorExpandScanline(ScrnInfoPtr pScrn, int bufno);
-
-#if DO_SCANLINE_IMAGE_WRITE
-static void I830SetupForScanlineImageWrite(ScrnInfoPtr pScrn, int rop,
-					   unsigned int planemask,
-					   int trans_color, int bpp,
-					   int depth);
-static void I830SubsequentScanlineImageWriteRect(ScrnInfoPtr pScrn,
-						 int x, int y, int w, int h,
-						 int skipleft);
-static void I830SubsequentImageWriteScanline(ScrnInfoPtr pScrn, int bufno);
-#endif
-static void I830RestoreAccelState(ScrnInfoPtr pScrn);
-
-
 /* The following function sets up the supported acceleration. Call it
  * from the FbInit() function in the SVGA driver, or before ScreenInit
  * in a monolithic server.
@@ -267,597 +256,15 @@ static void I830RestoreAccelState(ScrnInfoPtr pScrn);
 Bool
 I830AccelInit(ScreenPtr pScreen)
 {
-   XAAInfoRecPtr infoPtr;
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-   I830Ptr pI830 = I830PTR(pScrn);
-   int i;
-   int width = 0;
-   int nr_buffers = 0;
-   unsigned char *ptr = NULL;
+#ifdef I830_USE_EXA
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    I830Ptr pI830 = I830PTR(pScrn);
 
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-      ErrorF("I830AccelInit\n");
-
-   pI830->AccelInfoRec = infoPtr = XAACreateInfoRec();
-   if (!infoPtr)
-      return FALSE;
-
-   pI830->bufferOffset = 0;
-   infoPtr->Flags = LINEAR_FRAMEBUFFER | OFFSCREEN_PIXMAPS | PIXMAP_CACHE;
-
-   /* Use the same sync function as the I830.
-    */
-   infoPtr->Sync = I830Sync;
-
-   /* Everything else is different enough to justify different functions */
-   {
-      infoPtr->SolidFillFlags = NO_PLANEMASK;
-      infoPtr->SetupForSolidFill = I830SetupForSolidFill;
-      infoPtr->SubsequentSolidFillRect = I830SubsequentSolidFillRect;
-   }
-
-   {
-      infoPtr->ScreenToScreenCopyFlags = (NO_PLANEMASK | NO_TRANSPARENCY);
-
-      infoPtr->SetupForScreenToScreenCopy = I830SetupForScreenToScreenCopy;
-      infoPtr->SubsequentScreenToScreenCopy =
-	    I830SubsequentScreenToScreenCopy;
-   }
-
-   {
-      infoPtr->SetupForMono8x8PatternFill = I830SetupForMono8x8PatternFill;
-      infoPtr->SubsequentMono8x8PatternFillRect =
-	    I830SubsequentMono8x8PatternFillRect;
-
-      infoPtr->Mono8x8PatternFillFlags = (HARDWARE_PATTERN_PROGRAMMED_BITS |
-					  HARDWARE_PATTERN_SCREEN_ORIGIN |
-					  HARDWARE_PATTERN_PROGRAMMED_ORIGIN |
-					  BIT_ORDER_IN_BYTE_MSBFIRST |
-					  NO_PLANEMASK);
-
-   }
-
-   /* On the primary screen */
-   if (pI830->init == 0) {
-      if (pI830->Scratch.Size != 0) {
-         width = ((pScrn->displayWidth + 31) & ~31) / 8;
-         nr_buffers = pI830->Scratch.Size / width;
-         ptr = pI830->FbBase + pI830->Scratch.Start;
-      }
-   } else {
-   /* On the secondary screen */
-      I830Ptr pI8301 = I830PTR(pI830->entityPrivate->pScrn_1);
-      if (pI8301->Scratch2.Size != 0) {
-         width = ((pScrn->displayWidth + 31) & ~31) / 8;
-         nr_buffers = pI8301->Scratch2.Size / width;
-         /* We have to use the primary screen's FbBase, as that's where
-          * we allocated Scratch2, so we get the correct pointer */
-         ptr = pI8301->FbBase + pI8301->Scratch2.Start;
-      }
-   }
-
-   if (nr_buffers) {
-      pI830->NumScanlineColorExpandBuffers = nr_buffers;
-      pI830->ScanlineColorExpandBuffers = (unsigned char **)
-	    xnfcalloc(nr_buffers, sizeof(unsigned char *));
-
-      for (i = 0; i < nr_buffers; i++, ptr += width)
-	 pI830->ScanlineColorExpandBuffers[i] = ptr;
-
-      infoPtr->ScanlineCPUToScreenColorExpandFillFlags =
-	    (NO_PLANEMASK | ROP_NEEDS_SOURCE | BIT_ORDER_IN_BYTE_MSBFIRST);
-
-      infoPtr->ScanlineColorExpandBuffers = (unsigned char **)
-	    xnfcalloc(1, sizeof(unsigned char *));
-      infoPtr->NumScanlineColorExpandBuffers = 1;
-
-      infoPtr->ScanlineColorExpandBuffers[0] =
-	    pI830->ScanlineColorExpandBuffers[0];
-      pI830->nextColorExpandBuf = 0;
-
-      infoPtr->SetupForScanlineCPUToScreenColorExpandFill =
-	    I830SetupForScanlineCPUToScreenColorExpandFill;
-
-      infoPtr->SubsequentScanlineCPUToScreenColorExpandFill =
-	    I830SubsequentScanlineCPUToScreenColorExpandFill;
-
-      infoPtr->SubsequentColorExpandScanline =
-	    I830SubsequentColorExpandScanline;
-
-#if DO_SCANLINE_IMAGE_WRITE
-      infoPtr->NumScanlineImageWriteBuffers = 1;
-      infoPtr->ScanlineImageWriteBuffers = infoPtr->ScanlineColorExpandBuffers;
-      infoPtr->SetupForScanlineImageWrite = I830SetupForScanlineImageWrite;
-      infoPtr->SubsequentScanlineImageWriteRect =
-	    I830SubsequentScanlineImageWriteRect;
-      infoPtr->SubsequentImageWriteScanline = I830SubsequentImageWriteScanline;
-      infoPtr->ScanlineImageWriteFlags = NO_GXCOPY |
-					 NO_PLANEMASK |
-					 ROP_NEEDS_SOURCE |
-					 SCANLINE_PAD_DWORD;
+    if (pI830->useEXA)
+	return I830EXAInit(pScreen);
 #endif
-   }
-
-   {
-      Bool shared_accel = FALSE;
-      int i;
-
-      for(i = 0; i < pScrn->numEntities; i++) {
-         if(xf86IsEntityShared(pScrn->entityList[i]))
-            shared_accel = TRUE;
-      }
-      if(shared_accel == TRUE)
-         infoPtr->RestoreAccelState = I830RestoreAccelState;
-   }
-
-   I830SelectBuffer(pScrn, I830_SELECT_FRONT);
-
-   return XAAInit(pScreen, infoPtr);
-}
-
-#ifdef XF86DRI
-static unsigned int
-CheckTiling(ScrnInfoPtr pScrn)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-   unsigned int tiled = 0;
-
-    /* Check tiling */
-   if (IS_I96X(pI830)) {
-      if (pI830->bufferOffset == pScrn->fbOffset && pI830->front_tiled == FENCE_XMAJOR)
-         tiled = 1;
-      if (pI830->bufferOffset == pI830->RotatedMem.Start && pI830->rotated_tiled == FENCE_XMAJOR)
-         tiled = 1;
-      if (pI830->bufferOffset == pI830->BackBuffer.Start && pI830->back_tiled == FENCE_XMAJOR)
-         tiled = 1;
-      /* not really supported as it's always YMajor tiled */
-      if (pI830->bufferOffset == pI830->DepthBuffer.Start && pI830->depth_tiled == FENCE_XMAJOR)
-         tiled = 1;
-   }
-
-   return tiled;
-}
-#else
-#define CheckTiling(pScrn) 0
+#ifdef I830_USE_XAA
+    return I830XAAInit(pScreen);
 #endif
-
-void
-I830SetupForSolidFill(ScrnInfoPtr pScrn, int color, int rop,
-		      unsigned int planemask)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-      ErrorF("I830SetupForFillRectSolid color: %x rop: %x mask: %x\n",
-	     color, rop, planemask);
-
-   pI830->BR[13] = ((XAAGetPatternROP(rop) << 16) |
-		    (pScrn->displayWidth * pI830->cpp));
-
-   pI830->BR[16] = color;
-
-   switch (pScrn->bitsPerPixel) {
-   case 8:
-      break;
-   case 16:
-      pI830->BR[13] |= (1 << 24);
-      break;
-   case 32:
-      pI830->BR[13] |= ((1 << 25) | (1 << 24));
-      break;
-   }
-}
-
-void
-I830SubsequentSolidFillRect(ScrnInfoPtr pScrn, int x, int y, int w, int h)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-      ErrorF("I830SubsequentFillRectSolid %d,%d %dx%d\n", x, y, w, h);
-
-   {
-      BEGIN_LP_RING(6);
-
-      if (pScrn->bitsPerPixel == 32) {
-	 OUT_RING(COLOR_BLT_CMD | COLOR_BLT_WRITE_ALPHA |
-		  COLOR_BLT_WRITE_RGB);
-      } else {
-	 OUT_RING(COLOR_BLT_CMD);
-      }
-      OUT_RING(pI830->BR[13]);
-      OUT_RING((h << 16) | (w * pI830->cpp));
-      OUT_RING(pI830->bufferOffset + (y * pScrn->displayWidth + x) *
-	       pI830->cpp);
-      OUT_RING(pI830->BR[16]);
-      OUT_RING(0);
-
-      ADVANCE_LP_RING();
-   }
-
-   if (IS_I96X(pI830))
-      I830EmitFlush(pScrn);
-}
-
-void
-I830SetupForScreenToScreenCopy(ScrnInfoPtr pScrn, int xdir, int ydir, int rop,
-			       unsigned int planemask, int transparency_color)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-      ErrorF("I830SetupForScreenToScreenCopy %d %d %x %x %d\n",
-	     xdir, ydir, rop, planemask, transparency_color);
-
-   pI830->BR[13] = (pScrn->displayWidth * pI830->cpp);
-   pI830->BR[13] |= XAAGetCopyROP(rop) << 16;
-
-   switch (pScrn->bitsPerPixel) {
-   case 8:
-      break;
-   case 16:
-      pI830->BR[13] |= (1 << 24);
-      break;
-   case 32:
-      pI830->BR[13] |= ((1 << 25) | (1 << 24));
-      break;
-   }
-
-}
-
-void
-I830SubsequentScreenToScreenCopy(ScrnInfoPtr pScrn, int src_x1, int src_y1,
-				 int dst_x1, int dst_y1, int w, int h)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-   int dst_x2, dst_y2;
-   unsigned int tiled = CheckTiling(pScrn);
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-      ErrorF("I830SubsequentScreenToScreenCopy %d,%d - %d,%d %dx%d\n",
-	     src_x1, src_y1, dst_x1, dst_y1, w, h);
-
-   dst_x2 = dst_x1 + w;
-   dst_y2 = dst_y1 + h;
-
-   if (tiled)
-      pI830->BR[13] = ((pI830->BR[13] & 0xFFFF) >> 2) | 
-					(pI830->BR[13] & 0xFFFF0000);
-
-   {
-      BEGIN_LP_RING(8);
-
-      if (pScrn->bitsPerPixel == 32) {
-	 OUT_RING(XY_SRC_COPY_BLT_CMD | XY_SRC_COPY_BLT_WRITE_ALPHA |
-		  XY_SRC_COPY_BLT_WRITE_RGB | tiled << 15 | tiled << 11);
-      } else {
-	 OUT_RING(XY_SRC_COPY_BLT_CMD | tiled << 15 | tiled << 11);
-      }
-      OUT_RING(pI830->BR[13]);
-      OUT_RING((dst_y1 << 16) | (dst_x1 & 0xffff));
-      OUT_RING((dst_y2 << 16) | (dst_x2 & 0xffff));
-      OUT_RING(pI830->bufferOffset);
-      OUT_RING((src_y1 << 16) | (src_x1 & 0xffff));
-      OUT_RING(pI830->BR[13] & 0xFFFF);
-      OUT_RING(pI830->bufferOffset);
-
-      ADVANCE_LP_RING();
-   }
-
-   if (IS_I96X(pI830))
-      I830EmitFlush(pScrn);
-}
-
-static void
-I830SetupForMono8x8PatternFill(ScrnInfoPtr pScrn, int pattx, int patty,
-			       int fg, int bg, int rop,
-			       unsigned int planemask)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-      ErrorF("I830SetupForMono8x8PatternFill\n");
-
-   pI830->BR[16] = pattx;
-   pI830->BR[17] = patty;
-   pI830->BR[18] = bg;
-   pI830->BR[19] = fg;
-
-   pI830->BR[13] = (pScrn->displayWidth * pI830->cpp);	/* In bytes */
-   pI830->BR[13] |= XAAGetPatternROP(rop) << 16;
-   if (bg == -1)
-      pI830->BR[13] |= (1 << 28);
-
-   switch (pScrn->bitsPerPixel) {
-   case 8:
-      break;
-   case 16:
-      pI830->BR[13] |= (1 << 24);
-      break;
-   case 32:
-      pI830->BR[13] |= ((1 << 25) | (1 << 24));
-      break;
-   }
-
-}
-
-static void
-I830SubsequentMono8x8PatternFillRect(ScrnInfoPtr pScrn, int pattx, int patty,
-				     int x, int y, int w, int h)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-   int x1, x2, y1, y2;
-   unsigned int tiled = CheckTiling(pScrn);
-
-   x1 = x;
-   x2 = x + w;
-   y1 = y;
-   y2 = y + h;
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-      ErrorF("I830SubsequentMono8x8PatternFillRect\n");
-
-   if (tiled)
-      pI830->BR[13] = ((pI830->BR[13] & 0xFFFF) >> 2) | 
-					(pI830->BR[13] & 0xFFFF0000);
-
-   {
-      BEGIN_LP_RING(10);
-
-      if (pScrn->bitsPerPixel == 32) {
-	 OUT_RING(XY_MONO_PAT_BLT_CMD | XY_MONO_PAT_BLT_WRITE_ALPHA |
-		  XY_MONO_PAT_BLT_WRITE_RGB |
-		  tiled << 11 |
-		  ((patty << 8) & XY_MONO_PAT_VERT_SEED) |
-		  ((pattx << 12) & XY_MONO_PAT_HORT_SEED));
-      } else {
-	 OUT_RING(XY_MONO_PAT_BLT_CMD |
-		  tiled << 11 |
-		  ((patty << 8) & XY_MONO_PAT_VERT_SEED) |
-		  ((pattx << 12) & XY_MONO_PAT_HORT_SEED));
-      }
-      OUT_RING(pI830->BR[13]);
-      OUT_RING((y1 << 16) | x1);
-      OUT_RING((y2 << 16) | x2);
-      OUT_RING(pI830->bufferOffset);
-      OUT_RING(pI830->BR[18]);		/* bg */
-      OUT_RING(pI830->BR[19]);		/* fg */
-      OUT_RING(pI830->BR[16]);		/* pattern data */
-      OUT_RING(pI830->BR[17]);
-      OUT_RING(0);
-      ADVANCE_LP_RING();
-   }
-
-   if (IS_I96X(pI830))
-      I830EmitFlush(pScrn);
-}
-
-static void
-I830GetNextScanlineColorExpandBuffer(ScrnInfoPtr pScrn)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-   XAAInfoRecPtr infoPtr = pI830->AccelInfoRec;
-
-   if (pI830->nextColorExpandBuf == pI830->NumScanlineColorExpandBuffers)
-      I830Sync(pScrn);
-
-   infoPtr->ScanlineColorExpandBuffers[0] =
-	 pI830->ScanlineColorExpandBuffers[pI830->nextColorExpandBuf];
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-      ErrorF("using color expand buffer %d\n", pI830->nextColorExpandBuf);
-
-   pI830->nextColorExpandBuf++;
-}
-
-static void
-I830SetupForScanlineCPUToScreenColorExpandFill(ScrnInfoPtr pScrn,
-					       int fg, int bg, int rop,
-					       unsigned int planemask)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-      ErrorF("I830SetupForScanlineScreenToScreenColorExpand %d %d %x %x\n",
-	     fg, bg, rop, planemask);
-
-   /* Fill out register values */
-   pI830->BR[13] = (pScrn->displayWidth * pI830->cpp);
-   pI830->BR[13] |= XAAGetCopyROP(rop) << 16;
-   if (bg == -1)
-      pI830->BR[13] |= (1 << 29);
-
-   switch (pScrn->bitsPerPixel) {
-   case 8:
-      break;
-   case 16:
-      pI830->BR[13] |= (1 << 24);
-      break;
-   case 32:
-      pI830->BR[13] |= ((1 << 25) | (1 << 24));
-      break;
-   }
-
-   pI830->BR[18] = bg;
-   pI830->BR[19] = fg;
-
-   I830GetNextScanlineColorExpandBuffer(pScrn);
-}
-
-static void
-I830SubsequentScanlineCPUToScreenColorExpandFill(ScrnInfoPtr pScrn,
-						 int x, int y,
-						 int w, int h, int skipleft)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-      ErrorF("I830SubsequentScanlineCPUToScreenColorExpandFill "
-	     "%d,%d %dx%x %d\n", x, y, w, h, skipleft);
-
-   /* Fill out register values */
-   pI830->BR[9] = (pI830->bufferOffset +
-		   (y * pScrn->displayWidth + x) * pI830->cpp);
-   pI830->BR[11] = ((1 << 16) | w);
-}
-
-static void
-I830SubsequentColorExpandScanline(ScrnInfoPtr pScrn, int bufno)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-   unsigned int tiled = CheckTiling(pScrn);
-
-   if (pI830->init == 0) {
-      pI830->BR[12] = (pI830->AccelInfoRec->ScanlineColorExpandBuffers[0] -
-		       pI830->FbBase);
-   } else {
-      I830Ptr pI8301 = I830PTR(pI830->entityPrivate->pScrn_1);
-
-      /* We have to use the primary screen's FbBase, as that's where
-       * we allocated Scratch2, so we get the correct pointer */
-      pI830->BR[12] = (pI830->AccelInfoRec->ScanlineColorExpandBuffers[0] -
-		       pI8301->FbBase);
-   }
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-      ErrorF("I830SubsequentColorExpandScanline %d (addr %x)\n",
-	     bufno, pI830->BR[12]);
-
-   if (tiled)
-      pI830->BR[13] = ((pI830->BR[13] & 0xFFFF) >> 2) | 
-					(pI830->BR[13] & 0xFFFF0000);
-
-   {
-      BEGIN_LP_RING(8);
-
-      if (pScrn->bitsPerPixel == 32) {
-	 OUT_RING(XY_MONO_SRC_BLT_CMD | XY_MONO_SRC_BLT_WRITE_ALPHA |
-		  tiled << 11 |
-		  XY_MONO_SRC_BLT_WRITE_RGB);
-      } else {
-	 OUT_RING(XY_MONO_SRC_BLT_CMD | tiled << 11);
-      }
-      OUT_RING(pI830->BR[13]);
-      OUT_RING(0);			/* x1 = 0, y1 = 0 */
-      OUT_RING(pI830->BR[11]);		/* x2 = w, y2 = 1 */
-      OUT_RING(pI830->BR[9]);		/* dst addr */
-      OUT_RING(pI830->BR[12]);		/* src addr */
-      OUT_RING(pI830->BR[18]);		/* bg */
-      OUT_RING(pI830->BR[19]);		/* fg */
-
-      ADVANCE_LP_RING();
-   }
-
-   /* Advance to next scanline.
-    */
-   pI830->BR[9] += pScrn->displayWidth * pI830->cpp;
-   I830GetNextScanlineColorExpandBuffer(pScrn);
-
-   if (IS_I96X(pI830))
-      I830EmitFlush(pScrn);
-}
-
-#if DO_SCANLINE_IMAGE_WRITE
-static void
-I830SetupForScanlineImageWrite(ScrnInfoPtr pScrn, int rop,
-			       unsigned int planemask, int trans_color,
-			       int bpp, int depth)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-      ErrorF("I830SetupForScanlineImageWrite %x %x\n", rop, planemask);
-
-   /* Fill out register values */
-   pI830->BR[13] = (pScrn->displayWidth * pI830->cpp);
-   pI830->BR[13] |= XAAGetCopyROP(rop) << 16;
-
-   switch (pScrn->bitsPerPixel) {
-   case 8:
-      break;
-   case 16:
-      pI830->BR[13] |= (1 << 24);
-      break;
-   case 32:
-      pI830->BR[13] |= ((1 << 25) | (1 << 24));
-      break;
-   }
-
-   I830GetNextScanlineColorExpandBuffer(pScrn);
-}
-
-static void
-I830SubsequentScanlineImageWriteRect(ScrnInfoPtr pScrn, int x, int y,
-				     int w, int h, int skipleft)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-      ErrorF("I830SubsequentScanlineImageWriteRect "
-	     "%d,%d %dx%x %d\n", x, y, w, h, skipleft);
-
-   /* Fill out register values */
-   pI830->BR[9] = (pI830->bufferOffset +
-		   (y * pScrn->displayWidth + x) * pI830->cpp);
-   pI830->BR[11] = ((1 << 16) | w);
-}
-
-static void
-I830SubsequentImageWriteScanline(ScrnInfoPtr pScrn, int bufno)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-   unsigned int tiled = CheckTiling(pScrn);
-
-   if (pI830->init == 0) {
-      pI830->BR[12] = (pI830->AccelInfoRec->ScanlineColorExpandBuffers[0] -
-		       pI830->FbBase);
-   } else {
-      I830Ptr pI8301 = I830PTR(pI830->entityPrivate->pScrn_1);
-
-      /* We have to use the primary screen's FbBase, as that's where
-       * we allocated Scratch2, so we get the correct pointer */
-      pI830->BR[12] = (pI830->AccelInfoRec->ScanlineColorExpandBuffers[0] -
-		       pI8301->FbBase);
-   }
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-      ErrorF("I830SubsequentImageWriteScanline %d (addr %x)\n",
-	     bufno, pI830->BR[12]);
-
-   {
-      BEGIN_LP_RING(8);
-
-      if (pScrn->bitsPerPixel == 32) {
-	 OUT_RING(XY_SRC_COPY_BLT_CMD | XY_SRC_COPY_BLT_WRITE_ALPHA |
-		  tiled << 11 |
-		  XY_SRC_COPY_BLT_WRITE_RGB);
-      } else {
-	 OUT_RING(XY_SRC_COPY_BLT_CMD | tiled << 11);
-      }
-      OUT_RING(pI830->BR[13]);
-      OUT_RING(0);			/* x1 = 0, y1 = 0 */
-      OUT_RING(pI830->BR[11]);		/* x2 = w, y2 = 1 */
-      OUT_RING(pI830->BR[9]);		/* dst addr */
-      OUT_RING(0);			/* source origin (0,0) */
-      OUT_RING(pI830->BR[11] & 0xffff);	/* source pitch */
-      OUT_RING(pI830->BR[12]);		/* src addr */
-
-      ADVANCE_LP_RING();
-   }
-
-   /* Advance to next scanline.
-    */
-   pI830->BR[9] += pScrn->displayWidth * pI830->cpp;
-   I830GetNextScanlineColorExpandBuffer(pScrn);
-}
-#endif
-
-/* Support for multiscreen */
-static void
-I830RestoreAccelState(ScrnInfoPtr pScrn)
-{
-#if 0
-   /* might be needed, but everything is on a ring, so I don't think so */
-   I830Sync(pScrn);
-#endif
+    return FALSE;
 }

@@ -2,8 +2,14 @@
 
 #include "xorg-server.h"
 
+/* Use Damage extension */
+#undef DAMAGE
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
+
+/* Have drm_i915_flip_t and related definitions */
+#undef HAVE_I915_FLIP
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
@@ -32,14 +38,8 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Major version */
-#undef INTEL_VERSION_MAJOR
-
-/* Minor version */
-#undef INTEL_VERSION_MINOR
-
-/* Patch version */
-#undef INTEL_VERSION_PATCH
+/* Define to 1 if your C compiler doesn't accept -c and -o together. */
+#undef NO_MINUS_C_MINUS_O
 
 /* Name of package */
 #undef PACKAGE
@@ -82,3 +82,9 @@
 
 /* Enable developmental DRI driver support */
 #undef XF86DRI_DEVEL
+
+/* Extended DRI memory management */
+#undef XF86DRI_MM
+
+/* X server has built-in mode code */
+#undef XMODES
