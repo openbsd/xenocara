@@ -1,45 +1,488 @@
-2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+commit 38ba390f775e2f6001c8887328c5b925f623308a
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Sep 7 02:17:29 2007 +0200
 
-	* configure.ac:
-	* src/acecad.c:
-	Unlibcwrap and bump server version requirement.  Bump to 1.1.0.
+    Bump to 1.2.1
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 8bcc6d22889cc40c6b7d1582f87d4b2a816167ab
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Aug 28 17:31:54 2007 -0700
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    Make compatible with new input ABI
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 171d4c8dc6136aa8c14aedd0ee107d6ba957de04
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Mon Jul 9 11:03:00 2007 +0200
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Don't crash X when the tablet wasn't found.
+    
+    X would crash when switching to console if the acecad module was loaded but the tablet had not been configured.
+    
+    Fix by properly freeing structures before returning NULL in PreInit()
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit c69e2c95b9eb2381709c9de14957d24ab919b5bc
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Wed May 30 23:34:13 2007 -0600
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    fix build on BSD systems.
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 62bce174e7a3c896fabe40813639e479d9652452
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Wed May 30 23:33:56 2007 -0600
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Add .gitignore
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 1af7e022be2bcbcf50d12c0c3847a853a911347c
+Author: Paul Vojta <vojta@Math.Berkeley.EDU>
+Date:   Mon Apr 30 11:45:53 2007 -0700
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    Off-by-one (and comment) fix.
+    
+    Just a quick patch:
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit cc6bc3b848dfa312baf0cf4037b3e600d59a8f7e
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sun Apr 29 05:09:41 2007 +0200
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    Bump to 1.2.0.
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 405fac1dd34bbbfa8a2dd1a0ac2664871d914e1f
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sun Apr 29 05:02:03 2007 +0200
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    Simplify flag setup.
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit ac08aacf4693e2ed824c15c9d243e7e9c5750cc3
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sun Apr 29 04:44:27 2007 +0200
 
-	* configure.ac:
-	Update pkgcheck depedencies to work with separate build roots.
+    More whitespace/coding style cleanups.
+
+commit 9b9b1d03609996dc3220870fa6e226c46c888c83
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sun Apr 29 04:42:04 2007 +0200
+
+    Centralize the success code for the probe routine.
+
+commit 93736ac2bf92ad342255a64120c2685f4074a0e9
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Apr 28 15:32:32 2007 +0200
+
+    Keep track of device availability.
+    
+    Don't spam the log with errors about the device not being available, just inform the user when the device is available again.
+
+commit c471639adfba3e7c24c95b24da287147f86bd3d1
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Apr 28 15:10:25 2007 +0200
+
+    NOTAVAIL macro to check if errno means device not available.
+    
+    Define (and use) a NOTAVAIL macro that checks errno against ENODEV, ENXIO and ENOENT, instead of checking manually against ENODEV only.
+
+commit 81e37b4b042b824654b4bf2353732741cf49bce7
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Apr 28 14:42:20 2007 +0200
+
+    Make acecadAutoDev into a flag.
+    
+    Introduce AUTODEV_FLAG for the flags field in AceCadPrivateRec to tell if we are autodetecting devices or not, instead of having a separate acecadAutoDev field.
+
+commit bda0ee988acbae97dc908574c1247cf1ceb5b3c9
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Apr 28 14:36:12 2007 +0200
+
+    Make acecadUSB into a flag.
+    
+    Introduce USB_FLAG for the flags field in AceCadPrivateRec to tell if we have a USB device or not, instead of having a separate acecadUSB field.
+
+commit 2b88cc3642a94a58e777d8a931f7bbe9f16e9b93
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Apr 28 14:27:58 2007 +0200
+
+    More whitespace cleanup.
+
+commit 1d8e61f461fef959212d5a05cac70a590927ec20
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Apr 28 14:25:22 2007 +0200
+
+    More coding style cleanups.
+
+commit e5704a3484bb8cc3f295431ff2e50e3e628db0c7
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Apr 28 14:19:49 2007 +0200
+
+    Add missing newlines in a couple of messages.
+
+commit a8350a018d50f2a0e2adcf6ec8c76f6ab412dd16
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Apr 28 05:29:41 2007 +0200
+
+    Whitespace cleanup.
+
+commit 46b34bec71949b815b1372464b887da134378ae8
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Apr 28 05:10:39 2007 +0200
+
+    De-spammify AceCadAutoDevProbe().
+    
+    Demote X_ERRORs in AceCadAutoDevProbe() to X_WARNINGs, and add an X-style
+    verbosity parameter. This is set to 0 during initial probe, and to 4 during
+    runtime probes.
+
+commit 41941cb9e2365b27196805c22424dc9ad694806f
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Apr 28 04:55:26 2007 +0200
+
+    Re-probe on device not found on input if auto-dev is active.
+    
+    If USBReadInput() fails because the device is not being found, and auto-dev is
+    active, try re-probing for the device. The only downside of this procedure is
+    that the log may get spammed a lot as long as no device can be found.
+
+commit 838980da1cf5073ce0d532f94358cfc951e3b1c4
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Apr 28 03:43:04 2007 +0200
+
+    Re-probe for device if DeviceOn fails and auto-dev is active.
+    
+    If DeviceOn does not find the device and auto-dev is active, run the probe
+    again to try to find the new location of the device (if present).
+
+commit dba3190cb5e5c041c6b5811fa9efd1f0a5931fb6
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Apr 28 03:09:17 2007 +0200
+
+    Device autodetection via sysfs.
+    
+    If support for sysfs is compiled in and the libsysfs library is found, the
+    acecad driver will now try to autodetect the device via sysfs at first. If this
+    fails, it will probe /dev/input/eventX devices.
+    
+    Currently the Name option is ignored during sysfs detection: the first possibly
+    valid candidate is accepted without further checks.
+
+commit 4f738d5eee947d5e4bd27f4ecdf198c5718ca53a
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Fri Apr 27 14:40:43 2007 +0200
+
+    "Name" option to configure autodev detection string.
+    
+    The string we look for when probing event devices can now be configured with
+    the "Name" option.
+
+commit 947aa75cf284b651c77ae1f0431cae0c3c3d3d05
+Merge: 581635e... 805ccfb...
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Fri Apr 27 12:23:44 2007 +0200
+
+    Merge branch 'master' into autodev
+
+commit 805ccfb003d7e8d71da18210186217583df710b1
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Fri Apr 27 00:30:58 2007 +0200
+
+    Add autogen.sh and autogenerate ChangeLog to dist
+    
+    Get rid of the manually maintained ChangeLog and put in some rules to
+    autogenerate it from git logs, following the xorg/lib/libXi example.
+    
+    Also add ChangeLog and autogen.sh to the dist files.
+
+commit 558f80d3d4c21ddd5fa1981574c449bc4d86ddfa
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Fri Apr 27 00:01:54 2007 +0200
+
+    Add autoconf check for linux/input.h
+    
+    Since X went modular, we cannot rely on LINUX_INPUT being defined even when the
+    Linux input subsystem is available. Fix: add an autoconf rule that checks for
+    linux/input.h and define LINUX_INPUT if the header is found.
+
+commit 581635e2fc5563b2697d51e3aeec046918d8caee
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Thu Apr 26 13:33:51 2007 +0200
+
+    Initial support for device autodetection.
+    
+    When the "Device" option is missing or set to "auto-dev" the acecad module will
+    attempt autodetection of the correct device.
+    
+    Currently, it will probe all /dev/input/eventX nodes until one is found that
+    reports a device name that begins with "ACECAD".
+
+commit c6b21d102908104ffe9b6103894f8c8fcf2ae7f4
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Thu Apr 26 03:04:06 2007 +0200
+
+    Uniformize messages.
+    
+    Use xf86Msg, prepending local->name when possible and upcasing ACECAD (as per
+    their site, and to differentiate from the software company).
+    
+    Also reduce verbosity by using xf86MsgVerb with verbosity 4 for messages which
+    are not of interest for users.
+
+commit 4fb81ff8b0828294b3e1d0c63c67dca318ee7959
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Thu Apr 26 02:16:10 2007 +0200
+
+    We always have config.h.
+    
+    Quoting Alan Coopersmith from http://lists.x.org/archives/xorg/2007-April/024058.html
+    
+    > Now that we are no longer sharing source with the monolith, should
+    > all the #ifdef HAVE_CONFIG_H's be removed and just always include
+    > config.h now?
+
+commit e3499189b91725e09e25a468f21612e805dfa89d
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Tue Apr 24 22:00:47 2007 +0200
+
+    Use autoconfigured package version if possible.
+
+commit 7fe06dc37595a39e0298d9123a669d06df934c35
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Tue Apr 24 15:28:51 2007 +0200
+
+    Bump to 1.1.1.
+
+commit 7665457d70a37c3187b3dfcc54a7f15058e8acba
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Tue Apr 24 13:35:52 2007 +0200
+
+    Support 2.6.x kernels.
+
+commit 1eae0e35655ffddb8a203a51bb1e2aa53928a87e
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Tue Apr 24 12:44:58 2007 +0200
+
+    Use the proper MessageType for probed, default, info and error messages.
+
+commit 9ab58ae1001a399907458d236b1f725e3503ee90
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Tue Apr 24 12:38:38 2007 +0200
+
+    Clean up defines, and add an include to fix compilation when LINUX_INPUT is defined
+
+commit 190e38f513ed645b1662441a4b90eaf778878316
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 16:16:33 2006 +0000
+
+    Bump to 1.1.0.
+
+commit a128e04d9240409cf8c9a9c92671f374959c60d0
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 16:13:56 2006 +0000
+
+    Unlibcwrap and bump server version requirement.
+
+commit aaec49a8e42193e0d7f68132f01e8d802ecee27c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:55 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit e5dd84c88172873a99f12798cc00e59c5185afc7
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:49 2005 +0000
+
+    Stub COPYING files
+
+commit 2e050d849b72a5119790641fe6b7a83f5e6f15f0
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:13 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 8df008ad5451a0afc4576be121e112ae43c5a4bf
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:27 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit a3e290213ce7ce920145a4a7368e052f09768164
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:29 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 31963eae0d36ca43f103a885430b39626021aa94
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:04 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit 295f696a950f0883c040969a7381be1b16275674
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:53 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit b8075ef13db08347876dd74b06bd5d05be00d9ff
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:05 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit cab1f00c4f2d2b2a12260c078b06a30bd03b8d35
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:00 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit 9f164337b4c0ff7f3189f50033f5635550fbe598
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:10 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 37f29b066c955b9ef85b95f39ed4ca9c4c799da9
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:48 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit 0d5c65828cbda96688234ca98de51748cc6a7a9c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:47:59 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 48e99a4438d6e4c869cae23f2bcf17504b36f12b
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:50 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 9cd8523d3047eb00e9d1f90158d932c8c9c8d511
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:25 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit 33d7ef77bdc4d55c01f50f9a29ac660703c0e380
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:08:53 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 262151fd3f961ee1dc065943eff62e7c27823340
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:36 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 3e83d76e4315468df9c85b7a917508e5e0adc8e6
+Author: SÃ¸ren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Aug 10 14:07:21 2005 +0000
+
+    Don\'t lose existing CFLAGS in all the input drivers and some of the video
+        drivers
+
+commit 81612155b583e3fbaff7af662edf7353cfb0da8e
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:39 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 01f7b4b23a52439aab8262d3a500f3339be04eb3
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 13 20:03:20 2005 +0000
+
+    Make the module dir configurable
+
+commit b458a723e098531da7dbfac39747dc34df431831
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 13 02:20:57 2005 +0000
+
+    Update all input drivers to pass distcheck
+
+commit f603ac2e59944b7f75ff82803c67f2ce02321646
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Jul 12 06:15:07 2005 +0000
+
+    Build skeletons for input drivers. Should basically work.
+
+commit 0b74a6722cf7c0e24bf31720cfa4ce0eb1a479d2
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:37:58 2005 +0000
+
+    Prep input drivers for modularizing by adding guarded #include "config.h"
+
+commit a02a441079feb7cc208c4d4e190d3c47819fd59f
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Jun 28 20:54:21 2005 +0000
+
+    Bug #1565: Don't delete the driver twice. (Stéphane VOLTZ)
+
+commit 0702e4b5b996f7ce959d2252318c5da86f6138a2
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:17:00 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit cb1938aa46fcab41ec663568fea22a89b32afe45
+Author: Markus Kuhn <Markus.Kuhn@cl.cam.ac.uk>
+Date:   Sat Dec 4 00:43:10 2004 +0000
+
+    Encoding of numerous files changed to UTF-8
+
+commit 08ad8a93ee169525543da9aa044939024122e67f
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:54:02 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit eeeab6dfebe29f84947449a2123afcf673f74cbf
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:47 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit f45bf39ec0655879f922e30ce40a4d848bbe5c53
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:30 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit a4df6cf595d031007f7126d321350de13d6aaac2
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:36:00 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 0a754ffa019f081a194cb28b3d12968bf4522bab
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:33 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit e50d70f38e90bde903c91dcd6f47cf01165fe977
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:46 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 350b2d1c6157e75ab8e5374164cd68f9b6b5eea7
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:56 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 249fcdd8f49a8a922ee1eb88cbd8a01e8929328f
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:56 2003 +0000
+
+    Initial revision

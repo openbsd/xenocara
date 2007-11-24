@@ -25,14 +25,14 @@
  */
 /* $XFree86: xc/programs/Xserver/hw/xfree86/input/acecad/acecad.h,v 1.2tsi Exp $ */
 
-#ifndef	_ACECAD_H_
+#ifndef _ACECAD_H_
 #define _ACECAD_H_
 
 /******************************************************************************
  *		Definitions
  *		structs, typedefs, #defines, enums
  *****************************************************************************/
-#define ACECAD_PACKET_SIZE		7
+#define ACECAD_PACKET_SIZE	7
 
 #define ACECAD_CONFIG		"a"		/* Send configuration (max coords) */
 
@@ -44,12 +44,12 @@
 #define ACECAD_PROMPT_MODE	"B"		/* Prompt mode */
 #define ACECAD_STREAM_MODE	"@"		/* Stream mode */
 #define ACECAD_INCREMENT	'I'		/* Set increment */
-#define ACECAD_BINARY_FMT	"zb"	/* Binary reporting */
+#define ACECAD_BINARY_FMT	"zb"		/* Binary reporting */
 
 #define ACECAD_PROMPT		"P"		/* Prompt for current position */
 
 #define PHASING_BIT		0x80
-#define PROXIMITY_BIT	0x40
+#define PROXIMITY_BIT		0x40
 #define TABID_BIT		0x20
 #define XSIGN_BIT		0x10
 #define YSIGN_BIT		0x08
@@ -57,6 +57,11 @@
 #define COORD_BITS		0x7f
 
 #define ABSOLUTE_FLAG		1
+#define USB_FLAG		2
+#define AUTODEV_FLAG		4
+#define AVAIL_FLAG		8
+
+#define NOTAVAIL ((errno == ENODEV) || (errno == ENXIO) || (errno == ENOENT))
 
 #define milisleep(ms) xf86usleep (ms * 1000)
 
@@ -66,7 +71,7 @@ static const char * acecad_initstr = ACECAD_BINARY_FMT ACECAD_STREAM_MODE;
 
 typedef struct 
 {
-	XISBuffer *buffer;
+    XISBuffer	*buffer;
     int		acecadInc;		/* increment between transmits */
     int		acecadOldX;		/* previous X position */
     int		acecadOldY;		/* previous Y position */
@@ -76,8 +81,7 @@ typedef struct
     int		acecadMaxX;		/* max X value */
     int		acecadMaxY;		/* max Y value */
     int		acecadMaxZ;		/* max Y value */
-    char	acecadReportSpeed;		/* report speed */
-    int		acecadUSB;		/*USB flag*/
+    char	acecadReportSpeed;	/* report speed */
     int		flags;			/* various flags */
     int		packeti;		/* number of bytes read */
     int		PacketSize;		/* number of bytes read */
@@ -109,6 +113,8 @@ static InputInfoPtr AceCadPreInit(InputDriverPtr, IDevPtr , int);
 static void USBReadInput (LocalDevicePtr);
 static Bool USBQueryHardware (LocalDevicePtr);
 static int IsUSBLine(int);
+static Bool fd_query_acecad(int, char*);
+static Bool AceCadAutoDevProbe(LocalDevicePtr, int);
 #endif
 
 

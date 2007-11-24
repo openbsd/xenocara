@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-acecad],
-        1.1.0,
+        1.2.1,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-acecad)
 
@@ -85,6 +85,12 @@ AC_SUBST([CFLAGS])
 
 # Checks for header files.
 AC_HEADER_STDC
+AC_HEADER_CHECK([linux/input.h],
+		[AC_DEFINE([LINUX_INPUT], [1], [Using the Linux input subsystem])]
+		)
+AC_HEADER_CHECK([sysfs/libsysfs.h],
+		[AC_DEFINE([LINUX_SYSFS], [1], [Using sysfs to probe devices])]
+		)
 
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
