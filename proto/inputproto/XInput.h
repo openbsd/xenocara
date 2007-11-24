@@ -149,6 +149,13 @@ SOFTWARE.
 #define NoExtensionEvent(d,type,_class) \
     { _class =  ((XDevice *) d)->device_id << 8 | _noExtensionEvent;}
 
+#define DevicePresence(dpy, type, _class)                       \
+    {                                                           \
+        extern int _XiGetDevicePresenceNotifyEvent(Display *);  \
+        type = _XiGetDevicePresenceNotifyEvent(dpy);            \
+        _class =  (0x10000 | _devicePresence);                  \
+    }
+
 #define BadDevice(dpy,error) _xibaddevice(dpy, &error)
 
 #define BadClass(dpy,error) _xibadclass(dpy, &error)
@@ -418,6 +425,31 @@ typedef struct {
 
 /*******************************************************************
  *
+ * DevicePresenceNotify event.  This event is sent when the list of
+ * input devices changes, in which case devchange will be false, and
+ * no information about the change will be contained in the event;
+ * the client should use XListInputDevices() to learn what has changed.
+ *
+ * If devchange is true, an attribute that the server believes is
+ * important has changed on a device, and the client should use
+ * XGetDeviceControl to examine the device.  If control is non-zero,
+ * then that control has changed meaningfully.
+ */
+
+typedef struct {
+    int           type;
+    unsigned long serial;       /* # of last request processed by server */
+    Bool          send_event;   /* true if this came from a SendEvent request */
+    Display       *display;     /* Display the event was read from */
+    Window        window;       /* unused */
+    Time          time;
+    Bool          devchange;
+    XID           deviceid;
+    XID           control;
+} XDevicePresenceNotifyEvent;
+
+/*******************************************************************
+ *
  * Control structures for input devices that support input class
  * Feedback.  These are used by the XGetFeedbackControl and 
  * XChangeFeedbackControl functions.
@@ -631,6 +663,49 @@ typedef struct {
      int            *min_resolutions;
      int            *max_resolutions;
 } XDeviceResolutionState;
+
+typedef struct {
+    XID             control;
+    int             length;
+    int             min_x;
+    int             max_x;
+    int             min_y;
+    int             max_y;
+    int             flip_x;
+    int             flip_y;
+    int             rotation;
+    int             button_threshold;
+} XDeviceAbsCalibControl, XDeviceAbsCalibState;
+
+typedef struct {
+    XID             control;
+    int             length;
+    int             offset_x;
+    int             offset_y;
+    int             width;
+    int             height;
+    int             screen;
+    XID             following;
+} XDeviceAbsAreaControl, XDeviceAbsAreaState;
+
+typedef struct {
+    XID             control;
+    int             length;
+    int             status;
+} XDeviceCoreControl;
+
+typedef struct {
+    XID             control;
+    int             length;
+    int             status;
+    int             iscore;
+} XDeviceCoreState;
+
+typedef struct {
+    XID             control;
+    int             length;
+    int             enable;
+} XDeviceEnableControl, XDeviceEnableState;
 
 /*******************************************************************
  *

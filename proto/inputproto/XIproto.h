@@ -72,7 +72,7 @@ SOFTWARE.
 
 #define numInputClasses 7
 
-#define IEVENTS		15
+#define IEVENTS		16
 #define IERRORS		5
 
 #define CLIENT_REQ		1
@@ -113,6 +113,7 @@ struct tmask
 #define XI_ChangeDeviceNotify		12
 #define XI_DeviceKeystateNotify		13
 #define XI_DeviceButtonstateNotify	14
+#define XI_DevicePresenceNotify		15
 
 /*********************************************************
  *
@@ -1290,6 +1291,46 @@ typedef struct {
     CARD32  	num_valuators B32; 	/* number of valuators		*/
 } xDeviceResolutionState;
 
+typedef struct {
+     CARD16         control B16;
+     CARD16         length B16;
+     INT32          min_x B32;
+     INT32          max_x B32;
+     INT32          min_y B32;
+     INT32          max_y B32;
+     CARD32         flip_x B32;
+     CARD32         flip_y B32;
+     CARD32         rotation B32;
+     CARD32         button_threshold B32;
+} xDeviceAbsCalibState;
+
+typedef struct {
+     CARD16         control B16;
+     CARD16         length B16;
+     CARD32         offset_x B32;
+     CARD32         offset_y B32;
+     CARD32         width B32;
+     CARD32         height B32;
+     CARD32         screen B32;
+     CARD32         following B32;
+} xDeviceAbsAreaState;
+
+typedef struct {
+    CARD16      control B16;            /* control type                 */
+    CARD16      length  B16;            /* control length               */
+    CARD8       status;
+    CARD8       iscore;
+    CARD16      pad1 B16;
+} xDeviceCoreState;
+
+typedef struct {
+    CARD16      control B16;            /* control type                 */
+    CARD16      length  B16;            /* control length               */
+    CARD8       enable;
+    CARD8       pad0;
+    CARD16      pad1 B16;
+} xDeviceEnableState;
+
 /*********************************************************
  *
  * ChangeDeviceControl.
@@ -1332,21 +1373,45 @@ typedef struct {
     CARD8  	pad1,pad2;
 } xDeviceResolutionCtl;
 
-
-/* Merged from Metrolink tree for XINPUT stuff	*/
+typedef struct {
+     CARD16         control B16;
+     CARD16         length B16;
+     INT32          min_x;
+     INT32          max_x;
+     INT32          min_y;
+     INT32          max_y;
+     CARD32         flip_x;
+     CARD32         flip_y;
+     CARD32         rotation;
+     CARD32         button_threshold;
+} xDeviceAbsCalibCtl;
 
 typedef struct {
-     CARD16         control;
-     CARD16         length;
-     CARD32         min_x;
-     CARD32         max_x;
-     CARD32         min_y;
-     CARD32         max_y;
-     CARD32         button_threshold;
-} xDeviceTSCalibrationCtl;
+     CARD16         control B16;
+     CARD16         length B16;
+     CARD32         offset_x;
+     CARD32         offset_y;
+     INT32          width;
+     INT32          height;
+     INT32          screen;
+     CARD32         following;
+} xDeviceAbsAreaCtl;
 
-/* End of merged section	*/
+typedef struct {
+    CARD16          control B16;
+    CARD16          length  B16;
+    CARD8           status;
+    CARD8           pad0;
+    CARD16          pad1 B16;
+} xDeviceCoreCtl;
 
+typedef struct {
+    CARD16          control B16;
+    CARD16          length  B16;
+    CARD8           enable;
+    CARD8           pad0;
+    CARD16          pad1 B16;
+} xDeviceEnableCtl;
 
 /**********************************************************
  *
@@ -1522,6 +1587,28 @@ typedef struct
     CARD32	pad03 B32;
     CARD32	pad04 B32;
     }  changeDeviceNotify;
+
+/**********************************************************
+ *
+ * devicePresenceNotify.
+ *
+ */
+
+typedef struct
+    {
+    BYTE 	type;
+    BYTE        pad00;
+    CARD16 	sequenceNumber B16;
+    Time        time B32;
+    BYTE        devchange; /* Device{Added|Removed|Enabled|Disabled} */
+    BYTE        deviceid;
+    CARD16      control B16;
+    CARD32	pad02 B32;
+    CARD32	pad03 B32;
+    CARD32	pad04 B32;
+    CARD32	pad05 B32;
+    CARD32	pad06 B32;
+    }  devicePresenceNotify;
 
 #undef Window
 #undef Time
