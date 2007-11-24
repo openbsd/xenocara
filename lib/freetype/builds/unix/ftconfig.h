@@ -61,14 +61,52 @@ FT_BEGIN_HEADER
 #define HAVE_UNISTD_H 1
 #define HAVE_FCNTL_H 1
 
-#define SIZEOF_INT 4
-#define SIZEOF_LONG 4
+  /*************************************************************************/
+  /*                                                                       */
+  /*               PLATFORM-SPECIFIC CONFIGURATION MACROS                  */
+  /*                                                                       */
+  /* These macros can be toggled to suit a specific system.  The current   */
+  /* ones are defaults used to compile FreeType in an ANSI C environment   */
+  /* (16bit compilers are also supported).  Copy this file to your own     */
+  /* `freetype/builds/<system>' directory, and edit it to port the engine. */
+  /*                                                                       */
+  /*************************************************************************/
 
 
-#define FT_SIZEOF_INT   SIZEOF_INT
-#define FT_SIZEOF_LONG  SIZEOF_LONG
+  /* There are systems (like the Texas Instruments 'C54x) where a `char' */
+  /* has 16 bits.  ANSI C says that sizeof(char) is always 1.  Since an  */
+  /* `int' has 16 bits also for this system, sizeof(int) gives 1 which   */
+  /* is probably unexpected.                                             */
+  /*                                                                     */
+  /* `CHAR_BIT' (defined in limits.h) gives the number of bits in a      */
+  /* `char' type.                                                        */
 
+#ifndef FT_CHAR_BIT
 #define FT_CHAR_BIT  CHAR_BIT
+#endif
+
+  /* The size of an `int' type.  */
+#if                                 FT_UINT_MAX == 0xFFFFUL
+#define FT_SIZEOF_INT  (16 / FT_CHAR_BIT)
+#elif                               FT_UINT_MAX == 0xFFFFFFFFUL
+#define FT_SIZEOF_INT  (32 / FT_CHAR_BIT)
+#elif FT_UINT_MAX > 0xFFFFFFFFUL && FT_UINT_MAX == 0xFFFFFFFFFFFFFFFFUL
+#define FT_SIZEOF_INT  (64 / FT_CHAR_BIT)
+#else
+#error "Unsupported size of `int' type!"
+#endif
+
+  /* The size of a `long' type.  A five-byte `long' (as used e.g. on the */
+  /* DM642) is recognized but avoided.                                   */
+#if                                  FT_ULONG_MAX == 0xFFFFFFFFUL
+#define FT_SIZEOF_LONG  (32 / FT_CHAR_BIT)
+#elif FT_ULONG_MAX > 0xFFFFFFFFUL && FT_ULONG_MAX == 0xFFFFFFFFFFUL
+#define FT_SIZEOF_LONG  (32 / FT_CHAR_BIT)
+#elif FT_ULONG_MAX > 0xFFFFFFFFUL && FT_ULONG_MAX == 0xFFFFFFFFFFFFFFFFUL
+#define FT_SIZEOF_LONG  (64 / FT_CHAR_BIT)
+#else
+#error "Unsupported size of `long' type!"
+#endif
 
   /* Preferred alignment of data */
 #define FT_ALIGNMENT  8
