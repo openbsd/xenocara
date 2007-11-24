@@ -13,7 +13,7 @@
 .\" 
 .\" $Xorg: XSetMode.man,v 1.3 2000/08/17 19:41:57 cpqbld Exp $
 .ds xL Programming with Xlib
-.TH XSetDeviceMode 3X11 __xorgversion__ "X FUNCTIONS"
+.TH XSetDeviceMode __LIB_MAN_SUFFIX__ __xorgversion__ "X FUNCTIONS"
 .SH NAME
 XSetDeviceMode \- change the mode of a device
 .SH SYNTAX

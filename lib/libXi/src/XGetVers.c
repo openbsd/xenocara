@@ -64,9 +64,10 @@ XExtensionVersion *
 XGetExtensionVersion(register Display * dpy, _Xconst char *name)
 {
     XExtensionVersion *ext;
+    XExtDisplayInfo *info = XInput_find_display(dpy);
 
     LockDisplay(dpy);
-    ext = _XiGetExtensionVersion(dpy, name);
+    ext = _XiGetExtensionVersion(dpy, name, info);
     if (ext != (XExtensionVersion *) NoSuchExtension) {
 	UnlockDisplay(dpy);
 	SyncHandle();
@@ -75,12 +76,11 @@ XGetExtensionVersion(register Display * dpy, _Xconst char *name)
 }
 
 XExtensionVersion *
-_XiGetExtensionVersion(register Display * dpy, _Xconst char *name)
+_XiGetExtensionVersion(register Display * dpy, _Xconst char *name, XExtDisplayInfo *info)
 {
     xGetExtensionVersionReq *req;
     xGetExtensionVersionReply rep;
     XExtensionVersion *ext;
-    XExtDisplayInfo *info = XInput_find_display(dpy);
 
     if (_XiCheckExtInit(dpy, Dont_Check, info) == -1)
 	return ((XExtensionVersion *) NoSuchExtension);

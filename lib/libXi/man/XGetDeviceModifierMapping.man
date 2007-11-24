@@ -13,7 +13,7 @@
 .\" 
 .\" $Xorg: XChMMap.man,v 1.3 2000/08/17 19:41:56 cpqbld Exp $
 .ds xL Programming With Xlib
-.TH XGetDeviceModifierMapping 3X11 __xorgversion__  "X FUNCTIONS"
+.TH XGetDeviceModifierMapping __LIB_MAN_SUFFIX__ __xorgversion__  "X FUNCTIONS"
 .SH NAME
 XGetDeviceModifierMapping, XSetDeviceModifierMapping \- query or change device modifier mappings
 .SH SYNTAX
@@ -138,8 +138,8 @@ Unless a specific range is specified for an argument, the full range defined
 by the argument's type is accepted.  Any argument defined as a set of
 alternatives can generate this error.
 .SH "SEE ALSO"
-XSetDeviceKeyMapping(3X11) 
+XSetDeviceKeyMapping(3) 
 .br
-XSetDeviceButtonMapping(3X11) 
+XSetDeviceButtonMapping(3) 
 .br
 \fI\*(xL\fP

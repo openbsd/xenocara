@@ -13,7 +13,7 @@
 .\" 
 .\" $Xorg: XChDCtl.man,v 1.3 2000/08/17 19:41:56 cpqbld Exp $
 .ds xL Programming With Xlib
-.TH XGetDeviceControl 3X11 __xorgversion__ "X FUNCTIONS"
+.TH XGetDeviceControl __LIB_MAN_SUFFIX__ __xorgversion__ "X FUNCTIONS"
 .SH NAME
 XGetDeviceControl, XChangeDeviceControl \- query and change input device controls
 .SH SYNTAX

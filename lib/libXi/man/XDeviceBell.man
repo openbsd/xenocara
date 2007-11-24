@@ -13,7 +13,7 @@
 .\" 
 .\" $Xorg: XDevBell.man,v 1.3 2000/08/17 19:41:56 cpqbld Exp $
 .ds xL Programming With Xlib
-.TH XDeviceBell 3X11 __xorgversion__ "X FUNCTIONS"
+.TH XDeviceBell __LIB_MAN_SUFFIX__ __xorgversion__ "X FUNCTIONS"
 .SH NAME
 XDeviceBell \- ring a bell on a device supported through the input extension
 .SH SYNTAX
@@ -71,7 +71,7 @@ not been opened by this client via \fIXOpenInputDevice\fP.
 \fIBadValue\fP
 An invalid feedbackclass, feedbackid, or percent value was specified.
 .SH "SEE ALSO"
-XChangeFeedbackControl(3X),
-XBell(3X)
+XChangeFeedbackControl(3),
+XBell(3)
 .br
 \fI\*(xL\fP

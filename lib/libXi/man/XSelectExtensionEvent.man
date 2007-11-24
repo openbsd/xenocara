@@ -13,7 +13,7 @@
 .\" 
 .\" $Xorg: XSelExtEv.man,v 1.3 2000/08/17 19:41:57 cpqbld Exp $
 .ds xL Programming with Xlib
-.TH XSelectExtensionEvent 3X11 __xorgversion__ "X FUNCTIONS"
+.TH XSelectExtensionEvent __LIB_MAN_SUFFIX__ __xorgversion__ "X FUNCTIONS"
 .SH NAME
 XSelectExtensionEvent, XGetSelectedExtensionEvents \- select extension events, get the list of currently selected extension events
 .SH SYNTAX

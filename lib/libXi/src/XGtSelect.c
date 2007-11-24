@@ -106,6 +106,8 @@ XGetSelectedExtensionEvents(dpy, w, this_client_count, this_client_list,
 					sizeof(XEventClass));
 	    if (!*this_client_list) {
 		_XEatData(dpy, (unsigned long)tlen + alen);
+                UnlockDisplay(dpy);
+                SyncHandle();
 		return (Success);
 	    }
 	    for (i = 0; i < *this_client_count; i++) {
@@ -122,6 +124,8 @@ XGetSelectedExtensionEvents(dpy, w, this_client_count, this_client_list,
 		Xfree((char *)*this_client_list);
 		*this_client_list = NULL;
 		_XEatData(dpy, (unsigned long)alen);
+                UnlockDisplay(dpy);
+                SyncHandle();
 		return (Success);
 	    }
 	    for (i = 0; i < *all_clients_count; i++) {

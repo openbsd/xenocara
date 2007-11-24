@@ -13,7 +13,7 @@
 .\" 
 .\" $Xorg: XChgPtr.man,v 1.3 2000/08/17 19:41:56 cpqbld Exp $
 .ds xL Programming With Xlib
-.TH XChangePointerDevice 3X11 __xorgversion__ "X FUNCTIONS"
+.TH XChangePointerDevice __LIB_MAN_SUFFIX__ __xorgversion__ "X FUNCTIONS"
 .SH NAME
 XChangePointerDevice \- change which device is the X pointer
 .SH SYNTAX

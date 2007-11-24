@@ -72,6 +72,8 @@ XSetDeviceFocus(dpy, dev, focus, revert_to, time)
     XExtDisplayInfo *info = XInput_find_display(dpy);
 
     LockDisplay(dpy);
+    if (_XiCheckExtInit(dpy, XInput_Initial_Release, info) == -1)
+	return (NoSuchExtension);
 
     GetReq(SetDeviceFocus, req);
     req->reqType = info->codes->major_opcode;

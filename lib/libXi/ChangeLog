@@ -1,10 +1,126 @@
-commit 540b4cc6f5657c870079b4bf883c9297ab434d71
+commit 0239ef13d66113024066b7db8ade3942af563656
+Author: Eric Anholt <eric@anholt.net>
+Date:   Wed Sep 5 09:45:20 2007 -0700
+
+    Bump version to 1.1.3.
+
+commit 235b283ef6eda4591c95b4749d0a8cd0181783a6
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:53:41 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit 89d7e38124cdb34c55f8c28680725b5b645fe106
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Sun Jan 14 10:51:00 2007 -0800
+
+    Bug #9659: Bad markup on XListInputDevices.3x
+    
+    X.Org Bugzilla #9659 <https://bugs.freedesktop.org/show_bug.cgi?id=9659>
+
+commit bf01e98979e6fa500f74d882c1b21746c60d5d31
 Author: Daniel Stone <daniel@fooishbar.org>
-Date:   Wed Nov 8 16:20:34 2006 +0200
+Date:   Wed Aug 1 05:16:45 2007 +0300
 
-    bump to 1.0.2
+    XSetDeviceFocus: Add missing extension check
+    
+    Actually check for Xi existing before we try to do anything fancy.
 
-commit f0f5fb7b4eb685094fc64aa1b46573991e84589f
+commit 8f5f7e9d6fc288a5cc00df3a7fec44211cdbe8f4
+Author: David Weinehall <tao@debian.org>
+Date:   Wed Aug 1 05:12:21 2007 +0300
+
+    XGetSelectedExtensionEvents: Still more locking bugs
+    
+    Fix a couple more return-without-unlocks.
+
+commit a07c3cc1eec0427a056414ef44ef6ee4204df383
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Aug 1 03:03:44 2007 +0300
+
+    XChangeDeviceControl: Fix completely broken locking
+    
+    Drop the display lock when we exit from XChangeDeviceControl(), instead of
+    leaking it.
+
+commit 7f1b5257b7eb0c873988c33453c110fc5f9996dd
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Aug 1 01:59:17 2007 +0300
+
+    Bump to 1.1.2
+
+commit 257345a0500ef0b7cf8e56f19a8bf93721408673
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Aug 1 01:37:05 2007 +0300
+
+    DevicePresenceNotify: Don't make non-static function, static
+    
+    I wish that there was a better way to do this, but c'est la vie.  It's our
+    exposed API, so we've just got to deal for now.
+
+commit 9d0aa39742a0d1d4221ad4104708b0f8f60c14c7
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Thu Jul 5 10:47:45 2007 +0930
+
+    Bump to version 1.1.1.
+
+commit ddc3b9cbbcc892a48dce2bd441e6d404cd44d943
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Wed Jun 13 15:36:01 2007 +0930
+
+    Bug 9657: Bad markup on XGrabDeviceKey.3x
+    
+    <https://bugs.freedesktop.org/show_bug.cgi?id=9657>
+
+commit c8696a5230c565f8999fea136a85a875b04e7b9a
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Dec 6 18:56:56 2006 +0200
+
+    Makefile.am: make ChangeLog hook safer
+    
+    Make ChangeLog hook as safe as possible.
+
+commit 60dccd9a7be95e35b4b8c90934888efedfde84cc
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sun Nov 19 01:04:26 2006 -0800
+
+    Bug #8663: _XiCheckExtInit must drop the Display lock in all error cases.
+
+commit 41710257257939b181a1615937610550b40621b9
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Nov 8 16:19:58 2006 +0200
+
+    DevicePresenceNotify: remove verbosity, fill out all fields
+    Don't throw a printf every time we get a DPN, and fill in all the fields
+    when copying the structure.
+
+commit eeebae55766bd4c0121479a7b7188d6a0545f66c
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Oct 21 12:08:21 2006 +0300
+
+    re-enable iscore in DEVICE_CORE, re-enable DEVICE_ENABLE
+
+commit 50c88082ba2ee4785f4beaa351f2b772f1a381ad
+Author: Zephaniah E. Hull <warp@agamemnon.b5>
+Date:   Sat Oct 21 04:01:46 2006 -0400
+
+    Comment out DEVICE_ENABLE, and use of iscore in the DEVICE_CORE control.
+    (We now compile again.)
+    
+    Track the DEVICE_TOUCHSCREEN -> DEVICE_ABS_CALIB and new DEVICE_ABS_AREA
+    changes to the input protocol.
+
+commit 2a3f042241bb63601f5745f397bb1b66ecc5a592
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Oct 20 00:39:50 2006 +0300
+
+    add DEVICE_ENABLE control, add iscore to DEVICE_CORE
+    
+    Add DEVICE_ENABLE for enabling/disabling devices, and an 'iscore'
+    flag to DEVICE_CORE that specifies whether or not the device is a
+    virtual core device.
+
+commit c27e00ceceed3fea011c98c0e70ab568bf0687c6
 Author: Jamey Sharp <jamey@minilop.net>
 Date:   Sun Oct 15 00:26:21 2006 -0700
 
@@ -17,7 +133,77 @@ Date:   Sun Oct 15 00:26:21 2006 -0700
     
     Thanks to Magnus Kessler <Magnus.Kessler@gmx.net> for identifying
     the bug and proposing a workaround.
-    (cherry picked from c27e00ceceed3fea011c98c0e70ab568bf0687c6 commit)
+
+commit 5dda1e1509d40ef64ebc816ce538cef462a4fa51
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sun Oct 15 00:03:57 2006 -0700
+
+    Don't call XInput_find_display in _XiGetExtensionVersion, while the Display lock is held.
+    
+    _XiGetExtensionVersion has two callers. One had already called
+    XInput_find_display, and the other could easily do so outside the
+    Display lock. So I change the _XiGetExtensionVersion interface to
+    accept a previously-computed XExtDisplayInfo from the caller.
+    Besides being more correct, this should be slightly faster. :-)
+    
+    Thanks to Magnus Kessler <Magnus.Kessler@gmx.net> for identifying
+    the bug and proposing a workaround.
+
+commit 8e317d390d1ef8f2c072957355b5d71db3b89c43
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sat Oct 14 23:56:20 2006 -0700
+
+    Add *.o to .gitignore.
+
+commit 6e08a76fd8e356f98d2d6913f0c1b1401090768d
+Merge: ba84e84... 360ceac...
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Sep 24 20:02:24 2006 +0300
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/lib/libXi
+
+commit ba84e84575b4167b0c6298e86a860b0741e2d2a3
+Merge: 93d3c2c... 576c579...
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Sep 24 19:58:56 2006 +0300
+
+    Merge branch 'input-hotplug'
+
+commit 360ceacb2a3cbad1652d1b02d79b24469db2980a
+Author: Drew Parsons <dparsons@debian.org>
+Date:   Mon Aug 14 14:10:52 2006 -0700
+
+    Bug 7855/Patch 6530: incorrect manpage section suffix
+    
+    Bug 7855 <https://bugs.freedesktop.org/show_bug.cgi?id=7855>
+    Patch 6530 <https://bugs.freedesktop.org/attachment.cgi?id=6530>
+    Based on patch by Fabio M. Di Nitto c/- Colin Watson, Debian Bug#377204.
+
+commit 576c5794cf4b786dfc183c9b6f0a387cad4a5460
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jul 18 11:46:02 2006 -0400
+
+    bump version to 1.1.0, require inputproto 1.4
+    Bump the version to 1.1.0, and make sure we build with inputproto 1.4,
+    for the DEVICE_{TOUCHSCREEN,CORE} controls, and DevicePresenceNotify.
+
+commit b22d8d0e1519d3f86474f4a79f3c4b27b46c662a
+Author: Daniel Stone <krh@redhat.com>
+Date:   Tue Jul 18 11:45:07 2006 -0400
+
+    add DevicePresenceNotify event
+    Add a DevicePresenceNotify event, which notes that something about the
+    device list changed.
+
+commit 878d9e76764d27f5af861817b46b2caf2d89d7c4
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jul 18 11:43:24 2006 -0400
+
+    add sensible DEVICE_TOUCHSCREEN and DEVICE_CORE controls
+    Add a more sensible DEVICE_TOUCHSCREEN control, which allows you to
+    clip the x and y values.
+    Add a DEVICE_CORE control, which toggles the sending of core events
+    by extended devices.
 
 commit 93d3c2c45ccd9a806342746c4df33c684a284dd6
 Author: Daniel Stone <daniel@fooishbar.org>

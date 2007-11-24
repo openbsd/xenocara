@@ -13,7 +13,7 @@
 .\" 
 .\" $Xorg: XChKMap.man,v 1.3 2000/08/17 19:41:56 cpqbld Exp $
 .ds xL Programming with Xlib
-.TH XGetDeviceKeyMapping 3X11 __xorgversion__ "X FUNCTIONS"
+.TH XGetDeviceKeyMapping __LIB_MAN_SUFFIX__ __xorgversion__ "X FUNCTIONS"
 .SH NAME
 XGetDeviceKeyMapping, XChangeDeviceKeyMapping \- query or change device key mappings
 .SH SYNTAX
@@ -173,8 +173,8 @@ alternatives can generate this error.
 \fIBadAlloc\fP
 The server failed to allocate the requested resource or server memory.
 .SH "SEE ALSO"
-XSetDeviceButtonMapping(3X11) 
+XSetDeviceButtonMapping(3) 
 .br
-XSetDeviceModifierMapping(3X11) 
+XSetDeviceModifierMapping(3) 
 .br
 \fI\*(xL\fP

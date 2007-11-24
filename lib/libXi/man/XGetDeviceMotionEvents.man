@@ -13,7 +13,7 @@
 .\" 
 .\" $Xorg: XGetDvMo.man,v 1.3 2000/08/17 19:41:56 cpqbld Exp $
 .ds xL Programming with Xlib
-.TH XGetDeviceMotionEvents 3X11 __xorgversion__ "X FUNCTIONS"
+.TH XGetDeviceMotionEvents __LIB_MAN_SUFFIX__ __xorgversion__ "X FUNCTIONS"
 .SH NAME
 XGetDeviceMotionEvents, XDeviceTimeCoord \- get device motion history 
 .SH SYNTAX

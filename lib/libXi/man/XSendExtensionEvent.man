@@ -13,7 +13,7 @@
 .\" 
 .\" $Xorg: XSExEvnt.man,v 1.3 2000/08/17 19:41:56 cpqbld Exp $
 .ds xL Programming with Xlib
-.TH XSendExtensionEvent 3X11 __xorgversion__ "X FUNCTIONS"
+.TH XSendExtensionEvent __LIB_MAN_SUFFIX__ __xorgversion__ "X FUNCTIONS"
 .SH NAME
 XSendExtensionEvent \- send input extension events to a client
 .SH SYNTAX
@@ -56,7 +56,7 @@ determines which clients should receive the specified events,
 and ignores any active grabs.
 This request requires you to pass an event class list.
 For a discussion of the valid event class names,
-see \fIXOpenDevice(3X11)\fP.
+see \fIXOpenDevice(3)\fP.
 This request uses the w argument to identify the destination window as follows:
 .IP \(bu 5
 If w is

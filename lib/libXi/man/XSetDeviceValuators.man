@@ -13,7 +13,7 @@
 .\" 
 .\" $Xorg: XSetDVal.man,v 1.3 2000/08/17 19:41:57 cpqbld Exp $
 .ds xL Programming with Xlib
-.TH XSetDeviceValuators 3X11 __xorgversion__ "X FUNCTIONS"
+.TH XSetDeviceValuators __LIB_MAN_SUFFIX__ __xorgversion__ "X FUNCTIONS"
 .SH NAME
 XSetDeviceValuators \- initialize the valuators on an extension input device
 .SH SYNTAX

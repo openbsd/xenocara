@@ -80,9 +80,6 @@ typedef struct _XInputData
     XExtensionVersion *vers;
 } XInputData;
 
-#define XInputCheckExtension(dpy,i,val) \
-  XextCheckExtension (dpy, i, xinput_extension_name, val)
-
 static /* const */ XExtensionHooks xinput_extension_hooks = {
     NULL,	/* create_gc */
     NULL,	/* copy_gc */
@@ -122,7 +119,9 @@ XEXT_GENERATE_FIND_DISPLAY(XInput_find_display, xinput_info,
     {XI_Present, XI_Add_XSetDeviceValuators_Major,
      XI_Add_XSetDeviceValuators_Minor},
     {XI_Present, XI_Add_XChangeDeviceControl_Major,
-     XI_Add_XChangeDeviceControl_Minor}
+     XI_Add_XChangeDeviceControl_Minor},
+    {XI_Present, XI_Add_DevicePresenceNotify_Major,
+     XI_Add_DevicePresenceNotify_Minor}
     };
 
 /***********************************************************************
@@ -181,6 +180,12 @@ _xidevicebusy(dpy, error)
     *error = info->codes->first_error + XI_DeviceBusy;
 }
 
+static int XInputCheckExtension(Display *dpy, XExtDisplayInfo *info)
+{
+    XextCheckExtension (dpy, info, xinput_extension_name, 0);
+    return 1;
+}
+
 /***********************************************************************
  *
  * Check to see if the input extension is installed in the server.
@@ -196,7 +201,10 @@ _XiCheckExtInit(dpy, version_index, info)
 {
     XExtensionVersion *ext;
 
-    XInputCheckExtension(dpy, info, -1);
+    if (!XInputCheckExtension(dpy, info)) {
+	UnlockDisplay(dpy);
+	return (-1);
+    }
 
     if (info->data == NULL) {
 	info->data = (XPointer) Xmalloc(sizeof(XInputData));
@@ -205,7 +213,7 @@ _XiCheckExtInit(dpy, version_index, info)
 	    return (-1);
 	}
 	((XInputData *) info->data)->vers =
-	    _XiGetExtensionVersion(dpy, "XInputExtension");
+	    _XiGetExtensionVersion(dpy, "XInputExtension", info);
     }
 
     if (versions[version_index].major_version > Dont_Check) {
@@ -249,6 +257,14 @@ Ones(mask)
     y = (mask >> 1) & 033333333333;
     y = mask - y - ((y >> 1) & 033333333333);
     return (((y + (y >> 3)) & 030707070707) % 077);
+}
+
+int
+_XiGetDevicePresenceNotifyEvent(Display * dpy)
+{
+    XExtDisplayInfo *info = XInput_find_display(dpy);
+
+    return info->codes->first_event + XI_DevicePresenceNotify;
 }
 
 /***********************************************************************
@@ -665,6 +681,22 @@ XInputWireToEvent(dpy, re, event)
 	return (ENQUEUE_EVENT);
     }
 	break;
+
+    case XI_DevicePresenceNotify:
+    {
+	XDevicePresenceNotifyEvent *ev = (XDevicePresenceNotifyEvent *) re;
+	devicePresenceNotify *ev2 = (devicePresenceNotify *) event;
+
+	*ev = *(XDevicePresenceNotifyEvent *) save;
+	ev->window = 0;
+	ev->time = ev2->time;
+        ev->devchange = ev2->devchange;
+        ev->deviceid = ev2->deviceid;
+        ev->control = ev2->control;
+	return (ENQUEUE_EVENT);
+    }
+	break;
+
     default:
 	printf("XInputWireToEvent: UNKNOWN WIRE EVENT! type=%d\n", type);
 	break;

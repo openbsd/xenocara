@@ -13,7 +13,7 @@
 .\" 
 .\" $Xorg: XOpenDev.man,v 1.3 2000/08/17 19:41:56 cpqbld Exp $
 .ds xL Programming with Xlib
-.TH XOpenDevice 3X11 __xorgversion__ "X FUNCTIONS"
+.TH XOpenDevice __LIB_MAN_SUFFIX__ __xorgversion__ "X FUNCTIONS"
 .SH NAME
 XOpenDevice, XCloseDevice \- open or close an extension input device
 .SH SYNTAX

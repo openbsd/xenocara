@@ -13,7 +13,7 @@
 .\" 
 .\" $Xorg: XGrDvBut.man,v 1.3 2000/08/17 19:41:56 cpqbld Exp $
 .ds xL Programming With Xlib
-.TH XGrabDeviceButton 3X11 __xorgversion__ "X FUNCTIONS"
+.TH XGrabDeviceButton __LIB_MAN_SUFFIX__ __xorgversion__ "X FUNCTIONS"
 .SH NAME
 XGrabDeviceButton, XUngrabDeviceButton \- grab/ungrab extension input device buttons
 .SH SYNTAX
@@ -202,10 +202,10 @@ alternatives can generate this error.
 \fIBadWindow\fP
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XAllowDeviceEvents(3X),
+XAllowDeviceEvents(3),
 .br
-XGrabDevice(3X),
+XGrabDevice(3),
 .br
-XGrabDeviceKey(3X),
+XGrabDeviceKey(3),
 .br
 \fI\*(xL\fP

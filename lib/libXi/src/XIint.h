@@ -12,6 +12,6 @@ extern XExtDisplayInfo *XInput_find_display(Display *);
 
 extern int _XiCheckExtInit(Display *, int, XExtDisplayInfo *);
 
-extern XExtensionVersion *_XiGetExtensionVersion(Display *, _Xconst char *);
+extern XExtensionVersion *_XiGetExtensionVersion(Display *, _Xconst char *, XExtDisplayInfo *);
 
 #endif

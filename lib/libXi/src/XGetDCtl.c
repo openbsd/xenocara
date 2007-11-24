@@ -61,13 +61,11 @@ SOFTWARE.
 #include <X11/extensions/extutil.h>
 #include "XIint.h"
 
-XDeviceControl * XGetDeviceControl(dpy, dev, control)
-    register Display *
-	dpy;
-    XDevice *
-	dev;
-    int
-	control;
+XDeviceControl *
+XGetDeviceControl(dpy, dev, control)
+    register Display *dpy;
+    XDevice *dev;
+    int control;
 {
     int size = 0;
     int nbytes, i;
@@ -116,6 +114,20 @@ XDeviceControl * XGetDeviceControl(dpy, dev, control)
 		(3 * sizeof(int) * r->num_valuators);
 	    break;
 	}
+        case DEVICE_ABS_CALIB:
+        {
+            size += sizeof(xDeviceAbsCalibState);
+            break;
+        }
+        case DEVICE_ABS_AREA:
+        {
+            size += sizeof(xDeviceAbsAreaState);
+            break;
+        }
+        case DEVICE_CORE:
+        {
+            size += sizeof(xDeviceCoreState);
+        }
 	default:
 	    size += d->length;
 	    break;
@@ -152,6 +164,63 @@ XDeviceControl * XGetDeviceControl(dpy, dev, control)
 		*iptr++ = *iptr2++;
 	    break;
 	}
+        case DEVICE_ABS_CALIB:
+        {
+            xDeviceAbsCalibState *c = (xDeviceAbsCalibState *) d;
+            XDeviceAbsCalibState *C = (XDeviceAbsCalibState *) Device;
+
+            C->control = DEVICE_ABS_CALIB;
+            C->length = sizeof(C);
+            C->min_x = c->min_x;
+            C->max_x = c->max_x;
+            C->min_y = c->min_y;
+            C->max_y = c->max_y;
+            C->flip_x = c->flip_x;
+            C->flip_y = c->flip_y;
+            C->rotation = c->rotation;
+            C->button_threshold = c->button_threshold;
+
+            break;
+        }
+        case DEVICE_ABS_AREA:
+        {
+            xDeviceAbsAreaState *a = (xDeviceAbsAreaState *) d;
+            XDeviceAbsAreaState *A = (XDeviceAbsAreaState *) Device;
+
+            A->control = DEVICE_ABS_AREA;
+            A->length = sizeof(A);
+            A->offset_x = a->offset_x;
+            A->offset_y = a->offset_y;
+            A->width = a->width;
+            A->height = a->height;
+            A->screen = a->screen;
+            A->following = a->following;
+
+            break;
+        }
+        case DEVICE_CORE:
+        {
+            xDeviceCoreState *c = (xDeviceCoreState *) d;
+            XDeviceCoreState *C = (XDeviceCoreState *) Device;
+
+            C->control = DEVICE_CORE;
+            C->length = sizeof(C);
+            C->status = c->status;
+            C->iscore = c->iscore;
+
+            break;
+        }
+        case DEVICE_ENABLE:
+        {
+            xDeviceEnableState *e = (xDeviceEnableState *) d;
+            XDeviceEnableState *E = (XDeviceEnableState *) Device;
+
+            E->control = DEVICE_ENABLE;
+            E->length = sizeof(E);
+            E->enable = e->enable;
+
+            break;
+        }
 	default:
 	    break;
 	}
