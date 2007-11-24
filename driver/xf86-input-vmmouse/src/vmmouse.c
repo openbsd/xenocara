@@ -77,11 +77,41 @@
 #include "vmmouse_client.h"
 
 /*
+ * This is the only way I know to turn a #define of an integer constant into
+ * a constant string.
+ */
+#define VMW_INNERSTRINGIFY(s) #s
+#define VMW_STRING(str) VMW_INNERSTRINGIFY(str)
+
+/*
+ * So that the file compiles unmodified when dropped into an xfree source tree.
+ */
+#ifndef XORG_VERSION_CURRENT
+#define XORG_VERSION_CURRENT XF86_VERSION_CURRENT
+#endif
+
+/*
  * Version constants
  */
 #define VMMOUSE_MAJOR_VERSION 12
 #define VMMOUSE_MINOR_VERSION 4
-#define VMMOUSE_PATCHLEVEL 0
+#define VMMOUSE_PATCHLEVEL 3
+#define VMMOUSE_DRIVER_VERSION \
+   (VMMOUSE_MAJOR_VERSION * 65536 + VMMOUSE_MINOR_VERSION * 256 + VMMOUSE_PATCHLEVEL)
+#define VMMOUSE_DRIVER_VERSION_STRING \
+    VMW_STRING(VMMOUSE_MAJOR_VERSION) "." VMW_STRING(VMMOUSE_MINOR_VERSION) \
+    "." VMW_STRING(VMMOUSE_PATCHLEVEL)
+
+/*
+ * Standard four digit version string expected by VMware Tools installer.
+ * As the driver's version is only  {major, minor, patchlevel}, simply append an
+ * extra zero for the fourth digit.
+ */
+#ifdef __GNUC__
+const char vm_mouse_version[] __attribute__((section(".modinfo"),unused)) =
+    "version=" VMMOUSE_DRIVER_VERSION_STRING ".0";
+#endif
+
 
 /*****************************************************************************
  *	static function header
@@ -323,7 +353,9 @@ VMMousePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
    pInfo->flags = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
    pInfo->device_control = VMMouseDeviceControl;
    pInfo->read_input = VMMouseReadInput;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
    pInfo->motion_history_proc = xf86GetMotionEvents;
+#endif
    pInfo->control_proc = VMMouseControlProc;
    pInfo->close_proc = VMMouseCloseProc;
    pInfo->switch_mode = VMMouseSwitchMode;
@@ -753,8 +785,18 @@ VMMouseDeviceControl(DeviceIntPtr device, int mode)
 
       InitPointerDeviceStruct((DevicePtr)device, map,
 			      min(pMse->buttons, MSE_MAXBUTTONS),
-			      miPointerGetMotionEvents, pMse->Ctrl,
-			      miPointerGetMotionBufferSize());
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
+				miPointerGetMotionEvents,
+#else
+                                GetMotionHistory,
+#endif
+                                pMse->Ctrl,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
+				miPointerGetMotionBufferSize()
+#else
+                                GetMotionHistorySize(), 2
+#endif
+                                );
 
       /* X valuator */
       xf86InitValuatorAxisStruct(device, 0, 0, -1, 1, 0, 1);
@@ -762,7 +804,9 @@ VMMouseDeviceControl(DeviceIntPtr device, int mode)
       /* Y valuator */
       xf86InitValuatorAxisStruct(device, 1, 0, -1, 1, 0, 1);
       xf86InitValuatorDefaults(device, 1);
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
       xf86MotionHistoryAllocate(pInfo);
+#endif
 
       xf86Msg(X_INFO, "VMWARE(0): VMMOUSE DEVICE_INIT\n");
 #ifdef EXTMOUSEDEBUG
@@ -919,9 +963,18 @@ GetVMMouseMotionEvent(InputInfoPtr pInfo){
    int buttons, dx, dy, dz, dw;
    VMMOUSE_INPUT_DATA  vmmouseInput;
    int ps2Buttons = 0;
+   int numPackets;
 
    pMse = pInfo->private;  
-   while(VMMouseClient_GetInput(&vmmouseInput)){
+   while((numPackets = VMMouseClient_GetInput(&vmmouseInput))){
+      if (numPackets == VMMOUSE_ERROR) {
+         VMMouseClient_Disable();
+         VMMouseClient_Enable();
+         VMMouseClient_RequestAbsolute();
+         xf86Msg(X_INFO, "VMWARE(0): re-requesting absolute mode after reset\n");
+         break;
+      }
+
       if(vmmouseInput.Buttons & VMMOUSE_MIDDLE_BUTTON)
 	 ps2Buttons |= 0x04; 			/* Middle*/
       if(vmmouseInput.Buttons & VMMOUSE_RIGHT_BUTTON)
