@@ -64,6 +64,8 @@ typedef struct {
     int		acc;
     CARD32	pnpLast;
     Bool	disablePnPauto;
+    float	fracdx,fracdy; 
+    float	sensitivity;
 } mousePrivRec, *mousePrivPtr;
 
 /* mouse proto flags */

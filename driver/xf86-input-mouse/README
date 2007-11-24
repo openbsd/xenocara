@@ -55,7 +55,7 @@
   [1m1.  Introduction[0m
 
 
-  This document describes mouse support in X.org Foundation's X11R6.8
+  This document describes mouse support in X.org Foundation's Xorg
   server.
 
   Mouse configuration has often been mysterious task for novice users.
@@ -67,8 +67,9 @@
   [1m2.  Supported Hardware[0m
 
 
-  The X.org Foundation X server supports three classes of mice: serial,
-  bus and PS/2 mice.
+  The X.org Foundation X server supports four classes of mice: serial,
+  bus and PS/2 mice, and additional mouse types supported by
+  specific operating systems, such as USB mice.
 
 
      [1mSerial mouse[0m
@@ -112,9 +113,9 @@
      [1mUSB mouse[0m
         USB (Universal Serial Bus) ports are present on most modern
         computers. Several devices can be plugged into this bus,
-        including mices and keyboards.
+        including mice and keyboards.
 
-        The server includes support for USB mices on some systems.
+        The server includes support for USB mice on some systems.
 
   Many mice nowadays can be used both as a serial mouse and as a PS/2
   mouse.  They has a logic to distinguish which interface it is
@@ -247,7 +248,7 @@
   device. Refer to the [4mwsmouse(4)[24m manual page for kernel configuration
   informations.
 
-  This driver also provides support for USB mices. See the [4mums(4)[24m manual
+  This driver also provides support for USB mice. See the [4mums(4)[24m manual
   page for details.
 
 
@@ -273,7 +274,7 @@
   emulates the bus mouse.  Specify the "BusMouse" protocol for any PS/2
   mouse regardless of the brand of the mouse when using this device.
 
-  XFree86 3.3.6 support USB mices on OpenBSD 2.6 and later though the
+  XFree86 3.3.6 support USB mice on OpenBSD 2.6 and later though the
   generic Human Interface Device (hid) /dev/uhid*. Select the "usb"
   protocol and the /dev/uhid* instance corresponding to your mouse as
   the device name.
@@ -298,13 +299,22 @@
 
   [1m3.14.  Solaris[0m
 
-  Testing has been done with Solaris 2.5.1, 2.6, 7, 8, 9 and pre-release
-  versions of Solaris 10.  Logitech and Microsoft bus mice have not been
-  tested, but might work with the /dev/logi and /dev/msm devices.
+  Testing has been done with Solaris 2.5.1, 2.6, 7, 8, 9 and 10.
+
+  On Solaris 10 1/06 and later versions with "virtual mouse" support,
+  all PS/2 and USB mice connected to the system can be accessed via 
+  the /dev/mouse device using the VUID protocol, including USB mice 
+  plugged in after the X server is started.   On older releases or
+  to address mice individually, specific devices and protocols may 
+  be used.
+
+  Logitech and Microsoft bus mice have not been tested, but might work
+  with the /dev/logi and /dev/msm devices.
+
   Standard 2 and 3 button PS/2 mice work with the "PS/2" protocol type
   and the /dev/kdmouse device.  USB mice work with the "VUID" protocol
-  type and the /dev/mouse device.  The PnP serial mouse support (the
-  "Auto" protocol) has been tested and does not work.  The "Auto"
+  type and the /dev/mouse device.  The PnP serial mouse support via the
+  "Auto" protocol has been tested and does not work.  The "Auto"
   protocol can however detect PS/2 and USB mice correctly.
 
   Additional USB mice can be connected using the "VUID" protocol type
@@ -343,10 +353,11 @@
   connector of the mouse.  The serial mouse has a D-Sub female 9- or
   25-pin connector.  The bus mice have either a D-Sub male 9-pin
   connector or a round DIN 9-pin connector.  The PS/2 mouse is equipped
-  with a small, round DIN 6-pin connector.  Some mice come with adapters
-  with which the connector can be converted to another.  If you are to
-  use such an adapter, remember that the connector at the very end of
-  the mouse/adapter pair is what matters.
+  with a small, round DIN 6-pin connector.  USB mice have a thin 
+  rectangular connector.  Some mice come with adapters with which the 
+  connector can be converted to another.  If you are to use such an 
+  adapter, remember that the connector at the very end of the mouse/adapter 
+  pair is what matters.
 
   The next thing to decide is a device node to use for the given
   interface.  For the bus and PS/2 mice, there is little choice; your OS
@@ -455,14 +466,14 @@
            work with the "IntelliMouse" protocol, you have to use it as
            a regular 2- or 3-button serial mouse.
 
-     If the "Auto" protocol is specified and the mouse seems working,
-     but you find that not all features of the mouse is available, that
+     If the "Auto" protocol is specified and the mouse seems to be working,
+     but you find that not all features of the mouse are available, that
      is because the X server does not have native support for that model
      of mouse and is using a ``compatible'' protocol according to PnP
      information.
 
      If you suspect this is the case with your mouse, please enter a
-     bugreport in bugzilla.freedesktop.org, using the xorg product.
+     bug report at http://bugzilla.freedesktop.org, using the xorg product.
 
 
      [1mUSB mouse[0m
@@ -520,7 +531,7 @@
 
 
 
-  [1m5.2.  ZAxisMappping[0m
+  [1m5.2.  ZAxisMapping[0m
 
   This option maps the Z axis (wheel) motion to buttons or to another
   axis.
@@ -1153,7 +1164,11 @@
   5 Wheel Negative Move     Button 4
   6 Wheel Positive Move     Button 5
 
+  Starting in the Xorg 6.9 release, you can also achieve this in your
+  configuration file by adding this to the "InputDevice" section in 
+  xorg.conf:
 
+       Option "ButtonMapping" "1 6 3 2 4 5"
 
   For the MS IntelliMouse Explorer which as a wheel and 5 buttons, you
   may have the following InputDevice section.

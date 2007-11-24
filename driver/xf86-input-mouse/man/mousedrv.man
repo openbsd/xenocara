@@ -167,7 +167,7 @@ Default: "4 5".
 .TP 7
 .BI "Option \*qButtonMapping\*q \*q" "N1 N2 [...]" \*q
 Specifies how physical mouse buttons are mapped to logical buttons.
-Physcial button 1 is mapped to logical button
+Physical button 1 is mapped to logical button
 .IR N1 ,
 physical button 2 to
 .IR N2 ,
@@ -209,6 +209,15 @@ already set to.
 Sets the resolution of the device in counts per inch.  Setting this is
 only supported for some mice, including some PS/2 mice on some platforms.
 Default: whatever the mouse is already set to.
+.TP 7
+.BI "Option \*qSensitivity\*q \*q" float \*q
+Mouse movements are multiplied by this float before being processed. Use this
+mechanism to slow down high resolution mice. Because values bigger than 1.0
+will result in not all pixels on the screen being accessible, you should better
+use mouse acceleration (see
+.BR "man xset" )
+for speeding up low resolution mice.
+Default: 1.0
 .TP 7
 .BI "Option \*qDragLockButtons\*q \*q" "L1 B2 L3 B4" \*q
 Sets \*qdrag lock buttons\*q that simulate holding a button down, so
