@@ -32,6 +32,12 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Using the Linux input subsystem */
+#undef LINUX_INPUT
+
+/* Using sysfs to probe devices */
+#undef LINUX_SYSFS
+
 /* Name of package */
 #undef PACKAGE
 
