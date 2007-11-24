@@ -33,10 +33,11 @@
 #include "GL/xmesa.h"
 #include "xmesaP.h"
 #include "imports.h"
+#include "framebuffer.h"
 #include "renderbuffer.h"
 
 
-#ifndef XFree86Server
+#if defined(USE_XSHM) && !defined(XFree86Server)
 static volatile int mesaXErrorFlag = 0;
 
 /**
@@ -50,18 +51,14 @@ mesaHandleXError(XMesaDisplay *dpy, XErrorEvent *event)
    mesaXErrorFlag = 1;
    return 0;
 }
-#endif
-
 
 /**
  * Allocate a shared memory XImage back buffer for the given XMesaBuffer.
  * Return:  GL_TRUE if success, GL_FALSE if error
  */
-#ifndef XFree86Server
 static GLboolean
 alloc_back_shm_ximage(XMesaBuffer b, GLuint width, GLuint height)
 {
-#ifdef USE_XSHM
    /*
     * We have to do a _lot_ of error checking here to be sure we can
     * really use the XSHM extension.  It seems different servers trigger
@@ -151,10 +148,13 @@ alloc_back_shm_ximage(XMesaBuffer b, GLuint width, GLuint height)
    }
 
    return GL_TRUE;
+}
 #else
+static GLboolean
+alloc_back_shm_ximage(XMesaBuffer b, GLuint width, GLuint height)
+{
    /* Can't compile XSHM support */
    return GL_FALSE;
-#endif
 }
 #endif
 
@@ -186,14 +186,12 @@ alloc_back_buffer(XMesaBuffer b, GLuint width, GLuint height)
          return;
 
       /* Allocate new back buffer */
-#ifdef XFree86Server
-      /* Allocate a regular XImage for the back buffer. */
-      b->backxrb->ximage = XMesaCreateImage(b->xm_visual->BitsPerPixel,
-                                            width, height, NULL);
-      {
-#else
       if (b->shm == 0 || !alloc_back_shm_ximage(b, width, height)) {
 	 /* Allocate a regular XImage for the back buffer. */
+#ifdef XFree86Server
+	 b->backxrb->ximage = XMesaCreateImage(b->xm_visual->BitsPerPixel,
+                                               width, height, NULL);
+#else
 	 b->backxrb->ximage = XCreateImage(b->xm_visual->display,
                                       b->xm_visual->visinfo->visual,
                                       GET_VISUAL_DEPTH(b->xm_visual),
@@ -217,7 +215,6 @@ alloc_back_buffer(XMesaBuffer b, GLuint width, GLuint height)
       b->backxrb->pixmap = None;
    }
    else if (b->db_mode == BACK_PIXMAP) {
-
       /* Free the old back pixmap */
       if (b->backxrb->pixmap) {
          XMesaFreePixmap(b->xm_visual->display, b->backxrb->pixmap);
@@ -360,5 +357,68 @@ xmesa_new_renderbuffer(GLcontext *ctx, GLuint name, const GLvisual *visual,
 }
 
 
+/**
+ * Called via gl_framebuffer::Delete() method when this buffer
+ * is _really_ being deleted.
+ */
+void
+xmesa_delete_framebuffer(struct gl_framebuffer *fb)
+{
+   XMesaBuffer b = XMESA_BUFFER(fb);
 
+   if (b->num_alloced > 0) {
+      /* If no other buffer uses this X colormap then free the colors. */
+      if (!xmesa_find_buffer(b->display, b->cmap, b)) {
+#ifdef XFree86Server
+         int client = 0;
+         if (b->frontxrb->drawable)
+            client = CLIENT_ID(b->frontxrb->drawable->id);
+         (void)FreeColors(b->cmap, client,
+                          b->num_alloced, b->alloced_colors, 0);
+#else
+         XFreeColors(b->display, b->cmap,
+                     b->alloced_colors, b->num_alloced, 0);
+#endif
+      }
+   }
 
+   if (b->gc)
+      XMesaFreeGC(b->display, b->gc);
+   if (b->cleargc)
+      XMesaFreeGC(b->display, b->cleargc);
+   if (b->swapgc)
+      XMesaFreeGC(b->display, b->swapgc);
+
+   if (fb->Visual.doubleBufferMode) {
+      /* free back ximage/pixmap/shmregion */
+      if (b->backxrb->ximage) {
+#if defined(USE_XSHM) && !defined(XFree86Server)
+         if (b->shm) {
+            XShmDetach( b->display, &b->shminfo );
+            XDestroyImage( b->backxrb->ximage );
+            shmdt( b->shminfo.shmaddr );
+         }
+         else
+#endif
+            XMesaDestroyImage( b->backxrb->ximage );
+         b->backxrb->ximage = NULL;
+      }
+      if (b->backxrb->pixmap) {
+         XMesaFreePixmap( b->display, b->backxrb->pixmap );
+         if (b->xm_visual->hpcr_clear_flag) {
+            XMesaFreePixmap( b->display,
+                             b->xm_visual->hpcr_clear_pixmap );
+            XMesaDestroyImage( b->xm_visual->hpcr_clear_ximage );
+         }
+      }
+   }
+
+   if (b->rowimage) {
+      _mesa_free( b->rowimage->data );
+      b->rowimage->data = NULL;
+      XMesaDestroyImage( b->rowimage );
+   }
+
+   _mesa_free_framebuffer_data(fb);
+   _mesa_free(fb);
+}
