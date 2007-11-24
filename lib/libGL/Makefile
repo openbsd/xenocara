@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.8 2007/04/07 15:37:50 matthieu Exp $
+# $OpenBSD: Makefile,v 1.9 2007/11/24 17:46:55 matthieu Exp $
 
 all: ${OBJS}
 LIB=	GL
@@ -8,8 +8,13 @@ GL=	${.CURDIR}/../../dist/Mesa/src/GL
 GLX=	${.CURDIR}/../../dist/Mesa/src/glx/x11
 MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
 
+DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
+
+DRI_DRIVER_SEARCH_DIR=	$(DRI_DRIVER_INSTALL_DIR)
+
 INCSDIR=	${X11BASE}/include/GL
-LDADD=		-L${X11BASE}/lib -lXext -lX11
+LDADD=		-lpthread
+#LDADD=		-L${X11BASE}/lib -lXfixes -lXdamage -lXext -lX11 -ldrm -lpthread
 
 CPP=	cpp -notraditional
 DEBUG?=
@@ -17,6 +22,7 @@ DEBUG?=
 CPPFLAGS+= \
 	-I. \
 	-I${MESA_INCLUDE} \
+	-I${MESA_INCLUDE}/GL/internal \
 	-I${MESA} \
 	-I${MESA}/main \
 	-I${MESA}/math \
@@ -25,18 +31,12 @@ CPPFLAGS+= \
 	-I${MESA}/shader \
 	-I${MESA}/shader/grammar \
 	-I${MESA}/shader/slang \
-	-I${MESA}/shader/slang/OSDependent/Linux \
-	-I${MESA}/shader/slang/OGLCompilersDLL \
-	-I${MESA}/x86 \
-	-I${MESA}/drivers/dri/common \
-	-I${GL}/dri \
 	-I${GLX} \
 	-I${X11BASE}/include \
-	-DCSRG_BASED  \
-	-DUSE_GAS  \
-	-DGLX_INDIRECT_RENDERING \
-	-DGLX_USE_MESA  \
-	-DXF86VIDMODE 
+	-I${X11BASE}/include/drm \
+	-DPTHREADS -DGLX_INDIRECT_RENDERING \
+	-DHAVE_ALIAS \
+	-D_REENTRANT
 
 .if ${MACHINE_ARCH} == "i386"
 CPPFLAGS += \
@@ -45,7 +45,7 @@ CPPFLAGS += \
 	-DUSE_3DNOW_ASM \
 	-DUSE_SSE_ASM
 .elif ${MACHINE_ARCH} == "amd64"
-CPPFLAGS += -D__GLX_ALIGN64
+CPPFLAGS += -D__GLX_ALIGN64 -DUSE_X86_64_ASM
 .endif
 
 INCS= \
@@ -57,13 +57,13 @@ INCS= \
 
 # main
 MAIN_SOURCES= \
-	accum.c \
 	api_arrayelt.c \
 	api_loopback.c \
 	api_noop.c \
 	api_validate.c \
-	arrayobj.c  \
+	accum.c \
 	attrib.c \
+	arrayobj.c \
 	blend.c \
 	bufferobj.c \
 	buffers.c \
@@ -81,8 +81,8 @@ MAIN_SOURCES= \
 	eval.c \
 	execmem.c \
 	extensions.c \
-	feedback.c \
 	fbobject.c \
+	feedback.c \
 	fog.c \
 	framebuffer.c \
 	get.c \
@@ -97,17 +97,19 @@ MAIN_SOURCES= \
 	matrix.c \
 	mipmap.c \
 	mm.c \
-	occlude.c \
 	pixel.c \
 	points.c \
 	polygon.c \
+	queryobj.c \
 	rastpos.c \
+	rbadaptors.c \
 	renderbuffer.c \
+	shaders.c \
 	state.c \
 	stencil.c \
 	texcompress.c \
-	texcompress_fxt1.c \
 	texcompress_s3tc.c \
+	texcompress_fxt1.c \
 	texenvprogram.c \
 	texformat.c \
 	teximage.c \
@@ -121,12 +123,8 @@ MAIN_SOURCES= \
 GLAPI_SOURCES= \
 	dispatch.c \
 	glapi.c \
-	glthread.c
-
-.if ${MACHINE_ARCH} == "i386"
-GLAPI_SOURCES+= \
-	glapi_x86.S 
-.endif
+	glthread.c \
+	$(ASM_API)
 
 # math
 MATH_SOURCES= \
@@ -139,19 +137,12 @@ MATH_SOURCES= \
 	m_vector.c \
 	m_xform.c
 
-# array_cache
-ARRAY_CACHE_SOURCES= \
-	ac_context.c \
-	ac_import.c
-
-
 # swrast
 SWRAST_SOURCES= \
 	s_aaline.c \
 	s_aatriangle.c \
 	s_accum.c \
 	s_alpha.c \
-	s_arbshader.c \
 	s_atifragshader.c \
 	s_bitmap.c \
 	s_blend.c \
@@ -163,11 +154,11 @@ SWRAST_SOURCES= \
 	s_drawpix.c \
 	s_feedback.c \
 	s_fog.c \
+	s_fragprog.c \
 	s_imaging.c \
 	s_lines.c \
 	s_logic.c \
 	s_masking.c \
-	s_nvfragprog.c \
 	s_points.c \
 	s_readpix.c \
 	s_span.c \
@@ -185,16 +176,9 @@ SWRAST_SETUP_SOURCES= \
 
 # tnl
 TNL_SOURCES= \
-	t_array_api.c \
-	t_array_import.c \
 	t_context.c \
 	t_pipeline.c \
-	t_save_api.c \
-	t_save_loopback.c \
-	t_save_playback.c \
-	t_vb_arbprogram.c \
-	t_vb_arbprogram_sse.c \
-	t_vb_arbshader.c\
+	t_draw.c \
 	t_vb_program.c \
 	t_vb_render.c \
 	t_vb_texgen.c \
@@ -209,11 +193,22 @@ TNL_SOURCES= \
 	t_vertex.c \
 	t_vertex_sse.c \
 	t_vertex_generic.c \
-	t_vtx_api.c \
-	t_vtx_generic.c \
-	t_vtx_x86.c \
-	t_vtx_eval.c \
-	t_vtx_exec.c 
+
+VBO_SOURCES = \
+	vbo_context.c \
+	vbo_exec.c \
+	vbo_exec_api.c \
+	vbo_exec_array.c \
+	vbo_exec_draw.c \
+	vbo_exec_eval.c \
+	vbo_rebase.c \
+	vbo_split.c \
+	vbo_split_copy.c \
+	vbo_split_inplace.c \
+	vbo_save.c \
+	vbo_save_api.c \
+	vbo_save_draw.c \
+	vbo_save_loopback.c 
 
 # shader
 SHADER_SOURCES=	\
@@ -223,73 +218,61 @@ SHADER_SOURCES=	\
 	grammar_mesa.c \
 	nvfragparse.c \
 	nvprogram.c \
-	nvvertexec.c \
 	nvvertparse.c \
 	program.c \
-	shaderobjects.c \
-	shaderobjects_3dlabs.c
-
-# shader/slang C
-SLANG_C_SOURCES=	\
-	atom.c \
-	cpp.c \
-	cppstruct.c \
-	memory.c \
-	scanner.c \
-	symbols.c \
-	tokens.c
-
-# shader/slang CPP
-SLANG_CPP_SOURCES= \
-	slang_mesa.cpp	\
-	Gen_glslang.cpp	\
-	Gen_glslang_tab.cpp	\
-	InfoSink.cpp	\
-	Initialize.cpp	\
-	Intermediate.cpp	\
-	intermOut.cpp	\
-	IntermTraverse.cpp	\
-	parseConst.cpp	\
-	ParseHelper.cpp	\
-	PoolAlloc.cpp	\
-	QualifierAlive.cpp	\
-	RemoveTree.cpp	\
-	ShaderLang.cpp	\
-	SymbolTable.cpp	\
-	Initialisation.cpp	\
-	ossource.cpp
+	prog_debug.c \
+	prog_execute.c \
+	prog_instruction.c \
+	prog_parameter.c \
+	prog_print.c \
+	prog_statevars.c \
+	programopt.c \
+	shader_api.c \
 
 # shader/slang
 SLANG_SOURCES= \
-	slang_analyse.c	\
-	slang_assemble.c	\
-	slang_assemble_assignment.c	\
-	slang_assemble_conditional.c	\
-	slang_assemble_constructor.c	\
-	slang_assemble_typeinfo.c	\
+	slang_builtin.c	\
+	slang_codegen.c	\
 	slang_compile.c	\
 	slang_compile_function.c	\
 	slang_compile_operation.c	\
 	slang_compile_struct.c	\
 	slang_compile_variable.c	\
-	slang_execute.c	\
-	slang_export.c	\
+	slang_emit.c	\
+	slang_ir.c	\
+	slang_label.c	\
 	slang_library_noise.c	\
-	slang_library_texsample.c	\
 	slang_link.c	\
+	slang_log.c	\
+	slang_mem.c	\
 	slang_preprocess.c	\
+	slang_print.c	\
+	slang_simplify.c	\
 	slang_storage.c	\
+	slang_typeinfo.c	\
+	slang_vartable.c	\
 	slang_utility.c
 
-.if ${MACHINE_ARCH} == "i386"
-# x86
+.if ${MACHINE_ARCH} == i386
 ASM_C_SOURCES= \
 	common_x86.c \
 	x86.c \
 	3dnow.c \
 	sse.c \
-	x86sse.c \
-	slang_execute_x86.c
+	x86sse.c
+.endif
+.if ${MACHINE_ARCH} == sparc
+ASM_C_SOURCES= \
+	sparc.c
+.endif
+.if ${MACHINE_ARCH} == powerpc
+ASM_C_SOURCES= \
+	common_ppc.c
+.endif
+.if ${MACHINE_ARCH} == amd64
+ASM_C_SOURCES= \
+	x86-64.c
+.endif
 
 X86_SOURCES= \
 	common_x86_asm.S \
@@ -309,52 +292,109 @@ X86_SOURCES= \
 	sse_xform4.S \
 	sse_normal.S \
 	read_rgba_span_x86.S \
-	t_vtx_x86_gcc.S
-.endif
+
+X86_API = \
+	glapi_x86.S
+
+X86-64_SOURCES =		\
+	xform4.S
+
+X86-64_API =			\
+	glapi_x86-64.S
+
+SPARC_SOURCES =			\
+	clip.S			\
+	norm.S			\
+	xform.S
+
+SPARC_API =			\
+	glapi_sparc.S
+
+COMMON_DRIVER_SOURCES =			\
+	driverfuncs.c
+
+X11_DRIVER_SOURCES =		\
+	glxapi.c	\
+	fakeglx.c	\
+	xfonts.c	\
+	xm_api.c	\
+	xm_buffer.c	\
+	xm_dd.c	\
+	xm_glide.c	\
+	xm_line.c	\
+	xm_span.c	\
+	xm_tri.c
 
 GLX_SOURCES= \
-	  glcontextmodes.c \
-	  clientattrib.c \
-	  compsize.c \
-	  glxeval.c \
-	  glxcmds.c \
-	  glxext.c \
-	  glxextensions.c \
-	  indirect.c \
-	  indirect_init.c \
-	  indirect_size.c \
-	  indirect_window_pos.c \
-	  indirect_transpose_matrix.c \
-	  indirect_vertex_array.c \
-	  indirect_vertex_program.c \
-	  glxpixel.c \
-	  pixelstore.c \
-	  render2.c \
-	  renderpix.c \
-	  single2.c \
-	  singlepix.c \
-	  vertarr.c \
-	  xfont.c \
-	  glx_pbuffer.c \
-	  glx_query.c \
-	  glx_texture_compression.c \
-	  dri_glx.c
+	glcontextmodes.c \
+	clientattrib.c \
+	compsize.c \
+	glxeval.c \
+	glxcmds.c \
+	glxext.c \
+	glxextensions.c \
+	indirect.c \
+	indirect_init.c \
+	indirect_size.c \
+	indirect_window_pos.c \
+	indirect_transpose_matrix.c \
+	indirect_vertex_array.c \
+	indirect_vertex_program.c \
+	glxpixel.c \
+	pixelstore.c \
+	render2.c \
+	renderpix.c \
+	single2.c \
+	singlepix.c \
+	vertarr.c \
+	xfont.c \
+	glx_pbuffer.c \
+	glx_query.c \
+	glx_texture_compression.c \
+	dri_glx.c \
+	XF86dri.c
 
-SRCS = 	$(MAIN_SOURCES)		\
+# x86
+.if ${MACHINE_ARCH} == "i386"
+ASM_SOURCES = $(X86_SOURCES)
+ASM_API = $(X86_API)
+.endif
+
+# x86-64
+.if ${MACHINE_ARCH} == "amd64"
+ASM_SOURCES = $(X86-64_SOURCES)
+ASM_API = $(X86-64_API)
+.endif
+
+ALL_SOURCES = \
+	$(GLAPI_SOURCES)        \
+	$(SOLO_SOURCES)         \
+	$(ASM_SOURCES)          \
+	$(COMMON_DRIVER_SOURCES)\
+	$(X11_DRIVER_SOURCES)   \
+	$(FBDEV_DRIVER_SOURCES) \
+	$(OSMESA_DRIVER_SOURCES)
+
+
+SOLO_SOURCES = \
+	$(MAIN_SOURCES)		\
 	$(MATH_SOURCES)		\
-	$(ARRAY_CACHE_SOURCES)	\
+	$(VBO_SOURCES)		\
 	$(TNL_SOURCES)		\
 	$(SHADER_SOURCES)	\
 	$(SWRAST_SOURCES)	\
-	$(SWRAST_SETUP_SOURCES)	\
+	$(SWRAST_SETUP_SOURCES) \
 	$(ASM_C_SOURCES)	\
-	$(SLANG_SOURCES)	\
-	$(X86_SOURCES)		\
-	$(GLAPI_SOURCES)	\
-	$(GLX_SOURCES)
+	$(SLANG_SOURCES)
 
-#	$(SLANG_C_SOURCES)
+#SRCS =	$(SOLO_SOURCES)		\
+#	$(ASM_SOURCES)		\
+#	$(GLX_SOURCES)		\
+#	$(GLAPI_SOURCES)
 
+SRCS = $(GLX_SOURCES)	\
+	$(ASM_SOURCES)	\
+	$(GLAPI_SOURCES) 
 
 includes:
 	cd ${MESA_INCLUDE}/GL; for i in ${INCS}; do \
@@ -410,9 +450,19 @@ glxpixel.c: ${GLX}/pixel.c
 
 CLEANFILES+= glxeval.c glxpixel.c
 
+.if ${MACHINE_ARCH} == i386
 .PATH: ${MESA}/x86
 .PATH: ${MESA}/x86/rtasm
-.PATH: ${MESA}/array_cache
+.endif
+.if ${MACHINE_ARCH} == powerpc
+.PATH: ${MESA}/ppc
+.endif
+.if ${MACHINE_ARCH} == sparc
+.PATH: ${MESA}/sparc
+.endif
+.if ${MACHINE_ARCH} == amd64
+.PATH: ${MESA}/x86-64
+.endif
 .PATH: ${MESA}/glapi
 .PATH: ${MESA}/main
 .PATH: ${MESA}/math
@@ -426,7 +476,9 @@ CLEANFILES+= glxeval.c glxpixel.c
 .PATH: ${MESA}/shader/slang/MachineIndependent/preprocessor
 .PATH: ${MESA}/shader/slang/OGLCompilersDLL
 .PATH: ${MESA}/shader/slang/OSDependent/Linux
-.PATH: ${MESA}/drivers/dri/common
+.PATH: ${MESA}/vbo
+.PATH: ${MESA}/drivers/common
+.PATH: ${MESA}/drivers/x11
 .PATH: ${GLX}
 
 .SUFFIXES: .cpp
@@ -454,4 +506,3 @@ CLEANFILES+= glxeval.c glxpixel.c
 	@${COMPILE.cc} ${PICFLAG} -DPIC ${.IMPSRC} -o ${.TARGET}.o
 	@${LD} -X -r ${.TARGET}.o -o ${.TARGET}
 	@rm -f ${.TARGET}.o
-
