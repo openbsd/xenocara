@@ -36,28 +36,10 @@
 #include "glheader.h"
 #include "macros.h"
 #include "enums.h"
+#include "shader/program.h"
+#include "shader/prog_instruction.h"
 
-#include "program.h"
 #include "r300_context.h"
-#include "program_instruction.h"
-
-/* representation of a register for emit_arith/swizzle */
-typedef struct _pfs_reg_t {
-	enum {
-		REG_TYPE_INPUT,
-		REG_TYPE_OUTPUT,
-		REG_TYPE_TEMP,
-		REG_TYPE_CONST
-	} type:2;
-	GLuint index:6;
-	GLuint v_swz:5;
-	GLuint s_swz:5;
-	GLuint negate_v:1;
-	GLuint negate_s:1;
-	GLuint absolute:1;
-	GLboolean no_use:1;
-	GLboolean valid:1;
-} pfs_reg_t;
 
 typedef struct r300_fragment_program_swizzle {
 	GLuint length;
@@ -111,8 +93,12 @@ typedef struct r300_fragment_program_swizzle {
 		((0 | SRC_CONST) << R300_FPI3_SRC1A_SHIFT) | \
 		((0 | SRC_CONST) << R300_FPI3_SRC2A_SHIFT))
 
+#define DRI_CONF_FP_OPTIMIZATION_SPEED   0
+#define DRI_CONF_FP_OPTIMIZATION_QUALITY 1
+
 struct r300_fragment_program;
 
-extern void r300_translate_fragment_shader(struct r300_fragment_program *rp);
+extern void r300TranslateFragmentShader(r300ContextPtr r300,
+					struct r300_fragment_program *fp);
 
 #endif

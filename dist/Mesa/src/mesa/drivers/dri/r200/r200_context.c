@@ -45,7 +45,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
-#include "array_cache/acache.h"
+#include "vbo/vbo.h"
 
 #include "tnl/tnl.h"
 #include "tnl/t_pipeline.h"
@@ -60,7 +60,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "r200_tex.h"
 #include "r200_swtcl.h"
 #include "r200_tcl.h"
-#include "r200_vtxfmt.h"
 #include "r200_maos.h"
 #include "r200_vertprog.h"
 
@@ -193,7 +192,6 @@ static const struct tnl_pipeline_stage *r200_pipeline[] = {
    &_tnl_texgen_stage,
    &_tnl_texture_transform_stage,
    &_tnl_point_attenuation_stage,
-   &_tnl_arb_vertex_program_stage,
    &_tnl_vertex_program_stage,
    /* Try again to go to tcl? 
     *     - no good for asymmetric-twoside (do with multipass)
@@ -415,7 +413,7 @@ GLboolean r200CreateContext( const __GLcontextModes *glVisual,
    /* Initialize the software rasterizer and helper modules.
     */
    _swrast_CreateContext( ctx );
-   _ac_CreateContext( ctx );
+   _vbo_CreateContext( ctx );
    _tnl_CreateContext( ctx );
    _swsetup_CreateContext( ctx );
    _ae_create_context( ctx );
@@ -424,11 +422,10 @@ GLboolean r200CreateContext( const __GLcontextModes *glVisual,
     */
    _tnl_destroy_pipeline( ctx );
    _tnl_install_pipeline( ctx, r200_pipeline );
-   ctx->Driver.FlushVertices = r200FlushVertices;
 
    /* Try and keep materials and vertices separate:
     */
-   _tnl_isolate_materials( ctx, GL_TRUE );
+/*    _tnl_isolate_materials( ctx, GL_TRUE ); */
 
 
    /* Configure swrast and TNL to match hardware characteristics:
@@ -533,12 +530,6 @@ GLboolean r200CreateContext( const __GLcontextModes *glVisual,
       TCL_FALLBACK(rmesa->glCtx, R200_TCL_FALLBACK_TCL_DISABLE, 1);
    }
 
-   if (rmesa->r200Screen->chip_flags & RADEON_CHIPSET_TCL) {
-      if (tcl_mode >= DRI_CONF_TCL_VTXFMT)
-	 r200VtxfmtInit( ctx, tcl_mode >= DRI_CONF_TCL_CODEGEN );
-
-      _tnl_need_dlist_norm_lengths( ctx, GL_FALSE );
-   }
    return GL_TRUE;
 }
 
@@ -568,7 +559,7 @@ void r200DestroyContext( __DRIcontextPrivate *driContextPriv )
       release_texture_heaps = (rmesa->glCtx->Shared->RefCount == 1);
       _swsetup_DestroyContext( rmesa->glCtx );
       _tnl_DestroyContext( rmesa->glCtx );
-      _ac_DestroyContext( rmesa->glCtx );
+      _vbo_DestroyContext( rmesa->glCtx );
       _swrast_DestroyContext( rmesa->glCtx );
 
       r200DestroySwtcl( rmesa->glCtx );
@@ -577,12 +568,6 @@ void r200DestroyContext( __DRIcontextPrivate *driContextPriv )
       if (rmesa->dma.current.buf) {
 	 r200ReleaseDmaRegion( rmesa, &rmesa->dma.current, __FUNCTION__ );
 	 r200FlushCmdBuf( rmesa, __FUNCTION__ );
-      }
-
-      if (!(rmesa->TclFallback & R200_TCL_FALLBACK_TCL_DISABLE)) {
-	 int tcl_mode = driQueryOptioni(&rmesa->optionCache, "tcl_mode");
-	 if (tcl_mode >= DRI_CONF_TCL_VTXFMT)
-	    r200VtxfmtDestroy( rmesa->glCtx );
       }
 
       if (rmesa->state.scissor.pClipRects) {
@@ -687,21 +672,19 @@ r200MakeCurrent( __DRIcontextPrivate *driContextPriv,
 				&newCtx->vbl_seq );
       }
 
-      if ( newCtx->dri.drawable != driDrawPriv ||
-           newCtx->dri.readable != driReadPriv ) {
-	 newCtx->dri.drawable = driDrawPriv;
-	 newCtx->dri.readable = driReadPriv;
+      newCtx->dri.readable = driReadPriv;
 
-	 r200UpdateWindow( newCtx->glCtx );
+      if ( newCtx->dri.drawable != driDrawPriv ||
+           newCtx->lastStamp != driDrawPriv->lastStamp ) {
+	 newCtx->dri.drawable = driDrawPriv;
+
+	 r200SetCliprects(newCtx);
 	 r200UpdateViewportOffset( newCtx->glCtx );
       }
 
       _mesa_make_current( newCtx->glCtx,
 			  (GLframebuffer *) driDrawPriv->driverPrivate,
 			  (GLframebuffer *) driReadPriv->driverPrivate );
-
-      if (newCtx->vb.enabled)
-	 r200VtxfmtMakeCurrent( newCtx->glCtx );
 
       _mesa_update_state( newCtx->glCtx );
       r200ValidateState( newCtx->glCtx );
@@ -727,6 +710,5 @@ r200UnbindContext( __DRIcontextPrivate *driContextPriv )
    if (R200_DEBUG & DEBUG_DRI)
       fprintf(stderr, "%s ctx %p\n", __FUNCTION__, (void *)rmesa->glCtx);
 
-   r200VtxfmtUnbindContext( rmesa->glCtx );
    return GL_TRUE;
 }

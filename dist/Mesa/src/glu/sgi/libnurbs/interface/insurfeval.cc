@@ -31,10 +31,10 @@
 ** published by SGI, but has not been independently verified as being
 ** compliant with the OpenGL(R) version 1.2.1 Specification.
 **
-** $Date: 2006/11/25 18:54:49 $ $Revision: 1.1.1.1 $
+** $Date: 2007/11/24 17:27:02 $ $Revision: 1.1.1.2 $
 */
 /*
-** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/interface/Attic/insurfeval.cc,v 1.1.1.1 2006/11/25 18:54:49 matthieu Exp $
+** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/interface/Attic/insurfeval.cc,v 1.1.1.2 2007/11/24 17:27:02 matthieu Exp $
 */
 
 #include "gluos.h"
@@ -1533,8 +1533,8 @@ void OpenGLSurfaceEvaluator::inEvalVStrip(int n_left, REAL u_left, REAL* left_va
     }
   //clean up 
   free(leftXYZ);
-  free(leftXYZ);
-  free(rightNormal);
+  free(rightXYZ);
+  free(leftNormal);
   free(rightNormal);
 }
 

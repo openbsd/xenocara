@@ -43,7 +43,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "framebuffer.h"
 
 #include "swrast/swrast.h"
-#include "array_cache/acache.h"
+#include "vbo/vbo.h"
 #include "tnl/tnl.h"
 #include "tnl/t_pipeline.h"
 #include "swrast_setup/swrast_setup.h"
@@ -54,7 +54,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "r200_tcl.h"
 #include "r200_tex.h"
 #include "r200_swtcl.h"
-#include "r200_vtxfmt.h"
 #include "r200_vertprog.h"
 
 #include "drirenderbuffer.h"
@@ -1692,6 +1691,11 @@ static void r200ClearStencil( GLcontext *ctx, GLint s )
 #define SUBPIXEL_X 0.125
 #define SUBPIXEL_Y 0.125
 
+
+/**
+ * Called when window size or position changes or viewport or depth range
+ * state is changed.  We update the hardware viewport state here.
+ */
 void r200UpdateWindow( GLcontext *ctx )
 {
    r200ContextPtr rmesa = R200_CONTEXT(ctx);
@@ -1844,19 +1848,18 @@ static void r200LogicOpCode( GLcontext *ctx, GLenum opcode )
 }
 
 
-void r200SetCliprects( r200ContextPtr rmesa, GLenum mode )
+/*
+ * Set up the cliprects for either front or back-buffer drawing.
+ */
+void r200SetCliprects( r200ContextPtr rmesa )
 {
    __DRIdrawablePrivate *const drawable = rmesa->dri.drawable;
    __DRIdrawablePrivate *const readable = rmesa->dri.readable;
    GLframebuffer *const draw_fb = (GLframebuffer*) drawable->driverPrivate;
    GLframebuffer *const read_fb = (GLframebuffer*) readable->driverPrivate;
 
-   switch ( mode ) {
-   case GL_FRONT_LEFT:
-      rmesa->numClipRects = drawable->numClipRects;
-      rmesa->pClipRects = drawable->pClipRects;
-      break;
-   case GL_BACK_LEFT:
+   if (draw_fb->_ColorDrawBufferMask[0]
+       == BUFFER_BIT_BACK_LEFT) {
       /* Can't ignore 2d windows if we are page flipping.
        */
       if ( drawable->numBackClipRects == 0 || rmesa->doPageFlip ) {
@@ -1867,11 +1870,12 @@ void r200SetCliprects( r200ContextPtr rmesa, GLenum mode )
          rmesa->numClipRects = drawable->numBackClipRects;
          rmesa->pClipRects = drawable->pBackClipRects;
       }
-      break;
-   default:
-      fprintf(stderr, "bad mode in r200SetCliprects\n");
-      return;
    }
+   else {
+     /* front buffer (or none, or multiple buffers) */
+     rmesa->numClipRects = drawable->numClipRects;
+     rmesa->pClipRects = drawable->pClipRects;
+  }
 
    if ((draw_fb->Width != drawable->w) || (draw_fb->Height != drawable->h)) {
       _mesa_resize_framebuffer(rmesa->glCtx, draw_fb,
@@ -1890,6 +1894,8 @@ void r200SetCliprects( r200ContextPtr rmesa, GLenum mode )
 
    if (rmesa->state.scissor.enabled)
       r200RecalcScissorRects( rmesa );
+
+   rmesa->lastStamp = drawable->lastStamp;
 }
 
 
@@ -1909,18 +1915,16 @@ static void r200DrawBuffer( GLcontext *ctx, GLenum mode )
     */
    switch ( ctx->DrawBuffer->_ColorDrawBufferMask[0] ) {
    case BUFFER_BIT_FRONT_LEFT:
-      FALLBACK( rmesa, R200_FALLBACK_DRAW_BUFFER, GL_FALSE );
-      r200SetCliprects( rmesa, GL_FRONT_LEFT );
-      break;
    case BUFFER_BIT_BACK_LEFT:
       FALLBACK( rmesa, R200_FALLBACK_DRAW_BUFFER, GL_FALSE );
-      r200SetCliprects( rmesa, GL_BACK_LEFT );
       break;
    default:
-      /* GL_NONE or GL_FRONT_AND_BACK or stereo left&right, etc */
+      /* 0 (GL_NONE) buffers or multiple color drawing buffers */
       FALLBACK( rmesa, R200_FALLBACK_DRAW_BUFFER, GL_TRUE );
       return;
    }
+
+   r200SetCliprects( rmesa );
 
    /* We'll set the drawing engine's offset/pitch parameters later
     * when we update other state.
@@ -2536,23 +2540,24 @@ static void r200InvalidateState( GLcontext *ctx, GLuint new_state )
 {
    _swrast_InvalidateState( ctx, new_state );
    _swsetup_InvalidateState( ctx, new_state );
-   _ac_InvalidateState( ctx, new_state );
+   _vbo_InvalidateState( ctx, new_state );
    _tnl_InvalidateState( ctx, new_state );
    _ae_invalidate_state( ctx, new_state );
    R200_CONTEXT(ctx)->NewGLState |= new_state;
-   r200VtxfmtInvalidate( ctx );
 }
 
 /* A hack.  The r200 can actually cope just fine with materials
- * between begin/ends, so fix this. But how ?
+ * between begin/ends, so fix this.
+ * Should map to inputs just like the generic vertex arrays for vertex progs.
+ * In theory there could still be too many and we'd still need a fallback.
  */
 static GLboolean check_material( GLcontext *ctx )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    GLint i;
 
-   for (i = _TNL_ATTRIB_MAT_FRONT_AMBIENT; 
-	i < _TNL_ATTRIB_MAT_BACK_INDEXES; 
+   for (i = _TNL_ATTRIB_MAT_FRONT_AMBIENT;
+	i < _TNL_ATTRIB_MAT_BACK_INDEXES;
 	i++)
       if (tnl->vb.AttribPtr[i] &&
 	  tnl->vb.AttribPtr[i]->stride)
@@ -2560,7 +2565,7 @@ static GLboolean check_material( GLcontext *ctx )
 
    return GL_FALSE;
 }
-      
+
 static void r200WrapRunPipeline( GLcontext *ctx )
 {
    r200ContextPtr rmesa = R200_CONTEXT(ctx);
@@ -2574,7 +2579,7 @@ static void r200WrapRunPipeline( GLcontext *ctx )
    if (rmesa->NewGLState)
       r200ValidateState( ctx );
 
-   has_material = (ctx->Light.Enabled && check_material( ctx ));
+   has_material = !ctx->VertexProgram._Enabled && ctx->Light.Enabled && check_material( ctx );
 
    if (has_material) {
       TCL_FALLBACK( ctx, R200_TCL_FALLBACK_MATERIAL, GL_TRUE );

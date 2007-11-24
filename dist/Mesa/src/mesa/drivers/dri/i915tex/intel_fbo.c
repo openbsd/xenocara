@@ -75,11 +75,47 @@ intel_get_renderbuffer(struct gl_framebuffer *fb, GLuint attIndex)
 }
 
 
+void
+intel_flip_renderbuffers(struct intel_framebuffer *intel_fb)
+{
+   int current_page = intel_fb->pf_current_page;
+   int next_page = (current_page + 1) % intel_fb->pf_num_pages;
+   struct gl_renderbuffer *tmp_rb;
+
+   /* Exchange renderbuffers if necessary but make sure their reference counts
+    * are preserved.
+    */
+   if (intel_fb->color_rb[current_page] &&
+       intel_fb->Base.Attachment[BUFFER_FRONT_LEFT].Renderbuffer !=
+       &intel_fb->color_rb[current_page]->Base) {
+      tmp_rb = NULL;
+      _mesa_reference_renderbuffer(&tmp_rb,
+	 intel_fb->Base.Attachment[BUFFER_FRONT_LEFT].Renderbuffer);
+      tmp_rb = &intel_fb->color_rb[current_page]->Base;
+      _mesa_reference_renderbuffer(
+	 &intel_fb->Base.Attachment[BUFFER_FRONT_LEFT].Renderbuffer, tmp_rb);
+      _mesa_reference_renderbuffer(&tmp_rb, NULL);
+   }
+
+   if (intel_fb->color_rb[next_page] &&
+       intel_fb->Base.Attachment[BUFFER_BACK_LEFT].Renderbuffer !=
+       &intel_fb->color_rb[next_page]->Base) {
+      tmp_rb = NULL;
+      _mesa_reference_renderbuffer(&tmp_rb,
+	 intel_fb->Base.Attachment[BUFFER_BACK_LEFT].Renderbuffer);
+      tmp_rb = &intel_fb->color_rb[next_page]->Base;
+      _mesa_reference_renderbuffer(
+	 &intel_fb->Base.Attachment[BUFFER_BACK_LEFT].Renderbuffer, tmp_rb);
+      _mesa_reference_renderbuffer(&tmp_rb, NULL);
+   }
+}
+
+
 struct intel_region *
 intel_get_rb_region(struct gl_framebuffer *fb, GLuint attIndex)
 {
-   struct intel_renderbuffer *irb
-      = intel_renderbuffer(fb->Attachment[attIndex].Renderbuffer);
+   struct intel_renderbuffer *irb = intel_get_renderbuffer(fb, attIndex);
+
    if (irb)
       return irb->region;
    else
@@ -94,7 +130,9 @@ intel_get_rb_region(struct gl_framebuffer *fb, GLuint attIndex)
 static struct gl_framebuffer *
 intel_new_framebuffer(GLcontext * ctx, GLuint name)
 {
-   /* there's no intel_framebuffer at this time, just use Mesa's class */
+   /* Only drawable state in intel_framebuffer at this time, just use Mesa's
+    * class
+    */
    return _mesa_new_framebuffer(ctx, name);
 }
 
@@ -275,9 +313,35 @@ intel_alloc_window_storage(GLcontext * ctx, struct gl_renderbuffer *rb,
    rb->Width = width;
    rb->Height = height;
    rb->_ActualFormat = internalFormat;
+
    return GL_TRUE;
 }
 
+static void
+intel_resize_buffers(GLcontext *ctx, struct gl_framebuffer *fb,
+		     GLuint width, GLuint height)
+{
+   struct intel_framebuffer *intel_fb = (struct intel_framebuffer*)fb;
+   int i;
+
+   _mesa_resize_framebuffer(ctx, fb, width, height);
+
+   fb->Initialized = GL_TRUE; /* XXX remove someday */
+
+   if (fb->Name != 0) {
+      return;
+   }
+
+   /* Make sure all window system renderbuffers are up to date */
+   for (i = 0; i < 3; i++) {
+      struct gl_renderbuffer *rb = &intel_fb->color_rb[i]->Base;
+
+      /* only resize if size is changing */
+      if (rb && (rb->Width != width || rb->Height != height)) {
+	 rb->AllocStorage(ctx, rb, rb->InternalFormat, width, height);
+      }
+   }
+}
 
 static GLboolean
 intel_nop_alloc_storage(GLcontext * ctx, struct gl_renderbuffer *rb,
@@ -456,7 +520,7 @@ intel_framebuffer_renderbuffer(GLcontext * ctx,
 
 /**
  * When glFramebufferTexture[123]D is called this function sets up the
- * gl_renderbuffer wrapp around the texture image.
+ * gl_renderbuffer wrapper around the texture image.
  * This will have the region info needed for hardware rendering.
  */
 static struct intel_renderbuffer *
@@ -542,7 +606,7 @@ intel_render_texture(GLcontext * ctx,
       irb = intel_wrap_texture(ctx, newImage);
       if (irb) {
          /* bind the wrapper to the attachment point */
-         att->Renderbuffer = &irb->Base;
+         _mesa_reference_renderbuffer(&att->Renderbuffer, &irb->Base);
       }
       else {
          /* fallback to software rendering */
@@ -619,4 +683,5 @@ intel_fbo_init(struct intel_context *intel)
    intel->ctx.Driver.FramebufferRenderbuffer = intel_framebuffer_renderbuffer;
    intel->ctx.Driver.RenderTexture = intel_render_texture;
    intel->ctx.Driver.FinishRenderTexture = intel_finish_render_texture;
+   intel->ctx.Driver.ResizeBuffers = intel_resize_buffers;
 }

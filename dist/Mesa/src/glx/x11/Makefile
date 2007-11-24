@@ -46,7 +46,6 @@ INCLUDES = -I. \
 	-I$(TOP)/include/GL/internal \
 	-I$(TOP)/src/mesa/main \
 	-I$(TOP)/src/mesa/glapi \
-	-I$(TOP)/src/mesa/drivers/dri/common \
 	$(LIBDRM_CFLAGS) \
 	$(X11_INCLUDES)
 
@@ -63,9 +62,6 @@ INCLUDES = -I. \
 
 default: depend $(TOP)/$(LIB_DIR)/$(GL_LIB_NAME)
 
-glcontextmodes.c:
-	ln -s $(TOP)/src/mesa/drivers/dri/common/glcontextmodes.c .
-
 # Make libGL
 $(TOP)/$(LIB_DIR)/$(GL_LIB_NAME):  $(OBJECTS) Makefile
 	$(TOP)/bin/mklib -o $(GL_LIB) -linker '$(CC)' \
@@ -81,7 +77,7 @@ depend: $(SOURCES) $(MESA_GLAPI_SOURCES) $(MESA_ASM_API) Makefile
 
 # Emacs tags
 tags:
-	etags `find . -name \*.[ch]` `find ../include`
+	etags `find . -name \*.[ch]` `find $(TOP)/include`
 
 # Dummy install target
 install:

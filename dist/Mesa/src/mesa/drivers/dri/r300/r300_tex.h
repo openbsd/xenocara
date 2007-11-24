@@ -1,4 +1,3 @@
-/* $XFree86: xc/lib/GL/mesa/src/drv/r300/r300_tex.h,v 1.1 2002/10/30 12:51:53 alanh Exp $ */
 /*
 Copyright (C) The Weather Channel, Inc.  2002.  All Rights Reserved.
 
@@ -36,7 +35,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __r300_TEX_H__
 #define __r300_TEX_H__
 
-#ifdef GLX_DIRECT_RENDERING
+extern void r300SetTexOffset(__DRIcontext *pDRICtx, GLint texname,
+			     unsigned long long offset, GLint depth,
+			     GLuint pitch);
 
 extern void r300UpdateTextureState(GLcontext * ctx);
 
@@ -47,5 +48,4 @@ extern void r300DestroyTexObj(r300ContextPtr rmesa, r300TexObjPtr t);
 
 extern void r300InitTextureFuncs(struct dd_function_table *functions);
 
-#endif
 #endif				/* __r300_TEX_H__ */

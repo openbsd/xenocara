@@ -35,7 +35,7 @@
 /*
  * monotonizer.h
  *
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/monotonizer.h,v 1.1.1.1 2006/11/25 18:54:50 matthieu Exp $
+ * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/monotonizer.h,v 1.1.1.2 2007/11/24 17:27:07 matthieu Exp $
  */
 
 #ifndef __glumonotonizer_h_

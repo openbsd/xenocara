@@ -42,7 +42,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
-#include "array_cache/acache.h"
+#include "vbo/vbo.h"
 
 #include "tnl/tnl.h"
 #include "tnl/t_pipeline.h"
@@ -68,6 +68,7 @@ int R128_DEBUG = 0;
 
 #define need_GL_ARB_multisample
 #define need_GL_ARB_texture_compression
+#define need_GL_ARB_vertex_buffer_object
 #define need_GL_EXT_blend_minmax
 #define need_GL_EXT_fog_coord
 #define need_GL_EXT_secondary_color
@@ -80,6 +81,7 @@ const struct dri_extension card_extensions[] =
     { "GL_ARB_texture_compression",        GL_ARB_texture_compression_functions },
     { "GL_ARB_texture_env_add",            NULL },
     { "GL_ARB_texture_mirrored_repeat",    NULL },
+    { "GL_ARB_vertex_buffer_object",       GL_ARB_vertex_buffer_object_functions },
     { "GL_EXT_blend_subtract",             GL_EXT_blend_minmax_functions },
     { "GL_EXT_fog_coord",                  GL_EXT_fog_coord_functions },
     { "GL_EXT_texture_edge_clamp",         NULL },
@@ -235,7 +237,7 @@ GLboolean r128CreateContext( const __GLcontextModes *glVisual,
    /* Initialize the software rasterizer and helper modules.
     */
    _swrast_CreateContext( ctx );
-   _ac_CreateContext( ctx );
+   _vbo_CreateContext( ctx );
    _tnl_CreateContext( ctx );
    _swsetup_CreateContext( ctx );
 
@@ -293,7 +295,7 @@ void r128DestroyContext( __DRIcontextPrivate *driContextPriv  )
 
       _swsetup_DestroyContext( rmesa->glCtx );
       _tnl_DestroyContext( rmesa->glCtx );
-      _ac_DestroyContext( rmesa->glCtx );
+      _vbo_DestroyContext( rmesa->glCtx );
       _swrast_DestroyContext( rmesa->glCtx );
 
       if ( release_texture_heaps ) {

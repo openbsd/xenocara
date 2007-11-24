@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.2
+ * Version:  7.0.1
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -293,6 +293,11 @@ save_glx_visual( Display *dpy, XVisualInfo *vinfo,
             _mesa_warning(NULL, "Mesa: invalid value for MESA_BACK_BUFFER environment variable, using an XImage.");
          }
       }
+   }
+
+   if (stereoFlag) {
+      /* stereo not supported */
+      return NULL;
    }
 
    /* Comparing IDs uses less memory but sometimes fails. */
@@ -1078,7 +1083,7 @@ choose_visual( Display *dpy, int screen, const int *list, GLboolean fbConfig )
             else {
                stereo_flag = GL_TRUE;
             }
-            return NULL; /* stereo not supported */
+            break;
 	 case GLX_AUX_BUFFERS:
 	    parselist++;
             numAux = *parselist++;
@@ -1440,11 +1445,14 @@ Fake_glXMakeContextCurrent( Display *dpy, GLXDrawable draw,
       }
       if (!drawBuffer) {
          /* drawable must be a new window! */
-         drawBuffer = XMesaCreateWindowBuffer2( xmctx->xm_visual, draw, xmctx);
+         drawBuffer = XMesaCreateWindowBuffer( xmctx->xm_visual, draw );
          if (!drawBuffer) {
             /* Out of memory, or context/drawable depth mismatch */
             return False;
          }
+#ifdef FX
+         FXcreateContext( xmctx->xm_visual, draw, xmctx, drawBuffer );
+#endif
       }
 
       /* Find the XMesaBuffer which corresponds to the GLXDrawable 'read' */
@@ -1457,12 +1465,14 @@ Fake_glXMakeContextCurrent( Display *dpy, GLXDrawable draw,
       }
       if (!readBuffer) {
          /* drawable must be a new window! */
-         readBuffer = XMesaCreateWindowBuffer2(glxCtx->xmesaContext->xm_visual,
-                                               read, xmctx);
+         readBuffer = XMesaCreateWindowBuffer( xmctx->xm_visual, read );
          if (!readBuffer) {
             /* Out of memory, or context/drawable depth mismatch */
             return False;
          }
+#ifdef FX
+         FXcreateContext( xmctx->xm_visual, read, xmctx, readBuffer );
+#endif
       }
 
       MakeCurrent_PrevContext = ctx;
@@ -2107,9 +2117,14 @@ Fake_glXCreateWindow( Display *dpy, GLXFBConfig config, Window win,
    if (!xmvis)
       return 0;
 
-   xmbuf = XMesaCreateWindowBuffer2(xmvis, win, NULL);
+   xmbuf = XMesaCreateWindowBuffer(xmvis, win);
    if (!xmbuf)
       return 0;
+
+#ifdef FX
+   /* XXX this will segfault if actually called */
+   FXcreateContext(xmvis, win, NULL, xmbuf);
+#endif
 
    (void) dpy;
    (void) attribList;  /* Ignored in GLX 1.3 */

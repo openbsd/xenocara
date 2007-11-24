@@ -36,7 +36,6 @@
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
 #include "tnl/tnl.h"
-#include "array_cache/acache.h"
 
 #include "utils.h"
 #include "i915_reg.h"
@@ -67,7 +66,7 @@ i915InvalidateState(GLcontext * ctx, GLuint new_state)
 {
    _swrast_InvalidateState(ctx, new_state);
    _swsetup_InvalidateState(ctx, new_state);
-   _ac_InvalidateState(ctx, new_state);
+   _vbo_InvalidateState(ctx, new_state);
    _tnl_InvalidateState(ctx, new_state);
    _tnl_invalidate_vertex_state(ctx, new_state);
    intel_context(ctx)->NewGLState |= new_state;
@@ -158,8 +157,8 @@ i915CreateContext(const __GLcontextModes * mesaVis,
       I915_MAX_TEX_INDIRECT;
    ctx->Const.FragmentProgram.MaxNativeAddressRegs = 0; /* I don't think we have one */
 
-   ctx->_MaintainTexEnvProgram = 1;
-   ctx->_UseTexEnvProgram = 1;
+   ctx->FragmentProgram._MaintainTexEnvProgram = GL_TRUE;
+   ctx->FragmentProgram._UseTexEnvProgram = GL_TRUE;
 
    driInitExtensions(ctx, i915_extensions, GL_FALSE);
 

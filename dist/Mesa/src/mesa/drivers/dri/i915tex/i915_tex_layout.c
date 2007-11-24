@@ -30,6 +30,7 @@
  */
 
 #include "intel_mipmap_tree.h"
+#include "intel_tex_layout.h"
 #include "macros.h"
 #include "intel_context.h"
 
@@ -52,12 +53,6 @@ static GLint step_offsets[6][2] = { {0, 2},
 {-1, 1}
 };
 
-static GLuint
-minify(GLuint d)
-{
-   return MAX2(1, d >> 1);
-}
-
 GLboolean
 i915_miptree_layout(struct intel_mipmap_tree * mt)
 {
@@ -67,15 +62,23 @@ i915_miptree_layout(struct intel_mipmap_tree * mt)
    case GL_TEXTURE_CUBE_MAP:{
          const GLuint dim = mt->width0;
          GLuint face;
+         GLuint lvlWidth = mt->width0, lvlHeight = mt->height0;
+
+         assert(lvlWidth == lvlHeight); /* cubemap images are square */
 
          /* double pitch for cube layouts */
          mt->pitch = ((dim * mt->cpp * 2 + 3) & ~3) / mt->cpp;
          mt->total_height = dim * 4;
 
-         for (level = mt->first_level; level <= mt->last_level; level++)
+         for (level = mt->first_level; level <= mt->last_level; level++) {
             intel_miptree_set_level_info(mt, level, 6,
                                          0, 0,
-                                         mt->pitch, mt->total_height, 1);
+                                         /*OLD: mt->pitch, mt->total_height,*/
+                                         lvlWidth, lvlHeight,
+                                         1);
+            lvlWidth /= 2;
+            lvlHeight /= 2;
+         }
 
          for (face = 0; face < 6; face++) {
             GLuint x = initial_offsets[face][0] * dim;
@@ -158,11 +161,9 @@ i915_miptree_layout(struct intel_mipmap_tree * mt)
             if (mt->compressed)
                img_height = MAX2(1, height / 4);
             else
-               img_height = MAX2(2, height);
+               img_height = (MAX2(2, height) + 1) & ~1;
 
 	    mt->total_height += img_height;
-	    mt->total_height += 1;
-	    mt->total_height &= ~1;
 
             width = minify(width);
             height = minify(height);
@@ -187,6 +188,9 @@ i945_miptree_layout(struct intel_mipmap_tree * mt)
    case GL_TEXTURE_CUBE_MAP:{
          const GLuint dim = mt->width0;
          GLuint face;
+         GLuint lvlWidth = mt->width0, lvlHeight = mt->height0;
+
+         assert(lvlWidth == lvlHeight); /* cubemap images are square */
 
          /* Depending on the size of the largest images, pitch can be
           * determined either by the old-style packing of cubemap faces,
@@ -201,11 +205,13 @@ i945_miptree_layout(struct intel_mipmap_tree * mt)
 
          /* Set all the levels to effectively occupy the whole rectangular region. 
           */
-         for (level = mt->first_level; level <= mt->last_level; level++)
+         for (level = mt->first_level; level <= mt->last_level; level++) {
             intel_miptree_set_level_info(mt, level, 6,
                                          0, 0,
-                                         mt->pitch, mt->total_height, 1);
-
+                                         lvlWidth, lvlHeight, 1);
+	    lvlWidth /= 2;
+	    lvlHeight /= 2;
+	 }
 
 
          for (face = 0; face < 6; face++) {
@@ -217,7 +223,7 @@ i945_miptree_layout(struct intel_mipmap_tree * mt)
                y = mt->total_height - 4;
                x = (face - 4) * 8;
             }
-            else if (dim < 4) {
+            else if (dim < 4 && (face > 0 || mt->first_level > 0)) {
                y = mt->total_height - 4;
                x = face * 8;
             }
@@ -322,52 +328,9 @@ i945_miptree_layout(struct intel_mipmap_tree * mt)
 
    case GL_TEXTURE_1D:
    case GL_TEXTURE_2D:
-   case GL_TEXTURE_RECTANGLE_ARB:{
-         GLuint x = 0;
-         GLuint y = 0;
-         GLuint width = mt->width0;
-         GLuint height = mt->height0;
-	 GLint align_h = 2;
-
-         mt->pitch = ((mt->width0 * mt->cpp + 3) & ~3) / mt->cpp;
-         mt->total_height = 0;
-
-         for (level = mt->first_level; level <= mt->last_level; level++) {
-	    GLuint img_height;
-
-            intel_miptree_set_level_info(mt, level, 1,
-                                         x, y, 
-					 width, 
-					 mt->compressed ? height/4 : height, 1);
-
-
-	    if (mt->compressed)
-               img_height = MAX2(1, height / 4);
-            else
-               img_height = MAX2(align_h, height);
-
-            /* LPT change: step right after second mipmap.
-             */
-            if (level == mt->first_level + 1) {
-               x += mt->pitch / 2;
-	       x = (x + 3) & ~3;
-	    }
-            else {
-	       y += img_height;
-	       y += align_h - 1;
-	       y &= ~(align_h - 1);
-	    }
-
-            /* Because the images are packed better, the final offset
-             * might not be the maximal one:
-             */
-            mt->total_height = MAX2(mt->total_height, y);
-
-            width = minify(width);
-            height = minify(height);
-         }
+   case GL_TEXTURE_RECTANGLE_ARB:
+         i945_miptree_layout_2d(mt);
          break;
-      }
    default:
       _mesa_problem(NULL, "Unexpected tex target in i945_miptree_layout()");
    }

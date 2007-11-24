@@ -51,6 +51,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "radeon_macros.h"
 #include "radeon_reg.h"
 
+#include "radeon_state.h"
 #include "r300_state.h"
 
 #include "utils.h"
@@ -69,7 +70,10 @@ static const GLubyte *radeonGetString(GLcontext * ctx, GLenum name)
 
 	switch (name) {
 	case GL_VENDOR:
-		return (GLubyte *) "Tungsten Graphics, Inc.";
+		if (IS_R300_CLASS(radeon->radeonScreen))
+			return (GLubyte *) "DRI R300 Project";
+		else
+			return (GLubyte *) "Tungsten Graphics, Inc.";
 
 	case GL_RENDERER:
 	{
@@ -86,9 +90,15 @@ static const GLubyte *radeonGetString(GLcontext * ctx, GLenum name)
 		offset = driGetRendererString(buffer, chipname, DRIVER_DATE,
 					      agp_mode);
 
+		if (IS_R300_CLASS(radeon->radeonScreen)) {
 		sprintf(&buffer[offset], " %sTCL",
+			(radeon->radeonScreen->chip_flags & RADEON_CHIPSET_TCL)
+			? "" : "NO-");
+		} else {
+			sprintf(&buffer[offset], " %sTCL",
 			!(radeon->TclFallback & RADEON_TCL_FALLBACK_TCL_DISABLE)
 			? "" : "NO-");
+		}
 
 		return (GLubyte *) buffer;
 	}
@@ -272,12 +282,13 @@ GLboolean radeonMakeCurrent(__DRIcontextPrivate * driContextPriv,
 					      &radeon->vbl_seq);
 		}
 
-		if (radeon->dri.drawable != driDrawPriv ||
-		    radeon->dri.readable != driReadPriv) {
-			radeon->dri.drawable = driDrawPriv;
-			radeon->dri.readable = driReadPriv;
+		radeon->dri.readable = driReadPriv;
 
-			r300UpdateWindow(radeon->glCtx);
+		if (radeon->dri.drawable != driDrawPriv ||
+		    radeon->lastStamp != driDrawPriv->lastStamp) {
+			radeon->dri.drawable = driDrawPriv;
+
+			radeonSetCliprects(radeon);
 			r300UpdateViewportOffset(radeon->glCtx);
 		}
 
@@ -287,12 +298,9 @@ GLboolean radeonMakeCurrent(__DRIcontextPrivate * driContextPriv,
 				    (GLframebuffer *) driReadPriv->
 				    driverPrivate);
 
-		if (!radeon->glCtx->Viewport.Width) {
-			_mesa_set_viewport(radeon->glCtx, 0, 0,
-					   driDrawPriv->w, driDrawPriv->h);
-		}
-
 		_mesa_update_state(radeon->glCtx);		
+
+		radeonUpdatePageFlipping(radeon);
 	} else {
 		if (RADEON_DEBUG & DEBUG_DRI)
 			fprintf(stderr, "%s ctx is null\n", __FUNCTION__);

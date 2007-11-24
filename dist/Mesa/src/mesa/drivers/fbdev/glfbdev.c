@@ -54,7 +54,7 @@
 #include "texformat.h"
 #include "teximage.h"
 #include "texstore.h"
-#include "array_cache/acache.h"
+#include "vbo/vbo.h"
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
 #include "tnl/tnl.h"
@@ -143,7 +143,7 @@ update_state( GLcontext *ctx, GLuint new_state )
    /* not much to do here - pass it on */
    _swrast_InvalidateState( ctx, new_state );
    _swsetup_InvalidateState( ctx, new_state );
-   _ac_InvalidateState( ctx, new_state );
+   _vbo_InvalidateState( ctx, new_state );
    _tnl_InvalidateState( ctx, new_state );
 }
 
@@ -682,9 +682,16 @@ glFBDevDestroyBuffer( GLFBDevBufferPtr buffer )
       if (buffer == curDraw || buffer == curRead) {
          glFBDevMakeCurrent( NULL, NULL, NULL);
       }
+#if 0
       /* free the software depth, stencil, accum buffers */
       _mesa_free_framebuffer_data(&buffer->glframebuffer);
       _mesa_free(buffer);
+#else
+      {
+         struct gl_framebuffer *fb = &buffer->glframebuffer;
+         _mesa_unreference_framebuffer(&fb);
+      }
+#endif
    }
 }
 
@@ -776,7 +783,7 @@ glFBDevCreateContext( const GLFBDevVisualPtr visual, GLFBDevContextPtr share )
    /* Create module contexts */
    glctx = (GLcontext *) &ctx->glcontext;
    _swrast_CreateContext( glctx );
-   _ac_CreateContext( glctx );
+   _vbo_CreateContext( glctx );
    _tnl_CreateContext( glctx );
    _swsetup_CreateContext( glctx );
    _swsetup_Wakeup( glctx );
@@ -799,10 +806,16 @@ glFBDevDestroyContext( GLFBDevContextPtr context )
    GLFBDevContextPtr fbdevctx = glFBDevGetCurrentContext();
 
    if (context) {
+      GLcontext *mesaCtx = &context->glcontext;
+
+      _swsetup_DestroyContext( mesaCtx );
+      _swrast_DestroyContext( mesaCtx );
+      _tnl_DestroyContext( mesaCtx );
+      _vbo_DestroyContext( mesaCtx );
+
       if (fbdevctx == context) {
          /* destroying current context */
          _mesa_make_current(NULL, NULL, NULL);
-         _mesa_notifyDestroy(&context->glcontext);
       }
       _mesa_free_context_data(&context->glcontext);
       _mesa_free(context);

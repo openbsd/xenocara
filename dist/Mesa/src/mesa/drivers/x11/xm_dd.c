@@ -47,16 +47,11 @@
 #include "texstore.h"
 #include "texformat.h"
 #include "xmesaP.h"
-#include "array_cache/acache.h"
 #include "swrast/swrast.h"
 #include "swrast/s_context.h"
 #include "swrast_setup/swrast_setup.h"
 #include "tnl/tnl.h"
 #include "tnl/t_context.h"
-
-#ifdef XFree86Server
-#include <GL/glxtokens.h>
-#endif
 
 
 
@@ -443,7 +438,7 @@ xmesa_DrawPixels_8R8G8B( GLcontext *ctx,
 {
    const SWcontext *swrast = SWRAST_CONTEXT( ctx );
    struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[0][0];
-   struct xmesa_renderbuffer *xrb = (struct xmesa_renderbuffer *) rb->Wrapped;
+   struct xmesa_renderbuffer *xrb = xmesa_renderbuffer(rb->Wrapped);
 
    if (swrast->NewState)
       _swrast_validate_derived( ctx );
@@ -551,7 +546,7 @@ xmesa_DrawPixels_5R6G5B( GLcontext *ctx,
                          const GLvoid *pixels )
 {
    struct xmesa_renderbuffer *xrb
-      = (struct xmesa_renderbuffer *) ctx->DrawBuffer->_ColorDrawBuffers[0][0];
+      = xmesa_renderbuffer(ctx->DrawBuffer->_ColorDrawBuffers[0][0]->Wrapped);
    const XMesaContext xmesa = XMESA_CONTEXT(ctx);
    const SWcontext *swrast = SWRAST_CONTEXT( ctx );
    XMesaDisplay *dpy = xmesa->xm_visual->display;
@@ -657,10 +652,10 @@ xmesa_CopyPixels( GLcontext *ctx,
    const SWcontext *swrast = SWRAST_CONTEXT( ctx );
    XMesaDisplay *dpy = xmesa->xm_visual->display;
    const XMesaGC gc = ((XMesaBuffer) ctx->DrawBuffer)->gc;
-   struct xmesa_renderbuffer *srcXrb = (struct xmesa_renderbuffer *)
-      ctx->ReadBuffer->_ColorReadBuffer;
-   struct xmesa_renderbuffer *dstXrb = (struct xmesa_renderbuffer *)
-      ctx->DrawBuffer->_ColorDrawBuffers[0][0];
+   struct xmesa_renderbuffer *srcXrb
+      = xmesa_renderbuffer(ctx->ReadBuffer->_ColorReadBuffer->Wrapped);
+   struct xmesa_renderbuffer *dstXrb
+      = xmesa_renderbuffer(ctx->DrawBuffer->_ColorDrawBuffers[0][0]->Wrapped);
 
    ASSERT(dpy);
    ASSERT(gc);
@@ -829,8 +824,8 @@ xmesa_update_state( GLcontext *ctx, GLbitfield new_state )
     * modules.  The X11 driver has no internal GL-dependent state.
     */
    _swrast_InvalidateState( ctx, new_state );
-   _ac_InvalidateState( ctx, new_state );
    _tnl_InvalidateState( ctx, new_state );
+   _vbo_InvalidateState( ctx, new_state );
    _swsetup_InvalidateState( ctx, new_state );
 
    if (ctx->DrawBuffer->Name != 0)

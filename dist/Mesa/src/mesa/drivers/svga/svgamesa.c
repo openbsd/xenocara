@@ -1,4 +1,4 @@
-/* $Id: svgamesa.c,v 1.1.1.2 2007/03/03 11:56:58 matthieu Exp $ */
+/* $Id: svgamesa.c,v 1.1.1.3 2007/11/24 17:30:17 matthieu Exp $ */
 
 /*
  * Mesa 3-D graphics library
@@ -433,7 +433,6 @@ void SVGAMesaDestroyContext( SVGAMesaContext ctx )
    if (ctx) {
       _mesa_destroy_visual( ctx->gl_vis );
       _mesa_destroy_context( ctx->gl_ctx );
-      _mesa_destroy_framebuffer( ctx->gl_buffer );
       free( ctx );
       if (ctx==SVGAMesa) {
          SVGAMesa = NULL;

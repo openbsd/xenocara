@@ -33,11 +33,11 @@
 #include "extensions.h"
 #include "framebuffer.h"
 #include "imports.h"
+#include "points.h"
 
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
 #include "tnl/tnl.h"
-#include "array_cache/acache.h"
 
 #include "tnl/t_pipeline.h"
 #include "tnl/t_vertex.h"
@@ -60,6 +60,7 @@
 #include "intel_buffer_objects.h"
 #include "intel_fbo.h"
 
+#include "drirenderbuffer.h"
 #include "vblank.h"
 #include "utils.h"
 #include "xmlpool.h"            /* for symbolic values of enum-type options */
@@ -208,7 +209,6 @@ static const struct tnl_pipeline_stage *intel_pipeline[] = {
    &_tnl_texgen_stage,
    &_tnl_texture_transform_stage,
    &_tnl_point_attenuation_stage,
-   &_tnl_arb_vertex_program_stage,
    &_tnl_vertex_program_stage,
 #if 1
    &_intel_render_stage,        /* ADD: unclipped rastersetup-to-dma */
@@ -241,7 +241,7 @@ intelInvalidateState(GLcontext * ctx, GLuint new_state)
 {
    _swrast_InvalidateState(ctx, new_state);
    _swsetup_InvalidateState(ctx, new_state);
-   _ac_InvalidateState(ctx, new_state);
+   _vbo_InvalidateState(ctx, new_state);
    _tnl_InvalidateState(ctx, new_state);
    _tnl_invalidate_vertex_state(ctx, new_state);
    intel_context(ctx)->NewGLState |= new_state;
@@ -346,7 +346,15 @@ intelInitContext(struct intel_context *intel,
    drmI830Sarea *saPriv = (drmI830Sarea *)
       (((GLubyte *) sPriv->pSAREA) + intelScreen->sarea_priv_offset);
    int fthrottle_mode;
+   GLboolean havePools;
 
+   DRM_LIGHT_LOCK(sPriv->fd, &sPriv->pSAREA->lock, driContextPriv->hHWContext);
+   havePools = intelCreatePools(intelScreen);
+   DRM_UNLOCK(sPriv->fd, &sPriv->pSAREA->lock, driContextPriv->hHWContext);
+
+   if (!havePools)
+      return GL_FALSE;
+     
    if (!_mesa_initialize_context(&intel->ctx,
                                  mesaVis, shareCtx,
                                  functions, (void *) intel))
@@ -356,6 +364,10 @@ intelInitContext(struct intel_context *intel,
    intel->intelScreen = intelScreen;
    intel->driScreen = sPriv;
    intel->sarea = saPriv;
+
+   intel->width = intelScreen->width;
+   intel->height = intelScreen->height;
+   intel->current_rotation = intelScreen->current_rotation;
 
    if (!lockMutexInit) {
       lockMutexInit = GL_TRUE;
@@ -386,11 +398,16 @@ intelInitContext(struct intel_context *intel,
    ctx->Const.MaxPointSizeAA = 3.0;
    ctx->Const.PointSizeGranularity = 1.0;
 
+   /* reinitialize the context point state.
+    * It depend on constants in __GLcontextRec::Const
+    */
+   _mesa_init_point(ctx);
+
    ctx->Const.MaxColorAttachments = 4;  /* XXX FBO: review this */
 
    /* Initialize the software rasterizer and helper modules. */
    _swrast_CreateContext(ctx);
-   _ac_CreateContext(ctx);
+   _vbo_CreateContext(ctx);
    _tnl_CreateContext(ctx);
    _swsetup_CreateContext(ctx);
 
@@ -439,10 +456,6 @@ intelInitContext(struct intel_context *intel,
 
    intel->do_usleeps = (fthrottle_mode == DRI_CONF_FTHROTTLE_USLEEPS);
 
-   intel->vblank_flags = (intel->intelScreen->irq_active != 0)
-      ? driGetDefaultVBlankFlags(&intel->optionCache) : VBLANK_FLAG_NO_IRQ;
-
-   (*dri_interface->getUST) (&intel->swap_ust);
    _math_matrix_ctr(&intel->ViewportMatrix);
 
    /* Disable imaging extension until convolution is working in
@@ -500,7 +513,7 @@ intelDestroyContext(__DRIcontextPrivate * driContextPriv)
       release_texture_heaps = (intel->ctx.Shared->RefCount == 1);
       _swsetup_DestroyContext(&intel->ctx);
       _tnl_DestroyContext(&intel->ctx);
-      _ac_DestroyContext(&intel->ctx);
+      _vbo_DestroyContext(&intel->ctx);
 
       _swrast_DestroyContext(&intel->ctx);
       intel->Fallback = 0;      /* don't call _swrast_Flush later */
@@ -547,27 +560,30 @@ intelMakeCurrent(__DRIcontextPrivate * driContextPriv,
    if (driContextPriv) {
       struct intel_context *intel =
          (struct intel_context *) driContextPriv->driverPrivate;
-      GLframebuffer *drawFb = (GLframebuffer *) driDrawPriv->driverPrivate;
+      struct intel_framebuffer *intel_fb =
+	 (struct intel_framebuffer *) driDrawPriv->driverPrivate;
       GLframebuffer *readFb = (GLframebuffer *) driReadPriv->driverPrivate;
 
 
       /* XXX FBO temporary fix-ups! */
       /* if the renderbuffers don't have regions, init them from the context */
       {
-         struct intel_renderbuffer *irbFront
-            = intel_get_renderbuffer(drawFb, BUFFER_FRONT_LEFT);
-         struct intel_renderbuffer *irbBack
-            = intel_get_renderbuffer(drawFb, BUFFER_BACK_LEFT);
          struct intel_renderbuffer *irbDepth
-            = intel_get_renderbuffer(drawFb, BUFFER_DEPTH);
+            = intel_get_renderbuffer(&intel_fb->Base, BUFFER_DEPTH);
          struct intel_renderbuffer *irbStencil
-            = intel_get_renderbuffer(drawFb, BUFFER_STENCIL);
+            = intel_get_renderbuffer(&intel_fb->Base, BUFFER_STENCIL);
 
-         if (irbFront && !irbFront->region) {
-            intel_region_reference(&irbFront->region, intel->intelScreen->front_region);
+         if (intel_fb->color_rb[0] && !intel_fb->color_rb[0]->region) {
+            intel_region_reference(&intel_fb->color_rb[0]->region,
+				   intel->intelScreen->front_region);
          }
-         if (irbBack && !irbBack->region) {
-            intel_region_reference(&irbBack->region, intel->intelScreen->back_region);
+         if (intel_fb->color_rb[1] && !intel_fb->color_rb[1]->region) {
+            intel_region_reference(&intel_fb->color_rb[1]->region,
+				   intel->intelScreen->back_region);
+         }
+         if (intel_fb->color_rb[2] && !intel_fb->color_rb[2]->region) {
+            intel_region_reference(&intel_fb->color_rb[2]->region,
+				   intel->intelScreen->third_region);
          }
          if (irbDepth && !irbDepth->region) {
             intel_region_reference(&irbDepth->region, intel->intelScreen->depth_region);
@@ -577,29 +593,42 @@ intelMakeCurrent(__DRIcontextPrivate * driContextPriv,
          }
       }
 
-      /* set initial GLframebuffer size to match window, if needed */
-      if (drawFb->Width == 0 && driDrawPriv->w) {
-         _mesa_resize_framebuffer(&intel->ctx, drawFb,
-                                  driDrawPriv->w, driDrawPriv->h);
-      }         
-      if (readFb->Width == 0 && driReadPriv->w) {
-         _mesa_resize_framebuffer(&intel->ctx, readFb,
-                                  driReadPriv->w, driReadPriv->h);
-      }         
+      /* set GLframebuffer size to match window, if needed */
+      driUpdateFramebufferSize(&intel->ctx, driDrawPriv);
 
-      _mesa_make_current(&intel->ctx, drawFb, readFb);
+      if (driReadPriv != driDrawPriv) {
+	 driUpdateFramebufferSize(&intel->ctx, driReadPriv);
+      }
+
+      _mesa_make_current(&intel->ctx, &intel_fb->Base, readFb);
 
       /* The drawbuffer won't always be updated by _mesa_make_current: 
        */
-      if (intel->ctx.DrawBuffer == drawFb) {
+      if (intel->ctx.DrawBuffer == &intel_fb->Base) {
 
 	 if (intel->driDrawable != driDrawPriv) {
-	    driDrawableInitVBlank(driDrawPriv, intel->vblank_flags, &intel->vbl_seq);	    
+	    if (driDrawPriv->pdraw->swap_interval == (unsigned)-1) {
+	       int i;
+
+	       intel_fb->vblank_flags = (intel->intelScreen->irq_active != 0)
+		  ? driGetDefaultVBlankFlags(&intel->optionCache)
+		 : VBLANK_FLAG_NO_IRQ;
+
+	       (*dri_interface->getUST) (&intel_fb->swap_ust);
+	       driDrawableInitVBlank(driDrawPriv, intel_fb->vblank_flags,
+				     &intel_fb->vbl_seq);
+	       intel_fb->vbl_waited = intel_fb->vbl_seq;
+
+	       for (i = 0; i < (intel->intelScreen->third.handle ? 3 : 2); i++) {
+		  if (intel_fb->color_rb[i])
+		     intel_fb->color_rb[i]->vbl_pending = intel_fb->vbl_seq;
+	       }
+	    }
 	    intel->driDrawable = driDrawPriv;
 	    intelWindowMoved(intel);
 	 }
 
-	 intel_draw_buffer(&intel->ctx, drawFb);
+	 intel_draw_buffer(&intel->ctx, &intel_fb->Base);
       }
    }
    else {
@@ -635,26 +664,40 @@ intelContendedLock(struct intel_context *intel, GLuint flags)
        sarea->rotation != intelScreen->current_rotation) {
 
       intelUpdateScreenRotation(sPriv, sarea);
+   }
 
-      /* 
-       * This will drop the outstanding batchbuffer on the floor
-       * FIXME: This should be done for all contexts?
+   if (sarea->width != intel->width ||
+       sarea->height != intel->height ||
+       sarea->rotation != intel->current_rotation) {
+      int numClipRects = intel->numClipRects;
+
+      /*
+       * FIXME: Really only need to do this when drawing to a
+       * common back- or front buffer.
        */
 
-      intel_batchbuffer_reset(intel->batch);
+      /*
+       * This will essentially drop the outstanding batchbuffer on the floor.
+       */
+      intel->numClipRects = 0;
 
-      /* lose all primitives */
-      intel->prim.primitive = ~0;
-      intel->prim.start_ptr = 0;
-      intel->prim.flush = 0;
+      if (intel->Fallback)
+	 _swrast_flush(&intel->ctx);
 
-      /* re-emit all state */
-      intel->vtbl.lost_hardware(intel);
+      INTEL_FIREVERTICES(intel);
+
+      if (intel->batch->map != intel->batch->ptr)
+	 intel_batchbuffer_flush(intel->batch);
+
+      intel->numClipRects = numClipRects;
 
       /* force window update */
       intel->lastStamp = 0;
-   }
 
+      intel->width = sarea->width;
+      intel->height = sarea->height;
+      intel->current_rotation = sarea->rotation;
+   }
 
    /* Drawable changed?
     */
@@ -665,24 +708,42 @@ intelContendedLock(struct intel_context *intel, GLuint flags)
 }
 
 
+
 /* Lock the hardware and validate our state.  
  */
 void LOCK_HARDWARE( struct intel_context *intel )
 {
     char __ret=0;
-
+    struct intel_framebuffer *intel_fb = NULL;
+    struct intel_renderbuffer *intel_rb = NULL;
     _glthread_LOCK_MUTEX(lockMutex);
     assert(!intel->locked);
 
-    if (intel->swap_scheduled) {
+    if (intel->driDrawable) {
+       intel_fb = intel->driDrawable->driverPrivate;
+
+       if (intel_fb)
+	  intel_rb =
+	     intel_get_renderbuffer(&intel_fb->Base,
+				    intel_fb->Base._ColorDrawBufferMask[0] ==
+				    BUFFER_BIT_FRONT_LEFT ? BUFFER_FRONT_LEFT :
+				    BUFFER_BACK_LEFT);
+    }
+
+    if (intel_rb && intel_fb->vblank_flags &&
+	!(intel_fb->vblank_flags & VBLANK_FLAG_NO_IRQ) &&
+	(intel_fb->vbl_waited - intel_rb->vbl_pending) > (1<<23)) {
 	drmVBlank vbl;
+
 	vbl.request.type = DRM_VBLANK_ABSOLUTE;
-	if ( intel->vblank_flags & VBLANK_FLAG_SECONDARY ) {
+
+	if ( intel_fb->vblank_flags & VBLANK_FLAG_SECONDARY ) {
 	    vbl.request.type |= DRM_VBLANK_SECONDARY;
 	}
-	vbl.request.sequence = intel->vbl_seq;
+
+	vbl.request.sequence = intel_rb->vbl_pending;
 	drmWaitVBlank(intel->driFd, &vbl);
-	intel->swap_scheduled = 0;
+	intel_fb->vbl_waited = vbl.reply.sequence;
     }
 
     DRM_CAS(intel->driHwLock, intel->hHWContext,

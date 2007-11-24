@@ -39,6 +39,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <X11/Xlibint.h>
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
+#include "glheader.h"
 #include "glxclient.h"
 #include "xf86dri.h"
 #include "sarea.h"
@@ -81,11 +82,15 @@ static void InfoMessageF(const char *f, ...)
     }
 }
 
+/**
+ * Print error to stderr, unless LIBGL_DEBUG=="quiet".
+ */
 static void ErrorMessageF(const char *f, ...)
 {
     va_list args;
+    const char *env;
 
-    if (getenv("LIBGL_DEBUG")) {
+    if ((env = getenv("LIBGL_DEBUG")) && !strstr(env, "quiet")) {
 	fprintf(stderr, "libGL error: ");
 	va_start(args, f);
 	vfprintf(stderr, f, args);
@@ -338,7 +343,7 @@ __DRIdriver *driGetDriver(Display *dpy, int scrNum)
  * The returned char pointer points to a static array that will be
  * overwritten by subsequent calls.
  */
-const char *glXGetScreenDriver (Display *dpy, int scrNum) {
+PUBLIC const char *glXGetScreenDriver (Display *dpy, int scrNum) {
    static char ret[32];
    char *driverName;
    if (GetDriverName(dpy, scrNum, &driverName)) {
@@ -367,7 +372,7 @@ const char *glXGetScreenDriver (Display *dpy, int scrNum) {
  *
  * Note: The driver remains opened after this function returns.
  */
-const char *glXGetDriverConfig (const char *driverName) {
+PUBLIC const char *glXGetDriverConfig (const char *driverName) {
    __DRIdriver *driver = OpenDriver (driverName);
    if (driver)
       return dlsym (driver->handle, "__driConfigOptions");
@@ -376,7 +381,7 @@ const char *glXGetDriverConfig (const char *driverName) {
 }
 
 
-/* This function isn't currently used.
+/* Called from __glXFreeDisplayPrivate.
  */
 static void driDestroyDisplay(Display *dpy, void *private)
 {
@@ -386,8 +391,26 @@ static void driDestroyDisplay(Display *dpy, void *private)
         const int numScreens = ScreenCount(dpy);
         int i;
         for (i = 0; i < numScreens; i++) {
-            if (pdpyp->libraryHandles[i])
-                dlclose(pdpyp->libraryHandles[i]);
+	   if (pdpyp->libraryHandles[i]) {
+	      __DRIdriver *driver, *prev;
+
+	      /* Remove driver from Drivers list */
+	      for (prev = NULL, driver = Drivers; driver;
+		   prev = driver, driver = driver->next) {
+		 if (driver->handle == pdpyp->libraryHandles[i]) {
+		    if (prev)
+		       prev->next = driver->next;
+		    else
+		       Drivers = driver->next;
+
+		    Xfree(driver->name);
+		    Xfree(driver);
+		    break;
+		 }
+	      }
+
+	      dlclose(pdpyp->libraryHandles[i]);
+	   }
         }
         Xfree(pdpyp->libraryHandles);
 	Xfree(pdpyp);

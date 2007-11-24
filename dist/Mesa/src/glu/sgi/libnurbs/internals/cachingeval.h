@@ -35,8 +35,8 @@
 /*
  * cachingeval.h
  *
- * $Date: 2006/11/25 18:54:49 $ $Revision: 1.1.1.1 $
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/cachingeval.h,v 1.1.1.1 2006/11/25 18:54:49 matthieu Exp $
+ * $Date: 2007/11/24 17:27:03 $ $Revision: 1.1.1.2 $
+ * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/cachingeval.h,v 1.1.1.2 2007/11/24 17:27:03 matthieu Exp $
  */
 
 #ifndef __glucachingval_h_

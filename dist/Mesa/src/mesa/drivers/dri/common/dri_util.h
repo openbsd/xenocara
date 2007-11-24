@@ -49,8 +49,6 @@
 #ifndef _DRI_UTIL_H_
 #define _DRI_UTIL_H_
 
-#define CAPI  /* XXX this should be globally defined somewhere */
-
 #include <GL/gl.h>
 #include "drm.h"
 #include "drm_sarea.h"
@@ -191,6 +189,12 @@ struct __DriverAPIRec {
     /*@}*/
     void (*CopySubBuffer)(__DRIdrawablePrivate *driDrawPriv,
 			  int x, int y, int w, int h);
+
+    /**
+     * See corresponding field in \c __DRIscreenRec.
+     */
+    void (*setTexOffset)(__DRIcontext *pDRICtx, GLint texname,
+			 unsigned long long offset, GLint depth, GLuint pitch);
 };
 
 

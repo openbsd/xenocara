@@ -40,7 +40,7 @@
 #include "via_3d_reg.h"
 
 #include "swrast/swrast.h"
-#include "array_cache/acache.h"
+#include "vbo/vbo.h"
 #include "tnl/tnl.h"
 #include "swrast_setup/swrast_setup.h"
 
@@ -500,10 +500,8 @@ void viaEmitState(struct via_context *vmesa)
 
       OUT_RING( HC_HEADER2 );                     
       OUT_RING( (HC_ParaType_NotTex << 16) );
-      OUT_RING( (HC_SubA_HSPXYOS << 24) | 
-		(((32- vrb->drawXoff) & 0x1f) << HC_HSPXOS_SHIFT));
-      OUT_RING( (HC_SubA_HSPXYOS << 24) | 
-		(((32 - vrb->drawXoff) & 0x1f) << HC_HSPXOS_SHIFT));
+      OUT_RING( (HC_SubA_HSPXYOS << 24) );
+      OUT_RING( (HC_SubA_HSPXYOS << 24) );
 
       ADVANCE_RING();
    }
@@ -712,12 +710,8 @@ static void viaColorMask(GLcontext *ctx,
 }
 
 
-/* =============================================================
- */
 
-
-/* Using drawXoff like this is incorrect outside of locked regions.
- * This hardware just isn't capable of private back buffers without
+/* This hardware just isn't capable of private back buffers without
  * glitches and/or a hefty locking scheme.
  */
 void viaCalcViewport(GLcontext *ctx)
@@ -729,12 +723,10 @@ void viaCalcViewport(GLcontext *ctx)
     const GLfloat *v = ctx->Viewport._WindowMap.m;
     GLfloat *m = vmesa->ViewportMatrix.m;
     
-    /* See also via_translate_vertex.
-     */
     m[MAT_SX] =   v[MAT_SX];
-    m[MAT_TX] =   v[MAT_TX] + SUBPIXEL_X + vrb->drawXoff;
+    m[MAT_TX] =   v[MAT_TX] + vrb->drawX + SUBPIXEL_X;
     m[MAT_SY] = - v[MAT_SY];
-    m[MAT_TY] = - v[MAT_TY] + dPriv->h + SUBPIXEL_Y;
+    m[MAT_TY] = - v[MAT_TY] + vrb->drawY + SUBPIXEL_Y + vrb->drawH;
     m[MAT_SZ] =   v[MAT_SZ] * (1.0 / vmesa->depth_max);
     m[MAT_TZ] =   v[MAT_TZ] * (1.0 / vmesa->depth_max);
 }
@@ -1507,7 +1499,7 @@ static void viaInvalidateState(GLcontext *ctx, GLuint newState)
 
     _swrast_InvalidateState(ctx, newState);
     _swsetup_InvalidateState(ctx, newState);
-    _ac_InvalidateState(ctx, newState);
+    _vbo_InvalidateState(ctx, newState);
     _tnl_InvalidateState(ctx, newState);
 }
 

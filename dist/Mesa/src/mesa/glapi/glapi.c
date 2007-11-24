@@ -240,6 +240,7 @@ _glapi_check_multithread(void)
       else if (knownID != _glthread_GetID()) {
          ThreadSafe = GL_TRUE;
          _glapi_set_dispatch(NULL);
+         _glapi_set_context(NULL);
       }
    }
    else if (!_glapi_get_dispatch()) {
@@ -1003,7 +1004,6 @@ _glapi_check_table(const struct _glapi_table *table)
       GLuint offset = (secondaryColor3fFunc - (char *) table) / sizeof(void *);
       assert(secondaryColor3fOffset == _gloffset_SecondaryColor3fEXT);
       assert(secondaryColor3fOffset == offset);
-      assert(_glapi_get_proc_address("glSecondaryColor3fEXT") == (_glapi_proc) &glSecondaryColor3fEXT);
    }
    {
       GLuint pointParameterivOffset = _glapi_get_proc_offset("glPointParameterivNV");
@@ -1011,7 +1011,6 @@ _glapi_check_table(const struct _glapi_table *table)
       GLuint offset = (pointParameterivFunc - (char *) table) / sizeof(void *);
       assert(pointParameterivOffset == _gloffset_PointParameterivNV);
       assert(pointParameterivOffset == offset);
-      assert(_glapi_get_proc_address("glPointParameterivNV") == (_glapi_proc) &glPointParameterivNV);
    }
    {
       GLuint setFenceOffset = _glapi_get_proc_offset("glSetFenceNV");
@@ -1029,22 +1028,24 @@ _glapi_check_table(const struct _glapi_table *table)
 #if defined(PTHREADS) || defined(GLX_USE_TLS)
 /**
  * Perform platform-specific GL API entry-point fixups.
- * 
- * 
  */
 static void
 init_glapi_relocs( void )
 {
-#if defined( USE_X86_ASM ) && defined( GLX_USE_TLS )
-    extern void * _x86_get_dispatch(void);
-    const GLubyte * const get_disp = (const GLubyte *) _x86_get_dispatch;
+#if defined(USE_X86_ASM) && defined(GLX_USE_TLS) && !defined(GLX_X86_READONLY_TEXT)
+    extern unsigned long _x86_get_dispatch(void);
+    char run_time_patch[] = {
+       0x65, 0xa1, 0, 0, 0, 0 /* movl %gs:0,%eax */
+    };
+    GLuint *offset = (GLuint *) &run_time_patch[2]; /* 32-bits for x86/32 */
+    const GLubyte * const get_disp = (const GLubyte *) run_time_patch;
     GLubyte * curr_func = (GLubyte *) gl_dispatch_functions_start;
 
-
+    *offset = _x86_get_dispatch();
     while ( curr_func != (GLubyte *) gl_dispatch_functions_end ) {
-	(void) memcpy( curr_func, get_disp, 6 );
+	(void) memcpy( curr_func, get_disp, sizeof(run_time_patch));
 	curr_func += DISPATCH_FUNCTION_SIZE;
     }
-#endif /* defined( USE_X86_ASM ) && defined( GLX_USE_TLS ) */
-}
 #endif
+}
+#endif /* defined(PTHREADS) || defined(GLX_USE_TLS) */

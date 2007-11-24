@@ -1,4 +1,4 @@
-# $Id: sampleMakefile,v 1.1.1.1 2006/11/25 18:55:15 matthieu Exp $
+# $Id: sampleMakefile,v 1.1.1.2 2007/11/24 17:26:48 matthieu Exp $
 
 # Sample makefile for compiling OpenGL/Mesa applications on Unix.
 # This example assumes Linux with gcc.
@@ -6,12 +6,11 @@
 # This makefile is in the public domain
 
 # $Log: sampleMakefile,v $
-# Revision 1.1.1.1  2006/11/25 18:55:15  matthieu
-# Import MesaLibs 6.5.1. (in dist/ since its code is shared between lib 
-# and xserver)...
+# Revision 1.1.1.2  2007/11/24 17:26:48  matthieu
+# Mesa 7.0.1
 #
-# Revision 1.1.1.1  1999/08/19 00:55:42  jtg
-# Imported sources
+# Revision 1.1  1999/08/19 00:55:42  jtg
+# Initial revision
 #
 # Revision 1.1  1999/02/24 05:20:45  brianp
 # Initial revision

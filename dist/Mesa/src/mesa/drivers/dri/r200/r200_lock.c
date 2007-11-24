@@ -53,8 +53,10 @@ static void
 r200UpdatePageFlipping( r200ContextPtr rmesa )
 {
    rmesa->doPageFlip = rmesa->sarea->pfState;
-   driFlipRenderbuffers(rmesa->glCtx->WinSysDrawBuffer,
-                        rmesa->sarea->pfCurrentPage);
+   if (rmesa->glCtx->WinSysDrawBuffer) {
+      driFlipRenderbuffers(rmesa->glCtx->WinSysDrawBuffer,
+                           rmesa->sarea->pfCurrentPage);
+   }
 }
 
 
@@ -92,13 +94,9 @@ void r200GetLock( r200ContextPtr rmesa, GLuint flags )
 
    if ( rmesa->lastStamp != drawable->lastStamp ) {
       r200UpdatePageFlipping( rmesa );
-      if (rmesa->glCtx->DrawBuffer->_ColorDrawBufferMask[0] == BUFFER_BIT_BACK_LEFT)
-         r200SetCliprects( rmesa, GL_BACK_LEFT );
-      else
-         r200SetCliprects( rmesa, GL_FRONT_LEFT );
+      r200SetCliprects( rmesa );
       r200UpdateViewportOffset( rmesa->glCtx );
       driUpdateFramebufferSize(rmesa->glCtx, drawable);
-      rmesa->lastStamp = drawable->lastStamp;
    }
 
    R200_STATECHANGE( rmesa, ctx );

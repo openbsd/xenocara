@@ -49,7 +49,7 @@ static void i915_render_start( intelContextPtr intel )
    if (ctx->FragmentProgram._Active) 
       i915ValidateFragmentProgram( i915 );
    else {
-      assert(!ctx->_MaintainTexEnvProgram);
+      assert(!ctx->FragmentProgram._MaintainTexEnvProgram);
       i915ValidateTextureProgram( i915 );
    }
 }
@@ -64,6 +64,7 @@ static void i915_reduced_primitive_state( intelContextPtr intel,
     st1 &= ~ST1_ENABLE;
 
     switch (rprim) {
+    case GL_QUADS: /* from RASTERIZE(GL_QUADS) in t_dd_tritemp.h */
     case GL_TRIANGLES:
        if (intel->ctx.Polygon.StippleFlag &&
 	   intel->hw_stipple)
@@ -180,7 +181,7 @@ static void i915_emit_invarient_state( intelContextPtr intel )
     */
    OUT_BATCH(_3DSTATE_LOAD_STATE_IMMEDIATE_1 | 
 	     I1_LOAD_S(3) |
-	     (1));
+	     (0));
    OUT_BATCH(0);
  
    /* XXX: Use this */

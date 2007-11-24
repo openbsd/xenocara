@@ -38,7 +38,7 @@
 
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
-#include "array_cache/acache.h"
+#include "vbo/vbo.h"
 
 #include "tnl/tnl.h"
 #include "tnl/t_pipeline.h"
@@ -58,6 +58,7 @@
 #include "vblank.h"
 
 #define need_GL_ARB_multisample
+#define need_GL_ARB_vertex_buffer_object
 #include "extension_helper.h"
 
 #ifndef MACH64_DEBUG
@@ -83,6 +84,7 @@ const struct dri_extension card_extensions[] =
 {
     { "GL_ARB_multisample",                GL_ARB_multisample_functions },
     { "GL_ARB_multitexture",               NULL },
+    { "GL_ARB_vertex_buffer_object",       GL_ARB_vertex_buffer_object_functions },
     { "GL_EXT_texture_edge_clamp",         NULL },
     { "GL_MESA_ycbcr_texture",             NULL },
     { "GL_SGIS_generate_mipmap",           NULL },
@@ -102,6 +104,7 @@ GLboolean mach64CreateContext( const __GLcontextModes *glVisual,
    mach64ContextPtr mmesa;
    mach64ScreenPtr mach64Screen;
    int i, heap;
+   GLuint *c_textureSwapsPtr = NULL;
 
 #if DO_DEBUG
    MACH64_DEBUG = driParseDebugString(getenv("MACH64_DEBUG"), debug_control);
@@ -153,15 +156,28 @@ GLboolean mach64CreateContext( const __GLcontextModes *glVisual,
    mmesa->CurrentTexObj[0] = NULL;
    mmesa->CurrentTexObj[1] = NULL;
 
-   make_empty_list( &mmesa->SwappedOut );
+   (void) memset( mmesa->texture_heaps, 0, sizeof( mmesa->texture_heaps ) );
+   make_empty_list( &mmesa->swapped );
 
    mmesa->firstTexHeap = mach64Screen->firstTexHeap;
    mmesa->lastTexHeap = mach64Screen->firstTexHeap + mach64Screen->numTexHeaps;
 
    for ( i = mmesa->firstTexHeap ; i < mmesa->lastTexHeap ; i++ ) {
-      make_empty_list( &mmesa->TexObjList[i] );
-      mmesa->texHeap[i] = mmInit( 0, mach64Screen->texSize[i] );
-      mmesa->lastTexAge[i] = -1;
+      mmesa->texture_heaps[i] = driCreateTextureHeap( i, mmesa,
+	    mach64Screen->texSize[i],
+	    6, /* align to 64-byte boundary, use 12 for page-size boundary */
+	    MACH64_NR_TEX_REGIONS,
+	    (drmTextureRegionPtr)mmesa->sarea->tex_list[i],
+	    &mmesa->sarea->tex_age[i],
+	    &mmesa->swapped,
+	    sizeof( mach64TexObj ),
+	    (destroy_texture_object_t *) mach64DestroyTexObj );
+
+#if ENABLE_PERF_BOXES
+      c_textureSwapsPtr = & mmesa->c_textureSwaps;
+#endif
+      driSetTextureSwapCounterLocation( mmesa->texture_heaps[i],
+					c_textureSwapsPtr );
    }
 
    mmesa->RenderIndex = -1;		/* Impossible value */
@@ -176,17 +192,25 @@ GLboolean mach64CreateContext( const __GLcontextModes *glVisual,
     * Test for 2 textures * bytes/texel * size * size.  There's no
     * need to account for mipmaps since we only upload one level.
     */
-   heap = mach64Screen->IsPCI ? MACH64_CARD_HEAP : MACH64_AGP_HEAP;
-
-   if ( mach64Screen->texSize[heap] >= 2 * mach64Screen->cpp * 1024*1024 ) {
-      ctx->Const.MaxTextureLevels = 11; /* 1024x1024 */
-   } else if ( mach64Screen->texSize[heap] >= 2 * mach64Screen->cpp * 512*512 ) {
-      ctx->Const.MaxTextureLevels = 10; /* 512x512 */
-   } else {
-      ctx->Const.MaxTextureLevels = 9;  /* 256x256 */
-   }
 
    ctx->Const.MaxTextureUnits = 2;
+   ctx->Const.MaxTextureImageUnits = 2;
+   ctx->Const.MaxTextureCoordUnits = 2;
+
+   heap = mach64Screen->IsPCI ? MACH64_CARD_HEAP : MACH64_AGP_HEAP;
+
+   driCalculateMaxTextureLevels( & mmesa->texture_heaps[heap],
+				 1,
+				 & ctx->Const,
+				 mach64Screen->cpp,
+				 10, /* max 2D texture size is 1024x1024 */
+				 0,  /* 3D textures unsupported. */
+				 0,  /* cube textures unsupported. */
+				 0,  /* texture rectangles unsupported. */
+				 1,  /* mipmapping unsupported. */
+				 GL_TRUE, /* need to have both textures in
+					     either local or AGP memory */
+				 0 );
 
 #if ENABLE_PERF_BOXES
    mmesa->boxes = ( getenv( "LIBGL_PERFORMANCE_BOXES" ) != NULL );
@@ -203,7 +227,7 @@ GLboolean mach64CreateContext( const __GLcontextModes *glVisual,
    /* Initialize the software rasterizer and helper modules.
     */
    _swrast_CreateContext( ctx );
-   _ac_CreateContext( ctx );
+   _vbo_CreateContext( ctx );
    _tnl_CreateContext( ctx );
    _swsetup_CreateContext( ctx );
 
@@ -250,30 +274,28 @@ void mach64DestroyContext( __DRIcontextPrivate *driContextPriv  )
 
    assert(mmesa);  /* should never be null */
    if ( mmesa ) {
-      if (mmesa->glCtx->Shared->RefCount == 1) {
-         /* This share group is about to go away, free our private
-          * texture object data.
-          */
-         mach64TexObjPtr t, next_t;
-         int i;
+      GLboolean   release_texture_heaps;
 
-         for ( i = mmesa->firstTexHeap ; i < mmesa->lastTexHeap ; i++ ) {
-            foreach_s ( t, next_t, &mmesa->TexObjList[i] ) {
-               mach64DestroyTexObj( mmesa, t );
-            }
-            mmDestroy( mmesa->texHeap[i] );
-            mmesa->texHeap[i] = NULL;
-         }
-
-         foreach_s ( t, next_t, &mmesa->SwappedOut ) {
-            mach64DestroyTexObj( mmesa, t );
-         }
-      }
+      release_texture_heaps = (mmesa->glCtx->Shared->RefCount == 1);
 
       _swsetup_DestroyContext( mmesa->glCtx );
       _tnl_DestroyContext( mmesa->glCtx );
-      _ac_DestroyContext( mmesa->glCtx );
+      _vbo_DestroyContext( mmesa->glCtx );
       _swrast_DestroyContext( mmesa->glCtx );
+
+      if (release_texture_heaps) {
+         /* This share group is about to go away, free our private
+          * texture object data.
+          */
+         int i;
+
+         for ( i = mmesa->firstTexHeap ; i < mmesa->lastTexHeap ; i++ ) {
+	    driDestroyTextureHeap( mmesa->texture_heaps[i] );
+	    mmesa->texture_heaps[i] = NULL;
+         }
+
+	 assert( is_empty_list( & mmesa->swapped ) );
+      }
 
       mach64FreeVB( mmesa->glCtx );
 

@@ -23,6 +23,8 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
 
+/* *INDENT-OFF* */
+
 #ifndef _R300_REG_H
 #define _R300_REG_H
 
@@ -62,6 +64,12 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define R300_SE_VPORT_ZSCALE                0x1DA8
 #define R300_SE_VPORT_ZOFFSET               0x1DAC
 
+
+/*
+ * Vertex Array Processing (VAP) Control
+ * Stolen from r200 code from Christoph Brill (It's a guess!)
+ */
+#define R300_VAP_CNTL	0x2080
 
 /* This register is written directly and also starts data section
  * in many 3d CP_PACKET3's
@@ -135,10 +143,11 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /* gap */
 
-#define R300_VAP_CNTL                     0x2140
+#define R300_VAP_CNTL_STATUS              0x2140
 #	define R300_VC_NO_SWAP                  (0 << 0)
 #	define R300_VC_16BIT_SWAP               (1 << 0)
 #	define R300_VC_32BIT_SWAP               (2 << 0)
+#	define R300_VAP_TCL_BYPASS		(1 << 8)
 
 /* gap */
 
@@ -319,7 +328,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
  * Most likely this is used to ignore rest of the program in cases
  * where group of verts arent visible. For some reason this "section"
  * is sometimes accepted other instruction that have no relationship with
- *position calculations. 
+ *position calculations.
  */
 #define R300_VAP_PVS_CNTL_1                 0x22D0
 #       define R300_PVS_CNTL_1_PROGRAM_START_SHIFT   0
@@ -481,6 +490,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #	define R300_GB_W_SELECT_1		(1<<4)
 
 #define R300_GB_AA_CONFIG		0x4020
+#	define R300_AA_DISABLE			0x00
 #	define R300_AA_ENABLE			0x01
 #	define R300_AA_SUBSAMPLES_2		0
 #	define R300_AA_SUBSAMPLES_3		(1<<1)
@@ -491,6 +501,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /* Zero to flush caches. */
 #define R300_TX_CNTL                        0x4100
+#define R300_TX_FLUSH                       0x0
 
 /* The upper enable bits are guessed, based on fglrx reported limits. */
 #define R300_TX_ENABLE                      0x4104
@@ -538,6 +549,9 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 /* Some sort of scale or clamp value for texcoordless textures. */
 #define R300_RE_UNK4238                       0x4238
 
+/* Something shade related */
+#define R300_RE_SHADE                         0x4274
+
 #define R300_RE_SHADE_MODEL                   0x4278
 #	define R300_RE_SHADE_MODEL_SMOOTH     0x3aaaa
 #	define R300_RE_SHADE_MODEL_FLAT       0x39595
@@ -556,12 +570,13 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define R300_RE_FOG_SCALE                     0x4294
 #define R300_RE_FOG_START                     0x4298
 
-/* Not sure why there are duplicate of factor and constant values. 
- * My best guess so far is that there are seperate zbiases for test and write. 
+/* Not sure why there are duplicate of factor and constant values.
+ * My best guess so far is that there are seperate zbiases for test and write.
  * Ordering might be wrong.
  * Some of the tests indicate that fgl has a fallback implementation of zbias
  * via pixel shaders.
  */
+#define R300_RE_ZBIAS_CNTL                    0x42A0 /* GUESS */
 #define R300_RE_ZBIAS_T_FACTOR                0x42A4
 #define R300_RE_ZBIAS_T_CONSTANT              0x42A8
 #define R300_RE_ZBIAS_W_FACTOR                0x42AC
@@ -658,6 +673,11 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 /* Special handling for color: When the fragment program uses color,
  * the ROUTE_0_COLOR bit is set and ROUTE_0_COLOR_DEST contains the
  * color register index.
+ *
+ * Apperently you may set the R300_RS_ROUTE_0_COLOR bit, but not provide any
+ * R300_RS_ROUTE_0_COLOR_DEST value; this setup is used for clearing the state.
+ * See r300_ioctl.c:r300EmitClearState. I'm not sure if this setup is strictly
+ * correct or not. - Oliver.
  */
 #       define R300_RS_ROUTE_0_COLOR             (1 << 14)
 #       define R300_RS_ROUTE_0_COLOR_DEST_SHIFT  17
@@ -898,7 +918,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 /* 32 bit chroma key */
 #define R300_TX_CHROMA_KEY_0                      0x4580
 /* ff00ff00 == { 0, 1.0, 0, 1.0 } */
-#define R300_TX_BORDER_COLOR_0              0x45C0 
+#define R300_TX_BORDER_COLOR_0              0x45C0
 
 /* END: Texture specification */
 
@@ -988,6 +1008,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #		define R300_FPITX_OP_KIL	2
 #		define R300_FPITX_OP_TXP	3
 #		define R300_FPITX_OP_TXB	4
+#	define R300_FPITX_OPCODE_MASK           (7 << 15)
 
 /* ALU
  * The ALU instructions register blocks are enumerated according to the order
@@ -1036,7 +1057,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
  * WRT swizzling. If, for example, you want to load an R component into an
  * Alpha operand, this R component is taken from a *color* source, not from
  * an alpha source. The corresponding register doesn't even have to appear in
- * the alpha sources list. (I hope this alll makes sense to you)
+ * the alpha sources list. (I hope this all makes sense to you)
  *
  * Destination selection
  * The destination register index is in FPI1 (color) and FPI3 (alpha)
@@ -1063,6 +1084,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #       define R300_FPI1_SRC2C_SHIFT             12
 #       define R300_FPI1_SRC2C_MASK              (31 << 12)
 #       define R300_FPI1_SRC2C_CONST             (1 << 17)
+#       define R300_FPI1_SRC_MASK                0x0003ffff
 #       define R300_FPI1_DSTC_SHIFT              18
 #       define R300_FPI1_DSTC_MASK               (31 << 18)
 #		define R300_FPI1_DSTC_REG_MASK_SHIFT     23
@@ -1084,6 +1106,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #       define R300_FPI3_SRC2A_SHIFT             12
 #       define R300_FPI3_SRC2A_MASK              (31 << 12)
 #       define R300_FPI3_SRC2A_CONST             (1 << 17)
+#       define R300_FPI3_SRC_MASK                0x0003ffff
 #       define R300_FPI3_DSTA_SHIFT              18
 #       define R300_FPI3_DSTA_MASK               (31 << 18)
 #       define R300_FPI3_DSTA_REG                (1 << 23)
@@ -1273,6 +1296,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #       define R300_BLEND_MASK                       (63)
 #       define R300_SRC_BLEND_SHIFT                  (16)
 #       define R300_DST_BLEND_SHIFT                  (24)
+#define R300_RB3D_BLEND_COLOR               0x4E10
 #define R300_RB3D_COLORMASK                 0x4E0C
 #       define R300_COLORMASK0_B                 (1<<0)
 #       define R300_COLORMASK0_G                 (1<<1)
@@ -1312,8 +1336,8 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
  * Set to 0A before 3D operations, set to 02 afterwards.
  */
 #define R300_RB3D_DSTCACHE_CTLSTAT          0x4E4C
-#       define R300_RB3D_DSTCACHE_02             0x00000002
-#       define R300_RB3D_DSTCACHE_0A             0x0000000A
+#       define R300_RB3D_DSTCACHE_UNKNOWN_02             0x00000002
+#       define R300_RB3D_DSTCACHE_UNKNOWN_0A             0x0000000A
 
 /* gap */
 /* There seems to be no "write only" setting, so use Z-test = ALWAYS
@@ -1377,6 +1401,16 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #	define R300_DEPTH_FORMAT_24BIT_INT_Z     (2 << 0)
 	/* 16 bit format or some aditional bit ? */
 #	define R300_DEPTH_FORMAT_UNK32          (32 << 0)
+
+#define R300_RB3D_EARLY_Z                           0x4F14
+#	define R300_EARLY_Z_DISABLE              (0 << 0)
+#	define R300_EARLY_Z_ENABLE               (1 << 0)
+
+/* gap */
+
+#define R300_RB3D_ZCACHE_CTLSTAT            0x4F18 /* GUESS */
+#       define R300_RB3D_ZCACHE_UNKNOWN_01  0x1
+#       define R300_RB3D_ZCACHE_UNKNOWN_03  0x3
 
 /* gap */
 
@@ -1528,6 +1562,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define R300_PRIM_COLOR_ORDER_BGRA              (0 << 6)
 #define R300_PRIM_COLOR_ORDER_RGBA              (1 << 6)
 #define R300_PRIM_NUM_VERTICES_SHIFT            16
+#define R300_PRIM_NUM_VERTICES_MASK             0xffff
 
 /* Draw a primitive from vertex data in arrays loaded via 3D_LOAD_VBPNTR.
  * Two parameter dwords:
@@ -1576,5 +1611,6 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #define R300_CP_CMD_BITBLT_MULTI	0xC0009B00
 
-
 #endif /* _R300_REG_H */
+
+/* *INDENT-ON* */

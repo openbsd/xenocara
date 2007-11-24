@@ -527,7 +527,7 @@ static GLubyte *
 emit_DrawArrays_header_old( __GLXcontext * gc,
 			    struct array_state_vector * arrays,
 			    size_t * elements_per_request,
-			    unsigned int * total_requests,
+			    size_t * total_requests,
 			    GLenum mode, GLsizei count )
 {
     size_t command_size;
@@ -640,7 +640,7 @@ emit_DrawArrays_old( GLenum mode, GLint first, GLsizei count )
 
     GLubyte * pc;
     size_t elements_per_request;
-    unsigned total_requests = 0;
+    size_t total_requests = 0;
     unsigned i;
     size_t total_sent = 0;
 
@@ -770,7 +770,7 @@ emit_DrawElements_old( GLenum mode, GLsizei count, GLenum type,
 
     GLubyte * pc;
     size_t elements_per_request;
-    unsigned total_requests = 0;
+    size_t total_requests = 0;
     unsigned i;
     unsigned req;
 
@@ -1667,7 +1667,7 @@ __glXGetArrayType( const __GLXattribute * const state,
 						    key, index );
 
     if ( a != NULL ) {
-	*dest = (GLintptr) a->enabled;
+	*dest = (GLintptr) a->data_type;
     }
 
     return (a != NULL);

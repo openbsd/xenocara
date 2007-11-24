@@ -340,7 +340,7 @@ static GLboolean DoBindContext(__DRInativeDisplay *dpy,
 	DRM_SPINUNLOCK(&psp->pSAREA->drawable_lock, psp->drawLockID);
     }
 
-    if ((pdp != prp) && (!pdp->pStamp || *pdp->pStamp != pdp->lastStamp)) {
+    if ((pdp != prp) && (!prp->pStamp || *prp->pStamp != prp->lastStamp)) {
 	DRM_SPINLOCK(&psp->pSAREA->drawable_lock, psp->drawLockID);
 	__driUtilUpdateDrawableInfo(prp);
 	DRM_SPINUNLOCK(&psp->pSAREA->drawable_lock, psp->drawLockID);
@@ -420,7 +420,7 @@ __driUtilUpdateDrawableInfo(__DRIdrawablePrivate *pdp)
     psp = pdp->driScreenPriv;
     if (!psp) {
 	/* ERROR!!! */
-       _mesa_problem("Warning! Possible infinite loop due to bug "
+       _mesa_problem(NULL, "Warning! Possible infinite loop due to bug "
 		     "in file %s, line %d\n",
 		     __FILE__, __LINE__);
 	return;
@@ -428,10 +428,12 @@ __driUtilUpdateDrawableInfo(__DRIdrawablePrivate *pdp)
 
     if (pdp->pClipRects) {
 	_mesa_free(pdp->pClipRects); 
+	pdp->pClipRects = NULL;
     }
 
     if (pdp->pBackClipRects) {
 	_mesa_free(pdp->pBackClipRects); 
+	pdp->pBackClipRects = NULL;
     }
 
     DRM_SPINUNLOCK(&psp->pSAREA->drawable_lock, psp->drawLockID);
@@ -482,8 +484,27 @@ __driUtilUpdateDrawableInfo(__DRIdrawablePrivate *pdp)
 static void driSwapBuffers( __DRInativeDisplay *dpy, void *drawablePrivate )
 {
     __DRIdrawablePrivate *dPriv = (__DRIdrawablePrivate *) drawablePrivate;
+    drm_clip_rect_t rect;
+
     dPriv->swapBuffers(dPriv);
-    (void) dpy;
+
+    /* Check that we actually have the new damage report method */
+    if (api_ver < 20070105 || dri_interface->reportDamage == NULL)
+	return;
+
+    /* Assume it's affecting the whole drawable for now */
+    rect.x1 = 0;
+    rect.y1 = 0;
+    rect.x2 = rect.x1 + dPriv->w;
+    rect.y2 = rect.y1 + dPriv->h;
+
+    /* Report the damage.  Currently, all our drivers draw directly to the
+     * front buffer, so we report the damage there rather than to the backing
+     * store (if any).
+     */
+    (*dri_interface->reportDamage)(dpy, dPriv->screen, dPriv->draw,
+				   dPriv->x, dPriv->y,
+				   &rect, 1, GL_TRUE);
 }
 
 /**
@@ -975,6 +996,9 @@ __driUtilCreateNewScreen(__DRInativeDisplay *dpy, int scrn, __DRIscreen *psc,
     psc->getDrawable       = driGetDrawable;
     psc->getMSC            = driGetMSC;
     psc->createNewContext  = driCreateNewContext;
+
+    if (internal_api_version >= 20070121)
+	psc->setTexOffset  = psp->DriverAPI.setTexOffset;
 
     if ( (psp->DriverAPI.InitDriver != NULL)
 	 && !(*psp->DriverAPI.InitDriver)(psp) ) {

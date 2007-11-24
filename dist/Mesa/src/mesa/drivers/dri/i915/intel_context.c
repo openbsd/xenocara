@@ -33,11 +33,12 @@
 #include "extensions.h"
 #include "framebuffer.h"
 #include "imports.h"
+#include "points.h"
 
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
 #include "tnl/tnl.h"
-#include "array_cache/acache.h"
+#include "vbo/vbo.h"
 
 #include "tnl/t_pipeline.h"
 #include "tnl/t_vertex.h"
@@ -195,7 +196,6 @@ static const struct tnl_pipeline_stage *intel_pipeline[] = {
    &_tnl_texgen_stage,
    &_tnl_texture_transform_stage,
    &_tnl_point_attenuation_stage,
-   &_tnl_arb_vertex_program_stage,
    &_tnl_vertex_program_stage,
 #if 1
    &_intel_render_stage,     /* ADD: unclipped rastersetup-to-dma */
@@ -228,7 +228,7 @@ static void intelInvalidateState( GLcontext *ctx, GLuint new_state )
 {
    _swrast_InvalidateState( ctx, new_state );
    _swsetup_InvalidateState( ctx, new_state );
-   _ac_InvalidateState( ctx, new_state );
+   _vbo_InvalidateState( ctx, new_state );
    _tnl_InvalidateState( ctx, new_state );
    _tnl_invalidate_vertex_state( ctx, new_state );
    INTEL_CONTEXT(ctx)->NewGLState |= new_state;
@@ -302,9 +302,14 @@ GLboolean intelInitContext( intelContextPtr intel,
    ctx->Const.MaxPointSizeAA = 3.0;
    ctx->Const.PointSizeGranularity = 1.0;
 
+   /* reinitialize the context point state.
+    * It depend on constants in __GLcontextRec::Const
+    */
+   _mesa_init_point(ctx);
+
    /* Initialize the software rasterizer and helper modules. */
    _swrast_CreateContext( ctx );
-   _ac_CreateContext( ctx );
+   _vbo_CreateContext( ctx );
    _tnl_CreateContext( ctx );
    _swsetup_CreateContext( ctx );
 
@@ -423,7 +428,7 @@ void intelDestroyContext(__DRIcontextPrivate *driContextPriv)
       release_texture_heaps = (intel->ctx.Shared->RefCount == 1);
       _swsetup_DestroyContext (&intel->ctx);
       _tnl_DestroyContext (&intel->ctx);
-      _ac_DestroyContext (&intel->ctx);
+      _vbo_DestroyContext (&intel->ctx);
 
       _swrast_DestroyContext (&intel->ctx);
       intel->Fallback = 0;	/* don't call _swrast_Flush later */
@@ -563,7 +568,7 @@ void intelWindowMoved( intelContextPtr intel )
 	 GLint areaB = driIntersectArea( drw_rect, pipeB_rect );
 	 GLuint flags = intel->vblank_flags;
 
-	 if (areaB > areaA || (areaA > 0 && areaB > 0)) {
+	 if (areaB > areaA || (areaA == areaB && areaB > 0)) {
 	    flags = intel->vblank_flags | VBLANK_FLAG_SECONDARY;
 	 } else {
 	    flags = intel->vblank_flags & ~VBLANK_FLAG_SECONDARY;

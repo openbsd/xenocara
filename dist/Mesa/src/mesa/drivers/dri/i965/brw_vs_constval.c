@@ -30,10 +30,8 @@
   */
             
 
-#include "brw_context.h"
-#include "program.h"
-#include "program_instruction.h"
 #include "macros.h"
+#include "brw_context.h"
 #include "brw_vs.h"
 
 /* Component is active if it may diverge from [0,0,0,1].  Undef values
@@ -162,6 +160,7 @@ static GLuint get_input_size(struct brw_context *brw,
    GLuint sizes_dword = brw->vb.info.sizes[attr/16];
    GLuint sizes_bits = (sizes_dword>>((attr%16)*2)) & 0x3;
    return sizes_bits + 1;
+/*    return brw->vb.inputs[attr].glarray->Size; */
 }
 
 /* Calculate sizes of vertex program outputs.  Size is the largest
@@ -176,8 +175,6 @@ static void calc_wm_input_sizes( struct brw_context *brw )
    struct tracker t;
    GLuint insn;
    GLuint i;
-   GLuint64EXT inputs = brw_translate_inputs(brw->intel.ctx.VertexProgram._Enabled,
-					     vp->program.Base.InputsRead);
 
    memset(&t, 0, sizeof(t));
 
@@ -185,8 +182,8 @@ static void calc_wm_input_sizes( struct brw_context *brw )
    if (brw->attribs.Light->Model.TwoSide)
       t.twoside = 1;
 
-   for (i = 0; i < BRW_ATTRIB_MAX; i++) 
-      if (inputs & (1<<i))
+   for (i = 0; i < VERT_ATTRIB_MAX; i++) 
+      if (vp->program.Base.InputsRead & (1<<i))
 	 set_active_component(&t, PROGRAM_INPUT, i, 
 			      szflag[get_input_size(brw, i)]);
       

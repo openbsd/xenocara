@@ -66,7 +66,7 @@ void intelCopyBuffer( const __DRIdrawablePrivate *dPriv,
    intelFlush( &intel->ctx );
 
 
-   bmFinishFence(intel, intel->last_swap_fence);
+   bmFinishFenceLock(intel, intel->last_swap_fence);
 
    /* The LOCK_HARDWARE is required for the cliprects.  Buffer offsets
     * should work regardless.
@@ -155,7 +155,7 @@ void intelCopyBuffer( const __DRIdrawablePrivate *dPriv,
 
    intel_batchbuffer_flush( intel->batch );
    intel->second_last_swap_fence = intel->last_swap_fence;
-   intel->last_swap_fence = bmSetFence( intel );
+   intel->last_swap_fence = bmSetFenceLock( intel );
    UNLOCK_HARDWARE( intel );
 
    if (!rect)
@@ -532,12 +532,15 @@ intelEmitImmediateColorExpandBlit(struct intel_context *intel,
 				  GLuint dst_offset,
 				  GLboolean dst_tiled,
 				  GLshort x, GLshort y, 
-				  GLshort w, GLshort h)
+				  GLshort w, GLshort h,
+				  GLenum logic_op)
 {
    struct xy_setup_blit setup;
    struct xy_text_immediate_blit text;
    int dwords = ((src_size + 7) & ~7) / 4;
 
+   assert( logic_op - GL_CLEAR >= 0 );
+   assert( logic_op - GL_CLEAR < 0x10 );
 
    if (w < 0 || h < 0) 
       return;
@@ -561,7 +564,7 @@ intelEmitImmediateColorExpandBlit(struct intel_context *intel,
    setup.br0.length = (sizeof(setup) / sizeof(int)) - 2;
       
    setup.br13.dest_pitch = dst_pitch;
-   setup.br13.rop = 0xcc;
+   setup.br13.rop = translate_raster_op(logic_op);
    setup.br13.color_depth = (cpp == 4) ? BR13_8888 : BR13_565;
    setup.br13.clipping_enable = 0;
    setup.br13.mono_source_transparency = 1;

@@ -5,9 +5,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  7.0.1
  *
- * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -57,6 +57,9 @@ _mesa_PointSize( GLfloat size )
 
    FLUSH_VERTICES(ctx, _NEW_POINT);
    ctx->Point.Size = size;
+   ctx->Point._Size = CLAMP(ctx->Point.Size,
+			    ctx->Point.MinSize,
+			    ctx->Point.MaxSize);
 
    if (ctx->Driver.PointSize)
       ctx->Driver.PointSize(ctx, size);
@@ -82,8 +85,13 @@ _mesa_PointParameteriNV( GLenum pname, GLint param )
 void GLAPIENTRY
 _mesa_PointParameterivNV( GLenum pname, const GLint *params )
 {
-   const GLfloat value = (GLfloat) params[0];
-   _mesa_PointParameterfvEXT(pname, &value);
+   GLfloat p[3];
+   p[0] = (GLfloat) params[0];
+   if (pname == GL_DISTANCE_ATTENUATION_EXT) {
+      p[1] = (GLfloat) params[1];
+      p[2] = (GLfloat) params[2];
+   }
+   _mesa_PointParameterfvEXT(pname, p);
 }
 
 
@@ -115,6 +123,9 @@ _mesa_PointParameterfvEXT( GLenum pname, const GLfloat *params)
 	       return;
 	    FLUSH_VERTICES(ctx, _NEW_POINT);
             COPY_3V(ctx->Point.Params, params);
+            ctx->Point._Attenuated = (ctx->Point.Params[0] != 1.0 ||
+                                      ctx->Point.Params[1] != 0.0 ||
+                                      ctx->Point.Params[2] != 0.0);
          }
          else {
             _mesa_error(ctx, GL_INVALID_ENUM,
@@ -228,36 +239,6 @@ _mesa_PointParameterfvEXT( GLenum pname, const GLfloat *params)
       (*ctx->Driver.PointParameterfv)(ctx, pname, params);
 }
 #endif
-
-
-
-/**
- * Update derived point-related state.
- */
-void
-_mesa_update_point(GLcontext *ctx)
-{
-   /* clamp to user-specified limits now, clamp to ctx->Const.Min/Max
-    * limits during rasterization.
-    */
-   ctx->Point._Size = CLAMP(ctx->Point.Size,
-			    ctx->Point.MinSize,
-			    ctx->Point.MaxSize);
-
-   if (ctx->Point._Size == 1.0F)
-      ctx->_TriangleCaps &= ~DD_POINT_SIZE;
-   else
-      ctx->_TriangleCaps |= DD_POINT_SIZE;
-
-   ctx->Point._Attenuated = (ctx->Point.Params[0] != 1.0 ||
-                             ctx->Point.Params[1] != 0.0 ||
-                             ctx->Point.Params[2] != 0.0);
-
-   if (ctx->Point._Attenuated)
-      ctx->_TriangleCaps |= DD_POINT_ATTEN;
-   else
-      ctx->_TriangleCaps &= ~DD_POINT_ATTEN;
-}
 
 
 

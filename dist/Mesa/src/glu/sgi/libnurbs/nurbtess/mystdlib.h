@@ -35,8 +35,8 @@
 /*
  * mystdlib.h
  *
- * $Date: 2006/11/25 18:54:58 $ $Revision: 1.1.1.1 $
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/nurbtess/Attic/mystdlib.h,v 1.1.1.1 2006/11/25 18:54:58 matthieu Exp $
+ * $Date: 2007/11/24 17:27:13 $ $Revision: 1.1.1.2 $
+ * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/nurbtess/Attic/mystdlib.h,v 1.1.1.2 2007/11/24 17:27:13 matthieu Exp $
  */
 
 #ifndef __glumystdlib_h_

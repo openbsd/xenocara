@@ -35,8 +35,8 @@
 /*
  * glcurveval.c++
  *
- * $Date: 2006/11/25 18:54:47 $ $Revision: 1.1.1.1 $
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/interface/Attic/glcurveval.cc,v 1.1.1.1 2006/11/25 18:54:47 matthieu Exp $
+ * $Date: 2007/11/24 17:27:00 $ $Revision: 1.1.1.2 $
+ * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/interface/Attic/glcurveval.cc,v 1.1.1.2 2007/11/24 17:27:00 matthieu Exp $
  */
 
 /* Polynomial Evaluator Interface */

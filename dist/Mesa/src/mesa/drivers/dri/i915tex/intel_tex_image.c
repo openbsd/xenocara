@@ -329,25 +329,7 @@ intelTexImage(GLcontext * ctx,
    texImage->TexFormat = intelChooseTextureFormat(ctx, internalFormat,
                                                   format, type);
 
-   assert(texImage->TexFormat);
-
-   switch (dims) {
-   case 1:
-      texImage->FetchTexelc = texImage->TexFormat->FetchTexel1D;
-      texImage->FetchTexelf = texImage->TexFormat->FetchTexel1Df;
-      break;
-   case 2:
-      texImage->FetchTexelc = texImage->TexFormat->FetchTexel2D;
-      texImage->FetchTexelf = texImage->TexFormat->FetchTexel2Df;
-      break;
-   case 3:
-      texImage->FetchTexelc = texImage->TexFormat->FetchTexel3D;
-      texImage->FetchTexelf = texImage->TexFormat->FetchTexel3Df;
-      break;
-   default:
-      assert(0);
-      break;
-   }
+   _mesa_set_fetch_functions(texImage, dims);
 
    if (texImage->TexFormat->TexelBytes == 0) {
       /* must be a compressed format */
@@ -402,7 +384,6 @@ intelTexImage(GLcontext * ctx,
 	 DBG("guess_and_alloc_mipmap_tree: failed\n");
       }
    }
-
 
    assert(!intelImage->mt);
 
@@ -632,6 +613,7 @@ intel_get_tex_image(GLcontext * ctx, GLenum target, GLint level,
                                  intelImage->level,
                                  &intelImage->base.RowStride,
                                  intelImage->base.ImageOffsets);
+      intelImage->base.RowStride /= intelImage->mt->cpp;
    }
    else {
       /* Otherwise, the image should actually be stored in
@@ -683,4 +665,27 @@ intelGetCompressedTexImage(GLcontext *ctx, GLenum target, GLint level,
    intel_get_tex_image(ctx, target, level, 0, 0, pixels,
 		       texObj, texImage, 1);
 
+}
+
+void
+intelSetTexOffset(__DRIcontext *pDRICtx, GLint texname,
+		  unsigned long long offset, GLint depth, GLuint pitch)
+{
+   struct intel_context *intel = (struct intel_context*)
+      ((__DRIcontextPrivate*)pDRICtx->private)->driverPrivate;
+   struct gl_texture_object *tObj = _mesa_lookup_texture(&intel->ctx, texname);
+   struct intel_texture_object *intelObj = intel_texture_object(tObj);
+
+   if (!intelObj)
+      return;
+
+   if (intelObj->mt)
+      intel_miptree_release(intel, &intelObj->mt);
+
+   intelObj->imageOverride = GL_TRUE;
+   intelObj->depthOverride = depth;
+   intelObj->pitchOverride = pitch;
+
+   if (offset)
+      intelObj->textureOffset = offset;
 }

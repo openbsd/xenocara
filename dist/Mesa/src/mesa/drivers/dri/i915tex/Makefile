@@ -20,6 +20,7 @@ DRIVER_SOURCES = \
 	intel_batchbuffer.c \
 	intel_mipmap_tree.c \
 	i915_tex_layout.c \
+	intel_tex_layout.c \
 	intel_tex_image.c \
 	intel_tex_subimage.c \
 	intel_tex_copy.c \
@@ -59,8 +60,11 @@ C_SOURCES = \
 
 ASM_SOURCES = 
 
-
+DRIVER_DEFINES = -I../intel $(shell pkg-config libdrm --atleast-version=2.3.1 \
+				&& echo "-DDRM_VBLANK_FLIP=DRM_VBLANK_FLIP")
 
 include ../Makefile.template
+
+intel_tex_layout.o: ../intel/intel_tex_layout.c
 
 symlinks:

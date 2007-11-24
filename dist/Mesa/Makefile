@@ -1,5 +1,7 @@
 # Top-level Mesa makefile
 
+SHELL = /bin/bash
+
 TOP = .
 
 SUBDIRS = src progs
@@ -7,7 +9,9 @@ SUBDIRS = src progs
 
 default: $(TOP)/configs/current
 	@for dir in $(SUBDIRS) ; do \
-		(cd $$dir ; $(MAKE)) || exit 1 ; \
+		if [ -d $$dir ] ; then \
+			(cd $$dir && $(MAKE)) || exit 1 ; \
+		fi \
 	done
 
 
@@ -16,7 +20,9 @@ doxygen:
 
 clean:
 	@for dir in $(SUBDIRS) ; do \
-		(cd $$dir ; $(MAKE) clean) ; \
+		if [ -d $$dir ] ; then \
+			(cd $$dir && $(MAKE) clean) ; \
+		fi \
 	done
 
 
@@ -34,8 +40,11 @@ realclean:
 
 install:
 	@for dir in $(SUBDIRS) ; do \
-		(cd $$dir ; $(MAKE) install) || exit 1 ; \
+		if [ -d $$dir ] ; then \
+			(cd $$dir && $(MAKE) install) || exit 1 ; \
+		fi \
 	done
+
 
 # DirectFBGL module installation
 linux-directfb-install:
@@ -60,6 +69,7 @@ aix-64-static \
 aix-gcc \
 aix-static \
 beos \
+bluegene-osmesa \
 darwin \
 darwin-static \
 darwin-static-x86ppc \
@@ -92,6 +102,7 @@ linux-alpha-static \
 linux-debug \
 linux-directfb \
 linux-dri \
+linux-dri-debug \
 linux-dri-x86 \
 linux-dri-x86-64 \
 linux-dri-ppc \
@@ -143,6 +154,7 @@ sunos5-v8 \
 sunos5-v8-static \
 sunos5-v9 \
 sunos5-v9-static \
+sunos5-v9-cc-g++ \
 ultrix-gcc:
 	@ if [ -e configs/current ] ; then \
 		echo "Please run 'make realclean' before changing configs" ; \
@@ -154,10 +166,10 @@ ultrix-gcc:
 
 # Rules for making release tarballs
 
-DIRECTORY = Mesa-6.5.2
-LIB_NAME = MesaLib-6.5.2
-DEMO_NAME = MesaDemos-6.5.2
-GLUT_NAME = MesaGLUT-6.5.2
+DIRECTORY = Mesa-7.0.1
+LIB_NAME = MesaLib-7.0.1
+DEMO_NAME = MesaDemos-7.0.1
+GLUT_NAME = MesaGLUT-7.0.1
 
 MAIN_FILES = \
 	$(DIRECTORY)/Makefile*						\
@@ -208,9 +220,6 @@ MAIN_FILES = \
 	$(DIRECTORY)/src/mesa/glapi/*.[chS]				\
 	$(DIRECTORY)/src/mesa/glapi/descrip.mms				\
 	$(DIRECTORY)/src/mesa/glapi/sources				\
-	$(DIRECTORY)/src/mesa/array_cache/*.[ch]			\
-	$(DIRECTORY)/src/mesa/array_cache/descrip.mms			\
-	$(DIRECTORY)/src/mesa/array_cache/sources			\
 	$(DIRECTORY)/src/mesa/math/*.[ch]				\
 	$(DIRECTORY)/src/mesa/math/descrip.mms				\
 	$(DIRECTORY)/src/mesa/math/sources				\
@@ -224,12 +233,17 @@ MAIN_FILES = \
 	$(DIRECTORY)/src/mesa/shader/slang/descrip.mms			\
 	$(DIRECTORY)/src/mesa/shader/slang/sources			\
 	$(DIRECTORY)/src/mesa/shader/slang/library/*.[ch]		\
+	$(DIRECTORY)/src/mesa/shader/slang/library/*.gc			\
+	$(DIRECTORY)/src/mesa/shader/slang/library/*.syn		\
+	$(DIRECTORY)/src/mesa/shader/slang/library/Makefile		\
 	$(DIRECTORY)/src/mesa/swrast/*.[ch]				\
 	$(DIRECTORY)/src/mesa/swrast/descrip.mms			\
 	$(DIRECTORY)/src/mesa/swrast/sources				\
 	$(DIRECTORY)/src/mesa/swrast_setup/*.[ch]			\
 	$(DIRECTORY)/src/mesa/swrast_setup/descrip.mms			\
 	$(DIRECTORY)/src/mesa/swrast_setup/sources			\
+	$(DIRECTORY)/src/mesa/vbo/*.[chS]				\
+	$(DIRECTORY)/src/mesa/vbo/descrip.mms				\
 	$(DIRECTORY)/src/mesa/tnl/*.[chS]				\
 	$(DIRECTORY)/src/mesa/tnl/descrip.mms				\
 	$(DIRECTORY)/src/mesa/tnl/sources				\
@@ -278,17 +292,15 @@ MAIN_FILES = \
 	$(DIRECTORY)/vms/analyze_map.com				\
 	$(DIRECTORY)/vms/xlib.opt					\
 	$(DIRECTORY)/vms/xlib_share.opt					\
-	$(DIRECTORY)/windows/VC6/mesa/gdi/gdi.dsp			\
-	$(DIRECTORY)/windows/VC6/mesa/glu/*.txt				\
-	$(DIRECTORY)/windows/VC6/mesa/glu/glu.dsp			\
-	$(DIRECTORY)/windows/VC6/mesa/mesa.dsw				\
-	$(DIRECTORY)/windows/VC6/mesa/mesa/mesa.dsp			\
-	$(DIRECTORY)/windows/VC6/mesa/osmesa/osmesa.dsp			\
-	$(DIRECTORY)/windows/VC7/mesa/gdi/gdi.vcproj			\
-	$(DIRECTORY)/windows/VC7/mesa/glu/glu.vcproj			\
-	$(DIRECTORY)/windows/VC7/mesa/mesa.sln				\
-	$(DIRECTORY)/windows/VC7/mesa/mesa/mesa.vcproj			\
-	$(DIRECTORY)/windows/VC7/mesa/osmesa/osmesa.vcproj
+	$(DIRECTORY)/windows/VC8/mesa/mesa.sln				\
+	$(DIRECTORY)/windows/VC8/mesa/gdi/gdi.vcproj			\
+	$(DIRECTORY)/windows/VC8/mesa/glu/glu.vcproj			\
+	$(DIRECTORY)/windows/VC8/mesa/mesa/mesa.vcproj			\
+	$(DIRECTORY)/windows/VC8/mesa/osmesa/osmesa.vcproj		\
+	$(DIRECTORY)/windows/VC8/progs/progs.sln			\
+	$(DIRECTORY)/windows/VC8/progs/demos/gears.vcproj		\
+	$(DIRECTORY)/windows/VC8/progs/glut/glut.vcproj
+
 
 DRI_FILES = \
 	$(DIRECTORY)/include/GL/internal/dri_interface.h		\
@@ -309,6 +321,7 @@ SGI_GLU_FILES = \
 	$(DIRECTORY)/src/glu/Makefile					\
 	$(DIRECTORY)/src/glu/descrip.mms				\
 	$(DIRECTORY)/src/glu/sgi/Makefile				\
+	$(DIRECTORY)/src/glu/sgi/Makefile.mgw				\
 	$(DIRECTORY)/src/glu/sgi/Makefile.win				\
 	$(DIRECTORY)/src/glu/sgi/Makefile.DJ				\
 	$(DIRECTORY)/src/glu/sgi/glu.def				\
@@ -353,6 +366,8 @@ DEMO_FILES = \
 	$(DIRECTORY)/progs/demos/*.cxx			\
 	$(DIRECTORY)/progs/demos/*.dat			\
 	$(DIRECTORY)/progs/demos/README			\
+	$(DIRECTORY)/progs/fbdev/Makefile		\
+	$(DIRECTORY)/progs/fbdev/glfbdevtest.c		\
 	$(DIRECTORY)/progs/osdemos/Makefile		\
 	$(DIRECTORY)/progs/osdemos/*.c			\
 	$(DIRECTORY)/progs/xdemos/Makefile*		\
@@ -364,6 +379,9 @@ DEMO_FILES = \
 	$(DIRECTORY)/progs/samples/Makefile*		\
 	$(DIRECTORY)/progs/samples/README		\
 	$(DIRECTORY)/progs/samples/*.c			\
+	$(DIRECTORY)/progs/glsl/Makefile*		\
+	$(DIRECTORY)/progs/glsl/*.c			\
+	$(DIRECTORY)/progs/glsl/*.txt			\
 	$(DIRECTORY)/progs/windml/Makefile.ugl		\
 	$(DIRECTORY)/progs/windml/*.c			\
 	$(DIRECTORY)/progs/windml/*.bmp			\

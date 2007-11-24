@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.2
+ * Version:  7.0
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -312,7 +312,7 @@ _mesa_ProgramEnvParameters4fvEXT(GLenum target, GLuint index, GLsizei count,
 				 const GLfloat *params)
 {
    GET_CURRENT_CONTEXT(ctx);
-   unsigned i;
+   GLint i;
    GLfloat * dest;
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
@@ -464,7 +464,7 @@ _mesa_ProgramLocalParameters4fvEXT(GLenum target, GLuint index, GLsizei count,
 {
    GET_CURRENT_CONTEXT(ctx);
    struct gl_program *prog;
-   unsigned i;
+   GLint i;
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    FLUSH_VERTICES(ctx, _NEW_PROGRAM);
@@ -703,10 +703,18 @@ _mesa_GetProgramivARB(GLenum target, GLenum pname, GLint *params)
           * The spec says that even if this query returns true, there's
           * no guarantee that the program will run in hardware.
           */
-	 if (ctx->Driver.IsProgramNative) 
+         if (prog->Id == 0) {
+            /* default/null program */
+            *params = GL_FALSE;
+         }
+	 else if (ctx->Driver.IsProgramNative) {
+            /* ask the driver */
 	    *params = ctx->Driver.IsProgramNative( ctx, target, prog );
-	 else
+         }
+	 else {
+            /* probably running in software */
 	    *params = GL_TRUE;
+         }
          return;
       default:
          /* continue with fragment-program only queries below */
@@ -720,22 +728,22 @@ _mesa_GetProgramivARB(GLenum target, GLenum pname, GLint *params)
       const struct gl_fragment_program *fp = ctx->FragmentProgram.Current;
       switch (pname) {
          case GL_PROGRAM_ALU_INSTRUCTIONS_ARB:
-            *params = fp->NumNativeAluInstructions;
+            *params = fp->Base.NumNativeAluInstructions;
             return;
          case GL_PROGRAM_NATIVE_ALU_INSTRUCTIONS_ARB:
-            *params = fp->NumAluInstructions;
+            *params = fp->Base.NumAluInstructions;
             return;
          case GL_PROGRAM_TEX_INSTRUCTIONS_ARB:
-            *params = fp->NumTexInstructions;
+            *params = fp->Base.NumTexInstructions;
             return;
          case GL_PROGRAM_NATIVE_TEX_INSTRUCTIONS_ARB:
-            *params = fp->NumNativeTexInstructions;
+            *params = fp->Base.NumNativeTexInstructions;
             return;
          case GL_PROGRAM_TEX_INDIRECTIONS_ARB:
-            *params = fp->NumTexIndirections;
+            *params = fp->Base.NumTexIndirections;
             return;
          case GL_PROGRAM_NATIVE_TEX_INDIRECTIONS_ARB:
-            *params = fp->NumNativeTexIndirections;
+            *params = fp->Base.NumNativeTexIndirections;
             return;
          case GL_MAX_PROGRAM_ALU_INSTRUCTIONS_ARB:
             *params = limits->MaxAluInstructions;

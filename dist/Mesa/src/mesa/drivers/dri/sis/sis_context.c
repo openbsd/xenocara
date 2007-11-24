@@ -53,13 +53,14 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
-#include "array_cache/acache.h"
+#include "vbo/vbo.h"
 
 #include "tnl/tnl.h"
 #include "tnl/t_pipeline.h"
 
 #define need_GL_ARB_multisample
 #define need_GL_ARB_texture_compression
+#define need_GL_ARB_vertex_buffer_object
 #define need_GL_EXT_fog_coord
 #define need_GL_EXT_secondary_color
 #include "extension_helper.h"
@@ -79,6 +80,7 @@ struct dri_extension card_extensions[] =
     { "GL_ARB_texture_border_clamp",       NULL },
     { "GL_ARB_texture_compression",        GL_ARB_texture_compression_functions },
     { "GL_ARB_texture_mirrored_repeat",    NULL },
+    { "GL_ARB_vertex_buffer_object",       GL_ARB_vertex_buffer_object_functions },
     /*{ "GL_EXT_fog_coord",                  GL_EXT_fog_coord_functions },*/
     { "GL_EXT_texture_lod_bias",           NULL },
     { "GL_EXT_secondary_color",            GL_EXT_secondary_color_functions },
@@ -306,7 +308,7 @@ sisCreateContext( const __GLcontextModes *glVisual,
    /* Initialize the software rasterizer and helper modules.
     */
    _swrast_CreateContext( ctx );
-   _ac_CreateContext( ctx );
+   _vbo_CreateContext( ctx );
    _tnl_CreateContext( ctx );
    _swsetup_CreateContext( ctx );
 
@@ -353,7 +355,7 @@ sisDestroyContext ( __DRIcontextPrivate *driContextPriv )
    if ( smesa != NULL ) {
       _swsetup_DestroyContext( smesa->glCtx );
       _tnl_DestroyContext( smesa->glCtx );
-      _ac_DestroyContext( smesa->glCtx );
+      _vbo_DestroyContext( smesa->glCtx );
       _swrast_DestroyContext( smesa->glCtx );
 
       if (smesa->using_agp)

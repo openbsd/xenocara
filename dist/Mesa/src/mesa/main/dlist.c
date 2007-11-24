@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
+ * Version:  7.0.1
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -66,10 +66,10 @@
 #include "dlist.h"
 #include "macros.h"
 #include "matrix.h"
-#include "occlude.h"
 #include "pixel.h"
 #include "points.h"
 #include "polygon.h"
+#include "queryobj.h"
 #include "state.h"
 #include "texobj.h"
 #include "teximage.h"
@@ -343,8 +343,6 @@ typedef enum
    OPCODE_ATTR_3F_ARB,
    OPCODE_ATTR_4F_ARB,
    OPCODE_MATERIAL,
-   OPCODE_INDEX,
-   OPCODE_EDGEFLAG,
    OPCODE_BEGIN,
    OPCODE_END,
    OPCODE_RECTF,
@@ -2718,21 +2716,20 @@ save_PolygonMode(GLenum face, GLenum mode)
 }
 
 
-/*
- * Polygon stipple must have been upacked already!
- */
 static void GLAPIENTRY
 save_PolygonStipple(const GLubyte * pattern)
 {
    GET_CURRENT_CONTEXT(ctx);
+   GLvoid *image = unpack_image(2, 32, 32, 1, GL_COLOR_INDEX, GL_BITMAP,
+                                pattern, &ctx->Unpack);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
    n = ALLOC_INSTRUCTION(ctx, OPCODE_POLYGON_STIPPLE, 1);
    if (n) {
-      void *data;
-      n[1].data = _mesa_malloc(32 * 4);
-      data = n[1].data;         /* This needed for Acorn compiler */
-      MEMCPY(data, pattern, 32 * 4);
+      n[1].data = image; 
+   }
+   else if (image) {
+      _mesa_free(image);
    }
    if (ctx->ExecuteFlag) {
       CALL_PolygonStipple(ctx->Exec, ((GLubyte *) pattern));
@@ -4476,7 +4473,7 @@ save_ProgramLocalParameters4fvEXT(GLenum target, GLuint index, GLsizei count,
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
 
    if (count > 0) {
-      unsigned i;
+      GLint i;
       const GLfloat * p = params;
 
       for (i = 0 ; i < count ; i++) {
@@ -4710,7 +4707,7 @@ save_ProgramEnvParameters4fvEXT(GLenum target, GLuint index, GLsizei count,
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
 
    if (count > 0) {
-      unsigned i;
+      GLint i;
       const GLfloat * p = params;
 
       for (i = 0 ; i < count ; i++) {
@@ -5110,45 +5107,19 @@ save_EvalPoint2(GLint x, GLint y)
 static void GLAPIENTRY
 save_Indexf(GLfloat x)
 {
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_INDEX, 1);
-   if (n) {
-      n[1].f = x;
-   }
-
-   ctx->ListState.ActiveIndex = 1;
-   ctx->ListState.CurrentIndex = x;
-
-   if (ctx->ExecuteFlag) {
-      CALL_Indexf(ctx->Exec, (x));
-   }
+   save_Attr1fNV(VERT_ATTRIB_COLOR_INDEX, x);
 }
 
 static void GLAPIENTRY
 save_Indexfv(const GLfloat * v)
 {
-   save_Indexf(v[0]);
+   save_Attr1fNV(VERT_ATTRIB_COLOR_INDEX, v[0]);
 }
 
 static void GLAPIENTRY
 save_EdgeFlag(GLboolean x)
 {
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_EDGEFLAG, 1);
-   if (n) {
-      n[1].b = x;
-   }
-
-   ctx->ListState.ActiveEdgeFlag = 1;
-   ctx->ListState.CurrentEdgeFlag = x;
-
-   if (ctx->ExecuteFlag) {
-      CALL_EdgeFlag(ctx->Exec, (x));
-   }
+   save_Attr1fNV(VERT_ATTRIB_EDGEFLAG, x ? 1.0 : 0.0);
 }
 
 static void GLAPIENTRY
@@ -6197,7 +6168,12 @@ execute_list(GLcontext *ctx, GLuint list)
             CALL_PolygonMode(ctx->Exec, (n[1].e, n[2].e));
             break;
          case OPCODE_POLYGON_STIPPLE:
-            CALL_PolygonStipple(ctx->Exec, ((GLubyte *) n[1].data));
+            {
+               const struct gl_pixelstore_attrib save = ctx->Unpack;
+               ctx->Unpack = ctx->DefaultPacking;
+               CALL_PolygonStipple(ctx->Exec, ((GLubyte *) n[1].data));
+               ctx->Unpack = save;      /* restore */
+            }
             break;
          case OPCODE_POLYGON_OFFSET:
             CALL_PolygonOffset(ctx->Exec, (n[1].f, n[2].f));
@@ -6602,12 +6578,6 @@ execute_list(GLcontext *ctx, GLuint list)
                CALL_Materialfv(ctx->Exec, (n[1].e, n[2].e, f));
             }
             break;
-         case OPCODE_INDEX:
-            CALL_Indexf(ctx->Exec, (n[1].f));
-            break;
-         case OPCODE_EDGEFLAG:
-            CALL_EdgeFlag(ctx->Exec, (n[1].b));
-            break;
          case OPCODE_BEGIN:
             CALL_Begin(ctx->Exec, (n[1].e));
             break;
@@ -6792,9 +6762,6 @@ _mesa_NewList(GLuint list, GLenum mode)
 
    for (i = 0; i < MAT_ATTRIB_MAX; i++)
       ctx->ListState.ActiveMaterialSize[i] = 0;
-
-   ctx->ListState.ActiveIndex = 0;
-   ctx->ListState.ActiveEdgeFlag = 0;
 
    ctx->Driver.CurrentSavePrimitive = PRIM_UNKNOWN;
    ctx->Driver.NewList(ctx, list, mode);
@@ -8420,12 +8387,6 @@ print_list(GLcontext *ctx, GLuint list)
          case OPCODE_MATERIAL:
             _mesa_printf("MATERIAL %x %x: %f %f %f %f\n",
                          n[1].i, n[2].i, n[3].f, n[4].f, n[5].f, n[6].f);
-            break;
-         case OPCODE_INDEX:
-            _mesa_printf("INDEX: %f\n", n[1].f);
-            break;
-         case OPCODE_EDGEFLAG:
-            _mesa_printf("EDGEFLAG: %d\n", n[1].i);
             break;
          case OPCODE_BEGIN:
             _mesa_printf("BEGIN %x\n", n[1].i);

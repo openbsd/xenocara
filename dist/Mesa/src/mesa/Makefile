@@ -89,9 +89,7 @@ fbdev: $(CORE_OBJECTS) $(FBDEV_DRIVER_OBJECTS) $(COMMON_DRIVER_OBJECTS)
 # Stand-alone Mesa libGL and libOSMesa
 STAND_ALONE_DRIVER_SOURCES = \
 	$(COMMON_DRIVER_SOURCES) \
-	$(X11_DRIVER_SOURCES) \
-	$(GLIDE_DRIVER_SOURCES) \
-	$(SVGA_DRIVER_SOURCES)
+	$(X11_DRIVER_SOURCES)
 
 STAND_ALONE_DRIVER_OBJECTS = $(STAND_ALONE_DRIVER_SOURCES:.c=.o)
 
@@ -119,17 +117,16 @@ $(TOP)/$(LIB_DIR)/$(GL_LIB_NAME): $(STAND_ALONE_OBJECTS)
 		$(MKLIB_OPTIONS) $(GL_LIB_DEPS) $(STAND_ALONE_OBJECTS)
 
 # Make the OSMesa library
+# Note: version is kept at 6.5.3 to simplify app/linking issues
 $(TOP)/$(LIB_DIR)/$(OSMESA_LIB_NAME): $(OSMESA_DRIVER_OBJECTS) $(OSMESA16_OBJECTS)
 	@ if [ "${DRIVER_DIRS}" = "osmesa" ] ; then \
 		$(TOP)/bin/mklib -o $(OSMESA_LIB) -linker '$(CC)' \
-			-major $(MESA_MAJOR) \
-			-minor $(MESA_MINOR) -patch $(MESA_TINY) \
+			-major 6 -minor 5 -patch 3 \
 			-install $(TOP)/$(LIB_DIR) $(MKLIB_OPTIONS) \
 			$(OSMESA_LIB_DEPS) $(OSMESA16_OBJECTS) ; \
 	else \
 		$(TOP)/bin/mklib -o $(OSMESA_LIB) -linker '$(CC)' \
-			-major $(MESA_MAJOR) \
-			-minor $(MESA_MINOR) -patch $(GL_TINY) \
+			-major 6 -minor 5 -patch 3 \
 			-install $(TOP)/$(LIB_DIR) $(MKLIB_OPTIONS) \
 			$(OSMESA_LIB_DEPS) $(OSMESA_DRIVER_OBJECTS) ; \
 	fi
@@ -142,7 +139,7 @@ depend: $(ALL_SOURCES)
 	@ echo "running $(MKDEP)"
 	@ touch depend
 	@$(MKDEP) $(MKDEP_OPTIONS) $(DEFINES) $(INCLUDE_DIRS) $(ALL_SOURCES) \
-		> /dev/null 
+		> /dev/null 2>/dev/null
 
 
 subdirs:

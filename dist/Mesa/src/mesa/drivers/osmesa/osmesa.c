@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
+ * Version:  6.5.3
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -41,7 +41,6 @@
 #include "imports.h"
 #include "mtypes.h"
 #include "renderbuffer.h"
-#include "array_cache/acache.h"
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
 #include "swrast/s_context.h"
@@ -51,6 +50,7 @@
 #include "tnl/t_context.h"
 #include "tnl/t_pipeline.h"
 #include "drivers/common/driverfuncs.h"
+#include "vbo/vbo.h"
 
 
 
@@ -110,8 +110,8 @@ osmesa_update_state( GLcontext *ctx, GLuint new_state )
    /* easy - just propogate */
    _swrast_InvalidateState( ctx, new_state );
    _swsetup_InvalidateState( ctx, new_state );
-   _ac_InvalidateState( ctx, new_state );
    _tnl_InvalidateState( ctx, new_state );
+   _vbo_InvalidateState( ctx, new_state );
 }
 
 
@@ -1041,6 +1041,7 @@ new_osmesa_renderbuffer(GLcontext *ctx, GLenum format, GLenum type)
    const GLuint name = 0;
    struct gl_renderbuffer *rb = _mesa_new_renderbuffer(ctx, name);
    if (rb) {
+      rb->RefCount = 1;
       rb->Delete = osmesa_delete_renderbuffer;
       rb->AllocStorage = osmesa_renderbuffer_storage;
 
@@ -1237,6 +1238,7 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
       /* create front color buffer in user-provided memory (no back buffer) */
       osmesa->rb = new_osmesa_renderbuffer(&osmesa->mesa, format, type);
       _mesa_add_renderbuffer(osmesa->gl_buffer, BUFFER_FRONT_LEFT, osmesa->rb);
+      assert(osmesa->rb->RefCount == 2);
                         
       _mesa_add_soft_renderbuffers(osmesa->gl_buffer,
                                    GL_FALSE, /* color */
@@ -1261,7 +1263,7 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
          TNLcontext *tnl;
 
 	 if (!_swrast_CreateContext( ctx ) ||
-             !_ac_CreateContext( ctx ) ||
+             !_vbo_CreateContext( ctx ) ||
              !_tnl_CreateContext( ctx ) ||
              !_swsetup_CreateContext( ctx )) {
             _mesa_destroy_visual(osmesa->gl_visual);
@@ -1297,13 +1299,17 @@ GLAPI void GLAPIENTRY
 OSMesaDestroyContext( OSMesaContext osmesa )
 {
    if (osmesa) {
+      if (osmesa->rb)
+         _mesa_reference_renderbuffer(&osmesa->rb, NULL);
+
       _swsetup_DestroyContext( &osmesa->mesa );
       _tnl_DestroyContext( &osmesa->mesa );
-      _ac_DestroyContext( &osmesa->mesa );
+      _vbo_DestroyContext( &osmesa->mesa );
       _swrast_DestroyContext( &osmesa->mesa );
 
       _mesa_destroy_visual( osmesa->gl_visual );
-      _mesa_destroy_framebuffer( osmesa->gl_buffer );
+      _mesa_unreference_framebuffer( &osmesa->gl_buffer );
+
       _mesa_free_context_data( &osmesa->mesa );
       _mesa_free( osmesa );
    }
@@ -1569,6 +1575,7 @@ static struct name_function functions[] = {
    { "OSMesaGetDepthBuffer", (OSMESAproc) OSMesaGetDepthBuffer },
    { "OSMesaGetColorBuffer", (OSMESAproc) OSMesaGetColorBuffer },
    { "OSMesaGetProcAddress", (OSMESAproc) OSMesaGetProcAddress },
+   { "OSMesaColorClamp", (OSMESAproc) OSMesaColorClamp },
    { NULL, NULL }
 };
 

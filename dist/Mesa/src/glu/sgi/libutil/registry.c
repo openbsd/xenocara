@@ -31,8 +31,8 @@
 ** published by SGI, but has not been independently verified as being
 ** compliant with the OpenGL(R) version 1.2.1 Specification.
 **
-** $Date: 2006/11/25 18:55:12 $ $Revision: 1.1.1.1 $
-** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libutil/Attic/registry.c,v 1.1.1.1 2006/11/25 18:55:12 matthieu Exp $
+** $Date: 2007/11/24 17:27:25 $ $Revision: 1.1.1.2 $
+** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libutil/Attic/registry.c,v 1.1.1.2 2007/11/24 17:27:25 matthieu Exp $
 */
 
 #include "gluos.h"

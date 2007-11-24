@@ -92,6 +92,10 @@ struct intel_texture_object
     * regions will be copied to this region and the old storage freed.
     */
    struct intel_mipmap_tree *mt;
+
+   GLboolean imageOverride;
+   GLint depthOverride;
+   GLuint pitchOverride;
 };
 
 
@@ -274,18 +278,13 @@ struct intel_context
     */
    driOptionCache optionCache;
 
-   /* VBI
-    */
-   GLuint vbl_seq;
-   GLuint vblank_flags;
+  /* Rotation. Need to match that of the
+   * current screen.
+   */
 
-   int64_t swap_ust;
-   int64_t swap_missed_ust;
-
-   GLuint swap_count;
-   GLuint swap_missed_count;
-
-   GLuint swap_scheduled;
+  int width;
+  int height;
+  int current_rotation;
 };
 
 /* These are functions now:

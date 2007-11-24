@@ -31,10 +31,10 @@
 ** published by SGI, but has not been independently verified as being
 ** compliant with the OpenGL(R) version 1.2.1 Specification.
 **
-** $Date: 2006/11/25 18:54:51 $ $Revision: 1.1.1.1 $
+** $Date: 2007/11/24 17:27:09 $ $Revision: 1.1.1.2 $
 */
 /*
-** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/sorter.h,v 1.1.1.1 2006/11/25 18:54:51 matthieu Exp $
+** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/sorter.h,v 1.1.1.2 2007/11/24 17:27:09 matthieu Exp $
 */
 
 #ifndef __glusorter_h_

@@ -35,8 +35,8 @@
 /*
  * trimregion.c++
  *
- * $Date: 2006/11/25 18:54:57 $ $Revision: 1.1.1.1 $
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/trimregion.cc,v 1.1.1.1 2006/11/25 18:54:57 matthieu Exp $
+ * $Date: 2007/11/24 17:27:10 $ $Revision: 1.1.1.2 $
+ * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/trimregion.cc,v 1.1.1.2 2007/11/24 17:27:10 matthieu Exp $
  */
 
 #include "glimports.h"

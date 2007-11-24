@@ -35,8 +35,8 @@
 /*
 ** Author: Eric Veach, July 1994.
 **
-** $Date: 2006/11/25 18:55:04 $ $Revision: 1.1.1.1 $
-** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libtess/Attic/memalloc.h,v 1.1.1.1 2006/11/25 18:55:04 matthieu Exp $
+** $Date: 2007/11/24 17:27:18 $ $Revision: 1.1.1.2 $
+** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libtess/Attic/memalloc.h,v 1.1.1.2 2007/11/24 17:27:18 matthieu Exp $
 */
 
 #ifndef __memalloc_simple_h_

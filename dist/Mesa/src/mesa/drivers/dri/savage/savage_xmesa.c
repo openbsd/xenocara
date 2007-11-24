@@ -40,7 +40,7 @@
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
 #include "tnl/tnl.h"
-#include "array_cache/acache.h"
+#include "vbo/vbo.h"
 
 #include "tnl/t_pipeline.h"
 
@@ -61,6 +61,7 @@
 
 #define need_GL_ARB_multisample
 #define need_GL_ARB_texture_compression
+#define need_GL_ARB_vertex_buffer_object
 #define need_GL_EXT_secondary_color
 #include "extension_helper.h"
 
@@ -135,6 +136,7 @@ static const struct dri_extension card_extensions[] =
     { "GL_ARB_multisample",                GL_ARB_multisample_functions },
     { "GL_ARB_multitexture",               NULL },
     { "GL_ARB_texture_compression",        GL_ARB_texture_compression_functions },
+    { "GL_ARB_vertex_buffer_object",       GL_ARB_vertex_buffer_object_functions },
     { "GL_EXT_stencil_wrap",               NULL },
     { "GL_EXT_texture_lod_bias",           NULL },
     { "GL_EXT_secondary_color",            GL_EXT_secondary_color_functions },
@@ -509,7 +511,7 @@ savageCreateContext( const __GLcontextModes *mesaVis,
    /* Initialize the software rasterizer and helper modules.
     */
    _swrast_CreateContext( ctx );
-   _ac_CreateContext( ctx );
+   _vbo_CreateContext( ctx );
    _tnl_CreateContext( ctx );
    
    _swsetup_CreateContext( ctx );
@@ -599,7 +601,7 @@ savageDestroyContext(__DRIcontextPrivate *driContextPriv)
 
       _swsetup_DestroyContext(imesa->glCtx );
       _tnl_DestroyContext( imesa->glCtx );
-      _ac_DestroyContext( imesa->glCtx );
+      _vbo_DestroyContext( imesa->glCtx );
       _swrast_DestroyContext( imesa->glCtx );
 
       /* free the Mesa context */
@@ -710,7 +712,7 @@ savageCreateBuffer( __DRIscreenPrivate *driScrnPriv,
 static void
 savageDestroyBuffer(__DRIdrawablePrivate *driDrawPriv)
 {
-   _mesa_destroy_framebuffer((GLframebuffer *) (driDrawPriv->driverPrivate));
+   _mesa_unreference_framebuffer((GLframebuffer **)(&(driDrawPriv->driverPrivate)));
 }
 
 #if 0

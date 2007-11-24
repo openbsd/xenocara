@@ -34,8 +34,7 @@
 #include "brw_vs.h"
 #include "brw_util.h"
 #include "brw_state.h"
-#include "program.h"
-#include "shader/arbprogparse.h"
+#include "shader/prog_print.h"
 
 
 
@@ -54,12 +53,11 @@ static void do_vs_prog( struct brw_context *brw,
    c.vp = vp;
 
    c.prog_data.outputs_written = vp->program.Base.OutputsWritten;
-   c.prog_data.inputs_read = brw_translate_inputs(brw->intel.ctx.VertexProgram._Enabled,
-						  vp->program.Base.InputsRead);
+   c.prog_data.inputs_read = vp->program.Base.InputsRead;
 
    if (c.key.copy_edgeflag) {
       c.prog_data.outputs_written |= 1<<VERT_RESULT_EDGE;
-      c.prog_data.inputs_read |= 1<<BRW_ATTRIB_EDGEFLAG;
+      c.prog_data.inputs_read |= 1<<VERT_ATTRIB_EDGEFLAG;
    }
 
    if (0)

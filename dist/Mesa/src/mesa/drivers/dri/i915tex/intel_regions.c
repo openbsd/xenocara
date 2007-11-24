@@ -90,6 +90,7 @@ intel_region_alloc(intelScreenPrivate *intelScreen,
                    GLuint cpp, GLuint pitch, GLuint height)
 {
    struct intel_region *region = calloc(sizeof(*region), 1);
+   struct intel_context *intel = intelScreenContext(intelScreen);
 
    DBG("%s\n", __FUNCTION__);
 
@@ -107,7 +108,9 @@ intel_region_alloc(intelScreenPrivate *intelScreen,
 		 0,
 #endif
 		 0);
+   LOCK_HARDWARE(intel);
    driBOData(region->buffer, pitch * cpp * height, NULL, 0);
+   UNLOCK_HARDWARE(intel);
    return region;
 }
 
@@ -217,7 +220,8 @@ _mesa_copy_rect(GLubyte * dst,
                 GLuint dst_y,
                 GLuint width,
                 GLuint height,
-                GLubyte * src, GLuint src_pitch, GLuint src_x, GLuint src_y)
+                const GLubyte * src,
+                GLuint src_pitch, GLuint src_x, GLuint src_y)
 {
    GLuint i;
 
@@ -253,7 +257,7 @@ intel_region_data(intelScreenPrivate *intelScreen,
                   struct intel_region *dst,
                   GLuint dst_offset,
                   GLuint dstx, GLuint dsty,
-                  void *src, GLuint src_pitch,
+                  const void *src, GLuint src_pitch,
                   GLuint srcx, GLuint srcy, GLuint width, GLuint height)
 {
    struct intel_context *intel = intelScreenContext(intelScreen);
@@ -391,6 +395,8 @@ void
 intel_region_release_pbo(intelScreenPrivate *intelScreen,
                          struct intel_region *region)
 {
+   struct intel_context *intel = intelScreenContext(intelScreen);
+
    assert(region->buffer == region->pbo->buffer);
    region->pbo->region = NULL;
    region->pbo = NULL;
@@ -399,8 +405,11 @@ intel_region_release_pbo(intelScreenPrivate *intelScreen,
 
    driGenBuffers(intelScreen->regionPool,
                  "region", 1, &region->buffer, 64, 0, 0);
+   
+   LOCK_HARDWARE(intel);
    driBOData(region->buffer,
              region->cpp * region->pitch * region->height, NULL, 0);
+   UNLOCK_HARDWARE(intel);
 }
 
 /* Break the COW tie to the pbo.  Both the pbo and the region end up

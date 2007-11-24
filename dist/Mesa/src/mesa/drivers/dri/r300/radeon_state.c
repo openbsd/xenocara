@@ -41,7 +41,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "light.h"
 
 #include "swrast/swrast.h"
-#include "array_cache/acache.h"
+#include "vbo/vbo.h"
 #include "tnl/tnl.h"
 #include "tnl/t_pipeline.h"
 #include "swrast_setup/swrast_setup.h"
@@ -154,7 +154,8 @@ void radeonSetCliprects(radeonContextPtr radeon)
 
 	if (draw_fb->_ColorDrawBufferMask[0] == BUFFER_BIT_BACK_LEFT) {
 		/* Can't ignore 2d windows if we are page flipping. */
-		if (drawable->numBackClipRects == 0 || radeon->doPageFlip) {
+		if (drawable->numBackClipRects == 0 || radeon->doPageFlip ||
+		    radeon->sarea->pfCurrentPage == 1) {
 			radeon->numClipRects = drawable->numClipRects;
 			radeon->pClipRects = drawable->pClipRects;
 		} else {
@@ -185,6 +186,8 @@ void radeonSetCliprects(radeonContextPtr radeon)
 
 	if (radeon->state.scissor.enabled)
 		radeonRecalcScissorRects(radeon);
+
+	radeon->lastStamp = drawable->lastStamp;
 }
 
 

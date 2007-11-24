@@ -31,7 +31,7 @@
 ** published by SGI, but has not been independently verified as being
 ** compliant with the OpenGL(R) version 1.2.1 Specification.
 **
-** $Date: 2006/11/25 18:54:58 $ $Revision: 1.1.1.1 $
+** $Date: 2007/11/24 17:27:13 $ $Revision: 1.1.1.2 $
 */
 /*
  *partitionY.h:
@@ -53,7 +53,7 @@
  *A vertex is an interior cusp if it is a cusp and a reflex.
  *A vertex is an exterior cusp if it is a cusp but not a reflex.
  *
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/nurbtess/Attic/partitionY.h,v 1.1.1.1 2006/11/25 18:54:58 matthieu Exp $
+ * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/nurbtess/Attic/partitionY.h,v 1.1.1.2 2007/11/24 17:27:13 matthieu Exp $
  */
 
 #ifndef _PARTITIONY_H

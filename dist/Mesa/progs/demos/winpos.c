@@ -77,7 +77,7 @@ static void init( void )
       WindowPosFunc = &glWindowPos2fARB;
    }
    else
-#elif defined(GL_ARB_window_pos)
+#elif defined(GL_MESA_window_pos)
    if (glutExtensionSupported("GL_MESA_window_pos")) {
       printf("Using GL_MESA_window_pos\n");
       WindowPosFunc = &glWindowPos2fMESA;
@@ -100,6 +100,7 @@ static void init( void )
 
 int main( int argc, char *argv[] )
 {
+   glutInit(&argc, argv);
    glutInitWindowPosition(0, 0);
    glutInitWindowSize(500, 500);
    glutInitDisplayMode( GLUT_RGB );

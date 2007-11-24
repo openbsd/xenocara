@@ -55,7 +55,7 @@
 #include "tnl/tnl.h"
 #include "tnl/t_context.h"
 #include "tnl/t_pipeline.h"
-#include "array_cache/acache.h"
+#include "vbo/vbo.h"
 
 
 
@@ -1663,7 +1663,6 @@ static const struct tnl_pipeline_stage *fx_pipeline[] = {
    &_tnl_texture_transform_stage,
    &_tnl_point_attenuation_stage,
 #if defined(FEATURE_NV_vertex_program) || defined(FEATURE_ARB_vertex_program)
-   &_tnl_arb_vertex_program_stage,
    &_tnl_vertex_program_stage,
 #endif
    &_tnl_render_stage,
@@ -1783,7 +1782,7 @@ fxDDInitFxMesaContext(fxMesaContext fxMesa)
    /* Initialize the software rasterizer and helper modules.
     */
    _swrast_CreateContext(ctx);
-   _ac_CreateContext(ctx);
+   _vbo_CreateContext(ctx);
    _tnl_CreateContext(ctx);
    _swsetup_CreateContext(ctx);
 
@@ -1826,7 +1825,7 @@ fxDDDestroyFxMesaContext(fxMesaContext fxMesa)
 {
    _swsetup_DestroyContext(fxMesa->glCtx);
    _tnl_DestroyContext(fxMesa->glCtx);
-   _ac_DestroyContext(fxMesa->glCtx);
+   _vbo_DestroyContext(fxMesa->glCtx);
    _swrast_DestroyContext(fxMesa->glCtx);
 
    if (fxMesa->state)
@@ -2101,7 +2100,7 @@ fxDDUpdateDDPointers(GLcontext * ctx, GLuint new_state)
    }
 
    _swrast_InvalidateState(ctx, new_state);
-   _ac_InvalidateState(ctx, new_state);
+   _vbo_InvalidateState(ctx, new_state);
    _tnl_InvalidateState(ctx, new_state);
    _swsetup_InvalidateState(ctx, new_state);
 

@@ -31,8 +31,8 @@
 ** published by SGI, but has not been independently verified as being
 ** compliant with the OpenGL(R) version 1.2.1 Specification.
 **
-** $Date: 2006/11/25 18:55:07 $ $Revision: 1.1.1.1 $
-** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libutil/Attic/error.c,v 1.1.1.1 2006/11/25 18:55:07 matthieu Exp $
+** $Date: 2007/11/24 17:27:20 $ $Revision: 1.1.1.2 $
+** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libutil/Attic/error.c,v 1.1.1.2 2007/11/24 17:27:20 matthieu Exp $
 */
 
 #include "gluos.h"
@@ -82,7 +82,7 @@ gluErrorString(GLenum errorCode)
     if ((errorCode >= GLU_NURBS_ERROR1) && (errorCode <= GLU_NURBS_ERROR37)) {
 	return (const GLubyte *) __gluNURBSErrorString(errorCode - (GLU_NURBS_ERROR1 - 1));
     }
-    if ((errorCode >= GLU_TESS_ERROR1) && (errorCode <= GLU_TESS_ERROR8)) {
+    if ((errorCode >= GLU_TESS_ERROR1) && (errorCode <= GLU_TESS_ERROR6)) {
 	return (const GLubyte *) __gluTessErrorString(errorCode - (GLU_TESS_ERROR1 - 1));
     }
     return (const GLubyte *) 0;

@@ -630,40 +630,34 @@ unbind_texobj_from_texunits(GLcontext *ctx, struct gl_texture_object *texObj)
 
    for (u = 0; u < MAX_TEXTURE_IMAGE_UNITS; u++) {
       struct gl_texture_unit *unit = &ctx->Texture.Unit[u];
+      struct gl_texture_object **curr = NULL;
+
       if (texObj == unit->Current1D) {
+         curr = &unit->Current1D;
          unit->Current1D = ctx->Shared->Default1D;
-         ctx->Shared->Default1D->RefCount++;
-         texObj->RefCount--;
-         if (texObj == unit->_Current)
-            unit->_Current = unit->Current1D;
       }
       else if (texObj == unit->Current2D) {
+         curr = &unit->Current2D;
          unit->Current2D = ctx->Shared->Default2D;
-         ctx->Shared->Default2D->RefCount++;
-         texObj->RefCount--;
-         if (texObj == unit->_Current)
-            unit->_Current = unit->Current2D;
       }
       else if (texObj == unit->Current3D) {
+         curr = &unit->Current3D;
          unit->Current3D = ctx->Shared->Default3D;
-         ctx->Shared->Default3D->RefCount++;
-         texObj->RefCount--;
-         if (texObj == unit->_Current)
-            unit->_Current = unit->Current3D;
       }
       else if (texObj == unit->CurrentCubeMap) {
+         curr = &unit->CurrentCubeMap;
          unit->CurrentCubeMap = ctx->Shared->DefaultCubeMap;
-         ctx->Shared->DefaultCubeMap->RefCount++;
-         texObj->RefCount--;
-         if (texObj == unit->_Current)
-            unit->_Current = unit->CurrentCubeMap;
       }
       else if (texObj == unit->CurrentRect) {
+         curr = &unit->CurrentRect;
          unit->CurrentRect = ctx->Shared->DefaultRect;
-         ctx->Shared->DefaultRect->RefCount++;
+      }
+
+      if (curr) {
+         (*curr)->RefCount++;
          texObj->RefCount--;
          if (texObj == unit->_Current)
-            unit->_Current = unit->CurrentRect;
+            unit->_Current = *curr;
       }
    }
 }
@@ -699,7 +693,7 @@ _mesa_DeleteTextures( GLsizei n, const GLuint *textures)
             = _mesa_lookup_texture(ctx, textures[i]);
 
          if (delObj) {
-	    GLboolean delete;
+	    GLboolean deleted;
 
 	    _mesa_lock_texture(ctx, delObj);
 
@@ -728,14 +722,14 @@ _mesa_DeleteTextures( GLsizei n, const GLuint *textures)
              * XXX all RefCount accesses should be protected by a mutex.
              */
             delObj->RefCount--;
-	    delete = (delObj->RefCount == 0);
+	    deleted = (delObj->RefCount == 0);
 	    _mesa_unlock_texture(ctx, delObj);
 
 	    /* We know that refcount went to zero above, so this is
 	     * the only pointer left to delObj, so we don't have to
 	     * worry about locking any more:
 	     */
-            if (delete) {
+            if (deleted) {
                ASSERT(delObj->Name != 0); /* Never delete default tex objs */
                ASSERT(ctx->Driver.DeleteTexture);
                (*ctx->Driver.DeleteTexture)(ctx, delObj);

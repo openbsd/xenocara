@@ -31,10 +31,10 @@
 ** published by SGI, but has not been independently verified as being
 ** compliant with the OpenGL(R) version 1.2.1 Specification.
 **
-** $Date: 2006/11/25 18:54:58 $ $Revision: 1.1.1.1 $
+** $Date: 2007/11/24 17:27:13 $ $Revision: 1.1.1.2 $
 */
 /*
-** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/nurbtess/Attic/monoTriangulation.h,v 1.1.1.1 2006/11/25 18:54:58 matthieu Exp $
+** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/nurbtess/Attic/monoTriangulation.h,v 1.1.1.2 2007/11/24 17:27:13 matthieu Exp $
 */
 
 #ifndef _MONO_TRIANGULATION_H
@@ -43,10 +43,9 @@
 #include "definitions.h"
 #include "primitiveStream.h"
 #include "directedLine.h"
+#include "arc.h"
 
 class Backend;
-class Arc;
-typedef Arc *Arc_ptr;
 
 class reflexChain{
   Real2 *queue; 

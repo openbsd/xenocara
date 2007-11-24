@@ -33,12 +33,11 @@
 #include "glheader.h"
 #include "macros.h"
 #include "enums.h"
+#include "shader/prog_parameter.h"
+#include "shader/prog_print.h"
 #include "brw_vs.h"
 #include "brw_state.h"
 
-#include "shader/program.h"
-#include "shader/program_instruction.h"
-#include "shader/arbprogparse.h"
 
 struct state_key {
    unsigned light_global_enabled:1;
@@ -114,7 +113,7 @@ static GLuint translate_texgen( GLboolean enabled, GLenum mode )
 static void make_state_key( GLcontext *ctx, struct state_key *key )
 {
    struct brw_context *brw = brw_context(ctx);
-   struct gl_fragment_program *fp = brw->fragment_program;
+   const struct gl_fragment_program *fp = brw->fragment_program;
    GLuint i;
 
    /* This now relies on texenvprogram.c being active:
@@ -146,9 +145,13 @@ static void make_state_key( GLcontext *ctx, struct state_key *key )
       }
 
       /* BRW_NEW_INPUT_VARYING */
-      for (i = BRW_ATTRIB_MAT_FRONT_AMBIENT ; i < BRW_ATTRIB_MAX ; i++) 
-	 if (brw->vb.info.varying & ((GLuint64EXT)1<<i)) 
-	    key->light_material_mask |= 1<<(i-BRW_ATTRIB_MAT_FRONT_AMBIENT);
+
+      /* For these programs, material values are stuffed into the
+       * generic slots:
+       */
+      for (i = 0 ; i < MAT_ATTRIB_MAX ; i++) 
+	 if (brw->vb.info.varying & (1<<(VERT_ATTRIB_GENERIC0 + i))) 
+	    key->light_material_mask |= 1<<i;
 
       for (i = 0; i < MAX_LIGHTS; i++) {
 	 struct gl_light *light = &brw->attribs.Light->Light[i];
@@ -374,17 +377,10 @@ static void release_temps( struct tnl_program *p )
 
 static struct ureg register_input( struct tnl_program *p, GLuint input )
 {
-   GLuint orig_input = input;
-   /* Cram the material flags into the generic range.  We'll translate
-    * them back later.
-    */
-   if (input >= BRW_ATTRIB_MAT_FRONT_AMBIENT)
-      input -= BRW_ATTRIB_MAT_FRONT_AMBIENT - BRW_ATTRIB_GENERIC0;
-
    assert(input < 32);
 
    p->program->Base.InputsRead |= (1<<input);
-   return make_ureg(PROGRAM_INPUT, orig_input);
+   return make_ureg(PROGRAM_INPUT, input);
 }
 
 static struct ureg register_output( struct tnl_program *p, GLuint output )
@@ -401,11 +397,14 @@ static struct ureg register_const4f( struct tnl_program *p,
 {
    GLfloat values[4];
    GLint idx;
+   GLuint swizzle;
    values[0] = s0;
    values[1] = s1;
    values[2] = s2;
    values[3] = s3;
-   idx = _mesa_add_unnamed_constant( p->program->Base.Parameters, values, 4 );
+   idx = _mesa_add_unnamed_constant( p->program->Base.Parameters, values, 4,
+                                     &swizzle);
+   /* XXX what about swizzle? */
    return make_ureg(PROGRAM_STATE_VAR, idx);
 }
 
@@ -427,40 +426,37 @@ static struct ureg get_identity_param( struct tnl_program *p )
    return p->identity;
 }
 
-static struct ureg register_param6( struct tnl_program *p, 
-				   GLint s0,
-				   GLint s1,
-				   GLint s2,
-				   GLint s3,
-				   GLint s4,
-				   GLint s5)
+static struct ureg register_param5( struct tnl_program *p, 
+                                    GLint s0,
+                                    GLint s1,
+                                    GLint s2,
+                                    GLint s3,
+                                    GLint s4)
 {
-   GLint tokens[6];
+   gl_state_index tokens[STATE_LENGTH];
    GLint idx;
    tokens[0] = s0;
    tokens[1] = s1;
    tokens[2] = s2;
    tokens[3] = s3;
    tokens[4] = s4;
-   tokens[5] = s5;
    idx = _mesa_add_state_reference( p->program->Base.Parameters, tokens );
    return make_ureg(PROGRAM_STATE_VAR, idx);
 }
 
 
-#define register_param1(p,s0)          register_param6(p,s0,0,0,0,0,0)
-#define register_param2(p,s0,s1)       register_param6(p,s0,s1,0,0,0,0)
-#define register_param3(p,s0,s1,s2)    register_param6(p,s0,s1,s2,0,0,0)
-#define register_param4(p,s0,s1,s2,s3) register_param6(p,s0,s1,s2,s3,0,0)
+#define register_param1(p,s0)          register_param5(p,s0,0,0,0,0)
+#define register_param2(p,s0,s1)       register_param5(p,s0,s1,0,0,0)
+#define register_param3(p,s0,s1,s2)    register_param5(p,s0,s1,s2,0,0)
+#define register_param4(p,s0,s1,s2,s3) register_param5(p,s0,s1,s2,s3,0)
 
 
-static void register_matrix_param6( struct tnl_program *p,
-				    GLint s0,
-				    GLint s1,
-				    GLint s2,
-				    GLint s3,
-				    GLint s4,
-				    GLint s5,
+static void register_matrix_param5( struct tnl_program *p,
+				    GLint s0, /* matrix name */
+				    GLint s1, /* texture matrix number */
+				    GLint s2, /* first row */
+				    GLint s3, /* last row */
+				    GLint s4, /* modifier */
 				    struct ureg *matrix )
 {
    GLint i;
@@ -468,8 +464,8 @@ static void register_matrix_param6( struct tnl_program *p,
    /* This is a bit sad as the support is there to pull the whole
     * matrix out in one go:
     */
-   for (i = 0; i <= s4 - s3; i++) 
-      matrix[i] = register_param6( p, s0, s1, s2, i, i, s5 );
+   for (i = 0; i <= s3 - s2; i++) 
+      matrix[i] = register_param5( p, s0, s1, i, i, s4 );
 }
 
 
@@ -647,19 +643,19 @@ static void emit_passthrough( struct tnl_program *p,
 static struct ureg get_eye_position( struct tnl_program *p )
 {
    if (is_undef(p->eye_position)) {
-      struct ureg pos = register_input( p, BRW_ATTRIB_POS ); 
+      struct ureg pos = register_input( p, VERT_ATTRIB_POS ); 
       struct ureg modelview[4];
 
       p->eye_position = reserve_temp(p);
 
       if (PREFER_DP4) {
-	 register_matrix_param6( p, STATE_MATRIX, STATE_MODELVIEW, 0, 0, 3, 
-				 STATE_MATRIX, modelview );
+	 register_matrix_param5( p, STATE_MODELVIEW_MATRIX, 0, 0, 3, 
+				 0, modelview );
 
 	 emit_matrix_transform_vec4(p, p->eye_position, modelview, pos);
       }
       else {
-	 register_matrix_param6( p, STATE_MATRIX, STATE_MODELVIEW, 0, 0, 3, 
+	 register_matrix_param5( p, STATE_MODELVIEW_MATRIX, 0, 0, 3, 
 				 STATE_MATRIX_TRANSPOSE, modelview );
 
 	 emit_transpose_matrix_transform_vec4(p, p->eye_position, modelview, pos);
@@ -710,10 +706,10 @@ static struct ureg get_eye_position_normalized( struct tnl_program *p )
 static struct ureg get_eye_normal( struct tnl_program *p )
 {
    if (is_undef(p->eye_normal)) {
-      struct ureg normal = register_input(p, BRW_ATTRIB_NORMAL );
+      struct ureg normal = register_input(p, VERT_ATTRIB_NORMAL );
       struct ureg mvinv[3];
 
-      register_matrix_param6( p, STATE_MATRIX, STATE_MODELVIEW, 0, 0, 2,
+      register_matrix_param5( p, STATE_MODELVIEW_MATRIX, 0, 0, 2,
 			      STATE_MATRIX_INVTRANS, mvinv );
 
       p->eye_normal = reserve_temp(p);
@@ -743,17 +739,17 @@ static struct ureg get_eye_normal( struct tnl_program *p )
 
 static void build_hpos( struct tnl_program *p )
 {
-   struct ureg pos = register_input( p, BRW_ATTRIB_POS ); 
+   struct ureg pos = register_input( p, VERT_ATTRIB_POS ); 
    struct ureg hpos = register_output( p, VERT_RESULT_HPOS );
    struct ureg mvp[4];
 
    if (PREFER_DP4) {
-      register_matrix_param6( p, STATE_MATRIX, STATE_MVP, 0, 0, 3, 
-			      STATE_MATRIX, mvp );
+      register_matrix_param5( p, STATE_MVP_MATRIX, 0, 0, 3, 
+			      0, mvp );
       emit_matrix_transform_vec4( p, hpos, mvp, pos );
    }
    else {
-      register_matrix_param6( p, STATE_MATRIX, STATE_MVP, 0, 0, 3, 
+      register_matrix_param5( p, STATE_MVP_MATRIX, 0, 0, 3, 
 			      STATE_MATRIX_TRANSPOSE, mvp );
       emit_transpose_matrix_transform_vec4( p, hpos, mvp, pos );
    }
@@ -787,9 +783,9 @@ static struct ureg get_material( struct tnl_program *p, GLuint side,
    GLuint attrib = material_attrib(side, property);
 
    if (p->color_materials & (1<<attrib))
-      return register_input(p, BRW_ATTRIB_COLOR0);
+      return register_input(p, VERT_ATTRIB_COLOR0);
    else if (p->materials & (1<<attrib)) 
-      return register_input( p, attrib + BRW_ATTRIB_MAT_FRONT_AMBIENT );
+      return register_input( p, attrib + _TNL_ATTRIB_MAT_FRONT_AMBIENT );
    else
       return register_param3( p, STATE_MATERIAL, side, property );
 }
@@ -853,14 +849,13 @@ static struct ureg calculate_light_attenuation( struct tnl_program *p,
    /* Calculate spot attenuation:
     */
    if (!p->state->unit[i].light_spotcutoff_is_180) {
-      struct ureg spot_dir = register_param3(p, STATE_LIGHT, i,
-					     STATE_SPOT_DIRECTION);
+      struct ureg spot_dir_norm = register_param3(p, STATE_INTERNAL,
+						  STATE_SPOT_DIR_NORMALIZED, i);
       struct ureg spot = get_temp(p);
       struct ureg slt = get_temp(p);
-	       
-      emit_normalize_vec3( p, spot, spot_dir ); /* XXX: precompute! */
-      emit_op2(p, OPCODE_DP3, spot, 0, ureg_negate(VPpli), spot);
-      emit_op2(p, OPCODE_SLT, slt, 0, swizzle1(spot_dir,W), spot);
+
+      emit_op2(p, OPCODE_DP3, spot, 0, ureg_negate(VPpli), spot_dir_norm);
+      emit_op2(p, OPCODE_SLT, slt, 0, swizzle1(spot_dir_norm,W), spot);
       emit_op2(p, OPCODE_POW, spot, 0, spot, swizzle1(attenuation, W));
       emit_op2(p, OPCODE_MUL, att, 0, slt, spot);
 
@@ -898,7 +893,7 @@ static struct ureg calculate_light_attenuation( struct tnl_program *p,
 
 
 /* Need to add some addtional parameters to allow lighting in object
- * space - STATE_SPOT_DIRECTION and STATE_HALF implicitly assume eye
+ * space - STATE_SPOT_DIRECTION and STATE_HALF_VECTOR implicitly assume eye
  * space lighting.
  */
 static void build_lighting( struct tnl_program *p )
@@ -991,7 +986,14 @@ static void build_lighting( struct tnl_program *p )
 	     */
 	    VPpli = register_param3(p, STATE_LIGHT, i, 
 				    STATE_POSITION_NORMALIZED); 
-	    half = register_param3(p, STATE_LIGHT, i, STATE_HALF);
+            if (p->state->light_local_viewer) {
+                struct ureg eye_hat = get_eye_position_normalized(p);
+                half = get_temp(p);
+                emit_op2(p, OPCODE_SUB, half, 0, VPpli, eye_hat);
+                emit_normalize_vec3(p, half, half);
+            } else {
+                half = register_param3(p, STATE_LIGHT, i, STATE_HALF_VECTOR);
+            }
 	 } 
 	 else {
 	    struct ureg Ppli = register_param3(p, STATE_LIGHT, i, 
@@ -1157,12 +1159,13 @@ static void build_fog( struct tnl_program *p )
       input = swizzle1(get_eye_position(p), Z);
    }
    else {
-      input = swizzle1(register_input(p, BRW_ATTRIB_FOG), X);
+      input = swizzle1(register_input(p, VERT_ATTRIB_FOG), X);
    }
 
    if (p->state->fog_option &&
        p->state->tnl_do_vertex_fog) {
-      struct ureg params = register_param1(p, STATE_FOG_PARAMS);
+      struct ureg params = register_param2(p, STATE_INTERNAL,
+					   STATE_FOG_PARAMS_OPTIMIZED);
       struct ureg tmp = get_temp(p);
       struct ureg id = get_identity_param(p);
 
@@ -1170,24 +1173,21 @@ static void build_fog( struct tnl_program *p )
 
       switch (p->state->fog_option) {
       case FOG_LINEAR: {
-	 emit_op1(p, OPCODE_ABS, tmp, 0, input); 
-	 emit_op2(p, OPCODE_SUB, tmp, 0, swizzle1(params,Z), tmp); 
-	 emit_op2(p, OPCODE_MUL, tmp, 0, tmp, swizzle1(params,W)); 
+	 emit_op1(p, OPCODE_ABS, tmp, 0, input);
+	 emit_op3(p, OPCODE_MAD, tmp, 0, tmp, swizzle1(params,X), swizzle1(params,Y));
 	 emit_op2(p, OPCODE_MAX, tmp, 0, tmp, swizzle1(id,X)); /* saturate */
 	 emit_op2(p, OPCODE_MIN, fog, WRITEMASK_X, tmp, swizzle1(id,W));
 	 break;
       }
       case FOG_EXP:
 	 emit_op1(p, OPCODE_ABS, tmp, 0, input); 
-	 emit_op2(p, OPCODE_MUL, tmp, 0, tmp, swizzle1(params,X)); 
-	 emit_op2(p, OPCODE_POW, fog, WRITEMASK_X, 
-		  register_const1f(p, M_E), ureg_negate(tmp)); 
+	 emit_op2(p, OPCODE_MUL, tmp, 0, tmp, swizzle1(params,Z));
+	 emit_op1(p, OPCODE_EX2, fog, WRITEMASK_X, ureg_negate(tmp));
 	 break;
       case FOG_EXP2:
-	 emit_op2(p, OPCODE_MUL, tmp, 0, input, swizzle1(params,X)); 
+	 emit_op2(p, OPCODE_MUL, tmp, 0, input, swizzle1(params,W));
 	 emit_op2(p, OPCODE_MUL, tmp, 0, tmp, tmp); 
-	 emit_op2(p, OPCODE_POW, fog, WRITEMASK_X, 
-		  register_const1f(p, M_E), ureg_negate(tmp)); 
+	 emit_op1(p, OPCODE_EX2, fog, WRITEMASK_X, ureg_negate(tmp));
 	 break;
       }
       
@@ -1299,7 +1299,7 @@ static void build_texture_transform( struct tnl_program *p )
 	    for (j = 0; j < 4; j++) {
 	       switch (modes[j]) {
 	       case TXG_OBJ_LINEAR: {
-		  struct ureg obj = register_input(p, BRW_ATTRIB_POS);
+		  struct ureg obj = register_input(p, VERT_ATTRIB_POS);
 		  struct ureg plane = 
 		     register_param3(p, STATE_TEXGEN, i,
 				     STATE_TEXGEN_OBJECT_S + j);
@@ -1348,7 +1348,7 @@ static void build_texture_transform( struct tnl_program *p )
 	    }
 
 	    if (copy_mask) {
-	       struct ureg in = register_input(p, BRW_ATTRIB_TEX0+i);
+	       struct ureg in = register_input(p, VERT_ATTRIB_TEX0+i);
 	       emit_op1(p, OPCODE_MOV, out_texgen, copy_mask, in );
 	    }
 	 }
@@ -1357,15 +1357,15 @@ static void build_texture_transform( struct tnl_program *p )
 	    struct ureg texmat[4];
 	    struct ureg in = (!is_undef(out_texgen) ? 
 			      out_texgen : 
-			      register_input(p, BRW_ATTRIB_TEX0+i));
+			      register_input(p, VERT_ATTRIB_TEX0+i));
 	    if (PREFER_DP4) {
-	       register_matrix_param6( p, STATE_MATRIX, STATE_TEXTURE, i, 
-				       0, 3, STATE_MATRIX, texmat );
+	       register_matrix_param5( p, STATE_TEXTURE_MATRIX, i, 0, 3,
+				       0, texmat );
 	       emit_matrix_transform_vec4( p, out, texmat, in );
 	    }
 	    else {
-	       register_matrix_param6( p, STATE_MATRIX, STATE_TEXTURE, i, 
-				       0, 3, STATE_MATRIX_TRANSPOSE, texmat );
+	       register_matrix_param5( p, STATE_TEXTURE_MATRIX, i, 0, 3,
+				       STATE_MATRIX_TRANSPOSE, texmat );
 	       emit_transpose_matrix_transform_vec4( p, out, texmat, in );
 	    }
 	 }
@@ -1373,7 +1373,7 @@ static void build_texture_transform( struct tnl_program *p )
 	 release_temps(p);
       } 
       else {
-	 emit_passthrough(p, BRW_ATTRIB_TEX0+i, VERT_RESULT_TEX0+i);
+	 emit_passthrough(p, VERT_ATTRIB_TEX0+i, VERT_RESULT_TEX0+i);
       }
    }
 }
@@ -1425,10 +1425,10 @@ static void build_tnl_program( struct tnl_program *p )
 	 build_lighting(p);
       else {
 	 if (p->state->fragprog_inputs_read & FRAG_BIT_COL0)
-	    emit_passthrough(p, BRW_ATTRIB_COLOR0, VERT_RESULT_COL0);
+	    emit_passthrough(p, VERT_ATTRIB_COLOR0, VERT_RESULT_COL0);
 
 	 if (p->state->fragprog_inputs_read & FRAG_BIT_COL1)
-	    emit_passthrough(p, BRW_ATTRIB_COLOR1, VERT_RESULT_COL1);
+	    emit_passthrough(p, VERT_ATTRIB_COLOR1, VERT_RESULT_COL1);
       }
    }
 
@@ -1628,7 +1628,7 @@ const struct brw_tracked_state brw_tnl_vertprog = {
 
 static void update_active_vertprog( struct brw_context *brw )
 {
-   struct gl_vertex_program *prev = brw->vertex_program;
+   const struct gl_vertex_program *prev = brw->vertex_program;
 
    /* NEW_PROGRAM */
    if (brw->attribs.VertexProgram->_Enabled) {

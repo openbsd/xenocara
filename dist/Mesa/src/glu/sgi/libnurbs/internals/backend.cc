@@ -35,8 +35,8 @@
 /*
  * backend.c++
  *
- * $Date: 2006/11/25 18:54:52 $ $Revision: 1.1.1.1 $
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/backend.cc,v 1.1.1.1 2006/11/25 18:54:52 matthieu Exp $
+ * $Date: 2007/11/24 17:27:03 $ $Revision: 1.1.1.2 $
+ * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/backend.cc,v 1.1.1.2 2007/11/24 17:27:03 matthieu Exp $
  */
 
 /* Bezier surface backend
