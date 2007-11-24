@@ -39,14 +39,14 @@ subdir = .
 DIST_COMMON = $(am__configure_deps) $(randr_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/randrproto.pc.in $(top_srcdir)/configure COPYING \
-	ChangeLog install-sh missing mkinstalldirs
+	install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_CLEAN_FILES = randrproto.pc
 SOURCES =
 DIST_SOURCES =
@@ -56,9 +56,11 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(randrdir)"
+am__installdirs = "$(DESTDIR)$(pkgconfigdir)" \
+	"$(DESTDIR)$(randrdocdir)" "$(DESTDIR)$(randrdir)"
 pkgconfigDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(pkgconfig_DATA)
+randrdocDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(pkgconfig_DATA) $(randrdoc_DATA)
 randrHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(randr_HEADERS)
 ETAGS = etags
@@ -135,7 +137,9 @@ randr_HEADERS = \
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = randrproto.pc
-EXTRA_DIST = autogen.sh randrproto.pc.in
+randrdocdir = $(datadir)/doc/$(PACKAGE)
+randrdoc_DATA = randrproto.txt
+EXTRA_DIST = autogen.sh randrproto.pc.in $(randrdoc_DATA)
 all: all-am
 
 .SUFFIXES:
@@ -191,6 +195,23 @@ uninstall-pkgconfigDATA:
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(pkgconfigdir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(pkgconfigdir)/$$f"; \
+	done
+install-randrdocDATA: $(randrdoc_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(randrdocdir)" || $(mkdir_p) "$(DESTDIR)$(randrdocdir)"
+	@list='$(randrdoc_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(randrdocDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(randrdocdir)/$$f'"; \
+	  $(randrdocDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(randrdocdir)/$$f"; \
+	done
+
+uninstall-randrdocDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(randrdoc_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(randrdocdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(randrdocdir)/$$f"; \
 	done
 install-randrHEADERS: $(randr_HEADERS)
 	@$(NORMAL_INSTALL)
@@ -389,7 +410,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(randrdir)"; do \
+	for dir in "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(randrdocdir)" "$(DESTDIR)$(randrdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -435,7 +456,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-pkgconfigDATA install-randrHEADERS
+install-data-am: install-pkgconfigDATA install-randrHEADERS \
+	install-randrdocDATA
 
 install-exec-am:
 
@@ -464,7 +486,7 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-info-am uninstall-pkgconfigDATA \
-	uninstall-randrHEADERS
+	uninstall-randrHEADERS uninstall-randrdocDATA
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-generic ctags dist dist-all dist-bzip2 dist-gzip \
@@ -473,11 +495,13 @@ uninstall-am: uninstall-info-am uninstall-pkgconfigDATA \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-exec \
 	install-exec-am install-info install-info-am install-man \
-	install-pkgconfigDATA install-randrHEADERS install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
+	install-pkgconfigDATA install-randrHEADERS \
+	install-randrdocDATA install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
 	pdf-am ps ps-am tags uninstall uninstall-am uninstall-info-am \
-	uninstall-pkgconfigDATA uninstall-randrHEADERS
+	uninstall-pkgconfigDATA uninstall-randrHEADERS \
+	uninstall-randrdocDATA
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
