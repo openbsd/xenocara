@@ -76,7 +76,7 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xrandr_OBJECTS = xrandr-xrandr.$(OBJEXT)
+am_xrandr_OBJECTS = xrandr.$(OBJEXT)
 xrandr_OBJECTS = $(am_xrandr_OBJECTS)
 am__DEPENDENCIES_1 =
 xrandr_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -206,7 +206,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-xrandr_CFLAGS = $(XRANDR_CFLAGS)
+AM_CFLAGS = $(XRANDR_CFLAGS)
 xrandr_LDADD = $(XRANDR_LIBS)
 xrandr_SOURCES = \
         xrandr.c
@@ -325,7 +325,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xrandr-xrandr.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xrandr.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -340,20 +340,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xrandr-xrandr.o: xrandr.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xrandr_CFLAGS) $(CFLAGS) -MT xrandr-xrandr.o -MD -MP -MF "$(DEPDIR)/xrandr-xrandr.Tpo" -c -o xrandr-xrandr.o `test -f 'xrandr.c' || echo '$(srcdir)/'`xrandr.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xrandr-xrandr.Tpo" "$(DEPDIR)/xrandr-xrandr.Po"; else rm -f "$(DEPDIR)/xrandr-xrandr.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xrandr.c' object='xrandr-xrandr.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xrandr_CFLAGS) $(CFLAGS) -c -o xrandr-xrandr.o `test -f 'xrandr.c' || echo '$(srcdir)/'`xrandr.c
-
-xrandr-xrandr.obj: xrandr.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xrandr_CFLAGS) $(CFLAGS) -MT xrandr-xrandr.obj -MD -MP -MF "$(DEPDIR)/xrandr-xrandr.Tpo" -c -o xrandr-xrandr.obj `if test -f 'xrandr.c'; then $(CYGPATH_W) 'xrandr.c'; else $(CYGPATH_W) '$(srcdir)/xrandr.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xrandr-xrandr.Tpo" "$(DEPDIR)/xrandr-xrandr.Po"; else rm -f "$(DEPDIR)/xrandr-xrandr.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xrandr.c' object='xrandr-xrandr.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xrandr_CFLAGS) $(CFLAGS) -c -o xrandr-xrandr.obj `if test -f 'xrandr.c'; then $(CYGPATH_W) 'xrandr.c'; else $(CYGPATH_W) '$(srcdir)/xrandr.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
