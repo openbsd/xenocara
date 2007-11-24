@@ -1,10 +1,10 @@
-# $OpenBSD: Makefile,v 1.11 2007/06/28 18:48:49 matthieu Exp $
+# $OpenBSD: Makefile,v 1.12 2007/11/24 17:07:52 matthieu Exp $
 
 SUBDIR= bdftopcf mkfontscale mkfontdir \
 	appres beforelight bitmap editres fonttosfnt fslsfonts \
 	fstobdf	iceauth ico lbxproxy listres luit oclock \
 	proxymngr rgb rstart scripts sessreg setxkbmap showfont \
-	smproxy twm viewres x11perf xauth xbiff xcalc \
+	smproxy twm viewres x11perf xauth xbacklight xbiff xcalc \
 	xclipboard xclock xcmsdb xconsole  \
 	xdm xdpyinfo xedit xev xeyes xf86dga \
 	xfd  xfindproxy xfontsel xfsinfo xfwp xgamma xgc xhost \
