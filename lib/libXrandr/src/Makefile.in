@@ -58,7 +58,8 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libXrandr_la_DEPENDENCIES =
-am_libXrandr_la_OBJECTS = Xrandr.lo
+am_libXrandr_la_OBJECTS = Xrandr.lo XrrConfig.lo XrrCrtc.lo XrrMode.lo \
+	XrrOutput.lo XrrProperty.lo XrrScreen.lo
 libXrandr_la_OBJECTS = $(am_libXrandr_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -202,12 +203,18 @@ target_alias = @target_alias@
 lib_LTLIBRARIES = libXrandr.la
 libXrandr_la_SOURCES = \
 	Xrandr.c 	\
-	Xrandrint.h
+	Xrandrint.h	\
+	XrrConfig.c	\
+	XrrCrtc.c	\
+	XrrMode.c	\
+	XrrOutput.c	\
+	XrrProperty.c	\
+	XrrScreen.c
 
 libXrandr_la_LIBADD = @X_LIBS@ @RANDR_LIBS@
 AM_CFLAGS = @X_CFLAGS@ @RANDR_CFLAGS@ @MALLOC_ZERO_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include/X11/extensions
-libXrandr_la_LDFLAGS = -version-number 2:0:0 -no-undefined
+libXrandr_la_LDFLAGS = -version-number 2:1:0 -no-undefined
 libXrandrincludedir = $(includedir)/X11/extensions
 libXrandrinclude_HEADERS = $(top_srcdir)/include/X11/extensions/Xrandr.h 
 all: all-am
@@ -280,6 +287,12 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xrandr.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XrrConfig.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XrrCrtc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XrrMode.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XrrOutput.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XrrProperty.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XrrScreen.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
