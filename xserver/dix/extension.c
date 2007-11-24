@@ -59,16 +59,12 @@ SOFTWARE.
 #include "gcstruct.h"
 #include "scrnintstr.h"
 #include "dispatch.h"
-#ifdef XACE
 #include "xace.h"
-#endif
 
 #define EXTENSION_BASE  128
 #define EXTENSION_EVENT_BASE  64
 #define LAST_EVENT  128
 #define LAST_ERROR 255
-
-ScreenProcEntry AuxillaryScreenProcs[MAXSCREENS];
 
 static ExtensionEntry **extensions = (ExtensionEntry **)NULL;
 
@@ -83,11 +79,11 @@ extern unsigned totalExtensionSize;
 static void
 InitExtensionPrivates(ExtensionEntry *ext)
 {
-    register char *ptr;
+    char *ptr;
     DevUnion *ppriv;
-    register unsigned *sizes;
-    register unsigned size;
-    register int i;
+    unsigned *sizes;
+    unsigned size;
+    int i;
 
     if (totalExtensionSize == sizeof(ExtensionEntry))
 	ppriv = (DevUnion *)NULL;
@@ -117,7 +113,7 @@ AddExtension(char *name, int NumEvents, int NumErrors,
 	     unsigned short (*MinorOpcodeProc)(ClientPtr c3))
 {
     int i;
-    register ExtensionEntry *ext, **newexts;
+    ExtensionEntry *ext, **newexts;
     size_t buflen;
 
     if (!MainProc || !SwappedMainProc || !CloseDownProc || !MinorOpcodeProc)
@@ -260,11 +256,9 @@ GetExtensionEntry(int major)
 _X_EXPORT void
 DeclareExtensionSecurity(char *extname, Bool secure)
 {
-#ifdef XACE
     int i = FindExtension(extname, strlen(extname));
     if (i >= 0)
 	XaceHook(XACE_DECLARE_EXT_SECURE, extensions[i], secure);
-#endif
 }
 
 _X_EXPORT unsigned short
@@ -288,9 +282,9 @@ MinorOpcodeOfRequest(ClientPtr client)
 }
 
 void
-CloseDownExtensions()
+CloseDownExtensions(void)
 {
-    register int i,j;
+    int i,j;
 
     for (i = NumExtensions - 1; i >= 0; i--)
     {
@@ -306,20 +300,7 @@ CloseDownExtensions()
     extensions = (ExtensionEntry **)NULL;
     lastEvent = EXTENSION_EVENT_BASE;
     lastError = FirstExtensionError;
-    for (i=0; i<MAXSCREENS; i++)
-    {
-	register ScreenProcEntry *spentry = &AuxillaryScreenProcs[i];
-
-	while (spentry->num)
-	{
-	    spentry->num--;
-	    xfree(spentry->procList[spentry->num].name);
-	}
-	xfree(spentry->procList);
-	spentry->procList = (ProcEntryPtr)NULL;
-    }
 }
-
 
 int
 ProcQueryExtension(ClientPtr client)
@@ -340,12 +321,7 @@ ProcQueryExtension(ClientPtr client)
     else
     {
 	i = FindExtension((char *)&stuff[1], stuff->nbytes);
-        if (i < 0
-#ifdef XACE
-	    /* call callbacks to find out whether to show extension */
-	    || !XaceHook(XACE_EXT_ACCESS, client, extensions[i])
-#endif
-	    )
+        if (i < 0 || !XaceHook(XACE_EXT_ACCESS, client, extensions[i]))
             reply.present = xFalse;
         else
         {            
@@ -376,15 +352,14 @@ ProcListExtensions(ClientPtr client)
 
     if ( NumExtensions )
     {
-        register int i, j;
+        int i, j;
 
         for (i=0;  i<NumExtensions; i++)
 	{
-#ifdef XACE
 	    /* call callbacks to find out whether to show extension */
 	    if (!XaceHook(XACE_EXT_ACCESS, client, extensions[i]))
 		continue;
-#endif
+
 	    total_length += strlen(extensions[i]->name) + 1;
 	    reply.nExtensions += 1 + extensions[i]->num_aliases;
 	    for (j = extensions[i]->num_aliases; --j >= 0;)
@@ -397,10 +372,9 @@ ProcListExtensions(ClientPtr client)
         for (i=0;  i<NumExtensions; i++)
         {
 	    int len;
-#ifdef XACE
 	    if (!XaceHook(XACE_EXT_ACCESS, client, extensions[i]))
 		continue;
-#endif
+
             *bufptr++ = len = strlen(extensions[i]->name);
 	    memmove(bufptr, extensions[i]->name,  len);
 	    bufptr += len;
@@ -421,70 +395,16 @@ ProcListExtensions(ClientPtr client)
     return(client->noClientException);
 }
 
-
-ExtensionLookupProc 
-LookupProc(char *name, GCPtr pGC)
-{
-    register int i;
-    register ScreenProcEntry *spentry;
-    spentry  = &AuxillaryScreenProcs[pGC->pScreen->myNum];
-    if (spentry->num)    
-    {
-        for (i = 0; i < spentry->num; i++)
-            if (strcmp(name, spentry->procList[i].name) == 0)
-                return(spentry->procList[i].proc);
-    }
-    return (ExtensionLookupProc)NULL;
-}
-
-Bool
-RegisterProc(char *name, GC *pGC, ExtensionLookupProc proc)
-{
-    return RegisterScreenProc(name, pGC->pScreen, proc);
-}
-
-Bool
-RegisterScreenProc(char *name, ScreenPtr pScreen, ExtensionLookupProc proc)
-{
-    register ScreenProcEntry *spentry;
-    register ProcEntryPtr procEntry = (ProcEntryPtr)NULL;
-    char *newname;
-    size_t buflen;
+#ifdef XSERVER_DTRACE
+void LoadExtensionNames(char **RequestNames) {
     int i;
 
-    spentry = &AuxillaryScreenProcs[pScreen->myNum];
-    /* first replace duplicates */
-    if (spentry->num)
-    {
-        for (i = 0; i < spentry->num; i++)
-            if (strcmp(name, spentry->procList[i].name) == 0)
-	    {
-                procEntry = &spentry->procList[i];
-		break;
-	    }
-    }
-    if (procEntry)
-        procEntry->proc = proc;
-    else
-    {
-	buflen = strlen(name)+1;
-	newname = (char *)xalloc(buflen);
-	if (!newname)
-	    return FALSE;
-	procEntry = (ProcEntryPtr)
-			    xrealloc(spentry->procList,
-				     sizeof(ProcEntryRec) * (spentry->num+1));
-	if (!procEntry)
-	{
-	    xfree(newname);
-	    return FALSE;
+    for (i=0; i<NumExtensions; i++) {
+	int r = extensions[i]->base;
+
+	if (RequestNames[r] == NULL) {
+	    RequestNames[r] = strdup(extensions[i]->name);
 	}
-	spentry->procList = procEntry;
-        procEntry += spentry->num;
-        procEntry->name = newname;
-        strlcpy(newname, name, buflen);
-        procEntry->proc = proc;
-        spentry->num++;        
     }
-    return TRUE;
 }
+#endif

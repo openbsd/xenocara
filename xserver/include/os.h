@@ -275,7 +275,7 @@ void OsBlockSignals (void);
 
 void OsReleaseSignals (void);
 
-#if !defined(WIN32) && !defined(__UNIXOS2__)
+#if !defined(WIN32)
 extern int System(char *);
 extern pointer Popen(char *, char *);
 extern int Pclose(pointer);
@@ -351,12 +351,6 @@ extern void InitAuthorization(char * /*filename*/);
 
 extern void RegisterAuthorizations(void);
 
-extern XID AuthorizationToID (
-	unsigned short	name_length,
-	char		*name,
-	unsigned short	data_length,
-	char		*data);
-
 extern int AuthorizationFromID (
 	XID 		id,
 	unsigned short	*name_lenp,
@@ -404,14 +398,6 @@ extern void ddxInitGlobals(void);
 extern int ddxProcessArgument(int /*argc*/, char * /*argv*/ [], int /*i*/);
 
 extern void ddxUseMsg(void);
-
-/*
- *  idiom processing stuff
- */
-
-extern xReqPtr PeekNextRequest(xReqPtr req, ClientPtr client, Bool readmore);
-
-extern void SkipRequests(xReqPtr req, ClientPtr client, int numskipped);
 
 /* int ReqLen(xReq *req, ClientPtr client)
  * Given a pointer to a *complete* request, return its length in bytes.
@@ -512,6 +498,12 @@ extern void FatalError(const char *f, ...) _printf_attribute(1,2)
 __attribute((noreturn))
 #endif
 ;
+
+#ifdef DEBUG
+#define DebugF ErrorF
+#else
+#define DebugF(x, ...) /* */
+#endif
 
 extern void VErrorF(const char *f, va_list args);
 extern void ErrorF(const char *f, ...) _printf_attribute(1,2);

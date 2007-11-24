@@ -102,7 +102,7 @@ typedef struct _builtinColor {
 #define NUM_BUILTIN_COLORS  (sizeof (BuiltinColors) / sizeof (BuiltinColors[0]))
 
 Bool
-OsInitColors()
+OsInitColors(void)
 {
     return TRUE;
 }
@@ -226,18 +226,10 @@ OsInitColors(void)
 
   if (!was_here)
     {
-#ifndef __UNIXOS2__
       len = strlen(rgbPath) +5;
       path = (char*)ALLOCATE_LOCAL(len);
       strlcpy(path, rgbPath, len);
       strlcat(path, ".txt", len);
-#else
-      char *tmp = (char*)__XOS2RedirRoot(rgbPath);
-      len = strlen(tmp) +5;
-      path = (char*)ALLOCATE_LOCAL(len);
-      strlcpy(path, tmp, len);
-      strlcat(path, ".txt", len);
-#endif
       if (!(rgb = fopen(path, "r")))
         {
 	   ErrorF( "Couldn't open RGB_DB '%s'\n", rgbPath );
@@ -248,11 +240,7 @@ OsInitColors(void)
       while(fgets(line, sizeof(line), rgb))
 	{
 	  lineno++;
-#ifndef __UNIXOS2__
 	  if (sscanf(line,"%d %d %d %[^\n]\n", &red, &green, &blue, name) == 4)
-#else
-	  if (sscanf(line,"%d %d %d %[^\n\r]\n", &red, &green, &blue, name) == 4)
-#endif
 	    {
 	      if (red >= 0   && red <= 0xff &&
 		  green >= 0 && green <= 0xff &&

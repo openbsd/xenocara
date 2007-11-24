@@ -73,12 +73,15 @@ libGLcore_la_OBJECTS = $(am_libGLcore_la_OBJECTS)
 libafb_la_DEPENDENCIES = $(top_builddir)/afb/libafb.la
 am_libafb_la_OBJECTS = afbmodule.lo
 libafb_la_OBJECTS = $(am_libafb_la_OBJECTS)
+@AFB_TRUE@am_libafb_la_rpath = -rpath $(moduledir)
 libcfb_la_DEPENDENCIES = $(top_builddir)/cfb/libcfb.la
 am_libcfb_la_OBJECTS = cfbmodule.lo
 libcfb_la_OBJECTS = $(am_libcfb_la_OBJECTS)
+@CFB_TRUE@am_libcfb_la_rpath = -rpath $(moduledir)
 libcfb32_la_DEPENDENCIES = $(top_builddir)/cfb32/libcfb32.la
 am_libcfb32_la_OBJECTS = cfb32module.lo
 libcfb32_la_OBJECTS = $(am_libcfb32_la_OBJECTS)
+@CFB_TRUE@am_libcfb32_la_rpath = -rpath $(moduledir)
 libdbe_la_DEPENDENCIES = $(top_builddir)/dbe/libdbe.la
 am_libdbe_la_OBJECTS = dbemodule.lo
 libdbe_la_OBJECTS = $(am_libdbe_la_OBJECTS)
@@ -87,7 +90,7 @@ libdixmods_la_LIBADD =
 am_libdixmods_la_OBJECTS = libdixmods_la-miinitext.lo
 libdixmods_la_OBJECTS = $(am_libdixmods_la_OBJECTS)
 libfb_la_DEPENDENCIES = $(top_builddir)/fb/libfb.la
-am_libfb_la_OBJECTS = libfb_la-fbcmap.lo libfb_la-fbmodule.lo
+am_libfb_la_OBJECTS = libfb_la-fbcmap_mi.lo libfb_la-fbmodule.lo
 libfb_la_OBJECTS = $(am_libfb_la_OBJECTS)
 libfreetype_la_LIBADD =
 am_libfreetype_la_OBJECTS = ftmodule.lo
@@ -101,6 +104,7 @@ libglx_la_OBJECTS = $(am_libglx_la_OBJECTS)
 libmfb_la_DEPENDENCIES = $(top_builddir)/mfb/libmfb.la
 am_libmfb_la_OBJECTS = mfbmodule.lo
 libmfb_la_OBJECTS = $(am_libmfb_la_OBJECTS)
+@MFB_TRUE@am_libmfb_la_rpath = -rpath $(moduledir)
 librecord_la_DEPENDENCIES = $(top_builddir)/record/librecord.la
 am_librecord_la_OBJECTS = recordmod.lo
 librecord_la_OBJECTS = $(am_librecord_la_OBJECTS)
@@ -110,6 +114,9 @@ libshadow_la_OBJECTS = $(am_libshadow_la_OBJECTS)
 libtype1_la_LIBADD =
 am_libtype1_la_OBJECTS = type1mod.lo
 libtype1_la_OBJECTS = $(am_libtype1_la_OBJECTS)
+libwfb_la_DEPENDENCIES = $(top_builddir)/fb/libwfb.la
+am_libwfb_la_OBJECTS = libwfb_la-fbcmap_mi.lo libwfb_la-fbmodule.lo
+libwfb_la_OBJECTS = $(am_libwfb_la_OBJECTS)
 libxorgxkb_la_DEPENDENCIES = $(top_builddir)/dix/libdix.la
 am_libxorgxkb_la_OBJECTS = xkbVT.lo xkbPrivate.lo xkbKillSrv.lo
 libxorgxkb_la_OBJECTS = $(am_libxorgxkb_la_OBJECTS)
@@ -134,16 +141,16 @@ SOURCES = $(libGLcore_la_SOURCES) $(libafb_la_SOURCES) \
 	$(libfb_la_SOURCES) $(libfreetype_la_SOURCES) \
 	$(libglx_la_SOURCES) $(libmfb_la_SOURCES) \
 	$(librecord_la_SOURCES) $(libshadow_la_SOURCES) \
-	$(libtype1_la_SOURCES) $(libxorgxkb_la_SOURCES) \
-	$(libxtrap_la_SOURCES)
+	$(libtype1_la_SOURCES) $(libwfb_la_SOURCES) \
+	$(libxorgxkb_la_SOURCES) $(libxtrap_la_SOURCES)
 DIST_SOURCES = $(libGLcore_la_SOURCES) $(libafb_la_SOURCES) \
 	$(libcfb_la_SOURCES) $(libcfb32_la_SOURCES) \
 	$(libdbe_la_SOURCES) $(libdixmods_la_SOURCES) \
 	$(libfb_la_SOURCES) $(libfreetype_la_SOURCES) \
 	$(libglx_la_SOURCES) $(libmfb_la_SOURCES) \
 	$(librecord_la_SOURCES) $(libshadow_la_SOURCES) \
-	$(libtype1_la_SOURCES) $(libxorgxkb_la_SOURCES) \
-	$(libxtrap_la_SOURCES)
+	$(libtype1_la_SOURCES) $(libwfb_la_SOURCES) \
+	$(libxorgxkb_la_SOURCES) $(libxtrap_la_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-exec-recursive install-info-recursive \
@@ -172,6 +179,7 @@ AMTAR = @AMTAR@
 APPDEFAULTDIR = @APPDEFAULTDIR@
 APPGROUP_FALSE = @APPGROUP_FALSE@
 APPGROUP_TRUE = @APPGROUP_TRUE@
+APPLE_APPLICATIONS_DIR = @APPLE_APPLICATIONS_DIR@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -191,13 +199,18 @@ BSD_KQUEUE_APM_FALSE = @BSD_KQUEUE_APM_FALSE@
 BSD_KQUEUE_APM_TRUE = @BSD_KQUEUE_APM_TRUE@
 BUILDDOCS_FALSE = @BUILDDOCS_FALSE@
 BUILDDOCS_TRUE = @BUILDDOCS_TRUE@
+BUILD_DARWIN_FALSE = @BUILD_DARWIN_FALSE@
+BUILD_DARWIN_TRUE = @BUILD_DARWIN_TRUE@
 BUILD_DATE = @BUILD_DATE@
 BUILD_KBD_MODE_FALSE = @BUILD_KBD_MODE_FALSE@
 BUILD_KBD_MODE_TRUE = @BUILD_KBD_MODE_TRUE@
+BUILD_KDRIVEFBDEVLIB_FALSE = @BUILD_KDRIVEFBDEVLIB_FALSE@
+BUILD_KDRIVEFBDEVLIB_TRUE = @BUILD_KDRIVEFBDEVLIB_TRUE@
 BUILD_LINUXDOC_FALSE = @BUILD_LINUXDOC_FALSE@
 BUILD_LINUXDOC_TRUE = @BUILD_LINUXDOC_TRUE@
 BUILD_PDFDOC_FALSE = @BUILD_PDFDOC_FALSE@
 BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
+BUILD_TIME = @BUILD_TIME@
 BUILD_XORGCFG_FALSE = @BUILD_XORGCFG_FALSE@
 BUILD_XORGCFG_TRUE = @BUILD_XORGCFG_TRUE@
 CC = @CC@
@@ -210,6 +223,10 @@ CFLAGS = @CFLAGS@
 COMPILEDDEFAULTFONTPATH = @COMPILEDDEFAULTFONTPATH@
 COMPOSITE_FALSE = @COMPOSITE_FALSE@
 COMPOSITE_TRUE = @COMPOSITE_TRUE@
+CONFIG_DBUS_API_FALSE = @CONFIG_DBUS_API_FALSE@
+CONFIG_DBUS_API_TRUE = @CONFIG_DBUS_API_TRUE@
+CONFIG_HAL_FALSE = @CONFIG_HAL_FALSE@
+CONFIG_HAL_TRUE = @CONFIG_HAL_TRUE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CUP_FALSE = @CUP_FALSE@
@@ -219,8 +236,11 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DARWIN_LIBS = @DARWIN_LIBS@
 DBE_FALSE = @DBE_FALSE@
 DBE_TRUE = @DBE_TRUE@
+DBUS_CFLAGS = @DBUS_CFLAGS@
+DBUS_LIBS = @DBUS_LIBS@
 DEBUG_FALSE = @DEBUG_FALSE@
 DEBUG_TRUE = @DEBUG_TRUE@
 DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
@@ -228,7 +248,9 @@ DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DGA_CFLAGS = @DGA_CFLAGS@
 DGA_FALSE = @DGA_FALSE@
+DGA_LIBS = @DGA_LIBS@
 DGA_TRUE = @DGA_TRUE@
 DIX_CFLAGS = @DIX_CFLAGS@
 DLLTOOL = @DLLTOOL@
@@ -255,6 +277,7 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
 DRI_FALSE = @DRI_FALSE@
 DRI_TRUE = @DRI_TRUE@
+DTRACE = @DTRACE@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -283,6 +306,14 @@ GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
 H3600_TS_FALSE = @H3600_TS_FALSE@
 H3600_TS_TRUE = @H3600_TS_TRUE@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
+HAVE_AGL_FRAMEWORK_FALSE = @HAVE_AGL_FRAMEWORK_FALSE@
+HAVE_AGL_FRAMEWORK_TRUE = @HAVE_AGL_FRAMEWORK_TRUE@
+HAVE_DBUS_FALSE = @HAVE_DBUS_FALSE@
+HAVE_DBUS_TRUE = @HAVE_DBUS_TRUE@
+HAVE_X_PLUGIN_FALSE = @HAVE_X_PLUGIN_FALSE@
+HAVE_X_PLUGIN_TRUE = @HAVE_X_PLUGIN_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
@@ -319,6 +350,7 @@ KDRIVE_HW_FALSE = @KDRIVE_HW_FALSE@
 KDRIVE_HW_TRUE = @KDRIVE_HW_TRUE@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
+KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KDRIVE_TRUE = @KDRIVE_TRUE@
@@ -362,14 +394,17 @@ MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
 MKFONTDIR = @MKFONTDIR@
 MKFONTSCALE = @MKFONTSCALE@
-MMX_CAPABLE_FALSE = @MMX_CAPABLE_FALSE@
-MMX_CAPABLE_TRUE = @MMX_CAPABLE_TRUE@
 MULTIBUFFER_FALSE = @MULTIBUFFER_FALSE@
 MULTIBUFFER_TRUE = @MULTIBUFFER_TRUE@
 NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
 NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
 NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
 NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
+OBJC = @OBJC@
+OBJCCLD = @OBJCCLD@
+OBJCDEPMODE = @OBJCDEPMODE@
+OBJCFLAGS = @OBJCFLAGS@
+OBJCLINK = @OBJCLINK@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -380,7 +415,11 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PERL = @PERL@
+PIXMAN_CFLAGS = @PIXMAN_CFLAGS@
+PIXMAN_LIBS = @PIXMAN_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
+PLIST_VENDOR_WEB = @PLIST_VENDOR_WEB@
+PLIST_VERSION_STRING = @PLIST_VERSION_STRING@
 PPC_VIDEO_FALSE = @PPC_VIDEO_FALSE@
 PPC_VIDEO_TRUE = @PPC_VIDEO_TRUE@
 PROJECTROOT = @PROJECTROOT@
@@ -395,6 +434,7 @@ RES_TRUE = @RES_TRUE@
 RGB_DB = @RGB_DB@
 SCREENSAVER_FALSE = @SCREENSAVER_FALSE@
 SCREENSAVER_TRUE = @SCREENSAVER_TRUE@
+SERVERCONFIGdir = @SERVERCONFIGdir@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
@@ -418,9 +458,9 @@ USE_CURSES_TRUE = @USE_CURSES_TRUE@
 USE_RGB_BUILTIN_FALSE = @USE_RGB_BUILTIN_FALSE@
 USE_RGB_BUILTIN_TRUE = @USE_RGB_BUILTIN_TRUE@
 VENDOR_MAN_VERSION = @VENDOR_MAN_VERSION@
+VENDOR_NAME = @VENDOR_NAME@
+VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VENDOR_RELEASE = @VENDOR_RELEASE@
-VENDOR_STRING = @VENDOR_STRING@
-VENDOR_STRING_SHORT = @VENDOR_STRING_SHORT@
 VERSION = @VERSION@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
@@ -449,13 +489,20 @@ XEPHYR_FALSE = @XEPHYR_FALSE@
 XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
 XEPHYR_TRUE = @XEPHYR_TRUE@
+XERRORDB_PATH = @XERRORDB_PATH@
 XEVIE_FALSE = @XEVIE_FALSE@
 XEVIE_TRUE = @XEVIE_TRUE@
 XF86BIGFONT_FALSE = @XF86BIGFONT_FALSE@
 XF86BIGFONT_TRUE = @XF86BIGFONT_TRUE@
 XF86CONFIGFILE = @XF86CONFIGFILE@
+XF86MISC_CFLAGS = @XF86MISC_CFLAGS@
+XF86MISC_LIBS = @XF86MISC_LIBS@
 XF86UTILS_FALSE = @XF86UTILS_FALSE@
 XF86UTILS_TRUE = @XF86UTILS_TRUE@
+XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
+XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
+XFAKESERVER_FALSE = @XFAKESERVER_FALSE@
+XFAKESERVER_TRUE = @XFAKESERVER_TRUE@
 XGLMODULES_CFLAGS = @XGLMODULES_CFLAGS@
 XGLMODULES_LIBS = @XGLMODULES_LIBS@
 XGLXMODULES_CFLAGS = @XGLXMODULES_CFLAGS@
@@ -469,8 +516,6 @@ XGL_MODULE_PATH = @XGL_MODULE_PATH@
 XGL_TRUE = @XGL_TRUE@
 XINERAMA_FALSE = @XINERAMA_FALSE@
 XINERAMA_TRUE = @XINERAMA_TRUE@
-XINPUT_FALSE = @XINPUT_FALSE@
-XINPUT_TRUE = @XINPUT_TRUE@
 XKB_BASE_DIRECTORY = @XKB_BASE_DIRECTORY@
 XKB_BIN_DIRECTORY = @XKB_BIN_DIRECTORY@
 XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
@@ -507,8 +552,9 @@ XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
 XORG_LOADER_SPARC_FALSE = @XORG_LOADER_SPARC_FALSE@
 XORG_LOADER_SPARC_TRUE = @XORG_LOADER_SPARC_TRUE@
+XORG_MODULES_CFLAGS = @XORG_MODULES_CFLAGS@
+XORG_MODULES_LIBS = @XORG_MODULES_LIBS@
 XORG_OS = @XORG_OS@
-XORG_OS_KBD = @XORG_OS_KBD@
 XORG_OS_SUBDIR = @XORG_OS_SUBDIR@
 XORG_TRUE = @XORG_TRUE@
 XPRINTPROTO_CFLAGS = @XPRINTPROTO_CFLAGS@
@@ -519,6 +565,8 @@ XPRINT_LIBS = @XPRINT_LIBS@
 XPRINT_TRUE = @XPRINT_TRUE@
 XP_USE_FREETYPE_FALSE = @XP_USE_FREETYPE_FALSE@
 XP_USE_FREETYPE_TRUE = @XP_USE_FREETYPE_TRUE@
+XQUARTZ_FALSE = @XQUARTZ_FALSE@
+XQUARTZ_TRUE = @XQUARTZ_TRUE@
 XRESEXAMPLES_DEP_CFLAGS = @XRESEXAMPLES_DEP_CFLAGS@
 XRESEXAMPLES_DEP_LIBS = @XRESEXAMPLES_DEP_LIBS@
 XSDLSERVER_FALSE = @XSDLSERVER_FALSE@
@@ -529,6 +577,8 @@ XSERVERCFLAGS_CFLAGS = @XSERVERCFLAGS_CFLAGS@
 XSERVERCFLAGS_LIBS = @XSERVERCFLAGS_LIBS@
 XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
 XSERVERLIBS_LIBS = @XSERVERLIBS_LIBS@
+XSERVER_DTRACE_FALSE = @XSERVER_DTRACE_FALSE@
+XSERVER_DTRACE_TRUE = @XSERVER_DTRACE_TRUE@
 XSERVER_LIBS = @XSERVER_LIBS@
 XTRAP_FALSE = @XTRAP_FALSE@
 XTRAP_TRUE = @XTRAP_TRUE@
@@ -582,6 +632,8 @@ am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
 am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
+am__fastdepOBJC_FALSE = @am__fastdepOBJC_FALSE@
+am__fastdepOBJC_TRUE = @am__fastdepOBJC_TRUE@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -628,11 +680,14 @@ SUBDIRS = extmod
 @GLX_TRUE@GLXMODS = libglx.la libGLcore.la
 @XTRAP_TRUE@XTRAPMOD = libxtrap.la
 @DBE_TRUE@DBEMOD = libdbe.la
-module_LTLIBRARIES = libafb.la \
-                     libcfb.la \
-                     libcfb32.la \
+@AFB_TRUE@AFBMOD = libafb.la
+@CFB_TRUE@CFBMOD = libcfb.la libcfb32.la
+@MFB_TRUE@MFBMOD = libmfb.la
+module_LTLIBRARIES = $(AFBMOD) \
+                     $(CFBMOD) \
                      libfb.la \
-                     libmfb.la \
+                     libwfb.la \
+                     $(MFBMOD) \
                      libshadow.la
 
 extsmoduledir = $(moduledir)/extensions
@@ -647,9 +702,6 @@ fontsmodule_LTLIBRARIES = libfreetype.la \
 
 AM_CFLAGS = @XORG_CFLAGS@ @DIX_CFLAGS@
 INCLUDES = @XORG_INCS@ \
-           -I$(top_srcdir)/afb \
-           -I$(top_srcdir)/cfb \
-           -I$(top_srcdir)/mfb \
            -I$(top_srcdir)/dbe \
            -I$(top_srcdir)/hw/xfree86/loader \
            -I$(top_srcdir)/miext/shadow \
@@ -672,8 +724,12 @@ libdbe_la_LIBADD = $(top_builddir)/dbe/libdbe.la
 libdbe_la_SOURCES = dbemodule.c
 libfb_la_LDFLAGS = -avoid-version
 libfb_la_LIBADD = $(top_builddir)/fb/libfb.la
-libfb_la_SOURCES = $(top_builddir)/fb/fbcmap.c fbmodule.c
-libfb_la_CFLAGS = -DXFree86Server $(AM_CFLAGS)
+libfb_la_SOURCES = $(top_builddir)/fb/fbcmap_mi.c fbmodule.c
+libfb_la_CFLAGS = $(AM_CFLAGS)
+libwfb_la_LDFLAGS = -avoid-version
+libwfb_la_LIBADD = $(top_builddir)/fb/libwfb.la
+libwfb_la_SOURCES = $(top_builddir)/fb/fbcmap_mi.c fbmodule.c
+libwfb_la_CFLAGS = $(AM_CFLAGS) -DFB_ACCESS_WRAPPER
 libglx_la_LDFLAGS = -avoid-version
 @AIGLX_TRUE@GLXDRI_LIBRARY = $(top_builddir)/GL/glx/libglxdri.la
 libglx_la_LIBADD = \
@@ -827,11 +883,11 @@ clean-noinstLTLIBRARIES:
 libGLcore.la: $(libGLcore_la_OBJECTS) $(libGLcore_la_DEPENDENCIES) 
 	$(LINK) $(am_libGLcore_la_rpath) $(libGLcore_la_LDFLAGS) $(libGLcore_la_OBJECTS) $(libGLcore_la_LIBADD) $(LIBS)
 libafb.la: $(libafb_la_OBJECTS) $(libafb_la_DEPENDENCIES) 
-	$(LINK) -rpath $(moduledir) $(libafb_la_LDFLAGS) $(libafb_la_OBJECTS) $(libafb_la_LIBADD) $(LIBS)
+	$(LINK) $(am_libafb_la_rpath) $(libafb_la_LDFLAGS) $(libafb_la_OBJECTS) $(libafb_la_LIBADD) $(LIBS)
 libcfb.la: $(libcfb_la_OBJECTS) $(libcfb_la_DEPENDENCIES) 
-	$(LINK) -rpath $(moduledir) $(libcfb_la_LDFLAGS) $(libcfb_la_OBJECTS) $(libcfb_la_LIBADD) $(LIBS)
+	$(LINK) $(am_libcfb_la_rpath) $(libcfb_la_LDFLAGS) $(libcfb_la_OBJECTS) $(libcfb_la_LIBADD) $(LIBS)
 libcfb32.la: $(libcfb32_la_OBJECTS) $(libcfb32_la_DEPENDENCIES) 
-	$(LINK) -rpath $(moduledir) $(libcfb32_la_LDFLAGS) $(libcfb32_la_OBJECTS) $(libcfb32_la_LIBADD) $(LIBS)
+	$(LINK) $(am_libcfb32_la_rpath) $(libcfb32_la_LDFLAGS) $(libcfb32_la_OBJECTS) $(libcfb32_la_LIBADD) $(LIBS)
 libdbe.la: $(libdbe_la_OBJECTS) $(libdbe_la_DEPENDENCIES) 
 	$(LINK) $(am_libdbe_la_rpath) $(libdbe_la_LDFLAGS) $(libdbe_la_OBJECTS) $(libdbe_la_LIBADD) $(LIBS)
 libdixmods.la: $(libdixmods_la_OBJECTS) $(libdixmods_la_DEPENDENCIES) 
@@ -843,13 +899,15 @@ libfreetype.la: $(libfreetype_la_OBJECTS) $(libfreetype_la_DEPENDENCIES)
 libglx.la: $(libglx_la_OBJECTS) $(libglx_la_DEPENDENCIES) 
 	$(LINK) $(am_libglx_la_rpath) $(libglx_la_LDFLAGS) $(libglx_la_OBJECTS) $(libglx_la_LIBADD) $(LIBS)
 libmfb.la: $(libmfb_la_OBJECTS) $(libmfb_la_DEPENDENCIES) 
-	$(LINK) -rpath $(moduledir) $(libmfb_la_LDFLAGS) $(libmfb_la_OBJECTS) $(libmfb_la_LIBADD) $(LIBS)
+	$(LINK) $(am_libmfb_la_rpath) $(libmfb_la_LDFLAGS) $(libmfb_la_OBJECTS) $(libmfb_la_LIBADD) $(LIBS)
 librecord.la: $(librecord_la_OBJECTS) $(librecord_la_DEPENDENCIES) 
 	$(LINK) -rpath $(extsmoduledir) $(librecord_la_LDFLAGS) $(librecord_la_OBJECTS) $(librecord_la_LIBADD) $(LIBS)
 libshadow.la: $(libshadow_la_OBJECTS) $(libshadow_la_DEPENDENCIES) 
 	$(LINK) -rpath $(moduledir) $(libshadow_la_LDFLAGS) $(libshadow_la_OBJECTS) $(libshadow_la_LIBADD) $(LIBS)
 libtype1.la: $(libtype1_la_OBJECTS) $(libtype1_la_DEPENDENCIES) 
 	$(LINK) -rpath $(fontsmoduledir) $(libtype1_la_LDFLAGS) $(libtype1_la_OBJECTS) $(libtype1_la_LIBADD) $(LIBS)
+libwfb.la: $(libwfb_la_OBJECTS) $(libwfb_la_DEPENDENCIES) 
+	$(LINK) -rpath $(moduledir) $(libwfb_la_LDFLAGS) $(libwfb_la_OBJECTS) $(libwfb_la_LIBADD) $(LIBS)
 libxorgxkb.la: $(libxorgxkb_la_OBJECTS) $(libxorgxkb_la_DEPENDENCIES) 
 	$(LINK)  $(libxorgxkb_la_LDFLAGS) $(libxorgxkb_la_OBJECTS) $(libxorgxkb_la_LIBADD) $(LIBS)
 libxtrap.la: $(libxtrap_la_OBJECTS) $(libxtrap_la_DEPENDENCIES) 
@@ -869,8 +927,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ftmodule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glxmodule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdixmods_la-miinitext.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbcmap.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbcmap_mi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbmodule.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbcmap_mi.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbmodule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mfbmodule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/recordmod.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shmodule.Plo@am__quote@
@@ -908,12 +968,12 @@ libdixmods_la-miinitext.lo: $(top_srcdir)/mi/miinitext.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdixmods_la_CFLAGS) $(CFLAGS) -c -o libdixmods_la-miinitext.lo `test -f '$(top_srcdir)/mi/miinitext.c' || echo '$(srcdir)/'`$(top_srcdir)/mi/miinitext.c
 
-libfb_la-fbcmap.lo: $(top_builddir)/fb/fbcmap.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbcmap.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbcmap.Tpo" -c -o libfb_la-fbcmap.lo `test -f '$(top_builddir)/fb/fbcmap.c' || echo '$(srcdir)/'`$(top_builddir)/fb/fbcmap.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbcmap.Tpo" "$(DEPDIR)/libfb_la-fbcmap.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbcmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_builddir)/fb/fbcmap.c' object='libfb_la-fbcmap.lo' libtool=yes @AMDEPBACKSLASH@
+libfb_la-fbcmap_mi.lo: $(top_builddir)/fb/fbcmap_mi.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbcmap_mi.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbcmap_mi.Tpo" -c -o libfb_la-fbcmap_mi.lo `test -f '$(top_builddir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_builddir)/fb/fbcmap_mi.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbcmap_mi.Tpo" "$(DEPDIR)/libfb_la-fbcmap_mi.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbcmap_mi.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_builddir)/fb/fbcmap_mi.c' object='libfb_la-fbcmap_mi.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbcmap.lo `test -f '$(top_builddir)/fb/fbcmap.c' || echo '$(srcdir)/'`$(top_builddir)/fb/fbcmap.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbcmap_mi.lo `test -f '$(top_builddir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_builddir)/fb/fbcmap_mi.c
 
 libfb_la-fbmodule.lo: fbmodule.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbmodule.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbmodule.Tpo" -c -o libfb_la-fbmodule.lo `test -f 'fbmodule.c' || echo '$(srcdir)/'`fbmodule.c; \
@@ -921,6 +981,20 @@ libfb_la-fbmodule.lo: fbmodule.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbmodule.c' object='libfb_la-fbmodule.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbmodule.lo `test -f 'fbmodule.c' || echo '$(srcdir)/'`fbmodule.c
+
+libwfb_la-fbcmap_mi.lo: $(top_builddir)/fb/fbcmap_mi.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbcmap_mi.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbcmap_mi.Tpo" -c -o libwfb_la-fbcmap_mi.lo `test -f '$(top_builddir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_builddir)/fb/fbcmap_mi.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbcmap_mi.Tpo" "$(DEPDIR)/libwfb_la-fbcmap_mi.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbcmap_mi.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_builddir)/fb/fbcmap_mi.c' object='libwfb_la-fbcmap_mi.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbcmap_mi.lo `test -f '$(top_builddir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_builddir)/fb/fbcmap_mi.c
+
+libwfb_la-fbmodule.lo: fbmodule.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbmodule.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbmodule.Tpo" -c -o libwfb_la-fbmodule.lo `test -f 'fbmodule.c' || echo '$(srcdir)/'`fbmodule.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbmodule.Tpo" "$(DEPDIR)/libwfb_la-fbmodule.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbmodule.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbmodule.c' object='libwfb_la-fbmodule.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbmodule.lo `test -f 'fbmodule.c' || echo '$(srcdir)/'`fbmodule.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

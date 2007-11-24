@@ -266,7 +266,7 @@ int __glXDispSwap_CreateGLXPixmap(__GLXclientState *cl, GLbyte *pc)
     __GLX_SWAP_INT(&req->glxpixmap);
 
     return DoCreateGLXPixmap( cl, req->visual, req->screen,
-			      req->pixmap, req->glxpixmap );
+			      req->pixmap, req->glxpixmap, NULL, 0 );
 }
 
 int __glXDispSwap_CreatePixmap(__GLXclientState *cl, GLbyte *pc)
@@ -279,9 +279,12 @@ int __glXDispSwap_CreatePixmap(__GLXclientState *cl, GLbyte *pc)
     __GLX_SWAP_INT(&req->fbconfig);
     __GLX_SWAP_INT(&req->pixmap);
     __GLX_SWAP_INT(&req->glxpixmap);
+    __GLX_SWAP_INT(&req->numAttribs);
 
     return DoCreateGLXPixmap( cl, req->fbconfig, req->screen,
-			      req->pixmap, req->glxpixmap );
+			      req->pixmap, req->glxpixmap,
+			      (CARD32*)(req + 1),
+			      req->numAttribs );
 }
 
 int __glXDispSwap_CreateGLXPixmapWithConfigSGIX(__GLXclientState *cl, GLbyte *pc)
@@ -297,7 +300,7 @@ int __glXDispSwap_CreateGLXPixmapWithConfigSGIX(__GLXclientState *cl, GLbyte *pc
     __GLX_SWAP_INT(&req->glxpixmap);
 
     return DoCreateGLXPixmap( cl, req->fbconfig, req->screen,
-			      req->pixmap, req->glxpixmap );
+			      req->pixmap, req->glxpixmap, NULL, 0 );
 }
 
 int __glXDispSwap_DestroyGLXPixmap(__GLXclientState *cl, GLbyte *pc)
@@ -500,7 +503,6 @@ int __glXDispSwap_CopySubBufferMESA(__GLXclientState *cl, GLbyte *pc)
 
     (void) drawId;
     (void) buffer;
-
 
     pc += __GLX_VENDPRIV_HDR_SIZE;
 

@@ -119,9 +119,7 @@ static int pixmapFormat;
 static int shmPixFormat[MAXSCREENS];
 static ShmFuncsPtr shmFuncs[MAXSCREENS];
 static DestroyPixmapProcPtr destroyPixmap[MAXSCREENS];
-#ifdef PIXPRIV
 static int  shmPixmapPrivate;
-#endif
 static ShmFuncs miFuncs = {NULL, miShmPutImage};
 static ShmFuncs fbFuncs = {fbShmCreatePixmap, fbShmPutImage};
 
@@ -237,7 +235,6 @@ ShmExtensionInit(INITARGS)
 	    destroyPixmap[i] = screenInfo.screens[i]->DestroyPixmap;
 	    screenInfo.screens[i]->DestroyPixmap = ShmDestroyPixmap;
 	}
-#ifdef PIXPRIV
 	shmPixmapPrivate = AllocatePixmapPrivateIndex();
 	for (i = 0; i < screenInfo.numScreens; i++)
 	{
@@ -245,7 +242,6 @@ ShmExtensionInit(INITARGS)
 				       shmPixmapPrivate, 0))
 		return;
 	}
-#endif
       }
     }
     ShmSegType = CreateNewResourceType(ShmDetachSegment);
@@ -299,22 +295,7 @@ ShmDestroyPixmap (PixmapPtr pPixmap)
     if (pPixmap->refcnt == 1)
     {
 	ShmDescPtr  shmdesc;
-#ifdef PIXPRIV
 	shmdesc = (ShmDescPtr) pPixmap->devPrivates[shmPixmapPrivate].ptr;
-#else
-	char	*base = (char *) pPixmap->devPrivate.ptr;
-	
-	if (base != (pointer) (pPixmap + 1))
-	{
-	    for (shmdesc = Shmsegs; shmdesc; shmdesc = shmdesc->next)
-	    {
-		if (shmdesc->addr <= base && base <= shmdesc->addr + shmdesc->size)
-		    break;
-	    }
-	}
-	else
-	    shmdesc = 0;
-#endif
 	if (shmdesc)
 	    ShmDetachSegment ((pointer) shmdesc, pPixmap->drawable.id);
     }
@@ -571,11 +552,11 @@ ProcPanoramiXShmPutImage(register ClientPtr client)
     REQUEST_SIZE_MATCH(xShmPutImageReq);
 
     if(!(draw = (PanoramiXRes *)SecurityLookupIDByClass(
-                client, stuff->drawable, XRC_DRAWABLE, SecurityWriteAccess)))
+                client, stuff->drawable, XRC_DRAWABLE, DixWriteAccess)))
         return BadDrawable;
 
     if(!(gc = (PanoramiXRes *)SecurityLookupIDByType(
-                client, stuff->gc, XRT_GC, SecurityReadAccess)))
+                client, stuff->gc, XRT_GC, DixReadAccess)))
         return BadGC;
 
     isRoot = (draw->type == XRT_WINDOW) && draw->u.win.root;
@@ -606,7 +587,7 @@ ProcPanoramiXShmGetImage(ClientPtr client)
     DrawablePtr 	pDraw;
     xShmGetImageReply	xgi;
     ShmDescPtr		shmdesc;
-    int         	i, x, y, w, h, format;
+    int         	i, x, y, w, h, format, rc;
     Mask		plane = 0, planemask;
     long		lenPer = 0, length, widthBytesLine;
     Bool		isRoot;
@@ -621,13 +602,16 @@ ProcPanoramiXShmGetImage(ClientPtr client)
     }
 
     if(!(draw = (PanoramiXRes *)SecurityLookupIDByClass(
-		client, stuff->drawable, XRC_DRAWABLE, SecurityWriteAccess)))
+		client, stuff->drawable, XRC_DRAWABLE, DixWriteAccess)))
 	return BadDrawable;
 
     if (draw->type == XRT_PIXMAP)
 	return ProcShmGetImage(client);
 
-    VERIFY_DRAWABLE(pDraw, stuff->drawable, client);
+    rc = dixLookupDrawable(&pDraw, stuff->drawable, client, 0,
+			   DixUnknownAccess);
+    if (rc != Success)
+	return rc;
 
     VERIFY_SHMPTR(stuff->shmseg, stuff->offset, TRUE, shmdesc, client);
 
@@ -660,8 +644,12 @@ ProcPanoramiXShmGetImage(ClientPtr client)
     }
 
     drawables[0] = pDraw;
-    for(i = 1; i < PanoramiXNumScreens; i++)
-	VERIFY_DRAWABLE(drawables[i], draw->info[i].id, client);
+    for(i = 1; i < PanoramiXNumScreens; i++) {
+	rc = dixLookupDrawable(drawables+i, draw->info[i].id, client, 0, 
+			       DixUnknownAccess);
+	if (rc != Success)
+	    return rc;
+    }
 
     xgi.visual = wVisual(((WindowPtr)pDraw));
     xgi.type = X_Reply;
@@ -720,7 +708,7 @@ ProcPanoramiXShmCreatePixmap(
     PixmapPtr pMap = NULL;
     DrawablePtr pDraw;
     DepthPtr pDepth;
-    int i, j, result;
+    int i, j, result, rc;
     ShmDescPtr shmdesc;
     REQUEST(xShmCreatePixmapReq);
     PanoramiXRes *newPix;
@@ -730,7 +718,11 @@ ProcPanoramiXShmCreatePixmap(
     if (!sharedPixmaps)
 	return BadImplementation;
     LEGAL_NEW_RESOURCE(stuff->pid, client);
-    VERIFY_GEOMETRABLE(pDraw, stuff->drawable, client);
+    rc = dixLookupDrawable(&pDraw, stuff->drawable, client, M_ANY,
+			   DixUnknownAccess);
+    if (rc != Success)
+	return rc;
+
     VERIFY_SHMPTR(stuff->shmseg, stuff->offset, TRUE, shmdesc, client);
     if (!stuff->width || !stuff->height)
     {
@@ -770,9 +762,7 @@ CreatePmap:
 				shmdesc->addr + stuff->offset);
 
 	if (pMap) {
-#ifdef PIXPRIV
             pMap->devPrivates[shmPixmapPrivate].ptr = (pointer) shmdesc;
-#endif
             shmdesc->refcnt++;
 	    pMap->drawable.serialNumber = NEXT_SERIAL_NUMBER;
 	    pMap->drawable.id = newPix->info[j].id;
@@ -805,8 +795,8 @@ static int
 ProcShmPutImage(client)
     register ClientPtr client;
 {
-    register GCPtr pGC;
-    register DrawablePtr pDraw;
+    GCPtr pGC;
+    DrawablePtr pDraw;
     long length;
     ShmDescPtr shmdesc;
     REQUEST(xShmPutImageReq);
@@ -909,12 +899,12 @@ static int
 ProcShmGetImage(client)
     register ClientPtr client;
 {
-    register DrawablePtr pDraw;
+    DrawablePtr		pDraw;
     long		lenPer = 0, length;
     Mask		plane = 0;
     xShmGetImageReply	xgi;
     ShmDescPtr		shmdesc;
-    int			n;
+    int			n, rc;
 
     REQUEST(xShmGetImageReq);
 
@@ -924,7 +914,10 @@ ProcShmGetImage(client)
 	client->errorValue = stuff->format;
         return(BadValue);
     }
-    VERIFY_DRAWABLE(pDraw, stuff->drawable, client);
+    rc = dixLookupDrawable(&pDraw, stuff->drawable, client, 0,
+			   DixUnknownAccess);
+    if (rc != Success)
+	return rc;
     VERIFY_SHMPTR(stuff->shmseg, stuff->offset, TRUE, shmdesc, client);
     if (pDraw->type == DRAWABLE_WINDOW)
     {
@@ -1042,9 +1035,9 @@ ProcShmCreatePixmap(client)
     register ClientPtr client;
 {
     PixmapPtr pMap;
-    register DrawablePtr pDraw;
+    DrawablePtr pDraw;
     DepthPtr pDepth;
-    register int i;
+    register int i, rc;
     ShmDescPtr shmdesc;
     REQUEST(xShmCreatePixmapReq);
 
@@ -1053,7 +1046,11 @@ ProcShmCreatePixmap(client)
     if (!sharedPixmaps)
 	return BadImplementation;
     LEGAL_NEW_RESOURCE(stuff->pid, client);
-    VERIFY_GEOMETRABLE(pDraw, stuff->drawable, client);
+    rc = dixLookupDrawable(&pDraw, stuff->drawable, client, M_ANY,
+			   DixUnknownAccess);
+    if (rc != Success)
+	return rc;
+
     VERIFY_SHMPTR(stuff->shmseg, stuff->offset, TRUE, shmdesc, client);
     if (!stuff->width || !stuff->height)
     {
@@ -1079,9 +1076,7 @@ CreatePmap:
 			    shmdesc->addr + stuff->offset);
     if (pMap)
     {
-#ifdef PIXPRIV
 	pMap->devPrivates[shmPixmapPrivate].ptr = (pointer) shmdesc;
-#endif
 	shmdesc->refcnt++;
 	pMap->drawable.serialNumber = NEXT_SERIAL_NUMBER;
 	pMap->drawable.id = stuff->pid;

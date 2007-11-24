@@ -48,7 +48,7 @@
 #include "Configint.h"
 #include "vbe.h"
 #include "xf86DDC.h"
-#if defined(__sparc__) && !defined(__OpenBSD__)
+#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
 #include "xf86Bus.h"
 #include "xf86Sbus.h"
 #endif
@@ -57,7 +57,7 @@
 typedef struct _DevToConfig {
     GDevRec GDev;
     pciVideoPtr pVideo;
-#if defined(__sparc__) && !defined(__OpenBSD__)
+#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
     sbusDevicePtr sVideo;
 #endif
     int iDriver;
@@ -68,15 +68,12 @@ static int nDevToConfig = 0, CurrentDriver;
 
 _X_EXPORT xf86MonPtr ConfiguredMonitor;
 Bool xf86DoConfigurePass1 = TRUE;
-Bool foundMouse = FALSE;
+static Bool foundMouse = FALSE;
 
-#if defined(__UNIXOS2__)
-#define DFLT_MOUSE_DEV "mouse$"
-#define DFLT_MOUSE_PROTO "OS2Mouse"
-#elif defined(__SCO__)
+#if defined(__SCO__)
 static char *DFLT_MOUSE_PROTO = "OSMouse";
 #elif defined(__UNIXWARE__)
-static char *DFLT_MOUSE_PROTO = "Xqueue";
+static char *DFLT_MOUSE_PROTO = "OSMouse";
 static char *DFLT_MOUSE_DEV = "/dev/mouse";
 #elif defined(QNX4)
 static char *DFLT_MOUSE_PROTO = "OSMouse";
@@ -134,7 +131,7 @@ xf86AddBusDeviceToConfigure(const char *driver, BusType bus, void *busData, int 
 	    if (!DevToConfig[i].pVideo)
 		return NULL;
 	break;
-#if defined(__sparc__) && !defined(__OpenBSD__)
+#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
     case BUS_SBUS:
 	for (i = 0;  i < nDevToConfig;  i++)
 	    if (DevToConfig[i].sVideo &&
@@ -213,7 +210,7 @@ xf86AddBusDeviceToConfigure(const char *driver, BusType bus, void *busData, int 
 	NewDevice.GDev.identifier = "ISA Adapter";
 	NewDevice.GDev.busID = "ISA";
 	break;
-#if defined(__sparc__) && !defined(__OpenBSD__)
+#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
     case BUS_SBUS: {
 	char *promPath = NULL;
 	NewDevice.sVideo = (sbusDevicePtr) busData;
@@ -265,27 +262,12 @@ configureInputSection (void)
     parsePrologue (XF86ConfInputPtr, XF86ConfInputRec)
 
     ptr->inp_identifier = "Keyboard0";
-#ifdef USE_DEPRECATED_KEYBOARD_DRIVER
-    ptr->inp_driver = "keyboard";
-#else
     ptr->inp_driver = "kbd";
-#endif
     ptr->list.next = NULL;
 
     /* Crude mechanism to auto-detect mouse (os dependent) */
     { 
 	int fd;
-#if 0 && defined linux
-	/* Our autodetection code can do a better job */
-	int len;
-	char path[32];
-
-	if ((len = readlink(DFLT_MOUSE_DEV, path, sizeof(path) - 1)) > 0) {
-	    path[len] = '\0';
-	    if (strstr(path, "psaux") != NULL)
-		DFLT_MOUSE_PROTO = "PS/2";
-	}
-#endif
 #ifdef WSCONS_SUPPORT
 	fd = open("/dev/wsmouse", 0);
 	if (fd > 0) {
@@ -313,38 +295,18 @@ configureInputSection (void)
     mouse->inp_identifier = "Mouse0";
     mouse->inp_driver = "mouse";
     mouse->inp_option_lst = 
-		xf86addNewOption(mouse->inp_option_lst, "Protocol", DFLT_MOUSE_PROTO);
+		xf86addNewOption(mouse->inp_option_lst, xstrdup("Protocol"),
+				xstrdup(DFLT_MOUSE_PROTO));
 #ifndef __SCO__
     mouse->inp_option_lst = 
-		xf86addNewOption(mouse->inp_option_lst, "Device", DFLT_MOUSE_DEV);
+		xf86addNewOption(mouse->inp_option_lst, xstrdup("Device"),
+				xstrdup(DFLT_MOUSE_DEV));
 #endif
     mouse->inp_option_lst = 
-		xf86addNewOption(mouse->inp_option_lst, "ZAxisMapping", "4 5 6 7");
+		xf86addNewOption(mouse->inp_option_lst, xstrdup("ZAxisMapping"),
+				xstrdup("4 5 6 7"));
     ptr = (XF86ConfInputPtr)xf86addListItem((glp)ptr, (glp)mouse);
     return ptr;
-}
-
-static XF86ConfDRIPtr
-configureDRISection (void)
-{
-#ifdef NOTYET
-    parsePrologue (XF86ConfDRIPtr, XF86ConfDRIRec)
-
-    return ptr;
-#else
-    return NULL;
-#endif
-}
-
-static XF86ConfVendorPtr
-configureVendorSection (void)
-{
-    parsePrologue (XF86ConfVendorPtr, XF86ConfVendorRec)
-
-    return NULL;
-#if 0
-    return ptr;
-#endif
 }
 
 static XF86ConfScreenPtr
@@ -523,7 +485,7 @@ configureLayoutSection (void)
 	iptr->iref_option_lst = NULL;
 	iptr->iref_inputdev_str = "Mouse0";
 	iptr->iref_option_lst =
-		xf86addNewOption (iptr->iref_option_lst, "CorePointer", NULL);
+		xf86addNewOption (iptr->iref_option_lst, xstrdup("CorePointer"), NULL);
 	ptr->lay_input_lst = (XF86ConfInputrefPtr)
 		xf86addListItem ((glp) ptr->lay_input_lst, (glp) iptr);
     }
@@ -536,7 +498,7 @@ configureLayoutSection (void)
 	iptr->iref_option_lst = NULL;
 	iptr->iref_inputdev_str = "Keyboard0";
 	iptr->iref_option_lst =
-		xf86addNewOption (iptr->iref_option_lst, "CoreKeyboard", NULL);
+		xf86addNewOption (iptr->iref_option_lst, xstrdup("CoreKeyboard"), NULL);
 	ptr->lay_input_lst = (XF86ConfInputrefPtr)
 		xf86addListItem ((glp) ptr->lay_input_lst, (glp) iptr);
     }
@@ -566,29 +528,6 @@ configureLayoutSection (void)
     }
 
     return ptr;
-}
-
-static XF86ConfModesPtr
-configureModesSection (void)
-{
-#ifdef NOTYET
-    parsePrologue (XF86ConfModesPtr, XF86ConfModesRec)
-
-    return ptr;
-#else
-    return NULL;
-#endif
-}
-
-static XF86ConfVideoAdaptorPtr
-configureVideoAdaptorSection (void)
-{
-    parsePrologue (XF86ConfVideoAdaptorPtr, XF86ConfVideoAdaptorRec)
-
-    return NULL;
-#if 0
-    return ptr;
-#endif
 }
 
 static XF86ConfFlagsPtr
@@ -755,7 +694,7 @@ configureDDCMonitorSection (int screennum)
     }
 
     if (ConfiguredMonitor->features.dpms) {
-      ptr->mon_option_lst = xf86addNewOption(ptr->mon_option_lst, "DPMS", NULL);
+      ptr->mon_option_lst = xf86addNewOption(ptr->mon_option_lst, xstrdup("DPMS"), NULL);
     }
 
     return ptr;
@@ -863,19 +802,16 @@ DoConfigure()
     xf86config->conf_files = configureFilesSection();
     xf86config->conf_modules = configureModuleSection();
     xf86config->conf_flags = configureFlagsSection();
-    xf86config->conf_videoadaptor_lst = configureVideoAdaptorSection();
-    xf86config->conf_modes_lst = configureModesSection();
-    xf86config->conf_vendor_lst = configureVendorSection();
-    xf86config->conf_dri = configureDRISection();
+    xf86config->conf_videoadaptor_lst = NULL;
+    xf86config->conf_modes_lst = NULL;
+    xf86config->conf_vendor_lst = NULL;
+    xf86config->conf_dri = NULL;
     xf86config->conf_input_lst = configureInputSection();
     xf86config->conf_layout_lst = configureLayoutSection();
 
     if (!(home = getenv("HOME")))
     	home = "/";
     {
-#ifdef __UNIXOS2__
-#define PATH_MAX 2048
-#endif
 #if !defined(PATH_MAX)
 #define PATH_MAX 1024
 #endif
@@ -1011,13 +947,11 @@ DoConfigure()
 	ErrorF("\n"__XSERVERNAME__" is not able to detect your mouse.\n"
 		"Edit the file and correct the Device.\n");
     } else {
-#ifndef __UNIXOS2__  /* OS/2 definitely has a mouse */
 	ErrorF("\n"__XSERVERNAME__" detected your mouse at device %s.\n"
 		"Please check your config if the mouse is still not\n"
 		"operational, as by default "__XSERVERNAME__
 	       " tries to autodetect\n"
 		"the protocol.\n",DFLT_MOUSE_DEV);
-#endif
     }
 #endif /* !__SCO__ */
 

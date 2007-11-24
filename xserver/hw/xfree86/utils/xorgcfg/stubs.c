@@ -36,10 +36,6 @@
  * Implementation
  */
 
-#ifdef __UNIXOS2__
-static char dummy;
-#endif
-
 #if 0
 /* these are defined in libdummy.a */
 int

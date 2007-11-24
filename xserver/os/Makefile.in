@@ -14,6 +14,7 @@
 
 @SET_MAKE@
 
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -36,10 +37,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@XCSECURITY_TRUE@am__append_1 = $(XCSECURITY_SOURCES)
-@XDMCP_TRUE@am__append_2 = $(XDMCP_SOURCES)
-@NEED_STRLCAT_TRUE@am__append_3 = $(STRLCAT_SOURCES)
-@X_PRIVSEP_TRUE@am__append_4 = $(PRIVSEP_SOURCES)
+@XCSECURITY_TRUE@am__append_1 = $(XCSECURITY_SRCS)
+@XDMCP_TRUE@am__append_2 = $(XDMCP_SRCS)
+@NEED_STRLCAT_TRUE@am__append_3 = $(STRLCAT_SRCS)
+@X_PRIVSEP_TRUE@am__append_4 = $(PRIVSEP_SRCS)
+@XSERVER_DTRACE_TRUE@noinst_PROGRAMS = os.O$(EXEEXT)
 subdir = os
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -80,6 +82,10 @@ am_libos_la_OBJECTS = WaitFor.lo access.lo auth.lo connection.lo io.lo \
 	xprintf.lo $(am__objects_1) $(am__objects_3) $(am__objects_5) \
 	$(am__objects_7) $(am__objects_9)
 libos_la_OBJECTS = $(am_libos_la_OBJECTS)
+PROGRAMS = $(noinst_PROGRAMS)
+os_O_SOURCES = os.c
+os_O_OBJECTS = os.$(OBJEXT)
+os_O_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -91,8 +97,9 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libcwrapper_la_SOURCES) $(libos_la_SOURCES)
-DIST_SOURCES = $(libcwrapper_la_SOURCES) $(am__libos_la_SOURCES_DIST)
+SOURCES = $(libcwrapper_la_SOURCES) $(libos_la_SOURCES) os.c
+DIST_SOURCES = $(libcwrapper_la_SOURCES) $(am__libos_la_SOURCES_DIST) \
+	os.c
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -114,6 +121,7 @@ AMTAR = @AMTAR@
 APPDEFAULTDIR = @APPDEFAULTDIR@
 APPGROUP_FALSE = @APPGROUP_FALSE@
 APPGROUP_TRUE = @APPGROUP_TRUE@
+APPLE_APPLICATIONS_DIR = @APPLE_APPLICATIONS_DIR@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -133,13 +141,18 @@ BSD_KQUEUE_APM_FALSE = @BSD_KQUEUE_APM_FALSE@
 BSD_KQUEUE_APM_TRUE = @BSD_KQUEUE_APM_TRUE@
 BUILDDOCS_FALSE = @BUILDDOCS_FALSE@
 BUILDDOCS_TRUE = @BUILDDOCS_TRUE@
+BUILD_DARWIN_FALSE = @BUILD_DARWIN_FALSE@
+BUILD_DARWIN_TRUE = @BUILD_DARWIN_TRUE@
 BUILD_DATE = @BUILD_DATE@
 BUILD_KBD_MODE_FALSE = @BUILD_KBD_MODE_FALSE@
 BUILD_KBD_MODE_TRUE = @BUILD_KBD_MODE_TRUE@
+BUILD_KDRIVEFBDEVLIB_FALSE = @BUILD_KDRIVEFBDEVLIB_FALSE@
+BUILD_KDRIVEFBDEVLIB_TRUE = @BUILD_KDRIVEFBDEVLIB_TRUE@
 BUILD_LINUXDOC_FALSE = @BUILD_LINUXDOC_FALSE@
 BUILD_LINUXDOC_TRUE = @BUILD_LINUXDOC_TRUE@
 BUILD_PDFDOC_FALSE = @BUILD_PDFDOC_FALSE@
 BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
+BUILD_TIME = @BUILD_TIME@
 BUILD_XORGCFG_FALSE = @BUILD_XORGCFG_FALSE@
 BUILD_XORGCFG_TRUE = @BUILD_XORGCFG_TRUE@
 CC = @CC@
@@ -152,6 +165,10 @@ CFLAGS = @CFLAGS@
 COMPILEDDEFAULTFONTPATH = @COMPILEDDEFAULTFONTPATH@
 COMPOSITE_FALSE = @COMPOSITE_FALSE@
 COMPOSITE_TRUE = @COMPOSITE_TRUE@
+CONFIG_DBUS_API_FALSE = @CONFIG_DBUS_API_FALSE@
+CONFIG_DBUS_API_TRUE = @CONFIG_DBUS_API_TRUE@
+CONFIG_HAL_FALSE = @CONFIG_HAL_FALSE@
+CONFIG_HAL_TRUE = @CONFIG_HAL_TRUE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CUP_FALSE = @CUP_FALSE@
@@ -161,8 +178,11 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DARWIN_LIBS = @DARWIN_LIBS@
 DBE_FALSE = @DBE_FALSE@
 DBE_TRUE = @DBE_TRUE@
+DBUS_CFLAGS = @DBUS_CFLAGS@
+DBUS_LIBS = @DBUS_LIBS@
 DEBUG_FALSE = @DEBUG_FALSE@
 DEBUG_TRUE = @DEBUG_TRUE@
 DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
@@ -170,7 +190,9 @@ DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DGA_CFLAGS = @DGA_CFLAGS@
 DGA_FALSE = @DGA_FALSE@
+DGA_LIBS = @DGA_LIBS@
 DGA_TRUE = @DGA_TRUE@
 DIX_CFLAGS = @DIX_CFLAGS@
 DLLTOOL = @DLLTOOL@
@@ -197,6 +219,7 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
 DRI_FALSE = @DRI_FALSE@
 DRI_TRUE = @DRI_TRUE@
+DTRACE = @DTRACE@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -225,6 +248,14 @@ GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
 H3600_TS_FALSE = @H3600_TS_FALSE@
 H3600_TS_TRUE = @H3600_TS_TRUE@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
+HAVE_AGL_FRAMEWORK_FALSE = @HAVE_AGL_FRAMEWORK_FALSE@
+HAVE_AGL_FRAMEWORK_TRUE = @HAVE_AGL_FRAMEWORK_TRUE@
+HAVE_DBUS_FALSE = @HAVE_DBUS_FALSE@
+HAVE_DBUS_TRUE = @HAVE_DBUS_TRUE@
+HAVE_X_PLUGIN_FALSE = @HAVE_X_PLUGIN_FALSE@
+HAVE_X_PLUGIN_TRUE = @HAVE_X_PLUGIN_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
@@ -261,6 +292,7 @@ KDRIVE_HW_FALSE = @KDRIVE_HW_FALSE@
 KDRIVE_HW_TRUE = @KDRIVE_HW_TRUE@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
+KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KDRIVE_TRUE = @KDRIVE_TRUE@
@@ -304,14 +336,17 @@ MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
 MKFONTDIR = @MKFONTDIR@
 MKFONTSCALE = @MKFONTSCALE@
-MMX_CAPABLE_FALSE = @MMX_CAPABLE_FALSE@
-MMX_CAPABLE_TRUE = @MMX_CAPABLE_TRUE@
 MULTIBUFFER_FALSE = @MULTIBUFFER_FALSE@
 MULTIBUFFER_TRUE = @MULTIBUFFER_TRUE@
 NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
 NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
 NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
 NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
+OBJC = @OBJC@
+OBJCCLD = @OBJCCLD@
+OBJCDEPMODE = @OBJCDEPMODE@
+OBJCFLAGS = @OBJCFLAGS@
+OBJCLINK = @OBJCLINK@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -322,7 +357,11 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PERL = @PERL@
+PIXMAN_CFLAGS = @PIXMAN_CFLAGS@
+PIXMAN_LIBS = @PIXMAN_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
+PLIST_VENDOR_WEB = @PLIST_VENDOR_WEB@
+PLIST_VERSION_STRING = @PLIST_VERSION_STRING@
 PPC_VIDEO_FALSE = @PPC_VIDEO_FALSE@
 PPC_VIDEO_TRUE = @PPC_VIDEO_TRUE@
 PROJECTROOT = @PROJECTROOT@
@@ -337,6 +376,7 @@ RES_TRUE = @RES_TRUE@
 RGB_DB = @RGB_DB@
 SCREENSAVER_FALSE = @SCREENSAVER_FALSE@
 SCREENSAVER_TRUE = @SCREENSAVER_TRUE@
+SERVERCONFIGdir = @SERVERCONFIGdir@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
@@ -360,9 +400,9 @@ USE_CURSES_TRUE = @USE_CURSES_TRUE@
 USE_RGB_BUILTIN_FALSE = @USE_RGB_BUILTIN_FALSE@
 USE_RGB_BUILTIN_TRUE = @USE_RGB_BUILTIN_TRUE@
 VENDOR_MAN_VERSION = @VENDOR_MAN_VERSION@
+VENDOR_NAME = @VENDOR_NAME@
+VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VENDOR_RELEASE = @VENDOR_RELEASE@
-VENDOR_STRING = @VENDOR_STRING@
-VENDOR_STRING_SHORT = @VENDOR_STRING_SHORT@
 VERSION = @VERSION@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
@@ -391,13 +431,20 @@ XEPHYR_FALSE = @XEPHYR_FALSE@
 XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
 XEPHYR_TRUE = @XEPHYR_TRUE@
+XERRORDB_PATH = @XERRORDB_PATH@
 XEVIE_FALSE = @XEVIE_FALSE@
 XEVIE_TRUE = @XEVIE_TRUE@
 XF86BIGFONT_FALSE = @XF86BIGFONT_FALSE@
 XF86BIGFONT_TRUE = @XF86BIGFONT_TRUE@
 XF86CONFIGFILE = @XF86CONFIGFILE@
+XF86MISC_CFLAGS = @XF86MISC_CFLAGS@
+XF86MISC_LIBS = @XF86MISC_LIBS@
 XF86UTILS_FALSE = @XF86UTILS_FALSE@
 XF86UTILS_TRUE = @XF86UTILS_TRUE@
+XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
+XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
+XFAKESERVER_FALSE = @XFAKESERVER_FALSE@
+XFAKESERVER_TRUE = @XFAKESERVER_TRUE@
 XGLMODULES_CFLAGS = @XGLMODULES_CFLAGS@
 XGLMODULES_LIBS = @XGLMODULES_LIBS@
 XGLXMODULES_CFLAGS = @XGLXMODULES_CFLAGS@
@@ -411,8 +458,6 @@ XGL_MODULE_PATH = @XGL_MODULE_PATH@
 XGL_TRUE = @XGL_TRUE@
 XINERAMA_FALSE = @XINERAMA_FALSE@
 XINERAMA_TRUE = @XINERAMA_TRUE@
-XINPUT_FALSE = @XINPUT_FALSE@
-XINPUT_TRUE = @XINPUT_TRUE@
 XKB_BASE_DIRECTORY = @XKB_BASE_DIRECTORY@
 XKB_BIN_DIRECTORY = @XKB_BIN_DIRECTORY@
 XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
@@ -449,8 +494,9 @@ XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
 XORG_LOADER_SPARC_FALSE = @XORG_LOADER_SPARC_FALSE@
 XORG_LOADER_SPARC_TRUE = @XORG_LOADER_SPARC_TRUE@
+XORG_MODULES_CFLAGS = @XORG_MODULES_CFLAGS@
+XORG_MODULES_LIBS = @XORG_MODULES_LIBS@
 XORG_OS = @XORG_OS@
-XORG_OS_KBD = @XORG_OS_KBD@
 XORG_OS_SUBDIR = @XORG_OS_SUBDIR@
 XORG_TRUE = @XORG_TRUE@
 XPRINTPROTO_CFLAGS = @XPRINTPROTO_CFLAGS@
@@ -461,6 +507,8 @@ XPRINT_LIBS = @XPRINT_LIBS@
 XPRINT_TRUE = @XPRINT_TRUE@
 XP_USE_FREETYPE_FALSE = @XP_USE_FREETYPE_FALSE@
 XP_USE_FREETYPE_TRUE = @XP_USE_FREETYPE_TRUE@
+XQUARTZ_FALSE = @XQUARTZ_FALSE@
+XQUARTZ_TRUE = @XQUARTZ_TRUE@
 XRESEXAMPLES_DEP_CFLAGS = @XRESEXAMPLES_DEP_CFLAGS@
 XRESEXAMPLES_DEP_LIBS = @XRESEXAMPLES_DEP_LIBS@
 XSDLSERVER_FALSE = @XSDLSERVER_FALSE@
@@ -471,6 +519,8 @@ XSERVERCFLAGS_CFLAGS = @XSERVERCFLAGS_CFLAGS@
 XSERVERCFLAGS_LIBS = @XSERVERCFLAGS_LIBS@
 XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
 XSERVERLIBS_LIBS = @XSERVERLIBS_LIBS@
+XSERVER_DTRACE_FALSE = @XSERVER_DTRACE_FALSE@
+XSERVER_DTRACE_TRUE = @XSERVER_DTRACE_TRUE@
 XSERVER_LIBS = @XSERVER_LIBS@
 XTRAP_FALSE = @XTRAP_FALSE@
 XTRAP_TRUE = @XTRAP_TRUE@
@@ -524,6 +574,8 @@ am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
 am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
+am__fastdepOBJC_FALSE = @am__fastdepOBJC_FALSE@
+am__fastdepOBJC_TRUE = @am__fastdepOBJC_TRUE@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -569,17 +621,16 @@ noinst_LTLIBRARIES = libos.la libcwrapper.la
 AM_CFLAGS = $(DIX_CFLAGS)
 
 # FIXME: Add support for these in configure.ac
-K5AUTH_SOURCES = k5auth.c
-SECURERPC_SOURCES = rpcauth.c
-INTERNALMALLOC_SOURCES = xalloc.c
-XCSECURITY_SOURCES = secauth.c
-XDMCP_SOURCES = xdmcp.c
-STRLCAT_SOURCES = strlcat.c strlcpy.c
-XORG_SOURCES = log.c
-PRIVSEP_SOURCES = privsep.c
+SECURERPC_SRCS = rpcauth.c
+INTERNALMALLOC_SRCS = xalloc.c
+XCSECURITY_SRCS = secauth.c
+XDMCP_SRCS = xdmcp.c
+STRLCAT_SRCS = strlcat.c strlcpy.c
+XORG_SRCS = log.c
+PRIVSEP_SRCS = privsep.c
 libos_la_SOURCES = WaitFor.c access.c auth.c connection.c io.c \
 	mitauth.c oscolor.c oscolor.h osdep.h osinit.c utils.c \
-	xdmauth.c xstrans.c xprintf.c $(XORG_SOURCES) $(am__append_1) \
+	xdmauth.c xstrans.c xprintf.c $(XORG_SRCS) $(am__append_1) \
 	$(am__append_2) $(am__append_3) $(am__append_4)
 libcwrapper_la_SOURCES = \
 	$(top_srcdir)/hw/xfree86/os-support/shared/libc_wrapper.c
@@ -589,9 +640,10 @@ libcwrapper_la_CFLAGS = \
 	-I$(top_srcdir)/hw/xfree86/os-support \
 	$(AM_CFLAGS)
 
-EXTRA_DIST = $(K5AUTH_SOURCES) $(SECURERPC_SOURCES) $(INTERNALMALLOC_SOURCES) \
-     $(XCSECURITY_SOURCES) $(XDMCP_SOURCES) $(STRLCAT_SOURCES)
+EXTRA_DIST = $(SECURERPC_SRCS) $(INTERNALMALLOC_SRCS) \
+     $(XCSECURITY_SRCS) $(XDMCP_SRCS) $(STRLCAT_SRCS)
 
+CLEANFILES = os.c
 all: all-am
 
 .SUFFIXES:
@@ -639,6 +691,16 @@ libcwrapper.la: $(libcwrapper_la_OBJECTS) $(libcwrapper_la_DEPENDENCIES)
 libos.la: $(libos_la_OBJECTS) $(libos_la_DEPENDENCIES) 
 	$(LINK)  $(libos_la_LDFLAGS) $(libos_la_OBJECTS) $(libos_la_LIBADD) $(LIBS)
 
+clean-noinstPROGRAMS:
+	@list='$(noinst_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  echo " rm -f $$p $$f"; \
+	  rm -f $$p $$f ; \
+	done
+@XSERVER_DTRACE_FALSE@os.O$(EXEEXT): $(os_O_OBJECTS) $(os_O_DEPENDENCIES) 
+@XSERVER_DTRACE_FALSE@	@rm -f os.O$(EXEEXT)
+@XSERVER_DTRACE_FALSE@	$(LINK) $(os_O_LDFLAGS) $(os_O_OBJECTS) $(os_O_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -653,6 +715,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcwrapper_la-libc_wrapper.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mitauth.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/os.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/oscolor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osinit.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/privsep.Plo@am__quote@
@@ -780,7 +843,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES)
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS)
 installdirs:
 install: install-am
 install-exec: install-exec-am
@@ -799,6 +862,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -809,7 +873,7 @@ maintainer-clean-generic:
 clean: clean-am
 
 clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
-	mostlyclean-am
+	clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -858,17 +922,27 @@ ps-am:
 uninstall-am: uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-noinstLTLIBRARIES ctags distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
-	pdf pdf-am ps ps-am tags uninstall uninstall-am \
-	uninstall-info-am
+	clean-libtool clean-noinstLTLIBRARIES clean-noinstPROGRAMS \
+	ctags distclean distclean-compile distclean-generic \
+	distclean-libtool distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-info-am
 
+
+# Generate dtrace object code for probes in libos & libdix
+@XSERVER_DTRACE_TRUE@dtrace.o: $(top_srcdir)/dix/Xserver.d $(am_libos_la_OBJECTS)
+@XSERVER_DTRACE_TRUE@	$(DTRACE) -G -C -o $@ -s $(top_srcdir)/dix/Xserver.d .libs/*.o ../dix/.libs/*.o
+
+@XSERVER_DTRACE_TRUE@os.O: dtrace.o $(am_libos_la_OBJECTS)
+@XSERVER_DTRACE_TRUE@	ld -r -o $@ dtrace.o .libs/*.o
+
+os.c:
+	touch $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

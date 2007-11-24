@@ -1,4 +1,3 @@
-
 /*
  * Loosely based on code bearing the following copyright:
  *
@@ -36,17 +35,15 @@
 #endif
 
 #include <stdlib.h>
+#include <errno.h>
 
 #undef HAS_UTSNAME
-#if !defined(WIN32) && !defined(__UNIXOS2__)
+#if !defined(WIN32)
 #define HAS_UTSNAME 1
 #include <sys/utsname.h>
 #endif
 
 #define NEED_EVENTS
-#ifdef __UNIXOS2__
-#define I_NEED_OS2_H
-#endif
 #include <X11/X.h>
 #include <X11/Xmd.h>
 #include <X11/Xproto.h>
@@ -104,10 +101,6 @@ static void xf86PrintDefaultModulePath(void);
 static void xf86PrintDefaultLibraryPath(void);
 static void xf86RunVtInit(void);
 
-#ifdef __UNIXOS2__
-extern void os2ServerVideoAccess();
-#endif
-
 #ifdef XF86PM
 void (*xf86OSPMClose)(void) = NULL;
 #endif
@@ -136,18 +129,6 @@ static int numFormats = 7;
 static int numFormats = 6;
 #endif
 static Bool formatsDone = FALSE;
-
-#ifdef USE_DEPRECATED_KEYBOARD_DRIVER
-static InputDriverRec XF86KEYBOARD = {
-	1,
-	"keyboard",
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	0
-};
-#endif
 
 #ifdef X_PRIVSEP
 static Bool xf86KeepPriv = FALSE;
@@ -253,9 +234,6 @@ PostConfigInit(void)
 #ifdef SIGXFSZ
        signal(SIGXFSZ,xf86SigHandler);
 #endif
-#ifdef MEMDEBUG
-       signal(SIGUSR2,xf86SigMemDebug);
-#endif
     }
 
 #ifdef XF86PM
@@ -282,10 +260,6 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
   Bool			 pix24Fail = FALSE;
   Bool			 autoconfig = FALSE;
   
-#ifdef __UNIXOS2__
-  os2ServerVideoAccess();  /* See if we have access to the screen before doing anything */
-#endif
-
   xf86Initialising = TRUE;
 
   /* Do this early? */
@@ -343,39 +317,6 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
         LoaderSetOptions(LDR_OPT_ABI_MISMATCH_NONFATAL);
     }
 
-#ifdef TESTING
-    {
-	char **list, **l;
-	const char *subdirs[] = {
-		"drivers",
-		NULL
-	};
-	const char *patlist[] = {
-		"(.*)_drv\\.so",
-		"(.*)_drv\\.o",
-		NULL
-	};
-	ErrorF("Getting module listing...\n");
-	list = LoaderListDirs(NULL, NULL);
-	if (list)
-	    for (l = list; *l; l++)
-		ErrorF("module: %s\n", *l);
-	LoaderFreeDirList(list);
-	ErrorF("Getting video driver listing...\n");
-	list = LoaderListDirs(subdirs, NULL);
-	if (list)
-	    for (l = list; *l; l++)
-		ErrorF("video driver: %s\n", *l);
-	LoaderFreeDirList(list);
-	ErrorF("Getting driver listing...\n");
-	list = LoaderListDirs(NULL, patlist);
-	if (list)
-	    for (l = list; *l; l++)
-		ErrorF("video driver: %s\n", *l);
-	LoaderFreeDirList(list);
-    }
-#endif
-	
     /* Force load mandatory base modules */
     if (!xf86LoadModules(baseModules, NULL))
 	FatalError("Unable to load required base modules, Exiting...\n");
@@ -415,10 +356,6 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
       xfree(modulelist);
     }
 
-#ifdef USE_DEPRECATED_KEYBOARD_DRIVER
-    /* Setup the builtin input drivers */
-    xf86AddInputDriver(&XF86KEYBOARD, NULL, 0);
-#endif
     /* Load all input driver modules specified in the config file. */
     if ((modulelist = xf86InputDriverlistFromConfig())) {
       xf86LoadModules(modulelist, NULL);
@@ -771,7 +708,7 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
       }
       *VT = xf86Info.vtno;
     
-      VTAtom = MakeAtom(VT_ATOM_NAME, sizeof(VT_ATOM_NAME), TRUE);
+      VTAtom = MakeAtom(VT_ATOM_NAME, sizeof(VT_ATOM_NAME) - 1, TRUE);
 
       for (i = 0, ret = Success; i < xf86NumScreens && ret == Success; i++) {
 	ret = xf86RegisterRootWindowProperty(xf86Screens[i]->scrnIndex,
@@ -791,27 +728,6 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
 	    break;
 	}
     }
-
-#if BITMAP_SCANLINE_UNIT == 64
-    /*
-     * cfb24 doesn't currently work on architectures with a 64 bit
-     * BITMAP_SCANLINE_UNIT, so check for 24 bit pixel size for pixmaps
-     * or framebuffers.
-     */
-    {
-	Bool usesCfb24 = FALSE;
-
-	if (PIX24TOBPP(pix24) == 24)
-	    usesCfb24 = TRUE;
-	for (i = 0; i < xf86NumScreens; i++)
-	    if (xf86Screens[i]->bitsPerPixel == 24)
-		usesCfb24 = TRUE;
-	if (usesCfb24) {
-	    FatalError("24-bit pixel size is not supported on systems with"
-			" 64-bit scanlines.\n");
-	}
-    }
-#endif
 
 #ifdef XKB
     xf86InitXkb();
@@ -969,14 +885,6 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
     xf86Msg(xf86Info.randRFrom, "RandR %s\n",
 	    xf86Info.disableRandR ? "disabled" : "enabled");
 #endif
-#ifdef NOT_USED
-      /*
-       * Here we have to let the driver getting access of the VT. Note that
-       * this doesn't mean that the graphics board may access automatically
-       * the monitor. If the monitor is shared this is done in xf86CrossScreen!
-       */
-      if (!xf86Info.sharedMonitor) (xf86Screens[i]->EnterLeaveMonitor)(ENTER);
-#endif
   }
 
   xf86PostScreenInit();
@@ -990,21 +898,6 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
 				 NULL);
 }
 
-
-static InputDriverPtr
-MatchInput(IDevPtr pDev)
-{
-    int i;
-
-    for (i = 0; i < xf86NumInputDrivers; i++) {
-	if (xf86InputDriverList[i] && xf86InputDriverList[i]->driverName &&
-	    xf86NameCmp(pDev->driver, xf86InputDriverList[i]->driverName) == 0)
-	    return xf86InputDriverList[i];
-    }
-    return NULL;
-}
-
-
 /*
  * InitInput --
  *      Initialize all supported input devices.
@@ -1015,31 +908,29 @@ InitInput(argc, argv)
      int     	  argc;
      char    	  **argv;
 {
-    IDevPtr pDev;
+    IDevPtr* pDev;
     InputDriverPtr pDrv;
     InputInfoPtr pInfo;
-    static InputInfoPtr coreKeyboard = NULL, corePointer = NULL;
 
     xf86Info.vtRequestsPending = FALSE;
     xf86Info.inputPending = FALSE;
 
     if (serverGeneration == 1) {
 	/* Call the PreInit function for each input device instance. */
-	for (pDev = xf86ConfigLayout.inputs; pDev && pDev->identifier; pDev++) {
-#ifdef USE_DEPRECATED_KEYBOARD_DRIVER
-	    /* XXX The keyboard driver is a special case for now. */
-	    if (!xf86NameCmp(pDev->driver, "keyboard")) {
-		xf86MsgVerb(X_WARNING, 0, "*** WARNING the legacy keyboard driver \"keyboard\" is deprecated\n");
-		xf86MsgVerb(X_WARNING, 0, "*** and will be removed in the next release of the Xorg server.\n");
-		xf86MsgVerb(X_WARNING, 0, "*** Please consider using the the new \"kbd\" driver for \"%s\".\n",
-			pDev->identifier);
+	for (pDev = xf86ConfigLayout.inputs; pDev && *pDev; pDev++) {
+	    /* Replace obsolete keyboard driver with kbd */
+	    if (!xf86NameCmp((*pDev)->driver, "keyboard")) {
+		xf86MsgVerb(X_WARNING, 0,
+			    "*** WARNING the legacy keyboard driver \"%s\" has been removed\n",
+			    (*pDev)->driver);
+		xf86MsgVerb(X_WARNING, 0,
+			    "*** Using the new \"kbd\" driver for \"%s\".\n",
+			    (*pDev)->identifier);
+		strcpy((*pDev)->driver, "kbd");
+            }
 
-		continue;
-	    }
-#endif
-
-	    if ((pDrv = MatchInput(pDev)) == NULL) {
-		xf86Msg(X_ERROR, "No Input driver matching `%s'\n", pDev->driver);
+	    if ((pDrv = xf86LookupInputDriver((*pDev)->driver)) == NULL) {
+		xf86Msg(X_ERROR, "No Input driver matching `%s'\n", (*pDev)->driver);
 		/* XXX For now, just continue. */
 		continue;
 	    }
@@ -1049,91 +940,29 @@ InitInput(argc, argv)
 		    pDrv->driverName);
 		continue;
 	    }
-	    pInfo = pDrv->PreInit(pDrv, pDev, 0);
+	    pInfo = pDrv->PreInit(pDrv, *pDev, 0);
 	    if (!pInfo) {
 		xf86Msg(X_ERROR, "PreInit returned NULL for \"%s\"\n",
-			pDev->identifier);
+			(*pDev)->identifier);
 		continue;
 	    } else if (!(pInfo->flags & XI86_CONFIGURED)) {
 		xf86Msg(X_ERROR, "PreInit failed for input device \"%s\"\n",
-			pDev->identifier);
+			(*pDev)->identifier);
 		xf86DeleteInput(pInfo, 0);
 		continue;
 	    }
-	    if (pInfo->flags & XI86_CORE_KEYBOARD) {
-		if (coreKeyboard) {
-		    xf86Msg(X_ERROR,
-		      "Attempt to register more than one core keyboard (%s)\n",
-		      pInfo->name);
-		    pInfo->flags &= ~XI86_CORE_KEYBOARD;
-		} else {
-		    if (!(pInfo->flags & XI86_KEYBOARD_CAPABLE)) {
-			/* XXX just a warning for now */
-			xf86Msg(X_WARNING,
-			    "%s: does not have core keyboard capabilities\n",
-			    pInfo->name);
-		    }
-		    coreKeyboard = pInfo;
-		}
-	    }
-	    if (pInfo->flags & XI86_CORE_POINTER) {
-		if (corePointer) {
-		    xf86Msg(X_ERROR,
-			"Attempt to register more than one core pointer (%s)\n",
-			pInfo->name);
-		    pInfo->flags &= ~XI86_CORE_POINTER;
-		} else {
-		    if (!(pInfo->flags & XI86_POINTER_CAPABLE)) {
-			/* XXX just a warning for now */
-			xf86Msg(X_WARNING,
-			    "%s: does not have core pointer capabilities\n",
-			    pInfo->name);
-		    }
-		    corePointer = pInfo;
-		}
-	    }
 	}
-	if (!corePointer) {
-	    xf86Msg(X_WARNING, "No core pointer registered\n");
-	    /* XXX register a dummy core pointer */
-	}
-#ifdef NEW_KBD
-	if (!coreKeyboard) {
-	    xf86Msg(X_WARNING, "No core keyboard registered\n");
-	    /* XXX register a dummy core keyboard */
-	}
-#endif
     }
 
     /* Initialise all input devices. */
     pInfo = xf86InputDevs;
     while (pInfo) {
+        xf86Msg(X_INFO, "evaluating device (%s)\n", pInfo->name);
 	xf86ActivateDevice(pInfo);
 	pInfo = pInfo->next;
     }
 
-    if (coreKeyboard) {
-      xf86Info.pKeyboard = coreKeyboard->dev;
-      xf86Info.kbdEvents = NULL; /* to prevent the internal keybord driver usage*/
-    }
-    else {
-#ifdef USE_DEPRECATED_KEYBOARD_DRIVER
-      /* Only set this if we're allowing the old driver. */
-	if (xf86Info.kbdProc != NULL) 
-	    xf86Info.pKeyboard = AddInputDevice(xf86Info.kbdProc, TRUE);
-#endif
-    }
-    if (corePointer)
-	xf86Info.pMouse = corePointer->dev;
-    if (xf86Info.pKeyboard)
-      RegisterKeyboardDevice(xf86Info.pKeyboard); 
-
-  miRegisterPointerDevice(screenInfo.screens[0], xf86Info.pMouse);
-#ifdef XINPUT
-  xf86eqInit ((DevicePtr)xf86Info.pKeyboard, (DevicePtr)xf86Info.pMouse);
-#else
-  mieqInit ((DevicePtr)xf86Info.pKeyboard, (DevicePtr)xf86Info.pMouse);
-#endif
+    mieqInit();
 }
 
 #ifndef SET_STDERR_NONBLOCKING
@@ -1162,7 +991,9 @@ OsVendorInit(void)
   signal(SIGCHLD, SIG_DFL);	/* Need to wait for child processes */
 #endif
   OsDelayInitColors = TRUE;
+#ifndef BUILTIN_FONTS
   loadableFonts = TRUE;
+#endif
 
   if (!beenHere)
     xf86LogInit();
@@ -1179,9 +1010,7 @@ OsVendorInit(void)
 
 #ifdef O_NONBLOCK
   if (!beenHere) {
-#if !defined(__EMX__)
     if (geteuid() == 0 && getuid() != geteuid())
-#endif
     {
       int status;
 
@@ -1262,12 +1091,6 @@ void
 AbortDDX()
 {
   int i;
-
-  /*
-   * try to deinitialize all input devices
-   */
-  if (xf86Info.kbdProc && xf86Info.pKeyboard)
-    (xf86Info.kbdProc)(xf86Info.pKeyboard, DEVICE_CLOSE);
 
   /*
    * try to restore the original video state
@@ -1821,7 +1644,7 @@ xf86PrintBanner()
     "latest version in the X.Org Foundation git repository.\n"
     "See http://wiki.x.org/wiki/GitPage for git access instructions.\n");
 #endif
-  ErrorF("\nX Window System Version %d.%d.%d",
+  ErrorF("\nX.Org X Server %d.%d.%d",
 	 XORG_VERSION_MAJOR,
 	 XORG_VERSION_MINOR,
 	 XORG_VERSION_PATCH);
@@ -1855,8 +1678,8 @@ xf86PrintBanner()
 #define XORG_DATE XF86_DATE
 #endif
   ErrorF("\nRelease Date: %s\n", XORG_DATE);
-  ErrorF("X Protocol Version %d, Revision %d, %s\n",
-         X_PROTOCOL, X_PROTOCOL_REVISION, XORG_RELEASE );
+  ErrorF("X Protocol Version %d, Revision %d\n",
+         X_PROTOCOL, X_PROTOCOL_REVISION);
   ErrorF("Build Operating System: %s %s\n", OSNAME, OSVENDOR);
 #ifdef HAS_UTSNAME
   {
@@ -1882,8 +1705,16 @@ xf86PrintBanner()
     t.tm_mday = BUILD_DATE % 100;
     t.tm_mon = (BUILD_DATE / 100) % 100 - 1;
     t.tm_year = BUILD_DATE / 10000 - 1900;
+#if defined(BUILD_TIME)
+    t.tm_sec = BUILD_TIME % 100;
+    t.tm_min = (BUILD_TIME / 100) % 100;
+    t.tm_hour = (BUILD_TIME / 10000) % 100;
+    if (strftime(buf, sizeof(buf), "%d %B %Y  %I:%M:%S%p", &t))
+       ErrorF("Build Date: %s\n", buf);
+#else
     if (strftime(buf, sizeof(buf), "%d %B %Y", &t))
        ErrorF("Build Date: %s\n", buf);
+#endif
   }
 #endif
 #if defined(CLOG_DATE) && (CLOG_DATE > 19000000)
@@ -1981,16 +1812,17 @@ xf86LoadModules(char **list, pointer *optlist)
 
     for (i = 0; list[i] != NULL; i++) {
 
-#ifndef NORMALISE_MODULE_NAME
-	name = xstrdup(list[i]);
-#else
 	/* Normalise the module name */
 	name = xf86NormalizeName(list[i]);
-#endif
 
 	/* Skip empty names */
 	if (name == NULL || *name == '\0')
 	    continue;
+
+	/* Replace obsolete keyboard driver with kbd */
+	if (!xf86NameCmp(name, "keyboard")) {
+	    strcpy(name, "kbd");
+	}
 
 	if (optlist)
 	    opt = optlist[i];

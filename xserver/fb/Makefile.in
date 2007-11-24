@@ -37,7 +37,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@MMX_CAPABLE_TRUE@am__append_1 = -DUSE_MMX
 subdir = fb
 DIST_COMMON = $(am__sdk_HEADERS_DIST) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -57,18 +56,35 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/kdrive-config.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
-libfb_la_DEPENDENCIES = libfbmmx.la
-am_libfb_la_OBJECTS = fb24_32.lo fballpriv.lo fbarc.lo fbbits.lo \
-	fbblt.lo fbbltone.lo fbbstore.lo fbcompose.lo fbcopy.lo \
-	fbfill.lo fbfillrect.lo fbfillsp.lo fbgc.lo fbgetsp.lo \
-	fbglyph.lo fbimage.lo fbline.lo fboverlay.lo fbpict.lo \
-	fbpixmap.lo fbpoint.lo fbpush.lo fbscreen.lo fbseg.lo \
-	fbsetsp.lo fbsolid.lo fbstipple.lo fbtile.lo fbtrap.lo \
-	fbutil.lo fbwindow.lo fbpseudocolor.lo fbedge.lo
+libfb_la_LIBADD =
+am_libfb_la_OBJECTS = libfb_la-fb24_32.lo libfb_la-fballpriv.lo \
+	libfb_la-fbarc.lo libfb_la-fbbits.lo libfb_la-fbblt.lo \
+	libfb_la-fbbltone.lo libfb_la-fbbstore.lo libfb_la-fbcopy.lo \
+	libfb_la-fbfill.lo libfb_la-fbfillrect.lo libfb_la-fbfillsp.lo \
+	libfb_la-fbgc.lo libfb_la-fbgetsp.lo libfb_la-fbglyph.lo \
+	libfb_la-fbimage.lo libfb_la-fbline.lo libfb_la-fboverlay.lo \
+	libfb_la-fbpict.lo libfb_la-fbpixmap.lo libfb_la-fbpoint.lo \
+	libfb_la-fbpush.lo libfb_la-fbscreen.lo libfb_la-fbseg.lo \
+	libfb_la-fbsetsp.lo libfb_la-fbsolid.lo libfb_la-fbstipple.lo \
+	libfb_la-fbtile.lo libfb_la-fbtrap.lo libfb_la-fbutil.lo \
+	libfb_la-fbwindow.lo libfb_la-fbpseudocolor.lo
 libfb_la_OBJECTS = $(am_libfb_la_OBJECTS)
-libfbmmx_la_LIBADD =
-am_libfbmmx_la_OBJECTS = libfbmmx_la-fbmmx.lo
-libfbmmx_la_OBJECTS = $(am_libfbmmx_la_OBJECTS)
+libwfb_la_LIBADD =
+am__objects_1 = libwfb_la-fb24_32.lo libwfb_la-fballpriv.lo \
+	libwfb_la-fbarc.lo libwfb_la-fbbits.lo libwfb_la-fbblt.lo \
+	libwfb_la-fbbltone.lo libwfb_la-fbbstore.lo \
+	libwfb_la-fbcopy.lo libwfb_la-fbfill.lo \
+	libwfb_la-fbfillrect.lo libwfb_la-fbfillsp.lo \
+	libwfb_la-fbgc.lo libwfb_la-fbgetsp.lo libwfb_la-fbglyph.lo \
+	libwfb_la-fbimage.lo libwfb_la-fbline.lo \
+	libwfb_la-fboverlay.lo libwfb_la-fbpict.lo \
+	libwfb_la-fbpixmap.lo libwfb_la-fbpoint.lo libwfb_la-fbpush.lo \
+	libwfb_la-fbscreen.lo libwfb_la-fbseg.lo libwfb_la-fbsetsp.lo \
+	libwfb_la-fbsolid.lo libwfb_la-fbstipple.lo \
+	libwfb_la-fbtile.lo libwfb_la-fbtrap.lo libwfb_la-fbutil.lo \
+	libwfb_la-fbwindow.lo libwfb_la-fbpseudocolor.lo
+am_libwfb_la_OBJECTS = $(am__objects_1)
+libwfb_la_OBJECTS = $(am_libwfb_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -80,9 +96,10 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libfb_la_SOURCES) $(libfbmmx_la_SOURCES)
-DIST_SOURCES = $(libfb_la_SOURCES) $(libfbmmx_la_SOURCES)
-am__sdk_HEADERS_DIST = fb.h fbrop.h fbpseudocolor.h fboverlay.h
+SOURCES = $(libfb_la_SOURCES) $(libwfb_la_SOURCES)
+DIST_SOURCES = $(libfb_la_SOURCES) $(libwfb_la_SOURCES)
+am__sdk_HEADERS_DIST = fb.h fbrop.h fbpseudocolor.h fboverlay.h \
+	wfbrename.h
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -113,6 +130,7 @@ AMTAR = @AMTAR@
 APPDEFAULTDIR = @APPDEFAULTDIR@
 APPGROUP_FALSE = @APPGROUP_FALSE@
 APPGROUP_TRUE = @APPGROUP_TRUE@
+APPLE_APPLICATIONS_DIR = @APPLE_APPLICATIONS_DIR@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -132,13 +150,18 @@ BSD_KQUEUE_APM_FALSE = @BSD_KQUEUE_APM_FALSE@
 BSD_KQUEUE_APM_TRUE = @BSD_KQUEUE_APM_TRUE@
 BUILDDOCS_FALSE = @BUILDDOCS_FALSE@
 BUILDDOCS_TRUE = @BUILDDOCS_TRUE@
+BUILD_DARWIN_FALSE = @BUILD_DARWIN_FALSE@
+BUILD_DARWIN_TRUE = @BUILD_DARWIN_TRUE@
 BUILD_DATE = @BUILD_DATE@
 BUILD_KBD_MODE_FALSE = @BUILD_KBD_MODE_FALSE@
 BUILD_KBD_MODE_TRUE = @BUILD_KBD_MODE_TRUE@
+BUILD_KDRIVEFBDEVLIB_FALSE = @BUILD_KDRIVEFBDEVLIB_FALSE@
+BUILD_KDRIVEFBDEVLIB_TRUE = @BUILD_KDRIVEFBDEVLIB_TRUE@
 BUILD_LINUXDOC_FALSE = @BUILD_LINUXDOC_FALSE@
 BUILD_LINUXDOC_TRUE = @BUILD_LINUXDOC_TRUE@
 BUILD_PDFDOC_FALSE = @BUILD_PDFDOC_FALSE@
 BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
+BUILD_TIME = @BUILD_TIME@
 BUILD_XORGCFG_FALSE = @BUILD_XORGCFG_FALSE@
 BUILD_XORGCFG_TRUE = @BUILD_XORGCFG_TRUE@
 CC = @CC@
@@ -151,6 +174,10 @@ CFLAGS = @CFLAGS@
 COMPILEDDEFAULTFONTPATH = @COMPILEDDEFAULTFONTPATH@
 COMPOSITE_FALSE = @COMPOSITE_FALSE@
 COMPOSITE_TRUE = @COMPOSITE_TRUE@
+CONFIG_DBUS_API_FALSE = @CONFIG_DBUS_API_FALSE@
+CONFIG_DBUS_API_TRUE = @CONFIG_DBUS_API_TRUE@
+CONFIG_HAL_FALSE = @CONFIG_HAL_FALSE@
+CONFIG_HAL_TRUE = @CONFIG_HAL_TRUE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CUP_FALSE = @CUP_FALSE@
@@ -160,8 +187,11 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DARWIN_LIBS = @DARWIN_LIBS@
 DBE_FALSE = @DBE_FALSE@
 DBE_TRUE = @DBE_TRUE@
+DBUS_CFLAGS = @DBUS_CFLAGS@
+DBUS_LIBS = @DBUS_LIBS@
 DEBUG_FALSE = @DEBUG_FALSE@
 DEBUG_TRUE = @DEBUG_TRUE@
 DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
@@ -169,7 +199,9 @@ DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DGA_CFLAGS = @DGA_CFLAGS@
 DGA_FALSE = @DGA_FALSE@
+DGA_LIBS = @DGA_LIBS@
 DGA_TRUE = @DGA_TRUE@
 DIX_CFLAGS = @DIX_CFLAGS@
 DLLTOOL = @DLLTOOL@
@@ -196,6 +228,7 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
 DRI_FALSE = @DRI_FALSE@
 DRI_TRUE = @DRI_TRUE@
+DTRACE = @DTRACE@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -224,6 +257,14 @@ GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
 H3600_TS_FALSE = @H3600_TS_FALSE@
 H3600_TS_TRUE = @H3600_TS_TRUE@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
+HAVE_AGL_FRAMEWORK_FALSE = @HAVE_AGL_FRAMEWORK_FALSE@
+HAVE_AGL_FRAMEWORK_TRUE = @HAVE_AGL_FRAMEWORK_TRUE@
+HAVE_DBUS_FALSE = @HAVE_DBUS_FALSE@
+HAVE_DBUS_TRUE = @HAVE_DBUS_TRUE@
+HAVE_X_PLUGIN_FALSE = @HAVE_X_PLUGIN_FALSE@
+HAVE_X_PLUGIN_TRUE = @HAVE_X_PLUGIN_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
@@ -260,6 +301,7 @@ KDRIVE_HW_FALSE = @KDRIVE_HW_FALSE@
 KDRIVE_HW_TRUE = @KDRIVE_HW_TRUE@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
+KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KDRIVE_TRUE = @KDRIVE_TRUE@
@@ -303,14 +345,17 @@ MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
 MKFONTDIR = @MKFONTDIR@
 MKFONTSCALE = @MKFONTSCALE@
-MMX_CAPABLE_FALSE = @MMX_CAPABLE_FALSE@
-MMX_CAPABLE_TRUE = @MMX_CAPABLE_TRUE@
 MULTIBUFFER_FALSE = @MULTIBUFFER_FALSE@
 MULTIBUFFER_TRUE = @MULTIBUFFER_TRUE@
 NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
 NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
 NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
 NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
+OBJC = @OBJC@
+OBJCCLD = @OBJCCLD@
+OBJCDEPMODE = @OBJCDEPMODE@
+OBJCFLAGS = @OBJCFLAGS@
+OBJCLINK = @OBJCLINK@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -321,7 +366,11 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PERL = @PERL@
+PIXMAN_CFLAGS = @PIXMAN_CFLAGS@
+PIXMAN_LIBS = @PIXMAN_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
+PLIST_VENDOR_WEB = @PLIST_VENDOR_WEB@
+PLIST_VERSION_STRING = @PLIST_VERSION_STRING@
 PPC_VIDEO_FALSE = @PPC_VIDEO_FALSE@
 PPC_VIDEO_TRUE = @PPC_VIDEO_TRUE@
 PROJECTROOT = @PROJECTROOT@
@@ -336,6 +385,7 @@ RES_TRUE = @RES_TRUE@
 RGB_DB = @RGB_DB@
 SCREENSAVER_FALSE = @SCREENSAVER_FALSE@
 SCREENSAVER_TRUE = @SCREENSAVER_TRUE@
+SERVERCONFIGdir = @SERVERCONFIGdir@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
@@ -359,9 +409,9 @@ USE_CURSES_TRUE = @USE_CURSES_TRUE@
 USE_RGB_BUILTIN_FALSE = @USE_RGB_BUILTIN_FALSE@
 USE_RGB_BUILTIN_TRUE = @USE_RGB_BUILTIN_TRUE@
 VENDOR_MAN_VERSION = @VENDOR_MAN_VERSION@
+VENDOR_NAME = @VENDOR_NAME@
+VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VENDOR_RELEASE = @VENDOR_RELEASE@
-VENDOR_STRING = @VENDOR_STRING@
-VENDOR_STRING_SHORT = @VENDOR_STRING_SHORT@
 VERSION = @VERSION@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
@@ -390,13 +440,20 @@ XEPHYR_FALSE = @XEPHYR_FALSE@
 XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
 XEPHYR_TRUE = @XEPHYR_TRUE@
+XERRORDB_PATH = @XERRORDB_PATH@
 XEVIE_FALSE = @XEVIE_FALSE@
 XEVIE_TRUE = @XEVIE_TRUE@
 XF86BIGFONT_FALSE = @XF86BIGFONT_FALSE@
 XF86BIGFONT_TRUE = @XF86BIGFONT_TRUE@
 XF86CONFIGFILE = @XF86CONFIGFILE@
+XF86MISC_CFLAGS = @XF86MISC_CFLAGS@
+XF86MISC_LIBS = @XF86MISC_LIBS@
 XF86UTILS_FALSE = @XF86UTILS_FALSE@
 XF86UTILS_TRUE = @XF86UTILS_TRUE@
+XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
+XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
+XFAKESERVER_FALSE = @XFAKESERVER_FALSE@
+XFAKESERVER_TRUE = @XFAKESERVER_TRUE@
 XGLMODULES_CFLAGS = @XGLMODULES_CFLAGS@
 XGLMODULES_LIBS = @XGLMODULES_LIBS@
 XGLXMODULES_CFLAGS = @XGLXMODULES_CFLAGS@
@@ -410,8 +467,6 @@ XGL_MODULE_PATH = @XGL_MODULE_PATH@
 XGL_TRUE = @XGL_TRUE@
 XINERAMA_FALSE = @XINERAMA_FALSE@
 XINERAMA_TRUE = @XINERAMA_TRUE@
-XINPUT_FALSE = @XINPUT_FALSE@
-XINPUT_TRUE = @XINPUT_TRUE@
 XKB_BASE_DIRECTORY = @XKB_BASE_DIRECTORY@
 XKB_BIN_DIRECTORY = @XKB_BIN_DIRECTORY@
 XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
@@ -448,8 +503,9 @@ XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
 XORG_LOADER_SPARC_FALSE = @XORG_LOADER_SPARC_FALSE@
 XORG_LOADER_SPARC_TRUE = @XORG_LOADER_SPARC_TRUE@
+XORG_MODULES_CFLAGS = @XORG_MODULES_CFLAGS@
+XORG_MODULES_LIBS = @XORG_MODULES_LIBS@
 XORG_OS = @XORG_OS@
-XORG_OS_KBD = @XORG_OS_KBD@
 XORG_OS_SUBDIR = @XORG_OS_SUBDIR@
 XORG_TRUE = @XORG_TRUE@
 XPRINTPROTO_CFLAGS = @XPRINTPROTO_CFLAGS@
@@ -460,6 +516,8 @@ XPRINT_LIBS = @XPRINT_LIBS@
 XPRINT_TRUE = @XPRINT_TRUE@
 XP_USE_FREETYPE_FALSE = @XP_USE_FREETYPE_FALSE@
 XP_USE_FREETYPE_TRUE = @XP_USE_FREETYPE_TRUE@
+XQUARTZ_FALSE = @XQUARTZ_FALSE@
+XQUARTZ_TRUE = @XQUARTZ_TRUE@
 XRESEXAMPLES_DEP_CFLAGS = @XRESEXAMPLES_DEP_CFLAGS@
 XRESEXAMPLES_DEP_LIBS = @XRESEXAMPLES_DEP_LIBS@
 XSDLSERVER_FALSE = @XSDLSERVER_FALSE@
@@ -470,6 +528,8 @@ XSERVERCFLAGS_CFLAGS = @XSERVERCFLAGS_CFLAGS@
 XSERVERCFLAGS_LIBS = @XSERVERCFLAGS_LIBS@
 XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
 XSERVERLIBS_LIBS = @XSERVERLIBS_LIBS@
+XSERVER_DTRACE_FALSE = @XSERVER_DTRACE_FALSE@
+XSERVER_DTRACE_TRUE = @XSERVER_DTRACE_TRUE@
 XSERVER_LIBS = @XSERVER_LIBS@
 XTRAP_FALSE = @XTRAP_FALSE@
 XTRAP_TRUE = @XTRAP_TRUE@
@@ -523,6 +583,8 @@ am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
 am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
+am__fastdepOBJC_FALSE = @am__fastdepOBJC_FALSE@
+am__fastdepOBJC_TRUE = @am__fastdepOBJC_TRUE@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -564,27 +626,16 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 xglmoduledir = @xglmoduledir@
 xpconfigdir = @xpconfigdir@
-noinst_LTLIBRARIES = libfb.la libfbmmx.la
+noinst_LTLIBRARIES = libfb.la libwfb.la
 INCLUDES = \
 	-I$(top_srcdir)/hw/xfree86/os-support \
 	-I$(top_srcdir)/hw/xfree86/os-support/bus \
 	-I$(top_srcdir)/hw/xfree86/common
 
-AM_CFLAGS = $(DIX_CFLAGS) $(am__append_1)
-@XORG_TRUE@sdk_HEADERS = fb.h fbrop.h fbpseudocolor.h fboverlay.h
-@MMX_CAPABLE_TRUE@libfbmmx_la_CFLAGS = \
-@MMX_CAPABLE_TRUE@	$(DIX_CFLAGS)				\
-@MMX_CAPABLE_TRUE@	-DUSE_MMX				\
-@MMX_CAPABLE_TRUE@	-mmmx					\
-@MMX_CAPABLE_TRUE@	-msse					\
-@MMX_CAPABLE_TRUE@	-Winline				\
-@MMX_CAPABLE_TRUE@	--param inline-unit-growth=10000	\
-@MMX_CAPABLE_TRUE@        --param large-function-growth=10000
-
-libfbmmx_la_SOURCES = \
-	fbmmx.c		\
-	fbmmx.h
-
+AM_CFLAGS = $(DIX_CFLAGS)
+@XORG_TRUE@sdk_HEADERS = fb.h fbrop.h fbpseudocolor.h fboverlay.h wfbrename.h
+libfb_la_CFLAGS = $(AM_CFLAGS)
+libwfb_la_CFLAGS = $(AM_CFLAGS) -DFB_ACCESS_WRAPPER
 libfb_la_SOURCES = \
 	fb.h		\
 	fb24_32.c	\
@@ -596,7 +647,6 @@ libfb_la_SOURCES = \
 	fbblt.c		\
 	fbbltone.c	\
 	fbbstore.c	\
-	fbcompose.c	\
 	fbcopy.c	\
 	fbfill.c	\
 	fbfillrect.c	\
@@ -624,12 +674,10 @@ libfb_la_SOURCES = \
 	fbutil.c	\
 	fbwindow.c	\
 	fbpseudocolor.c \
-	fbpseudocolor.h \
-	fbedge.c	\
-	fbedgeimp.h
+	fbpseudocolor.h
 
-libfb_la_LIBADD = libfbmmx.la
-EXTRA_DIST = fbcmap.c
+libwfb_la_SOURCES = $(libfb_la_SOURCES)
+EXTRA_DIST = fbcmap.c fbcmap_mi.c
 all: all-am
 
 .SUFFIXES:
@@ -674,8 +722,8 @@ clean-noinstLTLIBRARIES:
 	done
 libfb.la: $(libfb_la_OBJECTS) $(libfb_la_DEPENDENCIES) 
 	$(LINK)  $(libfb_la_LDFLAGS) $(libfb_la_OBJECTS) $(libfb_la_LIBADD) $(LIBS)
-libfbmmx.la: $(libfbmmx_la_OBJECTS) $(libfbmmx_la_DEPENDENCIES) 
-	$(LINK)  $(libfbmmx_la_LDFLAGS) $(libfbmmx_la_OBJECTS) $(libfbmmx_la_LIBADD) $(LIBS)
+libwfb.la: $(libwfb_la_OBJECTS) $(libwfb_la_DEPENDENCIES) 
+	$(LINK)  $(libwfb_la_LDFLAGS) $(libwfb_la_OBJECTS) $(libwfb_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -683,40 +731,68 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fb24_32.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fballpriv.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbarc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbbits.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbblt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbbltone.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbbstore.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbcompose.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbcopy.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbedge.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbfill.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbfillrect.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbfillsp.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbgc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbgetsp.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbglyph.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbimage.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbline.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fboverlay.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbpict.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbpixmap.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbpoint.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbpseudocolor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbpush.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbscreen.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbseg.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbsetsp.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbsolid.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbstipple.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbtile.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbtrap.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbutil.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbwindow.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfbmmx_la-fbmmx.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fb24_32.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fballpriv.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbarc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbbits.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbblt.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbbltone.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbbstore.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbcopy.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbfill.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbfillrect.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbfillsp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbgc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbgetsp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbglyph.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbimage.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbline.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fboverlay.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbpict.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbpixmap.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbpoint.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbpseudocolor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbpush.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbscreen.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbseg.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbsetsp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbsolid.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbstipple.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbtile.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbtrap.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbutil.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbwindow.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fb24_32.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fballpriv.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbarc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbbits.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbblt.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbbltone.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbbstore.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbcopy.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbfill.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbfillrect.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbfillsp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbgc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbgetsp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbglyph.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbimage.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbline.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fboverlay.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbpict.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbpixmap.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbpoint.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbpseudocolor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbpush.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbscreen.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbseg.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbsetsp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbsolid.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbstipple.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbtile.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbtrap.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbutil.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbwindow.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -739,12 +815,439 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
-libfbmmx_la-fbmmx.lo: fbmmx.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfbmmx_la_CFLAGS) $(CFLAGS) -MT libfbmmx_la-fbmmx.lo -MD -MP -MF "$(DEPDIR)/libfbmmx_la-fbmmx.Tpo" -c -o libfbmmx_la-fbmmx.lo `test -f 'fbmmx.c' || echo '$(srcdir)/'`fbmmx.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfbmmx_la-fbmmx.Tpo" "$(DEPDIR)/libfbmmx_la-fbmmx.Plo"; else rm -f "$(DEPDIR)/libfbmmx_la-fbmmx.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbmmx.c' object='libfbmmx_la-fbmmx.lo' libtool=yes @AMDEPBACKSLASH@
+libfb_la-fb24_32.lo: fb24_32.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fb24_32.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fb24_32.Tpo" -c -o libfb_la-fb24_32.lo `test -f 'fb24_32.c' || echo '$(srcdir)/'`fb24_32.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fb24_32.Tpo" "$(DEPDIR)/libfb_la-fb24_32.Plo"; else rm -f "$(DEPDIR)/libfb_la-fb24_32.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fb24_32.c' object='libfb_la-fb24_32.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfbmmx_la_CFLAGS) $(CFLAGS) -c -o libfbmmx_la-fbmmx.lo `test -f 'fbmmx.c' || echo '$(srcdir)/'`fbmmx.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fb24_32.lo `test -f 'fb24_32.c' || echo '$(srcdir)/'`fb24_32.c
+
+libfb_la-fballpriv.lo: fballpriv.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fballpriv.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fballpriv.Tpo" -c -o libfb_la-fballpriv.lo `test -f 'fballpriv.c' || echo '$(srcdir)/'`fballpriv.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fballpriv.Tpo" "$(DEPDIR)/libfb_la-fballpriv.Plo"; else rm -f "$(DEPDIR)/libfb_la-fballpriv.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fballpriv.c' object='libfb_la-fballpriv.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fballpriv.lo `test -f 'fballpriv.c' || echo '$(srcdir)/'`fballpriv.c
+
+libfb_la-fbarc.lo: fbarc.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbarc.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbarc.Tpo" -c -o libfb_la-fbarc.lo `test -f 'fbarc.c' || echo '$(srcdir)/'`fbarc.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbarc.Tpo" "$(DEPDIR)/libfb_la-fbarc.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbarc.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbarc.c' object='libfb_la-fbarc.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbarc.lo `test -f 'fbarc.c' || echo '$(srcdir)/'`fbarc.c
+
+libfb_la-fbbits.lo: fbbits.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbbits.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbbits.Tpo" -c -o libfb_la-fbbits.lo `test -f 'fbbits.c' || echo '$(srcdir)/'`fbbits.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbbits.Tpo" "$(DEPDIR)/libfb_la-fbbits.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbbits.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbbits.c' object='libfb_la-fbbits.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbbits.lo `test -f 'fbbits.c' || echo '$(srcdir)/'`fbbits.c
+
+libfb_la-fbblt.lo: fbblt.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbblt.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbblt.Tpo" -c -o libfb_la-fbblt.lo `test -f 'fbblt.c' || echo '$(srcdir)/'`fbblt.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbblt.Tpo" "$(DEPDIR)/libfb_la-fbblt.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbblt.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbblt.c' object='libfb_la-fbblt.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbblt.lo `test -f 'fbblt.c' || echo '$(srcdir)/'`fbblt.c
+
+libfb_la-fbbltone.lo: fbbltone.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbbltone.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbbltone.Tpo" -c -o libfb_la-fbbltone.lo `test -f 'fbbltone.c' || echo '$(srcdir)/'`fbbltone.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbbltone.Tpo" "$(DEPDIR)/libfb_la-fbbltone.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbbltone.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbbltone.c' object='libfb_la-fbbltone.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbbltone.lo `test -f 'fbbltone.c' || echo '$(srcdir)/'`fbbltone.c
+
+libfb_la-fbbstore.lo: fbbstore.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbbstore.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbbstore.Tpo" -c -o libfb_la-fbbstore.lo `test -f 'fbbstore.c' || echo '$(srcdir)/'`fbbstore.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbbstore.Tpo" "$(DEPDIR)/libfb_la-fbbstore.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbbstore.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbbstore.c' object='libfb_la-fbbstore.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbbstore.lo `test -f 'fbbstore.c' || echo '$(srcdir)/'`fbbstore.c
+
+libfb_la-fbcopy.lo: fbcopy.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbcopy.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbcopy.Tpo" -c -o libfb_la-fbcopy.lo `test -f 'fbcopy.c' || echo '$(srcdir)/'`fbcopy.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbcopy.Tpo" "$(DEPDIR)/libfb_la-fbcopy.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbcopy.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbcopy.c' object='libfb_la-fbcopy.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbcopy.lo `test -f 'fbcopy.c' || echo '$(srcdir)/'`fbcopy.c
+
+libfb_la-fbfill.lo: fbfill.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbfill.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbfill.Tpo" -c -o libfb_la-fbfill.lo `test -f 'fbfill.c' || echo '$(srcdir)/'`fbfill.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbfill.Tpo" "$(DEPDIR)/libfb_la-fbfill.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbfill.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbfill.c' object='libfb_la-fbfill.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbfill.lo `test -f 'fbfill.c' || echo '$(srcdir)/'`fbfill.c
+
+libfb_la-fbfillrect.lo: fbfillrect.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbfillrect.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbfillrect.Tpo" -c -o libfb_la-fbfillrect.lo `test -f 'fbfillrect.c' || echo '$(srcdir)/'`fbfillrect.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbfillrect.Tpo" "$(DEPDIR)/libfb_la-fbfillrect.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbfillrect.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbfillrect.c' object='libfb_la-fbfillrect.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbfillrect.lo `test -f 'fbfillrect.c' || echo '$(srcdir)/'`fbfillrect.c
+
+libfb_la-fbfillsp.lo: fbfillsp.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbfillsp.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbfillsp.Tpo" -c -o libfb_la-fbfillsp.lo `test -f 'fbfillsp.c' || echo '$(srcdir)/'`fbfillsp.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbfillsp.Tpo" "$(DEPDIR)/libfb_la-fbfillsp.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbfillsp.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbfillsp.c' object='libfb_la-fbfillsp.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbfillsp.lo `test -f 'fbfillsp.c' || echo '$(srcdir)/'`fbfillsp.c
+
+libfb_la-fbgc.lo: fbgc.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbgc.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbgc.Tpo" -c -o libfb_la-fbgc.lo `test -f 'fbgc.c' || echo '$(srcdir)/'`fbgc.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbgc.Tpo" "$(DEPDIR)/libfb_la-fbgc.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbgc.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbgc.c' object='libfb_la-fbgc.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbgc.lo `test -f 'fbgc.c' || echo '$(srcdir)/'`fbgc.c
+
+libfb_la-fbgetsp.lo: fbgetsp.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbgetsp.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbgetsp.Tpo" -c -o libfb_la-fbgetsp.lo `test -f 'fbgetsp.c' || echo '$(srcdir)/'`fbgetsp.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbgetsp.Tpo" "$(DEPDIR)/libfb_la-fbgetsp.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbgetsp.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbgetsp.c' object='libfb_la-fbgetsp.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbgetsp.lo `test -f 'fbgetsp.c' || echo '$(srcdir)/'`fbgetsp.c
+
+libfb_la-fbglyph.lo: fbglyph.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbglyph.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbglyph.Tpo" -c -o libfb_la-fbglyph.lo `test -f 'fbglyph.c' || echo '$(srcdir)/'`fbglyph.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbglyph.Tpo" "$(DEPDIR)/libfb_la-fbglyph.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbglyph.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbglyph.c' object='libfb_la-fbglyph.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbglyph.lo `test -f 'fbglyph.c' || echo '$(srcdir)/'`fbglyph.c
+
+libfb_la-fbimage.lo: fbimage.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbimage.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbimage.Tpo" -c -o libfb_la-fbimage.lo `test -f 'fbimage.c' || echo '$(srcdir)/'`fbimage.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbimage.Tpo" "$(DEPDIR)/libfb_la-fbimage.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbimage.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbimage.c' object='libfb_la-fbimage.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbimage.lo `test -f 'fbimage.c' || echo '$(srcdir)/'`fbimage.c
+
+libfb_la-fbline.lo: fbline.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbline.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbline.Tpo" -c -o libfb_la-fbline.lo `test -f 'fbline.c' || echo '$(srcdir)/'`fbline.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbline.Tpo" "$(DEPDIR)/libfb_la-fbline.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbline.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbline.c' object='libfb_la-fbline.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbline.lo `test -f 'fbline.c' || echo '$(srcdir)/'`fbline.c
+
+libfb_la-fboverlay.lo: fboverlay.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fboverlay.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fboverlay.Tpo" -c -o libfb_la-fboverlay.lo `test -f 'fboverlay.c' || echo '$(srcdir)/'`fboverlay.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fboverlay.Tpo" "$(DEPDIR)/libfb_la-fboverlay.Plo"; else rm -f "$(DEPDIR)/libfb_la-fboverlay.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fboverlay.c' object='libfb_la-fboverlay.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fboverlay.lo `test -f 'fboverlay.c' || echo '$(srcdir)/'`fboverlay.c
+
+libfb_la-fbpict.lo: fbpict.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbpict.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbpict.Tpo" -c -o libfb_la-fbpict.lo `test -f 'fbpict.c' || echo '$(srcdir)/'`fbpict.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbpict.Tpo" "$(DEPDIR)/libfb_la-fbpict.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbpict.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbpict.c' object='libfb_la-fbpict.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbpict.lo `test -f 'fbpict.c' || echo '$(srcdir)/'`fbpict.c
+
+libfb_la-fbpixmap.lo: fbpixmap.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbpixmap.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbpixmap.Tpo" -c -o libfb_la-fbpixmap.lo `test -f 'fbpixmap.c' || echo '$(srcdir)/'`fbpixmap.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbpixmap.Tpo" "$(DEPDIR)/libfb_la-fbpixmap.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbpixmap.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbpixmap.c' object='libfb_la-fbpixmap.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbpixmap.lo `test -f 'fbpixmap.c' || echo '$(srcdir)/'`fbpixmap.c
+
+libfb_la-fbpoint.lo: fbpoint.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbpoint.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbpoint.Tpo" -c -o libfb_la-fbpoint.lo `test -f 'fbpoint.c' || echo '$(srcdir)/'`fbpoint.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbpoint.Tpo" "$(DEPDIR)/libfb_la-fbpoint.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbpoint.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbpoint.c' object='libfb_la-fbpoint.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbpoint.lo `test -f 'fbpoint.c' || echo '$(srcdir)/'`fbpoint.c
+
+libfb_la-fbpush.lo: fbpush.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbpush.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbpush.Tpo" -c -o libfb_la-fbpush.lo `test -f 'fbpush.c' || echo '$(srcdir)/'`fbpush.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbpush.Tpo" "$(DEPDIR)/libfb_la-fbpush.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbpush.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbpush.c' object='libfb_la-fbpush.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbpush.lo `test -f 'fbpush.c' || echo '$(srcdir)/'`fbpush.c
+
+libfb_la-fbscreen.lo: fbscreen.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbscreen.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbscreen.Tpo" -c -o libfb_la-fbscreen.lo `test -f 'fbscreen.c' || echo '$(srcdir)/'`fbscreen.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbscreen.Tpo" "$(DEPDIR)/libfb_la-fbscreen.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbscreen.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbscreen.c' object='libfb_la-fbscreen.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbscreen.lo `test -f 'fbscreen.c' || echo '$(srcdir)/'`fbscreen.c
+
+libfb_la-fbseg.lo: fbseg.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbseg.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbseg.Tpo" -c -o libfb_la-fbseg.lo `test -f 'fbseg.c' || echo '$(srcdir)/'`fbseg.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbseg.Tpo" "$(DEPDIR)/libfb_la-fbseg.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbseg.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbseg.c' object='libfb_la-fbseg.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbseg.lo `test -f 'fbseg.c' || echo '$(srcdir)/'`fbseg.c
+
+libfb_la-fbsetsp.lo: fbsetsp.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbsetsp.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbsetsp.Tpo" -c -o libfb_la-fbsetsp.lo `test -f 'fbsetsp.c' || echo '$(srcdir)/'`fbsetsp.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbsetsp.Tpo" "$(DEPDIR)/libfb_la-fbsetsp.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbsetsp.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbsetsp.c' object='libfb_la-fbsetsp.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbsetsp.lo `test -f 'fbsetsp.c' || echo '$(srcdir)/'`fbsetsp.c
+
+libfb_la-fbsolid.lo: fbsolid.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbsolid.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbsolid.Tpo" -c -o libfb_la-fbsolid.lo `test -f 'fbsolid.c' || echo '$(srcdir)/'`fbsolid.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbsolid.Tpo" "$(DEPDIR)/libfb_la-fbsolid.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbsolid.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbsolid.c' object='libfb_la-fbsolid.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbsolid.lo `test -f 'fbsolid.c' || echo '$(srcdir)/'`fbsolid.c
+
+libfb_la-fbstipple.lo: fbstipple.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbstipple.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbstipple.Tpo" -c -o libfb_la-fbstipple.lo `test -f 'fbstipple.c' || echo '$(srcdir)/'`fbstipple.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbstipple.Tpo" "$(DEPDIR)/libfb_la-fbstipple.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbstipple.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbstipple.c' object='libfb_la-fbstipple.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbstipple.lo `test -f 'fbstipple.c' || echo '$(srcdir)/'`fbstipple.c
+
+libfb_la-fbtile.lo: fbtile.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbtile.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbtile.Tpo" -c -o libfb_la-fbtile.lo `test -f 'fbtile.c' || echo '$(srcdir)/'`fbtile.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbtile.Tpo" "$(DEPDIR)/libfb_la-fbtile.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbtile.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbtile.c' object='libfb_la-fbtile.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbtile.lo `test -f 'fbtile.c' || echo '$(srcdir)/'`fbtile.c
+
+libfb_la-fbtrap.lo: fbtrap.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbtrap.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbtrap.Tpo" -c -o libfb_la-fbtrap.lo `test -f 'fbtrap.c' || echo '$(srcdir)/'`fbtrap.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbtrap.Tpo" "$(DEPDIR)/libfb_la-fbtrap.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbtrap.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbtrap.c' object='libfb_la-fbtrap.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbtrap.lo `test -f 'fbtrap.c' || echo '$(srcdir)/'`fbtrap.c
+
+libfb_la-fbutil.lo: fbutil.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbutil.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbutil.Tpo" -c -o libfb_la-fbutil.lo `test -f 'fbutil.c' || echo '$(srcdir)/'`fbutil.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbutil.Tpo" "$(DEPDIR)/libfb_la-fbutil.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbutil.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbutil.c' object='libfb_la-fbutil.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbutil.lo `test -f 'fbutil.c' || echo '$(srcdir)/'`fbutil.c
+
+libfb_la-fbwindow.lo: fbwindow.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbwindow.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbwindow.Tpo" -c -o libfb_la-fbwindow.lo `test -f 'fbwindow.c' || echo '$(srcdir)/'`fbwindow.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbwindow.Tpo" "$(DEPDIR)/libfb_la-fbwindow.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbwindow.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbwindow.c' object='libfb_la-fbwindow.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbwindow.lo `test -f 'fbwindow.c' || echo '$(srcdir)/'`fbwindow.c
+
+libfb_la-fbpseudocolor.lo: fbpseudocolor.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fbpseudocolor.lo -MD -MP -MF "$(DEPDIR)/libfb_la-fbpseudocolor.Tpo" -c -o libfb_la-fbpseudocolor.lo `test -f 'fbpseudocolor.c' || echo '$(srcdir)/'`fbpseudocolor.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libfb_la-fbpseudocolor.Tpo" "$(DEPDIR)/libfb_la-fbpseudocolor.Plo"; else rm -f "$(DEPDIR)/libfb_la-fbpseudocolor.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbpseudocolor.c' object='libfb_la-fbpseudocolor.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbpseudocolor.lo `test -f 'fbpseudocolor.c' || echo '$(srcdir)/'`fbpseudocolor.c
+
+libwfb_la-fb24_32.lo: fb24_32.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fb24_32.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fb24_32.Tpo" -c -o libwfb_la-fb24_32.lo `test -f 'fb24_32.c' || echo '$(srcdir)/'`fb24_32.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fb24_32.Tpo" "$(DEPDIR)/libwfb_la-fb24_32.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fb24_32.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fb24_32.c' object='libwfb_la-fb24_32.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fb24_32.lo `test -f 'fb24_32.c' || echo '$(srcdir)/'`fb24_32.c
+
+libwfb_la-fballpriv.lo: fballpriv.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fballpriv.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fballpriv.Tpo" -c -o libwfb_la-fballpriv.lo `test -f 'fballpriv.c' || echo '$(srcdir)/'`fballpriv.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fballpriv.Tpo" "$(DEPDIR)/libwfb_la-fballpriv.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fballpriv.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fballpriv.c' object='libwfb_la-fballpriv.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fballpriv.lo `test -f 'fballpriv.c' || echo '$(srcdir)/'`fballpriv.c
+
+libwfb_la-fbarc.lo: fbarc.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbarc.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbarc.Tpo" -c -o libwfb_la-fbarc.lo `test -f 'fbarc.c' || echo '$(srcdir)/'`fbarc.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbarc.Tpo" "$(DEPDIR)/libwfb_la-fbarc.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbarc.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbarc.c' object='libwfb_la-fbarc.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbarc.lo `test -f 'fbarc.c' || echo '$(srcdir)/'`fbarc.c
+
+libwfb_la-fbbits.lo: fbbits.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbbits.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbbits.Tpo" -c -o libwfb_la-fbbits.lo `test -f 'fbbits.c' || echo '$(srcdir)/'`fbbits.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbbits.Tpo" "$(DEPDIR)/libwfb_la-fbbits.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbbits.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbbits.c' object='libwfb_la-fbbits.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbbits.lo `test -f 'fbbits.c' || echo '$(srcdir)/'`fbbits.c
+
+libwfb_la-fbblt.lo: fbblt.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbblt.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbblt.Tpo" -c -o libwfb_la-fbblt.lo `test -f 'fbblt.c' || echo '$(srcdir)/'`fbblt.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbblt.Tpo" "$(DEPDIR)/libwfb_la-fbblt.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbblt.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbblt.c' object='libwfb_la-fbblt.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbblt.lo `test -f 'fbblt.c' || echo '$(srcdir)/'`fbblt.c
+
+libwfb_la-fbbltone.lo: fbbltone.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbbltone.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbbltone.Tpo" -c -o libwfb_la-fbbltone.lo `test -f 'fbbltone.c' || echo '$(srcdir)/'`fbbltone.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbbltone.Tpo" "$(DEPDIR)/libwfb_la-fbbltone.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbbltone.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbbltone.c' object='libwfb_la-fbbltone.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbbltone.lo `test -f 'fbbltone.c' || echo '$(srcdir)/'`fbbltone.c
+
+libwfb_la-fbbstore.lo: fbbstore.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbbstore.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbbstore.Tpo" -c -o libwfb_la-fbbstore.lo `test -f 'fbbstore.c' || echo '$(srcdir)/'`fbbstore.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbbstore.Tpo" "$(DEPDIR)/libwfb_la-fbbstore.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbbstore.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbbstore.c' object='libwfb_la-fbbstore.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbbstore.lo `test -f 'fbbstore.c' || echo '$(srcdir)/'`fbbstore.c
+
+libwfb_la-fbcopy.lo: fbcopy.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbcopy.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbcopy.Tpo" -c -o libwfb_la-fbcopy.lo `test -f 'fbcopy.c' || echo '$(srcdir)/'`fbcopy.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbcopy.Tpo" "$(DEPDIR)/libwfb_la-fbcopy.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbcopy.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbcopy.c' object='libwfb_la-fbcopy.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbcopy.lo `test -f 'fbcopy.c' || echo '$(srcdir)/'`fbcopy.c
+
+libwfb_la-fbfill.lo: fbfill.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbfill.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbfill.Tpo" -c -o libwfb_la-fbfill.lo `test -f 'fbfill.c' || echo '$(srcdir)/'`fbfill.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbfill.Tpo" "$(DEPDIR)/libwfb_la-fbfill.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbfill.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbfill.c' object='libwfb_la-fbfill.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbfill.lo `test -f 'fbfill.c' || echo '$(srcdir)/'`fbfill.c
+
+libwfb_la-fbfillrect.lo: fbfillrect.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbfillrect.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbfillrect.Tpo" -c -o libwfb_la-fbfillrect.lo `test -f 'fbfillrect.c' || echo '$(srcdir)/'`fbfillrect.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbfillrect.Tpo" "$(DEPDIR)/libwfb_la-fbfillrect.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbfillrect.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbfillrect.c' object='libwfb_la-fbfillrect.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbfillrect.lo `test -f 'fbfillrect.c' || echo '$(srcdir)/'`fbfillrect.c
+
+libwfb_la-fbfillsp.lo: fbfillsp.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbfillsp.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbfillsp.Tpo" -c -o libwfb_la-fbfillsp.lo `test -f 'fbfillsp.c' || echo '$(srcdir)/'`fbfillsp.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbfillsp.Tpo" "$(DEPDIR)/libwfb_la-fbfillsp.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbfillsp.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbfillsp.c' object='libwfb_la-fbfillsp.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbfillsp.lo `test -f 'fbfillsp.c' || echo '$(srcdir)/'`fbfillsp.c
+
+libwfb_la-fbgc.lo: fbgc.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbgc.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbgc.Tpo" -c -o libwfb_la-fbgc.lo `test -f 'fbgc.c' || echo '$(srcdir)/'`fbgc.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbgc.Tpo" "$(DEPDIR)/libwfb_la-fbgc.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbgc.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbgc.c' object='libwfb_la-fbgc.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbgc.lo `test -f 'fbgc.c' || echo '$(srcdir)/'`fbgc.c
+
+libwfb_la-fbgetsp.lo: fbgetsp.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbgetsp.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbgetsp.Tpo" -c -o libwfb_la-fbgetsp.lo `test -f 'fbgetsp.c' || echo '$(srcdir)/'`fbgetsp.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbgetsp.Tpo" "$(DEPDIR)/libwfb_la-fbgetsp.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbgetsp.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbgetsp.c' object='libwfb_la-fbgetsp.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbgetsp.lo `test -f 'fbgetsp.c' || echo '$(srcdir)/'`fbgetsp.c
+
+libwfb_la-fbglyph.lo: fbglyph.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbglyph.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbglyph.Tpo" -c -o libwfb_la-fbglyph.lo `test -f 'fbglyph.c' || echo '$(srcdir)/'`fbglyph.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbglyph.Tpo" "$(DEPDIR)/libwfb_la-fbglyph.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbglyph.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbglyph.c' object='libwfb_la-fbglyph.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbglyph.lo `test -f 'fbglyph.c' || echo '$(srcdir)/'`fbglyph.c
+
+libwfb_la-fbimage.lo: fbimage.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbimage.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbimage.Tpo" -c -o libwfb_la-fbimage.lo `test -f 'fbimage.c' || echo '$(srcdir)/'`fbimage.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbimage.Tpo" "$(DEPDIR)/libwfb_la-fbimage.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbimage.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbimage.c' object='libwfb_la-fbimage.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbimage.lo `test -f 'fbimage.c' || echo '$(srcdir)/'`fbimage.c
+
+libwfb_la-fbline.lo: fbline.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbline.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbline.Tpo" -c -o libwfb_la-fbline.lo `test -f 'fbline.c' || echo '$(srcdir)/'`fbline.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbline.Tpo" "$(DEPDIR)/libwfb_la-fbline.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbline.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbline.c' object='libwfb_la-fbline.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbline.lo `test -f 'fbline.c' || echo '$(srcdir)/'`fbline.c
+
+libwfb_la-fboverlay.lo: fboverlay.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fboverlay.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fboverlay.Tpo" -c -o libwfb_la-fboverlay.lo `test -f 'fboverlay.c' || echo '$(srcdir)/'`fboverlay.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fboverlay.Tpo" "$(DEPDIR)/libwfb_la-fboverlay.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fboverlay.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fboverlay.c' object='libwfb_la-fboverlay.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fboverlay.lo `test -f 'fboverlay.c' || echo '$(srcdir)/'`fboverlay.c
+
+libwfb_la-fbpict.lo: fbpict.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbpict.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbpict.Tpo" -c -o libwfb_la-fbpict.lo `test -f 'fbpict.c' || echo '$(srcdir)/'`fbpict.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbpict.Tpo" "$(DEPDIR)/libwfb_la-fbpict.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbpict.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbpict.c' object='libwfb_la-fbpict.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbpict.lo `test -f 'fbpict.c' || echo '$(srcdir)/'`fbpict.c
+
+libwfb_la-fbpixmap.lo: fbpixmap.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbpixmap.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbpixmap.Tpo" -c -o libwfb_la-fbpixmap.lo `test -f 'fbpixmap.c' || echo '$(srcdir)/'`fbpixmap.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbpixmap.Tpo" "$(DEPDIR)/libwfb_la-fbpixmap.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbpixmap.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbpixmap.c' object='libwfb_la-fbpixmap.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbpixmap.lo `test -f 'fbpixmap.c' || echo '$(srcdir)/'`fbpixmap.c
+
+libwfb_la-fbpoint.lo: fbpoint.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbpoint.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbpoint.Tpo" -c -o libwfb_la-fbpoint.lo `test -f 'fbpoint.c' || echo '$(srcdir)/'`fbpoint.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbpoint.Tpo" "$(DEPDIR)/libwfb_la-fbpoint.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbpoint.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbpoint.c' object='libwfb_la-fbpoint.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbpoint.lo `test -f 'fbpoint.c' || echo '$(srcdir)/'`fbpoint.c
+
+libwfb_la-fbpush.lo: fbpush.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbpush.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbpush.Tpo" -c -o libwfb_la-fbpush.lo `test -f 'fbpush.c' || echo '$(srcdir)/'`fbpush.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbpush.Tpo" "$(DEPDIR)/libwfb_la-fbpush.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbpush.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbpush.c' object='libwfb_la-fbpush.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbpush.lo `test -f 'fbpush.c' || echo '$(srcdir)/'`fbpush.c
+
+libwfb_la-fbscreen.lo: fbscreen.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbscreen.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbscreen.Tpo" -c -o libwfb_la-fbscreen.lo `test -f 'fbscreen.c' || echo '$(srcdir)/'`fbscreen.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbscreen.Tpo" "$(DEPDIR)/libwfb_la-fbscreen.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbscreen.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbscreen.c' object='libwfb_la-fbscreen.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbscreen.lo `test -f 'fbscreen.c' || echo '$(srcdir)/'`fbscreen.c
+
+libwfb_la-fbseg.lo: fbseg.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbseg.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbseg.Tpo" -c -o libwfb_la-fbseg.lo `test -f 'fbseg.c' || echo '$(srcdir)/'`fbseg.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbseg.Tpo" "$(DEPDIR)/libwfb_la-fbseg.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbseg.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbseg.c' object='libwfb_la-fbseg.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbseg.lo `test -f 'fbseg.c' || echo '$(srcdir)/'`fbseg.c
+
+libwfb_la-fbsetsp.lo: fbsetsp.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbsetsp.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbsetsp.Tpo" -c -o libwfb_la-fbsetsp.lo `test -f 'fbsetsp.c' || echo '$(srcdir)/'`fbsetsp.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbsetsp.Tpo" "$(DEPDIR)/libwfb_la-fbsetsp.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbsetsp.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbsetsp.c' object='libwfb_la-fbsetsp.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbsetsp.lo `test -f 'fbsetsp.c' || echo '$(srcdir)/'`fbsetsp.c
+
+libwfb_la-fbsolid.lo: fbsolid.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbsolid.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbsolid.Tpo" -c -o libwfb_la-fbsolid.lo `test -f 'fbsolid.c' || echo '$(srcdir)/'`fbsolid.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbsolid.Tpo" "$(DEPDIR)/libwfb_la-fbsolid.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbsolid.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbsolid.c' object='libwfb_la-fbsolid.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbsolid.lo `test -f 'fbsolid.c' || echo '$(srcdir)/'`fbsolid.c
+
+libwfb_la-fbstipple.lo: fbstipple.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbstipple.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbstipple.Tpo" -c -o libwfb_la-fbstipple.lo `test -f 'fbstipple.c' || echo '$(srcdir)/'`fbstipple.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbstipple.Tpo" "$(DEPDIR)/libwfb_la-fbstipple.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbstipple.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbstipple.c' object='libwfb_la-fbstipple.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbstipple.lo `test -f 'fbstipple.c' || echo '$(srcdir)/'`fbstipple.c
+
+libwfb_la-fbtile.lo: fbtile.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbtile.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbtile.Tpo" -c -o libwfb_la-fbtile.lo `test -f 'fbtile.c' || echo '$(srcdir)/'`fbtile.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbtile.Tpo" "$(DEPDIR)/libwfb_la-fbtile.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbtile.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbtile.c' object='libwfb_la-fbtile.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbtile.lo `test -f 'fbtile.c' || echo '$(srcdir)/'`fbtile.c
+
+libwfb_la-fbtrap.lo: fbtrap.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbtrap.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbtrap.Tpo" -c -o libwfb_la-fbtrap.lo `test -f 'fbtrap.c' || echo '$(srcdir)/'`fbtrap.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbtrap.Tpo" "$(DEPDIR)/libwfb_la-fbtrap.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbtrap.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbtrap.c' object='libwfb_la-fbtrap.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbtrap.lo `test -f 'fbtrap.c' || echo '$(srcdir)/'`fbtrap.c
+
+libwfb_la-fbutil.lo: fbutil.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbutil.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbutil.Tpo" -c -o libwfb_la-fbutil.lo `test -f 'fbutil.c' || echo '$(srcdir)/'`fbutil.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbutil.Tpo" "$(DEPDIR)/libwfb_la-fbutil.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbutil.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbutil.c' object='libwfb_la-fbutil.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbutil.lo `test -f 'fbutil.c' || echo '$(srcdir)/'`fbutil.c
+
+libwfb_la-fbwindow.lo: fbwindow.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbwindow.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbwindow.Tpo" -c -o libwfb_la-fbwindow.lo `test -f 'fbwindow.c' || echo '$(srcdir)/'`fbwindow.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbwindow.Tpo" "$(DEPDIR)/libwfb_la-fbwindow.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbwindow.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbwindow.c' object='libwfb_la-fbwindow.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbwindow.lo `test -f 'fbwindow.c' || echo '$(srcdir)/'`fbwindow.c
+
+libwfb_la-fbpseudocolor.lo: fbpseudocolor.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fbpseudocolor.lo -MD -MP -MF "$(DEPDIR)/libwfb_la-fbpseudocolor.Tpo" -c -o libwfb_la-fbpseudocolor.lo `test -f 'fbpseudocolor.c' || echo '$(srcdir)/'`fbpseudocolor.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libwfb_la-fbpseudocolor.Tpo" "$(DEPDIR)/libwfb_la-fbpseudocolor.Plo"; else rm -f "$(DEPDIR)/libwfb_la-fbpseudocolor.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fbpseudocolor.c' object='libwfb_la-fbpseudocolor.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fbpseudocolor.lo `test -f 'fbpseudocolor.c' || echo '$(srcdir)/'`fbpseudocolor.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

@@ -62,11 +62,12 @@ am_Xprt_OBJECTS = Xprt-attributes.$(OBJEXT) Xprt-AttrValid.$(OBJEXT) \
 	Xprt-mediaSizes.$(OBJEXT) Xprt-Oid.$(OBJEXT) \
 	Xprt-spooler.$(OBJEXT) Xprt-Util.$(OBJEXT) \
 	Xprt-miinitext-wrapper.$(OBJEXT) \
-	Xprt-dpmsstubs-wrapper.$(OBJEXT) Xprt-fbcmap.$(OBJEXT)
+	Xprt-dpmsstubs-wrapper.$(OBJEXT) Xprt-fbcmap_mi.$(OBJEXT)
 Xprt_OBJECTS = $(am_Xprt_OBJECTS)
 Xprt_DEPENDENCIES = ps/libps.la raster/libraster.la pcl/libpcl.la \
-	pcl-mono/libpcl.la ../../fb/libfb.la ../../render/librender.la \
-	../../mi/libmi.la ../../Xext/libXext.la
+	pcl-mono/libpcl.la $(top_builddir)/fb/libfb.la \
+	$(top_builddir)/render/librender.la \
+	$(top_builddir)/mi/libmi.la $(top_builddir)/Xext/libXext.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -108,6 +109,7 @@ AMTAR = @AMTAR@
 APPDEFAULTDIR = @APPDEFAULTDIR@
 APPGROUP_FALSE = @APPGROUP_FALSE@
 APPGROUP_TRUE = @APPGROUP_TRUE@
+APPLE_APPLICATIONS_DIR = @APPLE_APPLICATIONS_DIR@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -127,13 +129,18 @@ BSD_KQUEUE_APM_FALSE = @BSD_KQUEUE_APM_FALSE@
 BSD_KQUEUE_APM_TRUE = @BSD_KQUEUE_APM_TRUE@
 BUILDDOCS_FALSE = @BUILDDOCS_FALSE@
 BUILDDOCS_TRUE = @BUILDDOCS_TRUE@
+BUILD_DARWIN_FALSE = @BUILD_DARWIN_FALSE@
+BUILD_DARWIN_TRUE = @BUILD_DARWIN_TRUE@
 BUILD_DATE = @BUILD_DATE@
 BUILD_KBD_MODE_FALSE = @BUILD_KBD_MODE_FALSE@
 BUILD_KBD_MODE_TRUE = @BUILD_KBD_MODE_TRUE@
+BUILD_KDRIVEFBDEVLIB_FALSE = @BUILD_KDRIVEFBDEVLIB_FALSE@
+BUILD_KDRIVEFBDEVLIB_TRUE = @BUILD_KDRIVEFBDEVLIB_TRUE@
 BUILD_LINUXDOC_FALSE = @BUILD_LINUXDOC_FALSE@
 BUILD_LINUXDOC_TRUE = @BUILD_LINUXDOC_TRUE@
 BUILD_PDFDOC_FALSE = @BUILD_PDFDOC_FALSE@
 BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
+BUILD_TIME = @BUILD_TIME@
 BUILD_XORGCFG_FALSE = @BUILD_XORGCFG_FALSE@
 BUILD_XORGCFG_TRUE = @BUILD_XORGCFG_TRUE@
 CC = @CC@
@@ -146,6 +153,10 @@ CFLAGS = @CFLAGS@
 COMPILEDDEFAULTFONTPATH = @COMPILEDDEFAULTFONTPATH@
 COMPOSITE_FALSE = @COMPOSITE_FALSE@
 COMPOSITE_TRUE = @COMPOSITE_TRUE@
+CONFIG_DBUS_API_FALSE = @CONFIG_DBUS_API_FALSE@
+CONFIG_DBUS_API_TRUE = @CONFIG_DBUS_API_TRUE@
+CONFIG_HAL_FALSE = @CONFIG_HAL_FALSE@
+CONFIG_HAL_TRUE = @CONFIG_HAL_TRUE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CUP_FALSE = @CUP_FALSE@
@@ -155,8 +166,11 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DARWIN_LIBS = @DARWIN_LIBS@
 DBE_FALSE = @DBE_FALSE@
 DBE_TRUE = @DBE_TRUE@
+DBUS_CFLAGS = @DBUS_CFLAGS@
+DBUS_LIBS = @DBUS_LIBS@
 DEBUG_FALSE = @DEBUG_FALSE@
 DEBUG_TRUE = @DEBUG_TRUE@
 DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
@@ -164,7 +178,9 @@ DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DGA_CFLAGS = @DGA_CFLAGS@
 DGA_FALSE = @DGA_FALSE@
+DGA_LIBS = @DGA_LIBS@
 DGA_TRUE = @DGA_TRUE@
 DIX_CFLAGS = @DIX_CFLAGS@
 DLLTOOL = @DLLTOOL@
@@ -191,6 +207,7 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
 DRI_FALSE = @DRI_FALSE@
 DRI_TRUE = @DRI_TRUE@
+DTRACE = @DTRACE@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -219,6 +236,14 @@ GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
 H3600_TS_FALSE = @H3600_TS_FALSE@
 H3600_TS_TRUE = @H3600_TS_TRUE@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
+HAVE_AGL_FRAMEWORK_FALSE = @HAVE_AGL_FRAMEWORK_FALSE@
+HAVE_AGL_FRAMEWORK_TRUE = @HAVE_AGL_FRAMEWORK_TRUE@
+HAVE_DBUS_FALSE = @HAVE_DBUS_FALSE@
+HAVE_DBUS_TRUE = @HAVE_DBUS_TRUE@
+HAVE_X_PLUGIN_FALSE = @HAVE_X_PLUGIN_FALSE@
+HAVE_X_PLUGIN_TRUE = @HAVE_X_PLUGIN_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
@@ -255,6 +280,7 @@ KDRIVE_HW_FALSE = @KDRIVE_HW_FALSE@
 KDRIVE_HW_TRUE = @KDRIVE_HW_TRUE@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
+KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KDRIVE_TRUE = @KDRIVE_TRUE@
@@ -298,14 +324,17 @@ MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
 MKFONTDIR = @MKFONTDIR@
 MKFONTSCALE = @MKFONTSCALE@
-MMX_CAPABLE_FALSE = @MMX_CAPABLE_FALSE@
-MMX_CAPABLE_TRUE = @MMX_CAPABLE_TRUE@
 MULTIBUFFER_FALSE = @MULTIBUFFER_FALSE@
 MULTIBUFFER_TRUE = @MULTIBUFFER_TRUE@
 NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
 NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
 NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
 NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
+OBJC = @OBJC@
+OBJCCLD = @OBJCCLD@
+OBJCDEPMODE = @OBJCDEPMODE@
+OBJCFLAGS = @OBJCFLAGS@
+OBJCLINK = @OBJCLINK@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -316,7 +345,11 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PERL = @PERL@
+PIXMAN_CFLAGS = @PIXMAN_CFLAGS@
+PIXMAN_LIBS = @PIXMAN_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
+PLIST_VENDOR_WEB = @PLIST_VENDOR_WEB@
+PLIST_VERSION_STRING = @PLIST_VERSION_STRING@
 PPC_VIDEO_FALSE = @PPC_VIDEO_FALSE@
 PPC_VIDEO_TRUE = @PPC_VIDEO_TRUE@
 PROJECTROOT = @PROJECTROOT@
@@ -331,6 +364,7 @@ RES_TRUE = @RES_TRUE@
 RGB_DB = @RGB_DB@
 SCREENSAVER_FALSE = @SCREENSAVER_FALSE@
 SCREENSAVER_TRUE = @SCREENSAVER_TRUE@
+SERVERCONFIGdir = @SERVERCONFIGdir@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
@@ -354,9 +388,9 @@ USE_CURSES_TRUE = @USE_CURSES_TRUE@
 USE_RGB_BUILTIN_FALSE = @USE_RGB_BUILTIN_FALSE@
 USE_RGB_BUILTIN_TRUE = @USE_RGB_BUILTIN_TRUE@
 VENDOR_MAN_VERSION = @VENDOR_MAN_VERSION@
+VENDOR_NAME = @VENDOR_NAME@
+VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VENDOR_RELEASE = @VENDOR_RELEASE@
-VENDOR_STRING = @VENDOR_STRING@
-VENDOR_STRING_SHORT = @VENDOR_STRING_SHORT@
 VERSION = @VERSION@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
@@ -385,13 +419,20 @@ XEPHYR_FALSE = @XEPHYR_FALSE@
 XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
 XEPHYR_TRUE = @XEPHYR_TRUE@
+XERRORDB_PATH = @XERRORDB_PATH@
 XEVIE_FALSE = @XEVIE_FALSE@
 XEVIE_TRUE = @XEVIE_TRUE@
 XF86BIGFONT_FALSE = @XF86BIGFONT_FALSE@
 XF86BIGFONT_TRUE = @XF86BIGFONT_TRUE@
 XF86CONFIGFILE = @XF86CONFIGFILE@
+XF86MISC_CFLAGS = @XF86MISC_CFLAGS@
+XF86MISC_LIBS = @XF86MISC_LIBS@
 XF86UTILS_FALSE = @XF86UTILS_FALSE@
 XF86UTILS_TRUE = @XF86UTILS_TRUE@
+XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
+XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
+XFAKESERVER_FALSE = @XFAKESERVER_FALSE@
+XFAKESERVER_TRUE = @XFAKESERVER_TRUE@
 XGLMODULES_CFLAGS = @XGLMODULES_CFLAGS@
 XGLMODULES_LIBS = @XGLMODULES_LIBS@
 XGLXMODULES_CFLAGS = @XGLXMODULES_CFLAGS@
@@ -405,8 +446,6 @@ XGL_MODULE_PATH = @XGL_MODULE_PATH@
 XGL_TRUE = @XGL_TRUE@
 XINERAMA_FALSE = @XINERAMA_FALSE@
 XINERAMA_TRUE = @XINERAMA_TRUE@
-XINPUT_FALSE = @XINPUT_FALSE@
-XINPUT_TRUE = @XINPUT_TRUE@
 XKB_BASE_DIRECTORY = @XKB_BASE_DIRECTORY@
 XKB_BIN_DIRECTORY = @XKB_BIN_DIRECTORY@
 XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
@@ -443,8 +482,9 @@ XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
 XORG_LOADER_SPARC_FALSE = @XORG_LOADER_SPARC_FALSE@
 XORG_LOADER_SPARC_TRUE = @XORG_LOADER_SPARC_TRUE@
+XORG_MODULES_CFLAGS = @XORG_MODULES_CFLAGS@
+XORG_MODULES_LIBS = @XORG_MODULES_LIBS@
 XORG_OS = @XORG_OS@
-XORG_OS_KBD = @XORG_OS_KBD@
 XORG_OS_SUBDIR = @XORG_OS_SUBDIR@
 XORG_TRUE = @XORG_TRUE@
 XPRINTPROTO_CFLAGS = @XPRINTPROTO_CFLAGS@
@@ -455,6 +495,8 @@ XPRINT_LIBS = @XPRINT_LIBS@
 XPRINT_TRUE = @XPRINT_TRUE@
 XP_USE_FREETYPE_FALSE = @XP_USE_FREETYPE_FALSE@
 XP_USE_FREETYPE_TRUE = @XP_USE_FREETYPE_TRUE@
+XQUARTZ_FALSE = @XQUARTZ_FALSE@
+XQUARTZ_TRUE = @XQUARTZ_TRUE@
 XRESEXAMPLES_DEP_CFLAGS = @XRESEXAMPLES_DEP_CFLAGS@
 XRESEXAMPLES_DEP_LIBS = @XRESEXAMPLES_DEP_LIBS@
 XSDLSERVER_FALSE = @XSDLSERVER_FALSE@
@@ -465,6 +507,8 @@ XSERVERCFLAGS_CFLAGS = @XSERVERCFLAGS_CFLAGS@
 XSERVERCFLAGS_LIBS = @XSERVERCFLAGS_LIBS@
 XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
 XSERVERLIBS_LIBS = @XSERVERLIBS_LIBS@
+XSERVER_DTRACE_FALSE = @XSERVER_DTRACE_FALSE@
+XSERVER_DTRACE_TRUE = @XSERVER_DTRACE_TRUE@
 XSERVER_LIBS = @XSERVER_LIBS@
 XTRAP_FALSE = @XTRAP_FALSE@
 XTRAP_TRUE = @XTRAP_TRUE@
@@ -518,6 +562,8 @@ am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
 am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
+am__fastdepOBJC_FALSE = @am__fastdepOBJC_FALSE@
+am__fastdepOBJC_TRUE = @am__fastdepOBJC_TRUE@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -568,9 +614,9 @@ Xprt_CFLAGS = @DIX_CFLAGS@ @XPRINT_CFLAGS@ \
 
 Xprt_LDFLAGS = -L$(top_srcdir)
 Xprt_LDADD = @XPRINT_LIBS@ ps/libps.la raster/libraster.la  \
-	pcl/libpcl.la pcl-mono/libpcl.la ../../fb/libfb.la \
-	../../render/librender.la ../../mi/libmi.la ../../Xext/libXext.la \
-	@FREETYPE_LIBS@
+	pcl/libpcl.la pcl-mono/libpcl.la $(top_builddir)/fb/libfb.la \
+	$(top_builddir)/render/librender.la $(top_builddir)/mi/libmi.la \
+	$(top_builddir)/Xext/libXext.la  @FREETYPE_LIBS@
 
 Xprt_SOURCES = \
 	attributes.c		\
@@ -590,7 +636,7 @@ Xprt_SOURCES = \
 	Util.c			\
 	miinitext-wrapper.c	\
 	dpmsstubs-wrapper.c     \
-        $(top_srcdir)/fb/fbcmap.c
+        $(top_srcdir)/fb/fbcmap_mi.c
 
 EXTRA_DIST = ValTree.c
 all: all-recursive
@@ -671,7 +717,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xprt-attributes.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xprt-ddxInit.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xprt-dpmsstubs-wrapper.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xprt-fbcmap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xprt-fbcmap_mi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xprt-mediaSizes.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xprt-miinitext-wrapper.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xprt-spooler.Po@am__quote@
@@ -837,19 +883,19 @@ Xprt-dpmsstubs-wrapper.obj: dpmsstubs-wrapper.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xprt_CFLAGS) $(CFLAGS) -c -o Xprt-dpmsstubs-wrapper.obj `if test -f 'dpmsstubs-wrapper.c'; then $(CYGPATH_W) 'dpmsstubs-wrapper.c'; else $(CYGPATH_W) '$(srcdir)/dpmsstubs-wrapper.c'; fi`
 
-Xprt-fbcmap.o: $(top_srcdir)/fb/fbcmap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xprt_CFLAGS) $(CFLAGS) -MT Xprt-fbcmap.o -MD -MP -MF "$(DEPDIR)/Xprt-fbcmap.Tpo" -c -o Xprt-fbcmap.o `test -f '$(top_srcdir)/fb/fbcmap.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xprt-fbcmap.Tpo" "$(DEPDIR)/Xprt-fbcmap.Po"; else rm -f "$(DEPDIR)/Xprt-fbcmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/fb/fbcmap.c' object='Xprt-fbcmap.o' libtool=no @AMDEPBACKSLASH@
+Xprt-fbcmap_mi.o: $(top_srcdir)/fb/fbcmap_mi.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xprt_CFLAGS) $(CFLAGS) -MT Xprt-fbcmap_mi.o -MD -MP -MF "$(DEPDIR)/Xprt-fbcmap_mi.Tpo" -c -o Xprt-fbcmap_mi.o `test -f '$(top_srcdir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap_mi.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xprt-fbcmap_mi.Tpo" "$(DEPDIR)/Xprt-fbcmap_mi.Po"; else rm -f "$(DEPDIR)/Xprt-fbcmap_mi.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/fb/fbcmap_mi.c' object='Xprt-fbcmap_mi.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xprt_CFLAGS) $(CFLAGS) -c -o Xprt-fbcmap.o `test -f '$(top_srcdir)/fb/fbcmap.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xprt_CFLAGS) $(CFLAGS) -c -o Xprt-fbcmap_mi.o `test -f '$(top_srcdir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap_mi.c
 
-Xprt-fbcmap.obj: $(top_srcdir)/fb/fbcmap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xprt_CFLAGS) $(CFLAGS) -MT Xprt-fbcmap.obj -MD -MP -MF "$(DEPDIR)/Xprt-fbcmap.Tpo" -c -o Xprt-fbcmap.obj `if test -f '$(top_srcdir)/fb/fbcmap.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xprt-fbcmap.Tpo" "$(DEPDIR)/Xprt-fbcmap.Po"; else rm -f "$(DEPDIR)/Xprt-fbcmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/fb/fbcmap.c' object='Xprt-fbcmap.obj' libtool=no @AMDEPBACKSLASH@
+Xprt-fbcmap_mi.obj: $(top_srcdir)/fb/fbcmap_mi.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xprt_CFLAGS) $(CFLAGS) -MT Xprt-fbcmap_mi.obj -MD -MP -MF "$(DEPDIR)/Xprt-fbcmap_mi.Tpo" -c -o Xprt-fbcmap_mi.obj `if test -f '$(top_srcdir)/fb/fbcmap_mi.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap_mi.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap_mi.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xprt-fbcmap_mi.Tpo" "$(DEPDIR)/Xprt-fbcmap_mi.Po"; else rm -f "$(DEPDIR)/Xprt-fbcmap_mi.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/fb/fbcmap_mi.c' object='Xprt-fbcmap_mi.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xprt_CFLAGS) $(CFLAGS) -c -o Xprt-fbcmap.obj `if test -f '$(top_srcdir)/fb/fbcmap.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xprt_CFLAGS) $(CFLAGS) -c -o Xprt-fbcmap_mi.obj `if test -f '$(top_srcdir)/fb/fbcmap_mi.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap_mi.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap_mi.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

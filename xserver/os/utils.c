@@ -64,6 +64,10 @@ OR PERFORMANCE OF THIS SOFTWARE.
 #include <X11/Xos.h>
 #include <stdio.h>
 #include <time.h>
+#if !defined(WIN32) || !defined(__MINGW32__)
+#include <sys/time.h>
+#include <sys/resource.h>
+#endif
 #include "misc.h"
 #include <X11/X.h>
 #define XSERV_t
@@ -117,7 +121,7 @@ OR PERFORMANCE OF THIS SOFTWARE.
 #endif
 
 #ifdef XKB
-#include <X11/extensions/XKBsrv.h>
+#include <xkbsrv.h>
 #endif
 #ifdef XCSECURITY
 #include "securitysrv.h"
@@ -136,10 +140,7 @@ _X_EXPORT Bool noTestExtensions;
 _X_EXPORT Bool noBigReqExtension = FALSE;
 #endif
 #ifdef COMPOSITE
- /* COMPOSITE is disabled by default for now until the
-  * interface is stable */
- #define COMPOSITE_DEFAULT FALSE
-_X_EXPORT Bool noCompositeExtension = !COMPOSITE_DEFAULT;
+_X_EXPORT Bool noCompositeExtension = FALSE;
 #endif
 
 #ifdef DAMAGE
@@ -245,10 +246,6 @@ _X_EXPORT Bool noXvExtension = FALSE;
 Bool CoreDump;
 
 #ifdef PANORAMIX
-Bool PanoramiXVisibilityNotifySent = FALSE;
-Bool PanoramiXMapped = FALSE;
-Bool PanoramiXWindowExposureSent = FALSE;
-Bool PanoramiXOneExposeRequest = FALSE;
 Bool PanoramiXExtensionDisabledHack = FALSE;
 #endif
 
@@ -271,7 +268,7 @@ long Memory_fail = 0;
 #include <stdlib.h>  /* for random() */
 #endif
 
-char *dev_tty_from_init = NULL;		/* since we need to parse it anyway */
+static char *dev_tty_from_init = NULL;	/* since we need to parse it anyway */
 
 OsSigHandlerPtr
 OsSignal(sig, handler)
@@ -300,9 +297,7 @@ OsSignal(sig, handler)
  * server at a time.  This keeps the servers from stomping on each other
  * if the user forgets to give them different display numbers.
  */
-#ifndef __UNIXOS2__
 #define LOCK_DIR "/tmp"
-#endif
 #define LOCK_TMP_PREFIX "/.tX"
 #define LOCK_PREFIX "/.X"
 #define LOCK_SUFFIX "-lock"
@@ -310,10 +305,6 @@ OsSignal(sig, handler)
 #if defined(DGUX)
 #include <limits.h>
 #include <sys/param.h>
-#endif
-
-#ifdef __UNIXOS2__
-#define link rename
 #endif
 
 #ifndef PATH_MAX
@@ -354,14 +345,7 @@ LockServer(void)
   /*
    * Path names
    */
-#ifndef __UNIXOS2__
   tmppath = LOCK_DIR;
-#else
-  /* OS/2 uses TMP directory, must also prepare for 8.3 names */
-  tmppath = getenv("TMP");
-  if (!tmppath)
-    FatalError("No TMP dir found\n");
-#endif
 
   snprintf(port, sizeof(port), "%d", atoi(display));
   len = strlen(LOCK_PREFIX) > strlen(LOCK_TMP_PREFIX) ? strlen(LOCK_PREFIX) :
@@ -408,12 +392,10 @@ LockServer(void)
   /* if possible give away the lock file to the real uid/gid */
   fchown(lfd, getuid(), getgid());
 #endif
-#ifndef __UNIXOS2__
 #ifndef USE_CHMOD
   (void) fchmod(lfd, 0444);
 #else
   (void) chmod(tmp, 0444);
-#endif
 #endif
   (void) close(lfd);
 
@@ -493,9 +475,6 @@ UnlockServer(void)
 
   if (!StillLocking){
 
-#ifdef __UNIXOS2__
-  (void) chmod(LockFile,S_IREAD|S_IWRITE);
-#endif /* __UNIXOS2__ */
   (void) unlink(LockFile);
   }
 }
@@ -546,6 +525,13 @@ GiveUp(int sig)
     errno = olderrno;
 }
 
+#if defined WIN32 && defined __MINGW32__
+_X_EXPORT CARD32
+GetTimeInMillis (void)
+{
+  return GetTickCount ();
+}
+#else
 _X_EXPORT CARD32
 GetTimeInMillis(void)
 {
@@ -560,6 +546,7 @@ GetTimeInMillis(void)
     X_GETTIMEOFDAY(&tv);
     return(tv.tv_sec * 1000) + (tv.tv_usec / 1000);
 }
+#endif
 
 _X_EXPORT void
 AdjustWaitForDelay (pointer waitTime, unsigned long newdelay)
@@ -817,7 +804,15 @@ ProcessCommandLine(int argc, char *argv[])
 		UseMsg();
 	}
 	else if ( strcmp( argv[i], "-core") == 0)
+	{
 	    CoreDump = TRUE;
+#if !defined(WIN32) || !defined(__MINGW32__)
+	    struct rlimit   core_limit;
+	    getrlimit (RLIMIT_CORE, &core_limit);
+	    core_limit.rlim_cur = core_limit.rlim_max;
+	    setrlimit (RLIMIT_CORE, &core_limit);
+#endif
+	}
 	else if ( strcmp( argv[i], "-dpi") == 0)
 	{
 	    if(++i < argc)
@@ -916,7 +911,7 @@ ProcessCommandLine(int argc, char *argv[])
 #ifdef SERVER_LOCK
 	else if ( strcmp ( argv[i], "-nolock") == 0)
 	{
-#if !defined(WIN32) && !defined(__UNIXOS2__) && !defined(__CYGWIN__)
+#if !defined(WIN32) && !defined(__CYGWIN__)
 	  if (getuid() != 0)
 	    ErrorF("Warning: the -nolock option can only be used by root\n");
 	  else
@@ -1248,7 +1243,7 @@ ExpandCommandLine(int *pargc, char ***pargv)
 {
     int i;
 
-#if !defined(WIN32) && !defined(__UNIXOS2__) && !defined(__CYGWIN__)
+#if !defined(WIN32) && !defined(__CYGWIN__)
     if (getuid() != geteuid())
 	return;
 #endif
@@ -1683,7 +1678,7 @@ OsReleaseSignals (void)
 #endif
 }
 
-#if !defined(WIN32) && !defined(__UNIXOS2__)
+#if !defined(WIN32)
 /*
  * "safer" versions of system(3), popen(3) and pclose(3) which give up
  * all privs before running a command.
@@ -1890,7 +1885,7 @@ Fopen(char *file, char *type)
     pidlist = cur;
 
 #ifdef DEBUG
-    ErrorF("Popen: `%s', fp = %p\n", command, iop);
+    ErrorF("Fopen(%s), fp = %p\n", file, iop);
 #endif
 
     return iop;
@@ -1958,7 +1953,7 @@ Fclose(pointer iop)
 #endif
 }
 
-#endif /* !WIN32 && !__UNIXOS2__ */
+#endif /* !WIN32 */
 
 
 /*

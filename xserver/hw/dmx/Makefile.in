@@ -68,24 +68,19 @@ am__Xdmx_SOURCES_DIST = dmx.c dmxcb.c dmxcb.h dmxclient.h dmxcmap.c \
 	dmxpict.h dmxpixmap.c dmxpixmap.h dmxprop.c dmxprop.h \
 	dmxscrinit.c dmxscrinit.h dmxshadow.c dmxshadow.h dmxstat.c \
 	dmxstat.h dmxsync.c dmxsync.h dmxvisual.c dmxvisual.h \
-	dmxwindow.c dmxwindow.h $(top_srcdir)/fb/fbcmap.c \
-	$(top_srcdir)/mi/miinitext.c $(top_srcdir)/Xext/panoramiX.c \
+	dmxwindow.c dmxwindow.h $(top_srcdir)/mi/miinitext.c \
+	$(top_srcdir)/fb/fbcmap_mi.c $(top_srcdir)/Xext/panoramiX.c \
 	dmx_glxvisuals.c dmx_glxvisuals.h
-@XINERAMA_TRUE@am__objects_1 = Xdmx-panoramiX.$(OBJEXT)
-@GLX_TRUE@am__objects_2 = $(am__objects_1) \
-@GLX_TRUE@	Xdmx-dmx_glxvisuals.$(OBJEXT)
-am_Xdmx_OBJECTS = Xdmx-dmx.$(OBJEXT) Xdmx-dmxcb.$(OBJEXT) \
-	Xdmx-dmxcmap.$(OBJEXT) Xdmx-dmxcursor.$(OBJEXT) \
-	Xdmx-dmxdpms.$(OBJEXT) Xdmx-dmxextension.$(OBJEXT) \
-	Xdmx-dmxfont.$(OBJEXT) Xdmx-dmxgc.$(OBJEXT) \
-	Xdmx-dmxgcops.$(OBJEXT) Xdmx-dmxinit.$(OBJEXT) \
-	Xdmx-dmxinput.$(OBJEXT) Xdmx-dmxlog.$(OBJEXT) \
-	Xdmx-dmxpict.$(OBJEXT) Xdmx-dmxpixmap.$(OBJEXT) \
-	Xdmx-dmxprop.$(OBJEXT) Xdmx-dmxscrinit.$(OBJEXT) \
-	Xdmx-dmxshadow.$(OBJEXT) Xdmx-dmxstat.$(OBJEXT) \
-	Xdmx-dmxsync.$(OBJEXT) Xdmx-dmxvisual.$(OBJEXT) \
-	Xdmx-dmxwindow.$(OBJEXT) Xdmx-fbcmap.$(OBJEXT) \
-	Xdmx-miinitext.$(OBJEXT) $(am__objects_2)
+@XINERAMA_TRUE@am__objects_1 = panoramiX.$(OBJEXT)
+@GLX_TRUE@am__objects_2 = $(am__objects_1) dmx_glxvisuals.$(OBJEXT)
+am_Xdmx_OBJECTS = dmx.$(OBJEXT) dmxcb.$(OBJEXT) dmxcmap.$(OBJEXT) \
+	dmxcursor.$(OBJEXT) dmxdpms.$(OBJEXT) dmxextension.$(OBJEXT) \
+	dmxfont.$(OBJEXT) dmxgc.$(OBJEXT) dmxgcops.$(OBJEXT) \
+	dmxinit.$(OBJEXT) dmxinput.$(OBJEXT) dmxlog.$(OBJEXT) \
+	dmxpict.$(OBJEXT) dmxpixmap.$(OBJEXT) dmxprop.$(OBJEXT) \
+	dmxscrinit.$(OBJEXT) dmxshadow.$(OBJEXT) dmxstat.$(OBJEXT) \
+	dmxsync.$(OBJEXT) dmxvisual.$(OBJEXT) dmxwindow.$(OBJEXT) \
+	miinitext.$(OBJEXT) fbcmap_mi.$(OBJEXT) $(am__objects_2)
 Xdmx_OBJECTS = $(am_Xdmx_OBJECTS)
 am__DEPENDENCIES_1 =
 @GLX_TRUE@am__DEPENDENCIES_2 = glxProxy/libglxproxy.a
@@ -140,6 +135,7 @@ AMTAR = @AMTAR@
 APPDEFAULTDIR = @APPDEFAULTDIR@
 APPGROUP_FALSE = @APPGROUP_FALSE@
 APPGROUP_TRUE = @APPGROUP_TRUE@
+APPLE_APPLICATIONS_DIR = @APPLE_APPLICATIONS_DIR@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -159,13 +155,18 @@ BSD_KQUEUE_APM_FALSE = @BSD_KQUEUE_APM_FALSE@
 BSD_KQUEUE_APM_TRUE = @BSD_KQUEUE_APM_TRUE@
 BUILDDOCS_FALSE = @BUILDDOCS_FALSE@
 BUILDDOCS_TRUE = @BUILDDOCS_TRUE@
+BUILD_DARWIN_FALSE = @BUILD_DARWIN_FALSE@
+BUILD_DARWIN_TRUE = @BUILD_DARWIN_TRUE@
 BUILD_DATE = @BUILD_DATE@
 BUILD_KBD_MODE_FALSE = @BUILD_KBD_MODE_FALSE@
 BUILD_KBD_MODE_TRUE = @BUILD_KBD_MODE_TRUE@
+BUILD_KDRIVEFBDEVLIB_FALSE = @BUILD_KDRIVEFBDEVLIB_FALSE@
+BUILD_KDRIVEFBDEVLIB_TRUE = @BUILD_KDRIVEFBDEVLIB_TRUE@
 BUILD_LINUXDOC_FALSE = @BUILD_LINUXDOC_FALSE@
 BUILD_LINUXDOC_TRUE = @BUILD_LINUXDOC_TRUE@
 BUILD_PDFDOC_FALSE = @BUILD_PDFDOC_FALSE@
 BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
+BUILD_TIME = @BUILD_TIME@
 BUILD_XORGCFG_FALSE = @BUILD_XORGCFG_FALSE@
 BUILD_XORGCFG_TRUE = @BUILD_XORGCFG_TRUE@
 CC = @CC@
@@ -178,6 +179,10 @@ CFLAGS = @CFLAGS@
 COMPILEDDEFAULTFONTPATH = @COMPILEDDEFAULTFONTPATH@
 COMPOSITE_FALSE = @COMPOSITE_FALSE@
 COMPOSITE_TRUE = @COMPOSITE_TRUE@
+CONFIG_DBUS_API_FALSE = @CONFIG_DBUS_API_FALSE@
+CONFIG_DBUS_API_TRUE = @CONFIG_DBUS_API_TRUE@
+CONFIG_HAL_FALSE = @CONFIG_HAL_FALSE@
+CONFIG_HAL_TRUE = @CONFIG_HAL_TRUE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CUP_FALSE = @CUP_FALSE@
@@ -187,8 +192,11 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DARWIN_LIBS = @DARWIN_LIBS@
 DBE_FALSE = @DBE_FALSE@
 DBE_TRUE = @DBE_TRUE@
+DBUS_CFLAGS = @DBUS_CFLAGS@
+DBUS_LIBS = @DBUS_LIBS@
 DEBUG_FALSE = @DEBUG_FALSE@
 DEBUG_TRUE = @DEBUG_TRUE@
 DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
@@ -196,7 +204,9 @@ DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DGA_CFLAGS = @DGA_CFLAGS@
 DGA_FALSE = @DGA_FALSE@
+DGA_LIBS = @DGA_LIBS@
 DGA_TRUE = @DGA_TRUE@
 DIX_CFLAGS = @DIX_CFLAGS@
 DLLTOOL = @DLLTOOL@
@@ -223,6 +233,7 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
 DRI_FALSE = @DRI_FALSE@
 DRI_TRUE = @DRI_TRUE@
+DTRACE = @DTRACE@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -251,6 +262,14 @@ GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
 H3600_TS_FALSE = @H3600_TS_FALSE@
 H3600_TS_TRUE = @H3600_TS_TRUE@
+HAL_CFLAGS = @HAL_CFLAGS@
+HAL_LIBS = @HAL_LIBS@
+HAVE_AGL_FRAMEWORK_FALSE = @HAVE_AGL_FRAMEWORK_FALSE@
+HAVE_AGL_FRAMEWORK_TRUE = @HAVE_AGL_FRAMEWORK_TRUE@
+HAVE_DBUS_FALSE = @HAVE_DBUS_FALSE@
+HAVE_DBUS_TRUE = @HAVE_DBUS_TRUE@
+HAVE_X_PLUGIN_FALSE = @HAVE_X_PLUGIN_FALSE@
+HAVE_X_PLUGIN_TRUE = @HAVE_X_PLUGIN_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
@@ -287,6 +306,7 @@ KDRIVE_HW_FALSE = @KDRIVE_HW_FALSE@
 KDRIVE_HW_TRUE = @KDRIVE_HW_TRUE@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
+KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KDRIVE_TRUE = @KDRIVE_TRUE@
@@ -330,14 +350,17 @@ MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
 MKFONTDIR = @MKFONTDIR@
 MKFONTSCALE = @MKFONTSCALE@
-MMX_CAPABLE_FALSE = @MMX_CAPABLE_FALSE@
-MMX_CAPABLE_TRUE = @MMX_CAPABLE_TRUE@
 MULTIBUFFER_FALSE = @MULTIBUFFER_FALSE@
 MULTIBUFFER_TRUE = @MULTIBUFFER_TRUE@
 NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
 NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
 NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
 NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
+OBJC = @OBJC@
+OBJCCLD = @OBJCCLD@
+OBJCDEPMODE = @OBJCDEPMODE@
+OBJCFLAGS = @OBJCFLAGS@
+OBJCLINK = @OBJCLINK@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -348,7 +371,11 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PERL = @PERL@
+PIXMAN_CFLAGS = @PIXMAN_CFLAGS@
+PIXMAN_LIBS = @PIXMAN_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
+PLIST_VENDOR_WEB = @PLIST_VENDOR_WEB@
+PLIST_VERSION_STRING = @PLIST_VERSION_STRING@
 PPC_VIDEO_FALSE = @PPC_VIDEO_FALSE@
 PPC_VIDEO_TRUE = @PPC_VIDEO_TRUE@
 PROJECTROOT = @PROJECTROOT@
@@ -363,6 +390,7 @@ RES_TRUE = @RES_TRUE@
 RGB_DB = @RGB_DB@
 SCREENSAVER_FALSE = @SCREENSAVER_FALSE@
 SCREENSAVER_TRUE = @SCREENSAVER_TRUE@
+SERVERCONFIGdir = @SERVERCONFIGdir@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
@@ -386,9 +414,9 @@ USE_CURSES_TRUE = @USE_CURSES_TRUE@
 USE_RGB_BUILTIN_FALSE = @USE_RGB_BUILTIN_FALSE@
 USE_RGB_BUILTIN_TRUE = @USE_RGB_BUILTIN_TRUE@
 VENDOR_MAN_VERSION = @VENDOR_MAN_VERSION@
+VENDOR_NAME = @VENDOR_NAME@
+VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VENDOR_RELEASE = @VENDOR_RELEASE@
-VENDOR_STRING = @VENDOR_STRING@
-VENDOR_STRING_SHORT = @VENDOR_STRING_SHORT@
 VERSION = @VERSION@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
@@ -417,13 +445,20 @@ XEPHYR_FALSE = @XEPHYR_FALSE@
 XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
 XEPHYR_TRUE = @XEPHYR_TRUE@
+XERRORDB_PATH = @XERRORDB_PATH@
 XEVIE_FALSE = @XEVIE_FALSE@
 XEVIE_TRUE = @XEVIE_TRUE@
 XF86BIGFONT_FALSE = @XF86BIGFONT_FALSE@
 XF86BIGFONT_TRUE = @XF86BIGFONT_TRUE@
 XF86CONFIGFILE = @XF86CONFIGFILE@
+XF86MISC_CFLAGS = @XF86MISC_CFLAGS@
+XF86MISC_LIBS = @XF86MISC_LIBS@
 XF86UTILS_FALSE = @XF86UTILS_FALSE@
 XF86UTILS_TRUE = @XF86UTILS_TRUE@
+XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
+XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
+XFAKESERVER_FALSE = @XFAKESERVER_FALSE@
+XFAKESERVER_TRUE = @XFAKESERVER_TRUE@
 XGLMODULES_CFLAGS = @XGLMODULES_CFLAGS@
 XGLMODULES_LIBS = @XGLMODULES_LIBS@
 XGLXMODULES_CFLAGS = @XGLXMODULES_CFLAGS@
@@ -437,8 +472,6 @@ XGL_MODULE_PATH = @XGL_MODULE_PATH@
 XGL_TRUE = @XGL_TRUE@
 XINERAMA_FALSE = @XINERAMA_FALSE@
 XINERAMA_TRUE = @XINERAMA_TRUE@
-XINPUT_FALSE = @XINPUT_FALSE@
-XINPUT_TRUE = @XINPUT_TRUE@
 XKB_BASE_DIRECTORY = @XKB_BASE_DIRECTORY@
 XKB_BIN_DIRECTORY = @XKB_BIN_DIRECTORY@
 XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
@@ -475,8 +508,9 @@ XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
 XORG_LOADER_SPARC_FALSE = @XORG_LOADER_SPARC_FALSE@
 XORG_LOADER_SPARC_TRUE = @XORG_LOADER_SPARC_TRUE@
+XORG_MODULES_CFLAGS = @XORG_MODULES_CFLAGS@
+XORG_MODULES_LIBS = @XORG_MODULES_LIBS@
 XORG_OS = @XORG_OS@
-XORG_OS_KBD = @XORG_OS_KBD@
 XORG_OS_SUBDIR = @XORG_OS_SUBDIR@
 XORG_TRUE = @XORG_TRUE@
 XPRINTPROTO_CFLAGS = @XPRINTPROTO_CFLAGS@
@@ -487,6 +521,8 @@ XPRINT_LIBS = @XPRINT_LIBS@
 XPRINT_TRUE = @XPRINT_TRUE@
 XP_USE_FREETYPE_FALSE = @XP_USE_FREETYPE_FALSE@
 XP_USE_FREETYPE_TRUE = @XP_USE_FREETYPE_TRUE@
+XQUARTZ_FALSE = @XQUARTZ_FALSE@
+XQUARTZ_TRUE = @XQUARTZ_TRUE@
 XRESEXAMPLES_DEP_CFLAGS = @XRESEXAMPLES_DEP_CFLAGS@
 XRESEXAMPLES_DEP_LIBS = @XRESEXAMPLES_DEP_LIBS@
 XSDLSERVER_FALSE = @XSDLSERVER_FALSE@
@@ -497,6 +533,8 @@ XSERVERCFLAGS_CFLAGS = @XSERVERCFLAGS_CFLAGS@
 XSERVERCFLAGS_LIBS = @XSERVERCFLAGS_LIBS@
 XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
 XSERVERLIBS_LIBS = @XSERVERLIBS_LIBS@
+XSERVER_DTRACE_FALSE = @XSERVER_DTRACE_FALSE@
+XSERVER_DTRACE_TRUE = @XSERVER_DTRACE_TRUE@
 XSERVER_LIBS = @XSERVER_LIBS@
 XTRAP_FALSE = @XTRAP_FALSE@
 XTRAP_TRUE = @XTRAP_TRUE@
@@ -550,6 +588,8 @@ am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
 am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
+am__fastdepOBJC_FALSE = @am__fastdepOBJC_FALSE@
+am__fastdepOBJC_TRUE = @am__fastdepOBJC_TRUE@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -600,9 +640,14 @@ SUBDIRS = input config examples $(am__append_1) $(am__append_2)
 @GLX_TRUE@           -I@MESA_SOURCE@/include
 
 @GLX_TRUE@GLX_DEFS = @GL_CFLAGS@ 
+AM_CFLAGS = \
+      -DHAVE_DMX_CONFIG_H \
+      $(DIX_CFLAGS) \
+      $(GLX_INCS) \
+      $(GLX_DEFS) \
+      $(DMX_CFLAGS) \
+      @DMXMODULES_CFLAGS@
 
-# It's essential that fbcmap.c be compiled with this flag for DMX to work!!
-DMX_CFLAGS = -DXFree86Server=1
 Xdmx_SOURCES = dmx.c \
                dmxcb.c \
                dmxcb.h \
@@ -647,8 +692,8 @@ Xdmx_SOURCES = dmx.c \
                dmxvisual.h \
                dmxwindow.c \
                dmxwindow.h \
-               $(top_srcdir)/fb/fbcmap.c \
                $(top_srcdir)/mi/miinitext.c \
+               $(top_srcdir)/fb/fbcmap_mi.c \
                $(GLX_SRCS) 
 
 
@@ -662,14 +707,6 @@ Xdmx_LDADD = $(XORG_CORE_LIBS) \
              input/libdmxinput.a \
              config/libdmxconfig.a \
              @DMXMODULES_LIBS@
-
-Xdmx_CFLAGS = \
-              -DHAVE_DMX_CONFIG_H \
-              $(DIX_CFLAGS) \
-              $(GLX_INCS) \
-              $(GLX_DEFS) \
-              $(DMX_CFLAGS) \
-              @DMXMODULES_CFLAGS@
 
 
 # Man page
@@ -758,31 +795,31 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmx.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmx_glxvisuals.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxcb.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxcmap.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxcursor.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxdpms.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxextension.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxfont.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxgc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxgcops.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxinit.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxinput.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxlog.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxpict.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxpixmap.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxprop.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxscrinit.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxshadow.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxstat.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxsync.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxvisual.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-dmxwindow.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-fbcmap.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-miinitext.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdmx-panoramiX.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmx.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmx_glxvisuals.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxcb.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxcmap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxcursor.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxdpms.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxextension.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxfont.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxgc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxgcops.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxinit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxinput.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxlog.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxpict.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxpixmap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxprop.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxscrinit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxshadow.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxstat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxsync.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxvisual.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxwindow.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbcmap_mi.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/miinitext.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/panoramiX.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -805,355 +842,47 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
-Xdmx-dmx.o: dmx.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmx.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmx.Tpo" -c -o Xdmx-dmx.o `test -f 'dmx.c' || echo '$(srcdir)/'`dmx.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmx.Tpo" "$(DEPDIR)/Xdmx-dmx.Po"; else rm -f "$(DEPDIR)/Xdmx-dmx.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmx.c' object='Xdmx-dmx.o' libtool=no @AMDEPBACKSLASH@
+miinitext.o: $(top_srcdir)/mi/miinitext.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT miinitext.o -MD -MP -MF "$(DEPDIR)/miinitext.Tpo" -c -o miinitext.o `test -f '$(top_srcdir)/mi/miinitext.c' || echo '$(srcdir)/'`$(top_srcdir)/mi/miinitext.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/miinitext.Tpo" "$(DEPDIR)/miinitext.Po"; else rm -f "$(DEPDIR)/miinitext.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/mi/miinitext.c' object='miinitext.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmx.o `test -f 'dmx.c' || echo '$(srcdir)/'`dmx.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o miinitext.o `test -f '$(top_srcdir)/mi/miinitext.c' || echo '$(srcdir)/'`$(top_srcdir)/mi/miinitext.c
 
-Xdmx-dmx.obj: dmx.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmx.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmx.Tpo" -c -o Xdmx-dmx.obj `if test -f 'dmx.c'; then $(CYGPATH_W) 'dmx.c'; else $(CYGPATH_W) '$(srcdir)/dmx.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmx.Tpo" "$(DEPDIR)/Xdmx-dmx.Po"; else rm -f "$(DEPDIR)/Xdmx-dmx.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmx.c' object='Xdmx-dmx.obj' libtool=no @AMDEPBACKSLASH@
+miinitext.obj: $(top_srcdir)/mi/miinitext.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT miinitext.obj -MD -MP -MF "$(DEPDIR)/miinitext.Tpo" -c -o miinitext.obj `if test -f '$(top_srcdir)/mi/miinitext.c'; then $(CYGPATH_W) '$(top_srcdir)/mi/miinitext.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/mi/miinitext.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/miinitext.Tpo" "$(DEPDIR)/miinitext.Po"; else rm -f "$(DEPDIR)/miinitext.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/mi/miinitext.c' object='miinitext.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmx.obj `if test -f 'dmx.c'; then $(CYGPATH_W) 'dmx.c'; else $(CYGPATH_W) '$(srcdir)/dmx.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o miinitext.obj `if test -f '$(top_srcdir)/mi/miinitext.c'; then $(CYGPATH_W) '$(top_srcdir)/mi/miinitext.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/mi/miinitext.c'; fi`
 
-Xdmx-dmxcb.o: dmxcb.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxcb.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxcb.Tpo" -c -o Xdmx-dmxcb.o `test -f 'dmxcb.c' || echo '$(srcdir)/'`dmxcb.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxcb.Tpo" "$(DEPDIR)/Xdmx-dmxcb.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxcb.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxcb.c' object='Xdmx-dmxcb.o' libtool=no @AMDEPBACKSLASH@
+fbcmap_mi.o: $(top_srcdir)/fb/fbcmap_mi.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT fbcmap_mi.o -MD -MP -MF "$(DEPDIR)/fbcmap_mi.Tpo" -c -o fbcmap_mi.o `test -f '$(top_srcdir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap_mi.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fbcmap_mi.Tpo" "$(DEPDIR)/fbcmap_mi.Po"; else rm -f "$(DEPDIR)/fbcmap_mi.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/fb/fbcmap_mi.c' object='fbcmap_mi.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxcb.o `test -f 'dmxcb.c' || echo '$(srcdir)/'`dmxcb.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o fbcmap_mi.o `test -f '$(top_srcdir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap_mi.c
 
-Xdmx-dmxcb.obj: dmxcb.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxcb.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxcb.Tpo" -c -o Xdmx-dmxcb.obj `if test -f 'dmxcb.c'; then $(CYGPATH_W) 'dmxcb.c'; else $(CYGPATH_W) '$(srcdir)/dmxcb.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxcb.Tpo" "$(DEPDIR)/Xdmx-dmxcb.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxcb.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxcb.c' object='Xdmx-dmxcb.obj' libtool=no @AMDEPBACKSLASH@
+fbcmap_mi.obj: $(top_srcdir)/fb/fbcmap_mi.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT fbcmap_mi.obj -MD -MP -MF "$(DEPDIR)/fbcmap_mi.Tpo" -c -o fbcmap_mi.obj `if test -f '$(top_srcdir)/fb/fbcmap_mi.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap_mi.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap_mi.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fbcmap_mi.Tpo" "$(DEPDIR)/fbcmap_mi.Po"; else rm -f "$(DEPDIR)/fbcmap_mi.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/fb/fbcmap_mi.c' object='fbcmap_mi.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxcb.obj `if test -f 'dmxcb.c'; then $(CYGPATH_W) 'dmxcb.c'; else $(CYGPATH_W) '$(srcdir)/dmxcb.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o fbcmap_mi.obj `if test -f '$(top_srcdir)/fb/fbcmap_mi.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap_mi.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap_mi.c'; fi`
 
-Xdmx-dmxcmap.o: dmxcmap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxcmap.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxcmap.Tpo" -c -o Xdmx-dmxcmap.o `test -f 'dmxcmap.c' || echo '$(srcdir)/'`dmxcmap.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxcmap.Tpo" "$(DEPDIR)/Xdmx-dmxcmap.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxcmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxcmap.c' object='Xdmx-dmxcmap.o' libtool=no @AMDEPBACKSLASH@
+panoramiX.o: $(top_srcdir)/Xext/panoramiX.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT panoramiX.o -MD -MP -MF "$(DEPDIR)/panoramiX.Tpo" -c -o panoramiX.o `test -f '$(top_srcdir)/Xext/panoramiX.c' || echo '$(srcdir)/'`$(top_srcdir)/Xext/panoramiX.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/panoramiX.Tpo" "$(DEPDIR)/panoramiX.Po"; else rm -f "$(DEPDIR)/panoramiX.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/Xext/panoramiX.c' object='panoramiX.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxcmap.o `test -f 'dmxcmap.c' || echo '$(srcdir)/'`dmxcmap.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o panoramiX.o `test -f '$(top_srcdir)/Xext/panoramiX.c' || echo '$(srcdir)/'`$(top_srcdir)/Xext/panoramiX.c
 
-Xdmx-dmxcmap.obj: dmxcmap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxcmap.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxcmap.Tpo" -c -o Xdmx-dmxcmap.obj `if test -f 'dmxcmap.c'; then $(CYGPATH_W) 'dmxcmap.c'; else $(CYGPATH_W) '$(srcdir)/dmxcmap.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxcmap.Tpo" "$(DEPDIR)/Xdmx-dmxcmap.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxcmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxcmap.c' object='Xdmx-dmxcmap.obj' libtool=no @AMDEPBACKSLASH@
+panoramiX.obj: $(top_srcdir)/Xext/panoramiX.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT panoramiX.obj -MD -MP -MF "$(DEPDIR)/panoramiX.Tpo" -c -o panoramiX.obj `if test -f '$(top_srcdir)/Xext/panoramiX.c'; then $(CYGPATH_W) '$(top_srcdir)/Xext/panoramiX.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/Xext/panoramiX.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/panoramiX.Tpo" "$(DEPDIR)/panoramiX.Po"; else rm -f "$(DEPDIR)/panoramiX.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/Xext/panoramiX.c' object='panoramiX.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxcmap.obj `if test -f 'dmxcmap.c'; then $(CYGPATH_W) 'dmxcmap.c'; else $(CYGPATH_W) '$(srcdir)/dmxcmap.c'; fi`
-
-Xdmx-dmxcursor.o: dmxcursor.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxcursor.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxcursor.Tpo" -c -o Xdmx-dmxcursor.o `test -f 'dmxcursor.c' || echo '$(srcdir)/'`dmxcursor.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxcursor.Tpo" "$(DEPDIR)/Xdmx-dmxcursor.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxcursor.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxcursor.c' object='Xdmx-dmxcursor.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxcursor.o `test -f 'dmxcursor.c' || echo '$(srcdir)/'`dmxcursor.c
-
-Xdmx-dmxcursor.obj: dmxcursor.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxcursor.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxcursor.Tpo" -c -o Xdmx-dmxcursor.obj `if test -f 'dmxcursor.c'; then $(CYGPATH_W) 'dmxcursor.c'; else $(CYGPATH_W) '$(srcdir)/dmxcursor.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxcursor.Tpo" "$(DEPDIR)/Xdmx-dmxcursor.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxcursor.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxcursor.c' object='Xdmx-dmxcursor.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxcursor.obj `if test -f 'dmxcursor.c'; then $(CYGPATH_W) 'dmxcursor.c'; else $(CYGPATH_W) '$(srcdir)/dmxcursor.c'; fi`
-
-Xdmx-dmxdpms.o: dmxdpms.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxdpms.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxdpms.Tpo" -c -o Xdmx-dmxdpms.o `test -f 'dmxdpms.c' || echo '$(srcdir)/'`dmxdpms.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxdpms.Tpo" "$(DEPDIR)/Xdmx-dmxdpms.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxdpms.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxdpms.c' object='Xdmx-dmxdpms.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxdpms.o `test -f 'dmxdpms.c' || echo '$(srcdir)/'`dmxdpms.c
-
-Xdmx-dmxdpms.obj: dmxdpms.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxdpms.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxdpms.Tpo" -c -o Xdmx-dmxdpms.obj `if test -f 'dmxdpms.c'; then $(CYGPATH_W) 'dmxdpms.c'; else $(CYGPATH_W) '$(srcdir)/dmxdpms.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxdpms.Tpo" "$(DEPDIR)/Xdmx-dmxdpms.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxdpms.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxdpms.c' object='Xdmx-dmxdpms.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxdpms.obj `if test -f 'dmxdpms.c'; then $(CYGPATH_W) 'dmxdpms.c'; else $(CYGPATH_W) '$(srcdir)/dmxdpms.c'; fi`
-
-Xdmx-dmxextension.o: dmxextension.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxextension.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxextension.Tpo" -c -o Xdmx-dmxextension.o `test -f 'dmxextension.c' || echo '$(srcdir)/'`dmxextension.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxextension.Tpo" "$(DEPDIR)/Xdmx-dmxextension.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxextension.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxextension.c' object='Xdmx-dmxextension.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxextension.o `test -f 'dmxextension.c' || echo '$(srcdir)/'`dmxextension.c
-
-Xdmx-dmxextension.obj: dmxextension.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxextension.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxextension.Tpo" -c -o Xdmx-dmxextension.obj `if test -f 'dmxextension.c'; then $(CYGPATH_W) 'dmxextension.c'; else $(CYGPATH_W) '$(srcdir)/dmxextension.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxextension.Tpo" "$(DEPDIR)/Xdmx-dmxextension.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxextension.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxextension.c' object='Xdmx-dmxextension.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxextension.obj `if test -f 'dmxextension.c'; then $(CYGPATH_W) 'dmxextension.c'; else $(CYGPATH_W) '$(srcdir)/dmxextension.c'; fi`
-
-Xdmx-dmxfont.o: dmxfont.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxfont.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxfont.Tpo" -c -o Xdmx-dmxfont.o `test -f 'dmxfont.c' || echo '$(srcdir)/'`dmxfont.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxfont.Tpo" "$(DEPDIR)/Xdmx-dmxfont.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxfont.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxfont.c' object='Xdmx-dmxfont.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxfont.o `test -f 'dmxfont.c' || echo '$(srcdir)/'`dmxfont.c
-
-Xdmx-dmxfont.obj: dmxfont.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxfont.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxfont.Tpo" -c -o Xdmx-dmxfont.obj `if test -f 'dmxfont.c'; then $(CYGPATH_W) 'dmxfont.c'; else $(CYGPATH_W) '$(srcdir)/dmxfont.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxfont.Tpo" "$(DEPDIR)/Xdmx-dmxfont.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxfont.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxfont.c' object='Xdmx-dmxfont.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxfont.obj `if test -f 'dmxfont.c'; then $(CYGPATH_W) 'dmxfont.c'; else $(CYGPATH_W) '$(srcdir)/dmxfont.c'; fi`
-
-Xdmx-dmxgc.o: dmxgc.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxgc.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxgc.Tpo" -c -o Xdmx-dmxgc.o `test -f 'dmxgc.c' || echo '$(srcdir)/'`dmxgc.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxgc.Tpo" "$(DEPDIR)/Xdmx-dmxgc.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxgc.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxgc.c' object='Xdmx-dmxgc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxgc.o `test -f 'dmxgc.c' || echo '$(srcdir)/'`dmxgc.c
-
-Xdmx-dmxgc.obj: dmxgc.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxgc.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxgc.Tpo" -c -o Xdmx-dmxgc.obj `if test -f 'dmxgc.c'; then $(CYGPATH_W) 'dmxgc.c'; else $(CYGPATH_W) '$(srcdir)/dmxgc.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxgc.Tpo" "$(DEPDIR)/Xdmx-dmxgc.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxgc.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxgc.c' object='Xdmx-dmxgc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxgc.obj `if test -f 'dmxgc.c'; then $(CYGPATH_W) 'dmxgc.c'; else $(CYGPATH_W) '$(srcdir)/dmxgc.c'; fi`
-
-Xdmx-dmxgcops.o: dmxgcops.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxgcops.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxgcops.Tpo" -c -o Xdmx-dmxgcops.o `test -f 'dmxgcops.c' || echo '$(srcdir)/'`dmxgcops.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxgcops.Tpo" "$(DEPDIR)/Xdmx-dmxgcops.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxgcops.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxgcops.c' object='Xdmx-dmxgcops.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxgcops.o `test -f 'dmxgcops.c' || echo '$(srcdir)/'`dmxgcops.c
-
-Xdmx-dmxgcops.obj: dmxgcops.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxgcops.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxgcops.Tpo" -c -o Xdmx-dmxgcops.obj `if test -f 'dmxgcops.c'; then $(CYGPATH_W) 'dmxgcops.c'; else $(CYGPATH_W) '$(srcdir)/dmxgcops.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxgcops.Tpo" "$(DEPDIR)/Xdmx-dmxgcops.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxgcops.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxgcops.c' object='Xdmx-dmxgcops.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxgcops.obj `if test -f 'dmxgcops.c'; then $(CYGPATH_W) 'dmxgcops.c'; else $(CYGPATH_W) '$(srcdir)/dmxgcops.c'; fi`
-
-Xdmx-dmxinit.o: dmxinit.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxinit.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxinit.Tpo" -c -o Xdmx-dmxinit.o `test -f 'dmxinit.c' || echo '$(srcdir)/'`dmxinit.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxinit.Tpo" "$(DEPDIR)/Xdmx-dmxinit.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxinit.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxinit.c' object='Xdmx-dmxinit.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxinit.o `test -f 'dmxinit.c' || echo '$(srcdir)/'`dmxinit.c
-
-Xdmx-dmxinit.obj: dmxinit.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxinit.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxinit.Tpo" -c -o Xdmx-dmxinit.obj `if test -f 'dmxinit.c'; then $(CYGPATH_W) 'dmxinit.c'; else $(CYGPATH_W) '$(srcdir)/dmxinit.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxinit.Tpo" "$(DEPDIR)/Xdmx-dmxinit.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxinit.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxinit.c' object='Xdmx-dmxinit.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxinit.obj `if test -f 'dmxinit.c'; then $(CYGPATH_W) 'dmxinit.c'; else $(CYGPATH_W) '$(srcdir)/dmxinit.c'; fi`
-
-Xdmx-dmxinput.o: dmxinput.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxinput.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxinput.Tpo" -c -o Xdmx-dmxinput.o `test -f 'dmxinput.c' || echo '$(srcdir)/'`dmxinput.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxinput.Tpo" "$(DEPDIR)/Xdmx-dmxinput.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxinput.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxinput.c' object='Xdmx-dmxinput.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxinput.o `test -f 'dmxinput.c' || echo '$(srcdir)/'`dmxinput.c
-
-Xdmx-dmxinput.obj: dmxinput.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxinput.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxinput.Tpo" -c -o Xdmx-dmxinput.obj `if test -f 'dmxinput.c'; then $(CYGPATH_W) 'dmxinput.c'; else $(CYGPATH_W) '$(srcdir)/dmxinput.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxinput.Tpo" "$(DEPDIR)/Xdmx-dmxinput.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxinput.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxinput.c' object='Xdmx-dmxinput.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxinput.obj `if test -f 'dmxinput.c'; then $(CYGPATH_W) 'dmxinput.c'; else $(CYGPATH_W) '$(srcdir)/dmxinput.c'; fi`
-
-Xdmx-dmxlog.o: dmxlog.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxlog.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxlog.Tpo" -c -o Xdmx-dmxlog.o `test -f 'dmxlog.c' || echo '$(srcdir)/'`dmxlog.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxlog.Tpo" "$(DEPDIR)/Xdmx-dmxlog.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxlog.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxlog.c' object='Xdmx-dmxlog.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxlog.o `test -f 'dmxlog.c' || echo '$(srcdir)/'`dmxlog.c
-
-Xdmx-dmxlog.obj: dmxlog.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxlog.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxlog.Tpo" -c -o Xdmx-dmxlog.obj `if test -f 'dmxlog.c'; then $(CYGPATH_W) 'dmxlog.c'; else $(CYGPATH_W) '$(srcdir)/dmxlog.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxlog.Tpo" "$(DEPDIR)/Xdmx-dmxlog.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxlog.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxlog.c' object='Xdmx-dmxlog.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxlog.obj `if test -f 'dmxlog.c'; then $(CYGPATH_W) 'dmxlog.c'; else $(CYGPATH_W) '$(srcdir)/dmxlog.c'; fi`
-
-Xdmx-dmxpict.o: dmxpict.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxpict.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxpict.Tpo" -c -o Xdmx-dmxpict.o `test -f 'dmxpict.c' || echo '$(srcdir)/'`dmxpict.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxpict.Tpo" "$(DEPDIR)/Xdmx-dmxpict.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxpict.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxpict.c' object='Xdmx-dmxpict.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxpict.o `test -f 'dmxpict.c' || echo '$(srcdir)/'`dmxpict.c
-
-Xdmx-dmxpict.obj: dmxpict.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxpict.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxpict.Tpo" -c -o Xdmx-dmxpict.obj `if test -f 'dmxpict.c'; then $(CYGPATH_W) 'dmxpict.c'; else $(CYGPATH_W) '$(srcdir)/dmxpict.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxpict.Tpo" "$(DEPDIR)/Xdmx-dmxpict.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxpict.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxpict.c' object='Xdmx-dmxpict.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxpict.obj `if test -f 'dmxpict.c'; then $(CYGPATH_W) 'dmxpict.c'; else $(CYGPATH_W) '$(srcdir)/dmxpict.c'; fi`
-
-Xdmx-dmxpixmap.o: dmxpixmap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxpixmap.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxpixmap.Tpo" -c -o Xdmx-dmxpixmap.o `test -f 'dmxpixmap.c' || echo '$(srcdir)/'`dmxpixmap.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxpixmap.Tpo" "$(DEPDIR)/Xdmx-dmxpixmap.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxpixmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxpixmap.c' object='Xdmx-dmxpixmap.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxpixmap.o `test -f 'dmxpixmap.c' || echo '$(srcdir)/'`dmxpixmap.c
-
-Xdmx-dmxpixmap.obj: dmxpixmap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxpixmap.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxpixmap.Tpo" -c -o Xdmx-dmxpixmap.obj `if test -f 'dmxpixmap.c'; then $(CYGPATH_W) 'dmxpixmap.c'; else $(CYGPATH_W) '$(srcdir)/dmxpixmap.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxpixmap.Tpo" "$(DEPDIR)/Xdmx-dmxpixmap.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxpixmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxpixmap.c' object='Xdmx-dmxpixmap.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxpixmap.obj `if test -f 'dmxpixmap.c'; then $(CYGPATH_W) 'dmxpixmap.c'; else $(CYGPATH_W) '$(srcdir)/dmxpixmap.c'; fi`
-
-Xdmx-dmxprop.o: dmxprop.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxprop.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxprop.Tpo" -c -o Xdmx-dmxprop.o `test -f 'dmxprop.c' || echo '$(srcdir)/'`dmxprop.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxprop.Tpo" "$(DEPDIR)/Xdmx-dmxprop.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxprop.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxprop.c' object='Xdmx-dmxprop.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxprop.o `test -f 'dmxprop.c' || echo '$(srcdir)/'`dmxprop.c
-
-Xdmx-dmxprop.obj: dmxprop.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxprop.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxprop.Tpo" -c -o Xdmx-dmxprop.obj `if test -f 'dmxprop.c'; then $(CYGPATH_W) 'dmxprop.c'; else $(CYGPATH_W) '$(srcdir)/dmxprop.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxprop.Tpo" "$(DEPDIR)/Xdmx-dmxprop.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxprop.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxprop.c' object='Xdmx-dmxprop.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxprop.obj `if test -f 'dmxprop.c'; then $(CYGPATH_W) 'dmxprop.c'; else $(CYGPATH_W) '$(srcdir)/dmxprop.c'; fi`
-
-Xdmx-dmxscrinit.o: dmxscrinit.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxscrinit.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxscrinit.Tpo" -c -o Xdmx-dmxscrinit.o `test -f 'dmxscrinit.c' || echo '$(srcdir)/'`dmxscrinit.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxscrinit.Tpo" "$(DEPDIR)/Xdmx-dmxscrinit.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxscrinit.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxscrinit.c' object='Xdmx-dmxscrinit.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxscrinit.o `test -f 'dmxscrinit.c' || echo '$(srcdir)/'`dmxscrinit.c
-
-Xdmx-dmxscrinit.obj: dmxscrinit.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxscrinit.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxscrinit.Tpo" -c -o Xdmx-dmxscrinit.obj `if test -f 'dmxscrinit.c'; then $(CYGPATH_W) 'dmxscrinit.c'; else $(CYGPATH_W) '$(srcdir)/dmxscrinit.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxscrinit.Tpo" "$(DEPDIR)/Xdmx-dmxscrinit.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxscrinit.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxscrinit.c' object='Xdmx-dmxscrinit.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxscrinit.obj `if test -f 'dmxscrinit.c'; then $(CYGPATH_W) 'dmxscrinit.c'; else $(CYGPATH_W) '$(srcdir)/dmxscrinit.c'; fi`
-
-Xdmx-dmxshadow.o: dmxshadow.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxshadow.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxshadow.Tpo" -c -o Xdmx-dmxshadow.o `test -f 'dmxshadow.c' || echo '$(srcdir)/'`dmxshadow.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxshadow.Tpo" "$(DEPDIR)/Xdmx-dmxshadow.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxshadow.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxshadow.c' object='Xdmx-dmxshadow.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxshadow.o `test -f 'dmxshadow.c' || echo '$(srcdir)/'`dmxshadow.c
-
-Xdmx-dmxshadow.obj: dmxshadow.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxshadow.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxshadow.Tpo" -c -o Xdmx-dmxshadow.obj `if test -f 'dmxshadow.c'; then $(CYGPATH_W) 'dmxshadow.c'; else $(CYGPATH_W) '$(srcdir)/dmxshadow.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxshadow.Tpo" "$(DEPDIR)/Xdmx-dmxshadow.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxshadow.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxshadow.c' object='Xdmx-dmxshadow.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxshadow.obj `if test -f 'dmxshadow.c'; then $(CYGPATH_W) 'dmxshadow.c'; else $(CYGPATH_W) '$(srcdir)/dmxshadow.c'; fi`
-
-Xdmx-dmxstat.o: dmxstat.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxstat.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxstat.Tpo" -c -o Xdmx-dmxstat.o `test -f 'dmxstat.c' || echo '$(srcdir)/'`dmxstat.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxstat.Tpo" "$(DEPDIR)/Xdmx-dmxstat.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxstat.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxstat.c' object='Xdmx-dmxstat.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxstat.o `test -f 'dmxstat.c' || echo '$(srcdir)/'`dmxstat.c
-
-Xdmx-dmxstat.obj: dmxstat.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxstat.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxstat.Tpo" -c -o Xdmx-dmxstat.obj `if test -f 'dmxstat.c'; then $(CYGPATH_W) 'dmxstat.c'; else $(CYGPATH_W) '$(srcdir)/dmxstat.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxstat.Tpo" "$(DEPDIR)/Xdmx-dmxstat.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxstat.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxstat.c' object='Xdmx-dmxstat.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxstat.obj `if test -f 'dmxstat.c'; then $(CYGPATH_W) 'dmxstat.c'; else $(CYGPATH_W) '$(srcdir)/dmxstat.c'; fi`
-
-Xdmx-dmxsync.o: dmxsync.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxsync.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxsync.Tpo" -c -o Xdmx-dmxsync.o `test -f 'dmxsync.c' || echo '$(srcdir)/'`dmxsync.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxsync.Tpo" "$(DEPDIR)/Xdmx-dmxsync.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxsync.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxsync.c' object='Xdmx-dmxsync.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxsync.o `test -f 'dmxsync.c' || echo '$(srcdir)/'`dmxsync.c
-
-Xdmx-dmxsync.obj: dmxsync.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxsync.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxsync.Tpo" -c -o Xdmx-dmxsync.obj `if test -f 'dmxsync.c'; then $(CYGPATH_W) 'dmxsync.c'; else $(CYGPATH_W) '$(srcdir)/dmxsync.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxsync.Tpo" "$(DEPDIR)/Xdmx-dmxsync.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxsync.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxsync.c' object='Xdmx-dmxsync.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxsync.obj `if test -f 'dmxsync.c'; then $(CYGPATH_W) 'dmxsync.c'; else $(CYGPATH_W) '$(srcdir)/dmxsync.c'; fi`
-
-Xdmx-dmxvisual.o: dmxvisual.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxvisual.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxvisual.Tpo" -c -o Xdmx-dmxvisual.o `test -f 'dmxvisual.c' || echo '$(srcdir)/'`dmxvisual.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxvisual.Tpo" "$(DEPDIR)/Xdmx-dmxvisual.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxvisual.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxvisual.c' object='Xdmx-dmxvisual.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxvisual.o `test -f 'dmxvisual.c' || echo '$(srcdir)/'`dmxvisual.c
-
-Xdmx-dmxvisual.obj: dmxvisual.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxvisual.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxvisual.Tpo" -c -o Xdmx-dmxvisual.obj `if test -f 'dmxvisual.c'; then $(CYGPATH_W) 'dmxvisual.c'; else $(CYGPATH_W) '$(srcdir)/dmxvisual.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxvisual.Tpo" "$(DEPDIR)/Xdmx-dmxvisual.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxvisual.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxvisual.c' object='Xdmx-dmxvisual.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxvisual.obj `if test -f 'dmxvisual.c'; then $(CYGPATH_W) 'dmxvisual.c'; else $(CYGPATH_W) '$(srcdir)/dmxvisual.c'; fi`
-
-Xdmx-dmxwindow.o: dmxwindow.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxwindow.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmxwindow.Tpo" -c -o Xdmx-dmxwindow.o `test -f 'dmxwindow.c' || echo '$(srcdir)/'`dmxwindow.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxwindow.Tpo" "$(DEPDIR)/Xdmx-dmxwindow.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxwindow.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxwindow.c' object='Xdmx-dmxwindow.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxwindow.o `test -f 'dmxwindow.c' || echo '$(srcdir)/'`dmxwindow.c
-
-Xdmx-dmxwindow.obj: dmxwindow.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmxwindow.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmxwindow.Tpo" -c -o Xdmx-dmxwindow.obj `if test -f 'dmxwindow.c'; then $(CYGPATH_W) 'dmxwindow.c'; else $(CYGPATH_W) '$(srcdir)/dmxwindow.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmxwindow.Tpo" "$(DEPDIR)/Xdmx-dmxwindow.Po"; else rm -f "$(DEPDIR)/Xdmx-dmxwindow.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmxwindow.c' object='Xdmx-dmxwindow.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmxwindow.obj `if test -f 'dmxwindow.c'; then $(CYGPATH_W) 'dmxwindow.c'; else $(CYGPATH_W) '$(srcdir)/dmxwindow.c'; fi`
-
-Xdmx-fbcmap.o: $(top_srcdir)/fb/fbcmap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-fbcmap.o -MD -MP -MF "$(DEPDIR)/Xdmx-fbcmap.Tpo" -c -o Xdmx-fbcmap.o `test -f '$(top_srcdir)/fb/fbcmap.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-fbcmap.Tpo" "$(DEPDIR)/Xdmx-fbcmap.Po"; else rm -f "$(DEPDIR)/Xdmx-fbcmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/fb/fbcmap.c' object='Xdmx-fbcmap.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-fbcmap.o `test -f '$(top_srcdir)/fb/fbcmap.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap.c
-
-Xdmx-fbcmap.obj: $(top_srcdir)/fb/fbcmap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-fbcmap.obj -MD -MP -MF "$(DEPDIR)/Xdmx-fbcmap.Tpo" -c -o Xdmx-fbcmap.obj `if test -f '$(top_srcdir)/fb/fbcmap.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-fbcmap.Tpo" "$(DEPDIR)/Xdmx-fbcmap.Po"; else rm -f "$(DEPDIR)/Xdmx-fbcmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/fb/fbcmap.c' object='Xdmx-fbcmap.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-fbcmap.obj `if test -f '$(top_srcdir)/fb/fbcmap.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap.c'; fi`
-
-Xdmx-miinitext.o: $(top_srcdir)/mi/miinitext.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-miinitext.o -MD -MP -MF "$(DEPDIR)/Xdmx-miinitext.Tpo" -c -o Xdmx-miinitext.o `test -f '$(top_srcdir)/mi/miinitext.c' || echo '$(srcdir)/'`$(top_srcdir)/mi/miinitext.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-miinitext.Tpo" "$(DEPDIR)/Xdmx-miinitext.Po"; else rm -f "$(DEPDIR)/Xdmx-miinitext.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/mi/miinitext.c' object='Xdmx-miinitext.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-miinitext.o `test -f '$(top_srcdir)/mi/miinitext.c' || echo '$(srcdir)/'`$(top_srcdir)/mi/miinitext.c
-
-Xdmx-miinitext.obj: $(top_srcdir)/mi/miinitext.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-miinitext.obj -MD -MP -MF "$(DEPDIR)/Xdmx-miinitext.Tpo" -c -o Xdmx-miinitext.obj `if test -f '$(top_srcdir)/mi/miinitext.c'; then $(CYGPATH_W) '$(top_srcdir)/mi/miinitext.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/mi/miinitext.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-miinitext.Tpo" "$(DEPDIR)/Xdmx-miinitext.Po"; else rm -f "$(DEPDIR)/Xdmx-miinitext.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/mi/miinitext.c' object='Xdmx-miinitext.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-miinitext.obj `if test -f '$(top_srcdir)/mi/miinitext.c'; then $(CYGPATH_W) '$(top_srcdir)/mi/miinitext.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/mi/miinitext.c'; fi`
-
-Xdmx-panoramiX.o: $(top_srcdir)/Xext/panoramiX.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-panoramiX.o -MD -MP -MF "$(DEPDIR)/Xdmx-panoramiX.Tpo" -c -o Xdmx-panoramiX.o `test -f '$(top_srcdir)/Xext/panoramiX.c' || echo '$(srcdir)/'`$(top_srcdir)/Xext/panoramiX.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-panoramiX.Tpo" "$(DEPDIR)/Xdmx-panoramiX.Po"; else rm -f "$(DEPDIR)/Xdmx-panoramiX.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/Xext/panoramiX.c' object='Xdmx-panoramiX.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-panoramiX.o `test -f '$(top_srcdir)/Xext/panoramiX.c' || echo '$(srcdir)/'`$(top_srcdir)/Xext/panoramiX.c
-
-Xdmx-panoramiX.obj: $(top_srcdir)/Xext/panoramiX.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-panoramiX.obj -MD -MP -MF "$(DEPDIR)/Xdmx-panoramiX.Tpo" -c -o Xdmx-panoramiX.obj `if test -f '$(top_srcdir)/Xext/panoramiX.c'; then $(CYGPATH_W) '$(top_srcdir)/Xext/panoramiX.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/Xext/panoramiX.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-panoramiX.Tpo" "$(DEPDIR)/Xdmx-panoramiX.Po"; else rm -f "$(DEPDIR)/Xdmx-panoramiX.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/Xext/panoramiX.c' object='Xdmx-panoramiX.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-panoramiX.obj `if test -f '$(top_srcdir)/Xext/panoramiX.c'; then $(CYGPATH_W) '$(top_srcdir)/Xext/panoramiX.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/Xext/panoramiX.c'; fi`
-
-Xdmx-dmx_glxvisuals.o: dmx_glxvisuals.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmx_glxvisuals.o -MD -MP -MF "$(DEPDIR)/Xdmx-dmx_glxvisuals.Tpo" -c -o Xdmx-dmx_glxvisuals.o `test -f 'dmx_glxvisuals.c' || echo '$(srcdir)/'`dmx_glxvisuals.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmx_glxvisuals.Tpo" "$(DEPDIR)/Xdmx-dmx_glxvisuals.Po"; else rm -f "$(DEPDIR)/Xdmx-dmx_glxvisuals.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmx_glxvisuals.c' object='Xdmx-dmx_glxvisuals.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmx_glxvisuals.o `test -f 'dmx_glxvisuals.c' || echo '$(srcdir)/'`dmx_glxvisuals.c
-
-Xdmx-dmx_glxvisuals.obj: dmx_glxvisuals.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -MT Xdmx-dmx_glxvisuals.obj -MD -MP -MF "$(DEPDIR)/Xdmx-dmx_glxvisuals.Tpo" -c -o Xdmx-dmx_glxvisuals.obj `if test -f 'dmx_glxvisuals.c'; then $(CYGPATH_W) 'dmx_glxvisuals.c'; else $(CYGPATH_W) '$(srcdir)/dmx_glxvisuals.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/Xdmx-dmx_glxvisuals.Tpo" "$(DEPDIR)/Xdmx-dmx_glxvisuals.Po"; else rm -f "$(DEPDIR)/Xdmx-dmx_glxvisuals.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dmx_glxvisuals.c' object='Xdmx-dmx_glxvisuals.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xdmx_CFLAGS) $(CFLAGS) -c -o Xdmx-dmx_glxvisuals.obj `if test -f 'dmx_glxvisuals.c'; then $(CYGPATH_W) 'dmx_glxvisuals.c'; else $(CYGPATH_W) '$(srcdir)/dmx_glxvisuals.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o panoramiX.obj `if test -f '$(top_srcdir)/Xext/panoramiX.c'; then $(CYGPATH_W) '$(top_srcdir)/Xext/panoramiX.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/Xext/panoramiX.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

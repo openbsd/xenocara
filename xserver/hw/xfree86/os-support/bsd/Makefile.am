@@ -55,8 +55,7 @@ ARCH_SOURCES = i386_video.c
 endif
 
 if PPC_VIDEO
-ARCH_SOURCES = ppc_video.c \
-	$(srcdir)/../shared/ioperm_noop.c
+ARCH_SOURCES = ppc_video.c
 endif
 
 if SPARC64_VIDEO
@@ -67,28 +66,25 @@ ARCH_SOURCES = \
 endif
 
 # FIXME: NetBSD Aperture defines (configure.ac)
-AM_CFLAGS = -DUSESTDRES $(XORG_CFLAGS)
+AM_CFLAGS = -DUSESTDRES $(XORG_CFLAGS) $(DIX_CFLAGS)
 
 INCLUDES = $(XORG_INCS)
 
 libbsd_la_SOURCES = \
-	$(srcdir)/../shared/at_scancode.c \
 	$(srcdir)/../shared/libc_wrapper.c \
 	$(srcdir)/../shared/posix_tty.c \
 	$(srcdir)/../shared/sigio.c \
-	$(srcdir)/../shared/std_kbdEv.c \
 	$(srcdir)/../shared/stdPci.c \
 	$(srcdir)/../shared/vidmem.c \
 	bsd_VTsw.c \
 	bsd_init.c \
-	bsd_io.c \
-	bsd_kbd.c \
-	bsd_KbdMap.c \
 	bsd_mouse.c \
+	bsd_bell.c \
 	$(ARCH_SOURCES) \
 	$(AGP_SOURCES) \
 	$(APM_SOURCES) \
 	$(AXP_SOURCES) \
+	$(DRI_SOURCES) \
 	$(KMOD_SOURCES) \
 	$(RES_SOURCES)
 
@@ -96,7 +92,6 @@ libbsd_la_SOURCES = \
 EXTRA_DIST = \
 	bsd_apm.c \
 	bsd_jstk.c \
-	bsd_kbd.h \
 	bsd_kqueue_apm.c \
 	bsdResource.c \
 	memrange.h \

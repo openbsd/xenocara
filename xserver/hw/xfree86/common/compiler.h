@@ -47,8 +47,6 @@
  * authorization from the copyright holder(s) and author(s).
  */
 
-/* $XConsortium: compiler.h /main/16 1996/10/25 15:38:34 kaleb $ */
-
 #ifndef _COMPILER_H
 
 # define _COMPILER_H
@@ -118,7 +116,7 @@ extern int ffs(unsigned long);
 # if defined(NO_INLINE) || defined(DO_PROTOTYPES)
 
 #  if !defined(__arm__)
-#   if !defined(__sparc__) && !defined(__arm32__) \
+#   if !defined(__sparc__) && !defined(__sparc) && !defined(__arm32__) \
       && !(defined(__alpha__) && defined(linux)) \
       && !(defined(__ia64__) && defined(linux)) \
 
@@ -1377,7 +1375,7 @@ do {									\
 #    define write_mem_barrier()   /* NOP */
 
 #    if !defined(__SUNPRO_C)
-#    if !defined(FAKEIT) && !defined(__mc68000__) && !defined(__arm__) && !defined(__sh__) && !defined(__hppa__) && !defined(__vax__)
+#    if !defined(FAKEIT) && !defined(__mc68000__) && !defined(__arm__) && !defined(__sh__) && !defined(__hppa__) && !defined(__s390__) && !defined(__vax__)
 #     ifdef GCCUSESGAS
 
 /*
@@ -1709,7 +1707,7 @@ static __inline__ void ppc_flush_icache(char *addr)
 		: : "r"(addr) : "memory");
 }
 
-# elif defined(__sparc__) || defined(sparc)
+# elif defined(__sparc__) || defined(sparc) || defined(__sparc)
  /*
   * Like powerpc, we provide byteswapping and no byteswapping functions
   * here with byteswapping as default, drivers that don't need byteswapping

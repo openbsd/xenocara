@@ -107,11 +107,6 @@ SOFTWARE.
 #include <sys/ioctl.h>
 #endif
 
-#ifdef __UNIXOS2__
-#define select(n,r,w,x,t) os2PseudoSelect(n,r,w,x,t)
-extern __const__ int _nfiles;
-#endif
-
 #if defined(TCPCONN) || defined(STREAMSCONN)
 # include <netinet/in.h>
 # include <arpa/inet.h>
@@ -124,20 +119,16 @@ extern __const__ int _nfiles;
 #   ifdef CSRG_BASED
 #    include <sys/param.h>
 #   endif
-#    ifndef __UNIXOS2__
-#     include <netinet/tcp.h>
-#    endif
+#   include <netinet/tcp.h>
 #  endif
 # endif
 # include <arpa/inet.h>
 #endif
 
-#if !defined(__UNIXOS2__)
 #ifndef Lynx
 #include <sys/uio.h>
 #else
 #include <uio.h>
-#endif
 #endif
 #endif /* WIN32 */
 #include "misc.h"		/* for typedef of pointer */
@@ -148,9 +139,7 @@ extern __const__ int _nfiles;
 #ifdef XAPPGROUP
 #include "appgroup.h"
 #endif
-#ifdef XACE
 #include "xace.h"
-#endif
 #ifdef XCSECURITY
 #include "securitysrv.h"
 #endif
@@ -170,7 +159,16 @@ extern __const__ int _nfiles;
 # include <zone.h>
 #endif
 
-int lastfdesc;			/* maximum file descriptor */
+#ifdef XSERVER_DTRACE
+# include <sys/types.h>
+typedef const char *string;
+# ifndef HAS_GETPEERUCRED
+#  define zoneid_t int
+# endif
+# include "../dix/Xserver-dtrace.h"
+#endif
+
+static int lastfdesc;		/* maximum file descriptor */
 
 fd_set WellKnownConnections;	/* Listener mask */
 fd_set EnabledDevices;		/* mask for input devices that are on */
@@ -184,12 +182,9 @@ int MaxClients = 0;
 Bool NewOutputPending;		/* not yet attempted to write some new output */
 Bool AnyClientsWriteBlocked;	/* true if some client blocked on write */
 
-Bool RunFromSmartParent;	/* send SIGUSR1 to parent process */
+static Bool RunFromSmartParent;	/* send SIGUSR1 to parent process */
 Bool PartialNetwork;		/* continue even if unable to bind all addrs */
 static Pid_t ParentProcess;
-#ifdef __UNIXOS2__
-Pid_t GetPPID(Pid_t pid);
-#endif
 
 static Bool debug_conns = FALSE;
 
@@ -293,9 +288,9 @@ void ClearConnectionTranslation(void)
 }
 #endif
 
-XtransConnInfo 	*ListenTransConns = NULL;
-int	       	*ListenTransFds = NULL;
-int		ListenTransCount;
+static XtransConnInfo 	*ListenTransConns = NULL;
+static int	       	*ListenTransFds = NULL;
+static int		ListenTransCount;
 
 static void ErrorConnMax(XtransConnInfo /* trans_conn */);
 
@@ -322,8 +317,6 @@ InitConnectionLimits(void)
 
 #ifndef __CYGWIN__
 
-#ifndef __UNIXOS2__
-
 #if !defined(XNO_SYSCONF) && defined(_SC_OPEN_MAX)
     lastfdesc = sysconf(_SC_OPEN_MAX) - 1;
 #endif
@@ -336,10 +329,6 @@ InitConnectionLimits(void)
 #ifdef _NFILE
     if (lastfdesc < 0)
 	lastfdesc = _NFILE - 1;
-#endif
-
-#else /* __UNIXOS2__ */
-    lastfdesc = _nfiles - 1;
 #endif
 
 #endif /* __CYGWIN__ */
@@ -457,15 +446,6 @@ CreateWellKnownSockets(void)
 	RunFromSmartParent = TRUE;
     OsSignal(SIGUSR1, handler);
     ParentProcess = getppid ();
-#ifdef __UNIXOS2__
-    /*
-     * fg030505: under OS/2, xinit is not the parent process but
-     * the "grant parent" process of the server because execvpe()
-     * presents us an additional process number;
-     * GetPPID(pid) is part of libemxfix
-     */
-    ParentProcess = GetPPID (ParentProcess);
-#endif /* __UNIXOS2__ */
     if (RunFromSmartParent) {
 	if (ParentProcess > 1) {
 #ifdef X_PRIVSEP
@@ -562,6 +542,8 @@ AuthAudit (ClientPtr client, Bool letin,
     char client_uid_string[64];
 #ifdef HAS_GETPEERUCRED
     ucred_t *peercred = NULL;
+#endif
+#if defined(HAS_GETPEERUCRED) || defined(XSERVER_DTRACE)    
     pid_t client_pid = -1;
     zoneid_t client_zid = -1;
 #endif
@@ -572,7 +554,7 @@ AuthAudit (ClientPtr client, Bool letin,
 	switch (saddr->sa_family)
 	{
 	case AF_UNSPEC:
-#if defined(UNIXCONN) || defined(LOCALCONN) || defined(OS2PIPECONN)
+#if defined(UNIXCONN) || defined(LOCALCONN)
 	case AF_UNIX:
 #endif
 	  strlcpy(out, "local host", sizeof(addr));
@@ -623,14 +605,22 @@ AuthAudit (ClientPtr client, Bool letin,
 	client_uid_string[0] = '\0';
     }
     
-    if (proto_n)
+#ifdef XSERVER_DTRACE
+    XSERVER_CLIENT_AUTH(client->index, addr, client_pid, client_zid);
+    if (auditTrailLevel > 1) {
+#endif
+      if (proto_n)
 	AuditF("client %d %s from %s%s\n  Auth name: %.*s ID: %d\n", 
 	       client->index, letin ? "connected" : "rejected", addr,
 	       client_uid_string, (int)proto_n, auth_proto, auth_id);
-    else 
+      else 
 	AuditF("client %d %s from %s%s\n", 
 	       client->index, letin ? "connected" : "rejected", addr,
 	       client_uid_string);
+
+#ifdef XSERVER_DTRACE
+    }
+#endif	
 }
 
 XID
@@ -697,7 +687,11 @@ ClientAuthorized(ClientPtr client,
 	    else
 	    {
 		auth_id = (XID) 0;
+#ifdef XSERVER_DTRACE
+		if ((auditTrailLevel > 1) || XSERVER_CLIENT_AUTH_ENABLED())
+#else
 		if (auditTrailLevel > 1)
+#endif
 		    AuthAudit(client, TRUE,
 			(struct sockaddr *) from, fromlen,
 			proto_n, auth_proto, auth_id);
@@ -713,7 +707,11 @@ ClientAuthorized(ClientPtr client,
 		return "Client is not authorized to connect to Server";
 	}
     }
+#ifdef XSERVER_DTRACE
+    else if ((auditTrailLevel > 1) || XSERVER_CLIENT_AUTH_ENABLED())
+#else
     else if (auditTrailLevel > 1)
+#endif
     {
 	if (_XSERVTransGetPeerAddr (trans_conn,
 	    &family, &fromlen, &from) != -1)
@@ -731,9 +729,9 @@ ClientAuthorized(ClientPtr client,
     /* indicate to Xdmcp protocol that we've opened new client */
     XdmcpOpenDisplay(priv->fd);
 #endif /* XDMCP */
-#ifdef XACE
+
     XaceHook(XACE_AUTH_AVAIL, client, auth_id);
-#endif
+
     /* At this point, if the client is authorized to change the access control
      * list, we should getpeername() information, and add the client to
      * the selfhosts list.  It's not really the host machine, but the
@@ -791,6 +789,9 @@ AllocNewConnection (XtransConnInfo trans_conn, int fd, CARD32 conn_time)
     ErrorF("AllocNewConnection: client index = %d, socket fd = %d\n",
 	   client->index, fd);
 #endif
+#ifdef XSERVER_DTRACE
+    XSERVER_CLIENT_CONNECT(client->index, fd);
+#endif	
 
     return client;
 }
@@ -1058,7 +1059,7 @@ AddGeneralSocket(int fd)
 {
     FD_SET(fd, &AllSockets);
     if (GrabInProgress)
-        FD_SET(fd, &SavedAllSockets);
+	FD_SET(fd, &SavedAllSockets);
 }
 
 _X_EXPORT void
@@ -1073,7 +1074,7 @@ RemoveGeneralSocket(int fd)
 {
     FD_CLR(fd, &AllSockets);
     if (GrabInProgress)
-        FD_CLR(fd, &SavedAllSockets);
+	FD_CLR(fd, &SavedAllSockets);
 }
 
 _X_EXPORT void

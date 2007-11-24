@@ -202,9 +202,7 @@ SOFTWARE.
 #include "dixstruct.h"
 #include "osdep.h"
 
-#ifdef XACE
 #include "xace.h"
-#endif
 
 #ifndef PATH_MAX
 #ifdef MAXPATHLEN
@@ -236,8 +234,8 @@ static Bool NewHost(int /*family*/,
 		    int /*len*/,
 		    int /* addingLocalHosts */);
 
-int LocalClientCredAndGroups(ClientPtr client, int *pUid, int *pGid, 
-                             int **pSuppGids, int *nSuppGids);
+static int LocalClientCredAndGroups(ClientPtr client, int *pUid, int *pGid, 
+				    int **pSuppGids, int *nSuppGids);
 
 
 /* XFree86 bug #156: To keep track of which hosts were explicitly requested in
@@ -1171,10 +1169,6 @@ ResetHosts (char *display)
     struct nodeent 	*np;
     struct dn_naddr 	dnaddr, *dnaddrp, *dnet_addr();
 #endif
-#ifdef K5AUTH
-    krb5_principal      princ;
-    krb5_data		kbuf;
-#endif
     int			family = 0;
     pointer		addr;
     int 		len;
@@ -1200,9 +1194,6 @@ ResetHosts (char *display)
 	FatalError("Display name `%s' is too long\n", display);
     snprintf(fname, sizeof(fname), ETC_HOST_PREFIX "%s" ETC_HOST_SUFFIX, 
 	     display);
-#ifdef __UNIXOS2__
-    strlcpy(fname, (char*)__XOS2RedirRoot(fname), sizeof(fname));
-#endif /* __UNIXOS2__ */
 
     if ((fd = fopen (fname, "r")) != 0)
     {
@@ -1213,10 +1204,6 @@ ResetHosts (char *display)
 	    continue;
     	if ((ptr = strchr(ohostname, '\n')) != 0)
     	    *ptr = 0;
-#ifdef __UNIXOS2__
-    	if ((ptr = strchr(ohostname, '\r')) != 0)
-    	    *ptr = 0;
-#endif
         hostlen = strlen(ohostname) + 1;
         for (i = 0; i < hostlen; i++)
 	    lhostname[i] = tolower(ohostname[i]);
@@ -1252,13 +1239,6 @@ ResetHosts (char *display)
 	else if (!strncmp("nis:", lhostname, 4))
 	{
 	    family = FamilyNetname;
-	    hostname = ohostname + 4;
-	}
-#endif
-#ifdef K5AUTH
-	else if (!strncmp("krb:", lhostname, 4))
-	{
-	    family = FamilyKrb5Principal;
 	    hostname = ohostname + 4;
 	}
 #endif
@@ -1304,16 +1284,6 @@ ResetHosts (char *display)
     	}
 	else
 #endif /* DNETCONN */
-#ifdef K5AUTH
-	if (family == FamilyKrb5Principal)
-	{
-            krb5_parse_name(hostname, &princ);
-	    XauKrb5Encode(princ, &kbuf);
-	    (void) NewHost(FamilyKrb5Principal, kbuf.data, kbuf.length, FALSE);
-	    krb5_free_principal(princ);
-        }
-	else
-#endif
 #ifdef SECURE_RPC
 	if ((family == FamilyNetname) || (strchr(hostname, '@')))
 	{
@@ -1434,7 +1404,7 @@ LocalClientCred(ClientPtr client, int *pUid, int *pGid)
  *
  * Used by localuser & localgroup ServerInterpreted access control forms below
  */
-int
+static int
 LocalClientCredAndGroups(ClientPtr client, int *pUid, int *pGid, 
 			 int **pSuppGids, int *nSuppGids)
 {
@@ -1529,11 +1499,11 @@ AuthorizedClient(ClientPtr client)
 {
     if (!client || defeatAccessControl)
 	return TRUE;
-#ifdef XACE
+
     /* untrusted clients can't change host access */
-    if (!XaceHook(XACE_HOSTLIST_ACCESS, client, SecurityWriteAccess))
+    if (!XaceHook(XACE_HOSTLIST_ACCESS, client, DixWriteAccess))
 	return FALSE;
-#endif
+
     return LocalClient(client);
 }
 
@@ -1555,11 +1525,6 @@ AddHost (ClientPtr	client,
 	len = length;
 	LocalHostEnabled = TRUE;
 	break;
-#ifdef K5AUTH
-    case FamilyKrb5Principal:
-        len = length;
-        break;
-#endif
 #ifdef SECURE_RPC
     case FamilyNetname:
 	len = length;
@@ -1658,11 +1623,6 @@ RemoveHost (
 	len = length;
 	LocalHostEnabled = FALSE;
 	break;
-#ifdef K5AUTH
-    case FamilyKrb5Principal:
-        len = length;
-	break;
-#endif
 #ifdef SECURE_RPC
     case FamilyNetname:
 	len = length;
@@ -1859,7 +1819,7 @@ ConvertAddr (
     switch (saddr->sa_family)
     {
     case AF_UNSPEC:
-#if defined(UNIXCONN) || defined(LOCALCONN) || defined(OS2PIPECONN)
+#if defined(UNIXCONN) || defined(LOCALCONN)
     case AF_UNIX:
 #endif
         return FamilyLocal;

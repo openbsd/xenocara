@@ -82,36 +82,6 @@ static Bool	firstRegistrationPass = TRUE;
 
 /******************************************************************************
  *
- * DBE DIX Procedure: DbeValidateBuffer
- *
- * Description:
- *
- *     This function is called from VALIDATE_DRAWABLE_AND_GC and from
- *     various places in dispatch.c if the server has been compiled with
- *     the flags -DNEED_DBE_BUF_BITS and -DNEED_DBE_BUF_VALIDATE.  
- *     When pWin->dstBuffer changes, this function will be called with pWin
- *     as the first argument, the drawable ID that was specified as the
- *     second argument (could be a back buffer id), and True for the third
- *     argument.
- *     When pWin->srcBuffer changes, the third argument will be False, and
- *     the first two arguments are as described for dstBuffer.
- *
- *     This function should prepare the hardware to access the specified
- *     buffer for reads (if dstbuf is False) or writes (if dstbuf is True).
- *
- *****************************************************************************/
-
-void
-DbeValidateBuffer(WindowPtr pWin, XID drawID, Bool dstbuf)
-{
-    DbeScreenPrivPtr pDbeScreenPriv = DBE_SCREEN_PRIV_FROM_WINDOW(pWin);
-    if (pDbeScreenPriv->ValidateBuffer)
-	(*pDbeScreenPriv->ValidateBuffer)(pWin, drawID, dstbuf);
-}
-
-
-/******************************************************************************
- *
  * DBE DIX Procedure: DbeRegisterFunction
  *
  * Description:
@@ -317,7 +287,6 @@ DbeStubScreen(DbeScreenPrivPtr pDbeScreenPriv, int *nStubbedScreens)
     pDbeScreenPriv->EndIdiom            = NULL;
     pDbeScreenPriv->WinPrivDelete       = NULL;
     pDbeScreenPriv->ResetProc           = NULL;
-    pDbeScreenPriv->ValidateBuffer	= NULL;
 
     (*nStubbedScreens)++;
 
@@ -410,11 +379,9 @@ ProcDbeAllocateBackBufferName(ClientPtr client)
     REQUEST_SIZE_MATCH(xDbeAllocateBackBufferNameReq);
 
     /* The window must be valid. */
-    if (!(pWin = SecurityLookupWindow(stuff->window, client,
-				      SecurityWriteAccess)))
-    {
-	return(BadWindow);
-    }
+    status = dixLookupWindow(&pWin, stuff->window, client, DixWriteAccess);
+    if (status != Success)
+	return status;
 
     /* The window must be InputOutput. */
     if (pWin->drawable.class != InputOutput)
@@ -638,9 +605,9 @@ ProcDbeDeallocateBackBufferName(ClientPtr client)
 
     /* Buffer name must be valid */
     if (!(pDbeWindowPriv = (DbeWindowPrivPtr)SecurityLookupIDByType(client,
-		stuff->buffer, dbeWindowPrivResType, SecurityDestroyAccess)) ||
+		stuff->buffer, dbeWindowPrivResType, DixDestroyAccess)) ||
         !(SecurityLookupIDByType(client, stuff->buffer, dbeDrawableResType,
-				 SecurityDestroyAccess)))
+				 DixDestroyAccess)))
     {
         client->errorValue = stuff->buffer;
         return(dbeErrorBase + DbeBadBuffer);
@@ -737,11 +704,11 @@ ProcDbeSwapBuffers(ClientPtr client)
         /* Check all windows to swap. */
 
         /* Each window must be a valid window - BadWindow. */
-        if (!(pWin = SecurityLookupWindow(dbeSwapInfo[i].window, client,
-					  SecurityWriteAccess)))
-        {
+	error = dixLookupWindow(&pWin, dbeSwapInfo[i].window, client,
+				DixWriteAccess);
+	if (error != Success) {
             Xfree(swapInfo);
-	    return(BadWindow);
+	    return error;
         }
 
         /* Each window must be double-buffered - BadMatch. */
@@ -875,7 +842,7 @@ ProcDbeGetVisualInfo(ClientPtr client)
     xDbeGetVisualInfoReply	rep;
     Drawable			*drawables;
     DrawablePtr			*pDrawables = NULL;
-    register int		i, j, n;
+    register int		i, j, n, rc;
     register int		count;  /* number of visual infos in reply */
     register int		length; /* length of reply */
     ScreenPtr			pScreen;
@@ -899,11 +866,11 @@ ProcDbeGetVisualInfo(ClientPtr client)
 
         for (i = 0; i < stuff->n; i++)
         {
-            if (!(pDrawables[i] = (DrawablePtr)SecurityLookupDrawable(
-				drawables[i], client, SecurityReadAccess)))
-            {
+	    rc = dixLookupDrawable(pDrawables+i, drawables[i], client, 0,
+				   DixReadAccess);
+	    if (rc != Success) {
                 Xfree(pDrawables);
-                return(BadDrawable);
+                return rc;
             }
         }
     }
@@ -1057,7 +1024,7 @@ ProcDbeGetBackBufferAttributes(ClientPtr client)
     REQUEST_SIZE_MATCH(xDbeGetBackBufferAttributesReq);
 
     if (!(pDbeWindowPriv = (DbeWindowPrivPtr)SecurityLookupIDByType(client,
-		stuff->buffer, dbeWindowPrivResType, SecurityReadAccess)))
+		stuff->buffer, dbeWindowPrivResType, DixReadAccess)))
     {
         rep.attributes = None;
     }
