@@ -1,0 +1,228 @@
+/*
+ * Copyright © 2007 Intel Corporation
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ *
+ * Authors:
+ *    Wang Zhenyu <zhenyu.z.wang@intel.com>
+ */
+
+/*
+ * This's for exa composite operation in no mask picture case.
+ * The simplest case is just sending what src picture has to dst picture.
+ * XXX: This is still experimental, and should be fixed to support multiple texture
+ * map, and conditional mul actions. 
+ */
+
+/* I think this should be same as in g4a program for texture video,
+   as we also use 16-pixel dispatch. and SF scale in g3 is useful for us. */
+
+/* The initial payload of the thread is always g0.
+ * WM_URB (incoming URB entries) is g3
+   As mask texture coeffient needs extra setup urb starting from g4, we should
+   shift this location. 
+
+ * X0_R is g4->g6
+ * X1_R is g5->g7
+ * Y0_R is g6->g8
+ * Y1_R is g7->g9
+
+     * X0: {ss0.x, ss0.x+1, ss0.x,   ss0.x+1, ss1.x, ss1.x+1, ss1.x,   ss1.x+y}
+     * Y0: {ss0.y, ss0.y,   ss0.y+1, ss0.y+1, ss1.y, ss1.y,   ss1.y+1, ss1.y+1}
+     * X1: {ss2.x, ss2.x+1, ss2.x,   ss2.x+1, ss3.x, ss3.x+1, ss3.x,   ss3.x+y}
+     * Y1: {ss2.y, ss2.y,   ss2.y+1, ss2.y+1, ss3.y, ss3.y,   ss3.y+1, ss3.y+1}
+ */
+
+/* multitexture program with src and mask texture */
+/* - load src texture */
+/* - load mask texture */
+/* - mul src.X with mask's alpha */
+/* - write out src.X */
+
+    /* Set up ss0.x coordinates*/
+mov (1) g6<1>F g1.8<0,1,0>UW { align1 };
+add (1) g6.4<1>F g1.8<0,1,0>UW 1UB { align1 };
+mov (1) g6.8<1>F g1.8<0,1,0>UW { align1 };
+add (1) g6.12<1>F g1.8<0,1,0>UW 1UB { align1 };
+    /* Set up ss0.y coordinates */
+mov (1) g8<1>F g1.10<0,1,0>UW { align1 };
+mov (1) g8.4<1>F g1.10<0,1,0>UW { align1 };
+add (1) g8.8<1>F g1.10<0,1,0>UW 1UB { align1 };
+add (1) g8.12<1>F g1.10<0,1,0>UW 1UB { align1 };
+    /* set up ss1.x coordinates */
+mov (1) g6.16<1>F g1.12<0,1,0>UW { align1 };
+add (1) g6.20<1>F g1.12<0,1,0>UW 1UB { align1 };
+mov (1) g6.24<1>F g1.12<0,1,0>UW { align1 };
+add (1) g6.28<1>F g1.12<0,1,0>UW 1UB { align1 };
+    /* set up ss1.y coordinates */
+mov (1) g8.16<1>F g1.14<0,1,0>UW { align1 };
+mov (1) g8.20<1>F g1.14<0,1,0>UW { align1 };
+add (1) g8.24<1>F g1.14<0,1,0>UW 1UB { align1 };
+add (1) g8.28<1>F g1.14<0,1,0>UW 1UB { align1 };
+    /* Set up ss2.x coordinates */
+mov (1) g7<1>F g1.16<0,1,0>UW { align1 };
+add (1) g7.4<1>F g1.16<0,1,0>UW 1UB { align1 };
+mov (1) g7.8<1>F g1.16<0,1,0>UW { align1 };
+add (1) g7.12<1>F g1.16<0,1,0>UW 1UB { align1 };
+    /* Set up ss2.y coordinates */
+mov (1) g9<1>F g1.18<0,1,0>UW { align1 };
+mov (1) g9.4<1>F g1.18<0,1,0>UW { align1 };
+add (1) g9.8<1>F g1.18<0,1,0>UW 1UB { align1 };
+add (1) g9.12<1>F g1.18<0,1,0>UW 1UB { align1 };
+    /* Set up ss3.x coordinates */
+mov (1) g7.16<1>F g1.20<0,1,0>UW { align1 };
+add (1) g7.20<1>F g1.20<0,1,0>UW 1UB { align1 };
+mov (1) g7.24<1>F g1.20<0,1,0>UW { align1 };
+add (1) g7.28<1>F g1.20<0,1,0>UW 1UB { align1 };
+    /* Set up ss3.y coordinates */
+mov (1) g9.16<1>F g1.22<0,1,0>UW { align1 };
+mov (1) g9.20<1>F g1.22<0,1,0>UW { align1 };
+add (1) g9.24<1>F g1.22<0,1,0>UW 1UB { align1 };
+add (1) g9.28<1>F g1.22<0,1,0>UW 1UB { align1 };
+
+    /* Now, map these screen space coordinates into texture coordinates. */
+/* This is for src texture */
+/* I don't want to change origin ssX coords, as it will be used later in mask */
+/* so store tex coords in g10, g11, g12, g13 */
+
+    /* subtract screen-space X origin of vertex 0. */
+add (8) g10<1>F g6<8,8,1>F -g1<0,1,0>F { align1 };
+add (8) g11<1>F g7<8,8,1>F -g1<0,1,0>F { align1 };
+    /* scale by texture X increment */
+/* Cx[0] */
+mul (8) g10<1>F g10<8,8,1>F g3<0,1,0>F { align1 };
+mul (8) g11<1>F g11<8,8,1>F g3<0,1,0>F { align1 };
+    /* add in texture X offset */
+/* Co[0] */
+add (8) g10<1>F g10<8,8,1>F g3.12<0,1,0>F { align1 };
+add (8) g11<1>F g11<8,8,1>F g3.12<0,1,0>F { align1 };
+    /* subtract screen-space Y origin of vertex 0. */
+add (8) g12<1>F g8<8,8,1>F -g1.4<0,1,0>F { align1 };
+add (8) g13<1>F g9<8,8,1>F -g1.4<0,1,0>F { align1 };
+    /* scale by texture Y increment */
+/* Cy[0] */
+mul (8) g12<1>F g12<8,8,1>F g3.4<0,1,0>F { align1 };
+mul (8) g13<1>F g13<8,8,1>F g3.4<0,1,0>F { align1 };
+    /* add in texture Y offset */
+/* Co[1] */
+add (8) g12<1>F g12<8,8,1>F g3.28<0,1,0>F { align1 };
+add (8) g13<1>F g13<8,8,1>F g3.28<0,1,0>F { align1 };
+
+/* prepare sampler read back gX register, which would be written back to output */
+
+/* use simd16 sampler, param 0 is u, param 1 is v. */
+/* 'payload' loading, assuming tex coord start from g4 */
+mov (8) m1<1>F g10<8,8,1>F { align1 };
+mov (8) m2<1>F g11<8,8,1>F { align1 }; /* param 0 u in m1, m2 */
+mov (8) m3<1>F g12<8,8,1>F { align1 };
+mov (8) m4<1>F g13<8,8,1>F { align1 }; /* param 1 v in m3, m4 */
+
+/* m0 will be copied with g0, as it contains send desc */
+/* emit sampler 'send' cmd */
+
+/* src texture readback: g14-g21 */
+send (16) 0 		/* msg reg index */
+	g14<1>UW 	/* readback */
+	g0<8,8,1>UW  	/* copy to msg start reg*/
+	sampler (1,0,F)  /* sampler message description, 
+				(binding_table,sampler_index,datatype). 
+			    here(src->dst) we should use src_sampler and 
+			    src_surface */
+	mlen 5 rlen 8 { align1 };   /* required message len 5, readback len 8 */
+
+mov (8) g21<1>UD g21<8,8,1>UD { align1 };  /* wait sampler return */
+
+/* sampler mask texture, use g10, g11, g12, g13 */
+    /* subtract screen-space X origin of vertex 0. */
+add (8) g10<1>F g6<8,8,1>F -g1<0,1,0>F { align1 };
+add (8) g11<1>F g7<8,8,1>F -g1<0,1,0>F { align1 };
+    /* scale by texture X increment */
+/* Cx[2] */
+mul (8) g10<1>F g10<8,8,1>F g4<0,1,0>F { align1 };
+mul (8) g11<1>F g11<8,8,1>F g4<0,1,0>F { align1 };
+    /* add in texture X offset */
+/* Co[2] */
+add (8) g10<1>F g10<8,8,1>F g4.12<0,1,0>F { align1 };
+add (8) g11<1>F g11<8,8,1>F g4.12<0,1,0>F { align1 };
+    /* subtract screen-space Y origin of vertex 0. */
+add (8) g12<1>F g8<8,8,1>F -g1.4<0,1,0>F { align1 };
+add (8) g13<1>F g9<8,8,1>F -g1.4<0,1,0>F { align1 };
+    /* scale by texture Y increment */
+/* Cy[2] */
+mul (8) g12<1>F g12<8,8,1>F g4.4<0,1,0>F { align1 };
+mul (8) g13<1>F g13<8,8,1>F g4.4<0,1,0>F { align1 };
+    /* add in texture Y offset */
+/* Co[3] */
+add (8) g12<1>F g12<8,8,1>F g4.28<0,1,0>F { align1 };
+add (8) g13<1>F g13<8,8,1>F g4.28<0,1,0>F { align1 };
+
+mov (8) m1<1>F g10<8,8,1>F { align1 };
+mov (8) m2<1>F g11<8,8,1>F { align1 }; 
+mov (8) m3<1>F g12<8,8,1>F { align1 };
+mov (8) m4<1>F g13<8,8,1>F { align1 };
+
+/* mask sampler g22-g29 */
+/* binding_table (2), sampler (1) */
+send (16) 0 g22<1>UW g0<8,8,1>UW sampler (2,1,F) mlen 5 rlen 8 { align1 };
+mov (8) g29<1>UD g29<8,8,1>UD { align1 };  /* wait sampler return */
+
+/* mul mask's channel to src, then write out src */
+mul (8) g14<1>F g14<8,8,1>F g22<8,8,1>F { align1 };
+mul (8) g15<1>F g15<8,8,1>F g23<8,8,1>F { align1 };
+mul (8) g16<1>F g16<8,8,1>F g24<8,8,1>F { align1 };
+mul (8) g17<1>F g17<8,8,1>F g25<8,8,1>F { align1 };
+mul (8) g18<1>F g18<8,8,1>F g26<8,8,1>F { align1 };
+mul (8) g19<1>F g19<8,8,1>F g27<8,8,1>F { align1 };
+mul (8) g20<1>F g20<8,8,1>F g28<8,8,1>F { align1 };
+mul (8) g21<1>F g21<8,8,1>F g29<8,8,1>F { align1 };
+
+/* prepare data in m2-m5 for subspan(1,0), m6-m9 for subspan(3,2), then it's ready to write */
+mov (8) m2<1>F g14<8,8,1>F { align1 };
+mov (8) m3<1>F g16<8,8,1>F { align1 };
+mov (8) m4<1>F g18<8,8,1>F { align1 };
+mov (8) m5<1>F g20<8,8,1>F { align1 };
+mov (8) m6<1>F g15<8,8,1>F { align1 };
+mov (8) m7<1>F g17<8,8,1>F { align1 };
+mov (8) m8<1>F g19<8,8,1>F { align1 };
+mov (8) m9<1>F g21<8,8,1>F { align1 };
+
+/* m0, m1 are all direct passed by PS thread payload */
+mov (8) m1<1>UD g1<8,8,1>UD { align1 mask_disable };
+
+/* write */
+send (16) 0 acc0<1>UW g0<8,8,1>UW write (
+	0,  /* binding_table */
+	8,  /* pixel scordboard clear, msg type simd16 single source */
+	4,  /* render target write */
+	0   /* no write commit message */
+	) 
+	mlen 10
+	rlen 0
+	{ align1 EOT };
+
+nop;
+nop;
+nop;
+nop;
+nop;
+nop;
+nop;
+nop;
+nop;

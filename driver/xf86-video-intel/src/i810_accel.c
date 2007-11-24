@@ -597,7 +597,8 @@ I810RefreshRing(ScrnInfoPtr pScrn)
    if (pI810->LpRing->space < 0)
       pI810->LpRing->space += pI810->LpRing->mem.Size;
 
-   pI810->AccelInfoRec->NeedToSync = TRUE;
+   if (pI810->AccelInfoRec)
+      pI810->AccelInfoRec->NeedToSync = TRUE;
 }
 
 /* Emit on gaining VT?

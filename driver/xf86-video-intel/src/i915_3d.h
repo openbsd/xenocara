@@ -33,7 +33,7 @@
 #define MASK_Y			0x2
 #define MASK_Z			0x4
 #define MASK_W			0x8
-#define MASK_XYZ		(MASK_X | MASK_Y | MASK_W)
+#define MASK_XYZ		(MASK_X | MASK_Y | MASK_Z)
 #define MASK_XYZW		(MASK_XYZ | MASK_W)
 #define MASK_SATURATE		0x10
 
@@ -350,8 +350,16 @@ _i915_fs_arith(int cmd, int dest_reg,
     return op;
 }
 
+/** Move operand0 to dest_reg */
+#define i915_fs_mov(dest_reg, operand0)					\
+do {									\
+    FS_OUT(i915_fs_arith(MOV, dest_reg, operand0,			\
+			 i915_fs_operand_none(),			\
+			 i915_fs_operand_none()));			\
+} while (0)
+
 /**
- * Move the values in operand0 to the dest reg with the masking/saturation
+ * Move the value in operand0 to the dest reg with the masking/saturation
  * specified.
  */
 #define i915_fs_mov_masked(dest_reg, dest_mask, operand0)		\
@@ -375,6 +383,13 @@ do {									\
 			 i915_fs_operand_none()));			\
 } while (0)
 
+/** Add operand0 and operand1 and put the result in dest_reg */
+#define i915_fs_mul(dest_reg, operand0, operand1)			\
+do {									\
+    FS_OUT(i915_fs_arith(MUL, dest_reg, operand0, operand1,		\
+			 i915_fs_operand_none()));			\
+} while (0)
+
 /**
  * Perform a 3-component dot-product of operand0 and operand1 and put the
  * resulting scalar in the channels of dest_reg specified by the dest_mask.
@@ -383,7 +398,7 @@ do {									\
 do {									\
     struct i915_fs_op op;						\
 									\
-    op = i915_fs_arith(DP3, dest_reg, operand0, i915_fs_operand_none(),	\
+    op = i915_fs_arith(DP3, dest_reg, operand0, operand1,		\
 		       i915_fs_operand_none());				\
     op.ui[0] &= ~A0_DEST_CHANNEL_ALL;					\
     op.ui[0] |= ((dest_mask) & ~MASK_SATURATE) << A0_DEST_CHANNEL_SHIFT; \
@@ -421,11 +436,13 @@ do {									\
 
 #define FS_END()							\
 do {									\
-    int _i;								\
-    BEGIN_LP_RING(_cur_shader_commands * 3 + 1);			\
+    int _i, _pad = (_cur_shader_commands & 0x1) ? 0 : 1;		\
+    BEGIN_LP_RING(_cur_shader_commands * 3 + 1 + _pad);			\
     OUT_RING(_3DSTATE_PIXEL_SHADER_PROGRAM |				\
 	     (_cur_shader_commands * 3 - 1));				\
     for (_i = 0; _i < _cur_shader_commands * 3; _i++)			\
 	OUT_RING(_shader_buf[_i]);					\
+    if (_pad != 0)							\
+	OUT_RING(MI_NOOP);						\
     ADVANCE_LP_RING();							\
 } while (0);

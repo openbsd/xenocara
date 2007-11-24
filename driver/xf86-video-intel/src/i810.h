@@ -50,6 +50,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "vbe.h"
 #include "vgaHW.h"
 
+#include "xorg-server.h"
+#ifdef XSERVER_LIBPCIACCESS
+#include <pciaccess.h>
+#endif
+
 #ifdef XF86DRI
 #include "xf86drm.h"
 #include "sarea.h"
@@ -62,8 +67,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "common.h"
 
 #define I810_VERSION 4000
-#define I810_NAME "I810"
-#define I810_DRIVER_NAME "i810"
+#define I810_NAME "intel"
+#define I810_DRIVER_NAME "intel"
+#define I810_LEGACY_DRIVER_NAME "i810"
+
+#define INTEL_VERSION_MAJOR PACKAGE_VERSION_MAJOR
+#define INTEL_VERSION_MINOR PACKAGE_VERSION_MINOR
+#define INTEL_VERSION_PATCH PACKAGE_VERSION_PATCHLEVEL
 
 /* HWMC Surfaces */
 #define I810_MAX_SURFACES 7
@@ -179,8 +189,12 @@ typedef struct _I810Rec {
    unsigned long MMIOAddr;
    IOADDRESS ioBase;
    EntityInfoPtr pEnt;
+#if XSERVER_LIBPCIACCESS
+   struct pci_device *PciInfo;
+#else
    pciVideoPtr PciInfo;
    PCITAG PciTag;
+#endif
 
    I810RingBuffer *LpRing;
    unsigned int BR[20];

@@ -21,20 +21,10 @@
 # Process this file with autoconf to produce a configure script
 
 AC_PREREQ(2.57)
-AC_INIT([xf86-video-i810],
-        1.7.4,
+AC_INIT([xf86-video-intel],
+        2.2.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
-        xf86-video-i810)
-
-AC_DEFINE_UNQUOTED([INTEL_VERSION_MAJOR],
-		   [$(echo $PACKAGE_VERSION | sed -e 's/^\([[0-9]]\)\.[[0-9]]\.[[0-9]]/\1/')],
-		   [Major version])
-AC_DEFINE_UNQUOTED([INTEL_VERSION_MINOR],
-		   [$(echo $PACKAGE_VERSION | sed -e 's/^[[0-9]]\.\([[0-9]]\)\.[[0-9]]/\1/')],
-		   [Minor version])
-AC_DEFINE_UNQUOTED([INTEL_VERSION_PATCH],
-		   [$(echo $PACKAGE_VERSION | sed -e 's/^[[0-9]]\.[[0-9]]\.\([[0-9]]\)/\1/')],
-		   [Patch version])
+        xf86-video-intel)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
@@ -48,6 +38,7 @@ AM_MAINTAINER_MODE
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CC
+AM_PROG_CC_C_O
 
 AC_CHECK_PROG(gen4asm, [intel-gen4asm], yes, no)
 AM_CONDITIONAL(HAVE_GEN4ASM, test x$gen4asm = xyes)
@@ -69,6 +60,11 @@ AC_ARG_ENABLE(video-debug, AC_HELP_STRING([--enable-video-debug],
                                   [Enable video debugging support [[default=no]]]),
               [VIDEO_DEBUG="$enableval"],
               [VIDEO_DEBUG=no])
+
+AC_ARG_WITH(xserver-source,AC_HELP_STRING([--with-xserver-source=XSERVER_SOURCE],
+					  [Path to X server source tree]),
+			   [ XSERVER_SOURCE="$withval" ],
+			   [ XSERVER_SOURCE="" ])
 
 
 # Checks for extensions
@@ -94,6 +90,8 @@ if test "$DRI" != no; then
                       [have_sarea_h="yes"], [have_sarea_h="no"])
         AC_CHECK_FILE([${sdkdir}/dristruct.h],
                       [have_dristruct_h="yes"], [have_dristruct_h="no"])
+	AC_CHECK_FILE([${sdkdir}/damage.h],
+                      [have_damage_h="yes"], [have_damage_h="no"])
 fi
 
 AC_MSG_CHECKING([whether to include DRI support])
@@ -108,6 +106,69 @@ if test x$DRI = xauto; then
 fi
 AC_MSG_RESULT([$DRI])
 
+save_CFLAGS="$CFLAGS"
+CFLAGS="$XORG_CFLAGS"
+AC_CHECK_HEADER(xf86Modes.h,[XMODES=yes],[XMODES=no],[#include "xorg-server.h"])
+AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
+	      [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
+	      [#include "xorg-server.h"])
+CFLAGS="$save_CFLAGS"
+
+if test x$XSERVER_LIBPCIACCESS = xyes; then
+	PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.10.0])
+else
+	PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.5.0],
+				       have_libpciaccess=yes,
+				       have_libpciaccess=no)
+fi
+have_libpciaccess=no
+AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
+AM_CONDITIONAL(LIBPCIACCESS,
+	test "x$XSERVER_LIBPCIACCESS" = xyes -o "x$have_libpciaccess" = xyes)
+AM_CONDITIONAL(XMODES, test "x$XMODES" = xno)
+
+if test "x$XSERVER_SOURCE" = x; then
+	if test -d ../../xserver; then
+		XSERVER_SOURCE="`cd ../../xserver && pwd`"
+	fi
+fi
+	
+if test -d "$XSERVER_SOURCE"; then
+	case "$XSERVER_SOURCE" in
+	/*)
+		;;
+	*)
+		XSERVER_SOURCE="`cd $XSERVER_SOURCE && pwd`"
+		;;
+	esac
+	if test -f src/modes/xf86Modes.h; then
+		:
+	else
+		ln -sf $XSERVER_SOURCE/hw/xfree86/modes src/modes
+	fi
+	
+	if test -f src/parser/xf86Parser.h; then
+		:
+	else
+		ln -sf $XSERVER_SOURCE/hw/xfree86/parser src/parser
+	fi
+fi
+
+if test "x$XMODES" = xyes; then
+	AC_MSG_NOTICE([X server has new mode code])
+	AC_DEFINE(XMODES, 1,[X server has built-in mode code])
+	XMODES_CFLAGS=
+else
+	if test -f src/modes/xf86Modes.h -a -f src/parser/xf86Parser.h; then
+		AC_MSG_NOTICE([X server is missing new mode code, using local copy])
+	else
+		AC_MSG_ERROR([Must have X server >= 1.3 source tree for mode setting code. Please specify --with-xserver-source])
+	fi
+	XMODES_CFLAGS='-DXF86_MODES_RENAME -I$(top_srcdir)/src -I$(top_srcdir)/src/modes -I$(top_srcdir)/src/parser'
+fi
+
+AC_SUBST([XMODES_CFLAGS])
+
 dnl Use lots of warning flags with GCC
 
 WARN_CFLAGS=""
@@ -118,13 +179,29 @@ if test "x$GCC" = "xyes"; then
 	-Wnested-externs -fno-strict-aliasing"
 fi
 
-CFLAGS="$CFLAGS $WARN_CFLAGS"
-
 AM_CONDITIONAL(DRI, test x$DRI = xyes)
 if test "$DRI" = yes; then
-        PKG_CHECK_MODULES(DRI, [libdrm >= 2.2 xf86driproto])
+        PKG_CHECK_MODULES(DRI, [libdrm xf86driproto])
         AC_DEFINE(XF86DRI,1,[Enable DRI driver support])
         AC_DEFINE(XF86DRI_DEVEL,1,[Enable developmental DRI driver support])
+	PKG_CHECK_MODULES(DRI_MM, [libdrm >= 2.3.1],[DRI_MM=yes], [DRI_MM=no])
+	if test "x$DRI_MM" = xyes; then
+		AC_DEFINE(XF86DRI_MM,1,[Extended DRI memory management])
+	fi
+	if test "$have_damage_h" = yes; then
+		AC_DEFINE(DAMAGE,1,[Use Damage extension])
+	fi
+
+	save_CFLAGS="$CFLAGS"
+	CFLAGS="$XORG_CFLAGS $DRI_CFLAGS"
+	AC_CHECK_TYPE(drm_i915_flip_t,
+		      [AC_DEFINE(HAVE_I915_FLIP, 1,
+			         [Have drm_i915_flip_t and related definitions])],
+		      [], [
+#include <inttypes.h>
+#include <i915_drm.h>
+])
+	CFLAGS="$save_CFLAGS"
 fi
 
 AM_CONDITIONAL(VIDEO_DEBUG, test x$VIDEO_DEBUG = xyes)
@@ -134,9 +211,10 @@ fi
 
 AC_SUBST([DRI_CFLAGS])
 AC_SUBST([XORG_CFLAGS])
+AC_SUBST([WARN_CFLAGS])
 AC_SUBST([moduledir])
 
-DRIVER_NAME=i810
+DRIVER_NAME=intel
 AC_SUBST([DRIVER_NAME])
 
 XORG_MANPAGE_SECTIONS
@@ -148,5 +226,12 @@ AC_OUTPUT([
 	Makefile
 	src/Makefile
 	src/xvmc/Makefile
+	src/bios_reader/Makefile
+	src/ch7017/Makefile
+	src/ch7xxx/Makefile
+	src/ivch/Makefile
+	src/reg_dumper/Makefile
+	src/sil164/Makefile
+	src/tfp410/Makefile
 	man/Makefile
 ])

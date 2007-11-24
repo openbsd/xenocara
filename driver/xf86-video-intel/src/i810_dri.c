@@ -171,9 +171,9 @@ I810InitVisualConfigs(ScreenPtr pScreen)
    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
    I810Ptr pI810 = I810PTR(pScrn);
    int numConfigs = 0;
-   __GLXvisualConfig *pConfigs = 0;
-   I810ConfigPrivPtr pI810Configs = 0;
-   I810ConfigPrivPtr *pI810ConfigPtrs = 0;
+   __GLXvisualConfig *pConfigs = NULL;
+   I810ConfigPrivPtr pI810Configs = NULL;
+   I810ConfigPrivPtr *pI810ConfigPtrs = NULL;
    int accum, stencil, db, depth;
    int i;
 
@@ -222,6 +222,7 @@ I810InitVisualConfigs(ScreenPtr pScreen)
 	       pConfigs[i].redSize = 5;
 	       pConfigs[i].greenSize = 6;
 	       pConfigs[i].blueSize = 5;
+	       pConfigs[i].alphaSize = 0;
 	       pConfigs[i].redMask = 0x0000F800;
 	       pConfigs[i].greenMask = 0x000007E0;
 	       pConfigs[i].blueMask = 0x0000001F;
@@ -353,9 +354,15 @@ I810DRIScreenInit(ScreenPtr pScreen)
    } else {
       pDRIInfo->busIdString = xalloc(64);
       sprintf(pDRIInfo->busIdString, "PCI:%d:%d:%d",
+#if XSERVER_LIBPCIACCESS
+	      ((pI810->PciInfo->domain << 8) | pI810->PciInfo->bus),
+	      pI810->PciInfo->dev, pI810->PciInfo->func
+#else
 	      ((pciConfigPtr) pI810->PciInfo->thisCard)->busnum,
 	      ((pciConfigPtr) pI810->PciInfo->thisCard)->devnum,
-	      ((pciConfigPtr) pI810->PciInfo->thisCard)->funcnum);
+	      ((pciConfigPtr) pI810->PciInfo->thisCard)->funcnum
+#endif
+	      );
    }
    pDRIInfo->ddxDriverMajorVersion = I810_MAJOR_VERSION;
    pDRIInfo->ddxDriverMinorVersion = I810_MINOR_VERSION;
@@ -385,7 +392,7 @@ I810DRIScreenInit(ScreenPtr pScreen)
 
    if (!(pI810DRI = (I810DRIPtr) xcalloc(sizeof(I810DRIRec), 1))) {
       DRIDestroyInfoRec(pI810->pDRIInfo);
-      pI810->pDRIInfo = 0;
+      pI810->pDRIInfo = NULL;
       return FALSE;
    }
    pDRIInfo->devPrivate = pI810DRI;
@@ -413,9 +420,9 @@ I810DRIScreenInit(ScreenPtr pScreen)
       xf86DrvMsg(pScreen->myNum, X_ERROR,
 		 "[dri] DRIScreenInit failed.  Disabling DRI.\n");
       xfree(pDRIInfo->devPrivate);
-      pDRIInfo->devPrivate = 0;
+      pDRIInfo->devPrivate = NULL;
       DRIDestroyInfoRec(pI810->pDRIInfo);
-      pI810->pDRIInfo = 0;
+      pI810->pDRIInfo = NULL;
       return FALSE;
    }
 
@@ -971,12 +978,20 @@ I810DRIScreenInit(ScreenPtr pScreen)
 
    if (!pI810DRI->irq) {
       pI810DRI->irq = drmGetInterruptFromBusID(pI810->drmSubFD,
+#if XSERVER_LIBPCIACCESS
+					       ((pI810->PciInfo->domain << 8) |
+						pI810->PciInfo->bus),
+					       pI810->PciInfo->dev,
+					       pI810->PciInfo->func
+#else
 					       ((pciConfigPtr) pI810->
 						PciInfo->thisCard)->busnum,
 					       ((pciConfigPtr) pI810->
 						PciInfo->thisCard)->devnum,
 					       ((pciConfigPtr) pI810->
-						PciInfo->thisCard)->funcnum);
+						PciInfo->thisCard)->funcnum
+#endif
+					       );
       if ((drmCtlInstHandler(pI810->drmSubFD, pI810DRI->irq)) != 0) {
 	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		    "[drm] failure adding irq handler, there is a device "
@@ -990,7 +1005,7 @@ I810DRIScreenInit(ScreenPtr pScreen)
    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	      "[drm] dma control initialized, using IRQ %d\n", pI810DRI->irq);
 
-   pI810DRI->deviceID = pI810->PciInfo->chipType;
+   pI810DRI->deviceID = DEVICE_ID(pI810->PciInfo);
    pI810DRI->width = pScrn->virtualX;
    pI810DRI->height = pScrn->virtualY;
    pI810DRI->mem = pScrn->videoRam * 1024;
@@ -1070,10 +1085,10 @@ I810DRICloseScreen(ScreenPtr pScreen)
    if (pI810->pDRIInfo) {
       if (pI810->pDRIInfo->devPrivate) {
 	 xfree(pI810->pDRIInfo->devPrivate);
-	 pI810->pDRIInfo->devPrivate = 0;
+	 pI810->pDRIInfo->devPrivate = NULL;
       }
       DRIDestroyInfoRec(pI810->pDRIInfo);
-      pI810->pDRIInfo = 0;
+      pI810->pDRIInfo = NULL;
    }
    if (pI810->pVisualConfigs)
       xfree(pI810->pVisualConfigs);
@@ -1173,7 +1188,9 @@ I810DRIInitBuffers(WindowPtr pWin, RegionPtr prgn, CARD32 index)
       pbox++;
    }
    I810SelectBuffer(pScrn, I810_SELECT_FRONT);
-   pI810->AccelInfoRec->NeedToSync = TRUE;
+
+   if (pI810->AccelInfoRec)
+   	pI810->AccelInfoRec->NeedToSync = TRUE;
 }
 
 /* This routine is a modified form of XAADoBitBlt with the calls to
@@ -1200,9 +1217,9 @@ I810DRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
    BoxPtr pbox = REGION_RECTS(prgnSrc);
    int nbox = REGION_NUM_RECTS(prgnSrc);
 
-   BoxPtr pboxNew1 = 0;
-   BoxPtr pboxNew2 = 0;
-   DDXPointPtr pptNew1 = 0;
+   BoxPtr pboxNew1 = NULL;
+   BoxPtr pboxNew2 = NULL;
+   DDXPointPtr pptNew1 = NULL;
    DDXPointPtr pptSrc = &ptOldOrg;
 
    int dx = pParent->drawable.x - ptOldOrg.x;
@@ -1332,7 +1349,8 @@ I810DRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
       DEALLOCATE_LOCAL(pboxNew1);
    }
 
-   pI810->AccelInfoRec->NeedToSync = TRUE;
+   if (pI810->AccelInfoRec)
+	pI810->AccelInfoRec->NeedToSync = TRUE;
 }
 
 

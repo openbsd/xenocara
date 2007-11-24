@@ -1558,6 +1558,11 @@ static __inline__ void renderDualPrimeinField(uint **datay,uint **datau,
 // Description: inline function that sets hardware parameters for a Field
 //  encoded macroblock in a frame picture.
 ***************************************************************************/
+typedef union {
+  short	s[4];
+  uint  u[2];
+} su_t;
+
 static __inline__ void renderFieldinFrame(uint **datay,uint **datau,
 					  uint **datav,
 					  XvMCMacroBlock *mb,short *block_ptr,
@@ -1568,8 +1573,8 @@ static __inline__ void renderFieldinFrame(uint **datay,uint **datau,
   register uint *dv = *datav;
 
   /* Motion Vectors */
-  short fmv[4];
-  short bmv[4];
+  su_t fmv;
+  su_t bmv;
   /* gfxblock dword 1 */
   uint dw1[2];
 
@@ -1589,23 +1594,23 @@ static __inline__ void renderFieldinFrame(uint **datay,uint **datau,
     (((mb->coded_block_pattern & 0x3) |
       ((mb->coded_block_pattern & 0xc)<<2))<<22);
 
-  fmv[0] = mb->PMV[0][0][1]/2;
-  fmv[1] = mb->PMV[0][0][0];
-  fmv[2] = mb->PMV[1][0][1]/2;
-  fmv[3] = mb->PMV[1][0][0];
+  fmv.s[0] = mb->PMV[0][0][1]/2;
+  fmv.s[1] = mb->PMV[0][0][0];
+  fmv.s[2] = mb->PMV[1][0][1]/2;
+  fmv.s[3] = mb->PMV[1][0][0];
   
-  bmv[0] = mb->PMV[0][1][1]/2;
-  bmv[1] = mb->PMV[0][1][0];
-  bmv[2] = mb->PMV[1][1][1]/2;
-  bmv[3] = mb->PMV[1][1][0];
+  bmv.s[0] = mb->PMV[0][1][1]/2;
+  bmv.s[1] = mb->PMV[0][1][0];
+  bmv.s[2] = mb->PMV[1][1][1]/2;
+  bmv.s[3] = mb->PMV[1][1][0];
 
   /* First Y Block */
   *dy++ = GFXBLOCK + 4 + (y1size>>2);
   *dy++ = (1<<30) | (2<<28) | dw1[0];
   *dy++ = xy;
   *dy++ = (8<<16) | 16;
-  *dy++ = *(uint *)&fmv[0];
-  *dy++ = *(uint *)&bmv[0];
+  *dy++ = fmv.u[0];
+  *dy++ = bmv.u[0];
   PACK_CORR_DATA(dy,block_ptr,y1size);
   block_ptr = (short *)((unsigned long)block_ptr + y1size);
 
@@ -1614,21 +1619,21 @@ static __inline__ void renderFieldinFrame(uint **datay,uint **datau,
   *dy++ = (1<<30) | (2<<28) | dw1[1];
   *dy++ = xy;
   *dy++ = (8<<16) | 16;
-  *dy++ = *(uint *)&fmv[2];
-  *dy++ = *(uint *)&bmv[2];
+  *dy++ = fmv.u[1];
+  *dy++ = bmv.u[1];
   PACK_CORR_DATA(dy,block_ptr,y2size);
   block_ptr = (short *)((unsigned long)block_ptr + y2size);
   /* End Y Blocks */
 
-  fmv[0] /= 2;
-  fmv[1] /= 2;
-  fmv[2] /= 2;
-  fmv[3] /= 2;
+  fmv.s[0] /= 2;
+  fmv.s[1] /= 2;
+  fmv.s[2] /= 2;
+  fmv.s[3] /= 2;
   
-  bmv[0] /= 2;
-  bmv[1] /= 2;
-  bmv[2] /= 2;
-  bmv[3] /= 2;
+  bmv.s[0] /= 2;
+  bmv.s[1] /= 2;
+  bmv.s[2] /= 2;
+  bmv.s[3] /= 2;
 
   xy >>= 1;
 
@@ -1637,8 +1642,8 @@ static __inline__ void renderFieldinFrame(uint **datay,uint **datau,
   *du++ = (2<<30) | (1<<28) | dw1[0];
   *du++ = xy;
   *du++ = (4<<16) | 8;
-  *du++ = *(uint *)&fmv[0];
-  *du++ = *(uint *)&bmv[0];
+  *du++ = fmv.u[0];
+  *du++ = bmv.u[0];
   if(usize) {
     PACK_CORR_DATA_SHORT(du,block_ptr);
   }
@@ -1648,8 +1653,8 @@ static __inline__ void renderFieldinFrame(uint **datay,uint **datau,
   *du++ = (2<<30) | (1<<28) | dw1[1];
   *du++ = xy;
   *du++ = (4<<16) | 8;
-  *du++ = *(uint *)&fmv[2];
-  *du++ = *(uint *)&bmv[2];
+  *du++ = fmv.u[1];
+  *du++ = bmv.u[1];
   if(usize) {
     block_ptr = (short *)((unsigned long)block_ptr + 16);
     PACK_CORR_DATA_SHORT(du,block_ptr);
@@ -1662,8 +1667,8 @@ static __inline__ void renderFieldinFrame(uint **datay,uint **datau,
   *dv++ = (3<<30) | (1<<28) | dw1[0];
   *dv++ = xy;
   *dv++ = (4<<16) | 8;
-  *dv++ = *(uint *)&fmv[0];
-  *dv++ = *(uint *)&bmv[0];
+  *dv++ = fmv.u[0];
+  *dv++ = bmv.u[0];
   if(vsize) {
     PACK_CORR_DATA_SHORT(dv,block_ptr);
   }
@@ -1673,8 +1678,8 @@ static __inline__ void renderFieldinFrame(uint **datay,uint **datau,
   *dv++ = (3<<30) | (1<<28) | dw1[1];
   *dv++ = xy;
   *dv++ = (4<<16) | 8;
-  *dv++ = *(uint *)&fmv[2];
-  *dv++ = *(uint *)&bmv[2];
+  *dv++ = fmv.u[1];
+  *dv++ = bmv.u[1];
   if(vsize) {
     block_ptr = (short *)((unsigned long)block_ptr + 16);
     PACK_CORR_DATA_SHORT(dv,block_ptr);
@@ -1701,8 +1706,8 @@ static __inline__ void renderFieldinFrameDCT0(uint **datay,uint **datau,
   register uint *dv = *datav;
 
   /* Motion Vectors */
-  short fmv[4];
-  short bmv[4];
+  su_t fmv;
+  su_t bmv;
   /* CBP */
   uint cbp = (uint)mb->coded_block_pattern;
   /* gfxblock dword 1 */
@@ -1728,15 +1733,15 @@ static __inline__ void renderFieldinFrameDCT0(uint **datay,uint **datau,
     ((cbp | ((cbp<<2) & 0x30))<<22);
 
 
-  fmv[0] = mb->PMV[0][0][1]/2;
-  fmv[1] = mb->PMV[0][0][0];
-  fmv[2] = mb->PMV[1][0][1]/2;
-  fmv[3] = mb->PMV[1][0][0];
+  fmv.s[0] = mb->PMV[0][0][1]/2;
+  fmv.s[1] = mb->PMV[0][0][0];
+  fmv.s[2] = mb->PMV[1][0][1]/2;
+  fmv.s[3] = mb->PMV[1][0][0];
   
-  bmv[0] = mb->PMV[0][1][1]/2;
-  bmv[1] = mb->PMV[0][1][0];
-  bmv[2] = mb->PMV[1][1][1]/2;
-  bmv[3] = mb->PMV[1][1][0];
+  bmv.s[0] = mb->PMV[0][1][1]/2;
+  bmv.s[1] = mb->PMV[0][1][0];
+  bmv.s[2] = mb->PMV[1][1][1]/2;
+  bmv.s[3] = mb->PMV[1][1][0];
 
   /*
     The i810 cannot use DCT0 directly with field motion, we have to
@@ -1772,8 +1777,8 @@ static __inline__ void renderFieldinFrameDCT0(uint **datay,uint **datau,
   *dy++ = (1<<30) | (2<<28) | dw1[0];
   *dy++ = xy;
   *dy++ = (8<<16) | 16;
-  *dy++ = *(uint *)&fmv[0];
-  *dy++ = *(uint *)&bmv[0];
+  *dy++ = fmv.u[0];
+  *dy++ = bmv.u[0];
   if(dw1[0] & (1<<27)) {
     PACK_CORR_DATA_0to1(dy,top_left_b,bottom_left_b);
   }
@@ -1786,8 +1791,8 @@ static __inline__ void renderFieldinFrameDCT0(uint **datay,uint **datau,
   *dy++ = (1<<30) | (2<<28) | dw1[1];
   *dy++ = xy;
   *dy++ = (8<<16) | 16;
-  *dy++ = *(uint *)&fmv[2];
-  *dy++ = *(uint *)&bmv[2];
+  *dy++ = fmv.u[1];
+  *dy++ = bmv.u[1];
   if(dw1[1] & (1<<27)) {
     top_left_b = (short *)((unsigned long)top_left_b + 16);
     bottom_left_b = (short *)((unsigned long)bottom_left_b + 16);
@@ -1800,15 +1805,15 @@ static __inline__ void renderFieldinFrameDCT0(uint **datay,uint **datau,
   }
   /* End Y Blocks */
 
-  fmv[0] /= 2;
-  fmv[1] /= 2;
-  fmv[2] /= 2;
-  fmv[3] /= 2;
+  fmv.s[0] /= 2;
+  fmv.s[1] /= 2;
+  fmv.s[2] /= 2;
+  fmv.s[3] /= 2;
   
-  bmv[0] /= 2;
-  bmv[1] /= 2;
-  bmv[2] /= 2;
-  bmv[3] /= 2;
+  bmv.s[0] /= 2;
+  bmv.s[1] /= 2;
+  bmv.s[2] /= 2;
+  bmv.s[3] /= 2;
 
   xy >>= 1;
 
@@ -1817,8 +1822,8 @@ static __inline__ void renderFieldinFrameDCT0(uint **datay,uint **datau,
   *du++ = (2<<30) | (1<<28) | dw1[0];
   *du++ = xy;
   *du++ = (4<<16) | 8;
-  *du++ = *(uint *)&fmv[0];
-  *du++ = *(uint *)&bmv[0];
+  *du++ = fmv.u[0];
+  *du++ = bmv.u[0];
   if(usize) {
     PACK_CORR_DATA_SHORT(du,block_ptr);
   }
@@ -1828,8 +1833,8 @@ static __inline__ void renderFieldinFrameDCT0(uint **datay,uint **datau,
   *du++ = (2<<30) | (1<<28) | dw1[1];
   *du++ = xy;
   *du++ = (4<<16) | 8;
-  *du++ = *(uint *)&fmv[2];
-  *du++ = *(uint *)&bmv[2];
+  *du++ = fmv.u[1];
+  *du++ = bmv.u[1];
   if(usize) {
     block_ptr = (short *)((unsigned long)block_ptr + 16);
     PACK_CORR_DATA_SHORT(du,block_ptr);
@@ -1842,8 +1847,8 @@ static __inline__ void renderFieldinFrameDCT0(uint **datay,uint **datau,
   *dv++ = (3<<30) | (1<<28) | dw1[0];
   *dv++ = xy;
   *dv++ = (4<<16) | 8;
-  *dv++ = *(uint *)&fmv[0];
-  *dv++ = *(uint *)&bmv[0];
+  *dv++ = fmv.u[0];
+  *dv++ = bmv.u[0];
   if(vsize) {
     PACK_CORR_DATA_SHORT(dv,block_ptr);
   }
@@ -1853,8 +1858,8 @@ static __inline__ void renderFieldinFrameDCT0(uint **datay,uint **datau,
   *dv++ = (3<<30) | (1<<28) | dw1[1];
   *dv++ = xy;
   *dv++ = (4<<16) | 8;
-  *dv++ = *(uint *)&fmv[2];
-  *dv++ = *(uint *)&bmv[2];
+  *dv++ = fmv.u[1];
+  *dv++ = bmv.u[1];
   if(vsize) {
     block_ptr = (short *)((unsigned long)block_ptr + 16);
     PACK_CORR_DATA_SHORT(dv,block_ptr);
@@ -1882,8 +1887,8 @@ static __inline__ void renderFrameinFrame(uint **datay,uint **datau,
   register uint *dv = *datav;
 
   /* Motion Vectors */
-  short fmv[2];
-  short bmv[2];
+  su_t fmv;
+  su_t bmv;
   /* gfxblock dword 1 */
   uint dw1;
 
@@ -1897,28 +1902,28 @@ static __inline__ void renderFrameinFrame(uint **datay,uint **datau,
     (((uint)mb->coded_block_pattern)<<22);
 
 
-  fmv[0] = mb->PMV[0][0][1];
-  fmv[1] = mb->PMV[0][0][0];
+  fmv.s[0] = mb->PMV[0][0][1];
+  fmv.s[1] = mb->PMV[0][0][0];
   
-  bmv[0] = mb->PMV[0][1][1];
-  bmv[1] = mb->PMV[0][1][0];
+  bmv.s[0] = mb->PMV[0][1][1];
+  bmv.s[1] = mb->PMV[0][1][0];
 
   /* Y Block */
   *dy++ = GFXBLOCK + 4 + (ysize>>2);
   *dy++ = (1<<30) | (3<<28) | dw1;
   *dy++ = xy;
   *dy++ = (16<<16) | 16;
-  *dy++ = *(uint *)fmv;
-  *dy++ = *(uint *)bmv;
+  *dy++ = fmv.u[0];
+  *dy++ = bmv.u[0];
   PACK_CORR_DATA(dy,block_ptr,ysize);
   block_ptr = (short *)((unsigned long)block_ptr + ysize);
   /* End Y Blocks */
 
-  fmv[0] /= 2;
-  fmv[1] /= 2;
+  fmv.s[0] /= 2;
+  fmv.s[1] /= 2;
   
-  bmv[0] /= 2;
-  bmv[1] /= 2;
+  bmv.s[0] /= 2;
+  bmv.s[1] /= 2;
 
   xy >>= 1;
 
@@ -1927,8 +1932,8 @@ static __inline__ void renderFrameinFrame(uint **datay,uint **datau,
   *du++ = (2<<30) | (1<<28) | dw1;
   *du++ = xy;
   *du++ = (8<<16) | 8;
-  *du++ = *(uint *)fmv;
-  *du++ = *(uint *)bmv;
+  *du++ = fmv.u[0];
+  *du++ = bmv.u[0];
   PACK_CORR_DATA(du,block_ptr,usize);
   block_ptr = (short *)((unsigned long)block_ptr + usize);
   /* End U Block */
@@ -1938,8 +1943,8 @@ static __inline__ void renderFrameinFrame(uint **datay,uint **datau,
   *dv++ = (3<<30) | (1<<28) | dw1;
   *dv++ = xy;
   *dv++ = (8<<16) | 8;
-  *dv++ = *(uint *)fmv;
-  *dv++ = *(uint *)bmv;
+  *dv++ = fmv.u[0];
+  *dv++ = bmv.u[0];
   PACK_CORR_DATA(dv,block_ptr,vsize);
   block_ptr = (short *)((unsigned long)block_ptr + vsize);
   /* End V Block */
@@ -1963,8 +1968,8 @@ static __inline__ void renderFrameinFrameDCT1(uint **datay,uint **datau,
   register uint *dv = *datav;
 
   /* Motion Vectors */
-  short fmv[4];
-  short bmv[4];
+  su_t fmv;
+  su_t bmv;
 
   short * top_left_b = NULL;
   short * top_right_b = NULL;
@@ -1982,11 +1987,11 @@ static __inline__ void renderFrameinFrameDCT1(uint **datay,uint **datau,
   uint dw1 = type_table[mb->macroblock_type & 0xf] |
     (((uint)mb->coded_block_pattern)<<22);
 
-  fmv[0] = mb->PMV[0][0][1];
-  fmv[1] = mb->PMV[0][0][0];
+  fmv.s[0] = mb->PMV[0][0][1];
+  fmv.s[1] = mb->PMV[0][0][0];
   
-  bmv[0] = mb->PMV[0][1][1];
-  bmv[1] = mb->PMV[0][1][0];
+  bmv.s[0] = mb->PMV[0][1][1];
+  bmv.s[1] = mb->PMV[0][1][0];
 
   /*
     It is easiest to find out what blocks are in need of reading first
@@ -2026,8 +2031,8 @@ static __inline__ void renderFrameinFrameDCT1(uint **datay,uint **datau,
   *dy++ = (1<<30) | (3<<28) | dw1;
   *dy++ = xy;
   *dy++ = (16<<16) | 16;
-  *dy++ = *(uint *)fmv;
-  *dy++ = *(uint *)bmv;
+  *dy++ = fmv.u[0];
+  *dy++ = bmv.u[0];
   if(dw1 & (1<<27)) {
     PACK_CORR_DATA_1to0(dy,top_left_b,bottom_left_b);
     top_left_b = (short *)((unsigned long)top_left_b + 64);
@@ -2046,11 +2051,11 @@ static __inline__ void renderFrameinFrameDCT1(uint **datay,uint **datau,
   }
   /* End Y Block */
 
-  fmv[0] /= 2;
-  fmv[1] /= 2;
+  fmv.s[0] /= 2;
+  fmv.s[1] /= 2;
   
-  bmv[0] /= 2;
-  bmv[1] /= 2;
+  bmv.s[0] /= 2;
+  bmv.s[1] /= 2;
 
   xy >>= 1;
 
@@ -2059,8 +2064,8 @@ static __inline__ void renderFrameinFrameDCT1(uint **datay,uint **datau,
   *du++ = (2<<30) | (1<<28) | dw1;
   *du++ = xy;
   *du++ = (8<<16) | 8;
-  *du++ = *(uint *)fmv;
-  *du++ = *(uint *)bmv;
+  *du++ = fmv.u[0];
+  *du++ = bmv.u[0];
   PACK_CORR_DATA(du,block_ptr,usize);
   block_ptr = (short *)((unsigned long)block_ptr + usize);
 
@@ -2069,8 +2074,8 @@ static __inline__ void renderFrameinFrameDCT1(uint **datay,uint **datau,
   *dv++ = (3<<30) | (1<<28) | dw1;
   *dv++ = xy;
   *dv++ = (8<<16) | 8;
-  *dv++ = *(uint *)fmv;
-  *dv++ = *(uint *)bmv;
+  *dv++ = fmv.u[0];
+  *dv++ = bmv.u[0];
   PACK_CORR_DATA(dv,block_ptr,vsize);
   block_ptr = (short *)((unsigned long)block_ptr + vsize);
 
@@ -2093,8 +2098,8 @@ static __inline__ void renderDualPrimeinFrame(uint **datay,uint **datau,
   register uint *dv = *datav;
 
   /* Motion Vectors */
-  short fmv[4];
-  short bmv[4];
+  su_t fmv;
+  su_t bmv;
   /* gfxblock dword 1 */
   uint dw1[2];
 
@@ -2115,23 +2120,23 @@ static __inline__ void renderDualPrimeinFrame(uint **datay,uint **datau,
 	     ((mb->coded_block_pattern & 0xc)<<2))<<22) |
     3<<12 | 3<<6 | 3<<3 | 2;
   
-  fmv[0] = mb->PMV[0][0][1];
-  fmv[1] = mb->PMV[0][0][0];
-  bmv[0] = mb->PMV[1][0][1];
-  bmv[1] = mb->PMV[1][0][0];
+  fmv.s[0] = mb->PMV[0][0][1];
+  fmv.s[1] = mb->PMV[0][0][0];
+  bmv.s[0] = mb->PMV[1][0][1];
+  bmv.s[1] = mb->PMV[1][0][0];
   
-  fmv[2] = mb->PMV[0][0][1];
-  fmv[3] = mb->PMV[0][0][0];
-  bmv[2] = mb->PMV[1][1][1];
-  bmv[3] = mb->PMV[1][1][0];
+  fmv.s[2] = mb->PMV[0][0][1];
+  fmv.s[3] = mb->PMV[0][0][0];
+  bmv.s[2] = mb->PMV[1][1][1];
+  bmv.s[3] = mb->PMV[1][1][0];
 
   /* First Y Block */
   *dy++ = GFXBLOCK + 4 + (y1size>>2);
   *dy++ = (1<<30) | (2<<28) | dw1[0];
   *dy++ = xy;
   *dy++ = (8<<16) | 16;
-  *dy++ = *(uint *)fmv;
-  *dy++ = *(uint *)bmv;;
+  *dy++ = fmv.u[0];
+  *dy++ = bmv.u[0];;
   PACK_CORR_DATA(dy,block_ptr,y1size);
   block_ptr = (short *)((unsigned long)block_ptr + y1size);
 
@@ -2140,20 +2145,20 @@ static __inline__ void renderDualPrimeinFrame(uint **datay,uint **datau,
   *dy++ = (1<<30) | (2<<28) | dw1[1];
   *dy++ = xy;
   *dy++ = (8<<16) | 16;
-  *dy++ = *(uint *)&fmv[2];
-  *dy++ = *(uint *)&bmv[2];
+  *dy++ = fmv.u[1];
+  *dy++ = bmv.u[1];
   PACK_CORR_DATA(dy,block_ptr,y2size);
   block_ptr = (short *)((unsigned long)block_ptr + y2size);
 
-  fmv[0] /= 2;
-  fmv[1] /= 2;
-  bmv[0] /= 2;
-  bmv[1] /= 2;
+  fmv.s[0] /= 2;
+  fmv.s[1] /= 2;
+  bmv.s[0] /= 2;
+  bmv.s[1] /= 2;
   
-  fmv[2] /= 2;
-  fmv[3] /= 2;
-  bmv[2] /= 2;
-  bmv[3] /= 2;
+  fmv.s[2] /= 2;
+  fmv.s[3] /= 2;
+  bmv.s[2] /= 2;
+  bmv.s[3] /= 2;
 
   xy >>= 1;
 
@@ -2162,8 +2167,8 @@ static __inline__ void renderDualPrimeinFrame(uint **datay,uint **datau,
   *du++ = (2<<30) | (1<<28) | dw1[0];
   *du++ = xy;
   *du++ = (4<<16) | 8;
-  *du++ = *(uint *)fmv;
-  *du++ = *(uint *)bmv;
+  *du++ = fmv.u[0];
+  *du++ = bmv.u[0];
   if(dw1[0] & (1<<23)) {
     PACK_CORR_DATA_SHORT(du,block_ptr);
   }
@@ -2173,8 +2178,8 @@ static __inline__ void renderDualPrimeinFrame(uint **datay,uint **datau,
   *du++ = (2<<30) | (1<<28) | dw1[1];
   *du++ = xy;
   *du++ = (4<<16) | 8;
-  *du++ = *(uint *)&fmv[2];
-  *du++ = *(uint *)&bmv[2];
+  *du++ = fmv.u[1];
+  *du++ = bmv.u[1];
   if(dw1[1] & (1<<23)) {
     block_ptr = (short *)((unsigned long)block_ptr + 16);
     PACK_CORR_DATA_SHORT(du,block_ptr);
@@ -2187,8 +2192,8 @@ static __inline__ void renderDualPrimeinFrame(uint **datay,uint **datau,
   *dv++ = (3<<30) | (1<<28) | dw1[0];
   *dv++ = xy;
   *dv++ = (4<<16) | 8;
-  *dv++ = *(uint *)fmv;
-  *dv++ = *(uint *)bmv;
+  *dv++ = fmv.u[0];
+  *dv++ = bmv.u[0];
   if(dw1[0] & (1<<22)) {
     PACK_CORR_DATA_SHORT(dv,block_ptr);
   }
@@ -2198,8 +2203,8 @@ static __inline__ void renderDualPrimeinFrame(uint **datay,uint **datau,
   *dv++ = (3<<30) | (1<<28) | dw1[1];
   *dv++ = xy;
   *dv++ = (4<<16) | 8;
-  *dv++ = *(uint *)&fmv[2];
-  *dv++ = *(uint *)&bmv[2];
+  *dv++ = fmv.u[1];
+  *dv++ = bmv.u[1];
   if(dw1[1] & (1<<22)) {
     block_ptr = (short *)((unsigned long)block_ptr + 16);
     PACK_CORR_DATA_SHORT(dv,block_ptr);
@@ -2228,8 +2233,8 @@ static __inline__ void renderDualPrimeinFrameDCT0(uint **datay,uint **datau,
   register uint *dv = *datav;
 
   /* Motion Vectors */
-  short fmv[4];
-  short bmv[4];
+  su_t fmv;
+  su_t bmv;
   /* gfxblock dword 1 */
   uint dw1[2];
 
@@ -2255,15 +2260,15 @@ static __inline__ void renderDualPrimeinFrameDCT0(uint **datay,uint **datau,
   dw1[1] = ((cbp | ((cbp<<2) & 0x30))<<22) |
     3<<12 | 3<<6 | 3<<3 | 2;
   
-  fmv[0] = mb->PMV[0][0][1];
-  fmv[1] = mb->PMV[0][0][0];
-  bmv[0] = mb->PMV[1][0][1];
-  bmv[1] = mb->PMV[1][0][0];
+  fmv.s[0] = mb->PMV[0][0][1];
+  fmv.s[1] = mb->PMV[0][0][0];
+  bmv.s[0] = mb->PMV[1][0][1];
+  bmv.s[1] = mb->PMV[1][0][0];
   
-  fmv[2] = mb->PMV[0][0][1];
-  fmv[3] = mb->PMV[0][0][0];
-  bmv[2] = mb->PMV[1][1][1];
-  bmv[3] = mb->PMV[1][1][0];
+  fmv.s[2] = mb->PMV[0][0][1];
+  fmv.s[3] = mb->PMV[0][0][0];
+  bmv.s[2] = mb->PMV[1][1][1];
+  bmv.s[3] = mb->PMV[1][1][0];
   
   /*
     The i810 cannot use DCT0 directly with field motion, we have to
@@ -2299,8 +2304,8 @@ static __inline__ void renderDualPrimeinFrameDCT0(uint **datay,uint **datau,
   *dy++ = (1<<30) | (2<<28) | dw1[0];
   *dy++ = xy;
   *dy++ = (8<<16) | 16;
-  *dy++ = *(uint *)fmv;
-  *dy++ = *(uint *)bmv;
+  *dy++ = fmv.u[0];
+  *dy++ = bmv.u[0];
   if(cbp & 0x20) {
     PACK_CORR_DATA_0to1(dy,top_left_b,bottom_left_b);
   }
@@ -2313,8 +2318,8 @@ static __inline__ void renderDualPrimeinFrameDCT0(uint **datay,uint **datau,
   *dy++ = (1<<30) | (2<<28) | dw1[1];
   *dy++ = xy;
   *dy++ = (8<<16) | 16;
-  *dy++ = *(uint *)&fmv[2];
-  *dy++ = *(uint *)&bmv[2];
+  *dy++ = fmv.u[1];
+  *dy++ = bmv.u[1];
   if(cbp & 0x20) {
     top_left_b = (short *)((unsigned long)top_left_b + 16);
     bottom_left_b = (short *)((unsigned long)bottom_left_b + 16);
@@ -2328,15 +2333,15 @@ static __inline__ void renderDualPrimeinFrameDCT0(uint **datay,uint **datau,
   /* End Y Blocks */
 
 
-  fmv[0] /= 2;
-  fmv[1] /= 2;
-  bmv[0] /= 2;
-  bmv[1] /= 2;
+  fmv.s[0] /= 2;
+  fmv.s[1] /= 2;
+  bmv.s[0] /= 2;
+  bmv.s[1] /= 2;
   
-  fmv[2] /= 2;
-  fmv[3] /= 2;
-  bmv[2] /= 2;
-  bmv[3] /= 2;
+  fmv.s[2] /= 2;
+  fmv.s[3] /= 2;
+  bmv.s[2] /= 2;
+  bmv.s[3] /= 2;
 
   xy >>= 1;
 
@@ -2345,8 +2350,8 @@ static __inline__ void renderDualPrimeinFrameDCT0(uint **datay,uint **datau,
   *du++ = (2<<30) | (1<<28) | dw1[0];
   *du++ = xy;
   *du++ = (4<<16) | 8;
-  *du++ = *(uint *)fmv;
-  *du++ = *(uint *)bmv;
+  *du++ = fmv.u[0];
+  *du++ = bmv.u[0];
   if(cbp & (1<<23)) {
     PACK_CORR_DATA_SHORT(du,block_ptr);
   }
@@ -2356,8 +2361,8 @@ static __inline__ void renderDualPrimeinFrameDCT0(uint **datay,uint **datau,
   *du++ = (2<<30) | (1<<28) | dw1[1];
   *du++ = xy;
   *du++ = (4<<16) | 8;
-  *du++ = *(uint *)&fmv[2];
-  *du++ = *(uint *)&bmv[2];
+  *du++ = fmv.u[1];
+  *du++ = bmv.u[1];
   if(cbp & (1<<23)) {
     block_ptr = (short *)((unsigned long)block_ptr + 16);
     PACK_CORR_DATA_SHORT(du,block_ptr);
@@ -2370,8 +2375,8 @@ static __inline__ void renderDualPrimeinFrameDCT0(uint **datay,uint **datau,
   *dv++ = (3<<30) | (1<<28) | dw1[0];
   *dv++ = xy;
   *dv++ = (4<<16) | 8;
-  *dv++ = *(uint *)fmv;
-  *dv++ = *(uint *)bmv;
+  *dv++ = fmv.u[0];
+  *dv++ = bmv.u[0];
   if(cbp & (1<<22)) {
     PACK_CORR_DATA_SHORT(dv,block_ptr);
   }
@@ -2381,8 +2386,8 @@ static __inline__ void renderDualPrimeinFrameDCT0(uint **datay,uint **datau,
   *dv++ = (3<<30) | (1<<28) | dw1[1];
   *dv++ = xy;
   *dv++ = (4<<16) | 8;
-  *dv++ = *(uint *)&fmv[2];
-  *dv++ = *(uint *)&bmv[2];
+  *dv++ = fmv.u[1];
+  *dv++ = bmv.u[1];
   if(cbp & (1<<22)) {
     block_ptr = (short *)((unsigned long)block_ptr + 16);
     PACK_CORR_DATA_SHORT(dv,block_ptr);

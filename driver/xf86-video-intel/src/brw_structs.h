@@ -34,7 +34,7 @@ struct header
 {
    unsigned int length:16; 
    unsigned int opcode:16; 
-} bits;
+};
 
 
 union header_union

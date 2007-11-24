@@ -1301,7 +1301,7 @@ I810GetSurfaceAttribute(
     Atom attribute,
     INT32 *value
 ){
-    return I810GetPortAttribute(pScrn, attribute, value, 0);
+    return I810GetPortAttribute(pScrn, attribute, value, NULL);
 }
 
 static int
@@ -1310,7 +1310,7 @@ I810SetSurfaceAttribute(
     Atom attribute,
     INT32 value
 ){
-    return I810SetPortAttribute(pScrn, attribute, value, 0);
+    return I810SetPortAttribute(pScrn, attribute, value, NULL);
 }
 
 

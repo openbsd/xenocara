@@ -41,6 +41,7 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /* #define XVMC_DEBUG(x) do {x; }while(0); */
 #define XVMC_DEBUG(x)
 
+#include <stdint.h>
 #include "xf86drm.h"
 #include "i810_common.h"
 #include <X11/Xlibint.h>

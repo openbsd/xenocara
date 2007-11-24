@@ -40,7 +40,9 @@ typedef struct {
 
    int brightness;
    int contrast;
-   int pipe;
+   int saturation;
+   xf86CrtcPtr current_crtc;
+   xf86CrtcPtr desired_crtc;
    int doubleBuffer;
 
    RegionRec clip;
@@ -56,7 +58,8 @@ typedef struct {
    CARD32 videoStatus;
    Time offTime;
    Time freeTime;
-   FBLinearPtr linear;
+   i830_memory *buf; /** YUV data buffer */
+   unsigned int extra_offset;
 
    Bool overlayOK;
    int oneLineMode;
@@ -67,10 +70,26 @@ typedef struct {
 #define GET_PORT_PRIVATE(pScrn) \
    (I830PortPrivPtr)((I830PTR(pScrn))->adaptor->pPortPrivates[0].ptr)
 
+/*
+ * Broadwater requires a bit of extra video memory for state information
+ */
+#define BRW_LINEAR_EXTRA	(36*1024)
+
 void I915DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv,
 			      int id, RegionPtr dstRegion, short width,
 			      short height, int video_pitch,
 			      int x1, int y1, int x2, int y2,
 			      short src_w, short src_h,
 			      short drw_w, short drw_h,
-			      DrawablePtr pDraw);
+			      PixmapPtr pPixmap);
+
+void I965DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv,
+			      int id, RegionPtr dstRegion, short width,
+			      short height, int video_pitch,
+			      int x1, int y1, int x2, int y2,
+			      short src_w, short src_h,
+			      short drw_w, short drw_h,
+			      PixmapPtr pPixmap);
+
+void I830VideoBlockHandler(int i, pointer blockData, pointer pTimeout,
+			   pointer pReadmask);

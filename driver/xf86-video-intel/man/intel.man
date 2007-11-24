@@ -1,0 +1,217 @@
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH intel  __drivermansuffix__ __vendorversion__
+.SH NAME
+intel \- Intel integrated graphics chipsets
+.SH SYNOPSIS
+.nf
+.B "Section \*qDevice\*q"
+.BI "  Identifier \*q"  devname \*q
+.B  "  Driver \*qintel\*q"
+\ \ ...
+.B EndSection
+.fi
+.SH DESCRIPTION
+.B intel
+is an __xservername__ driver for Intel integrated graphics chipsets.
+The driver supports depths 8, 15, 16 and 24.  All visual types are
+supported in depth 8.  For the i810/i815 other depths support the
+TrueColor and DirectColor visuals.  For the i830M and later, only the
+TrueColor visual is supported for depths greater than 8.  The driver
+supports hardware accelerated 3D via the Direct Rendering Infrastructure
+(DRI), but only in depth 16 for the i810/i815 and depths 16 and 24 for
+the 830M and later.
+.SH SUPPORTED HARDWARE
+.B intel
+supports the i810, i810-DC100, i810e, i815, i830M, 845G, 852GM, 855GM,
+865G, 915G, 915GM, 945G, 945GM, 965G, 965Q, 946GZ, 965GM, 945GME,
+G33, Q33, and Q35 chipsets.
+
+.SH CONFIGURATION DETAILS
+Please refer to __xconfigfile__(__filemansuffix__) for general configuration
+details.  This section only covers configuration details specific to this
+driver.
+.PP
+The Intel 8xx and 9xx families of integrated graphics chipsets have a unified
+memory architecture and uses system memory for video ram.  For the i810 and
+i815 family of chipset, operating system support for allocating system
+memory for video use is required in order to use this driver.  For the 830M
+and later, this is required in order for the driver to use more video ram
+than has been pre-allocated at boot time by the BIOS.  This is usually
+achieved with an "agpgart" or "agp" kernel driver.  Linux, FreeBSD, OpenBSD,
+NetBSD, and Solaris have such kernel drivers available.
+.PP
+By default, the i810 will use 8 megabytes
+of system memory for graphics.  For the 830M and later, the driver will
+automatically size its memory allocation according to the features it will
+support.  The
+.B VideoRam
+option, which in the past had been necessary to allow more than some small
+amount of memory to be allocated, is now ignored.
+.PP
+The following driver
+.B Options
+are supported
+.TP
+.BI "Option \*qNoAccel\*q \*q" boolean \*q
+Disable or enable acceleration.  Default: acceleration is enabled.
+.TP
+.BI "Option \*qSWCursor\*q \*q" boolean \*q
+Disable or enable software cursor.  Default: software cursor is disable
+and a hardware cursor is used for configurations where the hardware cursor
+is available.
+.TP
+.BI "Option \*qColorKey\*q \*q" integer \*q
+This sets the default pixel value for the YUV video overlay key.
+Default: undefined.
+.TP
+.BI "Option \*qCacheLines\*q \*q" integer \*q
+This allows the user to change the amount of graphics memory used for
+2D acceleration and video when XAA acceleration is enabled.  Decreasing this
+amount leaves more for 3D textures.  Increasing it can improve 2D performance
+at the expense of 3D performance.
+Default: depends on the resolution, depth, and available video memory.  The
+driver attempts to allocate space for at 3 screenfuls of pixmaps plus an
+HD-sized XV video.  The default used for a specific configuration can be found
+by examining the __xservername__ log file.
+.TP
+.BI "Option \*qFramebufferCompression\*q \*q" boolean \*q
+This option controls whether the framebuffer compression feature is enabled.
+If possible, the front buffer will be allocated in a tiled format and compressed
+periodically to save memory bandwidth and power.
+This option is only available on mobile chipsets.
+Default: enabled on supported configurations.
+.TP
+.BI "Option \*qTiling\*q \*q" boolean \*q
+This option controls whether memory buffers are allocated in tiled mode.  In
+many cases (especially for complex rendering), tiling can improve performance.
+Default: enabled.
+.TP
+.BI "Option \*qDRI\*q \*q" boolean \*q
+Disable or enable DRI support.
+Default: DRI is enabled for configurations where it is supported.
+
+.PP
+The following driver
+.B Options
+are supported for the i810 and i815 chipsets:
+.TP
+.BI "Option \*qDDC\*q \*q" boolean \*q
+Disable or enable DDC support.
+Default: enabled.
+.TP
+.BI "Option \*qDac6Bit\*q \*q" boolean \*q
+Enable or disable 6-bits per RGB for 8-bit modes.
+Default: 8-bits per RGB for 8-bit modes.
+.TP
+.BI "Option \*qXvMCSurfaces\*q \*q" integer \*q
+This option enables XvMC.  The integer parameter specifies the number of
+surfaces to use.  Valid values are 6 and 7.
+Default: XvMC is disabled.
+
+.PP
+The following driver
+.B Options
+are supported for the 830M and later chipsets:
+.TP
+.BI "Option \*qVideoKey\*q \*q" integer \*q
+This is the same as the
+.B \*qColorKey\*q
+option described above.  It is provided for compatibility with most
+other drivers.
+.TP
+.BI "Option \*qXVideo\*q \*q" boolean \*q
+Disable or enable XVideo support.
+Default: XVideo is enabled for configurations where it is supported.
+.TP
+.BI "Option \*qLegacy3D\*q \*q" boolean \*q
+Enable support for the legacy i915_dri.so 3D driver.
+This will, among other things, make the 2D driver tell libGL to
+load the 3D driver i915_dri.so instead of the newer i915tex_dri.so.
+This option is only used for chipsets in the range i830-i945.
+Default for i830-i945 series: Enabled.
+Default for i810: The option is not used.
+Default for i965: The option is always true.
+.TP
+.BI "Option \*qAperTexSize\*q \*q" integer \*q
+Give the size in kiB of the AGP aperture area that is reserved for the
+DRM memory manager present in i915 drm from version 1.7.0 and upwards,
+and that is used with the 3D driver in Mesa from version 6.5.2 and
+upwards. If the size is set too high to make room for pre-allocated
+VideoRam, the driver will try to reduce it automatically. If you use only
+older Mesa or DRM versions, you may set this value to zero, and
+activate the legacy texture pool (see 
+.B "Option \*qLegacy3D\*q"
+). If you run 3D programs with large texture memory requirements, you might
+gain some performance by increasing this value.
+Default: 32768.
+.TP
+.BI "Option \*qPageFlip\*q \*q" boolean \*q
+Enable support for page flipping. This should improve 3D performance at the
+potential cost of worse performance with mixed 2D/3D. Also note that this gives
+no benefit without corresponding support in the Mesa 3D driver and may not give
+the full benefit without triple buffering (see
+.B "Option \*qTripleBuffer\*q"
+).
+Default for i810: The option is not used.
+Default for i830 and above: Disabled (This option is currently unstable).
+.TP
+.BI "Option \*qTripleBuffer\*q \*q" boolean \*q
+Enable support for triple buffering. This should improve 3D performance at the
+potential cost of worse performance with mixed 2D/3D. Also note that this gives
+no benefit without corresponding support in the Mesa 3D driver and may not give
+any benefit without page flipping either (see
+.B "Option \*qPageFlip\*q"
+).
+Default for i810: The option is not used.
+Default for i830 and above: Disabled.
+.TP
+.BI "Option \*qAccelMethod\*q \*q" string \*q
+Choose acceleration architecture, either "XAA" or "EXA".  XAA is the old
+XFree86 based acceleration architecture.  EXA is a newer and simpler
+acceleration architecture designed to better accelerate the X Render extension.
+Default: "EXA".
+.TP
+.BI "Option \*qModeDebug\*q \*q" boolean \*q
+Enable printing of additional debugging information about modesetting to
+the server log.
+
+.PP
+The 830M and newer driver supports the following outputs through RandR 1.2:
+.PP
+.TP
+.BI "VGA"
+Analog VGA output
+.TP
+.BI "LVDS"
+Laptop panel.  Properties:
+  BACKLIGHT - set backlight level
+  BACKLIGHT_CONTROL - set backlight level control method (i.e. use kernel interfaces, native LVDS power register, legacy register, or combination)
+.TP
+.BI "TV"
+Integrated TV output
+.TP
+.BI "TMDS-1"
+First DVI SDVO output
+.TP
+.BI "TMDS-2"
+Second DVI SDVO output
+.PP
+SDVO and DVO TV outputs are not supported by the driver at this time.
+.PP
+See __xconfigfile__(__filemansuffix__) for information on associating Monitor
+sections with these outputs for configuration.
+
+.SH "SEE ALSO"
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+.SH AUTHORS
+Authors include: Keith Whitwell, and also Jonathan Bian, Matthew J Sottek,
+Jeff Hartmann, Mark Vojkovich, Alan Hourihane, H. J. Lu.  830M and 845G
+support reworked for XFree86 4.3 by David Dawes and Keith Whitwell.  852GM,
+855GM, and 865G support added by David Dawes and Keith Whitwell.  915G,
+915GM, 945G, 945GM, 965G, 965Q and 946GZ support added by Alan Hourihane and
+Keith Whitwell. Lid status support added by Alan Hourihane. Textured video
+support for 915G and later chips, RandR 1.2 and hardware modesetting added
+by Eric Anholt and Keith Packard. EXA and Render acceleration added by Wang
+Zhenyu. TV out support added by Zou Nan Hai and Keith Packard. 965GM, G33,
+Q33, and Q35 support added by Wang Zhenyu.
