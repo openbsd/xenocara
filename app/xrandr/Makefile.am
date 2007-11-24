@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xrandr
 
-xrandr_CFLAGS = $(XRANDR_CFLAGS)
+AM_CFLAGS = $(XRANDR_CFLAGS)
 xrandr_LDADD = $(XRANDR_LIBS)
 
 xrandr_SOURCES =	\
