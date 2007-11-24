@@ -14,7 +14,6 @@
 
 @SET_MAKE@
 
-# $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 17:23:03 matthieu Exp $
 #
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 # 
@@ -489,7 +488,7 @@ uninstall-am: uninstall-info-am uninstall-libmanDATA
 
 
 .man.$(LIB_MAN_SUFFIX):
-	sed 's/__xorgversion__/"$(XORGRELSTRING)" "$(XORGMANNAME)"/' < $< > $@
+	sed 's/__xorgversion__/"$(XORGRELSTRING)" "$(XORGMANNAME)"/;  s/__LIB_MAN_SUFFIX__/$(LIB_MAN_SUFFIX)/' < $< > $@
 
 shadows.DONE:
 	-rm -f $(all_shadows:=.@LIB_MAN_SUFFIX@)

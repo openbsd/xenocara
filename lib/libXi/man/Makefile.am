@@ -1,4 +1,3 @@
-# $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 17:23:03 matthieu Exp $
 #
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 # 
@@ -72,7 +71,7 @@ XORGRELSTRING = @PACKAGE_STRING@
 SUFFIXES = .$(LIB_MAN_SUFFIX) .man
 
 .man.$(LIB_MAN_SUFFIX):
-	sed 's/__xorgversion__/"$(XORGRELSTRING)" "$(XORGMANNAME)"/' < $< > $@
+	sed 's/__xorgversion__/"$(XORGRELSTRING)" "$(XORGMANNAME)"/;  s/__LIB_MAN_SUFFIX__/$(LIB_MAN_SUFFIX)/' < $< > $@
 
 # Generate man page shadow files (Replaces InstallManPageAliases from Imake)
 
