@@ -997,6 +997,5 @@ xf86PrivilegedInit(void)
 	checkDevMem(TRUE);
 	xf86EnableIO();
 	xf86OpenConsole();
-	xf86AgpGARTSupported();
 }
 #endif

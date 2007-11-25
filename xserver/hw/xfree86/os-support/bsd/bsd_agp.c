@@ -1,4 +1,4 @@
-/*	$OpenBSD: bsd_agp.c,v 1.1 2006/11/28 20:29:31 matthieu Exp $ */
+/*	$OpenBSD: bsd_agp.c,v 1.2 2007/11/25 18:41:23 matthieu Exp $ */
 /*
  * Abstraction of the AGP GART interface.
  *
@@ -33,7 +33,7 @@ static int acquiredScreen = -1;
 static Bool initDone = FALSE;
 
 /*
- * Close /dev/agpgart.  This frees all associated memory allocated during
+ * Close the AGP device.  This frees all associated memory allocated during
  * this server generation.
  */
 Bool
@@ -48,7 +48,7 @@ xf86GARTCloseScreen(int screenNum)
 }
 
 /*
- * Open /dev/agpgart.  Keep it open until xf86GARTCloseScreen is called.
+ * Open the AGP device.  Keep it open until xf86GARTCloseScreen is called.
  */
 static Bool
 GARTInit(int screenNum)
@@ -60,11 +60,14 @@ GARTInit(int screenNum)
 
 	initDone = TRUE;
 
-	if (gartFd == -1)
-		gartFd = xf86Info.consoleFd;
-	else
+	if (gartFd != -1)
 		return FALSE;
 
+	gartFd = priv_open_device(AGP_DEVICE);
+	if (gartFd == -1 && errno == ENOENT) {
+		/* try the old interface */
+		gartFd = xf86Info.consoleFd;
+	}
 	xf86AcquireGART(-1);
 	/* Check the kernel driver version. */
 	if (ioctl(gartFd, AGPIOC_INFO, &agpinf) != 0) {
