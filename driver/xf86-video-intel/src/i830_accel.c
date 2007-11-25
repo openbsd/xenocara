@@ -183,7 +183,7 @@ I830Sync(ScrnInfoPtr pScrn)
 
    if (pI830->entityPrivate && !pI830->entityPrivate->RingRunning) return;
 
-   if (IS_I96X(pI830))
+   if (IS_I965G(pI830))
       flags = 0;
 
    /* Send a flush instruction and then wait till the ring is empty.
@@ -210,7 +210,7 @@ I830EmitFlush(ScrnInfoPtr pScrn)
    I830Ptr pI830 = I830PTR(pScrn);
    int flags = MI_WRITE_DIRTY_STATE | MI_INVALIDATE_MAP_CACHE;
 
-   if (IS_I96X(pI830))
+   if (IS_I965G(pI830))
       flags = 0;
 
    {

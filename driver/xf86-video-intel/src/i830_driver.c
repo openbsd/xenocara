@@ -2265,7 +2265,7 @@ IntelEmitInvarientState(ScrnInfoPtr pScrn)
       ADVANCE_LP_RING();
    }
 
-   if (!IS_I96X(pI830))
+   if (!IS_I965G(pI830))
    {
       if (IS_I9XX(pI830))
          I915EmitInvarientState(pScrn);
