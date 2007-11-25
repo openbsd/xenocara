@@ -333,7 +333,7 @@ CoreKeyboardProc(DeviceIntPtr pDev, int what)
 #ifdef XKB
         if (!noXkbExtension) {
             bzero(&names, sizeof(names));
-            XkbSetRulesDflts("base", "pc105", "us", NULL, NULL);
+            XkbSetRulesDflts("xorg", "pc105", "us", NULL, NULL);
             XkbInitKeyboardDeviceStruct(pDev, &names, &keySyms, modMap,
                                         CoreKeyboardBell, CoreKeyboardCtl);
         }
