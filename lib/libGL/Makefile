@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.9 2007/11/24 17:46:55 matthieu Exp $
+# $OpenBSD: Makefile,v 1.10 2007/11/25 10:18:21 matthieu Exp $
 
 all: ${OBJS}
 LIB=	GL
@@ -13,7 +13,7 @@ DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 DRI_DRIVER_SEARCH_DIR=	$(DRI_DRIVER_INSTALL_DIR)
 
 INCSDIR=	${X11BASE}/include/GL
-LDADD=		-lpthread
+LDADD=		-L${X11BASE}/lib -lXext -lX11
 #LDADD=		-L${X11BASE}/lib -lXfixes -lXdamage -lXext -lX11 -ldrm -lpthread
 
 CPP=	cpp -notraditional
@@ -34,7 +34,7 @@ CPPFLAGS+= \
 	-I${GLX} \
 	-I${X11BASE}/include \
 	-I${X11BASE}/include/drm \
-	-DPTHREADS -DGLX_INDIRECT_RENDERING \
+	-DGLX_INDIRECT_RENDERING \
 	-DHAVE_ALIAS \
 	-D_REENTRANT
 
