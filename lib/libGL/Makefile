@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.11 2007/11/26 15:10:19 matthieu Exp $
+# $OpenBSD: Makefile,v 1.12 2007/11/26 20:47:35 todd Exp $
 
 all: ${OBJS}
 LIB=	GL
@@ -38,6 +38,8 @@ CPPFLAGS+= \
 	-DPTHREADS \
 	-DHAVE_ALIAS \
 	-D_REENTRANT
+
+XENOCARA_BUILD_DRI?=	n
 
 .if ${XENOCARA_BUILD_DRI} == "y"
 CPPFLAGS+= \
