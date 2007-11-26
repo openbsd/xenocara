@@ -48,6 +48,11 @@
  * distinguishing each of the drafts.
  */
 
+static int _Xthr_once_stub_(void *, void (*)(void));
+static int _Xthr_key_create_stub_(unsigned int *, void (*)(void *));
+static int _Xthr_setspecific_stub_(unsigned int, const void *);
+static void *_Xthr_getspecific_stub_(unsigned int);
+
 #ifdef CTHREADS
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -113,9 +118,10 @@ int pthread_cond_destroy()  __attribute__ ((weak, alias ("_Xthr_zero_stub_")));
 int pthread_cond_wait()     __attribute__ ((weak, alias ("_Xthr_zero_stub_")));
 int pthread_cond_signal()   __attribute__ ((weak, alias ("_Xthr_zero_stub_")));
 int pthread_cond_broadcast() __attribute__ ((weak, alias ("_Xthr_zero_stub_")));
-int pthread_key_create()    __attribute__ ((weak, alias ("_Xthr_zero_stub_")));
-void *pthread_getspecific()  __attribute__ ((weak, alias ("_Xthr_zero_stub_")));
-int pthread_setspecific()   __attribute__ ((weak, alias ("_Xthr_zero_stub_")));
+int pthread_key_create()    __attribute__ ((weak, alias ("_Xthr_key_create_stub_")));
+void *pthread_getspecific()  __attribute__ ((weak, alias ("_Xthr_getspecific_stub_")));
+int pthread_setspecific()   __attribute__ ((weak, alias ("_Xthr_setspecific_stub_")));
+int pthread_once() __attribute__ ((weak, alias ("_Xthr_once_stub_")));
 #else	/* __GNUC__ */
 #pragma weak pthread_self = _Xthr_self_stub_
 #pragma weak pthread_mutex_init = _Xthr_zero_stub_
@@ -128,9 +134,10 @@ int pthread_setspecific()   __attribute__ ((weak, alias ("_Xthr_zero_stub_")));
 #pragma weak pthread_cond_signal = _Xthr_zero_stub_
 #pragma weak pthread_cond_broadcast = _Xthr_zero_stub_
 /* These are added for libGL */
-#pragma weak pthread_key_create = _Xthr_zero_stub_
-#pragma weak pthread_getspecific = _Xthr_zero_stub_
-#pragma weak pthread_setspecific = _Xthr_zero_stub_
+#pragma weak pthread_key_create = _Xthr_key_create_stub_
+#pragma weak pthread_getspecific = _Xthr_getspecific_stub_
+#pragma weak pthread_setspecific = _Xthr_setspecific_stub_
+#pragam weak pthread_once = _Xthr_once_stub_
 #endif	/* __GNUC__ */
 #if defined(_DECTHREADS_) || defined(linux)
 #pragma weak pthread_equal = _Xthr_equal_stub_	/* See Xthreads.h! */
@@ -158,3 +165,57 @@ _Xthr_zero_stub_()
 {
     return(0);
 }
+
+static int 
+_Xthr_once_stub_(void *id, void (*routine)(void))
+{
+    static int done = 0;
+    
+    if (!done) {
+	routine();
+	done++;
+    }
+}
+
+#include <errno.h>
+
+#define XTHR_KEYS_CHUNK 100
+
+static void **_Xthr_keys_ = NULL;
+static unsigned int _Xthr_last_key_ = 0;
+
+static int
+_Xthr_key_create_stub_(unsigned int *key, void (*destructor)(void *))
+{
+    void **tmp;
+
+    if ((_Xthr_last_key_ % XTHR_KEYS_CHUNK) == 0) {
+	tmp = recalloc(_Xthr_keys_, 1, 
+		       _Xthr_last_key_ + XTHR_KEYS_CHUNK*sizeof(void *));
+	if (tmp == NULL) {
+	    free(_Xthr_keys_);
+	    return ENOMEM;
+	}
+	_Xthr_keys_ = tmp;
+    }
+    *key = _Xthr_last_key_++;
+    return 0;
+}
+
+static int
+_Xthr_setspecific_stub_(unsigned int key, const void *value)
+{
+    if (_Xthr_last_key_ == 0 || key >= _Xthr_last_key_)
+	return EINVAL;
+    _Xthr_keys_[key] = value;
+    return 0;
+}
+
+static void *
+_Xthr_getspecific_stub_(unsigned int key)
+{
+    if (_Xthr_last_key_ == 0 || key >= _Xthr_last_key_)
+	return NULL;
+    return(_Xthr_keys_[key]);
+}
+
