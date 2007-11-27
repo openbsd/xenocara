@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: conf.c,v 1.13 2007/11/19 22:18:16 oga Exp $
+ * $Id: conf.c,v 1.14 2007/11/27 17:17:08 okan Exp $
  */
 
 #include "headers.h"
@@ -200,6 +200,7 @@ conf_setup(struct conf *c)
 	conf_bindname(c, "CM-1", "group1");
 	conf_bindname(c, "CM-2", "group2");
 	conf_bindname(c, "CM-3", "group3");
+	conf_bindname(c, "CM-4", "group4");
 	conf_bindname(c, "CM-5", "group5");
 	conf_bindname(c, "CM-6", "group6");
 	conf_bindname(c, "CM-7", "group7");
