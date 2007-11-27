@@ -685,7 +685,7 @@ Initialize (Widget request, Widget new, ArgList args, Cardinal *num_args)
 	   }
        }
 
-       if (!no_locale)
+       if (no_locale)
 #endif /* NO_I18N */
        {
 	   if (w->clock.font == NULL)
