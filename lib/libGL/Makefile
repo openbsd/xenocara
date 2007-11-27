@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.12 2007/11/26 20:47:35 todd Exp $
+# $OpenBSD: Makefile,v 1.13 2007/11/27 09:55:06 matthieu Exp $
 
 all: ${OBJS}
 LIB=	GL
@@ -38,13 +38,6 @@ CPPFLAGS+= \
 	-DPTHREADS \
 	-DHAVE_ALIAS \
 	-D_REENTRANT
-
-XENOCARA_BUILD_DRI?=	n
-
-.if ${XENOCARA_BUILD_DRI} == "y"
-CPPFLAGS+= \
-	-DGLX_DIRECT_RENDERING
-.endif
 
 .if ${MACHINE_ARCH} == "i386"
 CPPFLAGS += \
