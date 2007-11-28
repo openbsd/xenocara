@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: conf.c,v 1.14 2007/11/27 17:17:08 okan Exp $
+ * $Id: conf.c,v 1.15 2007/11/28 16:02:37 oga Exp $
  */
 
 #include "headers.h"
@@ -196,7 +196,7 @@ conf_setup(struct conf *c)
 	conf_bindname(c, "CM-n", "label");
 	conf_bindname(c, "CM-x", "delete");
 	conf_bindname(c, "CM-Escape", "groupselect");
-	conf_bindname(c, "CM-0", "group0");
+	conf_bindname(c, "CM-0", "nogroup");
 	conf_bindname(c, "CM-1", "group1");
 	conf_bindname(c, "CM-2", "group2");
 	conf_bindname(c, "CM-3", "group3");
