@@ -876,12 +876,10 @@
 ./etc/X11/xserver/zh_TW.utf8
 ./usr/X11R6/bin/Xnest
 ./usr/X11R6/bin/Xorg
-./usr/X11R6/bin/Xprt
 ./usr/X11R6/bin/Xvfb
 ./usr/X11R6/bin/kbd_mode
 ./usr/X11R6/bin/mmapr
 ./usr/X11R6/bin/mmapw
 ./usr/X11R6/bin/pcitweak
-./usr/X11R6/bin/xorgcfg
 ./usr/X11R6/bin/xorgconfig
 ./usr/X11R6/lib/X11/xserver

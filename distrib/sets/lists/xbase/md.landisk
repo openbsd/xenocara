@@ -436,8 +436,10 @@
 ./usr/X11R6/include/ft2build.h
 ./usr/X11R6/include/xorg
 ./usr/X11R6/lib/libGL.a
+./usr/X11R6/lib/libGL.so.6.0
 ./usr/X11R6/lib/libGLU.a
 ./usr/X11R6/lib/libGLw.a
+./usr/X11R6/lib/libX11.so.11.1
 ./usr/X11R6/lib/libXxf86dga.a
 ./usr/X11R6/lib/libXxf86dga.la
 ./usr/X11R6/man/cat1/glxgears.0
