@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: conf.c,v 1.15 2007/11/28 16:02:37 oga Exp $
+ * $Id: conf.c,v 1.16 2007/11/28 16:35:52 ian Exp $
  */
 
 #include "headers.h"
@@ -185,6 +185,7 @@ conf_setup(struct conf *c)
 	conf_bindname(c, "CM-Return", "terminal");
 	conf_bindname(c, "CM-Delete", "lock");
 	conf_bindname(c, "M-question", "exec");
+	conf_bindname(c, "CM-q", "exec_wm");
 	conf_bindname(c, "M-period", "ssh");
 	conf_bindname(c, "M-Return", "hide");
 	conf_bindname(c, "M-Down", "lower");
@@ -373,7 +374,8 @@ struct {
 	{ "prevgroup", kbfunc_client_prevgroup, 0, 0 },
 	{ "maximize", kbfunc_client_maximize, KBFLAG_NEEDCLIENT, 0 },
 	{ "vmaximize", kbfunc_client_vmaximize, KBFLAG_NEEDCLIENT, 0 },
-	{ "exec", kbfunc_exec, 0, 0 },
+	{ "exec", kbfunc_exec, 0, CWM_EXEC_PROGRAM },
+	{ "exec_wm", kbfunc_exec, 0, CWM_EXEC_WM },
 	{ "ssh", kbfunc_ssh, 0, 0 },
 	{ "terminal", kbfunc_term, 0, 0 },
 	{ "lock", kbfunc_lock, 0, 0 },

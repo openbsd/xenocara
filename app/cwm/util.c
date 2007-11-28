@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: util.c,v 1.1.1.1 2007/04/27 17:58:48 bernd Exp $
+ * $Id: util.c,v 1.2 2007/11/28 16:35:52 ian Exp $
  */
 
 #include "headers.h"
@@ -38,6 +38,22 @@ u_spawn(char *argstr)
 
 	return (0);
 }
+
+void
+exec_wm(char *argstr)
+{
+	char *args[MAXARGLEN], **ap = args;
+	char **end = &args[MAXARGLEN - 1];
+
+	while (ap < end && (*ap = strsep(&argstr, " \t")) != NULL)
+		ap++;
+
+	*ap = NULL;
+	setsid();
+	execvp(args[0], args);
+	err(1, args[0]);
+}
+
 
 int dirent_exists(char *filename) {
        struct stat buffer;

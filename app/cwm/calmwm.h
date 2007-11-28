@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: calmwm.h,v 1.12 2007/11/19 22:18:16 oga Exp $
+ * $Id: calmwm.h,v 1.13 2007/11/28 16:35:52 ian Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -208,6 +208,10 @@ enum kbtype {
 enum directions {
 	CWM_UP=0, CWM_DOWN, CWM_LEFT, CWM_RIGHT,
 };
+
+/* for cwm_exec */
+#define	CWM_EXEC_PROGRAM	0x1
+#define	CWM_EXEC_WM		0x2
 
 #define KBFLAG_NEEDCLIENT 0x01
 #define KBFLAG_FINDCLIENT 0x02
