@@ -54,8 +54,10 @@
 static pointer ppcMapVidMem(int, unsigned long, unsigned long, int flags);
 static void ppcUnmapVidMem(int, pointer, unsigned long);
 
+#ifdef __NetBSD__
 Bool xf86EnableIO(void);
 void xf86DisableIO(void);
+#endif
 
 void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
@@ -165,6 +167,7 @@ xf86PrivilegedInit(void)
 }
 #endif
 
+#ifdef __NetBSD__
 Bool xf86EnableIO()
 {
         int fd = xf86Info.screenFd;
@@ -193,3 +196,4 @@ void xf86DisableIO()
         }
 }
 
+#endif /* __NetBSD__ */
