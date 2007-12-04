@@ -1,0 +1,291 @@
+.\" radeonhd.man based on formatting used in the xf86-video-{ati,nv} radeon.man, nv.man
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.\"
+.\"
+.TH RADEONHD __drivermansuffix__ __vendorversion__
+.\"
+.\"
+.SH NAME
+radeonhd \- AMD GPG (ATI) R5xx/R6xx video driver
+.\"
+.\"
+.SH SYNOPSIS
+.nf
+.B "Section \*qDevice\*q"
+.BI "  Identifier \*q"  devname \*q
+.B  "  Driver \*qradeonhd\*q"
+\ \ ...
+.B EndSection
+.fi
+.\"
+.\"
+.SH DESCRIPTION
+.B radeonhd
+is an __xservername__ driver for AMD GPG (ATI) R5xx/R6xx based video cards.
+
+.B "RADEONHD is still very much work in progress."
+
+At the time of this writing,
+.B radeonhd
+has the following major limitations:
+.\".TP "\w'\fB\(bu\fR'u+1n"
+.TP 2
+\(bu
+.B NO
+support for 2D & 3D acceleration, no support for Xvideo.
+.TP
+\(bu
+No TV, Component, and HDMI connector support so far.
+.TP
+\(bu
+Suspend & Resume is pretty much untested. Often it just works, but your
+milage may vary.
+.TP
+\(bu
+After using the
+.I fglrx
+driver, the display can get very jittery with
+.BR radeonhd .
+A reboot fixes this problem in most
+cases, sometimes a powercycle is necessary.
+.PP
+A more up-to-date list can be found on the wiki page.
+.PP
+.\"
+.SH SUPPORTED HARDWARE
+The
+.B radeonhd
+driver supports video cards based on the following ATI chips:
+.\" The following list was generated from "X -logverbose 7" by the following command:
+.\" sed -n '/^\t[RM][A-Z0-9]\+ * : /{ s/\.$//; s/^\t\([A-Z0-9]\+\) \+: \(.*\)/.TP 8\n.B \1\n\2/; p};' /var/log/Xorg.0.log
+.\" The list replicates the output of RHDIdentify() in src/rhd_id.c.
+.TP 8
+.B RV505
+Radeon X1550, X1550 64bit
+.TP 8
+.B RV515
+Radeon X1300, X1550, X1600; FireGL V3300, V3350
+.TP 8
+.B RV516
+Radeon X1300, X1550, X1550 64-bit, X1600; FireMV 2250
+.TP 8
+.B R520
+Radeon X1800; FireGL V5300, V7200, V7300, V7350
+.TP 8
+.B RV530
+Radeon X1300 XT, X1600, X1600 Pro, X1650; FireGL V3400, V5200
+.TP 8
+.B RV535
+Radeon X1300, X1650
+.TP 8
+.B RV550
+Radeon X2300 HD
+.TP 8
+.B RV560
+Radeon X1650
+.TP 8
+.B RV570
+Radeon X1950, X1950 GT; FireGL V7400
+.TP 8
+.B R580
+Radeon X1900, X1950; AMD Stream Processor
+.TP 8
+.B R600
+Radeon HD 2900 GT/Pro/XT; FireGL V7600/V8600/V8650
+.TP 8
+.B RV610
+Radeon HD 2350, HD 2400 Pro/XT, HD 2400 Pro AGP; FireGL V4000
+.TP 8
+.B RV630
+Radeon HD 2600 LE/Pro/XT, HD 2600 Pro/XT AGP; Gemini RV630; FireGL V3600/V5600
+.TP 8
+.B M52
+Mobility Radeon X1300
+.TP 8
+.B M54
+Mobility Radeon X1400; M54-GL
+.TP 8
+.B M56
+Mobility Radeon X1600; Mobility FireGL V5200
+.TP 8
+.B M58
+Mobility Radeon X1800, X1800 XT; Mobility FireGL V7100, V7200
+.TP 8
+.B M62
+Mobility Radeon X1350
+.TP 8
+.B M64
+Mobility Radeon X1450, X2300
+.TP 8
+.B M66
+Mobility Radeon X1700, X1700 XT; FireGL V5250
+.TP 8
+.B M68
+Mobility Radeon X1900
+.TP 8
+.B M71
+Mobility Radeon HD 2300
+.TP 8
+.B M72
+Mobility Radeon HD 2400; Radeon E2400
+.TP 8
+.B M74
+Mobility Radeon HD 2400 XT
+.TP 8
+.B M76
+Mobility Radeon HD 2600; (Gemini ATI) Mobility Radeon HD 2600 XT
+.TP 8
+.B RS690
+Radeon X1200
+.TP 8
+.B RS740
+RS740, RS740M
+.\"
+.\"
+.PP
+.SH CONFIGURATION DETAILS
+Please refer to __xconfigfile__(__filemansuffix__) for general
+configuration details.  This section only covers configuration options
+specific to this driver. Some options may be deprecated and considered to be
+removed or replaced by better implementations soon.
+.\"
+.TP
+.BI "Option \*qSWcursor\*q \*q" boolean \*q
+Enable or disable the software cursor. The hardware cursor is inactive
+when the software cursor is enabled. The default is
+.BR off .
+.TP
+.BI "Option \*qNoAccel\*q
+Disable all hardware accleration. The default is to
+.B enable
+hardware acceleration.
+.br
+.B Acceleration is not implemented yet, so this option is ignored
+.B for the moment.
+.TP
+.BI "Option \*qShadowFB\*q \*q" boolean \*q
+Enable or disable shadow framebuffer support. This greatly improves the
+speed of unaccelerated drivers. The default is
+.B on
+as long as acceleration is not supported.
+.TP
+.BI "Option \*qNoRandr\*q
+Disable RandR 1.2 support. This turns the driver back to use standard
+modesetting behavior. The default is to
+.B enable
+RandR 1.2 support.
+.TP
+.BI "Option \*qForceReduced\*q \*q" boolean \*q
+Force the use of reduced blanking modes. Use this if your LCD monitor does not
+provide correct EDID data and you need a reduced blanking mode to drive a high
+resolution mode over a single link DVI connection. The default is
+.BR off .
+.TP
+.BI "Option \*qIgnoreHPD\*q \*q" boolean \*q
+Ignore or rely on hot plug detection (HPD) to work correctly. If the connector
+table is broken this might help to find CRTs attached to a DVI-I connector
+via a VGA-to-DVI adaptor. The default is
+.BR off .
+.TP
+.BI "Option \*qRRUseXF86Edid\*q \*q" boolean \*q
+.IR "RandR modesetting only" .
+.br
+Enable or disable the use of xf86OutputGetEDID() and xf86OutputGetEDIDModes()
+instead of the default routines from
+.BR radeonhd ,
+which are better adapted to the chipset. Panels will often fail to work with
+these calls. The default is
+.BR off .
+.br
+Considered deprecated. Report if needed for your configuration.
+.TP
+.BI "Option \*qRROutputOrder\*q \*q" "list-of-outputs" \*q
+.IR "RandR modesetting only" .
+.br
+Several legacy application rely on the Xinerama extension to determine the
+primary screen. RandR returns the viewport displayed on the first attached
+output of the internal table as the first Xinerama screen.
+If your outputs are ordered in the wrong way, you can reorder them by adding
+their names (separated by spaces or commas) to the
+.IR list-of-outputs .
+Typically only the first (primary) output has to be listed, remaining
+outputs are added automatically. The default is
+.BR none .
+.TP
+.BI "Option \*qIgnoreConnector\*q \*q" string \*q
+.IR "Standard (non-RandR) modesetting only" .
+.br
+Connector to be ignored during non-RandR modesetting. The default is
+.BR none .
+.TP
+.BI "Option \*qUseConfiguredMonitor\*q \*q" boolean \*q
+.IR "Standard (non-RandR) modesetting only" .
+.br
+Use or ignore the monitor section in
+.IR xorg.conf .
+In standard modesetting
+.B radeonhd
+ignores the EDID data if a monitor section is configured.  This is different
+to what most drivers behave like and a common source of configuration problems.
+Thus the default is
+.B off
+(i.e. ignore).
+.\"
+.\"
+.SH KNOWN BUGS
+As the
+.B radeonhd
+driver is still in an early stage of development, many non-obvious things
+do not work yet. A list of major known bugs is maintained on the wiki.
+Other places to check for known bugs and solutions are the bugtracker at
+.br
+.nf
+\%https://bugs.freedesktop.org/query.cgi?product=xorg&component=Driver/radeonhd
+.br
+.fi
+and the mailing list archives at
+\%http://lists.opensuse.org/radeonhd/
+.PP
+radeonhd development caused a few bugs in __xservername__ and a number
+of bugs in xrandr(__appmansuffix__) to be discovered. If you are using
+xrandr(__appmansuffix__) versions older than 2007-11-10, you should try
+updating xrandr(__appmansuffix__).
+.br
+Alternatively, you can try to always specify different CRTCs for
+all monitors by explicitly selecting them with
+.I --crtc [0|1]
+on the xrandr(__appmansuffix__) command line.
+.\"
+.\"
+.SH SEE ALSO
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+.IP " 1." 4
+The official radeonhd wiki
+.RS 4
+\%http://wiki.x.org/wiki/radeonhd
+.RE
+.IP " 2." 4
+The radeonhd mailing list
+.RS 4
+\%http://lists.opensuse.org/radeonhd/
+.RE
+.IP " 3." 4
+Overview about radeonhd development code
+.RS 4
+\%http://gitweb.freedesktop.org/?p=xorg/driver/xf86-video-radeonhd
+.RE
+.IP " 4." 4
+Query the bugtracker for radeonhd bugs
+.RS 4
+.nf
+\%https://bugs.freedesktop.org/query.cgi?\:product=\:xorg&\:component=\:Driver/radeonhd
+.fi
+.RE
+.\"
+.\"
+.SH AUTHORS
+Driver written by Egbert Eich, Luc Verhaegen, Matthias Hopf, and others.
+.PP
+Man page written by Hans Ulrich Niedermann, Matthias Hopf, and others.
+.\" vim: syntax=nroff

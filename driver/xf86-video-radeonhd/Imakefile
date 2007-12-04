@@ -1,0 +1,9 @@
+#include <Server.tmpl>
+
+#define IHaveSubdirs
+
+SUBDIRS = src man utils/conntest
+DEFAULT_BUILD_SUBDIRS = src man
+
+MakeSubdirs($(DEFAULT_BUILD_SUBDIRS))
+ForceSubdirs($(DEFAULT_BUILD_SUBDIRS))

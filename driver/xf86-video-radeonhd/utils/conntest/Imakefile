@@ -1,0 +1,17 @@
+#include <Server.tmpl>
+#include "../../RadeonHD.tmpl"
+
+SRCS = rhd_conntest.c git_version.h
+OBJS = rhd_conntest.o
+
+INCLUDES = -I$(TOP)/src/AtomBios/includes
+
+DEFINES  = $(INCLUDES) \
+	$(RHD_GIT_DEFINES) \
+	$(RHD_VERSION_DEFINES)
+
+SYS_LIBS = -lpci -lz
+
+NormalProgramTarget(rhd_conntest,$(OBJS),,,$(SYS_LIBS))
+AllTarget(ProgramTargetName(rhd_conntest))
+DependTarget()
