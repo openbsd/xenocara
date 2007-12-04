@@ -1,0 +1,3 @@
+SUBDIRS=i810
+
+.include <bsd.subdir.mk>
