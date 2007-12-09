@@ -259,6 +259,8 @@
 ./usr/X11R6/lib/modules/libvbe.so
 ./usr/X11R6/lib/modules/libvgahw.la
 ./usr/X11R6/lib/modules/libvgahw.so
+./usr/X11R6/lib/modules/libwfb.la
+./usr/X11R6/lib/modules/libwfb.so
 ./usr/X11R6/lib/modules/libxaa.la
 ./usr/X11R6/lib/modules/libxaa.so
 ./usr/X11R6/lib/modules/libxf1bpp.la
