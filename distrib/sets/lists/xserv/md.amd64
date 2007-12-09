@@ -208,6 +208,8 @@
 ./usr/X11R6/lib/modules/drivers/r128_drv.so
 ./usr/X11R6/lib/modules/drivers/radeon_drv.la
 ./usr/X11R6/lib/modules/drivers/radeon_drv.so
+./usr/X11R6/lib/modules/drivers/radeonhd_drv.la
+./usr/X11R6/lib/modules/drivers/radeonhd_drv.so
 ./usr/X11R6/lib/modules/drivers/rendition_drv.la
 ./usr/X11R6/lib/modules/drivers/rendition_drv.so
 ./usr/X11R6/lib/modules/drivers/s3_drv.la
@@ -383,6 +385,7 @@
 ./usr/X11R6/man/man4/glint.4
 ./usr/X11R6/man/man4/i128.4
 ./usr/X11R6/man/man4/i810.4
+./usr/X11R6/man/man4/intel.4
 ./usr/X11R6/man/man4/js_x.4
 ./usr/X11R6/man/man4/kbd.4
 ./usr/X11R6/man/man4/magictouch.4
@@ -395,6 +398,7 @@
 ./usr/X11R6/man/man4/palmax.4
 ./usr/X11R6/man/man4/r128.4
 ./usr/X11R6/man/man4/radeon.4
+./usr/X11R6/man/man4/radeonhd.4
 ./usr/X11R6/man/man4/rendition.4
 ./usr/X11R6/man/man4/s3virge.4
 ./usr/X11R6/man/man4/savage.4

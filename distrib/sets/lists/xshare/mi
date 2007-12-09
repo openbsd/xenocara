@@ -2547,7 +2547,6 @@
 ./usr/X11R6/man/man3/XwcTextPerCharExtents.3
 ./usr/X11R6/man/man3/XwcTextPropertyToTextList.3
 ./usr/X11R6/man/man3/libXp.3
-./usr/X11R6/man/man4/intel.4
 ./usr/X11R6/man/man5/SecurityPolicy.5
 ./usr/X11R6/man/man5/fonts-conf.5
 ./usr/X11R6/man/man7/Consortium.7
