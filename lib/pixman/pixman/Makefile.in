@@ -37,10 +37,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-
-# mmx code
 @USE_MMX_TRUE@am__append_1 = libpixman-mmx.la
-@USE_MMX_TRUE@am__append_2 = libpixman-mmx.la
 subdir = pixman
 DIST_COMMON = $(libpixmaninclude_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -62,12 +59,11 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 @USE_MMX_TRUE@am__DEPENDENCIES_1 = libpixman-mmx.la
-libpixman_1_la_DEPENDENCIES = libpixmanwrapper.la \
-	$(am__DEPENDENCIES_1)
+libpixman_1_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_libpixman_1_la_OBJECTS = pixman-region.lo pixman-image.lo \
-	pixman-compose.lo pixman-pict.lo pixman-utils.lo \
-	pixman-edge.lo pixman-trap.lo pixman-compute-region.lo \
-	pixman-timer.lo
+	pixman-compose.lo pixman-compose-accessors.lo pixman-pict.lo \
+	pixman-utils.lo pixman-edge.lo pixman-edge-accessors.lo \
+	pixman-trap.lo pixman-compute-region.lo pixman-timer.lo
 libpixman_1_la_OBJECTS = $(am_libpixman_1_la_OBJECTS)
 am__DEPENDENCIES_2 =
 @USE_MMX_TRUE@libpixman_mmx_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
@@ -76,11 +72,6 @@ am__libpixman_mmx_la_SOURCES_DIST = pixman-mmx.c pixman-mmx.h
 @USE_MMX_TRUE@	libpixman_mmx_la-pixman-mmx.lo
 libpixman_mmx_la_OBJECTS = $(am_libpixman_mmx_la_OBJECTS)
 @USE_MMX_TRUE@am_libpixman_mmx_la_rpath =
-libpixmanwrapper_la_LIBADD =
-am_libpixmanwrapper_la_OBJECTS =  \
-	libpixmanwrapper_la-pixman-compose.lo \
-	libpixmanwrapper_la-pixman-edge.lo
-libpixmanwrapper_la_OBJECTS = $(am_libpixmanwrapper_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -92,11 +83,9 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libpixman_1_la_SOURCES) $(libpixman_mmx_la_SOURCES) \
-	$(libpixmanwrapper_la_SOURCES)
+SOURCES = $(libpixman_1_la_SOURCES) $(libpixman_mmx_la_SOURCES)
 DIST_SOURCES = $(libpixman_1_la_SOURCES) \
-	$(am__libpixman_mmx_la_SOURCES_DIST) \
-	$(libpixmanwrapper_la_SOURCES)
+	$(am__libpixman_mmx_la_SOURCES_DIST)
 libpixmanincludeHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(libpixmaninclude_HEADERS)
 ETAGS = etags
@@ -165,6 +154,8 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 USE_MMX_FALSE = @USE_MMX_FALSE@
 USE_MMX_TRUE = @USE_MMX_TRUE@
+USE_SSE_FALSE = @USE_SSE_FALSE@
+USE_SSE_TRUE = @USE_SSE_TRUE@
 VERSION = @VERSION@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
@@ -211,17 +202,18 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LTLIBRARIES = libpixman-1.la
 libpixman_1_la_LDFLAGS = -version-info $(LT_VERSION_INFO)
-libpixman_1_la_LIBADD = @DEP_LIBS@ -lm libpixmanwrapper.la \
-	$(am__append_2)
+libpixman_1_la_LIBADD = @DEP_LIBS@ -lm $(am__append_1)
 libpixman_1_la_SOURCES = \
 	pixman.h		\
 	pixman-region.c		\
 	pixman-private.h	\
 	pixman-image.c		\
 	pixman-compose.c	\
+	pixman-compose-accessors.c	\
 	pixman-pict.c		\
 	pixman-utils.c		\
 	pixman-edge.c		\
+	pixman-edge-accessors.c		\
 	pixman-edge-imp.h	\
 	pixman-trap.c		\
 	pixman-compute-region.c \
@@ -230,13 +222,8 @@ libpixman_1_la_SOURCES = \
 libpixmanincludedir = $(includedir)/pixman-1/
 libpixmaninclude_HEADERS = pixman.h
 
-# wrapper library
-noinst_LTLIBRARIES = libpixmanwrapper.la $(am__append_1)
-libpixmanwrapper_la_SOURCES = \
-	pixman-compose.c	\
-	pixman-edge.c
-
-libpixmanwrapper_la_CFLAGS = $(DEP_CFLAGS) -DPIXMAN_FB_ACCESSORS
+# mmx code
+@USE_MMX_TRUE@noinst_LTLIBRARIES = libpixman-mmx.la
 @USE_MMX_TRUE@libpixman_mmx_la_SOURCES = \
 @USE_MMX_TRUE@	pixman-mmx.c \
 @USE_MMX_TRUE@	pixman-mmx.h
@@ -316,8 +303,6 @@ libpixman-1.la: $(libpixman_1_la_OBJECTS) $(libpixman_1_la_DEPENDENCIES)
 	$(LINK) -rpath $(libdir) $(libpixman_1_la_LDFLAGS) $(libpixman_1_la_OBJECTS) $(libpixman_1_la_LIBADD) $(LIBS)
 libpixman-mmx.la: $(libpixman_mmx_la_OBJECTS) $(libpixman_mmx_la_DEPENDENCIES) 
 	$(LINK) $(am_libpixman_mmx_la_rpath) $(libpixman_mmx_la_LDFLAGS) $(libpixman_mmx_la_OBJECTS) $(libpixman_mmx_la_LIBADD) $(LIBS)
-libpixmanwrapper.la: $(libpixmanwrapper_la_OBJECTS) $(libpixmanwrapper_la_DEPENDENCIES) 
-	$(LINK)  $(libpixmanwrapper_la_LDFLAGS) $(libpixmanwrapper_la_OBJECTS) $(libpixmanwrapper_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -326,10 +311,10 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_mmx_la-pixman-mmx.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixmanwrapper_la-pixman-compose.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixmanwrapper_la-pixman-edge.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-compose-accessors.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-compose.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-compute-region.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-edge-accessors.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-edge.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-image.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-pict.Plo@am__quote@
@@ -365,20 +350,6 @@ libpixman_mmx_la-pixman-mmx.lo: pixman-mmx.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-mmx.c' object='libpixman_mmx_la-pixman-mmx.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_mmx_la_CFLAGS) $(CFLAGS) -c -o libpixman_mmx_la-pixman-mmx.lo `test -f 'pixman-mmx.c' || echo '$(srcdir)/'`pixman-mmx.c
-
-libpixmanwrapper_la-pixman-compose.lo: pixman-compose.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixmanwrapper_la_CFLAGS) $(CFLAGS) -MT libpixmanwrapper_la-pixman-compose.lo -MD -MP -MF "$(DEPDIR)/libpixmanwrapper_la-pixman-compose.Tpo" -c -o libpixmanwrapper_la-pixman-compose.lo `test -f 'pixman-compose.c' || echo '$(srcdir)/'`pixman-compose.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixmanwrapper_la-pixman-compose.Tpo" "$(DEPDIR)/libpixmanwrapper_la-pixman-compose.Plo"; else rm -f "$(DEPDIR)/libpixmanwrapper_la-pixman-compose.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-compose.c' object='libpixmanwrapper_la-pixman-compose.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixmanwrapper_la_CFLAGS) $(CFLAGS) -c -o libpixmanwrapper_la-pixman-compose.lo `test -f 'pixman-compose.c' || echo '$(srcdir)/'`pixman-compose.c
-
-libpixmanwrapper_la-pixman-edge.lo: pixman-edge.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixmanwrapper_la_CFLAGS) $(CFLAGS) -MT libpixmanwrapper_la-pixman-edge.lo -MD -MP -MF "$(DEPDIR)/libpixmanwrapper_la-pixman-edge.Tpo" -c -o libpixmanwrapper_la-pixman-edge.lo `test -f 'pixman-edge.c' || echo '$(srcdir)/'`pixman-edge.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixmanwrapper_la-pixman-edge.Tpo" "$(DEPDIR)/libpixmanwrapper_la-pixman-edge.Plo"; else rm -f "$(DEPDIR)/libpixmanwrapper_la-pixman-edge.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-edge.c' object='libpixmanwrapper_la-pixman-edge.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixmanwrapper_la_CFLAGS) $(CFLAGS) -c -o libpixmanwrapper_la-pixman-edge.lo `test -f 'pixman-edge.c' || echo '$(srcdir)/'`pixman-edge.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
