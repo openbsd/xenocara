@@ -57,6 +57,9 @@
 /* use MMX compiler intrinsics */
 #undef USE_MMX
 
+/* use SSE compiler intrinsics */
+#undef USE_SSE
+
 /* Version number of package */
 #undef VERSION
 

@@ -37,6 +37,28 @@
 #  define FUNC     ((const char*) ("???"))
 #endif
 
+#ifndef INT16_MIN
+# define INT16_MIN              (-32767-1)
+# define INT16_MAX              (32767)
+#endif
+
+#ifndef INT32_MIN
+# define INT32_MIN              (-2147483647-1)
+# define INT32_MAX              (2147483647)
+#endif
+
+#ifndef UINT32_MIN
+# define UINT32_MIN             (0)
+# define UINT32_MAX             (4294967295U)
+#endif
+
+#ifndef M_PI
+# define M_PI			3.14159265358979323846
+#endif
+
+#ifdef _MSC_VER
+#define inline __inline
+#endif
 
 #define FB_SHIFT    5
 #define FB_UNIT     (1 << FB_SHIFT)
@@ -47,6 +69,8 @@
 /* Memory allocation helpers */
 void *pixman_malloc_ab (unsigned int n, unsigned int b);
 void *pixman_malloc_abc (unsigned int a, unsigned int b, unsigned int c);
+pixman_bool_t pixman_multiply_overflows_int (unsigned int a, unsigned int b);
+pixman_bool_t pixman_addition_overflows_int (unsigned int a, unsigned int b);
 
 #if DEBUG
 
@@ -774,6 +798,8 @@ pixman_rasterize_edges_accessors (pixman_image_t *image,
 				  pixman_fixed_t	b);
 
 
+#ifdef PIXMAN_TIMING
+
 /* Timing */
 static inline uint64_t
 oil_profile_stamp_rdtsc (void)
@@ -817,5 +843,6 @@ void pixman_timer_register (PixmanTimer *timer);
         timer##tname.total += OIL_STAMP() - begin##tname;		\
     }
 
+#endif /* PIXMAN_TIMING */
 
 #endif /* PIXMAN_PRIVATE_H */

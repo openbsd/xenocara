@@ -28,13 +28,12 @@
  *
  * Based on work by Owen Taylor
  */
+
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
 
 #ifdef USE_MMX
-
-#if defined(__amd64__) || defined(__x86_64__)
-#define USE_SSE
-#endif
 
 #include <mmintrin.h>
 #ifdef USE_SSE

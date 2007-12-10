@@ -45,7 +45,10 @@ SOFTWARE.
 
 ******************************************************************/
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
+
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
@@ -2515,6 +2518,8 @@ pixman_region_init_rects (pixman_region16_t *region,
 {
     int overlap;
 
+    /* if it's 1, then we just want to set the extents, so call
+     * the existing method. */
     if (count == 1) {
        pixman_region_init_rect(region,
                                boxes[0].x1,
@@ -2525,6 +2530,15 @@ pixman_region_init_rects (pixman_region16_t *region,
     }
 
     pixman_region_init(region);
+
+    /* if it's 0, don't call pixman_rect_alloc -- 0 rectangles is
+     * a special case, and causing pixman_rect_alloc would cause
+     * us to leak memory (because the 0-rect case should be the
+     * static pixman_region_emptyData data).
+     */
+    if (count == 0)
+        return TRUE;
+
     if (!pixman_rect_alloc(region, count))
 	return FALSE;
 

@@ -452,7 +452,7 @@ typedef enum {
 /* 1bpp formats */
     PIXMAN_a1 =		PIXMAN_FORMAT(1,PIXMAN_TYPE_A,1,0,0,0),
     
-    PIXMAN_g1 =		PIXMAN_FORMAT(1,PIXMAN_TYPE_GRAY,0,0,0,0),
+    PIXMAN_g1 =		PIXMAN_FORMAT(1,PIXMAN_TYPE_GRAY,0,0,0,0)
 } pixman_format_code_t;
 
 /* Constructors */
@@ -498,7 +498,7 @@ pixman_bool_t   pixman_image_set_filter              (pixman_image_t            
 void            pixman_image_set_filter_params       (pixman_image_t               *image,
 						      pixman_fixed_t               *params,
 						      int                           n_params);
-void		pixman_image_set_source_cliping      (pixman_image_t		   *image,
+void		pixman_image_set_source_clipping     (pixman_image_t		   *image,
 						      pixman_bool_t                 source_clipping);
 void            pixman_image_set_alpha_map           (pixman_image_t               *image,
 						      pixman_image_t               *alpha_map,

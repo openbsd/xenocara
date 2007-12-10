@@ -20,7 +20,9 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -283,9 +285,32 @@ create_bits (pixman_format_code_t format,
     int stride;
     int buf_size;
     int bpp;
-    
+
+    /* what follows is a long-winded way, avoiding any possibility of integer
+     * overflows, of saying:
+     * stride = ((width * bpp + FB_MASK) >> FB_SHIFT) * sizeof (uint32_t);
+     */
+
     bpp = PIXMAN_FORMAT_BPP (format);
-    stride = ((width * bpp + FB_MASK) >> FB_SHIFT) * sizeof (uint32_t);
+    if (pixman_multiply_overflows_int (width, bpp))
+	return NULL;
+
+    stride = width * bpp;
+    if (pixman_addition_overflows_int (stride, FB_MASK))
+	return NULL;
+
+    stride += FB_MASK;
+    stride >>= FB_SHIFT;
+
+#if FB_SHIFT < 2
+    if (pixman_multiply_overflows_int (stride, sizeof (uint32_t)))
+	return NULL;
+#endif
+    stride *= sizeof (uint32_t);
+
+    if (pixman_multiply_overflows_int (height, stride))
+	return NULL;
+
     buf_size = height * stride;
 
     if (rowstride_bytes)
@@ -325,7 +350,7 @@ pixman_image_create_bits (pixman_format_code_t  format,
     return_val_if_fail (bits == NULL ||
 			(rowstride_bytes % sizeof (uint32_t)) == 0, NULL); 
 
-    if (!bits)
+    if (!bits && width && height)
     {
 	free_me = bits = create_bits (format, width, height, &rowstride_bytes);
 	if (!bits)
@@ -334,8 +359,11 @@ pixman_image_create_bits (pixman_format_code_t  format,
     
     image = allocate_image();
 
-    if (!image)
+    if (!image) {
+	if (free_me)
+	    free (free_me);
 	return NULL;
+    }
     
     image->type = BITS;
     image->bits.format = format;

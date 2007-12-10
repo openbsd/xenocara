@@ -23,7 +23,9 @@
  * SOFTWARE.
  */
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
 
 #include <stdlib.h>
 #include <string.h>
@@ -2878,7 +2880,7 @@ static void fbFetchSolid(bits_image_t * pict, int x, int y, int width, uint32_t 
 static void fbFetch(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
     uint32_t *bits;
-    uint32_t stride;
+    int32_t stride;
     fetchProc fetch = fetchProcForPicture(pict);
     const pixman_indexed_t * indexed = pict->indexed;
     
@@ -3558,7 +3560,7 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
 static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
     uint32_t     *bits;
-    uint32_t    stride;
+    int32_t    stride;
     fetchPixelProc   fetch;
     pixman_vector_t	v;
     pixman_vector_t  unit;
@@ -4091,7 +4093,7 @@ static void fbFetchExternalAlpha(bits_image_t * pict, int x, int y, int width, u
 static void fbStore(bits_image_t * pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t *bits;
-    uint32_t stride;
+    int32_t stride;
     storeProc store = storeProcForPicture(pict);
     const pixman_indexed_t * indexed = pict->indexed;
     
@@ -4105,7 +4107,7 @@ static void fbStore(bits_image_t * pict, int x, int y, int width, uint32_t *buff
 static void fbStoreExternalAlpha(bits_image_t * pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t *bits, *alpha_bits;
-    uint32_t stride, astride;
+    int32_t stride, astride;
     int ax, ay;
     storeProc store;
     storeProc astore;
@@ -4161,7 +4163,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     unsigned int srcClass = SOURCE_IMAGE_CLASS_UNKNOWN;
     unsigned int maskClass = SOURCE_IMAGE_CLASS_UNKNOWN;
     uint32_t *bits;
-    uint32_t stride;
+    int32_t stride;
     int xoff, yoff;
     
     if (data->op == PIXMAN_OP_CLEAR)
