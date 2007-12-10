@@ -1866,26 +1866,17 @@ MouseConvert(InputInfoPtr pInfo, int first, int num, int v0, int v1, int v2,
 
 /**********************************************************************
  *
- * FlushButtons -- send button up events for sanity.
+ * FlushButtons -- reset button states.
  *
  **********************************************************************/
 
 static void
 FlushButtons(MouseDevPtr pMse)
 {
-
-    /* If no button down is pending xf86PostButtonEvent()
-     * will discard them. So we are on the safe side. */
-
     int i, blocked;
 
     pMse->lastButtons = 0;
     pMse->lastMappedButtons = 0;
-
-    blocked = xf86BlockSIGIO ();
-    for (i = 1; i <= 5; i++)
-	xf86PostButtonEvent(pMse->device,0,i,0,0,0);
-    xf86UnblockSIGIO (blocked);
 }
 
 /**********************************************************************
