@@ -928,7 +928,7 @@ xf86scanpci(int flags)
      * result in an endless recursion if platform/OS specific PCI
      * bus probing code calls this function from with in it.
      */
-    if (done || pci_devp)
+    if (done || (pci_devp && pci_devp[0]))
 	return pci_devp;
 
     done = TRUE;
