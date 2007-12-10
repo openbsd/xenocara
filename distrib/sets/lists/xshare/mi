@@ -667,15 +667,6 @@
 ./usr/X11R6/include/freetype2/freetype/ttunpat.h
 ./usr/X11R6/include/pixman-1
 ./usr/X11R6/include/pixman-1/pixman.h
-./usr/X11R6/include/xorg/hotplug.h
-./usr/X11R6/include/xorg/wfbrename.h
-./usr/X11R6/include/xorg/xf86Crtc.h
-./usr/X11R6/include/xorg/xf86Modes.h
-./usr/X11R6/include/xorg/xf86Optrec.h
-./usr/X11R6/include/xorg/xf86Parser.h
-./usr/X11R6/include/xorg/xf86RandR12.h
-./usr/X11R6/include/xorg/xf86Rename.h
-./usr/X11R6/include/xorg/xkbsrv.h
 ./usr/X11R6/lib/X11/config
 ./usr/X11R6/lib/X11/config/Amoeba.cf
 ./usr/X11R6/lib/X11/config/DGUX.cf

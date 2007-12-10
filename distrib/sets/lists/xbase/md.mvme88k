@@ -25,6 +25,15 @@
 ./usr/X11R6/include/freetype2/freetype/ftpfr.h
 ./usr/X11R6/include/freetype2/freetype/ftwinfnt.h
 ./usr/X11R6/include/ft2build.h
+./usr/X11R6/include/xorg/hotplug.h
+./usr/X11R6/include/xorg/wfbrename.h
+./usr/X11R6/include/xorg/xf86Crtc.h
+./usr/X11R6/include/xorg/xf86Modes.h
+./usr/X11R6/include/xorg/xf86Optrec.h
+./usr/X11R6/include/xorg/xf86Parser.h
+./usr/X11R6/include/xorg/xf86RandR12.h
+./usr/X11R6/include/xorg/xf86Rename.h
+./usr/X11R6/include/xorg/xkbsrv.h
 ./usr/X11R6/lib/X11/xkb/README
 ./usr/X11R6/lib/X11/xkb/README.config
 ./usr/X11R6/lib/X11/xkb/README.enhancing
