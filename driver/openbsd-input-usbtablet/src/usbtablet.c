@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.2 2007/04/01 19:07:36 matthieu Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.3 2007/12/11 23:56:08 sthen Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -427,12 +427,10 @@ UsbTabletOutOfProx(USBTDevicePtr prx)
 				   ods->xTilt, ods->yTilt);
 		prx->state.buttons = 0;
 	}
-	if (!xf86IsCorePointer(prx->info->dev)) {
-		DBG(1, ErrorF("xf86USBTSendEvents: out proximity\n"));
-		xf86PostProximityEvent(prx->info->dev, 0, 0, 5, 
-				       ods->x, ods->y, ods->pressure,
-				       ods->xTilt, ods->yTilt);
-	}
+	DBG(1, ErrorF("xf86USBTSendEvents: out proximity\n"));
+	xf86PostProximityEvent(prx->info->dev, 0, 0, 5, 
+			       ods->x, ods->y, ods->pressure,
+			       ods->xTilt, ods->yTilt);
 }
 
 static void
@@ -445,12 +443,10 @@ UsbTabletIntoProx(USBTDevicePtr prx, USBTState *ds)
 
 	DBG(1, ErrorF("Into proximity %s\n", prx->info->name));
 
-	if (!xf86IsCorePointer(prx->info->dev)) {
-		DBG(1, ErrorF("xf86USBTSendEvents: in proximity\n"));
-		xf86PostProximityEvent(prx->info->dev, 1, 0, 5, 
-				       ds->x, ds->y, ds->pressure,
-				       ds->xTilt, ds->yTilt);
-	}
+	DBG(1, ErrorF("xf86USBTSendEvents: in proximity\n"));
+	xf86PostProximityEvent(prx->info->dev, 1, 0, 5, 
+			       ds->x, ds->y, ds->pressure,
+			       ds->xTilt, ds->yTilt);
 	
 }
 
@@ -480,6 +476,7 @@ static void
 UsbTabletSendEvents(InputInfoPtr pInfo, int invert, USBTState *ds)
 {
 	USBTDevicePtr	priv = (USBTDevicePtr)pInfo->private;
+	USBTCommonPtr	comm = priv->comm;
 	USBTState	*ods = &priv->state;
 	int		is_abs;
 	int		rx, ry, rz, rtx, rty;
@@ -508,7 +505,9 @@ UsbTabletSendEvents(InputInfoPtr pInfo, int invert, USBTState *ds)
 		return;
 	}
 	is_abs = 1;
-	rx = ds->x; ry = ds->y; rz = ds->pressure; 
+	/* XXX scaling done here, since Xorg 7.3 does not call UsbTabletConvert */
+	rx = ds->x * comm->factorX; ry = ds->y * comm->factorY;
+	rz = ds->pressure; 
 	rtx = ds->xTilt; rty = ds->yTilt;
 
 	if (rx != ods->x || ry != ods->y || rz != ods->pressure ||
