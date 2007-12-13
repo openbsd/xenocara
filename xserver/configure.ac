@@ -26,7 +26,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.57)
-AC_INIT([xorg-server], 1.4, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+AC_INIT([xorg-server], 1.4.0.90, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([dist-bzip2 foreign])
 AM_MAINTAINER_MODE
@@ -608,6 +608,7 @@ XTRANS_CONNECTION_FLAGS
 
 # Secure RPC detection macro from xtrans.m4
 XTRANS_SECURE_RPC_FLAGS
+AM_CONDITIONAL(SECURE_RPC, [test "x$SECURE_RPC" = xyes])
 
 AM_CONDITIONAL(INT10_VM86, [test "x$INT10" = xvm86])
 AM_CONDITIONAL(INT10_X86EMU, [test "x$INT10" = xx86emu])
@@ -1638,7 +1639,9 @@ AM_CONDITIONAL([SOLARIS_USL_CONSOLE], [test "x$solaris_usl_console" = xyes])
 AM_CONDITIONAL([SOLARIS_ASM_INLINE], [test "x$solaris_asm_inline" = xyes])
 AM_CONDITIONAL([BUILD_DARWIN],[test "X$build_darwin" = Xyes])
 AM_CONDITIONAL([XQUARTZ],[test "X$XQUARTZ" = Xyes])
-AM_CONDITIONAL(DGA, [test "x$DGA" = xyes])
+AM_CONDITIONAL([DGA], [test "x$DGA" = xyes])
+AM_CONDITIONAL([XF86MISC], [test "x$XF86MISC" = xyes])
+AM_CONDITIONAL([XF86VIDMODE], [test "x$XF86VIDMODE" = xyes])
 
 dnl legacy fb support
 test "x$MFB" = xauto && MFB="$XORG"
