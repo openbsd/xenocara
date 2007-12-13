@@ -1,2 +1,2 @@
 #define MROP McopyInverted
-#include "./afbblt.c"
+#include "../../afb/afbblt.c"

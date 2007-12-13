@@ -1,2 +1,2 @@
 #define LSBFIRST
-#include "./xaaTEGlyph.c"
+#include "../../../../hw/xfree86/xaa/xaaTEGlyph.c"

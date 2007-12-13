@@ -1,2 +1,2 @@
 #define XAAReverseBitOrder xf86ReverseBitOrder
-#include "./../xaa/xaaBitOrder.c"
+#include "../../../../hw/xfree86/ramdac/../xaa/xaaBitOrder.c"

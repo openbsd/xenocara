@@ -1,2 +1,2 @@
 #define RROP GXcopy
-#include "../cfb/cfbsolid.c"
+#include "../../cfb/cfbsolid.c"

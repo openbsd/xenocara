@@ -1,2 +1,2 @@
 #include "mfbmap.h"
-#include "../../../mfb/mfbimage.c"
+#include "../../../../mfb/mfbimage.c"

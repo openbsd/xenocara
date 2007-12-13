@@ -1,3 +1,466 @@
+commit d63efecc9471ac53535932b80a85b7f408f06fb9
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Dec 12 21:57:59 2007 +0200
+
+    Bump to 1.4.0.90
+
+commit 446efcc554195970cb3ddcd992f7aac617d45b1d
+Author: Bartosz Fabianowski <freebsd@chillt.de>
+Date:   Fri Dec 7 02:38:14 2007 +0000
+
+    Input: Fix proximity events with valuators
+    
+    Initialise num_events to 1, so we always send a proximity event, and then
+    optionally valuator events.  Also make sure mieq can deal with valuator
+    events sent after proximity events.
+    (cherry picked from commit 2dcfab37d38c0c72e9be7cc724047405c8029e88)
+
+commit 9f4689173ef9db080592497dc2212ae79b8d6e02
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Dec 6 00:46:32 2007 +0000
+
+    KDrive: Xephyr: Fix non-GLX builds
+    
+    Only set noGlxExtension if we're actually building GLX.
+
+commit d37351308b255d5f9bff3438b6767c62974902da
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Dec 5 19:37:48 2007 +0000
+
+    XKB: Actions: Don't run certain actions on the core keyboard
+    
+    Don't run VT switches, terminations, or anything, on the core keyboard: only
+    run actions which affect the keyboard state.  If we get an action such as VT
+    switch, just swallow the event.
+    (cherry picked from commit 320abd7d1d906807448fa01ad3377daf707f46cc)
+
+commit 27da1367c9ea143946b8b8d3dbd0f9d44c4a9039
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Dec 5 19:36:59 2007 +0000
+
+    WaitForSomething: Ignore EAGAIN
+    
+    If select ever returns EAGAIN, don't bother complaining.
+    (cherry picked from commit 85dd8efac1bc0715f03c99d261b1c5d0980623e1)
+
+commit 259f86b13b453f3503afd3d523de32b43996d334
+Author: Rich Coe <Richard.Coe@med.ge.com>
+Date:   Wed Dec 5 19:36:37 2007 +0000
+
+    OS: Connection: Keep trying select while it gets interrupted (bug #9240)
+    
+    If we got interrupted (EINTR or EAGAIN) during select, just try again, rather
+    than shutting clients down on either of these errors.
+    (cherry picked from commit b7f3618f3933a810778093fd47564a1e3bf3fde6)
+
+commit 90649e6a39dc6caad8313b25ef869a089f81aba7
+Author: Rich Coe <Richard.Coe@med.ge.com>
+Date:   Wed Dec 5 19:31:07 2007 +0000
+
+    OS: Connection: Don't shut down disappeared clients (bug #7876)
+    
+    If a client disappears in the middle of CheckConnections (presumably
+    because its appgroup leader disappears), then don't attempt to shut it down
+    a second time, when it's already vanished.
+    (cherry picked from commit d8b2cad3771a09860e7be1726f67e684cf7caeec)
+
+commit 25d26b55e74b50a2fd0632329cb0bdca017fe8e6
+Author: Kanru Chen <koster@debian.org.tw>
+Date:   Mon Dec 3 12:46:45 2007 +0000
+
+    Config: HAL: Fix XKB option parsing
+    
+    Actually combine the XKB options into a string, rather than just repeatedly
+    writing a comma.
+    (cherry picked from commit da893908feb2dcf7c22420b3426ab3ac65c7ca99)
+
+commit b037e4a5abb878ad89e7f27c2b6c23004625f6c3
+Author: Peter Harris <peter.harris@hummingbird.com>
+Date:   Mon Oct 29 18:05:19 2007 -0400
+
+    Add missing swaps in panoramiXSwap.c
+    (cherry picked from commit cb67a10b7f6f564e0345de19316934361ea28720)
+
+commit 3e0993fcf38e47dd42c27a2dcb5dde7d23222ca8
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Nov 30 20:35:26 2007 +0200
+
+    ProcessOtherEvent: Don't do double translation of button events
+    
+    We already deal with the button mapping in GetPointerEvents, so don't
+    do the remapping again in ProcessOtherEvent.
+    (cherry picked from commit 7ff002fe3e229330216d7f2ff16cdabe63014bcd)
+
+commit cbf775cde7bb737ddf71fa3aa5b08c859d516084
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Sat Nov 17 22:50:07 2007 +0100
+
+    XKB: Generate correct key repeat events (bug #13114)
+    
+    Make sure we send the correct event for the type of device when we're
+    sending key repeat events, which stops repeats being sent to incorrect
+    windows.
+
+commit 3e987ea670aadefeb3a6ad05d9a39dd7902985f9
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Oct 18 17:44:14 2007 +0200
+
+    EXA: Don't attempt to move in pixmaps that can't be accelerated.
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=12815 .
+    
+    (Related to commit 5d74416740de883b7ef0994afea4bbd4d3901be0 on master.)
+
+commit 75b9dc907b332d64d074083cae0c6b099960f09b
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Sep 27 13:08:41 2007 +0200
+
+    EXA: Make sure tile offsets passed to drivers are never negative.
+    
+    Thanks to Björn Steinbrink for pointing out the problem on IRC.
+    
+    (cherry picked from commit 006f6525057970a74382132237b2131286ad147c with
+     modifications.)
+
+commit 732d586b0919e57ed836999f4117db3e776e2934
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Sep 27 13:08:40 2007 +0200
+
+    EXA: Punt on fallback case not handled correctly in exaFillRegionTiled.
+    
+    Fixes http://bugs.freedesktop.org/show_bug.cgi?id=12520 .
+    
+    (From master commit c7d6d1f5, modified to suit.)
+
+commit a3aed33244914b64d08630e19100c71ab81e1a81
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Nov 17 22:34:47 2007 +0100
+
+    XKB: Don't ring the bell when we don't have a BellProc (bug #13246)
+    (cherry picked from commit 55888552769ce6361174285b09dfb78ee22c170d)
+
+commit f3a5d67688a0f691ef23cb44b1fdda190b5b8bef
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Sep 23 12:43:31 2007 +0300
+
+    GetKeyboardEvents: Reject out-of-range keycodes (bug #12528)
+    
+    We can only deal with keycodes between 8 and 255, so make sure that we never
+    accept anything out of this range.
+    (cherry picked from commit 0e800ca4651a947ccef239e6fe7bf64aab92257c)
+
+commit 35bf7c738a8286a382aeef38c0f035773b3ab96a
+Author: Naoki Hamada <nao@tom-yam.or.jp>
+Date:   Thu Oct 25 18:45:50 2007 +0300
+
+    Input: Fix key down test (bug #12858)
+    
+    Fix the botched previous key_is_down test, which would give false positives.
+    Also move key_autorepeats to a separate inline function.
+    (cherry picked from commit 242f56f722243938e908d1957781ee53c2999783)
+
+commit b3de1b9d375c98b72c88991ac2011e492254c61f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Oct 26 09:12:15 2007 +0300
+
+    XFree86 Misc/VidMode: Remove ridiculous debug ErrorFs
+    
+    When we're building with --enable-debug, don't emit an ErrorF every time a
+    function gets called.
+    (cherry picked from commit 6d59bb5709a99ab60b482bbf3393ebffda7f9407)
+
+commit 007e2239cf65535c4df3486e7b2cc42a4e86eb56
+Author: Dodji Seketeli <dodji@seketeli.org>
+Date:   Mon Nov 12 20:29:12 2007 +0100
+
+    Xephyr: don't initialise the GLX extension
+
+commit 7f231de5e05a8755d76e18595c57baf2e239a4be
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Nov 6 15:05:06 2007 +0000
+
+    .gitignore: Ignore build directories
+    
+    Ignore directories people might use for building.
+    (cherry picked from commit 36df34cffd0cfcfb250fb42596781b3d4e9871eb)
+
+commit 4c20d6104691b370f14216035b5ff07ad5633098
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Aug 17 15:29:16 2007 -0700
+
+    Actually build Secure RPC authentication support (missed in modularization)
+    (cherry picked from commit 23fbd5292d356067e85e1eec4eb4f743532b0503)
+
+commit f350c81a912cf5eab8d88a7800a828141945a2f0
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Oct 24 20:31:51 2007 +0200
+
+    Prefer configured DisplaySize to probed DDC data, if available.
+    
+    Based on patch by Hong Liu <hong.liu@intel.com>.
+    (cherry picked from commit 48ca5961caee62f2980017a6bdc96a1b4c747727)
+
+commit c5501865703d5d4ee49e081b6075ab89a583deb6
+Author: Keith Packard <keithp@koto.keithp.com>
+Date:   Sun Aug 19 20:29:37 2007 -0700
+
+    Screen size changing should leave FB alone when X is inactive.
+    
+    xf86RandR12ScreenSetSize must protect calls to EnableDisableFBAccess with
+    suitable vtSema checks to avoid invoking driver code while the X server is
+    inactive.
+    (cherry picked from commit 265a633cf1fcbf497d6916d9e22403dffdde2e07)
+
+commit 9244b8e4a2274946b56d9cf6d43487e11c29f7d7
+Author: Elvis Pranskevichus <el@prans.net>
+Date:   Tue Nov 6 09:40:14 2007 +0000
+
+    Config: D-Bus: Fix dbus_bus_request_name failure check
+    
+    The code in connect_hook incorrectly checks for dbus_bus_request_name failure.
+    The dbus_bus_request_name error indicator is -1, not 0. This leads
+    to subsequent assertion failure in libdbus.
+    (cherry picked from commit ddce48ede036f3996f8e584b0012c396c5df42fb)
+
+commit 0050d7e78d990fa945bd808554b0a86721262786
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Nov 6 14:52:03 2007 +0000
+
+    DIX: XKB: Set xkbInfo to NULL as well as freeing it (bug #10639)
+    
+    XkbRemoveResourceClient wants to access xkbInfo if it exists, so make
+    sure we NULL it after freeing it.  It doesn't make much sense to move
+    the RemoveResourceClient call first, as there's not much point in
+    notifying clients while we're shutting the server down anyway.
+    (cherry picked from commit 23023af1c5a33546a2027cad23a946a2882e9893)
+
+commit 846745c58108856e5fc1b6d94c91a245cbc4f16f
+Author: Markku Vire <markku.vire@movial.fi>
+Date:   Thu Nov 1 22:43:04 2007 +0200
+
+    Config: HAL: Touchpads are pointers too
+    
+    Treat touchpads -- not just mice -- as pointer devices.
+    (cherry picked from commit 3f1b6765aadf665ede8253464da19a5878f16e56)
+
+commit ab80b27250bb583e3a40bf92cfe5edc117e4bd58
+Author: Mark Vytlacil <mrv@wi.rr.com>
+Date:   Thu Nov 1 21:05:43 2007 +0200
+
+    XFree86: Input: Save/restore errno around SIGIO (bug #10683)
+    
+    Make sure errno is saved and restored from the SIGIO handler, so errors
+    from system calls in input handlers don't break the interrupted code.
+    (cherry picked from commit 41c3069f7cf28155f8e6cfe0c10a12a1f5f76c7d)
+
+commit ad05d5d035b32b05d304b2fc598f6fadeb077516
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Sep 23 17:17:03 2007 +0300
+
+    Input: Generate XKB mapping changes for all core-sending devices (bug #12523)
+    
+    When we change the mapping on a core device, make sure we propagate this
+    through to XKB for all extended devices as well.
+    (cherry picked from commit 27ad5d74c20f01516a1bff73be283f8982fcf0fe)
+
+commit 84040b655e3ea9188a6c9d6dafea429ffc4690de
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Thu Sep 6 18:57:00 2007 +0930
+
+    xfree86: wrap keyboard devices for XKB.
+    
+    Call ProcessOtherEvents first, then for all keyboard devices let them be
+    wrapped by XKB. This way all XI events will go through XKB.
+    
+    Note that the VCK is still not wrapped, so core events will bypass XKB.
+    
+    (cherry picked from commit d627061b48ae06d27b37be209d67a3f4f2388dd3)
+    (cherry picked from commit 8ead41388e36e21eea6fa0408c847f174911eab0)
+
+commit e26e93c54e54ab4010dfdede47c3e56e4418bcbd
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Oct 27 21:32:47 2007 +0300
+
+    XKB: Cope with all events in XkbProcessKeyboardEvent
+    
+    Cope with Xi and pointer events in the (now increasingly misnamed)
+    XkbProcessKeyboardEvent.  If it's the wrong type, call through the wrapping
+    chain to get out; else, process it.
+    (cherry picked from commit e717cf08e99746761d74289c426bbd84176f4435)
+
+commit 37c690cfa4e9055209732ab5431fffb8886c7d67
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Oct 27 21:31:39 2007 +0300
+
+    XKB: Don't update indicators on all devices, add missing include file
+    
+    Don't get XkbUpdateIndicators to update the indicators on all our devices: we
+    already deal with that ourselves.
+    Add exevents.h include to get more (proto)types.
+    (cherry picked from commit 9db8846fa53d91193bbfe541b244e2326440011d)
+
+commit 1dce9c20283279eac4d6e5cafc4f73a333548c07
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Wed Sep 26 18:04:59 2007 +0930
+
+    xkb: Unwrap properly in ProcessPointerEvent.
+    
+    Instead of hardcoding CoreProcessPointerEvent, actually try to unwrap properly
+    and then call the unwrapped processInputProc. Seems to be a better idea,
+    especially since it makes stuff actually work...
+    (cherry picked from commit 8f9bf927e1beecf9b9ec8877131ec12c765e4d84)
+    (cherry picked from commit ee3aa948eb8ed181d037294ed87df6ceec81684e)
+
+commit 940cce1f4856a3ffc6fdba9c807c8238ed1acf8b
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Thu Sep 27 11:44:03 2007 +0930
+
+    xkb: xkbHandleActions: let wrapping take care of event delivery.
+    
+    This is hopefully better than hardcodey calling CoreProcessPointerEvent.
+    (cherry picked from commit 32d0440c7f6e604807cb14dd32349df6f22c903b)
+    (cherry picked from commit d3588a0aee33fbd233082f881c0d37152c6d4d8b)
+
+commit 5909fb3c406356505440af8d53785d9ee06ab9be
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Wed Sep 12 17:40:11 2007 +0930
+
+    dix: don't compress motion events from different devices (EventEnqueue)
+    
+    (cherry picked from commit 8840829ab93c4eb62eb58753c015da5307133fe5)
+    (cherry picked from commit 352c5a311200bf491153fe9ef16126c5877a57bb)
+
+commit 600752bece350592f374470dd54b9e1cd2900d0b
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Thu Sep 6 18:52:02 2007 +0930
+
+    dix: add XI event support to FixKeyState.
+    
+    FixKeyState needs to be able to handle XI events, otherwise we get "impossible
+    keyboard events" on server zaps and other special key combos.
+    (cherry picked from commit 5ee409794ee604fcf84886f70429fc2d6b1ff4f1)
+    (cherry picked from commit 8d3d027062c105b50863dce43b8070ec560bc12e)
+
+commit 15117d47bf883f3eefc57404f1dfc0c933ab054a
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Thu Sep 6 18:49:57 2007 +0930
+
+    xkb: enable XI event processing for xkb.
+    
+    XI events can now take the same processing paths as core events, and should do
+    the correct state changes etc.
+    
+    There's some cases where XKB will use KeyPress as type for an event to be
+    delivered to the client. Stuck warnings in, not sure what the correct solution
+    is yet.
+    
+    (cherry picked from commit 6334d4e7be18de5f237c12a6dc20f75aa23477d0 with some
+     additional compile fixes and non-MPX adaptations)
+    (cherry picked from commit 99e826e867c1c5520153c539ba07a884aec88d0c)
+
+commit 83e76fb3f7a89a237893c2b7df450d4f90eab52d
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Thu Jun 21 18:24:30 2007 +0930
+
+    Save processInputProc before wrapping it and restore it later, instead of
+    using a hardcoded ProcessKeyboardEvent. Otherwise we lose the ability to
+    process DeviceKeyEvents after the first key press.
+    
+    This should be the correct fix now.
+    (cherry picked from commit 4d5df14f2c4a3108a8c8adfcf4766c0d1a9daad2)
+    (cherry picked from commit 91077bfc50d54be37c217e377c55b6bf886a2fab)
+
+commit a53172827c69a88155a088843c9a3e8a7a7a0463
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Tue Sep 4 17:44:51 2007 +0930
+
+    xkb: Store the action filters per device in the XkbSrvInfoRec.
+    
+    Using a global array for action filters is bad. If two keyboard hit a modifier
+    at the same time, releaseing the first one will deactivate the filter and
+    thus the second keyboard can never release the modifier again.
+    (cherry picked from commit bfe6b4d2d9952a80f8dbc63eec974ef894e5c226)
+    (cherry picked from commit 8b9481a113b56078191e2298bf590905978f6289)
+
+commit b76b1d51fe3053fa2a60b64de9ac93f50ef252f5
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Oct 27 21:33:52 2007 +0300
+
+    XFree86: Remove ridiculous SIGIO debugging
+    
+    YOU PRESSED A KEY
+    AND AGAIN
+    YOU RELEASED A KEY
+    AND AGAIN
+    YOU PRESSED A KEY
+    AND AGAIN
+    
+    ... not so much.
+    (cherry picked from commit 493b83bd097372ae0023da9919da83af39e3fc1c)
+
+commit b600e7c123ce637359a75c43bf67b3462eadb37e
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Oct 27 21:35:31 2007 +0300
+
+    XKB: Add more bits to xkbsrv.h
+    
+    Add the device private index, given we use that in a macro here, and also the
+    prototype for xkbUnwrapProc, since that's also useful.
+    (cherry picked from commit a3d48de5f2b7eacf3193c60f0fb461912201210b)
+
+commit 63c6d9d622a10303f594a07bd86dda8e5f894ca7
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Oct 27 21:34:22 2007 +0300
+
+    Xi: Include XI protocol header in exevents.h
+    
+    Make sure we have all the types we need to use this header.
+    (cherry picked from commit e29e69960d67aa4b7a4d1551af509dbac193f438)
+
+commit bd779f8cde1c71a0db8470b8c993504da7c1104e
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Oct 28 15:46:26 2007 +0200
+
+    configure.ac/XFree86: Only build XF86Misc and XF86VidMode when appropriate
+    
+    Don't build XF86Misc or XF86Vidmode in hw/xfree86/dixmod when it's been
+    explicitly disabled in configure, or we don't have the proto modules
+    installed.
+    
+    (cherry picked from commit df57ae1639ba4f1719883c5bf868394e4748a022)
+
+commit 881e4fb518c7ed4c95882368356901c1ec4b6abf
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Sep 20 14:00:33 2007 -0700
+
+    Set noCompositeExtension to TRUE when failing to initialize the extension (e.g. when Xinerama is enabled).
+    (cherry picked from commit 50fa8722d35c12e5f0322cebe25faf99c39d4f50)
+
+commit ce55565ecd0411065878fa7c9983606d53663b7c
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Sep 20 16:22:24 2007 -0700
+
+    Don't segfault on shutdown if we never managed to connect to dbus.
+    (cherry picked from commit 3a965fdadccea7beff09a28c9c0ef4b4975eae38)
+
+commit eba45539af33f7d312bcfee954786fe38ab8f391
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Thu Aug 30 18:22:12 2007 +0930
+
+    config: Use [config/dbus] consistently for error messages.
+    (cherry picked from commit 3f42af8c0ef1e5379bc836f589e0cbee43c02ac5)
+
+commit c0da35bda136ed423f2963bd5c75ad0301ac7845
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Thu Aug 30 18:20:20 2007 +0930
+
+    config: return BadValue to caller if add/remove doesn't have parameters.
+    
+    If message iterator cannot be created, the caller didn't supply any
+    parameters. Return BadValue, instead of dying a horrible death while being
+    stuck in an endless loop.
+    (cherry picked from commit 0fcde83d94507eadd9f99d4e6a63584b221c989c)
+
 commit 99dd8b9414d1eb7aabc682be0b9cfd7a27eb2a6b
 Author: Eric Anholt <eric@anholt.net>
 Date:   Thu Sep 6 01:42:43 2007 -0700

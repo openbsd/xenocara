@@ -1,1 +1,1 @@
-#include "../../Xext/dpmsstubs.c"
+#include "../../../Xext/dpmsstubs.c"

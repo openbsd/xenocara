@@ -1,2 +1,2 @@
 #define POLYSEGMENT
-#include "./xaaDashLine.c"
+#include "../../../../hw/xfree86/xaa/xaaDashLine.c"

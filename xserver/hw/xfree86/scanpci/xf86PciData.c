@@ -1,2 +1,2 @@
 #define PCIDATA
-#include "./xf86ScanPci.c"
+#include "../../../../hw/xfree86/scanpci/xf86ScanPci.c"

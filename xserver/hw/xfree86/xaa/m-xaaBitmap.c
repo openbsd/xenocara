@@ -1,2 +1,2 @@
 #define MSBFIRST
-#include "./xaaBitmap.c"
+#include "../../../../hw/xfree86/xaa/xaaBitmap.c"

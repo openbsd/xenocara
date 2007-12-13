@@ -1,2 +1,2 @@
 #define POLYSEGMENT
-#include "./mfbline.c"
+#include "../../../../hw/xfree86/xf4bpp/mfbline.c"

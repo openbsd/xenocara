@@ -2,4 +2,4 @@
 #define MFBSOLIDFILLAREA mfbSolidBlackArea
 #define EQWHOLEWORD MFB_EQWHOLEWORD_BLACK
 #define MFBSTIPPLEFILLAREA mfbStippleBlackArea
-#include "./mfbpntarea.c"
+#include "../../mfb/mfbpntarea.c"

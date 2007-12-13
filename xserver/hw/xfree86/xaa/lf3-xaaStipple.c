@@ -1,4 +1,4 @@
 #define LSBFIRST
 #define TRIPLE_BITS
 #define FIXEDBASE
-#include "./xaaStipple.c"
+#include "../../../../hw/xfree86/xaa/xaaStipple.c"

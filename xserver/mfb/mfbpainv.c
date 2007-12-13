@@ -2,4 +2,4 @@
 #define MFBSOLIDFILLAREA mfbSolidInvertArea
 #define EQWHOLEWORD MFB_EQWHOLEWORD_INVERT
 #define MFBSTIPPLEFILLAREA mfbStippleInvertArea
-#include "./mfbpntarea.c"
+#include "../../mfb/mfbpntarea.c"

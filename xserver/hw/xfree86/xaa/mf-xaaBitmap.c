@@ -1,3 +1,3 @@
 #define MSBFIRST
 #define FIXEDBASE
-#include "./xaaBitmap.c"
+#include "../../../../hw/xfree86/xaa/xaaBitmap.c"

@@ -1,3 +1,3 @@
 #define MSBFIRST
 #define TRIPLE_BITS
-#include "./xaaBitmap.c"
+#include "../../../../hw/xfree86/xaa/xaaBitmap.c"

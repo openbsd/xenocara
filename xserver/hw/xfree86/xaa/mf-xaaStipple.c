@@ -1,3 +1,3 @@
 #define MSBFIRST
 #define FIXEDBASE
-#include "./xaaStipple.c"
+#include "../../../../hw/xfree86/xaa/xaaStipple.c"

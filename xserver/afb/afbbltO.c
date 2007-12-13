@@ -1,2 +1,2 @@
 #define MROP Mor
-#include "./afbblt.c"
+#include "../../afb/afbblt.c"

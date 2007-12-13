@@ -3,4 +3,4 @@
 #define OPEQ ^=
 #define EQWHOLEWORD ^=~0
 #include "mfbmap.h"
-#include "../../../mfb/mfbpntarea.c"
+#include "../../../../mfb/mfbpntarea.c"

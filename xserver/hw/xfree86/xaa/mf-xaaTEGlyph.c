@@ -1,3 +1,3 @@
 #define MSBFIRST
 #define FIXEDBASE
-#include "./xaaTEGlyph.c"
+#include "../../../../hw/xfree86/xaa/xaaTEGlyph.c"

@@ -134,10 +134,11 @@ get_prop_string_array(LibHalContext *hal_ctx, const char *udi, const char *prop)
 
         str = ret;
         for (i = 0; props[i]; i++) {
-            str = strcpy(str, props[i]);
+            strcpy(str, props[i]);
+            str += strlen(props[i]);
             *str++ = ',';
         }
-        *str = '\0';
+        *(str-1) = '\0';
 
         libhal_free_string_array(props);
     }
@@ -177,7 +178,8 @@ device_added(LibHalContext *hal_ctx, const char *udi)
         if (strcmp(props[i], "input.keys") == 0 ||
             strcmp(props[i], "input.keyboard") == 0)
             type |= TYPE_KEYS;
-        if (strcmp(props[i], "input.mouse") == 0)
+        if (strcmp(props[i], "input.mouse") == 0 ||
+            strcmp(props[i], "input.touchpad") == 0)
             type |= TYPE_POINTER;
     }
     libhal_free_string_array(props);
