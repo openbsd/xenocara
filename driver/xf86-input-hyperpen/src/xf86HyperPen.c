@@ -689,7 +689,7 @@ xf86HypReadInput(LocalDevicePtr local)
 {
     HyperPenDevicePtr	priv = (HyperPenDevicePtr) local->private;
     int			len, loop;
-    int			is_core_pointer, is_absolute;
+    int			is_absolute;
     int f_keys, f_key, tip;
     int x, y, bx, by, barrel, barrel1, prox, pressure, button, push;
     int hw_pressure;
@@ -791,16 +791,10 @@ is_absolute = stylus;
 	    
 	    device = local->dev;
 
-
-
-
-            is_core_pointer = xf86IsCorePointer(device);
-
 /* coordonates are ready we can send events */
 
 	    if ((prox) && !(f_keys)) {
 		if (!(priv->hypOldProximity)) 
-                    if (!is_core_pointer)
 		        xf86PostProximityEvent(device, 1, 0, 3, x, y, pressure);
 
 		if ((is_absolute && ((priv->hypOldX != x) || 
@@ -854,9 +848,8 @@ is_absolute = stylus;
 
 	    } else { /* !PROXIMITY */
 /* Any changes in buttons are ignored when !proximity */
-		if (!is_core_pointer)
-		   if (priv->hypOldProximity)
-		      xf86PostProximityEvent(device, 0, 0, 3, x, y, pressure);
+                if (priv->hypOldProximity)
+                    xf86PostProximityEvent(device, 0, 0, 3, x, y, pressure);
 		priv->hypOldProximity = 0;
 	    }
 	}
