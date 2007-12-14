@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.3 2007/12/11 23:56:08 sthen Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.4 2007/12/14 23:14:26 sthen Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -761,17 +761,18 @@ UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 
 	
 	/* Set the real values */
+	/* XXX scaling done here, since Xorg 7.3 does not call UsbTabletConvert */
 	InitValuatorAxisStruct(pUSBT,
 			       0,
-			       comm->hidX.logical_minimum, /* min val */
-			       comm->hidX.logical_maximum, /* max val */
+			       comm->hidX.logical_minimum * comm->factorX, /* min val */
+			       comm->hidX.logical_maximum * comm->factorX, /* max val */
 			       mils(1000), /* resolution */
 			       0, /* min_res */
 			       mils(1000)); /* max_res */
 	InitValuatorAxisStruct(pUSBT,
 			       1,
-			       comm->hidY.logical_minimum, /* min val */
-			       comm->hidY.logical_maximum, /* max val */
+			       comm->hidY.logical_minimum * comm->factorY, /* min val */
+			       comm->hidY.logical_maximum * comm->factorY, /* max val */
 			       mils(1000), /* resolution */
 			       0, /* min_res */
 			       mils(1000)); /* max_res */
