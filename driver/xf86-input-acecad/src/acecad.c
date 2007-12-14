@@ -27,6 +27,9 @@
 
 #include "config.h"
 
+#include <xorgVersion.h>
+#define XORG_VERSION_BOTCHED XORG_VERSION_NUMERIC(1,4,0,0,0)
+
 #define _ACECAD_C_
 /*****************************************************************************
  *	Standard Headers
@@ -60,8 +63,8 @@
 
 #include <string.h>
 #include <stdio.h>
-
 #include <errno.h>
+
 #ifdef LINUX_INPUT
 #include <fcntl.h>
 #ifdef LINUX_SYSFS
@@ -353,7 +356,7 @@ AceCadPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     memset(priv, 0, sizeof(AceCadPrivateRec));
 
     local->name = dev->identifier;
-    local->type_name = "ACECAD Tablet";
+    local->type_name = XI_TABLET;
     local->flags = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
     local->motion_history_proc = xf86GetMotionEvents;
@@ -664,14 +667,22 @@ DeviceInit (DeviceIntPtr dev)
         InitValuatorAxisStruct(dev,
                 0,
                 0,			/* min val */
+#if XORG_VERSION_CURRENT == XORG_VERSION_BOTCHED
+                screenInfo.screens[0]->width,
+#else
                 priv->acecadMaxX,	/* max val */
+#endif
                 1000,			/* resolution */
                 0,			/* min_res */
                 1000);			/* max_res */
         InitValuatorAxisStruct(dev,
                 1,
                 0,			/* min val */
+#if XORG_VERSION_CURRENT == XORG_VERSION_BOTCHED
+                screenInfo.screens[0]->height,
+#else
                 priv->acecadMaxY,	/* max val */
+#endif
                 1000,			/* resolution */
                 0,			/* min_res */
                 1000);			/* max_res */
@@ -722,13 +733,15 @@ ReadInput (LocalDevicePtr local)
 {
     int x, y, z;
     int prox, buttons;
-    int is_core_pointer, is_absolute;
+    int is_core_pointer = 1, is_absolute;
     AceCadPrivatePtr priv = (AceCadPrivatePtr) (local->private);
 
     /*xf86Msg(X_INFO, "ACECAD Tablet Read Input\n");*/
 
     is_absolute = (priv->flags & ABSOLUTE_FLAG);
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
     is_core_pointer = xf86IsCorePointer(local->dev);
+#endif
 
     /*
      * set blocking to -1 on the first call because we know there is data to
@@ -827,9 +840,13 @@ USBReadInput (LocalDevicePtr local)
     int x = priv->acecadOldX;
     int y = priv->acecadOldY;
     int z = priv->acecadOldZ;
+    int report_x, report_y;
     int prox = priv->acecadOldProximity;
     int buttons = priv->acecadOldButtons;
-    int is_core_pointer = xf86IsCorePointer(local->dev);
+    int is_core_pointer = 1;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
+    is_core_pointer = xf86IsCorePointer(local->dev);
+#endif
     /* Is autodev active? */
     int autodev = priv->flags & AUTODEV_FLAG;
     /* Was the device available last time we checked? */
@@ -921,14 +938,20 @@ USBReadInput (LocalDevicePtr local)
 
         if (prox)
         {
+#if XORG_VERSION_CURRENT == XORG_VERSION_BOTCHED
+            ConvertProc(local, 0, 3, x, y, 0, 0, 0, 0, &report_x, &report_y);
+#else
+            report_x = x;
+            report_y = y;
+#endif
             if (!(priv->acecadOldProximity))
                 if (!is_core_pointer)
                 {
-                    xf86PostProximityEvent(local->dev, 1, 0, 3 , x, y, z);
+                    xf86PostProximityEvent(local->dev, 1, 0, 3 , report_x, report_y, z);
                 }
 
 
-            xf86PostMotionEvent(local->dev, 1, 0, 3, x, y, z);
+            xf86PostMotionEvent(local->dev, 1, 0, 3, report_x, report_y, z);
 
             if (priv->acecadOldButtons != buttons)
             {
@@ -938,7 +961,7 @@ USBReadInput (LocalDevicePtr local)
                     int id = ffs(delta);
                     delta &= ~(1 << (id-1));
 
-                    xf86PostButtonEvent(local->dev, 1, id, (buttons&(1<<(id-1))), 0, 3, x, y,z);
+                    xf86PostButtonEvent(local->dev, 1, id, (buttons&(1<<(id-1))), 0, 3, report_x, report_y, z);
                 }
             }
         }
@@ -947,7 +970,7 @@ USBReadInput (LocalDevicePtr local)
             if (!is_core_pointer)
                 if (priv->acecadOldProximity)
                 {
-                    xf86PostProximityEvent(local->dev, 0, 0, 3, x,y,z);
+                    xf86PostProximityEvent(local->dev, 0, 0, 3, report_x, report_y, z);
                 }
             priv->acecadOldProximity = 0;
         }
@@ -979,8 +1002,12 @@ ConvertProc (LocalDevicePtr local, int first, int num,
 {
     AceCadPrivatePtr priv = (AceCadPrivatePtr)(local->private);
 
+    /* TODO: should have a structure to hold which screen the
+     * pointer is attached to? */
+    // xf86Msg(X_INFO, "%s: coordinate conversion in : %d, %d\n", local->name, v0, v1);
     *x = v0 * screenInfo.screens[0]->width / priv->acecadMaxX;
     *y = v1 * screenInfo.screens[0]->height / priv->acecadMaxY;
+    // xf86Msg(X_INFO, "%s: coordinate conversion out: %d, %d\n", local->name, *x, *y);
     return TRUE;
 }
 
@@ -992,8 +1019,10 @@ ReverseConvertProc (LocalDevicePtr local,
 {
     AceCadPrivatePtr priv = (AceCadPrivatePtr)(local->private);
 
+    // xf86Msg(X_INFO, "%s: reverse coordinate conversion in : %d, %d\n", local->name, x, y);
     valuators[0] = x * priv->acecadMaxX / screenInfo.screens[0]->width;
     valuators[1] = y * priv->acecadMaxY / screenInfo.screens[0]->height;
+    // xf86Msg(X_INFO, "%s: reverse coordinate conversion out: %d, %d\n", local->name, valuators[0], valuators[1]);
 
     return TRUE;
 }
