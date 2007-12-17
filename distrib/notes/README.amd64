@@ -1,12 +1,17 @@
 Post-installation instructions for X.Org on OpenBSD/amd64
 ---------------------------------------------------------
 
+Conventions used in this document:
+  - somename(1) implies that "somename" is a program, and there is a
+    manual page available in section 1 of the manual pages for further
+    reading, viewed by typing "man 1 somename".
+
 1. Make sure your system has support for X enabled:
 
-   You must have 'option APERTURE' in your kernel configuration and
+   You must have "option APERTURE" in your kernel configuration and
    uncomment the line that says:  
 
-      machdep.allowaperture=2
+        machdep.allowaperture=2
 
    in /etc/sysctl.conf.  See xf86(4) for more details about security
    issues related to this.  After changing this variable in sysctl.conf,
@@ -18,15 +23,21 @@ Post-installation instructions for X.Org on OpenBSD/amd64
    information down. The dmesg(8) command output is useful.
 
    What kind of mouse do you have and which port is it connected to?
-   The 2 most common cases are a PS/2 style mouse or a USB mouse, for
-   which OpenBSD uses the wsmouse(4) protocol with the /dev/wsmouse
-   device.
+   The two most common cases are a PS/2 style or USB mouse, for which
+   OpenBSD uses the wsmouse(4) protocol with the /dev/wsmouse device.
 
-3. Create the xorg.conf(5) file for your server.
+3. Create the configuration file for your server.
 
-   Run Xorg -configure as root and move the resulting
-   xorg.conf.new file to /etc/X11/xorg.conf. 
-   If needed, edit it to adjust the keyboard and mouse settings.
+   For many users of X.Org's servers, an xorg.conf file is not needed,
+   simply start X, and it will automatically detect and use your
+   hardware.  If your hardware is not properly autodetected or supported
+   or not supported as you wish, you will have to create a configuration
+   file.
+
+   Run Xorg -configure as root and move the resulting xorg.conf.new
+   file to /etc/X11/xorg.conf. Edit it to adjust it for your hardware.
+
+   See also Xorg(1), xorg.conf(5).
 
 4. Start either xdm(1) or startx(1).
 
@@ -41,4 +52,4 @@ Post-installation instructions for X.Org on OpenBSD/amd64
 
 problem_blurb
 
-$OpenBSD: README.amd64,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+$OpenBSD: README.amd64,v 1.2 2007/12/17 08:23:49 matthieu Exp $
