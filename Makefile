@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.22 2007/10/27 20:01:23 matthieu Exp $
+# $OpenBSD: Makefile,v 1.23 2007/12/20 06:52:03 matthieu Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
@@ -7,7 +7,11 @@ REALAPPD=/etc/X11/app-defaults
 XCONFIG=${XSRCDIR}/etc/X11.${MACHINE}/xorg.conf
 RM?=rm
 
-SUBDIR= proto data/bitmaps lib app data/xkbdata xserver driver util doc
+.if ${MACHINE_ARCH} != "sh"
+XSERVER= xserver
+.endif
+
+SUBDIR= proto data/bitmaps lib app data/xkbdata ${XSERVER} driver util doc
 .ifndef NOFONTS
 SUBDIR+= font
 .endif
