@@ -1,4 +1,4 @@
-/* $OpenBSD: kopenbsd.h,v 1.1 2007/05/25 15:33:32 matthieu Exp $ */
+/* $OpenBSD: kopenbsd.h,v 1.2 2007/12/23 14:28:10 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu.herrb@laas.fr>
  *
@@ -18,7 +18,7 @@
 #ifndef _KOpenBSD_H
 #define _KOpenBSD_H
 
-Bool OpenBSDFindPCI(CARD16, CARD16, CARD32 , KdCardAttr *);
+Bool OpenBSDFindPci(CARD16, CARD16, CARD32 , KdCardAttr *);
 unsigned char *OpenBSDGetPciCfg(KdCardAttr *);
 
 #endif /* _KOpenBSD_H */

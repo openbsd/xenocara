@@ -1,4 +1,4 @@
-/* $OpenBSD: wsinit.c,v 1.2 2007/05/25 19:10:43 matthieu Exp $ */
+/* $OpenBSD: wsinit.c,v 1.3 2007/12/23 14:28:10 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -44,8 +44,15 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
 void
 InitInput(int argc, char **argv)
 {
+	KdKeyboardInfo *ki;
+
 	DBG(("InitInput\n"));
-	KdInitInput(&WsconsMouseFuncs, &WsconsKeyboardFuncs);
+	KdAddKeyboardDriver(&WsconsKeyboardDriver);
+	KdAddPointerDriver(&WsconsMouseDriver);
+	ki = KdParseKeyboard("keybd");
+	KdAddKeyboard(ki);
+
+	KdInitInput();
 }
 
 void

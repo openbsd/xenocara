@@ -1,4 +1,4 @@
-/* $OpenBSD: mouse.c,v 1.4 2007/05/27 05:17:06 matthieu Exp $ */
+/* $OpenBSD: mouse.c,v 1.5 2007/12/23 14:28:10 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -42,6 +42,7 @@ static unsigned long kdbuttons[] = {
 static void
 wsmouseRead(int mousePort, void *closure)
 {
+	KdPointerInfo *pi = closure;
 	static struct wscons_event eventList[NUMEVENTS];
 	struct wscons_event *event = eventList;
 	int n;
@@ -81,41 +82,67 @@ wsmouseRead(int mousePort, void *closure)
 			    event->type);
 			continue;
 		} /* case */
-		KdEnqueueMouseEvent(kdMouseInfo, flags, dx, dy);
+		KdEnqueuePointerEvent(pi, flags, dx, dy, 0);
 	}	
 }
 
 int MouseInputType;
 
-static Bool
-wsmouseInit(void)
+static Status
+wsmouseInit(KdPointerInfo *pi)
 {
 	char *device = "/dev/wsmouse";
-	int port;
 
 	DBG(("wsmouseInit\n"));
 
-	if (!MouseInputType)
-		MouseInputType = KdAllocInputType();
+	if (pi->path == NULL)
+		pi->path = KdSaveString(device);
 
-	port = open(device, O_RDWR | O_NONBLOCK);
-	if (port == -1) {
-		ErrorF("wsmouseInit: couldn't open %s (%d)\n", device, errno);
-		return FALSE;
+	if (pi->name == NULL)
+		pi->name = KdSaveString("Wscons mouse");
+	return Success;
+}
+
+static Status
+wsmouseEnable(KdPointerInfo *pi)
+{
+	int fd;
+
+	DBG(("wsmouseEnable\n"));
+
+	if (pi == NULL || pi->driverPrivate == NULL || pi->path == NULL)
+		return BadImplementation;
+
+	fd = open(pi->path, O_RDWR | O_NONBLOCK);
+	if (fd < 0)
+		return BadMatch;
+
+	if (!KdRegisterFd(fd, wsmouseRead, pi)) {
+		close(fd);
+		return BadAlloc;
 	}
-	return KdRegisterFd(MouseInputType, port, wsmouseRead, NULL);
+	pi->driverPrivate = (void *)fd;
+	return Success;
+}
+
+static void
+wsmouseDisable(KdPointerInfo *pi)
+{
+	DBG(("wsmouseDisable\n"));
+	KdUnregisterFd(pi, (int)pi->driverPrivate, TRUE);
 }
 		
 static void
-wsmouseFini(void)
+wsmouseFini(KdPointerInfo *pi)
 {
-	KdMouseInfo *mi;
-
 	DBG(("wsmouseFini\n"));
-	KdUnregisterFds(MouseInputType, TRUE);
 }
 
-KdMouseFuncs WsconsMouseFuncs = {
+KdPointerDriver WsconsMouseDriver = {
+	"mouse",
 	wsmouseInit,
-	wsmouseFini
+	wsmouseEnable,
+	wsmouseDisable,
+	wsmouseFini,
+	NULL,
 };

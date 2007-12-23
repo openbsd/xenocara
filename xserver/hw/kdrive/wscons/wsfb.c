@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb.c,v 1.4 2007/05/29 20:14:43 matthieu Exp $ */
+/* $OpenBSD: wsfb.c,v 1.5 2007/12/23 14:28:10 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -39,6 +39,7 @@
 #include <kdrive-config.h>
 #endif
 #include <dev/wscons/wsconsio.h>
+#include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <errno.h>
 
@@ -80,7 +81,7 @@ Bool
 wsfbMapFramebuffer(KdScreenInfo *screen)
 {
 	WsfbScrPriv *scrPriv = screen->driver;
-	KdMouseMatrix m;
+	KdPointerMatrix m;
 	WsfbPriv *priv = screen->card->driver;
 	size_t len;
 
@@ -93,9 +94,9 @@ wsfbMapFramebuffer(KdScreenInfo *screen)
 	else
 		scrPriv->shadow = FALSE;
 
-	KdComputeMouseMatrix(&m, scrPriv->randr, 
+	KdComputePointerMatrix(&m, scrPriv->randr, 
 	    screen->width, screen->height);
-	KdSetMouseMatrix(&m);
+	KdSetPointerMatrix(&m);
 	
 	DBG(("screen->width %d\n", screen->width));
 	DBG(("screen->height %d\n", screen->height));
@@ -171,7 +172,7 @@ wsfbScreenInitialize(KdScreenInfo *screen, WsfbScrPriv *scrpriv)
 {
 	struct wsdisplay_gfx_mode gfxmode;
 	WsfbPriv *priv;
-	int depth, bpp;
+	int depth = 24;
 
 	priv = screen->card->driver;
 
@@ -301,8 +302,6 @@ wsfbEnable(ScreenPtr pScreen)
 {
 	KdScreenPriv(pScreen);
 	KdScreenInfo *screen = pScreenPriv->screen;
-	WsfbPriv *priv  = pScreenPriv->card->driver;
-	size_t len;
 	int wsmode = WSDISPLAYIO_MODE_DUMBFB;	
 
 	DBG(("wsfbEnable\n"));
@@ -354,7 +353,6 @@ wsfbRestore(KdCardInfo *card)
 void
 wsfbScreenFini(KdScreenInfo *screen)
 {
-	int mode = WSDISPLAYIO_MODE_EMUL;
 
 	DBG(("wsfbScreenFini\n"));
 	wsfbUnmapFramebuffer(screen);

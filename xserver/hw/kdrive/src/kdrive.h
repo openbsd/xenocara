@@ -891,8 +891,8 @@ extern KdPointerDriver	VxWorksMouseDriver;
 extern KdKeyboardDriver	VxWorksKeyboardDriver;
 extern KdOsFuncs	VxWorksFuncs;
 
-extern KdMouseFuncs	WsconsMouseFuncs;
-extern KdKeyboardFuncs	WsconsKeyboardFuncs;
+extern KdPointerDriver	WsconsMouseDriver;
+extern KdKeyboardDriver	WsconsKeyboardDriver;
 extern KdOsFuncs	OpenBSDFuncs;
 
 /* kmap.c */

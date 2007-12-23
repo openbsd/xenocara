@@ -1,4 +1,4 @@
-/* $OpenBSD: openbsd.c,v 1.3 2007/05/27 00:53:47 matthieu Exp $ */
+/* $OpenBSD: openbsd.c,v 1.4 2007/12/23 14:28:10 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -24,15 +24,15 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
 #include <dev/wscons/wsconsio.h>
 
 #include "kdrive.h"
 #include "kopenbsd.h"
 
-static int vtno;
 int WsconsConsoleFd;
 int OpenBSDApmFd = -1;
-static int activeVT;
 static Bool enabled;
 
 #define WSCONS_DEV "/dev/ttyC0"
@@ -123,13 +123,28 @@ OpenBSDFini(void)
 	}
 }
 
+static void
+OpenBSDBell(int volume, int pitch, int duration)
+{
+	struct wskbd_bell_data wsb;
+
+	DBG(("OpenBSDBell volume %d pictch %d duration %d\n",
+		volume, pitch, duration));
+	wsb.which = WSKBD_BELL_DOALL;
+	wsb.pitch = pitch;
+	wsb.period = duration;
+	wsb.volume = volume;
+	if (ioctl(WsconsConsoleFd, WSKBDIO_COMPLEXBELL, &wsb) == -1)
+		ErrorF("WsconsKeyboardBell: %s\n", strerror(errno));
+}
+
 KdOsFuncs OpenBSDFuncs = {
 	OpenBSDInit,
 	OpenBSDEnable,
 	OpenBSDSpecialKey,
 	OpenBSDDisable,
 	OpenBSDFini,
-	0
+	OpenBSDBell,
 };
 
 void
