@@ -335,12 +335,7 @@ XmuXftTextWidth(Display *dpy, XftFont *font, FcChar8 *string, int len);
 # define FAIL_X(w)	ERROR_X(w, w->login.fail)
 # define FAIL_Y(w)	(PROMPT_Y(w,1) + 2 * FAIL_Y_INC (w) + F_ASCENT(fail))
 
-#ifndef XPM
 # define ERROR_W(w,m)	STRING_WIDTH (fail, m)
-#else
-# define ERROR_W(w,m)	(STRING_WIDTH (fail, m) \
-			 + w->login.logoWidth + (2*w->login.logoPadding))
-#endif /* XPM */
 
 # define FAIL_W(w)	max(ERROR_W(w, w->login.failMsg), \
 			    ERROR_W(w, w->login.passwdChangeMsg))
