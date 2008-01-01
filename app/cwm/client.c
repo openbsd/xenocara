@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: client.c,v 1.7 2007/10/02 18:01:45 jasper Exp $
+ * $Id: client.c,v 1.8 2008/01/01 22:28:59 marc Exp $
  */
 
 #include "headers.h"
@@ -806,10 +806,12 @@ client_placecalc(struct client_ctx *cc)
 	mousey = MAX(mousey, (int)cc->bwidth);
 
 	if (cc->size->flags & USPosition) {
-		x = cc->size->x;
+		if (cc->size->x > 0)
+			x = cc->size->x;
 		if (x <= 0 || x >= xmax)
 			x = cc->bwidth;
-		y = cc->size->y;
+		if (cc->size->y > 0)
+			y = cc->size->y;
 		if (y <= 0 || y >= ymax)
 			y = cc->bwidth;
 	} else {
