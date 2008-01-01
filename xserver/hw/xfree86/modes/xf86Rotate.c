@@ -579,6 +579,9 @@ xf86CrtcRotate (xf86CrtcPtr crtc, DisplayModePtr mode, Rotation rotation)
     }
     else
     {
+	int width, height, old_width, old_height;
+	void *shadowData;
+	PixmapPtr shadow;
 	PictureTransformTranslate (&crtc_to_fb, &fb_to_crtc, crtc->x, crtc->y);
 	PictureTransformIsInverse ("offset", &crtc_to_fb, &fb_to_crtc);
 	
@@ -587,12 +590,12 @@ xf86CrtcRotate (xf86CrtcPtr crtc, DisplayModePtr mode, Rotation rotation)
 	 * matches the mode, not the pre-rotated copy in the
 	 * frame buffer
 	 */
-	int	    width = mode->HDisplay;
-	int	    height = mode->VDisplay;
-	void	    *shadowData = crtc->rotatedData;
-	PixmapPtr   shadow = crtc->rotatedPixmap;
-	int	    old_width = shadow ? shadow->drawable.width : 0;
-	int	    old_height = shadow ? shadow->drawable.height : 0;
+	width = mode->HDisplay;
+	height = mode->VDisplay;
+	shadowData = crtc->rotatedData;
+	shadow = crtc->rotatedPixmap;
+	old_width = shadow ? shadow->drawable.width : 0;
+	old_height = shadow ? shadow->drawable.height : 0;
 	
 	/* Allocate memory for rotation */
 	if (old_width != width || old_height != height)
