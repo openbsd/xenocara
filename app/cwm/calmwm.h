@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: calmwm.h,v 1.13 2007/11/28 16:35:52 ian Exp $
+ * $Id: calmwm.h,v 1.14 2008/01/02 20:54:32 marc Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -483,8 +483,6 @@ void group_sticky_toggle_exit(struct client_ctx *);
 void group_autogroup(struct client_ctx *);
 
 void notification_init(struct screen_ctx *);
-
-struct client_ctx *geographic_west(struct client_ctx *);
 
 Cursor cursor_bigarrow();
 
