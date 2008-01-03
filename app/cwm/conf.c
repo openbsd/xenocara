@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: conf.c,v 1.17 2007/12/31 02:49:45 okan Exp $
+ * $Id: conf.c,v 1.18 2008/01/03 01:56:25 oga Exp $
  */
 
 #include "headers.h"
@@ -374,8 +374,8 @@ struct {
 	{ "prevgroup", kbfunc_client_prevgroup, 0, 0 },
 	{ "maximize", kbfunc_client_maximize, KBFLAG_NEEDCLIENT, 0 },
 	{ "vmaximize", kbfunc_client_vmaximize, KBFLAG_NEEDCLIENT, 0 },
-	{ "exec", kbfunc_exec, 0, CWM_EXEC_PROGRAM },
-	{ "exec_wm", kbfunc_exec, 0, CWM_EXEC_WM },
+	{ "exec", kbfunc_exec, 0, (void *)CWM_EXEC_PROGRAM },
+	{ "exec_wm", kbfunc_exec, 0, (void *)CWM_EXEC_WM },
 	{ "ssh", kbfunc_ssh, 0, 0 },
 	{ "terminal", kbfunc_term, 0, 0 },
 	{ "lock", kbfunc_lock, 0, 0 },
