@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: client.c,v 1.8 2008/01/01 22:28:59 marc Exp $
+ * $Id: client.c,v 1.9 2008/01/03 20:20:20 marc Exp $
  */
 
 #include "headers.h"
@@ -90,7 +90,6 @@ client_new(Window win, struct screen_ctx *sc, int mapped)
 	cc->geom.x = wattr.x;
 	cc->geom.y = wattr.y;
 	cc->geom.width = wattr.width;
-	cc->geom.height = wattr.height;
 	cc->geom.height = wattr.height;
 	cc->cmap = wattr.colormap;
 
@@ -808,12 +807,16 @@ client_placecalc(struct client_ctx *cc)
 	if (cc->size->flags & USPosition) {
 		if (cc->size->x > 0)
 			x = cc->size->x;
-		if (x <= 0 || x >= xmax)
+		if (x < cc->bwidth)
 			x = cc->bwidth;
+		else if (x > xslack)
+			x = xslack;
 		if (cc->size->y > 0)
 			y = cc->size->y;
-		if (y <= 0 || y >= ymax)
+		if (y < cc->bwidth)
 			y = cc->bwidth;
+		else if (y > yslack)
+			y = yslack;
 	} else {
 		if (yslack < 0) {
 			y = cc->bwidth;
