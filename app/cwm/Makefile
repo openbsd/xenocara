@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2008/01/02 20:47:11 marc Exp $
+# $OpenBSD: Makefile,v 1.3 2008/01/03 01:58:16 oga Exp $
 
 .include <bsd.own.mk>
 
@@ -6,7 +6,7 @@ X11BASE?=	/usr/X11R6
 
 PROG=		cwm
 
-SRCS=		calmwm.c draw.c screen.c xmalloc.c client.c grab.c search.c \
+SRCS=		calmwm.c screen.c xmalloc.c client.c grab.c search.c \
 		util.c xutil.c conf.c input.c xevents.c group.c \
 		kbfunc.c cursor.c font.c
 

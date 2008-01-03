@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: calmwm.h,v 1.14 2008/01/02 20:54:32 marc Exp $
+ * $Id: calmwm.h,v 1.15 2008/01/03 01:58:16 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -445,8 +445,6 @@ void kbfunc_ptrmove(struct client_ctx *, void *);
 void kbfunc_ssh(struct client_ctx *, void *);
 void kbfunc_term(struct client_ctx *cc, void *arg);
 void kbfunc_lock(struct client_ctx *cc, void *arg);
-
-void draw_outline(struct client_ctx *);
 
 void  search_init(struct screen_ctx *);
 struct menu *search_start(struct menu_q *menuq,
