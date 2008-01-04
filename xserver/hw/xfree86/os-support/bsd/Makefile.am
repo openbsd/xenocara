@@ -59,6 +59,11 @@ ARCH_SOURCES = ppc_video.c \
 	$(srcdir)/../shared/ioperm_noop.c
 endif
 
+if SGI_VIDEO
+ARCH_SOURCES = sgi_video.c \
+	$(srcdir)/../shared/ioperm_noop.c
+endif
+
 if SPARC64_VIDEO
 # Cheat here and piggyback other sparc64 bits on SPARC64_VIDEO.
 ARCH_SOURCES = \

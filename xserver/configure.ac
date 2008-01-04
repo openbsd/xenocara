@@ -320,6 +320,10 @@ case $host_cpu in
 		*freebsd*)	DEFAULT_INT10=stub ;;
 	esac
 	;;
+  mips*)
+	SGI_VIDEO=yes
+	BSD_ARCH_SOURCES="sgi_video.c ioperm_noop.c"
+	;;
   sparc*)
 	xorg_loader_sparcmuldiv="yes"
 	SPARC64_VIDEO=yes
@@ -348,6 +352,7 @@ AM_CONDITIONAL(HP300_VIDEO, [test "x$HP300_VIDEO" = xyes])
 AM_CONDITIONAL(HPPA_VIDEO, [test "x$HPPA_VIDEO" = xyes])
 AM_CONDITIONAL(I386_VIDEO, [test "x$I386_VIDEO" = xyes])
 AM_CONDITIONAL(PPC_VIDEO, [test "x$PPC_VIDEO" = xyes])
+AM_CONDITIONAL(SGI_VIDEO, [test "x$SGI_VIDEO" = xyes])
 AM_CONDITIONAL(SPARC64_VIDEO, [test "x$SPARC64_VIDEO" = xyes])
 
 DRI=no
