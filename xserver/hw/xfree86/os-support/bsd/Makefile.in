@@ -61,13 +61,15 @@ am__libbsd_la_SOURCES_DIST = $(srcdir)/../shared/libc_wrapper.c \
 	bsd_VTsw.c bsd_init.c bsd_mouse.c bsd_bell.c alpha_video.c \
 	bsd_ev56.c bsd_axp.c $(srcdir)/../shared/xf86Axp.c arm_video.c \
 	$(srcdir)/../shared/ioperm_noop.c hp300_video.c hppa_video.c \
-	i386_video.c ppc_video.c sparc64_video.c \
+	i386_video.c ppc_video.c sgi_video.c sparc64_video.c \
 	$(srcdir)/../shared/agp_noop.c bsd_agp.c \
 	$(srcdir)/../shared/pm_noop.c $(srcdir)/bsd_apm.c \
 	$(srcdir)/bsd_kqueue_apm.c $(srcdir)/../shared/kmod_noop.c \
 	bsd_kmod.c $(srcdir)/../shared/stdResource.c
-@ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HP300_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SPARC64_VIDEO_TRUE@am__objects_1 = sparc64_video.lo \
-@ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HP300_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SPARC64_VIDEO_TRUE@	ioperm_noop.lo
+@ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HP300_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_FALSE@@SPARC64_VIDEO_TRUE@am__objects_1 = sparc64_video.lo \
+@ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HP300_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_FALSE@@SPARC64_VIDEO_TRUE@	ioperm_noop.lo
+@ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HP300_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_TRUE@am__objects_1 = sgi_video.lo \
+@ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HP300_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_TRUE@	ioperm_noop.lo
 @ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HP300_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@PPC_VIDEO_TRUE@am__objects_1 = ppc_video.lo \
 @ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HP300_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@PPC_VIDEO_TRUE@	ioperm_noop.lo
 @ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HP300_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_TRUE@am__objects_1 = i386_video.lo
@@ -383,6 +385,8 @@ SECURE_RPC_FALSE = @SECURE_RPC_FALSE@
 SECURE_RPC_TRUE = @SECURE_RPC_TRUE@
 SERVERCONFIGdir = @SERVERCONFIGdir@
 SET_MAKE = @SET_MAKE@
+SGI_VIDEO_FALSE = @SGI_VIDEO_FALSE@
+SGI_VIDEO_TRUE = @SGI_VIDEO_TRUE@
 SHELL = @SHELL@
 SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
 SOLARIS_ASM_INLINE_FALSE = @SOLARIS_ASM_INLINE_FALSE@
@@ -658,6 +662,9 @@ RES_SOURCES = $(srcdir)/../shared/stdResource.c
 @PPC_VIDEO_TRUE@ARCH_SOURCES = ppc_video.c \
 @PPC_VIDEO_TRUE@	$(srcdir)/../shared/ioperm_noop.c
 
+@SGI_VIDEO_TRUE@ARCH_SOURCES = sgi_video.c \
+@SGI_VIDEO_TRUE@	$(srcdir)/../shared/ioperm_noop.c
+
 
 # Cheat here and piggyback other sparc64 bits on SPARC64_VIDEO.
 @SPARC64_VIDEO_TRUE@ARCH_SOURCES = \
@@ -776,6 +783,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pm_noop.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/posix_tty.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ppc_video.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sgi_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigio.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sparc64_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stdPci.Plo@am__quote@
