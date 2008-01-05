@@ -35,7 +35,11 @@
 #include "xf86.h"
 
 /* for usleep */
-#include "xf86_ansic.h"
+#if HAVE_XF86_ANSIC_H
+# include "xf86_ansic.h"
+#else
+# include <unistd.h>
+#endif
 
 #include "rhd.h"
 #include "rhd_crtc.h"
@@ -56,7 +60,7 @@
 static inline CARD16
 LVTMARegisterShift(int ChipSet, CARD16 R500, CARD16 R600)
 {
-    if (ChipSet >= RHD_RS690)
+    if (ChipSet >= RHD_RS600)
 	return R600;
     else
 	return R500;
@@ -159,7 +163,7 @@ LVDSSet(struct rhdOutput *Output)
 
     if (Private->LVDS24Bit) { /* 24bits */
 	RHDRegMask(Output, LVTMA_LVDS_DATA_CNTL, 0x00000001, 0x00000001); /* enable 24bits */
-	RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0x00100000, 0x00100000); /* dithering bit depth = 24 */
+	RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0x00101010, 0x00101010); /* dithering bit depth = 24 */
 
 	if (Private->FPDI) /* FPDI? */
 	    RHDRegMask(Output, LVTMA_LVDS_DATA_CNTL, 0x00000010, 0x00000010); /* 24 bit format: FPDI or LDI? */
@@ -167,7 +171,7 @@ LVDSSet(struct rhdOutput *Output)
 	    RHDRegMask(Output, LVTMA_LVDS_DATA_CNTL, 0, 0x00000010);
     } else {
 	RHDRegMask(Output, LVTMA_LVDS_DATA_CNTL, 0, 0x00000001); /* disable 24bits */
-	RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0, 0x00100101); /* dithering bit depth != 24 */
+	RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0, 0x00101010); /* dithering bit depth != 24 */
     }
 
 #if 0
@@ -182,7 +186,9 @@ LVDSSet(struct rhdOutput *Output)
     } else
 	RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0, 0x00010101);
 #endif
-    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0x01010100, 0x01010101);
+
+    /* enable temporal dithering, disable spatial dithering and disable truncation */
+    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0x01010000, 0x01010101);
 
     /* reset the temporal dithering */
     RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0x04000000, 0x04000000);
@@ -467,7 +473,7 @@ LVDSInfoRetrieve(RHDPtr rhdPtr)
 
     Private->DualLink = (RHDRegRead(rhdPtr, LVTMA_CNTL) >> 24) & 0x00000001;
     Private->LVDS24Bit = RHDRegRead(rhdPtr, LVTMA_LVDS_DATA_CNTL) & 0x00000001;
-    Private->FPDI = RHDRegRead(rhdPtr, LVTMA_LVDS_DATA_CNTL) & 0x00000001;
+    Private->FPDI = RHDRegRead(rhdPtr, LVTMA_LVDS_DATA_CNTL) & 0x00000010;
 
 #ifdef ATOM_BIOS
     {
@@ -585,9 +591,10 @@ static struct R5xxTMDSBMacro {
     { 0x7146, 0x00F1061D }, /* RV515 */
     { 0x7147, 0x0082041D }, /* RV505 */
     { 0x7152, 0x00F2061C }, /* RV515 */
-    { 0x7183, 0x00b2050C }, /* RV530 */
+    { 0x7183, 0x00B2050C }, /* RV530 */
     { 0x71C1, 0x0062041D }, /* RV535 */
     { 0x71C2, 0x00F1061D }, /* RV530 */
+    { 0x71C6, 0x00F2061D }, /* RV530 */
     { 0x71D2, 0x00F10610 }, /* RV530: atombios uses 0x00F1061D */
     { 0x7249, 0x00F1061D }, /* R580  */
     { 0x724B, 0x00F10610 }, /* R580: atombios uses 0x00F1061D */
@@ -612,10 +619,12 @@ static struct RV6xxTMDSBMacro {
     CARD32 TX;
     CARD32 PreEmphasis;
 } RV6xxTMDSBMacro[] = {
-    { 0x94C1, 0x01030311, 0x10001A00, 0x01801015},
-    { 0x94C3, 0x01030311, 0x10001A00, 0x01801015},
-    { 0x9588, 0x01030311, 0x10001C00, 0x01C01011},
-    { 0x9589, 0x01030311, 0x10001C00, 0x01C01011},
+    { 0x94C1, 0x01030311, 0x10001A00, 0x01801015}, /* RV610 */
+    { 0x94C3, 0x01030311, 0x10001A00, 0x01801015}, /* RV610 */
+    { 0x9505, 0x0533041A, 0x020010A0, 0x41002045}, /* RV670 */
+    { 0x9587, 0x01030311, 0x10001C00, 0x01C01011}, /* RV630 */
+    { 0x9588, 0x01030311, 0x10001C00, 0x01C01011}, /* RV630 */
+    { 0x9589, 0x01030311, 0x10001C00, 0x01C01011}, /* RV630 */
     { 0, 0, 0, 0} /* End marker */
 };
 
@@ -667,11 +676,11 @@ TMDSBSet(struct rhdOutput *Output)
     RHDFUNC(Output);
 
     RHDRegMask(Output, LVTMA_MODE, 0x00000001, 0x00000001); /* select TMDS */
-    if (rhdPtr->ChipSet < RHD_RS690) /* r5xx */
+    if (rhdPtr->ChipSet < RHD_RS600) /* r5xx */
 	RHDRegMask(Output, LVTMA_REG_TEST_OUTPUT, 0x00200000, 0x00200000);
-    else if (rhdPtr->ChipSet == RHD_RS690)
+    else if ((rhdPtr->ChipSet == RHD_RS600) || (rhdPtr->ChipSet == RHD_RS690))
 	RHDRegWrite(Output, LVTMA_REG_TEST_OUTPUT, 0x01120000);
-    else /* R600 and up */
+    else if (rhdPtr->ChipSet < RHD_RV670)
 	RHDRegMask(Output, LVTMA_REG_TEST_OUTPUT, 0x00100000, 0x00100000);
 
     /* Clear out some HPD events first: this should be under driver control. */
@@ -680,7 +689,7 @@ TMDSBSet(struct rhdOutput *Output)
     RHDRegMask(Output, LVTMA_CNTL, 0, 0x00000010);
 
     /* Disable the transmitter */
-    if (rhdPtr->ChipSet < RHD_RS690)
+    if (rhdPtr->ChipSet < RHD_RS600)
 	RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x00001D1F);
     else
 	RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x00003E3E);
@@ -750,7 +759,7 @@ TMDSBPower(struct rhdOutput *Output, int Power)
     switch (Power) {
     case RHD_POWER_ON:
 	RHDRegMask(Output, LVTMA_CNTL, 0x00000001, 0x00000001);
-	if (rhdPtr->ChipSet < RHD_RS690)
+	if (rhdPtr->ChipSet < RHD_RS600)
 	    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0x0000001F, 0x0000001F);
 	else
 	    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0x0000003E, 0x0000003E);
@@ -759,7 +768,7 @@ TMDSBPower(struct rhdOutput *Output, int Power)
 	RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0, 0x00000002);
 	return;
     case RHD_POWER_RESET:
-	if (rhdPtr->ChipSet < RHD_RS690)
+	if (rhdPtr->ChipSet < RHD_RS600)
 	    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x0000001F);
 	else
 	    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x0000003E);
@@ -769,7 +778,7 @@ TMDSBPower(struct rhdOutput *Output, int Power)
 	RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0x00000002, 0x00000002);
 	usleep(2);
 	RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0, 0x00000001);
-	if (rhdPtr->ChipSet < RHD_RS690)
+	if (rhdPtr->ChipSet < RHD_RS600)
 	    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x0000001F);
 	else
 	    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x0000003E);

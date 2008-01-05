@@ -32,6 +32,11 @@
 
 #include "xf86.h"
 #include "xf86DDC.h"
+#if HAVE_XF86_ANSIC_H
+# include "xf86_ansic.h"
+#else
+# include <string.h>
+#endif
 
 #include "rhd.h"
 #include "rhd_connector.h"
@@ -39,10 +44,6 @@
 #include "rhd_monitor.h"
 #ifdef ATOM_BIOS
 # include "rhd_atombios.h"
-#endif
-
-#ifndef _XF86_ANSIC_H
-#include <strings.h>
 #endif
 
 /* From rhd_edid.c */
@@ -65,7 +66,7 @@ RHDMonitorPrint(struct rhdMonitor *Monitor)
     for (i = 0; i < Monitor->numVRefresh; i++)
 	xf86Msg(X_NONE, "        %3.1f - %3.1fHz\n",  Monitor->VRefresh[i].lo,
 		Monitor->VRefresh[i].hi);
-
+    xf86Msg(X_NONE, "    DPI: %dx%d\n", Monitor->xDpi, Monitor->yDpi);
     if (Monitor->ReducedAllowed)
 	xf86Msg(X_NONE, "    Allows reduced blanking.\n");
     if (Monitor->UseFixedModes)
@@ -324,15 +325,14 @@ rhdMonitorPanel(struct rhdConnector *Connector)
 	if (Result == ATOM_SUCCESS) {
 	    Mode = data.mode;
 	    Mode->type |= M_T_PREFERRED;
-	} else {
-	    if (!EDID) {
-		Result = RHDAtomBiosFunc(Connector->scrnIndex,
-					 rhdPtr->atomBIOS,
-					 ATOMBIOS_GET_PANEL_EDID, &data);
-		if (Result == ATOM_SUCCESS)
-		    EDID = xf86InterpretEDID(Connector->scrnIndex,
-					     data.EDIDBlock);
-	    }
+	}
+	if (!EDID) {
+	    Result = RHDAtomBiosFunc(Connector->scrnIndex,
+				     rhdPtr->atomBIOS,
+				     ATOMBIOS_GET_PANEL_EDID, &data);
+	    if (Result == ATOM_SUCCESS)
+		EDID = xf86InterpretEDID(Connector->scrnIndex,
+					 data.EDIDBlock);
 	}
     }
 #endif
@@ -352,6 +352,15 @@ rhdMonitorPanel(struct rhdConnector *Connector)
 	Monitor->VRefresh[0].lo = Mode->VRefresh;
 	Monitor->VRefresh[0].hi = Mode->VRefresh;
 	Monitor->Bandwidth = Mode->SynthClock;
+
+	/* Clueless atombios does give us a mode, but doesn't give us a
+	 * DPI or a size. It is just perfect, right? */
+	if (EDID) {
+	    if (EDID->features.hsize)
+		Monitor->xDpi = (Mode->HDisplay * 2.54) / ((float) EDID->features.hsize) + 0.5;
+	    if (EDID->features.vsize)
+		Monitor->yDpi = (Mode->VDisplay * 2.54) / ((float) EDID->features.vsize) + 0.5;
+	}
     } else if (EDID) {
 	RHDMonitorEDIDSet(Monitor, EDID);
 	rhdPanelEDIDModesFilter(Monitor);
@@ -364,6 +373,7 @@ rhdMonitorPanel(struct rhdConnector *Connector)
 
     /* panel should be driven at native resolution only. */
     Monitor->UseFixedModes = TRUE;
+    Monitor->ReducedAllowed = TRUE;
 
     if (EDID)
 	rhdMonitorPrintEDID(Monitor, EDID);

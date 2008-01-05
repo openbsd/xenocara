@@ -1222,7 +1222,7 @@ LVDSReport(void *map)
 
     DualLink = RegRead(map, LVTMA_CNTL) & 0x01000000;
     Bits24 = RegRead(map, LVTMA_LVDS_DATA_CNTL) & 0x1;
-    Fpdi = RegRead(map, LVTMA_LVDS_DATA_CNTL) & 0x1;
+    Fpdi = RegRead(map, LVTMA_LVDS_DATA_CNTL) & 0x10;
 
     printf("\t%dbits, %s link, %s Panel found.\n",
 	   Bits24 ? 24 : 18,
@@ -1471,15 +1471,15 @@ InterpretATOMBIOS(unsigned char *base)
 int
 main(int argc, char *argv[])
 {
-    struct pci_dev *device;
+    struct pci_dev *device = NULL;
     struct pci_access *pciAccess;
-    struct RHDDevice *rhdDevice;
+    struct RHDDevice *rhdDevice = NULL;
     int devMem;
     void *io;
     int bus, dev, func;
     int ret;
     int saved_errno;
-    Bool dumpBios, deviceSet, scanDDCBus;
+    Bool dumpBios = FALSE, deviceSet = FALSE, scanDDCBus = FALSE;
     int i;
     unsigned char *rombase;
     int size;

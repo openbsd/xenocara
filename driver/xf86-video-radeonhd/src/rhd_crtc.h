@@ -41,6 +41,7 @@ struct rhdCrtc {
     int Width;
     int Height;
     int X, Y; /* Current frame */
+    int MinX, MinY, MaxX, MaxY; /* Panning Area: Max != 0 if used */
 
     struct rhdPLL *PLL; /* Currently attached PLL */
     struct rhdLUT *LUT; /* Currently attached LUT */

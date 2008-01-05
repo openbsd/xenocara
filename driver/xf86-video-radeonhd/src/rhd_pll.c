@@ -30,7 +30,11 @@
 #include "xf86.h"
 
 /* for usleep */
-#include "xf86_ansic.h"
+#if HAVE_XF86_ANSIC_H
+# include "xf86_ansic.h"
+#else
+# include <unistd.h>
+#endif
 
 #include "rhd.h"
 #include "rhd_pll.h"
@@ -270,6 +274,52 @@ PLL2SetLow(struct rhdPLL *PLL, CARD32 RefDiv, CARD32 FBDiv, CARD32 PostDiv,
  * For R500, this is done in atombios by ASIC_RegistersInit
  * Some data table in atom should've provided this information.
  */
+
+struct PLL_Control {
+    CARD16 FeedbackDivider; /* 0xFFFF/-1 is the endmarker here */
+    CARD32 Control;
+};
+
+/* From hardcoded values. */
+static struct PLL_Control RV610PLLControl[] =
+{
+    { 0x0049, 0x159F8704 },
+    { 0x006C, 0x159B8704 },
+    { 0xFFFF, 0x159EC704 }
+};
+
+/* Some tables are provided by atombios,
+ * it's just that they are hidden away deliberately and not exposed */
+static struct PLL_Control RV670PLLControl[] =
+{
+    { 0x004A, 0x159FC704 },
+    { 0x0067, 0x159BC704 },
+    { 0x00C4, 0x159EC704 },
+    { 0x00F4, 0x1593A704 },
+    { 0x0136, 0x1595A704 },
+    { 0x01A4, 0x1596A704 },
+    { 0x022C, 0x159CE504 },
+    { 0xFFFF, 0x1591E404 }
+};
+
+/*
+ *
+ */
+static CARD32
+PLLControlTableRetrieve(struct PLL_Control *Table, CARD16 FeedbackDivider)
+{
+    int i;
+
+    for (i = 0; Table[i].FeedbackDivider == 0xFFFF; i++)
+	if (Table[i].FeedbackDivider >= FeedbackDivider)
+	    break;
+
+    return Table[i].Control;
+}
+
+/*
+ *
+ */
 static CARD32
 PLLElectrical(RHDPtr rhdPtr, CARD16 FeedbackDivider)
 {
@@ -284,6 +334,7 @@ PLLElectrical(RHDPtr rhdPtr, CARD16 FeedbackDivider)
 	    return 0x00230704;
 	else
 	    return 0;
+    case RHD_RS600:
     case RHD_RS690:
 	/* depending on MiscInfo also 0x00120004 */
 	return 0x00120704;
@@ -294,13 +345,9 @@ PLLElectrical(RHDPtr rhdPtr, CARD16 FeedbackDivider)
     case RHD_M72:
     case RHD_M74:
     case RHD_M76:
-	/* charge pump and loop filter differ per FB divider */
-	if (FeedbackDivider >= 0x6C)
-	    return 0x159EC704;
-	else if (FeedbackDivider >= 0x49)
-	    return 0x159B8704;
-	else
-	    return 0x159F8704;
+	return PLLControlTableRetrieve(RV610PLLControl, FeedbackDivider);
+    case RHD_RV670:
+	return PLLControlTableRetrieve(RV670PLLControl, FeedbackDivider);
     default:
 	return 0;
     }
@@ -327,7 +374,7 @@ PLL1Set(struct rhdPLL *PLL, CARD16 ReferenceDivider, CARD16 FeedbackDivider,
 	    FBDiv |= 0x00000030;
 	else if (FeedbackDivider <= 0x3F)
 	    FBDiv |= 0x00000020;
-    } else if (rhdPtr->ChipSet >= RHD_RS690) /* RS690 & R600 */
+    } else if (rhdPtr->ChipSet >= RHD_RS600) /* RS600, RS690, R600 */
 	FBDiv |= 0x00000030;
     else
 	FBDiv |= RHDRegRead(PLL, EXT1_PPLL_FB_DIV) & 0x00000030;
@@ -366,7 +413,7 @@ PLL2Set(struct rhdPLL *PLL, CARD16 ReferenceDivider, CARD16 FeedbackDivider,
 	    FBDiv |= 0x00000030;
 	else if (FeedbackDivider <= 0x3F)
 	    FBDiv |= 0x00000020;
-    } else if (rhdPtr->ChipSet >= RHD_RS690) /* RS690 & R600 */
+    } else if (rhdPtr->ChipSet >= RHD_RS600) /* RS600, RS690, R600 */
 	FBDiv |= 0x00000030;
     else
 	FBDiv |= RHDRegRead(PLL, EXT2_PPLL_FB_DIV) & 0x00000030;

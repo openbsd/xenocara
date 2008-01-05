@@ -2,7 +2,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-radeonhd],
-        1.0.0,
+        1.1.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/radeonhd],
         xf86-video-radeonhd)
 
@@ -48,12 +48,29 @@ sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 # Header files checks.
 AC_HEADER_STDC
 
+PKG_CHECK_MODULES(PCIUTILS, libpci,,
+   [AC_MSG_WARN([libpci not registered in pkgconfig, will guess instead])
+    test "x$PCIUTILS_CFLAGS$PCIUTILS_LIBS" = "x" && PCIUTILS_LIBS="-lpci -lz"
+])
+
+SAVED_CPPFLAGS="$CPPFLAGS"
+SAVED_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS $PCIUTILS_CFLAGS"
+CPPFLAGS="$CPPFLAGS $PCIUTILS_CFLAGS"
 AC_CHECK_HEADER([pci/pci.h],
                 [AC_DEFINE([HAVE_PCI_PCI_H], [1],
                            [Define to 1 if you have <pci/pci.h>.])
                  have_pci_pci_h=yes],
                 [AC_MSG_WARN([Caution: Will not compile rhd_conntest without pciutils headers.])])
 AM_CONDITIONAL([HAVE_PCI_PCI_H], [test "x$have_pci_pci_h" = "xyes"])
+CFLAGS="$SAVED_CFLAGS"
+CPPFLAGS="$SAVED_CPPFLAGS"
+
+AC_CHECK_HEADER([${sdkdir}/xf86_ansic.h],
+		[AC_DEFINE([HAVE_XF86_ANSIC_H], [1],
+			   [Define to 1 if you have <${sdkdir}/xf86_ansic.h>.])
+		have_xf86_ansic_h=yes])
+AM_CONDITIONAL([HAVE_XF86_ANSIC_H], [test "x$have_xf86_ansic_h" = "xyes"])
 
 SAVED_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS $XORG_CFLAGS"
@@ -180,6 +197,8 @@ esac
 
 # Substitute
 
+AC_SUBST([PCIUTILS_CFLAGS])
+AC_SUBST([PCIUTILS_LIBS])
 AC_SUBST([XORG_CFLAGS])
 AC_SUBST([WARN_CFLAGS])
 AC_SUBST([PEDANTIC_CFLAGS])

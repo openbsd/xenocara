@@ -28,8 +28,21 @@ This README file contains the following sections:
 
 
 
-Recent Changes
-==============
+Major Changes
+=============
+
+Read ChangeLog for a complete list.
+
+- Version 1.1.0
+
+  - Added Support for RS600, preliminary RV670.
+  - Allow panning in RandR mode.
+  - Preliminary (read: untested) support for HDMI connectors.
+  - Lots of bugfixes, e.g.
+    - Better monitor detection.
+    - Gamma + palette fixes.
+    - Mode stability + textmode restore.
+    - RandR mode selection fixes.
 
 - Version 1.0.0
 
@@ -50,7 +63,7 @@ More Resources
 
 The official radeonhd wiki:
    http://wiki.x.org/wiki/radeonhd
-   
+
 The mailing list on radeonhd:
    http://lists.opensuse.org/radeonhd/
 

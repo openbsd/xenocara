@@ -33,8 +33,8 @@
 #include "rhd_lut.h"
 #include "rhd_regs.h"
 
-#define RHD_REGOFFSET_LUTA 0x0000
-#define RHD_REGOFFSET_LUTB 0x8000
+#define RHD_REGOFFSET_LUTA 0x000
+#define RHD_REGOFFSET_LUTB 0x800
 
 /*
  *

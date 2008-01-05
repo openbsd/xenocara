@@ -28,8 +28,15 @@
 #endif
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86_ansic.h"
 #include "xf86Pci.h"
+#if HAVE_XF86_ANSIC_H
+# include "xf86_ansic.h"
+#else
+# include <unistd.h>
+# include <string.h>
+# include <stdio.h>
+#endif
+
 #include "edid.h"
 #include "rhd.h"
 #include "rhd_atombios.h"
@@ -818,7 +825,7 @@ rhdAtomLvdsTimings(atomBiosHandlePtr handle, ATOM_DTD_FORMAT *dtd)
     mode->VRefresh = (1000.0 * ((float) mode->Clock))
 	/ ((float)(((float)mode->HTotal) * ((float)mode->VTotal)));
 
-    xf86snprintf(name, NAME_LEN, "%dx%d",
+    snprintf(name, NAME_LEN, "%dx%d",
 		 mode->HDisplay, mode->VDisplay);
     mode->name = xstrdup(name);
 
@@ -1018,7 +1025,7 @@ rhdAtomLvdsInfoQuery(atomBiosHandlePtr handle,
 		    break;
 		case     ATOM_LVDS_FPDI:
 		    *val = atomDataPtr->LVDS_Info
-			.LVDS_Info->ucLVDS_Misc * 0x10;
+			.LVDS_Info->ucLVDS_Misc & 0x10;
 		    break;
 		default:
 		    return ATOM_NOT_IMPLEMENTED;
@@ -1362,12 +1369,12 @@ static const struct _rhd_connector_objs
     { "VGA", RHD_CONNECTOR_VGA },
     { "COMPOSITE", RHD_CONNECTOR_TV },
     { "SVIDEO", RHD_CONNECTOR_TV, },
+    { "YPrPb", RHD_CONNECTOR_TV, },
     { "D_CONNECTOR", RHD_CONNECTOR_NONE, },
     { "9PIN_DIN", RHD_CONNECTOR_NONE },
     { "SCART", RHD_CONNECTOR_TV },
-    { "HDMI_TYPE_A", RHD_CONNECTOR_NONE },
-    { "HDMI_TYPE_B", RHD_CONNECTOR_NONE },
-    { "HDMI_TYPE_B", RHD_CONNECTOR_NONE },
+    { "HDMI_TYPE_A", RHD_CONNECTOR_DVI },
+    { "HDMI_TYPE_B", RHD_CONNECTOR_DVI },
     { "LVDS", RHD_CONNECTOR_PANEL },
     { "7PIN_DIN", RHD_CONNECTOR_TV },
     { "PCIE_CONNECTOR", RHD_CONNECTOR_NONE },
@@ -1431,8 +1438,8 @@ static const struct _rhd_connectors
     {"PANEL", RHD_CONNECTOR_PANEL, FALSE },
     {"DIGITAL_LINK", RHD_CONNECTOR_NONE, FALSE },
     {"SCART", RHD_CONNECTOR_TV, FALSE },
-    {"HDMI Type A", RHD_CONNECTOR_NONE, FALSE },
-    {"HDMI Type B", RHD_CONNECTOR_NONE, FALSE },
+    {"HDMI Type A", RHD_CONNECTOR_DVI, FALSE },
+    {"HDMI Type B", RHD_CONNECTOR_DVI, FALSE },
     {"UNKNOWN", RHD_CONNECTOR_NONE, FALSE },
     {"UNKNOWN", RHD_CONNECTOR_NONE, FALSE },
     {"DVI+DIN", RHD_CONNECTOR_NONE, FALSE }
@@ -1955,7 +1962,7 @@ rhdAtomConnectorInfoFromSupportedDevices(atomBiosHandlePtr handle,
 	cp[ncon].Output[0] = devices[n].ot;
 	cp[ncon].Output[1] = RHD_OUTPUT_NONE;
 	cp[ncon].Type = devices[n].con;
-	cp[ncon].Name = xf86strdup(devices[n].name);
+	cp[ncon].Name = xstrdup(devices[n].name);
 	cp[ncon].Name = RhdAppendString(cp[ncon].Name, devices[n].outputName);
 
 	if (devices[n].dual) {

@@ -47,8 +47,9 @@ After using the
 .I fglrx
 driver, the display can get very jittery with
 .BR radeonhd .
-A reboot fixes this problem in most
-cases, sometimes a powercycle is necessary.
+Also suspend & resume will probably fail.  A reboot fixes this problem in most
+cases, sometimes a powercycle is necessary.  Unloading the kernel module is
+typically not enough.
 .PP
 A more up-to-date list can be found on the wiki page.
 .PP
@@ -60,6 +61,8 @@ driver supports video cards based on the following ATI chips:
 .\" The following list was generated from "X -logverbose 7" by the following command:
 .\" sed -n '/^\t[RM][A-Z0-9]\+ * : /{ s/\.$//; s/^\t\([A-Z0-9]\+\) \+: \(.*\)/.TP 8\n.B \1\n\2/; p};' /var/log/Xorg.0.log
 .\" The list replicates the output of RHDIdentify() in src/rhd_id.c.
+.PP
+.PD 0
 .TP 8
 .B RV505
 Radeon X1550, X1550 64bit
@@ -100,6 +103,9 @@ Radeon HD 2350, HD 2400 Pro/XT, HD 2400 Pro AGP; FireGL V4000
 .B RV630
 Radeon HD 2600 LE/Pro/XT, HD 2600 Pro/XT AGP; Gemini RV630; FireGL V3600/V5600
 .TP 8
+.B RV670
+Radeon HD 3850, HD 3870, FireGL V7700
+.TP 8
 .B M52
 Mobility Radeon X1300
 .TP 8
@@ -136,11 +142,12 @@ Mobility Radeon HD 2400 XT
 .B M76
 Mobility Radeon HD 2600; (Gemini ATI) Mobility Radeon HD 2600 XT
 .TP 8
-.B RS690
-Radeon X1200
+.B RS600
+Radeon Xpress 1200, Xpress 1250
 .TP 8
-.B RS740
-RS740, RS740M
+.B RS690
+Radeon X1200, X1250, X1270
+.PD
 .\"
 .\"
 .PP
@@ -182,11 +189,34 @@ provide correct EDID data and you need a reduced blanking mode to drive a high
 resolution mode over a single link DVI connection. The default is
 .BR off .
 .TP
-.BI "Option \*qIgnoreHPD\*q \*q" boolean \*q
-Ignore or rely on hot plug detection (HPD) to work correctly. If the connector
-table is broken this might help to find CRTs attached to a DVI-I connector
-via a VGA-to-DVI adaptor. The default is
-.BR off .
+.BI "Option \*qHPD\*q \*q" "hpd-mode" \*q
+Change the use of the hot plug detection (HPD) pins. On R5xx the according
+connector tables are often broken and have to be worked around.
+.RS
+.TP 8
+.PD 0
+.B Auto
+Select method depending on chipset and board
+.TP
+.B Off
+Don't use HPD pins. Some connectors might not be able to detect connections
+at all
+.TP
+.B Normal
+Use connector table information as-is
+.TP
+.B Swap
+Swap HPD pin 1 and 2 in connector table
+.RE
+.RS
+.PD
+.PP
+.B NOTE:
+Use of this option is discouraged. Whenever this option is needed to detect
+connected monitors correctly, please report to the mailing list.
+The default is
+.BR Auto .
+.RE
 .TP
 .BI "Option \*qRRUseXF86Edid\*q \*q" boolean \*q
 .IR "RandR modesetting only" .
@@ -197,8 +227,12 @@ instead of the default routines from
 which are better adapted to the chipset. Panels will often fail to work with
 these calls. The default is
 .BR off .
-.br
-Considered deprecated. Report if needed for your configuration.
+.PP
+.RS
+.B NOTE:
+Use of this option is considered deprecated. Report to the mailing list
+if this is needed for your configuration.
+.RE
 .TP
 .BI "Option \*qRROutputOrder\*q \*q" "list-of-outputs" \*q
 .IR "RandR modesetting only" .
@@ -231,6 +265,150 @@ to what most drivers behave like and a common source of configuration problems.
 Thus the default is
 .B off
 (i.e. ignore).
+.\"
+.\"
+.SH RANDR OUTPUT PROPERTIES
+The following properties can be queried with
+.B xrandr --prop
+and some of them can be set with
+.BR "xrandr --output" " <output> " --set " <property> <value> ."
+Those marked with RR13 are probably merged into a RandR 1.3 standard.
+Properties marked Read-Only are provided by the driver for informational
+purpose only, those marked Static won't change during runtime.
+.TP
+.BR RANDR_SIGNAL_FORMAT "   Read-Only RR13"
+.RS
+.TP 16
+.PD 0
+.IR Type :
+string
+.TP
+.IR Range/List :
+unknown VGA TMDS LVDS FBAS FBAS-PAL FBAS-NTSC FBAS-SECAM SVideo YPbPr
+DisplayPort
+.RE
+.RS
+.PD
+.PP
+Signal format / physical protocol format that is used for the specified
+output.
+.br
+A driver MAY change this property of an output if the underlying hardware
+indicates a protocol change (e.g. TV formats).  Values with dashes
+.RI ( FBAS-PAL )
+describe more specific versions of the base values
+.RI ( FBAS )
+and SHOULD be used if known to the driver.
+.RE
+.TP
+.BR RANDR_CONNECTOR_TYPE "   Read-Only Static RR13"
+.RS
+.TP 16
+.PD 0
+.IR Type :
+string
+.TP
+.IR Range/List :
+unknown VGA DVI DVI-I DVI-A DVI-D HDMI PANEL TV TV-FBAS TV-SVideo TV-YPbPr
+TV-SCART TV-C4 DisplayPort
+.RE
+.RS
+.PD
+.PP
+Connector type, as far as known to the driver.
+.br
+Values with dashes
+.RI ( TV-FBAS )
+describe more specific versions of the base values
+.RI ( TV ).
+The former SHOULD be used if the connector is not capable of producing other
+signal formats. The later SHOULD be used if the exact connector is unknown, or
+the connector is a multi-format connector that is not described otherwise.
+.IR DVI ,
+for instance, SHOULD be handled like a
+.I DVI-I
+connector, unless additional information is available to the user agent.
+.I PANEL
+describes laptop-internal (normally LVDS) displays.
+.IR TV ,
+.IR TV-SCART ,
+.IR TV-YPbPr ,
+and
+.I TV-C4
+with signal format
+.I VGA
+are valid combinations and describe RGB TV signals.
+.RE
+.TP
+.BR RANDR_CONNECTOR_NUMBER "   Read-Only Static RR13"
+.RS
+.TP 16
+.PD 0
+.IR Type :
+int32
+.TP
+.IR Range/List :
+0-
+.RE
+.RS
+.PD
+.PP
+Outputs that route their signal to the same connector MUST have the same
+connector number. Outputs with the same connector number MUST route their
+signal to the same connector, except if it is 0, which indicates unknown
+connectivity. 1 is called the primary connector, 2 the secondary. 3 is often a
+TV connector, but that is completely driver / hardware dependent.
+.br
+Outputs with the same connector number SHOULD have the same connector type.
+Meaning and client behavior for mismatching connector types is undefined at
+the moment.
+.RE
+.TP
+.BR RANDR_OUTPUT_NUMBER "   Read-Only Static RR13"
+.RS
+.TP 16
+.PD 0
+.IR Type :
+int32
+.TP
+.IR Range/List :
+0-
+.RE
+.RS
+.PD
+.PP
+A card may route one internal output to several connectors.  Connectors that
+are driven by the same output cannot be driven by different Crtcs and are thus
+only allowed to be used in clone mode. The driver SHOULD emit an error message
+and continue as gracefully as possible if using different Crtcs for the same
+internal output is requested.
+.br
+Internal outputs are numbered from 1, 0 indicates that output routing is
+unknown.
+.RE
+.TP
+.B RANDR_PANING_AREA
+.RS
+.TP 16
+.PD 0
+.IR Type :
+string
+.TP
+.IR Format :
+.RB <width> x <height>[ + <xoffset> + <yoffset>]
+.RE
+.RS
+.PD
+.PP
+Specifies the panning area in RandR mode per output.
+.br
+It actually is a Crtc-specific property, but RandR doesn't support that yet.
+As the
+.B xrandr
+application typically always resets the framebuffer size with every action,
+.BR --fb " <width>" x <height>
+has to be added on every invocation, unless there is an additional output
+configured that is using this size as its resolution.
 .\"
 .\"
 .SH KNOWN BUGS

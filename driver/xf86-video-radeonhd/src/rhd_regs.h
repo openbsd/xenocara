@@ -97,6 +97,7 @@ enum {
     D1GRPH_ENABLE                  = 0x6100,
     D1GRPH_CONTROL                 = 0x6104,
     D1GRPH_LUT_SEL                 = 0x6108,
+    D1GRPH_SWAP_CNTL               = 0x610C,
     D1GRPH_PRIMARY_SURFACE_ADDRESS = 0x6110,
     D1GRPH_PITCH                   = 0x6120,
     D1GRPH_SURFACE_OFFSET_X        = 0x6124,
@@ -169,6 +170,7 @@ enum {
     D2GRPH_ENABLE                  = 0x6900,
     D2GRPH_CONTROL                 = 0x6904,
     D2GRPH_LUT_SEL                 = 0x6908,
+    D2GRPH_SWAP_CNTL               = 0x690C,
     D2GRPH_PRIMARY_SURFACE_ADDRESS = 0x6910,
     D2GRPH_PITCH                   = 0x6920,
     D2GRPH_SURFACE_OFFSET_X        = 0x6924,
@@ -200,6 +202,7 @@ enum {
     /* DAC A */
     DACA_ENABLE                    = 0x7800,
     DACA_SOURCE_SELECT             = 0x7804,
+    DACA_SYNC_SELECT               = 0x7824,
     DACA_AUTODETECT_CONTROL        = 0x7828,
     DACA_FORCE_OUTPUT_CNTL         = 0x783C,
     DACA_FORCE_DATA                = 0x7840,
@@ -228,6 +231,7 @@ enum {
     /* DAC B */
     DACB_ENABLE                    = 0x7A00,
     DACB_SOURCE_SELECT             = 0x7A04,
+    DACB_SYNC_SELECT               = 0x7A24,
     DACB_AUTODETECT_CONTROL        = 0x7A28,
     DACB_FORCE_OUTPUT_CNTL         = 0x7A3C,
     DACB_FORCE_DATA                = 0x7A40,
@@ -342,7 +346,7 @@ enum _r6xxRegs {
 };
 
 /* *_Q: questionbable */
-enum _rs6xxRegs {
+enum _rs69xRegs {
     /* I2C */
     RS69_DC_I2C_CONTROL		   = 0x7D30,  /* (RW) *//* */
     RS69_DC_I2C_UNKNOWN_2		   = 0x7D34,  /* (RW) */

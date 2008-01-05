@@ -69,6 +69,7 @@ enum RHD_CHIPSETS {
     RHD_M68,
     RHD_M71,
     /* R500 integrated */
+    RHD_RS600,
     RHD_RS690,
     RHD_RS740,
     /* R600 */
@@ -79,8 +80,17 @@ enum RHD_CHIPSETS {
     RHD_M72,
     RHD_M74,
     RHD_M76,
-    /* R600 integrated */
+    /* RV670 came into existence after RV6x0 and M7x */
+    RHD_RV670,
     RHD_CHIP_END
+};
+
+enum RHD_HPD_USAGE {
+    RHD_HPD_USAGE_AUTO = 0,
+    RHD_HPD_USAGE_OFF,
+    RHD_HPD_USAGE_NORMAL,
+    RHD_HPD_USAGE_SWAP,
+    RHD_HPD_USAGE_AUTO_SWAP
 };
 
 #define RHD_CONNECTORS_MAX 4
@@ -132,10 +142,11 @@ typedef struct RHDRec {
     RHDOpt              swCursor;
     RHDOpt		shadowFB;
     RHDOpt		forceReduced;
-    RHDOpt		ignoreHpd;
+    RHDOpt              forceDPI;
     RHDOpt		noRandr;
     RHDOpt		rrUseXF86Edid;
     RHDOpt		rrOutputOrder;
+    enum RHD_HPD_USAGE	hpdUsage;
     unsigned int        FbMapSize;
     pointer             FbBase;   /* map base of fb   */
     unsigned int        FbIntAddress; /* card internal address of FB */
@@ -232,6 +243,8 @@ void RhdGetOptValString(const OptionInfoRec *table, int token,
 char *RhdAppendString(char *s1, const char *s2);
 void RhdAssertFailed(const char *str,
 		     const char *file, int line, const char *func) NORETURN;
+void RhdAssertFailedFormat(const char *str, const char *file, int line,
+			   const char *func, const char *format, ...) NORETURN;
 
 /* Extra debugging verbosity: decimates gdb usage */
 
@@ -243,8 +256,11 @@ void RhdAssertFailed(const char *str,
 #ifndef NO_ASSERT
 #  define ASSERT(x) do { if (!(x)) RhdAssertFailed \
 			 (#x, __FILE__, __LINE__, __func__); } while(0)
+#  define ASSERTF(x,f...) do { if (!(x)) RhdAssertFailedFormat \
+			    (#x, __FILE__, __LINE__, __func__, ##f); } while(0)
 #else
 #  define ASSERT(x) ((void)0)
+#  define ASSERTF(x,...) ((void)0)
 #endif
 
 #define LOG_DEBUG 7

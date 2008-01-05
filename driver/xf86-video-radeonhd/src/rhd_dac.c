@@ -30,7 +30,13 @@
 #include "xf86.h"
 
 /* for usleep */
-#include "xf86_ansic.h"
+#if HAVE_XF86_ANSIC_H
+# include "xf86_ansic.h"
+#else
+# include <unistd.h>
+# include <string.h>
+# include <stdio.h>
+#endif
 
 #include "rhd.h"
 #include "rhd_connector.h"
@@ -48,6 +54,7 @@ struct rhdDACPrivate {
     CARD32 Store_Powerdown;
     CARD32 Store_Force_Output_Control;
     CARD32 Store_Source_Select;
+    CARD32 Store_Sync_Select;
     CARD32 Store_Enable;
     CARD32 Store_Control1;
     CARD32 Store_Control2;
@@ -244,6 +251,7 @@ DACSet(struct rhdOutput *Output, CARD16 offset)
 {
     RHDRegWrite(Output, offset + DACA_FORCE_OUTPUT_CNTL, 0);
     RHDRegMask(Output, offset + DACA_SOURCE_SELECT, Output->Crtc->Id, 0x00000001);
+    RHDRegMask(Output, offset + DACA_SYNC_SELECT, 0, 0x00000101);
     RHDRegMask(Output, offset + DACA_CONTROL1, 0x00000002, 0x00000003);
     RHDRegMask(Output, offset + DACA_CONTROL2, 0, 0x00000001);
 }
@@ -324,6 +332,7 @@ DACSave(struct rhdOutput *Output, CARD16 offset)
     Private->Store_Powerdown = RHDRegRead(Output, offset + DACA_POWERDOWN);
     Private->Store_Force_Output_Control = RHDRegRead(Output, offset + DACA_FORCE_OUTPUT_CNTL);
     Private->Store_Source_Select = RHDRegRead(Output, offset + DACA_SOURCE_SELECT);
+    Private->Store_Sync_Select = RHDRegRead(Output, offset + DACA_SYNC_SELECT);
     Private->Store_Enable = RHDRegRead(Output, offset + DACA_ENABLE);
     Private->Store_Control1 = RHDRegRead(Output, offset + DACA_CONTROL1);
     Private->Store_Control2 = RHDRegRead(Output, offset + DACA_CONTROL2);
@@ -364,6 +373,7 @@ DACRestore(struct rhdOutput *Output, CARD16 offset)
     RHDRegWrite(Output, offset + DACA_POWERDOWN, Private->Store_Powerdown);
     RHDRegWrite(Output, offset + DACA_FORCE_OUTPUT_CNTL, Private->Store_Force_Output_Control);
     RHDRegWrite(Output, offset + DACA_SOURCE_SELECT, Private->Store_Source_Select);
+    RHDRegWrite(Output, offset + DACA_SYNC_SELECT, Private->Store_Sync_Select);
     RHDRegWrite(Output, offset + DACA_ENABLE, Private->Store_Enable);
     RHDRegWrite(Output, offset + DACA_CONTROL1, Private->Store_Control1);
     RHDRegWrite(Output, offset + DACA_CONTROL2, Private->Store_Control2);

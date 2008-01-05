@@ -28,11 +28,17 @@
 #endif
 
 #include "xf86.h"
-#include "xf86_ansic.h"
+#if HAVE_XF86_ANSIC_H
+# include "xf86_ansic.h"
+#else
+# include <sys/types.h>
+# include <unistd.h>
+# include <signal.h>
+# include <string.h>
+# include <stdio.h>
+#endif
 
 #include "rhd.h"
-
-#include <signal.h>
 
 void
 RhdGetOptValBool(const OptionInfoRec *table, int token,
@@ -114,10 +120,10 @@ RhdDebugDump(int scrnIndex, unsigned char *start, int size)
 	char *d = c;
 	int k = size < 16 ? size : 16;
 	for (i = 0; i < k; i++)
-	    cur += xf86snprintf(cur,4,"%2.2x ",(unsigned char) (*(c++)));
+	    cur += snprintf(cur,4,"%2.2x ",(unsigned char) (*(c++)));
 	c = d;
 	for (i = 0; i < k; i++) {
-	    cur += xf86snprintf(cur,2,"%c",((((CARD8)(*c)) > 32)
+	    cur += snprintf(cur,2,"%c",((((CARD8)(*c)) > 32)
 				&& (((CARD8)(*c)) < 128)) ?
 				(unsigned char) (*(c)): '.');
 	    c++;
@@ -179,15 +185,15 @@ RhdAppendString(char *s1, const char *s2)
     if (!s2)
 	return s1;
     else if (!s1)
-	return xf86strdup(s2);
+	return xstrdup(s2);
     else {
 	int len = strlen(s1) + strlen(s2) + 1;
 	char *result  = (char *)xalloc(len);
 
 	if (!result) return s1;
 
-	xf86strcpy(result,s1);
-	xf86strcat(result,s2);
+	strcpy(result,s1);
+	strcat(result,s2);
 	xfree(s1);
 	return result;
     }
@@ -199,7 +205,7 @@ void RhdAssertFailed(const char *str,
 {
     ErrorF("%s:%d: %s: Assertion '%s' failed.\n", file, line, func, str);
 
-#if 0			/* Set to 1 to get backtraces */
+#if !HAVE_XF86_ANSIC_H		/* Set to 1 to get backtraces */
     kill(getpid(), SIGSEGV);
     xf86abort();	/* Not executed, but make gcc happy */
 #else
@@ -207,3 +213,21 @@ void RhdAssertFailed(const char *str,
 #endif
 }
 
+void RhdAssertFailedFormat(const char *str,
+			   const char *file, int line, const char *func,
+			   const char *format, ...)
+{
+    va_list args;
+    ErrorF("%s:%d: %s: Assertion '%s' failed.\n  ", file, line, func, str);
+    va_start(args, format);
+    VErrorF(format, args);
+    va_end(args);
+    ErrorF("\n");
+
+#if !(HAVE_XF86_ANSIC_H)		     /* Set to 1 to get backtraces */
+    kill(getpid(), SIGSEGV);
+    xf86abort();	/* Not executed, but make gcc happy */
+#else
+    FatalError("Server aborting\n");
+#endif
+}

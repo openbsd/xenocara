@@ -79,7 +79,7 @@ support for your card.
 
 Create a small text file. Each step, mention which cable was connected where.
 
-Go over each connector seperately, and connect the analogue (VGA) cable once
+Go over each connector separately, and connect the analogue (VGA) cable once
 and connect the DVI cable once (when possible). Each time running rhd_conntest
 and saving the data rhd_conntest spews out.
 

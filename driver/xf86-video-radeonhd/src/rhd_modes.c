@@ -29,6 +29,12 @@
 
 #include "xf86.h"
 #include "xf86DDC.h"
+#if HAVE_XF86_ANSIC_H
+# include "xf86_ansic.h" 
+#else
+# include <stdio.h>
+# include <string.h>
+#endif
 
 #include "rhd.h"
 #include "rhd_crtc.h"
@@ -37,11 +43,6 @@
 #include "rhd_output.h"
 #include "rhd_modes.h"
 #include "rhd_monitor.h"
-
-#ifndef _XF86_ANSIC_H
-#include <stdio.h>
-#include <string.h>
-#endif
 
 /*
  * Define a set of own mode errors.
@@ -1033,7 +1034,7 @@ rhdModesGrabOnHighestType(DisplayModePtr *Modes)
     if (Mode)
         return Mode;
 
-    /* No reason why we should treat built-in and vesa seperately */
+    /* No reason why we should treat built-in and vesa separately */
     Mode = *Modes;
     *Modes = NULL;
     return Mode;
@@ -1324,7 +1325,7 @@ RHDModesPoolCreate(ScrnInfoPtr pScrn, Bool Silent)
         /* Sort our list */
         TempList = Pool;
 
-        /* Sort higher priority modes seperately */
+        /* Sort higher priority modes separately */
         Pool = rhdModesGrabOnTypeAll(&TempList, M_T_PREFERRED, M_T_PREFERRED);
         Pool = rhdModesSortOnSize(Pool);
 

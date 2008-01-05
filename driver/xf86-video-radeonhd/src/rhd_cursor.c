@@ -40,17 +40,17 @@
 #include "xf86Cursor.h"
 #include "cursorstr.h"
 #include "servermd.h"
+#if HAVE_XF86_ANSIC_H
+# include "xf86_ansic.h"
+#else
+#include <string.h>
+#endif
 
 /* Driver specific headers */
 #include "rhd.h"
 #include "rhd_cursor.h"
 #include "rhd_crtc.h"
 #include "rhd_regs.h"
-
-/* System headers */
-#ifndef _XF86_ANSIC_H
-#include <string.h>
-#endif
 
 /*
  * Bit-banging ONLY
@@ -325,6 +325,8 @@ rhdReloadCursor(ScrnInfoPtr pScrn)
     int i;
 
     RHDFUNC(pScrn);
+    if (! rhdPtr->CursorImage)
+	return;
     for (i = 0; i < 2; i++) {
 	struct rhdCrtc *Crtc = rhdPtr->Crtc[i];
 
@@ -427,11 +429,14 @@ rhdLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *src)
 }
 
 static Bool
-rhdUseHWCursorARGB(ScreenPtr pScreen, CursorPtr cur)
+rhdUseHWCursor(ScreenPtr pScreen, CursorPtr cur)
 {
     /* Inconsistency in interface: UseHWCursor == NULL is trivial accept,
      * UseHWCursorARGB == NULL is trivial reject. */
-    return TRUE;
+    if (cur->bits->width <= MAX_CURSOR_WIDTH &&
+	cur->bits->height <= MAX_CURSOR_HEIGHT)
+	return TRUE;
+    return FALSE;
 }
 
 static void
@@ -552,9 +557,9 @@ RHDxf86InitCursor(ScreenPtr pScreen)
     infoPtr->LoadCursorImage   = rhdLoadCursorImage;
     infoPtr->HideCursor        = rhdHideCursor;
     infoPtr->ShowCursor        = rhdShowCursor;
-    infoPtr->UseHWCursor       = NULL;
+    infoPtr->UseHWCursor       = rhdUseHWCursor;
 #ifdef ARGB_CURSOR
-    infoPtr->UseHWCursorARGB   = rhdUseHWCursorARGB; /* may not be NULL */
+    infoPtr->UseHWCursorARGB   = rhdUseHWCursor;
     infoPtr->LoadCursorARGB    = rhdLoadCursorARGB;
 #endif
     infoPtr->RealizeCursor     = rhdRealizeCursor;

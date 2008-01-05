@@ -31,7 +31,13 @@
 #include "edid.h"
 
 /* for usleep */
-#include "xf86_ansic.h"
+#if HAVE_XF86_ANSIC_H
+# include "xf86_ansic.h"
+#else
+# include <unistd.h>
+# include <string.h>
+# include <stdio.h>
+#endif
 
 #include "rhd.h"
 #include "rhd_connector.h"
@@ -165,7 +171,7 @@ rhdConnectorSynthName(struct rhdConnectorInfo *ConnectorInfo,
 	    return str;
 
 	case RHD_CONNECTOR_TV:
-	    str1 = strdup(ConnectorInfo->Name);
+	    str1 = xstrdup(ConnectorInfo->Name);
 	    str = xalloc(20);
 	    str2 = strchr(str1, ' ');
 	    if (str2) *(str2) = '\0';
@@ -187,15 +193,18 @@ RHDConnectorsInit(RHDPtr rhdPtr, struct rhdCard *Card)
     struct rhdConnector *Connector;
     struct rhdOutput *Output;
     struct rhdCsState *csstate = NULL;
-    int i, j, k, l;
+    int i, j, k, l, hpd;
     Bool InfoAllocated = FALSE;
 
     RHDFUNC(rhdPtr);
 
     /* Card->ConnectorInfo is there to work around quirks, so check it first */
-    if (Card && (Card->ConnectorInfo[0].Type != RHD_CONNECTOR_NONE))
+    if (Card && (Card->ConnectorInfo[0].Type != RHD_CONNECTOR_NONE)) {
 	ConnectorInfo = Card->ConnectorInfo;
-    else {
+	xf86DrvMsg(rhdPtr->scrnIndex, X_INFO,
+		   "ConnectorInfo from quirk table:");
+	RhdPrintConnectorInfo (rhdPtr->scrnIndex, ConnectorInfo);
+    } else {
 #ifdef ATOM_BIOS
 	/* common case */
 	AtomBiosArgRec data;
@@ -248,7 +257,26 @@ RHDConnectorsInit(RHDPtr rhdPtr, struct rhdCard *Card)
 	}
 
 	/* attach HPD */
-	switch(ConnectorInfo[i].HPD) {
+	hpd = ConnectorInfo[i].HPD;
+	switch (rhdPtr->hpdUsage) {
+	case RHD_HPD_USAGE_OFF:
+	    hpd = RHD_HPD_NONE;
+	    break;
+	case RHD_HPD_USAGE_AUTO_SWAP:
+	case RHD_HPD_USAGE_SWAP:
+	    switch (hpd) {
+	    case RHD_HPD_0:
+		hpd = RHD_HPD_1;
+		break;
+	    case RHD_HPD_1:
+		hpd = RHD_HPD_0;
+		break;
+	    }
+	    break;
+	default:
+	    break;
+	}
+	switch(hpd) {
 	case RHD_HPD_0:
 	    Connector->HPDMask = 0x00000001;
 	    Connector->HPDCheck = RHDHPDCheck;
@@ -362,6 +390,9 @@ void
 RhdPrintConnectorInfo(int scrnIndex, struct rhdConnectorInfo *cp)
 {
     int n;
+    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    RHDPtr rhdPtr = RHDPTR(pScrn);
+
     const char *c_name[] =
 	{ "RHD_CONNECTOR_NONE", "RHD_CONNECTOR_VGA", "RHD_CONNECTOR_DVI",
 	  "RHD_CONNECTOR_PANEL", "RHD_CONNECTOR_TV" };
@@ -369,13 +400,31 @@ RhdPrintConnectorInfo(int scrnIndex, struct rhdConnectorInfo *cp)
     const char *ddc_name[] =
 	{ "RHD_DDC_0", "RHD_DDC_1", "RHD_DDC_2", "RHD_DDC_3" };
 
-    const char *hpd_name[] =
+    const char *hpd_name_normal[] =
 	{ "RHD_HPD_NONE", "RHD_HPD_0", "RHD_HPD_1", "RHD_HPD_2" };
+    const char *hpd_name_off[] =
+	{ "RHD_HPD_NONE", "RHD_HPD_NONE /*0*/", "RHD_HPD_NONE /*1*/", "RHD_HPD_NONE /*2*/" };
+    const char *hpd_name_swapped[] =
+	{ "RHD_HPD_NONE", "RHD_HPD_1 /*swapped*/", "RHD_HPD_0 /*swapped*/", "RHD_HPD_2" };
 
     const char *output_name[] =
 	{ "RHD_OUTPUT_NONE", "RHD_OUTPUT_DACA", "RHD_OUTPUT_DACB", "RHD_OUTPUT_TMDSA",
 	  "RHD_OUTPUT_LVTMA"
 	};
+    const char **hpd_name;
+
+    switch (rhdPtr->hpdUsage) {
+    case RHD_HPD_USAGE_OFF:
+	hpd_name = hpd_name_off;
+	break;
+    case RHD_HPD_USAGE_SWAP:
+    case RHD_HPD_USAGE_AUTO_SWAP:
+	hpd_name = hpd_name_swapped;
+	break;
+    default:
+	hpd_name = hpd_name_normal;
+	break;
+    }
 
     for (n = 0; n < RHD_CONNECTORS_MAX; n++) {
 	if (cp[n].Type == RHD_CONNECTOR_NONE)

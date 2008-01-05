@@ -32,10 +32,6 @@
 #include "rhd.h"
 #include "rhd_regs.h"
 
-#ifndef _XF86_ANSIC_H
-#include <string.h>
-#endif
-
 struct rhdMC {
     CARD32 FbLocation;
     CARD32 MiscOffset;
@@ -54,7 +50,7 @@ RHDMCInit(RHDPtr rhdPtr)
     RHDFUNC(rhdPtr);
 
     /* for now */
-    if (rhdPtr->ChipSet < RHD_RS690)
+    if (rhdPtr->ChipSet < RHD_RS600)
 	return;
 
     MC = xnfcalloc(1, sizeof(struct rhdMC));

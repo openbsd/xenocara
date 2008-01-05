@@ -38,9 +38,6 @@
 /* For PIO/MMIO */
 #include "compiler.h"
 
-/* for usleep */
-#include "xf86_ansic.h"
-
 #include "xf86Resources.h"
 
 #include "xf86PciInfo.h"
@@ -83,6 +80,17 @@
 #include "xf86DDC.h"
 
 #include "picturestr.h"
+
+#if HAVE_XF86_ANSIC_H
+# include "xf86_ansic.h"
+#else
+# include <sys/types.h>
+# include <sys/stat.h>
+# include <string.h>
+# include <unistd.h>
+# define stat_t struct stat
+#endif
+
 /*
  * Driver data structures.
  */
@@ -106,10 +114,6 @@
 
 /* ??? */
 #include "servermd.h"
-
-#ifndef _XF86_ANSIC_H
-#include <string.h>
-#endif
 
 /* Mandatory functions */
 static const OptionInfoRec *	RHDAvailableOptions(int chipid, int busid);
@@ -139,6 +143,7 @@ static void     rhdSave(RHDPtr rhdPtr);
 static void     rhdRestore(RHDPtr rhdPtr);
 static Bool     rhdModeLayoutSelect(RHDPtr rhdPtr);
 static void     rhdModeLayoutPrint(RHDPtr rhdPtr);
+static void     rhdModeDPISet(ScrnInfoPtr pScrn);
 static void	rhdPrepareMode(RHDPtr rhdPtr);
 static void     rhdModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
 static void	rhdSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode);
@@ -166,6 +171,10 @@ static int pix24bpp = 0;
 #define _X_EXPORT
 #endif
 
+#ifdef __linux__
+# define FGLRX_SYS_PATH "/sys/module/fglrx"
+#endif
+
 _X_EXPORT DriverRec RADEONHD = {
     RHD_VERSION,
     RHD_DRIVER_NAME,
@@ -191,8 +200,9 @@ typedef enum {
     OPTION_SHADOWFB,
     OPTION_IGNORECONNECTOR,
     OPTION_FORCEREDUCED,
+    OPTION_FORCEDPI,
     OPTION_USECONFIGUREDMONITOR,
-    OPTION_IGNOREHPD,
+    OPTION_HPD,
     OPTION_NORANDR,
     OPTION_RRUSEXF86EDID,
     OPTION_RROUTPUTORDER
@@ -204,8 +214,9 @@ static const OptionInfoRec RHDOptions[] = {
     { OPTION_SHADOWFB,             "shadowfb",             OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_IGNORECONNECTOR,      "ignoreconnector",      OPTV_ANYSTR,  {0}, FALSE },
     { OPTION_FORCEREDUCED,         "forcereduced",         OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_FORCEDPI,             "forcedpi",             OPTV_INTEGER, {0}, FALSE },
     { OPTION_USECONFIGUREDMONITOR, "useconfiguredmonitor", OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_IGNOREHPD,            "IgnoreHPD",            OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_HPD,                  "HPD",                  OPTV_STRING,  {0}, FALSE },
     { OPTION_NORANDR,              "NoRandr",              OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_RRUSEXF86EDID,        "RRUseXF86Edid",        OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_RROUTPUTORDER,        "RROutputOrder",        OPTV_ANYSTR,  {0}, FALSE },
@@ -414,11 +425,21 @@ RHDPreInit(ScrnInfoPtr pScrn, int flags)
     Bool ret = FALSE;
     RHDI2CDataArg i2cArg;
     DisplayModePtr Modes;		/* Non-RandR-case only */
+    stat_t statbuf;
 
     if (flags & PROBE_DETECT)  {
         /* do dynamic mode probing */
 	return TRUE;
     }
+
+#ifdef FGLRX_SYS_PATH
+    /* check for fglrx kernel module */
+    if (stat (FGLRX_SYS_PATH, &statbuf) == 0) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "The fglrx kernel module is loaded. This can have obvious\n"
+		   "     or subtle side effects. See radeonhd(4) for details.\n");
+    }
+#endif
 
 #ifndef XSERVER_LIBPCIACCESS
     /*
@@ -529,6 +550,9 @@ RHDPreInit(ScrnInfoPtr pScrn, int flags)
     else
 	xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "Detected an %s on an "
 		   "unidentified card\n", pScrn->chipset);
+    if (rhdPtr->Card && rhdPtr->Card->flags & RHD_CARD_FLAG_HPDSWAP &&
+	rhdPtr->hpdUsage == RHD_HPD_USAGE_AUTO)
+	rhdPtr->hpdUsage = RHD_HPD_USAGE_AUTO_SWAP;
 
     /* We have none of these things yet. */
     rhdPtr->noAccel.val.bool = TRUE;
@@ -725,16 +749,18 @@ RHDPreInit(ScrnInfoPtr pScrn, int flags)
 	    RHDGetVirtualFromModesAndFilter(pScrn, Modes, FALSE);
 
 	RHDModesAttach(pScrn, Modes);
+
+	rhdModeDPISet(pScrn);
     }
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                "Using %dx%d Framebuffer with %d pitch\n", pScrn->virtualX,
                pScrn->virtualY, pScrn->displayWidth);
-    if (! rhdPtr->randr)
+    if (!rhdPtr->randr)
 	xf86PrintModes(pScrn);
-
-    /* If monitor resolution is set on the command line, use it */
-    xf86SetDpi(pScrn, 0, 0);
+    else
+	/* If monitor resolution is set on the command line, use it */
+	xf86SetDpi(pScrn, 0, 0);
 
     if (xf86LoadSubModule(pScrn, "fb") == NULL) {
 	goto error1;
@@ -866,8 +892,8 @@ RHDScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     /* init randr */
     if (rhdPtr->randr && !RHDRandrScreenInit (pScreen)) {
-	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "RandrScreenInit failed.\n");
-	rhdPtr->randr = NULL;
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "RandrScreenInit failed. Try Option \"noRandr\"\n");
+	return FALSE;
     }
 
     /* now init the new mode */
@@ -1388,7 +1414,7 @@ rhdModeLayoutSelect(RHDPtr rhdPtr)
 		rhdOutputConnectorCheck(Connector);
 	    } else {
 		Connector->HPDAttached = FALSE;
-		if (ConnectorIsDMS59 || rhdPtr->ignoreHpd.set)
+		if (ConnectorIsDMS59)
 		    rhdOutputConnectorCheck(Connector);
 	    }
 	} else
@@ -1421,8 +1447,7 @@ rhdModeLayoutSelect(RHDPtr rhdPtr)
 		Found = TRUE;
 
 		if (Monitor) {
-		    /* If this is a digitally attached monitor, enable
-		     * reduced blanking.
+		    /* If this is a DVI attached monitor, enable reduced blanking.
 		     * TODO: iiyama vm pro 453: CRT with DVI-D == No reduced.
 		     */
 		    if ((Output->Id == RHD_OUTPUT_TMDSA) ||
@@ -1446,6 +1471,102 @@ rhdModeLayoutSelect(RHDPtr rhdPtr)
 
     return Found;
 }
+
+/*
+ * Calculating DPI will never be good. But here we attempt to make it work,
+ * somewhat, with multiple monitors.
+ *
+ * The real solution for the DPI problem cannot be something statically,
+ * as DPI varies with resolutions chosen and with displays attached/detached.
+ */
+static void
+rhdModeDPISet(ScrnInfoPtr pScrn)
+{
+    RHDPtr rhdPtr = RHDPTR(pScrn);
+
+    /* first cleanse the option to at least be reasonable */
+    if (rhdPtr->forceDPI.set)
+	if ((rhdPtr->forceDPI.val.integer < 20) ||
+	    (rhdPtr->forceDPI.val.integer > 1000)) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "Option ForceDPI got passed"
+		       " an insane value: %d. Ignoring.\n",
+		       rhdPtr->forceDPI.val.integer);
+	    rhdPtr->forceDPI.set = FALSE;
+	}
+
+    /* monitorResolution is the DPI that was passed as a server option.
+     * This has been available all the way back to the original Xorg import */
+    if (monitorResolution > 0) {
+	RHDDebug(pScrn->scrnIndex, "%s: Forcing DPI through xserver argument.\n",
+		 __func__);
+
+	pScrn->xDpi = monitorResolution;
+	pScrn->yDpi = monitorResolution;
+    } else if (rhdPtr->forceDPI.set) {
+	RHDDebug(pScrn->scrnIndex, "%s: Forcing DPI through configuration option.\n",
+		 __func__);
+
+	pScrn->xDpi = rhdPtr->forceDPI.val.integer;
+	pScrn->yDpi = rhdPtr->forceDPI.val.integer;
+    } else {
+	/* go over the monitors */
+	struct rhdCrtc *Crtc;
+	struct rhdOutput *Output;
+	struct rhdMonitor *Monitor;
+	/* we need to use split counters, x or y might fail separately */
+	int i, xcount, ycount;
+
+	pScrn->xDpi = 0;
+	pScrn->yDpi = 0;
+	xcount = 0;
+	ycount = 0;
+
+	for (i = 0; i < 2; i++) {
+	    Crtc = rhdPtr->Crtc[i];
+	    if (Crtc->Active) {
+		for (Output = rhdPtr->Outputs; Output; Output = Output->Next) {
+		    if (Output->Active && (Output->Crtc == Crtc)) {
+			if (Output->Connector && Output->Connector->Monitor) {
+			    Monitor = Output->Connector->Monitor;
+
+			    if (Monitor->xDpi) {
+				pScrn->xDpi += (Monitor->xDpi - pScrn->xDpi) / (xcount + 1);
+				xcount++;
+			    }
+
+			    if (Monitor->yDpi) {
+				pScrn->yDpi += (Monitor->yDpi - pScrn->yDpi) / (ycount + 1);
+				ycount++;
+			    }
+			}
+		    }
+		}
+	    }
+	}
+
+	/* make sure that we have at least some value */
+	if (!pScrn->xDpi || !pScrn->yDpi) {
+	    if (pScrn->xDpi)
+		pScrn->yDpi = pScrn->xDpi;
+	    else if (pScrn->yDpi)
+		pScrn->xDpi = pScrn->xDpi;
+	    else {
+		pScrn->xDpi = 96;
+		pScrn->yDpi = 96;
+	    }
+	}
+    }
+
+#ifndef MMPERINCH
+#define MMPERINCH 25.4
+#endif
+    pScrn->widthmm = pScrn->virtualX * MMPERINCH / pScrn->xDpi;
+    pScrn->heightmm = pScrn->virtualY * MMPERINCH / pScrn->yDpi;
+
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Using %dx%d DPI.\n",
+	       pScrn->xDpi, pScrn->yDpi);
+}
+
 
 /*
  *
@@ -1537,10 +1658,6 @@ rhdPrepareMode(RHDPtr rhdPtr)
 {
     RHDFUNC(rhdPtr);
 
-    /* Stop crap from being shown: gets reenabled through SaveScreen */
-    rhdPtr->Crtc[0]->Blank(rhdPtr->Crtc[0], TRUE);
-    rhdPtr->Crtc[1]->Blank(rhdPtr->Crtc[1], TRUE);
-
     /* no active outputs == no mess */
     RHDOutputsPower(rhdPtr, RHD_POWER_RESET);
 
@@ -1559,6 +1676,10 @@ rhdModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 
     RHDFUNC(rhdPtr);
     pScrn->vtSema = TRUE;
+
+    /* Stop crap from being shown: gets reenabled through SaveScreen */
+    rhdPtr->Crtc[0]->Blank(rhdPtr->Crtc[0], TRUE);
+    rhdPtr->Crtc[1]->Blank(rhdPtr->Crtc[1], TRUE);
 
     rhdPrepareMode(rhdPtr);
 
@@ -1661,17 +1782,18 @@ rhdRestore(RHDPtr rhdPtr)
 
     RHDFUNC(rhdPtr);
 
-    RHDPLLsRestore(rhdPtr);
-    RHDLUTsRestore(rhdPtr);
+    RHDRestoreMC(rhdPtr);
 
-    rhdPtr->Crtc[0]->Restore(rhdPtr->Crtc[0]);
-    rhdPtr->Crtc[1]->Restore(rhdPtr->Crtc[1]);
     if (rhdPtr->CursorInfo)
 	rhdRestoreCursor(pScrn);
 
-    RHDRestoreMC(rhdPtr);
+    RHDPLLsRestore(rhdPtr);
+    RHDLUTsRestore(rhdPtr);
 
     RHDVGARestore(rhdPtr);
+
+    rhdPtr->Crtc[0]->Restore(rhdPtr->Crtc[0]);
+    rhdPtr->Crtc[1]->Restore(rhdPtr->Crtc[1]);
 
     RHDOutputsRestore(rhdPtr);
 }
@@ -1750,6 +1872,7 @@ static void
 rhdProcessOptions(ScrnInfoPtr pScrn)
 {
     RHDPtr rhdPtr = RHDPTR(pScrn);
+    RHDOpt hpd;
     /* Collect all of the relevant option flags (fill in pScrn->options) */
     xf86CollectOptions(pScrn, NULL);
     rhdPtr->Options = xnfcalloc(sizeof(RHDOptions), 1);
@@ -1758,28 +1881,41 @@ rhdProcessOptions(ScrnInfoPtr pScrn)
     /* Process the options */
     xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, rhdPtr->Options);
 
-    RhdGetOptValBool(rhdPtr->Options, OPTION_NOACCEL,
-		     &rhdPtr->noAccel, FALSE);
-    RhdGetOptValBool(rhdPtr->Options, OPTION_SW_CURSOR,
-		     &rhdPtr->swCursor, FALSE);
-    RhdGetOptValBool(rhdPtr->Options, OPTION_SHADOWFB,
-		     &rhdPtr->shadowFB, TRUE);
-    RhdGetOptValBool(rhdPtr->Options, OPTION_FORCEREDUCED,
-		     &rhdPtr->forceReduced, FALSE);
-    RhdGetOptValBool(rhdPtr->Options, OPTION_IGNOREHPD,
-		     &rhdPtr->ignoreHpd, FALSE);
-    RhdGetOptValBool(rhdPtr->Options, OPTION_NORANDR,
-		     &rhdPtr->noRandr, FALSE);
-    RhdGetOptValBool(rhdPtr->Options, OPTION_RRUSEXF86EDID,
-		     &rhdPtr->rrUseXF86Edid, FALSE);
-    RhdGetOptValString(rhdPtr->Options, OPTION_RROUTPUTORDER,
-		       &rhdPtr->rrOutputOrder, FALSE);
+    RhdGetOptValBool   (rhdPtr->Options, OPTION_NOACCEL,
+			&rhdPtr->noAccel, FALSE);
+    RhdGetOptValBool   (rhdPtr->Options, OPTION_SW_CURSOR,
+			&rhdPtr->swCursor, FALSE);
+    RhdGetOptValBool   (rhdPtr->Options, OPTION_SHADOWFB,
+			&rhdPtr->shadowFB, TRUE);
+    RhdGetOptValBool   (rhdPtr->Options, OPTION_FORCEREDUCED,
+			&rhdPtr->forceReduced, FALSE);
+    RhdGetOptValInteger(rhdPtr->Options, OPTION_FORCEDPI,
+			&rhdPtr->forceDPI, 0);
+    RhdGetOptValString (rhdPtr->Options, OPTION_HPD,
+			&hpd, "auto");
+    RhdGetOptValBool   (rhdPtr->Options, OPTION_NORANDR,
+			&rhdPtr->noRandr, FALSE);
+    RhdGetOptValBool   (rhdPtr->Options, OPTION_RRUSEXF86EDID,
+			&rhdPtr->rrUseXF86Edid, FALSE);
+    RhdGetOptValString (rhdPtr->Options, OPTION_RROUTPUTORDER,
+			&rhdPtr->rrOutputOrder, NULL);
 
-    if (rhdPtr->ignoreHpd.set)
+    rhdPtr->hpdUsage = RHD_HPD_USAGE_AUTO;
+    if (strcasecmp(hpd.val.string, "off") == 0) {
+	rhdPtr->hpdUsage = RHD_HPD_USAGE_OFF;
+    } else if (strcasecmp(hpd.val.string, "normal") == 0) {
+	rhdPtr->hpdUsage = RHD_HPD_USAGE_NORMAL;
+    } else if (strcasecmp(hpd.val.string, "swap") == 0) {
+	rhdPtr->hpdUsage = RHD_HPD_USAGE_SWAP;
+    } else if (strcasecmp(hpd.val.string, "auto") != 0) {
+	xf86DrvMsgVerb(rhdPtr->scrnIndex, X_ERROR, 0,
+		       "Unknown HPD Option \"%s\"", hpd.val.string);
+    }
+    if (rhdPtr->hpdUsage != RHD_HPD_USAGE_AUTO)
 	xf86DrvMsgVerb(rhdPtr->scrnIndex, X_WARNING, 0,
-	"!!! Option IgnoreHPD is set !!!\n"
+	"!!! Option HPD is set !!!\n"
 	"     This shall only be used to work around broken connector tables.\n"
-	"     Please report your BIOS to radeonhd@opensuse.org\n");
+	"     Please report your findings to radeonhd@opensuse.org\n");
 }
 
 /*

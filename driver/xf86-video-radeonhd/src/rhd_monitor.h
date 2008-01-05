@@ -31,6 +31,9 @@ struct rhdMonitor {
 
     char *Name;
 
+    int xDpi;
+    int yDpi;
+
     int numHSync; /* default: 0 */
     range HSync[MAX_HSYNC];
     int numVRefresh; /* default: 0 */

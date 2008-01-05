@@ -35,7 +35,11 @@
 #include "xf86.h"
 
 /* for usleep */
-#include "xf86_ansic.h"
+#if HAVE_XF86_ANSIC_H
+# include "xf86_ansic.h"
+#else
+# include <unistd.h>
+#endif
 
 #include "rhd.h"
 #include "rhd_crtc.h"
@@ -132,11 +136,13 @@ static struct R5xxTMDSAMacro {
     { 0x7142, 0x00A00415 }, /* RV515 */
     { 0x7146, 0x00C0041F }, /* RV515 */
     { 0x7147, 0x00C00418 }, /* RV505 */
+    { 0x7149, 0x00800416 }, /* M56   */
     { 0x7152, 0x00A00415 }, /* RV515 */
     { 0x7183, 0x00600412 }, /* RV530 */
     { 0x71C1, 0x00C0041F }, /* RV535 */
     { 0x71C2, 0x00A00416 }, /* RV530 */
     { 0x71C5, 0x00A00416 }, /* M56   */
+    { 0x71C6, 0x00A00513 }, /* RV530 */
     { 0x71D2, 0x00A00513 }, /* RV530 */
     { 0x71D5, 0x00A00513 }, /* M66   */
     { 0x7249, 0x00A00513 }, /* R580  */
@@ -154,6 +160,8 @@ static struct Rv6xxTMDSAMacro {
 } Rv6xxTMDSAMacro[] = {
     { 0x94C1, 0x00010416, 0x00010308 }, /* RV610 */
     { 0x94C3, 0x00010416, 0x00010308 }, /* RV610 */
+    { 0x9505, 0x00010416, 0x00010308 }, /* RV670: != atombios */
+    { 0x9587, 0x00010416, 0x00010308 }, /* RV630 */
     { 0x9588, 0x00010416, 0x00010388 }, /* RV630 */
     { 0x9589, 0x00010416, 0x00010388 }, /* RV630 */
     { 0, 0, 0} /* End marker */

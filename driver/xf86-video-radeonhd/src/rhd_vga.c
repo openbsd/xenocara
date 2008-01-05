@@ -28,14 +28,13 @@
 #endif
 
 #include "xf86.h"
+#if HAVE_XF86_ANSIC_H
+# include "xf86_ansic.h"
+#endif
 
 #include "rhd.h"
 #include "rhd_vga.h"
 #include "rhd_regs.h"
-
-#ifndef _XF86_ANSIC_H
-#include <string.h>
-#endif
 
 /*
  *

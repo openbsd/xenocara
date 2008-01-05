@@ -7,7 +7,7 @@
 #define GIT_VERSION_H 1
 
 /* whether this is a dist tarball or not */
-#undef GIT_IS_DIST
+#define GIT_IS_DIST 1
 
 /* No errors occured while running git */
 #undef GIT_ERRORS
@@ -20,7 +20,7 @@
 #define GIT_REPO 1
 
 /* Git SHA ID of last commit */
-#define GIT_SHAID "9fe776ed"
+#define GIT_SHAID "f213db06"
 
 /* Branch this tree is on */
 #define GIT_BRANCH "master"
