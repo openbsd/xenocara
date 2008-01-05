@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.23 2007/12/20 06:52:03 matthieu Exp $
+# $OpenBSD: Makefile,v 1.24 2008/01/05 20:22:38 espie Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
@@ -70,6 +70,7 @@ fix-appd:
 	fi
 
 release: release-clean distrib-dirs release-install dist
+.ORDER: release-clean distrib-dirs release-install dist
 
 release-clean:
 .if ! ( defined(DESTDIR) && defined(RELEASEDIR) )
