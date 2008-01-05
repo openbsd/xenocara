@@ -1,5 +1,5 @@
 ! $Xorg: Xresources,v 1.3 2000/08/17 19:54:17 cpqbld Exp $
-! $OpenBSD: Xresources.cpp,v 1.5 2007/09/27 19:21:13 matthieu Exp $
+! $OpenBSD: Xresources.cpp,v 1.6 2008/01/05 17:23:14 matthieu Exp $
 !
 !
 !
@@ -30,19 +30,19 @@ xlogin*greetFont: -adobe-helvetica-bold-o-normal--24-240-75-75-p-138-iso8859-1
 xlogin*font: -adobe-helvetica-medium-r-normal--18-180-75-75-p-98-iso8859-1
 xlogin*promptFont: -adobe-helvetica-bold-r-normal--18-180-75-75-p-103-iso8859-1
 xlogin*failFont: -adobe-helvetica-bold-r-normal--18-180-75-75-p-103-iso8859-1
-xlogin*greetFace:	Sans-24:bold:italic
-xlogin*face: 		Sans-18
-xlogin*promptFace: 	Sans-18:bold
-xlogin*failFace: 	Sans-18:bold
+xlogin*greetFace:       Luxi Sans-22:bold:italic:dpi=75
+xlogin*face:            Luxi Sans-16:dpi=75
+xlogin*promptFace:      Luxi Sans-16:bold:dpi=75
+xlogin*failFace:        Luxi Sans-16:bold:dpi=75
 XHASHelse
 xlogin*greetFont: -adobe-helvetica-bold-o-normal--17-120-100-100-p-92-iso8859-1
 xlogin*font: -adobe-helvetica-medium-r-normal--12-120-75-75-p-67-iso8859-1
 xlogin*promptFont: -adobe-helvetica-bold-r-normal--12-120-75-75-p-70-iso8859-1
 xlogin*failFont: -adobe-helvetica-bold-o-normal--14-140-75-75-p-82-iso8859-1
-xlogin*greetFace:	Sans-16:bold:italic
-xlogin*face: 		Sans-12
-xlogin*promptFace: 	Sans-12:bold
-xlogin*failFace: 	Sans-12:bold
+xlogin*greetFace:       Luxi Sans-18:bold:italic:dpi=75
+xlogin*face:            Luxi Sans-12:dpi=75
+xlogin*promptFace:      Luxi Sans-12:bold:dpi=75
+xlogin*failFace:        Luxi Sans-12:bold:dpi=75
 XHASHendif
 
 XHASHif !(defined(bpp1) || defined(bpp4) || defined(bpp8) || defined(bpp15))
