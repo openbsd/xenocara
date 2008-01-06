@@ -9,7 +9,7 @@ SUBDIRS = xlock modes/glx modes xmlock xglock
 
 MAKE_SUBDIR = for dir in $(SUBDIRS) ; do ( cd $$dir ; $(MAKE) $@ ) ; done
 # convenient not to use configure just to clean
-MAKEIN_SUBDIR = for dir in $(SUBDIRS) ; do ( cd $$dir ; sed s/@MODULES@/\#/ Makefile.in > Makefile ; $(MAKE) $@ ) ; done
+MAKEIN_SUBDIR = for dir in $(SUBDIRS) ; do ( cd $$dir ; sed s/\@MODULES\@/\#/ Makefile.in > Makefile ; $(MAKE) $@ ) ; done
 
 all :
 	@$(MAKE_SUBDIR)
