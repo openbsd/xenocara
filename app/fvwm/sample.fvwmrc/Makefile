@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.6 2007/03/30 17:24:12 aanriot Exp $
+# $OpenBSD: Makefile,v 1.7 2008/01/06 18:13:58 matthieu Exp $
 
 .include "../Makefile.inc"
 
@@ -28,7 +28,7 @@ install:
 clean:
 	${RM} -f .fvwmrc
 
-cleandir:
+cleandir: clean
 
 .include <bsd.own.mk>
 .include <bsd.xorg.mk>
