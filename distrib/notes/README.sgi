@@ -1,8 +1,27 @@
 Post-installation instructions for X.Org on OpenBSD/sgi
 -------------------------------------------------------
 
-There is no X server for sgi.  Only userland X.
+OpenBSD 4.3 and later use the X.Org X server on sgi.
+
+Currently, the X server is only supported on SGI O2 workstations with a gbe(4)
+frame buffer. The wsfb driver provides an unaccelerated frame buffer for use 
+with the X server.
+
+The default /etc/X11/xorg.conf which is installed, provides a ready-to-run
+configuration. Due to the current lack of dynamic object lazy binding on
+OpenBSD/sgi, the `shadow' and `fb' modules need to be force loaded. This can be
+achieved by ensuring that the following is included in the xorg.conf file:
+
+	Section "Module"
+		Load	"shadow"
+		Load	"fb"
+	EndSection
+
+To start xdm, the X display manager, activate the xdm_flags option in
+/etc/rc.conf. You will need to disable the console getty in /etc/ttys.
+
+Alternatively, you can log in at the console and run `startx'.
 
 problem_blurb
 
-$OpenBSD: README.sgi,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+$OpenBSD: README.sgi,v 1.2 2008/01/06 06:26:59 jsing Exp $
