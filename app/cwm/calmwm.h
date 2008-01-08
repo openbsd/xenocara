@@ -4,7 +4,7 @@
  * Copyright (c) 2004 Marius Aamodt Eriksen <marius@monkey.org>
  * All rights reserved.
  *
- * $Id: calmwm.h,v 1.15 2008/01/03 01:58:16 oga Exp $
+ * $Id: calmwm.h,v 1.16 2008/01/08 20:21:43 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -481,8 +481,6 @@ void group_sticky_toggle_exit(struct client_ctx *);
 void group_autogroup(struct client_ctx *);
 
 void notification_init(struct screen_ctx *);
-
-Cursor cursor_bigarrow();
 
 void font_init(struct screen_ctx *sc);
 struct fontdesc *font_get(struct screen_ctx *sc, const char *name);

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2008/01/03 01:58:16 oga Exp $
+# $OpenBSD: Makefile,v 1.4 2008/01/08 20:21:43 oga Exp $
 
 .include <bsd.own.mk>
 
@@ -8,7 +8,7 @@ PROG=		cwm
 
 SRCS=		calmwm.c screen.c xmalloc.c client.c grab.c search.c \
 		util.c xutil.c conf.c input.c xevents.c group.c \
-		kbfunc.c cursor.c font.c
+		kbfunc.c font.c
 
 CPPFLAGS+=	-I${X11BASE}/include -I${X11BASE}/include/freetype2
 
