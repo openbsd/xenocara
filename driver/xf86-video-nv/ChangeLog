@@ -1,3 +1,27 @@
+commit 58dbd31953d0e2f30d06b3fc5118a016a17666fe
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Oct 23 13:17:27 2007 -0700
+
+    Bump to 2.1.6.
+
+commit 0887084730af8428e902dabc6e00c505f383f57f
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sun Oct 14 14:15:07 2007 -0700
+
+    G80 bug #12397: Fix LVDS detection on certain laptops.
+
+commit 1003bcbe4381201f1d7b34dc1af72f57b2943b67
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sat Oct 13 14:36:49 2007 -0700
+
+    G80 bug #12637: Unwedge the hardware if the BIOS left it stuck.
+
+commit 1e12277650dff10b1083915cb73961525e21a471
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sat Oct 13 13:50:04 2007 -0700
+
+    Remove unused headers.
+
 commit 7a124edd1fcc0be6bdad489b0e8d7db3efe44b14
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Fri Sep 21 18:55:21 2007 -0700

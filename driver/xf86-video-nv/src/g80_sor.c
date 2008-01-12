@@ -427,20 +427,20 @@ static const xf86OutputFuncsRec G80SorLVDSOutputFuncs = {
 };
 
 static DisplayModePtr
-GetLVDSNativeMode(G80Ptr pNv)
+ReadLVDSNativeMode(G80Ptr pNv, const int off)
 {
     DisplayModePtr mode = xnfcalloc(1, sizeof(DisplayModeRec));
-    const CARD32 size = pNv->reg[0x00610B4C/4];
+    const CARD32 size = pNv->reg[(0x00610B4C+off)/4];
     const int width = size & 0x3fff;
     const int height = (size >> 16) & 0x3fff;
 
     mode->HDisplay = mode->CrtcHDisplay = width;
     mode->VDisplay = mode->CrtcVDisplay = height;
-    mode->Clock           = pNv->reg[0x610AD4/4] & 0x3fffff;
-    mode->CrtcHBlankStart = pNv->reg[0x610AFC/4];
-    mode->CrtcHSyncEnd    = pNv->reg[0x610B04/4];
-    mode->CrtcHBlankEnd   = pNv->reg[0x610AE8/4];
-    mode->CrtcHTotal      = pNv->reg[0x610AF4/4];
+    mode->Clock           = pNv->reg[(0x610AD4+off)/4] & 0x3fffff;
+    mode->CrtcHBlankStart = pNv->reg[(0x610AFC+off)/4];
+    mode->CrtcHSyncEnd    = pNv->reg[(0x610B04+off)/4];
+    mode->CrtcHBlankEnd   = pNv->reg[(0x610AE8+off)/4];
+    mode->CrtcHTotal      = pNv->reg[(0x610AF4+off)/4];
 
     mode->next = mode->prev = NULL;
     mode->status = MODE_OK;
@@ -449,6 +449,19 @@ GetLVDSNativeMode(G80Ptr pNv)
     xf86SetModeDefaultName(mode);
 
     return mode;
+}
+
+static DisplayModePtr
+GetLVDSNativeMode(G80Ptr pNv)
+{
+    CARD32 val = pNv->reg[0x00610050/4];
+
+    if((val & 3) == 2)
+        return ReadLVDSNativeMode(pNv, 0);
+    else if((val & 0x300) == 0x200)
+        return ReadLVDSNativeMode(pNv, 0x540);
+
+    return NULL;
 }
 
 xf86OutputPtr
@@ -467,6 +480,19 @@ G80CreateSor(ScrnInfoPtr pScrn, ORNum or, PanelType panelType)
     if(panelType == LVDS) {
         strcpy(orName, "LVDS");
         funcs = &G80SorLVDSOutputFuncs;
+
+        pPriv->nativeMode = GetLVDSNativeMode(pNv);
+
+        if(!pPriv->nativeMode) {
+            xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+                       "Failed to find LVDS native mode\n");
+            xfree(pPriv);
+            return FALSE;
+        }
+
+        xf86DrvMsg(pScrn->scrnIndex, X_INFO, "%s native size %dx%d\n",
+                   orName, pPriv->nativeMode->HDisplay,
+                   pPriv->nativeMode->VDisplay);
     } else {
         snprintf(orName, 5, "DVI%d", or);
         pNv->reg[(0x61C00C+off)/4] = 0x03010700;
@@ -487,14 +513,6 @@ G80CreateSor(ScrnInfoPtr pScrn, ORNum or, PanelType panelType)
     output->driver_private = pPriv;
     output->interlaceAllowed = TRUE;
     output->doubleScanAllowed = TRUE;
-
-    if(panelType == LVDS) {
-        pPriv->nativeMode = GetLVDSNativeMode(pNv);
-
-        xf86DrvMsg(pScrn->scrnIndex, X_INFO, "%s native size %dx%d\n",
-                   orName, pPriv->nativeMode->HDisplay,
-                   pPriv->nativeMode->VDisplay);
-    }
 
     return output;
 }
