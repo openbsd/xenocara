@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.7 2007/08/25 19:17:16 matthieu Exp $
+# $OpenBSD: Makefile,v 1.8 2008/01/13 17:22:58 matthieu Exp $
 
 SUBDIR=	icons resize
 
@@ -28,9 +28,10 @@ XETC?=		/etc/X11
 
 xterm.1tbl: xterm.man
 	sed -e 's#__vendorversion__#"X Window System"#g' \
+	    -e 's#__mansuffix__#1#g' \
 	    -e 's#__miscmansuffix__#1#g' \
-            -e 's#__apploaddir__#${X11ETC}/app-defaults#g' \
-	< ${.CURDIR}/xterm.man > $@
+	    -e 's#__apploaddir__#${X11ETC}/app-defaults#g' \
+	    < ${.CURDIR}/xterm.man > $@
 
 CLEANFILES+=	xterm.1tbl
 
