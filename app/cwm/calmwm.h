@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.17 2008/01/11 16:06:44 oga Exp $
+ * $Id: calmwm.h,v 1.18 2008/01/14 15:21:10 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -78,6 +78,10 @@ struct screen_ctx {
 	Pixmap		 gray, blue, red;
 
 	int		 altpersist;
+
+	int		 maxinitialised;
+	int		 xmax;
+	int		 ymax;
 
         FILE            *notifier;
 
@@ -276,7 +280,6 @@ struct menu {
 	char  text[MENU_MAXENTRY + 1];
 	char  print[MENU_MAXENTRY + 1];
 	void *ctx;
-	short lasthit;
 	short dummy;
 };
 
@@ -399,7 +402,6 @@ int   grab_drag(struct client_ctx *);
 void  grab_menuinit(struct screen_ctx *);
 void *grab_menu(XButtonEvent *, struct menu_q *);
 void  grab_label(struct client_ctx *);
-void  grab_exec(void);
 
 void  xfree(void *);
 void *xmalloc(size_t);
