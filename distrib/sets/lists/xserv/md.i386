@@ -173,6 +173,10 @@
 ./usr/X11R6/lib/modules/drivers/ati_drv.so
 ./usr/X11R6/lib/modules/drivers/atimisc_drv.la
 ./usr/X11R6/lib/modules/drivers/atimisc_drv.so
+./usr/X11R6/lib/modules/drivers/ch7017.la
+./usr/X11R6/lib/modules/drivers/ch7017.so
+./usr/X11R6/lib/modules/drivers/ch7xxx.la
+./usr/X11R6/lib/modules/drivers/ch7xxx.so
 ./usr/X11R6/lib/modules/drivers/chips_drv.la
 ./usr/X11R6/lib/modules/drivers/chips_drv.so
 ./usr/X11R6/lib/modules/drivers/cirrus_alpine.la
@@ -193,6 +197,10 @@
 ./usr/X11R6/lib/modules/drivers/i740_drv.so
 ./usr/X11R6/lib/modules/drivers/i810_drv.la
 ./usr/X11R6/lib/modules/drivers/i810_drv.so
+./usr/X11R6/lib/modules/drivers/intel_drv.la
+./usr/X11R6/lib/modules/drivers/intel_drv.so
+./usr/X11R6/lib/modules/drivers/ivch.la
+./usr/X11R6/lib/modules/drivers/ivch.so
 ./usr/X11R6/lib/modules/drivers/mga_drv.la
 ./usr/X11R6/lib/modules/drivers/mga_drv.so
 ./usr/X11R6/lib/modules/drivers/neomagic_drv.la
@@ -215,12 +223,16 @@
 ./usr/X11R6/lib/modules/drivers/s3virge_drv.so
 ./usr/X11R6/lib/modules/drivers/savage_drv.la
 ./usr/X11R6/lib/modules/drivers/savage_drv.so
+./usr/X11R6/lib/modules/drivers/sil164.la
+./usr/X11R6/lib/modules/drivers/sil164.so
 ./usr/X11R6/lib/modules/drivers/siliconmotion_drv.la
 ./usr/X11R6/lib/modules/drivers/siliconmotion_drv.so
 ./usr/X11R6/lib/modules/drivers/sis_drv.la
 ./usr/X11R6/lib/modules/drivers/sis_drv.so
 ./usr/X11R6/lib/modules/drivers/tdfx_drv.la
 ./usr/X11R6/lib/modules/drivers/tdfx_drv.so
+./usr/X11R6/lib/modules/drivers/tfp410.la
+./usr/X11R6/lib/modules/drivers/tfp410.so
 ./usr/X11R6/lib/modules/drivers/trident_drv.la
 ./usr/X11R6/lib/modules/drivers/trident_drv.so
 ./usr/X11R6/lib/modules/drivers/tseng_drv.la
@@ -383,6 +395,7 @@
 ./usr/X11R6/man/man4/i128.4
 ./usr/X11R6/man/man4/i740.4
 ./usr/X11R6/man/man4/i810.4
+./usr/X11R6/man/man4/intel.4
 ./usr/X11R6/man/man4/js_x.4
 ./usr/X11R6/man/man4/kbd.4
 ./usr/X11R6/man/man4/magictouch.4

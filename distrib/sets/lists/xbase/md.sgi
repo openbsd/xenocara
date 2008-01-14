@@ -432,6 +432,7 @@
 ./usr/X11R6/include/xorg/xf86RandR12.h
 ./usr/X11R6/include/xorg/xf86Rename.h
 ./usr/X11R6/include/xorg/xkbsrv.h
+./usr/X11R6/lib/X11/Options
 ./usr/X11R6/lib/libFS.so.8.0
 ./usr/X11R6/lib/libICE.so.8.1
 ./usr/X11R6/lib/libSM.so.8.0
@@ -485,7 +486,6 @@
 ./usr/X11R6/lib/libpixman-1.so.10.0
 ./usr/X11R6/lib/libxkbfile.so.4.0
 ./usr/X11R6/lib/libxkbui.so.4.0
-./usr/X11R6/lib/X11/Options
 ./usr/X11R6/man/cat3/GLwCreateMDrawingArea.0
 ./usr/X11R6/man/cat3/GLwDrawingArea.0
 ./usr/X11R6/man/cat3/GLwDrawingAreaMakeCurrent.0
