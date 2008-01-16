@@ -31,8 +31,7 @@ DRIVER_MAN_DIR_SUFFIX = $(DRIVER_MAN_DIR:@mandir@/man%=%)
 driverman_PRE = @DRIVER_NAME@.man
 
 driverman_DATA = \
-	$(driverman_PRE:man=@DRIVER_MAN_SUFFIX@) \
-	i810.@DRIVER_MAN_SUFFIX@
+	$(driverman_PRE:man=@DRIVER_MAN_SUFFIX@)
 
 EXTRA_DIST = @DRIVER_NAME@.man
 
@@ -61,9 +60,3 @@ SUFFIXES = .$(DRIVER_MAN_SUFFIX) .man
 .man.$(DRIVER_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
 
-BUILT_SOURCES = shadows.DONE
-
-shadows.DONE:
-	-rm -f i810.@DRIVER_MAN_SUFFIX@
-	echo .so man$(DRIVER_MAN_DIR_SUFFIX)/intel.$(DRIVER_MAN_SUFFIX) > \
-		i810.@DRIVER_MAN_SUFFIX@
