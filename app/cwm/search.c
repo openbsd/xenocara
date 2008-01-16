@@ -14,7 +14,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: search.c,v 1.5 2008/01/11 16:06:44 oga Exp $
+ * $Id: search.c,v 1.6 2008/01/16 11:39:20 oga Exp $
  */
 
 #include "headers.h"
@@ -455,12 +455,6 @@ search_match_exec(struct menu_q *menuq, struct menu_q *resultq, char *search)
 	TAILQ_FOREACH(mi, menuq, entry)
 		if (_strsubmatch(search, mi->text, 1))
 			TAILQ_INSERT_TAIL(resultq, mi, resultentry);
-}
-
-void
-search_rank_text(struct menu_q *resultq, char *search)
-{
-	return;
 }
 
 static int

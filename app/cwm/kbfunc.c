@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.12 2008/01/11 16:06:44 oga Exp $
+ * $Id: kbfunc.c,v 1.13 2008/01/16 11:39:20 oga Exp $
  */
 
 #include <paths.h>
@@ -171,7 +171,6 @@ kbfunc_client_search(struct client_ctx *scratch, void *arg)
 	TAILQ_INIT(&menuq);
 	
 	TAILQ_FOREACH(cc, &Clientq, entry) {
-		struct menu *mi;
 		XCALLOC(mi, struct menu);
 		strlcpy(mi->text, cc->name, sizeof(mi->text));
 		mi->ctx = cc;

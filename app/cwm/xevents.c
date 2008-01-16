@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.3 2008/01/11 16:06:44 oga Exp $
+ * $Id: xevents.c,v 1.4 2008/01/16 11:39:20 oga Exp $
  */
 
 /*
@@ -26,8 +26,6 @@
 
 #include "headers.h"
 #include "calmwm.h"
-
-void _sendxmsg(Window, Atom, long);
 
 /*
  * NOTE: in reality, many of these should move to client.c now that
