@@ -797,7 +797,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-data-local install-intel_drv_laLTLIBRARIES
+install-data-am: install-intel_drv_laLTLIBRARIES
 
 install-exec-am:
 
@@ -825,8 +825,7 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-intel_drv_laLTLIBRARIES \
-	uninstall-local
+uninstall-am: uninstall-info-am uninstall-intel_drv_laLTLIBRARIES
 
 uninstall-info: uninstall-info-recursive
 
@@ -836,16 +835,14 @@ uninstall-info: uninstall-info-recursive
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-recursive distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
-	install-data-am install-data-local install-exec \
-	install-exec-am install-info install-info-am \
-	install-intel_drv_laLTLIBRARIES install-man install-strip \
-	installcheck installcheck-am installdirs installdirs-am \
-	maintainer-clean maintainer-clean-generic \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-intel_drv_laLTLIBRARIES install-man \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
 	maintainer-clean-recursive mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool mostlyclean-recursive \
 	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
-	uninstall-info-am uninstall-intel_drv_laLTLIBRARIES \
-	uninstall-local
+	uninstall-info-am uninstall-intel_drv_laLTLIBRARIES
 
 
 @HAVE_GEN4ASM_TRUE@sf_prog.h: packed_yuv_sf.g4a
@@ -877,12 +874,6 @@ uninstall-info: uninstall-info-recursive
 
 @HAVE_GEN4ASM_TRUE@exa_wm_rotation_prog.h: exa_wm_rotation.g4a
 @HAVE_GEN4ASM_TRUE@	intel-gen4asm -o exa_wm_rotation_prog.h exa_wm_rotation.g4a
-
-install-data-local: install-intel_drv_laLTLIBRARIES
-	(cd $(DESTDIR)$(intel_drv_ladir) && rm -f i810_drv.so && ln -s intel_drv.so i810_drv.so)
-
-uninstall-local:
-	(cd $(DESTDIR)$(intel_drv_ladir) && rm -f i810_drv.so)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
