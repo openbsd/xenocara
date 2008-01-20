@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.12 2008/01/14 08:02:36 jasper Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.13 2008/01/20 18:45:06 jasper Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -1094,6 +1094,7 @@ WsfbCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
 	/* Unwrap CloseScreen. */
 	pScreen->CloseScreen = fPtr->CloseScreen;
+	TRACE_EXIT("WsfbCloseScreen");
 	return (*pScreen->CloseScreen)(scrnIndex, pScreen);
 }
 
@@ -1283,6 +1284,7 @@ WsfbSaveScreen(ScreenPtr pScreen, int mode)
 		ioctl(fPtr->fd,
 		      WSDISPLAYIO_SVIDEO, &state);
 	}
+	TRACE_EXIT("SaveScreen");
 	return TRUE;
 }
 
@@ -1304,6 +1306,7 @@ WsfbSave(ScrnInfoPtr pScrn)
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			   "error saving colormap %s\n", strerror(errno));
 	}
+	TRACE_EXIT("WsfbSave");
 
 }
 
