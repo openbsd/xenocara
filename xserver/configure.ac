@@ -320,6 +320,10 @@ case $host_cpu in
 		*freebsd*)	DEFAULT_INT10=stub ;;
 	esac
 	;;
+  m68k)
+	HP300_VIDEO=yes
+	BSD_ARCH_SOURCES="hp300_video.c ioperm_noop.c"
+	;;
   mips*)
 	SGI_VIDEO=yes
 	BSD_ARCH_SOURCES="sgi_video.c ioperm_noop.c"
