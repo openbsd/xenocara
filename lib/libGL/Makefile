@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.13 2007/11/27 09:55:06 matthieu Exp $
+# $OpenBSD: Makefile,v 1.14 2008/01/30 21:21:35 matthieu Exp $
 
 all: ${OBJS}
 LIB=	GL
@@ -481,29 +481,3 @@ CLEANFILES+= glxeval.c glxpixel.c
 .PATH: ${MESA}/drivers/common
 .PATH: ${MESA}/drivers/x11
 .PATH: ${GLX}
-
-.SUFFIXES: .cpp
-
-.cpp.o:
-	@echo "${COMPILE.cc} ${.IMPSRC} -o ${.TARGET}"
-	@${COMPILE.cc} ${.IMPSRC} -o ${.TARGET}.o
-	@${LD} -X -r ${.TARGET}.o -o ${.TARGET}
-	@rm -f ${.TARGET}.o
-
-.cpp.go:
-	@echo "${COMPILE.cc} -g ${.IMPSRC} -o ${.TARGET}"
-	@${COMPILE.cc} -g ${.IMPSRC} -o ${.TARGET}.o
-	@${LD} -X -r ${.TARGET}.o -o ${.TARGET}
-	@rm -f ${.TARGET}.o
-
-.cpp.po:
-	@echo "${COMPILE.cc} -p ${.IMPSRC} -o ${.TARGET}"
-	@${COMPILE.cc} -p ${.IMPSRC} -o ${.TARGET}.o
-	@${LD} -X -r ${.TARGET}.o -o ${.TARGET}
-	@rm -f ${.TARGET}.o
-
-.cpp.so:
-	@echo "${COMPILE.cc} ${PICFLAG} -DPIC ${.IMPSRC} -o ${.TARGET}"
-	@${COMPILE.cc} ${PICFLAG} -DPIC ${.IMPSRC} -o ${.TARGET}.o
-	@${LD} -X -r ${.TARGET}.o -o ${.TARGET}
-	@rm -f ${.TARGET}.o
