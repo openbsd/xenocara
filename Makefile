@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.24 2008/01/05 20:22:38 espie Exp $
+# $OpenBSD: Makefile,v 1.25 2008/01/31 22:34:40 matthieu Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
@@ -110,16 +110,12 @@ dist:
 
 
 distrib-dirs:
-	if [ ! -d ${DESTDIR}${X11BASE}/. ]; then \
-		${INSTALL} -d -o root -g wheel -m 755 ${DESTDIR}${X11BASE}/; \
-	fi
-	mtree -qdef ${.CURDIR}/etc/mtree/BSD.x11.dist \
-		-p ${DESTDIR}${X11BASE}/ -U
-	if [ ! -d ${DESTDIR}${X11ETC}/. ]; then \
-		${INSTALL} -d -o root -g wheel -m 755 ${DESTDIR}${X11ETC}/; \
-	fi
-	mtree -qdef ${.CURDIR}/etc/mtree/BSD.etc-x11.dist \
-		-p ${DESTDIR}${X11ETC}/ -U
+.if defined(DESTDIR) && ${DESTDIR} != ""
+	mtree -qdef ${.CURDIR}/etc/mtree/BSD.x11.dist -p ${DESTDIR} -U
+.else
+	mtree -qdef ${.CURDIR}/etc/mtree/BSD.x11.dist -p / -U
+.endif
+
 
 .PHONY: all build beforeinstall install afterinstall release clean cleandir \
 	dist distrib-dirs fix-appd
