@@ -1,315 +1,315 @@
-#	$OpenBSD: BSD.x11.dist,v 1.8 2008/01/31 22:34:40 matthieu Exp $
+#	$OpenBSD: BSD.x11.dist,v 1.9 2008/01/31 22:37:05 matthieu Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
-.              
-    etc            
-        X11            
-            app-defaults   
+.
+    etc
+        X11
+            app-defaults
             ..
-            fs             
+            fs
             ..
-            lbxproxy       
+            lbxproxy
             ..
-            proxymngr      
+            proxymngr
             ..
-            rstart         
-                commands       
-                    x11r6          
+            rstart
+                commands
+                    x11r6
                     ..
                 ..
-                contexts       
-                ..
-            ..
-            twm            
-            ..
-            xdm            
-                pixmaps        
+                contexts
                 ..
             ..
-            xinit          
+            twm
             ..
-            xkb            
-                compat         
-                ..
-                geometry       
-                    digital        
-                    ..
-                    ibm            
-                    ..
-                    sgi            
-                    ..
-                ..
-                keycodes       
-                    digital        
-                    ..
-                    sgi            
-                    ..
-                ..
-                keymap         
-                    digital        
-                    ..
-                    sgi            
-                    ..
-                    sun            
-                    ..
-                ..
-                rules          
-                ..
-                semantics      
-                ..
-                symbols        
-                    digital        
-                    ..
-                    fujitsu        
-                    ..
-                    hp             
-                    ..
-                    macintosh      
-                    ..
-                    nec            
-                    ..
-                    pc             
-                    ..
-                    sgi            
-                    ..
-                    sony           
-                    ..
-                    sun            
-                    ..
-                    xfree68        
-                    ..
-                ..
-                torture        
-                ..
-                types          
+            xdm
+                pixmaps
                 ..
             ..
-            xsm            
+            xinit
+            ..
+            xkb
+                compat
+                ..
+                geometry
+                    digital
+                    ..
+                    ibm
+                    ..
+                    sgi
+                    ..
+                ..
+                keycodes
+                    digital
+                    ..
+                    sgi
+                    ..
+                ..
+                keymap
+                    digital
+                    ..
+                    sgi
+                    ..
+                    sun
+                    ..
+                ..
+                rules
+                ..
+                semantics
+                ..
+                symbols
+                    digital
+                    ..
+                    fujitsu
+                    ..
+                    hp
+                    ..
+                    macintosh
+                    ..
+                    nec
+                    ..
+                    pc
+                    ..
+                    sgi
+                    ..
+                    sony
+                    ..
+                    sun
+                    ..
+                    xfree68
+                    ..
+                ..
+                torture
+                ..
+                types
+                ..
+            ..
+            xsm
             ..
         ..
-        fonts          
-            conf.avail     
+        fonts
+            conf.avail
             ..
-            conf.d         
+            conf.d
             ..
         ..
     ..
-    usr            
-        X11R6          
-            bin            
+    usr
+        X11R6
+            bin
             ..
-            include        
-                GL             
-                    internal       
+            include
+                GL
+                    internal
                     ..
                 ..
-                X11            
-                    ICE            
+                X11
+                    ICE
                     ..
-                    PM             
+                    PM
                     ..
-                    SM             
+                    SM
                     ..
-                    Xaw            
+                    Xaw
                     ..
-                    Xcursor        
+                    Xcursor
                     ..
-                    Xft            
+                    Xft
                     ..
-                    Xmu            
+                    Xmu
                     ..
-                    XprintAppUtil  
+                    XprintAppUtil
                     ..
-                    XprintUtil     
+                    XprintUtil
                     ..
-                    Xtrans         
+                    Xtrans
                     ..
-                    bitmaps        
+                    bitmaps
                     ..
-                    extensions     
+                    extensions
                     ..
-                    fonts          
+                    fonts
                     ..
-                    pixmaps        
+                    pixmaps
                     ..
                 ..
-                drm            
+                drm
                 ..
-                fontconfig     
+                fontconfig
                 ..
-                freetype2      
-                    freetype       
-                        config         
+                freetype2
+                    freetype
+                        config
                         ..
-                        internal       
-                            services       
+                        internal
+                            services
                             ..
                         ..
                     ..
                 ..
-                pixman-1       
+                pixman-1
                 ..
-                xorg           
+                xorg
                 ..
             ..
-            lib            
-                X11            
-                    app-defaults   
+            lib
+                X11
+                    app-defaults
                     ..
-                    config         
+                    config
                     ..
-                    fonts          
-                        100dpi         
+                    fonts
+                        100dpi
                         ..
-                        75dpi          
+                        75dpi
                         ..
-                        OTF            
+                        OTF
                         ..
-                        Speedo         
+                        Speedo
                         ..
-                        TTF            
+                        TTF
                         ..
-                        Type1          
+                        Type1
                         ..
-                        cyrillic       
+                        cyrillic
                         ..
-                        encodings      
-                            large          
+                        encodings
+                            large
                             ..
                         ..
-                        misc           
+                        misc
                         ..
-                        util           
+                        util
                         ..
                     ..
-                    fvwm           
+                    fvwm
                     ..
-                    proxymngr      
+                    proxymngr
                     ..
-                    x11perfcomp    
+                    x11perfcomp
                     ..
-                    xedit          
-                        lisp           
-                            progmodes      
+                    xedit
+                        lisp
+                            progmodes
                             ..
                         ..
                     ..
                 ..
-                modules        
-                    drivers        
+                modules
+                    drivers
                     ..
-                    extensions     
+                    extensions
                     ..
-                    fonts          
+                    fonts
                     ..
-                    input          
+                    input
                     ..
-                    linux          
+                    linux
                     ..
-                    multimedia     
+                    multimedia
                     ..
                 ..
-                pkgconfig      
+                pkgconfig
                 ..
-                xserver        
+                xserver
                 ..
             ..
-            man            
-                cat1           
+            man
+                cat1
                 ..
-                cat3           
+                cat3
                 ..
-                cat4           
+                cat4
                 ..
-                cat5           
+                cat5
                 ..
-                cat7           
+                cat7
                 ..
-                man1           
+                man1
                 ..
-                man3           
+                man3
                 ..
-                man4           
+                man4
                 ..
-                man5           
+                man5
                 ..
-                man7           
+                man7
                 ..
             ..
-            share          
-                X11            
-                    doc            
+            share
+                X11
+                    doc
                     ..
-                    locale         
-                        C              
+                    locale
+                        C
                         ..
-                        armscii-8      
+                        armscii-8
                         ..
-                        el_GR.UTF-8    
+                        el_GR.UTF-8
                         ..
-                        en_US.UTF-8    
+                        en_US.UTF-8
                         ..
                         georgian-academy
                         ..
-                        georgian-ps    
+                        georgian-ps
                         ..
-                        ibm-cp1133     
+                        ibm-cp1133
                         ..
-                        iscii-dev      
+                        iscii-dev
                         ..
-                        isiri-3342     
+                        isiri-3342
                         ..
-                        iso8859-1      
+                        iso8859-1
                         ..
-                        iso8859-10     
+                        iso8859-10
                         ..
-                        iso8859-11     
+                        iso8859-11
                         ..
-                        iso8859-13     
+                        iso8859-13
                         ..
-                        iso8859-14     
+                        iso8859-14
                         ..
-                        iso8859-15     
+                        iso8859-15
                         ..
-                        iso8859-2      
+                        iso8859-2
                         ..
-                        iso8859-3      
+                        iso8859-3
                         ..
-                        iso8859-4      
+                        iso8859-4
                         ..
-                        iso8859-5      
+                        iso8859-5
                         ..
-                        iso8859-6      
+                        iso8859-6
                         ..
-                        iso8859-7      
+                        iso8859-7
                         ..
-                        iso8859-8      
+                        iso8859-8
                         ..
-                        iso8859-9      
+                        iso8859-9
                         ..
-                        iso8859-9e     
+                        iso8859-9e
                         ..
-                        ja             
+                        ja
                         ..
-                        ja.JIS         
+                        ja.JIS
                         ..
-                        ja.S90         
+                        ja.S90
                         ..
-                        ja.SJIS        
+                        ja.SJIS
                         ..
-                        ja.U90         
+                        ja.U90
                         ..
-                        ja_JP.UTF-8    
+                        ja_JP.UTF-8
                         ..
-                        ko             
+                        ko
                         ..
-                        ko_KR.UTF-8    
+                        ko_KR.UTF-8
                         ..
-                        koi8-c         
+                        koi8-c
                         ..
-                        koi8-r         
+                        koi8-r
                         ..
-                        koi8-u         
+                        koi8-u
                         ..
                         microsoft-cp1251
                         ..
@@ -317,135 +317,135 @@
                         ..
                         microsoft-cp1256
                         ..
-                        mulelao-1      
+                        mulelao-1
                         ..
-                        nokhchi-1      
+                        nokhchi-1
                         ..
-                        pt_BR.UTF-8    
+                        pt_BR.UTF-8
                         ..
-                        tatar-cyr      
+                        tatar-cyr
                         ..
-                        th_TH          
+                        th_TH
                         ..
-                        th_TH.UTF-8    
+                        th_TH.UTF-8
                         ..
-                        tscii-0        
+                        tscii-0
                         ..
-                        vi_VN.tcvn     
+                        vi_VN.tcvn
                         ..
-                        vi_VN.viscii   
+                        vi_VN.viscii
                         ..
-                        zh_CN          
+                        zh_CN
                         ..
-                        zh_CN.UTF-8    
+                        zh_CN.UTF-8
                         ..
-                        zh_CN.gb18030  
+                        zh_CN.gb18030
                         ..
-                        zh_CN.gbk      
+                        zh_CN.gbk
                         ..
-                        zh_HK.UTF-8    
+                        zh_HK.UTF-8
                         ..
-                        zh_HK.big5     
+                        zh_HK.big5
                         ..
                         zh_HK.big5hkscs
                         ..
-                        zh_TW          
+                        zh_TW
                         ..
-                        zh_TW.UTF-8    
+                        zh_TW.UTF-8
                         ..
-                        zh_TW.big5     
+                        zh_TW.big5
                         ..
                     ..
-                    xserver        
-                        C              
-                            print          
-                                attributes     
+                    xserver
+                        C
+                            print
+                                attributes
                                 ..
-                                ddx-config     
-                                    raster         
+                                ddx-config
+                                    raster
                                     ..
                                 ..
-                                models         
-                                    CANONBJ10E-GS  
+                                models
+                                    CANONBJ10E-GS
                                     ..
-                                    CANONC3200-PS  
-                                        fonts          
+                                    CANONC3200-PS
+                                        fonts
                                         ..
                                     ..
-                                    GSdefault      
+                                    GSdefault
                                     ..
-                                    HPDJ1600C      
-                                        fonts          
+                                    HPDJ1600C
+                                        fonts
                                         ..
                                     ..
-                                    HPLJ4050-PS    
-                                        fonts          
+                                    HPLJ4050-PS
+                                        fonts
                                         ..
                                     ..
-                                    HPLJ4family    
-                                        fonts          
+                                    HPLJ4family
+                                        fonts
                                         ..
                                     ..
                                     PS2PDFspooldir-GS
                                     ..
-                                    PSdefault      
-                                        fonts          
+                                    PSdefault
+                                        fonts
                                         ..
                                     ..
-                                    PSspooldir     
+                                    PSspooldir
                                     ..
-                                    SPSPARC2       
-                                        fonts          
+                                    SPSPARC2
+                                        fonts
                                         ..
                                     ..
                                 ..
                             ..
                         ..
-                        en_US          
-                            print          
-                                attributes     
+                        en_US
+                            print
+                                attributes
                                 ..
                             ..
                         ..
                     ..
                 ..
-                aclocal        
+                aclocal
                 ..
-                doc            
-                    compositeproto 
+                doc
+                    compositeproto
                     ..
-                    damageproto    
+                    damageproto
                     ..
-                    fontconfig     
+                    fontconfig
                         fontconfig-devel
                         ..
                     ..
-                    randrproto     
+                    randrproto
                     ..
-                    renderproto    
+                    renderproto
                     ..
                 ..
-                mk             
+                mk
                 ..
             ..
         ..
-        local          
-            lib            
-                X11            
+        local
+            lib
+                X11
                 ..
             ..
         ..
     ..
-    var            
-        cache          
-            fontconfig     
+    var
+        cache
+            fontconfig
             ..
         ..
-        db             
-            xkb            
+        db
+            xkb
             ..
         ..
-        log            
+        log
         ..
     ..
 ..
