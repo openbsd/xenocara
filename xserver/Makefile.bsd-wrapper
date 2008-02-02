@@ -1,4 +1,6 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.18 2008/01/04 13:44:23 jsing Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.19 2008/02/02 17:19:57 matthieu Exp $
+
+.include <bsd.own.mk>
 
 DIST= ${.CURDIR}
 
@@ -29,6 +31,10 @@ NO_XF86_UTIL_OPTION=${NO_XF86_UTIL_${MACHINE}}
 MESA_SOURCE=	--with-mesa-source=${XSRCDIR}/dist/Mesa
 .endif
 
+.if defined(XENOCARA_BUILD_DRI) && ${XENOCARA_BUILD_DRI:L} == "yes"
+DRI_OPTION=	--enable-dri --with-dri-driver-path=${X11BASE}/lib/modules/dri
+.endif
+
 .if !defined(KDRIVE)
 CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--with-xkb-path=/etc/X11/xkb \
@@ -36,7 +42,7 @@ CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--with-module-dir=${LIBDIR}/modules ${MESA_SOURCE} \
 		--enable-install-setuid --enable-privsep \
 		--disable-dmx ${NO_XORG_OPTION} ${NO_XF86_UTIL_OPTION} \
-		${NO_XPRINT_OPTION}
+		${NO_XPRINT_OPTION} ${DRI_OPTION}
 .else
 CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--disable-xorg \
