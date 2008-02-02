@@ -1,11 +1,10 @@
-# $OpenBSD: Makefile,v 1.15 2008/02/02 17:24:30 matthieu Exp $
+# $OpenBSD: Makefile,v 1.16 2008/02/02 17:38:56 matthieu Exp $
 .include <bsd.own.mk>
 
 .if defined(XENOCARA_BUILD_DRI) && ${XENOCARA_BUILD_DRI:L} == "yes"
 SUBDIR=libmesa dri
 .endif
 
-all: ${OBJS}
 LIB=	GL
 
 MESA=	${.CURDIR}/../../dist/Mesa/src/mesa
@@ -18,7 +17,12 @@ DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 DRI_DRIVER_SEARCH_DIR=	$(DRI_DRIVER_INSTALL_DIR)
 
 INCSDIR=	${X11BASE}/include/GL
-LDADD=		-L${X11BASE}/lib -lXfixes -lXdamage -lXext -lX11 -ldrm
+
+.if defined(XENOCARA_BUILD_DRI) && ${XENOCARA_BUILD_DRI:L} == "yes"
+LDADD=		-L${X11BASE}/lib -lX11 -lXext -lXxf86vm -lXdamage -lXfixes -ldrm
+.else
+LDADD=		-L${X11BASE}/lib -lXext -lX11
+.endif
 
 CPP=	cpp -notraditional
 DEBUG?=
