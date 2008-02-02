@@ -1,4 +1,4 @@
-#	$OpenBSD: BSD.x11.dist,v 1.9 2008/01/31 22:37:05 matthieu Exp $
+#	$OpenBSD: BSD.x11.dist,v 1.10 2008/02/02 17:24:30 matthieu Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 .
@@ -196,6 +196,8 @@
                     ..
                 ..
                 modules
+                    dri
+                    ..
                     drivers
                     ..
                     extensions
