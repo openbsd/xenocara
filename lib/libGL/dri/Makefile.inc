@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.2 2008/02/02 17:24:30 matthieu Exp $
+# $OpenBSD: Makefile.inc,v 1.3 2008/02/07 00:09:01 oga Exp $
 .include <bsd.own.mk>
 
 MESA= ${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -20,7 +20,7 @@ COMMON_BM_SOURCES = \
 	dri_bufmgr.c \
 	dri_drmpool.c
 
-CFLAGS+= -DIN_DRI_DRIVER $(INCLUDES) $(DRIVER_DEFINES)
+CFLAGS+= -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING -DPTHREADS $(INCLUDES) $(DRIVER_DEFINES)
 
 INCLUDES = \
 	-I$(TOP)/src/mesa/drivers/dri/common \
@@ -39,7 +39,7 @@ INCLUDES = \
 	-I$(X11BASE)/include \
 	-I$(X11BASE)/include/drm
 
-LDADD=	../../libmesa/libmesa_pic.a -L${X11BASE}/lib -lexpat -ldrm 
+LDADD=	../../libmesa/libmesa_pic.a -L${X11BASE}/lib -lexpat -ldrm -lm
 .PATH: ${MESA}/drivers/dri/common
 .PATH: ${MESA}/drivers/common
 
