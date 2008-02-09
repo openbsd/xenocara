@@ -109,6 +109,23 @@ AM_CONDITIONAL(BUILD_XAW6, [test x$build_v6 = xyes])
 AM_CONDITIONAL(BUILD_XAW7, [test x$build_v7 = xyes])
 AM_CONDITIONAL(BUILD_XAW8, [test x$build_v8 = xyes])
 
+if test x$build_v6 = xyes; then
+	link_v6=yes
+fi
+AC_ARG_ENABLE(xaw6-symlink, AC_HELP_STRING([--disable-xaw8-symlink],
+	[Disable symlink of libXaw6.so.6 to libXaw.so.6]),
+	[link_v6=$enableval])
+AM_CONDITIONAL(LINK_XAW6, [test x$link_v6 = xyes])
+
+if test x$build_v7 = xyes; then
+	link_v7=yes
+fi
+AC_ARG_ENABLE(xaw7-symlink, AC_HELP_STRING([--disable-xaw8-symlink],
+	[Disable symlink of libXaw7.so.7 to libXaw.so.7]),
+	[link_v7=$enableval])
+AM_CONDITIONAL(LINK_XAW7, [test x$link_v7 = xyes])
+
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADER(wctype.h,
