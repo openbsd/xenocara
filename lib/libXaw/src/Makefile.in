@@ -230,6 +230,10 @@ LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LINK_XAW6_FALSE = @LINK_XAW6_FALSE@
+LINK_XAW6_TRUE = @LINK_XAW6_TRUE@
+LINK_XAW7_FALSE = @LINK_XAW7_FALSE@
+LINK_XAW7_TRUE = @LINK_XAW7_TRUE@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -1670,6 +1674,9 @@ maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
 @BUILD_XAW6_FALSE@@BUILD_XAW7_FALSE@@BUILD_XAW8_FALSE@install-exec-hook:
+@BUILD_XAW6_FALSE@@BUILD_XAW8_FALSE@@LINK_XAW7_FALSE@install-exec-hook:
+@BUILD_XAW7_FALSE@@BUILD_XAW8_FALSE@@LINK_XAW6_FALSE@install-exec-hook:
+@BUILD_XAW8_FALSE@@LINK_XAW6_FALSE@@LINK_XAW7_FALSE@install-exec-hook:
 @PLATFORM_WIN32_TRUE@install-exec-hook:
 @SHARED_LIBS_FALSE@install-exec-hook:
 clean: clean-am
@@ -1739,17 +1746,17 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
 	uninstall-libLTLIBRARIES
 
 
-@BUILD_XAW6_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
-@BUILD_XAW6_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.so.9.0
-@BUILD_XAW6_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.so.9.0 libXaw.so.9.0)
+@BUILD_XAW6_TRUE@@LINK_XAW6_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
+@BUILD_XAW6_TRUE@@LINK_XAW6_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.so.9.0
+@BUILD_XAW6_TRUE@@LINK_XAW6_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.so.9.0 libXaw.so.9.0)
 
-@BUILD_XAW7_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
-@BUILD_XAW7_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.so.11.0
-@BUILD_XAW7_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.so.11.0 libXaw.so.11.0)
+@BUILD_XAW7_TRUE@@LINK_XAW7_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
+@BUILD_XAW7_TRUE@@LINK_XAW7_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.so.12.0
+@BUILD_XAW7_TRUE@@LINK_XAW7_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.so.12.0 libXaw.so.12.0)
 
 @BUILD_XAW8_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
-@BUILD_XAW8_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.so.12.0
-@BUILD_XAW8_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw8.so.12.0 libXaw.so.12.0)
+@BUILD_XAW8_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.so.13.0
+@BUILD_XAW8_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw8.so.13.0 libXaw.so.13.0)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

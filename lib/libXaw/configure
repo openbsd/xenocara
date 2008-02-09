@@ -464,7 +464,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL PKG_CONFIG ac_pt_PKG_CONFIG PLATFORM_WIN32_TRUE PLATFORM_WIN32_FALSE SHARED_LIBS_TRUE SHARED_LIBS_FALSE XAW6_CFLAGS XAW6_LIBS XAW7_CFLAGS XAW7_LIBS XPRINT_CFLAGS XPRINT_LIBS XAW8_CFLAGS XAW8_LIBS BUILD_XAW6_TRUE BUILD_XAW6_FALSE BUILD_XAW7_TRUE BUILD_XAW7_FALSE BUILD_XAW8_TRUE BUILD_XAW8_FALSE APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL PKG_CONFIG ac_pt_PKG_CONFIG PLATFORM_WIN32_TRUE PLATFORM_WIN32_FALSE SHARED_LIBS_TRUE SHARED_LIBS_FALSE XAW6_CFLAGS XAW6_LIBS XAW7_CFLAGS XAW7_LIBS XPRINT_CFLAGS XPRINT_LIBS XAW8_CFLAGS XAW8_LIBS BUILD_XAW6_TRUE BUILD_XAW6_FALSE BUILD_XAW7_TRUE BUILD_XAW7_FALSE BUILD_XAW8_TRUE BUILD_XAW8_FALSE LINK_XAW6_TRUE LINK_XAW6_FALSE LINK_XAW7_TRUE LINK_XAW7_FALSE APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1076,6 +1076,8 @@ Optional Features:
   --disable-xaw6          Disable building of libXaw.so.6
   --disable-xaw7          Disable building of libXaw.so.7
   --disable-xaw8          Disable building of libXaw.so.8
+  --disable-xaw8-symlink  Disable symlink of libXaw6.so.6 to libXaw.so.6
+  --disable-xaw8-symlink  Disable symlink of libXaw7.so.7 to libXaw.so.7
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -3751,7 +3753,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 3754 "configure"' > conftest.$ac_ext
+  echo '#line 3756 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -5350,7 +5352,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:5353:" \
+echo "$as_me:5355:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -6413,11 +6415,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6416: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6418: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6420: \$? = $ac_status" >&5
+   echo "$as_me:6422: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -6681,11 +6683,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6684: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6686: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6688: \$? = $ac_status" >&5
+   echo "$as_me:6690: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -6785,11 +6787,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6788: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6790: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:6792: \$? = $ac_status" >&5
+   echo "$as_me:6794: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9134,7 +9136,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9137 "configure"
+#line 9139 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9234,7 +9236,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9237 "configure"
+#line 9239 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11578,11 +11580,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11581: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11583: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:11585: \$? = $ac_status" >&5
+   echo "$as_me:11587: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -11682,11 +11684,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11685: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11687: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:11689: \$? = $ac_status" >&5
+   echo "$as_me:11691: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13252,11 +13254,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13255: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13257: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13259: \$? = $ac_status" >&5
+   echo "$as_me:13261: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13356,11 +13358,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13359: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13361: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13363: \$? = $ac_status" >&5
+   echo "$as_me:13365: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -15563,11 +15565,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15566: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15568: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15570: \$? = $ac_status" >&5
+   echo "$as_me:15572: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -15831,11 +15833,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15834: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15836: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15838: \$? = $ac_status" >&5
+   echo "$as_me:15840: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -15935,11 +15937,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15938: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15940: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15942: \$? = $ac_status" >&5
+   echo "$as_me:15944: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -19270,6 +19272,45 @@ else
 fi
 
 
+if test x$build_v6 = xyes; then
+	link_v6=yes
+fi
+# Check whether --enable-xaw6-symlink or --disable-xaw6-symlink was given.
+if test "${enable_xaw6_symlink+set}" = set; then
+  enableval="$enable_xaw6_symlink"
+  link_v6=$enableval
+fi;
+
+
+if test x$link_v6 = xyes; then
+  LINK_XAW6_TRUE=
+  LINK_XAW6_FALSE='#'
+else
+  LINK_XAW6_TRUE='#'
+  LINK_XAW6_FALSE=
+fi
+
+
+if test x$build_v7 = xyes; then
+	link_v7=yes
+fi
+# Check whether --enable-xaw7-symlink or --disable-xaw7-symlink was given.
+if test "${enable_xaw7_symlink+set}" = set; then
+  enableval="$enable_xaw7_symlink"
+  link_v7=$enableval
+fi;
+
+
+if test x$link_v7 = xyes; then
+  LINK_XAW7_TRUE=
+  LINK_XAW7_FALSE='#'
+else
+  LINK_XAW7_TRUE='#'
+  LINK_XAW7_FALSE=
+fi
+
+
+
 # Checks for header files.
 echo "$as_me:$LINENO: checking for ANSI C header files" >&5
 echo $ECHO_N "checking for ANSI C header files... $ECHO_C" >&6
@@ -20248,6 +20289,20 @@ echo "$as_me: error: conditional \"BUILD_XAW8\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${LINK_XAW6_TRUE}" && test -z "${LINK_XAW6_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"LINK_XAW6\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"LINK_XAW6\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${LINK_XAW7_TRUE}" && test -z "${LINK_XAW7_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"LINK_XAW7\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"LINK_XAW7\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 
 : ${CONFIG_STATUS=./config.status}
 ac_clean_files_save=$ac_clean_files
@@ -20871,6 +20926,10 @@ s,@BUILD_XAW7_TRUE@,$BUILD_XAW7_TRUE,;t t
 s,@BUILD_XAW7_FALSE@,$BUILD_XAW7_FALSE,;t t
 s,@BUILD_XAW8_TRUE@,$BUILD_XAW8_TRUE,;t t
 s,@BUILD_XAW8_FALSE@,$BUILD_XAW8_FALSE,;t t
+s,@LINK_XAW6_TRUE@,$LINK_XAW6_TRUE,;t t
+s,@LINK_XAW6_FALSE@,$LINK_XAW6_FALSE,;t t
+s,@LINK_XAW7_TRUE@,$LINK_XAW7_TRUE,;t t
+s,@LINK_XAW7_FALSE@,$LINK_XAW7_FALSE,;t t
 s,@APP_MAN_SUFFIX@,$APP_MAN_SUFFIX,;t t
 s,@LIB_MAN_SUFFIX@,$LIB_MAN_SUFFIX,;t t
 s,@FILE_MAN_SUFFIX@,$FILE_MAN_SUFFIX,;t t
@@ -21757,6 +21816,20 @@ echo "$as_me: error: conditional \"BUILD_XAW8\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${LINK_XAW6_TRUE}" && test -z "${LINK_XAW6_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"LINK_XAW6\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"LINK_XAW6\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${LINK_XAW7_TRUE}" && test -z "${LINK_XAW7_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"LINK_XAW7\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"LINK_XAW7\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 
 : ${CONFIG_STATUS=./config.status}
 ac_clean_files_save=$ac_clean_files
@@ -22381,6 +22454,10 @@ s,@BUILD_XAW7_TRUE@,$BUILD_XAW7_TRUE,;t t
 s,@BUILD_XAW7_FALSE@,$BUILD_XAW7_FALSE,;t t
 s,@BUILD_XAW8_TRUE@,$BUILD_XAW8_TRUE,;t t
 s,@BUILD_XAW8_FALSE@,$BUILD_XAW8_FALSE,;t t
+s,@LINK_XAW6_TRUE@,$LINK_XAW6_TRUE,;t t
+s,@LINK_XAW6_FALSE@,$LINK_XAW6_FALSE,;t t
+s,@LINK_XAW7_TRUE@,$LINK_XAW7_TRUE,;t t
+s,@LINK_XAW7_FALSE@,$LINK_XAW7_FALSE,;t t
 s,@APP_MAN_SUFFIX@,$APP_MAN_SUFFIX,;t t
 s,@LIB_MAN_SUFFIX@,$LIB_MAN_SUFFIX,;t t
 s,@FILE_MAN_SUFFIX@,$FILE_MAN_SUFFIX,;t t
@@ -23268,6 +23345,20 @@ echo "$as_me: error: conditional \"BUILD_XAW8\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${LINK_XAW6_TRUE}" && test -z "${LINK_XAW6_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"LINK_XAW6\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"LINK_XAW6\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${LINK_XAW7_TRUE}" && test -z "${LINK_XAW7_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"LINK_XAW7\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"LINK_XAW7\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 
 : ${CONFIG_STATUS=./config.status}
 ac_clean_files_save=$ac_clean_files
@@ -23893,6 +23984,10 @@ s,@BUILD_XAW7_TRUE@,$BUILD_XAW7_TRUE,;t t
 s,@BUILD_XAW7_FALSE@,$BUILD_XAW7_FALSE,;t t
 s,@BUILD_XAW8_TRUE@,$BUILD_XAW8_TRUE,;t t
 s,@BUILD_XAW8_FALSE@,$BUILD_XAW8_FALSE,;t t
+s,@LINK_XAW6_TRUE@,$LINK_XAW6_TRUE,;t t
+s,@LINK_XAW6_FALSE@,$LINK_XAW6_FALSE,;t t
+s,@LINK_XAW7_TRUE@,$LINK_XAW7_TRUE,;t t
+s,@LINK_XAW7_FALSE@,$LINK_XAW7_FALSE,;t t
 s,@APP_MAN_SUFFIX@,$APP_MAN_SUFFIX,;t t
 s,@LIB_MAN_SUFFIX@,$LIB_MAN_SUFFIX,;t t
 s,@FILE_MAN_SUFFIX@,$FILE_MAN_SUFFIX,;t t
@@ -24780,6 +24875,20 @@ echo "$as_me: error: conditional \"BUILD_XAW8\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${LINK_XAW6_TRUE}" && test -z "${LINK_XAW6_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"LINK_XAW6\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"LINK_XAW6\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${LINK_XAW7_TRUE}" && test -z "${LINK_XAW7_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"LINK_XAW7\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"LINK_XAW7\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 
 : ${CONFIG_STATUS=./config.status}
 ac_clean_files_save=$ac_clean_files
@@ -25406,6 +25515,10 @@ s,@BUILD_XAW7_TRUE@,$BUILD_XAW7_TRUE,;t t
 s,@BUILD_XAW7_FALSE@,$BUILD_XAW7_FALSE,;t t
 s,@BUILD_XAW8_TRUE@,$BUILD_XAW8_TRUE,;t t
 s,@BUILD_XAW8_FALSE@,$BUILD_XAW8_FALSE,;t t
+s,@LINK_XAW6_TRUE@,$LINK_XAW6_TRUE,;t t
+s,@LINK_XAW6_FALSE@,$LINK_XAW6_FALSE,;t t
+s,@LINK_XAW7_TRUE@,$LINK_XAW7_TRUE,;t t
+s,@LINK_XAW7_FALSE@,$LINK_XAW7_FALSE,;t t
 s,@APP_MAN_SUFFIX@,$APP_MAN_SUFFIX,;t t
 s,@LIB_MAN_SUFFIX@,$LIB_MAN_SUFFIX,;t t
 s,@FILE_MAN_SUFFIX@,$FILE_MAN_SUFFIX,;t t
