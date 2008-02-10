@@ -1,4 +1,4 @@
-/*	$OpenBSD: xidle.c,v 1.1.1.1 2006/11/26 10:57:44 matthieu Exp $	*/
+/*	$OpenBSD: xidle.c,v 1.2 2008/02/10 10:57:05 mcbride Exp $	*/
 /*
  * Copyright (c) 2005 Federico G. Schwindt
  * Copyright (c) 2005 Claudio Castiglia
@@ -53,6 +53,8 @@ enum {
 	east  = 0x04,
 	west  = 0x08
 };
+
+enum { XIDLE_LOCK = 1, XIDLE_DIE = 2 };
 
 struct xinfo {
 	Display		*dpy;
@@ -202,7 +204,10 @@ handler(int sig)
 	ev.type = ClientMessage;
 	ev.display = x.dpy;
 	ev.window = x.win;
-	ev.message_type = 0xdead;
+	if (sig == SIGUSR1)
+		ev.message_type = XIDLE_LOCK;
+	else 
+		ev.message_type = XIDLE_DIE;
 	ev.format = 8;
 	XSendEvent(x.dpy, x.win, False, 0L, (XEvent *)&ev);
 	XFlush(x.dpy);
@@ -345,6 +350,7 @@ main(int argc, char **argv)
 
 	signal(SIGINT, handler);
 	signal(SIGTERM, handler);
+	signal(SIGUSR1, handler);
 
 	for (;;) {
 		XEvent ev;
@@ -383,11 +389,18 @@ main(int argc, char **argv)
 			break;
 
 		case ClientMessage:
-			if (ev.xclient.message_type != 0xdead)
+			switch (ev.xclient.message_type) {
+			case XIDLE_LOCK:
+				action(&x, args);
 				break;
-			close_x(&x);
-			exit(0);
-			/* NOTREACHED */
+			case XIDLE_DIE: 
+				close_x(&x);
+				exit(0);
+				/* NOTREACHED */
+			default:
+				break;
+			}
+			break;
 
 		case EnterNotify:
 			sleep(delay);

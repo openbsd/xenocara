@@ -1,4 +1,4 @@
-.\" $OpenBSD: xidle.1,v 1.1.1.1 2006/11/26 10:57:44 matthieu Exp $
+.\" $OpenBSD: xidle.1,v 1.2 2008/02/10 10:57:05 mcbride Exp $
 .\"
 .\" Copyright (c) 2005 Federico G. Schwindt.
 .\"
@@ -46,10 +46,11 @@ uses the
 extension to receive inactivity events when a timeout is specified, running
 a specific program after the elapsed time.
 .Nm
-also monitors the very corner of the given position for pointer activity
-and runs a program if the pointer sits there for more than the specified
-number of seconds.
-This behavior is always present, whether
+will also run the program if it is sent a
+.Dv SIGUSR1
+signal, or if the pointer sits in a corner of the screen for
+an ammount of time.
+Signal and corner locking are always enabled, whether
 .Fl timeout
 is specified or not.
 .Pp
