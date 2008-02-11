@@ -298,6 +298,16 @@ extern int I810_DEBUG;
 #define PCI_CHIP_I815_BRIDGE       0x1130
 #endif
 
+#ifndef PCI_CHIP_I830_M
+#define PCI_CHIP_I830_M            0x3577
+#define PCI_CHIP_I830_M_BRIDGE     0x3575
+#endif
+
+#ifndef PCI_CHIP_845_G
+#define PCI_CHIP_845_G		   0x2562
+#define PCI_CHIP_845_G_BRIDGE	   0x2560
+#endif
+
 #ifndef PCI_CHIP_I855_GM
 #define PCI_CHIP_I855_GM	   0x3582
 #define PCI_CHIP_I855_GM_BRIDGE	   0x3580
@@ -339,9 +349,9 @@ extern int I810_DEBUG;
 #define PCI_CHIP_I945_GME_BRIDGE 0x27AC
 #endif
 
-#ifndef PCI_CHIP_I965_G_1
-#define PCI_CHIP_I965_G_1		0x2982
-#define PCI_CHIP_I965_G_1_BRIDGE 	0x2980
+#ifndef PCI_CHIP_G35_G
+#define PCI_CHIP_G35_G		0x2982
+#define PCI_CHIP_G35_G_BRIDGE 	0x2980
 #endif
 
 #ifndef PCI_CHIP_I965_Q
@@ -384,6 +394,11 @@ extern int I810_DEBUG;
 #define PCI_CHIP_Q33_G_BRIDGE 	0x29D0
 #endif
 
+#ifndef PCI_CHIP_IGD_GM
+#define PCI_CHIP_IGD_GM		0x2A42
+#define PCI_CHIP_IGD_GM_BRIDGE  0x2A40
+#endif
+
 #if XSERVER_LIBPCIACCESS
 #define I810_MEMBASE(p,n) (p)->regions[(n)].base_addr
 #define VENDOR_ID(p)      (p)->vendor_id
@@ -415,14 +430,15 @@ extern int I810_DEBUG;
 #define IS_I915GM(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I915_GM)
 #define IS_I945G(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I945_G)
 #define IS_I945GM(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I945_GM || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I945_GME)
+#define IS_IGD_GM(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_IGD_GM)
 #define IS_I965GM(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_GM || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_GME)
-#define IS_I965G(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_G || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_G_1 || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_Q || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I946_GZ || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_GM || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_GME)
+#define IS_I965G(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_G || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_G35_G || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_Q || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I946_GZ || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_GM || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_GME || IS_IGD_GM(pI810))
 #define IS_G33CLASS(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_G33_G ||\
  			    DEVICE_ID(pI810->PciInfo) == PCI_CHIP_Q35_G ||\
  			    DEVICE_ID(pI810->PciInfo) == PCI_CHIP_Q33_G)
 #define IS_I9XX(pI810) (IS_I915G(pI810) || IS_I915GM(pI810) || IS_I945G(pI810) || IS_I945GM(pI810) || IS_I965G(pI810) || IS_G33CLASS(pI810))
 
-#define IS_MOBILE(pI810) (IS_I830(pI810) || IS_I85X(pI810) || IS_I915GM(pI810) || IS_I945GM(pI810) || IS_I965GM(pI810))
+#define IS_MOBILE(pI810) (IS_I830(pI810) || IS_I85X(pI810) || IS_I915GM(pI810) || IS_I945GM(pI810) || IS_I965GM(pI810) || IS_IGD_GM(pI810))
 /* mark chipsets for using gfx VM offset for overlay */
 #define OVERLAY_NOPHYSICAL(pI810) (IS_G33CLASS(pI810))
 

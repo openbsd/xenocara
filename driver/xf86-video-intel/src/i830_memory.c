@@ -97,6 +97,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endif
 
 #include <assert.h>
+#include <inttypes.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -274,12 +275,16 @@ i830_free_memory(ScrnInfoPtr pScrn, i830_memory *mem)
 	I830Ptr pI830 = I830PTR(pScrn);
 
 	drmBOUnreference(pI830->drmSubFD, &mem->bo);
-	if (pI830->bo_list == mem)
+	if (pI830->bo_list == mem) {
 	    pI830->bo_list = mem->next;
-	if (mem->next)
-	    mem->next->prev = NULL;
-	if (mem->prev)
-	    mem->prev->next = NULL;
+	    if (mem->next)
+		mem->next->prev = NULL;
+	} else {
+	    if (mem->prev)
+		mem->prev->next = mem->next;
+	    if (mem->next)
+		mem->next->prev = mem->prev;
+	}
 	xfree(mem->name);
 	xfree(mem);
 	return;
@@ -596,8 +601,8 @@ i830_get_stolen_physical(ScrnInfoPtr pScrn, unsigned long offset,
 
 	if ((scan - offset) != (scan_physical - physical)) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		       "Non-contiguous GTT entries: (%ld,0x16%llx) vs "
-		       "(%ld,0x%16llx)\n",
+		       "Non-contiguous GTT entries: (%ld,0x16%" PRIx64 ") vs "
+		       "(%ld,0x%" PRIx64 ")\n",
 		       scan, scan_physical, offset, physical);
 	    return -1;
 	}
@@ -945,7 +950,7 @@ i830_describe_allocations(ScrnInfoPtr pScrn, int verbosity, const char *prefix)
 
 	if (mem->bus_addr != 0)
 	    snprintf(phys_suffix, sizeof(phys_suffix),
-		    ", 0x%016llx physical\n", mem->bus_addr);
+		    ", 0x%016" PRIx64 " physical\n", mem->bus_addr);
 	if (mem->tiling == TILE_XMAJOR)
 	    tile_suffix = " X tiled";
 	else if (mem->tiling == TILE_YMAJOR)
@@ -1930,7 +1935,8 @@ i830_bind_all_memory(ScrnInfoPtr pScrn)
 	}
 #endif
     }
-    i830_update_cursor_offsets(pScrn);
+    if (!pI830->SWCursor)
+	i830_update_cursor_offsets(pScrn);
 
     return TRUE;
 }

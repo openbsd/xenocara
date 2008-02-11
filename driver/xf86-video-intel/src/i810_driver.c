@@ -144,7 +144,7 @@ static const struct pci_id_match intel_device_match[] = {
    INTEL_DEVICE_MATCH (PCI_CHIP_I945_GM, 0 ),
    INTEL_DEVICE_MATCH (PCI_CHIP_I945_GME, 0 ),
    INTEL_DEVICE_MATCH (PCI_CHIP_I965_G, 0 ),
-   INTEL_DEVICE_MATCH (PCI_CHIP_I965_G_1, 0 ),
+   INTEL_DEVICE_MATCH (PCI_CHIP_G35_G, 0 ),
    INTEL_DEVICE_MATCH (PCI_CHIP_I965_Q, 0 ),
    INTEL_DEVICE_MATCH (PCI_CHIP_I946_GZ, 0 ),
    INTEL_DEVICE_MATCH (PCI_CHIP_I965_GM, 0 ),
@@ -152,6 +152,7 @@ static const struct pci_id_match intel_device_match[] = {
    INTEL_DEVICE_MATCH (PCI_CHIP_G33_G, 0 ),
    INTEL_DEVICE_MATCH (PCI_CHIP_Q35_G, 0 ),
    INTEL_DEVICE_MATCH (PCI_CHIP_Q33_G, 0 ),
+   INTEL_DEVICE_MATCH (PCI_CHIP_IGD_GM, 0 ),
     { 0, 0, 0 },
 };
 
@@ -196,7 +197,7 @@ static SymTabRec I810Chipsets[] = {
    {PCI_CHIP_I945_GM,		"945GM"},
    {PCI_CHIP_I945_GME,		"945GME"},
    {PCI_CHIP_I965_G,		"965G"},
-   {PCI_CHIP_I965_G_1,		"965G"},
+   {PCI_CHIP_G35_G,		"G35"},
    {PCI_CHIP_I965_Q,		"965Q"},
    {PCI_CHIP_I946_GZ,		"946GZ"},
    {PCI_CHIP_I965_GM,		"965GM"},
@@ -204,6 +205,7 @@ static SymTabRec I810Chipsets[] = {
    {PCI_CHIP_G33_G,		"G33"},
    {PCI_CHIP_Q35_G,		"Q35"},
    {PCI_CHIP_Q33_G,		"Q33"},
+   {PCI_CHIP_IGD_GM,		"Intel Integrated Graphics Device"},
    {-1,				NULL}
 };
 
@@ -225,7 +227,7 @@ static PciChipsets I810PciChipsets[] = {
    {PCI_CHIP_I945_GM,		PCI_CHIP_I945_GM,	RES_SHARED_VGA},
    {PCI_CHIP_I945_GME,		PCI_CHIP_I945_GME,	RES_SHARED_VGA},
    {PCI_CHIP_I965_G,		PCI_CHIP_I965_G,	RES_SHARED_VGA},
-   {PCI_CHIP_I965_G_1,		PCI_CHIP_I965_G_1,	RES_SHARED_VGA},
+   {PCI_CHIP_G35_G,		PCI_CHIP_G35_G,		RES_SHARED_VGA},
    {PCI_CHIP_I965_Q,		PCI_CHIP_I965_Q,	RES_SHARED_VGA},
    {PCI_CHIP_I946_GZ,		PCI_CHIP_I946_GZ,	RES_SHARED_VGA},
    {PCI_CHIP_I965_GM,		PCI_CHIP_I965_GM,	RES_SHARED_VGA},
@@ -233,6 +235,7 @@ static PciChipsets I810PciChipsets[] = {
    {PCI_CHIP_G33_G,		PCI_CHIP_G33_G,		RES_SHARED_VGA},
    {PCI_CHIP_Q35_G,		PCI_CHIP_Q35_G,		RES_SHARED_VGA},
    {PCI_CHIP_Q33_G,		PCI_CHIP_Q33_G,		RES_SHARED_VGA},
+   {PCI_CHIP_IGD_GM,		PCI_CHIP_IGD_GM,	RES_SHARED_VGA},
    {-1,				-1, RES_UNDEFINED }
 };
 
@@ -788,7 +791,7 @@ I810Probe(DriverPtr drv, int flags)
 	    case PCI_CHIP_I945_GM:
 	    case PCI_CHIP_I945_GME:
 	    case PCI_CHIP_I965_G:
-	    case PCI_CHIP_I965_G_1:
+	    case PCI_CHIP_G35_G:
 	    case PCI_CHIP_I965_Q:
 	    case PCI_CHIP_I946_GZ:
 	    case PCI_CHIP_I965_GM:
@@ -796,6 +799,7 @@ I810Probe(DriverPtr drv, int flags)
  	    case PCI_CHIP_G33_G:
  	    case PCI_CHIP_Q35_G:
  	    case PCI_CHIP_Q33_G:
+ 	    case PCI_CHIP_IGD_GM:
     	       xf86SetEntitySharable(usedChips[i]);
 
     	       /* Allocate an entity private if necessary */		
@@ -950,7 +954,7 @@ I810PreInit(ScrnInfoPtr pScrn, int flags)
    pScrn->monitor = pScrn->confScreen->monitor;
 
    flags24 = Support24bppFb | PreferConvert32to24 | SupportConvert32to24;
-   if (!xf86SetDepthBpp(pScrn, 0, 0, 0, flags24)) {
+   if (!xf86SetDepthBpp(pScrn, 16, 0, 16, flags24)) {
       return FALSE;
    } else {
       switch (pScrn->depth) {
