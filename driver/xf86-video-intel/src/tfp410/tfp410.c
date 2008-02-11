@@ -259,7 +259,7 @@ tfp410_restore(I2CDevPtr d)
     tfp410WriteByte(tfp, TFP410_CTL_1, tfp->SavedReg.ctl1);
 }
 
-I830I2CVidOutputRec TFP410VidOutput = {
+_X_EXPORT I830I2CVidOutputRec TFP410VidOutput = {
     .init = tfp410_init,
     .detect = tfp410_detect,
     .mode_valid = tfp410_mode_valid,

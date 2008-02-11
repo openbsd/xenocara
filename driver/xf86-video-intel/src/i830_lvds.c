@@ -109,18 +109,18 @@ i830_set_lvds_backlight_method(xf86OutputPtr output)
     ScrnInfoPtr pScrn = output->scrn;
     I830Ptr pI830 = I830PTR(pScrn);
     CARD32 blc_pwm_ctl, blc_pwm_ctl2;
-    enum backlight_control method = NATIVE; /* Default to native */
+    enum backlight_control method = BCM_NATIVE; /* Default to native */
 
     if (i830_kernel_backlight_available(output)) {
-	    method = KERNEL;
-    } else if (IS_I965GM(pI830)) {
+	    method = BCM_KERNEL;
+    } else if (IS_I965GM(pI830) || IS_IGD_GM(pI830)) {
 	blc_pwm_ctl2 = INREG(BLC_PWM_CTL2);
 	if (blc_pwm_ctl2 & BLM_LEGACY_MODE2)
-	    method = COMBO;
+	    method = BCM_LEGACY;
     } else {
 	blc_pwm_ctl = INREG(BLC_PWM_CTL);
 	if (blc_pwm_ctl & BLM_LEGACY_MODE)
-	    method = COMBO;
+	    method = BCM_LEGACY;
     }
 
     pI830->backlight_control_method = method;
@@ -161,7 +161,7 @@ i830_lvds_get_backlight_max_native(xf86OutputPtr output)
     CARD32 pwm_ctl = INREG(BLC_PWM_CTL);
     int val;
 
-    if (IS_I965GM(pI830)) {
+    if (IS_I965GM(pI830) || IS_IGD_GM(pI830)) {
 	val = ((pwm_ctl & BACKLIGHT_MODULATION_FREQ_MASK2) >>
 	       BACKLIGHT_MODULATION_FREQ_SHIFT2);
     } else {
@@ -234,6 +234,12 @@ i830_lvds_set_backlight_combo(xf86OutputPtr output, int level)
 #endif
     }
 
+    /*
+     * Don't set the lowest bit in combo configs since it can act as a flag for
+     * max brightness.
+     */
+    level <<= 1;
+
     blc_pwm_ctl = INREG(BLC_PWM_CTL);
     blc_pwm_ctl &= ~BACKLIGHT_DUTY_CYCLE_MASK;
     OUTREG(BLC_PWM_CTL, blc_pwm_ctl | (level << BACKLIGHT_DUTY_CYCLE_SHIFT));
@@ -248,7 +254,17 @@ i830_lvds_get_backlight_combo(xf86OutputPtr output)
 
     blc_pwm_ctl = INREG(BLC_PWM_CTL);
     blc_pwm_ctl &= BACKLIGHT_DUTY_CYCLE_MASK;
-    return blc_pwm_ctl;
+
+    /* Since we don't use the low bit when using combo, the value is halved */
+
+    return blc_pwm_ctl >> 1;
+}
+
+static int
+i830_lvds_get_backlight_max_combo(xf86OutputPtr output)
+{
+    /* Since we don't set the low bit when using combo, the range is halved */
+    return i830_lvds_get_backlight_max_native(output) >> 1;
 }
 
 /*
@@ -356,6 +372,17 @@ i830SetLVDSPanelPower(xf86OutputPtr output, Bool on)
     CARD32		    pp_status;
 
     if (on) {
+	/*
+	 * If we're going from off->on we may need to turn on the backlight.
+	 * We should use the saved value whenever possible, but on some
+	 * machines 0 is a valid backlight value (due to an external backlight
+	 * controller for example), so on them, when turning LVDS back on,
+	 * they'll always re-maximize the brightness.
+	 */
+	if (!(INREG(PP_CONTROL) & POWER_TARGET_ON) &&
+	    dev_priv->backlight_duty_cycle == 0)
+	    dev_priv->backlight_duty_cycle = dev_priv->backlight_max;
+
 	OUTREG(PP_CONTROL, INREG(PP_CONTROL) | POWER_TARGET_ON);
 	do {
 	    pp_status = INREG(PP_STATUS);
@@ -363,6 +390,12 @@ i830SetLVDSPanelPower(xf86OutputPtr output, Bool on)
 
 	dev_priv->set_backlight(output, dev_priv->backlight_duty_cycle);
     } else {
+	/*
+	 * Only save the current backlight value if we're going from
+	 * on to off.
+	 */
+	if (INREG(PP_CONTROL) & POWER_TARGET_ON)
+	    dev_priv->backlight_duty_cycle = dev_priv->get_backlight(output);
 	dev_priv->set_backlight(output, 0);
 
 	OUTREG(PP_CONTROL, INREG(PP_CONTROL) & ~POWER_TARGET_ON);
@@ -391,7 +424,7 @@ i830_lvds_save (xf86OutputPtr output)
     ScrnInfoPtr		    pScrn = output->scrn;
     I830Ptr		    pI830 = I830PTR(pScrn);
 
-    if (IS_I965GM(pI830))
+    if (IS_I965GM(pI830) || IS_IGD_GM(pI830))
 	pI830->saveBLC_PWM_CTL2 = INREG(BLC_PWM_CTL2);
     pI830->savePP_ON = INREG(LVDSPP_ON);
     pI830->savePP_OFF = INREG(LVDSPP_OFF);
@@ -399,12 +432,6 @@ i830_lvds_save (xf86OutputPtr output)
     pI830->savePP_CYCLE = INREG(PP_CYCLE);
     pI830->saveBLC_PWM_CTL = INREG(BLC_PWM_CTL);
     dev_priv->backlight_duty_cycle = dev_priv->get_backlight(output);
-
-    /*
-     * If the light is off at server startup, just make it full brightness
-     */
-    if (dev_priv->backlight_duty_cycle == 0)
-	dev_priv->backlight_duty_cycle = dev_priv->backlight_max;
 }
 
 static void
@@ -413,7 +440,7 @@ i830_lvds_restore(xf86OutputPtr output)
     ScrnInfoPtr	pScrn = output->scrn;
     I830Ptr	pI830 = I830PTR(pScrn);
 
-    if (IS_I965GM(pI830))
+    if (IS_I965GM(pI830) || IS_IGD_GM(pI830))
 	OUTREG(BLC_PWM_CTL2, pI830->saveBLC_PWM_CTL2);
     OUTREG(BLC_PWM_CTL, pI830->saveBLC_PWM_CTL);
     OUTREG(LVDSPP_ON, pI830->savePP_ON);
@@ -646,24 +673,24 @@ i830_lvds_set_backlight_control(xf86OutputPtr output)
     struct i830_lvds_priv   *dev_priv = intel_output->dev_priv;
 
     switch (pI830->backlight_control_method) {
-    case NATIVE:
+    case BCM_NATIVE:
 	dev_priv->set_backlight = i830_lvds_set_backlight_native;
 	dev_priv->get_backlight = i830_lvds_get_backlight_native;
 	dev_priv->backlight_max =
 	    i830_lvds_get_backlight_max_native(output);
 	break;
-    case LEGACY:
+    case BCM_LEGACY:
 	dev_priv->set_backlight = i830_lvds_set_backlight_legacy;
 	dev_priv->get_backlight = i830_lvds_get_backlight_legacy;
 	dev_priv->backlight_max = 0xff;
 	break;
-    case COMBO:
+    case BCM_COMBO:
 	dev_priv->set_backlight = i830_lvds_set_backlight_combo;
 	dev_priv->get_backlight = i830_lvds_get_backlight_combo;
 	dev_priv->backlight_max =
-	    i830_lvds_get_backlight_max_native(output);
+	    i830_lvds_get_backlight_max_combo(output);
 	break;
-    case KERNEL:
+    case BCM_KERNEL:
 	dev_priv->set_backlight = i830_lvds_set_backlight_kernel;
 	dev_priv->get_backlight = i830_lvds_get_backlight_kernel;
 	dev_priv->backlight_max =
@@ -990,22 +1017,22 @@ i830_lvds_init(ScrnInfoPtr pScrn)
     i830_set_lvds_backlight_method(output);
 
     switch (pI830->backlight_control_method) {
-    case NATIVE:
+    case BCM_NATIVE:
 	dev_priv->set_backlight = i830_lvds_set_backlight_native;
 	dev_priv->get_backlight = i830_lvds_get_backlight_native;
 	dev_priv->backlight_max = i830_lvds_get_backlight_max_native(output);
 	break;
-    case LEGACY:
+    case BCM_LEGACY:
 	dev_priv->set_backlight = i830_lvds_set_backlight_legacy;
 	dev_priv->get_backlight = i830_lvds_get_backlight_legacy;
 	dev_priv->backlight_max = 0xff;
 	break;
-    case COMBO:
+    case BCM_COMBO:
 	dev_priv->set_backlight = i830_lvds_set_backlight_combo;
 	dev_priv->get_backlight = i830_lvds_get_backlight_combo;
-	dev_priv->backlight_max = i830_lvds_get_backlight_max_native(output);
+	dev_priv->backlight_max = i830_lvds_get_backlight_max_combo(output);
 	break;
-    case KERNEL:
+    case BCM_KERNEL:
 	dev_priv->set_backlight = i830_lvds_set_backlight_kernel;
 	dev_priv->get_backlight = i830_lvds_get_backlight_kernel;
 	dev_priv->backlight_max = i830_lvds_get_backlight_max_kernel(output);
@@ -1015,7 +1042,7 @@ i830_lvds_init(ScrnInfoPtr pScrn)
 	break;
     }
 
-    dev_priv->backlight_duty_cycle = dev_priv->backlight_max;
+    dev_priv->backlight_duty_cycle = dev_priv->get_backlight(output);
 
     return;
 

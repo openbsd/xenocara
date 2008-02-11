@@ -175,32 +175,85 @@ Default: "EXA".
 .BI "Option \*qModeDebug\*q \*q" boolean \*q
 Enable printing of additional debugging information about modesetting to
 the server log.
+.TP
+.BI "Option \*qForceEnablePipeA\*q \*q" boolean \*q
+Force the driver to leave pipe A enabled.  May be necessary in configurations
+where the BIOS accesses pipe registers during display hotswitch or lid close,
+causing a crash.  If you find that your platform needs this option, please file
+a bug against xf86-video-intel at http://bugs.freedesktop.org which includes
+the output of 'lspci -v' and 'lspci -vn'.
+
+.SH OUTPUT CONFIGURATION
+On 830M and better chipsets, the driver supports runtime configuration of
+detected outputs.  You can use the
+.B xrandr
+tool to control outputs on the command line.  Each output listed below may have
+one or more properties associated with it (like a binary EDID block if one is
+found).  Some outputs have unique properties which are described below.
+
+.SS "VGA"
+VGA output port (typically exposed via an HD15 connector).
+
+.SS "LVDS"
+Low Voltage Differential Signalling output (typically a laptop LCD panel).  Available properties:
 
 .PP
-The 830M and newer driver supports the following outputs through RandR 1.2:
+.B BACKLIGHT
+- current backlight level (adjustable)
+.TP 2
+By adjusting the BACKLIGHT property, the brightness on the LVDS output can be adjusted.  In some cases, this property may be unavailable (for example if your platform uses an external microcontroller to control the backlight).
+
 .PP
-.TP
-.BI "VGA"
-Analog VGA output
-.TP
-.BI "LVDS"
-Laptop panel.  Properties:
-  BACKLIGHT - set backlight level
-  BACKLIGHT_CONTROL - set backlight level control method (i.e. use kernel interfaces, native LVDS power register, legacy register, or combination)
-.TP
-.BI "TV"
-Integrated TV output
-.TP
-.BI "TMDS-1"
+.B BACKLIGHT_CONTROL
+- method used to control backlight
+.TP 2
+The driver will attempt to automatically detect the backlight control method for your platform.  If this fails however, you can select another method which may allow you to control your backlight.  Available methods include:
+.PP
+.B NATIVE
+.TP 4
+Intel chipsets include backlight control registers, which on some platforms may be wired to control the backlight directly.  This method uses those registers.
+.PP
+.B LEGACY
+.TP 4
+The legacy backlight control registers exist in PCI configuration space, and have fewer available backlight levels than the native registers.  However, some platforms are wired this way and so need to use this method.
+.PP
+.B COMBO
+.TP 4
+This method attempts to use the native registers where possible, resorting to the legacy, configuration space registers only to enable the backlight if needed.  On platforms that have both wired this can be a good choice as it allows the fine grained backlight control of the native interface.
+.PP
+.B KERNEL
+.TP 4
+On some system, the kernel may provide a backlight control driver.  In that case, using the kernel interfaces is preferable, as the same driver may respond to hotkey events or external APIs.
+
+.SS "TV"
+Integrated TV output.  Available properties include:
+
+.PP
+.B BOTTOM, RIGHT, TOP, LEFT
+- margins
+.TP 2
+Adjusting these properties allows you to control the placement of your TV output buffer on the screen.
+
+.PP
+.B TV_FORMAT
+- output standard
+.TP 2
+This property allows you to control the output standard used on your TV output port.  You can select between NTSC-M, NTSC-443, NTSC-J, PAL-M, PAL-N, and PAL.
+
+.SS "TMDS-1"
 First DVI SDVO output
-.TP
-.BI "TMDS-2"
+
+.SS "TMDS-2"
 Second DVI SDVO output
+
 .PP
 SDVO and DVO TV outputs are not supported by the driver at this time.
+
 .PP
 See __xconfigfile__(__filemansuffix__) for information on associating Monitor
-sections with these outputs for configuration.
+sections with these outputs for configuration.  Associating Monitor sections
+with each output can be helpful if you need to ignore a specific output, for
+example, or statically configure an extended desktop monitor layout.
 
 .SH "SEE ALSO"
 __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)

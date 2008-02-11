@@ -727,7 +727,7 @@ i830_sdvo_mode_set(xf86OutputPtr output, DisplayModePtr mode,
     }
 
     /* Set the SDVO control regs. */
-    if (IS_I965GM(pI830)) {
+    if (IS_I965GM(pI830) || IS_IGD_GM(pI830)) {
 	sdvox = SDVO_BORDER_ENABLE;
     } else {
 	sdvox = INREG(dev_priv->output_device);
@@ -900,10 +900,10 @@ i830_sdvo_mode_valid(xf86OutputPtr output, DisplayModePtr pMode)
 	return MODE_NO_DBLESCAN;
 
     if (dev_priv->pixel_clock_min > pMode->Clock)
-	return MODE_CLOCK_HIGH;
+	return MODE_CLOCK_LOW;
 
     if (dev_priv->pixel_clock_max < pMode->Clock)
-	return MODE_CLOCK_LOW;
+	return MODE_CLOCK_HIGH;
 
     return MODE_OK;
 }
@@ -1100,8 +1100,10 @@ i830_sdvo_get_modes(xf86OutputPtr output)
 {
     ScrnInfoPtr pScrn = output->scrn;
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
-    DisplayModePtr modes;
+    DisplayModePtr modes = NULL;
     xf86OutputPtr crt;
+    I830OutputPrivatePtr intel_output;
+    xf86MonPtr edid_mon = NULL;
 
     modes = i830_ddc_get_modes(output);
     if (modes != NULL)
@@ -1113,11 +1115,17 @@ i830_sdvo_get_modes(xf86OutputPtr output)
      * analog when we fail at finding it the right way.
      */
     crt = xf86_config->output[0];
-    if (crt->funcs->detect(crt) == XF86OutputStatusDisconnected) {
-	return crt->funcs->get_modes(crt);
+    intel_output = crt->driver_private;
+    if (intel_output->type == I830_OUTPUT_ANALOG &&
+	crt->funcs->detect(crt) == XF86OutputStatusDisconnected) {
+	edid_mon = xf86OutputGetEDID(crt, intel_output->pDDCBus);
+    }
+    if (edid_mon) {
+	xf86OutputSetEDID(output, edid_mon);
+	modes = xf86OutputGetEDIDModes(output);
     }
 
-    return NULL;
+    return modes;
 }
 
 static void

@@ -39,6 +39,11 @@ typedef struct {
     void (*hook)(I830Ptr);
 } i830_quirk, *i830_quirk_ptr;
 
+static void quirk_pipea_force (I830Ptr pI830)
+{
+    pI830->quirk_flag |= QUIRK_PIPEA_FORCE;
+}
+
 static void quirk_ignore_tv (I830Ptr pI830)
 {
     pI830->quirk_flag |= QUIRK_IGNORE_TV;
@@ -58,33 +63,43 @@ static void quirk_mac_mini (I830Ptr pI830)
 static i830_quirk i830_quirk_list[] = {
     /* Aopen mini pc */
     { PCI_CHIP_I945_GM, 0xa0a0, SUBSYS_ANY, quirk_ignore_lvds },
+    { PCI_CHIP_I965_GM, 0xa0a0, SUBSYS_ANY, quirk_ignore_lvds },
     { PCI_CHIP_I965_GM, 0x8086, 0x1999, quirk_ignore_lvds },
 
     /* Apple Mac mini has no lvds, but macbook pro does */
     { PCI_CHIP_I945_GM, 0x8086, 0x7270, quirk_mac_mini },
-    
+
+    /* Clevo M720R has no tv output */
+    { PCI_CHIP_I965_GM, 0x1558, 0x0721, quirk_ignore_tv },
+
     /* Dell Latitude X1 */
-    { PCI_CHIP_I945_GM, 0x1028, 0x01a3, quirk_ignore_tv },
+    { PCI_CHIP_I915_GM, 0x1028, 0x01a3, quirk_ignore_tv },
     /* Dell XPS 1330 */
     { PCI_CHIP_I965_GM, 0x1028, 0x0209, quirk_ignore_tv },
-    
+
     /* Lenovo X60s has no TV output */
     { PCI_CHIP_I945_GM, 0x17aa, 0x201a, quirk_ignore_tv },
     /* Lenovo T61 has no TV output */
     { PCI_CHIP_I965_GM, 0x17aa, 0x20b5, quirk_ignore_tv },
     /* Lenovo 3000 v200 */
     { PCI_CHIP_I965_GM, 0x17aa, 0x3c18, quirk_ignore_tv },
-    
+
     /* Panasonic Toughbook CF-Y4 has no TV output */
     { PCI_CHIP_I915_GM, 0x10f7, 0x8338, quirk_ignore_tv },
     /* Panasonic Toughbook CF-Y7 has no TV output */
     { PCI_CHIP_I965_GM, 0x10f7, 0x8338, quirk_ignore_tv },
-    
+
     /* Toshiba Satellite U300 has no TV output */
     { PCI_CHIP_I965_GM, 0x1179, 0xff50, quirk_ignore_tv },
 
     /* Samsung Q35 has no TV output */
     { PCI_CHIP_I945_GM, 0x144d, 0xc504, quirk_ignore_tv },
+    /* Samsung Q45 has no TV output */
+    { PCI_CHIP_I965_GM, 0x144d, 0xc510, quirk_ignore_tv },
+
+    /* Dell Inspiron 510m needs pipe A force quirk */
+    { PCI_CHIP_I855_GM, 0x1028, 0x0164, quirk_pipea_force },
+
     { 0, 0, 0, NULL },
 };
 

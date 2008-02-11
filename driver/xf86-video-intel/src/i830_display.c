@@ -529,36 +529,6 @@ i830_display_tiled(xf86CrtcPtr crtc)
     return FALSE;
 }
 
-static Bool
-i830_use_fb_compression(xf86CrtcPtr crtc)
-{
-    ScrnInfoPtr pScrn = crtc->scrn;
-    I830Ptr pI830 = I830PTR(pScrn);
-    I830CrtcPrivatePtr	intel_crtc = crtc->driver_private;
-    int plane = (intel_crtc->plane == 0 ? FBC_CTL_PLANEA : FBC_CTL_PLANEB);
-
-    if (!pI830->fb_compression)
-	return FALSE;
-
-    if (!i830_display_tiled(crtc))
-	return FALSE;
-
-    /* Pre-965 only supports plane A */
-    if (!IS_I965GM(pI830) && plane != FBC_CTL_PLANEA)
-	return FALSE;
-
-    /* Need 15, 16, or 32 (w/alpha) pixel format */
-    if (!(pScrn->bitsPerPixel == 16 || /* covers 15 bit mode as well */
-	  pScrn->bitsPerPixel == 32)) /* mode_set dtrt if fbc is in use */
-	return FALSE;
-
-    /*
-     * No checks for pixel multiply, incl. horizontal, or interlaced modes
-     * since they're currently unused.
-     */
-    return TRUE;
-}
-
 /*
  * Several restrictions:
  *   - DSP[AB]CNTR - no line duplication && no pixel multiplier
@@ -610,6 +580,7 @@ i830_enable_fb_compression(xf86CrtcPtr crtc)
     OUTREG(FBC_LL_BASE, pI830->compressed_ll_buffer->bus_addr + 6);
     OUTREG(FBC_CONTROL2, FBC_CTL_FENCE_DBL | FBC_CTL_IDLE_FULL |
 	   FBC_CTL_CPU_FENCE | plane);
+    OUTREG(FBC_FENCE_OFF, crtc->y);
 
     /* Zero buffers */
     memset(pI830->FbBase + pI830->compressed_front_buffer->offset, 0,
@@ -646,6 +617,50 @@ i830_disable_fb_compression(xf86CrtcPtr crtc)
     while (INREG(FBC_STATUS) & FBC_STAT_COMPRESSING)
 	; /* nothing */
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "fbc disabled on plane %c\n", plane);
+}
+
+static Bool
+i830_use_fb_compression(xf86CrtcPtr crtc)
+{
+    ScrnInfoPtr pScrn = crtc->scrn;
+    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+    I830Ptr pI830 = I830PTR(pScrn);
+    I830CrtcPrivatePtr	intel_crtc = crtc->driver_private;
+    int plane = (intel_crtc->plane == 0 ? FBC_CTL_PLANEA : FBC_CTL_PLANEB);
+    int i, count = 0;
+
+    /* Only available on one pipe at a time */
+    for (i = 0; i < xf86_config->num_crtc; i++) {
+	if (xf86_config->crtc[i]->enabled)
+	    count++;
+    }
+
+    /* Here we disable it to catch one->two pipe enabled configs */
+    if (count > 1) {
+	i830_disable_fb_compression(crtc);
+	return FALSE;
+    }
+
+    if (!pI830->fb_compression)
+	return FALSE;
+
+    if (!i830_display_tiled(crtc))
+	return FALSE;
+
+    /* Pre-965 only supports plane A */
+    if (!IS_I965GM(pI830) && plane != FBC_CTL_PLANEA)
+	return FALSE;
+
+    /* Need 15, 16, or 32 (w/alpha) pixel format */
+    if (!(pScrn->bitsPerPixel == 16 || /* covers 15 bit mode as well */
+	  pScrn->bitsPerPixel == 32)) /* mode_set dtrt if fbc is in use */
+	return FALSE;
+
+    /*
+     * No checks for pixel multiply, incl. horizontal, or interlaced modes
+     * since they're currently unused.
+     */
+    return TRUE;
 }
 
 /**
@@ -723,6 +738,10 @@ i830_crtc_dpms(xf86CrtcPtr crtc, int mode)
 
 	/* Give the overlay scaler a chance to disable if it's on this pipe */
 	i830_crtc_dpms_video(crtc, FALSE);
+
+	/* May need to leave pipe A on */
+	if ((pipe == 0) && (pI830->quirk_flag & QUIRK_PIPEA_FORCE))
+	    return;
 
 	/* Disable the VGA plane that we never use */
 	OUTREG(VGACNTRL, VGA_DISP_DISABLE);
@@ -1176,14 +1195,6 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	i830PrintPll("chosen", &clock);
     }
 
-    if (dpll & DPLL_VCO_ENABLE)
-    {
-	OUTREG(fp_reg, fp);
-	OUTREG(dpll_reg, dpll & ~DPLL_VCO_ENABLE);
-	POSTING_READ(dpll_reg);
-	usleep(150);
-    }
-
     /* The LVDS pin pair needs to be on before the DPLLs are enabled.
      * This is an exception to the general rule that mode_set doesn't turn
      * things on.
@@ -1191,6 +1202,14 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     if (is_lvds)
     {
 	CARD32 lvds = INREG(LVDS);
+
+	if (dpll & DPLL_VCO_ENABLE)
+	{
+	    OUTREG(fp_reg, fp);
+	    OUTREG(dpll_reg, dpll & ~DPLL_VCO_ENABLE);
+	    POSTING_READ(dpll_reg);
+	    usleep(150);
+	}
 
 	lvds |= LVDS_PORT_EN | LVDS_A0A2_CLKA_POWER_UP | LVDS_PIPEB_SELECT;
 	/* Set the B0-B3 data pairs corresponding to whether we're going to
@@ -1338,6 +1357,7 @@ i830_crtc_shadow_allocate (xf86CrtcPtr crtc, int width, int height)
 		   "Couldn't allocate shadow memory for rotated CRTC\n");
 	return NULL;
     }
+    memset(pI830->FbBase + intel_crtc->rotate_mem->offset, 0, size);
 
     return pI830->FbBase + intel_crtc->rotate_mem->offset;
 }
@@ -1618,7 +1638,11 @@ i830_crtc_clock_get(ScrnInfoPtr pScrn, xf86CrtcPtr crtc)
 	if (is_lvds) {
 	    clock.p1 = ffs((dpll & DPLL_FPA01_P1_POST_DIV_MASK_I830_LVDS) >>
 			   DPLL_FPA01_P1_POST_DIV_SHIFT);
-	    clock.p2 = 14;
+
+	    if ((INREG(LVDS) & LVDS_CLKB_POWER_MASK) == LVDS_CLKB_POWER_UP)
+		clock.p2 = I8XX_P2_LVDS_SLOW;
+	    else
+		clock.p2 = I8XX_P2_LVDS_FAST;
 
 	    if ((dpll & PLL_REF_INPUT_MASK) == PLLB_REF_INPUT_SPREADSPECTRUMIN)
 		i8xx_clock(66000, &clock); /* XXX: might not be 66MHz */

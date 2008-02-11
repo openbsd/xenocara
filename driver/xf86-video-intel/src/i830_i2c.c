@@ -88,7 +88,7 @@ static void i830_getscl(I2CBusPtr b, int *state)
     OUTREG(b->DriverPrivate.uval, GPIO_CLOCK_DIR_IN | GPIO_CLOCK_DIR_MASK);
     OUTREG(b->DriverPrivate.uval, 0);
     val = INREG(b->DriverPrivate.uval);
-    *state = ((val & GPIO_DATA_VAL_IN) != 0);
+    *state = ((val & GPIO_CLOCK_VAL_IN) != 0);
 }
 
 static int i830_getsda(I2CBusPtr b)

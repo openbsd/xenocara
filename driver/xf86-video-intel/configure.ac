@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-intel],
-        2.2.0,
+        2.2.0.90,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-intel)
 
@@ -117,11 +117,10 @@ CFLAGS="$save_CFLAGS"
 if test x$XSERVER_LIBPCIACCESS = xyes; then
 	PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.10.0])
 else
-	PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.5.0],
+	PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.10.0],
 				       have_libpciaccess=yes,
 				       have_libpciaccess=no)
 fi
-have_libpciaccess=no
 AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
 AM_CONDITIONAL(LIBPCIACCESS,
 	test "x$XSERVER_LIBPCIACCESS" = xyes -o "x$have_libpciaccess" = xyes)
@@ -217,6 +216,8 @@ AC_SUBST([moduledir])
 DRIVER_NAME=intel
 AC_SUBST([DRIVER_NAME])
 
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.1.3)
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
 

@@ -349,34 +349,39 @@ i830_crt_detect(xf86OutputPtr output)
     I830Ptr		    pI830 = I830PTR(pScrn);
     xf86CrtcPtr		    crtc;
     int			    dpms_mode;
-    
+    xf86OutputStatus	    status;
+    Bool		    connected;
+
+    crtc = i830GetLoadDetectPipe (output, NULL, &dpms_mode);
+    if (!crtc)
+	return XF86OutputStatusUnknown;
+
     if (IS_I945G(pI830) || IS_I945GM(pI830) || IS_I965G(pI830) ||
 	    IS_G33CLASS(pI830)) {
 	if (i830_crt_detect_hotplug(output))
-	    return XF86OutputStatusConnected;
+	    status = XF86OutputStatusConnected;
 	else
-	    return XF86OutputStatusDisconnected;
+	    status = XF86OutputStatusDisconnected;
+
+	goto out;
     }
 
-    if (i830_crt_detect_ddc(output))
-	return XF86OutputStatusConnected;
+    if (i830_crt_detect_ddc(output)) {
+	status = XF86OutputStatusConnected;
+	goto out;
+    }
 
     /* Use the load-detect method if we have no other way of telling. */
-    crtc = i830GetLoadDetectPipe (output, NULL, &dpms_mode);
-    
-    if (crtc)
-    {
-	Bool			connected;
+    connected = i830_crt_detect_load (crtc, output);
+    if (connected)
+	status = XF86OutputStatusConnected;
+    else
+	status = XF86OutputStatusDisconnected;
 
-	connected = i830_crt_detect_load (crtc, output);
-	i830ReleaseLoadDetectPipe (output, dpms_mode);
-	if (connected)
-	    return XF86OutputStatusConnected;
-	else
-	    return XF86OutputStatusDisconnected;
-    }
+out:
+    i830ReleaseLoadDetectPipe (output, dpms_mode);
 
-    return XF86OutputStatusUnknown;
+    return status;
 }
 
 static void

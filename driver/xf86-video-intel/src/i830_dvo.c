@@ -83,7 +83,7 @@ struct _I830DVODriver i830_dvo_drivers[] =
 	.type = I830_OUTPUT_DVO_LVDS,
 	.modulename = "ivch",
 	.fntablename = "ivch_methods",
-	.dvo_reg = DVOA,
+	.dvo_reg = DVOB,
 	.address = 0x04, /* Might also be 0x44, 0x84, 0xc4 */
 	.symbols = ivch_symbols
     },

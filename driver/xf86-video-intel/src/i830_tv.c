@@ -580,7 +580,7 @@ const static tv_mode_t tv_modes[] = {
     {
 	.name       = "576p",
 	.clock 	= 107520,	
-	.refresh	= 59.94,
+	.refresh	= 50.0,
 	.oversample     = TV_OVERSAMPLE_4X,
 	.component_only = 1,
 
@@ -1398,7 +1398,7 @@ static struct input_res {
 	{"1280x1024", 1280, 1024},
 	{"848x480", 848, 480},
 	{"1280x720", 1280, 720},
-	{"1920x108", 1920, 1080},
+	{"1920x1080", 1920, 1080},
 };
 
 /**

@@ -188,6 +188,7 @@ ivch_init(I2CBusPtr b, I2CSlaveAddr addr)
 		   "ivch detect failed due to address mismatch "
 		   "(%d vs %d)\n",
 		   (temp & VR00_BASE_ADDRESS_MASK), priv->d.SlaveAddr >> 1);
+	goto out;
     }
 
     if (!xf86I2CDevInit(&priv->d)) {
@@ -357,7 +358,7 @@ ivch_restore(I2CDevPtr d)
 }
 
 
-I830I2CVidOutputRec ivch_methods = {
+_X_EXPORT I830I2CVidOutputRec ivch_methods = {
     .init = ivch_init,
     .dpms = ivch_dpms,
     .save = ivch_save,

@@ -832,9 +832,8 @@ struct brw_wm_unit_state
       unsigned int program_computes_depth:1; 
       unsigned int program_uses_killpixel:1; 
       unsigned int legacy_line_rast: 1; 
-      unsigned int pad1:1; 
-      unsigned int max_threads:6; 
-      unsigned int pad2:1;
+      unsigned int transposed_urb_read:1; 
+      unsigned int max_threads:7; 
    } wm5;
    
    float global_depth_offset_constant;  
@@ -977,6 +976,13 @@ struct brw_surface_state
       unsigned int min_array_elt:9; 
       unsigned int min_lod:4; 
    } ss4;
+
+   struct {
+       unsigned int pad:20;
+       unsigned int y_offset:4;
+       unsigned int pad2:1;
+       unsigned int x_offset:7;
+   } ss5;
 };
 
 

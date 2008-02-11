@@ -25,6 +25,8 @@
  *
  */
 
+#include <inttypes.h>
+
 #ifdef REG_DUMPER
 #include "reg_dumper/reg_dumper.h"
 
@@ -191,7 +193,11 @@ DEBUGSTRING(i830_debug_dpll)
 	    mode = "LVDS";
 	    p1 = ffs((val & DPLL_FPA01_P1_POST_DIV_MASK_I830_LVDS) >>
 		     DPLL_FPA01_P1_POST_DIV_SHIFT);
-	    p2 = 14;
+	    if ((INREG(LVDS) & LVDS_CLKB_POWER_MASK) == LVDS_CLKB_POWER_UP)
+		p2 = 7;
+	    else
+		p2 = 14;
+
 	} else {
 	    mode = "DAC/serial";
 	    if (val & PLL_P1_DIVIDE_BY_TWO) {
@@ -689,6 +695,19 @@ void i830DumpRegs (ScrnInfoPtr pScrn)
 		xf86DrvMsg (pScrn->scrnIndex, X_WARNING, "p1 out of range\n");
 		break;
 	    }
+	    
+	    switch ((dpll >> 13) & 0x3) {
+	    case 0:
+		ref = 96000;
+		break;
+	    case 3:
+		ref = 100000;
+		break;
+	    default:
+		ref = 0;
+		xf86DrvMsg (pScrn->scrnIndex, X_WARNING, "ref out of range\n");
+		break;
+	    }
 	}
 	else
 	{
@@ -726,18 +745,19 @@ void i830DumpRegs (ScrnInfoPtr pScrn)
 		else
 		    p1 = ((dpll >> 16) & 0x3f) + 2;
 	    }
-	}
-	switch ((dpll >> 13) & 0x3) {
-	case 0:
-	    ref = 96000;
-	    break;
-	case 3:
-	    ref = 100000;
-	    break;
-	default:
-	    ref = 0;
-	    xf86DrvMsg (pScrn->scrnIndex, X_WARNING, "ref out of range\n");
-	    break;
+
+	    switch ((dpll >> 13) & 0x3) {
+	    case 0:
+		ref = 48000;
+		break;
+	    case 3:
+		ref = 66000;
+		break;
+	    default:
+		ref = 0;
+		xf86DrvMsg (pScrn->scrnIndex, X_WARNING, "ref out of range\n");
+		break;
+	    }
 	}
 	if (IS_I965G(pI830)) {
 	    phase = (dpll >> 9) & 0xf;
@@ -786,8 +806,8 @@ i830_dump_ring(ScrnInfoPtr pScrn)
     mask = pI830->LpRing->tail_mask;
     
     virt = pI830->LpRing->virtual_start;
-    ErrorF ("Ring at virtual 0x%x head 0x%x tail 0x%x count %d\n",
-	    (unsigned int) virt, head, tail, (((tail + mask + 1) - head) & mask) >> 2);
+    ErrorF ("Ring at virtual %p head 0x%x tail 0x%x count %d\n",
+	    virt, head, tail, (((tail + mask + 1) - head) & mask) >> 2);
     for (ring = (head - 128) & mask; ring != ((head + 4) & mask);
 	 ring = (ring + 4) & mask)
     {
@@ -803,25 +823,25 @@ i830_dump_error_state(ScrnInfoPtr pScrn)
 {
     I830Ptr pI830 = I830PTR(pScrn);
 
-    ErrorF("pgetbl_ctl: 0x%lx pgetbl_err: 0x%lx\n",
-	   (unsigned long)INREG(PGETBL_CTL), (unsigned long)INREG(PGE_ERR));
+    ErrorF("pgetbl_ctl: 0x%" PRIx32 "getbl_err: 0x%" PRIx32 "\n",
+	   INREG(PGETBL_CTL), INREG(PGE_ERR));
 
-    ErrorF("ipeir: %lx iphdr: %lx\n", (unsigned long)INREG(IPEIR),
-	   (unsigned long)INREG(IPEHR));
+    ErrorF("ipeir: %" PRIx32 " iphdr: %" PRIx32 "\n", INREG(IPEIR),
+	   INREG(IPEHR));
 
-    ErrorF("LP ring tail: %lx head: %lx len: %lx start %lx\n",
-	   (unsigned long)INREG(LP_RING + RING_TAIL),
-	   (unsigned long)INREG(LP_RING + RING_HEAD) & HEAD_ADDR,
-	   (unsigned long)INREG(LP_RING + RING_LEN),
-	   (unsigned long)INREG(LP_RING + RING_START));
+    ErrorF("LP ring tail: %" PRIx32 " head: %" PRIx32 " len: %" PRIx32 " start %" PRIx32 "\n",
+	   INREG(LP_RING + RING_TAIL),
+	   INREG(LP_RING + RING_HEAD) & HEAD_ADDR,
+	   INREG(LP_RING + RING_LEN),
+	   INREG(LP_RING + RING_START));
 
     ErrorF("eir: %x esr: %x emr: %x\n",
 	   INREG16(EIR), INREG16(ESR), INREG16(EMR));
 
     ErrorF("instdone: %x instpm: %x\n", INREG16(INST_DONE), INREG8(INST_PM));
 
-    ErrorF("memmode: %lx instps: %lx\n", (unsigned long)INREG(MEMMODE),
-	   (unsigned long)INREG(INST_PS));
+    ErrorF("memmode: %" PRIx32 " instps: %" PRIx32 "\n", INREG(MEMMODE),
+	   INREG(INST_PS));
 
     ErrorF("hwstam: %x ier: %x imr: %x iir: %x\n",
 	   INREG16(HWSTAM), INREG16(IER), INREG16(IMR), INREG16(IIR));
@@ -833,12 +853,12 @@ i965_dump_error_state(ScrnInfoPtr pScrn)
 {
     I830Ptr pI830 = I830PTR(pScrn);
 
-    ErrorF("pgetbl_ctl: 0x%lx pgetbl_err: 0x%lx\n",
+    ErrorF("pgetbl_ctl: 0x%" PRIx32 " pgetbl_err: 0x%" PRIx32 "\n",
 	   INREG(PGETBL_CTL), INREG(PGE_ERR));
 
-    ErrorF("ipeir: %lx iphdr: %lx\n", INREG(IPEIR_I965), INREG(IPEHR_I965));
+    ErrorF("ipeir: %" PRIx32 " iphdr: %" PRIx32 "\n", INREG(IPEIR_I965), INREG(IPEHR_I965));
 
-    ErrorF("LP ring tail: %lx head: %lx len: %lx start %lx\n",
+    ErrorF("LP ring tail: %" PRIx32 " head: %" PRIx32 " len: %" PRIx32 " start %" PRIx32 "\n",
 	   INREG(LP_RING + RING_TAIL),
 	   INREG(LP_RING + RING_HEAD) & HEAD_ADDR,
 	   INREG(LP_RING + RING_LEN), INREG(LP_RING + RING_START));
@@ -850,15 +870,15 @@ i965_dump_error_state(ScrnInfoPtr pScrn)
 	   (int)INREG(INST_DONE_1));
     ErrorF("instpm: %x\n", (int)INREG(INST_PM));
 
-    ErrorF("memmode: %lx instps: %lx\n", INREG(MEMMODE), INREG(INST_PS_I965));
+    ErrorF("memmode: %" PRIx32 " instps: %" PRIx32 "\n", INREG(MEMMODE), INREG(INST_PS_I965));
 
     ErrorF("HW Status mask (hwstam): %x\nIRQ enable (ier): %x "
 	   "imr: %x iir: %x\n",
 	   (int)INREG(HWSTAM), (int)INREG(IER), (int)INREG(IMR),
 	   (int)INREG(IIR));
 
-    ErrorF("acthd: %lx dma_fadd_p: %lx\n", INREG(ACTHD), INREG(DMA_FADD_P));
-    ErrorF("ecoskpd: %lx excc: %lx\n", INREG(ECOSKPD), INREG(EXCC));
+    ErrorF("acthd: %" PRIx32 " dma_fadd_p: %" PRIx32 "\n", INREG(ACTHD), INREG(DMA_FADD_P));
+    ErrorF("ecoskpd: %" PRIx32 " excc: %" PRIx32 "\n", INREG(ECOSKPD), INREG(EXCC));
 
     ErrorF("cache_mode: %x/%x\n", (int)INREG(CACHE_MODE_0),
 	   (int)INREG(CACHE_MODE_1));

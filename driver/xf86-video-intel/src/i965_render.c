@@ -907,6 +907,7 @@ i965_prepare_composite(int op, PicturePtr pSrcPicture,
 					   src_sampler_offset) >> 5;
     wm_state->wm4.sampler_count = 1; /* 1-4 samplers used */
     wm_state->wm5.max_threads = PS_MAX_THREADS - 1;
+    wm_state->wm5.transposed_urb_read = 0;
     wm_state->wm5.thread_dispatch_enable = 1;
     /* just use 16-pixel dispatch (4 subspans), don't need to change kernel
      * start point
@@ -933,7 +934,10 @@ i965_prepare_composite(int op, PicturePtr pSrcPicture,
         BEGIN_LP_RING(12);
 
         /* Match Mesa driver setup */
-        OUT_RING(BRW_PIPELINE_SELECT | PIPELINE_SELECT_3D);
+	if (IS_IGD_GM(pI830))
+	    OUT_RING(NEW_PIPELINE_SELECT | PIPELINE_SELECT_3D);
+	else
+	    OUT_RING(BRW_PIPELINE_SELECT | PIPELINE_SELECT_3D);
 
    	OUT_RING(BRW_CS_URB_STATE | 0);
    	OUT_RING((0 << 4) |  /* URB Entry Allocation Size */

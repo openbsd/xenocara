@@ -40,6 +40,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define I830DEBUG
 #endif
 
+#include <stdint.h>
+
 #ifndef REMAP_RESERVED
 #define REMAP_RESERVED 0
 #endif
@@ -321,29 +323,29 @@ enum last_3d {
  * so they can choose an ideal one for their platform (assuming our quirk
  * code picks the wrong one).
  *
- * Four different methods are available:
- *   NATIVE:  only ever touch the native backlight control registers
+ * Four different backlight control methods are available:
+ *   BCM_NATIVE:  only ever touch the native backlight control registers
  *     This method may be susceptible to problem (2) above if the firmware
  *     modifies the legacy registers.
- *   LEGACY:  only ever touch the legacy backlight control registers
+ *   BCM_LEGACY:  only ever touch the legacy backlight control registers
  *     This method may be susceptible to problem (1) above if the firmware
  *     also modifies the legacy registers.
- *   COMBO:  try to use both sets
+ *   BCM_COMBO:  try to use both sets
  *     In this case, the driver will try to modify both sets of registers
  *     if needed.  To avoid problem (2) above it may set the LBB register
  *     to a non-zero value if the brightness is to be increased.  It's still
  *     susceptible to problem (1), but to a lesser extent than the LEGACY only
  *     method.
- *   KERNEL:  use kernel methods for controlling the backlight
+ *   BCM_KERNEL:  use kernel methods for controlling the backlight
  *     This is only available on some platforms, but where present this can
  *     provide the best user experience.
  */
 
 enum backlight_control {
-    NATIVE = 0,
-    LEGACY,
-    COMBO,
-    KERNEL,
+    BCM_NATIVE = 0,
+    BCM_LEGACY,
+    BCM_COMBO,
+    BCM_KERNEL,
 };
 
 typedef struct _I830Rec {
@@ -614,6 +616,7 @@ typedef struct _I830Rec {
    CARD32 saveFBC_LL_BASE;
    CARD32 saveFBC_CONTROL2;
    CARD32 saveFBC_CONTROL;
+   CARD32 saveFBC_FENCE_OFF;
 
    enum last_3d *last_3d;
 
@@ -834,6 +837,7 @@ extern const int I830CopyROP[16];
 #define QUIRK_IGNORE_TV			0x00000001
 #define QUIRK_IGNORE_LVDS		0x00000002
 #define QUIRK_IGNORE_MACMINI_LVDS 	0x00000004
+#define QUIRK_PIPEA_FORCE		0x00000008
 extern void i830_fixup_devices(ScrnInfoPtr);
 
 #endif /* _I830_H_ */

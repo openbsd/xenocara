@@ -50,7 +50,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 static struct ch7xxx_id_struct {
-    int vid;
+    CARD8 vid;
     char *name;
 } ch7xxx_ids[] = { 
 	{ CH7011_VID, "CH7011" },
@@ -77,7 +77,7 @@ struct ch7xxx_priv {
 
 static void ch7xxx_save(I2CDevPtr d);
 
-static char *ch7xxx_get_id(int vid)
+static char *ch7xxx_get_id(CARD8 vid)
 {
     int i;
 
@@ -306,7 +306,7 @@ ch7xxx_restore(I2CDevPtr d)
     ch7xxx_write(dev_priv, CH7xxx_PM, dev_priv->save_PM);
 }
 
-I830I2CVidOutputRec CH7xxxVidOutput = {
+_X_EXPORT I830I2CVidOutputRec CH7xxxVidOutput = {
     .init = ch7xxx_init,
     .detect = ch7xxx_detect,
     .mode_valid = ch7xxx_mode_valid,

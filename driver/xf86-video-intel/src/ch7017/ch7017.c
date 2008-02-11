@@ -313,7 +313,7 @@ ch7017_restore(I2CDevPtr d)
     ch7017_write(priv, CH7017_POWER_MANAGEMENT, priv->save_power_management);
 }
 
-I830I2CVidOutputRec ch7017_methods = {
+_X_EXPORT I830I2CVidOutputRec ch7017_methods = {
     .init = ch7017_init,
     .detect = ch7017_detect,
     .mode_valid = ch7017_mode_valid,

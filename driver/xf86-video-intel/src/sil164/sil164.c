@@ -237,7 +237,7 @@ sil164_restore(I2CDevPtr d)
 }
 
 
-I830I2CVidOutputRec SIL164VidOutput = {
+_X_EXPORT I830I2CVidOutputRec SIL164VidOutput = {
     .init = sil164_init,
     .detect = sil164_detect,
     .mode_valid = sil164_mode_valid,
