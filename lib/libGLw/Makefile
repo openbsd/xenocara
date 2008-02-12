@@ -1,8 +1,12 @@
-# $OpenBSD: Makefile,v 1.7 2007/07/29 08:32:45 matthieu Exp $
+# $OpenBSD: Makefile,v 1.8 2008/02/12 21:09:27 matthieu Exp $
 
 DEBUG?=
 
 LIB= GLw
+
+MESA_MAJOR=	7
+MESA_MINOR=	0
+MESA_TINY=	2
 
 CPPFLAGS += -I${X11BASE}/include \
 	-I${.CURDIR}
@@ -31,6 +35,16 @@ includes:
 	done
 
 beforeinstall: includes
+
+afterinstall: glw.pc
+	$(INSTALL) -c -m 644 -o root -g wheel glw.pc \
+		${DESTDIR}${LIBDIR}/pkgconfig
+
+glw.pc: glw.pc.in
+	sed -e 's,@INSTALL_DIR@,$(X11BASE),' \
+	    -e 's,@LIB_DIR@,lib,' \
+	    -e 's,@VERSION@,$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY),' \
+	< ${.CURDIR}/glw.pc.in > glw.pc
 
 NOPROFILE=
 

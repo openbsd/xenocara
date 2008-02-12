@@ -1,0 +1,12 @@
+prefix=@INSTALL_DIR@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/@LIB_DIR@
+includedir=${prefix}/include
+
+Name: gl
+Description: Mesa OpenGL library
+Requires:
+Requires.private: xext x11
+Version: @VERSION@
+Libs: -L${libdir} -lGL
+Cflags: -I${includedir}

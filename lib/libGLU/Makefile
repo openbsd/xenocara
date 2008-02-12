@@ -1,8 +1,12 @@
-# $OpenBSD: Makefile,v 1.6 2007/04/07 15:37:50 matthieu Exp $
+# $OpenBSD: Makefile,v 1.7 2008/02/12 21:09:27 matthieu Exp $
 
 .include <bsd.own.mk>
 USE_GCC3?=No
 DEBUG?=
+
+MESA_MAJOR=	7
+MESA_MINOR=	0
+MESA_TINY=	2
 
 LIB=	GLU
 
@@ -133,6 +137,17 @@ includes:
 		${DESTDIR}${X11BASE}/include/GL/glu.h \
 	|| ${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 \
 		${DIST}/include/GL/glu.h ${DESTDIR}${X11BASE}/include/GL 
+
+glu.pc: ${DIST}/src/glu/glu.pc.in Makefile
+	sed -e 's,@INSTALL_DIR@,$(X11BASE),' \
+	    -e 's,@LIB_DIR@,lib,' \
+	    -e 's,@VERSION@,$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY),' \
+	< ${DIST}/src/glu/glu.pc.in > glu.pc
+
+afterinstall: glu.pc
+	$(INSTALL) -c -m 644 -o root -g wheel glu.pc \
+		${DESTDIR}${LIBDIR}/pkgconfig
+
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>

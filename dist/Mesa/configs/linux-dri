@@ -32,6 +32,11 @@ CFLAGS = -Wall -Wmissing-prototypes -std=c99 -ffast-math \
 
 CXXFLAGS = -Wall $(OPT_FLAGS) $(PIC_FLAGS) $(ARCH_FLAGS) $(DEFINES)
 
+GLUT_CFLAGS = -fexceptions
+
+# Work around aliasing bugs - developers should comment this out
+CFLAGS += -fno-strict-aliasing
+CXXFLAGS += -fno-strict-aliasing
 
 ASM_SOURCES = 
 
@@ -55,10 +60,10 @@ USING_EGL=0
 # Directories
 ifeq ($(USING_EGL), 1)
 SRC_DIRS = egl glx/x11 mesa glu glut/glx glw
-PROGRAM_DIRS = egl
+PROGRAM_DIRS = egl xdemos
 else
 SRC_DIRS = glx/x11 mesa glu glut/glx glw
-PROGRAM_DIRS =
+PROGRAM_DIRS = xdemos
 endif
 
 DRIVER_DIRS = dri

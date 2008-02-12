@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.16 2008/02/02 17:38:56 matthieu Exp $
+# $OpenBSD: Makefile,v 1.17 2008/02/12 21:09:27 matthieu Exp $
 .include <bsd.own.mk>
 
 .if defined(XENOCARA_BUILD_DRI) && ${XENOCARA_BUILD_DRI:L} == "yes"
@@ -11,6 +11,10 @@ MESA=	${.CURDIR}/../../dist/Mesa/src/mesa
 GL=	${.CURDIR}/../../dist/Mesa/src/GL
 GLX=	${.CURDIR}/../../dist/Mesa/src/glx/x11
 MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
+
+MESA_MAJOR=	7
+MESA_MINOR=	0
+MESA_TINY=	2
 
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 
@@ -161,6 +165,16 @@ glxpixel.c: ${GLX}/pixel.c
 	ln -s ${GLX}/pixel.c $@
 
 CLEANFILES+= glxeval.c glxpixel.c
+
+gl.pc: ${MESA}/gl.pc.in Makefile
+	sed -e 's,@INSTALL_DIR@,$(X11BASE),' \
+	    -e 's,@LIB_DIR@,lib,' \
+	    -e 's,@VERSION@,$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY),' \
+	< ${MESA}/gl.pc.in > gl.pc
+
+afterinstall: gl.pc
+	$(INSTALL) -c -m 644 -o root -g wheel gl.pc \
+		${DESTDIR}${LIBDIR}/pkgconfig
 
 .if ${MACHINE_ARCH} == i386
 .PATH: ${MESA}/x86
