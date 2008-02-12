@@ -71,7 +71,7 @@
 #endif
 
 # ifdef __OpenBSD__
-#  define DRM_MAJOR 81
+#  define DRM_MAJOR 88
 # endif
 
 #ifndef DRM_MAJOR
@@ -268,61 +268,17 @@ static int drmMatchBusID(const char *id1, const char *id2)
  */
 static int drmOpenDevice(long dev, int minor)
 {
-    stat_t          st;
     char            buf[64];
     int             fd;
-    mode_t          devmode = DRM_DEV_MODE, serv_mode;
-    int             isroot  = !geteuid();
-    uid_t           user    = DRM_DEV_UID;
-    gid_t           group   = DRM_DEV_GID, serv_group;
     
-    sprintf(buf, DRM_DEV_NAME, DRM_DIR_NAME, minor);
+    snprintf(buf, sizeof(buf), DRM_DEV_NAME, DRM_DIR_NAME, minor);
     drmMsg("drmOpenDevice: node name is %s\n", buf);
 
-    if (drm_server_info) {
-      drm_server_info->get_perms(&serv_group, &serv_mode);
-      devmode  = serv_mode ? serv_mode : DRM_DEV_MODE;
-      devmode &= ~(S_IXUSR|S_IXGRP|S_IXOTH);
-      group = (serv_group >= 0) ? serv_group : DRM_DEV_GID;
-    }
-
-    if (stat(DRM_DIR_NAME, &st)) {
-	if (!isroot) return DRM_ERR_NOT_ROOT;
-	mkdir(DRM_DIR_NAME, DRM_DEV_DIRMODE);
-	chown(DRM_DIR_NAME, 0, 0); /* root:root */
-	chmod(DRM_DIR_NAME, DRM_DEV_DIRMODE);
-    }
-
-    /* Check if the device node exists and create it if necessary. */
-    if (stat(buf, &st)) {
-	if (!isroot) return DRM_ERR_NOT_ROOT;
-	remove(buf);
-	mknod(buf, S_IFCHR | devmode, dev);
-    }
-
-    if (drm_server_info) {
-      chown(buf, user, group);
-      chmod(buf, devmode);
-    }
-
+#ifndef X_PRIVSEP
     fd = open(buf, O_RDWR, 0);
-    drmMsg("drmOpenDevice: open result is %d, (%s)\n",
-		fd, fd < 0 ? strerror(errno) : "OK");
-    if (fd >= 0) return fd;
-
-    /* Check if the device node is not what we expect it to be, and recreate it
-     * and try again if so.
-     */
-    if (st.st_rdev != dev) {
-	if (!isroot) return DRM_ERR_NOT_ROOT;
-	remove(buf);
-	mknod(buf, S_IFCHR | devmode, dev);
-	if (drm_server_info) {
-	  chown(buf, user, group);
-	  chmod(buf, devmode);
-	}
-    }
-    fd = open(buf, O_RDWR, 0);
+#else
+    fd = priv_open_device(buf);
+#endif
     drmMsg("drmOpenDevice: open result is %d, (%s)\n",
 		fd, fd < 0 ? strerror(errno) : "OK");
     if (fd >= 0) return fd;
@@ -352,8 +308,13 @@ static int drmOpenMinor(int minor, int create)
     
     if (create) return drmOpenDevice(makedev(DRM_MAJOR, minor), minor);
     
-    sprintf(buf, DRM_DEV_NAME, DRM_DIR_NAME, minor);
-    if ((fd = open(buf, O_RDWR, 0)) >= 0) return fd;
+    snprintf(buf, sizeof(buf), DRM_DEV_NAME, DRM_DIR_NAME, minor);
+#ifndef X_PRIVSEP
+    fd = open(buf, O_RDWR, 0);
+#else
+    fd = priv_open_device(buf);
+#endif
+    if (fd >= 0) return fd;
     return -errno;
 }
 
@@ -379,6 +340,7 @@ int drmAvailable(void)
 	/* Try proc for backward Linux compatibility */
 	if (!access("/proc/dri/0", R_OK)) return 1;
 #endif
+	drmMsg("drmAvailable: no\n");
 	return 0;
     }
     
@@ -387,7 +349,7 @@ int drmAvailable(void)
 	drmFreeVersion(version);
     }
     close(fd);
-
+    drmMsg("drmAvailable: %d\n", retval);
     return retval;
 }
 
@@ -3276,3 +3238,15 @@ void drmCloseOnce(int fd)
       }
    }
 }
+
+#ifdef X_PRIVSEP
+static int
+_priv_open_device(const char *path)
+{
+	drmMsg("_priv_open_device\n");
+	return open(path, O_RDWR, 0);
+}
+
+int priv_open_device(const char *) 
+	__attribute__((weak, alias ("_priv_open_device")));
+#endif

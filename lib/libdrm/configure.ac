@@ -32,6 +32,16 @@ AC_PROG_CC
 AC_HEADER_STDC
 AC_SYS_LARGEFILE
 
+dnl Privsep
+AC_ARG_ENABLE(privsep,
+	AC_HELP_STRING([--enable-privsep],
+         [Build support for X server privilege separation (default is NO)]),
+	[ENABLE_PRIVSEP="$enableval"], [ENABLE_PRIVSEP="no"])
+if test x$ENABLE_PRIVSEP = xyes ; then
+	AC_DEFINE(X_PRIVSEP, 1, [Use X server privilege separation])
+fi
+AM_CONDITIONAL(X_PRIVSEP, [test x$ENABLE_PRIVSEP = xyes])
+
 pkgconfigdir=${libdir}/pkgconfig
 AC_SUBST(pkgconfigdir)
 

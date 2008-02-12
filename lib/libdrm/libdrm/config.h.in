@@ -54,6 +54,9 @@
 /* Version number of package */
 #undef VERSION
 
+/* Use X server privilege separation */
+#undef X_PRIVSEP
+
 /* Number of bits in a file offset, on hosts where this is settable. */
 #undef _FILE_OFFSET_BITS
 
