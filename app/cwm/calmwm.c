@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.9 2008/02/13 21:04:19 oga Exp $
+ * $Id: calmwm.c,v 1.10 2008/02/13 21:48:03 oga Exp $
  */
 
 #include "headers.h"
@@ -322,7 +322,7 @@ _sigchld_cb(int which)
 		;
 }
 
-void
+__dead void
 usage(void)
 {
 	extern char *__progname;
