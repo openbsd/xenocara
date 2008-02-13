@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.19 2008/01/16 11:39:20 oga Exp $
+ * $Id: calmwm.h,v 1.20 2008/02/13 21:04:19 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -312,6 +312,7 @@ int   x_errorhandler(Display *, XErrorEvent *);
 void  x_setup(char *display_name);
 char *x_screenname(int);
 void  x_setupscreen(struct screen_ctx *, u_int);
+void  usage(void);
 
 struct client_ctx *client_find(Window);
 void               client_setup(void);

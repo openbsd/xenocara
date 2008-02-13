@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.8 2008/02/13 12:09:47 oga Exp $
+ * $Id: calmwm.c,v 1.9 2008/02/13 21:04:19 oga Exp $
  */
 
 #include "headers.h"
@@ -71,7 +71,7 @@ main(int argc, char **argv)
 			DefaultFontName = xstrdup(optarg);
 			break;
 		default:
-			errx(1, "Unknown option '%c'", ch);
+			usage();
 		}
 	}
 	argc -= optind;
@@ -320,4 +320,13 @@ _sigchld_cb(int which)
         while ((pid = waitpid(-1, &status, WNOHANG)) > 0 ||
             (pid < 0 && errno == EINTR))
 		;
+}
+
+void
+usage(void)
+{
+	extern char *__progname;
+
+	fprintf(stderr, "usage: %s [-s] [-d display] [-f fontname] \n", __progname);
+	exit(1);
 }
