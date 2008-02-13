@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.7 2008/01/16 11:39:20 oga Exp $
+ * $Id: calmwm.c,v 1.8 2008/02/13 12:09:47 oga Exp $
  */
 
 #include "headers.h"
@@ -124,7 +124,8 @@ x_setup(char *display_name)
 	TAILQ_INIT(&Screenq);
 
 	if ((X_Dpy = XOpenDisplay(display_name)) == NULL)
-		errx(1, "%s:%d XOpenDisplay()", __FILE__, __LINE__);
+		errx(1, "unable to open display \"%s\"",
+		    XDisplayName(display_name));
 
 	XSetErrorHandler(x_errorhandler);
 
