@@ -168,14 +168,10 @@
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.la
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.so
 ./usr/X11R6/lib/modules/extensions
-./usr/X11R6/lib/modules/extensions/libGLcore.la
-./usr/X11R6/lib/modules/extensions/libGLcore.so
 ./usr/X11R6/lib/modules/extensions/libdbe.la
 ./usr/X11R6/lib/modules/extensions/libdbe.so
 ./usr/X11R6/lib/modules/extensions/libextmod.la
 ./usr/X11R6/lib/modules/extensions/libextmod.so
-./usr/X11R6/lib/modules/extensions/libglx.la
-./usr/X11R6/lib/modules/extensions/libglx.so
 ./usr/X11R6/lib/modules/extensions/librecord.la
 ./usr/X11R6/lib/modules/extensions/librecord.so
 ./usr/X11R6/lib/modules/extensions/libxtrap.la
