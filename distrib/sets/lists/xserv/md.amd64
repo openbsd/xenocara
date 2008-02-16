@@ -193,7 +193,6 @@
 ./usr/X11R6/lib/modules/drivers/glint_drv.so
 ./usr/X11R6/lib/modules/drivers/i128_drv.la
 ./usr/X11R6/lib/modules/drivers/i128_drv.so
-./usr/X11R6/lib/modules/drivers/i810_drv.so
 ./usr/X11R6/lib/modules/drivers/intel_drv.la
 ./usr/X11R6/lib/modules/drivers/intel_drv.so
 ./usr/X11R6/lib/modules/drivers/ivch.la
@@ -384,7 +383,6 @@
 ./usr/X11R6/man/man4/fpit.4
 ./usr/X11R6/man/man4/glint.4
 ./usr/X11R6/man/man4/i128.4
-./usr/X11R6/man/man4/i810.4
 ./usr/X11R6/man/man4/intel.4
 ./usr/X11R6/man/man4/js_x.4
 ./usr/X11R6/man/man4/kbd.4

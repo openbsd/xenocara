@@ -98,3 +98,4 @@
 ./usr/X11R6/share/X11/xserver/en_US/print/attributes
 ./var/db
 ./var/db/xkb/README.compiled
+./var/log

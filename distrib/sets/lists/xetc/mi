@@ -6,6 +6,7 @@
 ./etc/X11/app-defaults/Clock-color
 ./etc/X11/app-defaults/Editres
 ./etc/X11/app-defaults/Editres-color
+./etc/X11/app-defaults/KOI8RXTerm
 ./etc/X11/app-defaults/SshAskpass
 ./etc/X11/app-defaults/UXTerm
 ./etc/X11/app-defaults/Viewres

@@ -463,7 +463,7 @@
 ./usr/X11R6/lib/X11/Options
 ./usr/X11R6/lib/libFS.so.8.0
 ./usr/X11R6/lib/libGL.a
-./usr/X11R6/lib/libGL.so.6.0
+./usr/X11R6/lib/libGL.so.7.1
 ./usr/X11R6/lib/libGLU.a
 ./usr/X11R6/lib/libGLU.so.7.0
 ./usr/X11R6/lib/libGLU_pic.a
@@ -477,10 +477,9 @@
 ./usr/X11R6/lib/libXRes.so.4.0
 ./usr/X11R6/lib/libXTrap.so.10.0
 ./usr/X11R6/lib/libXau.so.9.0
-./usr/X11R6/lib/libXaw.so.11.0
-./usr/X11R6/lib/libXaw.so.12.0
-./usr/X11R6/lib/libXaw7.so.11.0
-./usr/X11R6/lib/libXaw8.so.12.0
+./usr/X11R6/lib/libXaw.so.13.0
+./usr/X11R6/lib/libXaw7.so.12.0
+./usr/X11R6/lib/libXaw8.so.13.0
 ./usr/X11R6/lib/libXcomposite.so.3.0
 ./usr/X11R6/lib/libXcursor.so.4.0
 ./usr/X11R6/lib/libXdamage.so.3.1
@@ -527,6 +526,7 @@
 ./usr/X11R6/lib/libxkbfile.so.4.0
 ./usr/X11R6/lib/libxkbui.so.4.0
 ./usr/X11R6/lib/modules
+./usr/X11R6/lib/modules/dri
 ./usr/X11R6/lib/pkgconfig/libdrm.pc
 ./usr/X11R6/man/cat1/glxgears.0
 ./usr/X11R6/man/cat1/glxinfo.0

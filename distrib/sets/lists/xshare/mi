@@ -828,7 +828,10 @@
 ./usr/X11R6/lib/pkgconfig/fontsproto.pc
 ./usr/X11R6/lib/pkgconfig/fontutil.pc
 ./usr/X11R6/lib/pkgconfig/freetype2.pc
+./usr/X11R6/lib/pkgconfig/gl.pc
 ./usr/X11R6/lib/pkgconfig/glproto.pc
+./usr/X11R6/lib/pkgconfig/glu.pc
+./usr/X11R6/lib/pkgconfig/glw.pc
 ./usr/X11R6/lib/pkgconfig/ice.pc
 ./usr/X11R6/lib/pkgconfig/inputproto.pc
 ./usr/X11R6/lib/pkgconfig/kbproto.pc
@@ -913,8 +916,10 @@
 ./usr/X11R6/man/cat1/FvwmWinList.0
 ./usr/X11R6/man/cat1/cwm.0
 ./usr/X11R6/man/cat1/fvwm.0
+./usr/X11R6/man/cat1/koi8rxterm.0
 ./usr/X11R6/man/cat1/resize.0
 ./usr/X11R6/man/cat1/ssh-askpass.0
+./usr/X11R6/man/cat1/uxterm.0
 ./usr/X11R6/man/cat1/xidle.0
 ./usr/X11R6/man/cat1/xpmroot.0
 ./usr/X11R6/man/cat1/xsystrace.0

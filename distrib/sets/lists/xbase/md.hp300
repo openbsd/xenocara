@@ -408,7 +408,6 @@
 ./usr/X11R6/bin/glxinfo
 ./usr/X11R6/bin/xdriinfo
 ./usr/X11R6/bin/xfs
-./usr/X11R6/include/drm
 ./usr/X11R6/include/GL
 ./usr/X11R6/include/GL/GLwDrawA.h
 ./usr/X11R6/include/GL/GLwDrawAP.h
@@ -430,6 +429,7 @@
 ./usr/X11R6/include/X11/extensions/xf86dga1.h
 ./usr/X11R6/include/X11/extensions/xf86dga1str.h
 ./usr/X11R6/include/X11/extensions/xf86dgastr.h
+./usr/X11R6/include/drm
 ./usr/X11R6/include/freetype2/freetype/ftgzip.h
 ./usr/X11R6/include/freetype2/freetype/ftincrem.h
 ./usr/X11R6/include/freetype2/freetype/ftpfr.h
