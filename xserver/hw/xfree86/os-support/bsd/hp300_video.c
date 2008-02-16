@@ -1,4 +1,4 @@
-/* $OpenBSD: hp300_video.c,v 1.2 2008/01/27 14:03:40 matthieu Exp $	*/
+/* $OpenBSD: hp300_video.c,v 1.3 2008/02/16 21:40:29 miod Exp $	*/
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -56,8 +56,6 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 	pVidMem->initialised = TRUE;
 }
 
-
-volatile unsigned char *ioBase = MAP_FAILED;
 
 static pointer
 hp300MapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
