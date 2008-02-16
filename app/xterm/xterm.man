@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.392 2007/07/22 17:14:09 tom Exp $
+.\" $XTermId: xterm.man,v 1.405 2008/01/27 17:37:46 tom Exp $
 .\"
-.\" Copyright 1996-2006,2007 by Thomas E. Dickey
+.\" Copyright 1996-2007,2008 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -53,8 +53,6 @@
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
-.\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.126 2006/06/20 00:42:38 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
 .
@@ -526,6 +524,18 @@ It sets the \fBhpFunctionKeys\fP resource to ``true''.
 This option indicates that HP Function Key escape codes should not be generated
 for function keys.
 It sets the \fBhpFunctionKeys\fP resource to ``false''.
+.TP 8
+.BI -hm
+Tells \fIxterm\fP to use
+\fBhighlightTextColor\fP and \fBhighlightColor\fP 
+to override the reversed foreground/background colors in a selection.
+It sets the \fBhighlightColorMode\fP resource to ``true''.
+.TP 8
+.BI +hm
+Tells \fIxterm\fP not to use
+\fBhighlightTextColor\fP and \fBhighlightColor\fP 
+to override the reversed foreground/background colors in a selection.
+It sets the \fBhighlightColorMode\fP resource to ``false''.
 .TP 8
 .BI -hold
 Turn on the \fBhold\fP resource, i.e.,
@@ -1092,7 +1102,7 @@ It sets the \fBborderWidth\fP resource of the shell widget,
 and may provide advice to your window manager to set the thickness of the
 window frame.
 Most window managers do not use this information.
-See the \fB-b\fP option, which controls the inner border of the \fBxterm\fP
+See the \fB-b\fP option, which controls the inner border of the \fIxterm\fP
 window.
 .TP 8
 .B -display \fIdisplay\fP
@@ -2029,7 +2039,8 @@ When using an ISO-10646-1 font and the \fBwideChars\fP resource is true,
 .IP
 If ``false'', \fIxterm\fP checks for missing glyphs in the font
 and makes line-drawing characters directly as needed.
-If ``true'', \fIxterm\fP uses whatever is in the font without checking.
+If ``true'', \fIxterm\fP assumes the font does not contain the
+line-drawing characters, and draws them directly.
 The default is ``false.''
 .TP 8
 .B "foreground (\fPclass\fB Foreground)"
@@ -2056,6 +2067,69 @@ Specifies the color to use for the background of selected (highlighted) text.
 If not specified (i.e., matching the default foreground), reverse video is used.
 The default is ``XtDefaultForeground.''
 .TP 8
+.B "highlightColorMode (\fPclass\fB HighlightColorMode)"
+Specifies whether \fIxterm\fP should use
+\fBhighlightTextColor\fP and \fBhighlightColor\fP 
+to override the reversed foreground/background colors in a selection.
+The default is unspecified:
+at startup, \fIxterm\fP checks if those resources are set to something
+other than the default foreground and background colors.
+Setting this resource disables the check.
+.IP
+The following table shows the interaction of the highlighting
+resources, abbreviated as shown to fit in this page:
+.RS
+.TP 3
+HCM
+highlightColorMode
+.TP 3
+HR
+highlightReverse
+.TP 3
+HBG
+highlightColor
+.TP 3
+HFG
+highlightTextColor
+.RE
+.IP
+.TS
+l l l l l
+_ _ _ _ _
+l l l l l.
+\fIHCM\fR	\fIHR\fR	\fIHBG\fR	\fIHFG\fR	\fIHighlight\fP
+false	false	default	default	bg/fg\"0
+false	false	default	set	bg/fg\"1
+false	false	set	default	fg/HBG\"2
+false	false	set	set	fg/HBG\"3
+=
+false	true	default	default	bg/fg\"4
+false	true	default	set	bg/fg\"5
+false	true	set	default	fg/HBG\"6
+false	true	set	set	fg/HBG\"7
+=
+true	false	default	default	bg/fg\"8
+true	false	default	set	HFG/fg\"9
+true	false	set	default	bg/HBG\"10
+true	false	set	set	HFG/HBG\"11
+=
+true	true	default	default	fg/fg (useless)\"12
+true	true	default	set	HFG/fg\"13
+true	true	set	default	fg/HBG\"14
+true	true	set	set	HFG/HBG\"15
+=
+default	false	default	default	bg/fg\"16
+default	false	default	set	bg/fg\"17
+default	false	set	default	fg/HBG\"18
+default	false	set	set	HFG/HBG\"19
+=
+default	true	default	default	bg/fg\"20
+default	true	default	set	bg/fg\"21
+default	true	set	default	fg/HBG\"22
+default	true	set	set	HFG/HBG\"23
+=
+.TE
+.TP 8
 .B "highlightReverse (\fPclass\fB HighlightReverse)"
 Specifies whether \fIxterm\fP should reverse the selection foreground
 and background colors when selecting text with reverse-video attribute.
@@ -2063,6 +2137,7 @@ This applies only to
 the \fBhighlightColor\fP and \fBhighlightTextColor\fP resources,
 e.g., to match the color scheme of \fIxwsh\fP.
 If ``true'', \fIxterm\fP reverses the colors,
+If ``false'', \fIxterm\fP does not reverse colors,
 The default is ``true.''
 .TP 8
 .B "highlightSelection (\fPclass\fB HighlightSelection)"
@@ -2137,6 +2212,11 @@ It is implemented only for TrueType fonts.
 Specifies whether or not jump scroll should be used.
 This corresponds to the VT102 DECSCLM private mode.
 The default is ``true.''
+.TP 8
+.B "keepSelection (\fPclass\fB KeepSelection)"
+Specifies whether \fIxterm\fR will keep the selection even after the
+selected area was touched by some output to the terminal.
+The default is ``false''.
 .TP 8
 .B "keyboardDialect (\fPclass\fB KeyboardDialect)"
 Specifies the initial keyboard dialect, as well as the default value when
@@ -2438,6 +2518,23 @@ Specifies the background color of the pointer.
 The default is
 ``XtDefaultBackground.''
 .TP 8
+.B "pointerMode (\fPclass\fB PointerMode)"
+Specifies when the pointer may be hidden as the user types.
+It will be redisplayed if the user moves the mouse,
+or clicks one of its buttons.
+.RS
+.TP 3
+0
+never
+.TP 3
+1
+the application running in \fIxterm\fP has not activated mouse mode.
+This is the default.
+.TP 3
+2
+always.
+.RE
+.TP 8
 .B "pointerShape (\fPclass\fB Cursor)"
 Specifies the name of the shape of the pointer.
 The default is ``xterm.''
@@ -2488,6 +2585,12 @@ The default is ``false.''
 .B "printerFormFeed (\fPclass\fB PrinterFormFeed)"
 Controls whether a form feed is sent to the printer at the end of a print
 page function.
+The default is ``false.''
+.TP 8
+.B "quietGrab (\fPclass\fB QuietGrab)"
+Controls whether the cursor is repainted 
+when \fINotifyGrab\fP and \fINotifyUngrab\fP
+event types are received during change of focus.
 The default is ``false.''
 .TP 8
 .B "renderFont (\fPclass\fB RenderFont)"
@@ -3474,6 +3577,18 @@ option and the
 resource.
 .
 .TP
+Keep Selection (keepSelection)
+Tell \fIxterm\fP whether to disown the selection when it stops highlighting it,
+e.g., when an application modifies the display so that it no longer matches
+the text which has been highlighted.
+As long as \fIxterm\fP continues to own the selection,
+it can provide the corresponding text to other clients via cut/paste.
+This corresponds to the
+.B keepSelection
+resource.
+There is no corresponding command-line option.
+.
+.TP
 Select to Clipboard (selectToClipboard)
 Tell \fIxterm\fP whether to use the PRIMARY or CLIPBOARD
 for SELECT tokens in the \fBtranslations\fP resource which
@@ -4213,6 +4328,10 @@ This action toggles the \fBjumpscroll\fP resource and is also invoked by the
 This action toggles the \fIxterm\fR's state regarding whether the current font
 has line-drawing characters and whether it should draw them directly.
 It is also invoked by the \fBfont-linedrawing\fP entry in \fIfontMenu\fP.
+.TP 8
+.B "set-keep-selection(\fIon/off/toggle\fP)"
+This action toggles the \fBkeepSelection\fP resource and is also invoked by
+the \fBkeepSelection\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-logging()"
 This action toggles the state of the logging option.

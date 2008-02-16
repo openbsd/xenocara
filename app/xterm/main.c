@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.574 2007/07/22 20:02:22 tom Exp $ */
+/* $XTermId: main.c,v 1.582 2008/01/15 23:58:01 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -15,7 +15,7 @@
 
 /***********************************************************
 
-Copyright 2002-2006,2007 by Thomas E. Dickey
+Copyright 2002-2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -86,8 +86,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-
-/* $XFree86: xc/programs/xterm/main.c,v 3.212 2006/06/20 00:42:38 dickey Exp $ */
 
 /* main.c */
 
@@ -506,54 +504,72 @@ static char **command_to_exec_with_luit = NULL;
 #define VAL_LINE_SPEED B9600
 #endif
 
-/* allow use of system default characters if defined and reasonable */
+/*
+ * Allow use of system default characters if defined and reasonable.
+ * These are based on the BSD ttydefaults.h
+ */
 #ifndef CBRK
-#define CBRK 0
+#define CBRK     0xff		/* was 0 */
+#endif
+#ifndef CDISCARD
+#define CDISCARD CONTROL('O')
 #endif
 #ifndef CDSUSP
-#define CDSUSP CONTROL('Y')
+#define CDSUSP   CONTROL('Y')
 #endif
 #ifndef CEOF
-#define CEOF CONTROL('D')
+#define CEOF     CONTROL('D')
 #endif
 #ifndef CEOL
-#define CEOL 0
+#define CEOL	 0xff		/* was 0 */
+#endif
+#ifndef CERASE
+#define CERASE   0177
+#endif
+#ifndef CERASE2
+#define	CERASE2  CONTROL('H')
 #endif
 #ifndef CFLUSH
-#define CFLUSH CONTROL('O')
+#define CFLUSH   CONTROL('O')
 #endif
 #ifndef CINTR
-#define CINTR 0177
+#define CINTR    CONTROL('C')
 #endif
 #ifndef CKILL
-#define CKILL '@'
+#define CKILL	 CTRL('U')	/* was '@' */
 #endif
 #ifndef CLNEXT
-#define CLNEXT CONTROL('V')
+#define CLNEXT   CONTROL('V')
 #endif
 #ifndef CNUL
-#define CNUL 0
+#define CNUL     0
 #endif
 #ifndef CQUIT
-#define CQUIT CONTROL('\\')
+#define CQUIT    CONTROL('\\')
 #endif
 #ifndef CRPRNT
-#define CRPRNT CONTROL('R')
+#define CRPRNT   CONTROL('R')
+#endif
+#ifndef CREPRINT
+#define CREPRINT CRPRNT
 #endif
 #ifndef CSTART
-#define CSTART CONTROL('Q')
+#define CSTART   CONTROL('Q')
+#endif
+#ifndef CSTATUS
+#define	CSTATUS  CONTROL('T')
 #endif
 #ifndef CSTOP
-#define CSTOP CONTROL('S')
+#define CSTOP    CONTROL('S')
 #endif
 #ifndef CSUSP
-#define CSUSP CONTROL('Z')
+#define CSUSP    CONTROL('Z')
 #endif
 #ifndef CSWTCH
-#define CSWTCH 0
+#define CSWTCH   0
 #endif
 #ifndef CWERASE
-#define CWERASE CONTROL('W')
+#define CWERASE  CONTROL('W')
 #endif
 
 #ifdef USE_ANY_SYSV_TERMIO
@@ -617,13 +633,13 @@ static struct jtchars d_jtc =
  * POSIX termios has termios.c_cc, which is similar to SVR4.
  */
 #define TTYMODE(name) { name, sizeof(name)-1, 0, 0 }
-static int override_tty_modes = 0;
+static Boolean override_tty_modes = False;
 /* *INDENT-OFF* */
 static struct _xttymodes {
     char *name;
     size_t len;
     int set;
-    Char value;
+    int value;
 } ttymodelist[] = {
     TTYMODE("intr"),		/* tchars.t_intrc ; VINTR */
 #define XTTYMODE_intr	0
@@ -664,6 +680,71 @@ static struct _xttymodes {
     TTYMODE("eol2"),		/* VEOL2 */
 #define XTTYMODE_eol2	18
     { NULL,	0, 0, '\0' },	/* end of data */
+};
+
+#define validTtyChar(data, n) \
+	    (known_ttyChars[n].sysMode >= 0 && \
+	     known_ttyChars[n].sysMode < (int) XtNumber(data.c_cc))
+
+static const struct {
+    int sysMode;
+    int myMode;
+    int myDefault;
+} known_ttyChars[] = {
+#ifdef VINTR
+    { VINTR,    XTTYMODE_intr,   CINTR },
+#endif
+#ifdef VQUIT
+    { VQUIT,    XTTYMODE_quit,   CQUIT },
+#endif
+#ifdef VERASE
+    { VERASE,   XTTYMODE_erase,  CERASE },
+#endif
+#ifdef VKILL
+    { VKILL,    XTTYMODE_kill,   CKILL },
+#endif
+#ifdef VEOF
+    { VEOF,     XTTYMODE_eof,    CEOF },
+#endif
+#ifdef VEOL
+    { VEOL,     XTTYMODE_eol,    CEOL },
+#endif
+#ifdef VSWTCH
+    { VSWTCH,   XTTYMODE_swtch,  CNUL },
+#endif
+#ifdef VSTART
+    { VSTART,   XTTYMODE_start,  CSTART },
+#endif
+#ifdef VSTOP
+    { VSTOP,    XTTYMODE_stop,   CSTOP },
+#endif
+#ifdef VSUSP
+    { VSUSP,    XTTYMODE_susp,   CSUSP },
+#endif
+#ifdef VDSUSP
+    { VDSUSP,   XTTYMODE_dsusp,  CDSUSP },
+#endif
+#ifdef VREPRINT
+    { VREPRINT, XTTYMODE_rprnt,  CREPRINT },
+#endif
+#ifdef VDISCARD
+    { VDISCARD, XTTYMODE_flush,  CDISCARD },
+#endif
+#ifdef VWERASE
+    { VWERASE,  XTTYMODE_weras,  CWERASE },
+#endif
+#ifdef VLNEXT
+    { VLNEXT,   XTTYMODE_lnext,  CLNEXT },
+#endif
+#ifdef VSTATUS
+    { VSTATUS,  XTTYMODE_status, CSTATUS },
+#endif
+#ifdef VERASE2
+    { VERASE2,  XTTYMODE_erase2, CERASE2 },
+#endif
+#ifdef VEOL2
+    { VEOL2,    XTTYMODE_eol2,   CNUL },
+#endif
 };
 /* *INDENT-ON* */
 
@@ -868,6 +949,8 @@ static XrmOptionDescRec optionDescList[] = {
 #endif
 #if OPT_HIGHLIGHT_COLOR
 {"-hc",		"*highlightColor", XrmoptionSepArg,	(caddr_t) NULL},
+{"-hm",		"*highlightColorMode", XrmoptionNoArg,	(caddr_t) "on"},
+{"+hm",		"*highlightColorMode", XrmoptionNoArg,	(caddr_t) "off"},
 {"-selfg",	"*highlightTextColor", XrmoptionSepArg,	(caddr_t) NULL},
 {"-selbg",	"*highlightColor", XrmoptionSepArg,	(caddr_t) NULL},
 #endif
@@ -1052,6 +1135,7 @@ static OptionHelp xtermOptions[] = {
 { "-/+cu",                 "turn on/off curses emulation" },
 { "-/+dc",                 "turn off/on dynamic color selection" },
 #if OPT_HIGHLIGHT_COLOR
+{ "-/+hm",                 "turn on/off selection-color override" },
 { "-selbg color",          "selection background color" },
 { "-selfg color",          "selection foreground color" },
 #endif
@@ -1748,6 +1832,7 @@ main(int argc, char *argv[]ENVP_ARG)
      * of the various terminal structures (which may change from
      * implementation to implementation).
      */
+    memset(&d_tio, 0, sizeof(d_tio));
     d_tio.c_iflag = ICRNL | IXON;
 #ifdef TAB3
     d_tio.c_oflag = OPOST | ONLCR | TAB3;
@@ -1758,6 +1843,17 @@ main(int argc, char *argv[]ENVP_ARG)
     d_tio.c_oflag = OPOST;
 #endif
 #endif
+    {
+	Cardinal nn;
+
+	/* fill in default-values */
+	for (nn = 0; nn < XtNumber(known_ttyChars); ++nn) {
+	    if (validTtyChar(d_tio, nn)) {
+		d_tio.c_cc[known_ttyChars[nn].sysMode] =
+		    known_ttyChars[nn].myDefault;
+	    }
+	}
+    }
 #if defined(macII) || defined(ATT) || defined(CRAY)	/* { */
     d_tio.c_cflag = VAL_LINE_SPEED | CS8 | CREAD | PARENB | HUPCL;
     d_tio.c_lflag = ISIG | ICANON | ECHO | ECHOE | ECHOK;
@@ -1767,31 +1863,10 @@ main(int argc, char *argv[]ENVP_ARG)
 #ifdef ECHOCTL
     d_tio.c_lflag |= ECHOCTL | IEXTEN;
 #endif
-
 #ifndef USE_TERMIOS		/* { */
     d_tio.c_line = 0;
 #endif /* } */
-
-    d_tio.c_cc[VINTR] = CINTR;
-    d_tio.c_cc[VQUIT] = CQUIT;
-    d_tio.c_cc[VERASE] = CERASE;
-    d_tio.c_cc[VKILL] = CKILL;
-    d_tio.c_cc[VEOF] = CEOF;
-    d_tio.c_cc[VEOL] = CNUL;
-    d_tio.c_cc[VEOL2] = CNUL;
-#ifdef VSWTCH
-    d_tio.c_cc[VSWTCH] = CNUL;
-#endif
-
 #if defined(USE_TERMIOS) || defined(USE_POSIX_TERMIOS)	/* { */
-    d_tio.c_cc[VSUSP] = CSUSP;
-#ifdef VDSUSP
-    d_tio.c_cc[VDSUSP] = CDSUSP;
-#endif
-    d_tio.c_cc[VREPRINT] = CRPRNT;
-    d_tio.c_cc[VDISCARD] = CFLUSH;
-    d_tio.c_cc[VWERASE] = CWERASE;
-    d_tio.c_cc[VLNEXT] = CLNEXT;
     d_tio.c_cc[VMIN] = 1;
     d_tio.c_cc[VTIME] = 0;
 #endif /* } */
@@ -1839,102 +1914,20 @@ main(int argc, char *argv[]ENVP_ARG)
 #ifdef __MVS__
     d_tio.c_cflag &= ~(HUPCL | PARENB);
 #endif
-    d_tio.c_cc[VINTR] = CONTROL('C');	/* '^C' */
-    d_tio.c_cc[VERASE] = ANSI_DEL;	/* DEL  */
-    d_tio.c_cc[VKILL] = CONTROL('U');	/* '^U' */
-    d_tio.c_cc[VQUIT] = CQUIT;	/* '^\' */
-    d_tio.c_cc[VEOF] = CEOF;	/* '^D' */
-    d_tio.c_cc[VEOL] = CEOL;	/* '^@' */
-    d_tio.c_cc[VMIN] = 1;
-    d_tio.c_cc[VTIME] = 0;
-#ifdef VSWTCH
-    d_tio.c_cc[VSWTCH] = CSWTCH;	/* usually '^Z' */
-#endif
-#ifdef VLNEXT
-    d_tio.c_cc[VLNEXT] = CLNEXT;
-#endif
-#ifdef VWERASE
-    d_tio.c_cc[VWERASE] = CWERASE;
-#endif
-#ifdef VREPRINT
-    d_tio.c_cc[VREPRINT] = CRPRNT;
-#endif
-#ifdef VRPRNT
-    d_tio.c_cc[VRPRNT] = CRPRNT;
-#endif
-#ifdef VDISCARD
-    d_tio.c_cc[VDISCARD] = CFLUSH;
-#endif
-#ifdef VFLUSHO
-    d_tio.c_cc[VFLUSHO] = CFLUSH;
-#endif
-#ifdef VSTOP
-    d_tio.c_cc[VSTOP] = CSTOP;
-#endif
-#ifdef VSTART
-    d_tio.c_cc[VSTART] = CSTART;
-#endif
-#ifdef VSUSP
-    d_tio.c_cc[VSUSP] = CSUSP;
-#endif
-#ifdef VDSUSP
-    d_tio.c_cc[VDSUSP] = CDSUSP;
-#endif
-#ifdef VSTATUS
-    d_tio.c_cc[VSTATUS] = CSTATUS;
-#endif
-    /* now, try to inherit tty settings */
     {
+	Cardinal nn;
 	int i;
 
+	/* try to inherit tty settings */
 	for (i = 0; i <= 2; i++) {
 	    TERMIO_STRUCT deftio;
 	    if (ttyGetAttr(i, &deftio) == 0) {
-		d_tio.c_cc[VINTR] = deftio.c_cc[VINTR];
-		d_tio.c_cc[VQUIT] = deftio.c_cc[VQUIT];
-		d_tio.c_cc[VERASE] = deftio.c_cc[VERASE];
-		d_tio.c_cc[VKILL] = deftio.c_cc[VKILL];
-		d_tio.c_cc[VEOF] = deftio.c_cc[VEOF];
-		d_tio.c_cc[VEOL] = deftio.c_cc[VEOL];
-#ifdef VSWTCH
-		d_tio.c_cc[VSWTCH] = deftio.c_cc[VSWTCH];
-#endif
-#ifdef VEOL2
-		d_tio.c_cc[VEOL2] = deftio.c_cc[VEOL2];
-#endif
-#ifdef VLNEXT
-		d_tio.c_cc[VLNEXT] = deftio.c_cc[VLNEXT];
-#endif
-#ifdef VWERASE
-		d_tio.c_cc[VWERASE] = deftio.c_cc[VWERASE];
-#endif
-#ifdef VREPRINT
-		d_tio.c_cc[VREPRINT] = deftio.c_cc[VREPRINT];
-#endif
-#ifdef VRPRNT
-		d_tio.c_cc[VRPRNT] = deftio.c_cc[VRPRNT];
-#endif
-#ifdef VDISCARD
-		d_tio.c_cc[VDISCARD] = deftio.c_cc[VDISCARD];
-#endif
-#ifdef VFLUSHO
-		d_tio.c_cc[VFLUSHO] = deftio.c_cc[VFLUSHO];
-#endif
-#ifdef VSTOP
-		d_tio.c_cc[VSTOP] = deftio.c_cc[VSTOP];
-#endif
-#ifdef VSTART
-		d_tio.c_cc[VSTART] = deftio.c_cc[VSTART];
-#endif
-#ifdef VSUSP
-		d_tio.c_cc[VSUSP] = deftio.c_cc[VSUSP];
-#endif
-#ifdef VDSUSP
-		d_tio.c_cc[VDSUSP] = deftio.c_cc[VDSUSP];
-#endif
-#ifdef VSTATUS
-		d_tio.c_cc[VSTATUS] = deftio.c_cc[VSTATUS];
-#endif
+		for (nn = 0; nn < XtNumber(known_ttyChars); ++nn) {
+		    if (validTtyChar(d_tio, nn)) {
+			d_tio.c_cc[known_ttyChars[nn].sysMode] =
+			    deftio.c_cc[known_ttyChars[nn].sysMode];
+		    }
+		}
 		break;
 	    }
 	}
@@ -1947,27 +1940,7 @@ main(int argc, char *argv[]ENVP_ARG)
     d_ltc.t_werasc = CharOf('\377');
     d_ltc.t_lnextc = CharOf('\377');
 #endif /* } HAS_LTCHARS */
-#if defined(USE_TERMIOS) || defined(USE_POSIX_TERMIOS)	/* { */
-    d_tio.c_cc[VSUSP] = CSUSP;
-#ifdef VDSUSP
-    d_tio.c_cc[VDSUSP] = CharOf('\000');
-#endif
-#ifdef VSTATUS
-    d_tio.c_cc[VSTATUS] = CharOf('\377');
-#endif
-#ifdef VREPRINT
-    d_tio.c_cc[VREPRINT] = CharOf('\377');
-#endif
-#ifdef VDISCARD
-    d_tio.c_cc[VDISCARD] = CharOf('\377');
-#endif
-#ifdef VWERASE
-    d_tio.c_cc[VWERASE] = CharOf('\377');
-#endif
-#ifdef VLNEXT
-    d_tio.c_cc[VLNEXT] = CharOf('\377');
-#endif
-#endif /* } USE_TERMIOS */
+
 #ifdef TIOCLSET			/* { */
     d_lmode = 0;
 #endif /* } TIOCLSET */
@@ -2035,7 +2008,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	    fprintf(stderr, "%s:  bad tty modes \"%s\"\n",
 		    ProgramName, resource.tty_modes);
 	} else if (n > 0) {
-	    override_tty_modes = 1;
+	    override_tty_modes = True;
 	}
     }
 #if OPT_ZICONBEEP
@@ -2401,13 +2374,9 @@ main(int argc, char *argv[]ENVP_ARG)
 
     if ((reversed && term->misc.re_verse0)
 	&& ((term->screen.Tcolors[TEXT_FG].resource
-	     && (x_strcasecmp(term->screen.Tcolors[TEXT_FG].resource,
-			      XtDefaultForeground) != 0)
-	    )
+	     && !isDefaultForeground(term->screen.Tcolors[TEXT_FG].resource))
 	    || (term->screen.Tcolors[TEXT_BG].resource
-		&& (x_strcasecmp(term->screen.Tcolors[TEXT_BG].resource,
-				 XtDefaultBackground) != 0)
-	    )
+		&& !isDefaultBackground(term->screen.Tcolors[TEXT_BG].resource))
 	))
 	ReverseVideo(term);
 #endif /* OPT_COLOR_RES */
@@ -3001,6 +2970,7 @@ static int
 spawnXTerm(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
+    Cardinal nn;
 #if OPT_PTY_HANDSHAKE
     Bool got_handshake_size = False;
     handshake_t handshake;
@@ -3695,97 +3665,29 @@ spawnXTerm(XtermWidget xw)
 #ifdef ECHOCTL
 		tio.c_lflag |= ECHOCTL | IEXTEN;
 #endif
-#ifndef __MVS__
-		/* reset EOL to default value */
-		tio.c_cc[VEOL] = CEOL;	/* '^@' */
-		/* certain shells (ksh & csh) change EOF as well */
-		tio.c_cc[VEOF] = CEOF;	/* '^D' */
-#else
-		if (tio.c_cc[VEOL] == 0)
-		    tio.c_cc[VEOL] = CEOL;	/* '^@' */
-		if (tio.c_cc[VEOF] == 0)
-		    tio.c_cc[VEOF] = CEOF;	/* '^D' */
+		for (nn = 0; nn < XtNumber(known_ttyChars); ++nn) {
+		    if (validTtyChar(tio, nn)) {
+			int sysMode = known_ttyChars[nn].sysMode;
+#ifdef __MVS__
+			if (tio.c_cc[sysMode] != 0) {
+			    switch (sysMode) {
+			    case VEOL:
+			    case VEOF:
+				continue;
+			    }
+			}
 #endif
-#ifdef VLNEXT
-		tio.c_cc[VLNEXT] = CLNEXT;
-#endif
-#ifdef VWERASE
-		tio.c_cc[VWERASE] = CWERASE;
-#endif
-#ifdef VREPRINT
-		tio.c_cc[VREPRINT] = CRPRNT;
-#endif
-#ifdef VRPRNT
-		tio.c_cc[VRPRNT] = CRPRNT;
-#endif
-#ifdef VDISCARD
-		tio.c_cc[VDISCARD] = CFLUSH;
-#endif
-#ifdef VFLUSHO
-		tio.c_cc[VFLUSHO] = CFLUSH;
-#endif
-#ifdef VSTOP
-		tio.c_cc[VSTOP] = CSTOP;
-#endif
-#ifdef VSTART
-		tio.c_cc[VSTART] = CSTART;
-#endif
-#ifdef VSUSP
-		tio.c_cc[VSUSP] = CSUSP;
-#endif
-#ifdef VDSUSP
-		tio.c_cc[VDSUSP] = CDSUSP;
-#endif
+			tio.c_cc[sysMode] = known_ttyChars[nn].myDefault;
+		    }
+		}
+
 		if (override_tty_modes) {
-		    /* sysv-specific */
-		    TMODE(XTTYMODE_intr, tio.c_cc[VINTR]);
-		    TMODE(XTTYMODE_quit, tio.c_cc[VQUIT]);
-		    TMODE(XTTYMODE_erase, tio.c_cc[VERASE]);
-		    TMODE(XTTYMODE_kill, tio.c_cc[VKILL]);
-		    TMODE(XTTYMODE_eof, tio.c_cc[VEOF]);
-		    TMODE(XTTYMODE_eol, tio.c_cc[VEOL]);
-#ifdef VSWTCH
-		    TMODE(XTTYMODE_swtch, tio.c_cc[VSWTCH]);
-#endif
-#ifdef VSUSP
-		    TMODE(XTTYMODE_susp, tio.c_cc[VSUSP]);
-#endif
-#ifdef VDSUSP
-		    TMODE(XTTYMODE_dsusp, tio.c_cc[VDSUSP]);
-#endif
-#ifdef VREPRINT
-		    TMODE(XTTYMODE_rprnt, tio.c_cc[VREPRINT]);
-#endif
-#ifdef VRPRNT
-		    TMODE(XTTYMODE_rprnt, tio.c_cc[VRPRNT]);
-#endif
-#ifdef VDISCARD
-		    TMODE(XTTYMODE_flush, tio.c_cc[VDISCARD]);
-#endif
-#ifdef VFLUSHO
-		    TMODE(XTTYMODE_flush, tio.c_cc[VFLUSHO]);
-#endif
-#ifdef VWERASE
-		    TMODE(XTTYMODE_weras, tio.c_cc[VWERASE]);
-#endif
-#ifdef VLNEXT
-		    TMODE(XTTYMODE_lnext, tio.c_cc[VLNEXT]);
-#endif
-#ifdef VSTART
-		    TMODE(XTTYMODE_start, tio.c_cc[VSTART]);
-#endif
-#ifdef VSTOP
-		    TMODE(XTTYMODE_stop, tio.c_cc[VSTOP]);
-#endif
-#ifdef VSTATUS
-		    TMODE(XTTYMODE_status, tio.c_cc[VSTATUS]);
-#endif
-#ifdef VERASE2
-		    TMODE(XTTYMODE_erase2, tio.c_cc[VERASE2]);
-#endif
-#ifdef VEOL2
-		    TMODE(XTTYMODE_eol2, tio.c_cc[VEOL2]);
-#endif
+		    for (nn = 0; nn < XtNumber(known_ttyChars); ++nn) {
+			if (validTtyChar(tio, nn)) {
+			    TMODE(known_ttyChars[nn].myMode,
+				  tio.c_cc[known_ttyChars[nn].sysMode]);
+			}
+		    }
 #ifdef HAS_LTCHARS
 		    /* both SYSV and BSD have ltchars */
 		    TMODE(XTTYMODE_susp, ltc.t_suspc);

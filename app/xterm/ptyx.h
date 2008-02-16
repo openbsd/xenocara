@@ -1,9 +1,7 @@
-/* $XTermId: ptyx.h,v 1.494 2007/07/17 21:08:07 tom Exp $ */
-
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
+/* $XTermId: ptyx.h,v 1.510 2008/01/31 01:01:52 tom Exp $ */
 
 /*
- * Copyright 1999-2006,2007 by Thomas E. Dickey
+ * Copyright 1999-2007,2008 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -290,6 +288,8 @@ typedef struct {
 #define isSameRow(a,b)		((a)->row == (b)->row)
 #define isSameCol(a,b)		((a)->col == (b)->col)
 #define isSameCELL(a,b)		(isSameRow(a,b) && isSameCol(a,b))
+
+#define xBIT(n)         (1 << (n))
 
 /*
  * ANSI emulation, special character codes
@@ -1012,11 +1012,15 @@ extern int A2E(int);
 
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
-#define PAIRED_CHARS(a,b) a,b
+#define if_WIDE_OR_NARROW(screen, wide, narrow) if(screen->wide_chars) wide else narrow
+#define PAIRED_CHARS(lo,hi)	lo,hi
+#define PACK_PAIR(lo,hi,n)	(lo[n] | (hi ? (hi[n] << 8) : 0))
 typedef unsigned IChar;		/* for 8 or 16-bit characters, plus flag */
 #else
 #define if_OPT_WIDE_CHARS(screen, code) /* nothing */
-#define PAIRED_CHARS(a,b) a
+#define if_WIDE_OR_NARROW(screen, wide, narrow) narrow
+#define PAIRED_CHARS(lo,hi)	lo
+#define PACK_PAIR(lo,hi,n)	lo[n]
 typedef unsigned char IChar;	/* for 8-bit characters */
 #endif
 
@@ -1306,6 +1310,7 @@ typedef struct {
 	gid_t		gid;		/* group id of actual person	*/
 	ColorRes	Tcolors[NCOLORS]; /* terminal colors		*/
 #if OPT_HIGHLIGHT_COLOR
+	Boolean		hilite_color;	/* hilite colors override	*/
 	Boolean		hilite_reverse;	/* hilite overrides reverse	*/
 #endif
 #if OPT_ISO_COLORS
@@ -1353,7 +1358,7 @@ typedef struct {
 #if OPT_BROKEN_ST
 	Boolean		brokenStringTerm; /* true to match old OSC parse */
 #endif
-#if OPT_C1_PRINT
+#if OPT_C1_PRINT || OPT_WIDE_CHARS
 	Boolean		c1_printable;	/* true if we treat C1 as print	*/
 #endif
 	int		border;		/* inner border			*/
@@ -1362,6 +1367,7 @@ typedef struct {
 	unsigned short	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
 	Boolean		send_focus_pos; /* user wants focus in/out info */
+	Boolean		quiet_grab;	/* true if no cursor change on focus */
 #if OPT_PASTE64
 	int		base64_paste;	/* set to send paste in base64	*/
 	int		base64_final;	/* string-terminator for paste	*/
@@ -1423,7 +1429,10 @@ typedef struct {
 	VTwin		*whichVwin;
 #endif /* NO_ACTIVE_ICON */
 
-	Cursor	pointer_cursor;		/* pointer cursor in window	*/
+	int		pointer_mode;	/* when to use hidden_cursor	*/
+	Boolean 	hide_pointer;	/* true to use "hidden_cursor"  */
+	Cursor		pointer_cursor;	/* pointer cursor in window	*/
+	Cursor		hidden_cursor;	/* hidden cursor in window	*/
 
 	String	answer_back;		/* response to ENQ		*/
 	String	printer_command;	/* pipe/shell command string	*/
@@ -1441,10 +1450,10 @@ typedef struct {
 #endif
 	Dimension	fnt_wide;
 	Dimension	fnt_high;
-	XFontStruct	*fnts[fMAX];	/* normal/bold/etc for terminal	*/
+	XTermFonts	fnts[fMAX];	/* normal/bold/etc for terminal	*/
 	Boolean		free_bold_box;	/* same_font_size's austerity	*/
 #ifndef NO_ACTIVE_ICON
-	XFontStruct	*fnt_icon;	/* icon font */
+	XTermFonts	fnt_icon;	/* icon font */
 #endif /* NO_ACTIVE_ICON */
 	int		enbolden;	/* overstrike for bold font	*/
 	XPoint		*box;		/* draw unselected cursor	*/
@@ -1610,6 +1619,7 @@ typedef struct {
 	Boolean		trim_selection; /* controls trimming of selection */
 	Boolean		i18nSelections;
 	Boolean		brokenSelections;
+	Boolean		keepSelection;	/* do not lose selection on output */
 	Boolean		replyToEmacs;	/* Send emacs escape code when done selecting or extending? */
 	Char		*selection_data; /* the current selection */
 	int		selection_size; /* size of allocated buffer */
@@ -1753,6 +1763,12 @@ typedef enum {
     keyboardIsTermcap,
     keyboardIsVT220
 } xtermKeyboardType;
+
+typedef enum {			/* legal values for screen.pointer_mode */
+    pNever = 0,
+    pNoMouse = 1,
+    pAlways = 2
+} pointerModeTypes;
 
 typedef enum {			/* legal values for screen.utf8_mode */
     uFalse = 0,
@@ -1938,18 +1954,18 @@ extern WidgetClass tekWidgetClass;
 #endif
 
 /* define masks for keyboard.flags */
-#define MODE_KAM	0x01	/* keyboard action mode */
-#define MODE_DECKPAM	0x02	/* keypad application mode */
-#define MODE_DECCKM	0x04	/* cursor keys */
-#define MODE_SRM	0x08	/* send-receive mode */
-#define MODE_DECBKM	0x10	/* backarrow */
+#define MODE_KAM	xBIT(0)	/* keyboard action mode */
+#define MODE_DECKPAM	xBIT(1)	/* keypad application mode */
+#define MODE_DECCKM	xBIT(2)	/* cursor keys */
+#define MODE_SRM	xBIT(3)	/* send-receive mode */
+#define MODE_DECBKM	xBIT(4)	/* backarrow */
 
 
 #define N_MARGINBELL	10
 
-#define TAB_BITS_SHIFT	5	/* 2**5 == 32 */
+#define TAB_BITS_SHIFT	5	/* FIXME: 2**5 == 32 (should derive) */
 #define TAB_BITS_WIDTH	(1 << TAB_BITS_SHIFT)
-#define TAB_ARRAY_SIZE	10	/* number of ints to provide MAX_TABS bits */
+#define TAB_ARRAY_SIZE	(1024 / TAB_BITS_WIDTH)
 #define MAX_TABS	(TAB_BITS_WIDTH * TAB_ARRAY_SIZE)
 
 typedef unsigned Tabs [TAB_ARRAY_SIZE];
@@ -1997,57 +2013,67 @@ typedef struct _TekWidgetRec {
  * term->flags and screen->save_modes.  This need only fit in an unsigned.
  */
 
+#define AttrBIT(n)	xBIT(n)		/* text-attributes */
+#define DrawBIT(n)	xBIT(n + 8)	/* drawXtermText flags */
+#define MiscBIT(n)	xBIT(n + 16)	/* miscellaneous state flags */
+
 /* global flags and character flags (visible character attributes) */
-#define INVERSE		0x01	/* invert the characters to be output */
-#define UNDERLINE	0x02	/* true if underlining */
-#define BOLD		0x04
-#define BLINK		0x08
+#define INVERSE		AttrBIT(0)	/* invert the characters to be output */
+#define UNDERLINE	AttrBIT(1)	/* true if underlining */
+#define BOLD		AttrBIT(2)
+#define BLINK		AttrBIT(3)
 /* global flags (also character attributes) */
-#define BG_COLOR	0x10	/* true if background set */
-#define FG_COLOR	0x20	/* true if foreground set */
+#define BG_COLOR	AttrBIT(4)	/* true if background set */
+#define FG_COLOR	AttrBIT(5)	/* true if foreground set */
 
 /* character flags (internal attributes) */
-#define PROTECTED	0x40	/* a character is drawn that cannot be erased */
-#define CHARDRAWN	0x80    /* a character has been drawn here on the
-				   screen.  Used to distinguish blanks from
-				   empty parts of the screen when selecting */
+#define PROTECTED	AttrBIT(6)	/* a character that cannot be erased */
+#define CHARDRAWN	AttrBIT(7)	/* a character has been drawn here on
+					   the screen.  Used to distinguish
+					   blanks from empty parts of the
+					   screen when selecting */
+
+/* The following attributes are used in the argument of drawXtermText()  */
+#define NOBACKGROUND	DrawBIT(0)	/* Used for overstrike */
+#define NOTRANSLATION	DrawBIT(1)	/* No scan for chars missing in font */
+#define DOUBLEWFONT	DrawBIT(2)	/* The actual X-font is double-width */
+#define DOUBLEHFONT	DrawBIT(3)	/* The actual X-font is double-height */
+#define CHARBYCHAR	DrawBIT(4)	/* Draw chars one-by-one */
+
+/* The following attribute is used in the argument of xtermSpecialFont etc */
+#define NORESOLUTION	DrawBIT(5)	/* find the font without resolution */
+
+/*
+ * Other flags
+ */
+#define WRAPAROUND	MiscBIT(0)	/* true if auto wraparound mode */
+#define	REVERSEWRAP	MiscBIT(1)	/* true if reverse wraparound mode */
+#define REVERSE_VIDEO	MiscBIT(2)	/* true if screen white on black */
+#define LINEFEED	MiscBIT(3)	/* true if in auto linefeed mode */
+#define ORIGIN		MiscBIT(4)	/* true if in origin mode */
+#define INSERT		MiscBIT(5)	/* true if in insert mode */
+#define SMOOTHSCROLL	MiscBIT(6)	/* true if in smooth scroll mode */
+#define IN132COLUMNS	MiscBIT(7)	/* true if in 132 column mode */
+#define INVISIBLE	MiscBIT(8)	/* true if writing invisible text */
+#define NATIONAL        MiscBIT(9)	/* true if writing national charset */
+
+/*
+ * Groups of attributes
+ */
+			/* mask for video-attributes only */
+#define SGR_MASK	(BOLD | BLINK | UNDERLINE | INVERSE)
+
+			/* mask: user-visible attributes */
+#define	ATTRIBUTES	(SGR_MASK | BG_COLOR | FG_COLOR | INVISIBLE | PROTECTED)
+
+/* The toplevel-call to drawXtermText() should have text-attributes guarded: */
+#define DRAWX_MASK	(ATTRIBUTES | CHARDRAWN)
 
 #if OPT_BLINK_TEXT
 #define BOLDATTR(screen) (BOLD | ((screen)->blink_as_bold ? BLINK : 0))
 #else
 #define BOLDATTR(screen) (BOLD | BLINK)
 #endif
-
-/* The following attributes make sense in the argument of drawXtermText()  */
-#define NOBACKGROUND	0x100	/* Used for overstrike */
-#define NOTRANSLATION	0x200	/* No scan for chars missing in font */
-#define NATIVEENCODING	0x400	/* strings are in the font encoding */
-#define DOUBLEWFONT	0x800	/* The actual X-font is double-width */
-#define DOUBLEHFONT	0x1000	/* The actual X-font is double-height */
-#define CHARBYCHAR	0x2000	/* Draw chars one-by-one */
-
-/* The toplevel-call to drawXtermText() should have text-attributes guarded: */
-#define DRAWX_MASK	0xff	/* text flags should be bitand'ed */
-
-/* The following attribute makes sense in the argument of xtermSpecialFont etc */
-#define NORESOLUTION	0x800000	/* find the font without resolution */
-
-			/* mask: user-visible attributes */
-#define	ATTRIBUTES	(INVERSE|UNDERLINE|BOLD|BLINK|BG_COLOR|FG_COLOR|INVISIBLE|PROTECTED)
-
-			/* mask for video-attributes only */
-#define SGR_MASK	(BOLD|BLINK|UNDERLINE|INVERSE)
-
-#define WRAPAROUND	0x400	/* true if auto wraparound mode */
-#define	REVERSEWRAP	0x800	/* true if reverse wraparound mode */
-#define REVERSE_VIDEO	0x1000	/* true if screen white on black */
-#define LINEFEED	0x2000	/* true if in auto linefeed mode */
-#define ORIGIN		0x4000	/* true if in origin mode */
-#define INSERT		0x8000	/* true if in insert mode */
-#define SMOOTHSCROLL	0x10000	/* true if in smooth scroll mode */
-#define IN132COLUMNS	0x20000	/* true if in 132 column mode */
-#define INVISIBLE	0x40000	/* true if writing invisible text */
-#define NATIONAL       0x100000 /* true if writing national charset */
 
 /*
  * Per-line flags
@@ -2106,11 +2132,11 @@ typedef struct _TekWidgetRec {
 #define WhichVWin(screen)	((screen)->whichVwin)
 #define WhichTWin(screen)	((screen)->whichTwin)
 
-#define WhichVFont(screen,name)	(IsIcon(screen) ? (screen)->fnt_icon \
+#define WhichVFont(screen,name)	(IsIcon(screen) ? (screen)->fnt_icon.fs \
 						: (screen)->name)
-#define FontAscent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->ascent \
+#define FontAscent(screen)	(IsIcon(screen) ? (screen)->fnt_icon.fs->ascent \
 						: WhichVWin(screen)->f_ascent)
-#define FontDescent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->descent \
+#define FontDescent(screen)	(IsIcon(screen) ? (screen)->fnt_icon.fs->descent \
 						: WhichVWin(screen)->f_descent)
 #else /* NO_ACTIVE_ICON */
 
@@ -2147,12 +2173,12 @@ typedef struct _TekWidgetRec {
 #define FontWidth(screen)	WhichVWin(screen)->f_width
 #define FontHeight(screen)	WhichVWin(screen)->f_height
 
-#define NormalFont(screen)	WhichVFont(screen, fnts[fNorm])
-#define BoldFont(screen)	WhichVFont(screen, fnts[fBold])
+#define NormalFont(screen)	WhichVFont(screen, fnts[fNorm].fs)
+#define BoldFont(screen)	WhichVFont(screen, fnts[fBold].fs)
 
 #if OPT_WIDE_CHARS
-#define NormalWFont(screen)	WhichVFont(screen, fnts[fWide])
-#define BoldWFont(screen)	WhichVFont(screen, fnts[fWBold])
+#define NormalWFont(screen)	WhichVFont(screen, fnts[fWide].fs)
+#define BoldWFont(screen)	WhichVFont(screen, fnts[fWBold].fs)
 #endif
 
 #define ScrollbarWidth(screen)	WhichVWin(screen)->sb_info.width

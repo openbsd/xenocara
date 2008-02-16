@@ -1,7 +1,9 @@
 #!/bin/sh
-# $XTermId: uxterm,v 1.23 2006/01/04 02:10:27 tom Exp $
-# $XFree86: xc/programs/xterm/uxterm,v 1.12 2006/01/04 02:10:27 dickey Exp $
+# $XTermId: uxterm,v 1.25 2007/12/30 16:33:36 tom Exp $
+#
 # wrapper script to setup xterm with UTF-8 locale
+
+whoami=uxterm
 
 : ${XTERM_PROGRAM=xterm}
 
@@ -66,9 +68,9 @@ if test $found != yes ; then
 			eval ${name}=${save}
 			eval export ${name}
 
-			echo "uxterm tried to use locale $value by setting \$$name" >&2
+			echo "$whoami tried to use locale $value by setting \$$name" >&2
 			xmessage -file - <<EOF
-uxterm tried unsuccessfully to use locale $value
+$whoami tried unsuccessfully to use locale $value
 by setting \$$name to "${value}".
 EOF
 			exit 1
@@ -79,4 +81,4 @@ fi
 # for testing:
 #test -f ./xterm && XTERM_PROGRAM=./xterm
 
-exec $XTERM_PROGRAM -class UXTerm -title 'uxterm' -en UTF-8 "$@"
+exec $XTERM_PROGRAM -class UXTerm -title $whoami -en UTF-8 "$@"

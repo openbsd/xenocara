@@ -1,6 +1,4 @@
-## $XTermId: Makefile.in,v 1.148 2007/06/16 18:47:51 tom Exp $
-##
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.56 2006/06/19 00:36:50 dickey Exp $ ##
+## $XTermId: Makefile.in,v 1.155 2008/01/05 14:26:52 tom Exp $
 ##
 ## Copyright 2002-2006,2007 by Thomas E. Dickey
 ##
@@ -162,13 +160,15 @@ resize$x : $(OBJS2)
 
 charproc$o : main.h @CHARPROC_DEPS@
 ################################################################################
-actual_xterm  = `echo xterm|    sed '$(transform)'`
-actual_resize = `echo resize|   sed '$(transform)'`
-actual_uxterm = `echo uxterm|   sed '$(transform)'`
+actual_xterm  = `echo xterm|        sed '$(transform)'`
+actual_resize = `echo resize|       sed '$(transform)'`
+actual_uxterm = `echo uxterm|       sed '$(transform)'`
+actual_k8term = `echo koi8rxterm|   sed '$(transform)'`
 
 binary_xterm  = $(actual_xterm)$x
 binary_resize = $(actual_resize)$x
 binary_uxterm = $(actual_uxterm)
+binary_k8term = $(actual_k8term)
 
 install \
 install-bin \
@@ -185,6 +185,15 @@ install-full :: xterm$x resize$x $(BINDIR)
 		else \
 			$(INSTALL_SCRIPT) -m  755 $(srcdir)/uxterm $(BINDIR)/$(binary_uxterm); \
 		fi'
+	@$(SHELL) -c 'echo "... installing $(BINDIR)/$(binary_k8term)"; \
+		if test "$(binary_xterm)" != "xterm"; then \
+			name="$(binary_xterm)"; \
+			sed -e "s,=xterm,=$$name," $(srcdir)/koi8rxterm >k8term.tmp; \
+			$(INSTALL_SCRIPT) -m  755 k8term.tmp $(BINDIR)/$(binary_k8term); \
+			rm -f k8term.tmp; \
+		else \
+			$(INSTALL_SCRIPT) -m  755 $(srcdir)/koi8rxterm $(BINDIR)/$(binary_k8term); \
+		fi'
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && rm -f @XTERM_SYMLINK@ ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && $(LN_S) $(binary_xterm) @XTERM_SYMLINK@ ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && echo '... created symbolic link:' && ls -l $(binary_xterm) @XTERM_SYMLINK@ ; fi"
@@ -194,6 +203,8 @@ install-man \
 install-full :: $(MANDIR)
 	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)  $(appsdir)
 	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext) $(appsdir)
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/uxterm.man   $(MANDIR)/$(actual_uxterm).$(manext) $(appsdir)
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/koi8rxterm.man   $(MANDIR)/$(actual_k8term).$(manext) $(appsdir)
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && $(LN_S) $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && echo '... created symbolic link:' && ls -l $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
@@ -210,6 +221,9 @@ install-full :: $(MANDIR)
 @no_appsdir@	@echo installing $(APPSDIR)/UXTerm
 @no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/UXTerm.ad >XTerm.tmp
 @no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/UXTerm
+@no_appsdir@	@echo installing $(APPSDIR)/KOI8RXTerm
+@no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/KOI8RXTerm.ad >XTerm.tmp
+@no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/KOI8RXTerm
 @no_appsdir@	@rm -f XTerm.tmp
 @no_icondir@	@echo "... installed app-defaults"
 
@@ -246,6 +260,7 @@ uninstall-full ::
 	-$(RM) $(BINDIR)/$(binary_xterm)
 	-$(RM) $(BINDIR)/$(binary_resize)
 	-$(RM) $(BINDIR)/$(binary_uxterm)
+	-$(RM) $(BINDIR)/$(binary_k8term)
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && rm -f @XTERM_SYMLINK@; fi"
 
 uninstall \
@@ -253,6 +268,8 @@ uninstall-man \
 uninstall-full ::
 	-$(RM) $(MANDIR)/$(actual_xterm).$(manext)
 	-$(RM) $(MANDIR)/$(actual_resize).$(manext)
+	-$(RM) $(MANDIR)/$(actual_uxterm).$(manext)
+	-$(RM) $(MANDIR)/$(actual_k8term).$(manext)
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext); fi"
 
 @no_appsdir@uninstall \
@@ -266,8 +283,8 @@ uninstall-full ::
 @no_icondir@uninstall-icon \
 @no_icondir@uninstall-full ::
 @no_icondir@	-$(RM) $(ICONDIR)/xterm-color_32x32.xpm
-@no_icondir@	-$(RM) $(ICONDIR)/xterm_48x48.xpm
-@no_icondir@	-$(RM) $(ICONDIR)/xterm-color_32x32.xpm
+@no_icondir@	-$(RM) $(ICONDIR)/xterm_32x32.xpm
+@no_icondir@	-$(RM) $(ICONDIR)/xterm-color_48x48.xpm
 @no_icondir@	-$(RM) $(ICONDIR)/xterm_48x48.xpm
 ################################################################################
 # Desktop-utils does not provide an uninstall, and is not uniformly available.
@@ -294,6 +311,9 @@ realclean : distclean
 
 maintainer-clean : realclean
 	-$(RM) 256colres.h 88colres.h
+################################################################################
+terminfo.out : terminfo		; tic -a -I -1 terminfo >$@
+termcap.out : termcap		; tic -a -C -U termcap >$@
 ################################################################################
 ctlseqs.html : ctlseqs.ms
 ctlseqs.pdf : ctlseqs.ps

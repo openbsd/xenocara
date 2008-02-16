@@ -1,5 +1,4 @@
-! $XTermId: XTerm.ad,v 1.83 2007/03/18 22:41:40 tom Exp $
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.37 2006/04/10 00:34:36 dickey Exp $
+! $XTermId: XTerm.ad,v 1.85 2007/11/26 18:42:37 tom Exp $
 
 *scrollBar: true
 *saveLines: 1024
@@ -52,6 +51,7 @@
 *vtMenu*scrollkey*Label:  Scroll to Bottom on Key Press
 *vtMenu*scrollttyoutput*Label:  Scroll to Bottom on Tty Output
 *vtMenu*allow132*Label: Allow 80/132 Column Switching
+*vtMenu*keepSelection*Label: Keep Selection
 *vtMenu*selectToClipboard*Label: Select to Clipboard
 *vtMenu*cursesemul*Label:  Enable Curses Emulation
 *vtMenu*visualbell*Label:  Enable Visual Bell

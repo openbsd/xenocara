@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.157 2007/07/10 19:53:11 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.158 2008/01/26 01:21:10 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -7,7 +7,7 @@
 
 /*
 
-Copyright 2001-2006,2007 by Thomas E. Dickey
+Copyright 2001-2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -729,13 +729,16 @@ Tekparse(TekWidget tw)
 				   1);
 	    } else
 #endif
+	    {
+		char ch2 = (char) ch;
 		XDrawString(XtDisplay(tw),
 			    TWindow(tekscr),
 			    tekscr->TnormalGC,
 			    x,
 			    y,
-			    (char *) &ch,
+			    &ch2,
 			    1);
+	    }
 	    TCursorForward(tw);
 	    break;
 	case CASE_OSC:

@@ -1,9 +1,9 @@
-# $OpenBSD: Makefile,v 1.8 2008/01/13 17:22:58 matthieu Exp $
+# $OpenBSD: Makefile,v 1.9 2008/02/16 09:40:00 matthieu Exp $
 
 SUBDIR=	icons resize
 
 PROG=	xterm
-MAN=	xterm.1tbl
+MAN=	xterm.1tbl uxterm.1 koi8rxterm.1
 
 BINGRP=		utmp
 BINMODE=	2755
@@ -33,7 +33,16 @@ xterm.1tbl: xterm.man
 	    -e 's#__apploaddir__#${X11ETC}/app-defaults#g' \
 	    < ${.CURDIR}/xterm.man > $@
 
-CLEANFILES+=	xterm.1tbl
+.SUFFIXES: .man .1
+
+.man.1:
+	sed -e 's#__vendorversion__#"X Window System"#g' \
+	    -e 's#__mansuffix__#1#g' \
+	    -e 's#__miscmansuffix__#1#g' \
+	    -e 's#__apploaddir__#${X11ETC}/app-defaults#g' \
+	    < $< > $@
+
+CLEANFILES+=	${MAN}
 
 afterinstall:
 	${INSTALL} ${INSTALL_COPY} -m 755 ${.CURDIR}/uxterm \
@@ -44,6 +53,10 @@ afterinstall:
 		${DESTDIR}${XETC}/app-defaults/XTerm-color
 	${INSTALL} ${INSTALL_COPY} -m 644 ${.CURDIR}/UXTerm.ad \
 		${DESTDIR}${XETC}/app-defaults/UXTerm
+	${INSTALL} ${INSTALL_COPY} -m 755 ${.CURDIR}/koi8rxterm \
+		${DESTDIR}${BINDIR}
+	${INSTALL} ${INSTALL_COPY} -m 644 ${.CURDIR}/KOI8RXTerm.ad \
+		${DESTDIR}${XETC}/app-defaults/KOI8RXTerm
 
 obj: _xenocara_obj
 
