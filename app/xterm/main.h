@@ -118,7 +118,7 @@
 #endif
 
 #ifndef DEF_POINTER_MODE
-#define DEF_POINTER_MODE	pNoMouse
+#define DEF_POINTER_MODE	pNever
 #endif
 
 #ifndef DEF_PTY_STTY_SIZE

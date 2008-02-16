@@ -2525,11 +2525,11 @@ or clicks one of its buttons.
 .RS
 .TP 3
 0
-never
+never.
+This is the default.
 .TP 3
 1
 the application running in \fIxterm\fP has not activated mouse mode.
-This is the default.
 .TP 3
 2
 always.
