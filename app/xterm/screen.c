@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.223 2007/07/22 20:37:55 tom Exp $ */
+/* $XTermId: screen.c,v 1.234 2008/01/27 16:43:54 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -405,7 +405,7 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 	});
 	if_OPT_DEC_CHRSET({
 	    memset(SCRN_BUF_CSETS(screen, row) + col,
-		   curXtermChrSet(xw, screen->cur_row), len);
+		   curXtermChrSet(xw, row), len);
 	});
 	if_OPT_WIDE_CHARS(screen, {
 	    int off;
@@ -447,7 +447,11 @@ void
 ScrnDisownSelection(XtermWidget xw)
 {
     if (ScrnHaveSelection(&(xw->screen))) {
-	DisownSelection(xw);
+	if (xw->screen.keepSelection) {
+	    UnhiliteSelection(xw);
+	} else {
+	    DisownSelection(xw);
+	}
     }
 }
 
@@ -535,16 +539,14 @@ ScrnWriteText(XtermWidget xw,
 	    char2 = SCRN_BUF_WIDEC(screen, screen->cur_row);
 	    char2 += screen->cur_col;
 	    if (screen->cur_col && starcol1 == HIDDEN_LO && *char2 == HIDDEN_HI
-		&& iswide(char1[-1] | (char2[-1] << 8))) {
+		&& iswide(PACK_PAIR(char1, char2, -1))) {
 		char1[-1] = ERROR_1;
 		char2[-1] = ERROR_2;
 	    }
 	    /* if we are overwriting the right hand half of a
 	       wide character, make the other half vanish */
 	    while (length) {
-		int ch = *str;
-		if (str2)
-		    ch |= *str2 << 8;
+		int ch = PACK_PAIR(str, str2, 0);
 
 		*char1 = *str;
 		char1++;
@@ -580,14 +582,14 @@ ScrnWriteText(XtermWidget xw,
 	    if ((char2 = SCRN_BUF_WIDEC(screen, screen->cur_row)) != 0) {
 		char2 += screen->cur_col;
 		if (screen->cur_col && starcol1 == HIDDEN_LO && *char2 == HIDDEN_HI
-		    && iswide(chars[-1] | (char2[-1] << 8))) {
+		    && iswide(PACK_PAIR(chars, char2, -1))) {
 		    chars[-1] = ERROR_1;
 		    char2[-1] = ERROR_2;
 		}
 		/* if we are overwriting the right hand half of a
 		   wide character, make the other half vanish */
 		if (chars[length] == HIDDEN_LO && char2[length] == HIDDEN_HI &&
-		    iswide(starcol2 | (char2[length - 1] << 8))) {
+		    iswide(PACK_PAIR(chars, char2, length - 1))) {
 		    chars[length] = ERROR_1;
 		    char2[length] = ERROR_2;
 		}
@@ -1033,8 +1035,8 @@ ScrnRefresh(XtermWidget xw,
 		/* adjust to redraw all of a widechar if we just wanted
 		   to draw the right hand half */
 		if (leftcol > 0 &&
-		    (chars[leftcol] | (widec[leftcol] << 8)) == HIDDEN_CHAR &&
-		    iswide(chars[leftcol - 1] | (widec[leftcol - 1] << 8))) {
+		    (PACK_PAIR(chars, widec, leftcol)) == HIDDEN_CHAR &&
+		    iswide(PACK_PAIR(chars, widec, leftcol - 1))) {
 		    leftcol--;
 		    ncols++;
 		    col = leftcol;
@@ -1136,7 +1138,7 @@ ScrnRefresh(XtermWidget xw,
 	flags = attrs[col];
 #if OPT_WIDE_CHARS
 	if (widec)
-	    wideness = iswide(chars[col] | (widec[col] << 8));
+	    wideness = iswide(PACK_PAIR(chars, widec, col));
 	else
 	    wideness = 0;
 #endif
@@ -1173,8 +1175,8 @@ ScrnRefresh(XtermWidget xw,
 #endif
 #if OPT_WIDE_CHARS
 		|| (widec
-		    && ((iswide(chars[col] | (widec[col] << 8))) != wideness)
-		    && !((chars[col] | (widec[col] << 8)) == HIDDEN_CHAR))
+		    && ((iswide(PACK_PAIR(chars, widec, col))) != wideness)
+		    && !((PACK_PAIR(chars, widec, col)) == HIDDEN_CHAR))
 #endif
 #if OPT_DEC_CHRSET
 		|| (cb[col] != cs)
@@ -1209,8 +1211,8 @@ ScrnRefresh(XtermWidget xw,
 			    int my_x = CurCursorX(screen,
 						  ROW2INX(screen, row),
 						  i);
-			    int base = chars[i] | (widec[i] << 8);
-			    int combo = com_lo[i] | (com_hi[i] << 8);
+			    int base = PACK_PAIR(chars, widec, i);
+			    int combo = PACK_PAIR(com_lo, com_hi, i);
 
 			    if (iswide(base))
 				my_x = CurCursorX(screen,
@@ -1252,7 +1254,7 @@ ScrnRefresh(XtermWidget xw,
 		});
 #if OPT_WIDE_CHARS
 		if (widec)
-		    wideness = iswide(chars[col] | (widec[col] << 8));
+		    wideness = iswide(PACK_PAIR(chars, widec, col));
 #endif
 
 		gc = updatedXtermGC(xw, flags, fg_bg, hilite);
@@ -1295,8 +1297,8 @@ ScrnRefresh(XtermWidget xw,
 		    int my_x = CurCursorX(screen,
 					  ROW2INX(screen, row),
 					  i);
-		    int base = chars[i] | (widec[i] << 8);
-		    int combo = com_lo[i] | (com_hi[i] << 8);
+		    int base = PACK_PAIR(chars, widec, i);
+		    int combo = PACK_PAIR(com_lo, com_hi, i);
 
 		    if (iswide(base))
 			my_x = CurCursorX(screen,
@@ -1382,6 +1384,10 @@ ClearBufRows(XtermWidget xw,
 
     TRACE(("ClearBufRows %d..%d\n", first, last));
     for (row = first; row <= last; row++) {
+	if_OPT_DEC_CHRSET({
+	    /* clearing the whole row resets the doublesize characters */
+	    SCRN_ROW_CSET(screen, row) = CSET_SWL;
+	});
 	ScrnClrWrapped(screen, row);
 	ClearCells(xw, 0, len, row, 0);
     }
@@ -1607,6 +1613,44 @@ non_blank_line(TScreen * screen,
 }
 
 /*
+ * Rectangle parameters start from one.
+ */
+#define minRectRow(screen) (getMinRow(screen) + 1)
+#define minRectCol(screen) (getMinCol(screen) + 1)
+#define maxRectRow(screen) (getMaxRow(screen) + 1)
+#define maxRectCol(screen) (getMaxCol(screen) + 1)
+
+static int
+limitedParseRow(XtermWidget xw, TScreen * screen, int row)
+{
+    int min_row = minRectRow(screen);
+    int max_row = maxRectRow(screen);
+
+    if (row < min_row)
+	row = min_row;
+    else if (row > max_row)
+	row = max_row;
+    return row;
+}
+
+static int
+limitedParseCol(XtermWidget xw, TScreen * screen, int col)
+{
+    int min_col = minRectCol(screen);
+    int max_col = maxRectCol(screen);
+
+    (void) xw;
+    if (col < min_col)
+	col = min_col;
+    else if (col > max_col)
+	col = max_col;
+    return col;
+}
+
+#define LimitedParse(num, func, dft) \
+	func(xw, screen, (nparams > num) ? params[num] : dft)
+
+/*
  * Copy the rectangle boundaries into a struct, providing default values as
  * needed.
  */
@@ -1616,10 +1660,10 @@ xtermParseRect(XtermWidget xw, int nparams, int *params, XTermRect * target)
     TScreen *screen = &(xw->screen);
 
     memset(target, 0, sizeof(*target));
-    target->top = (nparams > 0) ? params[0] : getMinRow(screen) + 1;
-    target->left = (nparams > 1) ? params[1] : getMinCol(screen) + 1;
-    target->bottom = (nparams > 2) ? params[2] : getMaxRow(screen) + 1;
-    target->right = (nparams > 3) ? params[3] : getMaxCol(screen) + 1;
+    target->top = LimitedParse(0, limitedParseRow, minRectRow(screen));
+    target->left = LimitedParse(1, limitedParseCol, minRectCol(screen));
+    target->bottom = LimitedParse(2, limitedParseRow, maxRectRow(screen));
+    target->right = LimitedParse(3, limitedParseCol, maxRectCol(screen));
     TRACE(("parsed rectangle %d,%d %d,%d\n",
 	   target->top,
 	   target->left,
@@ -1633,41 +1677,74 @@ validRect(XtermWidget xw, XTermRect * target)
     TScreen *screen = &(xw->screen);
 
     TRACE(("comparing against screensize %dx%d\n",
-	   getMaxRow(screen) + 1,
-	   getMaxCol(screen) + 1));
+	   maxRectRow(screen),
+	   maxRectCol(screen)));
     return (target != 0
-	    && target->top > getMinRow(screen)
-	    && target->left > getMinCol(screen)
+	    && target->top >= minRectRow(screen)
+	    && target->left >= minRectCol(screen)
 	    && target->top <= target->bottom
 	    && target->left <= target->right
-	    && target->top <= getMaxRow(screen) + 1
-	    && target->right <= getMaxCol(screen) + 1);
+	    && target->top <= maxRectRow(screen)
+	    && target->right <= maxRectCol(screen));
 }
 
 /*
- * Fills a rectangle with the given character and video-attributes.
+ * Fills a rectangle with the given 8-bit character and video-attributes.
+ * Colors and double-size attribute are unmodified.
  */
 void
-ScrnFillRectangle(XtermWidget xw, XTermRect * target, int value, unsigned flags)
+ScrnFillRectangle(XtermWidget xw,
+		  XTermRect * target,
+		  int value,
+		  unsigned flags,
+		  Bool keepColors)
 {
     TScreen *screen = &(xw->screen);
 
-    TRACE(("filling rectangle with '%c'\n", value));
+    TRACE(("filling rectangle with '%c' flags %#x\n", value, flags));
     if (validRect(xw, target)) {
 	unsigned left = target->left - 1;
 	unsigned size = target->right - left;
 	Char attrs = flags;
-	int row;
+	int row, col;
 
 	attrs &= ATTRIBUTES;
 	attrs |= CHARDRAWN;
 	for (row = target->bottom - 1; row >= (target->top - 1); row--) {
-	    TRACE(("filling %d [%d..%d]\n", row, left + 1, left + size));
-	    memset(SCRN_BUF_ATTRS(screen, row) + left, attrs, size);
+	    TRACE(("filling %d [%d..%d]\n", row, left, left + size));
+
+	    /*
+	     * Fill attributes, preserving "protected" flag, as well as
+	     * colors if asked.
+	     */
+	    for (col = left; col < target->right; ++col) {
+		Char temp = SCRN_BUF_ATTRS(screen, row)[col];
+		if (!keepColors) {
+		    temp &= ~(FG_COLOR | BG_COLOR);
+		}
+		temp = attrs | (temp & (FG_COLOR | BG_COLOR | PROTECTED));
+		temp |= CHARDRAWN;
+		SCRN_BUF_ATTRS(screen, row)[col] = temp;
+#if OPT_ISO_COLORS
+		if (attrs & (FG_COLOR | BG_COLOR)) {
+		    if_OPT_EXT_COLORS(screen, {
+			SCRN_BUF_FGRND(screen, row)[col] = xw->sgr_foreground;
+			SCRN_BUF_BGRND(screen, row)[col] = xw->cur_background;
+		    });
+		    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+			SCRN_BUF_COLOR(screen, row)[col] = xtermColorPair(xw);
+		    });
+		}
+#endif
+	    }
+
 	    memset(SCRN_BUF_CHARS(screen, row) + left, (Char) value, size);
 	    if_OPT_WIDE_CHARS(screen, {
-		bzero(SCRN_BUF_WIDEC(screen, row) + left, size);
-	    });
+		int off;
+		for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
+		    memset(SCREEN_PTR(screen, row, off) + left, 0, size);
+		}
+	    })
 	}
 	ScrnUpdate(xw,
 		   target->top - 1,
@@ -1705,19 +1782,12 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 	if (validRect(xw, &target)) {
 	    unsigned high = (source->bottom - source->top) + 1;
 	    unsigned wide = (source->right - source->left) + 1;
-	    unsigned size = (high * wide);
-	    int row, col, n;
+	    unsigned size = (high * wide * MAX_PTRS);
+	    int row, col, n, j;
 
-	    Char *attrs = TypeMallocN(Char, size);
-	    Char *chars = TypeMallocN(Char, size);
+	    Char *cells = TypeMallocN(Char, size);
 
-#if OPT_WIDE_CHARS
-	    Char *widec = TypeMallocN(Char, size);
-	    if (widec == 0)
-		return;
-#endif
-	    if (attrs == 0
-		|| chars == 0)
+	    if (cells == 0)
 		return;
 
 	    TRACE(("OK - make copy %dx%d\n", high, wide));
@@ -1726,12 +1796,10 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 
 	    for (row = source->top - 1; row < source->bottom; ++row) {
 		for (col = source->left - 1; col < source->right; ++col) {
-		    n = ((1 + row - source->top) * wide) + (1 + col - source->left);
-		    attrs[n] = SCRN_BUF_ATTRS(screen, row)[col] | CHARDRAWN;
-		    chars[n] = SCRN_BUF_CHARS(screen, row)[col];
-		    if_OPT_WIDE_CHARS(screen, {
-			widec[n] = SCRN_BUF_WIDEC(screen, row)[col];
-		    })
+		    n = (((1 + row - source->top) * wide)
+			 + (1 + col - source->left)) * MAX_PTRS;
+		    for (j = OFF_ATTRS; j < MAX_PTRS; ++j)
+			cells[n + j] = SCREEN_PTR(screen, row, j)[col];
 		}
 	    }
 	    for (row = target.top - 1; row < target.bottom; ++row) {
@@ -1740,20 +1808,15 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 			&& row <= getMaxRow(screen)
 			&& col >= getMinCol(screen)
 			&& col <= getMaxCol(screen)) {
-			n = ((1 + row - target.top) * wide) + (1 + col - target.left);
-			SCRN_BUF_ATTRS(screen, row)[col] = attrs[n];
-			SCRN_BUF_CHARS(screen, row)[col] = chars[n];
-			if_OPT_WIDE_CHARS(screen, {
-			    SCRN_BUF_WIDEC(screen, row)[col] = widec[n];
-			})
+			n = (((1 + row - target.top) * wide)
+			     + (1 + col - target.left)) * MAX_PTRS;
+			for (j = OFF_ATTRS; j < MAX_PTRS; ++j)
+			    SCREEN_PTR(screen, row, j)[col] = cells[n + j];
+			SCRN_BUF_ATTRS(screen, row)[col] |= CHARDRAWN;
 		    }
 		}
 	    }
-	    free(attrs);
-	    free(chars);
-#if OPT_WIDE_CHARS
-	    free(widec);
-#endif
+	    free(cells);
 
 	    ScrnUpdate(xw,
 		       (target.top - 1),
@@ -1766,7 +1829,13 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 }
 
 /*
- * Modifies the video-attributes only - so selection is unaffected.
+ * Modifies the video-attributes only - so selection (not a video attribute) is
+ * unaffected.  Colors and double-size flags are unaffected as well.
+ *
+ * FIXME: our representation for "invisible" does not work with this operation,
+ * since the attribute byte is fully-allocated for other flags.  The logic
+ * is shown for INVISIBLE because it's harmless, and useful in case the
+ * CHARDRAWN or PROTECTED flags are reassigned.
  */
 void
 ScrnMarkRectangle(XtermWidget xw,
@@ -1798,7 +1867,7 @@ ScrnMarkRectangle(XtermWidget xw,
 			 ? (target->right - 1)
 			 : getMaxCol(screen));
 
-	    TRACE(("marking %d [%d..%d]\n", row, left + 1, right + 1));
+	    TRACE(("marking %d [%d..%d]\n", row, left, right));
 	    for (col = left; col <= right; ++col) {
 		unsigned flags = SCRN_BUF_ATTRS(screen, row)[col];
 
@@ -1821,6 +1890,9 @@ ScrnMarkRectangle(XtermWidget xw,
 			case 7:
 			    flags ^= INVERSE;
 			    break;
+			case 8:
+			    flags ^= INVISIBLE;
+			    break;
 			}
 		    } else {
 			switch (params[n]) {
@@ -1839,6 +1911,9 @@ ScrnMarkRectangle(XtermWidget xw,
 			case 7:
 			    flags |= INVERSE;
 			    break;
+			case 8:
+			    flags |= INVISIBLE;
+			    break;
 			case 22:
 			    flags &= ~BOLD;
 			    break;
@@ -1850,6 +1925,9 @@ ScrnMarkRectangle(XtermWidget xw,
 			    break;
 			case 27:
 			    flags &= ~INVERSE;
+			    break;
+			case 28:
+			    flags &= ~INVISIBLE;
 			    break;
 			}
 		    }
@@ -1875,7 +1953,7 @@ ScrnMarkRectangle(XtermWidget xw,
 
 /*
  * Resets characters to space, except where prohibited by DECSCA.  Video
- * attributes are untouched.
+ * attributes (including color) are untouched.
  */
 void
 ScrnWipeRectangle(XtermWidget xw,
@@ -1894,15 +1972,17 @@ ScrnWipeRectangle(XtermWidget xw,
 	    int left = (target->left - 1);
 	    int right = (target->right - 1);
 
-	    TRACE(("wiping %d [%d..%d]\n", row, left + 1, right + 1));
+	    TRACE(("wiping %d [%d..%d]\n", row, left, right));
 	    for (col = left; col <= right; ++col) {
 		if (!((screen->protected_mode == DEC_PROTECT)
 		      && (SCRN_BUF_ATTRS(screen, row)[col] & PROTECTED))) {
-		    /* FIXME - use ClearCells */
 		    SCRN_BUF_ATTRS(screen, row)[col] |= CHARDRAWN;
 		    SCRN_BUF_CHARS(screen, row)[col] = ' ';
 		    if_OPT_WIDE_CHARS(screen, {
-			SCRN_BUF_WIDEC(screen, row)[col] = '\0';
+			int off;
+			for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
+			    memset(SCREEN_PTR(screen, row, off) + col, 0, 1);
+			}
 		    })
 		}
 	    }

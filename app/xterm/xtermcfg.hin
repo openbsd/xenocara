@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.166 2007/07/19 21:43:21 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.167 2007/12/31 17:21:48 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.61 2006/06/19 00:36:52 dickey Exp $
@@ -68,6 +68,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_TERMIOS_H		/* AC_CHECK_HEADERS(termios.h) */
 #undef HAVE_TERMIO_C_ISPEED	/* CF_TERMIO_C_ISPEED */
 #undef HAVE_TERM_H		/* AC_CHECK_HEADERS(term.h) */
+#undef HAVE_TIGETSTR		/* AC_CHECK_FUNCS(tigetstr) */
 #undef HAVE_UNISTD_H		/* AC_CHECK_HEADERS(unistd.h) */
 #undef HAVE_UTMP		/* CF_UTMP */
 #undef HAVE_UTMP_UT_HOST	/* CF_UTMP_UT_HOST */

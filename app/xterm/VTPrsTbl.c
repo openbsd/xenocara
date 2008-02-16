@@ -1,9 +1,8 @@
-/* $XTermId: VTPrsTbl.c,v 1.48 2006/07/31 22:14:03 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.49 2008/01/27 17:41:05 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/VTPrsTbl.c,v 3.31 2006/02/13 01:14:58 dickey Exp $ */
 /*
  *
- * Copyright 1999-2005,2006 by Thomas E. Dickey
+ * Copyright 1999-2006,2008 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3141,7 +3140,7 @@ CASE_SET_MOD_FKEYS,
 CASE_SET_MOD_FKEYS0,
 CASE_GROUND_STATE,
 /*	p		q		r		s	*/
-CASE_GROUND_STATE,
+CASE_HIDE_POINTER,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,

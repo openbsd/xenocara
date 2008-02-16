@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.291 2007/07/22 20:34:04 tom Exp $ */
+/* $XTermId: input.c,v 1.296 2007/12/31 21:11:19 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -342,18 +342,52 @@ allowModifierParm(XtermWidget xw, KEY_DATA * kd)
 
 #undef CTRL
 
+/* FIXME - make these used in xtermcap.c */
 #define	UNMOD	1
 #define	SHIFT	1
 #define	ALT	2
 #define	CTRL	4
 #define	META	8
 
-#define MODIFIER_NAME(parm, name) (((parm - UNMOD) & name) ? " "#name : "")
+#define MODIFIER_NAME(parm, name) \
+	(((parm > UNMOD) && ((parm - UNMOD) & name)) ? " "#name : "")
 
-static short
-computeModifierParm(XtermWidget xw, unsigned state)
+int
+xtermParamToState(XtermWidget xw, unsigned param)
 {
-    short modify_parm = UNMOD;
+    int result = 0;
+#if OPT_NUM_LOCK
+    if (param > UNMOD
+	&& ((ShiftMask
+	     | ControlMask
+	     | xw->misc.alt_mods
+	     | xw->misc.meta_mods) & xw->misc.other_mods) == 0) {
+	if ((param - UNMOD) & SHIFT)
+	    result |= ShiftMask;
+	if ((param - UNMOD) & CTRL)
+	    result |= ControlMask;
+	if ((param - UNMOD) & ALT)
+	    result |= xw->misc.alt_mods;
+	if ((param - UNMOD) & META)
+	    result |= xw->misc.meta_mods;
+    }
+#else
+    (void) xw;
+    (void) param;
+#endif
+    TRACE(("xtermParamToState(%d) %s%s%s%s -> %#x\n", param,
+	   MODIFIER_NAME(param, SHIFT),
+	   MODIFIER_NAME(param, ALT),
+	   MODIFIER_NAME(param, CTRL),
+	   MODIFIER_NAME(param, META),
+	   result));
+    return result;
+}
+
+int
+xtermStateToParam(XtermWidget xw, unsigned state)
+{
+    int modify_parm = UNMOD;
 
 #if OPT_NUM_LOCK
     if ((state & xw->misc.other_mods) == 0) {
@@ -378,7 +412,7 @@ computeModifierParm(XtermWidget xw, unsigned state)
     (void) xw;
     (void) state;
 #endif
-    TRACE(("...computeModifierParm %d%s%s%s%s\n", modify_parm,
+    TRACE(("...xtermStateToParam %d%s%s%s%s\n", modify_parm,
 	   MODIFIER_NAME(modify_parm, SHIFT),
 	   MODIFIER_NAME(modify_parm, ALT),
 	   MODIFIER_NAME(modify_parm, CTRL),
@@ -387,7 +421,7 @@ computeModifierParm(XtermWidget xw, unsigned state)
 }
 
 #define computeMaskedModifier(xw, state, mask) \
-	computeModifierParm(xw, Masked(state, mask))
+	xtermStateToParam(xw, Masked(state, mask))
 
 #if OPT_NUM_LOCK
 static unsigned
@@ -572,7 +606,7 @@ ModifyOtherKeys(XtermWidget xw,
 			result = True;
 		    break;
 		case XK_Delete:
-		    result = (computeModifierParm(xw, state) > 1);
+		    result = (xtermStateToParam(xw, state) > 1);
 		    break;
 #ifdef XK_ISO_Left_Tab
 		case XK_ISO_Left_Tab:
@@ -908,7 +942,7 @@ Input(XtermWidget xw,
 #if OPT_MOD_FKEYS
     if (evt_state != 0
 	&& allowModifierParm(xw, &kd)) {
-	modify_parm = computeModifierParm(xw, evt_state);
+	modify_parm = xtermStateToParam(xw, evt_state);
     }
 
     /*
@@ -1013,7 +1047,7 @@ Input(XtermWidget xw,
 	 * that we just used.
 	 */
 	if (modify_parm)
-	    modify_parm = computeModifierParm(xw, evt_state);
+	    modify_parm = xtermStateToParam(xw, evt_state);
 #endif /* OPT_MOD_FKEYS */
     }
 
@@ -1175,7 +1209,7 @@ Input(XtermWidget xw,
 
 	    evt_state = mod_state;
 
-	    modify_parm = computeModifierParm(xw, evt_state);
+	    modify_parm = xtermStateToParam(xw, evt_state);
 
 	    /*
 	     * We want to show a keycode that corresponds to the 8-bit value
@@ -1301,6 +1335,7 @@ Input(XtermWidget xw,
     if (key && !TEK4014_ACTIVE(xw))
 	AdjustAfterInput(xw);
 
+    xtermShowPointer(xw, False);
     return;
 }
 
@@ -1644,7 +1679,7 @@ stripTranslations(const char *s)
     char *dst = 0;
 
     if (s != 0) {
-	dst = malloc(strlen(s) + 1);
+	dst = TypeMallocN(char, strlen(s) + 1);
 
 	if (dst != 0) {
 	    int state = 0;
@@ -1783,8 +1818,9 @@ addTranslation(XtermWidget xw, char *fromString, char *toString)
 		     + 6);
 
     if (!xtermHasTranslation(xw, fromString)) {
-	if ((xw->keyboard.extra_translations
-	     = realloc(xw->keyboard.extra_translations, need)) != 0) {
+	xw->keyboard.extra_translations
+	    = TypeRealloc(char, need, xw->keyboard.extra_translations);
+	if ((xw->keyboard.extra_translations) != 0) {
 	    TRACE(("adding %s: %s\n", fromString, toString));
 	    if (have)
 		strcat(xw->keyboard.extra_translations, " \\n\\");

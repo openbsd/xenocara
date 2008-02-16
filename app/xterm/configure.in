@@ -1,6 +1,4 @@
-dnl $XTermId: configure.in,v 1.236 2007/07/22 18:51:36 tom Exp $
-dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.77 2006/06/19 00:36:51 dickey Exp $
+dnl $XTermId: configure.in,v 1.240 2008/01/05 14:26:52 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -723,10 +721,10 @@ AC_MSG_RESULT($enable_session_mgt)
 test "$enable_session_mgt" = no && AC_DEFINE(OPT_SESSION_MGT,0)
 
 AC_MSG_CHECKING(if you want to use termcap function-keys)
-CF_ARG_ENABLE(tcap-fkeys,
-	[  --enable-tcap-fkeys     compile-in termcap function-keys support],
-	[enable_tcap_fkeys=yes],
-	[enable_tcap_fkeys=no])
+CF_ARG_DISABLE(tcap-fkeys,
+	[  --disable-tcap-fkeys    disable termcap function-keys support],
+	[enable_tcap_fkeys=no],
+	[enable_tcap_fkeys=yes])
 AC_MSG_RESULT($enable_tcap_fkeys)
 test "$enable_tcap_fkeys" = yes && AC_DEFINE(OPT_TCAP_FKEYS,1)
 
@@ -826,10 +824,10 @@ if test "$enable_dec_locator" = yes ; then
 fi
 
 AC_MSG_CHECKING(if you want VT420 rectangle support)
-CF_ARG_ENABLE(rectangles,
-	[  --enable-rectangles     enable VT420 rectangle support],
-	[enable_rectangles=yes],
-	[enable_rectangles=no])
+CF_ARG_DISABLE(rectangles,
+	[  --disable-rectangles    disable VT420 rectangle support],
+	[enable_rectangles=no],
+	[enable_rectangles=yes])
 AC_MSG_RESULT($enable_rectangles)
 if test "$enable_rectangles" = yes ; then
 	AC_DEFINE(OPT_DEC_RECTOPS,1)
@@ -881,6 +879,9 @@ if test "$enable_xmc" = yes ; then
 	EXTRASRCS="$EXTRASRCS testxmc.c"
 	EXTRAOBJS="$EXTRAOBJS testxmc.o"
 fi
+
+dnl FIXME - extra test needed to make tcap-fkeys work on HPUX
+AC_CHECK_FUNCS(tigetstr)
 
 if test -n "$GCC" ; then
 AC_MSG_CHECKING(if you want to turn on gcc warnings)

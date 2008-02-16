@@ -1,4 +1,4 @@
-MANIFEST for xterm-229, version xterm-229
+MANIFEST for xterm-231, version xterm-231
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -8,6 +8,7 @@ MANIFEST                        this file
 AAA_README_VMS.txt              note for VMS port of 'xterm'
 INSTALL                         configure script: options and related install instructions
 Imakefile                       imake template for Makefile
+KOI8RXTerm.ad                   resources for koi8rxterm
 Makefile.in                     configure script template for Makefile
 README                          overview & caveats for 'xterm'
 README.i18n                     i18n readme:
@@ -49,6 +50,8 @@ input.c                         VT100 key-symbol and function-key translation
 install.sh                      configure script: fallback install script
 keysym2ucs.c                    lookup-table for UTF-8 to keysyms
 keysym2ucs.h                    interface of keysym2ucs.c
+koi8rxterm                      KOI-8 wrapper from Debian (originally me)
+koi8rxterm.man                  manpage for koi8rxterm
 link_axp.com                    build-script for VMS port of xterm
 main.c                          main program of 'xterm'
 main.h                          default definitions for 'xterm'
@@ -81,6 +84,7 @@ trace.h                         interface of trace.c
 util.c                          miscellaneous utility functions for 'xterm'
 uxterm                          wrapper script to make unicode-xterm
 uxterm.desktop                  sample desktop file for uxterm
+uxterm.man                      manpage for uxterm, from Debian
 version.h                       version of xterm
 vms.c                           VMS version of xterm's spawn(), etc.
 vms.h                           system headers and definitions for vms.c

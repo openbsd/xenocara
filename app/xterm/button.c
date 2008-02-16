@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.277 2007/07/22 20:37:11 tom Exp $ */
+/* $XTermId: button.c,v 1.283 2008/01/07 22:56:37 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1041,7 +1041,7 @@ struct _SelectionList {
 static unsigned
 DECtoASCII(unsigned ch)
 {
-    if (ch < 32) {
+    if (xtermIsDecGraphic(ch)) {
 	ch = "###########+++++##-##++++|######"[ch];
 	/*    01234567890123456789012345678901 */
     }
@@ -1079,7 +1079,7 @@ UTF8toLatin1(Char * s, unsigned len, unsigned long *result)
 		*q++ = value;
 	    } else {
 		unsigned eqv = ucs2dec(value);
-		if (eqv < 32) {
+		if (xtermIsDecGraphic(eqv)) {
 		    *q++ = DECtoASCII(eqv);
 		} else {
 		    eqv = AsciiEquivs(value);
@@ -1198,9 +1198,9 @@ MapSelections(XtermWidget xw, String * params, Cardinal num_params)
 	    }
 	}
 	if (map) {
-	    String mapTo = (xw->screen.selectToClipboard
-			    ? "CLIPBOARD"
-			    : "PRIMARY");
+	    const char *mapTo = (xw->screen.selectToClipboard
+				 ? "CLIPBOARD"
+				 : "PRIMARY");
 
 	    UnmapSelections(xw);
 	    if ((result = TypeMallocN(String, num_params + 1)) != 0) {
@@ -2466,11 +2466,13 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 		/* some internal points may not be drawn */
 		if (data == 0)
 		    data = ' ';
-#if OPT_WIDE_CHARS
-		next = convertToUTF8(last, data);
-#else
-		*next++ = CharOf(data);
-#endif
+
+		if_WIDE_OR_NARROW(screen, {
+		    next = convertToUTF8(last, data);
+		}
+		, {
+		    *next++ = CharOf(data);
+		});
 
 		if_OPT_WIDE_CHARS(screen, {
 		    int off;
@@ -3152,6 +3154,7 @@ ConvertSelection(Widget w,
 	return False;		/* can this happen? */
 
     if (*target == XA_TARGETS(dpy)) {
+	Atom *allocP;
 	Atom *targetP;
 	Atom *std_targets;
 	XPointer std_return = 0;
@@ -3163,8 +3166,12 @@ ConvertSelection(Widget w,
 					&std_length, format)) {
 	    std_targets = (Atom *) (std_return);
 	    *length = std_length + 6;
+
 	    targetP = (Atom *) XtMalloc(sizeof(Atom) * (*length));
+	    allocP = targetP;
+
 	    *value = (XtPointer) targetP;
+
 	    *targetP++ = XA_STRING;
 	    *targetP++ = XA_TEXT(dpy);
 #ifdef X_HAVE_UTF8_STRING
@@ -3179,6 +3186,9 @@ ConvertSelection(Widget w,
 #endif
 	    *targetP++ = XA_LENGTH(dpy);
 	    *targetP++ = XA_LIST_LENGTH(dpy);
+
+	    *length = std_length + (targetP - allocP);
+
 	    memcpy(targetP, std_targets, sizeof(Atom) * std_length);
 	    XtFree((char *) std_targets);
 	    *type = XA_ATOM;
@@ -3445,6 +3455,21 @@ DisownSelection(XtermWidget xw)
 	ReHiliteText(xw, &first, &last);
     } else {
 	ResetSelectionState(screen);
+    }
+}
+
+void
+UnhiliteSelection(XtermWidget xw)
+{
+    TScreen *screen = &(xw->screen);
+
+    if (ScrnHaveSelection(screen)) {
+	CELL first = screen->startH;
+	CELL last = screen->endH;
+
+	screen->startH = zeroCELL;
+	screen->endH = zeroCELL;
+	ReHiliteText(xw, &first, &last);
     }
 }
 

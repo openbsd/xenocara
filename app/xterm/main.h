@@ -1,9 +1,7 @@
-/* $XTermId: main.h,v 1.35 2007/07/22 17:13:32 tom Exp $ */
-
-/* $XFree86: xc/programs/xterm/main.h,v 3.15 2006/02/13 01:14:59 dickey Exp $ */
+/* $XTermId: main.h,v 1.38 2008/01/27 17:40:31 tom Exp $ */
 
 /*
- * Copyright 2000-2006,2007 by Thomas E. Dickey
+ * Copyright 2000-2007,2008 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -100,7 +98,7 @@
 #endif
 
 #ifndef DEFDELETE_DEL
-#define DEFDELETE_DEL		2
+#define DEFDELETE_DEL		Maybe
 #endif
 
 #ifndef DEF_BACKARO_ERASE
@@ -117,6 +115,10 @@
 
 #ifndef DEF_INITIAL_ERASE
 #define DEF_INITIAL_ERASE	False
+#endif
+
+#ifndef DEF_POINTER_MODE
+#define DEF_POINTER_MODE	pNoMouse
 #endif
 
 #ifndef DEF_PTY_STTY_SIZE

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: minstall.sh,v 1.12 2007/08/12 15:29:02 tom Exp $
+# $XTermId: minstall.sh,v 1.13 2008/01/27 15:45:03 tom Exp $
 #
 # Install manpages, substituting a reasonable section value since XFree86 4.x
 # and derived imakes do not use constants...
@@ -16,6 +16,11 @@ LANG=C;		export LANG
 LANGUAGE=C;	export LANGUAGE
 LC_ALL=C;	export LC_ALL
 LC_CTYPE=C;	export LC_CTYPE
+XTERM_LOCALE=C	export XTERM_LOCALE
+
+# these could interfere with the "man" command.
+unset MANPAGER
+unset PAGER
 
 # get parameters
 MINSTALL="$1"

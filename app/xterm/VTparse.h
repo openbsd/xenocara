@@ -1,8 +1,7 @@
-/* $XTermId: VTparse.h,v 1.42 2006/07/31 22:17:40 tom Exp $ */
+/* $XTermId: VTparse.h,v 1.43 2008/01/27 17:11:37 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/VTparse.h,v 3.24 2006/02/13 01:14:58 dickey Exp $ */
 /*
- * Copyright 2002-2005,2006 by Thomas E. Dickey
+ * Copyright 2002-2006,2008 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -242,5 +241,6 @@ extern Const PARSE_T esc_pct_table[];
 #define CASE_CSI_STAR_STATE 130
 #define CASE_SET_MOD_FKEYS 131
 #define CASE_SET_MOD_FKEYS0 132
+#define CASE_HIDE_POINTER 133
 
 #endif /* included_VTparse_h */

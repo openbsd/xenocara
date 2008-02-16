@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.h,v 1.3 2007/03/18 23:37:48 tom Exp $ */
+/* $XTermId: xtermcap.h,v 1.5 2007/12/06 00:09:44 tom Exp $ */
 
 /************************************************************
 
@@ -67,6 +67,17 @@ authorization.
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define MAX_FKEY 64
+#define MAX_FMOD 16
+
+#define CodeToXkey(code) (XK_Fn(MAX_FKEY) - (int) code)
+
+/*
+ * Store Xkey-data internally as a negative value, past the last values used
+ * for function keys.
+ */
+#define XkeyData(code,mods) (-((mods-1) + (code*MAX_FMOD) + MAX_FKEY))
 
 /* xtermcap.c */
 extern Bool get_termcap(char * /* name */, char * /* buffer */);

@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
  *****************************************************************************
- * Copyright 1996-2006,2007 by Thomas E. Dickey                              *
+ * Copyright 1996-2007,2008 by Thomas E. Dickey                              *
  * All Rights Reserved.                                                      *
  *                                                                           *
  * Permission to use, copy, modify, and distribute this software and its     *
@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.600 2007/08/12 17:32:04 tom Exp $
+  $XTermId: xterm.log.html,v 1.652 2008/01/30 01:02:39 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -30,7 +30,7 @@
 </HEAD>
 <BODY>
 <HR>
-Copyright &copy; 1997-2006,2007 by <A
+Copyright &copy; 1997-2007,2008 by <A
 HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <HR>
 <H1>Contents</H1>
@@ -45,7 +45,10 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
-<LI><A HREF="#xterm_229">Patch #229 - 2008/8/12</A>
+<LI><A HREF="#xterm_232">Patch #232 - 2008/01/30</A>
+<LI><A HREF="#xterm_231">Patch #231 - 2008/01/05</A>
+<LI><A HREF="#xterm_230">Patch #230 - 2007/12/31</A>
+<LI><A HREF="#xterm_229">Patch #229 - 2007/8/12</A>
 <LI><A HREF="#xterm_228">Patch #228 - 2007/7/22</A>
 <LI><A HREF="#xterm_227">Patch #227 - 2007/6/27</A>
 <LI><A HREF="#xterm_226">Patch #226 - 2007/6/17</A>
@@ -277,7 +280,199 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
-<H1><A NAME="xterm_229">Patch #229 - 2008/8/12</A></H1>
+<H1><A NAME="xterm_232">Patch #232 - 2008/01/30</A></H1>
+<ul>
+	<li>corrected logic in a font-cache used for reverse-video (Debian
+	    #404079).
+
+	<li>add control sequence to alter <code>pointerMode</code> at runtime.
+
+	<li>add limit-checks for rectangle operation parameters (report by
+	    Martin Pirker).
+
+	<li>modify <code>minstall.sh</code> to suppress <code>$MANPAGER</code>
+	    and <code>$PAGER</code> environment variables, which may interfere
+	    with redirecting output of <code>man</code> to a shell variable
+	    (report/patch by Zdenek Sekera).
+
+	<li>do not try to hide mouse pointer in the tek4014 window, fixes
+	    broken "-t" option at startup from
+	    <a href="#xterm_230">patch #230</a> changes
+	    (report by Robert K. Nelson).
+
+	<li>correct datatype used when drawing tek4014 data using xterm
+	    compiled for wide-characters, on big-endian machines (reports
+	    by Jeremy Huddleston, Harald Hanche-Olsen, Martin Costabel, Merle
+	    Reinhart).
+
+	<li>modify to cache the font-names along with the bitmap font data,
+	    to improve comparison of fonts.
+
+	<li>modify to allow building with configure options
+	    <code>--disable-ansi-color</code> and
+	    <code>--disable-leaks</code> (Debian #459817, report/patch by Németh Márton).
+
+	<li>modify to allow building with configure options
+	    <code>--enable-wide-chars</code> and
+	    <code>--disable-c1-print</code> (Debian #459816, report/patch by Németh Márton).
+
+	<li>add <code>pointerMode</code> resource to control whether and
+	    when the pointer cursor is hidden as the user types.
+
+	<li>simplify initialization of ttyMode- and related characters using
+	    a table.
+
+	<li>modify initialization-logic for stty values that correspond to
+	    ltchars structure and the BSD TIOCSLTC ioctl (susp, dsusp, rprnt
+	    flush, werase, lnext).  These were reset to constants for both
+	    termios and legacy interfaces immediately after asking the system
+	    for the existing values since X11R6.1, rather than using them to
+	    provide inherited values.  While the legacy interface has some
+	    constraints, e.g., on HPUX, the POSIX or termios interface should
+	    not.  Your shell may reset these anyway
+	    (prompted by patch by Ed Schouten).
+
+	<li>improve logic for hiding/displaying pointer-cursor (report by
+	    Mark Brukhartz).
+
+	<li>add limit-checks to tabs.c, increase maximum column for setting
+	    tab-stops from 320 to 1024 (report by Németh Márton).
+
+	<li>correct length, i.e., number of types of selection targets,
+	    computed by <code>ConvertSelection()</code> when not handling
+	    wide characters for the <code>XA_TARGETS()</code> case.
+	    This leaves an extra Atom on the end of the list which is
+	    not handled by
+	    <a href="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6322854">Java applications</a>.
+	    The problem was introduced in <a href="#xterm_151">patch #151</a>
+	    (report by David Wood).
+</ul>
+
+<H1><A NAME="xterm_231">Patch #231 - 2008/01/05</A></H1>
+<ul>
+	<li>undo change to <code>getXtermCell()</code> from patch #230
+	    using <code>PACK_PAIR</code> macro (Debian #459014, analysis by
+	    Caetano Jimenez Carezzato).
+
+	<li>minor documentation fixes (patch by Slava Semushin)
+
+	<li>add makefile actions to install KOI8RXTerm app-defaults file
+	    (patch by Julien Cristau).
+</ul>
+
+<H1><A NAME="xterm_230">Patch #230 - 2007/12/31</A></H1>
+<ul>
+	<li>add <code>quietGrab</code> resource, which when true, suppresses
+	    cursor repainting when <code>NotifyGrab</code> and
+	    <code>NotifyUngrab</code> event types are received during
+	    change of focus (request by Nicolas George).
+
+	<li>do not treat Unicode BIDI control characters as combining
+	    characters (Debian #457634).
+
+	<li>add <code>koi8rxterm</code>, from Debian.
+
+	<li>add manpage for <code>uxterm</code>, from Debian (Ubuntu #128136,
+	    Debian #438645)
+
+	<li>remove ".xpm" suffixes from Icon filenames in desktop files since
+	    it confuses some lookups following the
+	    <a href="http://standards.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html">Icon Theme Specification</a>
+	    (report by Slava Semushin)
+
+	<li>correct width-calculation used for adjusting proportional fonts,
+	    to work with wide-characters (Debian #441354).
+
+	<li>fixes/improvements for double-size characters:
+	    <ul>
+	    <li>correct old clipping calculation which used total height of
+		glyphs where ascent was needed.
+
+	    <li>if bold font is unavailable, fall back to normal font
+
+	    <li>adjust to "work" with Xft (which does not support double-width
+		single-height characters). 
+
+	    <li>restore reset of doublesize for a line when it is cleared,
+	        broken in <a href="#xterm-228">patch #228</a>.
+	    </ul>
+
+	<li>modify logic for <code>forceBoxChars</code> resource when using
+	    TrueType fonts to be consistent with bitmap fonts
+
+	<li>modify logic for <code>forceBoxChars</code> resource to make the
+	    "Line-Drawing Characters" menu entry use xterm's line-drawing
+	    characters even asked to draw wide line-drawing characters which
+	    are available in the font.
+
+	<li>modify rectangle-support functions to preserve colors when
+	    filling/erasing (request by Enzo Toscano, to match WRQ Reflection
+	    behavior).
+
+	<li>add getopt-parsing to tcapquery.pl, including feature to test the
+	    extended cursor/editing keys.
+
+	<li>make missing double-width glyphs display as double-width
+	    (Debian #456236).
+
+	<li>change <code>tcap-fkeys</code> and <code>rectangles</code>
+	    configure options to enable them by default.
+
+	<li>hide the mouse pointer while user is typing (request by Rodolfo
+	    Borges).
+
+	<li>extend configure options
+	    <code>--enable-tcap-query</code> and
+	    <code>--enable-tcap-fkeys</code> to
+	    send cursor- and editing-keypad keys modified according to the
+	    keyboard (or termcap) selection for shift, alt, control, meta.
+
+	<li>modify <code>kdch1</code> in termcap, e.g., <code>xterm-r6</code>
+	    to match the terminfo file.
+
+	<li>add <code>-hm</code> option to turn <code>highlightColorMode</code>
+	    on or off.
+
+	<li>add <code>highlightColorMode</code> resource to separate the
+	    new (since <a href="#xterm_225">patch #225</a>) highlighting with both text- and
+	    background-colors (prompted by report/example by Thomas Wolff).
+
+	<li>add <em>Keep Selection</em> menu entry to turn the 
+	    <code>keepSelection</code> resource on/off at runtime.
+
+	<li>add <code>keepSelection</code> resource, which when enabled,
+	    tells xterm to retain the X selection even after it stops
+	    highlighting it (patch by Sergey Vlasov).
+
+	<li>extend the <code>CSI&nbsp;&gt;&nbsp;n</code> sequence to allow
+	    disabling all types of modified-keys that the
+	    <code>CSI&nbsp;&gt;&nbsp;m</code> sequence affects.
+
+	<li>move include for <code>&lt;xtermcap.h&gt;</code> in
+	    <code>resize.c</code> to avoid redefinition of <code>termios</code>
+	    structure on OpenSolaris (report by Rahul Gopinathan Nair).
+
+	<li>extend terminfo building blocks for modified editing keys to
+	    include all six keys.
+
+	<li>synchronize terminfo with ncurses (report by Stephane Chazelas):
+	    <ul>
+	    <li>equate <code>xterm-xfree86</code>
+	        and <code>xterm-xf86-v44</code>.
+	    <li>add ncurses extensions OTbs, AX, for termcap conversions.
+	    <li>make old/legacy entries such as
+	        <code>xterm-24</code>, <code>xterm-65</code>
+	        and aliases <code>xterms</code>, <code>vs100</code>
+		inherit from <code>xterm-old</code>.
+	    <li>make <code>xterm-r5</code> and <code>xterm-r6</code> the
+	        same, ignoring historical errors in X Consortium's version.
+	    </ul>
+
+	<li>fix an ifdef in logic for selecting regular
+	    expressions while in a narrow-character locale (Debian #449227).
+</ul>
+
+<H1><A NAME="xterm_229">Patch #229 - 2007/8/12</A></H1>
 <ul>
 	<li>override locale in minstall.sh;
 	    change in <a href="#xterm_226">patch #226</a>

@@ -743,7 +743,7 @@ Optional Features:
   --disable-rightbar      disable right-scrollbar support
   --disable-samename      disable check for redundant name-change
   --disable-session-mgt   disable support for session management
-  --enable-tcap-fkeys     compile-in termcap function-keys support
+  --disable-tcap-fkeys    disable termcap function-keys support
   --enable-tcap-query     compile-in termcap-query support
   --disable-tek4014       disable tek4014 emulation
   --enable-toolbar        compile-in toolbar for pulldown menus
@@ -753,7 +753,7 @@ Optional Features:
   --enable-wide-chars     enable wide-character support
   --enable-dabbrev        enable dynamic-abbreviation support
   --enable-dec-locator    enable DECterm Locator support
-  --enable-rectangles     enable VT420 rectangle support
+  --disable-rectangles    disable VT420 rectangle support
   --disable-ziconbeep     disable -ziconbeep option
 Testing/development Options:
   --enable-trace          test: set to enable debugging traces
@@ -11333,15 +11333,15 @@ echo $ECHO_N "checking if you want to use termcap function-keys... $ECHO_C" >&6
 # Check whether --enable-tcap-fkeys or --disable-tcap-fkeys was given.
 if test "${enable_tcap_fkeys+set}" = set; then
   enableval="$enable_tcap_fkeys"
-  test "$enableval" != yes && enableval=no
-  if test "$enableval" != "no" ; then
-    enable_tcap_fkeys=yes
-  else
+  test "$enableval" != no && enableval=yes
+  if test "$enableval" != "yes" ; then
     enable_tcap_fkeys=no
+  else
+    enable_tcap_fkeys=yes
   fi
 else
-  enableval=no
-  enable_tcap_fkeys=no
+  enableval=yes
+  enable_tcap_fkeys=yes
 
 fi;
 echo "$as_me:11347: result: $enable_tcap_fkeys" >&5
@@ -11707,15 +11707,15 @@ echo $ECHO_N "checking if you want VT420 rectangle support... $ECHO_C" >&6
 # Check whether --enable-rectangles or --disable-rectangles was given.
 if test "${enable_rectangles+set}" = set; then
   enableval="$enable_rectangles"
-  test "$enableval" != yes && enableval=no
-  if test "$enableval" != "no" ; then
-    enable_rectangles=yes
-  else
+  test "$enableval" != no && enableval=yes
+  if test "$enableval" != "yes" ; then
     enable_rectangles=no
+  else
+    enable_rectangles=yes
   fi
 else
-  enableval=no
-  enable_rectangles=no
+  enableval=yes
+  enable_rectangles=yes
 
 fi;
 echo "$as_me:11721: result: $enable_rectangles" >&5
@@ -11871,8 +11871,77 @@ EOF
 	EXTRAOBJS="$EXTRAOBJS testxmc.o"
 fi
 
+for ac_func in tigetstr
+do
+as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
+echo "$as_me:11877: checking for $ac_func" >&5
+echo $ECHO_N "checking for $ac_func... $ECHO_C" >&6
+if eval "test \"\${$as_ac_var+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+#line 11883 "configure"
+#include "confdefs.h"
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char $ac_func (); below.  */
+#include <assert.h>
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char $ac_func ();
+char (*f) ();
+
+int
+main ()
+{
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_$ac_func) || defined (__stub___$ac_func)
+choke me
+#else
+f = $ac_func;
+#endif
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:11914: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:11917: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:11920: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:11923: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  eval "$as_ac_var=yes"
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+eval "$as_ac_var=no"
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+fi
+echo "$as_me:11933: result: `eval echo '${'$as_ac_var'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_var'}'`" >&6
+if test `eval echo '${'$as_ac_var'}'` = yes; then
+  cat >>confdefs.h <<EOF
+#define `echo "HAVE_$ac_func" | $as_tr_cpp` 1
+EOF
+
+fi
+done
+
 if test -n "$GCC" ; then
-echo "$as_me:11875: checking if you want to turn on gcc warnings" >&5
+echo "$as_me:11944: checking if you want to turn on gcc warnings" >&5
 echo $ECHO_N "checking if you want to turn on gcc warnings... $ECHO_C" >&6
 
 # Check whether --enable-warnings or --disable-warnings was given.
@@ -11889,7 +11958,7 @@ else
   with_warnings=no
 
 fi;
-echo "$as_me:11892: result: $with_warnings" >&5
+echo "$as_me:11961: result: $with_warnings" >&5
 echo "${ECHO_T}$with_warnings" >&6
 if test "$with_warnings" = yes
 then
@@ -11912,10 +11981,10 @@ cat > conftest.i <<EOF
 EOF
 if test "$GCC" = yes
 then
-	{ echo "$as_me:11915: checking for $CC __attribute__ directives..." >&5
+	{ echo "$as_me:11984: checking for $CC __attribute__ directives..." >&5
 echo "$as_me: checking for $CC __attribute__ directives..." >&6;}
 cat > conftest.$ac_ext <<EOF
-#line 11918 "configure"
+#line 11987 "configure"
 #include "confdefs.h"
 #include "conftest.h"
 #include "conftest.i"
@@ -11953,12 +12022,12 @@ EOF
 EOF
 			;;
 		esac
-		if { (eval echo "$as_me:11956: \"$ac_compile\"") >&5
+		if { (eval echo "$as_me:12025: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
-  echo "$as_me:11959: \$? = $ac_status" >&5
+  echo "$as_me:12028: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-			test -n "$verbose" && echo "$as_me:11961: result: ... $cf_attribute" >&5
+			test -n "$verbose" && echo "$as_me:12030: result: ... $cf_attribute" >&5
 echo "${ECHO_T}... $cf_attribute" >&6
 			cat conftest.h >>confdefs.h
 		fi
@@ -11971,11 +12040,11 @@ fi
 
 GCC_VERSION=none
 if test "$GCC" = yes ; then
-	echo "$as_me:11974: checking version of $CC" >&5
+	echo "$as_me:12043: checking version of $CC" >&5
 echo $ECHO_N "checking version of $CC... $ECHO_C" >&6
 	GCC_VERSION="`${CC} --version| sed -e '2,$d' -e 's/^.*(GCC) //' -e 's/^[^0-9.]*//' -e 's/[^0-9.].*//'`"
 	test -z "$GCC_VERSION" && GCC_VERSION=unknown
-	echo "$as_me:11978: result: $GCC_VERSION" >&5
+	echo "$as_me:12047: result: $GCC_VERSION" >&5
 echo "${ECHO_T}$GCC_VERSION" >&6
 fi
 
@@ -11984,12 +12053,12 @@ INTEL_COMPILER=no
 if test "$GCC" = yes ; then
 	case $host_os in
 	linux*|gnu*)
-		echo "$as_me:11987: checking if this is really Intel C compiler" >&5
+		echo "$as_me:12056: checking if this is really Intel C compiler" >&5
 echo $ECHO_N "checking if this is really Intel C compiler... $ECHO_C" >&6
 		cf_save_CFLAGS="$CFLAGS"
 		CFLAGS="$CFLAGS -no-gcc"
 		cat >conftest.$ac_ext <<_ACEOF
-#line 11992 "configure"
+#line 12061 "configure"
 #include "confdefs.h"
 
 int
@@ -12006,16 +12075,16 @@ make an error
 }
 _ACEOF
 rm -f conftest.$ac_objext
-if { (eval echo "$as_me:12009: \"$ac_compile\"") >&5
+if { (eval echo "$as_me:12078: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
-  echo "$as_me:12012: \$? = $ac_status" >&5
+  echo "$as_me:12081: \$? = $ac_status" >&5
   (exit $ac_status); } &&
          { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:12015: \"$ac_try\"") >&5
+  { (eval echo "$as_me:12084: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
-  echo "$as_me:12018: \$? = $ac_status" >&5
+  echo "$as_me:12087: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   INTEL_COMPILER=yes
 cf_save_CFLAGS="$cf_save_CFLAGS -we147 -no-gcc"
@@ -12026,14 +12095,14 @@ cat conftest.$ac_ext >&5
 fi
 rm -f conftest.$ac_objext conftest.$ac_ext
 		CFLAGS="$cf_save_CFLAGS"
-		echo "$as_me:12029: result: $INTEL_COMPILER" >&5
+		echo "$as_me:12098: result: $INTEL_COMPILER" >&5
 echo "${ECHO_T}$INTEL_COMPILER" >&6
 		;;
 	esac
 fi
 
 cat > conftest.$ac_ext <<EOF
-#line 12036 "configure"
+#line 12105 "configure"
 int main(int argc, char *argv[]) { return (argv[argc-1] == 0) ; }
 EOF
 
@@ -12051,7 +12120,7 @@ then
 # remark #981: operands are evaluated in unspecified order
 # warning #269: invalid format string conversion
 
-	{ echo "$as_me:12054: checking for $CC warning options..." >&5
+	{ echo "$as_me:12123: checking for $CC warning options..." >&5
 echo "$as_me: checking for $CC warning options..." >&6;}
 	cf_save_CFLAGS="$CFLAGS"
 	EXTRA_CFLAGS="-Wall"
@@ -12068,12 +12137,12 @@ echo "$as_me: checking for $CC warning options..." >&6;}
 		wd981
 	do
 		CFLAGS="$cf_save_CFLAGS $EXTRA_CFLAGS -$cf_opt"
-		if { (eval echo "$as_me:12071: \"$ac_compile\"") >&5
+		if { (eval echo "$as_me:12140: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
-  echo "$as_me:12074: \$? = $ac_status" >&5
+  echo "$as_me:12143: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-			test -n "$verbose" && echo "$as_me:12076: result: ... -$cf_opt" >&5
+			test -n "$verbose" && echo "$as_me:12145: result: ... -$cf_opt" >&5
 echo "${ECHO_T}... -$cf_opt" >&6
 			EXTRA_CFLAGS="$EXTRA_CFLAGS -$cf_opt"
 		fi
@@ -12082,7 +12151,7 @@ echo "${ECHO_T}... -$cf_opt" >&6
 
 elif test "$GCC" = yes
 then
-	{ echo "$as_me:12085: checking for $CC warning options..." >&5
+	{ echo "$as_me:12154: checking for $CC warning options..." >&5
 echo "$as_me: checking for $CC warning options..." >&6;}
 	cf_save_CFLAGS="$CFLAGS"
 	EXTRA_CFLAGS="-W -Wall"
@@ -12102,12 +12171,12 @@ echo "$as_me: checking for $CC warning options..." >&6;}
 		Wundef $cf_warn_CONST Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum
 	do
 		CFLAGS="$cf_save_CFLAGS $EXTRA_CFLAGS -$cf_opt"
-		if { (eval echo "$as_me:12105: \"$ac_compile\"") >&5
+		if { (eval echo "$as_me:12174: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
-  echo "$as_me:12108: \$? = $ac_status" >&5
+  echo "$as_me:12177: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-			test -n "$verbose" && echo "$as_me:12110: result: ... -$cf_opt" >&5
+			test -n "$verbose" && echo "$as_me:12179: result: ... -$cf_opt" >&5
 echo "${ECHO_T}... -$cf_opt" >&6
 			case $cf_opt in #(vi
 			Wcast-qual) #(vi
@@ -12248,7 +12317,7 @@ DEFS=-DHAVE_CONFIG_H
 : ${CONFIG_STATUS=./config.status}
 ac_clean_files_save=$ac_clean_files
 ac_clean_files="$ac_clean_files $CONFIG_STATUS"
-{ echo "$as_me:12251: creating $CONFIG_STATUS" >&5
+{ echo "$as_me:12320: creating $CONFIG_STATUS" >&5
 echo "$as_me: creating $CONFIG_STATUS" >&6;}
 cat >$CONFIG_STATUS <<_ACEOF
 #! $SHELL
@@ -12421,7 +12490,7 @@ cat >>$CONFIG_STATUS <<\EOF
     echo "$ac_cs_version"; exit 0 ;;
   --he | --h)
     # Conflict between --help and --header
-    { { echo "$as_me:12424: error: ambiguous option: $1
+    { { echo "$as_me:12493: error: ambiguous option: $1
 Try \`$0 --help' for more information." >&5
 echo "$as_me: error: ambiguous option: $1
 Try \`$0 --help' for more information." >&2;}
@@ -12440,7 +12509,7 @@ Try \`$0 --help' for more information." >&2;}
     ac_need_defaults=false;;
 
   # This is an error.
-  -*) { { echo "$as_me:12443: error: unrecognized option: $1
+  -*) { { echo "$as_me:12512: error: unrecognized option: $1
 Try \`$0 --help' for more information." >&5
 echo "$as_me: error: unrecognized option: $1
 Try \`$0 --help' for more information." >&2;}
@@ -12477,7 +12546,7 @@ do
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "xtermcfg.h" ) CONFIG_HEADERS="$CONFIG_HEADERS xtermcfg.h:xtermcfg.hin" ;;
-  *) { { echo "$as_me:12480: error: invalid argument: $ac_config_target" >&5
+  *) { { echo "$as_me:12549: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
    { (exit 1); exit 1; }; };;
   esac
@@ -12733,7 +12802,7 @@ done; }
   esac
 
   if test x"$ac_file" != x-; then
-    { echo "$as_me:12736: creating $ac_file" >&5
+    { echo "$as_me:12805: creating $ac_file" >&5
 echo "$as_me: creating $ac_file" >&6;}
     rm -f "$ac_file"
   fi
@@ -12751,7 +12820,7 @@ echo "$as_me: creating $ac_file" >&6;}
       -) echo $tmp/stdin ;;
       [\\/$]*)
          # Absolute (can't be DOS-style, as IFS=:)
-         test -f "$f" || { { echo "$as_me:12754: error: cannot find input file: $f" >&5
+         test -f "$f" || { { echo "$as_me:12823: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          echo $f;;
@@ -12764,7 +12833,7 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
            echo $srcdir/$f
          else
            # /dev/null tree
-           { { echo "$as_me:12767: error: cannot find input file: $f" >&5
+           { { echo "$as_me:12836: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          fi;;
@@ -12830,7 +12899,7 @@ for ac_file in : $CONFIG_HEADERS; do test "x$ac_file" = x: && continue
   * )   ac_file_in=$ac_file.in ;;
   esac
 
-  test x"$ac_file" != x- && { echo "$as_me:12833: creating $ac_file" >&5
+  test x"$ac_file" != x- && { echo "$as_me:12902: creating $ac_file" >&5
 echo "$as_me: creating $ac_file" >&6;}
 
   # First look for the input files in the build tree, otherwise in the
@@ -12841,7 +12910,7 @@ echo "$as_me: creating $ac_file" >&6;}
       -) echo $tmp/stdin ;;
       [\\/$]*)
          # Absolute (can't be DOS-style, as IFS=:)
-         test -f "$f" || { { echo "$as_me:12844: error: cannot find input file: $f" >&5
+         test -f "$f" || { { echo "$as_me:12913: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          echo $f;;
@@ -12854,7 +12923,7 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
            echo $srcdir/$f
          else
            # /dev/null tree
-           { { echo "$as_me:12857: error: cannot find input file: $f" >&5
+           { { echo "$as_me:12926: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          fi;;
@@ -12972,7 +13041,7 @@ cat >>$CONFIG_STATUS <<\EOF
   rm -f $tmp/in
   if test x"$ac_file" != x-; then
     if cmp -s $ac_file $tmp/config.h 2>/dev/null; then
-      { echo "$as_me:12975: $ac_file is unchanged" >&5
+      { echo "$as_me:13044: $ac_file is unchanged" >&5
 echo "$as_me: $ac_file is unchanged" >&6;}
     else
       ac_dir=`$as_expr X"$ac_file" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \

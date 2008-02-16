@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.109 2007/03/17 00:00:37 tom Exp $ */
+/* $XTermId: menu.h,v 1.111 2007/11/26 18:09:53 tom Exp $ */
 
 /*
 
@@ -49,7 +49,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.h,v 3.41 2006/03/13 01:27:59 dickey Exp $ */
 
 #ifndef included_menu_h
 #define included_menu_h
@@ -110,6 +109,7 @@ extern void HandleScrollbar        PROTO_XT_ACTIONS_ARGS;
 extern void HandleSecure           PROTO_XT_ACTIONS_ARGS;
 extern void HandleSendSignal       PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetPopOnBell     PROTO_XT_ACTIONS_ARGS;
+extern void HandleKeepSelection    PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetSelect        PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetTekText       PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetTerminalType  PROTO_XT_ACTIONS_ARGS;
@@ -206,6 +206,7 @@ typedef enum {
     vtMenu_scrollkey,
     vtMenu_scrollttyoutput,
     vtMenu_allow132,
+    vtMenu_keepSelection,
     vtMenu_selectToClipboard,
     vtMenu_visualbell,
     vtMenu_bellIsUrgent,
@@ -375,6 +376,7 @@ extern void update_autolinefeed(void);
 extern void update_appcursor(void);
 extern void update_appkeypad(void);
 extern void update_scrollkey(void);
+extern void update_keepSelection(void);
 extern void update_selectToClipboard(void);
 extern void update_scrollttyoutput(void);
 extern void update_allow132(void);

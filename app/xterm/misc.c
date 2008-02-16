@@ -1,8 +1,8 @@
-/* $XTermId: misc.c,v 1.370 2007/07/22 20:34:04 tom Exp $ */
+/* $XTermId: misc.c,v 1.382 2008/01/27 15:37:18 tom Exp $ */
 
 /*
  *
- * Copyright 1999-2006,2007 by Thomas E. Dickey
+ * Copyright 1999-2007,2008 by Thomas E. Dickey
  *
  *                        All Rights Reserved
  *
@@ -63,6 +63,7 @@
 #include <pwd.h>
 #include <sys/wait.h>
 
+#include <X11/keysym.h>
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
 #include <X11/Xlocale.h>
@@ -108,14 +109,16 @@
 #if OPT_TEK4014
 #define OUR_EVENT(event,Type) \
 		(event.type == Type && \
-		  (event.xcrossing.window == XtWindow(XtParent(term)) || \
+		  (event.xcrossing.window == XtWindow(XtParent(xw)) || \
 		    (tekWidget && \
 		     event.xcrossing.window == XtWindow(XtParent(tekWidget)))))
 #else
 #define OUR_EVENT(event,Type) \
 		(event.type == Type && \
-		   (event.xcrossing.window == XtWindow(XtParent(term))))
+		   (event.xcrossing.window == XtWindow(XtParent(xw))))
 #endif
+
+static Cursor make_hidden_cursor(XtermWidget);
 
 #if OPT_EXEC_XTERM
 /* Like readlink(2), but returns a malloc()ed buffer, or NULL on
@@ -128,7 +131,7 @@ Readlink(const char *filename)
     int n;
 
     for (;;) {
-	buf = realloc(buf, size);
+	buf = TypeRealloc(char, size, buf);
 	memset(buf, 0, size);
 
 	n = readlink(filename, buf, size);
@@ -277,6 +280,82 @@ do_xevents(void)
 }
 
 void
+xtermDisplayCursor(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (screen->Vshow) {
+	if (screen->hide_pointer) {
+	    TRACE(("Display hidden_cursor\n"));
+	    XDefineCursor(screen->display, VWindow(screen), screen->hidden_cursor);
+	} else {
+	    TRACE(("Display pointer_cursor\n"));
+	    recolor_cursor(screen,
+			   screen->pointer_cursor,
+			   T_COLOR(screen, MOUSE_FG),
+			   T_COLOR(screen, MOUSE_BG));
+	    XDefineCursor(screen->display, VWindow(screen), screen->pointer_cursor);
+	}
+    }
+}
+
+void
+xtermShowPointer(XtermWidget xw, Bool enable)
+{
+    static int tried = -1;
+    TScreen *screen = TScreenOf(xw);
+
+#if OPT_TEK4014
+    if (TEK4014_SHOWN(xw))
+	enable = True;
+#endif
+
+    /*
+     * Whether we actually hide the pointer depends on the pointer-mode and
+     * the mouse-mode:
+     */
+    if (!enable) {
+	switch (screen->pointer_mode) {
+	case pNever:
+	    enable = True;
+	    break;
+	case pNoMouse:
+	    if (screen->send_mouse_pos != MOUSE_OFF)
+		enable = True;
+	    break;
+	case pAlways:
+	    break;
+	}
+    }
+
+    if (enable) {
+	if (screen->hide_pointer) {
+	    screen->hide_pointer = False;
+	    xtermDisplayCursor(xw);
+	    switch (screen->send_mouse_pos) {
+	    case ANY_EVENT_MOUSE:
+		break;
+	    default:
+		MotionOff(screen, xw);
+		break;
+	    }
+	}
+    } else if (!(screen->hide_pointer) && (tried <= 0)) {
+	if (screen->hidden_cursor == 0) {
+	    screen->hidden_cursor = make_hidden_cursor(xw);
+	}
+	if (screen->hidden_cursor == 0) {
+	    tried = 1;
+	} else {
+	    tried = 0;
+	    screen->hide_pointer = True;
+	    xtermDisplayCursor(xw);
+	    MotionOn(screen, xw);
+	}
+    }
+}
+
+void
 xevents(void)
 {
     XtermWidget xw = term;
@@ -348,9 +427,64 @@ xevents(void)
 	    ((event.xany.type != KeyPress) &&
 	     (event.xany.type != KeyRelease) &&
 	     (event.xany.type != ButtonPress) &&
-	     (event.xany.type != ButtonRelease)))
+	     (event.xany.type != ButtonRelease))) {
+
+	    /*
+	     * If the event is interesting (and not a keyboard event), turn the
+	     * mouse pointer back on.
+	     */
+	    if (screen->hide_pointer) {
+		switch (event.xany.type) {
+		case KeyPress:
+		case KeyRelease:
+		case ButtonPress:
+		case ButtonRelease:
+		    /* also these... */
+		case Expose:
+		case NoExpose:
+		case PropertyNotify:
+		    break;
+		default:
+		    xtermShowPointer(xw, True);
+		    break;
+		}
+	    }
+
 	    XtDispatchEvent(&event);
+	}
     } while ((input_mask = XtAppPending(app_con)) & XtIMXEvent);
+}
+
+static Cursor
+make_hidden_cursor(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    Cursor c;
+    Display *dpy = screen->display;
+    XFontStruct *fn;
+
+    static XColor dummy;
+
+    /*
+     * Prefer nil2 (which is normally available) to "fixed" (which is supposed
+     * to be "always" available), since it's a smaller glyph in case the
+     * server insists on drawing _somethng_.
+     */
+    TRACE(("Ask for nil2 font\n"));
+    if ((fn = XLoadQueryFont(dpy, "nil2")) == 0) {
+	TRACE(("...Ask for fixed font\n"));
+	fn = XLoadQueryFont(dpy, "fixed");
+    }
+
+    if (fn != 0) {
+	/* a space character seems to work as a cursor (dots are not needed) */
+	c = XCreateGlyphCursor(dpy, fn->fid, fn->fid, 'X', ' ', &dummy, &dummy);
+	XFreeFont(dpy, fn);
+    } else {
+	c = 0;
+    }
+    TRACE(("XCreateGlyphCursor ->%#lx\n", c));
+    return (c);
 }
 
 Cursor
@@ -453,7 +587,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
     pid_t pid;
 
     /*
-     * Try to find the actual program which is running in the child process. 
+     * Try to find the actual program which is running in the child process.
      * This works for Linux.  If we cannot find the program, fall back to the
      * xterm program (which is usually adequate).  Give up if we are given only
      * a relative path to xterm, since that would not always match $PATH.
@@ -596,7 +730,10 @@ HandleFocusChange(Widget w GCC_UNUSED,
 	   event->mode,
 	   event->detail));
 
-    if (event->type == FocusIn) {
+    if (screen->quiet_grab
+	&& (event->mode == NotifyGrab || event->mode == NotifyUngrab)) {
+	;
+    } else if (event->type == FocusIn) {
 	setXUrgency(screen, False);
 
 	/*
@@ -1106,6 +1243,8 @@ Redraw(void)
     TScreen *screen = TScreenOf(term);
     XExposeEvent event;
 
+    TRACE(("Redraw\n"));
+
     event.type = Expose;
     event.display = screen->display;
     event.x = 0;
@@ -1604,7 +1743,7 @@ find_closest_color(Display * dpy, Colormap cmap, XColor * def)
 		    for (i = 0; i < cmap_size; i++) {
 			if (!tried[bestInx]) {
 			    /*
-			     * Look for the best match based on luminance. 
+			     * Look for the best match based on luminance.
 			     * Measure this by the least-squares difference of
 			     * the weighted R/G/B components from the color map
 			     * versus the requested color.  Use the Y (luma)
@@ -2718,6 +2857,14 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 			unparseputn(xw, NUM_ANSI_COLORS);
 		    } else
 #endif
+#if OPT_TCAP_FKEYS
+			/*
+			 * First ensure that we handle the extended cursor- and
+			 * editing-keypad keys.
+			 */
+			if ((code <= XK_Fn(MAX_FKEY))
+			    || xtermcapString(xw, CodeToXkey(code), 0) == 0)
+#endif
 		    {
 			XKeyEvent event;
 			event.state = state;
@@ -2772,8 +2919,10 @@ ChangeGroup(String attribute, char *value)
 #if OPT_WIDE_CHARS
     static Char *converted;	/* NO_LEAKS */
 #endif
+    static char empty[1];
+
     Arg args[1];
-    char *original = (value != 0) ? value : "";
+    char *original = (value != 0) ? value : empty;
     char *name = original;
     TScreen *screen = TScreenOf(term);
     Widget w = CURRENT_EMU();
@@ -2854,9 +3003,9 @@ ChangeGroup(String attribute, char *value)
 	Display *dpy = XtDisplay(term);
 	Atom my_atom;
 
-	char *propname = (!strcmp(attribute, XtNtitle)
-			  ? "_NET_WM_NAME"
-			  : "_NET_WM_ICON_NAME");
+	const char *propname = (!strcmp(attribute, XtNtitle)
+				? "_NET_WM_NAME"
+				: "_NET_WM_ICON_NAME");
 	if ((my_atom = XInternAtom(dpy, propname, False)) != None) {
 	    if (screen->utf8_title) {	/* FIXME - redundant? */
 		TRACE(("...updating %s\n", propname));

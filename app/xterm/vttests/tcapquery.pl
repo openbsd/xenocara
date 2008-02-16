@@ -1,13 +1,36 @@
 #!/usr/bin/perl -w
-# $XTermId: tcapquery.pl,v 1.10 2006/07/20 00:37:00 tom Exp $
-# $XFree86: xc/programs/xterm/vttests/tcapquery.pl,v 1.3 2006/03/13 01:28:02 dickey Exp $
+# $XTermId: tcapquery.pl,v 1.12 2007/12/16 14:02:35 tom Exp $
 #
 # -- Thomas Dickey (2004/3/3)
 # Test the tcap-query option of xterm.
 
 use strict;
 
+use Getopt::Std;
 use IO::Handle;
+
+our ($opt_a, $opt_b, $opt_c, $opt_e, $opt_f, $opt_i, $opt_k, $opt_m, $opt_x);
+&getopts('abcefikmx:') || die("Usage: $0 [options]\n
+Options:\n
+  -a     (same as -c -e -f -k -m)
+  -b     use both terminfo and termcap (default is termcap)
+  -c     cursor-keys
+  -e     editing keypad-keys
+  -f     function-keys
+  -i     use terminfo rather than termcap names
+  -k     numeric keypad-keys
+  -m     miscellaneous (none of -c, -e, -f, -k)
+  -x KEY extended cursor/editing key (terminfo only)
+");
+
+if ( not ( defined($opt_c)
+	or defined($opt_e)
+	or defined($opt_f)
+	or defined($opt_k)
+	or defined($opt_m)
+	or defined($opt_x) ) ) {
+	$opt_a=1;
+}
 
 sub get_reply($) {
 	open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
@@ -19,6 +42,9 @@ sub get_reply($) {
 	my $reply=<TTY>;
 	close TTY;
 	system "stty $old";
+	if ( defined $reply ) {
+		die("^C received\n") if ( "$reply" eq "\003" );
+	}
 	return $reply;
 }
 
@@ -38,10 +64,16 @@ sub query_tcap($$) {
 	my $tinfo = $_[1];
 	my $param1 = hexified($tcap);
 	my $param2 = hexified($tinfo);
+	my $reply;
 
 	# uncomment one of the following lines
-	my $reply=get_reply("\x1bP+q" . $param1 . ";" . $param2 . "\x1b\\");
-	#my $reply=get_reply("\x1bP+q" . $param2 . "\x1b\\");
+	if ( defined($opt_b) ) {
+		$reply=get_reply("\x1bP+q" . $param1 . ";" . $param2 . "\x1b\\");
+	} elsif ( defined($opt_i) ) {
+		$reply=get_reply("\x1bP+q" . $param2 . "\x1b\\");
+	} else {
+		$reply=get_reply("\x1bP+q" . $param1 . "\x1b\\");
+	}
 
 	return unless defined $reply;
 	if ( $reply =~ /\x1bP1\+r[[:xdigit:]]+=[[:xdigit:]]*.*/ ) {
@@ -82,28 +114,52 @@ sub query_tcap($$) {
 	}
 }
 
-# See xtermcapKeycode()
-query_tcap(	"#2",	"kHOM");
-query_tcap(	"*7",	"kEND");
-query_tcap(	"#4",	"kLFT");
-query_tcap(	"%c",	"kNXT");
-query_tcap(	"%e",	"kPRV");
-query_tcap(	"%i",	"kRIT");
+sub query_extended($) {
+	my $name = $_[0];
+	my $n;
 
-query_tcap(	"kh",	"khome");
-query_tcap(	"\@7",	"kend");
+	$name = "k" . $name if ( $name !~ /^k/ );
+
+	for ( $n = 2; $n <= 7; ++$n) {
+		my $test = $name;
+		$test = $test . $n if ( $n > 2 );
+		query_tcap( $name, $test );
+	}
+}
+
+# See xtermcapKeycode()
+if ( defined($opt_a) || defined($opt_c) ) {
 query_tcap(	"kl",	"kcub1");
 query_tcap(	"kd",	"kcud1");
 query_tcap(	"ku",	"kcuu1");
 query_tcap(	"kr",	"kcuf1");
 
-query_tcap(	"%1",	"khlp");
-query_tcap(	"#1",	"kHLP");
+query_tcap(	"#4",	"kLFT");
+query_tcap(	"%c",	"kNXT");
+query_tcap(	"%e",	"kPRV");
+query_tcap(	"%i",	"kRIT");
+
+}
+
+if ( defined($opt_a) || defined($opt_e) ) {
+query_tcap(	"kD",	"kdch1");
+query_tcap(	"kI",	"kich1");
+
+query_tcap(	"kh",	"khome");
+query_tcap(	"\@7",	"kend");
+query_tcap(	"#2",	"kHOM");
+query_tcap(	"*7",	"kEND");
+
 query_tcap(	"*6",	"kslt");
 query_tcap(	"#6",	"kSLT");
 query_tcap(	"\@0",	"kfnd");
 query_tcap(	"*0",	"kFND");
 
+query_tcap(	"kN",	"knp");
+query_tcap(	"kP",	"kpp");
+}
+
+if ( defined($opt_a) || defined($opt_f) ) {
 query_tcap(	"k1",	"kf1");
 query_tcap(	"k2",	"kf2");
 query_tcap(	"k3",	"kf3");
@@ -167,19 +223,25 @@ query_tcap(	"Fo",	"kf60");
 query_tcap(	"Fp",	"kf61");
 query_tcap(	"Fq",	"kf62");
 query_tcap(	"Fr",	"kf63");
+}
 
+if ( defined($opt_a) || defined($opt_k) ) {
 query_tcap(	"K1",	"ka1");
 query_tcap(	"K4",	"kc1");
+}
 
+if ( defined($opt_a) || defined($opt_m) ) {
 query_tcap(	"kB",	"kcbt");
 query_tcap(	"kC",	"kclr");
 
-query_tcap(	"kD",	"kdch1");
-query_tcap(	"kI",	"kich1");
-
-query_tcap(	"kN",	"knp");
-query_tcap(	"kP",	"kpp");
-
 query_tcap(	"kb",	"kbs");
 
+query_tcap(	"%1",	"khlp");
+query_tcap(	"#1",	"kHLP");
+
 query_tcap(	"Co",	"colors");
+}
+
+if ( defined ($opt_x) ) {
+	query_extended($opt_x);
+}

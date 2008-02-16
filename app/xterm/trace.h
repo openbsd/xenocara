@@ -1,12 +1,8 @@
-/* $XTermId: trace.h,v 1.40 2006/08/27 17:00:36 tom Exp $ */
-
-/*
- * $XFree86: xc/programs/xterm/trace.h,v 3.17 2005/09/18 23:48:13 dickey Exp $
- */
+/* $XTermId: trace.h,v 1.42 2007/12/31 20:58:23 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2005,2006 by Thomas E. Dickey
+Copyright 1997-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -39,7 +35,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #if OPT_TRACE
 
-extern	void	Trace ( char *, ... )
+extern	void	Trace ( const char *, ... )
 #ifdef GCC_PRINTF
 	__attribute__ ((format(printf,1,2)))
 #endif
@@ -50,6 +46,7 @@ extern	void	Trace ( char *, ... )
 #define TRACE2(p) Trace p
 #endif
 
+extern  const char * visibleChrsetName(int /* chrset */);
 extern	char *	visibleChars (PAIRED_CHARS(Char * /* buf */, Char * /* buf2 */), unsigned /* len */);
 extern	char *	visibleIChar (IChar *, unsigned);
 extern	const char * visibleEventType (int);

@@ -1,4 +1,4 @@
-/* $XTermId: charclass.c,v 1.18 2007/07/15 16:18:41 tom Exp $ */
+/* $XTermId: charclass.c,v 1.20 2008/01/31 01:07:23 tom Exp $ */
 
 /*
  * Compact and efficient reimplementation of the
@@ -23,7 +23,6 @@
  * can be accessed via binary search, but merging in new intervals is
  * significantly more hassle and not worth the effort here.
  */
-/* $XFree86: xc/programs/xterm/charclass.c,v 1.7 2006/02/13 01:14:58 dickey Exp $ */
 
 #include <xterm.h>
 #include <charclass.h>
@@ -66,11 +65,11 @@ SetCharacterClassRange(int low, int high, int value)
     return 0;
 }
 
-enum {
+typedef enum {
     IDENT = -1,
     ALNUM = 48,
     CNTRL = 1,
-    BLANK = 32,
+    BLANK = 32
 } Classes;
 
 void

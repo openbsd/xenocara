@@ -1,10 +1,10 @@
 #! /usr/bin/perl -w
 # Author: Thomas E. Dickey
-# $XTermId: gen-pc-fkeys.pl,v 1.16 2007/06/10 23:36:09 tom Exp $
+# $XTermId: gen-pc-fkeys.pl,v 1.21 2007/11/30 23:03:55 tom Exp $
 #
 # Construct a list of function-key definitions corresponding to xterm's
-# Sun/PC keyboard.  This uses infocmp to obtain the strings to modify (and
-# verify).
+# Sun/PC keyboard.  This uses ncurses' infocmp to obtain the strings (including
+# extensions) to modify (and verify).
 use strict;
 
 my($max_modifier, $terminfo);
@@ -16,13 +16,9 @@ my(@ckey_names);
 @ckey_names = (
 	'kcud1', 'kcub1', 'kcuf1', 'kcuu1',	# 1 = no modifiers
 	'kDN',   'kLFT',  'kRIT',  'kUP',	# 2 = shift
-	# repeat the second row with the modifier code appended to each name
-	'kDN3',  'kLFT3', 'kRIT3', 'kUP3',  	# 3 = alt
-	'kDN4',  'kLFT4', 'kRIT4', 'kUP4',  	# 4 = shift + alt
-	'kDN5',  'kLFT5', 'kRIT5', 'kUP5',  	# 5 = control
-	'kDN6',  'kLFT6', 'kRIT6', 'kUP6',  	# 6 = shift + control
-	'kDN7',  'kLFT7', 'kRIT7', 'kUP7',  	# 7 = alt + control
+	# make_ckey_names() repeats this row, appending the modifier code
 	);
+my %ckey_names;
 my(@ckey_known);
 @ckey_known = (
 	'kind',  'kLFT',  'kRIT',  'kri',	# 2 = shift (standard)
@@ -30,10 +26,9 @@ my(@ckey_known);
 
 my(@ekey_names);
 @ekey_names = (
-	# 'khome', 'kend', 'knp',   'kpp',   'kdch1', 'kich1',	# 1 = no modifiers
-	# 'kHOM',  'kEND', 'kNXT',  'kPRV',  'kDC',   'kIC',	# 2 = shift
-	'khome', 'kend', # 1 = no modifiers
-	'kHOM',  'kEND', # 2 = shift
+	'khome', 'kend',  'knp',   'kpp',   'kdch1', 'kich1', # 1 = no modifiers
+	'kHOM',  'kEND',  'kNXT',  'kPRV',  'kDC',   'kIC',   # 2 = shift
+	# make_ekey_names() repeats this row, appending the modifier code
 );
 my %ekey_names;
 
@@ -42,10 +37,10 @@ $max_fkeys=64;		# the number of function-keys terminfo can support
 $max_modifier=8;	# modifier 1 + (1=shift, 2=alt, 4=control 8=meta)
 
 $min_ckeys=4;		# the number of "real" cursor keys on your keyboard
-$max_ckeys=($min_ckeys * $max_modifier);
+$max_ckeys=($min_ckeys * ($max_modifier - 1));
 
-$min_ekeys=2;		# the number of "real" editing keys on your keyboard
-$max_ekeys=($min_ekeys * $max_modifier);
+$min_ekeys=6;		# the number of "real" editing keys on your keyboard
+$max_ekeys=($min_ekeys * ($max_modifier - 1));
 
 $opt_ckeys=2;		# xterm's modifyCursorKeys resource
 $opt_ekeys=2;		# xterm's modifyCursorKeys resource
@@ -101,6 +96,23 @@ sub next_modifier {
 	return $mask + 1;
 }
 
+sub make_ckey_names() {
+	my ($j, $k);
+	my $min = $min_ckeys * 2;
+	my $max = $max_ckeys - 1;
+
+	# printf "# make_ckey_names\n";
+	for $j ($min..$max) {
+		$k = 1 + substr($j / $min_ckeys, 0, 1);
+		$ckey_names[$j] = $ckey_names[$min_ckeys + ($j % $min_ckeys)] . $k;
+		# printf "# make %d:%s\n", $j, $ckey_names[$j];
+	}
+	for $j (0..$#ckey_names) {
+		# printf "# %d:%s\n", $j, $ckey_names[$j];
+		$ckey_names{$ckey_names[$j]} = $j;
+	}
+}
+
 sub make_ekey_names() {
 	my ($j, $k);
 	my $min = $min_ekeys * 2;
@@ -108,7 +120,7 @@ sub make_ekey_names() {
 
 	# printf "# make_ekey_names\n";
 	for $j ($min..$max) {
-		$k = substr($j / $min_ekeys, 0, 1);
+		$k = 1 + substr($j / $min_ekeys, 0, 1);
 		$ekey_names[$j] = $ekey_names[$min_ekeys + ($j % $min_ekeys)] . $k;
 		# printf "# make %d:%s\n", $j, $ekey_names[$j];
 	}
@@ -123,7 +135,7 @@ sub make_ekey_names() {
 sub readterm($) {
 	my $term = $_[0];
 	my($key, $n, $str);
-	my(@list) = `infocmp -1 $term`;
+	my(@list) = `infocmp -x -1 $term`;
 
 	for $n (0..$#list) {
 		chop $list[$n];
@@ -313,8 +325,10 @@ sub show_nondefault()
 	}
 }
 
+make_ckey_names();
 make_ekey_names();
 
 printf "# gen-pc-fkeys.pl\n";
+printf "# %s:timode\n", "vile";
 show_default();
 show_nondefault();

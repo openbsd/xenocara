@@ -1,5 +1,4 @@
--- $XTermId: INSTALL,v 1.115 2007/06/17 13:44:39 tom Exp $
--- $XFree86: xc/programs/xterm/INSTALL,v 3.42 2006/02/13 01:14:57 dickey Exp $
+-- $XTermId: INSTALL,v 1.117 2007/12/12 01:30:43 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2006,2007 by Thomas E. Dickey
 --
@@ -228,6 +227,10 @@ The options (in alphabetic order):
 	match the parent's.  In particular, it addresses a problem where the
 	terminal size is not defined in the stty settings.
 
+  --disable-rectangles    disable VT420 rectangle support
+
+	Do not compile-in code to support VT420 rectangle control-sequences.
+
   --disable-regex         disable regular-expression selections
 
 	Do not compile-in code to support the "regex" option for multiple
@@ -266,6 +269,12 @@ The options (in alphabetic order):
   --disable-sun-fkeys
 
   	Do not compile-in code to support Sun-style function keys.
+
+  --disable-tcap-fkeys    disable termcap function-keys
+
+	Compile-in code to support feature which allows xterm to use the
+	function-key definitions from the termcap/terminfo entry which it used
+	to set the $TERM variable on startup.
 
   --disable-tek4014       disable tek4014 emulation
 
@@ -406,10 +415,6 @@ The options (in alphabetic order):
 
 	(See --enable-paste64, which fits xterm's protocol better).
 
-  --enable-rectangles     enable VT420 rectangle support
-
-	Compile-in code to support VT420 rectangle control-sequences.
-
   --enable-sco-fkeys      enable support for SCO-style function keys
 
   	Compile-in code to support SCO-style function keys.
@@ -417,12 +422,6 @@ The options (in alphabetic order):
   --enable-sun-fkeys      enable support for Sun-style function keys
 
   	Compile-in code to support Sun-style function keys.
-
-  --enable-tcap-fkeys     enable termcap function-keys
-
-	Compile-in code to support experimental feature which directs xterm
-	to use the function-key definitions from the termcap/terminfo entry
-	which it used to set the $TERM variable on startup.
 
   --enable-tcap-query     enable termcap query/report
 
