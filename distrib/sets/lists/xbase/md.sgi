@@ -417,6 +417,7 @@
 ./usr/X11R6/include/X11/extensions/xf86dga1.h
 ./usr/X11R6/include/X11/extensions/xf86dga1str.h
 ./usr/X11R6/include/X11/extensions/xf86dgastr.h
+./usr/X11R6/include/drm
 ./usr/X11R6/include/freetype2/freetype/ftgzip.h
 ./usr/X11R6/include/freetype2/freetype/ftincrem.h
 ./usr/X11R6/include/freetype2/freetype/ftpfr.h
@@ -440,10 +441,9 @@
 ./usr/X11R6/lib/libXRes.so.4.0
 ./usr/X11R6/lib/libXTrap.so.10.0
 ./usr/X11R6/lib/libXau.so.9.0
-./usr/X11R6/lib/libXaw.so.11.0
-./usr/X11R6/lib/libXaw.so.12.0
-./usr/X11R6/lib/libXaw7.so.11.0
-./usr/X11R6/lib/libXaw8.so.12.0
+./usr/X11R6/lib/libXaw.so.13.0
+./usr/X11R6/lib/libXaw7.so.12.0
+./usr/X11R6/lib/libXaw8.so.13.0
 ./usr/X11R6/lib/libXcomposite.so.3.0
 ./usr/X11R6/lib/libXcursor.so.4.0
 ./usr/X11R6/lib/libXdamage.so.3.1
@@ -486,6 +486,7 @@
 ./usr/X11R6/lib/libpixman-1.so.10.0
 ./usr/X11R6/lib/libxkbfile.so.4.0
 ./usr/X11R6/lib/libxkbui.so.4.0
+./usr/X11R6/lib/modules/dri
 ./usr/X11R6/man/cat3/GLwCreateMDrawingArea.0
 ./usr/X11R6/man/cat3/GLwDrawingArea.0
 ./usr/X11R6/man/cat3/GLwDrawingAreaMakeCurrent.0

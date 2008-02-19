@@ -418,6 +418,9 @@
 ./usr/X11R6/lib/libXfontcache.so.4.0
 ./usr/X11R6/lib/libXxf86dga.a
 ./usr/X11R6/lib/libfreetype_pic.a
+./usr/X11R6/lib/pkgconfig/gl.pc
+./usr/X11R6/lib/pkgconfig/glu.pc
+./usr/X11R6/lib/pkgconfig/glw.pc
 ./usr/X11R6/man/cat1/XDarwin.0
 ./usr/X11R6/man/cat1/bdftruncate.0
 ./usr/X11R6/man/cat1/dga.0

@@ -499,6 +499,9 @@
 ./usr/X11R6/lib/libpixman-1.so.10.0
 ./usr/X11R6/lib/libxkbfile.so.4.0
 ./usr/X11R6/lib/libxkbui.so.4.0
+./usr/X11R6/lib/pkgconfig/gl.pc
+./usr/X11R6/lib/pkgconfig/glu.pc
+./usr/X11R6/lib/pkgconfig/glw.pc
 ./usr/X11R6/man/cat1/glxgears.0
 ./usr/X11R6/man/cat1/glxinfo.0
 ./usr/X11R6/man/cat3/GLwCreateMDrawingArea.0

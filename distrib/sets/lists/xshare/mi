@@ -828,10 +828,7 @@
 ./usr/X11R6/lib/pkgconfig/fontsproto.pc
 ./usr/X11R6/lib/pkgconfig/fontutil.pc
 ./usr/X11R6/lib/pkgconfig/freetype2.pc
-./usr/X11R6/lib/pkgconfig/gl.pc
 ./usr/X11R6/lib/pkgconfig/glproto.pc
-./usr/X11R6/lib/pkgconfig/glu.pc
-./usr/X11R6/lib/pkgconfig/glw.pc
 ./usr/X11R6/lib/pkgconfig/ice.pc
 ./usr/X11R6/lib/pkgconfig/inputproto.pc
 ./usr/X11R6/lib/pkgconfig/kbproto.pc

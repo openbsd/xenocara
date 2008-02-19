@@ -484,6 +484,9 @@
 ./usr/X11R6/lib/libxkbui.so.3.0
 ./usr/X11R6/lib/libxrx.so.7.0
 ./usr/X11R6/lib/libxrxnest.so.7.0
+./usr/X11R6/lib/pkgconfig/gl.pc
+./usr/X11R6/lib/pkgconfig/glu.pc
+./usr/X11R6/lib/pkgconfig/glw.pc
 ./usr/X11R6/man/cat1/bdftruncate.0
 ./usr/X11R6/man/cat1/glxgears.0
 ./usr/X11R6/man/cat1/glxinfo.0
