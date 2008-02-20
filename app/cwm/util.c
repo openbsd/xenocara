@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: util.c,v 1.4 2008/01/16 11:39:20 oga Exp $
+ * $Id: util.c,v 1.5 2008/02/20 13:00:18 oga Exp $
  */
 
 #include "headers.h"
@@ -62,7 +62,7 @@ exec_wm(char *argstr)
 	*ap = NULL;
 	setsid();
 	execvp(args[0], args);
-	err(1, args[0]);
+	warn(args[0]);
 }
 
 int dirent_isdir(char *filename) {
