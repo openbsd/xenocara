@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.4 2008/01/16 11:39:20 oga Exp $
+ * $Id: xevents.c,v 1.5 2008/02/20 12:56:10 oga Exp $
  */
 
 /*
@@ -413,7 +413,7 @@ out:
 }
 
 /*
- * This is only used for the alt supression detection.
+ * This is only used for the alt suppression detection.
  */
 void
 xev_handle_keyrelease(struct xevent *xev, XEvent *ee)
