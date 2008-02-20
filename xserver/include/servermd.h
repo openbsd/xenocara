@@ -165,6 +165,15 @@ SOFTWARE.
 
 #endif /* hpux || __hppa__ */
 
+#if defined (__m88k__)
+
+#define IMAGE_BYTE_ORDER       MSBFirst
+#define BITMAP_BIT_ORDER       MSBFirst
+#define GLYPHPADBYTES          4
+#define GETLEFTBITS_ALIGNMENT  1
+
+#endif /* __m88k__ */
+
 #if defined(__powerpc__) || defined(__ppc__)
 
 #define IMAGE_BYTE_ORDER        MSBFirst
@@ -501,7 +510,7 @@ SOFTWARE.
 #define GLYPHPADBYTES          4
 #define GETLEFTBITS_ALIGNMENT  1
 
-#endif /* OpenBSD/hp300 */
+#endif /* OpenBSD/m68k */
 
 #ifdef sgi
 
