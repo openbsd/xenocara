@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.13 2008/02/16 21:41:37 miod Exp $
+# $OpenBSD: Makefile,v 1.14 2008/02/21 08:04:44 todd Exp $
 
 SUBDIR= bdftopcf mkfontscale mkfontdir \
 	appres beforelight bitmap editres fonttosfnt fslsfonts \
@@ -21,7 +21,8 @@ SUBDIR += xfs
 .endif
 
 # GL
-.if ${MACHINE} != "sgi" && ${MACHINE} != "vax" && ${MACHINE_ARCH} != "m88k"
+.if ${MACHINE} != "sgi" && ${MACHINE} != "vax" && ${MACHINE_ARCH} != "m88k" \
+	&& ${MACHINE} != "landisk"
 SUBDIR +=   xdriinfo glxgears glxinfo
 .endif
 
