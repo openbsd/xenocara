@@ -100,6 +100,9 @@ static i830_quirk i830_quirk_list[] = {
     /* Dell Inspiron 510m needs pipe A force quirk */
     { PCI_CHIP_I855_GM, 0x1028, 0x0164, quirk_pipea_force },
 
+    /* ThinkPad X40 needs pipe A force quirk */
+    { PCI_CHIP_I855_GM, 0x1014, 0x0557, quirk_pipea_force },
+
     { 0, 0, 0, NULL },
 };
 
