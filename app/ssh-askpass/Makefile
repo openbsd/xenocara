@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.7 2007/04/09 10:33:47 matthieu Exp $
+# $OpenBSD: Makefile,v 1.8 2008/02/22 11:35:22 oga Exp $
 
 .include	<bsd.own.mk>
 X11BASE?=	/usr/X11R6
@@ -28,6 +28,9 @@ $(CLASS)_ad.h: $(CLASS).ad
 $(CLASS).ad: $(APP_DEFAULTS)
 	rm -f $(CLASS).ad
 	ln -s $(.CURDIR)/$(APP_DEFAULTS) $(CLASS).ad
+
+# XXX why isn't $(CLASS)_ad.h being build before .depend?
+x11-ssh-askpass.o: $(CLASS)_ad.h
 
 afterinstall:
 	${INSTALL_DATA} $(CLASS).ad \
