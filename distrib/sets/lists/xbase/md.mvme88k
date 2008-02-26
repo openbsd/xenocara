@@ -20,6 +20,7 @@
 ./usr/X11R6/include/X11/extensions/xf86dga1.h
 ./usr/X11R6/include/X11/extensions/xf86dga1str.h
 ./usr/X11R6/include/X11/extensions/xf86dgastr.h
+./usr/X11R6/include/drm
 ./usr/X11R6/include/freetype2/freetype/ftgzip.h
 ./usr/X11R6/include/freetype2/freetype/ftincrem.h
 ./usr/X11R6/include/freetype2/freetype/ftpfr.h
@@ -411,13 +412,13 @@
 ./usr/X11R6/lib/X11/xkb/types/numpad
 ./usr/X11R6/lib/X11/xkb/types/pc
 ./usr/X11R6/lib/X11/xkb/xkbcomp
-./usr/X11R6/lib/libGL.so.6.0
+./usr/X11R6/lib/libGL.so.7.1
 ./usr/X11R6/lib/libX11.so.11.1
-./usr/X11R6/lib/libXaw.so.11.0
-./usr/X11R6/lib/libXaw7.so.11.0
+./usr/X11R6/lib/libXaw7.so.12.0
 ./usr/X11R6/lib/libXfontcache.so.4.0
 ./usr/X11R6/lib/libXxf86dga.a
 ./usr/X11R6/lib/libfreetype_pic.a
+./usr/X11R6/lib/modules/dri
 ./usr/X11R6/lib/pkgconfig/gl.pc
 ./usr/X11R6/lib/pkgconfig/glu.pc
 ./usr/X11R6/lib/pkgconfig/glw.pc
