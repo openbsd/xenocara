@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.22 2007/11/25 10:23:01 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.23 2008/03/03 07:01:44 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -23,7 +23,7 @@ AUTOMAKE_VERSION=	1.9
 AUTOCONF_VERSION=	2.59
 
 # Where source lives
-XSRCDIR?=		/usr/src/xenocara
+XSRCDIR?=		/usr/xenocara
 
 # Where to build
 XOBJDIR?=	/usr/xobj

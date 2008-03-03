@@ -102,7 +102,7 @@ to any module sub-directory and run 'make build' from there.
 
 The variable XSRCDIR can be set either in the environment or in
 /etc/mk.conf to point to the xenocara source tree, in case you keep it
-in a non-standard directory (the default is /usr/src/xenocara).
+in a non-standard directory (the default is /usr/xenocara).
 
   Objdirs
 
@@ -206,4 +206,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.20 2007/07/14 11:20:10 jolan Exp $
+$OpenBSD: README,v 1.21 2008/03/03 07:01:44 matthieu Exp $
