@@ -502,6 +502,9 @@
 ./usr/X11R6/lib/libfreetype_pic.a
 ./usr/X11R6/lib/liblbxutil.so.1.0
 ./usr/X11R6/lib/liboldX.so.10.0
+./usr/X11R6/lib/libpixman-1.a
+./usr/X11R6/lib/libpixman-1.la
+./usr/X11R6/lib/libpixman-1.so.10.0
 ./usr/X11R6/lib/libxkbfile.so.4.0
 ./usr/X11R6/lib/modules/dri
 ./usr/X11R6/lib/pkgconfig/gl.pc
