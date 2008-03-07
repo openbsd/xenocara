@@ -120,7 +120,7 @@ AC_PATH_PROGS(MCOOKIE, [mcookie], [$MCOOKIE],
 
 case $host_os in
 	*openbsd*)
-	MCOOKIE='openssl rand -hex 16'
+	MCOOKIE='/usr/sbin/openssl rand -hex 16'
 	;;
 esac
 
