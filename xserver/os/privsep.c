@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.2 2007/11/25 18:41:23 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.3 2008/03/13 06:53:06 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -135,7 +135,10 @@ static void
 send_fd(int socket, int fd)
 {
 	struct msghdr msg;
-	char tmp[CMSG_SPACE(sizeof(int))];
+	union {
+		struct cmsghdr hdr;
+		char buf[CMSG_SPACE(sizeof(int))];
+	} cmsgbuf;
 	struct cmsghdr *cmsg;
 	struct iovec vec;
 	int result = 0;
@@ -144,8 +147,8 @@ send_fd(int socket, int fd)
 	memset(&msg, 0, sizeof(msg));
 
 	if (fd >= 0) {
-		msg.msg_control = (caddr_t)tmp;
-		msg.msg_controllen = CMSG_LEN(sizeof(int));
+		msg.msg_control = &cmsgbuf.buf;
+		msg.msg_controllen = sizeof(cmsgbuf.buf);
 		cmsg = CMSG_FIRSTHDR(&msg);
 		cmsg->cmsg_len = CMSG_LEN(sizeof(int));
 		cmsg->cmsg_level = SOL_SOCKET;
@@ -171,7 +174,10 @@ static int
 receive_fd(int socket)
 {
 	struct msghdr msg;
-	char tmp[CMSG_SPACE(sizeof(int))];
+	union {
+		struct cmsghdr hdr;
+		char buf[CMSG_SPACE(sizeof(int))];
+	} cmsgbuf;
 	struct cmsghdr *cmsg;
 	struct iovec vec;
 	ssize_t n;
@@ -183,8 +189,8 @@ receive_fd(int socket)
 	vec.iov_len = sizeof(int);
 	msg.msg_iov = &vec;
 	msg.msg_iovlen = 1;
-	msg.msg_control = tmp;
-	msg.msg_controllen = sizeof(tmp);
+	msg.msg_control = &cmsgbuf.buf;
+	msg.msg_controllen = sizeof(cmsgbuf.buf);
 
 	if ((n = recvmsg(socket, &msg, 0)) == -1)
 		warn("%s: recvmsg", __func__);
