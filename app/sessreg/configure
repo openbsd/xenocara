@@ -1446,51 +1446,6 @@ test -z "$INSTALL_SCRIPT" && INSTALL_SCRIPT='${INSTALL}'
 
 test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
-echo "$as_me:$LINENO: checking whether build environment is sane" >&5
-echo $ECHO_N "checking whether build environment is sane... $ECHO_C" >&6
-# Just in case
-sleep 1
-echo timestamp > conftest.file
-# Do `set' in a subshell so we don't clobber the current shell's
-# arguments.  Must try -L first in case configure is actually a
-# symlink; some systems play weird games with the mod time of symlinks
-# (eg FreeBSD returns the mod time of the symlink's containing
-# directory).
-if (
-   set X `ls -Lt $srcdir/configure conftest.file 2> /dev/null`
-   if test "$*" = "X"; then
-      # -L didn't work.
-      set X `ls -t $srcdir/configure conftest.file`
-   fi
-   rm -f conftest.file
-   if test "$*" != "X $srcdir/configure conftest.file" \
-      && test "$*" != "X conftest.file $srcdir/configure"; then
-
-      # If neither matched, then we have a broken ls.  This can happen
-      # if, for instance, CONFIG_SHELL is bash and it inherits a
-      # broken ls alias from the environment.  This has actually
-      # happened.  Such a system could not be considered "sane".
-      { { echo "$as_me:$LINENO: error: ls -t appears to fail.  Make sure there is not a broken
-alias in your environment" >&5
-echo "$as_me: error: ls -t appears to fail.  Make sure there is not a broken
-alias in your environment" >&2;}
-   { (exit 1); exit 1; }; }
-   fi
-
-   test "$2" = conftest.file
-   )
-then
-   # Ok.
-   :
-else
-   { { echo "$as_me:$LINENO: error: newly created file is older than distributed files!
-Check your system clock" >&5
-echo "$as_me: error: newly created file is older than distributed files!
-Check your system clock" >&2;}
-   { (exit 1); exit 1; }; }
-fi
-echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
 test "$program_prefix" != NONE &&
   program_transform_name="s,^,$program_prefix,;$program_transform_name"
 # Use a double $ so make ignores it.

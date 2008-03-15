@@ -659,6 +659,7 @@ RES_SOURCES = $(srcdir)/../shared/stdResource.c
 
 @HP300_VIDEO_TRUE@ARCH_SOURCES = hp300_video.c \
 @HP300_VIDEO_TRUE@	$(srcdir)/../shared/ioperm_noop.c
+
 @HPPA_VIDEO_TRUE@ARCH_SOURCES = hppa_video.c
 @I386_VIDEO_TRUE@ARCH_SOURCES = i386_video.c
 @PPC_VIDEO_TRUE@ARCH_SOURCES = ppc_video.c \
