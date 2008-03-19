@@ -1,4 +1,4 @@
-/* $XTermId: tabs.c,v 1.30 2008/01/13 20:14:33 tom Exp $ */
+/* $XTermId: tabs.c,v 1.31 2008/02/24 17:35:03 Nemeth Exp $ */
 
 /*
  *	$XFree86: xc/programs/xterm/tabs.c,v 3.14 2006/02/13 01:14:59 dickey Exp $
@@ -75,8 +75,7 @@ TabReset(Tabs tabs)
 {
     int i;
 
-    for (i = 0; i < TAB_ARRAY_SIZE; ++i)
-	tabs[i] = 0;
+    TabZonk(tabs);
 
     for (i = 0; i < MAX_TABS; i += 8)
 	TabSet(tabs, i);
@@ -179,8 +178,5 @@ TabToPrevStop(XtermWidget xw)
 void
 TabZonk(Tabs tabs)
 {
-    int i;
-
-    for (i = 0; i < TAB_ARRAY_SIZE; ++i)
-	tabs[i] = 0;
+    memset(tabs, 0, sizeof(*tabs) * TAB_ARRAY_SIZE);
 }

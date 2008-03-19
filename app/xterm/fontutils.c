@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.267 2008/01/27 14:44:07 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.270 2008/02/29 00:25:16 Andrea.Odetti Exp $ */
 
 /************************************************************
 
@@ -699,6 +699,9 @@ xtermOpenFont(XtermWidget xw, char *name, XTermFonts * result)
     return code;
 }
 
+/*
+ * Close the font and Free the font info
+ */
 XTermFonts *
 xtermCloseFont(XtermWidget xw, XTermFonts * fnt)
 {
@@ -707,6 +710,7 @@ xtermCloseFont(XtermWidget xw, XTermFonts * fnt)
 
 	clrCgsFonts(xw, WhichVWin(screen), fnt);
 	XFreeFont(screen->display, fnt->fs);
+	xtermFreeFontInfo(fnt);
     }
     return 0;
 }
@@ -720,13 +724,16 @@ xtermCloseFonts(XtermWidget xw, XTermFonts * fnts)
     int j, k;
 
     for (j = 0; j < fMAX; ++j) {
-	if (fnts[j].fs != 0) {
+	/*
+	 * Need to save the pointer since xtermCloseFont zeroes it
+	 */
+	XFontStruct *thisFont = fnts[j].fs;
+	if (thisFont != 0) {
 	    xtermCloseFont(xw, &fnts[j]);
 	    for (k = j + 1; k < fMAX; ++k) {
-		if (fnts[j].fs == fnts[k].fs)
+		if (thisFont == fnts[k].fs)
 		    xtermFreeFontInfo(&fnts[k]);
 	    }
-	    xtermFreeFontInfo(&fnts[j]);
 	}
     }
 }
@@ -1768,7 +1775,7 @@ xtermMissingChar(XtermWidget xw, unsigned ch, XFontStruct * font)
 	}
 #if OPT_WIDE_CHARS
 	else {
-	    CI_GET_CHAR_INFO_2D(font, (ch >> 8), (ch & 0xff), tmp, pc);
+	    CI_GET_CHAR_INFO_2D(font, HI_BYTE(ch), LO_BYTE(ch), tmp, pc);
 	}
 #else
 

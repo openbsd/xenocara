@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.405 2008/01/27 17:37:46 tom Exp $
+.\" $XTermId: xterm.man,v 1.406 2008/02/24 19:09:31 Alan.Coopersmith Exp $
 .\"
 .\" Copyright 1996-2007,2008 by Thomas E. Dickey
 .\"
@@ -294,7 +294,7 @@ This is equivalent to setting the \fIvt100\fP resource
 This option indicates that auto-wraparound should be allowed.
 This
 allows the cursor to automatically wrap to the beginning of the next
-line when when it is at the rightmost position of a line and text is
+line when it is at the rightmost position of a line and text is
 output.
 .TP 8
 .B +aw

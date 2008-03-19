@@ -1,9 +1,9 @@
-/* $XTermId: scrollbar.c,v 1.132 2007/02/11 14:49:56 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.134 2008/02/28 01:07:30 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/scrollbar.c,v 3.48 2006/02/13 01:14:59 dickey Exp $ */
 
 /*
- * Copyright 2000-2006,2007 by Thomas E. Dickey
+ * Copyright 2000-2007,2008 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -191,6 +191,13 @@ DoResizeScreen(XtermWidget xw)
 	TRACE(("...almost, retry screensize %dx%d\n", repHeight, repWidth));
 	geomreqresult = XtMakeResizeRequest((Widget) xw, repWidth,
 					    repHeight, NULL, NULL);
+    }
+
+    if (geomreqresult != XtGeometryYes) {
+	/* The resize wasn't successful, so we might need to adjust
+	   our idea of how large the screen is. */
+	TRACE(("...still no (%d) - resize the core-class\n", geomreqresult));
+	xw->core.widget_class->core_class.resize((Widget) xw);
     }
 #if 1				/* ndef nothack */
     /*

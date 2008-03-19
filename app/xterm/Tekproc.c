@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.158 2008/01/26 01:21:10 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.159 2008/02/21 20:21:51 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -718,8 +718,8 @@ Tekparse(TekWidget tw)
 	    if (screen->wide_chars
 		&& (ch > 255)) {
 		XChar2b sbuf;
-		sbuf.byte2 = CharOf(ch);
-		sbuf.byte1 = CharOf(ch >> 8);
+		sbuf.byte2 = LO_BYTE(ch);
+		sbuf.byte1 = HI_BYTE(ch);
 		XDrawImageString16(XtDisplay(tw),
 				   TWindow(tekscr),
 				   tekscr->TnormalGC,

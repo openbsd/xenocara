@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.167 2007/12/31 17:21:48 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.169 2008/02/24 21:47:48 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.61 2006/06/19 00:36:52 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1997-2006,2007 by Thomas E. Dickey
+Copyright 1997-2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -62,6 +62,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_STRERROR		/* AC_CHECK_FUNCS(strerror) */
 #undef HAVE_STRFTIME		/* AC_CHECK_FUNCS(strftime) */
 #undef HAVE_SYS_TIME_H		/* AC_HEADER_TIME */
+#undef HAVE_SYS_TTYDEFAULTS_H	/* AC_CHECK_HEADERS(sys/ttydefaults.h) */
 #undef HAVE_SYS_WAIT_H		/* AC_HEADER_SYS_WAIT */
 #undef HAVE_TCGETATTR		/* AC_CHECK_FUNCS(tcgetattr) */
 #undef HAVE_TERMCAP_H		/* AC_CHECK_HEADERS(termcap.h) */
@@ -73,6 +74,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_UTMP		/* CF_UTMP */
 #undef HAVE_UTMP_UT_HOST	/* CF_UTMP_UT_HOST */
 #undef HAVE_UTMP_UT_SESSION	/* CF_UTMP_UT_SESSION */
+#undef HAVE_UTMP_UT_SYSLEN	/* CF_UTMP_UT_SYSLEN */
 #undef HAVE_UTMP_UT_XSTATUS	/* CF_UTMP_UT_XSTATUS */
 #undef HAVE_UTMP_UT_XTIME	/* CF_UTMP_UT_XTIME */
 #undef HAVE_WAITPID		/* AC_CHECK_FUNCS(waitpid) */

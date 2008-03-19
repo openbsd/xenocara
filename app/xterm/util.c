@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.406 2008/01/20 14:19:15 tom Exp $ */
+/* $XTermId: util.c,v 1.407 2008/02/21 20:29:01 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -2867,9 +2867,9 @@ drawXtermText(XtermWidget xw,
 			screen->fnt_wide = old_wide;
 			screen->fnt_high = old_high;
 		    } else {
-			temp[0] = ch;
+			temp[0] = LO_BYTE(ch);
 #if OPT_WIDE_CHARS
-			temp2[0] = (ch >> 8);
+			temp2[0] = HI_BYTE(ch);
 #endif
 			nc = drawClippedXftString(xw,
 						  flags,
@@ -3081,11 +3081,20 @@ drawXtermText(XtermWidget xw,
 		needWide = True;
 	    }
 
-	    screen->draw_buf[dst].byte2 = text[src];
-	    screen->draw_buf[dst].byte1 = text2[src];
+	    /*
+	     * bitmap-fonts are limited to 16-bits.
+	     */
+	    if (ch > 0xffff) {
+		ch = UCS_REPL;
+		screen->draw_buf[dst].byte2 = LO_BYTE(ch);
+		screen->draw_buf[dst].byte1 = HI_BYTE(ch);
+	    } else {
+		screen->draw_buf[dst].byte2 = text[src];
+		screen->draw_buf[dst].byte1 = text2[src];
+	    }
 #if OPT_MINI_LUIT
-#define UCS2SBUF(value)	screen->draw_buf[dst].byte2 = (value & 0xff);\
-	    		screen->draw_buf[dst].byte1 = (value >> 8)
+#define UCS2SBUF(value)	screen->draw_buf[dst].byte2 = LO_BYTE(value);\
+	    		screen->draw_buf[dst].byte1 = HI_BYTE(value)
 
 #define Map2Sbuf(from,to) (text[src] == from) { UCS2SBUF(to); }
 
@@ -3504,10 +3513,10 @@ getXtermCell(TScreen * screen, int row, int col)
 void
 putXtermCell(TScreen * screen, int row, int col, int ch)
 {
-    SCRN_BUF_CHARS(screen, row)[col] = ch;
+    SCRN_BUF_CHARS(screen, row)[col] = LO_BYTE(ch);
     if_OPT_WIDE_CHARS(screen, {
 	int off;
-	SCRN_BUF_WIDEC(screen, row)[col] = (ch >> 8);
+	SCRN_BUF_WIDEC(screen, row)[col] = HI_BYTE(ch);
 	for (off = OFF_WIDEC + 1; off < MAX_PTRS; ++off) {
 	    SCREEN_PTR(screen, row, off)[col] = 0;
 	}
@@ -3538,8 +3547,8 @@ addXtermCombining(TScreen * screen, int row, int col, unsigned ch)
 	for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
 	    if (!SCREEN_PTR(screen, row, off + 0)[col]
 		&& !SCREEN_PTR(screen, row, off + 1)[col]) {
-		SCREEN_PTR(screen, row, off + 0)[col] = ch & 0xff;
-		SCREEN_PTR(screen, row, off + 1)[col] = ch >> 8;
+		SCREEN_PTR(screen, row, off + 0)[col] = LO_BYTE(ch);
+		SCREEN_PTR(screen, row, off + 1)[col] = HI_BYTE(ch);
 		break;
 	    }
 	}

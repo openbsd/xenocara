@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.510 2008/01/31 01:01:52 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.513 2008/02/25 00:05:13 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -1010,6 +1010,9 @@ extern int A2E(int);
 
 /***====================================================================***/
 
+#define LO_BYTE(ch) ((ch) & 0xff)
+#define HI_BYTE(ch) ((ch) >> 8)
+
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
 #define if_WIDE_OR_NARROW(screen, wide, narrow) if(screen->wide_chars) wide else narrow
@@ -1627,6 +1630,7 @@ typedef struct {
 	EventMode	eventMode;
 	Time		selection_time;	/* latest event timestamp */
 	Time		lastButtonUpTime;
+	unsigned	lastButton;
 
 	CELL		rawPos;		/* raw position for selection start */
 	CELL		startRaw;	/* area before selectUnit processing */

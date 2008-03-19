@@ -1,8 +1,8 @@
-dnl $XTermId: configure.in,v 1.240 2008/01/05 14:26:52 tom Exp $
+dnl $XTermId: configure.in,v 1.241 2008/02/24 21:46:37 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2006,2007 by Thomas E. Dickey
+dnl Copyright 1997-2007,2008 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -68,6 +68,7 @@ CF_SIGWINCH
 AC_CHECK_HEADERS( \
 ncurses/term.h \
 stdlib.h \
+sys/ttydefaults.h \
 term.h \
 termios.h \
 unistd.h \

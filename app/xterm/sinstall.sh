@@ -1,6 +1,5 @@
 #!/bin/sh
-# $XTermId: sinstall.sh,v 1.15 2006/01/04 02:10:27 tom Exp $
-# $XFree86: xc/programs/xterm/sinstall.sh,v 1.5 2006/01/04 02:10:27 dickey Exp $
+# $XTermId: sinstall.sh,v 1.16 2008/03/02 23:35:02 tom Exp $
 #
 # Install program setuid if the installer is running as root, and if xterm is
 # already installed on the system with setuid privilege.  This is a safeguard
@@ -19,6 +18,13 @@
 
 trace=:
 trace=echo
+
+# override locale...
+# (otherwise GNU ls displays date column in a locale-dependent manner).
+LANG=C;		export LANG
+LANGUAGE=C;	export LANGUAGE
+LC_ALL=C;	export LC_ALL
+LC_CTYPE=C;	export LC_CTYPE
 
 OPTS_SUID=
 OPTS_SGID=
@@ -79,11 +85,13 @@ elif test -f "$REF_PROG" ; then
 
 	# Expect listing to have fields like this:
 	#-r--r--r--   1 user      group       34293 Jul 18 16:29 pathname
+	ls $cf_option $REF_PROG
 	ls $cf_option $REF_PROG >$MYTEMP
 	read cf_mode cf_links cf_usr cf_grp cf_size cf_date1 cf_date2 cf_date3 cf_rest <$MYTEMP
 	$trace "... if \"$cf_rest\" is null, try the ls -g option"
 	if test -z "$cf_rest" ; then
 		cf_option="$cf_option -g"
+		ls $cf_option $REF_PROG
 		ls $cf_option $REF_PROG >$MYTEMP
 		read cf_mode cf_links cf_usr cf_grp cf_size cf_date1 cf_date2 cf_date3 cf_rest <$MYTEMP
 	fi
@@ -105,14 +113,17 @@ elif test -f "$REF_PROG" ; then
 	$trace "... see if mode \"$cf_mode\" has s-bit set"
 	case ".$cf_mode" in #(vi
 	.???s??s*) #(vi
+		$trace "... both setuid/setgid"
 		PROG_SUID=4000
 		PROG_SGID=2000
 		;;
 	.???s*) #(vi
+		$trace "... setuid"
 		PROG_SUID=4000
 		PROG_GRP=
 		;;
 	.??????s*)
+		$trace "... setgid"
 		PROG_SGID=2000
 		PROG_USR=
 		;;

@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.283 2008/01/07 22:56:37 tom Exp $ */
+/* $XTermId: button.c,v 1.285 2008/02/24 19:42:02 tom Exp $ */
 
 /*
- * Copyright 1999-2006,2007 by Thomas E. Dickey
+ * Copyright 1999-2007,2008 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1722,12 +1722,17 @@ HandleInsertSelection(Widget w,
 }
 
 static SelectUnit
-EvalSelectUnit(TScreen * screen, Time buttonDownTime, SelectUnit defaultUnit)
+EvalSelectUnit(TScreen * screen,
+	       Time buttonDownTime,
+	       SelectUnit defaultUnit,
+	       unsigned int button)
 {
     SelectUnit result;
     int delta;
 
-    if (screen->lastButtonUpTime == (Time) 0) {
+    if (button != screen->lastButton) {
+	delta = term->screen.multiClickTime + 1;
+    } else if (screen->lastButtonUpTime == (Time) 0) {
 	/* first time and once in a blue moon */
 	delta = screen->multiClickTime + 1;
     } else if (buttonDownTime > screen->lastButtonUpTime) {
@@ -1758,7 +1763,10 @@ do_select_start(XtermWidget xw,
 
     if (SendMousePosition(xw, event))
 	return;
-    screen->selectUnit = EvalSelectUnit(screen, event->xbutton.time, Select_CHAR);
+    screen->selectUnit = EvalSelectUnit(screen,
+					event->xbutton.time,
+					Select_CHAR,
+					event->xbutton.button);
     screen->replyToEmacs = False;
 
 #if OPT_READLINE
@@ -1812,7 +1820,10 @@ TrackDown(XtermWidget xw, XButtonEvent * event)
     TScreen *screen = &(xw->screen);
     CELL cell;
 
-    screen->selectUnit = EvalSelectUnit(screen, event->time, Select_CHAR);
+    screen->selectUnit = EvalSelectUnit(screen,
+					event->time,
+					Select_CHAR,
+					event->button);
     if (screen->numberOfClicks > 1) {
 	PointToCELL(screen, event->y, event->x, &cell);
 	screen->replyToEmacs = True;
@@ -1898,6 +1909,7 @@ EndExtend(XtermWidget xw,
     }
     ExtendExtend(xw, &cell);
     screen->lastButtonUpTime = event->xbutton.time;
+    screen->lastButton = event->xbutton.button;
     if (!isSameCELL(&(screen->startSel), &(screen->endSel))) {
 	if (screen->replyToEmacs) {
 	    count = 0;
@@ -1987,7 +1999,10 @@ do_start_extend(XtermWidget xw,
 	|| event->xbutton.button != Button3
 	|| !(SCREEN_FLAG(screen, dclick3_deletes)))
 #endif
-	screen->selectUnit = EvalSelectUnit(screen, event->xbutton.time, screen->selectUnit);
+	screen->selectUnit = EvalSelectUnit(screen,
+					    event->xbutton.time,
+					    screen->selectUnit,
+					    event->xbutton.button);
     screen->replyToEmacs = False;
 
 #if OPT_READLINE

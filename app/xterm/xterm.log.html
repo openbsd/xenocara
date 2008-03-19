@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.652 2008/01/30 01:02:39 tom Exp $
+  $XTermId: xterm.log.html,v 1.664 2008/03/02 23:32:51 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,8 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_234">Patch #234 - 2008-03/02</A>
+<LI><A HREF="#xterm_233">Patch #233 - 2008/02/24</A>
 <LI><A HREF="#xterm_232">Patch #232 - 2008/01/30</A>
 <LI><A HREF="#xterm_231">Patch #231 - 2008/01/05</A>
 <LI><A HREF="#xterm_230">Patch #230 - 2007/12/31</A>
@@ -279,6 +281,58 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_234">Patch #234 - 2008-03/02</A></H1>
+<ul>
+	<li>modify <code>sinstall.sh</code> to use POSIX locale to 
+	    bypass GNU ls changes to date-format.
+
+	<li>improved/refined changes for closing bitmap font (patch by
+	    Andrea Odetti).
+
+	<li>improve resize computation for situations where the negotiation
+	    fails, by invoking the xterm widget's core-class resize method
+	    (Debian #365602, patch by Jim Paris).
+
+	<li>restore initialization of terminal's <code>VMIN</code> and
+	    <code>VTIME</code> settings,
+	    from <a href="#xterm_232">patch #232</a> changes
+	    (patch by Matthieu Herrb).
+</ul>
+
+<H1><A NAME="xterm_233">Patch #233 - 2008/02/24</A></H1>
+<ul>
+	<li>add configure check for <code>ttydefaults.h</code>, include if
+	    needed, e.g., for systems where defining
+	    <code>_POSIX_C_SOURCE</code>, etc.,
+	    prevents it from being included via
+	    <code>termios.h</code> (prompted by comments by Robert Delius Royar
+	    and Jeremy Huddleston).
+
+	<li>patches from Alan Coopersmith.  These correspond
+	    to bug-ids on bugs.opensolaris.org 
+	    <dl>
+	    <dt>4029911
+	    <dd>fix a typo in manpage
+	    <dt>4045962
+	    <dd>xterm doesn't properly set ut_syslen
+	    <dt>4192572
+	    <dd>left-left-right misinterpreted as triple click
+	    </dl>
+
+	<li>minor optimization to tab-initialization (patch by
+	    Németh Márton).
+
+	<li>fix a case where an incorrect font was freed during initialization
+	    from <a href="#xterm_232">patch #232</a> changes (patch by
+	    Andrea Odetti).
+
+	<li>improve comparison used in <code>SameFont</code> function for
+	    GC-caching (Julien Cristau).
+
+	<li>correct macro name used for default <code>CKILL</code> definition
+	    to work with Mac OS X (report by Jeremy Huddleston).
+</ul>
 
 <H1><A NAME="xterm_232">Patch #232 - 2008/01/30</A></H1>
 <ul>

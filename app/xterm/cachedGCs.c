@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.47 2008/01/30 00:56:13 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.48 2008/02/20 20:54:54 Julien.Cristau Exp $ */
 
 /************************************************************
 
@@ -404,8 +404,8 @@ SameFont(XTermFonts * a, XTermFonts * b)
 {
     return (HaveFont(a)
 	    && HaveFont(b)
-	    && (a->fs == b->fs)
-	    && !memcmp(a->fs, b->fs, sizeof(*(a->fs))));
+	    && ((a->fs == b->fs)
+		|| !memcmp(a->fs, b->fs, sizeof(*(a->fs)))));
 }
 
 #define SameColor(a,b) ((a) == (b))

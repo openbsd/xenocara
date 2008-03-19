@@ -1,10 +1,10 @@
-dnl $XTermId: aclocal.m4,v 1.245 2007/06/27 22:13:37 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.247 2008/02/24 19:30:23 tom Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.65 2006/06/19 00:36:50 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2006,2007 by Thomas E. Dickey
+dnl Copyright 1997-2007,2008 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -546,7 +546,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_ATTRIBUTES version: 10 updated: 2005/05/28 13:16:28
+dnl CF_GCC_ATTRIBUTES version: 11 updated: 2007/07/29 09:55:12
 dnl -----------------
 dnl Test for availability of useful gcc __attribute__ directives to quiet
 dnl compiler warnings.  Though useful, not all are supported -- and contrary
@@ -573,7 +573,7 @@ if test "$GCC" = yes
 then
 	AC_CHECKING([for $CC __attribute__ directives])
 cat > conftest.$ac_ext <<EOF
-#line __oline__ "configure"
+#line __oline__ "${as_me-configure}"
 #include "confdefs.h"
 #include "conftest.h"
 #include "conftest.i"
@@ -635,7 +635,7 @@ if test "$GCC" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 21 updated: 2007/06/27 18:12:15
+dnl CF_GCC_WARNINGS version: 22 updated: 2007/07/29 09:55:12
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
@@ -660,7 +660,7 @@ AC_REQUIRE([CF_GCC_VERSION])
 CF_INTEL_COMPILER(GCC,INTEL_COMPILER,CFLAGS)
 
 cat > conftest.$ac_ext <<EOF
-#line __oline__ "configure"
+#line __oline__ "${as_me-configure}"
 int main(int argc, char *argv[[]]) { return (argv[[argc-1]] == 0) ; }
 EOF
 
@@ -1033,12 +1033,12 @@ AC_TRY_COMPILE([
 test $cf_cv_path_lastlog != no && AC_DEFINE(USE_LASTLOG)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_MSG_LOG version: 3 updated: 1997/09/07 14:05:52
+dnl CF_MSG_LOG version: 4 updated: 2007/07/29 09:55:12
 dnl ----------
 dnl Write a debug message to config.log, along with the line number in the
 dnl configure script.
 AC_DEFUN([CF_MSG_LOG],[
-echo "(line __oline__) testing $* ..." 1>&AC_FD_CC
+echo "${as_me-configure}:__oline__: testing $* ..." 1>&AC_FD_CC
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_PATH_PROG version: 6 updated: 2004/01/26 20:58:41
@@ -1875,7 +1875,7 @@ if test "$cf_cv_have_utempter" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_UTMP version: 8 updated: 2002/10/27 23:21:42
+dnl CF_UTMP version: 9 updated: 2008/01/25 17:18:00
 dnl -------
 dnl Check for UTMP/UTMPX headers
 AC_DEFUN([CF_UTMP],
@@ -1914,6 +1914,7 @@ if test $cf_cv_have_utmp != no ; then
 	AC_DEFINE(HAVE_UTMP)
 	test $cf_cv_have_utmp = utmpx && AC_DEFINE(UTMPX_FOR_UTMP)
 	CF_UTMP_UT_HOST
+	CF_UTMP_UT_SYSLEN
 	CF_UTMP_UT_NAME
 	CF_UTMP_UT_XSTATUS
 	CF_UTMP_UT_XTIME
@@ -2047,6 +2048,26 @@ fi
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_UTMP_UT_SYSLEN version: 1 updated: 2008/01/25 17:18:00
+dnl -----------------
+dnl Check if UTMP/UTMPX struct defines ut_syslen member
+AC_DEFUN([CF_UTMP_UT_SYSLEN],
+[
+if test $cf_cv_have_utmp != no ; then
+AC_MSG_CHECKING(if ${cf_cv_have_utmp}.ut_syslen is declared)
+AC_CACHE_VAL(cf_cv_have_utmp_ut_syslen,[
+	AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <${cf_cv_have_utmp}.h>],
+	[struct $cf_cv_have_utmp x; int y = x.ut_syslen],
+	[cf_cv_have_utmp_ut_syslen=yes],
+	[cf_cv_have_utmp_ut_syslen=no])
+	])
+AC_MSG_RESULT($cf_cv_have_utmp_ut_syslen)
+test $cf_cv_have_utmp_ut_syslen != no && AC_DEFINE(HAVE_UTMP_UT_SYSLEN)
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_UTMP_UT_XSTATUS version: 3 updated: 2001/12/27 12:55:07
 dnl ------------------
 dnl Check for known variants on the UTMP/UTMPX struct's exit-status as reported
@@ -2114,11 +2135,12 @@ fi
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_VERBOSE version: 2 updated: 1997/09/05 10:45:14
+dnl CF_VERBOSE version: 3 updated: 2007/07/29 09:55:12
 dnl ----------
 dnl Use AC_VERBOSE w/o the warnings
 AC_DEFUN([CF_VERBOSE],
 [test -n "$verbose" && echo "	$1" 1>&AC_FD_MSG
+CF_MSG_LOG([$1])
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_WITH_IMAKE_CFLAGS version: 8 updated: 2005/11/02 15:04:41
