@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.8 2008/02/22 11:35:22 oga Exp $
+# $OpenBSD: Makefile,v 1.9 2008/03/19 20:31:09 matthieu Exp $
 
 .include	<bsd.own.mk>
 X11BASE?=	/usr/X11R6
@@ -21,7 +21,7 @@ ssh-askpass.1: x11-ssh-askpass.man.in
 	    -e 's#@DATE@#$(DATE)#g' < $(.CURDIR)/x11-ssh-askpass.man.in > $@
 
 $(CLASS)_ad.h: $(CLASS).ad
-	cat $(CLASS).ad | grep -v '^[   ]*$$' |\
+	grep -v '^[   ]*$$' $(CLASS).ad |\
 	  awk '/^[      ]*!/ { sub("^[  ]*![ ]?","", $$0); printf("/* %s */\n", $$0); next } ! /^[      ]*!/ { printf("\"%s\",\n", $$0) }' \
           >$@
 
