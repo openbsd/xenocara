@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.19 2008/03/13 20:32:32 matthieu Exp $
+# $OpenBSD: MODULES,v 1.20 2008/03/19 20:57:57 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -96,7 +96,7 @@ app/xwud		1.0.1	7.0
 data/bitmaps		1.0.1	7.0
 data/xkbdata		1.0.1	7.0	obsolete
 
-doc/xorg-docs		1.3	7.2RC2
+doc/xorg-docs		1.4	7.3	needs-update
 doc/xorg-sgml-doctools	1.1.1	7.2RC2
 
 driver/xf86-input-acecad	1.2.2	7.4	needs-update
@@ -126,34 +126,33 @@ driver/xf86-input-tek4957	1.1.0	7.1
 driver/xf86-input-ur98		1.1.0	7.1
 driver/xf86-input-vmmouse	12.4.1	7.3	needs-update
 driver/xf86-input-void		1.1.0	7.1
-driver/xf86-video-apm		1.1.1	7.1
-driver/xf86-video-ark		0.6.0	7.1
-driver/xf86-video-ast		0.81.0	7.1	needs-rel
-driver/xf86-video-ati		6.6.192 7.2+	needs-update
-driver/xf86-video-chips		1.1.1	7.1
-driver/xf86-video-cirrus	1.1.0	7.1
+driver/xf86-video-apm		1.2.0	7.4	needs-update
+driver/xf86-video-ark		0.7.0	7.4	needs-update
+driver/xf86-video-ast		0.85.0	7.4	needs-update
+driver/xf86-video-ati		6.8.0	7.4	needs-update
+driver/xf86-video-chips		1.2.0	7.4	needs-update
+driver/xf86-video-cirrus	1.2.0	7.4	needs-update
 driver/xf86-video-cyrix		1.1.0	7.1
 driver/xf86-video-dummy		0.2.0	7.1
-driver/xf86-video-fbdev		0.3.1	7.2
-driver/xf86-video-glint		1.1.1	7.1
-driver/xf86-video-i128		1.2.1	7.2RC3
-driver/xf86-video-i740		1.1.0	7.1
+driver/xf86-video-glint		1.2.0	7.4	needs-update
+driver/xf86-video-i128		1.3.0	7.4	needs-update
+driver/xf86-video-i740		1.2.0	7.4	needs-update
 driver/xf86-video-impact	0.2.0		need-rel
 driver/xf86-video-imstt		1.1.0	7.1
 driver/xf86-video-intel		2.2.1	7.4	needs-update
 driver/xf86-video-mga		1.4.8	7.4	needs-update
-driver/xf86-video-neomagic	1.1.1	7.1
+driver/xf86-video-neomagic	1.2.0	7.1	needs-update
 driver/xf86-video-newport	0.2.1	7.2RC1
 driver/xf86-video-nsc		2.8.3	7.3	needs-update
 driver/xf86-video-nv		2.1.7	7.4	needs-update
 driver/xf86-video-radeonhd	1.1.0	7.4	needs-update
-driver/xf86-video-rendition	4.1.3	7.2RC4
-driver/xf86-video-s3		0.5.0	7.2RC3
-driver/xf86-video-s3virge	1.9.1	7.1
-driver/xf86-video-savage	2.1.3	7.3
-driver/xf86-video-siliconmotion	1.4.2	7.2RC1
-driver/xf86-video-sis		0.9.3	7.2RC3
-driver/xf86-video-sisusb	0.8.1	7.1
+driver/xf86-video-rendition	4.2.9	7.4	needs-update
+driver/xf86-video-s3		0.6.0	7.4	needs-update
+driver/xf86-video-s3virge	1.10.0	7.4	needs-update
+driver/xf86-video-savage	2.2.0	7.4	needs-update
+driver/xf86-video-siliconmotion	1.6.0	7.4	needs-update
+driver/xf86-video-sis		0.10.0	7.4	needs-update
+driver/xf86-video-sisusb	0.9.0	7.4	needs-update
 driver/xf86-video-sunbw2	1.1.0	7.1
 driver/xf86-video-suncg14	1.1.0	7.1
 driver/xf86-video-suncg3	1.1.0	7.1
@@ -161,11 +160,11 @@ driver/xf86-video-suncg6	1.1.0	7.1
 driver/xf86-video-sunffb	1.1.0	7.1
 driver/xf86-video-sunleo	1.1.0	7.1
 driver/xf86-video-suntcx	1.1.0	7.1
-driver/xf86-video-tdfx		1.2.2	7.2RC1
+driver/xf86-video-tdfx		1.4.0	7.4	needs-update
 driver/xf86-video-tga		1.1.0	7.0
-driver/xf86-video-trident	1.2.3	7.2RC2
-driver/xf86-video-tseng		1.1.1	7.2RC1
-driver/xf86-video-v4l		0.1.1	7.1
+driver/xf86-video-trident	1.3.0	7.4	needs-update
+driver/xf86-video-tseng		1.2.0	7.4	needs-update
+driver/xf86-video-v4l		0.2.0	7.4	needs-update
 driver/xf86-video-vesa		1.3.0	7.2RC3
 driver/xf86-video-vga		4.1.0	7.1
 driver/xf86-video-via		0.2.2	7.2RC1
@@ -219,7 +218,7 @@ lib/libICE			1.0.4	7.3
 lib/libSM			1.0.3	7.3
 lib/libX11			1.1.4	7.4	needs-update
 lib/libXRes			1.0.3	7.2RC4
-lib/libXScrnSaver		1.1.2	7.2RC4
+lib/libXScrnSaver		1.1.3	7.4	needs-update
 lib/libXTrap			1.0.0	7.0
 lib/libXau			1.0.3	7.2RC4
 lib/libXaw			1.0.4	7.3
@@ -244,7 +243,7 @@ lib/libXrandr			1.2.2	7.3	needs-update
 lib/libXrender			0.9.4	7.3
 lib/libXt			1.0.5	7.2+
 lib/libXtst			1.0.3	7.3
-lib/libXv			1.0.3	7.2RC4
+lib/libXv			1.0.4	7.4	needs-update
 lib/libXvMC			1.0.4	7.2RC4
 lib/libXxf86dga			1.0.2	7.3
 lib/libXxf86misc		1.0.1	7.1
@@ -255,7 +254,7 @@ lib/liblbxutil			1.0.4	7.2RC4
 lib/liboldX			1.0.1	7.0	still needed?
 lib/libpciaccess		0.10	7.4	needs-update
 lib/libxcb			1.1	7.3	needs-import
-lib/libxkbfile			1.0.4	7.2RC1
+lib/libxkbfile			1.0.5	7.4	needs-update
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.1	7.4	needs-update
 lib/pixman			0.9.6	7.3
