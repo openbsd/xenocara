@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.11 2008/01/16 11:39:20 oga Exp $
+ * $Id: client.c,v 1.12 2008/03/19 00:18:28 oga Exp $
  */
 
 #include "headers.h"
@@ -642,17 +642,21 @@ client_cyclenext(int reverse)
 void
 client_cycleinfo(struct client_ctx *cc)
 {
+#define LISTSIZE 3
 	int w, h, nlines, i, n, oneh, curn = -1, x, y, diff;
-	struct client_ctx *ccc, *list[3];
+	struct client_ctx *ccc, *list[LISTSIZE];
 	struct screen_ctx *sc = CCTOSC(cc);
 	struct fontdesc *font = DefaultFont;
 
 	memset(list, 0, sizeof(list));
 
 	nlines = 0;
-	TAILQ_FOREACH(ccc, &sc->mruq, mru_entry)
-		nlines++;
-	nlines = MIN(nlines, 3);
+	TAILQ_FOREACH(ccc, &sc->mruq, mru_entry) {
+		if (!ccc->flags & CLIENT_HIDDEN) {
+			if (++nlines == LISTSIZE)
+				break;
+		}
+	}
 
 	oneh = font_ascent(font) + font_descent(font) + 1;
 	h = nlines*oneh;
