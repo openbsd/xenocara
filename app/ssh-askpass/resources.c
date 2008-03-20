@@ -53,12 +53,22 @@ get_string_resource (char *res_name, char *res_class)
   XrmValue value;
   char	*type;
   char full_name [1024], full_class [1024];
-  strcpy (full_name, progname);
-  strcat (full_name, ".");
-  strcat (full_name, res_name);
-  strcpy (full_class, progclass);
-  strcat (full_class, ".");
-  strcat (full_class, res_class);
+  int result;
+
+  result = snprintf(full_name, sizeof(full_name), "%s.%s", 
+      progname, res_name);
+  if (result == -1 || result >= sizeof(full_name)) {
+	  fprintf(stderr, "%s: resource name too long: %s.%s\n", progname,
+	      progname, res_name);
+	  return 0;
+  }
+  result = snprintf(full_class, sizeof(full_class), "%s.%s", 
+      progclass, res_class);
+  if (result == -1 || result >= sizeof(full_class)) {
+	 fprintf(stderr, "%s: resource name too long: %s.%s\n", progname,
+	      progclass, res_class);
+	  return 0;
+  }
   if (XrmGetResource (db, full_name, full_class, &type, &value))
     {
       char *str = (char *) malloc (value.size + 1);
