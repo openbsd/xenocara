@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.10 2008/02/13 21:48:03 oga Exp $
+ * $Id: calmwm.c,v 1.11 2008/03/22 14:09:02 oga Exp $
  */
 
 #include "headers.h"
@@ -149,7 +149,7 @@ void
 x_setupscreen(struct screen_ctx *sc, u_int which)
 {
 	XColor tmp;
-	XGCValues gv, gv1/* , gv2 */;
+	XGCValues gv;
 	Window *wins, w0, w1;
 	u_int nwins, i = 0;
 	XWindowAttributes winattr;
@@ -208,13 +208,6 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 	sc->hlgc = XCreateGC(X_Dpy, sc->rootwin,
 	    GCForeground|GCBackground|GCFunction|
 	    GCLineWidth|GCSubwindowMode, &gv);
-
-	gv1.function = GXinvert;
-	gv1.subwindow_mode = IncludeInferiors;
-	gv1.line_width = 1;
-
-	sc->invgc = XCreateGC(X_Dpy, sc->rootwin,
-	    GCFunction|GCSubwindowMode|GCLineWidth, &gv1);
 
 	font_init(sc);
 	DefaultFont = font_getx(sc, DefaultFontName);

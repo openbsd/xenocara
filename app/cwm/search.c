@@ -14,7 +14,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: search.c,v 1.6 2008/01/16 11:39:20 oga Exp $
+ * $Id: search.c,v 1.7 2008/03/22 14:09:02 oga Exp $
  */
 
 #include "headers.h"
@@ -32,11 +32,6 @@ search_init(struct screen_ctx *sc)
 }
 
 /*
- * ranking.  each rank type is assigned a weight.  multiply this by
- * the rank given.  add them up.  simple linear combination.
- */
-
-/*
  * Input: list of items,
  * Output: choose one
  * so, exactly like menus
@@ -45,7 +40,6 @@ search_init(struct screen_ctx *sc)
 struct menu *
 search_start(struct menu_q *menuq,
     void (*match)(struct menu_q *, struct menu_q *, char *), 
-    void (*rank)(struct menu_q *resultq, char *search), 
     void (*print)(struct menu *mi, int print),
     char *prompt, int dummy)
 {
@@ -109,10 +103,6 @@ search_start(struct menu_q *menuq,
 
 		switch (e.type) {
 		case KeyPress:
-			/*
-			 * XXX - C-s & C-r for next and prev.
-			 */
-
 			if (input_keycodetrans(e.xkey.keycode, e.xkey.state,
 				&ctl, &chr, 1) < 0)
 				continue;
@@ -180,8 +170,6 @@ search_start(struct menu_q *menuq,
 			if (mutated && strlen(searchstr) > 0) {
 				(*match)(menuq, &resultq, searchstr);
 				beobnoxious = TAILQ_EMPTY(&resultq);
-				if (!beobnoxious && rank != NULL)
-					(*rank)(&resultq, searchstr);
 			} else if (mutated)
 				TAILQ_INIT(&resultq);
 
@@ -194,12 +182,10 @@ search_start(struct menu_q *menuq,
 		case Expose:
 			if (list) {
 				if (TAILQ_EMPTY(&resultq) && list) {
-					/* Copy them over and rank them. */
+					/* Copy them all over. */
 					TAILQ_FOREACH(mi, menuq, entry)
 					    TAILQ_INSERT_TAIL(&resultq, mi,
 						resultentry);
-					if (rank != NULL)
-						(*rank)(&resultq, searchstr);
 
 					listing = 1;
 				} else if (mutated)

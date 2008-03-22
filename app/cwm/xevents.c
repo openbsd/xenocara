@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.5 2008/02/20 12:56:10 oga Exp $
+ * $Id: xevents.c,v 1.6 2008/03/22 14:09:02 oga Exp $
  */
 
 /*
@@ -400,7 +400,7 @@ xev_handle_keypress(struct xevent *xev, XEvent *ee)
 	if (kb == NULL)
 		goto out;
 
-	if ((kb->flags & (KBFLAG_NEEDCLIENT|KBFLAG_FINDCLIENT)) && 
+	if ((kb->flags & (KBFLAG_NEEDCLIENT)) && 
 	    (cc = client_find(e->window)) == NULL &&
 	    (cc = client_current()) == NULL)
 		if (kb->flags & KBFLAG_NEEDCLIENT)
