@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.11 2008/03/22 14:09:02 oga Exp $
+ * $Id: calmwm.c,v 1.12 2008/03/22 15:09:45 oga Exp $
  */
 
 #include "headers.h"
@@ -119,7 +119,6 @@ x_setup(char *display_name)
 {
 	int i;
 	struct screen_ctx *sc;
-	char *fontname;
 
 	TAILQ_INIT(&Screenq);
 

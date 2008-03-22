@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.12 2008/03/19 00:18:28 oga Exp $
+ * $Id: client.c,v 1.13 2008/03/22 15:09:45 oga Exp $
  */
 
 #include "headers.h"
@@ -191,10 +191,7 @@ client_new(Window win, struct screen_ctx *sc, int mapped)
 	client_update(cc);
 	
 	if (mapped) {
-		if (Conf.flags & CONF_STICKY_GROUPS)
-			group_sticky(cc);
-		else
-			group_autogroup(cc);
+		group_autogroup(cc);
 	}
 
 	return (cc);

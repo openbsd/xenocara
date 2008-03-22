@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.14 2008/03/22 14:09:02 oga Exp $
+ * $Id: kbfunc.c,v 1.15 2008/03/22 15:09:45 oga Exp $
  */
 
 #include <paths.h>
@@ -320,17 +320,20 @@ kbfunc_exec(struct client_ctx *scratch, void *arg)
 			if (stat(tpath, &sb) == -1)
 				continue;
 			/* may we execute this file? */
-			if (euid == sb.st_uid)
+			if (euid == sb.st_uid) {
 					if (sb.st_mode & S_IXUSR)
 						goto executable;
 					else
 						continue;
-			for (j = 0; j < ngroups; j++)
-				if (mygroups[j] == sb.st_gid)
+			}
+			for (j = 0; j < ngroups; j++) {
+				if (mygroups[j] == sb.st_gid) {
 					if (sb.st_mode & S_IXGRP)
 						goto executable;
 					else
 						continue;
+				}
+			}
 			if (sb.st_mode & S_IXOTH)
 				goto executable;
 			continue;
@@ -448,21 +451,9 @@ kbfunc_client_delete(struct client_ctx *cc, void *arg)
 }
 
 void
-kbfunc_client_groupselect(struct client_ctx *cc, void *arg)
-{
-	if (Groupmode)
-		group_done();
-	else
-		group_enter();
-}
-
-void
 kbfunc_client_group(struct client_ctx *cc, void *arg)
 {
-	if (Groupmode)
-		group_select(KBTOGROUP((int)arg));
-	else
-		group_hidetoggle(KBTOGROUP((int)arg));
+	group_hidetoggle(KBTOGROUP((int)arg));
 }
 
 void
@@ -480,10 +471,7 @@ kbfunc_client_prevgroup(struct client_ctx *cc, void *arg)
 void
 kbfunc_client_nogroup(struct client_ctx *cc, void *arg)
 {
-	if (Groupmode)
-		group_deletecurrent();
-	else
-		group_alltoggle();
+	group_alltoggle();
 }
 
 void

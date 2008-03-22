@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.21 2008/03/18 00:48:56 oga Exp $
+ * $Id: conf.c,v 1.22 2008/03/22 15:09:45 oga Exp $
  */
 
 #include "headers.h"
@@ -53,8 +53,6 @@ struct winmatch_q ignoreq;
 	wm->opts |= CONF_IGNORECASE;			\
 	TAILQ_INSERT_TAIL(queue, wm, entry);		\
 } while (0)
-
-/* #define SYSTR_PRE "systrace -C -g /usr/local/bin/notification -d /usr/home/marius/policy/X11 " */
 
 /* Initializes the command menu */
 
@@ -207,7 +205,6 @@ conf_setup(struct conf *c)
 	conf_bindname(c, "MS-Tab", "rcycle");
 	conf_bindname(c, "CM-n", "label");
 	conf_bindname(c, "CM-x", "delete");
-	conf_bindname(c, "CM-Escape", "groupselect");
 	conf_bindname(c, "CM-0", "nogroup");
 	conf_bindname(c, "CM-1", "group1");
 	conf_bindname(c, "CM-2", "group2");
@@ -357,7 +354,6 @@ struct {
 	{ "bigptrmovedown", kbfunc_ptrmove, 0, (void *)(CWM_DOWN|CWM_BIGMOVE) },
 	{ "bigptrmoveleft", kbfunc_ptrmove, 0, (void *)(CWM_LEFT|CWM_BIGMOVE) },
 	{ "bigptrmoveright", kbfunc_ptrmove, 0, (void *)(CWM_RIGHT|CWM_BIGMOVE) },
-	{ "groupselect", kbfunc_client_groupselect, 0, 0 },
 	{ "group1", kbfunc_client_group, 0, (void *)1 },
 	{ "group2", kbfunc_client_group, 0, (void *)2 },
 	{ "group3", kbfunc_client_group, 0, (void *)3 },
