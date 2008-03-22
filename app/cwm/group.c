@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.6 2008/03/22 15:09:45 oga Exp $
+ * $Id: group.c,v 1.7 2008/03/22 21:34:07 okan Exp $
  */
 
 #include "headers.h"
@@ -341,11 +341,6 @@ group_autogroup(struct client_ctx *cc)
 	struct group_ctx *gc;
 	char group[CALMWM_MAXNAMELEN];
 
-	if (Conf.flags & CONF_STICKY_GROUPS) {
-		_group_add(Group_active, cc);
-		return;
-	}
-
 	if (cc->app_class == NULL || cc->app_name == NULL)
 		return;
 
@@ -358,8 +353,13 @@ group_autogroup(struct client_ctx *cc)
 	}
 
 	TAILQ_FOREACH(gc, &Groupq, entry) {
-		if (strcmp(shortcut_to_name[gc->shortcut], group) == 0)
+		if (strcmp(shortcut_to_name[gc->shortcut], group) == 0) {
 			_group_add(gc, cc);
+			return;
+		}
 	}
+
+	if (Conf.flags & CONF_STICKY_GROUPS)
+		_group_add(Group_active, cc);
 
 }
