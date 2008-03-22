@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2008/01/13 17:22:58 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2008/03/22 12:40:02 merdely Exp $
 
 PROG=	resize
 MAN=	resize.1
@@ -18,7 +18,7 @@ SRCS=		resize.c xstrings.c
 resize.1: resize.man
 	sed -e 's#__vendorversion__#"X Window System"#g' \
 	    -e 's#__mansuffix__#1#g' \
-	    -e 's#__miscmansuffix__#1#g' \
+	    -e 's#__miscmansuffix__#7#g' \
 	    -e 's#__apploaddir__#${X11ETC}/app-defaults#g' \
 	    < ${.CURDIR}/../resize.man > $@
 
