@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2008/02/02 17:24:30 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2008/03/23 16:43:25 oga Exp $
 
 MESA=	${.CURDIR}/../../../dist/Mesa/src/mesa
 MESA_INCLUDE=	${.CURDIR}/../../../dist/Mesa/include
@@ -262,7 +262,6 @@ ASM_C_SOURCES= \
 
 ASM_SOURCES =		\
 	xform4.S
-
 .endif
 .if ${MACHINE_ARCH} == sparc
 ASM_C_SOURCES= \
@@ -329,31 +328,34 @@ ${LIB}_pic.a:	${OBJS} $(DPADD)
 	@${AR} cq lib${LIB}_pic.a `${LORDER} ${OBJS} | tsort -q`
 	${RANLIB} lib${LIB}_pic.a
 
-.if ${MACHINE_ARCH} == i386
+
+.if ${MACHINE_ARCH} == i386 || ${MACHINE_ARCH} == amd64
 gen_matypes: gen_matypes.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) ${MESA}/x86/gen_matypes.c -o gen_matypes
+
 
 matypes.h: mtypes.h t_context.h gen_matypes
 	./gen_matypes > matypes.h
 
 CLEANFILES+= gen_matypes matypes.h
 
-common_x86_asm.o: matypes.h
-3dnow_normal.o: matypes.h
-3dnow_xform1.o: matypes.h
-3dnow_xform2.o: matypes.h
-3dnow_xform3.o: matypes.h
-3dnow_xform4.o: matypes.h
-mmx_blend.o: matypes.h
-sse_normal.o: matypes.h
-sse_xform1.o: matypes.h
-sse_xform2.o: matypes.h
-sse_xform3.o: matypes.h
-sse_xform4.o: matypes.h
-x86_cliptest.o: matypes.h
-x86_xform2.o: matypes.h
-x86_xform3.o: matypes.h
-x86_xform4.o: matypes.h
+xform4.so: matypes.h
+common_x86_asm.so: matypes.h
+3dnow_normal.so: matypes.h
+3dnow_xform1.so: matypes.h
+3dnow_xform2.so: matypes.h
+3dnow_xform3.so: matypes.h
+3dnow_xform4.so: matypes.h
+mmx_blend.so: matypes.h
+sse_normal.so: matypes.h
+sse_xform1.so: matypes.h
+sse_xform2.so: matypes.h
+sse_xform3.so: matypes.h
+sse_xform4.so: matypes.h
+x86_cliptest.so: matypes.h
+x86_xform2.so: matypes.h
+x86_xform3.so: matypes.h
+x86_xform4.so: matypes.h
 .endif
 
 .if ${MACHINE_ARCH} == i386
@@ -368,6 +370,7 @@ x86_xform4.o: matypes.h
 .endif
 .if ${MACHINE_ARCH} == amd64
 .PATH: ${MESA}/x86-64
+.PATH: ${MESA}/x86
 .endif
 .PATH: ${MESA}/glapi
 .PATH: ${MESA}/main
