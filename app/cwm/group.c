@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.7 2008/03/22 21:34:07 okan Exp $
+ * $Id: group.c,v 1.8 2008/03/23 15:09:21 simon Exp $
  */
 
 #include "headers.h"
@@ -30,12 +30,6 @@ struct group_ctx    Groups[CALMWM_NGROUPS];
 char                Group_name[256];
 int                 Grouphideall = 0;
 struct group_ctx_q  Groupq;
-
-static char *shortcut_to_name[] = {
-	"XXX", "one", "two", "three",
-	"four", "five", "six", "seven",
-	"eight", "nine",
-};
 
 static void
 _group_add(struct group_ctx *gc, struct client_ctx *cc)

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.7 2008/03/22 15:09:45 oga Exp $
+ * $Id: xevents.c,v 1.8 2008/03/23 15:09:21 simon Exp $
  */
 
 /*
@@ -275,10 +275,7 @@ xev_handle_buttonpress(struct xevent *xev, XEvent *ee)
 			break;
 		case Button3: {
 			struct cmd *cmd;
-			if (conf_cmd_changed(Conf.menu_path)) {
-				conf_cmd_clear(&Conf);
-				conf_cmd_populate(&Conf, Conf.menu_path);
-			}
+			conf_reload(&Conf);
 			TAILQ_FOREACH(cmd, &Conf.cmdq, entry) {
 				XCALLOC(mi, struct menu);
 				strlcpy(mi->text, cmd->label, sizeof(mi->text));
