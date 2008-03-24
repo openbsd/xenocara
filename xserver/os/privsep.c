@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.4 2008/03/15 17:14:11 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.5 2008/03/24 21:24:52 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -148,7 +148,7 @@ send_fd(int socket, int fd)
 
 	if (fd >= 0) {
 		msg.msg_control = &cmsgbuf.buf;
-		msg.msg_controllen = CMSG_LEN(sizeof(int));
+		msg.msg_controllen = sizeof(cmsgbuf.buf);
 		cmsg = CMSG_FIRSTHDR(&msg);
 		cmsg->cmsg_len = CMSG_LEN(sizeof(int));
 		cmsg->cmsg_level = SOL_SOCKET;
@@ -190,7 +190,7 @@ receive_fd(int socket)
 	msg.msg_iov = &vec;
 	msg.msg_iovlen = 1;
 	msg.msg_control = &cmsgbuf.buf;
-	msg.msg_controllen = CMSG_LEN(sizeof(int));
+	msg.msg_controllen = sizeof(cmsgbuf.buf);
 
 	if ((n = recvmsg(socket, &msg, 0)) == -1)
 		warn("%s: recvmsg", __func__);
