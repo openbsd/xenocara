@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.23 2008/03/03 07:01:44 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.24 2008/03/25 23:28:19 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -53,6 +53,51 @@ AUTOTOOLS_ENV=  AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 		AUTOCONF_VERSION="$(AUTOCONF_VERSION)" \
 		ACLOCAL="aclocal -I ${X11BASE}/share/aclocal" \
 		$(CONFIGURE_ENV)
+
+##
+## Default rules
+##
+
+# pkgconfig
+.if defined(PKGCONFIG)
+PACKAGE_VERSION!=m4 ${XSRCDIR}/share/mk/package_version.m4 ${.CURDIR}/configure.ac
+
+all:: ${PKGCONFIG}
+
+${PKGCONFIG}: ${PKGCONFIG}.in
+	@sed -e 's#@prefix@#${X11BASE}#g' \
+	    -e 's#@exec_prefix@#$${prefix}#g' \
+	    -e 's#@libdir@#$${exec_prefix}/lib#g' \
+	    -e 's#@includedir@#$${prefix}/include#g' \
+	    -e 's#@PACKAGE_VERSION@#${PACKAGE_VERSION}#g' \
+	< ${.CURDIR}/${PKGCONFIG}.in > $@
+
+install:: ${PKGCONFIG}
+	${INSTALL_DATA} ${PKGCONFIG} ${DESTDIR}${LIBDIR}/pkgconfig
+
+clean::
+	rm -f ${PKGCONFIG}
+.endif
+
+# headers
+.if defined(HEADERS)
+install::
+	@echo installing ${HEADERS} in ${INCSDIR}/${HEADERS_SUBDIR}
+	@cd ${.CURDIR}; for i in ${HEADERS}; do \
+	    cmp -s $$i ${DESTDIR}${INCSDIR}/${HEADERS_SUBDIR}$$i || \
+		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/${HEADERS_SUBDIR}$$i;\
+	done
+.endif
+.if defined(HEADERS_SUBDIRS)
+.for d in ${HEADERS_SUBDIRS}
+install::
+	@echo installing ${HEADERS_${d:S/\//_/}} in ${INCSDIR}/${d}
+	@cd ${.CURDIR}; for i in ${HEADERS_${d:S/\//_/}}; do \
+	    cmp -s $$i ${DESTDIR}${INCSDIR}/$d/$$i || \
+		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/${d}; \
+	done
+.endfor
+.endif
 
 .if !target(.MAIN)
 .MAIN: all

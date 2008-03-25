@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile,v 1.4 2008/02/02 17:19:57 matthieu Exp $
+# $OpenBSD: Makefile,v 1.5 2008/03/25 23:28:19 matthieu Exp $
 
-.include <bsd.own.mk>
+.include <bsd.xconf.mk>
 
 SUBDIR= bigreqsproto compositeproto dmxproto damageproto evieproto \
 	fixesproto fontcacheproto fontsproto glproto inputproto \
@@ -8,9 +8,9 @@ SUBDIR= bigreqsproto compositeproto dmxproto damageproto evieproto \
 	recordproto renderproto resourceproto scrnsaverproto \
 	trapproto videoproto x11proto xcmiscproto xextproto \
 	xf86bigfontproto xf86dgaproto xf86miscproto \
-	xf86rushproto xf86vidmodeproto
+	xf86rushproto xf86vidmodeproto 
 
-.if defined(XENOCARA_BUILD_DRI) && ${XENOCARA_BUILD_DRI:L} == "yes"
+.if ${XENOCARA_BUILD_DRI:L} == "yes"
 SUBDIR+= xf86driproto
 .endif
 
