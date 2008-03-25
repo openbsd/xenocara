@@ -1,4 +1,5 @@
-# $OpenBSD: Makefile,v 1.8 2007/04/09 15:47:23 matthieu Exp $
+# $OpenBSD: Makefile,v 1.9 2008/03/25 23:41:50 matthieu Exp $
+.include <bsd.xconf.mk>
 
 PROG=	xsystrace
 MAN=	xsystrace.1
@@ -16,7 +17,6 @@ afterinstall:
 	${INSTALL_DATA} \
 		${.CURDIR}/Xsystrace.ad ${DESTDIR}/etc/X11/app-defaults/Xsystrace
 
-X11BASE?= /usr/X11R6
 MANDIR=	${X11BASE}/man/cat
 
 obj: _xenocara_obj

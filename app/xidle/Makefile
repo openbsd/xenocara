@@ -1,7 +1,5 @@
-# $OpenBSD: Makefile,v 1.3 2007/04/09 11:14:25 matthieu Exp $
-
-.include <bsd.own.mk>
-X11BASE?=	/usr/X11R6
+# $OpenBSD: Makefile,v 1.4 2008/03/25 23:41:50 matthieu Exp $
+.include <bsd.xconf.mk>
 
 PROG=	xidle
 

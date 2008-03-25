@@ -1,11 +1,10 @@
-# $OpenBSD: Makefile.inc,v 1.4 2008/02/20 22:41:51 matthieu Exp $
-.include <bsd.own.mk>
+# $OpenBSD: Makefile.inc,v 1.5 2008/03/25 23:41:50 matthieu Exp $
+.include <bsd.xconf.mk>
 
 MESA= ${.CURDIR}/../../../../dist/Mesa/src/mesa
 TOP= ${.CURDIR}/../../../../dist/Mesa
 
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
-X11BASE ?= /usr/X11R6
 
 COMMON_SOURCES = \
 	driverfuncs.c \

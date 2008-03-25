@@ -1,7 +1,7 @@
-# $OpenBSD: Makefile,v 1.17 2008/02/12 21:09:27 matthieu Exp $
-.include <bsd.own.mk>
+# $OpenBSD: Makefile,v 1.18 2008/03/25 23:41:50 matthieu Exp $
+.include <bsd.xconf.mk>
 
-.if defined(XENOCARA_BUILD_DRI) && ${XENOCARA_BUILD_DRI:L} == "yes"
+.if ${XENOCARA_BUILD_DRI:L} == "yes"
 SUBDIR=libmesa dri
 .endif
 
@@ -22,7 +22,7 @@ DRI_DRIVER_SEARCH_DIR=	$(DRI_DRIVER_INSTALL_DIR)
 
 INCSDIR=	${X11BASE}/include/GL
 
-.if defined(XENOCARA_BUILD_DRI) && ${XENOCARA_BUILD_DRI:L} == "yes"
+.if ${XENOCARA_BUILD_DRI:L} == "yes"
 LDADD=		-L${X11BASE}/lib -lX11 -lXext -lXxf86vm -lXdamage -lXfixes -ldrm
 .else
 LDADD=		-L${X11BASE}/lib -lXext -lX11
@@ -51,7 +51,7 @@ CPPFLAGS+= \
 	-DHAVE_ALIAS \
 	-D_REENTRANT
 
-.if defined(XENOCARA_BUILD_DRI) && ${XENOCARA_BUILD_DRI:L} == "yes"
+.if ${XENOCARA_BUILD_DRI:L} == "yes"
 CPPFLAGS+=	-DGLX_DIRECT_RENDERING
 .endif
 

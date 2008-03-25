@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.20 2008/02/13 21:34:15 miod Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.21 2008/03/25 23:41:50 matthieu Exp $
 
-.include <bsd.own.mk>
+.include <bsd.xconf.mk>
 
 DIST= ${.CURDIR}
 
@@ -27,12 +27,11 @@ NO_XF86_UTIL_${M} = --disable-xfree86-utils
 .endfor
 NO_XF86_UTIL_OPTION=${NO_XF86_UTIL_${MACHINE}}
 
-.if ${MACHINE} != "landisk" && ${MACHINE} != "sgi" && ${MACHINE} != "vax" && \
-    ${MACHINE_ARCH} != "m68k"
+.if ${XENOCARA_BUILD_GL:L} == "yes"
 MESA_SOURCE=	--with-mesa-source=${XSRCDIR}/dist/Mesa
 .endif
 
-.if defined(XENOCARA_BUILD_DRI) && ${XENOCARA_BUILD_DRI:L} == "yes"
+.if ${XENOCARA_BUILD_DRI:L} == "yes"
 DRI_OPTION=	--enable-dri --with-dri-driver-path=${X11BASE}/lib/modules/dri
 .endif
 

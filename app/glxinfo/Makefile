@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile,v 1.5 2007/04/08 21:53:14 matthieu Exp $
-.include <bsd.own.mk>
-X11BASE?=	/usr/X11R6
+# $OpenBSD: Makefile,v 1.6 2008/03/25 23:41:50 matthieu Exp $
+.include <bsd.xconf.mk>
+
 DIST=		${XSRCDIR}/dist/Mesa
 GLXINFO=	${DIST}/progs/xdemos
 MANDIR=		${X11BASE}/man/cat

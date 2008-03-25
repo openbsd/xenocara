@@ -1,8 +1,6 @@
-# $OpenBSD: Makefile,v 1.5 2008/03/23 15:09:21 simon Exp $
+# $OpenBSD: Makefile,v 1.6 2008/03/25 23:41:50 matthieu Exp $
 
-.include <bsd.own.mk>
-
-X11BASE?=	/usr/X11R6
+.include <bsd.xconf.mk>
 
 PROG=		cwm
 

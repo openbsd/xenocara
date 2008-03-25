@@ -1,4 +1,5 @@
-# $OpenBSD: Makefile,v 1.14 2008/02/21 08:04:44 todd Exp $
+# $OpenBSD: Makefile,v 1.15 2008/03/25 23:41:50 matthieu Exp $
+.include <bsd.xconf.mk>
 
 SUBDIR= bdftopcf mkfontscale mkfontdir \
 	appres beforelight bitmap editres fonttosfnt fslsfonts \
@@ -16,13 +17,12 @@ SUBDIR= bdftopcf mkfontscale mkfontdir \
 	xwud
 
 # Font server doesn't link on architectures with static only libraries
-.if ${MACHINE} != landisk && ${MACHINE} != "vax" && ${MACHINE_ARCH} != "m88k"
+.if ${XENOCARA_HAVE_SHARED_LIBS:L} == "yes"
 SUBDIR += xfs
 .endif
 
 # GL
-.if ${MACHINE} != "sgi" && ${MACHINE} != "vax" && ${MACHINE_ARCH} != "m88k" \
-	&& ${MACHINE} != "landisk"
+.if ${XENOCARA_BUILD_GL:L} == "yes"
 SUBDIR +=   xdriinfo glxgears glxinfo
 .endif
 

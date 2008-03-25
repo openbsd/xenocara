@@ -1,8 +1,8 @@
-#	$OpenBSD: Makefile,v 1.2 2007/03/18 10:26:58 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2008/03/25 23:41:50 matthieu Exp $
 
 .include <bsd.own.mk>
 
-FILES=	automake.dep bsd.xorg.mk
+FILES=	automake.dep bsd.xconf.mk bsd.xorg.mk
 
 all:
 

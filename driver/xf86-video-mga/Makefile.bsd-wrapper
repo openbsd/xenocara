@@ -1,8 +1,8 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2008/02/02 17:19:57 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2008/03/25 23:41:50 matthieu Exp $
 
-.include <bsd.own.mk>
+.include <bsd.xconf.mk>
 
-.if !defined(XENOCARA_BUILD_DRI) || ${XENOCARA_BUILD_DRI:L} != "yes"
+.if ${XENOCARA_BUILD_DRI:L} != "yes"
 CONFIGURE_ARGS+= --disable-dri
 .endif
 

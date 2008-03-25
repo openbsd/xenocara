@@ -1,11 +1,9 @@
 # -*- makefile -*- 
-# $OpenBSD: Makefile.inc,v 1.4 2007/04/04 22:33:46 david Exp $
+# $OpenBSD: Makefile.inc,v 1.5 2008/03/25 23:41:50 matthieu Exp $
 
 .ifndef FVWM_MAKEFILE_INC
 FVWM_MAKEFILE_INC = done
-.include <bsd.own.mk>
-
-X11BASE?=	/usr/X11R6
+.include <bsd.xconf.mk>
 
 CFLAGS+=	-I${X11BASE}/include -I${.CURDIR} -I${.CURDIR}/.. \
 		-I${.CURDIR}/../libs

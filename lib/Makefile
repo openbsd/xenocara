@@ -1,4 +1,6 @@
-# $OpenBSD: Makefile,v 1.8 2008/03/21 21:07:48 oga Exp $
+# $OpenBSD: Makefile,v 1.9 2008/03/25 23:41:50 matthieu Exp $
+
+.include <bsd.xconf.mk>
 
 SUBDIR= freetype fontconfig libxtrans libXau libXdmcp \
 	libX11  libXext  libXrender libXft libdmx libfontenc \
@@ -9,14 +11,11 @@ SUBDIR= freetype fontconfig libxtrans libXau libXdmcp \
 	libXprintAppUtil libXrandr libXRes libXScrnSaver libXTrap \
 	libXtst libXv libXvMC libXxf86dga libXxf86misc libXxf86vm
 
-DRM_ARCHES= alpha amd64 i386 macppc sparc64
+.if ${XENOCARA_BUILD_DRI:L} == "yes"
+SUBDIR+= libdrm
+.endif
 
-.for a in $(DRM_ARCHES)
-SUBDIR_$a+= libdrm
-.endfor
-SUBDIR+= $(SUBDIR_$(MACHINE))
-
-.if ${MACHINE} != "sgi" && ${MACHINE} != "vax"
+.if ${XENOCARA_BUILD_GL:L} == "yes"
 SUBDIR+= libGL libGLU libGLw
 .endif
 

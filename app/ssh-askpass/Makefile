@@ -1,7 +1,6 @@
-# $OpenBSD: Makefile,v 1.9 2008/03/19 20:31:09 matthieu Exp $
+# $OpenBSD: Makefile,v 1.10 2008/03/25 23:41:50 matthieu Exp $
+.include	<bsd.xconf.mk>
 
-.include	<bsd.own.mk>
-X11BASE?=	/usr/X11R6
 PROG=		ssh-askpass
 SRCS=		drawing.c dynlist.c resources.c x11-ssh-askpass.c
 MANDIR=		${X11BASE}/man/cat
