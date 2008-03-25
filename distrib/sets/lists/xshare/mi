@@ -923,6 +923,7 @@
 ./usr/X11R6/man/cat1/xterm.0
 ./usr/X11R6/man/cat1/xvctl.0
 ./usr/X11R6/man/cat3
+./usr/X11R6/man/cat5/cwmrc.0
 ./usr/X11R6/man/man1/Xmark.1
 ./usr/X11R6/man/man1/appres.1
 ./usr/X11R6/man/man1/atobm.1
