@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xconf.mk,v 1.1 2008/03/25 23:41:50 matthieu Exp $
+# $OpenBSD: bsd.xconf.mk,v 1.2 2008/03/25 23:43:25 matthieu Exp $
 
 # Shared libs?
 .if ${MACHINE} == landisk || ${MACHINE} == "mvme88k" || ${MACHINE} == "vax"
@@ -9,7 +9,7 @@ XENOCARA_HAVE_SHARED_LIBS?=yes
 
 # Build DRI?
 .if ${MACHINE} == "amd64" || ${MACHINE} == "i386"
-XENOCARA_BUILD_DRI?=yes
+XENOCARA_BUILD_DRI?=no
 .else
 XENOCARA_BUILD_DRI?=no
 .endif
