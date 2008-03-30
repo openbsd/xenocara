@@ -190,8 +190,8 @@ _Xthr_key_create_stub_(unsigned int *key, void (*destructor)(void *))
     void **tmp;
 
     if ((_Xthr_last_key_ % XTHR_KEYS_CHUNK) == 0) {
-	tmp = recalloc(_Xthr_keys_, 1, 
-		       _Xthr_last_key_ + XTHR_KEYS_CHUNK*sizeof(void *));
+	tmp = realloc(_Xthr_keys_,
+	    (_Xthr_last_key_ + XTHR_KEYS_CHUNK)*sizeof(void *));
 	if (tmp == NULL) {
 	    free(_Xthr_keys_);
 	    return ENOMEM;
