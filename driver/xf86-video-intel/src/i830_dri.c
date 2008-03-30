@@ -236,18 +236,18 @@ I830SetParam(ScrnInfoPtr pScrn, int param, int value)
    return TRUE;
 }
 
-static Bool
-I830SetHWS(ScrnInfoPtr pScrn, int addr)
+Bool
+I830DRISetHWS(ScrnInfoPtr pScrn)
 {
     I830Ptr pI830 = I830PTR(pScrn);
     drmI830HWS hws;
 
-    hws.addr = addr;
+    hws.addr = pI830->hw_status->offset;
 
     if (drmCommandWrite(pI830->drmSubFD, DRM_I830_HWS_PAGE_ADDR,
 		&hws, sizeof(drmI830HWS))) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		"G33 status page initialization Failed\n");
+		"hw status page initialization Failed\n");
 	return FALSE;
     }
     return TRUE;
@@ -813,12 +813,6 @@ I830DRIDoMappings(ScreenPtr pScreen)
       return FALSE;
    }
 
-   if (IS_G33CLASS(pI830)) {
-       if (!I830SetHWS(pScrn, pI830->hw_status->offset)) {
-	   DRICloseScreen(pScreen);
-	   return FALSE;
-       }
-   }
    /* init to zero to be safe */
    sarea->front_handle = 0;
    sarea->back_handle = 0;
@@ -881,18 +875,12 @@ I830DRIDoMappings(ScreenPtr pScreen)
 }
 
 Bool
-I830DRIResume(ScreenPtr pScreen)
+I830DRIInstIrqHandler(ScrnInfoPtr pScrn)
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
    I830Ptr pI830 = I830PTR(pScrn);
    I830DRIPtr pI830DRI = (I830DRIPtr) pI830->pDRIInfo->devPrivate;
 
-   DPRINTF(PFX, "I830DRIResume\n");
-
-   I830ResumeDma(pScrn);
-
-   {
-      pI830DRI->irq = drmGetInterruptFromBusID(pI830->drmSubFD,
+   pI830DRI->irq = drmGetInterruptFromBusID(pI830->drmSubFD,
 #if XSERVER_LIBPCIACCESS
 					       ((pI830->PciInfo->domain << 8) |
 						pI830->PciInfo->bus),
@@ -908,19 +896,31 @@ I830DRIResume(ScreenPtr pScreen)
 #endif
 					       );
 
-      if (drmCtlInstHandler(pI830->drmSubFD, pI830DRI->irq)) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "[drm] failure adding irq handler\n");
-	 pI830DRI->irq = 0;
-	 return FALSE;
-      }
-      else
-	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		    "[drm] dma control initialized, using IRQ %d\n",
-		    pI830DRI->irq);
-   }
+   if (drmCtlInstHandler(pI830->drmSubFD, pI830DRI->irq)) {
+       xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+	       "[drm] failure adding irq handler\n");
+       pI830DRI->irq = 0;
+       return FALSE;
+   } else
+       xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+	       "[drm] dma control initialized, using IRQ %d\n",
+	       pI830DRI->irq);
 
-   return FALSE;
+   return TRUE;
+}
+
+Bool
+I830DRIResume(ScreenPtr pScreen)
+{
+   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+
+   DPRINTF(PFX, "I830DRIResume\n");
+
+   I830ResumeDma(pScrn);
+
+   I830DRIInstIrqHandler(pScrn);
+
+   return TRUE;
 }
 
 void
@@ -976,47 +976,16 @@ I830DestroyContext(ScreenPtr pScreen, drm_context_t hwContext,
 Bool
 I830DRIFinishScreenInit(ScreenPtr pScreen)
 {
-   ScrnInfoPtr        pScrn = xf86Screens[pScreen->myNum];
-   I830Ptr pI830 = I830PTR(pScrn);
-
    DPRINTF(PFX, "I830DRIFinishScreenInit\n");
 
    if (!DRIFinishScreenInit(pScreen))
       return FALSE;
 
-   /* Okay now initialize the dma engine */
-   {
-      I830DRIPtr pI830DRI = (I830DRIPtr) pI830->pDRIInfo->devPrivate;
-
-      pI830DRI->irq = drmGetInterruptFromBusID(pI830->drmSubFD,
-#if XSERVER_LIBPCIACCESS
-					       ((pI830->PciInfo->domain << 8) |
-						pI830->PciInfo->bus),
-					       pI830->PciInfo->dev,
-					       pI830->PciInfo->func
-#else
-					       ((pciConfigPtr) pI830->
-						PciInfo->thisCard)->busnum,
-					       ((pciConfigPtr) pI830->
-						PciInfo->thisCard)->devnum,
-					       ((pciConfigPtr) pI830->
-						PciInfo->thisCard)->funcnum
-#endif
-					       );
-
-      if (drmCtlInstHandler(pI830->drmSubFD, pI830DRI->irq)) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "[drm] failure adding irq handler\n");
-	 pI830DRI->irq = 0;
-	 DRICloseScreen(pScreen);
-	 return FALSE;
-      }
-      else
-	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		    "[drm] dma control initialized, using IRQ %d\n",
-		    pI830DRI->irq);
-	 return TRUE;
-   }
+   /* move irq initialize later in EnterVT, as then we
+    * would finish binding possible hw status page, which
+    * requires irq ctrl ioctl not be called that early.
+    */
+   return TRUE;
 }
 
 #ifdef DAMAGE

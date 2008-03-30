@@ -696,7 +696,9 @@ extern Bool I830DRIFinishScreenInit(ScreenPtr pScreen);
 extern void I830DRIUnlock(ScrnInfoPtr pScrn);
 extern Bool I830DRILock(ScrnInfoPtr pScrn);
 extern Bool I830DRISetVBlankInterrupt (ScrnInfoPtr pScrn, Bool on);
-Bool i830_update_dri_buffers(ScrnInfoPtr pScrn);
+extern Bool i830_update_dri_buffers(ScrnInfoPtr pScrn);
+extern Bool I830DRISetHWS(ScrnInfoPtr pScrn);
+extern Bool I830DRIInstIrqHandler(ScrnInfoPtr pScrn);
 #endif
 
 unsigned long intel_get_pixmap_offset(PixmapPtr pPix);
@@ -838,6 +840,7 @@ extern const int I830CopyROP[16];
 #define QUIRK_IGNORE_LVDS		0x00000002
 #define QUIRK_IGNORE_MACMINI_LVDS 	0x00000004
 #define QUIRK_PIPEA_FORCE		0x00000008
+#define QUIRK_IVCH_NEED_DVOB		0x00000010
 extern void i830_fixup_devices(ScrnInfoPtr);
 
 #endif /* _I830_H_ */

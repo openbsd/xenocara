@@ -83,7 +83,7 @@ struct _I830DVODriver i830_dvo_drivers[] =
 	.type = I830_OUTPUT_DVO_LVDS,
 	.modulename = "ivch",
 	.fntablename = "ivch_methods",
-	.dvo_reg = DVOB,
+	.dvo_reg = DVOA,
 	.address = 0x04, /* Might also be 0x44, 0x84, 0xc4 */
 	.symbols = ivch_symbols
     },
@@ -398,6 +398,7 @@ i830_dvo_get_current_mode (xf86OutputPtr output)
 void
 i830_dvo_init(ScrnInfoPtr pScrn)
 {
+    I830Ptr pI830 = I830PTR(pScrn);
     I830OutputPrivatePtr intel_output;
     int ret;
     int i;
@@ -430,6 +431,11 @@ i830_dvo_init(ScrnInfoPtr pScrn)
 
 	ret_ptr = NULL;
 	drv->vid_rec = LoaderSymbol(drv->fntablename);
+
+	if (!strcmp(drv->modulename, "ivch") &&
+	    pI830->quirk_flag & QUIRK_IVCH_NEED_DVOB) {
+	    drv->dvo_reg = DVOB;
+	}
 
 	/* Allow the I2C driver info to specify the GPIO to be used in
 	 * special cases, but otherwise default to what's defined in the spec.

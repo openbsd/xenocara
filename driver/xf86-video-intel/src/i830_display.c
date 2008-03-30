@@ -637,7 +637,8 @@ i830_use_fb_compression(xf86CrtcPtr crtc)
 
     /* Here we disable it to catch one->two pipe enabled configs */
     if (count > 1) {
-	i830_disable_fb_compression(crtc);
+	if (i830_fb_compression_supported(pI830))
+	    i830_disable_fb_compression(crtc);
 	return FALSE;
     }
 
@@ -1639,10 +1640,11 @@ i830_crtc_clock_get(ScrnInfoPtr pScrn, xf86CrtcPtr crtc)
 	    clock.p1 = ffs((dpll & DPLL_FPA01_P1_POST_DIV_MASK_I830_LVDS) >>
 			   DPLL_FPA01_P1_POST_DIV_SHIFT);
 
+	    /* if LVDS is dual-channel, p2 = 7 */
 	    if ((INREG(LVDS) & LVDS_CLKB_POWER_MASK) == LVDS_CLKB_POWER_UP)
-		clock.p2 = I8XX_P2_LVDS_SLOW;
+		clock.p2 = 7;
 	    else
-		clock.p2 = I8XX_P2_LVDS_FAST;
+		clock.p2 = 14;
 
 	    if ((dpll & PLL_REF_INPUT_MASK) == PLLB_REF_INPUT_SPREADSPECTRUMIN)
 		i8xx_clock(66000, &clock); /* XXX: might not be 66MHz */

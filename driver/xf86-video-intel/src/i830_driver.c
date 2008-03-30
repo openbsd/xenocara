@@ -495,7 +495,7 @@ I830DetectMemory(ScrnInfoPtr pScrn)
    range = gtt_size + 4;
 
    if (IS_I85X(pI830) || IS_I865G(pI830) || IS_I9XX(pI830)) {
-      switch (gmch_ctrl & I830_GMCH_GMS_MASK) {
+      switch (gmch_ctrl & I855_GMCH_GMS_MASK) {
       case I855_GMCH_GMS_STOLEN_1M:
 	 memsize = MB(1) - KB(range);
 	 break;
@@ -2120,12 +2120,14 @@ RestoreHWState(ScrnInfoPtr pScrn)
     * enabled if pipe A is actually on (otherwise we have a bug in the initial
     * state).
     */
-   if (pI830->saveDSPACNTR & DISPPLANE_SEL_PIPE_A) {
+   if ((pI830->saveDSPACNTR & DISPPLANE_SEL_PIPE_MASK) ==
+       DISPPLANE_SEL_PIPE_A) {
        OUTREG(DSPACNTR, pI830->saveDSPACNTR);
        OUTREG(DSPABASE, INREG(DSPABASE));
        i830WaitForVblank(pScrn);
    }
-   if (pI830->saveDSPBCNTR & DISPPLANE_SEL_PIPE_A) {
+   if ((pI830->saveDSPBCNTR & DISPPLANE_SEL_PIPE_MASK) ==
+       DISPPLANE_SEL_PIPE_A) {
        OUTREG(DSPBCNTR, pI830->saveDSPBCNTR);
        OUTREG(DSPBBASE, INREG(DSPBBASE));
        i830WaitForVblank(pScrn);
@@ -2177,12 +2179,14 @@ RestoreHWState(ScrnInfoPtr pScrn)
        * Note that pipe B may be disabled, and in that case, the plane
        * should also be disabled or we must have had a bad initial state.
        */
-      if (pI830->saveDSPACNTR & DISPPLANE_SEL_PIPE_B) {
+      if ((pI830->saveDSPACNTR & DISPPLANE_SEL_PIPE_MASK) ==
+	  DISPPLANE_SEL_PIPE_B) {
 	  OUTREG(DSPACNTR, pI830->saveDSPACNTR);
 	  OUTREG(DSPABASE, INREG(DSPABASE));
 	  i830WaitForVblank(pScrn);
       }
-      if (pI830->saveDSPBCNTR & DISPPLANE_SEL_PIPE_B) {
+      if ((pI830->saveDSPBCNTR & DISPPLANE_SEL_PIPE_MASK) ==
+	  DISPPLANE_SEL_PIPE_B) {
 	  OUTREG(DSPBCNTR, pI830->saveDSPBCNTR);
 	  OUTREG(DSPBBASE, INREG(DSPBBASE));
 	  i830WaitForVblank(pScrn);
@@ -3186,6 +3190,22 @@ I830EnterVT(int scrnIndex, int flags)
 
 #ifdef XF86DRI
    if (pI830->directRenderingEnabled) {
+       /* HW status is fixed, we need to set it up before any drm
+	* operation which accessing that page, like irq install, etc.
+	*/
+       if (pI830->starting) {
+	   if (HWS_NEED_GFX(pI830) && !I830DRISetHWS(pScrn)) {
+		   xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			   "Fail to setup hardware status page.\n");
+		   I830DRICloseScreen(pScrn->pScreen);
+		   return FALSE;
+	   }
+	   if (!I830DRIInstIrqHandler(pScrn)) {
+	       I830DRICloseScreen(pScrn->pScreen);
+	       return FALSE;
+	   }
+       }
+
       /* Update buffer offsets in sarea and mappings, since buffer offsets
        * may have changed.
        */

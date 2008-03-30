@@ -88,6 +88,61 @@ DEBUGSTRING(i830_debug_pipeconf)
     return XNFprintf("%s, %s", enabled, bit30);
 }
 
+DEBUGSTRING(i830_debug_pipestat)
+{
+    char *_FIFO_UNDERRUN = val & FIFO_UNDERRUN ? " FIFO_UNDERRUN" : "";
+    char *_CRC_ERROR_ENABLE = val & CRC_ERROR_ENABLE ? " CRC_ERROR_ENABLE" : "";
+    char *_CRC_DONE_ENABLE = val & CRC_DONE_ENABLE ? " CRC_DONE_ENABLE" : "";
+    char *_GMBUS_EVENT_ENABLE = val & GMBUS_EVENT_ENABLE ? " GMBUS_EVENT_ENABLE" : "";
+    char *_VSYNC_INT_ENABLE = val & VSYNC_INT_ENABLE ? " VSYNC_INT_ENABLE" : "";
+    char *_DLINE_COMPARE_ENABLE = val & DLINE_COMPARE_ENABLE ? " DLINE_COMPARE_ENABLE" : "";
+    char *_DPST_EVENT_ENABLE = val & DPST_EVENT_ENABLE ? " DPST_EVENT_ENABLE" : "";
+    char *_LBLC_EVENT_ENABLE = val & LBLC_EVENT_ENABLE ? " LBLC_EVENT_ENABLE" : "";
+    char *_OFIELD_INT_ENABLE = val & OFIELD_INT_ENABLE ? " OFIELD_INT_ENABLE" : "";
+    char *_EFIELD_INT_ENABLE = val & EFIELD_INT_ENABLE ? " EFIELD_INT_ENABLE" : "";
+    char *_SVBLANK_INT_ENABLE = val & SVBLANK_INT_ENABLE ? " SVBLANK_INT_ENABLE" : "";
+    char *_VBLANK_INT_ENABLE = val & VBLANK_INT_ENABLE ? " VBLANK_INT_ENABLE" : "";
+    char *_OREG_UPDATE_ENABLE = val & OREG_UPDATE_ENABLE ? " OREG_UPDATE_ENABLE" : "";
+    char *_CRC_ERROR_INT_STATUS = val & CRC_ERROR_INT_STATUS ? " CRC_ERROR_INT_STATUS" : "";
+    char *_CRC_DONE_INT_STATUS = val & CRC_DONE_INT_STATUS ? " CRC_DONE_INT_STATUS" : "";
+    char *_GMBUS_INT_STATUS = val & GMBUS_INT_STATUS ? " GMBUS_INT_STATUS" : "";
+    char *_VSYNC_INT_STATUS = val & VSYNC_INT_STATUS ? " VSYNC_INT_STATUS" : "";
+    char *_DLINE_COMPARE_STATUS = val & DLINE_COMPARE_STATUS ? " DLINE_COMPARE_STATUS" : "";
+    char *_DPST_EVENT_STATUS = val & DPST_EVENT_STATUS ? " DPST_EVENT_STATUS" : "";
+    char *_LBLC_EVENT_STATUS = val & LBLC_EVENT_STATUS ? " LBLC_EVENT_STATUS" : "";
+    char *_OFIELD_INT_STATUS = val & OFIELD_INT_STATUS ? " OFIELD_INT_STATUS" : "";
+    char *_EFIELD_INT_STATUS = val & EFIELD_INT_STATUS ? " EFIELD_INT_STATUS" : "";
+    char *_SVBLANK_INT_STATUS = val & SVBLANK_INT_STATUS ? " SVBLANK_INT_STATUS" : "";
+    char *_VBLANK_INT_STATUS = val & VBLANK_INT_STATUS ? " VBLANK_INT_STATUS" : "";
+    char *_OREG_UPDATE_STATUS = val & OREG_UPDATE_STATUS ? " OREG_UPDATE_STATUS" : "";
+    return XNFprintf("status:%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+		     _FIFO_UNDERRUN,
+		     _CRC_ERROR_ENABLE,
+		     _CRC_DONE_ENABLE,
+		     _GMBUS_EVENT_ENABLE,
+		     _VSYNC_INT_ENABLE,
+		     _DLINE_COMPARE_ENABLE,
+		     _DPST_EVENT_ENABLE,
+		     _LBLC_EVENT_ENABLE,
+		     _OFIELD_INT_ENABLE,
+		     _EFIELD_INT_ENABLE,
+		     _SVBLANK_INT_ENABLE,
+		     _VBLANK_INT_ENABLE,
+		     _OREG_UPDATE_ENABLE,
+		     _CRC_ERROR_INT_STATUS,
+		     _CRC_DONE_INT_STATUS,
+		     _GMBUS_INT_STATUS,
+		     _VSYNC_INT_STATUS,
+		     _DLINE_COMPARE_STATUS,
+		     _DPST_EVENT_STATUS,
+		     _LBLC_EVENT_STATUS,
+		     _OFIELD_INT_STATUS,
+		     _EFIELD_INT_STATUS,
+		     _SVBLANK_INT_STATUS,
+		     _VBLANK_INT_STATUS,
+		     _OREG_UPDATE_STATUS);
+}
+
 DEBUGSTRING(i830_debug_hvtotal)
 {
     return XNFprintf("%d active, %d total", (val & 0xffff) + 1,
@@ -340,6 +395,76 @@ DEBUGSTRING(i830_debug_sdvo)
 		     enable, pipe, stall, detected, sdvoextra, gang);
 }
 
+DEBUGSTRING(i830_debug_dspclk_gate_d)
+{
+    char *DPUNIT_B = val & DPUNIT_B_CLOCK_GATE_DISABLE ? " DPUNIT_B" : "";
+    char *VSUNIT = val & VSUNIT_CLOCK_GATE_DISABLE ? " VSUNIT" : "";
+    char *VRHUNIT = val & VRHUNIT_CLOCK_GATE_DISABLE ? " VRHUNIT" : "";
+    char *VRDUNIT = val & VRDUNIT_CLOCK_GATE_DISABLE ? " VRDUNIT" : "";
+    char *AUDUNIT = val & AUDUNIT_CLOCK_GATE_DISABLE ? " AUDUNIT" : "";
+    char *DPUNIT_A = val & DPUNIT_A_CLOCK_GATE_DISABLE ? " DPUNIT_A" : "";
+    char *DPCUNIT = val & DPCUNIT_CLOCK_GATE_DISABLE ? " DPCUNIT" : "";
+    char *TVRUNIT = val & TVRUNIT_CLOCK_GATE_DISABLE ? " TVRUNIT" : "";
+    char *TVCUNIT = val & TVCUNIT_CLOCK_GATE_DISABLE ? " TVCUNIT" : "";
+    char *TVFUNIT = val & TVFUNIT_CLOCK_GATE_DISABLE ? " TVFUNIT" : "";
+    char *TVEUNIT = val & TVEUNIT_CLOCK_GATE_DISABLE ? " TVEUNIT" : "";
+    char *DVSUNIT = val & DVSUNIT_CLOCK_GATE_DISABLE ? " DVSUNIT" : "";
+    char *DSSUNIT = val & DSSUNIT_CLOCK_GATE_DISABLE ? " DSSUNIT" : "";
+    char *DDBUNIT = val & DDBUNIT_CLOCK_GATE_DISABLE ? " DDBUNIT" : "";
+    char *DPRUNIT = val & DPRUNIT_CLOCK_GATE_DISABLE ? " DPRUNIT" : "";
+    char *DPFUNIT = val & DPFUNIT_CLOCK_GATE_DISABLE ? " DPFUNIT" : "";
+    char *DPBMUNIT = val & DPBMUNIT_CLOCK_GATE_DISABLE ? " DPBMUNIT" : "";
+    char *DPLSUNIT = val & DPLSUNIT_CLOCK_GATE_DISABLE ? " DPLSUNIT" : "";
+    char *DPLUNIT = val & DPLUNIT_CLOCK_GATE_DISABLE ? " DPLUNIT" : "";
+    char *DPOUNIT = val & DPOUNIT_CLOCK_GATE_DISABLE ? " DPOUNIT" : "";
+    char *DPBUNIT = val & DPBUNIT_CLOCK_GATE_DISABLE ? " DPBUNIT" : "";
+    char *DCUNIT = val & DCUNIT_CLOCK_GATE_DISABLE ? " DCUNIT" : "";
+    char *DPUNIT = val & DPUNIT_CLOCK_GATE_DISABLE ? " DPUNIT" : "";
+    char *VRUNIT = val & VRUNIT_CLOCK_GATE_DISABLE ? " VRUNIT" : "";
+    char *OVHUNIT = val & OVHUNIT_CLOCK_GATE_DISABLE ? " OVHUNIT" : "";
+    char *DPIOUNIT = val & DPIOUNIT_CLOCK_GATE_DISABLE ? " DPIOUNIT" : "";
+    char *OVFUNIT = val & OVFUNIT_CLOCK_GATE_DISABLE ? " OVFUNIT" : "";
+    char *OVBUNIT = val & OVBUNIT_CLOCK_GATE_DISABLE ? " OVBUNIT" : "";
+    char *OVRUNIT = val & OVRUNIT_CLOCK_GATE_DISABLE ? " OVRUNIT" : "";
+    char *OVCUNIT = val & OVCUNIT_CLOCK_GATE_DISABLE ? " OVCUNIT" : "";
+    char *OVUUNIT = val & OVUUNIT_CLOCK_GATE_DISABLE ? " OVUUNIT" : "";
+    char *OVLUNIT = val & OVLUNIT_CLOCK_GATE_DISABLE ? " OVLUNIT" : "";
+
+    return XNFprintf ("clock gates disabled:%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+		      DPUNIT_B,
+		      VSUNIT,
+		      VRHUNIT,
+		      VRDUNIT,
+		      AUDUNIT,
+		      DPUNIT_A,
+		      DPCUNIT,
+		      TVRUNIT,
+		      TVCUNIT,
+		      TVFUNIT,
+		      TVEUNIT,
+		      DVSUNIT,
+		      DSSUNIT,
+		      DDBUNIT,
+		      DPRUNIT,
+		      DPFUNIT,
+		      DPBMUNIT,
+		      DPLSUNIT,
+		      DPLUNIT,
+		      DPOUNIT,
+		      DPBUNIT,
+		      DCUNIT,
+		      DPUNIT,
+		      VRUNIT,
+		      OVHUNIT,
+		      DPIOUNIT,
+		      OVFUNIT,
+		      OVBUNIT,
+		      OVRUNIT,
+		      OVCUNIT,
+		      OVUUNIT,
+		      OVLUNIT);
+}
+
 #if 0
 DEBUGSTRING(i810_debug_fence_new)
 {
@@ -368,8 +493,9 @@ static struct i830SnapshotRec {
     DEFINEREG2(VCLK_DIVISOR_VGA1, i830_debug_fp),
     DEFINEREG2(VCLK_POST_DIV, i830_debug_vga_pd),
     DEFINEREG2(DPLL_TEST, i830_debug_dpll_test),
+    DEFINEREG(CACHE_MODE_0),
     DEFINEREG(D_STATE),
-    DEFINEREG(DSPCLK_GATE_D),
+    DEFINEREG2(DSPCLK_GATE_D, i830_debug_dspclk_gate_d),
     DEFINEREG(RENCLK_GATE_D1),
     DEFINEREG(RENCLK_GATE_D2),
 /*  DEFINEREG(RAMCLK_GATE_D),	CRL only */
@@ -408,6 +534,7 @@ static struct i830SnapshotRec {
     DEFINEREG(DSPATILEOFF),
     DEFINEREG2(PIPEACONF, i830_debug_pipeconf),
     DEFINEREG2(PIPEASRC, i830_debug_yxminus1),
+    DEFINEREG2(PIPEASTAT, i830_debug_pipestat),
 
     DEFINEREG(FBC_CFB_BASE),
     DEFINEREG(FBC_LL_BASE),
@@ -440,6 +567,7 @@ static struct i830SnapshotRec {
     DEFINEREG(DSPBTILEOFF),
     DEFINEREG2(PIPEBCONF, i830_debug_pipeconf),
     DEFINEREG2(PIPEBSRC, i830_debug_yxminus1),
+    DEFINEREG2(PIPEBSTAT, i830_debug_pipestat),
 
     DEFINEREG2(FPB0, i830_debug_fp),
     DEFINEREG2(FPB1, i830_debug_fp),
@@ -494,6 +622,11 @@ static struct i830SnapshotRec {
     DEFINEREG(TV_H_CHROMA_0),
     DEFINEREG(TV_H_CHROMA_59),
 
+    DEFINEREG(MI_MODE),
+    DEFINEREG(MI_DISPLAY_POWER_DOWN),
+    DEFINEREG(MI_ARB_STATE),
+    DEFINEREG(MI_RDRET_STATE),
+    DEFINEREG(ECOSKPD),
 #if 0
     DEFINEREG2(FENCE_NEW + 0, i810_debug_fence_new),
     DEFINEREG2(FENCE_NEW + 8, i810_debug_fence_new),
@@ -601,6 +734,7 @@ static void i830DumpAR(ScrnInfoPtr pScrn)
     }
     INREG8(st01);
     OUTREG8(0x3c0, orig_arx);
+    INREG8(st01); /* switch back to index mode */
 }
 
 void i830DumpRegs (ScrnInfoPtr pScrn)

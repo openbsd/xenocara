@@ -475,7 +475,6 @@ i830_overlay_continue(ScrnInfoPtr pScrn, Bool update_filter)
     OVERLAY_DEBUG("overlay_continue\n");
 }
 
-
 static void
 i830_overlay_off(ScrnInfoPtr pScrn)
 {
