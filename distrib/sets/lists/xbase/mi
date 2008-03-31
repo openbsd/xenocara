@@ -137,6 +137,7 @@
 ./usr/X11R6/bin/xwud
 ./usr/X11R6/include
 ./usr/X11R6/include/X11
+./usr/X11R6/include/drm
 ./usr/X11R6/lib
 ./usr/X11R6/lib/X11
 ./usr/X11R6/lib/X11/Xcms.txt
