@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.21 2008/03/20 21:58:49 matthieu Exp $
+# $OpenBSD: MODULES,v 1.22 2008/03/31 18:21:50 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -126,6 +126,7 @@ driver/xf86-input-tek4957	1.2.0	7.4	needs-update
 driver/xf86-input-ur98		1.1.0	7.1
 driver/xf86-input-vmmouse	12.5.0	7.4	needs-update
 driver/xf86-input-void		1.1.0	7.1
+driver/xf86-video-amd		2.7.7.7	7.4	needs-porting
 driver/xf86-video-apm		1.2.0	7.4	needs-update
 driver/xf86-video-ark		0.7.0	7.4	needs-update
 driver/xf86-video-ast		0.85.0	7.4	needs-update
@@ -257,7 +258,7 @@ lib/libxcb			1.1	7.3	needs-import
 lib/libxkbfile			1.0.5	7.4	needs-update
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.1	7.4	needs-update
-lib/pixman			0.9.6	7.3
+lib/pixman			0.10	7.4	needs-update
 
 proto/bigreqsproto		1.0.2	7.0	needs-rel
 proto/compositeproto		0.4	7.3
