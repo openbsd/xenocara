@@ -1,4 +1,4 @@
-/*	$OpenBSD: bsd_agp.c,v 1.2 2007/11/25 18:41:23 matthieu Exp $ */
+/*	$OpenBSD: bsd_agp.c,v 1.3 2008/04/01 21:08:01 matthieu Exp $ */
 /*
  * Abstraction of the AGP GART interface.
  *
@@ -63,7 +63,11 @@ GARTInit(int screenNum)
 	if (gartFd != -1)
 		return FALSE;
 
+#ifndef X_PRIVSEP
+	gartFd = open(AGP_DEVICE, O_RDWR);
+#else
 	gartFd = priv_open_device(AGP_DEVICE);
+#endif
 	if (gartFd == -1 && errno == ENOENT) {
 		/* try the old interface */
 		gartFd = xf86Info.consoleFd;
