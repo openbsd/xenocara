@@ -131,6 +131,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	char		*style, *shell, *home, *s, **argv;
 	char		path[MAXPATHLEN];
 	int		authok;
+	size_t		passwd_len;
 
 	/* User may have specified an authentication style. */
 	if ((style = strchr(greet->name, ':')) != NULL)
@@ -170,12 +171,15 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 		bzero(greet->password, strlen(greet->password));
 		return 0;
 	}
-
+	passwd_len = strlen(greet->password);
 	/* Set up state for no challenge, just check a response. */
 	auth_setstate(as, 0);
 	auth_setdata(as, "", 1);
-	auth_setdata(as, greet->password, strlen(greet->password) + 1);
-
+	auth_setdata(as, greet->password, passwd_len + 1);
+#if !defined(SECURE_RPC) && !defined(K5AUTH)
+	/* wipe password now, otherwise it'll be copied fork() in auth_call */
+	bzero(greet->password, passwd_len);
+#endif
 	/* Build path of the auth script and call it */
 	snprintf(path, sizeof(path), _PATH_AUTHPROG "%s", style);
 	auth_call(as, path, style, "-s", "response", greet->name, 
@@ -184,7 +188,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 
 	if ((authok & AUTH_ALLOW) == 0) {
 		Debug("password verify failed\n");
-		bzero(greet->password, strlen(greet->password));
+		bzero(greet->password, passwd_len);
 		auth_close(as);
 		login_close(lc);
 		return 0;
@@ -192,7 +196,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	/* Run the approval script */
 	if (!auth_approval(as, lc, greet->name, "auth-xdm")) {
 		Debug("login not approved\n");
-		bzero(greet->password, strlen(greet->password));
+		bzero(greet->password, passwd_len);
 		auth_close(as);
 		login_close(lc);
 		return 0;
@@ -200,14 +204,14 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	auth_close(as);
 	login_close(lc);
 	/* Check empty passwords against allowNullPasswd */
-	if (!greet->allow_null_passwd && strlen(greet->password) == 0) {
+	if (!greet->allow_null_passwd && passwd_len == 0) {
 		Debug("empty password not allowed\n");
 		return 0;
 	}
 	/* Only accept root logins if allowRootLogin resource is set */
 	if (p->pw_uid == 0 && !greet->allow_root_login) {
 		Debug("root logins not allowed\n");
-		bzero(greet->password, strlen(greet->password));
+		bzero(greet->password, passwd_len);
 		return 0;
 	}
 
@@ -220,7 +224,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 			/* did not found the shell in /etc/shells 
 			   -> failure */
 			Debug("shell not in /etc/shells\n");
-			bzero(greet->password, strlen(greet->password));
+			bzero(greet->password, passwd_len);
 			endusershell();
 			return 0;
 		}
