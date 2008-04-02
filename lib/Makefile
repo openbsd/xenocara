@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.9 2008/03/25 23:41:50 matthieu Exp $
+# $OpenBSD: Makefile,v 1.10 2008/04/02 20:05:35 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -11,7 +11,8 @@ SUBDIR= freetype fontconfig libxtrans libXau libXdmcp \
 	libXprintAppUtil libXrandr libXRes libXScrnSaver libXTrap \
 	libXtst libXv libXvMC libXxf86dga libXxf86misc libXxf86vm
 
-.if ${XENOCARA_BUILD_DRI:L} == "yes"
+# libdrm is needed by the via driver built on i386 only
+.if ${XENOCARA_BUILD_DRI:L} == "yes" || ${MACHINE} == "i386"
 SUBDIR+= libdrm
 .endif
 
