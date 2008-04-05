@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.16 2008/03/23 15:09:21 simon Exp $
+ * $Id: kbfunc.c,v 1.17 2008/04/05 21:09:19 okan Exp $
  */
 
 #include <paths.h>
@@ -264,7 +264,7 @@ void
 kbfunc_exec(struct client_ctx *scratch, void *arg)
 {
 #define NPATHS 256
-	char **ap, *paths[NPATHS], *path, tpath[MAXPATHLEN];
+	char **ap, *paths[NPATHS], *path, *pathcpy, tpath[MAXPATHLEN];
 	int l, i, j, ngroups;
 	gid_t mygroups[NGROUPS_MAX];
 	uid_t ruid, euid, suid;
@@ -294,14 +294,18 @@ kbfunc_exec(struct client_ctx *scratch, void *arg)
 		err(1, "getresuid failure");
 
 	TAILQ_INIT(&menuq);
-	/* just use default path until we have config to set this */
-	path = xstrdup(_PATH_DEFPATH);
+
+	if ((path = getenv("PATH")) == NULL)
+		path = _PATH_DEFPATH;
+	pathcpy = path = xstrdup(path);
+
 	for (ap = paths; ap < &paths[NPATHS - 1] &&
-	    (*ap = strsep(&path, ":")) != NULL;) {
+	    (*ap = strsep(&pathcpy, ":")) != NULL;) {
 		if (**ap != '\0')
 			ap++;
 	}
 	*ap = NULL;
+	xfree(path);
 	for (i = 0; i < NPATHS && paths[i] != NULL; i++) {
 		if ((dirp = opendir(paths[i])) == NULL)
 			continue;
@@ -367,7 +371,6 @@ kbfunc_exec(struct client_ctx *scratch, void *arg)
 		TAILQ_REMOVE(&menuq, mi, entry);
 		xfree(mi);
 	}
-	xfree(path);
 }
 
 void
