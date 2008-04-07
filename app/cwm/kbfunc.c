@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.17 2008/04/05 21:09:19 okan Exp $
+ * $Id: kbfunc.c,v 1.18 2008/04/07 23:47:09 simon Exp $
  */
 
 #include <paths.h>
@@ -26,6 +26,8 @@
 #define KNOWN_HOSTS ".ssh/known_hosts"
 #define HASH_MARKER "|1|"
 #define MOVE_AMOUNT 1
+
+extern int _xev_quit;
 
 void
 kbfunc_client_lower(struct client_ctx *cc, void *arg)
@@ -487,4 +489,10 @@ void
 kbfunc_client_vmaximize(struct client_ctx *cc, void *arg)
 {
 	client_vertmaximize(cc);
+}
+
+void
+kbfunc_quit_wm(struct client_ctx *cc, void *arg)
+{
+	_xev_quit = 1;
 }
