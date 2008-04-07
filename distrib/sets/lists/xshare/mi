@@ -2790,7 +2790,6 @@
 ./usr/X11R6/share/aclocal/fontutil.m4
 ./usr/X11R6/share/aclocal/xaw.m4
 ./usr/X11R6/share/aclocal/xorg-macros.m4
-./usr/X11R6/share/aclocal/xorg-server.m4
 ./usr/X11R6/share/aclocal/xorgversion.m4
 ./usr/X11R6/share/aclocal/xtrans.m4
 ./usr/X11R6/share/doc

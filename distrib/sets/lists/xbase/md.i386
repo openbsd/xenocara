@@ -497,6 +497,8 @@
 ./usr/X11R6/lib/libXxf86misc.so.5.0
 ./usr/X11R6/lib/libXxf86vm.so.5.0
 ./usr/X11R6/lib/libdmx.so.1.0
+./usr/X11R6/lib/libdrm.la
+./usr/X11R6/lib/libdrm.so.2.3
 ./usr/X11R6/lib/libfontconfig.so.5.1
 ./usr/X11R6/lib/libfontenc.so.3.0
 ./usr/X11R6/lib/libfreetype.so.16.0
@@ -513,6 +515,7 @@
 ./usr/X11R6/lib/pkgconfig/gl.pc
 ./usr/X11R6/lib/pkgconfig/glu.pc
 ./usr/X11R6/lib/pkgconfig/glw.pc
+./usr/X11R6/lib/pkgconfig/libdrm.pc
 ./usr/X11R6/man/cat1/glxgears.0
 ./usr/X11R6/man/cat1/glxinfo.0
 ./usr/X11R6/man/cat3/GLwCreateMDrawingArea.0

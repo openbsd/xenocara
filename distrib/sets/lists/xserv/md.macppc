@@ -355,6 +355,7 @@
 ./usr/X11R6/share/X11/xserver/en_US
 ./usr/X11R6/share/X11/xserver/en_US/print
 ./usr/X11R6/share/X11/xserver/en_US/print/attributes
+./usr/X11R6/share/aclocal/xorg-server.m4
 ./var/db
 ./var/db/xkb
 ./var/db/xkb/README.compiled
