@@ -1,6 +1,7 @@
 ./usr/X11R6/bin/Xnest
 ./usr/X11R6/bin/Xvfb
 ./usr/X11R6/lib/modules
+./usr/X11R6/lib/modules/dri
 ./usr/X11R6/lib/modules/drivers
 ./usr/X11R6/lib/modules/extensions
 ./usr/X11R6/lib/modules/fonts

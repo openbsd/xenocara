@@ -165,6 +165,7 @@
 ./usr/X11R6/include/xorg/xvdix.h
 ./usr/X11R6/include/xorg/xvmcext.h
 ./usr/X11R6/lib/modules
+./usr/X11R6/lib/modules/dri
 ./usr/X11R6/lib/modules/drivers
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.la
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.so
