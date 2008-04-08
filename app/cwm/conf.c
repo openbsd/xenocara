@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.24 2008/04/07 23:47:09 simon Exp $
+ * $Id: conf.c,v 1.25 2008/04/08 14:12:28 okan Exp $
  */
 
 #include "headers.h"
@@ -119,7 +119,7 @@ conf_init(struct conf *c)
 	conf_bindname(c, "M-Left", "prevgroup");
 	conf_bindname(c, "CM-f", "maximize");
 	conf_bindname(c, "CM-equal", "vmaximize");
-	conf_bindname(c, "CM-q", "quit");
+	conf_bindname(c, "CMS-q", "quit");
 
 	conf_bindname(c, "M-h", "moveleft");
 	conf_bindname(c, "M-j", "movedown");
