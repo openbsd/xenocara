@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.18 2008/04/07 23:47:09 simon Exp $
+ * $Id: kbfunc.c,v 1.19 2008/04/08 17:38:27 oga Exp $
  */
 
 #include <paths.h>
@@ -307,7 +307,6 @@ kbfunc_exec(struct client_ctx *scratch, void *arg)
 			ap++;
 	}
 	*ap = NULL;
-	xfree(path);
 	for (i = 0; i < NPATHS && paths[i] != NULL; i++) {
 		if ((dirp = opendir(paths[i])) == NULL)
 			continue;
@@ -351,6 +350,7 @@ kbfunc_exec(struct client_ctx *scratch, void *arg)
 		}
 		(void) closedir(dirp);
 	}
+	xfree(path);
 
 	if ((mi = search_start(&menuq,
 		    search_match_exec, NULL, label, 1)) != NULL) {
