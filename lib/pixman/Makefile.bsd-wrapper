@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2007/12/10 21:30:21 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2008/04/08 19:00:25 matthieu Exp $
 
-SHARED_LIBS=	pixman-1 10.0
+SHARED_LIBS=	pixman-1 11.0
 
 .include <bsd.xorg.mk>

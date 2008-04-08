@@ -47,7 +47,7 @@ mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 @HAVE_GTK_TRUE@am__EXEEXT_1 = composite-test$(EXEEXT) \
-@HAVE_GTK_TRUE@	gradient-test$(EXEEXT)
+@HAVE_GTK_TRUE@	gradient-test$(EXEEXT) fetch-test$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
 composite_test_SOURCES = composite-test.c
 composite_test_OBJECTS = composite-test.$(OBJEXT)
@@ -55,6 +55,10 @@ am__DEPENDENCIES_1 =
 @HAVE_GTK_TRUE@composite_test_DEPENDENCIES =  \
 @HAVE_GTK_TRUE@	$(top_builddir)/pixman/libpixman-1.la \
 @HAVE_GTK_TRUE@	$(am__DEPENDENCIES_1)
+fetch_test_SOURCES = fetch-test.c
+fetch_test_OBJECTS = fetch-test.$(OBJEXT)
+@HAVE_GTK_TRUE@fetch_test_DEPENDENCIES =  \
+@HAVE_GTK_TRUE@	$(top_builddir)/pixman/libpixman-1.la
 gradient_test_SOURCES = gradient-test.c
 gradient_test_OBJECTS = gradient-test.$(OBJEXT)
 @HAVE_GTK_TRUE@gradient_test_DEPENDENCIES =  \
@@ -71,8 +75,8 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = composite-test.c gradient-test.c
-DIST_SOURCES = composite-test.c gradient-test.c
+SOURCES = composite-test.c fetch-test.c gradient-test.c
+DIST_SOURCES = composite-test.c fetch-test.c gradient-test.c
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -132,13 +136,19 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PIXMAN_MAJOR = @PIXMAN_MAJOR@
+PIXMAN_VERSION_MAJOR = @PIXMAN_VERSION_MAJOR@
+PIXMAN_VERSION_MICRO = @PIXMAN_VERSION_MICRO@
+PIXMAN_VERSION_MINOR = @PIXMAN_VERSION_MINOR@
+PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+SSE_CFLAGS = @SSE_CFLAGS@
 STRIP = @STRIP@
 USE_MMX_FALSE = @USE_MMX_FALSE@
 USE_MMX_TRUE = @USE_MMX_TRUE@
+USE_SSE2_FALSE = @USE_SSE2_FALSE@
+USE_SSE2_TRUE = @USE_SSE2_TRUE@
 USE_SSE_FALSE = @USE_SSE_FALSE@
 USE_SSE_TRUE = @USE_SSE_TRUE@
 VERSION = @VERSION@
@@ -148,6 +158,7 @@ ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
+ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -187,11 +198,13 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 @HAVE_GTK_TRUE@TESTPROGRAMS = \
 @HAVE_GTK_TRUE@	composite-test		\
-@HAVE_GTK_TRUE@	gradient-test
+@HAVE_GTK_TRUE@	gradient-test		\
+@HAVE_GTK_TRUE@	fetch-test
 
 @HAVE_GTK_TRUE@INCLUDES = -I$(top_srcdir)/pixman $(GTK_CFLAGS)
 @HAVE_GTK_TRUE@composite_test_LDADD = $(top_builddir)/pixman/libpixman-1.la $(GTK_LIBS)
 @HAVE_GTK_TRUE@gradient_test_LDADD = $(top_builddir)/pixman/libpixman-1.la $(GTK_LIBS)
+@HAVE_GTK_TRUE@fetch_test_LDADD = $(top_builddir)/pixman/libpixman-1.la
 all: all-am
 
 .SUFFIXES:
@@ -235,6 +248,9 @@ clean-noinstPROGRAMS:
 composite-test$(EXEEXT): $(composite_test_OBJECTS) $(composite_test_DEPENDENCIES) 
 	@rm -f composite-test$(EXEEXT)
 	$(LINK) $(composite_test_LDFLAGS) $(composite_test_OBJECTS) $(composite_test_LDADD) $(LIBS)
+fetch-test$(EXEEXT): $(fetch_test_OBJECTS) $(fetch_test_DEPENDENCIES) 
+	@rm -f fetch-test$(EXEEXT)
+	$(LINK) $(fetch_test_LDFLAGS) $(fetch_test_OBJECTS) $(fetch_test_LDADD) $(LIBS)
 gradient-test$(EXEEXT): $(gradient_test_OBJECTS) $(gradient_test_DEPENDENCIES) 
 	@rm -f gradient-test$(EXEEXT)
 	$(LINK) $(gradient_test_LDFLAGS) $(gradient_test_OBJECTS) $(gradient_test_LDADD) $(LIBS)
@@ -246,6 +262,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/composite-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fetch-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gradient-test.Po@am__quote@
 
 .c.o:

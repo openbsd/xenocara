@@ -1,6 +1,4 @@
 /*
- * $Id: pixman-edge-imp.h,v 1.1.1.1 2007/10/03 20:48:59 matthieu Exp $
- *
  * Copyright © 2004 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -35,34 +33,49 @@ rasterizeEdges (pixman_image_t  *image,
     pixman_fixed_t  y = t;
     uint32_t  *line;
     uint32_t *buf = (image)->bits.bits;
-    int32_t stride = (image)->bits.rowstride;
-    int32_t width = (image)->bits.width;
-    
+    int stride = (image)->bits.rowstride;
+    int width = (image)->bits.width;
+
     line = buf + pixman_fixed_to_int (y) * stride;
-    
+
     for (;;)
     {
 	pixman_fixed_t	lx;
 	pixman_fixed_t      rx;
 	int	lxi;
 	int rxi;
-	
-	/* clip X */
+
 	lx = l->x;
+	rx = r->x;
+#if N_BITS == 1
+	/* For the non-antialiased case, round the coordinates up, in effect
+	 * sampling the center of the pixel. (The AA case does a similar 
+	 * adjustment in RenderSamplesX) */
+	lx += X_FRAC_FIRST(1);
+	rx += X_FRAC_FIRST(1);
+#endif
+	/* clip X */
 	if (lx < 0)
 	    lx = 0;
-	rx = r->x;
 	if (pixman_fixed_to_int (rx) >= width)
+#if N_BITS == 1
 	    rx = pixman_int_to_fixed (width);
-	
+#else
+	    /* Use the last pixel of the scanline, covered 100%.
+	     * We can't use the first pixel following the scanline,
+	     * because accessing it could result in a buffer overrun.
+	     */
+	    rx = pixman_int_to_fixed (width) - 1;
+#endif
+
 	/* Skip empty (or backwards) sections */
 	if (rx > lx)
 	{
-	    
+
 	    /* Find pixel bounds for span */
 	    lxi = pixman_fixed_to_int (lx);
 	    rxi = pixman_fixed_to_int (rx);
-	    
+
 #if N_BITS == 1
 	    {
 		uint32_t  *a = line;
@@ -71,30 +84,30 @@ rasterizeEdges (pixman_image_t  *image,
 		int	    nmiddle;
 		int	    width = rxi - lxi;
 		int	    x = lxi;
-		
+
 		a += x >> FB_SHIFT;
 		x &= FB_MASK;
-		
+
 		FbMaskBits (x, width, startmask, nmiddle, endmask);
 		    if (startmask) {
-			WRITE(a, READ(a) | startmask);
+			WRITE(image, a, READ(image, a) | startmask);
 			a++;
 		    }
 		    while (nmiddle--)
-			WRITE(a++, FB_ALLONES);
+			WRITE(image, a++, FB_ALLONES);
 		    if (endmask)
-			WRITE(a, READ(a) | endmask);
+			WRITE(image, a, READ(image, a) | endmask);
 	    }
 #else
 	    {
 		DefineAlpha(line,lxi);
 		int	    lxs;
 		int     rxs;
-		
+
 		/* Sample coverage for edge pixels */
 		lxs = RenderSamplesX (lx, N_BITS);
 		rxs = RenderSamplesX (rx, N_BITS);
-		
+
 		/* Add coverage across row */
 		if (lxi == rxi)
 		{
@@ -103,7 +116,7 @@ rasterizeEdges (pixman_image_t  *image,
 		else
 		{
 		    int	xi;
-		    
+
 		    AddAlpha (N_X_FRAC(N_BITS) - lxs);
 		    StepAlpha;
 		    for (xi = lxi + 1; xi < rxi; xi++)
@@ -111,20 +124,15 @@ rasterizeEdges (pixman_image_t  *image,
 			AddAlpha (N_X_FRAC(N_BITS));
 			StepAlpha;
 		    }
-		    /* Do not add in a 0 alpha here. This check is necessary
-		     * to avoid a buffer overrun when rx is exactly on a pixel
-		     * boundary.
-		     */
-		    if (rxs != 0)
-			AddAlpha (rxs);
+		    AddAlpha (rxs);
 		}
 	    }
 #endif
 	}
-	
+
 	if (y == b)
 	    break;
-	
+
 #if N_BITS > 1
 	if (pixman_fixed_frac (y) != Y_FRAC_LAST(N_BITS))
 	{

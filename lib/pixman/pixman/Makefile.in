@@ -37,17 +37,24 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+
+# mmx code
 @USE_MMX_TRUE@am__append_1 = libpixman-mmx.la
+@USE_MMX_TRUE@am__append_2 = libpixman-mmx.la
+
+# sse2 code
+@USE_SSE2_TRUE@am__append_3 = libpixman-sse.la
+@USE_SSE2_TRUE@am__append_4 = libpixman-sse.la
 subdir = pixman
 DIST_COMMON = $(libpixmaninclude_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in
+	$(srcdir)/Makefile.in $(srcdir)/pixman-version.h.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = pixman-version.h
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -59,19 +66,30 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 @USE_MMX_TRUE@am__DEPENDENCIES_1 = libpixman-mmx.la
-libpixman_1_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_libpixman_1_la_OBJECTS = pixman-region.lo pixman-image.lo \
-	pixman-compose.lo pixman-compose-accessors.lo pixman-pict.lo \
+@USE_SSE2_TRUE@am__DEPENDENCIES_2 = libpixman-sse.la
+libpixman_1_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
+am_libpixman_1_la_OBJECTS = pixman-access.lo \
+	pixman-access-accessors.lo pixman-region.lo pixman-image.lo \
+	pixman-combine.lo pixman-compose.lo \
+	pixman-compose-accessors.lo pixman-pict.lo pixman-source.lo \
+	pixman-transformed.lo pixman-transformed-accessors.lo \
 	pixman-utils.lo pixman-edge.lo pixman-edge-accessors.lo \
 	pixman-trap.lo pixman-compute-region.lo pixman-timer.lo
 libpixman_1_la_OBJECTS = $(am_libpixman_1_la_OBJECTS)
-am__DEPENDENCIES_2 =
-@USE_MMX_TRUE@libpixman_mmx_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
+am__DEPENDENCIES_3 =
+@USE_MMX_TRUE@libpixman_mmx_la_DEPENDENCIES = $(am__DEPENDENCIES_3)
 am__libpixman_mmx_la_SOURCES_DIST = pixman-mmx.c pixman-mmx.h
 @USE_MMX_TRUE@am_libpixman_mmx_la_OBJECTS =  \
 @USE_MMX_TRUE@	libpixman_mmx_la-pixman-mmx.lo
 libpixman_mmx_la_OBJECTS = $(am_libpixman_mmx_la_OBJECTS)
 @USE_MMX_TRUE@am_libpixman_mmx_la_rpath =
+@USE_SSE2_TRUE@libpixman_sse_la_DEPENDENCIES = $(am__DEPENDENCIES_3)
+am__libpixman_sse_la_SOURCES_DIST = pixman-sse.c pixman-sse.h
+@USE_SSE2_TRUE@am_libpixman_sse_la_OBJECTS =  \
+@USE_SSE2_TRUE@	libpixman_sse_la-pixman-sse.lo
+libpixman_sse_la_OBJECTS = $(am_libpixman_sse_la_OBJECTS)
+@USE_SSE2_TRUE@am_libpixman_sse_la_rpath =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -83,9 +101,11 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libpixman_1_la_SOURCES) $(libpixman_mmx_la_SOURCES)
+SOURCES = $(libpixman_1_la_SOURCES) $(libpixman_mmx_la_SOURCES) \
+	$(libpixman_sse_la_SOURCES)
 DIST_SOURCES = $(libpixman_1_la_SOURCES) \
-	$(am__libpixman_mmx_la_SOURCES_DIST)
+	$(am__libpixman_mmx_la_SOURCES_DIST) \
+	$(am__libpixman_sse_la_SOURCES_DIST)
 libpixmanincludeHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(libpixmaninclude_HEADERS)
 ETAGS = etags
@@ -147,13 +167,19 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PIXMAN_MAJOR = @PIXMAN_MAJOR@
+PIXMAN_VERSION_MAJOR = @PIXMAN_VERSION_MAJOR@
+PIXMAN_VERSION_MICRO = @PIXMAN_VERSION_MICRO@
+PIXMAN_VERSION_MINOR = @PIXMAN_VERSION_MINOR@
+PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+SSE_CFLAGS = @SSE_CFLAGS@
 STRIP = @STRIP@
 USE_MMX_FALSE = @USE_MMX_FALSE@
 USE_MMX_TRUE = @USE_MMX_TRUE@
+USE_SSE2_FALSE = @USE_SSE2_FALSE@
+USE_SSE2_TRUE = @USE_SSE2_TRUE@
 USE_SSE_FALSE = @USE_SSE_FALSE@
 USE_SSE_TRUE = @USE_SSE_TRUE@
 VERSION = @VERSION@
@@ -163,6 +189,7 @@ ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
+ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -202,34 +229,45 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LTLIBRARIES = libpixman-1.la
 libpixman_1_la_LDFLAGS = -version-info $(LT_VERSION_INFO)
-libpixman_1_la_LIBADD = @DEP_LIBS@ -lm $(am__append_1)
+libpixman_1_la_LIBADD = @DEP_LIBS@ -lm $(am__append_2) $(am__append_4)
 libpixman_1_la_SOURCES = \
-	pixman.h		\
-	pixman-region.c		\
-	pixman-private.h	\
-	pixman-image.c		\
-	pixman-compose.c	\
+	pixman.h			\
+	pixman-access.c			\
+	pixman-access-accessors.c	\
+	pixman-region.c			\
+	pixman-private.h		\
+	pixman-image.c			\
+	pixman-combine.c		\
+	pixman-compose.c		\
 	pixman-compose-accessors.c	\
-	pixman-pict.c		\
-	pixman-utils.c		\
-	pixman-edge.c		\
+	pixman-pict.c			\
+	pixman-source.c			\
+	pixman-transformed.c		\
+	pixman-transformed-accessors.c	\
+	pixman-utils.c			\
+	pixman-edge.c			\
 	pixman-edge-accessors.c		\
-	pixman-edge-imp.h	\
-	pixman-trap.c		\
-	pixman-compute-region.c \
+	pixman-edge-imp.h		\
+	pixman-trap.c			\
+	pixman-compute-region.c		\
 	pixman-timer.c
 
 libpixmanincludedir = $(includedir)/pixman-1/
-libpixmaninclude_HEADERS = pixman.h
-
-# mmx code
-@USE_MMX_TRUE@noinst_LTLIBRARIES = libpixman-mmx.la
+libpixmaninclude_HEADERS = pixman.h pixman-version.h
+noinst_LTLIBRARIES = $(am__append_1) $(am__append_3)
+EXTRA_DIST = Makefile.win32
 @USE_MMX_TRUE@libpixman_mmx_la_SOURCES = \
 @USE_MMX_TRUE@	pixman-mmx.c \
 @USE_MMX_TRUE@	pixman-mmx.h
 
 @USE_MMX_TRUE@libpixman_mmx_la_CFLAGS = $(DEP_CFLAGS) $(MMX_CFLAGS)
 @USE_MMX_TRUE@libpixman_mmx_la_LIBADD = $(DEP_LIBS)
+@USE_SSE2_TRUE@libpixman_sse_la_SOURCES = \
+@USE_SSE2_TRUE@	pixman-sse.c \
+@USE_SSE2_TRUE@	pixman-sse.h
+
+@USE_SSE2_TRUE@libpixman_sse_la_CFLAGS = $(DEP_CFLAGS) $(SSE_CFLAGS)
+@USE_SSE2_TRUE@libpixman_sse_la_LIBADD = $(DEP_LIBS)
 all: all-am
 
 .SUFFIXES:
@@ -263,6 +301,8 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+pixman-version.h: $(top_builddir)/config.status $(srcdir)/pixman-version.h.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
 	test -z "$(libdir)" || $(mkdir_p) "$(DESTDIR)$(libdir)"
@@ -303,6 +343,8 @@ libpixman-1.la: $(libpixman_1_la_OBJECTS) $(libpixman_1_la_DEPENDENCIES)
 	$(LINK) -rpath $(libdir) $(libpixman_1_la_LDFLAGS) $(libpixman_1_la_OBJECTS) $(libpixman_1_la_LIBADD) $(LIBS)
 libpixman-mmx.la: $(libpixman_mmx_la_OBJECTS) $(libpixman_mmx_la_DEPENDENCIES) 
 	$(LINK) $(am_libpixman_mmx_la_rpath) $(libpixman_mmx_la_LDFLAGS) $(libpixman_mmx_la_OBJECTS) $(libpixman_mmx_la_LIBADD) $(LIBS)
+libpixman-sse.la: $(libpixman_sse_la_OBJECTS) $(libpixman_sse_la_DEPENDENCIES) 
+	$(LINK) $(am_libpixman_sse_la_rpath) $(libpixman_sse_la_LDFLAGS) $(libpixman_sse_la_OBJECTS) $(libpixman_sse_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -311,6 +353,10 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_mmx_la-pixman-mmx.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_sse_la-pixman-sse.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-access-accessors.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-access.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-combine.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-compose-accessors.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-compose.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-compute-region.Plo@am__quote@
@@ -319,7 +365,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-image.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-pict.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-region.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-source.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-timer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-transformed-accessors.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-transformed.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-trap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-utils.Plo@am__quote@
 
@@ -350,6 +399,13 @@ libpixman_mmx_la-pixman-mmx.lo: pixman-mmx.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-mmx.c' object='libpixman_mmx_la-pixman-mmx.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_mmx_la_CFLAGS) $(CFLAGS) -c -o libpixman_mmx_la-pixman-mmx.lo `test -f 'pixman-mmx.c' || echo '$(srcdir)/'`pixman-mmx.c
+
+libpixman_sse_la-pixman-sse.lo: pixman-sse.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_sse_la_CFLAGS) $(CFLAGS) -MT libpixman_sse_la-pixman-sse.lo -MD -MP -MF "$(DEPDIR)/libpixman_sse_la-pixman-sse.Tpo" -c -o libpixman_sse_la-pixman-sse.lo `test -f 'pixman-sse.c' || echo '$(srcdir)/'`pixman-sse.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_sse_la-pixman-sse.Tpo" "$(DEPDIR)/libpixman_sse_la-pixman-sse.Plo"; else rm -f "$(DEPDIR)/libpixman_sse_la-pixman-sse.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-sse.c' object='libpixman_sse_la-pixman-sse.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_sse_la_CFLAGS) $(CFLAGS) -c -o libpixman_sse_la-pixman-sse.lo `test -f 'pixman-sse.c' || echo '$(srcdir)/'`pixman-sse.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

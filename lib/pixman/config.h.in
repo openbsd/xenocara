@@ -60,6 +60,9 @@
 /* use SSE compiler intrinsics */
 #undef USE_SSE
 
+/* use SSE compiler intrinsics */
+#undef USE_SSE2
+
 /* Version number of package */
 #undef VERSION
 
