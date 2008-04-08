@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2008/04/07 20:59:41 todd Exp $
+# $OpenBSD: Makefile,v 1.4 2008/04/08 21:53:47 todd Exp $
 
 # Various list maintenance functions
 
@@ -25,6 +25,7 @@ archs  = ${basefiles:S/^md.//}
 mdtomi:
 	@echo "Checking for common md file lines for migration to mi files:"
 	@for xdir in x*; do \
+	[ "$$xdir" = "xfont" ] && continue; \
 	dir=$$(mktemp -d /tmp/mdtomi.XXXXXXXXXX); \
 	i1=first; \
 	for a in ${archs}; do \
@@ -42,12 +43,12 @@ mdtomi:
 	echo "If any common md files were found, migrating to mi files:"; \
 	cat $$dir/mi | while read line; do \
 		echo "==> $$line"; \
-		for line2 in $$(grep "^$$line$$" $$xdir/m*); do \
+		for line2 in $$(grep "^$${line}$$" $$xdir/m*); do \
 			f=$${line2%:*}; \
-			grep -v $$line $$f > $$f.tmp && mv $$f.tmp $$f; \
+			grep -v "^$${line}$$" $$f > $$f.tmp && mv $$f.tmp $$f; \
 			echo "===> -$$line2"; \
 		done; \
-		echo "===> +$$d/mi"; \
+		echo "===> +$$xdir/mi"; \
 		echo $$line >> $$xdir/mi; \
 	done; rm -rf $$dir; \
 	done
