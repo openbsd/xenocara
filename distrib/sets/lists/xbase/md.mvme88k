@@ -1,6 +1,5 @@
 ./usr/X11R6/bin/dga
 ./usr/X11R6/bin/ucs2any
-./usr/X11R6/bin/xfs
 ./usr/X11R6/include/X11/extensions/xf86dga.h
 ./usr/X11R6/include/X11/extensions/xf86dga1.h
 ./usr/X11R6/include/X11/extensions/xf86dga1str.h
@@ -400,6 +399,7 @@
 ./usr/X11R6/lib/pkgconfig/gl.pc
 ./usr/X11R6/lib/pkgconfig/glu.pc
 ./usr/X11R6/lib/pkgconfig/glw.pc
+./usr/X11R6/lib/pkgconfig/pixman-1.pc
 ./usr/X11R6/man/cat1/bdftruncate.0
 ./usr/X11R6/man/cat1/dga.0
 ./usr/X11R6/man/cat1/ucs2any.0
@@ -422,4 +422,3 @@
 ./usr/X11R6/man/cat3/XDGASetMode.0
 ./usr/X11R6/man/cat3/XDGASetViewport.0
 ./usr/X11R6/man/cat3/XDGASync.0
-./usr/X11R6/man/man1/xfs.1

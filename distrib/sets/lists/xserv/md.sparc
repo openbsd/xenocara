@@ -153,7 +153,6 @@
 ./usr/X11R6/include/xorg/xvdix.h
 ./usr/X11R6/include/xorg/xvmcext.h
 ./usr/X11R6/lib/modules
-./usr/X11R6/lib/modules/dri
 ./usr/X11R6/lib/modules/drivers
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.la
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.so
@@ -242,6 +241,7 @@
 ./usr/X11R6/lib/modules/multimedia/tda9885_drv.so
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.la
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.so
+./usr/X11R6/lib/pkgconfig/xorg-server.pc
 ./usr/X11R6/lib/xserver
 ./usr/X11R6/lib/xserver/SecurityPolicy
 ./usr/X11R6/man/man1/Xnest.1
@@ -257,7 +257,9 @@
 ./usr/X11R6/man/man4/void.4
 ./usr/X11R6/man/man4/ws.4
 ./usr/X11R6/man/man4/wsfb.4
+./usr/X11R6/man/man5/SecurityPolicy.5
 ./usr/X11R6/man/man5/xorg.conf.5
+./usr/X11R6/man/man7/Xprint.7
 ./usr/X11R6/share/X11/xserver
 ./usr/X11R6/share/X11/xserver/C
 ./usr/X11R6/share/X11/xserver/C/print

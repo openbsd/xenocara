@@ -395,7 +395,6 @@
 ./usr/X11R6/bin/glxinfo
 ./usr/X11R6/bin/ucs2any
 ./usr/X11R6/bin/xdriinfo
-./usr/X11R6/bin/xfs
 ./usr/X11R6/include/GL
 ./usr/X11R6/include/GL/GLwDrawA.h
 ./usr/X11R6/include/GL/GLwDrawAP.h
@@ -429,6 +428,7 @@
 ./usr/X11R6/include/drm/sis_drm.h
 ./usr/X11R6/include/drm/via_3d_reg.h
 ./usr/X11R6/include/drm/via_drm.h
+./usr/X11R6/include/pixman-1/pixman.h
 ./usr/X11R6/include/xf86drm.h
 ./usr/X11R6/include/xf86mm.h
 ./usr/X11R6/include/xorg/hotplug.h
@@ -510,6 +510,7 @@
 ./usr/X11R6/lib/pkgconfig/glu.pc
 ./usr/X11R6/lib/pkgconfig/glw.pc
 ./usr/X11R6/lib/pkgconfig/libdrm.pc
+./usr/X11R6/lib/pkgconfig/pixman-1.pc
 ./usr/X11R6/man/cat1/glxgears.0
 ./usr/X11R6/man/cat1/glxinfo.0
 ./usr/X11R6/man/cat3/GLwCreateMDrawingArea.0
@@ -1040,7 +1041,6 @@
 ./usr/X11R6/man/man1/dga.1
 ./usr/X11R6/man/man1/ucs2any.1
 ./usr/X11R6/man/man1/xdriinfo.1
-./usr/X11R6/man/man1/xfs.1
 ./usr/X11R6/man/man3/XDGA.3
 ./usr/X11R6/man/man3/XDGAChangePixmapMode.3
 ./usr/X11R6/man/man3/XDGACloseFramebuffer.3
@@ -1093,7 +1093,6 @@
 ./usr/X11R6/man/man3/XF86VidModeSwitchToMode.3
 ./usr/X11R6/man/man3/XF86VidModeValidateModeLine.3
 ./usr/X11R6/man/man3/XFree86-DGA.3
-./usr/X11R6/man/man7/Xprint.7
 ./var/cache/fontconfig/0f0db7876307790c19e1f91eb9095080-x86.cache-2
 ./var/cache/fontconfig/1487dd4aecf3164c4a11193169052443-x86.cache-2
 ./var/cache/fontconfig/49aa604a5ac92994756d3008e408245c-x86.cache-2

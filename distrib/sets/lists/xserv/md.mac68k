@@ -51,11 +51,12 @@
 ./usr/X11R6/lib/X11/etc/xmodmap.std
 ./usr/X11R6/lib/X11/xorg.conf.eg
 ./usr/X11R6/lib/modules
-./usr/X11R6/lib/modules/dri
 ./usr/X11R6/lib/modules/drivers
 ./usr/X11R6/lib/modules/extensions
 ./usr/X11R6/lib/modules/fonts
 ./usr/X11R6/lib/modules/input
 ./usr/X11R6/lib/modules/internal
 ./usr/X11R6/lib/modules/multimedia
+./usr/X11R6/lib/pkgconfig/xorg-server.pc
+./usr/X11R6/man/man5/SecurityPolicy.5
 ./usr/X11R6/share/aclocal/xorg-server.m4

@@ -1,4 +1,4 @@
-./usr/X11R6/lib/modules/dri
+./usr/X11R6/lib/pkgconfig/xorg-server.pc
 ./usr/X11R6/man/cat1/XDarwin.0
 ./usr/X11R6/man/cat4/aiptek.0
 ./usr/X11R6/man/cat4/glide.0
@@ -13,4 +13,5 @@
 ./usr/X11R6/man/cat4/ur98.0
 ./usr/X11R6/man/cat4/v4l.0
 ./usr/X11R6/man/cat7/Xprint.0
+./usr/X11R6/man/man5/SecurityPolicy.5
 ./usr/X11R6/share/aclocal/xorg-server.m4

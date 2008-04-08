@@ -665,8 +665,6 @@
 ./usr/X11R6/include/freetype2/freetype/tttables.h
 ./usr/X11R6/include/freetype2/freetype/tttags.h
 ./usr/X11R6/include/freetype2/freetype/ttunpat.h
-./usr/X11R6/include/pixman-1
-./usr/X11R6/include/pixman-1/pixman.h
 ./usr/X11R6/lib/X11/config
 ./usr/X11R6/lib/X11/config/Amoeba.cf
 ./usr/X11R6/lib/X11/config/DGUX.cf
@@ -835,7 +833,6 @@
 ./usr/X11R6/lib/pkgconfig/lbxutil.pc
 ./usr/X11R6/lib/pkgconfig/libfs.pc
 ./usr/X11R6/lib/pkgconfig/oldx.pc
-./usr/X11R6/lib/pkgconfig/pixman-1.pc
 ./usr/X11R6/lib/pkgconfig/printproto.pc
 ./usr/X11R6/lib/pkgconfig/randrproto.pc
 ./usr/X11R6/lib/pkgconfig/recordproto.pc
@@ -874,7 +871,6 @@
 ./usr/X11R6/lib/pkgconfig/xkbui.pc
 ./usr/X11R6/lib/pkgconfig/xmu.pc
 ./usr/X11R6/lib/pkgconfig/xmuu.pc
-./usr/X11R6/lib/pkgconfig/xorg-server.pc
 ./usr/X11R6/lib/pkgconfig/xp.pc
 ./usr/X11R6/lib/pkgconfig/xpm.pc
 ./usr/X11R6/lib/pkgconfig/xprintapputil.pc
@@ -921,6 +917,7 @@
 ./usr/X11R6/man/cat1/xpmroot.0
 ./usr/X11R6/man/cat1/xsystrace.0
 ./usr/X11R6/man/cat1/xterm.0
+./usr/X11R6/man/cat1/xtsscale.0
 ./usr/X11R6/man/cat1/xvctl.0
 ./usr/X11R6/man/cat3
 ./usr/X11R6/man/cat5/cwmrc.0
@@ -991,6 +988,7 @@
 ./usr/X11R6/man/man1/xfd.1
 ./usr/X11R6/man/man1/xfindproxy.1
 ./usr/X11R6/man/man1/xfontsel.1
+./usr/X11R6/man/man1/xfs.1
 ./usr/X11R6/man/man1/xfsinfo.1
 ./usr/X11R6/man/man1/xft-config.1
 ./usr/X11R6/man/man1/xfwp.1
@@ -2541,7 +2539,6 @@
 ./usr/X11R6/man/man3/XwcTextPerCharExtents.3
 ./usr/X11R6/man/man3/XwcTextPropertyToTextList.3
 ./usr/X11R6/man/man3/libXp.3
-./usr/X11R6/man/man5/SecurityPolicy.5
 ./usr/X11R6/man/man5/fonts-conf.5
 ./usr/X11R6/man/man7/Consortium.7
 ./usr/X11R6/man/man7/Standards.7

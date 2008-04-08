@@ -2,7 +2,6 @@
 ./usr/X11R6/bin/glxinfo
 ./usr/X11R6/bin/ucs2any
 ./usr/X11R6/bin/xdriinfo
-./usr/X11R6/bin/xfs
 ./usr/X11R6/include/GL
 ./usr/X11R6/include/GL/GLwDrawA.h
 ./usr/X11R6/include/GL/GLwDrawAP.h
@@ -66,6 +65,7 @@
 ./usr/X11R6/lib/pkgconfig/gl.pc
 ./usr/X11R6/lib/pkgconfig/glu.pc
 ./usr/X11R6/lib/pkgconfig/glw.pc
+./usr/X11R6/lib/pkgconfig/pixman-1.pc
 ./usr/X11R6/man/cat1/bdftruncate.0
 ./usr/X11R6/man/cat1/glxgears.0
 ./usr/X11R6/man/cat1/glxinfo.0
@@ -596,6 +596,5 @@
 ./usr/X11R6/man/cat3/gluTessProperty.0
 ./usr/X11R6/man/cat3/gluTessVertex.0
 ./usr/X11R6/man/cat3/gluUnProject.0
-./usr/X11R6/man/man1/xfs.1
 ./var/db/xkb
 ./var/db/xkb/README

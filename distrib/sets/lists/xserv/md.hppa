@@ -2,13 +2,13 @@
 ./usr/X11R6/bin/Xvfb
 ./usr/X11R6/bin/ucs2any
 ./usr/X11R6/lib/modules
-./usr/X11R6/lib/modules/dri
 ./usr/X11R6/lib/modules/drivers
 ./usr/X11R6/lib/modules/extensions
 ./usr/X11R6/lib/modules/fonts
 ./usr/X11R6/lib/modules/input
 ./usr/X11R6/lib/modules/linux
 ./usr/X11R6/lib/modules/multimedia
+./usr/X11R6/lib/pkgconfig/xorg-server.pc
 ./usr/X11R6/lib/xserver
 ./usr/X11R6/lib/xserver/SecurityPolicy
 ./usr/X11R6/man/man1/Xnest.1
@@ -70,6 +70,7 @@
 ./usr/X11R6/man/man3/XF86VidModeSwitchToMode.3
 ./usr/X11R6/man/man3/XF86VidModeValidateModeLine.3
 ./usr/X11R6/man/man3/XFree86-DGA.3
+./usr/X11R6/man/man5/SecurityPolicy.5
 ./usr/X11R6/man/man7/Xprint.7
 ./usr/X11R6/share/X11/xserver
 ./usr/X11R6/share/X11/xserver/C

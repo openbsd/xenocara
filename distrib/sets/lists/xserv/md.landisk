@@ -1,7 +1,4 @@
-./usr/X11R6/bin/Xnest
-./usr/X11R6/bin/Xvfb
 ./usr/X11R6/lib/modules
-./usr/X11R6/lib/modules/dri
 ./usr/X11R6/lib/modules/drivers
 ./usr/X11R6/lib/modules/extensions
 ./usr/X11R6/lib/modules/fonts
@@ -9,10 +6,6 @@
 ./usr/X11R6/lib/modules/linux
 ./usr/X11R6/lib/modules/multimedia
 ./usr/X11R6/lib/xserver
-./usr/X11R6/lib/xserver/SecurityPolicy
-./usr/X11R6/man/man1/Xnest.1
-./usr/X11R6/man/man1/Xserver.1
-./usr/X11R6/man/man1/Xvfb.1
 ./usr/X11R6/man/man3/XFree86-DGA.3
 ./usr/X11R6/man/man7/Xprint.7
 ./usr/X11R6/share/X11/xserver
@@ -41,7 +34,7 @@
 ./usr/X11R6/share/X11/xserver/en_US
 ./usr/X11R6/share/X11/xserver/en_US/print
 ./usr/X11R6/share/X11/xserver/en_US/print/attributes
-./usr/X11R6/share/aclocal/xorg-server.m4
 ./var/db
 ./var/db/xkb
 ./var/db/xkb/README.compiled
+./var/log

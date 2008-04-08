@@ -89,6 +89,7 @@
 ./usr/X11R6/bin/xfd
 ./usr/X11R6/bin/xfindproxy
 ./usr/X11R6/bin/xfontsel
+./usr/X11R6/bin/xfs
 ./usr/X11R6/bin/xfsinfo
 ./usr/X11R6/bin/xft-config
 ./usr/X11R6/bin/xfwp
@@ -156,6 +157,7 @@
 ./usr/X11R6/include/freetype2/freetype/ftpfr.h
 ./usr/X11R6/include/freetype2/freetype/ftwinfnt.h
 ./usr/X11R6/include/ft2build.h
+./usr/X11R6/include/pixman-1
 ./usr/X11R6/lib
 ./usr/X11R6/lib/X11
 ./usr/X11R6/lib/X11/Xcms.txt
@@ -278,7 +280,6 @@
 ./usr/X11R6/lib/libxkbui.la
 ./usr/X11R6/man
 ./usr/X11R6/man/cat1
-./usr/X11R6/man/cat1/xtsscale.0
 ./usr/X11R6/man/cat4
 ./usr/X11R6/man/cat5
 ./usr/X11R6/man/cat7
