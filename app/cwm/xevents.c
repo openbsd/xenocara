@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.9 2008/04/07 23:47:09 simon Exp $
+ * $Id: xevents.c,v 1.10 2008/04/08 00:09:50 simon Exp $
  */
 
 /*
@@ -451,7 +451,7 @@ out:
 
 static struct xevent_q _xevq, _xevq_putaway;
 static short _xev_q_lock = 0;
-int _xev_quit = 0;
+volatile sig_atomic_t _xev_quit = 0;
 
 void
 xev_init(void)
