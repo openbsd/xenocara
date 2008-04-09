@@ -428,6 +428,7 @@
 ./usr/X11R6/include/drm/sis_drm.h
 ./usr/X11R6/include/drm/via_3d_reg.h
 ./usr/X11R6/include/drm/via_drm.h
+./usr/X11R6/include/pixman-1/pixman-version.h
 ./usr/X11R6/include/pixman-1/pixman.h
 ./usr/X11R6/include/xf86drm.h
 ./usr/X11R6/include/xf86mm.h
@@ -503,7 +504,7 @@
 ./usr/X11R6/lib/liboldX.so.10.0
 ./usr/X11R6/lib/libpixman-1.a
 ./usr/X11R6/lib/libpixman-1.la
-./usr/X11R6/lib/libpixman-1.so.10.0
+./usr/X11R6/lib/libpixman-1.so.11.0
 ./usr/X11R6/lib/libxkbfile.so.4.0
 ./usr/X11R6/lib/libxkbui.so.4.0
 ./usr/X11R6/lib/pkgconfig/gl.pc
