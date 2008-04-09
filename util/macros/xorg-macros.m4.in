@@ -194,7 +194,11 @@ AC_DEFUN([XORG_CHECK_LINUXDOC],[
 XORG_SGML_PATH=$prefix/share/sgml
 HAVE_DEFS_ENT=
 
-AC_CHECK_FILE([$XORG_SGML_PATH/X11/defs.ent], [HAVE_DEFS_ENT=yes])
+if test x"$cross_compiling" = x"yes" ; then
+  HAVE_DEFS_ENT=no
+else
+  AC_CHECK_FILE([$XORG_SGML_PATH/X11/defs.ent], [HAVE_DEFS_ENT=yes])
+fi
 
 AC_PATH_PROG(LINUXDOC, linuxdoc)
 AC_PATH_PROG(PS2PDF, ps2pdf)

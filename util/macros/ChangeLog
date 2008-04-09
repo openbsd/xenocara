@@ -1,3 +1,18 @@
+commit e1c1ee013e72dafd7b00ca96a8d4a25273b88e15
+Author: Jeremy Huddleston <jeremy@tifa-2.local>
+Date:   Sat Feb 16 02:18:50 2008 -0800
+
+    Support version strings  like 1.2.3-blah4
+
+commit e20c503d24e5ccf03035aa0f6d833d235d2179df
+Author: Keith Packard <keithp@koto.keithp.com>
+Date:   Mon Aug 13 19:21:58 2007 -0700
+
+    Cannot use AC_CHECK_FILE when cross compiling; assume no LINUXDOC.
+    
+    As AC_CHECK_FILE cannot be used when cross compiling, just assume linuxdoc
+    is not present.
+
 commit f2ddb356d86225a8ff6d1d1397fb2156cebd360f
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sun Dec 24 06:17:44 2006 +0200
