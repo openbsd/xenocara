@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.27 2008/04/07 23:47:09 simon Exp $
+ * $Id: calmwm.h,v 1.28 2008/04/09 18:10:47 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -352,7 +352,6 @@ Pixmap             client_bg_pixmap(struct client_ctx *);
 void               client_map(struct client_ctx *cc);
 void               client_mtf(struct client_ctx *cc);
 struct client_ctx *client_cyclenext(int reverse);
-void               client_cycleinfo(struct client_ctx *cc);
 void               client_altrelease();
 struct client_ctx *client_mrunext(struct client_ctx *cc);
 struct client_ctx *client_mruprev(struct client_ctx *cc);
