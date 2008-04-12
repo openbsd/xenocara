@@ -25,7 +25,7 @@
 .\"
 .\" $XFree86: xc/programs/mkfontdir/mkfontdir.man,v 1.14 2001/11/01 23:35:34 dawes Exp $
 .\"
-.TH MKFONTDIR 1 __xorgversion__
+.TH MKFONTDIR __appmansuffix__ __xorgversion__
 .SH NAME
 mkfontdir \- create an index of X font files in a directory
 .SH SYNOPSIS
@@ -38,10 +38,10 @@ mkfontdir \- create an index of X font files in a directory
 .IR prefix ]
 .RB [ \-e
 .IR encoding-directory-name ]
-\|.\|.\|.
+\&\|.\|.\|.
 .RB [ \-\- ]
 .RI [ directory-name
-\|.\|.\|. ]
+\&\|.\|.\|. ]
 .SH DESCRIPTION
 For each directory argument, 
 .I mkfontdir
@@ -71,7 +71,10 @@ file "fonts.scale" can be used to name the scalable fonts in the
 directory.
 The fonts listed in it are copied to fonts.dir by 
 .IR mkfontdir .
-"fonts.scale" has the same format as the "fonts.dir" file.
+"fonts.scale" has the same format as the "fonts.dir" file, and can be
+created with the
+.IR mkfontscale (__appmansuffix__)
+program.
 .SH "FONT NAME ALIASES"
 The file "fonts.alias", which can be put in any directory of the font-path, is
 used to map new names to existing fonts, and should be edited by hand.  The
@@ -155,20 +158,21 @@ End options.
 .B fonts.dir
 List of fonts in the directory and the files they are stored in.
 Created by \fImkfontdir\fP.  Read by the X server and font server each
-time the font path is set (see xset(1)).
+time the font path is set (see xset(__appmansuffix__)).
 .TP 15
 .B fonts.scale
 List of scalable fonts in the directory.  Contents are copied to
-fonts.dir by \fImkfontdir\fP.
+fonts.dir by \fImkfontdir\fP.   Can be created with
+.IR mkfontscale (__appmansuffix__).
 .TP 15
 .B fonts.alias
 List of font name aliases.
 Read by the X server and font server each
-time the font path is set (see xset(1)).
+time the font path is set (see xset(__appmansuffix__)).
 .TP 15
 .B encodings.dir
 List of known encodings and the files they are stored in.
 Created by \fImkfontdir\fP.  Read by the X server and font server each
 time a font with an unknown charset is opened.
 .SH "SEE ALSO"
-X(__miscmansuffix__), Xserver(1), xfs(1), xset(1)
+X(__miscmansuffix__), Xserver(__appmansuffix__), mkfontscale(__appmansuffix__), xfs(__appmansuffix__), xset(__appmansuffix__)
