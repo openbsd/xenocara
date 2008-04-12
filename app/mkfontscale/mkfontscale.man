@@ -1,6 +1,6 @@
 .\" $XFree86: xc/programs/mkfontscale/mkfontscale.man,v 1.4 2003/06/20 15:49:52 eich Exp $
 .\"
-.TH MKFONTSCALE 1 __vendorversion__
+.TH MKFONTSCALE __appmansuffix__ __vendorversion__
 .SH NAME
 mkfontscale \- create an index of scalable font files for X
 .SH SYNOPSIS
@@ -53,7 +53,7 @@ The resulting
 .B fonts.scale
 file should be checked and possibly manually edited before being used
 as input for the
-.BR mkfontdir (1)
+.BR mkfontdir (__appmansuffix__)
 program.
 .SH OPTIONS
 .TP
@@ -129,14 +129,14 @@ is useful when generating encoding directories only.
 .B \-\- 
 end of options.
 .SH SEE ALSO
-X(__miscmansuffix__), Xserver(1), mkfontdir(1), ttmkfdir(1), xfs(1), xset(1)
+X(__miscmansuffix__), Xserver(__appmansuffix__), mkfontdir(__appmansuffix__), ttmkfdir(__appmansuffix__), xfs(__appmansuffix__), xset(__appmansuffix__)
 .SH NOTES
 The format of the
 .BR fonts.scale ,
 .B fonts.dir
 and
 .B encodings.dir
-files is documented in the mkfontdir(1) manual page.
+files is documented in the mkfontdir(__appmansuffix__) manual page.
 
 .B Mkfontscale
 will overwrite any
@@ -149,7 +149,7 @@ is equivalent to
 .SH AUTHOR
 The version of
 .B mkfontscale
-included in this X.Org Foundataion release was originally written by
+included in this X.Org Foundation release was originally written by
 Juliusz Chroboczek <jch@freedesktop.org> for the XFree86 project.  The
 functionality of this program was inspired by the
 .B ttmkfdir

@@ -19,11 +19,11 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   THE SOFTWARE.
 */
-/* $XFree86$ */
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "hash.h"
 #include "list.h"
 
@@ -40,46 +40,16 @@ hash(char *string)
     return (u & (NUMBUCKETS - 1));
 }
 
-static char
-lwr(char a)
-{
-    if(a >= 'A' && a <= 'Z')
-        return a | 0x20;
-    else
-        return a;
-}
-
 static void
 strcpy_lwr(char *dst, char *src)
 {
     while(1) {
-        *dst = lwr(*src);
+        *dst = tolower(*src);
         if(*src == '\0')
             break;
         src++;
         dst++;
     }
-}
-
-static int
-strcmp_lwr(char *a, char *b)
-{
-    while(*a != '\0' && *b != '\0') {
-        if(lwr(*a) != lwr(*b)) {
-            if(lwr(*a) < lwr(*b))
-                return -1;
-            if(lwr(*a) > lwr(*b))
-                return 1;
-        }
-        a++;
-        b++;
-    }
-    if (*a != '\0')
-        return -1;
-    else if(*b == '\0')
-        return 1;
-    else
-        return 0;
 }
 
 HashTablePtr
@@ -112,7 +82,7 @@ getHash(HashTablePtr table, char *key)
     int i = hash(key);
     HashBucketPtr bp;
     for(bp = table[i]; bp; bp = bp->next) {
-        if(strcmp_lwr(bp->key, key) == 0)
+        if(strcasecmp(bp->key, key) == 0)
             return bp->value;
     }
     return NULL;
@@ -125,7 +95,7 @@ putHash(HashTablePtr table, char *key, char *value, int prio)
     char *keycopy = NULL, *valuecopy = NULL;
     HashBucketPtr bp;
     for(bp = table[i]; bp; bp = bp->next) {
-        if(strcmp_lwr(bp->key, key) == 0) {
+        if(strcasecmp(bp->key, key) == 0) {
             if(prio > bp->prio) {
                 keycopy = malloc(strlen(key) + 1);
                 if(keycopy == NULL) goto fail;
@@ -184,7 +154,7 @@ static int
 key_first_cmp(const void *v1, const void *v2)
 {
     const HashBucketPtr *b1 = v1, *b2 = v2;
-    int c1 = strcmp_lwr((*b1)->key, (*b2)->key);
+    int c1 = strcasecmp((*b1)->key, (*b2)->key);
     if(c1 != 0) return c1;
     return strcmp((*b1)->value, (*b2)->value);
 }
@@ -195,7 +165,7 @@ value_first_cmp(const void *v1, const void *v2)
     const HashBucketPtr *b1 = v1, *b2 = v2;
     int c1 = strcmp((*b1)->value, (*b2)->value);
     if(c1 != 0) return c1;
-    return strcmp_lwr((*b1)->key, (*b2)->key);
+    return strcasecmp((*b1)->key, (*b2)->key);
 }
 
 HashBucketPtr *
