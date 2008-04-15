@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: input.c,v 1.4 2008/01/11 16:06:44 oga Exp $
+ * $Id: input.c,v 1.5 2008/04/15 18:33:13 okan Exp $
  */
 
 #include "headers.h"
@@ -70,9 +70,28 @@ input_keycodetrans(KeyCode kc, u_int state,
 		case XK_U:
 			*ctl = CTL_WIPE;
 			break;
+		case XK_h:
+		case XK_H:
+			*ctl = CTL_ERASEONE;
+			break;
 		case XK_a:
 		case XK_A:
 			*ctl = CTL_ALL;
+			break;
+		}
+	}
+
+	if (*ctl == CTL_NONE && (state & Mod1Mask)) {
+		switch (ks) {
+		case XK_j:
+		case XK_J:
+			/* Vi "down" */
+			*ctl = CTL_DOWN;
+			break;
+		case XK_k:
+		case XK_K:
+			/* Vi "up" */
+			*ctl = CTL_UP;
 			break;
 		}
 	}
