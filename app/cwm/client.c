@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.15 2008/04/09 18:10:47 okan Exp $
+ * $Id: client.c,v 1.16 2008/04/15 18:46:58 oga Exp $
  */
 
 #include "headers.h"
@@ -339,10 +339,12 @@ client_maximize(struct client_ctx *cc)
 		XGetWindowAttributes(X_Dpy, sc->rootwin, &rootwin_geom);
 		if (!(cc->flags & CLIENT_VMAXIMIZED))
 			cc->savegeom = cc->geom;
-		cc->geom.x = 0;
-		cc->geom.y = 0;
-		cc->geom.height = rootwin_geom.height;
-		cc->geom.width = rootwin_geom.width;
+		cc->geom.x = Conf.gap_left;
+		cc->geom.y = Conf.gap_top;
+		cc->geom.height = rootwin_geom.height -
+			(Conf.gap_top + Conf.gap_bottom);
+		cc->geom.width = rootwin_geom.width -
+			(Conf.gap_left + Conf.gap_right);
 		cc->flags |= CLIENT_DOMAXIMIZE;
 	}
 
@@ -765,12 +767,9 @@ client_vertmaximize(struct client_ctx *cc)
         
 		if (!(cc->flags & CLIENT_MAXIMIZED)) 
 			cc->savegeom = cc->geom;
-		cc->geom.y = cc->bwidth;
-		if (cc->geom.min_dx == 0)
-			cc->geom.height = display_height; 
-		else
-			cc->geom.height = display_height -
-			    (display_height % cc->geom.min_dx);
+		cc->geom.y = cc->bwidth + Conf.gap_top;
+		cc->geom.height = display_height -
+			(Conf.gap_top + Conf.gap_bottom); 
 		cc->flags |= CLIENT_DOVMAXIMIZE;
 	}
 

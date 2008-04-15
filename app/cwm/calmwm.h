@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.28 2008/04/09 18:10:47 okan Exp $
+ * $Id: calmwm.h,v 1.29 2008/04/15 18:46:58 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -274,6 +274,7 @@ struct conf {
 
 #define	DEFAULTFONTNAME		"sans-serif:pixelsize=14:bold"
 	char			*DefaultFontName;
+	int			gap_top, gap_bottom, gap_left, gap_right;
 };
 
 /* Menu stuff */

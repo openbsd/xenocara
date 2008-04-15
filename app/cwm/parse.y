@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.2 2008/04/15 18:22:08 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.3 2008/04/15 18:46:58 oga Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -65,7 +65,7 @@ typedef struct {
 
 %}
 
-%token	FONTNAME STICKY
+%token	FONTNAME STICKY GAP
 %token	AUTOGROUP BIND COMMAND IGNORE
 %token	YES NO
 %token	ERROR
@@ -161,8 +161,13 @@ main		: FONTNAME STRING		{
 			free($2);
 			free($3);
 		}
+		| GAP NUMBER NUMBER NUMBER NUMBER {
+			conf->gap_top = $2;
+			conf->gap_bottom = $3;
+			conf->gap_left = $4;
+			conf->gap_right = $5;
+		}
 		;
-
 %%
 
 struct keywords {
@@ -199,6 +204,7 @@ lookup(char *s)
 		{ "bind",		BIND},
 		{ "command",		COMMAND},
 		{ "fontname",		FONTNAME},
+		{ "gap",		GAP},
 		{ "ignore",		IGNORE},
 		{ "no",			NO},
 		{ "sticky",		STICKY},
@@ -574,6 +580,8 @@ parse_config(const char *filename, struct conf *xconf)
 		strlcpy(xconf->lockpath, conf->lockpath, sizeof(xconf->lockpath));
 
 		xconf->DefaultFontName = conf->DefaultFontName;
+
+		bcopy(&(conf->gap_top), &(xconf->gap_top), sizeof(int) * 4);
 	}
 
 	free(conf);
