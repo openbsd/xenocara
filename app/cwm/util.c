@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: util.c,v 1.6 2008/04/15 20:24:41 oga Exp $
+ * $Id: util.c,v 1.7 2008/04/15 20:26:50 oga Exp $
  */
 
 #include "headers.h"
@@ -63,32 +63,4 @@ exec_wm(char *argstr)
 	setsid();
 	execvp(args[0], args);
 	warn(args[0]);
-}
-
-int
-dirent_isdir(char *filename)
-{
-	struct stat buffer;
-	int return_value;
-
-	return_value = stat(filename, &buffer);
-
-	if (return_value == -1)
-		return (0);
-	else
-		return (S_ISDIR(buffer.st_mode));
-}
-
-int
-dirent_islink(char *filename)
-{
-	struct stat buffer;
-	int return_value;
-
-	return_value = lstat(filename, &buffer);
-
-	if (return_value == -1)
-		return (0);
-	else
-		return (S_ISLNK(buffer.st_mode));
 }
