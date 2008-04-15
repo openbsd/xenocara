@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: util.c,v 1.7 2008/04/15 20:26:50 oga Exp $
+ * $Id: util.c,v 1.8 2008/04/15 21:20:56 oga Exp $
  */
 
 #include "headers.h"
@@ -26,19 +26,10 @@
 int
 u_spawn(char *argstr)
 {
-	char *args[MAXARGLEN], **ap;
-	char **end = &args[MAXARGLEN - 1];
-
 	switch (fork()) {
 	case 0:
-		ap = args;
-		while (ap < end && (*ap = strsep(&argstr, " \t")) != NULL)
-			ap++;
-
-		*ap = NULL;
-		setsid();
-		execvp(args[0], args);
-		err(1, args[0]);
+		u_exec(argstr);
+		err(1, "%s", argstr);
 		break;
 	case -1:
 		warn("fork");
@@ -51,16 +42,35 @@ u_spawn(char *argstr)
 }
 
 void
-exec_wm(char *argstr)
+u_exec(char *argstr)
 {
 	char *args[MAXARGLEN], **ap = args;
 	char **end = &args[MAXARGLEN - 1];
+	char *tmp;
 
-	while (ap < end && (*ap = strsep(&argstr, " \t")) != NULL)
-		ap++;
+	while (ap < end && (*ap = strsep(&argstr, " \t")) != NULL) {
+		if(**ap == '\0')
+			continue;
+ 		ap++;
+		if (argstr != NULL) {
+			/* deal with quoted strings */
+			switch(argstr[0]) {
+			case '"':
+			case '\'':
+				if ((tmp = strchr(argstr + 1, argstr[0]))
+				    != NULL) {
+					*(tmp++) = '\0';
+					*(ap++) = ++argstr;
+					argstr = tmp;
+				}
+				break;
+			default:
+				break;
+			}
+		}
+	}
 
 	*ap = NULL;
 	setsid();
 	execvp(args[0], args);
-	warn(args[0]);
 }

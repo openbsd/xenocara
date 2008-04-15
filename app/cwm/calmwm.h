@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.31 2008/04/15 20:26:50 oga Exp $
+ * $Id: calmwm.h,v 1.32 2008/04/15 21:20:56 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -401,7 +401,7 @@ int			 xu_getstate(struct client_ctx *, int *);
 void			 xu_key_grab_keycode(Window, int, int);
 
 int			 u_spawn(char *);
-void			 exec_wm(char *);
+void			 u_exec(char *);
 
 void			 grab_sweep(struct client_ctx *);
 void			 grab_drag(struct client_ctx *);

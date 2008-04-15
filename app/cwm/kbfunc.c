@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.20 2008/04/15 20:24:41 oga Exp $
+ * $Id: kbfunc.c,v 1.21 2008/04/15 21:20:56 oga Exp $
  */
 
 #include <paths.h>
@@ -359,7 +359,8 @@ kbfunc_exec(struct client_ctx *scratch, void *arg)
 				u_spawn(mi->text);
 				break;
 			case CWM_EXEC_WM:
-				exec_wm(mi->text);
+				u_exec(mi->text);
+				warn("%s", mi->text);
 				break;
 			default:
 				err(1, "kb_func: egad, cmd changed value!");
