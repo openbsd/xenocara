@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.1 2008/03/23 15:09:21 simon Exp $ */
+/*	$OpenBSD: parse.y,v 1.2 2008/04/15 18:22:08 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -513,8 +513,7 @@ parse_config(const char *filename, struct conf *xconf)
 {
 	int			 errors = 0;
 
-	if ((conf = malloc(sizeof(struct conf))) == NULL)
-		return (-1);
+	XCALLOC(conf, struct conf);
 
 	if ((file = pushfile(filename)) == NULL) {
 		free(conf);

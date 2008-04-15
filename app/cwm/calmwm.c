@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.14 2008/04/03 13:58:57 simon Exp $
+ * $Id: calmwm.c,v 1.15 2008/04/15 18:22:08 okan Exp $
  */
 
 #include "headers.h"
@@ -81,6 +81,7 @@ main(int argc, char **argv)
 	group_init();
 
 	Starting = 1;
+	bzero(&Conf, sizeof(Conf));
 	conf_setup(&Conf, conffile);
 	client_setup();
 	x_setup(display_name);
