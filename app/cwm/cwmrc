@@ -1,4 +1,4 @@
-# $OpenBSD: cwmrc,v 1.1 2008/03/23 15:09:21 simon Exp $
+# $OpenBSD: cwmrc,v 1.2 2008/04/15 20:24:41 oga Exp $
 
 # Makes the Xft(3) font string fontname the default font
 #fontname "sans-serif:pixelsize=14:bold"
@@ -25,4 +25,3 @@
 #bind CM-r	"label"
 #bind CS-Return	"xterm -e top"
 #bind 4-o	"unmap"
-

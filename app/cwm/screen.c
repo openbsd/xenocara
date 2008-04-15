@@ -15,14 +15,14 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: screen.c,v 1.3 2008/01/11 16:06:44 oga Exp $
+ * $Id: screen.c,v 1.4 2008/04/15 20:24:41 oga Exp $
  */
 
 #include "headers.h"
 #include "calmwm.h"
 
-extern struct screen_ctx_q	Screenq;
-extern struct screen_ctx       *Curscreen;
+extern struct screen_ctx_q	 Screenq;
+extern struct screen_ctx	*Curscreen;
 
 static void
 _clearwindow_cb(int sig)
@@ -76,7 +76,6 @@ screen_updatestackingorder(void)
 void
 screen_init(void)
 {
-
 	struct screen_ctx *sc = screen_current();
 
 	sc->cycle_client = NULL;
