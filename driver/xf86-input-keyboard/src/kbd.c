@@ -149,11 +149,12 @@ static const char *kbdDefaults[] = {
     "AutoRepeat",	"500 30",
     "XkbRules",		__XKBDEFRULES__,
     "XkbModel",		"pc105",
-    "XkbLayout",	"us",
     "Panix106",		"off",
     "CustomKeycodes",	"off",
     NULL
 };
+
+static const char *kbdLayout = "us";
 
 static const char *kbd98Defaults[] = {
 #ifdef XQUEUE
@@ -260,6 +261,12 @@ KbdPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     if (!pKbd->OpenKeyboard(pInfo)) {
         return pInfo;
+    }
+
+    if (xf86findOption(pInfo->options, "XkbLayout") == NULL) {
+	xf86Msg(X_INFO, "%s: adding default layout %s\n",
+		pInfo->name, kbdLayout);
+        xf86addNewOption(pInfo->options, "XkbLayout", kbdLayout);
     }
 
     if ((s = xf86SetStrOption(pInfo->options, "AutoRepeat", NULL))) {

@@ -27,6 +27,16 @@
 #include "xf86OSKbd.h"
 #include "atKeynames.h"
 
+#ifdef WSCONS_SUPPORT
+#include <dev/wscons/wsconsio.h>
+#include <dev/wscons/wsksymdef.h>
+
+struct nameint {
+  int val;
+  char *name;
+} kbdenc[] = { KB_ENCTAB, { 0 } }, kbdvar[] = { KB_VARTAB, { 0 } };
+#endif
+
 extern void KbdGetMapping(InputInfoPtr pInfo, KeySymsPtr pKeySyms,
                           CARD8 *pModMap);
 
@@ -396,6 +406,9 @@ OpenKeyboard(InputInfoPtr pInfo)
     int i;
     KbdProtocolId prot = PROT_UNKNOWN_KBD;
     char *s;
+#ifdef WSCONS_SUPPORT
+    kbd_t wsenc = 0;
+#endif
 
     s = xf86SetStrOption(pInfo->options, "Protocol", NULL);
     for (i = 0; protocols[i].name; i++) {
@@ -456,7 +469,7 @@ OpenKeyboard(InputInfoPtr pInfo)
 #endif
 
 #ifdef WSCONS_SUPPORT
-    if( prot == PROT_WSCONS) {
+    if (prot == PROT_WSCONS) {
        pKbd->consType = WSCONS;
        /* Find out keyboard type */
        if (ioctl(pInfo->fd, WSKBDIO_GTYPE, &(pKbd->wsKbdType)) == -1) {
@@ -502,6 +515,37 @@ OpenKeyboard(InputInfoPtr pInfo)
                return FALSE;
        }
     }
+
+    /*
+     * Try to get the configured keyboard translation from the wscons
+     * keyboard driver (see kbd(8) for more information) if no
+     * XkbLayout has been specified.  Do this even if the protocol is
+     * not wskbd.
+     */
+    if (xf86findOption(pInfo->options, "XkbLayout") != NULL)
+        return TRUE;
+
+    if (ioctl(pInfo->fd, WSKBDIO_GETENCODING, &wsenc) == -1) {
+	/* Ignore the error, we just use the defaults */
+	xf86Msg(X_ERROR, "%s: error getting wscons layout name: %s\n",
+		pInfo->name, strerror(errno));
+	return TRUE;
+    }
+    for (i = 0; kbdenc[i].val; i++)
+        if (KB_ENCODING(wsenc) == kbdenc[i].val) {
+	    xf86Msg(X_PROBED, "%s: using wscons layout %s\n",
+		    pInfo->name, kbdenc[i].name);
+            xf86addNewOption(pInfo->options, "XkbLayout", kbdenc[i].name);
+            break;
+        }
+    if (xf86findOption(pInfo->options, "XkbOptions") == NULL)
+        for (i = 0; kbdvar[i].val; i++)
+            if (KB_VARIANT(wsenc) == kbdvar[i].val) {
+		xf86Msg(X_PROBED, "%s: using wscons option %s\n",
+			pInfo->name, kbdvar[i].name);
+                xf86addNewOption(pInfo->options, "XkbOptions", kbdvar[i].name);
+                break;
+            }
 #endif
     return TRUE;
 }
