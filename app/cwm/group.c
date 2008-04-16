@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.10 2008/04/16 13:35:37 oga Exp $
+ * $Id: group.c,v 1.11 2008/04/16 13:38:09 oga Exp $
  */
 
 #include "headers.h"
@@ -85,7 +85,7 @@ _group_show(struct group_ctx *gc)
 	u_int i;
 	int lastempty = -1;
 
-	winlist = (Window *) xcalloc(sizeof(*winlist) * (gc->highstack + 1));
+	winlist = (Window *) xcalloc(sizeof(*winlist), (gc->highstack + 1));
 
 	/*
 	 * Invert the stacking order as XRestackWindows() expects them

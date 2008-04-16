@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.26 2008/04/15 20:24:41 oga Exp $
+ * $Id: conf.c,v 1.27 2008/04/16 13:38:09 oga Exp $
  */
 
 #include "headers.h"
@@ -360,7 +360,7 @@ conf_bindname(struct conf *c, char *name, char *binding)
 		return;
 
 	current_binding->callback = kbfunc_cmdexec;
-	current_binding->argument = strdup(binding);
+	current_binding->argument = xstrdup(binding);
 	current_binding->flags = 0;
 	TAILQ_INSERT_TAIL(&c->keybindingq, current_binding, entry);
 	return;

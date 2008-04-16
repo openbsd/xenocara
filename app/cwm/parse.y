@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.4 2008/04/15 20:24:41 oga Exp $ */
+/*	$OpenBSD: parse.y,v 1.5 2008/04/16 13:38:09 oga Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -359,9 +359,7 @@ yylex(void)
 			}
 			*p++ = (char)c;
 		}
-		yylval.v.string = strdup(buf);
-		if (yylval.v.string == NULL)
-			err(1, "yylex: strdup");
+		yylval.v.string = xstrdup(buf);
 		return (STRING);
 	}
 
@@ -418,8 +416,7 @@ nodigits:
 		lungetc(c);
 		*p = '\0';
 		if ((token = lookup(buf)) == STRING)
-			if ((yylval.v.string = strdup(buf)) == NULL)
-				err(1, "yylex: strdup");
+			yylval.v.string = xstrdup(buf);
 		return (token);
 	}
 	if (c == '\n') {
@@ -436,11 +433,9 @@ pushfile(const char *name)
 {
 	struct file	*nfile;
 
-	if ((nfile = calloc(1, sizeof(struct file))) == NULL ||
-	    (nfile->name = strdup(name)) == NULL) {
-		warn("malloc");
-		return (NULL);
-	}
+	nfile = xcalloc(1, sizeof(struct file));
+	nfile->name = xstrdup(name);
+
 	if ((nfile->stream = fopen(nfile->name, "r")) == NULL) {
 		warn("%s", nfile->name);
 		free(nfile->name);
