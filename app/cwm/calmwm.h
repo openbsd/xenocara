@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.32 2008/04/15 21:20:56 oga Exp $
+ * $Id: calmwm.h,v 1.33 2008/04/16 13:33:26 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -65,7 +65,6 @@ struct screen_ctx {
 	Window		 rootwin;
 	Window		 menuwin;
 	Window		 searchwin;
-	Window		 groupwin;
 	Window		 infowin;
 	Colormap	 colormap;
 	XColor		 bgcolor, fgcolor, fccolor, redcolor, cyancolor,
