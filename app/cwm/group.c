@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.9 2008/04/15 20:24:41 oga Exp $
+ * $Id: group.c,v 1.10 2008/04/16 13:35:37 oga Exp $
  */
 
 #include "headers.h"
@@ -182,9 +182,6 @@ void
 group_hidetoggle(int idx)
 {
 	struct group_ctx *gc;
-#ifdef notyet
-	char buf[128];
-#endif
 
 	if (idx < 0 || idx >= CALMWM_NGROUPS)
 		err(1, "group_hidetoggle: index out of range (%d)", idx);
@@ -200,11 +197,6 @@ group_hidetoggle(int idx)
 		if (TAILQ_EMPTY(&gc->clients))
 			Group_active = gc;
 	}
-
-#ifdef notyet
-	snprintf(buf, sizeof(buf), "Group %d", idx + 1);
-	screen_infomsg(buf);
-#endif
 }
 
 #define GROUP_NEXT(gc, fwd) (fwd) ?					\
