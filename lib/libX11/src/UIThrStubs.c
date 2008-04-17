@@ -188,6 +188,7 @@ static int
 _Xthr_key_create_stub_(unsigned int *key, void (*destructor)(void *))
 {
     void **tmp;
+    unsigned int i;
 
     if ((_Xthr_last_key_ % XTHR_KEYS_CHUNK) == 0) {
 	tmp = realloc(_Xthr_keys_,
@@ -196,6 +197,8 @@ _Xthr_key_create_stub_(unsigned int *key, void (*destructor)(void *))
 	    free(_Xthr_keys_);
 	    return ENOMEM;
 	}
+	for (i =_Xthr_last_key_; i<XTHR_KEYS_CHUNK; i++)
+	    tmp[i] = 0;
 	_Xthr_keys_ = tmp;
     }
     *key = _Xthr_last_key_++;
@@ -218,4 +221,3 @@ _Xthr_getspecific_stub_(unsigned int key)
 	return NULL;
     return(_Xthr_keys_[key]);
 }
-
