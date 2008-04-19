@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg$ */
 /*
  * 2D Acceleration for SiS 315 and Xabre series
  * Definitions for the SIS engine communication.

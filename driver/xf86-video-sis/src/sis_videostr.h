@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg$ */
 /*
  * Xv driver for SiS 300, 315 and 330 series
  *

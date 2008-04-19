@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-sis],
-        0.9.3,
+        0.10.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-sis)
 
@@ -100,6 +100,19 @@ fi
 
 # technically this should be a configure flag.  meh.
 AC_DEFINE(XF86EXA, 1, [Build support for Exa])
+
+SAVE_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
+AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
+              [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
+              [#include "xorg-server.h"])
+CPPFLAGS="$SAVE_CPPFLAGS"
+
+if test "x$XSERVER_LIBPCIACCESS" = xyes; then
+    PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.10])
+    XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
+fi
+AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
 
 AC_SUBST([DRI_CFLAGS])
 AC_SUBST([XORG_CFLAGS])

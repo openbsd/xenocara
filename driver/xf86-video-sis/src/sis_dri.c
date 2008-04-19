@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sis/src/sis_dri.c,v 1.26 2005/10/21 18:40:19 ajax Exp $ */
 /*
  * DRI wrapper for 300 and 315 series
  *
@@ -59,7 +57,9 @@ extern Bool drmSiSAgpInit(int driSubFD, int offset, int size);
 #ifdef XORG_VERSION_CURRENT
 #define SISHAVECREATEBUSID
 #if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(6,7,99,1,0)
+#ifndef XSERVER_LIBPCIACCESS
 extern char *DRICreatePCIBusID(pciVideoPtr PciInfo);
+#endif
 #endif
 #else
 # if XF86_VERSION_CURRENT < XF86_VERSION_NUMERIC(4,4,99,9,0)
@@ -861,7 +861,7 @@ SISDRISwapContext(ScreenPtr pScreen, DRISyncType syncType,
      break;
 #endif
   case SIS_300_VGA:
-     *(pSiS->IOBase + 0x8B50) = 0xff;
+     *((unsigned char *)pSiS->IOBase + 0x8B50) = 0xff;
      *(CARD32 *)(pSiS->IOBase + 0x8B60) = 0xffffffff;
      break;
   }

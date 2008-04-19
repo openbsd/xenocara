@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg$ */
 /*
  * 2D Acceleration for SiS 530, 620, 300, 540, 630, 730.
  * Definitions for the SIS engine communication

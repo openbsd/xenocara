@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg$ */
 /*
  * Global data and definitions
  *

@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg$ */
 /*
  * General structure definitions for universal mode switching modules
  *

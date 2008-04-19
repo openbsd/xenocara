@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sis/src/sis_accel.c,v 1.23 2006-03-09 06:06:25 anholt Exp $ */
 /*
  * 2D acceleration for SiS5597/5598 and 6326
  *

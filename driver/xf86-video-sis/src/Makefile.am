@@ -46,6 +46,7 @@ sis_drv_la_SOURCES = \
          sis310_accel.c \
          sis310_accel.h \
          sis6326_video.c \
+	 sispcirename.h \
          sis_accel.c \
          sis_accel.h \
          sis_common.h \

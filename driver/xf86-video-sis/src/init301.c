@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg$ */
 /*
  * Mode initializing code (CRT2 section)
  * for SiS 300/305/540/630/730,
@@ -932,7 +930,7 @@ SiS_SetChrontelGPIO(struct SiS_Private *SiS_Pr, unsigned short myvbinfo)
 #ifdef SIS_LINUX_KERNEL
    acpibase = sisfb_read_lpc_pci_dword(SiS_Pr, 0x74);
 #else
-   acpibase = pciReadLong(0x00000800, 0x74);
+   acpibase = sis_pci_read_device_u32(1, 0x74);
 #endif
    acpibase &= 0xFFFF;
    if(!acpibase) return;
@@ -5220,8 +5218,8 @@ SiS_SetCRT2FIFO_300(struct SiS_Private *SiS_Pr,unsigned short ModeNo)
 	pci50 = sisfb_read_nbridge_pci_dword(SiS_Pr, 0x50);
 	pciA0 = sisfb_read_nbridge_pci_dword(SiS_Pr, 0xa0);
 #else
-	pci50 = pciReadLong(0x00000000, 0x50);
-	pciA0 = pciReadLong(0x00000000, 0xA0);
+	pci50 = sis_pci_read_host_bridge_u32(0x50);
+	pciA0 = sis_pci_read_host_bridge_u32(0xA0);
 #endif
 
         if(SiS_Pr->ChipType == SIS_730) {

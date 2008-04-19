@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sis/src/sis310_accel.c,v 1.31 2006-03-09 06:06:25 anholt Exp $ */
 /*
  * 2D Acceleration for SiS 315, 330 and 340 series
  *

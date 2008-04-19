@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sis/src/sis.h,v 1.67 2006/04/07 21:05:21 ajax Exp $ */
 /*
  * Main global data and definitions
  *
@@ -39,6 +37,11 @@
 #include <string.h>
 #include <math.h>
 #include <setjmp.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+
+#include <sispcirename.h>
 
 #define SISDRIVERVERSIONYEAR    5
 #define SISDRIVERVERSIONMONTH   9
@@ -92,7 +95,7 @@
 	(((major) * 10000000) + ((minor) * 100000) + ((patch) * 1000) + snap)
 #define XF86_VERSION_CURRENT XF86_VERSION_NUMERIC(4,3,99,902,0)
 #endif
-#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(6,8,99,900,0)
+#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(6,8,99,900,0) || XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(4,0,0,0,0)
 #define SISISXORG6899900
 #endif
 #if 0
@@ -109,10 +112,10 @@
 
 #define SIS_NAME                "SIS"
 #define SIS_DRIVER_NAME         "sis"
-#define SIS_MAJOR_VERSION       0
+#define SIS_MAJOR_VERSION	PACKAGE_VERSION_MAJOR
 #ifdef SISISXORG6899900
-#define SIS_MINOR_VERSION       9	/* DRI changes */
-#define SIS_PATCHLEVEL		1
+#define SIS_MINOR_VERSION	PACKAGE_VERSION_MINOR	/* DRI changes */
+#define SIS_PATCHLEVEL		PACKAGE_VERSION_PATCHLEVEL
 #else
 #define SIS_MINOR_VERSION       7
 #define SIS_PATCHLEVEL          1
@@ -850,15 +853,15 @@ typedef struct {
     ULong		masterFbSize;
     ULong		slaveFbAddress;
     ULong		slaveFbSize;
-    UChar		*FbBase;         	/* VRAM linear address */
+    void		*FbBase;         	/* VRAM linear address */
     UChar		*RealFbBase;         	/* Real VRAM linear address (for DHM, SiS76x UMA skipping) */
-    UChar		*IOBase;         	/* MMIO linear address */
+    void		*IOBase;         	/* MMIO linear address */
     UShort		MapCountIOBase;		/* map/unmap queue counter */
     UShort		MapCountFbBase;		/* map/unmap queue counter */
     Bool		forceUnmapIOBase;	/* ignore counter and unmap */
     Bool		forceUnmapFbBase;	/* ignore counter and unmap */
 #ifdef __alpha__
-    UChar		*IOBaseDense;    	/* MMIO for Alpha platform */
+    void		*IOBaseDense;    	/* MMIO for Alpha platform */
     UShort		MapCountIOBaseDense;
     Bool		forceUnmapIOBaseDense;  /* ignore counter and unmap */
 #endif
@@ -921,7 +924,7 @@ typedef struct {
     unsigned int	CPUFlags;
 #ifdef SIS_NEED_MAP_IOP
     CARD32		IOPAddress;		/* I/O port physical address */
-    UChar		*IOPBase;		/* I/O port linear address */
+    void		*IOPBase;		/* I/O port linear address */
     UShort		MapCountIOPBase;	/* map/unmap queue counter */
     Bool		forceUnmapIOPBase;	/* ignore counter and unmap */
 #endif
@@ -962,13 +965,13 @@ typedef struct {
     int			DSTN;		/* For 550 FSTN/DSTN; set by option, no detection */
     ULong		FbAddress;	/* VRAM physical address (in DHM: for each Fb!) */
     ULong		realFbAddress;	/* For DHM/PCI mem mapping: store global FBAddress */
-    UChar 		*FbBase;	/* VRAM virtual linear address */
-    UChar 		*RealFbBase;	/* Real VRAM virtual linear address (for DHM and SiS76x UMA skipping) */
+    void 		*FbBase;	/* VRAM virtual linear address */
+    void 		*RealFbBase;	/* Real VRAM virtual linear address (for DHM and SiS76x UMA skipping) */
     CARD32		IOAddress;	/* MMIO physical address */
-    UChar		*IOBase;	/* MMIO linear address */
+    void		*IOBase;	/* MMIO linear address */
     IOADDRESS		IODBase;	/* Base of PIO memory area */
 #ifdef __alpha__
-    UChar		*IOBaseDense;	/* MMIO for Alpha platform */
+    void		*IOBaseDense;	/* MMIO for Alpha platform */
 #endif
     SISIOADDRESS        RelIO;		/* Relocated IO Ports baseaddress */
     UChar		*BIOS;
@@ -1376,7 +1379,7 @@ typedef struct {
     Bool		SCLogQuiet;
 #ifdef SIS_NEED_MAP_IOP
     CARD32		IOPAddress;		/* I/O port physical address */
-    UChar 		*IOPBase;		/* I/O port linear address */
+    void 		*IOPBase;		/* I/O port linear address */
 #endif
 #ifdef SISMERGED
     Bool		MergedFB, MergedFBAuto;
@@ -1570,6 +1573,12 @@ extern int   SiS_GetTVyscale(ScrnInfoPtr pScrn);
 extern int   SiS_GetSISCRT1SaturationGain(ScrnInfoPtr pScrn);
 extern void  SiS_SetSISCRT1SaturationGain(ScrnInfoPtr pScrn, int val);
 
+extern unsigned int sis_pci_read_device_u32(int device, int offset);
+extern unsigned char sis_pci_read_device_u8(int device, int offset);
+extern unsigned int sis_pci_read_host_bridge_u32(int offset);
+extern unsigned char sis_pci_read_host_bridge_u8(int offset);
+extern void sis_pci_write_host_bridge_u8(int offset, unsigned char value);
+extern void sis_pci_write_host_bridge_u32(int offset, unsigned int value);
 #endif  /* _SIS_H_ */
 
 

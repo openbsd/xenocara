@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg$ */
 /*
  * X.org/XFree86 specific supplements to init.c/init301.c
  *

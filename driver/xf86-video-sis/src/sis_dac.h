@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg$ */
 /*
  * DAC helper functions (Save/Restore, MemClk, etc)
  * Definitions and prototypes

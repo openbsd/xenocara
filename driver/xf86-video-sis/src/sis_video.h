@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sis/src/sis_video.h,v 1.4 2005/07/04 10:57:08 twini Exp $ */
 /*
  * Xv driver for SiS 300, 315 and 330 series.
  *
@@ -163,7 +161,7 @@ extern int	SISGetPortUtilAttribute(ScrnInfoPtr pScrn,  Atom attribute,
 #define IMAGE_MAX_WIDTH_315   1920
 #define IMAGE_MAX_WIDTH_340   1920	/* ? */
 #define IMAGE_MAX_WIDTH_761   1920	/* ? */
-#define IMAGE_MAX_HEIGHT_315  1080
+#define IMAGE_MAX_HEIGHT_315  1088
 
 #define OVERLAY_MIN_WIDTH       32  	/* Minimum overlay sizes */
 #define OVERLAY_MIN_HEIGHT      24

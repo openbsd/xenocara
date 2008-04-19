@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg$ */
 /*
  * Video bridge detection and configuration for 300, 315 and 330 series
  *
