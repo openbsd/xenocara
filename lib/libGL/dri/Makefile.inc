@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.5 2008/03/25 23:41:50 matthieu Exp $
+# $OpenBSD: Makefile.inc,v 1.6 2008/04/19 07:15:17 matthieu Exp $
 .include <bsd.xconf.mk>
 
 MESA= ${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -39,6 +39,8 @@ INCLUDES = \
 	-I$(X11BASE)/include/drm
 
 LDADD=	../../libmesa/libmesa_pic.a -L${X11BASE}/lib -lX11 -lexpat -ldrm -lm
+DPADD=	../../libmesa/libmesa_pic.a
+
 .PATH: ${MESA}/drivers/dri/common
 .PATH: ${MESA}/drivers/common
 
