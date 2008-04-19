@@ -25,6 +25,13 @@
 #ifndef _RHD_CRTC_H
 #define _RHD_CRTC_H
 
+struct rhdFMTDither {
+    Bool LVDS24Bit;
+    Bool LVDSSpatialDither;
+    Bool LVDSTemporalDither;
+    int LVDSGreyLevel;
+};
+
 struct rhdCrtc {
     int scrnIndex;
 
@@ -48,7 +55,9 @@ struct rhdCrtc {
     struct rhdCursor *Cursor; /* Fixed to the MODE engine */
 
     DisplayModePtr CurrentMode;
-    DisplayModePtr Modes; /* Cycle through these */
+    DisplayModePtr Modes; /* Validated ones: Cycle through these */
+
+    DisplayModePtr ScaledMode; /* usually a fixed mode from one of the monitors */
 
     ModeStatus (*FBValid) (struct rhdCrtc *Crtc, CARD16 Width, CARD16 Height,
 			   int bpp, CARD32 Offset, CARD32 Size, CARD32 *pPitch);
@@ -58,10 +67,16 @@ struct rhdCrtc {
     ModeStatus (*ModeValid) (struct rhdCrtc *Crtc, DisplayModePtr Mode);
     void (*ModeSet) (struct rhdCrtc *Crtc, DisplayModePtr Mode);
 
-    void (*PLLSelect) (struct rhdCrtc *Crtc, struct rhdPLL *PLL);
-    void (*LUTSelect) (struct rhdCrtc *Crtc, struct rhdLUT *LUT);
+#define RHD_CRTC_SCALE_TYPE_NONE    0   /* top left */
+#define RHD_CRTC_SCALE_TYPE_CENTER  1   /* center of the actual mode */
+#define RHD_CRTC_SCALE_TYPE_SCALE   2   /* scaled to fullscreen */
+    ModeStatus (*ScaleValid) (struct rhdCrtc *Crtc, CARD32 Type, DisplayModePtr Mode, DisplayModePtr ScaledMode);
+    void (*ScaleSet) (struct rhdCrtc *Crtc, CARD32 Type, DisplayModePtr Mode, DisplayModePtr ScaledMode);
 
     void (*FrameSet) (struct rhdCrtc *Crtc, CARD16 X, CARD16 Y);
+
+    void (*PLLSelect) (struct rhdCrtc *Crtc, struct rhdPLL *PLL);
+    void (*LUTSelect) (struct rhdCrtc *Crtc, struct rhdLUT *LUT);
 
     void (*Power) (struct rhdCrtc *Crtc, int Power);
     void (*Blank) (struct rhdCrtc *Crtc, Bool Blank);
@@ -69,6 +84,11 @@ struct rhdCrtc {
     struct rhdCrtcStore *Store;
     void (*Save) (struct rhdCrtc *Crtc);
     void (*Restore) (struct rhdCrtc *Crtc);
+
+    struct rhdFMTStore *FMTStore;
+    void (*FMTModeSet)(struct rhdCrtc *Crtc, struct rhdFMTDither *FMTDither);
+    void (*FMTSave)(struct rhdCrtc *Crtc);
+    void (*FMTRestore)(struct rhdCrtc *Crtc);
 
     /* Gamma, scaling */
 };

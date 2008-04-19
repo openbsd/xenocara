@@ -25,12 +25,15 @@ rhd_crtc.c \
 rhd_connector.c \
 rhd_cursor.c \
 rhd_dac.c \
+rhd_dig.c \
+rhd_ddia.c \
 rhd_driver.c \
 rhd_edid.c \
 rhd_helper.c \
 rhd_id.c \
 rhd_lut.c \
 rhd_lvtma.c \
+rhd_mc.c \
 rhd_modes.c \
 rhd_monitor.c \
 rhd_output.c \
@@ -39,6 +42,8 @@ rhd_randr.c \
 rhd_tmds.c \
 rhd_vga.c \
 rhd_shadow.c \
+r5xx_accel.c \
+r5xx_xaa.c \
 $(ATOM_BIOS_PARSER_SRCS) \
 git_version.h
 
@@ -49,12 +54,15 @@ rhd_crtc.o \
 rhd_connector.o \
 rhd_cursor.o \
 rhd_dac.o \
+rhd_dig.o \
+rhd_ddia.o \
 rhd_driver.o \
 rhd_edid.o \
 rhd_helper.o \
 rhd_id.o \
 rhd_lut.o \
 rhd_lvtma.o \
+rhd_mc.o \
 rhd_modes.o \
 rhd_monitor.o \
 rhd_output.o \
@@ -63,6 +71,8 @@ rhd_randr.o \
 rhd_tmds.o \
 rhd_vga.o \
 rhd_shadow.o \
+r5xx_accel.o \
+r5xx_xaa.o \
 $(ATOM_BIOS_PARSER_OBJS)
 
 INCLUDES = -I. -I$(XF86COMSRC) -I$(XF86OSSRC) \

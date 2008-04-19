@@ -76,6 +76,8 @@
 #define ENCODER_OBJECT_ID_HDMI_SI1932             0x1B
 #define ENCODER_OBJECT_ID_DP_AN9801               0x1C
 #define ENCODER_OBJECT_ID_DP_DP501                0x1D
+#define ENCODER_OBJECT_ID_INTERNAL_UNIPHY         0x1E
+#define ENCODER_OBJECT_ID_INTERNAL_KLDSCP_LVTMA   0x1F
 
 /****************************************************/
 /* Connector Object ID Definition                   */
@@ -172,6 +174,10 @@
 #define ENCODER_MVPU_FPGA_ENUM_ID1               0x2118
 #define ENCODER_INTERNAL_DDI_ENUM_ID1            0x2119
 #define ENCODER_VT1625_ENUM_ID1               0x211A
+#define ENCODER_HDMI_SI1932_ENUM_ID1             0x211B
+#define ENCODER_ENCODER_DP_AN9801_ENUM_ID1       0x211C
+#define ENCODER_DP_DP501_ENUM_ID1                0x211D
+#define ENCODER_INTERNAL_UNIPHY_ENUM_ID1         0x211E
 */
 #define ENCODER_INTERNAL_LVDS_ENUM_ID1     ( GRAPH_OBJECT_TYPE_ENCODER << OBJECT_TYPE_SHIFT |\
                                              GRAPH_OBJECT_ENUM_ID1 << ENUM_ID_SHIFT |\
@@ -304,6 +310,19 @@
 #define ENCODER_DP_AN9801_ENUM_ID1            ( GRAPH_OBJECT_TYPE_ENCODER << OBJECT_TYPE_SHIFT |\
                                              GRAPH_OBJECT_ENUM_ID1 << ENUM_ID_SHIFT |\
                                              ENCODER_OBJECT_ID_DP_AN9801 << OBJECT_ID_SHIFT)
+
+#define ENCODER_INTERNAL_UNIPHY_ENUM_ID1         ( GRAPH_OBJECT_TYPE_ENCODER << OBJECT_TYPE_SHIFT |\
+                                                 GRAPH_OBJECT_ENUM_ID1 << ENUM_ID_SHIFT |\
+                                                 ENCODER_OBJECT_ID_INTERNAL_UNIPHY << OBJECT_ID_SHIFT)
+
+#define ENCODER_INTERNAL_UNIPHY_ENUM_ID2         ( GRAPH_OBJECT_TYPE_ENCODER << OBJECT_TYPE_SHIFT |\
+                                                 GRAPH_OBJECT_ENUM_ID2 << ENUM_ID_SHIFT |\
+                                                 ENCODER_OBJECT_ID_INTERNAL_UNIPHY << OBJECT_ID_SHIFT)
+
+#define ENCODER_INTERNAL_KLDSCP_LVTMA_ENUM_ID1   ( GRAPH_OBJECT_TYPE_ENCODER << OBJECT_TYPE_SHIFT |\
+                                                 GRAPH_OBJECT_ENUM_ID1 << ENUM_ID_SHIFT |\
+                                                 ENCODER_OBJECT_ID_INTERNAL_KLDSCP_LVTMA << OBJECT_ID_SHIFT)  
+
 /****************************************************/
 /* Connector Object ID definition - Shared with BIOS */
 /****************************************************/
@@ -349,12 +368,20 @@
                                                  GRAPH_OBJECT_ENUM_ID1 << ENUM_ID_SHIFT |\
                                                  CONNECTOR_OBJECT_ID_SINGLE_LINK_DVI_D << OBJECT_ID_SHIFT)
 
+#define CONNECTOR_SINGLE_LINK_DVI_D_ENUM_ID2   ( GRAPH_OBJECT_TYPE_CONNECTOR << OBJECT_TYPE_SHIFT |\
+                                                 GRAPH_OBJECT_ENUM_ID2 << ENUM_ID_SHIFT |\
+                                                 CONNECTOR_OBJECT_ID_SINGLE_LINK_DVI_D << OBJECT_ID_SHIFT)
+
 #define CONNECTOR_DUAL_LINK_DVI_D_ENUM_ID1     ( GRAPH_OBJECT_TYPE_CONNECTOR << OBJECT_TYPE_SHIFT |\
                                                  GRAPH_OBJECT_ENUM_ID1 << ENUM_ID_SHIFT |\
                                                  CONNECTOR_OBJECT_ID_DUAL_LINK_DVI_D << OBJECT_ID_SHIFT)
 
 #define CONNECTOR_VGA_ENUM_ID1                 ( GRAPH_OBJECT_TYPE_CONNECTOR << OBJECT_TYPE_SHIFT |\
                                                  GRAPH_OBJECT_ENUM_ID1 << ENUM_ID_SHIFT |\
+                                                 CONNECTOR_OBJECT_ID_VGA << OBJECT_ID_SHIFT)
+
+#define CONNECTOR_VGA_ENUM_ID2                 ( GRAPH_OBJECT_TYPE_CONNECTOR << OBJECT_TYPE_SHIFT |\
+                                                 GRAPH_OBJECT_ENUM_ID2 << ENUM_ID_SHIFT |\
                                                  CONNECTOR_OBJECT_ID_VGA << OBJECT_ID_SHIFT)
 
 #define CONNECTOR_COMPOSITE_ENUM_ID1           ( GRAPH_OBJECT_TYPE_CONNECTOR << OBJECT_TYPE_SHIFT |\
@@ -397,6 +424,10 @@
                                                  GRAPH_OBJECT_ENUM_ID1 << ENUM_ID_SHIFT |\
                                                  CONNECTOR_OBJECT_ID_PCIE_CONNECTOR << OBJECT_ID_SHIFT)
 
+#define CONNECTOR_PCIE_CONNECTOR_ENUM_ID2      ( GRAPH_OBJECT_TYPE_CONNECTOR << OBJECT_TYPE_SHIFT |\
+                                                 GRAPH_OBJECT_ENUM_ID2 << ENUM_ID_SHIFT |\
+                                                 CONNECTOR_OBJECT_ID_PCIE_CONNECTOR << OBJECT_ID_SHIFT)
+
 #define CONNECTOR_CROSSFIRE_ENUM_ID1           ( GRAPH_OBJECT_TYPE_CONNECTOR << OBJECT_TYPE_SHIFT |\
                                                  GRAPH_OBJECT_ENUM_ID1 << ENUM_ID_SHIFT |\
                                                  CONNECTOR_OBJECT_ID_CROSSFIRE << OBJECT_ID_SHIFT)
@@ -417,6 +448,11 @@
 #define CONNECTOR_DISPLAYPORT_ENUM_ID1         ( GRAPH_OBJECT_TYPE_CONNECTOR << OBJECT_TYPE_SHIFT |\
                                                  GRAPH_OBJECT_ENUM_ID1 << ENUM_ID_SHIFT |\
                                                  CONNECTOR_OBJECT_ID_DISPLAYPORT << OBJECT_ID_SHIFT)
+
+#define CONNECTOR_DISPLAYPORT_ENUM_ID2         ( GRAPH_OBJECT_TYPE_CONNECTOR << OBJECT_TYPE_SHIFT |\
+                                                 GRAPH_OBJECT_ENUM_ID2 << ENUM_ID_SHIFT |\
+                                                 CONNECTOR_OBJECT_ID_DISPLAYPORT << OBJECT_ID_SHIFT)
+
 /****************************************************/
 /* Router Object ID definition - Shared with BIOS   */
 /****************************************************/

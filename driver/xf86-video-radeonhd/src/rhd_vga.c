@@ -88,7 +88,7 @@ RHDVGASave(RHDPtr rhdPtr)
 
     /* Could be that the VGA internal address no longer is pointing to what
        we know as our FB memory, in which case we should give up cleanly. */
-    if (VGA->FBOffset < (unsigned) pScrn->videoRam) {
+    if (VGA->FBOffset < (unsigned) (pScrn->videoRam * 1024)) {
 	VGA->FBSize = 256 * 1024;
 	VGA->FB = xcalloc(VGA->FBSize, 1);
 	if (VGA->FB)

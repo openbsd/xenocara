@@ -1,5 +1,11 @@
 /* imake template for radeonhd driver -*- makefile -*- */
 
+/* Copyright (c) 2007 Hans Ulrich Niedermann <hun@n-dimensional.de>
+ *
+ * This Makefile fragment is free software; the author(s) give(s)
+ * unlimited permission to copy, distribute and modify it.
+ */
+
 VER_GREP                   = grep -A 4 AC_INIT $(TOP)/configure.ac
 VER_SED                    = sed -n '2s/[^0-9]*\([0-9][^,]*\).*/\1/p'
 VER_CUT                    = cut -d . -f

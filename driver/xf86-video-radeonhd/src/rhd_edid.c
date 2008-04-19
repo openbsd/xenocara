@@ -31,8 +31,8 @@
 #include "xf86.h"
 #include "xf86DDC.h"
 #if HAVE_XF86_ANSIC_H
-# include "xf86_ansic.h" 
-#else 
+# include "xf86_ansic.h"
+#else
 # include <string.h>
 # include <stdio.h>
 #endif
@@ -181,9 +181,14 @@ EDIDGuessRangesFromModes(struct rhdMonitor *Monitor, DisplayModePtr Modes)
 	if (!Mode->HSync)
             Mode->HSync = ((float) Mode->Clock ) / ((float) Mode->HTotal);
 
-        if (!Mode->VRefresh)
+        if (!Mode->VRefresh) {
             Mode->VRefresh = (1000.0 * ((float) Mode->Clock)) /
                 ((float) (Mode->HTotal * Mode->VTotal));
+	    if (Mode->Flags & V_INTERLACE)
+		Mode->VRefresh *= 2.0;
+	    if (Mode->Flags & V_DBLSCAN)
+		Mode->VRefresh /= 2.0;
+	}
     }
 
     if (!Monitor->numHSync) {

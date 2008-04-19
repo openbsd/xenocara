@@ -30,5 +30,6 @@ void RHDMCDestroy(RHDPtr rhdPtr);
 void RHDSaveMC(RHDPtr rhdPtr);
 void RHDRestoreMC(RHDPtr rhdPtr);
 void RHDMCSetup(RHDPtr rhdPtr);
+Bool RHDMCIdle(RHDPtr rhdPtr, CARD32 count);
 
 #endif /* RHD_MC_H */

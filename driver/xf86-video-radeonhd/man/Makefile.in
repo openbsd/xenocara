@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.in,v 1.4 2008/03/15 18:08:46 matthieu Exp $
+# $Id: Makefile.in,v 1.5 2008/04/19 13:41:45 matthieu Exp $
 #
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 # 
@@ -168,6 +168,8 @@ RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+USE_EXA_FALSE = @USE_EXA_FALSE@
+USE_EXA_TRUE = @USE_EXA_TRUE@
 VERSION = @VERSION@
 WARN_CFLAGS = @WARN_CFLAGS@
 XORG_CFLAGS = @XORG_CFLAGS@

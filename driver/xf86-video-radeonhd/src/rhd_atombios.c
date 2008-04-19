@@ -1,8 +1,8 @@
 /*
- * Copyright 2007  Egbert Eich   <eich@novell.com>
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
+ * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007, 2008  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -29,6 +29,10 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
+/* only for testing now */
+#include "xf86DDC.h"
+#include "edid.h"
+
 #if HAVE_XF86_ANSIC_H
 # include "xf86_ansic.h"
 #else
@@ -37,7 +41,6 @@
 # include <stdio.h>
 #endif
 
-#include "edid.h"
 #include "rhd.h"
 #include "rhd_atombios.h"
 #include "rhd_connector.h"
@@ -45,8 +48,6 @@
 #include "rhd_monitor.h"
 #include "rhd_card.h"
 #include "rhd_regs.h"
-/* only for testing now */
-#include "xf86DDC.h"
 
 #ifdef ATOM_BIOS
 # include "rhd_atomwrapper.h"
@@ -82,6 +83,8 @@ static AtomBiosResult rhdAtomInit(atomBiosHandlePtr unused1,
 				      AtomBiosRequestID unused2, AtomBiosArgPtr data);
 static AtomBiosResult rhdAtomTearDown(atomBiosHandlePtr handle,
 					  AtomBiosRequestID unused1, AtomBiosArgPtr unused2);
+static AtomBiosResult rhdAtomGetDataInCodeTable(atomBiosHandlePtr handle,
+						AtomBiosRequestID unused, AtomBiosArgPtr data);
 static AtomBiosResult rhdAtomVramInfoQuery(atomBiosHandlePtr handle,
 					       AtomBiosRequestID func, AtomBiosArgPtr data);
 static AtomBiosResult rhdAtomTmdsInfoQuery(atomBiosHandlePtr handle,
@@ -98,6 +101,13 @@ static AtomBiosResult rhdAtomFirmwareInfoQuery(atomBiosHandlePtr handle,
 						   AtomBiosRequestID func, AtomBiosArgPtr data);
 static AtomBiosResult rhdAtomConnectorInfo(atomBiosHandlePtr handle,
 					   AtomBiosRequestID unused, AtomBiosArgPtr data);
+static AtomBiosResult
+rhdAtomAnalogTVInfoQuery(atomBiosHandlePtr handle,
+			 AtomBiosRequestID func, AtomBiosArgPtr data);
+static AtomBiosResult
+rhdAtomGetConditionalGoldenSetting(atomBiosHandlePtr handle,
+				   AtomBiosRequestID func, AtomBiosArgPtr data);
+
 # ifdef ATOM_BIOS_PARSER
 static AtomBiosResult rhdAtomExec(atomBiosHandlePtr handle,
 				   AtomBiosRequestID unused, AtomBiosArgPtr data);
@@ -105,6 +115,9 @@ static AtomBiosResult rhdAtomExec(atomBiosHandlePtr handle,
 static AtomBiosResult
 rhdAtomCompassionateDataQuery(atomBiosHandlePtr handle,
 			      AtomBiosRequestID func, AtomBiosArgPtr data);
+static AtomBiosResult
+rhdAtomIntegratedSystemInfoQuery(atomBiosHandlePtr handle,
+				 AtomBiosRequestID func, AtomBiosArgPtr data);
 
 
 enum msgDataFormat {
@@ -135,6 +148,8 @@ struct atomBIOSRequests {
      "AtomBIOS Get Panel Mode",			MSG_FORMAT_NONE},
     {ATOMBIOS_GET_PANEL_EDID,		rhdAtomLvdsGetTimings,
      "AtomBIOS Get Panel EDID",			MSG_FORMAT_NONE},
+    {ATOMBIOS_GET_CODE_DATA_TABLE,	rhdAtomGetDataInCodeTable,
+     "AtomBIOS Get Datatable from Codetable",   MSG_FORMAT_NONE},
     {GET_DEFAULT_ENGINE_CLOCK,		rhdAtomFirmwareInfoQuery,
      "Default Engine Clock",			MSG_FORMAT_DEC},
     {GET_DEFAULT_MEMORY_CLOCK,		rhdAtomFirmwareInfoQuery,
@@ -155,8 +170,8 @@ struct atomBIOSRequests {
       "Start of VRAM area used by Firmware",	MSG_FORMAT_HEX},
     {GET_FW_FB_SIZE,			rhdAtomVramInfoQuery,
       "Framebuffer space used by Firmware (kb)", MSG_FORMAT_DEC},
-    {ATOM_TMDS_FREQUENCY,		rhdAtomTmdsInfoQuery,
-     "TMDS Frequency",				MSG_FORMAT_DEC},
+    {ATOM_TMDS_MAX_FREQUENCY,		rhdAtomTmdsInfoQuery,
+     "TMDS Max Frequency",			MSG_FORMAT_DEC},
     {ATOM_TMDS_PLL_CHARGE_PUMP,		rhdAtomTmdsInfoQuery,
      "TMDS PLL ChargePump",			MSG_FORMAT_DEC},
     {ATOM_TMDS_PLL_DUTY_CYCLE,		rhdAtomTmdsInfoQuery,
@@ -173,8 +188,10 @@ struct atomBIOSRequests {
      "LVDS SEQ Dig onto DE",			MSG_FORMAT_DEC},
     {ATOM_LVDS_SEQ_DE_TO_BL,		rhdAtomLvdsInfoQuery,
      "LVDS SEQ DE to BL",			MSG_FORMAT_DEC},
-    {ATOM_LVDS_DITHER,			rhdAtomLvdsInfoQuery,
-     "LVDS Ditherc",				MSG_FORMAT_HEX},
+    {ATOM_LVDS_TEMPORAL_DITHER,	        rhdAtomLvdsInfoQuery,
+     "LVDS Temporal Dither ",			MSG_FORMAT_HEX},
+    {ATOM_LVDS_SPATIAL_DITHER,	        rhdAtomLvdsInfoQuery,
+     "LVDS Spatial Dither ",			MSG_FORMAT_HEX},
     {ATOM_LVDS_DUALLINK,		rhdAtomLvdsInfoQuery,
      "LVDS Duallink",				MSG_FORMAT_HEX},
     {ATOM_LVDS_GREYLVL,			rhdAtomLvdsInfoQuery,
@@ -201,6 +218,18 @@ struct atomBIOSRequests {
      "DAC2_CRTC2 Mux Register Index",		MSG_FORMAT_HEX},
     {ATOM_DAC2_CRTC2_MUX_REG_INFO,rhdAtomCompassionateDataQuery,
      "DAC2_CRTC2 Mux Register Info",		MSG_FORMAT_HEX},
+    {ATOM_ANALOG_TV_MODE, rhdAtomAnalogTVInfoQuery,
+     "Analog TV Mode",				MSG_FORMAT_NONE},
+    {ATOM_ANALOG_TV_DEFAULT_MODE, rhdAtomAnalogTVInfoQuery,
+     "Analog TV Default Mode",			MSG_FORMAT_DEC},
+    {ATOM_ANALOG_TV_SUPPORTED_MODES, rhdAtomAnalogTVInfoQuery,
+     "Analog TV Supported Modes",		MSG_FORMAT_HEX},
+    {ATOM_GET_CONDITIONAL_GOLDEN_SETTINGS, rhdAtomGetConditionalGoldenSetting,
+     "Conditional Golden Settings",		MSG_FORMAT_NONE},
+    {ATOM_GET_PCIENB_CFG_REG7, rhdAtomIntegratedSystemInfoQuery,
+     "PCIE NB Cfg7Reg",				MSG_FORMAT_HEX},
+    {ATOM_GET_CAPABILITY_FLAG, rhdAtomIntegratedSystemInfoQuery,
+     "CapabilityFlag",				MSG_FORMAT_HEX},
     {FUNC_END,					NULL,
      NULL,					MSG_FORMAT_NONE}
 };
@@ -291,8 +320,8 @@ typedef struct _atomBiosHandle {
     atomDataTablesPtr atomDataPtr;
     pointer *scratchBase;
     CARD32 fbBase;
-    PCITAG PciTag;
     unsigned int BIOSImageSize;
+    unsigned char *codeTable;
 } atomBiosHandleRec;
 
 enum {
@@ -330,7 +359,7 @@ rhdAtomAnalyzeCommonHdr(ATOM_COMMON_TABLE_HEADER *hdr)
 static int
 rhdAtomAnalyzeRomHdr(unsigned char *rombase,
               ATOM_ROM_HEADER *hdr,
-              unsigned int *data_offset)
+		     unsigned int *data_offset, unsigned int *code_table)
 {
     if (!rhdAtomAnalyzeCommonHdr(&hdr->sHeader)) {
         return FALSE;
@@ -343,6 +372,7 @@ rhdAtomAnalyzeRomHdr(unsigned char *rombase,
 		   rombase + hdr->usBIOS_BootupMessageOffset);
 
     *data_offset = hdr->usMasterDataTableOffset;
+    *code_table = hdr->usMasterCommandTableOffset;
 
     return TRUE;
 }
@@ -377,6 +407,7 @@ rhdAtomGetTableRevisionAndSize(ATOM_COMMON_TABLE_HEADER *hdr,
     if (formatRev) *formatRev = hdr->ucTableFormatRevision;
     if (size) *size = (short)hdr->usStructureSize
                    - sizeof(ATOM_COMMON_TABLE_HEADER);
+
     return TRUE;
 }
 
@@ -442,10 +473,12 @@ rhdAtomAnalyzeMasterDataTable(unsigned char *base,
 }
 
 static Bool
-rhdAtomGetDataTable(int scrnIndex, unsigned char *base,
-		    atomDataTables *atomDataPtr, unsigned int BIOSImageSize)
+rhdAtomGetTables(int scrnIndex, unsigned char *base,
+		 atomDataTables *atomDataPtr, unsigned char **codeTablePtr,
+		 unsigned int BIOSImageSize)
 {
     unsigned int  data_offset;
+    unsigned int  code_offset;
     unsigned int atom_romhdr_off =  *(unsigned short*)
         (base + OFFSET_TO_POINTER_TO_ATOM_ROM_HEADER);
     ATOM_ROM_HEADER *atom_rom_hdr =
@@ -465,7 +498,7 @@ rhdAtomGetDataTable(int scrnIndex, unsigned char *base,
         return FALSE;
     }
     xf86DrvMsg(scrnIndex, X_INFO, "ATOM BIOS Rom: \n");
-    if (!rhdAtomAnalyzeRomHdr(base, atom_rom_hdr, &data_offset)) {
+    if (!rhdAtomAnalyzeRomHdr(base, atom_rom_hdr, &data_offset, &code_offset)) {
         xf86DrvMsg(scrnIndex, X_ERROR, "RomHeader invalid\n");
         return FALSE;
     }
@@ -473,7 +506,15 @@ rhdAtomGetDataTable(int scrnIndex, unsigned char *base,
     if (data_offset + sizeof (ATOM_MASTER_DATA_TABLE) > BIOSImageSize) {
 	xf86DrvMsg(scrnIndex,X_ERROR,"%s: Atom data table outside of BIOS\n",
 		   __func__);
+	return FALSE;
     }
+
+    if (code_offset + sizeof (ATOM_MASTER_COMMAND_TABLE) > BIOSImageSize) {
+	xf86DrvMsg(scrnIndex, X_ERROR, "%s: Atom command table outside of BIOS\n",
+		   __func__);
+	(*codeTablePtr) = NULL;
+    } else
+	(*codeTablePtr) = base + code_offset;
 
     if (!rhdAtomAnalyzeMasterDataTable(base, (ATOM_MASTER_DATA_TABLE *)
 				       (base + data_offset),
@@ -482,6 +523,7 @@ rhdAtomGetDataTable(int scrnIndex, unsigned char *base,
 		   __func__);
         return FALSE;
     }
+
     return TRUE;
 }
 
@@ -579,6 +621,8 @@ rhdAtomASICInit(atomBiosHandlePtr handle)
     ASIC_INIT_PS_ALLOCATION asicInit;
     AtomBiosArgRec data;
 
+    RHDFUNC(handle);
+
     RHDAtomBiosFunc(handle->scrnIndex, handle,
 		    GET_DEFAULT_ENGINE_CLOCK,
 		    &data);
@@ -588,7 +632,7 @@ rhdAtomASICInit(atomBiosHandlePtr handle)
 		    &data);
     asicInit.sASICInitClocks.ulDefaultMemoryClock = data.val / 10;/*in 10 Khz*/
     data.exec.dataSpace = NULL;
-    data.exec.index = 0x0;
+    data.exec.index = GetIndexIntoMasterTable(COMMAND, ASIC_Init);
     data.exec.pspace = &asicInit;
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling ASIC Init\n");
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
@@ -606,10 +650,12 @@ rhdAtomSetScaler(atomBiosHandlePtr handle, unsigned char scalerID, int setting)
     ENABLE_SCALER_PARAMETERS scaler;
     AtomBiosArgRec data;
 
+    RHDFUNC(handle);
+
     scaler.ucScaler = scalerID;
     scaler.ucEnable = setting;
     data.exec.dataSpace = NULL;
-    data.exec.index = 0x21;
+    data.exec.index = GetIndexIntoMasterTable(COMMAND, EnableScaler);
     data.exec.pspace = &scaler;
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling EnableScaler\n");
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
@@ -617,7 +663,138 @@ rhdAtomSetScaler(atomBiosHandlePtr handle, unsigned char scalerID, int setting)
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "EnableScaler Successful\n");
 	return TRUE;
     }
-    xf86DrvMsg(handle->scrnIndex, X_INFO, "EableScaler Failed\n");
+    xf86DrvMsg(handle->scrnIndex, X_INFO, "EnableScaler Failed\n");
+    return FALSE;
+}
+
+Bool
+rhdAtomSetTVEncoder(atomBiosHandlePtr handle, Bool enable, int mode)
+{
+    TV_ENCODER_CONTROL_PS_ALLOCATION tvEncoder;
+    AtomBiosArgRec data;
+
+    RHDFUNC(handle);
+
+    tvEncoder.sTVEncoder.ucTvStandard = mode;
+    tvEncoder.sTVEncoder.ucAction = enable ? 1 :0;
+
+    data.exec.dataSpace = NULL;
+    data.exec.pspace = &tvEncoder;
+    data.exec.index =  GetIndexIntoMasterTable(COMMAND, TVEncoderControl);
+
+    xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling SetTVEncoder\n");
+    if (RHDAtomBiosFunc(handle->scrnIndex, handle,
+			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+	xf86DrvMsg(handle->scrnIndex, X_INFO, "SetTVEncoder Successful\n");
+	return TRUE;
+    }
+    xf86DrvMsg(handle->scrnIndex, X_INFO, "SetTVEncoder Failed\n");
+    return FALSE;
+}
+
+/*
+ *
+ */
+Bool
+rhdAtomDigTransmitterControl(atomBiosHandlePtr handle, enum atomTransmitter id,
+			     enum atomTransmitterAction action, struct atomTransmitterConfig *config)
+{
+    DIG_TRANSMITTER_CONTROL_PARAMETERS Transmitter;
+    AtomBiosArgRec data;
+    char *name = NULL;
+
+    RHDFUNC(handle);
+
+    switch (action) {
+	case atomTransDisable:
+	    Transmitter.ucAction = ATOM_TRANSMITTER_ACTION_DISABLE;
+	    break;
+	case atomTransEnable:
+	    Transmitter.ucAction = ATOM_TRANSMITTER_ACTION_ENABLE;
+	    break;
+	case atomTransEnableOutput:
+	    Transmitter.ucAction = ATOM_TRANSMITTER_ACTION_ENABLE_OUTPUT;
+	    break;
+	case atomTransDisableOutput:
+	    Transmitter.ucAction = ATOM_TRANSMITTER_ACTION_DISABLE_OUTPUT;
+	    break;
+	case atomTransSetup:
+	    Transmitter.ucAction = ATOM_TRANSMITTER_ACTION_SETUP;
+	    break;
+    }
+
+    Transmitter.ucConfig = 0;
+    switch (config->mode) {
+	case atomDVI_1Link:
+	case atomHDMI:
+	case atomLVDS:
+	    Transmitter.usPixelClock = config->pixelClock / 10;
+	    break;
+
+	case atomDVI_2Link:
+	case atomLVDS_DUAL:
+	    Transmitter.usPixelClock = config->pixelClock / 20;
+	    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_8LANE_LINK;
+	    break;
+
+	case atomDP:
+	case atomDP_8Lane:
+	case atomSDVO:
+	default:
+	    /* we don't know what to do here yet */
+	    return FALSE;
+    }
+
+    if (config->coherent)
+	Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_COHERENT;
+
+    switch (id) {
+	case atomTransmitterDIG1:
+	case atomTransmitterUNIPHY:
+	case atomTransmitterPCIEPHY:
+	    switch (config->link) {
+		case atomTransLinkA:
+		    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LINKA;
+		    break;
+
+		case atomTransLinkB:
+		    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LINKB;
+		    break;
+	    }
+	    switch (config->encoder) {
+		case atomEncoderDIG1:
+		    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_DIG1_ENCODER;
+		    break;
+
+		case atomEncoderDIG2:
+		    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_DIG2_ENCODER;
+		    break;
+	    }
+	    data.exec.index =  GetIndexIntoMasterTable(COMMAND, UNIPHYTransmitterControl);
+	    name = "UNIPHYTransmitterControl";
+
+	    if (id == atomTransmitterPCIEPHY)
+		return FALSE; /* for now */
+
+	    break;
+
+	case atomTransmitterLVTMA:
+	case atomTransmitterDIG2:
+	    data.exec.index =  GetIndexIntoMasterTable(COMMAND, DIG2TransmitterControl);
+	    name = "DIG2TransmitterControl";
+	    break;
+    }
+
+    data.exec.dataSpace = NULL;
+    data.exec.pspace = &Transmitter;
+
+    xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling %s\n",name);
+    if (RHDAtomBiosFunc(handle->scrnIndex, handle,
+			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+	xf86DrvMsg(handle->scrnIndex, X_INFO, "SetTVEncoder Successful\n");
+	return TRUE;
+    }
+    xf86DrvMsg(handle->scrnIndex, X_INFO, "%s Failed\n",name);
     return FALSE;
 }
 
@@ -633,6 +810,9 @@ rhdAtomInit(atomBiosHandlePtr unused1, AtomBiosRequestID unused2,
     atomDataTablesPtr atomDataPtr;
     atomBiosHandlePtr handle = NULL;
     unsigned int BIOSImageSize = 0;
+    Bool unposted = FALSE;
+    unsigned char* codeTable;
+
     data->atomhandle = NULL;
 
     RHDFUNCI(scrnIndex);
@@ -651,6 +831,7 @@ rhdAtomInit(atomBiosHandlePtr unused1, AtomBiosRequestID unused2,
 	if (!xf86IsEntityPrimary(rhdPtr->entityIndex)) {
 	    if (!(BIOSImageSize = RHDReadPCIBios(rhdPtr, &ptr)))
 		return ATOM_FAILED;
+	    unposted = TRUE;
 	} else {
 	    int read_len;
 	    unsigned char tmp[32];
@@ -684,7 +865,7 @@ rhdAtomInit(atomBiosHandlePtr unused1, AtomBiosRequestID unused2,
 		   "ATOM BIOS data tabes\n");
 	goto error;
     }
-    if (!rhdAtomGetDataTable(scrnIndex, ptr, atomDataPtr,BIOSImageSize))
+    if (!rhdAtomGetTables(scrnIndex, ptr, atomDataPtr, &codeTable, BIOSImageSize))
 	goto error1;
     if (!(handle = xcalloc(1, sizeof(atomBiosHandleRec)))) {
 	xf86DrvMsg(scrnIndex,X_ERROR,"Cannot allocate memory\n");
@@ -693,12 +874,12 @@ rhdAtomInit(atomBiosHandlePtr unused1, AtomBiosRequestID unused2,
     handle->BIOSBase = ptr;
     handle->atomDataPtr = atomDataPtr;
     handle->scrnIndex = scrnIndex;
-    handle->PciTag = rhdPtr->PciTag;
     handle->BIOSImageSize = BIOSImageSize;
+    handle->codeTable = codeTable;
 
 # if ATOM_BIOS_PARSER
     /* Try to find out if BIOS has been posted (either by system or int10 */
-    if (!rhdAtomGetFbBaseAndSize(handle, NULL, NULL)) {
+    if (unposted) {
 	/* run AsicInit */
 	if (!rhdAtomASICInit(handle))
 	    xf86DrvMsg(scrnIndex, X_WARNING,
@@ -761,7 +942,7 @@ rhdAtomTmdsInfoQuery(atomBiosHandlePtr handle,
 {
     atomDataTablesPtr atomDataPtr;
     CARD32 *val = &data->val;
-    int idx = *val;
+    int i = 0, clock = *val;
 
     atomDataPtr = handle->atomDataPtr;
     if (!rhdAtomGetTableRevisionAndSize(
@@ -772,25 +953,38 @@ rhdAtomTmdsInfoQuery(atomBiosHandlePtr handle,
 
     RHDFUNC(handle);
 
-    switch (func) {
-	case ATOM_TMDS_FREQUENCY:
-	    *val = atomDataPtr->TMDS_Info->asMiscInfo[idx].usFrequency;
-	    break;
-	case ATOM_TMDS_PLL_CHARGE_PUMP:
-	    *val = atomDataPtr->TMDS_Info->asMiscInfo[idx].ucPLL_ChargePump;
-	    break;
-	case ATOM_TMDS_PLL_DUTY_CYCLE:
-	    *val = atomDataPtr->TMDS_Info->asMiscInfo[idx].ucPLL_DutyCycle;
-	    break;
-	case ATOM_TMDS_PLL_VCO_GAIN:
-	    *val = atomDataPtr->TMDS_Info->asMiscInfo[idx].ucPLL_VCO_Gain;
-	    break;
-	case ATOM_TMDS_PLL_VOLTAGE_SWING:
-	    *val = atomDataPtr->TMDS_Info->asMiscInfo[idx].ucPLL_VoltageSwing;
-	    break;
-	default:
-	    return ATOM_NOT_IMPLEMENTED;
+    if (func == ATOM_TMDS_MAX_FREQUENCY)
+	*val = atomDataPtr->TMDS_Info->usMaxFrequency * 10;
+    else {
+	if (clock > atomDataPtr->TMDS_Info->usMaxFrequency * 10)
+	    return ATOM_FAILED;
+
+	for (;i < ATOM_MAX_MISC_INFO; i++) {
+	    if (clock < atomDataPtr->TMDS_Info->asMiscInfo[i].usFrequency * 10) {
+		switch (func) {
+		    case ATOM_TMDS_PLL_CHARGE_PUMP:
+			*val = atomDataPtr->TMDS_Info->asMiscInfo[i].ucPLL_ChargePump;
+			break;
+		    case ATOM_TMDS_PLL_DUTY_CYCLE:
+			*val = atomDataPtr->TMDS_Info->asMiscInfo[i].ucPLL_DutyCycle;
+			break;
+		    case ATOM_TMDS_PLL_VCO_GAIN:
+			*val = atomDataPtr->TMDS_Info->asMiscInfo[i].ucPLL_VCO_Gain;
+			break;
+		    case ATOM_TMDS_PLL_VOLTAGE_SWING:
+			*val = atomDataPtr->TMDS_Info->asMiscInfo[i].ucPLL_VoltageSwing;
+			break;
+		    default:
+			return ATOM_NOT_IMPLEMENTED;
+		}
+		break;
+	    }
+	}
     }
+    
+    if (i > ATOM_MAX_MISC_INFO)
+	return ATOM_FAILED;
+
     return ATOM_SUCCESS;
 }
 
@@ -836,7 +1030,7 @@ rhdAtomLvdsTimings(atomBiosHandlePtr handle, ATOM_DTD_FORMAT *dtd)
 	     mode->CrtcHBlankEnd, mode->HTotal,
 	     mode->VDisplay, mode->CrtcVBlankStart, mode->VSyncStart, mode->VSyncEnd,
 	     mode->CrtcVBlankEnd, mode->VTotal);
-
+#undef NAME_LEN
     return mode;
 }
 
@@ -920,7 +1114,7 @@ rhdAtomLvdsGetTimings(atomBiosHandlePtr handle, AtomBiosRequestID func,
 
     if (!rhdAtomGetTableRevisionAndSize(
 	    (ATOM_COMMON_TABLE_HEADER *)(atomDataPtr->LVDS_Info.base),
-	    &frev,&crev,NULL)) {
+	    &crev,&frev,NULL)) {
 	return ATOM_FAILED;
     }
 
@@ -984,7 +1178,7 @@ rhdAtomLvdsInfoQuery(atomBiosHandlePtr handle,
 
     if (!rhdAtomGetTableRevisionAndSize(
 	    (ATOM_COMMON_TABLE_HEADER *)(atomDataPtr->LVDS_Info.base),
-	    &frev,&crev,NULL)) {
+	    &crev,&frev,NULL)) {
 	return ATOM_FAILED;
     }
 
@@ -1007,9 +1201,17 @@ rhdAtomLvdsInfoQuery(atomBiosHandlePtr handle,
 		    *val = atomDataPtr->LVDS_Info
 			.LVDS_Info->ucPowerSequenceDEtoBLOnin10Ms * 10;
 		    break;
-		case     ATOM_LVDS_DITHER:
+		case     ATOM_LVDS_TEMPORAL_DITHER:
 		    *val = atomDataPtr->LVDS_Info
 			.LVDS_Info->ucLVDS_Misc & 0x40;
+		    break;
+		case     ATOM_LVDS_SPATIAL_DITHER:
+		    *val = atomDataPtr->LVDS_Info
+			.LVDS_Info->ucLVDS_Misc & 0x20;
+		    break;
+		case     ATOM_LVDS_FPDI:
+		    *val = atomDataPtr->LVDS_Info
+			.LVDS_Info->ucLVDS_Misc & 0x10;
 		    break;
 		case     ATOM_LVDS_DUALLINK:
 		    *val = atomDataPtr->LVDS_Info
@@ -1022,10 +1224,6 @@ rhdAtomLvdsInfoQuery(atomBiosHandlePtr handle,
 		case     ATOM_LVDS_GREYLVL:
 		    *val = atomDataPtr->LVDS_Info
 			.LVDS_Info->ucLVDS_Misc & 0x0C;
-		    break;
-		case     ATOM_LVDS_FPDI:
-		    *val = atomDataPtr->LVDS_Info
-			.LVDS_Info->ucLVDS_Misc & 0x10;
 		    break;
 		default:
 		    return ATOM_NOT_IMPLEMENTED;
@@ -1049,7 +1247,15 @@ rhdAtomLvdsInfoQuery(atomBiosHandlePtr handle,
 		    *val = atomDataPtr->LVDS_Info
 			.LVDS_Info_v12->ucPowerSequenceDEtoBLOnin10Ms * 10;
 		    break;
-		case     ATOM_LVDS_DITHER:
+		case     ATOM_LVDS_FPDI:
+		    *val = atomDataPtr->LVDS_Info
+			.LVDS_Info_v12->ucLVDS_Misc * 0x10;
+		    break;
+		case     ATOM_LVDS_SPATIAL_DITHER:
+		    *val = atomDataPtr->LVDS_Info
+			.LVDS_Info_v12->ucLVDS_Misc & 0x20;
+		    break;
+		case     ATOM_LVDS_TEMPORAL_DITHER:
 		    *val = atomDataPtr->LVDS_Info
 			.LVDS_Info_v12->ucLVDS_Misc & 0x40;
 		    break;
@@ -1064,10 +1270,6 @@ rhdAtomLvdsInfoQuery(atomBiosHandlePtr handle,
 		case     ATOM_LVDS_GREYLVL:
 		    *val = atomDataPtr->LVDS_Info
 			.LVDS_Info_v12->ucLVDS_Misc & 0x0C;
-		    break;
-		case     ATOM_LVDS_FPDI:
-		    *val = atomDataPtr->LVDS_Info
-			.LVDS_Info_v12->ucLVDS_Misc * 0x10;
 		    break;
 		default:
 		    return ATOM_NOT_IMPLEMENTED;
@@ -1094,7 +1296,7 @@ rhdAtomCompassionateDataQuery(atomBiosHandlePtr handle,
 
     if (!rhdAtomGetTableRevisionAndSize(
 	    (ATOM_COMMON_TABLE_HEADER *)(atomDataPtr->CompassionateData),
-	    &frev,&crev,NULL)) {
+	    &crev,&frev,NULL)) {
 	return ATOM_FAILED;
     }
 
@@ -1138,6 +1340,199 @@ rhdAtomCompassionateDataQuery(atomBiosHandlePtr handle,
 }
 
 static AtomBiosResult
+rhdAtomIntegratedSystemInfoQuery(atomBiosHandlePtr handle,
+			AtomBiosRequestID func, AtomBiosArgPtr data)
+{
+    atomDataTablesPtr atomDataPtr;
+    CARD8 crev, frev;
+    CARD32 *val = &data->val;
+
+    RHDFUNC(handle);
+
+    atomDataPtr = handle->atomDataPtr;
+
+    if (!rhdAtomGetTableRevisionAndSize(
+	    (ATOM_COMMON_TABLE_HEADER *)(atomDataPtr->IntegratedSystemInfo.base),
+	    &crev,&frev,NULL)) {
+	return ATOM_FAILED;
+    }
+
+    switch (crev) {
+	case 1:
+	    switch (func) {
+		case ATOM_GET_PCIENB_CFG_REG7:
+		    *val = atomDataPtr->IntegratedSystemInfo.IntegratedSystemInfo->usPCIENBCfgReg7;
+		    break;
+		case ATOM_GET_CAPABILITY_FLAG:
+		    *val = atomDataPtr->IntegratedSystemInfo.IntegratedSystemInfo->usCapabilityFlag;
+		    break;
+		default:
+		    return ATOM_NOT_IMPLEMENTED;
+	    }
+	    break;
+	case 2:
+	    switch (func) {
+		default:
+		    return ATOM_NOT_IMPLEMENTED;
+	    }
+	    break;
+    }
+    return ATOM_SUCCESS;
+}
+
+static DisplayModePtr
+rhdAtomAnalogTVTimings(atomBiosHandlePtr handle,
+		       ATOM_ANALOG_TV_INFO *tv_info,
+		       enum RHD_TV_MODE tvMode)
+{
+    atomDataTablesPtr atomDataPtr;
+    DisplayModePtr mode;
+    int mode_n;
+    char *name;
+    ATOM_MODE_TIMING *amt;
+
+    RHDFUNC(handle);
+
+    atomDataPtr = handle->atomDataPtr;
+
+    switch (tvMode) {
+	case NTSC_SUPPORT:
+	case NTSCJ_SUPPORT:
+	    mode_n = 0;
+	    name = "TV_NTSC";
+	    break;
+	case PAL_SUPPORT:
+	case PALM_SUPPORT:
+	case PALCN_SUPPORT:
+	case PALN_SUPPORT:
+	case PAL60_SUPPORT:
+	case SECAM_SUPPORT:
+	    mode_n = 1;
+	    name = "TV_PAL/SECAM";
+	    break;
+	default:
+	    return NULL;
+    }
+
+
+    if (!(tv_info->ucTV_SupportedStandard & (tvMode)))
+	return NULL;
+
+    if (!(mode = (DisplayModePtr)xcalloc(1,sizeof(DisplayModeRec))))
+	return NULL;
+
+    amt = &tv_info->aModeTimings[mode_n];
+
+    mode->CrtcHDisplay = mode->HDisplay =  amt->usCRTC_H_Disp;
+    mode->CrtcHSyncStart = mode->HSyncStart = amt->usCRTC_H_SyncStart;
+    mode->CrtcHSyncEnd = mode->HSyncEnd = mode->HSyncStart + amt->usCRTC_H_SyncWidth;
+    mode->CrtcHTotal = mode->HTotal = amt->usCRTC_H_Total;
+    mode->CrtcHBlankStart = mode->HDisplay + amt->usCRTC_OverscanRight;
+    mode->CrtcHBlankEnd = mode->HTotal - amt->usCRTC_OverscanLeft;
+
+    mode->CrtcVDisplay = mode->VDisplay = amt->usCRTC_V_Disp;
+    mode->CrtcVSyncStart = mode->VSyncStart = amt->usCRTC_V_SyncStart;
+    mode->CrtcVSyncEnd = mode->VSyncEnd = mode->VSyncStart + amt->usCRTC_V_SyncWidth;
+    mode->CrtcVTotal = mode->VTotal = amt->usCRTC_V_Total;
+    mode->CrtcVBlankStart = mode->VDisplay + amt->usCRTC_OverscanBottom;
+    mode->CrtcVBlankEnd = mode->CrtcVTotal - amt->usCRTC_OverscanTop;
+
+    mode->SynthClock = mode->Clock  = amt->usPixelClock * 10;
+    if (amt->susModeMiscInfo.usAccess & ATOM_HSYNC_POLARITY)
+	mode->Flags |= V_NHSYNC;
+    else
+	mode->Flags |= V_PHSYNC;
+    if (amt->susModeMiscInfo.usAccess & ATOM_VSYNC_POLARITY)
+	mode->Flags |= V_NVSYNC;
+    else
+	mode->Flags |= V_PVSYNC;
+    if (amt->susModeMiscInfo.usAccess & ATOM_INTERLACE)
+	mode->Flags |= V_INTERLACE;
+    if (amt->susModeMiscInfo.usAccess & ATOM_COMPOSITESYNC)
+	mode->Flags |= V_CSYNC;
+    if (amt->susModeMiscInfo.usAccess & ATOM_DOUBLE_CLOCK_MODE)
+	mode->Flags |= V_DBLCLK;
+
+    mode->HSync = ((float) mode->Clock) / ((float)mode->HTotal);
+    mode->VRefresh = (1000.0 * ((float) mode->Clock))
+	/ ((float)(((float)mode->HTotal) * ((float)mode->VTotal)));
+
+    mode->name = xstrdup(name);
+
+    RHDDebug(handle->scrnIndex,"%s: TV Modeline: %s  "
+	     "%2.d  %i (%i) %i %i (%i) %i  %i (%i) %i %i (%i) %i\n",
+	     __func__, mode->name, mode->Clock,
+	     mode->HDisplay, mode->CrtcHBlankStart, mode->HSyncStart, mode->CrtcHSyncEnd,
+	     mode->CrtcHBlankEnd, mode->HTotal,
+	     mode->VDisplay, mode->CrtcVBlankStart, mode->VSyncStart, mode->VSyncEnd,
+	     mode->CrtcVBlankEnd, mode->VTotal);
+
+
+    return mode;
+}
+
+static AtomBiosResult
+rhdAtomAnalogTVInfoQuery(atomBiosHandlePtr handle,
+			AtomBiosRequestID func, AtomBiosArgPtr data)
+{
+    CARD8 crev, frev;
+    atomDataTablesPtr atomDataPtr = handle->atomDataPtr;
+    int mode = 0, i;
+    struct { enum RHD_TV_MODE rhd_mode; int atomMode; }
+    tv_modes[] = {
+	{ RHD_TV_NTSC,  NTSC_SUPPORT },
+	{ RHD_TV_NTSCJ, NTSCJ_SUPPORT},
+	{ RHD_TV_PAL,   PAL_SUPPORT  },
+	{ RHD_TV_PALM,  PALM_SUPPORT },
+	{ RHD_TV_PALCN, PALCN_SUPPORT},
+	{ RHD_TV_PALN,  PALN_SUPPORT },
+	{ RHD_TV_PAL60, PAL60_SUPPORT},
+	{ RHD_TV_SECAM, SECAM_SUPPORT},
+	{ RHD_TV_NONE, 0 }
+    };
+
+
+    RHDFUNC(handle);
+
+    if (!rhdAtomGetTableRevisionAndSize(
+	    (ATOM_COMMON_TABLE_HEADER *)(atomDataPtr->AnalogTV_Info),
+	    &crev,&frev,NULL)) {
+	return ATOM_FAILED;
+    }
+    switch (func) {
+	case ATOM_ANALOG_TV_MODE:
+	    for (i = 0; tv_modes[i].atomMode; i++) {
+		if (data->tvMode == tv_modes[i].rhd_mode) {
+		    mode = tv_modes[i].atomMode;
+		    break;
+		}
+	    }
+	    data->mode = rhdAtomAnalogTVTimings(handle,
+						atomDataPtr->AnalogTV_Info,
+						mode);
+	    if (!data->mode)
+		return ATOM_FAILED;
+	    return ATOM_SUCCESS;
+	case ATOM_ANALOG_TV_DEFAULT_MODE:
+	     data->tvMode = tv_modes[atomDataPtr->AnalogTV_Info->ucTV_BootUpDefaultStandard - 1].rhd_mode;
+	    break;
+	case ATOM_ANALOG_TV_SUPPORTED_MODES:
+	    mode = (CARD32)atomDataPtr->AnalogTV_Info->ucTV_SupportedStandard;
+	    data->val = 0;
+	    for (i = 0; tv_modes[i].atomMode; i++) {
+		if (tv_modes[i].atomMode & mode) {
+		    data->val |= tv_modes[i].rhd_mode;
+		}
+	    }
+	    break;
+	default:
+	    return ATOM_NOT_IMPLEMENTED;
+    }
+
+    return ATOM_SUCCESS;
+}
+
+static AtomBiosResult
 rhdAtomGPIOI2CInfoQuery(atomBiosHandlePtr handle,
 			AtomBiosRequestID func, AtomBiosArgPtr data)
 {
@@ -1152,7 +1547,7 @@ rhdAtomGPIOI2CInfoQuery(atomBiosHandlePtr handle,
 
     if (!rhdAtomGetTableRevisionAndSize(
 	    (ATOM_COMMON_TABLE_HEADER *)(atomDataPtr->GPIO_I2C_Info),
-	    &frev,&crev,&size)) {
+	    &crev,&frev,&size)) {
 	return ATOM_FAILED;
     }
 
@@ -1352,9 +1747,43 @@ rhdAtomFirmwareInfoQuery(atomBiosHandlePtr handle,
     return ATOM_SUCCESS;
 }
 
+/*
+ *
+ */
+static AtomBiosResult
+rhdAtomGetConditionalGoldenSetting(atomBiosHandlePtr handle,
+			 AtomBiosRequestID func, AtomBiosArgPtr data)
+{
+    unsigned short *table = (unsigned short *)data->GoldenSettings.BIOSPtr;
+    unsigned short entry_size = *(table++);
+
+    RHDFUNC(handle);
+
+    RHDDebug(handle->scrnIndex, "%s: testing 0x%4.4x\n",__func__,
+	     data->GoldenSettings.value);
+
+/* @@@ endian! */
+    while (table < (unsigned short *)data->GoldenSettings.End) {
+	RHDDebugCont("\t\t against: 0x%8.8x\n", table[1] << 16 | table[0]);
+	if ((data->GoldenSettings.value >> 16) == table[1]) {
+	    if ((data->GoldenSettings.value & 0xffff) <= table[0]) {
+		data->GoldenSettings.BIOSPtr = (unsigned char *)(table + 2);
+		return ATOM_SUCCESS;
+	    }
+	}
+	table = (unsigned short *)(((unsigned char *)table) + entry_size);
+    }
+    return ATOM_FAILED;
+}
+
 #define Limit(n,max,name) ((n >= max) ? ( \
      xf86DrvMsg(handle->scrnIndex,X_ERROR,"%s: %s %i exceeds maximum %i\n", \
 		__func__,name,n,max), TRUE) : FALSE)
+
+enum rhdChipKind {
+    RHD_CHIP_EXTERNAL = 0,
+    RHD_CHIP_IGP = 1
+};
 
 static const struct _rhd_connector_objs
 {
@@ -1362,10 +1791,10 @@ static const struct _rhd_connector_objs
     rhdConnectorType con;
 } rhd_connector_objs[] = {
     { "NONE", RHD_CONNECTOR_NONE },
-    { "SINGLE_LINK_DVI_I", RHD_CONNECTOR_DVI },
-    { "DUAL_LINK_DVI_I", RHD_CONNECTOR_DVI_DUAL },
-    { "SINGLE_LINK_DVI_D", RHD_CONNECTOR_DVI },
-    { "DUAL_LINK_DVI_D", RHD_CONNECTOR_DVI_DUAL },
+    { "SINGLE_LINK_DVI_I", RHD_CONNECTOR_DVI_SINGLE },
+    { "DUAL_LINK_DVI_I", RHD_CONNECTOR_DVI },
+    { "SINGLE_LINK_DVI_D", RHD_CONNECTOR_DVI_SINGLE },
+    { "DUAL_LINK_DVI_D", RHD_CONNECTOR_DVI },
     { "VGA", RHD_CONNECTOR_VGA },
     { "COMPOSITE", RHD_CONNECTOR_TV },
     { "SVIDEO", RHD_CONNECTOR_TV, },
@@ -1373,7 +1802,7 @@ static const struct _rhd_connector_objs
     { "D_CONNECTOR", RHD_CONNECTOR_NONE, },
     { "9PIN_DIN", RHD_CONNECTOR_NONE },
     { "SCART", RHD_CONNECTOR_TV },
-    { "HDMI_TYPE_A", RHD_CONNECTOR_DVI },
+    { "HDMI_TYPE_A", RHD_CONNECTOR_DVI_SINGLE },
     { "HDMI_TYPE_B", RHD_CONNECTOR_DVI },
     { "LVDS", RHD_CONNECTOR_PANEL },
     { "7PIN_DIN", RHD_CONNECTOR_TV },
@@ -1387,38 +1816,40 @@ static const int n_rhd_connector_objs = sizeof (rhd_connector_objs) / sizeof(str
 static const struct _rhd_encoders
 {
     char *name;
-    rhdOutputType ot;
+    rhdOutputType ot[2];  /* { RHD_CHIP_EXTERNAL, RHD_CHIP_IGP } */
 } rhd_encoders[] = {
-    { "NONE", RHD_OUTPUT_NONE },
-    { "INTERNAL_LVDS", RHD_OUTPUT_LVDS },
-    { "INTERNAL_TMDS1", RHD_OUTPUT_TMDSA },
-    { "INTERNAL_TMDS2", RHD_OUTPUT_TMDSB },
-    { "INTERNAL_DAC1", RHD_OUTPUT_DACA },
-    { "INTERNAL_DAC2", RHD_OUTPUT_DACB },
-    { "INTERNAL_SDVOA", RHD_OUTPUT_NONE },
-    { "INTERNAL_SDVOB", RHD_OUTPUT_NONE },
-    { "SI170B", RHD_OUTPUT_NONE },
-    { "CH7303", RHD_OUTPUT_NONE },
-    { "CH7301", RHD_OUTPUT_NONE },
-    { "INTERNAL_DVO1", RHD_OUTPUT_NONE },
-    { "EXTERNAL_SDVOA", RHD_OUTPUT_NONE },
-    { "EXTERNAL_SDVOB", RHD_OUTPUT_NONE },
-    { "TITFP513", RHD_OUTPUT_NONE },
-    { "INTERNAL_LVTM1", RHD_OUTPUT_LVTMA },
-    { "VT1623", RHD_OUTPUT_NONE },
-    { "HDMI_SI1930", RHD_OUTPUT_NONE },
-    { "HDMI_INTERNAL", RHD_OUTPUT_NONE },
-    { "INTERNAL_KLDSCP_TMDS1", RHD_OUTPUT_TMDSA },
-    { "INTERNAL_KLSCP_DVO1", RHD_OUTPUT_NONE },
-    { "INTERNAL_KLDSCP_DAC1", RHD_OUTPUT_DACA },
-    { "INTERNAL_KLDSCP_DAC2", RHD_OUTPUT_DACB },
-    { "SI178", RHD_OUTPUT_NONE },
-    { "MVPU_FPGA", RHD_OUTPUT_NONE },
-    { "INTERNAL_DDI", RHD_OUTPUT_NONE },
-    { "VT1625", RHD_OUTPUT_NONE },
-    { "HDMI_SI1932", RHD_OUTPUT_NONE },
-    { "AN9801", RHD_OUTPUT_NONE },
-    { "DP501",  RHD_OUTPUT_NONE },
+    { "NONE", {RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "INTERNAL_LVDS", { RHD_OUTPUT_LVDS, RHD_OUTPUT_NONE }},
+    { "INTERNAL_TMDS1", { RHD_OUTPUT_TMDSA, RHD_OUTPUT_NONE }},
+    { "INTERNAL_TMDS2", { RHD_OUTPUT_TMDSB, RHD_OUTPUT_NONE }},
+    { "INTERNAL_DAC1", { RHD_OUTPUT_DACA, RHD_OUTPUT_NONE }},
+    { "INTERNAL_DAC2", { RHD_OUTPUT_DACB, RHD_OUTPUT_NONE }},
+    { "INTERNAL_SDVOA", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "INTERNAL_SDVOB", { RHD_OUTPUT_NONE , RHD_OUTPUT_NONE }},
+    { "SI170B", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "CH7303", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "CH7301", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "INTERNAL_DVO1", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "EXTERNAL_SDVOA", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "EXTERNAL_SDVOB", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "TITFP513", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "INTERNAL_LVTM1", { RHD_OUTPUT_LVTMA, RHD_OUTPUT_NONE }},
+    { "VT1623", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "HDMI_SI1930", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "HDMI_INTERNAL", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "INTERNAL_KLDSCP_TMDS1", { RHD_OUTPUT_TMDSA, RHD_OUTPUT_NONE }},
+    { "INTERNAL_KLSCP_DVO1", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "INTERNAL_KLDSCP_DAC1", { RHD_OUTPUT_DACA, RHD_OUTPUT_NONE }},
+    { "INTERNAL_KLDSCP_DAC2", { RHD_OUTPUT_DACB, RHD_OUTPUT_NONE }},
+    { "SI178", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "MVPU_FPGA", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "INTERNAL_DDI", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "VT1625", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "HDMI_SI1932", {RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "AN9801", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "DP501",  { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
+    { "UNIPHY",  { RHD_OUTPUT_UNIPHYA, RHD_OUTPUT_UNIPHYB }},
+    { "KLDSCP_LVTMA", { RHD_OUTPUT_KLDSKP_LVTMA, RHD_OUTPUT_NONE }}
 };
 static const int n_rhd_encoders = sizeof (rhd_encoders) / sizeof(struct _rhd_encoders);
 
@@ -1438,7 +1869,7 @@ static const struct _rhd_connectors
     {"PANEL", RHD_CONNECTOR_PANEL, FALSE },
     {"DIGITAL_LINK", RHD_CONNECTOR_NONE, FALSE },
     {"SCART", RHD_CONNECTOR_TV, FALSE },
-    {"HDMI Type A", RHD_CONNECTOR_DVI, FALSE },
+    {"HDMI Type A", RHD_CONNECTOR_DVI_SINGLE, FALSE },
     {"HDMI Type B", RHD_CONNECTOR_DVI, FALSE },
     {"UNKNOWN", RHD_CONNECTOR_NONE, FALSE },
     {"UNKNOWN", RHD_CONNECTOR_NONE, FALSE },
@@ -1449,18 +1880,18 @@ static const int n_rhd_connectors = sizeof(rhd_connectors) / sizeof(struct _rhd_
 static const struct _rhd_devices
 {
     char *name;
-    rhdOutputType ot;
+    rhdOutputType ot[2];
 } rhd_devices[] = {
-    {" CRT1", RHD_OUTPUT_NONE },
-    {" LCD1", RHD_OUTPUT_LVTMA },
-    {" TV1", RHD_OUTPUT_NONE },
-    {" DFP1", RHD_OUTPUT_TMDSA },
-    {" CRT2", RHD_OUTPUT_NONE },
-    {" LCD2", RHD_OUTPUT_LVTMA },
-    {" TV2", RHD_OUTPUT_NONE },
-    {" DFP2", RHD_OUTPUT_LVTMA },
-    {" CV", RHD_OUTPUT_NONE },
-    {" DFP3", RHD_OUTPUT_LVTMA }
+    {" CRT1", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE } },
+    {" LCD1", { RHD_OUTPUT_LVTMA, RHD_OUTPUT_LVTMA } },
+    {" TV1",  { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE } },
+    {" DFP1", { RHD_OUTPUT_TMDSA, RHD_OUTPUT_NONE } },
+    {" CRT2", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE } },
+    {" LCD2", { RHD_OUTPUT_LVTMA, RHD_OUTPUT_NONE } },
+    {" TV2",  { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE } },
+    {" DFP2", { RHD_OUTPUT_LVTMA, RHD_OUTPUT_DVO } },
+    {" CV",   { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE } },
+    {" DFP3", { RHD_OUTPUT_LVTMA, RHD_OUTPUT_LVTMA } }
 };
 static const int n_rhd_devices = sizeof(rhd_devices) / sizeof(struct _rhd_devices);
 
@@ -1633,6 +2064,8 @@ rhdAtomDeviceTagsFromRecord(atomBiosHandlePtr handle,
 	k = 0;
 	j = Record->asDeviceTag[i].usDeviceID;
 
+	if (!j) continue;
+
 	while (!(j & 0x1)) { j >>= 1; k++; };
 
 	if (!Limit(k,n_rhd_devices,"usDeviceID"))
@@ -1750,10 +2183,12 @@ rhdAtomConnectorInfoFromObjectHeader(atomBiosHandlePtr handle,
 	    rhdAtomInterpretObjectID(handle, SrcDstTable->usSrcObjectID[j],
 				     &stype, &sobj_id, &snum, &sname);
 
-	    RHDDebug(handle->scrnIndex, " * SrcObject: ID: %x name: %s\n",
-		     SrcDstTable->usSrcObjectID[j], sname);
+	    RHDDebug(handle->scrnIndex, " * SrcObject: ID: %x name: %s enum: %i\n",
+		     SrcDstTable->usSrcObjectID[j], sname, snum);
 
-	    cp[ncon].Output[nout] = rhd_encoders[sobj_id].ot;
+	    if (snum < 2)
+		cp[ncon].Output[nout] = rhd_encoders[sobj_id].ot[snum - 1];
+
 	    if (++nout >= MAX_OUTPUTS_PER_CONNECTOR)
 		break;
 	}
@@ -1826,6 +2261,7 @@ rhdAtomConnectorInfoFromObjectHeader(atomBiosHandlePtr handle,
  */
 static AtomBiosResult
 rhdAtomConnectorInfoFromSupportedDevices(atomBiosHandlePtr handle,
+					 enum rhdChipKind kind,
 					 rhdConnectorInfoPtr *ptr)
 {
     atomDataTablesPtr atomDataPtr;
@@ -1893,7 +2329,7 @@ rhdAtomConnectorInfoFromSupportedDevices(atomBiosHandlePtr handle,
 	    if ((devices[n].ot
 		 = acc_dac[ci.sucConnectorInfo.sbfAccess.bfAssociatedDAC])
 		== RHD_OUTPUT_NONE) {
-		devices[n].ot = rhd_devices[n].ot;
+		devices[n].ot = rhd_devices[n].ot[kind];
 	    }
 	} else
 	    devices[n].ot = RHD_OUTPUT_NONE;
@@ -2014,18 +2450,105 @@ rhdAtomConnectorInfoFromSupportedDevices(atomBiosHandlePtr handle,
 /*
  *
  */
+enum rhdChipKind
+rhdAtomGetChipKind(enum RHD_CHIPSETS chipset)
+{
+    switch (chipset) {
+	case RHD_RS600:
+	case RHD_RS690:
+	case RHD_RS740:
+	    return RHD_CHIP_IGP;
+	default:
+	    return RHD_CHIP_EXTERNAL;
+    }
+}
+
+/*
+ *
+ */
 static AtomBiosResult
 rhdAtomConnectorInfo(atomBiosHandlePtr handle,
 		     AtomBiosRequestID unused, AtomBiosArgPtr data)
 {
+    int chipset = data->chipset;
     data->connectorInfo = NULL;
 
     if (rhdAtomConnectorInfoFromObjectHeader(handle,&data->connectorInfo)
 	== ATOM_SUCCESS)
 	return ATOM_SUCCESS;
-    else
-	return rhdAtomConnectorInfoFromSupportedDevices(handle,
+    else {
+	enum rhdChipKind kind = rhdAtomGetChipKind(chipset);
+	return rhdAtomConnectorInfoFromSupportedDevices(handle, kind,
 							&data->connectorInfo);
+    }
+}
+
+struct atomCodeDataTableHeader
+{
+    unsigned char signature;
+    unsigned short size;
+};
+
+#define CODE_DATA_TABLE_SIGNATURE 0x7a
+#define ATOM_EOT_COMMAND 0x5b
+
+static AtomBiosResult
+rhdAtomGetDataInCodeTable(atomBiosHandlePtr handle,
+			   AtomBiosRequestID unused, AtomBiosArgPtr data)
+{
+    unsigned char *command_table;
+    unsigned short size;
+    unsigned short offset;
+
+    int i;
+
+    RHDFUNC(handle);
+
+    if (data->val > sizeof (struct _ATOM_MASTER_LIST_OF_COMMAND_TABLES) / sizeof (USHORT))
+	return ATOM_FAILED;
+
+    if ((offset = ((USHORT *)&(((ATOM_MASTER_COMMAND_TABLE *)handle->codeTable)
+			       ->ListOfCommandTables))[data->val]))
+	command_table = handle->BIOSBase + offset;
+    else
+	return ATOM_FAILED;
+
+    if (!rhdAtomGetTableRevisionAndSize(&(((ATOM_COMMON_ROM_COMMAND_TABLE_HEADER *)
+					     command_table)->CommonHeader),
+					NULL, NULL, &size))
+	return ATOM_FAILED;
+
+    for (i = sizeof(ATOM_COMMON_ROM_COMMAND_TABLE_HEADER); i < size - 1; i++) {
+
+	if (command_table[i] == ATOM_EOT_COMMAND
+	    && command_table[i+1] == CODE_DATA_TABLE_SIGNATURE) {
+	    unsigned short *dt_size = (unsigned short*)(command_table + i + 2);
+
+	    int diff;
+
+	    diff = size - (i + 1) + sizeof(struct atomCodeDataTableHeader) + *dt_size;
+
+	    DEBUGP(ErrorF("Table[0x%2.2x] = 0x%4.4x -> data_size: 0x%x\n",data->val, size, *dt_size));
+
+	    if (diff < 0) {
+		xf86DrvMsg(handle->scrnIndex, X_ERROR,
+			   "Data table in command table %i extends %i bytes "
+			   "beyond command table size\n",
+			   data->val, -diff);
+
+		return  ATOM_FAILED;
+	    }
+	    data->CommandDataTable.loc =
+		command_table + i + 2 + sizeof(unsigned short);
+
+	    data->CommandDataTable.size = *dt_size;
+	    DEBUGP(RhdDebugDump(handle->scrnIndex, data->CommandDataTable.loc, *dt_size));
+
+	    return ATOM_SUCCESS;
+	}
+    }
+
+    return ATOM_FAILED;
 }
 
 # ifdef ATOM_BIOS_PARSER
@@ -2226,14 +2749,10 @@ ULONG
 CailReadMC(VOID *CAIL, ULONG Address)
 {
     ULONG ret;
-    ULONG Offset, AccMask;
 
     CAILFUNC(CAIL);
 
-    Offset = Address & 0x1FF;
-    AccMask = (Address & 0xFE00) << 6; /* ??? */
-
-    ret = RHDReadMC(((atomBiosHandlePtr)CAIL), Offset | AccMask);
+    ret = RHDReadMC(((atomBiosHandlePtr)CAIL), Address | MC_IND_ALL);
     DEBUGP(ErrorF("%s(%x) = %x\n",__func__,Address,ret));
     return ret;
 }
@@ -2241,15 +2760,11 @@ CailReadMC(VOID *CAIL, ULONG Address)
 VOID
 CailWriteMC(VOID *CAIL, ULONG Address, ULONG data)
 {
-    CARD32 Offset, AccMask;
-
     CAILFUNC(CAIL);
 
-    Offset = Address & 0x1FF;
-    AccMask = (Address & 0xFE00) << 6; /* ??? */
 
     DEBUGP(ErrorF("%s(%x,%x)\n",__func__,Address,data));
-    RHDWriteMC(((atomBiosHandlePtr)CAIL), Offset | AccMask, data);
+    RHDWriteMC(((atomBiosHandlePtr)CAIL), Address | MC_IND_ALL | MC_IND_WR_EN, data);
 }
 
 #ifdef XSERVER_LIBPCIACCESS
@@ -2273,7 +2788,7 @@ CailWritePCIConfigData(VOID*CAIL,VOID*src,UINT32 idx,UINT16 size)
 VOID
 CailReadPCIConfigData(VOID*CAIL, VOID* ret, UINT32 idx,UINT16 size)
 {
-    PCITAG tag = ((atomBiosHandlePtr)CAIL)->PciTag;
+    PCITAG tag = RHDPTRI((atomBiosHandlePtr)CAIL)->PciTag;
 
     CAILFUNC(CAIL);
 
@@ -2301,7 +2816,7 @@ CailReadPCIConfigData(VOID*CAIL, VOID* ret, UINT32 idx,UINT16 size)
 VOID
 CailWritePCIConfigData(VOID*CAIL,VOID*src,UINT32 idx,UINT16 size)
 {
-    PCITAG tag = ((atomBiosHandlePtr)CAIL)->PciTag;
+    PCITAG tag = RHDPTRI((atomBiosHandlePtr)CAIL)->PciTag;
 
     CAILFUNC(CAIL);
     DEBUGP(ErrorF("%s(%x,%x)\n",__func__,idx,(*(unsigned int*)src)));
@@ -2326,12 +2841,13 @@ CailWritePCIConfigData(VOID*CAIL,VOID*src,UINT32 idx,UINT16 size)
 ULONG
 CailReadPLL(VOID *CAIL, ULONG Address)
 {
+    ULONG ret;
+
     CAILFUNC(CAIL);
 
-    xf86DrvMsg(((atomBiosHandlePtr)CAIL)->scrnIndex,
-	       X_ERROR, "%s: ReadPLL not impemented\n",
-	       __func__);
-    return 0;
+    ret = _RHDReadPLL(((atomBiosHandlePtr)CAIL)->scrnIndex, Address);
+    DEBUGP(ErrorF("%s(%x) = %x\n",__func__,Address,ret));
+    return ret;
 }
 
 VOID
@@ -2339,9 +2855,8 @@ CailWritePLL(VOID *CAIL, ULONG Address,ULONG Data)
 {
     CAILFUNC(CAIL);
 
-    xf86DrvMsg(((atomBiosHandlePtr)CAIL)->scrnIndex,
-	       X_ERROR, "%s: WritePLL not impemented",
-	       __func__);
+    DEBUGP(ErrorF("%s(%x,%x)\n",__func__,Address,Data));
+    _RHDWritePLL(((atomBiosHandlePtr)CAIL)->scrnIndex, Address, Data);
 }
 
 # endif

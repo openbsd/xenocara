@@ -60,6 +60,7 @@ The
 driver supports video cards based on the following ATI chips:
 .\" The following list was generated from "X -logverbose 7" by the following command:
 .\" sed -n '/^\t[RM][A-Z0-9]\+ * : /{ s/\.$//; s/^\t\([A-Z0-9]\+\) \+: \(.*\)/.TP 8\n.B \1\n\2/; p};' /var/log/Xorg.0.log
+.\" TODO: Note that this line doesn't deal with multi-line output correctly
 .\" The list replicates the output of RHDIdentify() in src/rhd_id.c.
 .PP
 .PD 0
@@ -100,11 +101,20 @@ Radeon HD 2900 GT/Pro/XT; FireGL V7600/V8600/V8650
 .B RV610
 Radeon HD 2350, HD 2400 Pro/XT, HD 2400 Pro AGP; FireGL V4000
 .TP 8
+.B RV620
+Radeon HD 3450, HD 3470
+.TP 8
 .B RV630
 Radeon HD 2600 LE/Pro/XT, HD 2600 Pro/XT AGP; Gemini RV630; FireGL V3600/V5600
 .TP 8
+.B RV635
+Radeon HD 3650, HD 3670
+.TP 8
 .B RV670
 Radeon HD 3850, HD 3870, FireGL V7700
+.TP 8
+.B R680
+Radeon HD 3870 X2
 .TP 8
 .B M52
 Mobility Radeon X1300
@@ -142,6 +152,12 @@ Mobility Radeon HD 2400 XT
 .B M76
 Mobility Radeon HD 2600; (Gemini ATI) Mobility Radeon HD 2600 XT
 .TP 8
+.B M82
+Mobility Radeon HD 3400
+.TP 8
+.B M86
+Mobility Radeon HD 3600
+.TP 8
 .B RS600
 Radeon Xpress 1200, Xpress 1250
 .TP 8
@@ -163,19 +179,18 @@ Enable or disable the software cursor. The hardware cursor is inactive
 when the software cursor is enabled. The default is
 .BR off .
 .TP
-.BI "Option \*qNoAccel\*q
-Disable all hardware accleration. The default is to
-.B enable
-hardware acceleration.
+.BI "Option \*qAccelMethod\*q \*q" none|default|shadowfb|xaa|exa \*q
+Use the indicated accleration method. The
+.B default
+is depending on chipset version and state of acceleration techniques and
+tries to give the best user experience.
+.B shadowfb
+is a software-only acceleration technique, while
+.B xaa
+and
+.B exa
+are hardware-based acceleration techniques.
 .br
-.B Acceleration is not implemented yet, so this option is ignored
-.B for the moment.
-.TP
-.BI "Option \*qShadowFB\*q \*q" boolean \*q
-Enable or disable shadow framebuffer support. This greatly improves the
-speed of unaccelerated drivers. The default is
-.B on
-as long as acceleration is not supported.
 .TP
 .BI "Option \*qNoRandr\*q
 Disable RandR 1.2 support. This turns the driver back to use standard
@@ -218,21 +233,12 @@ The default is
 .BR Auto .
 .RE
 .TP
-.BI "Option \*qRRUseXF86Edid\*q \*q" boolean \*q
-.IR "RandR modesetting only" .
-.br
-Enable or disable the use of xf86OutputGetEDID() and xf86OutputGetEDIDModes()
-instead of the default routines from
-.BR radeonhd ,
-which are better adapted to the chipset. Panels will often fail to work with
-these calls. The default is
-.BR off .
-.PP
-.RS
-.B NOTE:
-Use of this option is considered deprecated. Report to the mailing list
-if this is needed for your configuration.
-.RE
+.BI "Option \*qOffscreenSize\*q \*q" <integer>M|<integer>% \*q
+Specify the amount of framebuffer memory used for offscreen pixmaps, in
+megabytes or percent of available memory. This amount of memory is not
+available for DRI. Certain hardware and software limits apply. The default
+is
+.BR 10% .
 .TP
 .BI "Option \*qRROutputOrder\*q \*q" "list-of-outputs" \*q
 .IR "RandR modesetting only" .
@@ -265,6 +271,41 @@ to what most drivers behave like and a common source of configuration problems.
 Thus the default is
 .B off
 (i.e. ignore).
+.TP
+.BI "Option \*qNoAccel\*q
+Disable all hardware acceleration. The default is to
+.B enable
+hardware acceleration.
+.br
+.B NOTE:
+Use of this option is considered deprecated. The
+.B AccelMethod
+option is considered to be more flexible.
+.TP
+.BI "Option \*qShadowFB\*q \*q" boolean \*q
+Enable or disable shadow framebuffer support. This greatly improves the
+speed of unaccelerated drivers. The default depends on chipset and
+acceleration state.
+.br
+.B NOTE:
+Use of this option is considered deprecated. The
+.B AccelMethod
+option is considered to be more flexible.
+.TP
+.BI "Option \*qRRUseXF86Edid\*q \*q" boolean \*q
+.IR "RandR modesetting only" .
+.br
+Enable or disable the use of xf86OutputGetEDID() and xf86OutputGetEDIDModes()
+instead of the default routines from
+.BR radeonhd ,
+which are better adapted to the chipset. Panels will often fail to work with
+these calls. The default is
+.BR off .
+.br
+.B NOTE:
+Use of this option is considered deprecated. Report to the mailing list
+if this is needed for your configuration.
+.RE
 .\"
 .\"
 .SH RANDR OUTPUT PROPERTIES
@@ -387,7 +428,7 @@ Internal outputs are numbered from 1, 0 indicates that output routing is
 unknown.
 .RE
 .TP
-.B RANDR_PANING_AREA
+.B RANDR_PANNING_AREA
 .RS
 .TP 16
 .PD 0

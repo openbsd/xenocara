@@ -1,8 +1,8 @@
 /*
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Egbert Eich   <eich@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
+ * Copyright 2007, 2008  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -382,6 +382,57 @@ rhdMonitorPanel(struct rhdConnector *Connector)
 }
 
 /*
+ * rhdMonitorTV(): get TV modes. Currently we can only get this from AtomBIOS.
+ */
+static struct rhdMonitor *
+rhdMonitorTV(struct rhdConnector *Connector)
+{
+    struct rhdMonitor *Monitor = NULL;
+#ifdef ATOM_BIOS
+    ScrnInfoPtr pScrn = xf86Screens[Connector->scrnIndex];
+    RHDPtr rhdPtr = RHDPTR(pScrn);
+    DisplayModeRec *Mode = NULL;
+    AtomBiosArgRec arg;
+
+    RHDFUNC(Connector);
+
+    arg.tvMode = rhdPtr->tvMode;
+    if (RHDAtomBiosFunc(Connector->scrnIndex, rhdPtr->atomBIOS, 
+			ATOM_ANALOG_TV_MODE, &arg)
+	!= ATOM_SUCCESS)
+	return NULL;
+
+    Mode = arg.mode;
+    Mode->type |= M_T_PREFERRED;
+
+    Monitor = xnfcalloc(sizeof(struct rhdMonitor), 1);
+
+    Monitor->scrnIndex = Connector->scrnIndex;
+    Monitor->EDID      = NULL;
+
+    Monitor->Name      = xstrdup("TV");
+    Monitor->Modes     = RHDModesAdd(Monitor->Modes, Mode);
+    Monitor->numHSync  = 1;
+    Monitor->HSync[0].lo = Mode->HSync;
+    Monitor->HSync[0].hi = Mode->HSync;
+    Monitor->numVRefresh = 1;
+    Monitor->VRefresh[0].lo = Mode->VRefresh;
+    Monitor->VRefresh[0].hi = Mode->VRefresh;
+    Monitor->Bandwidth = Mode->SynthClock;
+
+    /* TV should be driven at native resolution only. */
+    Monitor->UseFixedModes = TRUE;
+    Monitor->ReducedAllowed = FALSE;
+    /* 
+     *  hack: the TV encoder takes care of that. 
+     *  The mode that goes in isn't what comes out.
+     */
+    Mode->Flags &= ~(V_INTERLACE);
+#endif
+    return Monitor;
+}
+
+/*
  *
  */
 struct rhdMonitor *
@@ -393,6 +444,8 @@ RHDMonitorInit(struct rhdConnector *Connector)
 
     if (Connector->Type == RHD_CONNECTOR_PANEL)
 	Monitor = rhdMonitorPanel(Connector);
+    else if (Connector->Type == RHD_CONNECTOR_TV)
+	Monitor = rhdMonitorTV(Connector);
     else if (Connector->DDC) {
 	xf86MonPtr EDID = xf86DoEDID_DDC2(Connector->scrnIndex, Connector->DDC);
 	if (EDID) {

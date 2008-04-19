@@ -1,8 +1,8 @@
 /*
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Egbert Eich   <eich@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007, 2008 Egbert Eich   <eich@novell.com>
+ * Copyright 2007, 2008  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,6 +28,7 @@
 #endif
 
 #include "xf86.h"
+#include "xf86i2c.h"
 #include "edid.h"
 
 /* for usleep */
@@ -45,13 +46,11 @@
 #include "rhd_regs.h"
 #include "rhd_monitor.h"
 #include "rhd_card.h"
+#include "rhd_i2c.h"
 
 #ifdef ATOM_BIOS
 #include "rhd_atombios.h"
 #endif
-
-#include "xf86i2c.h"
-#include "rhd_i2c.h"
 
 /*
  *
@@ -117,7 +116,15 @@ RHDHPDSet(RHDPtr rhdPtr)
 static Bool
 RHDHPDCheck(struct rhdConnector *Connector)
 {
-    return (RHDRegRead(Connector, DC_GPIO_HPD_Y) & Connector->HPDMask);
+    Bool ret;
+
+    RHDFUNC(Connector);
+
+    ret = RHDRegRead(Connector, DC_GPIO_HPD_Y);
+    RHDDebug(Connector->scrnIndex, "%s returned: %x mask: %x\n",
+	     __func__,ret, Connector->HPDMask);
+
+    return (ret & Connector->HPDMask);
 }
 
 struct rhdCsState {
@@ -129,14 +136,14 @@ struct rhdCsState {
  *
  */
 static char *
-rhdConnectorSynthName(struct rhdConnectorInfo *ConnectorInfo, 
+rhdConnectorSynthName(struct rhdConnectorInfo *ConnectorInfo,
 		      struct rhdCsState **state)
 {
     char *str = NULL;
     char *typec;
     char *str1, *str2;
 
-    assert(state != NULL); 
+    assert(state != NULL);
 
     if (!*state) {
 	if (!(*state = xcalloc(sizeof(struct rhdCsState), 1)))
@@ -146,15 +153,16 @@ rhdConnectorSynthName(struct rhdConnectorInfo *ConnectorInfo,
 	case RHD_CONNECTOR_NONE:
 	    return NULL;
 	case RHD_CONNECTOR_DVI:
+	case RHD_CONNECTOR_DVI_SINGLE:
 	    if (ConnectorInfo->Output[0] && ConnectorInfo->Output[1])
 		typec = "I";
-	    else if (ConnectorInfo->Output[0] == RHD_OUTPUT_DACA 
+	    else if (ConnectorInfo->Output[0] == RHD_OUTPUT_DACA
 		     || ConnectorInfo->Output[0] == RHD_OUTPUT_DACB
 		     || ConnectorInfo->Output[1] == RHD_OUTPUT_DACA
 		     || ConnectorInfo->Output[1] == RHD_OUTPUT_DACB
 		)
 		typec = "A";
-	    else 
+	    else
 		typec = "D";
 	    str = xalloc(12);
 	    snprintf(str, 11, "DVI-%s %i",typec, ++(*state)->dvi_cnt);
@@ -210,6 +218,7 @@ RHDConnectorsInit(RHDPtr rhdPtr, struct rhdCard *Card)
 	AtomBiosArgRec data;
 	AtomBiosResult result;
 
+	data.chipset = rhdPtr->ChipSet;
 	result = RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
 				 ATOMBIOS_GET_CONNECTORS, &data);
 	if (result == ATOM_SUCCESS) {
@@ -260,10 +269,11 @@ RHDConnectorsInit(RHDPtr rhdPtr, struct rhdCard *Card)
 	hpd = ConnectorInfo[i].HPD;
 	switch (rhdPtr->hpdUsage) {
 	case RHD_HPD_USAGE_OFF:
+	case RHD_HPD_USAGE_AUTO_OFF:
 	    hpd = RHD_HPD_NONE;
 	    break;
-	case RHD_HPD_USAGE_AUTO_SWAP:
 	case RHD_HPD_USAGE_SWAP:
+	case RHD_HPD_USAGE_AUTO_SWAP:
 	    switch (hpd) {
 	    case RHD_HPD_0:
 		hpd = RHD_HPD_1;
@@ -320,6 +330,17 @@ RHDConnectorsInit(RHDPtr rhdPtr, struct rhdCard *Card)
 		    break;
 		case RHD_OUTPUT_LVTMA:
 		    Output = RHDLVTMAInit(rhdPtr, ConnectorInfo[i].Type);
+		    RHDOutputAdd(rhdPtr, Output);
+		    break;
+		    case RHD_OUTPUT_DVO:
+		    Output = RHDDDIAInit(rhdPtr, ConnectorInfo[i].Type);
+		    if (Output)
+			RHDOutputAdd(rhdPtr, Output);
+		    break;
+		case RHD_OUTPUT_KLDSKP_LVTMA:
+		case RHD_OUTPUT_UNIPHYA:
+		case RHD_OUTPUT_UNIPHYB:
+		    Output = RHDDIGInit(rhdPtr, ConnectorInfo[i].Output[k], ConnectorInfo[i].Type);
 		    RHDOutputAdd(rhdPtr, Output);
 		    break;
 		default:
@@ -395,7 +416,7 @@ RhdPrintConnectorInfo(int scrnIndex, struct rhdConnectorInfo *cp)
 
     const char *c_name[] =
 	{ "RHD_CONNECTOR_NONE", "RHD_CONNECTOR_VGA", "RHD_CONNECTOR_DVI",
-	  "RHD_CONNECTOR_PANEL", "RHD_CONNECTOR_TV" };
+	  "RHD_CONNECTOR_DVI_SINGLE", "RHD_CONNECTOR_PANEL", "RHD_CONNECTOR_TV" };
 
     const char *ddc_name[] =
 	{ "RHD_DDC_0", "RHD_DDC_1", "RHD_DDC_2", "RHD_DDC_3" };
@@ -409,12 +430,13 @@ RhdPrintConnectorInfo(int scrnIndex, struct rhdConnectorInfo *cp)
 
     const char *output_name[] =
 	{ "RHD_OUTPUT_NONE", "RHD_OUTPUT_DACA", "RHD_OUTPUT_DACB", "RHD_OUTPUT_TMDSA",
-	  "RHD_OUTPUT_LVTMA"
-	};
+	  "RHD_OUTPUT_LVTMA", "RHD_OUTPUT_DVO", "RHD_OUTPUT_KLDSKP_LVTMA",
+	  "RHD_OUTPUT_UNIPHYA", "RHD_OUTPUT_UNIPHYB" };
     const char **hpd_name;
 
     switch (rhdPtr->hpdUsage) {
     case RHD_HPD_USAGE_OFF:
+    case RHD_HPD_USAGE_AUTO_OFF:
 	hpd_name = hpd_name_off;
 	break;
     case RHD_HPD_USAGE_SWAP:

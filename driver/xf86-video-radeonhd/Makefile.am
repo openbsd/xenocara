@@ -22,7 +22,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 AUTOMAKE_OPTIONS = foreign
-SUBDIRS = man src utils/conntest
+SUBDIRS = man src 
 
 EXTRA_DIST = RadeonHD.tmpl Imakefile git_version.sh ChangeLog
 MAINTAINERCLEANFILES = ChangeLog

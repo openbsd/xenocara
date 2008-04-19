@@ -1,8 +1,8 @@
 /*
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Egbert Eich   <eich@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
+ * Copyright 2007, 2008  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -32,53 +32,55 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
-
 /* Xserver interface */
 #include "xf86.h"
+
+#if (RANDR_MAJOR == 1 && RANDR_MINOR >= 2) || RANDR_MAJOR >= 2
+# define RANDR_12_SUPPORT
+#endif
+
+#ifdef RANDR_12_SUPPORT
+/* Xserver interface */
+# include "randrstr.h"
+# include "xf86i2c.h"		/* Missing in old versions of xf86Crtc.h */
+# include "xf86Crtc.h"
+# include "xf86RandR12.h"
+# define DPMS_SERVER
+# include "X11/extensions/dpms.h"
+# include "X11/Xatom.h"
+#endif /* RANDR_12_SUPPORT */
+
 #if HAVE_XF86_ANSIC_H
-# include "xf86_ansic.h" 
+# include "xf86_ansic.h"
 #endif
 
 /* Driver specific headers */
 #include "rhd.h"
 #include "rhd_randr.h"
 
-#if (RANDR_MAJOR == 1 && RANDR_MINOR >= 2) || RANDR_MAJOR >= 2
-
-
-/* Xserver interface */
-#include "randrstr.h"
-#include "xf86i2c.h"		/* Missing in old versions of xf86Crtc.h */
-#include "xf86Crtc.h"
-#include "xf86RandR12.h"
-#define DPMS_SERVER
-#include "X11/extensions/dpms.h"
-#include "X11/Xatom.h"
-
-/* Driver specific headers */
-#include "rhd.h"
-#include "rhd_crtc.h"
-#include "rhd_cursor.h"
-#include "rhd_connector.h"
-#include "rhd_output.h"
-#include "rhd_modes.h"
-#include "rhd_monitor.h"
-#include "rhd_vga.h"
-#include "rhd_pll.h"
-#include "rhd_lut.h"
-#include "rhd_mc.h"
-#include "rhd_card.h"
+#ifdef RANDR_12_SUPPORT
+# include "rhd_crtc.h"
+# include "rhd_cursor.h"
+# include "rhd_connector.h"
+# include "rhd_output.h"
+# include "rhd_modes.h"
+# include "rhd_monitor.h"
+# include "rhd_vga.h"
+# include "rhd_pll.h"
+# include "rhd_lut.h"
+# include "rhd_mc.h"
+# include "rhd_card.h"
 
 /*
  * Driver internal
  */
 
-#define WRAP_SCRNINFO(func,new)					\
+# define WRAP_SCRNINFO(func,new)					\
     do {							\
 	rhdPtr->randr->func = pScrn->func;			\
 	pScrn->func = new;					\
     } while (0)
-#define UNWRAP_SCRNINFO(func)					\
+# define UNWRAP_SCRNINFO(func)					\
 	pScrn->func = rhdPtr->randr->func
 
 struct rhdRandr {
@@ -98,7 +100,7 @@ typedef struct _rhdRandrOutput {
 #define ATOM_CONNECTOR_TYPE   "RANDR_CONNECTOR_TYPE"
 #define ATOM_CONNECTOR_NUMBER "RANDR_CONNECTOR_NUMBER"
 #define ATOM_OUTPUT_NUMBER    "RANDR_OUTPUT_NUMBER"
-#define ATOM_PANNING_AREA     "RANDR_PANING_AREA"
+#define ATOM_PANNING_AREA     "RANDR_PANNING_AREA"
 
 static Atom atomSignalFormat, atomConnectorType, atomConnectorNumber,
 	    atomOutputNumber, atomPanningArea;
@@ -114,18 +116,23 @@ rhdGetSignalFormat(rhdRandrOutputPtr ro)
 	switch (ro->Connector->Type) {
 	case RHD_CONNECTOR_VGA:
 	case RHD_CONNECTOR_DVI:
+	case RHD_CONNECTOR_DVI_SINGLE:
 	    return "VGA";
 	case RHD_CONNECTOR_TV:		/* TODO: depending on current format */
 	default:
 	    return "unknown";
 	}
     case RHD_OUTPUT_LVTMA:
+    case RHD_OUTPUT_KLDSKP_LVTMA:
     case RHD_OUTPUT_LVDS:
+    case RHD_OUTPUT_UNIPHYA:
+    case RHD_OUTPUT_UNIPHYB:
 #if RHD_OUTPUT_LVTMB != RHD_OUTPUT_LVDS
     case RHD_OUTPUT_LVTMB:
 #endif
 	switch (ro->Connector->Type) {
 	case RHD_CONNECTOR_DVI:
+	case RHD_CONNECTOR_DVI_SINGLE:
 	    return "TMDS";
 	case RHD_CONNECTOR_PANEL:
 	    return "LVDS";
@@ -149,6 +156,8 @@ rhdGetConnectorType(rhdRandrOutputPtr ro)
 	return "VGA";
     case RHD_CONNECTOR_DVI:
 	return "DVI";			/* TODO: DVI-I/A/D / HDMI */
+    case RHD_CONNECTOR_DVI_SINGLE:
+	return "DVI (single link)";
     case RHD_CONNECTOR_PANEL:
 	return "PANEL";
     case RHD_CONNECTOR_TV:
@@ -229,7 +238,7 @@ rhdRRXF86CrtcResize(ScrnInfoPtr pScrn, int width, int height)
      * work as expected... */
 #if 0
     pScrn->virtualX = width;
-    pScrn->virtualY = height; 
+    pScrn->virtualY = height;
 #endif
     return TRUE;
 }
@@ -328,6 +337,7 @@ rhdRRCrtcPrepare(xf86CrtcPtr crtc)
     if (Crtc->MaxY > Crtc->Height)
 	Crtc->MaxY = Crtc->Height;
 }
+
 static void
 rhdRRCrtcModeSet(xf86CrtcPtr  crtc,
 		 DisplayModePtr OrigMode, DisplayModePtr Mode,
@@ -346,8 +356,9 @@ rhdRRCrtcModeSet(xf86CrtcPtr  crtc,
 
     /* Set up mode */
     Crtc->FBSet(Crtc, pScrn->displayWidth, pScrn->virtualX, pScrn->virtualY,
-		pScrn->depth, rhdPtr->FbFreeStart);
+		pScrn->depth, rhdPtr->FbScanoutStart);
     Crtc->ModeSet(Crtc, Mode);
+    Crtc->ScaleSet(Crtc, RHD_CRTC_SCALE_TYPE_NONE, Mode, NULL);
     Crtc->FrameSet(Crtc, x, y);
     rhdUpdateCrtcPos(Crtc, Crtc->Cursor->X, Crtc->Cursor->Y);
     RHDPLLSet(Crtc->PLL, Mode->Clock);		/* This also powers up PLL */
@@ -400,7 +411,7 @@ rhdRRCrtcGammaSet(xf86CrtcPtr crtc, CARD16 *red, CARD16 *green, CARD16 *blue,
 
 /* Dummy, because not tested for NULL */
 static Bool
-rhdRRCrtcModeFixupDUMMY(xf86CrtcPtr    crtc, 
+rhdRRCrtcModeFixupDUMMY(xf86CrtcPtr    crtc,
 			DisplayModePtr mode,
 			DisplayModePtr adjusted_mode)
 { return TRUE; }
@@ -509,7 +520,7 @@ rhdRROutputDpms(xf86OutputPtr       out,
     RHDPtr rhdPtr          = RHDPTR(out->scrn);
     rhdRandrOutputPtr rout = (rhdRandrOutputPtr) out->driver_private;
     xf86OutputPtr    *ro;
-    struct rhdCrtc   *Crtc = out->crtc ? 
+    struct rhdCrtc   *Crtc = out->crtc ?
         (struct rhdCrtc *) out->crtc->driver_private : NULL;
     const char *outUsedBy = NULL;
 
@@ -643,7 +654,7 @@ rhdRROutputModeFixup(xf86OutputPtr  out,
     if (out->crtc)
 	Crtc = (struct rhdCrtc *) out->crtc->driver_private;
     setupCrtc(rhdPtr, Crtc);
-    
+
     /* Monitor is handled by RandR */
     Status = RHDRRModeFixup(out->scrn, Mode, Crtc, rout->Connector,
 			    rout->Output, NULL);
@@ -698,7 +709,7 @@ rhdRROutputModeSet(xf86OutputPtr  out,
 		   "assuming ouput/connector clash\n", rout->Name);
     /* Set up mode */
     rout->Output->Crtc = Crtc;
-    rout->Output->Mode(rout->Output);
+    rout->Output->Mode(rout->Output, Mode);
 }
 static void
 rhdRROutputCommit(xf86OutputPtr out)
@@ -713,7 +724,7 @@ rhdRROutputCommit(xf86OutputPtr out)
     ASSERT(Crtc == rout->Output->Crtc);
 
     rout->Output->Active    = TRUE;
-    rout->Output->Connector = rout->Connector;
+    rout->Output->Connector = rout->Connector; /* @@@ */
     rout->Output->Power(rout->Output, RHD_POWER_ON);
 
     /* Some outputs may have physical protocol changes (e.g. TV) */
@@ -746,8 +757,10 @@ rhdRROutputDetect(xf86OutputPtr output)
     RHDDebug(rhdPtr->scrnIndex, "%s: Output %s\n", __func__, rout->Name);
 
     /* Assume that a panel is always connected */
-    if (rout->Connector->Type == RHD_CONNECTOR_PANEL)
+    if (rout->Connector->Type == RHD_CONNECTOR_PANEL) {
+	rout->Output->Connector = rout->Connector; /* @@@ */
 	return XF86OutputStatusConnected;
+    }
 
     if (rout->Connector->HPDCheck) {
 	/* Hot Plug Detection available, use it */
@@ -756,9 +769,13 @@ rhdRROutputDetect(xf86OutputPtr output)
 	     * HPD returned true
 	     */
 	    if (rout->Output->Sense) {
-		if (rout->Output->Sense(rout->Output, rout->Connector->Type))
+		if ((rout->Output->SensedType
+		     = rout->Output->Sense(rout->Output,
+					   rout->Connector->Type))) {
+		    RHDOutputPrintSensedType(rout->Output);
+		    rout->Output->Connector = rout->Connector; /* @@@ */
 		    return XF86OutputStatusConnected;
-		else
+		} else
 		    return XF86OutputStatusDisconnected;
 	    } else {
 		/* HPD returned true, but no Sense() available
@@ -773,10 +790,14 @@ rhdRROutputDetect(xf86OutputPtr output)
 			o->Connector == rout->Connector &&
 			o->Output->Sense) {
 			/* Yes, this looks wrong, but is correct */
-			if (o->Output->Sense(o->Output, o->Connector->Type))
+			if ((o->Output->SensedType =
+			     o->Output->Sense(o->Output, o->Connector->Type))) {
+			    RHDOutputPrintSensedType(o->Output);
 			    return XF86OutputStatusDisconnected;
+			}
 		    }
 		}
+		rout->Output->Connector = rout->Connector; /* @@@ */
 		return XF86OutputStatusConnected;
 	    }
 	} else {
@@ -789,8 +810,13 @@ rhdRROutputDetect(xf86OutputPtr output)
 		xf86DrvMsg(rhdPtr->scrnIndex, X_INFO,
 			   "RandR: Verifying state of DMS-59 VGA connector.\n");
 		if (rout->Output->Sense &&
-		    rout->Output->Sense(rout->Output, rout->Connector->Type))
-		return XF86OutputStatusConnected;
+		    (rout->Output->SensedType
+		     = rout->Output->Sense(rout->Output,
+					   rout->Connector->Type))) {
+		    rout->Output->Connector = rout->Connector; /* @@@ */
+		    RHDOutputPrintSensedType(rout->Output);
+		    return XF86OutputStatusConnected;
+		}
 	    }
 	    return XF86OutputStatusDisconnected;
 	}
@@ -799,18 +825,23 @@ rhdRROutputDetect(xf86OutputPtr output)
 	 * No HPD available, Sense() if possible
 	 */
 	if (rout->Output->Sense) {
-	    if (rout->Output->Sense(rout->Output, rout->Connector->Type))
-		return XF86OutputStatusConnected;
-	    else
+	    if ((rout->Output->SensedType
+		 = rout->Output->Sense(rout->Output, rout->Connector->Type))) {
+		    rout->Output->Connector = rout->Connector; /* @@@ */
+		    RHDOutputPrintSensedType(rout->Output);
+		    return XF86OutputStatusConnected;
+	    } else
 		return XF86OutputStatusDisconnected;
 	}
 	/* Use DDC address probing if possible otherwise */
 	if (rout->Connector->DDC) {
-	    if (xf86I2CProbeAddress(rout->Connector->DDC, 0xa0))
+	    if (xf86I2CProbeAddress(rout->Connector->DDC, 0xa0)) {
+		rout->Output->Connector = rout->Connector; /* @@@ */
 		return XF86OutputStatusConnected;
-	    else
+	    }  else
 		return XF86OutputStatusDisconnected;
 	}
+	rout->Output->Connector = rout->Connector; /* @@@ */
 	return XF86OutputStatusUnknown;
     }
 }
@@ -849,7 +880,10 @@ rhdRROutputGetModes(xf86OutputPtr output)
 
     /* If digitally attached, enable reduced blanking */
     if (rout->Output->Id == RHD_OUTPUT_TMDSA ||
-	rout->Output->Id == RHD_OUTPUT_LVTMA)
+	rout->Output->Id == RHD_OUTPUT_LVTMA ||
+	rout->Output->Id == RHD_OUTPUT_KLDSKP_LVTMA ||
+	rout->Output->Id == RHD_OUTPUT_UNIPHYA ||
+	rout->Output->Id == RHD_OUTPUT_UNIPHYB)
 	rout->Connector->Monitor->ReducedAllowed = TRUE;
     /* Allow user overrides */
     if (rhdPtr->forceReduced.set)
@@ -857,6 +891,25 @@ rhdRROutputGetModes(xf86OutputPtr output)
 	    rhdPtr->forceReduced.val.bool;
 
     xf86OutputSetEDID (output, rout->Connector->Monitor->EDID);
+
+    /* If no EDID data is available, calculate mm_size by assuming 96dpi
+     * for the preferred (or first if no preferred) mode */
+    if (! rout->Connector->Monitor->EDID) {
+	DisplayModePtr m;
+	for (m = rout->Connector->Monitor->Modes; m; m = m->next)
+	    if (m->type & M_T_PREFERRED)
+		break;
+	if (! m)
+	    m = rout->Connector->Monitor->Modes;
+	if (m) {
+#define DEFAULT_MM_PER_DOT (25.4 / 96)
+	    output->mm_width  = m->HDisplay * DEFAULT_MM_PER_DOT;
+	    output->mm_height = m->VDisplay * DEFAULT_MM_PER_DOT;
+	    xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING,
+		       "No monitor size info, assuming 96dpi.\n");
+	}
+    }
+
     return rout->Connector->Monitor->Modes;
 }
 
@@ -972,6 +1025,9 @@ consolidateRandrOutputNames(rhdRandrOutputPtr *rop, int num)
 			break;
 		    case RHD_OUTPUT_TMDSA:
 		    case RHD_OUTPUT_LVTMA:
+		    case RHD_OUTPUT_KLDSKP_LVTMA:
+		    case RHD_OUTPUT_UNIPHYA:
+		    case RHD_OUTPUT_UNIPHYB:
 			outname = "digital";
 			break;
 		    default:
@@ -1018,8 +1074,8 @@ createXF86Output(ScrnInfoPtr pScrn, rhdRandrOutputPtr rro)
     xo->driver_private = rro;
     xo->possible_crtcs  = ~0;				/* No limitations */
     xo->possible_clones = ~0;				/* No limitations */
-    xo->interlaceAllowed = FALSE;
-    xo->doubleScanAllowed = FALSE;
+    xo->interlaceAllowed = TRUE;
+    xo->doubleScanAllowed = TRUE;
     xo->subpixel_order = SubPixelUnknown;
     xo->use_screen_monitor = FALSE;
     return xo;
@@ -1161,7 +1217,7 @@ rhdRRPointerMoved(int scrnIndex, int x, int y)
     }
     UNWRAP_SCRNINFO(PointerMoved);
     pScrn->PointerMoved(scrnIndex, x, y);
-    WRAP_SCRNINFO(PointerMoved, rhdRRPointerMoved); 
+    WRAP_SCRNINFO(PointerMoved, rhdRRPointerMoved);
 }
 
 /* Call in ScreenInit after frame buffer + acceleration layers */
@@ -1175,7 +1231,7 @@ RHDRandrScreenInit(ScreenPtr pScreen)
     if (!xf86CrtcScreenInit(pScreen))
 	return FALSE;
     /* Wrap cursor for driver-level panning */
-    WRAP_SCRNINFO(PointerMoved, rhdRRPointerMoved); 
+    WRAP_SCRNINFO(PointerMoved, rhdRRPointerMoved);
 
     RHDDebugRandrState(rhdPtr, "POST-ScreenInit");
     return TRUE;
@@ -1209,8 +1265,7 @@ RHDRandrSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
 }
 
 
-#else /* RANDR_12_INTERFACE */
-
+#else /* RANDR_12_SUPPORT */
 
 Bool
 RHDRandrPreInit(ScrnInfoPtr pScrn)
@@ -1233,5 +1288,5 @@ RHDRandrSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
 { ASSERT(0); return FALSE; }
 
 
-#endif /* RANDR_12_INTERFACE */
+#endif /* RANDR_12_SUPPORT */
 

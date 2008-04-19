@@ -32,6 +32,8 @@ radeonhd_drv_la_SOURCES = \
 	rhd_mc.c \
 	rhd_shadow.c \
 	rhd_randr.c \
+	rhd_dig.c \
+	rhd_ddia.c \
 	rhd_atombios.h \
 	rhd.h \
 	rhd_i2c.h \
@@ -48,10 +50,18 @@ radeonhd_drv_la_SOURCES = \
 	rhd_regs.h \
 	rhd_vga.h \
 	rhd_shadow.h \
-	rhd_mc.h
+	rhd_mc.h \
+	r5xx_accel.c \
+	r5xx_accel.h \
+	r5xx_xaa.c \
+	r5xx_2dregs.h
 
 nodist_radeonhd_drv_la_SOURCES = \
 	git_version.h
+
+if USE_EXA
+radeonhd_drv_la_SOURCES += r5xx_exa.c
+endif
 
 if ATOM_BIOS
 radeonhd_drv_la_SOURCES += \

@@ -1,8 +1,8 @@
 /*
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Egbert Eich   <eich@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2007-2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007-2008  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007-2008  Egbert Eich   <eich@novell.com>
+ * Copyright 2007-2008  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -58,7 +58,7 @@
  * but speed is not an issue here.
  */
 static inline CARD16
-LVTMARegisterShift(int ChipSet, CARD16 R500, CARD16 R600)
+LVTMAChipGenerationSelect(int ChipSet, CARD32 R500, CARD32 R600)
 {
     if (ChipSet >= RHD_RS600)
 	return R600;
@@ -66,31 +66,32 @@ LVTMARegisterShift(int ChipSet, CARD16 R500, CARD16 R600)
 	return R500;
 }
 
-#define LVTMAREGSHIFT(r500, r600) LVTMARegisterShift(rhdPtr->ChipSet, (r500), (r600))
-
+#define LVTMAGENSEL(r500, r600) LVTMAChipGenerationSelect(rhdPtr->ChipSet, (r500), (r600))
 #define LVTMA_DATA_SYNCHRONIZATION \
-    LVTMAREGSHIFT(LVTMA_R500_DATA_SYNCHRONIZATION, LVTMA_R600_DATA_SYNCHRONIZATION)
+    LVTMAGENSEL(LVTMA_R500_DATA_SYNCHRONIZATION, LVTMA_R600_DATA_SYNCHRONIZATION)
 #define LVTMA_PWRSEQ_REF_DIV \
-    LVTMAREGSHIFT(LVTMA_R500_PWRSEQ_REF_DIV, LVTMA_R600_PWRSEQ_REF_DIV)
+    LVTMAGENSEL(LVTMA_R500_PWRSEQ_REF_DIV, LVTMA_R600_PWRSEQ_REF_DIV)
 #define LVTMA_PWRSEQ_DELAY1 \
-    LVTMAREGSHIFT(LVTMA_R500_PWRSEQ_DELAY1, LVTMA_R600_PWRSEQ_DELAY1)
+    LVTMAGENSEL(LVTMA_R500_PWRSEQ_DELAY1, LVTMA_R600_PWRSEQ_DELAY1)
 #define LVTMA_PWRSEQ_DELAY2 \
-    LVTMAREGSHIFT(LVTMA_R500_PWRSEQ_DELAY2, LVTMA_R600_PWRSEQ_DELAY2)
+    LVTMAGENSEL(LVTMA_R500_PWRSEQ_DELAY2, LVTMA_R600_PWRSEQ_DELAY2)
 #define LVTMA_PWRSEQ_CNTL \
-    LVTMAREGSHIFT(LVTMA_R500_PWRSEQ_CNTL, LVTMA_R600_PWRSEQ_CNTL)
+    LVTMAGENSEL(LVTMA_R500_PWRSEQ_CNTL, LVTMA_R600_PWRSEQ_CNTL)
 #define LVTMA_PWRSEQ_STATE \
-    LVTMAREGSHIFT(LVTMA_R500_PWRSEQ_STATE, LVTMA_R600_PWRSEQ_STATE)
+    LVTMAGENSEL(LVTMA_R500_PWRSEQ_STATE, LVTMA_R600_PWRSEQ_STATE)
 #define LVTMA_LVDS_DATA_CNTL \
-    LVTMAREGSHIFT(LVTMA_R500_LVDS_DATA_CNTL, LVTMA_R600_LVDS_DATA_CNTL)
-#define LVTMA_MODE LVTMAREGSHIFT(LVTMA_R500_MODE, LVTMA_R600_MODE)
+    LVTMAGENSEL(LVTMA_R500_LVDS_DATA_CNTL, LVTMA_R600_LVDS_DATA_CNTL)
+#define LVTMA_MODE LVTMAGENSEL(LVTMA_R500_MODE, LVTMA_R600_MODE)
 #define LVTMA_TRANSMITTER_ENABLE \
-    LVTMAREGSHIFT(LVTMA_R500_TRANSMITTER_ENABLE, LVTMA_R600_TRANSMITTER_ENABLE)
+    LVTMAGENSEL(LVTMA_R500_TRANSMITTER_ENABLE, LVTMA_R600_TRANSMITTER_ENABLE)
 #define LVTMA_MACRO_CONTROL \
-    LVTMAREGSHIFT(LVTMA_R500_MACRO_CONTROL, LVTMA_R600_MACRO_CONTROL)
+    LVTMAGENSEL(LVTMA_R500_MACRO_CONTROL, LVTMA_R600_MACRO_CONTROL)
 #define LVTMA_TRANSMITTER_CONTROL \
-    LVTMAREGSHIFT(LVTMA_R500_TRANSMITTER_CONTROL, LVTMA_R600_TRANSMITTER_CONTROL)
+    LVTMAGENSEL(LVTMA_R500_TRANSMITTER_CONTROL, LVTMA_R600_TRANSMITTER_CONTROL)
 #define LVTMA_REG_TEST_OUTPUT \
-    LVTMAREGSHIFT(LVTMA_R500_REG_TEST_OUTPUT, LVTMA_R600_REG_TEST_OUTPUT)
+    LVTMAGENSEL(LVTMA_R500_REG_TEST_OUTPUT, LVTMA_R600_REG_TEST_OUTPUT)
+
+#define LVTMA_DITHER_RESET_BIT LVTMAGENSEL(0x04000000, 0x02000000)
 
 /*
  *
@@ -112,6 +113,9 @@ struct LVDSPrivate {
     CARD16 PowerDigToDE;
     CARD16 PowerDEToBL;
     CARD16 OffDelay;
+    Bool   TemporalDither;
+    Bool   SpatialDither;
+    int    GreyLevel;
 
     Bool Stored;
 
@@ -139,6 +143,9 @@ LVDSModeValid(struct rhdOutput *Output, DisplayModePtr Mode)
 {
     RHDFUNC(Output);
 
+    if (Mode->Flags & V_INTERLACE)
+        return MODE_NO_INTERLACE;
+
     return MODE_OK;
 }
 
@@ -146,7 +153,7 @@ LVDSModeValid(struct rhdOutput *Output, DisplayModePtr Mode)
  *
  */
 static void
-LVDSSet(struct rhdOutput *Output)
+LVDSSet(struct rhdOutput *Output, DisplayModePtr Mode)
 {
     struct LVDSPrivate *Private = (struct LVDSPrivate *) Output->Private;
     RHDPtr rhdPtr = RHDPTRI(Output);
@@ -174,25 +181,16 @@ LVDSSet(struct rhdOutput *Output)
 	RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0, 0x00101010); /* dithering bit depth != 24 */
     }
 
-#if 0
-    if (LVDS_Info->LVDS_Misc & 0x40) { /* enable dithering? */
-	if (LVDS_Info->LVDS_Misc & 0x0C) /* no idea. */
-	    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0x01000000, 0x01000000); /* grey level 4 */
-	else
-	    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0, 0x01000000); /* grey level 2 */
-
-	/* enable temporal bit depth reduction */
-	RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0x00010000, 0x00010000);
-    } else
-	RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0, 0x00010101);
-#endif
-
     /* enable temporal dithering, disable spatial dithering and disable truncation */
-    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0x01010000, 0x01010101);
+    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL,
+	       Private->TemporalDither ? 1 << 16 : 0
+	       | Private->SpatialDither ? 1 << 8 : 0
+	       | (Private->GreyLevel > 2) ? 1 << 24 : 0,
+	       0x01010101);
 
     /* reset the temporal dithering */
-    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0x04000000, 0x04000000);
-    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0, 0x04000000);
+    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, LVTMA_DITHER_RESET_BIT, LVTMA_DITHER_RESET_BIT);
+    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0, LVTMA_DITHER_RESET_BIT);
 
     /* go for RGB 4:4:4 RGB/YCbCr  */
     RHDRegMask(Output, LVTMA_CNTL, 0, 0x00010000);
@@ -342,12 +340,13 @@ LVDSDisable(struct rhdOutput *Output)
 static void
 LVDSShutdown(struct rhdOutput *Output)
 {
+    RHDPtr rhdPtr = RHDPTRI(Output);
     RHDFUNC(Output);
 
     RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0x00000002, 0x00000002); /* PLL in reset */
     RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0, 0x00000001); /* disable LVDS */
     RHDRegMask(Output, LVTMA_DATA_SYNCHRONIZATION, 0, 0x00000001);
-    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0x04000000, 0x04000000); /* reset temp dithering */
+    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, LVTMA_DITHER_RESET_BIT, LVTMA_DITHER_RESET_BIT); /* reset temp dithering */
     RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0, 0x00111111); /* disable all dithering */
     RHDRegWrite(Output, LVTMA_CNTL, 0); /* disable */
 }
@@ -475,11 +474,16 @@ LVDSInfoRetrieve(RHDPtr rhdPtr)
     Private->LVDS24Bit = RHDRegRead(rhdPtr, LVTMA_LVDS_DATA_CNTL) & 0x00000001;
     Private->FPDI = RHDRegRead(rhdPtr, LVTMA_LVDS_DATA_CNTL) & 0x00000010;
 
+    tmp = RHDRegRead(rhdPtr, LVTMA_BIT_DEPTH_CONTROL);
+    Private->TemporalDither =  ((tmp & (1 << 16)) != 0);
+    Private->SpatialDither = ((tmp & (1 << 8)) != 0);
+    Private->GreyLevel = (tmp & (1 << 24)) ? 4 : 2;
+
 #ifdef ATOM_BIOS
     {
 	AtomBiosArgRec data;
 
-	if(RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+	if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
 			   ATOM_LVDS_SEQ_DIG_ONTO_DE, &data) == ATOM_SUCCESS)
 	    Private->PowerDigToDE = data.val;
 
@@ -500,8 +504,23 @@ LVDSInfoRetrieve(RHDPtr rhdPtr)
 	    Private->LVDS24Bit = data.val;
 
 	if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
-				 ATOM_LVDS_FPDI, &data) == ATOM_SUCCESS)
+			    ATOM_LVDS_FPDI, &data) == ATOM_SUCCESS)
 	    Private->FPDI = data.val;
+
+	if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+			    ATOM_LVDS_TEMPORAL_DITHER, &data) == ATOM_SUCCESS)
+	    Private->TemporalDither = data.val;
+
+	if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+			    ATOM_LVDS_SPATIAL_DITHER, &data) == ATOM_SUCCESS)
+	    Private->SpatialDither = data.val;
+
+	if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+			    ATOM_LVDS_GREYLVL, &data) == ATOM_SUCCESS) {
+	    Private->GreyLevel = data.val;
+	    xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR, "AtomBIOS returned %i Grey Levels\n",
+		       Private->GreyLevel);
+	}
     }
 #endif
 
@@ -541,6 +560,9 @@ LVDSInfoRetrieve(RHDPtr rhdPtr)
  *
  */
 struct rhdTMDSBPrivate {
+    Bool RunsDualLink;
+    Bool Coherent;
+
     Bool Stored;
 
     CARD32 StoreControl;
@@ -570,13 +592,154 @@ TMDSBModeValid(struct rhdOutput *Output, DisplayModePtr Mode)
 {
     RHDFUNC(Output);
 
+    if (Mode->Flags & V_INTERLACE)
+        return MODE_NO_INTERLACE;
+
     if (Mode->Clock < 25000)
 	return MODE_CLOCK_LOW;
 
-    if (Mode->Clock > 165000)
-	return MODE_CLOCK_HIGH;
+    if (Output->Connector->Type == RHD_CONNECTOR_DVI_SINGLE) {
+	if (Mode->Clock > 165000)
+	    return MODE_CLOCK_HIGH;
+    } else if (Output->Connector->Type == RHD_CONNECTOR_DVI) {
+	if (Mode->Clock > 330000) /* could go higher still */
+	    return MODE_CLOCK_HIGH;
+    }
 
     return MODE_OK;
+}
+
+/*
+ *
+ */
+static void
+RS600VoltageControl(struct rhdOutput *Output, DisplayModePtr Mode)
+{
+    struct rhdTMDSBPrivate *Private = (struct rhdTMDSBPrivate *) Output->Private;
+
+    RHDFUNC(Output);
+#ifdef NOT_YET
+    if (Output->Connector == RHD_CONNECTOR_HDMI || Output->Connector == RHD_CONNECTOR_HDMI_DUAL) {
+	int clock = Mode->SynthClock;
+
+	if (Private->RunsDualLink)
+	    clock >>= 1;
+	if (clock <= 75000) {
+	    RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x00010213);
+	    RHDRegWrite(Output, LVTMA_R600_REG_TEST_OUTPUT, 0x000a0000);
+	} else {
+	    RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x00000213);
+	    RHDRegWrite(Output, LVTMA_R600_REG_TEST_OUTPUT, 0x00100000);
+	}
+    } else
+#endif
+    {
+	if (Private->RunsDualLink) {
+	    RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x0000020f);
+	    RHDRegWrite(Output, LVTMA_R600_REG_TEST_OUTPUT, 0x00100000);
+	} else {
+	    if (Mode->SynthClock < 39000)
+		RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x0002020f);
+	    else
+		RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x0000020f);
+	    RHDRegWrite(Output, LVTMA_R600_REG_TEST_OUTPUT, 0x00100000);
+	}
+    }
+}
+
+/*
+ *
+ */
+static void
+RS690VoltageControl(struct rhdOutput *Output, DisplayModePtr Mode)
+{
+    RHDPtr rhdPtr = RHDPTRI(Output);
+    struct rhdTMDSBPrivate *Private = (struct rhdTMDSBPrivate *) Output->Private;
+    CARD32 rev = (RHDRegRead(Output, CONFIG_CNTL) && RS69_CFG_ATI_REV_ID_MASK) >> RS69_CFG_ATI_REV_ID_SHIFT;
+
+    if (rev < 3) {
+#ifdef NOT_YET
+	if (Output->Connector == RHD_CONNECTOR_HDMI || Output->Connector == RHD_CONNECTOR_HDMI_DUAL) {
+	    if (Mode->SynthClock > 75000) {
+		RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0xa001632f);
+		RHDRegWrite(Output, LVTMA_R600_REG_TEST_OUTPUT, 0x05120000);
+		RHDRegMask(Output,  LVTMA_R600_TRANSMITTER_CONTROL, 0x10000000, 0x10000000);
+	    } else if (Mode->SynthClock > 41000) {
+		RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x0000632f);
+		RHDRegWrite(Output, LVTMA_R600_REG_TEST_OUTPUT, 0x05120000);
+		RHDRegMask(Output,  LVTMA_R600_TRANSMITTER_CONTROL, 0x10000000, 0x10000000);
+	    } else {
+		RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x0003632f);
+		RHDRegWrite(Output, LVTMA_R600_REG_TEST_OUTPUT, 0x050b000);
+		RHDRegMask(Output,  LVTMA_R600_TRANSMITTER_CONTROL, 0x0, 0x10000000);
+	    }
+	} else
+#endif
+	{
+	    int clock = Mode->SynthClock;
+
+	    if (Private->RunsDualLink)
+		clock >>= 1;
+
+	    RHDRegWrite(Output, LVTMA_R600_REG_TEST_OUTPUT, 0x05120000);
+
+	    if (clock > 75000) {
+		RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0xa001631f);
+		RHDRegMask(Output,  LVTMA_R600_TRANSMITTER_CONTROL, 0x10000000, 0x10000000);
+	    } else if (clock > 41000) {
+		RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x0000631f);
+		RHDRegMask(Output,  LVTMA_R600_TRANSMITTER_CONTROL, 0x10000000, 0x10000000);
+	    } else {
+		RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x0003631f);
+		RHDRegMask(Output,  LVTMA_R600_TRANSMITTER_CONTROL, 0x0, 0x10000000);
+	    }
+	}
+    } else {
+#ifdef NOT_YET
+	if (Output->Connector == RHD_CONNECTOR_HDMI || Output->Connector == RHD_CONNECTOR_HDMI_DUAL) {
+	    if (Mode->SynthClock <= 75000) {
+		RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x0002612f);
+		RHDRegWrite(Output, LVTMA_R600_REG_TEST_OUTPUT, 0x010b0000);
+		RHDRegMask(Output,  LVTMA_R600_TRANSMITTER_CONTROL, 0x0, 0x10000000);
+	    } else {
+		RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x0000642f);
+		RHDRegWrite(Output, LVTMA_R600_REG_TEST_OUTPUT, 0x01120000);
+		RHDRegMask(Output,  LVTMA_R600_TRANSMITTER_CONTROL, 0x10000000, 0x10000000);
+	    }
+	} else
+#endif
+	{
+	    int clock = Mode->SynthClock;
+
+	    if (Private->RunsDualLink)
+		clock >>= 1;
+
+	    RHDRegWrite(Output, LVTMA_R600_REG_TEST_OUTPUT, 0x01120000);
+	    RHDRegMask(Output,  LVTMA_R600_TRANSMITTER_CONTROL, 0x10000000, 0x10000000);
+
+	    if (Mode->SynthClock > 75000) {
+		RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x00016318);
+	    } else {
+		{
+#ifdef ATOM_BIOS
+		    AtomBiosArgRec data;
+
+		    if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+					ATOM_GET_CAPABILITY_FLAG, &data) == ATOM_SUCCESS) {
+			if (((data.val & 0x60) == 0x20 || (data.val & 0x80))) {
+			    RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x00016318);
+			} else {
+			    RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x00006318);
+			}
+		    } else
+#endif
+		    {
+			RHDRegWrite(Output, LVTMA_R600_MACRO_CONTROL, 0x00006318);
+		    }
+		}
+	    }
+	}
+    }
 }
 
 /*
@@ -584,33 +747,42 @@ TMDSBModeValid(struct rhdOutput *Output, DisplayModePtr Mode)
  */
 static struct R5xxTMDSBMacro {
     CARD16 Device;
-    CARD32 Macro;
+    CARD32 MacroSingle;
+    CARD32 MacroDual;
 } R5xxTMDSBMacro[] = {
-    { 0x7104, 0x00F20616 }, /* R520  */
-    { 0x7142, 0x00F2061C }, /* RV515 */
-    { 0x7146, 0x00F1061D }, /* RV515 */
-    { 0x7147, 0x0082041D }, /* RV505 */
-    { 0x7152, 0x00F2061C }, /* RV515 */
-    { 0x7183, 0x00B2050C }, /* RV530 */
-    { 0x71C1, 0x0062041D }, /* RV535 */
-    { 0x71C2, 0x00F1061D }, /* RV530 */
-    { 0x71C6, 0x00F2061D }, /* RV530 */
-    { 0x71D2, 0x00F10610 }, /* RV530: atombios uses 0x00F1061D */
-    { 0x7249, 0x00F1061D }, /* R580  */
-    { 0x724B, 0x00F10610 }, /* R580: atombios uses 0x00F1061D */
-    { 0x7280, 0x0042041F }, /* RV570 */
-    { 0x7288, 0x0042041F }, /* RV570 */
-    { 0x791E, 0x0001642F }, /* RS690 */
-    { 0x791F, 0x0001642F }, /* RS690 */
-    { 0x9400, 0x00020213 }, /* R600  */
-    { 0x9401, 0x00020213 }, /* R600  */
-    { 0x9402, 0x00020213 }, /* R600  */
-    { 0x9403, 0x00020213 }, /* R600  */
-    { 0x9405, 0x00020213 }, /* R600  */
-    { 0x940A, 0x00020213 }, /* R600  */
-    { 0x940B, 0x00020213 }, /* R600  */
-    { 0x940F, 0x00020213 }, /* R600  */
-    { 0, 0} /* End marker */
+    /*
+     * this list isn't complete yet.
+     *  Some more values for dual need to be dug up
+     */
+    { 0x7104, 0x00F20616, 0x00F20616 }, /* R520  */
+    { 0x7142, 0x00F2061C, 0x00F2061C }, /* RV515 */
+    { 0x7145, 0x00F1061D, 0x00F2061D }, /**/
+    { 0x7146, 0x00F1061D, 0x00F1061D }, /* RV515 */
+    { 0x7147, 0x0082041D, 0x0082041D }, /* RV505 */
+    { 0x7149, 0x00F1061D, 0x00D2061D }, /**/
+    { 0x7152, 0x00F2061C, 0x00F2061C }, /* RV515 */
+    { 0x7183, 0x00B2050C, 0x00B2050C }, /* RV530 */
+    { 0x71C0, 0x00F1061F, 0x00f2061D }, /**/
+    { 0x71C1, 0x0062041D, 0x0062041D }, /* RV535 *//**/
+    { 0x71C2, 0x00F1061D, 0x00F2061D }, /* RV530 *//**/
+    { 0x71C5, 0x00D1061D, 0x00D2061D }, /**/
+    { 0x71C6, 0x00F2061D, 0x00F2061D }, /* RV530 */
+    { 0x71D2, 0x00F10610, 0x00F20610 }, /* RV530: atombios uses 0x00F1061D *//**/
+    { 0x7249, 0x00F1061D, 0x00F1061D }, /* R580  */
+    { 0x724B, 0x00F10610, 0x00F10610 }, /* R580: atombios uses 0x00F1061D */
+    { 0x7280, 0x0042041F, 0x0042041F }, /* RV570 *//**/
+    { 0x7288, 0x0042041F, 0x0042041F }, /* RV570 */
+    { 0x791E, 0x0001642F, 0x0001642F }, /* RS690 */
+    { 0x791F, 0x0001642F, 0x0001642F }, /* RS690 */
+    { 0x9400, 0x00020213, 0x00020213 }, /* R600  */
+    { 0x9401, 0x00020213, 0x00020213 }, /* R600  */
+    { 0x9402, 0x00020213, 0x00020213 }, /* R600  */
+    { 0x9403, 0x00020213, 0x00020213 }, /* R600  */
+    { 0x9405, 0x00020213, 0x00020213 }, /* R600  */
+    { 0x940A, 0x00020213, 0x00020213 }, /* R600  */
+    { 0x940B, 0x00020213, 0x00020213 }, /* R600  */
+    { 0x940F, 0x00020213, 0x00020213 }, /* R600  */
+    { 0, 0, 0 } /* End marker */
 };
 
 static struct RV6xxTMDSBMacro {
@@ -621,7 +793,9 @@ static struct RV6xxTMDSBMacro {
 } RV6xxTMDSBMacro[] = {
     { 0x94C1, 0x01030311, 0x10001A00, 0x01801015}, /* RV610 */
     { 0x94C3, 0x01030311, 0x10001A00, 0x01801015}, /* RV610 */
+    { 0x9501, 0x0533041A, 0x020010A0, 0x41002045}, /* RV670 */
     { 0x9505, 0x0533041A, 0x020010A0, 0x41002045}, /* RV670 */
+    { 0x950F, 0x0533041A, 0x020010A0, 0x41002045}, /* R680  */
     { 0x9587, 0x01030311, 0x10001C00, 0x01C01011}, /* RV630 */
     { 0x9588, 0x01030311, 0x10001C00, 0x01C01011}, /* RV630 */
     { 0x9589, 0x01030311, 0x10001C00, 0x01C01011}, /* RV630 */
@@ -629,15 +803,35 @@ static struct RV6xxTMDSBMacro {
 };
 
 static void
-TMDSBVoltageControl(struct rhdOutput *Output)
+TMDSBVoltageControl(struct rhdOutput *Output, DisplayModePtr Mode)
 {
+    struct rhdTMDSBPrivate *Private = (struct rhdTMDSBPrivate *) Output->Private;
     RHDPtr rhdPtr = RHDPTRI(Output);
     int i;
 
-    if (rhdPtr->ChipSet < RHD_RV610) { /* R5xx, RS690 and R600 */
+    /* IGP chipsets are rather special */
+    if (rhdPtr->ChipSet == RHD_RS690) {
+	RS690VoltageControl(Output, Mode);
+	return;
+    } else if (rhdPtr->ChipSet == RHD_RS600) {
+	RS600VoltageControl(Output, Mode);
+	return;
+    }
+
+    /* TEST_OUTPUT register - IGPs are handled above */
+    if (rhdPtr->ChipSet < RHD_RS600) /* r5xx */
+	RHDRegMask(Output, LVTMA_REG_TEST_OUTPUT, 0x00200000, 0x00200000);
+    else if (rhdPtr->ChipSet < RHD_RV670)
+	RHDRegMask(Output, LVTMA_REG_TEST_OUTPUT, 0x00100000, 0x00100000);
+
+    /* macro control values */
+    if (rhdPtr->ChipSet < RHD_RV610) { /* R5xx and R600 */
 	for (i = 0; R5xxTMDSBMacro[i].Device; i++)
 	    if (R5xxTMDSBMacro[i].Device == rhdPtr->PciDeviceID) {
-		RHDRegWrite(Output, LVTMA_MACRO_CONTROL, R5xxTMDSBMacro[i].Macro);
+		if (!Private->RunsDualLink)
+		    RHDRegWrite(Output, LVTMA_MACRO_CONTROL, R5xxTMDSBMacro[i].MacroSingle);
+		else
+		    RHDRegWrite(Output, LVTMA_MACRO_CONTROL, R5xxTMDSBMacro[i].MacroDual);
 		return;
 	    }
 
@@ -669,19 +863,14 @@ TMDSBVoltageControl(struct rhdOutput *Output)
  *
  */
 static void
-TMDSBSet(struct rhdOutput *Output)
+TMDSBSet(struct rhdOutput *Output, DisplayModePtr Mode)
 {
     RHDPtr rhdPtr = RHDPTRI(Output);
+    struct rhdTMDSBPrivate *Private = (struct rhdTMDSBPrivate *) Output->Private;
 
     RHDFUNC(Output);
 
     RHDRegMask(Output, LVTMA_MODE, 0x00000001, 0x00000001); /* select TMDS */
-    if (rhdPtr->ChipSet < RHD_RS600) /* r5xx */
-	RHDRegMask(Output, LVTMA_REG_TEST_OUTPUT, 0x00200000, 0x00200000);
-    else if ((rhdPtr->ChipSet == RHD_RS600) || (rhdPtr->ChipSet == RHD_RS690))
-	RHDRegWrite(Output, LVTMA_REG_TEST_OUTPUT, 0x01120000);
-    else if (rhdPtr->ChipSet < RHD_RV670)
-	RHDRegMask(Output, LVTMA_REG_TEST_OUTPUT, 0x00100000, 0x00100000);
 
     /* Clear out some HPD events first: this should be under driver control. */
     RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0, 0x0000000C);
@@ -689,16 +878,13 @@ TMDSBSet(struct rhdOutput *Output)
     RHDRegMask(Output, LVTMA_CNTL, 0, 0x00000010);
 
     /* Disable the transmitter */
-    if (rhdPtr->ChipSet < RHD_RS600)
-	RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x00001D1F);
-    else
-	RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x00003E3E);
+    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x00003E3E);
 
     /* Disable bit reduction and reset temporal dither */
     RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0, 0x00010101);
-    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0x02000000, 0x02000000);
+    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, LVTMA_DITHER_RESET_BIT, LVTMA_DITHER_RESET_BIT);
     usleep(2);
-    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0, 0x02000000);
+    RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0, LVTMA_DITHER_RESET_BIT);
     RHDRegMask(Output, LVTMA_BIT_DEPTH_CONTROL, 0, 0xF0000000); /* not documented */
 
     /* reset phase on vsync and use RGB */
@@ -707,9 +893,15 @@ TMDSBSet(struct rhdOutput *Output)
     /* Select CRTC, select syncA, no stereosync */
     RHDRegMask(Output, LVTMA_SOURCE_SELECT, Output->Crtc->Id, 0x00010101);
 
-    /* Single link, for now */
     RHDRegWrite(Output, LVTMA_COLOR_FORMAT, 0);
-    RHDRegMask(Output, LVTMA_CNTL, 0, 0x01000000);
+
+    if (Mode->SynthClock > 165000) {
+	RHDRegMask(Output, LVTMA_CNTL, 0x01000000, 0x01000000);
+	Private->RunsDualLink = TRUE; /* for TRANSMITTER_ENABLE in TMDSBPower */
+    } else {
+	RHDRegMask(Output, LVTMA_CNTL, 0, 0x01000000);
+	Private->RunsDualLink = FALSE;
+    }
 
     if (rhdPtr->ChipSet > RHD_R600) /* Rv6xx: disable split mode */
 	RHDRegMask(Output, LVTMA_CNTL, 0, 0x20000000);
@@ -720,18 +912,19 @@ TMDSBSet(struct rhdOutput *Output)
     /* DC balancer enable */
     RHDRegMask(Output, LVTMA_DCBALANCER_CONTROL, 0x00000001, 0x00000001);
 
-    TMDSBVoltageControl(Output);
+    TMDSBVoltageControl(Output, Mode);
 
     /* use IDCLK */
     RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0, 0x00000010);
-    /* coherent mode */
-    RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0, 0x10000000);
-    /* LVTMA only: use clock selected by previous write */
+    /* LVTMA only: use clock selected by next write */
     RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0x20000000, 0x20000000);
+    /* coherent mode */
+    RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL,
+	       Private->Coherent ? 0 : 0x10000000, 0x10000000);
     /* clear LVDS clock pattern */
     RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0, 0x03FF0000);
 
-    /* reset transmitter */
+    /* reset transmitter pll */
     RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0x00000002, 0x00000002);
     usleep(2);
     RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0, 0x00000002);
@@ -751,6 +944,7 @@ static void
 TMDSBPower(struct rhdOutput *Output, int Power)
 {
     RHDPtr rhdPtr = RHDPTRI(Output);
+    struct rhdTMDSBPrivate *Private = (struct rhdTMDSBPrivate *) Output->Private;
 
     RHDFUNC(Output);
 
@@ -759,29 +953,25 @@ TMDSBPower(struct rhdOutput *Output, int Power)
     switch (Power) {
     case RHD_POWER_ON:
 	RHDRegMask(Output, LVTMA_CNTL, 0x00000001, 0x00000001);
-	if (rhdPtr->ChipSet < RHD_RS600)
-	    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0x0000001F, 0x0000001F);
+
+	if (Private->RunsDualLink)
+	    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0x00003E3E,0x00003E3E);
 	else
-	    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0x0000003E, 0x0000003E);
+	    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0x0000003E, 0x00003E3E);
+
 	RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0x00000001, 0x00000001);
 	usleep(2);
 	RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0, 0x00000002);
 	return;
     case RHD_POWER_RESET:
-	if (rhdPtr->ChipSet < RHD_RS600)
-	    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x0000001F);
-	else
-	    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x0000003E);
+	RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x00003E3E);
 	return;
     case RHD_POWER_SHUTDOWN:
     default:
 	RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0x00000002, 0x00000002);
 	usleep(2);
 	RHDRegMask(Output, LVTMA_TRANSMITTER_CONTROL, 0, 0x00000001);
-	if (rhdPtr->ChipSet < RHD_RS600)
-	    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x0000001F);
-	else
-	    RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x0000003E);
+	RHDRegMask(Output, LVTMA_TRANSMITTER_ENABLE, 0, 0x00003E3E);
 	RHDRegMask(Output, LVTMA_CNTL, 0, 0x00000001);
 	return;
     }
@@ -884,7 +1074,7 @@ RHDLVTMAInit(RHDPtr rhdPtr, CARD8 Type)
     RHDFUNC(rhdPtr);
 
     /* Stop weird connector types */
-    if ((Type != RHD_CONNECTOR_PANEL) && (Type != RHD_CONNECTOR_DVI)) {
+    if ((Type != RHD_CONNECTOR_PANEL) && (Type != RHD_CONNECTOR_DVI) && (Type != RHD_CONNECTOR_DVI_SINGLE)) {
 	xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR, "%s: unhandled connector type:"
 		   " %d\n", __func__, Type);
 	return NULL;
@@ -909,6 +1099,8 @@ RHDLVTMAInit(RHDPtr rhdPtr, CARD8 Type)
 
 	Output->Private = LVDSInfoRetrieve(rhdPtr);
     } else {
+	struct rhdTMDSBPrivate *Private = xnfcalloc(sizeof(struct rhdTMDSBPrivate), 1);
+
 	Output->Name = "TMDS B";
 
 	Output->ModeValid = TMDSBModeValid;
@@ -917,7 +1109,10 @@ RHDLVTMAInit(RHDPtr rhdPtr, CARD8 Type)
 	Output->Save = TMDSBSave;
 	Output->Restore = TMDSBRestore;
 
-	Output->Private = xnfcalloc(sizeof(struct rhdTMDSBPrivate), 1);
+	Output->Private = Private;
+
+	Private->RunsDualLink = FALSE;
+	Private->Coherent = TRUE;
     }
 
     return Output;

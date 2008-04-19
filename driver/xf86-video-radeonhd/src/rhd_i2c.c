@@ -1,8 +1,8 @@
 /*
- * Copyright 2007  Egbert Eich   <eich@novell.com>
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
+ * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007, 2008  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -178,7 +178,84 @@ enum _rhdRS69I2CBits {
     RS69_DC_I2C_SW_NACK1      = (0x1 << 13)
 };
 
+/* RV620 */
+enum rv620I2CBits {
+    /* GENERIC_I2C_CONTROL */
+    RV62_DC_I2C_GO    = (0x1 << 0),
+    RV62_GENERIC_I2C_GO       = (0x1 << 0),
+    RV62_GENERIC_I2C_SOFT_RESET       = (0x1 << 1),
+    RV62_GENERIC_I2C_SEND_RESET       = (0x1 << 2),
+    /* GENERIC_I2C_INTERRUPT_CONTROL */
+    RV62_GENERIC_I2C_DONE_INT         = (0x1 << 0),
+    RV62_GENERIC_I2C_DONE_ACK         = (0x1 << 1),
+    RV62_GENERIC_I2C_DONE_MASK        = (0x1 << 2),
+    /* GENERIC_I2C_STATUS */
+    RV62_GENERIC_I2C_STATUS_BIT       = (0xf << 0),
+    RV62_GENERIC_I2C_DONE     = (0x1 << 4),
+    RV62_GENERIC_I2C_ABORTED  = (0x1 << 5),
+    RV62_GENERIC_I2C_TIMEOUT  = (0x1 << 6),
+    RV62_GENERIC_I2C_STOPPED_ON_NACK  = (0x1 << 9),
+    RV62_GENERIC_I2C_NACK     = (0x1 << 10),
+    /* GENERIC_I2C_SPEED */
+    RV62_GENERIC_I2C_THRESHOLD        = (0x3 << 0),
+    RV62_GENERIC_I2C_DISABLE_FILTER_DURING_STALL      = (0x1 << 4),
+    RV62_GENERIC_I2C_PRESCALE         = (0xffff << 16),
+    /* GENERIC_I2C_SETUP */
+    RV62_GENERIC_I2C_DATA_DRIVE_EN    = (0x1 << 0),
+    RV62_GENERIC_I2C_DATA_DRIVE_SEL   = (0x1 << 1),
+    RV62_GENERIC_I2C_CLK_DRIVE_EN     = (0x1 << 7),
+    RV62_GENERIC_I2C_INTRA_BYTE_DELAY         = (0xff << 8),
+    RV62_GENERIC_I2C_TIME_LIMIT       = (0xff << 24),
+    /* GENERIC_I2C_TRANSACTION */
+    RV62_GENERIC_I2C_RW       = (0x1 << 0),
+    RV62_GENERIC_I2C_STOP_ON_NACK     = (0x1 << 8),
+    RV62_GENERIC_I2C_ACK_ON_READ      = (0x1 << 9),
+    RV62_GENERIC_I2C_START    = (0x1 << 12),
+    RV62_GENERIC_I2C_STOP     = (0x1 << 13),
+    RV62_GENERIC_I2C_COUNT    = (0xf << 16),
+    /* GENERIC_I2C_DATA */
+    RV62_GENERIC_I2C_DATA_RW  = (0x1 << 0),
+    RV62_GENERIC_I2C_DATA_BIT         = (0xff << 8),
+    RV62_GENERIC_I2C_INDEX    = (0xf << 16),
+    RV62_GENERIC_I2C_INDEX_WRITE      = (0x1 << 31),
+    /* GENERIC_I2C_PIN_SELECTION */
+    RV62_GENERIC_I2C_SCL_PIN_SEL      = (0x7f << 0),
+    RV62_GENERIC_I2C_SDA_PIN_SEL      = (0x7f << 8)
+};
+
 /* R5xx */
+static Bool
+rhd5xxI2CSetupStatus(I2CBusPtr I2CPtr, int line)
+{
+    line &= 0xf;
+
+    RHDFUNC(I2CPtr);
+
+    switch (line) {
+	case 0:
+	    RHDRegMask(I2CPtr, R5_DC_GPIO_DDC1_MASK, 0x0, 0xffff);
+	    RHDRegMask(I2CPtr, R5_DC_GPIO_DDC1_A, 0x0, 0xffff);
+	    RHDRegMask(I2CPtr, R6_DC_GPIO_DDC1_EN, 0x0, 0xffff);
+	    break;
+	case 1:
+	    RHDRegMask(I2CPtr, R5_DC_GPIO_DDC2_MASK, 0x0, 0xffff);
+	    RHDRegMask(I2CPtr, R5_DC_GPIO_DDC2_A, 0x0, 0xffff);
+	    RHDRegMask(I2CPtr, R6_DC_GPIO_DDC2_EN, 0x0, 0xffff);
+	    break;
+	case 2:
+	    RHDRegMask(I2CPtr, R5_DC_GPIO_DDC3_MASK, 0x0, 0xffff);
+	    RHDRegMask(I2CPtr, R5_DC_GPIO_DDC3_A, 0x0, 0xffff);
+	    RHDRegMask(I2CPtr, R5_DC_GPIO_DDC3_EN, 0x0, 0xffff);
+	    break;
+	default:
+	    xf86DrvMsg(I2CPtr->scrnIndex,X_ERROR,
+		       "%s: Trying to initialize non-existent I2C line: %i\n",
+		       __func__,line);
+	    return FALSE;
+    }
+    return TRUE;
+}
+
 static Bool
 rhd5xxI2CStatus(I2CBusPtr I2CPtr)
 {
@@ -226,17 +303,23 @@ rhd5xxWriteReadChunk(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer,
 	       R5_DC_I2C_SW_WANTS_TO_USE_I2C,
 	       R5_DC_I2C_SW_WANTS_TO_USE_I2C);
 
-    RHDRegMask(I2CPtr, R5_DC_I2C_STATUS1, R5_DC_I2C_DONE
-	       | R5_DC_I2C_NACK
-	       | R5_DC_I2C_HALT, 0xff);
-    RHDRegMask(I2CPtr, R5_DC_I2C_RESET, R5_DC_I2C_SOFT_RESET, 0xffff);
-    RHDRegWrite(I2CPtr, R5_DC_I2C_RESET, 0);
+    if (!RHDRegRead(I2CPtr, R5_DC_I2C_ARBITRATION) & R5_DC_I2C_SW_CAN_USE_I2C) {
+	RHDDebug(I2CPtr->scrnIndex, "%s SW cannot use I2C line %i\n",__func__,line);
+	ret = FALSE;
+    } else {
 
-    RHDRegMask(I2CPtr, R5_DC_I2C_CONTROL1,
-	       (line  & 0x0f) << 16 | R5_DC_I2C_EN,
-	       R5_DC_I2C_PIN_SELECT | R5_DC_I2C_EN);
+	RHDRegMask(I2CPtr, R5_DC_I2C_STATUS1, R5_DC_I2C_DONE
+		   | R5_DC_I2C_NACK
+		   | R5_DC_I2C_HALT, 0xff);
+	RHDRegMask(I2CPtr, R5_DC_I2C_RESET, R5_DC_I2C_SOFT_RESET, 0xffff);
+	RHDRegWrite(I2CPtr, R5_DC_I2C_RESET, 0);
 
-    if (nWrite || !nRead) { /* special case for bus probing */
+	RHDRegMask(I2CPtr, R5_DC_I2C_CONTROL1,
+		   (line  & 0x0f) << 16 | R5_DC_I2C_EN,
+		   R5_DC_I2C_PIN_SELECT | R5_DC_I2C_EN);
+    }
+
+    if (ret && (nWrite || !nRead)) { /* special case for bus probing */
 	/*
 	 * chip can't just write the slave address without data.
 	 * Add a dummy byte.
@@ -314,7 +397,10 @@ rhd5xxWriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer, int nWrite, I2CByte *
      * the transaction after 15 bytes sending
      * a new offset.
      */
-    RHDFUNC(i2cDevPtr->pI2CBus);
+
+    I2CBusPtr I2CPtr = i2cDevPtr->pI2CBus;
+
+    RHDFUNC(I2CPtr);
 
     if (nWrite > 15 || (nRead > 15 && nWrite != 1)) {
 	xf86DrvMsg(i2cDevPtr->pI2CBus->scrnIndex,X_ERROR,
@@ -323,6 +409,8 @@ rhd5xxWriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer, int nWrite, I2CByte *
 		   __func__);
 	return FALSE;
     }
+    rhd5xxI2CSetupStatus(I2CPtr, ((rhdI2CPtr)(I2CPtr->DriverPrivate.ptr))->line);
+
     if (nRead > 15) {
 	I2CByte offset = *WriteBuffer;
 	while (nRead) {
@@ -366,38 +454,50 @@ rhdRS69I2CStatus(I2CBusPtr I2CPtr)
 static Bool
 rhdRS69I2CSetupStatus(I2CBusPtr I2CPtr, int line, int prescale)
 {
-    AtomBiosArgRec atomBiosArg;
     CARD32 ddc;
-    RHDPtr rhdPtr = RHDPTR(xf86Screens[I2CPtr->scrnIndex]);
+    unsigned int clk_line = 0; /* invalid clk register */
 
     RHDFUNC(I2CPtr);
 
-    atomBiosArg.val = line & 0xf;
-    if (ATOM_SUCCESS != RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
-					ATOM_GPIO_I2C_CLK_MASK,
-					&atomBiosArg))
-	return FALSE;
+#ifdef ATOM_BIOS
+    {
+	RHDPtr rhdPtr = RHDPTR(xf86Screens[I2CPtr->scrnIndex]);
+	AtomBiosArgRec atomBiosArg;
+
+	atomBiosArg.val = line & 0xf;
+	if (ATOM_SUCCESS != RHDAtomBiosFunc(rhdPtr->scrnIndex,
+					    rhdPtr->atomBIOS,
+					    ATOM_GPIO_I2C_CLK_MASK,
+					    &atomBiosArg))
+	    return FALSE;
+	clk_line = atomBiosArg.val;
+#endif /* ATOM_BIOS */
+
+	/* add SDVO handling later */
+	switch (clk_line) {
+	    case 0x1f90:
+		ddc = 0; /* ddc1 */
+		break;
+	    case 0x1f94: /* ddc2 */
+		ddc = 1;
+		break;
+	    case 0x1f98: /* ddc3 */
+		ddc = 2;
+		break;
+	    default:
+		xf86DrvMsg(I2CPtr->scrnIndex, X_ERROR, "Invalid ClkLine for DDC. "
+			   "AtomBIOS reported wrong or AtomBIOS unavailable\n");
+		return FALSE;
+	}
+
+	RHDDebug(I2CPtr->scrnIndex, "%s: DDC Line: %i val: %i port: 0x%x\n",
+		 __func__, line & 0xf, ddc, atomBiosArg.val);
+    }
 
     RHDRegMask(I2CPtr, 0x28, 0x200, 0x200);
     RHDRegMask(I2CPtr, RS69_DC_I2C_UNKNOWN_1, prescale << 16 | 0x2, 0xffff00ff);
-    /* add SDVO handling later */
-    switch (atomBiosArg.val) {
-	case 0x1f90:
-	    ddc = 0; /* ddc1 */
-	    break;
-	case 0x1f94: /* ddc2 */
-	    ddc = 1;
-	    break;
-	default:
-	    ddc = 2; /* ddc3 */
-	    break;
-    }
-    RHDDebug(I2CPtr->scrnIndex,"%s: DDC Line: %i val: %i port: 0x%x\n",
-	     __func__,line & 0xf, ddc, atomBiosArg.val);
-
-    RHDRegMask(I2CPtr, RS69_DC_I2C_CONTROL, ddc << 8, 0xff << 8);
     RHDRegWrite(I2CPtr, RS69_DC_I2C_DDC_SETUP_Q, 0x30000000);
-    RHDRegMask(I2CPtr, RS69_DC_I2C_CONTROL, (line & 0x3) << 16, 0xff << 16);
+    RHDRegMask(I2CPtr, RS69_DC_I2C_CONTROL, ((line & 0x3) << 16) | (ddc << 8), 0xffff00);
     RHDRegMask(I2CPtr, RS69_DC_I2C_INTERRUPT_CONTROL, 0x2, 0x2);
     RHDRegMask(I2CPtr, RS69_DC_I2C_UNKNOWN_2, 0x2, 0xff);
 
@@ -664,6 +764,201 @@ rhd6xxWriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer, int nWrite, I2CByte *
     return ret;
 }
 
+/* RV620 */
+static Bool
+rhdRV620I2CStatus(I2CBusPtr I2CPtr)
+{
+    int count = 5000;
+    volatile CARD32 val;
+
+    RHDFUNC(I2CPtr);
+
+    while (--count) {
+
+	usleep(10);
+	val = RHDRegRead(I2CPtr, RV62_GENERIC_I2C_STATUS);
+	RHDDebugVerb(I2CPtr->scrnIndex,1,
+		     "SW_STATUS: 0x%x %i\n",(unsigned int)val,count);
+	if (val & RV62_GENERIC_I2C_DONE)
+	    break;
+    }
+    RHDRegMask(I2CPtr, RV62_GENERIC_I2C_INTERRUPT_CONTROL, 0x2, 0xff);
+
+    if (!count
+	|| (val & (RV62_GENERIC_I2C_STOPPED_ON_NACK | RV62_GENERIC_I2C_NACK
+		| RV62_GENERIC_I2C_ABORTED | RV62_GENERIC_I2C_TIMEOUT)))
+	return FALSE; /* 2 */
+
+    return TRUE; /* 1 */
+}
+
+static  Bool
+rhdRV620I2CSetupStatus(I2CBusPtr I2CPtr, int line, int prescale)
+{
+    CARD32 reg_7d9c = 0; /* 0 is invalid */
+#ifdef ATOM_BIOS
+    RHDPtr rhdPtr = RHDPTRI(I2CPtr);
+    AtomBiosArgRec data;
+    int i = 0;
+    struct atomGPIOTable {
+	unsigned char line;
+	unsigned char pad;
+	unsigned short reg_7d9c;
+    } *table;
+
+    RHDFUNC(I2CPtr);
+
+    if (line > 3)
+	return FALSE;
+
+    data.val = 0x36;
+    if (RHDAtomBiosFunc(I2CPtr->scrnIndex,
+			rhdPtr->atomBIOS,
+			ATOMBIOS_GET_CODE_DATA_TABLE,
+			&data) == ATOM_SUCCESS) {
+
+	table = (struct atomGPIOTable *)data.CommandDataTable.loc;
+
+	while (i * sizeof(struct atomGPIOTable) < data.CommandDataTable.size) {
+
+	    if (table[i].line == line) {
+
+		reg_7d9c = table[i].reg_7d9c;
+
+		DEBUGP( ErrorF("Line[%i] = 0x%4.4x\n",line, reg_7d9c)) ;
+
+		break;
+	    }
+	    i++;
+	}
+    }
+    if (!reg_7d9c)
+#endif
+    {
+	CARD32 regList7d9c[] = { 0x1, 0x0203 };
+	if (line > 1)
+	    return FALSE;
+
+	reg_7d9c = regList7d9c[line];
+    }
+
+    RHDRegWrite(I2CPtr, 0x7e40, 0);
+    RHDRegWrite(I2CPtr, 0x7e50, 0);
+    RHDRegWrite(I2CPtr, 0x7e60, 0);
+    RHDRegWrite(I2CPtr, 0x7e20, 0);
+
+    RHDRegWrite(I2CPtr, RV62_GENERIC_I2C_PIN_SELECTION, reg_7d9c);
+    RHDRegMask(I2CPtr, RV62_GENERIC_I2C_SPEED,
+	    (prescale & 0xffff) << 16 | 0x02, 0xffff00ff);
+    RHDRegWrite(I2CPtr, RV62_GENERIC_I2C_SETUP, 0x30000000);
+    RHDRegMask(I2CPtr, RV62_GENERIC_I2C_INTERRUPT_CONTROL,
+	    RV62_GENERIC_I2C_DONE_ACK, RV62_GENERIC_I2C_DONE_ACK);
+
+    return TRUE;
+}
+
+static Bool
+rhdRV620Transaction(I2CDevPtr i2cDevPtr, Bool Write, I2CByte *Buffer, int count)
+{
+    I2CBusPtr I2CPtr = i2cDevPtr->pI2CBus;
+    I2CSlaveAddr slave = i2cDevPtr->SlaveAddr;
+    Bool Start = TRUE;
+
+    RHDFUNC(I2CPtr);
+
+#define MAX 8
+
+    while (count > 0) {
+	int num;
+	int idx = 0;
+	CARD32 data = 0;
+
+	if (count > MAX) {
+	    num = MAX;
+	    RHDRegMask(I2CPtr, RV62_GENERIC_I2C_TRANSACTION,
+		    (MAX - (((Start) ? 0 : 1))) << 16
+		    | RV62_GENERIC_I2C_STOP_ON_NACK
+		    | RV62_GENERIC_I2C_ACK_ON_READ
+		    | (Start ? RV62_GENERIC_I2C_START : 0)
+		    | (!Write ? RV62_GENERIC_I2C_RW : 0 ),
+		    0xFFFFFF);
+	} else {
+	    num = count;
+	    data = ( count - (((Start) ? 0 : 1)) ) << 16
+		| RV62_GENERIC_I2C_STOP_ON_NACK
+		|  RV62_GENERIC_I2C_STOP
+		| (Start ? RV62_GENERIC_I2C_START : 0)
+		| (!Write ? RV62_GENERIC_I2C_RW : 0);
+	    RHDRegMask(I2CPtr, RV62_GENERIC_I2C_TRANSACTION,
+		    data,
+		    0xFFFFFF);
+	}
+
+	if (Start) {
+	    data = RV62_GENERIC_I2C_INDEX_WRITE
+		| (((slave & 0xfe) | ( Write ? 0 : 1)) << 8)
+		| (idx++ << 16);
+	    RHDRegWrite(I2CPtr, RV62_GENERIC_I2C_DATA, data);
+	}
+
+	if (Write) {
+	    while (num--) {
+		data = RV62_GENERIC_I2C_INDEX_WRITE
+		    | (idx++ << 16)
+		    | *(Buffer++) << 8;
+		RHDRegWrite(I2CPtr, RV62_GENERIC_I2C_DATA, data);
+	    }
+
+	    RHDRegMask(I2CPtr, RV62_GENERIC_I2C_CONTROL,
+		    RV62_GENERIC_I2C_GO, RV62_GENERIC_I2C_GO);
+	    if (!rhdRV620I2CStatus(I2CPtr))
+		return FALSE;
+	} else {
+
+	    RHDRegMask(I2CPtr, RV62_GENERIC_I2C_CONTROL,
+		    RV62_GENERIC_I2C_GO, RV62_GENERIC_I2C_GO);
+	    if (!rhdRV620I2CStatus(I2CPtr))
+		return FALSE;
+
+	    RHDRegWrite(I2CPtr, RV62_GENERIC_I2C_DATA,
+		     RV62_GENERIC_I2C_INDEX_WRITE
+		     | (idx++ << 16)
+		     | RV62_GENERIC_I2C_RW);
+
+	    while (num--) {
+		data = RHDRegRead(I2CPtr, RV62_GENERIC_I2C_DATA);
+		*(Buffer++) = (CARD8)((data >> 8) & 0xff);
+	    }
+	}
+	Start = FALSE;
+	count -= MAX;
+    }
+
+    return TRUE;
+}
+
+static Bool
+rhdRV620WriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer, int nWrite, I2CByte *ReadBuffer, int nRead)
+{
+    I2CBusPtr I2CPtr = i2cDevPtr->pI2CBus;
+    rhdI2CPtr I2C = (rhdI2CPtr)I2CPtr->DriverPrivate.ptr;
+    CARD8 line = I2C->line;
+    int prescale = I2C->prescale;
+
+    RHDFUNC(I2C);
+
+    rhdRV620I2CSetupStatus(I2CPtr, line, prescale);
+
+    if (nWrite)
+	if (!rhdRV620Transaction(i2cDevPtr, TRUE, WriteBuffer, nWrite))
+	    return FALSE;
+    if (nRead)
+	if (!rhdRV620Transaction(i2cDevPtr, FALSE, ReadBuffer, nRead))
+	    return FALSE;
+
+    return TRUE;
+}
+
 static void
 rhdTearDownI2C(I2CBusPtr *I2C)
 {
@@ -700,10 +995,14 @@ rhdGetI2CPrescale(RHDPtr rhdPtr)
 			GET_DEFAULT_ENGINE_CLOCK, &atomBiosArg);
 	return (0x7f << 8)
 	    + (atomBiosArg.val / (4 * 0x7f * TARGET_HW_I2C_CLOCK));
+    } else if (rhdPtr->ChipSet < RHD_RV620) {
+	RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+			GET_REF_CLOCK, &atomBiosArg);
+	return (atomBiosArg.val / TARGET_HW_I2C_CLOCK);
     } else {
 	RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
 			GET_REF_CLOCK, &atomBiosArg);
-	    return (atomBiosArg.val / TARGET_HW_I2C_CLOCK);
+	return (atomBiosArg.val / (4 * TARGET_HW_I2C_CLOCK));
     }
 #else
     RHDFUNC(rhdPtr);
@@ -711,9 +1010,10 @@ rhdGetI2CPrescale(RHDPtr rhdPtr)
     if (rhdPtr->ChipSet < RHD_R600) {
 	return (0x7f << 8)
 	    + (DEFAULT_ENGINE_CLOCK) / (4 * 0x7f * TARGET_HW_I2C_CLOCK);
-    } else {
+    } else if {rhdPtr->ChipSet < RHD_RV620) {
 	return (DEFAULT_ENGINE_CLOCK / TARGET_HW_I2C_CLOCK);
-    }
+    } else
+	  return (DEFAULT_ENGINE_CLOCK / (4 * TARGET_HW_I2C_CLOCK));
 #endif
 }
 
@@ -783,10 +1083,12 @@ rhdInitI2C(int scrnIndex)
 	I2CPtr->scrnIndex = scrnIndex;
 	if (rhdPtr->ChipSet < RHD_RS600)
 	    I2CPtr->I2CWriteRead = rhd5xxWriteRead;
-	else if (rhdPtr->ChipSet < RHD_R600)
+	else if (RHDFamily(rhdPtr->ChipSet) == RHD_FAMILY_RS690)
 	    I2CPtr->I2CWriteRead = rhdRS69WriteRead;
-	else
+	else if (rhdPtr->ChipSet < RHD_RV620)
 	    I2CPtr->I2CWriteRead = rhd6xxWriteRead;
+	else
+	    I2CPtr->I2CWriteRead = rhdRV620WriteRead;
 	I2CPtr->I2CAddress = rhdI2CAddress;
 	I2CPtr->I2CStop = rhdI2CStop;
 

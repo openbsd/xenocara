@@ -44,20 +44,19 @@ struct rhdPLL {
 
     /* from defaults or from atom */
     CARD32 RefClock;
-    CARD32 OutMin;
-    CARD32 OutMax;
+    CARD32 IntMin;
+    CARD32 IntMax;
     CARD32 PixMin;
     CARD32 PixMax;
 
     ModeStatus (*Valid) (struct rhdPLL *PLL, CARD32 Clock);
     void (*Set) (struct rhdPLL *PLL, CARD16 ReferenceDivider,
-		 CARD16 FeedbackDivider, CARD8 FeedbackDividerFraction,
-		 CARD8 PostDivider);
+		 CARD16 FeedbackDivider, CARD8 PostDivider);
     void (*Power) (struct rhdPLL *PLL, int Power);
     void (*Save) (struct rhdPLL *PLL);
     void (*Restore) (struct rhdPLL *PLL);
 
-    /* For save/restore */
+    /* For save/restore: Move to a Private */
     Bool Stored;
     Bool StoreActive;
     CARD32 StoreRefDiv;
@@ -65,6 +64,12 @@ struct rhdPLL {
     CARD32 StorePostDiv;
     CARD32 StoreControl;
     CARD32 StoreSpreadSpectrum;
+
+    /* RV620/RV635/RS780 */
+    Bool StoreDCCGCLKOwner;
+    CARD32 StoreDCCGCLK;
+    CARD8 StoreScalerPostDiv;
+    CARD8 StoreSymPostDiv;
 };
 
 void RHDPLLsInit(RHDPtr rhdPtr);

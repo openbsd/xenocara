@@ -14,6 +14,11 @@
 
 @SET_MAKE@
 
+# Copyright (c) 2007 Hans Ulrich Niedermann <hun@n-dimensional.de>
+#
+# This Makefile fragment is free software; the author(s) give(s)
+# unlimited permission to copy, distribute and modify it.
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -38,9 +43,10 @@ build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/RadeonHD.am
-EXTRA_PROGRAMS = rhd_conntest$(EXEEXT)
+EXTRA_PROGRAMS = rhd_conntest$(EXEEXT) rhd_dump$(EXEEXT)
 @HAVE_PCI_PCI_H_TRUE@@HAVE_ZLIB_TRUE@noinst_PROGRAMS =  \
-@HAVE_PCI_PCI_H_TRUE@@HAVE_ZLIB_TRUE@	rhd_conntest$(EXEEXT)
+@HAVE_PCI_PCI_H_TRUE@@HAVE_ZLIB_TRUE@	rhd_conntest$(EXEEXT) \
+@HAVE_PCI_PCI_H_TRUE@@HAVE_ZLIB_TRUE@	rhd_dump$(EXEEXT)
 subdir = utils/conntest
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -55,6 +61,10 @@ nodist_rhd_conntest_OBJECTS =
 rhd_conntest_OBJECTS = $(am_rhd_conntest_OBJECTS) \
 	$(nodist_rhd_conntest_OBJECTS)
 rhd_conntest_DEPENDENCIES =
+am_rhd_dump_OBJECTS = rhd_dump.$(OBJEXT)
+nodist_rhd_dump_OBJECTS =
+rhd_dump_OBJECTS = $(am_rhd_dump_OBJECTS) $(nodist_rhd_dump_OBJECTS)
+rhd_dump_DEPENDENCIES =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -66,8 +76,9 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(rhd_conntest_SOURCES) $(nodist_rhd_conntest_SOURCES)
-DIST_SOURCES = $(rhd_conntest_SOURCES)
+SOURCES = $(rhd_conntest_SOURCES) $(nodist_rhd_conntest_SOURCES) \
+	$(rhd_dump_SOURCES) $(nodist_rhd_dump_SOURCES)
+DIST_SOURCES = $(rhd_conntest_SOURCES) $(rhd_dump_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -155,6 +166,8 @@ RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+USE_EXA_FALSE = @USE_EXA_FALSE@
+USE_EXA_TRUE = @USE_EXA_TRUE@
 VERSION = @VERSION@
 WARN_CFLAGS = @WARN_CFLAGS@
 XORG_CFLAGS = @XORG_CFLAGS@
@@ -221,6 +234,9 @@ AM_CPPFLAGS = -I$(top_srcdir)/src/AtomBios/includes
 rhd_conntest_SOURCES = rhd_conntest.c
 nodist_rhd_conntest_SOURCES = git_version.h
 rhd_conntest_LDADD = @PCIUTILS_LIBS@
+rhd_dump_SOURCES = rhd_dump.c
+nodist_rhd_dump_SOURCES = git_version.h
+rhd_dump_LDADD = @PCIUTILS_LIBS@
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -265,6 +281,9 @@ clean-noinstPROGRAMS:
 rhd_conntest$(EXEEXT): $(rhd_conntest_OBJECTS) $(rhd_conntest_DEPENDENCIES) 
 	@rm -f rhd_conntest$(EXEEXT)
 	$(LINK) $(rhd_conntest_LDFLAGS) $(rhd_conntest_OBJECTS) $(rhd_conntest_LDADD) $(LIBS)
+rhd_dump$(EXEEXT): $(rhd_dump_OBJECTS) $(rhd_dump_DEPENDENCIES) 
+	@rm -f rhd_dump$(EXEEXT)
+	$(LINK) $(rhd_dump_LDFLAGS) $(rhd_dump_OBJECTS) $(rhd_dump_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -273,6 +292,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rhd_conntest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rhd_dump.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

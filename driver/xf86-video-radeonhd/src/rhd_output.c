@@ -1,8 +1,8 @@
 /*
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Egbert Eich   <eich@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
+ * Copyright 2007, 2008  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -57,7 +57,7 @@ RHDOutputAdd(RHDPtr rhdPtr, struct rhdOutput *New)
  *
  */
 void
-RHDOutputsMode(RHDPtr rhdPtr, struct rhdCrtc *Crtc)
+RHDOutputsMode(RHDPtr rhdPtr, struct rhdCrtc *Crtc, DisplayModePtr Mode)
 {
     struct rhdOutput *Output = rhdPtr->Outputs;
 
@@ -65,7 +65,7 @@ RHDOutputsMode(RHDPtr rhdPtr, struct rhdCrtc *Crtc)
 
     while (Output) {
 	if (Output->Active && Output->Mode && (Output->Crtc == Crtc))
-	    Output->Mode(Output);
+	    Output->Mode(Output, Mode);
 
 	Output = Output->Next;
     }
@@ -166,5 +166,33 @@ RHDOutputsDestroy(RHDPtr rhdPtr)
 	xfree(Output);
 
 	Output = Next;
+    }
+}
+
+/*
+ *
+ */
+void
+RHDOutputPrintSensedType(struct rhdOutput *Output)
+{
+    struct { enum rhdSensedOutput type; char *name; } 
+    list[] = { { RHD_SENSED_NONE, "none" },
+	     { RHD_SENSED_VGA, "VGA" },
+	     { RHD_SENSED_DVI, "DVI" },
+	     { RHD_SENSED_TV_SVIDEO, "TV_SVIDEO"},
+	     { RHD_SENSED_TV_COMPOSITE, "TV_COMPOSITE" },
+	     { RHD_SENSED_TV_COMPONENT, "TV_COMPONENT" },
+	     { 0, NULL }
+    };
+    int i = 0;
+
+    while (list[i].name) {
+	if (list[i].type == Output->SensedType) {
+	    xf86DrvMsgVerb(Output->scrnIndex, X_INFO, 3,
+			   "%s: Sensed Output: %s\n",Output->Name,
+			   list[i].name);
+	    return;
+	}
+	i++;
     }
 }

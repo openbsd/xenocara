@@ -1,8 +1,8 @@
 /*
- * Copyright 2004-2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007       Matthias Hopf <mhopf@novell.com>
- * Copyright 2007       Egbert Eich   <eich@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2004-2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008 Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007, 2008 Egbert Eich   <eich@novell.com>
+ * Copyright 2007, 2008 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,17 +27,30 @@
 #define _RHD_OUTPUT_H
 
 /* Also needed for connector -> output mapping */
-typedef enum _rhdOutputType {
+typedef enum rhdOutputType {
     RHD_OUTPUT_NONE  = 0,
     RHD_OUTPUT_DAC_EXTERNAL = RHD_OUTPUT_NONE,
     RHD_OUTPUT_DACA,
     RHD_OUTPUT_DACB,
     RHD_OUTPUT_TMDSA,
     RHD_OUTPUT_LVTMA,
+    RHD_OUTPUT_DVO,
+    RHD_OUTPUT_KLDSKP_LVTMA,
+    RHD_OUTPUT_UNIPHYA,
+    RHD_OUTPUT_UNIPHYB,
     RHD_OUTPUT_TMDSB = RHD_OUTPUT_NONE,
     RHD_OUTPUT_LVDS = RHD_OUTPUT_NONE,
     RHD_OUTPUT_LVTMB = RHD_OUTPUT_NONE
 } rhdOutputType;
+
+typedef enum rhdSensedOutput {
+    RHD_SENSED_NONE = 0,
+    RHD_SENSED_VGA,
+    RHD_SENSED_DVI,
+    RHD_SENSED_TV_SVIDEO,
+    RHD_SENSED_TV_COMPOSITE,
+    RHD_SENSED_TV_COMPONENT
+} rhdSensedOutput;
 
 /*
  *
@@ -50,16 +63,19 @@ struct rhdOutput {
     int scrnIndex;
 
     char *Name;
-    enum _rhdOutputType Id;
+    enum rhdOutputType Id;
 
     Bool Active;
 
     struct rhdCrtc *Crtc;
     struct rhdConnector *Connector;
 
-    Bool (*Sense) (struct rhdOutput *Output, enum rhdConnectorType Type);
+    enum rhdSensedOutput SensedType;
+
+    enum rhdSensedOutput (*Sense) (struct rhdOutput *Output,
+				   enum rhdConnectorType Type);
     ModeStatus (*ModeValid) (struct rhdOutput *Output, DisplayModePtr Mode);
-    void (*Mode) (struct rhdOutput *Output);
+    void (*Mode) (struct rhdOutput *Output, DisplayModePtr Mode);
     void (*Power) (struct rhdOutput *Output, int Power);
     void (*Save) (struct rhdOutput *Output);
     void (*Restore) (struct rhdOutput *Output);
@@ -70,17 +86,19 @@ struct rhdOutput {
 };
 
 void RHDOutputAdd(RHDPtr rhdPtr, struct rhdOutput *Output);
-void RHDOutputsMode(RHDPtr rhdPtr, struct rhdCrtc *Crtc);
+void RHDOutputsMode(RHDPtr rhdPtr, struct rhdCrtc *Crtc, DisplayModePtr Mode);
 void RHDOutputsPower(RHDPtr rhdPtr, int Power);
 void RHDOutputsShutdownInactive(RHDPtr rhdPtr);
 void RHDOutputsSave(RHDPtr rhdPtr);
 void RHDOutputsRestore(RHDPtr rhdPtr);
 void RHDOutputsDestroy(RHDPtr rhdPtr);
+void RHDOutputPrintSensedType(struct rhdOutput *Output);
 
 /* output local functions. */
 struct rhdOutput *RHDDACAInit(RHDPtr rhdPtr);
 struct rhdOutput *RHDDACBInit(RHDPtr rhdPtr);
 struct rhdOutput *RHDTMDSAInit(RHDPtr rhdPtr);
 struct rhdOutput *RHDLVTMAInit(RHDPtr rhdPtr, CARD8 Type);
-
+struct rhdOutput *RHDDIGInit(RHDPtr rhdPtr,  enum rhdOutputType outputType, CARD8 ConnectorType);
+struct rhdOutput *RHDDDIAInit(RHDPtr rhdPtr, enum rhdOutputType outputType);
 #endif /* _RHD_OUTPUT_H */

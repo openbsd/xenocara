@@ -45,15 +45,94 @@
 #define PLL_CALIBRATE_WAIT 0x100000
 
 /*
- *
+ * Get gain, charge pump, loop filter and current bias.
+ * For R500, this is done in atombios by ASIC_RegistersInit
+ * Some data table in atom should've provided this information.
  */
-static ModeStatus
-PLLValid(struct rhdPLL *PLL, CARD32 Clock)
-{
-    RHDFUNC(PLL);
 
-    return MODE_OK;
+struct PLL_Control {
+    CARD16 FeedbackDivider; /* 0xFFFF/-1 is the endmarker here */
+    CARD32 Control;
+};
+
+/* From hardcoded values. */
+static struct PLL_Control RV610PLLControl[] =
+{
+    { 0x0049, 0x159F8704 },
+    { 0x006C, 0x159B8704 },
+    { 0xFFFF, 0x159EC704 }
+};
+
+/* Some tables are provided by atombios,
+ * it's just that they are hidden away deliberately and not exposed */
+static struct PLL_Control RV670PLLControl[] =
+{
+    { 0x004A, 0x159FC704 },
+    { 0x0067, 0x159BC704 },
+    { 0x00C4, 0x159EC704 },
+    { 0x00F4, 0x1593A704 },
+    { 0x0136, 0x1595A704 },
+    { 0x01A4, 0x1596A704 },
+    { 0x022C, 0x159CE504 },
+    { 0xFFFF, 0x1591E404 }
+};
+
+/*
+ * Used by PLLElectrical() for r5xx+ and by rv620/35 code.
+ */
+static CARD32
+PLLControlTableRetrieve(struct PLL_Control *Table, CARD16 FeedbackDivider)
+{
+    int i;
+
+    for (i = 0; Table[i].FeedbackDivider < 0xFFFF ; i++)
+	if (Table[i].FeedbackDivider >= FeedbackDivider)
+	    break;
+
+    return Table[i].Control;
 }
+
+/*
+ * Not used by rv620/35 code.
+ */
+static CARD32
+PLLElectrical(RHDPtr rhdPtr, CARD16 FeedbackDivider)
+{
+    switch (rhdPtr->ChipSet) {
+    case RHD_RV515:
+	if (rhdPtr->PciDeviceID == 0x7146)
+	    return 0x00120704;
+	else
+	    return 0;
+    case RHD_RV535:
+	if (rhdPtr->PciDeviceID == 0x71C1)
+	    return 0x00230704;
+	else
+	    return 0;
+    case RHD_RS600:
+    case RHD_RS690:
+    case RHD_RS740:
+	/* depending on MiscInfo also 0x00120004 */
+	return 0x00120704;
+    case RHD_R600:
+	return 0x01130704;
+    case RHD_RV610:
+    case RHD_RV630:
+    case RHD_M72:
+    case RHD_M74:
+    case RHD_M76:
+	return PLLControlTableRetrieve(RV610PLLControl, FeedbackDivider);
+    case RHD_RV670:
+    case RHD_R680:
+	return PLLControlTableRetrieve(RV670PLLControl, FeedbackDivider);
+    default:
+	return 0;
+    }
+}
+
+/*
+ * All R500s, RS6x0, R600, RV610 and RV630.
+ */
 
 /*
  *
@@ -117,7 +196,7 @@ PLL2Calibrate(struct rhdPLL *PLL)
  *
  */
 static void
-PLL1Power(struct rhdPLL *PLL, int Power)
+R500PLL1Power(struct rhdPLL *PLL, int Power)
 {
     RHDFUNC(PLL);
 
@@ -153,7 +232,7 @@ PLL1Power(struct rhdPLL *PLL, int Power)
  *
  */
 static void
-PLL2Power(struct rhdPLL *PLL, int Power)
+R500PLL2Power(struct rhdPLL *PLL, int Power)
 {
     RHDFUNC(PLL);
 
@@ -189,11 +268,12 @@ PLL2Power(struct rhdPLL *PLL, int Power)
  *
  */
 static void
-PLL1SetLow(struct rhdPLL *PLL, CARD32 RefDiv, CARD32 FBDiv, CARD32 PostDiv,
-	   CARD32 Control)
+R500PLL1SetLow(struct rhdPLL *PLL, CARD32 RefDiv, CARD32 FBDiv, CARD32 PostDiv,
+	       CARD32 Control)
 {
     RHDRegWrite(PLL, EXT1_PPLL_REF_DIV_SRC, 0x01); /* XTAL */
     RHDRegWrite(PLL, EXT1_PPLL_POST_DIV_SRC, 0x00); /* source = reference */
+
     RHDRegWrite(PLL, EXT1_PPLL_UPDATE_LOCK, 0x01); /* lock */
 
     RHDRegWrite(PLL, EXT1_PPLL_REF_DIV, RefDiv);
@@ -231,11 +311,12 @@ PLL1SetLow(struct rhdPLL *PLL, CARD32 RefDiv, CARD32 FBDiv, CARD32 PostDiv,
  *
  */
 static void
-PLL2SetLow(struct rhdPLL *PLL, CARD32 RefDiv, CARD32 FBDiv, CARD32 PostDiv,
-	   CARD32 Control)
+R500PLL2SetLow(struct rhdPLL *PLL, CARD32 RefDiv, CARD32 FBDiv, CARD32 PostDiv,
+	       CARD32 Control)
 {
     RHDRegWrite(PLL, EXT2_PPLL_REF_DIV_SRC, 0x01); /* XTAL */
     RHDRegWrite(PLL, EXT2_PPLL_POST_DIV_SRC, 0x00); /* source = reference */
+
     RHDRegWrite(PLL, EXT2_PPLL_UPDATE_LOCK, 0x01); /* lock */
 
     RHDRegWrite(PLL, EXT2_PPLL_REF_DIV, RefDiv);
@@ -270,95 +351,11 @@ PLL2SetLow(struct rhdPLL *PLL, CARD32 RefDiv, CARD32 FBDiv, CARD32 PostDiv,
 }
 
 /*
- * Get gain, charge pump, loop filter and current bias.
- * For R500, this is done in atombios by ASIC_RegistersInit
- * Some data table in atom should've provided this information.
- */
-
-struct PLL_Control {
-    CARD16 FeedbackDivider; /* 0xFFFF/-1 is the endmarker here */
-    CARD32 Control;
-};
-
-/* From hardcoded values. */
-static struct PLL_Control RV610PLLControl[] =
-{
-    { 0x0049, 0x159F8704 },
-    { 0x006C, 0x159B8704 },
-    { 0xFFFF, 0x159EC704 }
-};
-
-/* Some tables are provided by atombios,
- * it's just that they are hidden away deliberately and not exposed */
-static struct PLL_Control RV670PLLControl[] =
-{
-    { 0x004A, 0x159FC704 },
-    { 0x0067, 0x159BC704 },
-    { 0x00C4, 0x159EC704 },
-    { 0x00F4, 0x1593A704 },
-    { 0x0136, 0x1595A704 },
-    { 0x01A4, 0x1596A704 },
-    { 0x022C, 0x159CE504 },
-    { 0xFFFF, 0x1591E404 }
-};
-
-/*
- *
- */
-static CARD32
-PLLControlTableRetrieve(struct PLL_Control *Table, CARD16 FeedbackDivider)
-{
-    int i;
-
-    for (i = 0; Table[i].FeedbackDivider == 0xFFFF; i++)
-	if (Table[i].FeedbackDivider >= FeedbackDivider)
-	    break;
-
-    return Table[i].Control;
-}
-
-/*
- *
- */
-static CARD32
-PLLElectrical(RHDPtr rhdPtr, CARD16 FeedbackDivider)
-{
-    switch (rhdPtr->ChipSet) {
-    case RHD_RV515:
-	if (rhdPtr->PciDeviceID == 0x7146)
-	    return 0x00120704;
-	else
-	    return 0;
-    case RHD_RV535:
-	if (rhdPtr->PciDeviceID == 0x71C1)
-	    return 0x00230704;
-	else
-	    return 0;
-    case RHD_RS600:
-    case RHD_RS690:
-	/* depending on MiscInfo also 0x00120004 */
-	return 0x00120704;
-    case RHD_R600:
-	return 0x01130704;
-    case RHD_RV610:
-    case RHD_RV630:
-    case RHD_M72:
-    case RHD_M74:
-    case RHD_M76:
-	return PLLControlTableRetrieve(RV610PLLControl, FeedbackDivider);
-    case RHD_RV670:
-	return PLLControlTableRetrieve(RV670PLLControl, FeedbackDivider);
-    default:
-	return 0;
-    }
-}
-
-/*
  *
  */
 static void
-PLL1Set(struct rhdPLL *PLL, CARD16 ReferenceDivider, CARD16 FeedbackDivider,
-	CARD8 FeedbackDividerFraction, CARD8 PostDivider)
+R500PLL1Set(struct rhdPLL *PLL, CARD16 ReferenceDivider,
+	    CARD16 FeedbackDivider, CARD8 PostDivider)
 {
     RHDPtr rhdPtr = RHDPTRI(PLL);
     CARD32 RefDiv, FBDiv, PostDiv, Control;
@@ -367,7 +364,7 @@ PLL1Set(struct rhdPLL *PLL, CARD16 ReferenceDivider, CARD16 FeedbackDivider,
 
     RefDiv = ReferenceDivider;
 
-    FBDiv = (FeedbackDivider << 16) | FeedbackDividerFraction;
+    FBDiv = FeedbackDivider << 16;
 
     if (rhdPtr->ChipSet > RHD_R600) { /* set up Feedbackdivider slip */
 	if (FeedbackDivider <= 0x24)
@@ -389,15 +386,15 @@ PLL1Set(struct rhdPLL *PLL, CARD16 ReferenceDivider, CARD16 FeedbackDivider,
     /* Disable Spread Spectrum */
     RHDRegMask(PLL, P1PLL_INT_SS_CNTL, 0, 0x00000001);
 
-    PLL1SetLow(PLL, RefDiv, FBDiv, PostDiv, Control);
+    R500PLL1SetLow(PLL, RefDiv, FBDiv, PostDiv, Control);
 }
 
 /*
  *
  */
 static void
-PLL2Set(struct rhdPLL *PLL, CARD16 ReferenceDivider, CARD16 FeedbackDivider,
-	CARD8 FeedbackDividerFraction, CARD8 PostDivider)
+R500PLL2Set(struct rhdPLL *PLL, CARD16 ReferenceDivider,
+	    CARD16 FeedbackDivider, CARD8 PostDivider)
 {
     RHDPtr rhdPtr = RHDPTRI(PLL);
     CARD32 RefDiv, FBDiv, PostDiv, Control;
@@ -406,7 +403,7 @@ PLL2Set(struct rhdPLL *PLL, CARD16 ReferenceDivider, CARD16 FeedbackDivider,
 
     RefDiv = ReferenceDivider;
 
-    FBDiv = (FeedbackDivider << 16) | FeedbackDividerFraction;
+    FBDiv = FeedbackDivider << 16;
 
     if (rhdPtr->ChipSet > RHD_R600) { /* set up Feedbackdivider slip */
 	if (FeedbackDivider <= 0x24)
@@ -428,14 +425,14 @@ PLL2Set(struct rhdPLL *PLL, CARD16 ReferenceDivider, CARD16 FeedbackDivider,
     /* Disable Spread Spectrum */
     RHDRegMask(PLL, P2PLL_INT_SS_CNTL, 0, 0x00000001);
 
-    PLL2SetLow(PLL, RefDiv, FBDiv, PostDiv, Control);
+    R500PLL2SetLow(PLL, RefDiv, FBDiv, PostDiv, Control);
 }
 
 /*
  *
  */
 static void
-PLL1Save(struct rhdPLL *PLL)
+R500PLL1Save(struct rhdPLL *PLL)
 {
     RHDFUNC(PLL);
 
@@ -453,7 +450,7 @@ PLL1Save(struct rhdPLL *PLL)
  *
  */
 static void
-PLL2Save(struct rhdPLL *PLL)
+R500PLL2Save(struct rhdPLL *PLL)
 {
     RHDFUNC(PLL);
 
@@ -471,7 +468,7 @@ PLL2Save(struct rhdPLL *PLL)
  *
  */
 static void
-PLL1Restore(struct rhdPLL *PLL)
+R500PLL1Restore(struct rhdPLL *PLL)
 {
     RHDFUNC(PLL);
 
@@ -482,8 +479,8 @@ PLL1Restore(struct rhdPLL *PLL)
     }
 
     if (PLL->StoreActive) {
-	PLL1SetLow(PLL, PLL->StoreRefDiv, PLL->StoreFBDiv,
-		   PLL->StorePostDiv, PLL->StoreControl);
+	R500PLL1SetLow(PLL, PLL->StoreRefDiv, PLL->StoreFBDiv,
+		       PLL->StorePostDiv, PLL->StoreControl);
 	RHDRegMask(PLL, P1PLL_INT_SS_CNTL,
 		   PLL->StoreSpreadSpectrum, 0x00000001);
     } else {
@@ -502,7 +499,7 @@ PLL1Restore(struct rhdPLL *PLL)
  *
  */
 static void
-PLL2Restore(struct rhdPLL *PLL)
+R500PLL2Restore(struct rhdPLL *PLL)
 {
     RHDFUNC(PLL);
 
@@ -513,8 +510,8 @@ PLL2Restore(struct rhdPLL *PLL)
     }
 
     if (PLL->StoreActive) {
-	PLL2SetLow(PLL, PLL->StoreRefDiv, PLL->StoreFBDiv,
-		   PLL->StorePostDiv, PLL->StoreControl);
+	R500PLL2SetLow(PLL, PLL->StoreRefDiv, PLL->StoreFBDiv,
+		       PLL->StorePostDiv, PLL->StoreControl);
 	RHDRegMask(PLL, P2PLL_INT_SS_CNTL,
 		   PLL->StoreSpreadSpectrum, 0x00000001);
     } else {
@@ -529,12 +526,500 @@ PLL2Restore(struct rhdPLL *PLL)
     }
 }
 
+/*
+ * RV620 and up
+ */
+
+/*
+ *
+ */
+#define RV620_DCCGCLK_RESET   0
+#define RV620_DCCGCLK_GRAB    1
+#define RV620_DCCGCLK_RELEASE 2
+
+/*
+ * I still have no idea what DCCG stands for and why it needs to hook off some
+ * pixelclock...
+ */
+static void
+RV620DCCGCLKSet(struct rhdPLL *PLL, int set)
+{
+    CARD32 tmp;
+
+    RHDFUNC(PLL);
+
+    switch(set) {
+    case RV620_DCCGCLK_GRAB:
+	if (PLL->Id == PLL_ID_PLL1)
+	    RHDRegMask(PLL, DCCG_DISP_CLK_SRCSEL, 0, 0x00000003);
+	else if (PLL->Id == PLL_ID_PLL2)
+	    RHDRegMask(PLL, DCCG_DISP_CLK_SRCSEL, 1, 0x00000003);
+	else
+	    RHDRegMask(PLL, DCCG_DISP_CLK_SRCSEL, 3, 0x00000003);
+	break;
+    case RV620_DCCGCLK_RELEASE:
+	tmp = RHDRegRead(PLL, DCCG_DISP_CLK_SRCSEL) & 0x03;
+
+	if ((PLL->Id == PLL_ID_PLL1) && (tmp == 0)) {
+	    /* set to other PLL or external */
+	    tmp = RHDRegRead(PLL, P2PLL_CNTL);
+	    if (!(tmp & 0x03) && /* powered and not in reset */
+		((tmp & 0x00300000) == 0x00300000)) /* calibrated and locked */
+		RHDRegMask(PLL, DCCG_DISP_CLK_SRCSEL, 1, 0x00000003);
+	    else
+		RHDRegMask(PLL, DCCG_DISP_CLK_SRCSEL, 3, 0x00000003);
+	} else if ((PLL->Id == PLL_ID_PLL2) && (tmp == 1)) {
+	    /* set to other PLL or external */
+	    tmp = RHDRegRead(PLL, P1PLL_CNTL);
+	    if (!(tmp & 0x03) && /* powered and not in reset */
+		((tmp & 0x00300000) == 0x00300000)) /* calibrated and locked */
+		RHDRegMask(PLL, DCCG_DISP_CLK_SRCSEL, 0, 0x00000003);
+	    else
+		RHDRegMask(PLL, DCCG_DISP_CLK_SRCSEL, 3, 0x00000003);
+
+	} /* no other action needs to be taken */
+	break;
+    case RV620_DCCGCLK_RESET:
+	tmp = RHDRegRead(PLL, DCCG_DISP_CLK_SRCSEL) & 0x03;
+
+	if (((PLL->Id == PLL_ID_PLL1) && (tmp == 0)) ||
+	    ((PLL->Id == PLL_ID_PLL2) && (tmp == 1)))
+	    RHDRegMask(PLL, DCCG_DISP_CLK_SRCSEL, 3, 0x00000003);
+	break;
+    default:
+	break;
+    }
+}
+
+/*
+ *
+ */
+static Bool
+RV620DCCGCLKAvailable(struct rhdPLL *PLL)
+{
+    CARD32 Dccg = RHDRegRead(PLL, DCCG_DISP_CLK_SRCSEL) & 0x03;
+
+    RHDFUNC(PLL);
+
+    if (Dccg & 0x02)
+	return TRUE;
+
+    if ((PLL->Id == PLL_ID_PLL1) && (Dccg == 0))
+	return TRUE;
+    if ((PLL->Id == PLL_ID_PLL2) && (Dccg == 1))
+	return TRUE;
+
+    return FALSE;
+}
+
+/*
+ *
+ */
+static void
+RV620PLL1Power(struct rhdPLL *PLL, int Power)
+{
+    RHDFUNC(PLL);
+
+    switch (Power) {
+    case RHD_POWER_ON:
+    {
+	Bool HasDccg = RV620DCCGCLKAvailable(PLL);
+
+	if (HasDccg)
+	    RV620DCCGCLKSet(PLL, RV620_DCCGCLK_RESET);
+
+	RHDRegMask(PLL, P1PLL_CNTL, 0, 0x02); /* Powah */
+	usleep(2);
+
+	PLL1Calibrate(PLL);
+
+	if (HasDccg)
+	    RV620DCCGCLKSet(PLL, RV620_DCCGCLK_GRAB);
+	return;
+    }
+    case RHD_POWER_RESET:
+	RV620DCCGCLKSet(PLL, RV620_DCCGCLK_RELEASE);
+
+	RHDRegMask(PLL, P1PLL_CNTL, 0x01, 0x01); /* Reset */
+	usleep(2);
+
+	RHDRegMask(PLL, P1PLL_CNTL, 0, 0x02); /* Powah */
+	usleep(2);
+
+	return;
+    case RHD_POWER_SHUTDOWN:
+    default:
+	RV620DCCGCLKSet(PLL, RV620_DCCGCLK_RELEASE);
+
+	RHDRegMask(PLL, P1PLL_CNTL, 0x01, 0x01); /* Reset */
+	usleep(2);
+
+	RHDRegMask(PLL, P1PLL_CNTL, 0x02, 0x02); /* Power down */
+	usleep(200);
+
+	return;
+    }
+}
+
+/*
+ *
+ */
+static void
+RV620PLL2Power(struct rhdPLL *PLL, int Power)
+{
+    RHDFUNC(PLL);
+
+    switch (Power) {
+    case RHD_POWER_ON:
+    {
+	Bool HasDccg = RV620DCCGCLKAvailable(PLL);
+
+	if (HasDccg)
+	    RV620DCCGCLKSet(PLL, RV620_DCCGCLK_RESET);
+
+	RHDRegMask(PLL, P2PLL_CNTL, 0, 0x02); /* Powah */
+	usleep(2);
+
+	PLL2Calibrate(PLL);
+
+	if (HasDccg)
+	    RV620DCCGCLKSet(PLL, RV620_DCCGCLK_GRAB);
+	return;
+    }
+    case RHD_POWER_RESET:
+	RV620DCCGCLKSet(PLL, RV620_DCCGCLK_RELEASE);
+
+	RHDRegMask(PLL, P2PLL_CNTL, 0x01, 0x01); /* Reset */
+	usleep(2);
+
+	RHDRegMask(PLL, P2PLL_CNTL, 0, 0x02); /* Powah */
+	usleep(2);
+
+	return;
+    case RHD_POWER_SHUTDOWN:
+    default:
+	RV620DCCGCLKSet(PLL, RV620_DCCGCLK_RELEASE);
+
+	RHDRegMask(PLL, P2PLL_CNTL, 0x01, 0x01); /* Reset */
+	usleep(2);
+
+	RHDRegMask(PLL, P2PLL_CNTL, 0x02, 0x02); /* Power down */
+	usleep(200);
+
+	return;
+    }
+}
+
+/*
+ *
+ */
+static void
+RV620PLL1SetLow(struct rhdPLL *PLL, CARD32 RefDiv, CARD32 FBDiv, CARD32 PostDiv,
+		CARD8 ScalerDiv, CARD8 SymPostDiv, CARD32 Control)
+{
+    /* switch to external */
+    RHDRegWrite(PLL, EXT1_PPLL_POST_DIV_SRC, 0);
+    RHDRegMask(PLL, P1PLL_DISP_CLK_CNTL, 0x00000200, 0x00000300);
+    RHDRegMask(PLL, EXT1_SYM_PPLL_POST_DIV, 0, 0x00000100);
+
+    RHDRegMask(PLL, P1PLL_CNTL, 0x00000001, 0x00000001); /* reset */
+    usleep(2);
+    RHDRegMask(PLL, P1PLL_CNTL, 0x00000002, 0x00000002); /* power down */
+    usleep(10);
+    RHDRegMask(PLL, P1PLL_CNTL, 0x00002000, 0x00002000); /* reset anti-glitch */
+
+    RHDRegWrite(PLL, EXT1_PPLL_CNTL, Control);
+
+    RHDRegMask(PLL, P1PLL_DISP_CLK_CNTL, ScalerDiv, 0x0000003F);
+
+    RHDRegWrite(PLL, EXT1_PPLL_UPDATE_LOCK, 1); /* lock */
+
+    RHDRegWrite(PLL, EXT1_PPLL_POST_DIV_SRC, 0x00000001);
+
+    RHDRegWrite(PLL, EXT1_PPLL_REF_DIV, RefDiv);
+    RHDRegWrite(PLL, EXT1_PPLL_FB_DIV, FBDiv);
+    RHDRegMask(PLL, EXT1_PPLL_POST_DIV, PostDiv, 0x0000007F);
+    RHDRegMask(PLL, EXT1_SYM_PPLL_POST_DIV, SymPostDiv, 0x0000007F);
+
+    usleep(10);
+    RHDRegWrite(PLL, EXT1_PPLL_UPDATE_LOCK, 0); /* unlock */
+
+    RHDRegMask(PLL, P1PLL_CNTL, 0, 0x00000002); /* power up */
+    usleep(10);
+    RHDRegMask(PLL, P1PLL_CNTL, 0, 0x00002000); /* undo reset anti-glitch */
+
+    PLL1Calibrate(PLL);
+
+    /* switch back to the pll */
+    RHDRegMask(PLL, P1PLL_DISP_CLK_CNTL, 0, 0x00000300);
+    RHDRegMask(PLL, EXT1_SYM_PPLL_POST_DIV, 0x00000100, 0x00000100);
+    RHDRegWrite(PLL, EXT1_PPLL_POST_DIV_SRC, 0x00000001);
+
+    RHDRegMask(PLL, P1PLL_CNTL, 0, 0x80000000); /* new and undocumented */
+}
+
+/*
+ *
+ */
+static void
+RV620PLL2SetLow(struct rhdPLL *PLL, CARD32 RefDiv, CARD32 FBDiv, CARD32 PostDiv,
+		CARD8 ScalerDiv, CARD8 SymPostDiv, CARD32 Control)
+{
+    /* switch to external */
+    RHDRegWrite(PLL, EXT2_PPLL_POST_DIV_SRC, 0);
+    RHDRegMask(PLL, P2PLL_DISP_CLK_CNTL, 0x00000200, 0x00000300);
+    RHDRegMask(PLL, EXT2_SYM_PPLL_POST_DIV, 0, 0x00000100);
+
+    RHDRegMask(PLL, P2PLL_CNTL, 0x00000001, 0x00000001); /* reset */
+    usleep(2);
+    RHDRegMask(PLL, P2PLL_CNTL, 0x00000002, 0x00000002); /* power down */
+    usleep(10);
+    RHDRegMask(PLL, P2PLL_CNTL, 0x00002000, 0x00002000); /* reset anti-glitch */
+
+    RHDRegWrite(PLL, EXT2_PPLL_CNTL, Control);
+
+    RHDRegMask(PLL, P2PLL_DISP_CLK_CNTL, ScalerDiv, 0x0000003F);
+
+    RHDRegWrite(PLL, EXT2_PPLL_UPDATE_LOCK, 1); /* lock */
+
+    RHDRegWrite(PLL, EXT2_PPLL_POST_DIV_SRC, 0x00000001);
+
+    RHDRegWrite(PLL, EXT2_PPLL_REF_DIV, RefDiv);
+    RHDRegWrite(PLL, EXT2_PPLL_FB_DIV, FBDiv);
+    RHDRegMask(PLL, EXT2_PPLL_POST_DIV, PostDiv, 0x0000007F);
+    RHDRegMask(PLL, EXT2_SYM_PPLL_POST_DIV, SymPostDiv, 0x0000007F);
+
+    usleep(10);
+    RHDRegWrite(PLL, EXT2_PPLL_UPDATE_LOCK, 0); /* unlock */
+
+    RHDRegMask(PLL, P2PLL_CNTL, 0, 0x00000002); /* power up */
+    usleep(10);
+    RHDRegMask(PLL, P2PLL_CNTL, 0, 0x00002000); /* undo reset anti-glitch */
+
+    PLL2Calibrate(PLL);
+
+    /* switch back to the pll */
+    RHDRegMask(PLL, P2PLL_DISP_CLK_CNTL, 0, 0x00000300);
+    RHDRegMask(PLL, EXT2_SYM_PPLL_POST_DIV, 0x00000100, 0x00000100);
+    RHDRegWrite(PLL, EXT2_PPLL_POST_DIV_SRC, 0x00000001);
+
+    RHDRegMask(PLL, P2PLL_CNTL, 0, 0x80000000); /* new and undocumented */
+}
+
+/*
+ *
+ */
+static void
+RV620PLL1Set(struct rhdPLL *PLL, CARD16 ReferenceDivider,
+	     CARD16 FeedbackDivider, CARD8 PostDivider)
+{
+    Bool HasDccg = RV620DCCGCLKAvailable(PLL);
+    CARD32 RefDiv, FBDiv, PostDiv, Control;
+    CARD8 ScalerDiv, SymPostDiv;
+
+    RHDFUNC(PLL);
+
+    if (HasDccg)
+	RV620DCCGCLKSet(PLL, RV620_DCCGCLK_RESET);
+
+    /* Disable Spread Spectrum */
+    RHDRegMask(PLL, P1PLL_INT_SS_CNTL, 0, 0x00000001);
+
+    RefDiv = ReferenceDivider;
+
+    FBDiv = RHDRegRead(PLL, EXT1_PPLL_FB_DIV) & ~0x07FF003F;
+    FBDiv |= ((FeedbackDivider << 16) | 0x0030) & 0x07FF003F;
+
+    PostDiv = RHDRegRead(PLL, EXT1_PPLL_POST_DIV) & ~0x0000007F;
+    PostDiv |= PostDivider & 0x0000007F;
+
+    /* introduce flags for this, like on unichrome */
+    ScalerDiv = 2; /* scaler post divider, 4 for UPDP */
+
+    SymPostDiv = PostDivider & 0x0000007F;
+
+    Control = PLLControlTableRetrieve(RV670PLLControl, FeedbackDivider);
+
+    RV620PLL1SetLow(PLL, RefDiv, FBDiv, PostDiv, ScalerDiv, SymPostDiv,
+		    Control);
+
+    if (HasDccg)
+	RV620DCCGCLKSet(PLL, RV620_DCCGCLK_GRAB);
+}
+
+/*
+ *
+ */
+static void
+RV620PLL2Set(struct rhdPLL *PLL, CARD16 ReferenceDivider,
+	     CARD16 FeedbackDivider, CARD8 PostDivider)
+{
+    Bool HasDccg = RV620DCCGCLKAvailable(PLL);
+    CARD32 RefDiv, FBDiv, PostDiv, Control;
+    CARD8 ScalerDiv, SymPostDiv;
+
+    RHDFUNC(PLL);
+
+    if (HasDccg)
+	RV620DCCGCLKSet(PLL, RV620_DCCGCLK_RESET);
+
+    /* Disable Spread Spectrum */
+    RHDRegMask(PLL, P2PLL_INT_SS_CNTL, 0, 0x00000001);
+
+    RefDiv = ReferenceDivider;
+
+    FBDiv = RHDRegRead(PLL, EXT2_PPLL_FB_DIV) & ~0x07FF003F;
+    FBDiv |= ((FeedbackDivider << 16) | 0x0030) & 0x07FF003F;
+
+    PostDiv = RHDRegRead(PLL, EXT2_PPLL_POST_DIV) & ~0x0000007F;
+    PostDiv |= PostDivider & 0x0000007F;
+
+    /* introduce flags for this, like on unichrome */
+    ScalerDiv = 2; /* scaler post divider, 4 for UPDP */
+
+    SymPostDiv = PostDivider & 0x0000007F;
+
+    Control = PLLControlTableRetrieve(RV670PLLControl, FeedbackDivider);
+
+    RV620PLL2SetLow(PLL, RefDiv, FBDiv, PostDiv, ScalerDiv, SymPostDiv,
+		    Control);
+
+    if (HasDccg)
+	RV620DCCGCLKSet(PLL, RV620_DCCGCLK_GRAB);
+}
+
+/*
+ *
+ */
+static void
+RV620PLL1Save(struct rhdPLL *PLL)
+{
+    RHDFUNC(PLL);
+
+    PLL->StoreActive = !(RHDRegRead(PLL, P1PLL_CNTL) & 0x03);
+    PLL->StoreRefDiv = RHDRegRead(PLL, EXT1_PPLL_REF_DIV);
+    PLL->StoreFBDiv = RHDRegRead(PLL, EXT1_PPLL_FB_DIV);
+    PLL->StorePostDiv = RHDRegRead(PLL, EXT1_PPLL_POST_DIV);
+    PLL->StoreControl = RHDRegRead(PLL, EXT1_PPLL_CNTL);
+    PLL->StoreSpreadSpectrum = RHDRegRead(PLL, P1PLL_INT_SS_CNTL);
+
+    PLL->StoreScalerPostDiv = RHDRegRead(PLL, P1PLL_DISP_CLK_CNTL) & 0x003F;
+    PLL->StoreSymPostDiv = RHDRegRead(PLL, EXT1_SYM_PPLL_POST_DIV) & 0x007F;
+
+    PLL->StoreDCCGCLKOwner = RV620DCCGCLKAvailable(PLL);
+    if (PLL->StoreDCCGCLKOwner)
+	PLL->StoreDCCGCLK = RHDRegRead(PLL, DCCG_DISP_CLK_SRCSEL);
+    else
+	PLL->StoreDCCGCLK = 0;
+
+    PLL->Stored = TRUE;
+}
+
+/*
+ *
+ */
+static void
+RV620PLL2Save(struct rhdPLL *PLL)
+{
+    RHDFUNC(PLL);
+
+    PLL->StoreActive = !(RHDRegRead(PLL, P2PLL_CNTL) & 0x03);
+    PLL->StoreRefDiv = RHDRegRead(PLL, EXT2_PPLL_REF_DIV);
+    PLL->StoreFBDiv = RHDRegRead(PLL, EXT2_PPLL_FB_DIV);
+    PLL->StorePostDiv = RHDRegRead(PLL, EXT2_PPLL_POST_DIV);
+    PLL->StoreControl = RHDRegRead(PLL, EXT2_PPLL_CNTL);
+    PLL->StoreSpreadSpectrum = RHDRegRead(PLL, P2PLL_INT_SS_CNTL);
+
+    PLL->StoreScalerPostDiv = RHDRegRead(PLL, P2PLL_DISP_CLK_CNTL) & 0x003F;
+    PLL->StoreSymPostDiv = RHDRegRead(PLL, EXT2_SYM_PPLL_POST_DIV) & 0x007F;
+
+    PLL->StoreDCCGCLKOwner = RV620DCCGCLKAvailable(PLL);
+    if (PLL->StoreDCCGCLKOwner)
+	PLL->StoreDCCGCLK = RHDRegRead(PLL, DCCG_DISP_CLK_SRCSEL);
+    else
+	PLL->StoreDCCGCLK = 0;
+
+    PLL->Stored = TRUE;
+}
+
+/*
+ *
+ */
+static void
+RV620PLL1Restore(struct rhdPLL *PLL)
+{
+    RHDFUNC(PLL);
+
+    if (PLL->StoreDCCGCLKOwner)
+	RHDRegMask(PLL, DCCG_DISP_CLK_SRCSEL, 0x03, 0x00000003);
+
+    if (PLL->StoreActive) {
+	RV620PLL1SetLow(PLL, PLL->StoreRefDiv, PLL->StoreFBDiv,
+			PLL->StorePostDiv, PLL->StoreScalerPostDiv,
+			PLL->StoreSymPostDiv, PLL->StoreControl);
+	RHDRegMask(PLL, P1PLL_INT_SS_CNTL,
+		   PLL->StoreSpreadSpectrum, 0x00000001);
+    } else {
+	PLL->Power(PLL, RHD_POWER_SHUTDOWN);
+
+	/* lame attempt at at least restoring the old values */
+	RHDRegWrite(PLL, EXT1_PPLL_REF_DIV, PLL->StoreRefDiv);
+	RHDRegWrite(PLL, EXT1_PPLL_FB_DIV, PLL->StoreFBDiv);
+	RHDRegWrite(PLL, EXT1_PPLL_POST_DIV, PLL->StorePostDiv);
+	RHDRegWrite(PLL, EXT1_PPLL_CNTL, PLL->StoreControl);
+	RHDRegMask(PLL, P1PLL_DISP_CLK_CNTL, PLL->StoreScalerPostDiv, 0x003F);
+	RHDRegMask(PLL, EXT1_SYM_PPLL_POST_DIV, PLL->StoreSymPostDiv, 0x007F);
+	RHDRegWrite(PLL, P1PLL_INT_SS_CNTL, PLL->StoreSpreadSpectrum);
+    }
+
+    if (PLL->StoreDCCGCLKOwner)
+	RHDRegWrite(PLL, DCCG_DISP_CLK_SRCSEL, PLL->StoreDCCGCLK);
+}
+
+/*
+ *
+ */
+static void
+RV620PLL2Restore(struct rhdPLL *PLL)
+{
+    RHDFUNC(PLL);
+
+    if (PLL->StoreDCCGCLKOwner)
+	RHDRegMask(PLL, DCCG_DISP_CLK_SRCSEL, 0x03, 0x00000003);
+
+    if (PLL->StoreActive) {
+	RV620PLL2SetLow(PLL, PLL->StoreRefDiv, PLL->StoreFBDiv,
+			PLL->StorePostDiv, PLL->StoreScalerPostDiv,
+			PLL->StoreSymPostDiv, PLL->StoreControl);
+	RHDRegMask(PLL, P2PLL_INT_SS_CNTL,
+		   PLL->StoreSpreadSpectrum, 0x00000001);
+    } else {
+	PLL->Power(PLL, RHD_POWER_SHUTDOWN);
+
+	/* lame attempt at at least restoring the old values */
+	RHDRegWrite(PLL, EXT2_PPLL_REF_DIV, PLL->StoreRefDiv);
+	RHDRegWrite(PLL, EXT2_PPLL_FB_DIV, PLL->StoreFBDiv);
+	RHDRegWrite(PLL, EXT2_PPLL_POST_DIV, PLL->StorePostDiv);
+	RHDRegWrite(PLL, EXT2_PPLL_CNTL, PLL->StoreControl);
+	RHDRegMask(PLL, P2PLL_DISP_CLK_CNTL, PLL->StoreScalerPostDiv, 0x003F);
+	RHDRegMask(PLL, EXT2_SYM_PPLL_POST_DIV, PLL->StoreSymPostDiv, 0x007F);
+	RHDRegWrite(PLL, P2PLL_INT_SS_CNTL, PLL->StoreSpreadSpectrum);
+    }
+
+    if (PLL->StoreDCCGCLKOwner)
+	RHDRegWrite(PLL, DCCG_DISP_CLK_SRCSEL, PLL->StoreDCCGCLK);
+}
+
 /* Some defaults for when we don't have this info */
-#define RHD_PLL_DEFAULT_REFERENCE    27000 /* it's right there on the card */
-#define RHD_PLL_DEFAULT_PLLOUT_MIN  648000 /* experimental. */
-#define RHD_PLL_DEFAULT_PLLOUT_MAX 1100000 /* Lowest value seen so far */
-#define RHD_PLL_DEFAULT_MIN          16000 /* guess */
-#define RHD_PLL_DEFAULT_MAX         400000 /* 400Mhz modes... hrm */
+/* XTAL is visible on the cards */
+#define RHD_PLL_REFERENCE_DEFAULT            27000
+/* these required quite some testing */
+#define RHD_R500_PLL_INTERNAL_MIN_DEFAULT   648000
+#define RHD_RV620_PLL_INTERNAL_MIN_DEFAULT  702000
+/* Lowest value seen so far */
+#define RHD_PLL_INTERNAL_MAX_DEFAULT       1100000
+#define RHD_PLL_MIN_DEFAULT                  16000 /* guess */
+#define RHD_PLL_MAX_DEFAULT                 400000 /* 400Mhz modes... hrm */
 
 enum pllComp {
     PLL_NONE,
@@ -594,31 +1079,40 @@ void
 RHDPLLsInit(RHDPtr rhdPtr)
 {
     struct rhdPLL *PLL;
-    CARD32 RefClock, OutMin, OutMax, PixMin, PixMax;
+    CARD32 RefClock, IntMin, IntMax, PixMin, PixMax;
 
     RHDFUNC(rhdPtr);
 
     /* Retrieve the internal PLL frequency limits*/
-    RefClock = RHD_PLL_DEFAULT_REFERENCE;
-    OutMin = RHD_PLL_DEFAULT_PLLOUT_MIN;
-    OutMax = RHD_PLL_DEFAULT_PLLOUT_MAX;
+    RefClock = RHD_PLL_REFERENCE_DEFAULT;
+    if (rhdPtr->ChipSet < RHD_RV620)
+	IntMin = RHD_R500_PLL_INTERNAL_MIN_DEFAULT;
+    else
+	IntMin = RHD_RV620_PLL_INTERNAL_MIN_DEFAULT;
+
+    IntMax = RHD_PLL_INTERNAL_MAX_DEFAULT;
+
     /* keep the defaults */
-    PixMin = RHD_PLL_DEFAULT_MIN;
-    PixMax = RHD_PLL_DEFAULT_MAX;
+    PixMin = RHD_PLL_MIN_DEFAULT;
+    PixMax = RHD_PLL_MAX_DEFAULT;
 
 #ifdef ATOM_BIOS
     getPLLValuesFromAtomBIOS(rhdPtr, GET_MIN_PIXEL_CLOCK_PLL_OUTPUT, "minimum PLL output",
-			     &OutMin,  PLL_MIN);
+			     &IntMin,  PLL_MIN);
     getPLLValuesFromAtomBIOS(rhdPtr, GET_MAX_PIXEL_CLOCK_PLL_OUTPUT, "maximum PLL output",
-			     &OutMax, PLL_MAX);
+			     &IntMax, PLL_MAX);
     getPLLValuesFromAtomBIOS(rhdPtr, GET_MAX_PIXEL_CLK, "Pixel Clock",
 			     &PixMax, PLL_MAX);
     getPLLValuesFromAtomBIOS(rhdPtr, GET_REF_CLOCK, "reference clock",
 			     &RefClock, PLL_NONE);
-    if (OutMax == 0) {
+    if (IntMax == 0) {
+	if (rhdPtr->ChipSet < RHD_RV620)
+	    IntMax = RHD_R500_PLL_INTERNAL_MIN_DEFAULT;
+	else
+	    IntMax = RHD_RV620_PLL_INTERNAL_MIN_DEFAULT;
+
 	xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING, "AtomBIOS reports maximum VCO freq 0. "
-		   "Using %lu instead\n",(unsigned long)OutMin);
-	OutMin = RHD_PLL_DEFAULT_PLLOUT_MIN;
+		   "Using %lu instead\n",(unsigned long)IntMax);
     }
 #endif
     /* PLL1 */
@@ -629,16 +1123,23 @@ RHDPLLsInit(RHDPtr rhdPtr)
     PLL->Id = PLL_ID_PLL1;
 
     PLL->RefClock = RefClock;
-    PLL->OutMin = OutMin;
-    PLL->OutMax = OutMax;
+    PLL->IntMin = IntMin;
+    PLL->IntMax = IntMax;
     PLL->PixMin = PixMin;
     PLL->PixMax = PixMax;
 
-    PLL->Valid = PLLValid;
-    PLL->Set = PLL1Set;
-    PLL->Power = PLL1Power;
-    PLL->Save = PLL1Save;
-    PLL->Restore = PLL1Restore;
+    PLL->Valid = NULL;
+    if (rhdPtr->ChipSet < RHD_RV620) {
+	PLL->Set = R500PLL1Set;
+	PLL->Power = R500PLL1Power;
+	PLL->Save = R500PLL1Save;
+	PLL->Restore = R500PLL1Restore;
+    } else {
+	PLL->Set = RV620PLL1Set;
+	PLL->Power = RV620PLL1Power;
+	PLL->Save = RV620PLL1Save;
+	PLL->Restore = RV620PLL1Restore;
+    }
 
     rhdPtr->PLLs[0] = PLL;
 
@@ -650,16 +1151,23 @@ RHDPLLsInit(RHDPtr rhdPtr)
     PLL->Id = PLL_ID_PLL2;
 
     PLL->RefClock = RefClock;
-    PLL->OutMin = OutMin;
-    PLL->OutMax = OutMax;
+    PLL->IntMin = IntMin;
+    PLL->IntMax = IntMax;
     PLL->PixMin = PixMin;
     PLL->PixMax = PixMax;
 
-    PLL->Valid = PLLValid;
-    PLL->Set = PLL2Set;
-    PLL->Power = PLL2Power;
-    PLL->Save = PLL2Save;
-    PLL->Restore = PLL2Restore;
+    PLL->Valid = NULL;
+    if (rhdPtr->ChipSet < RHD_RV620) {
+	PLL->Set = R500PLL2Set;
+	PLL->Power = R500PLL2Power;
+	PLL->Save = R500PLL2Save;
+	PLL->Restore = R500PLL2Restore;
+    } else {
+	PLL->Set = RV620PLL2Set;
+	PLL->Power = RV620PLL2Power;
+	PLL->Save = RV620PLL2Save;
+	PLL->Restore = RV620PLL2Restore;
+    }
 
     rhdPtr->PLLs[1] = PLL;
 }
@@ -713,9 +1221,9 @@ PLLCalculate(struct rhdPLL *PLL, CARD32 PixelClock,
 	CARD32 VCOOut = PixelClock * PostDiv;
 
 	/* we are conservative and avoid the limits */
-	if (VCOOut <= PLL->OutMin)
+	if (VCOOut <= PLL->IntMin)
 	    continue;
-	if (VCOOut >= PLL->OutMax)
+	if (VCOOut >= PLL->IntMax)
 	    break;
 
         for (RefDiv = 1; RefDiv <= REF_DIV_LIMIT; RefDiv++) {
@@ -771,7 +1279,7 @@ RHDPLLSet(struct rhdPLL *PLL, CARD32 Clock)
 	     PLL->Name, Clock);
 
     if (PLLCalculate(PLL, Clock, &RefDivider, &FBDivider, &PostDivider)) {
-	PLL->Set(PLL, RefDivider, FBDivider, 0, PostDivider);
+	PLL->Set(PLL, RefDivider, FBDivider, PostDivider);
 
 	PLL->CurrentClock = Clock;
 	PLL->Active = TRUE;

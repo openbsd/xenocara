@@ -46,9 +46,6 @@ RHDShadowPreInit(ScrnInfoPtr pScrn)
 
     RHDFUNC(pScrn);
 
-    if (!rhdPtr->shadowFB.val.bool)
-	return FALSE;
-
     if (!xf86LoadSubModule(pScrn, "shadow")) {
 	return FALSE;
     }
@@ -70,7 +67,7 @@ rhdShadowWindow(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
     DEBUGP(RHDDebugVerb(pScrn->scrnIndex, 1, "FUNCTION: %s row: %i\n",__func__,row));
 
     *size = pScrn->displayWidth * (pScrn->bitsPerPixel >> 3);
-    return ((CARD8 *)rhdPtr->FbBase + rhdPtr->FbFreeStart
+    return ((CARD8 *)rhdPtr->FbBase + rhdPtr->FbScanoutStart
 	    + row * (*size) + offset);
 }
 

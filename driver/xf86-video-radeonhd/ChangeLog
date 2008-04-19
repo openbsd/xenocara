@@ -1,3 +1,1217 @@
+commit 9d131f9035b3b0ff7755dda708e16326aa156e83
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Apr 10 21:20:42 2008 +0200
+
+    Bump to 1.2.0. Add changes to README.
+
+commit 7560240b9935d86570be0ea46f85a6f5c9630cf9
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Apr 10 21:20:09 2008 +0200
+
+    Update + fix supported chips list, both in source and manpage.
+
+commit 595050167523f0121b3bf0efeed42e6ca403d1a4
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Apr 10 07:41:07 2008 +0200
+
+    Add a very basic register dump utility.
+
+commit b0563cbde992594f5d66d308c1ef5fdb7b110a7e
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Apr 10 20:34:19 2008 +0200
+
+    Add a very basic register dump utility.
+
+commit 89c10062a3207c1f194a6a610684da2c1a40ef66
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Apr 10 07:40:26 2008 +0200
+
+    Minor cleanups.
+
+commit bb652740fc287eba2421e9bbc048f004549cb059
+Author: Hans Ulrich Niedermann <hun@n-dimensional.de>
+Date:   Thu Apr 10 15:29:14 2008 +0200
+
+    git_version scripts: add licensing information.
+
+commit 60dc7e0453167b956a1fb0cc9db89aa22196b1cf
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Apr 7 23:23:22 2008 +0200
+
+    Add a hard coded connector table for an MSI HD2600PRO AGP.
+    
+    Full ID of the card: MSI RX2600PRO-T2D512Z/D2.
+    The connector information for this chip lists HPD0 instead of HPD2.
+
+commit 8048353d9580e3930b9f1bfc47581284dc2ab100
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Apr 7 22:44:24 2008 +0200
+
+    Remove unneeded use of pciTag when using libpciaccess.
+
+commit 3076447f027eb0e358304b4d5ffd337626e2b9a5
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Apr 7 22:45:28 2008 +0200
+
+    Fix MC access for RS 690.
+    
+    The MC registers are accessed thru PCI config space of the NB.
+    Since we know nothing about RS600 it is excluded for now.
+
+commit 01bc57b1e3aafae5e5d992c1f20e0c63a956c9c6
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Apr 7 13:01:15 2008 +0200
+
+    Add initial support for talking to IGP northbridges.
+
+commit 46367d6107510e55b75db0eff16c5ca496c6daf7
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Apr 7 12:56:09 2008 +0200
+
+    Add IGP flag to chipset map.
+
+commit 338eb58b749071ab2559455d2a4ba212276667d5
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Apr 7 11:41:08 2008 +0200
+
+    In verbose 7 debug mode dump present mode line.
+
+commit c0c8fbedb18369c5a057488dec9aa249d82fdb23
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Apr 7 11:11:48 2008 +0200
+
+    Mark PCI subsystem 0x94C1, 0x1002, 0x0D02 DMS-59.
+
+commit 5a8138e896136a6598a023d40501a7eb54ede3e4
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sun Apr 6 10:28:31 2008 +0200
+
+    Treat RV635 as a separate family.
+
+commit 954fd01c4d950d3727d0a72144904f754b83c498
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sun Apr 6 10:14:03 2008 +0200
+
+    Provide more information on HPD detection and mode programming in verbose log.
+
+commit 4733547bf8ba4813a1ce55a20f02080b6c06d2be
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Apr 7 16:14:06 2008 +0200
+
+    Add support for the full RS690 family including RS740.
+
+commit 580ad5bfa12f529915b4d364ffc6bca9670aac6b
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sat Apr 5 22:43:12 2008 +0200
+
+    Enable RS690 MC support.
+
+commit decf3554ebb1ae39901fdfd82adf2ced55d72cd3
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sat Apr 5 22:09:32 2008 +0200
+
+    Treat all RV515 chips as such in MC code.
+    
+    There are a number of ASIC generations which belong to the
+    RV515 family.
+    A table and a function is added to match asics to families.
+
+commit 2c2d132077fdac80f41c39c019eb93b5b3f7f95a
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Apr 2 20:34:46 2008 +0200
+
+    Add a workaround to make interlaced mode work.
+    
+    A HW bug requires the front porch to be at least 2 lines in interlaced mode.
+
+commit 783b5ab4f3d910e5964e69938ea0a5835bd19be4
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Mar 26 21:11:20 2008 +0100
+
+    Add support for interlaced modes.
+
+commit 6d5ef116bbdd60799da2ace15f51b1bb4b883c6f
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Apr 1 22:59:04 2008 +0200
+
+    Add better support for LVTMA TMDS macro control values on R5xx and RS600/RS690.
+
+commit 38efb27c05523fd25323c732a567e90378e1a1e7
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Apr 1 17:17:28 2008 +0200
+
+    Add MC idle testing for RV515, add MC support for RV550.
+    
+    RV515 is supposed to be identical to RV515.
+
+commit f64aba20a2942a18daf122d642389ccfede22cdc
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Apr 1 16:38:48 2008 +0200
+
+    Use proper temporal dither reset bits depending on chip generation.
+
+commit db2c3948d5a398047b3a881f6f88541dc963d22e
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 31 08:12:44 2008 +0200
+
+    Fix LVTMA code to also handle single link DVI correctly.
+    
+    Bug #15214
+
+commit 55e3b21e709c2a14ff7153e2044a4921f30b82f2
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 31 08:10:33 2008 +0200
+
+    HDMI Type A is single link DVI while B is dual link.
+    
+    This is a follow up on 806d95361c11068a078.
+
+commit d53f2201b5d82936b190fb5b5fe2701f5e083aeb
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 31 00:49:07 2008 +0200
+
+    Add source select to DDIA block.
+    
+    This code got dropped on the floor by accident.
+
+commit be9055f03a8a4759fbdf454ad4c2c4e215ead1df
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sat Mar 29 14:21:33 2008 +0100
+
+    Fixed argument order to rhdAtomGetTableRevisionAndSize().
+
+commit 1623f86f0834e7c13a89682983729b70348512b2
+Author: Stefan Dirsch <sndirsch@suse.de>
+Date:   Thu Mar 27 17:49:01 2008 +0100
+
+    Added missing rhd_ddia.c/rhd_ddia.o to Imakefile.
+
+commit 186c345cad07fb4eb626707f40a2c444fc5d8bc7
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Mar 27 07:34:30 2008 +0100
+
+    Print output name for sensed type.
+
+commit d7d63b25d264f0838c497a79e38059506ccdc814
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Mar 26 22:50:43 2008 +0100
+
+    Print sensed type also for RandR.
+
+commit 6d628f5658512cb73fd04dda85f5672736e80080
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Mar 26 21:10:31 2008 +0100
+
+    Make debugging output of HPD verbose about the result.
+
+commit 811b0cd66958e32bddcbbca7656893de160b2de8
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Mar 25 17:25:14 2008 +0100
+
+    Added quirk table entry for a different Sapphire X1300
+
+commit 89cfb7384b1e34c1de88d3b32ff6202b9ecda287
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 24 23:07:08 2008 +0100
+
+    Add support for RS690 DDIA digital block.
+    
+    This will support the second digital output on many RS690 boards.
+
+commit b6418a97bfc448ecd6e15c548bcdeb8af8967619
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 24 09:34:18 2008 +0100
+
+    Add debugging aids.
+    
+    The RHDReg??D() functions can be used to print out the register
+    values read/written. When RHD_DEBUG isn't define they will be
+    identical to the versions without the 'D'.
+
+commit c8ad2599d54fa855b4cdf234c6c560301afeebf4
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 24 18:28:55 2008 +0100
+
+    Reset CRTC horizontal counter replication.
+    
+    Appearantly this should only be set for 30bpp DVI modes.
+
+commit bd11d76aab42354403dff1bffd5f89dc86c3ecc7
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 24 16:23:08 2008 +0100
+
+    Handle AtomBIOS TMDS PLL parameters correctly.
+    
+    NOTE: This code is not used so far but support for this
+    will be added later.
+
+commit 806d95361c11068a078c85db2891c3802a106f9d
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 24 13:57:44 2008 +0100
+
+    HDMI Type B connector is dual link capable.
+
+commit ae3171b9621b54ecacc2a10a133c435f2e380152
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 24 13:43:40 2008 +0100
+
+    Add TMDS PLL macro control values for M54 (0x7145).
+    
+    Bug #15132, reported by Veli-Jussi Raitila.
+
+commit 19a6eb464a5f988a700259c85042350d67d66ea3
+Author: Stefan Dirsch <sndirsch@suse.de>
+Date:   Fri Mar 21 11:35:13 2008 +0100
+
+    Chipset name review.
+    
+    Added Device ID for Radeon HD 3850 AGP. Fixed typo in Device
+    ID for ATI FireMV 2450.
+
+commit 96f36339e2b6dbe60efafc6a150a561111aaf844
+Author: Stefan Dirsch <sndirsch@suse.de>
+Date:   Thu Mar 20 17:54:57 2008 +0100
+
+    Fixed imake build.
+    
+    Added rhd_mc.c, rhd_dig.c to Imakefile to resolve undefined
+    symbol RHDMCInit, which prevented Xserver from starting.
+
+commit 3d62e9a1be968655969e79570a522c28da218bae
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Wed Mar 19 01:54:17 2008 +0100
+
+    Cosmetics: Move RV620/635 to a more sensible position in our devices list.
+    
+    Makes supported devices printing a bit saner, but pretty useless otherwise :)
+
+commit 9de85904ca8183fad9c9ec67985394c2567ac2f5
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Wed Mar 19 00:13:48 2008 +0100
+
+    RHDPLLsInit: PLL2: Add missing " else " in "if () {}{}"... Duh.
+    
+    I really must visit an optician one of these days...
+
+commit 00f182d6c9f026ac05969cc1304e02e6483cae90
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Mar 13 13:20:03 2008 +0100
+
+    Use correct option name for (yet unused) TVMode option.
+
+commit 98d328b04500dda5030eb612f1fa899ee0fb5a95
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Mar 13 13:12:21 2008 +0100
+
+    Fix endless loop.
+    
+    Bugzilla #14988
+
+commit 427d95537b424d7f3ccfb3b0c0ccb779adc9ab8e
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Mar 13 07:51:13 2008 +0100
+
+    If available read panel dithering parameters from AtomBIOS.
+    
+    AtomBIOS contains information about temporal and spatial dithering
+    as well as the number of grey levels emulated thru temporal dithering
+    in the LVDS_Info table. If available use this information.
+
+commit c336508ea9cc26c02c1331f3ec9dbb394c3cd9fd
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Mar 13 07:37:37 2008 +0100
+
+    Remove DVI_DUAL as a type which can be detected by load detection.
+    
+    Appearantly TMDS(A) load detection cannot be used to distringuish between
+    single link and dual link DVI which would be useful to detect if someone
+    erronously uses a single link DVI cable on a dual link capable monitor.
+
+commit bf8bda883793465f0f88b622a2412b3f3597cf60
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Mar 13 07:33:05 2008 +0100
+
+    Make variable and enum names more consistent.
+
+commit db0d605852934a248f484a88528042c3623f6ddc
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Mar 11 07:35:41 2008 +0100
+
+    Fix a memory leak.
+
+commit 098cf71d3d51694908f2766a8c35483a9f79da19
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 10 12:36:01 2008 +0100
+
+    Make test for DIG2 more consistent.
+
+commit 46a40c82c6696d1d57261ea34d124f94e342b391
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Mar 6 17:03:09 2008 +0100
+
+    Add #ifdef wrappers around AtomBIOS related code.
+
+commit 54f491f983ab6d618e9e06e2c8f7d8cd37464266
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Mar 5 20:54:34 2008 +0100
+
+    Add AtomBIOS based UNIPHY support for RV620/635.
+
+commit 2d81ffc704db68f3758e5ce28fe6d1de83ef7c11
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Mar 5 20:52:12 2008 +0100
+
+    Fix a wrong type in ATOM_ANALOG_TV_INFO in upstream version of atombios.h.
+
+commit cab03118f05d47b714965d7d46ae61eeb37abcfd
+Author: Luc Verhaegen <lverhaegen@ridcully.suse.de>
+Date:   Wed Mar 12 18:36:26 2008 +0100
+
+    DxCRTC: Fix disabling check.
+    
+    We were waiting on hblank, while we have a nice little bit for checking the
+    state of the CRTC.
+
+commit 52f04a7f8ff43fe79c140ba7d17d18bb78cdb1af
+Author: Luc Verhaegen <lverhaegen@ridcully.suse.de>
+Date:   Wed Mar 12 17:20:49 2008 +0100
+
+    TMDSA: Fix sensing with respect to duallink.
+    
+    Load detection is apparently sniffed at at ATI. So our only sense-able
+    digital link is unable to find out whether we have proper duallink
+    termination there or not. A missed opportunity...
+
+commit 42d3201bb7dcfe2ec1755976641e0260f5eb4e91
+Author: Luc Verhaegen <lverhaegen@ridcully.suse.de>
+Date:   Wed Mar 12 16:34:10 2008 +0100
+
+    PLL: further fall-out of removal of validation callback for our hw.
+    
+    NoRandR path was fixed, but RandR wasn't... Stupid!
+
+commit 8f499c3879cff399ec40db2403a0bf5626f13c03
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 10 11:57:55 2008 +0100
+
+    DVI is on TMDSB not LVDS.
+
+commit 56a264f86762030bb4173b6fc0515918b0e3fc5e
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 10 11:51:48 2008 +0100
+
+    Set Connector element already in rhdRROutputDetect().
+    
+    Setting this early makes this infornmation available to mode validation.
+    Some limits may depend on the connector (example: dual link DVI has a
+    pix clock limit twice as high as single link).
+
+commit 478bda793b7101834ce58bbe37f03a3ccf5036a4
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 10 11:31:27 2008 +0100
+
+    Fix issues with DDC on RV620/635.
+    
+    DDC may also time out or be aborted - in which case the result is also
+    invalid. Let the status function check for that.
+
+commit e5dddbc2f73bccc66a5ff00a2afb6e8a7ffa93e5
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 10 11:30:42 2008 +0100
+
+    Fix issues with DAC load detection on RV620/635.
+    
+    Some BIOSes leave DDET_REF_EN or SDET_REF_EN set. This changes the
+    DAC comparator reference. We turn off either.
+
+commit 5596d06da56a299a42818a63ec15b72393703861
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 10 11:26:38 2008 +0100
+
+    Fix issues with DAC load detection and erronous DDC detection on RV620/635.
+    
+    Some BIOSes leave DDET_REF_EN or SDET_REF_EN set. This changes the
+    DAC comparator reference. We turn off either.
+    DDC may also time out or be aborted - in which case the result is also
+    invalid. Let the status function check for that.
+
+commit c9ccc4c474af39b583073ea083a61a7b0f711ad3
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sat Mar 8 10:52:09 2008 +0100
+
+    Resolve unknown registers.
+    
+    DIG1 drives UNIPHY link1 and DIG2 drives UNIPHY link2 (if not dual)
+    unless swapping bit is set.
+    Fix DIG clock source selection and enable.
+
+commit aa7037a7418869da702bd2429b59fb51c9ee6e42
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sat Mar 8 10:40:04 2008 +0100
+
+    Remove stale structure elements.
+
+commit dfe3604858d8792a5d34ac6324baced24274135e
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Mar 5 15:24:21 2008 +0100
+
+    Changed heuristics for encoder link enabling.
+
+commit 153331e806eedff5f73ccb212a7d68d0b691753d
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Mar 4 18:03:47 2008 +0100
+
+    Properly restore Encoder and Transmitter.
+    
+    This patch attempts to follow the set procedure to restore encoder and
+    transmitter values. Not doing this doesn't seem to make any difference
+    here, but we never know...
+
+commit 6742f79e8e77add4d62893c1a84908c6c4a5d621
+Author: Luc Verhaegen <lverhaegen@ridcully.suse.de>
+Date:   Sat Mar 8 04:09:07 2008 +0100
+
+    RV620: Add Pixelclock support.
+
+commit 807e525a277668b3006afb36596a9f89dad7ca48
+Author: Luc Verhaegen <lverhaegen@ridcully.suse.de>
+Date:   Thu Mar 6 17:22:36 2008 +0100
+
+    Implement the hardware level scaling code.
+    
+    This is currently only useful for disabling scaling and for save and restore.
+    The framework for enabling scaling is not implemented yet, so this code should
+    not change driver functionality, just fix some modesetting issues we've come
+    across.
+
+commit fd6a7abfc2dce560092791706393ca073090e995
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Mar 4 13:55:46 2008 +0100
+
+    Restructure FMT block handling.
+    
+    The FMT block is directly linked to the CRTC block but only the ditital
+    outputs seem to be connected to it. The FMT block preformats the pixel
+    data for the display doing things like dithering which will give the
+    impression of a higher color depth on 18bit digital displays.
+    Since the FMT block is connected to the CRTC we save/restore it in the
+    rhd_crtc.c while we program it from within DigMode().
+
+commit 2e1f55b00d101274bebc51d7ce3a27d54f92d658
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Mar 4 11:41:54 2008 +0100
+
+    Consolidate handling of dual link TMDS displays.
+    
+    This code is still not tested, yet due to lack of equipment.
+
+commit f0256f38aff57fc88e2a5deed79a4744fd1f331a
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Mar 4 11:12:41 2008 +0100
+
+    List explicite arguments for FMT block programming.
+
+commit 59de4071c6354cf95722d9e5d19f7506d7f69a5f
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 3 22:19:36 2008 +0100
+
+    Fix identification of end-of-code table data tables and GoldenSettings search.
+
+commit b3df388f2917e754bd5cd1bee68292032c0a75e0
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 3 22:14:08 2008 +0100
+
+    Add RV620/RV635 devices.
+
+commit c13650e667aad0064223060bb6460de2c307f810
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 3 22:10:34 2008 +0100
+
+    Add KLDSKP_LVTMA and UNIPHYs to connector handling.
+
+commit 0dee42c5b7c1153ea524c65766ee7b0f36b63c93
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Mar 12 20:42:02 2008 +0100
+
+    Add support for new DIG blocks on RV620/635.
+
+commit 8dabb69a3780ffcf231dd38dc190e39fd1f88437
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 3 22:18:02 2008 +0100
+
+    Fix structure names in rhd_output.c.
+
+commit 80fb6b3fa5a9dfccc9c2b8bfdfeba39842ca3cf2
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 3 22:15:53 2008 +0100
+
+    Fix copy-over artefacts from rhd_conntest.
+
+commit 252491e4a1b97b2ad020ebf45862d75c99da561b
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Feb 27 20:25:27 2008 +0100
+
+    Adding KLDSKP_LVTMA and UNIPYA/B as output types.
+
+commit 6dab67a84caa30d4653cad44ce67b572037b89f2
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Feb 27 19:31:03 2008 +0100
+
+    Add RHD_CONNECTOR_DVI_SINGLE to be able to mark a single link connector.
+
+commit abb188fe88e5b1887b940201ce0f7c5cf7234a66
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Feb 26 22:16:45 2008 +0100
+
+    Separate query for temporal and spatial dithering.
+
+commit 4ec302827107453fc8f20f9c0dd083644683a834
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Feb 26 21:59:48 2008 +0100
+
+    Add more verbose output on GoldenSettings matching.
+
+commit a0c11368fb48f7bec4b0e0dee723f523315e76b6
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Feb 26 20:35:43 2008 +0100
+
+    Add support enumerated object IDs to the connector table parser.
+    
+    The enumeration of object IDs is not just used to number devices but
+    is used to further specify the device type.
+
+commit b280b417463affbb2da7168f1eb67f68a2b40864
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Feb 13 10:29:28 2008 +0100
+
+    Support for TMDSA dual link load detection (untested!).
+    
+    This code attempts to load detect it a second DVI channel on TMDSA is
+    available. This code is entirely untested.
+
+commit dec87ba6920ac89df21c6c7453d3c8e79626f0aa
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Feb 13 10:24:37 2008 +0100
+
+    Add support for dual link DVI panels (untested!).
+    
+    NOTE: This is entirely untested due to lack of testing equipment.
+
+commit cf8eea258505b1902b030a3d0ca8bf41d4dae9d8
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Feb 12 09:25:47 2008 +0100
+
+    Add support for two new ObjectIDs required for RV620/635.
+
+commit 55ce4f82c4ac88dfb184d1a21c364ad87b0acab9
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Feb 20 14:19:48 2008 +0100
+
+    Added own version of AtomBIOS getConditionalGoldenValues().
+
+commit 283c2d2e877e1eb8bef9ed496ba153484b9c768a
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sun Feb 3 20:05:39 2008 +0100
+
+    Fix GPIO routing for DDC in RV620/635.
+    
+    Locate GPIO routing data table in ReadEDIDFromHWAssistedI2C
+    table and find the correct entry.
+
+commit d499a61623b10a9ff2b046877bf2528efe250e70
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sun Feb 3 20:05:03 2008 +0100
+
+    Fix GPIO routing for DDC for RV620/635 in rhd_conntest.c.
+    
+    This adds support to pick data tables from AtomBIOS command tables.
+    And code that locates GPIO routing table in ReadEDIDFromHWAssistedI2C
+    command table.
+
+commit 8de4cd9a9b71ca2f7e2b00a2943c19ced3517b8f
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sun Feb 3 20:04:32 2008 +0100
+
+    Locate data tables embedded in AtomBIOS command tables.
+    
+    The AtomBIOS bytecode tables can contain data tables which are
+    referenced from this specific table only. Find them and return
+    their size and a pointer to their start.
+
+commit e29024d98e605e3b0d38462f4a7b42b4f246d400
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sat Feb 2 15:33:47 2008 +0100
+
+    Consolidate load detection for R5xx/r6xx in rhd_conntest.
+
+commit f021c0cf6ed65095d7ee6bfbf3ecebfa6d4279f4
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri Feb 1 18:50:39 2008 +0100
+
+    Add support for DAC load detection and I2C for RV620/RV635 to rhd_conntest.
+
+commit 481df4027f75b38a522355668561db1439f1d50e
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri Feb 1 18:49:39 2008 +0100
+
+    Add stubs for the PLL subsystem.
+    
+    PLL support is going to follow soon.
+
+commit 3ba1c0937d60eea79167039062f931c3974e5bc3
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri Feb 1 18:48:45 2008 +0100
+
+    Add support for the DAC output subsystem for RV620/RV635.
+
+commit b08e64ec70e29af8e8050508f44e7c8f822ff41f
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri Feb 1 18:44:46 2008 +0100
+
+    Add I2C subsystem support for RV620/RV635.
+    
+    This patch includes the register additions required for I2C and DAC support.
+
+commit 089801d49ffd3b736f27529fc8ba4499e43f280f
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri Feb 1 18:27:36 2008 +0100
+
+    Add RV620/RV635 PCI IDs.
+    
+    These IDs are disabled at the moment as we are still missing PLLs to
+    do anything really useful.
+
+commit 47298a34699d9c81ba61e5d829279253e193d3bf
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Jan 16 10:25:06 2008 +0100
+
+    Add support for sensing and programming different analog outputs.
+    
+    In this event clean up handling of analog output norm handling
+    and AtomBIOS fixed mode retrieval.
+
+commit 2d42e5b7c8e826771c38c19d7418c3ab0e07a667
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Jan 15 15:34:02 2008 +0100
+
+    Add monitor support for TVs.
+
+commit 8f06626d19543f5e7e4b99819cc230f3a38ebe9a
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Jan 15 15:33:17 2008 +0100
+
+    Add an option to pass the TV standard to override boot default.
+
+commit 3fe49f2a1de02d572c3e66f16ba6aba439f1fe79
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Mar 12 21:24:35 2008 +0100
+
+    Fix spelling of 'Supp(p)orted' to match the fixed spelling in atombios.h.
+    
+    Fixing spelling in atombios.h generally isn't a good idea as it would
+    require all the code that depends on it to be fixed (in the
+    Catalyst driver for example).
+    Nontheless this fix was given to us by ATI.
+
+commit 2bcabe12c8f07ce501025e7214854a7df9b5231f
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Jan 15 15:30:13 2008 +0100
+
+    Add parsing of TV releated data tables to the AtomBIOS support.
+    
+    Add AtomBIOS support for setting up the TV encoder.
+
+commit 726f6da1f3778d420b505bd28894dba7cad327e1
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Jan 15 15:26:38 2008 +0100
+
+    Add TV detection do DAC load detection.
+
+commit e1605dfbfa917cd52c7685fc612ee876ba2266c5
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 3 09:59:27 2008 +0100
+
+    Be more verbose about fb parameters.
+
+commit 5163b9fb81967ff026a8f2ed7dddaae640fa3f93
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 3 09:58:38 2008 +0100
+
+    Get and store verbosity level.
+    
+    The verbosity level is used in many instances when we need to decide
+    wether we want to log a certain information or not. If we know the
+    verbosity level we can avoid computational overhead when we are not
+    going to print anything anyway.
+
+commit 00e1b02500d0513681c48ca4c5cf1b4fa419c6eb
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Mar 3 09:25:17 2008 +0100
+
+    Restore original order of CRTCRestore and VGARestore.
+    
+    This reverts commit 23a47ec001e195218e5c4ac4349139f70fc9984a:
+    "Restore VGA after restoring the CRTCs."
+    This change collided with 1a1d110f49c66063aba92d823e3158ea1860f5ae
+    and doesn't seem to be required to fix the underlying problem.
+
+commit 8c6d1b46b70ae19fafb5484c238a74cca18d5990
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Fri Feb 29 23:03:14 2008 +0100
+
+    conntest: add new ids.
+
+commit 294cf1f62a9def23e08405c3718c4696881e2a80
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri Feb 29 09:08:56 2008 +0100
+
+    Fix test for RS6XX in RHDMCSetup().
+    
+    Problem pointed out by CornedBee on #radeonid.
+
+commit 1b3f3c9c56fb4f70d49f4b123f1e2b1feb6ec3cd
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri Feb 29 09:03:55 2008 +0100
+
+    Add connector table flag for X1400 (0x7145, 0x1297, 0x3058).
+
+commit a23b11238155b184c4f886ee72b33bd41d18b0ce
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Feb 27 13:00:08 2008 +0100
+
+    Loop over all CRTCs when shutting down memory access.
+    
+    A stupid cut-n-paste bug had prevented this.
+
+commit 8432cb084ec351da6ec586b10940cc53327163ec
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Feb 25 18:26:39 2008 +0100
+
+    Add quirk table entry for Diamond Viper Radeon X1650 Pro
+
+commit 5ba5f4b5cf28a106d40c5a73c648ce15f4d99b62
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Feb 25 18:22:39 2008 +0100
+
+    Include description for acceleration options.
+
+commit eee9b71888aa5916b5681de1b014c3d03b9e9614
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Feb 25 18:06:04 2008 +0100
+
+    Fix typo in patch adding DradonFlyBSD support.
+
+commit f89bac589adb2586b15643d6829a047d7853a101
+Author: Thomas E. Spanjaard <tgen@netphreax.net>
+Date:   Mon Feb 25 16:25:52 2008 +0100
+
+    Add support for DragonFlyBSD.
+
+commit 1223e40a401e4abf67752197ff05e01d9a7856c0
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Feb 20 13:20:26 2008 +0100
+
+    Add debugging to rhd_conntest.c
+
+commit 1e8637b1be1ffd7de16d519ad175110383d005a8
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Feb 18 23:05:27 2008 +0100
+
+    Changing R6XX_MC_VM_MISC_OFFSET to R6XX_HDP_NONSURFACE_BASE.
+    
+    HDP_NONSURFACE_BASE is the official ATI name.
+    Originally we found this register in code tables called by AsicInit.
+    It was given the name MC_VM_MISC_OFFSET because we didn't know the
+    official name of it as we never received docs on it from ATI.
+    
+    Now it appeared in the 'radeon' driver under it's official name.
+
+commit 854ce3b22585be6b51a3870817081fc599ece6dc
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri Feb 15 18:16:47 2008 +0100
+
+    Make DDC for panels work on MacBook Pro's.
+
+commit 247d42637b24dc07fdf3763a40d08fda52d632d7
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri Feb 15 01:32:00 2008 +0100
+
+    Set up GPIO pin HW access for DDC testing in rhd_conntest.
+
+commit 23a47ec001e195218e5c4ac4349139f70fc9984a
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Feb 14 13:24:34 2008 +0100
+
+    Restore VGA after restoring the CRTCs.
+
+commit 74eacf3e5ef7c490e08e0806944cf2f1af9d535a
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Feb 14 13:23:16 2008 +0100
+
+    Make sure GRAPH and CRTC engine are disabled before changing surface.
+
+commit 2b16734b998e657a426af5b9dc332700cba2c9be
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Feb 14 12:23:10 2008 +0100
+
+    Set GPIO pins to be HW driven on R5xx for HW controlled I2C.
+
+commit 2feff5cb81db551e1b25a60a3cd4c130a6f3c9af
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Feb 14 12:20:51 2008 +0100
+
+    Add wait for memory idle state.
+    
+    Make sure all engines are properly turned off and memory is idle
+    before accessing MC or surface offset registers.
+
+commit e0d587844419881b4523dfd8288abf606f7b819e
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Feb 13 00:37:46 2008 +0100
+
+    Handle LVTMA_TRANSMITTER_ENABLE identically on R5/6xx.
+
+commit 1849092ef139e4b19ace04872466e6170e216582
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Feb 13 08:51:01 2008 +0100
+
+    Add connector information for a Sapphire Radeon HD 2600 PRO AGP (PnPID: 0x9587:0x1002:0x0028).
+    
+    This card has one DVI-I and one VGA connector. However AtomBIOS
+    claims it has two DVI-I.
+
+commit 7527df07812ec7175cadb4dbe4efc1986f608882
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Feb 25 16:12:47 2008 +0100
+
+    Revert "PATCH: Report PANEL as disconnected when no modes are available"
+    
+    This reverts commit 3d29d4ce1183a53810ff8b5c2970b03f9cc3b097.
+    This patch actually makes PANEL never report as connected, even when
+    rhd_conntest seems to report otherwise, when an external monitor is
+    connected.
+
+commit 3d29d4ce1183a53810ff8b5c2970b03f9cc3b097
+Author: Thomas Meyer <thomas@m3y3r.de>
+Date:   Wed Jan 30 19:41:08 2008 +0100
+
+    PATCH: Report PANEL as disconnected when no modes are available
+    
+    Report PANEL as disconnected when no modes are available
+
+commit cd6a4b894c36728b27cd31f6a375beac7dbae0db
+Author: Yang Zhao <yangman@gmail.com>
+Date:   Thu Feb 7 13:56:02 2008 -0800
+
+    typo fix in DPI guessing code
+    
+    Looks like there's a typo in the code that tries to guess screen DPI;
+    doesn't make sense to assign a variable value to itself. ;)
+    
+    Untested, as my hardware setup won't trigger this portion of the driver.
+
+commit 1a503c591164d61d4ad6af964f65cd3d58a98e56
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 6 17:34:03 2008 -0500
+
+    Update ObjectID.h
+    
+    Updated with upstream AMD changes.  Coincides with my recent atombios.h patch.
+    
+    Alex
+
+commit 8640be8ee3923b45c5b8d8cb02296f7d31fb96aa
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Feb 1 16:08:15 2008 -0500
+
+    Update atombios.h
+    
+    Update atombios.h with the upstream AMD version.
+    
+    Alex
+
+commit a9af866ae712a0048d374dc640e482d1f4ce8859
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Feb 11 08:37:30 2008 +0100
+
+    Prevent endless loop in connector table parser.
+    
+    Some connector usDeviceID entries may contain 0 (which is invalid).
+    This patch should handle this problem.
+
+commit 80c7c9e5c19d5f60c117f5458e44c3d60b8d1a41
+Author: Sebastian Redl <wasti.redl@gmx.net>
+Date:   Sun Feb 10 12:47:06 2008 +0100
+
+    Fix device ID for 0x7187, 0x174B, 0x3000 in cards table.
+    
+    Cut-n-paste error caused 0x300 to be written instead of 0x3000.
+    Also fix a formatting error in a log message (again spotted
+    by Sebastian Redl.)
+
+commit bef7f09c6de1b4cf2192dbc46bddb9634c0bd058
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sat Feb 9 18:18:33 2008 +0100
+
+    Ask people to not only send in their log file but also to describe their problem.
+
+commit bde5fbbf29ed1c95d398e895e29f6b5c434bbb54
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sat Feb 9 17:52:25 2008 +0100
+
+    Added 'HPD swap' flag for  0x7187, 0x174B, 0x300.
+    
+    Bugzilla #14414. Thanks to Sebastian Redl.
+
+commit 7606be1a7a3e50503dba0ffe80da8aea2a4eaa8f
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Feb 5 16:08:42 2008 +0100
+
+    Fully implement the SaveScreen() function.
+    
+    The argument to SaveScreen() is not simply on/off.
+    xf86IsUnblank() needs to be called to actually match the
+    DIX argument to on/off. Also the input timer needs to be
+    reset on unblank. Furthermore the ScreenPtr may be NULL
+    under certain circumstances thus it also needs to be checked
+    before dereferencing.
+
+commit 748de8400bf49ed20bcbe4b54779b2d6943de0b1
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Tue Feb 5 13:33:06 2008 +0100
+
+    VGA: bitten by pScrn->videoRam in kB instead of B again.
+    
+    This way, our VGA FB can live in more than the first 256kB of our framebuffer
+    :)
+
+commit cbbd54a2fa934ecbe8c6b93d5b063407c06d955f
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Feb 4 22:39:33 2008 +0100
+
+    Fix blaning problem in bug #13853.
+    
+    RHDSaveScreen() is a DIX function. It gets called right from the DPMS
+    extension. Non of the DIX function know anything about screen switching. Thus
+    the protection of the hardware against accidental switches needs to come from
+    the DDX (which includes the driver - if it provies functions which may be
+    called from DIX directly).
+    Adding a check for vtSema seems to fix the problem.
+
+commit f37d4cb9767a7d7aca66c489578a86fc71a25c00
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sun Feb 3 23:24:08 2008 +0100
+
+    Don't make assumptions about DDC clk line on RS690 when AtomBIOS is not available.
+    
+    Commit c900aa5 hardwired the DDC clock line to DDC2 when AtomBIOS was not
+    available. This is definitely wrong. The 'default' in the switch statement
+    meant as 'fall back to the one remaining possibility' (exactly as handled
+    by AtomBIOS iself), not as the default value.
+    This change hopefully eliminates any confusions.
+
+commit dc519eb296e434e6ce31f3f020eb5514c162828e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Feb 3 21:05:50 2008 +0100
+
+    Need to include string.h in r5xx_exa.c
+
+commit caa10014d115a49a59b4a2aef6ce36a4e615556a
+Author: Joachim Deguara <joachim.deguara@amd.com>
+Date:   Tue Jan 29 23:39:54 2008 +0100
+
+    Add support for R680 (HD3870 X2).
+
+commit 7e9b6ef0917932964d2be2cadd450525e9f08512
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Tue Jan 29 19:54:16 2008 +0100
+
+    R5xx: Implement EXA.
+    
+    MMIO only, so no accelerated up/download yet.
+
+commit af0c64d897f7f2288419b6e43468850e1037bb59
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Mon Jan 28 13:09:55 2008 +0100
+
+    R5xx accel: Add XAA support.
+    
+    MMIO path only, no CP support yet.
+
+commit 7cab021c74e1ea45d2e087df89b9f14c5ec300ee
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Mon Jan 28 13:05:42 2008 +0100
+
+    Improve FB handling.
+    
+    Split things up in Scanout, Offscreen and Free.
+    Add option offscreensize, which allows selection for both % (of total
+    videoram) and M(megabytes) of offscreen memory.
+
+commit e0cfbcd5c97591ee556dc836d58e965771e5240a
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Mon Jan 28 07:12:59 2008 +0100
+
+    Add AccelMethod Option and related handling.
+
+commit c900aa5a2c9ce18dee3e1ac54aeed002ae68b01b
+Author: Thomas Meyer <thomas@m3y3r.de>
+Date:   Tue Jan 29 21:16:00 2008 +0100
+
+    I2C: fix build without atombios.
+
+commit bc8851304a71e612b2dafaacc965858e3f197654
+Author: Hans Ulrich Niedermann <hun@n-dimensional.de>
+Date:   Mon Jan 21 00:47:25 2008 +0100
+
+    autoconf: Check for libpciaccess.
+    
+    If xorg-server.h does not define XSERVER_LIBPCIACCESS, there will be no
+    check for the unused libpciaccess.
+
+commit 5829bff7d02cfe42d3eb54ac14fc38383bf0751d
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Wed Jan 16 18:19:35 2008 +0100
+
+    TMDSA: Add control value for 71C4.
+    
+    Reported by Alec Habig.
+
+commit 7cb27bca609f5bc2dc3e4f3aa8e9633c2e621eb4
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Jan 16 17:11:09 2008 +0100
+
+    Add RHD_CARD_FLAG_HPDOFF flag, improve quirk entries for T60p.
+
+commit 9eaa27c7b08a3faa252172fd402d8e5483783477
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Jan 16 17:01:36 2008 +0100
+
+    Add PCP X1600 400M/500E.
+
+commit f75ad2d36d45856abb3ca8e78de6b5f1a9ce8a06
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Jan 15 12:20:58 2008 +0100
+
+    Add PowerColor X1550.
+
+commit 32d1b4d99afdda3bc402a7ada0a833d650da4433
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Jan 8 13:04:58 2008 +0100
+
+    If no EDID is available, assume 96dpi on the first (preferred) mode.
+
+commit ad50eaa0bc53a97d905cce4432763c2c966387fa
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Jan 14 13:45:35 2008 +0100
+
+    Correct order of mask and value in ROM access code.
+
+commit 0f066c209e091813eed0a8b94f90ba66b05c897b
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Jan 8 23:10:38 2008 +0100
+
+    Implemented PLL functions for CAIL, fixed MC.
+    
+    Some AtomBIOSes require access to the PLL registers.
+
+commit 361ba486e00471d1232a1622531357043356fc3f
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Jan 8 17:41:09 2008 +0100
+
+    Change heuristics to check for an unPOSTed card.
+    
+    The code used to look for the location and size of the VRAM
+    scratch area in the BIOS to determine if the device has been
+    POSTed or not. This value reads 0 on unPOSTed BIOSes.
+    This however is not true for all cards.
+    Now we simply look where the BIOS has originated.
+
+commit 72e7b062479cbf6fb80ee9bdf5ab2b4736530bda
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Jan 8 14:54:58 2008 +0100
+
+    Fix some issues when reading PCI ROM on POSTed systems.
+    
+    This stuff is rather magic.
+    The SPI ROM interface needs to be set up. The SCK period
+    needs to be set to be increased (power up default should be
+    save).
+    The GPIO pins seem to control the SPI ROM, so the GPIO pins
+    must be set to be driven by hardware.
+
+commit 26c6ce53463f2432f341fd41694b4758886023f9
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Jan 8 08:26:08 2008 +0100
+
+    Add I2C data dump code.
+    
+    This code scans all i2c buses it can find and dumps n bytes of data
+    starting at offset 0.
+
+commit a412d58233854dc8cfa6d3697960c23cdfb26f8a
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri Jan 4 16:01:13 2008 +0100
+
+    Read PCI BIOS on secondary R5xx cards.
+
+commit 4e488a349c862da2e27f6025d376fb2b63db3bf9
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Jan 2 22:04:53 2008 +0100
+
+    Woops! Fix typo in chipset names.
+
+commit cfc003965eeb05d3f635cc77b6d05ad2169a5bff
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Jan 2 21:50:43 2008 +0100
+
+    Enable FB location fix for r5xx.
+    
+    RS6xx still needs to be checked.
+
+commit a6835b5872cec662caed34ec756f9308a81b7f9f
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Jan 2 07:41:56 2008 +0100
+
+    PLLControlTableRetrieve(): Fix test in for loop.
+    
+    With the current for loop test the function will always return the first value
+    in the list.
+
+commit 3293c60d0e8b026f3fedcc182ac86bb05d6a1ced
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Dec 31 09:41:46 2007 +0100
+
+    Fix header inclusion order.
+    
+    The inclusion of xf86_ansic.h before the X.Org headers caused
+    problems under some circumstances as those header might include
+    system headers whose function declarations then also get wrapped.
+
+commit fcf15c8facb7c2c1a4a2513f3f84537f3f35c6a1
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Dec 28 16:23:47 2007 +0100
+
+    Add quirk table entry for ATI Radeon 2400HD Pro.
+
+commit 7e5ea8a215c2e2941b62824ca8453b58b0573437
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Dec 28 12:57:12 2007 +0100
+
+    Fix RANDR_PANNING_AREA spelling. Oops.
+
+commit 6c0f97d50f7884e822d573b1da57fcfd2aee08fa
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Sat Dec 22 17:25:22 2007 +0100
+
+    conntest: fix warning (uninitialised value).
+
+commit 10c551027b92f3ce796115c754393cd0b88a7bac
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Sat Dec 22 17:22:42 2007 +0100
+
+    RV670 0x9501: TMDSA/B electrical values.
+
 commit f213db06140226c843c9649cfaaea4b3d130ba16
 Author: Matthias Hopf <mhopf@suse.de>
 Date:   Fri Dec 21 16:43:05 2007 +0100

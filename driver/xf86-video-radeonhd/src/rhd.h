@@ -82,7 +82,29 @@ enum RHD_CHIPSETS {
     RHD_M76,
     /* RV670 came into existence after RV6x0 and M7x */
     RHD_RV670,
+    RHD_R680,
+    RHD_RV620,
+    RHD_M82,
+    RHD_RV635,
+    RHD_M86,
     RHD_CHIP_END
+};
+
+enum RHD_FAMILIES {
+    RHD_FAMILY_UNKNOWN = 0,
+    RHD_FAMILY_RV515,
+    RHD_FAMILY_R520,
+    RHD_FAMILY_RV530,
+    RHD_FAMILY_RV560,
+    RHD_FAMILY_RV570,
+    RHD_FAMILY_R580,
+    RHD_FAMILY_RS690,
+    RHD_FAMILY_R600,
+    RHD_FAMILY_RV610,
+    RHD_FAMILY_RV630,
+    RHD_FAMILY_RV670,
+    RHD_FAMILY_RV620,
+    RHD_FAMILY_RV635
 };
 
 enum RHD_HPD_USAGE {
@@ -90,7 +112,21 @@ enum RHD_HPD_USAGE {
     RHD_HPD_USAGE_OFF,
     RHD_HPD_USAGE_NORMAL,
     RHD_HPD_USAGE_SWAP,
-    RHD_HPD_USAGE_AUTO_SWAP
+    RHD_HPD_USAGE_AUTO_SWAP,
+    RHD_HPD_USAGE_AUTO_OFF
+};
+
+enum RHD_TV_MODE {
+    RHD_TV_NONE = 0,
+    RHD_TV_NTSC = 1,
+    RHD_TV_NTSCJ = 1 << 2,
+    RHD_TV_PAL = 1 << 3,
+    RHD_TV_PALM = 1 << 4,
+    RHD_TV_PALCN = 1 << 5,
+    RHD_TV_PALN = 1 << 6,
+    RHD_TV_PAL60 = 1 << 7,
+    RHD_TV_SECAM = 1 << 8,
+    RHD_TV_CV = 1 << 9
 };
 
 #define RHD_CONNECTORS_MAX 4
@@ -124,21 +160,32 @@ typedef struct _RHDopt {
     } val;
 } RHDOpt, *RHDOptPtr;
 
+/* Some more intelligent handling of chosing which acceleration to use */
+enum AccelMethod {
+    RHD_ACCEL_NONE = 0, /* ultra slow, but might be desired for debugging. */
+    RHD_ACCEL_SHADOWFB = 1, /* cache in main ram. */
+    RHD_ACCEL_XAA = 2, /* "old" X acceleration architecture. */
+    RHD_ACCEL_EXA = 3, /* not done yet. */
+    RHD_ACCEL_DEFAULT = 4 /* keep as highest. */
+};
+
 typedef struct RHDRec {
     int                 scrnIndex;
 
     int                 ChipSet;
 #ifdef XSERVER_LIBPCIACCESS
     struct pci_device   *PciInfo;
+    struct pci_device   *NBPciInfo;
 #else
     pciVideoRec         *PciInfo;
-#endif
     PCITAG              PciTag;
+    PCITAG		NBPciTag;
+#endif
     unsigned int	PciDeviceID;
     int			entityIndex;
     struct rhdCard      *Card;
     OptionInfoPtr       Options;
-    RHDOpt              noAccel;
+    enum AccelMethod    AccelMethod;
     RHDOpt              swCursor;
     RHDOpt		shadowFB;
     RHDOpt		forceReduced;
@@ -146,6 +193,7 @@ typedef struct RHDRec {
     RHDOpt		noRandr;
     RHDOpt		rrUseXF86Edid;
     RHDOpt		rrOutputOrder;
+    RHDOpt		tvModeName;
     enum RHD_HPD_USAGE	hpdUsage;
     unsigned int        FbMapSize;
     pointer             FbBase;   /* map base of fb   */
@@ -156,6 +204,15 @@ typedef struct RHDRec {
 #define RHD_FB_CHUNK(x)     (((x) + 0xFFF) & ~0xFFF) /* align */
     unsigned int        FbFreeStart;
     unsigned int        FbFreeSize;
+
+    /* visible part of the framebuffer */
+    unsigned int        FbScanoutStart;
+    unsigned int        FbScanoutSize;
+
+    /* for 2d acceleration: pixmapcache and such */
+    RHDOpt              OffscreenOption;
+    unsigned int        FbOffscreenStart;
+    unsigned int        FbOffscreenSize;
 
     unsigned int        MMIOMapSize;
     pointer             MMIOBase; /* map base if mmio */
@@ -194,11 +251,19 @@ typedef struct RHDRec {
 
     /* don't ignore the Monitor section of the conf file */
     struct rhdMonitor  *ConfigMonitor;
+    enum RHD_TV_MODE   tvMode;
+    rhdShadowPtr       shadowPtr;
 
-    rhdShadowPtr	shadowPtr;
+    struct _XAAInfoRec *XAAInfo;
+#ifdef USE_EXA
+    struct _ExaDriver  *EXAInfo;
+#endif
+    void               *TwoDInfo;
 
     /* RandR compatibility layer */
     struct rhdRandr    *randr;
+    /* log verbosity - store this for convenience */
+    int			verbosity;
 } RHDRec, *RHDPtr;
 
 #define RHDPTR(p) 	((RHDPtr)((p)->driverPrivate))
@@ -226,6 +291,14 @@ CARD32 _RHDReadMC(int scrnIndex, CARD32 addr);
 #define RHDReadMC(ptr,addr) _RHDReadMC((ptr)->scrnIndex,(addr))
 void _RHDWriteMC(int scrnIndex, CARD32 addr, CARD32 data);
 #define RHDWriteMC(ptr,addr,value) _RHDWriteMC((ptr)->scrnIndex,(addr),(value))
+CARD32 _RHDReadPLL(int scrnIndex, CARD16 offset);
+#define RHDReadPLL(ptr, off) _RHDReadPLL((ptr)->scrnIndex,(off))
+void _RHDWritePLL(int scrnIndex, CARD16 offset, CARD32 data);
+#define RHDWritePLL(ptr, off, value) _RHDWritePLL((ptr)->scrnIndex,(off),(value))
+
+/* rhd_id.c */
+enum RHD_FAMILIES RHDFamily(enum RHD_CHIPSETS chipset);
+Bool RHDIsIGP(enum RHD_CHIPSETS chipset);
 
 /* rhd_helper.c */
 void RhdGetOptValBool(const OptionInfoRec *table, int token,
@@ -243,7 +316,7 @@ void RhdGetOptValString(const OptionInfoRec *table, int token,
 char *RhdAppendString(char *s1, const char *s2);
 void RhdAssertFailed(const char *str,
 		     const char *file, int line, const char *func) NORETURN;
-void RhdAssertFailedFormat(const char *str, const char *file, int line,
+void RhdAssertFailedFormat(const char *str,  const char *file, int line,
 			   const char *func, const char *format, ...) NORETURN;
 
 /* Extra debugging verbosity: decimates gdb usage */
@@ -271,9 +344,19 @@ void RHDDebugContVerb(int verb, const char *format, ...);
 #define RHDFUNC(ptr) RHDDebug((ptr)->scrnIndex, "FUNCTION: %s\n", __func__)
 #define RHDFUNCI(scrnIndex) RHDDebug(scrnIndex, "FUNCTION: %s\n", __func__)
 void RhdDebugDump(int scrnIndex, unsigned char *start, int size);
+
 #ifdef RHD_DEBUG
+CARD32 _RHDRegReadD(int scrnIndex, CARD16 offset);
+# define RHDRegReadD(ptr, offset) _RHDRegReadD((ptr)->scrnIndex, (offset))
+void _RHDRegWriteD(int scrnIndex, CARD16 offset, CARD32 value);
+# define RHDRegWriteD(ptr, offset, value) _RHDRegWriteD((ptr)->scrnIndex, (offset), (value))
+void _RHDRegMaskD(int scrnIndex, CARD16 offset, CARD32 value, CARD32 mask);
+# define RHDRegMaskD(ptr, offset, value, mask) _RHDRegMaskD((ptr)->scrnIndex, (offset), (value), (mask))
 # define DEBUGP(x) {x;}
 #else
+# define RHDRegReadD(ptr, offset) RHDRegRead(ptr, offset)
+# define RHDRegWriteD(ptr, offset, value) RHDRegWrite(ptr, offset, value)
+# define RHDRegMaskD(ptr, offset, value, mask) RHDRegMask(ptr, offset, value, mask)
 # define DEBUGP(x)
 #endif
 

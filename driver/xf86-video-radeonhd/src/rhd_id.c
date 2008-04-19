@@ -72,6 +72,9 @@ SymTabRec RHDChipsets[] = {
     { RHD_M76,   "M76" },
     /* RV670 came into existence after RV6x0 and M7x */
     { RHD_RV670, "RV670" },
+    { RHD_R680,  "R680"  },
+    { RHD_RV620, "RV620" },
+    { RHD_RV635, "RV635" },
     { -1,      NULL }
 };
 
@@ -110,7 +113,7 @@ const PCI_ID_LIST = {
     RHD_DEVICE_MATCH(  0x710C, RHD_R520  ), /* Radeon X1800 */
     RHD_DEVICE_MATCH(  0x710E, RHD_R520  ), /* FireGL V7300 */
     RHD_DEVICE_MATCH(  0x710F, RHD_R520  ), /* FireGL V7350 */
-    RHD_DEVICE_MATCH(  0x7140, RHD_RV515 ), /* Radeon X1600 */
+    RHD_DEVICE_MATCH(  0x7140, RHD_RV515 ), /* Radeon X1600/X1550 */
     RHD_DEVICE_MATCH(  0x7141, RHD_RV505 ), /* RV505 */
     RHD_DEVICE_MATCH(  0x7142, RHD_RV515 ), /* Radeon X1300/X1550 */
     RHD_DEVICE_MATCH(  0x7143, RHD_RV505 ), /* Radeon X1550 */
@@ -196,12 +199,10 @@ const PCI_ID_LIST = {
     RHD_DEVICE_MATCH(  0x793F, RHD_RS600 ), /* Radeon Xpress 1200 */
     RHD_DEVICE_MATCH(  0x7941, RHD_RS600 ), /* Radeon Xpress 1200 */
     RHD_DEVICE_MATCH(  0x7942, RHD_RS600 ), /* Radeon Xpress 1200 (M) */
-#if 0 /* Not seen yet */
     RHD_DEVICE_MATCH(  0x796C, RHD_RS740 ), /* RS740 */
     RHD_DEVICE_MATCH(  0x796D, RHD_RS740 ), /* RS740M */
-    RHD_DEVICE_MATCH(  0x796E, RHD_RS740 ), /* RS740 */
+    RHD_DEVICE_MATCH(  0x796E, RHD_RS740 ), /* ATI Radeon 2100 RS740 */
     RHD_DEVICE_MATCH(  0x796F, RHD_RS740 ), /* RS740M */
-#endif
     RHD_DEVICE_MATCH(  0x9400, RHD_R600  ), /* Radeon HD 2900 XT */
     RHD_DEVICE_MATCH(  0x9401, RHD_R600  ), /* Radeon HD 2900 XT */
     RHD_DEVICE_MATCH(  0x9402, RHD_R600  ), /* Radeon HD 2900 XT */
@@ -220,12 +221,14 @@ const PCI_ID_LIST = {
     RHD_DEVICE_MATCH(  0x94C8, RHD_M74   ), /* Mobility Radeon HD 2400 XT */
     RHD_DEVICE_MATCH(  0x94C9, RHD_M72   ), /* Mobility Radeon HD 2400 */
     RHD_DEVICE_MATCH(  0x94CB, RHD_M72   ), /* ATI RADEON E2400 */
-    RHD_DEVICE_MATCH(  0x94CC, RHD_RV610 ), /* RV610 */
+    RHD_DEVICE_MATCH(  0x94CC, RHD_RV610 ), /* ATI Radeon HD 2400 */
     RHD_DEVICE_MATCH(  0x9500, RHD_RV670 ), /* RV670 */
     RHD_DEVICE_MATCH(  0x9501, RHD_RV670 ), /* ATI Radeon HD3870 */
     RHD_DEVICE_MATCH(  0x9505, RHD_RV670 ), /* ATI Radeon HD3850 */
     RHD_DEVICE_MATCH(  0x9507, RHD_RV670 ), /* RV670 */
+    RHD_DEVICE_MATCH(  0x950F, RHD_R680  ), /* ATI Radeon HD3870 X2 */
     RHD_DEVICE_MATCH(  0x9511, RHD_RV670 ), /* ATI FireGL V7700 */
+    RHD_DEVICE_MATCH(  0x9515, RHD_RV670 ), /* ATI Radeon HD 3850 AGP */
     RHD_DEVICE_MATCH(  0x9580, RHD_RV630 ), /* RV630 */
     RHD_DEVICE_MATCH(  0x9581, RHD_M76   ), /* Mobility Radeon HD 2600 */
     RHD_DEVICE_MATCH(  0x9583, RHD_M76   ), /* Mobility Radeon HD 2600 XT */
@@ -238,7 +241,63 @@ const PCI_ID_LIST = {
     RHD_DEVICE_MATCH(  0x958C, RHD_RV630 ), /* FireGL V5600 */
     RHD_DEVICE_MATCH(  0x958D, RHD_RV630 ), /* FireGL V3600 */
     RHD_DEVICE_MATCH(  0x958E, RHD_RV630 ), /* ATI Radeon HD 2600 LE */
+    RHD_DEVICE_MATCH(  0x9590, RHD_RV635 ), /* ATI Radeon HD 3600 Series */
+    RHD_DEVICE_MATCH(  0x9591, RHD_RV635 ), /* ATI Mobility Radeon HD 3650 */
+    RHD_DEVICE_MATCH(  0x9596, RHD_RV635 ), /* ATI Radeon HD 3650 AGP */
+    RHD_DEVICE_MATCH(  0x9597, RHD_RV635 ), /* ATI Radeon HD 3600 Series */
+    RHD_DEVICE_MATCH(  0x9598, RHD_RV635 ), /* ATI Radeon HD 3670 */
+    RHD_DEVICE_MATCH(  0x9599, RHD_RV635 ), /* ATI Radeon HD 3600 Series */
+    RHD_DEVICE_MATCH(  0x95C0, RHD_RV620 ), /* ATI Radeon HD 3470 */
+    RHD_DEVICE_MATCH(  0x95C2, RHD_M82   ), /* ATI Mobility Radeon HD 3430 (M82) */
+    RHD_DEVICE_MATCH(  0x95C4, RHD_M82 ), /* ATI Mobility Radeon HD 3400 Series (M82)  */
+    RHD_DEVICE_MATCH(  0x95C5, RHD_RV620 ), /* ATI Radeon HD 3450 */
+    RHD_DEVICE_MATCH(  0x95C7, RHD_RV620 ), /* ATI Radeon HD 3430 */
+    RHD_DEVICE_MATCH(  0x95CD, RHD_RV620 ), /* ATI FireMV 2450  */
+    RHD_DEVICE_MATCH(  0x95CE, RHD_RV620 ), /* ATI FireMV 2260  */
+    RHD_DEVICE_MATCH(  0x95CF, RHD_RV620 ), /* ATI FireMV 2260  */
     LIST_END
+};
+
+static struct rhdChipsetMapStruct {
+    enum RHD_FAMILIES family;
+    Bool IGP;
+} rhdChipsetMap[] = {
+    { RHD_FAMILY_UNKNOWN, 0 }, /* RHD_UNKNOWN */
+    { RHD_FAMILY_RV515, 0 },     /* RHD_RV505 */
+    { RHD_FAMILY_RV515, 0 },     /* RHD_RV515 */
+    { RHD_FAMILY_RV515, 0 },     /* RHD_RV516 */
+    { RHD_FAMILY_R520,  0 },     /* RHD_R520 */
+    { RHD_FAMILY_RV530, 0 },     /* RHD_RV530 */
+    { RHD_FAMILY_RV530, 0 },     /* RHD_RV535 */
+    { RHD_FAMILY_RV515, 0 },     /* RHD_RV550 */
+    { RHD_FAMILY_RV560, 0 },     /* RHD_RV560 */
+    { RHD_FAMILY_RV570, 0 },     /* RHD_RV570 */
+    { RHD_FAMILY_R580,  0 },     /* RHD_R580 */
+    { RHD_FAMILY_RV515, 0 },     /* RHD_M52 */
+    { RHD_FAMILY_RV515, 0 },     /* RHD_M54 */
+    { RHD_FAMILY_RV530, 0 },     /* RHD_M56 */
+    { RHD_FAMILY_R520,  0 },     /* RHD_M58 */
+    { RHD_FAMILY_RV515, 0 },     /* RHD_M62 */
+    { RHD_FAMILY_RV515, 0 },     /* RHD_M64 */
+    { RHD_FAMILY_RV530, 0 },     /* RHD_M66 */
+    { RHD_FAMILY_R580,  0 },     /* RHD_M68 */
+    { RHD_FAMILY_RV515, 0 },     /* RHD_M71 */
+    { RHD_FAMILY_RS690, 1 },     /* RHD_RS600 */
+    { RHD_FAMILY_RS690, 1 },     /* RHD_RS690 */
+    { RHD_FAMILY_RS690, 1 },     /* RHD_RS740 */
+    { RHD_FAMILY_R600,  0 },     /* RHD_R600 */
+    { RHD_FAMILY_RV610, 0 },     /* RHD_RV610 */
+    { RHD_FAMILY_RV630, 0 },     /* RHD_RV630 */
+    { RHD_FAMILY_RV610, 0 },     /* RHD_M72 */
+    { RHD_FAMILY_RV610, 0 },     /* RHD_M74 */
+    { RHD_FAMILY_RV630, 0 },     /* RHD_M76 */
+    { RHD_FAMILY_RV670, 0 },     /* RHD_RV670 */
+    { RHD_FAMILY_RV670, 0 },     /* RHD_R680 */
+    { RHD_FAMILY_RV620, 0 },     /* RHD_RV620 */
+    { RHD_FAMILY_RV620, 0 },     /* RHD_M82 */
+    { RHD_FAMILY_RV635, 0 },     /* RHD_RV635 */
+    { RHD_FAMILY_UNKNOWN, 0 }    /* RHD_M86 */
+    /* RHD_CHIP_END */
 };
 
 /*
@@ -262,9 +321,12 @@ RHDIdentify(int flags)
     xf86Msg(X_NONE,
 	    "\tR600  : Radeon HD 2900 GT/Pro/XT; FireGL V7600/V8600/V8650.\n"
 	    "\tRV610 : Radeon HD 2350, HD 2400 Pro/XT, HD 2400 Pro AGP; FireGL V4000.\n"
+	    "\tRV620 : Radeon HD 3450, HD 3470.\n"
 	    "\tRV630 : Radeon HD 2600 LE/Pro/XT, HD 2600 Pro/XT AGP; Gemini RV630;\n"
 	    "\t\tFireGL V3600/V5600.\n"
-	    "\tRV670 : Radeon HD 3850, HD 3870, FireGL V7700.\n");
+	    "\tRV635 : Radeon HD 3650, HD 3670.\n"
+	    "\tRV670 : Radeon HD 3850, HD 3870, FireGL V7700.\n"
+	    "\tR680  : Radeon HD 3870 X2.\n");
     xf86Msg(X_NONE,
 	    "\tM52   : Mobility Radeon X1300.\n"
 	    "\tM54   : Mobility Radeon X1400; M54-GL.\n"
@@ -278,8 +340,10 @@ RHDIdentify(int flags)
 	    "\tM71   : Mobility Radeon HD 2300.\n"
 	    "\tM72   : Mobility Radeon HD 2400; Radeon E2400.\n"
 	    "\tM74   : Mobility Radeon HD 2400 XT.\n"
-	    "\tM76   : Mobility Radeon HD 2600\n"
-	    "\t\t(Gemini ATI) Mobility Radeon HD 2600 XT.\n");
+	    "\tM76   : Mobility Radeon HD 2600;\n"
+	    "\t\t(Gemini ATI) Mobility Radeon HD 2600 XT.\n"
+	    "\tM82   : Mobility Radeon HD 3400.\n"
+	    "\tM86   : Mobility Radeon HD 3600.\n");
     xf86Msg(X_NONE,
 	    "\tRS600 : Radeon Xpress 1200, Xpress 1250.\n"
 	    "\tRS690 : Radeon X1200, X1250, X1270.\n"
@@ -288,6 +352,28 @@ RHDIdentify(int flags)
 
     xf86Msg(X_INFO, "%s: version %s, built from %s\n\n",
 	    RHD_NAME, PACKAGE_VERSION, GIT_MESSAGE);
+}
+
+/*
+ *
+ */
+enum RHD_FAMILIES
+RHDFamily(enum RHD_CHIPSETS chipset)
+{
+    assert(chipset <= sizeof(RHDChipsetMap)/sizeof(rhdChipsetMapStruct));
+
+    return rhdChipsetMap[chipset].family;
+}
+
+/*
+ *
+ */
+Bool
+RHDIsIGP(enum RHD_CHIPSETS chipset)
+{
+    assert(chipset <= sizeof(RHDChipsetMap)/sizeof(rhdChipsetMapStruct));
+
+    return rhdChipsetMap[chipset].IGP;
 }
 
 /*
@@ -307,7 +393,7 @@ RHDIdentify(int flags)
 
 /* MacBook Pro provides a weird atombios connector table. */
 #define ID_CONNECTORINFO_MACBOOKPRO \
- { {RHD_CONNECTOR_PANEL, "Panel", RHD_DDC_NONE, RHD_HPD_NONE, \
+ { {RHD_CONNECTOR_PANEL, "Panel", RHD_DDC_2, RHD_HPD_NONE, \
        { RHD_OUTPUT_LVTMA, RHD_OUTPUT_NONE}}, \
    {RHD_CONNECTOR_DVI, "DVI-I", RHD_DDC_0, RHD_HPD_0, \
        { RHD_OUTPUT_DACB, RHD_OUTPUT_TMDSA}}}
@@ -325,6 +411,24 @@ RHDIdentify(int flags)
        { RHD_OUTPUT_LVTMA, RHD_OUTPUT_NONE}}, \
    {RHD_CONNECTOR_DVI, "DVI-I", RHD_DDC_0, RHD_HPD_NONE, \
        { RHD_OUTPUT_DACA, RHD_OUTPUT_TMDSA}}}
+
+/* Sapphire Radeon HD 2600 PRO AGP reports VGA output as DVI */
+#define DVI_BA10_TV_B0_VGA_A0 \
+ { { RHD_CONNECTOR_DVI, "DUAL_LINK_DVI_I", RHD_DDC_1, RHD_HPD_0, \
+	{ RHD_OUTPUT_TMDSA, RHD_OUTPUT_DACB }}, \
+    { RHD_CONNECTOR_TV, "7PIN_DIN TV1 CV", RHD_DDC_0, RHD_HPD_NONE, \
+	{ RHD_OUTPUT_DACB, RHD_OUTPUT_NONE }}, \
+    { RHD_CONNECTOR_VGA, "VGA", RHD_DDC_0, RHD_HPD_NONE, \
+	{ RHD_OUTPUT_NONE, RHD_OUTPUT_DACA }}}
+
+/* MSI RX2600PRO-T2D512Z/D2 */
+#define DVI_BA12_TV_B0_DVI_AB01 \
+ { { RHD_CONNECTOR_DVI, "DUAL_LINK_DVI_I DFP1 CRT2", RHD_DDC_1, RHD_HPD_2, \
+	 { RHD_OUTPUT_TMDSA, RHD_OUTPUT_DACB }}, \
+   { RHD_CONNECTOR_TV, "7PIN_DIN TV1 CV", RHD_DDC_NONE, RHD_HPD_NONE, \
+	 { RHD_OUTPUT_DACB, RHD_OUTPUT_NONE }}, \
+   { RHD_CONNECTOR_DVI, "DUAL_LINK_DVI_I CRT1 DFP2", RHD_DDC_0, RHD_HPD_1, \
+	 { RHD_OUTPUT_LVTMA, RHD_OUTPUT_DACA }}}
 
 #if defined(USE_ID_CONNECTORS) || !defined(ATOM_BIOS)
 
@@ -454,6 +558,7 @@ rhdCards[] =
     /* 0x710E : R520 : FireGL V7300 */
     /* 0x710F : R520 : FireGL V7350 */
     /* 0x7140 : RV515 : Radeon X1600 */
+    { 0x7140, 0x1787, 0x3000, "PowerColor X1550", RHD_CARD_FLAG_HPDSWAP, ID_CONNECTORINFO_EMPTY },
     /* 0x7141 : RV505 : RV505 */
     /* 0x7142 : RV515 : Radeon X1300/X1550 */
     /* 0x7143 : RV505 : Radeon X1550 */
@@ -462,11 +567,13 @@ rhdCards[] =
     { 0x7145, 0x1028, 0x2002, "Dell Inspiron 9400", RHD_CARD_FLAG_NONE, PANEL_B2_VGA_A0_DVI_A10 },
     { 0x7145, 0x1028, 0x2003, "Dell Inspiron 6400", RHD_CARD_FLAG_NONE, PANEL_B_VGA_A0 },
     { 0x7145, 0x1179, 0xFF10, "Toshiba Satellite A100-773", RHD_CARD_FLAG_NONE, PANEL_B1_VGA_A2 },
+    { 0x7145, 0x1297, 0x3058, "M54P X1440", RHD_CARD_FLAG_HPDOFF, ID_CONNECTORINFO_EMPTY },
     { 0x7145, 0x1734, 0x10B0, "Fujitsu Siemens Amilo PI1536", RHD_CARD_FLAG_NONE, PANEL_B_DVI_AA1 },
     { 0x7145, 0x17AA, 0x2006, "Lenovo Thinkpad T60 (2007)", RHD_CARD_FLAG_NONE, PANEL_B2_VGA_A0_DVI_A10 },
     { 0x7145, 0x17AA, 0x202A, "Lenovo Thinkpad Z61m", RHD_CARD_FLAG_NONE, PANEL_B2_VGA_A0 },
     /* 0x7146 : RV515 : Radeon X1300/X1550 */
     { 0x7146, 0x174B, 0x0470, "Sapphire X1300", RHD_CARD_FLAG_NONE, VGA_B1_DVI_AB01 },
+    { 0x7146, 0x174B, 0x0920, "Sapphire X1300", RHD_CARD_FLAG_HPDSWAP, ID_CONNECTORINFO_EMPTY },
     /* 0x7147 : RV505 : Radeon X1550 64-bit */
     { 0x7147, 0x174B, 0x0840, "Sapphire X1550", RHD_CARD_FLAG_HPDSWAP, ID_CONNECTORINFO_EMPTY },
     /* 0x7149 : M52 : Mobility Radeon X1300 */
@@ -490,6 +597,7 @@ rhdCards[] =
     { 0x7183, 0x1028, 0x0D02, "Dell ATI Radeon X1300", RHD_CARD_FLAG_DMS59, DVI_AA00_DVI_BB11 },
     /* 0x7186 : M64 : Mobility Radeon X1450 */
     /* 0x7187 : RV516 : Radeon X1300/X1550 */
+    { 0x7187, 0x174B, 0x3000, "RV516 : Radeon X1300/X1550", RHD_CARD_FLAG_HPDSWAP, ID_CONNECTORINFO_EMPTY },
     /* 0x7188 : M64 : Mobility Radeon X2300 */
     /* 0x718A : M64 : Mobility Radeon X2300 */
     /* 0x718B : M62 : Mobility Radeon X1350 */
@@ -507,7 +615,7 @@ rhdCards[] =
     { 0x71C2, 0x17EE, 0x71C0, "Connect3D Radeon X1600 Pro", RHD_CARD_FLAG_NONE, VGA_B1_DVI_AA00 },
     /* 0x71C3 : RV535 : Radeon X1600 */
     /* 0x71C4 : M56 : Mobility FireGL V5200 */
-    { 0x71C4, 0x17AA, 0x2007, "Lenovo Thinkpad T60p", RHD_CARD_FLAG_NONE, PANEL_B2_VGA_A0 },
+    { 0x71C4, 0x17AA, 0x2007, "Lenovo Thinkpad T60p V5200", RHD_CARD_FLAG_HPDOFF, ID_CONNECTORINFO_EMPTY },
     /* 0x71C5 : M56 : Mobility Radeon X1600 */
     { 0x71C5, 0x103C, 0x30A3, "HP/Compaq nc8430", RHD_CARD_FLAG_NONE, PANEL_B1_VGA_A0 },
     { 0x71C5, 0x103C, 0x30B4, "HP/Compaq nw8440", RHD_CARD_FLAG_NONE, PANEL_B1_VGA_A0 },
@@ -519,12 +627,14 @@ rhdCards[] =
     { 0x71C6, 0x1462, 0x0400, "MSI RX1650 Pro", RHD_CARD_FLAG_NONE, DVI_BA10_DVI_AB01 },
     /* 0x71C7 : RV535 : Radeon X1650 */
     { 0x71C7, 0x1043, 0x01B6, "Asus EAX1650 Silent", RHD_CARD_FLAG_NONE, VGA_A0_DVI_BB10 },
+    { 0x71C7, 0x1787, 0x2227, "Damond Viper X1650 Pro", RHD_CARD_FLAG_HPDSWAP, ID_CONNECTORINFO_EMPTY },
     /* 0x71CD : RV530 : Radeon X1600 */
+    { 0x71CD, 0x174B, 0x0840, "PCP X1600 400M/500E", RHD_CARD_FLAG_HPDSWAP, ID_CONNECTORINFO_EMPTY },
     /* 0x71CE : RV530 : Radeon X1300 XT/X1600 Pro */
     /* 0x71D2 : RV530 : FireGL V3400 */
     { 0x71D2, 0x1002, 0x2B02, "ATI FireGL V3400", RHD_CARD_FLAG_NONE, DVI_BB11_DVI_AA00 },
     /* 0x71D4 : M66 : Mobility FireGL V5250 */
-    { 0x71D4, 0x17AA, 0x20A4, "Lenovo T60p", RHD_CARD_FLAG_NONE, PANEL_B2_VGA_A0 },
+    { 0x71D4, 0x17AA, 0x20A4, "Lenovo Thinkpad T60p V5250", RHD_CARD_FLAG_HPDOFF, ID_CONNECTORINFO_EMPTY },
     /* 0x71D5 : M66 : Mobility Radeon X1700 */
     /* 0x71D6 : M66 : Mobility Radeon X1700 XT */
     /* 0x71DA : RV530 : FireGL V5200 */
@@ -586,9 +696,11 @@ rhdCards[] =
     /* 0x940F : R600 : ATI FireGL V7600  */
     /* 0x94C0 : RV610 : RV610 */
     /* 0x94C1 : RV610 : Radeon HD 2400 XT */
+    { 0x94C1, 0x1002, 0x0D02, "ATI Radeon HD 2400 XT", RHD_CARD_FLAG_DMS59, ID_CONNECTORINFO_EMPTY },
     { 0x94C1, 0x1028, 0x0D02, "Dell Radeon HD 2400 XT", RHD_CARD_FLAG_DMS59, ID_CONNECTORINFO_EMPTY },
     { 0x94C1, 0x174B, 0xE390, "Sapphire HD 2400 XT", RHD_CARD_FLAG_NONE, VGA_B1_DVI_AB00 },
     /* 0x94C3 : RV610 : Radeon HD 2400 Pro */
+    { 0x94C3, 0x1545, 0x3210, "ATI Radeon 2400HD Pro", RHD_CARD_FLAG_HPDSWAP, ID_CONNECTORINFO_EMPTY },
     { 0x94C3, 0x174B, 0xE370, "Sapphire HD 2400 Pro", RHD_CARD_FLAG_NONE, VGA_A0_DVI_BB10 },
     /* 0x94C4 : RV610 : ATI Radeon HD 2400 PRO AGP  */
     { 0x94C4, 0x18BC, 0x0028, "GeCube Radeon HD 2400PRO AGP", RHD_CARD_FLAG_NONE, BROKEN_VGA_B1_DVI_AB00 },
@@ -605,6 +717,8 @@ rhdCards[] =
     /* 0x9583 : M76 : Mobility Radeon HD 2600 XT */
     /* 0x9586 : RV630 : ATI Radeon HD 2600 XT AGP */
     /* 0x9587 : RV630 : ATI Radeon HD 2600 Pro AGP */
+    { 0x9587, 0x1002, 0x0028, "Sapphire Radeon HD 2600 PRO AGP", RHD_CARD_FLAG_NONE, DVI_BA10_TV_B0_VGA_A0 },
+    { 0x9587, 0x1462, 0x0028, "MSI HD2600PRO AGP", RHD_CARD_FLAG_NONE, DVI_BA12_TV_B0_DVI_AB01 },
     /* 0x9588 : RV630 : Radeon HD 2600 XT */
     { 0x9588, 0x1002, 0x2542, "ATI Radeon HD 2600XT DDR4", RHD_CARD_FLAG_NONE, DVI_BA10_DVI_AB01 },
     { 0x9588, 0x1448, 0x216C, "Gigabyte HD 2600 XT 256MB DDR3", RHD_CARD_FLAG_NONE, DVI_BA10_DVI_AB01 },
@@ -654,7 +768,9 @@ RHDCardIdentify(ScrnInfoPtr pScrn)
     xf86Msg(X_NONE, "\t"
 	    "If - and only if - your card does not work or does not work optimally\n\t"
 	    "please contact radeonhd@opensuse.org to help rectify this.\n\t"
-	    "Use the subject: 0x%04X:0x%04X:0x%04X: <name of board>.\n",
+	    "Use the subject: 0x%04X:0x%04X:0x%04X: <name of board>\n\t"
+	    "and *please* describe the problems you are seeing\n\t"
+	    "in your message.\n",
 	    deviceID, subVendorID, subDeviceID);
 #else
     xf86Msg(X_NONE, "\t"

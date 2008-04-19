@@ -1,8 +1,8 @@
 /*
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Egbert Eich   <eich@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2007-2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007-2008  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007-2008  Egbert Eich   <eich@novell.com>
+ * Copyright 2007-2008  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,8 +24,8 @@
  */
 
 /*
- * Deals with the Primary TMDS device (TMDSA).
- *
+ * Deals with the Primary TMDS device (TMDSA) of R500s, R600s.
+ * Gets replaced by DDIA on RS690 and DIG/UNIPHY on RV620.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -48,6 +48,8 @@
 #include "rhd_regs.h"
 
 struct rhdTMDSPrivate {
+    Bool RunsDualLink;
+
     Bool Stored;
 
     CARD32 StoreControl;
@@ -64,9 +66,11 @@ struct rhdTMDSPrivate {
 };
 
 /*
- *
+ * We cannot sense for dual link here at all, plus, we need a bit more work
+ * for enabling the transmitter for sensing to happen on most R5xx cards.
+ * RV570 (0x7280) and R600 and above seem ok.
  */
-static Bool
+static enum rhdSensedOutput
 TMDSASense(struct rhdOutput *Output, enum rhdConnectorType Type)
 {
     RHDPtr rhdPtr = RHDPTRI(Output);
@@ -75,18 +79,17 @@ TMDSASense(struct rhdOutput *Output, enum rhdConnectorType Type)
 
     RHDFUNC(Output);
 
-    if (Type != RHD_CONNECTOR_DVI) {
+    if ((Type != RHD_CONNECTOR_DVI) && (Type != RHD_CONNECTOR_DVI_SINGLE)) {
 	xf86DrvMsg(Output->scrnIndex, X_WARNING,
 		   "%s: connector type %d is not supported.\n",
 		   __func__, Type);
-	return FALSE;
+	return RHD_SENSED_NONE;
     }
 
     Enable = RHDRegRead(Output, TMDSA_TRANSMITTER_ENABLE);
     Control = RHDRegRead(Output, TMDSA_TRANSMITTER_CONTROL);
     Detect = RHDRegRead(Output, TMDSA_LOAD_DETECT);
 
-    /* r500 needs a tiny bit more work :) */
     if (rhdPtr->ChipSet < RHD_R600) {
 	RHDRegMask(Output, TMDSA_TRANSMITTER_ENABLE, 0x00000003, 0x00000003);
 	RHDRegMask(Output, TMDSA_TRANSMITTER_CONTROL, 0x00000001, 0x00000003);
@@ -95,8 +98,8 @@ TMDSASense(struct rhdOutput *Output, enum rhdConnectorType Type)
     RHDRegMask(Output, TMDSA_LOAD_DETECT, 0x00000001, 0x00000001);
     usleep(1);
     ret = RHDRegRead(Output, TMDSA_LOAD_DETECT) & 0x00000010;
-    RHDRegMask(Output, TMDSA_LOAD_DETECT, Detect, 0x00000001);
 
+    RHDRegMask(Output, TMDSA_LOAD_DETECT, Detect, 0x00000001);
     if (rhdPtr->ChipSet < RHD_R600) {
 	RHDRegWrite(Output, TMDSA_TRANSMITTER_ENABLE, Enable);
 	RHDRegWrite(Output, TMDSA_TRANSMITTER_CONTROL, Control);
@@ -105,7 +108,10 @@ TMDSASense(struct rhdOutput *Output, enum rhdConnectorType Type)
     RHDDebug(Output->scrnIndex, "%s: %s\n", __func__,
 	     ret ? "Attached" : "Disconnected");
 
-    return ret;
+    if (ret)
+	return RHD_SENSED_DVI;
+    else
+	return RHD_SENSED_NONE;
 }
 
 /*
@@ -116,11 +122,19 @@ TMDSAModeValid(struct rhdOutput *Output, DisplayModePtr Mode)
 {
     RHDFUNC(Output);
 
+    if (Mode->Flags & V_INTERLACE)
+        return MODE_NO_INTERLACE;
+
     if (Mode->Clock < 25000)
 	return MODE_CLOCK_LOW;
 
-    if (Mode->Clock > 165000)
-	return MODE_CLOCK_HIGH;
+    if (Output->Connector->Type == RHD_CONNECTOR_DVI_SINGLE) {
+	if (Mode->Clock > 165000)
+	    return MODE_CLOCK_HIGH;
+    } else if (Output->Connector->Type == RHD_CONNECTOR_DVI) {
+	if (Mode->Clock > 330000) /* could go higher still */
+	    return MODE_CLOCK_HIGH;
+    }
 
     return MODE_OK;
 }
@@ -134,6 +148,7 @@ static struct R5xxTMDSAMacro {
 } R5xxTMDSAMacro[] = {
     { 0x7104, 0x00C00414 }, /* R520  */
     { 0x7142, 0x00A00415 }, /* RV515 */
+    { 0x7145, 0x00A00416 }, /* M54   */
     { 0x7146, 0x00C0041F }, /* RV515 */
     { 0x7147, 0x00C00418 }, /* RV505 */
     { 0x7149, 0x00800416 }, /* M56   */
@@ -141,6 +156,7 @@ static struct R5xxTMDSAMacro {
     { 0x7183, 0x00600412 }, /* RV530 */
     { 0x71C1, 0x00C0041F }, /* RV535 */
     { 0x71C2, 0x00A00416 }, /* RV530 */
+    { 0x71C4, 0x00A00416 }, /* M56   */
     { 0x71C5, 0x00A00416 }, /* M56   */
     { 0x71C6, 0x00A00513 }, /* RV530 */
     { 0x71D2, 0x00A00513 }, /* RV530 */
@@ -160,7 +176,9 @@ static struct Rv6xxTMDSAMacro {
 } Rv6xxTMDSAMacro[] = {
     { 0x94C1, 0x00010416, 0x00010308 }, /* RV610 */
     { 0x94C3, 0x00010416, 0x00010308 }, /* RV610 */
+    { 0x9501, 0x00010416, 0x00010308 }, /* RV670: != atombios */
     { 0x9505, 0x00010416, 0x00010308 }, /* RV670: != atombios */
+    { 0x950F, 0x00010416, 0x00010308 }, /* R680 : != atombios */
     { 0x9587, 0x00010416, 0x00010308 }, /* RV630 */
     { 0x9588, 0x00010416, 0x00010388 }, /* RV630 */
     { 0x9589, 0x00010416, 0x00010388 }, /* RV630 */
@@ -204,9 +222,10 @@ TMDSAVoltageControl(struct rhdOutput *Output)
  *
  */
 static void
-TMDSASet(struct rhdOutput *Output)
+TMDSASet(struct rhdOutput *Output, DisplayModePtr Mode)
 {
     RHDPtr rhdPtr = RHDPTRI(Output);
+    struct rhdTMDSPrivate *Private = (struct rhdTMDSPrivate *) Output->Private;
 
     RHDFUNC(Output);
 
@@ -238,7 +257,15 @@ TMDSASet(struct rhdOutput *Output)
 
     /* Single link, for now */
     RHDRegWrite(Output, TMDSA_COLOR_FORMAT, 0);
-    RHDRegMask(Output, TMDSA_CNTL, 0, 0x01000000);
+
+    /* store this for TRANSMITTER_ENABLE in TMDSAPower */
+    if (Mode->SynthClock > 165000) {
+	RHDRegMask(Output, TMDSA_CNTL, 0x01000000, 0x01000000);
+	Private->RunsDualLink = TRUE; /* for TRANSMITTER_ENABLE in TMDSAPower */
+    } else {
+	RHDRegMask(Output, TMDSA_CNTL, 0, 0x01000000);
+	Private->RunsDualLink = FALSE;
+    }
 
     /* Disable force data */
     RHDRegMask(Output, TMDSA_FORCE_OUTPUT_CNTL, 0, 0x00000001);
@@ -277,25 +304,34 @@ TMDSASet(struct rhdOutput *Output)
 static void
 TMDSAPower(struct rhdOutput *Output, int Power)
 {
+    struct rhdTMDSPrivate *Private = (struct rhdTMDSPrivate *) Output->Private;
+
     RHDFUNC(Output);
 
     switch (Power) {
     case RHD_POWER_ON:
 	RHDRegMask(Output, TMDSA_CNTL, 0x00000001, 0x00000001);
-	RHDRegMask(Output, TMDSA_TRANSMITTER_ENABLE, 0x0000001F, 0x0000001F);
+
+	if (Private->RunsDualLink) {
+	    /* bit 9 is not known by anything below RV610, but is ignored by
+	       the hardware anyway */
+	    RHDRegMask(Output, TMDSA_TRANSMITTER_ENABLE, 0x00001F1F, 0x00001F1F);
+	} else
+	    RHDRegMask(Output, TMDSA_TRANSMITTER_ENABLE, 0x0000001F, 0x00001F1F);
+
 	RHDRegMask(Output, TMDSA_TRANSMITTER_CONTROL, 0x00000001, 0x00000001);
 	usleep(2);
 	RHDRegMask(Output, TMDSA_TRANSMITTER_CONTROL, 0, 0x00000002);
 	return;
     case RHD_POWER_RESET:
-	RHDRegMask(Output, TMDSA_TRANSMITTER_ENABLE, 0, 0x0000001F);
+	RHDRegMask(Output, TMDSA_TRANSMITTER_ENABLE, 0, 0x00001F1F);
 	return;
     case RHD_POWER_SHUTDOWN:
     default:
 	RHDRegMask(Output, TMDSA_TRANSMITTER_CONTROL, 0x00000002, 0x00000002);
 	usleep(2);
 	RHDRegMask(Output, TMDSA_TRANSMITTER_CONTROL, 0, 0x00000001);
-	RHDRegMask(Output, TMDSA_TRANSMITTER_ENABLE, 0, 0x0000001F);
+	RHDRegMask(Output, TMDSA_TRANSMITTER_ENABLE, 0, 0x00001F1F);
 	RHDRegMask(Output, TMDSA_CNTL, 0, 0x00000001);
 	return;
     }
@@ -412,6 +448,8 @@ RHDTMDSAInit(RHDPtr rhdPtr)
     Output->Destroy = TMDSADestroy;
 
     Private = xnfcalloc(sizeof(struct rhdTMDSPrivate), 1);
+    Private->RunsDualLink = FALSE;
+
     Output->Private = Private;
 
     return Output;

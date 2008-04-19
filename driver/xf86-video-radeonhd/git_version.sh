@@ -5,13 +5,46 @@
 # Copyright (c) 2006-2007 Luc Verhaegen <libv@skynet.be>
 # Copyright (C) 2007 Hans Ulrich Niedermann <hun@n-dimensional.de>
 #
-# The author thanks the nice people on #git for the assistance!
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE COPYRIGHT HOLDER(S) OR AUTHOR(S) BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+# This script is based on the one written for xf86-video-unichrome by
+# Luc Verhaegen, but was rewritten almost completely by Hans Ulrich
+# Niedermann. The script contains a few bug fixes from Egbert Eich,
+# Matthias Hopf, Joerg Sonnenberger, and possibly others.
+#
+# The author thanks the nice people on #git for the assistance.
 #
 # Simple testing of this script:
 #   /sbin/busybox sh git_version.sh --example > moo.c \
 #     && gcc -Wall -Wextra -Wno-unused -o moo moo.c \
 #     && ./moo
 #   (bash should also do)
+#
+# For how to hook this up to your automake- and/or imake-based build
+# system, best take a look at how the RadeonHD.am and/or RadeonHD.tmpl
+# work in the xf86-video-radeonhd build system. For non-recursive make,
+# you can probably make things a little bit simpler.
+#
+# KNOWN BUGS:
+#  * Uses hyphenated ("git-foo-bar") program names, which git upstream
+#    have declared deprecated.
+#
 
 # Help messages
 USAGE="[<option>...]"
