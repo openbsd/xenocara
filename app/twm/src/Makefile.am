@@ -27,8 +27,8 @@ bin_PROGRAMS = twm
 rcdir = ${datadir}/X11/twm
 dist_rc_DATA = system.twmrc
 
-twm_CFLAGS = $(TWM_CFLAGS) -DXVENDORNAME=\"The\ X.Org\ Foundation\" -DXORG_RELEASE=\"Release\ $(VERSION)\" -D_BSD_SOURCE
-twm_CFLAGS += -DSYSTEM_INIT_FILE=\"${datadir}/X11/twm/system.twmrc\"
+AM_CFLAGS = $(TWM_CFLAGS) -DXVENDORNAME=\"The\ X.Org\ Foundation\" -DXORG_RELEASE=\"Release\ $(VERSION)\" -D_BSD_SOURCE
+AM_CFLAGS += -DSYSTEM_INIT_FILE=\"${datadir}/X11/twm/system.twmrc\"
 
 twm_LDADD = $(TWM_LIBS)
 

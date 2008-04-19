@@ -1,4 +1,3 @@
-
 dnl  Copyright 2005 Red Hat, Inc.
 dnl 
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
@@ -22,7 +21,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(twm,[1.0.3], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],twm)
+AC_INIT(twm,[1.0.4], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],twm)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -37,7 +36,7 @@ AC_CHECK_FUNC([mkstemp],
    AC_DEFINE(HAS_MKSTEMP,1,[Define to 1 if you have the `mkstemp' function.]))
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(TWM, x11 xext xt xmu)
+PKG_CHECK_MODULES(TWM, x11 xext xt xmu ice sm)
 AC_SUBST(TWM_CFLAGS)
 AC_SUBST(TWM_LIBS)
 
