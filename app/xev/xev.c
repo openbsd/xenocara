@@ -70,6 +70,9 @@ int screen;
 
 XIC xic = NULL;
 
+Atom wm_delete_window;
+Atom wm_protocols;
+
 static void
 prologue (XEvent *eventp, char *event_name)
 {
@@ -581,10 +584,23 @@ do_ClientMessage (XEvent *eventp)
     XClientMessageEvent *e = (XClientMessageEvent *) eventp;
     char *mname = XGetAtomName (dpy, e->message_type);
 
-    printf ("    message_type 0x%lx (%s), format %d\n",
-	    e->message_type, mname ? mname : Unknown, e->format);
+    if (e->message_type == wm_protocols) {
+        char *message = XGetAtomName (dpy, e->data.l[0]);
+        printf ("    message_type 0x%lx (%s), format %d, message 0x%lx (%s)\n",
+                e->message_type, mname ? mname : Unknown, e->format, e->data.l[0], message);
+        if (message) XFree (message);
+    }
+    else {
+        printf ("    message_type 0x%lx (%s), format %d\n",
+                e->message_type, mname ? mname : Unknown, e->format);
+    }
 
     if (mname) XFree (mname);
+
+    if (e->format == 32 
+        && e->message_type == wm_protocols 
+        && (Atom) e->data.l[0] == wm_delete_window) 
+        exit (0);
 }
 
 static void
@@ -884,6 +900,10 @@ main (int argc, char **argv)
 				    INNER_WINDOW_WIDTH, INNER_WINDOW_HEIGHT,
 				    INNER_WINDOW_BORDER,
 				    attr.border_pixel, attr.background_pixel);
+
+        wm_protocols = XInternAtom(dpy, "WM_PROTOCOLS", False);
+        wm_delete_window = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
+        XSetWMProtocols(dpy, w, &wm_delete_window, 1);
 
 	XMapWindow (dpy, subw);		/* map before w so that it appears */
 	XMapWindow (dpy, w);

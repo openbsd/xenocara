@@ -1,4 +1,3 @@
-
 dnl  Copyright 2005 Red Hat, Inc.
 dnl 
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
@@ -22,7 +21,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xev,[1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xev)
+AC_INIT(xev,[1.0.3], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xev)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
