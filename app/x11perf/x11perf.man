@@ -180,7 +180,7 @@ Runs all tests.  This may take a while.
 Runs all the tests starting from the specified name \fItest1\fP until
 the name \fItest2\fP, including both the specified tests. The testnames
 should be one of the options starting from -dot. (eg) -range line100
-will peform the tests from the 100 pixel line test, and go on till the
+will perform the tests from the 100 pixel line test, and go on till the
 last test, -range line100,dline10 will do the tests from line100 to
 dline10.
 .TP 14
@@ -223,7 +223,7 @@ StaticColor, PseudoColor, TrueColor, or DirectColor.  (default is the default
 visual).
 .TP 14
 .B \-reps <n>
-Specify the repetition count (Default is number that takes aprox. 5 seconds)
+Specify the repetition count (Default is number that takes approx. 5 seconds)
 .TP 14
 .B \-subs <s0 s1 ...>
 Specify the number of sub windows to use in the Window tests.

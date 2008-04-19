@@ -32,17 +32,15 @@ following way:
 .PP
 It is possible to run the GXcopy and GXxor tests separately, as long as they
 are concatenated to the same output file:
-.PP
+.nf
 .BI "x11perf -display " display " -v1.3 -rop GXcopy -all > " datafile 
-.br
 .BI "x11perf -display " display " -v1.3 -rop GXxor -all >> " datafile 
-.PP
+.fi
 or
-.PP
+.nf
 .BI "x11perf -display " display " -v1.3 -rop GXxor -all > " datafile 
-.br
 .BI "x11perf -display " display " -v1.3 -rop GXcopy -all >> " datafile 
-.PP
+.fi
 .SH FILES
 .TP
 .B temp.$$

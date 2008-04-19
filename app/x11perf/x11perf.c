@@ -1,5 +1,5 @@
 /* $Xorg: x11perf.c,v 1.4 2000/08/17 19:54:10 cpqbld Exp $ */
-/* $XdotOrg: app/x11perf/x11perf.c,v 1.4 2006/02/14 02:48:22 anholt Exp $ */
+/* $XdotOrg: app/x11perf/x11perf.c,v 1.3 2005/07/26 18:55:42 alanc Exp $ */
 /****************************************************************************
 Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
@@ -68,6 +68,32 @@ RopNameRec ropNames[] = {
 	{ "set",	  GXset }		/* 1 */
 };
 
+RopNameRec popNames[] = {
+	{ "Clear",    	  PictOpClear },
+	{ "Src",	  PictOpSrc },
+	{ "Dst",	  PictOpDst },
+	{ "Over",	  PictOpOver },
+	{ "OverReverse",  PictOpOverReverse },
+	{ "In",		  PictOpIn },
+	{ "InReverse",	  PictOpInReverse },
+	{ "Out",	  PictOpOut },
+	{ "OutReverse",	  PictOpOutReverse },
+	{ "Atop",	  PictOpAtop },
+	{ "AtopReverse",  PictOpAtopReverse },
+	{ "Xor",	  PictOpXor },
+	{ "Add",	  PictOpAdd },
+	{ "Saturate",	  PictOpSaturate },
+};
+
+RopNameRec formatNames[] = {
+    { "RGB24",	  PictStandardRGB24 },
+    { "ARGB32",	  PictStandardARGB32 },
+    { "A8",	  PictStandardA8 },
+    { "A4",	  PictStandardA4 },
+    { "A1",	  PictStandardA1 },
+    { "NATIVE",	  PictStandardNative },
+};
+
 char *(visualClassNames)[] = {
     "StaticGray",
     "GrayScale",
@@ -90,8 +116,15 @@ static double syncTime = 0.0;
 static int saveargc;
 static char **saveargv;
 
+#define NUM_ROPS    16
 static int  numRops = 1;
-static int  rops[16] = { GXcopy };
+static int  rops[NUM_ROPS] = { GXcopy };
+#define NUM_POPS    14
+static int  numPops = 1;
+static int  pops[NUM_POPS] = { PictOpOver };
+#define NUM_FORMATS 6
+static int  numFormats = 1;
+static int  formats[NUM_FORMATS] = { PictStandardNative };
 static int  numPlanemasks = 1;
 static unsigned long planemasks[256] = { (unsigned long)~0 };
 
@@ -131,6 +164,8 @@ static int GetWords(int argi, int argc, char **argv, char **wordsp, int *nump);
 static int GetNumbers(int argi, int argc, char **argv, unsigned long *intsp, 
 		      int *nump);
 static int GetRops(int argi, int argc, char **argv, int *ropsp, int *nump);
+static int GetPops(int argi, int argc, char **argv, int *popsp, int *nump);
+static int GetFormats(int argi, int argc, char **argv, int *formatsp, int *nump);
 
 /************************************************
 *	    time related stuff			*
@@ -329,7 +364,7 @@ GetVersion(int *pargc, /* MODIFIED */
 {
     int     argc = *pargc;
     char    **pargv = argv+1;
-    Version version = VERSION1_5;
+    Version version = VERSION1_6;
     int     i;
     Bool    found = False;
 
@@ -356,6 +391,15 @@ GetVersion(int *pargc, /* MODIFIED */
 	}
 	if (!strcmp (arg, "-v1.4")) {
 	    version = VERSION1_4;
+	    *pargc -= 1;
+	    if (found) {
+		fprintf(stderr, "Warning: multiple version specifications\n");
+	    }
+	    found = True;
+	    continue;
+	}
+	if (!strcmp (arg, "-v1.5")) {
+	    version = VERSION1_5;
 	    *pargc -= 1;
 	    if (found) {
 		fprintf(stderr, "Warning: multiple version specifications\n");
@@ -798,6 +842,12 @@ ProcessTest(XParms xp, Test *test, int func, unsigned long pm, char *label)
     int     j;
 
     xp->planemask = pm;
+    xp->func = func;
+    if (test->testType == COMP)
+    {
+	func = GXcopy;
+	pm = ~0L;
+    }
     CreatePerfGCs(xp, func, pm);
     DisplayStatus(xp->d, "Calibrating", label, 0);
     reps = CalibrateTest(xp, test, seconds, &time);
@@ -860,6 +910,7 @@ main(int argc, char *argv[])
     XGCValues	tgcv;
     int		screen;
     int		rop, pm;
+    int		pop, format;
     int		window_y, window_x;
     XVisualInfo *vinfolist, vinfotempl;
     unsigned long vmask;
@@ -968,6 +1019,12 @@ main(int argc, char *argv[])
 	    ddbackground = argv[i];
 	} else if (strcmp(argv[i], "-rop") == 0) {
 	    skip = GetRops (i+1, argc, argv, rops, &numRops);
+	    i += skip;
+	} else if (strcmp(argv[i], "-pop") == 0) {
+	    skip = GetPops (i+1, argc, argv, pops, &numPops);
+	    i += skip;
+	} else if (strcmp(argv[i], "-format") == 0) {
+	    skip = GetFormats (i+1, argc, argv, formats, &numFormats);
 	    i += skip;
 	} else if (strcmp(argv[i], "-pm") == 0) {
 	    skip = GetNumbers (i+1, argc, argv, planemasks, &numPlanemasks);
@@ -1106,6 +1163,18 @@ main(int argc, char *argv[])
 			    printf ("%s (%ld kids)\n",
 				LABELP(i), subWindows[child]);
 			}
+			break;
+		    case COMP:
+			/* Run it through all specified pops */
+			for (pop = 0; pop < numPops; pop++) {
+			    if (pops[pop] == PictOpOver) {
+				printf ("%s\n", LABELP(i));
+			    } else {
+				printf ("(%s) %s\n",
+					popNames[pops[pop]].name,
+					LABELP(i));
+			    }
+			} /* for pop */
 			break;
 		} /* switch */
 	    }
@@ -1314,6 +1383,28 @@ main(int argc, char *argv[])
 			ProcessTest(&xparms, &test[i], GXcopy, ~0L, label);
 		    }
 		    break;
+	        case COMP:
+		    /* Loop through the composite operands */
+		    for (pop = 0; pop < numPops; pop++) {
+			for (format = 0; format < numFormats; format++) {
+			    if (formats[format] == PictStandardNative) {
+				if (pops[pop] == PictOpOver) {
+				    sprintf (label, "%s", LABELP(i));
+				} else {
+				    sprintf (label, "(%s) %s",
+					     popNames[pops[pop]].name,
+					     LABELP(i));
+				}
+			    } else {
+				sprintf (label, "(%s %s) %s",
+					popNames[pops[pop]].name,
+					formatNames[formats[format]].name,
+					LABELP(i));
+			    }
+			    ProcessTest (&xparms, &test[i], pops[pop], formats[format], label);
+			}
+		    }
+		    break;
 	    } /* switch */
 	} /* if doit */
     } /* ForEachTest */
@@ -1404,20 +1495,82 @@ GetRops (int argi, int argc, char **argv, int *ropsp, int *nump)
 	if (!strncmp (words[i], "GX", 2))
 	    words[i] += 2;
 	if (!strcmp (words[i], "all")) {
-	    for (i = 0; i < 16; i++)
+	    for (i = 0; i < NUM_ROPS; i++)
 		ropsp[i] = ropNames[i].rop;
-	    *nump = 16;
+	    *nump = NUM_ROPS;
 	    break;
 	}
-	for (rop = 0; rop < 16; rop++) {
+	for (rop = 0; rop < NUM_ROPS; rop++) {
 	    if (!strcmp (words[i], ropNames[rop].name)) {
 		ropsp[i] = ropNames[rop].rop;
 		break;
 	    }
 	}
-	if (rop == 16) {
+	if (rop == NUM_ROPS) {
 	    usage ();
 	    fprintf (stderr, "unknown rop name %s\n", words[i]);
+	}
+    }
+    return count;
+}
+
+static int
+GetPops (int argi, int argc, char **argv, int *popsp, int *nump)
+{
+    char    *words[256];
+    int	    count;
+    int	    i;
+    int	    pop;
+
+    count = GetWords (argi, argc, argv, words, nump);
+    for (i = 0; i < count; i++) {
+	if (!strncmp (words[i], "PictOp", 6))
+	    words[i] += 6;
+	if (!strcmp (words[i], "all")) {
+	    for (i = 0; i < NUM_POPS; i++)
+		popsp[i] = popNames[i].rop;
+	    *nump = NUM_POPS;
+	    break;
+	}
+	for (pop = 0; pop < NUM_POPS; pop++) {
+	    if (!strcmp (words[i], popNames[pop].name)) {
+		popsp[i] = popNames[pop].rop;
+		break;
+	    }
+	}
+	if (pop == NUM_POPS) {
+	    usage ();
+	    fprintf (stderr, "unknown picture op name %s\n", words[i]);
+	}
+    }
+    return count;
+}
+
+static int
+GetFormats (int argi, int argc, char **argv, int *formatsp, int *nump)
+{
+    char    *words[256];
+    int	    count;
+    int	    i;
+    int	    format;
+
+    count = GetWords (argi, argc, argv, words, nump);
+    for (i = 0; i < count; i++) {
+	if (!strcmp (words[i], "all")) {
+	    for (i = 0; i < NUM_FORMATS; i++)
+		formatsp[i] = formatNames[i].rop;
+	    *nump = NUM_FORMATS;
+	    break;
+	}
+	for (format = 0; format < NUM_FORMATS; format++) {
+	    if (!strcmp (words[i], formatNames[format].name)) {
+		formatsp[i] = formatNames[format].rop;
+		break;
+	    }
+	}
+	if (format == NUM_FORMATS) {
+	    usage ();
+	    fprintf (stderr, "unknown format name %s\n", words[i]);
 	}
     }
     return count;

@@ -564,3 +564,117 @@ DoCopyPlane(XParms xp, Parms p, int reps)
     }
 }
 
+#include <X11/extensions/Xrender.h>
+
+static Picture	winPict, pixPict;
+
+int
+InitCompositeWin(XParms xp, Parms p, int reps)
+{
+    XRenderPictFormat	*format;
+    (void) InitScroll (xp, p, reps);
+    InitCopyLocations (xp, p, reps);
+    format = XRenderFindVisualFormat (xp->d, xp->vinfo.visual);
+    winPict = XRenderCreatePicture (xp->d, xp->w, format, 0, NULL);
+    return reps;
+}
+
+int
+InitCompositePix(XParms xp, Parms p, int reps)
+{
+    XRenderPictFormat	*format = NULL;
+    int			depth;
+
+    (void) InitCompositeWin (xp, p, reps);
+    
+    /* Create pixmap to write stuff into, and initialize it */
+    switch (xp->planemask) {
+    case PictStandardNative:
+	depth = xp->vinfo.depth;
+	format = XRenderFindVisualFormat (xp->d, xp->vinfo.visual);
+	break;
+    case PictStandardRGB24:
+	depth = 24;
+	break;
+    case PictStandardARGB32:
+	depth = 32;
+	break;
+    case PictStandardA8:
+	depth = 8;
+	break;
+    case PictStandardA4:
+	depth = 4;
+	break;
+    case PictStandardA1:
+	depth = 1;
+	break;
+    }
+    if (!format)
+	format = XRenderFindStandardFormat (xp->d, xp->planemask);
+    
+    pix = XCreatePixmap(xp->d, xp->w, WIDTH, HEIGHT, depth);
+    pixPict = XRenderCreatePicture (xp->d, pix, format, 0, NULL);
+    
+    XRenderComposite (xp->d, PictOpClear,
+		      winPict, None, pixPict,
+		      0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
+    
+#if 1
+    XRenderComposite (xp->d, PictOpOver,
+		      winPict, None, pixPict,
+		      0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
+#endif
+    return reps;
+}
+
+void
+EndCompositeWin (XParms xp, Parms p)
+{
+    if (winPict)
+    {
+	XRenderFreePicture (xp->d, winPict);
+	winPict = None;
+    }
+    if (pixPict)
+    {
+	XRenderFreePicture (xp->d, pixPict);
+	pixPict = None;
+    }
+}
+
+static void 
+CompositeArea(XParms xp, Parms p, int reps, Picture src, Picture dst)
+{
+    int i, size;
+    XSegment *sa, *sb;
+
+    size = p->special;
+    for (sa = segsa, sb = segsb, i = 0; i != reps; i++, sa++, sb++) {
+	XRenderComposite (xp->d, xp->func,
+			  src, None, dst,
+			  sa->x1, sa->y1, 0, 0, 
+			  sa->x2, sa->y2, size, size);
+	XRenderComposite (xp->d, xp->func,
+			  src, None, dst,
+			  sa->x2, sa->y2, 0, 0, sa->x1, sa->y1, size, size);
+	XRenderComposite (xp->d, xp->func,
+			  src, None, dst,
+			  sb->x2, sb->y2, 0, 0, sb->x1, sb->y1, size, size);
+	XRenderComposite (xp->d, xp->func,
+			  src, None, dst,
+			  sb->x1, sb->y1, 0, 0, sb->x2, sb->y2, size, size);
+	CheckAbort ();
+    }
+}
+
+void
+DoCompositeWinWin (XParms xp, Parms p, int reps)
+{
+    CompositeArea (xp, p, reps, winPict, winPict);
+}
+
+void
+DoCompositePixWin (XParms xp, Parms p, int reps)
+{
+    CompositeArea (xp, p, reps, pixPict, winPict);
+}

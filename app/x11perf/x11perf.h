@@ -39,6 +39,7 @@ SOFTWARE.
 #include <X11/Xfuncs.h>
 #endif
 #include <stddef.h>
+#include <X11/extensions/Xrender.h>
 
 #define POLY	     1000       /* # (small) items in poly calls	*/
 #define MAXROWS	       40       /* Max rows of items in poly calls      */
@@ -53,6 +54,7 @@ SOFTWARE.
 #define BigTile	((char *)2)		/* Big tile/stipple */
 #define OddTile	((char *)1)		/* Odd sized tile/stipple */
 
+#define PictStandardNative    5
 
 typedef unsigned char Version;
 
@@ -60,11 +62,13 @@ typedef unsigned char Version;
 #define VERSION1_3  ((Version)(1 << 1))
 #define VERSION1_4  ((Version)(1 << 2))
 #define VERSION1_5  ((Version)(1 << 3))
+#define VERSION1_6  ((Version)(1 << 4))
 #define V1_2ONLY VERSION1_2
-#define V1_2FEATURE	(VERSION1_2 | VERSION1_3 | VERSION1_4 | VERSION1_5)
-#define V1_3FEATURE	(VERSION1_3 | VERSION1_4 | VERSION1_5)
-#define V1_4FEATURE	(VERSION1_4 | VERSION1_5)
-#define V1_5FEATURE     (VERSION1_5)
+#define V1_2FEATURE	(VERSION1_2 | VERSION1_3 | VERSION1_4 | VERSION1_5 | VERSION1_6)
+#define V1_3FEATURE	(VERSION1_3 | VERSION1_4 | VERSION1_5 | VERSION1_6)
+#define V1_4FEATURE	(VERSION1_4 | VERSION1_5 | VERSION1_6)
+#define V1_5FEATURE     (VERSION1_5 | VERSION1_6)
+#define V1_6FEATURE     (VERSION1_6)
 
 typedef struct _Parms {
     /* Required fields */
@@ -84,6 +88,8 @@ typedef struct _XParms {
     GC		    bggc;
     GC		    ddfggc;
     GC		    ddbggc;
+    Picture	    w_picture;
+    Picture	    p_picture;
     unsigned long   foreground;
     unsigned long   background;
     unsigned long   ddbackground;
@@ -93,6 +99,8 @@ typedef struct _XParms {
     Bool	    save_under;
     int		    backing_store;
     unsigned long   planemask;
+    int		    func;
+    int		    format;
     Colormap	    cmap;
 } XParmRec, *XParms;
 
@@ -104,7 +112,8 @@ typedef enum {
     WINDOW,     /* Windowing test, rop, planemask have no affect	*/
     ROP,	/* Graphics test, rop, planemask has some affect	*/
     PLANEMASK,  /* Graphics test, rop no affect, planemask some affect  */
-    NONROP      /* Graphics or overhead test, rop has no affect		*/
+    NONROP,     /* Graphics or overhead test, rop has no affect		*/
+    COMP        /* Graphics test, render op                             */
 } TestType;
 
 typedef struct _Test {
@@ -185,6 +194,24 @@ extern void EndCopyPix ( XParms xp, Parms p );
 extern void EndGetImage ( XParms xp, Parms p );
 extern int InitCopyPlane ( XParms xp, Parms p, int reps );
 extern void DoCopyPlane ( XParms xp, Parms p, int reps );
+
+int
+InitCompositeWin(XParms xp, Parms p, int reps);
+
+void
+EndCompositeWin (XParms xp, Parms p);
+
+void
+DoCompositeWinWin (XParms xp, Parms p, int reps);
+
+int
+InitCompositePix(XParms xp, Parms p, int reps);
+
+void
+EndCompositePix (XParms xp, Parms p);
+
+void
+DoCompositePixWin (XParms xp, Parms p, int reps);
 
 /* do_complex.c */
 extern int InitComplexPoly ( XParms xp, Parms p, int reps );
