@@ -1,4 +1,3 @@
-
 dnl  Copyright 2005 Red Hat, Inc.
 dnl 
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
@@ -24,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 dnl $XdotOrg: app/xdm/configure.ac,v 1.42 2006/06/03 01:01:21 alanc Exp $
 
 AC_PREREQ([2.57])
-AC_INIT(xdm,[1.1.6],[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xdm)
+AC_INIT(xdm,[1.1.7],[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xdm)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -128,7 +127,7 @@ case $host_os in
 	SU="su"
         ;;
     darwin*)
-        OS_CFLAGS="-D__DARWIN__ -DNO_LASTLOG"
+        OS_CFLAGS="-DNO_LASTLOG"
 	SU="su -m"
         ;;
     *bsd*|dragonfly*)

@@ -1,3 +1,31 @@
+commit 996fea2fb1ae1e419e673b89cc3778e371a29324
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Mar 7 17:10:30 2008 -0500
+
+    Fix distcheck.
+
+commit 87a8f18c334b3e5819f92d0f8f37cc41987486d4
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Thu Dec 20 19:11:53 2007 -0800
+
+    Darwin doesn't need __DARWIN__ anymore.
+
+commit 28f4ded22488ce8542ff8b9871f6b4e04614058d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Sep 21 11:03:54 2007 -0700
+
+    Debian bug #440389: 800x600 settings got lost, screen now too wide
+    
+    Debian bug #440389 <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=440389>
+    When deleting the XPM #ifdefs, a set of #if WIDTH < 800 resources
+    got accidentally deleted as well.  (Cause & fix found by Brice Goglin)
+
+commit 923176024d3d6b7f5b392b4f9a07cce8c6ed3823
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Aug 27 14:17:13 2007 -0700
+
+    Restore #endif accidentally removed in d0d4581be22aba9021c5a672bd9e5ba719961e29
+
 commit e775ab1778850663a755279470d3ad6a2c9c0054
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Thu Aug 16 14:47:17 2007 -0700
