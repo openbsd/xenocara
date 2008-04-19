@@ -36,7 +36,7 @@
 
 
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__OpenBSD__)
 
 /*
  * Allocate a large block of memory which can hold code then dole it out
@@ -64,7 +64,7 @@ init_heap(void)
    if (!exec_mem)
       exec_mem = (unsigned char *) mmap(0, EXEC_HEAP_SIZE, 
 					PROT_EXEC | PROT_READ | PROT_WRITE, 
-					MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+					MAP_PRIVATE | MAP_ANON, -1, 0);
 }
 
 
