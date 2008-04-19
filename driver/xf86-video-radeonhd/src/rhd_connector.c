@@ -143,7 +143,7 @@ rhdConnectorSynthName(struct rhdConnectorInfo *ConnectorInfo,
     char *typec;
     char *str1, *str2;
 
-    assert(state != NULL);
+    ASSERT(state != NULL);
 
     if (!*state) {
 	if (!(*state = xcalloc(sizeof(struct rhdCsState), 1)))

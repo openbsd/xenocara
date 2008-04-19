@@ -229,6 +229,8 @@ const PCI_ID_LIST = {
     RHD_DEVICE_MATCH(  0x950F, RHD_R680  ), /* ATI Radeon HD3870 X2 */
     RHD_DEVICE_MATCH(  0x9511, RHD_RV670 ), /* ATI FireGL V7700 */
     RHD_DEVICE_MATCH(  0x9515, RHD_RV670 ), /* ATI Radeon HD 3850 AGP */
+    RHD_DEVICE_MATCH(  0x9517, RHD_RV670 ), /* ATI Radeon HD 3960 */
+    RHD_DEVICE_MATCH(  0x9519, RHD_RV670 ), /* FireStream 9170 */
     RHD_DEVICE_MATCH(  0x9580, RHD_RV630 ), /* RV630 */
     RHD_DEVICE_MATCH(  0x9581, RHD_M76   ), /* Mobility Radeon HD 2600 */
     RHD_DEVICE_MATCH(  0x9583, RHD_M76   ), /* Mobility Radeon HD 2600 XT */
@@ -242,7 +244,6 @@ const PCI_ID_LIST = {
     RHD_DEVICE_MATCH(  0x958D, RHD_RV630 ), /* FireGL V3600 */
     RHD_DEVICE_MATCH(  0x958E, RHD_RV630 ), /* ATI Radeon HD 2600 LE */
     RHD_DEVICE_MATCH(  0x9590, RHD_RV635 ), /* ATI Radeon HD 3600 Series */
-    RHD_DEVICE_MATCH(  0x9591, RHD_RV635 ), /* ATI Mobility Radeon HD 3650 */
     RHD_DEVICE_MATCH(  0x9596, RHD_RV635 ), /* ATI Radeon HD 3650 AGP */
     RHD_DEVICE_MATCH(  0x9597, RHD_RV635 ), /* ATI Radeon HD 3600 Series */
     RHD_DEVICE_MATCH(  0x9598, RHD_RV635 ), /* ATI Radeon HD 3670 */
@@ -325,7 +326,7 @@ RHDIdentify(int flags)
 	    "\tRV630 : Radeon HD 2600 LE/Pro/XT, HD 2600 Pro/XT AGP; Gemini RV630;\n"
 	    "\t\tFireGL V3600/V5600.\n"
 	    "\tRV635 : Radeon HD 3650, HD 3670.\n"
-	    "\tRV670 : Radeon HD 3850, HD 3870, FireGL V7700.\n"
+	    "\tRV670 : Radeon HD 3690, 3850, HD 3870, FireGL V7700, FireStream 9170.\n"
 	    "\tR680  : Radeon HD 3870 X2.\n");
     xf86Msg(X_NONE,
 	    "\tM52   : Mobility Radeon X1300.\n"
@@ -342,8 +343,7 @@ RHDIdentify(int flags)
 	    "\tM74   : Mobility Radeon HD 2400 XT.\n"
 	    "\tM76   : Mobility Radeon HD 2600;\n"
 	    "\t\t(Gemini ATI) Mobility Radeon HD 2600 XT.\n"
-	    "\tM82   : Mobility Radeon HD 3400.\n"
-	    "\tM86   : Mobility Radeon HD 3600.\n");
+	    "\tM82   : Mobility Radeon HD 3400.\n");
     xf86Msg(X_NONE,
 	    "\tRS600 : Radeon Xpress 1200, Xpress 1250.\n"
 	    "\tRS690 : Radeon X1200, X1250, X1270.\n"
@@ -360,7 +360,7 @@ RHDIdentify(int flags)
 enum RHD_FAMILIES
 RHDFamily(enum RHD_CHIPSETS chipset)
 {
-    assert(chipset <= sizeof(RHDChipsetMap)/sizeof(rhdChipsetMapStruct));
+    ASSERT(chipset < sizeof(rhdChipsetMap)/sizeof(struct rhdChipsetMapStruct));
 
     return rhdChipsetMap[chipset].family;
 }
@@ -371,7 +371,7 @@ RHDFamily(enum RHD_CHIPSETS chipset)
 Bool
 RHDIsIGP(enum RHD_CHIPSETS chipset)
 {
-    assert(chipset <= sizeof(RHDChipsetMap)/sizeof(rhdChipsetMapStruct));
+    ASSERT(chipset < sizeof(rhdChipsetMap)/sizeof(struct rhdChipsetMapStruct));
 
     return rhdChipsetMap[chipset].IGP;
 }

@@ -1,3 +1,30 @@
+commit 761940fde7fef72bff18a8b8e840540452cf675a
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Apr 14 17:21:48 2008 +0200
+
+    Bump to 1.2.1. Add changes to README.
+
+commit a898e097ca4ae26db1d0f71144df7a580f0612bd
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sat Apr 12 17:57:46 2008 +0200
+
+    Add build rule for rhd_dump to Imakefile for backward compatibility.
+
+commit e54fda75f2fcc141825d928cf71e23dce23ae095
+Author: Stefan Dirsch <sndirsch@suse.de>
+Date:   Sun Apr 13 11:35:31 2008 +0200
+
+    Added two new RV670 devices. Removed unsupported M86 device.
+    
+    New RV670 devices added: HD 3960, FireStream 9170. Unsupported
+    M86 device removed: HD3650.
+
+commit 19c048d38af6c96182fee7857c3e8a272f77c800
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Apr 11 14:48:21 2008 +0200
+
+    Fix broken assert() in rhd_id.c. Use ASSERT() instead of assert() everywhere.
+
 commit 9d131f9035b3b0ff7755dda708e16326aa156e83
 Author: Matthias Hopf <mhopf@suse.de>
 Date:   Thu Apr 10 21:20:42 2008 +0200

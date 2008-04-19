@@ -1,8 +1,10 @@
 #include <Server.tmpl>
 #include "../../RadeonHD.tmpl"
 
-SRCS = rhd_conntest.c git_version.h
-OBJS = rhd_conntest.o
+SRCS_conntest = rhd_conntest.c git_version.h
+OBJS_conntest = rhd_conntest.o
+SRCS_dump = rhd_dump.c git_version.h
+OBJS_dump = rhd_dump.o
 
 INCLUDES = -I$(TOP)/src/AtomBios/includes
 
@@ -12,6 +14,8 @@ DEFINES  = $(INCLUDES) \
 
 SYS_LIBS = -lpci -lz
 
-NormalProgramTarget(rhd_conntest,$(OBJS),,,$(SYS_LIBS))
+NormalProgramTarget(rhd_conntest,$(OBJS_conntest),,,$(SYS_LIBS))
+NormalProgramTarget(rhd_dump,$(OBJS_dump),,,$(SYS_LIBS))
 AllTarget(ProgramTargetName(rhd_conntest))
+AllTarget(ProgramTargetName(rhd_dump))
 DependTarget()

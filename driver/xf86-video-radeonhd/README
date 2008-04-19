@@ -33,6 +33,11 @@ Major Changes
 
 Read ChangeLog for a complete list.
 
+- Version 1.2.1
+
+  - Build-fixes for systems without -NDEBUG, and for rhd_dump
+  - Added two new RV670 devices.
+
 - Version 1.2.0
 
   - Added support for RV620, RV635, and R680.
