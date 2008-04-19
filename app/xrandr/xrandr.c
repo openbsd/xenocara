@@ -1284,6 +1284,20 @@ check_crtc_for_output (crtc_t *crtc, output_t *output)
 	if (crtc->rotation != output->rotation)
 	    return False;
     }
+    else if (crtc->crtc_info->noutput)
+    {
+	/* make sure the state matches the already used state */
+	XRRModeInfo *mode = find_mode_by_xid (crtc->crtc_info->mode);
+
+	if (mode != output->mode_info)
+	    return False;
+	if (crtc->crtc_info->x != output->x)
+	    return False;
+	if (crtc->crtc_info->y != output->y)
+	    return False;
+	if (crtc->crtc_info->rotation != output->rotation)
+	    return False;
+    }
     return True;
 }
 
@@ -1520,14 +1534,13 @@ pick_crtcs_score (output_t *outputs)
 	    best_score = score;
 	}
     }
+    if (output->crtc_info != best_crtc)
+	output->crtc_info = best_crtc;
     /*
      * Reset other outputs based on this one using the best crtc
      */
-    if (output->crtc_info != best_crtc)
-    {
-	output->crtc_info = best_crtc;
-	(void) pick_crtcs_score (outputs);
-    }
+    (void) pick_crtcs_score (outputs);
+
     return best_score;
 }
 
@@ -1544,11 +1557,18 @@ pick_crtcs (void)
      */
     for (output = outputs; output; output = output->next)
     {
-	if (output->changes && output->mode_info && !output->crtc_info)
+	if (output->changes && output->mode_info)
 	{
-	    output->crtc_info = find_crtc_for_output (output);
-	    if (!output->crtc_info)
-		break;
+	    if (output->crtc_info) {
+		if (output->crtc_info->crtc_info->noutput > 0 &&
+		    (output->crtc_info->crtc_info->noutput > 1 ||
+		     output != find_output_by_xid (output->crtc_info->crtc_info->outputs[0])))
+		    break;
+	    } else {
+		output->crtc_info = find_crtc_for_output (output);
+		if (!output->crtc_info)
+		    break;
+	    }
 	}
     }
     /*
@@ -1712,9 +1732,12 @@ main (int argc, char **argv)
 	}
 	if (!strcmp ("--output", argv[i])) {
 	    if (++i >= argc) usage();
-	    output = add_output ();
 
-	    set_name (&output->output, argv[i], name_string|name_xid);
+	    output = find_output_by_name (argv[i]);
+	    if (!output) {
+		output = add_output ();
+		set_name (&output->output, argv[i], name_string|name_xid);
+	    }
 	    
 	    setit_1_2 = True;
 	    continue;
@@ -2404,6 +2427,10 @@ main (int argc, char **argv)
 		    for (f = 0; mode_flags[f].flag; f++)
 			if (mode->modeFlags & mode_flags[f].flag)
 			    printf (" %s", mode_flags[f].string);
+		    if (mode == output->mode_info)
+			printf (" *current");
+		    if (j < output_info->npreferred)
+			printf (" +preferred");
 		    printf ("\n");
 		    printf ("        h: width  %4d start %4d end %4d total %4d skew %4d clock %6.1fKHz\n",
 			    mode->width, mode->hSyncStart, mode->hSyncEnd,

@@ -70,8 +70,15 @@ xrandr \- primitive command line interface to RandR extension
 .I Xrandr
 is used to set the size, orientation and/or reflection of the outputs for a
 screen. It can also set the screen size.
-There are a few global options; the rest modify a particular output and
-follow the specification of that output on the command line.
+
+If invoked without any option, it will dump the state of the outputs,
+showing the existing modes for each of them, with a '+' after the preferred
+mode and a '*' after the current mode.
+
+There are a few global options. Other options modify the last output that is
+specified in earlier parameters in the command line. Multiple outputs may
+be modified at the same time by passing mutiple \-\-output options followed
+immediately by their corresponding modifying options.
 .IP \-\-help
 Print out a summary of the usage and exit.
 .IP \-v
