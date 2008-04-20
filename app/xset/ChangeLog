@@ -1,3 +1,48 @@
+commit b6343fa846eeadb6736f383577b91dbb46d46971
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 15 18:11:25 2008 -0800
+
+    Delete duplicated #include statements
+
+commit e92294748383b0eaca6cb7f3883cf909077963a1
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 15 18:10:37 2008 -0800
+
+    Convert function declarations from K&R to ANSI C
+
+commit 685fe4692583d383ffec8e0db52ea055fca0ed11
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 15 17:54:14 2008 -0800
+
+    Make code formatting consistent
+    
+    Too many different indent styles/levels made code hard to read
+
+commit 5dfbc61487623448c82d043c4f4f29d5e047d498
+Author: gsr.bugs <gsr.bugs@infernal-iceberg.com>
+Date:   Thu Nov 15 00:04:34 2007 +0200
+
+    Manpage: Add mention of mouse acceleration with zero threshold
+    
+    xset m A/B 0 gives a different behaviour, smooth acceleration, than typical
+    A/B C (C not zero) which is two speed. This behaviour is, for some people,
+    nice. But the point is that it is not documented in man page, so nobody
+    can just test it except if discovered due some reason more complex than read
+    the docs.
+
+commit 6d56c1f8d25ce84c797c3b72070073bc44d1a7ac
+Merge: c4f7c40... 3decc85...
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 06:02:50 2007 -0400
+
+    Merge branch 'master' of ssh://git.freedesktop.org/git/xorg/app/xset
+
+commit c4f7c402ad52c784c01655b5d3a9d4d33c6598d6
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:51:47 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
 commit 3decc85623f023a31b8c19526b29092a9f2d0357
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Aug 27 16:37:20 2007 -0700
