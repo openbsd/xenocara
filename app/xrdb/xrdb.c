@@ -1203,10 +1203,13 @@ Process(int scrno, Bool doScreen, Bool execute)
 #else
 	    if((cmd = (char *)
 		malloc(strlen(cpp_program) + strlen(includes.val) + 1 +
-		       strlen(defines.val) + 1)) ==
+		       strlen(defines.val) + 1 +
+		       strlen(filename ? filename : "") + 1)) ==
 	       NULL)
 		fatal("%s: Out of memory\n", ProgramName);
-	    sprintf(cmd, "%s%s %s", cpp_program, includes.val, defines.val);
+	    sprintf(cmd, "%s%s %s %s", cpp_program,
+		    includes.val, defines.val,
+		    filename ? filename : "");
 	    if (!(input = popen(cmd, "r")))
 		fatal("%s: cannot run '%s'\n", ProgramName, cmd);
 	    free(cmd);

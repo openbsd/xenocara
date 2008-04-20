@@ -1,3 +1,17 @@
+commit 09ef847d16333d6ae04c3f88ff7f535381cb9405
+Author: Luca Capello <luca@pca.it>
+Date:   Mon Jan 7 23:48:12 2008 +0100
+
+    Prevent cpp from prefixing errors with <stdin> when the xrdb input is a file
+    
+    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=458246
+
+commit ab156455b2f759cc4cb0edc3265ccb9bba53f2ed
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:09 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
 commit 13917748af3288ae188cbe9c05742411d53ec34f
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed Aug 15 15:35:00 2007 -0700
