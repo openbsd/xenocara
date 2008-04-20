@@ -27,6 +27,8 @@ xprop_LDADD = $(XPROP_LIBS)
 xprop_SOURCES =	\
         dsimple.c \
         dsimple.h \
+        clientwin.c \
+        clientwin.h \
         xprop.c
 
 appman_PRE = \

@@ -51,7 +51,6 @@ from The Open Group.
 #endif
 
 #include <X11/Xatom.h>
-#include <X11/Xmu/WinUtil.h>
 
 #include "dsimple.h"
 
@@ -1702,19 +1701,8 @@ main (int argc, char **argv)
     if ((remove_props != NULL || set_props != NULL) && argc > 0)
 	usage();
 
-    if (target_win == None) {
-	target_win = Select_Window(dpy);
-	if (target_win != None && !frame_only) {
-	    Window root;
-	    int dummyi;
-	    unsigned int dummy;
-
-	    if (XGetGeometry (dpy, target_win, &root, &dummyi, &dummyi,
-			      &dummy, &dummy, &dummy, &dummy)
-		&& target_win != root)
-		target_win = XmuClientWindow (dpy, target_win);
-	}
-    }
+    if (target_win == None)
+	target_win = Select_Window(dpy, !frame_only);
 
     if (remove_props != NULL) {
 	int count;

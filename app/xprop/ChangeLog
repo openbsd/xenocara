@@ -1,3 +1,39 @@
+commit 427023df02bd38ff9dc2af2a2059466f37f4cfd8
+Author: Benjamin Close <Benjamin.Close@clearchain.com>
+Date:   Wed Dec 19 15:17:34 2007 +1030
+
+    Fix build under autoconf 2.57
+    
+    configure.ac specifies a max version of 2.57 but AC_CHECK_HEADERS_ONCE
+    was only introduced to autoconf in 2.59c. Drop the _ONCE to make autoconf happy
+    
+    Bug: 13631
+    Found by: tinderbox
+    Approved by: daniels@
+
+commit e09956f244099ddd36b1a2cd5d7800d5fc7120c1
+Author: Kim Woelders <kim@woelders.dk>
+Date:   Thu Dec 6 05:30:43 2007 -0500
+
+    Select correct client window in WM’s using virtual roots
+    From bug 2185¹
+    
+    When manually selecting a window, xprop finds the top-level window containing
+    the pointer and uses XmuClientWindow to attempt to find a client window having
+    WM_STATE set.
+    
+    In a WM using virtual roots (e.g. enlightenment, desks other than first) this
+    fails beacuse the top-level window is a virtual root, and XmuClientWindow seems
+    to find the first client having WM_STATE set, which only by coincidence will be
+    the one the user intended to select (i.e. containing the pointer).
+    
+    The solution is to descend the window hierarchy at the pointer location to find
+    a window with WM_STATE set.
+    
+    1] https://bugs.freedesktop.org/show_bug.cgi?id=2185
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
 commit 9ccda86dae06375750685977a81f4fb1cabf3d00
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Aug 10 14:52:27 2007 -0700

@@ -76,7 +76,8 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xprop_OBJECTS = dsimple.$(OBJEXT) xprop.$(OBJEXT)
+am_xprop_OBJECTS = dsimple.$(OBJEXT) clientwin.$(OBJEXT) \
+	xprop.$(OBJEXT)
 xprop_OBJECTS = $(am_xprop_OBJECTS)
 am__DEPENDENCIES_1 =
 xprop_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -217,6 +218,8 @@ xprop_LDADD = $(XPROP_LIBS)
 xprop_SOURCES = \
         dsimple.c \
         dsimple.h \
+        clientwin.c \
+        clientwin.h \
         xprop.c
 
 appman_PRE = \
@@ -337,6 +340,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clientwin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsimple.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xprop.Po@am__quote@
 
