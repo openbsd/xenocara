@@ -281,7 +281,7 @@ int ch;
 }
 
 struct _Keyword {
-	char	*keyword;
+	const char *keyword;
 	int	 token;
 } keywords[] = {
     { "xkb_keymap",		XKB_KEYMAP		},

@@ -147,7 +147,7 @@ AddIndicatorName(KeyNamesInfo *info,IndicatorNameInfo *new)
 {
 IndicatorNameInfo *old;
 Bool 		   replace;
-char *		   action;
+const char *action;
 
     replace= (new->defs.merge==MergeReplace)||
 		 (new->defs.merge==MergeOverride);
@@ -200,7 +200,7 @@ char *		   action;
 	    if ((old->name==new->name)&&(old->virtual==new->virtual))
 		action= "Identical definitions ignored\n";
 	    else {
-		char   *oldType,*newType;
+		const char *oldType,*newType;
 		Atom	using,ignoring;
 		if (old->virtual)	oldType= "virtual indicator";
 		else			oldType= "real indicator";

@@ -740,7 +740,7 @@ ShapeInfo *	si;
 }
 
 static ShapeInfo *
-FindShape(GeometryInfo *info,Atom name,char *type,char *which)
+FindShape(GeometryInfo *info, Atom name, const char *type, const char *which)
 {
 ShapeInfo *	old;
 
@@ -1310,7 +1310,7 @@ SetShapeDoodadField(	DoodadInfo *	di,
 			GeometryInfo *	info)
 {
 ExprResult	tmp;
-char *		typeName;
+const char *typeName;
 
     typeName= (di->type==XkbSolidDoodad?"solid doodad":"outline doodad");
     if ((!uStrCaseCmp(field,"corner"))||(!uStrCaseCmp(field,"cornerradius"))) {
@@ -1804,7 +1804,7 @@ ExprResult	tmp;
 
 static int
 SetKeyField(	KeyInfo *key,
-		char *field,
+		const char *field,
 		ExprDef *arrayNdx,
 		ExprDef *value,
 		GeometryInfo *info)

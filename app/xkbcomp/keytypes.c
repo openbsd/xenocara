@@ -258,7 +258,7 @@ KeyTypeInfo	*old;
 }
 
 static Bool
-ReportTypeBadWidth(char *type,int has,int needs)
+ReportTypeBadWidth(const char *type, int has, int needs)
 {
     ERROR3("Key type \"%s\" has %d levels, must have %d\n",type,has,needs);
     ACTION("Illegal type definition ignored\n");

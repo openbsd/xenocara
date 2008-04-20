@@ -185,7 +185,7 @@ static char buf[32];
 /***====================================================================***/
 
 static Bool
-ReportMismatch(unsigned action,unsigned field,char *type)
+ReportMismatch(unsigned action, unsigned field, const char *type)
 {
     ERROR2("Value of %s field must be of type %s\n",fieldText(field),type);
     ACTION1("Action %s definition ignored\n",
@@ -214,7 +214,7 @@ ReportActionNotArray(unsigned action,unsigned field)
 }
 
 static Bool
-ReportNotFound(unsigned action,unsigned field,char *what,char *bad)
+ReportNotFound(unsigned action, unsigned field, const char *what, char *bad)
 {
     ERROR2("%s named %s not found\n",what,bad);
     ACTION2("Ignoring the %s field of an %s action\n",fieldText(field),

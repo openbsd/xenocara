@@ -90,7 +90,8 @@ Atom		stmtName;
 		if (stmt->value==NULL)
 		    return True;
 		else {
-		    char *str1,*str2 = "";
+		    char *str1;
+		    const char *str2 = "";
 		    if (!ExprResolveModMask(stmt->value,&mod,NULL,NULL)) {
 			str1= XkbAtomText(NULL,stmt->name,XkbMessage);
 			ACTION1("Declaration of %s ignored\n",str1);

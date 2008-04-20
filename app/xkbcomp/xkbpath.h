@@ -42,7 +42,7 @@ extern	void	XkbAddDefaultDirectoriesToPath(
 );
 
 extern	Bool	XkbAddDirectoryToPath(
-	char *	/* dir */
+	const char *	/* dir */
 );
 
 extern char *	XkbDirectoryForInclude(

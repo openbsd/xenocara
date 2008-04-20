@@ -130,7 +130,7 @@ extern	Boolean	uSetErrorFile(
 #define INFO 			uInformation
 
 extern	void	uInformation(
-	char * /* s */, ...
+	const char * /* s */, ...
 )
 #if defined(__GNUC__) && \
     ((__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ >= 6)))
@@ -147,7 +147,7 @@ __attribute__((format(printf, 1, 2)))
 #define ACTION			uAction
 
 extern	void	uAction(
-	char * /* s  */, ...
+	const char * /* s  */, ...
 )
 #if defined(__GNUC__) && \
     ((__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ >= 6)))
@@ -164,7 +164,7 @@ __attribute__((format(printf, 1, 2)))
 #define WARN			uWarning
 
 extern	void	uWarning(
-	char * /* s  */, ...
+	const char * /* s  */, ...
 )
 #if defined(__GNUC__) && \
     ((__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ >= 6)))
@@ -181,7 +181,7 @@ __attribute__((format(printf, 1, 2)))
 #define ERROR			uError
 
 extern	void	uError(
-	char * /* s  */, ...
+	const char * /* s  */, ...
 )
 #if defined(__GNUC__) && \
     ((__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ >= 6)))
@@ -198,7 +198,7 @@ __attribute__((format(printf, 1, 2)))
 #define FATAL			uFatalError
 
 extern	void	uFatalError(
-	char * /* s  */, ...
+	const char * /* s  */, ...
 )
 #if defined(__GNUC__) && \
     ((__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ >= 6)))
@@ -216,7 +216,7 @@ __attribute__((format(printf, 1, 2)))
 #define WSGO			uInternalError
 
 extern	void	uInternalError(
-	char * /* s  */, ...
+	const char * /* s  */, ...
 )
 #if defined(__GNUC__) && \
     ((__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ >= 6)))
@@ -256,11 +256,11 @@ extern	void	uFinishUp(
 #define	uStrCasePrefix(p,s)	(strncasecmp(p,s,strlen(p))==0)
 #else
 extern	int uStrCaseCmp(
-	char *	/* s1 */,
-	char *	/* s2 */
+	const char *	/* s1 */,
+	const char *	/* s2 */
 );
 extern	int uStrCasePrefix(
-	char *	/* p */,
+	const char *	/* p */,
 	char *	/* str */
 );
 #endif
@@ -268,7 +268,7 @@ extern	int uStrCasePrefix(
 #define	uStringDup(s1)		(strdup(s1))
 #else
 extern	char *uStringDup(
-	char *	/* s1 */
+	const char *	/* s1 */
 );
 #endif
 

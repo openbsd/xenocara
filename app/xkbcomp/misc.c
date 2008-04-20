@@ -111,7 +111,7 @@ int	 oldLine = lineNum;
 /***====================================================================***/
 
 int
-ReportNotArray(char *type,char *field,char *name)
+ReportNotArray(const char *type, const char *field, const char *name)
 {
     ERROR2("The %s %s field is not an array\n",type,field);
     ACTION1("Ignoring illegal assignment in %s\n",name);
@@ -119,7 +119,7 @@ ReportNotArray(char *type,char *field,char *name)
 }
 
 int
-ReportShouldBeArray(char *type,char *field,char *name)
+ReportShouldBeArray(const char *type, const char *field, char *name)
 {
     ERROR2("Missing subscript for %s %s\n",type,field);
     ACTION1("Ignoring illegal assignment in %s\n",name);
@@ -127,7 +127,8 @@ ReportShouldBeArray(char *type,char *field,char *name)
 }
 
 int
-ReportBadType(char *type,char *field,char *name,char *wanted)
+ReportBadType(const char *type, const char *field,
+              const char *name, const char *wanted)
 {
     ERROR3("The %s %s field must be a %s\n",type,field,wanted);
     ACTION1("Ignoring illegal assignment in %s\n",name);
@@ -143,7 +144,7 @@ ReportBadIndexType(char *type,char *field,char *name,char *wanted)
 }
 
 int
-ReportBadField(char *type,char *field,char *name)
+ReportBadField(const char *type, const char *field, const char *name)
 {
     ERROR3("Unknown %s field %s in %s\n",type,field,name);
     ACTION1("Ignoring assignment to unknown field in %s\n",name);

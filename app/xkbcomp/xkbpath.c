@@ -157,7 +157,7 @@ register int i;
 }
 
 Bool
-XkbAddDirectoryToPath(char *dir)
+XkbAddDirectoryToPath(const char *dir)
 {
 int	len;
     if ((dir==NULL)||(dir[0]=='\0')) {

@@ -76,7 +76,7 @@
 #define	INPUT_XKB	1
 #define	INPUT_XKM	2
 
-static char *fileTypeExt[] = {
+static const char *fileTypeExt[] = {
 	"XXX",
 	"xkm",
 	"h",
@@ -721,9 +721,8 @@ Status		status;
     }
     if (inputFile!=NULL) {
 	if (uStringEqual(inputFile,"-")) {
-	    static char *in= "stdin";
 	    file= stdin;
-	    inputFile= in;
+	    inputFile= "stdin";
 	}
 	else {
 	    file= fopen(inputFile,"r");

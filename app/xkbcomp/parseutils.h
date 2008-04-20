@@ -228,7 +228,7 @@ extern XkbFile *CreateXKBFile(
 );
 
 extern void yyerror(
-    char *		/* s */
+    const char *		/* s */
 );
 
 extern int yywrap(

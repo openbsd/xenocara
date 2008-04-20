@@ -213,7 +213,7 @@ uSetErrorFile(char *name)
 }
 
 void
-uInformation(char *s, ...)
+uInformation(const char *s, ...)
 {
 va_list args;
 
@@ -226,7 +226,7 @@ va_list args;
 /***====================================================================***/
 
 void
-uAction(char *s, ...)
+uAction(const char *s, ...)
 {
 va_list args;
 
@@ -242,7 +242,7 @@ va_list args;
 /***====================================================================***/
 
 void
-uWarning(char *s, ...)
+uWarning(const char *s, ...)
 {
 va_list args;
 
@@ -261,7 +261,7 @@ va_list args;
 /***====================================================================***/
 
 void
-uError(char *s, ...)
+uError(const char *s, ...)
 {
 va_list args;
 
@@ -280,7 +280,7 @@ va_list args;
 /***====================================================================***/
 
 void
-uFatalError(char *s, ...)
+uFatalError(const char *s, ...)
 {
 va_list args;
 
@@ -302,7 +302,7 @@ va_list args;
 /***====================================================================***/
 
 void
-uInternalError(char *s, ...)
+uInternalError(const char *s, ...)
 {
 va_list args;
 
@@ -352,7 +352,7 @@ uFinishUp(void)
 
 #ifndef HAVE_STRDUP
 char *
-uStringDup(char *str)
+uStringDup(const char *str)
 {
 char *rtrn;
 
@@ -366,7 +366,7 @@ char *rtrn;
 
 #ifndef HAVE_STRCASECMP
 int
-uStrCaseCmp(char *str1,char *str2)
+uStrCaseCmp(const char *str1, const char *str2)
 {
     char buf1[512],buf2[512];
     char c, *s;
@@ -392,7 +392,7 @@ uStrCaseCmp(char *str1,char *str2)
 }
 
 int
-uStrCasePrefix(char *my_prefix,char *str)
+uStrCasePrefix(const char *my_prefix, char *str)
 {
     char c1;
     char c2;

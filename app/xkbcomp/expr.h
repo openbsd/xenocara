@@ -62,7 +62,7 @@ typedef	struct _LookupPriv {
 } LookupPriv;
 
 typedef struct _LookupEntry {
-    char *	name;
+    const char *name;
     unsigned	result;
 } LookupEntry;
 

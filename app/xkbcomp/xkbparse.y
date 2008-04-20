@@ -705,7 +705,8 @@ Terminal	:	String
 			{
 			    ExprDef *expr;
 			    expr= ExprCreate(ExprValue,TypeKeyName);
-			    memcpy(expr->value.keyName,$1,4);
+			    memset(expr->value.keyName,0,5);
+			    strncpy(expr->value.keyName,$1,4);
 			    free($1);
 			    $$= expr;
 			}
@@ -778,7 +779,7 @@ MapName		:	STRING 	{ $$= scanStr; scanStr= NULL; }
 		;
 %%
 void
-yyerror(char *s)
+yyerror(const char *s)
 {
     if (warningLevel>0) {
 	(void)fprintf(stderr,"%s: line %d of %s\n",s,lineNum,

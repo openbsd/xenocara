@@ -754,7 +754,7 @@ GetGroupIndex(	KeyInfo *	key,
 		unsigned	what,
 		unsigned *	ndx_rtrn)
 {
-char *		name;
+const char *name;
 ExprResult	tmp;
 
     if (what==SYMBOLS)	name= "symbols";

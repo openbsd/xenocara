@@ -60,22 +60,22 @@ extern XPointer AddCommonInfo(
 );
 
 extern int	ReportNotArray(
-    char *	/* type */,
-    char *	/* field */,
-    char *	/* name */
+    const char * /* type */,
+    const char * /* field */,
+    const char * /* name */
 );
 
 extern int	ReportShouldBeArray(
-    char *	/* type */,
-    char *	/* field */,
+    const char * /* type */,
+    const char * /* field */,
     char *	/* name */
 );
 
 extern int	ReportBadType(
-    char *	/* type */,
-    char *	/* field */,
-    char *	/* name */,
-    char *	/* wanted */
+    const char * /* type */,
+    const char * /* field */,
+    const char * /* name */,
+    const char * /* wanted */
 );
 
 extern int	ReportBadIndexType(
@@ -86,9 +86,9 @@ extern int	ReportBadIndexType(
 );
 
 extern int	ReportBadField(
-    char *	/* type */,
-    char *	/* field */,
-    char *	/* name */
+    const char * /* type */,
+    const char * /* field */,
+    const char * /* name */
 );
 
 extern int	ReportMultipleDefs(
