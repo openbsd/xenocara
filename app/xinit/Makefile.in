@@ -35,6 +35,13 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+# Translate XCOMM into pound sign with sed, rather than passing -DXCOMM=XCOMM
+# to cpp, because that trick does not work on all ANSI C preprocessors.
+# Delete line numbers from the cpp output (-P is not portable, I guess).
+# Allow XCOMM to be preceded by whitespace and provide a means of generating
+# output lines with trailing backslashes.
+# Allow XHASH to always be substituted, even in cases where XCOMM isn't.
+
 
 
 srcdir = @srcdir@
@@ -62,8 +69,9 @@ host_triplet = @host@
 bin_PROGRAMS = xinit$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh missing
+	$(top_srcdir)/configure $(top_srcdir)/cpprules.in AUTHORS \
+	COPYING ChangeLog INSTALL NEWS compile config.guess config.sub \
+	depcomp install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -75,7 +83,8 @@ mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)" \
-	"$(DESTDIR)$(appmandir)" "$(DESTDIR)$(xinitrcdir)"
+	"$(DESTDIR)$(appmandir)" "$(DESTDIR)$(launchagentsdir)" \
+	"$(DESTDIR)$(xinitrcdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_xinit_OBJECTS = xinit-xinit.$(OBJEXT)
@@ -100,8 +109,9 @@ am__vpath_adj = case $$p in \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 appmanDATA_INSTALL = $(INSTALL_DATA)
+launchagentsDATA_INSTALL = $(INSTALL_DATA)
 xinitrcDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(appman_DATA) $(xinitrc_DATA)
+DATA = $(appman_DATA) $(launchagents_DATA) $(xinitrc_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -121,6 +131,8 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+APPLE_FALSE = @APPLE_FALSE@
+APPLE_TRUE = @APPLE_TRUE@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 ARCHMANDEFS = @ARCHMANDEFS@
@@ -149,6 +161,9 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LAUNCHD = @LAUNCHD@
+LAUNCHD_FALSE = @LAUNCHD_FALSE@
+LAUNCHD_TRUE = @LAUNCHD_TRUE@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
@@ -218,6 +233,7 @@ host_vendor = @host_vendor@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
+launchagentsdir = @launchagentsdir@
 libdir = @libdir@
 libexecdir = @libexecdir@
 localstatedir = @localstatedir@
@@ -234,6 +250,7 @@ XINITDIR = $(datadir)/X11/xinit
 bin_SCRIPTS = startx
 xinit_CFLAGS = $(XINIT_CFLAGS) -DXINITDIR=\"$(XINITDIR)\" -DBINDIR=\"$(bindir)\"
 xinit_LDADD = $(XINIT_LIBS)
+@APPLE_TRUE@xinit_LDFLAGS = -framework CoreServices
 xinit_SOURCES = \
         xinit.c
 
@@ -243,18 +260,12 @@ appman_PRE = \
         xinit.man
 
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-# Translate XCOMM into pound sign with sed, rather than passing -DXCOMM=XCOMM
-# to cpp, because that trick does not work on all ANSI C preprocessors.
-# Delete line numbers from the cpp output (-P is not portable, I guess).
-# Allow XCOMM to be preceded by whitespace and provide a means of generating
-# output lines with trailing backslashes.
-# Allow XHASH to always be substituted, even in cases where XCOMM isn't.
 CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
                        -e '/^\#line  *[0-9][0-9]*  *.*$$/d' \
                        -e '/^[ 	]*XCOMM$$/s/XCOMM/\#/' \
                        -e '/^[ 	]*XCOMM[^a-zA-Z0-9_]/s/XCOMM/\#/' \
                        -e '/^[ 	]*XHASH/s/XHASH/\#/' \
+                       -e '/XSLASHGLOB/s/XSLASHGLOB/\/\*/' \
                        -e '/\@\@$$/s/\@\@$$/\\/'
 
 
@@ -272,7 +283,7 @@ MANDEFS = \
 	-D__bindir__=$(bindir) \
 	-DSHELL_CMD=$(SHELL_CMD) $(ARCHMANDEFS)
 
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
+SUFFIXES = .$(APP_MAN_SUFFIX) .man .cpp
 xinitrcdir = $(XINITDIR)
 PROGCPPDEFS = \
 	-DXRDB=@XRDB@ \
@@ -286,23 +297,27 @@ PROGCPPDEFS = \
 	-DWM=@WM@ \
 	-DXCONSOLE=@XCONSOLE@
 
-SCRIPTDEFS = \
+CPP_FILES_FLAGS = \
 	-DXINITDIR=$(XINITDIR) $(PROGCPPDEFS) -DLIBDIR=$(libdir) \
-	-DSHELL_CMD=$(SHELL_CMD) $(STARTX_COOKIE_FLAGS)
+	-DSHELL_CMD=$(SHELL_CMD) $(STARTX_COOKIE_FLAGS) \
+	-D__libexecdir__="$(libexecdir)" \
+	-D__bindir__="$(bindir)"
 
+@LAUNCHD_TRUE@launchagents_PRE = org.x.X11.plist.pre
+@LAUNCHD_TRUE@launchagents_DATA = $(launchagents_PRE:plist.pre=plist)
 xinitrc_DATA = xinitrc
-CLEANFILES = xinitrc startx $(appman_DATA)
-EXTRA_DIST = xinitrc.cpp startx.cpp $(appman_PRE)	\
+CLEANFILES = xinitrc startx $(appman_DATA) $(launchagents_DATA)
+EXTRA_DIST = xinitrc.cpp startx.cpp org.x.X11.plist.cpp $(appman_PRE)	\
 		startx.cmd xinitrc.cmd xinit.def ChangeLog autogen.sh
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .$(APP_MAN_SUFFIX) .man .c .o .obj
+.SUFFIXES: .$(APP_MAN_SUFFIX) .man .cpp .c .o .obj
 am--refresh:
 	@:
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/cpprules.in $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -448,6 +463,23 @@ uninstall-appmanDATA:
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(appmandir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(appmandir)/$$f"; \
+	done
+install-launchagentsDATA: $(launchagents_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(launchagentsdir)" || $(mkdir_p) "$(DESTDIR)$(launchagentsdir)"
+	@list='$(launchagents_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(launchagentsDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(launchagentsdir)/$$f'"; \
+	  $(launchagentsDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(launchagentsdir)/$$f"; \
+	done
+
+uninstall-launchagentsDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(launchagents_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(launchagentsdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(launchagentsdir)/$$f"; \
 	done
 install-xinitrcDATA: $(xinitrc_DATA)
 	@$(NORMAL_INSTALL)
@@ -648,7 +680,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(PROGRAMS) $(SCRIPTS) $(DATA) config.h
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(xinitrcdir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(launchagentsdir)" "$(DESTDIR)$(xinitrcdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -697,7 +729,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-appmanDATA install-xinitrcDATA
+install-data-am: install-appmanDATA install-launchagentsDATA \
+	install-xinitrcDATA
 
 install-exec-am: install-binPROGRAMS install-binSCRIPTS
 
@@ -727,7 +760,8 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
-	uninstall-binSCRIPTS uninstall-info-am uninstall-xinitrcDATA
+	uninstall-binSCRIPTS uninstall-info-am \
+	uninstall-launchagentsDATA uninstall-xinitrcDATA
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
@@ -737,23 +771,26 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-binSCRIPTS \
 	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	install-xinitrcDATA installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-appmanDATA \
-	uninstall-binPROGRAMS uninstall-binSCRIPTS uninstall-info-am \
-	uninstall-xinitrcDATA
+	install-info install-info-am install-launchagentsDATA \
+	install-man install-strip install-xinitrcDATA installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-appmanDATA uninstall-binPROGRAMS \
+	uninstall-binSCRIPTS uninstall-info-am \
+	uninstall-launchagentsDATA uninstall-xinitrcDATA
 
+
+.cpp:
+	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
 
 .man.$(APP_MAN_SUFFIX):
 	$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
 
-xinitrc: xinitrc.cpp
-	$(RAWCPP) $(SCRIPTDEFS) < $(srcdir)/xinitrc.cpp | $(CPP_SED_MAGIC) > $@
-
+xinitrc: xinitrc.cpp Makefile
 startx: startx.cpp Makefile
-	$(RAWCPP) $(SCRIPTDEFS) < $(srcdir)/startx.cpp | $(CPP_SED_MAGIC) > $@
+
+.PHONY: ChangeLog
 
 ChangeLog:
 	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)

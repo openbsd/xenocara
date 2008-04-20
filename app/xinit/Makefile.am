@@ -27,6 +27,10 @@ bin_SCRIPTS = startx
 xinit_CFLAGS = $(XINIT_CFLAGS) -DXINITDIR=\"$(XINITDIR)\" -DBINDIR=\"$(bindir)\"
 xinit_LDADD = $(XINIT_LIBS)
 
+if APPLE
+xinit_LDFLAGS = -framework CoreServices
+endif
+
 xinit_SOURCES =	\
         xinit.c
 
@@ -38,39 +42,7 @@ appman_PRE = \
 
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
-# Translate XCOMM into pound sign with sed, rather than passing -DXCOMM=XCOMM
-# to cpp, because that trick does not work on all ANSI C preprocessors.
-# Delete line numbers from the cpp output (-P is not portable, I guess).
-# Allow XCOMM to be preceded by whitespace and provide a means of generating
-# output lines with trailing backslashes.
-# Allow XHASH to always be substituted, even in cases where XCOMM isn't.
-
-CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
-                       -e '/^\#line  *[0-9][0-9]*  *.*$$/d' \
-                       -e '/^[ 	]*XCOMM$$/s/XCOMM/\#/' \
-                       -e '/^[ 	]*XCOMM[^a-zA-Z0-9_]/s/XCOMM/\#/' \
-                       -e '/^[ 	]*XHASH/s/XHASH/\#/' \
-                       -e '/\@\@$$/s/\@\@$$/\\/'
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
-
-MANDEFS =  \
-	-D__xorgversion__="\"$(XORGRELSTRING)\" \"$(XORGMANNAME)\"" \
-	-D__appmansuffix__=$(APP_MAN_SUFFIX) \
-	-D__filemansuffix__=$(FILE_MAN_SUFFIX) \
-	-D__libmansuffix__=$(LIB_MAN_SUFFIX) \
-	-D__miscmansuffix__=$(MISC_MAN_SUFFIX) \
-	-D__XSERVERNAME__=Xorg -D__XCONFIGFILE__=xorg.conf \
-	-D__xinitdir__=$(XINITDIR) \
-	-D__bindir__=$(bindir) \
-	-DSHELL_CMD=$(SHELL_CMD) $(ARCHMANDEFS)
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
-
-.man.$(APP_MAN_SUFFIX):
-	$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
+include $(top_srcdir)/cpprules.in
 
 xinitrcdir = $(XINITDIR)
 
@@ -86,22 +58,28 @@ PROGCPPDEFS = \
 	-DWM=@WM@ \
 	-DXCONSOLE=@XCONSOLE@
 
-SCRIPTDEFS = \
+CPP_FILES_FLAGS = \
 	-DXINITDIR=$(XINITDIR) $(PROGCPPDEFS) -DLIBDIR=$(libdir) \
-	-DSHELL_CMD=$(SHELL_CMD) $(STARTX_COOKIE_FLAGS)
+	-DSHELL_CMD=$(SHELL_CMD) $(STARTX_COOKIE_FLAGS) \
+	-D__libexecdir__="$(libexecdir)" \
+	-D__bindir__="$(bindir)"
 
-xinitrc: xinitrc.cpp
-	$(RAWCPP) $(SCRIPTDEFS) < $(srcdir)/xinitrc.cpp | $(CPP_SED_MAGIC) > $@
+if LAUNCHD
+launchagents_PRE = org.x.X11.plist.pre
+launchagents_DATA = $(launchagents_PRE:plist.pre=plist)
+endif
 
+xinitrc: xinitrc.cpp Makefile
 startx: startx.cpp Makefile
-	$(RAWCPP) $(SCRIPTDEFS) < $(srcdir)/startx.cpp | $(CPP_SED_MAGIC) > $@
 
 xinitrc_DATA = xinitrc
 
-CLEANFILES = xinitrc startx $(appman_DATA)
+CLEANFILES = xinitrc startx $(appman_DATA) $(launchagents_DATA)
 
-EXTRA_DIST = xinitrc.cpp startx.cpp $(appman_PRE)	\
+EXTRA_DIST = xinitrc.cpp startx.cpp org.x.X11.plist.cpp $(appman_PRE)	\
 		startx.cmd xinitrc.cmd xinit.def ChangeLog autogen.sh
+
+.PHONY: ChangeLog
 
 ChangeLog:
 	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)

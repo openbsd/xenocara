@@ -1,3 +1,194 @@
+commit 96c8650369a99e344b4e3510f713b331d83c4272
+Author: Jeremy Huddleston <jeremy@tifa.local>
+Date:   Sun Mar 2 10:32:58 2008 -0800
+
+    Apple: Use -c in the launchd plist, so broken .profile/.bashrc don't much up startx
+
+commit aa026deef43a8c1479e6a558194e0a473bbdaeb0
+Author: Jeremy Huddleston <jeremy@tifa.local>
+Date:   Sat Mar 1 17:30:47 2008 -0800
+
+    Apple: Adding support for an xinitrc.d directory on OSX, so fink doesn't need to clobber files
+
+commit 916b1ab10d10efbdf3a544534acb95f9d28692cf
+Author: Jeremy Huddleston <jeremy@tifa.local>
+Date:   Mon Feb 18 15:53:46 2008 -0800
+
+    Apple: font caching and defaults
+    Quieted defaults "error" messages by initializing default values
+    Do font caching in startx, so users with custom ~/.xinitrc won't have to
+    worry about updating it.
+    Add "cache_fonts" defaults item to toggle whether or not to cache fonts at startup
+    Fall back on fc-cache if font_cache.sh is not present.
+
+commit 19fa8408a2c707081ba984537a3dcab744b0a565
+Author: Jeremy Huddleston <jeremy@tifa-2.local>
+Date:   Sat Feb 16 02:50:47 2008 -0800
+
+    Added org.x.X11.plist.cpp to EXTRA_DIST
+
+commit 9259740a2d69c6c2fc1786508dbd08ae2cfef101
+Author: Jeremy Huddleston <jeremy@tifa.local>
+Date:   Sun Feb 10 18:49:06 2008 -0800
+
+    Apple: Support spaces in $HOME for font path, and remove duplicate entry
+
+commit 4e899293d7f7bb0a67b094402fad7db55169acec
+Author: Jeremy Huddleston <jeremy@tifa.local>
+Date:   Sun Feb 10 02:04:16 2008 -0800
+
+    Apple: Cleaned up font path setting and added font caching to xinitrc
+
+commit 238b74a47eb66bfa24627b099bf9c6a06e91d35a
+Author: Jeremy Huddleston <jeremy@tifa.local>
+Date:   Sat Feb 9 22:17:02 2008 -0800
+
+    Apple: use -nocpp arg to xrdb if cpp is not installed
+
+commit b9a2f211eff9f7fdc1399146d175923ca589cf2a
+Author: David Nusinow <dnusinow@debian.org>
+Date:   Tue Feb 5 11:58:40 2008 -0500
+
+    Unbreak installs on non-launchd systems
+    
+    Thanks to cjb for running the tinderbox that spotted this
+    breakage.
+
+commit 6403e53a1fef9fd7dd8c77640d01bb8aaee09f91
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Fri Feb 1 00:35:27 2008 -0800
+
+    OS-X: Set fontpath in xinitrc to include system / user fonts.  Additionally fixed font scaling issues (trac #52)
+
+commit d9d43955a03fb3d5b2d87d9c1a7de463f1a027b6
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Fri Feb 1 00:23:54 2008 -0800
+
+    OS-X: Fixed typo
+
+commit 7400760ae1b88d0c514aa119643cd412a4a68b06
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Wed Jan 9 21:03:41 2008 -0800
+
+    OS-X: Add bindir to $PATH in startx if it's not there
+    This should also fix this on SCO since it was using the incorrect BINDIR
+    instead of __bindir__ in that code block...
+
+commit 0f740f75ececc9742c6f407d53b482897ef5f698
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Fri Jan 4 11:36:26 2008 -0800
+
+    OS-X: Properly set enable_xauth if the user has no defaults set and choose a valid $display for fast-user-switching.
+
+commit 9c57524fde57284daae2309dce17dbf56a8643de
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Thu Dec 20 18:26:38 2007 -0800
+
+    XQuartz doesn't need the -launchd command line argument anymore.
+
+commit f31042ae688d75c2043e9df56f66cabdd56fdf75
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Thu Dec 20 17:22:16 2007 -0800
+
+    OS-X: Need to use bash --login to setup the environment from launchd.
+
+commit d1c968926fa2fe36b612d4ebc948d73e6e0f6c01
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Thu Dec 20 16:50:39 2007 -0800
+
+    OS-X: Made defaults test more robust
+
+commit 73a2dd64576328de712ee792d569a88550e4ddb4
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Thu Dec 20 16:13:27 2007 -0800
+
+    Added support for OS-X preferences to disable tcp/ip connections and xauth
+
+commit 4afcc5afa0dc7a1d14e93f18289c4490c9f2decd
+Author: root <root@tinderbox.wearablelab.ml.unisa.edu.au>
+Date:   Fri Dec 21 00:53:45 2007 +1030
+
+    Define APPLE for the rest of us
+    
+    APPLE was only defined when, well on an APPLE. However Makefile.am
+    unconditionally required it. Hence define APPLE to false when
+    we're not on an APPLE.
+    
+    Found by: Tinderbox
+
+commit cced740b1e1c8220701e59cec1be04498f851296
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Sun Dec 16 01:12:20 2007 -0800
+
+    OS-X: Added argv[0] hack for finding Xquartz UI and icon as well as claiming its dock icon
+    Partially removes need for x11-exec on OS-X.  We still need to handle options set in defaults.
+
+commit 3c5ae3a242895f53d4f27fefb785f2725077a55d
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Sat Dec 15 15:52:22 2007 -0800
+
+    Changed x11-exec to actually start X11.app.  X11.app will be responsible for calling xinit.
+
+commit f5db2f6bc21b8d589b92c0f1d60bd6ec8da21ae0
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Sat Dec 15 15:01:02 2007 -0800
+
+    Added Apple launchd support
+
+commit c0246278393f9440717eea292a3d31440f7972dd
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:07 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
+commit 3b064b7206a84aae873743b706c41324a67c1f2c
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Mon Dec 3 19:57:26 2007 -0800
+
+    Added some support for Xquartz on OS-X.
+
+commit e2963ff8acb7e20aab1f8e31a656f4553dda208a
+Merge: a7fda62... 0516336...
+Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
+Date:   Fri Sep 28 22:26:26 2007 +0200
+
+    Merge branch 'master' of ssh://herrb@git.freedesktop.org/git/xorg/app/xinit
+
+commit a7fda62fcb5600dc65f84148923f5a0a70181e7e
+Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
+Date:   Fri Sep 28 22:25:17 2007 +0200
+
+    Use /dev/arandom instead of /dev/urandom to generate the cookie
+    on OpenBSD. Problem noticed by Joerg Sonnenberger. Thanks.
+
+commit 051633650c7b7a7eb9ef494a48a6a79fa2e06080
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Mon Sep 17 12:46:59 2007 +0200
+
+    Bumped version to 1.0.7.
+
+commit 52121e9de907c61a16e41f0f08acecc1dc1546e5
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Mon Sep 17 08:27:23 2007 +0200
+
+    Bug #12448: Don't try to trap 'ERR'.
+    
+    startx is advertised as a POSIX sh script. These shells don't
+    necessarily support trapping 'ERR'. This makes startx work again with
+    dash (and probably others).
+
+commit ff9752bc4304e5a29ef7e06b56bd4e0e5ca32926
+Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
+Date:   Sat Sep 15 18:51:19 2007 +0200
+
+    Bump to 1.0.6
+
+commit af5e859a8da23f063fd3371a9e7266054532d769
+Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
+Date:   Sat Sep 15 18:50:57 2007 +0200
+
+    generate
+
 commit 6c1bef8580a1dcd945c3a89522daa90fe8f4c272
 Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
 Date:   Sat Sep 15 18:43:52 2007 +0200

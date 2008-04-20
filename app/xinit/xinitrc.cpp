@@ -1,6 +1,6 @@
 XCOMM!SHELL_CMD
 XCOMM $Xorg: xinitrc.cpp,v 1.3 2000/08/17 19:54:30 cpqbld Exp $
-XCOMM $OpenBSD: xinitrc.cpp,v 1.2 2006/11/26 17:17:57 matthieu Exp $
+XCOMM $OpenBSD: xinitrc.cpp,v 1.3 2008/04/20 13:46:02 matthieu Exp $
 
 userresources=$HOME/.Xresources
 usermodmap=$HOME/.Xmodmap
@@ -10,7 +10,15 @@ sysmodmap=XINITDIR/.Xmodmap
 XCOMM merge in defaults and keymaps
 
 if [ -f $sysresources ]; then
+#ifdef __APPLE__
+    if [ -x /usr/bin/cpp ] ; then
+        XRDB -merge $sysresources
+    else
+        XRDB -nocpp -merge $sysresources
+    fi
+#else
     XRDB -merge $sysresources
+#endif
 fi
 
 if [ -f $sysmodmap ]; then
@@ -18,7 +26,15 @@ if [ -f $sysmodmap ]; then
 fi
 
 if [ -f $userresources ]; then
+#ifdef __APPLE__
+    if [ -x /usr/bin/cpp ] ; then
+        XRDB -merge $userresources
+    else
+        XRDB -nocpp -merge $userresources
+    fi
+#else
     XRDB -merge $userresources
+#endif
 fi
 
 if [ -f $usermodmap ]; then

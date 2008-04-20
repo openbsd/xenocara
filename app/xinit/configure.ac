@@ -21,13 +21,14 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xinit,[1.0.6], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xinit)
+AC_INIT(xinit,[1.0.8], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xinit)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
+AM_PROG_CC_C_O
 XORG_PROG_RAWCPP
 AC_PROG_INSTALL
 AC_PATH_PROG(SED,sed)
@@ -102,6 +103,39 @@ AC_ARG_WITH(xconsole,
 	 AS_HELP_STRING([--with-xconsole=XCONSOLE], [Path to xconsole]),
 	[XCONSOLE="$withval"],
 	[XCONSOLE="$DEFAULT_XCONSOLE"])
+
+AC_ARG_WITH(launchd,          AS_HELP_STRING([--with-launchd], [Build with suppo
+rt for Apple's launchd (default: auto)]), [LAUNCHD=$withval], [LAUNCHD=auto])
+AC_ARG_WITH(launchagents-dir,AS_HELP_STRING([--with-launchagents-dir=PATH], [Pat
+h to launchd's LaunchAgents directory (default: /Library/LaunchAgents)]),
+                                [ launchagentsdir="${withval}" ],
+                                [ launchagentsdir="/Library/LaunchAgents" ])
+
+if test "x$LAUNCHD" = "xauto"; then
+	unset LAUNCHD
+	AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no])
+fi
+
+if test "x$LAUNCHD" = "xyes" ; then
+	AC_DEFINE(HAVE_LAUNCHD, 1, [launchd support available])
+
+	case $host_os in
+		darwin*)
+			# For now, this is how we find X11.app on OS-X...
+			# A future version of launchd should let us do this cleaner
+			#XSERVER=\'\`'$(libexecdir)/x11-exec'\`\'
+			AM_CONDITIONAL(APPLE, true)
+		;;
+		*)
+			AM_CONDITIONAL(APPLE, false)
+		;;
+	esac
+else
+	AM_CONDITIONAL(APPLE,false)
+        launchagentsdir=""
+fi
+AC_SUBST([launchagentsdir])
+AM_CONDITIONAL(LAUNCHD, [test "x$LAUNCHD" = "xyes"])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XINIT, x11)

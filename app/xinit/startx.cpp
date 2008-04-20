@@ -13,37 +13,44 @@ XCOMM Site administrators are STRONGLY urged to write nicer versions.
 XCOMM
 XCOMM $XFree86: xc/programs/xinit/startx.cpp,v 3.16tsi Exp $
 
-#if defined(__SCO__) || defined(__UNIXWARE__)
+#if defined(__SCO__) || defined(__UNIXWARE__) || defined(__APPLE__)
 
 XCOMM Check for /usr/bin/X11 and BINDIR in the path, if not add them.
 XCOMM This allows startx to be placed in a place like /usr/bin or /usr/local/bin
 XCOMM and people may use X without changing their PATH.
 XCOMM Note that we put our own bin directory at the front of the path, and
-XCOMM the standard SCO path at the back, since if you are using the Xorg
+XCOMM the standard system path at the back, since if you are using the Xorg
 XCOMM server theres a pretty good chance you want to bias the Xorg clients
-XCOMM over the old SCO X11R5 clients.
+XCOMM over the old system's clients.
 
 XCOMM First our compiled path
-
-bindir=BINDIR
-scobindir=/usr/bin/X11
+bindir=__bindir__
 
 case $PATH in
-  *:$bindir | *:$bindir:* | $bindir:*) ;;
-  *) PATH=$bindir:$PATH ;;
+    *:$bindir | *:$bindir:* | $bindir:*) ;;
+    *) PATH=$bindir:$PATH ;;
 esac
 
-XCOMM Now the "SCO" compiled path
+XCOMM Now the "old" compiled path
+#ifdef __APPLE__
+oldbindir=/usr/X11R6/bin
+#else
+oldbindir=/usr/bin/X11
+#endif
 
-case $PATH in
-  *:$scobindir | *:$scobindir:* | $scobindir:*) ;;
-  *) PATH=$PATH:$scobindir ;;
-esac
+if [ -d "$oldbindir" ] ; then
+    case $PATH in
+        *:$oldbindir | *:$oldbindir:* | $oldbindir:*) ;;
+        *) PATH=$PATH:$oldbindir ;;
+    esac
+fi
 
 XCOMM Bourne shell does not automatically export modified environment variables
 XCOMM so export the new PATH just in case the user changes the shell
 export PATH
+#endif
 
+#if defined(__SCO__) || defined(__UNIXWARE__)
 XCOMM Set up the XMERGE env var so that dos merge is happy under X
 
 if [ -f /usr/lib/merge/xmergeset.sh ]; then
@@ -70,6 +77,50 @@ defaultclientargs=""
 defaultserverargs=""
 clientargs=""
 serverargs=""
+
+#ifdef __APPLE__
+
+XCOMM Initialize defaults (this will cut down on "safe" error messages)
+if ! defaults read org.x.X11 cache_fonts >& /dev/null ; then
+    defaults write org.x.X11 cache_fonts -bool true
+fi
+
+if ! defaults read org.x.X11 no_auth >& /dev/null ; then
+    defaults write org.x.X11 no_auth -bool false
+fi
+
+if ! defaults read org.x.X11 nolisten_tcp >& /dev/null ; then
+    defaults write org.x.X11 nolisten_tcp -bool true
+fi
+
+XCOMM First, start caching fonts
+if [ x`defaults read org.x.X11 cache_fonts` = x1 ] ; then
+    if [ -x /usr/X11/bin/font_cache.sh ] ; then
+        /usr/X11/bin/font_cache.sh &
+    elif [ -x /usr/X11/bin/fc-cache ] ; then
+        /usr/X11/bin/fc-cache &
+    fi
+fi
+
+if [ x`defaults read org.x.X11 no_auth` = x0 ] ; then
+    enable_xauth=1
+else
+    enable_xauth=0
+fi
+
+if [ x`defaults read org.x.X11 nolisten_tcp` = x1 ] ; then
+    defaultserverargs="$defaultserverargs -nolisten tcp"
+fi
+
+for ((d=0; ; d++)) ; do
+    [[ -e /tmp/.X$d-lock ]] || break
+done
+defaultdisplay=":$d"
+
+#else
+enable_xauth=1
+#endif
+
 
 if [ -f $userclientrc ]; then
     defaultclientargs=$userclientrc
@@ -158,70 +209,75 @@ if [ x"$server" = x ]; then
     XCOMM if no server arguments or display either, use rc file instead
     if [ x"$serverargs" = x -a x"$display" = x ]; then
 	server="$defaultserverargs"
+#ifdef __APPLE__
+	display="$defaultdisplay"
+#endif
     else
 	server=$defaultserver
     fi
 fi
 
-if [ x"$XAUTHORITY" = x ]; then
-    XAUTHORITY=$HOME/.Xauthority
-    export XAUTHORITY
-fi
+if [ x"$enable_xauth" = x1 ] ; then
+    if [ x"$XAUTHORITY" = x ]; then
+        XAUTHORITY=$HOME/.Xauthority
+        export XAUTHORITY
+    fi
 
-removelist=
+    removelist=
 
-XCOMM set up default Xauth info for this machine
-case `uname` in
-Linux*)
-	if [ -z "`hostname --version 2>&1 | grep GNU`" ]; then
-		hostname=`hostname -f`
-	else
-		hostname=`hostname`
-	fi
-	;;
-*)
-	hostname=`hostname`
-	;;
-esac
+    XCOMM set up default Xauth info for this machine
+    case `uname` in
+    Linux*)
+        if [ -z "`hostname --version 2>&1 | grep GNU`" ]; then
+            hostname=`hostname -f`
+        else
+            hostname=`hostname`
+        fi
+        ;;
+    *)
+        hostname=`hostname`
+        ;;
+    esac
 
-authdisplay=${display:-:0}
+    authdisplay=${display:-:0}
 #if defined(HAS_COOKIE_MAKER) && defined(MK_COOKIE)
-mcookie=`MK_COOKIE`
+    mcookie=`MK_COOKIE`
 #else
-mcookie=`dd if=/dev/random bs=16 count=1 2>/dev/null | hexdump -e \\"%08x\\"`
-if test x"$mcookie" = x; then
-                echo "Couldn't create cookie"
-                exit 1
-fi
+    mcookie=`dd if=/dev/random bs=16 count=1 2>/dev/null | hexdump -e \\"%08x\\"`
+    if test x"$mcookie" = x; then
+        echo "Couldn't create cookie"
+        exit 1
+    fi
 #endif
-dummy=0
+    dummy=0
 
-XCOMM create a file with auth information for the server. ':0' is a dummy.
-xserverauthfile=$HOME/.serverauth.$$
-trap "rm -f $xserverauthfile" ERR HUP INT QUIT ILL TRAP KILL BUS TERM
-xauth -q -f $xserverauthfile << EOF
+    XCOMM create a file with auth information for the server. ':0' is a dummy.
+    xserverauthfile=$HOME/.serverauth.$$
+    trap "rm -f $xserverauthfile" HUP INT QUIT ILL TRAP KILL BUS TERM
+    xauth -q -f $xserverauthfile << EOF
 add :$dummy . $mcookie
 EOF
-serverargs=${serverargs}" -auth "${xserverauthfile}
+    serverargs=${serverargs}" -auth "${xserverauthfile}
 
-XCOMM now add the same credentials to the client authority file
-XCOMM if '$displayname' already exists do not overwrite it as another
-XCOMM server man need it. Add them to the '$xserverauthfile' instead.
-for displayname in $authdisplay $hostname$authdisplay; do
-     authcookie=`XAUTH list "$displayname" @@
-       | sed -n "s/.*$displayname[[:space:]*].*[[:space:]*]//p"` 2>/dev/null;
-    if [ "z${authcookie}" = "z" ] ; then
-        XAUTH -q << EOF 
+    XCOMM now add the same credentials to the client authority file
+    XCOMM if '$displayname' already exists do not overwrite it as another
+    XCOMM server man need it. Add them to the '$xserverauthfile' instead.
+    for displayname in $authdisplay $hostname$authdisplay; do
+        authcookie=`XAUTH list "$displayname" @@
+        | sed -n "s/.*$displayname[[:space:]*].*[[:space:]*]//p"` 2>/dev/null;
+        if [ "z${authcookie}" = "z" ] ; then
+            XAUTH -q << EOF 
 add $displayname . $mcookie
 EOF
-	removelist="$displayname $removelist"
-    else
-        dummy=$(($dummy+1));
-        XAUTH -q -f $xserverauthfile << EOF
+        removelist="$displayname $removelist"
+        else
+            dummy=$(($dummy+1));
+            XAUTH -q -f $xserverauthfile << EOF
 add :$dummy . $authcookie
 EOF
-    fi
-done
+        fi
+    done
+fi
 
 #if defined(__SCO__) || defined(__UNIXWARE__)
 if [ "$REMOTE_SERVER" = "TRUE" ]; then
@@ -233,13 +289,15 @@ fi
 XINIT $client $clientargs -- $server $display $serverargs
 #endif
 
-if [ x"$removelist" != x ]; then
-    XAUTH remove $removelist
+if [ x"$enable_xauth" = x1 ] ; then
+    if [ x"$removelist" != x ]; then
+        XAUTH remove $removelist
+    fi
+    if [ x"$xserverauthfile" != x ]; then
+        rm -f $xserverauthfile
+    fi
 fi
-if [ x"$xserverauthfile" != x ]; then
-    rm -f $xserverauthfile
-fi
-    
+
 /*
  * various machines need special cleaning up
  */

@@ -1,6 +1,6 @@
 /* $Xorg: xinit.c,v 1.5 2001/02/09 02:05:49 xorgcvs Exp $ */
 /* $XdotOrg: xc/programs/xinit/xinit.c,v 1.4 2005/10/04 01:27:34 ajax Exp $ */
-/* $OpenBSD: xinit.c,v 1.4 2008/04/20 13:25:46 matthieu Exp $ */
+/* $OpenBSD: xinit.c,v 1.5 2008/04/20 13:46:02 matthieu Exp $ */
 
 /*
 
@@ -39,6 +39,12 @@ in this Software without prior written authorization from The Open Group.
 #include <stdio.h>
 #include <ctype.h>
 #include <stdint.h>
+
+#ifdef __APPLE__
+#include <CoreServices/CoreServices.h>
+#define kX11AppBundleId "org.x.X11"
+#define kX11AppBundlePath "/Contents/MacOS/X11"
+#endif
 
 #ifdef X_POSIX_C_SOURCE
 #define _POSIX_C_SOURCE X_POSIX_C_SOURCE
@@ -137,12 +143,11 @@ const char * const server_names[] = {
 #ifdef XORG
     "Xorg        Common X server for most displays",
 #endif
-#ifdef __DARWIN__
-    "XDarwin         Darwin/Mac OS X IOKit displays",
-    "XDarwinQuartz   Mac OS X Quartz displays",
-    "XDarwinStartup  Auto-select between XDarwin and XDarwinQuartz",
+#ifdef __APPLE__
+    "Xquartz     Mac OSX Quartz displays.",
 #endif
     "Xvfb        Virtual frame buffer",
+    "Xfake       kdrive-based virtual frame buffer",
     "Xnest       X server nested in a window on another X server",
     "Xephyr      kdrive-based nested X server",
     NULL};
@@ -162,18 +167,21 @@ char xserverrcbuf[256];
 #define	OK_EXIT		0
 #define	ERR_EXIT	1
 
-char *default_server = "X";
-char *default_display = ":0";		/* choose most efficient */
-char *default_client[] = {"xterm", "-geometry", "+1+1", "-n", "login", NULL};
-char *serverargv[100];
-char *clientargv[100];
-char **server = serverargv + 2;		/* make sure room for sh .xserverrc args */
-char **client = clientargv + 2;		/* make sure room for sh .xinitrc args */
-char *displayNum;
-char *program;
-Display *xd;			/* server connection */
+static char *default_server = "X";
+static char *default_display = ":0";		/* choose most efficient */
+static char *default_client[] = {"xterm", "-geometry", "+1+1", "-n", "login", NULL};
+static char *serverargv[100];
+static char *clientargv[100];
+static char **server = serverargv + 2;		/* make sure room for sh .xserverrc args */
+static char **client = clientargv + 2;		/* make sure room for sh .xinitrc args */
+static char *displayNum = NULL;
+static char *program = NULL;
+static Display *xd = NULL;			/* server connection */
+#ifdef __APPLE__
+static char x11_path[PATH_MAX];
+#endif
 #ifndef SYSV
-#if defined(__CYGWIN__) || defined(SVR4) || defined(_POSIX_SOURCE) || defined(CSRG_BASED) || defined(__UNIXOS2__) || defined(Lynx)
+#if defined(__CYGWIN__) || defined(SVR4) || defined(_POSIX_SOURCE) || defined(CSRG_BASED) || defined(__UNIXOS2__) || defined(Lynx) || defined(__APPLE__)
 int status;
 #else
 union wait	status;
@@ -208,7 +216,7 @@ sigCatch(int sig)
 static SIGVAL 
 sigAlarm(int sig)
 {
-#if defined(SYSV) || defined(SVR4) || defined(linux) || defined(__UNIXOS2__)
+#if defined(SYSV) || defined(SVR4) || defined(linux) || defined(__UNIXOS2__) || defined(__APPLE__)
 	signal (sig, sigAlarm);
 #endif
 }
@@ -216,16 +224,61 @@ sigAlarm(int sig)
 static SIGVAL
 sigUsr1(int sig)
 {
-#if defined(SYSV) || defined(SVR4) || defined(linux) || defined(__UNIXOS2__)
+#if defined(SYSV) || defined(SVR4) || defined(linux) || defined(__UNIXOS2__) || defined(__APPLE__)
 	signal (sig, sigUsr1);
 #endif
 }
+
+#ifdef __APPLE__
+static void set_x11_path() {
+    CFURLRef appURL = NULL;
+    OSStatus osstatus = LSFindApplicationForInfo(kLSUnknownCreator, CFSTR(kX11AppBundleId), nil, nil, &appURL);
+
+    switch (osstatus) {
+        case noErr:
+            if (appURL == NULL) {
+                fprintf(stderr, "xinit: Invalid response from LSFindApplicationForInfo(%s)\n", 
+                        kX11AppBundleId);
+                exit(1);
+            }
+            
+            if (!CFURLGetFileSystemRepresentation(appURL, true, (unsigned char *)x11_path, sizeof(x11_path))) {
+                fprintf(stderr, "xinit: Error resolving URL for %s\n", kX11AppBundleId);
+                exit(2);
+            }
+            
+            strlcat(x11_path, kX11AppBundlePath, sizeof(x11_path));
+#ifdef DEBUG
+            fprintf(stderr, "xinit: X11.app = %s\n", x11_path);
+#endif
+            break;
+        case kLSApplicationNotFoundErr:
+            fprintf(stderr, "xinit: Unable to find application for %s\n", kX11AppBundleId);
+            exit(4);
+        default:
+            fprintf(stderr, "xinit: Unable to find application for %s, error code = %d\n", 
+                    kX11AppBundleId, (int)osstatus);
+            exit(5);
+    }
+}
+#endif
 
 static void 
 Execute(char **vec,		/* has room from up above */
 	char **envp)
 {
-    Execvpe (vec[0], vec, envp);
+    char *file = vec[0];
+#ifdef __APPLE__
+    /* This is ugly, but currently, we need to trick OS-X into thinking X is in
+     * the X11.app bundle.  Hopefully UI, icons, etc will eventually be set
+     * by Xquartz, but this is how we're doing it for now. -JH
+     */
+    if(!strcmp(file, "/usr/X11/bin/X") || !strcmp(file, "/usr/X11/bin/Xquartz") || !strcmp(file, "X") || !strcmp(file, "Xquartz")) {
+        vec[0] = x11_path;
+        fprintf(stderr, "xinit: Detected Xquartz startup, setting file=%s, argv[0]=%s\n", file, vec[0]);
+    }
+#endif
+    Execvpe (file, vec, envp);
 #ifndef __UNIXOS2__
     if (access (vec[0], R_OK) == 0) {
 	vec--;				/* back it up to stuff shell in */
@@ -252,6 +305,10 @@ main(int argc, char *argv[], char *envp[])
 	int client_args_given = 0, server_args_given = 0;
 	int start_of_client_args, start_of_server_args;
 	struct sigaction sa;
+
+#ifdef __APPLE__
+    set_x11_path();
+#endif
 
 #ifdef __UNIXOS2__
 	envsave = envp;	/* circumvent an EMX problem */
@@ -400,7 +457,6 @@ main(int argc, char *argv[], char *envp[])
 	    }
 	}
 
-
 	/*
 	 * put the display name into the environment
 	 */
@@ -497,7 +553,7 @@ processTimeout(int timeout, char *string)
 			break;
 		alarm(0);
 #else /* SYSV */
-#if defined(SVR4) || defined(_POSIX_SOURCE) || defined(Lynx)
+#if defined(SVR4) || defined(_POSIX_SOURCE) || defined(Lynx) || defined(__APPLE__)
 		if ((pidfound = waitpid(serverpid, &status, WNOHANG)) == serverpid)
 			break;
 #else
@@ -817,7 +873,7 @@ set_environment(void)
 {
     int nenvvars;
     char **newPtr, **oldPtr;
-    static char displaybuf[256];
+    static char displaybuf[512];
 
     /* count number of environment variables */
     for (oldPtr = environ; *oldPtr; oldPtr++) ;
