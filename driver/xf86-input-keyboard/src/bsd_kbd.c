@@ -531,8 +531,12 @@ OpenKeyboard(InputInfoPtr pInfo)
 		pInfo->name, strerror(errno));
 	return TRUE;
     }
+    if (KB_ENCODING(wsenc) == KB_USER)
+	/* Don't try to set XkbLayout */
+	return TRUE;
+
     for (i = 0; kbdenc[i].val; i++)
-        if (KB_ENCODING(wsenc) == kbdenc[i].val) {
+	if(KB_ENCODING(wsenc) == kbdenc[i].val) {
 	    xf86Msg(X_PROBED, "%s: using wscons layout %s\n",
 		    pInfo->name, kbdenc[i].name);
             xf86addNewOption(pInfo->options, "XkbLayout", kbdenc[i].name);
