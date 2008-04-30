@@ -410,8 +410,12 @@
 ./usr/X11R6/include/GL/glxproto.h
 ./usr/X11R6/include/GL/glxtokens.h
 ./usr/X11R6/include/GL/internal
+./usr/X11R6/include/GL/internal/dri_interface.h
 ./usr/X11R6/include/GL/internal/glcore.h
 ./usr/X11R6/include/GL/osmesa.h
+./usr/X11R6/include/X11/dri
+./usr/X11R6/include/X11/dri/xf86dri.h
+./usr/X11R6/include/X11/dri/xf86dristr.h
 ./usr/X11R6/include/X11/extensions/xf86dga.h
 ./usr/X11R6/include/X11/extensions/xf86dga1.h
 ./usr/X11R6/include/X11/extensions/xf86dga1str.h
@@ -432,7 +436,10 @@
 ./usr/X11R6/include/pixman-1/pixman.h
 ./usr/X11R6/include/xf86drm.h
 ./usr/X11R6/include/xf86mm.h
+./usr/X11R6/include/xorg/dri.h
+./usr/X11R6/include/xorg/dristruct.h
 ./usr/X11R6/include/xorg/hotplug.h
+./usr/X11R6/include/xorg/sarea.h
 ./usr/X11R6/include/xorg/wfbrename.h
 ./usr/X11R6/include/xorg/xf86Crtc.h
 ./usr/X11R6/include/xorg/xf86Modes.h
@@ -453,6 +460,8 @@
 ./usr/X11R6/lib/libGLw.a
 ./usr/X11R6/lib/libGLw.so.5.1
 ./usr/X11R6/lib/libGLw_pic.a
+./usr/X11R6/lib/libI810XvMC.la
+./usr/X11R6/lib/libI810XvMC.so.1.0
 ./usr/X11R6/lib/libICE.so.8.1
 ./usr/X11R6/lib/libSM.so.8.0
 ./usr/X11R6/lib/libX11.so.11.1
@@ -505,6 +514,10 @@
 ./usr/X11R6/lib/libpixman-1.a
 ./usr/X11R6/lib/libpixman-1.la
 ./usr/X11R6/lib/libpixman-1.so.11.0
+./usr/X11R6/lib/libviaXvMC.la
+./usr/X11R6/lib/libviaXvMC.so.1.0
+./usr/X11R6/lib/libviaXvMCPro.la
+./usr/X11R6/lib/libviaXvMCPro.so.1.0
 ./usr/X11R6/lib/libxkbfile.so.4.0
 ./usr/X11R6/lib/libxkbui.so.4.0
 ./usr/X11R6/lib/pkgconfig/gl.pc
@@ -512,6 +525,7 @@
 ./usr/X11R6/lib/pkgconfig/glw.pc
 ./usr/X11R6/lib/pkgconfig/libdrm.pc
 ./usr/X11R6/lib/pkgconfig/pixman-1.pc
+./usr/X11R6/lib/pkgconfig/xf86driproto.pc
 ./usr/X11R6/man/cat1/glxgears.0
 ./usr/X11R6/man/cat1/glxinfo.0
 ./usr/X11R6/man/cat3/GLwCreateMDrawingArea.0
