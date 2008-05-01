@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: screen.c,v 1.5 2008/04/16 13:35:37 oga Exp $
+ * $Id: screen.c,v 1.6 2008/05/01 18:01:13 oga Exp $
  */
 
 #include "headers.h"
@@ -69,7 +69,4 @@ screen_updatestackingorder(void)
 void
 screen_init(void)
 {
-	struct screen_ctx *sc = screen_current();
-
-	sc->cycle_client = NULL;
 }

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.37 2008/04/16 13:47:29 oga Exp $
+ * $Id: calmwm.h,v 1.38 2008/05/01 18:01:13 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -81,8 +81,6 @@ struct screen_ctx {
 	int		 ymax;
 
 	struct cycle_entry_q mruq;
-
-	struct client_ctx* cycle_client;
 
 	struct fonthash	 fonthash;
 	XftDraw		*xftdraw;
