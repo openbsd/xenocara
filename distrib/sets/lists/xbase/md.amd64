@@ -413,7 +413,6 @@
 ./usr/X11R6/include/GL/internal/dri_interface.h
 ./usr/X11R6/include/GL/internal/glcore.h
 ./usr/X11R6/include/GL/osmesa.h
-./usr/X11R6/include/X11/dri
 ./usr/X11R6/include/X11/dri/xf86dri.h
 ./usr/X11R6/include/X11/dri/xf86dristr.h
 ./usr/X11R6/include/X11/extensions/xf86dga.h
