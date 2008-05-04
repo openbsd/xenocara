@@ -31,10 +31,18 @@
 #include <dev/wscons/wsconsio.h>
 #include <dev/wscons/wsksymdef.h>
 
+#define KB_OVRENC \
+	{ KB_UK,	"gb" }, \
+	{ KB_SV,	"se" }, \
+	{ KB_SG,	"ch(de)" }, \
+	{ KB_SF,	"ch(fr)" }, \
+	{ KB_LA,	"latam" }, \
+	{ KB_CF,	"ca(fr)" }
+
 struct nameint {
   int val;
   char *name;
-} kbdenc[] = { KB_ENCTAB, { 0 } }, kbdvar[] = { KB_VARTAB, { 0 } };
+} kbdenc[] = { KB_OVRENC, KB_ENCTAB, { 0 } }, kbdvar[] = { KB_VARTAB, { 0 } };
 #endif
 
 extern void KbdGetMapping(InputInfoPtr pInfo, KeySymsPtr pKeySyms,
