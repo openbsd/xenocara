@@ -988,8 +988,6 @@
 ./usr/X11R6/man/man1/xfd.1
 ./usr/X11R6/man/man1/xfindproxy.1
 ./usr/X11R6/man/man1/xfontsel.1
-./usr/X11R6/man/man1/xfs.1
-./usr/X11R6/man/man1/xfsinfo.1
 ./usr/X11R6/man/man1/xft-config.1
 ./usr/X11R6/man/man1/xfwp.1
 ./usr/X11R6/man/man1/xgamma.1

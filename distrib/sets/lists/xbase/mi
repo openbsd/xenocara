@@ -89,7 +89,6 @@
 ./usr/X11R6/bin/xfd
 ./usr/X11R6/bin/xfindproxy
 ./usr/X11R6/bin/xfontsel
-./usr/X11R6/bin/xfs
 ./usr/X11R6/bin/xfsinfo
 ./usr/X11R6/bin/xft-config
 ./usr/X11R6/bin/xfwp
