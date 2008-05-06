@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.16 2008/04/15 20:24:41 oga Exp $
+ * $Id: calmwm.c,v 1.17 2008/05/06 15:12:04 tobias Exp $
  */
 
 #include "headers.h"
@@ -300,12 +300,15 @@ static void
 _sigchld_cb(int which)
 {
 	pid_t pid;
+	int save_errno = errno;
 	int status;
 
 	/* Collect dead children. */
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0 ||
 	    (pid < 0 && errno == EINTR))
 		;
+
+	errno = save_errno;
 }
 
 __dead void
