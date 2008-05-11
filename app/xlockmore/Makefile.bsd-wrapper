@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2007/04/07 15:45:13 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2008/05/11 20:36:28 matthieu Exp $
 
 config.status:
 	AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
@@ -9,6 +9,7 @@ config.status:
 		sh ${.CURDIR}/configure --prefix=${X11BASE} \
 		--enable-appdefaultdir=/etc/X11/app-defaults \
 		--enable-syslog --without-motif --without-ttf \
-		--without-gtk2 --without-gtk --without-esound
+		--without-gtk2 --without-gtk --without-esound \
+		--without-rplay
 
 .include <bsd.xorg.mk>
