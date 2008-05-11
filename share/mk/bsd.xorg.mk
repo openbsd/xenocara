@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.24 2008/03/25 23:28:19 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.25 2008/05/11 20:58:10 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -44,7 +44,12 @@ _cache= --cache-file=${XOBJDIR}/xorg-config.cache.${MACHINE}
 
 CFLAGS+=	$(COPTS)
 
+.if !defined(CONFIG_SITE)
+CONFIG_SITE=	${XSRCDIR}/etc/config.site
+.endif
+
 CONFIGURE_ENV=	PKG_CONFIG_LIBDIR="$(PKG_CONFIG_LIBDIR)" \
+		CONFIG_SITE=$(CONFIG_SITE) \
 		XMLTO=: \
 		CFLAGS="$(CFLAGS:C/ *$//)" \
 		MAKE="${MAKE}"
