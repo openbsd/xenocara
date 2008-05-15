@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: grab.c,v 1.9 2008/04/15 20:24:41 oga Exp $
+ * $Id: grab.c,v 1.10 2008/05/15 22:18:00 oga Exp $
  */
 
 #include "headers.h"
@@ -292,8 +292,7 @@ grab_label(struct client_ctx *cc)
 	XMapRaised(X_Dpy, sc->searchwin);
 
 	XGetInputFocus(X_Dpy, &focuswin, &focusrevert);
-	XSetInputFocus(X_Dpy, sc->searchwin,
-	    RevertToPointerRoot, CurrentTime);
+	XSetInputFocus(X_Dpy, sc->searchwin, RevertToPointerRoot, CurrentTime);
 
 	for (;;) {
 		XMaskEvent(X_Dpy, LabelMask, &e);
@@ -301,7 +300,7 @@ grab_label(struct client_ctx *cc)
 		switch (e.type) {
 		case KeyPress:
 			if (input_keycodetrans(e.xkey.keycode, e.xkey.state,
-				&ctl, &chr, 0) < 0)
+			    &ctl, &chr, 0) < 0)
 				continue;
 
 			switch (ctl) {
@@ -348,9 +347,8 @@ grab_label(struct client_ctx *cc)
 		}
 	}
 
- out:
-	XSetInputFocus(X_Dpy, focuswin,
-	    focusrevert, CurrentTime);
+out:
+	XSetInputFocus(X_Dpy, focuswin, focusrevert, CurrentTime);
 	XUnmapWindow(X_Dpy, sc->searchwin);
 }
 

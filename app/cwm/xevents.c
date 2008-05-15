@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.12 2008/04/16 13:35:37 oga Exp $
+ * $Id: xevents.c,v 1.13 2008/05/15 22:18:00 oga Exp $
  */
 
 /*
@@ -342,7 +342,7 @@ xev_handle_buttonpress(struct xevent *xev, XEvent *ee)
 		client_lower(cc);
 		break;
 	}
- out:
+out:
 	xev_register(xev);
 }
 
@@ -422,7 +422,7 @@ xev_handle_keyrelease(struct xevent *xev, XEvent *ee)
 	 */
 	client_mtf(NULL);
 
- out:
+out:
 	xev_register(xev);
 }
 

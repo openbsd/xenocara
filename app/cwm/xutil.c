@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xutil.c,v 1.5 2008/04/15 20:24:41 oga Exp $
+ * $Id: xutil.c,v 1.6 2008/05/15 22:18:00 oga Exp $
  */
 
 #include "headers.h"
@@ -25,15 +25,15 @@ int
 xu_ptr_grab(Window win, int mask, Cursor curs)
 {
 	return (XGrabPointer(X_Dpy, win, False, mask,
-		    GrabModeAsync, GrabModeAsync,
-		    None, curs, CurrentTime) == GrabSuccess ? 0 : -1);
+	    GrabModeAsync, GrabModeAsync,
+	    None, curs, CurrentTime) == GrabSuccess ? 0 : -1);
 }
 
 int
 xu_ptr_regrab(int mask, Cursor curs)
 {
 	return (XChangeActivePointerGrab(X_Dpy, mask,
-		curs, CurrentTime) == GrabSuccess ? 0 : -1);
+	    curs, CurrentTime) == GrabSuccess ? 0 : -1);
 }
 
 void
@@ -46,8 +46,8 @@ int
 xu_btn_grab(Window win, int mask, u_int btn)
 {
 	return (XGrabButton(X_Dpy, btn, mask, win,
-		    False, ButtonMask, GrabModeAsync,
-		    GrabModeSync, None, None) == GrabSuccess ? 0 : -1);
+	    False, ButtonMask, GrabModeAsync,
+	    GrabModeSync, None, None) == GrabSuccess ? 0 : -1);
 }
 
 void
@@ -110,7 +110,7 @@ xu_getprop(struct client_ctx *cc, Atom atm, Atom type, long len, u_char **p)
 	int format;
 
 	if (XGetWindowProperty(X_Dpy, cc->win, atm, 0L, len, False, type,
-		&realtype, &format, &n, &extra, p) != Success || *p == NULL)
+	    &realtype, &format, &n, &extra, p) != Success || *p == NULL)
 		return (-1);
 
 	if (n == 0)

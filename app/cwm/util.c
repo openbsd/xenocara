@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: util.c,v 1.8 2008/04/15 21:20:56 oga Exp $
+ * $Id: util.c,v 1.9 2008/05/15 22:18:00 oga Exp $
  */
 
 #include "headers.h"
@@ -49,9 +49,9 @@ u_exec(char *argstr)
 	char *tmp;
 
 	while (ap < end && (*ap = strsep(&argstr, " \t")) != NULL) {
-		if(**ap == '\0')
+		if (**ap == '\0')
 			continue;
- 		ap++;
+		ap++;
 		if (argstr != NULL) {
 			/* deal with quoted strings */
 			switch(argstr[0]) {

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.28 2008/04/16 13:47:29 oga Exp $
+ * $Id: conf.c,v 1.29 2008/05/15 22:18:00 oga Exp $
  */
 
 #include "headers.h"
@@ -396,8 +396,8 @@ void conf_unbind(struct conf *c, struct keybinding *unbind)
 			continue;
 
 		if ((key->keycode != 0 && key->keysym == NoSymbol &&
-			key->keycode == unbind->keycode) ||
-			key->keysym == unbind->keysym)
+		    key->keycode == unbind->keycode) ||
+		    key->keysym == unbind->keysym)
 			TAILQ_REMOVE(&c->keybindingq, key, entry);
 	}
 }
