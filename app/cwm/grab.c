@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: grab.c,v 1.10 2008/05/15 22:18:00 oga Exp $
+ * $Id: grab.c,v 1.11 2008/05/17 03:59:55 okan Exp $
  */
 
 #include "headers.h"
@@ -101,6 +101,7 @@ grab_sweep(struct client_ctx *cc)
 			XReparentWindow(X_Dpy, sc->menuwin, sc->rootwin, 0, 0);
 			xu_ptr_ungrab();
 			client_ptrwarp(cc);
+			client_do_shape(cc);
 			return;
 		}
 	}

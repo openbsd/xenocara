@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.21 2008/05/15 22:18:00 oga Exp $
+ * $Id: client.c,v 1.22 2008/05/17 03:59:54 okan Exp $
  */
 
 #include "headers.h"
@@ -139,21 +139,6 @@ client_new(Window win, struct screen_ctx *sc, int mapped)
 	    DefaultVisual(X_Dpy, sc->which),
 	    CWOverrideRedirect | CWBackPixel | CWEventMask, &pxattr);
 
-	if (Doshape) {
-		XRectangle *r;
-		int n, tmp;
-
-		XShapeSelectInput(X_Dpy, cc->win, ShapeNotifyMask);
-
-		r = XShapeGetRectangles(X_Dpy, cc->win, ShapeBounding,
-		    &n, &tmp);
-		if (n > 1)
-			XShapeCombineShape(X_Dpy, cc->pwin, ShapeBounding,
-			    0,	0, /* XXX border */
-			    cc->win, ShapeBounding, ShapeSet);
-		XFree(r);
-	}
-
 	cc->active = 0;
 	client_draw_border(cc);
 
@@ -186,6 +171,27 @@ client_new(Window win, struct screen_ctx *sc, int mapped)
 		group_autogroup(cc);
 
 	return (cc);
+}
+
+void
+client_do_shape(struct client_ctx *cc)
+{
+	/* Windows not rectangular require more effort */
+	XRectangle *r;
+	int n, tmp;
+
+	if (Doshape) {
+		XShapeSelectInput(X_Dpy, cc->win, ShapeNotifyMask);
+
+		r = XShapeGetRectangles(X_Dpy, cc->win, ShapeBounding,
+		    &n, &tmp);
+
+		if (n > 1)
+			XShapeCombineShape(X_Dpy, cc->pwin, ShapeBounding,
+			    cc->bwidth,	cc->bwidth, cc->win, ShapeBounding,
+			    ShapeSet);
+		XFree(r);
+	}
 }
 
 int
@@ -458,6 +464,8 @@ client_draw_border(struct client_ctx *cc)
 
 		XClearWindow(X_Dpy, cc->pwin);
 	}
+
+	client_do_shape(cc);
 }
 
 u_long
