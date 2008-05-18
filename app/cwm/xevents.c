@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.13 2008/05/15 22:18:00 oga Exp $
+ * $Id: xevents.c,v 1.14 2008/05/18 20:06:36 okan Exp $
  */
 
 /*
@@ -141,8 +141,8 @@ xev_handle_configurerequest(struct xevent *xev, XEvent *ee)
 		xev_reconfig(cc);
 	}
 
-	wc.x = cc != NULL ? 0 : e->x;
-	wc.y = cc != NULL ? 0 : e->y;
+	wc.x = cc != NULL ? cc->bwidth : e->x;
+	wc.y = cc != NULL ? cc->bwidth : e->y;
 	wc.width = e->width;
 	wc.height = e->height;
 	wc.stack_mode = Above;
