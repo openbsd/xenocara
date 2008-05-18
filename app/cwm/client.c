@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.22 2008/05/17 03:59:54 okan Exp $
+ * $Id: client.c,v 1.23 2008/05/18 20:00:16 okan Exp $
  */
 
 #include "headers.h"
@@ -365,7 +365,6 @@ client_resize(struct client_ctx *cc)
 	XMoveResizeWindow(X_Dpy, cc->win, cc->bwidth, cc->bwidth,
 	    cc->geom.width, cc->geom.height);
 	xev_reconfig(cc);
-	client_draw_border(cc);
 }
 
 void
@@ -386,7 +385,6 @@ void
 client_raise(struct client_ctx *cc)
 {
 	XRaiseWindow(X_Dpy, cc->pwin);
-	client_draw_border(cc);
 }
 
 void

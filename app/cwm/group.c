@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.13 2008/05/18 19:38:18 oga Exp $
+ * $Id: group.c,v 1.14 2008/05/18 20:00:16 okan Exp $
  */
 
 #include "headers.h"
@@ -53,8 +53,6 @@ _group_remove(struct client_ctx *cc)
 
 	TAILQ_REMOVE(&cc->group->clients, cc, group_entry);
 	cc->group = NULL;
-	cc->highlight = 0;
-	client_draw_border(cc);
 }
 
 static void
