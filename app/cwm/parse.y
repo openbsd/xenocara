@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.7 2008/05/18 19:34:09 oga Exp $ */
+/*	$OpenBSD: parse.y,v 1.8 2008/05/18 19:43:50 oga Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -152,7 +152,6 @@ main		: FONTNAME STRING		{
 
 			XCALLOC(wm, struct winmatch);
 			strlcpy(wm->title, $2, sizeof(wm->title));
-			wm->opts |= CONF_IGNORECASE;
 			TAILQ_INSERT_TAIL(&conf->ignoreq, wm, entry);
 
 			free($2);
