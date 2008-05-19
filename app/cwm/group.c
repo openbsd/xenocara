@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.15 2008/05/19 17:11:19 okan Exp $
+ * $Id: group.c,v 1.16 2008/05/19 17:13:55 oga Exp $
  */
 
 #include "headers.h"
@@ -327,6 +327,9 @@ group_autogroup(struct client_ctx *cc)
 			break;
 		}
 	}
+
+	if (strncmp("nogroup", group, 7) == 0)
+		return;
 
 	TAILQ_FOREACH(gc, &Groupq, entry) {
 		if (strcmp(shortcut_to_name[gc->shortcut], group) == 0) {

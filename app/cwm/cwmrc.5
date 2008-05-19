@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwmrc.5,v 1.6 2008/05/18 19:57:43 okan Exp $
+.\"	$OpenBSD: cwmrc.5,v 1.7 2008/05/19 17:13:55 oga Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -15,7 +15,7 @@
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
 .\" The following requests are required for all man pages.
-.Dd $Mdocdate: May 18 2008 $
+.Dd $Mdocdate: May 19 2008 $
 .Dt CWMRC 5
 .Os
 .Sh NAME
@@ -33,7 +33,11 @@ The following options are accepted in the configuration file:
 Control automatic window grouping, based on the class and/or name
 properties, where
 .Ar group
-is a number between 1 and 9.
+is a number between 0 and 9.
+If the group number is 0, then the window will not be grouped; this to
+allow for 
+.Dq sticky
+windows in sticky group mode.
 .Pp
 The class and name of a window may be obtained using
 .Xr xprop 1 .

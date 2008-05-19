@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.8 2008/05/18 19:43:50 oga Exp $ */
+/*	$OpenBSD: parse.y,v 1.9 2008/05/19 17:13:55 oga Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -125,7 +125,7 @@ main		: FONTNAME STRING		{
 			struct autogroupwin *aw;
 			char *p;
 
-			if ($2 < 1 || $2 > 9) {
+			if ($2 < 0 || $2 > 9) {
 				free($3);
 				yyerror("autogroup number out of range: %d", $2);
 				YYERROR;
