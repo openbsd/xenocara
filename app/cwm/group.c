@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.14 2008/05/18 20:00:16 okan Exp $
+ * $Id: group.c,v 1.15 2008/05/19 17:11:19 okan Exp $
  */
 
 #include "headers.h"
@@ -195,15 +195,11 @@ group_hidetoggle(int idx)
 	}
 }
 
-#define GROUP_NEXT(gc, fwd) (fwd) ?					\
-	TAILQ_NEXT(gc, entry) : TAILQ_PREV(gc, group_ctx_q, entry)
-
 /*
- * Jump to the next/previous active group.  If none exist, then just
- * stay put.
+ * Cycle through active groups.  If none exist, then just stay put.
  */
 void
-group_slide(int fwd)
+group_cycle(int reverse)
 {
 	struct group_ctx *gc, *showgroup = NULL;
 
@@ -211,10 +207,11 @@ group_slide(int fwd)
 
 	gc = Group_active;
 	for (;;) {
-		gc = GROUP_NEXT(gc, fwd);
+		gc = reverse ? TAILQ_PREV(gc, group_ctx_q, entry) :
+		    TAILQ_NEXT(gc, entry);
 		if (gc == NULL)
-			gc = fwd ? TAILQ_FIRST(&Groupq) :
-			    TAILQ_LAST(&Groupq, group_ctx_q);
+			gc = reverse ? TAILQ_LAST(&Groupq, group_ctx_q) :
+			    TAILQ_FIRST(&Groupq);
 		if (gc == Group_active)
 			break;
 

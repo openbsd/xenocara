@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.24 2008/05/19 15:17:50 oga Exp $
+ * $Id: kbfunc.c,v 1.25 2008/05/19 17:11:19 okan Exp $
  */
 
 #include <paths.h>
@@ -412,15 +412,9 @@ kbfunc_client_group(struct client_ctx *cc, void *arg)
 }
 
 void
-kbfunc_client_nextgroup(struct client_ctx *cc, void *arg)
+kbfunc_client_cyclegroup(struct client_ctx *cc, void *arg)
 {
-	group_slide(1);
-}
-
-void
-kbfunc_client_prevgroup(struct client_ctx *cc, void *arg)
-{
-	group_slide(0);
+	group_cycle((int)arg);
 }
 
 void
