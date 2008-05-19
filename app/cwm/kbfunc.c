@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.25 2008/05/19 17:11:19 okan Exp $
+ * $Id: kbfunc.c,v 1.26 2008/05/19 17:24:19 okan Exp $
  */
 
 #include <paths.h>
@@ -182,7 +182,7 @@ kbfunc_client_cycle(struct client_ctx *scratch, void *arg)
 	XGrabKeyboard(X_Dpy, sc->rootwin, True,
 	    GrabModeAsync, GrabModeAsync, CurrentTime);
 
-	client_cyclenext((int)arg);
+	client_cycle((int)arg);
 }
 
 void

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.25 2008/05/19 15:17:50 oga Exp $
+ * $Id: client.c,v 1.26 2008/05/19 17:24:19 okan Exp $
  */
 
 #include "headers.h"
@@ -590,7 +590,7 @@ match:
 }
 
 struct client_ctx *
-client_cyclenext(int reverse)
+client_cycle(int reverse)
 {
 	struct client_ctx	*oldcc = client_current(), *newcc;
 	struct screen_ctx	*sc = screen_current();
