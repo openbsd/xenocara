@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.31 2008/05/18 19:47:19 oga Exp $
+ * $Id: conf.c,v 1.32 2008/05/19 12:56:58 okan Exp $
  */
 
 #include "headers.h"
@@ -117,6 +117,7 @@ conf_init(struct conf *c)
 	conf_bindname(c, "CM-9", "group9");
 	conf_bindname(c, "M-Right", "nextgroup");
 	conf_bindname(c, "M-Left", "prevgroup");
+	conf_bindname(c, "CM-g", "grouptoggle");
 	conf_bindname(c, "CM-f", "maximize");
 	conf_bindname(c, "CM-equal", "vmaximize");
 	conf_bindname(c, "CMS-q", "quit");
@@ -224,6 +225,7 @@ struct {
 	{ "nogroup", kbfunc_client_nogroup, 0, 0 },
 	{ "nextgroup", kbfunc_client_nextgroup, 0, 0 },
 	{ "prevgroup", kbfunc_client_prevgroup, 0, 0 },
+	{ "grouptoggle", kbfunc_client_grouptoggle, KBFLAG_NEEDCLIENT, 0},
 	{ "maximize", kbfunc_client_maximize, KBFLAG_NEEDCLIENT, 0 },
 	{ "vmaximize", kbfunc_client_vmaximize, KBFLAG_NEEDCLIENT, 0 },
 	{ "quit", kbfunc_quit_wm, 0, 0 },

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.22 2008/04/16 13:47:29 oga Exp $
+ * $Id: kbfunc.c,v 1.23 2008/05/19 12:56:58 okan Exp $
  */
 
 #include <paths.h>
@@ -427,6 +427,16 @@ void
 kbfunc_client_nogroup(struct client_ctx *cc, void *arg)
 {
 	group_alltoggle();
+}
+
+void
+kbfunc_client_grouptoggle(struct client_ctx *cc, void *arg)
+{
+	/* XXX for stupid X apps like xpdf and gvim */
+	XGrabKeyboard(X_Dpy, cc->pwin, True,
+	    GrabModeAsync, GrabModeAsync, CurrentTime);
+
+	group_sticky_toggle_enter(cc);
 }
 
 void

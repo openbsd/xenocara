@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.14 2008/05/18 20:06:36 okan Exp $
+ * $Id: xevents.c,v 1.15 2008/05/19 12:56:58 okan Exp $
  */
 
 /*
@@ -408,6 +408,7 @@ xev_handle_keyrelease(struct xevent *xev, XEvent *ee)
 {
 	XKeyEvent *e = &ee->xkey;
 	struct screen_ctx *sc = screen_fromroot(e->root);
+	struct client_ctx *cc = client_current();
 	int keysym;
 
 	keysym = XKeycodeToKeysym(X_Dpy, e->keycode, 0);
@@ -421,6 +422,11 @@ xev_handle_keyrelease(struct xevent *xev, XEvent *ee)
 	 * how/when to mtf.
 	 */
 	client_mtf(NULL);
+
+	if (cc != NULL) {
+		group_sticky_toggle_exit(cc);
+		XUngrabKeyboard(X_Dpy, CurrentTime);
+	}
 
 out:
 	xev_register(xev);
