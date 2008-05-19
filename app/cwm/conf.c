@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.34 2008/05/19 17:11:19 okan Exp $
+ * $Id: conf.c,v 1.35 2008/05/19 18:53:09 oga Exp $
  */
 
 #include "headers.h"
@@ -157,9 +157,9 @@ conf_init(struct conf *c)
 }
 
 void
-conf_setup(struct conf *c, const char *conffile)
+conf_setup(struct conf *c, const char *conf_file)
 {
-	if (conffile == NULL) {
+	if (conf_file == NULL) {
 		char *home = getenv("HOME");
 
 		if (home == NULL)
@@ -168,7 +168,7 @@ conf_setup(struct conf *c, const char *conffile)
 		snprintf(c->conf_path, sizeof(c->conf_path), "%s/%s", home,
 		    CONFFILE);
 	} else
-		snprintf(c->conf_path, sizeof(c->conf_path), "%s", conffile);
+		snprintf(c->conf_path, sizeof(c->conf_path), "%s", conf_file);
 
 	conf_init(c);
 

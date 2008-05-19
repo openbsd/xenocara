@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.26 2008/05/19 17:24:19 okan Exp $
+ * $Id: kbfunc.c,v 1.27 2008/05/19 18:53:09 oga Exp $
  */
 
 #include <paths.h>
@@ -46,9 +46,9 @@ kbfunc_client_raise(struct client_ctx *cc, void *arg)
 void
 kbfunc_moveresize(struct client_ctx *cc, void *arg)
 {
-	struct screen_ctx *sc = screen_current();
-	int x,y,flags,amt;
-	u_int mx,my;
+	struct screen_ctx	*sc = screen_current();
+	int			 x, y, flags, amt;
+	u_int			 mx, my;
 
 	mx = my = 0;
 
@@ -57,7 +57,7 @@ kbfunc_moveresize(struct client_ctx *cc, void *arg)
 
 	if (flags & CWM_BIGMOVE) {
 		flags -= CWM_BIGMOVE;
-		amt = amt*10;
+		amt = amt * 10;
 	}
 
 	switch (flags & movemask) {
@@ -115,9 +115,9 @@ kbfunc_moveresize(struct client_ctx *cc, void *arg)
 void
 kbfunc_client_search(struct client_ctx *scratch, void *arg)
 {
-	struct menu_q menuq;
-	struct client_ctx *cc, *old_cc = client_current();
-	struct menu *mi;
+	struct menu_q		 menuq;
+	struct client_ctx	*cc, *old_cc = client_current();
+	struct menu		*mi;
 
 	TAILQ_INIT(&menuq);
 
@@ -149,9 +149,9 @@ kbfunc_client_search(struct client_ctx *scratch, void *arg)
 void
 kbfunc_menu_search(struct client_ctx *scratch, void *arg)
 {
-	struct menu_q menuq;
-	struct menu *mi;
-	struct cmd *cmd;
+	struct menu_q	 menuq;
+	struct menu	*mi;
+	struct cmd	*cmd;
 
 	TAILQ_INIT(&menuq);
 
