@@ -14,7 +14,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: search.c,v 1.9 2008/05/15 22:18:00 oga Exp $
+ * $Id: search.c,v 1.10 2008/05/19 18:07:53 okan Exp $
  */
 
 #include "headers.h"
@@ -104,7 +104,7 @@ search_start(struct menu_q *menuq,
 		switch (e.type) {
 		case KeyPress:
 			if (input_keycodetrans(e.xkey.keycode, e.xkey.state,
-			    &ctl, &chr, 1) < 0)
+			    &ctl, &chr) < 0)
 				continue;
 
 			switch (ctl) {

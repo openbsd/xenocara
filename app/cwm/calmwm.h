@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.47 2008/05/19 17:32:22 oga Exp $
+ * $Id: calmwm.h,v 1.48 2008/05/19 18:07:53 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -310,7 +310,7 @@ struct mwm_hints {
 #define	MWM_DECOR_BORDER	(1 << 1)
 
 int			 input_keycodetrans(KeyCode, u_int, enum ctltype *,
-			     char *, int);
+			     char *);
 
 int			 x_errorhandler(Display *, XErrorEvent *);
 void			 x_setup(char *display_name);

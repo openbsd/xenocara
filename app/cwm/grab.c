@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: grab.c,v 1.11 2008/05/17 03:59:55 okan Exp $
+ * $Id: grab.c,v 1.12 2008/05/19 18:07:53 okan Exp $
  */
 
 #include "headers.h"
@@ -301,7 +301,7 @@ grab_label(struct client_ctx *cc)
 		switch (e.type) {
 		case KeyPress:
 			if (input_keycodetrans(e.xkey.keycode, e.xkey.state,
-			    &ctl, &chr, 0) < 0)
+			    &ctl, &chr) < 0)
 				continue;
 
 			switch (ctl) {

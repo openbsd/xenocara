@@ -15,15 +15,14 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: input.c,v 1.5 2008/04/15 18:33:13 okan Exp $
+ * $Id: input.c,v 1.6 2008/05/19 18:07:53 okan Exp $
  */
 
 #include "headers.h"
 #include "calmwm.h"
 
 int
-input_keycodetrans(KeyCode kc, u_int state,
-    enum ctltype *ctl, char *chr, int normalize)
+input_keycodetrans(KeyCode kc, u_int state, enum ctltype *ctl, char *chr)
 {
 	int ks;
 
@@ -107,8 +106,6 @@ input_keycodetrans(KeyCode kc, u_int state,
 		return (-1);
 
 	*chr = (char)ks;
-	if (normalize)
-		*chr = tolower(*chr);
 
 	return (0);
 }
