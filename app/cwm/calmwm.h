@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.42 2008/05/19 12:56:58 okan Exp $
+ * $Id: calmwm.h,v 1.43 2008/05/19 15:17:50 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -221,6 +221,9 @@ TAILQ_HEAD(winmatch_q, winmatch);
 /* for cwm_exec */
 #define	CWM_EXEC_PROGRAM	0x1
 #define	CWM_EXEC_WM		0x2
+/* For alt-tab */
+#define CWM_CYCLE		0x0
+#define CWM_RCYCLE		0x1
 
 #define KBFLAG_NEEDCLIENT 0x01
 

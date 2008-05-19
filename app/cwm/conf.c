@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.32 2008/05/19 12:56:58 okan Exp $
+ * $Id: conf.c,v 1.33 2008/05/19 15:17:50 oga Exp $
  */
 
 #include "headers.h"
@@ -209,8 +209,8 @@ struct {
 	{ "search", kbfunc_client_search, 0, 0 },
 	{ "menusearch", kbfunc_menu_search, 0, 0 },
 	{ "hide", kbfunc_client_hide, KBFLAG_NEEDCLIENT, 0 },
-	{ "cycle", kbfunc_client_cycle, 0, 0 },
-	{ "rcycle", kbfunc_client_rcycle, 0, 0 },
+	{ "cycle", kbfunc_client_cycle, 0, (void *)CWM_CYCLE },
+	{ "rcycle", kbfunc_client_cycle, 0, (void *)CWM_RCYCLE },
 	{ "label", kbfunc_client_label, KBFLAG_NEEDCLIENT, 0 },
 	{ "delete", kbfunc_client_delete, KBFLAG_NEEDCLIENT, 0 },
 	{ "group1", kbfunc_client_group, 0, (void *)1 },

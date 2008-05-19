@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.24 2008/05/19 12:56:58 okan Exp $
+ * $Id: client.c,v 1.25 2008/05/19 15:17:50 oga Exp $
  */
 
 #include "headers.h"
@@ -620,10 +620,10 @@ client_cyclenext(int reverse)
 			if (again)
 				return (NULL);	/* No windows visible. */
 
-			goto done;
+			break;
 		}
 	}
-done:
+
 	/* reset when alt is released. XXX I hate this hack */
 	sc->altpersist = 1;
 	client_ptrsave(oldcc);
