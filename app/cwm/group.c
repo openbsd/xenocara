@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.16 2008/05/19 17:13:55 oga Exp $
+ * $Id: group.c,v 1.17 2008/05/21 14:11:19 oga Exp $
  */
 
 #include "headers.h"
@@ -273,7 +273,7 @@ group_menu(XButtonEvent *e)
 	if (TAILQ_EMPTY(&menuq))
 		return;
 
-	mi = (struct menu *)grab_menu(e, &menuq);
+	mi = menu_filter(&menuq, NULL, NULL, 0, NULL, NULL);
 
 	if (mi == NULL || mi->ctx == NULL)
 		goto cleanup;

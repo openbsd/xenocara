@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.15 2008/05/19 12:56:58 okan Exp $
+ * $Id: xevents.c,v 1.16 2008/05/21 14:11:19 oga Exp $
  */
 
 /*
@@ -290,7 +290,7 @@ xev_handle_buttonpress(struct xevent *xev, XEvent *ee)
 		if (TAILQ_EMPTY(&menuq))
 			goto out;
 
-		mi = (struct menu *)grab_menu(e, &menuq);
+		mi = menu_filter(&menuq, NULL, NULL, 0, NULL, NULL);
 		if (mi == NULL)
 			goto cleanup;
 

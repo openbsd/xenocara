@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.49 2008/05/20 14:50:51 oga Exp $
+ * $Id: calmwm.h,v 1.50 2008/05/21 14:11:19 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -65,7 +65,7 @@ struct screen_ctx {
 			 whitecolor, blackcolor;
 	char		*display;
 	unsigned long	 blackpixl, whitepixl, redpixl, bluepixl, cyanpixl;
-	GC		 gc, hlgc;
+	GC		 gc;
 
 	Pixmap		 gray, blue, red;
 
@@ -356,6 +356,7 @@ void			 client_do_shape(struct client_ctx *);
 struct menu  		*menu_filter(struct menu_q *, char *, char *, int,
 			     void (*)(struct menu_q *, struct menu_q *, char *),
 			     void (*)(struct menu *, int));
+void			 menu_init(struct screen_ctx *);
 
 void			 xev_handle_maprequest(struct xevent *, XEvent *);
 void			 xev_handle_unmapnotify(struct xevent *, XEvent *);
@@ -405,8 +406,6 @@ void			 u_exec(char *);
 
 void			 grab_sweep(struct client_ctx *);
 void			 grab_drag(struct client_ctx *);
-void			 grab_menuinit(struct screen_ctx *);
-void			*grab_menu(XButtonEvent *, struct menu_q *);
 void			 grab_label(struct client_ctx *);
 
 void			 xfree(void *);

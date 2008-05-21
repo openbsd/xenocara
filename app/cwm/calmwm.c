@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.19 2008/05/20 14:50:51 oga Exp $
+ * $Id: calmwm.c,v 1.20 2008/05/21 14:11:19 oga Exp $
  */
 
 #include "headers.h"
@@ -202,10 +202,6 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 	    GCForeground|GCBackground|GCFunction|
 	    GCLineWidth|GCSubwindowMode, &gv);
 
-	sc->hlgc = XCreateGC(X_Dpy, sc->rootwin,
-	    GCForeground|GCBackground|GCFunction|
-	    GCLineWidth|GCSubwindowMode, &gv);
-
 	font_init(sc);
 	DefaultFont = font_getx(sc, Conf.DefaultFontName);
 	sc->fontheight = font_ascent(DefaultFont) +
@@ -218,7 +214,7 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 	TAILQ_INIT(&sc->mruq);
 
 	/* Initialize menu window. */
-	grab_menuinit(sc);
+	menu_init(sc);
 
 	/* Deal with existing clients. */
 	XQueryTree(X_Dpy, sc->rootwin, &w0, &w1, &wins, &nwins);
