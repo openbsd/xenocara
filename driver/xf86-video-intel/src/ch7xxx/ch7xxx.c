@@ -30,6 +30,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "config.h"
 #endif
 
+#include <stdint.h>
 #include <string.h>
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -50,7 +51,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 static struct ch7xxx_id_struct {
-    CARD8 vid;
+    uint8_t vid;
     char *name;
 } ch7xxx_ids[] = { 
 	{ CH7011_VID, "CH7011" },
@@ -62,7 +63,7 @@ static struct ch7xxx_id_struct {
 #define ID_ARRAY_SIZE (sizeof(ch7xxx_ids) / sizeof(ch7xxx_ids[0]))
 
 struct ch7xxx_reg_state {
-    CARD8 regs[CH7xxx_NUM_REGS];
+    uint8_t regs[CH7xxx_NUM_REGS];
 };
 
 struct ch7xxx_priv {
@@ -71,13 +72,13 @@ struct ch7xxx_priv {
 
     struct ch7xxx_reg_state SavedReg;
     struct ch7xxx_reg_state ModeReg;
-    CARD8 save_TCTL, save_TPCP, save_TPD, save_TPVT;
-    CARD8 save_TLPF, save_TCT, save_PM, save_IDF;
+    uint8_t save_TCTL, save_TPCP, save_TPD, save_TPVT;
+    uint8_t save_TLPF, save_TCT, save_PM, save_IDF;
 };
 
 static void ch7xxx_save(I2CDevPtr d);
 
-static char *ch7xxx_get_id(CARD8 vid)
+static char *ch7xxx_get_id(uint8_t vid)
 {
     int i;
 
@@ -126,7 +127,7 @@ ch7xxx_init(I2CBusPtr b, I2CSlaveAddr addr)
 {
     /* this will detect the CH7xxx chip on the specified i2c bus */
     struct ch7xxx_priv *dev_priv;
-    CARD8 vendor, device;
+    uint8_t vendor, device;
     char *name;
 
     dev_priv = xcalloc(1, sizeof(struct ch7xxx_priv));
@@ -187,7 +188,7 @@ static xf86OutputStatus
 ch7xxx_detect(I2CDevPtr d)
 {
     struct ch7xxx_priv *dev_priv = d->DriverPrivate.ptr;
-    CARD8 cdet, orig_pm, pm;
+    uint8_t cdet, orig_pm, pm;
 
     ch7xxx_read(dev_priv, CH7xxx_PM, &orig_pm);
 
@@ -219,7 +220,7 @@ static void
 ch7xxx_mode_set(I2CDevPtr d, DisplayModePtr mode, DisplayModePtr adjusted_mode)
 {
     struct ch7xxx_priv *dev_priv = d->DriverPrivate.ptr;
-    CARD8 tvco, tpcp, tpd, tlpf, idf;
+    uint8_t tvco, tpcp, tpd, tlpf, idf;
 
     if (mode->Clock <= 65000) {
 	tvco = 0x23;

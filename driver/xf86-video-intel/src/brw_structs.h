@@ -1342,5 +1342,112 @@ struct brw_instruction
    } bits3;
 };
 
+/* media pipeline */
+
+struct brw_vfe_state {
+    struct {
+	unsigned int per_thread_scratch_space:4;
+	unsigned int pad3:3;
+	unsigned int extend_vfe_state_present:1;
+	unsigned int pad2:2;
+	unsigned int scratch_base:22;
+    } vfe0;
+
+    struct {
+	unsigned int debug_counter_control:2;
+	unsigned int children_present:1;
+	unsigned int vfe_mode:4;
+	unsigned int pad2:2;
+	unsigned int num_urb_entries:7;
+	unsigned int urb_entry_alloc_size:9;
+	unsigned int max_threads:7;
+    } vfe1;
+
+    struct {
+	unsigned int pad4:4;
+	unsigned int interface_descriptor_base:28;
+    } vfe2;
+};
+
+struct brw_vld_state {
+    struct {
+	unsigned int pad6:6;
+	unsigned int scan_order:1;
+	unsigned int intra_vlc_format:1;
+	unsigned int quantizer_scale_type:1;
+	unsigned int concealment_motion_vector:1;
+	unsigned int frame_predict_frame_dct:1;
+	unsigned int top_field_first:1;
+	unsigned int picture_structure:2;
+	unsigned int intra_dc_precision:2;
+	unsigned int f_code_0_0:4;
+	unsigned int f_code_0_1:4;
+	unsigned int f_code_1_0:4;
+	unsigned int f_code_1_1:4;
+    } vld0;
+
+    struct {
+	unsigned int pad2:9;
+	unsigned int picture_coding_type:2;
+	unsigned int pad:21;
+    } vld1;
+
+    struct {
+	unsigned int index_0:4;
+	unsigned int index_1:4;
+	unsigned int index_2:4;
+	unsigned int index_3:4;
+	unsigned int index_4:4;
+	unsigned int index_5:4;
+	unsigned int index_6:4;
+	unsigned int index_7:4;
+    } desc_remap_table0;
+
+    struct {
+	unsigned int index_8:4;
+	unsigned int index_9:4;
+	unsigned int index_10:4;
+	unsigned int index_11:4;
+	unsigned int index_12:4;
+	unsigned int index_13:4;
+	unsigned int index_14:4;
+	unsigned int index_15:4;
+    } desc_remap_table1;
+};
+
+struct brw_interface_descriptor {
+    struct {
+	unsigned int grf_reg_blocks:4;
+	unsigned int pad:2;
+	unsigned int kernel_start_pointer:26;
+    } desc0;
+
+    struct {
+	unsigned int pad:7;
+	unsigned int software_exception:1;
+	unsigned int pad2:3;
+	unsigned int maskstack_exception:1;
+	unsigned int pad3:1;
+	unsigned int illegal_opcode_exception:1;
+	unsigned int pad4:2;
+	unsigned int floating_point_mode:1;
+	unsigned int thread_priority:1;
+	unsigned int single_program_flow:1;
+	unsigned int pad5:1;
+	unsigned int const_urb_entry_read_offset:6;
+	unsigned int const_urb_entry_read_len:6;
+    } desc1;
+
+    struct {
+	unsigned int pad:2;
+	unsigned int sampler_count:3;
+	unsigned int sampler_state_pointer:27;
+    } desc2;
+
+    struct {
+	unsigned int binding_table_entry_count:5;
+	unsigned int binding_table_pointer:27;
+    } desc3;
+};
 
 #endif

@@ -48,7 +48,7 @@ I915DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
 			 PixmapPtr pPixmap)
 {
    I830Ptr pI830 = I830PTR(pScrn);
-   CARD32 format, ms3, s5;
+   uint32_t format, ms3, s5;
    BoxPtr pbox;
    int nbox, dxo, dyo, pix_xoff, pix_yoff;
    Bool planar;
@@ -75,80 +75,90 @@ I915DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
    IntelEmitInvarientState(pScrn);
    *pI830->last_3d = LAST_3D_VIDEO;
 
-   BEGIN_LP_RING(20);
+   BEGIN_BATCH(20);
 
    /* flush map & render cache */
-   OUT_RING(MI_FLUSH | MI_WRITE_DIRTY_STATE | MI_INVALIDATE_MAP_CACHE);
-   OUT_RING(0x00000000);
+   OUT_BATCH(MI_FLUSH | MI_WRITE_DIRTY_STATE | MI_INVALIDATE_MAP_CACHE);
+   OUT_BATCH(0x00000000);
 
    /* draw rect -- just clipping */
-   OUT_RING(_3DSTATE_DRAW_RECT_CMD);
-   OUT_RING(DRAW_DITHER_OFS_X(pPixmap->drawable.x & 3) |
-	    DRAW_DITHER_OFS_Y(pPixmap->drawable.y & 3));
-   OUT_RING(0x00000000);	/* ymin, xmin */
-   OUT_RING((pPixmap->drawable.width - 1) |
-	    (pPixmap->drawable.height - 1) << 16); /* ymax, xmax */
-   OUT_RING(0x00000000);	/* yorigin, xorigin */
-   OUT_RING(MI_NOOP);
+   OUT_BATCH(_3DSTATE_DRAW_RECT_CMD);
+   OUT_BATCH(DRAW_DITHER_OFS_X(pPixmap->drawable.x & 3) |
+	     DRAW_DITHER_OFS_Y(pPixmap->drawable.y & 3));
+   OUT_BATCH(0x00000000);	/* ymin, xmin */
+   OUT_BATCH((pPixmap->drawable.width - 1) |
+	     (pPixmap->drawable.height - 1) << 16); /* ymax, xmax */
+   OUT_BATCH(0x00000000);	/* yorigin, xorigin */
+   OUT_BATCH(MI_NOOP);
 
-   OUT_RING(_3DSTATE_LOAD_STATE_IMMEDIATE_1 | I1_LOAD_S(2) |
-	    I1_LOAD_S(4) | I1_LOAD_S(5) | I1_LOAD_S(6) | 3);
-   OUT_RING(S2_TEXCOORD_FMT(0, TEXCOORDFMT_2D) |
-	    S2_TEXCOORD_FMT(1, TEXCOORDFMT_NOT_PRESENT) |
-	    S2_TEXCOORD_FMT(2, TEXCOORDFMT_NOT_PRESENT) |
-	    S2_TEXCOORD_FMT(3, TEXCOORDFMT_NOT_PRESENT) |
-	    S2_TEXCOORD_FMT(4, TEXCOORDFMT_NOT_PRESENT) |
-	    S2_TEXCOORD_FMT(5, TEXCOORDFMT_NOT_PRESENT) |
-	    S2_TEXCOORD_FMT(6, TEXCOORDFMT_NOT_PRESENT) |
-	    S2_TEXCOORD_FMT(7, TEXCOORDFMT_NOT_PRESENT));
-   OUT_RING((1 << S4_POINT_WIDTH_SHIFT) | S4_LINE_WIDTH_ONE |
-	    S4_CULLMODE_NONE | S4_VFMT_XY);
+   OUT_BATCH(_3DSTATE_LOAD_STATE_IMMEDIATE_1 | I1_LOAD_S(2) |
+	     I1_LOAD_S(4) | I1_LOAD_S(5) | I1_LOAD_S(6) | 3);
+   OUT_BATCH(S2_TEXCOORD_FMT(0, TEXCOORDFMT_2D) |
+	     S2_TEXCOORD_FMT(1, TEXCOORDFMT_NOT_PRESENT) |
+	     S2_TEXCOORD_FMT(2, TEXCOORDFMT_NOT_PRESENT) |
+	     S2_TEXCOORD_FMT(3, TEXCOORDFMT_NOT_PRESENT) |
+	     S2_TEXCOORD_FMT(4, TEXCOORDFMT_NOT_PRESENT) |
+	     S2_TEXCOORD_FMT(5, TEXCOORDFMT_NOT_PRESENT) |
+	     S2_TEXCOORD_FMT(6, TEXCOORDFMT_NOT_PRESENT) |
+	     S2_TEXCOORD_FMT(7, TEXCOORDFMT_NOT_PRESENT));
+   OUT_BATCH((1 << S4_POINT_WIDTH_SHIFT) | S4_LINE_WIDTH_ONE |
+	     S4_CULLMODE_NONE | S4_VFMT_XY);
    s5 = 0x0;
    if (pI830->cpp == 2)
       s5 |= S5_COLOR_DITHER_ENABLE;
-   OUT_RING(s5); /* S5 - enable bits */
-   OUT_RING((2 << S6_DEPTH_TEST_FUNC_SHIFT) |
-	    (2 << S6_CBUF_SRC_BLEND_FACT_SHIFT) |
-	    (1 << S6_CBUF_DST_BLEND_FACT_SHIFT) | S6_COLOR_WRITE_ENABLE |
-	    (2 << S6_TRISTRIP_PV_SHIFT));
+   OUT_BATCH(s5); /* S5 - enable bits */
+   OUT_BATCH((2 << S6_DEPTH_TEST_FUNC_SHIFT) |
+	     (2 << S6_CBUF_SRC_BLEND_FACT_SHIFT) |
+	     (1 << S6_CBUF_DST_BLEND_FACT_SHIFT) | S6_COLOR_WRITE_ENABLE |
+	     (2 << S6_TRISTRIP_PV_SHIFT));
 
-   OUT_RING(_3DSTATE_CONST_BLEND_COLOR_CMD);
-   OUT_RING(0x00000000);
+   OUT_BATCH(_3DSTATE_CONST_BLEND_COLOR_CMD);
+   OUT_BATCH(0x00000000);
 
-   OUT_RING(_3DSTATE_DST_BUF_VARS_CMD);
+   OUT_BATCH(_3DSTATE_DST_BUF_VARS_CMD);
    if (pI830->cpp == 2)
       format = COLR_BUF_RGB565;
    else
       format = COLR_BUF_ARGB8888 | DEPTH_FRMT_24_FIXED_8_OTHER;
 
-   OUT_RING(LOD_PRECLAMP_OGL |
-     DSTORG_HORT_BIAS(0x80) | DSTORG_VERT_BIAS(0x80) | format);
+   OUT_BATCH(LOD_PRECLAMP_OGL |
+	     DSTORG_HORT_BIAS(0x80) |
+	     DSTORG_VERT_BIAS(0x80) |
+	     format);
 
    /* front buffer, pitch, offset */
-   OUT_RING(_3DSTATE_BUF_INFO_CMD);
-   OUT_RING(BUF_3D_ID_COLOR_BACK | BUF_3D_USE_FENCE |
-	    BUF_3D_PITCH(intel_get_pixmap_pitch(pPixmap)));
-   OUT_RING(BUF_3D_ADDR(intel_get_pixmap_offset(pPixmap)));
-   ADVANCE_LP_RING();
+   OUT_BATCH(_3DSTATE_BUF_INFO_CMD);
+   OUT_BATCH(BUF_3D_ID_COLOR_BACK | BUF_3D_USE_FENCE |
+	     BUF_3D_PITCH(intel_get_pixmap_pitch(pPixmap)));
+   OUT_BATCH(BUF_3D_ADDR(intel_get_pixmap_offset(pPixmap)));
+   ADVANCE_BATCH();
 
    if (!planar) {
-      FS_LOCALS(3);
+      FS_LOCALS(10);
 
-      BEGIN_LP_RING(10);
-      OUT_RING(_3DSTATE_SAMPLER_STATE | 3);
-      OUT_RING(0x00000001);
-      OUT_RING(SS2_COLORSPACE_CONVERSION |
-	       (FILTER_LINEAR << SS2_MAG_FILTER_SHIFT) |
-	       (FILTER_LINEAR << SS2_MIN_FILTER_SHIFT));
-      OUT_RING((TEXCOORDMODE_CLAMP_EDGE << SS3_TCX_ADDR_MODE_SHIFT) |
-	       (TEXCOORDMODE_CLAMP_EDGE << SS3_TCY_ADDR_MODE_SHIFT) |
-	       (0 << SS3_TEXTUREMAP_INDEX_SHIFT) |
-	       SS3_NORMALIZED_COORDS);
-      OUT_RING(0x00000000);
+      BEGIN_BATCH(16);
+      OUT_BATCH(_3DSTATE_PIXEL_SHADER_CONSTANTS | 4);
+      OUT_BATCH(0x0000001);	/* constant 0 */
+      /* constant 0: brightness/contrast */
+      OUT_BATCH_F(pPriv->brightness / 128.0);
+      OUT_BATCH_F(pPriv->contrast / 255.0);
+      OUT_BATCH_F(0.0);
+      OUT_BATCH_F(0.0);
 
-      OUT_RING(_3DSTATE_MAP_STATE | 3);
-      OUT_RING(0x00000001);	/* texture map #1 */
-      OUT_RING(pPriv->YBuf0offset);
+      OUT_BATCH(_3DSTATE_SAMPLER_STATE | 3);
+      OUT_BATCH(0x00000001);
+      OUT_BATCH(SS2_COLORSPACE_CONVERSION |
+		(FILTER_LINEAR << SS2_MAG_FILTER_SHIFT) |
+		(FILTER_LINEAR << SS2_MIN_FILTER_SHIFT));
+      OUT_BATCH((TEXCOORDMODE_CLAMP_EDGE << SS3_TCX_ADDR_MODE_SHIFT) |
+		(TEXCOORDMODE_CLAMP_EDGE << SS3_TCY_ADDR_MODE_SHIFT) |
+		(0 << SS3_TEXTUREMAP_INDEX_SHIFT) |
+		SS3_NORMALIZED_COORDS);
+      OUT_BATCH(0x00000000);
+
+      OUT_BATCH(_3DSTATE_MAP_STATE | 3);
+      OUT_BATCH(0x00000001);	/* texture map #1 */
+      OUT_BATCH(pPriv->YBuf0offset);
       ms3 = MAPSURF_422 | MS3_USE_FENCE_REGS;
       switch (id) {
       case FOURCC_YUY2:
@@ -160,19 +170,25 @@ I915DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
       }
       ms3 |= (height - 1) << MS3_HEIGHT_SHIFT;
       ms3 |= (width - 1) << MS3_WIDTH_SHIFT;
-      OUT_RING(ms3);
-      OUT_RING(((video_pitch / 4) - 1) << MS4_PITCH_SHIFT);
-      ADVANCE_LP_RING();
+      OUT_BATCH(ms3);
+      OUT_BATCH(((video_pitch / 4) - 1) << MS4_PITCH_SHIFT);
+
+      ADVANCE_BATCH();
 
       FS_BEGIN();
       i915_fs_dcl(FS_S0);
       i915_fs_dcl(FS_T0);
       i915_fs_texld(FS_OC, FS_S0, FS_T0);
+      if (pPriv->brightness != 0) {
+	  i915_fs_add(FS_OC,
+		      i915_fs_operand_reg(FS_OC),
+		      i915_fs_operand(FS_C0, X, X, X, ZERO));
+      }
       FS_END();
    } else {
       FS_LOCALS(16);
 
-      BEGIN_LP_RING(18 + 11 + 11);
+      BEGIN_BATCH(22 + 11 + 11);
       /* For the planar formats, we set up three samplers -- one for each plane,
        * in a Y8 format.  Because I couldn't get the special PLANAR_TO_PACKED
        * shader setup to work, I did the manual pixel shader:
@@ -192,80 +208,85 @@ I915DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
        * r3 = (v,v,v,v)
        * OC = (r,g,b,1)
        */
-      OUT_RING(_3DSTATE_PIXEL_SHADER_CONSTANTS | 16);
-      OUT_RING(0x000000f);	/* constants 0-3 */
+      OUT_BATCH(_3DSTATE_PIXEL_SHADER_CONSTANTS | (22 - 2));
+      OUT_BATCH(0x000001f);	/* constants 0-4 */
       /* constant 0: normalization offsets */
-      OUT_RING_F(-0.0625);
-      OUT_RING_F(-0.5);
-      OUT_RING_F(-0.5);
-      OUT_RING_F(0.0);
+      OUT_BATCH_F(-0.0625);
+      OUT_BATCH_F(-0.5);
+      OUT_BATCH_F(-0.5);
+      OUT_BATCH_F(0.0);
       /* constant 1: r coefficients*/
-      OUT_RING_F(1.1643);
-      OUT_RING_F(0.0);
-      OUT_RING_F(1.5958);
-      OUT_RING_F(0.0);
+      OUT_BATCH_F(1.1643);
+      OUT_BATCH_F(0.0);
+      OUT_BATCH_F(1.5958);
+      OUT_BATCH_F(0.0);
       /* constant 2: g coefficients */
-      OUT_RING_F(1.1643);
-      OUT_RING_F(-0.39173);
-      OUT_RING_F(-0.81290);
-      OUT_RING_F(0.0);
+      OUT_BATCH_F(1.1643);
+      OUT_BATCH_F(-0.39173);
+      OUT_BATCH_F(-0.81290);
+      OUT_BATCH_F(0.0);
       /* constant 3: b coefficients */
-      OUT_RING_F(1.1643);
-      OUT_RING_F(2.017);
-      OUT_RING_F(0.0);
-      OUT_RING_F(0.0);
+      OUT_BATCH_F(1.1643);
+      OUT_BATCH_F(2.017);
+      OUT_BATCH_F(0.0);
+      OUT_BATCH_F(0.0);
+      /* constant 4: brightness/contrast */
+      OUT_BATCH_F(pPriv->brightness / 128.0);
+      OUT_BATCH_F(pPriv->contrast / 255.0);
+      OUT_BATCH_F(0.0);
+      OUT_BATCH_F(0.0);
 
-      OUT_RING(_3DSTATE_SAMPLER_STATE | 9);
-      OUT_RING(0x00000007);
+      OUT_BATCH(_3DSTATE_SAMPLER_STATE | 9);
+      OUT_BATCH(0x00000007);
       /* sampler 0 */
-      OUT_RING((FILTER_LINEAR << SS2_MAG_FILTER_SHIFT) |
+      OUT_BATCH((FILTER_LINEAR << SS2_MAG_FILTER_SHIFT) |
 	       (FILTER_LINEAR << SS2_MIN_FILTER_SHIFT));
-      OUT_RING((TEXCOORDMODE_CLAMP_EDGE << SS3_TCX_ADDR_MODE_SHIFT) |
+      OUT_BATCH((TEXCOORDMODE_CLAMP_EDGE << SS3_TCX_ADDR_MODE_SHIFT) |
 	       (TEXCOORDMODE_CLAMP_EDGE << SS3_TCY_ADDR_MODE_SHIFT) |
 	       (0 << SS3_TEXTUREMAP_INDEX_SHIFT) |
 	       SS3_NORMALIZED_COORDS);
-      OUT_RING(0x00000000);
+      OUT_BATCH(0x00000000);
       /* sampler 1 */
-      OUT_RING((FILTER_LINEAR << SS2_MAG_FILTER_SHIFT) |
+      OUT_BATCH((FILTER_LINEAR << SS2_MAG_FILTER_SHIFT) |
 	       (FILTER_LINEAR << SS2_MIN_FILTER_SHIFT));
-      OUT_RING((TEXCOORDMODE_CLAMP_EDGE << SS3_TCX_ADDR_MODE_SHIFT) |
+      OUT_BATCH((TEXCOORDMODE_CLAMP_EDGE << SS3_TCX_ADDR_MODE_SHIFT) |
 	       (TEXCOORDMODE_CLAMP_EDGE << SS3_TCY_ADDR_MODE_SHIFT) |
 	       (1 << SS3_TEXTUREMAP_INDEX_SHIFT) |
 	       SS3_NORMALIZED_COORDS);
-      OUT_RING(0x00000000);
+      OUT_BATCH(0x00000000);
       /* sampler 2 */
-      OUT_RING((FILTER_LINEAR << SS2_MAG_FILTER_SHIFT) |
-	       (FILTER_LINEAR << SS2_MIN_FILTER_SHIFT));
-      OUT_RING((TEXCOORDMODE_CLAMP_EDGE << SS3_TCX_ADDR_MODE_SHIFT) |
-	       (TEXCOORDMODE_CLAMP_EDGE << SS3_TCY_ADDR_MODE_SHIFT) |
-	       (2 << SS3_TEXTUREMAP_INDEX_SHIFT) |
-	       SS3_NORMALIZED_COORDS);
-      OUT_RING(0x00000000);
+      OUT_BATCH((FILTER_LINEAR << SS2_MAG_FILTER_SHIFT) |
+		(FILTER_LINEAR << SS2_MIN_FILTER_SHIFT));
+      OUT_BATCH((TEXCOORDMODE_CLAMP_EDGE << SS3_TCX_ADDR_MODE_SHIFT) |
+		(TEXCOORDMODE_CLAMP_EDGE << SS3_TCY_ADDR_MODE_SHIFT) |
+		(2 << SS3_TEXTUREMAP_INDEX_SHIFT) |
+		SS3_NORMALIZED_COORDS);
+      OUT_BATCH(0x00000000);
 
-      OUT_RING(_3DSTATE_MAP_STATE | 9);
-      OUT_RING(0x00000007);
+      OUT_BATCH(_3DSTATE_MAP_STATE | 9);
+      OUT_BATCH(0x00000007);
 
-      OUT_RING(pPriv->YBuf0offset);
+      OUT_BATCH(pPriv->YBuf0offset);
       ms3 = MAPSURF_8BIT | MT_8BIT_I8 | MS3_USE_FENCE_REGS;
       ms3 |= (height - 1) << MS3_HEIGHT_SHIFT;
       ms3 |= (width - 1) << MS3_WIDTH_SHIFT;
-      OUT_RING(ms3);
-      OUT_RING(((video_pitch * 2 / 4) - 1) << MS4_PITCH_SHIFT);
+      OUT_BATCH(ms3);
+      OUT_BATCH(((video_pitch * 2 / 4) - 1) << MS4_PITCH_SHIFT);
 
-      OUT_RING(pPriv->UBuf0offset);
+      OUT_BATCH(pPriv->UBuf0offset);
       ms3 = MAPSURF_8BIT | MT_8BIT_I8 | MS3_USE_FENCE_REGS;
       ms3 |= (height / 2 - 1) << MS3_HEIGHT_SHIFT;
       ms3 |= (width / 2 - 1) << MS3_WIDTH_SHIFT;
-      OUT_RING(ms3);
-      OUT_RING(((video_pitch / 4) - 1) << MS4_PITCH_SHIFT);
+      OUT_BATCH(ms3);
+      OUT_BATCH(((video_pitch / 4) - 1) << MS4_PITCH_SHIFT);
 
-      OUT_RING(pPriv->VBuf0offset);
+      OUT_BATCH(pPriv->VBuf0offset);
       ms3 = MAPSURF_8BIT | MT_8BIT_I8 | MS3_USE_FENCE_REGS;
       ms3 |= (height / 2 - 1) << MS3_HEIGHT_SHIFT;
       ms3 |= (width / 2 - 1) << MS3_WIDTH_SHIFT;
-      OUT_RING(ms3);
-      OUT_RING(((video_pitch / 4) - 1) << MS4_PITCH_SHIFT);
-      ADVANCE_LP_RING();
+      OUT_BATCH(ms3);
+      OUT_BATCH(((video_pitch / 4) - 1) << MS4_PITCH_SHIFT);
+      ADVANCE_BATCH();
 
       FS_BEGIN();
       /* Declare samplers */
@@ -305,14 +326,20 @@ I915DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
        * the source.
        */
       i915_fs_mov_masked(FS_OC, MASK_W, i915_fs_operand_one());
+
+      if (pPriv->brightness != 0) {
+	  i915_fs_add(FS_OC,
+		      i915_fs_operand_reg(FS_OC),
+		      i915_fs_operand(FS_C4, X, X, X, ZERO));
+      }
       FS_END();
    }
    
    {
-      BEGIN_LP_RING(2);
-      OUT_RING(MI_FLUSH | MI_WRITE_DIRTY_STATE | MI_INVALIDATE_MAP_CACHE);
-      OUT_RING(0x00000000);
-      ADVANCE_LP_RING();
+      BEGIN_BATCH(2);
+      OUT_BATCH(MI_FLUSH | MI_WRITE_DIRTY_STATE | MI_INVALIDATE_MAP_CACHE);
+      OUT_BATCH(0x00000000);
+      ADVANCE_BATCH();
    }
 
    /* Set up the offset for translating from the given region (in screen
@@ -344,39 +371,39 @@ I915DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
       src_scale_x = ((float)src_w / width) / drw_w;
       src_scale_y  = ((float)src_h / height) / drw_h;
 
-      BEGIN_LP_RING(8 + 12);
-      OUT_RING(MI_NOOP);
-      OUT_RING(MI_NOOP);
-      OUT_RING(MI_NOOP);
-      OUT_RING(MI_NOOP);
-      OUT_RING(MI_NOOP);
-      OUT_RING(MI_NOOP);
-      OUT_RING(MI_NOOP);
+      BEGIN_BATCH(8 + 12);
+      OUT_BATCH(MI_NOOP);
+      OUT_BATCH(MI_NOOP);
+      OUT_BATCH(MI_NOOP);
+      OUT_BATCH(MI_NOOP);
+      OUT_BATCH(MI_NOOP);
+      OUT_BATCH(MI_NOOP);
+      OUT_BATCH(MI_NOOP);
 
       /* vertex data - rect list consists of bottom right, bottom left, and top
        * left vertices.
        */
-      OUT_RING(PRIM3D_INLINE | PRIM3D_RECTLIST | (12 - 1));
+      OUT_BATCH(PRIM3D_INLINE | PRIM3D_RECTLIST | (12 - 1));
 
       /* bottom right */
-      OUT_RING_F(box_x2 + pix_xoff);
-      OUT_RING_F(box_y2 + pix_yoff);
-      OUT_RING_F((box_x2 - dxo) * src_scale_x);
-      OUT_RING_F((box_y2 - dyo) * src_scale_y);
+      OUT_BATCH_F(box_x2 + pix_xoff);
+      OUT_BATCH_F(box_y2 + pix_yoff);
+      OUT_BATCH_F((box_x2 - dxo) * src_scale_x);
+      OUT_BATCH_F((box_y2 - dyo) * src_scale_y);
 
       /* bottom left */
-      OUT_RING_F(box_x1 + pix_xoff);
-      OUT_RING_F(box_y2 + pix_yoff);
-      OUT_RING_F((box_x1 - dxo) * src_scale_x);
-      OUT_RING_F((box_y2 - dyo) * src_scale_y);
+      OUT_BATCH_F(box_x1 + pix_xoff);
+      OUT_BATCH_F(box_y2 + pix_yoff);
+      OUT_BATCH_F((box_x1 - dxo) * src_scale_x);
+      OUT_BATCH_F((box_y2 - dyo) * src_scale_y);
 
       /* top left */
-      OUT_RING_F(box_x1 + pix_xoff);
-      OUT_RING_F(box_y1 + pix_yoff);
-      OUT_RING_F((box_x1 - dxo) * src_scale_x);
-      OUT_RING_F((box_y1 - dyo) * src_scale_y);
+      OUT_BATCH_F(box_x1 + pix_xoff);
+      OUT_BATCH_F(box_y1 + pix_yoff);
+      OUT_BATCH_F((box_x1 - dxo) * src_scale_x);
+      OUT_BATCH_F((box_y1 - dyo) * src_scale_y);
 
-      ADVANCE_LP_RING();
+      ADVANCE_BATCH();
    }
 
    i830MarkSync(pScrn);

@@ -39,6 +39,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef _I810_H_
 #define _I810_H_
 
+#include <stdint.h>
 #include "compiler.h"
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
@@ -65,6 +66,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endif
 
 #include "common.h"
+#include "i810_ring.h"
 
 #define I810_VERSION 4000
 #define I810_NAME "intel"
@@ -85,11 +87,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 typedef struct _I810Rec *I810Ptr;
 
 typedef void (*I810WriteIndexedByteFunc)(I810Ptr pI810, IOADDRESS addr,
-					 CARD8 index, CARD8 value);
-typedef CARD8(*I810ReadIndexedByteFunc)(I810Ptr pI810, IOADDRESS addr,
-					CARD8 index);
-typedef void (*I810WriteByteFunc)(I810Ptr pI810, IOADDRESS addr, CARD8 value);
-typedef CARD8(*I810ReadByteFunc)(I810Ptr pI810, IOADDRESS addr);
+					 uint8_t index, uint8_t value);
+typedef uint8_t(*I810ReadIndexedByteFunc)(I810Ptr pI810, IOADDRESS addr,
+					  uint8_t index);
+typedef void (*I810WriteByteFunc)(I810Ptr pI810, IOADDRESS addr,
+				  uint8_t value);
+typedef uint8_t(*I810ReadByteFunc)(I810Ptr pI810, IOADDRESS addr);
 
 extern void I810SetTiledMemory(ScrnInfoPtr pScrn, int nr, unsigned start,
 			       unsigned pitch, unsigned size);

@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-intel],
-        2.2.1,
+        2.3.1,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-intel)
 
@@ -42,6 +42,9 @@ AM_PROG_CC_C_O
 
 AC_CHECK_PROG(gen4asm, [intel-gen4asm], yes, no)
 AM_CONDITIONAL(HAVE_GEN4ASM, test x$gen4asm = xyes)
+
+AC_CHECK_HEADERS(sys/mman.h)
+AC_CHECK_FUNCS(mprotect)
 
 AH_TOP([#include "xorg-server.h"])
 
@@ -66,6 +69,10 @@ AC_ARG_WITH(xserver-source,AC_HELP_STRING([--with-xserver-source=XSERVER_SOURCE]
 			   [ XSERVER_SOURCE="$withval" ],
 			   [ XSERVER_SOURCE="" ])
 
+AC_ARG_ENABLE(xvmc, AC_HELP_STRING([--disable-xvmc],
+                                  [Disable XvMC support [[default=auto]]]),
+              [XVMC="$enableval"],
+              [XVMC=auto])
 
 # Checks for extensions
 XORG_DRIVER_CHECK_EXT(XINERAMA, xineramaproto)
@@ -75,7 +82,7 @@ XORG_DRIVER_CHECK_EXT(XF86DRI, xextproto x11)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XORG, [xorg-server xproto xvmc fontsproto $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XORG, [xorg-server xproto fontsproto $REQUIRED_MODULES])
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 # Checks for libraries.
@@ -83,7 +90,8 @@ sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 # Checks for header files.
 AC_HEADER_STDC
 
-if test "$DRI" != no; then
+AC_MSG_CHECKING([whether to include DRI support])
+if test x$DRI = xauto; then
         AC_CHECK_FILE([${sdkdir}/dri.h],
                       [have_dri_h="yes"], [have_dri_h="no"])
         AC_CHECK_FILE([${sdkdir}/sarea.h],
@@ -92,10 +100,7 @@ if test "$DRI" != no; then
                       [have_dristruct_h="yes"], [have_dristruct_h="no"])
 	AC_CHECK_FILE([${sdkdir}/damage.h],
                       [have_damage_h="yes"], [have_damage_h="no"])
-fi
 
-AC_MSG_CHECKING([whether to include DRI support])
-if test x$DRI = xauto; then
         if test "$have_dri_h" = yes -a \
                 "$have_sarea_h" = yes -a \
                 "$have_dristruct_h" = yes; then
@@ -115,9 +120,9 @@ AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
 CFLAGS="$save_CFLAGS"
 
 if test x$XSERVER_LIBPCIACCESS = xyes; then
-	PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.10.0])
+	PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.10])
 else
-	PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.10.0],
+	PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.10],
 				       have_libpciaccess=yes,
 				       have_libpciaccess=no)
 fi
@@ -140,16 +145,16 @@ if test -d "$XSERVER_SOURCE"; then
 		XSERVER_SOURCE="`cd $XSERVER_SOURCE && pwd`"
 		;;
 	esac
-	if test -f src/modes/xf86Modes.h; then
+	if test -f $srcdir/src/modes/xf86Modes.h; then
 		:
 	else
-		ln -sf $XSERVER_SOURCE/hw/xfree86/modes src/modes
+		ln -sf $XSERVER_SOURCE/hw/xfree86/modes $srcdir/src/modes
 	fi
 	
-	if test -f src/parser/xf86Parser.h; then
+	if test -f $srcdir/src/parser/xf86Parser.h; then
 		:
 	else
-		ln -sf $XSERVER_SOURCE/hw/xfree86/parser src/parser
+		ln -sf $XSERVER_SOURCE/hw/xfree86/parser $srcdir/src/parser
 	fi
 fi
 
@@ -158,7 +163,7 @@ if test "x$XMODES" = xyes; then
 	AC_DEFINE(XMODES, 1,[X server has built-in mode code])
 	XMODES_CFLAGS=
 else
-	if test -f src/modes/xf86Modes.h -a -f src/parser/xf86Parser.h; then
+	if test -f $srcdir/src/modes/xf86Modes.h -a -f $srcdir/src/parser/xf86Parser.h; then
 		AC_MSG_NOTICE([X server is missing new mode code, using local copy])
 	else
 		AC_MSG_ERROR([Must have X server >= 1.3 source tree for mode setting code. Please specify --with-xserver-source])
@@ -167,6 +172,18 @@ else
 fi
 
 AC_SUBST([XMODES_CFLAGS])
+
+SAVE_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
+
+AC_CHECK_DECL(xf86RotateFreeShadow,
+	      [AC_DEFINE(HAVE_FREE_SHADOW, 1, [have new FreeShadow API])],
+	      [],
+	      [#include <xorg-server.h>
+	       #include <windowstr.h>
+	       #include <xf86Crtc.h>])
+	     
+CPPFLAGS="$SAVE_CPPFLAGS"
 
 dnl Use lots of warning flags with GCC
 
@@ -207,6 +224,24 @@ AM_CONDITIONAL(VIDEO_DEBUG, test x$VIDEO_DEBUG = xyes)
 if test "$VIDEO_DEBUG" = yes; then
 	AC_DEFINE(VIDEO_DEBUG,1,[Enable debug support])
 fi
+
+if test "$XVMC" = auto; then
+	XVMC="$DRI"
+fi
+if test "$XVMC" = yes && test "$DRI" = no; then
+	AC_MSG_ERROR([XvMC can't be enabled without DRI])
+fi
+if test "$XVMC" = yes; then
+	PKG_CHECK_MODULES(XVMCLIB, [xvmc], [XVMC=yes], [XVMC=no])
+fi
+AC_MSG_CHECKING([whether to include XvMC support])
+AC_MSG_RESULT([$XVMC])
+AM_CONDITIONAL(XVMC, test x$XVMC = xyes)
+if test "$XVMC" = yes; then
+	AC_DEFINE(ENABLE_XVMC,1,[Enable XvMC support])
+    	AC_SUBST([XVMCLIB_CFLAGS])
+fi
+
 
 AC_SUBST([DRI_CFLAGS])
 AC_SUBST([XORG_CFLAGS])

@@ -71,19 +71,19 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "i810.h"
 #endif
 
-#define minb(p) *(volatile CARD8 *)(pI810->MMIOBase + (p))
-#define moutb(p,v) *(volatile CARD8 *)(pI810->MMIOBase + (p)) = (v)
+#define minb(p) *(volatile uint8_t *)(pI810->MMIOBase + (p))
+#define moutb(p,v) *(volatile uint8_t *)(pI810->MMIOBase + (p)) = (v)
 
 static void
-I810WriteControlPIO(I810Ptr pI810, IOADDRESS addr, CARD8 index, CARD8 val)
+I810WriteControlPIO(I810Ptr pI810, IOADDRESS addr, uint8_t index, uint8_t val)
 {
    addr += pI810->ioBase;
    outb(addr, index);
    outb(addr + 1, val);
 }
 
-static CARD8
-I810ReadControlPIO(I810Ptr pI810, IOADDRESS addr, CARD8 index)
+static uint8_t
+I810ReadControlPIO(I810Ptr pI810, IOADDRESS addr, uint8_t index)
 {
    addr += pI810->ioBase;
    outb(addr, index);
@@ -91,12 +91,12 @@ I810ReadControlPIO(I810Ptr pI810, IOADDRESS addr, CARD8 index)
 }
 
 static void
-I810WriteStandardPIO(I810Ptr pI810, IOADDRESS addr, CARD8 val)
+I810WriteStandardPIO(I810Ptr pI810, IOADDRESS addr, uint8_t val)
 {
    outb(pI810->ioBase + addr, val);
 }
 
-static CARD8
+static uint8_t
 I810ReadStandardPIO(I810Ptr pI810, IOADDRESS addr)
 {
    return inb(pI810->ioBase + addr);
@@ -112,26 +112,26 @@ I810SetPIOAccess(I810Ptr pI810)
 }
 
 static void
-I810WriteControlMMIO(I810Ptr pI810, IOADDRESS addr, CARD8 index, CARD8 val)
+I810WriteControlMMIO(I810Ptr pI810, IOADDRESS addr, uint8_t index, uint8_t val)
 {
    moutb(addr, index);
    moutb(addr + 1, val);
 }
 
-static CARD8
-I810ReadControlMMIO(I810Ptr pI810, IOADDRESS addr, CARD8 index)
+static uint8_t
+I810ReadControlMMIO(I810Ptr pI810, IOADDRESS addr, uint8_t index)
 {
    moutb(addr, index);
    return minb(addr + 1);
 }
 
 static void
-I810WriteStandardMMIO(I810Ptr pI810, IOADDRESS addr, CARD8 val)
+I810WriteStandardMMIO(I810Ptr pI810, IOADDRESS addr, uint8_t val)
 {
    moutb(addr, val);
 }
 
-static CARD8
+static uint8_t
 I810ReadStandardMMIO(I810Ptr pI810, IOADDRESS addr)
 {
    return minb(addr);

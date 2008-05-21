@@ -36,7 +36,6 @@
  * use i830_debug.c mostly unmodified.
  */
 
-typedef uint32_t CARD32;
 typedef char Bool;
 
 #define FALSE 0

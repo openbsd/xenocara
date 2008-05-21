@@ -5,8 +5,14 @@
 /* Use Damage extension */
 #undef DAMAGE
 
+/* Enable XvMC support */
+#undef ENABLE_XVMC
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
+
+/* have new FreeShadow API */
+#undef HAVE_FREE_SHADOW
 
 /* Have drm_i915_flip_t and related definitions */
 #undef HAVE_I915_FLIP
@@ -16,6 +22,9 @@
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the `mprotect' function. */
+#undef HAVE_MPROTECT
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -28,6 +37,9 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/mman.h> header file. */
+#undef HAVE_SYS_MMAN_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H

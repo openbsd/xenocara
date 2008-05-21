@@ -45,7 +45,8 @@
 
 #include "i810_reg.h"
 
-#define DEBUGSTRING(func) static char *func(I830Ptr pI830, int reg, CARD32 val)
+#define DEBUGSTRING(func) static char *func(I830Ptr pI830, int reg, \
+					    uint32_t val)
 
 DEBUGSTRING(i830_debug_xyminus1)
 {
@@ -486,8 +487,8 @@ DEBUGSTRING(i810_debug_fence_new)
 static struct i830SnapshotRec {
     int reg;
     char *name;
-    char *(*debug_output)(I830Ptr pI830, int reg, CARD32 val);
-    CARD32 val;
+    char *(*debug_output)(I830Ptr pI830, int reg, uint32_t val);
+    uint32_t val;
 } i830_snapshot[] = {
     DEFINEREG2(VCLK_DIVISOR_VGA0, i830_debug_fp),
     DEFINEREG2(VCLK_DIVISOR_VGA1, i830_debug_fp),
@@ -544,6 +545,10 @@ static struct i830SnapshotRec {
     DEFINEREG(FBC_CONTROL2),
     DEFINEREG(FBC_FENCE_OFF),
     DEFINEREG(FBC_MOD_NUM),
+
+    DEFINEREG(FWATER_BLC),
+    DEFINEREG(FWATER_BLC2),
+    DEFINEREG(FWATER_BLC_SELF),
 
     DEFINEREG2(FPA0, i830_debug_fp),
     DEFINEREG2(FPA1, i830_debug_fp),
@@ -623,7 +628,7 @@ static struct i830SnapshotRec {
     DEFINEREG(TV_H_CHROMA_59),
 
     DEFINEREG(MI_MODE),
-    DEFINEREG(MI_DISPLAY_POWER_DOWN),
+    /* DEFINEREG(MI_DISPLAY_POWER_DOWN), CRL only */
     DEFINEREG(MI_ARB_STATE),
     DEFINEREG(MI_RDRET_STATE),
     DEFINEREG(ECOSKPD),
@@ -668,7 +673,7 @@ void i830CompareRegsToSnapshot(ScrnInfoPtr pScrn, char *where)
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	       "Comparing regs from server start up to %s\n", where);
     for (i = 0; i < NUM_I830_SNAPSHOTREGS; i++) {
-	CARD32 val = INREG(i830_snapshot[i].reg);
+	uint32_t val = INREG(i830_snapshot[i].reg);
 	if (i830_snapshot[i].val == val)
 	    continue;
 
@@ -752,7 +757,7 @@ void i830DumpRegs (ScrnInfoPtr pScrn)
 
     xf86DrvMsg (pScrn->scrnIndex, X_INFO, "DumpRegsBegin\n");
     for (i = 0; i < NUM_I830_SNAPSHOTREGS; i++) {
-	CARD32 val = INREG(i830_snapshot[i].reg);
+	uint32_t val = INREG(i830_snapshot[i].reg);
 
 	if (i830_snapshot[i].debug_output != NULL) {
 	    char *debug = i830_snapshot[i].debug_output(pI830,
@@ -783,7 +788,7 @@ void i830DumpRegs (ScrnInfoPtr pScrn)
 	dpll = INREG(pipe == 0 ? DPLL_A : DPLL_B);
 	if (IS_I9XX(pI830)) 
 	{
-	    CARD32  lvds = INREG(LVDS);
+	    uint32_t lvds = INREG(LVDS);
 	    if ((lvds & LVDS_PORT_EN) &&
 		(lvds & LVDS_PIPEB_SELECT) == (pipe << 30))
 	    {
@@ -845,7 +850,7 @@ void i830DumpRegs (ScrnInfoPtr pScrn)
 	}
 	else
 	{
-	    CARD32  lvds = INREG(LVDS);
+	    uint32_t lvds = INREG(LVDS);
 	    if (IS_I85X (pI830) && 
 		(lvds & LVDS_PORT_EN) &&
 		(lvds & LVDS_PIPEB_SELECT) == (pipe << 30))
@@ -957,27 +962,27 @@ i830_dump_error_state(ScrnInfoPtr pScrn)
 {
     I830Ptr pI830 = I830PTR(pScrn);
 
-    ErrorF("pgetbl_ctl: 0x%" PRIx32 "getbl_err: 0x%" PRIx32 "\n",
+    ErrorF("pgetbl_ctl: 0x%08x getbl_err: 0x%08x\n",
 	   INREG(PGETBL_CTL), INREG(PGE_ERR));
 
-    ErrorF("ipeir: %" PRIx32 " iphdr: %" PRIx32 "\n", INREG(IPEIR),
-	   INREG(IPEHR));
+    ErrorF("ipeir: 0x%08x iphdr: 0x%08x\n", INREG(IPEIR), INREG(IPEHR));
 
-    ErrorF("LP ring tail: %" PRIx32 " head: %" PRIx32 " len: %" PRIx32 " start %" PRIx32 "\n",
+    ErrorF("LP ring tail: 0x%08x head: 0x%08x len: 0x%08x start 0x%08x\n",
 	   INREG(LP_RING + RING_TAIL),
 	   INREG(LP_RING + RING_HEAD) & HEAD_ADDR,
 	   INREG(LP_RING + RING_LEN),
 	   INREG(LP_RING + RING_START));
 
-    ErrorF("eir: %x esr: %x emr: %x\n",
+    ErrorF("eir: 0x%04x esr: 0x%04x emr: 0x%04x\n",
 	   INREG16(EIR), INREG16(ESR), INREG16(EMR));
 
-    ErrorF("instdone: %x instpm: %x\n", INREG16(INST_DONE), INREG8(INST_PM));
+    ErrorF("instdone: 0x%04x instpm: 0x%04x\n",
+	   INREG16(INST_DONE), INREG8(INST_PM));
 
-    ErrorF("memmode: %" PRIx32 " instps: %" PRIx32 "\n", INREG(MEMMODE),
-	   INREG(INST_PS));
+    ErrorF("memmode: 0x%08x instps: 0x%08x\n",
+	   INREG(MEMMODE), INREG(INST_PS));
 
-    ErrorF("hwstam: %x ier: %x imr: %x iir: %x\n",
+    ErrorF("hwstam: 0x%04x ier: 0x%04x imr: 0x%04x iir: 0x%04x\n",
 	   INREG16(HWSTAM), INREG16(IER), INREG16(IMR), INREG16(IIR));
     i830_dump_ring (pScrn);
 }
@@ -987,73 +992,80 @@ i965_dump_error_state(ScrnInfoPtr pScrn)
 {
     I830Ptr pI830 = I830PTR(pScrn);
 
-    ErrorF("pgetbl_ctl: 0x%" PRIx32 " pgetbl_err: 0x%" PRIx32 "\n",
+    ErrorF("pgetbl_ctl: 0x%08x pgetbl_err: 0x%08x\n",
 	   INREG(PGETBL_CTL), INREG(PGE_ERR));
 
-    ErrorF("ipeir: %" PRIx32 " iphdr: %" PRIx32 "\n", INREG(IPEIR_I965), INREG(IPEHR_I965));
+    ErrorF("ipeir: 0x%08x iphdr: 0x%08x\n",
+	   INREG(IPEIR_I965), INREG(IPEHR_I965));
 
-    ErrorF("LP ring tail: %" PRIx32 " head: %" PRIx32 " len: %" PRIx32 " start %" PRIx32 "\n",
+    ErrorF("LP ring tail: 0x%08x head: %x len: 0x%08x start 0x%08x\n",
 	   INREG(LP_RING + RING_TAIL),
 	   INREG(LP_RING + RING_HEAD) & HEAD_ADDR,
-	   INREG(LP_RING + RING_LEN), INREG(LP_RING + RING_START));
+	   INREG(LP_RING + RING_LEN),
+	   INREG(LP_RING + RING_START));
 
-    ErrorF("Err ID (eir): %x Err Status (esr): %x Err Mask (emr): %x\n",
-	   (int)INREG(EIR), (int)INREG(ESR), (int)INREG(EMR));
+    ErrorF("Err ID (eir): 0x%08x\n"
+	   "Err Status (esr): 0x%08x\n"
+	   "Err Mask (emr): 0x%08x\n",
+	   INREG(EIR), INREG(ESR), INREG(EMR));
 
-    ErrorF("instdone: %x instdone_1: %x\n", (int)INREG(INST_DONE_I965),
-	   (int)INREG(INST_DONE_1));
-    ErrorF("instpm: %x\n", (int)INREG(INST_PM));
+    ErrorF("instdone: 0x%08x instdone_1: 0x%08x\n",
+	   INREG(INST_DONE_I965), INREG(INST_DONE_1));
+    ErrorF("instpm: 0x%08x\n", INREG(INST_PM));
 
-    ErrorF("memmode: %" PRIx32 " instps: %" PRIx32 "\n", INREG(MEMMODE), INREG(INST_PS_I965));
+    ErrorF("memmode: 0x%08x instps: 0x%08x\n",
+	   INREG(MEMMODE), INREG(INST_PS_I965));
 
-    ErrorF("HW Status mask (hwstam): %x\nIRQ enable (ier): %x "
-	   "imr: %x iir: %x\n",
-	   (int)INREG(HWSTAM), (int)INREG(IER), (int)INREG(IMR),
-	   (int)INREG(IIR));
+    ErrorF("HW Status mask (hwstam): 0x%08x\nIRQ enable (ier): 0x%08x "
+	   "imr: 0x%08x iir: 0x%08x\n",
+	   INREG(HWSTAM), INREG(IER), INREG(IMR), INREG(IIR));
 
-    ErrorF("acthd: %" PRIx32 " dma_fadd_p: %" PRIx32 "\n", INREG(ACTHD), INREG(DMA_FADD_P));
-    ErrorF("ecoskpd: %" PRIx32 " excc: %" PRIx32 "\n", INREG(ECOSKPD), INREG(EXCC));
+    ErrorF("acthd: 0x%08x dma_fadd_p: 0x%08x\n",
+	   INREG(ACTHD), INREG(DMA_FADD_P));
+    ErrorF("ecoskpd: 0x%08x excc: 0x%08x\n",
+	   INREG(ECOSKPD), INREG(EXCC));
 
-    ErrorF("cache_mode: %x/%x\n", (int)INREG(CACHE_MODE_0),
-	   (int)INREG(CACHE_MODE_1));
-    ErrorF("mi_arb_state: %x\n", (int)INREG(MI_ARB_STATE));
+    ErrorF("cache_mode: 0x%08x/0x%08x\n", INREG(CACHE_MODE_0),
+	   INREG(CACHE_MODE_1));
+    ErrorF("mi_arb_state: 0x%08x\n", INREG(MI_ARB_STATE));
 
-    ErrorF("IA_VERTICES_COUNT_QW %x/%x\n",
-	   (int)INREG(IA_VERTICES_COUNT_QW),
-	   (int)INREG(IA_VERTICES_COUNT_QW+4));
-    ErrorF("IA_PRIMITIVES_COUNT_QW %x/%x\n",
-	   (int)INREG(IA_PRIMITIVES_COUNT_QW),
-	   (int)INREG(IA_PRIMITIVES_COUNT_QW+4));
+    ErrorF("IA_VERTICES_COUNT_QW 0x%08x/0x%08x\n",
+	   INREG(IA_VERTICES_COUNT_QW),
+	   INREG(IA_VERTICES_COUNT_QW+4));
+    ErrorF("IA_PRIMITIVES_COUNT_QW 0x%08x/0x%08x\n",
+	   INREG(IA_PRIMITIVES_COUNT_QW),
+	   INREG(IA_PRIMITIVES_COUNT_QW+4));
 
-    ErrorF("VS_INVOCATION_COUNT_QW %x/%x\n",
-	   (int)INREG(VS_INVOCATION_COUNT_QW),
-	   (int)INREG(VS_INVOCATION_COUNT_QW+4));
+    ErrorF("VS_INVOCATION_COUNT_QW 0x%08x/0x%08x\n",
+	   INREG(VS_INVOCATION_COUNT_QW),
+	   INREG(VS_INVOCATION_COUNT_QW+4));
 
-    ErrorF("GS_INVOCATION_COUNT_QW %x/%x\n",
-	   (int)INREG(GS_INVOCATION_COUNT_QW),
-	   (int)INREG(GS_INVOCATION_COUNT_QW+4));
-    ErrorF("GS_PRIMITIVES_COUNT_QW %x/%x\n",
-	   (int)INREG(GS_PRIMITIVES_COUNT_QW),
-	   (int)INREG(GS_PRIMITIVES_COUNT_QW+4));
+    ErrorF("GS_INVOCATION_COUNT_QW 0x%08x/0x%08x\n",
+	   INREG(GS_INVOCATION_COUNT_QW),
+	   INREG(GS_INVOCATION_COUNT_QW+4));
+    ErrorF("GS_PRIMITIVES_COUNT_QW 0x%08x/0x%08x\n",
+	   INREG(GS_PRIMITIVES_COUNT_QW),
+	   INREG(GS_PRIMITIVES_COUNT_QW+4));
 
-    ErrorF("CL_INVOCATION_COUNT_QW %x/%x\n",
-	   (int)INREG(CL_INVOCATION_COUNT_QW),
-	   (int)INREG(CL_INVOCATION_COUNT_QW+4));
-    ErrorF("CL_PRIMITIVES_COUNT_QW %x/%x\n",
-	   (int)INREG(CL_PRIMITIVES_COUNT_QW),
-	   (int)INREG(CL_PRIMITIVES_COUNT_QW+4));
+    ErrorF("CL_INVOCATION_COUNT_QW 0x%08x/0x%08x\n",
+	   INREG(CL_INVOCATION_COUNT_QW),
+	   INREG(CL_INVOCATION_COUNT_QW+4));
+    ErrorF("CL_PRIMITIVES_COUNT_QW 0x%08x/0x%08x\n",
+	   INREG(CL_PRIMITIVES_COUNT_QW),
+	   INREG(CL_PRIMITIVES_COUNT_QW+4));
 
-    ErrorF("PS_INVOCATION_COUNT_QW %x/%x\n",
-	   (int)INREG(PS_INVOCATION_COUNT_QW),
-	   (int)INREG(PS_INVOCATION_COUNT_QW+4));
-    ErrorF("PS_DEPTH_COUNT_QW %x/%x\n",
-	   (int)INREG(PS_DEPTH_COUNT_QW),
-	   (int)INREG(PS_DEPTH_COUNT_QW+4));
+    ErrorF("PS_INVOCATION_COUNT_QW 0x%08x/0x%08x\n",
+	   INREG(PS_INVOCATION_COUNT_QW),
+	   INREG(PS_INVOCATION_COUNT_QW+4));
+    ErrorF("PS_DEPTH_COUNT_QW 0x%08x/0x%08x\n",
+	   INREG(PS_DEPTH_COUNT_QW),
+	   INREG(PS_DEPTH_COUNT_QW+4));
 
-    ErrorF("WIZ_CTL %x\n", (int)INREG(WIZ_CTL));
-    ErrorF("TS_CTL %x  TS_DEBUG_DATA %x\n", (int)INREG(TS_CTL),
-	   (int)INREG(TS_DEBUG_DATA));
-    ErrorF("TD_CTL %x / %x\n", (int)INREG(TD_CTL), (int)INREG(TD_CTL2));
+    ErrorF("WIZ_CTL 0x%08x\n", INREG(WIZ_CTL));
+    ErrorF("TS_CTL 0x%08x  TS_DEBUG_DATA 0x%08x\n", INREG(TS_CTL),
+	   INREG(TS_DEBUG_DATA));
+    ErrorF("TD_CTL 0x%08x / 0x%08x\n",
+	   INREG(TD_CTL), INREG(TD_CTL2));
 }
 
 /**

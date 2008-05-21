@@ -59,7 +59,7 @@ struct i830_sdvo_priv {
     int output_device;
 
     /** Active outputs controlled by this SDVO output */
-    CARD16 active_outputs;
+    uint16_t active_outputs;
 
     /**
      * Capabilities of the SDVO device returned by i830_sdvo_get_capabilities()
@@ -72,10 +72,10 @@ struct i830_sdvo_priv {
     /** State for save/restore */
     /** @{ */
     int save_sdvo_mult;
-    CARD16 save_active_outputs;
+    uint16_t save_active_outputs;
     struct i830_sdvo_dtd save_input_dtd_1, save_input_dtd_2;
     struct i830_sdvo_dtd save_output_dtd[16];
-    CARD32 save_SDVOX;
+    uint32_t save_SDVOX;
     /** @} */
 };
 
@@ -84,13 +84,13 @@ struct i830_sdvo_priv {
  * SDVOB and SDVOC to work around apparent hardware issues (according to
  * comments in the BIOS).
  */
-static void i830_sdvo_write_sdvox(xf86OutputPtr output, CARD32 val)
+static void i830_sdvo_write_sdvox(xf86OutputPtr output, uint32_t val)
 {
     ScrnInfoPtr		    pScrn = output->scrn;
     I830OutputPrivatePtr    intel_output = output->driver_private;
     struct i830_sdvo_priv   *dev_priv = intel_output->dev_priv;
     I830Ptr		    pI830 = I830PTR(pScrn);
-    CARD32		    bval = val, cval = val;
+    uint32_t		    bval = val, cval = val;
     int			    i;
 
     if (dev_priv->output_device == SDVOB)
@@ -158,7 +158,7 @@ static Bool i830_sdvo_write_byte(xf86OutputPtr output,
 #define SDVO_CMD_NAME_ENTRY(cmd) {cmd, #cmd}
 /** Mapping of command numbers to names, for debug output */
 const static struct _sdvo_cmd_name {
-    CARD8 cmd;
+    uint8_t cmd;
     char *name;
 } sdvo_cmd_names[] = {
     SDVO_CMD_NAME_ENTRY(SDVO_CMD_RESET),
@@ -212,7 +212,8 @@ static I2CSlaveAddr slaveAddr;
  * Writes out the data given in args (up to 8 bytes), followed by the opcode.
  */
 static void
-i830_sdvo_write_cmd(xf86OutputPtr output, CARD8 cmd, void *args, int args_len)
+i830_sdvo_write_cmd(xf86OutputPtr output, uint8_t cmd, void *args,
+		    int args_len)
 {
     I830Ptr pI830 = I830PTR(output->scrn);
     I830OutputPrivatePtr    intel_output = output->driver_private;
@@ -227,7 +228,7 @@ i830_sdvo_write_cmd(xf86OutputPtr output, CARD8 cmd, void *args, int args_len)
 	xf86DrvMsg(intel_output->pI2CBus->scrnIndex, X_INFO, "%s: W: %02X ",
 		   SDVO_NAME(dev_priv), cmd);
 	for (i = 0; i < args_len; i++)
-	    LogWrite(1, "%02X ", ((CARD8 *)args)[i]);
+	    LogWrite(1, "%02X ", ((uint8_t *)args)[i]);
 	for (; i < 8; i++)
 	    LogWrite(1, "   ");
 	for (i = 0; i < sizeof(sdvo_cmd_names) / sizeof(sdvo_cmd_names[0]);
@@ -245,7 +246,7 @@ i830_sdvo_write_cmd(xf86OutputPtr output, CARD8 cmd, void *args, int args_len)
 
     /* send the output regs */
     for (i = 0; i < args_len; i++) {
-	i830_sdvo_write_byte(output, SDVO_I2C_ARG_0 - i, ((CARD8 *)args)[i]);
+	i830_sdvo_write_byte(output, SDVO_I2C_ARG_0 - i, ((uint8_t *)args)[i]);
     }
     /* blast the command reg */
     i830_sdvo_write_byte(output, SDVO_I2C_OPCODE, cmd);
@@ -264,20 +265,20 @@ static const char *cmd_status_names[] = {
 /**
  * Reads back response_len bytes from the SDVO device, and returns the status.
  */
-static CARD8
+static uint8_t
 i830_sdvo_read_response(xf86OutputPtr output, void *response, int response_len)
 {
     I830Ptr pI830 = I830PTR(output->scrn);
     I830OutputPrivatePtr    intel_output = output->driver_private;
     int			    i;
-    CARD8		    status;
-    CARD8		    retry = 50;
+    uint8_t		    status;
+    uint8_t		    retry = 50;
 
     while (retry--) {
     	/* Read the command response */
     	for (i = 0; i < response_len; i++) {
 	    i830_sdvo_read_byte(output, SDVO_I2C_RETURN_0 + i,
-			    &((CARD8 *)response)[i]);
+			    &((uint8_t *)response)[i]);
     	}
 
     	/* Read the return status */
@@ -288,7 +289,7 @@ i830_sdvo_read_response(xf86OutputPtr output, void *response, int response_len)
 	    xf86DrvMsg(intel_output->pI2CBus->scrnIndex, X_INFO,
 		   "%s: R: ", SDVO_NAME(SDVO_PRIV(intel_output)));
 	    for (i = 0; i < response_len; i++)
-	    	LogWrite(1, "%02X ", ((CARD8 *)response)[i]);
+	    	LogWrite(1, "%02X ", ((uint8_t *)response)[i]);
 	    for (; i < 8; i++)
 	    	LogWrite(1, "   ");
 	    if (status <= SDVO_CMD_STATUS_SCALING_NOT_SUPP) {
@@ -324,7 +325,7 @@ i830_sdvo_get_pixel_multiplier(DisplayModePtr pMode)
  * STOP.  PROM access is terminated by accessing an internal register.
  */
 static void
-i830_sdvo_set_control_bus_switch(xf86OutputPtr output, CARD8 target)
+i830_sdvo_set_control_bus_switch(xf86OutputPtr output, uint8_t target)
 {
     i830_sdvo_write_cmd(output, SDVO_CMD_SET_CONTROL_BUS_SWITCH, &target, 1);
 }
@@ -333,7 +334,7 @@ static Bool
 i830_sdvo_set_target_input(xf86OutputPtr output, Bool target_0, Bool target_1)
 {
     struct i830_sdvo_set_target_input_args targets = {0};
-    CARD8 status;
+    uint8_t status;
 
     if (target_0 && target_1)
 	return SDVO_CMD_STATUS_NOTSUPP;
@@ -359,7 +360,7 @@ static Bool
 i830_sdvo_get_trained_inputs(xf86OutputPtr output, Bool *input_1, Bool *input_2)
 {
     struct i830_sdvo_get_trained_inputs_response response;
-    CARD8 status;
+    uint8_t status;
 
     i830_sdvo_write_cmd(output, SDVO_CMD_GET_TRAINED_INPUTS, NULL, 0);
 
@@ -375,9 +376,9 @@ i830_sdvo_get_trained_inputs(xf86OutputPtr output, Bool *input_1, Bool *input_2)
 
 static Bool
 i830_sdvo_get_active_outputs(xf86OutputPtr output,
-			     CARD16 *outputs)
+			     uint16_t *outputs)
 {
-    CARD8 status;
+    uint8_t status;
 
     i830_sdvo_write_cmd(output, SDVO_CMD_GET_ACTIVE_OUTPUTS, NULL, 0);
     status = i830_sdvo_read_response(output, outputs, sizeof(*outputs));
@@ -387,9 +388,9 @@ i830_sdvo_get_active_outputs(xf86OutputPtr output,
 
 static Bool
 i830_sdvo_set_active_outputs(xf86OutputPtr output,
-			     CARD16 outputs)
+			     uint16_t outputs)
 {
-    CARD8 status;
+    uint8_t status;
 
     i830_sdvo_write_cmd(output, SDVO_CMD_SET_ACTIVE_OUTPUTS, &outputs,
 			sizeof(outputs));
@@ -401,8 +402,8 @@ i830_sdvo_set_active_outputs(xf86OutputPtr output,
 static Bool
 i830_sdvo_set_encoder_power_state(xf86OutputPtr output, int mode)
 {
-    CARD8 status;
-    CARD8 state;
+    uint8_t status;
+    uint8_t state;
 
     switch (mode) {
     case DPMSModeOn:
@@ -434,7 +435,7 @@ i830_sdvo_get_input_pixel_clock_range(xf86OutputPtr output, int *clock_min,
 				      int *clock_max)
 {
     struct i830_sdvo_pixel_clock_range clocks;
-    CARD8 status;
+    uint8_t status;
 
     i830_sdvo_write_cmd(output, SDVO_CMD_GET_INPUT_PIXEL_CLOCK_RANGE, NULL, 0);
 
@@ -451,9 +452,9 @@ i830_sdvo_get_input_pixel_clock_range(xf86OutputPtr output, int *clock_min,
 }
 
 static Bool
-i830_sdvo_set_target_output(xf86OutputPtr output, CARD16 outputs)
+i830_sdvo_set_target_output(xf86OutputPtr output, uint16_t outputs)
 {
-    CARD8 status;
+    uint8_t status;
 
     i830_sdvo_write_cmd(output, SDVO_CMD_SET_TARGET_OUTPUT, &outputs,
 			sizeof(outputs));
@@ -465,9 +466,9 @@ i830_sdvo_set_target_output(xf86OutputPtr output, CARD16 outputs)
 
 /** Fetches either input or output timings to *dtd, depending on cmd. */
 static Bool
-i830_sdvo_get_timing(xf86OutputPtr output, CARD8 cmd, struct i830_sdvo_dtd *dtd)
+i830_sdvo_get_timing(xf86OutputPtr output, uint8_t cmd, struct i830_sdvo_dtd *dtd)
 {
-    CARD8 status;
+    uint8_t status;
 
     i830_sdvo_write_cmd(output, cmd, NULL, 0);
 
@@ -498,9 +499,10 @@ i830_sdvo_get_output_timing(xf86OutputPtr output, struct i830_sdvo_dtd *dtd)
 
 /** Sets either input or output timings from *dtd, depending on cmd. */
 static Bool
-i830_sdvo_set_timing(xf86OutputPtr output, CARD8 cmd, struct i830_sdvo_dtd *dtd)
+i830_sdvo_set_timing(xf86OutputPtr output, uint8_t cmd,
+		     struct i830_sdvo_dtd *dtd)
 {
-    CARD8 status;
+    uint8_t status;
 
     i830_sdvo_write_cmd(output, cmd, &dtd->part1, sizeof(dtd->part1));
     status = i830_sdvo_read_response(output, NULL, 0);
@@ -529,8 +531,8 @@ i830_sdvo_set_output_timing(xf86OutputPtr output, struct i830_sdvo_dtd *dtd)
 
 #if 0
 static Bool
-i830_sdvo_create_preferred_input_timing(xf86OutputPtr output, CARD16 clock,
-					CARD16 width, CARD16 height)
+i830_sdvo_create_preferred_input_timing(xf86OutputPtr output, uint16_t clock,
+					uint16_t width, uint16_t height)
 {
     struct i830_sdvo_priv *dev_priv = output->dev_priv;
     struct i830_sdvo_preferred_input_timing_args args;
@@ -577,8 +579,8 @@ i830_sdvo_get_clock_rate_mult(xf86OutputPtr output)
 {
     I830OutputPrivatePtr    intel_output = output->driver_private;
     struct i830_sdvo_priv   *dev_priv = intel_output->dev_priv;
-    CARD8 response;
-    CARD8 status;
+    uint8_t response;
+    uint8_t status;
 
     i830_sdvo_write_cmd(output, SDVO_CMD_GET_CLOCK_RATE_MULT, NULL, 0);
     status = i830_sdvo_read_response(output, &response, 1);
@@ -602,9 +604,9 @@ i830_sdvo_get_clock_rate_mult(xf86OutputPtr output)
  * is actually turned on.
  */
 static Bool
-i830_sdvo_set_clock_rate_mult(xf86OutputPtr output, CARD8 val)
+i830_sdvo_set_clock_rate_mult(xf86OutputPtr output, uint8_t val)
 {
-    CARD8 status;
+    uint8_t status;
 
     i830_sdvo_write_cmd(output, SDVO_CMD_SET_CLOCK_RATE_MULT, &val, 1);
     status = i830_sdvo_read_response(output, NULL, 0);
@@ -636,13 +638,13 @@ i830_sdvo_mode_set(xf86OutputPtr output, DisplayModePtr mode,
     struct i830_sdvo_priv   *dev_priv = intel_output->dev_priv;
     xf86CrtcPtr	    crtc = output->crtc;
     I830CrtcPrivatePtr	    intel_crtc = crtc->driver_private;
-    CARD32 sdvox;
+    uint32_t sdvox;
     int sdvo_pixel_multiply;
-    CARD16 width, height;
-    CARD16 h_blank_len, h_sync_len, v_blank_len, v_sync_len;
-    CARD16 h_sync_offset, v_sync_offset;
+    uint16_t width, height;
+    uint16_t h_blank_len, h_sync_len, v_blank_len, v_sync_len;
+    uint16_t h_sync_offset, v_sync_offset;
     struct i830_sdvo_dtd output_dtd;
-    CARD16 no_outputs;
+    uint16_t no_outputs;
 
     no_outputs = 0;
 
@@ -727,7 +729,7 @@ i830_sdvo_mode_set(xf86OutputPtr output, DisplayModePtr mode,
     }
 
     /* Set the SDVO control regs. */
-    if (IS_I965GM(pI830) || IS_IGD_GM(pI830)) {
+    if (IS_I965G(pI830)) {
 	sdvox = SDVO_BORDER_ENABLE;
     } else {
 	sdvox = INREG(dev_priv->output_device);
@@ -763,7 +765,7 @@ i830_sdvo_dpms(xf86OutputPtr output, int mode)
     I830OutputPrivatePtr    intel_output = output->driver_private;
     struct i830_sdvo_priv   *dev_priv = intel_output->dev_priv;
     I830Ptr pI830 = I830PTR(pScrn);
-    CARD32  temp;
+    uint32_t  temp;
 
     if (mode != DPMSModeOn) {
 	i830_sdvo_set_active_outputs(output, 0);
@@ -779,7 +781,7 @@ i830_sdvo_dpms(xf86OutputPtr output, int mode)
     } else {
 	Bool input1, input2;
 	int i;
-	CARD8 status;
+	uint8_t status;
 
 	temp = INREG(dev_priv->output_device);
 	if ((temp & SDVO_ENABLE) == 0)
@@ -828,7 +830,7 @@ i830_sdvo_save(xf86OutputPtr output)
 
     for (o = SDVO_OUTPUT_FIRST; o <= SDVO_OUTPUT_LAST; o++)
     {
-	CARD16  this_output = (1 << o);
+	uint16_t this_output = (1 << o);
 	if (dev_priv->caps.output_flags & this_output)
 	{
 	    i830_sdvo_set_target_output(output, this_output);
@@ -848,13 +850,13 @@ i830_sdvo_restore(xf86OutputPtr output)
     int			    o;
     int			    i;
     Bool		    input1, input2;
-    CARD8		    status;
+    uint8_t		    status;
 
     i830_sdvo_set_active_outputs(output, 0);
 
     for (o = SDVO_OUTPUT_FIRST; o <= SDVO_OUTPUT_LAST; o++)
     {
-	CARD16  this_output = (1 << o);
+	uint16_t this_output = (1 << o);
 	if (dev_priv->caps.output_flags & this_output)
 	{
 	    i830_sdvo_set_target_output(output, this_output);
@@ -911,7 +913,7 @@ i830_sdvo_mode_valid(xf86OutputPtr output, DisplayModePtr pMode)
 static Bool
 i830_sdvo_get_capabilities(xf86OutputPtr output, struct i830_sdvo_caps *caps)
 {
-    CARD8 status;
+    uint8_t status;
 
     i830_sdvo_write_cmd(output, SDVO_CMD_GET_DEVICE_CAPS, NULL, 0);
     status = i830_sdvo_read_response(output, caps, sizeof(*caps));
@@ -1016,7 +1018,7 @@ i830_sdvo_ddc_i2c_address(I2CDevPtr d, I2CSlaveAddr addr)
 static void
 i830_sdvo_dump_cmd(xf86OutputPtr output, int opcode)
 {
-    CARD8		    response[8];
+    uint8_t response[8];
 
     i830_sdvo_write_cmd(output, opcode, NULL, 0);
     i830_sdvo_read_response(output, response, 8);
@@ -1080,8 +1082,8 @@ i830_sdvo_dump(ScrnInfoPtr pScrn)
 static xf86OutputStatus
 i830_sdvo_detect(xf86OutputPtr output)
 {
-    CARD8 response[2];
-    CARD8 status;
+    uint8_t response[2];
+    uint8_t status;
 
     i830_sdvo_write_cmd(output, SDVO_CMD_GET_ATTACHED_DISPLAYS, NULL, 0);
     status = i830_sdvo_read_response(output, &response, 2);
@@ -1144,6 +1146,20 @@ i830_sdvo_destroy (xf86OutputPtr output)
     }
 }
 
+#ifdef RANDR_GET_CRTC_INTERFACE
+static xf86CrtcPtr
+i830_sdvo_get_crtc(xf86OutputPtr output)
+{
+    ScrnInfoPtr	pScrn = output->scrn;
+    I830Ptr pI830 = I830PTR(pScrn);
+    I830OutputPrivatePtr intel_output = output->driver_private;
+    struct i830_sdvo_priv *dev_priv = intel_output->dev_priv;
+    int pipe = !!(INREG(dev_priv->output_device) & SDVO_PIPE_B_SELECT);
+   
+    return i830_pipe_to_crtc(pScrn, pipe);
+}
+#endif
+
 static const xf86OutputFuncsRec i830_sdvo_output_funcs = {
     .dpms = i830_sdvo_dpms,
     .save = i830_sdvo_save,
@@ -1155,7 +1171,10 @@ static const xf86OutputFuncsRec i830_sdvo_output_funcs = {
     .commit = i830_output_commit,
     .detect = i830_sdvo_detect,
     .get_modes = i830_sdvo_get_modes,
-    .destroy = i830_sdvo_destroy
+    .destroy = i830_sdvo_destroy,
+#ifdef RANDR_GET_CRTC_INTERFACE
+    .get_crtc = i830_sdvo_get_crtc,
+#endif
 };
 
 void

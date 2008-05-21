@@ -121,15 +121,6 @@ extern void I830DPRINTF_stub(const char *filename, int line,
    }									\
 } while (0)
 
-#define OUT_RING(n) do {						\
-   if (I810_DEBUG & DEBUG_VERBOSE_RING)					\
-      ErrorF( "OUT_RING %lx: %x, (mask %x)\n",				\
-		(unsigned long)(outring), (unsigned int)(n), ringmask);	\
-   *(volatile unsigned int *)(virt + outring) = n;			\
-   outring += 4; ringused += 4;							\
-   outring &= ringmask;							\
-} while (0)
-
 static inline void memset_volatile(volatile void *b, int c, size_t len)
 {
     int i;
@@ -147,97 +138,15 @@ static inline void memcpy_volatile(volatile void *dst, const void *src,
 	((volatile char *)dst)[i] = ((volatile char *)src)[i];
 }
 
-/** Copies a given number of bytes to the ring */
-#define OUT_RING_COPY(n, ptr) do {					\
-    if (I810_DEBUG & DEBUG_VERBOSE_RING)				\
-	ErrorF("OUT_RING_DATA %d bytes\n", n);				\
-    memcpy_volatile(virt + outring, ptr, n);				\
-    outring += n;							\
-    ringused += n;							\
-    outring &= ringmask;						\
-} while (0)
-
-/** Pads the ring with a given number of zero bytes */
-#define OUT_RING_PAD(n) do {						\
-    if (I810_DEBUG & DEBUG_VERBOSE_RING)				\
-	ErrorF("OUT_RING_PAD %d bytes\n", n);				\
-    memset_volatile(virt + outring, 0, n);				\
-    outring += n;							\
-    ringused += n;							\
-    outring &= ringmask;						\
-} while (0)
-
-union intfloat {
-	float f;
-	unsigned int ui;
-};
-
-#define OUT_RING_F(x) do {			\
-	union intfloat tmp;			\
-	tmp.f = (float)(x);			\
-	OUT_RING(tmp.ui);			\
-} while(0)				
-
-#define ADVANCE_LP_RING() do {						\
-   if (ringused > needed)          \
-      FatalError("%s: ADVANCE_LP_RING: exceeded allocation %d/%d\n ",	\
-	     __FUNCTION__, ringused, needed);   			\
-   else if (ringused < needed)						\
-      FatalError("%s: ADVANCE_LP_RING: under-used allocation %d/%d\n ",	\
-	     __FUNCTION__, ringused, needed);   			\
-   RecPtr->LpRing->tail = outring;					\
-   RecPtr->LpRing->space -= ringused;					\
-   if (outring & 0x07)							\
-      FatalError("%s: ADVANCE_LP_RING: "					\
-	     "outring (0x%x) isn't on a QWord boundary\n",		\
-	     __FUNCTION__, outring);					\
-   OUTREG(LP_RING + RING_TAIL, outring);				\
-} while (0)
-
-/*
- * XXX Note: the head/tail masks are different for 810 and i830.
- * If the i810 always sets the higher bits to 0, then this shouldn't be
- * a problem.  Check this!
- */
-#define DO_RING_IDLE() do {						\
-   int _head;								\
-   int _tail;								\
-   do {									\
-      _head = INREG(LP_RING + RING_HEAD) & I830_HEAD_MASK;		\
-      _tail = INREG(LP_RING + RING_TAIL) & I830_TAIL_MASK;		\
-      DELAY(10);							\
-   } while (_head != _tail);						\
-} while( 0)
-
-
-#define BEGIN_LP_RING(n)						\
-   unsigned int outring, ringmask, ringused = 0;			\
-   volatile unsigned char *virt;					\
-   int needed;								\
-   if ((n) & 1)								\
-      ErrorF("BEGIN_LP_RING called with odd argument: %d\n", n);	\
-   if ((n) > 2 && (I810_DEBUG&DEBUG_ALWAYS_SYNC))			\
-      DO_RING_IDLE();							\
-   needed = (n) * 4;							\
-   if (RecPtr->LpRing->space < needed)					\
-      WaitRingFunc(pScrn, needed, 0);					\
-   outring = RecPtr->LpRing->tail;					\
-   ringmask = RecPtr->LpRing->tail_mask;				\
-   virt = RecPtr->LpRing->virtual_start;				\
-   if (I810_DEBUG & DEBUG_VERBOSE_RING)					\
-      ErrorF( "BEGIN_LP_RING %d in %s\n", n, FUNCTION_NAME);
-
-
-
 /* Memory mapped register access macros */
-#define INREG8(addr)        *(volatile CARD8  *)(RecPtr->MMIOBase + (addr))
-#define INREG16(addr)       *(volatile CARD16 *)(RecPtr->MMIOBase + (addr))
-#define INREG(addr)         *(volatile CARD32 *)(RecPtr->MMIOBase + (addr))
-#define INGTT(addr)         *(volatile CARD32 *)(RecPtr->GTTBase + (addr))
+#define INREG8(addr)        *(volatile uint8_t *)(RecPtr->MMIOBase + (addr))
+#define INREG16(addr)       *(volatile uint16_t *)(RecPtr->MMIOBase + (addr))
+#define INREG(addr)         *(volatile uint32_t *)(RecPtr->MMIOBase + (addr))
+#define INGTT(addr)         *(volatile uint32_t *)(RecPtr->GTTBase + (addr))
 #define POSTING_READ(addr)  (void)INREG(addr)
 
 #define OUTREG8(addr, val) do {						\
-   *(volatile CARD8 *)(RecPtr->MMIOBase  + (addr)) = (val);		\
+   *(volatile uint8_t *)(RecPtr->MMIOBase  + (addr)) = (val);		\
    if (I810_DEBUG&DEBUG_VERBOSE_OUTREG) {				\
       ErrorF("OUTREG8(0x%lx, 0x%lx) in %s\n", (unsigned long)(addr),	\
 		(unsigned long)(val), FUNCTION_NAME);			\
@@ -245,7 +154,7 @@ union intfloat {
 } while (0)
 
 #define OUTREG16(addr, val) do {					\
-   *(volatile CARD16 *)(RecPtr->MMIOBase + (addr)) = (val);		\
+   *(volatile uint16_t *)(RecPtr->MMIOBase + (addr)) = (val);		\
    if (I810_DEBUG&DEBUG_VERBOSE_OUTREG) {				\
       ErrorF("OUTREG16(0x%lx, 0x%lx) in %s\n", (unsigned long)(addr),	\
 		(unsigned long)(val), FUNCTION_NAME);			\
@@ -253,7 +162,7 @@ union intfloat {
 } while (0)
 
 #define OUTREG(addr, val) do {						\
-   *(volatile CARD32 *)(RecPtr->MMIOBase + (addr)) = (val);		\
+   *(volatile uint32_t *)(RecPtr->MMIOBase + (addr)) = (val);		\
    if (I810_DEBUG&DEBUG_VERBOSE_OUTREG) {				\
       ErrorF("OUTREG(0x%lx, 0x%lx) in %s\n", (unsigned long)(addr),	\
 		(unsigned long)(val), FUNCTION_NAME);			\
@@ -440,7 +349,7 @@ extern int I810_DEBUG;
 
 #define IS_MOBILE(pI810) (IS_I830(pI810) || IS_I85X(pI810) || IS_I915GM(pI810) || IS_I945GM(pI810) || IS_I965GM(pI810) || IS_IGD_GM(pI810))
 /* mark chipsets for using gfx VM offset for overlay */
-#define OVERLAY_NOPHYSICAL(pI810) (IS_G33CLASS(pI810))
+#define OVERLAY_NOPHYSICAL(pI810) (IS_G33CLASS(pI810) || IS_I965G(pI810))
 /* chipsets require graphics mem for hardware status page */
 #define HWS_NEED_GFX(pI810) (IS_G33CLASS(pI810) || IS_IGD_GM(pI810))
 

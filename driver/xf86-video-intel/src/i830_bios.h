@@ -28,24 +28,25 @@
 #ifndef _I830_BIOS_H_
 #define _I830_BIOS_H_
 
+#include <stdint.h>
 #include <xf86str.h>
 
 struct vbt_header {
     char signature[20];			/**< Always starts with 'VBT$' */
-    CARD16 version;			/**< decimal */
-    CARD16 header_size;			/**< in bytes */
-    CARD16 vbt_size;			/**< in bytes */
-    CARD8 vbt_checksum;
-    CARD8 reserved0;
-    CARD32 bdb_offset;			/**< from beginning of VBT */
-    CARD32 aim_offset[4];		/**< from beginning of VBT */
+    uint16_t version;			/**< decimal */
+    uint16_t header_size;		/**< in bytes */
+    uint16_t vbt_size;			/**< in bytes */
+    uint8_t vbt_checksum;
+    uint8_t reserved0;
+    uint32_t bdb_offset;		/**< from beginning of VBT */
+    uint32_t aim_offset[4];		/**< from beginning of VBT */
 } __attribute__((packed));
 
 struct bdb_header {
     char signature[16];			/**< Always 'BIOS_DATA_BLOCK' */
-    CARD16 version;			/**< decimal */
-    CARD16 header_size;			/**< in bytes */
-    CARD16 bdb_size;			/**< in bytes */
+    uint16_t version;			/**< decimal */
+    uint16_t header_size;		/**< in bytes */
+    uint16_t bdb_size;			/**< in bytes */
 } __attribute__((packed));
 
 #define LVDS_CAP_EDID			(1 << 6)
@@ -56,89 +57,89 @@ struct bdb_header {
 #define LVDS_CAP_PFIT_GRAPHICS		(1 << 1)
 #define LVDS_CAP_PFIT_TEXT		(1 << 0)
 struct lvds_bdb_1 {
-    CARD8 id;				/**< 40 */
-    CARD16 size;
-    CARD8 panel_type;
-    CARD8 reserved0;
-    CARD16 caps;
+    uint8_t id;				/**< 40 */
+    uint16_t size;
+    uint8_t panel_type;
+    uint8_t reserved0;
+    uint16_t caps;
 } __attribute__((packed));
 
 struct lvds_bdb_2_fp_params {
-    CARD16 x_res;
-    CARD16 y_res;
-    CARD32 lvds_reg;
-    CARD32 lvds_reg_val;
-    CARD32 pp_on_reg;
-    CARD32 pp_on_reg_val;
-    CARD32 pp_off_reg;
-    CARD32 pp_off_reg_val;
-    CARD32 pp_cycle_reg;
-    CARD32 pp_cycle_reg_val;
-    CARD32 pfit_reg;
-    CARD32 pfit_reg_val;
-    CARD16 terminator;
+    uint16_t x_res;
+    uint16_t y_res;
+    uint32_t lvds_reg;
+    uint32_t lvds_reg_val;
+    uint32_t pp_on_reg;
+    uint32_t pp_on_reg_val;
+    uint32_t pp_off_reg;
+    uint32_t pp_off_reg_val;
+    uint32_t pp_cycle_reg;
+    uint32_t pp_cycle_reg_val;
+    uint32_t pfit_reg;
+    uint32_t pfit_reg_val;
+    uint16_t terminator;
 } __attribute__((packed));
 
 struct lvds_bdb_2_fp_edid_dtd {
-    CARD16 dclk;		/**< In 10khz */
-    CARD8 hactive;
-    CARD8 hblank;
-    CARD8 high_h;		/**< 7:4 = hactive 11:8, 3:0 = hblank 11:8 */
-    CARD8 vactive;
-    CARD8 vblank;
-    CARD8 high_v;		/**< 7:4 = vactive 11:8, 3:0 = vblank 11:8 */
-    CARD8 hsync_off;
-    CARD8 hsync_pulse_width;
-    CARD8 vsync_off;
-    CARD8 high_hsync_off;	/**< 7:6 = hsync off 9:8 */
-    CARD8 h_image;
-    CARD8 v_image;
-    CARD8 max_hv;
-    CARD8 h_border;
-    CARD8 v_border;
-    CARD8 flags;
+    uint16_t dclk;		/**< In 10khz */
+    uint8_t hactive;
+    uint8_t hblank;
+    uint8_t high_h;		/**< 7:4 = hactive 11:8, 3:0 = hblank 11:8 */
+    uint8_t vactive;
+    uint8_t vblank;
+    uint8_t high_v;		/**< 7:4 = vactive 11:8, 3:0 = vblank 11:8 */
+    uint8_t hsync_off;
+    uint8_t hsync_pulse_width;
+    uint8_t vsync_off;
+    uint8_t high_hsync_off;	/**< 7:6 = hsync off 9:8 */
+    uint8_t h_image;
+    uint8_t v_image;
+    uint8_t max_hv;
+    uint8_t h_border;
+    uint8_t v_border;
+    uint8_t flags;
 #define FP_EDID_FLAG_VSYNC_POSITIVE	(1 << 2)
 #define FP_EDID_FLAG_HSYNC_POSITIVE	(1 << 1)
 } __attribute__((packed));
 
 struct lvds_bdb_2_entry {
-    CARD16 fp_params_offset;		/**< From beginning of BDB */
-    CARD8 fp_params_size;
-    CARD16 fp_edid_dtd_offset;
-    CARD8 fp_edid_dtd_size;
-    CARD16 fp_edid_pid_offset;
-    CARD8 fp_edid_pid_size;
+    uint16_t fp_params_offset;		/**< From beginning of BDB */
+    uint8_t fp_params_size;
+    uint16_t fp_edid_dtd_offset;
+    uint8_t fp_edid_dtd_size;
+    uint16_t fp_edid_pid_offset;
+    uint8_t fp_edid_pid_size;
 } __attribute__((packed));
 
 struct lvds_bdb_2 {
-    CARD8 id;			/**< 41 */
-    CARD16 size;
-    CARD8 table_size;	/* not sure on this one */
+    uint8_t id;			/**< 41 */
+    uint16_t size;
+    uint8_t table_size;	/* not sure on this one */
     struct lvds_bdb_2_entry panels[16];
 } __attribute__((packed));
 
 struct aimdb_header {
     char    signature[16];
     char    oem_device[20];
-    CARD16  aimdb_version;
-    CARD16  aimdb_header_size;
-    CARD16  aimdb_size;
+    uint16_t  aimdb_version;
+    uint16_t  aimdb_header_size;
+    uint16_t  aimdb_size;
 } __attribute__((packed));
 
 struct aimdb_block {
-    CARD8   aimdb_id;
-    CARD16  aimdb_size;
+    uint8_t   aimdb_id;
+    uint16_t  aimdb_size;
 } __attribute__((packed));
 
 struct vch_panel_data {
-    CARD16	fp_timing_offset;
-    CARD8	fp_timing_size;
-    CARD16	dvo_timing_offset;
-    CARD8	dvo_timing_size;
-    CARD16	text_fitting_offset;
-    CARD8	text_fitting_size;
-    CARD16	graphics_fitting_offset;
-    CARD8	graphics_fitting_size;
+    uint16_t	fp_timing_offset;
+    uint8_t	fp_timing_size;
+    uint16_t	dvo_timing_offset;
+    uint8_t	dvo_timing_size;
+    uint16_t	text_fitting_offset;
+    uint8_t	text_fitting_size;
+    uint16_t	graphics_fitting_offset;
+    uint8_t	graphics_fitting_size;
 } __attribute__((packed));
 
 struct vch_bdb_22 {

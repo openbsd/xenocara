@@ -40,75 +40,49 @@
  * Y1_R is g7
  */
 
-    /* Set up ss0.x coordinates*/
-mov (1) g4<1>F g1.8<0,1,0>UW { align1 };
-add (1) g4.4<1>F g1.8<0,1,0>UW 1UB { align1 };
-mov (1) g4.8<1>F g1.8<0,1,0>UW { align1 };
-add (1) g4.12<1>F g1.8<0,1,0>UW 1UB { align1 };
-    /* Set up ss0.y coordinates */
-mov (1) g6<1>F g1.10<0,1,0>UW { align1 };
-mov (1) g6.4<1>F g1.10<0,1,0>UW { align1 };
-add (1) g6.8<1>F g1.10<0,1,0>UW 1UB { align1 };
-add (1) g6.12<1>F g1.10<0,1,0>UW 1UB { align1 };
-    /* set up ss1.x coordinates */
-mov (1) g4.16<1>F g1.12<0,1,0>UW { align1 };
-add (1) g4.20<1>F g1.12<0,1,0>UW 1UB { align1 };
-mov (1) g4.24<1>F g1.12<0,1,0>UW { align1 };
-add (1) g4.28<1>F g1.12<0,1,0>UW 1UB { align1 };
-    /* set up ss1.y coordinates */
-mov (1) g6.16<1>F g1.14<0,1,0>UW { align1 };
-mov (1) g6.20<1>F g1.14<0,1,0>UW { align1 };
-add (1) g6.24<1>F g1.14<0,1,0>UW 1UB { align1 };
-add (1) g6.28<1>F g1.14<0,1,0>UW 1UB { align1 };
-    /* Set up ss2.x coordinates */
-mov (1) g5<1>F g1.16<0,1,0>UW { align1 };
-add (1) g5.4<1>F g1.16<0,1,0>UW 1UB { align1 };
-mov (1) g5.8<1>F g1.16<0,1,0>UW { align1 };
-add (1) g5.12<1>F g1.16<0,1,0>UW 1UB { align1 };
-    /* Set up ss2.y coordinates */
-mov (1) g7<1>F g1.18<0,1,0>UW { align1 };
-mov (1) g7.4<1>F g1.18<0,1,0>UW { align1 };
-add (1) g7.8<1>F g1.18<0,1,0>UW 1UB { align1 };
-add (1) g7.12<1>F g1.18<0,1,0>UW 1UB { align1 };
-    /* Set up ss3.x coordinates */
-mov (1) g5.16<1>F g1.20<0,1,0>UW { align1 };
-add (1) g5.20<1>F g1.20<0,1,0>UW 1UB { align1 };
-mov (1) g5.24<1>F g1.20<0,1,0>UW { align1 };
-add (1) g5.28<1>F g1.20<0,1,0>UW 1UB { align1 };
-    /* Set up ss3.y coordinates */
-mov (1) g7.16<1>F g1.22<0,1,0>UW { align1 };
-mov (1) g7.20<1>F g1.22<0,1,0>UW { align1 };
-add (1) g7.24<1>F g1.22<0,1,0>UW 1UB { align1 };
-add (1) g7.28<1>F g1.22<0,1,0>UW 1UB { align1 };
+
+/* Load X and Y coordinates and compute per-pixel coordinates */
+add (16)	g4<1>UW		g1.8<2,4,0>UW	0x10101010V	{ align1 };
+add (16)	g6<1>UW		g1.10<2,4,0>UW	0x11001100V	{ align1 };
 
     /* Now, map these screen space coordinates into texture coordinates. */
+    
     /* subtract screen-space X origin of vertex 0. */
-add (8) g4<1>F g4<8,8,1>F -g1<0,1,0>F { align1 };
-add (8) g5<1>F g5<8,8,1>F -g1<0,1,0>F { align1 };
-    /* scale by texture X increment */
-mul (8) g4<1>F g4<8,8,1>F g3<0,1,0>F { align1 };
-mul (8) g5<1>F g5<8,8,1>F g3<0,1,0>F { align1 };
-    /* add in texture X offset */
-add (8) g4<1>F g4<8,8,1>F g3.12<0,1,0>F { align1 };
-add (8) g5<1>F g5<8,8,1>F g3.12<0,1,0>F { align1 };
+add (16)	g12<1>F		g4<8,8,1>UW	-g1.0<0,1,0>F { compr align1 };
+
     /* subtract screen-space Y origin of vertex 0. */
-add (8) g6<1>F g6<8,8,1>F -g1.4<0,1,0>F { align1 };
-add (8) g7<1>F g7<8,8,1>F -g1.4<0,1,0>F { align1 };
-    /* scale by texture Y increment */
-mul (8) g6<1>F g6<8,8,1>F g3.20<0,1,0>F { align1 };
-mul (8) g7<1>F g7<8,8,1>F g3.20<0,1,0>F { align1 };
-    /* add in texture Y offset */
-add (8) g6<1>F g6<8,8,1>F g3.28<0,1,0>F { align1 };
-add (8) g7<1>F g7<8,8,1>F g3.28<0,1,0>F { align1 };
+add (16)	g16<1>F		g6<8,8,1>UW	-g1.4<0,1,0>F { compr align1 };
+
+	/* g8/g9 = X * du/dx */
+mul (16)	g8<1>F		g12<8,8,1>F	g3.0<0,1,0>F { compr align1 };
+
+	/* g10/g11 = Y * du/dy */
+mul (16)	g10<1>F		g16<8,8,1>F	g3.4<0,1,0>F { compr align1 };
+
+	/* g8/g9 = X du/dx + Y du/dy */
+add (16)	g8<1>F		g8<8,8,1>F	g10<8,8,1>F { compr align1 };
+
+	/* m1/m2 = g8/g9 + uo */
+add (16)	m1<1>F		g8<8,8,1>F	g3.12<0,1,0>F { compr align1 };
+
+
+	/* g8/g9 = X * dv/dx */
+mul (16)	g8<1>F		g12<8,8,1>F	g3.16<0,1,0>F { compr align1 };
+
+	/* g10/g11 = Y * du/dy */
+mul (16)	g10<1>F		g16<8,8,1>F	g3.20<0,1,0>F { compr align1 };
+
+	/* g8/g9 = X du/dx + Y du/dy */
+add (16)	g8<1>F		g8<8,8,1>F	g10<8,8,1>F { compr align1 };
+
+	/* m3/m4 = g8/g9 + vo */
+add (16)	m3<1>F		g8<8,8,1>F	g3.28<0,1,0>F { compr align1 };
+
 
 /* prepare sampler read back gX register, which would be written back to output */
 
 /* use simd16 sampler, param 0 is u, param 1 is v. */
 /* 'payload' loading, assuming tex coord start from g4 */
-mov (8) m1<1>F g4<8,8,1>F { align1 };
-mov (8) m2<1>F g5<8,8,1>F { align1 };  /* param 0 u in m1, m2 */
-mov (8) m3<1>F g6<8,8,1>F { align1 };
-mov (8) m4<1>F g7<8,8,1>F { align1 };  /* param 1 v in m3, m4 */
 
 /* m0 will be copied with g0, as it contains send desc */
 /* emit sampler 'send' cmd */
@@ -145,7 +119,7 @@ mov (8) m8<1>F g17<8,8,1>F { align1 };
 mov (8) m9<1>F g19<8,8,1>F { align1 };
 
 /* m0, m1 are all direct passed by PS thread payload */
-mov (8) m1<1>UD g1<8,8,1>UD { align1 mask_disable };
+mov (8) m1<1>UD g1<8,8,1>UD { align1 };
 
 /* write */
 send (16) 0 acc0<1>UW g0<8,8,1>UW write (

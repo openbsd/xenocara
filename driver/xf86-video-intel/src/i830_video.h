@@ -28,13 +28,13 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "xf86_OSproc.h"
 
 typedef struct {
-   CARD32 YBuf0offset;
-   CARD32 UBuf0offset;
-   CARD32 VBuf0offset;
+   uint32_t YBuf0offset;
+   uint32_t UBuf0offset;
+   uint32_t VBuf0offset;
 
-   CARD32 YBuf1offset;
-   CARD32 UBuf1offset;
-   CARD32 VBuf1offset;
+   uint32_t YBuf1offset;
+   uint32_t UBuf1offset;
+   uint32_t VBuf1offset;
 
    unsigned char currentBuf;
 
@@ -46,16 +46,16 @@ typedef struct {
    int doubleBuffer;
 
    RegionRec clip;
-   CARD32 colorKey;
+   uint32_t colorKey;
 
-   CARD32 gamma0;
-   CARD32 gamma1;
-   CARD32 gamma2;
-   CARD32 gamma3;
-   CARD32 gamma4;
-   CARD32 gamma5;
+   uint32_t gamma0;
+   uint32_t gamma1;
+   uint32_t gamma2;
+   uint32_t gamma3;
+   uint32_t gamma4;
+   uint32_t gamma5;
 
-   CARD32 videoStatus;
+   uint32_t videoStatus;
    Time offTime;
    Time freeTime;
    i830_memory *buf; /** YUV data buffer */
@@ -65,6 +65,7 @@ typedef struct {
    int oneLineMode;
    int scaleRatio;
    Bool textured;
+   Rotation rotation; /* should remove I830->rotation later*/
 } I830PortPrivRec, *I830PortPrivPtr;
 
 #define GET_PORT_PRIVATE(pScrn) \

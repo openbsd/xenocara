@@ -88,19 +88,4 @@
 #define TFP410_V_RES_LO 0x3C
 #define TFP410_V_RES_HI 0x3D
 
-typedef struct _TFP410SaveRec {
-    CARD8 ctl1;
-    CARD8 ctl2;
-} TFP410SaveRec;
-
-typedef struct {
-    I2CDevRec d;
-    Bool quiet;
-
-    TFP410SaveRec SavedReg;
-    TFP410SaveRec ModeReg;
-} TFP410Rec, *TFP410Ptr;
-
-#define TFPPTR(d) ((TFP410Ptr)(d->DriverPrivate.ptr))
-
 #endif

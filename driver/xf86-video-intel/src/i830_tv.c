@@ -57,39 +57,39 @@ struct i830_tv_priv {
     int type;
     char *tv_format;
     int margin[4];
-    CARD32 save_TV_H_CTL_1;
-    CARD32 save_TV_H_CTL_2;
-    CARD32 save_TV_H_CTL_3;
-    CARD32 save_TV_V_CTL_1;
-    CARD32 save_TV_V_CTL_2;
-    CARD32 save_TV_V_CTL_3;
-    CARD32 save_TV_V_CTL_4;
-    CARD32 save_TV_V_CTL_5;
-    CARD32 save_TV_V_CTL_6;
-    CARD32 save_TV_V_CTL_7;
-    CARD32 save_TV_SC_CTL_1, save_TV_SC_CTL_2, save_TV_SC_CTL_3;
+    uint32_t save_TV_H_CTL_1;
+    uint32_t save_TV_H_CTL_2;
+    uint32_t save_TV_H_CTL_3;
+    uint32_t save_TV_V_CTL_1;
+    uint32_t save_TV_V_CTL_2;
+    uint32_t save_TV_V_CTL_3;
+    uint32_t save_TV_V_CTL_4;
+    uint32_t save_TV_V_CTL_5;
+    uint32_t save_TV_V_CTL_6;
+    uint32_t save_TV_V_CTL_7;
+    uint32_t save_TV_SC_CTL_1, save_TV_SC_CTL_2, save_TV_SC_CTL_3;
 
-    CARD32 save_TV_CSC_Y;
-    CARD32 save_TV_CSC_Y2;
-    CARD32 save_TV_CSC_U;
-    CARD32 save_TV_CSC_U2;
-    CARD32 save_TV_CSC_V;
-    CARD32 save_TV_CSC_V2;
-    CARD32 save_TV_CLR_KNOBS;
-    CARD32 save_TV_CLR_LEVEL;
-    CARD32 save_TV_WIN_POS;
-    CARD32 save_TV_WIN_SIZE;
-    CARD32 save_TV_FILTER_CTL_1;
-    CARD32 save_TV_FILTER_CTL_2;
-    CARD32 save_TV_FILTER_CTL_3;
+    uint32_t save_TV_CSC_Y;
+    uint32_t save_TV_CSC_Y2;
+    uint32_t save_TV_CSC_U;
+    uint32_t save_TV_CSC_U2;
+    uint32_t save_TV_CSC_V;
+    uint32_t save_TV_CSC_V2;
+    uint32_t save_TV_CLR_KNOBS;
+    uint32_t save_TV_CLR_LEVEL;
+    uint32_t save_TV_WIN_POS;
+    uint32_t save_TV_WIN_SIZE;
+    uint32_t save_TV_FILTER_CTL_1;
+    uint32_t save_TV_FILTER_CTL_2;
+    uint32_t save_TV_FILTER_CTL_3;
 
-    CARD32 save_TV_H_LUMA[60];
-    CARD32 save_TV_H_CHROMA[60];
-    CARD32 save_TV_V_LUMA[43];
-    CARD32 save_TV_V_CHROMA[43];
+    uint32_t save_TV_H_LUMA[60];
+    uint32_t save_TV_H_CHROMA[60];
+    uint32_t save_TV_V_LUMA[43];
+    uint32_t save_TV_V_CHROMA[43];
 
-    CARD32 save_TV_DAC;
-    CARD32 save_TV_CTL;
+    uint32_t save_TV_DAC;
+    uint32_t save_TV_CTL;
 };
 
 typedef struct {
@@ -102,7 +102,7 @@ typedef struct {
     float   rv, gv, bv, av;
 } color_conversion_t;
 
-static const CARD32 filter_table[] = {
+static const uint32_t filter_table[] = {
     0xB1403000, 0x2E203500, 0x35002E20, 0x3000B140,
     0x35A0B160, 0x2DC02E80, 0xB1403480, 0xB1603000,
     0x2EA03640, 0x34002D80, 0x3000B120, 0x36E0B160,
@@ -161,7 +161,7 @@ typedef struct {
     char *name;
     int	clock;
     double refresh;
-    CARD32 oversample;
+    uint32_t oversample;
     int hsync_end, hblank_start, hblank_end, htotal;
     Bool progressive, trilevel_sync, component_only;
     int vsync_start_f1, vsync_start_f2, vsync_len;
@@ -178,14 +178,14 @@ typedef struct {
      * subcarrier programming
      */
     int dda2_size, dda3_size, dda1_inc, dda2_inc, dda3_inc;
-    CARD32 sc_reset;
+    uint32_t sc_reset;
     Bool pal_burst;
     /*
      * blank/black levels
      */
     video_levels_t	composite_levels, svideo_levels;
     color_conversion_t	composite_color, svideo_color;
-    const CARD32 *filter_table;
+    const uint32_t *filter_table;
     int max_srcw;
 } tv_mode_t;
 
@@ -981,13 +981,13 @@ i830_tv_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
     return TRUE;
 }
 
-static CARD32
+static uint32_t
 i830_float_to_csc (float fin)
 {
-    CARD32  exp;
-    CARD32  mant;
-    CARD32  ret;
-    float   f = fin;
+    uint32_t exp;
+    uint32_t mant;
+    uint32_t ret;
+    float f = fin;
 
     /* somehow the color conversion knows the signs of all the values */
     if (f < 0) f = -f;
@@ -1009,10 +1009,10 @@ i830_float_to_csc (float fin)
     return ret;
 }
 
-static CARD16
+static uint16_t
 i830_float_to_luma (float f)
 {
-    CARD16  ret;
+    uint16_t ret;
 
     ret = (f * (1 << 9));
     return ret;
@@ -1029,10 +1029,10 @@ i830_tv_mode_set(xf86OutputPtr output, DisplayModePtr mode,
     I830CrtcPrivatePtr	    intel_crtc = crtc->driver_private;
     struct i830_tv_priv	    *dev_priv = intel_output->dev_priv;
     const tv_mode_t	    *tv_mode = i830_tv_mode_find (output);
-    CARD32		    tv_ctl;
-    CARD32		    hctl1, hctl2, hctl3;
-    CARD32		    vctl1, vctl2, vctl3, vctl4, vctl5, vctl6, vctl7;
-    CARD32		    scctl1, scctl2, scctl3;
+    uint32_t		    tv_ctl;
+    uint32_t		    hctl1, hctl2, hctl3;
+    uint32_t		    vctl1, vctl2, vctl3, vctl4, vctl5, vctl6, vctl7;
+    uint32_t		    scctl1, scctl2, scctl3;
     int			    i, j;
     const video_levels_t	*video_levels;
     const color_conversion_t	*color_conversion;
@@ -1271,8 +1271,8 @@ i830_tv_detect_type (xf86CrtcPtr    crtc,
     ScrnInfoPtr		    pScrn = output->scrn;
     I830Ptr		    pI830 = I830PTR(pScrn);
     I830OutputPrivatePtr    intel_output = output->driver_private;
-    CARD32		    tv_ctl, save_tv_ctl;
-    CARD32		    tv_dac, save_tv_dac;
+    uint32_t		    tv_ctl, save_tv_ctl;
+    uint32_t		    tv_dac, save_tv_dac;
     int			    type = TV_TYPE_UNKNOWN;
 
     tv_dac = INREG(TV_DAC);
@@ -1640,6 +1640,18 @@ i830_tv_set_property(xf86OutputPtr output, Atom property,
 }
 #endif /* RANDR_12_INTERFACE */
 
+#ifdef RANDR_GET_CRTC_INTERFACE
+static xf86CrtcPtr
+i830_tv_get_crtc(xf86OutputPtr output)
+{
+    ScrnInfoPtr	pScrn = output->scrn;
+    I830Ptr pI830 = I830PTR(pScrn);
+    int pipe = !!(INREG(TV_CTL) & TV_ENC_PIPEB_SELECT);
+   
+    return i830_pipe_to_crtc(pScrn, pipe);
+}
+#endif
+
 static const xf86OutputFuncsRec i830_tv_output_funcs = {
     .create_resources = i830_tv_create_resources,
     .dpms = i830_tv_dpms,
@@ -1656,6 +1668,9 @@ static const xf86OutputFuncsRec i830_tv_output_funcs = {
 #ifdef RANDR_12_INTERFACE
     .set_property = i830_tv_set_property,
 #endif
+#ifdef RANDR_GET_CRTC_INTERFACE
+    .get_crtc = i830_tv_get_crtc,
+#endif
 };
 
 void
@@ -1665,7 +1680,7 @@ i830_tv_init(ScrnInfoPtr pScrn)
     xf86OutputPtr	    output;
     I830OutputPrivatePtr    intel_output;
     struct i830_tv_priv	    *dev_priv;
-    CARD32		    tv_dac_on, tv_dac_off, save_tv_dac;
+    uint32_t		    tv_dac_on, tv_dac_off, save_tv_dac;
 
     if (pI830->quirk_flag & QUIRK_IGNORE_TV)
 	return;

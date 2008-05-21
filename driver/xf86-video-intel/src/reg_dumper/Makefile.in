@@ -36,7 +36,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-noinst_PROGRAMS = intel_reg_dumper$(EXEEXT)
+noinst_PROGRAMS = intel_reg_dumper$(EXEEXT) intel_idle$(EXEEXT) \
+	intel_stepping$(EXEEXT)
 subdir = src/reg_dumper
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -47,12 +48,18 @@ mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
-am_intel_reg_dumper_OBJECTS = intel_reg_dumper-main.$(OBJEXT) \
-	intel_reg_dumper-xprintf.$(OBJEXT) \
-	intel_reg_dumper-i830_debug.$(OBJEXT)
-intel_reg_dumper_OBJECTS = $(am_intel_reg_dumper_OBJECTS)
+am_intel_idle_OBJECTS = idle.$(OBJEXT) xprintf.$(OBJEXT) \
+	i830_debug.$(OBJEXT)
+intel_idle_OBJECTS = $(am_intel_idle_OBJECTS)
 am__DEPENDENCIES_1 =
+intel_idle_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_intel_reg_dumper_OBJECTS = main.$(OBJEXT) xprintf.$(OBJEXT) \
+	i830_debug.$(OBJEXT)
+intel_reg_dumper_OBJECTS = $(am_intel_reg_dumper_OBJECTS)
 intel_reg_dumper_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_intel_stepping_OBJECTS = stepping.$(OBJEXT)
+intel_stepping_OBJECTS = $(am_intel_stepping_OBJECTS)
+intel_stepping_DEPENDENCIES = $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -64,8 +71,10 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(intel_reg_dumper_SOURCES)
-DIST_SOURCES = $(intel_reg_dumper_SOURCES)
+SOURCES = $(intel_idle_SOURCES) $(intel_reg_dumper_SOURCES) \
+	$(intel_stepping_SOURCES)
+DIST_SOURCES = $(intel_idle_SOURCES) $(intel_reg_dumper_SOURCES) \
+	$(intel_stepping_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -107,6 +116,7 @@ DRI_LIBS = @DRI_LIBS@
 DRI_MM_CFLAGS = @DRI_MM_CFLAGS@
 DRI_MM_LIBS = @DRI_MM_LIBS@
 DRI_TRUE = @DRI_TRUE@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -144,6 +154,7 @@ MAKE_PS = @MAKE_PS@
 MAKE_TEXT = @MAKE_TEXT@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -157,6 +168,7 @@ PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -171,10 +183,16 @@ XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 XSERVER_LIBPCIACCESS_FALSE = @XSERVER_LIBPCIACCESS_FALSE@
 XSERVER_LIBPCIACCESS_TRUE = @XSERVER_LIBPCIACCESS_TRUE@
+XVMCLIB_CFLAGS = @XVMCLIB_CFLAGS@
+XVMCLIB_LIBS = @XVMCLIB_LIBS@
+XVMC_FALSE = @XVMC_FALSE@
+XVMC_TRUE = @XVMC_TRUE@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
@@ -223,8 +241,19 @@ intel_reg_dumper_SOURCES = \
 	xprintf.c \
 	../i830_debug.c
 
+intel_idle_SOURCES = \
+	idle.c \
+	reg_dumper.h \
+	xprintf.c \
+	../i830_debug.c
+
+intel_stepping_SOURCES = \
+	stepping.c
+
 intel_reg_dumper_LDADD = $(PCIACCESS_LIBS)
-intel_reg_dumper_CFLAGS = $(PCIACCESS_CFLAGS) $(WARN_CFLAGS) \
+intel_idle_LDADD = $(PCIACCESS_LIBS)
+intel_stepping_LDADD = $(PCIACCESS_LIBS)
+AM_CFLAGS = $(PCIACCESS_CFLAGS) $(WARN_CFLAGS) \
 	-I$(srcdir)/.. -DREG_DUMPER
 
 all: all-am
@@ -267,9 +296,15 @@ clean-noinstPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
+intel_idle$(EXEEXT): $(intel_idle_OBJECTS) $(intel_idle_DEPENDENCIES) 
+	@rm -f intel_idle$(EXEEXT)
+	$(LINK) $(intel_idle_LDFLAGS) $(intel_idle_OBJECTS) $(intel_idle_LDADD) $(LIBS)
 intel_reg_dumper$(EXEEXT): $(intel_reg_dumper_OBJECTS) $(intel_reg_dumper_DEPENDENCIES) 
 	@rm -f intel_reg_dumper$(EXEEXT)
 	$(LINK) $(intel_reg_dumper_LDFLAGS) $(intel_reg_dumper_OBJECTS) $(intel_reg_dumper_LDADD) $(LIBS)
+intel_stepping$(EXEEXT): $(intel_stepping_OBJECTS) $(intel_stepping_DEPENDENCIES) 
+	@rm -f intel_stepping$(EXEEXT)
+	$(LINK) $(intel_stepping_LDFLAGS) $(intel_stepping_OBJECTS) $(intel_stepping_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -277,9 +312,11 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_reg_dumper-i830_debug.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_reg_dumper-main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_reg_dumper-xprintf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_debug.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/idle.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stepping.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xprintf.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -302,47 +339,19 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
-intel_reg_dumper-main.o: main.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_reg_dumper_CFLAGS) $(CFLAGS) -MT intel_reg_dumper-main.o -MD -MP -MF "$(DEPDIR)/intel_reg_dumper-main.Tpo" -c -o intel_reg_dumper-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/intel_reg_dumper-main.Tpo" "$(DEPDIR)/intel_reg_dumper-main.Po"; else rm -f "$(DEPDIR)/intel_reg_dumper-main.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='intel_reg_dumper-main.o' libtool=no @AMDEPBACKSLASH@
+i830_debug.o: ../i830_debug.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT i830_debug.o -MD -MP -MF "$(DEPDIR)/i830_debug.Tpo" -c -o i830_debug.o `test -f '../i830_debug.c' || echo '$(srcdir)/'`../i830_debug.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/i830_debug.Tpo" "$(DEPDIR)/i830_debug.Po"; else rm -f "$(DEPDIR)/i830_debug.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../i830_debug.c' object='i830_debug.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_reg_dumper_CFLAGS) $(CFLAGS) -c -o intel_reg_dumper-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o i830_debug.o `test -f '../i830_debug.c' || echo '$(srcdir)/'`../i830_debug.c
 
-intel_reg_dumper-main.obj: main.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_reg_dumper_CFLAGS) $(CFLAGS) -MT intel_reg_dumper-main.obj -MD -MP -MF "$(DEPDIR)/intel_reg_dumper-main.Tpo" -c -o intel_reg_dumper-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/intel_reg_dumper-main.Tpo" "$(DEPDIR)/intel_reg_dumper-main.Po"; else rm -f "$(DEPDIR)/intel_reg_dumper-main.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='intel_reg_dumper-main.obj' libtool=no @AMDEPBACKSLASH@
+i830_debug.obj: ../i830_debug.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT i830_debug.obj -MD -MP -MF "$(DEPDIR)/i830_debug.Tpo" -c -o i830_debug.obj `if test -f '../i830_debug.c'; then $(CYGPATH_W) '../i830_debug.c'; else $(CYGPATH_W) '$(srcdir)/../i830_debug.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/i830_debug.Tpo" "$(DEPDIR)/i830_debug.Po"; else rm -f "$(DEPDIR)/i830_debug.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../i830_debug.c' object='i830_debug.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_reg_dumper_CFLAGS) $(CFLAGS) -c -o intel_reg_dumper-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
-
-intel_reg_dumper-xprintf.o: xprintf.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_reg_dumper_CFLAGS) $(CFLAGS) -MT intel_reg_dumper-xprintf.o -MD -MP -MF "$(DEPDIR)/intel_reg_dumper-xprintf.Tpo" -c -o intel_reg_dumper-xprintf.o `test -f 'xprintf.c' || echo '$(srcdir)/'`xprintf.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/intel_reg_dumper-xprintf.Tpo" "$(DEPDIR)/intel_reg_dumper-xprintf.Po"; else rm -f "$(DEPDIR)/intel_reg_dumper-xprintf.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xprintf.c' object='intel_reg_dumper-xprintf.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_reg_dumper_CFLAGS) $(CFLAGS) -c -o intel_reg_dumper-xprintf.o `test -f 'xprintf.c' || echo '$(srcdir)/'`xprintf.c
-
-intel_reg_dumper-xprintf.obj: xprintf.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_reg_dumper_CFLAGS) $(CFLAGS) -MT intel_reg_dumper-xprintf.obj -MD -MP -MF "$(DEPDIR)/intel_reg_dumper-xprintf.Tpo" -c -o intel_reg_dumper-xprintf.obj `if test -f 'xprintf.c'; then $(CYGPATH_W) 'xprintf.c'; else $(CYGPATH_W) '$(srcdir)/xprintf.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/intel_reg_dumper-xprintf.Tpo" "$(DEPDIR)/intel_reg_dumper-xprintf.Po"; else rm -f "$(DEPDIR)/intel_reg_dumper-xprintf.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xprintf.c' object='intel_reg_dumper-xprintf.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_reg_dumper_CFLAGS) $(CFLAGS) -c -o intel_reg_dumper-xprintf.obj `if test -f 'xprintf.c'; then $(CYGPATH_W) 'xprintf.c'; else $(CYGPATH_W) '$(srcdir)/xprintf.c'; fi`
-
-intel_reg_dumper-i830_debug.o: ../i830_debug.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_reg_dumper_CFLAGS) $(CFLAGS) -MT intel_reg_dumper-i830_debug.o -MD -MP -MF "$(DEPDIR)/intel_reg_dumper-i830_debug.Tpo" -c -o intel_reg_dumper-i830_debug.o `test -f '../i830_debug.c' || echo '$(srcdir)/'`../i830_debug.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/intel_reg_dumper-i830_debug.Tpo" "$(DEPDIR)/intel_reg_dumper-i830_debug.Po"; else rm -f "$(DEPDIR)/intel_reg_dumper-i830_debug.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../i830_debug.c' object='intel_reg_dumper-i830_debug.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_reg_dumper_CFLAGS) $(CFLAGS) -c -o intel_reg_dumper-i830_debug.o `test -f '../i830_debug.c' || echo '$(srcdir)/'`../i830_debug.c
-
-intel_reg_dumper-i830_debug.obj: ../i830_debug.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_reg_dumper_CFLAGS) $(CFLAGS) -MT intel_reg_dumper-i830_debug.obj -MD -MP -MF "$(DEPDIR)/intel_reg_dumper-i830_debug.Tpo" -c -o intel_reg_dumper-i830_debug.obj `if test -f '../i830_debug.c'; then $(CYGPATH_W) '../i830_debug.c'; else $(CYGPATH_W) '$(srcdir)/../i830_debug.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/intel_reg_dumper-i830_debug.Tpo" "$(DEPDIR)/intel_reg_dumper-i830_debug.Po"; else rm -f "$(DEPDIR)/intel_reg_dumper-i830_debug.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../i830_debug.c' object='intel_reg_dumper-i830_debug.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_reg_dumper_CFLAGS) $(CFLAGS) -c -o intel_reg_dumper-i830_debug.obj `if test -f '../i830_debug.c'; then $(CYGPATH_W) '../i830_debug.c'; else $(CYGPATH_W) '$(srcdir)/../i830_debug.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o i830_debug.obj `if test -f '../i830_debug.c'; then $(CYGPATH_W) '../i830_debug.c'; else $(CYGPATH_W) '$(srcdir)/../i830_debug.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

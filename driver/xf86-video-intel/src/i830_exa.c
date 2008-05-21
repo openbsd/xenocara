@@ -121,6 +121,7 @@ i830_pixmap_tiled(PixmapPtr pPixmap)
     return FALSE;
 }
 
+#if EXA_VERSION_MINOR >= 2
 static Bool
 i830_exa_pixmap_is_offscreen(PixmapPtr pPixmap)
 {
@@ -136,6 +137,7 @@ i830_exa_pixmap_is_offscreen(PixmapPtr pPixmap)
 	return FALSE;
     }
 }
+#endif
 
 /**
  * I830EXASync - wait for a command to finish
@@ -169,6 +171,8 @@ I830EXAPrepareSolid(PixmapPtr pPixmap, int alu, Pixel planemask, Pixel fg)
 
     if (pPixmap->drawable.bitsPerPixel == 24)
 	I830FALLBACK("solid 24bpp unsupported!\n");
+
+    i830_exa_check_pitch_2d(pPixmap);
 
     offset = exaGetPixmapOffset(pPixmap);
     pitch = exaGetPixmapPitch(pPixmap);
@@ -207,7 +211,7 @@ I830EXASolid(PixmapPtr pPixmap, int x1, int y1, int x2, int y2)
     pitch = exaGetPixmapPitch(pPixmap);
 
     {
-	BEGIN_LP_RING(6);
+	BEGIN_BATCH(6);
 
 	cmd = XY_COLOR_BLT_CMD;
 
@@ -220,14 +224,14 @@ I830EXASolid(PixmapPtr pPixmap, int x1, int y1, int x2, int y2)
 	    cmd |= XY_COLOR_BLT_TILED;
 	}
 
-	OUT_RING(cmd);
+	OUT_BATCH(cmd);
 
-	OUT_RING(pI830->BR[13] | pitch);
-	OUT_RING((y1 << 16) | (x1 & 0xffff));
-	OUT_RING((y2 << 16) | (x2 & 0xffff));
-	OUT_RING(offset);
-	OUT_RING(pI830->BR[16]);
-	ADVANCE_LP_RING();
+	OUT_BATCH(pI830->BR[13] | pitch);
+	OUT_BATCH((y1 << 16) | (x1 & 0xffff));
+	OUT_BATCH((y2 << 16) | (x2 & 0xffff));
+	OUT_BATCH(offset);
+	OUT_BATCH(pI830->BR[16]);
+	ADVANCE_BATCH();
     }
 }
 
@@ -254,6 +258,9 @@ I830EXAPrepareCopy(PixmapPtr pSrcPixmap, PixmapPtr pDstPixmap, int xdir,
 
     if (!EXA_PM_IS_SOLID(&pSrcPixmap->drawable, planemask))
 	I830FALLBACK("planemask is not solid");
+
+    i830_exa_check_pitch_2d(pSrcPixmap);
+    i830_exa_check_pitch_2d(pDstPixmap);
 
     pI830->pSrcPixmap = pSrcPixmap;
 
@@ -291,7 +298,7 @@ I830EXACopy(PixmapPtr pDstPixmap, int src_x1, int src_y1, int dst_x1,
     src_pitch = exaGetPixmapPitch(pI830->pSrcPixmap);
 
     {
-	BEGIN_LP_RING(8);
+	BEGIN_BATCH(8);
 
 	cmd = XY_SRC_COPY_BLT_CMD;
 
@@ -312,17 +319,17 @@ I830EXACopy(PixmapPtr pDstPixmap, int src_x1, int src_y1, int dst_x1,
 	    }
 	}
 
-	OUT_RING(cmd);
+	OUT_BATCH(cmd);
 
-	OUT_RING(pI830->BR[13] | dst_pitch);
-	OUT_RING((dst_y1 << 16) | (dst_x1 & 0xffff));
-	OUT_RING((dst_y2 << 16) | (dst_x2 & 0xffff));
-	OUT_RING(dst_off);
-	OUT_RING((src_y1 << 16) | (src_x1 & 0xffff));
-	OUT_RING(src_pitch);
-	OUT_RING(src_off);
+	OUT_BATCH(pI830->BR[13] | dst_pitch);
+	OUT_BATCH((dst_y1 << 16) | (dst_x1 & 0xffff));
+	OUT_BATCH((dst_y2 << 16) | (dst_x2 & 0xffff));
+	OUT_BATCH(dst_off);
+	OUT_BATCH((src_y1 << 16) | (src_x1 & 0xffff));
+	OUT_BATCH(src_pitch);
+	OUT_BATCH(src_off);
 
-	ADVANCE_LP_RING();
+	ADVANCE_BATCH();
     }
 }
 
@@ -339,12 +346,31 @@ I830EXADoneCopy(PixmapPtr pDstPixmap)
 #define xFixedToFloat(val) \
 	((float)xFixedToInt(val) + ((float)xFixedFrac(val) / 65536.0))
 
+static Bool
+_i830_transform_point (PictTransformPtr transform,
+		       float		x,
+		       float		y,
+		       float		result[3])
+{
+    int		    j;
+
+    for (j = 0; j < 3; j++)
+    {
+	result[j] = (xFixedToFloat (transform->matrix[j][0]) * x +
+		     xFixedToFloat (transform->matrix[j][1]) * y +
+		     xFixedToFloat (transform->matrix[j][2]));
+    }
+    if (!result[2])
+	return FALSE;
+    return TRUE;
+}
+
 /**
  * Returns the floating-point coordinates transformed by the given transform.
  *
  * transform may be null.
  */
-void
+Bool
 i830_get_transformed_coordinates(int x, int y, PictTransformPtr transform,
 				 float *x_out, float *y_out)
 {
@@ -352,103 +378,53 @@ i830_get_transformed_coordinates(int x, int y, PictTransformPtr transform,
 	*x_out = x;
 	*y_out = y;
     } else {
-	PictVector v;
+	float	result[3];
 
-        v.vector[0] = IntToxFixed(x);
-        v.vector[1] = IntToxFixed(y);
-        v.vector[2] = xFixed1;
-        PictureTransformPoint(transform, &v);
-	*x_out = xFixedToFloat(v.vector[0]);
-	*y_out = xFixedToFloat(v.vector[1]);
+	if (!_i830_transform_point (transform, (float) x, (float) y, result))
+	    return FALSE;
+	*x_out = result[0] / result[2];
+	*y_out = result[1] / result[2];
     }
-}
-
-/**
- * Uploads data from system memory to the framebuffer using a series of
- * 8x8 pattern blits.
- */
-static Bool
-i830_upload_to_screen(PixmapPtr pDst, int x, int y, int w, int h, char *src,
-		      int src_pitch)
-{
-    ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
-    I830Ptr pI830 = I830PTR(pScrn);
-    const int uts_width_max = 16, uts_height_max = 16;
-    int cpp = pDst->drawable.bitsPerPixel / 8;
-    int sub_x, sub_y;
-    CARD32 br13;
-    CARD32 offset;
-
-    if (w > uts_width_max || h > uts_height_max)
-	I830FALLBACK("too large for upload to screen (%d,%d)", w, h);
-
-    offset = exaGetPixmapOffset(pDst);
-
-    br13 = exaGetPixmapPitch(pDst);
-    br13 |= ((I830PatternROP[GXcopy] & 0xff) << 16);
-    switch (pDst->drawable.bitsPerPixel) {
-    case 16:
-	br13 |= 1 << 24;
-	break;
-    case 32:
-	br13 |= 3 << 24;
-	break;
-    }
-
-    for (sub_y = 0; sub_y < uts_height_max && sub_y < h; sub_y += 8) {
-	int sub_height;
-
-	if (sub_y + 8 > h)
-	    sub_height = h - sub_y;
-	else
-	    sub_height = 8;
-
-	for (sub_x = 0; sub_x < uts_width_max && sub_x < w; sub_x += 8) {
-	    int sub_width, line;
-	    char *src_line = src + sub_y * src_pitch + sub_x * cpp;
-
-	    if (sub_x + 8 > w)
-		sub_width = w - sub_x;
-	    else
-		sub_width = 8;
-
-	    BEGIN_LP_RING(6 + (cpp * 8 * 8 / 4));
-
-	    /* XXX We may need a pattern offset here for {x,y} % 8 != 0*/
-	    OUT_RING(XY_PAT_BLT_IMMEDIATE |
-		     XY_SRC_COPY_BLT_WRITE_ALPHA |
-		     XY_SRC_COPY_BLT_WRITE_RGB |
-		     (3 + cpp * 8 * 8 / 4));
-	    OUT_RING(br13);
-	    OUT_RING(((y + sub_y) << 16) | (x + sub_x));
-	    OUT_RING(((y + sub_y + sub_height) << 16) |
-		     (x + sub_x + sub_width));
-	    OUT_RING(offset);
-
-	    /* Write out the lines with valid data, followed by any needed
-	     * padding
-	     */
-	    for (line = 0; line < sub_height; line++) {
-		OUT_RING_COPY(sub_width * cpp, src_line);
-		src_line += src_pitch;
-		if (sub_width != 8)
-		    OUT_RING_PAD((8 - sub_width) * cpp);
-	    }
-	    /* Write out any full padding lines to follow */
-	    if (sub_height != 8)
-		OUT_RING_PAD(8 * cpp * (8 - sub_height));
-
-	    OUT_RING(MI_NOOP);
-	    ADVANCE_LP_RING();
-	}
-    }
-
-    exaMarkSync(pDst->drawable.pScreen);
-    /* exaWaitSync(pDst->drawable.pScreen); */
-
     return TRUE;
 }
 
+/**
+ * Returns the un-normalized floating-point coordinates transformed by the given transform.
+ *
+ * transform may be null.
+ */
+Bool
+i830_get_transformed_coordinates_3d(int x, int y, PictTransformPtr transform,
+				    float *x_out, float *y_out, float *w_out)
+{
+    if (transform == NULL) {
+	*x_out = x;
+	*y_out = y;
+	*w_out = 1;
+    } else {
+	float    result[3];
+
+	if (!_i830_transform_point (transform, (float) x, (float) y, result))
+	    return FALSE;
+	*x_out = result[0];
+	*y_out = result[1];
+	*w_out = result[2];
+    }
+    return TRUE;
+}
+
+/**
+ * Returns whether the provided transform is affine.
+ *
+ * transform may be null.
+ */
+Bool
+i830_transform_is_affine (PictTransformPtr t)
+{
+    if (t == NULL)
+	return TRUE;
+    return t->matrix[2][0] == 0 && t->matrix[2][1] == 0;
+}
 
 /*
  * TODO:
@@ -583,10 +559,6 @@ I830EXAInit(ScreenPtr pScreen)
 #if EXA_VERSION_MINOR >= 2
     pI830->EXADriverPtr->PixmapIsOffscreen = i830_exa_pixmap_is_offscreen;
 #endif
-
-    /* UploadToScreen/DownloadFromScreen */
-    if (0)
-	pI830->EXADriverPtr->UploadToScreen = i830_upload_to_screen;
 
     if(!exaDriverInit(pScreen, pI830->EXADriverPtr)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,

@@ -49,8 +49,7 @@ CONFIG_CLEAN_FILES =
 @LIBPCIACCESS_TRUE@am__EXEEXT_1 = bios_dumper$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
 am__bios_dumper_SOURCES_DIST = bios_dumper.c
-@LIBPCIACCESS_TRUE@am_bios_dumper_OBJECTS =  \
-@LIBPCIACCESS_TRUE@	bios_dumper-bios_dumper.$(OBJEXT)
+@LIBPCIACCESS_TRUE@am_bios_dumper_OBJECTS = bios_dumper.$(OBJEXT)
 bios_dumper_OBJECTS = $(am_bios_dumper_OBJECTS)
 am__DEPENDENCIES_1 =
 @LIBPCIACCESS_TRUE@bios_dumper_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -111,6 +110,7 @@ DRI_LIBS = @DRI_LIBS@
 DRI_MM_CFLAGS = @DRI_MM_CFLAGS@
 DRI_MM_LIBS = @DRI_MM_LIBS@
 DRI_TRUE = @DRI_TRUE@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -148,6 +148,7 @@ MAKE_PS = @MAKE_PS@
 MAKE_TEXT = @MAKE_TEXT@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -161,6 +162,7 @@ PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -175,10 +177,16 @@ XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 XSERVER_LIBPCIACCESS_FALSE = @XSERVER_LIBPCIACCESS_FALSE@
 XSERVER_LIBPCIACCESS_TRUE = @XSERVER_LIBPCIACCESS_TRUE@
+XVMCLIB_CFLAGS = @XVMCLIB_CFLAGS@
+XVMCLIB_LIBS = @XVMCLIB_LIBS@
+XVMC_FALSE = @XVMC_FALSE@
+XVMC_TRUE = @XVMC_TRUE@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
@@ -221,10 +229,9 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-AM_CFLAGS = @WARN_CFLAGS@ @XORG_CFLAGS@ @XMODES_CFLAGS@
+AM_CFLAGS = @WARN_CFLAGS@ @XORG_CFLAGS@ @XMODES_CFLAGS@ @PCIACCESS_CFLAGS@
 @LIBPCIACCESS_TRUE@BIOS_DUMPER = bios_dumper
 @LIBPCIACCESS_TRUE@bios_dumper_SOURCES = bios_dumper.c
-@LIBPCIACCESS_TRUE@bios_dumper_CFLAGS = $(PCIACCESS_CFLAGS)
 @LIBPCIACCESS_TRUE@bios_dumper_LDADD = $(PCIACCESS_LIBS)
 all: all-am
 
@@ -279,7 +286,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bios_dumper-bios_dumper.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bios_dumper.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bios_reader.Po@am__quote@
 
 .c.o:
@@ -302,20 +309,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
-
-bios_dumper-bios_dumper.o: bios_dumper.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bios_dumper_CFLAGS) $(CFLAGS) -MT bios_dumper-bios_dumper.o -MD -MP -MF "$(DEPDIR)/bios_dumper-bios_dumper.Tpo" -c -o bios_dumper-bios_dumper.o `test -f 'bios_dumper.c' || echo '$(srcdir)/'`bios_dumper.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/bios_dumper-bios_dumper.Tpo" "$(DEPDIR)/bios_dumper-bios_dumper.Po"; else rm -f "$(DEPDIR)/bios_dumper-bios_dumper.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bios_dumper.c' object='bios_dumper-bios_dumper.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bios_dumper_CFLAGS) $(CFLAGS) -c -o bios_dumper-bios_dumper.o `test -f 'bios_dumper.c' || echo '$(srcdir)/'`bios_dumper.c
-
-bios_dumper-bios_dumper.obj: bios_dumper.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bios_dumper_CFLAGS) $(CFLAGS) -MT bios_dumper-bios_dumper.obj -MD -MP -MF "$(DEPDIR)/bios_dumper-bios_dumper.Tpo" -c -o bios_dumper-bios_dumper.obj `if test -f 'bios_dumper.c'; then $(CYGPATH_W) 'bios_dumper.c'; else $(CYGPATH_W) '$(srcdir)/bios_dumper.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/bios_dumper-bios_dumper.Tpo" "$(DEPDIR)/bios_dumper-bios_dumper.Po"; else rm -f "$(DEPDIR)/bios_dumper-bios_dumper.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bios_dumper.c' object='bios_dumper-bios_dumper.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bios_dumper_CFLAGS) $(CFLAGS) -c -o bios_dumper-bios_dumper.obj `if test -f 'bios_dumper.c'; then $(CYGPATH_W) 'bios_dumper.c'; else $(CYGPATH_W) '$(srcdir)/bios_dumper.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

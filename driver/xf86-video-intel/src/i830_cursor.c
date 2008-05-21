@@ -90,7 +90,7 @@ I830InitHWCursor(ScrnInfoPtr pScrn)
 {
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     I830Ptr		pI830 = I830PTR(pScrn);
-    CARD32		temp;
+    uint32_t		temp;
     int			i;
 
     DPRINTF(PFX, "I830InitHWCursor\n");
@@ -141,7 +141,7 @@ i830_crtc_load_cursor_image (xf86CrtcPtr crtc, unsigned char *src)
 {
     I830Ptr		pI830 = I830PTR(crtc->scrn);
     I830CrtcPrivatePtr	intel_crtc = crtc->driver_private;
-    CARD8		*pcurs;
+    uint8_t		*pcurs;
 
     pcurs = pI830->FbBase + intel_crtc->cursor_offset;
 
@@ -155,9 +155,9 @@ i830_crtc_load_cursor_argb (xf86CrtcPtr crtc, CARD32 *image)
 {
     I830Ptr		pI830 = I830PTR(crtc->scrn);
     I830CrtcPrivatePtr	intel_crtc = crtc->driver_private;
-    CARD32		*pcurs;
+    uint32_t		*pcurs;
 
-    pcurs = (CARD32 *) (pI830->FbBase + intel_crtc->cursor_argb_offset);
+    pcurs = (uint32_t *) (pI830->FbBase + intel_crtc->cursor_argb_offset);
 
     intel_crtc->cursor_is_argb = TRUE;
     memcpy (pcurs, image, I810_CURSOR_Y * I810_CURSOR_X * 4);
@@ -170,7 +170,7 @@ i830_crtc_set_cursor_position (xf86CrtcPtr crtc, int x, int y)
     ScrnInfoPtr		scrn = crtc->scrn;
     I830Ptr		pI830 = I830PTR(scrn);
     I830CrtcPrivatePtr	intel_crtc = I830CrtcPrivate(crtc);
-    CARD32		temp;
+    uint32_t		temp;
 
     temp = 0;
     if (x < 0) {
@@ -204,7 +204,7 @@ i830_crtc_show_cursor (xf86CrtcPtr crtc)
     I830Ptr		pI830 = I830PTR(scrn);
     I830CrtcPrivatePtr	intel_crtc = I830CrtcPrivate(crtc);
     int			pipe = intel_crtc->pipe;
-    CARD32		temp;
+    uint32_t		temp;
     int			cursor_control = (pipe == 0 ? CURSOR_A_CONTROL :
 					  CURSOR_B_CONTROL);
     
@@ -242,7 +242,7 @@ i830_crtc_hide_cursor (xf86CrtcPtr crtc)
     I830Ptr		pI830 = I830PTR(scrn);
     I830CrtcPrivatePtr	intel_crtc = I830CrtcPrivate(crtc);
     int			pipe = intel_crtc->pipe;
-    CARD32		temp;
+    uint32_t		temp;
     int			cursor_control = (pipe == 0 ? CURSOR_A_CONTROL :
 					  CURSOR_B_CONTROL);
     

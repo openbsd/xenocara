@@ -171,7 +171,6 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/mman.h>
 #include <errno.h>
 
 #include "xf86.h"
@@ -198,6 +197,14 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "i830_debug.h"
 #include "i830_bios.h"
 #include "i830_video.h"
+#if HAVE_SYS_MMAN_H && HAVE_MPROTECT
+#include <sys/mman.h>
+#endif
+
+#ifdef INTEL_XVMC
+#define _INTEL_XVMC_SERVER_
+#include "i830_hwmc.h"
+#endif
 
 #ifdef XF86DRI
 #include "dri.h"
@@ -292,13 +299,18 @@ typedef enum {
    OPTION_COLOR_KEY,
    OPTION_CHECKDEVICES,
    OPTION_MODEDEBUG,
+   OPTION_LVDS24BITMODE,
    OPTION_FBC,
    OPTION_TILING,
 #ifdef XF86DRI_MM
    OPTION_INTELTEXPOOL,
 #endif
+   OPTION_LVDSFIXEDMODE,
    OPTION_TRIPLEBUFFER,
-   OPTION_FORCEENABLEPIPEA
+   OPTION_FORCEENABLEPIPEA,
+#ifdef INTEL_XVMC
+   OPTION_XVMC,
+#endif
 } I830Opts;
 
 static OptionInfoRec I830Options[] = {
@@ -315,13 +327,18 @@ static OptionInfoRec I830Options[] = {
    {OPTION_VIDEO_KEY,	"VideoKey",	OPTV_INTEGER,	{0},	FALSE},
    {OPTION_CHECKDEVICES, "CheckDevices",OPTV_BOOLEAN,	{0},	FALSE},
    {OPTION_MODEDEBUG,	"ModeDebug",	OPTV_BOOLEAN,	{0},	FALSE},
+   {OPTION_LVDS24BITMODE, "LVDS24Bit",	OPTV_BOOLEAN,	{0},	FALSE},
    {OPTION_FBC,		"FramebufferCompression", OPTV_BOOLEAN, {0}, TRUE},
    {OPTION_TILING,	"Tiling",	OPTV_BOOLEAN,	{0},	TRUE},
 #ifdef XF86DRI_MM
    {OPTION_INTELTEXPOOL,"Legacy3D",     OPTV_BOOLEAN,	{0},	FALSE},
 #endif
+   {OPTION_LVDSFIXEDMODE, "LVDSFixedMode", OPTV_BOOLEAN,	{0},	FALSE},
    {OPTION_TRIPLEBUFFER, "TripleBuffer", OPTV_BOOLEAN,	{0},	FALSE},
    {OPTION_FORCEENABLEPIPEA, "ForceEnablePipeA", OPTV_BOOLEAN,	{0},	FALSE},
+#ifdef INTEL_XVMC
+   {OPTION_XVMC,	"XvMC",		OPTV_BOOLEAN,	{0},	TRUE},
+#endif
    {-1,			NULL,		OPTV_NONE,	{0},	FALSE}
 };
 /* *INDENT-ON* */
@@ -606,8 +623,8 @@ I830MapMMIO(ScrnInfoPtr pScrn)
     * time.
     */
    if (IS_I9XX(pI830)) {
-      CARD32   gttaddr;
-      
+      uint32_t gttaddr;
+
       if (IS_I965G(pI830)) 
       {
 	 if (IS_IGD_GM(pI830)) {
@@ -673,6 +690,13 @@ I830MapMem(ScrnInfoPtr pScrn)
    err = pci_device_map_range (device, pI830->LinearAddr, pI830->FbMapSize,
 			       PCI_DEV_MAP_FLAG_WRITABLE | PCI_DEV_MAP_FLAG_WRITE_COMBINE,
 			       (void **) &pI830->FbBase);
+    if (err)
+	return FALSE;
+    /* KLUDGE ALERT -- rewrite the PTEs to turn off the CD and WT bits */
+#if HAVE_MPROTECT
+    mprotect (pI830->FbBase, pI830->FbMapSize, PROT_NONE);
+    mprotect (pI830->FbBase, pI830->FbMapSize, PROT_READ|PROT_WRITE);
+#endif
 #else
    pI830->FbBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
 				 pI830->PciTag,
@@ -684,15 +708,6 @@ I830MapMem(ScrnInfoPtr pScrn)
    if (I830IsPrimary(pScrn) && pI830->LpRing->mem != NULL) {
       pI830->LpRing->virtual_start =
 	 pI830->FbBase + pI830->LpRing->mem->offset;
-   }
-
-   /* Mark the pages we haven't yet bound into AGP as inaccessible. */
-   if (pI830->FbMapSize > pI830->stolen_size) {
-      if (mprotect(pI830->FbBase + pI830->stolen_size,
-		   pI830->FbMapSize - pI830->stolen_size, PROT_NONE) != 0) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "Failed to mprotect unbound AGP: %s\n", strerror(errno));
-      }
    }
 
    return TRUE;
@@ -744,7 +759,7 @@ I830LoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
    xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
    int i,j, index;
    int p;
-   CARD16 lut_r[256], lut_g[256], lut_b[256];
+   uint16_t lut_r[256], lut_g[256], lut_b[256];
 
    DPRINTF(PFX, "I830LoadPalette: numColors: %d\n", numColors);
 
@@ -1026,7 +1041,7 @@ static void
 i830SetHotkeyControl(ScrnInfoPtr pScrn, int mode)
 {
    I830Ptr pI830 = I830PTR(pScrn);
-   CARD8 gr18;
+   uint8_t gr18;
 
    gr18 = pI830->readControl(pI830, GRX, 0x18);
    if (mode == HOTKEY_BIOS_SWITCH)
@@ -1034,6 +1049,211 @@ i830SetHotkeyControl(ScrnInfoPtr pScrn, int mode)
    else
       gr18 |= HOTKEY_VBIOS_SWITCH_BLOCK;
    pI830->writeControl(pI830, GRX, 0x18, gr18);
+}
+
+static Bool
+i830_detect_chipset(ScrnInfoPtr pScrn)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+    MessageType from = X_PROBED;
+    const char *chipname;
+    uint32_t capid;
+    int fb_bar, mmio_bar;
+
+    switch (DEVICE_ID(pI830->PciInfo)) {
+    case PCI_CHIP_I830_M:
+	chipname = "830M";
+	break;
+    case PCI_CHIP_845_G:
+	chipname = "845G";
+	break;
+    case PCI_CHIP_I855_GM:
+	/* Check capid register to find the chipset variant */
+#if XSERVER_LIBPCIACCESS
+	pci_device_cfg_read_u32 (pI830->PciInfo, &capid, I85X_CAPID);
+#else
+	capid = pciReadLong (pI830->PciTag, I85X_CAPID);
+#endif
+	pI830->variant = (capid >> I85X_VARIANT_SHIFT) & I85X_VARIANT_MASK;
+	switch (pI830->variant) {
+	case I855_GM:
+	    chipname = "855GM";
+	    break;
+	case I855_GME:
+	    chipname = "855GME";
+	    break;
+	case I852_GM:
+	    chipname = "852GM";
+	    break;
+	case I852_GME:
+	    chipname = "852GME";
+	    break;
+	default:
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		       "Unknown 852GM/855GM variant: 0x%x)\n", pI830->variant);
+	    chipname = "852GM/855GM (unknown variant)";
+	    break;
+	}
+	break;
+    case PCI_CHIP_I865_G:
+	chipname = "865G";
+	break;
+    case PCI_CHIP_I915_G:
+	chipname = "915G";
+	break;
+    case PCI_CHIP_E7221_G:
+	chipname = "E7221 (i915)";
+	break;
+    case PCI_CHIP_I915_GM:
+	chipname = "915GM";
+	break;
+    case PCI_CHIP_I945_G:
+	chipname = "945G";
+	break;
+    case PCI_CHIP_I945_GM:
+	chipname = "945GM";
+	break;
+    case PCI_CHIP_I945_GME:
+	chipname = "945GME";
+	break;
+    case PCI_CHIP_I965_G:
+	chipname = "965G";
+	break;
+    case PCI_CHIP_G35_G:
+	chipname = "G35";
+	break;
+    case PCI_CHIP_I965_Q:
+	chipname = "965Q";
+	break;
+    case PCI_CHIP_I946_GZ:
+	chipname = "946GZ";
+	break;
+    case PCI_CHIP_I965_GM:
+	chipname = "965GM";
+	break;
+    case PCI_CHIP_I965_GME:
+	chipname = "965GME/GLE";
+	break;
+    case PCI_CHIP_G33_G:
+	chipname = "G33";
+	break;
+    case PCI_CHIP_Q35_G:
+	chipname = "Q35";
+	break;
+    case PCI_CHIP_Q33_G:
+	chipname = "Q33";
+	break;
+    case PCI_CHIP_IGD_GM:
+	chipname = "Intel Integrated Graphics Device";
+	break;
+   default:
+	chipname = "unknown chipset";
+	break;
+    }
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+	       "Integrated Graphics Chipset: Intel(R) %s\n", chipname);
+
+    /* Set the Chipset and ChipRev, allowing config file entries to override. */
+    if (pI830->pEnt->device->chipset && *pI830->pEnt->device->chipset) {
+	pScrn->chipset = pI830->pEnt->device->chipset;
+	from = X_CONFIG;
+    } else if (pI830->pEnt->device->chipID >= 0) {
+	pScrn->chipset = (char *)xf86TokenToString(I830Chipsets,
+						   pI830->pEnt->device->chipID);
+	from = X_CONFIG;
+	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ChipID override: 0x%04X\n",
+		   pI830->pEnt->device->chipID);
+	DEVICE_ID(pI830->PciInfo) = pI830->pEnt->device->chipID;
+    } else {
+	from = X_PROBED;
+	pScrn->chipset = (char *)xf86TokenToString(I830Chipsets,
+						   DEVICE_ID(pI830->PciInfo));
+    }
+
+    if (pI830->pEnt->device->chipRev >= 0) {
+	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ChipRev override: %d\n",
+		   pI830->pEnt->device->chipRev);
+    }
+
+    xf86DrvMsg(pScrn->scrnIndex, from, "Chipset: \"%s\"\n",
+	       (pScrn->chipset != NULL) ? pScrn->chipset : "Unknown i8xx");
+
+    /* Now that we know the chipset, figure out the resource base addrs */
+    if (IS_I9XX(pI830)) {
+	fb_bar = 2;
+	mmio_bar = 0;
+    } else {
+	fb_bar = 0;
+	mmio_bar = 1;
+    }
+
+    if (pI830->pEnt->device->MemBase != 0) {
+	pI830->LinearAddr = pI830->pEnt->device->MemBase;
+	from = X_CONFIG;
+    } else {
+	pI830->LinearAddr = I810_MEMBASE (pI830->PciInfo, fb_bar);
+	if (pI830->LinearAddr == 0) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "No valid FB address in PCI config space\n");
+	    PreInitCleanup(pScrn);
+	    return FALSE;
+	}
+    }
+
+    xf86DrvMsg(pScrn->scrnIndex, from, "Linear framebuffer at 0x%lX\n",
+	       (unsigned long)pI830->LinearAddr);
+
+    if (pI830->pEnt->device->IOBase != 0) {
+	pI830->MMIOAddr = pI830->pEnt->device->IOBase;
+	from = X_CONFIG;
+    } else {
+	pI830->MMIOAddr = I810_MEMBASE (pI830->PciInfo, mmio_bar);
+	if (pI830->MMIOAddr == 0) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "No valid MMIO address in PCI config space\n");
+	    PreInitCleanup(pScrn);
+	    return FALSE;
+	}
+    }
+
+    xf86DrvMsg(pScrn->scrnIndex, from, "IO registers at addr 0x%lX\n",
+	       (unsigned long)pI830->MMIOAddr);
+
+    /* Now figure out mapsize on 8xx chips */
+    if (IS_I830(pI830) || IS_845G(pI830)) {
+#if XSERVER_LIBPCIACCESS
+	uint16_t		gmch_ctrl;
+	struct pci_device *bridge;
+
+	bridge = intel_host_bridge ();
+	pci_device_cfg_read_u16 (bridge, &gmch_ctrl, I830_GMCH_CTRL);
+#else
+	PCITAG bridge;
+	uint16_t gmch_ctrl;
+
+	bridge = pciTag(0, 0, 0);		/* This is always the host bridge */
+	gmch_ctrl = pciReadWord(bridge, I830_GMCH_CTRL);
+#endif
+	if ((gmch_ctrl & I830_GMCH_MEM_MASK) == I830_GMCH_MEM_128M) {
+	    pI830->FbMapSize = 0x8000000;
+	} else {
+	    pI830->FbMapSize = 0x4000000; /* 64MB - has this been tested ?? */
+	}
+    } else {
+	if (IS_I9XX(pI830)) {
+#if XSERVER_LIBPCIACCESS
+	    pI830->FbMapSize = pI830->PciInfo->regions[fb_bar].size;
+#else
+	    pI830->FbMapSize = 1UL << pciGetBaseSize(pI830->PciTag, 2, TRUE,
+						     NULL);
+#endif
+	} else {
+	    /* 128MB aperture for later i8xx series. */
+	    pI830->FbMapSize = 0x8000000;
+	}
+    }
+
+    return TRUE;
 }
 
 /**
@@ -1057,11 +1277,8 @@ I830PreInit(ScrnInfoPtr pScrn, int flags)
    int i;
    char *s;
    pointer pVBEModule = NULL;
-   const char *chipname;
    int num_pipe;
    int max_width, max_height;
-   uint32_t	capid;
-   int fb_bar, mmio_bar;
 
    if (pScrn->numEntities != 1)
       return FALSE;
@@ -1195,172 +1412,26 @@ I830PreInit(ScrnInfoPtr pScrn, int flags)
       pI830->debug_modes = FALSE;
    }
 
+   if (xf86ReturnOptValBool(pI830->Options, OPTION_LVDS24BITMODE, FALSE)) {
+      pI830->lvds_24_bit_mode = TRUE;
+   } else {
+      pI830->lvds_24_bit_mode = FALSE;
+   }
+
+   if (xf86ReturnOptValBool(pI830->Options, OPTION_LVDSFIXEDMODE, TRUE)) {
+      pI830->lvds_fixed_mode = TRUE;
+   } else {
+      pI830->lvds_fixed_mode = FALSE;
+   }
+
    if (xf86ReturnOptValBool(pI830->Options, OPTION_FORCEENABLEPIPEA, FALSE))
        pI830->quirk_flag |= QUIRK_PIPEA_FORCE;
 
    /* We have to use PIO to probe, because we haven't mapped yet. */
    I830SetPIOAccess(pI830);
 
-   switch (DEVICE_ID(pI830->PciInfo)) {
-   case PCI_CHIP_I830_M:
-      chipname = "830M";
-      break;
-   case PCI_CHIP_845_G:
-      chipname = "845G";
-      break;
-   case PCI_CHIP_I855_GM:
-      /* Check capid register to find the chipset variant */
-#if XSERVER_LIBPCIACCESS
-      pci_device_cfg_read_u32 (pI830->PciInfo, &capid, I85X_CAPID);
-#else
-      capid = pciReadLong (pI830->PciTag, I85X_CAPID);
-#endif
-      pI830->variant = (capid >> I85X_VARIANT_SHIFT) & I85X_VARIANT_MASK;
-      switch (pI830->variant) {
-      case I855_GM:
-	 chipname = "855GM";
-	 break;
-      case I855_GME:
-	 chipname = "855GME";
-	 break;
-      case I852_GM:
-	 chipname = "852GM";
-	 break;
-      case I852_GME:
-	 chipname = "852GME";
-	 break;
-      default:
-	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		    "Unknown 852GM/855GM variant: 0x%x)\n", pI830->variant);
-	 chipname = "852GM/855GM (unknown variant)";
-	 break;
-      }
-      break;
-   case PCI_CHIP_I865_G:
-      chipname = "865G";
-      break;
-   case PCI_CHIP_I915_G:
-      chipname = "915G";
-      break;
-   case PCI_CHIP_E7221_G:
-      chipname = "E7221 (i915)";
-      break;
-   case PCI_CHIP_I915_GM:
-      chipname = "915GM";
-      break;
-   case PCI_CHIP_I945_G:
-      chipname = "945G";
-      break;
-   case PCI_CHIP_I945_GM:
-      chipname = "945GM";
-      break;
-   case PCI_CHIP_I945_GME:
-      chipname = "945GME";
-      break;
-   case PCI_CHIP_I965_G:
-      chipname = "965G";
-      break;
-   case PCI_CHIP_G35_G:
-      chipname = "G35";
-      break;
-   case PCI_CHIP_I965_Q:
-      chipname = "965Q";
-      break;
-   case PCI_CHIP_I946_GZ:
-      chipname = "946GZ";
-      break;
-   case PCI_CHIP_I965_GM:
-      chipname = "965GM";
-      break;
-   case PCI_CHIP_I965_GME:
-      chipname = "965GME/GLE";
-      break;
-   case PCI_CHIP_G33_G:
-      chipname = "G33";
-      break;
-   case PCI_CHIP_Q35_G:
-      chipname = "Q35";
-      break;
-   case PCI_CHIP_Q33_G:
-      chipname = "Q33";
-      break;
-   case PCI_CHIP_IGD_GM:
-      chipname = "Intel Integrated Graphics Device";
-      break;
-   default:
-      chipname = "unknown chipset";
-      break;
-   }
-   xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-	      "Integrated Graphics Chipset: Intel(R) %s\n", chipname);
-
-   /* Set the Chipset and ChipRev, allowing config file entries to override. */
-   if (pI830->pEnt->device->chipset && *pI830->pEnt->device->chipset) {
-      pScrn->chipset = pI830->pEnt->device->chipset;
-      from = X_CONFIG;
-   } else if (pI830->pEnt->device->chipID >= 0) {
-      pScrn->chipset = (char *)xf86TokenToString(I830Chipsets,
-						 pI830->pEnt->device->chipID);
-      from = X_CONFIG;
-      xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ChipID override: 0x%04X\n",
-		 pI830->pEnt->device->chipID);
-      DEVICE_ID(pI830->PciInfo) = pI830->pEnt->device->chipID;
-   } else {
-      from = X_PROBED;
-      pScrn->chipset = (char *)xf86TokenToString(I830Chipsets,
-						 DEVICE_ID(pI830->PciInfo));
-   }
-
-   if (pI830->pEnt->device->chipRev >= 0) {
-      xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ChipRev override: %d\n",
-		 pI830->pEnt->device->chipRev);
-   }
-
-   xf86DrvMsg(pScrn->scrnIndex, from, "Chipset: \"%s\"\n",
-	      (pScrn->chipset != NULL) ? pScrn->chipset : "Unknown i8xx");
-
-   if (IS_I9XX(pI830))
-   {
-      fb_bar = 2;
-      mmio_bar = 0;
-   }
-   else
-   {
-      fb_bar = 0;
-      mmio_bar = 1;
-   }
-
-   if (pI830->pEnt->device->MemBase != 0) {
-      pI830->LinearAddr = pI830->pEnt->device->MemBase;
-      from = X_CONFIG;
-   } else {
-      pI830->LinearAddr = I810_MEMBASE (pI830->PciInfo, fb_bar);
-      if (pI830->LinearAddr == 0) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "No valid FB address in PCI config space\n");
-	 PreInitCleanup(pScrn);
-	 return FALSE;
-      }
-   }
-
-   xf86DrvMsg(pScrn->scrnIndex, from, "Linear framebuffer at 0x%lX\n",
-	      (unsigned long)pI830->LinearAddr);
-
-   if (pI830->pEnt->device->IOBase != 0) {
-      pI830->MMIOAddr = pI830->pEnt->device->IOBase;
-      from = X_CONFIG;
-   } else {
-      pI830->MMIOAddr = I810_MEMBASE (pI830->PciInfo, mmio_bar);
-      if (pI830->MMIOAddr == 0) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "No valid MMIO address in PCI config space\n");
-	 PreInitCleanup(pScrn);
-	 return FALSE;
-      }
-   }
-
-   xf86DrvMsg(pScrn->scrnIndex, from, "IO registers at addr 0x%lX\n",
-	      (unsigned long)pI830->MMIOAddr);
+   if (!i830_detect_chipset(pScrn))
+       return FALSE;
 
    /* check quirks */
    i830_fixup_devices(pScrn);
@@ -1379,39 +1450,6 @@ I830PreInit(ScrnInfoPtr pScrn, int flags)
       max_height = 2048;
    }
    xf86CrtcSetSizeRange (pScrn, 320, 200, max_width, max_height);
-
-   if (IS_I830(pI830) || IS_845G(pI830)) {
-#if XSERVER_LIBPCIACCESS
-      uint16_t		gmch_ctrl;
-      struct pci_device *bridge;
-
-      bridge = intel_host_bridge ();
-      pci_device_cfg_read_u16 (bridge, &gmch_ctrl, I830_GMCH_CTRL);
-#else
-      PCITAG bridge;
-      CARD16 gmch_ctrl;
-
-      bridge = pciTag(0, 0, 0);		/* This is always the host bridge */
-      gmch_ctrl = pciReadWord(bridge, I830_GMCH_CTRL);
-#endif
-      if ((gmch_ctrl & I830_GMCH_MEM_MASK) == I830_GMCH_MEM_128M) {
-	 pI830->FbMapSize = 0x8000000;
-      } else {
-	 pI830->FbMapSize = 0x4000000; /* 64MB - has this been tested ?? */
-      }
-   } else {
-      if (IS_I9XX(pI830)) {
-#if XSERVER_LIBPCIACCESS
-	 pI830->FbMapSize = pI830->PciInfo->regions[fb_bar].size;
-#else
-	 pI830->FbMapSize = 1UL << pciGetBaseSize(pI830->PciTag, 2, TRUE,
-						  NULL);
-#endif
-      } else {
-	 /* 128MB aperture for later i8xx series. */
-	 pI830->FbMapSize = 0x8000000;
-      }
-   }
 
    /* Some of the probing needs MMIO access, so map it here. */
    I830MapMMIO(pScrn);
@@ -1468,7 +1506,7 @@ I830PreInit(ScrnInfoPtr pScrn, int flags)
        pI830->useEXA = TRUE;
 #endif
 #if defined(I830_USE_XAA) && defined(I830_USE_EXA)
-       int from = X_DEFAULT;
+       from = X_DEFAULT;
        if ((s = (char *)xf86GetOptValString(pI830->Options,
 					    OPTION_ACCELMETHOD))) {
 	   if (!xf86NameCmp(s, "EXA")) {
@@ -1607,6 +1645,15 @@ I830PreInit(ScrnInfoPtr pScrn, int flags)
 
    xf86DrvMsg(pScrn->scrnIndex, from, "Triple buffering %sabled\n",
 	      pI830->TripleBuffer ? "en" : "dis");
+#endif
+
+#ifdef INTEL_XVMC
+   pI830->XvMCEnabled = FALSE;
+   from =  (!pI830->directRenderingDisabled &&
+	    xf86GetOptValBool(pI830->Options, OPTION_XVMC,
+			      &pI830->XvMCEnabled)) ? X_CONFIG : X_DEFAULT;
+   xf86DrvMsg(pScrn->scrnIndex, from, "Intel XvMC decoder %sabled\n",
+	   pI830->XvMCEnabled ? "en" : "dis");
 #endif
 
    /*
@@ -1994,6 +2041,13 @@ SaveHWState(ScrnInfoPtr pScrn)
    pI830->saveVCLK_POST_DIV = INREG(VCLK_POST_DIV);
    pI830->saveVGACNTRL = INREG(VGACNTRL);
 
+   pI830->saveCURSOR_A_CONTROL = INREG(CURSOR_A_CONTROL);
+   pI830->saveCURSOR_A_POSITION = INREG(CURSOR_A_POSITION);
+   pI830->saveCURSOR_A_BASE = INREG(CURSOR_A_BASE);
+   pI830->saveCURSOR_B_CONTROL = INREG(CURSOR_B_CONTROL);
+   pI830->saveCURSOR_B_POSITION = INREG(CURSOR_B_POSITION);
+   pI830->saveCURSOR_B_BASE = INREG(CURSOR_B_BASE);
+
    for(i = 0; i < 7; i++) {
       pI830->saveSWF[i] = INREG(SWF0 + (i << 2));
       pI830->saveSWF[i+7] = INREG(SWF00 + (i << 2));
@@ -2195,6 +2249,20 @@ RestoreHWState(ScrnInfoPtr pScrn)
 
    OUTREG(VGACNTRL, pI830->saveVGACNTRL);
 
+   /*
+    * Restore cursors
+    * Even though the X cursor is hidden before we restore the hw state,
+    * we probably only disabled one cursor plane.  If we're going from
+    * e.g. plane b to plane a here in RestoreHWState, we need to restore
+    * both cursor plane settings.
+    */
+   OUTREG(CURSOR_A_POSITION, pI830->saveCURSOR_A_POSITION);
+   OUTREG(CURSOR_A_BASE, pI830->saveCURSOR_A_BASE);
+   OUTREG(CURSOR_A_CONTROL, pI830->saveCURSOR_A_CONTROL);
+   OUTREG(CURSOR_B_POSITION, pI830->saveCURSOR_B_POSITION);
+   OUTREG(CURSOR_B_BASE, pI830->saveCURSOR_B_BASE);
+   OUTREG(CURSOR_B_CONTROL, pI830->saveCURSOR_B_CONTROL);
+
    /* Restore outputs */
    for (i = 0; i < xf86_config->num_output; i++) {
       xf86OutputPtr   output = xf86_config->output[i];
@@ -2306,7 +2374,7 @@ void
 IntelEmitInvarientState(ScrnInfoPtr pScrn)
 {
    I830Ptr pI830 = I830PTR(pScrn);
-   CARD32 ctx_addr;
+   uint32_t ctx_addr;
 
    if (pI830->noAccel)
       return;
@@ -2330,12 +2398,12 @@ IntelEmitInvarientState(ScrnInfoPtr pScrn)
    ctx_addr = pI830->logical_context->offset;
    assert((pI830->logical_context->offset & 2047) == 0);
    {
-      BEGIN_LP_RING(2);
-      OUT_RING(MI_SET_CONTEXT);
-      OUT_RING(pI830->logical_context->offset |
-	       CTXT_NO_RESTORE |
-	       CTXT_PALETTE_SAVE_DISABLE | CTXT_PALETTE_RESTORE_DISABLE);
-      ADVANCE_LP_RING();
+      BEGIN_BATCH(2);
+      OUT_BATCH(MI_SET_CONTEXT);
+      OUT_BATCH(pI830->logical_context->offset |
+		CTXT_NO_RESTORE |
+		CTXT_PALETTE_SAVE_DISABLE | CTXT_PALETTE_RESTORE_DISABLE);
+      ADVANCE_BATCH();
    }
 
    if (!IS_I965G(pI830))
@@ -2362,7 +2430,195 @@ I830BlockHandler(int i,
     pI830->BlockHandler = pScreen->BlockHandler;
     pScreen->BlockHandler = I830BlockHandler;
 
+    /* Emit a flush of the rendering cache, or on the 965 and beyond
+     * rendering results may not hit the framebuffer until significantly
+     * later.  In the direct rendering case this is already done just
+     * after the page flipping updates, so there's no need to duplicate
+     * the effort here.
+     */
+    if (pScrn->vtSema && !pI830->noAccel && !pI830->directRenderingEnabled)
+	I830EmitFlush(pScrn);
+
     I830VideoBlockHandler(i, blockData, pTimeout, pReadmask);
+}
+
+static void
+i830_fixup_mtrrs(ScrnInfoPtr pScrn)
+{
+#ifdef HAS_MTRR_SUPPORT
+    I830Ptr pI830 = I830PTR(pScrn);
+    int fd;
+    struct mtrr_gentry gentry;
+    struct mtrr_sentry sentry;
+
+    if ( ( fd = open ("/proc/mtrr", O_RDONLY, 0) ) != -1 ) {
+	for (gentry.regnum = 0; ioctl (fd, MTRRIOC_GET_ENTRY, &gentry) == 0;
+		++gentry.regnum) {
+
+	    if (gentry.size < 1) {
+		/* DISABLED */
+		continue;
+	    }
+
+	    /* Check the MTRR range is one we like and if not - remove it.
+	     * The Xserver common layer will then setup the right range
+	     * for us.
+	     */
+	    if (gentry.base == pI830->LinearAddr && 
+		    gentry.size < pI830->FbMapSize) {
+
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+			"Removing bad MTRR range (base 0x%lx, size 0x%x)\n",
+			gentry.base, gentry.size);
+
+		sentry.base = gentry.base;
+		sentry.size = gentry.size;
+		sentry.type = gentry.type;
+
+		if (ioctl (fd, MTRRIOC_DEL_ENTRY, &sentry) == -1) {
+		    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			    "Failed to remove bad MTRR range\n");
+		}
+	    }
+	}
+	close(fd);
+    }
+#endif
+}
+
+static Bool
+i830_try_memory_allocation(ScrnInfoPtr pScrn)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+    Bool tiled = pI830->tiling;
+    Bool dri = pI830->directRenderingEnabled;
+
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+	    "Attempting memory allocation with %stiled buffers.\n",
+	    tiled ? "" : "un");
+
+    if (!i830_allocate_2d_memory(pScrn))
+	goto failed;
+
+    if (dri && !i830_allocate_3d_memory(pScrn))
+	goto failed;
+
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "%siled allocation successful.\n",
+	    tiled ? "T" : "Unt");
+    return TRUE;
+
+failed:
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "%siled allocation failed.\n",
+	    tiled ? "T" : "Unt");
+    return FALSE;
+}
+
+/*
+ * Try to allocate memory in several ways:
+ *  1) If direct rendering is enabled, try to allocate enough memory for tiled
+ *     surfaces by rounding up the display width to a tileable one.
+ *  2) If that fails or the allocations themselves fail, try again with untiled
+ *     allocations (if this works DRI will stay enabled).
+ *  3) And if all else fails, disable DRI and try just 2D allocations.
+ *  4) Give up and fail ScreenInit.
+ */
+static Bool
+i830_memory_init(ScrnInfoPtr pScrn)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+    int savedDisplayWidth = pScrn->displayWidth;
+    int i;
+    Bool tiled = FALSE;
+
+    /*
+     * Adjust the display width to allow for front buffer tiling if possible
+     */
+    if (pI830->tiling) {
+	if (IS_I965G(pI830)) {
+	    int tile_pixels = 512 / pI830->cpp;
+	    pScrn->displayWidth = (pScrn->displayWidth + tile_pixels - 1) &
+		~(tile_pixels - 1);
+	    tiled = TRUE;
+	} else {
+	    /* Good pitches to allow tiling.  Don't care about pitches < 1024
+	     * pixels.
+	     */
+	    static const int pitches[] = {
+		1024,
+		2048,
+		4096,
+		8192,
+		0
+	    };
+
+	    for (i = 0; pitches[i] != 0; i++) {
+		if (pitches[i] >= pScrn->displayWidth) {
+		    pScrn->displayWidth = pitches[i];
+		    tiled = TRUE;
+		    break;
+		}
+	    }
+	}
+    }
+    /* Set up our video memory allocator for the chosen videoRam */
+    if (!i830_allocator_init(pScrn, 0, pScrn->videoRam * KB(1))) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		"Couldn't initialize video memory allocator\n");
+	PreInitCleanup(pScrn);
+	return FALSE;
+    }
+
+    xf86DrvMsg(pScrn->scrnIndex,
+	    pI830->pEnt->device->videoRam ? X_CONFIG : X_DEFAULT,
+	    "VideoRam: %d KB\n", pScrn->videoRam);
+
+    if (xf86GetOptValInteger(pI830->Options, OPTION_CACHE_LINES,
+		&(pI830->CacheLines))) {
+	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Requested %d cache lines\n",
+		pI830->CacheLines);
+    } else {
+	pI830->CacheLines = -1;
+    }
+
+    /* Tiled first if we got a good displayWidth */
+    if (tiled) {
+	if (i830_try_memory_allocation(pScrn))
+	    return TRUE;
+	else {
+	    i830_reset_allocations(pScrn);
+	    pI830->tiling = FALSE;
+	}
+    }
+
+    /* If tiling fails we have to disable page flipping & FBC */
+    pScrn->displayWidth = savedDisplayWidth;
+    if (pI830->allowPageFlip)
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		"Couldn't allocate tiled memory, page flipping "
+		"disabled\n");
+    pI830->allowPageFlip = FALSE;
+    if (pI830->fb_compression)
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		"Couldn't allocate tiled memory, fb compression "
+		"disabled\n");
+    pI830->fb_compression = FALSE;
+
+    /* Try again, but leave DRI enabled */
+    if (pI830->directRenderingEnabled) {
+	if (i830_try_memory_allocation(pScrn))
+	    return TRUE;
+	else {
+	    i830_reset_allocations(pScrn);
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Couldn't allocate 3D memory, "
+		    "disabling DRI.\n");
+	    pI830->directRenderingEnabled = FALSE;
+	}
+    }
+
+    if (i830_try_memory_allocation(pScrn))
+	return TRUE;
+
+    return FALSE;
 }
 
 static Bool
@@ -2374,8 +2630,7 @@ I830ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
    VisualPtr visual;
    I830Ptr pI8301 = NULL;
    unsigned long sys_mem;
-   int i, c;
-   Bool allocation_done = FALSE;
+   int c;
    MessageType from;
 #ifdef XF86DRI
    xf86CrtcConfigPtr config;
@@ -2473,12 +2728,13 @@ I830ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
       pScrn->videoRam &= ~3;
    }
 
-#ifdef XF86DRI
-   /* Check for appropriate bpp and module support to initialize DRI. */
-   if (!I830CheckDRIAvailable(pScrn)) {
+   if (!IS_I965G(pI830) && pScrn->displayWidth > 2048) {
+      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		 "Cannot support DRI with frame buffer width > 2048.\n");
       pI830->directRenderingDisabled = TRUE;
    }
 
+#ifdef XF86DRI
    /* If DRI hasn't been explicitly disabled, try to initialize it.
     * It will be used by the memory allocator.
     */
@@ -2489,26 +2745,6 @@ I830ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 #else
    pI830->directRenderingEnabled = FALSE;
 #endif
-
-   /* Set up our video memory allocator for the chosen videoRam */
-   if (!i830_allocator_init(pScrn, 0, pScrn->videoRam * KB(1))) {
-      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		 "Couldn't initialize video memory allocator\n");
-      PreInitCleanup(pScrn);
-      return FALSE;
-   }
-
-   xf86DrvMsg(pScrn->scrnIndex,
-	      pI830->pEnt->device->videoRam ? X_CONFIG : X_DEFAULT,
-	      "VideoRam: %d KB\n", pScrn->videoRam);
-
-   if (xf86GetOptValInteger(pI830->Options, OPTION_CACHE_LINES,
-			    &(pI830->CacheLines))) {
-      xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Requested %d cache lines\n",
-		 pI830->CacheLines);
-   } else {
-      pI830->CacheLines = -1;
-   }
 
    /* Enable tiling by default */
    pI830->tiling = TRUE;
@@ -2567,16 +2803,6 @@ I830ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
       pI830->last_3d = pI8301->last_3d;
    }
 
-   /* Need MMIO mapped to do GTT lookups during memory allocation. */
-   I830MapMMIO(pScrn);
-
-#if defined(XF86DRI)
-   /*
-    * If DRI is potentially usable, check if there is enough memory available
-    * for it, and if there's also enough to allow tiling to be enabled.
-    */
-
-
 #ifdef I830_XV
     /*
      * Set this so that the overlay allocation is factored in when
@@ -2585,150 +2811,19 @@ I830ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     pI830->XvEnabled = !pI830->XvDisabled;
 #endif
 
-   if (pI830->directRenderingEnabled) {
-      int savedDisplayWidth = pScrn->displayWidth;
-      Bool tiled = FALSE;
 
-      if (IS_I965G(pI830)) {
-	 int tile_pixels = 512 / pI830->cpp;
-	 pScrn->displayWidth = (pScrn->displayWidth + tile_pixels - 1) &
-	    ~(tile_pixels - 1);
-	 tiled = TRUE;
-      } else {
-	 /* Good pitches to allow tiling.  Don't care about pitches < 1024
-	  * pixels.
-	  */
-	 static const int pitches[] = {
-	    1024,
-	    2048,
-	    4096,
-	    8192,
-	    0
-	 };
+   /* Need MMIO mapped to do GTT lookups during memory allocation. */
+   I830MapMMIO(pScrn);
 
-	 for (i = 0; pitches[i] != 0; i++) {
-	    if (pitches[i] >= pScrn->displayWidth) {
-	       pScrn->displayWidth = pitches[i];
-	       tiled = TRUE;
-	       break;
-	    }
-	 }
-      }
-
-      /* Attempt two rounds of allocation to get 2d and 3d memory to fit:
-       *
-       * 0: untiled
-       * 1: tiled
-       */
-
-#define MM_TURNS 2
-      for (i = 0; i < MM_TURNS; i++) {
-	 if (!tiled && i == 0)
-	    continue;
-
-	 if (i >= 1) {
-	    /* For further allocations, disable tiling */
-	    pI830->tiling = FALSE;
-	    pScrn->displayWidth = savedDisplayWidth;
-	    if (pI830->allowPageFlip)
-	       xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-			  "Couldn't allocate tiled memory, page flipping "
-			  "disabled\n");
-	    pI830->allowPageFlip = FALSE;
-	    if (pI830->fb_compression)
-	       xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-			  "Couldn't allocate tiled memory, fb compression "
-			  "disabled\n");
-	    pI830->fb_compression = FALSE;
-	 }
-
-	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		    "Attempting memory allocation with %s buffers.\n",
-		    (i & 1) ? "untiled" : "tiled");
-
-	 if (i830_allocate_2d_memory(pScrn) &&
-	     i830_allocate_3d_memory(pScrn))
-	 {
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Success.\n");
-	    if (pScrn->displayWidth != savedDisplayWidth) {
-	       xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-			  "Increasing the scanline pitch to allow tiling mode "
-			  "(%d -> %d).\n",
-			  savedDisplayWidth, pScrn->displayWidth);
-	    }
-	    allocation_done = TRUE;
-	    break;
-	 }
-
-	 i830_reset_allocations(pScrn);
-      }
-
-      if (i == MM_TURNS) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		    "Not enough video memory.  Disabling DRI.\n");
-	 pI830->directRenderingEnabled = FALSE;
-      }
-   }
-#endif
-
-   if (!allocation_done) {
-      if (!i830_allocate_2d_memory(pScrn)) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		    "Couldn't allocate video memory\n");
-	 return FALSE;
-      }
-      allocation_done = TRUE;
+   if (!i830_memory_init(pScrn)) {
+       xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+	       "Couldn't allocate video memory\n");
+       return FALSE;
    }
 
    I830UnmapMMIO(pScrn);
 
-   if (!IS_I965G(pI830) && pScrn->displayWidth > 2048) {
-      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		 "Cannot support DRI with frame buffer width > 2048.\n");
-      pI830->tiling = FALSE;
-      pI830->directRenderingEnabled = FALSE;
-   }
-
-#ifdef HAS_MTRR_SUPPORT
-   {
-      int fd;
-      struct mtrr_gentry gentry;
-      struct mtrr_sentry sentry;
-
-      if ( ( fd = open ("/proc/mtrr", O_RDONLY, 0) ) != -1 ) {
-         for (gentry.regnum = 0; ioctl (fd, MTRRIOC_GET_ENTRY, &gentry) == 0;
-	      ++gentry.regnum) {
-
-	    if (gentry.size < 1) {
-	       /* DISABLED */
-	       continue;
-	    }
-
-            /* Check the MTRR range is one we like and if not - remove it.
-             * The Xserver common layer will then setup the right range
-             * for us.
-             */
-	    if (gentry.base == pI830->LinearAddr && 
-	        gentry.size < pI830->FbMapSize) {
-
-               xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		  "Removing bad MTRR range (base 0x%lx, size 0x%x)\n",
-		  gentry.base, gentry.size);
-
-    	       sentry.base = gentry.base;
-               sentry.size = gentry.size;
-               sentry.type = gentry.type;
-
-               if (ioctl (fd, MTRRIOC_DEL_ENTRY, &sentry) == -1) {
-                  xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		     "Failed to remove bad MTRR range\n");
-               }
-	    }
-         }
-         close(fd);
-      }
-   }
-#endif
+   i830_fixup_mtrrs(pScrn);
 
    pI830->starting = TRUE;
 
@@ -2775,7 +2870,7 @@ I830ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		    "needs 2D acceleration.\n");
 	 pI830->XvEnabled = FALSE;
       }
-      if (!IS_I9XX(pI830) && pI830->overlay_regs == NULL) {
+      if (!IS_IGD_GM(pI830) && pI830->overlay_regs == NULL) {
 	  xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		     "Disabling Xv because the overlay register buffer "
 		      "allocation failed.\n");
@@ -3049,6 +3144,12 @@ i830AdjustFrame(int scrnIndex, int x, int y, int flags)
 static void
 I830FreeScreen(int scrnIndex, int flags)
 {
+#ifdef INTEL_XVMC
+    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    I830Ptr pI830 = I830PTR(pScrn);
+    if (pI830 && pI830->XvMCEnabled)
+	intel_xvmc_finish(xf86Screens[scrnIndex]);
+#endif
    I830FreeRec(xf86Screens[scrnIndex]);
    if (xf86LoaderCheckSymbol("vgaHWFreeHWRec"))
       vgaHWFreeHWRec(xf86Screens[scrnIndex]);
@@ -3059,6 +3160,10 @@ I830LeaveVT(int scrnIndex, int flags)
 {
    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
    I830Ptr pI830 = I830PTR(pScrn);
+   xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
+#ifndef HAVE_FREE_SHADOW
+   int o;
+#endif
 
    DPRINTF(PFX, "Leave VT\n");
 
@@ -3084,6 +3189,21 @@ I830LeaveVT(int scrnIndex, int flags)
       I830DRISetVBlankInterrupt (pScrn, FALSE);
       drmCtlUninstHandler(pI830->drmSubFD);
    }
+#endif
+
+#ifndef HAVE_FREE_SHADOW
+   for (o = 0; o < config->num_crtc; o++) {
+       xf86CrtcPtr crtc = config->crtc[o];
+
+       if (crtc->rotatedPixmap || crtc->rotatedData) {
+	   crtc->funcs->shadow_destroy(crtc, crtc->rotatedPixmap,
+				crtc->rotatedData);
+	   crtc->rotatedPixmap = NULL;
+	   crtc->rotatedData = NULL;
+       }
+   }
+#else
+   xf86RotateFreeShadow(pScrn);
 #endif
 
    xf86_hide_cursors (pScrn);
@@ -3123,8 +3243,6 @@ I830EnterVT(int scrnIndex, int flags)
 {
    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
    I830Ptr  pI830 = I830PTR(pScrn);
-   xf86CrtcConfigPtr	config = XF86_CRTC_CONFIG_PTR(pScrn);
-   int o;
 
    DPRINTF(PFX, "Enter VT\n");
 
@@ -3170,11 +3288,6 @@ I830EnterVT(int scrnIndex, int flags)
    /* Clear the framebuffer */
    memset(pI830->FbBase + pScrn->fbOffset, 0,
 	  pScrn->virtualY * pScrn->displayWidth * pI830->cpp);
-
-   for (o = 0; o < config->num_output; o++) {
-   	xf86OutputPtr  output = config->output[o];
-	output->funcs->dpms(output, DPMSModeOff);
-   }
 
    if (!xf86SetDesiredModes (pScrn))
       return FALSE;
@@ -3434,12 +3547,32 @@ I830PMEvent(int scrnIndex, pmEvent event, Bool undo)
 
       I830CheckDevicesTimer(NULL, 0, pScrn);
       SaveScreens(SCREEN_SAVER_FORCER, ScreenSaverReset);
+      if (pI830->quirk_flag & QUIRK_RESET_MODES)
+	 xf86SetDesiredModes(pScrn);
+
       break;
    default:
       ErrorF("I830PMEvent: received APM event %d\n", event);
    }
    return TRUE;
 }
+
+xf86CrtcPtr
+i830_pipe_to_crtc(ScrnInfoPtr pScrn, int pipe)
+{
+   xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR (pScrn);
+   int c;
+   
+   for (c = 0; c < config->num_crtc; c++) {
+      xf86CrtcPtr crtc = config->crtc[c];
+      I830CrtcPrivatePtr intel_crtc = crtc->driver_private;
+
+      if (intel_crtc->pipe == pipe)
+	  return crtc;
+   }
+
+   return NULL;
+} 
 
 #if 0
 /**
@@ -3482,7 +3615,7 @@ I830CheckDevicesTimer(OsTimerPtr timer, CARD32 now, pointer arg)
 {
    ScrnInfoPtr pScrn = (ScrnInfoPtr) arg;
    I830Ptr pI830 = I830PTR(pScrn);
-   CARD8 gr18;
+   uint8_t gr18;
 
    if (!pScrn->vtSema)
       return 1000;

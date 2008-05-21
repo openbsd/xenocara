@@ -360,6 +360,16 @@
 #define S2_TEXCOORD_FMT(unit, type)    ((type)<<(unit*4))
 #define S2_TEXCOORD_NONE               (~0)
 
+#define TEXCOORD_WRAP_SHORTEST_TCX	8
+#define TEXCOORD_WRAP_SHORTEST_TCY	4
+#define TEXCOORD_WRAP_SHORTEST_TCZ	2
+#define TEXCOORD_PERSPECTIVE_DISABLE	1
+
+#define S3_WRAP_SHORTEST_TCX(unit)	(TEXCOORD_WRAP_SHORTEST_TCX << ((unit) * 4))
+#define S3_WRAP_SHORTEST_TCY(unit)	(TEXCOORD_WRAP_SHORTEST_TCY << ((unit) * 4))
+#define S3_WRAP_SHORTEST_TCZ(unit)	(TEXCOORD_WRAP_SHORTEST_TCZ << ((unit) * 4))
+#define S3_PERSPECTIVE_DISABLE(unit)	(TEXCOORD_PERSPECTIVE_DISABLE << ((unit) * 4))
+
 /* S3 not interesting */
 
 #define S4_POINT_WIDTH_SHIFT           23

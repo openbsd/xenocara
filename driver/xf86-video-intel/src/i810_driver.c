@@ -1609,7 +1609,7 @@ I810Save(ScrnInfoPtr pScrn)
 {
    vgaHWPtr hwp;
    I810Ptr pI810;
-   CARD32 temp;
+   uint32_t temp;
 
    hwp = VGAHWPTR(pScrn);
    pI810 = I810PTR(pScrn);
@@ -1770,9 +1770,9 @@ DoRestore(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, I810RegPtr i810Reg,
 
    /* Setting the OVRACT Register for video overlay */
    {
-       CARD32 LCD_TV_Control = INREG(LCD_TV_C);
-       CARD32 TV_HTotal = INREG(LCD_TV_HTOTAL);
-       CARD32 ActiveStart, ActiveEnd;
+       uint32_t LCD_TV_Control = INREG(LCD_TV_C);
+       uint32_t TV_HTotal = INREG(LCD_TV_HTOTAL);
+       uint32_t ActiveStart, ActiveEnd;
        
        if((LCD_TV_Control & LCD_TV_ENABLE)
 	  && !(LCD_TV_Control & LCD_TV_VGAMOD)

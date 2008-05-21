@@ -101,7 +101,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
-#include <sys/mman.h>
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -204,30 +203,14 @@ i830_bind_memory(ScrnInfoPtr pScrn, i830_memory *mem)
 					mem->allocated_size, mem->tiling);
     }
 
-    /* Mark the pages accessible now that they're bound. */
-    if (mprotect(pI830->FbBase + mem->offset, ALIGN(mem->size, GTT_PAGE_SIZE),
-		 PROT_READ | PROT_WRITE) != 0) {
-	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		   "Failed to mprotect %s: %s\n", mem->name, strerror(errno));
-    }
-
     return TRUE;
 }
 
 static Bool
 i830_unbind_memory(ScrnInfoPtr pScrn, i830_memory *mem)
 {
-    I830Ptr pI830 = I830PTR(pScrn);
-
     if (mem == NULL || !mem->bound)
 	return TRUE;
-
-    /* Mark the pages accessible now that they're bound. */
-    if (mprotect(pI830->FbBase + mem->offset, ALIGN(mem->size, GTT_PAGE_SIZE),
-		 PROT_NONE) != 0) {
-	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		   "Failed to mprotect %s: %s\n", mem->name, strerror(errno));
-    }
 
     if (mem->tiling != TILE_NONE)
 	i830_clear_tiling(pScrn, mem->fence_nr);
@@ -462,7 +445,7 @@ i830_allocator_init(ScrnInfoPtr pScrn, unsigned long offset, unsigned long size)
 	/* Overlay and cursors, if physical, need to be allocated outside
 	 * of the kernel memory manager.
 	 */
-	if (!OVERLAY_NOPHYSICAL(pI830) && !IS_I965G(pI830)) {
+	if (!OVERLAY_NOPHYSICAL(pI830) && !IS_IGD_GM(pI830)) {
 	    mmsize -= ROUND_TO(OVERLAY_SIZE, GTT_PAGE_SIZE);
 	}
 	if (pI830->CursorNeedsPhysical) {
@@ -470,7 +453,7 @@ i830_allocator_init(ScrnInfoPtr pScrn, unsigned long offset, unsigned long size)
 		    ROUND_TO(HWCURSOR_SIZE_ARGB, GTT_PAGE_SIZE));
 	}
 	if (pI830->fb_compression)
-	    mmsize -= MB(6);
+	    mmsize -= MB(6) + ROUND_TO_PAGE(FBC_LL_SIZE + FBC_LL_PAD);
 	/* Can't do TTM on stolen memory */
 	mmsize -= pI830->stolen_size;
 
@@ -543,7 +526,7 @@ static uint64_t
 i830_get_gtt_physical(ScrnInfoPtr pScrn, unsigned long offset)
 {
     I830Ptr pI830 = I830PTR(pScrn);
-    CARD32 gttentry;
+    uint32_t gttentry;
 
     /* We don't have GTTBase set up on i830 yet. */
     if (pI830->GTTBase == NULL)
@@ -730,10 +713,6 @@ i830_allocate_agp_memory(ScrnInfoPtr pScrn, i830_memory *mem, int flags)
 	return FALSE;
     }
 
-    if (!i830_bind_memory(pScrn, mem)) {
-	return FALSE;
-    }
-
     return TRUE;
 }
 
@@ -850,6 +829,11 @@ i830_allocate_memory(ScrnInfoPtr pScrn, const char *name,
 	    return NULL;
 
 	if (!i830_allocate_agp_memory(pScrn, mem, flags)) {
+	    i830_free_memory(pScrn, mem);
+	    return NULL;
+	}
+
+	if (!i830_bind_memory(pScrn, mem)) {
 	    i830_free_memory(pScrn, mem);
 	    return NULL;
 	}
@@ -1041,18 +1025,19 @@ i830_allocate_overlay(ScrnInfoPtr pScrn)
     if (!pI830->XvEnabled)
 	return TRUE;
 
+    if (IS_IGD_GM(pI830))
+	return TRUE;
+
     if (!OVERLAY_NOPHYSICAL(pI830))
 	flags |= NEED_PHYSICAL_ADDR;
 
-    if (!IS_I965G(pI830)) {
-	pI830->overlay_regs = i830_allocate_memory(pScrn, "overlay registers",
-						   OVERLAY_SIZE, GTT_PAGE_SIZE,
-						   flags);
-	if (pI830->overlay_regs == NULL) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		       "Failed to allocate Overlay register space.\n");
-	    /* This failure isn't fatal. */
-	}
+    pI830->overlay_regs = i830_allocate_memory(pScrn, "overlay registers",
+					       OVERLAY_SIZE, GTT_PAGE_SIZE,
+					       flags);
+    if (pI830->overlay_regs == NULL) {
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		   "Failed to allocate Overlay register space.\n");
+	/* This failure isn't fatal. */
     }
 
     return TRUE;
@@ -1280,6 +1265,13 @@ i830_allocate_cursor_buffers(ScrnInfoPtr pScrn)
 static void i830_setup_fb_compression(ScrnInfoPtr pScrn)
 {
     I830Ptr pI830 = I830PTR(pScrn);
+    unsigned long compressed_size;
+    unsigned long fb_height;
+
+    if (pScrn->virtualX > pScrn->virtualY)
+	fb_height = pScrn->virtualX;
+    else
+	fb_height = pScrn->virtualY;
 
     /* Only mobile chips since 845 support this feature */
     if (!IS_MOBILE(pI830)) {
@@ -1287,11 +1279,12 @@ static void i830_setup_fb_compression(ScrnInfoPtr pScrn)
 	goto out;
     }
 
-    /* Clear out any stale state */
-    OUTREG(FBC_CFB_BASE, 0);
-    OUTREG(FBC_LL_BASE, 0);
-    OUTREG(FBC_CONTROL2, 0);
-    OUTREG(FBC_CONTROL, 0);
+    if (IS_IGD_GM(pI830)) {
+	/* Update i830_display.c too if compression ratio changes */
+	compressed_size = fb_height * (pScrn->displayWidth / 4);
+    } else {
+	compressed_size = MB(6);
+    }
 
     /*
      * Compressed framebuffer limitations:
@@ -1306,21 +1299,23 @@ static void i830_setup_fb_compression(ScrnInfoPtr pScrn)
      */
     pI830->compressed_front_buffer =
 	i830_allocate_memory(pScrn, "compressed frame buffer",
-			     MB(6), KB(4), NEED_PHYSICAL_ADDR);
+			     compressed_size, KB(4), NEED_PHYSICAL_ADDR);
 
     if (!pI830->compressed_front_buffer) {
 	pI830->fb_compression = FALSE;
 	goto out;
     }
 
-    pI830->compressed_ll_buffer =
-	i830_allocate_memory(pScrn, "compressed ll buffer",
-			     FBC_LL_SIZE + FBC_LL_PAD, KB(4),
-			     NEED_PHYSICAL_ADDR);
-    if (!pI830->compressed_ll_buffer) {
-	i830_free_memory(pScrn, pI830->compressed_front_buffer);
-	pI830->fb_compression = FALSE;
-	goto out;
+    if (!IS_IGD_GM(pI830)) {
+	pI830->compressed_ll_buffer =
+	    i830_allocate_memory(pScrn, "compressed ll buffer",
+				 FBC_LL_SIZE + FBC_LL_PAD, KB(4),
+				 NEED_PHYSICAL_ADDR);
+	if (!pI830->compressed_ll_buffer) {
+	    i830_free_memory(pScrn, pI830->compressed_front_buffer);
+	    pI830->fb_compression = FALSE;
+	    goto out;
+	}
     }
 
 out:
@@ -1704,8 +1699,8 @@ i830_set_tiling(ScrnInfoPtr pScrn, unsigned int offset,
 		enum tile_format tile_format)
 {
     I830Ptr pI830 = I830PTR(pScrn);
-    CARD32 val;
-    CARD32 fence_mask = 0;
+    uint32_t val;
+    uint32_t fence_mask = 0;
     unsigned int fence_pitch;
     unsigned int max_fence;
     unsigned int fence_nr;
@@ -2005,4 +2000,26 @@ I830CheckAvailableMemory(ScrnInfoPtr pScrn)
 		   "I830CheckAvailableMemory", maxPages * 4);
 
     return maxPages * 4;
+}
+
+/*
+ * Allocate memory for MC compensation
+ */
+Bool i830_allocate_xvmc_buffer(ScrnInfoPtr pScrn, const char *name,
+                               i830_memory **buffer, unsigned long size,
+                               int flags)
+{
+    *buffer = i830_allocate_memory(pScrn, name, size,
+                                   GTT_PAGE_SIZE, flags);
+
+    if (!*buffer) {
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                   "Failed to allocate memory for %s.\n", name);
+        return FALSE;
+    }
+
+    if (!i830_bind_memory(pScrn, *buffer))
+	return FALSE;
+
+    return TRUE;
 }

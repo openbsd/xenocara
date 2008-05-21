@@ -29,6 +29,7 @@
 #include "config.h"
 #endif
 
+#include <stdint.h>
 #include <unistd.h>
 
 #include "xf86.h"
@@ -47,16 +48,16 @@
 struct ch7017_priv {
     I2CDevRec d;
 
-    CARD8 save_hapi;
-    CARD8 save_vali;
-    CARD8 save_valo;
-    CARD8 save_ailo;
-    CARD8 save_lvds_pll_vco;
-    CARD8 save_feedback_div;
-    CARD8 save_lvds_control_2;
-    CARD8 save_outputs_enable;
-    CARD8 save_lvds_power_down;
-    CARD8 save_power_management;
+    uint8_t save_hapi;
+    uint8_t save_vali;
+    uint8_t save_valo;
+    uint8_t save_ailo;
+    uint8_t save_lvds_pll_vco;
+    uint8_t save_feedback_div;
+    uint8_t save_lvds_control_2;
+    uint8_t save_outputs_enable;
+    uint8_t save_lvds_power_down;
+    uint8_t save_power_management;
 };
 
 static void
@@ -65,7 +66,7 @@ static void
 ch7017_dpms(I2CDevPtr d, int mode);
 
 static Bool
-ch7017_read(struct ch7017_priv *priv, int addr, CARD8 *val)
+ch7017_read(struct ch7017_priv *priv, int addr, uint8_t *val)
 {
     if (!xf86I2CReadByte(&priv->d, addr, val)) {
 	xf86DrvMsg(priv->d.pI2CBus->scrnIndex, X_ERROR,
@@ -77,7 +78,7 @@ ch7017_read(struct ch7017_priv *priv, int addr, CARD8 *val)
 }
 
 static Bool
-ch7017_write(struct ch7017_priv *priv, int addr, CARD8 val)
+ch7017_write(struct ch7017_priv *priv, int addr, uint8_t val)
 {
     if (!xf86I2CWriteByte(&priv->d, addr, val)) {
 	xf86DrvMsg(priv->d.pI2CBus->scrnIndex, X_ERROR,
@@ -93,7 +94,7 @@ static void *
 ch7017_init(I2CBusPtr b, I2CSlaveAddr addr)
 {
     struct ch7017_priv *priv;
-    CARD8 val;
+    uint8_t val;
 
     priv = xcalloc(1, sizeof(struct ch7017_priv));
     if (priv == NULL)
@@ -149,11 +150,11 @@ static void
 ch7017_mode_set(I2CDevPtr d, DisplayModePtr mode, DisplayModePtr adjusted_mode)
 {
     struct ch7017_priv *priv = d->DriverPrivate.ptr;
-    CARD8 lvds_pll_feedback_div, lvds_pll_vco_control;
-    CARD8 outputs_enable, lvds_control_2, lvds_power_down;
-    CARD8 horizontal_active_pixel_input;
-    CARD8 horizontal_active_pixel_output, vertical_active_line_output;
-    CARD8 active_input_line_output;
+    uint8_t lvds_pll_feedback_div, lvds_pll_vco_control;
+    uint8_t outputs_enable, lvds_control_2, lvds_power_down;
+    uint8_t horizontal_active_pixel_input;
+    uint8_t horizontal_active_pixel_output, vertical_active_line_output;
+    uint8_t active_input_line_output;
 
     xf86DrvMsg(priv->d.pI2CBus->scrnIndex, X_INFO,
 	       "Registers before mode setting\n");
@@ -228,7 +229,7 @@ static void
 ch7017_dpms(I2CDevPtr d, int mode)
 {
     struct ch7017_priv *priv = d->DriverPrivate.ptr;
-    CARD8 val;
+    uint8_t val;
 
     ch7017_read(priv, CH7017_LVDS_POWER_DOWN, &val);
 
@@ -258,7 +259,7 @@ static void
 ch7017_dump_regs(I2CDevPtr d)
 {
     struct ch7017_priv *priv = d->DriverPrivate.ptr;
-    CARD8 val;
+    uint8_t val;
 
 #define DUMP(reg)					\
 do {							\

@@ -135,7 +135,7 @@ static void I830DRITransitionSingleToMulti3d(ScreenPtr pScreen);
 #define DRI_DRIVER_FRAMEBUFFER_MAP 0
 #endif
 
-#ifdef DRI_SUPPORTS_CLIP_NOTIFY
+#if DRI_SUPPORTS_CLIP_NOTIFY
 static void I830DRIClipNotify(ScreenPtr pScreen, WindowPtr *ppWin, int num);
 #endif
 
@@ -747,12 +747,12 @@ static void
 I830InitTextureHeap(ScrnInfoPtr pScrn)
 {
    I830Ptr pI830 = I830PTR(pScrn);
+   drmI830MemInitHeap drmHeap;
 
    if (pI830->textures == NULL)
        return;
 
    /* Start up the simple memory manager for agp space */
-   drmI830MemInitHeap drmHeap;
    drmHeap.region = I830_MEM_REGION_AGP;
    drmHeap.start  = 0;
    drmHeap.size   = pI830->textures->size;
@@ -993,7 +993,7 @@ I830DRIFinishScreenInit(ScreenPtr pScreen)
  * Otherwise will have to sync again???
  */
 static void
-I830DRIDoRefreshArea (ScrnInfoPtr pScrn, int num, BoxPtr pbox, CARD32 dst)
+I830DRIDoRefreshArea (ScrnInfoPtr pScrn, int num, BoxPtr pbox, uint32_t dst)
 {
    I830Ptr pI830 = I830PTR(pScrn);
    int i, cmd, br13 = (pScrn->displayWidth * pI830->cpp) | (0xcc << 16);
@@ -1008,16 +1008,16 @@ I830DRIDoRefreshArea (ScrnInfoPtr pScrn, int num, BoxPtr pbox, CARD32 dst)
    }
 
    for (i = 0 ; i < num ; i++, pbox++) {
-      BEGIN_LP_RING(8);
-      OUT_RING(cmd);
-      OUT_RING(br13);
-      OUT_RING((pbox->y1 << 16) | pbox->x1);
-      OUT_RING((pbox->y2 << 16) | pbox->x2);
-      OUT_RING(dst);
-      OUT_RING((pbox->y1 << 16) | pbox->x1);
-      OUT_RING(br13 & 0xffff);
-      OUT_RING(pI830->front_buffer->offset);
-      ADVANCE_LP_RING();
+      BEGIN_BATCH(8);
+      OUT_BATCH(cmd);
+      OUT_BATCH(br13);
+      OUT_BATCH((pbox->y1 << 16) | pbox->x1);
+      OUT_BATCH((pbox->y2 << 16) | pbox->x2);
+      OUT_BATCH(dst);
+      OUT_BATCH((pbox->y1 << 16) | pbox->x1);
+      OUT_BATCH(br13 & 0xffff);
+      OUT_BATCH(pI830->front_buffer->offset);
+      ADVANCE_BATCH();
    }
 }
 

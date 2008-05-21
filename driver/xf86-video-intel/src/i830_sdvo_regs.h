@@ -47,11 +47,11 @@
 #define SDVO_OUTPUT_LAST    (14)
 
 struct i830_sdvo_caps {
-    CARD8 vendor_id;
-    CARD8 device_id;
-    CARD8 device_rev_id;
-    CARD8 sdvo_version_major;
-    CARD8 sdvo_version_minor;
+    uint8_t vendor_id;
+    uint8_t device_id;
+    uint8_t device_rev_id;
+    uint8_t sdvo_version_major;
+    uint8_t sdvo_version_minor;
     unsigned int sdvo_inputs_mask:2;
     unsigned int smooth_scaling:1;
     unsigned int sharp_scaling:1;
@@ -59,48 +59,48 @@ struct i830_sdvo_caps {
     unsigned int down_scaling:1;
     unsigned int stall_support:1;
     unsigned int pad:1;
-    CARD16 output_flags;
+    uint16_t output_flags;
 } __attribute__((packed));
 
 /** This matches the EDID DTD structure, more or less */
 struct i830_sdvo_dtd {
     struct {
-	CARD16 clock;		/**< pixel clock, in 10kHz units */
-	CARD8 h_active;		/**< lower 8 bits (pixels) */
-	CARD8 h_blank;		/**< lower 8 bits (pixels) */
-	CARD8 h_high;		/**< upper 4 bits each h_active, h_blank */
-	CARD8 v_active;		/**< lower 8 bits (lines) */
-	CARD8 v_blank;		/**< lower 8 bits (lines) */
-	CARD8 v_high;		/**< upper 4 bits each v_active, v_blank */
+	uint16_t clock;		/**< pixel clock, in 10kHz units */
+	uint8_t h_active;	/**< lower 8 bits (pixels) */
+	uint8_t h_blank;	/**< lower 8 bits (pixels) */
+	uint8_t h_high;		/**< upper 4 bits each h_active, h_blank */
+	uint8_t v_active;	/**< lower 8 bits (lines) */
+	uint8_t v_blank;	/**< lower 8 bits (lines) */
+	uint8_t v_high;		/**< upper 4 bits each v_active, v_blank */
     } part1;
 
     struct {
-	CARD8 h_sync_off;	/**< lower 8 bits, from hblank start */
-	CARD8 h_sync_width;	/**< lower 8 bits (pixels) */
+	uint8_t h_sync_off;	/**< lower 8 bits, from hblank start */
+	uint8_t h_sync_width;	/**< lower 8 bits (pixels) */
 	/** lower 4 bits each vsync offset, vsync width */
-	CARD8 v_sync_off_width;
+	uint8_t v_sync_off_width;
 	/**
 	 * 2 high bits of hsync offset, 2 high bits of hsync width,
 	 * bits 4-5 of vsync offset, and 2 high bits of vsync width.
 	 */
-	CARD8 sync_off_width_high;
-	CARD8 dtd_flags;
-	CARD8 sdvo_flags;
+	uint8_t sync_off_width_high;
+	uint8_t dtd_flags;
+	uint8_t sdvo_flags;
 	/** bits 6-7 of vsync offset at bits 6-7 */
-	CARD8 v_sync_off_high;
-	CARD8 reserved;
+	uint8_t v_sync_off_high;
+	uint8_t reserved;
     } part2;
 } __attribute__((packed));
 
 struct i830_sdvo_pixel_clock_range {
-    CARD16 min;			/**< pixel clock, in 10kHz units */
-    CARD16 max;			/**< pixel clock, in 10kHz units */
+    uint16_t min;			/**< pixel clock, in 10kHz units */
+    uint16_t max;			/**< pixel clock, in 10kHz units */
 } __attribute__((packed));
 
 struct i830_sdvo_preferred_input_timing_args {
-    CARD16 clock;
-    CARD16 width;
-    CARD16 height;
+    uint16_t clock;
+    uint16_t width;
+    uint16_t height;
 } __attribute__((packed));
 
 /* I2C registers for SDVO */
@@ -205,7 +205,7 @@ struct i830_sdvo_get_trained_inputs_response {
 
 #define SDVO_CMD_GET_INTERRUPT_EVENT_SOURCE		0x0f
 struct i830_sdvo_get_interrupt_event_source_response {
-    CARD16 interrupt_status;
+    uint16_t interrupt_status;
     unsigned int ambient_light_interrupt:1;
     unsigned int pad:7;
 } __attribute__((packed));

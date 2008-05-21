@@ -50,26 +50,25 @@ struct ivch_priv {
     xf86OutputPtr   output;
     Bool quiet;
 
-    CARD16    	    width;
-    CARD16    	    height;
+    uint16_t width, height;
 
-    CARD16	    save_VR01;
-    CARD16	    save_VR40;
+    uint16_t save_VR01;
+    uint16_t save_VR40;
 };
 
 struct vch_capabilities {
     struct aimdb_block	aimdb_block;
-    CARD8		panel_type;
-    CARD8		set_panel_type;
-    CARD8		slave_address;
-    CARD8		capabilities;
+    uint8_t		panel_type;
+    uint8_t		set_panel_type;
+    uint8_t		slave_address;
+    uint8_t		capabilities;
 #define VCH_PANEL_FITTING_SUPPORT	(0x3 << 0)
 #define VCH_PANEL_FITTING_TEXT		(1 << 2)
 #define VCH_PANEL_FITTING_GRAPHICS	(1 << 3)
 #define VCH_PANEL_FITTING_RATIO		(1 << 4)
 #define VCH_DITHERING			(1 << 5)
-    CARD8		backlight_gpio;
-    CARD8		set_panel_type_us_gpios;
+    uint8_t		backlight_gpio;
+    uint8_t		set_panel_type_us_gpios;
 } __attribute__ ((packed));
 
 static void
@@ -81,7 +80,7 @@ ivch_dump_regs(I2CDevPtr d);
  * Each of the 256 registers are 16 bits long.
  */
 static Bool
-ivch_read(struct ivch_priv *priv, int addr, CARD16 *data)
+ivch_read(struct ivch_priv *priv, int addr, uint16_t *data)
 {
     I2CBusPtr b = priv->d.pI2CBus;
     I2CByte *p = (I2CByte *) data;
@@ -118,7 +117,7 @@ ivch_read(struct ivch_priv *priv, int addr, CARD16 *data)
  
 /** Writes a 16-bit register on the ivch */
 static Bool
-ivch_write(struct ivch_priv *priv, int addr, CARD16 data)
+ivch_write(struct ivch_priv *priv, int addr, uint16_t data)
 {
     I2CBusPtr b = priv->d.pI2CBus;
 
@@ -158,7 +157,7 @@ static void *
 ivch_init(I2CBusPtr b, I2CSlaveAddr addr)
 {
     struct	ivch_priv *priv;
-    CARD16	temp;
+    uint16_t	temp;
 
     priv = xcalloc(1, sizeof(struct ivch_priv));
     if (priv == NULL)
@@ -226,7 +225,7 @@ ivch_dpms(I2CDevPtr d, int mode)
 {
     struct ivch_priv *priv = d->DriverPrivate.ptr;
     int i;
-    CARD16 vr01, vr30, backlight;
+    uint16_t vr01, vr30, backlight;
 
     /* Set the new power state of the panel. */
     if (!ivch_read(priv, VR01, &vr01))
@@ -262,8 +261,8 @@ static void
 ivch_mode_set(I2CDevPtr d, DisplayModePtr mode, DisplayModePtr adjusted_mode)
 {
     struct ivch_priv	*priv = d->DriverPrivate.ptr;
-    CARD16		vr40 = 0;
-    CARD16		vr01;
+    uint16_t		vr40 = 0;
+    uint16_t		vr01;
 
     vr01 = 0;
     vr40 = (VR40_STALL_ENABLE |
@@ -273,7 +272,7 @@ ivch_mode_set(I2CDevPtr d, DisplayModePtr mode, DisplayModePtr adjusted_mode)
     if (mode->HDisplay != adjusted_mode->HDisplay || 
 	mode->VDisplay != adjusted_mode->VDisplay)
     {
-	CARD16	x_ratio, y_ratio;
+	uint16_t	x_ratio, y_ratio;
 	
 	vr01 |= VR01_PANEL_FIT_ENABLE;
 	vr40 |= VR40_CLOCK_GATING_ENABLE;
@@ -299,7 +298,7 @@ static void
 ivch_dump_regs(I2CDevPtr d)
 {
     struct ivch_priv *priv = d->DriverPrivate.ptr;
-    CARD16 val;
+    uint16_t val;
 
     ivch_read(priv, VR00, &val);
     xf86DrvMsg(priv->d.pI2CBus->scrnIndex, X_INFO, "VR00: 0x%04x\n", val);

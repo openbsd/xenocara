@@ -59,7 +59,7 @@ static void i830_setscl(I2CBusPtr b, int state)
 {
     ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
     I830Ptr pI830 = I830PTR(pScrn);
-    CARD32 val;
+    uint32_t val;
 
     OUTREG(b->DriverPrivate.uval,
 	   (state ? GPIO_CLOCK_VAL_OUT : 0) | GPIO_CLOCK_DIR_OUT |
@@ -71,7 +71,7 @@ static void i830_setsda(I2CBusPtr b, int state)
 {
     ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
     I830Ptr pI830 = I830PTR(pScrn);
-    CARD32 val;
+    uint32_t val;
 
     OUTREG(b->DriverPrivate.uval,
 	   (state ? GPIO_DATA_VAL_OUT : 0) | GPIO_DATA_DIR_OUT |
@@ -83,7 +83,7 @@ static void i830_getscl(I2CBusPtr b, int *state)
 {
     ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
     I830Ptr pI830 = I830PTR(pScrn);
-    CARD32 val;
+    uint32_t val;
 
     OUTREG(b->DriverPrivate.uval, GPIO_CLOCK_DIR_IN | GPIO_CLOCK_DIR_MASK);
     OUTREG(b->DriverPrivate.uval, 0);
@@ -95,7 +95,7 @@ static int i830_getsda(I2CBusPtr b)
  {
      ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
      I830Ptr pI830 = I830PTR(pScrn);
-     CARD32 val;
+     uint32_t val;
 
      OUTREG(b->DriverPrivate.uval, GPIO_DATA_DIR_IN | GPIO_DATA_DIR_MASK);
      OUTREG(b->DriverPrivate.uval, 0);
@@ -272,7 +272,7 @@ i830I2CGetBits(I2CBusPtr b, int *clock, int *data)
 {
     ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
     I830Ptr pI830 = I830PTR(pScrn);
-    CARD32 val;
+    uint32_t val;
 
     val = INREG(b->DriverPrivate.uval);
 
@@ -295,8 +295,8 @@ i830I2CGetBits(I2CBusPtr b, int *clock, int *data)
 static void
 i830I2CPutBits(I2CBusPtr b, int clock, int data)
 {
-    CARD32 reserved = 0;
-    CARD32 data_bits, clock_bits;
+    uint32_t reserved = 0;
+    uint32_t data_bits, clock_bits;
 
 #if I2C_DEBUG
     int cur_clock, cur_data;
@@ -346,6 +346,7 @@ Bool
 I830I2CInit(ScrnInfoPtr pScrn, I2CBusPtr *bus_ptr, int i2c_reg, char *name)
 {
     I2CBusPtr pI2CBus;
+    I830Ptr pI830 = I830PTR(pScrn);
 
     pI2CBus = xf86CreateI2CBusRec();
 
@@ -378,6 +379,12 @@ I830I2CInit(ScrnInfoPtr pScrn, I2CBusPtr *bus_ptr, int i2c_reg, char *name)
     pI2CBus->BitTimeout = 40;
     pI2CBus->AcknTimeout = 40;
     pI2CBus->RiseFallTime = 20;
+
+    /* Disable the GMBUS, which we won't use.  If it is left enabled (for
+     * example, by Mac Mini EFI initialization), GPIO access to the pins it
+     * uses gets disabled.
+     */
+    OUTREG(GMBUS0, 0);
 
     if (!xf86I2CBusInit(pI2CBus))
 	return FALSE;

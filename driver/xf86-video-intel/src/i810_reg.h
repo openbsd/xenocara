@@ -290,6 +290,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # define GPIO_DATA_VAL_IN		(1 << 12)
 # define GPIO_DATA_PULLUP_DISABLE	(1 << 13)
 
+/* GMBus registers for hardware-assisted (non-bitbanging) I2C access */
+#define GMBUS0			0x5100
+#define GMBUS1			0x5104
+#define GMBUS2			0x5108
+#define GMBUS3			0x510c
+#define GMBUS4			0x5110
+#define GMBUS5			0x5120
+
 /* p317, 319
  */
 #define VCLK2_VCO_M        0x6008 /* treat as 16 bit? (includes msbs) */
@@ -351,6 +359,18 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define IPEIR_I965                  0x2064 /* i965 */
 #define IPEHR_I965                  0x2068 /* i965 */
 #define INST_DONE_I965              0x206c
+# define I965_SF_DONE			(1 << 23)
+# define I965_SE_DONE			(1 << 22)
+# define I965_WM_DONE			(1 << 21)
+# define I965_TEXTURE_FETCH_DONE	(1 << 14)
+# define I965_SAMPLER_CACHE_DONE	(1 << 12)
+# define I965_FILTER_DONE		(1 << 11)
+# define I965_PS_DONE			(1 << 9)
+# define I965_CC_DONE			(1 << 8)
+# define I965_MAP_FILTER_DONE		(1 << 7)
+# define I965_MAP_L2_IDLE		(1 << 6)
+# define I965_CP_DONE			(1 << 1)
+# define I965_RING_0_ENABLE		(1 << 0)
 #define INST_PS_I965                0x2070
 
 /* Current active ring head address: 
@@ -477,6 +497,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #define FWATER_BLC       0x20d8
 #define FWATER_BLC2	 0x20dc
+#define FWATER_BLC_SELF	 0x20e0
 #define MM_BURST_LENGTH     0x00700000
 #define MM_FIFO_WATERMARK   0x0001F000
 #define LM_BURST_LENGTH     0x00000700
@@ -851,8 +872,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #define PFIT_CONTROL	0x61230
 # define PFIT_ENABLE				(1 << 31)
-# define PFIT_PIPE_MASK				(3 << 29)
-# define PFIT_PIPE_SHIFT			29
+/* Pre-965 */
 # define VERT_INTERP_DISABLE			(0 << 10)
 # define VERT_INTERP_BILINEAR			(1 << 10)
 # define VERT_INTERP_MASK			(3 << 10)
@@ -862,12 +882,30 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # define HORIZ_INTERP_MASK			(3 << 6)
 # define HORIZ_AUTO_SCALE			(1 << 5)
 # define PANEL_8TO6_DITHER_ENABLE		(1 << 3)
+/* 965+ */
+# define PFIT_PIPE_MASK				(3 << 29)
+# define PFIT_PIPE_SHIFT			29
+# define PFIT_SCALING_MODE_MASK			(7 << 26)
+#  define PFIT_SCALING_AUTO			(0 << 26)
+#  define PFIT_SCALING_PROGRAMMED		(1 << 26)
+#  define PFIT_SCALING_PILLAR			(2 << 26)
+#  define PFIT_SCALING_LETTER			(3 << 26)
+# define PFIT_FILTER_SELECT_MASK		(3 << 24)
+#  define PFIT_FILTER_FUZZY			(0 << 24)
+#  define PFIT_FILTER_CRISP			(1 << 24)
+#  define PFIT_FILTER_MEDIAN			(2 << 24)
 
 #define PFIT_PGM_RATIOS	0x61234
+/* Pre-965 */
+# define PFIT_VERT_SCALE_SHIFT			20
 # define PFIT_VERT_SCALE_MASK			0xfff00000
+# define PFIT_HORIZ_SCALE_SHIFT			4
 # define PFIT_HORIZ_SCALE_MASK			0x0000fff0
-
-#define PFIT_AUTO_RATIOS	0x61238
+/* 965+ */
+# define PFIT_VERT_SCALE_SHIFT_965		16
+# define PFIT_VERT_SCALE_MASK_965		0x1fff0000
+# define PFIT_HORIZ_SCALE_SHIFT_965		0
+# define PFIT_HORIZ_SCALE_MASK_965		0x00001fff
 
 #define DPLL_A		0x06014
 #define DPLL_B		0x06018
@@ -2285,6 +2323,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define MI_FLUSH			(0x04<<23)
 #define MI_WRITE_DIRTY_STATE		(1<<4)
 #define MI_END_SCENE			(1<<3)
+#define MI_GLOBAL_SNAPSHOT_COUNT_RESET	(1<<3)
 #define MI_INHIBIT_RENDER_CACHE_FLUSH	(1<<2)
 #define MI_STATE_INSTRUCTION_CACHE_FLUSH (1<<1)
 #define MI_INVALIDATE_MAP_CACHE		(1<<0)
@@ -2669,5 +2708,29 @@ typedef enum {
 
 #define FBC_LL_SIZE		(1536)
 #define FBC_LL_PAD		(32)
+
+/* Framebuffer compression version 2 */
+#define DPFC_CB_BASE		0x3200
+#define DPFC_CONTROL		0x3208
+#define   DPFC_CTL_EN		(1<<31)
+#define   DPFC_CTL_PLANEA	(0<<30)
+#define   DPFC_CTL_PLANEB	(1<<30)
+#define   DPFC_CTL_FENCE_EN	(1<<29)
+#define   DPFC_CTL_LIMIT_1X	(0<<6)
+#define   DPFC_CTL_LIMIT_2X	(1<<6)
+#define   DPFC_CTL_LIMIT_4X	(2<<6)
+#define DPFC_RECOMP_CTL		0x320c
+#define   DPFC_RECOMP_STALL_EN	(1<<27)
+#define   DPFC_RECOMP_STALL_WM_SHIFT (16)
+#define   DPFC_RECOMP_STALL_WM_MASK (0x07ff0000)
+#define   DPFC_RECOMP_TIMER_COUNT_SHIFT (0)
+#define   DPFC_RECOMP_TIMER_COUNT_MASK (0x0000003f)
+#define DPFC_STATUS		0x3210
+#define   DPFC_INVAL_SEG_SHIFT  (16)
+#define   DPFC_INVAL_SEG_MASK	(0x07ff0000)
+#define   DPFC_COMP_SEG_SHIFT	(0)
+#define   DPFC_COMP_SEG_MASK	(0x000003ff)
+#define DPFC_STATUS2		0x3214
+#define DPFC_FENCE_YOFF		0x3218
 
 #endif /* _I810_REG_H */

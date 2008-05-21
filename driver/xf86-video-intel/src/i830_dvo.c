@@ -226,7 +226,7 @@ i830_dvo_mode_set(xf86OutputPtr output, DisplayModePtr mode,
     I830OutputPrivatePtr    intel_output = output->driver_private;
     struct _I830DVODriver   *drv = intel_output->i2c_drv;
     int			    pipe = intel_crtc->pipe;
-    CARD32		    dvo;
+    uint32_t		    dvo;
     unsigned int	    dvo_reg = drv->dvo_reg, dvo_srcdim_reg;
     int			    dpll_reg = (pipe == 0) ? DPLL_A : DPLL_B;
 
@@ -330,6 +330,20 @@ i830_dvo_destroy (xf86OutputPtr output)
     }
 }
 
+#ifdef RANDR_GET_CRTC_INTERFACE
+static xf86CrtcPtr
+i830_dvo_get_crtc(xf86OutputPtr output)
+{
+    ScrnInfoPtr	pScrn = output->scrn;
+    I830Ptr pI830 = I830PTR(pScrn);
+    I830OutputPrivatePtr intel_output = output->driver_private;
+    struct _I830DVODriver *drv = intel_output->i2c_drv;
+    int pipe = !!(INREG(drv->dvo_reg) & SDVO_PIPE_B_SELECT);
+   
+    return i830_pipe_to_crtc(pScrn, pipe);
+}
+#endif
+
 static const xf86OutputFuncsRec i830_dvo_output_funcs = {
     .dpms = i830_dvo_dpms,
     .save = i830_dvo_save,
@@ -341,7 +355,10 @@ static const xf86OutputFuncsRec i830_dvo_output_funcs = {
     .commit = i830_output_commit,
     .detect = i830_dvo_detect,
     .get_modes = i830_dvo_get_modes,
-    .destroy = i830_dvo_destroy
+    .destroy = i830_dvo_destroy,
+#ifdef RANDR_GET_CRTC_INTERFACE
+    .get_crtc = i830_dvo_get_crtc,
+#endif
 };
 
 /**
@@ -358,7 +375,7 @@ i830_dvo_get_current_mode (xf86OutputPtr output)
     I830Ptr		    pI830 = I830PTR(pScrn);
     struct _I830DVODriver   *drv = intel_output->i2c_drv;
     unsigned int	    dvo_reg = drv->dvo_reg;
-    CARD32		    dvo = INREG(dvo_reg);
+    uint32_t		    dvo = INREG(dvo_reg);
     DisplayModePtr    	    mode = NULL;
 
     /* If the DVO port is active, that'll be the LVDS, so we can pull out

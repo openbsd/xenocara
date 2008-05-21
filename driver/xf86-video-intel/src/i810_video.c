@@ -271,43 +271,43 @@ static XF86ImageRec Images[NUM_IMAGES] =
 /* *INDENT-ON* */
 
 typedef struct {
-    CARD32 OBUF_0Y;
-    CARD32 OBUF_1Y;
-    CARD32 OBUF_0U;
-    CARD32 OBUF_0V;
-    CARD32 OBUF_1U;
-    CARD32 OBUF_1V;
-    CARD32 OV0STRIDE;
-    CARD32 YRGB_VPH;
-    CARD32 UV_VPH;
-    CARD32 HORZ_PH;
-    CARD32 INIT_PH;
-    CARD32 DWINPOS;
-    CARD32 DWINSZ;
-    CARD32 SWID;
-    CARD32 SWIDQW;
-    CARD32 SHEIGHT;
-    CARD32 YRGBSCALE;
-    CARD32 UVSCALE;
-    CARD32 OV0CLRC0;
-    CARD32 OV0CLRC1;
-    CARD32 DCLRKV;
-    CARD32 DCLRKM;
-    CARD32 SCLRKVH;
-    CARD32 SCLRKVL;
-    CARD32 SCLRKM;
-    CARD32 OV0CONF;
-    CARD32 OV0CMD;
+    uint32_t OBUF_0Y;
+    uint32_t OBUF_1Y;
+    uint32_t OBUF_0U;
+    uint32_t OBUF_0V;
+    uint32_t OBUF_1U;
+    uint32_t OBUF_1V;
+    uint32_t OV0STRIDE;
+    uint32_t YRGB_VPH;
+    uint32_t UV_VPH;
+    uint32_t HORZ_PH;
+    uint32_t INIT_PH;
+    uint32_t DWINPOS;
+    uint32_t DWINSZ;
+    uint32_t SWID;
+    uint32_t SWIDQW;
+    uint32_t SHEIGHT;
+    uint32_t YRGBSCALE;
+    uint32_t UVSCALE;
+    uint32_t OV0CLRC0;
+    uint32_t OV0CLRC1;
+    uint32_t DCLRKV;
+    uint32_t DCLRKM;
+    uint32_t SCLRKVH;
+    uint32_t SCLRKVL;
+    uint32_t SCLRKM;
+    uint32_t OV0CONF;
+    uint32_t OV0CMD;
 } I810OverlayRegRec, *I810OverlayRegPtr;
 
 typedef struct {
-	CARD32       YBuf0offset;
-	CARD32       UBuf0offset;
-	CARD32       VBuf0offset;
+	uint32_t     YBuf0offset;
+	uint32_t     UBuf0offset;
+	uint32_t     VBuf0offset;
 
-	CARD32       YBuf1offset;
-	CARD32       UBuf1offset;
-	CARD32       VBuf1offset;
+	uint32_t     YBuf1offset;
+	uint32_t     UBuf1offset;
+	uint32_t     VBuf1offset;
 
 	unsigned char currentBuf;
 
@@ -315,9 +315,9 @@ typedef struct {
 	int          contrast;
 
 	RegionRec    clip;
-	CARD32       colorKey;
+	uint32_t     colorKey;
 
-	CARD32       videoStatus;
+	uint32_t     videoStatus;
 	Time         offTime;
 	Time         freeTime;
 	FBLinearPtr  linear;

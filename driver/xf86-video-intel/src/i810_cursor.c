@@ -130,8 +130,8 @@ static Bool I810UseHWCursorARGB (ScreenPtr pScreen, CursorPtr pCurs)
 static void I810LoadCursorARGB (ScrnInfoPtr pScrn, CursorPtr pCurs)
 {
    I810Ptr pI810 = I810PTR(pScrn);
-   CARD32 *pcurs = (CARD32 *) (pI810->FbBase + pI810->CursorStart);
-   CARD32 *image = (CARD32 *) pCurs->bits->argb;
+   uint32_t *pcurs = (uint32_t *) (pI810->FbBase + pI810->CursorStart);
+   uint32_t *image = (uint32_t *) pCurs->bits->argb;
    int x, y, w, h;
 
 #ifdef ARGB_CURSOR
@@ -171,7 +171,7 @@ static void
 I810LoadCursorImage(ScrnInfoPtr pScrn, unsigned char *src)
 {
    I810Ptr pI810 = I810PTR(pScrn);
-   CARD8 *pcurs = (CARD8 *) (pI810->FbBase + pI810->CursorStart);
+   uint8_t *pcurs = (uint8_t *) (pI810->FbBase + pI810->CursorStart);
    int x, y;
 
 #ifdef ARGB_CURSOR

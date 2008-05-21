@@ -1,5 +1,5 @@
 /*
- * Copyright © 2007 Intel Corporation
+ * Copyright © 2006 Intel Corporation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,34 +22,28 @@
  *
  * Authors:
  *    Wang Zhenyu <zhenyu.z.wang@intel.com>
+ *    Keith Packard <keithp@keithp.com>
  */
 
-/* 1/dx */
-send (1) 0 g6<1>F g1.12<0,1,0>F math inv scalar mlen 1 rlen 1 { align1 };
-/* 1/dy */
-send (1) 0 g6.4<1>F g1.20<0,1,0>F math inv scalar mlen 1 rlen 1 { align1 };
-/* du, dv */
-mul (1) g7<1>F g3<0,1,0>F -1.0F { align1 };
-mul (1) g7.4<1>F g3.4<0,1,0>F -1.0F { align1 };
-add (1) g7<1>F g4<0,1,0>F g7<0,1,0>F { align1 };
-add (1) g7.4<1>F g4.4<0,1,0>F g7.4<0,1,0>F { align1 };
 
-/* du/dy */
-mul (1) g7<1>F g7<0,1,0>F g6.4<0,1,0>F { align1 };
-/* dv/dx */
-mul (1) g7.4<1>F g7.4<0,1,0>F g6<0,1,0>F { align1 };
-/* Cx */
-mov (8) m1<1>F g7<0,1,0>F { align1 };
-/* Cy */
-mov (8) m2<1>F g7.4<0,1,0>F { align1 };
-/* Co */
-mov (8) m3<1>F g3<8,8,1>F { align1 };
-send (8) 0 null g0<8,8,1>F urb 0 transpose used complete mlen 4 rlen 0 { align1 EOT };
-nop;
-nop;
-nop;
-nop;
-nop;
-nop;
-nop;
-nop;
+include(`exa_wm.g4i')
+define(`du_dx',	`src_du_dx')
+define(`du_dy',	`src_du_dy')
+define(`uo',	`src_uo')
+define(`dv_dx',	`src_dv_dx')
+define(`dv_dy',	`src_dv_dy')
+define(`vo',	`src_vo')
+define(`dw_dx',	`src_dw_dx')
+define(`dw_dy',	`src_dw_dy')
+define(`wo',	`src_wo')
+define(`u',	`src_u')
+define(`v',	`src_v')
+define(`w',	`src_w')
+define(`u_0',	`src_u_0')
+define(`v_0',	`src_v_0')
+define(`u_1',	`src_u_1')
+define(`v_1',	`src_v_1')
+define(`w_0',	`src_w_0')
+define(`w_1',	`src_w_1')
+
+include(`exa_wm_projective.g4i')

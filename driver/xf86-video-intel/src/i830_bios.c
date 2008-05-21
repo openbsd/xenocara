@@ -171,7 +171,7 @@ i830_bios_get_panel_mode(ScrnInfoPtr pScrn, Bool *wants_dither)
 	struct lvds_bdb_2_fp_params *fpparam;
 	struct lvds_bdb_2_fp_edid_dtd *fptiming;
 	DisplayModePtr fixed_mode;
-	CARD8 *timing_ptr;
+	uint8_t *timing_ptr;
 
 	id = INTEL_BIOS_8(start);
 	block_size = INTEL_BIOS_16(start + 1) + 3;
@@ -270,7 +270,7 @@ i830_bios_get_aim_data_block (ScrnInfoPtr pScrn, int aim, int data_block)
     aim_off = vbt->aim_offset[aim];
     if (!aim_off)
     {
-	free (bios);
+	xfree (bios);
 	return NULL;
     }
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "aim_off %d\n", aim_off);
@@ -284,15 +284,15 @@ i830_bios_get_aim_data_block (ScrnInfoPtr pScrn, int aim, int data_block)
 	    unsigned char   *aim = malloc (aimdb_block->aimdb_size + sizeof (struct aimdb_block));
 	    if (!aim)
 	    {
-		free (bios);
+		xfree (bios);
 		return NULL;
 	    }
 	    memcpy (aim, aimdb_block, aimdb_block->aimdb_size + sizeof (struct aimdb_block));
-	    free (bios);
+	    xfree (bios);
 	    return aim;
 	}
 	bdb_off += aimdb_block->aimdb_size + sizeof (struct aimdb_block);
     }
-    free (bios);
+    xfree (bios);
     return NULL;
 }

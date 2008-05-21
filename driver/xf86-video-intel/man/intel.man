@@ -182,6 +182,37 @@ where the BIOS accesses pipe registers during display hotswitch or lid close,
 causing a crash.  If you find that your platform needs this option, please file
 a bug against xf86-video-intel at http://bugs.freedesktop.org which includes
 the output of 'lspci -v' and 'lspci -vn'.
+.TP
+.BI "Option \*qLVDS24Bit\*q \*q" boolean \*q
+Specify 24 bit pixel format (i.e. 8 bits per color) to be used for the
+LVDS output.  Some newer LCD panels expect pixels to be formatted and
+sent as 8 bits per color channel instead of the more common 6 bits per
+color channel.  Set this option to true to enable the newer format.
+Note that this concept is entirely different and independent from the
+frame buffer color depth - which is still controlled in the usual way
+within the X server.  This option instead selects the physical format
+/ sequencing of the digital bits sent to the display.  Setting the
+frame buffer color depth is really a matter of preference by the user,
+while setting the pixel format here is a requirement of the connected
+hardware.  Leaving this unset implies the default value of false,
+which is almost always going to be right choice.  If your
+LVDS-connected display on the other hand is extremely washed out
+(e.g. white on a lighter white), trying this option might clear the
+problem.
+.TP
+.BI "Option \*qLVDSFixedMode\*q \*q" boolean \*q
+Use a fixed set of timings for the LVDS output, independent of normal
+xorg specified timings.  The default value if left unspecified is
+true, which is what you want for a normal LVDS-connected LCD type of
+panel.  If you are not sure about this, leave it at its default, which
+allows the driver to automatically figure out the correct fixed panel
+timings.  See further in the section about LVDS fixed timing for more
+information.
+.TP
+.BI "Option \*qXvMC\*q \*q" boolean \*q
+Enable XvMC driver. Current support MPEG2 MC on 915/945 and G33 series.
+User should provide absolute path to libIntelXvMC.so in XvMCConfig file.
+Default: Disabled.
 
 .SH OUTPUT CONFIGURATION
 On 830M and better chipsets, the driver supports runtime configuration of
@@ -209,21 +240,39 @@ By adjusting the BACKLIGHT property, the brightness on the LVDS output can be ad
 .TP 2
 The driver will attempt to automatically detect the backlight control method for your platform.  If this fails however, you can select another method which may allow you to control your backlight.  Available methods include:
 .PP
-.B NATIVE
+.B native
 .TP 4
 Intel chipsets include backlight control registers, which on some platforms may be wired to control the backlight directly.  This method uses those registers.
 .PP
-.B LEGACY
+.B legacy
 .TP 4
 The legacy backlight control registers exist in PCI configuration space, and have fewer available backlight levels than the native registers.  However, some platforms are wired this way and so need to use this method.
 .PP
-.B COMBO
+.B combo
 .TP 4
 This method attempts to use the native registers where possible, resorting to the legacy, configuration space registers only to enable the backlight if needed.  On platforms that have both wired this can be a good choice as it allows the fine grained backlight control of the native interface.
 .PP
-.B KERNEL
+.B kernel
 .TP 4
 On some system, the kernel may provide a backlight control driver.  In that case, using the kernel interfaces is preferable, as the same driver may respond to hotkey events or external APIs.
+
+.PP
+.B PANEL_FITTING
+- control LCD panel fitting
+.TP 2
+By default, the driver will attempt to upscale resolutions smaller than the LCD's native size while preserving the aspect ratio.  Other modes are available however:
+.PP
+.B center
+.TP 4
+Simply center the image on-screen, without scaling.
+.PP
+.B full_aspect
+.TP 4
+The default mode.  Try to upscale the image to the screen size, while preserving aspect ratio.  May result in letterboxing or pillar-boxing with some resolutions.
+.PP
+.B full
+.TP 4
+Upscale the image to the native screen size without regard to aspect ratio.  In this mode, the full screen image may appear distorted in some resolutions.
 
 .SS "TV"
 Integrated TV output.  Available properties include:
@@ -254,6 +303,84 @@ See __xconfigfile__(__filemansuffix__) for information on associating Monitor
 sections with these outputs for configuration.  Associating Monitor sections
 with each output can be helpful if you need to ignore a specific output, for
 example, or statically configure an extended desktop monitor layout.
+
+.SH HARDWARE LVDS FIXED TIMINGS AND SCALING
+
+Following here is a discussion that should shed some light on the
+nature and reasoning behind the LVDSFixedMode option.
+
+Unlike a CRT display, an LCD has a "native" resolution corresponding
+to the actual pixel geometry.  A graphics controller under all normal
+circumstances should always output that resolution (and timings) to
+the display.  Anything else and the image might not fill the display,
+it might not be centered, or it might have information missing - any
+manner of strange effects can happen if an LCD panel is not fed with
+the expected resolution and timings.
+
+However there are cases where one might want to run an LCD panel at an
+effective resolution other than the native one.  And for this reason,
+GPUs which drive LCD panels typically include a hardware scaler to
+match the user-configured frame buffer size to the actual size of the
+panel.  Thus when one "sets" his/her 1280x1024 panel to only 1024x768,
+the GPU happily configures a 1024x768 frame buffer, but it scans the
+buffer out in such a way that the image is scaled to 1280x1024 and in
+fact sends 1280x1024 to the panel.  This is normally invisible to the
+user; when a "fuzzy" LCD image is seen, scaling like this is why this
+happens.
+
+In order to make this magic work, this driver logically has to be
+configured with two sets of monitor timings - the set specified (or
+otherwise determined) as the normal xorg "mode", and the "fixed"
+timings that are actually sent to the monitor.  But with xorg, it's
+only possible to specify the first user-driven set, and not the second
+fixed set.  So how does the driver figure out the correct fixed panel
+timings?  Normally it will attempt to detect the fixed timings, and it
+uses a number of strategies to figure this out.  First it attempts to
+read EDID data from whatever is connected to the LVDS port.  Failing
+that, it will check if the LVDS output is already configured (perhaps
+previously by the video BIOS) and will adopt those settings if found.
+Failing that, it will scan the video BIOS ROM, looking for an embedded
+mode table from which it can infer the proper timings.  If even that
+fails, then the driver gives up, prints the message "Couldn't detect
+panel mode.  Disabling panel" to the X server log, and shuts down the
+LVDS output.
+
+Under most circumstances, the detection scheme works.  However there
+are cases when it can go awry.  For example, if you have a panel
+without EDID support and it isn't integral to the motherboard
+(i.e. not a laptop), then odds are the driver is either not going to
+find something suitable to use or it is going to find something
+flat-out wrong, leaving a messed up display.  Remember that this is
+about the fixed timings being discussed here and not the
+user-specified timings which can always be set in xorg.conf in the
+worst case.  So when this process goes awry there seems to be little
+recourse.  This sort of scenario can happen in some embedded
+applications.
+
+The LVDSFixedMode option is present to deal with this.  This option
+normally enables the above-described detection strategy.  And since it
+defaults to true, this is in fact what normally happens.  However if
+the detection fails to do the right thing, the LVDSFixedMode option
+can instead be set to false, which disables all the magic.  With
+LVDSFixedMode set to false, the detection steps are skipped and the
+driver proceeds without a specified fixed mode timing.  This then
+causes the hardware scaler to be disabled, and the actual timings then
+used fall back to those normally configured via the usual xorg
+mechanisms.
+
+Having LVDSFixedMode set to false means that whatever is used for the
+monitor's mode (e.g. a modeline setting) is precisely what is sent to
+the device connected to the LVDS port.  This also means that the user
+now has to determine the correct mode to use - but it's really no
+different than the work for correctly configuring an old-school CRT
+anyway, and the alternative if detection fails will be a useless
+display.
+
+In short, leave LVDSFixedMode alone (thus set to true) and normal
+fixed mode detection will take place, which in most cases is exactly
+what is needed.  Set LVDSFixedMode to false and then the user has full
+control over the resolution and timings sent to the LVDS-connected
+device, through the usual means in xorg.
 
 .SH "SEE ALSO"
 __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)

@@ -326,7 +326,7 @@ I830SetupForSolidFill(ScrnInfoPtr pScrn, int color, int rop,
      */
     pI830->BR[13] |= (I830PatternROP[rop] << 16);
 #else
-    pI830->BR[13] |= ((XAAGetPatternROP(rop) << 16);
+    pI830->BR[13] |= (XAAGetPatternROP(rop) << 16);
 #endif
 
     pI830->BR[16] = color;
@@ -352,22 +352,22 @@ I830SubsequentSolidFillRect(ScrnInfoPtr pScrn, int x, int y, int w, int h)
 	ErrorF("I830SubsequentFillRectSolid %d,%d %dx%d\n", x, y, w, h);
 
     {
-	BEGIN_LP_RING(6);
+	BEGIN_BATCH(6);
 
 	if (pScrn->bitsPerPixel == 32) {
-	    OUT_RING(COLOR_BLT_CMD | COLOR_BLT_WRITE_ALPHA |
-		     COLOR_BLT_WRITE_RGB);
+	    OUT_BATCH(COLOR_BLT_CMD | COLOR_BLT_WRITE_ALPHA |
+		      COLOR_BLT_WRITE_RGB);
 	} else {
-	    OUT_RING(COLOR_BLT_CMD);
+	    OUT_BATCH(COLOR_BLT_CMD);
 	}
-	OUT_RING(pI830->BR[13]);
-	OUT_RING((h << 16) | (w * pI830->cpp));
-	OUT_RING(pI830->bufferOffset + (y * pScrn->displayWidth + x) *
-		 pI830->cpp);
-	OUT_RING(pI830->BR[16]);
-	OUT_RING(0);
+	OUT_BATCH(pI830->BR[13]);
+	OUT_BATCH((h << 16) | (w * pI830->cpp));
+	OUT_BATCH(pI830->bufferOffset + (y * pScrn->displayWidth + x) *
+		  pI830->cpp);
+	OUT_BATCH(pI830->BR[16]);
+	OUT_BATCH(0);
 
-	ADVANCE_LP_RING();
+	ADVANCE_BATCH();
     }
 
     if (IS_I965G(pI830))
@@ -429,23 +429,23 @@ I830SubsequentScreenToScreenCopy(ScrnInfoPtr pScrn, int src_x1, int src_y1,
     dst_y2 = dst_y1 + h;
 
     {
-	BEGIN_LP_RING(8);
+	BEGIN_BATCH(8);
 
 	if (pScrn->bitsPerPixel == 32) {
-	    OUT_RING(XY_SRC_COPY_BLT_CMD | XY_SRC_COPY_BLT_WRITE_ALPHA |
-		     XY_SRC_COPY_BLT_WRITE_RGB | tiled << 15 | tiled << 11);
+	    OUT_BATCH(XY_SRC_COPY_BLT_CMD | XY_SRC_COPY_BLT_WRITE_ALPHA |
+		      XY_SRC_COPY_BLT_WRITE_RGB | tiled << 15 | tiled << 11);
 	} else {
-	    OUT_RING(XY_SRC_COPY_BLT_CMD | tiled << 15 | tiled << 11);
+	    OUT_BATCH(XY_SRC_COPY_BLT_CMD | tiled << 15 | tiled << 11);
 	}
-	OUT_RING(pI830->BR[13]);
-	OUT_RING((dst_y1 << 16) | (dst_x1 & 0xffff));
-	OUT_RING((dst_y2 << 16) | (dst_x2 & 0xffff));
-	OUT_RING(pI830->bufferOffset);
-	OUT_RING((src_y1 << 16) | (src_x1 & 0xffff));
-	OUT_RING(pI830->BR[13] & 0xFFFF);
-	OUT_RING(pI830->bufferOffset);
+	OUT_BATCH(pI830->BR[13]);
+	OUT_BATCH((dst_y1 << 16) | (dst_x1 & 0xffff));
+	OUT_BATCH((dst_y2 << 16) | (dst_x2 & 0xffff));
+	OUT_BATCH(pI830->bufferOffset);
+	OUT_BATCH((src_y1 << 16) | (src_x1 & 0xffff));
+	OUT_BATCH(pI830->BR[13] & 0xFFFF);
+	OUT_BATCH(pI830->bufferOffset);
 
-	ADVANCE_LP_RING();
+	ADVANCE_BATCH();
     }
 
     if (IS_I965G(pI830))
@@ -506,28 +506,28 @@ I830SubsequentMono8x8PatternFillRect(ScrnInfoPtr pScrn, int pattx, int patty,
 	ErrorF("I830SubsequentMono8x8PatternFillRect\n");
 
     {
-	BEGIN_LP_RING(10);
+	BEGIN_BATCH(10);
 
 	if (pScrn->bitsPerPixel == 32) {
-	    OUT_RING(XY_MONO_PAT_BLT_CMD | XY_MONO_PAT_BLT_WRITE_ALPHA |
-		     XY_MONO_PAT_BLT_WRITE_RGB | tiled << 11 |
-		     ((patty << 8) & XY_MONO_PAT_VERT_SEED) |
-		     ((pattx << 12) & XY_MONO_PAT_HORT_SEED));
+	    OUT_BATCH(XY_MONO_PAT_BLT_CMD | XY_MONO_PAT_BLT_WRITE_ALPHA |
+		      XY_MONO_PAT_BLT_WRITE_RGB | tiled << 11 |
+		      ((patty << 8) & XY_MONO_PAT_VERT_SEED) |
+		      ((pattx << 12) & XY_MONO_PAT_HORT_SEED));
 	} else {
-	    OUT_RING(XY_MONO_PAT_BLT_CMD | tiled << 11 |
-		     ((patty << 8) & XY_MONO_PAT_VERT_SEED) |
-		     ((pattx << 12) & XY_MONO_PAT_HORT_SEED));
+	    OUT_BATCH(XY_MONO_PAT_BLT_CMD | tiled << 11 |
+		      ((patty << 8) & XY_MONO_PAT_VERT_SEED) |
+		      ((pattx << 12) & XY_MONO_PAT_HORT_SEED));
 	}
-	OUT_RING(pI830->BR[13]);
-	OUT_RING((y1 << 16) | x1);
-	OUT_RING((y2 << 16) | x2);
-	OUT_RING(pI830->bufferOffset);
-	OUT_RING(pI830->BR[18]);		/* bg */
-	OUT_RING(pI830->BR[19]);		/* fg */
-	OUT_RING(pI830->BR[16]);		/* pattern data */
-	OUT_RING(pI830->BR[17]);
-	OUT_RING(0);
-	ADVANCE_LP_RING();
+	OUT_BATCH(pI830->BR[13]);
+	OUT_BATCH((y1 << 16) | x1);
+	OUT_BATCH((y2 << 16) | x2);
+	OUT_BATCH(pI830->bufferOffset);
+	OUT_BATCH(pI830->BR[18]);		/* bg */
+	OUT_BATCH(pI830->BR[19]);		/* fg */
+	OUT_BATCH(pI830->BR[16]);		/* pattern data */
+	OUT_BATCH(pI830->BR[17]);
+	OUT_BATCH(0);
+	ADVANCE_BATCH();
     }
 
     if (IS_I965G(pI830))
@@ -630,23 +630,23 @@ I830SubsequentColorExpandScanline(ScrnInfoPtr pScrn, int bufno)
 	       bufno, pI830->BR[12]);
 
     {
-	BEGIN_LP_RING(8);
+	BEGIN_BATCH(8);
 
 	if (pScrn->bitsPerPixel == 32) {
-	    OUT_RING(XY_MONO_SRC_BLT_CMD | XY_MONO_SRC_BLT_WRITE_ALPHA |
-		     tiled << 11 | XY_MONO_SRC_BLT_WRITE_RGB);
+	    OUT_BATCH(XY_MONO_SRC_BLT_CMD | XY_MONO_SRC_BLT_WRITE_ALPHA |
+		      tiled << 11 | XY_MONO_SRC_BLT_WRITE_RGB);
 	} else {
-	    OUT_RING(XY_MONO_SRC_BLT_CMD | tiled << 11);
+	    OUT_BATCH(XY_MONO_SRC_BLT_CMD | tiled << 11);
 	}
-	OUT_RING(pI830->BR[13]);
-	OUT_RING(0);			/* x1 = 0, y1 = 0 */
-	OUT_RING(pI830->BR[11]);		/* x2 = w, y2 = 1 */
-	OUT_RING(pI830->BR[9]);		/* dst addr */
-	OUT_RING(pI830->BR[12]);		/* src addr */
-	OUT_RING(pI830->BR[18]);		/* bg */
-	OUT_RING(pI830->BR[19]);		/* fg */
+	OUT_BATCH(pI830->BR[13]);
+	OUT_BATCH(0);			/* x1 = 0, y1 = 0 */
+	OUT_BATCH(pI830->BR[11]);		/* x2 = w, y2 = 1 */
+	OUT_BATCH(pI830->BR[9]);		/* dst addr */
+	OUT_BATCH(pI830->BR[12]);		/* src addr */
+	OUT_BATCH(pI830->BR[18]);		/* bg */
+	OUT_BATCH(pI830->BR[19]);		/* fg */
 
-	ADVANCE_LP_RING();
+	ADVANCE_BATCH();
     }
 
     /* Advance to next scanline.
@@ -730,23 +730,23 @@ I830SubsequentImageWriteScanline(ScrnInfoPtr pScrn, int bufno)
 	       bufno, pI830->BR[12]);
 
     {
-	BEGIN_LP_RING(8);
+	BEGIN_BATCH(8);
 
 	if (pScrn->bitsPerPixel == 32) {
-	    OUT_RING(XY_SRC_COPY_BLT_CMD | XY_SRC_COPY_BLT_WRITE_ALPHA |
-		     tiled << 11 | XY_SRC_COPY_BLT_WRITE_RGB);
+	    OUT_BATCH(XY_SRC_COPY_BLT_CMD | XY_SRC_COPY_BLT_WRITE_ALPHA |
+		      tiled << 11 | XY_SRC_COPY_BLT_WRITE_RGB);
 	} else {
-	    OUT_RING(XY_SRC_COPY_BLT_CMD | tiled << 11);
+	    OUT_BATCH(XY_SRC_COPY_BLT_CMD | tiled << 11);
 	}
-	OUT_RING(pI830->BR[13]);
-	OUT_RING(0);				/* x1 = 0, y1 = 0 */
-	OUT_RING(pI830->BR[11]);		/* x2 = w, y2 = 1 */
-	OUT_RING(pI830->BR[9]);			/* dst addr */
-	OUT_RING(0);				/* source origin (0,0) */
-	OUT_RING(pI830->BR[11] & 0xffff);	/* source pitch */
-	OUT_RING(pI830->BR[12]);		/* src addr */
+	OUT_BATCH(pI830->BR[13]);
+	OUT_BATCH(0);				/* x1 = 0, y1 = 0 */
+	OUT_BATCH(pI830->BR[11]);		/* x2 = w, y2 = 1 */
+	OUT_BATCH(pI830->BR[9]);			/* dst addr */
+	OUT_BATCH(0);				/* source origin (0,0) */
+	OUT_BATCH(pI830->BR[11] & 0xffff);	/* source pitch */
+	OUT_BATCH(pI830->BR[12]);		/* src addr */
 
-	ADVANCE_LP_RING();
+	ADVANCE_BATCH();
     }
 
     /* Advance to next scanline.

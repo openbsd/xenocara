@@ -57,19 +57,4 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #define SIL164_REGC 0x0c
 
-typedef struct _Sil164SaveRec {
-    CARD8 reg8;
-    CARD8 reg9;
-    CARD8 regc;
-} SIL164SaveRec;
-
-typedef struct {
-    I2CDevRec d;
-    Bool quiet;
-    SIL164SaveRec SavedReg;
-    SIL164SaveRec ModeReg;
-} SIL164Rec, *SIL164Ptr;
-
-#define SILPTR(d) ((SIL164Ptr)(d->DriverPrivate.ptr))
-
 #endif

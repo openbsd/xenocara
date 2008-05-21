@@ -260,8 +260,8 @@ I810SetTiledMemory(ScrnInfoPtr pScrn, int nr, unsigned int start,
 {
    I810Ptr pI810 = I810PTR(pScrn);
    I810RegPtr i810Reg = &pI810->ModeReg;
-   CARD32 val;
-   CARD32 fence_mask = 0;
+   uint32_t val;
+   uint32_t fence_mask = 0;
 
    if (nr < 0 || nr > 7) {
       xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "%s - fence %d out of range\n",

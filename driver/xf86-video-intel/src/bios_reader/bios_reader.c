@@ -38,7 +38,7 @@
 
 /* Make a fake pI830 so we can easily pull i830_bios.c code in here. */
 struct _fake_i830 {
-    CARD8 *VBIOS;
+    uint8_t *VBIOS;
 };
 struct _fake_i830 I830;
 struct _fake_i830 *pI830 = &I830;
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 	struct lvds_bdb_2 *lvds2;
 	struct lvds_bdb_2_fp_params *fpparam;
 	struct lvds_bdb_2_fp_edid_dtd *fptiming;
-	CARD8 *timing_ptr;
+	uint8_t *timing_ptr;
 
 	id = INTEL_BIOS_8(start);
 	block_size = INTEL_BIOS_16(start + 1) + 3;
