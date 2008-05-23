@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.27 2008/05/20 14:50:51 oga Exp $
+ * $Id: client.c,v 1.28 2008/05/23 18:57:35 okan Exp $
  */
 
 #include "headers.h"
@@ -665,9 +665,8 @@ client_placecalc(struct client_ctx *cc)
 	height = cc->geom.height;
 	width = cc->geom.width;
 
-
-	yslack = sc->ymax - cc->geom.height;
-	xslack = sc->xmax - cc->geom.width;
+	yslack = sc->ymax - cc->geom.height - cc->bwidth;
+	xslack = sc->xmax - cc->geom.width - cc->bwidth;
 
 	xu_ptr_getpos(sc->rootwin, &mousex, &mousey);
 
