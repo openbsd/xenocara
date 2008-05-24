@@ -103,7 +103,7 @@ incompatible, it returns zero.
 .SS \fBXineramaIsActive()\fR
 
 .LP
-The XineramaActive function returns a Boolean operator used to determine if 
+The XineramaIsActive function returns a Boolean operator used to determine if 
 Xinerama is activated on the screen. Returns True for active and False for 
 not active.
 .sp

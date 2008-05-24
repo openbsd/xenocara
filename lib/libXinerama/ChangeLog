@@ -1,3 +1,32 @@
+commit 7c169beed2d8324c95385d248777f21c721b332e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sun Feb 24 20:30:03 2008 -0500
+
+    Bug #13660: XineramaQueryScreens() always modifies the 'number' outparameter.
+    
+    This makes the code match the man page.
+
+commit 52040eaaba626dd998f7a5421a923de0b0e06ad2
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:17 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
+commit 5362a27db8fddfb03ade3b2c622a2256d91de9eb
+Author: Brice Goglin <Brice.Goglin@ens-lyon.org>
+Date:   Wed Jul 25 21:41:28 2007 +0200
+
+    Fix typo in Xinerama.man
+    
+    Reported by Emanuele Rocca <ema@debian.org> in
+    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=432256
+
+commit 583d26d583bb0034ff91119ceefc08df64fbbc46
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Mar 16 16:26:41 2007 -0700
+
+    Version bump: 1.0.2
+
 commit 96c081ed52e3437ede0062eb7ccfb520879cbc0e
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Mar 16 16:22:21 2007 -0700

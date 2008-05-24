@@ -307,12 +307,11 @@ XineramaQueryScreens(
 	    *number = rep.number;
 	} else
 	    _XEatData(dpy, rep.length << 2);
+    } else {
+	*number = 0;
     }
 
     UnlockDisplay (dpy);
     SyncHandle ();
     return scrnInfo;
 }
-
-
-
