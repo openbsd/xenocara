@@ -1,3 +1,49 @@
+commit e3af1209b9c1fdb032d01e00b300d57278b81189
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Mar 17 18:28:14 2008 -0700
+
+    Version bump: 1.1.3
+
+commit a9208d44e5123c2f688097c2833abba7e6bcfc71
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Mar 4 18:51:25 2008 -0300
+
+    libXScrnSaver ansification.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b805b9ebb2f981a507d16fc5524f573b8187e5f1
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Mar 17 18:05:32 2008 -0700
+
+    Add hooks to check code with sparse/lint/etc.
+
+commit ae5c253a13cbb408cb41e173bffb993ec6aa6310
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 00:21:17 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit f641875615739ae6431e59b4fc47bb52fdce6381
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:14 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
+commit ec5ca1927558d686c4957f2ae8c8c50c722cd87b
+Author: Daniel Drake <ddrake@brontes3d.com>
+Date:   Tue May 29 10:07:00 2007 -0800
+
+    Bug #11084: libXScrnSaver COPYING file
+    
+    X.Org Bugzilla #11084 <https://bugs.freedesktop.org/show_bug.cgi?id=11084>
+
+commit 8eced0dc1e259777bcda00539c0c59a57fa4a49d
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:53:34 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
 commit 36205d276fd8f783898abae4c32f72ab4eaab3c4
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Dec 16 01:35:45 2006 +0200
