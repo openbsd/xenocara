@@ -1,144 +1,406 @@
-/* $OpenBSD: openbsd_pci.c,v 1.1 2007/06/06 21:01:25 matthieu Exp $ */
 /*
- * (C) Copyright Eric Anholt 2006
- * (C) Copyright IBM Corporation 2006
- * All Rights Reserved.
+ * Copyright (c) 2008 Mark Kettenis
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
  *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.  IN NO EVENT SHALL
- * IBM AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/**
- * \file openbsd_pci.c
- *
- * Access the kernel PCI support using /dev/pci's ioctl and mmap interface.
- *
- * \author Eric Anholt <eric@anholt.net>
- */
-#include <stdlib.h>
+#include <sys/param.h>
+#include <sys/ioctl.h>
+#include <sys/memrange.h>
+#include <sys/mman.h>
+#include <sys/pciio.h>
+
+#include <dev/pci/pcireg.h>
+#include <dev/pci/pcidevs.h>
+
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/pciio.h>
-#include <sys/mman.h>
 
 #include "pciaccess.h"
 #include "pciaccess_private.h"
 
-/**
- * OpenBSD private pci_system structure that extends the base pci_system
- * structure.
- *
- * It is initialized once and used as a global, just as pci_system is used.
- */
-struct openbsd_pci_system {
-	struct pci_system pci_sys; /* must come first */
-	int pcidev;		/**< fd for /dev/pci */
-} *openbsd_pci_sys;
+static int pcifd;
+static int aperturefd = -1;
 
-/**
- * Map a memory region for a device using /dev/mem.
- *
- * \param dev          Device whose memory region is to be mapped.
- * \param region       Region, on the range [0, 5], that is to be mapped.
- * \param write_enable Map for writing (non-zero).
- *
- * \return
- * Zero on success or an \c errno value on failure.
- */
 static int
-pci_device_openbsd_map(struct pci_device *dev, unsigned int region,
-    int write_enable)
+pci_read(int bus, int dev, int func, uint32_t reg, uint32_t *val)
 {
+	struct pci_io io;
+	int err;
+
+	bzero(&io, sizeof(io));
+	io.pi_sel.pc_bus = bus;
+	io.pi_sel.pc_dev = dev;
+	io.pi_sel.pc_func = func;
+	io.pi_reg = reg;
+	io.pi_width = 4;
+
+	err = ioctl(pcifd, PCIOCREAD, &io);
+	if (err)
+		return (err);
+
+	*val = io.pi_data;
+
+	return (0);
 }
 
-/**
- * Unmap the specified region.
- *
- * \param dev          Device whose memory region is to be unmapped.
- * \param region       Region, on the range [0, 5], that is to be unmapped.
- *
- * \return
- * Zero on success or an \c errno value on failure.
- */
 static int
-pci_device_openbsd_unmap(struct pci_device *dev, unsigned int region)
+pci_write(int bus, int dev, int func, uint32_t reg, uint32_t val)
 {
+	struct pci_io io;
+
+	bzero(&io, sizeof(io));
+	io.pi_sel.pc_bus = bus;
+	io.pi_sel.pc_dev = dev;
+	io.pi_sel.pc_func = func;
+	io.pi_reg = reg;
+	io.pi_width = 4;
+	io.pi_data = val;
+
+	return ioctl(pcifd, PCIOCWRITE, &io);
+}
+
+static int
+pci_nfuncs(int bus, int dev)
+{
+	uint32_t hdr;
+
+	if (pci_read(bus, dev, 0, PCI_BHLC_REG, &hdr) != 0)
+		return -1;
+
+	return (PCI_HDRTYPE_MULTIFN(hdr) ? 8 : 1);
+}
+
+static int
+pci_device_openbsd_map_range(struct pci_device *dev,
+    struct pci_device_mapping *map)
+{
+	struct mem_range_desc mr;
+	struct mem_range_op mo;
+	int prot = PROT_READ;
+
+	if (map->flags & PCI_DEV_MAP_FLAG_WRITABLE)
+		prot |= PROT_WRITE;
+
+	map->memory = mmap(NULL, map->size, prot, MAP_SHARED, aperturefd,
+	    map->base);
+	if (map->memory == MAP_FAILED)
+		return  errno;
+
+	/* No need to set an MTRR if it's the default mode. */
+	if ((map->flags & PCI_DEV_MAP_FLAG_CACHABLE) ||
+	    (map->flags & PCI_DEV_MAP_FLAG_WRITE_COMBINE)) {
+		mr.mr_base = map->base;
+		mr.mr_len = map->size;
+		mr.mr_flags = 0;
+		if (map->flags & PCI_DEV_MAP_FLAG_CACHABLE)
+			mr.mr_flags |= MDF_WRITEBACK;
+		if (map->flags & PCI_DEV_MAP_FLAG_WRITE_COMBINE)
+			mr.mr_flags |= MDF_WRITECOMBINE;
+		strlcpy(mr.mr_owner, "pciaccess", sizeof(mr.mr_owner));
+
+		mo.mo_desc = &mr;
+		mo.mo_arg[0] = MEMRANGE_SET_UPDATE;
+
+		if (ioctl(aperturefd, MEMRANGE_SET, &mo))
+			return errno;
+	}
+
+	return 0;
+}
+
+static int
+pci_device_openbsd_unmap_range(struct pci_device *dev,
+    struct pci_device_mapping *map)
+{
+	struct mem_range_desc mr;
+	struct mem_range_op mo;
+
+	if ((map->flags & PCI_DEV_MAP_FLAG_CACHABLE) ||
+	    (map->flags & PCI_DEV_MAP_FLAG_WRITE_COMBINE)) {
+		mr.mr_base = map->base;
+		mr.mr_len = map->size;
+		mr.mr_flags = MDF_UNCACHEABLE;
+		strlcpy(mr.mr_owner, "pciaccess", sizeof(mr.mr_owner));
+
+		mo.mo_desc = &mr;
+		mo.mo_arg[0] = MEMRANGE_SET_REMOVE;
+
+		(void)ioctl(aperturefd, MEMRANGE_SET, &mo);
+	}
+
+	return pci_device_generic_unmap_range(dev, map);
 }
 
 static int
 pci_device_openbsd_read(struct pci_device *dev, void *data,
     pciaddr_t offset, pciaddr_t size, pciaddr_t *bytes_read)
 {
+	struct pci_io io;
+
+	io.pi_sel.pc_bus = dev->bus;
+	io.pi_sel.pc_dev = dev->dev;
+	io.pi_sel.pc_func = dev->func;
+
+	*bytes_read = 0;
+	while (size > 0) {
+		int toread = MIN(size, 4 - (offset & 0x3));
+
+		io.pi_reg = (offset & ~0x3);
+		io.pi_width = 4;
+
+		if (ioctl(pcifd, PCIOCREAD, &io) == -1)
+			return errno;
+
+		io.pi_data = htole32(io.pi_data);
+		io.pi_data >>= ((offset & 0x3) * 8);
+
+		memcpy(data, &io.pi_data, toread);
+
+		offset += toread;
+		data = (char *)data + toread;
+		size -= toread;
+		*bytes_read += toread;
+	}
+
+	return 0;
 }
 
 static int
 pci_device_openbsd_write(struct pci_device *dev, const void *data,
     pciaddr_t offset, pciaddr_t size, pciaddr_t *bytes_written)
 {
+	struct pci_io io;
+
+	if ((offset % 4) == 0 || (size % 4) == 0)
+		return EINVAL;
+
+	io.pi_sel.pc_bus = dev->bus;
+	io.pi_sel.pc_dev = dev->dev;
+	io.pi_sel.pc_func = dev->func;
+
+	*bytes_written = 0;
+	while (size > 0) {
+		io.pi_reg = offset;
+		io.pi_width = 4;
+		memcpy(&io.pi_data, data, 4);
+
+		if (ioctl(pcifd, PCIOCWRITE, &io) == -1) 
+			return errno;
+
+		offset += 4;
+		data = (char *)data + 4;
+		size -= 4;
+		*bytes_written += 4;
+	}
+
+	return 0;
 }
-
-
-static int
-pci_device_openbsd_probe(struct pci_device *dev)
-{
-}
-
-static int
-pci_device_openbsd_read_rom(struct pci_device *dev, void *buffer)
-{
-}
-
 
 static void
 pci_system_openbsd_destroy(void)
 {
-	free(openbsd_pci_sys->pci_sys.devices);
-	openbsd_pci_sys = NULL;
+	close(aperturefd);
+	close(pcifd);
+	free(pci_sys);
+	pci_sys = NULL;
+}
+
+static int
+pci_device_openbsd_probe(struct pci_device *device)
+{
+	struct pci_device_private *priv = (struct pci_device_private *)device;
+	struct pci_mem_region *region;
+	uint64_t reg64, size64;
+	uint32_t bar, reg, size;
+	int bus, dev, func, err;
+
+	bus = device->bus;
+	dev = device->dev;
+	func = device->func;
+
+	err = pci_read(bus, dev, func, PCI_BHLC_REG, &reg);
+	if (err)
+		return err;
+
+	priv->header_type = PCI_HDRTYPE_TYPE(reg);
+	if (priv->header_type != 0)
+		return 0;
+
+	region = device->regions;
+	for (bar = PCI_MAPREG_START; bar < PCI_MAPREG_END;
+	     bar += sizeof(uint32_t), region++) {
+		err = pci_read(bus, dev, func, bar, &reg);
+		if (err)
+			return err;
+
+		/* Probe the size of the region. */
+		err = pci_write(bus, dev, func, bar, ~0);
+		if (err)
+			return err;
+		pci_read(bus, dev, func, bar, &size);
+		pci_write(bus, dev, func, bar, reg);
+
+		if (PCI_MAPREG_TYPE(reg) == PCI_MAPREG_TYPE_IO) {
+			region->is_IO = 1;
+			region->base_addr = PCI_MAPREG_IO_ADDR(reg);
+			region->size = PCI_MAPREG_IO_SIZE(size);
+		} else {
+			if (PCI_MAPREG_MEM_PREFETCHABLE(reg))
+				region->is_prefetchable = 1;
+			switch(PCI_MAPREG_MEM_TYPE(reg)) {
+			case PCI_MAPREG_MEM_TYPE_32BIT:
+			case PCI_MAPREG_MEM_TYPE_32BIT_1M:
+				region->base_addr = PCI_MAPREG_MEM_ADDR(reg);
+				region->size = PCI_MAPREG_MEM_SIZE(size);
+				break;
+			case PCI_MAPREG_MEM_TYPE_64BIT:
+				region->is_64 = 1;
+
+				reg64 = reg;
+				size64 = size;
+
+				bar += sizeof(uint32_t);
+
+				err = pci_read(bus, dev, func, bar, &reg);
+				if (err)
+					return err;
+				reg64 |= (uint64_t)reg << 32;
+
+				err = pci_write(bus, dev, func, bar, ~0);
+				if (err)
+					return err;
+				pci_read(bus, dev, func, bar, &size);
+				pci_write(bus, dev, func, bar, reg64 >> 32);
+				size64 |= (uint64_t)size << 32;
+
+				region->base_addr = PCI_MAPREG_MEM64_ADDR(reg64);
+				region->size = PCI_MAPREG_MEM64_SIZE(size64);
+				region++;
+				break;
+			}
+		}
+	}
+
+	return 0;
 }
 
 static const struct pci_system_methods openbsd_pci_methods = {
-	.destroy = pci_system_openbsd_destroy,
-	.destroy_device = NULL,
-	.read_rom = pci_device_openbsd_read_rom, 
-	.probe = pci_device_openbsd_probe,
-	.map = pci_device_openbsd_map,
-	.unmap = pci_device_openbsd_unmap,
-	.read = pci_device_openbsd_read,
-	.write = pci_device_openbsd_write,
-	.fill_capabilities = pci_fill_capabilities_generic,
+	pci_system_openbsd_destroy,
+	NULL,
+	NULL,
+	pci_device_openbsd_probe,
+	pci_device_openbsd_map_range,
+	pci_device_openbsd_unmap_range,
+	pci_device_openbsd_read,
+	pci_device_openbsd_write,
+	pci_fill_capabilities_generic
 };
 
-/**
- * Attempt to acces the OpenBSD PCI interface.
- */
 int
 pci_system_openbsd_create(void)
 {
-	openbsd_pci_sys = calloc(1, sizeof(struct openbsd_pci_system));
-	if (openbsd_pci_sys = NULL)
+	struct pci_device_private *device;
+	int bus, dev, func, ndevs, nfuncs;
+	uint32_t reg;
+
+	pcifd = open("/dev/pci", O_RDWR);
+	if (pcifd == -1)
+		return ENXIO;
+
+	pci_sys = calloc(1, sizeof(struct pci_system));
+	if (pci_sys == NULL) {
+		close(aperturefd);
+		close(pcifd);
 		return ENOMEM;
-	pci_sys = &openbsd_pci_sys->pci_sys;
+	}
+
 	pci_sys->methods = &openbsd_pci_methods;
-	
+
+	ndevs = 0;
+	for (bus = 0; bus < 256; bus++) {
+		for (dev = 0; dev < 32; dev++) {
+			nfuncs = pci_nfuncs(bus, dev);
+			for (func = 0; func < nfuncs; func++) {
+				if (pci_read(bus, dev, func, PCI_ID_REG,
+				    &reg) != 0)
+					continue;
+				if (PCI_VENDOR(reg) == PCI_VENDOR_INVALID ||
+				    PCI_VENDOR(reg) == 0)
+					continue;
+
+				ndevs++;
+			}
+		}
+	}
+
+	pci_sys->num_devices = ndevs;
+	pci_sys->devices = calloc(ndevs, sizeof(struct pci_device_private));
+	if (pci_sys->devices == NULL) {
+		free(pci_sys);
+		close(pcifd);
+		return ENOMEM;
+	}
+
+	device = pci_sys->devices;
+	for (bus = 0; bus < 256; bus++) {
+		for (dev = 0; dev < 32; dev++) {
+			nfuncs = pci_nfuncs(bus, dev);
+			for (func = 0; func < nfuncs; func++) {
+				if (pci_read(bus, dev, func, PCI_ID_REG,
+				    &reg) != 0)
+					continue;
+				if (PCI_VENDOR(reg) == PCI_VENDOR_INVALID ||
+				    PCI_VENDOR(reg) == 0)
+					continue;
+
+				device->base.domain = 0;
+				device->base.bus = bus;
+				device->base.dev = dev;
+				device->base.func = func;
+				device->base.vendor_id = PCI_VENDOR(reg);
+				device->base.device_id = PCI_PRODUCT(reg);
+
+				if (pci_read(bus, dev, func, PCI_CLASS_REG,
+				    &reg) != 0)
+					continue;
+
+				device->base.device_class =
+				    PCI_INTERFACE(reg) | PCI_CLASS(reg) << 16 |
+				    PCI_SUBCLASS(reg) << 8;
+				device->base.revision = PCI_REVISION(reg);
+
+				if (pci_read(bus, dev, func, PCI_SUBVEND_0,
+				    &reg) != 0)
+					continue;
+
+				device->base.subvendor_id = PCI_VENDOR(reg);
+				device->base.subdevice_id = PCI_PRODUCT(reg);
+
+				device++;
+			}
+		}
+	}
+
 	return 0;
+}
+
+void
+pci_system_openbsd_init_dev_mem(int fd)
+{
+	aperturefd = fd;
 }

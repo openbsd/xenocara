@@ -59,7 +59,7 @@
  * later to try again for the second capability.  This could lead to memory
  * leaks or other quirky behavior.
  */
-int
+_pci_hidden int
 pci_fill_capabilities_generic( struct pci_device * dev )
 {
     struct pci_device_private * const dev_priv =

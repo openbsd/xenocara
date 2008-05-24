@@ -1,4 +1,3 @@
-
 dnl (C) Copyright IBM Corporation 2006
 dnl All Rights Reserved.
 dnl
@@ -41,7 +40,7 @@ dnl refers to ${prefix}.  Thus we have to use `eval' twice.
 
 AC_PREREQ([2.57])
 
-AC_INIT(libpciaccess, 0.8.0, [none yet], libpciaccess)
+AC_INIT(libpciaccess, 0.10.2, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=libpciaccess], libpciaccess)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -72,7 +71,7 @@ if test "x$GCC" = "xyes"; then
 fi
 
 case $host_os in
-	*freebsd*)
+	*freebsd* | *dragonfly*)
 		freebsd=yes
 		;;
 	*linux*)
@@ -83,6 +82,7 @@ case $host_os in
 		;;
 	*solaris*)
 		solaris=yes
+		PCIACCESS_LIBS="$PCIACCESS_LIBS -ldevinfo"
 		;;
 esac
 
@@ -90,6 +90,12 @@ AM_CONDITIONAL(LINUX, [test "x$linux" = xyes])
 AM_CONDITIONAL(FREEBSD, [test "x$freebsd" = xyes])
 AM_CONDITIONAL(OPENBSD, [test "x$openbsd" = xyes])
 AM_CONDITIONAL(SOLARIS, [test "x$solaris" = xyes])
+
+AC_CHECK_FILE([/usr/include/asm/mtrr.h],
+              [have_mtrr_h="yes"], [have_mtrr_h="no"])
+if test "x$have_mtrr_h" = xyes; then
+    AC_DEFINE(HAVE_MTRR, 1, [Use MTRRs on mappings])
+fi
 
 AC_SUBST(PCIACCESS_CFLAGS)
 AC_SUBST(PCIACCESS_LIBS)

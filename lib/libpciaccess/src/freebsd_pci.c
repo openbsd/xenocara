@@ -38,11 +38,25 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <sys/param.h>
 #include <sys/pciio.h>
 #include <sys/mman.h>
+#include <sys/memrange.h>
+
+#if __FreeBSD_version >= 700053
+#define DOMAIN_SUPPORT 1
+#else
+#define DOMAIN_SUPPORT 0
+#endif
 
 #include "pciaccess.h"
 #include "pciaccess_private.h"
+
+#define	PCIC_DISPLAY	0x03
+#define	PCIS_DISPLAY_VGA	0x00
+#define	PCIS_DISPLAY_XGA	0x01
+#define	PCIS_DISPLAY_3D		0x02
+#define	PCIS_DISPLAY_OTHER	0x80
 
 /**
  * FreeBSD private pci_system structure that extends the base pci_system
@@ -61,62 +75,89 @@ struct freebsd_pci_system {
 
 /**
  * Map a memory region for a device using /dev/mem.
- *
- * \param dev          Device whose memory region is to be mapped.
- * \param region       Region, on the range [0, 5], that is to be mapped.
- * \param write_enable Map for writing (non-zero).
- *
+ * 
+ * \param dev   Device whose memory region is to be mapped.
+ * \param map   Parameters of the mapping that is to be created.
+ * 
  * \return
  * Zero on success or an \c errno value on failure.
  */
 static int
-pci_device_freebsd_map( struct pci_device *dev, unsigned region,
-			int write_enable )
+pci_device_freebsd_map_range(struct pci_device *dev,
+			     struct pci_device_mapping *map)
 {
-    int fd, err = 0, prot;
+    const int prot = ((map->flags & PCI_DEV_MAP_FLAG_WRITABLE) != 0) 
+        ? (PROT_READ | PROT_WRITE) : PROT_READ;
+    struct mem_range_desc mrd;
+    struct mem_range_op mro;
 
-    fd = open( "/dev/mem", write_enable ? O_RDWR : O_RDONLY );
-    if ( fd == -1 )
+    int fd, err = 0;
+
+    fd = open("/dev/mem", O_RDWR);
+    if (fd == -1)
 	return errno;
 
-    prot = write_enable ? (PROT_READ | PROT_WRITE) : PROT_READ;
-    dev->regions[ region ].memory = mmap( NULL, dev->regions[ region ].size,
-					  prot, MAP_SHARED, fd,
-					  dev->regions[ region ].base_addr);
+    map->memory = mmap(NULL, map->size, prot, MAP_SHARED, fd, map->base);
 
-    if ( dev->regions[ region ].memory == MAP_FAILED ) {
-	close( fd );
-	dev->regions[ region ].memory = NULL;
+    if (map->memory == MAP_FAILED) {
 	err = errno;
     }
 
-    close( fd );
+    mrd.mr_base = map->base;
+    mrd.mr_len = map->size;
+    strncpy(mrd.mr_owner, "pciaccess", sizeof(mrd.mr_owner));
+    if (map->flags & PCI_DEV_MAP_FLAG_CACHABLE)
+	mrd.mr_flags = MDF_WRITEBACK;
+    else if (map->flags & PCI_DEV_MAP_FLAG_WRITE_COMBINE)
+	mrd.mr_flags = MDF_WRITECOMBINE;
+    else
+	mrd.mr_flags = MDF_UNCACHEABLE;
+    mro.mo_desc = &mrd;
+    mro.mo_arg[0] = MEMRANGE_SET_UPDATE;
+
+    /* No need to set an MTRR if it's the default mode. */
+    if (mrd.mr_flags != MDF_UNCACHEABLE) {
+	if (ioctl(fd, MEMRANGE_SET, &mro)) {
+	    fprintf(stderr, "failed to set mtrr: %s\n", strerror(errno));
+	}
+    }
+
+    close(fd);
 
     return err;
 }
 
-/**
- * Unmap the specified region.
- *
- * \param dev          Device whose memory region is to be unmapped.
- * \param region       Region, on the range [0, 5], that is to be unmapped.
- *
- * \return
- * Zero on success or an \c errno value on failure.
- */
 static int
-pci_device_freebsd_unmap( struct pci_device * dev, unsigned region )
+pci_device_freebsd_unmap_range( struct pci_device *dev,
+				struct pci_device_mapping *map )
 {
-    int err = 0;
+    struct mem_range_desc mrd;
+    struct mem_range_op mro;
+    int fd;
 
-    if ( munmap( dev->regions[ region ].memory,
-		 dev->regions[ region ].size ) == -1) {
-	err = errno;
+    if ((map->flags & PCI_DEV_MAP_FLAG_CACHABLE) ||
+	(map->flags & PCI_DEV_MAP_FLAG_WRITE_COMBINE))
+    {
+	fd = open("/dev/mem", O_RDWR);
+	if (fd != -1) {
+	    mrd.mr_base = map->base;
+	    mrd.mr_len = map->size;
+	    strncpy(mrd.mr_owner, "pciaccess", sizeof(mrd.mr_owner));
+	    mrd.mr_flags = MDF_UNCACHEABLE;
+	    mro.mo_desc = &mrd;
+	    mro.mo_arg[0] = MEMRANGE_SET_REMOVE;
+
+	    if (ioctl(fd, MEMRANGE_SET, &mro)) {
+		fprintf(stderr, "failed to unset mtrr: %s\n", strerror(errno));
+	    }
+
+	    close(fd);
+	} else {
+	    fprintf(stderr, "Failed to open /dev/mem\n");
+	}
     }
 
-    dev->regions[ region ].memory = NULL;
-
-    return err;
+    return pci_device_generic_unmap_range(dev, map);
 }
 
 static int
@@ -126,6 +167,9 @@ pci_device_freebsd_read( struct pci_device * dev, void * data,
 {
     struct pci_io io;
 
+#if DOMAIN_SUPPORT
+    io.pi_sel.pc_domain = dev->domain;
+#endif
     io.pi_sel.pc_bus = dev->bus;
     io.pi_sel.pc_dev = dev->dev;
     io.pi_sel.pc_func = dev->func;
@@ -163,6 +207,9 @@ pci_device_freebsd_write( struct pci_device * dev, const void * data,
 {
     struct pci_io io;
 
+#if DOMAIN_SUPPORT
+    io.pi_sel.pc_domain = dev->domain;
+#endif
     io.pi_sel.pc_bus = dev->bus;
     io.pi_sel.pc_dev = dev->dev;
     io.pi_sel.pc_func = dev->func;
@@ -183,6 +230,42 @@ pci_device_freebsd_write( struct pci_device * dev, const void * data,
 	size -= towrite;
 	*bytes_written += towrite;
     }
+
+    return 0;
+}
+
+/**
+ * Read a VGA rom using the 0xc0000 mapping.
+ *
+ * This function should be extended to handle access through PCI resources,
+ * which should be more reliable when available.
+ */
+static int
+pci_device_freebsd_read_rom( struct pci_device * dev, void * buffer )
+{
+    void *bios;
+    int memfd;
+
+    if ( ( dev->device_class & 0x00ffff00 ) !=
+	 ( ( PCIC_DISPLAY << 16 ) | ( PCIS_DISPLAY_VGA << 8 ) ) )
+    {
+	return ENOSYS;
+    }
+
+    memfd = open( "/dev/mem", O_RDONLY );
+    if ( memfd == -1 )
+	return errno;
+
+    bios = mmap( NULL, dev->rom_size, PROT_READ, 0, memfd, 0xc0000 );
+    if ( bios == MAP_FAILED ) {
+	close( memfd );
+	return errno;
+    }
+
+    memcpy( buffer, bios, dev->rom_size );
+
+    munmap( bios, dev->rom_size );
+    close( memfd );
 
     return 0;
 }
@@ -314,10 +397,20 @@ pci_device_freebsd_probe( struct pci_device * dev )
     bar = 0x10;
     for (i = 0; i < pci_device_freebsd_get_num_regions( dev ); i++) {
 	pci_device_freebsd_get_region_info( dev, i, bar );
-	if (dev->regions[i].is_64)
+	if (dev->regions[i].is_64) {
 	    bar += 0x08;
-	else
+	    i++;
+	} else
 	    bar += 0x04;
+    }
+
+    /* If it's a VGA device, set up the rom size for read_rom using the
+     * 0xc0000 mapping.
+     */
+    if ((dev->device_class & 0x00ffff00) ==
+	((PCIC_DISPLAY << 16) | (PCIS_DISPLAY_VGA << 8)))
+    {
+	dev->rom_size = 64 * 1024;
     }
 
     return 0;
@@ -334,10 +427,10 @@ pci_system_freebsd_destroy(void)
 static const struct pci_system_methods freebsd_pci_methods = {
     .destroy = pci_system_freebsd_destroy,
     .destroy_device = NULL, /* nothing to do for this */
-    .read_rom = NULL, /* XXX: Fill me in */
+    .read_rom = pci_device_freebsd_read_rom,
     .probe = pci_device_freebsd_probe,
-    .map = pci_device_freebsd_map,
-    .unmap = pci_device_freebsd_unmap,
+    .map_range = pci_device_freebsd_map_range,
+    .unmap_range = pci_device_freebsd_unmap_range,
     .read = pci_device_freebsd_read,
     .write = pci_device_freebsd_write,
     .fill_capabilities = pci_fill_capabilities_generic,
@@ -346,7 +439,7 @@ static const struct pci_system_methods freebsd_pci_methods = {
 /**
  * Attempt to access the FreeBSD PCI interface.
  */
-int
+_pci_hidden int
 pci_system_freebsd_create( void )
 {
     struct pci_conf_io pciconfio;
@@ -394,13 +487,18 @@ pci_system_freebsd_create( void )
     for ( i = 0; i < pciconfio.num_matches; i++ ) {
 	struct pci_conf *p = &pciconf[ i ];
 
-	pci_sys->devices[ i ].base.domain = 0; /* XXX */
+#if DOMAIN_SUPPORT
+	pci_sys->devices[ i ].base.domain = p->pc_sel.pc_domain;
+#else
+	pci_sys->devices[ i ].base.domain = 0;
+#endif
 	pci_sys->devices[ i ].base.bus = p->pc_sel.pc_bus;
 	pci_sys->devices[ i ].base.dev = p->pc_sel.pc_dev;
 	pci_sys->devices[ i ].base.func = p->pc_sel.pc_func;
 	pci_sys->devices[ i ].base.vendor_id = p->pc_vendor;
 	pci_sys->devices[ i ].base.device_id = p->pc_device;
 	pci_sys->devices[ i ].base.subvendor_id = p->pc_subvendor;
+	pci_sys->devices[ i ].base.subdevice_id = p->pc_subdevice;
 	pci_sys->devices[ i ].base.device_class = (uint32_t)p->pc_class << 16 |
 	    (uint32_t)p->pc_subclass << 8 | (uint32_t)p->pc_progif;
     }

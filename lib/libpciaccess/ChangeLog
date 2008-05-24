@@ -1,98 +1,606 @@
-2006-05-09  Ian Romanick  <idr@us.ibm.com>
+commit 4586bb6766983d040bff38b43dc458c47e0ca21f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 13:44:38 2008 -0400
 
-	* src/linux_sysfs.c: (pci_device_linux_sysfs_probe):
-	Fix foolish endianess bug.
+    Linux: Fail gracefully on machines without PCI.
 
-	* src/Makefile.am:
-	Bump to version 0.4.1.
+commit 26400575a2a2d10b1014eaf0bfca6cfbf5d9b93b
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed May 21 16:10:37 2008 +1000
 
-2006-04-12  Ian Romanick  <idr@us.ibm.com>
+    pciaccess: bump to 0.10.1
 
-	* configure.ac:
-	* src/Makefile.am:
-	Bump to version 0.4.0.
+commit 4bc9292ff9338e759eb9a73f12edfa5ca87353e0
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed May 21 16:10:24 2008 +1000
 
-	* include/pciaccess.h:
-	Add multiple-inclusion protection.
+    linux: add pci_device_enable entrypoint and sysfs support for it
 
-	* src/common_interface.c: (pci_device_cfg_write_bits):
-	Add new function to write masked bits to PCI config space.
-	This mirrors functionality currently available in X.org that is slated
-	to be removed.
+commit ded8326f2adadc773b34889474a0d4fc20ef387a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri May 9 15:15:42 2008 -0700
 
-	* src/common_iterator.c: (pci_slot_match_iterator_create),
-	(pci_id_match_iterator_create), (pci_iterator_destroy),
-	(pci_device_next), (pci_device_find_by_slot):
-	Gut old regex based search mechanism with a new mechanism that is
-	modeled after the Linux kernel.  In addition to searching for
-	devices by device / vendor ID, it is possible to search for devices
-	by their domain / bus / slot / function.
+    Fix lint warnings in solx_devfs.c
 
-	* src/linux_sysfs.c: (pci_device_linux_sysfs_read_rom),
-	(pci_device_linux_sysfs_map_region),
-	(pci_device_linux_sysfs_unmap_region):
-	Fix serious bugs in the reading of ROMs and in the unmapping of
-	regions.  The main point is that the map routine depens on the
-	pci_mem_region::memory pointer being non-NULL only when the region
-	is mapped.  Therefore, the unmap routine should set it to NULL after
-	unmapping.
+commit 74c976a7bcee3102993cf788850d0b803cf15afd
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri May 9 15:05:46 2008 -0700
 
-	* src/scanpci.c: (main):
-	Update to use new search API.
+    Add pci_system_solx_devfs_create prototype to pciaccess_private.h
 
-2006-03-27  Ian Romanick  <idr@us.ibm.com>
+commit 2ac461b2eca788fa0559312d45efd3caf6eea9bb
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri May 9 14:49:32 2008 -0700
 
-	* Makefile.am:
-	Remove src/pcils.c and src/Makefile.foo.  Add src/scanpci.c.
+    Initialize err to 0 in pci_device_solx_devfs_map_range
+    
+    Prevents returning errors when mapping actually succeeds
 
-	* configure.ac:
-	* src/Makefile.am:
-	Bump version to 0.3.0.
+commit b30d458202bc0304c705eb081b12ead860584bea
+Author: Keith Packard <keithp@keithp.com>
+Date:   Wed Apr 16 12:10:52 2008 -0700
 
-	* include/pciaccess.h:
-	* src/common_device_name.c: (pci_get_strings):
-	Replace pci_get_name with pci_get_strings.  This function
-	matches the functionality provided by the Xorg scanpci module
-	almost identically.
+    Kludge around linux bug and turn off write-through and cache-disable bits
+    
+    When mmaping the PCI device, the kernel turns on the write-through and
+    cache-disable bits in the allocated PTEs. This disables write-combining mode
+    and dramatically reduces write bandwidth to the frame buffer. While that
+    should be fixed in the kernel, we'll kludge around it here by using mprotect
+    to rewrite the PTEs and get those bits turned off.
 
-2006-03-24  Ian D. Romanick  <idr@us.ibm.com>
+commit a3b63c43b960e3b37e1b303214e63c5155192a5d
+Author: Hasso Tepper <hasso@estpak.ee>
+Date:   Mon Apr 7 15:28:44 2008 +0300
 
-	* src/Makefile.foo: Drop from CVS.
+    Add DragonFly BSD support
+    
+    DragonFly behaves exactly like FreeBSD, so no problem here.
 
-2006-03-20  Kristian Høgsberg  <krh@redhat.com>
+commit ec53d6ef2bdf0e7a087ffd45fe112290f2181656
+Author: Danny van Dyk <danny.dyk@uni-dortmund.de>
+Date:   Fri Mar 28 17:01:29 2008 -0700
 
-	* src/Makefile.am (noinst_PROGRAMS): Add scanpci as a noinst target.
-	* src/Makefile.in: Drop from CVS.
+    Fix function prototypes for C++
 
-2006-03-17  Ian D. Romanick  <idr@us.ibm.com>
+commit a5c862029846ddd5cecf44819f2a967e2a1672a9
+Author: Stuart Bennett <sb476@cam.ac.uk>
+Date:   Fri Mar 14 11:58:33 2008 -0400
 
-	* configure.ac, src/common_device_name.c
-	Added configure option (--with-pciids-path) to set the default
-	place to look for the pci.ids file.
+    Bug #13988: Fix reads from "0"-sized ROMs.
 
-2006-03-16  Ian D. Romanick  <idr@us.ibm.com>
+commit d898072e28ac35f5b3569f48f2e90a9ef8eee2ca
+Author: Mark Kettenis <mark.kettenis@xs4all.nl>
+Date:   Wed Mar 12 21:29:58 2008 +0100
 
-	* src/pcils.c, src/scanpci.c, src/Makefile.foo
-	Made pcils more like XFree86's scanpci utility than lspci.  Changed
-	the name of the source file from pcils.c to scanpci.c.  Eventually
-	this will be it's own project somewhere else (or it will whither and
-	die).
+    OpenBSD support for libpciaccess.
+    
+    xserver and libpciaccess both need to open /dev/xf86, which can only
+    be opened once.  I implemented pci_system_init_dev_mem() like Ian
+    suggested.  This requires some minor changes to the BSD-specific
+    os-support code.  Since pci_system_init_dev_mem() is a no-op on
+    FreeBSD this should be no problem.
 
-2006-03-15  Ian D. Romanick  <idr@us.ibm.com>
+commit 4224ff23794500e1455f28fd5689bd0549b72367
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Mar 7 14:41:47 2008 +0100
 
-	* First round of autotools madness.
+    solaris: add pci_tools.h to OS_SUPPORT
+    
+    pci_tools.h was missing from the tarball, but is needed by solx_devfs.c
 
-2006-02-24  Ian D. Romanick  <idr@us.ibm.com>
+commit ac119e0b1d5fdbb6bd447b6cef1ddca59840fe40
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 6 15:31:51 2008 -0500
 
-	* common_device_name.c, pciaccess.h, pcils.c:
-	Add interfaces for querying the device, vendor, subdevice, and
-	subvendor name strings from pci.ids.
+    libpciaccess 0.10
 
-2006-02-20  Ian D. Romanick  <idr@us.ibm.com>
+commit 0ac748d0da1361075efa48a6238f2328d24ba1a8
+Author: Doug Chapman <doug.chapman@hp.com>
+Date:   Thu Mar 6 14:22:17 2008 -0500
 
-	* common_agp.c:
-	Removed this file.  It was an old version of what became
-	common_capability.c.
+    Bug #14818: Actually return the PCI vendor name, instead of NULL.
 
-	* common_capability.c:
-	Fixed an issue with AGP rate detection for AGP3 devices.
+commit adc46f65d7a097ea0e8427a2496586a420c99d55
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Feb 19 14:45:40 2008 +0100
+
+    Don't export private symbols.
+
+commit 25de45d250811474e86cb9a09caf258aef699196
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Feb 19 14:26:54 2008 +0100
+
+    Use <byteswap.h> when using glibc, not just on linux
+    
+    This fixes the build on GNU/kFreeBSD.
+
+commit ceda00d33fbf3d491e3f7e53302acd2b8b74a305
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 16:38:51 2007 -0500
+
+    Replace static ChangeLog with dist-hook to generate from git log
+
+commit e392082abb5696c8837224da86cc0af4f21d7010
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Oct 23 15:19:36 2007 +0200
+
+    Bit-fields have to have type _Bool, signed int, or unsigned int.
+    
+    ISO/IEC 9899:1999 (E), 6.7.2.1 Structure and union specifiers, (4).
+    _Bool is only supported for C99 and up, and 1-bit signed types don't make
+    sense -> unsigned int.
+
+commit 5b9ca552a17de37bbac84f0cf5b4430d108e576c
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Thu Oct 18 15:59:14 2007 -0700
+
+    Update bug reporting link.
+
+commit 57a942b3cca314a56735e0a4198cac2f25b653dd
+Author: Eric Anholt <eric@anholt.net>
+Date:   Wed Oct 10 15:20:51 2007 -0700
+
+    FreeBSD: for 64-bit BARs, skip the resource slot used for the upper 32 bits.
+    
+    This gets us the same resource numbering as on Linux.
+
+commit 127ae628a2090bb00df81adce831b8b031d3b4a8
+Author: Eric Anholt <eric@anholt.net>
+Date:   Wed Oct 10 14:55:45 2007 -0700
+
+    FreeBSD: Don't try to unset an MTRR if we didn't set it.
+
+commit 28fea32f987a74d365d01bc5870a8bce1c393d59
+Author: Eric Anholt <eric@anholt.net>
+Date:   Wed Oct 10 14:32:38 2007 -0700
+
+    Add domain output to scanpci.
+
+commit 393145db90578d7d598fccf949b249217066a67c
+Author: Eric Anholt <eric@anholt.net>
+Date:   Wed Oct 10 14:32:09 2007 -0700
+
+    FreeBSD: Add support for multiple PCI domains.
+
+commit 7d809e149b59f22e24723db7360a4c38a9145b45
+Author: Eric Anholt <eric@anholt.net>
+Date:   Tue Oct 9 12:13:49 2007 -0700
+
+    FreeBSD: Fix unmap_range to return an error value.
+
+commit 042735df2aa5846fcabfd74c5f73877132728b25
+Author: Eric Anholt <eric@anholt.net>
+Date:   Tue Oct 9 12:12:34 2007 -0700
+
+    FreeBSD: don't set the MTRR if it's the default mode (uncacheable).
+
+commit 4bdaca5295eeacdaeb80f2e7d0fa17674dcbc77a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Sep 27 15:22:51 2007 -0700
+
+    Need to link with -ldevinfo on Solaris
+
+commit 63983e2397d813246b851771c13397ff700e239e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Sep 26 17:26:47 2007 -0700
+
+    Fix Solaris build: missing static prototype & typo in variable name
+
+commit 8c77862e70eac7f61cd402e9ef33a5b0ca1c6426
+Author: Eric Anholt <eric@anholt.net>
+Date:   Tue Sep 11 15:07:55 2007 +0000
+
+    Add FreeBSD MTRR setting support.
+
+commit 82a2ff0bb091e097bacb66273f55a287afb15abf
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Tue Sep 4 16:13:24 2007 -0700
+
+    Add stub version of pci_device_map_memory_range
+    
+    This stub version of pci_device_map_memory_range allows the vesa driver and
+    other users of this interface to continue functioning with current
+    libpciaccess bits.  That said, users of this interface should convert over
+    to pci_device_map_range as soon as possible.
+
+commit 9d1596cba90c8fd273e9d1d5488747cc0f34fdc7
+Merge: b1e9117... 5cf29b0...
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 06:15:58 2007 -0400
+
+    Merge branch 'master' of ssh://git.freedesktop.org/git/xorg/lib/libpciaccess
+
+commit b1e911784d314fdbd8d938e5fe3671bec128fb61
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:53:57 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit 5cf29b06b9b5806056a0b04160b2286eb4158748
+Author: Keith Packard <keithp@koto.keithp.com>
+Date:   Fri Aug 31 13:43:18 2007 -0700
+
+    Don't add MTRR for uncached regions. Remove MTRR on unmap.
+    
+    MTRR regions aren't needed for uncached mappings, so don't add them. Also,
+    when unmapping memory, remove the MTRR entry.
+
+commit ebc618e7508847307713a59aeeed337a9277629d
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Aug 31 12:40:03 2007 -0700
+
+    Update / add comments in struct pci_mem_region.
+
+commit 08ff9f7fbd26dd2d0e30351b556c71c272f6be6c
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Thu Aug 30 17:52:02 2007 -0700
+
+    New interfaces to map memory with MTRR (or similar) support.
+    
+    Added new functions pci_device_map_range and pci_device_unmap_range to
+    handle mapping of PCI device BARs.  These new interfaces allow the
+    possiblity of MTRRs on platforms that support them.
+    
+    These additional APIs necessitated changing some internal interfaces.  The
+    code for FreeBSD and Solaris has been updated but has not been compiled or
+    tested.
+    
+    Old interfaces are marked deprecated and will eventually be removed.
+
+commit c87273e8e20c8bff892ded31295dba103f27dd35
+Author: Eric Anholt <eric@anholt.net>
+Date:   Tue Aug 28 16:02:46 2007 -0700
+
+    Make the base address printout of scanpci more usable.
+
+commit 47d625ccea7dbcd6b69009aa1ec64a96e97513f6
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Aug 27 16:41:52 2007 -0700
+
+    Bump version to 0.9.1 (sigh).
+
+commit 73197e09c924dabc18b8839180508584b97e03df
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Aug 27 16:41:21 2007 -0700
+
+    Add linux_devmem.h to file list.
+
+commit 5e595d09e7011b82a90f74b149a97bea23ddfbf0
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Aug 27 16:39:00 2007 -0700
+
+    Bump version to 0.9.0.
+
+commit b0c9558c97ee861af240a948c364807e628e49de
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 21:31:50 2007 -0400
+
+    Remove deprecated .cvsignore files
+
+commit 4e6be0466ad973ee6f63e0cbed466a974908dce8
+Author: Eric Anholt <eric@anholt.net>
+Date:   Fri Aug 3 16:47:09 2007 -0700
+
+    FreeBSD: Add VGA rom reading through /dev/mem.
+
+commit ae4aed2821161028dabd8381273f3803a24340ad
+Author: Eric Anholt <eric@anholt.net>
+Date:   Fri Aug 3 10:46:55 2007 -0700
+
+    FreeBSD: Fill in the subdevice ID.
+
+commit 14e62c77bd1ae6ef1d4048df2da96eeff8f7538f
+Author: Eric Anholt <eric@anholt.net>
+Date:   Fri Aug 3 10:40:53 2007 -0700
+
+    Make scanpci exit cleanly if pci_system_init() fails.
+
+commit a7faac3d2dc49a2130906fbeea3298f32bb9349f
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Jun 18 12:56:40 2007 -0700
+
+    Initial support for reading expansion ROM via VGA BIOS address.
+
+commit 206e29213f92dd639fb4814ed2f3b6ec27e6f985
+Author: edward shu <edward.shu@sun.com>
+Date:   Wed Jun 6 23:05:56 2007 +0800
+
+    Libpciaccess on Solaris Initial integration
+    
+    Libpciaccess on Solaris Initial integration. It depends on devfs to access
+    pci configuration space, also xsvc is used for memory map.
+
+commit db56c640028d2f8072274f3eb603caa481103f4f
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Tue Mar 27 08:01:39 2007 -0700
+
+    Whitespace police.
+
+commit c6e72deddb3055167fff8007bf039be61e45849e
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Tue Mar 27 07:57:35 2007 -0700
+
+    Don't pci_device_probe until absolutely necessary.
+
+commit 28dc34c2a6045ab95183d708500009bd1eea1659
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Tue Mar 27 07:57:00 2007 -0700
+
+    Make sure header_type is available in read_bridge_info.
+
+commit 061a011ceffc13db3b147dd105d8b7c2edcc3bc8
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Tue Mar 27 07:56:16 2007 -0700
+
+    Populate device and vendor ID fields at device list creation.
+
+commit b36d737d92dbeee7951aded990fa52bac39b2a79
+Author: Eric Anholt <eric@anholt.net>
+Date:   Tue Mar 6 10:48:51 2007 -0800
+
+    FreeBSD: Fix a couple of minor issues in cleanup paths.
+
+commit 09be109c223b93d74ea3cc7a12d9a22b44990a14
+Author: Eric Anholt <eric@anholt.net>
+Date:   Thu Mar 1 10:49:13 2007 -0800
+
+    FreeBSD: Add system cleanup function.
+
+commit f6502eee20205ec14ce6499251a28962cc36fdd6
+Author: Eric Anholt <eric@anholt.net>
+Date:   Wed Feb 28 16:25:07 2007 -0800
+
+    FreeBSD: When mapping regions, use the region's base address, not 0.
+
+commit a4ec2f35ea5b4f74cf455be24f8ad25d4096ab98
+Author: Eric Anholt <eric@anholt.net>
+Date:   Wed Feb 28 16:13:44 2007 -0800
+
+    Fix inverted protection typo for mmap in region mapping.
+
+commit 9819ae0c376db57a9de5fcbb2f1d4c3ee1ed2ea8
+Author: Eric Anholt <eric@anholt.net>
+Date:   Wed Feb 28 15:42:24 2007 -0800
+
+    scanpci prototype warning fix
+
+commit e70b710133cc552df266d5046a53f7a241a569eb
+Author: Eric Anholt <eric@anholt.net>
+Date:   Wed Feb 28 15:39:38 2007 -0800
+
+    Update freebsd code for pci_device_cfg_write API change.
+
+commit d86245be3bd57b29e5b7561b3facecb3298fea3b
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Nov 15 02:49:50 2006 +0200
+
+    scanpci: BIST line offsets were off by 4.
+
+commit cc1d08f113140010f49503adc4e7afe5db892a02
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Tue Jan 16 21:24:12 2007 -0800
+
+    Fix bad parameter to pci_device_cfg_write in pci_device_cfg_write_u8.
+    
+    When changing the interface of the pci_device_cfg_write_u* functions
+    in commit 37ce43c1804bad9c52b8316eaefd3a57b670ee29, I forgot to modify
+    pci_device_cfg_write_u8 to pass a pointer to data to
+    pci_device_cfg_write instead of just passing data.
+
+commit 54d40b528ab769c4e89aaca87d1728a6194e4378
+Merge: 37ce43c... 335d42f...
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Jan 15 11:18:29 2007 -0800
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/lib/libpciaccess
+
+commit 37ce43c1804bad9c52b8316eaefd3a57b670ee29
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Jan 15 11:18:19 2007 -0800
+
+    Convert pci_device_write_u* funtions to take a value instead of a pointer.
+    
+    At anholt's request, the pci_device_write_u* functions have been
+    converted to take the value to be written as a parameter instead of a
+    pointer to the value.
+    
+    Bump the version to 0.8.0.
+
+commit 335d42f637dd44461bc20ba599ca5dc4971b6eaa
+Author: Eric Anholt <eric@anholt.net>
+Date:   Fri Jan 12 16:32:51 2007 -0800
+
+    Add support for getting region information on FreeBSD.
+    
+    This could stand a lot more testing -- all it has received is visual inspection
+    of scanpci output on one machine, with some differing results from XFree86
+    scanpci output.
+
+commit 94355b6f49a61e7424ddc7ddfc70a9b344233a47
+Author: Eric Anholt <eric@anholt.net>
+Date:   Fri Jan 12 14:15:29 2007 -0800
+
+    Open the pci device read-write so we can read and write config regs.
+    
+    With this, we can hook up the IRQ line information.  It would probably be nice
+    to have an unpriveleged mode, but for now, write access is required.
+
+commit 253e7f672b8b311b18cf827cd12c9147bba8eb4c
+Author: Eric Anholt <eric@anholt.net>
+Date:   Fri Jan 12 13:33:51 2007 -0800
+
+    Remove extra fallback definition of PCIIDS_PATH.
+    
+    PCIIDS_PATH should always be provided by configure.ac and config.h.
+
+commit 87ec7de307ab5bd395d01cdb4f8fdf231d9e769e
+Author: Eric Anholt <eric@anholt.net>
+Date:   Fri Jan 12 13:13:27 2007 -0800
+
+    Fix many warnings and bugs in the freebsd implementation.
+    
+    With this, scanpci gives partially-sane results.
+
+commit 4f6e1a61fc0abe1865e147509af5f7f2bfcaf8f7
+Author: Eric Anholt <eric@anholt.net>
+Date:   Fri Jan 12 13:11:21 2007 -0800
+
+    Enable more warnings when the compiler is GCC.
+
+commit c7ce8ee140b01931994030900c0e8238fbb0caa2
+Author: Eric Anholt <eric@anholt.net>
+Date:   Fri Jan 12 13:06:50 2007 -0800
+
+    Add pciaccess_private.h to _SOURCES so it gets included in the dist.
+
+commit c65aa7630802c8dfcc06a20e515ace31ab0d0e48
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Thu Jan 11 21:40:57 2007 -0800
+
+    Add interfaces to map / unmap specific memory ranges, bump lib version to 0.7.0.
+    
+    Add pci_device_map_memory_range and pci_device_unmap_memory_range to
+    map and unmap specific memory ranges.  The unmap bit is still a bit
+    hinkey (unmaps the whole BAR).  Works so far for initial conversion of
+    VESA driver.  Will need to be revisited.
+
+commit db4a12d09fba381f39af024418e913fb99c34935
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Thu Jan 11 21:39:15 2007 -0800
+
+    Fix bad cast that caused bit truncation.
+
+commit 8948a6c3593d92a50a09baf568b69f164d7e7f59
+Author: Eric Anholt <eric@anholt.net>
+Date:   Tue Nov 14 14:38:48 2006 -0800
+
+    Update .gitignores.
+
+commit 1d227d67d35aba4601c4ffd6a2947ee746d5dc47
+Author: Eric Anholt <eric@anholt.net>
+Date:   Tue Nov 14 14:37:53 2006 -0800
+
+    Add missing newline at the end of the file.
+
+commit e29843d3b0ff5d32d8ab4bc84c58300782d189d3
+Merge: 07b09d9... d05da65...
+Author: Eric Anholt <eric@anholt.net>
+Date:   Tue Nov 14 14:37:46 2006 -0800
+
+    Merge branch 'origin'
+    
+    Conflicts:
+    
+    	src/Makefile.am
+
+commit 07b09d930ed2b7eae299ae036ec30099374b95aa
+Author: Eric Anholt <anholt@FreeBSD.org>
+Date:   Sun Jul 30 16:19:50 2006 -0700
+
+    Add the beginnings of a FreeBSD port.
+
+commit d05da6520a273ee4c2f0e11b5a9bac65b51835fe
+Author: Ian Romanick <idr@localhost.localdomain>
+Date:   Thu Aug 10 09:46:07 2006 -0700
+
+    Fix a segfault in populate_vendor that was triggered when the pci.ids file
+    could not be opened.  Thanks to Aaron Plattner for reporting this.  Fix a
+    couple possible memory leaks in the same function.
+
+commit 27f0ffca71277371a0b6c0cd1a720a9ce9519da5
+Author: Ian Romanick <idr@localhost.localdomain>
+Date:   Sun Jul 30 15:35:41 2006 -0700
+
+    Added some function preamble comments.
+
+commit cf1b4d3ddfcdbaeddefc42b6eb19eb85a0a1e454
+Author: Eric Anholt <anholt@FreeBSD.org>
+Date:   Sun Jul 30 14:29:58 2006 -0700
+
+    Add endian macros for BSD.
+
+commit edf3908958eacc20162563b68aa45964f0e38b2c
+Author: Eric Anholt <anholt@FreeBSD.org>
+Date:   Sun Jul 30 14:26:38 2006 -0700
+
+    Use ENXIO instead of ENODATA for pci reads returning less than desired.
+
+commit c0e31708e0446b33240d3e1ba3e36c26a618544c
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Tue Jul 25 15:36:52 2006 -0700
+
+    Add pci_device_get_bridge_buses, bump API version to 0.5.0.
+
+commit 2ba1a0e42928f82e678987c84598e1b9d8ba1ef9
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Thu Jul 6 17:18:14 2006 -0700
+
+    Files missed (for reasons I still don't understand) on the previous
+    commit.  REALLY add support for querying bridge information.  Bump to
+    version 0.5.0.
+
+commit c0ff6e6141ee6ebb1f628931ae62f0fa8ef87061
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Thu Jul 6 17:09:47 2006 -0700
+
+    Add support for querying bridge information.  Bump to version 0.5.0.
+
+commit 2467b3c509c7e5b771ca21ee6317b2d72d481439
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Thu Jul 6 17:07:18 2006 -0700
+
+    Fix byte ordering of the PCI class.
+
+commit 70a66689fc2e44e7cd693947ed5f3f2acb4b6587
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon May 22 16:10:37 2006 +0000
+
+    Fix foolish endianess bug. Bump to version 0.4.1.
+
+commit 64af050c3803ed61837d9e9109c7a4e239a5c0b8
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Apr 12 22:56:50 2006 +0000
+
+    Bump to version 0.4.0.
+    Add multiple-inclusion protection.
+    Add new function to write masked bits to PCI config space. This mirrors
+        functionality currently available in X.org that is slated to be
+        removed.
+    Gut old regex based search mechanism with a new mechanism that is modeled
+        after the Linux kernel. In addition to searching for devices by device
+        / vendor ID, it is possible to search for devices by their domain / bus
+        / slot / function.
+    Fix serious bus in the reading of ROMs and in the unmapping of regions. The
+        main point is that the map routine depens on the pci_mem_region::memory
+        pointer being non-NULL only when the region is mapped. Therefore, the
+        unmap routine should set it to NULL after unmapping.
+    Update to use new search API.
+
+commit 5b4db5c392c123f71a7933bd94c789b5e23dd69a
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Mar 27 18:08:42 2006 +0000
+
+    Remove src/pcils.c and src/Makefile.foo. Add src/scanpci.c.
+    Bump version to 0.3.0.
+    Replace pci_get_name with pci_get_strings. This function matches the
+        functionality provided by the Xorg scanpci module almost identically.
+
+commit 6b1e9fae2ab9979b2a3bb3137c5db4d92d2905c8
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Mar 24 16:57:17 2006 +0000
+
+    Remove src/Makefile.foo from CVS since the generated Makefile can do
+        everything now.
+
+commit d890ded5312dc88455fd332e03a4f212ba587e9d
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Mar 20 20:13:34 2006 +0000
+
+    Add scanpci as a noinst target.
+    Drop from CVS.
+
+commit 5a04522a921cd8737ef921dfd49b750a8c64dfc9
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Sat Mar 18 00:12:48 2006 +0000
+
+    Initial import of libpciaccess.

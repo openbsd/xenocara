@@ -100,18 +100,13 @@ static int xsvc_fd = -1;
 #define	DEBUGON	0
 
 
-
+static int pci_device_solx_devfs_map_range(struct pci_device *dev,
+    struct pci_device_mapping *map);
 
 static int pci_device_solx_devfs_read_rom( struct pci_device * dev,
     void * buffer );
 
 static int pci_device_solx_devfs_probe( struct pci_device * dev );
-
-static int pci_device_solx_devfs_map_region( struct pci_device * dev,
-    unsigned region, int write_enable );
-
-static int pci_device_solx_devfs_unmap_region( struct pci_device * dev,
-    unsigned region );
 
 static int pci_device_solx_devfs_read( struct pci_device * dev, void * data,
     pciaddr_t offset, pciaddr_t size, pciaddr_t * bytes_read );
@@ -144,8 +139,8 @@ static const struct pci_system_methods solx_devfs_methods = {
     .destroy_device = NULL,
     .read_rom = pci_device_solx_devfs_read_rom,
     .probe = pci_device_solx_devfs_probe,
-    .map = pci_device_solx_devfs_map_region,
-    .unmap = pci_device_solx_devfs_unmap_region,
+    .map_range = pci_device_solx_devfs_map_range,
+    .unmap_range = pci_device_generic_unmap_range,
 
     .read = pci_device_solx_devfs_read,
     .write = pci_device_solx_devfs_write,
@@ -599,7 +594,7 @@ pci_device_solx_devfs_probe( struct pci_device * dev )
 		 * using libdevinfo
 		 */
 		if ((rnode = di_init("/", DINFOCPYALL)) == DI_NODE_NIL) {
-			(void) fprintf(stderr, "di_init failed: $s\n",
+			(void) fprintf(stderr, "di_init failed: %s\n",
 			    strerror(errno));
 			err = errno;
 		} else {
@@ -758,7 +753,7 @@ pci_device_solx_devfs_read( struct pci_device * dev, void * data,
 		cfg_prg.offset = offset + i;
 		if ((err = ioctl(root_fd, PCITOOL_DEVICE_GET_REG,
 		    &cfg_prg)) != 0) {
-			fprintf(stderr, "read bdf<%x,%x,%x,%x> config space failure\n",
+			fprintf(stderr, "read bdf<%x,%x,%x,%llx> config space failure\n",
 			    cfg_prg.bus_no,
 			    cfg_prg.dev_no,
 			    cfg_prg.func_no,
@@ -836,55 +831,39 @@ pci_device_solx_devfs_write( struct pci_device * dev, const void * data,
 }
 
 
-/*
- * Solaris Version
+/**
+ * Map a memory region for a device using /dev/xsvc.
+ * 
+ * \param dev   Device whose memory region is to be mapped.
+ * \param map   Parameters of the mapping that is to be created.
+ * 
+ * \return
+ * Zero on success or an \c errno value on failure.
  */
 static int
-pci_device_solx_devfs_map_region( struct pci_device * dev, unsigned region,
-    int write_enable )
+pci_device_solx_devfs_map_range(struct pci_device *dev,
+				struct pci_device_mapping *map)
 {
+	const int prot = ((map->flags & PCI_DEV_MAP_FLAG_WRITABLE) != 0) 
+		? (PROT_READ | PROT_WRITE) : PROT_READ;
+	int err = 0;
+
 
 	if (xsvc_fd < 0) {
 		if ((xsvc_fd = open("/dev/xsvc", O_RDWR)) < 0) {
-		    (void) fprintf(stderr, "can not open xsvc driver\n");
-		
-			return (-1);
+			(void) fprintf(stderr, "can not open xsvc driver\n");
+			return errno;
 		}
 	}
 
-	dev->regions[region].memory = mmap(NULL, dev->regions[region].size,
-	    (write_enable) ? (PROT_READ | PROT_WRITE) : PROT_READ, MAP_SHARED,
-	    xsvc_fd, dev->regions[region].base_addr);
+	map->memory = mmap(NULL, map->size, prot, MAP_SHARED, xsvc_fd,
+			   map->base);
+	if (map->memory == MAP_FAILED) {
+		err = errno;
 
-	if (dev->regions[region].memory == MAP_FAILED) {
-		dev->regions[region].memory = 0;
-	
-		(void) fprintf(stderr, "map rom region =%x failed",
-		    dev->regions[region].base_addr);
-		return (-1);
+		(void) fprintf(stderr, "map rom region =%llx failed",
+			       map->base);
 	}
-	
-	/*
-	 * Still used xsvc to do the user space mapping
-	 */
-	return (0);
-}
 
-
-/*
- * Solaris version
- */
-static int
-pci_device_solx_devfs_unmap_region( struct pci_device * dev, unsigned region )
-{
-    int err = 0;
-
-    if ( munmap( dev->regions[ region ].memory, dev->regions[ region ].size )
-	 == -1 ) {
-	err = errno;
-    }
-
-    dev->regions[ region ].memory = NULL;
-
-    return (err);
+	return err;
 }

@@ -44,19 +44,29 @@
 #include <dirent.h>
 #include <errno.h>
 
+#include "config.h"
+
+#ifdef HAVE_MTRR
+#include <asm/mtrr.h>
+#include <sys/ioctl.h>
+#endif
+
 #include "pciaccess.h"
 #include "pciaccess_private.h"
+#include "linux_devmem.h"
+
+static void pci_device_linux_sysfs_enable(struct pci_device *dev);
 
 static int pci_device_linux_sysfs_read_rom( struct pci_device * dev,
     void * buffer );
 
 static int pci_device_linux_sysfs_probe( struct pci_device * dev );
 
-static int pci_device_linux_sysfs_map_region( struct pci_device * dev,
-    unsigned region, int write_enable );
+static int pci_device_linux_sysfs_map_range(struct pci_device *dev,
+    struct pci_device_mapping *map);
 
-static int pci_device_linux_sysfs_unmap_region( struct pci_device * dev,
-    unsigned region );
+static int pci_device_linux_sysfs_unmap_range(struct pci_device *dev,
+    struct pci_device_mapping *map);
 
 static int pci_device_linux_sysfs_read( struct pci_device * dev, void * data,
     pciaddr_t offset, pciaddr_t size, pciaddr_t * bytes_read );
@@ -70,13 +80,14 @@ static const struct pci_system_methods linux_sysfs_methods = {
     .destroy_device = NULL,
     .read_rom = pci_device_linux_sysfs_read_rom,
     .probe = pci_device_linux_sysfs_probe,
-    .map = pci_device_linux_sysfs_map_region,
-    .unmap = pci_device_linux_sysfs_unmap_region,
+    .map_range = pci_device_linux_sysfs_map_range,
+    .unmap_range = pci_device_linux_sysfs_unmap_range,
 
     .read = pci_device_linux_sysfs_read,
     .write = pci_device_linux_sysfs_write,
 
-    .fill_capabilities = pci_fill_capabilities_generic
+    .fill_capabilities = pci_fill_capabilities_generic,
+    .enable = pci_device_linux_sysfs_enable,
 };
 
 #define SYS_BUS_PCI "/sys/bus/pci/devices"
@@ -88,7 +99,7 @@ static int populate_entries(struct pci_system * pci_sys);
 /**
  * Attempt to access PCI subsystem using Linux's sysfs interface.
  */
-int
+_pci_hidden int
 pci_system_linux_sysfs_create( void )
 {
     int err = 0;
@@ -103,6 +114,9 @@ pci_system_linux_sysfs_create( void )
 	pci_sys = calloc( 1, sizeof( struct pci_system ) );
 	if ( pci_sys != NULL ) {
 	    pci_sys->methods = & linux_sysfs_methods;
+#ifdef HAVE_MTRR
+	    pci_sys->mtrr_fd = open("/proc/mtrr", O_WRONLY);
+#endif
 	    err = populate_entries(pci_sys);
 	}
 	else {
@@ -141,7 +155,7 @@ populate_entries( struct pci_system * p )
     struct dirent ** devices;
     int n;
     int i;
-    int err;
+    int err = 0;
 
 
     n = scandir( SYS_BUS_PCI, & devices, scan_sys_pci_filter, alphasort );
@@ -278,6 +292,7 @@ pci_device_linux_sysfs_probe( struct pci_device * dev )
 	    high_addr = strtoull( next, & next, 16 );
 	    flags = strtoull( next, & next, 16 );
 	    if ( low_addr != 0 ) {
+		priv->rom_base = low_addr;
 		dev->rom_size = (high_addr - low_addr) + 1;
 	    }
 	}
@@ -294,6 +309,7 @@ pci_device_linux_sysfs_read_rom( struct pci_device * dev, void * buffer )
     int fd;
     struct stat  st;
     int err = 0;
+    size_t rom_size;
     size_t total_bytes;
 
 
@@ -306,7 +322,10 @@ pci_device_linux_sysfs_read_rom( struct pci_device * dev, void * buffer )
     
     fd = open( name, O_RDWR );
     if ( fd == -1 ) {
-	return errno;
+	/* If reading the ROM using sysfs fails, fall back to the old
+	 * /dev/mem based interface.
+	 */
+	return pci_device_linux_devmem_read_rom(dev, buffer);
     }
 
 
@@ -315,6 +334,9 @@ pci_device_linux_sysfs_read_rom( struct pci_device * dev, void * buffer )
 	return errno;
     }
 
+    rom_size = st.st_size;
+    if ( rom_size == 0 )
+	rom_size = 0x10000;
 
     /* This is a quirky thing on Linux.  Even though the ROM and the file
      * for the ROM in sysfs are read-only, the string "1" must be written to
@@ -324,9 +346,9 @@ pci_device_linux_sysfs_read_rom( struct pci_device * dev, void * buffer )
     write( fd, "1", 1 );
     lseek( fd, 0, SEEK_SET );
 
-    for ( total_bytes = 0 ; total_bytes < st.st_size ; /* empty */ ) {
+    for ( total_bytes = 0 ; total_bytes < rom_size ; /* empty */ ) {
 	const int bytes = read( fd, (char *) buffer + total_bytes,
-				st.st_size - total_bytes );
+				rom_size - total_bytes );
 	if ( bytes == -1 ) {
 	    err = errno;
 	    break;
@@ -356,7 +378,7 @@ pci_device_linux_sysfs_read( struct pci_device * dev, void * data,
     pciaddr_t temp_size = size;
     int err = 0;
     int fd;
-
+    char *data_bytes = data;
 
     if ( bytes_read != NULL ) {
 	*bytes_read = 0;
@@ -381,7 +403,7 @@ pci_device_linux_sysfs_read( struct pci_device * dev, void * data,
 
 
     while ( temp_size > 0 ) {
-	const ssize_t bytes = pread64( fd, data, temp_size, offset );
+	const ssize_t bytes = pread64( fd, data_bytes, temp_size, offset );
 
 	/* If zero bytes were read, then we assume it's the end of the
 	 * config file.
@@ -393,7 +415,7 @@ pci_device_linux_sysfs_read( struct pci_device * dev, void * data,
 
 	temp_size -= bytes;
 	offset += bytes;
-	data += bytes;
+	data_bytes += bytes;
     }
     
     if ( bytes_read != NULL ) {
@@ -414,7 +436,7 @@ pci_device_linux_sysfs_write( struct pci_device * dev, const void * data,
     pciaddr_t temp_size = size;
     int err = 0;
     int fd;
-
+    const char *data_bytes = data;
 
     if ( bytes_written != NULL ) {
 	*bytes_written = 0;
@@ -439,7 +461,7 @@ pci_device_linux_sysfs_write( struct pci_device * dev, const void * data,
 
 
     while ( temp_size > 0 ) {
-	const ssize_t bytes = pwrite64( fd, data, temp_size, offset );
+	const ssize_t bytes = pwrite64( fd, data_bytes, temp_size, offset );
 
 	/* If zero bytes were written, then we assume it's the end of the
 	 * config file.
@@ -451,7 +473,7 @@ pci_device_linux_sysfs_write( struct pci_device * dev, const void * data,
 
 	temp_size -= bytes;
 	offset += bytes;
-	data += bytes;
+	data_bytes += bytes;
     }
     
     if ( bytes_written != NULL ) {
@@ -466,14 +488,13 @@ pci_device_linux_sysfs_write( struct pci_device * dev, const void * data,
 /**
  * Map a memory region for a device using the Linux sysfs interface.
  * 
- * \param dev          Device whose memory region is to be mapped.
- * \param region       Region, on the range [0, 5], that is to be mapped.
- * \param write_enable Map for writing (non-zero).
+ * \param dev   Device whose memory region is to be mapped.
+ * \param map   Parameters of the mapping that is to be created.
  * 
  * \return
  * Zero on success or an \c errno value on failure.
  *
- * \sa pci_device_map_region, pci_device_linux_sysfs_unmap_region
+ * \sa pci_device_map_rrange, pci_device_linux_sysfs_unmap_range
  *
  * \todo
  * Some older 2.6.x kernels don't implement the resourceN files.  On those
@@ -481,51 +502,83 @@ pci_device_linux_sysfs_write( struct pci_device * dev, const void * data,
  * \c mmap64 may need to be used.
  */
 static int
-pci_device_linux_sysfs_map_region( struct pci_device * dev, unsigned region,
-				   int write_enable )
+pci_device_linux_sysfs_map_range(struct pci_device *dev,
+                                 struct pci_device_mapping *map)
 {
     char name[256];
     int fd;
     int err = 0;
-    const int prot = (write_enable) ? (PROT_READ | PROT_WRITE) : PROT_READ;
+    const int prot = ((map->flags & PCI_DEV_MAP_FLAG_WRITABLE) != 0) 
+        ? (PROT_READ | PROT_WRITE) : PROT_READ;
+    const int open_flags = ((map->flags & PCI_DEV_MAP_FLAG_WRITABLE) != 0) 
+        ? O_RDWR : O_RDONLY;
+    const off_t offset = map->base - dev->regions[map->region].base_addr;
+#ifdef HAVE_MTRR
+    struct mtrr_sentry sentry = {
+	.base = map->base,
+        .size = map->size,
+	.type = MTRR_TYPE_UNCACHABLE
+    };
+#endif
 
+    snprintf(name, 255, "%s/%04x:%02x:%02x.%1u/resource%u",
+             SYS_BUS_PCI,
+             dev->domain,
+             dev->bus,
+             dev->dev,
+             dev->func,
+             map->region);
 
-    snprintf( name, 255, "%s/%04x:%02x:%02x.%1u/resource%u",
-	      SYS_BUS_PCI,
-	      dev->domain,
-	      dev->bus,
-	      dev->dev,
-	      dev->func,
-	      region );
-
-    fd = open( name, (write_enable) ? O_RDWR : O_RDONLY );
-    if ( fd == -1 ) {
-	return errno;
+    fd = open(name, open_flags);
+    if (fd == -1) {
+        return errno;
     }
 
 
-    dev->regions[ region ].memory = mmap( NULL, dev->regions[ region ].size,
-					  prot, MAP_SHARED, fd, 0 );
-    if ( dev->regions[ region ].memory == MAP_FAILED ) {
-	err = errno;
-	dev->regions[ region ].memory = NULL;
+    map->memory = mmap(NULL, map->size, prot, MAP_SHARED, fd, offset);
+    if (map->memory == MAP_FAILED) {
+        err = errno;
+        map->memory = NULL;
     }
 
-    close( fd );
+    close(fd);
+
+#ifdef HAVE_MTRR
+    if ((map->flags & PCI_DEV_MAP_FLAG_CACHABLE) != 0) {
+        sentry.type = MTRR_TYPE_WRBACK;
+    } else if ((map->flags & PCI_DEV_MAP_FLAG_WRITE_COMBINE) != 0) {
+        sentry.type = MTRR_TYPE_WRCOMB;
+    }
+
+    if (pci_sys->mtrr_fd != -1 && sentry.type != MTRR_TYPE_UNCACHABLE) {
+	if (ioctl(pci_sys->mtrr_fd, MTRRIOC_ADD_ENTRY, &sentry) < 0) {
+	    /* FIXME: Should we report an error in this case?
+	     */
+	    fprintf(stderr, "error setting MTRR "
+		    "(base = 0x%08lx, size = 0x%08x, type = %u) %s (%d)\n",
+		    sentry.base, sentry.size, sentry.type,
+		    strerror(errno), errno);
+/*            err = errno;*/
+	}
+	/* KLUDGE ALERT -- rewrite the PTEs to turn off the CD and WT bits */
+	mprotect (map->memory, map->size, PROT_NONE);
+	mprotect (map->memory, map->size, PROT_READ|PROT_WRITE);
+    }
+#endif
+
     return err;
 }
 
-
 /**
- * Unmap the specified region using the Linux sysfs interface.
- *
- * \param dev          Device whose memory region is to be mapped.
- * \param region       Region, on the range [0, 5], that is to be mapped.
- *
+ * Unmap a memory region for a device using the Linux sysfs interface.
+ * 
+ * \param dev   Device whose memory region is to be unmapped.
+ * \param map   Parameters of the mapping that is to be destroyed.
+ * 
  * \return
  * Zero on success or an \c errno value on failure.
  *
- * \sa pci_device_unmap_region, pci_device_linux_sysfs_map_region
+ * \sa pci_device_map_rrange, pci_device_linux_sysfs_map_range
  *
  * \todo
  * Some older 2.6.x kernels don't implement the resourceN files.  On those
@@ -533,16 +586,61 @@ pci_device_linux_sysfs_map_region( struct pci_device * dev, unsigned region,
  * \c mmap64 may need to be used.
  */
 static int
-pci_device_linux_sysfs_unmap_region( struct pci_device * dev, unsigned region )
+pci_device_linux_sysfs_unmap_range(struct pci_device *dev,
+				   struct pci_device_mapping *map)
 {
     int err = 0;
+#ifdef HAVE_MTRR
+    struct mtrr_sentry sentry = {
+	.base = map->base,
+        .size = map->size,
+	.type = MTRR_TYPE_UNCACHABLE
+    };
+#endif
 
-    if ( munmap( dev->regions[ region ].memory, dev->regions[ region ].size )
-	 == -1 ) {
-	err = errno;
+    err = pci_device_generic_unmap_range (dev, map);
+    if (err)
+	return err;
+    
+#ifdef HAVE_MTRR
+    if ((map->flags & PCI_DEV_MAP_FLAG_CACHABLE) != 0) {
+        sentry.type = MTRR_TYPE_WRBACK;
+    } else if ((map->flags & PCI_DEV_MAP_FLAG_WRITE_COMBINE) != 0) {
+        sentry.type = MTRR_TYPE_WRCOMB;
     }
 
-    dev->regions[ region ].memory = NULL;
+    if (pci_sys->mtrr_fd != -1 && sentry.type != MTRR_TYPE_UNCACHABLE) {
+	if (ioctl(pci_sys->mtrr_fd, MTRRIOC_DEL_ENTRY, &sentry) < 0) {
+	    /* FIXME: Should we report an error in this case?
+	     */
+	    fprintf(stderr, "error setting MTRR "
+		    "(base = 0x%08lx, size = 0x%08x, type = %u) %s (%d)\n",
+		    sentry.base, sentry.size, sentry.type,
+		    strerror(errno), errno);
+/*            err = errno;*/
+	}
+    }
+#endif
 
     return err;
+}
+
+static void pci_device_linux_sysfs_enable(struct pci_device *dev)
+{
+    char name[256];
+    int fd;
+
+    snprintf( name, 255, "%s/%04x:%02x:%02x.%1u/enable",
+	      SYS_BUS_PCI,
+	      dev->domain,
+	      dev->bus,
+	      dev->dev,
+	      dev->func );
+    
+    fd = open( name, O_RDWR );
+    if (fd == -1)
+       return;
+
+    write( fd, "1", 1 );
+    close(fd);
 }

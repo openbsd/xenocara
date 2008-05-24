@@ -33,6 +33,12 @@
 
 #include <inttypes.h>
 
+#if __GNUC__ >= 3
+#define __deprecated __attribute__((deprecated))
+#else
+#define __deprecated 
+#endif
+
 typedef uint64_t pciaddr_t;
 
 struct pci_device;
@@ -40,18 +46,29 @@ struct pci_device_iterator;
 struct pci_id_match;
 struct pci_slot_match;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int pci_device_read_rom(struct pci_device *dev, void *buffer);
 
-int pci_device_map_region(struct pci_device *dev, unsigned region,
-    int write_enable);
+int  __deprecated pci_device_map_region(struct pci_device *dev,
+    unsigned region, int write_enable);
 
-int pci_device_unmap_region(struct pci_device *dev, unsigned region);
+int __deprecated pci_device_unmap_region(struct pci_device *dev,
+    unsigned region);
 
-int pci_device_map_memory_range(struct pci_device *dev, pciaddr_t base,
-    pciaddr_t size, int write_enable, void **addr);
+int pci_device_map_range(struct pci_device *dev, pciaddr_t base,
+    pciaddr_t size, unsigned map_flags, void **addr);
 
-int pci_device_unmap_memory_range(struct pci_device *dev, void *memory,
+int pci_device_unmap_range(struct pci_device *dev, void *memory,
     pciaddr_t size);
+
+int __deprecated pci_device_map_memory_range(struct pci_device *dev,
+    pciaddr_t base, pciaddr_t size, int write_enable, void **addr);
+
+int __deprecated pci_device_unmap_memory_range(struct pci_device *dev,
+    void *memory, pciaddr_t size);
 
 int pci_device_probe(struct pci_device *dev);
 
@@ -67,6 +84,8 @@ int pci_device_get_bridge_buses(struct pci_device *dev, int *primary_bus,
     int *secondary_bus, int *subordinate_bus);
 
 int pci_system_init(void);
+
+void pci_system_init_dev_mem(int fd);
 
 void pci_system_cleanup(void);
 
@@ -91,6 +110,8 @@ const char *pci_device_get_subdevice_name(const struct pci_device *dev);
 const char *pci_device_get_vendor_name(const struct pci_device *dev);
 const char *pci_device_get_subvendor_name(const struct pci_device *dev);
 
+void pci_device_enable(struct pci_device *dev);
+
 int pci_device_cfg_read    (struct pci_device *dev, void *data,
     pciaddr_t offset, pciaddr_t size, pciaddr_t *bytes_read);
 int pci_device_cfg_read_u8 (struct pci_device *dev, uint8_t  *data,
@@ -110,6 +131,20 @@ int pci_device_cfg_write_u32(struct pci_device *dev, uint32_t data,
     pciaddr_t offset);
 int pci_device_cfg_write_bits(struct pci_device *dev, uint32_t mask,
     uint32_t data, pciaddr_t offset);
+
+#ifdef __cplusplus
+}
+#endif
+
+/**
+ * \name Mapping flags passed to \c pci_device_map_range
+ */
+/*@{*/
+#define PCI_DEV_MAP_FLAG_WRITABLE       (1U<<0)
+#define PCI_DEV_MAP_FLAG_WRITE_COMBINE  (1U<<1)
+#define PCI_DEV_MAP_FLAG_CACHABLE       (1U<<2)
+/*@}*/
+
 
 #define PCI_MATCH_ANY  (~0)
 
@@ -178,10 +213,35 @@ struct pci_slot_match {
 struct pci_mem_region {
     /**
      * When the region is mapped, this is the pointer to the memory.
+     *
+     * This field is \b only set when the deprecated \c pci_device_map_region
+     * interface is used.  Use \c pci_device_map_range instead.
+     *
+     * \deprecated
      */
     void *memory;
 
+
+    /**
+     * Base physical address of the region within its bus / domain.
+     *
+     * \warning
+     * This address is really only useful to other devices in the same
+     * domain.  It's probably \b not the address applications will ever
+     * use.
+     * 
+     * \warning
+     * Most (all?) platform back-ends leave this field unset.
+     */
     pciaddr_t bus_addr;
+
+
+    /**
+     * Base physical address of the region from the CPU's point of view.
+     * 
+     * This address is typically passed to \c pci_device_map_range to create
+     * a mapping of the region to the CPU's virtual address space.
+     */
     pciaddr_t base_addr;
 
 
@@ -320,13 +380,13 @@ struct pci_agp_info {
      */
     uint8_t    rates;
 
-    uint8_t    fast_writes:1;       /**< Are fast-writes supported? */
-    uint8_t    addr64:1;
-    uint8_t    htrans:1;
-    uint8_t    gart64:1;
-    uint8_t    coherent:1;
-    uint8_t    sideband:1;          /**< Is side-band addressing supported? */
-    uint8_t    isochronus:1;
+    unsigned int    fast_writes:1;  /**< Are fast-writes supported? */
+    unsigned int    addr64:1;
+    unsigned int    htrans:1;
+    unsigned int    gart64:1;
+    unsigned int    coherent:1;
+    unsigned int    sideband:1;     /**< Is side-band addressing supported? */
+    unsigned int    isochronus:1;
 
     uint8_t    async_req_size;
     uint8_t    calibration_cycle_timing;

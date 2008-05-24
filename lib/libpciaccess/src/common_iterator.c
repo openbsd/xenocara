@@ -158,6 +158,9 @@ pci_device_next( struct pci_device_iterator * iter )
 {
     struct pci_device_private * d = NULL;
 
+    if (!iter)
+	return NULL;
+
     switch( iter->mode ) {
     case match_any:
 	if ( iter->next_index < pci_sys->num_devices ) {

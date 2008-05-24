@@ -30,12 +30,13 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 
 #include "pciaccess.h"
 #include "pciaccess_private.h"
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__GLIBC__)
 #include <byteswap.h>
 
 #if __BYTE_ORDER == __BIG_ENDIAN
@@ -56,23 +57,20 @@
 #define	LETOH_32(x)	(x)
 #define	HTOLE_32(x)	(x)
 
-#elif defined(__OpenBSD__)
-
-#include <sys/types.h>
-
-#define LETOH_16(x)	letoh16(x)
-#define HTOLE_16(x)	htole16(x)
-#define LETOH_32(x)	letoh32(x)
-#define HTOLE_32(x)	htole32(x)
-
 #else
 
 #include <sys/endian.h>
 
-#define LETOH_16(x)	le16toh(x)
 #define HTOLE_16(x)	htole16(x)
-#define LETOH_32(x)	le32toh(x)
 #define HTOLE_32(x)	htole32(x)
+
+#if defined(__FreeBSD__) || defined(__DragonFly__)
+#define LETOH_16(x)	le16toh(x)
+#define LETOH_32(x)	le32toh(x)
+#else
+#define LETOH_16(x)	letoh16(x)
+#define LETOH_32(x)	letoh32(x)
+#endif
 
 #endif /* others */
 
@@ -140,25 +138,27 @@ pci_device_probe( struct pci_device * dev )
  * \return
  * Zero on success or an \c errno value on failure.
  *
- * \sa pci_device_unmap_region
+ * \sa pci_device_map_range, pci_device_unmap_range
+ * \deprecated
  */
 int
-pci_device_map_region( struct pci_device * dev, unsigned region,
-		       int write_enable )
+pci_device_map_region(struct pci_device * dev, unsigned region,
+                      int write_enable)
 {
-    if ( dev == NULL ) {
-	return EFAULT;
+    const unsigned map_flags =
+        (write_enable) ? PCI_DEV_MAP_FLAG_WRITABLE : 0;
+
+    if ((region > 5) || (dev->regions[region].size == 0))  {
+        return ENOENT;
     }
 
-    if ( (region > 5) || (dev->regions[ region ].size == 0) ) {
-	return ENOENT;
-    }
-
-    if ( dev->regions[ region ].memory != NULL ) {
-	return 0;
+    if (dev->regions[region].memory != NULL) {
+        return 0;
     }
     
-    return (pci_sys->methods->map)( dev, region, write_enable );
+    return pci_device_map_range(dev, dev->regions[region].base_addr,
+                                dev->regions[region].size, map_flags,
+                                &dev->regions[region].memory);
 }
 
 
@@ -178,51 +178,111 @@ pci_device_map_region( struct pci_device * dev, unsigned region,
  * \return
  * Zero on success or an \c errno value on failure.
  *
- * \sa pci_device_unmap_memory_range, pci_device_map_region
+ * \sa pci_device_map_range
+ */
+int pci_device_map_memory_range(struct pci_device *dev,
+				pciaddr_t base, pciaddr_t size,
+				int write_enable, void **addr)
+{
+    return pci_device_map_range(dev, base, size,
+				(write_enable) ? PCI_DEV_MAP_FLAG_WRITABLE : 0,
+				addr);
+}
+
+
+/**
+ * Map the specified memory range so that it can be accessed by the CPU.
+ *
+ * Maps the specified memory range for access by the processor.  The pointer
+ * to the mapped region is stored in \c addr.  In addtion, the
+ * \c pci_mem_region::memory pointer for the BAR will be updated.
+ *
+ * \param dev          Device whose memory region is to be mapped.
+ * \param base         Base address of the range to be mapped.
+ * \param size         Size of the range to be mapped.
+ * \param map_flags    Flag bits controlling how the mapping is accessed.
+ * \param addr         Location to store the mapped address.
+ * 
+ * \return
+ * Zero on success or an \c errno value on failure.
+ *
+ * \sa pci_device_unmap_range
  */
 int
-pci_device_map_memory_range(struct pci_device *dev, pciaddr_t base,
-			    pciaddr_t size, int write_enable, 
-			    void **addr)
+pci_device_map_range(struct pci_device *dev, pciaddr_t base,
+                     pciaddr_t size, unsigned map_flags,
+                     void **addr)
 {
+    struct pci_device_private *const devp =
+        (struct pci_device_private *) dev;
+    struct pci_device_mapping *mappings;
     unsigned region;
+    unsigned i;
     int err = 0;
 
 
     *addr = NULL;
 
     if (dev == NULL) {
-	return EFAULT;
+        return EFAULT;
     }
 
 
     for (region = 0; region < 6; region++) {
-	const struct pci_mem_region const* r = &dev->regions[region];
+        const struct pci_mem_region const* r = &dev->regions[region];
 
-	if (r->size != 0) {
-	    if ((r->base_addr <= base) && ((r->base_addr + r->size) > base)) {
-		if ((base + size) > (r->base_addr + r->size)) {
-		    return E2BIG;
-		}
+        if (r->size != 0) {
+            if ((r->base_addr <= base) && ((r->base_addr + r->size) > base)) {
+                if ((base + size) > (r->base_addr + r->size)) {
+                    return E2BIG;
+                }
 
-		break;
-	    }
-	}
+                break;
+            }
+        }
     }
 
     if (region > 5) {
-	return ENOENT;
+        return ENOENT;
     }
+
+    /* Make sure that there isn't already a mapping with the same base and
+     * size.
+     */
+    for (i = 0; i < devp->num_mappings; i++) {
+        if ((devp->mappings[i].base == base)
+            && (devp->mappings[i].size == size)) {
+            return EINVAL;
+        }
+    }
+
+
+    mappings = realloc(devp->mappings,
+                       (sizeof(devp->mappings[0]) * (devp->num_mappings + 1)));
+    if (mappings == NULL) {
+        return ENOMEM;
+    }
+
+    mappings[devp->num_mappings].base = base;
+    mappings[devp->num_mappings].size = size;
+    mappings[devp->num_mappings].region = region;
+    mappings[devp->num_mappings].flags = map_flags;
+    mappings[devp->num_mappings].memory = NULL;
 
     if (dev->regions[region].memory == NULL) {
-	err = (*pci_sys->methods->map)(dev, region, write_enable);
+        err = (*pci_sys->methods->map_range)(dev,
+                                             &mappings[devp->num_mappings]);
     }
-    
-    if (err == 0) {
-	const pciaddr_t offset = base - dev->regions[region].base_addr;
 
-	*addr = ((uint8_t *)dev->regions[region].memory) + offset;
+    if (err == 0) {
+        *addr =  mappings[devp->num_mappings].memory;
+        devp->num_mappings++;
+    } else {
+        mappings = realloc(devp->mappings,
+                           (sizeof(devp->mappings[0]) * devp->num_mappings));
     }
+
+    devp->mappings = mappings;
 
     return err;
 }
@@ -240,24 +300,29 @@ pci_device_map_memory_range(struct pci_device *dev, pciaddr_t base,
  * \return
  * Zero on success or an \c errno value on failure.
  *
- * \sa pci_device_map_region
+ * \sa pci_device_map_range, pci_device_unmap_range
+ * \deprecated
  */
 int
 pci_device_unmap_region( struct pci_device * dev, unsigned region )
 {
-    if ( dev == NULL ) {
-	return EFAULT;
+    int err;
+
+    if (dev == NULL) {
+        return EFAULT;
     }
 
-    if ( (region > 5) || (dev->regions[ region ].size == 0) ) {
-	return ENOENT;
+    if ((region > 5) || (dev->regions[region].size == 0)) {
+        return ENOENT;
     }
 
-    if ( dev->regions[ region ].memory == NULL ) {
-	return 0;
+    err = pci_device_unmap_range(dev, dev->regions[region].memory,
+                                 dev->regions[region].size);
+    if (!err) {
+        dev->regions[region].memory = NULL;
     }
-    
-    return (pci_sys->methods->unmap)( dev, region );
+
+    return err;
 }
 
 
@@ -274,41 +339,74 @@ pci_device_unmap_region( struct pci_device * dev, unsigned region )
  * \return
  * Zero on success or an \c errno value on failure.
  *
- * \sa pci_device_map_memory_range, pci_device_unmap_region
+ * \sa pci_device_map_range, pci_device_unmap_range
+ * \deprecated
  */
 int
 pci_device_unmap_memory_range(struct pci_device *dev, void *memory,
-			      pciaddr_t size)
+                              pciaddr_t size)
 {
-    unsigned region;
+    return pci_device_unmap_range(dev, memory, size);
+}
+
+
+/**
+ * Unmap the specified memory range so that it can no longer be accessed by the CPU.
+ *
+ * Unmaps the specified memory range that was previously mapped via
+ * \c pci_device_map_memory_range.
+ *
+ * \param dev          Device whose memory is to be unmapped.
+ * \param memory       Pointer to the base of the mapped range.
+ * \param size         Size, in bytes, of the range to be unmapped.
+ * 
+ * \return
+ * Zero on success or an \c errno value on failure.
+ *
+ * \sa pci_device_map_range
+ */
+int
+pci_device_unmap_range(struct pci_device *dev, void *memory,
+                       pciaddr_t size)
+{
+    struct pci_device_private *const devp =
+        (struct pci_device_private *) dev;
+    unsigned i;
+    int err;
 
 
     if (dev == NULL) {
-	return EFAULT;
+        return EFAULT;
     }
 
-    for (region = 0; region < 6; region++) {
-	const struct pci_mem_region const* r = &dev->regions[region];
-	const uint8_t *const mem = r->memory;
-
-	if (r->size != 0) {
-	    if ((mem <= memory) && ((mem + r->size) > memory)) {
-		if ((memory + size) > (mem + r->size)) {
-		    return E2BIG;
-		}
-
-		break;
-	    }
-	}
+    for (i = 0; i < devp->num_mappings; i++) {
+        if ((devp->mappings[i].memory == memory)
+            && (devp->mappings[i].size == size)) {
+            break;
+        }
     }
 
-    if (region > 5) {
-	return ENOENT;
+    if (i == devp->num_mappings) {
+        return ENOENT;
     }
 
-    return (dev->regions[region].memory != NULL)
-	? (*pci_sys->methods->unmap)(dev, region)
-	: 0;
+    
+    err = (*pci_sys->methods->unmap_range)(dev, &devp->mappings[i]);
+    if (!err) {
+        const unsigned entries_to_move = (devp->num_mappings - i) - 1;
+        
+        if (entries_to_move > 0) {
+            (void) memmove(&devp->mappings[i],
+                           &devp->mappings[i + 1],
+                           entries_to_move * sizeof(devp->mappings[0]));
+        }
+        
+        devp->num_mappings--;
+        devp->mappings = realloc(devp->mappings,
+                                 (sizeof(devp->mappings[0]) * devp->num_mappings));
+    }
+
+    return err;
 }
 
 
@@ -505,4 +603,15 @@ pci_device_cfg_write_bits( struct pci_device * dev, uint32_t mask,
     }
 
     return err;
+}
+
+void
+pci_device_enable(struct pci_device *dev)
+{
+    if (dev == NULL) {
+	return;
+    }
+
+    if (pci_sys->methods->enable)
+	pci_sys->methods->enable(dev);
 }

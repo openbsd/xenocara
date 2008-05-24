@@ -29,16 +29,28 @@
  * \author Ian Romanick <idr@us.ibm.com>
  */
 
+#if defined(__GNUC__) && (__GNUC__ >= 4)
+# define _pci_hidden      __attribute__((visibility("hidden")))
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+# define _pci_hidden      __hidden
+#else /* not gcc >= 4 and not Sun Studio >= 8 */
+# define _pci_hidden
+#endif /* GNUC >= 4 */
+
+struct pci_device_mapping;
 
 int pci_fill_capabilities_generic( struct pci_device * dev );
+int pci_device_generic_unmap_range(struct pci_device *dev,
+    struct pci_device_mapping *map);
 
 struct pci_system_methods {
     void (*destroy)( void );
     void (*destroy_device)( struct pci_device * dev );
     int (*read_rom)( struct pci_device * dev, void * buffer );    
     int (*probe)( struct pci_device * dev );
-    int (*map)( struct pci_device * dev, unsigned region, int write_enable );
-    int (*unmap)( struct pci_device * dev, unsigned region );
+    int (*map_range)(struct pci_device *dev, struct pci_device_mapping *map);
+    int (*unmap_range)(struct pci_device * dev,
+		       struct pci_device_mapping *map);
     
     int (*read)(struct pci_device * dev, void * data, pciaddr_t offset,
 		pciaddr_t size, pciaddr_t * bytes_read );
@@ -47,6 +59,15 @@ struct pci_system_methods {
 		pciaddr_t size, pciaddr_t * bytes_written );
 
     int (*fill_capabilities)( struct pci_device * dev );
+    void (*enable)( struct pci_device *dev );
+};
+
+struct pci_device_mapping {
+    pciaddr_t base;
+    pciaddr_t size;
+    unsigned region;
+    unsigned flags;
+    void *memory;
 };
 
 struct pci_device_private {
@@ -63,6 +84,11 @@ struct pci_device_private {
     /*@}*/
     
     /**
+     * Base address of the device's expansion ROM.
+     */
+    pciaddr_t rom_base;
+
+    /**
      * \name Bridge information.
      */
     /*@{*/
@@ -71,7 +97,14 @@ struct pci_device_private {
 	struct pci_pcmcia_bridge_info * pcmcia;
     } bridge;
     /*@}*/
-    
+
+    /**
+     * \name Mappings active on this device.
+     */
+    /*@{*/
+    struct pci_device_mapping *mappings;
+    unsigned num_mappings;
+    /*@}*/
 };
 
 
@@ -93,9 +126,16 @@ struct pci_system {
      * Array of known devices.
      */
     struct pci_device_private * devices;
+
+#ifdef HAVE_MTRR
+    int mtrr_fd;
+#endif
 };
 
 extern struct pci_system * pci_sys;
 
 extern int pci_system_linux_sysfs_create( void );
 extern int pci_system_freebsd_create( void );
+extern int pci_system_openbsd_create( void );
+extern void pci_system_openbsd_init_dev_mem( int );
+extern int pci_system_solx_devfs_create( void );

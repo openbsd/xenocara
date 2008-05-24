@@ -46,6 +46,7 @@
 #endif
 
 #include "pciaccess.h"
+#include "pciaccess_private.h"
 
 #define DO_MATCH(a,b)  (((a) == PCI_MATCH_ANY) || ((a) == (b)))
 
@@ -92,7 +93,7 @@ struct pci_device_leaf {
 /**
  * Root of the PCI vendor ID search tree.
  */
-struct pci_id_node * tree = NULL;
+_pci_hidden struct pci_id_node * tree = NULL;
 
 /**
  * Name of the file containing the PCI ID information.
@@ -227,7 +228,7 @@ populate_vendor( struct pci_id_leaf * vend, int fill_device_data )
 		/* vendor_name may already be set from a previous invocation
 		 * of this function with fill_device_data = 0.
 		 */
-		if (vend->vendor_name != NULL) {
+		if (vend->vendor_name == NULL) {
 		    vend->vendor_name = strdup( & buf[ num_tabs + 6 ] );
 		}
 
