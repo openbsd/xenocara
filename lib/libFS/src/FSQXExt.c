@@ -69,13 +69,13 @@ _FS_convert_char_info(fsXCharInfo *src, FSXCharInfo *dst)
 }
 
 int
-FSQueryXExtents8(svr, fid, range_type, str, str_len, extents)
-    FSServer   *svr;
-    Font        fid;
-    Bool        range_type;
-    unsigned char *str;
-    unsigned long str_len;
-    FSXCharInfo **extents;
+FSQueryXExtents8(
+    FSServer		 *svr,
+    Font		  fid,
+    Bool		  range_type,
+    unsigned char	 *str,
+    unsigned long	  str_len,
+    FSXCharInfo		**extents)
 {
     fsQueryXExtents8Req *req;
     fsQueryXExtents8Reply reply;
@@ -115,13 +115,13 @@ FSQueryXExtents8(svr, fid, range_type, str, str_len, extents)
 }
 
 int
-FSQueryXExtents16(svr, fid, range_type, str, str_len, extents)
-    FSServer   *svr;
-    Font        fid;
-    Bool        range_type;
-    FSChar2b   *str;
-    unsigned long str_len;
-    FSXCharInfo **extents;
+FSQueryXExtents16(
+    FSServer		 *svr,
+    Font		  fid,
+    Bool		  range_type,
+    FSChar2b		 *str,
+    unsigned long	  str_len,
+    FSXCharInfo		**extents)
 {
     fsQueryXExtents16Req *req;
     fsQueryXExtents16Reply reply;

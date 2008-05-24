@@ -58,9 +58,9 @@ in this Software without prior written authorization from The Open Group.
 #include	"FSlibint.h"
 
 char      **
-FSListExtensions(svr, next)
-    FSServer     *svr;
-    int        *next;
+FSListExtensions(
+    FSServer	*svr,
+    int		*next)
 {
     fsListExtensionsReply rep;
     char      **list;
@@ -114,8 +114,7 @@ FSListExtensions(svr, next)
 
 }
 
-int FSFreeExtensionList(list)
-    char      **list;
+int FSFreeExtensionList(char **list)
 {
     if (list != NULL) {
 	FSfree(list[0] - 1);

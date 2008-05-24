@@ -57,11 +57,11 @@ in this Software without prior written authorization from The Open Group.
 #include	"FSlibint.h"
 
 char      **
-FSListCatalogues(svr, pattern, maxNames, actualCount)
-    FSServer   *svr;
-    char       *pattern;
-    int         maxNames;
-    int        *actualCount;
+FSListCatalogues(
+    FSServer	*svr,
+    char	*pattern,
+    int		 maxNames,
+    int		*actualCount)
 {
     long        nbytes;
     int         i,
@@ -121,8 +121,7 @@ FSListCatalogues(svr, pattern, maxNames, actualCount)
 
 }
 
-int FSFreeCatalogues(list)
-    char      **list;
+int FSFreeCatalogues(char **list)
 {
     if (list) {
 	FSfree(list[0] - 1);

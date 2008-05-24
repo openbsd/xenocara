@@ -58,10 +58,10 @@ in this Software without prior written authorization from The Open Group.
 #include	<stdio.h>
 #include	<X11/Xosdefs.h>
 #include	<stdlib.h>
+#include	"FSlib.h"
 
 char       *
-FSServerName(server)
-    char       *server;
+FSServerName(char *server)
 {
     char       *s;
 

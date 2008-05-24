@@ -58,12 +58,12 @@ in this Software without prior written authorization from The Open Group.
 #include "FSlibint.h"
 
 Font
-FSOpenBitmapFont(svr, hint, fmask, name, otherid)
-    FSServer   *svr;
-    FSBitmapFormat hint;
-    FSBitmapFormatMask fmask;
-    char       *name;
-    Font       *otherid;
+FSOpenBitmapFont(
+    FSServer		*svr,
+    FSBitmapFormat	 hint,
+    FSBitmapFormatMask	 fmask,
+    char		*name,
+    Font		*otherid)
 {
     unsigned int nbytes;
     fsOpenBitmapFontReq *req;

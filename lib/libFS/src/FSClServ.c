@@ -61,8 +61,7 @@ in this Software without prior written authorization from The Open Group.
 extern FSServer *_FSHeadOfServerList;
 
 int 
-FSCloseServer(svr)
-    FSServer     *svr;
+FSCloseServer(FSServer *svr)
 {
     _FSExtension *ext;
     FSServer    **sv = &_FSHeadOfServerList;

@@ -58,10 +58,10 @@ in this Software without prior written authorization from The Open Group.
 #include	"FSlibint.h"
 
 int
-FSSetCatalogues(svr, num, cats)
-    FSServer   *svr;
-    int         num;
-    char      **cats;
+FSSetCatalogues(
+    FSServer	 *svr,
+    int		  num,
+    char	**cats)
 {
     int         nbytes;
     fsSetCataloguesReq *req;

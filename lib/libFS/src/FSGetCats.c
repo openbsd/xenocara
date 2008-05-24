@@ -57,9 +57,9 @@ in this Software without prior written authorization from The Open Group.
 #include	"FSlibint.h"
 
 char      **
-FSGetCatalogues(svr, num)
-    FSServer   *svr;
-    int        *num;
+FSGetCatalogues(
+    FSServer	*svr,
+    int		*num)
 {
     fsGetCataloguesReply rep;
     char      **list;

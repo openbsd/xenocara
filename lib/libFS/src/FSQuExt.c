@@ -57,12 +57,12 @@ in this Software without prior written authorization from The Open Group.
 #include	"FSlibint.h"
 
 Bool
-FSQueryExtension(svr, name, major_opcode, first_event, first_error)
-    FSServer   *svr;
-    char       *name;
-    int        *major_opcode;
-    int        *first_event;
-    int        *first_error;
+FSQueryExtension(
+    FSServer	*svr,
+    char	*name,
+    int		*major_opcode,
+    int		*first_event,
+    int		*first_error)
 {
     fsQueryExtensionReply rep;
     fsQueryExtensionReq *req;

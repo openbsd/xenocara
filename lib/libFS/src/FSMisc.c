@@ -57,8 +57,7 @@ in this Software without prior written authorization from The Open Group.
 #include	"FSlibint.h"
 
 long
-FSMaxRequestSize(svr)
-    FSServer     *svr;
+FSMaxRequestSize(FSServer *svr)
 {
     return svr->max_request_size;
 }

@@ -62,13 +62,13 @@ in this Software without prior written authorization from The Open Group.
  */
 
 int
-FSQueryXInfo(svr, fid, info, props, offsets, prop_data)
-    FSServer   *svr;
-    Font        fid;
-    FSXFontInfoHeader *info;
-    FSPropInfo *props;
-    FSPropOffset **offsets;
-    unsigned char **prop_data;
+FSQueryXInfo(
+    FSServer		 *svr,
+    Font		  fid,
+    FSXFontInfoHeader	 *info,
+    FSPropInfo		 *props,
+    FSPropOffset	**offsets,
+    unsigned char	**prop_data)
 {
     fsQueryXInfoReq *req;
     fsQueryXInfoReply reply;

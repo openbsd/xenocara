@@ -58,9 +58,9 @@ in this Software without prior written authorization from The Open Group.
 
 extern _FSQEvent *_FSqfree;
 
-int FSNextEvent(svr, event)
-    FSServer     *svr;
-    FSEvent    *event;
+int FSNextEvent(
+    FSServer	*svr,
+    FSEvent	*event)
 {
     _FSQEvent  *qelt;
 

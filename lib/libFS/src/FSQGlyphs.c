@@ -57,15 +57,15 @@ in this Software without prior written authorization from The Open Group.
 #include "FSlibint.h"
 
 int
-FSQueryXBitmaps8(svr, fid, format, range_type, str, str_len, offsets, glyphdata)
-    FSServer   *svr;
-    Font        fid;
-    FSBitmapFormat format;
-    Bool        range_type;
-    unsigned char *str;
-    unsigned long str_len;
-    FSOffset  **offsets;
-    unsigned char **glyphdata;
+FSQueryXBitmaps8(
+    FSServer		 *svr,
+    Font		  fid,
+    FSBitmapFormat	  format,
+    Bool		  range_type,
+    unsigned char	 *str,
+    unsigned long	  str_len,
+    FSOffset		**offsets,
+    unsigned char	**glyphdata)
 {
     fsQueryXBitmaps8Req *req;
     fsQueryXBitmaps8Reply reply;
@@ -126,16 +126,15 @@ FSQueryXBitmaps8(svr, fid, format, range_type, str, str_len, offsets, glyphdata)
 }
 
 int
-FSQueryXBitmaps16(svr, fid, format, range_type, str, str_len,
-		  offsets, glyphdata)
-    FSServer   *svr;
-    Font        fid;
-    FSBitmapFormat format;
-    Bool        range_type;
-    FSChar2b   *str;
-    unsigned long str_len;
-    FSOffset  **offsets;
-    unsigned char **glyphdata;
+FSQueryXBitmaps16(
+    FSServer		 *svr,
+    Font		  fid,
+    FSBitmapFormat	  format,
+    Bool		  range_type,
+    FSChar2b		 *str,
+    unsigned long	  str_len,
+    FSOffset		**offsets,
+    unsigned char	**glyphdata)
 {
     fsQueryXBitmaps16Req *req;
     fsQueryXBitmaps16Reply reply;

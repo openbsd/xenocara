@@ -55,8 +55,7 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #include	"FSlibint.h"
 
-int FSFlush(svr)
-    FSServer     *svr;
+int FSFlush(FSServer *svr)
 {
     _FSFlush(svr);
     return 1;

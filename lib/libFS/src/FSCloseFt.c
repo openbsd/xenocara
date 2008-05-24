@@ -58,9 +58,9 @@ in this Software without prior written authorization from The Open Group.
 
 
 int 
-FSCloseFont(svr, fid)
-    FSServer     *svr;
-    Font        fid;
+FSCloseFont(
+    FSServer	*svr,
+    Font	 fid)
 {
     fsResourceReq *req;
 

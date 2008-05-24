@@ -60,9 +60,9 @@ extern _FSQEvent *_FSqfree;
 
 /* synchronize with errors and events */
 
-int FSSync(svr, discard)
-    FSServer     *svr;
-    Bool        discard;
+int FSSync(
+    FSServer	*svr,
+    Bool	 discard)
 {
     fsListExtensionsReply rep;
     fsReq      *req;

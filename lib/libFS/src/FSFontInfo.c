@@ -56,15 +56,15 @@ in this Software without prior written authorization from The Open Group.
 #include	"FSlibint.h"
 
 char      **
-FSListFontsWithXInfo(svr, pattern, maxNames, count, info, pprops, offsets, prop_data)
-    FSServer   *svr;
-    char       *pattern;
-    int         maxNames;
-    int        *count;
-    FSXFontInfoHeader ***info;
-    FSPropInfo ***pprops;
-    FSPropOffset ***offsets;
-    unsigned char ***prop_data;
+FSListFontsWithXInfo(
+    FSServer		  *svr,
+    char		  *pattern,
+    int			   maxNames,
+    int			  *count,
+    FSXFontInfoHeader	***info,
+    FSPropInfo		***pprops,
+    FSPropOffset	***offsets,
+    unsigned char	***prop_data)
 {
     long        nbytes;
     int         i,

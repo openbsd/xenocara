@@ -57,11 +57,11 @@ in this Software without prior written authorization from The Open Group.
 #include "FSlibint.h"
 
 char      **
-FSListFonts(svr, pattern, maxNames, actualCount)
-    FSServer   *svr;
-    char       *pattern;
-    int         maxNames;
-    int        *actualCount;
+FSListFonts(
+    FSServer	*svr,
+    char	*pattern,
+    int		 maxNames,
+    int		*actualCount)
 {
     long        nbytes;
     int         i,
@@ -120,8 +120,7 @@ FSListFonts(svr, pattern, maxNames, actualCount)
 
 }
 
-int FSFreeFontNames(list)
-    char      **list;
+int FSFreeFontNames(char **list)
 {
     if (list) {
 	FSfree(list[0] - 1);

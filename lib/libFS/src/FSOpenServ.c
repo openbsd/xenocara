@@ -73,8 +73,7 @@ static void OutOfMemory ( FSServer *svr, char *setup );
 
 FSServer   *_FSHeadOfServerList = NULL;
 
-void _FSFreeServerStructure(svr)
-    FSServer   *svr;
+void _FSFreeServerStructure(FSServer *svr)
 {
     if (svr->server_name)
 	FSfree(svr->server_name);
@@ -88,9 +87,9 @@ void _FSFreeServerStructure(svr)
 }
 
 static
-void OutOfMemory(svr, setup)
-    FSServer   *svr;
-    char       *setup;
+void OutOfMemory(
+    FSServer	*svr,
+    char	*setup)
 {
 
     _FSDisconnectServer(svr->trans_conn);
@@ -105,8 +104,7 @@ void OutOfMemory(svr, setup)
  */
 
 FSServer   *
-FSOpenServer(server)
-    char       *server;
+FSOpenServer(char *server)
 {
     FSServer   *svr;
     int         i;

@@ -79,9 +79,9 @@ FSSynchronize(FSServer *svr, int onoff)
 }
 
 FSSyncHandler 
-FSSetAfterFunction(svr, func)
-    FSServer     *svr;
-    FSSyncHandler func;
+FSSetAfterFunction(
+    FSServer		*svr,
+    FSSyncHandler	 func)
 {
     FSSyncHandler temp;
 
