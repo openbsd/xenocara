@@ -1,4 +1,3 @@
-/* $Xorg: Xtransutil.c,v 1.4 2001/02/09 02:04:07 xorgcvs Exp $ */
 /*
 
 Copyright 1993, 1994, 1998  The Open Group
@@ -25,10 +24,7 @@ not be used in advertising or otherwise to promote the sale, use or
 other dealings in this Software without prior written authorization
 from The Open Group.
 
-*/
-/* $XFree86: xc/lib/xtrans/Xtransutil.c,v 3.26 2003/07/09 15:27:30 tsi Exp $ */
-
-/* Copyright 1993, 1994 NCR Corporation - Dayton, Ohio, USA
+ * Copyright 1993, 1994 NCR Corporation - Dayton, Ohio, USA
  *
  * All Rights Reserved
  *
@@ -60,6 +56,10 @@ from The Open Group.
 
 #ifdef XTHREADS
 #include <X11/Xthreads.h>
+#endif
+#ifdef WIN32
+#include <X11/Xlibint.h>
+#include <X11/Xwinsock.h>
 #endif
 
 #ifdef X11_t
@@ -487,7 +487,7 @@ TRANS(WSAStartup) (void)
 
     PRMSG (2,"WSAStartup()\n", 0, 0, 0);
 
-    if (!wsadata.wVersion && WSAStartup(0x0101, &wsadata))
+    if (!wsadata.wVersion && WSAStartup(MAKEWORD(2,2), &wsadata))
         return 1;
     return 0;
 }
@@ -664,8 +664,10 @@ trans_mkdir(char *path, int mode)
 		    return -1;
 		}
 #endif
+#ifndef __APPLE_CC__
 	  	PRMSG(1, "mkdir: Owner of %s should be set to root\n",
 		      path, 0, 0);
+#endif
 	    }
 	    
 	    if (updateMode && !updatedMode) {

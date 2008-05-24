@@ -1,3 +1,180 @@
+commit e75b9dad0ae4bc0869af81652d8259675a3c5cac
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Thu May 8 16:27:29 2008 +0200
+
+    Bump to 1.2
+
+commit 962ad4d3f8096f5ffa14b32b3ee094f250790c77
+Author: Alan Hourihane <alanh@tungstengraphics.com>
+Date:   Mon Apr 28 23:46:05 2008 +0100
+
+    disable UNIXCONN on MINGW
+
+commit 9e8c0e3356bc6359368b7655d3a717d6c000387e
+Author: Alan Hourihane <alanh@tungstengraphics.com>
+Date:   Sat Apr 26 16:23:19 2008 +0100
+
+    fix build for MAKEWORD
+
+commit 568c5ea02ee1de437833ee0b53a7b3fd7ece084f
+Author: Colin Harrison <colin.harrison-at-virgin.net>
+Date:   Sat Apr 26 08:53:13 2008 +0100
+
+    Update to winsock2
+
+commit 960902584a3ef125946beb5ebe331b54d697e9d9
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Fri Apr 25 15:53:20 2008 -0400
+
+    Fix length calculation for the path for abstract unix domain sockets
+    
+    Since the struct has a fixed-lenght char[] its sizeof() contains
+    trailing NUL octets which results in corrupt abstract sockets.
+    
+    Instead, take the strlen(3) of the path, plus the single NUL octet
+    (which identifies the path as an abstract path rather than a file-
+    system path) plus the offset from the start of the struct to the
+    start of the char array.
+    
+    This fixes:
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=15677
+
+commit 3a2a5375b8aab85697b4f2644ab99c3ccf79e658
+Author: Colin Harrison <colin.harrison-at-virgin.net>
+Date:   Wed Apr 23 10:39:30 2008 +0100
+
+    Only call WSAGetLastError() if there has been an
+    error condition.
+
+commit ac13a1a34b61247a21da130f0ba9922f35d3dc3b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Apr 15 12:32:35 2008 -0700
+
+    Sun bug #6688467: _X11TransConvertAddress: Unknown family type on 64-bit SPARC
+    
+    Check for socklen_t definition and if found use it instead of size_t or
+    int for the length argument to getpeername/getsockname/etc.
+    
+    <http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6688467>
+
+commit 556a351de83fc6f401b02213dae95731553c216d
+Author: Loïc Minier <lool@dooz.org>
+Date:   Mon Mar 24 15:38:27 2008 -0400
+
+    Bug #10489: Don't retry unix socket connect()s on ENOENT.
+    
+    If the socket isn't there, it's not gonna magically appear.  Either it's
+    a server socket and you should have just waited for the SIGUSR1 from the
+    server, or it's a stale reference to an ICE socket.
+    
+    However, do retry once, so fallback from abstract to filesystem namespace
+    works.
+    
+    Originally Debian bug #385976.
+
+commit 3de3e666e0653d4e8ae23fc3e6e31864ddad4059
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Mar 23 19:43:32 2008 +0100
+
+    BSD44SOCKETS is the wrong check for SOCK_MAXADDRLEN
+    
+    GNU/kFreeBSD defines BSD44SOCKETS, but doesn't have SOCK_MAXADDRLEN.
+    Check for the latter directly.
+
+commit 662994b9096181117cec4cae88f24bf6da806159
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 5 21:02:28 2008 -0500
+
+    xtrans 1.1
+
+commit 2afe206ec9569e0d62caa6d91c3fb057b0efa23d
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 5 20:48:59 2008 -0500
+
+    Add support for the abstract socket namespace under Linux.
+    
+    Unlike normal unix sockets, the abstract namespace is not bound to the
+    filesystem.  This has some notable advantages; /tmp need not exist, the
+    socket directory need not have magic permissions, etc.  xtrans servers
+    will listen on both the normal and abstract socket endpoints; clients
+    will attempt to connect to the abstract socket before connecting to the
+    corresponding filesystem socket.
+    
+    Based on a patch by Bill Crawford.
+
+commit c8ed67f16f71042ef134a4d2189c20dd200a0648
+Author: Jeremy Huddleston <jeremy@tifa.local>
+Date:   Sun Feb 10 19:04:40 2008 -0800
+
+    Fixed #ifdef checks that were using i386 to use __i386__
+    
+    """
+    
+    It's simply obsolete, sloppy, compiler namespace pollution.  The
+    compiler is not allowed to predefine symbols that might conflict with
+    ordinary identifiers.  For backwards compatibility gcc currently
+    predefines i386 when compiling for x86 32-bit (but not 64-bit), but that
+    will go away.  It is also not defined if you specify -ansi when invoking
+    the compiler, because then it is seriously standards compliant.  Other
+    compilers shouldn't define it either.  Correct code shouldn't rely on it
+    being defined.  However __i386__ is safe and proper.
+    
+    """
+
+commit 9970b5b6f8237685267b7972282319cf266661ea
+Author: Ben Byer <bbyer@bbyer.local>
+Date:   Sun Dec 2 07:36:51 2007 -0800
+
+    make launchd error messages less scary
+
+commit cd1da5cec49fb7fe6238a00d9ba550b3ed78fa08
+Author: Ben Byer <bbyer@bbyer.local>
+Date:   Wed Nov 14 03:57:57 2007 -0800
+
+    Fix for incorrect processing of recycled launchd socket on OS X
+
+commit 3da4d6c1dc05f9e1291b023a97535eb67f0830e2
+Author: Ben Byer <bbyer@bbyer.local>
+Date:   Wed Nov 14 03:55:42 2007 -0800
+
+    removed cvs tags
+
+commit 496cf2c46d2123c3bed3e6878f8f9a62e87ce559
+Author: Dodji Seketeli <dodji@seketeli.org>
+Date:   Tue Sep 11 12:52:44 2007 +0200
+
+    libxtrans: fixed a typo in my last commit
+    
+            * Xtranssock.c: (SocketReopen): oops fix a typo in my last commit.
+
+commit 88e141225113fcc4ebe5e8fe361e75673cdbf9ff
+Author: Dodji Seketeli <dodji@seketeli.org>
+Date:   Tue Sep 11 08:48:03 2007 +0200
+
+    libxtrans: fix linux compilation breakage
+    
+            * Xtranssock.c:
+              (SocketReopen): protect use of BSD4.4 socket with BSD44SOCKETS macro.
+              protect use of strlcnpy with HAVE_STRLCPY macro.
+              That one is defined (or not) by the xserver configure.
+
+commit 6217f34977bfa17b66b89df5d45420774abedcb3
+Author: Ben Byer <bbyer@bbyer.apple.com>
+Date:   Wed Sep 5 18:29:44 2007 -0700
+
+    changes to support launchd on OS X
+
+commit 4d0cfe491046df26027db291530b247b7f24df5b
+Author: Ben Byer <bbyer@bbyer.apple.com>
+Date:   Wed Sep 5 18:04:01 2007 -0700
+
+    suppress warning about socket directory ownership on OS X
+    
+    We don't need to warn the user about the fact that the socket
+    directory is not owned by root under OS X; on that platform,
+    it's never owned by root, as the X server runs as the normal user.
+
 commit de93d67f6d48c7c08f2554cb85515bcf7dfbffb2
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Aug 21 17:54:23 2007 -0700

@@ -1,5 +1,3 @@
-/* $XdotOrg: lib/xtrans/Xtranssock.c,v 1.11 2005/11/08 06:33:26 jkj Exp $ */
-/* $Xorg: Xtranssock.c,v 1.11 2001/02/09 02:04:06 xorgcvs Exp $ */
 /*
 
 Copyright 1993, 1994, 1998  The Open Group
@@ -27,10 +25,7 @@ not be used in advertising or otherwise to promote the sale, use or
 other dealings in this Software without prior written authorization
 from the copyright holders.
 
-*/
-/* $XFree86: xc/lib/xtrans/Xtranssock.c,v 3.68 2004/01/07 04:28:02 dawes Exp $ */
-
-/* Copyright 1993, 1994 NCR Corporation - Dayton, Ohio, USA
+ * Copyright 1993, 1994 NCR Corporation - Dayton, Ohio, USA
  *
  * All Rights Reserved
  *
@@ -103,11 +98,11 @@ from the copyright holders.
 #include <sys/filio.h>
 #endif
 
-#if (defined(i386) && defined(SYSV)) && !defined(SCO325) && !defined(sun)
+#if (defined(__i386__) && defined(SYSV)) && !defined(SCO325) && !defined(sun)
 #include <net/errno.h>
 #endif 
 
-#if (defined(i386) && defined(SYSV)) && (!defined(ISC) || !defined(I_NREAD) || defined(SCO325)) || defined(_SEQUENT_)
+#if (defined(__i386__) && defined(SYSV)) && (!defined(ISC) || !defined(I_NREAD) || defined(SCO325)) || defined(_SEQUENT_)
 #include <sys/stropts.h>
 #endif 
 
@@ -163,6 +158,10 @@ static int IBMsockInit = 0;
 #define SocketInitOnce() /**/
 #endif
 
+#ifdef linux
+#define HAVE_ABSTRACT_SOCKETS
+#endif
+
 #define MIN_BACKLOG 128
 #ifdef SOMAXCONN
 #if SOMAXCONN > MIN_BACKLOG
@@ -172,6 +171,7 @@ static int IBMsockInit = 0;
 #ifndef BACKLOG
 #define BACKLOG MIN_BACKLOG
 #endif
+
 /*
  * This is the Socket implementation of the X Transport service layer
  *
@@ -281,6 +281,14 @@ static int TRANS(SocketINETClose) (XtransConnInfo ciptr);
 #define MAXHOSTNAMELEN 255
 #endif
 
+#if defined HAVE_SOCKLEN_T || (defined(IPv6) && defined(AF_INET6))
+# define SOCKLEN_T socklen_t
+#elif defined(SVR4) || defined(__SCO__)
+# define SOCKLEN_T size_t 
+#else
+# define SOCKLEN_T int
+#endif
+
 /*
  * This provides compatibility for apps linked against system libraries
  * that don't have IPv6 support.
@@ -327,11 +335,7 @@ TRANS(SocketINETGetAddr) (XtransConnInfo ciptr)
 #endif
     struct sockaddr_in socknamev4;
     void *socknamePtr;
-#if defined(SVR4) || defined(__SCO__)
-    size_t namelen;
-#else
-    int namelen;
-#endif
+    SOCKLEN_T namelen;
 
     PRMSG (3,"SocketINETGetAddr(%p)\n", ciptr, 0, 0);
 
@@ -404,11 +408,7 @@ TRANS(SocketINETGetPeerAddr) (XtransConnInfo ciptr)
 #endif
     struct sockaddr_in 	socknamev4;
     void *socknamePtr;
-#if defined(SVR4) || defined(__SCO__)
-    size_t namelen;
-#else
-    int namelen;
-#endif
+    SOCKLEN_T namelen;
 
 #if defined(IPv6) && defined(AF_INET6)
     if (haveIPv6 && ciptr->family == AF_INET6)
@@ -523,18 +523,67 @@ TRANS(SocketReopen) (int i, int type, int fd, char *port)
 
 {
     XtransConnInfo	ciptr;
+    int portlen;
+    struct sockaddr *addr;
 
     PRMSG (3,"SocketReopen(%d,%d,%s)\n", type, fd, port);
+
+    if (port == NULL) {
+      PRMSG (1, "SocketReopen: port was null!\n", 0, 0, 0);
+      return NULL;
+    }
+
+    portlen = strlen(port) + 1; // include space for trailing null
+#ifdef SOCK_MAXADDRLEN
+    if (portlen < 0 || portlen > (SOCK_MAXADDRLEN + 2)) {
+      PRMSG (1, "SocketReopen: invalid portlen %d\n", portlen, 0, 0);
+      return NULL;
+    }
+    if (portlen < 14) portlen = 14;
+#else
+    if (portlen < 0 || portlen > 14) {
+      PRMSG (1, "SocketReopen: invalid portlen %d\n", portlen, 0, 0);
+      return NULL;
+    }
+#endif /*SOCK_MAXADDRLEN*/
 
     if ((ciptr = (XtransConnInfo) xcalloc (
 	1, sizeof(struct _XtransConnInfo))) == NULL)
     {
-	PRMSG (1, "SocketReopen: malloc failed\n", 0, 0, 0);
+	PRMSG (1, "SocketReopen: malloc(ciptr) failed\n", 0, 0, 0);
 	return NULL;
     }
 
     ciptr->fd = fd;
 
+    if ((addr = (struct sockaddr *) xcalloc (1, portlen + 2)) == NULL) {
+	PRMSG (1, "SocketReopen: malloc(addr) failed\n", 0, 0, 0);
+	return NULL;
+    }
+    ciptr->addr = addr;
+    ciptr->addrlen = portlen + 2;
+
+    if ((ciptr->peeraddr = (struct sockaddr *) xcalloc (1, portlen + 2)) == NULL) {
+	PRMSG (1, "SocketReopen: malloc(portaddr) failed\n", 0, 0, 0);
+	return NULL;
+    }
+    ciptr->peeraddrlen = portlen + 2;
+
+    /* Initialize ciptr structure as if it were a normally-opened unix socket */
+    ciptr->flags = TRANS_LOCAL | TRANS_NOUNLINK;
+#ifdef BSD44SOCKETS
+    addr->sa_len = portlen + 1;
+#endif
+    addr->sa_family = AF_UNIX;
+#ifdef HAS_STRLCPY
+    strlcpy(addr->sa_data, port, portlen);
+#else
+    strncpy(addr->sa_data, port, portlen);
+#endif
+    ciptr->family = AF_UNIX;
+    memcpy(ciptr->peeraddr, ciptr->addr, sizeof(struct sockaddr));
+    ciptr->port = rindex(addr->sa_data, ':');
+    if (ciptr->port[0] == ':') ciptr->port++; /* port should now point to portnum or NULL */
     return ciptr;
 }
 
@@ -829,23 +878,28 @@ TRANS(SocketSetOption) (XtransConnInfo ciptr, int option, int arg)
 
 #ifdef UNIXCONN
 static int
-set_sun_path(const char *port, const char *upath, char *path)
+set_sun_path(const char *port, const char *upath, char *path, int abstract)
 {
     struct sockaddr_un s;
     int maxlen = sizeof(s.sun_path) - 1;
+    const char *at = "";
 
     if (!port || !*port || !path)
 	return -1;
 
-    if (*port == '/') { /* a full pathname */
-	if (strlen(port) > maxlen)
-	    return -1;
-	snprintf(path, maxlen+1, "%s", port);
-    } else {
-	if (strlen(port) + strlen(upath) > maxlen)
-	    return -1;
-	snprintf(path, maxlen+1, "%s%s", upath, port);
-    }
+#ifdef HAVE_ABSTRACT_SOCKETS
+    if (port[0] == '@')
+	upath = "";
+    else if (abstract)
+	at = "@";
+#endif
+
+    if (*port == '/') /* a full pathname */
+	upath = "";
+
+    if (strlen(port) + strlen(upath) > maxlen)
+	return -1;
+    snprintf(path, maxlen+1, "%s%s%s", at, upath, port);
     return 0;
 }
 #endif
@@ -858,7 +912,7 @@ TRANS(SocketCreateListener) (XtransConnInfo ciptr,
 			     int socknamelen, unsigned int flags)
 
 {
-    int	namelen = socknamelen;
+    SOCKLEN_T namelen = socknamelen;
     int	fd = ciptr->fd;
     int	retry;
 
@@ -938,7 +992,7 @@ TRANS(SocketINETCreateListener) (XtransConnInfo ciptr, char *port, unsigned int 
     struct sockaddr_in	    sockname;
 #endif
     unsigned short	    sport;
-    int		namelen = sizeof(sockname);
+    SOCKLEN_T	namelen = sizeof(sockname);
     int		status;
     long	tmpport;
 #ifdef XTHREADS_NEEDS_BYNAMEPARAMS
@@ -1068,6 +1122,12 @@ TRANS(SocketUNIXCreateListener) (XtransConnInfo ciptr, char *port,
     int			oldUmask;
     int			status;
     unsigned int	mode;
+    char		tmpport[108];
+
+    int			abstract = 0;
+#ifdef HAVE_ABSTRACT_SOCKETS
+    abstract = ciptr->transptr->flags & TRANS_ABSTRACT;
+#endif
 
     PRMSG (2, "SocketUNIXCreateListener(%s)\n",
 	port ? port : "NULL", 0, 0);
@@ -1090,16 +1150,16 @@ TRANS(SocketUNIXCreateListener) (XtransConnInfo ciptr, char *port,
     }
 #endif
 
+    memset(&sockname, 0, sizeof(sockname));
     sockname.sun_family = AF_UNIX;
 
-    if (port && *port) {
-	if (set_sun_path(port, UNIX_PATH, sockname.sun_path) != 0) {
-	    PRMSG (1, "SocketUNIXCreateListener: path too long\n", 0, 0, 0);
-	    return TRANS_CREATE_LISTENER_FAILED;
-	}
-    } else {
-	snprintf (sockname.sun_path, sizeof(sockname.sun_path),
-		  "%s%ld", UNIX_PATH, (long)getpid());
+    if (!(port && *port)) {
+	snprintf (tmpport, sizeof(tmpport), "%s%ld", UNIX_PATH, (long)getpid());
+	port = tmpport;
+    }
+    if (set_sun_path(port, UNIX_PATH, sockname.sun_path, abstract) != 0) {
+	PRMSG (1, "SocketUNIXCreateListener: path too long\n", 0, 0, 0);
+	return TRANS_CREATE_LISTENER_FAILED;
     }
 
 #if (defined(BSD44SOCKETS) || defined(__UNIXWARE__)) && !defined(Lynx)
@@ -1112,7 +1172,12 @@ TRANS(SocketUNIXCreateListener) (XtransConnInfo ciptr, char *port,
     namelen = strlen(sockname.sun_path) + offsetof(struct sockaddr_un, sun_path);
 #endif
 
-    unlink (sockname.sun_path);
+    if (abstract) {
+	sockname.sun_path[0] = '\0';
+	namelen = offsetof(struct sockaddr_un, sun_path) + 1 + strlen(&sockname.sun_path[1]);
+    }
+    else
+	unlink (sockname.sun_path);
 
     if ((status = TRANS(SocketCreateListener) (ciptr,
 	(struct sockaddr *) &sockname, namelen, flags)) < 0)
@@ -1142,6 +1207,9 @@ TRANS(SocketUNIXCreateListener) (XtransConnInfo ciptr, char *port,
         return TRANS_CREATE_LISTENER_FAILED;
     }
 
+    if (abstract)
+	sockname.sun_path[0] = '@';
+
     ciptr->family = sockname.sun_family;
     ciptr->addrlen = namelen;
     memcpy (ciptr->addr, &sockname, ciptr->addrlen);
@@ -1164,16 +1232,22 @@ TRANS(SocketUNIXResetListener) (XtransConnInfo ciptr)
     struct stat		statb;
     int 		status = TRANS_RESET_NOOP;
     unsigned int	mode;
+    int abstract = 0;
+#ifdef HAVE_ABSTRACT_SOCKETS
+    abstract = ciptr->transptr->flags & TRANS_ABSTRACT;
+#endif
 
     PRMSG (3, "SocketUNIXResetListener(%p,%d)\n", ciptr, ciptr->fd, 0);
 
-    if (stat (unsock->sun_path, &statb) == -1 ||
+    if (!abstract && (
+	stat (unsock->sun_path, &statb) == -1 ||
         ((statb.st_mode & S_IFMT) !=
 #if (defined (sun) && defined(SVR4)) || defined(NCR) || defined(SCO325) || !defined(S_IFSOCK)
-	  		S_IFIFO))
+	  		S_IFIFO
 #else
-			S_IFSOCK))
+			S_IFSOCK
 #endif
+				)))
     {
 	int oldUmask = umask (0);
 
@@ -1235,7 +1309,7 @@ TRANS(SocketINETAccept) (XtransConnInfo ciptr, int *status)
 {
     XtransConnInfo	newciptr;
     struct sockaddr_in	sockname;
-    int			namelen = sizeof(sockname);
+    SOCKLEN_T		namelen = sizeof(sockname);
 
     PRMSG (2, "SocketINETAccept(%p,%d)\n", ciptr, ciptr->fd, 0);
 
@@ -1314,11 +1388,7 @@ TRANS(SocketUNIXAccept) (XtransConnInfo ciptr, int *status)
 {
     XtransConnInfo	newciptr;
     struct sockaddr_un	sockname;
-#if defined(SVR4) || defined(__SCO__)
-    size_t namelen = sizeof sockname;
-#else
-    int namelen = sizeof sockname;
-#endif
+    SOCKLEN_T 		namelen = sizeof sockname;
 
     PRMSG (2, "SocketUNIXAccept(%p,%d)\n", ciptr, ciptr->fd, 0);
 
@@ -1339,6 +1409,7 @@ TRANS(SocketUNIXAccept) (XtransConnInfo ciptr, int *status)
 	return NULL;
     }
 
+	ciptr->addrlen = namelen;
     /*
      * Get the socket name and the peer name from the listener socket,
      * since this is unix domain.
@@ -1355,6 +1426,10 @@ TRANS(SocketUNIXAccept) (XtransConnInfo ciptr, int *status)
         return NULL;
     }
 
+    /*
+     * if the socket is abstract, we already modified the address to have a
+     * @ instead of the initial NUL, so no need to do that again here.
+     */
 
     newciptr->addrlen = ciptr->addrlen;
     memcpy (newciptr->addr, ciptr->addr, newciptr->addrlen);
@@ -1941,13 +2016,17 @@ TRANS(SocketUNIXConnect) (XtransConnInfo ciptr, char *host, char *port)
 
 {
     struct sockaddr_un	sockname;
-    int			namelen;
+    SOCKLEN_T		namelen;
 
 #if defined(hpux) && defined(X11_t)
     struct sockaddr_un	old_sockname;
-    int			old_namelen;
+    SOCKLEN_T		old_namelen;
 #endif
 
+    int abstract = 0;
+#ifdef HAVE_ABSTRACT_SOCKETS
+    abstract = ciptr->transptr->flags & TRANS_ABSTRACT;
+#endif
 
     PRMSG (2,"SocketUNIXConnect(%d,%s,%s)\n", ciptr->fd, host, port);
     
@@ -1959,7 +2038,7 @@ TRANS(SocketUNIXConnect) (XtransConnInfo ciptr, char *host, char *port)
      * we know for sure it will fail.
      */
 
-    if (strcmp (host, "unix") != 0 && !UnixHostReallyLocal (host))
+    if (host && *host && host[0]!='/' && strcmp (host, "unix") != 0 && !UnixHostReallyLocal (host))
     {
 	PRMSG (1,
 	   "SocketUNIXConnect: Cannot connect to non-local host %s\n",
@@ -1985,7 +2064,7 @@ TRANS(SocketUNIXConnect) (XtransConnInfo ciptr, char *host, char *port)
     
     sockname.sun_family = AF_UNIX;
 
-    if (set_sun_path(port, UNIX_PATH, sockname.sun_path) != 0) {
+    if (set_sun_path(port, UNIX_PATH, sockname.sun_path, abstract) != 0) {
 	PRMSG (1, "SocketUNIXConnect: path too long\n", 0, 0, 0);
 	return TRANS_CONNECT_FAILED;
     }
@@ -2006,7 +2085,7 @@ TRANS(SocketUNIXConnect) (XtransConnInfo ciptr, char *host, char *port)
      * This is gross, but it was in Xlib
      */
     old_sockname.sun_family = AF_UNIX;
-    if (set_sun_path(port, OLD_UNIX_PATH, old_sockname.sun_path) != 0) {
+    if (set_sun_path(port, OLD_UNIX_PATH, old_sockname.sun_path, abstract) != 0) {
 	PRMSG (1, "SocketUNIXConnect: path too long\n", 0, 0, 0);
 	return TRANS_CONNECT_FAILED;
     }
@@ -2014,6 +2093,17 @@ TRANS(SocketUNIXConnect) (XtransConnInfo ciptr, char *host, char *port)
 	offsetof(struct sockaddr_un, sun_path);
 #endif
 
+    /*
+     * Adjust the socket path if using abstract sockets.
+     * Done here because otherwise all the strlen() calls above would fail.
+     */
+
+    if (abstract) {
+	sockname.sun_path[0] = '\0';
+#if defined(hpux) && defined(X11_t)
+	old_sockname.sun_path[0] = '\0';
+#endif
+    }
 
     /*
      * Do the connect()
@@ -2041,8 +2131,13 @@ TRANS(SocketUNIXConnect) (XtransConnInfo ciptr, char *host, char *port)
 	    errno = olderrno;
 	    
 	    /*
-	     * If the error was ENOENT, the server may be starting up
-	     * and we should try again.
+	     * If the error was ENOENT, the server may be starting up; we used
+	     * to suggest to try again in this case with
+	     * TRANS_TRY_CONNECT_AGAIN, but this introduced problems for
+	     * processes still referencing stale sockets in their environment.
+	     * Hence, we now return a hard error, TRANS_CONNECT_FAILED, and it
+	     * is suggested that higher level stacks handle retries on their
+	     * level when they face a slow starting server.
 	     *
 	     * If the error was EWOULDBLOCK or EINPROGRESS then the socket
 	     * was non-blocking and we should poll using select
@@ -2051,12 +2146,19 @@ TRANS(SocketUNIXConnect) (XtransConnInfo ciptr, char *host, char *port)
 	     * should try again.
 	     */
 
-	    if (olderrno == ENOENT || olderrno == EINTR)
-		return TRANS_TRY_CONNECT_AGAIN;
-	    else if (olderrno == EWOULDBLOCK || olderrno == EINPROGRESS)
+	    if (olderrno == EWOULDBLOCK || olderrno == EINPROGRESS)
 		return TRANS_IN_PROGRESS;
-	    else
-	    {
+	    else if (olderrno == EINTR)
+		return TRANS_TRY_CONNECT_AGAIN;
+	    else if (olderrno == ENOENT) {
+		/* If opening as abstract socket failed, try again normally */
+		if (abstract) {
+		    ciptr->transptr->flags &= ~(TRANS_ABSTRACT);
+		    return TRANS_TRY_CONNECT_AGAIN;
+		} else {
+		    return TRANS_CONNECT_FAILED;
+		}
+	    } else {
 		PRMSG (2,"SocketUNIXConnect: Can't connect: errno = %d\n",
 		       EGET(),0, 0);
 
@@ -2079,12 +2181,15 @@ TRANS(SocketUNIXConnect) (XtransConnInfo ciptr, char *host, char *port)
         return TRANS_CONNECT_FAILED;
     }
 
+    if (abstract)
+	sockname.sun_path[0] = '@';
+
     ciptr->family = AF_UNIX;
     ciptr->addrlen = namelen;
     ciptr->peeraddrlen = namelen;
     memcpy (ciptr->addr, &sockname, ciptr->addrlen);
     memcpy (ciptr->peeraddr, &sockname, ciptr->peeraddrlen);
-    
+
     return 0;
 }
 
@@ -2105,11 +2210,11 @@ TRANS(SocketBytesReadable) (XtransConnInfo ciptr, BytesReadable_t *pend)
 #ifdef WIN32
     {
 	int ret = ioctlsocket ((SOCKET) ciptr->fd, FIONREAD, (u_long *) pend);
-	errno = WSAGetLastError();
+	if (ret == SOCKET_ERROR) errno = WSAGetLastError();
 	return ret;
     }
 #else
-#if (defined(i386) && defined(SYSV) && !defined(SCO325)) || (defined(_SEQUENT_) && _SOCKET_VERSION == 1)
+#if (defined(__i386__) && defined(SYSV) && !defined(SCO325)) || (defined(_SEQUENT_) && _SOCKET_VERSION == 1)
     return ioctl (ciptr->fd, I_NREAD, (char *) pend);
 #else
 #if defined(__UNIXOS2__)
@@ -2117,7 +2222,7 @@ TRANS(SocketBytesReadable) (XtransConnInfo ciptr, BytesReadable_t *pend)
 #else
     return ioctl (ciptr->fd, FIONREAD, (char *) pend);
 #endif /* __UNIXOS2__ */
-#endif /* i386 && SYSV || _SEQUENT_ && _SOCKET_VERSION == 1 */
+#endif /* __i386__ && SYSV || _SEQUENT_ && _SOCKET_VERSION == 1 */
 #endif /* WIN32 */
 }
 
@@ -2132,7 +2237,7 @@ TRANS(SocketRead) (XtransConnInfo ciptr, char *buf, int size)
     {
 	int ret = recv ((SOCKET)ciptr->fd, buf, size, 0);
 #ifdef WIN32
-	errno = WSAGetLastError();
+	if (ret == SOCKET_ERROR) errno = WSAGetLastError();
 #endif
 	return ret;
     }
@@ -2152,7 +2257,7 @@ TRANS(SocketWrite) (XtransConnInfo ciptr, char *buf, int size)
     {
 	int ret = send ((SOCKET)ciptr->fd, buf, size, 0);
 #ifdef WIN32
-	errno = WSAGetLastError();
+	if (ret == SOCKET_ERROR) errno = WSAGetLastError();
 #endif
 	return ret;
     }
@@ -2191,7 +2296,7 @@ TRANS(SocketDisconnect) (XtransConnInfo ciptr)
 #ifdef WIN32
     { 
 	int ret = shutdown (ciptr->fd, 2);
-	errno = WSAGetLastError();
+	if (ret == SOCKET_ERROR) errno = WSAGetLastError();
 	return ret;
     }
 #else
@@ -2210,7 +2315,7 @@ TRANS(SocketINETClose) (XtransConnInfo ciptr)
 #ifdef WIN32
     {
 	int ret = close (ciptr->fd);
-	errno = WSAGetLastError();
+	if (ret == SOCKET_ERROR) errno = WSAGetLastError();
 	return ret;
     }
 #else
@@ -2224,7 +2329,6 @@ TRANS(SocketINETClose) (XtransConnInfo ciptr)
 #ifdef UNIXCONN
 static int
 TRANS(SocketUNIXClose) (XtransConnInfo ciptr)
-
 {
     /*
      * If this is the server side, then once the socket is closed,
@@ -2243,7 +2347,8 @@ TRANS(SocketUNIXClose) (XtransConnInfo ciptr)
        && sockname->sun_family == AF_UNIX
        && sockname->sun_path[0])
     {
-	if (!(ciptr->flags & TRANS_NOUNLINK))
+	if (!(ciptr->flags & TRANS_NOUNLINK
+	    || ciptr->transptr->flags & TRANS_ABSTRACT))
 		unlink (sockname->sun_path);
     }
 
@@ -2410,7 +2515,11 @@ Xtransport     TRANS(SocketINET6Funcs) = {
 Xtransport	TRANS(SocketLocalFuncs) = {
 	/* Socket Interface */
 	"local",
+#ifdef HAVE_ABSTRACT_SOCKETS
+	TRANS_ABSTRACT,
+#else
 	0,
+#endif
 #ifdef TRANS_CLIENT
 	TRANS(SocketOpenCOTSClient),
 #endif /* TRANS_CLIENT */
@@ -2456,7 +2565,7 @@ static char* unix_nolisten[] = { "local" , NULL };
 Xtransport	TRANS(SocketUNIXFuncs) = {
 	/* Socket Interface */
 	"unix",
-#if !defined(LOCALCONN)
+#if !defined(LOCALCONN) && !defined(HAVE_ABSTRACT_SOCKETS)
         TRANS_ALIAS,
 #else
 	0,

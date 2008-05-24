@@ -1,6 +1,3 @@
-dnl 
-dnl  $Id: configure.ac,v 1.1.1.3 2007/09/30 08:56:09 matthieu Exp $
-dnl 
 dnl  Copyright © 2003 Keith Packard, Noah Levitt
 dnl 
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
@@ -24,7 +21,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xtrans, 1.0.4, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xtrans)
+AC_INIT(xtrans, 1.2, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xtrans)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
