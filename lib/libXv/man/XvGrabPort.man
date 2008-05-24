@@ -1,24 +1,16 @@
 .TH XvGrabPort __libmansuffix__ __vendorversion__
-.\" $XFree86: xc/doc/man/Xv/XvGrabPort.man,v 1.4 1999/03/02 11:49:14 dawes Exp $
 .SH Name
 XvGrabPort \- lock port for exclusive use by client
 .\"
 .SH Syntax
 .B #include <X11/extensions/Xvlib.h>
-.sp 1l
-.B XvGrabPort(\fIdpy, port, time)\fR
-.sp 1l
-.B Display \fI*dpy;\fR
-.br
-.B XvPortID 
-.I port;
-.br
-.B Time 
-.I time;
-.\"
+.sp
+.nf
+.BI "XvGrabPort(Display *" dpy ", XvPortID " port ", Time " time ");"
+.fi
 .SH Arguments
 .\"
-.IP \fIdpy\fR 8 
+.IP \fIdpy\fR 8
 Specifies the connection to the X server.
 .IP \fIport\fR 8
 Defines the port to be grabbed.

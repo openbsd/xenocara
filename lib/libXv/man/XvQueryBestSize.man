@@ -1,26 +1,16 @@
 .TH XvQueryBestSize __libmansuffix__ __vendorversion__
-.\" $XFree86: xc/doc/man/Xv/XvQueryBestSize.man,v 1.4 1999/03/02 11:49:16 dawes Exp $
 .SH Name
 XvQueryBestSize \- determine the optimum drawable region size
 .\"
 .SH Syntax
 .B #include <X11/extensions/Xvlib.h>
-.sp 1l
-\fBXvQueryBestSize\fP(\fIdpy, port, motion, vw, vh, dw, dh, p_dw, p_dh\fR)
-.sp 1l
-.B Display \fI*dpy\fR;
-.br 
-.B XvPortID \fIport\fR; 
-.br
-.B Bool \fImotion\fR;
-.br
-.B unsigned 
-.B int \fIvw, vh\fR;
-.br
-\fBunsigned int \fIdw, dh;\fR 
-.br 
-\fBunsigned int \fI*p_dw, *p_dh;\fR
-.\"
+.sp
+.nf
+.BI "XvQueryBestSize(Display *" dpy ", XvPort " port ", Bool " motion ",
+.BI "                unsigned int " vw ", unsigned int " vh ",
+.BI "                unsigned int " dw ", unsigned int " dh ",
+.BI "                unsigned int *" p_dw ", unsigned int *" p_dh ");"
+.fi
 .SH Arguments
 .\"
 .IP \fIdpy\fR 15

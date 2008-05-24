@@ -1,20 +1,14 @@
 .TH XvSetPortAttribute __libmansuffix__  __vendorversion__
-.\" $XFree86: xc/doc/man/Xv/XvSetPortAttribute.man,v 1.6 2001/01/27 18:20:36 dawes Exp $
 .SH Name
 XvSetPortAttribute \- sets an attribute of a video port 
 .\"
 .SH Syntax
-\fB#include <X11/extensions/Xvlib.h>\fR
-.sp 1l
-\fBXvSetPortAttribute(\fIdpy, port, attribute, value\fR)
-.sp 1l
-\fBDisplay \fI*dpy\fR;
-.br
-\fBXvPortID \fIport\fR;
-.br
-\fBAtom \fIattribute\fR;
-.br
-\fBint \fIvalue\fR;
+.B #include <X11/extensions/Xvlib.h>
+.sp
+.nf
+.BI "XvSetPortAttribute(Display *" dpy ", XvPortID " port ",
+.BI "                   Atom " attribute ", int " value ");"
+.fi
 .SH Arguments
 .\"
 .IP \fIdpy\fR 15

@@ -1,41 +1,15 @@
 .TH XvGetVideo __libmansuffix__  __vendorversion__
-.\" $XFree86: xc/doc/man/Xv/XvGetVideo.man,v 1.4 1999/03/02 11:49:14 dawes Exp $
 .SH Name
 XvGetVideo \- capture video from a drawable
 .\"
 .SH Syntax
-.B include "Xvlib.h"
-.sp 1l
-.B XvGetVideo(dpy, port, d, gc, vx, vy, vw, vh, dx, dy, dw, dh)
-.sp 1l
-.B register 
-.I Display 
-.I *dpy;
-.br
-.B XvPortID 
-.I port;
-.br
-.B Drawable 
-.I d;
-.br
-.B GC 
-.I gc;
-.br
-.B int 
-.I vx, 
-.I vy, 
-.I dx, 
-.I dy;
-.br
-unsigned int 
-.I vw, 
-.I vh;
-.br
-unsigned int 
-.I dw, 
-.I dh;
-.sp 1l
-.\"
+.B #include <X11/extensions/Xvlib.h>
+.sp
+.nf
+.BI "XvGetVideo(Display *" dpy ", XvPortID " port ", Drawable " d ", GC " gc ",
+.BI "           int " vx ", int " vy ", unsigned int " vw ", unsigned int " vh ",
+.BI "           int " dx ", int " dy ", unsigned int " dw ", unsigned int " dh ");"
+.fi
 .SH Arguments
 .\"
 .IP \fIdpy\fR 15

@@ -1,20 +1,14 @@
 .TH XvSelectVideoNotify __libmansuffix__ __vendorversion__
-.\" $XFree86: xc/doc/man/Xv/XvSelectVideoNotify.man,v 1.5 2001/01/27 18:20:36 dawes Exp $
 .SH Name
 XvSelectVideoNotify \- enable or disable VideoNotify events
 .\"
 .SH Syntax
-\fB#include\fI <X11/extensions/Xvlib.h>\fR
-.sp 1l
-\fBXvSelectVideoNotify(\fIdpy, drawable, onoff\fR)
-.sp 1l
-\fBregister Display \fI*dpy\fR;
-.br
-\fBDrawable \fIdrawable\fR;
-.br
-\fBBool \fIonoff\fR;
+.B #include <X11/extensions/Xvlib.h>
+.sp
+.nf
+.BI "XvSelectVideoNotify(Display *" dpy ", Drawable " drawable ", Bool " onoff ");"
+.fi
 .SH Arguments
-.\"
 .IP \fIdpy\fR 15
 Specifies the connection to the X server.
 .IP \fIdrawable\fR 15

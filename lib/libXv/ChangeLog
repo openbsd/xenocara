@@ -1,3 +1,30 @@
+commit 2c0dc990a1ad96b71c95800d83378413eab63dbb
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Mar 17 20:01:01 2008 -0700
+
+    Version bump: 1.0.4
+
+commit acb78abb510e7e69e74fb3bba80d8ceaf2af7ce4
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 08:43:44 2008 +0100
+
+    nuke RCS Ids
+
+commit d455a1d9ae336a397a1b1a08228b7faa1024c1aa
+Author: Ademar de Souza Reis Jr <ademar@mandriva.com.br>
+Date:   Mon Aug 20 19:02:40 2007 -0300
+
+    get rid of ancient XFree86 CVS Id tags
+
+commit 8b0752135f84edebc5e476f19069c8d78676f416
+Author: Ademar de Souza Reis Jr <ademar@mandriva.com.br>
+Date:   Mon Aug 20 18:58:44 2007 -0300
+
+    convert manpages prototypes to C ANSI format
+    
+    Closes: #8360 (libXv man pages should be
+    converted to ANSI prototypes)
+
 commit 20d07bb9ba2bca56e3f02b4b878377eded241059
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Dec 16 01:31:51 2006 +0200

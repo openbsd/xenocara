@@ -1,28 +1,26 @@
 .TH XvQueryExtension __libmansuffix__ __vendorversion__
-.\" $XFree86: xc/doc/man/Xv/XvQueryExtension.man,v 1.5 2001/01/27 18:20:36 dawes Exp $
 .SH Name
 XvQueryExtension \- return version and release of extension
 .\"
 .SH Syntax
-.B #include <X11/extensions/Xvlib.h> 
-.sp 1l
-\fBXvQueryExtension(\fIdpy, p_version, p_release, 
-.br
-	p_request_base, p_event_base, p_error_base\fR)
-.sp 1l
-\fBDisplay \fI*dpy\fR;
-.br
-\fBunsigned int \fI*p_version, *p_release\fR;
-.br
-\fBunsigned int \fI*p_request_base, *p_event_base, *p_error_base\fR;
-.\"
+.B #include <X11/extensions/Xvlib.h>
+.sp
+.nf
+.BI "XvQueryExtension(Display *" dpy ", unsigned int *" p_version ",
+.BI "                unsigned int *" p_revision ",
+.BI "                unsigned int *" p_request_base ",
+.BI "                unsigned int *" p_event_base ",
+.BI "                unsigned int *" p_error_base ");"
+.fi
 .SH Arguments
 .\"
+.IP \fIdpy\fR 15
+Specifies the connection to the X server.
 .IP \fIp_version\fR 15
 Pointer to where the current version number of the \fIXv\fP video extension
 is written.
-.IP \fIp_release\fR 15
-Pointer to where the release number of the \fIXv\fP video extension
+.IP \fIp_revision\fR 15
+Pointer to where the revision number of the \fIXv\fP video extension
 is written.
 .IP \fIp_request_base\fR 15
 Pointer to where the extension major request number is returned

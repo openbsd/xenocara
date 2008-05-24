@@ -1,27 +1,20 @@
 .TH XvStopVideo __libmansuffix__ __vendorversion__
-.\" $XFree86: xc/doc/man/Xv/XvStopVideo.man,v 1.5 2001/01/27 18:20:36 dawes Exp $
 .SH Name
 XvStopVideo \- stop active video 
 .\"
 .SH Syntax
-\fB#include <X11/extensions/Xvlib.h>
-.sp 1l
-\fBXvStopVideo(\fIdpy, port, draw\fR)
-.sp 1l
-\fBDisplay \fI*dpy\fR;
-.br
-\fBXvPortID \fIport\fR;
-.br
-\fBDrawable \fIdraw\fR;
-.\"
+.B #include <X11/extensions/Xvlib.h>
+.sp
+.nf
+.BI "XvGetStill(Display *" dpy ", XvPortID " port ", Drawable " draw ");"
+.fi
 .SH Arguments
 .\"
-.\"
-.IP \fIdpy\fR 15
+.IP \fIdpy\fR 8
 Specifies the connection to the X server.
-.IP \fIport\fR 15
+.IP \fIport\fR 8
 Specifies the port for which video is to be stopped.
-.IP \fIdraw\fR 15
+.IP \fIdraw\fR 8
 Specifies the drawable associated with the named port.
 .SH Description
 .\"

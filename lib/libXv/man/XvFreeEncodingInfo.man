@@ -1,12 +1,9 @@
 .TH XvFreeEncodingInfo __libmansuffix__ __vendorversion__
-.\" $XFree86: xc/doc/man/Xv/XvFreeEncodingInfo.man,v 1.4 1999/03/02 11:49:13 dawes Exp $
 .SH Name
 XvFreeEncodingInfo \- free encoding information 
 .\"
 .SH Syntax
-\fBXvFreeEncodingInfo(\fIp_encoding_info\fR)
-.sp 1l
-\fBXvEncodingInfo \fI*p_encoding_info\fR;
+\fBXvFreeEncodingInfo(XvEncodingInfo *\fIp_encoding_info\fR)"
 .SH Arguments
 .\"
 .IP \fIp_encoding_info\fR 8

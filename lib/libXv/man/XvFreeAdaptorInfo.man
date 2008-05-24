@@ -1,12 +1,9 @@
 .TH XvFreeAdaptorInfo __libmansuffix__ __vendorversion__
-.\" $XFree86: xc/doc/man/Xv/XvFreeAdaptorInfo.man,v 1.4 1999/03/02 11:49:13 dawes Exp $
 .SH Name
 XvFreeAdaptorInfo \- free adaptor information 
 .\"
 .SH Syntax
-\fBXvFreeAdaptorInfo(\fIp_adaptor_info\fR)
-.sp 1l
-\fBXvAdaptorInfo \fI*p_adaptor_info\fR;
+\fBXvFreeAdaptorInfo(XvAdaptorInfo *\fIp_adaptor_info\fR)
 .SH Arguments
 .\"
 .IP \fIp_adaptor_info\fR 8

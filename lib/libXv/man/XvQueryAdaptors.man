@@ -1,29 +1,21 @@
 .TH XvQueryAdaptors __libmansuffix__  __vendorversion__
-.\" $XFree86: xc/doc/man/Xv/XvQueryAdaptors.man,v 1.5 2001/01/27 18:20:36 dawes Exp $
 .SH Name
 XvQueryAdaptors \- return adaptor information for a screen
 .\"
 .SH Syntax
 .B #include <X11/extensions/Xvlib.h>
-.br
-.sp 1l
-.B XvQueryAdaptors(\fIdpy, win, p_num_adaptors, pp_adaptor_info\fR)
-.sp 1l 
-\fBDisplay \fI*dpy;\fR
-.br
-\fBDrawable \fI draw;\fR
-.br
-\fBint \fI*p_num_adaptors\fR;
-.br
-\fBXvAdaptorInfo \fI**pp_adaptor_info\fR;
-.br
-.\"
+.sp
+.nf
+.BI "XvQueryAdaptors(Display *" dpy ", Window " window ",
+.BI "                unsigned int *" p_num_adaptors ",
+.BI "                XvAdaptorInfo **" pp_adaptor_info ");"
+.fi
 .SH Arguments
 .\"
 .IP \fIdpy\fR 8
 Specifies the connection to the X server.
-.IP \fIdraw\fR 8
-Specifies a drawable of the screen for which the adaptor 
+.IP \fIwindow\fR 8
+Specifies a window of the screen for which the adaptor 
 information is desired.
 .IP \fIp_num_adaptors\fR 8
 A pointer to where the number of adaptors for the specified screen 

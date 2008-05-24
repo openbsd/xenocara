@@ -1,19 +1,13 @@
 .TH XvSelectPortNotify __libmansuffix__ __vendorversion__
-.\" $XFree86: xc/doc/man/Xv/XvSelectPortNotify.man,v 1.5 2001/01/27 18:20:36 dawes Exp $
 .SH Name
 XvSelectPortNotify \- enable or disable XvPortNotify(__libmansuffix__) events
 .\"
 .SH Syntax
 .B #include <X11/extensions/Xvlib.h>
-.sp 1l
-\fBXvSelectPortNotify(\fIdpy, port, onoff\fR)
-.sp 1l
-\fBDisplay \fI*dpy\fR;
-.br
-\fBXvPortID \fIport\fR;
-.br
-\fBBool \fIonoff\fR;
-.\"
+.sp
+.nf
+.BI "XvSelectPortNotify(Display *" dpy ", XvPortID " port ", Bool " onoff ");"
+.fi
 .SH Arguments
 .\"
 .IP \fIdpy\fR 8

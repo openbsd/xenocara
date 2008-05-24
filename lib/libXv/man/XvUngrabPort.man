@@ -1,26 +1,21 @@
 .TH XvUngrabPort __libmansuffix__ __vendorversion__
-.\" $XFree86: xc/doc/man/Xv/XvUngrabPort.man,v 1.5 2001/01/27 18:20:36 dawes Exp $
 .SH Name
 XvUngrabPort \- release port grabbed for video operation
 .\"
 .SH Syntax
-\fB#include <X11/extensions/Xvlib.h>
-.sp 1l
-XvUngrabPort(\fIdpy, port, time\fR)
-.sp 1l
-\fBDisplay \fI*dpy\fR;
-.br
-\fBXvPortID \fIport\fR;
-.br
-\fBTime \fItime\fR;
+.B #include <X11/extensions/Xvlib.h>
+.sp
+.nf
+.BI "XvUngrabPort(Display *" dpy ", XvPortID " port ", Time " time ");"
+.fi
 .SH Arguments
 .\"
-.IP \fIdpy\fR 15
+.IP \fIdpy\fR 8
 Specifies the connection to the X server.
-.IP \fIport\fR 15
+.IP \fIport\fR 8
 Specifies the port to be released.  If the port had not been
 previously grabbed, the request is ignored.
-.IP \fItime\fR 15
+.IP \fItime\fR 8
 Specifies the request timestamp.
 .\"
 .SH Description
