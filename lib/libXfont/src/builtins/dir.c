@@ -29,7 +29,7 @@
 #endif
 #include "builtin.h"
 
-BuiltinDirPtr
+static BuiltinDirPtr
 BuiltinDirsDup (const BuiltinDirPtr a_dirs,
                 int a_dirs_len)
 {
@@ -60,7 +60,7 @@ BuiltinDirsDup (const BuiltinDirPtr a_dirs,
  * @param a_saved the saved instance of BuiltinDir to copy into a_cur
  * @return 0 if went okay, 1 otherwise.
  */
-int
+static int
 BuiltinDirRestore (BuiltinDirPtr a_cur,
                    const BuiltinDirPtr a_saved)
 {
@@ -75,7 +75,7 @@ BuiltinDirRestore (BuiltinDirPtr a_cur,
 }
 
 
-int
+static int
 BuiltinDirsRestore (BuiltinDirPtr a_cur_tab,
                     const BuiltinDirPtr a_saved_tab,
                     int a_tab_len)
@@ -94,7 +94,7 @@ BuiltinDirsRestore (BuiltinDirPtr a_cur_tab,
     return 0 ;
 }
 
-BuiltinAliasPtr
+static BuiltinAliasPtr
 BuiltinAliasesDup (const BuiltinAliasPtr a_aliases,
                    int a_aliases_len)
 {
@@ -122,7 +122,7 @@ BuiltinAliasesDup (const BuiltinAliasPtr a_aliases,
  * @param a_saved the saved instance of BuiltinAlias to copy into a_cur
  * @return 0 if went okay, 1 otherwise.
  */
-int
+static int
 BuiltinAliasRestore (BuiltinAliasPtr a_cur,
                      const BuiltinAliasPtr a_save)
 {
@@ -137,7 +137,7 @@ BuiltinAliasRestore (BuiltinAliasPtr a_cur,
     return 0 ;
 }
 
-int
+static int
 BuiltinAliasesRestore (BuiltinAliasPtr a_cur_tab,
                        const BuiltinAliasPtr a_saved_tab,
                        int a_tab_len)

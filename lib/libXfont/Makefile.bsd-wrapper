@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2007/09/08 16:24:20 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2008/05/24 13:29:07 matthieu Exp $
 
-SHARED_LIBS=	Xfont 7.0
+SHARED_LIBS=	Xfont 8.0
 
 .if ${MACHINE} == landisk || ${MACHINE} == vax
 CONFIGURE_ARGS+= --disable-loadable-font-modules

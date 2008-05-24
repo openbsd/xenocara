@@ -27,6 +27,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#include <string.h>
 #include "builtin.h"
 
 typedef struct _BuiltinIO {
@@ -49,7 +50,7 @@ BuiltinFill (BufFilePtr	f)
     len = BUFFILESIZE;
     if (len > left)
 	len = left;
-    bcopy (io->file->bits + io->offset, f->buffer, len);
+    memcpy (f->buffer, io->file->bits + io->offset, len);
     io->offset += len;
     f->left = len - 1;
     f->bufp = f->buffer + 1;

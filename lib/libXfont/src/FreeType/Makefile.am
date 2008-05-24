@@ -13,5 +13,3 @@ libft_la_SOURCES = 		\
 	ftfuncs.c		\
 	fttools.c		\
 	xttcap.c
-
-EXTRA_DIST = ftsystem.c
