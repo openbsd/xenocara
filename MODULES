@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.27 2008/05/21 20:25:41 matthieu Exp $
+# $OpenBSD: MODULES,v 1.28 2008/05/24 15:46:32 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -9,8 +9,8 @@ app/beforelight		1.0.2	7.2RC4
 app/bitmap		1.0.3	7.2+
 app/editres		1.0.3	7.2+
 app/fonttosfnt		1.0.4	7.4	needs-update
-app/fslsfonts		1.0.1	7.0
-app/fstobdf		1.0.2 	7.1
+app/fslsfonts		1.0.2	7.4	needs-update
+app/fstobdf		1.0.3 	7.4	needs-update
 app/iceauth		1.0.2	7.3
 app/ico			1.0.2	7.3
 app/lbxproxy		1.0.1	7.0
@@ -25,7 +25,7 @@ app/rstart		1.0.2	7.1
 app/scripts		1.0.1	7.0
 app/sessreg		1.0.3	7.3
 app/setxkbmap		1.0.4	7.3
-app/showfont		1.0.1	7.0
+app/showfont		1.0.2	7.4	needs-update
 app/smproxy		1.0.2	7.1
 app/twm			1.0.4	7.4
 app/viewres		1.0.1	7.0
@@ -49,8 +49,8 @@ app/xf86dga		1.0.2	7.2RC1
 app/xfd			1.0.1	7.0
 app/xfindproxy		1.0.1	7.0
 app/xfontsel		1.0.2	7.2+
-app/xfs			1.0.7	7.4	needs-update
-app/xfsinfo		1.0.1	7.0
+app/xfs			1.0.8	7.4	needs-update
+app/xfsinfo		1.0.2	7.4	needs-update
 app/xfwp		1.0.1	7.0
 app/xgamma		1.0.2	7.3
 app/xgc			1.0.1	7.0
@@ -122,7 +122,7 @@ driver/xf86-input-spaceorb	1.1.1	7.1	needs-update
 driver/xf86-input-summa		1.2.0	7.4	needs-update
 driver/xf86-input-tek4957	1.2.0	7.4	needs-update
 driver/xf86-input-ur98		1.1.0	7.1
-driver/xf86-input-vmmouse	12.5.0	7.4	needs-update
+driver/xf86-input-vmmouse	12.5.1	7.4	needs-update
 driver/xf86-input-void		1.1.1	7.1	needs-update
 driver/xf86-video-apm		1.2.0	7.4	needs-update
 driver/xf86-video-ark		0.7.0	7.4	needs-update
@@ -211,12 +211,12 @@ font-util			fonts/util			1.0.1
 font-winitzki-cyrillic		fonts/winitzki-cyrillic		1.0.0
 font-xfree86-type1		fonts/xfree86-type1		1.0.1 update
 
-lib/libFS			1.0.0	7.0
+lib/libFS			1.0.1	7.4
 lib/libICE			1.0.4	7.3
 lib/libSM			1.0.3	7.3
 lib/libX11			1.1.4	7.4	needs-update
 lib/libXRes			1.0.3	7.2RC4
-lib/libXScrnSaver		1.1.3	7.4	needs-update
+lib/libXScrnSaver		1.1.3	7.4
 lib/libXTrap			1.0.0	7.0
 lib/libXau			1.0.3	7.2RC4
 lib/libXaw			1.0.4	7.3
@@ -225,23 +225,23 @@ lib/libXcursor			1.1.9	7.3
 lib/libXdamage			1.1.1	7.3+
 lib/libXdmcp			1.0.2	7.2RC1
 lib/libXevie			1.0.2	7.2RC1
-lib/libXext			1.0.4	7.4	needs-update
+lib/libXext			1.0.4	7.4
 lib/libXfixes			4.0.3	7.2RC2
-lib/libXfont			1.3.2	7.4	needs-update
+lib/libXfont			1.3.2	7.4
 lib/libXfontcache		1.0.4	7.2RC4
 lib/libXft			2.1.12	7.2RC4
 lib/libXi			1.1.3	7.3
-lib/libXinerama			1.0.3	7.4	needs-update
+lib/libXinerama			1.0.3	7.4
 lib/libXmu			1.0.3	7.2RC2
 lib/libXp			1.0.0	7.0
 lib/libXpm			3.5.7	7.3
 lib/libXprintAppUtil		1.0.1	7.0
 lib/libXprintUtil		1.0.1	7.0
-lib/libXrandr			1.2.2	7.3	needs-update
+lib/libXrandr			1.2.2	7.3
 lib/libXrender			0.9.4	7.3
 lib/libXt			1.0.5	7.2+
 lib/libXtst			1.0.3	7.3
-lib/libXv			1.0.4	7.4	needs-update
+lib/libXv			1.0.4	7.4
 lib/libXvMC			1.0.4	7.2RC4
 lib/libXxf86dga			1.0.2	7.3
 lib/libXxf86misc		1.0.1	7.1
@@ -250,12 +250,12 @@ lib/libdmx			1.0.2	7.1
 lib/libfontenc			1.0.3	7.2RC1
 lib/liblbxutil			1.0.4	7.2RC4
 lib/liboldX			1.0.1	7.0	still needed?
-lib/libpciaccess		0.10	7.4	needs-update
+lib/libpciaccess		0.10.2	7.4
 lib/libxcb			1.1	7.3	needs-import
-lib/libxkbfile			1.0.5	7.4	needs-update
+lib/libxkbfile			1.0.5	7.4
 lib/libxkbui			1.0.2	7.1
-lib/libxtrans			1.1	7.4	needs-update
-lib/pixman			0.10	7.4	needs-update
+lib/libxtrans			1.2	7.4
+lib/pixman			0.10.0	7.4
 
 proto/bigreqsproto		1.0.2	7.0	needs-rel
 proto/compositeproto		0.4	7.3
@@ -294,4 +294,4 @@ util/imake			1.0.2
 util/macros			1.1.6	7.4
 util/makedepend			1.0.1	7.3
 
-xserver				1.4.99.901	7.4	needs-update
+xserver				1.4.99.902	7.4	needs-update
