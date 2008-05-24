@@ -117,10 +117,13 @@ Status XeviGetVisualInfo(
     register int n_data, visualIndex, vinfoIndex;
     Bool isValid;
     XeviCheckExtension (dpy, info, 0);
+    if (!n_info_return || !evi_return) {
+	return BadValue;
+    }
     *n_info_return = 0;
     *evi_return = NULL;
     vinfo = XGetVisualInfo(dpy, 0, NULL, &sz_info);
-    if (!vinfo || !evi_return) {
+    if (!vinfo) {
 	return BadValue;
     }
     if (!n_visual || !visual) {		/* copy the all visual */

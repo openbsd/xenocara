@@ -76,14 +76,14 @@ University of California.
  * Holds the request type code for this extension.  The request type code
  * for this extension may vary depending on how many extensions are installed
  * already, so the initial value given below will be added to the base request
- * code that is aquired when this extension is installed.
+ * code that is acquired when this extension is installed.
  */
 static int		XTestReqCode = 0;
 /*
  * Holds the two event type codes for this extension.  The event type codes
  * for this extension may vary depending on how many extensions are installed
  * already, so the initial values given below will be added to the base event
- * code that is aquired when this extension is installed.
+ * code that is acquired when this extension is installed.
  *
  * These two variables must be available to programs that use this extension.
  */
@@ -1200,7 +1200,7 @@ int	ack_flag)
 	/*
 	 * points to XTestIdentifyMyEvent
 	 */
-	Bool	(*func_ptr)();
+	Bool	(*func_ptr)(Display *, XEvent *, XPointer);
 
 	/*
 	 * write the input actions to the server
@@ -1262,7 +1262,7 @@ static	Bool
 XTestIdentifyMyEvent(
 Display	*display,
 /*
- * Holds the event that this routiine is supposed to look at.
+ * Holds the event that this routine is supposed to look at.
  */
 XEvent	*event_ptr,
 /*

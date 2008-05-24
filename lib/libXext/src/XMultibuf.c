@@ -354,7 +354,7 @@ void XmbufDestroyBuffers (Display *dpy, Window window)
  * XmbufDisplayBuffers - 
  * 	Displays the indicated buffers their appropriate windows within
  * 	max_delay milliseconds after min_delay milliseconds have passed.
- * 	No two buffers may be associated with the same window or else a Matc
+ * 	No two buffers may be associated with the same window or else a Match
  * 	error is generated.
  */
 void XmbufDisplayBuffers (

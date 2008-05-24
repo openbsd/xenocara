@@ -78,7 +78,7 @@ static XExtensionHooks Security_extension_hooks = {
 };
 
 static char    *security_error_list[] = {
-    "BadAuthorization"
+    "BadAuthorization",
     "BadAuthorizationProtocol"
 };
 

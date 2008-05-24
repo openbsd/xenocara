@@ -461,7 +461,7 @@ XRectangle *XShapeGetRectangles (
     }
     *count = rep.nrects;
     *ordering = rep.ordering;
-    rects = 0;
+    rects = NULL;
     if (*count) {
 	xrects = (xRectangle *) Xmalloc (*count * sizeof (xRectangle));
 	rects = (XRectangle *) Xmalloc (*count * sizeof (XRectangle));
@@ -471,7 +471,7 @@ XRectangle *XShapeGetRectangles (
 	    if (rects)
 		Xfree (rects);
 	    _XEatData (dpy, *count * sizeof (xRectangle));
-	    rects = 0;
+	    rects = NULL;
 	    *count = 0;
 	} else {
 	    _XRead (dpy, (char *) xrects, *count * sizeof (xRectangle));

@@ -75,7 +75,7 @@ from The Open Group.
 /*
  * Error handlers; used to be in XlibInt.c
  */
-typedef int (*funcptr)();
+typedef int (*funcptr)(Display*, char *, char *);
 ZEROINIT (funcptr, _XExtensionErrorFunction, NULL);
 
 /*

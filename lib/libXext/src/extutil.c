@@ -248,11 +248,11 @@ static int _default_exterror (Display *dpy, char *ext_name, char *reason)
  * requested extension is referenced.  This should eventually move into Xlib.
  */
 
-extern int (*_XExtensionErrorFunction)();
+extern int (*_XExtensionErrorFunction)(Display*, char *, char * );
 
-int (*XSetExtensionErrorHandler(int (*handler)(Display*, char *, char * )))()
+int (*XSetExtensionErrorHandler(int (*handler)(Display*, char *, char * )))(Display*, char *, char * )
 {
-    int (*oldhandler)() = _XExtensionErrorFunction;
+    int (*oldhandler)(Display*, char *, char * ) = _XExtensionErrorFunction;
 
     _XExtensionErrorFunction = (handler ? handler :
 				_default_exterror);
@@ -265,7 +265,7 @@ int (*XSetExtensionErrorHandler(int (*handler)(Display*, char *, char * )))()
  */
 int XMissingExtension (Display *dpy, _Xconst char *ext_name)
 {
-    int (*func)() = (_XExtensionErrorFunction ?
+    int (*func)(Display*, char *, char *) = (_XExtensionErrorFunction ?
 		     _XExtensionErrorFunction : _default_exterror);
 
     if (!ext_name) ext_name = X_EXTENSION_UNKNOWN;

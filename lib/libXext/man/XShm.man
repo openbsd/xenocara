@@ -128,24 +128,24 @@ Status XShmGetEventBase(
 .ta 3i
 \fIEvents:\fP
 typedef struct {
-    int type;               /\\(* of event */
-    unsigned long serial;   /\\(* # of last request processed by server*/
-    Bool send_event;        /\\(* true if this came from a SendEvent request*/
-    Display *display;       /\\(* Display the event was read from */
-    Drawable drawable;      /\\(* drawable of request */
-    int major_code;         /\\(* ShmReqCode */
-    int minor_code;         /\\(* X_ShmPutImage */
-    ShmSeg shmseg;          /\\(* the ShmSeg used in the request*/
-    unsigned long offset;   /\\(* the offset into ShmSeg used in the request*/
+    int type;               /\&* of event */
+    unsigned long serial;   /\&* # of last request processed by server*/
+    Bool send_event;        /\&* true if this came from a SendEvent request*/
+    Display *display;       /\&* Display the event was read from */
+    Drawable drawable;      /\&* drawable of request */
+    int major_code;         /\&* ShmReqCode */
+    int minor_code;         /\&* X_ShmPutImage */
+    ShmSeg shmseg;          /\&* the ShmSeg used in the request*/
+    unsigned long offset;   /\&* the offset into ShmSeg used in the request*/
 } XShmCompletionEvent;
 .LP
 \fIa structure of type XShmSegmentInfo :\fP
 
 typedef struct {
-    ShmSeg shmseg;      /\\(* resource id */
-    int shmid;          /\\(* kernel id */
-    char *shmaddr;      /\\(* address in client */
-    Bool readOnly;      /\\(* how the server should attach it */
+    ShmSeg shmseg;      /\&* resource id */
+    int shmid;          /\&* kernel id */
+    char *shmaddr;      /\&* address in client */
+    Bool readOnly;      /\&* how the server should attach it */
 } XShmSegmentInfo;
 
 .SH DESCRIPTION

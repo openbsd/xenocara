@@ -1,3 +1,77 @@
+commit 9884a41dd0282ca3dd19db5bf3a11554ee7eee57
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Feb 28 19:02:58 2008 -0800
+
+    Version bump: 1.0.4
+
+commit f6c7c70f312c8eb0883437c003ba78bb4abbabc3
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Dec 7 15:41:42 2007 -0800
+
+    Coverity #467: security_error_list has fewer than XSecurityNumberErrors entries
+    
+    Sometimes it's annoying that C silently merges adjacent strings without
+    warning you that you forgot a comma in your list of strings.
+
+commit 37fe15843fd892c529e554f24a937ed712ea129c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Dec 7 15:39:13 2007 -0800
+
+    Allow overriding the SOREV in configure.ac
+
+commit 285deb33da14fb5476b18cb1071b41070cf3ae99
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:16 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
+commit 249daf0d8a044a97d053c957ab45445c159d31e4
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Nov 28 17:29:28 2007 -0800
+
+    XeviGetVisualInfo: check for null pointer before writing to it, not after
+
+commit a7d211f6e3ded98c79e7be73253a51958d3e98db
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Nov 27 18:12:29 2007 -0800
+
+    include of config.h should not be inside #ifdef WIN32
+
+commit 1614ea1074d62f32f51032141b0c55250380ca17
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Nov 27 17:54:34 2007 -0800
+
+    Add hooks for checking code with lint/sparse/etc.
+
+commit 8a2bb8793eed1c7f690be5c00772b2a64b9632fd
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Nov 27 16:54:21 2007 -0800
+
+    Fix sparse warnings (type mismatches in function pointers, int as pointer)
+
+commit 781dbe7d723e9fe5a0e028dcb5a0fafeb59629e3
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Nov 27 16:11:49 2007 -0800
+
+    Add missing copyright/license notices to COPYING
+
+commit 39cb1caa381666ac79307d3d312992d4e22980d1
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Nov 27 16:03:14 2007 -0800
+
+    Fix incorrect comment delimiters in libXext man pages
+    
+    Similar to X.Org Bug #4312 <http://bugs.freedesktop.org/show_bug.cgi?id=4312>
+    Protect /* sequences from cpp pre-processor removal without transforming
+    to Unicode mathematical asterisk character, and fix incorrectly encoded
+    /* sequences in XShm.man.
+
+commit cca90a25678bf3c3269af1c0ac5493cfd4809727
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Nov 27 15:55:28 2007 -0800
+
+    Fix typos in source comments
+
 commit 8d8a6ac4012c2bd5bfd037e42f69f5b2b111433d
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Thu Jan 25 18:28:21 2007 -0800

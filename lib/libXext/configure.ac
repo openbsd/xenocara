@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([libXext],
-        1.0.3,
+        1.0.4,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         libXext)
 
@@ -14,14 +14,20 @@ AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER([config.h])
 
+# Require xorg-macros version 1.1.0 or newer for XORG_WITH_LINT macro
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.1 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.1)
+
 # Determine .so library version per platform 
 # based on SharedXextRev in monolith xc/config/cf/*Lib.tmpl
 AC_CANONICAL_HOST
-case $host_os in
+if test "x$XEXT_SOREV" = "x" ; then
+    case $host_os in
 	openbsd*)	XEXT_SOREV=8:0 		;;
 	solaris*)       XEXT_SOREV=0 		;;
 	*)              XEXT_SOREV=6:4:0 	;;
-esac
+    esac
+fi
 AC_SUBST(XEXT_SOREV)
 
 # Checks for programs.
@@ -44,6 +50,11 @@ XORG_RELEASE_VERSION
 # Man page processing requirements
 XORG_PROG_RAWCPP
 XORG_MANPAGE_SECTIONS
+
+dnl Allow checking code with lint, sparse, etc.
+XORG_WITH_LINT
+XORG_LINT_LIBRARY([Xext])
+LINT_FLAGS="${LINT_FLAGS} ${XEXT_CFLAGS}"
 
 AC_OUTPUT([Makefile
            man/Makefile
