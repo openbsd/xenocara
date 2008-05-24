@@ -2016,6 +2016,11 @@ AM_CONDITIONAL(BUILD_KBD_MODE, [test x$BUILD_KBD_MODE = xyes])
 AM_CONDITIONAL(BSD_KBD_MODE, [test x$KBD_MODE_TYPE = xbsd])
 AM_CONDITIONAL(SUN_KBD_MODE, [test x$KBD_MODE_TYPE = xsun])
 
+AC_ARG_ENABLE(ioport, AS_HELP_STRING([--enable-ioport],
+	[Build ioport utilities (default: yes)]),
+	[BUILD_IOPORT=$enable_val], [BUILD_IOPORT="yes"])
+AM_CONDITIONAL(BUILD_IOPORT, [test x$BUILD_IOPORT = xyes])
+
 BUILD_DATE="$(date +'%Y%m%d')"
 AC_SUBST([BUILD_DATE])
 BUILD_TIME="$(date +'1%H%M%S')"
