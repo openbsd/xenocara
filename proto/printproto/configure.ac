@@ -1,5 +1,5 @@
 AC_PREREQ([2.57])
-AC_INIT([PrintProto], [1.0.3], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
+AC_INIT([PrintProto], [1.0.4], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 XORG_RELEASE_VERSION
