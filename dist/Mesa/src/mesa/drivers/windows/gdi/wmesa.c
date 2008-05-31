@@ -1500,15 +1500,19 @@ void gl_dispatch_stub_650(void){}
 void gl_dispatch_stub_651(void){}
 void gl_dispatch_stub_652(void){}
 void gl_dispatch_stub_653(void){}
+void gl_dispatch_stub_733(void){}
 void gl_dispatch_stub_734(void){}
 void gl_dispatch_stub_735(void){}
 void gl_dispatch_stub_736(void){}
 void gl_dispatch_stub_737(void){}
 void gl_dispatch_stub_738(void){}
+void gl_dispatch_stub_744(void){}
 void gl_dispatch_stub_745(void){}
 void gl_dispatch_stub_746(void){}
 void gl_dispatch_stub_760(void){}
 void gl_dispatch_stub_761(void){}
+void gl_dispatch_stub_763(void){}
+void gl_dispatch_stub_765(void){}
 void gl_dispatch_stub_766(void){}
 void gl_dispatch_stub_767(void){}
 void gl_dispatch_stub_768(void){}
@@ -1533,5 +1537,6 @@ void gl_dispatch_stub_749(void){}
 void gl_dispatch_stub_769(void){}
 void gl_dispatch_stub_770(void){}
 void gl_dispatch_stub_771(void){}
+void gl_dispatch_stub_772(void){}
 
 #endif

@@ -71,6 +71,7 @@ do
 	    echo '  -install DIR  put resulting library file(s) in DIR'
 	    echo '  -arch ARCH    override using `uname` to determine host system'
 	    echo '  -archopt OPT  specify an extra achitecture-specific option OPT'
+	    echo '  -altopts OPTS alternate options to override all others'
 	    echo "  -noprefix     don't prefix library name with 'lib' nor add any suffix"
 	    echo '  -exports FILE only export the symbols listed in FILE'
 	    echo '  -h, --help    display this information and exit'
@@ -111,7 +112,6 @@ do
 	    DEPS="$DEPS $1"
 	    ;;
 	'-pthread')
-	    # for FreeBSD
 	    DEPS="$DEPS -pthread"
 	    ;;
 	'-cplusplus')
@@ -135,6 +135,10 @@ do
 	    shift 1;
 	    ARCHOPT=$1
 	    ;;
+	'-altopts')
+            shift 1;
+            ALTOPTS=$1
+            ;;
 	'-noprefix')
 	    NOPREFIX=1
 	    ;;
@@ -209,8 +213,13 @@ case $ARCH in
 	if [ $NOPREFIX = 1 ] ; then
 	    # No "lib" or ".so" part
 	    echo "mklib: Making" $ARCH "shared library: " ${LIBNAME}
-	    #OPTS="-shared -Wl,-soname,${LIBNAME}"  # soname???
-	    OPTS="-shared"
+	    case $ARCH in 'Linux' | 'GNU' | GNU/*)
+		OPTS="-Xlinker -Bsymbolic -shared"
+	    ;;
+	    *)
+		OPTS="-shared"
+	    ;;
+	    esac
 
 	    # Check if objects are 32-bit and we're running in 64-bit
 	    # environment.  If so, pass -m32 flag to linker.
@@ -219,6 +228,10 @@ case $ARCH in
 	    if [ "${ABI32}" -a `uname -m` = "x86_64" ] ; then
 		OPTS="-m32 ${OPTS}"
 	    fi
+
+            if [ "${ALTOPTS}" ] ; then
+                OPTS=${ALTOPTS}
+            fi
 
             rm -f ${LIBNAME}
             # make lib
@@ -230,6 +243,9 @@ case $ARCH in
             echo "mklib: Making" $ARCH "static library: " ${LIBNAME}
             LINK="ar"
             OPTS="-ru"
+            if [ "${ALTOPTS}" ] ; then
+                OPTS=${ALTOPTS}
+            fi
             rm -f ${LIBNAME}
             # make lib
             ${LINK} ${OPTS} ${LIBNAME} ${OBJECTS}
@@ -265,6 +281,9 @@ case $ARCH in
 	    if [ "${ABI32}" -a `uname -m` = "x86_64" ] ; then
 		OPTS="-m32 ${OPTS}"
 	    fi
+            if [ "${ALTOPTS}" ] ; then
+                OPTS=${ALTOPTS}
+            fi
 
 	    if [ x${PATCH} = "x" ] ; then
 		VERSION="${MAJOR}.${MINOR}"
@@ -347,7 +366,9 @@ case $ARCH in
 	    if [ "${SPARCV9}" ] ; then
 		OPTS="${OPTS} -xarch=v9"
 	    fi
-
+            if [ "${ALTOPTS}" ] ; then
+                OPTS=${ALTOPTS}
+            fi
 	    # for debug:
 	    #echo "mklib: linker is" ${LINK} ${OPTS}
 	    if [ $NOPREFIX = 1 ] ; then
@@ -378,6 +399,9 @@ case $ARCH in
 	    # No "lib" or ".so" part
 	    echo "mklib: Making FreeBSD shared library: " ${LIBNAME}
 	    OPTS="-shared"
+            if [ "${ALTOPTS}" ] ; then
+                OPTS=${ALTOPTS}
+            fi
 	    rm -f ${LIBNAME}
 	    ${LINK} ${OPTS} ${LDFLAGS} -o ${LIBNAME} ${OBJECTS} ${DEPS}
 	    FINAL_LIBS=${LIBNAME}
@@ -391,6 +415,9 @@ case $ARCH in
 	else
 	    SHLIB="lib${LIBNAME}.so.${MAJOR}"
 	    OPTS="-shared -Wl,-soname,${SHLIB}"
+            if [ "${ALTOPTS}" ] ; then
+                OPTS=${ALTOPTS}
+            fi
 	    echo "mklib: Making FreeBSD shared library: " ${SHLIB}
 	    rm -f ${SHLIB}
 	    ${LINK} ${OPTS} ${LDFLAGS} -o ${SHLIB} ${OBJECTS} ${DEPS}
@@ -443,6 +470,10 @@ case $ARCH in
 		echo "Error: Unexpected IRIX ABI!"
 		exit 1
 	    fi
+
+            if [ "${ALTOPTS}" ] ; then
+                OPTS=${ALTOPTS}
+            fi
 
 	    if [ $CPLUSPLUS = 1 ] ; then
 		LINK="CC"
@@ -524,6 +555,10 @@ case $ARCH in
 		}
 	    }' | sort -u >> ${EXPFILE}
 
+            if [ "${ALTOPTS}" ] ; then
+                OPTS=${ALTOPTS}
+            fi
+
             # On AIX a shared library is linked differently when
             # you want to dlopen the file
 	    if [ $DLOPEN = "1" ] ; then
@@ -575,6 +610,9 @@ case $ARCH in
             echo "mklib: Making Darwin static library: " ${LIBNAME}
             LINK="ar"
             OPTS="-ruvs"
+            if [ "${ALTOPTS}" ] ; then
+                OPTS=${ALTOPTS}
+            fi
             ${LINK} ${OPTS} ${LIBNAME} ${OBJECTS}
             FINAL_LIBS=${LIBNAME}
         else
@@ -586,19 +624,37 @@ case $ARCH in
 		LIBSUFFIX="dylib"
                 OPTS="${ARCHOPT} -dynamiclib -multiply_defined suppress -current_version ${MAJOR}.${MINOR}.0 -compatibility_version ${MAJOR}.${MINOR}.0 -install_name lib${LIBNAME}.${MAJOR}.${LIBSUFFIX}"
             fi
-            LINKNAME="lib${LIBNAME}.${LIBSUFFIX}"
-            LIBNAME="lib${LIBNAME}.${MAJOR}.${LIBSUFFIX}"
+
+            if [ ${EXPORTS} ] ; then
+                OPTS="${OPTS} -exported_symbols_list ${EXPORTS}"
+            fi 
+
+            LINKNAME="lib${LIBNAME}.${MAJOR}.${LIBSUFFIX}"
+            LINKNAME2="lib${LIBNAME}.${LIBSUFFIX}"
+            LIBNAME="lib${LIBNAME}.${MAJOR}.${MINOR}.${LIBSUFFIX}"
 
 	    # examine first object to determine ABI
     	    set ${OBJECTS}
-	    ABI_PPC=`file $1 | grep 'object ppc'`
-	    ABI_I386=`file $1 | grep 'object i386'`
-	    if [ "${ABI_PPC}" ] ; then
-		OPTS="${OPTS} -arch ppc"
-	    fi
-	    if [ "${ABI_I386}" ] ; then
-		OPTS="${OPTS} -arch i386"
-	    fi
+            ABI_PPC=`file $1 | grep ' ppc'`
+            ABI_I386=`file $1 | grep ' i386'`
+            ABI_PPC64=`file $1 | grep ' ppc64'`
+            ABI_X86_64=`file $1 | grep ' x86_64'`
+            if [ "${ABI_PPC}" ] ; then
+                OPTS="${OPTS} -arch ppc"
+            fi
+            if [ "${ABI_I386}" ] ; then
+                OPTS="${OPTS} -arch i386"
+            fi
+            if [ "${ABI_PPC64}" ] ; then
+                OPTS="${OPTS} -arch ppc64"
+            fi
+            if [ "${ABI_X86_64}" ] ; then
+                OPTS="${OPTS} -arch x86_64"
+            fi
+
+            if [ "${ALTOPTS}" ] ; then
+                OPTS=${ALTOPTS}
+            fi
 
 	    # XXX can we always add -isysroot /Developer/SDKs/MacOSX10.4u.sdk
 	    # to OPTS here?
@@ -611,9 +667,11 @@ case $ARCH in
 	    fi
 
             echo "mklib: Making Darwin shared library: " ${LIBNAME}
+
             ${LINK} ${OPTS} ${LDFLAGS} -o ${LIBNAME} ${OBJECTS} ${DEPS}
             ln -s ${LIBNAME} ${LINKNAME}
-            FINAL_LIBS="${LIBNAME} ${LINKNAME}"
+            ln -s ${LIBNAME} ${LINKNAME2}
+            FINAL_LIBS="${LIBNAME} ${LINKNAME} ${LINKNAME2}"
         fi
         ;;
 
@@ -665,6 +723,9 @@ case $ARCH in
             echo "mklib: Making Intel ICC static library: " ${LIBNAME}.a
             LINK="ar"
             OPTS="-ruv"
+            if [ "${ALTOPTS}" ] ; then
+                OPTS=${ALTOPTS}
+            fi
             # make lib
             ${LINK} ${OPTS} ${LIBNAME}.a ${OBJECTS}
             # finish up
@@ -674,6 +735,9 @@ case $ARCH in
                  OPTS="-shared -i-static -cxxlib-icc"
             else
                  OPTS="-shared"
+            fi
+            if [ "${ALTOPTS}" ] ; then
+                OPTS=${ALTOPTS}
             fi
             VERSION="${MAJOR}.${MINOR}.${PATCH}"
             echo "mklib: Making Intel ICC shared library: " ${LIBNAME}.so.${VERSION}
@@ -739,6 +803,9 @@ case $ARCH in
             echo "mklib: Making" $ARCH "static library: " ${LIBNAME}.a
             LINK="ar"
             OPTS="-ru"
+            if [ "${ALTOPTS}" ] ; then
+                OPTS=${ALTOPTS}
+            fi
             # make lib
             ${LINK} ${OPTS} ${LIBNAME}.a ${OBJECTS}
 	    ranlib ${LIBNAME}.a
@@ -746,6 +813,9 @@ case $ARCH in
             FINAL_LIBS=${LIBNAME}.a
         else
 	    OPTS="-shared -Wl,-export-all -Wl,--out-implib=${LIBNAME}-${MAJOR}.dll.a"
+            if [ "${ALTOPTS}" ] ; then
+                OPTS=${ALTOPTS}
+            fi
             echo "mklib: Making" $ARCH "shared library: " ${LIBNAME}-${MAJOR}.dll
 
             if [ $CPLUSPLUS = 1 ] ; then

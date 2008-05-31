@@ -462,6 +462,8 @@ static void r300SetDepthState(GLcontext * ctx)
 	r300SetEarlyZState(ctx);
 }
 
+static void r300ClipPlane( GLcontext *ctx, GLenum plane, const GLfloat *eq );
+
 /**
  * Handle glEnable()/glDisable().
  *
@@ -470,7 +472,7 @@ static void r300SetDepthState(GLcontext * ctx)
 static void r300Enable(GLcontext * ctx, GLenum cap, GLboolean state)
 {
 	r300ContextPtr r300 = R300_CONTEXT(ctx);
-
+	GLuint p;
 	if (RADEON_DEBUG & DEBUG_STATE)
 		fprintf(stderr, "%s( %s = %s )\n", __FUNCTION__,
 			_mesa_lookup_enum_by_nr(cap),
@@ -510,6 +512,27 @@ static void r300Enable(GLcontext * ctx, GLenum cap, GLboolean state)
 		r300SetBlendState(ctx);
 		break;
 
+
+	case GL_CLIP_PLANE0:
+	case GL_CLIP_PLANE1:
+	case GL_CLIP_PLANE2:
+	case GL_CLIP_PLANE3:
+	case GL_CLIP_PLANE4:
+	case GL_CLIP_PLANE5:
+		/* no VAP UCP on non-TCL chipsets */
+		if (!(r300->radeon.radeonScreen->chip_flags & RADEON_CHIPSET_TCL))
+			return;
+
+		p = cap-GL_CLIP_PLANE0;
+		R300_STATECHANGE( r300, vap_clip_cntl );
+		if (state) {
+			r300->hw.vap_clip_cntl.cmd[1] |= (R300_VAP_UCP_ENABLE_0<<p);
+			r300ClipPlane( ctx, cap, NULL );
+		}
+		else {
+			r300->hw.vap_clip_cntl.cmd[1] &= ~(R300_VAP_UCP_ENABLE_0<<p);
+		}
+		break;
 	case GL_DEPTH_TEST:
 		r300SetDepthState(ctx);
 		break;
@@ -1888,7 +1911,7 @@ static void r300ResetHwState(r300ContextPtr r300)
 
 	r300->hw.unk21DC.cmd[1] = 0xAAAAAAAA;
 
-	r300->hw.unk221C.cmd[1] = R300_221C_NORMAL;
+	r300->hw.vap_clip_cntl.cmd[1] = R300_221C_NORMAL;
 
 	r300->hw.unk2220.cmd[1] = r300PackFloat32(1.0);
 	r300->hw.unk2220.cmd[2] = r300PackFloat32(1.0);
@@ -2254,6 +2277,8 @@ void r300InitState(r300ContextPtr r300)
 		depth_fmt = R300_DEPTH_FORMAT_24BIT_INT_Z;
 		r300->state.stencil.clear = 0x00ff0000;
 		break;
+
+
 	default:
 		fprintf(stderr, "Error: Unsupported depth %d... exiting\n",
 			ctx->Visual.depthBits);
@@ -2274,6 +2299,38 @@ static void r300RenderMode(GLcontext * ctx, GLenum mode)
 	r300ContextPtr rmesa = R300_CONTEXT(ctx);
 	(void)rmesa;
 	(void)mode;
+}
+
+static void r300ClipPlane( GLcontext *ctx, GLenum plane, const GLfloat *eq )
+{
+	r300ContextPtr rmesa = R300_CONTEXT(ctx);
+	GLint p = (GLint) plane - (GLint) GL_CLIP_PLANE0;
+	GLint *ip = (GLint *)ctx->Transform._ClipUserPlane[p];
+
+	R300_STATECHANGE( rmesa, vpucp[p] );
+	rmesa->hw.vpucp[p].cmd[R300_VPUCP_X] = ip[0];
+	rmesa->hw.vpucp[p].cmd[R300_VPUCP_Y] = ip[1];
+	rmesa->hw.vpucp[p].cmd[R300_VPUCP_Z] = ip[2];
+	rmesa->hw.vpucp[p].cmd[R300_VPUCP_W] = ip[3];
+}
+
+
+void r300UpdateClipPlanes( GLcontext *ctx )
+{
+	r300ContextPtr rmesa = R300_CONTEXT(ctx);
+	GLuint p;
+	
+	for (p = 0; p < ctx->Const.MaxClipPlanes; p++) {
+		if (ctx->Transform.ClipPlanesEnabled & (1 << p)) {
+			GLint *ip = (GLint *)ctx->Transform._ClipUserPlane[p];
+			
+			R300_STATECHANGE( rmesa, vpucp[p] );
+			rmesa->hw.vpucp[p].cmd[R300_VPUCP_X] = ip[0];
+			rmesa->hw.vpucp[p].cmd[R300_VPUCP_Y] = ip[1];
+			rmesa->hw.vpucp[p].cmd[R300_VPUCP_Z] = ip[2];
+			rmesa->hw.vpucp[p].cmd[R300_VPUCP_W] = ip[3];
+		}
+	}
 }
 
 /**
@@ -2313,4 +2370,6 @@ void r300InitStateFuncs(struct dd_function_table *functions)
 	functions->PolygonMode = r300PolygonMode;
 
 	functions->RenderMode = r300RenderMode;
+
+	functions->ClipPlane = r300ClipPlane;
 }

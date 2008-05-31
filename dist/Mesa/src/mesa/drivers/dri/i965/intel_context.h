@@ -387,6 +387,8 @@ extern int INTEL_DEBUG;
 #define PCI_CHIP_I946_GZ		0x2972
 #define PCI_CHIP_I965_GM                0x2A02
 
+#define PCI_CHIP_IGD_GM       0x2A42
+
 
 /* ================================================================
  * intel_context.c:

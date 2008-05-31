@@ -38,6 +38,9 @@ struct intel_batchbuffer
    struct buffer_reloc reloc[MAX_RELOCS];
    GLuint nr_relocs;
    GLuint size;
+
+   GLuint dirty_state;
+   GLuint id;
 };
 
 struct intel_batchbuffer *intel_batchbuffer_alloc(struct intel_context

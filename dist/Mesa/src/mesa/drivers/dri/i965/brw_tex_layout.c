@@ -38,7 +38,7 @@
 #include "macros.h"
 
 
-GLboolean brw_miptree_layout( struct intel_mipmap_tree *mt )
+GLboolean brw_miptree_layout( struct intel_context *intel, struct intel_mipmap_tree *mt )
 {
    /* XXX: these vary depending on image format: 
     */
@@ -102,7 +102,7 @@ GLboolean brw_miptree_layout( struct intel_mipmap_tree *mt )
    }
 
    default:
-      i945_miptree_layout_2d(mt);
+      i945_miptree_layout_2d(intel, mt);
       break;
    }
    DBG("%s: %dx%dx%d - sz 0x%x\n", __FUNCTION__, 

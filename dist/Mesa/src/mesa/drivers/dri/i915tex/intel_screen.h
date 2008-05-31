@@ -95,6 +95,7 @@ typedef struct
    struct _DriBufferPool *regionPool;
    struct _DriBufferPool *staticPool;
    unsigned int maxBatchSize;
+   unsigned batch_id;
    GLboolean havePools;
 } intelScreenPrivate;
 

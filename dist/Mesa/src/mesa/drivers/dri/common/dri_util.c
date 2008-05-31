@@ -486,6 +486,9 @@ static void driSwapBuffers( __DRInativeDisplay *dpy, void *drawablePrivate )
     __DRIdrawablePrivate *dPriv = (__DRIdrawablePrivate *) drawablePrivate;
     drm_clip_rect_t rect;
 
+    if (!dPriv->numClipRects)
+        return;
+
     dPriv->swapBuffers(dPriv);
 
     /* Check that we actually have the new damage report method */

@@ -103,6 +103,7 @@ static void clear_batch_cache( struct brw_context *brw )
 
 void brw_clear_batch_cache_flush( struct brw_context *brw )
 {
+   bmFinishFenceLock(&(brw->intel), bmSetFenceLock(&(brw->intel)));
    clear_batch_cache(brw);
 
    brw->wrap = 0;

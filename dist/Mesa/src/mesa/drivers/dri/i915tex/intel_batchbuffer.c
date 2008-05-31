@@ -118,6 +118,8 @@ intel_batchbuffer_reset(struct intel_batchbuffer *batch)
 
    batch->map = driBOMap(batch->buffer, DRM_BO_FLAG_WRITE, 0);
    batch->ptr = batch->map;
+   batch->dirty_state = ~0;
+   batch->id = batch->intel->intelScreen->batch_id++;
 }
 
 /*======================================================================

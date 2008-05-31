@@ -249,7 +249,7 @@ static void upload_depthbuffer(struct brw_context *brw)
    memset(&bd, 0, sizeof(bd));
 
    bd.header.bits.opcode = CMD_DEPTH_BUFFER;
-   bd.header.bits.length = sizeof(bd)/4-2;
+   bd.header.bits.length = BRW_IS_IGD(brw) ? (sizeof(bd)/4-2) : (sizeof(bd)/4-3);
    bd.dword1.bits.pitch = (region->pitch * region->cpp) - 1;
    
    switch (region->cpp) {
@@ -359,6 +359,33 @@ const struct brw_tracked_state brw_polygon_stipple_offset = {
    .update = upload_polygon_stipple_offset
 };
 
+/**********************************************************************
+ * AA Line parameters
+ */
+static void upload_aa_line_parameters(struct brw_context *brw)
+{
+   struct brw_aa_line_parameters balp;
+   
+   if (!BRW_IS_IGD(brw))
+      return;
+
+   /* use legacy aa line coverage computation */
+   memset(&balp, 0, sizeof(balp));
+   balp.header.opcode = CMD_AA_LINE_PARAMETERS;
+   balp.header.length = sizeof(balp) / 4 - 2;
+   
+   BRW_CACHED_BATCH_STRUCT(brw, &balp);
+}
+
+const struct brw_tracked_state brw_aa_line_parameters = {
+   .dirty = {
+      .mesa = 0,
+      .brw = BRW_NEW_CONTEXT,
+      .cache = 0
+   },
+   .update = upload_aa_line_parameters
+};
+
 /***********************************************************************
  * Line stipple packet
  */
@@ -441,7 +468,7 @@ static void upload_invarient_state( struct brw_context *brw )
       struct brw_pipeline_select ps;
 
       memset(&ps, 0, sizeof(ps));
-      ps.header.opcode = CMD_PIPELINE_SELECT;
+      ps.header.opcode = CMD_PIPELINE_SELECT(brw);
       ps.header.pipeline_select = 0;
       BRW_BATCH_STRUCT(brw, &ps);
    }
@@ -477,7 +504,7 @@ static void upload_invarient_state( struct brw_context *brw )
       struct brw_vf_statistics vfs;
       memset(&vfs, 0, sizeof(vfs));
 
-      vfs.opcode = CMD_VF_STATISTICS;
+      vfs.opcode = CMD_VF_STATISTICS(brw);
       if (INTEL_DEBUG & DEBUG_STATS)
 	 vfs.statistics_enable = 1; 
 

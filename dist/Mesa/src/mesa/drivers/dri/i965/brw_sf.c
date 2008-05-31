@@ -57,7 +57,7 @@ static void compile_sf_prog( struct brw_context *brw,
 
    /* Begin the compilation:
     */
-   brw_init_compile(&c.func);
+   brw_init_compile(brw, &c.func);
 
    c.key = *key;
    c.nr_attrs = brw_count_bits(c.key.attrs);
@@ -82,15 +82,15 @@ static void compile_sf_prog( struct brw_context *brw,
    switch (key->primitive) {
    case SF_TRIANGLES:
       c.nr_verts = 3;
-      brw_emit_tri_setup( &c );
+      brw_emit_tri_setup( &c, GL_TRUE );
       break;
    case SF_LINES:
       c.nr_verts = 2;
-      brw_emit_line_setup( &c );
+      brw_emit_line_setup( &c, GL_TRUE );
       break;
    case SF_POINTS:
       c.nr_verts = 1;
-      brw_emit_point_setup( &c );
+      brw_emit_point_setup( &c, GL_TRUE );
       break;
    case SF_UNFILLED_TRIS:
       c.nr_verts = 3;

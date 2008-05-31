@@ -189,6 +189,7 @@ struct intel_context
    struct _DriFenceObject *first_swap_fence;
 
    struct intel_batchbuffer *batch;
+   GLuint last_state_batch_id;
 
    struct
    {

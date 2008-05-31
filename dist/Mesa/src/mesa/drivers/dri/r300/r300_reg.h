@@ -281,7 +281,20 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define R300_VAP_PVS_UPLOAD_ADDRESS         0x2200
 #       define R300_PVS_UPLOAD_PROGRAM           0x00000000
 #       define R300_PVS_UPLOAD_PARAMETERS        0x00000200
+#       define R300_PVS_UPLOAD_CLIP_PLANE0       0x00000400
+#       define R300_PVS_UPLOAD_CLIP_PLANE1       0x00000401
+#       define R300_PVS_UPLOAD_CLIP_PLANE2       0x00000402
+#       define R300_PVS_UPLOAD_CLIP_PLANE3       0x00000403
+#       define R300_PVS_UPLOAD_CLIP_PLANE4       0x00000404
+#       define R300_PVS_UPLOAD_CLIP_PLANE5       0x00000405
 #       define R300_PVS_UPLOAD_POINTSIZE         0x00000406
+
+#       define R500_PVS_UPLOAD_CLIP_PLANE0       0x00000600
+#       define R500_PVS_UPLOAD_CLIP_PLANE1       0x00000601
+#       define R500_PVS_UPLOAD_CLIP_PLANE2       0x00000602
+#       define R500_PVS_UPLOAD_CLIP_PLANE3       0x00000603
+#       define R500_PVS_UPLOAD_CLIP_PLANE4       0x00000604
+#       define R500_PVS_UPLOAD_CLIP_PLANE5       0x00000605
 
 /* gap */
 
@@ -294,10 +307,16 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 /* I do not know the purpose of this register. However, I do know that
  * it is set to 221C_CLEAR for clear operations and to 221C_NORMAL
  * for normal rendering.
+ *
+ * 2007-11-05: This register is the user clip plane control register, but there
+ * also seems to be a rendering mode control; the NORMAL/CLEAR defines.
+ *
+ * See bug #9871. http://bugs.freedesktop.org/attachment.cgi?id=10672&action=view
  */
-#define R300_VAP_UNKNOWN_221C               0x221C
+#define R300_VAP_CLIP_CNTL                       0x221C
 #       define R300_221C_NORMAL                  0x00000000
 #       define R300_221C_CLEAR                   0x0001C000
+#define R300_VAP_UCP_ENABLE_0 (1 << 0)
 
 /* gap */
 

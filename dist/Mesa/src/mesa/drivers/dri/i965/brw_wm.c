@@ -150,7 +150,6 @@ static void do_wm_prog( struct brw_context *brw,
    c->fp = fp;
    c->env_param = brw->intel.ctx.FragmentProgram.Parameters;
 
-
    /* Augment fragment program.  Add instructions for pre- and
     * post-fragment-program tasks such as interpolation and fogging.
     */
@@ -175,7 +174,7 @@ static void do_wm_prog( struct brw_context *brw,
 
    /* This is where we start emitting gen4 code:
     */
-   brw_init_compile(&c->func);    
+   brw_init_compile(brw, &c->func);    
 
    brw_wm_pass2(c);
 

@@ -185,7 +185,8 @@ static void upload_sf_unit( struct brw_context *brw )
    sf.sf6.point_rast_rule = 1;	/* opengl conventions */
    sf.sf7.point_size = brw->attribs.Point->_Size * (1<<3);
    sf.sf7.use_point_size_state = !brw->attribs.Point->_Attenuated;
-      
+   sf.sf7.aa_line_distance_mode = 0;
+
    /* might be BRW_NEW_PRIMITIVE if we have to adjust pv for polygons:
     */
    sf.sf7.trifan_pv = 2;

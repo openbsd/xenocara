@@ -97,9 +97,9 @@ struct brw_sf_compile {
 };
 
  
-void brw_emit_tri_setup( struct brw_sf_compile *c );
-void brw_emit_line_setup( struct brw_sf_compile *c );
-void brw_emit_point_setup( struct brw_sf_compile *c );
+void brw_emit_tri_setup( struct brw_sf_compile *c, GLboolean allocate );
+void brw_emit_line_setup( struct brw_sf_compile *c, GLboolean allocate );
+void brw_emit_point_setup( struct brw_sf_compile *c, GLboolean allocate );
 void brw_emit_anyprim_setup( struct brw_sf_compile *c );
 
 #endif

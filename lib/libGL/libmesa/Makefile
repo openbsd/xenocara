@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2008/03/23 16:43:25 oga Exp $
+# $OpenBSD: Makefile,v 1.3 2008/05/31 16:36:49 matthieu Exp $
 
 MESA=	${.CURDIR}/../../../dist/Mesa/src/mesa
 MESA_INCLUDE=	${.CURDIR}/../../../dist/Mesa/include
@@ -29,12 +29,15 @@ CPPFLAGS+= \
 
 .if ${MACHINE_ARCH} == "i386"
 CPPFLAGS += \
+	-I${MESA}/x86 \
 	-DUSE_X86_ASM \
 	-DUSE_MMX_ASM \
 	-DUSE_3DNOW_ASM \
 	-DUSE_SSE_ASM
 .elif ${MACHINE_ARCH} == "amd64"
-CPPFLAGS += -D__GLX_ALIGN64 -DUSE_X86_64_ASM
+CPPFLAGS += \
+	-I${MESA}/x86 \
+	-D__GLX_ALIGN64 -DUSE_X86_64_ASM
 .endif
 
 # main

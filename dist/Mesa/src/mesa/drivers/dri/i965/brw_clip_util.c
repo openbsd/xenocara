@@ -262,7 +262,7 @@ void brw_clip_kill_thread(struct brw_clip_compile *c)
 		 c->reg.R0,
 		 0,		/* allocate */
 		 0,		/* used */
-		 0, 		/* msg len */
+		 1, 		/* msg len */
 		 0, 		/* response len */
 		 1, 		/* eot */
 		 1,		/* writes complete */
@@ -343,12 +343,14 @@ void brw_clip_init_clipmask( struct brw_clip_compile *c )
       release_tmp(c, tmp);
    }
 
-   /* Test for -ve rhw workaround 
-    */
-   brw_set_conditionalmod(p, BRW_CONDITIONAL_NZ);
-   brw_AND(p, vec1(brw_null_reg()), incoming, brw_imm_ud(1<<20));
-   brw_OR(p, c->reg.planemask, c->reg.planemask, brw_imm_ud(0x3f));
-   brw_set_predicate_control(p, BRW_PREDICATE_NONE);
+   if (!BRW_IS_IGD(p->brw)) {
+       /* Test for -ve rhw workaround 
+        */
+       brw_set_conditionalmod(p, BRW_CONDITIONAL_NZ);
+       brw_AND(p, vec1(brw_null_reg()), incoming, brw_imm_ud(1<<20));
+       brw_OR(p, c->reg.planemask, c->reg.planemask, brw_imm_ud(0x3f));
+   }
 
+   brw_set_predicate_control(p, BRW_PREDICATE_NONE);
 }
 

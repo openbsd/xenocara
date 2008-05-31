@@ -71,9 +71,10 @@ bluegene-osmesa \
 bluegene-xlc-osmesa \
 catamount-osmesa-pgi \
 darwin \
+darwin-fat-32bit \
+darwin-fat-all \
 darwin-static \
 darwin-static-x86ppc \
-darwin-x86ppc \
 freebsd \
 freebsd-dri \
 freebsd-dri-amd64 \
@@ -166,10 +167,10 @@ ultrix-gcc:
 
 # Rules for making release tarballs
 
-DIRECTORY = Mesa-7.0.2
-LIB_NAME = MesaLib-7.0.2
-DEMO_NAME = MesaDemos-7.0.2
-GLUT_NAME = MesaGLUT-7.0.2
+DIRECTORY = Mesa-7.0.3
+LIB_NAME = MesaLib-7.0.3
+DEMO_NAME = MesaDemos-7.0.3
+GLUT_NAME = MesaGLUT-7.0.3
 
 MAIN_FILES = \
 	$(DIRECTORY)/Makefile*						\
@@ -355,6 +356,7 @@ GLW_FILES = \
 	$(DIRECTORY)/src/glw/*.[ch]			\
 	$(DIRECTORY)/src/glw/Makefile*			\
 	$(DIRECTORY)/src/glw/README			\
+	$(DIRECTORY)/src/glw/glw.pc.in			\
 	$(DIRECTORY)/src/glw/depend
 
 DEMO_FILES = \
@@ -414,6 +416,7 @@ GLUT_FILES = \
 	$(DIRECTORY)/src/glut/fbdev/Makefile		\
 	$(DIRECTORY)/src/glut/fbdev/*[ch]		\
 	$(DIRECTORY)/src/glut/mini/*[ch]		\
+	$(DIRECTORY)/src/glut/mini/glut.pc.in		\
 	$(DIRECTORY)/src/glut/directfb/Makefile		\
 	$(DIRECTORY)/src/glut/directfb/NOTES		\
 	$(DIRECTORY)/src/glut/directfb/*[ch]		\
@@ -424,7 +427,6 @@ DEPEND_FILES = \
 	$(TOP)/src/mesa/depend		\
 	$(TOP)/src/glx/x11/depend	\
 	$(TOP)/src/glw/depend		\
-	$(TOP)/src/glw/glw.pc.in	\
 	$(TOP)/src/glut/glx/depend	\
 	$(TOP)/src/glu/sgi/depend
 

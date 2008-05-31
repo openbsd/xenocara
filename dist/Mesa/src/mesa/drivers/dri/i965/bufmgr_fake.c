@@ -704,6 +704,9 @@ void bmDeleteBuffers(struct intel_context *intel, unsigned n, struct buffer **bu
 	 if (buf && buf->block)
 	    free_block(intel, buf->block);
 
+	 if (buf && buf->backing_store)
+	    free_backing_store(intel, buf);
+
 	 if (buf) 
 	    free(buf);	 
       }

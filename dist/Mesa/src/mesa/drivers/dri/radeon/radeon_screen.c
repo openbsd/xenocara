@@ -585,6 +585,7 @@ radeonCreateScreen( __DRIscreenPrivate *sPriv )
    case PCI_CHIP_RV370_5B63:
    case PCI_CHIP_RV370_5B64:
    case PCI_CHIP_RV370_5B65:
+   case PCI_CHIP_RV370_5657:
    case PCI_CHIP_RV380_3150:
    case PCI_CHIP_RV380_3152:
    case PCI_CHIP_RV380_3154:
@@ -634,6 +635,13 @@ radeonCreateScreen( __DRIscreenPrivate *sPriv )
       screen->chip_flags = RADEON_CHIPSET_TCL;
       break;
 
+   /* RV410 SE chips have half the pipes of regular RV410 */
+   case PCI_CHIP_RV410_5E4C:
+   case PCI_CHIP_RV410_5E4F:
+      screen->chip_family = CHIP_FAMILY_RV380;
+      screen->chip_flags = RADEON_CHIPSET_TCL;
+      break;
+
    case PCI_CHIP_RV410_564A:
    case PCI_CHIP_RV410_564B:
    case PCI_CHIP_RV410_564F:
@@ -642,9 +650,7 @@ radeonCreateScreen( __DRIscreenPrivate *sPriv )
    case PCI_CHIP_RV410_5E48:
    case PCI_CHIP_RV410_5E4A:
    case PCI_CHIP_RV410_5E4B:
-   case PCI_CHIP_RV410_5E4C:
    case PCI_CHIP_RV410_5E4D:
-   case PCI_CHIP_RV410_5E4F:
       screen->chip_family = CHIP_FAMILY_RV410;
       screen->chip_flags = RADEON_CHIPSET_TCL;
       break;
@@ -702,8 +708,11 @@ radeonCreateScreen( __DRIscreenPrivate *sPriv )
    screen->depthPitch	= dri_priv->depthPitch;
 
    /* Check if ddx has set up a surface reg to cover depth buffer */
-   screen->depthHasSurface = ((sPriv->ddxMajor > 4) &&
-      (screen->chip_flags & RADEON_CHIPSET_TCL));
+   screen->depthHasSurface = (sPriv->ddxMajor > 4) ||
+      /* these chips don't use tiled z without hyperz. So always pretend
+         we have set up a surface which will cause linear reads/writes */
+      ((screen->chip_family & RADEON_CLASS_R100) &&
+      !(screen->chip_flags & RADEON_CHIPSET_TCL));
 
    if ( dri_priv->textureSize == 0 ) {
       screen->texOffset[RADEON_LOCAL_TEX_HEAP] = screen->gart_texture_offset;

@@ -315,7 +315,7 @@ intelFinish(GLcontext * ctx)
    intelFlush(ctx);
    if (intel->batch->last_fence) {
       driFenceFinish(intel->batch->last_fence,
-                     0, GL_FALSE);
+                     DRM_FENCE_TYPE_EXE | DRM_I915_FENCE_TYPE_RW, GL_FALSE);
       driFenceUnReference(intel->batch->last_fence);
       intel->batch->last_fence = NULL;
    }
