@@ -456,7 +456,7 @@
 ./usr/X11R6/lib/libXevie.so.2.0
 ./usr/X11R6/lib/libXext.so.10.0
 ./usr/X11R6/lib/libXfixes.so.5.0
-./usr/X11R6/lib/libXfont.so.7.0
+./usr/X11R6/lib/libXfont.so.8.0
 ./usr/X11R6/lib/libXfontcache.so.4.0
 ./usr/X11R6/lib/libXft.so.7.0
 ./usr/X11R6/lib/libXi.so.10.0

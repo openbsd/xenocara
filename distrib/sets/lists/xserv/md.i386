@@ -4,13 +4,6 @@
 ./usr/X11R6/bin/Xvfb
 ./usr/X11R6/bin/cvt
 ./usr/X11R6/bin/gtf
-./usr/X11R6/bin/inb
-./usr/X11R6/bin/inl
-./usr/X11R6/bin/inw
-./usr/X11R6/bin/ioport
-./usr/X11R6/bin/outb
-./usr/X11R6/bin/outl
-./usr/X11R6/bin/outw
 ./usr/X11R6/bin/pcitweak
 ./usr/X11R6/bin/scanpci
 ./usr/X11R6/bin/xorgconfig
