@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.28 2008/05/24 15:46:32 matthieu Exp $
+# $OpenBSD: MODULES,v 1.29 2008/06/01 13:00:45 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -260,16 +260,17 @@ lib/pixman			0.10.0	7.4
 proto/bigreqsproto		1.0.2	7.0	needs-rel
 proto/compositeproto		0.4	7.3
 proto/damageproto		1.1.0	7.3
+proto/dri2proto			1.1	7.4	needs-import
 proto/dmxproto			2.2.2	7.0
 proto/evieproto			1.0.2	7.0
 proto/fixesproto		4.0	7.1
 proto/fontcacheproto		0.1.2	7.0
 proto/fontsproto		2.0.2	7.0
-proto/glproto			1.4.8	7.2
-proto/inputproto		1.4.3	7.4	needs-update
+proto/glproto			1.4.9	7.4	needs-update
+proto/inputproto		1.4.3	7.4
 proto/kbproto			1.0.3	7.2RC1
 proto/pmproto			1.0.2	7.0
-proto/printproto		1.0.4	7.4	needs-update
+proto/printproto		1.0.4	7.4
 proto/randrproto		1.2.1	7.3
 proto/recordproto		1.13.2	7.0
 proto/renderproto		0.9.3	7.3
@@ -282,7 +283,7 @@ proto/xcmiscproto		1.1.2	7.0
 proto/xextproto			7.0.2	7.0
 proto/xf86bigfontproto		1.1.2	7.0
 proto/xf86dgaproto		2.0.3	7.3
-proto/xf86driproto		2.0.3	7.0
+proto/xf86driproto		2.0.4	7.4	needs-update
 proto/xf86miscproto		0.9.2	7.0
 proto/xf86rushproto		1.1.2	7.0
 proto/xf86vidmodeproto		2.2.2	7.0
