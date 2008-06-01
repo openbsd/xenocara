@@ -391,7 +391,7 @@
 ./usr/X11R6/lib/X11/xkb/types/numpad
 ./usr/X11R6/lib/X11/xkb/types/pc
 ./usr/X11R6/lib/X11/xkb/xkbcomp
-./usr/X11R6/lib/libGL.so.7.1
+./usr/X11R6/lib/libGL.so.7.3
 ./usr/X11R6/lib/libX11.so.11.1
 ./usr/X11R6/lib/libXaw7.so.12.0
 ./usr/X11R6/lib/libXfontcache.so.4.0
