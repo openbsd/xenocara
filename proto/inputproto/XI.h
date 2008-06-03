@@ -50,9 +50,8 @@ SOFTWARE.
 /* Definitions used by the server, library and client */
 
 #ifndef _XI_H_
-#define _XI_H_
 
-#include <X11/Xmd.h> /* CARD32 */
+#define _XI_H_
 
 #define sz_xGetExtensionVersionReq		8
 #define sz_xGetExtensionVersionReply		32
