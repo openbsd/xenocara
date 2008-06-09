@@ -54,11 +54,6 @@
 #endif
 #endif
 
-#if defined(__OpenBSD__) && defined(__amd64__)
-#include <machine/mtrr.h>
-#include <machine/sysarch.h>
-#endif
-
 #include "xf86_OSlib.h"
 #include "xf86OSpriv.h"
 
@@ -106,11 +101,6 @@ static Bool cleanMTRR(void);
 static pointer NetBSDsetWC(int, unsigned long, unsigned long, Bool,
 			   MessageType);
 static void NetBSDundoWC(int, pointer);
-#endif
-#if defined(__amd64__) && defined(__OpenBSD__)
-static pointer amd64setWC(int, unsigned long, unsigned long, Bool, 
-    MessageType);
-static void amd64undoWC(int, pointer);
 #endif
 
 /*
@@ -208,10 +198,6 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 #if defined(HAS_MTRR_BUILTIN) && defined(__NetBSD__)
 	pVidMem->setWC = NetBSDsetWC;
 	pVidMem->undoWC = NetBSDundoWC;
-#endif
-#if defined(__amd64__) && defined(__OpenBSD__)
-	pVidMem->setWC = amd64setWC;
-	pVidMem->undoWC = amd64undoWC;
 #endif
 	pVidMem->initialised = TRUE;
 }
@@ -831,6 +817,10 @@ static pointer
 setWC(int screenNum, unsigned long base, unsigned long size, Bool enable,
 	MessageType from)
 {
+	xf86DrvMsg(screenNum, X_WARNING,
+		"%s MTRR %lx - %lx\n", enable ? "set" : "remove",
+		base, (base + size));
+
 	if (enable)
 		return addWC(screenNum, base, size, from);
 	else
@@ -934,57 +924,6 @@ NetBSDundoWC(int screenNum, pointer list)
 	xfree(mtrrp);
 }
 #endif
-
-#if defined(__OpenBSD__) && defined(__amd64__)
-static pointer
-amd64setWC(int screenNum, unsigned long base, unsigned long size, Bool enable,
-	    MessageType from)
-{
-	struct mtrr *mtrrp;
-	int n;
-
-	xf86DrvMsg(screenNum, X_WARNING,
-		   "%s MTRR %lx - %lx\n", enable ? "set" : "remove",
-		   base, (base + size));
-
-	mtrrp = xnfalloc(sizeof (struct mtrr));
-	mtrrp->base = base;
-	mtrrp->len = size;
-	mtrrp->type = MTRR_TYPE_WC;
-
-	/*
-	 * MTRR_PRIVATE will make this MTRR get reset automatically
-	 * if this process exits, so we have no need for an explicit
-	 * cleanup operation when starting a new server.
-	 */
-
-	if (enable)
-		mtrrp->flags = MTRR_VALID | MTRR_PRIVATE;
-	else
-		mtrrp->flags = 0;
-	n = 1;
-
-	if (amd64_set_mtrr(mtrrp, &n) < 0) {
-		xfree(mtrrp);
-		return NULL;
-	}
-	return mtrrp;
-}
-
-static void
-amd64undoWC(int screenNum, pointer list)
-{
-	struct mtrr *mtrrp = (struct mtrr *)list;
-	int n;
-
-	if (mtrrp == NULL)
-		return;
-	n = 1;
-	mtrrp->flags &= ~MTRR_VALID;
-	amd64_set_mtrr(mtrrp, &n);
-	xfree(mtrrp);
-}
-#endif /* OpenBSD/amd64 */
 
 #ifdef X_PRIVSEP
 /*
