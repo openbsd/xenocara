@@ -177,6 +177,7 @@ _Xthr_once_stub_(void *id, void (*routine)(void))
 	routine();
 	done++;
     }
+    return 0;
 }
 
 #include <errno.h>
@@ -199,8 +200,8 @@ _Xthr_key_create_stub_(unsigned int *key, void (*destructor)(void *))
 	    free(_Xthr_keys_);
 	    return ENOMEM;
 	}
-	for (i =_Xthr_last_key_; i<XTHR_KEYS_CHUNK; i++)
-	    tmp[i] = 0;
+	for (i = 0; i < XTHR_KEYS_CHUNK; i++)
+	    tmp[_Xthr_last_key_ + i] = 0;
 	_Xthr_keys_ = tmp;
     }
     *key = _Xthr_last_key_++;
