@@ -48,6 +48,8 @@
  * distinguishing each of the drafts.
  */
 
+#include <stdlib.h>
+
 static int _Xthr_once_stub_(void *, void (*)(void));
 static int _Xthr_key_create_stub_(unsigned int *, void (*)(void *));
 static int _Xthr_setspecific_stub_(unsigned int, const void *);
