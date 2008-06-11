@@ -36,6 +36,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* launchd support available */
+#undef HAVE_LAUNCHD
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -44,6 +47,9 @@
 
 /* Use shl_load to load shared libraries */
 #undef HAVE_SHL_LOAD
+
+/* Define to 1 if the system has the type `socklen_t'. */
+#undef HAVE_SOCKLEN_T
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -116,6 +122,9 @@
 
 /* Support TCP socket connections */
 #undef TCPCONN
+
+/* launchd support available */
+#undef TRANS_REOPEN
 
 /* Support UNIX socket connections */
 #undef UNIXCONN

@@ -55,6 +55,7 @@ host_triplet = @host@
 @XCB_FALSE@                  ConnDis.c \
 @XCB_FALSE@                  x11_trans.c
 
+@MAKE_LINT_LIB_TRUE@am__append_7 = $(lintlib_DATA)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in
@@ -72,7 +73,8 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(x11datadir)"
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(lintlibdir)" \
+	"$(DESTDIR)$(x11datadir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 @XCB_TRUE@libX11_xcb_la_DEPENDENCIES = libX11.la
@@ -221,8 +223,9 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	install-recursive installcheck-recursive installdirs-recursive \
 	pdf-recursive ps-recursive uninstall-info-recursive \
 	uninstall-recursive
+lintlibDATA_INSTALL = $(INSTALL_DATA)
 x11dataDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(x11data_DATA)
+DATA = $(lintlib_DATA) $(x11data_DATA)
 ETAGS = etags
 CTAGS = ctags
 DIST_SUBDIRS = util xcms xlibi18n xkb
@@ -256,6 +259,7 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -276,6 +280,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 # Building ks_tables.h requires the makekeys utility
 #
 KEYSYMDEF = @KEYSYMDEF@
+LAUNCHD = @LAUNCHD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
@@ -283,6 +288,7 @@ LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINT = @LINT@
+LINTLIB = @LINTLIB@
 LINT_FALSE = @LINT_FALSE@
 LINT_FLAGS = @LINT_FLAGS@
 LINT_TRUE = @LINT_TRUE@
@@ -292,11 +298,14 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MAKE_LINT_LIB_FALSE = @MAKE_LINT_LIB_FALSE@
+MAKE_LINT_LIB_TRUE = @MAKE_LINT_LIB_TRUE@
 MALLOC_ZERO_CFLAGS = @MALLOC_ZERO_CFLAGS@
 MANPAGES_FALSE = @MANPAGES_FALSE@
 MANPAGES_TRUE = @MANPAGES_TRUE@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 OS2_FALSE = @OS2_FALSE@
 OS2_TRUE = @OS2_TRUE@
@@ -311,6 +320,7 @@ PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -359,7 +369,9 @@ XUSE_MTSAFE_API = @XUSE_MTSAFE_API@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
@@ -404,7 +416,7 @@ target_alias = @target_alias@
 SUBDIRS = util xcms xlibi18n $(XKB_SUBDIRS)
 lib_LTLIBRARIES = libX11.la $(am__append_5)
 BUILT_SOURCES = ks_tables.h
-CLEANFILES = ks_tables.h ks_tables_h
+CLEANFILES = ks_tables.h ks_tables_h $(am__append_7)
 AM_CFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/include/X11 \
@@ -526,6 +538,9 @@ libX11_la_LIBADD = \
 @LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 @LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
 
+@MAKE_LINT_LIB_TRUE@lintlibdir = $(libdir)
+@MAKE_LINT_LIB_TRUE@lintlib_DATA = $(LINTLIB)
+@MAKE_LINT_LIB_TRUE@lintlib_src = $(libX11_la_SOURCES) xcms/*.c xkb/*.c
 all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -910,6 +925,23 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
+install-lintlibDATA: $(lintlib_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(lintlibdir)" || $(mkdir_p) "$(DESTDIR)$(lintlibdir)"
+	@list='$(lintlib_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(lintlibDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(lintlibdir)/$$f'"; \
+	  $(lintlibDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(lintlibdir)/$$f"; \
+	done
+
+uninstall-lintlibDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(lintlib_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(lintlibdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(lintlibdir)/$$f"; \
+	done
 install-x11dataDATA: $(x11data_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(x11datadir)" || $(mkdir_p) "$(DESTDIR)$(x11datadir)"
@@ -1108,7 +1140,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LTLIBRARIES) $(DATA) config.h
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(x11datadir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(lintlibdir)" "$(DESTDIR)$(x11datadir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -1159,7 +1191,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-x11dataDATA
+install-data-am: install-lintlibDATA install-x11dataDATA
 
 install-exec-am: install-libLTLIBRARIES
 
@@ -1188,7 +1220,7 @@ ps: ps-recursive
 ps-am:
 
 uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
-	uninstall-x11dataDATA
+	uninstall-lintlibDATA uninstall-x11dataDATA
 
 uninstall-info: uninstall-info-recursive
 
@@ -1200,13 +1232,14 @@ uninstall-info: uninstall-info-recursive
 	dvi dvi-am html html-am info info-am install install-am \
 	install-data install-data-am install-exec install-exec-am \
 	install-info install-info-am install-libLTLIBRARIES \
-	install-man install-strip install-x11dataDATA installcheck \
-	installcheck-am installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic maintainer-clean-recursive \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-am uninstall-info-am \
-	uninstall-libLTLIBRARIES uninstall-x11dataDATA
+	install-lintlibDATA install-man install-strip \
+	install-x11dataDATA installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
+	maintainer-clean-recursive mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool mostlyclean-recursive \
+	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
+	uninstall-info-am uninstall-libLTLIBRARIES \
+	uninstall-lintlibDATA uninstall-x11dataDATA
 
 
 preprocess: $(patsubst %.c,%.ii,$(libX11_la_SOURCES))
@@ -1221,6 +1254,9 @@ preprocess: $(patsubst %.c,%.ii,$(libX11_la_SOURCES))
 @LINT_TRUE@		echo "Making $@ in src/$$subdir"; \
 @LINT_TRUE@		(cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) lint) ; \
 @LINT_TRUE@	done
+
+@MAKE_LINT_LIB_TRUE@$(LINTLIB): $(libX11_la_SOURCES)
+@MAKE_LINT_LIB_TRUE@	$(LINT) -y -oX11 -x $(ALL_LINT_FLAGS) $(lintlib_src)
 
 ks_tables.h: $(KEYSYMDEF) $(top_builddir)/src/util/makekeys$(EXEEXT)
 	$(top_builddir)/src/util/makekeys < $(KEYSYMDEF) > ks_tables_h

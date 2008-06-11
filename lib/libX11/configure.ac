@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([libX11],
-        1.1.3,
+        1.1.4,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         libX11)
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -13,6 +13,10 @@ AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER([src/config.h])
 AC_CONFIG_HEADER([include/X11/XlibConf.h])
+
+# Require xorg-macros version 1.1.0 or newer for XORG_WITH_LINT macro
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.1 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.1)
 
 # Checks for programs.
 AC_PROG_LIBTOOL
@@ -143,6 +147,17 @@ esac
 AC_SUBST(WCHAR32)
 
 AM_CONDITIONAL(OS2, test x$os2 = xtrue)
+
+AC_ARG_WITH(launchd, AS_HELP_STRING([--with-launchd], [Build with support for Apple's launchd (default: auto)]), [LAUNCHD=$withval], [LAUNCHD=auto])
+if test "x$LAUNCHD" = xauto; then
+	unset LAUNCHD
+	AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no])
+fi
+
+if test "x$LAUNCHD" = xyes ; then
+	AC_DEFINE(HAVE_LAUNCHD, 1, [launchd support available])
+	AC_DEFINE(TRANS_REOPEN, 1, [launchd support available])
+fi
 
 AC_ARG_ENABLE(xthreads,
               AC_HELP_STRING([--disable-xthreads],
@@ -320,6 +335,7 @@ fi
 
 dnl Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT
+XORG_LINT_LIBRARY([X11])
 LINT_FLAGS="${LINT_FLAGS} ${X11_CFLAGS} ${XPROTO_CFLAGS}"
 
 if test "x$GCC" = "xyes"; then
@@ -346,6 +362,7 @@ AC_DEFINE_DIR(X11_LIBDIR, X11_LIBDIR, [Location of libX11 library data])
 AC_SUBST(X11_LIBDIR)
 
 X11_CFLAGS="$X11_CFLAGS $XPROTO_CFLAGS"
+
 AC_SUBST(X11_CFLAGS)
 AC_SUBST(X11_LIBS)
 
@@ -399,6 +416,7 @@ AC_OUTPUT([Makefile
 	   modules/om/generic/Makefile
 	   src/xkb/Makefile
 	   nls/Makefile
+	   nls/am_ET.UTF-8/Makefile
 	   nls/armscii-8/Makefile
 	   nls/C/Makefile
 	   nls/el_GR.UTF-8/Makefile
