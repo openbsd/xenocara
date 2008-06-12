@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.28 2008/05/20 14:50:51 oga Exp $
+ * $Id: kbfunc.c,v 1.29 2008/06/12 18:32:06 okan Exp $
  */
 
 #include <paths.h>
@@ -89,12 +89,12 @@ kbfunc_moveresize(struct client_ctx *cc, void *arg)
 		cc->geom.width += mx;
 		client_resize(cc);
 
-		/*
-		 * Moving the cursor while resizing is problematic. Just place
-		 * it in the middle of the window.
-		 */
-		cc->ptr.x = -1;
-		cc->ptr.y = -1;
+		/* Make sure the pointer stays within the window. */
+		xu_ptr_getpos(cc->pwin, &cc->ptr.x, &cc->ptr.y);
+		if (cc->ptr.x > cc->geom.width)
+			cc->ptr.x = cc->geom.width - cc->bwidth;
+		if (cc->ptr.y > cc->geom.height)
+			cc->ptr.y = cc->geom.height - cc->bwidth;
 		client_ptrwarp(cc);
 		break;
 	case CWM_PTRMOVE:
