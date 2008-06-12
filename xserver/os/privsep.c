@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.5 2008/03/24 21:24:52 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.6 2008/06/12 18:50:19 oga Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -63,72 +63,76 @@ typedef struct priv_cmd {
 
 static int priv_fd = -1;
 static pid_t parent_pid = -1;
-static const char * const allowed_devices[] = {
+struct okdev {
+	const char *const name;
+	int flags;
+} allowed_devices[] = {
 	/* Serial devices */
-	"/dev/wsmouse",
-	"/dev/wsmouse0",
-	"/dev/wsmouse1",
-	"/dev/wsmouse2",
-	"/dev/wsmouse3",
-	"/dev/uhid0",
-	"/dev/uhid1",
-	"/dev/uhid2",
-	"/dev/uhid3",
-	"/dev/tty00",
-	"/dev/tty01",
-	"/dev/tty02",
-	"/dev/tty03",
-	"/dev/ttya",
-	"/dev/ttyb",
-	"/dev/ttyc",
-	"/dev/ttyd",
-	"/dev/wskbd",
-	"/dev/wskbd0",
-	"/dev/wskbd1",
-	"/dev/wskbd2",
-	"/dev/wskbd3",
-	"/dev/ttyC0",
-	"/dev/ttyC1",
-	"/dev/ttyC2",
-	"/dev/ttyC3",
-	"/dev/ttyC4",
-	"/dev/ttyC5",
-	"/dev/ttyC6",
-	"/dev/ttyC7",
-	"/dev/ttyD0",
-	"/dev/ttyD1",
-	"/dev/ttyD2",
-	"/dev/ttyD3",
-	"/dev/ttyD4",
-	"/dev/ttyD5",
-	"/dev/ttyD6",
-	"/dev/ttyD7",
-	"/dev/pci",
-	"/dev/agp0",
-	NULL
+	{"/dev/wsmouse", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wsmouse0", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wsmouse1", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wsmouse2", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wsmouse3", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/uhid0", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/uhid1", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/uhid2", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/uhid3", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/tty00", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/tty01", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/tty02", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/tty03", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttya", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyb", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyc", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyd", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wskbd", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wskbd0", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wskbd1", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wskbd2", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wskbd3", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyC0", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyC1", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyC2", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyC3", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyC4", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyC5", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyC6", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyC7", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyD0", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyD1", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyD2", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyD3", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyD4", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyD5", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyD6", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyD7", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/pci", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/agp0", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/dri/card0", O_RDWR },
+	{NULL, 0}
 };
 
 /* return 1 if allowed to open said path */
-static int
+static struct okdev *
 open_ok(const char *path) 
 {
-	const char * const *p;
+	struct okdev *p;
 	struct stat sb;
 
-	for (p = allowed_devices; *p != NULL; p++) {
-		if (strcmp(path, *p) == 0) {
+	for (p = allowed_devices; p->name != NULL; p++) {
+		if (strcmp(path, p->name) == 0) {
 			if (stat(path, &sb) < 0) {
 				/* path is valid, but doesn't exist */
-				return 0;
+				return NULL;
 			}
 			if (sb.st_mode & S_IFCHR) {
 				/* File is a character device */
-				return 1;
+				return p;
 			}
 		}
 	}
 	/* path is not valid */
-	return 0;
+	return NULL;
 }
 
 static void
@@ -221,6 +225,7 @@ priv_init(uid_t uid, gid_t gid)
 	pid_t pid;
 	int socks[2];
 	priv_cmd_t cmd;
+	struct okdev *dev;
 
 	parent_pid = getppid();
 
@@ -262,9 +267,8 @@ priv_init(uid_t uid, gid_t gid)
 		switch (cmd.cmd) {
 
 		case PRIV_OPEN_DEVICE:
-			if (open_ok(cmd.arg.open.path)) {
-				fd = open(cmd.arg.open.path, 
-					  O_RDWR | O_NONBLOCK | O_EXCL);
+			if ((dev = open_ok(cmd.arg.open.path)) != NULL) {
+				fd = open(cmd.arg.open.path, dev->flags);
 				if (fd < 0) {
 					warn("%s: open %s", __func__,
 					     cmd.arg.open.path);
