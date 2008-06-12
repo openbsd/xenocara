@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.16 2008/05/21 14:11:19 oga Exp $
+ * $Id: xevents.c,v 1.17 2008/06/12 05:01:13 okan Exp $
  */
 
 /*
@@ -506,7 +506,7 @@ xev_handle_expose(struct xevent *xev, XEvent *ee)
 	XExposeEvent *e = &ee->xexpose;
 	struct client_ctx *cc;
 
-	if ((cc = client_find(e->window)) != NULL)
+	if ((cc = client_find(e->window)) != NULL && e->count == 0)
 		client_draw_border(cc);
 
 	xev_register(xev);
