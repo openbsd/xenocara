@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.29 2008/06/01 13:00:45 matthieu Exp $
+# $OpenBSD: MODULES,v 1.30 2008/06/12 04:22:42 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -20,10 +20,10 @@ app/mkfontdir		1.0.4	7.4
 app/mkfontscale		1.0.5	7.4	needs-update
 app/oclock		1.0.1	7.0
 app/proxymngr		1.0.1	7.0
-app/rgb			1.0.1	7.1
+app/rgb			1.0.3	7.4	needs-update
 app/rstart		1.0.2	7.1
 app/scripts		1.0.1	7.0
-app/sessreg		1.0.3	7.3
+app/sessreg		1.0.4	7.4	needs-update
 app/setxkbmap		1.0.4	7.3
 app/showfont		1.0.2	7.4	needs-update
 app/smproxy		1.0.2	7.1
@@ -105,7 +105,7 @@ driver/xf86-input-digitaledge	1.1.1	7.1	needs-update
 driver/xf86-input-dmc		1.1.2	7.4	needs-update
 driver/xf86-input-dynapro	1.1.2	7.4	needs-update
 driver/xf86-input-elo2300	1.1.2	7.4	needs-update
-driver/xf86-input-elographics	1.2.1	7.4	needs-update
+driver/xf86-input-elographics	1.2.2	7.4	needs-update
 driver/xf86-input-fpit		1.2.0	7.4	needs-update
 driver/xf86-input-hyperpen	1.2.0	7.4	needs-update
 driver/xf86-input-jamstudio	1.2.0	7.4	needs-update
@@ -250,7 +250,7 @@ lib/libdmx			1.0.2	7.1
 lib/libfontenc			1.0.3	7.2RC1
 lib/liblbxutil			1.0.4	7.2RC4
 lib/liboldX			1.0.1	7.0	still needed?
-lib/libpciaccess		0.10.2	7.4
+lib/libpciaccess		0.10.3	7.4	needs-update
 lib/libxcb			1.1	7.3	needs-import
 lib/libxkbfile			1.0.5	7.4
 lib/libxkbui			1.0.2	7.1
@@ -278,9 +278,9 @@ proto/resourceproto		1.0.2	7.0
 proto/scrnsaverproto		1.1.0	7.1
 proto/trapproto			3.4.3	7.0
 proto/videoproto		2.2.2	7.0
-proto/x11proto			7.0.12	7.4	needs-update
+proto/x11proto			7.0.13	7.4+	needs-update
 proto/xcmiscproto		1.1.2	7.0
-proto/xextproto			7.0.2	7.0
+proto/xextproto			7.0.3	7.4	needs-update
 proto/xf86bigfontproto		1.1.2	7.0
 proto/xf86dgaproto		2.0.3	7.3
 proto/xf86driproto		2.0.4	7.4	needs-update
@@ -295,4 +295,4 @@ util/imake			1.0.2
 util/macros			1.1.6	7.4
 util/makedepend			1.0.1	7.3
 
-xserver				1.4.99.902	7.4	needs-update
+xserver				1.4.2	7.3+	needs-update
