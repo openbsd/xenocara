@@ -595,14 +595,14 @@ AC_DEFUN([XORG_RELEASE_VERSION],[
 	AC_DEFINE_UNQUOTED([PACKAGE_VERSION_MAJOR],
 		[`echo $PACKAGE_VERSION | cut -d . -f 1`],
 		[Major version of this package])
-	PVM=`echo $PACKAGE_VERSION | cut -d . -f 2`
+	PVM=`echo $PACKAGE_VERSION | cut -d . -f 2 | cut -d - -f 1`
 	if test "x$PVM" = "x"; then
 		PVM="0"
 	fi
 	AC_DEFINE_UNQUOTED([PACKAGE_VERSION_MINOR],
 		[$PVM],
 		[Minor version of this package])
-	PVP=`echo $PACKAGE_VERSION | cut -d . -f 3`
+	PVP=`echo $PACKAGE_VERSION | cut -d . -f 3 | cut -d - -f 1`
 	if test "x$PVP" = "x"; then
 		PVP="0"
 	fi
