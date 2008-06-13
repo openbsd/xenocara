@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.30 2008/06/12 04:22:42 matthieu Exp $
+# $OpenBSD: MODULES,v 1.31 2008/06/13 15:36:15 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -8,24 +8,24 @@ app/bdftopcf		1.0.1	7.3
 app/beforelight		1.0.2	7.2RC4
 app/bitmap		1.0.3	7.2+
 app/editres		1.0.3	7.2+
-app/fonttosfnt		1.0.4	7.4	needs-update
-app/fslsfonts		1.0.2	7.4	needs-update
-app/fstobdf		1.0.3 	7.4	needs-update
+app/fonttosfnt		1.0.4	7.4
+app/fslsfonts		1.0.2	7.4
+app/fstobdf		1.0.3 	7.4
 app/iceauth		1.0.2	7.3
 app/ico			1.0.2	7.3
 app/lbxproxy		1.0.1	7.0
 app/listres		1.0.1	7.0
 app/luit		1.0.2	7.2RC2	needs-rel
 app/mkfontdir		1.0.4	7.4
-app/mkfontscale		1.0.5	7.4	needs-update
+app/mkfontscale		1.0.5	7.4
 app/oclock		1.0.1	7.0
 app/proxymngr		1.0.1	7.0
-app/rgb			1.0.3	7.4	needs-update
+app/rgb			1.0.3	7.4
 app/rstart		1.0.2	7.1
 app/scripts		1.0.1	7.0
 app/sessreg		1.0.4	7.4	needs-update
 app/setxkbmap		1.0.4	7.3
-app/showfont		1.0.2	7.4	needs-update
+app/showfont		1.0.2	7.4
 app/smproxy		1.0.2	7.1
 app/twm			1.0.4	7.4
 app/viewres		1.0.1	7.0
@@ -55,7 +55,7 @@ app/xfwp		1.0.1	7.0
 app/xgamma		1.0.2	7.3
 app/xgc			1.0.1	7.0
 app/xhost		1.0.2	7.3
-app/xinit		1.0.9	7.4	needs-update
+app/xinit		1.1.0	7.4	needs-update
 app/xkbcomp		1.0.5	7.4	needs-update
 app/xkbevd		1.0.2	7.1
 app/xkbprint		1.0.1	7.0
@@ -170,51 +170,49 @@ driver/xf86-video-vmware	10.16.1	7.4	needs-update
 driver/xf86-video-voodoo	1.2.0	7.4	needs-update
 driver/xf86-video-wsfb		0.2.1	7.2
 
-doc/xorg-docs			1.4	7.3	needs-update
-
-encodings			fonts/encodings 		1.0.2	7.2RC2
-font-adobe-100dpi		fonts/adobe-100dpi		1.0.0
-font-adobe-75dpi		fonts/adobe-75dpi		1.0.0
-font-adobe-utopia-100dpi	fonts/adobe-utopia-100dpi	1.0.1
-font-adobe-utopia-75dpi		fonts/adobe-utopia-75dpi	1.0.1
-font-adobe-utopia-type1		fonts/adobe-utopia-type1	1.0.1
-font-alias			fonts/alias			1.0.1
-font-arabic-misc		fonts/arabic-misc		1.0.0
-font-bh-100dpi			fonts/bh-100dpi			1.0.0
-font-bh-75dpi			fonts/bh-75dpi			1.0.0
-font-bh-lucidatypewriter-100dpi	fonts/bh-lucidatypewriter-100dpi	1.0.0
-font-bh-lucidatypewriter-75dpi	fonts/bh-lucidatypewriter-75dpi	1.0.0
-font-bh-ttf			fonts/bh-ttf			1.0.0
-font-bh-type1			fonts/bh-type1			1.0.0
-font-bitstream-100dpi		fonts/bitstream-100dpi		1.0.0
-font-bitstream-75dpi		fonts/bitstream-75dpi		1.0.0
-font-bitstream-speedo		fonts/bitstream-speedo		1.0.0
-font-bitstream-type1		fonts/bitstream-type1		1.0.0
-font-cronyx-cyrillic		fonts/cronyx-cyrillic		1.0.0
-font-cursor-misc		fonts/cursor-misc		1.0.0
-font-daewoo-misc		fonts/daewoo-misc		1.0.0
-font-dec-misc			fonts/dec-misc			1.0.0
-font-ibm-type1			fonts/ibm-type1			1.0.0
-font-isas-misc			fonts/isas-misc			1.0.0
-font-jis-misc			fonts/jis-misc			1.0.0
-font-micro-misc			fonts/micro-misc		1.0.0
-font-misc-cyrillic		fonts/misc-cyrillic		1.0.0
-font-misc-ethiopic		fonts/misc-ethiopic		1.0.0
-font-misc-meltho		fonts/misc-meltho		1.0.0
-font-misc-misc			fonts/misc-misc			1.0.0
-font-mutt-misc			fonts/mutt-misc			1.0.0
-font-schumacher-misc		fonts/schumacher-misc		1.0.0
-font-screen-cyrillic		fonts/screen-cyrillic		1.0.1
-font-sony-misc			fonts/sony-misc			1.0.0
-font-sun-misc			fonts/sun-misc			1.0.0
-font-util			fonts/util			1.0.1
-font-winitzki-cyrillic		fonts/winitzki-cyrillic		1.0.0
-font-xfree86-type1		fonts/xfree86-type1		1.0.1 update
+fonts/encodings 		1.0.2	7.2RC2
+fonts/adobe-100dpi		1.0.0
+fonts/adobe-75dpi		1.0.0
+fonts/adobe-utopia-100dpi	1.0.1
+fonts/adobe-utopia-75dpi	1.0.1
+fonts/adobe-utopia-type1	1.0.1
+fonts/alias			1.0.1
+fonts/arabic-misc		1.0.0
+fonts/bh-100dpi			1.0.0
+fonts/bh-75dpi			1.0.0
+fonts/bh-lucidatypewriter-100dpi	1.0.0
+fonts/bh-lucidatypewriter-75dpi	1.0.0
+fonts/bh-ttf			1.0.0
+fonts/bh-type1			1.0.0
+fonts/bitstream-100dpi		1.0.0
+fonts/bitstream-75dpi		1.0.0
+fonts/bitstream-speedo		1.0.0
+fonts/bitstream-type1		1.0.0
+fonts/cronyx-cyrillic		1.0.0
+fonts/cursor-misc		1.0.0
+fonts/daewoo-misc		1.0.0
+fonts/dec-misc			1.0.0
+fonts/ibm-type1			1.0.0
+fonts/isas-misc			1.0.0
+fonts/jis-misc			1.0.0
+fonts/micro-misc		1.0.0
+fonts/misc-cyrillic		1.0.0
+fonts/misc-ethiopic		1.0.0
+fonts/misc-meltho		1.0.0
+fonts/misc-misc			1.0.0
+fonts/mutt-misc			1.0.0
+fonts/schumacher-misc		1.0.0
+fonts/screen-cyrillic		1.0.1
+fonts/sony-misc			1.0.0
+fonts/sun-misc			1.0.0
+fonts/util			1.0.1
+fonts/winitzki-cyrillic		1.0.0
+fonts/xfree86-type1		1.0.1
 
 lib/libFS			1.0.1	7.4
 lib/libICE			1.0.4	7.3
 lib/libSM			1.0.3	7.3
-lib/libX11			1.1.4	7.4	needs-update
+lib/libX11			1.1.4	7.4
 lib/libXRes			1.0.3	7.2RC4
 lib/libXScrnSaver		1.1.3	7.4
 lib/libXTrap			1.0.0	7.0
