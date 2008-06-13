@@ -76,8 +76,8 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_fstobdf_OBJECTS = fstobdf-chars.$(OBJEXT) fstobdf-fstobdf.$(OBJEXT) \
-	fstobdf-header.$(OBJEXT) fstobdf-props.$(OBJEXT)
+am_fstobdf_OBJECTS = chars.$(OBJEXT) fstobdf.$(OBJEXT) \
+	header.$(OBJEXT) props.$(OBJEXT)
 fstobdf_OBJECTS = $(am_fstobdf_OBJECTS)
 am__DEPENDENCIES_1 =
 fstobdf_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -207,7 +207,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-fstobdf_CFLAGS = $(FSTOBDF_CFLAGS)
+AM_CFLAGS = $(FSTOBDF_CFLAGS)
 fstobdf_LDADD = $(FSTOBDF_LIBS)
 fstobdf_SOURCES = \
         chars.c \
@@ -221,7 +221,7 @@ appman_PRE = \
 
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) ChangeLog
 CLEANFILES = $(appman_DATA)
 SED = sed
 
@@ -242,6 +242,7 @@ MAN_SUBSTS = \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
+MAINTAINERCLEANFILES = ChangeLog
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -330,10 +331,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fstobdf-chars.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fstobdf-fstobdf.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fstobdf-header.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fstobdf-props.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chars.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fstobdf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/header.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/props.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -348,62 +349,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-fstobdf-chars.o: chars.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -MT fstobdf-chars.o -MD -MP -MF "$(DEPDIR)/fstobdf-chars.Tpo" -c -o fstobdf-chars.o `test -f 'chars.c' || echo '$(srcdir)/'`chars.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fstobdf-chars.Tpo" "$(DEPDIR)/fstobdf-chars.Po"; else rm -f "$(DEPDIR)/fstobdf-chars.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chars.c' object='fstobdf-chars.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -c -o fstobdf-chars.o `test -f 'chars.c' || echo '$(srcdir)/'`chars.c
-
-fstobdf-chars.obj: chars.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -MT fstobdf-chars.obj -MD -MP -MF "$(DEPDIR)/fstobdf-chars.Tpo" -c -o fstobdf-chars.obj `if test -f 'chars.c'; then $(CYGPATH_W) 'chars.c'; else $(CYGPATH_W) '$(srcdir)/chars.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fstobdf-chars.Tpo" "$(DEPDIR)/fstobdf-chars.Po"; else rm -f "$(DEPDIR)/fstobdf-chars.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chars.c' object='fstobdf-chars.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -c -o fstobdf-chars.obj `if test -f 'chars.c'; then $(CYGPATH_W) 'chars.c'; else $(CYGPATH_W) '$(srcdir)/chars.c'; fi`
-
-fstobdf-fstobdf.o: fstobdf.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -MT fstobdf-fstobdf.o -MD -MP -MF "$(DEPDIR)/fstobdf-fstobdf.Tpo" -c -o fstobdf-fstobdf.o `test -f 'fstobdf.c' || echo '$(srcdir)/'`fstobdf.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fstobdf-fstobdf.Tpo" "$(DEPDIR)/fstobdf-fstobdf.Po"; else rm -f "$(DEPDIR)/fstobdf-fstobdf.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fstobdf.c' object='fstobdf-fstobdf.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -c -o fstobdf-fstobdf.o `test -f 'fstobdf.c' || echo '$(srcdir)/'`fstobdf.c
-
-fstobdf-fstobdf.obj: fstobdf.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -MT fstobdf-fstobdf.obj -MD -MP -MF "$(DEPDIR)/fstobdf-fstobdf.Tpo" -c -o fstobdf-fstobdf.obj `if test -f 'fstobdf.c'; then $(CYGPATH_W) 'fstobdf.c'; else $(CYGPATH_W) '$(srcdir)/fstobdf.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fstobdf-fstobdf.Tpo" "$(DEPDIR)/fstobdf-fstobdf.Po"; else rm -f "$(DEPDIR)/fstobdf-fstobdf.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fstobdf.c' object='fstobdf-fstobdf.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -c -o fstobdf-fstobdf.obj `if test -f 'fstobdf.c'; then $(CYGPATH_W) 'fstobdf.c'; else $(CYGPATH_W) '$(srcdir)/fstobdf.c'; fi`
-
-fstobdf-header.o: header.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -MT fstobdf-header.o -MD -MP -MF "$(DEPDIR)/fstobdf-header.Tpo" -c -o fstobdf-header.o `test -f 'header.c' || echo '$(srcdir)/'`header.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fstobdf-header.Tpo" "$(DEPDIR)/fstobdf-header.Po"; else rm -f "$(DEPDIR)/fstobdf-header.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='header.c' object='fstobdf-header.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -c -o fstobdf-header.o `test -f 'header.c' || echo '$(srcdir)/'`header.c
-
-fstobdf-header.obj: header.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -MT fstobdf-header.obj -MD -MP -MF "$(DEPDIR)/fstobdf-header.Tpo" -c -o fstobdf-header.obj `if test -f 'header.c'; then $(CYGPATH_W) 'header.c'; else $(CYGPATH_W) '$(srcdir)/header.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fstobdf-header.Tpo" "$(DEPDIR)/fstobdf-header.Po"; else rm -f "$(DEPDIR)/fstobdf-header.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='header.c' object='fstobdf-header.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -c -o fstobdf-header.obj `if test -f 'header.c'; then $(CYGPATH_W) 'header.c'; else $(CYGPATH_W) '$(srcdir)/header.c'; fi`
-
-fstobdf-props.o: props.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -MT fstobdf-props.o -MD -MP -MF "$(DEPDIR)/fstobdf-props.Tpo" -c -o fstobdf-props.o `test -f 'props.c' || echo '$(srcdir)/'`props.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fstobdf-props.Tpo" "$(DEPDIR)/fstobdf-props.Po"; else rm -f "$(DEPDIR)/fstobdf-props.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='props.c' object='fstobdf-props.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -c -o fstobdf-props.o `test -f 'props.c' || echo '$(srcdir)/'`props.c
-
-fstobdf-props.obj: props.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -MT fstobdf-props.obj -MD -MP -MF "$(DEPDIR)/fstobdf-props.Tpo" -c -o fstobdf-props.obj `if test -f 'props.c'; then $(CYGPATH_W) 'props.c'; else $(CYGPATH_W) '$(srcdir)/props.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fstobdf-props.Tpo" "$(DEPDIR)/fstobdf-props.Po"; else rm -f "$(DEPDIR)/fstobdf-props.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='props.c' object='fstobdf-props.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fstobdf_CFLAGS) $(CFLAGS) -c -o fstobdf-props.obj `if test -f 'props.c'; then $(CYGPATH_W) 'props.c'; else $(CYGPATH_W) '$(srcdir)/props.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
@@ -500,6 +445,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -629,6 +577,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -684,8 +633,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-data \
@@ -700,6 +649,13 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

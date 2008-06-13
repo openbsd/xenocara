@@ -36,3 +36,5 @@ extern Bool EmitProperties ( FILE *outFile, FSXFontInfoHeader *fontHeader,
 extern Bool EmitCharacters ( FILE *outFile, FSServer *fontServer, 
 			     FSXFontInfoHeader *fontHeader, Font fontID );
 
+extern unsigned long yResolution; /* intended vertical resoultion for font */
+extern unsigned long pointSize;   /* font height in points */

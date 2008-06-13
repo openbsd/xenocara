@@ -1,5 +1,5 @@
 /* $Xorg: chars.c,v 1.4 2001/02/09 02:05:30 xorgcvs Exp $ */
-/* $XdotOrg: app/fstobdf/chars.c,v 1.4 2006/04/03 22:17:25 ajax Exp $ */
+/* $XdotOrg: app/fstobdf/chars.c,v 1.3 2005/10/31 16:05:45 alanc Exp $ */
 /*
  
 Copyright 1990, 1998  The Open Group
@@ -51,9 +51,6 @@ in this Software without prior written authorization from The Open Group.
 #include	<stdio.h>
 #include	<X11/Xlib.h>
 #include	"fstobdf.h"
-
-extern unsigned long yResolution; /* intended vertical resoultion for font */
-extern unsigned long pointSize;	  /* font height in points */
 
 #define BIT_ORDER	BitmapFormatBitOrderMSB
 #ifdef BYTE_ORDER

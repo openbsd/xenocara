@@ -26,14 +26,14 @@
 .\"
 .\" $XFree86: xc/programs/fstobdf/fstobdf.man,v 1.6 2001/01/27 18:21:02 dawes Exp $
 .\"
-.TH FSTOBDF 1 __xorgversion__
+.TH FSTOBDF __appmansuffix__ __xorgversion__
 .SH NAME
 fstobdf \- generate BDF font from X font server
 .SH SYNOPSIS
 .B "fstobdf"
 [
 .B \-server
-.I server
+.I servername
 ]
 .B \-fn
 .I fontname
@@ -46,15 +46,25 @@ lost BDF files.
 .TP 8
 .B \-server \fIservername\fP
 This option specifies the server from which the font should be read.
+.I servername 
+must be specified in one of the formats defined in the
+.I Font Server Names
+section of X(__miscmansuffix__).   If not specified, the server name in the
+.B FONTSERVER
+environment variable is used.
 .TP 8
 .B \-fn \fIfontname\fP
 This option specifies the font for which a BDF file should be generated.
 .SH ENVIRONMENT
 .TP 8
 .B FONTSERVER
-default server to use
+The default server to use.  The server name must
+be specified in one of the formats defined in the
+.I Font Server Names
+section of X(__miscmansuffix__).
 .SH "SEE ALSO"
-xfs(1), bdftopcf(1), fslsfonts(1)
+xfs(__appmansuffix__), bdftopcf(__appmansuffix__), showfont(__appmansuffix__),
+fslsfonts(__appmansuffix__), X(__miscmansuffix__).
 .SH AUTHOR
 Olaf Brandt, Network Computing Devices
 .br
