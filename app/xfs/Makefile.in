@@ -60,18 +60,19 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xfs$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
+	$(srcdir)/Makefile.in $(srcdir)/xfs-config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
 	config.guess config.sub depcomp install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
 mkinstalldirs = $(SHELL) $(install_sh) -d
-CONFIG_HEADER = config.h
+CONFIG_HEADER = xfs-config.h
 CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" \
 	"$(DESTDIR)$(configdir)"
@@ -136,9 +137,12 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CONFIG_FILE_DESC = @CONFIG_FILE_DESC@
+CONFIG_FILE_PATH = @CONFIG_FILE_PATH@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DEFAULT_CONFIG_FILE = @DEFAULT_CONFIG_FILE@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
@@ -159,6 +163,10 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LINT = @LINT@
+LINT_FALSE = @LINT_FALSE@
+LINT_FLAGS = @LINT_FLAGS@
+LINT_TRUE = @LINT_TRUE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -219,11 +227,11 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-configdir = $(datadir)/X11/fs
+ACLOCAL_AMFLAGS = -I m4
+configdir = $(sysconfdir)/X11/fs
 FONT_FLAGS = -DFONT_PCF -DFONT_FS -DFONT_SPEEDO -DFONTCACHE
-AM_CFLAGS = $(XFS_CFLAGS) -I$(top_srcdir)/include -DXFSPIDDIR=\"/var/run\" \
-		-DDEFAULT_CONFIG_FILE=\"$(configdir)/config\" $(FONT_FLAGS) \
-		-D_BSD_SOURCE -DFONT_t -DTRANS_SERVER -DTRANS_REOPEN
+AM_CPPFLAGS = $(XFS_CFLAGS) -I$(top_srcdir)/include -DXFSPIDDIR=\"/var/run\" \
+	$(FONT_FLAGS) -D_BSD_SOURCE -DFONT_t -DTRANS_SERVER -DTRANS_REOPEN
 
 LDADD = $(XFS_LIBS)
 xfs_SOURCES = \
@@ -292,7 +300,7 @@ FSERRORS = /var/log/xfs.log
 FONTDIR = $(libdir)/X11/fonts
 FONTPATH = $(FONTDIR)/misc/,$(FONTDIR)/TTF/,$(FONTDIR)/Type1/,$(FONTDIR)/CID/,$(FONTDIR)/100dpi/,$(FONTDIR)/75dpi/
 config_DATA = config
-EXTRA_DIST = xfs.def config.cpp $(appman_PRE)
+EXTRA_DIST = xfs.def config.cpp $(appman_PRE) ChangeLog
 CLEANFILES = config $(appman_DATA)
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
@@ -314,10 +322,16 @@ MAN_SUBSTS = \
 	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g' \
+	-e 's|__configfiledesc__|$(CONFIG_FILE_DESC)|g' \
+	-e 's|__configfilepath__|$(CONFIG_FILE_PATH)|g' \
 	-e 's|XCOMM|\#|g'
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
-all: config.h
+MAINTAINERCLEANFILES = ChangeLog
+@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+@LINT_TRUE@	       $(AM_CPPFLAGS) $(CPPFLAGS)
+
+all: xfs-config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
@@ -356,22 +370,22 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 
-config.h: stamp-h1
+xfs-config.h: stamp-h1
 	@if test ! -f $@; then \
 	  rm -f stamp-h1; \
 	  $(MAKE) stamp-h1; \
 	else :; fi
 
-stamp-h1: $(srcdir)/config.h.in $(top_builddir)/config.status
+stamp-h1: $(srcdir)/xfs-config.h.in $(top_builddir)/config.status
 	@rm -f stamp-h1
-	cd $(top_builddir) && $(SHELL) ./config.status config.h
-$(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps) 
+	cd $(top_builddir) && $(SHELL) ./config.status xfs-config.h
+$(srcdir)/xfs-config.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps) 
 	cd $(top_srcdir) && $(AUTOHEADER)
 	rm -f stamp-h1
 	touch $@
 
 distclean-hdr:
-	-rm -f config.h stamp-h1
+	-rm -f xfs-config.h stamp-h1
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	test -z "$(bindir)" || $(mkdir_p) "$(DESTDIR)$(bindir)"
@@ -870,11 +884,11 @@ ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	mkid -fID $$unique
 tags: TAGS
 
-TAGS:  $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) \
+TAGS:  $(HEADERS) $(SOURCES) xfs-config.h.in $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
 	tags=; \
 	here=`pwd`; \
-	list='$(SOURCES) $(HEADERS) config.h.in $(LISP) $(TAGS_FILES)'; \
+	list='$(SOURCES) $(HEADERS) xfs-config.h.in $(LISP) $(TAGS_FILES)'; \
 	unique=`for i in $$list; do \
 	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
 	  done | \
@@ -886,11 +900,11 @@ TAGS:  $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) \
 	    $$tags $$unique; \
 	fi
 ctags: CTAGS
-CTAGS:  $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) \
+CTAGS:  $(HEADERS) $(SOURCES) xfs-config.h.in $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
 	tags=; \
 	here=`pwd`; \
-	list='$(SOURCES) $(HEADERS) config.h.in $(LISP) $(TAGS_FILES)'; \
+	list='$(SOURCES) $(HEADERS) xfs-config.h.in $(LISP) $(TAGS_FILES)'; \
 	unique=`for i in $$list; do \
 	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
 	  done | \
@@ -911,6 +925,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
+	$(mkdir_p) $(distdir)/m4
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -937,6 +952,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -1036,7 +1054,7 @@ distcleancheck: distclean
 	       exit 1; } >&2
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS) $(DATA) config.h
+all-am: Makefile $(PROGRAMS) $(DATA) xfs-config.h
 installdirs:
 	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(configdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
@@ -1066,6 +1084,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -1121,8 +1140,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-configDATA \
@@ -1140,6 +1159,16 @@ config: config.cpp
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
+
+@LINT_TRUE@lint:
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(xfs_SOURCES)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

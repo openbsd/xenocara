@@ -91,7 +91,7 @@ extern FontCacheSettings cacheSettings;
 struct _osComm;	/* FIXME: osCommPtr */
 
 /* os/config.c */
-extern	int	ReadConfigFile(char *filename);
+extern	int	ReadConfigFile(const char *filename);
 
 /* os/connection.c */
 extern	void	AttendClient(ClientPtr client);

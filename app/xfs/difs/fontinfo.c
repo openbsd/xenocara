@@ -48,6 +48,8 @@ in this Software without prior written authorization from The Open Group.
  */
 /* $XFree86: xc/programs/xfs/difs/fontinfo.c,v 1.10 2001/12/14 20:01:34 dawes Exp $ */
 
+#include	<xfs-config.h>
+
 #include        <X11/fonts/FS.h>
 #include        <X11/fonts/FSproto.h>
 #include        <stdio.h>
@@ -62,9 +64,6 @@ in this Software without prior written authorization from The Open Group.
 #include	<swapreq.h>
 #include	<swaprep.h>
 
-#ifdef HAVE_CONFIG_H
-#include	<config.h>
-#endif
 #ifdef HAVE_STDINT_H
 #include	<stdint.h>
 #endif

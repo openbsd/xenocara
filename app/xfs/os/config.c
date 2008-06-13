@@ -49,6 +49,8 @@ in this Software without prior written authorization from The Open Group.
  */
 /* $XFree86: xc/programs/xfs/os/config.c,v 3.15 2002/05/31 18:46:12 dawes Exp $ */
 
+#include	<xfs-config.h>
+
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<ctype.h>
@@ -65,6 +67,15 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #include	<X11/fonts/fontutil.h>
 #include	"difs.h"
+
+static const char * const default_config_files[] = {
+#ifdef DEFAULT_CONFIG_FILE
+    DEFAULT_CONFIG_FILE,
+#else
+    "/usr/lib/X11/fs/config",
+#endif
+    NULL
+};
 
 extern int portFromCmdline;
 
@@ -285,6 +296,10 @@ SetConfigValues(void)
     int         err,
                 num;
 
+    if (font_catalogue == NULL) {
+	FatalError("font catalogue is missing/empty\n");
+    }
+
     err = SetFontCatalogue(font_catalogue, &num);
     if (err != FSSuccess) {
 	FatalError("element #%d (starting at 0) of font path is bad or has a bad font:\n\"%s\"\n",
@@ -315,12 +330,14 @@ char *__XFSRedirRoot(char *fname)
 }
 #endif
 
+/* If argument is NULL, uses first file found from default_config_files */
 int
-ReadConfigFile(char *filename)
+ReadConfigFile(const char *filename)
 {
     FILE       *fp;
     int         ret;
     int         len;
+    int         i;
     char       *data;
 
     data = (char *) fsalloc(CONFIG_MAX_FILESIZE);
@@ -328,12 +345,31 @@ ReadConfigFile(char *filename)
 	ErrorF(ConfigErrors[CONFIG_ERR_MEMORY], filename);
 	return FSBadAlloc;
     }
+    if (filename != NULL) {
 #ifdef __UNIXOS2__
-    filename = __XFSRedirRoot(filename);
+	filename = __XFSRedirRoot(filename);
 #endif
-    if ((fp = fopen(filename, "r")) == NULL) {
+	fp = fopen(filename, "r");
+	if (fp == NULL) {
+	    ErrorF(ConfigErrors[CONFIG_ERR_OPEN], filename);
+	}
+    } else {
+	for (i = 0; default_config_files[i] != NULL; i++) {
+	    filename = default_config_files[i];
+#ifdef __UNIXOS2__
+	    filename = __XFSRedirRoot(filename);
+#endif	    
+	    if ((fp = fopen(filename, "r")) != NULL)
+		break;
+	}
+	if (fp == NULL) {
+	    for (i = 0; default_config_files[i] != NULL; i++) {
+		ErrorF(ConfigErrors[CONFIG_ERR_OPEN], default_config_files[i]);
+	    }
+	}
+    }
+    if (fp == NULL) {
 	fsfree(data);
-	ErrorF(ConfigErrors[CONFIG_ERR_OPEN], filename);
 	return FSBadName;
     }
     ret = fread(data, sizeof(char), CONFIG_MAX_FILESIZE, fp);

@@ -1,5 +1,5 @@
 /*
- * $Id: xfstrans.c,v 1.1.1.1 2006/11/26 14:43:47 matthieu Exp $
+ * $Id: xfstrans.c,v 1.2 2008/06/13 21:00:36 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -22,9 +22,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <xfs-config.h>
 
 #define FONT_t
 #define TRANS_REOPEN

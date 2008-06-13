@@ -69,10 +69,6 @@ int         ConnInfoLen;
 
 Cache       serverCache;
 
-#ifndef DEFAULT_CONFIG_FILE
-#define DEFAULT_CONFIG_FILE "/usr/lib/X11/fs/config"
-#endif
-
 #define	SERVER_CACHE_SIZE	10000	/* for random server cacheables */
 
 static Bool create_connection_block(void);
@@ -91,7 +87,7 @@ main(int argc, char *argv[])
     argcGlobal = argc;
     argvGlobal = argv;
 
-    configfilename = DEFAULT_CONFIG_FILE;
+    configfilename = NULL;
 
     /* init stuff */
     ProcessCmdLine(argc, argv);

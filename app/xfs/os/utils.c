@@ -562,7 +562,7 @@ StorePid (void)
 		     strerror (errno));
 	    return -1;
 	}
-	if (fprintf (pidFilePtr, "%5ld\n", (long) getpid ()) != 6)
+	if (fprintf (pidFilePtr, "%11ld\n", (long) getpid ()) != 12)
 	{
 	    ErrorF ("cannot write to process-id file %s: %s\n", pidFile,
 		    strerror (errno));

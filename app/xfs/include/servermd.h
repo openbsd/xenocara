@@ -49,8 +49,17 @@ in this Software without prior written authorization from The Open Group.
 #ifndef _SERVERMD_H_
 #define _SERVERMD_H_
 
+#include <xfs-config.h>
+
 #ifndef VENDOR_RELEASE
-#define VENDOR_RELEASE 6700
+# if defined PACKAGE_VERSION_MAJOR
+#  define VENDOR_RELEASE \
+    	(((PACKAGE_VERSION_MAJOR) * 10000000) + \
+	 ((PACKAGE_VERSION_MINOR) * 100000) + \
+	 ((PACKAGE_VERSION_PATCHLEVEL) * 1000))
+# else
+#  define VENDOR_RELEASE 7000
+# endif
 #endif
 
 #ifndef VENDOR_STRING

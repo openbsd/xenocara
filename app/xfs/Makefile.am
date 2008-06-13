@@ -19,15 +19,16 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
-configdir = $(datadir)/X11/fs
+ACLOCAL_AMFLAGS = -I m4
+
+configdir = $(sysconfdir)/X11/fs
 
 bin_PROGRAMS = xfs
 
 FONT_FLAGS = -DFONT_PCF -DFONT_FS -DFONT_SPEEDO -DFONTCACHE
 
-AM_CFLAGS = $(XFS_CFLAGS) -I$(top_srcdir)/include -DXFSPIDDIR=\"/var/run\" \
-		-DDEFAULT_CONFIG_FILE=\"$(configdir)/config\" $(FONT_FLAGS) \
-		-D_BSD_SOURCE -DFONT_t -DTRANS_SERVER -DTRANS_REOPEN
+AM_CPPFLAGS = $(XFS_CFLAGS) -I$(top_srcdir)/include -DXFSPIDDIR=\"/var/run\" \
+	$(FONT_FLAGS) -D_BSD_SOURCE -DFONT_t -DTRANS_SERVER -DTRANS_REOPEN
 
 LDADD = $(XFS_LIBS)
 
@@ -133,9 +134,29 @@ MAN_SUBSTS = \
 	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g' \
+	-e 's|__configfiledesc__|$(CONFIG_FILE_DESC)|g' \
+	-e 's|__configfilepath__|$(CONFIG_FILE_PATH)|g' \
 	-e 's|XCOMM|\#|g'
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
+
+if LINT
+ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	       $(AM_CPPFLAGS) $(CPPFLAGS)
+
+lint:
+	$(LINT) $(ALL_LINT_FLAGS) $(xfs_SOURCES)
+endif LINT
