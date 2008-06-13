@@ -22,7 +22,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(fonttosfnt,[1.0.3], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],fonttosfnt)
+AC_INIT(fonttosfnt,[1.0.4], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],fonttosfnt)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -32,6 +32,11 @@ AC_PROG_CC
 AC_PROG_INSTALL
 
 AC_CHECK_FUNC(setenv, have_setenv=yes, have_setenv=no)
+AC_CHECK_FUNCS([vasprintf])
+AC_CHECK_DECLS([va_copy], [], [], [
+	AC_INCLUDES_DEFAULT
+	#include <stdarg.h>
+])
 
 AM_CONDITIONAL(NEED_SETENV, [test x$have_setenv = xno])
 

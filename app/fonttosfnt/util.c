@@ -69,28 +69,49 @@ extern void unsetenv(const char *name);
 #endif
 
 char*
-sprintf_reliable(char *f, ...)
+sprintf_alloc(char *f, ...)
 {
     char *s;
     va_list args;
     va_start(args, f);
-    s = vsprintf_reliable(f, args);
+    s = vsprintf_alloc(f, args);
     va_end(args);
     return s;
-}    
+}
 
+#if HAVE_VASPRINTF
 char*
-vsprintf_reliable(char *f, va_list args)
+vsprintf_alloc(char *f, va_list args)
+{
+    char *r;
+    int rc;
+
+    rc = vasprintf(&r, f, args);
+    if(rc < 0)
+        return NULL;
+    return r;
+}
+#else
+char*
+vsprintf_alloc(char *f, va_list args)
 {
     int n, size = 12;
     char *string;
+    va_list args_copy;
+
     while(1) {
         if(size > 4096)
             return NULL;
         string = malloc(size);
         if(!string)
             return NULL;
+
+#if HAVE_DECL_VA_COPY
+        va_copy(args_copy, args);
+        n = vsnprintf(string, size, f, args_copy);
+#else
         n = vsnprintf(string, size, f, args);
+#endif
         if(n >= 0 && n < size)
             return string;
         else if(n >= size)
@@ -101,6 +122,7 @@ vsprintf_reliable(char *f, va_list args)
     }
     /* NOTREACHED */
 }
+#endif
 
 /* Build a UTF-16 string from a Latin-1 string.  
    Result is not NUL-terminated. */
@@ -376,7 +398,7 @@ faceEncoding(FT_Face face)
     if(rc != 0 || p2.type != BDF_PROPERTY_TYPE_ATOM)
         return NULL;
 
-    return sprintf_reliable("%s-%s", p1.u.atom, p2.u.atom);
+    return sprintf_alloc("%s-%s", p1.u.atom, p2.u.atom);
 }
     
 int

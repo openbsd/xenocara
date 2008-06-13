@@ -58,10 +58,10 @@ main(int argc, char **argv)
 
         if(argv[i][1] == 'o') {
             if(argv[i][2] == '\0') {
-                output = sprintf_reliable("%s", argv[i + 1]);
+                output = sprintf_alloc("%s", argv[i + 1]);
                 i += 2;
             } else {
-                output = sprintf_reliable("%s", argv[i] + 2);
+                output = sprintf_alloc("%s", argv[i] + 2);
                 i++;
             }
         } else if(strcmp(argv[i], "-v") == 0) {

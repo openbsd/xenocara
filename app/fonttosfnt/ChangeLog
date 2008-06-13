@@ -1,3 +1,83 @@
+commit a9a8778a984e69007d77227969b0103b2a81e4c8
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun May 11 00:50:20 2008 +0200
+
+    Bump to 1.0.4
+
+commit b3046750c37837dfe6d2a488361a1c78abdce138
+Author: Juliusz Chroboczek <jch@pps.jussieu.fr>
+Date:   Sun May 11 00:46:52 2008 +0200
+
+    Use va_copy in vsprintf_alloc.
+    This avoids a crash on arches with an interesting implementation of va_list
+    (such as AMD64) but no vasprintf in their libc.
+
+commit a0d110f283e387e9c594d422c5c75cb593def91e
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun May 11 00:45:51 2008 +0200
+
+    Add autoconf test for va_copy.
+
+commit e583311c8a73a675fc3396fe24cdafcad53e60e5
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun May 11 00:32:05 2008 +0200
+
+    Use autoconf test instead of #ifdef GLIBC for vasprintf.
+
+commit 8e36cc8647b27a4d14cf3f63045410db79fb98a3
+Author: Juliusz Chroboczek <jch@pps.jussieu.fr>
+Date:   Sun May 11 00:30:12 2008 +0200
+
+    Rename *_reliable to *_alloc.
+
+commit 867c33d332abe479ab088f98e01c06800203a3e0
+Author: Juliusz Chroboczek <jch@pps.jussieu.fr>
+Date:   Sun May 11 00:01:38 2008 +0200
+
+    Update copyright date.
+
+commit 4ecd697abe1026eb27e1373bf357ebca2ade4138
+Author: Juliusz Chroboczek <jch@pps.jussieu.fr>
+Date:   Fri May 2 19:24:21 2008 +0200
+
+    Use asprintf on GNU platforms.
+    This fixes fonttosfnt on AMD64 with glibc.  It will still break on
+    non-GNU RISC platforms, because I'm incompetent and cannot use va_copy.
+
+commit 5cb6dcac85b89deea8263e1b7bcb7714e07063ff
+Author: George Williams <gww@silcom.com>
+Date:   Fri May 2 19:14:58 2008 +0200
+
+    Fix handling for non-square pixels.
+
+commit 95a16fb0001abcea6a12b4eb2e1a1d24ab83d5fa
+Author: George Williams <gww@silcom.com>
+Date:   Fri May 2 19:09:09 2008 +0200
+
+    Fix off-by-one entrySel field.
+
+commit bbab34919743990bf87935480092f7644f8f02fc
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Mar 13 13:19:11 2008 -0400
+
+    I’m not sure the PCLT table is needed by the fonts generated here, but
+    use a fixed 16 char string as the initializer for the PCLT Fontname field
+    to silence the warning (or error for some compilers) as reported in bugzilla:
+    
+    http://bugs.freedesktop.org/show_bug.cgi?id=3928
+
+commit 5bf16aed7ba59559a636552811f7267d79a746bb
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:51:00 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit 64474e003376039cf485fa6eb41d241170397ab4
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Aug 10 16:21:44 2007 -0700
+
+    Change fonttosfnt_CFLAGS to AM_CFLAGS to make automake-1.10 happier
+
 commit 0c316fb4aadf26bea5784974cd484483d6322b5c
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Dec 16 01:37:31 2006 +0200

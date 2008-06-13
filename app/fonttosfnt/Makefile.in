@@ -80,10 +80,9 @@ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am__fonttosfnt_SOURCES_DIST = fonttosfnt.c fonttosfnt.h read.c \
 	struct.c util.c write.c env.c
-@NEED_SETENV_TRUE@am__objects_1 = fonttosfnt-env.$(OBJEXT)
-am_fonttosfnt_OBJECTS = fonttosfnt-fonttosfnt.$(OBJEXT) \
-	fonttosfnt-read.$(OBJEXT) fonttosfnt-struct.$(OBJEXT) \
-	fonttosfnt-util.$(OBJEXT) fonttosfnt-write.$(OBJEXT) \
+@NEED_SETENV_TRUE@am__objects_1 = env.$(OBJEXT)
+am_fonttosfnt_OBJECTS = fonttosfnt.$(OBJEXT) read.$(OBJEXT) \
+	struct.$(OBJEXT) util.$(OBJEXT) write.$(OBJEXT) \
 	$(am__objects_1)
 fonttosfnt_OBJECTS = $(am_fonttosfnt_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -133,6 +132,7 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
@@ -142,6 +142,7 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
@@ -216,9 +217,8 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-fonttosfnt_CFLAGS = -DXVENDORNAME=\"X.org\ Foundation\" \
-	$(FONTTOSFNT_CFLAGS) -DXVENDORNAMESHORT=\"X.org\" \
-	-D_BSD_SOURCE $(am__append_2)
+AM_CFLAGS = -DXVENDORNAME=\"X.Org\ Foundation\" $(FONTTOSFNT_CFLAGS) \
+	-DXVENDORNAMESHORT=\"X.Org\" -D_BSD_SOURCE $(am__append_2)
 fonttosfnt_LDADD = $(FONTTOSFNT_LIBS) -lm
 fonttosfnt_SOURCES = fonttosfnt.c fonttosfnt.h read.c struct.c util.c \
 	write.c $(am__append_1)
@@ -336,12 +336,12 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fonttosfnt-env.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fonttosfnt-fonttosfnt.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fonttosfnt-read.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fonttosfnt-struct.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fonttosfnt-util.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fonttosfnt-write.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/env.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fonttosfnt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/read.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/struct.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/write.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -356,90 +356,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-fonttosfnt-fonttosfnt.o: fonttosfnt.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -MT fonttosfnt-fonttosfnt.o -MD -MP -MF "$(DEPDIR)/fonttosfnt-fonttosfnt.Tpo" -c -o fonttosfnt-fonttosfnt.o `test -f 'fonttosfnt.c' || echo '$(srcdir)/'`fonttosfnt.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fonttosfnt-fonttosfnt.Tpo" "$(DEPDIR)/fonttosfnt-fonttosfnt.Po"; else rm -f "$(DEPDIR)/fonttosfnt-fonttosfnt.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fonttosfnt.c' object='fonttosfnt-fonttosfnt.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -c -o fonttosfnt-fonttosfnt.o `test -f 'fonttosfnt.c' || echo '$(srcdir)/'`fonttosfnt.c
-
-fonttosfnt-fonttosfnt.obj: fonttosfnt.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -MT fonttosfnt-fonttosfnt.obj -MD -MP -MF "$(DEPDIR)/fonttosfnt-fonttosfnt.Tpo" -c -o fonttosfnt-fonttosfnt.obj `if test -f 'fonttosfnt.c'; then $(CYGPATH_W) 'fonttosfnt.c'; else $(CYGPATH_W) '$(srcdir)/fonttosfnt.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fonttosfnt-fonttosfnt.Tpo" "$(DEPDIR)/fonttosfnt-fonttosfnt.Po"; else rm -f "$(DEPDIR)/fonttosfnt-fonttosfnt.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fonttosfnt.c' object='fonttosfnt-fonttosfnt.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -c -o fonttosfnt-fonttosfnt.obj `if test -f 'fonttosfnt.c'; then $(CYGPATH_W) 'fonttosfnt.c'; else $(CYGPATH_W) '$(srcdir)/fonttosfnt.c'; fi`
-
-fonttosfnt-read.o: read.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -MT fonttosfnt-read.o -MD -MP -MF "$(DEPDIR)/fonttosfnt-read.Tpo" -c -o fonttosfnt-read.o `test -f 'read.c' || echo '$(srcdir)/'`read.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fonttosfnt-read.Tpo" "$(DEPDIR)/fonttosfnt-read.Po"; else rm -f "$(DEPDIR)/fonttosfnt-read.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='read.c' object='fonttosfnt-read.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -c -o fonttosfnt-read.o `test -f 'read.c' || echo '$(srcdir)/'`read.c
-
-fonttosfnt-read.obj: read.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -MT fonttosfnt-read.obj -MD -MP -MF "$(DEPDIR)/fonttosfnt-read.Tpo" -c -o fonttosfnt-read.obj `if test -f 'read.c'; then $(CYGPATH_W) 'read.c'; else $(CYGPATH_W) '$(srcdir)/read.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fonttosfnt-read.Tpo" "$(DEPDIR)/fonttosfnt-read.Po"; else rm -f "$(DEPDIR)/fonttosfnt-read.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='read.c' object='fonttosfnt-read.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -c -o fonttosfnt-read.obj `if test -f 'read.c'; then $(CYGPATH_W) 'read.c'; else $(CYGPATH_W) '$(srcdir)/read.c'; fi`
-
-fonttosfnt-struct.o: struct.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -MT fonttosfnt-struct.o -MD -MP -MF "$(DEPDIR)/fonttosfnt-struct.Tpo" -c -o fonttosfnt-struct.o `test -f 'struct.c' || echo '$(srcdir)/'`struct.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fonttosfnt-struct.Tpo" "$(DEPDIR)/fonttosfnt-struct.Po"; else rm -f "$(DEPDIR)/fonttosfnt-struct.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='struct.c' object='fonttosfnt-struct.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -c -o fonttosfnt-struct.o `test -f 'struct.c' || echo '$(srcdir)/'`struct.c
-
-fonttosfnt-struct.obj: struct.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -MT fonttosfnt-struct.obj -MD -MP -MF "$(DEPDIR)/fonttosfnt-struct.Tpo" -c -o fonttosfnt-struct.obj `if test -f 'struct.c'; then $(CYGPATH_W) 'struct.c'; else $(CYGPATH_W) '$(srcdir)/struct.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fonttosfnt-struct.Tpo" "$(DEPDIR)/fonttosfnt-struct.Po"; else rm -f "$(DEPDIR)/fonttosfnt-struct.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='struct.c' object='fonttosfnt-struct.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -c -o fonttosfnt-struct.obj `if test -f 'struct.c'; then $(CYGPATH_W) 'struct.c'; else $(CYGPATH_W) '$(srcdir)/struct.c'; fi`
-
-fonttosfnt-util.o: util.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -MT fonttosfnt-util.o -MD -MP -MF "$(DEPDIR)/fonttosfnt-util.Tpo" -c -o fonttosfnt-util.o `test -f 'util.c' || echo '$(srcdir)/'`util.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fonttosfnt-util.Tpo" "$(DEPDIR)/fonttosfnt-util.Po"; else rm -f "$(DEPDIR)/fonttosfnt-util.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='util.c' object='fonttosfnt-util.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -c -o fonttosfnt-util.o `test -f 'util.c' || echo '$(srcdir)/'`util.c
-
-fonttosfnt-util.obj: util.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -MT fonttosfnt-util.obj -MD -MP -MF "$(DEPDIR)/fonttosfnt-util.Tpo" -c -o fonttosfnt-util.obj `if test -f 'util.c'; then $(CYGPATH_W) 'util.c'; else $(CYGPATH_W) '$(srcdir)/util.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fonttosfnt-util.Tpo" "$(DEPDIR)/fonttosfnt-util.Po"; else rm -f "$(DEPDIR)/fonttosfnt-util.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='util.c' object='fonttosfnt-util.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -c -o fonttosfnt-util.obj `if test -f 'util.c'; then $(CYGPATH_W) 'util.c'; else $(CYGPATH_W) '$(srcdir)/util.c'; fi`
-
-fonttosfnt-write.o: write.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -MT fonttosfnt-write.o -MD -MP -MF "$(DEPDIR)/fonttosfnt-write.Tpo" -c -o fonttosfnt-write.o `test -f 'write.c' || echo '$(srcdir)/'`write.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fonttosfnt-write.Tpo" "$(DEPDIR)/fonttosfnt-write.Po"; else rm -f "$(DEPDIR)/fonttosfnt-write.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='write.c' object='fonttosfnt-write.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -c -o fonttosfnt-write.o `test -f 'write.c' || echo '$(srcdir)/'`write.c
-
-fonttosfnt-write.obj: write.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -MT fonttosfnt-write.obj -MD -MP -MF "$(DEPDIR)/fonttosfnt-write.Tpo" -c -o fonttosfnt-write.obj `if test -f 'write.c'; then $(CYGPATH_W) 'write.c'; else $(CYGPATH_W) '$(srcdir)/write.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fonttosfnt-write.Tpo" "$(DEPDIR)/fonttosfnt-write.Po"; else rm -f "$(DEPDIR)/fonttosfnt-write.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='write.c' object='fonttosfnt-write.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -c -o fonttosfnt-write.obj `if test -f 'write.c'; then $(CYGPATH_W) 'write.c'; else $(CYGPATH_W) '$(srcdir)/write.c'; fi`
-
-fonttosfnt-env.o: env.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -MT fonttosfnt-env.o -MD -MP -MF "$(DEPDIR)/fonttosfnt-env.Tpo" -c -o fonttosfnt-env.o `test -f 'env.c' || echo '$(srcdir)/'`env.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fonttosfnt-env.Tpo" "$(DEPDIR)/fonttosfnt-env.Po"; else rm -f "$(DEPDIR)/fonttosfnt-env.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='env.c' object='fonttosfnt-env.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -c -o fonttosfnt-env.o `test -f 'env.c' || echo '$(srcdir)/'`env.c
-
-fonttosfnt-env.obj: env.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -MT fonttosfnt-env.obj -MD -MP -MF "$(DEPDIR)/fonttosfnt-env.Tpo" -c -o fonttosfnt-env.obj `if test -f 'env.c'; then $(CYGPATH_W) 'env.c'; else $(CYGPATH_W) '$(srcdir)/env.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fonttosfnt-env.Tpo" "$(DEPDIR)/fonttosfnt-env.Po"; else rm -f "$(DEPDIR)/fonttosfnt-env.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='env.c' object='fonttosfnt-env.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fonttosfnt_CFLAGS) $(CFLAGS) -c -o fonttosfnt-env.obj `if test -f 'env.c'; then $(CYGPATH_W) 'env.c'; else $(CYGPATH_W) '$(srcdir)/env.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)

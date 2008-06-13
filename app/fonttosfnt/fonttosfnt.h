@@ -24,6 +24,10 @@ THE SOFTWARE.
 #ifndef _FONTTOSFNT_H_
 #define _FONTTOSFNT_H_ 1
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdarg.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -162,8 +166,8 @@ int writeFile(char *filename, FontPtr);
 #define PROP_INTEGER 2
 #define PROP_CARDINAL 3
 
-char *sprintf_reliable(char *f, ...);
-char *vsprintf_reliable(char *f, va_list args);
+char *sprintf_alloc(char *f, ...);
+char *vsprintf_alloc(char *f, va_list args);
 char *makeUTF16(char *);
 unsigned makeName(char*);
 int macTime(int *, unsigned *);

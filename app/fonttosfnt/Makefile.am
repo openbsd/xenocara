@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = fonttosfnt
 
-fonttosfnt_CFLAGS = -DXVENDORNAME=\"X.org\ Foundation\" $(FONTTOSFNT_CFLAGS) -DXVENDORNAMESHORT=\"X.org\" -D_BSD_SOURCE
+AM_CFLAGS = -DXVENDORNAME=\"X.Org\ Foundation\" $(FONTTOSFNT_CFLAGS) -DXVENDORNAMESHORT=\"X.Org\" -D_BSD_SOURCE
 fonttosfnt_LDADD = $(FONTTOSFNT_LIBS) -lm
 
 fonttosfnt_SOURCES =	\
@@ -34,7 +34,7 @@ fonttosfnt_SOURCES =	\
 
 if NEED_SETENV
 fonttosfnt_SOURCES += env.c
-fonttosfnt_CFLAGS += -DNEED_SETENV
+AM_CFLAGS += -DNEED_SETENV
 endif
 
 appman_PRE = \

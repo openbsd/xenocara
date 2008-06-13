@@ -358,7 +358,7 @@ writeDir(FILE *out, FontPtr font, int numTables, unsigned *tables)
     writeULONG(out, 0x10000);   /* version */
     writeUSHORT(out, numTables); /* numTables */
     writeUSHORT(out, 16 * ti);  /* searchRange */
-    writeUSHORT(out, i - 1);    /* entrySelector */
+    writeUSHORT(out, i);        /* entrySelector */
     writeUSHORT(out, 16 * (numTables - ti)); /* rangeShift */
 
     /* see fixupDir */
@@ -1030,7 +1030,7 @@ writeOS2(FILE* out, FontPtr font)
 static int 
 writePCLT(FILE* out, FontPtr font)
 {
-    char name[16] = XVENDORNAME" font    ";
+    char name[16] = "X11 font        ";
     char filename[6] = "X11R00";
     unsigned char charComplement[8] = 
         {0xFF, 0xFF, 0xFF, 0xFF, 0x0B, 0xFF, 0xFF, 0xFE};
