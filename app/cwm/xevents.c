@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.17 2008/06/12 05:01:13 okan Exp $
+ * $Id: xevents.c,v 1.18 2008/06/13 03:41:58 oga Exp $
  */
 
 /*
@@ -68,21 +68,9 @@ xev_handle_unmapnotify(struct xevent *xev, XEvent *ee)
 {
 	XUnmapEvent *e = &ee->xunmap;
 	struct client_ctx *cc;
-	struct screen_ctx *sc;
-	int wascurrent;
 
-	if ((cc = client_find(e->window)) != NULL) {
-		sc = CCTOSC(cc);
-		wascurrent = cc == client_current();
-		client_delete(cc, e->send_event, 0);
-
-#ifdef notyet
-		/* XXX disable the ptrwarp until we handle it
-		 * better. */
-		if (!client_delete(cc, e->send_event, 0) && wascurrent)
-			;/* 			client_ptrwarp(new_cc); */
-#endif
-	}
+	if ((cc = client_find(e->window)) != NULL)
+		xu_setstate(cc, WithdrawnState);
 
 	xev_register(xev);
 }
