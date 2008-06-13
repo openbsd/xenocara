@@ -2553,6 +2553,10 @@
 ./usr/X11R6/share/X11/locale/C/Compose
 ./usr/X11R6/share/X11/locale/C/XI18N_OBJS
 ./usr/X11R6/share/X11/locale/C/XLC_LOCALE
+./usr/X11R6/share/X11/locale/am_ET.UTF-8
+./usr/X11R6/share/X11/locale/am_ET.UTF-8/Compose
+./usr/X11R6/share/X11/locale/am_ET.UTF-8/XI18N_OBJS
+./usr/X11R6/share/X11/locale/am_ET.UTF-8/XLC_LOCALE
 ./usr/X11R6/share/X11/locale/armscii-8
 ./usr/X11R6/share/X11/locale/armscii-8/Compose
 ./usr/X11R6/share/X11/locale/armscii-8/XI18N_OBJS
