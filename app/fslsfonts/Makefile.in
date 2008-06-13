@@ -77,7 +77,7 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_fslsfonts_OBJECTS = fslsfonts-fslsfonts.$(OBJEXT)
+am_fslsfonts_OBJECTS = fslsfonts.$(OBJEXT)
 fslsfonts_OBJECTS = $(am_fslsfonts_OBJECTS)
 am__DEPENDENCIES_1 =
 fslsfonts_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -207,7 +207,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-fslsfonts_CFLAGS = $(FSLSFONTS_CFLAGS)
+AM_CFLAGS = $(FSLSFONTS_CFLAGS)
 fslsfonts_LDADD = $(FSLSFONTS_LIBS)
 fslsfonts_SOURCES = \
         fslsfonts.c
@@ -217,7 +217,7 @@ appman_PRE = \
 
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) ChangeLog
 CLEANFILES = $(appman_DATA)
 SED = sed
 
@@ -238,6 +238,7 @@ MAN_SUBSTS = \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
+MAINTAINERCLEANFILES = ChangeLog
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -326,7 +327,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fslsfonts-fslsfonts.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fslsfonts.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -341,20 +342,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-fslsfonts-fslsfonts.o: fslsfonts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fslsfonts_CFLAGS) $(CFLAGS) -MT fslsfonts-fslsfonts.o -MD -MP -MF "$(DEPDIR)/fslsfonts-fslsfonts.Tpo" -c -o fslsfonts-fslsfonts.o `test -f 'fslsfonts.c' || echo '$(srcdir)/'`fslsfonts.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fslsfonts-fslsfonts.Tpo" "$(DEPDIR)/fslsfonts-fslsfonts.Po"; else rm -f "$(DEPDIR)/fslsfonts-fslsfonts.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fslsfonts.c' object='fslsfonts-fslsfonts.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fslsfonts_CFLAGS) $(CFLAGS) -c -o fslsfonts-fslsfonts.o `test -f 'fslsfonts.c' || echo '$(srcdir)/'`fslsfonts.c
-
-fslsfonts-fslsfonts.obj: fslsfonts.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fslsfonts_CFLAGS) $(CFLAGS) -MT fslsfonts-fslsfonts.obj -MD -MP -MF "$(DEPDIR)/fslsfonts-fslsfonts.Tpo" -c -o fslsfonts-fslsfonts.obj `if test -f 'fslsfonts.c'; then $(CYGPATH_W) 'fslsfonts.c'; else $(CYGPATH_W) '$(srcdir)/fslsfonts.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fslsfonts-fslsfonts.Tpo" "$(DEPDIR)/fslsfonts-fslsfonts.Po"; else rm -f "$(DEPDIR)/fslsfonts-fslsfonts.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='fslsfonts.c' object='fslsfonts-fslsfonts.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fslsfonts_CFLAGS) $(CFLAGS) -c -o fslsfonts-fslsfonts.obj `if test -f 'fslsfonts.c'; then $(CYGPATH_W) 'fslsfonts.c'; else $(CYGPATH_W) '$(srcdir)/fslsfonts.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
@@ -451,6 +438,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -580,6 +570,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -635,8 +626,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-data \
@@ -651,6 +642,13 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

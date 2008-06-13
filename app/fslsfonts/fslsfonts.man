@@ -33,7 +33,7 @@ fslsfonts \- list fonts served by X font server
 .B fslsfonts
 [\-options ...] [\-fn pattern]
 .SH DESCRIPTION
-.I Fslsfonts
+.I fslsfonts
 lists the fonts that match the given \fIpattern\fP.
 The wildcard character "*" may be used to match any sequence of
 characters (including none), and "?" to match any single character.
@@ -44,8 +44,14 @@ being expanded by the shell.
 .SH "OPTIONS"
 .PP
 .TP 8
-.B \-server \fIhost\fP:\fIport\fP
+.B \-server \fIservername\fP
 This option specifies the X font server to contact.
+.I servername 
+must be specified in one of the formats defined in the
+.I Font Server Names
+section of X(__miscmansuffix__).   If not specified, the server name in the
+.B FONTSERVER
+environment variable is used.
 .PP
 .TP 8
 .B \-l
@@ -83,12 +89,16 @@ number of character specified by \fB\-w\fP \fIwidth\fP.
 .B \-u
 This option indicates that the output should be left unsorted.
 .PP
-.SH "SEE ALSO"
-xfs(1), showfont(1), xlsfonts(1)
 .SH ENVIRONMENT
 .TP 8
 .B FONTSERVER
-to get the default host and port to use.
+To get the default fontserver.  The server name must
+be specified in one of the formats defined in the
+.I Font Server Names
+section of X(__miscmansuffix__).
+.SH "SEE ALSO"
+xfs(__appmansuffix__), showfont(__appmansuffix__), xlsfonts(__appmansuffix__),
+X(__miscmansuffix__).
 .SH BUGS
 Doing ``fslsfonts \-l'' can tie up your server for a very long time.
 This is really a bug with single-threaded non-preemptable servers, not with
