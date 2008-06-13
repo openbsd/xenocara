@@ -656,6 +656,8 @@ filenames.sed: filenames.sed.c
 @LINT_TRUE@lint:
 @LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(sessreg_SOURCES)
 
+.PHONY: ChangeLog
+
 ChangeLog:
 	git-log > ChangeLog
 

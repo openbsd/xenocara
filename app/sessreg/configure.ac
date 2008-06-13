@@ -21,7 +21,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(sessreg, [1.0.3],
+AC_INIT(sessreg, [1.0.4],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
 	sessreg)
 AM_INIT_AUTOMAKE([dist-bzip2])
@@ -47,7 +47,7 @@ AC_DEFINE_UNQUOTED(HAVE_UTMPX_UT_SYSLEN,$HAVE_SYSLEN,
 AC_SYS_LARGEFILE
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(SESSREG, x11)
+PKG_CHECK_MODULES(SESSREG, xproto)
 AC_SUBST(SESSREG_CFLAGS)
 
 # Allow checking code with lint, sparse, etc.

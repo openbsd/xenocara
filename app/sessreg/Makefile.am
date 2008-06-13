@@ -75,6 +75,8 @@ endif LINT
 
 MAINTAINERCLEANFILES=ChangeLog
 
+.PHONY: ChangeLog
+
 ChangeLog:
 	git-log > ChangeLog
 

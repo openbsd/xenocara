@@ -88,10 +88,6 @@
 
 #include <time.h>
 #define Time_t time_t
-#ifdef X_NOT_POSIX
-extern long	lseek ();
-extern char	*ttyname ();
-#endif
 
 static void set_utmp (struct utmp *u, char *line, char *user, char *host, Time_t date, int addp);
 

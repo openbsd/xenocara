@@ -1,3 +1,27 @@
+commit 3db21d655b0a2988ae0fd47e360d29bb8763cd03
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jun 11 14:46:29 2008 -0700
+
+    Version bump: 1.0.4
+
+commit accc7988851b983d1589d64e32a707c0b44fee0e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jun 11 14:44:10 2008 -0700
+
+    X_NOT_POSIX bits for pre-POSIX-1990 systems not needed any more
+
+commit c9973031a696cc00c509d7013145b1116093bf82
+Author: David Nusinow <dnusinow@debian.org>
+Date:   Sat Mar 1 13:53:21 2008 -0500
+
+    Require xproto instead of libX11 for building (bug #9631)
+
+commit a888e809b4e1c9576e667cb50cc62009a1bf391e
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:04 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
 commit da1b5f42fcb1bd0bc9b80f6f1ab7ebb9eb506554
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Aug 17 14:30:31 2007 -0700
