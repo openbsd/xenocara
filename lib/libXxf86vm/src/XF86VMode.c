@@ -1,5 +1,3 @@
-/* $XConsortium: XF86VMode.c /main/2 1995/11/14 18:17:58 kaleb $ */
-/* $XFree86: xc/lib/Xxf86vm/XF86VMode.c,v 3.33 2002/10/16 00:37:34 dawes Exp $ */
 /*
 
 Copyright (c) 1995  Kaleb S. KEITHLEY
@@ -29,7 +27,6 @@ or other dealings in this Software without prior written authorization
 from Kaleb S. KEITHLEY.
 
 */
-/* $XConsortium: XF86VMode.c /main/4 1996/01/16 07:52:25 kaleb CHECKEDOUT $ */
 
 /* THIS IS NOT AN X CONSORTIUM STANDARD */
 
@@ -966,12 +963,8 @@ XF86VidModeGetMonitor(dpy, screen, monitor)
     }
     if (rep.vendorLength)
 	_XReadPad(dpy, monitor->vendor, rep.vendorLength);
-    else
-	monitor->vendor = "";
     if (rep.modelLength)
 	_XReadPad(dpy, monitor->model, rep.modelLength);
-    else
-	monitor->model = "";
 	
     UnlockDisplay(dpy);
     SyncHandle();
