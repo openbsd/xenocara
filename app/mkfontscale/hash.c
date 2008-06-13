@@ -53,7 +53,7 @@ strcpy_lwr(char *dst, char *src)
 }
 
 HashTablePtr
-makeHashTable()
+makeHashTable(void)
 {
     return calloc(NUMBUCKETS, sizeof(HashBucketPtr));
 }

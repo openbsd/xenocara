@@ -1,3 +1,62 @@
+commit 8126d2b694f48cc8137be05705a125f7d02e7e12
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun May 11 00:03:44 2008 +0200
+
+    Bump to 1.0.5
+
+commit f131ff40d2b46692c393346110df2567cfa67c29
+Author: Juliusz Chroboczek <jch@pps.jussieu.fr>
+Date:   Sat May 10 23:58:55 2008 +0200
+
+    Update copyright date.
+
+commit c322c79c2b9b8d6075b6782d572033cc50799a49
+Author: Juliusz Chroboczek <jch@pps.jussieu.fr>
+Date:   Sat May 10 23:56:33 2008 +0200
+
+    Fix handling of OpenType/CFF fonts with embedded bitmaps.
+    The old workaround would trigger with CFF fonts with embedded bitmaps.
+    We now explicitly check for the font format being TrueType.
+    Reported by Andrey V. Panov.
+
+commit 5db9e13aafbed8c0562838005147ebefb12d08ac
+Author: Juliusz Chroboczek <jch@pps.jussieu.fr>
+Date:   Sat May 10 23:37:14 2008 +0200
+
+    Remove doubly included header.
+
+commit b0860282c3229d088840fa0758d8473ea6d8813b
+Author: Juliusz Chroboczek <jch@pps.jussieu.fr>
+Date:   Mon Apr 28 19:53:11 2008 +0200
+
+    Add bdf and pcf to font priority table.
+    This mirrors the behaviour of the old mkfontdir, which prefers pcf to
+    bdf fonts.
+
+commit 9c5594ad13e9143e86a7fd94f90858795ae2970b
+Author: Juliusz Chroboczek <jch@pps.jussieu.fr>
+Date:   Mon Apr 28 19:15:05 2008 +0200
+
+    Fix typo in mkfontscale.c.
+    This spurious break statement disabled checking for Apple and ISO Unicode
+    CMaps in SFNT fonts.  Thanks to Alan Coopersmith and Stefan Dirsch.
+
+commit 5ca409f025fb35a20ab1ef4742a9034a36e3d959
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Sat Mar 15 18:44:06 2008 -0300
+
+    Compile warning fixes.
+    
+    Include headers for proper prototypes and "ansify" makeHashTable.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 47ec1e2697eb856f823cc1b488c6b5a1d2077df9
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 6 16:40:41 2008 -0500
+
+    mkfontscale 1.0.4
+
 commit 1cb9c0074c5075bbce63ff3601712f34bbb74ca1
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Sun Feb 24 21:34:00 2008 -0500

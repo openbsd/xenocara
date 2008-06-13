@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "zlib.h"
+#include "ident.h"
 
 #define PCF_VERSION (('p'<<24)|('c'<<16)|('f'<<8)|1)
 #define PCF_PROPERTIES (1 << 0)

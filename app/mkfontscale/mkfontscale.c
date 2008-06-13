@@ -30,6 +30,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include <X11/Xos.h>
 #include <X11/fonts/fontenc.h>
@@ -40,7 +41,7 @@
 #include FT_TRUETYPE_IDS_H
 #include FT_TYPE1_TABLES_H
 #include FT_BDF_H
-#include FT_TRUETYPE_TABLES_H
+#include FT_XFREE86_H
 
 #include "list.h"
 #include "hash.h"
@@ -726,16 +727,24 @@ filePrio(char *filename)
     if(n < 4)
         return 0;
     if(strcmp(filename + n - 4, ".otf") == 0)
-        return 4;
+        return 6;
     if(strcmp(filename + n - 4, ".OTF") == 0)
-        return 4;
+        return 6;
     if(strcmp(filename + n - 4, ".ttf") == 0)
-        return 3;
+        return 5;
     if(strcmp(filename + n - 4, ".TTF") == 0)
-        return 3;
+        return 5;
+    if(strcmp(filename + n - 4, ".pcf") == 0)
+        return 4;
+    if(strcmp(filename + n - 4, ".PCF") == 0)
+        return 4;
     if(strcmp(filename + n - 3, ".gz") == 0)
-        return 2;
+        return 3;
     if(strcmp(filename + n - 2, ".Z") == 0)
+        return 2;
+    if(strcmp(filename + n - 4, ".bdf") == 0)
+        return 1;
+    if(strcmp(filename + n - 4, ".BDF") == 0)
         return 1;
     return 0;
 }
@@ -840,8 +849,9 @@ doDirectory(char *dirname_given, int numEncodings, ListPtr encodingsToDo)
             isBitmap = ((face->face_flags & FT_FACE_FLAG_SCALABLE) == 0);
 
             if(!isBitmap) {
-                /* Workaround for bitmap-only TTF fonts */
-                if(face->num_fixed_sizes > 0) {
+                /* Workaround for bitmap-only SFNT fonts */
+                if(FT_IS_SFNT(face) && face->num_fixed_sizes > 0 &&
+                   strcmp(FT_Get_X11_Font_Format(face), "TrueType") == 0) {
                     TT_MaxProfile *maxp;
                     maxp = FT_Get_Sfnt_Table(face, ft_sfnt_maxp);
                     if(maxp != NULL && maxp->maxContours == 0)
@@ -1129,7 +1139,6 @@ find_cmap(int type, int pid, int eid, FT_Face face)
                     return 1;
             }
         }
-        break;
         /* Try Apple Unicode */
         for(i=0; i<n; i++) {
             cmap = face->charmaps[i];

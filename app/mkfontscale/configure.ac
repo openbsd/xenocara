@@ -21,7 +21,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(mkfontscale, [1.0.4], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], mkfontscale)
+AC_INIT(mkfontscale, [1.0.5], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], mkfontscale)
 AM_INIT_AUTOMAKE([dist-bzip2 foreign])
 AM_MAINTAINER_MODE
 
