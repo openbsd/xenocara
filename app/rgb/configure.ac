@@ -28,7 +28,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(rgb,[1.0.1],[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],rgb)
+AC_INIT(rgb,[1.0.3],[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],rgb)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -36,6 +36,8 @@ AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
 AC_PROG_INSTALL
+
+PKG_CHECK_MODULES(RGB, xproto)
 
 AC_MSG_CHECKING([for rgb database location])
 AC_ARG_WITH([rgb-db-dir],
@@ -56,6 +58,8 @@ AC_ARG_WITH([rgb-db-type],
 	[db_type=$withval], [db_type="text"])
 AC_MSG_RESULT([$db_type])
 
+RGB_DB_TYPE=$db_type
+
 case $db_type in
 	text)
 		RGB_DB_FILES=""
@@ -63,23 +67,35 @@ case $db_type in
 			[Define to 1 to use plain text files for rgb database])
 		;;
 	dbm)
-		AC_SEARCH_LIBS([dbminit], [db dbm],  [],
+		AC_SEARCH_LIBS([dbminit], [db dbm nsl], [],
 				AC_MSG_ERROR([dbm requested but dbminit() not found in any libraries]))
-		RGB_DB_FILES="$(db_file).dir $(db_file).pag"
+		AC_CHECK_HEADER([dbm.h], [DBM_HEADER='<dbm.h>'],
+		  [AC_CHECK_HEADER([rpcsvc/dbm.h], [DBM_HEADER='<rpcsvc/dbm.h>'],
+		    [AC_MSG_ERROR([dbm requested but dbm.h not found])])])
+		PKG_CHECK_MODULES(XORG, [xorg-server])
+		RGB_CFLAGS="$RGB_CFLAGS $XORG_CFLAGS"
+		RGB_DB_FILES='$(db_file).dir $(db_file).pag'
 		;;
 	ndbm)
 		# Find a dbm or ndbm implementation
-		AC_SEARCH_LIBS([dbm_open], [db ndbm dbm],  
-				AC_DEFINE([NDBM], [1], 
+		AC_SEARCH_LIBS([dbm_open], [db ndbm dbm],
+				AC_DEFINE([NDBM], [1],
 				 [Define to 1 if you have ndbm.h interfaces]),
 				AC_MSG_ERROR([ndbm requested but dbm_open() not found in any libraries]))
-		RGB_DB_FILES="$(db_file).dir $(db_file).pag"
+		DBM_HEADER='<ndbm.h>'
+		PKG_CHECK_MODULES(XORG, [xorg-server])
+		RGB_CFLAGS="$RGB_CFLAGS $XORG_CFLAGS"
+		RGB_DB_FILES='$(db_file).dir $(db_file).pag'
 		;;
 esac
+if test x$DBM_HEADER != x ; then
+  AC_DEFINE_UNQUOTED([DBM_HEADER], [$DBM_HEADER], 
+		     [Header file to include for dbm functions])
+fi
+AC_SUBST([RGB_DB_TYPE])
 AC_SUBST([RGB_DB_FILES])
-AM_CONDITIONAL(RGB_TXT, [test x$db_type = xtext])
+AM_CONDITIONAL(RGB_DB, [test x$db_type != xtext])
 
-PKG_CHECK_MODULES(RGB, xproto)
 AC_SUBST(RGB_CFLAGS)
 
 XORG_MANPAGE_SECTIONS

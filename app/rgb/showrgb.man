@@ -1,4 +1,3 @@
-.\" $Xorg: showrgb.man,v 1.4 2001/02/09 02:05:35 xorgcvs Exp $
 .\" Copyright 1993, 1998  The Open Group
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and its
@@ -23,11 +22,9 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/rgb/showrgb.man,v 1.7 2001/12/14 20:01:04 dawes Exp $
-.\"
 .TH SHOWRGB 1 __xorgversion__
 .SH NAME
-showrgb \- uncompile an rgb color-name database
+showrgb \- display an rgb color-name database
 .SH SYNOPSIS
 .B showrgb
 [
@@ -36,13 +33,13 @@ showrgb \- uncompile an rgb color-name database
 .SH DESCRIPTION
 The
 .I showrgb
-program reads an rgb color-name database compiled for use with the dbm
-database routines and converts it back to source form, printing the
+program reads an rgb color-name database from a __RGB_DB_TYPE__ file
+and converts it back to source form, printing the
 result to standard output.  The default
 database is the one that X was built with, and may be overridden on
 the command line.  Specify the database name without
-the \fI.pag\fP or \fI.dir\fP suffix.
+the \fI.txt\fP, \fI.pag\fP or \fI.dir\fP suffix.
 .SH FILES
 .TP 20
-.I __projectroot__/lib/X11/rgb
+.I __RGB_DB__
 default database.

@@ -1,4 +1,4 @@
-# Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+# Copyright 2008 Sun Microsystems, Inc.  All rights reserved.
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
@@ -27,24 +27,28 @@
 # 
 
 
-if RGB_TXT
 bin_PROGRAMS = showrgb
-else
-bin_PROGRAMS = rgb showrgb
 
-rgb_CFLAGS = $(RGB_CFLAGS) $(RGB_DB_DEFINES)
+showrgb_SOURCES =  showrgb.c
+
+appman_PRE = showrgb.man
+
+if RGB_DB
+bin_PROGRAMS += rgb
+
 rgb_SOURCES = rgb.c 
+
+appman_PRE += rgb.man
+
+$(RGB_DB_FILES): rgb rgb.txt
+	-rm -f $(RGB_DB_FILES)
+	./rgb rgb < $(srcdir)/rgb.txt
 endif
 
 rgbdir = $(db_dir)
 rgb_DATA = $(db_file).txt $(RGB_DB_FILES)
 RGB_DB_DEFINES = -DRGB_DB=\"$(db_dir)/$(db_file)\"
-
-showrgb_CFLAGS = $(RGB_CFLAGS) $(RGB_DB_DEFINES)
-showrgb_SOURCES =  showrgb.c
-
-appman_PRE = \
-        showrgb.man
+AM_CFLAGS = $(RGB_CFLAGS) $(RGB_DB_DEFINES)
 
 EXTRA_DIST= \
 	rgb.txt \
@@ -58,7 +62,7 @@ appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
 EXTRA_DIST += $(appman_PRE)
-CLEANFILES = $(appman_DATA)
+CLEANFILES = $(appman_DATA) $(RGB_DB_FILES)
 
 SED = sed
 
@@ -67,6 +71,10 @@ XORGRELSTRING = @PACKAGE_STRING@
   XORGMANNAME = X Version 11
 
 MAN_SUBSTS = \
+	-e 's|__RGB_DB__|$(db_dir)/$(db_file)|' \
+	-e 's|__RGB_DB_DIR__|$(db_dir)|' \
+	-e 's|__RGB_DB_TYPE__|$(RGB_DB_TYPE)|' \
+	-e 's|__RGB_DB_FILES__|$(RGB_DB_FILES)|' \
 	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xservername__|Xorg|g' \
@@ -83,3 +91,13 @@ SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog

@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+# Copyright 2008 Sun Microsystems, Inc.  All rights reserved.
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
@@ -65,8 +65,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@RGB_TXT_FALSE@bin_PROGRAMS = rgb$(EXEEXT) showrgb$(EXEEXT)
-@RGB_TXT_TRUE@bin_PROGRAMS = showrgb$(EXEEXT)
+bin_PROGRAMS = showrgb$(EXEEXT) $(am__EXEEXT_1)
+@RGB_DB_TRUE@am__append_1 = rgb
+@RGB_DB_TRUE@am__append_2 = rgb.man
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
@@ -81,15 +82,16 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
+@RGB_DB_TRUE@am__EXEEXT_1 = rgb$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" \
 	"$(DESTDIR)$(rgbdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am__rgb_SOURCES_DIST = rgb.c
-@RGB_TXT_FALSE@am_rgb_OBJECTS = rgb-rgb.$(OBJEXT)
+@RGB_DB_TRUE@am_rgb_OBJECTS = rgb.$(OBJEXT)
 rgb_OBJECTS = $(am_rgb_OBJECTS)
 rgb_LDADD = $(LDADD)
-am_showrgb_OBJECTS = showrgb-showrgb.$(OBJEXT)
+am_showrgb_OBJECTS = showrgb.$(OBJEXT)
 showrgb_OBJECTS = $(am_showrgb_OBJECTS)
 showrgb_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
@@ -138,6 +140,7 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
@@ -147,6 +150,7 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
@@ -176,14 +180,17 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RGB_CFLAGS = @RGB_CFLAGS@
+RGB_DB_FALSE = @RGB_DB_FALSE@
 RGB_DB_FILES = @RGB_DB_FILES@
+RGB_DB_TRUE = @RGB_DB_TRUE@
+RGB_DB_TYPE = @RGB_DB_TYPE@
 RGB_LIBS = @RGB_LIBS@
-RGB_TXT_FALSE = @RGB_TXT_FALSE@
-RGB_TXT_TRUE = @RGB_TXT_TRUE@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+XORG_CFLAGS = @XORG_CFLAGS@
+XORG_LIBS = @XORG_LIBS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_STRIP = @ac_ct_STRIP@
 ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
@@ -224,27 +231,28 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-@RGB_TXT_FALSE@rgb_CFLAGS = $(RGB_CFLAGS) $(RGB_DB_DEFINES)
-@RGB_TXT_FALSE@rgb_SOURCES = rgb.c 
+showrgb_SOURCES = showrgb.c
+appman_PRE = showrgb.man $(am__append_2)
+@RGB_DB_TRUE@rgb_SOURCES = rgb.c 
 rgbdir = $(db_dir)
 rgb_DATA = $(db_file).txt $(RGB_DB_FILES)
 RGB_DB_DEFINES = -DRGB_DB=\"$(db_dir)/$(db_file)\"
-showrgb_CFLAGS = $(RGB_CFLAGS) $(RGB_DB_DEFINES)
-showrgb_SOURCES = showrgb.c
-appman_PRE = \
-        showrgb.man
-
+AM_CFLAGS = $(RGB_CFLAGS) $(RGB_DB_DEFINES)
 EXTRA_DIST = rgb.txt others/README others/old-rgb.txt \
-	others/raveling.txt others/thomas.txt $(appman_PRE)
+	others/raveling.txt others/thomas.txt $(appman_PRE) ChangeLog
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-CLEANFILES = $(appman_DATA)
+CLEANFILES = $(appman_DATA) $(RGB_DB_FILES)
 SED = sed
 
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
 XORGMANNAME = X Version 11
 MAN_SUBSTS = \
+	-e 's|__RGB_DB__|$(db_dir)/$(db_file)|' \
+	-e 's|__RGB_DB_DIR__|$(db_dir)|' \
+	-e 's|__RGB_DB_TYPE__|$(RGB_DB_TYPE)|' \
+	-e 's|__RGB_DB_FILES__|$(RGB_DB_FILES)|' \
 	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xservername__|Xorg|g' \
@@ -258,6 +266,7 @@ MAN_SUBSTS = \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
+MAINTAINERCLEANFILES = ChangeLog
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -349,8 +358,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rgb-rgb.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/showrgb-showrgb.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rgb.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/showrgb.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -365,34 +374,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-rgb-rgb.o: rgb.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rgb_CFLAGS) $(CFLAGS) -MT rgb-rgb.o -MD -MP -MF "$(DEPDIR)/rgb-rgb.Tpo" -c -o rgb-rgb.o `test -f 'rgb.c' || echo '$(srcdir)/'`rgb.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/rgb-rgb.Tpo" "$(DEPDIR)/rgb-rgb.Po"; else rm -f "$(DEPDIR)/rgb-rgb.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rgb.c' object='rgb-rgb.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rgb_CFLAGS) $(CFLAGS) -c -o rgb-rgb.o `test -f 'rgb.c' || echo '$(srcdir)/'`rgb.c
-
-rgb-rgb.obj: rgb.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rgb_CFLAGS) $(CFLAGS) -MT rgb-rgb.obj -MD -MP -MF "$(DEPDIR)/rgb-rgb.Tpo" -c -o rgb-rgb.obj `if test -f 'rgb.c'; then $(CYGPATH_W) 'rgb.c'; else $(CYGPATH_W) '$(srcdir)/rgb.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/rgb-rgb.Tpo" "$(DEPDIR)/rgb-rgb.Po"; else rm -f "$(DEPDIR)/rgb-rgb.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rgb.c' object='rgb-rgb.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rgb_CFLAGS) $(CFLAGS) -c -o rgb-rgb.obj `if test -f 'rgb.c'; then $(CYGPATH_W) 'rgb.c'; else $(CYGPATH_W) '$(srcdir)/rgb.c'; fi`
-
-showrgb-showrgb.o: showrgb.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(showrgb_CFLAGS) $(CFLAGS) -MT showrgb-showrgb.o -MD -MP -MF "$(DEPDIR)/showrgb-showrgb.Tpo" -c -o showrgb-showrgb.o `test -f 'showrgb.c' || echo '$(srcdir)/'`showrgb.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/showrgb-showrgb.Tpo" "$(DEPDIR)/showrgb-showrgb.Po"; else rm -f "$(DEPDIR)/showrgb-showrgb.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='showrgb.c' object='showrgb-showrgb.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(showrgb_CFLAGS) $(CFLAGS) -c -o showrgb-showrgb.o `test -f 'showrgb.c' || echo '$(srcdir)/'`showrgb.c
-
-showrgb-showrgb.obj: showrgb.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(showrgb_CFLAGS) $(CFLAGS) -MT showrgb-showrgb.obj -MD -MP -MF "$(DEPDIR)/showrgb-showrgb.Tpo" -c -o showrgb-showrgb.obj `if test -f 'showrgb.c'; then $(CYGPATH_W) 'showrgb.c'; else $(CYGPATH_W) '$(srcdir)/showrgb.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/showrgb-showrgb.Tpo" "$(DEPDIR)/showrgb-showrgb.Po"; else rm -f "$(DEPDIR)/showrgb-showrgb.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='showrgb.c' object='showrgb-showrgb.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(showrgb_CFLAGS) $(CFLAGS) -c -o showrgb-showrgb.obj `if test -f 'showrgb.c'; then $(CYGPATH_W) 'showrgb.c'; else $(CYGPATH_W) '$(srcdir)/showrgb.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
@@ -507,6 +488,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -636,6 +620,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -691,8 +676,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-data \
@@ -705,8 +690,19 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 	uninstall-info-am uninstall-rgbDATA
 
 
+@RGB_DB_TRUE@$(RGB_DB_FILES): rgb rgb.txt
+@RGB_DB_TRUE@	-rm -f $(RGB_DB_FILES)
+@RGB_DB_TRUE@	./rgb rgb < $(srcdir)/rgb.txt
+
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

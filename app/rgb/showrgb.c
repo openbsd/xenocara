@@ -1,6 +1,4 @@
 /*
- * $Xorg: showrgb.c,v 1.4 2001/02/09 02:05:35 xorgcvs Exp $
- * $XdotOrg: app/rgb/showrgb.c,v 1.5 2005/11/08 06:33:31 jkj Exp $
  *
 Copyright 1989, 1998  The Open Group
 
@@ -27,21 +25,13 @@ in this Software without prior written authorization from The Open Group.
  * Author:  Jim Fulton, MIT X Consortium
  */
 
-/* $XFree86: xc/programs/rgb/showrgb.c,v 3.8 2001/12/14 20:01:04 dawes Exp $ */
-
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
 
 #ifndef USE_RGB_TXT
-#ifdef NDBM
-#include <ndbm.h>
-#else
-#if defined(SVR4)
-#include <rpcsvc/dbm.h>
-#else
-#include <dbm.h>
-#endif
+#include DBM_HEADER
+#ifndef NDBM
 #define dbm_open(name,flags,mode) (!dbminit(name))
 #define dbm_firstkey(db) (firstkey())
 #define dbm_fetch(db,key) (fetch(key))
@@ -55,11 +45,10 @@ in this Software without prior written authorization from The Open Group.
 #include <stdlib.h>
 #ifndef USE_RGB_TXT
 #include "rgb.h"			/* off in server/include/ */
-#include "site.h"
 #endif
 #include <X11/Xfuncs.h>
 
-char *ProgramName;
+static char *ProgramName;
 static void dumprgb(char *filename);
 
 int
@@ -77,8 +66,7 @@ main (int argc, char *argv[])
 
 #ifndef USE_RGB_TXT
 static void
-dumprgb (filename)
-    char *filename;
+dumprgb (char *filename)
 {
 #ifdef NDBM
     DBM *rgb_dbm;

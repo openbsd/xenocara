@@ -1,5 +1,3 @@
-/* $Xorg: rgb.c,v 1.4 2001/02/09 02:05:35 xorgcvs Exp $ */
-/* $XdotOrg: app/rgb/rgb.c,v 1.4 2005/11/08 06:33:31 jkj Exp $ */
 /*
 
 Copyright 1985, 1998  The Open Group
@@ -27,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/rgb/rgb.c,v 3.8tsi Exp $ */
 
 
 /* reads from standard input lines of the form:
@@ -39,14 +36,8 @@ from The Open Group.
 # include "config.h"
 #endif
 
-#ifdef NDBM
-#include <ndbm.h>
-#else
-#if defined(SVR4)
-#include <rpcsvc/dbm.h>
-#else
-#include <dbm.h>
-#endif
+#include DBM_HEADER
+#ifndef NDBM
 #define dbm_open(name,flags,mode) (!dbminit(name))
 #define dbm_store(db,key,content,flags) (store(key,content))
 #define dbm_close(db) dbmclose()
@@ -57,23 +48,14 @@ from The Open Group.
 #include <stdlib.h>
 #include <X11/Xos.h>
 #include "rgb.h"
-#include "site.h"
 #include <ctype.h>
 
 #include <errno.h>
 
-char *ProgramName;
-
-char *SysError ()
-{
-    register char *s = strerror(errno);
-    return s ? s : "?";
-}
+static char *ProgramName;
 
 int
-main(argc, argv)
-    int argc;
-    char **argv;
+main(int argc, char **argv)
 {
     char *dbname;
     char line[512];
