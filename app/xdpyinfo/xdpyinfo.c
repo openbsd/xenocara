@@ -1,7 +1,7 @@
 /*
  * $Xorg: xdpyinfo.c,v 1.5 2001/02/09 02:05:41 xorgcvs Exp $
  * 
- * xdpyinfo - print information about X display connecton
+ * xdpyinfo - print information about X display connection
  *
  * 
 Copyright 1988, 1998  The Open Group
@@ -134,6 +134,14 @@ in this Software without prior written authorization from The Open Group.
 
 char *ProgramName;
 Bool queryExtensions = False;
+
+static int
+silent_errors(Display *dpy, XErrorEvent *ev)
+{
+    return 0;
+}
+
+static int (*old_handler)(Display *, XErrorEvent *) = NULL;
 
 static int print_event_mask(char *buf, int lastcol, int indent, long mask);
 
@@ -424,6 +432,7 @@ Bool IsPrintScreen(Screen *s)
         pscreens = XpQueryScreens(dpy, &pscrcount);
         for( i = 0 ; (i < pscrcount) && pscreens ; i++ ) {
             if (s == pscreens[i]) {
+                XFree(pscreens);
                 return True;
             }
         }
@@ -438,7 +447,7 @@ print_screen_info(Display *dpy, int scr)
 {
     Screen *s = ScreenOfDisplay (dpy, scr);  /* opaque structure */
     XVisualInfo viproto;		/* fill in for getting info */
-    XVisualInfo *vip;			/* retured info */
+    XVisualInfo *vip;			/* returned info */
     int nvi;				/* number of elements returned */
     int i;				/* temp variable: iterator */
     char eventbuf[80];			/* want 79 chars per line + nul */
@@ -446,7 +455,7 @@ print_screen_info(Display *dpy, int scr)
     double xres, yres;
     int ndepths = 0, *depths = NULL;
     unsigned int width, height;
-    Bool isPrintScreen = False; /* Initalise this if |INCLUDE_XPRINT_SUPPORT| is not set */
+    Bool isPrintScreen = False; /* Initialise this if |INCLUDE_XPRINT_SUPPORT| is not set */
 
     /*
      * there are 2.54 centimeters to an inch; so there are 25.4 millimeters.
@@ -729,11 +738,15 @@ print_dga_info(Display *dpy, char *extname)
 	return 1;
     }
 
+    old_handler = XSetErrorHandler(silent_errors);
+
     if (!XF86DGAGetVideoLL(dpy, DefaultScreen(dpy), &offset,
 			    &width, &bank, &ram))
 	return 0;
     printf("  Base address = 0x%X, Width = %d, Bank size = %d,"
 	   " RAM size = %dk\n", offset, width, bank, ram);
+
+    XSetErrorHandler(old_handler);
 
     return 1;
 }
@@ -765,7 +778,9 @@ print_XF86VidMode_info(Display *dpy, char *extname)
     if (!XF86VidModeGetMonitor(dpy, DefaultScreen(dpy), &monitor))
 	return 0;
     printf("  Monitor Information:\n");
-    printf("    Vendor: %s, Model: %s\n", monitor.vendor, monitor.model);
+    printf("    Vendor: %s, Model: %s\n", 
+	monitor.vendor == NULL ? "" : monitor.vendor,
+	monitor.model == NULL ? "" : monitor.model);
     printf("    Num hsync: %d, Num vsync: %d\n", monitor.nhsync, monitor.nvsync);
     for (i = 0; i < monitor.nhsync; i++) {
         printf("    hsync range %d: %6.2f - %6.2f\n", i, monitor.hsync[i].lo,
@@ -775,6 +790,10 @@ print_XF86VidMode_info(Display *dpy, char *extname)
         printf("    vsync range %d: %6.2f - %6.2f\n", i, monitor.vsync[i].lo,
                monitor.vsync[i].hi);
     }
+    XFree(monitor.vendor);
+    XFree(monitor.model);
+    XFree(monitor.hsync);
+    XFree(monitor.vsync);
 
     if ((majorrev > 0) || (majorrev == 0 && minorrev > 5)) {
       if (!XF86VidModeGetAllModeLines(dpy, DefaultScreen(dpy), &modecount,
@@ -800,6 +819,7 @@ print_XF86VidMode_info(Display *dpy, char *extname)
         if (modelines[i]->flags & V_DBLSCAN)   printf(" doublescan");
         printf("\n");
       }
+      XFree(modelines);
 
       if (!XF86VidModeGetModeLine(dpy, DefaultScreen(dpy),
 				  &dotclock, &modeline))
@@ -850,6 +870,8 @@ print_XF86Misc_info(Display *dpy, char *extname)
 	return 0;
     print_standard_extension_info(dpy, extname, majorrev, minorrev);
 
+    old_handler = XSetErrorHandler(silent_errors);
+
     if ((majorrev > 0) || (majorrev == 0 && minorrev > 0)) {
       if (!XF86MiscGetKbdSettings(dpy, &kbdinfo))
 	return 0;
@@ -861,6 +883,7 @@ print_XF86Misc_info(Display *dpy, char *extname)
 	return 0;
       printf("  Mouse Settings-       Device: %s, Type: ",
 	strlen(mouseinfo.device) == 0 ? "None": mouseinfo.device);
+      XFree(mouseinfo.device);
       if (mouseinfo.type == MTYPE_XQUEUE)
 	printf("Xqueue\n");
       else if (mouseinfo.type == MTYPE_OSMOUSE)
@@ -879,6 +902,8 @@ print_XF86Misc_info(Display *dpy, char *extname)
 		+(mouseinfo.flags & MF_CLEAR_RTS? 1: 0)] );
       printf("                        Buttons: %d\n", mouseinfo.buttons);
     }
+
+    XSetErrorHandler(old_handler);
 
     return 1;
 }
@@ -986,6 +1011,7 @@ print_xinput_info(Display *dpy, char *extname)
 
   print_standard_extension_info(dpy, extname, ext->major_version,
 				ext->minor_version);
+  XFree(ext);
 
   extensions = XListExtensions(dpy, &num_extensions);
   for (loop = 0; loop < num_extensions &&
@@ -1006,6 +1032,16 @@ print_xinput_info(Display *dpy, char *extname)
 	  case IsXExtensionDevice:
 	      printf("XExtensionDevice]\n");
 	      break;
+#ifdef IsXExtensionKeyboard
+	  case IsXExtensionKeyboard:
+	      printf("XExtensionKeyboard]\n");
+	      break;
+#endif
+#ifdef IsXExtensionPointer
+	  case IsXExtensionPointer:
+	      printf("XExtensionPointer]\n");
+	      break;
+#endif
 	  default:
 	      printf("invalid value]\n");
 	      break;
@@ -1049,7 +1085,7 @@ print_xrender_info(Display *dpy, char *extname)
   XFreeExtensionList(extensions);
   if (loop != num_extensions) {
     printf ("  Render formats :\n");
-    for (count = 0; (pictform = XRenderFindFormat (dpy, 0, 0, count)); count++)
+    for (count = 0; (pictform = XRenderFindFormat (dpy, 0, NULL, count)); count++)
     {
       printf  ("  pict format:\n");
       printf  ("\tformat id:    0x%lx\n", pictform->id);
@@ -1120,6 +1156,7 @@ print_xrender_info(Display *dpy, char *extname)
 	for (count = 0; (pictform = XRenderFindFormat (dpy, PictFormatDepth, &templ, count)); count++)
 	  printf("       pict format id: 0x%lx\n", pictform->id);
       }
+      if (depths) XFree (depths);
     }
     return 1;
   }
@@ -1425,12 +1462,15 @@ print_known_extensions(FILE *f)
     int i, col;
     for (i = 0, col = 6; i < num_known_extensions; i++)
     {
-	if ((col += strlen(known_extensions[i].extname)+1) > 79)
+	int extlen = strlen(known_extensions[i].extname) + 1;
+	
+	if ((col + extlen) > 79)
 	{
 		col = 6;
 		fprintf(f, "\n     ");
 	}
 	fprintf(f, "%s ", known_extensions[i].extname);
+	col += extlen;
     }
 }
 

@@ -58,7 +58,13 @@ and the server is displayed.
 .B DISPLAY
 To get the default host, display number, and screen.
 .SH "SEE ALSO"
-X(__miscmansuffix__), xwininfo(1), xprop(1), xrdb(1)
+.IR X (__miscmansuffix__), 
+.IR xprop (__appmansuffix__),
+.IR xrdb (__appmansuffix__),
+.IR xwininfo (__appmansuffix__),
+.IR xdriinfo (__appmansuffix__),
+.IR xvinfo (__appmansuffix__), 
+.IR glxinfo (__appmansuffix__)
 .SH AUTHOR
 Jim Fulton, MIT X Consortium
 .br
