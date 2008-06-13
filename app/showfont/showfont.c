@@ -1,7 +1,7 @@
 /* $XConsortium: showfont.c,v 1.13 94/04/17 20:44:07 gildea Exp $ */
 /*
  * Copyright 1990 Network Computing Devices;
- * Portions Copyright 1987 by Digital Equipment Corporation and the
+ * Portions Copyright 1987 by Digital Equipment Corporation
  *
  * Permission to use, copy, modify, distribute, and sell this software and
  * its documentation for any purpose is hereby granted without fee, provided
@@ -167,8 +167,7 @@ show_glyphs(
     FSXCharInfo *extents;
     int         err,
                 ch,
-                start,
-                end;
+		start;
     int         offset = 0;
     unsigned char *glyphs;
     FSOffset   *offsets;
@@ -178,6 +177,9 @@ show_glyphs(
     FSBitmapFormat format;
     FSChar2b    chars[2];
     int         num_chars;
+    int		row,
+		col,
+		temp_ch;
 
     if (show_all) {
 	num_chars = 0;
@@ -198,70 +200,75 @@ show_glyphs(
 	    exit(1);
 	}
     }
-    start = first.low + (first.high << 8);
-    end = last.low + (last.high << 8);
 
     scanpad = scan_pad >> 3;
 
-    for (ch = 0; ch <= (end - start); ch++) {
-	int         bottom,
-	            bpr,
-	            charwidth;
+    for (row = (int)first.high; row <= (int)last.high; row++) {
+	start = first.low + (row << 8);
+	for (col = (int)first.low; col <= (int)last.low; col++) {
+	    int		bottom,
+			bpr,
+	        	charwidth;
 
-	printf("char #%d", ch + start);
-	if ((ch + start >= 0) && (ch + start <= 127) && isprint(ch + start))
-	    printf(" '%c'\n", (char) (ch + start));
-	else
-	    printf(" 0x%04x\n", ch + start);
-	show_char_info(&extents[ch]);
-	if (extents_only)
-	    continue;
-	if (offset != offsets[ch].position)
-	    fprintf(stderr, "offset mismatch: expected %d, got %d\n",
-		    offset, offsets[ch].position);
-	switch (bitmap_format) {
-	case BitmapFormatImageRectMin:
-	    bottom = extents[ch].descent + extents[ch].ascent;
-	    charwidth = extents[ch].right - extents[ch].left;
-	    break;
-	case BitmapFormatImageRectMaxWidth:
-	    bottom = extents[ch].descent + extents[ch].ascent;
-	    charwidth = hdr->max_bounds.right - hdr->min_bounds.left;
-	    break;
-	case BitmapFormatImageRectMax:
-	    bottom = hdr->max_bounds.ascent +
-		hdr->max_bounds.descent;
-	    charwidth = hdr->max_bounds.right - hdr->min_bounds.left;
-	    break;
-	default:
-	    bottom = 0;
-	    charwidth = 0;
-	}
-
-	if (extents[ch].left == 0 &&
-	    extents[ch].right == 0 &&
-	    extents[ch].width == 0 &&
-	    extents[ch].ascent == 0 &&
-	    extents[ch].descent == 0)
-	{
-	    printf ("Nonexistent character\n");
-	    continue;
-	}
-	bpr = GLWIDTHBYTESPADDED(charwidth, scanpad);
-	if (offsets[ch].length != bottom * bpr) {
-	    fprintf (stderr, "length mismatch: expected %d (%dx%d), got %d\n",
-			 bottom * bpr, bpr, bottom, offsets[ch].length);
-	}
-	offset = offsets[ch].position;
-	for (r = 0; r < bottom; r++) {
-	    unsigned char *row = glyphs + offset;
-
-	    for (b = 0; b < charwidth; b++) {
-		putchar((row[b >> 3] &
-			 (1 << (7 - (b & 7)))) ? '#' : '-');
+	    ch = ((row - (int)first.high)
+		  * ((int)last.low - (int)first.low + 1))
+		+ (col - (int)first.low);
+	    temp_ch = start + (col - (int)first.low);
+	    printf("char #%d", temp_ch);
+	    if ((temp_ch >= 0) && (temp_ch <= 127) && isprint(temp_ch))
+		printf(" '%c'\n", (char) (temp_ch));
+	    else
+		printf(" 0x%04x\n", temp_ch);
+	    show_char_info(&extents[ch]);
+	    if (extents_only)
+		continue;
+	    if (offset != offsets[ch].position)
+		fprintf(stderr, "offset mismatch: expected %d, got %d\n",
+			offset, offsets[ch].position);
+	    switch (bitmap_format) {
+	    case BitmapFormatImageRectMin:
+		bottom = extents[ch].descent + extents[ch].ascent;
+		charwidth = extents[ch].right - extents[ch].left;
+		break;
+	    case BitmapFormatImageRectMaxWidth:
+		bottom = extents[ch].descent + extents[ch].ascent;
+		charwidth = hdr->max_bounds.right - hdr->min_bounds.left;
+		break;
+	    case BitmapFormatImageRectMax:
+		bottom = hdr->max_bounds.ascent +
+		    hdr->max_bounds.descent;
+		charwidth = hdr->max_bounds.right - hdr->min_bounds.left;
+		break;
+	    default:
+		bottom = 0;
+		charwidth = 0;
 	    }
-	    putchar('\n');
-	    offset += bpr;
+
+	    if (extents[ch].left == 0 &&
+		extents[ch].right == 0 &&
+		extents[ch].width == 0 &&
+		extents[ch].ascent == 0 &&
+		extents[ch].descent == 0) {
+		printf ("Nonexistent character\n");
+		continue;
+	    }
+	    bpr = GLWIDTHBYTESPADDED(charwidth, scanpad);
+	    if (offsets[ch].length != bottom * bpr) {
+		fprintf (stderr,
+			 "length mismatch: expected %d (%dx%d), got %d\n",
+			 bottom * bpr, bpr, bottom, offsets[ch].length);
+	    }
+	    offset = offsets[ch].position;
+	    for (r = 0; r < bottom; r++) {
+		unsigned char *row = glyphs + offset;
+
+		for (b = 0; b < charwidth; b++) {
+		    putchar((row[b >> 3] &
+			     (1 << (7 - (b & 7)))) ? '#' : '-');
+		}
+		putchar('\n');
+		offset += bpr;
+	    }
 	}
     }
     FSFree((char *) extents);

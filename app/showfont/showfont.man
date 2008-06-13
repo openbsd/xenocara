@@ -1,6 +1,6 @@
 .\" $XConsortium: showfont.man,v 1.3 94/04/11 14:29:57 gildea Exp $
 .\" $XFree86: xc/programs/showfont/showfont.man,v 1.3 2000/02/17 14:00:33 dawes Exp $
-.TH SHOWFONT 1 __xorgversion__
+.TH SHOWFONT __appmansuffix__ __xorgversion__
 .SH NAME
 showfont \- font dumper for X font server
 .SH SYNOPSIS
@@ -24,8 +24,14 @@ being expanded by the shell.
 If no pattern is given, "*" is assumed.
 .SH "OPTIONS"
 .TP 8
-.B \-server \fIhost\fP:\fIport\fP
+.B \-server \fIservername\fP
 The X font server to contact.
+.I servername 
+must be specified in one of the formats defined in the
+.I Font Server Names
+section of X(__miscmansuffix__).   If not specified, the server name in the
+.B FONTSERVER
+environment variable is used.
 .TP 8
 .BI \-fn " name"
 The font to display.
@@ -70,14 +76,18 @@ where 0 is ImageRectMin, 1 is ImageRectMaxWidth and 2 is ImageRectMax).
 .B \-noprops
 Do not show the font properties.
 .SH "SEE ALSO"
-xfs(1), fslsfonts(1), xlsfonts(1)
+xfs(__appmansuffix__), fslsfonts(__appmansuffix__), 
+fstobdf(__appmansuffix__), xlsfonts(__appmansuffix__), X(__miscmansuffix__).
 .SH ENVIRONMENT
 .TP 8
 .B FONTSERVER
-the default X font server to contact.
+the default X font server to contact.  The server name must
+be specified in one of the formats defined in the
+.I Font Server Names
+section of X(__miscmansuffix__).
 .SH COPYRIGHT
 Copyright 1991, Network Computing Devices, Inc.
 .br
-See \fIX\fP(1) for a full statement of rights and permissions.
+See \fIX\fP(__miscmansuffix__) for a full statement of rights and permissions.
 .SH AUTHOR
 Dave Lemke, Network Computing Devices, Inc.

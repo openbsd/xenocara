@@ -77,7 +77,7 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_showfont_OBJECTS = showfont-showfont.$(OBJEXT)
+am_showfont_OBJECTS = showfont.$(OBJEXT)
 showfont_OBJECTS = $(am_showfont_OBJECTS)
 am__DEPENDENCIES_1 =
 showfont_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -207,7 +207,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-showfont_CFLAGS = $(SHOWFONT_CFLAGS)
+AM_CFLAGS = $(SHOWFONT_CFLAGS)
 showfont_LDADD = $(SHOWFONT_LIBS)
 showfont_SOURCES = \
         showfont.c
@@ -217,7 +217,7 @@ appman_PRE = \
 
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) ChangeLog
 CLEANFILES = $(appman_DATA)
 SED = sed
 
@@ -238,6 +238,7 @@ MAN_SUBSTS = \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
+MAINTAINERCLEANFILES = ChangeLog
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -326,7 +327,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/showfont-showfont.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/showfont.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -341,20 +342,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-showfont-showfont.o: showfont.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(showfont_CFLAGS) $(CFLAGS) -MT showfont-showfont.o -MD -MP -MF "$(DEPDIR)/showfont-showfont.Tpo" -c -o showfont-showfont.o `test -f 'showfont.c' || echo '$(srcdir)/'`showfont.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/showfont-showfont.Tpo" "$(DEPDIR)/showfont-showfont.Po"; else rm -f "$(DEPDIR)/showfont-showfont.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='showfont.c' object='showfont-showfont.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(showfont_CFLAGS) $(CFLAGS) -c -o showfont-showfont.o `test -f 'showfont.c' || echo '$(srcdir)/'`showfont.c
-
-showfont-showfont.obj: showfont.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(showfont_CFLAGS) $(CFLAGS) -MT showfont-showfont.obj -MD -MP -MF "$(DEPDIR)/showfont-showfont.Tpo" -c -o showfont-showfont.obj `if test -f 'showfont.c'; then $(CYGPATH_W) 'showfont.c'; else $(CYGPATH_W) '$(srcdir)/showfont.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/showfont-showfont.Tpo" "$(DEPDIR)/showfont-showfont.Po"; else rm -f "$(DEPDIR)/showfont-showfont.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='showfont.c' object='showfont-showfont.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(showfont_CFLAGS) $(CFLAGS) -c -o showfont-showfont.obj `if test -f 'showfont.c'; then $(CYGPATH_W) 'showfont.c'; else $(CYGPATH_W) '$(srcdir)/showfont.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
@@ -451,6 +438,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -580,6 +570,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -635,8 +626,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-data \
@@ -651,6 +642,13 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
