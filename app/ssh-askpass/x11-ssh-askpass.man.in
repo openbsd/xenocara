@@ -228,7 +228,9 @@ The title of the application as specified to the window manager.
 .It Cm label ( No class Cm Label )
 The label displayed above the led indicators.
 .It Cm font ( No class Cm Font )
-The font to be used to display the label.
+The font to be used to display the first line of label.
+.It Cm fixedFont ( No class Cm FixedFont )
+The font to be used to display the second and following lines of the label.
 .El
 .Pp
 The following Resources are recognized by the dialog, button, and
