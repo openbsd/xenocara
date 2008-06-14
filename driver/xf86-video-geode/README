@@ -1,0 +1,51 @@
+AMD Geode GX and LX Xorg graphics Driver
+May 9, 2007
+========================================
+
+= Introduction =
+
+This is the X graphics driver for the AMD Geode GX and LX processors.
+The GX driver features XAA and EXA support for graphics acceleration,
+and the LX driver supports EXA (including compositing).  Both drivers
+suppport dynamic rotation with XRandR, and Xv overlay support.
+
+= Configuration options =
+
+You can specify the Geode driver in the normal fashion:
+
+Section "Device"
+	Identifier "AMD Geode"
+	Driver "geode"
+	Option "blah" "blah"
+	...
+EndSection
+
+The following options may be added to the section:
+
+== GX ==
+
+SWCursor: Enable software cursors (essentially disabling HW cursor support)
+NoCompression: Disable video bandwidth compression
+NoAccel: Disable hardware assisted acceleration
+AccelMethod: "EXA" (default) or "XAA"
+Rotate: Select a orientation to start with - LEFT, INVERT, CCW
+NoPanel: Disable panel support
+OSMImageBuffers: Set the number of image buffers (XAA only)
+OSMColorExpBuffers: Set the number of color expansion buffers (XAA only)
+FBSize: Specify the size of the video space (in bytes)
+PanelGeometry: Specify the geometry of the attached panel ("<width>x<height>")
+
+== LX ==
+
+SWCursor: Enable software cursors (essentially disabling HW cursor support)
+NoCompression: Disable video bandwidth compression
+NoAccel: Disable hardware assisted acceleration
+Rotate: Select a orientation to start with - LEFT, INVERT, CCW
+NoPanel: Disable panel support
+ExaScratch: Specify the amount of extra EXA scratch buffer (in bytes)
+FBSize: Specify the size of the video space (in bytes)
+PanelGeometry: Specify the geometry of the attached panel ("<width>x<height>")
+
+
+
+
