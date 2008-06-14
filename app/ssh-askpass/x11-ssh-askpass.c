@@ -230,13 +230,18 @@ void calcTextObjectExtents(TextObject *t, XFontStruct *font) {
 void calcLabelTextExtents(LabelInfo *label)
 {
    TextObject *t;
+   int first = 1;
    
    if ((!label) || (!(label->fullText)) || (!(label->font))) {
       return;
    }
    t = label->multiText;
    while (NULL != t) {
-      calcTextObjectExtents(t, label->font);
+      if (first) {
+         calcTextObjectExtents(t, label->font);
+	 first = 0;
+      } else
+         calcTextObjectExtents(t, label->fixedFont);
       label->w.height += (t->ascent + t->descent);
       if (label->w.width < t->overall.width) {
 	 label->w.width = t->overall.width;
@@ -440,6 +445,8 @@ void createDialog(AppInfo *app)
    createLabel(app, labelText, &(d->label));
    freeIf(labelText);
    d->label.font = getFontResource(app, "dialog.font", "Dialog.Font");
+   d->label.fixedFont = getFontResource(app, "dialog.fixedFont", 
+       "Dialog.FixedFont");
    calcLabelTextExtents(&(d->label));
    d->label.w.foreground = d->w3.w.foreground;
    d->label.w.background = d->w3.w.background;
@@ -712,6 +719,7 @@ void destroyLabel(AppInfo *app, LabelInfo *label)
    }
    freeIf(label->fullText);
    freeFontIf(app, label->font);
+   freeFontIf(app, label->fixedFont);
 }
 
 void destroyDialog(AppInfo *app)
@@ -872,6 +880,7 @@ void paintLabel(AppInfo *app, Drawable draw, LabelInfo label)
    TextObject *t;
    Position x;
    Position y;
+   int first = 1;
 
    if (!(label.fullText)) {
       return;
@@ -884,6 +893,11 @@ void paintLabel(AppInfo *app, Drawable draw, LabelInfo label)
    x = label.w.x;
    y = label.w.y + t->ascent;
    while (NULL != t) {
+      if (!first) 
+	 XSetFont(app->dpy, app->textGC, label.fixedFont->fid);
+      else
+	 first = 0;
+       
       if (t->text) {
 	 XDrawString(app->dpy, draw, app->textGC, x, y, t->text,
 		     t->textLength);

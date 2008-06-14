@@ -27,6 +27,7 @@
 ! +-----------------------------+
 
 *Dialog.font:			-adobe-helvetica-bold-r-normal-*-*-120-*-*-*-*-iso8859-1
+*Dialog.fixedFont:		-adobe-courier-bold-r-normal-*-*-120-*-*-*-*-iso8859-1
 *?.foreground:			rgb:00/00/00
 *?.background:			rgb:cc/cc/cc
 *topShadowColor:		rgb:ff/ff/ff

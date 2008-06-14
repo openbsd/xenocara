@@ -87,6 +87,7 @@ typedef struct
 {
    char *fullText;
    XFontStruct *font;
+   XFontStruct *fixedFont;
    TextObject *multiText;
    WidgetInfo w;
 } LabelInfo;
