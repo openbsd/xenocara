@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.19 2008/06/14 21:48:54 okan Exp $
+ * $Id: xevents.c,v 1.20 2008/06/14 22:04:11 okan Exp $
  */
 
 /*
@@ -260,7 +260,6 @@ xev_handle_buttonrelease(struct xevent *xev, XEvent *ee)
 		group_sticky_toggle_exit(cc);
 
 	xev_register(xev);
-
 }
 
 void
@@ -354,6 +353,16 @@ out:
 	xev_register(xev);
 }
 
+void
+xev_handle_shape(struct xevent *xev, XEvent *ee)
+{
+	XShapeEvent *sev = (XShapeEvent *) ee;
+	struct client_ctx *cc;
+
+	if ((cc = client_find(sev->window)) != NULL)
+		client_do_shape(cc);
+}
+
 /*
  * X Event handling
  */
@@ -411,8 +420,10 @@ xev_handle_expose(struct xevent *xev, XEvent *ee)
 	XExposeEvent *e = &ee->xexpose;
 	struct client_ctx *cc;
 
-	if ((cc = client_find(e->window)) != NULL && e->count == 0)
+	if ((cc = client_find(e->window)) != NULL && e->count == 0) {
 		client_draw_border(cc);
+		client_do_shape(cc);
+	}
 
 	xev_register(xev);
 }
@@ -478,7 +489,9 @@ xev_loop(void)
 		case ClientMessage:
 			ASSIGN1(xclient);
 			break;
-		default:	/* XXX - still need shape event support. */
+		default:
+			if (e.type == Shape_ev)
+				xev_handle_shape(xev, &e);
 			break;
 		}
 
