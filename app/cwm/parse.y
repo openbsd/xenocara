@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.10 2008/06/14 21:48:54 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.11 2008/06/14 21:51:00 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -441,7 +441,8 @@ pushfile(const char *name)
 	nfile->name = xstrdup(name);
 
 	if ((nfile->stream = fopen(nfile->name, "r")) == NULL) {
-		warn("%s", nfile->name);
+		if (errno != ENOENT)
+			warn("%s", nfile->name);
 		free(nfile->name);
 		free(nfile);
 		return (NULL);
