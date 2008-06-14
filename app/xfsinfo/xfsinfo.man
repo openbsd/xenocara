@@ -26,7 +26,7 @@
 .\"
 .\" $XFree86: xc/programs/xfsinfo/xfsinfo.man,v 1.4 2001/04/18 16:13:23 dawes Exp $
 .\"
-.TH XFSINFO 1 __xorgversion__
+.TH XFSINFO __appmansuffix__ __xorgversion__
 .SH NAME
 xfsinfo \- X font server information utility
 .SH SYNOPSIS
@@ -43,8 +43,14 @@ and alternate servers that are available.
 .SH "OPTIONS"
 .PP
 .TP
-.B \-server \fIhost\fP:\fIport\fP
+.B \-server \fIservername\fP
 This option specifies the X font server to contact.
+.I servername
+must be specified in one of the formats defined in the
+.I Font Server Names
+section of X(__miscmansuffix__).   If not specified, the server name in the
+.B FONTSERVER
+environment variable is used.
 .SH HISTORY
 .I Xfsinfo
 was originally called
@@ -56,9 +62,10 @@ utility from the Berkeley automounter
 .SH EXAMPLE
 .PP
 The following shows a sample produced by
-.I xfsinfo.
+.IR xfsinfo .
 .PP
 .nf
+example% xfsinfo -server hansen:7100
 name of server:	hansen:7100
 version number:	1
 vendor string:	Font Server Prototype
@@ -76,8 +83,11 @@ number of extensions:	0
 .PP
 .TP 8
 .B FONTSERVER
-To get the default fontserver.
+To get the default fontserver.  The server name must
+be specified in one of the formats defined in the
+.I Font Server Names
+section of X(__miscmansuffix__).
 .SH "SEE ALSO"
-xfs(1), fslsfonts(1)
+xfs(__appmansuffix__), fslsfonts(__appmansuffix__), X(__miscmansuffix__).
 .SH AUTHOR
 Dave Lemke, Network Computing Devices, Inc

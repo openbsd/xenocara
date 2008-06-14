@@ -139,6 +139,7 @@ print_catalogue_info(FSServer *svr)
 	for (i = 0; i < n; i++) {
 	    printf("	%s\n", cats[i]);
 	}
+	FSFreeCatalogues(cats);
     }
 }
 
@@ -155,6 +156,7 @@ print_extension_info(FSServer *svr)
 	for (i = 0; i < n; i++) {
 	    printf("	%s\n", extlist[i]);
 	}
+	FSFreeExtensionList(extlist);
     }
 }
 
