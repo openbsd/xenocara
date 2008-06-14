@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.31 2008/06/13 15:36:15 matthieu Exp $
+# $OpenBSD: MODULES,v 1.32 2008/06/14 23:06:17 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -23,7 +23,7 @@ app/proxymngr		1.0.1	7.0
 app/rgb			1.0.3	7.4
 app/rstart		1.0.2	7.1
 app/scripts		1.0.1	7.0
-app/sessreg		1.0.4	7.4	needs-update
+app/sessreg		1.0.4	7.4
 app/setxkbmap		1.0.4	7.3
 app/showfont		1.0.2	7.4
 app/smproxy		1.0.2	7.1
@@ -40,7 +40,7 @@ app/xcmsdb		1.0.1	7.0
 app/xconsole		1.0.3	7.3
 app/xcursorgen		1.0.2	7.3	ports
 app/xdm			1.1.8	7.4	needs-update
-app/xdpyinfo		1.0.3	7.4	needs-update
+app/xdpyinfo		1.0.3	7.4
 app/xdriinfo		1.0.2	7.3
 app/xedit		1.0.2	7.1
 app/xev			1.0.3	7.4
@@ -49,14 +49,14 @@ app/xf86dga		1.0.2	7.2RC1
 app/xfd			1.0.1	7.0
 app/xfindproxy		1.0.1	7.0
 app/xfontsel		1.0.2	7.2+
-app/xfs			1.0.8	7.4	needs-update
-app/xfsinfo		1.0.2	7.4	needs-update
+app/xfs			1.0.8	7.4
+app/xfsinfo		1.0.2	7.4
 app/xfwp		1.0.1	7.0
 app/xgamma		1.0.2	7.3
 app/xgc			1.0.1	7.0
 app/xhost		1.0.2	7.3
 app/xinit		1.1.0	7.4	needs-update
-app/xkbcomp		1.0.5	7.4	needs-update
+app/xkbcomp		1.0.5	7.4
 app/xkbevd		1.0.2	7.1
 app/xkbprint		1.0.1	7.0
 app/xkbutils		1.0.1	7.0
@@ -71,10 +71,10 @@ app/xman		1.0.3	7.3
 app/xmessage		1.0.2	7.3
 app/xmodmap		1.0.3	7.3
 app/xmore		1.0.1	7.0
-app/xphelloworld	1.0.1	7.0	need-rel
-app/xplsprinters	1.0.1	7.0
+app/xphelloworld	1.0.1	7.0	need-rel deprecated
+app/xplsprinters	1.0.1	7.0	deprecated
 app/xpr			1.0.2	7.2+
-app/xprehashprinterlist 1.0.1	7.0
+app/xprehashprinterlist 1.0.1	7.0	deprecated
 app/xprop		1.0.4	7.4
 app/xrandr		1.2.3	7.4
 app/xrdb		1.0.5	7.4
@@ -132,7 +132,7 @@ driver/xf86-video-chips		1.2.0	7.4	needs-update
 driver/xf86-video-cirrus	1.2.1	7.4	needs-update
 driver/xf86-video-cyrix		1.1.0	7.1
 driver/xf86-video-dummy		0.3.0	7.4	needs-update
-driver/xf86-video-geode		2.9.0	7.4	needs-porting
+driver/xf86-video-geode		2.10.0	7.4
 driver/xf86-video-glint		1.2.0	7.4	needs-update
 driver/xf86-video-i128		1.3.0	7.4	needs-update
 driver/xf86-video-i740		1.2.0	7.4	needs-update
@@ -233,8 +233,8 @@ lib/libXinerama			1.0.3	7.4
 lib/libXmu			1.0.3	7.2RC2
 lib/libXp			1.0.0	7.0
 lib/libXpm			3.5.7	7.3
-lib/libXprintAppUtil		1.0.1	7.0
-lib/libXprintUtil		1.0.1	7.0
+lib/libXprintAppUtil		1.0.1	7.0	deprecated
+lib/libXprintUtil		1.0.1	7.0	deprecated
 lib/libXrandr			1.2.2	7.3
 lib/libXrender			0.9.4	7.3
 lib/libXt			1.0.5	7.2+
@@ -246,8 +246,8 @@ lib/libXxf86misc		1.0.1	7.1
 lib/libXxf86vm			1.0.1	7.1
 lib/libdmx			1.0.2	7.1
 lib/libfontenc			1.0.3	7.2RC1
-lib/liblbxutil			1.0.4	7.2RC4
-lib/liboldX			1.0.1	7.0	still needed?
+lib/liblbxutil			1.0.4	7.2RC4	deprecated
+lib/liboldX			1.0.1	7.0	deprecated
 lib/libpciaccess		0.10.3	7.4	needs-update
 lib/libxcb			1.1	7.3	needs-import
 lib/libxkbfile			1.0.5	7.4
@@ -268,7 +268,7 @@ proto/glproto			1.4.9	7.4	needs-update
 proto/inputproto		1.4.3	7.4
 proto/kbproto			1.0.3	7.2RC1
 proto/pmproto			1.0.2	7.0
-proto/printproto		1.0.4	7.4
+proto/printproto		1.0.4	7.4	deprecated
 proto/randrproto		1.2.1	7.3
 proto/recordproto		1.13.2	7.0
 proto/renderproto		0.9.3	7.3
