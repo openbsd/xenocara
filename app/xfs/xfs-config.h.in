@@ -1,13 +1,19 @@
-/* config.h.in.  Generated from configure.ac by autoheader.  */
+/* xfs-config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define to 1 if `struct sockaddr_in' has a `sin_len' member */
 #undef BSD44SOCKETS
+
+/* comma-separated list of strings for config file paths when not specified */
+#undef DEFAULT_CONFIG_FILE
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* Define to 1 if the system has the type `socklen_t'. */
+#undef HAVE_SOCKLEN_T
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
