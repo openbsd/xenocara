@@ -30,7 +30,7 @@ DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir) \
 # -DPNL_SUP is now provided by AMD_CFLAGS
 #
 AM_CFLAGS = @XORG_CFLAGS@ \
-   -DHAVE_GX -DHAVE_LX -DAMD_V4L2_VIDEO -DOPT_ACCEL \
+   -DHAVE_GX -DHAVE_LX -DOPT_ACCEL \
    -DLINUX_2_6 @AMD_CFLAGS@
 
 AM_CCASFLAGS = @XORG_CFLAGS@
@@ -140,11 +140,3 @@ EXTRA_DIST = \
   \
         gx_vga.c \
         lx_vga.c
-
-ztv_drv_la_LTLIBRARIES = ztv_drv.la
-ztv_drv_la_LDFLAGS = -module -avoid-version
-ztv_drv_ladir = @moduledir@/drivers
-
-ztv_drv_la_SOURCES = \
-        z4l.c
-
