@@ -133,7 +133,6 @@ XkbAddDefaultDirectoriesToPath(void)
 {
     if (noDefaultPath)
 	return;
-    XkbAddDirectoryToPath(".");
     XkbAddDirectoryToPath(DFLT_XKB_CONFIG_ROOT);
 }
 
@@ -298,16 +297,7 @@ char	 buf[PATH_MAX],*typeDir;
     typeLen= strlen(typeDir);
     for (i=0;i<nPathEntries;i++) {
 	pathLen= strlen(includePath[i]);
-	if ((nameLen+pathLen+1)>=PATH_MAX) {
-	    ERROR2("File name (%s/%s) too long\n",includePath[i],name);
-	    ACTION("Ignored\n");
-	    continue;
-	}
-	sprintf(buf,"%s/%s",includePath[i],name);
-	file= fopen(buf,"r");
-	if (file!=NULL)
-	     break;
-	else if (typeLen<1)
+	if (typeLen<1)
 	     continue;
 
 	if ((nameLen+typeLen+pathLen+2)>=PATH_MAX) {

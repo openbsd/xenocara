@@ -104,6 +104,7 @@ static	Bool		xkblist= False;
 static	char *		preErrorMsg= NULL;
 static	char *		postErrorMsg= NULL;
 static	char *		errorPrefix= NULL;
+static unsigned int     device_id = XkbUseCoreKbd;
 
 /***====================================================================***/
 
@@ -140,6 +141,7 @@ Usage(int argc,char *argv[])
 	M("                     R: recursively list subdirectories\n");
 	M("                     default is all options off\n");
     }
+    M("-i <deviceid>        Specifies device ID (not name) to compile for\n");
     M("-m[ap] <map>         Specifies map to compile\n");
     M("-o <file>            Specifies output file name\n");
     if (!xkblist) {
@@ -301,6 +303,13 @@ register int i,tmp;
 		exit(1);
 	    }
 	}
+        else if ((strncmp(argv[i], "-i", 2) == 0) && (!xkblist)) {
+            if (++i >= argc) {
+                if (warningLevel > 0)
+                    WARN("No device ID specified\n");
+            }
+            device_id = atoi(argv[i]);
+        }
 	else if ((strncmp(argv[i],"-l",2)==0)&&(!xkblist)) {
 	    if (outputFormat!=WANT_DEFAULT) {
 		if (warningLevel>0) {
@@ -846,7 +855,7 @@ Status		status;
     else if (inDpy!=NULL) {
 	bzero((char *)&result,sizeof(result));
 	result.type= XkmKeymapFile;
-	result.xkb= XkbGetMap(inDpy,XkbAllMapComponentsMask,XkbUseCoreKbd);
+	result.xkb= XkbGetMap(inDpy,XkbAllMapComponentsMask,device_id);
 	if (result.xkb==NULL)
 	    WSGO("Cannot load keyboard description\n");
 	if (XkbGetIndicatorMap(inDpy,~0,result.xkb)!=Success)

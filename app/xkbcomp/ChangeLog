@@ -1,3 +1,30 @@
+commit 1aecdffaa0db7bbf85bc0aae9043e9437b25c30d
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Apr 17 00:52:29 2008 +0300
+
+    Don't scan paths which make NO SENSE WHATSOEVER TO SCAN
+    
+    Hey, I wonder if we have XKB files in our directory! I wonder if we
+    haven't bothered with a structure, and let's try to open a file called
+    'misc' in someone's home directory! What a surprise, it's not a valid
+    XKB file! Let's fail miserably!
+    
+    SURPRISINGLY, THIS IS NOT USEFUL BEHAVIOUR.
+
+commit a3a05fd489a9a35942a4419c537634e796dbebd1
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Apr 17 00:50:07 2008 +0300
+
+    xkbcomp: Take a device ID argument
+    
+    Allows the user to set maps (or whatever) on arbitrary devices.
+
+commit be084fbeba28312fc5102e98d64726464032c3e8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 6 17:13:42 2008 -0500
+
+    xkbcomp 1.0.4
+
 commit c1cc023fc50ce3a4a23f4682ebefd2301fd13170
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Fri Feb 29 15:30:34 2008 -0500
