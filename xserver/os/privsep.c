@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.7 2008/06/12 22:20:24 oga Exp $ */
+/* $OpenBSD: privsep.c,v 1.8 2008/06/14 21:37:13 mbalmer Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -109,6 +109,7 @@ struct okdev {
 	{"/dev/pci", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/agp0", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/drm0", O_RDWR },
+	{"/dev/amdmsr", O_RDWR | O_EXCL},
 	{NULL, 0}
 };
 
