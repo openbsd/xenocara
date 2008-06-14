@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.38 2008/06/14 21:51:00 okan Exp $
+ * $Id: conf.c,v 1.39 2008/06/14 21:59:09 okan Exp $
  */
 
 #include "headers.h"
@@ -434,7 +434,7 @@ conf_mousebind(struct conf *c, char *name, char *binding)
 	if (strchr(name, '-') == NULL)
 		substring = name;
 
-	current_binding->button = strtonum(substring);
+	current_binding->button = strtonum(substring, 1, 3, &errstr);
 	if (errstr)
 		warnx("number of buttons is %s: %s", errstr, substring);
 
