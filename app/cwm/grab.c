@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: grab.c,v 1.18 2008/06/14 22:04:11 okan Exp $
+ * $Id: grab.c,v 1.19 2008/06/15 02:47:46 oga Exp $
  */
 
 #include "headers.h"
@@ -33,23 +33,22 @@ grab_sweep_draw(struct client_ctx *cc, int dx, int dy)
 	int x0 = cc->geom.x, y0 = cc->geom.y;
 	char asize[10];	/* fits "nnnnxnnnn\0" */
 	int wide, height, wide_size, wide_name;
-	struct fontdesc *font = DefaultFont;
 
 	snprintf(asize, sizeof(asize), "%dx%d",
 	    ADJUST_WIDTH(cc, dx), ADJUST_HEIGHT(cc, dy));
-	wide_size = font_width(font, asize, strlen(asize)) + 4;
-	wide_name = font_width(font, cc->name, strlen(cc->name)) + 4;
+	wide_size = font_width(asize, strlen(asize)) + 4;
+	wide_name = font_width(cc->name, strlen(cc->name)) + 4;
 	wide = MAX(wide_size, wide_name);
-	height = font_ascent(font) + font_descent(font) + 1;
+	height = font_ascent() + font_descent() + 1;
 
 	XMoveResizeWindow(X_Dpy, sc->menuwin, x0, y0, wide, height * 2);
 	XMapWindow(X_Dpy, sc->menuwin);
 	XReparentWindow(X_Dpy, sc->menuwin, cc->win, 0, 0);
 	XClearWindow(X_Dpy, sc->menuwin);
-	font_draw(font, cc->name, strlen(cc->name), sc->menuwin,
-	    2, font_ascent(font) + 1);
-	font_draw(font, asize, strlen(asize), sc->menuwin,
-	    wide/2 - wide_size/2, height + font_ascent(font) + 1);
+	font_draw(sc, cc->name, strlen(cc->name), sc->menuwin,
+	    2, font_ascent() + 1);
+	font_draw(sc, asize, strlen(asize), sc->menuwin,
+	    wide/2 - wide_size/2, height + font_ascent() + 1);
 }
 
 void
