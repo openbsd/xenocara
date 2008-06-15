@@ -136,6 +136,18 @@ Date:   Thu Oct 18 15:59:14 2007 -0700
 
     Update bug reporting link.
 
+commit ed0555e4225aec26aaaa40f4f3c15fd914390817
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jun 10 15:24:56 2008 -0400
+
+    libpciaccess 0.10.3
+
+commit 07577a875bc9996437cfe30e5a87ca6b1a0f7e4a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jun 10 15:23:06 2008 -0400
+
+    libpciaccess 0.10.2
+
 commit 57a942b3cca314a56735e0a4198cac2f25b653dd
 Author: Eric Anholt <eric@anholt.net>
 Date:   Wed Oct 10 15:20:51 2007 -0700
