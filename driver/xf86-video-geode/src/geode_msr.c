@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #ifdef __OpenBSD__
-#include <sys/amdmsr.h>
+#include <machine/amdmsr.h>
 #endif
 
 #include <errno.h>
