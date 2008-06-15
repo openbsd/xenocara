@@ -394,6 +394,7 @@ ephyrUnsetInternalDamage (ScreenPtr pScreen)
   
   pPixmap = (*pScreen->GetScreenPixmap) (pScreen);
   DamageUnregister (&pPixmap->drawable, scrpriv->pDamage);
+  DamageDestroy (scrpriv->pDamage);
   
   RemoveBlockAndWakeupHandlers (ephyrInternalDamageBlockHandler,
 				ephyrInternalDamageWakeupHandler,
@@ -914,6 +915,7 @@ EphyrKeyboardInit (KdKeyboardInfo *ki)
   ki->minScanCode = ki->keySyms.minKeyCode;
   ki->maxScanCode = ki->keySyms.maxKeyCode;
   ki->keySyms.mapWidth = ephyrKeySyms.mapWidth;
+  xfree(ki->keySyms.map);
   ki->keySyms.map = ephyrKeySyms.map;
   ki->name = KdSaveString("Xephyr virtual keyboard");
   ephyrKbd = ki;

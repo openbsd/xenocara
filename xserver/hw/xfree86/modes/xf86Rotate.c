@@ -582,7 +582,7 @@ xf86CrtcRotate (xf86CrtcPtr crtc, DisplayModePtr mode, Rotation rotation)
 	int width, height, old_width, old_height;
 	void *shadowData;
 	PixmapPtr shadow;
-	PictureTransformTranslate (&crtc_to_fb, &fb_to_crtc, crtc->x, crtc->y);
+	PictureTransformTranslate (&crtc_to_fb, &fb_to_crtc, F(crtc->x), F(crtc->y));
 	PictureTransformIsInverse ("offset", &crtc_to_fb, &fb_to_crtc);
 	
 	/* 

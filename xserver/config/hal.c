@@ -63,7 +63,7 @@ remove_device(DeviceIntPtr dev)
 static void
 device_removed(LibHalContext *ctx, const char *udi)
 {
-    DeviceIntPtr dev;
+    DeviceIntPtr dev, next;
     char *value;
 
     value = xalloc(strlen(udi) + 5); /* "hal:" + NULL */
@@ -71,11 +71,13 @@ device_removed(LibHalContext *ctx, const char *udi)
         return;
     sprintf(value, "hal:%s", udi);
 
-    for (dev = inputInfo.devices; dev; dev = dev->next) {
+    for (dev = inputInfo.devices; dev; dev = next) {
+	next = dev->next;
         if (dev->config_info && strcmp(dev->config_info, value) == 0)
             remove_device(dev);
     }
-    for (dev = inputInfo.off_devices; dev; dev = dev->next) {
+    for (dev = inputInfo.off_devices; dev; dev = next) {
+	next = dev->next;
         if (dev->config_info && strcmp(dev->config_info, value) == 0)
             remove_device(dev);
     }
@@ -92,6 +94,8 @@ add_option(InputOption **options, const char *key, const char *value)
     for (; *options; options = &(*options)->next)
         ;
     *options = xcalloc(sizeof(**options), 1);
+    if (!*options) /* Yeesh. */
+        return;
     (*options)->key = xstrdup(key);
     (*options)->value = xstrdup(value);
     (*options)->next = NULL;
@@ -156,7 +160,7 @@ device_added(LibHalContext *hal_ctx, const char *udi)
     char *path = NULL, *driver = NULL, *name = NULL, *xkb_rules = NULL;
     char *xkb_model = NULL, *xkb_layout = NULL, *xkb_variant = NULL;
     char *xkb_options = NULL, *config_info = NULL;
-    InputOption *options = NULL;
+    InputOption *options = NULL, *tmpo = NULL;
     DeviceIntPtr dev;
     DBusError error;
     int type = TYPE_NONE;
@@ -232,6 +236,7 @@ device_added(LibHalContext *hal_ctx, const char *udi)
 
     if (NewInputDeviceRequest(options, &dev) != Success) {
         DebugF("[config/hal] NewInputDeviceRequest failed\n");
+        dev = NULL;
         goto unwind;
     }
 
@@ -255,6 +260,12 @@ unwind:
         xfree(xkb_options);
     if (config_info)
         xfree(config_info);
+    while (!dev && (tmpo = options)) {
+        options = tmpo->next;
+        xfree(tmpo->key);
+        xfree(tmpo->value);
+        xfree(tmpo);
+    }
 
 out_error:
     dbus_error_free(&error);

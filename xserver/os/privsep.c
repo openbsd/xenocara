@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.8 2008/06/14 21:37:13 mbalmer Exp $ */
+/* $OpenBSD: privsep.c,v 1.9 2008/06/15 00:17:33 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -298,6 +298,7 @@ int
 priv_open_device(const char *path)
 {
 	priv_cmd_t cmd;
+	struct okdev *dev;
 
 	if (priv_fd != -1) {
 		cmd.cmd = PRIV_OPEN_DEVICE;
