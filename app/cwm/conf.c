@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.40 2008/06/15 02:47:46 oga Exp $
+ * $Id: conf.c,v 1.41 2008/06/16 19:09:48 mk Exp $
  */
 
 #include "headers.h"
@@ -171,7 +171,7 @@ conf_init(struct conf *c)
 	strlcpy(c->termpath, "xterm", sizeof(c->termpath));
 	strlcpy(c->lockpath, "xlock", sizeof(c->lockpath));
 
-	c->DefaultFontName = DEFAULTFONTNAME;
+	c->DefaultFontName = xstrdup(DEFAULTFONTNAME);
 }
 
 void

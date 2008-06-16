@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.12 2008/06/15 02:47:46 oga Exp $ */
+/*	$OpenBSD: parse.y,v 1.13 2008/06/16 19:09:48 mk Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -100,11 +100,8 @@ yesno		: YES				{ $$ = 1; }
 		;
 
 main		: FONTNAME STRING		{
-			if (conf->DefaultFontName != NULL &&
-			    conf->DefaultFontName != DEFAULTFONTNAME)
-				free(conf->DefaultFontName);
-			conf->DefaultFontName = xstrdup($2);
-			free($2);
+			free(conf->DefaultFontName);
+			conf->DefaultFontName = $2;
 		}
 		| STICKY yesno {
 			if ($2 == 0)
