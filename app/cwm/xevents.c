@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.20 2008/06/14 22:04:11 okan Exp $
+ * $Id: xevents.c,v 1.21 2008/06/17 20:21:17 oga Exp $
  */
 
 /*
@@ -220,32 +220,33 @@ xev_handle_leavenotify(struct xevent *xev, XEvent *ee)
 void
 xev_handle_buttonpress(struct xevent *xev, XEvent *ee)
 {
-	XButtonEvent *e = &ee->xbutton;
-	struct client_ctx *cc;
-	struct screen_ctx *sc = screen_fromroot(e->root);
-	char *wname;
-	struct mousebinding *mb;
+	XButtonEvent		*e = &ee->xbutton;
+	struct client_ctx	*cc;
+	struct screen_ctx	*sc = screen_fromroot(e->root);
+	struct mousebinding	*mb;
+	char			*wname;
 
 	cc = client_find(e->window);
 
-	if (sc->rootwin == e->window)
+	if (e->window == sc->rootwin) {
 		TAILQ_FOREACH(mb, &Conf.mousebindingq, entry) {
-			if(e->button!=mb->button || e->state!=mb->modmask ||
-			    mb->context!=MOUSEBIND_CTX_ROOT)
-				continue;
-			(*mb->callback)(cc, e);
+			if (e->button == mb->button && e->state == mb->modmask
+			    && mb->context == MOUSEBIND_CTX_ROOT) {
+				(*mb->callback)(cc, e);
+				break;
+			}
 		}
+	}
 
 	if (cc == NULL || e->state == 0)
 		goto out;
 
 	TAILQ_FOREACH(mb, &Conf.mousebindingq, entry) {
-		if(e->button!=mb->button || e->state!=mb->modmask ||
-		   mb->context!=MOUSEBIND_CTX_WIN)
-			continue;
-
-		(*mb->callback)(cc, NULL);
-		break;
+		if (e->button == mb->button && e->state == mb->modmask &&
+		    mb->context == MOUSEBIND_CTX_ROOT) {
+			(*mb->callback)(cc, NULL);
+			break;
+		}
 	}
 out:
 	xev_register(xev);
