@@ -204,7 +204,7 @@ current display, copy it to another machine, and merge it into the
 user's authority file on the remote machine:
 .sp
 .nf
-        %  xauth extract \- $DISPLAY | rsh otherhost xauth merge \-
+        %  xauth extract \- $DISPLAY | ssh otherhost xauth merge \-
 .fi
 .PP
 .sp
