@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.41 2008/06/16 19:09:48 mk Exp $
+ * $Id: conf.c,v 1.42 2008/06/17 23:40:33 oga Exp $
  */
 
 #include "headers.h"
@@ -322,14 +322,6 @@ conf_bindname(struct conf *c, char *name, char *binding)
 	if (strchr(name, 'M') != NULL &&
 	    strchr(name, 'M') < strchr(name, '-'))
 		current_binding->modmask |= Mod1Mask;
-
-	if (strchr(name, '2') != NULL &&
-	    strchr(name, '2') < strchr(name, '-'))
-		current_binding->modmask |= Mod2Mask;
-
-	if (strchr(name, '3') != NULL &&
-	    strchr(name, '3') < strchr(name, '-'))
-		current_binding->modmask |= Mod3Mask;
 
 	if (strchr(name, '4') != NULL &&
 	    strchr(name, '4') < strchr(name, '-'))
