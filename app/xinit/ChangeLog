@@ -1,3 +1,162 @@
+commit 44e2ee01b456deb2630d21786d19ee2734d2f40a
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed May 28 12:01:35 2008 -0700
+
+    Apple: Don't use launchd on Tiger since it doesn't support the features we need.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=15893
+
+commit d315445cb85876cda56f46cb657167d4eb906ba0
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed May 28 11:54:22 2008 -0700
+
+    Properly handle using xserverrc
+
+commit 3c5e2ed686bd3ab39e2c1e87feffb5990603cf3c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 14:34:52 2008 -0400
+
+    xinit 1.0.9
+
+commit c07501f69239e9c1448736ad7e689a2c3da49af9
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 14:29:55 2008 -0400
+
+    Unset session environment variables so startx works within a running session.
+
+commit ef2610f44c7cf40489203fddc77ddcdfb7764eed
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue May 13 16:28:33 2008 -0700
+
+    Use /bin/ksh instead of /bin/sh on Solaris
+
+commit d3bc7001315a8ba13be073af86fe710740b2d4c3
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue May 13 16:25:49 2008 -0700
+
+    Check for proper cookie creation on all platforms
+
+commit ef7abe2e72074f8252f0812ab2ca05dff7e76a38
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue May 13 16:25:22 2008 -0700
+
+    Use od on /dev/random to generate cookie on Solaris
+
+commit e0e89545db1fc08ffe49b2b24455bb30137da671
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Mon May 12 13:17:46 2008 -0700
+
+    Apple: Don't need to spew unneccessary 'directory exists' messages.
+
+commit 85561f8347b33422dd4b0ea11911347c0666e409
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Tue May 6 00:07:18 2008 -0700
+
+    Apple: No need for these bits being here in xinit as of xserver-1.4.0-apple9
+
+commit 280774466dc9f57b4b46c618345f7938290dbb2c
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Fri Apr 25 19:00:23 2008 -0700
+
+    Apple: Added some OSX version protection, so this will still compile on Tiger and below.
+
+commit 0806ae2ecfdcb4ad5f3b7a66dcc9bc5d29d72649
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Fri Apr 25 15:12:54 2008 -0700
+
+    Apple: Use CFProcessPath instead of argv[0] trick.
+
+commit edc3112679af749f0c6fc54b2eec1b89aaf0d0c8
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Apr 20 17:30:14 2008 +0200
+
+    Replace sprintf() and strcpy() with snprintf().
+
+commit 47d561fd6efb8923cfbace6fea40dfeb314b4662
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Sat Apr 19 08:50:45 2008 -0700
+
+    Cleaned up handling of defaultserver{,args}
+    Per comments from Jeremy Reed on the list... basically doing for everyone what I do for Apple
+
+commit f6e75ebf5f7f245e1cdeb883a1d2db74f2451fd4
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Sat Apr 19 08:47:20 2008 -0700
+
+    Apple: Fixed make dist to include a missing header and not include generated sources
+
+commit 2b06b58a328e13df4704df8a48d4cd0b1100ba7e
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Apr 17 17:19:41 2008 -0700
+
+    Apple: Added privileged_startx
+
+commit fe5af014f2645d1ecf981d40d3c10a3621e9ec56
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Mon Apr 14 13:05:26 2008 -0700
+
+    Apple: Wait for privileged_startx to finish, so we don't race to create /tmp/.X11-unix
+
+commit d5590dba3cce39367762d39822094ca51000142b
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Sun Apr 13 23:15:27 2008 -0700
+
+    Apple: We renamed font_cache.sh to font_cache for better consistency... Changing startx to work with this
+
+commit 5ef443bb6bff0a03ee00105d9bf95bc3f6f82b11
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Sun Apr 13 19:51:18 2008 -0700
+
+    Apple: privileged_startx is in XINITDIR
+
+commit c1b70ca67ecd12d6837584e7ef4abd01ee3b7ad9
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Tue Apr 8 17:25:54 2008 -0700
+
+    Correctly handle users with spaces in $HOME
+
+commit 1cb4bb208d481967fb736acf10c6ac2b66bf3181
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Sat Apr 5 17:23:02 2008 -0700
+
+    Apple: Renamed LaunchAgent to org.x.startx to distinguish it from the org.x.X11 application
+
+commit f7c706ff46d4a2364d65731cd1c3135ef7987380
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Fri Apr 4 22:49:51 2008 -0700
+
+    Apple: Execute /usr/X11/bin/privileged_startx if it's present
+
+commit ca08a36d10f15be6d230a9af92288da4cb24cd43
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Fri Apr 4 02:31:10 2008 -0700
+
+    Apple: Fixed issue where display would not be passed correctly to the server if nolisten tcp was enabled.
+
+commit 8c52bd4509b7fe5a74026b5bc638d59add9e8945
+Author: Jeremy C. Reed <reed@tx.reedmedia.net>
+Date:   Sat Mar 15 18:23:45 2008 -0500
+
+    Use /dev/urandom for cookie it it exists
+    else fall back to /dev/random.
+    Not doing in configure.ac because can't easily check for
+    existence when doing cross-builds.
+    (Alternative would be to define this for every operating system
+    in configure.ac. Currently only is defined for OpenBSD.
+    Systems that have mcookie also will not be effected.)
+
+commit 062524614fdd4f11f32ba3d054f7fc16b9bc5f12
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 19:02:05 2008 +0100
+
+    OpenBSD: use openssl rand -hex 16 to generate the cookie.
+
+commit 3eaee22196a03d88c419c42470baf562552c1a3b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 6 17:09:45 2008 -0500
+
+    xinit 1.0.8
+
 commit 96c8650369a99e344b4e3510f713b331d83c4272
 Author: Jeremy Huddleston <jeremy@tifa.local>
 Date:   Sun Mar 2 10:32:58 2008 -0800

@@ -1,6 +1,6 @@
 /* $Xorg: xinit.c,v 1.5 2001/02/09 02:05:49 xorgcvs Exp $ */
 /* $XdotOrg: xc/programs/xinit/xinit.c,v 1.4 2005/10/04 01:27:34 ajax Exp $ */
-/* $OpenBSD: xinit.c,v 1.5 2008/04/20 13:46:02 matthieu Exp $ */
+/* $OpenBSD: xinit.c,v 1.6 2008/06/18 20:31:51 matthieu Exp $ */
 
 /*
 
@@ -39,12 +39,6 @@ in this Software without prior written authorization from The Open Group.
 #include <stdio.h>
 #include <ctype.h>
 #include <stdint.h>
-
-#ifdef __APPLE__
-#include <CoreServices/CoreServices.h>
-#define kX11AppBundleId "org.x.X11"
-#define kX11AppBundlePath "/Contents/MacOS/X11"
-#endif
 
 #ifdef X_POSIX_C_SOURCE
 #define _POSIX_C_SOURCE X_POSIX_C_SOURCE
@@ -177,9 +171,6 @@ static char **client = clientargv + 2;		/* make sure room for sh .xinitrc args *
 static char *displayNum = NULL;
 static char *program = NULL;
 static Display *xd = NULL;			/* server connection */
-#ifdef __APPLE__
-static char x11_path[PATH_MAX];
-#endif
 #ifndef SYSV
 #if defined(__CYGWIN__) || defined(SVR4) || defined(_POSIX_SOURCE) || defined(CSRG_BASED) || defined(__UNIXOS2__) || defined(Lynx) || defined(__APPLE__)
 int status;
@@ -229,56 +220,11 @@ sigUsr1(int sig)
 #endif
 }
 
-#ifdef __APPLE__
-static void set_x11_path() {
-    CFURLRef appURL = NULL;
-    OSStatus osstatus = LSFindApplicationForInfo(kLSUnknownCreator, CFSTR(kX11AppBundleId), nil, nil, &appURL);
-
-    switch (osstatus) {
-        case noErr:
-            if (appURL == NULL) {
-                fprintf(stderr, "xinit: Invalid response from LSFindApplicationForInfo(%s)\n", 
-                        kX11AppBundleId);
-                exit(1);
-            }
-            
-            if (!CFURLGetFileSystemRepresentation(appURL, true, (unsigned char *)x11_path, sizeof(x11_path))) {
-                fprintf(stderr, "xinit: Error resolving URL for %s\n", kX11AppBundleId);
-                exit(2);
-            }
-            
-            strlcat(x11_path, kX11AppBundlePath, sizeof(x11_path));
-#ifdef DEBUG
-            fprintf(stderr, "xinit: X11.app = %s\n", x11_path);
-#endif
-            break;
-        case kLSApplicationNotFoundErr:
-            fprintf(stderr, "xinit: Unable to find application for %s\n", kX11AppBundleId);
-            exit(4);
-        default:
-            fprintf(stderr, "xinit: Unable to find application for %s, error code = %d\n", 
-                    kX11AppBundleId, (int)osstatus);
-            exit(5);
-    }
-}
-#endif
-
 static void 
 Execute(char **vec,		/* has room from up above */
 	char **envp)
 {
-    char *file = vec[0];
-#ifdef __APPLE__
-    /* This is ugly, but currently, we need to trick OS-X into thinking X is in
-     * the X11.app bundle.  Hopefully UI, icons, etc will eventually be set
-     * by Xquartz, but this is how we're doing it for now. -JH
-     */
-    if(!strcmp(file, "/usr/X11/bin/X") || !strcmp(file, "/usr/X11/bin/Xquartz") || !strcmp(file, "X") || !strcmp(file, "Xquartz")) {
-        vec[0] = x11_path;
-        fprintf(stderr, "xinit: Detected Xquartz startup, setting file=%s, argv[0]=%s\n", file, vec[0]);
-    }
-#endif
-    Execvpe (file, vec, envp);
+    Execvpe (vec[0], vec, envp);
 #ifndef __UNIXOS2__
     if (access (vec[0], R_OK) == 0) {
 	vec--;				/* back it up to stuff shell in */
@@ -305,10 +251,6 @@ main(int argc, char *argv[], char *envp[])
 	int client_args_given = 0, server_args_given = 0;
 	int start_of_client_args, start_of_server_args;
 	struct sigaction sa;
-
-#ifdef __APPLE__
-    set_x11_path();
-#endif
 
 #ifdef __UNIXOS2__
 	envsave = envp;	/* circumvent an EMX problem */
@@ -413,10 +355,11 @@ main(int argc, char *argv[], char *envp[])
 
 	    xinitrcbuf[0] = '\0';
 	    if ((cp = getenv ("XINITRC")) != NULL) {
-		strcpy (xinitrcbuf, cp);
+		(void) snprintf (xinitrcbuf, sizeof(xinitrcbuf), "%s", cp);
 		required = True;
 	    } else if ((cp = getenv ("HOME")) != NULL) {
-		(void) sprintf (xinitrcbuf, "%s/%s", cp, XINITRC);
+		(void) snprintf (xinitrcbuf, sizeof(xinitrcbuf),
+				 "%s/%s", cp, XINITRC);
 	    }
 	    if (xinitrcbuf[0]) {
 		if (access (xinitrcbuf, F_OK) == 0) {
@@ -440,10 +383,11 @@ main(int argc, char *argv[], char *envp[])
 
 	    xserverrcbuf[0] = '\0';
 	    if ((cp = getenv ("XSERVERRC")) != NULL) {
-		strcpy (xserverrcbuf, cp);
+		(void) snprintf (xserverrcbuf, sizeof(xserverrcbuf), "%s", cp);
 		required = True;
 	    } else if ((cp = getenv ("HOME")) != NULL) {
-		(void) sprintf (xserverrcbuf, "%s/%s", cp, XSERVERRC);
+		(void) snprintf (xserverrcbuf, sizeof(xserverrcbuf),
+				 "%s/%s", cp, XSERVERRC);
 	    }
 	    if (xserverrcbuf[0]) {
 		if (access (xserverrcbuf, F_OK) == 0) {
@@ -706,6 +650,7 @@ setWindowPath(void)
 	unsigned long num;
 	char nums[10];
 	int numn;
+	size_t len;
 	prop = XInternAtom(xd, "XFree86_VT", False);
 	if (prop == None) {
 #ifdef DEBUG
@@ -761,11 +706,18 @@ setWindowPath(void)
 	windowpath = getenv("WINDOWPATH");
 	numn = snprintf(nums, sizeof(nums), "%lu", num);
 	if (!windowpath) {
-		newwindowpath = malloc(10 + 1 + numn + 1);
-		sprintf(newwindowpath, "WINDOWPATH=%s", nums);
+		len = 10 + 1 + numn + 1;
+		newwindowpath = malloc(len);
+		if (newwindowpath == NULL) 
+		    return;
+		snprintf(newwindowpath, len, "WINDOWPATH=%s", nums);
 	} else {
-		newwindowpath = malloc(10 + 1 + strlen(windowpath) + 1 + numn + 1);
-		sprintf(newwindowpath, "WINDOWPATH=%s:%s", windowpath, nums);
+		len = 10 + 1 + strlen(windowpath) + 1 + numn + 1;
+		newwindowpath = malloc(len);
+		if (newwindowpath == NULL)
+		    return;
+		snprintf(newwindowpath, len, "WINDOWPATH=%s:%s", 
+			 windowpath, nums);
 	}
 	*newenvironlast++ = newwindowpath;
 	*newenvironlast = NULL;
@@ -888,8 +840,7 @@ set_environment(void)
     }
 
     /* put DISPLAY=displayname as first element */
-    strcpy (displaybuf, "DISPLAY=");
-    strcpy (displaybuf + 8, displayNum);
+    snprintf (displaybuf, sizeof(displaybuf), "DISPLAY=%s", displayNum);
     newPtr = newenviron;
     *newPtr++ = displaybuf;
 

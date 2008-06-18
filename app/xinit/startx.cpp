@@ -13,6 +13,9 @@ XCOMM Site administrators are STRONGLY urged to write nicer versions.
 XCOMM
 XCOMM $XFree86: xc/programs/xinit/startx.cpp,v 3.16tsi Exp $
 
+unset DBUS_SESSION_BUS_ADDRESS
+unset SESSION_MANAGER
+
 #if defined(__SCO__) || defined(__UNIXWARE__) || defined(__APPLE__)
 
 XCOMM Check for /usr/bin/X11 and BINDIR in the path, if not add them.
@@ -75,6 +78,7 @@ defaultclient=XTERM
 defaultserver=XSERVER
 defaultclientargs=""
 defaultserverargs=""
+defaultdisplay=":0"
 clientargs=""
 serverargs=""
 
@@ -95,11 +99,19 @@ fi
 
 XCOMM First, start caching fonts
 if [ x`defaults read org.x.X11 cache_fonts` = x1 ] ; then
-    if [ -x /usr/X11/bin/font_cache.sh ] ; then
+    if [ -x /usr/X11/bin/font_cache ] ; then
+        /usr/X11/bin/font_cache &
+    elif [ -x /usr/X11/bin/font_cache.sh ] ; then
         /usr/X11/bin/font_cache.sh &
     elif [ -x /usr/X11/bin/fc-cache ] ; then
         /usr/X11/bin/fc-cache &
     fi
+fi
+
+if [ -x XINITDIR/privileged_startx ] ; then
+	# Don't push this into the background becasue it can cause
+	# a race to create /tmp/.X11-unix
+	XINITDIR/privileged_startx
 fi
 
 if [ x`defaults read org.x.X11 no_auth` = x0 ] ; then
@@ -148,12 +160,6 @@ case $1 in
         ;;
 esac
 #endif
-
-if [ -f $userserverrc ]; then
-    defaultserverargs=$userserverrc
-elif [ -f $sysserverrc ]; then
-    defaultserverargs=$sysserverrc
-fi
 
 whoseargs="client"
 while [ x"$1" != x ]; do
@@ -206,14 +212,19 @@ fi
 
 XCOMM process server arguments
 if [ x"$server" = x ]; then
-    XCOMM if no server arguments or display either, use rc file instead
+    server=$defaultserver
+
+    XCOMM if no server arguments or display either, use defaults
     if [ x"$serverargs" = x -a x"$display" = x ]; then
-	server="$defaultserverargs"
-#ifdef __APPLE__
-	display="$defaultdisplay"
-#endif
-    else
-	server=$defaultserver
+	XCOMM For compatibility reasons, only use xserverrc if there were no server command line arguments
+	if [ -f $userserverrc ]; then
+	    server=$userserverrc
+	elif [ -f $sysserverrc ]; then
+	    server=$sysserverrc
+	fi
+
+	serverargs=$defaultserverargs
+	display=$defaultdisplay
     fi
 fi
 
@@ -243,12 +254,16 @@ if [ x"$enable_xauth" = x1 ] ; then
 #if defined(HAS_COOKIE_MAKER) && defined(MK_COOKIE)
     mcookie=`MK_COOKIE`
 #else
-    mcookie=`dd if=/dev/random bs=16 count=1 2>/dev/null | hexdump -e \\"%08x\\"`
+    if [ -r /dev/urandom ]; then
+        mcookie=`dd if=/dev/urandom bs=16 count=1 2>/dev/null | hexdump -e \\"%08x\\"`
+    else
+        mcookie=`dd if=/dev/random bs=16 count=1 2>/dev/null | hexdump -e \\"%08x\\"`
+    fi
+#endif
     if test x"$mcookie" = x; then
         echo "Couldn't create cookie"
         exit 1
     fi
-#endif
     dummy=0
 
     XCOMM create a file with auth information for the server. ':0' is a dummy.

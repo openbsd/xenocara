@@ -27,10 +27,6 @@ bin_SCRIPTS = startx
 xinit_CFLAGS = $(XINIT_CFLAGS) -DXINITDIR=\"$(XINITDIR)\" -DBINDIR=\"$(bindir)\"
 xinit_LDADD = $(XINIT_LIBS)
 
-if APPLE
-xinit_LDFLAGS = -framework CoreServices
-endif
-
 xinit_SOURCES =	\
         xinit.c
 
@@ -65,9 +61,13 @@ CPP_FILES_FLAGS = \
 	-D__bindir__="$(bindir)"
 
 if LAUNCHD
-launchagents_PRE = org.x.X11.plist.pre
-launchagents_DATA = $(launchagents_PRE:plist.pre=plist)
+launchagents_PRE = org.x.startx.plist.cpp
+launchagents_DATA = $(launchagents_PRE:plist.cpp=plist)
+
+SUBDIRS = privileged_startx
 endif
+
+DIST_SUBDIRS = privileged_startx
 
 xinitrc: xinitrc.cpp Makefile
 startx: startx.cpp Makefile
@@ -76,7 +76,7 @@ xinitrc_DATA = xinitrc
 
 CLEANFILES = xinitrc startx $(appman_DATA) $(launchagents_DATA)
 
-EXTRA_DIST = xinitrc.cpp startx.cpp org.x.X11.plist.cpp $(appman_PRE)	\
+EXTRA_DIST = xinitrc.cpp startx.cpp org.x.startx.plist.cpp $(appman_PRE)	\
 		startx.cmd xinitrc.cmd xinit.def ChangeLog autogen.sh
 
 .PHONY: ChangeLog

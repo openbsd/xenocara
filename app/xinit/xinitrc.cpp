@@ -1,6 +1,6 @@
 XCOMM!SHELL_CMD
 XCOMM $Xorg: xinitrc.cpp,v 1.3 2000/08/17 19:54:30 cpqbld Exp $
-XCOMM $OpenBSD: xinitrc.cpp,v 1.3 2008/04/20 13:46:02 matthieu Exp $
+XCOMM $OpenBSD: xinitrc.cpp,v 1.4 2008/06/18 20:31:51 matthieu Exp $
 
 userresources=$HOME/.Xresources
 usermodmap=$HOME/.Xmodmap
@@ -25,20 +25,20 @@ if [ -f $sysmodmap ]; then
     XMODMAP $sysmodmap
 fi
 
-if [ -f $userresources ]; then
+if [ -f "$userresources" ]; then
 #ifdef __APPLE__
     if [ -x /usr/bin/cpp ] ; then
-        XRDB -merge $userresources
+        XRDB -merge "$userresources"
     else
-        XRDB -nocpp -merge $userresources
+        XRDB -nocpp -merge "$userresources"
     fi
 #else
-    XRDB -merge $userresources
+    XRDB -merge "$userresources"
 #endif
 fi
 
-if [ -f $usermodmap ]; then
-    XMODMAP $usermodmap
+if [ -f "$usermodmap" ]; then
+    XMODMAP "$usermodmap"
 fi
 
 XCOMM if we have private ssh key(s), start ssh-agent and add the key(s)

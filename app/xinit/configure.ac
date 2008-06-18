@@ -21,7 +21,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xinit,[1.0.8], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xinit)
+AC_INIT(xinit,[1.1.0], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xinit)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -104,37 +104,34 @@ AC_ARG_WITH(xconsole,
 	[XCONSOLE="$withval"],
 	[XCONSOLE="$DEFAULT_XCONSOLE"])
 
-AC_ARG_WITH(launchd,          AS_HELP_STRING([--with-launchd], [Build with suppo
-rt for Apple's launchd (default: auto)]), [LAUNCHD=$withval], [LAUNCHD=auto])
-AC_ARG_WITH(launchagents-dir,AS_HELP_STRING([--with-launchagents-dir=PATH], [Pat
-h to launchd's LaunchAgents directory (default: /Library/LaunchAgents)]),
+AC_ARG_WITH(launchd,            AS_HELP_STRING([--with-launchd], [Build with support for Apple's launchd (default: auto)]), [LAUNCHD=$withval], [LAUNCHD=auto])
+AC_ARG_WITH(launchagents-dir,   AS_HELP_STRING([--with-launchagents-dir=PATH], [Path to launchd's LaunchAgents directory (default: /Library/LaunchAgents)]),
                                 [ launchagentsdir="${withval}" ],
                                 [ launchagentsdir="/Library/LaunchAgents" ])
+AC_ARG_WITH(launchdaemons-dir,  AS_HELP_STRING([--with-launchdaemons-dir=PATH], [Path to launchd's LaunchDaemonss directory (default: /Library/LaunchDaemons)]),
+                                [ launchdaemonsdir="${withval}" ],
+                                [ launchdaemonsdir="/Library/LaunchDaemons" ])
 
 if test "x$LAUNCHD" = "xauto"; then
 	unset LAUNCHD
-	AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no])
+	case $host_os in
+		darwin8*)
+			LAUNCHD=no
+		;;
+		*)
+			AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no])
+		;;
+	esac
 fi
 
 if test "x$LAUNCHD" = "xyes" ; then
 	AC_DEFINE(HAVE_LAUNCHD, 1, [launchd support available])
-
-	case $host_os in
-		darwin*)
-			# For now, this is how we find X11.app on OS-X...
-			# A future version of launchd should let us do this cleaner
-			#XSERVER=\'\`'$(libexecdir)/x11-exec'\`\'
-			AM_CONDITIONAL(APPLE, true)
-		;;
-		*)
-			AM_CONDITIONAL(APPLE, false)
-		;;
-	esac
 else
-	AM_CONDITIONAL(APPLE,false)
         launchagentsdir=""
+        launchdaemonsdir=""
 fi
 AC_SUBST([launchagentsdir])
+AC_SUBST([launchdaemonsdir])
 AM_CONDITIONAL(LAUNCHD, [test "x$LAUNCHD" = "xyes"])
 
 # Checks for pkg-config packages
@@ -156,6 +153,9 @@ case $host_os in
 	*openbsd*)
 	MCOOKIE='/usr/sbin/openssl rand -hex 16'
 	;;
+	*solaris*)
+	MCOOKIE="/usr/bin/od -X -A n -N 16 /dev/urandom | /usr/bin/tr -d ' '"
+	;;
 esac
 
 if test "x$MCOOKIE" != x ; then
@@ -163,9 +163,13 @@ if test "x$MCOOKIE" != x ; then
 fi
 AC_SUBST(STARTX_COOKIE_FLAGS)
 
-# Additional substitutions in xinitrc & man pages
+# Additional substitutions in startx, xinitrc & man pages
 case $host_os in
-    *sco*)	
+    *solaris*)
+	SHELL_CMD="/bin/ksh"
+	ARCHMANDEFS=""
+	;;
+    *sco*)
 	SHELL_CMD="/bin/ksh"
 	ARCHMANDEFS="-D__SCOMAN__"
 	;;
@@ -196,3 +200,4 @@ XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile])
+AC_OUTPUT([privileged_startx/Makefile])
