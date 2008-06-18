@@ -1,9 +1,9 @@
-# $OpenBSD: Makefile,v 1.15 2008/03/25 23:41:50 matthieu Exp $
+# $OpenBSD: Makefile,v 1.16 2008/06/18 20:19:53 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR= bdftopcf mkfontscale mkfontdir \
 	appres beforelight bitmap editres fonttosfnt fslsfonts \
-	fstobdf	iceauth ico lbxproxy listres luit oclock \
+	fstobdf	iceauth ico listres luit oclock \
 	proxymngr rgb rstart scripts sessreg setxkbmap showfont \
 	smproxy twm viewres x11perf xauth xbacklight xbiff xcalc \
 	xclipboard xclock xcmsdb xconsole  \
@@ -11,10 +11,13 @@ SUBDIR= bdftopcf mkfontscale mkfontdir \
 	xfd  xfindproxy xfontsel xfsinfo xfwp xgamma xgc xhost \
 	xinit xkbcomp xkbevd xkbprint xkbutils xkill xload xlogo \
 	xlsatoms xlsclients xlsfonts xmag xman xmessage \
-	xmodmap xmore xphelloworld xplsprinters xpr xprehashprinterlist \
+	xmodmap xmore xpr \
 	xprop xrandr xrdb xrefresh xset xsetmode xsetpointer \
 	xsetroot xsm xstdcmap xtrap xvidtune xvinfo xwd xwininfo \
 	xwud
+
+# Deprecated
+# lbxproxy  xphelloworld xplsprinters  xprehashprinterlist 
 
 # Font server doesn't link on architectures with static only libraries
 .if ${XENOCARA_HAVE_SHARED_LIBS:L} == "yes"
