@@ -33,7 +33,8 @@ _msr_open(void)
 	msrfd = open(_PATH_MSRDEV, O_RDWR);
 #endif
 	if (msrfd == -1)
-	    ErrorF("Unable to open %s: %s\n", _PATH_MSRDEV, strerror(errno));
+	    FatalError("Unable to open %s: %s\n", _PATH_MSRDEV,
+		strerror(errno));
     }
 
     return msrfd;
@@ -51,7 +52,8 @@ GeodeReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi)
     req.addr = addr;
 
     if (ioctl(fd, RDMSR, &req) == -1)
-	ErrorF("Unable to RDMSR %d\n", errno);
+	FatalError("Unable to read MSR at address %0x06x: %s\n", addr,
+	    strerror(errno));
 
     *hi = req.val >> 32;
     *lo = req.val & 0xffffffff;
@@ -92,7 +94,8 @@ GeodeWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi)
     req.val = (u_int64_t)hi << 32 | (u_int64_t)lo;
 
     if (ioctl(fd, WRMSR, &req) == -1)
-	ErrorF("Unable to WRMSR %d\n", errno);
+	FatalError("Unable to write MSR at address 0x%06x: %s\n", addr,
+	    strerror(errno));
 #else
     unsigned int data[2];
     int fd = _msr_open();
