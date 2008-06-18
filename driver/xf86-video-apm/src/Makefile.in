@@ -77,7 +77,8 @@ apm_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(apm_drv_la_LTLIBRARIES)
 apm_drv_la_LIBADD =
 am__apm_drv_la_SOURCES_DIST = apm_accel.c apm_cursor.c apm_dga.c \
-	apm_driver.c apm.h apm_i2c.c apm_regs.h apm_rush.c
+	apm_driver.c apm.h apm_i2c.c apm_regs.h apm_pcirename.h \
+	apm_rush.c
 @XF86RUSH_TRUE@am__objects_1 = apm_rush.lo
 am_apm_drv_la_OBJECTS = apm_accel.lo apm_cursor.lo apm_dga.lo \
 	apm_driver.lo apm_i2c.lo $(am__objects_1)
@@ -130,6 +131,7 @@ DEPDIR = @DEPDIR@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -164,6 +166,7 @@ MAKE_PS = @MAKE_PS@
 MAKE_TEXT = @MAKE_TEXT@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -172,9 +175,12 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
+PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -188,7 +194,9 @@ XORG_LIBS = @XORG_LIBS@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
@@ -240,7 +248,7 @@ apm_drv_la_LTLIBRARIES = apm_drv.la
 apm_drv_la_LDFLAGS = -module -avoid-version
 apm_drv_ladir = @moduledir@/drivers
 apm_drv_la_SOURCES = apm_accel.c apm_cursor.c apm_dga.c apm_driver.c \
-	apm.h apm_i2c.c apm_regs.h $(am__append_1)
+	apm.h apm_i2c.c apm_regs.h apm_pcirename.h $(am__append_1)
 EXTRA_DIST = \
          apm_funcs.c \
          apm_video.c \

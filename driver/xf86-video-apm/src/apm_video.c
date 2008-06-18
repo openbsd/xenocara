@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/apm/apm_video.c,v 1.11tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

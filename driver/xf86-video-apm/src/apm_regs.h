@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/apm/apm_regs.h,v 1.7 2000/02/29 03:09:18 dawes Exp $ */
 
 
 

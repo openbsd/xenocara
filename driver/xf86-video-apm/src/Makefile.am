@@ -35,7 +35,8 @@ apm_drv_la_SOURCES = \
          apm_driver.c \
          apm.h \
          apm_i2c.c \
-         apm_regs.h
+         apm_regs.h \
+	 apm_pcirename.h
 	
 if XF86RUSH
 apm_drv_la_SOURCES += apm_rush.c

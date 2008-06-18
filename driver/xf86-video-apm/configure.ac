@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-apm],
-        1.1.1,
+        1.2.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-apm)
 
@@ -68,9 +68,22 @@ AC_SUBST([CFLAGS])
 AC_SUBST([INCLUDES])
 
 # Checks for libraries.
+SAVE_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
+AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
+              [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
+              [#include "xorg-server.h"])
+AC_CHECK_HEADER(xf1bpp.h,[AC_DEFINE(HAVE_XF1BPP, 1, [Have 1bpp support])],[])
+AC_CHECK_HEADER(xf4bpp.h,[AC_DEFINE(HAVE_XF4BPP, 1, [Have 4bpp support])],[])
+CPPFLAGS="$SAVE_CPPFLAGS"
 
 # Checks for header files.
 AC_HEADER_STDC
+
+if test "x$XSERVER_LIBPCIACCESS" = xyes; then
+    PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.8.0])
+    XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
+fi
 
 DRIVER_NAME=apm
 AC_SUBST([DRIVER_NAME])

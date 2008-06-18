@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/apm/apm_cursor.c,v 1.14 2000/06/30 18:27:02 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -13,7 +12,6 @@
 #include "scrnintstr.h"
 #include "servermd.h"
 #include "windowstr.h"
-#include "mfb.h"
 #include "mipointer.h"
 
 #include "apm.h"
