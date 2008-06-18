@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.30 2008/06/14 22:04:11 okan Exp $
+ * $Id: client.c,v 1.31 2008/06/18 20:42:29 oga Exp $
  */
 
 #include "headers.h"
@@ -421,7 +421,6 @@ client_hide(struct client_ctx *cc)
 {
 	/* XXX - add wm_state stuff */
 	XUnmapWindow(X_Dpy, cc->pwin);
-	XUnmapWindow(X_Dpy, cc->win);
 
 	cc->active = 0;
 	cc->flags |= CLIENT_HIDDEN;
@@ -434,7 +433,6 @@ client_hide(struct client_ctx *cc)
 void
 client_unhide(struct client_ctx *cc)
 {
-	XMapWindow(X_Dpy, cc->win);
 	XMapRaised(X_Dpy, cc->pwin);
 
 	cc->highlight = 0;
