@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.23 2008/06/17 23:40:33 oga Exp $
+ * $Id: xevents.c,v 1.24 2008/06/18 19:09:12 oga Exp $
  */
 
 /*
@@ -70,7 +70,7 @@ xev_handle_unmapnotify(struct xevent *xev, XEvent *ee)
 	struct client_ctx *cc;
 
 	if ((cc = client_find(e->window)) != NULL)
-		xu_setstate(cc, WithdrawnState);
+		client_delete(cc, e->send_event, 0);
 
 	xev_register(xev);
 }
