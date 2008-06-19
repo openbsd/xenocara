@@ -34,11 +34,6 @@ AC_PROG_CPP
 AC_PROG_CC
 AC_PROG_INSTALL
 
-AC_PATH_PROG(LBXPROXY, lbxproxy)
-if [[ -z $LBXPROXY ]] ; then
-   AC_MSG_ERROR([lbxproxy is needed])
-fi
-
 AC_PATH_PROG(SED, sed)
 if [[ -z $SED ]] ; then
    AC_MSG_ERROR([sed is needed])
