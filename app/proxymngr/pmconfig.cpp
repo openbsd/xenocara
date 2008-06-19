@@ -6,7 +6,7 @@
 !        or
 !    <serviceName> unmanaged <proxyAddress>
 !
-lbx managed LBXPROXY
+!lbx managed BINDIR/lbxproxy
 !
 ! substitute site-specific info
 !xfwp unmanaged firewall:4444

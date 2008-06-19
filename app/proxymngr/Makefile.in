@@ -139,6 +139,7 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
@@ -146,7 +147,6 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-LBXPROXY = @LBXPROXY@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
@@ -715,7 +715,7 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 
 pmconfig: pmconfig.cpp
-	$(SED) -e s/LBXPROXY/`echo @LBXPROXY@ | sed -e s/\\\\//\\\\\\\\\\\\//g`/ < $(srcdir)/pmconfig.cpp > $@
+	$(SED) -e s/BINDIR/`echo ${bindir} | sed -e s/\\\\//\\\\\\\\\\\\//g`/ < $(srcdir)/pmconfig.cpp > $@
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
