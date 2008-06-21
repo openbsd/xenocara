@@ -48,6 +48,9 @@
 #include <X11/Xos.h>
 #include "XpExtUtil.h"
 #include <limits.h>
+#ifdef XTHREADS
+#include <X11/Xthreads.h>
+#endif
 #ifndef WIN32
 #define X_INCLUDE_PWD_H
 #define XOS_USE_XLIB_LOCKING
