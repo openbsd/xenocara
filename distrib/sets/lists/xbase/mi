@@ -46,7 +46,6 @@
 ./usr/X11R6/bin/ico
 ./usr/X11R6/bin/imake
 ./usr/X11R6/bin/koi8rxterm
-./usr/X11R6/bin/lbxproxy
 ./usr/X11R6/bin/listres
 ./usr/X11R6/bin/luit
 ./usr/X11R6/bin/makedepend
@@ -115,14 +114,9 @@
 ./usr/X11R6/bin/xmessage
 ./usr/X11R6/bin/xmodmap
 ./usr/X11R6/bin/xmore
-./usr/X11R6/bin/xphelloworld
-./usr/X11R6/bin/xplsprinters
 ./usr/X11R6/bin/xpmroot
 ./usr/X11R6/bin/xpr
-./usr/X11R6/bin/xprehashprinterlist
 ./usr/X11R6/bin/xprop
-./usr/X11R6/bin/xpsimplehelloworld
-./usr/X11R6/bin/xpxthelloworld
 ./usr/X11R6/bin/xrandr
 ./usr/X11R6/bin/xrdb
 ./usr/X11R6/bin/xrefresh

@@ -943,7 +943,6 @@
 ./usr/X11R6/man/man1/iceauth.1
 ./usr/X11R6/man/man1/ico.1
 ./usr/X11R6/man/man1/imake.1
-./usr/X11R6/man/man1/lbxproxy.1
 ./usr/X11R6/man/man1/listres.1
 ./usr/X11R6/man/man1/luit.1
 ./usr/X11R6/man/man1/makedepend.1
@@ -1011,13 +1010,8 @@
 ./usr/X11R6/man/man1/xmodmap.1
 ./usr/X11R6/man/man1/xmore.1
 ./usr/X11R6/man/man1/xon.1
-./usr/X11R6/man/man1/xphelloworld.1
-./usr/X11R6/man/man1/xplsprinters.1
 ./usr/X11R6/man/man1/xpr.1
-./usr/X11R6/man/man1/xprehashprinterlist.1
 ./usr/X11R6/man/man1/xprop.1
-./usr/X11R6/man/man1/xpsimplehelloworld.1
-./usr/X11R6/man/man1/xpxthelloworld.1
 ./usr/X11R6/man/man1/xrandr.1
 ./usr/X11R6/man/man1/xrdb.1
 ./usr/X11R6/man/man1/xrefresh.1
