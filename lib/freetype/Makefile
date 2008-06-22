@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.10 2007/10/27 07:09:48 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.11 2008/06/22 17:37:35 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
@@ -12,8 +12,8 @@ DEBUG?=
 
 LIB=	freetype
 
-SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c ftgasp.c \
-	ftglyph.c \
+SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
+	ftcid.c ftgasp.c ftglyph.c \
 	ftgxval.c ftlcdfil.c ftotval.c ftpatent.c \
         ftinit.c ftlzw.c ftmm.c ftpfr.c ftstroke.c ftsynth.c ftsystem.c \
         fttype1.c ftwinfnt.c ftxf86.c autofit.c bdf.c cff.c \
