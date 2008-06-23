@@ -603,6 +603,7 @@
 ./usr/X11R6/include/freetype2/freetype/ftbitmap.h
 ./usr/X11R6/include/freetype2/freetype/ftcache.h
 ./usr/X11R6/include/freetype2/freetype/ftchapters.h
+./usr/X11R6/include/freetype2/freetype/ftcid.h
 ./usr/X11R6/include/freetype2/freetype/fterrdef.h
 ./usr/X11R6/include/freetype2/freetype/fterrors.h
 ./usr/X11R6/include/freetype2/freetype/ftgasp.h
@@ -644,6 +645,7 @@
 ./usr/X11R6/include/freetype2/freetype/internal/pshints.h
 ./usr/X11R6/include/freetype2/freetype/internal/services
 ./usr/X11R6/include/freetype2/freetype/internal/services/svbdf.h
+./usr/X11R6/include/freetype2/freetype/internal/services/svcid.h
 ./usr/X11R6/include/freetype2/freetype/internal/services/svgldict.h
 ./usr/X11R6/include/freetype2/freetype/internal/services/svkern.h
 ./usr/X11R6/include/freetype2/freetype/internal/services/svmm.h
