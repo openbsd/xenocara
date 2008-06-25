@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.21 2008/06/15 02:47:46 oga Exp $
+ * $Id: calmwm.c,v 1.22 2008/06/25 01:09:09 oga Exp $
  */
 
 #include "headers.h"
@@ -315,6 +315,6 @@ usage(void)
 {
 	extern char *__progname;
 
-	fprintf(stderr, "usage: %s [-d display] [-c file]\n", __progname);
+	fprintf(stderr, "usage: %s [-c file] [-d display]\n", __progname);
 	exit(1);
 }
