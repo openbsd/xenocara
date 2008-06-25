@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.56 2008/06/25 22:37:29 oga Exp $
+ * $Id: calmwm.h,v 1.57 2008/06/25 22:44:42 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -457,6 +457,7 @@ void			 mousefunc_window_move(struct client_ctx *, void *);
 void			 mousefunc_window_grouptoggle(struct client_ctx *,
 			    void *);
 void			 mousefunc_window_lower(struct client_ctx *, void *);
+void			 mousefunc_window_hide(struct client_ctx *, void *);
 void			 mousefunc_menu_group(struct client_ctx *, void *);
 void			 mousefunc_menu_unhide(struct client_ctx *, void *);
 void			 mousefunc_menu_cmd(struct client_ctx *, void *);

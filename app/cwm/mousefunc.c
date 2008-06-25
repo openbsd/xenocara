@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: mousefunc.c,v 1.1 2008/06/14 21:48:54 okan Exp $
+ * $Id: mousefunc.c,v 1.2 2008/06/25 22:44:42 oga Exp $
  */
 
 #include "headers.h"
@@ -46,6 +46,12 @@ mousefunc_window_lower(struct client_ctx *cc, void *arg)
 {
 	client_ptrsave(cc);
 	client_lower(cc);
+}
+
+void
+mousefunc_window_hide(struct client_ctx *cc, void *arg)
+{
+	client_hide(cc);
 }
 
 void
