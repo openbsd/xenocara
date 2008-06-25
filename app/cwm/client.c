@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.31 2008/06/18 20:42:29 oga Exp $
+ * $Id: client.c,v 1.32 2008/06/25 22:37:29 oga Exp $
  */
 
 #include "headers.h"
@@ -272,8 +272,7 @@ client_setactive(struct client_ctx *cc, int fg)
 		XInstallColormap(X_Dpy, cc->cmap);
 		XSetInputFocus(X_Dpy, cc->win,
 		    RevertToPointerRoot, CurrentTime);
-		xu_btn_grab(cc->pwin, Mod1Mask, AnyButton);
-		xu_btn_grab(cc->pwin, ControlMask|Mod1Mask, Button1);
+		conf_grab_mouse(cc);
 		/*
 		 * If we're in the middle of alt-tabbing, don't change
 		 * the order please.

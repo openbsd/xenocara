@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.42 2008/06/17 23:40:33 oga Exp $
+ * $Id: conf.c,v 1.43 2008/06/25 22:37:29 oga Exp $
  */
 
 #include "headers.h"
@@ -474,3 +474,33 @@ conf_mouseunbind(struct conf *c, struct mousebinding *unbind)
 	}
 }
 
+/*
+ * Grab the mouse buttons that we need for bindings for this client
+ */
+void
+conf_grab_mouse(struct client_ctx *cc)
+{
+	struct mousebinding	*mb;
+	int			 button;
+	
+
+	TAILQ_FOREACH(mb, &Conf.mousebindingq, entry) {
+		if (mb->context != MOUSEBIND_CTX_WIN)
+ 			continue;
+
+		switch(mb->button) {
+		case 1:
+			button = Button1;
+			break;
+		case 2:
+			button = Button2;
+			break;
+		case 3:
+			button = Button3;
+			break;
+		default:
+			warnx("strange button in mousebinding\n");
+		}
+		xu_btn_grab(cc->pwin, mb->modmask, button);
+	}
+}
