@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.44 2008/06/25 22:38:36 oga Exp $
+ * $Id: conf.c,v 1.45 2008/06/25 22:40:27 oga Exp $
  */
 
 #include "headers.h"
@@ -433,6 +433,10 @@ conf_mousebind(struct conf *c, char *name, char *binding)
 	if (strchr(name, 'S') != NULL &&
 	    strchr(name, 'S') < strchr(name, '-'))
 		current_binding->modmask |= ShiftMask;
+
+	if (strchr(name, '4') != NULL &&
+	    strchr(name, '4') < strchr(name, '-'))
+		current_binding->modmask |= Mod4Mask;
 
 	substring = strchr(name, '-') + 1;
 
