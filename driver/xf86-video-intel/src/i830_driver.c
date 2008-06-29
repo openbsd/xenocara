@@ -692,11 +692,6 @@ I830MapMem(ScrnInfoPtr pScrn)
 			       (void **) &pI830->FbBase);
     if (err)
 	return FALSE;
-    /* KLUDGE ALERT -- rewrite the PTEs to turn off the CD and WT bits */
-#if HAVE_MPROTECT
-    mprotect (pI830->FbBase, pI830->FbMapSize, PROT_NONE);
-    mprotect (pI830->FbBase, pI830->FbMapSize, PROT_READ|PROT_WRITE);
-#endif
 #else
    pI830->FbBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
 				 pI830->PciTag,
@@ -934,6 +929,53 @@ I830SetupOutputs(ScrnInfoPtr pScrn)
    }
 }
 
+static void
+i830_init_clock_gating(ScrnInfoPtr pScrn)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+
+    /* Disable clock gating reported to work incorrectly according to the specs.
+     */
+    if (IS_IGD_GM(pI830)) {
+	OUTREG(RENCLK_GATE_D1, 0);
+	OUTREG(RENCLK_GATE_D2, 0);
+	OUTREG(RAMCLK_GATE_D, 0);
+	OUTREG(DSPCLK_GATE_D, VRHUNIT_CLOCK_GATE_DISABLE |
+	       OVRUNIT_CLOCK_GATE_DISABLE |
+	       OVCUNIT_CLOCK_GATE_DISABLE);
+    } else if (IS_I965GM(pI830)) {
+	OUTREG(RENCLK_GATE_D1, I965_RCC_CLOCK_GATE_DISABLE);
+	OUTREG(RENCLK_GATE_D2, 0);
+	OUTREG(DSPCLK_GATE_D, 0);
+	OUTREG(RAMCLK_GATE_D, 0);
+	OUTREG16(DEUC, 0);
+    } else if (IS_I965G(pI830)) {
+	OUTREG(RENCLK_GATE_D1, I965_RCZ_CLOCK_GATE_DISABLE |
+	       I965_RCC_CLOCK_GATE_DISABLE |
+	       I965_RCPB_CLOCK_GATE_DISABLE |
+	       I965_ISC_CLOCK_GATE_DISABLE |
+	       I965_FBC_CLOCK_GATE_DISABLE);
+	OUTREG(RENCLK_GATE_D2, 0);
+    } else if (IS_I855(pI830) || IS_I865G(pI830)) {
+	OUTREG(RENCLK_GATE_D1, SV_CLOCK_GATE_DISABLE);
+    } else if (IS_I830(pI830)) {
+	OUTREG(DSPCLK_GATE_D, OVRUNIT_CLOCK_GATE_DISABLE);
+    }
+}
+
+static void
+i830_init_bios_control(ScrnInfoPtr pScrn)
+{
+   I830Ptr pI830 = I830PTR(pScrn);
+
+   /* Set "extended desktop" */
+   OUTREG(SWF0, INREG(SWF0) | (1 << 21));
+
+   /* Set "driver loaded",  "OS unknown", "APM 1.2" */
+   OUTREG(SWF4, (INREG(SWF4) & ~((3 << 19) | (7 << 16))) |
+		(1 << 23) | (2 << 16));
+}
+
 static int
 I830LVDSPresent(ScrnInfoPtr pScrn)
 {
@@ -991,10 +1033,6 @@ PreInitCleanup(ScrnInfoPtr pScrn)
    } else {
       if (pI830->entityPrivate)
          pI830->entityPrivate->pScrn_2 = NULL;
-   }
-   if (pI830->swfSaved) {
-      OUTREG(SWF0, pI830->saveSWF0);
-      OUTREG(SWF4, pI830->saveSWF4);
    }
    if (pI830->MMIOBase)
       I830UnmapMMIO(pScrn);
@@ -1461,19 +1499,6 @@ I830PreInit(ScrnInfoPtr pScrn, int flags)
 
    i830TakeRegSnapshot(pScrn);
 
-#if 1
-   pI830->saveSWF0 = INREG(SWF0);
-   pI830->saveSWF4 = INREG(SWF4);
-   pI830->swfSaved = TRUE;
-
-   /* Set "extended desktop" */
-   OUTREG(SWF0, pI830->saveSWF0 | (1 << 21));
-
-   /* Set "driver loaded",  "OS unknown", "APM 1.2" */
-   OUTREG(SWF4, (pI830->saveSWF4 & ~((3 << 19) | (7 << 16))) |
-		(1 << 23) | (2 << 16));
-#endif
-
    if (DEVICE_ID(pI830->PciInfo) == PCI_CHIP_E7221_G)
       num_pipe = 1;
    else
@@ -1708,12 +1733,6 @@ I830PreInit(ScrnInfoPtr pScrn, int flags)
       pI830->noAccel = TRUE;
    }
 
-   /* Don't need MMIO access anymore. */
-   if (pI830->swfSaved) {
-      OUTREG(SWF0, pI830->saveSWF0);
-      OUTREG(SWF4, pI830->saveSWF4);
-   }
-
    /* Set display resolution */
    xf86SetDpi(pScrn, 0, 0);
 
@@ -1820,7 +1839,6 @@ i830_stop_ring(ScrnInfoPtr pScrn, Bool flush)
       if (temp & RING_VALID) {
 	 i830_refresh_ring(pScrn);
 	 I830Sync(pScrn);
-	 DO_RING_IDLE();
       }
 
       OUTREG(LP_RING + RING_LEN, 0);
@@ -1900,19 +1918,6 @@ SetHWOperatingState(ScrnInfoPtr pScrn)
    I830Ptr pI830 = I830PTR(pScrn);
 
    DPRINTF(PFX, "SetHWOperatingState\n");
-
-   /* Disable clock gating reported to work incorrectly according to the specs.
-    */
-   if (IS_I965GM(pI830)) {
-      OUTREG(RENCLK_GATE_D1, I965_RCC_CLOCK_GATE_DISABLE);
-   } else if (IS_I965G(pI830)) {
-      OUTREG(RENCLK_GATE_D1,
-	     I965_RCC_CLOCK_GATE_DISABLE | I965_ISC_CLOCK_GATE_DISABLE);
-   } else if (IS_I855(pI830) || IS_I865G(pI830)) {
-      OUTREG(RENCLK_GATE_D1, SV_CLOCK_GATE_DISABLE);
-   } else if (IS_I830(pI830)) {
-      OUTREG(DSPCLK_GATE_D, OVRUNIT_CLOCK_GATE_DISABLE);
-   }
 
    i830_start_ring(pScrn);
    if (!pI830->SWCursor)
@@ -2056,6 +2061,17 @@ SaveHWState(ScrnInfoPtr pScrn)
    pI830->saveSWF[15] = INREG(SWF31);
    pI830->saveSWF[16] = INREG(SWF32);
 
+   pI830->saveDSPCLK_GATE_D = INREG(DSPCLK_GATE_D);
+   pI830->saveRENCLK_GATE_D1 = INREG(RENCLK_GATE_D1);
+
+   if (IS_I965G(pI830)) {
+      pI830->saveRENCLK_GATE_D2 = INREG(RENCLK_GATE_D2);
+      pI830->saveRAMCLK_GATE_D = INREG(RAMCLK_GATE_D);
+   }
+
+   if (IS_I965GM(pI830) || IS_IGD_GM(pI830))
+      pI830->savePWRCTXA = INREG(PWRCTXA);
+
    if (IS_MOBILE(pI830) && !IS_I830(pI830))
       pI830->saveLVDS = INREG(LVDS);
    pI830->savePFIT_CONTROL = INREG(PFIT_CONTROL);
@@ -2112,6 +2128,17 @@ RestoreHWState(ScrnInfoPtr pScrn)
 
    if (!IS_I830(pI830) && !IS_845G(pI830))
      OUTREG(PFIT_CONTROL, pI830->savePFIT_CONTROL);
+
+   OUTREG(DSPCLK_GATE_D, pI830->saveDSPCLK_GATE_D);
+   OUTREG(RENCLK_GATE_D1, pI830->saveRENCLK_GATE_D1);
+
+   if (IS_I965G(pI830)) {
+      OUTREG(RENCLK_GATE_D2, pI830->saveRENCLK_GATE_D2);
+      OUTREG(RAMCLK_GATE_D, pI830->saveRAMCLK_GATE_D);
+   }
+
+   if (IS_I965GM(pI830) || IS_IGD_GM(pI830))
+      OUTREG(PWRCTXA, pI830->savePWRCTXA);
 
    /*
     * Pipe regs
@@ -2499,6 +2526,10 @@ i830_try_memory_allocation(ScrnInfoPtr pScrn)
 
     if (!i830_allocate_2d_memory(pScrn))
 	goto failed;
+
+    if (IS_I965GM(pI830) || IS_IGD_GM(pI830))
+	if (!i830_allocate_pwrctx(pScrn))
+	    goto failed;
 
     if (dri && !i830_allocate_3d_memory(pScrn))
 	goto failed;
@@ -3098,20 +3129,6 @@ I830ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
    if (serverGeneration == 1)
       xf86ShowUnusedOptions(pScrn->scrnIndex, pScrn->options);
 
-   if (IS_I965G(pI830)) {
-      /* turn off clock gating */
-#if 0
-      OUTREG(0x6204, 0x70804000);
-      OUTREG(0x6208, 0x00000001);
-#else
-      OUTREG(0x6204, 0x70000000);
-#endif
-      /* Enable DAP stateless accesses.  
-       * Required for all i965 steppings.
-       */
-      OUTREG(SVG_WORK_CTL, 0x00000010);
-   }
-
    pI830->starting = FALSE;
    pI830->closing = FALSE;
    pI830->suspended = FALSE;
@@ -3285,6 +3302,14 @@ I830EnterVT(int scrnIndex, int flags)
    i830_stop_ring(pScrn, FALSE);
    SetHWOperatingState(pScrn);
 
+   /* Tell the BIOS that we're in control of mode setting now. */
+   i830_init_bios_control(pScrn);
+
+   i830_init_clock_gating(pScrn);
+
+   if (pI830->power_context)
+       OUTREG(PWRCTXA, pI830->power_context->offset | PWRCTX_EN);
+
    /* Clear the framebuffer */
    memset(pI830->FbBase + pScrn->fbOffset, 0,
 	  pScrn->virtualY * pScrn->displayWidth * pI830->cpp);
@@ -3297,9 +3322,6 @@ I830EnterVT(int scrnIndex, int flags)
       i830DumpRegs (pScrn);
    }
    i830DescribeOutputConfiguration(pScrn);
-
-   i830_stop_ring(pScrn, TRUE);
-   SetHWOperatingState(pScrn);
 
 #ifdef XF86DRI
    if (pI830->directRenderingEnabled) {
@@ -3333,10 +3355,9 @@ I830EnterVT(int scrnIndex, int flags)
          int i;
 
 	 I830DRIResume(screenInfo.screens[scrnIndex]);
-      
+
 	 i830_refresh_ring(pScrn);
 	 I830Sync(pScrn);
-	 DO_RING_IDLE();
 
 	 sarea->texAge++;
 	 for(i = 0; i < I830_NR_TEX_REGIONS+1 ; i++)

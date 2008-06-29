@@ -36,6 +36,10 @@
 #include <pciaccess.h>
 #include <err.h>
 
+#ifndef DEFFILEMODE
+#define DEFFILEMODE (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH) /* 0666*/
+#endif
+
 static void usage(void)
 {
     fprintf(stderr, "usage: bios_dumper <filename>\n");

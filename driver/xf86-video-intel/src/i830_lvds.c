@@ -63,6 +63,9 @@ struct i830_lvds_priv {
     /* The panel needs dithering enabled */
     Bool	    panel_wants_dither;
 
+    /* The panel is in DPMS off */
+    Bool           dpmsoff;
+
     /* restore backlight to this value */
     int		    backlight_duty_cycle;
 
@@ -334,6 +337,7 @@ i830_lvds_get_backlight_kernel(xf86OutputPtr output)
 	return 0;
     }
 
+    memset(val, 0, sizeof(val));
     if (read(fd, val, BACKLIGHT_VALUE_LEN) == -1)
 	goto out_err;
 
@@ -388,6 +392,10 @@ i830SetLVDSPanelPower(xf86OutputPtr output, Bool on)
     uint32_t		    pp_status;
 
     if (on) {
+	/* if we're going from on->on, be aware to current level. */
+	if ((INREG(PP_CONTROL) & POWER_TARGET_ON) && !dev_priv->dpmsoff) 
+	    dev_priv->backlight_duty_cycle = dev_priv->get_backlight(output);
+
 	/*
 	 * If we're going from off->on we may need to turn on the backlight.
 	 * We should use the saved value whenever possible, but on some
@@ -405,12 +413,13 @@ i830SetLVDSPanelPower(xf86OutputPtr output, Bool on)
 	} while ((pp_status & PP_ON) == 0);
 
 	dev_priv->set_backlight(output, dev_priv->backlight_duty_cycle);
+	dev_priv->dpmsoff = FALSE;
     } else {
 	/*
 	 * Only save the current backlight value if we're going from
 	 * on to off.
 	 */
-	if (INREG(PP_CONTROL) & POWER_TARGET_ON)
+	if ((INREG(PP_CONTROL) & POWER_TARGET_ON) && !dev_priv->dpmsoff)
 	    dev_priv->backlight_duty_cycle = dev_priv->get_backlight(output);
 	dev_priv->set_backlight(output, 0);
 
@@ -418,6 +427,8 @@ i830SetLVDSPanelPower(xf86OutputPtr output, Bool on)
 	do {
 	    pp_status = INREG(PP_STATUS);
 	} while (pp_status & PP_ON);
+
+	dev_priv->dpmsoff = TRUE;
     }
 }
 
@@ -447,7 +458,8 @@ i830_lvds_save (xf86OutputPtr output)
     pI830->savePP_CONTROL = INREG(PP_CONTROL);
     pI830->savePP_CYCLE = INREG(PP_CYCLE);
     pI830->saveBLC_PWM_CTL = INREG(BLC_PWM_CTL);
-    dev_priv->backlight_duty_cycle = dev_priv->get_backlight(output);
+    if ((INREG(PP_CONTROL) & POWER_TARGET_ON) && !dev_priv->dpmsoff) 
+	dev_priv->backlight_duty_cycle = dev_priv->get_backlight(output);
 }
 
 static void
@@ -671,7 +683,7 @@ i830_lvds_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
 
 		/* Letterbox will have top/bottom borders */
 		top_border = (dev_priv->panel_fixed_mode->VDisplay -
-			      mode->VDisplay) / 2;
+			      scaled_height) / 2;
 		bottom_border = top_border;
 		if (mode->VDisplay & 1)
 		    bottom_border++;
@@ -1081,7 +1093,10 @@ i830_lvds_set_property(xf86OutputPtr output, Atom property,
 		       "RRConfigureOutputProperty error, %d\n", ret);
 	}
 	/* Set the current value of the backlight property */
-	data = dev_priv->get_backlight(output);
+	if ((INREG(PP_CONTROL) & POWER_TARGET_ON) && !dev_priv->dpmsoff) 
+	    data = dev_priv->get_backlight(output);
+	else
+	    data = dev_priv->backlight_duty_cycle;
 	ret = RRChangeOutputProperty(output->randr_output, backlight_atom,
 				     XA_INTEGER, 32, PropModeReplace, 1, &data,
 				     FALSE, TRUE);
@@ -1130,6 +1145,8 @@ i830_lvds_set_property(xf86OutputPtr output, Atom property,
 static Bool
 i830_lvds_get_property(xf86OutputPtr output, Atom property)
 {
+    ScrnInfoPtr		    pScrn = output->scrn;
+    I830Ptr		    pI830 = I830PTR(pScrn);
     I830OutputPrivatePtr    intel_output = output->driver_private;
     struct i830_lvds_priv   *dev_priv = intel_output->dev_priv;
     int ret;
@@ -1140,8 +1157,11 @@ i830_lvds_get_property(xf86OutputPtr output, Atom property)
      */
     if (property == backlight_atom) {
 	int val;
-	val = dev_priv->get_backlight(output);
-	dev_priv->backlight_duty_cycle = val;
+	if ((INREG(PP_CONTROL) & POWER_TARGET_ON) && !dev_priv->dpmsoff) {
+	    val = dev_priv->get_backlight(output);
+	    dev_priv->backlight_duty_cycle = val;
+	} else
+	    val = dev_priv->backlight_duty_cycle;
 	ret = RRChangeOutputProperty(output->randr_output, backlight_atom,
 				     XA_INTEGER, 32, PropModeReplace, 1, &val,
 				     FALSE, TRUE);

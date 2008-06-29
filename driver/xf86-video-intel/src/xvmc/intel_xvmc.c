@@ -513,7 +513,7 @@ Status XvMCCreateBlocks(Display *display, XvMCContext *context,
  */
 Status XvMCDestroyBlocks(Display *display, XvMCBlockArray *block)
 {
-    if (!display || block)
+    if (!display || !block)
         return BadValue;
 
     if (block->blocks)

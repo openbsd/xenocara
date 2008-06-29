@@ -95,8 +95,6 @@ typedef struct _I915XvMC
     PutImageFuncPtr savePutImage;
 } I915XvMC, *I915XvMCPtr;
 
-#define ARRARY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-
 /*
 static int yv12_subpicture_index_list[2] =
 {
@@ -160,6 +158,22 @@ static XF86ImagePtr i915_subpicture_list[2] =
     (XF86ImagePtr)&ai44_subpicture
 };
 #endif
+
+/* Check context size not exceed surface type max */
+static void
+i915_check_context_size(XvMCContextPtr ctx)
+{
+    int i;
+
+    for (i = 0; i < ARRAY_SIZE(ppSI); i++) {
+	if (ctx->surface_type_id == ppSI[i]->surface_type_id) {
+	    if (ctx->width > ppSI[i]->max_width)
+		ctx->width = ppSI[i]->max_width;
+	    if (ctx->height > ppSI[i]->max_height)
+		ctx->height = ppSI[i]->max_height;
+	}
+    }
+}
 
 /*
  * Init and clean up the screen private parts of XvMC.
@@ -429,6 +443,8 @@ static int i915_xvmc_create_context (ScrnInfoPtr pScrn, XvMCContextPtr pContext,
                    "[XvMC] i915: Out of contexts.\n");
         return BadAlloc;
     }
+
+    i915_check_context_size(pContext);
 
     *priv = xcalloc(1, sizeof(I915XvMCCreateContextRec));
     contextRec = (I915XvMCCreateContextRec *)*priv;
@@ -776,10 +792,9 @@ static int i915_xvmc_put_image(ScrnInfoPtr pScrn,
     struct intel_xvmc_command *xvmc_cmd = (struct intel_xvmc_command *)buf;
     int ret;
 
-    if (pI830->XvMCEnabled) {
-        if (FOURCC_XVMC == id) {
-            switch (xvmc_cmd->command) {
-            case INTEL_XVMC_COMMAND_DISPLAY:
+    if (FOURCC_XVMC == id) {
+	switch (xvmc_cmd->command) {
+	    case INTEL_XVMC_COMMAND_DISPLAY:
 		if ((xvmc_cmd->srfNo >= I915_XVMC_MAX_SURFACES) ||
 			!pXvMC->surfaces[xvmc_cmd->srfNo] ||
 			!pXvMC->sfprivs[xvmc_cmd->srfNo]) {
@@ -793,10 +808,9 @@ static int i915_xvmc_put_image(ScrnInfoPtr pScrn,
 		id = xvmc_cmd->real_id;
 		pI830->IsXvMCSurface = 1;
 		break;
-            default:
-                return 0;
-            }
-        }
+	    default:
+		return 0;
+	}
     }
 
     ret = pXvMC->savePutImage(pScrn, src_x, src_y, drw_x, drw_y, src_w, src_h,
@@ -850,7 +864,7 @@ static void i915_xvmc_fini(ScrnInfoPtr pScrn)
 static XF86MCAdaptorRec pAdapt =
 {
     .name		= "Intel(R) Textured Video",
-    .num_surfaces	= ARRARY_SIZE(ppSI),
+    .num_surfaces	= ARRAY_SIZE(ppSI),
     .surfaces		= ppSI,
 #if 0
     .num_subpictures	= ARRARY_SIZE(i915_subpicture_list),

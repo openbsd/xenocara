@@ -788,6 +788,7 @@ i830_tv_dpms(xf86OutputPtr output, int mode)
 	    OUTREG(TV_CTL, INREG(TV_CTL) & ~TV_ENC_ENABLE);
 	    break;
     }
+    i830WaitForVblank(pScrn);
 }
 
 static void
@@ -920,6 +921,7 @@ i830_tv_restore(xf86OutputPtr output)
 
     OUTREG(TV_DAC, dev_priv->save_TV_DAC);
     OUTREG(TV_CTL, dev_priv->save_TV_CTL);
+    i830WaitForVblank(pScrn);
 }
 
 static const tv_mode_t *
@@ -1237,6 +1239,7 @@ i830_tv_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 	OUTREG(TV_V_CHROMA_0 + (i<<2), tv_mode->filter_table[j++]);
     OUTREG(TV_DAC, 0);
     OUTREG(TV_CTL, tv_ctl);
+    i830WaitForVblank(pScrn);
 }
 
 static const DisplayModeRec reported_modes[] = {
@@ -1303,6 +1306,7 @@ i830_tv_detect_type (xf86CrtcPtr    crtc,
 	tv_dac = INREG(TV_DAC);
 	OUTREG(TV_DAC, save_tv_dac);
 	OUTREG(TV_CTL, save_tv_ctl);
+	i830WaitForVblank(pScrn);
     }
     /*
      *  A B C

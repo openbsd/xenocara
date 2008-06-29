@@ -201,7 +201,7 @@ I830Sync(ScrnInfoPtr pScrn)
       ADVANCE_BATCH();
    }
 
-   I830WaitLpRing(pScrn, pI830->LpRing->mem->size - 8, 0);
+   i830_wait_ring_idle(pScrn);
 
    pI830->LpRing->space = pI830->LpRing->mem->size - 8;
    pI830->nextColorExpandBuf = 0;

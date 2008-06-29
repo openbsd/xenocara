@@ -63,12 +63,11 @@ libIntelXvMC_la_DEPENDENCIES =
 am__libIntelXvMC_la_SOURCES_DIST = intel_xvmc.c intel_xvmc.h \
 	i915_structs.h i915_program.h i915_xvmc.c i915_xvmc.h \
 	intel_batchbuffer.c intel_batchbuffer.h xf86dri.c xf86dri.h \
-	xf86dristr.h driDrawable.c driDrawable.h
+	xf86dristr.h
 @XVMC_TRUE@am_libIntelXvMC_la_OBJECTS = libIntelXvMC_la-intel_xvmc.lo \
 @XVMC_TRUE@	libIntelXvMC_la-i915_xvmc.lo \
 @XVMC_TRUE@	libIntelXvMC_la-intel_batchbuffer.lo \
-@XVMC_TRUE@	libIntelXvMC_la-xf86dri.lo \
-@XVMC_TRUE@	libIntelXvMC_la-driDrawable.lo
+@XVMC_TRUE@	libIntelXvMC_la-xf86dri.lo
 libIntelXvMC_la_OBJECTS = $(am_libIntelXvMC_la_OBJECTS)
 @XVMC_TRUE@am_libIntelXvMC_la_rpath = -rpath $(libdir)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -264,9 +263,7 @@ target_alias = @target_alias@
 @XVMC_TRUE@                         intel_batchbuffer.h \
 @XVMC_TRUE@                         xf86dri.c \
 @XVMC_TRUE@                         xf86dri.h \
-@XVMC_TRUE@                         xf86dristr.h \
-@XVMC_TRUE@                         driDrawable.c \
-@XVMC_TRUE@                         driDrawable.h
+@XVMC_TRUE@                         xf86dristr.h
 
 @XVMC_TRUE@libIntelXvMC_la_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@ @XVMCLIB_CFLAGS@ -I$(top_srcdir)/src -DTRUE=1 -DFALSE=0
 @XVMC_TRUE@libIntelXvMC_la_LDFLAGS = -version-number 1:0:0
@@ -343,7 +340,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libI810XvMC_la-I810XvMC.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libIntelXvMC_la-driDrawable.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libIntelXvMC_la-i915_xvmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libIntelXvMC_la-intel_batchbuffer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libIntelXvMC_la-intel_xvmc.Plo@am__quote@
@@ -404,13 +400,6 @@ libIntelXvMC_la-xf86dri.lo: xf86dri.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xf86dri.c' object='libIntelXvMC_la-xf86dri.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libIntelXvMC_la_CFLAGS) $(CFLAGS) -c -o libIntelXvMC_la-xf86dri.lo `test -f 'xf86dri.c' || echo '$(srcdir)/'`xf86dri.c
-
-libIntelXvMC_la-driDrawable.lo: driDrawable.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libIntelXvMC_la_CFLAGS) $(CFLAGS) -MT libIntelXvMC_la-driDrawable.lo -MD -MP -MF "$(DEPDIR)/libIntelXvMC_la-driDrawable.Tpo" -c -o libIntelXvMC_la-driDrawable.lo `test -f 'driDrawable.c' || echo '$(srcdir)/'`driDrawable.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libIntelXvMC_la-driDrawable.Tpo" "$(DEPDIR)/libIntelXvMC_la-driDrawable.Plo"; else rm -f "$(DEPDIR)/libIntelXvMC_la-driDrawable.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='driDrawable.c' object='libIntelXvMC_la-driDrawable.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libIntelXvMC_la_CFLAGS) $(CFLAGS) -c -o libIntelXvMC_la-driDrawable.lo `test -f 'driDrawable.c' || echo '$(srcdir)/'`driDrawable.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

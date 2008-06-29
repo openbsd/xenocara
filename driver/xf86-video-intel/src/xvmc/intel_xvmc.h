@@ -53,7 +53,6 @@
 #include <drm_sarea.h>
 
 #include "xf86dri.h"
-#include "driDrawable.h"
 
 #include "intel_batchbuffer.h"
 

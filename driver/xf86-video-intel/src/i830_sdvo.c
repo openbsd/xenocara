@@ -730,7 +730,9 @@ i830_sdvo_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 
     /* Set the SDVO control regs. */
     if (IS_I965G(pI830)) {
-	sdvox = SDVO_BORDER_ENABLE;
+	sdvox = SDVO_BORDER_ENABLE |
+		SDVO_VSYNC_ACTIVE_HIGH |
+		SDVO_HSYNC_ACTIVE_HIGH;
     } else {
 	sdvox = INREG(dev_priv->output_device);
 	switch (dev_priv->output_device) {

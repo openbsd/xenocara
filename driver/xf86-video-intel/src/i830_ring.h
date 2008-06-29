@@ -75,28 +75,13 @@ union intfloat {
     pI830->ring_emitting = 0;						\
 } while (0)
 
-/*
- * XXX Note: the head/tail masks are different for 810 and i830.
- * If the i810 always sets the higher bits to 0, then this shouldn't be
- * a problem.  Check this!
- */
-#define DO_RING_IDLE() do {						\
-    int _head;								\
-    int _tail;								\
-    do {								\
-	_head = INREG(LP_RING + RING_HEAD) & I830_HEAD_MASK;		\
-	_tail = INREG(LP_RING + RING_TAIL) & I830_TAIL_MASK;		\
-	DELAY(10);							\
-    } while (_head != _tail);						\
-} while (0)
-
 #define BEGIN_LP_RING(n)						\
 do {									\
     if (pI830->ring_emitting != 0)					\
 	FatalError("%s: BEGIN_LP_RING called without closing "		\
 		   "ADVANCE_LP_RING\n", __FUNCTION__);			\
     if ((n) > 2 && (I810_DEBUG&DEBUG_ALWAYS_SYNC))			\
-	DO_RING_IDLE();							\
+	i830_wait_ring_idle(pScrn);					\
     pI830->ring_emitting = (n) * 4;					\
     if ((n) & 1)							\
 	pI830->ring_emitting += 4;					\

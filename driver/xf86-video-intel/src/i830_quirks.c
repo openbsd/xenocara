@@ -237,6 +237,8 @@ static i830_quirk i830_quirk_list[] = {
     { PCI_CHIP_I965_GM, 0x1028, 0x0256, quirk_ignore_tv },
     /* Dell Inspiron 1318 */
     { PCI_CHIP_I965_GM, 0x1028, 0x0286, quirk_ignore_tv },
+    /* Dell Vostro A840 (LP: #235155) */
+    { PCI_CHIP_I965_GM, 0x1028, 0x0298, quirk_ignore_tv },
 
     /* Lenovo Napa TV (use dmi)*/
     { PCI_CHIP_I945_GM, 0x17aa, SUBSYS_ANY, quirk_lenovo_tv_dmi },
@@ -272,6 +274,8 @@ static i830_quirk i830_quirk_list[] = {
     { PCI_CHIP_I855_GM, 0x1028, 0x0139, quirk_pipea_force },
     /* Dell Latitude D500 needs pipe A force quirk */
     { PCI_CHIP_I855_GM, 0x1028, 0x0152, quirk_pipea_force },
+    /* Dell Latitude D505 needs pipe A force quirk (LP: #235643) */
+    { PCI_CHIP_I855_GM, 0x1028, 0x0163, quirk_pipea_force },
     /* Dell Latitude X300 needs pipe A force quirk */
     { PCI_CHIP_I855_GM, 0x1028, 0x014f, quirk_pipea_force },
     /* Dell Inspiron 510m needs pipe A force quirk */

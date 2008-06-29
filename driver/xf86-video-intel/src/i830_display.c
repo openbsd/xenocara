@@ -241,13 +241,15 @@ static void intel_clock(I830Ptr pI830, int refclk, intel_clock_t *clock)
 }
 
 static void
-i830PrintPll(char *prefix, intel_clock_t *clock)
+i830PrintPll(ScrnInfoPtr pScrn, char *prefix, intel_clock_t *clock)
 {
-    ErrorF("%s: dotclock %d vco %d ((m %d, m1 %d, m2 %d), n %d, (p %d, p1 %d, p2 %d))\n",
-	   prefix, clock->dot, clock->vco,
-	   clock->m, clock->m1, clock->m2,
-	   clock->n, 
-	   clock->p, clock->p1, clock->p2);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+	       "%s: dotclock %d vco %d ((m %d, m1 %d, m2 %d), n %d, "
+	       "(p %d, p1 %d, p2 %d))\n",
+	       prefix, clock->dot, clock->vco,
+	       clock->m, clock->m1, clock->m2,
+	       clock->n,
+	       clock->p, clock->p1, clock->p2);
 }
 
 /**
@@ -1262,7 +1264,7 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 		       "Adjusted mode for pipe %c:\n", pipe == 0 ? 'A' : 'B');
 	    xf86PrintModeline(pScrn->scrnIndex, adjusted_mode);
 	}
-	i830PrintPll("chosen", &clock);
+	i830PrintPll(pScrn, "chosen", &clock);
     }
 
     if (dpll & DPLL_VCO_ENABLE)
@@ -1755,7 +1757,7 @@ i830_crtc_clock_get(ScrnInfoPtr pScrn, xf86CrtcPtr crtc)
      * configuration being accurate, which it isn't necessarily.
      */
     if (0)
-	i830PrintPll("probed", &clock);
+	i830PrintPll(pScrn, "probed", &clock);
 
     return clock.dot;
 }

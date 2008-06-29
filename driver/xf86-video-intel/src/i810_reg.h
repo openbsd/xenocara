@@ -460,6 +460,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *   - new bits for i810
  *   - new register hwstam (mask)
  */
+#define PWRCTXA		     0x2088 /* 965GM+ only */
+#define   PWRCTX_EN	     (1<<0)
 #define HWSTAM               0x2098 /* p290 */
 #define IER                  0x20a0 /* p291 */
 #define IIR                  0x20a4 /* p292 */
@@ -497,7 +499,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #define FWATER_BLC       0x20d8
 #define FWATER_BLC2	 0x20dc
-#define FWATER_BLC_SELF	 0x20e0
 #define MM_BURST_LENGTH     0x00700000
 #define MM_FIFO_WATERMARK   0x0001F000
 #define LM_BURST_LENGTH     0x00000700
@@ -1121,6 +1122,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #define RENCLK_GATE_D2		0x6208
 #define RAMCLK_GATE_D		0x6210		/* CRL only */
+#define DEUC			0x6214          /* CRL only */
 
 /*
  * This is a PCI config space register to manipulate backlight brightness
@@ -1220,6 +1222,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define SDVO_CLOCK_OUTPUT_INVERT		(1 << 18)
 #define SDVOC_GANG_MODE				(1 << 16)
 #define SDVO_BORDER_ENABLE			(1 << 7)
+/** new with 965, default is to be set */
+#define SDVO_VSYNC_ACTIVE_HIGH			(1 << 4)
+#define SDVO_HSYNC_ACTIVE_HIGH			(1 << 3)
+/** 915/945 only, read-only bit */
 #define SDVOB_PCIE_CONCURRENCY			(1 << 3)
 #define SDVO_DETECTED				(1 << 2)
 /* Bits to be preserved when writing */

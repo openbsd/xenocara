@@ -426,6 +426,8 @@ typedef struct _I830Rec {
 
    i830_memory *logical_context;
 
+   i830_memory *power_context;
+
 #ifdef XF86DRI
    i830_memory *back_buffer;
    i830_memory *third_buffer;
@@ -552,10 +554,6 @@ typedef struct _I830Rec {
 
    Bool StolenOnly;
 
-   Bool swfSaved;
-   uint32_t saveSWF0;
-   uint32_t saveSWF4;
-
    Bool checkDevices;
 
    /* Driver phase/state information */
@@ -647,6 +645,11 @@ typedef struct _I830Rec {
    uint32_t saveFBC_CONTROL2;
    uint32_t saveFBC_CONTROL;
    uint32_t saveFBC_FENCE_OFF;
+   uint32_t saveRENCLK_GATE_D1;
+   uint32_t saveRENCLK_GATE_D2;
+   uint32_t saveDSPCLK_GATE_D;
+   uint32_t saveRAMCLK_GATE_D;
+   uint32_t savePWRCTXA;
 
    enum last_3d *last_3d;
 
@@ -657,6 +660,8 @@ typedef struct _I830Rec {
 } I830Rec;
 
 #define I830PTR(p) ((I830Ptr)((p)->driverPrivate))
+
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 #define I830_SELECT_FRONT	0
 #define I830_SELECT_BACK	1
@@ -768,6 +773,7 @@ void i830_free_memory(ScrnInfoPtr pScrn, i830_memory *mem);
 extern long I830CheckAvailableMemory(ScrnInfoPtr pScrn);
 Bool i830_allocate_2d_memory(ScrnInfoPtr pScrn);
 Bool i830_allocate_texture_memory(ScrnInfoPtr pScrn);
+Bool i830_allocate_pwrctx(ScrnInfoPtr pScrn);
 Bool i830_allocate_3d_memory(ScrnInfoPtr pScrn);
 #ifdef INTEL_XVMC
 Bool i830_allocate_xvmc_buffer(ScrnInfoPtr pScrn, const char *name,
@@ -847,6 +853,14 @@ i830_get_transformed_coordinates_3d(int x, int y, PictTransformPtr transform,
 				    float *x_out, float *y_out, float *z_out);
 
 void i830_enter_render(ScrnInfoPtr);
+
+static inline void
+i830_wait_ring_idle(ScrnInfoPtr pScrn)
+{
+   I830Ptr pI830 = I830PTR(pScrn);
+
+   I830WaitLpRing(pScrn, pI830->LpRing->mem->size - 8, 0);
+}
 
 static inline int i830_fb_compression_supported(I830Ptr pI830)
 {

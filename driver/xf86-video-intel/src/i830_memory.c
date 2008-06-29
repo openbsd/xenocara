@@ -112,6 +112,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /* Our hardware status area is just a single page */
 #define HWSTATUS_PAGE_SIZE GTT_PAGE_SIZE
+#define PWRCTX_SIZE GTT_PAGE_SIZE
 
 static i830_memory *
 i830_allocate_aperture(ScrnInfoPtr pScrn, const char *name,
@@ -337,6 +338,7 @@ i830_reset_allocations(ScrnInfoPtr pScrn)
     pI830->exa_965_state = NULL;
     pI830->overlay_regs = NULL;
     pI830->logical_context = NULL;
+    pI830->power_context = NULL;
 #ifdef XF86DRI
     pI830->back_buffer = NULL;
     pI830->third_buffer = NULL;
@@ -1654,6 +1656,22 @@ i830_allocate_hwstatus(ScrnInfoPtr pScrn)
 }
 
 Bool
+i830_allocate_pwrctx(ScrnInfoPtr pScrn)
+{
+    I830Ptr pI830 = I830PTR(pScrn);
+
+    pI830->power_context = i830_allocate_memory(pScrn, "power context",
+						PWRCTX_SIZE, GTT_PAGE_SIZE,
+						NEED_LIFETIME_FIXED);
+    if (!pI830->power_context) {
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		"Failed to allocate power context.\n");
+	return FALSE;
+    }
+    return TRUE;
+}
+
+Bool
 i830_allocate_3d_memory(ScrnInfoPtr pScrn)
 {
     I830Ptr pI830 = I830PTR(pScrn);
@@ -2002,6 +2020,7 @@ I830CheckAvailableMemory(ScrnInfoPtr pScrn)
     return maxPages * 4;
 }
 
+#ifdef INTEL_XVMC
 /*
  * Allocate memory for MC compensation
  */
@@ -2023,3 +2042,4 @@ Bool i830_allocate_xvmc_buffer(ScrnInfoPtr pScrn, const char *name,
 
     return TRUE;
 }
+#endif
