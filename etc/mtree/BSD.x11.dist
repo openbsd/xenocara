@@ -1,4 +1,4 @@
-#	$OpenBSD: BSD.x11.dist,v 1.11 2008/04/29 18:59:05 oga Exp $
+#	$OpenBSD: BSD.x11.dist,v 1.12 2008/06/30 15:25:57 naddy Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 .
@@ -246,6 +246,8 @@
                     ..
                     locale
                         C
+                        ..
+                        am_ET.UTF-8
                         ..
                         armscii-8
                         ..
