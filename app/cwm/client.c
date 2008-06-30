@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.32 2008/06/25 22:37:29 oga Exp $
+ * $Id: client.c,v 1.33 2008/06/30 17:52:37 okan Exp $
  */
 
 #include "headers.h"
@@ -605,8 +605,8 @@ client_cycle(int reverse)
 		newcc = (reverse ? client_mruprev(newcc) :
 		    client_mrunext(newcc));
 
-		/* Only cycle visible windows. */
-		if (newcc->flags & CLIENT_HIDDEN)
+		/* Only cycle visible and non-ignored windows. */
+		if (newcc->flags & (CLIENT_HIDDEN|CLIENT_IGNORE))
 			again = 1;
 
 		/* Is oldcc the only non-hidden window? */
