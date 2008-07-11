@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: mousefunc.c,v 1.2 2008/06/25 22:44:42 oga Exp $
+ * $Id: mousefunc.c,v 1.3 2008/07/11 14:21:28 okan Exp $
  */
 
 #include "headers.h"
@@ -63,10 +63,12 @@ mousefunc_menu_group(struct client_ctx *cc, void *arg)
 void
 mousefunc_menu_unhide(struct client_ctx *cc, void *arg)
 {
-	struct menu *mi;
-	struct menu_q menuq;
-	char *wname;
-	struct client_ctx *old_cc = client_current();
+	struct client_ctx	*old_cc;
+	struct menu		*mi;
+	struct menu_q		 menuq;
+	char			*wname;
+
+	old_cc = client_current();
 
 	TAILQ_INIT(&menuq);
 	TAILQ_FOREACH(cc, &Clientq, entry)
@@ -96,19 +98,21 @@ mousefunc_menu_unhide(struct client_ctx *cc, void *arg)
 		if (old_cc != NULL)
 			client_ptrsave(old_cc);
 		client_ptrwarp(cc);
-	} else
+	} else {
 		while ((mi = TAILQ_FIRST(&menuq)) != NULL) {
 			TAILQ_REMOVE(&menuq, mi, entry);
 			xfree(mi);
 		}
+	}
 }
 
 void
 mousefunc_menu_cmd(struct client_ctx *cc, void *arg)
 {
-	struct menu *mi;
-	struct menu_q menuq;
-	struct cmd *cmd;
+	struct menu	*mi;
+	struct menu_q	 menuq;
+	struct cmd	*cmd;
+
 	conf_reload(&Conf);
 
 	TAILQ_INIT(&menuq);

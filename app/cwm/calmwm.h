@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.57 2008/06/25 22:44:42 oga Exp $
+ * $Id: calmwm.h,v 1.58 2008/07/11 14:21:28 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -83,8 +83,8 @@ TAILQ_HEAD(screen_ctx_q, screen_ctx);
 
 
 struct winname {
-	TAILQ_ENTRY(winname) entry;
-	char *name;
+	TAILQ_ENTRY(winname)	 entry;
+	char			*name;
 };
 
 TAILQ_HEAD(winname_q, winname);

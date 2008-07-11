@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xmalloc.c,v 1.3 2008/04/16 13:38:09 oga Exp $
+ * $Id: xmalloc.c,v 1.4 2008/07/11 14:21:28 okan Exp $
  */
 
 #include "headers.h"
@@ -24,7 +24,7 @@
 void *
 xmalloc(size_t siz)
 {
-	void *p;
+	void	*p;
 
 	if ((p = malloc(siz)) == NULL)
 		err(1, "malloc");
@@ -35,7 +35,7 @@ xmalloc(size_t siz)
 void *
 xcalloc(size_t no, size_t siz)
 {
-	void *p;
+	void	*p;
 
 	if ((p = calloc(no, siz)) == NULL)
 		err(1, "calloc");
@@ -52,7 +52,7 @@ xfree(void *p)
 char *
 xstrdup(const char *str)
 {
-	char *p;
+	char	*p;
 
 	if ((p = strdup(str)) == NULL)
 		err(1, "strdup");

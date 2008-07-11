@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: input.c,v 1.6 2008/05/19 18:07:53 okan Exp $
+ * $Id: input.c,v 1.7 2008/07/11 14:21:28 okan Exp $
  */
 
 #include "headers.h"
@@ -24,7 +24,7 @@
 int
 input_keycodetrans(KeyCode kc, u_int state, enum ctltype *ctl, char *chr)
 {
-	int ks;
+	int	 ks;
 
 	*ctl = CTL_NONE;
 	*chr = '\0';

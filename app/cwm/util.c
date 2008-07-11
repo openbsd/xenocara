@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: util.c,v 1.9 2008/05/15 22:18:00 oga Exp $
+ * $Id: util.c,v 1.10 2008/07/11 14:21:28 okan Exp $
  */
 
 #include "headers.h"
@@ -44,9 +44,8 @@ u_spawn(char *argstr)
 void
 u_exec(char *argstr)
 {
-	char *args[MAXARGLEN], **ap = args;
-	char **end = &args[MAXARGLEN - 1];
-	char *tmp;
+	char	*args[MAXARGLEN], **ap = args;
+	char	**end = &args[MAXARGLEN - 1], *tmp;
 
 	while (ap < end && (*ap = strsep(&argstr, " \t")) != NULL) {
 		if (**ap == '\0')
