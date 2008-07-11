@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.34 2008/07/11 14:21:28 okan Exp $
+ * $Id: client.c,v 1.35 2008/07/11 14:23:30 okan Exp $
  */
 
 #include "headers.h"
@@ -699,19 +699,15 @@ client_placecalc(struct client_ctx *cc)
 void
 client_vertmaximize(struct client_ctx *cc)
 {
+	struct screen_ctx	*sc = CCTOSC(cc);
+
 	if (cc->flags & CLIENT_VMAXIMIZED) {
 		cc->geom = cc->savegeom;
 	} else {
-		struct screen_ctx	*sc = CCTOSC(cc);
-		int			 display_height;
-
-		display_height = DisplayHeight(X_Dpy, sc->which) -
-		    cc->bwidth * 2;
-
 		if (!(cc->flags & CLIENT_MAXIMIZED))
 			cc->savegeom = cc->geom;
 		cc->geom.y = cc->bwidth + Conf.gap_top;
-		cc->geom.height = display_height -
+		cc->geom.height = (sc->ymax - cc->bwidth * 2) -
 		    (Conf.gap_top + Conf.gap_bottom);
 		cc->flags |= CLIENT_DOVMAXIMIZE;
 	}
