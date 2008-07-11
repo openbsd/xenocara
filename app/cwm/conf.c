@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.47 2008/07/11 14:21:28 okan Exp $
+ * $Id: conf.c,v 1.48 2008/07/11 14:24:34 okan Exp $
  */
 
 #include "headers.h"
@@ -194,8 +194,7 @@ conf_setup(struct conf *c, const char *conf_file)
 		if (stat(conf_file, &sb) == -1 || !(sb.st_mode & S_IFREG))
 			errx(1, "%s: %s", conf_file, strerror(errno));
 		else
-			snprintf(c->conf_path, sizeof(c->conf_path), "%s",
-			    conf_file);
+			strlcpy(c->conf_path, conf_file, sizeof(c->conf_path));
 
 	conf_init(c);
 
