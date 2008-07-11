@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: mousefunc.c,v 1.3 2008/07/11 14:21:28 okan Exp $
+ * $Id: mousefunc.c,v 1.4 2008/07/11 15:18:29 okan Exp $
  */
 
 #include "headers.h"
@@ -112,8 +112,6 @@ mousefunc_menu_cmd(struct client_ctx *cc, void *arg)
 	struct menu	*mi;
 	struct menu_q	 menuq;
 	struct cmd	*cmd;
-
-	conf_reload(&Conf);
 
 	TAILQ_INIT(&menuq);
 	TAILQ_FOREACH(cmd, &Conf.cmdq, entry) {

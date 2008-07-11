@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.58 2008/07/11 14:21:28 okan Exp $
+ * $Id: calmwm.h,v 1.59 2008/07/11 15:18:29 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -425,7 +425,6 @@ void			 conf_unbind(struct conf *, struct keybinding *);
 void			 conf_mousebind(struct conf *, char *, char *);
 void			 conf_mouseunbind(struct conf *, struct mousebinding *);
 void			 conf_grab_mouse(struct client_ctx *);
-int			 conf_changed(char *);
 void			 conf_reload(struct conf *);
 void			 conf_font(struct conf *);
 
@@ -444,6 +443,7 @@ void			 kbfunc_client_nogroup(struct client_ctx *, void *);
 void			 kbfunc_client_grouptoggle(struct client_ctx *, void *);
 void			 kbfunc_client_maximize(struct client_ctx *, void *);
 void			 kbfunc_client_vmaximize(struct client_ctx *, void *);
+void			 kbfunc_reload(struct client_ctx *, void *);
 void			 kbfunc_quit_wm(struct client_ctx *, void *);
 void			 kbfunc_moveresize(struct client_ctx *, void *);
 void			 kbfunc_menu_search(struct client_ctx *, void *);
