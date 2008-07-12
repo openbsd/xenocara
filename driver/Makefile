@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.18 2008/06/14 22:29:23 mbalmer Exp $
+# $OpenBSD: Makefile,v 1.19 2008/07/12 13:01:20 matthieu Exp $
 
 # Broken
 # xf86-input-calcomp  xf86-input-citron  xf86-input-dmc
@@ -80,8 +80,8 @@ VIDEO_DRV_i386= \
 	xf86-video-i810 \
 	xf86-video-intel \
 	xf86-video-nsc \
+	xf86-video-openchrome \
 	xf86-video-radeonhd \
-	xf86-video-via \
 	xf86-video-vmware \
 	xf86-video-voodoo
 
