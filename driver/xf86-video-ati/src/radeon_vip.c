@@ -46,13 +46,13 @@ static Bool RADEONVIP_ioctl(GENERIC_BUS_Ptr b, long ioctl, long arg1, char *arg2
     }
 }
 
-static CARD32 RADEONVIP_idle(GENERIC_BUS_Ptr b)
+static uint32_t RADEONVIP_idle(GENERIC_BUS_Ptr b)
 {
    ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
    RADEONInfoPtr info = RADEONPTR(pScrn);
    unsigned char *RADEONMMIO = info->MMIO;
 
-   CARD32 timeout;
+   uint32_t timeout;
    
    RADEONWaitForIdleMMIO(pScrn);
    timeout = INREG(RADEON_VIPH_TIMEOUT_STAT);
@@ -67,13 +67,13 @@ static CARD32 RADEONVIP_idle(GENERIC_BUS_Ptr b)
    return (INREG(RADEON_VIPH_CONTROL) & 0x2000) ? VIP_BUSY : VIP_IDLE ;
 }
 
-static CARD32 RADEONVIP_fifo_idle(GENERIC_BUS_Ptr b, CARD8 channel)
+static uint32_t RADEONVIP_fifo_idle(GENERIC_BUS_Ptr b, uint8_t channel)
 {
    ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
    RADEONInfoPtr info = RADEONPTR(pScrn);
    unsigned char *RADEONMMIO = info->MMIO;
 
-   CARD32 timeout;
+   uint32_t timeout;
    
    RADEONWaitForIdleMMIO(pScrn);
    timeout = INREG(VIPH_TIMEOUT_STAT);
@@ -105,12 +105,12 @@ static CARD32 RADEONVIP_fifo_idle(GENERIC_BUS_Ptr b, CARD8 channel)
     }						\
   } 
 
-static Bool RADEONVIP_read(GENERIC_BUS_Ptr b, CARD32 address, CARD32 count, CARD8 *buffer)
+static Bool RADEONVIP_read(GENERIC_BUS_Ptr b, uint32_t address, uint32_t count, uint8_t *buffer)
 {
    ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
    RADEONInfoPtr info = RADEONPTR(pScrn);
    unsigned char *RADEONMMIO = info->MMIO;
-   CARD32 status,tmp;
+   uint32_t status,tmp;
 
    if((count!=1) && (count!=2) && (count!=4))
    {
@@ -152,13 +152,13 @@ static Bool RADEONVIP_read(GENERIC_BUS_Ptr b, CARD32 address, CARD32 count, CARD
     RADEONWaitForIdleMMIO(pScrn);
     switch(count){
         case 1:
-             *buffer=(CARD8)(INREG(RADEON_VIPH_REG_DATA) & 0xff);
+             *buffer=(uint8_t)(INREG(RADEON_VIPH_REG_DATA) & 0xff);
              break;
         case 2:
-             *(CARD16 *)buffer=(CARD16) (INREG(RADEON_VIPH_REG_DATA) & 0xffff);
+             *(uint16_t *)buffer=(uint16_t) (INREG(RADEON_VIPH_REG_DATA) & 0xffff);
              break;
         case 4:
-             *(CARD32 *)buffer=(CARD32) ( INREG(RADEON_VIPH_REG_DATA) & 0xffffffff);
+             *(uint32_t *)buffer=(uint32_t) ( INREG(RADEON_VIPH_REG_DATA) & 0xffffffff);
              break;
         }
      VIP_WAIT_FOR_IDLE();
@@ -171,12 +171,12 @@ static Bool RADEONVIP_read(GENERIC_BUS_Ptr b, CARD32 address, CARD32 count, CARD
      return TRUE;
 }
 
-static Bool RADEONVIP_fifo_read(GENERIC_BUS_Ptr b, CARD32 address, CARD32 count, CARD8 *buffer)
+static Bool RADEONVIP_fifo_read(GENERIC_BUS_Ptr b, uint32_t address, uint32_t count, uint8_t *buffer)
 {
    ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
    RADEONInfoPtr info = RADEONPTR(pScrn);
    unsigned char *RADEONMMIO = info->MMIO;
-   CARD32 status,tmp;
+   uint32_t status,tmp;
 
    if(count!=1)
    {
@@ -222,13 +222,13 @@ static Bool RADEONVIP_fifo_read(GENERIC_BUS_Ptr b, CARD32 address, CARD32 count,
     RADEONWaitForIdleMMIO(pScrn);
     switch(count){
         case 1:
-             *buffer=(CARD8)(INREG(VIPH_REG_DATA) & 0xff);
+             *buffer=(uint8_t)(INREG(VIPH_REG_DATA) & 0xff);
              break;
         case 2:
-             *(CARD16 *)buffer=(CARD16) (INREG(VIPH_REG_DATA) & 0xffff);
+             *(uint16_t *)buffer=(uint16_t) (INREG(VIPH_REG_DATA) & 0xffff);
              break;
         case 4:
-             *(CARD32 *)buffer=(CARD32) ( INREG(VIPH_REG_DATA) & 0xffffffff);
+             *(uint32_t *)buffer=(uint32_t) ( INREG(VIPH_REG_DATA) & 0xffffffff);
              break;
         }
      while(VIP_BUSY == (status = RADEONVIP_fifo_idle(b, 0xff)));
@@ -245,13 +245,13 @@ static Bool RADEONVIP_fifo_read(GENERIC_BUS_Ptr b, CARD32 address, CARD32 count,
 }
 
 
-static Bool RADEONVIP_write(GENERIC_BUS_Ptr b, CARD32 address, CARD32 count, CARD8 *buffer)
+static Bool RADEONVIP_write(GENERIC_BUS_Ptr b, uint32_t address, uint32_t count, uint8_t *buffer)
 {
     ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
     RADEONInfoPtr info = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
     
-    CARD32 status;
+    uint32_t status;
 
 
     if((count!=4))
@@ -269,7 +269,7 @@ static Bool RADEONVIP_write(GENERIC_BUS_Ptr b, CARD32 address, CARD32 count, CAR
     RADEONWaitForFifo(pScrn, 2);
     switch(count){
         case 4:
-             OUTREG(RADEON_VIPH_REG_DATA, *(CARD32 *)buffer);
+             OUTREG(RADEON_VIPH_REG_DATA, *(uint32_t *)buffer);
              break;
         }
     write_mem_barrier();
@@ -278,14 +278,14 @@ static Bool RADEONVIP_write(GENERIC_BUS_Ptr b, CARD32 address, CARD32 count, CAR
     return TRUE;
 }
 
-static Bool RADEONVIP_fifo_write(GENERIC_BUS_Ptr b, CARD32 address, CARD32 count, CARD8 *buffer)
+static Bool RADEONVIP_fifo_write(GENERIC_BUS_Ptr b, uint32_t address, uint32_t count, uint8_t *buffer)
 {
     ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
     RADEONInfoPtr info = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
     
-    CARD32 status;
-	CARD32 i;
+    uint32_t status;
+	uint32_t i;
 
     RADEONWaitForFifo(pScrn, 2);
     OUTREG(VIPH_REG_ADDR, (address & (~0x2000)) | 0x1000);
@@ -300,7 +300,7 @@ static Bool RADEONVIP_fifo_write(GENERIC_BUS_Ptr b, CARD32 address, CARD32 count
 	RADEONWaitForFifo(pScrn, 2);
 	for (i = 0; i < count; i+=4)
 	{
-		OUTREG(VIPH_REG_DATA, *(CARD32*)(buffer + i));
+		OUTREG(VIPH_REG_DATA, *(uint32_t*)(buffer + i));
     	write_mem_barrier();
 		while(VIP_BUSY == (status = RADEONVIP_fifo_idle(b, 0x0f)));
     	if(VIP_IDLE != status)
@@ -326,6 +326,13 @@ void RADEONVIP_reset(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 		case CHIP_FAMILY_R350:
 		case CHIP_FAMILY_R300:
 	    OUTREG(RADEON_VIPH_CONTROL, 0x003F0009); /* slowest, timeout in 16 phases */
+	    OUTREG(RADEON_VIPH_TIMEOUT_STAT, (INREG(RADEON_VIPH_TIMEOUT_STAT) & 0xFFFFFF00) | RADEON_VIPH_TIMEOUT_STAT__VIPH_REGR_DIS);
+	    OUTREG(RADEON_VIPH_DV_LAT, 0x444400FF); /* set timeslice */
+	    OUTREG(RADEON_VIPH_BM_CHUNK, 0x0);
+	    OUTREG(RADEON_TEST_DEBUG_CNTL, INREG(RADEON_TEST_DEBUG_CNTL) & (~RADEON_TEST_DEBUG_CNTL__TEST_DEBUG_OUT_EN));
+	    break;
+		case CHIP_FAMILY_RV380:
+	    OUTREG(RADEON_VIPH_CONTROL, 0x003F000D); /* slowest, timeout in 16 phases */
 	    OUTREG(RADEON_VIPH_TIMEOUT_STAT, (INREG(RADEON_VIPH_TIMEOUT_STAT) & 0xFFFFFF00) | RADEON_VIPH_TIMEOUT_STAT__VIPH_REGR_DIS);
 	    OUTREG(RADEON_VIPH_DV_LAT, 0x444400FF); /* set timeslice */
 	    OUTREG(RADEON_VIPH_BM_CHUNK, 0x0);

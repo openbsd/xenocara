@@ -26,6 +26,7 @@
  *    Eric Anholt <anholt@FreeBSD.org>
  *    Zack Rusin <zrusin@trolltech.com>
  *    Benjamin Herrenschmidt <benh@kernel.crashing.org>
+ *    Alex Deucher <alexander.deucher@amd.com>
  *
  */
 
@@ -57,11 +58,18 @@
 #ifdef ONLY_ONCE
 static Bool is_transform[2];
 static PictTransform *transform[2];
+static Bool has_mask;
+/* Whether we are tiling horizontally and vertically */
+static Bool need_src_tile_x;
+static Bool need_src_tile_y;
+/* Size of tiles ... set to 65536x65536 if not tiling in that direction */
+static Bool src_tile_width;
+static Bool src_tile_height;
 
 struct blendinfo {
     Bool dst_alpha;
     Bool src_alpha;
-    CARD32 blend_cntl;
+    uint32_t blend_cntl;
 };
 
 static struct blendinfo RadeonBlendOp[] = {
@@ -95,7 +103,7 @@ static struct blendinfo RadeonBlendOp[] = {
 
 struct formatinfo {
     int fmt;
-    CARD32 card_fmt;
+    uint32_t card_fmt;
 };
 
 /* Note on texture formats:
@@ -121,9 +129,20 @@ static struct formatinfo R200TexFormats[] = {
     {PICT_a8,		R200_TXFORMAT_I8 | R200_TXFORMAT_ALPHA_IN_MAP},
 };
 
+static struct formatinfo R300TexFormats[] = {
+    {PICT_a8r8g8b8,	R300_EASY_TX_FORMAT(X, Y, Z, W, W8Z8Y8X8)},
+    {PICT_x8r8g8b8,	R300_EASY_TX_FORMAT(X, Y, Z, ONE, W8Z8Y8X8)},
+    {PICT_a8b8g8r8,	R300_EASY_TX_FORMAT(Z, Y, X, W, W8Z8Y8X8)},
+    {PICT_x8b8g8r8,	R300_EASY_TX_FORMAT(Z, Y, X, ONE, W8Z8Y8X8)},
+    {PICT_r5g6b5,	R300_EASY_TX_FORMAT(X, Y, Z, ONE, Z5Y6X5)},
+    {PICT_a1r5g5b5,	R300_EASY_TX_FORMAT(X, Y, Z, W, W1Z5Y5X5)},
+    {PICT_x1r5g5b5,	R300_EASY_TX_FORMAT(X, Y, Z, ONE, W1Z5Y5X5)},
+    {PICT_a8,		R300_EASY_TX_FORMAT(ZERO, ZERO, ZERO, X, X8)},
+};
+
 /* Common Radeon setup code */
 
-static Bool RADEONGetDestFormat(PicturePtr pDstPicture, CARD32 *dst_format)
+static Bool RADEONGetDestFormat(PicturePtr pDstPicture, uint32_t *dst_format)
 {
     switch (pDstPicture->format) {
     case PICT_a8r8g8b8:
@@ -148,9 +167,33 @@ static Bool RADEONGetDestFormat(PicturePtr pDstPicture, CARD32 *dst_format)
     return TRUE;
 }
 
-static CARD32 RADEONGetBlendCntl(int op, PicturePtr pMask, CARD32 dst_format)
+static Bool R300GetDestFormat(PicturePtr pDstPicture, uint32_t *dst_format)
 {
-    CARD32 sblend, dblend;
+    switch (pDstPicture->format) {
+    case PICT_a8r8g8b8:
+    case PICT_x8r8g8b8:
+	*dst_format = R300_COLORFORMAT_ARGB8888;
+	break;
+    case PICT_r5g6b5:
+	*dst_format = R300_COLORFORMAT_RGB565;
+	break;
+    case PICT_a1r5g5b5:
+    case PICT_x1r5g5b5:
+	*dst_format = R300_COLORFORMAT_ARGB1555;
+	break;
+    case PICT_a8:
+	*dst_format = R300_COLORFORMAT_I8;
+	break;
+    default:
+	RADEON_FALLBACK(("Unsupported dest format 0x%x\n",
+	       (int)pDstPicture->format));
+    }
+    return TRUE;
+}
+
+static uint32_t RADEONGetBlendCntl(int op, PicturePtr pMask, uint32_t dst_format)
+{
+    uint32_t sblend, dblend;
 
     sblend = RadeonBlendOp[op].blend_cntl & RADEON_SRC_BLEND_MASK;
     dblend = RadeonBlendOp[op].blend_cntl & RADEON_DST_BLEND_MASK;
@@ -182,8 +225,97 @@ static CARD32 RADEONGetBlendCntl(int op, PicturePtr pMask, CARD32 dst_format)
 
 union intfloat {
     float f;
-    CARD32 i;
+    uint32_t i;
 };
+
+/* Check if we need a software-fallback because of a repeating
+ *   non-power-of-two texture.
+ *
+ * canTile: whether we can emulate a repeat by drawing in tiles:
+ *   possible for the source, but not for the mask. (Actually
+ *   we could do tiling for the mask too, but dealing with the
+ *   combination of a tiled mask and a tiled source would be
+ *   a lot of complexity, so we handle only the most common
+ *   case of a repeating mask.)
+ */
+static Bool RADEONCheckTexturePOT(PicturePtr pPict, Bool canTile)
+{
+    int w = pPict->pDrawable->width;
+    int h = pPict->pDrawable->height;
+
+    if (pPict->repeat && ((w & (w - 1)) != 0 || (h & (h - 1)) != 0) &&
+	!(!pPict->transform && canTile))
+	RADEON_FALLBACK(("NPOT repeating %s unsupported (%dx%d), transform=%d\n",
+			 canTile ? "source" : "mask", w, h, pPict->transform != 0));
+
+    return TRUE;
+}
+
+/* Determine if the pitch of the pixmap meets the criteria for being
+ * used as a repeating texture: no padding or only a single line texture.
+ */
+static Bool RADEONPitchMatches(PixmapPtr pPix)
+{
+    int w = pPix->drawable.width;
+    int h = pPix->drawable.height;
+    uint32_t txpitch = exaGetPixmapPitch(pPix);
+
+    if (h > 1 && ((w * pPix->drawable.bitsPerPixel / 8 + 31) & ~31) != txpitch)
+	return FALSE;
+
+    return TRUE;
+}
+
+/* We can't turn on repeats normally for a non-power-of-two dimension,
+ * but if the source isn't transformed, we can get the same effect
+ * by drawing the image in multiple tiles. (A common case that it's
+ * important to get right is drawing a strip of a NPOTxPOT texture
+ * repeating in the POT direction. With tiling, this ends up as a
+ * a single tile on R300 and newer, which is perfect.)
+ *
+ * canTile1d: On R300 and newer, we can repeat a texture that is NPOT in
+ *   one direction and POT in the other in the POT direction; on
+ *   older chips we can only repeat at all if the texture is POT in
+ *   both directions.
+ *
+ * needMatchingPitch: On R100/R200, we can only repeat horizontally if
+ *   there is no padding in the texture. Textures with small POT widths
+ *   (1,2,4,8) thus can't be tiled.
+ */
+static Bool RADEONSetupSourceTile(PicturePtr pPict,
+				  PixmapPtr pPix,
+				  Bool canTile1d,
+				  Bool needMatchingPitch)
+{
+    need_src_tile_x = need_src_tile_y = FALSE;
+    src_tile_width = src_tile_height = 65536; /* "infinite" */
+	    
+    if (pPict->repeat) {
+	Bool badPitch = needMatchingPitch && !RADEONPitchMatches(pPix);
+	
+	int w = pPict->pDrawable->width;
+	int h = pPict->pDrawable->height;
+	
+	if (pPict->transform) {
+	    if (badPitch)
+		RADEON_FALLBACK(("Width %d and pitch %u not compatible for repeat\n",
+				 w, (unsigned)exaGetPixmapPitch(pPix)));
+	} else {
+	    need_src_tile_x = (w & (w - 1)) != 0 || badPitch;
+	    need_src_tile_y = (h & (h - 1)) != 0;
+	    
+	    if (!canTile1d)
+		need_src_tile_x = need_src_tile_y = need_src_tile_x || need_src_tile_y;
+	}
+
+	if (need_src_tile_x)
+	  src_tile_width = w;
+	if (need_src_tile_y)
+	  src_tile_height = h;
+    }
+
+    return TRUE;
+}
 
 /* R100-specific code */
 
@@ -204,8 +336,8 @@ static Bool R100CheckCompositeTexture(PicturePtr pPict, int unit)
 	RADEON_FALLBACK(("Unsupported picture format 0x%x\n",
 			(int)pPict->format));
 
-    if (pPict->repeat && ((w != 1) || (h != 1)))
-	RADEON_FALLBACK(("Repeat unsupported (%dx%d)\n", w, h));
+    if (!RADEONCheckTexturePOT(pPict, unit == 0))
+	return FALSE;
 
     if (pPict->filter != PictFilterNearest &&
 	pPict->filter != PictFilterBilinear)
@@ -222,14 +354,15 @@ static Bool FUNC_NAME(R100TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
 					int unit)
 {
     RINFO_FROM_SCREEN(pPix->drawable.pScreen);
-    CARD32 txfilter, txformat, txoffset, txpitch;
+    uint32_t txfilter, txformat, txoffset, txpitch;
     int w = pPict->pDrawable->width;
     int h = pPict->pDrawable->height;
+    Bool repeat = pPict->repeat && !(unit == 0 && (need_src_tile_x || need_src_tile_y));
     int i;
     ACCEL_PREAMBLE();
 
     txpitch = exaGetPixmapPitch(pPix);
-    txoffset = exaGetPixmapOffset(pPix) + info->fbLocation;
+    txoffset = exaGetPixmapOffset(pPix) + info->fbLocation + pScrn->fbOffset;
 
     if ((txoffset & 0x1f) != 0)
 	RADEON_FALLBACK(("Bad texture offset 0x%x\n", (int)txoffset));
@@ -245,13 +378,20 @@ static Bool FUNC_NAME(R100TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
     if (RADEONPixmapIsColortiled(pPix))
 	txoffset |= RADEON_TXO_MACRO_TILE;
 
-    if (pPict->repeat) {
+    if (repeat) {
+	if (!RADEONPitchMatches(pPix))
+	    RADEON_FALLBACK(("Width %d and pitch %u not compatible for repeat\n",
+			     w, (unsigned)txpitch));
+
 	txformat |= RADEONLog2(w) << RADEON_TXFORMAT_WIDTH_SHIFT;
 	txformat |= RADEONLog2(h) << RADEON_TXFORMAT_HEIGHT_SHIFT;
-    } else 
+    } else
 	txformat |= RADEON_TXFORMAT_NON_POWER2;
     txformat |= unit << 24; /* RADEON_TXFORMAT_ST_ROUTE_STQX */
- 
+
+    info->texW[unit] = 1;
+    info->texH[unit] = 1;
+
     switch (pPict->filter) {
     case PictFilterNearest:
 	txfilter = (RADEON_MAG_FILTER_NEAREST | RADEON_MIN_FILTER_NEAREST);
@@ -262,6 +402,9 @@ static Bool FUNC_NAME(R100TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
     default:
 	RADEON_FALLBACK(("Bad filter 0x%x\n", pPict->filter));
     }
+
+    if (repeat)
+      txfilter |= RADEON_CLAMP_S_WRAP | RADEON_CLAMP_T_WRAP;
 
     BEGIN_ACCEL(5);
     if (unit == 0) {
@@ -294,40 +437,75 @@ static Bool FUNC_NAME(R100TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
 }
 
 #ifdef ONLY_ONCE
+
+static PixmapPtr
+RADEONGetDrawablePixmap(DrawablePtr pDrawable)
+{
+    if (pDrawable->type == DRAWABLE_WINDOW)
+	return pDrawable->pScreen->GetWindowPixmap((WindowPtr)pDrawable);
+    else
+	return (PixmapPtr)pDrawable;
+}
+
 static Bool R100CheckComposite(int op, PicturePtr pSrcPicture,
 			       PicturePtr pMaskPicture, PicturePtr pDstPicture)
 {
-    CARD32 tmp1;
+    PixmapPtr pSrcPixmap, pDstPixmap;
+    uint32_t tmp1;
 
     /* Check for unsupported compositing operations. */
     if (op >= sizeof(RadeonBlendOp) / sizeof(RadeonBlendOp[0]))
 	RADEON_FALLBACK(("Unsupported Composite op 0x%x\n", op));
 
-    if (pMaskPicture != NULL && pMaskPicture->componentAlpha) {
-	/* Check if it's component alpha that relies on a source alpha and on
-	 * the source value.  We can only get one of those into the single
-	 * source value that we get to blend with.
-	 */
-	if (RadeonBlendOp[op].src_alpha &&
-	    (RadeonBlendOp[op].blend_cntl & RADEON_SRC_BLEND_MASK) !=
-	     RADEON_SRC_BLEND_GL_ZERO)
-	{
-	    RADEON_FALLBACK(("Component alpha not supported with source "
-			    "alpha and source value blending.\n"));
-	}
+    if (!pSrcPicture->pDrawable)
+	return FALSE;
+
+    pSrcPixmap = RADEONGetDrawablePixmap(pSrcPicture->pDrawable);
+
+    if (pSrcPixmap->drawable.width >= 2048 ||
+	pSrcPixmap->drawable.height >= 2048) {
+	RADEON_FALLBACK(("Source w/h too large (%d,%d).\n",
+			 pSrcPixmap->drawable.width,
+			 pSrcPixmap->drawable.height));
     }
 
-    if (pDstPicture->pDrawable->width >= (1 << 11) ||
-	pDstPicture->pDrawable->height >= (1 << 11))
-    {
+    pDstPixmap = RADEONGetDrawablePixmap(pDstPicture->pDrawable);
+
+    if (pDstPixmap->drawable.width >= 2048 ||
+	pDstPixmap->drawable.height >= 2048) {
 	RADEON_FALLBACK(("Dest w/h too large (%d,%d).\n",
-			pDstPicture->pDrawable->width,
-			pDstPicture->pDrawable->height));
+			 pDstPixmap->drawable.width,
+			 pDstPixmap->drawable.height));
+    }
+
+    if (pMaskPicture) {
+	PixmapPtr pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
+
+	if (pMaskPixmap->drawable.width >= 2048 ||
+	    pMaskPixmap->drawable.height >= 2048) {
+	    RADEON_FALLBACK(("Mask w/h too large (%d,%d).\n",
+			     pMaskPixmap->drawable.width,
+			     pMaskPixmap->drawable.height));
+	}
+
+	if (pMaskPicture->componentAlpha) {
+	    /* Check if it's component alpha that relies on a source alpha and
+	     * on the source value.  We can only get one of those into the
+	     * single source value that we get to blend with.
+	     */
+	    if (RadeonBlendOp[op].src_alpha &&
+		(RadeonBlendOp[op].blend_cntl & RADEON_SRC_BLEND_MASK) !=
+		RADEON_SRC_BLEND_GL_ZERO) {
+		RADEON_FALLBACK(("Component alpha not supported with source "
+				 "alpha and source value blending.\n"));
+	    }
+	}
+
+	if (!R100CheckCompositeTexture(pMaskPicture, 1))
+	    return FALSE;
     }
 
     if (!R100CheckCompositeTexture(pSrcPicture, 0))
-	return FALSE;
-    if (pMaskPicture != NULL && !R100CheckCompositeTexture(pMaskPicture, 1))
 	return FALSE;
 
     if (!RADEONGetDestFormat(pDstPicture, &tmp1))
@@ -346,8 +524,8 @@ static Bool FUNC_NAME(R100PrepareComposite)(int op,
 					    PixmapPtr pDst)
 {
     RINFO_FROM_SCREEN(pDst->drawable.pScreen);
-    CARD32 dst_format, dst_offset, dst_pitch, colorpitch;
-    CARD32 pp_cntl, blendcntl, cblend, ablend;
+    uint32_t dst_format, dst_offset, dst_pitch, colorpitch;
+    uint32_t pp_cntl, blendcntl, cblend, ablend;
     int pixel_shift;
     ACCEL_PREAMBLE();
 
@@ -356,21 +534,31 @@ static Bool FUNC_NAME(R100PrepareComposite)(int op,
     if (!info->XInited3D)
 	RADEONInit3DEngine(pScrn);
 
-    RADEONGetDestFormat(pDstPicture, &dst_format);
+    if (!RADEONGetDestFormat(pDstPicture, &dst_format))
+	return FALSE;
+
+    if (pMask)
+	has_mask = TRUE;
+    else
+	has_mask = FALSE;
+
     pixel_shift = pDst->drawable.bitsPerPixel >> 4;
 
-    dst_offset = exaGetPixmapOffset(pDst) + info->fbLocation;
+    dst_offset = exaGetPixmapOffset(pDst) + info->fbLocation + pScrn->fbOffset;
     dst_pitch = exaGetPixmapPitch(pDst);
     colorpitch = dst_pitch >> pixel_shift;
     if (RADEONPixmapIsColortiled(pDst))
 	colorpitch |= RADEON_COLOR_TILE_ENABLE;
 
-    dst_offset = exaGetPixmapOffset(pDst) + info->fbLocation;
+    dst_offset = exaGetPixmapOffset(pDst) + info->fbLocation + pScrn->fbOffset;
     dst_pitch = exaGetPixmapPitch(pDst);
     if ((dst_offset & 0x0f) != 0)
 	RADEON_FALLBACK(("Bad destination offset 0x%x\n", (int)dst_offset));
     if (((dst_pitch >> pixel_shift) & 0x7) != 0)
 	RADEON_FALLBACK(("Bad destination pitch 0x%x\n", (int)dst_pitch));
+
+    if (!RADEONSetupSourceTile(pSrcPicture, pSrc, FALSE, TRUE))
+	return FALSE;
 
     if (!FUNC_NAME(R100TextureSetup)(pSrcPicture, pSrc, 0))
 	return FALSE;
@@ -427,9 +615,13 @@ static Bool FUNC_NAME(R100PrepareComposite)(int op,
 
     OUT_ACCEL_REG(RADEON_PP_TXCBLEND_0, cblend);
     OUT_ACCEL_REG(RADEON_PP_TXABLEND_0, ablend);
-    OUT_ACCEL_REG(RADEON_SE_VTX_FMT, RADEON_SE_VTX_FMT_XY |
-				     RADEON_SE_VTX_FMT_ST0 |
-				     RADEON_SE_VTX_FMT_ST1);
+    if (pMask)
+	OUT_ACCEL_REG(RADEON_SE_VTX_FMT, (RADEON_SE_VTX_FMT_XY |
+					  RADEON_SE_VTX_FMT_ST0 |
+					  RADEON_SE_VTX_FMT_ST1));
+    else
+	OUT_ACCEL_REG(RADEON_SE_VTX_FMT, (RADEON_SE_VTX_FMT_XY |
+					  RADEON_SE_VTX_FMT_ST0));
     /* Op operator. */
     blendcntl = RADEONGetBlendCntl(op, pMaskPicture, pDstPicture->format);
 
@@ -459,8 +651,8 @@ static Bool R200CheckCompositeTexture(PicturePtr pPict, int unit)
 	RADEON_FALLBACK(("Unsupported picture format 0x%x\n",
 			 (int)pPict->format));
 
-    if (pPict->repeat && ((w != 1) || (h != 1)))
-	RADEON_FALLBACK(("Repeat unsupported (%dx%d)\n", w, h));
+    if (!RADEONCheckTexturePOT(pPict, unit == 0))
+	return FALSE;
 
     if (pPict->filter != PictFilterNearest &&
 	pPict->filter != PictFilterBilinear)
@@ -475,20 +667,21 @@ static Bool FUNC_NAME(R200TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
 					int unit)
 {
     RINFO_FROM_SCREEN(pPix->drawable.pScreen);
-    CARD32 txfilter, txformat, txoffset, txpitch;
+    uint32_t txfilter, txformat, txoffset, txpitch;
     int w = pPict->pDrawable->width;
     int h = pPict->pDrawable->height;
+    Bool repeat = pPict->repeat && !(unit == 0 && (need_src_tile_x || need_src_tile_y));
     int i;
     ACCEL_PREAMBLE();
 
     txpitch = exaGetPixmapPitch(pPix);
-    txoffset = exaGetPixmapOffset(pPix) + info->fbLocation;
+    txoffset = exaGetPixmapOffset(pPix) + info->fbLocation + pScrn->fbOffset;
 
     if ((txoffset & 0x1f) != 0)
 	RADEON_FALLBACK(("Bad texture offset 0x%x\n", (int)txoffset));
     if ((txpitch & 0x1f) != 0)
 	RADEON_FALLBACK(("Bad texture pitch 0x%x\n", (int)txpitch));
-    
+
     for (i = 0; i < sizeof(R200TexFormats) / sizeof(R200TexFormats[0]); i++)
     {
 	if (R200TexFormats[i].fmt == pPict->format)
@@ -498,12 +691,19 @@ static Bool FUNC_NAME(R200TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
     if (RADEONPixmapIsColortiled(pPix))
 	txoffset |= R200_TXO_MACRO_TILE;
 
-    if (pPict->repeat) {
+    if (repeat) {
+	if (!RADEONPitchMatches(pPix))
+	    RADEON_FALLBACK(("Width %d and pitch %u not compatible for repeat\n",
+			     w, (unsigned)txpitch));
+
 	txformat |= RADEONLog2(w) << R200_TXFORMAT_WIDTH_SHIFT;
 	txformat |= RADEONLog2(h) << R200_TXFORMAT_HEIGHT_SHIFT;
     } else
 	txformat |= R200_TXFORMAT_NON_POWER2;
     txformat |= unit << R200_TXFORMAT_ST_ROUTE_SHIFT;
+
+    info->texW[unit] = w;
+    info->texH[unit] = h;
 
     switch (pPict->filter) {
     case PictFilterNearest:
@@ -517,6 +717,9 @@ static Bool FUNC_NAME(R200TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
     default:
 	RADEON_FALLBACK(("Bad filter 0x%x\n", pPict->filter));
     }
+
+    if (repeat)
+      txfilter |= R200_CLAMP_S_WRAP | R200_CLAMP_T_WRAP;
 
     BEGIN_ACCEL(6);
     if (unit == 0) {
@@ -552,31 +755,60 @@ static Bool FUNC_NAME(R200TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
 static Bool R200CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskPicture,
 			       PicturePtr pDstPicture)
 {
-    CARD32 tmp1;
+    PixmapPtr pSrcPixmap, pDstPixmap;
+    uint32_t tmp1;
 
     TRACE;
 
-    /* Check for unsupported compositing operations. */
-    if (op >= sizeof(RadeonBlendOp) / sizeof(RadeonBlendOp[0]))
-	RADEON_FALLBACK(("Unsupported Composite op 0x%x\n", op));
+    if (!pSrcPicture->pDrawable)
+	return FALSE;
 
-    if (pMaskPicture != NULL && pMaskPicture->componentAlpha) {
-	/* Check if it's component alpha that relies on a source alpha and on
-	 * the source value.  We can only get one of those into the single
-	 * source value that we get to blend with.
-	 */
-	if (RadeonBlendOp[op].src_alpha &&
-	    (RadeonBlendOp[op].blend_cntl & RADEON_SRC_BLEND_MASK) !=
-	     RADEON_SRC_BLEND_GL_ZERO)
-	{
-	    RADEON_FALLBACK(("Component alpha not supported with source "
-			    "alpha and source value blending.\n"));
+    pSrcPixmap = RADEONGetDrawablePixmap(pSrcPicture->pDrawable);
+
+    if (pSrcPixmap->drawable.width >= 2048 ||
+	pSrcPixmap->drawable.height >= 2048) {
+	RADEON_FALLBACK(("Source w/h too large (%d,%d).\n",
+			 pSrcPixmap->drawable.width,
+			 pSrcPixmap->drawable.height));
+    }
+
+    pDstPixmap = RADEONGetDrawablePixmap(pDstPicture->pDrawable);
+
+    if (pDstPixmap->drawable.width >= 2048 ||
+	pDstPixmap->drawable.height >= 2048) {
+	RADEON_FALLBACK(("Dest w/h too large (%d,%d).\n",
+			 pDstPixmap->drawable.width,
+			 pDstPixmap->drawable.height));
+    }
+
+    if (pMaskPicture) {
+	PixmapPtr pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
+
+	if (pMaskPixmap->drawable.width >= 2048 ||
+	    pMaskPixmap->drawable.height >= 2048) {
+	    RADEON_FALLBACK(("Mask w/h too large (%d,%d).\n",
+			     pMaskPixmap->drawable.width,
+			     pMaskPixmap->drawable.height));
 	}
+
+	if (pMaskPicture->componentAlpha) {
+	    /* Check if it's component alpha that relies on a source alpha and
+	     * on the source value.  We can only get one of those into the
+	     * single source value that we get to blend with.
+	     */
+	    if (RadeonBlendOp[op].src_alpha &&
+		(RadeonBlendOp[op].blend_cntl & RADEON_SRC_BLEND_MASK) !=
+		RADEON_SRC_BLEND_GL_ZERO) {
+		RADEON_FALLBACK(("Component alpha not supported with source "
+				 "alpha and source value blending.\n"));
+	    }
+	}
+
+	if (!R200CheckCompositeTexture(pMaskPicture, 1))
+	    return FALSE;
     }
 
     if (!R200CheckCompositeTexture(pSrcPicture, 0))
-	return FALSE;
-    if (pMaskPicture != NULL && !R200CheckCompositeTexture(pMaskPicture, 1))
 	return FALSE;
 
     if (!RADEONGetDestFormat(pDstPicture, &tmp1))
@@ -591,8 +823,8 @@ static Bool FUNC_NAME(R200PrepareComposite)(int op, PicturePtr pSrcPicture,
 				PixmapPtr pSrc, PixmapPtr pMask, PixmapPtr pDst)
 {
     RINFO_FROM_SCREEN(pDst->drawable.pScreen);
-    CARD32 dst_format, dst_offset, dst_pitch;
-    CARD32 pp_cntl, blendcntl, cblend, ablend, colorpitch;
+    uint32_t dst_format, dst_offset, dst_pitch;
+    uint32_t pp_cntl, blendcntl, cblend, ablend, colorpitch;
     int pixel_shift;
     ACCEL_PREAMBLE();
 
@@ -601,10 +833,17 @@ static Bool FUNC_NAME(R200PrepareComposite)(int op, PicturePtr pSrcPicture,
     if (!info->XInited3D)
 	RADEONInit3DEngine(pScrn);
 
-    RADEONGetDestFormat(pDstPicture, &dst_format);
+    if (!RADEONGetDestFormat(pDstPicture, &dst_format))
+	return FALSE;
+
+    if (pMask)
+	has_mask = TRUE;
+    else
+	has_mask = FALSE;
+
     pixel_shift = pDst->drawable.bitsPerPixel >> 4;
 
-    dst_offset = exaGetPixmapOffset(pDst) + info->fbLocation;
+    dst_offset = exaGetPixmapOffset(pDst) + info->fbLocation + pScrn->fbOffset;
     dst_pitch = exaGetPixmapPitch(pDst);
     colorpitch = dst_pitch >> pixel_shift;
     if (RADEONPixmapIsColortiled(pDst))
@@ -614,6 +853,9 @@ static Bool FUNC_NAME(R200PrepareComposite)(int op, PicturePtr pSrcPicture,
 	RADEON_FALLBACK(("Bad destination offset 0x%x\n", (int)dst_offset));
     if (((dst_pitch >> pixel_shift) & 0x7) != 0)
 	RADEON_FALLBACK(("Bad destination pitch 0x%x\n", (int)dst_pitch));
+
+    if (!RADEONSetupSourceTile(pSrcPicture, pSrc, FALSE, TRUE))
+	return FALSE;
 
     if (!FUNC_NAME(R200TextureSetup)(pSrcPicture, pSrc, 0))
 	return FALSE;
@@ -636,9 +878,13 @@ static Bool FUNC_NAME(R200PrepareComposite)(int op, PicturePtr pSrcPicture,
     OUT_ACCEL_REG(RADEON_RB3D_COLOROFFSET, dst_offset);
 
     OUT_ACCEL_REG(R200_SE_VTX_FMT_0, R200_VTX_XY);
-    OUT_ACCEL_REG(R200_SE_VTX_FMT_1,
-		 (2 << R200_VTX_TEX0_COMP_CNT_SHIFT) |
-		 (2 << R200_VTX_TEX1_COMP_CNT_SHIFT));
+    if (pMask)
+	OUT_ACCEL_REG(R200_SE_VTX_FMT_1,
+		      (2 << R200_VTX_TEX0_COMP_CNT_SHIFT) |
+		      (2 << R200_VTX_TEX1_COMP_CNT_SHIFT));
+    else
+	OUT_ACCEL_REG(R200_SE_VTX_FMT_1,
+		      (2 << R200_VTX_TEX0_COMP_CNT_SHIFT));
 
     OUT_ACCEL_REG(RADEON_RB3D_COLORPITCH, colorpitch);
 
@@ -690,11 +936,919 @@ static Bool FUNC_NAME(R200PrepareComposite)(int op, PicturePtr pSrcPicture,
     return TRUE;
 }
 
+#ifdef ONLY_ONCE
+
+static Bool R300CheckCompositeTexture(PicturePtr pPict,
+				      PicturePtr pDstPict,
+				      int op,
+				      int unit,
+				      Bool is_r500)
+{
+    int w = pPict->pDrawable->width;
+    int h = pPict->pDrawable->height;
+    int i;
+    int max_tex_w, max_tex_h;
+
+    if (is_r500) {
+	max_tex_w = 4096;
+	max_tex_h = 4096;
+    } else {
+	max_tex_w = 2048;
+	max_tex_h = 2048;
+    }
+
+    if ((w > max_tex_w) || (h > max_tex_h))
+	RADEON_FALLBACK(("Picture w/h too large (%dx%d)\n", w, h));
+
+    for (i = 0; i < sizeof(R300TexFormats) / sizeof(R300TexFormats[0]); i++)
+    {
+	if (R300TexFormats[i].fmt == pPict->format)
+	    break;
+    }
+    if (i == sizeof(R300TexFormats) / sizeof(R300TexFormats[0]))
+	RADEON_FALLBACK(("Unsupported picture format 0x%x\n",
+			 (int)pPict->format));
+
+    if (!RADEONCheckTexturePOT(pPict, unit == 0))
+	return FALSE;
+
+    if (pPict->filter != PictFilterNearest &&
+	pPict->filter != PictFilterBilinear)
+	RADEON_FALLBACK(("Unsupported filter 0x%x\n", pPict->filter));
+
+    /* for REPEAT_NONE, Render semantics are that sampling outside the source
+     * picture results in alpha=0 pixels. We can implement this with a border color
+     * *if* our source texture has an alpha channel, otherwise we need to fall
+     * back. If we're not transformed then we hope that upper layers have clipped
+     * rendering to the bounds of the source drawable, in which case it doesn't
+     * matter. I have not, however, verified that the X server always does such
+     * clipping.
+     */
+    if (pPict->transform != 0 && !pPict->repeat && PICT_FORMAT_A(pPict->format) == 0) {
+	if (!(((op == PictOpSrc) || (op == PictOpClear)) && (PICT_FORMAT_A(pDstPict->format) == 0)))
+	    RADEON_FALLBACK(("REPEAT_NONE unsupported for transformed xRGB source\n"));
+    }
+
+    return TRUE;
+}
+
+#endif /* ONLY_ONCE */
+
+static Bool FUNC_NAME(R300TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
+					int unit)
+{
+    RINFO_FROM_SCREEN(pPix->drawable.pScreen);
+    uint32_t txfilter, txformat0, txformat1, txoffset, txpitch;
+    int w = pPict->pDrawable->width;
+    int h = pPict->pDrawable->height;
+    int i, pixel_shift;
+    ACCEL_PREAMBLE();
+
+    TRACE;
+
+    txpitch = exaGetPixmapPitch(pPix);
+    txoffset = exaGetPixmapOffset(pPix) + info->fbLocation + pScrn->fbOffset;
+
+    if ((txoffset & 0x1f) != 0)
+	RADEON_FALLBACK(("Bad texture offset 0x%x\n", (int)txoffset));
+    if ((txpitch & 0x1f) != 0)
+	RADEON_FALLBACK(("Bad texture pitch 0x%x\n", (int)txpitch));
+
+    /* TXPITCH = pixels (texels) per line - 1 */
+    pixel_shift = pPix->drawable.bitsPerPixel >> 4;
+    txpitch >>= pixel_shift;
+    txpitch -= 1;
+
+    if (RADEONPixmapIsColortiled(pPix))
+	txoffset |= R300_MACRO_TILE;
+
+    for (i = 0; i < sizeof(R300TexFormats) / sizeof(R300TexFormats[0]); i++)
+    {
+	if (R300TexFormats[i].fmt == pPict->format)
+	    break;
+    }
+
+    txformat1 = R300TexFormats[i].card_fmt;
+
+    txformat0 = ((((w - 1) & 0x7ff) << R300_TXWIDTH_SHIFT) |
+		 (((h - 1) & 0x7ff) << R300_TXHEIGHT_SHIFT));
+
+    if (IS_R500_3D && ((w - 1) & 0x800))
+	txpitch |= R500_TXWIDTH_11;
+
+    if (IS_R500_3D && ((h - 1) & 0x800))
+	txpitch |= R500_TXHEIGHT_11;
+
+    /* Use TXPITCH instead of TXWIDTH for address computations: we could
+     * omit this if there is no padding, but there is no apparent advantage
+     * in doing so.
+     */
+    txformat0 |= R300_TXPITCH_EN;
+
+    info->texW[unit] = w;
+    info->texH[unit] = h;
+
+    if (pPict->repeat && !(unit == 0 && need_src_tile_x))
+      txfilter = R300_TX_CLAMP_S(R300_TX_CLAMP_WRAP);
+    else
+      txfilter = R300_TX_CLAMP_S(R300_TX_CLAMP_CLAMP_GL);
+
+    if (pPict->repeat && !(unit == 0 && need_src_tile_y))
+      txfilter |= R300_TX_CLAMP_T(R300_TX_CLAMP_WRAP);
+    else
+      txfilter |= R300_TX_CLAMP_T(R300_TX_CLAMP_CLAMP_GL);
+		   
+    txfilter |= (unit << R300_TX_ID_SHIFT);
+
+    switch (pPict->filter) {
+    case PictFilterNearest:
+	txfilter |= (R300_TX_MAG_FILTER_NEAREST | R300_TX_MIN_FILTER_NEAREST);
+	break;
+    case PictFilterBilinear:
+	txfilter |= (R300_TX_MAG_FILTER_LINEAR | R300_TX_MIN_FILTER_LINEAR);
+	break;
+    default:
+	RADEON_FALLBACK(("Bad filter 0x%x\n", pPict->filter));
+    }
+
+    BEGIN_ACCEL(pPict->repeat ? 6 : 7);
+    OUT_ACCEL_REG(R300_TX_FILTER0_0 + (unit * 4), txfilter);
+    OUT_ACCEL_REG(R300_TX_FILTER1_0 + (unit * 4), 0);
+    OUT_ACCEL_REG(R300_TX_FORMAT0_0 + (unit * 4), txformat0);
+    OUT_ACCEL_REG(R300_TX_FORMAT1_0 + (unit * 4), txformat1);
+    OUT_ACCEL_REG(R300_TX_FORMAT2_0 + (unit * 4), txpitch);
+    OUT_ACCEL_REG(R300_TX_OFFSET_0 + (unit * 4), txoffset);
+    if (!pPict->repeat)
+	OUT_ACCEL_REG(R300_TX_BORDER_COLOR_0 + (unit * 4), 0);
+    FINISH_ACCEL();
+
+    if (pPict->transform != 0) {
+	is_transform[unit] = TRUE;
+	transform[unit] = pPict->transform;
+    } else {
+	is_transform[unit] = FALSE;
+    }
+
+    return TRUE;
+}
+
+#ifdef ONLY_ONCE
+
+static Bool R300CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskPicture,
+			       PicturePtr pDstPicture)
+{
+    uint32_t tmp1;
+    ScreenPtr pScreen = pDstPicture->pDrawable->pScreen;
+    PixmapPtr pSrcPixmap, pDstPixmap;
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    int max_tex_w, max_tex_h, max_dst_w, max_dst_h;
+
+    TRACE;
+
+    /* Check for unsupported compositing operations. */
+    if (op >= sizeof(RadeonBlendOp) / sizeof(RadeonBlendOp[0]))
+	RADEON_FALLBACK(("Unsupported Composite op 0x%x\n", op));
+
+    pSrcPixmap = RADEONGetDrawablePixmap(pSrcPicture->pDrawable);
+
+    if (IS_R500_3D) {
+	max_tex_w = 4096;
+	max_tex_h = 4096;
+	max_dst_w = 4096;
+	max_dst_h = 4096;
+    } else {
+	max_tex_w = 2048;
+	max_tex_h = 2048;
+	max_dst_w = 2560;
+	max_dst_h = 2560;
+    }
+
+    if (pSrcPixmap->drawable.width >= max_tex_w ||
+	pSrcPixmap->drawable.height >= max_tex_h) {
+	RADEON_FALLBACK(("Source w/h too large (%d,%d).\n",
+			 pSrcPixmap->drawable.width,
+			 pSrcPixmap->drawable.height));
+    }
+
+    pDstPixmap = RADEONGetDrawablePixmap(pDstPicture->pDrawable);
+
+    if (pDstPixmap->drawable.width >= max_dst_w ||
+	pDstPixmap->drawable.height >= max_dst_h) {
+	RADEON_FALLBACK(("Dest w/h too large (%d,%d).\n",
+			 pDstPixmap->drawable.width,
+			 pDstPixmap->drawable.height));
+    }
+
+    if (pMaskPicture) {
+	PixmapPtr pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
+
+	if (pMaskPixmap->drawable.width >= max_tex_w ||
+	    pMaskPixmap->drawable.height >= max_tex_h) {
+	    RADEON_FALLBACK(("Mask w/h too large (%d,%d).\n",
+			     pMaskPixmap->drawable.width,
+			     pMaskPixmap->drawable.height));
+	}
+
+	if (pMaskPicture->componentAlpha) {
+	    /* Check if it's component alpha that relies on a source alpha and
+	     * on the source value.  We can only get one of those into the
+	     * single source value that we get to blend with.
+	     */
+	    if (RadeonBlendOp[op].src_alpha &&
+		(RadeonBlendOp[op].blend_cntl & RADEON_SRC_BLEND_MASK) !=
+		RADEON_SRC_BLEND_GL_ZERO) {
+		RADEON_FALLBACK(("Component alpha not supported with source "
+				 "alpha and source value blending.\n"));
+	    }
+	}
+
+	if (!R300CheckCompositeTexture(pMaskPicture, pDstPicture, op, 1, IS_R500_3D))
+	    return FALSE;
+    }
+
+    if (!R300CheckCompositeTexture(pSrcPicture, pDstPicture, op, 0, IS_R500_3D))
+	return FALSE;
+
+    if (!R300GetDestFormat(pDstPicture, &tmp1))
+	return FALSE;
+
+    return TRUE;
+
+}
+#endif /* ONLY_ONCE */
+
+static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
+				PicturePtr pMaskPicture, PicturePtr pDstPicture,
+				PixmapPtr pSrc, PixmapPtr pMask, PixmapPtr pDst)
+{
+    RINFO_FROM_SCREEN(pDst->drawable.pScreen);
+    uint32_t dst_format, dst_offset, dst_pitch;
+    uint32_t txenable, colorpitch;
+    uint32_t blendcntl;
+    int pixel_shift;
+    ACCEL_PREAMBLE();
+
+    TRACE;
+
+    if (!info->XInited3D)
+	RADEONInit3DEngine(pScrn);
+
+    if (!R300GetDestFormat(pDstPicture, &dst_format))
+	return FALSE;
+
+    if (pMask)
+	has_mask = TRUE;
+    else
+	has_mask = FALSE;
+
+    pixel_shift = pDst->drawable.bitsPerPixel >> 4;
+
+    dst_offset = exaGetPixmapOffset(pDst) + info->fbLocation + pScrn->fbOffset;
+    dst_pitch = exaGetPixmapPitch(pDst);
+    colorpitch = dst_pitch >> pixel_shift;
+
+    if (RADEONPixmapIsColortiled(pDst))
+	colorpitch |= R300_COLORTILE;
+
+    colorpitch |= dst_format;
+
+    if ((dst_offset & 0x0f) != 0)
+	RADEON_FALLBACK(("Bad destination offset 0x%x\n", (int)dst_offset));
+    if (((dst_pitch >> pixel_shift) & 0x7) != 0)
+	RADEON_FALLBACK(("Bad destination pitch 0x%x\n", (int)dst_pitch));
+
+    if (!RADEONSetupSourceTile(pSrcPicture, pSrc, TRUE, FALSE))
+	return FALSE;
+
+    if (!FUNC_NAME(R300TextureSetup)(pSrcPicture, pSrc, 0))
+	return FALSE;
+    txenable = R300_TEX_0_ENABLE;
+
+    if (pMask != NULL) {
+	if (!FUNC_NAME(R300TextureSetup)(pMaskPicture, pMask, 1))
+	    return FALSE;
+	txenable |= R300_TEX_1_ENABLE;
+    } else {
+	is_transform[1] = FALSE;
+    }
+
+    RADEON_SWITCH_TO_3D();
+
+    /* setup the VAP */
+    if (info->has_tcl) {
+	if (pMask)
+	    BEGIN_ACCEL(8);
+	else
+	    BEGIN_ACCEL(7);
+    } else {
+	if (pMask)
+	    BEGIN_ACCEL(6);
+	else
+	    BEGIN_ACCEL(5);
+    }
+
+    /* These registers define the number, type, and location of data submitted
+     * to the PVS unit of GA input (when PVS is disabled)
+     * DST_VEC_LOC is the slot in the PVS input vector memory when PVS/TCL is
+     * enabled.  This memory provides the imputs to the vertex shader program
+     * and ordering is not important.  When PVS/TCL is disabled, this field maps
+     * directly to the GA input memory and the order is signifigant.  In
+     * PVS_BYPASS mode the order is as follows:
+     * Position
+     * Point Size
+     * Color 0-3
+     * Textures 0-7
+     * Fog
+     */
+    if (pMask) {
+	OUT_ACCEL_REG(R300_VAP_PROG_STREAM_CNTL_0,
+		      ((R300_DATA_TYPE_FLOAT_2 << R300_DATA_TYPE_0_SHIFT) |
+		       (0 << R300_SKIP_DWORDS_0_SHIFT) |
+		       (0 << R300_DST_VEC_LOC_0_SHIFT) |
+		       R300_SIGNED_0 |
+		       (R300_DATA_TYPE_FLOAT_2 << R300_DATA_TYPE_1_SHIFT) |
+		       (0 << R300_SKIP_DWORDS_1_SHIFT) |
+		       (6 << R300_DST_VEC_LOC_1_SHIFT) |
+		       R300_SIGNED_1));
+	OUT_ACCEL_REG(R300_VAP_PROG_STREAM_CNTL_1,
+		      ((R300_DATA_TYPE_FLOAT_2 << R300_DATA_TYPE_2_SHIFT) |
+		       (0 << R300_SKIP_DWORDS_2_SHIFT) |
+		       (7 << R300_DST_VEC_LOC_2_SHIFT) |
+		       R300_LAST_VEC_2 |
+		       R300_SIGNED_2));
+    } else
+	OUT_ACCEL_REG(R300_VAP_PROG_STREAM_CNTL_0,
+		      ((R300_DATA_TYPE_FLOAT_2 << R300_DATA_TYPE_0_SHIFT) |
+		       (0 << R300_SKIP_DWORDS_0_SHIFT) |
+		       (0 << R300_DST_VEC_LOC_0_SHIFT) |
+		       R300_SIGNED_0 |
+		       (R300_DATA_TYPE_FLOAT_2 << R300_DATA_TYPE_1_SHIFT) |
+		       (0 << R300_SKIP_DWORDS_1_SHIFT) |
+		       (6 << R300_DST_VEC_LOC_1_SHIFT) |
+		       R300_LAST_VEC_1 |
+		       R300_SIGNED_1));
+
+    /* load the vertex shader
+     * We pre-load vertex programs in RADEONInit3DEngine():
+     * - exa no mask
+     * - exa mask
+     * - Xv
+     * Here we select the offset of the vertex program we want to use
+     */
+    if (info->has_tcl) {
+	if (pMask) {
+	    OUT_ACCEL_REG(R300_VAP_PVS_CODE_CNTL_0,
+			  ((0 << R300_PVS_FIRST_INST_SHIFT) |
+			   (2 << R300_PVS_XYZW_VALID_INST_SHIFT) |
+			   (2 << R300_PVS_LAST_INST_SHIFT)));
+	    OUT_ACCEL_REG(R300_VAP_PVS_CODE_CNTL_1,
+			  (2 << R300_PVS_LAST_VTX_SRC_INST_SHIFT));
+	} else {
+	    OUT_ACCEL_REG(R300_VAP_PVS_CODE_CNTL_0,
+			  ((3 << R300_PVS_FIRST_INST_SHIFT) |
+			   (4 << R300_PVS_XYZW_VALID_INST_SHIFT) |
+			   (4 << R300_PVS_LAST_INST_SHIFT)));
+	    OUT_ACCEL_REG(R300_VAP_PVS_CODE_CNTL_1,
+			  (4 << R300_PVS_LAST_VTX_SRC_INST_SHIFT));
+	}
+    }
+
+    /* Position and one or two sets of 2 texture coordinates */
+    OUT_ACCEL_REG(R300_VAP_OUT_VTX_FMT_0, R300_VTX_POS_PRESENT);
+    if (pMask)
+	OUT_ACCEL_REG(R300_VAP_OUT_VTX_FMT_1,
+		      ((2 << R300_TEX_0_COMP_CNT_SHIFT) |
+		       (2 << R300_TEX_1_COMP_CNT_SHIFT)));
+    else
+	OUT_ACCEL_REG(R300_VAP_OUT_VTX_FMT_1,
+		      (2 << R300_TEX_0_COMP_CNT_SHIFT));
+
+    OUT_ACCEL_REG(R300_TX_INVALTAGS, 0x0);
+    OUT_ACCEL_REG(R300_TX_ENABLE, txenable);
+    FINISH_ACCEL();
+
+    /* setup pixel shader */
+    if (IS_R300_3D) {
+	uint32_t output_fmt;
+	int src_color, src_alpha;
+	int mask_color, mask_alpha;
+
+	if (PICT_FORMAT_RGB(pSrcPicture->format) == 0)
+	    src_color = R300_ALU_RGB_0_0;
+	else
+	    src_color = R300_ALU_RGB_SRC0_RGB;
+
+	if (PICT_FORMAT_A(pSrcPicture->format) == 0)
+	    src_alpha = R300_ALU_ALPHA_1_0;
+	else
+	    src_alpha = R300_ALU_ALPHA_SRC0_A;
+
+	if (pMask && pMaskPicture->componentAlpha) {
+	    if (RadeonBlendOp[op].src_alpha) {
+		if (PICT_FORMAT_A(pSrcPicture->format) == 0) {
+		    src_color = R300_ALU_RGB_1_0;
+		    src_alpha = R300_ALU_ALPHA_1_0;
+		} else {
+		    src_color = R300_ALU_RGB_SRC0_AAA;
+		    src_alpha = R300_ALU_ALPHA_SRC0_A;
+		}
+
+		mask_color = R300_ALU_RGB_SRC1_RGB;
+
+		if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		    mask_alpha = R300_ALU_ALPHA_1_0;
+		else
+		    mask_alpha = R300_ALU_ALPHA_SRC1_A;
+
+	    } else {
+		src_color = R300_ALU_RGB_SRC0_RGB;
+
+		if (PICT_FORMAT_A(pSrcPicture->format) == 0)
+		    src_alpha = R300_ALU_ALPHA_1_0;
+		else
+		    src_alpha = R300_ALU_ALPHA_SRC0_A;
+
+		mask_color = R300_ALU_RGB_SRC1_RGB;
+
+		if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		    mask_alpha = R300_ALU_ALPHA_1_0;
+		else
+		    mask_alpha = R300_ALU_ALPHA_SRC1_A;
+
+	    }
+	} else if (pMask) {
+	    if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		mask_color = R300_ALU_RGB_1_0;
+	    else
+		mask_color = R300_ALU_RGB_SRC1_AAA;
+
+	    if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		mask_alpha = R300_ALU_ALPHA_1_0;
+	    else
+		mask_alpha = R300_ALU_ALPHA_SRC1_A;
+	} else {
+	    mask_color = R300_ALU_RGB_1_0;
+	    mask_alpha = R300_ALU_ALPHA_1_0;
+	}
+
+	/* shader output swizzling */
+	switch (pDstPicture->format) {
+	case PICT_a8r8g8b8:
+	case PICT_x8r8g8b8:
+	default:
+	    output_fmt = (R300_OUT_FMT_C4_8 |
+			  R300_OUT_FMT_C0_SEL_BLUE |
+			  R300_OUT_FMT_C1_SEL_GREEN |
+			  R300_OUT_FMT_C2_SEL_RED |
+			  R300_OUT_FMT_C3_SEL_ALPHA);
+	    break;
+	case PICT_a8b8g8r8:
+	case PICT_x8b8g8r8:
+	    output_fmt = (R300_OUT_FMT_C4_8 |
+			  R300_OUT_FMT_C0_SEL_RED |
+			  R300_OUT_FMT_C1_SEL_GREEN |
+			  R300_OUT_FMT_C2_SEL_BLUE |
+			  R300_OUT_FMT_C3_SEL_ALPHA);
+	    break;
+	case PICT_a8:
+	    output_fmt = (R300_OUT_FMT_C4_8 |
+			  R300_OUT_FMT_C0_SEL_ALPHA);
+	    break;
+	}
+
+
+	/* setup the rasterizer, load FS */
+	BEGIN_ACCEL(9);
+	if (pMask) {
+	    /* 4 components: 2 for tex0, 2 for tex1 */
+	    OUT_ACCEL_REG(R300_RS_COUNT,
+			  ((4 << R300_RS_COUNT_IT_COUNT_SHIFT) |
+			   R300_RS_COUNT_HIRES_EN));
+
+	    /* R300_INST_COUNT_RS - highest RS instruction used */
+	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(1) | R300_TX_OFFSET_RS(6));
+
+	    OUT_ACCEL_REG(R300_US_CODE_OFFSET, (R300_ALU_CODE_OFFSET(0) |
+						R300_ALU_CODE_SIZE(0) |
+						R300_TEX_CODE_OFFSET(0) |
+						R300_TEX_CODE_SIZE(1)));
+
+	    OUT_ACCEL_REG(R300_US_CODE_ADDR_3,
+			  (R300_ALU_START(0) |
+			   R300_ALU_SIZE(0) |
+			   R300_TEX_START(0) |
+			   R300_TEX_SIZE(1) |
+			   R300_RGBA_OUT));
+	} else {
+	    /* 2 components: 2 for tex0 */
+	    OUT_ACCEL_REG(R300_RS_COUNT,
+			  ((2 << R300_RS_COUNT_IT_COUNT_SHIFT) |
+			   R300_RS_COUNT_HIRES_EN));
+
+	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(0) | R300_TX_OFFSET_RS(6));
+
+	    OUT_ACCEL_REG(R300_US_CODE_OFFSET, (R300_ALU_CODE_OFFSET(0) |
+						R300_ALU_CODE_SIZE(0) |
+						R300_TEX_CODE_OFFSET(0) |
+						R300_TEX_CODE_SIZE(0)));
+
+	    OUT_ACCEL_REG(R300_US_CODE_ADDR_3,
+			  (R300_ALU_START(0) |
+			   R300_ALU_SIZE(0) |
+			   R300_TEX_START(0) |
+			   R300_TEX_SIZE(0) |
+			   R300_RGBA_OUT));
+	}
+
+	/* shader output swizzling */
+	OUT_ACCEL_REG(R300_US_OUT_FMT_0, output_fmt);
+
+	/* tex inst for src texture is pre-loaded in RADEONInit3DEngine() */
+	/* tex inst for mask texture is pre-loaded in RADEONInit3DEngine() */
+
+	/* RGB inst
+	 * temp addresses for texture inputs
+	 * ALU_RGB_ADDR0 is src tex (temp 0)
+	 * ALU_RGB_ADDR1 is mask tex (temp 1)
+	 * R300_ALU_RGB_OMASK - output components to write
+	 * R300_ALU_RGB_TARGET_A - render target
+	 */
+	OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR_0,
+		      (R300_ALU_RGB_ADDR0(0) |
+		       R300_ALU_RGB_ADDR1(1) |
+		       R300_ALU_RGB_ADDR2(0) |
+		       R300_ALU_RGB_ADDRD(0) |
+		       R300_ALU_RGB_OMASK((R300_ALU_RGB_MASK_R |
+					   R300_ALU_RGB_MASK_G |
+					   R300_ALU_RGB_MASK_B)) |
+		       R300_ALU_RGB_TARGET_A));
+	/* RGB inst
+	 * ALU operation
+	 */
+	OUT_ACCEL_REG(R300_US_ALU_RGB_INST_0,
+		      (R300_ALU_RGB_SEL_A(src_color) |
+		       R300_ALU_RGB_MOD_A(R300_ALU_RGB_MOD_NOP) |
+		       R300_ALU_RGB_SEL_B(mask_color) |
+		       R300_ALU_RGB_MOD_B(R300_ALU_RGB_MOD_NOP) |
+		       R300_ALU_RGB_SEL_C(R300_ALU_RGB_0_0) |
+		       R300_ALU_RGB_MOD_C(R300_ALU_RGB_MOD_NOP) |
+		       R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+		       R300_ALU_RGB_OMOD(R300_ALU_RGB_OMOD_NONE) |
+		       R300_ALU_RGB_CLAMP));
+	/* Alpha inst
+	 * temp addresses for texture inputs
+	 * ALU_ALPHA_ADDR0 is src tex (0)
+	 * ALU_ALPHA_ADDR1 is mask tex (1)
+	 * R300_ALU_ALPHA_OMASK - output components to write
+	 * R300_ALU_ALPHA_TARGET_A - render target
+	 */
+	OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR_0,
+		      (R300_ALU_ALPHA_ADDR0(0) |
+		       R300_ALU_ALPHA_ADDR1(1) |
+		       R300_ALU_ALPHA_ADDR2(0) |
+		       R300_ALU_ALPHA_ADDRD(0) |
+		       R300_ALU_ALPHA_OMASK(R300_ALU_ALPHA_MASK_A) |
+		       R300_ALU_ALPHA_TARGET_A |
+		       R300_ALU_ALPHA_OMASK_W(R300_ALU_ALPHA_MASK_NONE)));
+	/* Alpha inst
+	 * ALU operation
+	 */
+	OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST_0,
+		      (R300_ALU_ALPHA_SEL_A(src_alpha) |
+		       R300_ALU_ALPHA_MOD_A(R300_ALU_ALPHA_MOD_NOP) |
+		       R300_ALU_ALPHA_SEL_B(mask_alpha) |
+		       R300_ALU_ALPHA_MOD_B(R300_ALU_ALPHA_MOD_NOP) |
+		       R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0) |
+		       R300_ALU_ALPHA_MOD_C(R300_ALU_ALPHA_MOD_NOP) |
+		       R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+		       R300_ALU_ALPHA_OMOD(R300_ALU_ALPHA_OMOD_NONE) |
+		       R300_ALU_ALPHA_CLAMP));
+	FINISH_ACCEL();
+    } else {
+	uint32_t output_fmt;
+	uint32_t src_color, src_alpha;
+	uint32_t mask_color, mask_alpha;
+
+	if (PICT_FORMAT_RGB(pSrcPicture->format) == 0)
+	    src_color = (R500_ALU_RGB_R_SWIZ_A_0 |
+			 R500_ALU_RGB_G_SWIZ_A_0 |
+			 R500_ALU_RGB_B_SWIZ_A_0);
+	else
+	    src_color = (R500_ALU_RGB_R_SWIZ_A_R |
+			 R500_ALU_RGB_G_SWIZ_A_G |
+			 R500_ALU_RGB_B_SWIZ_A_B);
+
+	if (PICT_FORMAT_A(pSrcPicture->format) == 0)
+	    src_alpha = R500_ALPHA_SWIZ_A_1;
+	else
+	    src_alpha = R500_ALPHA_SWIZ_A_A;
+
+	if (pMask && pMaskPicture->componentAlpha) {
+	    if (RadeonBlendOp[op].src_alpha) {
+		if (PICT_FORMAT_A(pSrcPicture->format) == 0) {
+		    src_color = (R500_ALU_RGB_R_SWIZ_A_1 |
+				 R500_ALU_RGB_G_SWIZ_A_1 |
+				 R500_ALU_RGB_B_SWIZ_A_1);
+		    src_alpha = R500_ALPHA_SWIZ_A_1;
+		} else {
+		    src_color = (R500_ALU_RGB_R_SWIZ_A_A |
+				 R500_ALU_RGB_G_SWIZ_A_A |
+				 R500_ALU_RGB_B_SWIZ_A_A);
+		    src_alpha = R500_ALPHA_SWIZ_A_A;
+		}
+
+		mask_color = (R500_ALU_RGB_R_SWIZ_B_R |
+			      R500_ALU_RGB_G_SWIZ_B_G |
+			      R500_ALU_RGB_B_SWIZ_B_B);
+
+		if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		    mask_alpha = R500_ALPHA_SWIZ_B_1;
+		else
+		    mask_alpha = R500_ALPHA_SWIZ_B_A;
+
+	    } else {
+		src_color = (R500_ALU_RGB_R_SWIZ_A_R |
+			     R500_ALU_RGB_G_SWIZ_A_G |
+			     R500_ALU_RGB_B_SWIZ_A_B);
+
+		if (PICT_FORMAT_A(pSrcPicture->format) == 0)
+		    src_alpha = R500_ALPHA_SWIZ_A_1;
+		else
+		    src_alpha = R500_ALPHA_SWIZ_A_A;
+
+		mask_color = (R500_ALU_RGB_R_SWIZ_B_R |
+			      R500_ALU_RGB_G_SWIZ_B_G |
+			      R500_ALU_RGB_B_SWIZ_B_B);
+
+		if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		    mask_alpha = R500_ALPHA_SWIZ_B_1;
+		else
+		    mask_alpha = R500_ALPHA_SWIZ_B_A;
+
+	    }
+	} else if (pMask) {
+	    if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		mask_color = (R500_ALU_RGB_R_SWIZ_B_1 |
+			      R500_ALU_RGB_G_SWIZ_B_1 |
+			      R500_ALU_RGB_B_SWIZ_B_1);
+	    else
+		mask_color = (R500_ALU_RGB_R_SWIZ_B_A |
+			      R500_ALU_RGB_G_SWIZ_B_A |
+			      R500_ALU_RGB_B_SWIZ_B_A);
+
+	    if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		mask_alpha = R500_ALPHA_SWIZ_B_1;
+	    else
+		mask_alpha = R500_ALPHA_SWIZ_B_A;
+	} else {
+	    mask_color = (R500_ALU_RGB_R_SWIZ_B_1 |
+			  R500_ALU_RGB_G_SWIZ_B_1 |
+			  R500_ALU_RGB_B_SWIZ_B_1);
+	    mask_alpha = R500_ALPHA_SWIZ_B_1;
+	}
+
+	/* shader output swizzling */
+	switch (pDstPicture->format) {
+	case PICT_a8r8g8b8:
+	case PICT_x8r8g8b8:
+	default:
+	    output_fmt = (R300_OUT_FMT_C4_8 |
+			  R300_OUT_FMT_C0_SEL_BLUE |
+			  R300_OUT_FMT_C1_SEL_GREEN |
+			  R300_OUT_FMT_C2_SEL_RED |
+			  R300_OUT_FMT_C3_SEL_ALPHA);
+	    break;
+	case PICT_a8b8g8r8:
+	case PICT_x8b8g8r8:
+	    output_fmt = (R300_OUT_FMT_C4_8 |
+			  R300_OUT_FMT_C0_SEL_RED |
+			  R300_OUT_FMT_C1_SEL_GREEN |
+			  R300_OUT_FMT_C2_SEL_BLUE |
+			  R300_OUT_FMT_C3_SEL_ALPHA);
+	    break;
+	case PICT_a8:
+	    output_fmt = (R300_OUT_FMT_C4_8 |
+			  R300_OUT_FMT_C0_SEL_ALPHA);
+	    break;
+	}
+
+	BEGIN_ACCEL(6);
+	if (pMask) {
+	    /* 4 components: 2 for tex0, 2 for tex1 */
+	    OUT_ACCEL_REG(R300_RS_COUNT,
+			  ((4 << R300_RS_COUNT_IT_COUNT_SHIFT) |
+			   R300_RS_COUNT_HIRES_EN));
+
+	    /* 2 RS instructions: 1 for tex0 (src), 1 for tex1 (mask) */
+	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(1) | R300_TX_OFFSET_RS(6));
+
+	    OUT_ACCEL_REG(R500_US_CODE_ADDR, (R500_US_CODE_START_ADDR(0) |
+					      R500_US_CODE_END_ADDR(2)));
+	    OUT_ACCEL_REG(R500_US_CODE_RANGE, (R500_US_CODE_RANGE_ADDR(0) |
+					       R500_US_CODE_RANGE_SIZE(2)));
+	    OUT_ACCEL_REG(R500_US_CODE_OFFSET, 0);
+	} else {
+	    OUT_ACCEL_REG(R300_RS_COUNT,
+			  ((2 << R300_RS_COUNT_IT_COUNT_SHIFT) |
+			   R300_RS_COUNT_HIRES_EN));
+
+	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(0) | R300_TX_OFFSET_RS(6));
+
+	    OUT_ACCEL_REG(R500_US_CODE_ADDR, (R500_US_CODE_START_ADDR(0) |
+					      R500_US_CODE_END_ADDR(1)));
+	    OUT_ACCEL_REG(R500_US_CODE_RANGE, (R500_US_CODE_RANGE_ADDR(0) |
+					       R500_US_CODE_RANGE_SIZE(1)));
+	    OUT_ACCEL_REG(R500_US_CODE_OFFSET, 0);
+	}
+
+	OUT_ACCEL_REG(R300_US_OUT_FMT_0, output_fmt);
+	FINISH_ACCEL();
+
+	if (pMask) {
+	    BEGIN_ACCEL(19);
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_INDEX, 0);
+	    /* tex inst for src texture */
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_TEX |
+						   R500_INST_RGB_WMASK_R |
+						   R500_INST_RGB_WMASK_G |
+						   R500_INST_RGB_WMASK_B |
+						   R500_INST_ALPHA_WMASK |
+						   R500_INST_RGB_CLAMP |
+						   R500_INST_ALPHA_CLAMP));
+
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_TEX_ID(0) |
+						   R500_TEX_INST_LD |
+						   R500_TEX_IGNORE_UNCOVERED));
+
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_TEX_SRC_ADDR(0) |
+						   R500_TEX_SRC_S_SWIZ_R |
+						   R500_TEX_SRC_T_SWIZ_G |
+						   R500_TEX_DST_ADDR(0) |
+						   R500_TEX_DST_R_SWIZ_R |
+						   R500_TEX_DST_G_SWIZ_G |
+						   R500_TEX_DST_B_SWIZ_B |
+						   R500_TEX_DST_A_SWIZ_A));
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_DX_ADDR(0) |
+						   R500_DX_S_SWIZ_R |
+						   R500_DX_T_SWIZ_R |
+						   R500_DX_R_SWIZ_R |
+						   R500_DX_Q_SWIZ_R |
+						   R500_DY_ADDR(0) |
+						   R500_DY_S_SWIZ_R |
+						   R500_DY_T_SWIZ_R |
+						   R500_DY_R_SWIZ_R |
+						   R500_DY_Q_SWIZ_R));
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000);
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000);
+
+	    /* tex inst for mask texture */
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_TEX |
+						   R500_INST_TEX_SEM_WAIT |
+						   R500_INST_RGB_WMASK_R |
+						   R500_INST_RGB_WMASK_G |
+						   R500_INST_RGB_WMASK_B |
+						   R500_INST_ALPHA_WMASK |
+						   R500_INST_RGB_CLAMP |
+						   R500_INST_ALPHA_CLAMP));
+
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_TEX_ID(1) |
+						   R500_TEX_INST_LD |
+						   R500_TEX_SEM_ACQUIRE |
+						   R500_TEX_IGNORE_UNCOVERED));
+
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_TEX_SRC_ADDR(1) |
+						   R500_TEX_SRC_S_SWIZ_R |
+						   R500_TEX_SRC_T_SWIZ_G |
+						   R500_TEX_DST_ADDR(1) |
+						   R500_TEX_DST_R_SWIZ_R |
+						   R500_TEX_DST_G_SWIZ_G |
+						   R500_TEX_DST_B_SWIZ_B |
+						   R500_TEX_DST_A_SWIZ_A));
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_DX_ADDR(1) |
+						   R500_DX_S_SWIZ_R |
+						   R500_DX_T_SWIZ_R |
+						   R500_DX_R_SWIZ_R |
+						   R500_DX_Q_SWIZ_R |
+						   R500_DY_ADDR(1) |
+						   R500_DY_S_SWIZ_R |
+						   R500_DY_T_SWIZ_R |
+						   R500_DY_R_SWIZ_R |
+						   R500_DY_Q_SWIZ_R));
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000);
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000);
+	} else {
+	    BEGIN_ACCEL(13);
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_INDEX, 0);
+	    /* tex inst for src texture */
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_TEX |
+						   R500_INST_TEX_SEM_WAIT |
+						   R500_INST_RGB_WMASK_R |
+						   R500_INST_RGB_WMASK_G |
+						   R500_INST_RGB_WMASK_B |
+						   R500_INST_ALPHA_WMASK |
+						   R500_INST_RGB_CLAMP |
+						   R500_INST_ALPHA_CLAMP));
+
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_TEX_ID(0) |
+						   R500_TEX_INST_LD |
+						   R500_TEX_SEM_ACQUIRE |
+						   R500_TEX_IGNORE_UNCOVERED));
+
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_TEX_SRC_ADDR(0) |
+						   R500_TEX_SRC_S_SWIZ_R |
+						   R500_TEX_SRC_T_SWIZ_G |
+						   R500_TEX_DST_ADDR(0) |
+						   R500_TEX_DST_R_SWIZ_R |
+						   R500_TEX_DST_G_SWIZ_G |
+						   R500_TEX_DST_B_SWIZ_B |
+						   R500_TEX_DST_A_SWIZ_A));
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_DX_ADDR(0) |
+						   R500_DX_S_SWIZ_R |
+						   R500_DX_T_SWIZ_R |
+						   R500_DX_R_SWIZ_R |
+						   R500_DX_Q_SWIZ_R |
+						   R500_DY_ADDR(0) |
+						   R500_DY_S_SWIZ_R |
+						   R500_DY_T_SWIZ_R |
+						   R500_DY_R_SWIZ_R |
+						   R500_DY_Q_SWIZ_R));
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000);
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000);
+	}
+
+	/* ALU inst */
+	/* *_OMASK* - output component write mask */
+	OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_OUT |
+					       R500_INST_TEX_SEM_WAIT |
+					       R500_INST_LAST |
+					       R500_INST_RGB_OMASK_R |
+					       R500_INST_RGB_OMASK_G |
+					       R500_INST_RGB_OMASK_B |
+					       R500_INST_ALPHA_OMASK |
+					       R500_INST_RGB_CLAMP |
+					       R500_INST_ALPHA_CLAMP));
+	/* ALU inst
+	 * temp addresses for texture inputs
+	 * RGB_ADDR0 is src tex (temp 0)
+	 * RGB_ADDR1 is mask tex (temp 1)
+	 */
+	OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_RGB_ADDR0(0) |
+					       R500_RGB_ADDR1(1) |
+					       R500_RGB_ADDR2(0)));
+	/* ALU inst
+	 * temp addresses for texture inputs
+	 * ALPHA_ADDR0 is src tex (temp 0)
+	 * ALPHA_ADDR1 is mask tex (temp 1)
+	 */
+	OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_ALPHA_ADDR0(0) |
+					       R500_ALPHA_ADDR1(1) |
+					       R500_ALPHA_ADDR2(0)));
+
+	/* R500_ALU_RGB_TARGET - RGB render target */
+	OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_ALU_RGB_SEL_A_SRC0 |
+					       src_color |
+					       R500_ALU_RGB_SEL_B_SRC1 |
+					       mask_color |
+					       R500_ALU_RGB_TARGET(0)));
+
+	/* R500_ALPHA_RGB_TARGET - alpha render target */
+	OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_ALPHA_OP_MAD |
+					       R500_ALPHA_ADDRD(0) |
+					       R500_ALPHA_SEL_A_SRC0 |
+					       src_alpha |
+					       R500_ALPHA_SEL_B_SRC1 |
+					       mask_alpha |
+					       R500_ALPHA_TARGET(0)));
+
+	OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_ALU_RGBA_OP_MAD |
+					       R500_ALU_RGBA_ADDRD(0) |
+					       R500_ALU_RGBA_R_SWIZ_0 |
+					       R500_ALU_RGBA_G_SWIZ_0 |
+					       R500_ALU_RGBA_B_SWIZ_0 |
+					       R500_ALU_RGBA_A_SWIZ_0));
+	FINISH_ACCEL();
+    }
+
+    BEGIN_ACCEL(3);
+
+    OUT_ACCEL_REG(R300_RB3D_COLOROFFSET0, dst_offset);
+    OUT_ACCEL_REG(R300_RB3D_COLORPITCH0, colorpitch);
+
+    blendcntl = RADEONGetBlendCntl(op, pMaskPicture, pDstPicture->format);
+    OUT_ACCEL_REG(R300_RB3D_BLENDCNTL, blendcntl | R300_ALPHA_BLEND_ENABLE | R300_READ_ENABLE);
+
+    FINISH_ACCEL();
+
+    return TRUE;
+}
+
+#define VTX_COUNT_MASK 6
+#define VTX_COUNT 4
+
 #ifdef ACCEL_CP
 
-#define VTX_DWORD_COUNT 6
-
-#define VTX_OUT(_dstX, _dstY, _srcX, _srcY, _maskX, _maskY)	\
+#define VTX_OUT_MASK(_dstX, _dstY, _srcX, _srcY, _maskX, _maskY)	\
 do {								\
     OUT_RING_F(_dstX);						\
     OUT_RING_F(_dstY);						\
@@ -704,11 +1858,17 @@ do {								\
     OUT_RING_F(_maskY);						\
 } while (0)
 
+#define VTX_OUT(_dstX, _dstY, _srcX, _srcY)	\
+do {								\
+    OUT_RING_F(_dstX);						\
+    OUT_RING_F(_dstY);						\
+    OUT_RING_F(_srcX);						\
+    OUT_RING_F(_srcY);						\
+} while (0)
+
 #else /* ACCEL_CP */
 
-#define VTX_REG_COUNT 6
-
-#define VTX_OUT(_dstX, _dstY, _srcX, _srcY, _maskX, _maskY)	\
+#define VTX_OUT_MASK(_dstX, _dstY, _srcX, _srcY, _maskX, _maskY)	\
 do {								\
     OUT_ACCEL_REG_F(RADEON_SE_PORT_DATA0, _dstX);		\
     OUT_ACCEL_REG_F(RADEON_SE_PORT_DATA0, _dstY);		\
@@ -718,86 +1878,124 @@ do {								\
     OUT_ACCEL_REG_F(RADEON_SE_PORT_DATA0, _maskY);		\
 } while (0)
 
+#define VTX_OUT(_dstX, _dstY, _srcX, _srcY)	\
+do {								\
+    OUT_ACCEL_REG_F(RADEON_SE_PORT_DATA0, _dstX);		\
+    OUT_ACCEL_REG_F(RADEON_SE_PORT_DATA0, _dstY);		\
+    OUT_ACCEL_REG_F(RADEON_SE_PORT_DATA0, _srcX);		\
+    OUT_ACCEL_REG_F(RADEON_SE_PORT_DATA0, _srcY);		\
+} while (0)
+
 #endif /* !ACCEL_CP */
 
-static void FUNC_NAME(RadeonComposite)(PixmapPtr pDst,
-				     int srcX, int srcY,
-				     int maskX, int maskY,
-				     int dstX, int dstY,
-				     int w, int h)
+#ifdef ONLY_ONCE
+static inline void transformPoint(PictTransform *transform, xPointFixed *point)
+{
+    PictVector v;
+    v.vector[0] = point->x;
+    v.vector[1] = point->y;
+    v.vector[2] = xFixed1;
+    PictureTransformPoint(transform, &v);
+    point->x = v.vector[0];
+    point->y = v.vector[1];
+}
+#endif
+
+static void FUNC_NAME(RadeonCompositeTile)(PixmapPtr pDst,
+					   int srcX, int srcY,
+					   int maskX, int maskY,
+					   int dstX, int dstY,
+					   int w, int h)
 {
     RINFO_FROM_SCREEN(pDst->drawable.pScreen);
-    int srcXend, srcYend, maskXend, maskYend;
-    PictVector v;
+    int vtx_count;
+    xPointFixed srcTopLeft, srcTopRight, srcBottomLeft, srcBottomRight;
+    xPointFixed maskTopLeft, maskTopRight, maskBottomLeft, maskBottomRight;
     ACCEL_PREAMBLE();
 
     ENTER_DRAW(0);
 
-    /*ErrorF("RadeonComposite (%d,%d) (%d,%d) (%d,%d) (%d,%d)\n",
-	   srcX, srcY, maskX, maskY,dstX, dstY, w, h);*/
+    /* ErrorF("RadeonComposite (%d,%d) (%d,%d) (%d,%d) (%d,%d)\n",
+       srcX, srcY, maskX, maskY,dstX, dstY, w, h); */
 
-    srcXend = srcX + w;
-    srcYend = srcY + h;
-    maskXend = maskX + w;
-    maskYend = maskY + h;
+    srcTopLeft.x     = IntToxFixed(srcX);
+    srcTopLeft.y     = IntToxFixed(srcY);
+    srcTopRight.x    = IntToxFixed(srcX + w);
+    srcTopRight.y    = IntToxFixed(srcY);
+    srcBottomLeft.x  = IntToxFixed(srcX);
+    srcBottomLeft.y  = IntToxFixed(srcY + h);
+    srcBottomRight.x = IntToxFixed(srcX + w);
+    srcBottomRight.y = IntToxFixed(srcY + h);
+
+    maskTopLeft.x     = IntToxFixed(maskX);
+    maskTopLeft.y     = IntToxFixed(maskY);
+    maskTopRight.x    = IntToxFixed(maskX + w);
+    maskTopRight.y    = IntToxFixed(maskY);
+    maskBottomLeft.x  = IntToxFixed(maskX);
+    maskBottomLeft.y  = IntToxFixed(maskY + h);
+    maskBottomRight.x = IntToxFixed(maskX + w);
+    maskBottomRight.y = IntToxFixed(maskY + h);
+
     if (is_transform[0]) {
-	v.vector[0] = IntToxFixed(srcX);
-	v.vector[1] = IntToxFixed(srcY);
-	v.vector[2] = xFixed1;
-	PictureTransformPoint(transform[0], &v);
-	srcX = xFixedToInt(v.vector[0]);
-	srcY = xFixedToInt(v.vector[1]);
-	v.vector[0] = IntToxFixed(srcXend);
-	v.vector[1] = IntToxFixed(srcYend);
-	v.vector[2] = xFixed1;
-	PictureTransformPoint(transform[0], &v);
-	srcXend = xFixedToInt(v.vector[0]);
-	srcYend = xFixedToInt(v.vector[1]);
+	transformPoint(transform[0], &srcTopLeft);
+	transformPoint(transform[0], &srcTopRight);
+	transformPoint(transform[0], &srcBottomLeft);
+	transformPoint(transform[0], &srcBottomRight);
     }
     if (is_transform[1]) {
-	v.vector[0] = IntToxFixed(maskX);
-	v.vector[1] = IntToxFixed(maskY);
-	v.vector[2] = xFixed1;
-	PictureTransformPoint(transform[1], &v);
-	maskX = xFixedToInt(v.vector[0]);
-	maskY = xFixedToInt(v.vector[1]);
-	v.vector[0] = IntToxFixed(maskXend);
-	v.vector[1] = IntToxFixed(maskYend);
-	v.vector[2] = xFixed1;
-	PictureTransformPoint(transform[1], &v);
-	maskXend = xFixedToInt(v.vector[0]);
-	maskYend = xFixedToInt(v.vector[1]);
+	transformPoint(transform[1], &maskTopLeft);
+	transformPoint(transform[1], &maskTopRight);
+	transformPoint(transform[1], &maskBottomLeft);
+	transformPoint(transform[1], &maskBottomRight);
+    }
+
+    if (has_mask)
+	vtx_count = VTX_COUNT_MASK;
+    else
+	vtx_count = VTX_COUNT;
+
+    if (IS_R300_3D || IS_R500_3D) {
+	BEGIN_ACCEL(1);
+	OUT_ACCEL_REG(R300_VAP_VTX_SIZE, vtx_count);
+	FINISH_ACCEL();
     }
 
 #ifdef ACCEL_CP
     if (info->ChipFamily < CHIP_FAMILY_R200) {
-	BEGIN_RING(4 * VTX_DWORD_COUNT + 3);
+	BEGIN_RING(4 * vtx_count + 3);
 	OUT_RING(CP_PACKET3(RADEON_CP_PACKET3_3D_DRAW_IMMD,
-			    4 * VTX_DWORD_COUNT + 1));
-	OUT_RING(RADEON_CP_VC_FRMT_XY |
-		 RADEON_CP_VC_FRMT_ST0 |
-		 RADEON_CP_VC_FRMT_ST1);
+			    4 * vtx_count + 1));
+	if (has_mask)
+	    OUT_RING(RADEON_CP_VC_FRMT_XY |
+		     RADEON_CP_VC_FRMT_ST0 |
+		     RADEON_CP_VC_FRMT_ST1);
+	else
+	    OUT_RING(RADEON_CP_VC_FRMT_XY |
+		     RADEON_CP_VC_FRMT_ST0);
 	OUT_RING(RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_FAN |
 		 RADEON_CP_VC_CNTL_PRIM_WALK_RING |
 		 RADEON_CP_VC_CNTL_MAOS_ENABLE |
 		 RADEON_CP_VC_CNTL_VTX_FMT_RADEON_MODE |
 		 (4 << RADEON_CP_VC_CNTL_NUM_SHIFT));
     } else {
-	BEGIN_RING(4 * VTX_DWORD_COUNT + 2);
+	if (IS_R300_3D || IS_R500_3D)
+	    BEGIN_RING(4 * vtx_count + 4);
+	else
+	    BEGIN_RING(4 * vtx_count + 2);
+
 	OUT_RING(CP_PACKET3(R200_CP_PACKET3_3D_DRAW_IMMD_2,
-			    4 * VTX_DWORD_COUNT));
+			    4 * vtx_count));
 	OUT_RING(RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_FAN |
 		 RADEON_CP_VC_CNTL_PRIM_WALK_RING |
 		 (4 << RADEON_CP_VC_CNTL_NUM_SHIFT));
     }
 
-    VTX_OUT(dstX,     dstY,     srcX,    srcY,    maskX,    maskY);
-    VTX_OUT(dstX,     dstY + h, srcX,    srcYend, maskX,    maskYend);
-    VTX_OUT(dstX + w, dstY + h, srcXend, srcYend, maskXend, maskYend);
-    VTX_OUT(dstX + w, dstY,     srcXend, srcY,    maskXend, maskY);
-    ADVANCE_RING();
 #else /* ACCEL_CP */
-    BEGIN_ACCEL(1 + VTX_REG_COUNT * 4);
+    if (IS_R300_3D || IS_R500_3D)
+	BEGIN_ACCEL(2 + vtx_count * 4);
+    else
+	BEGIN_ACCEL(1 + vtx_count * 4);
+
     if (info->ChipFamily < CHIP_FAMILY_R200) {
 	OUT_ACCEL_REG(RADEON_SE_VF_CNTL, (RADEON_VF_PRIM_TYPE_TRIANGLE_FAN |
 					  RADEON_VF_PRIM_WALK_DATA |
@@ -808,24 +2006,124 @@ static void FUNC_NAME(RadeonComposite)(PixmapPtr pDst,
 					  RADEON_VF_PRIM_WALK_DATA |
 					  4 << RADEON_VF_NUM_VERTICES_SHIFT));
     }
+#endif
 
-    VTX_OUT(dstX,     dstY,     srcX,    srcY,    maskX,    maskY);
-    VTX_OUT(dstX,     dstY + h, srcX,    srcYend, maskX,    maskYend);
-    VTX_OUT(dstX + w, dstY + h, srcXend, srcYend, maskXend, maskYend);
-    VTX_OUT(dstX + w, dstY,     srcXend, srcY,    maskXend, maskY);
+    if (has_mask) {
+	VTX_OUT_MASK((float)dstX,                                      (float)dstY,
+		xFixedToFloat(srcTopLeft.x) / info->texW[0],      xFixedToFloat(srcTopLeft.y) / info->texH[0],
+		xFixedToFloat(maskTopLeft.x) / info->texW[1],     xFixedToFloat(maskTopLeft.y) / info->texH[1]);
+	VTX_OUT_MASK((float)dstX,                                      (float)(dstY + h),
+		xFixedToFloat(srcBottomLeft.x) / info->texW[0],   xFixedToFloat(srcBottomLeft.y) / info->texH[0],
+		xFixedToFloat(maskBottomLeft.x) / info->texW[1],  xFixedToFloat(maskBottomLeft.y) / info->texH[1]);
+	VTX_OUT_MASK((float)(dstX + w),                                (float)(dstY + h),
+		xFixedToFloat(srcBottomRight.x) / info->texW[0],  xFixedToFloat(srcBottomRight.y) / info->texH[0],
+		xFixedToFloat(maskBottomRight.x) / info->texW[1], xFixedToFloat(maskBottomRight.y) / info->texH[1]);
+	VTX_OUT_MASK((float)(dstX + w),                                (float)dstY,
+		xFixedToFloat(srcTopRight.x) / info->texW[0],     xFixedToFloat(srcTopRight.y) / info->texH[0],
+		xFixedToFloat(maskTopRight.x) / info->texW[1],    xFixedToFloat(maskTopRight.y) / info->texH[1]);
+    } else {
+	VTX_OUT((float)dstX,                                      (float)dstY,
+		xFixedToFloat(srcTopLeft.x) / info->texW[0],      xFixedToFloat(srcTopLeft.y) / info->texH[0]);
+	VTX_OUT((float)dstX,                                      (float)(dstY + h),
+		xFixedToFloat(srcBottomLeft.x) / info->texW[0],   xFixedToFloat(srcBottomLeft.y) / info->texH[0]);
+	VTX_OUT((float)(dstX + w),                                (float)(dstY + h),
+		xFixedToFloat(srcBottomRight.x) / info->texW[0],  xFixedToFloat(srcBottomRight.y) / info->texH[0]);
+	VTX_OUT((float)(dstX + w),                                (float)dstY,
+		xFixedToFloat(srcTopRight.x) / info->texW[0],     xFixedToFloat(srcTopRight.y) / info->texH[0]);
+    }
+
+    if (IS_R300_3D || IS_R500_3D)
+	/* flushing is pipelined, free/finish is not */
+	OUT_ACCEL_REG(R300_RB3D_DSTCACHE_CTLSTAT, R300_DC_FLUSH_3D);
+
+#ifdef ACCEL_CP
+    ADVANCE_RING();
+#else
     FINISH_ACCEL();
 #endif /* !ACCEL_CP */
 
     LEAVE_DRAW(0);
 }
 #undef VTX_OUT
+#undef VTX_OUT_MASK
 
-#ifdef ONLY_ONCE
-static void RadeonDoneComposite(PixmapPtr pDst)
+static void FUNC_NAME(RadeonComposite)(PixmapPtr pDst,
+				       int srcX, int srcY,
+				       int maskX, int maskY,
+				       int dstX, int dstY,
+				       int width, int height)
 {
+    int tileSrcY, tileMaskY, tileDstY;
+    int remainingHeight;
+    
+    if (!need_src_tile_x && !need_src_tile_y) {
+	FUNC_NAME(RadeonCompositeTile)(pDst,
+				       srcX, srcY,
+				       maskX, maskY,
+				       dstX, dstY,
+				       width, height);
+	return;
+    }
+
+    /* Tiling logic borrowed from exaFillRegionTiled */
+
+    modulus(srcY, src_tile_height, tileSrcY);
+    tileMaskY = maskY;
+    tileDstY = dstY;
+
+    remainingHeight = height;
+    while (remainingHeight > 0) {
+	int remainingWidth = width;
+	int tileSrcX, tileMaskX, tileDstX;
+	int h = src_tile_height - tileSrcY;
+	
+	if (h > remainingHeight)
+	    h = remainingHeight;
+	remainingHeight -= h;
+
+	modulus(srcX, src_tile_width, tileSrcX);
+	tileMaskX = maskX;
+	tileDstX = dstX;
+	
+	while (remainingWidth > 0) {
+	    int w = src_tile_width - tileSrcX;
+	    if (w > remainingWidth)
+		w = remainingWidth;
+	    remainingWidth -= w;
+	    
+	    FUNC_NAME(RadeonCompositeTile)(pDst,
+					   tileSrcX, tileSrcY,
+					   tileMaskX, tileMaskY,
+					   tileDstX, tileDstY,
+					   w, h);
+	    
+	    tileSrcX = 0;
+	    tileMaskX += w;
+	    tileDstX += w;
+	}
+	tileSrcY = 0;
+	tileMaskY += h;
+	tileDstY += h;
+    }
+}
+
+static void FUNC_NAME(RadeonDoneComposite)(PixmapPtr pDst)
+{
+    RINFO_FROM_SCREEN(pDst->drawable.pScreen);
+    ACCEL_PREAMBLE();
+
     ENTER_DRAW(0);
+
+    if (IS_R300_3D || IS_R500_3D) {
+	BEGIN_ACCEL(2);
+	OUT_ACCEL_REG(R300_RB3D_DSTCACHE_CTLSTAT, R300_RB3D_DC_FLUSH_ALL);
+    } else
+	BEGIN_ACCEL(1);
+    OUT_ACCEL_REG(RADEON_WAIT_UNTIL, RADEON_WAIT_3D_IDLECLEAN);
+    FINISH_ACCEL();
+
     LEAVE_DRAW(0);
 }
-#endif /* ONLY_ONCE */
 
 #undef ONLY_ONCE
+#undef FUNC_NAME

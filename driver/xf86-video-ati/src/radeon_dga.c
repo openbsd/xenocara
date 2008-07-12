@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/radeon_dga.c,v 1.11 2002/09/18 18:14:58 martin Exp $ */
 /*
  * Copyright 2000 ATI Technologies Inc., Markham, Ontario, and
  *                VA Linux Systems Inc., Fremont, California.
@@ -375,7 +374,7 @@ static void RADEON_FillRect(ScrnInfoPtr pScrn,
     /* XXX */
     if (info->useEXA) {
 	/*
-	info->exa.accel.PrepareSolid(pScrn, color, GXcopy, (CARD32)(~0));
+	info->exa.accel.PrepareSolid(pScrn, color, GXcopy, (uint32_t)(~0));
 	info->exa.accel.Solid(pScrn, x, y, x+w, y+h);
 	info->exa.accel.DoneSolid();
 	*/
@@ -384,7 +383,7 @@ static void RADEON_FillRect(ScrnInfoPtr pScrn,
 #endif /* USE_EXA */
 #ifdef USE_XAA
     if (!info->useEXA) {
-	(*info->accel->SetupForSolidFill)(pScrn, color, GXcopy, (CARD32)(~0));
+	(*info->accel->SetupForSolidFill)(pScrn, color, GXcopy, (uint32_t)(~0));
 	(*info->accel->SubsequentSolidFillRect)(pScrn, x, y, w, h);
         if (pScrn->bitsPerPixel == info->CurrentLayout.bitsPerPixel)
 	    RADEON_MARK_SYNC(info, pScrn);
@@ -405,7 +404,7 @@ static void RADEON_BlitRect(ScrnInfoPtr pScrn,
     /* XXX */
     if (info->useEXA) {
 	/*
-	info->exa.accel.PrepareCopy(pScrn, color, GXcopy, (CARD32)(~0));
+	info->exa.accel.PrepareCopy(pScrn, color, GXcopy, (uint32_t)(~0));
 	info->exa.accel.Copy(pScrn, srcx, srcy, dstx, dsty, w, h);
 	info->exa.accel.DoneCopy();
 	*/
@@ -415,7 +414,7 @@ static void RADEON_BlitRect(ScrnInfoPtr pScrn,
 #ifdef USE_XAA
     if (!info->useEXA) {
 	(*info->accel->SetupForScreenToScreenCopy)(pScrn, xdir, ydir,
-						   GXcopy, (CARD32)(~0), -1);
+						   GXcopy, (uint32_t)(~0), -1);
 	(*info->accel->SubsequentScreenToScreenCopy)(pScrn, srcx, srcy,
 						     dstx, dsty, w, h);
         if (pScrn->bitsPerPixel == info->CurrentLayout.bitsPerPixel)
@@ -434,7 +433,7 @@ static void RADEON_BlitTransRect(ScrnInfoPtr pScrn,
 
     info->XAAForceTransBlit = TRUE;
     (*info->accel->SetupForScreenToScreenCopy)(pScrn, xdir, ydir,
-					       GXcopy, (CARD32)(~0), color);
+					       GXcopy, (uint32_t)(~0), color);
 
     info->XAAForceTransBlit = FALSE;
 

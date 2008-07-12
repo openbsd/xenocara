@@ -21,20 +21,12 @@
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = src man
 
-if BUILD_LINUXDOC
-README.ati: README.ati.sgml
-	$(MAKE_TEXT) README.ati.sgml && mv README.ati.txt README.ati
-
-README.r128: README.r128.sgml
-	$(MAKE_TEXT) README.r128.sgml && mv README.r128.txt README.r128
-
-endif
-
-EXTRA_DIST = README.ati README.r128 README.ati.sgml README.r128.sgml ChangeLog
-
-# Always regenerate the changelog
+EXTRA_DIST = ChangeLog
 CLEANFILES = ChangeLog
-ChangeLog: FORCE
-	git-log > ChangeLog
-FORCE:
 
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog

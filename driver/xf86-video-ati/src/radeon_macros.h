@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/radeon_macros.h,v 1.2 2003/07/08 15:39:48 tsi Exp $ */
 /*
  * Copyright 2000 ATI Technologies Inc., Markham, Ontario, and
  *                VA Linux Systems Inc., Fremont, California.
@@ -52,6 +51,32 @@
 
 #include "compiler.h"
 
+#if HAVE_BYTESWAP_H
+#include <byteswap.h>
+#elif defined(USE_SYS_ENDIAN_H)
+#include <sys/endian.h>
+#else
+#define	bswap_16(value)  \
+ 	((((value) & 0xff) << 8) | ((value) >> 8))
+
+#define	bswap_32(value)	\
+ 	(((uint32_t)bswap_16((uint16_t)((value) & 0xffff)) << 16) | \
+ 	(uint32_t)bswap_16((uint16_t)((value) >> 16)))
+ 
+#define	bswap_64(value)	\
+ 	(((uint64_t)bswap_32((uint32_t)((value) & 0xffffffff)) \
+ 	    << 32) | \
+ 	(uint64_t)bswap_32((uint32_t)((value) >> 32)))
+#endif
+
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+#define le32_to_cpu(x) bswap_32(x)
+#define le16_to_cpu(x) bswap_16(x)
+#else
+#define le32_to_cpu(x) (x)
+#define le16_to_cpu(x) (x)
+#endif
+
 #define RADEON_BIOS8(v)  (info->VBIOS[v])
 #define RADEON_BIOS16(v) (info->VBIOS[v] | \
                           (info->VBIOS[(v) + 1] << 8))
@@ -68,12 +93,12 @@
 #define OUTREG16(addr, val) MMIO_OUT16(RADEONMMIO, addr, val)
 #define OUTREG(addr, val)   MMIO_OUT32(RADEONMMIO, addr, val)
 
-#define ADDRREG(addr)       ((volatile CARD32 *)(pointer)(RADEONMMIO + (addr)))
+#define ADDRREG(addr)       ((volatile uint32_t *)(pointer)(RADEONMMIO + (addr)))
 
 
 #define OUTREGP(addr, val, mask)					\
 do {									\
-    CARD32 tmp = INREG(addr);						\
+    uint32_t tmp = INREG(addr);						\
     tmp &= (mask);							\
     tmp |= ((val) & ~(mask));						\
     OUTREG(addr, tmp);							\
@@ -85,7 +110,7 @@ do {									\
 
 #define OUTPLLP(pScrn, addr, val, mask)					\
 do {									\
-    CARD32 tmp_ = INPLL(pScrn, addr);					\
+    uint32_t tmp_ = INPLL(pScrn, addr);					\
     tmp_ &= (mask);							\
     tmp_ |= ((val) & ~(mask));						\
     OUTPLL(pScrn, addr, tmp_);						\
@@ -93,15 +118,23 @@ do {									\
 
 #define OUTPAL_START(idx)						\
 do {									\
-    OUTREG8(RADEON_PALETTE_INDEX, (idx));				\
+    if (IS_AVIVO_VARIANT) {                                             \
+        OUTREG8(AVIVO_DC_LUT_RW_INDEX, (idx));				\
+    } else {                                                            \
+        OUTREG8(RADEON_PALETTE_INDEX, (idx));				\
+    }								        \
 } while (0)
 
 #define OUTPAL_NEXT(r, g, b)						\
 do {									\
-    OUTREG(RADEON_PALETTE_DATA, ((r) << 16) | ((g) << 8) | (b));	\
+    if (IS_AVIVO_VARIANT) {                                             \
+        OUTREG(AVIVO_DC_LUT_30_COLOR, ((r) << 22) | ((g) << 12) | ((b) << 2));	\
+    } else {                                                               \
+        OUTREG(RADEON_PALETTE_DATA, ((r) << 16) | ((g) << 8) | (b));	\
+    }								        \
 } while (0)
 
-#define OUTPAL_NEXT_CARD32(v)						\
+#define OUTPAL_NEXT_uint32_t(v)						\
 do {									\
     OUTREG(RADEON_PALETTE_DATA, (v & 0x00ffffff));			\
 } while (0)
@@ -114,20 +147,43 @@ do {									\
 
 #define INPAL_START(idx)						\
 do {									\
-    OUTREG(RADEON_PALETTE_INDEX, (idx) << 16);				\
+    if (IS_AVIVO_VARIANT) {                                             \
+        OUTREG8(AVIVO_DC_LUT_RW_INDEX, (idx));				\
+    } else {                                                            \
+        OUTREG(RADEON_PALETTE_INDEX, (idx) << 16);			\
+    }								        \
 } while (0)
 
-#define INPAL_NEXT() INREG(RADEON_PALETTE_DATA)
+#define INPAL_NEXT()                                                    \
+do {									\
+    if (IS_AVIVO_VARIANT) {                                             \
+        INREG(AVIVO_DC_LUT_30_COLOR);                                   \
+    } else {                                                            \
+        INREG(RADEON_PALETTE_DATA);                                     \
+    }								        \
+} while (0)
 
 #define PAL_SELECT(idx)							\
 do {									\
-    if (!idx) {								\
-	OUTREG(RADEON_DAC_CNTL2, INREG(RADEON_DAC_CNTL2) &		\
-	       (CARD32)~RADEON_DAC2_PALETTE_ACC_CTL);			\
-    } else {								\
-	OUTREG(RADEON_DAC_CNTL2, INREG(RADEON_DAC_CNTL2) |		\
-	       RADEON_DAC2_PALETTE_ACC_CTL);				\
-    }									\
+    if (IS_AVIVO_VARIANT) {                                             \
+        if (!idx) {							\
+	    OUTREG(AVIVO_DC_LUT_RW_SELECT, 0);                          \
+        } else {						        \
+	    OUTREG(AVIVO_DC_LUT_RW_SELECT, 1);                          \
+        }								\
+    } else {                                                            \
+        if (!idx) {							\
+	    OUTREG(RADEON_DAC_CNTL2, INREG(RADEON_DAC_CNTL2) &		\
+	           (uint32_t)~RADEON_DAC2_PALETTE_ACC_CTL);		\
+        } else {							\
+	    OUTREG(RADEON_DAC_CNTL2, INREG(RADEON_DAC_CNTL2) |		\
+	           RADEON_DAC2_PALETTE_ACC_CTL);			\
+        }								\
+    }								        \
 } while (0)
+
+#define INMC(pScrn, addr) RADEONINMC(pScrn, addr)
+
+#define OUTMC(pScrn, addr, val) RADEONOUTMC(pScrn, addr, val)
 
 #endif

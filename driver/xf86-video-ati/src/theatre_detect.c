@@ -1,5 +1,4 @@
 /*************************************************************************************
- * $Id: theatre_detect.c,v 1.1.1.1 2006/11/26 20:01:06 matthieu Exp $
  * 
  * Copyright (C) 2005 Bogdan D. bogdand@users.sourceforge.net
  *
@@ -23,8 +22,15 @@
  * authorization from the author.
  *
  * $Log: theatre_detect.c,v $
- * Revision 1.1.1.1  2006/11/26 20:01:06  matthieu
- * Importing xf86-video-ati 6.6.3
+ * Revision 1.2  2008/07/12 15:18:34  oga
+ * Long awaited update of xf86-video-ati to 6.9.0.
+ *
+ * the rage128 and mach64 drivers were split out of this driver just after
+ * the 6.8.0 release, these drivers will be commited separately.
+ *
+ * MergedFb mode is gone, so please use xrandr if you used to use it.
+ *
+ * ok matthieu@.
  *
  * Revision 1.4  2005/08/28 18:00:23  bogdand
  * Modified the licens type from GPL to a X/MIT one
@@ -47,19 +53,20 @@
 #include "generic_bus.h"
 #include "theatre.h"
 #include "theatre_reg.h"
+#include "theatre_detect.h"
 
-static Bool theatre_read(TheatrePtr t,CARD32 reg, CARD32 *data)
+static Bool theatre_read(TheatrePtr t,uint32_t reg, uint32_t *data)
 {
    if(t->theatre_num<0)return FALSE;
-   return t->VIP->read(t->VIP, ((t->theatre_num & 0x3)<<14) | reg,4, (CARD8 *) data);
+   return t->VIP->read(t->VIP, ((t->theatre_num & 0x3)<<14) | reg,4, (uint8_t *) data);
 }
 
 /* Unused code - reference */
 #if 0
-static Bool theatre_write(TheatrePtr t,CARD32 reg, CARD32 data)
+static Bool theatre_write(TheatrePtr t,uint32_t reg, uint32_t data)
 {
    if(t->theatre_num<0)return FALSE;
-   return t->VIP->write(t->VIP,((t->theatre_num & 0x03)<<14) | reg,4, (CARD8 *) &data);
+   return t->VIP->write(t->VIP,((t->theatre_num & 0x03)<<14) | reg,4, (uint8_t *) &data);
 }
 #define RT_regw(reg,data)	theatre_write(t,(reg),(data))
 #endif
@@ -68,11 +75,11 @@ static Bool theatre_write(TheatrePtr t,CARD32 reg, CARD32 data)
 #define VIP_TYPE      "ATI VIP BUS"
 
 
-TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
+_X_EXPORT TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
 {
    TheatrePtr t;  
-   CARD32 i;
-   CARD32 val;
+   int i;
+   uint32_t val;
    char s[20];
    
    b->ioctl(b,GB_IOCTL_GET_TYPE,20,s);
@@ -87,12 +94,14 @@ TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
    t->theatre_num = -1;
    t->mode=MODE_UNINITIALIZED;
 
-   b->read(b, VIP_VIP_VENDOR_DEVICE_ID, 4, (CARD8 *)&val);
+   b->read(b, VIP_VIP_VENDOR_DEVICE_ID, 4, (uint8_t *)&val);
    for(i=0;i<4;i++)
    {
-	if(b->read(b, ((i & 0x03)<<14) | VIP_VIP_VENDOR_DEVICE_ID, 4, (CARD8 *)&val))
+	if(b->read(b, ((i & 0x03)<<14) | VIP_VIP_VENDOR_DEVICE_ID, 4, (uint8_t *)&val))
         {
-	  if(val)xf86DrvMsg(b->scrnIndex, X_INFO, "Device %ld on VIP bus ids as 0x%08lx\n",i,val);
+	  if(val)xf86DrvMsg(b->scrnIndex, X_INFO,
+			    "Device %d on VIP bus ids as 0x%08x\n", i,
+			    (unsigned)val);
 	  if(t->theatre_num>=0)continue; /* already found one instance */
 	  switch(val){
 	  	case RT100_ATI_ID:
@@ -105,10 +114,12 @@ TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
 		   break;
                 }
 	} else {
-	  xf86DrvMsg(b->scrnIndex, X_INFO, "No response from device %ld on VIP bus\n",i);	
+	  xf86DrvMsg(b->scrnIndex, X_INFO, "No response from device %d on VIP bus\n",i);	
 	}
    }
-   if(t->theatre_num>=0)xf86DrvMsg(b->scrnIndex, X_INFO, "Detected Rage Theatre as device %d on VIP bus with id 0x%08lx\n",t->theatre_num,t->theatre_id);
+   if(t->theatre_num>=0)xf86DrvMsg(b->scrnIndex, X_INFO,
+				   "Detected Rage Theatre as device %d on VIP bus with id 0x%08x\n",
+				   t->theatre_num, (unsigned)t->theatre_id);
 
    if(t->theatre_num < 0)
    {
@@ -117,7 +128,8 @@ TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
    }
 
    RT_regr(VIP_VIP_REVISION_ID, &val);
-   xf86DrvMsg(b->scrnIndex, X_INFO, "Detected Rage Theatre revision %8.8lX\n", val);
+   xf86DrvMsg(b->scrnIndex, X_INFO, "Detected Rage Theatre revision %8.8X\n",
+	      (unsigned)val);
 
 #if 0
 DumpRageTheatreRegsByName(t);

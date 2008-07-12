@@ -11,10 +11,12 @@
 #include "generic_bus.h"
 #include "theatre.h"
 
+#include "xf86Crtc.h"
+
 /* Xvideo port struct */
 typedef struct {
-   CARD32	 transform_index;
-   CARD32	 gamma; /* gamma value x 1000 */
+   uint32_t	 transform_index;
+   uint32_t	 gamma; /* gamma value x 1000 */
    int           brightness;
    int           saturation;
    int           hue;
@@ -22,7 +24,6 @@ typedef struct {
    int           red_intensity;
    int           green_intensity;
    int           blue_intensity;
-   int		 ecp_div;
 
 	/* overlay composition mode */
    int		 alpha_mode; /* 0 = key mode, 1 = global mode */
@@ -31,17 +32,17 @@ typedef struct {
 
      /* i2c bus and devices */
    I2CBusPtr     i2c;
-   CARD32        radeon_i2c_timing;
-   CARD32        radeon_M;
-   CARD32        radeon_N;
-   CARD32        i2c_status;
-   CARD32        i2c_cntl;
+   uint32_t      radeon_i2c_timing;
+   uint32_t      radeon_M;
+   uint32_t      radeon_N;
+   uint32_t      i2c_status;
+   uint32_t      i2c_cntl;
    
    FI1236Ptr     fi1236;
-   CARD8         tuner_type;
+   uint8_t       tuner_type;
    MSP3430Ptr    msp3430;
    TDA9885Ptr    tda9885;
-	UDA1380Ptr	  uda1380;
+   UDA1380Ptr    uda1380;
 
    /* VIP bus and devices */
    GENERIC_BUS_Ptr  VIP;
@@ -49,12 +50,12 @@ typedef struct {
 
    Bool          video_stream_active;
    int           encoding;
-   CARD32        frequency;
+   uint32_t      frequency;
    int           volume;
    Bool          mute;
    int           sap_channel;
    int           v;
-   CARD32        adjustment; /* general purpose variable */
+   uint32_t      adjustment; /* general purpose variable */
    
 #define METHOD_BOB      0
 #define METHOD_SINGLE   1
@@ -62,8 +63,7 @@ typedef struct {
 #define METHOD_ADAPTIVE 3
 
    int           overlay_deinterlacing_method;
-   int		 overlay_scaler_buffer_width;
-   
+
    int           capture_vbi_data;
 
    int           dec_brightness;
@@ -74,15 +74,15 @@ typedef struct {
    Bool          doubleBuffer;
    unsigned char currentBuffer;
    RegionRec     clip;
-   CARD32        colorKey;
-   CARD32        videoStatus;
+   uint32_t      colorKey;
+   uint32_t      videoStatus;
    Time          offTime;
    Time          freeTime;
    Bool          autopaint_colorkey;
-   Bool		 crt2; /* 0=CRT1, 1=CRT2 */
+   xf86CrtcPtr   desired_crtc;
 
+   int           size;
 #ifdef USE_EXA
-   int              size;
    ExaOffscreenArea *off_screen;
 #endif
 
@@ -90,6 +90,20 @@ typedef struct {
    int           video_offset;
 
    Atom          device_id, location_id, instance_id;
+
+    /* textured video */
+    Bool textured;
+    DrawablePtr pDraw;
+    PixmapPtr pPixmap;
+
+    uint32_t src_offset;
+    uint32_t src_pitch;
+    uint8_t *src_addr;
+
+    int id;
+    int src_w, src_h, dst_w, dst_h;
+    int w, h;
+    int drw_x, drw_y;
 } RADEONPortPrivRec, *RADEONPortPrivPtr;
 
 
@@ -99,5 +113,33 @@ void RADEONResetI2C(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv);
 void RADEONVIP_init(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv);
 void RADEONVIP_reset(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv);
 
+uint32_t
+RADEONAllocateMemory(ScrnInfoPtr pScrn, void **mem_struct, int size);
+void
+RADEONFreeMemory(ScrnInfoPtr pScrn, void *mem_struct);
+
+int  RADEONSetPortAttribute(ScrnInfoPtr, Atom, INT32, pointer);
+int  RADEONGetPortAttribute(ScrnInfoPtr, Atom ,INT32 *, pointer);
+void RADEONStopVideo(ScrnInfoPtr, pointer, Bool);
+void RADEONQueryBestSize(ScrnInfoPtr, Bool, short, short, short, short,
+			 unsigned int *, unsigned int *, pointer);
+int  RADEONQueryImageAttributes(ScrnInfoPtr, int, unsigned short *,
+			unsigned short *,  int *, int *);
+
+XF86VideoAdaptorPtr
+RADEONSetupImageTexturedVideo(ScreenPtr pScreen);
+
+void
+RADEONCopyData(ScrnInfoPtr pScrn,
+	       unsigned char *src, unsigned char *dst,
+	       unsigned int srcPitch, unsigned int dstPitch,
+	       unsigned int h, unsigned int w, unsigned int bpp);
+
+void
+RADEONCopyMungedData(ScrnInfoPtr pScrn,
+		     unsigned char *src1, unsigned char *src2,
+		     unsigned char *src3, unsigned char *dst1,
+		     unsigned int srcPitch, unsigned int srcPitch2,
+		     unsigned int dstPitch, unsigned int h, unsigned int w);
 
 #endif

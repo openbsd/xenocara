@@ -26,11 +26,11 @@
 
 drivermandir = $(DRIVER_MAN_DIR)
 
-driverman_PRE = @DRIVER_NAME@.man r128.man radeon.man
+driverman_PRE = @DRIVER_NAME@.man radeon.man
 
 driverman_DATA = $(driverman_PRE:man=@DRIVER_MAN_SUFFIX@)
 
-EXTRA_DIST = @DRIVER_NAME@.man r128.man radeon.man
+EXTRA_DIST = @DRIVER_NAME@.man radeon.man
 
 CLEANFILES = $(driverman_DATA)
 

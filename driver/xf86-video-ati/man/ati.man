@@ -17,7 +17,7 @@ ati \- ATI video driver
 is an __xservername__ wrapper driver for ATI video cards.  It autodetects
 whether your hardware has a Radeon, Rage 128, or Mach64 or earlier class of
 chipset, and loads the radeon(__drivermansuffix__),
-r128(__drivermansuffix__), or atimisc(__drivermansuffix__) driver as
+r128(__drivermansuffix__), or mach64 driver as
 appropriate.
 .SH SUPPORTED HARDWARE
 The
@@ -29,6 +29,6 @@ Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details, and the specific card driver for driver configuration details.
 driver.
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__), r128(__drivermansuffix__), radeon(__drivermansuffix__)
 .SH AUTHORS
 See the individual driver pages for authors.

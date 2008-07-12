@@ -99,17 +99,24 @@ static __inline__ int
 RADEONLog2(int val)
 {
 	int bits;
-
+#if (defined __i386__ || defined __x86_64__) && (defined __GNUC__)
+	__asm volatile("bsrl	%1, %0"
+		: "=r" (bits)
+		: "c" (val)
+	);
+	return bits;
+#else
 	for (bits = 0; val != 0; val >>= 1, ++bits)
 		;
 	return bits - 1;
+#endif
 }
 
-static __inline__ CARD32 F_TO_DW(float val)
+static __inline__ uint32_t F_TO_DW(float val)
 {
     union {
 	float f;
-	CARD32 l;
+	uint32_t l;
     } tmp;
     tmp.f = val;
     return tmp.l;
@@ -118,7 +125,7 @@ static __inline__ CARD32 F_TO_DW(float val)
 /* Assumes that depth 15 and 16 can be used as depth 16, which is okay since we
  * require src and dest datatypes to be equal.
  */
-static Bool RADEONGetDatatypeBpp(int bpp, CARD32 *type)
+Bool RADEONGetDatatypeBpp(int bpp, uint32_t *type)
 {
 	switch (bpp) {
 	case 8:
@@ -152,12 +159,12 @@ static Bool RADEONPixmapIsColortiled(PixmapPtr pPix)
 	return FALSE;
 }
 
-static Bool RADEONGetOffsetPitch(PixmapPtr pPix, int bpp, CARD32 *pitch_offset,
+static Bool RADEONGetOffsetPitch(PixmapPtr pPix, int bpp, uint32_t *pitch_offset,
 				 unsigned int offset, unsigned int pitch)
 {
 	RINFO_FROM_SCREEN(pPix->drawable.pScreen);
 
-	if (pitch % info->exa->pixmapPitchAlign != 0)
+	if (pitch > 16320 || pitch % info->exa->pixmapPitchAlign != 0)
 		RADEON_FALLBACK(("Bad pitch 0x%08x\n", pitch));
 
 	if (offset % info->exa->pixmapOffsetAlign != 0)
@@ -172,17 +179,17 @@ static Bool RADEONGetOffsetPitch(PixmapPtr pPix, int bpp, CARD32 *pitch_offset,
 	return TRUE;
 }
 
-static Bool RADEONGetPixmapOffsetPitch(PixmapPtr pPix, CARD32 *pitch_offset)
+Bool RADEONGetPixmapOffsetPitch(PixmapPtr pPix, uint32_t *pitch_offset)
 {
 	RINFO_FROM_SCREEN(pPix->drawable.pScreen);
-	CARD32 pitch, offset;
+	uint32_t pitch, offset;
 	int bpp;
 
 	bpp = pPix->drawable.bitsPerPixel;
 	if (bpp == 24)
 		bpp = 8;
 
-	offset = exaGetPixmapOffset(pPix) + info->fbLocation;
+	offset = exaGetPixmapOffset(pPix) + info->fbLocation + pScrn->fbOffset;
 	pitch = exaGetPixmapPitch(pPix);
 
 	return RADEONGetOffsetPitch(pPix, bpp, pitch_offset, offset, pitch);
@@ -196,9 +203,9 @@ static Bool RADEONPrepareAccess(PixmapPtr pPix, int index)
 {
     RINFO_FROM_SCREEN(pPix->drawable.pScreen);
     unsigned char *RADEONMMIO = info->MMIO;
-    CARD32 offset = exaGetPixmapOffset(pPix);
+    uint32_t offset = exaGetPixmapOffset(pPix);
     int bpp, soff;
-    CARD32 size, flags;
+    uint32_t size, flags;
 
     /* Front buffer is always set with proper swappers */
     if (offset == 0)
@@ -262,7 +269,7 @@ static void RADEONFinishAccess(PixmapPtr pPix, int index)
 {
     RINFO_FROM_SCREEN(pPix->drawable.pScreen);
     unsigned char *RADEONMMIO = info->MMIO;
-    CARD32 offset = exaGetPixmapOffset(pPix);
+    uint32_t offset = exaGetPixmapOffset(pPix);
     int soff;
 
     /* Front buffer is always set with proper swappers */
@@ -293,7 +300,7 @@ static void RADEONFinishAccess(PixmapPtr pPix, int index)
 
 #define RADEON_SWITCH_TO_2D()						\
 do {									\
-	CARD32 wait_until = 0;			\
+	uint32_t wait_until = 0;			\
 	BEGIN_ACCEL(1);							\
 	switch (info->engineMode) {					\
 	case EXA_ENGINEMODE_UNKNOWN:					\
@@ -310,13 +317,13 @@ do {									\
 
 #define RADEON_SWITCH_TO_3D()						\
 do {									\
-	CARD32 wait_until = 0;			\
+	uint32_t wait_until = 0;			\
 	BEGIN_ACCEL(1);							\
 	switch (info->engineMode) {					\
 	case EXA_ENGINEMODE_UNKNOWN:					\
 	    wait_until |= RADEON_WAIT_HOST_IDLECLEAN | RADEON_WAIT_3D_IDLECLEAN;	\
 	case EXA_ENGINEMODE_2D:						\
-	    wait_until |= RADEON_WAIT_2D_IDLECLEAN;			\
+	    wait_until |= RADEON_WAIT_2D_IDLECLEAN | RADEON_WAIT_DMA_GUI_IDLE;		\
 	case EXA_ENGINEMODE_3D:						\
 	    break;							\
 	}								\
@@ -374,6 +381,7 @@ Bool RADEONSetupMemEXA (ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
     RADEONInfoPtr info = RADEONPTR(pScrn);
+    xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     int cpp = info->CurrentLayout.pixel_bytes;
     int screen_size;
     int byteStride = pScrn->displayWidth * cpp;
@@ -394,28 +402,34 @@ Bool RADEONSetupMemEXA (ScreenPtr pScreen)
     else
 	screen_size = pScrn->virtualY * byteStride;
 
-    info->exa->memoryBase = info->FB + pScrn->fbOffset;
+    info->exa->memoryBase = info->FB;
     info->exa->memorySize = info->FbMapSize - info->FbSecureSize;
     info->exa->offScreenBase = screen_size;
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Allocating from a screen of %ld kb\n",
 	       info->exa->memorySize / 1024);
 
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-	       "Will use %d kb for front buffer at offset 0x%08x\n",
-	       screen_size / 1024, 0);
 
     /* Reserve static area for hardware cursor */
     if (!xf86ReturnOptValBool(info->Options, OPTION_SW_CURSOR, FALSE)) {
 	int cursor_size = 64 * 4 * 64;
+	int c;
 
-	info->cursor_offset = info->exa->offScreenBase;
+	for (c = 0; c < xf86_config->num_crtc; c++) {
+	    xf86CrtcPtr crtc = xf86_config->crtc[c];
+	    RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
 
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		   "Will use %d kb for hardware cursor at offset 0x%08x\n",
-		   cursor_size / 1024, (unsigned int)info->cursor_offset);
+	    radeon_crtc->cursor_offset = info->exa->offScreenBase;
+	    info->exa->offScreenBase += cursor_size;
 
-	info->exa->offScreenBase += cursor_size;
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		       "Will use %d kb for hardware cursor %d at offset 0x%08x\n",
+		       (cursor_size * xf86_config->num_crtc) / 1024,
+		       c,
+		       (unsigned int)radeon_crtc->cursor_offset);
+	}
+
+
     }
 
 #if defined(XF86DRI)
@@ -425,12 +439,15 @@ Bool RADEONSetupMemEXA (ScreenPtr pScreen)
 	info->frontOffset = 0;
 	info->frontPitch = pScrn->displayWidth;
 
+        xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+	       "Will use %d kb for front buffer at offset 0x%08x\n",
+	       screen_size / 1024, info->frontOffset);
 	RADEONDRIAllocatePCIGARTTable(pScreen);
 	
 	if (info->cardType==CARD_PCIE)
 	  xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		     "Will use %d kb for PCI GART at offset 0x%08x\n",
-		     RADEON_PCIGART_TABLE_SIZE / 1024,
+		     info->pciGartSize / 1024,
 		     (int)info->pciGartOffset);
 
 	/* Reserve a static area for the back buffer the same size as the
@@ -483,9 +500,12 @@ Bool RADEONSetupMemEXA (ScreenPtr pScreen)
 	    /* Minimum texture size is for 2 256x256x32bpp textures */
 	    info->textureSize = 0;
 	}
-    }
+    } else
 #endif /* XF86DRI */
-	
+    	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		       "Will use %d kb for front buffer at offset 0x%08x\n",
+		       screen_size / 1024, 0);
+
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	       "Will use %ld kb for X Server offscreen at offset 0x%08lx\n",
 	       (info->exa->memorySize - info->exa->offScreenBase) /
@@ -493,3 +513,20 @@ Bool RADEONSetupMemEXA (ScreenPtr pScreen)
 
     return TRUE;
 }
+
+#ifdef XF86DRI
+
+#ifndef ExaOffscreenMarkUsed
+extern void ExaOffscreenMarkUsed(PixmapPtr);
+#endif
+
+unsigned long long
+RADEONTexOffsetStart(PixmapPtr pPix)
+{
+    exaMoveInPixmap(pPix);
+    ExaOffscreenMarkUsed(pPix);
+
+    return RADEONPTR(xf86Screens[pPix->drawable.pScreen->myNum])->fbLocation +
+	exaGetPixmapOffset(pPix);
+}
+#endif

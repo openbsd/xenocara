@@ -1,5 +1,4 @@
 /*************************************************************************************
- * $Id: theatre200.c,v 1.1.1.1 2006/11/26 20:01:06 matthieu Exp $
  * 
  * Copyright (C) 2005 Bogdan D. bogdand@users.sourceforge.net
  *
@@ -23,8 +22,15 @@
  * authorization from the author.
  *
  * $Log: theatre200.c,v $
- * Revision 1.1.1.1  2006/11/26 20:01:06  matthieu
- * Importing xf86-video-ati 6.6.3
+ * Revision 1.2  2008/07/12 15:18:34  oga
+ * Long awaited update of xf86-video-ati to 6.9.0.
+ *
+ * the rage128 and mach64 drivers were split out of this driver just after
+ * the 6.8.0 release, these drivers will be commited separately.
+ *
+ * MergedFb mode is gone, so please use xrandr if you used to use it.
+ *
+ * ok matthieu@.
  *
  * Revision 1.6  2006/03/22 22:30:14  krh
  * 2006-03-22  Kristian Høgsberg  <krh@redhat.com>
@@ -75,51 +81,51 @@ static void microc_clean(struct rt200_microc_data* microc_datap, int screen);
 static int dsp_init(TheatrePtr t, struct rt200_microc_data* microc_datap);
 static int dsp_load(TheatrePtr t, struct rt200_microc_data* microc_datap);
 
-static CARD32 dsp_send_command(TheatrePtr t, CARD32 fb_scratch1, CARD32 fb_scratch0);
-static CARD32 dsp_set_video_input_connector(TheatrePtr t, CARD32 connector);
-//static CARD32 dsp_reset(TheatrePtr t);
-static CARD32 dsp_set_lowpowerstate(TheatrePtr t, CARD32 pstate);
-static CARD32 dsp_set_video_standard(TheatrePtr t, CARD32 standard);
-static CARD32 dsp_set_videostreamformat(TheatrePtr t, CARD32 format);
-static CARD32 dsp_video_standard_detection(TheatrePtr t);
-//static CARD32 dsp_get_signallockstatus(TheatrePtr t);
-//static CARD32 dsp_get_signallinenumber(TheatrePtr t);
+static uint32_t dsp_send_command(TheatrePtr t, uint32_t fb_scratch1, uint32_t fb_scratch0);
+static uint32_t dsp_set_video_input_connector(TheatrePtr t, uint32_t connector);
+//static uint32_t dsp_reset(TheatrePtr t);
+static uint32_t dsp_set_lowpowerstate(TheatrePtr t, uint32_t pstate);
+static uint32_t dsp_set_video_standard(TheatrePtr t, uint32_t standard);
+static uint32_t dsp_set_videostreamformat(TheatrePtr t, uint32_t format);
+static uint32_t dsp_video_standard_detection(TheatrePtr t);
+//static uint32_t dsp_get_signallockstatus(TheatrePtr t);
+//static uint32_t dsp_get_signallinenumber(TheatrePtr t);
 
-static CARD32 dsp_set_brightness(TheatrePtr t, CARD8 brightness);
-static CARD32 dsp_set_contrast(TheatrePtr t, CARD8 contrast);
-//static CARD32 dsp_set_sharpness(TheatrePtr t, int sharpness);
-static CARD32 dsp_set_tint(TheatrePtr t, CARD8 tint);
-static CARD32 dsp_set_saturation(TheatrePtr t, CARD8 saturation);
-static CARD32 dsp_set_video_scaler_horizontal(TheatrePtr t, CARD16 output_width, CARD16 horz_start, CARD16 horz_end);
-static CARD32 dsp_set_video_scaler_vertical(TheatrePtr t, CARD16 output_height, CARD16 vert_start, CARD16 vert_end);
-static CARD32 dsp_audio_mute(TheatrePtr t, CARD8 left, CARD8 right);
-static CARD32 dsp_set_audio_volume(TheatrePtr t, CARD8 left, CARD8 right, CARD8 auto_mute);
-//static CARD32 dsp_audio_detection(TheatrePtr t, CARD8 option);
-static CARD32 dsp_configure_i2s_port(TheatrePtr t, CARD8 tx_mode, CARD8 rx_mode, CARD8 clk_mode);
-static CARD32 dsp_configure_spdif_port(TheatrePtr t, CARD8 state);
+static uint32_t dsp_set_brightness(TheatrePtr t, uint8_t brightness);
+static uint32_t dsp_set_contrast(TheatrePtr t, uint8_t contrast);
+//static uint32_t dsp_set_sharpness(TheatrePtr t, int sharpness);
+static uint32_t dsp_set_tint(TheatrePtr t, uint8_t tint);
+static uint32_t dsp_set_saturation(TheatrePtr t, uint8_t saturation);
+static uint32_t dsp_set_video_scaler_horizontal(TheatrePtr t, uint16_t output_width, uint16_t horz_start, uint16_t horz_end);
+static uint32_t dsp_set_video_scaler_vertical(TheatrePtr t, uint16_t output_height, uint16_t vert_start, uint16_t vert_end);
+static uint32_t dsp_audio_mute(TheatrePtr t, uint8_t left, uint8_t right);
+static uint32_t dsp_set_audio_volume(TheatrePtr t, uint8_t left, uint8_t right, uint8_t auto_mute);
+//static uint32_t dsp_audio_detection(TheatrePtr t, uint8_t option);
+static uint32_t dsp_configure_i2s_port(TheatrePtr t, uint8_t tx_mode, uint8_t rx_mode, uint8_t clk_mode);
+static uint32_t dsp_configure_spdif_port(TheatrePtr t, uint8_t state);
 
-static Bool theatre_read(TheatrePtr t,CARD32 reg, CARD32 *data)
+static Bool theatre_read(TheatrePtr t,uint32_t reg, uint32_t *data)
 {
    if(t->theatre_num<0)return FALSE;
-   return t->VIP->read(t->VIP, ((t->theatre_num & 0x3)<<14) | reg,4, (CARD8 *) data);
+   return t->VIP->read(t->VIP, ((t->theatre_num & 0x3)<<14) | reg,4, (uint8_t *) data);
 }
 
-static Bool theatre_write(TheatrePtr t,CARD32 reg, CARD32 data)
+static Bool theatre_write(TheatrePtr t,uint32_t reg, uint32_t data)
 {
    if(t->theatre_num<0)return FALSE;
-   return t->VIP->write(t->VIP,((t->theatre_num & 0x03)<<14) | reg,4, (CARD8 *) &data);
+   return t->VIP->write(t->VIP,((t->theatre_num & 0x03)<<14) | reg,4, (uint8_t *) &data);
 }
 
-static Bool theatre_fifo_read(TheatrePtr t,CARD32 fifo, CARD8 *data)
+static Bool theatre_fifo_read(TheatrePtr t,uint32_t fifo, uint8_t *data)
 {
    if(t->theatre_num<0)return FALSE;
-   return t->VIP->fifo_read(t->VIP, ((t->theatre_num & 0x3)<<14) | fifo,1, (CARD8 *) data);
+   return t->VIP->fifo_read(t->VIP, ((t->theatre_num & 0x3)<<14) | fifo,1, (uint8_t *) data);
 }
 
-static Bool theatre_fifo_write(TheatrePtr t,CARD32 fifo, CARD32 count, CARD8* buffer)
+static Bool theatre_fifo_write(TheatrePtr t,uint32_t fifo, uint32_t count, uint8_t* buffer)
 {
    if(t->theatre_num<0)return FALSE;
-   return t->VIP->fifo_write(t->VIP,((t->theatre_num & 0x03)<<14) | fifo,count, (CARD8 *)buffer);
+   return t->VIP->fifo_write(t->VIP,((t->theatre_num & 0x03)<<14) | fifo,count, (uint8_t *)buffer);
 }
 
 #define RT_regr(reg,data)				theatre_read(t,(reg),(data))
@@ -348,7 +354,7 @@ static void microc_clean(struct rt200_microc_data* microc_datap, int screen)
 
 static int dsp_init(TheatrePtr t, struct rt200_microc_data* microc_datap)
 {
-	CARD32 data;
+	uint32_t data;
 	int i = 0;
 	int screen = t->VIP->scrnIndex;
 
@@ -373,12 +379,12 @@ static int dsp_init(TheatrePtr t, struct rt200_microc_data* microc_datap)
 static int dsp_load(TheatrePtr t, struct rt200_microc_data* microc_datap)
 {
 	struct rt200_microc_seg* seg_list = microc_datap->microc_seg_list;
-	CARD8	data8;
-	CARD32 data, fb_scratch0, fb_scratch1;
-	CARD32 i;
-	CARD32 tries = 0;
-	CARD32 result = 0;
-	CARD32 seg_id = 0;
+	uint8_t	data8;
+	uint32_t data, fb_scratch0, fb_scratch1;
+	uint32_t i;
+	uint32_t tries = 0;
+	uint32_t result = 0;
+	uint32_t seg_id = 0;
 	int screen = t->VIP->scrnIndex;
 		  
 	DEBUG("Microcode: before everything: %x\n", data8);
@@ -568,9 +574,9 @@ static int dsp_load(TheatrePtr t, struct rt200_microc_data* microc_datap)
 	return 0;
 }
 
-static CARD32 dsp_send_command(TheatrePtr t, CARD32 fb_scratch1, CARD32 fb_scratch0)
+static uint32_t dsp_send_command(TheatrePtr t, uint32_t fb_scratch1, uint32_t fb_scratch0)
 {
-	CARD32 data;
+	uint32_t data;
 	int i;
 
 	/*
@@ -615,10 +621,10 @@ static CARD32 dsp_send_command(TheatrePtr t, CARD32 fb_scratch1, CARD32 fb_scrat
 	return fb_scratch0;
 }
 
-static CARD32 dsp_set_video_input_connector(TheatrePtr t, CARD32 connector)
+static uint32_t dsp_set_video_input_connector(TheatrePtr t, uint32_t connector)
 {
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((connector << 8) & 0xff00) | (55 & 0xff);
@@ -631,10 +637,10 @@ static CARD32 dsp_set_video_input_connector(TheatrePtr t, CARD32 connector)
 }
 
 #if 0
-static CARD32 dsp_reset(TheatrePtr t)
+static uint32_t dsp_reset(TheatrePtr t)
 {
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((2 << 8) & 0xff00) | (8 & 0xff);
@@ -647,10 +653,10 @@ static CARD32 dsp_reset(TheatrePtr t)
 }
 #endif
 
-static CARD32 dsp_set_lowpowerstate(TheatrePtr t, CARD32 pstate)
+static uint32_t dsp_set_lowpowerstate(TheatrePtr t, uint32_t pstate)
 {
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((pstate << 8) & 0xff00) | (82 & 0xff);
@@ -661,10 +667,10 @@ static CARD32 dsp_set_lowpowerstate(TheatrePtr t, CARD32 pstate)
 		  
 	return result;
 }
-static CARD32 dsp_set_video_standard(TheatrePtr t, CARD32 standard)
+static uint32_t dsp_set_video_standard(TheatrePtr t, uint32_t standard)
 {
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((standard << 8) & 0xff00) | (52 & 0xff);
@@ -676,10 +682,10 @@ static CARD32 dsp_set_video_standard(TheatrePtr t, CARD32 standard)
 	return result;
 }
 
-static CARD32 dsp_set_videostreamformat(TheatrePtr t, CARD32 format)
+static uint32_t dsp_set_videostreamformat(TheatrePtr t, uint32_t format)
 {
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((format << 8) & 0xff00) | (65 & 0xff);
@@ -691,10 +697,10 @@ static CARD32 dsp_set_videostreamformat(TheatrePtr t, CARD32 format)
 	return result;
 }
 
-static CARD32 dsp_video_standard_detection(TheatrePtr t)
+static uint32_t dsp_video_standard_detection(TheatrePtr t)
 {
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = 0 | (54 & 0xff);
@@ -707,11 +713,11 @@ static CARD32 dsp_video_standard_detection(TheatrePtr t)
 }
 
 #if 0
-static CARD32 dsp_get_signallockstatus(TheatrePtr t)
+static uint32_t dsp_get_signallockstatus(TheatrePtr t)
 {
-	CARD32 fb_scratch1 = 0;
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch1 = 0;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = 0 | (77 & 0xff);
@@ -724,11 +730,11 @@ static CARD32 dsp_get_signallockstatus(TheatrePtr t)
 	return result;
 }
 
-static CARD32 dsp_get_signallinenumber(TheatrePtr t)
+static uint32_t dsp_get_signallinenumber(TheatrePtr t)
 {
-	CARD32 fb_scratch1 = 0;
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch1 = 0;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = 0 | (78 & 0xff);
@@ -742,11 +748,11 @@ static CARD32 dsp_get_signallinenumber(TheatrePtr t)
 }
 #endif
 
-static CARD32 dsp_set_brightness(TheatrePtr t, CARD8 brightness)
+static uint32_t dsp_set_brightness(TheatrePtr t, uint8_t brightness)
 {
-	CARD32 fb_scratch1 = 0;
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch1 = 0;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((brightness << 8) & 0xff00) | (67 & 0xff);
@@ -758,11 +764,11 @@ static CARD32 dsp_set_brightness(TheatrePtr t, CARD8 brightness)
 	return result;
 }
 
-static CARD32 dsp_set_contrast(TheatrePtr t, CARD8 contrast)
+static uint32_t dsp_set_contrast(TheatrePtr t, uint8_t contrast)
 {
-	CARD32 fb_scratch1 = 0;
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch1 = 0;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((contrast << 8) & 0xff00) | (71 & 0xff);
@@ -775,11 +781,11 @@ static CARD32 dsp_set_contrast(TheatrePtr t, CARD8 contrast)
 }
 
 #if 0
-static CARD32 dsp_set_sharpness(TheatrePtr t, int sharpness)
+static uint32_t dsp_set_sharpness(TheatrePtr t, int sharpness)
 {
-	CARD32 fb_scratch1 = 0;
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch1 = 0;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = 0 | (73 & 0xff);
@@ -792,11 +798,11 @@ static CARD32 dsp_set_sharpness(TheatrePtr t, int sharpness)
 }
 #endif
 
-static CARD32 dsp_set_tint(TheatrePtr t, CARD8 tint)
+static uint32_t dsp_set_tint(TheatrePtr t, uint8_t tint)
 {
-	CARD32 fb_scratch1 = 0;
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch1 = 0;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((tint << 8) & 0xff00) | (75 & 0xff);
@@ -808,11 +814,11 @@ static CARD32 dsp_set_tint(TheatrePtr t, CARD8 tint)
 	return result;
 }
 
-static CARD32 dsp_set_saturation(TheatrePtr t, CARD8 saturation)
+static uint32_t dsp_set_saturation(TheatrePtr t, uint8_t saturation)
 {
-	CARD32 fb_scratch1 = 0;
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch1 = 0;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((saturation << 8) & 0xff00) | (69 & 0xff);
@@ -824,11 +830,11 @@ static CARD32 dsp_set_saturation(TheatrePtr t, CARD8 saturation)
 	return result;
 }
 
-static CARD32 dsp_set_video_scaler_horizontal(TheatrePtr t, CARD16 output_width, CARD16 horz_start, CARD16 horz_end)
+static uint32_t dsp_set_video_scaler_horizontal(TheatrePtr t, uint16_t output_width, uint16_t horz_start, uint16_t horz_end)
 {
-	CARD32 fb_scratch1 = 0;
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch1 = 0;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((output_width << 8) & 0x00ffff00) | (195 & 0xff);
@@ -841,11 +847,11 @@ static CARD32 dsp_set_video_scaler_horizontal(TheatrePtr t, CARD16 output_width,
 	return result;
 }
 
-static CARD32 dsp_set_video_scaler_vertical(TheatrePtr t, CARD16 output_height, CARD16 vert_start, CARD16 vert_end)
+static uint32_t dsp_set_video_scaler_vertical(TheatrePtr t, uint16_t output_height, uint16_t vert_start, uint16_t vert_end)
 {
-	CARD32 fb_scratch1 = 0;
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch1 = 0;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((output_height << 8) & 0x00ffff00) | (196 & 0xff);
@@ -858,11 +864,11 @@ static CARD32 dsp_set_video_scaler_vertical(TheatrePtr t, CARD16 output_height, 
 	return result;
 }
 
-static CARD32 dsp_audio_mute(TheatrePtr t, CARD8 left, CARD8 right)
+static uint32_t dsp_audio_mute(TheatrePtr t, uint8_t left, uint8_t right)
 {
-	CARD32 fb_scratch1 = 0;
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch1 = 0;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((right << 16) & 0xff0000) | ((left << 8) & 0xff00) | (21 & 0xff);
@@ -874,11 +880,11 @@ static CARD32 dsp_audio_mute(TheatrePtr t, CARD8 left, CARD8 right)
 	return result;
 }
 
-static CARD32 dsp_set_audio_volume(TheatrePtr t, CARD8 left, CARD8 right, CARD8 auto_mute)
+static uint32_t dsp_set_audio_volume(TheatrePtr t, uint8_t left, uint8_t right, uint8_t auto_mute)
 {
-	CARD32 fb_scratch1 = 0;
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch1 = 0;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
   
 	fb_scratch0 = ((auto_mute << 24) & 0xff000000) | ((right << 16) & 0xff0000) | ((left << 8) & 0xff00) | (22 & 0xff);
@@ -891,11 +897,11 @@ static CARD32 dsp_set_audio_volume(TheatrePtr t, CARD8 left, CARD8 right, CARD8 
 }
 
 #if 0
-static CARD32 dsp_audio_detection(TheatrePtr t, CARD8 option)
+static uint32_t dsp_audio_detection(TheatrePtr t, uint8_t option)
 {
-	CARD32 fb_scratch1 = 0;
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch1 = 0;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((option << 8) & 0xff00) | (16 & 0xff);
@@ -908,11 +914,11 @@ static CARD32 dsp_audio_detection(TheatrePtr t, CARD8 option)
 }
 #endif
 
-static CARD32 dsp_configure_i2s_port(TheatrePtr t, CARD8 tx_mode, CARD8 rx_mode, CARD8 clk_mode)
+static uint32_t dsp_configure_i2s_port(TheatrePtr t, uint8_t tx_mode, uint8_t rx_mode, uint8_t clk_mode)
 {
-	CARD32 fb_scratch1 = 0;
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch1 = 0;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((clk_mode << 24) & 0xff000000) | ((rx_mode << 16) & 0xff0000) | ((tx_mode << 8) & 0xff00) | (40 & 0xff);
@@ -924,11 +930,11 @@ static CARD32 dsp_configure_i2s_port(TheatrePtr t, CARD8 tx_mode, CARD8 rx_mode,
 	return result;
 }
 
-static CARD32 dsp_configure_spdif_port(TheatrePtr t, CARD8 state)
+static uint32_t dsp_configure_spdif_port(TheatrePtr t, uint8_t state)
 {
-	CARD32 fb_scratch1 = 0;
-	CARD32 fb_scratch0 = 0;
-	CARD32 result;
+	uint32_t fb_scratch1 = 0;
+	uint32_t fb_scratch0 = 0;
+	uint32_t result;
 	int screen = t->VIP->scrnIndex;
 
 	fb_scratch0 = ((state << 8) & 0xff00) | (41 & 0xff);
@@ -1018,7 +1024,7 @@ fld_V_INT_LENGTH,
 fld_CRDR_ACTIVE_GAIN,
 fld_CBDB_ACTIVE_GAIN,
 fld_DVS_DIRECTION,
-fld_DVS_VBI_CARD8_SWAP,
+fld_DVS_VBI_UINT8_SWAP,
 fld_DVS_CLK_SELECT,
 fld_CONTINUOUS_STREAM,
 fld_DVSOUT_CLK_DRV,
@@ -1100,16 +1106,16 @@ regRT_MAX_REGS
 
 
 typedef struct {
-	CARD8 size;
-	CARD32 fld_id;
-	CARD32 dwRegAddrLSBs;
-	CARD32 dwFldOffsetLSBs;
-	CARD32 dwMaskLSBs;
-	CARD32 addr2;
-	CARD32 offs2;
-	CARD32 mask2;
-	CARD32 dwCurrValue;
-	CARD32 rw;
+	uint8_t size;
+	uint32_t fld_id;
+	uint32_t dwRegAddrLSBs;
+	uint32_t dwFldOffsetLSBs;
+	uint32_t dwMaskLSBs;
+	uint32_t addr2;
+	uint32_t offs2;
+	uint32_t mask2;
+	uint32_t dwCurrValue;
+	uint32_t rw;
 	} RTREGMAP;
 
 #define READONLY 1
@@ -1197,7 +1203,7 @@ RTREGMAP RT_RegMap[regRT_MAX_REGS]={
 {10 ,fld_CRDR_ACTIVE_GAIN   ,VIP_CP_ACTIVE_GAIN     ,  0, 0xFFFFFC00, 0, 0,0, fld_CRDR_ACTIVE_GAIN_def  ,READWRITE  },
 {10 ,fld_CBDB_ACTIVE_GAIN   ,VIP_CP_ACTIVE_GAIN     , 16, 0xFC00FFFF, 0, 0,0, fld_CBDB_ACTIVE_GAIN_def  ,READWRITE  },
 {1  ,fld_DVS_DIRECTION      ,VIP_DVS_PORT_CTRL      ,  0, 0xFFFFFFFE, 0, 0,0, fld_DVS_DIRECTION_def     ,READWRITE  },
-{1  ,fld_DVS_VBI_CARD8_SWAP  ,VIP_DVS_PORT_CTRL      ,  1, 0xFFFFFFFD, 0, 0,0, fld_DVS_VBI_CARD8_SWAP_def ,READWRITE  },
+{1  ,fld_DVS_VBI_UINT8_SWAP  ,VIP_DVS_PORT_CTRL      ,  1, 0xFFFFFFFD, 0, 0,0, fld_DVS_VBI_UINT8_SWAP_def ,READWRITE  },
 {1  ,fld_DVS_CLK_SELECT     ,VIP_DVS_PORT_CTRL      ,  2, 0xFFFFFFFB, 0, 0,0, fld_DVS_CLK_SELECT_def    ,READWRITE  },
 {1  ,fld_CONTINUOUS_STREAM  ,VIP_DVS_PORT_CTRL      ,  3, 0xFFFFFFF7, 0, 0,0, fld_CONTINUOUS_STREAM_def ,READWRITE  },
 {1  ,fld_DVSOUT_CLK_DRV     ,VIP_DVS_PORT_CTRL      ,  4, 0xFFFFFFEF, 0, 0,0, fld_DVSOUT_CLK_DRV_def    ,READWRITE  },
@@ -1276,7 +1282,7 @@ RTREGMAP RT_RegMap[regRT_MAX_REGS]={
 };
 
 /* Rage Theatre's register fields default values: */
-CARD32 RT_RegDef[regRT_MAX_REGS]=
+uint32_t RT_RegDef[regRT_MAX_REGS]=
 {
 fld_tmpReg1_def,
 fld_tmpReg2_def,
@@ -1354,7 +1360,7 @@ fld_V_INT_LENGTH_def,
 fld_CRDR_ACTIVE_GAIN_def,
 fld_CBDB_ACTIVE_GAIN_def,
 fld_DVS_DIRECTION_def,
-fld_DVS_VBI_CARD8_SWAP_def,
+fld_DVS_VBI_UINT8_SWAP_def,
 fld_DVS_CLK_SELECT_def,
 fld_CONTINUOUS_STREAM_def,
 fld_DVSOUT_CLK_DRV_def,
@@ -1433,16 +1439,16 @@ fld_GPIO_6_OUT_def,
 };
 
 /****************************************************************************
- * WriteRT_fld (CARD32 dwReg, CARD32 dwData)                                  *
+ * WriteRT_fld (uint32_t dwReg, uint32_t dwData)                                  *
  *  Function: Writes a register field within Rage Theatre                   *
- *    Inputs: CARD32 dwReg = register field to be written                    *
- *            CARD32 dwData = data that will be written to the reg field     *
+ *    Inputs: uint32_t dwReg = register field to be written                    *
+ *            uint32_t dwData = data that will be written to the reg field     *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-static void WriteRT_fld1 (TheatrePtr t, CARD32 dwReg, CARD32 dwData)
+static void WriteRT_fld1 (TheatrePtr t, uint32_t dwReg, uint32_t dwData)
 {
-	CARD32 dwResult=0;
-	CARD32 dwValue=0;
+	uint32_t dwResult=0;
+	uint32_t dwValue=0;
 	
 	if (RT_regr (RT_RegMap[dwReg].dwRegAddrLSBs, &dwResult) == TRUE)
 	{
@@ -1462,14 +1468,14 @@ static void WriteRT_fld1 (TheatrePtr t, CARD32 dwReg, CARD32 dwData)
 
 #if 0
 /****************************************************************************
- * ReadRT_fld (CARD32 dwReg)                                                 *
+ * ReadRT_fld (uint32_t dwReg)                                                 *
  *  Function: Reads a register field within Rage Theatre                    *
- *    Inputs: CARD32 dwReg = register field to be read                       *
- *   Outputs: CARD32 - value read from register field                        *
+ *    Inputs: uint32_t dwReg = register field to be read                       *
+ *   Outputs: uint32_t - value read from register field                        *
  ****************************************************************************/
-static CARD32 ReadRT_fld1 (TheatrePtr t,CARD32 dwReg)
+static uint32_t ReadRT_fld1 (TheatrePtr t,uint32_t dwReg)
 {
-	CARD32 dwResult=0;
+	uint32_t dwResult=0;
 
 	if (RT_regr (RT_RegMap[dwReg].dwRegAddrLSBs, &dwResult) == TRUE)
 	{
@@ -1496,7 +1502,7 @@ static CARD32 ReadRT_fld1 (TheatrePtr t,CARD32 dwReg)
  *    Inputs: int hue - the hue value to be set.                            *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetTint (TheatrePtr t, int hue)
+_X_EXPORT void RT_SetTint (TheatrePtr t, int hue)
 {
     /* Validate Hue level */
     if (hue < -1000)
@@ -1510,7 +1516,7 @@ void RT_SetTint (TheatrePtr t, int hue)
 
     t->iHue=hue;
 	
-	dsp_set_tint(t, (CARD8)((hue*255)/2000 + 128));
+	dsp_set_tint(t, (uint8_t)((hue*255)/2000 + 128));
 
 } /* RT_SetTint ()... */
 
@@ -1521,7 +1527,7 @@ void RT_SetTint (TheatrePtr t, int hue)
  *    Inputs: int Saturation - the saturation value to be set.              *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetSaturation (TheatrePtr t, int Saturation)
+_X_EXPORT void RT_SetSaturation (TheatrePtr t, int Saturation)
 {
     /* VALIDATE SATURATION LEVEL */
     if (Saturation < -1000L)
@@ -1536,7 +1542,7 @@ void RT_SetSaturation (TheatrePtr t, int Saturation)
     t->iSaturation = Saturation;
 
 	/* RT200 has saturation in range 0 to 255 with nominal value 128 */
-	dsp_set_saturation(t, (CARD8)((Saturation*255)/2000 + 128));
+	dsp_set_saturation(t, (uint8_t)((Saturation*255)/2000 + 128));
 
 	return;
 } /* RT_SetSaturation ()...*/
@@ -1547,7 +1553,7 @@ void RT_SetSaturation (TheatrePtr t, int Saturation)
  *    Inputs: int Brightness - the brightness value to be set.              *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetBrightness (TheatrePtr t, int Brightness)
+_X_EXPORT void RT_SetBrightness (TheatrePtr t, int Brightness)
 {
     /* VALIDATE BRIGHTNESS LEVEL */
     if (Brightness < -1000)
@@ -1564,19 +1570,19 @@ void RT_SetBrightness (TheatrePtr t, int Brightness)
     t->dbBrightnessRatio =  (double) (Brightness+1000.0) / 10.0;
 
 	 /* RT200 is having brightness level from 0 to 255  with 128 nominal value */
-	 dsp_set_brightness(t, (CARD8)((Brightness*255)/2000 + 128));
+	 dsp_set_brightness(t, (uint8_t)((Brightness*255)/2000 + 128));
 
 	 return;
 } /* RT_SetBrightness ()... */
 
 
 /****************************************************************************
- * RT_SetSharpness (CARD16 wSharpness)                                        *
+ * RT_SetSharpness (uint16_t wSharpness)                                        *
  *  Function: sets the sharpness level for the Rage Theatre video in        *
- *    Inputs: CARD16 wSharpness - the sharpness value to be set.              *
+ *    Inputs: uint16_t wSharpness - the sharpness value to be set.              *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetSharpness (TheatrePtr t, CARD16 wSharpness)
+_X_EXPORT void RT_SetSharpness (TheatrePtr t, uint16_t wSharpness)
 {
 	switch (wSharpness)
 	{
@@ -1602,7 +1608,7 @@ void RT_SetSharpness (TheatrePtr t, CARD16 wSharpness)
  *    Inputs: int Contrast - the contrast value to be set.                  *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetContrast (TheatrePtr t, int Contrast)
+_X_EXPORT void RT_SetContrast (TheatrePtr t, int Contrast)
 {
 	/* VALIDATE CONTRAST LEVEL */
 	if (Contrast < -1000)
@@ -1619,28 +1625,28 @@ void RT_SetContrast (TheatrePtr t, int Contrast)
     t->dbContrast = (double) (Contrast+1000.0) / 1000.0;
 	 
 	/* RT200 has contrast values between 0 to 255 with nominal value at 128 */
-	dsp_set_contrast(t, (CARD8)((Contrast*255)/2000 + 128));
+	dsp_set_contrast(t, (uint8_t)((Contrast*255)/2000 + 128));
 	return;
 
 } /* RT_SetContrast ()... */
 
 /****************************************************************************
- * RT_SetInterlace (CARD8 bInterlace)                                        *
+ * RT_SetInterlace (uint8_t bInterlace)                                        *
  *  Function: to set the interlacing pattern for the Rage Theatre video in  *
- *    Inputs: CARD8 bInterlace                                               *
+ *    Inputs: uint8_t bInterlace                                               *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetInterlace (TheatrePtr t, CARD8 bInterlace)
+_X_EXPORT void RT_SetInterlace (TheatrePtr t, uint8_t bInterlace)
 {
 	switch(bInterlace)
 	{
 		case (TRUE):    /*DEC_INTERLACE */
 			WriteRT_fld (fld_V_DEINTERLACE_ON, 0x1);
-			t->wInterlaced = (CARD16) RT_DECINTERLACED;
+			t->wInterlaced = (uint16_t) RT_DECINTERLACED;
 			break;
 		case (FALSE):    /*DEC_NONINTERLACE */
 			WriteRT_fld (fld_V_DEINTERLACE_ON, RT_DECNONINTERLACED);
-			t->wInterlaced = (CARD16) RT_DECNONINTERLACED;
+			t->wInterlaced = (uint16_t) RT_DECNONINTERLACED;
 			break;
 	   default:
 			break;
@@ -1652,12 +1658,12 @@ void RT_SetInterlace (TheatrePtr t, CARD8 bInterlace)
 
 
 /****************************************************************************
- * RT_SetStandard (CARD16 wStandard)                                          *
+ * RT_SetStandard (uint16_t wStandard)                                          *
  *  Function: to set the input standard for the Rage Theatre video in       *
- *    Inputs: CARD16 wStandard - input standard (NTSC, PAL, SECAM)            *
+ *    Inputs: uint16_t wStandard - input standard (NTSC, PAL, SECAM)            *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetStandard (TheatrePtr t, CARD16 wStandard)
+_X_EXPORT void RT_SetStandard (TheatrePtr t, uint16_t wStandard)
 {
 	xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"Rage Theatre setting standard 0x%04x\n",
 		wStandard);
@@ -1767,16 +1773,16 @@ void RT_SetStandard (TheatrePtr t, CARD16 wStandard)
 
 
 /****************************************************************************
- * RT_SetOutputVideoSize (CARD16 wHorzSize, CARD16 wVertSize,                   *
- *                          CARD8 fCC_On, CARD8 fVBICap_On)                   *
+ * RT_SetOutputVideoSize (uint16_t wHorzSize, uint16_t wVertSize,                   *
+ *                          uint8_t fCC_On, uint8_t fVBICap_On)                   *
  *  Function: sets the output video size for the Rage Theatre video in      *
- *    Inputs: CARD16 wHorzSize - width of output in pixels                    *
- *            CARD16 wVertSize - height of output in pixels (lines)           *
- *            CARD8 fCC_On - enable CC output                                *
- *            CARD8 fVBI_Cap_On - enable VBI capture                         *
+ *    Inputs: uint16_t wHorzSize - width of output in pixels                    *
+ *            uint16_t wVertSize - height of output in pixels (lines)           *
+ *            uint8_t fCC_On - enable CC output                                *
+ *            uint8_t fVBI_Cap_On - enable VBI capture                         *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetOutputVideoSize (TheatrePtr t, CARD16 wHorzSize, CARD16 wVertSize, CARD8 fCC_On, CARD8 fVBICap_On)
+_X_EXPORT void RT_SetOutputVideoSize (TheatrePtr t, uint16_t wHorzSize, uint16_t wVertSize, uint8_t fCC_On, uint8_t fVBICap_On)
 {
 	/* VBI is ignored now */
 
@@ -1790,23 +1796,25 @@ void RT_SetOutputVideoSize (TheatrePtr t, CARD16 wHorzSize, CARD16 wVertSize, CA
 
 
 /****************************************************************************
- * RT_SetConnector (CARD16 wStandard, int tunerFlag)                          *
+ * RT_SetConnector (uint16_t wStandard, int tunerFlag)                          *
  *  Function:
- *    Inputs: CARD16 wStandard - input standard (NTSC, PAL, SECAM)            *
+ *    Inputs: uint16_t wStandard - input standard (NTSC, PAL, SECAM)            *
  *            int tunerFlag
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetConnector (TheatrePtr t, CARD16 wConnector, int tunerFlag)
+_X_EXPORT void RT_SetConnector (TheatrePtr t, uint16_t wConnector, int tunerFlag)
 {
-	CARD32 data;
+	uint32_t data;
 
 	t->wConnector = wConnector;
 
 	theatre_read(t, VIP_GPIO_CNTL, &data);
-	xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"VIP_GPIO_CNTL: %lx\n", data);
+	xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"VIP_GPIO_CNTL: %x\n",
+		   (unsigned)data);
 
 	theatre_read(t, VIP_GPIO_INOUT, &data);
-	xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"VIP_GPIO_INOUT: %lx\n", data);
+	xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"VIP_GPIO_INOUT: %x\n",
+		   (unsigned)data);
 	
 	switch (wConnector)
 	{
@@ -1855,10 +1863,12 @@ void RT_SetConnector (TheatrePtr t, CARD16 wConnector, int tunerFlag)
 	}
 
 	theatre_read(t, VIP_GPIO_CNTL, &data);
-	xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"VIP_GPIO_CNTL: %lx\n", data);
+	xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"VIP_GPIO_CNTL: %x\n",
+		   (unsigned)data);
 
 	theatre_read(t, VIP_GPIO_INOUT, &data);
-	xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"VIP_GPIO_INOUT: %lx\n", data);
+	xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"VIP_GPIO_INOUT: %x\n",
+		   (unsigned)data);
 
 
 	dsp_configure_i2s_port(t, 0, 0, 0);
@@ -1871,10 +1881,10 @@ void RT_SetConnector (TheatrePtr t, CARD16 wConnector, int tunerFlag)
 } /* RT_SetConnector ()...*/
 
 
-void InitTheatre(TheatrePtr t)
+_X_EXPORT void InitTheatre(TheatrePtr t)
 {
-	CARD32 data;
-	CARD32 M, N, P;
+	uint32_t data;
+	uint32_t M, N, P;
 
 	/* this will give 108Mhz at 27Mhz reference */
 	M = 28;
@@ -1992,7 +2002,7 @@ err_exit:
 }
 
 
-void ShutdownTheatre(TheatrePtr t)
+_X_EXPORT void ShutdownTheatre(TheatrePtr t)
 {
 #if 0
     WriteRT_fld (fld_VIN_ASYNC_RST, RT_ASYNC_DISABLE);
@@ -2003,15 +2013,16 @@ void ShutdownTheatre(TheatrePtr t)
     t->mode=MODE_UNINITIALIZED;
 }
 
-void DumpRageTheatreRegs(TheatrePtr t)
+_X_EXPORT void DumpRageTheatreRegs(TheatrePtr t)
 {
     int i;
-    CARD32 data;
+    uint32_t data;
     
     for(i=0;i<0x900;i+=4)
     {
        RT_regr(i, &data);
-       xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "register 0x%04x is equal to 0x%08lx\n", i, data);
+       xf86DrvMsg(t->VIP->scrnIndex, X_INFO,
+		  "register 0x%04x is equal to 0x%08x\n", i, (unsigned)data);
     }   
 
 }
@@ -2019,7 +2030,7 @@ void DumpRageTheatreRegs(TheatrePtr t)
 void DumpRageTheatreRegsByName(TheatrePtr t)
 {
     int i;
-    CARD32 data;
+    uint32_t data;
     struct { char *name; long addr; } rt_reg_list[]={
     { "ADC_CNTL                ", 0x0400 },
     { "ADC_DEBUG               ", 0x0404 },
@@ -2216,12 +2227,14 @@ void DumpRageTheatreRegsByName(TheatrePtr t)
 
     for(i=0; rt_reg_list[i].name!=NULL;i++){
         RT_regr(rt_reg_list[i].addr, &data);
-        xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "register (0x%04lx) %s is equal to 0x%08lx\n", rt_reg_list[i].addr, rt_reg_list[i].name, data);
+        xf86DrvMsg(t->VIP->scrnIndex, X_INFO,
+		   "register (0x%04lx) %s is equal to 0x%08x\n",
+		   rt_reg_list[i].addr, rt_reg_list[i].name, (unsigned)data);
     	}
 
 }
 
-void ResetTheatreRegsForNoTVout(TheatrePtr t)
+_X_EXPORT void ResetTheatreRegsForNoTVout(TheatrePtr t)
 {
      RT_regw(VIP_CLKOUT_CNTL, 0x0); 
      RT_regw(VIP_HCOUNT, 0x0); 
@@ -2235,7 +2248,7 @@ void ResetTheatreRegsForNoTVout(TheatrePtr t)
 }
 
 
-void ResetTheatreRegsForTVout(TheatrePtr t)
+_X_EXPORT void ResetTheatreRegsForTVout(TheatrePtr t)
 {
 /*    RT_regw(VIP_HW_DEBUG, 0x200);   */
 /*     RT_regw(VIP_INT_CNTL, 0x0); 

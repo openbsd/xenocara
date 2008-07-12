@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/radeon_version.h,v 1.10 2003/09/28 20:15:57 alanh Exp $ */
 /*
  * Copyright 2000 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -42,7 +41,7 @@
 
 #define RADEON_VERSION_MAJOR 4
 #define RADEON_VERSION_MAJOR_TILED 5
-#define RADEON_VERSION_MINOR 2
+#define RADEON_VERSION_MINOR 3
 #define RADEON_VERSION_PATCH 0
 
 #ifndef RADEON_VERSION_EXTRA

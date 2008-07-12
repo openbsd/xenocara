@@ -661,215 +661,215 @@
 #define  DEC_SHARP                  1
 
 /* RT Register Field Defaults: */
-#define     fld_tmpReg1_def     (CARD32) 0x00000000
-#define     fld_tmpReg2_def     (CARD32) 0x00000001
-#define     fld_tmpReg3_def     (CARD32) 0x00000002
+#define     fld_tmpReg1_def             (uint32_t) 0x00000000
+#define     fld_tmpReg2_def             (uint32_t) 0x00000001
+#define     fld_tmpReg3_def             (uint32_t) 0x00000002
 
-#define     fld_LP_CONTRAST_def     (CARD32) 0x0000006e
-#define     fld_LP_BRIGHTNESS_def   (CARD32) 0x00003ff0
-#define     fld_CP_HUE_CNTL_def     (CARD32) 0x00000000
-#define     fld_LUMA_FILTER_def     (CARD32) 0x00000001
-#define     fld_H_SCALE_RATIO_def   (CARD32) 0x00010000
-#define     fld_H_SHARPNESS_def     (CARD32) 0x00000000
+#define     fld_LP_CONTRAST_def         (uint32_t) 0x0000006e
+#define     fld_LP_BRIGHTNESS_def       (uint32_t) 0x00003ff0
+#define     fld_CP_HUE_CNTL_def         (uint32_t) 0x00000000
+#define     fld_LUMA_FILTER_def         (uint32_t) 0x00000001
+#define     fld_H_SCALE_RATIO_def       (uint32_t) 0x00010000
+#define     fld_H_SHARPNESS_def         (uint32_t) 0x00000000
 
-#define     fld_V_SCALE_RATIO_def   (CARD32) 0x00000800
-#define     fld_V_DEINTERLACE_ON_def    (CARD32) 0x00000001
-#define     fld_V_BYPSS_def             (CARD32) 0x00000000
-#define     fld_V_DITHER_ON_def         (CARD32) 0x00000001
-#define     fld_EVENF_OFFSET_def        (CARD32) 0x00000000
-#define     fld_ODDF_OFFSET_def         (CARD32) 0x00000000
+#define     fld_V_SCALE_RATIO_def       (uint32_t) 0x00000800
+#define     fld_V_DEINTERLACE_ON_def    (uint32_t) 0x00000001
+#define     fld_V_BYPSS_def             (uint32_t) 0x00000000
+#define     fld_V_DITHER_ON_def         (uint32_t) 0x00000001
+#define     fld_EVENF_OFFSET_def        (uint32_t) 0x00000000
+#define     fld_ODDF_OFFSET_def         (uint32_t) 0x00000000
 
-#define     fld_INTERLACE_DETECTED_def  (CARD32) 0x00000000
+#define     fld_INTERLACE_DETECTED_def  (uint32_t) 0x00000000
 
-#define     fld_VS_LINE_COUNT_def   (CARD32) 0x00000000
-#define     fld_VS_DETECTED_LINES_def   (CARD32) 0x00000000
-#define     fld_VS_ITU656_VB_def    (CARD32) 0x00000000
+#define     fld_VS_LINE_COUNT_def       (uint32_t) 0x00000000
+#define     fld_VS_DETECTED_LINES_def   (uint32_t) 0x00000000
+#define     fld_VS_ITU656_VB_def        (uint32_t) 0x00000000
 
-#define     fld_VBI_CC_DATA_def         (CARD32) 0x00000000
-#define     fld_VBI_CC_WT_def           (CARD32) 0x00000000
-#define     fld_VBI_CC_WT_ACK_def       (CARD32) 0x00000000
-#define     fld_VBI_CC_HOLD_def         (CARD32) 0x00000000
-#define     fld_VBI_DECODE_EN_def       (CARD32) 0x00000000
+#define     fld_VBI_CC_DATA_def         (uint32_t) 0x00000000
+#define     fld_VBI_CC_WT_def           (uint32_t) 0x00000000
+#define     fld_VBI_CC_WT_ACK_def       (uint32_t) 0x00000000
+#define     fld_VBI_CC_HOLD_def         (uint32_t) 0x00000000
+#define     fld_VBI_DECODE_EN_def       (uint32_t) 0x00000000
 
-#define     fld_VBI_CC_DTO_P_def        (CARD32) 0x00001802
-#define     fld_VBI_20BIT_DTO_P_def     (CARD32) 0x0000155c
+#define     fld_VBI_CC_DTO_P_def        (uint32_t) 0x00001802
+#define     fld_VBI_20BIT_DTO_P_def     (uint32_t) 0x0000155c
 
-#define     fld_VBI_CC_LEVEL_def        (CARD32) 0x0000003f
-#define     fld_VBI_20BIT_LEVEL_def     (CARD32) 0x00000059
-#define     fld_VBI_CLK_RUNIN_GAIN_def  (CARD32) 0x0000010f
+#define     fld_VBI_CC_LEVEL_def        (uint32_t) 0x0000003f
+#define     fld_VBI_20BIT_LEVEL_def     (uint32_t) 0x00000059
+#define     fld_VBI_CLK_RUNIN_GAIN_def  (uint32_t) 0x0000010f
 
-#define     fld_H_VBI_WIND_START_def    (CARD32) 0x00000041
-#define     fld_H_VBI_WIND_END_def      (CARD32) 0x00000366
+#define     fld_H_VBI_WIND_START_def    (uint32_t) 0x00000041
+#define     fld_H_VBI_WIND_END_def      (uint32_t) 0x00000366
 
-#define     fld_V_VBI_WIND_START_def    (CARD32) 0x0B  /* instead of 0x0D - V.D. */
-#define     fld_V_VBI_WIND_END_def      (CARD32) 0x24
+#define     fld_V_VBI_WIND_START_def    (uint32_t) 0x0B  /* instead of 0x0D - V.D. */
+#define     fld_V_VBI_WIND_END_def      (uint32_t) 0x24
 
-#define     fld_VBI_20BIT_DATA0_def     (CARD32) 0x00000000
-#define     fld_VBI_20BIT_DATA1_def     (CARD32) 0x00000000
-#define     fld_VBI_20BIT_WT_def        (CARD32) 0x00000000
-#define     fld_VBI_20BIT_WT_ACK_def    (CARD32) 0x00000000
-#define     fld_VBI_20BIT_HOLD_def      (CARD32) 0x00000000
+#define     fld_VBI_20BIT_DATA0_def     (uint32_t) 0x00000000
+#define     fld_VBI_20BIT_DATA1_def     (uint32_t) 0x00000000
+#define     fld_VBI_20BIT_WT_def        (uint32_t) 0x00000000
+#define     fld_VBI_20BIT_WT_ACK_def    (uint32_t) 0x00000000
+#define     fld_VBI_20BIT_HOLD_def      (uint32_t) 0x00000000
 
-#define     fld_VBI_CAPTURE_ENABLE_def  (CARD32) 0x00000000
+#define     fld_VBI_CAPTURE_ENABLE_def  (uint32_t) 0x00000000
 
-#define     fld_VBI_EDS_DATA_def        (CARD32) 0x00000000
-#define     fld_VBI_EDS_WT_def          (CARD32) 0x00000000
-#define     fld_VBI_EDS_WT_ACK_def      (CARD32) 0x00000000
-#define     fld_VBI_EDS_HOLD_def        (CARD32) 0x00000000
+#define     fld_VBI_EDS_DATA_def        (uint32_t) 0x00000000
+#define     fld_VBI_EDS_WT_def          (uint32_t) 0x00000000
+#define     fld_VBI_EDS_WT_ACK_def      (uint32_t) 0x00000000
+#define     fld_VBI_EDS_HOLD_def        (uint32_t) 0x00000000
 
-#define     fld_VBI_SCALING_RATIO_def   (CARD32) 0x00010000
-#define     fld_VBI_ALIGNER_ENABLE_def  (CARD32) 0x00000000
+#define     fld_VBI_SCALING_RATIO_def   (uint32_t) 0x00010000
+#define     fld_VBI_ALIGNER_ENABLE_def  (uint32_t) 0x00000000
 
-#define     fld_H_ACTIVE_START_def      (CARD32) 0x00000070
-#define     fld_H_ACTIVE_END_def        (CARD32) 0x000002f0
+#define     fld_H_ACTIVE_START_def      (uint32_t) 0x00000070
+#define     fld_H_ACTIVE_END_def        (uint32_t) 0x000002f0
 
-#define     fld_V_ACTIVE_START_def      (CARD32) ((22-4)*2+1)
-#define     fld_V_ACTIVE_END_def        (CARD32) ((22+240-4)*2+2)
+#define     fld_V_ACTIVE_START_def      (uint32_t) ((22-4)*2+1)
+#define     fld_V_ACTIVE_END_def        (uint32_t) ((22+240-4)*2+2)
 
-#define     fld_CH_HEIGHT_def           (CARD32) 0x000000CD
-#define     fld_CH_KILL_LEVEL_def       (CARD32) 0x000000C0
-#define     fld_CH_AGC_ERROR_LIM_def    (CARD32) 0x00000002
-#define     fld_CH_AGC_FILTER_EN_def    (CARD32) 0x00000000
-#define     fld_CH_AGC_LOOP_SPEED_def   (CARD32) 0x00000000
+#define     fld_CH_HEIGHT_def           (uint32_t) 0x000000CD
+#define     fld_CH_KILL_LEVEL_def       (uint32_t) 0x000000C0
+#define     fld_CH_AGC_ERROR_LIM_def    (uint32_t) 0x00000002
+#define     fld_CH_AGC_FILTER_EN_def    (uint32_t) 0x00000000
+#define     fld_CH_AGC_LOOP_SPEED_def   (uint32_t) 0x00000000
 
-#define     fld_HUE_ADJ_def             (CARD32) 0x00000000
+#define     fld_HUE_ADJ_def             (uint32_t) 0x00000000
 
-#define     fld_STANDARD_SEL_def        (CARD32) 0x00000000
-#define     fld_STANDARD_YC_def         (CARD32) 0x00000000
+#define     fld_STANDARD_SEL_def        (uint32_t) 0x00000000
+#define     fld_STANDARD_YC_def         (uint32_t) 0x00000000
 
-#define     fld_ADC_PDWN_def            (CARD32) 0x00000001
-#define     fld_INPUT_SELECT_def        (CARD32) 0x00000000
+#define     fld_ADC_PDWN_def            (uint32_t) 0x00000001
+#define     fld_INPUT_SELECT_def        (uint32_t) 0x00000000
 
-#define     fld_ADC_PREFLO_def          (CARD32) 0x00000003
-#define     fld_H_SYNC_PULSE_WIDTH_def  (CARD32) 0x00000000
-#define     fld_HS_GENLOCKED_def        (CARD32) 0x00000000
-#define     fld_HS_SYNC_IN_WIN_def      (CARD32) 0x00000000
+#define     fld_ADC_PREFLO_def          (uint32_t) 0x00000003
+#define     fld_H_SYNC_PULSE_WIDTH_def  (uint32_t) 0x00000000
+#define     fld_HS_GENLOCKED_def        (uint32_t) 0x00000000
+#define     fld_HS_SYNC_IN_WIN_def      (uint32_t) 0x00000000
 
-#define     fld_VIN_ASYNC_RST_def       (CARD32) 0x00000001
-#define     fld_DVS_ASYNC_RST_def       (CARD32) 0x00000001
+#define     fld_VIN_ASYNC_RST_def       (uint32_t) 0x00000001
+#define     fld_DVS_ASYNC_RST_def       (uint32_t) 0x00000001
 
 /* Vendor IDs: */
-#define     fld_VIP_VENDOR_ID_def       (CARD32) 0x00001002
-#define     fld_VIP_DEVICE_ID_def       (CARD32) 0x00004d54
-#define     fld_VIP_REVISION_ID_def     (CARD32) 0x00000001
+#define     fld_VIP_VENDOR_ID_def       (uint32_t) 0x00001002
+#define     fld_VIP_DEVICE_ID_def       (uint32_t) 0x00004d54
+#define     fld_VIP_REVISION_ID_def     (uint32_t) 0x00000001
 
 /* AGC Delay Register */
-#define     fld_BLACK_INT_START_def     (CARD32) 0x00000031
-#define     fld_BLACK_INT_LENGTH_def    (CARD32) 0x0000000f
+#define     fld_BLACK_INT_START_def     (uint32_t) 0x00000031
+#define     fld_BLACK_INT_LENGTH_def    (uint32_t) 0x0000000f
 
-#define     fld_UV_INT_START_def        (CARD32) 0x0000003b
-#define     fld_U_INT_LENGTH_def        (CARD32) 0x0000000f
-#define     fld_V_INT_LENGTH_def        (CARD32) 0x0000000f
-#define     fld_CRDR_ACTIVE_GAIN_def    (CARD32) 0x0000007a
-#define     fld_CBDB_ACTIVE_GAIN_def    (CARD32) 0x000000ac
+#define     fld_UV_INT_START_def        (uint32_t) 0x0000003b
+#define     fld_U_INT_LENGTH_def        (uint32_t) 0x0000000f
+#define     fld_V_INT_LENGTH_def        (uint32_t) 0x0000000f
+#define     fld_CRDR_ACTIVE_GAIN_def    (uint32_t) 0x0000007a
+#define     fld_CBDB_ACTIVE_GAIN_def    (uint32_t) 0x000000ac
 
-#define     fld_DVS_DIRECTION_def       (CARD32) 0x00000000
-#define     fld_DVS_VBI_CARD8_SWAP_def   (CARD32) 0x00000000
-#define     fld_DVS_CLK_SELECT_def      (CARD32) 0x00000000
-#define     fld_CONTINUOUS_STREAM_def   (CARD32) 0x00000000
-#define     fld_DVSOUT_CLK_DRV_def      (CARD32) 0x00000001
-#define     fld_DVSOUT_DATA_DRV_def     (CARD32) 0x00000001
+#define     fld_DVS_DIRECTION_def       (uint32_t) 0x00000000
+#define     fld_DVS_VBI_UINT8_SWAP_def  (uint32_t) 0x00000000
+#define     fld_DVS_CLK_SELECT_def      (uint32_t) 0x00000000
+#define     fld_CONTINUOUS_STREAM_def   (uint32_t) 0x00000000
+#define     fld_DVSOUT_CLK_DRV_def      (uint32_t) 0x00000001
+#define     fld_DVSOUT_DATA_DRV_def     (uint32_t) 0x00000001
 
-#define     fld_COMB_CNTL0_def          (CARD32) 0x09438090
-#define     fld_COMB_CNTL1_def          (CARD32) 0x00000010
+#define     fld_COMB_CNTL0_def          (uint32_t) 0x09438090
+#define     fld_COMB_CNTL1_def          (uint32_t) 0x00000010
 
-#define     fld_COMB_CNTL2_def          (CARD32) 0x16161010
-#define     fld_COMB_LENGTH_def         (CARD32) 0x0718038A
+#define     fld_COMB_CNTL2_def          (uint32_t) 0x16161010
+#define     fld_COMB_LENGTH_def         (uint32_t) 0x0718038A
 
-#define     fld_SYNCTIP_REF0_def        (CARD32) 0x00000037
-#define     fld_SYNCTIP_REF1_def        (CARD32) 0x00000029
-#define     fld_CLAMP_REF_def           (CARD32) 0x0000003B
-#define     fld_AGC_PEAKWHITE_def       (CARD32) 0x000000FF
-#define     fld_VBI_PEAKWHITE_def       (CARD32) 0x000000D2
+#define     fld_SYNCTIP_REF0_def        (uint32_t) 0x00000037
+#define     fld_SYNCTIP_REF1_def        (uint32_t) 0x00000029
+#define     fld_CLAMP_REF_def           (uint32_t) 0x0000003B
+#define     fld_AGC_PEAKWHITE_def       (uint32_t) 0x000000FF
+#define     fld_VBI_PEAKWHITE_def       (uint32_t) 0x000000D2
 
-#define     fld_WPA_THRESHOLD_def       (CARD32) 0x000003B0
+#define     fld_WPA_THRESHOLD_def       (uint32_t) 0x000003B0
 
-#define     fld_WPA_TRIGGER_LO_def      (CARD32) 0x000000B4
-#define     fld_WPA_TRIGGER_HIGH_def    (CARD32) 0x0000021C
+#define     fld_WPA_TRIGGER_LO_def      (uint32_t) 0x000000B4
+#define     fld_WPA_TRIGGER_HIGH_def    (uint32_t) 0x0000021C
 
-#define     fld_LOCKOUT_START_def       (CARD32) 0x00000206
-#define     fld_LOCKOUT_END_def         (CARD32) 0x00000021
+#define     fld_LOCKOUT_START_def       (uint32_t) 0x00000206
+#define     fld_LOCKOUT_END_def         (uint32_t) 0x00000021
 
-#define     fld_CH_DTO_INC_def          (CARD32) 0x00400000
-#define     fld_PLL_SGAIN_def           (CARD32) 0x00000001
-#define     fld_PLL_FGAIN_def           (CARD32) 0x00000002
+#define     fld_CH_DTO_INC_def          (uint32_t) 0x00400000
+#define     fld_PLL_SGAIN_def           (uint32_t) 0x00000001
+#define     fld_PLL_FGAIN_def           (uint32_t) 0x00000002
 
-#define     fld_CR_BURST_GAIN_def       (CARD32) 0x0000007a
-#define     fld_CB_BURST_GAIN_def       (CARD32) 0x000000ac
+#define     fld_CR_BURST_GAIN_def       (uint32_t) 0x0000007a
+#define     fld_CB_BURST_GAIN_def       (uint32_t) 0x000000ac
 
-#define     fld_VERT_LOCKOUT_START_def  (CARD32) 0x00000207
-#define     fld_VERT_LOCKOUT_END_def    (CARD32) 0x0000000E
+#define     fld_VERT_LOCKOUT_START_def  (uint32_t) 0x00000207
+#define     fld_VERT_LOCKOUT_END_def    (uint32_t) 0x0000000E
 
-#define     fld_H_IN_WIND_START_def     (CARD32) 0x00000070
-#define     fld_V_IN_WIND_START_def     (CARD32) 0x00000027
+#define     fld_H_IN_WIND_START_def     (uint32_t) 0x00000070
+#define     fld_V_IN_WIND_START_def     (uint32_t) 0x00000027
 
-#define     fld_H_OUT_WIND_WIDTH_def    (CARD32) 0x000002f4
+#define     fld_H_OUT_WIND_WIDTH_def    (uint32_t) 0x000002f4
 
-#define     fld_V_OUT_WIND_WIDTH_def    (CARD32) 0x000000f0
+#define     fld_V_OUT_WIND_WIDTH_def    (uint32_t) 0x000000f0
 
-#define     fld_HS_LINE_TOTAL_def       (CARD32) 0x0000038E
+#define     fld_HS_LINE_TOTAL_def       (uint32_t) 0x0000038E
 
-#define     fld_MIN_PULSE_WIDTH_def     (CARD32) 0x0000002F
-#define     fld_MAX_PULSE_WIDTH_def     (CARD32) 0x00000046
+#define     fld_MIN_PULSE_WIDTH_def     (uint32_t) 0x0000002F
+#define     fld_MAX_PULSE_WIDTH_def     (uint32_t) 0x00000046
 
-#define     fld_WIN_CLOSE_LIMIT_def     (CARD32) 0x0000004D
-#define     fld_WIN_OPEN_LIMIT_def      (CARD32) 0x000001B7
+#define     fld_WIN_CLOSE_LIMIT_def     (uint32_t) 0x0000004D
+#define     fld_WIN_OPEN_LIMIT_def      (uint32_t) 0x000001B7
 
-#define     fld_VSYNC_INT_TRIGGER_def   (CARD32) 0x000002AA
+#define     fld_VSYNC_INT_TRIGGER_def   (uint32_t) 0x000002AA
 
-#define     fld_VSYNC_INT_HOLD_def      (CARD32) 0x0000001D
+#define     fld_VSYNC_INT_HOLD_def      (uint32_t) 0x0000001D
 
-#define     fld_VIN_M0_def              (CARD32) 0x00000039
-#define     fld_VIN_N0_def              (CARD32) 0x0000014c
-#define     fld_MNFLIP_EN_def           (CARD32) 0x00000000
-#define     fld_VIN_P_def               (CARD32) 0x00000006
-#define     fld_REG_CLK_SEL_def         (CARD32) 0x00000000
+#define     fld_VIN_M0_def              (uint32_t) 0x00000039
+#define     fld_VIN_N0_def              (uint32_t) 0x0000014c
+#define     fld_MNFLIP_EN_def           (uint32_t) 0x00000000
+#define     fld_VIN_P_def               (uint32_t) 0x00000006
+#define     fld_REG_CLK_SEL_def         (uint32_t) 0x00000000
 
-#define     fld_VIN_M1_def              (CARD32) 0x00000000
-#define     fld_VIN_N1_def              (CARD32) 0x00000000
-#define     fld_VIN_DRIVER_SEL_def      (CARD32) 0x00000000
-#define     fld_VIN_MNFLIP_REQ_def      (CARD32) 0x00000000
-#define     fld_VIN_MNFLIP_DONE_def     (CARD32) 0x00000000
-#define     fld_TV_LOCK_TO_VIN_def      (CARD32) 0x00000000
-#define     fld_TV_P_FOR_WINCLK_def     (CARD32) 0x00000004
+#define     fld_VIN_M1_def              (uint32_t) 0x00000000
+#define     fld_VIN_N1_def              (uint32_t) 0x00000000
+#define     fld_VIN_DRIVER_SEL_def      (uint32_t) 0x00000000
+#define     fld_VIN_MNFLIP_REQ_def      (uint32_t) 0x00000000
+#define     fld_VIN_MNFLIP_DONE_def     (uint32_t) 0x00000000
+#define     fld_TV_LOCK_TO_VIN_def      (uint32_t) 0x00000000
+#define     fld_TV_P_FOR_WINCLK_def     (uint32_t) 0x00000004
 
-#define     fld_VINRST_def              (CARD32) 0x00000001
-#define     fld_VIN_CLK_SEL_def         (CARD32) 0x00000000
+#define     fld_VINRST_def              (uint32_t) 0x00000001
+#define     fld_VIN_CLK_SEL_def         (uint32_t) 0x00000000
 
-#define     fld_VS_FIELD_BLANK_START_def    (CARD32) 0x00000206
+#define     fld_VS_FIELD_BLANK_START_def    (uint32_t) 0x00000206
 
-#define     fld_VS_FIELD_BLANK_END_def  (CARD32) 0x0000000A
+#define     fld_VS_FIELD_BLANK_END_def  (uint32_t) 0x0000000A
 
-/*#define     fld_VS_FIELD_IDLOCATION_def (CARD32) 0x00000105 */
-#define     fld_VS_FIELD_IDLOCATION_def (CARD32) 0x00000001
-#define     fld_VS_FRAME_TOTAL_def      (CARD32) 0x00000217
+/*#define     fld_VS_FIELD_IDLOCATION_def (uint32_t) 0x00000105 */
+#define     fld_VS_FIELD_IDLOCATION_def (uint32_t) 0x00000001
+#define     fld_VS_FRAME_TOTAL_def      (uint32_t) 0x00000217
 
-#define     fld_SYNC_TIP_START_def      (CARD32) 0x00000372
-#define     fld_SYNC_TIP_LENGTH_def     (CARD32) 0x0000000F
+#define     fld_SYNC_TIP_START_def      (uint32_t) 0x00000372
+#define     fld_SYNC_TIP_LENGTH_def     (uint32_t) 0x0000000F
 
-#define     fld_GAIN_FORCE_DATA_def     (CARD32) 0x00000000
-#define     fld_GAIN_FORCE_EN_def       (CARD32) 0x00000000
-#define     fld_I_CLAMP_SEL_def         (CARD32) 0x00000003
-#define     fld_I_AGC_SEL_def           (CARD32) 0x00000001
-#define     fld_EXT_CLAMP_CAP_def       (CARD32) 0x00000001
-#define     fld_EXT_AGC_CAP_def         (CARD32) 0x00000001
-#define     fld_DECI_DITHER_EN_def      (CARD32) 0x00000001
-#define     fld_ADC_PREFHI_def          (CARD32) 0x00000000
-#define     fld_ADC_CH_GAIN_SEL_def     (CARD32) 0x00000001
+#define     fld_GAIN_FORCE_DATA_def     (uint32_t) 0x00000000
+#define     fld_GAIN_FORCE_EN_def       (uint32_t) 0x00000000
+#define     fld_I_CLAMP_SEL_def         (uint32_t) 0x00000003
+#define     fld_I_AGC_SEL_def           (uint32_t) 0x00000001
+#define     fld_EXT_CLAMP_CAP_def       (uint32_t) 0x00000001
+#define     fld_EXT_AGC_CAP_def         (uint32_t) 0x00000001
+#define     fld_DECI_DITHER_EN_def      (uint32_t) 0x00000001
+#define     fld_ADC_PREFHI_def          (uint32_t) 0x00000000
+#define     fld_ADC_CH_GAIN_SEL_def     (uint32_t) 0x00000001
 
-#define     fld_HS_PLL_SGAIN_def        (CARD32) 0x00000003
+#define     fld_HS_PLL_SGAIN_def        (uint32_t) 0x00000003
 
-#define     fld_NREn_def                (CARD32) 0x00000000
-#define     fld_NRGainCntl_def          (CARD32) 0x00000000
-#define     fld_NRBWTresh_def           (CARD32) 0x00000000
-#define     fld_NRGCTresh_def           (CARD32) 0x00000000
-#define     fld_NRCoefDespeclMode_def   (CARD32) 0x00000000
+#define     fld_NREn_def                (uint32_t) 0x00000000
+#define     fld_NRGainCntl_def          (uint32_t) 0x00000000
+#define     fld_NRBWTresh_def           (uint32_t) 0x00000000
+#define     fld_NRGCTresh_def           (uint32_t) 0x00000000
+#define     fld_NRCoefDespeclMode_def   (uint32_t) 0x00000000
 
-#define     fld_GPIO_5_OE_def           (CARD32) 0x00000000
-#define     fld_GPIO_6_OE_def           (CARD32) 0x00000000
+#define     fld_GPIO_5_OE_def           (uint32_t) 0x00000000
+#define     fld_GPIO_6_OE_def           (uint32_t) 0x00000000
 
-#define     fld_GPIO_5_OUT_def          (CARD32) 0x00000000
-#define     fld_GPIO_6_OUT_def          (CARD32) 0x00000000
+#define     fld_GPIO_5_OUT_def          (uint32_t) 0x00000000
+#define     fld_GPIO_6_OUT_def          (uint32_t) 0x00000000
 
 /* End of field default values. */
 

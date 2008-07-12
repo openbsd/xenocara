@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atimodule.c,v 1.16 2003/05/28 14:08:03 tsi Exp $ */
 /*
  * Copyright 1997 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -25,58 +24,10 @@
 #include "config.h"
 #endif
 
-#ifdef XFree86LOADER
-
 #include "ati.h"
-#include "atimodule.h"
 #include "ativersion.h"
 
 /* Module loader interface */
-
-const char *ATISymbols[] =
-{
-    "ATIPreInit",
-    "ATIScreenInit",
-    "ATISwitchMode",
-    "ATIAdjustFrame",
-    "ATIEnterVT",
-    "ATILeaveVT",
-    "ATIFreeScreen",
-    "ATIValidMode",
-    "ATIFillInScreenInfo",
-    NULL
-};
-
-const char *R128Symbols[] =
-{
-    "R128PreInit",
-    "R128ScreenInit",
-    "R128SwitchMode",
-    "R128AdjustFrame",
-    "R128EnterVT",
-    "R128LeaveVT",
-    "R128FreeScreen",
-    "R128ValidMode",
-    "R128OptionsWeak",
-    "R128FillInScreenInfo",
-    NULL
-};
-
-const char *RADEONSymbols[] =
-{
-    "RADEONPreInit",
-    "RADEONScreenInit",
-    "RADEONSwitchMode",
-    "RADEONAdjustFrame",
-    "RADEONEnterVT",
-    "RADEONLeaveVT",
-    "RADEONFreeScreen",
-    "RADEONValidMode",
-    "RADEONOptionsWeak",
-    "RADEONHandleMessage",
-    "RADEONFillInScreenInfo",
-    NULL
-};
 
 static XF86ModuleVersionInfo ATIVersionRec =
 {
@@ -111,13 +62,7 @@ ATISetup
     if (!Inited)
     {
         Inited = TRUE;
-        xf86AddDriver(&ATI, Module, 0);
-
-        xf86LoaderRefSymLists(
-            ATISymbols,
-            R128Symbols,
-            RADEONSymbols,
-            NULL);
+        ati_gdev_subdriver(Options);
     }
 
     return (pointer)1;
@@ -130,5 +75,3 @@ _X_EXPORT XF86ModuleData atiModuleData =
     ATISetup,
     NULL
 };
-
-#endif /* XFree86LOADER */

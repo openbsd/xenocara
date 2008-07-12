@@ -15,9 +15,8 @@ radeon \- ATI RADEON video driver
 .B radeon
 is an __xservername__ driver for ATI RADEON based video cards.  It contains
 full support for 8, 15, 16 and 24 bit pixel depths, dual-head setup,
-flat panel, hardware 2D acceleration, hardware 3D acceleration
-(experimental on R300 and R400 series cards), hardware cursor, XV extension,
-and the Xinerama extension.
+flat panel, hardware 2D acceleration, hardware 3D acceleration, hardware cursor, 
+XV extension, and the Xinerama extension.
 .SH SUPPORTED HARDWARE
 The
 .B radeon
@@ -27,7 +26,7 @@ driver supports PCI and AGP video cards based on the following ATI chips
 Radeon 7200
 .TP 12
 .B RV100
-Radeon 7000(VE), M6
+Radeon 7000(VE), M6, RN50/ES1000
 .TP 12
 .B RS100
 Radeon IGP320(M)
@@ -53,44 +52,74 @@ Radeon 9100 IGP
 .B RS350
 Radeon 9200 IGP
 .TP 12
-.B RS400
-Radeon XPRESS 200/200M IGP
+.B RS400/RS480
+Radeon XPRESS 200(M)/1100 IGP
 .TP 12
 .B RV280
-Radeon 9200PRO/9200/9200SE, M9+
+Radeon 9200PRO/9200/9200SE/9250, M9+
 .TP 12
 .B R300
-Radeon 9700PRO/9700/9500PRO/9500/9600TX, FireGL X1/Z1 (2D only)
+Radeon 9700PRO/9700/9500PRO/9500/9600TX, FireGL X1/Z1
 .TP 12
 .B R350
-Radeon 9800PRO/9800SE/9800, FireGL X2 (2D only)
+Radeon 9800PRO/9800SE/9800, FireGL X2
 .TP 12
 .B R360
-Radeon 9800XT (2d only)
+Radeon 9800XT
 .TP 12
 .B RV350
-Radeon 9600PRO/9600SE/9600, M10/M11, FireGL T2 (2D only)
+Radeon 9600PRO/9600SE/9600/9550, M10/M11, FireGL T2
 .TP 12
-.B RV360 
-Radeon 9600XT (2d only)
+.B RV360
+Radeon 9600XT
 .TP 12
 .B RV370
-Radeon X300, M22 (2d only)
+Radeon X300, M22
 .TP 12
 .B RV380
-Radeon X600, M24 (2d only)
+Radeon X600, M24
 .TP 12
 .B RV410
-Radeon X700, M26 PCIE (2d only)
+Radeon X700, M26 PCIE
 .TP 12
 .B R420
-Radeon X800 AGP (2d only)
+Radeon X800 AGP
 .TP 12
 .B R423/R430
-Radeon X800, M28 PCIE (2d only)
+Radeon X800, M28 PCIE
 .TP 12
 .B R480/R481
-Radeon X850 PCIE/AGP (2d only)
+Radeon X850 PCIE/AGP
+.TP 12
+.B RV505/RV515/RV516/RV550
+Radeon X1300/X1400/X1500/X2300
+.TP 12
+.B R520
+Radeon X1800
+.TP 12
+.B RV530/RV560
+Radeon X1600/X1650/X1700
+.TP 12
+.B RV570/R580
+Radeon X1900/X1950
+.TP 12
+.B RS600/RS690
+Radeon X1200
+.TP 12
+.B R600
+Radeon HD 2900
+.TP 12
+.B RV610/RV630
+Radeon HD 2400/2600
+.TP 12
+.B RV670
+Radeon HD 3850/3870
+.TP 12
+.B RV620/RV635
+Radeon HD 3450/3470
+.TP 12
+.B RS780
+Radeon HD 3200
 
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
@@ -140,31 +169,38 @@ This overrides the default pixel value for the YUV video overlay key.
 The default value is
 .B 0x1E.
 .TP
-.BI "Option \*qUseFBDev\*q \*q" boolean \*q
-Enable or disable use of an OS\-specific framebuffer device interface
-(which is not supported on all OSs).  MergedFB does not work when this
-option is in use.  See fbdevhw(__drivermansuffix__) for further information. 
+.BI "Option \*qScalerWidth\*q \*q" integer \*q
+This sets the overlay scaler buffer width. Accepted values range from 1024 to
+2048, divisible by 64, values other than 1536 and 1920 may not make sense
+though. Should be set automatically, but noone has a clue what the limit is
+for which chip. If you think quality is not optimal when playing back HD video
+(with horizontal resolution larger than this setting), increase this value, if
+you get an empty area at the right (usually pink), decrease it. Note this only
+affects the "true" overlay via xv, it won't affect things like textured video.
 .br
-The default is
-.B off.
+The default value is either 1536 (for most chips) or 1920.
 .TP
 .BI "Option \*qAGPMode\*q \*q" integer \*q
 Set AGP data transfer rate.
 (used only when DRI is enabled)
 .br
-1      \-\- x1 (default)
+1      \-\- 1x (before AGP v3 only)
 .br
-2      \-\- x2
+2      \-\- 2x (before AGP v3 only)
 .br
-4      \-\- x4
+4      \-\- 4x
 .br
-8      \-\- x8
+8      \-\- 8x (AGP v3 only)
 .br
 others \-\- invalid
+.br
+The default is to
+.B leave it unchanged.
 .TP
 .BI "Option \*qAGPFastWrite\*q \*q" boolean \*q
-Enable AGP fast write.  Enabling this option is frequently the cause of
-instability. Used only when the DRI is enabled.
+Enable AGP fast writes.  Enabling this is frequently the cause of
+instability. Used only when the DRI is enabled. If you enable
+this option you will get *NO* support from developers.
 .br
 The default is
 .B off.
@@ -209,227 +245,6 @@ HIGH   \-\- Force to the highest priority.
 The default value is
 .B AUTO.
 .TP
-.BI "Option \*qMonitorLayout\*q \*q" string \*q
-.br
-This option is used to overwrite the detected monitor types.
-This is only required when driver makes a false detection.
-The possible monitor types are:
-.br
-NONE   \-\- Not connected
-.br
-CRT    \-\- Analog CRT monitor
-.br
-TMDS   \-\- Desktop flat panel
-.br 
-LVDS   \-\- Laptop flat panel
-.br
-This option can be used in following format:
-.br
-Option "MonitorLayout" "[type on primary], [type on secondary]"
-.br
-For example, Option "MonitorLayout" "CRT, TMDS"
-
-Primary/Secondary head for dual\-head cards:
-.br
-(when only one port is used, it will be treated as the primary regardless)
-.br
-.B Primary head:
-.br
-DVI port on DVI+VGA cards
-.br
-LCD output on laptops
-.br 
-Internal TMDS port on DVI+DVI cards
-.br 
-.B Secondary head:
-.br
-VGA port on DVI+VGA cards
-.br
-VGA port on laptops
-.br
-External TMDS port on DVI+DVI cards
-
-The default value is
-.B undefined.
-.TP 
-.BI "Option \*qMergedFB\*q \*q" boolean \*q
-This enables merged framebuffer mode.  In this mode you have a single 
-shared framebuffer with two viewports looking into it.  It is similar
-to Xinerama, but has some advantages.  It is faster than Xinerama, the
-DRI works on both heads, and it supports clone modes.  
-.br
-Merged framebuffer mode provides two linked viewports looking into a
-single large shared framebuffer.  The size of the framebuffer is 
-determined by the
-.B Virtual
-keyword defined on the
-.B Screen
-section of your __xconfigfile__ file.  It works just like regular virtual
-desktop except you have two viewports looking into it instead of one.
-.br
-For example, if you wanted a desktop composed of two 1024x768 viewports
-looking into a single desktop you would create a virtual desktop of 
-2048x768 (left/right) or 1024x1536 (above/below), e.g.,
-.br
-.B Virtual 2048 768
-or
-.B Virtual 1024 1536
-.br
-The virtual desktop can be larger than larger than the size of the viewports
-looking into it.  In this case the linked viewports will scroll around in the 
-virtual desktop.  Viewports with different sizes are also supported (e.g., one
-that is 1024x768 and one that is 640x480).  In this case the smaller viewport
-will scroll relative to the larger one such that none of the virtual desktop 
-is inaccessible.  If you do not define a virtual desktop the driver will create
-one based on the orientation of the heads and size of the largest defined mode in 
-the display section that is supported on each head.
-.br
-The relation of the viewports in specified by the
-.B CRT2Position
-Option.  The options are
-.B Clone
-,
-.B LeftOf
-,
-.B RightOf
-,
-.B Above
-, and
-.B Below.  
-MergedFB is enabled by default if a monitor is detected on each output.  If 
-no position is given it defaults to clone mode (the old clone options are now 
-deprecated, also, the option OverlayOnCRTC2 has been replaced by the Xv 
-attribute XV_SWITCHCRT; the overlay can be switched to CRT1 or CRT2 on the fly 
-in clone mode).
-.br
-The maximum framebuffer size that the 2D acceleration engine can handle is 
-8192x8192.  The maximum framebuffer size that the 3D engine can handle is 
-2048x2048.
-.br
-.B Note:
-Page flipping does not work well in certain configurations with MergedFB.  If you 
-see rendering errors or other strange behavior, disable page flipping. Also MergedFB
-is not compatible with the 
-.B UseFBDev 
-option.
-.br
-The default value is
-.B undefined.
-.TP 
-.BI "Option \*qCRT2HSync\*q \*q" "string" \*q
-Set the horizontal sync range for the secondary  monitor. 
-It is not required if a DDC\-capable monitor is connected.
-.br
-For example, Option "CRT2HSync" "30.0-86.0"
-.br
-The default value is
-.B undefined.
-.TP 
-.BI "Option \*qCRT2VRefresh\*q \*q" "string" \*q
-Set the vertical refresh range for the secondary monitor.
-It is not required if a DDC\-capable monitor is connected.
-.br
-For example, Option "CRT2VRefresh" "50.0-120.0"
-.br
-The default value is
-.B undefined.
-.TP
-.BI "Option \*qCRT2Position\*q \*q" "string" \*q
-Set the relationship of CRT2 relative to CRT1. Valid options are: 
-.B Clone
-,
-.B LeftOf
-,
-.B RightOf
-,
-.B Above
-, and
-.B Below
-.
-.br
-For example, Option "CRT2Position" "RightOf"
-.br
-This option also supports an offset.  This is most useful when
-.B MergedNonRectangular 
-is enabled.  For example if you want CRT2 to be offset 100 pixels down from 
-the start of CRT1, you'd type:
-.br
-Option "CRT2Position" "LeftOf 100"
-.br
-The offset is vertical for LeftOf and RightOf and horizontal for Above and 
-Below.  Offsets can be positive or negative.
-.br
-The default value is
-.B Clone.
-.TP
-.BI "Option \*qMetaModes\*q \*q" "string" \*q
-MetaModes are mode combinations for CRT1 and CRT2.  If you are using merged
-frame buffer mode and want to change modes (CTRL-ALT-+/-), these define which
-modes will be switched to on CRT1 and CRT2.  The MetaModes are defined as 
-CRT1Mode-CRT2Mode (800x600-1024x768).  Modes listed individually (800x600) 
-define clone modes, that way you can mix clone modes with non-clone modes. 
-Also some programs require "standard" modes.  If you want to add clone modes 
-of different refreshes or sizes to the mix, they are defined as CRT1Mode+CRT2Mode 
-(800x600+1024x768).
-.br
-Note:  Any mode you use in the MetaModes must be defined in the
-.B Screen 
-section of your __xconfigfile__ file.  Modes not defined there will be ignored when
-the MetaModes are parsed since the driver uses them to make sure the monitors can 
-handle those modes.  If you do not define a MetaMode the driver will create
-one based on the orientation of the heads and size of the largest defined mode in 
-the display section that is supported on each head.
-.br
-.B Modes "1024x768" "800x600" "640x480"
-.br
-For example, Option "MetaModes" "1024x768-1024x768 800x600-1024x768 640x480-800x600 800x600"
-.br
-The default value is
-.B undefined.
-.TP
-.BI "Option \*qMergedXinerama\*q \*q" boolean \*q
-Since merged framebuffer mode does not use Xinerama, apps are not able to intelligently
-place windows.  Merged framebuffer mode provides its own pseudo-Xinerama.  This allows
-Xinerama compliant applications to place windows appropriately.  There are some caveats.
-Since merged framebuffer mode is able to change relative screen sizes and orientations on
-the fly, as well has having overlapping viewports, pseudo-Xinerama, might not always 
-provide the right hints.  Also many Xinerama compliant applications only query Xinerama
-once at startup; if the information changes, they may not be aware of the change.  If
-you are already using Xinerama (e.g., a single head card and a dualhead card providing
-three heads), pseudo-Xinerama will be disabled.
-.br
-This option allows you turn off the driver provided pseudo-Xinerama extension.
-.br
-The default value is
-.B TRUE.
-.TP 
-.BI "Option \*qMergedXineramaCRT2IsScreen0\*q \*q" boolean \*q
-By default the pseudo-Xinerama provided by the driver makes the left-most or bottom
-head Xinerama screen 0.  Certain Xinerama-aware applications do special things with 
-screen 0.  To change that behavior, use this option.
-.br
-The default value is
-.B undefined.
-.TP
-.BI "Option \*qMergedDPI\*q \*q" "string" \*q
-The driver will attempt to figure out an appropriate DPI based on the DDC information
-and the orientation of the heads when in merged framebuffer mode.  If this value does 
-not suit you, you can manually set the DPI using this option.
-.br
-For example, Option "MergedDPI" "100 100"
-.br
-The default value is
-.B undefined.
-.TP
-.BI "Option \*qMergedNonRectangular\*q \*q" boolean \*q
-If you are using MergedFB with two modes of different sizes, turn this option on to 
-keep the smaller head from scrolling within the larger virtual desktop and to keep 
-the mouse from moving into that area.  Applications that are not Xinerama aware can 
-potentially end up stranded in this area.
-.br
-The default value is
-.B FALSE.
-.TP
 .BI "Option \*qColorTiling\*q \*q" "boolean" \*q
 Frame buffer can be addressed either in linear or tiled mode. Tiled mode can provide
 significant performance benefits with 3D applications, for 2D it shouldn't matter
@@ -464,12 +279,6 @@ For example, Option "PanelSize" "1400x1050"
 .br
 The default value is
 .B none.
-.TP 
-.BI "Option \*qPanelOff\*q \*q" boolean \*q
-Disable panel output.
-.br
-The default value is
-.B off.
 .TP
 .BI "Option \*qEnablePageFlip\*q \*q" boolean \*q
 Enable page flipping for 3D acceleration. This will increase performance
@@ -521,7 +330,7 @@ remainder of video RAM is reserved for EXA offscreen management. Specifying 0
 results in all offscreen video RAM being reserved for EXA and only GART memory
 being available for OpenGL textures. This may improve EXA performance, but
 beware that it may cause problems with OpenGL drivers from Mesa versions older
-than 6.4. With XAA, specifiying lower percentage than what gets reserved without
+than 6.4. With XAA, specifying lower percentage than what gets reserved without
 this option has no effect, but the driver tries to increase the video RAM
 reserved for textures to the amount specified roughly.
 Default:
@@ -576,13 +385,6 @@ life by reducing power usage.  Some users report reduced 3D performance
 with this enabled.  The default is
 .B off.
 .TP
-.BI "Option \*qBIOSHotkeys\*q \*q" boolean \*q
-Enable BIOS hotkey output switching. This allows the BIOS to toggle outputs
-using hotkeys (e.g., fn-f7, etc.).  Since the driver does not support ACPI, 
-there is no way to validate modes on an output switch and the BIOS can 
-potentially change things behind the driver's back.  The default is
-.B off.
-.TP
 .BI "Option \*qVGAAccess\*q \*q" boolean \*q
 Tell the driver if it can do legacy VGA IOs to the card. This is
 necessary for properly resuming consoles when in VGA text mode, but
@@ -590,7 +392,7 @@ shouldn't be if the console is using radeonfb or some other graphic
 mode driver. Some platforms like PowerPC have issues with those, and they aren't
 necessary unless you have a real text mode in console. The default is
 .B off
-on PowerPC and
+on PowerPC and SPARC and
 .B on
 on other architectures.
 .TP
@@ -611,6 +413,110 @@ case.  This is only useful for LVDS panels (laptop internal panels).
 The default is
 .B on.
 .TP
+.BI "Option \*qTVDACLoadDetect\*q \*q" boolean \*q
+Enable load detection on the TV DAC.  The TV DAC is used to drive both 
+TV-OUT and analog monitors. Load detection is often unreliable in the 
+TV DAC so it is disabled by default.
+The default is
+.B off.
+.TP
+.BI "Option \*qDefaultTMDSPLL\*q \*q" boolean \*q
+Use the default driver provided TMDS PLL values rather than the ones
+provided by the bios. This option has no effect on Mac cards.  Enable 
+this option if you are having problems with a DVI monitor using the 
+internal TMDS controller.
+The default is
+.B off.
+.TP
+.BI "Option \*qDefaultTVDACAdj\*q \*q" boolean \*q
+Use the default driver provided TVDAC Adj values rather than the ones
+provided by the bios. This option has no effect on Mac cards.  Enable 
+this option if you are having problems with a washed out display on 
+the secondary DAC.
+The default is
+.B off.
+.TP
+.BI "Option \*qDRI\*q \*q" boolean \*q
+Enable DRI support.  This option allows you to enable to disable the DRI.  
+The default is
+.B off 
+for RN50/ES1000 and
+.B on 
+for others.
+.TP
+.BI "Option \*qDefaultConnectorTable\*q \*q" boolean \*q
+Enable this option to skip the BIOS connector table parsing and use the
+driver defaults for each chip.  
+The default is
+.B off 
+.TP
+.BI "Option \*qMacModel\*q \*q" string \*q
+.br
+Used to specify Mac models for connector tables and quirks.  If you have
+a powerbook or mini with DVI that does not work properly, try the alternate
+ options as Apple does not seem to provide a good way of knowing whether
+ they use internal or external TMDS for DVI.  Only valid on PowerPC.
+.br
+ibook                \-\- ibooks
+.br
+powerbook-external   \-\- Powerbooks with external DVI
+.br
+powerbook-internal   \-\- Powerbooks with integrated DVI
+.br
+powerbook-vga        \-\- Powerbooks with VGA rather than DVI
+.br
+powerbook-duallink   \-\- powerbook-external alias
+.br
+powerbook            \-\- powerbook-internal alias
+.br
+mini-external        \-\- Mac Mini with external DVI
+.br
+mini-internal        \-\- Mac Mini with integrated DVI
+.br
+mini                 \-\- mini-external alias
+.br
+imac-g5-isight       \-\- iMac G5 iSight
+.br
+The default value is
+.B undefined.
+.TP
+.BI "Option \*qTVStandard\*q \*q" string \*q
+.br
+Used to specify the default TV standard if you want to use something other than
+the bios default. Valid options are:
+.br
+ntsc
+.br
+pal
+.br
+pal-m
+.br
+pal-60
+.br
+ntsc-j
+.br
+scart-pal
+.br
+The default value is
+.B undefined.
+.TP
+.BI "Option \*qForceTVOut\*q \*q" boolean \*q
+Enable this option to force TV Out to always be detected as attached.
+The default is
+.B off 
+.TP
+.BI "Option \*qIgnoreLidStatus\*q \*q" boolean \*q
+Enable this option to ignore lid status on laptops and always detect
+LVDS as attached.
+The default is
+.B on. 
+.TP
+.BI "Option \*qInt10\*q \*q" boolean \*q
+This option allows you to disable int10 initialization.  Set this to 
+False if you are experiencing a hang when initializing a secondary card.
+The default is
+.B on. 
+.TP
 
 .SH SEE ALSO
 __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
@@ -622,7 +528,7 @@ Kevin E. Martin          \fIkem@freedesktop.org\fP
 Alan Hourihane           \fIalanh@fairlite.demon.co.uk\fP
 Marc Aurele La France    \fItsi@xfree86.org\fP
 Benjamin Herrenschmidt   \fIbenh@kernel.crashing.org\fP
-Michel Dänzer            \fImichel@tungstengraphics.com\fP
+Michel D\(:anzer            \fImichel@tungstengraphics.com\fP
 Alex Deucher             \fIalexdeucher@gmail.com\fP
 Bogdan D.                \fIbogdand@users.sourceforge.net\fP
 Eric Anholt              \fIeric@anholt.net\fP

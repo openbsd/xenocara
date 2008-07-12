@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/radeon_misc.c,v 1.7 2003/01/01 19:16:35 tsi Exp $ */
 /*
  * Copyright 2000 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -24,10 +23,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
-#ifdef XFree86LOADER
-
-#include "ativersion.h"
 
 #include "radeon_probe.h"
 #include "radeon_version.h"
@@ -67,13 +62,8 @@ RADEONSetup
     static Bool Inited = FALSE;
 
     if (!Inited) {
-        /* Ensure main driver module is loaded, but not as a submodule */
-        if (!xf86ServerIsOnlyDetecting() && !LoaderSymbol(ATI_NAME))
-            xf86LoadOneModule(ATI_DRIVER_NAME, Options);
-
-        RADEONLoaderRefSymLists();
-
         Inited = TRUE;
+        xf86AddDriver(&RADEON, Module, HaveDriverFuncs);
     }
 
     return (pointer)TRUE;
@@ -86,5 +76,3 @@ _X_EXPORT XF86ModuleData radeonModuleData =
     RADEONSetup,
     NULL
 };
-
-#endif /* XFree86LOADER */

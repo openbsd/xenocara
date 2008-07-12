@@ -1,6 +1,4 @@
 /*************************************************************************************
- * $Id: theatre_detect.h,v 1.1.1.1 2006/11/26 20:01:18 matthieu Exp $
- * 
  * Copyright (C) 2005 Bogdan D. bogdand@users.sourceforge.net
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this 
@@ -23,8 +21,15 @@
  * authorization from the author.
  *
  * $Log: theatre_detect.h,v $
- * Revision 1.1.1.1  2006/11/26 20:01:18  matthieu
- * Importing xf86-video-ati 6.6.3
+ * Revision 1.2  2008/07/12 15:18:34  oga
+ * Long awaited update of xf86-video-ati to 6.9.0.
+ *
+ * the rage128 and mach64 drivers were split out of this driver just after
+ * the 6.8.0 release, these drivers will be commited separately.
+ *
+ * MergedFb mode is gone, so please use xrandr if you used to use it.
+ *
+ * ok matthieu@.
  *
  * Revision 1.3  2005/08/28 18:00:23  bogdand
  * Modified the licens type from GPL to a X/MIT one
@@ -43,20 +48,9 @@
  */
 
 
-TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b);
+#define xf86_DetectTheatre	DetectTheatre
+_X_EXPORT TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b);
 
 
-#define TheatreDetectSymbolsList  \
-		"DetectTheatre"
-
-#ifdef XFree86LOADER
-
-#define xf86_DetectTheatre         ((TheatrePtr (*)(GENERIC_BUS_Ptr))LoaderSymbol("DetectTheatre"))
-
-#else
-
-#define xf86_DetectTheatre             DetectTheatre
-
-#endif		
 
 #endif

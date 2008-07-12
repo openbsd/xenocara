@@ -2,32 +2,29 @@
 
 #include "xorg-server.h"
 
-/* Major version */
-#undef ATI_VERSION_MAJOR
+/* Use Damage extension */
+#undef DAMAGE
 
-/* Minor version */
-#undef ATI_VERSION_MINOR
+/* Use linux pragma pack */
+#undef FGL_LINUX
 
-/* Patch version */
-#undef ATI_VERSION_PATCH
-
-/* Avoid PIO and use MMIO for atimisc. */
-#undef AVOID_CPIO
-
-/* Do not build DGA support. */
-#undef AVOID_DGA
-
-/* Only probe PCI cards; do not probe ISA. */
-#undef AVOID_NON_PCI
+/* Define to 1 if you have the <byteswap.h> header file. */
+#undef HAVE_BYTESWAP_H
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
+
+/* have new FreeShadow API */
+#undef HAVE_FREE_SHADOW
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* Have pci_device_enable prototype */
+#undef HAVE_PCI_DEVICE_ENABLE
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -49,6 +46,15 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Have xf86_crtc_clip_video_helper prototype */
+#undef HAVE_XF86CRTCCLIPVIDEOHELPER
+
+/* Have xf86ModeBandwidth prototype */
+#undef HAVE_XF86MODEBANDWIDTH
+
+/* Have xf86XVFillKeyHelperDrawable prototype */
+#undef HAVE_XV_DRAWABLE_HELPER
 
 /* Name of package */
 #undef PACKAGE
@@ -80,11 +86,11 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Build TV-Out support for atimisc. */
-#undef TV_OUT
-
 /* Build support for Exa */
 #undef USE_EXA
+
+/* Define to use byteswap macros from <sys/endian.h> */
+#undef USE_SYS_ENDIAN_H
 
 /* Build support for XAA */
 #undef USE_XAA
@@ -97,3 +103,15 @@
 
 /* Enable developmental DRI driver support */
 #undef XF86DRI_DEVEL
+
+/* X server has built-in mode code */
+#undef XMODES
+
+/* Define to 16-bit byteswap macro */
+#undef bswap_16
+
+/* Define to 32-bit byteswap macro */
+#undef bswap_32
+
+/* Define to 64-bit byteswap macro */
+#undef bswap_64

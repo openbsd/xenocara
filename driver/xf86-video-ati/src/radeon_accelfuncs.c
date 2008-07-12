@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/radeon_accelfuncs.c,v 1.7tsi Exp $ */
 /*
  * Copyright 2000 ATI Technologies Inc., Markham, Ontario, and
  *                VA Linux Systems Inc., Fremont, California.
@@ -152,6 +151,11 @@ FUNC_NAME(RADEONSetupForSolidFill)(ScrnInfoPtr pScrn,
 					      | RADEON_DST_Y_TOP_TO_BOTTOM));
 
     FINISH_ACCEL();
+    BEGIN_ACCEL(2);
+    OUT_ACCEL_REG(RADEON_DSTCACHE_CTLSTAT, RADEON_RB2D_DC_FLUSH_ALL);
+    OUT_ACCEL_REG(RADEON_WAIT_UNTIL,
+                  RADEON_WAIT_2D_IDLECLEAN | RADEON_WAIT_DMA_GUI_IDLE);
+    FINISH_ACCEL();
 }
 
 /* Subsequent XAA SolidFillRect
@@ -205,6 +209,11 @@ FUNC_NAME(RADEONSetupForSolidLine)(ScrnInfoPtr pScrn,
     OUT_ACCEL_REG(RADEON_DP_BRUSH_FRGD_CLR,  color);
     OUT_ACCEL_REG(RADEON_DP_WRITE_MASK,      planemask);
 
+    FINISH_ACCEL();
+    BEGIN_ACCEL(2);
+    OUT_ACCEL_REG(RADEON_DSTCACHE_CTLSTAT, RADEON_RB2D_DC_FLUSH_ALL);
+    OUT_ACCEL_REG(RADEON_WAIT_UNTIL,
+                  RADEON_WAIT_2D_IDLECLEAN | RADEON_WAIT_DMA_GUI_IDLE);
     FINISH_ACCEL();
 }
 
@@ -285,7 +294,7 @@ FUNC_NAME(RADEONSetupForDashedLine)(ScrnInfoPtr pScrn,
 				    unsigned char *pattern)
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
-    CARD32         pat  = *(CARD32 *)(pointer)pattern;
+    uint32_t pat  = *(uint32_t *)(pointer)pattern;
     ACCEL_PREAMBLE();
 
     /* Save for determining whether or not to draw last pixel */
@@ -325,6 +334,11 @@ FUNC_NAME(RADEONSetupForDashedLine)(ScrnInfoPtr pScrn,
     OUT_ACCEL_REG(RADEON_BRUSH_DATA0,        pat);
 
     FINISH_ACCEL();
+    BEGIN_ACCEL(2);
+    OUT_ACCEL_REG(RADEON_DSTCACHE_CTLSTAT, RADEON_RB2D_DC_FLUSH_ALL);
+    OUT_ACCEL_REG(RADEON_WAIT_UNTIL,
+                  RADEON_WAIT_2D_IDLECLEAN | RADEON_WAIT_DMA_GUI_IDLE);
+    FINISH_ACCEL();
 }
 
 /* Helper function to draw last point for dashed lines */
@@ -334,7 +348,7 @@ FUNC_NAME(RADEONDashedLastPel)(ScrnInfoPtr pScrn,
 			       int fg)
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
-    CARD32         dp_gui_master_cntl = info->dp_gui_master_cntl_clip;
+    uint32_t dp_gui_master_cntl = info->dp_gui_master_cntl_clip;
     ACCEL_PREAMBLE();
 
     dp_gui_master_cntl &= ~RADEON_GMC_BRUSH_DATATYPE_MASK;
@@ -358,6 +372,11 @@ FUNC_NAME(RADEONDashedLastPel)(ScrnInfoPtr pScrn,
     OUT_ACCEL_REG(RADEON_DP_GUI_MASTER_CNTL, info->dp_gui_master_cntl_clip);
     OUT_ACCEL_REG(RADEON_DP_BRUSH_FRGD_CLR,  info->dash_fg);
 
+    FINISH_ACCEL();
+    BEGIN_ACCEL(2);
+    OUT_ACCEL_REG(RADEON_DSTCACHE_CTLSTAT, RADEON_RB2D_DC_FLUSH_ALL);
+    OUT_ACCEL_REG(RADEON_WAIT_UNTIL,
+                  RADEON_WAIT_2D_IDLECLEAN | RADEON_WAIT_DMA_GUI_IDLE);
     FINISH_ACCEL();
 }
 
@@ -462,6 +481,11 @@ FUNC_NAME(RADEONSetupForScreenToScreenCopy)(ScrnInfoPtr pScrn,
 		   (ydir >= 0 ? RADEON_DST_Y_TOP_TO_BOTTOM : 0)));
 
     FINISH_ACCEL();
+    BEGIN_ACCEL(2);
+    OUT_ACCEL_REG(RADEON_DSTCACHE_CTLSTAT, RADEON_RB2D_DC_FLUSH_ALL);
+    OUT_ACCEL_REG(RADEON_WAIT_UNTIL,
+                  RADEON_WAIT_2D_IDLECLEAN | RADEON_WAIT_DMA_GUI_IDLE);
+    FINISH_ACCEL();
 
     info->trans_color = trans_color;
     FUNC_NAME(RADEONSetTransparency)(pScrn, trans_color);
@@ -549,10 +573,15 @@ FUNC_NAME(RADEONSetupForMono8x8PatternFill)(ScrnInfoPtr pScrn,
     OUT_ACCEL_REG(RADEON_BRUSH_DATA0,        patternx);
     OUT_ACCEL_REG(RADEON_BRUSH_DATA1,        patterny);
 #else
-    OUT_ACCEL_REG(RADEON_BRUSH_DATA0,        *(CARD32 *)(pointer)&pattern[0]);
-    OUT_ACCEL_REG(RADEON_BRUSH_DATA1,        *(CARD32 *)(pointer)&pattern[4]);
+    OUT_ACCEL_REG(RADEON_BRUSH_DATA0,        *(uint32_t *)(pointer)&pattern[0]);
+    OUT_ACCEL_REG(RADEON_BRUSH_DATA1,        *(uint32_t *)(pointer)&pattern[4]);
 #endif
 
+    FINISH_ACCEL();
+    BEGIN_ACCEL(2);
+    OUT_ACCEL_REG(RADEON_DSTCACHE_CTLSTAT, RADEON_RB2D_DC_FLUSH_ALL);
+    OUT_ACCEL_REG(RADEON_WAIT_UNTIL,
+                  RADEON_WAIT_2D_IDLECLEAN | RADEON_WAIT_DMA_GUI_IDLE);
     FINISH_ACCEL();
 }
 
@@ -830,10 +859,10 @@ FUNC_NAME(RADEONSubsequentScanline)(ScrnInfoPtr pScrn,
 {
     RADEONInfoPtr    info = RADEONPTR(pScrn);
 #ifdef ACCEL_MMIO
-    CARD32          *p    = (pointer)info->scratch_buffer[bufno];
+    uint32_t        *p    = (pointer)info->scratch_buffer[bufno];
     int              i;
     int              left = info->scanline_words;
-    volatile CARD32 *d;
+    volatile uint32_t *d;
     ACCEL_PREAMBLE();
 
     if (info->scanline_direct) return;
@@ -1087,6 +1116,11 @@ FUNC_NAME(RADEONSetClippingRectangle)(ScrnInfoPtr pScrn,
     OUT_ACCEL_REG(RADEON_SC_BOTTOM_RIGHT,    tmp2);
 
     FINISH_ACCEL();
+    BEGIN_ACCEL(2);
+    OUT_ACCEL_REG(RADEON_DSTCACHE_CTLSTAT, RADEON_RB2D_DC_FLUSH_ALL);
+    OUT_ACCEL_REG(RADEON_WAIT_UNTIL,
+                  RADEON_WAIT_2D_IDLECLEAN | RADEON_WAIT_DMA_GUI_IDLE);
+    FINISH_ACCEL();
 
     FUNC_NAME(RADEONSetTransparency)(pScrn, info->trans_color);
 }
@@ -1105,6 +1139,11 @@ FUNC_NAME(RADEONDisableClipping)(ScrnInfoPtr pScrn)
     OUT_ACCEL_REG(RADEON_SC_BOTTOM_RIGHT,    (RADEON_DEFAULT_SC_RIGHT_MAX |
 					      RADEON_DEFAULT_SC_BOTTOM_MAX));
 
+    FINISH_ACCEL();
+    BEGIN_ACCEL(2);
+    OUT_ACCEL_REG(RADEON_DSTCACHE_CTLSTAT, RADEON_RB2D_DC_FLUSH_ALL);
+    OUT_ACCEL_REG(RADEON_WAIT_UNTIL,
+                  RADEON_WAIT_2D_IDLECLEAN | RADEON_WAIT_DMA_GUI_IDLE);
     FINISH_ACCEL();
 
     FUNC_NAME(RADEONSetTransparency)(pScrn, info->trans_color);
@@ -1183,9 +1222,7 @@ FUNC_NAME(RADEONAccelInit)(ScreenPtr pScreen, XAAInfoRecPtr a)
     a->SubsequentSolidHorVertLine
 	= FUNC_NAME(RADEONSubsequentSolidHorVertLine);
 
-#ifdef XFree86LOADER
     if (info->xaaReq.minorversion >= 1) {
-#endif
 
     /* RADEON only supports 14 bits for lines and clipping and only
      * draws lines that are completely on-screen correctly.  This will
@@ -1205,8 +1242,14 @@ FUNC_NAME(RADEONAccelInit)(ScreenPtr pScreen, XAAInfoRecPtr a)
        hardware accel two point lines */
     miSetZeroLineBias(pScreen, (OCTANT5 | OCTANT6 | OCTANT7 | OCTANT8));
 
-    a->SubsequentSolidTwoPointLine
-	= FUNC_NAME(RADEONSubsequentSolidTwoPointLine);
+#ifdef ACCEL_CP
+    /* RV280s lock up with this using the CP for reasons to be determined.
+     * See https://bugs.freedesktop.org/show_bug.cgi?id=5986 .
+     */
+    if (info->ChipFamily != CHIP_FAMILY_RV280)
+#endif
+	a->SubsequentSolidTwoPointLine
+	    = FUNC_NAME(RADEONSubsequentSolidTwoPointLine);
 
     /* Disabled on RV200 and newer because it does not pass XTest */
     if (info->ChipFamily < CHIP_FAMILY_RV200) {
@@ -1226,12 +1269,10 @@ FUNC_NAME(RADEONAccelInit)(ScreenPtr pScreen, XAAInfoRecPtr a)
 	a->DashedLineLimits.y2 = pScrn->virtualY-1;
     }
 
-#ifdef XFree86LOADER
     } else {
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "libxaa too old, can't accelerate TwoPoint lines\n");
     }
-#endif
 
     /* Clipping, note that without this, all line accelerations will
      * not be called
@@ -1291,11 +1332,7 @@ FUNC_NAME(RADEONAccelInit)(ScreenPtr pScreen, XAAInfoRecPtr a)
 #endif
 
 #ifdef RENDER
-    if (info->RenderAccel
-#ifdef XFree86LOADER
-	&& info->xaaReq.minorversion >= 2
-#endif
-	) {
+    if (info->RenderAccel && info->xaaReq.minorversion >= 2) {
 
 	a->CPUToScreenAlphaTextureFlags = XAA_RENDER_POWER_OF_2_TILE_ONLY;
 	a->CPUToScreenAlphaTextureFormats = RADEONTextureFormats;
@@ -1304,16 +1341,17 @@ FUNC_NAME(RADEONAccelInit)(ScreenPtr pScreen, XAAInfoRecPtr a)
 	a->CPUToScreenTextureFormats = RADEONTextureFormats;
 	a->CPUToScreenTextureDstFormats = RADEONDstFormats;
 
-	if (IS_R300_VARIANT) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Render acceleration "
-		       "unsupported on Radeon 9500/9700 and newer.\n");
+	if (IS_R300_VARIANT || IS_AVIVO_VARIANT) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "XAA Render acceleration "
+		       "unsupported on Radeon 9500/9700 and newer. "
+		       "Please use EXA instead.\n");
 	} else if ((info->ChipFamily == CHIP_FAMILY_RV250) || 
 		   (info->ChipFamily == CHIP_FAMILY_RV280) || 
 		   (info->ChipFamily == CHIP_FAMILY_RS300) || 
 		   (info->ChipFamily == CHIP_FAMILY_R200)) {
 	    a->SetupForCPUToScreenAlphaTexture2 =
 		FUNC_NAME(R200SetupForCPUToScreenAlphaTexture);
-	    a->SubsequentCPUToScreenAlphaTexture = 
+	    a->SubsequentCPUToScreenAlphaTexture =
 		FUNC_NAME(R200SubsequentCPUToScreenTexture);
 
 	    a->SetupForCPUToScreenTexture2 =

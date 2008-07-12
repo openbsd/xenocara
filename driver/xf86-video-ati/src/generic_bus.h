@@ -4,6 +4,7 @@
 /* this is meant to be used for proprietary buses where abstraction is needed
    but they don't occur often enough to warrant a separate helper library */
 
+#include <stdint.h>
 
 #define GB_IOCTL_GET_NAME	1
           /* third argument is size of the buffer, fourth argument is pointer
@@ -21,10 +22,10 @@ typedef struct _GENERIC_BUS_Rec{
         int scrnIndex;
         DevUnion  DriverPrivate;
 	Bool (*ioctl)(GENERIC_BUS_Ptr, long, long, char *);
-	Bool (*read)(GENERIC_BUS_Ptr, CARD32,  CARD32, CARD8 *);
-	Bool (*write)(GENERIC_BUS_Ptr, CARD32,  CARD32, CARD8 *);
-	Bool (*fifo_read)(GENERIC_BUS_Ptr, CARD32,  CARD32, CARD8 *);
-	Bool (*fifo_write)(GENERIC_BUS_Ptr, CARD32,  CARD32, CARD8 *);
+	Bool (*read)(GENERIC_BUS_Ptr, uint32_t,  uint32_t, uint8_t *);
+	Bool (*write)(GENERIC_BUS_Ptr, uint32_t,  uint32_t, uint8_t *);
+	Bool (*fifo_read)(GENERIC_BUS_Ptr, uint32_t,  uint32_t, uint8_t *);
+	Bool (*fifo_write)(GENERIC_BUS_Ptr, uint32_t,  uint32_t, uint8_t *);
 
 	} GENERIC_BUS_Rec;
 

@@ -55,25 +55,40 @@
 #include <string.h>
 
 #include "radeon.h"
-#include "atidri.h"
 
 #include "exa.h"
+
+static int
+FUNC_NAME(RADEONMarkSync)(ScreenPtr pScreen)
+{
+    RINFO_FROM_SCREEN(pScreen);
+
+    TRACE;
+
+    return ++info->exaSyncMarker;
+}
 
 static void
 FUNC_NAME(RADEONSync)(ScreenPtr pScreen, int marker)
 {
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+
     TRACE;
 
-    FUNC_NAME(RADEONWaitForIdle)(xf86Screens[pScreen->myNum]);
+    if (info->exaMarkerSynced != marker) {
+	FUNC_NAME(RADEONWaitForIdle)(pScrn);
+	info->exaMarkerSynced = marker;
+    }
 
-    RADEONPTR(xf86Screens[pScreen->myNum])->engineMode = EXA_ENGINEMODE_UNKNOWN;
+    RADEONPTR(pScrn)->engineMode = EXA_ENGINEMODE_UNKNOWN;
 }
 
 static Bool
 FUNC_NAME(RADEONPrepareSolid)(PixmapPtr pPix, int alu, Pixel pm, Pixel fg)
 {
     RINFO_FROM_SCREEN(pPix->drawable.pScreen);
-    CARD32 datatype, dst_pitch_offset;
+    uint32_t datatype, dst_pitch_offset;
     ACCEL_PREAMBLE();
 
     TRACE;
@@ -109,7 +124,6 @@ FUNC_NAME(RADEONPrepareSolid)(PixmapPtr pPix, int alu, Pixel pm, Pixel fg)
 static void
 FUNC_NAME(RADEONSolid)(PixmapPtr pPix, int x1, int y1, int x2, int y2)
 {
-
     RINFO_FROM_SCREEN(pPix->drawable.pScreen);
     ACCEL_PREAMBLE();
 
@@ -124,32 +138,25 @@ FUNC_NAME(RADEONSolid)(PixmapPtr pPix, int x1, int y1, int x2, int y2)
 static void
 FUNC_NAME(RADEONDoneSolid)(PixmapPtr pPix)
 {
-    TRACE;
-}
-
-static Bool
-FUNC_NAME(RADEONPrepareCopy)(PixmapPtr pSrc,   PixmapPtr pDst,
-			     int xdir, int ydir,
-			     int rop,
-			     Pixel planemask)
-{
-    RINFO_FROM_SCREEN(pDst->drawable.pScreen);
-    CARD32 datatype, src_pitch_offset, dst_pitch_offset;
+    RINFO_FROM_SCREEN(pPix->drawable.pScreen);
     ACCEL_PREAMBLE();
 
     TRACE;
 
-    info->xdir = xdir;
-    info->ydir = ydir;
+    BEGIN_ACCEL(2);
+    OUT_ACCEL_REG(RADEON_DSTCACHE_CTLSTAT, RADEON_RB2D_DC_FLUSH_ALL);
+    OUT_ACCEL_REG(RADEON_WAIT_UNTIL,
+                  RADEON_WAIT_2D_IDLECLEAN | RADEON_WAIT_DMA_GUI_IDLE);
+    FINISH_ACCEL();
+}
 
-    if (pDst->drawable.bitsPerPixel == 24)
-	RADEON_FALLBACK(("24bpp unsupported"));
-    if (!RADEONGetDatatypeBpp(pDst->drawable.bitsPerPixel, &datatype))
-	RADEON_FALLBACK(("RADEONGetDatatypeBpp failed\n"));
-    if (!RADEONGetPixmapOffsetPitch(pSrc, &src_pitch_offset))
-	RADEON_FALLBACK(("RADEONGetPixmapOffsetPitch source failed\n"));
-    if (!RADEONGetPixmapOffsetPitch(pDst, &dst_pitch_offset))
-	RADEON_FALLBACK(("RADEONGetPixmapOffsetPitch dest failed\n"));
+void
+FUNC_NAME(RADEONDoPrepareCopy)(ScrnInfoPtr pScrn, uint32_t src_pitch_offset,
+			       uint32_t dst_pitch_offset, uint32_t datatype, int rop,
+			       Pixel planemask)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    ACCEL_PREAMBLE();
 
     RADEON_SWITCH_TO_2D();
 
@@ -165,22 +172,48 @@ FUNC_NAME(RADEONPrepareCopy)(PixmapPtr pSrc,   PixmapPtr pDst,
 	RADEON_GMC_CLR_CMP_CNTL_DIS);
     OUT_ACCEL_REG(RADEON_DP_WRITE_MASK, planemask);
     OUT_ACCEL_REG(RADEON_DP_CNTL,
-	((xdir >= 0 ? RADEON_DST_X_LEFT_TO_RIGHT : 0) |
-	 (ydir >= 0 ? RADEON_DST_Y_TOP_TO_BOTTOM : 0)));
+	((info->xdir >= 0 ? RADEON_DST_X_LEFT_TO_RIGHT : 0) |
+	 (info->ydir >= 0 ? RADEON_DST_Y_TOP_TO_BOTTOM : 0)));
     OUT_ACCEL_REG(RADEON_DST_PITCH_OFFSET, dst_pitch_offset);
     OUT_ACCEL_REG(RADEON_SRC_PITCH_OFFSET, src_pitch_offset);
     FINISH_ACCEL();
+}
+
+static Bool
+FUNC_NAME(RADEONPrepareCopy)(PixmapPtr pSrc,   PixmapPtr pDst,
+			     int xdir, int ydir,
+			     int rop,
+			     Pixel planemask)
+{
+    RINFO_FROM_SCREEN(pDst->drawable.pScreen);
+    uint32_t datatype, src_pitch_offset, dst_pitch_offset;
+
+    TRACE;
+
+    info->xdir = xdir;
+    info->ydir = ydir;
+
+    if (pDst->drawable.bitsPerPixel == 24)
+	RADEON_FALLBACK(("24bpp unsupported"));
+    if (!RADEONGetDatatypeBpp(pDst->drawable.bitsPerPixel, &datatype))
+	RADEON_FALLBACK(("RADEONGetDatatypeBpp failed\n"));
+    if (!RADEONGetPixmapOffsetPitch(pSrc, &src_pitch_offset))
+	RADEON_FALLBACK(("RADEONGetPixmapOffsetPitch source failed\n"));
+    if (!RADEONGetPixmapOffsetPitch(pDst, &dst_pitch_offset))
+	RADEON_FALLBACK(("RADEONGetPixmapOffsetPitch dest failed\n"));
+
+    FUNC_NAME(RADEONDoPrepareCopy)(pScrn, src_pitch_offset, dst_pitch_offset,
+				   datatype, rop, planemask);
 
     return TRUE;
 }
 
-static void
+void
 FUNC_NAME(RADEONCopy)(PixmapPtr pDst,
 		      int srcX, int srcY,
 		      int dstX, int dstY,
 		      int w, int h)
 {
-
     RINFO_FROM_SCREEN(pDst->drawable.pScreen);
     ACCEL_PREAMBLE();
 
@@ -207,26 +240,33 @@ FUNC_NAME(RADEONCopy)(PixmapPtr pDst,
 static void
 FUNC_NAME(RADEONDoneCopy)(PixmapPtr pDst)
 {
+    RINFO_FROM_SCREEN(pDst->drawable.pScreen);
+    ACCEL_PREAMBLE();
+
     TRACE;
+
+    BEGIN_ACCEL(2);
+    OUT_ACCEL_REG(RADEON_DSTCACHE_CTLSTAT, RADEON_RB2D_DC_FLUSH_ALL);
+    OUT_ACCEL_REG(RADEON_WAIT_UNTIL,
+                  RADEON_WAIT_2D_IDLECLEAN | RADEON_WAIT_DMA_GUI_IDLE);
+    FINISH_ACCEL();
 }
 
 static Bool
 FUNC_NAME(RADEONUploadToScreen)(PixmapPtr pDst, int x, int y, int w, int h,
 				char *src, int src_pitch)
 {
-#if X_BYTE_ORDER == X_BIG_ENDIAN || defined(ACCEL_CP)
     RINFO_FROM_SCREEN(pDst->drawable.pScreen);
-#endif
-    CARD8	   *dst	     = pDst->devPrivate.ptr;
+    uint8_t	   *dst	     = info->FB + exaGetPixmapOffset(pDst);
     unsigned int   dst_pitch = exaGetPixmapPitch(pDst);
     unsigned int   bpp	     = pDst->drawable.bitsPerPixel;
 #ifdef ACCEL_CP
     unsigned int   hpass;
-    CARD32	   buf_pitch, dst_pitch_off;
+    uint32_t	   buf_pitch, dst_pitch_off;
 #endif
 #if X_BYTE_ORDER == X_BIG_ENDIAN 
     unsigned char *RADEONMMIO = info->MMIO;
-    unsigned int swapper = info->ModeReg.surface_cntl &
+    unsigned int swapper = info->ModeReg->surface_cntl &
 	    ~(RADEON_NONSURF_AP0_SWP_32BPP | RADEON_NONSURF_AP1_SWP_32BPP |
 	      RADEON_NONSURF_AP0_SWP_16BPP | RADEON_NONSURF_AP1_SWP_16BPP);
 #endif
@@ -239,7 +279,7 @@ FUNC_NAME(RADEONUploadToScreen)(PixmapPtr pDst, int x, int y, int w, int h,
 #ifdef ACCEL_CP
     if (info->directRenderingEnabled &&
 	RADEONGetPixmapOffsetPitch(pDst, &dst_pitch_off)) {
-	CARD8 *buf;
+	uint8_t *buf;
 	int cpp = bpp / 8;
 	ACCEL_PREAMBLE();
 
@@ -247,7 +287,7 @@ FUNC_NAME(RADEONUploadToScreen)(PixmapPtr pDst, int x, int y, int w, int h,
 	while ((buf = RADEONHostDataBlit(pScrn,
 					 cpp, w, dst_pitch_off, &buf_pitch,
 					 x, &y, (unsigned int*)&h, &hpass)) != 0) {
-	    RADEONHostDataBlitCopyPass(pScrn, cpp, buf, (CARD8 *)src,
+	    RADEONHostDataBlitCopyPass(pScrn, cpp, buf, (uint8_t *)src,
 				       hpass, buf_pitch, src_pitch);
 	    src += hpass * src_pitch;
 	}
@@ -286,7 +326,7 @@ FUNC_NAME(RADEONUploadToScreen)(PixmapPtr pDst, int x, int y, int w, int h,
 
 #if X_BYTE_ORDER == X_BIG_ENDIAN
     /* restore byte swapping */
-    OUTREG(RADEON_SURFACE_CNTL, info->ModeReg.surface_cntl);
+    OUTREG(RADEON_SURFACE_CNTL, info->ModeReg->surface_cntl);
 #endif
 
     return TRUE;
@@ -295,8 +335,8 @@ FUNC_NAME(RADEONUploadToScreen)(PixmapPtr pDst, int x, int y, int w, int h,
 #ifdef ACCEL_CP
 /* Emit blit with arbitrary source and destination offsets and pitches */
 static void
-RADEONBlitChunk(ScrnInfoPtr pScrn, CARD32 datatype, CARD32 src_pitch_offset,
-		CARD32 dst_pitch_offset, int srcX, int srcY, int dstX, int dstY,
+RADEONBlitChunk(ScrnInfoPtr pScrn, uint32_t datatype, uint32_t src_pitch_offset,
+		uint32_t dst_pitch_offset, int srcX, int srcY, int dstX, int dstY,
 		int w, int h)
 {
     RADEONInfoPtr info = RADEONPTR(pScrn);
@@ -319,6 +359,11 @@ RADEONBlitChunk(ScrnInfoPtr pScrn, CARD32 datatype, CARD32 src_pitch_offset,
     OUT_ACCEL_REG(RADEON_DST_Y_X, (dstY << 16) | dstX);
     OUT_ACCEL_REG(RADEON_DST_HEIGHT_WIDTH, (h << 16) | w);
     FINISH_ACCEL();
+    BEGIN_ACCEL(2);
+    OUT_ACCEL_REG(RADEON_DSTCACHE_CTLSTAT, RADEON_RB2D_DC_FLUSH_ALL);
+    OUT_ACCEL_REG(RADEON_WAIT_UNTIL,
+                  RADEON_WAIT_2D_IDLECLEAN | RADEON_WAIT_DMA_GUI_IDLE);
+    FINISH_ACCEL();
 }
 #endif
 
@@ -326,20 +371,18 @@ static Bool
 FUNC_NAME(RADEONDownloadFromScreen)(PixmapPtr pSrc, int x, int y, int w, int h,
 				    char *dst, int dst_pitch)
 {
-#if defined(ACCEL_CP) || X_BYTE_ORDER == X_BIG_ENDIAN
     RINFO_FROM_SCREEN(pSrc->drawable.pScreen);
-#endif
 #if X_BYTE_ORDER == X_BIG_ENDIAN
     unsigned char *RADEONMMIO = info->MMIO;
-    unsigned int swapper = info->ModeReg.surface_cntl &
+    unsigned int swapper = info->ModeReg->surface_cntl &
 	    ~(RADEON_NONSURF_AP0_SWP_32BPP | RADEON_NONSURF_AP1_SWP_32BPP |
 	      RADEON_NONSURF_AP0_SWP_16BPP | RADEON_NONSURF_AP1_SWP_16BPP);
 #endif
-    CARD8	  *src	     = pSrc->devPrivate.ptr;
+    uint8_t	  *src	     = info->FB + exaGetPixmapOffset(pSrc);
     int		   src_pitch = exaGetPixmapPitch(pSrc);
     int		   bpp	     = pSrc->drawable.bitsPerPixel;
 #ifdef ACCEL_CP
-    CARD32 datatype, src_pitch_offset, scratch_pitch = (w * bpp/8 + 63) & ~63, scratch_off = 0;
+    uint32_t datatype, src_pitch_offset, scratch_pitch = (w * bpp/8 + 63) & ~63, scratch_off = 0;
     drmBufPtr scratch;
 #endif
 
@@ -357,7 +400,7 @@ FUNC_NAME(RADEONDownloadFromScreen)(PixmapPtr pSrc, int x, int y, int w, int h,
     {
 	int swap = RADEON_HOST_DATA_SWAP_NONE, wpass = w * bpp / 8;
 	int hpass = min(h, scratch->total/2 / scratch_pitch);
-	CARD32 scratch_pitch_offset = scratch_pitch << 16
+	uint32_t scratch_pitch_offset = scratch_pitch << 16
 				    | (info->gartLocation + info->bufStart
 				       + scratch->idx * scratch->total) >> 10;
 	drmRadeonIndirect indirect;
@@ -384,7 +427,7 @@ FUNC_NAME(RADEONDownloadFromScreen)(PixmapPtr pSrc, int x, int y, int w, int h,
 	while (h) {
 	    int oldhpass = hpass, i = 0;
 
-	    src = (CARD8*)scratch->address + scratch_off;
+	    src = (uint8_t*)scratch->address + scratch_off;
 
 	    y += oldhpass;
 	    h -= oldhpass;
@@ -417,10 +460,10 @@ FUNC_NAME(RADEONDownloadFromScreen)(PixmapPtr pSrc, int x, int y, int w, int h,
 
 	    /* Copy out data from previous blit */
 	    if (wpass == scratch_pitch && wpass == dst_pitch) {
-		RADEONCopySwap((CARD8*)dst, src, wpass * oldhpass, swap);
+		RADEONCopySwap((uint8_t*)dst, src, wpass * oldhpass, swap);
 		dst += dst_pitch * oldhpass;
 	    } else while (oldhpass--) {
-		RADEONCopySwap((CARD8*)dst, src, wpass, swap);
+		RADEONCopySwap((uint8_t*)dst, src, wpass, swap);
 		src += scratch_pitch;
 		dst += dst_pitch;
 	    }
@@ -432,6 +475,8 @@ FUNC_NAME(RADEONDownloadFromScreen)(PixmapPtr pSrc, int x, int y, int w, int h,
 
 	drmCommandWriteRead(info->drmFD, DRM_RADEON_INDIRECT,
 			    &indirect, sizeof(drmRadeonIndirect));
+
+	info->exaMarkerSynced = info->exaSyncMarker;
 
 	return TRUE;
     }
@@ -467,7 +512,7 @@ FUNC_NAME(RADEONDownloadFromScreen)(PixmapPtr pSrc, int x, int y, int w, int h,
 
 #if X_BYTE_ORDER == X_BIG_ENDIAN
     /* restore byte swapping */
-    OUTREG(RADEON_SURFACE_CNTL, info->ModeReg.surface_cntl);
+    OUTREG(RADEON_SURFACE_CNTL, info->ModeReg->surface_cntl);
 #endif
 
     return TRUE;
@@ -482,8 +527,8 @@ Bool FUNC_NAME(RADEONDrawInit)(ScreenPtr pScreen)
 	return FALSE;
     }
 
-    info->exa->exa_major = 2;
-    info->exa->exa_minor = 0;
+    info->exa->exa_major = EXA_VERSION_MAJOR;
+    info->exa->exa_minor = EXA_VERSION_MINOR;
 
     info->exa->PrepareSolid = FUNC_NAME(RADEONPrepareSolid);
     info->exa->Solid = FUNC_NAME(RADEONSolid);
@@ -493,6 +538,7 @@ Bool FUNC_NAME(RADEONDrawInit)(ScreenPtr pScreen)
     info->exa->Copy = FUNC_NAME(RADEONCopy);
     info->exa->DoneCopy = FUNC_NAME(RADEONDoneCopy);
 
+    info->exa->MarkSync = FUNC_NAME(RADEONMarkSync);
     info->exa->WaitMarker = FUNC_NAME(RADEONSync);
     info->exa->UploadToScreen = FUNC_NAME(RADEONUploadToScreen);
     info->exa->DownloadFromScreen = FUNC_NAME(RADEONDownloadFromScreen);
@@ -506,17 +552,29 @@ Bool FUNC_NAME(RADEONDrawInit)(ScreenPtr pScreen)
     info->exa->pixmapOffsetAlign = RADEON_BUFFER_ALIGN + 1;
     info->exa->pixmapPitchAlign = 64;
 
-    info->exa->maxX = 2047;
-    info->exa->maxY = 2047;
-
 #ifdef RENDER
     if (info->RenderAccel) {
-	if (info->ChipFamily >= CHIP_FAMILY_R300) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Render acceleration "
-			       "unsupported on R300 type cards and newer.\n");
-	} else if ((info->ChipFamily == CHIP_FAMILY_RV250) || 
-		   (info->ChipFamily == CHIP_FAMILY_RV280) || 
-		   (info->ChipFamily == CHIP_FAMILY_RS300) || 
+	if (info->ChipFamily >= CHIP_FAMILY_R600)
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Render acceleration "
+			       "unsupported on R600 and newer cards.\n");
+	else if (IS_R300_3D || IS_R500_3D) {
+	    if ((info->ChipFamily < CHIP_FAMILY_RS400)
+#ifdef XF86DRI
+		|| (info->directRenderingEnabled)
+#endif
+		) {
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Render acceleration "
+			       "enabled for R300/R400/R500 type cards.\n");
+		info->exa->CheckComposite = R300CheckComposite;
+		info->exa->PrepareComposite =
+		    FUNC_NAME(R300PrepareComposite);
+		info->exa->Composite = FUNC_NAME(RadeonComposite);
+		info->exa->DoneComposite = FUNC_NAME(RadeonDoneComposite);
+	    } else
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "EXA Composite requires CP on R5xx/IGP\n");
+	} else if ((info->ChipFamily == CHIP_FAMILY_RV250) ||
+		   (info->ChipFamily == CHIP_FAMILY_RV280) ||
+		   (info->ChipFamily == CHIP_FAMILY_RS300) ||
 		   (info->ChipFamily == CHIP_FAMILY_R200)) {
 		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Render acceleration "
 			       "enabled for R200 type cards.\n");
@@ -524,7 +582,7 @@ Bool FUNC_NAME(RADEONDrawInit)(ScreenPtr pScreen)
 		info->exa->PrepareComposite =
 		    FUNC_NAME(R200PrepareComposite);
 		info->exa->Composite = FUNC_NAME(RadeonComposite);
-		info->exa->DoneComposite = RadeonDoneComposite;
+		info->exa->DoneComposite = FUNC_NAME(RadeonDoneComposite);
 	} else {
 		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Render acceleration "
 			       "enabled for R100 type cards.\n");
@@ -532,10 +590,20 @@ Bool FUNC_NAME(RADEONDrawInit)(ScreenPtr pScreen)
 		info->exa->PrepareComposite =
 		    FUNC_NAME(R100PrepareComposite);
 		info->exa->Composite = FUNC_NAME(RadeonComposite);
-		info->exa->DoneComposite = RadeonDoneComposite;
+		info->exa->DoneComposite = FUNC_NAME(RadeonDoneComposite);
 	}
     }
 #endif
+
+#if EXA_VERSION_MAJOR > 2 || (EXA_VERSION_MAJOR == 2 && EXA_VERSION_MINOR >= 3)
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Setting EXA maxPitchBytes\n");
+
+    info->exa->maxPitchBytes = 16320;
+    info->exa->maxX = 8192;
+#else
+    info->exa->maxX = 16320 / 4;
+#endif
+    info->exa->maxY = 8192;
 
     RADEONEngineInit(pScrn);
 

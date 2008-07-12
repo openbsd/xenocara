@@ -12,29 +12,31 @@
 #undef write
 #undef ioctl
 
-static Bool theatre_read(TheatrePtr t,CARD32 reg, CARD32 *data)
+static Bool theatre_read(TheatrePtr t,uint32_t reg, uint32_t *data)
 {
    if(t->theatre_num<0)return FALSE;
-   return t->VIP->read(t->VIP, ((t->theatre_num & 0x3)<<14) | reg,4, (CARD8 *) data);
+   return t->VIP->read(t->VIP, ((t->theatre_num & 0x3)<<14) | reg,4, (uint8_t *) data);
 }
 
-static Bool theatre_write(TheatrePtr t,CARD32 reg, CARD32 data)
+static Bool theatre_write(TheatrePtr t,uint32_t reg, uint32_t data)
 {
    if(t->theatre_num<0)return FALSE;
-   return t->VIP->write(t->VIP,((t->theatre_num & 0x03)<<14) | reg,4, (CARD8 *) &data);
+   return t->VIP->write(t->VIP,((t->theatre_num & 0x03)<<14) | reg,4, (uint8_t *) &data);
 }
 
 #define RT_regr(reg,data)	theatre_read(t,(reg),(data))
 #define RT_regw(reg,data)	theatre_write(t,(reg),(data))
 #define VIP_TYPE      "ATI VIP BUS"
 
+static void CalculateCrCbGain (TheatrePtr t, double *CrGain, double *CbGain, uint16_t wStandard);
+static void RT_SetCombFilter (TheatrePtr t, uint16_t wStandard, uint16_t wConnector);
 
 #if 0
 TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
 {
    TheatrePtr t;  
-   CARD32 i;
-   CARD32 val;
+   uint32_t i;
+   uint32_t val;
    char s[20];
    
    b->ioctl(b,GB_IOCTL_GET_TYPE,20,s);
@@ -49,10 +51,10 @@ TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
    t->theatre_num = -1;
    t->mode=MODE_UNINITIALIZED;
    
-   b->read(b, VIP_VIP_VENDOR_DEVICE_ID, 4, (CARD8 *)&val);
+   b->read(b, VIP_VIP_VENDOR_DEVICE_ID, 4, (uint8_t *)&val);
    for(i=0;i<4;i++)
    {
-	if(b->read(b, ((i & 0x03)<<14) | VIP_VIP_VENDOR_DEVICE_ID, 4, (CARD8 *)&val))
+	if(b->read(b, ((i & 0x03)<<14) | VIP_VIP_VENDOR_DEVICE_ID, 4, (uint8_t *)&val))
         {
 	  if(val)xf86DrvMsg(b->scrnIndex, X_INFO, "Device %d on VIP bus ids as 0x%08x\n",i,val);
 	  if(t->theatre_num>=0)continue; /* already found one instance */
@@ -171,7 +173,7 @@ fld_V_INT_LENGTH,
 fld_CRDR_ACTIVE_GAIN,
 fld_CBDB_ACTIVE_GAIN,
 fld_DVS_DIRECTION,
-fld_DVS_VBI_CARD8_SWAP,
+fld_DVS_VBI_UINT8_SWAP,
 fld_DVS_CLK_SELECT,
 fld_CONTINUOUS_STREAM,
 fld_DVSOUT_CLK_DRV,
@@ -253,17 +255,17 @@ regRT_MAX_REGS
 
 
 typedef struct {
-	CARD8 size;
-	CARD32 fld_id;
-	CARD32 dwRegAddrLSBs;
-	CARD32 dwFldOffsetLSBs;
-	CARD32 dwMaskLSBs;
-	CARD32 addr2;
-	CARD32 offs2;
-	CARD32 mask2;
-	CARD32 dwCurrValue;
-	CARD32 rw;
-	} RTREGMAP;
+	uint8_t size;
+	uint32_t fld_id;
+	uint32_t dwRegAddrLSBs;
+	uint32_t dwFldOffsetLSBs;
+	uint32_t dwMaskLSBs;
+	uint32_t addr2;
+	uint32_t offs2;
+	uint32_t mask2;
+	uint32_t dwCurrValue;
+	uint32_t rw;
+} RTREGMAP;
 
 #define READONLY 1
 #define WRITEONLY 2
@@ -350,7 +352,7 @@ RTREGMAP RT_RegMap[regRT_MAX_REGS]={
 {10 ,fld_CRDR_ACTIVE_GAIN   ,VIP_CP_ACTIVE_GAIN     ,  0, 0xFFFFFC00, 0, 0,0, fld_CRDR_ACTIVE_GAIN_def  ,READWRITE  },
 {10 ,fld_CBDB_ACTIVE_GAIN   ,VIP_CP_ACTIVE_GAIN     , 16, 0xFC00FFFF, 0, 0,0, fld_CBDB_ACTIVE_GAIN_def  ,READWRITE  },
 {1  ,fld_DVS_DIRECTION      ,VIP_DVS_PORT_CTRL      ,  0, 0xFFFFFFFE, 0, 0,0, fld_DVS_DIRECTION_def     ,READWRITE  },
-{1  ,fld_DVS_VBI_CARD8_SWAP  ,VIP_DVS_PORT_CTRL      ,  1, 0xFFFFFFFD, 0, 0,0, fld_DVS_VBI_CARD8_SWAP_def ,READWRITE  },
+{1  ,fld_DVS_VBI_UINT8_SWAP  ,VIP_DVS_PORT_CTRL      ,  1, 0xFFFFFFFD, 0, 0,0, fld_DVS_VBI_UINT8_SWAP_def ,READWRITE  },
 {1  ,fld_DVS_CLK_SELECT     ,VIP_DVS_PORT_CTRL      ,  2, 0xFFFFFFFB, 0, 0,0, fld_DVS_CLK_SELECT_def    ,READWRITE  },
 {1  ,fld_CONTINUOUS_STREAM  ,VIP_DVS_PORT_CTRL      ,  3, 0xFFFFFFF7, 0, 0,0, fld_CONTINUOUS_STREAM_def ,READWRITE  },
 {1  ,fld_DVSOUT_CLK_DRV     ,VIP_DVS_PORT_CTRL      ,  4, 0xFFFFFFEF, 0, 0,0, fld_DVSOUT_CLK_DRV_def    ,READWRITE  },
@@ -429,7 +431,7 @@ RTREGMAP RT_RegMap[regRT_MAX_REGS]={
 };
 
 /* Rage Theatre's register fields default values: */
-CARD32 RT_RegDef[regRT_MAX_REGS]=
+uint32_t RT_RegDef[regRT_MAX_REGS]=
 {
 fld_tmpReg1_def,
 fld_tmpReg2_def,
@@ -507,7 +509,7 @@ fld_V_INT_LENGTH_def,
 fld_CRDR_ACTIVE_GAIN_def,
 fld_CBDB_ACTIVE_GAIN_def,
 fld_DVS_DIRECTION_def,
-fld_DVS_VBI_CARD8_SWAP_def,
+fld_DVS_VBI_UINT8_SWAP_def,
 fld_DVS_CLK_SELECT_def,
 fld_CONTINUOUS_STREAM_def,
 fld_DVSOUT_CLK_DRV_def,
@@ -586,16 +588,16 @@ fld_GPIO_6_OUT_def,
 };
 
 /****************************************************************************
- * WriteRT_fld (CARD32 dwReg, CARD32 dwData)                                  *
+ * WriteRT_fld (uint32_t dwReg, uint32_t dwData)                                  *
  *  Function: Writes a register field within Rage Theatre                   *
- *    Inputs: CARD32 dwReg = register field to be written                    *
- *            CARD32 dwData = data that will be written to the reg field     *
+ *    Inputs: uint32_t dwReg = register field to be written                    *
+ *            uint32_t dwData = data that will be written to the reg field     *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-static void WriteRT_fld1 (TheatrePtr t, CARD32 dwReg, CARD32 dwData)
+static void WriteRT_fld1 (TheatrePtr t, uint32_t dwReg, uint32_t dwData)
 {
-    CARD32 dwResult=0;
-    CARD32 dwValue=0;
+    uint32_t dwResult=0;
+    uint32_t dwValue=0;
 
     if (RT_regr (RT_RegMap[dwReg].dwRegAddrLSBs, &dwResult) == TRUE)
     {
@@ -615,14 +617,14 @@ static void WriteRT_fld1 (TheatrePtr t, CARD32 dwReg, CARD32 dwData)
 } /* WriteRT_fld ()... */
 
 /****************************************************************************
- * ReadRT_fld (CARD32 dwReg)                                                 *
+ * ReadRT_fld (uint32_t dwReg)                                                 *
  *  Function: Reads a register field within Rage Theatre                    *
- *    Inputs: CARD32 dwReg = register field to be read                       *
- *   Outputs: CARD32 - value read from register field                        *
+ *    Inputs: uint32_t dwReg = register field to be read                       *
+ *   Outputs: uint32_t - value read from register field                        *
  ****************************************************************************/
-static CARD32 ReadRT_fld1 (TheatrePtr t,CARD32 dwReg)
+static uint32_t ReadRT_fld1 (TheatrePtr t,uint32_t dwReg)
 {
-    CARD32 dwResult=0;
+    uint32_t dwResult=0;
 
     if (RT_regr (RT_RegMap[dwReg].dwRegAddrLSBs, &dwResult) == TRUE)
     {
@@ -641,15 +643,15 @@ static CARD32 ReadRT_fld1 (TheatrePtr t,CARD32 dwReg)
 #define ReadRT_fld(a)	   ReadRT_fld1(t,(a))
 
 /****************************************************************************
- * RT_SetVINClock (CARD16 wStandard)                                          *
+ * RT_SetVINClock (uint16_t wStandard)                                          *
  *  Function: to set the VIN clock for the selected standard                *
- *    Inputs: CARD16 wStandard - input standard (NTSC, PAL, SECAM)            *
+ *    Inputs: uint16_t wStandard - input standard (NTSC, PAL, SECAM)            *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-static void RT_SetVINClock(TheatrePtr t, CARD16 wStandard)
+static void RT_SetVINClock(TheatrePtr t, uint16_t wStandard)
 {
-    CARD32 dwM0=0, dwN0=0, dwP=0;
-    CARD8 ref_freq;
+    uint32_t dwM0=0, dwN0=0, dwP=0;
+    uint8_t ref_freq;
 
     /* Determine the reference frequency first.  This can be obtained
        from the MMTABLE.video_decoder_type field (bits 4:7)
@@ -657,9 +659,9 @@ static void RT_SetVINClock(TheatrePtr t, CARD16 wStandard)
        27 or 29.49 MHz. */
        /*
     R128ReadBIOS(0x48,
-		     (CARD8 *)&bios_header, sizeof(bios_header));
+		     (uint8_t *)&bios_header, sizeof(bios_header));
      R128ReadBIOS(bios_header + 0x30,
-		     (CARD8 *)&pll_info_block, sizeof(pll_info_block));
+		     (uint8_t *)&pll_info_block, sizeof(pll_info_block));
 
      R128ReadBIOS(pll_info_block+0x07, &video_decoder_type, sizeof(video_decoder_type)); 
       */ 
@@ -793,9 +795,9 @@ static void RT_SetVINClock(TheatrePtr t, CARD16 wStandard)
  *    Inputs: int hue - the hue value to be set.                            *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetTint (TheatrePtr t, int hue)
+_X_EXPORT void RT_SetTint (TheatrePtr t, int hue)
 {
-    CARD32 nhue = 0;
+    uint32_t nhue = 0;
 
     t->iHue=hue;
     /* Scale hue value from -1000<->1000 to -180<->180 */
@@ -822,11 +824,11 @@ void RT_SetTint (TheatrePtr t, int hue)
         case (DEC_SECAM):
                             if (hue >= 0)
                             {
-                                nhue = (CARD32) (256 * hue)/360;
+                                nhue = (uint32_t) (256 * hue)/360;
                             }
                             else
                             {
-                                nhue = (CARD32) (256 * (hue + 360))/360;
+                                nhue = (uint32_t) (256 * (hue + 360))/360;
                             }
                             break;
 
@@ -846,9 +848,9 @@ void RT_SetTint (TheatrePtr t, int hue)
  *    Inputs: int Saturation - the saturation value to be set.              *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetSaturation (TheatrePtr t, int Saturation)
+_X_EXPORT void RT_SetSaturation (TheatrePtr t, int Saturation)
 {
-    CARD16   wSaturation_V, wSaturation_U;
+    uint16_t   wSaturation_V, wSaturation_U;
     double dbSaturation = 0, dbCrGain = 0, dbCbGain = 0;
 
     /* VALIDATE SATURATION LEVEL */
@@ -873,8 +875,8 @@ void RT_SetSaturation (TheatrePtr t, int Saturation)
 
     CalculateCrCbGain (t, &dbCrGain, &dbCbGain, t->wStandard);
 
-    wSaturation_U = (CARD16) ((dbCrGain * dbSaturation * 128.0) + 0.5);
-    wSaturation_V = (CARD16) ((dbCbGain * dbSaturation * 128.0) + 0.5);
+    wSaturation_U = (uint16_t) ((dbCrGain * dbSaturation * 128.0) + 0.5);
+    wSaturation_V = (uint16_t) ((dbCbGain * dbSaturation * 128.0) + 0.5);
 
     /* SET SATURATION LEVEL */
     WriteRT_fld (fld_CRDR_ACTIVE_GAIN, wSaturation_U);
@@ -893,14 +895,14 @@ void RT_SetSaturation (TheatrePtr t, int Saturation)
  *    Inputs: int Brightness - the brightness value to be set.              *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetBrightness (TheatrePtr t, int Brightness)
+_X_EXPORT void RT_SetBrightness (TheatrePtr t, int Brightness)
 {
     double dbSynctipRef0=0, dbContrast=1;
 
     double dbYgain=0;
     double dbBrightness=0;
     double dbSetup=0;
-    CARD16   wBrightness=0;
+    uint16_t   wBrightness=0;
 
     /* VALIDATE BRIGHTNESS LEVEL */
     if (Brightness < -1000)
@@ -950,7 +952,7 @@ void RT_SetBrightness (TheatrePtr t, int Brightness)
             break;
     }
 
-    wBrightness = (CARD16) (16.0 * ((dbBrightness-dbSetup) + (16.0 / (dbContrast * dbYgain))));
+    wBrightness = (uint16_t) (16.0 * ((dbBrightness-dbSetup) + (16.0 / (dbContrast * dbYgain))));
 
     WriteRT_fld (fld_LP_BRIGHTNESS, wBrightness);
 
@@ -962,12 +964,12 @@ void RT_SetBrightness (TheatrePtr t, int Brightness)
 
 
 /****************************************************************************
- * RT_SetSharpness (CARD16 wSharpness)                                        *
+ * RT_SetSharpness (uint16_t wSharpness)                                        *
  *  Function: sets the sharpness level for the Rage Theatre video in        *
- *    Inputs: CARD16 wSharpness - the sharpness value to be set.              *
+ *    Inputs: uint16_t wSharpness - the sharpness value to be set.              *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetSharpness (TheatrePtr t, CARD16 wSharpness)
+_X_EXPORT void RT_SetSharpness (TheatrePtr t, uint16_t wSharpness)
 {
     switch (wSharpness)
     {
@@ -993,11 +995,11 @@ void RT_SetSharpness (TheatrePtr t, CARD16 wSharpness)
  *    Inputs: int Contrast - the contrast value to be set.                  *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetContrast (TheatrePtr t, int Contrast)
+_X_EXPORT void RT_SetContrast (TheatrePtr t, int Contrast)
 {
     double dbSynctipRef0=0, dbContrast=0;
     double dbYgain=0;
-    CARD8   bTempContrast=0;
+    uint8_t   bTempContrast=0;
 
     /* VALIDATE CONTRAST LEVEL */
     if (Contrast < -1000)
@@ -1035,9 +1037,9 @@ void RT_SetContrast (TheatrePtr t, int Contrast)
             break;
     }
 
-    bTempContrast = (CARD8) ((dbContrast * dbYgain * 64) + 0.5);
+    bTempContrast = (uint8_t) ((dbContrast * dbYgain * 64) + 0.5);
 
-    WriteRT_fld (fld_LP_CONTRAST, (CARD32)bTempContrast);
+    WriteRT_fld (fld_LP_CONTRAST, (uint32_t)bTempContrast);
 
     /* Save value for future modification */
     t->dbContrast = dbContrast;
@@ -1047,23 +1049,23 @@ void RT_SetContrast (TheatrePtr t, int Contrast)
 } /* RT_SetContrast ()... */
 
 /****************************************************************************
- * RT_SetInterlace (CARD8 bInterlace)                                        *
+ * RT_SetInterlace (uint8_t bInterlace)                                        *
  *  Function: to set the interlacing pattern for the Rage Theatre video in  *
- *    Inputs: CARD8 bInterlace                                               *
+ *    Inputs: uint8_t bInterlace                                               *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetInterlace (TheatrePtr t, CARD8 bInterlace)
+_X_EXPORT void RT_SetInterlace (TheatrePtr t, uint8_t bInterlace)
 {
 
     switch(bInterlace)
      {
         case (TRUE):    /*DEC_INTERLACE */
                         WriteRT_fld (fld_V_DEINTERLACE_ON, 0x1);
-                        t->wInterlaced = (CARD16) RT_DECINTERLACED;
+                        t->wInterlaced = (uint16_t) RT_DECINTERLACED;
                         break;
        case (FALSE):    /*DEC_NONINTERLACE */
                         WriteRT_fld (fld_V_DEINTERLACE_ON, RT_DECNONINTERLACED);
-                        t->wInterlaced = (CARD16) RT_DECNONINTERLACED;
+                        t->wInterlaced = (uint16_t) RT_DECNONINTERLACED;
                         break;
        default:
                         break;
@@ -1075,16 +1077,16 @@ void RT_SetInterlace (TheatrePtr t, CARD8 bInterlace)
 
 /****************************************************************************
  * GetStandardConstants (double *LPeriod, double *FPeriod,                  *
- *                          double *Fsamp, CARD16 wStandard)                  *
+ *                          double *Fsamp, uint16_t wStandard)                  *
  *  Function: return timing values for a given standard                     *
  *    Inputs: double *LPeriod -
  *            double *FPeriod -
  *            double *Fsamp - sampling frequency used for a given standard  *
- *            CARD16 wStandard - input standard (NTSC, PAL, SECAM)            *
+ *            uint16_t wStandard - input standard (NTSC, PAL, SECAM)            *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
 static void GetStandardConstants (double *LPeriod, double *FPeriod,
-                           double *Fsamp, CARD16 wStandard)
+                           double *Fsamp, uint16_t wStandard)
 {
     *LPeriod = 0.0;
     *FPeriod = 0.0;
@@ -1137,15 +1139,15 @@ static void GetStandardConstants (double *LPeriod, double *FPeriod,
 
 
 /****************************************************************************
- * RT_SetStandard (CARD16 wStandard)                                          *
+ * RT_SetStandard (uint16_t wStandard)                                          *
  *  Function: to set the input standard for the Rage Theatre video in       *
- *    Inputs: CARD16 wStandard - input standard (NTSC, PAL, SECAM)            *
+ *    Inputs: uint16_t wStandard - input standard (NTSC, PAL, SECAM)            *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetStandard (TheatrePtr t, CARD16 wStandard)
+_X_EXPORT void RT_SetStandard (TheatrePtr t, uint16_t wStandard)
 {
     double dbFsamp=0, dbLPeriod=0, dbFPeriod=0;
-    CARD16   wFrameTotal = 0;
+    uint16_t   wFrameTotal = 0;
     double dbSPPeriod = 4.70;
 
     xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"Rage Theatre setting standard 0x%04x\n",
@@ -1155,7 +1157,7 @@ void RT_SetStandard (TheatrePtr t, CARD16 wStandard)
     /* Get the constants for the given standard. */    
     GetStandardConstants (&dbLPeriod, &dbFPeriod, &dbFsamp, wStandard);
 
-    wFrameTotal = (CARD16) (((2.0 * dbFPeriod) * 1000 / dbLPeriod) + 0.5);
+    wFrameTotal = (uint16_t) (((2.0 * dbFPeriod) * 1000 / dbLPeriod) + 0.5);
 
     /* Procedures before setting the standards: */
     WriteRT_fld (fld_VIN_CLK_SEL, RT_REF_CLK);
@@ -1207,10 +1209,10 @@ void RT_SetStandard (TheatrePtr t, CARD16 wStandard)
             WriteRT_fld (fld_V_VBI_WIND_START,   RT_NTSCM_V_VBI_WIND_START);
             WriteRT_fld (fld_V_VBI_WIND_END,   RT_NTSCM_V_VBI_WIND_END);
 
-            WriteRT_fld (fld_UV_INT_START,   (CARD8)((0.10 * dbLPeriod * dbFsamp / 2.0) + 0.5 - 32));
+            WriteRT_fld (fld_UV_INT_START,   (uint8_t)((0.10 * dbLPeriod * dbFsamp / 2.0) + 0.5 - 32));
 
-            WriteRT_fld (fld_VSYNC_INT_TRIGGER , (CARD16) RT_NTSCM_VSYNC_INT_TRIGGER);
-            WriteRT_fld (fld_VSYNC_INT_HOLD, (CARD16) RT_NTSCM_VSYNC_INT_HOLD);
+            WriteRT_fld (fld_VSYNC_INT_TRIGGER , (uint16_t) RT_NTSCM_VSYNC_INT_TRIGGER);
+            WriteRT_fld (fld_VSYNC_INT_HOLD, (uint16_t) RT_NTSCM_VSYNC_INT_HOLD);
 
             switch (wStandard & 0xFF00)
             {
@@ -1283,7 +1285,7 @@ void RT_SetStandard (TheatrePtr t, CARD16 wStandard)
 
             WriteRT_fld (fld_VERT_LOCKOUT_START,   RT_PAL_VERT_LOCKOUT_START);
             WriteRT_fld (fld_VERT_LOCKOUT_END, RT_PAL_VERT_LOCKOUT_END);
-            WriteRT_fld (fld_VS_FIELD_BLANK_START,  (CARD16)RT_PALSEM_VS_FIELD_BLANK_START);
+            WriteRT_fld (fld_VS_FIELD_BLANK_START,  (uint16_t)RT_PALSEM_VS_FIELD_BLANK_START);
 
             WriteRT_fld (fld_VS_FIELD_BLANK_END,   RT_PAL_VS_FIELD_BLANK_END);
 
@@ -1300,11 +1302,11 @@ void RT_SetStandard (TheatrePtr t, CARD16 wStandard)
             WriteRT_fld (fld_V_VBI_WIND_END,   RT_PAL_V_VBI_WIND_END);
 
 	    /* Magic 0.10 is correct - according to Ivo. Also see SECAM code below */
-/*            WriteRT_fld (fld_UV_INT_START,   (CARD8)( (0.12 * dbLPeriod * dbFsamp / 2.0) + 0.5 - 32 )); */
-            WriteRT_fld (fld_UV_INT_START,   (CARD8)( (0.10 * dbLPeriod * dbFsamp / 2.0) + 0.5 - 32 ));
+/*            WriteRT_fld (fld_UV_INT_START,   (uint8_t)( (0.12 * dbLPeriod * dbFsamp / 2.0) + 0.5 - 32 )); */
+            WriteRT_fld (fld_UV_INT_START,   (uint8_t)( (0.10 * dbLPeriod * dbFsamp / 2.0) + 0.5 - 32 ));
 
-            WriteRT_fld (fld_VSYNC_INT_TRIGGER , (CARD16) RT_PALSEM_VSYNC_INT_TRIGGER);
-            WriteRT_fld (fld_VSYNC_INT_HOLD, (CARD16) RT_PALSEM_VSYNC_INT_HOLD);
+            WriteRT_fld (fld_VSYNC_INT_TRIGGER , (uint16_t) RT_PALSEM_VSYNC_INT_TRIGGER);
+            WriteRT_fld (fld_VSYNC_INT_HOLD, (uint16_t) RT_PALSEM_VSYNC_INT_HOLD);
 
             break;
         case (DEC_SECAM):  /*PAL GROUP*/
@@ -1343,7 +1345,7 @@ void RT_SetStandard (TheatrePtr t, CARD16 wStandard)
             WriteRT_fld (fld_VERT_LOCKOUT_START,   RT_SECAM_VERT_LOCKOUT_START);  /*Might not need */
             WriteRT_fld (fld_VERT_LOCKOUT_END, RT_SECAM_VERT_LOCKOUT_END);  /* Might not need */
 
-            WriteRT_fld (fld_VS_FIELD_BLANK_START,  (CARD16)RT_PALSEM_VS_FIELD_BLANK_START);
+            WriteRT_fld (fld_VS_FIELD_BLANK_START,  (uint16_t)RT_PALSEM_VS_FIELD_BLANK_START);
             WriteRT_fld (fld_VS_FIELD_BLANK_END,   RT_PAL_VS_FIELD_BLANK_END);
 
             WriteRT_fld (fld_H_ACTIVE_START,   RT_PAL_H_ACTIVE_START);
@@ -1358,11 +1360,11 @@ void RT_SetStandard (TheatrePtr t, CARD16 wStandard)
             WriteRT_fld (fld_V_VBI_WIND_START,   RT_PAL_V_VBI_WIND_START);
             WriteRT_fld (fld_V_VBI_WIND_END,   RT_PAL_V_VBI_WIND_END);
 
-            WriteRT_fld (fld_VSYNC_INT_TRIGGER , (CARD16) RT_PALSEM_VSYNC_INT_TRIGGER);
-            WriteRT_fld (fld_VSYNC_INT_HOLD, (CARD16) RT_PALSEM_VSYNC_INT_HOLD);
+            WriteRT_fld (fld_VSYNC_INT_TRIGGER , (uint16_t) RT_PALSEM_VSYNC_INT_TRIGGER);
+            WriteRT_fld (fld_VSYNC_INT_HOLD, (uint16_t) RT_PALSEM_VSYNC_INT_HOLD);
 
-/*            WriteRT_fld (fld_UV_INT_START,   (CARD8)( (0.12 * dbLPeriod * dbFsamp / 2.0) + 0.5 - 32 )); */
-            WriteRT_fld (fld_UV_INT_START,   (CARD8)( (0.10 * dbLPeriod * dbFsamp / 2.0) + 0.5 - 32 ));
+/*            WriteRT_fld (fld_UV_INT_START,   (uint8_t)( (0.12 * dbLPeriod * dbFsamp / 2.0) + 0.5 - 32 )); */
+            WriteRT_fld (fld_UV_INT_START,   (uint8_t)( (0.10 * dbLPeriod * dbFsamp / 2.0) + 0.5 - 32 ));
 
             break;
         default:
@@ -1381,37 +1383,37 @@ void RT_SetStandard (TheatrePtr t, CARD16 wStandard)
     }
 
     /* Set the following values according to the formulas */
-    WriteRT_fld (fld_HS_LINE_TOTAL, (CARD16)((dbLPeriod * dbFsamp / 2.0) +0.5));
+    WriteRT_fld (fld_HS_LINE_TOTAL, (uint16_t)((dbLPeriod * dbFsamp / 2.0) +0.5));
     /* According to Ivo PAL/SECAM needs different treatment */
     switch(wStandard & 0x00FF)
     {
         case DEC_PAL:
 	case DEC_SECAM:
-			WriteRT_fld (fld_MIN_PULSE_WIDTH, (CARD8)(0.5 * dbSPPeriod * dbFsamp/2.0));
-			WriteRT_fld (fld_MAX_PULSE_WIDTH, (CARD8)(1.5 * dbSPPeriod * dbFsamp/2.0));
-    			WriteRT_fld (fld_WIN_OPEN_LIMIT, (CARD16)(((dbLPeriod * dbFsamp / 4.0) + 0.5) - 16));
-  		    	WriteRT_fld (fld_WIN_CLOSE_LIMIT, (CARD16)(2.39 * dbSPPeriod * dbFsamp / 2.0));
-		/*    	WriteRT_fld (fld_VS_FIELD_IDLOCATION,   (CARD16)RT_PAL_FIELD_IDLOCATION); */
+			WriteRT_fld (fld_MIN_PULSE_WIDTH, (uint8_t)(0.5 * dbSPPeriod * dbFsamp/2.0));
+			WriteRT_fld (fld_MAX_PULSE_WIDTH, (uint8_t)(1.5 * dbSPPeriod * dbFsamp/2.0));
+    			WriteRT_fld (fld_WIN_OPEN_LIMIT, (uint16_t)(((dbLPeriod * dbFsamp / 4.0) + 0.5) - 16));
+  		    	WriteRT_fld (fld_WIN_CLOSE_LIMIT, (uint16_t)(2.39 * dbSPPeriod * dbFsamp / 2.0));
+		/*    	WriteRT_fld (fld_VS_FIELD_IDLOCATION,   (uint16_t)RT_PAL_FIELD_IDLOCATION); */
 		/*      According to docs the following value will work right, though the resulting stream deviates
 		        slightly from CCIR..., in particular the value that was before will do nuts to VCRs in
 			pause/rewind state. */
-		    	WriteRT_fld (fld_VS_FIELD_IDLOCATION,   (CARD16)0x01);
+		    	WriteRT_fld (fld_VS_FIELD_IDLOCATION,   (uint16_t)0x01);
 		    	WriteRT_fld (fld_HS_PLL_SGAIN, 2);
 			break;
   	case DEC_NTSC:
-			WriteRT_fld (fld_MIN_PULSE_WIDTH, (CARD8)(0.75 * dbSPPeriod * dbFsamp/2.0));
-    			WriteRT_fld (fld_MAX_PULSE_WIDTH, (CARD8)(1.25 * dbSPPeriod * dbFsamp/2.0));
-    			WriteRT_fld (fld_WIN_OPEN_LIMIT, (CARD16)(((dbLPeriod * dbFsamp / 4.0) + 0.5) - 16));
-    			WriteRT_fld (fld_WIN_CLOSE_LIMIT, (CARD16)(1.15 * dbSPPeriod * dbFsamp / 2.0));
-    		/*	WriteRT_fld (fld_VS_FIELD_IDLOCATION,   (CARD16)fld_VS_FIELD_IDLOCATION_def);*/
+			WriteRT_fld (fld_MIN_PULSE_WIDTH, (uint8_t)(0.75 * dbSPPeriod * dbFsamp/2.0));
+    			WriteRT_fld (fld_MAX_PULSE_WIDTH, (uint8_t)(1.25 * dbSPPeriod * dbFsamp/2.0));
+    			WriteRT_fld (fld_WIN_OPEN_LIMIT, (uint16_t)(((dbLPeriod * dbFsamp / 4.0) + 0.5) - 16));
+    			WriteRT_fld (fld_WIN_CLOSE_LIMIT, (uint16_t)(1.15 * dbSPPeriod * dbFsamp / 2.0));
+    		/*	WriteRT_fld (fld_VS_FIELD_IDLOCATION,   (uint16_t)fld_VS_FIELD_IDLOCATION_def);*/
 		/*      I think the default value was the same as the one here.. does not hurt to hardcode it */
-			WriteRT_fld (fld_VS_FIELD_IDLOCATION,   (CARD16)0x01);
+			WriteRT_fld (fld_VS_FIELD_IDLOCATION,   (uint16_t)0x01);
 
      }
 
-    WriteRT_fld (fld_VS_FRAME_TOTAL,   (CARD16)(wFrameTotal) + 10);
-    WriteRT_fld (fld_BLACK_INT_START,   (CARD8)((0.09 * dbLPeriod * dbFsamp / 2.0) - 32 ));
-    WriteRT_fld (fld_SYNC_TIP_START,   (CARD16)((dbLPeriod * dbFsamp / 2.0 + 0.5) - 28 ));
+    WriteRT_fld (fld_VS_FRAME_TOTAL,   (uint16_t)(wFrameTotal) + 10);
+    WriteRT_fld (fld_BLACK_INT_START,   (uint8_t)((0.09 * dbLPeriod * dbFsamp / 2.0) - 32 ));
+    WriteRT_fld (fld_SYNC_TIP_START,   (uint16_t)((dbLPeriod * dbFsamp / 2.0 + 0.5) - 28 ));
 
     return;
 
@@ -1420,19 +1422,19 @@ void RT_SetStandard (TheatrePtr t, CARD16 wStandard)
 
 
 /****************************************************************************
- * RT_SetCombFilter (CARD16 wStandard, CARD16 wConnector)                       *
+ * RT_SetCombFilter (uint16_t wStandard, uint16_t wConnector)                       *
  *  Function: sets the input comb filter based on the standard and          *
  *            connector being used (composite vs. svideo)                   *
- *    Inputs: CARD16 wStandard - input standard (NTSC, PAL, SECAM)            *
- *            CARD16 wConnector - COMPOSITE, SVIDEO                           *
+ *    Inputs: uint16_t wStandard - input standard (NTSC, PAL, SECAM)            *
+ *            uint16_t wConnector - COMPOSITE, SVIDEO                           *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetCombFilter (TheatrePtr t, CARD16 wStandard, CARD16 wConnector)
+static void RT_SetCombFilter (TheatrePtr t, uint16_t wStandard, uint16_t wConnector)
 {
-    CARD32 dwComb_Cntl0=0;
-    CARD32 dwComb_Cntl1=0;
-    CARD32 dwComb_Cntl2=0;
-    CARD32 dwComb_Line_Length=0;
+    uint32_t dwComb_Cntl0=0;
+    uint32_t dwComb_Cntl1=0;
+    uint32_t dwComb_Cntl2=0;
+    uint32_t dwComb_Line_Length=0;
 
     switch (wConnector)
     {
@@ -1558,28 +1560,28 @@ void RT_SetCombFilter (TheatrePtr t, CARD16 wStandard, CARD16 wConnector)
 
 
 /****************************************************************************
- * RT_SetOutputVideoSize (CARD16 wHorzSize, CARD16 wVertSize,                   *
- *                          CARD8 fCC_On, CARD8 fVBICap_On)                   *
+ * RT_SetOutputVideoSize (uint16_t wHorzSize, uint16_t wVertSize,                   *
+ *                          uint8_t fCC_On, uint8_t fVBICap_On)                   *
  *  Function: sets the output video size for the Rage Theatre video in      *
- *    Inputs: CARD16 wHorzSize - width of output in pixels                    *
- *            CARD16 wVertSize - height of output in pixels (lines)           *
- *            CARD8 fCC_On - enable CC output                                *
- *            CARD8 fVBI_Cap_On - enable VBI capture                         *
+ *    Inputs: uint16_t wHorzSize - width of output in pixels                    *
+ *            uint16_t wVertSize - height of output in pixels (lines)           *
+ *            uint8_t fCC_On - enable CC output                                *
+ *            uint8_t fVBI_Cap_On - enable VBI capture                         *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetOutputVideoSize (TheatrePtr t, CARD16 wHorzSize, CARD16 wVertSize, CARD8 fCC_On, CARD8 fVBICap_On)
+_X_EXPORT void RT_SetOutputVideoSize (TheatrePtr t, uint16_t wHorzSize, uint16_t wVertSize, uint8_t fCC_On, uint8_t fVBICap_On)
 {
-    CARD32  dwHwinStart=0;
-    CARD32  dwHScaleRatio=0;
-    CARD32  dwHActiveLength=0;
-    CARD32  dwVwinStart=0;
-    CARD32  dwVScaleRatio=0;
-    CARD32  dwVActiveLength=0;
-    CARD32  dwTempRatio=0;
-    CARD32  dwEvenFieldOffset=0;
-    CARD32  dwOddFieldOffset=0;
-    CARD32  dwXin=0;
-    CARD32  dwYin=0;
+    uint32_t  dwHwinStart=0;
+    uint32_t  dwHScaleRatio=0;
+    uint32_t  dwHActiveLength=0;
+    uint32_t  dwVwinStart=0;
+    uint32_t  dwVScaleRatio=0;
+    uint32_t  dwVActiveLength=0;
+    uint32_t  dwTempRatio=0;
+    uint32_t  dwEvenFieldOffset=0;
+    uint32_t  dwOddFieldOffset=0;
+    uint32_t  dwXin=0;
+    uint32_t  dwYin=0;
 
     if (fVBICap_On)
     {
@@ -1626,21 +1628,21 @@ void RT_SetOutputVideoSize (TheatrePtr t, CARD16 wHorzSize, CARD16 wVertSize, CA
             dwHwinStart = RT_NTSCM_H_IN_START;
             dwXin = (ReadRT_fld (fld_H_ACTIVE_END) - ReadRT_fld (fld_H_ACTIVE_START)); /*tempscaler*/
             dwXin = RT_NTSC_H_ACTIVE_SIZE;
-            dwHScaleRatio = (CARD32) ((long) dwXin * 65536L / wHorzSize);
+            dwHScaleRatio = (uint32_t) ((long) dwXin * 65536L / wHorzSize);
             dwHScaleRatio = dwHScaleRatio & 0x001FFFFF; /*21 bit number;*/
             dwHActiveLength = wHorzSize;
             break;
         case (DEC_PAL):
             dwHwinStart = RT_PAL_H_IN_START;
             dwXin = RT_PAL_H_ACTIVE_SIZE;
-            dwHScaleRatio = (CARD32) ((long) dwXin * 65536L / wHorzSize);
+            dwHScaleRatio = (uint32_t) ((long) dwXin * 65536L / wHorzSize);
             dwHScaleRatio = dwHScaleRatio & 0x001FFFFF; /*21 bit number;*/
             dwHActiveLength = wHorzSize;
             break;
         case (DEC_SECAM):
             dwHwinStart = RT_SECAM_H_IN_START;
             dwXin = RT_SECAM_H_ACTIVE_SIZE;
-            dwHScaleRatio = (CARD32) ((long) dwXin * 65536L / wHorzSize);
+            dwHScaleRatio = (uint32_t) ((long) dwXin * 65536L / wHorzSize);
             dwHScaleRatio = dwHScaleRatio & 0x001FFFFF; /*21 bit number;*/
             dwHActiveLength = wHorzSize;
             break;
@@ -1655,24 +1657,24 @@ void RT_SetOutputVideoSize (TheatrePtr t, CARD16 wHorzSize, CARD16 wVertSize, CA
             dwVwinStart = RT_NTSCM_V_IN_START;
             /* dwYin = (ReadRT_fld (fld_V_ACTIVE_END) - ReadRT_fld (fld_V_ACTIVE_START)); */ /*tempscaler*/
 	    dwYin = RT_NTSCM_V_ACTIVE_SIZE;
-            dwTempRatio = (CARD32)((long) wVertSize / dwYin);
-            dwVScaleRatio = (CARD32)((long)wVertSize * 2048L / dwYin);
+            dwTempRatio = (uint32_t)((long) wVertSize / dwYin);
+            dwVScaleRatio = (uint32_t)((long)wVertSize * 2048L / dwYin);
             dwVScaleRatio = dwVScaleRatio & 0x00000FFF;
             dwVActiveLength = wVertSize/2;
             break;
         case (DEC_PAL):
             dwVwinStart = RT_PAL_V_IN_START;
             dwYin = RT_PAL_V_ACTIVE_SIZE;
-            dwTempRatio = (CARD32)(wVertSize/dwYin);
-            dwVScaleRatio = (CARD32)((long)wVertSize * 2048L / dwYin);
+            dwTempRatio = (uint32_t)(wVertSize/dwYin);
+            dwVScaleRatio = (uint32_t)((long)wVertSize * 2048L / dwYin);
             dwVScaleRatio = dwVScaleRatio & 0x00000FFF;
             dwVActiveLength = wVertSize/2;
             break;
         case (DEC_SECAM):
             dwVwinStart = RT_SECAM_V_IN_START;
             dwYin = RT_SECAM_V_ACTIVE_SIZE;
-            dwTempRatio = (CARD32) (wVertSize / dwYin);
-            dwVScaleRatio = (CARD32) ((long) wVertSize  * 2048L / dwYin);
+            dwTempRatio = (uint32_t) (wVertSize / dwYin);
+            dwVScaleRatio = (uint32_t) ((long) wVertSize  * 2048L / dwYin);
             dwVScaleRatio = dwVScaleRatio & 0x00000FFF;
             dwVActiveLength = wVertSize/2;
             break;
@@ -1683,14 +1685,14 @@ void RT_SetOutputVideoSize (TheatrePtr t, CARD16 wHorzSize, CARD16 wVertSize, CA
     /*4. Set up offset based on if interlaced or not:*/
     if (t->wInterlaced == RT_DECINTERLACED)
     {
-        dwEvenFieldOffset = (CARD32) ((1.0 - ((double) wVertSize / (double) dwYin)) * 512.0);
+        dwEvenFieldOffset = (uint32_t) ((1.0 - ((double) wVertSize / (double) dwYin)) * 512.0);
         dwOddFieldOffset  =  dwEvenFieldOffset;
         WriteRT_fld (fld_V_DEINTERLACE_ON, 0x1);
     }
     else
     {
-        dwEvenFieldOffset = (CARD32)(dwTempRatio * 512.0);
-        dwOddFieldOffset  = (CARD32)(2048 - dwEvenFieldOffset);
+        dwEvenFieldOffset = (uint32_t)(dwTempRatio * 512.0);
+        dwOddFieldOffset  = (uint32_t)(2048 - dwEvenFieldOffset);
         WriteRT_fld (fld_V_DEINTERLACE_ON, 0x0);
     }
 
@@ -1716,14 +1718,14 @@ void RT_SetOutputVideoSize (TheatrePtr t, CARD16 wHorzSize, CARD16 wVertSize, CA
 
 
 /****************************************************************************
- * CalculateCrCbGain (double *CrGain, double *CbGain, CARD16 wStandard)       *
+ * CalculateCrCbGain (double *CrGain, double *CbGain, uint16_t wStandard)       *
  *  Function:                                                               *
  *    Inputs: double *CrGain -
  *            double *CbGain -
- *            CARD16 wStandard - input standard (NTSC, PAL, SECAM)            *
+ *            uint16_t wStandard - input standard (NTSC, PAL, SECAM)            *
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void CalculateCrCbGain (TheatrePtr t, double *CrGain, double *CbGain, CARD16 wStandard)
+static void CalculateCrCbGain (TheatrePtr t, double *CrGain, double *CbGain, uint16_t wStandard)
 {
     #define UVFLTGAIN   1.5
     #define FRMAX       280000.0
@@ -1773,15 +1775,15 @@ void CalculateCrCbGain (TheatrePtr t, double *CrGain, double *CbGain, CARD16 wSt
 
 
 /****************************************************************************
- * RT_SetConnector (CARD16 wStandard, int tunerFlag)                          *
+ * RT_SetConnector (uint16_t wStandard, int tunerFlag)                          *
  *  Function:
- *    Inputs: CARD16 wStandard - input standard (NTSC, PAL, SECAM)            *
+ *    Inputs: uint16_t wStandard - input standard (NTSC, PAL, SECAM)            *
  *            int tunerFlag
  *   Outputs: NONE                                                          *
  ****************************************************************************/
-void RT_SetConnector (TheatrePtr t, CARD16 wConnector, int tunerFlag)
+void RT_SetConnector (TheatrePtr t, uint16_t wConnector, int tunerFlag)
 {
-    CARD32 dwTempContrast=0;
+    uint32_t dwTempContrast=0;
     int i;
     long counter;
 
@@ -1796,7 +1798,9 @@ void RT_SetConnector (TheatrePtr t, CARD16 wConnector, int tunerFlag)
     	counter++;
 	}
     dwTempContrast = ReadRT_fld (fld_LP_CONTRAST);
-    if(counter>=10000)xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "Rage Theatre: timeout waiting for line count (%ld)\n", ReadRT_fld (fld_VS_LINE_COUNT));
+    if(counter>=10000)xf86DrvMsg(t->VIP->scrnIndex, X_INFO,
+				 "Rage Theatre: timeout waiting for line count (%u)\n",
+				 (unsigned)ReadRT_fld (fld_VS_LINE_COUNT));
 
 
     WriteRT_fld (fld_LP_CONTRAST, 0x0);
@@ -1851,7 +1855,9 @@ void RT_SetConnector (TheatrePtr t, CARD16 wConnector, int tunerFlag)
     	counter++;
 	}
     WriteRT_fld (fld_LP_CONTRAST, dwTempContrast);
-    if(counter>=10000)xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "Rage Theatre: timeout waiting for line count (%ld)\n", ReadRT_fld (fld_VS_LINE_COUNT));
+    if(counter>=10000)xf86DrvMsg(t->VIP->scrnIndex, X_INFO,
+				 "Rage Theatre: timeout waiting for line count (%u)\n",
+				 (unsigned)ReadRT_fld (fld_VS_LINE_COUNT));
 
 
 
@@ -1860,9 +1866,9 @@ void RT_SetConnector (TheatrePtr t, CARD16 wConnector, int tunerFlag)
 } /* RT_SetConnector ()...*/
 
 
-void InitTheatre(TheatrePtr t)
+_X_EXPORT void InitTheatre(TheatrePtr t)
 {
-    CARD32 data;
+    uint32_t data;
 
     
     /* 0 reset Rage Theatre */
@@ -1925,7 +1931,7 @@ void InitTheatre(TheatrePtr t)
 }
 
 
-void ShutdownTheatre(TheatrePtr t)
+_X_EXPORT void ShutdownTheatre(TheatrePtr t)
 {
     WriteRT_fld (fld_VIN_ASYNC_RST, RT_ASYNC_DISABLE);
     WriteRT_fld (fld_VINRST       , RT_VINRST_RESET);
@@ -1934,15 +1940,16 @@ void ShutdownTheatre(TheatrePtr t)
     t->mode=MODE_UNINITIALIZED;
 }
 
-void DumpRageTheatreRegs(TheatrePtr t)
+_X_EXPORT void DumpRageTheatreRegs(TheatrePtr t)
 {
     int i;
-    CARD32 data;
+    uint32_t data;
     
     for(i=0;i<0x900;i+=4)
     {
        RT_regr(i, &data);
-       xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "register 0x%04x is equal to 0x%08lx\n", i, data);
+       xf86DrvMsg(t->VIP->scrnIndex, X_INFO,
+		  "register 0x%04x is equal to 0x%08x\n", i, (unsigned)data);
     }   
 
 }
@@ -1950,7 +1957,7 @@ void DumpRageTheatreRegs(TheatrePtr t)
 void DumpRageTheatreRegsByName(TheatrePtr t)
 {
     int i;
-    CARD32 data;
+    uint32_t data;
     struct { char *name; long addr; } rt_reg_list[]={
     { "ADC_CNTL                ", 0x0400 },
     { "ADC_DEBUG               ", 0x0404 },
@@ -2147,12 +2154,14 @@ void DumpRageTheatreRegsByName(TheatrePtr t)
 
     for(i=0; rt_reg_list[i].name!=NULL;i++){
         RT_regr(rt_reg_list[i].addr, &data);
-        xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "register (0x%04lx) %s is equal to 0x%08lx\n", rt_reg_list[i].addr, rt_reg_list[i].name, data);
+        xf86DrvMsg(t->VIP->scrnIndex, X_INFO,
+		   "register (0x%04lx) %s is equal to 0x%08x\n",
+		   rt_reg_list[i].addr, rt_reg_list[i].name, (unsigned)data);
     	}
 
 }
 
-void ResetTheatreRegsForNoTVout(TheatrePtr t)
+_X_EXPORT void ResetTheatreRegsForNoTVout(TheatrePtr t)
 {
      RT_regw(VIP_CLKOUT_CNTL, 0x0); 
      RT_regw(VIP_HCOUNT, 0x0); 
@@ -2166,7 +2175,7 @@ void ResetTheatreRegsForNoTVout(TheatrePtr t)
 }
 
 
-void ResetTheatreRegsForTVout(TheatrePtr t)
+_X_EXPORT void ResetTheatreRegsForTVout(TheatrePtr t)
 {
 /*    RT_regw(VIP_HW_DEBUG, 0x200);   */
 /*     RT_regw(VIP_INT_CNTL, 0x0); 

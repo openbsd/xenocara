@@ -22,18 +22,9 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-ati],
-        6.6.3,
+        6.9.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-ati)
-AC_DEFINE_UNQUOTED([ATI_VERSION_MAJOR],
-		   [$(echo $PACKAGE_VERSION | sed -e 's/^\([[0-9]]\)\.[[0-9]]\.[[0-9]]/\1/')],
-		   [Major version])
-AC_DEFINE_UNQUOTED([ATI_VERSION_MINOR],
-		   [$(echo $PACKAGE_VERSION | sed -e 's/^[[0-9]]\.\([[0-9]]\)\.[[0-9]]/\1/')],
-		   [Minor version])
-AC_DEFINE_UNQUOTED([ATI_VERSION_PATCH],
-		   [$(echo $PACKAGE_VERSION | sed -e 's/^[[0-9]]\.[[0-9]]\.\([[0-9]]\)/\1/')],
-		   [Patch version])
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
@@ -47,6 +38,10 @@ AM_MAINTAINER_MODE
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CC
+
+if test "x$GCC" = "xyes"; then
+	CPPFLAGS="$CPPFLAGS -Wall"
+fi
 
 AH_TOP([#include "xorg-server.h"])
 
@@ -63,9 +58,14 @@ AC_ARG_ENABLE(dri, AC_HELP_STRING([--disable-dri],
 
 AC_ARG_ENABLE(exa,
               AC_HELP_STRING([--disable-exa],
-                             [Disable EXA support [[default enabled]]]),
+                             [Disable EXA support [[default=enabled]]]),
               [EXA="$enableval"],
               [EXA=yes])
+
+AC_ARG_WITH(xserver-source,AC_HELP_STRING([--with-xserver-source=XSERVER_SOURCE],
+                                          [Path to X server source tree]),
+                           [ XSERVER_SOURCE="$withval" ],
+                           [ XSERVER_SOURCE="" ])
 
 # Checks for extensions
 XORG_DRIVER_CHECK_EXT(XINERAMA, xineramaproto)
@@ -76,7 +76,7 @@ XORG_DRIVER_CHECK_EXT(XF86MISC, xf86miscproto)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XORG, [xorg-server xproto fontsproto $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.2 xproto fontsproto $REQUIRED_MODULES])
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 # Checks for libraries.
@@ -91,6 +91,8 @@ if test "$DRI" != no; then
                       [have_sarea_h="yes"], [have_sarea_h="no"])
 	AC_CHECK_FILE([${sdkdir}/dristruct.h],
                       [have_dristruct_h="yes"], [have_dristruct_h="no"])
+	AC_CHECK_FILE([${sdkdir}/damage.h],
+                      [have_damage_h="yes"], [have_damage_h="no"])
 fi
 
 AC_MSG_CHECKING([whether to include DRI support])
@@ -107,78 +109,18 @@ AC_MSG_RESULT([$DRI])
 
 AM_CONDITIONAL(DRI, test x$DRI = xyes)
 if test "$DRI" = yes; then
-	PKG_CHECK_MODULES(DRI, [libdrm >= 2.0 xf86driproto])
+	PKG_CHECK_MODULES(DRI, [libdrm >= 2.2 xf86driproto])
         AC_DEFINE(XF86DRI,1,[Enable DRI driver support])
         AC_DEFINE(XF86DRI_DEVEL,1,[Enable developmental DRI driver support])
+	if test "$have_damage_h" = yes; then
+		AC_DEFINE(DAMAGE,1,[Use Damage extension])
+	fi
 fi
 
-# Note that this is sort of inverted from drivers/ati/Imakefile in
-# the monolith.  We test for foo, not for !foo (i.e. ATMISC_CPIO, not
-# ATIMISC_AVOID_CPIO), but the defines are negative.  So beware.  Oh yeah,
-# TV_OUT is the special case where it's a positive define, not AVOID_TV_OUT.
-
-# AVOID_CPIO: Only x86, amd64, and alpha are cool with CPIO.  It needs a
-# little-endian, undirected PIO space of at least 64kB.
-# AVOID_NON_PCI: Platforms which don't deal with PCI master aborts should
-# stick to PCI-only probing, stick their fingers in their ears, and pretend
-# that ISA cards simply don't exist.
-# AVOID_DGA: ???
-# ATI_TV_OUT: This only works on x86.
-
-ATIMISC_CPIO=no
-ATIMISC_NON_PCI=yes
-ATIMISC_DGA=yes
-ATIMISC_TV_OUT=no
-
-case $host_cpu in
-  i*86)
-    ATIMISC_TV_OUT=yes
-    ATIMISC_CPIO=yes
-    ;;
-  x86_64|amd64|alpha|ia64)
-    ATIMISC_CPIO=yes
-    ;;
-  sparc)
-    ATIMISC_DGA=no
-    ;;
-  powerpc)
-    ATIMISC_NON_PCI=no
-    ;;
-  *)
-    ;;
-esac
-
-AC_MSG_CHECKING([whether to include PIO support])
-AM_CONDITIONAL(ATIMISC_CPIO, test "x$ATIMISC_CPIO" = xyes)
-if test "x$ATIMISC_CPIO" = xyes; then
-	AC_MSG_RESULT([yes, PIO])
-else
-	AC_DEFINE(AVOID_CPIO, 1, [Avoid PIO and use MMIO for atimisc.])
-	AC_MSG_RESULT([no, MMIO])
-fi
-
-AC_MSG_CHECKING([whether to include support for non-PCI devices])
-AM_CONDITIONAL(ATIMISC_NON_PCI, test "x$ATIMISC_NON_PCI" = xyes)
-if test "x$ATI_AVOID_NON_PCI" = xyes; then
-	AC_MSG_RESULT([yes, PCI and ISA])
-else
-	AC_DEFINE(AVOID_NON_PCI, 1, [Only probe PCI cards; do not probe ISA.])
-	AC_MSG_RESULT([no, PCI only])
-fi
-
-AC_MSG_CHECKING([whether to include DGA support])
-AC_MSG_RESULT([$ATIMISC_DGA])
-AM_CONDITIONAL(ATIMISC_DGA, test "x$ATIMISC_DGA" = xyes)
-if ! test "x$ATIMISC_DGA" = xyes; then
-	AC_DEFINE(AVOID_DGA, 1, [Do not build DGA support.])
-fi
-
-AC_MSG_CHECKING([whether to include TV Out support])
-AC_MSG_RESULT([$ATIMISC_TV_OUT])
-AM_CONDITIONAL(ATIMISC_TV_OUT, test "x$ATIMISC_TV_OUT" = xyes)
-if test "x$ATIMISC_TV_OUT" = xyes; then
-	AC_DEFINE(TV_OUT, 1, [Build TV-Out support for atimisc.])
-fi
+save_CFLAGS="$CFLAGS"
+CFLAGS="$XORG_CFLAGS"
+AC_CHECK_HEADER(xf86Modes.h,[XMODES=yes],[XMODES=no],[#include "xorg-server.h"])
+CFLAGS="$save_CFLAGS"
 
 AC_DEFINE(USE_XAA, 1, [Build support for XAA])
 
@@ -214,9 +156,158 @@ if test "x$have_exa_h" = xyes; then
                 AC_DEFINE(USE_EXA, 1, [Build support for Exa])
         fi
 fi
+
+AC_CHECK_DECL(xf86XVFillKeyHelperDrawable,
+	      [AC_DEFINE(HAVE_XV_DRAWABLE_HELPER, 1, [Have xf86XVFillKeyHelperDrawable prototype])],
+	      [],
+	      [#include <xf86xv.h>])
+
+AC_CHECK_DECL(xf86ModeBandwidth,
+	      [AC_DEFINE(HAVE_XF86MODEBANDWIDTH, 1, [Have xf86ModeBandwidth prototype])],
+	      [],
+	      [#include "xorg-server.h"
+	       #include "xf86Modes.h"])
+
+AC_CHECK_DECL(xf86_crtc_clip_video_helper,
+	      [AC_DEFINE(HAVE_XF86CRTCCLIPVIDEOHELPER, 1, [Have xf86_crtc_clip_video_helper prototype])],
+	      [],
+	      [#include <X11/Xmd.h>
+	       #include "xorg-server.h"
+	       #include "xf86i2c.h"
+	       #include "xf86Crtc.h"])
+
+AC_CHECK_DECL(xf86RotateFreeShadow,
+	      [AC_DEFINE(HAVE_FREE_SHADOW, 1, [have new FreeShadow API])],
+	      [],
+	      [#include <xorg-server.h>
+               #include <windowstr.h>
+	       #include <xf86Crtc.h>])
+
+AC_CHECK_DECL(pci_device_enable,
+	      [AC_DEFINE(HAVE_PCI_DEVICE_ENABLE, 1, [Have pci_device_enable prototype])],
+	      [],
+	      [#include <pciaccess.h>])
+
+AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
+	      [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
+	      [#include "xorg-server.h"])
+
+AM_CONDITIONAL(XMODES, test "x$XMODES" = xno)
+
+if test "x$XSERVER_SOURCE" = x; then
+        if test -d ../../xserver; then
+                XSERVER_SOURCE="`cd ../../xserver && pwd`"
+        fi
+fi
+
+if test -d "$XSERVER_SOURCE"; then
+        case "$XSERVER_SOURCE" in
+        /*)
+                ;;
+        *)
+                XSERVER_SOURCE="`cd $XSERVER_SOURCE && pwd`"
+        esac
+        if test -f src/modes/xf86Modes.h; then
+                :
+        else
+                ln -sf $XSERVER_SOURCE/hw/xfree86/modes src/modes
+        fi
+
+        if test -f src/parser/xf86Parser.h; then
+                :
+        else
+                ln -sf $XSERVER_SOURCE/hw/xfree86/parser src/parser
+        fi
+fi
+if test "x$XMODES" = xyes; then
+        AC_MSG_NOTICE([X server has new mode code])
+        AC_DEFINE(XMODES, 1,[X server has built-in mode code])
+        XMODES_CFLAGS=
+else
+        if test -f src/modes/xf86Modes.h -a -f src/parser/xf86Parser.h; then
+                AC_MSG_NOTICE([X server is missing new mode code, using local copy])
+        else
+                AC_MSG_ERROR([Must have X server >= 1.3 source tree for mode setting code. Please specify --with-xserver-source])
+        fi
+        XMODES_CFLAGS='-DXF86_MODES_RENAME -I$(top_srcdir)/src -I$(top_srcdir)/src/modes -I$(top_srcdir)/src/parser'
+fi
+
+AC_SUBST([XMODES_CFLAGS])
+
 CPPFLAGS="$SAVE_CPPFLAGS"
 
 AM_CONDITIONAL(USE_EXA, test "x$USE_EXA" = xyes)
+
+if test "x$XSERVER_LIBPCIACCESS" = xyes; then
+    PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.8.0])
+    XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
+fi
+AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
+
+# Checks for headers/macros for byte swapping
+# Known variants:
+#	<byteswap.h> bswap_16, bswap_32, bswap_64  (glibc)
+#	<sys/endian.h> __swap16, __swap32, __swap64 (OpenBSD)
+#	<sys/endian.h> bswap16, bswap32, bswap64 (other BSD's)
+#	and a fallback to local macros if none of the above are found
+
+# if <byteswap.h> is found, assume it's the correct version
+AC_CHECK_HEADERS([byteswap.h])
+
+# if <sys/endian.h> is found, have to check which version
+AC_CHECK_HEADER([sys/endian.h], [HAVE_SYS_ENDIAN_H="yes"], [HAVE_SYS_ENDIAN_H="no"])
+
+if test "x$HAVE_SYS_ENDIAN_H" = "xyes" ; then
+	AC_MSG_CHECKING([for __swap16 variant of <sys/endian.h> byteswapping macros])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([
+#include <sys/types.h>
+#include <sys/endian.h>
+ ], [
+int a = 1, b;
+b = __swap16(a);
+ ])
+], [SYS_ENDIAN__SWAP='yes'], [SYS_ENDIAN__SWAP='no'])
+	AC_MSG_RESULT([$SYS_ENDIAN__SWAP])
+
+	AC_MSG_CHECKING([for bswap16 variant of <sys/endian.h> byteswapping macros])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([
+#include <sys/types.h>
+#include <sys/endian.h>
+ ], [
+int a = 1, b;
+b = bswap16(a);
+ ])
+], [SYS_ENDIAN_BSWAP='yes'], [SYS_ENDIAN_BSWAP='no'])
+	AC_MSG_RESULT([$SYS_ENDIAN_BSWAP])
+
+    	if test "$SYS_ENDIAN_BSWAP" = "yes" ; then
+		USE_SYS_ENDIAN_H=yes
+		BSWAP=bswap
+	else	
+	    	if test "$SYS_ENDIAN__SWAP" = "yes" ; then
+			USE_SYS_ENDIAN_H=yes
+			BSWAP=__swap
+		else
+			USE_SYS_ENDIAN_H=no
+		fi
+	fi
+
+	if test "$USE_SYS_ENDIAN_H" = "yes" ; then
+	    AC_DEFINE([USE_SYS_ENDIAN_H], 1, 
+		[Define to use byteswap macros from <sys/endian.h>])
+	    AC_DEFINE_UNQUOTED([bswap_16], ${BSWAP}16, 
+			[Define to 16-bit byteswap macro])
+	    AC_DEFINE_UNQUOTED([bswap_32], ${BSWAP}32, 
+			[Define to 32-bit byteswap macro])
+	    AC_DEFINE_UNQUOTED([bswap_64], ${BSWAP}64, 
+			[Define to 64-bit byteswap macro])
+	fi
+fi
+
+case $host_os in
+  *linux*)
+  AC_DEFINE(FGL_LINUX, 1, [Use linux pragma pack]) ;;
+esac
 
 AC_SUBST([XORG_CFLAGS])
 AC_SUBST([DRI_CFLAGS])
@@ -228,6 +319,18 @@ AC_SUBST([DRIVER_NAME])
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
 XORG_CHECK_LINUXDOC
+
+AC_MSG_NOTICE(
+[The atimisc sub-driver has been split out to xf86-video-mach64:]
+[    git://anongit.freedesktop.org/git/xorg/driver/xf86-video-mach64]
+[Please install that driver as well for mach64-based cards.]
+)
+
+AC_MSG_NOTICE(
+[The r128 sub-driver has been split out to xf86-video-r128:]
+[    git://anongit.freedesktop.org/git/xorg/driver/xf86-video-r128]
+[Please install that driver as well for rage128-based cards.]
+)
 
 AC_OUTPUT([
 	Makefile
