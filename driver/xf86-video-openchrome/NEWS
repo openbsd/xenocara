@@ -1,0 +1,48 @@
+openchrome 0.2.902 (29/03/2008)
+-------------------------------
+* Enhancements and bug fixes:
+- libpciaccess support.
+- Fix Xv on LCD for VM800/CN700/P4M800pro.
+- Fix P4M900 fifo setting.
+- Various code clean up.
+
+* New boards:
+- ASRock P4VM900-SATA2, Asustek M2V-MX SE, Asustek P5VD2-VM SE,
+  Biostar P4M800 Pro-M7, Clevo M54xSR, Clevo M660SR, Medion Notebook MD96483,
+  Mitac 8515, Mitac 8624, MSI Fuzzy CX700/CX700D, Packard Bell EasyNote XS
+  (aka Everex Cloudbook CE1200V), VIA Epia SN.
+
+* Notes:
+- The "HWCursor" option has been removed. Hardware-accelerated cursor is on by
+  default, so this option was useless. Use the "SWCursor" option if you want to
+  disable HW cursor.
+- AGPDMA has been disabled for K8M800 and VM800/CN700/P4M800pro in this release
+  because it causes screen repaint and lockup issues. The problem has been
+  tracked down to a bug in kernel drm. All kernel >= 2.6.22 are affected. This
+  bug will be fixed in the upcoming 2.6.25-rc7. It is also fixed in current
+  drm git tree. If you're using one of the affected kernels, you'll have to
+  either keep AGPDMA disabled  or build the modules from the fixed drm git
+  tree. This option brings extra performance for some operations. To use it,
+  add 'Option "EnableAGPDMA"' in the Device section of the xorg configuration.
+
+
+openchrome 0.2.901 (02/01/2008)
+-------------------------------
+* Enhancements :
+- New pci ids : FIC CE260, Hasee F700C, MSI P4M900M / P4M900M2-F/L,
+  PCChips V21G, Biostar P4M900M-M7 SE.
+- Identify the driver as Openchrome, with CHROME as a shorthand.
+- Report chipset too in case of an unknown card id.
+- Improve P4M890 memory detection.
+- Add VT1625 720x480Under, 720x480Fit and 720x480Over NTSC modes.
+- Add VT1625 720x576 PAL mode.
+
+* Fixes :
+- Panel on CX700 needs VBE.
+- K8M890 can use DDR667.
+- Never enable IRQ on KM400, KM400A owner will still need to enable manually.
+- Various code cleanups.
+
+openchrome 0.2.900 (20/10/2007)
+-------------------------------
+- First openchrome official release.

@@ -1,0 +1,67 @@
+xf86-video-openchrome
+---------------------
+(http://www.openchrome.org)
+
+SUPPORTED CHIPSETS :
+--------------------
+- CLE266 (VT3122)
+- KM400/P4M800 (VT3205)
+- K8M800 (VT3204)
+- PM800/PM880/CN400 (VT3259)
+- VM800/CN700/P4M800Pro (VT3314)
+- CX700 (VT3324)
+- P4M890 (VT3327)
+- K8M890 (VT3336)
+- P4M900/VN896 (VT3364)
+
+
+SUPPORTED FEATURES :
+--------------------
+- Free modesetting for Unichrome and Unichrome Pro chipset.
+- VBE modesetting for everything not natively supported.
+- TV-out support.
+- EXA acceleration.
+- Hardware MPEG2 acceleration.
+
+
+IMPORTANT NOTE :
+----------------
+- The driver name is now 'openchrome', and this is what you need to use in
+  your xorg.conf now (instead of 'via'). The XvMC libraries have also been
+  renamed, to 'libchromeXvMC.so' and 'libchromeXvMCPro.so'.
+
+
+KNOWN BUGS/LIMITATIONS :
+------------------------
+* Laptop panel
+- Laptop displays for anything other than CLE266 and KM400/P4M800 are only
+  supported thru VBE calls.
+- Virtual terminal is broken on some laptop displays. Use a vesa framebuffer to
+  work around that (append vga=791 to your kernel command line, for example).
+
+* XvMC
+- The hardware MPEG4 acceleration that is present on some chipsets is not
+  implemented.
+- No XvMC support for CX700 (new, unsupported engine).
+- No XvMC support for K8M890, P4M890 and P4M900/VN896 (need to get dri working
+  for them first).
+
+* TV output
+- TV modes are hardcoded and must be choosen inside a list depending on the TV
+  encoder.
+- Outputs are dependent on each other and will use the least common
+  denominator. If you're using both VGA/LCD output and TV output, the VGA/LCD
+  output will be limited by the TV encoder (720x576@50Hz for example).
+  In other words, there is no dual screen support.
+
+* Misc.
+- Add-on and integrated TMDS encoders are not supported, except thru VBE.
+
+* Chrome9
+- Chrome9 chipsets' family (P4M900 and K8M890) currently doesn't
+  support neither AGP DMA nor 3D acceleration. 
+
+
+Please note that 3D acceleration is provided by Mesa (http://mesa3d.org) and is
+not directly related to openchrome.
+
