@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.19 2008/07/12 13:01:20 matthieu Exp $
+# $OpenBSD: Makefile,v 1.20 2008/07/12 15:50:48 oga Exp $
 
 # Broken
 # xf86-input-calcomp  xf86-input-citron  xf86-input-dmc
@@ -55,9 +55,9 @@ INPUT_DRV= ${INPUT_DRV_DEFAULT}
 VIDEO_DRV_COMMON= \
 	xf86-video-apm xf86-video-ark xf86-video-ati xf86-video-chips  \
 	xf86-video-cirrus xf86-video-cyrix xf86-video-dummy \
-	xf86-video-glint xf86-video-i128 xf86-video-mga \
+	xf86-video-glint xf86-video-i128 xf86-video-mach64 xf86-video-mga \
 	xf86-video-neomagic \
-	xf86-video-nv xf86-video-rendition xf86-video-s3 \
+	xf86-video-nv xf86-video-r128 xf86-video-rendition xf86-video-s3 \
 	xf86-video-s3virge xf86-video-savage xf86-video-siliconmotion \
 	xf86-video-sis xf86-video-tdfx xf86-video-trident \
 	xf86-video-tseng xf86-video-vesa xf86-video-vga  \
@@ -88,14 +88,15 @@ VIDEO_DRV_i386= \
 VIDEO_DRV_landisk=
 
 VIDEO_DRV_macppc= \
-	xf86-video-ati xf86-video-nv xf86-video-wsfb
+	xf86-video-ati xf86-video-mach64 xf86-video-nv xf86-video-r128 \
+	xf86-video-wsfb
 
 VIDEO_DRV_mvme68k=
 VIDEO_DRV_mvme88k=
 VIDEO_DRV_sgi= xf86-video-wsfb
 
 VIDEO_DRV_sparc64= \
-	xf86-video-ati xf86-video-wsfb
+	xf86-video-ati xf86-video-mach64 xf86-video-r128 xf86-video-wsfb
 
 VIDEO_DRV_vax=
 
