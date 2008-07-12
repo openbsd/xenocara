@@ -2,7 +2,7 @@
 # NOTE: Changing this file will not affect anything until you rerun configure.
 #
 # Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005, 2006,
-# 2007  Free Software Foundation, Inc.
+# 2007, 2008  Free Software Foundation, Inc.
 # Originally by Gordon Matzigkeit <gord@gnu.ai.mit.edu>, 1996
 #
 # This program is free software; you can redistribute it and/or modify
@@ -43,8 +43,8 @@ EXIT_FAILURE=1
 
 PROGRAM=ltmain.sh
 PACKAGE=libtool
-VERSION=1.5.24
-TIMESTAMP=" (1.1220.2.456 2007/06/24 02:25:32)"
+VERSION=1.5.26
+TIMESTAMP=" (1.1220.2.493 2008/02/01 16:58:18)"
 
 # Be Bourne compatible (taken from Autoconf:_AS_BOURNE_COMPATIBLE).
 if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then
@@ -113,14 +113,20 @@ esac
 # These must not be set unconditionally because not all systems understand
 # e.g. LANG=C (notably SCO).
 # We save the old values to restore during execute mode.
-for lt_var in LANG LC_ALL LC_CTYPE LC_COLLATE LC_MESSAGES
+lt_env=
+for lt_var in LANG LANGUAGE LC_ALL LC_CTYPE LC_COLLATE LC_MESSAGES
 do
   eval "if test \"\${$lt_var+set}\" = set; then
 	  save_$lt_var=\$$lt_var
+	  lt_env=\"$lt_var=\$$lt_var \$lt_env\"
 	  $lt_var=C
 	  export $lt_var
 	fi"
 done
+
+if test -n "$lt_env"; then
+  lt_env="env $lt_env"
+fi
 
 # Make sure IFS has a sensible default
 lt_nl='
@@ -485,7 +491,7 @@ do
     echo "\
 $PROGRAM (GNU $PACKAGE) $VERSION$TIMESTAMP
 
-Copyright (C) 2007  Free Software Foundation, Inc.
+Copyright (C) 2008  Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
     exit $?
@@ -788,6 +794,7 @@ if test -z "$show_help"; then
     *.for) xform=for ;;
     *.java) xform=java ;;
     *.obj) xform=obj ;;
+    *.sx) xform=sx ;;
     esac
 
     libobj=`$echo "X$libobj" | $Xsed -e "s/\.$xform$/.lo/"`
@@ -956,7 +963,7 @@ EOF
       $run $rm "$lobj" "$output_obj"
 
       $show "$command"
-      if $run eval "$command"; then :
+      if $run eval $lt_env "$command"; then :
       else
 	test -n "$output_obj" && $run $rm $removelist
 	exit $EXIT_FAILURE
@@ -1028,7 +1035,7 @@ EOF
       command="$command$suppress_output"
       $run $rm "$obj" "$output_obj"
       $show "$command"
-      if $run eval "$command"; then :
+      if $run eval $lt_env "$command"; then :
       else
 	$run $rm $removelist
 	exit $EXIT_FAILURE
@@ -1161,6 +1168,7 @@ EOF
     thread_safe=no
     vinfo=
     vinfo_number=no
+    single_module="${wl}-single_module"
 
     func_infer_tag $base_compile
 
@@ -1643,6 +1651,12 @@ EOF
 	compiler_flags="$compiler_flags $arg"
 	compile_command="$compile_command $arg"
 	finalize_command="$finalize_command $arg"
+	deplibs="$deplibs $arg"
+	continue
+	;;
+
+      -multi_module)
+	single_module="${wl}-multi_module"
 	continue
 	;;
 
@@ -2113,6 +2127,17 @@ EOF
 	;;
     esac
     for pass in $passes; do
+      # The preopen pass in lib mode reverses $deplibs; put it back here
+      # so that -L comes before libs that need it for instance...
+      if test "$linkmode,$pass" = "lib,link"; then
+	## FIXME: Find the place where the list is rebuilt in the wrong
+	##        order, and fix it there properly
+	tmp_deplibs=
+	for deplib in $deplibs; do
+	  tmp_deplibs="$deplib $tmp_deplibs"
+	done
+	deplibs="$tmp_deplibs"
+      fi
       if test "$linkmode,$pass" = "lib,link" ||
 	 test "$linkmode,$pass" = "prog,scan"; then
 	libs="$deplibs"
@@ -2140,6 +2165,7 @@ EOF
 	    finalize_deplibs="$deplib $finalize_deplibs"
 	  else
 	    compiler_flags="$compiler_flags $deplib"
+	    test "$linkmode" = lib && newdependency_libs="$deplib $newdependency_libs"
 	  fi
 	  continue
 	  ;;
@@ -2149,7 +2175,12 @@ EOF
 	    continue
 	  fi
 	  name=`$echo "X$deplib" | $Xsed -e 's/^-l//'`
-	  for searchdir in $newlib_search_path $lib_search_path $sys_lib_search_path $shlib_search_path; do
+	  if test "$linkmode" = lib; then
+	    searchdirs="$newlib_search_path $lib_search_path $compiler_lib_search_dirs $sys_lib_search_path $shlib_search_path"
+	  else
+	    searchdirs="$newlib_search_path $lib_search_path $sys_lib_search_path $shlib_search_path"
+	  fi
+	  for searchdir in $searchdirs; do
 	    for search_ext in .la $std_shrext .so .a; do
 	      # Search the libtool library
 	      lib="$searchdir/lib${name}${search_ext}"
@@ -2374,20 +2405,20 @@ EOF
 	    # It is a libtool convenience library, so add in its objects.
 	    convenience="$convenience $ladir/$objdir/$old_library"
 	    old_convenience="$old_convenience $ladir/$objdir/$old_library"
-	    tmp_libs=
-	    for deplib in $dependency_libs; do
-	      deplibs="$deplib $deplibs"
-              if test "X$duplicate_deps" = "Xyes" ; then
-	        case "$tmp_libs " in
-	        *" $deplib "*) specialdeplibs="$specialdeplibs $deplib" ;;
-	        esac
-              fi
-	      tmp_libs="$tmp_libs $deplib"
-	    done
 	  elif test "$linkmode" != prog && test "$linkmode" != lib; then
 	    $echo "$modename: \`$lib' is not a convenience library" 1>&2
 	    exit $EXIT_FAILURE
 	  fi
+	  tmp_libs=
+	  for deplib in $dependency_libs; do
+	    deplibs="$deplib $deplibs"
+	    if test "X$duplicate_deps" = "Xyes" ; then
+	      case "$tmp_libs " in
+	      *" $deplib "*) specialdeplibs="$specialdeplibs $deplib" ;;
+	      esac
+	    fi
+	    tmp_libs="$tmp_libs $deplib"
+	  done
 	  continue
 	fi # $pass = conv
 
@@ -2584,7 +2615,7 @@ EOF
 	   { test "$use_static_libs" = no || test -z "$old_library"; }; then
 	  if test "$installed" = no; then
 	    notinst_deplibs="$notinst_deplibs $lib"
-	    need_relink=yes
+	    test -z "$DESTDIR" && need_relink=yes
 	  fi
 	  # This is a shared library
 
@@ -2783,7 +2814,7 @@ EOF
 	    add_dir=
 	    add=
 	    # Finalize command for both is simple: just hardcode it.
-	    if test "$hardcode_direct" = yes; then
+	    if test "$hardcode_direct" = yes && test -f $libdir/$linklib; then
 	      add="$libdir/$linklib"
 	    elif test "$hardcode_minus_L" = yes; then
 	      add_dir="-L$libdir"
@@ -2945,12 +2976,18 @@ EOF
 		  # we do not want to link against static libs,
 		  # but need to link against shared
 		  eval deplibrary_names=`${SED} -n -e 's/^library_names=\(.*\)$/\1/p' $deplib`
+		  eval deplibdir=`${SED} -n -e 's/^libdir=\(.*\)$/\1/p' $deplib`
 		  if test -n "$deplibrary_names" ; then
 		    for tmp in $deplibrary_names ; do
 		      depdepl=$tmp
 		    done
-		    if test -f "$path/$depdepl" ; then
+		    if test -f "$deplibdir/$depdepl" ; then
+		      depdepl="$deplibdir/$depdepl"
+	      	    elif test -f "$path/$depdepl" ; then
 		      depdepl="$path/$depdepl"
+		    else
+		      # Can't find it, oh well...
+		      depdepl=
 		    fi
 		    # do not add paths which are already there
 		    case " $newlib_search_path " in
@@ -3098,9 +3135,10 @@ EOF
 
     case $linkmode in
     oldlib)
-      if test -n "$deplibs"; then
-	$echo "$modename: warning: \`-l' and \`-L' are ignored for archives" 1>&2
-      fi
+      case " $deplibs" in
+      *\ -l* | *\ -L*)
+	$echo "$modename: warning: \`-l' and \`-L' are ignored for archives" 1>&2 ;;
+      esac
 
       if test -n "$dlfiles$dlprefiles" || test "$dlself" != no; then
 	$echo "$modename: warning: \`-dlopen' is ignored for archives" 1>&2
@@ -3406,6 +3444,20 @@ EOF
 	  major=
 	  versuffix=
 	  verstring=""
+	else
+	  # XXX
+	  tmp=`echo $libname|sed -e 's,+,_,g' -e 's,-,_,g' -e 's,\.,_,g'`
+	  eval tmp2=\$${tmp}_ltversion
+	  if ! test -z "${SHARED_LIBS_LOG}"; then
+		  if ! test -f ${SHARED_LIBS_LOG}; then
+			  echo "# SHARED_LIBS+=	<libname>      <obsd version> # <orig version>" >${SHARED_LIBS_LOG}
+		  fi
+		  tmp4=`echo $libname|sed -e 's/^lib//'`
+		  printf "SHARED_LIBS +=\t%-20s %-8s # %s\n" "$tmp4" "$tmp2" "$versuffix" >>${SHARED_LIBS_LOG}
+	  fi
+	  if test -n "$versuffix" && test -n "$tmp2"; then
+	    versuffix=".$tmp2"
+	  fi
 	fi
 
 	# Check to see if the archive will have undefined symbols.
@@ -4237,9 +4289,10 @@ EOF
       ;;
 
     obj)
-      if test -n "$deplibs"; then
-	$echo "$modename: warning: \`-l' and \`-L' are ignored for objects" 1>&2
-      fi
+      case " $deplibs" in
+      *\ -l* | *\ -L*)
+	$echo "$modename: warning: \`-l' and \`-L' are ignored for objects" 1>&2 ;;
+      esac
 
       if test -n "$dlfiles$dlprefiles" || test "$dlself" != no; then
 	$echo "$modename: warning: \`-dlopen' is ignored for objects" 1>&2
@@ -5860,6 +5913,10 @@ relink_command=\"$relink_command\""
       esac
       install_prog="$install_prog $arg"
     done
+    case " $install_prog " in
+    *[\\\ /]cp\ *) extra_mode=;;
+    *) extra_mode='-m 644';;
+    esac
 
     if test -z "$install_prog"; then
       $echo "$modename: you must specify an install program" 1>&2
@@ -6014,8 +6071,8 @@ relink_command=\"$relink_command\""
 	  test -n "$relink_command" && srcname="$realname"T
 
 	  # Install the shared library and build the symlinks.
-	  $show "$install_prog $dir/$srcname $destdir/$realname"
-	  $run eval "$install_prog $dir/$srcname $destdir/$realname" || exit $?
+	  $show "$install_prog $extra_mode $dir/$srcname $destdir/$realname"
+	  $run eval "$install_prog $extra_mode $dir/$srcname $destdir/$realname" || exit $?
 	  if test -n "$stripme" && test -n "$striplib"; then
 	    $show "$striplib $destdir/$realname"
 	    $run eval "$striplib $destdir/$realname" || exit $?
@@ -6060,8 +6117,8 @@ relink_command=\"$relink_command\""
 	# Install the pseudo-library for information purposes.
 	name=`$echo "X$file" | $Xsed -e 's%^.*/%%'`
 	instname="$dir/$name"i
-	$show "$install_prog $instname $destdir/$name"
-	$run eval "$install_prog $instname $destdir/$name" || exit $?
+	$show "$install_prog $extra_mode $instname $destdir/$name"
+	$run eval "$install_prog $extra_mode $instname $destdir/$name" || exit $?
 
 	# Maybe install the static library, too.
 	test -n "$old_library" && staticlibs="$staticlibs $dir/$old_library"
@@ -6096,8 +6153,8 @@ relink_command=\"$relink_command\""
 
 	# Install the libtool object if requested.
 	if test -n "$destfile"; then
-	  $show "$install_prog $file $destfile"
-	  $run eval "$install_prog $file $destfile" || exit $?
+	  $show "$install_prog $extra_mode $file $destfile"
+	  $run eval "$install_prog $extra_mode $file $destfile" || exit $?
 	fi
 
 	# Install the old object if enabled.
@@ -6105,8 +6162,8 @@ relink_command=\"$relink_command\""
 	  # Deduce the name of the old-style object file.
 	  staticobj=`$echo "X$file" | $Xsed -e "$lo2o"`
 
-	  $show "$install_prog $staticobj $staticdest"
-	  $run eval "$install_prog \$staticobj \$staticdest" || exit $?
+	  $show "$install_prog $extra_mode $staticobj $staticdest"
+	  $run eval "$install_prog $extra_mode \$staticobj \$staticdest" || exit $?
 	fi
 	exit $EXIT_SUCCESS
 	;;
@@ -6320,40 +6377,6 @@ relink_command=\"$relink_command\""
     # Exit here if they wanted silent mode.
     test "$show" = : && exit $EXIT_SUCCESS
 
-    $echo "X----------------------------------------------------------------------" | $Xsed
-    $echo "Libraries have been installed in:"
-    for libdir in $libdirs; do
-      $echo "   $libdir"
-    done
-    $echo
-    $echo "If you ever happen to want to link against installed libraries"
-    $echo "in a given directory, LIBDIR, you must either use libtool, and"
-    $echo "specify the full pathname of the library, or use the \`-LLIBDIR'"
-    $echo "flag during linking and do at least one of the following:"
-    if test -n "$shlibpath_var"; then
-      $echo "   - add LIBDIR to the \`$shlibpath_var' environment variable"
-      $echo "     during execution"
-    fi
-    if test -n "$runpath_var"; then
-      $echo "   - add LIBDIR to the \`$runpath_var' environment variable"
-      $echo "     during linking"
-    fi
-    if test -n "$hardcode_libdir_flag_spec"; then
-      libdir=LIBDIR
-      eval flag=\"$hardcode_libdir_flag_spec\"
-
-      $echo "   - use the \`$flag' linker flag"
-    fi
-    if test -n "$admincmds"; then
-      $echo "   - have your system administrator run these commands:$admincmds"
-    fi
-    if test -f /etc/ld.so.conf; then
-      $echo "   - have your system administrator add LIBDIR to \`/etc/ld.so.conf'"
-    fi
-    $echo
-    $echo "See any operating system documentation about shared libraries for"
-    $echo "more information, such as the ld(1) and ld.so(8) manual pages."
-    $echo "X----------------------------------------------------------------------" | $Xsed
     exit $EXIT_SUCCESS
     ;;
 
@@ -6478,7 +6501,7 @@ relink_command=\"$relink_command\""
       fi
 
       # Restore saved environment variables
-      for lt_var in LANG LC_ALL LC_CTYPE LC_COLLATE LC_MESSAGES
+      for lt_var in LANG LANGUAGE LC_ALL LC_CTYPE LC_COLLATE LC_MESSAGES
       do
 	eval "if test \"\${save_$lt_var+set}\" = set; then
 		$lt_var=\$save_$lt_var; export $lt_var
