@@ -32,6 +32,7 @@
 #include <X11/Xutil.h>
 #include "vldXvMC.h"
 #include "via_xvmc.h"
+#include <pthread.h>
 
 typedef struct
 {
