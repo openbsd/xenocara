@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.37 2008/07/15 22:06:48 okan Exp $
+ * $Id: client.c,v 1.38 2008/07/15 22:12:09 okan Exp $
  */
 
 #include "headers.h"
@@ -333,6 +333,25 @@ client_maximize(struct client_ctx *cc)
 		cc->geom.height = sc->ymax - (Conf.gap_top + Conf.gap_bottom);
 		cc->geom.width = sc->xmax - (Conf.gap_left + Conf.gap_right);
 		cc->flags |= CLIENT_DOMAXIMIZE;
+	}
+
+	client_resize(cc);
+}
+
+void
+client_vertmaximize(struct client_ctx *cc)
+{
+	struct screen_ctx	*sc = CCTOSC(cc);
+
+	if (cc->flags & CLIENT_VMAXIMIZED) {
+		cc->geom = cc->savegeom;
+	} else {
+		if (!(cc->flags & CLIENT_MAXIMIZED))
+			cc->savegeom = cc->geom;
+		cc->geom.y = cc->bwidth + Conf.gap_top;
+		cc->geom.height = (sc->ymax - cc->bwidth * 2) -
+		    (Conf.gap_top + Conf.gap_bottom);
+		cc->flags |= CLIENT_DOVMAXIMIZE;
 	}
 
 	client_resize(cc);
@@ -690,25 +709,6 @@ client_placecalc(struct client_ctx *cc)
 			cc->geom.height = sc->ymax - Conf.gap_top;
 		}
 	}
-}
-
-void
-client_vertmaximize(struct client_ctx *cc)
-{
-	struct screen_ctx	*sc = CCTOSC(cc);
-
-	if (cc->flags & CLIENT_VMAXIMIZED) {
-		cc->geom = cc->savegeom;
-	} else {
-		if (!(cc->flags & CLIENT_MAXIMIZED))
-			cc->savegeom = cc->geom;
-		cc->geom.y = cc->bwidth + Conf.gap_top;
-		cc->geom.height = (sc->ymax - cc->bwidth * 2) -
-		    (Conf.gap_top + Conf.gap_bottom);
-		cc->flags |= CLIENT_DOVMAXIMIZE;
-	}
-
-	client_resize(cc);
 }
 
 void
