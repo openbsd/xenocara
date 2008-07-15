@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.36 2008/07/15 13:52:02 okan Exp $
+ * $Id: client.c,v 1.37 2008/07/15 22:06:48 okan Exp $
  */
 
 #include "headers.h"
@@ -321,21 +321,17 @@ client_gravitate(struct client_ctx *cc, int yes)
 void
 client_maximize(struct client_ctx *cc)
 {
+	struct screen_ctx	*sc = CCTOSC(cc);
+
 	if (cc->flags & CLIENT_MAXIMIZED) {
 		cc->geom = cc->savegeom;
 	} else {
-		XWindowAttributes rootwin_geom;
-		struct screen_ctx *sc = CCTOSC(cc);
-
-		XGetWindowAttributes(X_Dpy, sc->rootwin, &rootwin_geom);
 		if (!(cc->flags & CLIENT_VMAXIMIZED))
 			cc->savegeom = cc->geom;
 		cc->geom.x = Conf.gap_left;
 		cc->geom.y = Conf.gap_top;
-		cc->geom.height = rootwin_geom.height -
-		    (Conf.gap_top + Conf.gap_bottom);
-		cc->geom.width = rootwin_geom.width -
-		    (Conf.gap_left + Conf.gap_right);
+		cc->geom.height = sc->ymax - (Conf.gap_top + Conf.gap_bottom);
+		cc->geom.width = sc->xmax - (Conf.gap_left + Conf.gap_right);
 		cc->flags |= CLIENT_DOMAXIMIZE;
 	}
 
