@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.35 2008/07/11 14:23:30 okan Exp $
+ * $Id: client.c,v 1.36 2008/07/15 13:52:02 okan Exp $
  */
 
 #include "headers.h"
@@ -682,7 +682,7 @@ client_placecalc(struct client_ctx *cc)
 				cc->geom.x -= Conf.gap_right;
 		} else {
 			cc->geom.x = cc->bwidth + Conf.gap_left;
-			cc->geom.width = sc->xmax - cc->bwidth - Conf.gap_left;
+			cc->geom.width = sc->xmax - Conf.gap_left;
 		}
 		if (yslack >= 0) {
 			cc->geom.y = MAX(MIN(ymouse, yslack),
@@ -691,7 +691,7 @@ client_placecalc(struct client_ctx *cc)
 				cc->geom.y -= Conf.gap_bottom;
 		} else {
 			cc->geom.y = cc->bwidth + Conf.gap_top;
-			cc->geom.height = sc->ymax - cc->bwidth - Conf.gap_top;
+			cc->geom.height = sc->ymax - Conf.gap_top;
 		}
 	}
 }
