@@ -504,6 +504,10 @@
 ./usr/X11R6/lib/libXxf86dga.so.5.0
 ./usr/X11R6/lib/libXxf86misc.so.5.0
 ./usr/X11R6/lib/libXxf86vm.so.5.0
+./usr/X11R6/lib/libchromeXvMC.la
+./usr/X11R6/lib/libchromeXvMC.so.1.0
+./usr/X11R6/lib/libchromeXvMCPro.la
+./usr/X11R6/lib/libchromeXvMCPro.so.1.0
 ./usr/X11R6/lib/libdmx.so.1.0
 ./usr/X11R6/lib/libdrm.la
 ./usr/X11R6/lib/libdrm.so.2.3
@@ -516,10 +520,6 @@
 ./usr/X11R6/lib/libpixman-1.a
 ./usr/X11R6/lib/libpixman-1.la
 ./usr/X11R6/lib/libpixman-1.so.11.0
-./usr/X11R6/lib/libviaXvMC.la
-./usr/X11R6/lib/libviaXvMC.so.1.0
-./usr/X11R6/lib/libviaXvMCPro.la
-./usr/X11R6/lib/libviaXvMCPro.so.1.0
 ./usr/X11R6/lib/libxkbfile.so.4.0
 ./usr/X11R6/lib/libxkbui.so.4.0
 ./usr/X11R6/lib/modules/drivers/geode_drv.la

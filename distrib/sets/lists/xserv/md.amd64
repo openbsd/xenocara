@@ -178,8 +178,6 @@
 ./usr/X11R6/lib/modules/drivers/ark_drv.so
 ./usr/X11R6/lib/modules/drivers/ati_drv.la
 ./usr/X11R6/lib/modules/drivers/ati_drv.so
-./usr/X11R6/lib/modules/drivers/atimisc_drv.la
-./usr/X11R6/lib/modules/drivers/atimisc_drv.so
 ./usr/X11R6/lib/modules/drivers/ch7017.la
 ./usr/X11R6/lib/modules/drivers/ch7017.so
 ./usr/X11R6/lib/modules/drivers/ch7xxx.la
@@ -204,6 +202,8 @@
 ./usr/X11R6/lib/modules/drivers/intel_drv.so
 ./usr/X11R6/lib/modules/drivers/ivch.la
 ./usr/X11R6/lib/modules/drivers/ivch.so
+./usr/X11R6/lib/modules/drivers/mach64_drv.la
+./usr/X11R6/lib/modules/drivers/mach64_drv.so
 ./usr/X11R6/lib/modules/drivers/mga_drv.la
 ./usr/X11R6/lib/modules/drivers/mga_drv.so
 ./usr/X11R6/lib/modules/drivers/neomagic_drv.la
