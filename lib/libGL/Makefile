@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.18 2008/03/25 23:41:50 matthieu Exp $
+# $OpenBSD: Makefile,v 1.19 2008/07/16 20:24:39 brad Exp $
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
@@ -14,7 +14,7 @@ MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
 
 MESA_MAJOR=	7
 MESA_MINOR=	0
-MESA_TINY=	2
+MESA_TINY=	3
 
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 

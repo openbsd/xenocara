@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.7 2008/02/12 21:09:27 matthieu Exp $
+# $OpenBSD: Makefile,v 1.8 2008/07/16 20:24:40 brad Exp $
 
 .include <bsd.own.mk>
 USE_GCC3?=No
@@ -6,7 +6,7 @@ DEBUG?=
 
 MESA_MAJOR=	7
 MESA_MINOR=	0
-MESA_TINY=	2
+MESA_TINY=	3
 
 LIB=	GLU
 
