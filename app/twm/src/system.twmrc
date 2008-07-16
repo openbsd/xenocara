@@ -123,6 +123,7 @@ menu "Restart"
 ""		f.nop
 "twm"		f.startwm "twm"
 "fvwm"		f.startwm "fvwm"
+"cwm"		f.startwm "cwm"
 "wm2"		f.startwm "wm2"
 "ctwm"		f.startwm "ctwm"
 "mwm"		f.startwm "mwm"

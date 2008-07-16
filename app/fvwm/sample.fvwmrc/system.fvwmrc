@@ -207,6 +207,7 @@ AddToMenu Module-Popup	"FvwmModules"	Title
 AddToMenu Quit-Verify 
 +		      	"Restart Fvwm%mini.refresh.xpm%"	    Restart fvwm
 +		      	""		    Nop	
++	      	      	"Start cwm"         Restart cwm
 +	      	      	"Start wm2"         Restart wm2
 +		      	"Start twm"         Restart twm
 +		      	"Start ctwm"        Restart ctwm
