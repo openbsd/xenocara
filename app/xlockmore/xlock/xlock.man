@@ -349,10 +349,9 @@ when looking for resources to configure
 .BI \-mode \ modename
 As of this writing there are over 90 display modes supported
 (plus one more for random selection of one of these).
+.TP 8
 .B anemone
 Shows wiggling tentacles.
-.TP 8
-.B apollonian
 .TP 8
 .B ant
 Shows Langton's and Turk's generalized ants.
