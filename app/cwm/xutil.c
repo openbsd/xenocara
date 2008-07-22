@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xutil.c,v 1.8 2008/07/11 14:21:28 okan Exp $
+ * $Id: xutil.c,v 1.9 2008/07/22 20:26:12 oga Exp $
  */
 
 #include "headers.h"
@@ -90,9 +90,23 @@ xu_key_grab(Window win, int mask, int keysym)
 		mask |= ShiftMask;
 
 	for (i = 0; i < sizeof(ign_mods)/sizeof(*ign_mods); i++)
-		XGrabKey(X_Dpy, XKeysymToKeycode(X_Dpy, keysym),
-		    (mask | ign_mods[i]), win, True, GrabModeAsync,
-		    GrabModeAsync);
+		XGrabKey(X_Dpy, code, (mask | ign_mods[i]), win,
+		    True, GrabModeAsync, GrabModeAsync);
+}
+
+void
+xu_key_ungrab(Window win, int mask, int keysym)
+{
+	KeyCode	 code;
+	int	 i;
+
+	code = XKeysymToKeycode(X_Dpy, keysym);
+	if ((XKeycodeToKeysym(X_Dpy, code, 0) != keysym) &&
+	    (XKeycodeToKeysym(X_Dpy, code, 1) == keysym))
+		mask |= ShiftMask;
+
+	for (i = 0; i < sizeof(ign_mods)/sizeof(*ign_mods); i++)
+		XUngrabKey(X_Dpy, code, (mask | ign_mods[i]), win);
 }
 
 void
