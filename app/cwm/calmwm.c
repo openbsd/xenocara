@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.26 2008/07/22 20:51:54 oga Exp $
+ * $Id: calmwm.c,v 1.27 2008/07/22 21:01:54 oga Exp $
  */
 
 #include "headers.h"
@@ -101,6 +101,7 @@ main(int argc, char **argv)
 	XEV_QUICK(NULL, NULL, Expose, xev_handle_expose, NULL);
 	XEV_QUICK(NULL, NULL, DestroyNotify, xev_handle_destroynotify, NULL);
 	XEV_QUICK(NULL, NULL, ClientMessage, xev_handle_clientmessage, NULL);
+	XEV_QUICK(NULL, NULL, MappingNotify, xev_handle_mapping, NULL);
 
 	xev_loop();
 

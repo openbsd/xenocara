@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.25 2008/07/11 14:21:28 okan Exp $
+ * $Id: xevents.c,v 1.26 2008/07/22 21:01:54 oga Exp $
  */
 
 /*
@@ -373,6 +373,27 @@ xev_handle_shape(struct xevent *xev, XEvent *ee)
 
 	if ((cc = client_find(sev->window)) != NULL)
 		client_do_shape(cc);
+}
+
+/* 
+ * Called when the keymap has changed.
+ * Ungrab all keys, reload keymap and then regrab
+ */
+void
+xev_handle_mapping(struct xevent *xev, XEvent *ee)
+{
+	XMappingEvent		*e = &ee->xmapping;
+	struct keybinding	*kb;
+
+	TAILQ_FOREACH(kb, &Conf.keybindingq, entry)
+		conf_ungrab(&Conf, kb);
+
+	XRefreshKeyboardMapping(e);
+
+	TAILQ_FOREACH(kb, &Conf.keybindingq, entry)
+		conf_grab(&Conf, kb);
+
+	xev_register(xev);
 }
 
 /*
