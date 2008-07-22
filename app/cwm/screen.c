@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: screen.c,v 1.7 2008/07/11 14:21:28 okan Exp $
+ * $Id: screen.c,v 1.8 2008/07/22 19:54:57 oga Exp $
  */
 
 #include "headers.h"
@@ -66,9 +66,4 @@ screen_updatestackingorder(void)
 	}
 
 	XFree(wins);
-}
-
-void
-screen_init(void)
-{
 }

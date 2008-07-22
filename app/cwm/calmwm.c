@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.23 2008/07/11 14:21:28 okan Exp $
+ * $Id: calmwm.c,v 1.24 2008/07/22 19:54:57 oga Exp $
  */
 
 #include "headers.h"
@@ -204,10 +204,6 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 	font_init(sc);
 	conf_font(&Conf);
 
-	/*
-	 * XXX - this should *really* be in screen_init().  ordering
-	 * problem.
-	 */
 	TAILQ_INIT(&sc->mruq);
 
 	/* Initialize menu window. */
@@ -228,7 +224,6 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 	}
 	XFree(wins);
 
-	screen_init();
 	screen_updatestackingorder();
 
 	rootattr.event_mask = ChildMask|PropertyChangeMask|EnterWindowMask|
