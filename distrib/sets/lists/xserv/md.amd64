@@ -210,6 +210,8 @@
 ./usr/X11R6/lib/modules/drivers/neomagic_drv.so
 ./usr/X11R6/lib/modules/drivers/nv_drv.la
 ./usr/X11R6/lib/modules/drivers/nv_drv.so
+./usr/X11R6/lib/modules/drivers/openchrome_drv.la
+./usr/X11R6/lib/modules/drivers/openchrome_drv.so
 ./usr/X11R6/lib/modules/drivers/r128_drv.la
 ./usr/X11R6/lib/modules/drivers/r128_drv.so
 ./usr/X11R6/lib/modules/drivers/radeon_drv.la
@@ -403,6 +405,7 @@
 ./usr/X11R6/man/man4/mutouch.4
 ./usr/X11R6/man/man4/neomagic.4
 ./usr/X11R6/man/man4/nv.4
+./usr/X11R6/man/man4/openchrome.4
 ./usr/X11R6/man/man4/palmax.4
 ./usr/X11R6/man/man4/r128.4
 ./usr/X11R6/man/man4/radeon.4

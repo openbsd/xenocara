@@ -504,6 +504,10 @@
 ./usr/X11R6/lib/libXxf86dga.so.5.0
 ./usr/X11R6/lib/libXxf86misc.so.5.0
 ./usr/X11R6/lib/libXxf86vm.so.5.0
+./usr/X11R6/lib/libchromeXvMC.la
+./usr/X11R6/lib/libchromeXvMC.so.1.0
+./usr/X11R6/lib/libchromeXvMCPro.la
+./usr/X11R6/lib/libchromeXvMCPro.so.1.0
 ./usr/X11R6/lib/libdmx.so.1.0
 ./usr/X11R6/lib/libdrm.la
 ./usr/X11R6/lib/libdrm.so.2.3
