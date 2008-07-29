@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.20 2008/07/12 15:50:48 oga Exp $
+# $OpenBSD: Makefile,v 1.21 2008/07/29 20:08:48 matthieu Exp $
 
 # Broken
 # xf86-input-calcomp  xf86-input-citron  xf86-input-dmc
@@ -68,7 +68,10 @@ VIDEO_DRV_alpha= \
 
 VIDEO_DRV_amd64= \
 	${VIDEO_DRV_COMMON} \
-	xf86-video-intel xf86-video-radeonhd xf86-video-vmware
+	xf86-video-intel \
+	xf86-video-openchrome \
+	xf86-video-radeonhd \
+	xf86-video-vmware
 
 VIDEO_DRV_hppa=
 
