@@ -7,6 +7,8 @@
 #include <xf86Crtc.h>
 #include <xf86int10.h>
 
+#define G80_NUM_I2C_PORTS 6
+
 typedef enum Head {
     HEAD0 = 0,
     HEAD1
@@ -51,11 +53,13 @@ typedef struct G80Rec {
     struct {
         ORNum           dac;
         ORNum           sor;
-    } i2cMap[4];
+    } i2cMap[G80_NUM_I2C_PORTS];
     struct {
         Bool            present;
         ORNum           or;
+        int             i2cPort;
     } lvds;
+    unsigned            loadVal;
 
     xf86Int10InfoPtr    int10;
     int                 int10Mode; /* Console mode to restore */
@@ -66,6 +70,7 @@ typedef struct G80Rec {
     Bool                NoAccel;
     AccelMethod         AccelMethod;
     Bool                Dither;
+    Bool                AllowDualLink;
 
     /* XAA */
     XAAInfoRecPtr       xaa;

@@ -1,3 +1,256 @@
+commit 6cd80057fadbb8d63d3e1a623515206800fefc8e
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Jun 30 16:26:09 2008 -0700
+
+    Bump to 2.1.10.
+
+commit 3f43093cf0c0338a1a479ed4ba2fad3f5f04ad69
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Jun 30 16:25:54 2008 -0700
+
+    More G8x chips.
+
+commit 69aa963d7ab8256d0e932e1a5a98599f168b8836
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Jun 30 13:30:07 2008 -0700
+
+    Fix build by using CARD32 instead of uint32_t, like we do everywhere else.
+
+commit 91d8778176f1db54c8222a95315610a043198648
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sun Jun 29 21:26:57 2008 -0700
+
+    G80: Handle extended I2C ports and LVDS panels with DDC-based EDIDs.
+
+commit db768cf105956fbea39383a2214227782bf827b0
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sun Jun 22 13:01:21 2008 -0700
+
+    Add a note that MODE_PANEL really means "larger than BIOS-programmed panel size".
+    
+    Bug #16085.
+
+commit fb10793d2607d30077a9861b575c108b6c4101ca
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sun Jun 22 12:55:10 2008 -0700
+
+    Add new chips to the man page and fix capitalization of "Quadro".
+
+commit 2fdcda8ea62eba1b7885f0a75249884715936247
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sun Jun 22 12:45:31 2008 -0700
+
+    Replace copyright notices with stock MIT X11 boilerplate.
+
+commit 2df11aafe4eae33aab06d902ddeed6bd996b1575
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Jun 16 10:07:07 2008 -0700
+
+    GeForce GTX 280 and 260 chip names.
+    
+    Note: These GPUs already worked with this driver, this change just adds their
+    names to the table.
+
+commit 745a1d2d318eef0a6195fe08e4a43471b6d0a662
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Jun 5 20:41:43 2008 -0700
+
+    GeForce 9 mobile chips.
+
+commit cca0a00c89730c8338af44e62438babc93f078fb
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri May 9 18:45:46 2008 -0700
+
+    Bump to 2.1.9.
+
+commit 9c98d2ca942049322688b5796a2ed041fd48282d
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri May 9 18:44:57 2008 -0700
+
+    Yet more G80s.
+    
+    Sometimes I wish we made fewer products.
+
+commit cb83fbdfa22aa408e6692256cd44b78fef53e801
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri May 9 18:31:07 2008 -0700
+
+    Add an option to allow validation of dual-link DVI modes.
+    
+    These modes don't work at bootup (i.e. power saving) configuration on all GPUs,
+    so they're still disabled by default.  This option allows users to enable them
+    in case they actually work.
+
+commit 8db2d4e63508f59299098e092ae85e543cf61d03
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sun Apr 27 16:23:40 2008 -0700
+
+    More G80s.
+
+commit 4aa43a2b66e473f9154f1582f5cf0e4b4596e485
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sun Apr 27 16:23:28 2008 -0700
+
+    Fix a few startup bugs.
+
+commit 0ddee2347109e8c64bd2cb4693b97c3fa3aab94b
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Mar 25 16:35:05 2008 -0700
+
+    Sort the IsSupported table.
+
+commit c0c7d610800161976fd7dce064beae05d2d4195b
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Apr 28 14:43:12 2008 -0700
+
+    I win at C.
+
+commit b62a7cf70db356918aa04fb3f30bf1fd1142b9d5
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Mar 8 23:43:58 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit f88ef390985babdb2b489cf52bfa587e1879db38
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Mar 7 12:32:40 2008 -0800
+
+    Bug #14885: Add missing static keywords.
+
+commit 4965498f238fbe3d8a0d0b84bf8bceb9237e472a
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Mar 6 13:53:54 2008 -0800
+
+    Bump to 2.1.8.
+
+commit 806331f411df991dcd1a48108f9ff4e9bb480969
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Mar 6 14:31:16 2008 -0800
+
+    Add xf86gtf.c to the compat file list.
+
+commit 09d154246ab55846878e34bc133b08c11765c45b
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Mar 6 12:40:23 2008 -0800
+
+    More new chip names.
+
+commit fa97c4c2c69f91ac5a034ef2f62287b7cd5b2bde
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Feb 26 12:24:05 2008 -0800
+
+    GeForce 9600 GT.
+    
+    Note that the 9600 GT should already work in 2.1.7.  This change just adds its
+    name to the list.
+
+commit a87b93d5c5b4d1a65a60dad271b06a2d560b71b8
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Feb 19 14:17:57 2008 -0800
+
+    G80: Fix connector mapping and TMDS initialization on certain GPUs.
+
+commit 3f2a1898fedbada151da31fc163ae54daac0e896
+Author: Søren Sandmann Pedersen <sandmann@redhat.com>
+Date:   Wed Feb 13 10:43:28 2008 -0800
+
+    [PATCH] Bug #14484: Fix G80SorSetProperty return value.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit f8b24e5c729c9d3321282b065f4ef79b177f928d
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Jan 25 18:23:48 2008 -0800
+
+    Bump to 2.1.7.
+
+commit d2367140ad1fe96bce5e780332d21999e5aa31bf
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Jan 25 18:15:12 2008 -0800
+
+    Fix warning.
+
+commit e844f10c7b5e41330f2bcb884ab448641dd5bb06
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Thu Sep 27 00:22:04 2007 +0200
+
+    [PATCH] Enable backlight toggling for Dell Inspiron 8200 GeForce2 Go
+    
+    GeForce2 Go and similar cards are explicitly excluded from the
+    NVBacklightEnable() code (purposedly, as the code used for the other
+    chipsets on x86 has no effect.) This causes the backlight to remain
+    active on laptops equipped with such a card, even when DPMS modes were
+    active.
+    
+    Fix the issue for Dell Inspiron 8200 by introducing the proper
+    registry writes to toggle the backlight.
+    
+    Signed-off-by: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 02e431eb0969cabb67f3e4b1cb1a2d7fc5f697f0
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Thu Sep 27 00:08:28 2007 +0200
+
+    [PATCH] Add macros to retrieve the subsystem vendor/device
+    
+    Signed-off-by: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 3449da7a7baf7365c247caa9b4344316a961ec41
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Jan 24 20:51:29 2008 -0800
+
+    Update know card list date and add G92 to the manpage.
+
+commit 62ff129257161db99dc4056cf16aa196ccfbc921
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Jan 23 21:32:51 2008 -0800
+
+    Fix more load detection false positives.
+
+commit 28f34db87cefdc6b327a98db43da5b4fefe3bdd8
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Jan 23 20:23:32 2008 -0800
+
+    New chips.
+
+commit 64721629c3908556fcf8c9941feea1e3b961bf00
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sat Dec 1 16:02:37 2007 -0800
+
+    G80Create{Dac,Sor} return pointers, not Bools.
+
+commit 7f281be7e53ac274016a6af6b2b5dc6f8bddb810
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Nov 30 17:37:20 2007 -0800
+
+    Bug #7309: Delay after disabling cursor to avoid wedging the cursor hardware on GeForce 6150.
+
+commit 100f5e24da2cbc79ed761083daa9a00b107008ab
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Nov 26 13:14:40 2007 -0800
+
+    xcalloc needs 2 args, Xcalloc takes one - yay for inconsistency!
+
+commit e9ada35b4d24abd44bc5d811b59c6f25af5984f4
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Nov 21 15:35:06 2007 -0800
+
+    Build fix for recent removal of ALLOCATE_LOCAL and DEALLOCATE_LOCAL
+
+commit d483ecd851bb84014f1fa86f0ada4540b3ad801e
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Nov 13 17:18:10 2007 -0800
+
+    G80: Reduce load detection false positives.
+
+commit 4da88cb3dd13a86c477389c5b2d42d7d40ce2023
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Nov 2 16:56:35 2007 -0700
+
+    GeForce 8800 GT.
+
 commit 58dbd31953d0e2f30d06b3fc5118a016a17666fe
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Tue Oct 23 13:17:27 2007 -0700

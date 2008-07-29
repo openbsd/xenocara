@@ -494,7 +494,8 @@ xf86CrtcRotate (xf86CrtcPtr crtc, DisplayModePtr mode, Rotation rotation)
 {
     ScrnInfoPtr		pScrn = crtc->scrn;
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
-    ScreenPtr		pScreen = pScrn->pScreen;
+    /* if this is called during ScreenInit() we don't have pScrn->pScreen yet */
+    ScreenPtr		pScreen = screenInfo.screens[pScrn->scrnIndex];
     PictTransform	crtc_to_fb, fb_to_crtc;
     
     PictureTransformIdentity (&crtc_to_fb);
@@ -579,9 +580,9 @@ xf86CrtcRotate (xf86CrtcPtr crtc, DisplayModePtr mode, Rotation rotation)
     }
     else
     {
-	PictureTransformTranslate (&crtc_to_fb, &fb_to_crtc, crtc->x, crtc->y);
+	PictureTransformTranslate (&crtc_to_fb, &fb_to_crtc, F(crtc->x), F(crtc->y));
 	PictureTransformIsInverse ("offset", &crtc_to_fb, &fb_to_crtc);
-	
+
 	/* 
 	 * these are the size of the shadow pixmap, which
 	 * matches the mode, not the pre-rotated copy in the

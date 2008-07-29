@@ -85,7 +85,8 @@ am_nv_drv_la_OBJECTS = $(am__objects_1) $(am__objects_2) \
 	$(am__objects_3)
 am__EXTRA_nv_drv_la_SOURCES_DIST = local_xf86Rename.h
 am__objects_4 = xf86Modes.lo xf86cvt.lo xf86Crtc.lo xf86Cursors.lo \
-	xf86EdidModes.lo xf86RandR12.lo xf86Rotate.lo xf86DiDGA.lo
+	xf86EdidModes.lo xf86gtf.lo xf86RandR12.lo xf86Rotate.lo \
+	xf86DiDGA.lo
 @BUILD_XMODES_TRUE@nodist_nv_drv_la_OBJECTS = $(am__objects_4)
 nv_drv_la_OBJECTS = $(am_nv_drv_la_OBJECTS) \
 	$(nodist_nv_drv_la_OBJECTS)
@@ -137,6 +138,7 @@ DEPDIR = @DEPDIR@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -165,6 +167,7 @@ MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -177,6 +180,7 @@ PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -187,7 +191,9 @@ XORG_LIBS = @XORG_LIBS@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
@@ -304,6 +310,7 @@ xmode_sources = \
          @modes_dir@/xf86Crtc.c \
          @modes_dir@/xf86Cursors.c \
          @modes_dir@/xf86EdidModes.c \
+         @modes_dir@/xf86gtf.c \
          @modes_dir@/xf86RandR12.c \
          @modes_dir@/xf86RandR12.h \
          @modes_dir@/xf86Rename.h \
@@ -415,6 +422,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86RandR12.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Rotate.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86cvt.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86gtf.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -471,6 +479,13 @@ xf86EdidModes.lo: @modes_dir@/xf86EdidModes.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='@modes_dir@/xf86EdidModes.c' object='xf86EdidModes.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86EdidModes.lo `test -f '@modes_dir@/xf86EdidModes.c' || echo '$(srcdir)/'`@modes_dir@/xf86EdidModes.c
+
+xf86gtf.lo: @modes_dir@/xf86gtf.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86gtf.lo -MD -MP -MF "$(DEPDIR)/xf86gtf.Tpo" -c -o xf86gtf.lo `test -f '@modes_dir@/xf86gtf.c' || echo '$(srcdir)/'`@modes_dir@/xf86gtf.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86gtf.Tpo" "$(DEPDIR)/xf86gtf.Plo"; else rm -f "$(DEPDIR)/xf86gtf.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='@modes_dir@/xf86gtf.c' object='xf86gtf.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86gtf.lo `test -f '@modes_dir@/xf86gtf.c' || echo '$(srcdir)/'`@modes_dir@/xf86gtf.c
 
 xf86RandR12.lo: @modes_dir@/xf86RandR12.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86RandR12.lo -MD -MP -MF "$(DEPDIR)/xf86RandR12.Tpo" -c -o xf86RandR12.lo `test -f '@modes_dir@/xf86RandR12.c' || echo '$(srcdir)/'`@modes_dir@/xf86RandR12.c; \

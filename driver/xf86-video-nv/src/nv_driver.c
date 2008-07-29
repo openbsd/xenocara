@@ -113,7 +113,7 @@ _X_EXPORT DriverRec NV = {
 #endif
 };
 
-/* Known cards as of 2007/07/24 */
+/* Known cards as of 2008/06/16 */
 
 static SymTabRec NVKnownChipsets[] =
 {
@@ -361,9 +361,12 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE019D, "Quadro FX 5600" },
   { 0x10DE019E, "Quadro FX 4600" },
   { 0x10DE0400, "GeForce 8600 GTS" },
+  { 0x10DE0401, "GeForce 8600 GT" },
   { 0x10DE0402, "GeForce 8600 GT" },
   { 0x10DE0404, "GeForce 8400 GS" },
+  { 0x10DE0405, "GeForce 9500M GS" },
   { 0x10DE0407, "GeForce 8600M GT" },
+  { 0x10DE0408, "GeForce 9650M GS" },
   { 0x10DE0409, "GeForce 8700M GT" },
   { 0x10DE040A, "Quadro FX 370" },
   { 0x10DE040B, "Quadro NVS 320M" },
@@ -371,9 +374,11 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE040D, "Quadro FX 1600M" },
   { 0x10DE040E, "Quadro FX 570" },
   { 0x10DE040F, "Quadro FX 1700" },
+  { 0x10DE0420, "GeForce 8400 SE" },
   { 0x10DE0421, "GeForce 8500 GT" },
   { 0x10DE0422, "GeForce 8400 GS" },
   { 0x10DE0423, "GeForce 8300 GS" },
+  { 0x10DE0424, "GeForce 8400 GS" },
   { 0x10DE0425, "GeForce 8600M GS" },
   { 0x10DE0426, "GeForce 8400M GT" },
   { 0x10DE0427, "GeForce 8400M GS" },
@@ -762,26 +767,26 @@ NVIsSupported(CARD32 id)
     /* look for a compatible devices which may be newer than
        the NVKnownChipsets list above.  */
     switch(id & 0xfff0) {
+    case 0x0040:
+    case 0x0090:
+    case 0x00C0:
+    case 0x0120:
+    case 0x0140:
+    case 0x0160:
     case 0x0170:
     case 0x0180:
+    case 0x01D0:
+    case 0x0210:
+    case 0x0220:
+    case 0x0240:
     case 0x0250:
     case 0x0280:
+    case 0x0290:
     case 0x0300:
     case 0x0310:
     case 0x0320:
     case 0x0330:
     case 0x0340:
-    case 0x0040:
-    case 0x00C0:
-    case 0x0120:
-    case 0x0140:
-    case 0x0160:
-    case 0x01D0:
-    case 0x0090:
-    case 0x0210:
-    case 0x0220:
-    case 0x0240:
-    case 0x0290:
     case 0x0390:
     case 0x03D0:
         return TRUE;
@@ -938,7 +943,7 @@ NVSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
     return NVModeInit(pScrn, mode);
 }
 
-Bool
+static Bool
 NVSwitchModeVBE(int scrnIndex, DisplayModePtr mode, int flags)
 {
     ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
@@ -1218,7 +1223,7 @@ NVModesAdd(DisplayModePtr Modes, DisplayModePtr Additions)
 }
 
 /* Mandatory */
-Bool
+static Bool
 NVPreInit(ScrnInfoPtr pScrn, int flags)
 {
     NVPtr pNv;
@@ -2002,7 +2007,7 @@ NVMapMem(ScrnInfoPtr pScrn)
     return TRUE;
 }
 
-Bool
+static Bool
 NVMapMemFBDev(ScrnInfoPtr pScrn)
 {
     NVPtr pNv;
@@ -2134,8 +2139,10 @@ NVRestore(ScrnInfoPtr pScrn)
     NVPtr pNv = NVPTR(pScrn);
     NVRegPtr nvReg = &pNv->SavedReg;
 
-    if(pNv->HWCursor)
+    if(pNv->HWCursor) {
         NVShowHideCursor(pNv, 0);
+        sleep(1);
+    }
     NVLockUnlock(pNv, 0);
 
     if(pNv->twoHeads) {
@@ -2178,8 +2185,17 @@ static void NVBacklightEnable(NVPtr pNv,  Bool on)
 #endif
     
     if(pNv->LVDS) {
-       if(pNv->twoHeads && ((pNv->Chipset & 0x0ff0) != 0x0110)) {
-           pNv->PMC[0x130C/4] = on ? 3 : 7; 
+       if(pNv->twoHeads) {
+           if((pNv->Chipset & 0x0ff0) != 0x0110) {
+               pNv->PMC[0x130C/4] = on ? 3 : 7;
+           } else if(SUBVENDOR_ID(pNv->PciInfo) == 0x1028 &&
+                     SUBDEVICE_ID(pNv->PciInfo) == 0xd4) {
+               // Dell Inspiron 8200, GeForce2 Go
+               CARD32 tmp_pcrt = pNv->PCRTC0[0x081C/4] & 0xFFFFFFFC;
+               if(on)
+                   tmp_pcrt |= 0x1;
+               pNv->PCRTC0[0x081C/4] = tmp_pcrt;
+           }
        }
     } else {
        CARD32 fpcontrol;

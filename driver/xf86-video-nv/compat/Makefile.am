@@ -7,6 +7,7 @@ EXTRA_DIST = \
     modes/xf86cvt.c \
     modes/xf86DiDGA.c \
     modes/xf86EdidModes.c \
+    modes/xf86gtf.c \
     modes/xf86Modes.c \
     modes/xf86Modes.h \
     modes/xf86RandR12.c \

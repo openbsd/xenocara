@@ -35,22 +35,22 @@ NV4
 .B RIVA TNT2
 NV5
 .TP 22
-.B GeForce 256, QUADRO 
+.B GeForce 256, Quadro 
 NV10
 .TP 22
-.B GeForce2, QUADRO2
+.B GeForce2, Quadro2
 NV11 & NV15  
 .TP 22
-.B GeForce3, QUADRO DCC
+.B GeForce3, Quadro DCC
 NV20
 .TP 22
 .B nForce, nForce2
 NV1A, NV1F
 .TP 22
-.B GeForce4, QUADRO4
+.B GeForce4, Quadro4
 NV17, NV18, NV25, NV28
 .TP 22
-.B GeForce FX, QUADRO FX
+.B GeForce FX, Quadro FX
 NV30, NV31, NV34, NV35, NV36, NV37, NV38 
 .TP 22
 .B GeForce 6XXX
@@ -59,9 +59,12 @@ NV40, NV41, NV43, NV44, NV45, C51
 .B GeForce 7XXX
 G70, G71, G72, G73
 .TP 22
-.B GeForce 8XXX
-G80, G84, G86
-
+.B GeForce 8XXX, GeForce 9XXX
+G80, G84, G86, G92, G94, G96, G98
+.TP 22
+.B GeForce GTX
+GT200
+.
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details.  This section only covers configuration details specific to this
@@ -162,6 +165,10 @@ Default: XAA.
 Enable or disable flat panel dithering by default.
 Dithering can also be enabled or disabled using the RandR 1.2 \*qdither\*q output property.
 Default: off.
+.TP
+.BI "Option \*qAllowDualLinkModes\*q \*q" boolean \*q
+Allow validation of dual-link DVI modes.
+Not all GPUs are configured at boot time to be able to handle dual-link modes, so they are disabled by default.
 .
 .\" RandR 1.2
 .PP
@@ -190,7 +197,7 @@ Authors include: David McKay, Jarno Paananen, Chas Inman, Dave Schmenk,
 Mark Vojkovich, Aaron Plattner
 .SH COPYRIGHT
 .LP
-Copyright (c) 2003 - 2007 NVIDIA, Corporation
+Copyright (c) 2003 - 2008 NVIDIA, Corporation
 .LP
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the

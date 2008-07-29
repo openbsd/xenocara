@@ -10,11 +10,15 @@
  #define MEMBASE(p,n)     (p)->regions[n].base_addr
  #define VENDOR_ID(p)     (p)->vendor_id
  #define DEVICE_ID(p)     (p)->device_id
+ #define SUBVENDOR_ID(p)  (p)->subvendor_id
+ #define SUBDEVICE_ID(p)  (p)->subdevice_id
  #define CHIP_REVISION(p) (p)->revision
 #else
  #define MEMBASE(p,n)     (p)->memBase[n]
  #define VENDOR_ID(p)     (p)->vendor
  #define DEVICE_ID(p)     (p)->chipType
+ #define SUBVENDOR_ID(p)  (p)->subsysVendor
+ #define SUBDEVICE_ID(p)  (p)->subsysCard
  #define CHIP_REVISION(p) (p)->chipRev
 #endif
 
