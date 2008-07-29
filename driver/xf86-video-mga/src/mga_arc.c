@@ -23,7 +23,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 ********************************************************/
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/mga/mga_arc.c,v 1.12tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -50,12 +49,6 @@ in this Software without prior written authorization from The Open Group.
 #include "mga.h"
 #include "mga_reg.h"
 #include "mga_macros.h"
-
-
-/* 
-   This is only faster than cfb for stuff other than GXcopy.  
-   And even then, only when pci_retries are on.  
-*/
 
 
 #define DRAW_POINT(x, y) { \

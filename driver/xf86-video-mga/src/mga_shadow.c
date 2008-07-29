@@ -1,5 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/mga/mga_shadow.c,v 1.1 1999/08/14 10:49:48 dawes Exp $ */
-
 /*
    Copyright (c) 1999,  The XFree86 Project Inc. 
    Written by Mark Vojkovich <markv@valinux.com>

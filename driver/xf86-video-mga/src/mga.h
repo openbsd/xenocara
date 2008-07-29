@@ -14,6 +14,9 @@
 #ifndef MGA_H
 #define MGA_H
 
+#ifdef XSERVER_LIBPCIACCESS
+#include <pciaccess.h>
+#endif
 #include <string.h>
 #include <stdio.h>
 
@@ -82,7 +85,8 @@ typedef enum {
     OPTION_METAMODES,
     OPTION_OLDDMA,
     OPTION_PCIDMA,
-    OPTION_ACCELMETHOD
+    OPTION_ACCELMETHOD,
+    OPTION_KVM
 } MGAOpts;
 
 
@@ -121,6 +125,14 @@ void MGAdbg_outreg32(ScrnInfoPtr, int,int, char*);
 #define PCI_CHIP_MGAG200_SE_B_PCI 0x0524
 #endif
 
+#ifndef PCI_CHIP_MGAG200_WINBOND_PCI
+#define PCI_CHIP_MGAG200_WINBOND_PCI 0x0532
+#endif
+
+#ifndef PCI_CHIP_MGAG200_EV_PCI
+#define PCI_CHIP_MGAG200_EV_PCI 0x0530
+#endif
+
 /*
  * Read/write to the DAC via MMIO 
  */
@@ -147,6 +159,32 @@ void MGAdbg_outreg32(ScrnInfoPtr, int,int, char*);
 	    outMGAdreg(MGA1064_DATA, tmp | (val)); \
 	} while (0)
 
+#define MGAWAITVSYNC() \
+    do { \
+	unsigned int count = 0; \
+    	unsigned int status = 0; \
+	do { \
+	    status = INREG( MGAREG_Status ); \
+	    count++; \
+    	} while( ( status & 0x08 ) && (count < 250000) );\
+	count = 0; \
+    	status = 0; \
+	do { \
+	    status = INREG( MGAREG_Status ); \
+	    count++; \
+    	} while( !( status & 0x08 ) && (count < 250000) );\
+    } while (0)
+    
+#define MGAWAITBUSY() \
+    do { \
+    	unsigned int count = 0; \
+	unsigned int status = 0; \
+    	do { \
+    	    status = INREG8( MGAREG_Status + 2 ); \
+	    count++; \
+    	} while( ( status & 0x01 ) && (count < 500000) ); \
+    } while (0)
+
 #define PORT_OFFSET 	(0x1F00 - 0x300)
 
 #define MGA_VERSION 4000
@@ -166,6 +204,9 @@ typedef struct {
     CARD32		Option3;
     long                Clock;
     Bool                PIXPLLCSaved;
+    unsigned char       PllM;
+    unsigned char       PllN;
+    unsigned char       PllP;
 } MGARegRec, *MGARegPtr;
 
 /* For programming the second CRTC */
@@ -237,7 +278,6 @@ typedef struct {
     int depth;
     int displayWidth;
     rgb weight;
-    Bool Overlay8Plus24;
     DisplayModePtr mode;
 } MGAFBLayout;
 
@@ -260,7 +300,11 @@ typedef struct {
 
 #ifdef DISABLE_VGA_IO
 typedef struct mgaSave {
+#ifdef XSERVER_LIBPCIACCESS
+    struct pci_device * pvp;
+#else
     pciVideoPtr pvp;
+#endif
     Bool enable;
 } MgaSave, *MgaSavePtr;
 #endif
@@ -373,6 +417,38 @@ struct mga_bios_values {
 };
 
 
+/**
+ * Attributes that of an MGA device that can be derrived purely from its
+ * PCI ID.
+ */
+struct mga_device_attributes {
+    unsigned has_sdram:1;
+    unsigned probe_for_sdram:1;
+    unsigned dual_head_possible:1;
+    unsigned fb_4mb_quirk:1;
+    unsigned hwcursor_1064:1;
+
+    unsigned dri_capable:1;
+    unsigned dri_chipset:3;
+    
+    unsigned HAL_chipset:1;
+
+    enum {
+	old_BARs = 0,
+	probe_BARs,
+	new_BARs
+    } BARs:2;
+    
+    uint32_t accel_flags;
+    
+    /** Default BIOS values. */
+    struct mga_bios_values default_bios_values;
+    
+    /** Default memory probe offset / size values. */
+    unsigned probe_size;
+    unsigned probe_offset;
+};
+
 typedef struct {
 #ifdef USEMGAHAL
     LPCLIENTDATA	pClientStruct;
@@ -383,15 +459,25 @@ typedef struct {
     EntityInfoPtr	pEnt;
     struct mga_bios_values bios;
     CARD8               BiosOutputMode;
+#ifdef XSERVER_LIBPCIACCESS
+    struct pci_device *	PciInfo;
+#else
     pciVideoPtr		PciInfo;
     PCITAG		PciTag;
+#endif
+    const struct mga_device_attributes * chip_attribs;
     xf86AccessRec	Access;
     int			Chipset;
     int                 ChipRev;
 
     int is_Gx50:1;
     int is_G200SE:1;
-    int is_HAL_chipset:1;
+    int is_G200WB:1;
+    int is_G200EV:1;
+
+    int KVM;
+
+    CARD32		reg_1e24;   /* model revision on g200se */
 
     Bool		Primary;
     Bool		Interleave;
@@ -403,12 +489,30 @@ typedef struct {
     int			YDstOrg;
     int			DstOrg;
     int			SrcOrg;
+
+    /**
+     * Which BAR corresponds to the framebuffer on this chip?
+     */
+    unsigned            framebuffer_bar;
+
+    /**
+     * Which BAR corresponds to IO space on this chip?
+     */
+    unsigned            io_bar;
+
+    /**
+     * Which BAR corresponds to ILOAD space on this chip?  If the value is
+     * -1, then this chip does not have an ILOAD region.
+     */
+    int                 iload_bar;
+
+#ifndef XSERVER_LIBPCIACCESS
     unsigned long	IOAddress;
-    unsigned long	FbAddress;
     unsigned long	ILOADAddress;
-    int			FbBaseReg;
     unsigned long	BiosAddress;
     MessageType		BiosFrom;
+#endif
+    unsigned long	FbAddress;
     unsigned char *     IOBase;
     unsigned char *	FbBase;
     unsigned char *	ILOADBase;
@@ -422,11 +526,9 @@ typedef struct {
     Bool		Exa;
     ExaDriverPtr 	ExaDriver;
     Bool		SyncOnGreen;
-    Bool		Dac6Bit;
     Bool		HWCursor;
     Bool		UsePCIRetry;
     Bool		ShowCache;
-    Bool		Overlay8Plus24;
     Bool		ShadowFB;
     unsigned char *	ShadowPtr;
     int			ShadowPitch;
@@ -693,6 +795,9 @@ long MGAG450SavePLLFreq(ScrnInfoPtr pScrn);
 void MGAprintDac(ScrnInfoPtr pScrn);
 void MGAG200SESaveFonts(ScrnInfoPtr, vgaRegPtr);
 void MGAG200SERestoreFonts(ScrnInfoPtr, vgaRegPtr);
+void MGAG200SESaveMode(ScrnInfoPtr, vgaRegPtr);
+void MGAG200SERestoreMode(ScrnInfoPtr, vgaRegPtr);
+void MGAG200SEHWProtect(ScrnInfoPtr, Bool);
 
 #ifdef USEMGAHAL
 /************ ESC Call Definition ***************/

@@ -227,11 +227,6 @@ mgaPrepareCopy(PixmapPtr pSrc, PixmapPtr pDst, int xdir, int ydir, int alu,
      */
     QUIESCE_DMA(pSrc);
 
-    DEBUG_MSG(("s: %x@%x d: %x@%x xdir %d ydir %d alu %d pm %d\n",
-           exaGetPixmapOffset(pSrc), exaGetPixmapPitch(pSrc),
-           exaGetPixmapOffset(pDst), exaGetPixmapPitch(pDst),
-           xdir, ydir, alu, planemask));
-
     if (xdir < 0)
         blit_direction |= BLIT_LEFT;
 
@@ -261,8 +256,6 @@ mgaCopy(PixmapPtr pDst, int srcx, int srcy, int dstx, int dsty, int w, int h)
     PMGA(pDst);
     int start, end;
 
-    DEBUG_MSG(("    %d,%d -> %d,%d %dx%d\n", srcx, srcy, dstx,dsty, w, h));
-
     w--;
 
     if (pMga->BltScanDirection & BLIT_UP) {
@@ -276,9 +269,6 @@ mgaCopy(PixmapPtr pDst, int srcx, int srcy, int dstx, int dsty, int w, int h)
         start += w;
     else
         end += w;
-
-    DEBUG_MSG(("        end %d start %d dstx %d dsty %d w %d h %d\n",
-              end, start, dstx, dsty, w, h));
 
     WAITFIFO(4);
     OUTREG(MGAREG_AR0, end);
@@ -360,6 +350,8 @@ static Bool
 mgaCheckComposite(int op, PicturePtr pSrcPict, PicturePtr pMaskPict,
                   PicturePtr pDstPict)
 {
+    MGAPtr pMga = xf86Screens[pSrcPict->pDrawable->pScreen->myNum]->driverPrivate;
+
     if (op >= sizeof(mgaBlendOp) / sizeof(mgaBlendOp[0])) {
         DEBUG_MSG(("unsupported op %x\n", op));
         return FALSE;
@@ -383,10 +375,9 @@ mgaCheckComposite(int op, PicturePtr pSrcPict, PicturePtr pMaskPict,
         return FALSE;
     }
 
-    /* FIXME
-     * Doing this operation in hardware is broken atm :/
-     */
-    if (op == PictOpAdd && pSrcPict->format == PICT_a8 &&
+    /* Only the G550 can perform Add on A8 textures, it seems. */
+    if (pMga->Chipset != PCI_CHIP_MGAG550 &&
+        op == PictOpAdd && pSrcPict->format == PICT_a8 &&
         pDstPict->format == PICT_a8)
         return FALSE;
 
@@ -594,15 +585,6 @@ mgaPrepareComposite(int op, PicturePtr pSrcPict, PicturePtr pMaskPict,
             blendcntl = (blendcntl & ~MGA_SRC_BLEND_MASK) | MGA_SRC_ZERO;
     }
 
-    if (!PICT_FORMAT_A(pSrcPict->format) && mgaBlendOp[op].src_alpha) {
-        int dblend = blendcntl & MGA_DST_BLEND_MASK;
-
-        if (dblend == MGA_DST_SRC_ALPHA)
-            blendcntl = (blendcntl & ~MGA_DST_BLEND_MASK) | MGA_DST_ONE;
-        else if (dblend == MGA_DST_ONE_MINUS_SRC_ALPHA)
-            blendcntl = (blendcntl & ~MGA_DST_BLEND_MASK) | MGA_DST_ZERO;
-    }
-
     WAITFIFO(5);
     OUTREG(MGAREG_FCOL, fcol);
     OUTREG(MGAREG_TDUALSTAGE0, ds0);
@@ -732,6 +714,33 @@ mgaUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h,
         src += src_pitch;
     }
 
+    exaMarkSync(pDst->drawable.pScreen);
+
+    return TRUE;
+}
+
+static Bool
+mgaDownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h,
+                      char *dst, int dst_pitch)
+{
+    PMGA(pSrc);
+
+    char *src = pSrc->devPrivate.ptr;
+    int src_pitch = exaGetPixmapPitch(pSrc);
+
+    int cpp = (pSrc->drawable.bitsPerPixel + 7) / 8;
+    int bytes = w * cpp;
+
+    src += y * src_pitch + x * cpp;
+
+    QUIESCE_DMA(pSrc);
+
+    while (h--) {
+	memcpy (dst, src, bytes);
+	src += src_pitch;
+	dst += dst_pitch;
+    }
+
     return TRUE;
 }
 
@@ -748,6 +757,82 @@ mgaWaitMarker(ScreenPtr pScreen, int marker)
     /* wait until the "drawing engine busy" bit is unset */
     while (INREG (MGAREG_Status) & 0x10000);
 }
+
+#ifdef XF86DRI
+static void
+init_dri(ScrnInfoPtr pScrn)
+{
+    MGAPtr pMga = MGAPTR(pScrn);
+    MGADRIServerPrivatePtr dri = pMga->DRIServerInfo;
+    int cpp = pScrn->bitsPerPixel / 8;
+    int widthBytes = pScrn->displayWidth * cpp;
+    int bufferSize = ((pScrn->virtualY * widthBytes + MGA_BUFFER_ALIGN)
+                      & ~MGA_BUFFER_ALIGN);
+    int maxlines, mb;
+
+    switch (pMga->Chipset) {
+    case PCI_CHIP_MGAG200_SE_A_PCI:
+    case PCI_CHIP_MGAG200_SE_B_PCI:
+        mb = 1;
+	break;
+    default:
+        mb = 16;
+	break;
+    }
+
+    maxlines = (min(pMga->FbUsableSize, mb * 1024 * 1024)) /
+               (pScrn->displayWidth * pMga->CurrentLayout.bitsPerPixel / 8);
+
+    dri->frontOffset = 0;
+    dri->frontPitch = widthBytes;
+
+    /* Try for front, back, depth, and two framebuffers worth of
+     * pixmap cache.  Should be enough for a fullscreen background
+     * image plus some leftovers.
+     */
+    dri->textureSize = pMga->FbMapSize - 5 * bufferSize;
+
+    /* If that gives us less than half the available memory, let's
+     * be greedy and grab some more.  Sorry, I care more about 3D
+     * performance than playing nicely, and you'll get around a full
+     * framebuffer's worth of pixmap cache anyway.
+     */
+    if (dri->textureSize < (int)pMga->FbMapSize / 2) {
+        dri->textureSize = pMga->FbMapSize - 4 * bufferSize;
+    }
+
+    /* Check to see if there is more room available after the maximum
+     * scanline for textures.
+     */
+    if ((int) pMga->FbMapSize - maxlines * widthBytes - bufferSize * 2
+        > dri->textureSize) {
+        dri->textureSize = pMga->FbMapSize - maxlines * widthBytes -
+                           bufferSize * 2;
+    }
+
+    /* Set a minimum usable local texture heap size.  This will fit
+     * two 256x256x32bpp textures.
+     */
+    if (dri->textureSize < 512 * 1024) {
+        dri->textureOffset = 0;
+        dri->textureSize = 0;
+    }
+
+    /* Reserve space for textures */
+    dri->textureOffset = (pMga->FbMapSize - dri->textureSize +
+                          MGA_BUFFER_ALIGN) & ~MGA_BUFFER_ALIGN;
+
+    /* Reserve space for the shared depth buffer */
+    dri->depthOffset = (dri->textureOffset - bufferSize +
+                        MGA_BUFFER_ALIGN) & ~MGA_BUFFER_ALIGN;
+    dri->depthPitch = widthBytes;
+
+    /* Reserve space for the shared back buffer */
+    dri->backOffset = (dri->depthOffset - bufferSize +
+                       MGA_BUFFER_ALIGN) & ~MGA_BUFFER_ALIGN;
+    dri->backPitch = widthBytes;
+}
+#endif /* XF86DRI */
 
 Bool
 mgaExaInit(ScreenPtr pScreen)
@@ -806,6 +891,12 @@ mgaExaInit(ScreenPtr pScreen)
     }
 
     pExa->UploadToScreen = mgaUploadToScreen;
+    pExa->DownloadFromScreen = mgaDownloadFromScreen;
+
+#ifdef XF86DRI
+    if (pMga->directRenderingEnabled)
+        init_dri(pScrn);
+#endif
 
     return exaDriverInit(pScreen, pExa);
 }

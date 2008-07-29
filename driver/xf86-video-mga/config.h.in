@@ -32,6 +32,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Have xf86ModeBandwidth */
+#undef HAVE_XF86MODEBANDWIDTH
+
 /* Name of package */
 #undef PACKAGE
 

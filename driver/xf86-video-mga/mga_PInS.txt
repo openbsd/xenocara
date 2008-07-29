@@ -221,7 +221,33 @@ Offset  Type      Description
 		  9        Has DLL?
 		  10       Core uses MCTLWTST?
 		  11 - 15  MCTLWTST values for core?
-116     char[5]   Unknown?
+116     uint16_t  Display Info.
+                  Bits     Meaning
+                  0-3      Primary display info (see below)
+                  4-7      Secondary display info (see below)
+                  8-10     Primary modes (see below)
+                  13       Default output
+                           0 = default output is secondary connector
+                           1 = default output is primary connector
+                  12-14    Secondary modes (see below)
+                  15       Primary hardware dectect
+                           0 = hardware detection is off
+                           1 = use hardware detection to determine main output
+                           
+                  Display info values:
+                  0000     None
+                  0001     HD15
+                  0010     DVI
+                  0011     TV
+                  x1xx     Reserved
+                  1xxx     Reserved
+
+                  Modes values:
+                  xx1      Analog
+                  x1x      Digital
+                  1xx      TV
+
+118     char[3]   Unknown?
 121     uint8_t   VCO min for system PLL.  Stored using standard clock
                   encoding (see above).
 122     uint8_t   VCO min for video PLL.  Stored using standard clock

@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-char *opcodes[] = {
+const char *opcodes[] = {
 	"line_open",		/* 0000 */
 	"autoline_open",	/* 0001 */
 	"line_close",		/* 0010 */
@@ -29,7 +29,7 @@ char *opcodes[] = {
 	"iload filter"		/* 1111 */
 };
 
-char *atype[] = {
+const char *atype[] = {
 	"rpl - Write (Replace)",		/* 000 */
 	"rstr - read-modify-write (raster)",	/* 001 */
 	"reserved",	/* 010 */
@@ -40,7 +40,7 @@ char *atype[] = {
 	"I - Gouraud (with depth compare)"	/* 111 */
 };
 
-char *zmode[] = {
+const char *zmode[] = {
 	"NOZCMP - always",		/* 000 */
 	"reserved",	/* 001 */
 	"ZE - depth =",	/* 010 */
@@ -51,7 +51,7 @@ char *zmode[] = {
 	"zgte"	/* 111 */
 };
 
-char *bop[] = {
+const char *bop[] = {
 	"0",		/* 0000 */
 	"~(D|S)",	/* 0001 */
 	"D & ~S",	/* 0010 */
@@ -73,7 +73,7 @@ char *bop[] = {
 	"1"		/* 1111 */
 };
 
-char *bitmod[] = {
+const char *bitmod[] = {
 	"BMONOLEF - Source is mono, or if iload, source is little endian",	/* 0000 */
 	"BPLAN - source is mono from one plane",				/* 0001 */
 	"BFCOL - source is colour, and is formatted from host",			/* 0010 */

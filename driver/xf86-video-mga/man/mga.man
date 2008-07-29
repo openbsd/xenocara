@@ -126,13 +126,6 @@ loaded when available and when using hardware that it supports.
 Set clocks to values used by some commercial X Servers (G100, G200 and G400
 only).  Default: off.
 .TP
-.BI "Option \*qOverlay\*q \*q" value \*q
-Enable 8+24 overlay mode.  Only appropriate for depth 24. 
-Recognized values are: "8,24", "24,8". Default: off.
-.RB ( Note:
-the G100 is unaccelerated in the 8+24 overlay mode due to a missing
-hardware feature.) 
-.TP
 .BI "Option \*qPciRetry\*q \*q" boolean \*q
 Enable or disable PCI retries.  Default: off.
 .TP

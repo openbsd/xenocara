@@ -1,5 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/mga/mga_storm.c,v 1.99tsi Exp $ */
-
 #define PSZ 8
 
 #ifdef HAVE_CONFIG_H
@@ -27,7 +25,6 @@
 #include "servermd.h"
 
 #ifdef XF86DRI
-#include "cfb.h"
 #include "GL/glxtokens.h"
 #endif
 
@@ -142,12 +139,6 @@ static void mgaSubsequentDashedTwoPointLine( ScrnInfoPtr pScrn,
 #endif
 
 static void mgaRestoreAccelState( ScrnInfoPtr pScrn );
-
-#ifdef XF86DRI
-void mgaDRIInitBuffers(WindowPtr pWin, RegionPtr prgn, CARD32 index);
-void mgaDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
-    RegionPtr prgnSrc, CARD32 index);
-#endif
 
 static void MGASetClippingRectangle(ScrnInfoPtr pScrn, int x1, int y1,
 				int x2, int y2);
@@ -318,11 +309,6 @@ Bool MGASetupForCPUToScreenAlphaTextureFaked( ScrnInfoPtr pScrn, int op,
 
     CHECK_DMA_QUIESCENT(pMga, pScrn);
 
-    if(pMga->Overlay8Plus24) {
-        WAITFIFO(1);
-        SET_PLANEMASK_REPLICATED( 0x00ffffff, 0xffffffff, 32 );
-    }
-
     pitch = (width + 15) & ~15;
     sizeNeeded = pitch * height;
     if(pScrn->bitsPerPixel == 16)
@@ -406,11 +392,6 @@ MGASetupForCPUToScreenAlphaTexture (
     log2h = GetPowerOfTwo(height);
 
     CHECK_DMA_QUIESCENT(pMga, pScrn);
-
-    if(pMga->Overlay8Plus24) {
-        WAITFIFO(1);
-        SET_PLANEMASK_REPLICATED( 0x00ffffff, 0xffffffff, 32 );
-    }
 
     pitch = (width + 15) & ~15;
     sizeNeeded = (pitch * height) >> 1;
@@ -510,11 +491,6 @@ MGASetupForCPUToScreenTexture (
     log2h = GetPowerOfTwo(height);
 
     CHECK_DMA_QUIESCENT(pMga, pScrn);
-
-    if(pMga->Overlay8Plus24) {
-        WAITFIFO(1);
-        SET_PLANEMASK_REPLICATED( 0x00ffffff, 0xffffffff, 32 );
-    }
 
     pitch = (width + 15) & ~15;
     sizeNeeded = pitch * height;
@@ -619,37 +595,10 @@ Bool mgaAccelInit( ScreenPtr pScreen )
     pMga->MaxFastBlitY = 0;
     pMga->MaxBlitDWORDS = 0x40000 >> 5;
 
-    switch (pMga->Chipset) {
-    case PCI_CHIP_MGA2064:
-    	pMga->AccelFlags = BLK_OPAQUE_EXPANSION | FASTBLT_BUG;
-	break;
-    case PCI_CHIP_MGA2164:
-    case PCI_CHIP_MGA2164_AGP:
-    	pMga->AccelFlags = BLK_OPAQUE_EXPANSION |
-			   TRANSC_SOLID_FILL |
- 			   USE_RECTS_FOR_LINES;
-        break;
-    case PCI_CHIP_MGAG200_SE_A_PCI:
-    case PCI_CHIP_MGAG200_SE_B_PCI:
-    case PCI_CHIP_MGAG400:
-    case PCI_CHIP_MGAG550:
-    case PCI_CHIP_MGAG200:
-    case PCI_CHIP_MGAG200_PCI:
-        pMga->AccelFlags = TRANSC_SOLID_FILL |
-			   TWO_PASS_COLOR_EXPAND;
-        break;
-    case PCI_CHIP_MGA1064:
-	pMga->AccelFlags = 0;
-        break;
-    case PCI_CHIP_MGAG100:
-    case PCI_CHIP_MGAG100_PCI:
-    default:
-	pMga->AccelFlags = MGA_NO_PLANEMASK;
-        break;
-    }
 
-    /* all should be able to use this now with the bug fixes */
-    pMga->AccelFlags |= USE_LINEAR_EXPANSION;
+    /* Set initial acceleration flags.
+     */
+    pMga->AccelFlags = pMga->chip_attribs->accel_flags;
 
     if ((pMga->FbMapSize > 8*1024*1024) && (pScrn->depth == 8)) {
 	pMga->AccelFlags |= LARGE_ADDRESSES;
@@ -1179,6 +1128,8 @@ void MGAStormEngineInit( ScrnInfoPtr pScrn )
     case PCI_CHIP_MGAG200_PCI:
     case PCI_CHIP_MGAG200_SE_A_PCI:
     case PCI_CHIP_MGAG200_SE_B_PCI:
+    case PCI_CHIP_MGAG200_WINBOND_PCI:
+    case PCI_CHIP_MGAG200_EV_PCI:
 	pMga->SrcOrg = 0;
 	OUTREG(MGAREG_SRCORG, pMga->realSrcOrg);
 	OUTREG(MGAREG_DSTORG, pMga->DstOrg);
@@ -2570,179 +2521,3 @@ MGAFillCacheBltRects(
 
     SET_SYNC_FLAG(infoRec);
 }
-
-
-#if defined(XF86DRI)
-void
-mgaDRIInitBuffers(WindowPtr pWin, RegionPtr prgn, CARD32 index)
-{
-    ScreenPtr pScreen = pWin->drawable.pScreen;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-    MGAPtr pMga = MGAPTR(pScrn);
-    BoxPtr pbox = REGION_RECTS(prgn);
-    int nbox  = REGION_NUM_RECTS(prgn);
-
-    CHECK_DMA_QUIESCENT(MGAPTR(pScrn), pScrn);
-
-    mgaSetupForSolidFill(pScrn, 0, GXcopy, -1);
-    while (nbox--) {
-        MGASelectBuffer(pScrn, MGA_BACK);
-        mgaSubsequentSolidFillRect(pScrn, pbox->x1, pbox->y1,
-				   pbox->x2-pbox->x1, pbox->y2-pbox->y1);
-        MGASelectBuffer(pScrn, MGA_DEPTH);
-        mgaSubsequentSolidFillRect(pScrn, pbox->x1, pbox->y1,
-				   pbox->x2-pbox->x1, pbox->y2-pbox->y1);
-        pbox++;
-    }
-    MGASelectBuffer(pScrn, MGA_FRONT);
-
-    pMga->AccelInfoRec->NeedToSync = TRUE;
-}
-
-/*
-  This routine is a modified form of XAADoBitBlt with the calls to
-  ScreenToScreenBitBlt built in. My routine has the prgnSrc as source
-  instead of destination. My origin is upside down so the ydir cases
-  are reversed.
-*/
-
-void
-mgaDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
-		  RegionPtr prgnSrc, CARD32 index)
-{
-    ScreenPtr pScreen = pParent->drawable.pScreen;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-    MGAPtr pMga = MGAPTR(pScrn);
-    int nbox;
-    BoxPtr pbox, pboxTmp, pboxNext, pboxBase, pboxNew1, pboxNew2;
-    DDXPointPtr pptTmp, pptNew1, pptNew2;
-    int xdir, ydir;
-    int dx, dy;
-    DDXPointPtr pptSrc;
-    int screenwidth = pScrn->virtualX;
-    int screenheight = pScrn->virtualY;
-
-    CHECK_DMA_QUIESCENT(MGAPTR(pScrn), pScrn);
-
-    pbox = REGION_RECTS(prgnSrc);
-    nbox = REGION_NUM_RECTS(prgnSrc);
-    pboxNew1 = 0;
-    pptNew1 = 0;
-    pboxNew2 = 0;
-    pboxNew2 = 0;
-    pptSrc = &ptOldOrg;
-
-    dx = pParent->drawable.x - ptOldOrg.x;
-    dy = pParent->drawable.y - ptOldOrg.y;
-
-    /* If the copy will overlap in Y, reverse the order */
-    if (dy>0) {
-        ydir = -1;
-
-        if (nbox>1) {
-	    /* Keep ordering in each band, reverse order of bands */
-	    pboxNew1 = (BoxPtr)ALLOCATE_LOCAL(sizeof(BoxRec)*nbox);
-	    if (!pboxNew1) return;
-	    pptNew1 = (DDXPointPtr)ALLOCATE_LOCAL(sizeof(DDXPointRec)*nbox);
-	    if (!pptNew1) {
-	        DEALLOCATE_LOCAL(pboxNew1);
-	        return;
-	    }
-	    pboxBase = pboxNext = pbox+nbox-1;
-	    while (pboxBase >= pbox) {
-	        while ((pboxNext >= pbox) && (pboxBase->y1 == pboxNext->y1))
-		  pboxNext--;
-	        pboxTmp = pboxNext+1;
-	        pptTmp = pptSrc + (pboxTmp - pbox);
-	        while (pboxTmp <= pboxBase) {
-		    *pboxNew1++ = *pboxTmp++;
-		    *pptNew1++ = *pptTmp++;
-		}
-	        pboxBase = pboxNext;
-	    }
-	    pboxNew1 -= nbox;
-	    pbox = pboxNew1;
-	    pptNew1 -= nbox;
-	    pptSrc = pptNew1;
-	}
-    } else {
-        /* No changes required */
-        ydir = 1;
-    }
-
-    /* If the regions will overlap in X, reverse the order */
-    if (dx>0) {
-        xdir = -1;
-
-        if (nbox > 1) {
-	    /*reverse orderof rects in each band */
-	    pboxNew2 = (BoxPtr)ALLOCATE_LOCAL(sizeof(BoxRec)*nbox);
-	    pptNew2 = (DDXPointPtr)ALLOCATE_LOCAL(sizeof(DDXPointRec)*nbox);
-	    if (!pboxNew2 || !pptNew2) {
-	        if (pptNew2) DEALLOCATE_LOCAL(pptNew2);
-	        if (pboxNew2) DEALLOCATE_LOCAL(pboxNew2);
-	        if (pboxNew1) {
-		    DEALLOCATE_LOCAL(pptNew1);
-		    DEALLOCATE_LOCAL(pboxNew1);
-		}
-	       return;
-	    }
-	    pboxBase = pboxNext = pbox;
-	    while (pboxBase < pbox+nbox) {
-	        while ((pboxNext < pbox+nbox) &&
-		       (pboxNext->y1 == pboxBase->y1))
-		  pboxNext++;
-	        pboxTmp = pboxNext;
-	        pptTmp = pptSrc + (pboxTmp - pbox);
-	        while (pboxTmp != pboxBase) {
-		    *pboxNew2++ = *--pboxTmp;
-		    *pptNew2++ = *--pptTmp;
-		}
-	        pboxBase = pboxNext;
-	    }
-	    pboxNew2 -= nbox;
-	    pbox = pboxNew2;
-	    pptNew2 -= nbox;
-	    pptSrc = pptNew2;
-	}
-    } else {
-        /* No changes are needed */
-        xdir = 1;
-    }
-
-    mgaSetupForScreenToScreenCopy(pScrn, xdir, ydir, GXcopy, -1, -1);
-    for ( ; nbox-- ; pbox++) {
-	 int x1 = pbox->x1;
-	 int y1 = pbox->y1;
-	 int destx = x1 + dx;
-	 int desty = y1 + dy;
-	 int w = pbox->x2 - x1 + 1;
-	 int h = pbox->y2 - y1 + 1;
-
-	 if ( destx < 0 ) x1 -= destx, w += destx, destx = 0;
-	 if ( desty < 0 ) y1 -= desty, h += desty, desty = 0;
-	 if ( destx + w > screenwidth ) w = screenwidth - destx;
-	 if ( desty + h > screenheight ) h = screenheight - desty;
-	 if ( w <= 0 ) continue;
-	 if ( h <= 0 ) continue;
-
-	 MGASelectBuffer(pScrn, MGA_BACK);
-	 mgaSubsequentScreenToScreenCopy(pScrn, x1, y1, destx, desty, w, h);
-	 MGASelectBuffer(pScrn, MGA_DEPTH);
-	 mgaSubsequentScreenToScreenCopy(pScrn, x1, y1, destx, desty, w, h);
-    }
-    MGASelectBuffer(pScrn, MGA_FRONT);
-
-    if (pboxNew2) {
-        DEALLOCATE_LOCAL(pptNew2);
-        DEALLOCATE_LOCAL(pboxNew2);
-    }
-    if (pboxNew1) {
-        DEALLOCATE_LOCAL(pptNew1);
-        DEALLOCATE_LOCAL(pboxNew1);
-    }
-
-    pMga->AccelInfoRec->NeedToSync = TRUE;
-}
-
-#endif /* XF86DRI */

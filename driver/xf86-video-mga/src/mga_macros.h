@@ -3,6 +3,20 @@
 #ifndef _MGA_MACROS_H_
 #define _MGA_MACROS_H_
 
+#ifdef XSERVER_LIBPCIACCESS
+#define MGA_IO_ADDRESS(p) (p)->PciInfo->regions[(p)->io_bar].base_addr
+#define VENDOR_ID(p)      (p)->vendor_id
+#define DEVICE_ID(p)      (p)->device_id
+#define SUBSYS_ID(p)      (p)->subdevice_id
+#define CHIP_REVISION(p)  (p)->revision
+#else
+#define MGA_IO_ADDRESS(p) (p)->IOAddress
+#define VENDOR_ID(p)      (p)->vendor
+#define DEVICE_ID(p)      (p)->chipType
+#define SUBSYS_ID(p)      (p)->subsysCard
+#define CHIP_REVISION(p)  (p)->chipRev
+#endif
+
 #define RGBEQUAL(c) (!((((c) >> 8) ^ (c)) & 0xffff))
 
 #ifdef XF86DRI
@@ -63,15 +77,13 @@ while(INREG(MGAREG_DWGSYNC) != MGA_SYNC_XTAG) ; \
 #endif
 
 #ifdef USEMGAHAL
-#define HAL_CHIPSETS (pMga->is_HAL_chipset)
-    
 #define MGA_HAL(x) { \
 	MGAPtr pMga = MGAPTR(pScrn); \
-	if (pMga->HALLoaded && HAL_CHIPSETS) { x; } \
+	if (pMga->HALLoaded && pMga->chip_attribs->HAL_chipset) { x; } \
 }
 #define MGA_NOT_HAL(x) { \
 	MGAPtr pMga = MGAPTR(pScrn); \
-	if (!pMga->HALLoaded || !HAL_CHIPSETS) { x; } \
+	if (!pMga->HALLoaded || !pMga->chip_attribs->HAL_chipset) { x; } \
 }
 #else
 #define MGA_NOT_HAL(x) { x; }

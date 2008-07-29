@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/mga/mga_dac3026.c,v 1.58tsi Exp $ */
 /*
  * Copyright 1994 by Robin Cutshaw <robin@XFree86.org>
  *
@@ -136,14 +135,6 @@ const static unsigned char MGADACbpp32[DACREGSIZE] = {
 	0x00
 };
 
-/* on at least some 2064Ws, the PSEL line flips at 4MB or so, so PSEL keying
-   has to be off in register 0x1e -> bit4 clear */
-   
-const static unsigned char MGADACbpp8plus24[DACREGSIZE] = {
-	0x07, 0x06, 0x5b, 0x05, 0x00,   0x00, 0x2C, 0x00, 0x1E, 0xFF, 
-	0xFF, 0xFF, 0xFF, 0xFF, 0xFF,   0xFF, 0x00, 0x01, 0x00, 0x00, 
-	0x00
-};
     
 /*
  * Read/write to the DAC via MMIO 
@@ -517,11 +508,8 @@ MGA3026Init(ScrnInfoPtr pScrn, DisplayModePtr mode)
 		initDAC = MGADACbpp24;
 		break;
 	case 32:
-		if(pLayout->Overlay8Plus24)
-		    initDAC = MGADACbpp8plus24;
-		else
-		    initDAC = MGADACbpp32;
-		break;
+	    initDAC = MGADACbpp32;
+	    break;
 	default:
 		FatalError("MGA: unsupported bits per pixel\n");
 	}
@@ -534,11 +522,6 @@ MGA3026Init(ScrnInfoPtr pScrn, DisplayModePtr mode)
 	    pReg->DacRegs[i] = initDAC[i]; 
 	    if (MGADACregs[i] == 0x1D)
 		index_1d = i;
-	}
-
-        if((pLayout->bitsPerPixel == 32) && pLayout->Overlay8Plus24) {
-	    pReg->DacRegs[9] = pMga->colorKey;
-	    pReg->DacRegs[10] = pMga->colorKey;
 	}
 
 	if ( (pLayout->bitsPerPixel == 16) && (pLayout->weight.red == 5)
@@ -746,8 +729,13 @@ MGA3026Restore(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, MGARegPtr mgaReg,
 	for (i = 0; i < 6; i++)
 		OUTREG16(0x1FDE, (mgaReg->ExtVga[i] << 8) | i);
 
+#ifdef XSERVER_LIBPCIACCESS
+	pci_device_cfg_write_bits(pMga->PciInfo, OPTION_MASK, mgaReg->Option,
+				  PCI_OPTION_REG);
+#else
 	pciSetBitsLong(pMga->PciTag, PCI_OPTION_REG, OPTION_MASK,
 		       mgaReg->Option);
+#endif
 
 	MGA_NOT_HAL(
 	/* select pixel clock PLL as clock source */
@@ -866,7 +854,12 @@ MGA3026Save(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, MGARegPtr mgaReg,
 	for (i = 0; i < DACREGSIZE; i++)
 		mgaReg->DacRegs[i]	 = inTi3026(MGADACregs[i]);
 	
+#ifdef XSERVER_LIBPCIACCESS
+	pci_device_cfg_read_u32(pMga->PciInfo, & mgaReg->Option, 
+				PCI_OPTION_REG);
+#else
 	mgaReg->Option = pciReadLong(pMga->PciTag, PCI_OPTION_REG);
+#endif
 	
 #ifdef DEBUG		
 	ErrorF("read: %02X %02X %02X	%02X %02X %02X	%08lX\n",
@@ -1127,9 +1120,6 @@ void MGA3026LoadPalette(
 ){
     MGAPtr pMga = MGAPTR(pScrn);
     int i, index;
-
-    if(pMga->CurrentLayout.Overlay8Plus24 && (pVisual->nplanes != 8))
-	return;
 
     if (pVisual->nplanes == 16) {
 	for(i = 0; i < numColors; i++) {

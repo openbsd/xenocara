@@ -1,5 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/mga/mga_merge.c,v 1.4 2003/09/24 02:43:24 dawes Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -272,8 +270,9 @@ MGAPreInitMergedFB(ScrnInfoPtr pScrn1, int flags)
 	return TRUE;
     }
 
+#ifndef XSERVER_LIBPCIACCESS
     pMga->PciTag = pMga1->PciTag;
-   
+#endif
     pMga->Primary = pMga1->Primary;
 
     /* Set pScrn->monitor */
@@ -334,7 +333,6 @@ MGAPreInitMergedFB(ScrnInfoPtr pScrn1, int flags)
     pMga->ShowCache = pMga1->ShowCache;
     pMga->HasSDRAM = pMga1->HasSDRAM;
     pMga->MemClk = pMga1->MemClk;
-    pMga->Overlay8Plus24 = pMga1->Overlay8Plus24;
     pMga->colorKey = pMga1->colorKey;
     pScrn->colorKey = pScrn1->colorKey;
     pScrn->overlayFlags = pScrn1->overlayFlags;
@@ -363,6 +361,8 @@ MGAPreInitMergedFB(ScrnInfoPtr pScrn1, int flags)
     case PCI_CHIP_MGAG200_PCI:
     case PCI_CHIP_MGAG200_SE_A_PCI:
     case PCI_CHIP_MGAG200_SE_B_PCI:
+    case PCI_CHIP_MGAG200_WINBOND_PCI:
+    case PCI_CHIP_MGAG200_EV_PCI:
     case PCI_CHIP_MGAG400:
     case PCI_CHIP_MGAG550:
 	MGAGSetupFuncs(pScrn);
@@ -370,12 +370,13 @@ MGAPreInitMergedFB(ScrnInfoPtr pScrn1, int flags)
     }
 
     pMga->FbAddress = pMga1->FbAddress;
-    pMga->FbBaseReg = pMga1->FbBaseReg;
     pMga->PciInfo = pMga1->PciInfo;
+#ifndef XSERVER_LIBPCIACCESS
     pMga->IOAddress = pMga1->IOAddress;
     pMga->ILOADAddress = pMga1->ILOADAddress;
     pMga->BiosFrom = pMga1->BiosFrom;
     pMga->BiosAddress = pMga1->BiosAddress;
+#endif
 
     /*
      * Read the BIOS data struct
@@ -514,6 +515,8 @@ MGAPreInitMergedFB(ScrnInfoPtr pScrn1, int flags)
 	case PCI_CHIP_MGAG200_PCI:
 	case PCI_CHIP_MGAG200_SE_A_PCI:
 	case PCI_CHIP_MGAG200_SE_B_PCI:
+        case PCI_CHIP_MGAG200_WINBOND_PCI:
+        case PCI_CHIP_MGAG200_EV_PCI:
 	case PCI_CHIP_MGAG400:
 	case PCI_CHIP_MGAG550:
 	   maxPitch = 4096;
@@ -624,7 +627,6 @@ MGAPreInitMergedFB(ScrnInfoPtr pScrn1, int flags)
     pMga->CurrentLayout.weight.red = pScrn->weight.red;
     pMga->CurrentLayout.weight.green = pScrn->weight.green;
     pMga->CurrentLayout.weight.blue = pScrn->weight.blue;
-    pMga->CurrentLayout.Overlay8Plus24 = pMga->Overlay8Plus24;
     pMga->CurrentLayout.mode = pScrn->currentMode;
 
 

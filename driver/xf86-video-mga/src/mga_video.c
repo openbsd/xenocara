@@ -1,5 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/mga/mga_video.c,v 1.33tsi Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -63,6 +61,10 @@ static void MGAResetVideoOverlay(ScrnInfoPtr);
 
 static void MGAVideoTimerCallback(ScrnInfoPtr pScrn, Time time);
 
+static XF86VideoAdaptorPtr MGASetupImageVideoILOAD(ScreenPtr);
+static int MGAPutImageILOAD(ScrnInfoPtr, short, short, short, short, short, 
+			    short, short, short, int, unsigned char*, short,
+			    short, Bool, RegionPtr, pointer, DrawablePtr);
 
 #define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
 
@@ -89,16 +91,28 @@ void MGAInitVideo(ScreenPtr pScreen)
     MGAPtr pMga = MGAPTR(pScrn);
     int num_adaptors;
 
-    if((pScrn->bitsPerPixel != 8) && !pMga->NoAccel &&
-       (pMga->SecondCrtc == FALSE) &&
-       ((pMga->Chipset == PCI_CHIP_MGAG200) ||
-        (pMga->Chipset == PCI_CHIP_MGAG200_PCI) ||
-        (pMga->Chipset == PCI_CHIP_MGAG400) ||
-	(pMga->Chipset == PCI_CHIP_MGAG550))) 
-    {
-	if((pMga->Overlay8Plus24 || pMga->TexturedVideo) &&
-	   (pScrn->bitsPerPixel != 24))
-        {
+    if ((pScrn->bitsPerPixel != 8) && !pMga->NoAccel &&
+	(pMga->SecondCrtc == FALSE) &&
+	((pMga->Chipset == PCI_CHIP_MGA2164) ||
+	 (pMga->Chipset == PCI_CHIP_MGA2164_AGP) ||     
+/*	 (pMga->Chipset == PCI_CHIP_MGA2064) ||     */
+	 (pMga->Chipset == PCI_CHIP_MGAG200) ||     
+	 (pMga->Chipset == PCI_CHIP_MGAG200_PCI) ||
+	 (pMga->Chipset == PCI_CHIP_MGAG400) ||
+	 (pMga->Chipset == PCI_CHIP_MGAG550))) {
+	if ((pMga->Chipset == PCI_CHIP_MGA2164) ||
+/*	    (pMga->Chipset == PCI_CHIP_MGA2064) ||   */  
+	    (pMga->Chipset == PCI_CHIP_MGA2164_AGP)) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Using MGA 2164W ILOAD video\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, 
+		       "This is an experimental driver and may not work on your machine.\n");
+
+	    newAdaptor = MGASetupImageVideoILOAD(pScreen);
+	    pMga->TexturedVideo = TRUE; 
+	    /* ^^^ this is not really true but the ILOAD scaler shares 
+	     * much more code with the textured video than the overlay 
+	     */
+	} else if (pMga->TexturedVideo && (pScrn->bitsPerPixel != 24)) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Using texture video\n");
 	    newAdaptor = MGASetupImageVideoTexture(pScreen);
 	    pMga->TexturedVideo = TRUE;
@@ -107,8 +121,8 @@ void MGAInitVideo(ScreenPtr pScreen)
 	    newAdaptor = MGASetupImageVideoOverlay(pScreen);
 	    pMga->TexturedVideo = FALSE;
 	}
-	if(!pMga->Overlay8Plus24)
-	    MGAInitOffscreenImages(pScreen);
+
+	MGAInitOffscreenImages(pScreen);
     }
 
     num_adaptors = xf86XVListGenericAdaptors(pScrn, &adaptors);
@@ -782,11 +796,6 @@ MGADisplayVideoTexture(
    
     CHECK_DMA_QUIESCENT(pMga, pScrn);
 
-    if(pMga->Overlay8Plus24) {
-	WAITFIFO(1);
-	SET_PLANEMASK_REPLICATED( 0x00ffffff, 0xffffffff, 32 );
-    }
-
     WAITFIFO(15);
     OUTREG(MGAREG_TMR0, incx);  /* sx inc */
     OUTREG(MGAREG_TMR1, 0);  /* sy inc */
@@ -1257,4 +1266,761 @@ MGAInitOffscreenImages(ScreenPtr pScreen)
     }
 
     xf86XVRegisterOffscreenImages(pScreen, offscreenImages, num);
+}
+
+
+/* Matrox MGA 2164W Xv extension support.
+*  The extension is implemented as a HOST->FB image load in YUV format. 
+*  I decided not to use real hardware overlay since on the Millennium II
+*  it would limit the size of the frame buffer to 4Mb (even on a 16Mb
+*  card) due to an hardware limitation.
+*  Author: Gabriele Gorla (gorlik@yahoo.com)
+*  Based on the MGA-Gxxx Xv extension by: Mark Vojkovich
+   */
+
+/* This code is still in alpha stage. Only YUV->RGB conversion
+   and horizontal scaling are hardware accelerated.
+   All 4 FOURCC formats supported by X should be supported.
+   It has been tested only on my DEC XP1000 at 1024x768x32 under
+   linux 2.6.18 with X.org 7.1.1 (debian alpha)
+
+   Bug reports and success/failure stories are greatly appreciated.
+*/
+
+/* #define DEBUG_MGA2164 */
+/* #define CUSTOM_MEMCOPY */
+#define MGA2164_SWFILTER
+
+
+static XF86VideoAdaptorPtr
+MGASetupImageVideoILOAD(ScreenPtr pScreen)
+{
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    XF86VideoAdaptorPtr adapt;
+    MGAPtr pMga = MGAPTR(pScrn);
+
+    adapt = MGAAllocAdaptor(pScrn, FALSE);
+
+    adapt->type = XvWindowMask | XvInputMask | XvImageMask;
+    adapt->flags = 0;
+    adapt->name = "Matrox Millennium II ILOAD Video Engine";
+    adapt->nEncodings = 1;
+    adapt->pEncodings = &DummyEncoding[1];
+    adapt->nFormats = NUM_FORMATS;
+    adapt->pFormats = Formats;
+    adapt->nPorts = MGA_MAX_PORTS;
+    adapt->pAttributes = NULL;
+    adapt->nAttributes = 0;
+    
+    /* number of supported color formats */
+    adapt->pImages = Images;
+    adapt->nImages = 4;
+
+    adapt->PutVideo = NULL;
+    adapt->PutStill = NULL;
+    adapt->GetVideo = NULL;
+    adapt->GetStill = NULL;
+    adapt->StopVideo = MGAStopVideo;
+    
+    adapt->SetPortAttribute = MGASetPortAttributeTexture;
+    adapt->GetPortAttribute = MGAGetPortAttributeTexture;
+    adapt->QueryBestSize = MGAQueryBestSize;
+    adapt->PutImage = MGAPutImageILOAD;
+    adapt->QueryImageAttributes = MGAQueryImageAttributes;
+
+    REGION_INIT(pScreen, &(pMga->portPrivate->clip), NullBox, 0);
+
+    return adapt;
+}
+
+/* this function is optimized for alpha. It might be better also for 
+other load/store risc architectures but I never tested on anything else 
+than my ev56 */
+static void CopyMungedScanline_AXP(CARD32 *fb_ptr, short src_w,
+				   CARD32 *tsp, CARD32 *tpu, CARD32 *tpv)
+{
+    CARD32 k,y0,y1,u,v;
+  
+    for(k=src_w/8;k;k--) {
+	y0=*tsp;
+	y1=*(tsp+1);
+	u=*tpu;
+	v=*tpv;
+
+	*(fb_ptr)=(y1&0x000000ff)|((y1&0x0000ff00)<<8) |
+	    (v&0x00ff0000)<<8 | (u&0x00ff0000)>>8;
+	*(fb_ptr+1)=(y1&0x000000ff)|((y1&0x0000ff00)<<8) |
+	    (v&0x00ff0000)<<8 | (u&0x00ff0000)>>8;
+
+	*(fb_ptr+2)=(y0&0x000000ff)|((y0&0x0000ff00)<<8) |
+	    (v&0x000000ff)<<24 | (u&0x000000ff)<<8;
+	*(fb_ptr+3)=(y0&0x000000ff)|((y0&0x0000ff00)<<8) |
+	    (v&0x000000ff)<<24 | (u&0x000000ff)<<8;
+
+	/*correct below*/
+	/*    *(fb_ptr)=(y0&0x000000ff)|((y0&0x0000ff00)<<8) |
+	      (v&0x000000ff)<<24 | (u&0x000000ff)<<8;
+	      *(fb_ptr+1)=((y0&0x00ff0000)>>16)|((y0&0xff000000)>>8) |
+	      (v&0x0000ff00)<<16 | (u&0x0000ff00);
+	      *(fb_ptr+2)=(y1&0x000000ff)|((y1&0x0000ff00)<<8) |
+	      (v&0x00ff0000)<<8 | (u&0x00ff0000)>>8;
+	      *(fb_ptr+3)=((y1&0x00ff0000)>>16)|((y1&0xff000000)>>8) |
+	      (v&0xff000000) | (u&0xff000000)>>16; */
+
+	tsp+=2; tpu++; tpv++;    
+	fb_ptr+=4;
+    }
+}
+
+static void CopyMungedScanline_AXP2(CARD32 *fb_ptr, short src_w,
+				    CARD32 *tsp, CARD32 *tpu, CARD32 *tpv)
+{
+    CARD8 *y, *u, *v;
+    int k;
+    y=(CARD8 *)tsp;
+    u=(CARD8 *)tpu;
+    v=(CARD8 *)tpv;
+
+    for(k=src_w/8;k;k--) {
+	fb_ptr[0]=y[0] | y[1]<<16 | v[0]<<24 | u[0]<<8;
+	fb_ptr[1]=y[2] | y[3]<<16 | v[1]<<24 | u[1]<<8;
+	fb_ptr[2]=y[4] | y[5]<<16 | v[2]<<24 | u[2]<<8;
+	fb_ptr[3]=y[6] | y[7]<<16 | v[3]<<24 | u[3]<<8;
+
+	y+=8; u+=4; v+=4;
+	fb_ptr+=4;
+    }
+}
+
+
+static void CopyMungedScanlineFilter_AXP(CARD32 *fb_ptr, short src_w,
+					 CARD32 *tsp1, CARD32 *tpu1, CARD32 *tpv1,
+					 CARD32 *tsp2, CARD32 *tpu2, CARD32 *tpv2,
+					 int beta, int xds )
+{
+    unsigned int k,y0_1,y1_1,y0_2,y1_2,u,v;
+    int yf[8], uf[4], vf[4];
+    int oneminbeta = 0xff - beta;
+
+    for(k=xds*src_w/8;k;k--) {
+	y0_1=*tsp1;
+	y1_1=*(tsp1+1);
+	y0_2=*tsp2;
+	y1_2=*(tsp2+1);
+	u=*tpu1;
+	v=*tpv1;
+
+	tsp1+=2; tsp2+=2; tpu1++; tpv1++; 
+	yf[0] = ((y0_1&0x000000ff)*oneminbeta + (y0_2&0x000000ff)*beta )>>8;
+	yf[1] = (((y0_1&0x0000ff00)>>8)*oneminbeta + ((y0_2&0x0000ff00)>>8)*beta )>>8;
+	yf[2] = (((y0_1&0x00ff0000)>>16)*oneminbeta + ((y0_2&0x00ff0000)>>16)*beta )>>8;
+	yf[3] = (((y0_1&0xff000000)>>24)*oneminbeta + ((y0_2&0xff000000)>>24)*beta )>>8;
+	yf[4] = ((y1_1&0x000000ff)*oneminbeta + (y1_2&0x000000ff)*beta )>>8;
+	yf[5] = (((y1_1&0x0000ff00)>>8)*oneminbeta + ((y1_2&0x0000ff00)>>8)*beta )>>8;
+	yf[6] = (((y1_1&0x00ff0000)>>16)*oneminbeta + ((y1_2&0x00ff0000)>>16)*beta )>>8;
+	yf[7] = (((y1_1&0xff000000)>>24)*oneminbeta + ((y1_2&0xff000000)>>24)*beta )>>8;
+
+	/* FIXME: there is still no filtering on u and v */
+	uf[0]=(u&0x000000ff);
+	uf[1]=(u&0x0000ff00)>>8;
+	uf[2]=(u&0x00ff0000)>>16;
+	uf[3]=(u&0xff000000)>>24;
+
+	vf[0]=(v&0x000000ff);
+	vf[1]=(v&0x0000ff00)>>8;
+	vf[2]=(v&0x00ff0000)>>16;
+	vf[3]=(v&0xff000000)>>24;
+
+	switch(xds) {
+	case 1:
+	    *(fb_ptr)=(yf[0]) | (yf[1]<<16) |
+		vf[0]<<24 | uf[0]<<8;
+	    *(fb_ptr+1)=(yf[2]) | (yf[3]<<16) |
+		vf[1]<<24 | uf[1]<<8;
+	    *(fb_ptr+2)=(yf[4]) | (yf[5]<<16) |
+		vf[2]<<24 | uf[2]<<8;
+	    *(fb_ptr+3)=(yf[6]) | (yf[7]<<16) |
+		vf[3]<<24 | uf[3]<<8;
+	    fb_ptr+=4;
+	    break;
+
+	case 2:
+	    *(fb_ptr)=(yf[0]+yf[1])/2 | (((yf[2]+yf[3])/2)<<16) |
+		((vf[0]+vf[1])/2 )<<24 | ((uf[0]+uf[1])/2)<<8;
+	    *(fb_ptr+1)=(yf[4]+yf[5])/2 | ( ((yf[6]+yf[7])/2) <<16) |
+		((vf[2]+vf[3])/2 )<<24 | ((uf[2]+uf[3])/2)<<8;
+	    fb_ptr+=2;
+	    break;
+
+	case 4:
+	    *(fb_ptr)=(yf[0]+yf[1]+yf[2]+yf[3])/4 | (((yf[4]+yf[5]+yf[6]+yf[7])/4)<<16) |
+		((vf[0]+vf[1]+vf[2]+vf[3])/4 )<<24 | ((uf[0]+uf[1]+uf[2]+uf[3])/4)<<8;
+	    fb_ptr+=1;
+	    break;
+
+	default:
+	    break;
+	}
+    }
+}
+
+static void CopyMungedScanlineFilterDown_AXP(CARD32 *fb_ptr, short src_w,
+					     CARD32 *tsp1, CARD32 *tpu1, CARD32 *tpv1,
+					     CARD32 *tsp2, CARD32 *tpu2, CARD32 *tpv2,
+					     int beta , int xds)
+{
+    unsigned int k,y0_1,y1_1,y0_2,y1_2,u,v;
+    int yf[8], uf[4], vf[4];
+  
+    for(k=src_w/8;k;k--) {
+	y0_1=*tsp1;
+	y1_1=*(tsp1+1);
+	y0_2=*tsp2;
+	y1_2=*(tsp2+1);
+	u=*tpu1;
+	v=*tpv1;
+
+	tsp1+=2; tsp2+=2; tpu1++; tpv1++;
+	yf[0] = ((y0_1&0x000000ff) + (y0_2&0x000000ff))>>8;
+	yf[1] = (((y0_1&0x0000ff00)>>8) + ((y0_2&0x0000ff00)>>8))>>8;
+	yf[2] = (((y0_1&0x00ff0000)>>16) + ((y0_2&0x00ff0000)>>16))>>8;
+	yf[3] = (((y0_1&0x000000ff)>>24) + ((y0_2&0x000000ff)>>24))>>8;
+	yf[4] = ((y1_1&0x000000ff) + (y1_2&0x000000ff))>>8;
+	yf[5] = (((y1_1&0x0000ff00)>>8) + ((y1_2&0x0000ff00)>>8))>>8;
+	yf[6] = (((y1_1&0x00ff0000)>>16) + ((y1_2&0x00ff0000)>>16))>>8;
+	yf[7] = (((y1_1&0x000000ff)>>24) + ((y1_2&0x000000ff)>>24))>>8;
+
+	*(fb_ptr)=(yf[0]) | (yf[1]<<16) |
+	    (v&0x000000ff)<<24 | (u&0x000000ff)<<8;
+	*(fb_ptr+1)=(yf[2]) | (yf[3]<<16) |
+	    (v&0x0000ff00)<<16 | (u&0x0000ff00);
+	*(fb_ptr+2)=(yf[4]) | (yf[5]<<16) |
+	    (v&0x00ff0000)<<8 | (u&0x00ff0000)>>8;
+	*(fb_ptr+3)=(yf[6]) | (yf[7]<<16) |
+	    (v&0xff000000) | (u&0xff000000)>>16;
+
+	fb_ptr+=4;
+    }
+}
+
+static void MGACopyScaledILOAD(
+			       ScrnInfoPtr pScrn,
+			       int id, unsigned char *buf,
+			       BoxPtr pbox,
+			       int width, int height, int pitch,
+			       short src_x, short src_y,
+			       short src_w, short src_h,
+			       short drw_x, short drw_y,
+			       short drw_w, short drw_h
+			       )
+{
+    MGAPtr pMga = MGAPTR(pScrn);
+    CARD32 *fb_ptr;
+    unsigned char *ubuf, *vbuf, *tbuf;
+    CARD32 *pu, *pv;
+    int k,l, pl, dl, xds, yds;
+    short box_h;
+    short scr_pitch = ( pScrn->virtualX + 15) & ~15;
+
+#ifdef DEBUG_MGA2164
+    char sbuf[255];
+
+    sprintf(sbuf,"---- PBOX: x1=%d y1=%d w=%d h=%d (x2=%d y2=%d)\n",
+	    pbox->x1,pbox->y1,pbox->x2-pbox->x1,pbox->y2-pbox->y1,
+	    pbox->x2,pbox->y2);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf);
+
+    sprintf(sbuf,"in src: src_x=%d src_y=%d src_w=%d src_h=%d\n",
+	    src_x,src_y,src_w,src_h);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf);
+    sprintf(sbuf,"in drw: drw_x=%d drw_y=%d drw_w=%d drw_h=%d\n",
+	    drw_x,drw_y,drw_w,drw_h);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf);
+#endif
+
+    /* scaling yuv->rgb */
+
+    /* hack to force width and src image to be 8 pixel aligned */
+    src_x&=~0x7;
+    src_w&=~0x7;
+
+    box_h=pbox->y2-pbox->y1;
+
+    /* compute X down scaling factor */
+    if(src_w>drw_w) {
+	if(src_w/2<drw_w) {
+	    xds=2;
+	} else if(src_w/4<drw_w) {
+	    xds=4;
+	} else { xds=8; }
+    } else xds = 1;
+
+    /* prevent crashing when dragging window outside left boundary of screen */
+    /* FIXME: need to implement per pixel left start to avoid undesired
+       effects when dragging window outside left screen boundary */
+
+    if(drw_x<0) {
+	src_x=( -(drw_x*src_w)/drw_w + 0x7)&~0x7;
+	src_w-=src_x;
+	drw_w+=drw_x;
+	drw_x=0;
+    }
+
+    src_w/=xds;
+
+    /* compute X down scaling factor */
+    if(src_h>drw_h) {
+	if(src_h/2<drw_h) {
+	    yds=2;
+	} else if(src_h/4<drw_h) {
+	    yds=4;
+	} else { yds=8; }
+    } else yds = 1;
+
+
+#ifdef DEBUG_MGA2164
+    char sbuf[255];
+
+    sprintf(sbuf,"---- xds = %d\n",
+	    xds);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf);
+#endif
+
+
+#ifdef DEBUG_MGA2164
+    sprintf(sbuf,"out src: src_x=%d src_y=%d src_w=%d src_h=%d\n",
+	    src_x,src_y,src_w,src_h);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf);
+    sprintf(sbuf,"out drw: drw_x=%d drw_y=%d drw_w=%d drw_h=%d\n",
+	    drw_x,drw_y,drw_w,drw_h);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf);
+#endif
+
+    CHECK_DMA_QUIESCENT(pMga, pScrn);
+
+    /* scaling ILOAD */
+
+    vbuf=buf+width*height;
+    ubuf=vbuf+width*height/4;
+    pu = (CARD32 *)(ubuf+(src_y/2)*(width/2));
+    pv = (CARD32 *)(vbuf+(src_y/2)*(width/2));
+
+    for(pl=-1,dl=0;dl<box_h;dl++) {
+	int beta;
+	l=(dl+(pbox->y1-drw_y))*src_h/drw_h;
+	/* FIXME: check the math */
+	beta = ((dl+(pbox->y1-drw_y))*src_h*0xff/drw_h) - ((dl+(pbox->y1-drw_y))*src_h/drw_h*0xff);
+
+#ifdef MGA2164_BLIT_DUP
+	if(l!=pl)
+#else
+	    if(1)
+#endif
+		{
+
+		    /*
+		      #ifdef DEBUG_MGA2164
+		      sprintf(sbuf,"new line: scr_dst %d   img_src %d   prev %d\n",
+		      dl,l,pl);
+		      xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf);
+		      #endif
+		    */
+
+		    OUTREG(MGAREG_DWGCTL, MGADWG_ILOAD_HIQH | MGADWG_BUYUV | MGADWG_SHIFTZERO
+			   | MGADWG_SGNZERO | 0xc0000);
+    
+		    OUTREG(MGAREG_AR0, pbox->x1 + drw_w -1);    /* SRC LINE END   why -1 ? */
+		    OUTREG(MGAREG_AR2, ( ( (src_w-1)<<16) / (drw_w-1)) + 1 ); /* ((SRC_X_DIM -1)<<16) / (DST_X_DIM-1) +1 */
+		    OUTREG(MGAREG_AR3, pbox->x1 );                            /* SRC LINE START*/
+		    OUTREG(MGAREG_AR5, scr_pitch);                            /* DST_Y_INCR = PITCH? */
+		    OUTREG(MGAREG_AR6, ((src_w-drw_w)<<16) / (drw_w-1) );     /* */
+		    OUTREG(MGAREG_FXBNDRY, drw_x|((drw_x+drw_w-1)<<16) );     /* why -1 ? */
+		    OUTREG(MGAREG_CXBNDRY, pbox->x1 | ((pbox->x2-1)<<16 ) );
+		    OUTREG(MGAREG_YDST , pbox->y1+dl );                       /* Y_START_POS */
+		    OUTREG(MGAREG_LEN + MGAREG_EXEC , 1);                     /* # of LINES */
+    
+		    /* xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Data finished\n"); */
+    
+		    fb_ptr=(CARD32 *)pMga->ILOADBase;
+  
+		    switch(id) {
+		    case FOURCC_YV12:
+		    case FOURCC_I420:
+			tbuf=buf+(l+src_y)*width;
+			{
+			    CARD32 *tpu=pu+src_x/8+l/2*width/8;
+			    CARD32 *tpv=pv+src_x/8+l/2*width/8;
+			    CARD32 *tsp=(CARD32 *)(tbuf+src_x), *tsp2;
+
+			    if((l+src_y)<(src_h-1))
+				tsp2=(CARD32 *)(tbuf+src_x+width);
+			    else
+				tsp2=(CARD32 *)(tbuf+src_x);
+
+			    /* it is not clear if waiting is actually good for performance */
+			    /*	 WAITFIFO(pMga->FifoSize);*/
+			    /* should try to get MGACopyMunged data to work here */
+			    /*		CopyMungedScanline_AXP(fb_ptr,src_w,tsp,tpu,tpv); */
+
+			    /* Filter does not work yet */
+			    CopyMungedScanlineFilter_AXP(fb_ptr,src_w,tsp,tpu,tpv,tsp2,tpu,tpv, beta, xds); 
+			    /*	if(l&1) {
+				pu+=width/8;
+				pv+=width/8;
+				} */
+			}
+			break;
+		    case FOURCC_UYVY:
+		    case FOURCC_YUY2:
+			tbuf=buf+(l+src_y)*width*2;
+
+#ifndef MGA2164_SWFILTER
+			WAITFIFO(pMga->FifoSize/2);
+			memcpy(fb_ptr, tbuf+src_x*2, src_w*2);
+			fb_ptr+=src_w*2;   /* pointer in the pseudo dma window */
+#else
+			{
+			    CARD32 *tsp=(CARD32 *)(tbuf+src_x*2), *tsp2;
+
+			    if((l+src_y)<(src_h-1))
+				tsp2=(CARD32 *)(tbuf+src_x*2+width*2);
+			    else
+				tsp2=(CARD32 *)(tbuf+src_x*2);
+			    /*	  {
+				  char sbuf [256];
+				  sprintf(sbuf,"dst line: %d   src_line: %d    beta: %x\n",
+				  dl, l, beta );
+				  xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf);
+				  }  */
+
+			    WAITFIFO(pMga->FifoSize/4);
+			    for(k=xds*src_w/8;k;k--) {
+				int oneminbeta = 0xff-beta;
+				int y[8], u[4], v[4], ya[4], ua[2], va[2], p;
+
+				switch(yds) {
+				case 1:
+				    /* upscale y filter */
+				    for(p=0;p<4;p++) {
+					y[2*p]=(((*(tsp+p)&0x000000ff))*oneminbeta+((*(tsp2+p)&0x000000ff))*beta)>>8;
+					y[2*p+1]=(((*(tsp+p)&0x00ff0000)>>16)*oneminbeta+((*(tsp2+p)&0x00ff0000)>>16)*beta)>>8;
+					u[p]=(((*(tsp+p)&0x0000ff00)>>8)*oneminbeta+((*(tsp2+p)&0x0000ff00)>>8)*beta)>>8;
+					v[p]=(((*(tsp+p)&0xff000000)>>24)*oneminbeta+((*(tsp2+p)&0xff000000)>>24)*beta)>>8;
+				    }
+				    break;
+				    /* downscale y filter */
+				case 2:
+				case 3:
+				case 4:
+				default:
+				    for(p=0;p<4;p++) {
+					y[2*p]=(((*(tsp+p)&0x000000ff)));
+					y[2*p+1]=(((*(tsp+p)&0x00ff0000)>>16));
+					u[p]=(((*(tsp+p)&0x0000ff00)>>8));
+					v[p]=(((*(tsp+p)&0xff000000)>>24));
+				    }
+				    break;
+				}
+
+				switch (xds) {
+				case 1: /* simple copy */
+				    *(fb_ptr++)=y[0]|y[1]<<16|u[0]<<8|v[0]<<24;
+				    *(fb_ptr++)=y[2]|y[3]<<16|u[1]<<8|v[1]<<24;
+				    *(fb_ptr++)=y[4]|y[5]<<16|u[2]<<8|v[2]<<24;
+				    *(fb_ptr++)=y[6]|y[7]<<16|u[3]<<8|v[3]<<24;
+				    break;
+				case 2: /* dowscale by 2 */
+				    ya[0]=(y[0]+y[1])>>1;
+				    ya[1]=(y[2]+y[3])>>1;
+				    ya[2]=(y[4]+y[5])>>1;
+				    ya[3]=(y[6]+y[7])>>1;
+				    ua[0]=(u[0]+u[1])>>1;
+				    ua[1]=(u[2]+u[3])>>1;
+				    va[0]=(v[0]+v[1])>>1;
+				    va[1]=(v[2]+v[3])>>1;
+				    *(fb_ptr++)=ya[0]|ya[1]<<16|ua[0]<<8|va[0]<<24;
+				    *(fb_ptr++)=ya[2]|ya[3]<<16|ua[1]<<8|va[1]<<24;
+				    break;
+				case 4: /* downscale by 4 */
+				    ya[0]=(y[0]+y[1]+y[2]+y[3])>>2;
+				    ya[1]=(y[4]+y[5]+y[6]+y[7])>>2;
+				    ua[0]=(u[0]+u[1]+u[2]+u[3])>>2;
+				    va[0]=(v[0]+v[1]+v[2]+v[3])>>2;
+				    *(fb_ptr++)=ya[0]|ya[1]<<16|ua[0]<<8|va[0]<<24;
+				    break;
+				case 8:
+				default:
+				    break;
+				}
+
+				/* fb_ptr+=4; */
+				tsp+=4; tsp2+=4;
+			    }
+			}
+#endif /* MGA2164_SWFILTER */
+			break;
+		    default:
+			break;
+		    }
+		    pl=l;
+		} else {
+		    /* dup lines */
+
+#ifdef DEBUG_MGA2164
+		    sprintf(sbuf,"dup line: scr_src %d   scr_dst %d\n",
+			    dl-1,dl);
+		    xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf);
+#endif
+
+		    OUTREG(MGAREG_DWGCTL, 0x040C6008);
+		    OUTREG(MGAREG_FXBNDRY, pbox->x1|((pbox->x2-1)<<16) );      /* why -1 ? */
+		    OUTREG(MGAREG_AR3, (pbox->y1+dl-1)*scr_pitch+pbox->x1 );   /* SRC LINE START*/
+		    OUTREG(MGAREG_AR0, (pbox->y1+dl-1)*scr_pitch+pbox->x2 -1); /* SRC LINE END   why -1 ? */
+		    OUTREG(MGAREG_AR5, scr_pitch);                             /* DST_Y_INCR = PITCH? */
+		    OUTREG(MGAREG_YDST , pbox->y1+dl);                         /* Y_START_POS */
+		    OUTREG(MGAREG_LEN + MGAREG_EXEC , 1);                      /* # of LINES */
+		}
+    }
+    OUTREG(MGAREG_CXBNDRY, 0xFFFF0000);
+}
+
+static void MGACopyILOAD(
+			 ScrnInfoPtr pScrn,
+			 int id, unsigned char *buf,
+			 BoxPtr pbox,
+			 int width, int height, int pitch,
+			 short src_x, short src_y,
+			 short src_w, short src_h,
+			 short drw_x, short drw_y,
+			 short drw_w, short drw_h
+			 )
+{
+    MGAPtr pMga = MGAPTR(pScrn);
+    CARD32 *fb_ptr;
+    CARD8  *ubuf, *vbuf;
+    CARD32 *pu, *pv;
+    int k,l;
+    short clip_x1, clip_x2, tmp_w;
+
+#ifdef DEBUG_MGA2164
+    char sbuf[255];
+  
+    sprintf(sbuf,"---- PBOX: x1=%d y1=%d w=%d h=%d (x2=%d y2=%d)\n",
+	    pbox->x1,pbox->y1,pbox->x2-pbox->x1,pbox->y2-pbox->y1,
+	    pbox->x2,pbox->y2);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf);
+  
+    sprintf(sbuf,"in src: src_x=%d src_y=%d src_w=%d src_h=%d\n",
+	    src_x,src_y,src_w,src_h);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf);
+    sprintf(sbuf,"in drw: drw_x=%d drw_y=%d drw_w=%d drw_h=%d\n",
+	    drw_x,drw_y,drw_w,drw_h);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf);
+#endif
+
+    /* non-scaling yuv->rgb */
+
+    /* hack to force width and src image to be 8 pixel aligned */
+    src_x&=~0x7;
+    src_w&=~0x7;
+    drw_w&=~0x7;
+    tmp_w=drw_w;
+    clip_x1=drw_x;
+    clip_x2=drw_x+drw_w;
+
+    /* hack for clipping in non scaling version */
+    /* this works only if no scaling */
+    if(pbox->x1 > drw_x) {              /* left side X clipping*/
+	src_x+=((pbox->x1-drw_x)&~0x7);
+	src_w-=((pbox->x1-drw_x)&~0x7);
+	clip_x1=pbox->x1;
+	drw_x+=src_x;
+	drw_w=src_w;
+    }
+
+    if( (pbox->x2) < (drw_x+drw_w) ) {     /* right side X clipping */
+	tmp_w=( (pbox->x2) - drw_x );
+	drw_w= tmp_w & (~0x7);
+	if(drw_w!=tmp_w) drw_w+=8;
+	clip_x2=drw_x+tmp_w-1; /* not sure why needs -1 */
+	src_w=drw_w;
+    }
+
+    if(pbox->y1 > drw_y) {             /* top side Y clipping */
+	src_y+=(pbox->y1-drw_y);
+	src_h-=(pbox->y1-drw_y);
+	drw_y+=src_y;
+	drw_h=src_h;
+    }
+    if((pbox->y2)<(drw_y+drw_h)) {     /* bottom side Y clipping */
+	drw_h=(pbox->y2)-drw_y;
+	src_h=drw_h;
+    }
+
+    if(drw_x<0) drw_x=0;
+
+#ifdef DEBUG_MGA2164
+    sprintf(sbuf,"out src: src_x=%d src_y=%d src_w=%d src_h=%d\n",
+	    src_x,src_y,src_w,src_h);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf);
+    sprintf(sbuf,"out drw: drw_x=%d drw_y=%d drw_w=%d drw_h=%d\n",
+	    drw_x,drw_y,drw_w,drw_h);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf);
+#endif
+
+    /* ready to draw */
+    if(drw_w==0||drw_h==0) return;
+
+    if(drw_w<0||drw_h<0) {
+	/* actually until scaling is working this might happen
+	   during normal operation */
+	/*  sprintf(sbuf,"drw_w or drw_h are negative (this should never
+	    happen)\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, sbuf); */
+	return;
+    }
+
+    CHECK_DMA_QUIESCENT(pMga, pScrn);
+
+    /* non scaling ILOAD */
+    WAITFIFO(6);
+    OUTREG(MGAREG_AR5, 0);
+    OUTREG(MGAREG_DWGCTL, MGADWG_ILOAD | MGADWG_BUYUV | MGADWG_SHIFTZERO
+	   | MGADWG_SGNZERO | 0xc0000);
+    OUTREG(MGAREG_AR0, (drw_w)-1 );
+    OUTREG(MGAREG_AR3, 0);
+    OUTREG(MGAREG_CXBNDRY, clip_x1|(clip_x2<<16));
+    OUTREG(MGAREG_FXBNDRY, drw_x|((drw_x+drw_w-1)<<16));
+    OUTREG(MGAREG_YDSTLEN + MGAREG_EXEC , (drw_y<<16)|drw_h);
+
+    fb_ptr=(CARD32 *)pMga->ILOADBase;
+    vbuf=buf+width*height;
+    ubuf=vbuf+width*height/4;
+
+    switch(id) {
+    case FOURCC_YV12:
+    case FOURCC_I420:
+	pu = (CARD32 *)(ubuf+(src_y/2)*(width/2));
+	pv = (CARD32 *)(vbuf+(src_y/2)*(width/2));
+	buf+=src_y*width;
+
+	for(l=0;l<drw_h;l++) {
+	    CARD32 *tpu=pu+src_x/8;
+	    CARD32 *tpv=pv+src_x/8;
+	    CARD32 *tsp=(CARD32 *)(buf+src_x);
+
+	    /* it is not clear if waiting is actually good for performance */
+	    /*	WAITFIFO(pMga->FifoSize);*/
+	    /* should try to get MGACopyMunged data to work here */
+	    CopyMungedScanline_AXP(fb_ptr,src_w,tsp,tpu,tpv);
+	    buf+=width;
+	    if(l&1) {
+		pu+=width/8;
+		pv+=width/8;
+	    }
+	}
+	break;
+    case FOURCC_UYVY:
+    case FOURCC_YUY2:
+	buf+=src_y*width*2;
+	for(l=0;l<drw_h;l++) {
+
+#ifndef CUSTOM_MEMCOPY
+	    WAITFIFO(pMga->FifoSize/2); /* not sure what's the value for best performance */
+	    memcpy(fb_ptr, buf+src_x*2, src_w*2);
+	    fb_ptr+=src_w*2;
+#else
+	    CARD32 *tsp=(CARD32 *)(buf+src_x*2);
+	    WAITFIFO(pMga->FifoSize/4);
+	    for(k=src_w/8;k;k--) {
+		*(fb_ptr)=*(tsp);
+		*(fb_ptr+1)=*(tsp+1);
+		*(fb_ptr+2)=*(tsp+2);
+		*(fb_ptr+3)=*(tsp+3);
+		fb_ptr+=4; tsp+=4;
+	    }
+#endif /* CUSTOM_MEMCOPY */
+	    buf+=width*2;
+	}
+	break;
+    default:
+	break;
+    }
+    OUTREG(MGAREG_CXBNDRY, 0xFFFF0000);    /* put clipping back to normal */
+}
+
+static int
+MGAPutImageILOAD(
+		 ScrnInfoPtr pScrn,
+		 short src_x, short src_y,
+		 short drw_x, short drw_y,
+		 short src_w, short src_h,
+		 short drw_w, short drw_h,
+		 int id, unsigned char* buf,
+		 short width, short height,
+		 Bool Sync,
+		 RegionPtr clipBoxes, pointer data,
+		 DrawablePtr pDraw
+		 ){
+    MGAPtr pMga = MGAPTR(pScrn);
+    MGAPortPrivPtr pPriv = pMga->portPrivate;
+    INT32 x1, x2, y1, y2;
+    int dstPitch = 0;
+    int bpp;
+    BoxRec dstBox;
+    int nbox;
+    BoxPtr pbox;
+
+    /* Clip */
+    x1 = src_x; x2 = src_x + src_w;
+    y1 = src_y; y2 = src_y + src_h;
+
+    dstBox.x1 = drw_x; dstBox.x2 = drw_x + drw_w;
+    dstBox.y1 = drw_y; dstBox.y2 = drw_y + drw_h;
+
+    if(!xf86XVClipVideoHelper(&dstBox, &x1, &x2, &y1, &y2,
+			      clipBoxes, width, height))
+	return Success;
+
+    bpp = pScrn->bitsPerPixel >> 3;
+
+    if( pMga->AccelInfoRec->NeedToSync && ((long)data != pPriv->lastPort) ) {
+	MGAStormSync(pScrn);
+    }
+
+    pPriv->lastPort = (long)data;
+    nbox=REGION_NUM_RECTS(clipBoxes);
+    pbox=REGION_RECTS(clipBoxes);
+
+    while(nbox--) {
+
+	if ( (drw_w==src_w) && (drw_h==src_h) && (drw_x >= 0 ) ) {
+	    /* special case 1: non scaling optimization */
+	    MGACopyILOAD(pScrn,id,buf,pbox,
+			 width, height, dstPitch, src_x, src_y, src_w, src_h,
+			 drw_x, drw_y, drw_w, drw_h);
+#if 0
+	    } else if ( (drw_w>src_w) && (drw_h>src_h) && (drw_x >= 0 ) ) {
+		/* special case 2: upscaling for full screen apps */
+		/* FIXME: to do */
+		MGACopyScaledILOAD(pScrn,id,buf,pbox,
+				   width, height, dstPitch, src_x, src_y, src_w, src_h,
+				   drw_x, drw_y, drw_w, drw_h);
+
+#endif
+	    } else /* generic fallback case */
+		MGACopyScaledILOAD(pScrn,id,buf,pbox,
+				   width, height, dstPitch, src_x, src_y, src_w, src_h,
+				   drw_x, drw_y, drw_w, drw_h);
+	/* FIXME: when the generic is perfect I will enable the optimizations */
+	pbox++;
+    }
+
+
+    pMga->AccelInfoRec->NeedToSync = TRUE;
+    pPriv->videoStatus = FREE_TIMER;
+    pPriv->freeTime = currentTime.milliseconds + FREE_DELAY;
+    pMga->VideoTimerCallback = MGAVideoTimerCallback;
+
+    return Success;
 }

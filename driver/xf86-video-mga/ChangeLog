@@ -1,3 +1,425 @@
+commit 62c8f0ad5bb3dd23226a6b481ed4f260c6770f55
+Author: Yannick Henault <yheneaul@matrox.com>
+Date:   Mon Jun 30 17:00:16 2008 -0400
+
+    Bug #16545: Add G200WB support.
+
+commit 32d50fca615af2c49914dd88c9da0f21b868b172
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Jun 23 13:06:21 2008 -0400
+
+    Death to RCS tags.
+
+commit 382659741681ad10290c1e01045dfe9e2fde8d3f
+Author: Yannick Henault <yheneaul@matrox.com>
+Date:   Mon Jun 23 13:02:43 2008 -0400
+
+    Bug #15836: Fix DDC on G200SE.
+
+commit 9e2ee9403c198da5d79dfb2f4fcafe9b381afd3d
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Jun 9 11:36:46 2008 -0700
+
+    G200EV: Enable support for G200EV
+
+commit fd9732800687b96caa9f81c0cc4b24c6aad04e78
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri May 30 19:47:10 2008 -0700
+
+    I2C: Second (and final) round of clean-ups
+
+commit c0711038ac2dcfb28dd4ead784c89615fb3b5844
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri May 30 19:39:38 2008 -0700
+
+    I2C: First round of clean-ups
+
+commit 7e28ce7f26fba2acee879c1da41426490034c0a9
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri May 30 18:43:27 2008 -0700
+
+    Get memory probe size and stride (offset) values values from a data table instead of from code
+
+commit 074a4aa1985219910a96b022368067e3ed5641e6
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri May 30 18:23:59 2008 -0700
+
+    Initialize default BIOS values from a data table instead of from code
+
+commit 9ee7b04b1fe57834a541ef27b4e25acffd3ac1c5
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri May 30 17:51:22 2008 -0700
+
+    cfb8_32: Gut a remnants of support for 24-bit with 8-bit overlay
+
+commit 254299d06eba2ede820f1fe2929a4b247ead39b1
+Author: Tiago Vignatti <vignatti@c3sl.ufpr.br>
+Date:   Wed May 7 01:07:44 2008 -0300
+
+    For compatibility, accept SWcursor as option.
+
+commit 0c61ccde7857dc7514881636144f95df51edaddf
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com>
+Date:   Fri Feb 1 00:15:27 2008 -0200
+
+    Replace ALLOCATE_LOCAL/DEALLOCATE_LOCAL with xalloc/xfree.
+    
+    The other missing symbols is MGAGetClientPointer, that I believe
+    should be provided by matrox's libHAL.a, that I am afraid if someone
+    still has a copy of it, it won't work with X Org's loader.
+
+commit dcad316efe93491fabfe558bcf5331cf0a9402a6
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Mar 8 23:39:28 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit b5e43552f6b2a8ce8f405411a4ba6496e57d5100
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Jan 19 15:34:56 2008 -0500
+
+    Disable I2C on G200SE for now.
+
+commit cd2436c57d6b197ce0f58bf39ade903393cea842
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Jan 19 15:34:41 2008 -0500
+
+    Change initial memory sizing on G200SE.
+
+commit 40a4c1bdff174c31e6426a2ab3bc7cea5d99a700
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Jan 19 15:34:19 2008 -0500
+
+    Adjust memory timings on G200SE-A.
+    
+    A bit opaque, but from the vendor:
+    
+    "The 0x1E24 check is to verify which pilot card is being used. And is used
+    mainly to setup the hipri value of the card for use in a non hal enabled
+    configuration as well as for when we check the max bandwidth for the latest
+    board version of pilot." (fdo bug #11652)
+
+commit d26b8d50a80b9408565f7daf0ad911bac5f44721
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Jan 19 15:33:49 2008 -0500
+
+    Updates to memory sizing on G200SE.
+
+commit e3777cafc07500c733b8569b50ce202e346c94bf
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Jan 19 15:33:28 2008 -0500
+
+    No depth 15 on G200SE-A.
+
+commit 6cd7677c41cf59194561225ed521a295e535862f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Jan 19 15:33:13 2008 -0500
+
+    Filter high-bandwidth modes on G200SE.
+
+commit 15ba6d7b79308ff2da8abc9edf67ddc96d7d6b9f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Jan 19 15:32:53 2008 -0500
+
+    Update PInS defaults for G200SE-A.
+
+commit e50a99877b2870746266b799b0a6411b2214a3de
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Jan 18 19:31:40 2008 +0100
+
+    Bumped version to 1.4.8.
+
+commit bfee7bf011625079fd79b1bf89198ffeb76096d2
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Jan 18 18:05:49 2008 +0100
+
+    Bug #13926: Unbreak Xinerama.
+
+commit 2096022c0757b675d39dea8830125ba800b43160
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Dec 12 18:10:52 2007 -0500
+
+    G200SE-A can't cope with bigger than 1600x1200.
+
+commit 81717e5780350665166dd7a0f4d96135609a8764
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Oct 30 18:43:30 2007 -0700
+
+    Don't build or call init_dri if XF86DRI is undefined
+
+commit db22b6ef0fa3ae20f46719bd826e16b6580e5213
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Oct 3 23:06:48 2007 +0200
+
+    Fixed a typo.
+
+commit 8e971287f60f3a41f2d0d176e4eaaa653e25276b
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Oct 3 12:47:59 2007 -0700
+
+    Unmap the same size that was mapped
+    
+    Make sure the same size is used with pci_device_unmap_range as was used with
+    pci_device_map_range.  Failing to do so was causing problems with a G450
+    card in a POWER6 box.
+    
+    Based on a patch submitted by Anton Blanchard.
+
+commit 10d452ad86b4798f3ded6c4c2446f08aaab6af00
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Sep 15 00:16:16 2007 +0200
+
+    Oops, don't access the "memory" field in struct pci_mem_region either.
+
+commit 485fb9aa1e5d90c75d763db4b7bf5a80e51e83e9
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Sep 14 23:10:09 2007 +0200
+
+    Use pci_device_map_range() instead of pci_device_map_region().
+    
+    Likewise for pci_device_unmap_region().
+
+commit d7f0f657504b2646a94f652baf0f71ff4117fac4
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 5 18:06:57 2007 +0200
+
+    Bumped version to 1.4.7.
+
+commit 6fde3fd6d34e7252ee16422b19896d71b1622039
+Merge: 4bfc1e1... 923176f...
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 06:07:32 2007 -0400
+
+    Merge branch 'master' of ssh://git.freedesktop.org/git/xorg/driver/xf86-video-mga
+
+commit 4bfc1e1ea11604e3af150a4228663cb1cb1bf9f3
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:52:35 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit 923176f5aad777b4023003a457bb77da21373389
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Aug 31 11:05:57 2007 -0700
+
+    Use XSERVER_LIBPCIACCESS to detect pci-rework.
+
+commit 90beb8c27b4206b593898d346bf37ab49e75b975
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Aug 22 11:19:46 2007 -0700
+
+    Set pScrn to NULL before calling xf86ConfigPciEntity.
+    
+    Why is the interface to xf86ConfigPciEntity so filled with hate?
+
+commit 55d219394ad6af8e25ff604bcbb49d5a551bd348
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Aug 22 10:43:39 2007 -0700
+
+    Merge PCI-rework support and "classic" PCI interface support into one tree
+    
+    First pass at merging both trees.  So far, this has only been tested
+    on the PCI-rework build on a PCI G450.
+
+commit f4ef39d53d5a67942707507814fef4ad466dc909
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Aug 20 15:36:57 2007 -0700
+
+    Fix compile error introduced by merge.
+
+commit 707d3adbc7d9ee918d6c70083f51ad851ce68852
+Merge: 741c50c... 489e007...
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Aug 20 15:20:39 2007 -0700
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/driver/xf86-video-mga into pci-rework
+
+commit 489e007a29de63716ab550eacb3e98a91975d1d5
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Aug 8 21:32:57 2007 +0200
+
+    Fixed major blending and compositing breakage.
+    
+    Do not adjust the destination blend factor if we need source alpha
+    but our source doesn't have an alpha channel. This makes no sense at all,
+    because the intermediate picture will always have alpha bits (either from
+    the original source, or forced to 0xff).
+
+commit 3820f55e3068163f8c3047a25126673e6de2d16e
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Aug 1 09:02:21 2007 -0700
+
+    Add info for offset 116 in PInS version 5.
+
+commit 7d7626f8429e108dd326899d927de4b4c79f71f5
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Mon Jul 30 12:36:19 2007 +0200
+
+    Bug #4249: Further increase the minimum dot clock.
+
+commit 1a1fe837bc114b5f741e87f14bef74803e299c8d
+Author: Brice Goglin <Brice.Goglin@ens-lyon.org>
+Date:   Fri Jul 27 18:19:21 2007 +0200
+
+    Change minimal frequency guess from 12 to 16MHz
+    
+    G550 seems to lock up with frequencies below 16MHz.
+    
+    Reported by Benjamin Wong <hackerb9@u.washington.edu> in
+    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=430112
+    and https://bugs.freedesktop.org/show_bug.cgi?id=11339
+
+commit 041caa230b91a017881394c59d76d663d647529c
+Author: Gabriele Gorla <gorlik@yahoo.com>
+Date:   Thu Jul 19 22:14:51 2007 -0400
+
+    Add Xv support for Millennium II chips
+    
+    Bug 11537
+
+commit 7b080d993ceda7b181e0611ed0c997c8aecc9ad7
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Apr 15 12:47:27 2007 +0200
+
+    Added memcpy-based DownloadFromScreen implementation.
+
+commit 43b79af51b600e98ecac9d57aeb0d686dbc6a50e
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Apr 15 12:41:01 2007 +0200
+
+    On G550, do A8 adds in hardware.
+
+commit 69c4ed205afbeb9ad937f079caace6cee19bd7b1
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Apr 15 12:28:28 2007 +0200
+
+    Make DRI initialization work when using EXA.
+    
+    Still need to implement InitBuffers and MoveBuffers for EXA.
+
+commit 920b84364a374ac8cde9314efc6742c11a72ce4f
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Mar 30 20:47:14 2007 +0200
+
+    Removed the debug messages for solid and copy ops.
+
+commit d1696d91d9da79c40b0576b3ce754dc8a6666117
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Mar 30 20:45:45 2007 +0200
+
+    Sync after UploadToScreen.
+
+commit 1246f724bfdd44b49091516bf909ecf97c9b82db
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Wed Mar 28 11:14:24 2007 -0400
+
+    Default mode on G200SE of 1024x768 @ 16bpp.
+    
+    The poor thing has so little VRAM that you can't do any bigger than 640x480
+    at 32bpp, so in the interest of having a reasonable screen size...
+
+commit 834bdfc2503f64d8f3bff088dc5eaf8f52f828f5
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Wed Mar 28 11:09:56 2007 -0400
+
+    Disable MTRR support for PCIE G200SE cards, as it tickles hardware bugs.
+
+commit 630390dc5b892941ed6609ca5c35b90be53333f7
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Wed Mar 28 11:07:49 2007 -0400
+
+    Fix various timing bugs on the G200SE.
+
+commit 99430f1cf36c07350cdc557dbbb5c0a34c9b9dd0
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Mar 18 12:41:06 2007 +0100
+
+    Shut up the compiler.
+
+commit 741c50c162986a14647301c2c5f8e080a7664efd
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Feb 2 15:50:14 2007 -0800
+
+    Code refactoring in MGAScreenInit.
+    
+    Rearrange code so that functions that are selected based on MergedFB
+    and SecondCrtc are selected in one place instead of 3.  Rearrange some
+    code that selects on FBDev and Primary to flow a little better.
+
+commit 4432091b2597cf4bba09009622d247c0d8ff151f
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Thu Feb 1 13:45:18 2007 -0800
+
+    Ensure the result of MGAMapMem is checked.
+    
+    Add GCC warn_unused_result attribute to MGAMapMem.  Add a check of the
+    return value to one place that was missing it (in MGACountRam), and
+    check the return of that function.
+
+commit 3a47132af4dfab420e3c35d7d100dd93fb7bf9c6
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Thu Feb 1 13:30:34 2007 -0800
+
+    Refactor memory map / unmap functions.
+    
+    MGAMapMem and MGAMapMemFBDev were refactored into a single function.
+    This happens to fix a bug triggered in software XAA paths because
+    MGAMapMem did not set FbStart.  MGAUnmapMem and MGAUnmapMemFBDev were
+    also refactored into a single function.
+
+commit 916d41bcf99bbf666bf634edb1c72b90d9b16ea0
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Jan 15 11:42:52 2007 -0800
+
+    Convert to new pci_device_cfg_write_u* interface.
+
+commit b26bfefb7ea107be3949daea0f6beca6d80c09d4
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Jan 15 11:42:07 2007 -0800
+
+    Pass the correct pointer to pci_device_cfg_write_bits.
+
+commit d5b4dbe749e860e4349607c57467f8085dc28c33
+Merge: cb103a1... 876657e...
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Tue Jan 9 16:04:06 2007 -0800
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/driver/xf86-video-mga into pci-rework
+
+commit 876657e613de6d9dd906c95e05fc590a84d1c322
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Tue Dec 26 22:14:57 2006 +0100
+
+    Fixed a typo that caused MGAREG_C2OFFSET to be set to a bad value.
+    
+    Unfortunately, this doesn't fix any bugs because afterwards,
+    the correct value would be stored in MGAREG_C2OFFSET anyway.
+
+commit 7d676a830a9b0c5593e144e15a14dc4aa6bc5ab7
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Tue Dec 26 19:45:18 2006 +0100
+
+    More boring janitoring work.
+
+commit 787284f420d324821ac31b43f3d915d58533a141
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Tue Dec 26 00:30:51 2006 +0100
+
+    Fixed a typo in a debug message.
+
+commit 373bf108414cebdaea8d3febc9120566ef5e4118
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Tue Dec 26 00:28:55 2006 +0100
+
+    Bug #9448: Actually write the C2STARTADD0 register.
+
+commit fd91b601ec4dd48cfb6ea5495b595fec6d932ab5
+Merge: f84b138... 0ce8f52...
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Dec 24 06:32:53 2006 +0200
+
+    Merge branch 'temp'
+
 commit 0ce8f522a207dd0fa21ebf41b82f6af930cd7e54
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sun Dec 24 06:24:56 2006 +0200
@@ -10,6 +432,42 @@ Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sun Dec 24 06:23:43 2006 +0200
 
     bump to 1.4.6
+
+commit f84b13871114e6bb486402e00186a319df123f53
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Dec 24 06:23:19 2006 +0200
+
+    bump to 1.4.6.1
+
+commit 9b2e1381ccda8bb4f4d186c20d5672738adfc04b
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Dec 16 01:44:49 2006 +0200
+
+    bump to 1.4.6
+
+commit cb103a18067adb3256c0b791255ce8435ff57e06
+Merge: d0e0362... 4bcfca9...
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Dec 11 15:06:19 2006 -0800
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/driver/xf86-video-mga into pci-rework
+
+commit d0e03622811fd94c830c0b5233ff505392c0d331
+Merge: 8fee907... 1dd6e69...
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Dec 11 15:06:03 2006 -0800
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/driver/xf86-video-mga into pci-rework
+    
+    Conflicts:
+    
+    	src/mga_macros.h
+
+commit 4bcfca9bcf4a2be8d49a700b1a0d529f4e5ea412
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Dec 10 14:33:10 2006 +0100
+
+    Replaced some more magic values with register names.
 
 commit 55d283a8c2347e809dadace3fb9a026bab6d57dd
 Author: Daniel Stone <daniel@fooishbar.org>
@@ -146,6 +604,13 @@ Author: Adam Jackson <ajax@benzedrine.nwnk.net>
 Date:   Fri Oct 13 18:33:39 2006 -0400
 
     Bump to 1.4.3
+
+commit 8fee907cac7e5924630e3648bfb72ad9bd021ea8
+Merge: 7cecee1... 2fc0ebf...
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Tue Oct 10 11:43:52 2006 -0700
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/driver/xf86-video-mga into pci-rework
 
 commit 2fc0ebfbe850c138e840b6653ed1476623aa04a4
 Author: Tilman Sauerbeck <tilman@code-monkey.de>
@@ -532,6 +997,13 @@ Date:   Thu Aug 10 19:49:22 2006 +0200
     Based on ajax' mga-exa-2.patch with some straight forward fixes
     by myself.
 
+commit 7cecee186c889902bed9b7fa042f0bd3cc0297ef
+Merge: 160b1f7... bde5920...
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Thu Aug 10 10:19:55 2006 -0700
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/driver/xf86-video-mga into pci-rework
+
 commit bde592047cd62194d7ef67520a9fdbaf269a8b90
 Author: Tilman Sauerbeck <tilman@code-monkey.de>
 Date:   Wed Aug 9 21:59:42 2006 +0200
@@ -548,6 +1020,27 @@ Date:   Wed Aug 9 21:59:42 2006 +0200
     removed.
     I didn't notice any DRI performance drop, but I didn't do serious
     benchmarking either.
+
+commit 160b1f79fab7266a24b7d1a680cdf29bad9707c1
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Tue Aug 8 16:59:15 2006 -0700
+
+    Store the pci_device pointer passed into MGAPciProbe instead of
+    searching for it in MGAPreInit.
+
+commit 068e3427cfdf3e3b5dc5c97872d5f52f47ff0d68
+Merge: 95e0722... 7170de8...
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Wed Jul 26 11:47:32 2006 -0700
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/driver/xf86-video-mga into pci-rework
+
+commit 95e0722ff2e8878cdd6bb0e349eecab042b879db
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Wed Jul 26 11:46:52 2006 -0700
+
+    Current state of MGA driver modified to work with the xserver
+    pci-rework branch.
 
 commit 7170de83762660efebff79be84f763008466ffa7
 Author: Tilman Sauerbeck <tilman@code-monkey.de>

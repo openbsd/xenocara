@@ -24,7 +24,7 @@ AC_PREREQ(2.57)
 
 # When the version number is modified here, also modify it in src/mga.h.
 AC_INIT([xf86-video-mga],
-        1.4.6.1,
+        1.4.9,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-mga)
 
@@ -103,6 +103,22 @@ if test "x$DRI" = xyes; then
         AC_DEFINE(XF86DRI,1,[Enable DRI driver support])
         AC_DEFINE(XF86DRI_DEVEL,1,[Enable developmental DRI driver support])
 fi
+
+save_CFLAGS="$CFLAGS"
+CFLAGS="$XORG_CFLAGS"
+AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
+              [XSERVER_LIBPCIACCESS=yes], [XSERVER_LIBPCIACCESS=no],
+              [#include "xorg-server.h"])
+AC_CHECK_DECL(xf86ModeBandwidth,
+	      [AC_DEFINE(HAVE_XF86MODEBANDWIDTH, 1, [Have xf86ModeBandwidth])],
+	      [],
+	      [#include "xf86Modes.h"])
+CFLAGS="$save_CFLAGS"
+
+if test "x$XSERVER_LIBPCIACCESS" = xyes; then
+    PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.8.0])
+fi
+AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
 
 AM_CONDITIONAL(USE_XAA, true)
 AC_DEFINE(USE_XAA, 1, [Build support for XAA])

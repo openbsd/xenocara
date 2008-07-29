@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/mga/mga_dh.c,v 1.4tsi Exp $ */
 /*********************************************************************
 *  	G450: This is for Dual Head. 
 *       Matrox Graphics
@@ -207,7 +206,7 @@ void MGACRTC2Set(ScrnInfoPtr pScrn, xMODEINFO *pModeInfo)
     
     /** Offset value*/
     
-    OUTREG(MGAREG_C2OFFSET, pReg->crtc2[MGAREG2_C2VSYNC]);
+    OUTREG(MGAREG_C2OFFSET, pReg->crtc2[MGAREG2_C2OFFSET]);
 #ifdef DEBUG    
     ErrorF("EXIT MGACRTC2Set\n");
 #endif
@@ -432,9 +431,9 @@ void MGACRTC2SetDisplayStart (ScrnInfoPtr pScrn, xMODEINFO *pModeInfo, CARD32 ba
     ErrorF("ENTER MGACRTC2SetDisplayStart\n");
 #endif
     
-    OUTREG(MGAREG2_C2STARTADD0,  pReg->crtc2[MGAREG2_C2STARTADD0]);  
+    OUTREG(MGAREG_C2STARTADD0,  pReg->crtc2[MGAREG2_C2STARTADD0]);  
 #ifdef DEBUG
-    ErrorF("EXIT MGACRTC2GetDisplayStart\n");
+    ErrorF("EXIT MGACRTC2SetDisplayStart\n");
 #endif
     
 }

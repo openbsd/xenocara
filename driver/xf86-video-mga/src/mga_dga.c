@@ -1,5 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/mga/mga_dga.c,v 1.14 1999/11/02 23:12:00 mvojkovi Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -329,7 +327,6 @@ MGA_SetMode(
       pMga->CurrentLayout.weight.red = BitsSet(pMode->red_mask);
       pMga->CurrentLayout.weight.green = BitsSet(pMode->green_mask);
       pMga->CurrentLayout.weight.blue = BitsSet(pMode->blue_mask);
-      pMga->CurrentLayout.Overlay8Plus24 = FALSE;
       /* MGAModeInit() will set the mode field */
 
       pScrn->SwitchMode(index, pMode->mode, 0);

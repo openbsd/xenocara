@@ -1,5 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/mga/mga_hwcurs.c,v 1.8tsi Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
