@@ -1,4 +1,4 @@
-.\" $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neomagic.man,v 1.4 2003/02/20 03:22:52 dawes Exp $ 
+.\" $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neomagic.man,v 1.5 2003/05/29 21:48:09 herrb Exp $ 
 .\" shorthand for double quote that works everywhere.
 .ds q \N'34'
 .TH NEOMAGIC __drivermansuffix__ __vendorversion__
@@ -90,7 +90,7 @@ following options are needed to avoid a lock-up of the graphic engine:
 .fi
 
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+__xservername__(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1), X(__miscmansuffix__)
 .SH AUTHORS
 Authors include: Jens Owen, Kevin E. Martin, and also Egbert Eich,  
 Mark Vojkovich, Alan Hourihane.

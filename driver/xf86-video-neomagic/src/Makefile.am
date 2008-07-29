@@ -43,4 +43,5 @@ neomagic_drv_la_SOURCES = \
          neo_reg.h \
          neo_shadow.c \
          neo_video.c \
-         neo_video.h
+         neo_video.h \
+	 neo_pcirename.h
