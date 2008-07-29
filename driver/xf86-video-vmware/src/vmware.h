@@ -8,13 +8,24 @@
 #ifndef VMWARE_H
 #define VMWARE_H
 
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#ifdef HAVE_XORG_SERVER_1_1_0
 #include <string.h>
+#endif
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Resources.h"
 
 #include <X11/extensions/panoramiXproto.h>
+
+#ifdef XSERVER_LIBPCIACCESS
+#include <pciaccess.h>
+#endif
 
 #include "compiler.h"	        /* inb/outb */
 
@@ -25,15 +36,12 @@
 
 #include "vgaHW.h"		/* VGA hardware */
 #include "fb.h"
-#include "xaa.h"
 
 #include "xf86cmap.h"		/* xf86HandleColormaps */
 
 #include "vm_basic_types.h"
 #include "svga_reg.h"
 #include "svga_struct.h"
-
-#include "offscreen_manager.h"
 
 /* Arbitrarily choose max cursor dimensions.  The emulation doesn't care. */
 #define MAX_CURS        32
@@ -58,8 +66,12 @@ typedef xXineramaScreenInfo VMWAREXineramaRec, *VMWAREXineramaPtr;
 
 typedef struct {
     EntityInfoPtr pEnt;
+#if XSERVER_LIBPCIACCESS
+    struct pci_device *PciInfo;
+#else
     pciVideoPtr PciInfo;
     PCITAG PciTag;
+#endif
     Bool Primary;
     int depth;
     int bitsPerPixel;
@@ -71,6 +83,7 @@ typedef struct {
     unsigned long fbOffset;
     unsigned long fbPitch;
     unsigned long ioBase;
+    unsigned long portIOBase;
     int maxWidth;
     int maxHeight;
     unsigned int vmwareCapability;
@@ -81,7 +94,6 @@ typedef struct {
     VMWARERegRec SavedReg;
     VMWARERegRec ModeReg;
 
-    DisplayModePtr initialMode;
     DisplayModePtr dynMode1;
     DisplayModePtr dynMode2;
 
@@ -107,7 +119,6 @@ typedef struct {
 
     unsigned char* mmioVirtBase;
     CARD32* vmwareFIFO;
-    Bool hasPitchLockFIFOReg;
 
     xf86CursorInfoPtr CursorInfoRec;
     struct {
@@ -126,23 +137,6 @@ typedef struct {
     ScreenRec ScrnFuncs;
 
     /*
-     * XAA info rec and misc storage
-     */
-    XAAInfoRecPtr xaaInfo;
-    int xaaFGColor;
-    int xaaBGColor;
-    int xaaRop;
-
-    unsigned char* xaaColorExpScanLine[1];
-    unsigned int xaaColorExpSize; /* size of current scan line in DWords */
-
-    Heap* heap;
-    SVGASurface* frontBuffer;
-
-    SVGASurface* curPict;
-    int op;
-
-    /*
      * Xinerama state
      */
     Bool xinerama;
@@ -153,6 +147,11 @@ typedef struct {
 
     VMWAREXineramaPtr xineramaNextState;
     unsigned int xineramaNextNumOutputs;
+
+    /*
+     * Xv
+     */
+    DevUnion *videoStreams;
 
 } VMWARERec, *VMWAREPtr;
 
@@ -191,8 +190,6 @@ static __inline ScrnInfoPtr infoFromScreen(ScreenPtr s) {
 
 #define MOUSE_ID 1
 
-extern const char *vmwareXaaSymbols[];
-
 /*#define DEBUG_LOGGING*/
 #ifdef DEBUG_LOGGING
 # define VmwareLog(args) ErrorF args
@@ -204,6 +201,20 @@ extern const char *vmwareXaaSymbols[];
 
 /* Undefine this to kill all acceleration */
 #define ACCELERATE_OPS
+
+#if XSERVER_LIBPCIACCESS
+#define VENDOR_ID(p)      (p)->vendor_id
+#define DEVICE_ID(p)      (p)->device_id
+#define SUBVENDOR_ID(p)   (p)->subvendor_id
+#define SUBSYS_ID(p)      (p)->subdevice_id
+#define CHIP_REVISION(p)  (p)->revision
+#else
+#define VENDOR_ID(p)      (p)->vendor
+#define DEVICE_ID(p)      (p)->chipType
+#define SUBVENDOR_ID(p)   (p)->subsysVendor
+#define SUBSYS_ID(p)      (p)->subsysCard
+#define CHIP_REVISION(p)  (p)->chipRev
+#endif
 
 void vmwareWriteReg(
    VMWAREPtr pVMWARE, int index, CARD32 value
@@ -257,23 +268,25 @@ void vmwareCursorHookWrappers(
    );
 
 
-/* vmwarexaa.c */
-Bool vmwareXAAScreenInit(
-   ScreenPtr pScreen
-   );
-
-Bool vmwareXAAModeInit(
-    ScrnInfoPtr pScrn, DisplayModePtr mode
-    );
-
-void vmwareXAACloseScreen(
-   ScreenPtr pScreen
-   );
-
 /* vmwarectrl.c */
 void VMwareCtrl_ExtInit(ScrnInfoPtr pScrn);
 
 /* vmwarexinerama.c */
 void VMwareXinerama_ExtInit(ScrnInfoPtr pScrn);
+
+/* vmwarevideo.c */
+Bool vmwareVideoInit(
+   ScreenPtr pScreen
+   );
+void vmwareVideoEnd(
+   ScreenPtr pScreen
+   );
+Bool vmwareVideoEnabled(
+   VMWAREPtr pVMWARE
+   );
+
+void vmwareCheckVideoSanity(
+   ScrnInfoPtr pScrn
+   );
 
 #endif

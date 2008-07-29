@@ -28,9 +28,6 @@ are supported:
 .BI "Option \*qHWCursor\*q \*q" boolean \*q
 Enable or disable the HW cursor.  Default: off.
 .TP
-.BI "Option \*qNoAccel\*q \*q" boolean \*q
-Disable or enable acceleration.  Default: acceleration is enabled.
-.TP
 .BI "Option \*qXinerama\*q \*q" boolean \*q
 Disable or enable Xinerama support. Default: xinerama is enabled if the
 hardware supports it.
@@ -43,4 +40,4 @@ and so on. Negative offsets are not supported.
 .SH "SEE ALSO"
 __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
 .SH AUTHORS
-Copyright (c) 1999-2006 VMware, Inc.
+Copyright (c) 1999-2007 VMware, Inc.

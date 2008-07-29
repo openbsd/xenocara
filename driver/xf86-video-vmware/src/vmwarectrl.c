@@ -113,18 +113,27 @@ VMwareCtrlQueryVersion(ClientPtr client)
 static Bool
 VMwareCtrlDoSetRes(ScrnInfoPtr pScrn,
                    CARD32 x,
-                   CARD32 y)
+                   CARD32 y,
+                   Bool resetXinerama)
 {
    DisplayModePtr mode;
    VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
-  
+
    if (pScrn && pScrn->modes) {
+      VmwareLog(("DoSetRes: %d %d\n", x, y));
+  
+      if (resetXinerama) {
+         xfree(pVMWARE->xineramaNextState);
+         pVMWARE->xineramaNextState = NULL;
+         pVMWARE->xineramaNextNumOutputs = 0;
+      }
+
       /* 
        * Don't resize larger than possible but don't
        * return an X Error either.
        */
-      if (x > pVMWARE->initialMode->HDisplay ||
-          y > pVMWARE->initialMode->VDisplay) {
+      if (x > pVMWARE->maxWidth ||
+          y > pVMWARE->maxHeight) {
          return TRUE;
       }
 
@@ -191,7 +200,7 @@ VMwareCtrlSetRes(ClientPtr client)
       return BadMatch;
    }
 
-   if (!VMwareCtrlDoSetRes(pScrn, stuff->x, stuff->y)) {
+   if (!VMwareCtrlDoSetRes(pScrn, stuff->x, stuff->y, TRUE)) {
       return BadValue;
    }
 
@@ -220,7 +229,8 @@ VMwareCtrlSetRes(ClientPtr client)
  * VMwareCtrlDoSetTopology --
  *
  *      Set the custom topology and set a dynamic mode to the bounding box
- *      of the passed topology.
+ *      of the passed topology. If a topology is already pending, then do
+ *      nothing but do not return failure.
  *
  * Results:
  *      TRUE on success, FALSE otherwise.
@@ -245,10 +255,17 @@ VMwareCtrlDoSetTopology(ScrnInfoPtr pScrn,
       short maxY = 0;
       size_t i;
 
+      if (pVMWARE->xineramaNextState) {
+         VmwareLog(("DoSetTopology: Aborting due to existing pending state\n"));
+         return TRUE;
+      }
+
       for (i = 0; i < number; i++) {
          maxX = MAX(maxX, extents[i].x_org + extents[i].width);
          maxY = MAX(maxY, extents[i].y_org + extents[i].height);
       }
+
+      VmwareLog(("DoSetTopology: %d %d\n", maxX, maxY));
 
       xineramaState = (VMWAREXineramaPtr)xcalloc(number, sizeof(VMWAREXineramaRec));
       if (xineramaState) {
@@ -258,7 +275,7 @@ VMwareCtrlDoSetTopology(ScrnInfoPtr pScrn,
          pVMWARE->xineramaNextState = xineramaState;
          pVMWARE->xineramaNextNumOutputs = number;
 
-         return VMwareCtrlDoSetRes(pScrn, maxX, maxY);
+         return VMwareCtrlDoSetRes(pScrn, maxX, maxY, FALSE);
       } else {
          return FALSE;
       }
@@ -294,7 +311,6 @@ VMwareCtrlSetTopology(ClientPtr client)
    ExtensionEntry *ext;
    register int n;
    xXineramaScreenInfo *extents;
-   size_t i;
 
    REQUEST_AT_LEAST_SIZE(xVMwareCtrlSetTopologyReq);
 

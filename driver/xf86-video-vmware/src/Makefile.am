@@ -33,9 +33,10 @@ vmware_drv_la_SOURCES = \
          bits2pixels.h \
          guest_os.h \
          includeCheck.h \
-         offscreen_manager.c \
-         offscreen_manager.h \
+	 svga_escape.h \
          svga_limits.h \
+         svga_modes.h \
+	 svga_overlay.h \
          svga_reg.h \
          svga_struct.h \
          vm_basic_types.h \
@@ -43,8 +44,9 @@ vmware_drv_la_SOURCES = \
          vmware.c \
          vmwarecurs.c \
          vmware.h \
-         vmwarexaa.c \
          vmwarectrl.c \
          vmwarectrl.h \
          vmwarectrlproto.h \
-         vmwarexinerama.c
+         vmwarexinerama.c \
+         vmwarevideo.c
+

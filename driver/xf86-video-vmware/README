@@ -20,6 +20,15 @@ svga_limits.h
     Included by svga_reg.h, defines maximum frame buffer and memory region
     sizes.
 
+svga_modes.h
+    A list of default display modes that are built into the driver.
+
+svga_overlay.h
+   A list of definitions required for Xv extension support. Included by vmwarevideo.c
+
+svga_escape.h
+   A list of definitions for the SVGA Escape commands.
+
 guest_os.h
     Values for the GUEST_ID register.
 
@@ -29,6 +38,9 @@ vm_basic_types.h
 vm_device_version.h
     PCI vendor ID's and related information.
 
+vmwarectrl.h
+vmwarectrlproto.h
+    The definitions of the VMWARECTRL protocol extension.
 
 Programming the VMware SVGA Device
 ----------------------------------
@@ -256,6 +268,7 @@ table shows which capability indicates support for which command.
     SVGA_CMD_DEFINE_ALPHA_CURSOR	SVGA_CAP_ALPHA_CURSOR
     SVGA_CMD_DRAW_GLYPH                 SVGA_CAP_GLYPH
     SVGA_CMD_DRAW_GLYPH_CLIPPED         SVGA_CAP_GLYPH_CLIPPING
+    SVGA_CMD_ESCAPE                     SVGA_FIFO_CAP_ESCAPE
 
 Note:  SVGA_CMD_DISPLAY_CURSOR and SVGA_CMD_MOVE_CURSOR should not be used.
 Drivers wishing hardware cursor support should use cursor bypass (see below).

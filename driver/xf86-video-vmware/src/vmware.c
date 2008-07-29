@@ -37,6 +37,7 @@ char rcsId_vmware[] =
 #include "vmware.h"
 #include "guest_os.h"
 #include "vm_device_version.h"
+#include "svga_modes.h"
 
 #ifdef HaveDriverFuncs
 #define VMWARE_DRIVER_FUNC HaveDriverFuncs
@@ -81,14 +82,26 @@ char rcsId_vmware[] =
 #define VMWARE_NAME "VMWARE"
 #define VMWARE_DRIVER_NAME "vmware"
 #define VMWARE_MAJOR_VERSION	10
-#define VMWARE_MINOR_VERSION	14
-#define VMWARE_PATCHLEVEL	1
+#define VMWARE_MINOR_VERSION	16
+#define VMWARE_PATCHLEVEL	4
 #define VMWARE_DRIVER_VERSION \
    (VMWARE_MAJOR_VERSION * 65536 + VMWARE_MINOR_VERSION * 256 + VMWARE_PATCHLEVEL)
+#define VMWARE_DRIVER_VERSION_STRING \
+    VMW_STRING(VMWARE_MAJOR_VERSION) "." VMW_STRING(VMWARE_MINOR_VERSION) \
+    "." VMW_STRING(VMWARE_PATCHLEVEL)
 
-static const char VMWAREBuildStr[] = "VMware Guest X Server " 
-    VMW_STRING(VMWARE_MAJOR_VERSION) "." VMW_STRING(VMWARE_MINOR_VERSION)
-    "." VMW_STRING(VMWARE_PATCHLEVEL) " - build=$Name:  $\n";
+static const char VMWAREBuildStr[] = "VMware Guest X Server "
+    VMWARE_DRIVER_VERSION_STRING " - build=$Name:  $\n";
+
+/*
+ * Standard four digit version string expected by VMware Tools installer.
+ * As the driver's version is only  {major, minor, patchlevel}, simply append an
+ * extra zero for the fourth digit.
+ */
+#ifdef __GNUC__
+const char vm_svga_version[] __attribute__((section(".modinfo"),unused)) =
+    "version=" VMWARE_DRIVER_VERSION_STRING ".0";
+#endif
 
 static SymTabRec VMWAREChipsets[] = {
     { PCI_CHIP_VMWARE0405, "vmware0405" },
@@ -101,6 +114,18 @@ static resRange vmwareLegacyRes[] = {
       SVGA_LEGACY_BASE_PORT + SVGA_NUM_PORTS*sizeof(uint32)},
     _VGA_EXCLUSIVE, _END
 };
+
+#if XSERVER_LIBPCIACCESS
+
+#define VMWARE_DEVICE_MATCH(d, i) \
+    {PCI_VENDOR_VMWARE, (d), PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0, (i) }
+
+static const struct pci_id_match VMwareDeviceMatch[] = {
+    VMWARE_DEVICE_MATCH (PCI_CHIP_VMWARE0405, 0 ),
+    VMWARE_DEVICE_MATCH (PCI_CHIP_VMWARE0710, 0 ),
+    { 0, 0, 0 },
+};
+#endif
 
 /*
  * Currently, even the PCI obedient 0405 chip still only obeys IOSE and
@@ -164,18 +189,31 @@ static XF86ModuleVersionInfo vmwareVersRec = {
 
 typedef enum {
     OPTION_HW_CURSOR,
-    OPTION_NOACCEL,
     OPTION_XINERAMA,
     OPTION_STATIC_XINERAMA
 } VMWAREOpts;
 
 static const OptionInfoRec VMWAREOptions[] = {
     { OPTION_HW_CURSOR, "HWcursor",     OPTV_BOOLEAN,   {0},    FALSE },
-    { OPTION_NOACCEL,   "NoAccel",      OPTV_BOOLEAN,   {0},    FALSE },
     { OPTION_XINERAMA,  "Xinerama",     OPTV_BOOLEAN,   {0},    FALSE },
     { OPTION_STATIC_XINERAMA, "StaticXinerama", OPTV_STRING, {0}, FALSE },
     { -1,               NULL,           OPTV_NONE,      {0},    FALSE }
 };
+
+/* Table of default modes to always add to the mode list. */
+
+typedef struct {
+   int width;
+   int height;
+} VMWAREDefaultMode;
+
+#define SVGA_DEFAULT_MODE(width, height) { width, height, },
+
+static const VMWAREDefaultMode VMWAREDefaultModes[] = {
+   SVGA_DEFAULT_MODES
+};
+
+#undef SVGA_DEFAULT_MODE
 
 static void VMWAREStopFIFO(ScrnInfoPtr pScrn);
 static void VMWARESave(ScrnInfoPtr pScrn);
@@ -280,23 +318,6 @@ vmwareSendSVGACmdUpdateFullScreen(VMWAREPtr pVMWARE)
     vmwareSendSVGACmdUpdate(pVMWARE, &BB);
 }
 
-static void
-vmwareSetPitchLock(VMWAREPtr pVMWARE, unsigned long fbPitch)
-{
-   CARD32 *vmwareFIFO = pVMWARE->vmwareFIFO;
-
-   VmwareLog(("Attempting to set pitchlock\n"));
-
-   if (pVMWARE->vmwareCapability & SVGA_CAP_PITCHLOCK) {
-      VmwareLog(("Using PitchLock register\n"));
-      vmwareWriteReg(pVMWARE, SVGA_REG_PITCHLOCK, fbPitch);
-   } else if (pVMWARE->hasPitchLockFIFOReg &&
-              vmwareFIFO[SVGA_FIFO_MIN] >= (vmwareReadReg(pVMWARE, SVGA_REG_MEM_REGS) << 2)) {
-      VmwareLog(("Using PitchLock FIFO register\n"));
-      vmwareFIFO[SVGA_FIFO_PITCHLOCK] = fbPitch;
-   }
-}
-
 static CARD32
 vmwareCalculateWeight(CARD32 mask)
 {
@@ -365,7 +386,7 @@ VMXGetVMwareSvgaId(VMWAREPtr pVMWARE)
     return SVGA_ID_INVALID;
 }
 
-
+#ifndef XSERVER_LIBPCIACCESS
 /*
  *----------------------------------------------------------------------
  *
@@ -411,6 +432,7 @@ RewriteTagString(const char *istr, char *ostr, int osize)
 	*op++ = chr;
     } while (chr);
 }
+#endif
 
 static void
 VMWAREIdentify(int flags)
@@ -558,7 +580,6 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
     int i;
     ClockRange* clockRanges;
     IOADDRESS domainIOBase = 0;
-    Bool useXinerama = TRUE;
 
 #ifndef BUILD_FOR_420
     domainIOBase = pScrn->domainIOBase;
@@ -588,17 +609,22 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
         return FALSE;
     }
 
-    if (pVMWARE->PciInfo->chipType == PCI_CHIP_VMWARE0710) {
+    if (DEVICE_ID(pVMWARE->PciInfo) == PCI_CHIP_VMWARE0710) {
         pVMWARE->indexReg = domainIOBase +
            SVGA_LEGACY_BASE_PORT + SVGA_INDEX_PORT*sizeof(uint32);
         pVMWARE->valueReg = domainIOBase +
            SVGA_LEGACY_BASE_PORT + SVGA_VALUE_PORT*sizeof(uint32);
     } else {
         /* Note:  This setting of valueReg causes unaligned I/O */
+#if XSERVER_LIBPCIACCESS
+        pVMWARE->portIOBase = pVMWARE->PciInfo->regions[0].base_addr;
+#else
+        pVMWARE->portIOBase = pVMWARE->PciInfo->ioBase[0];
+#endif
         pVMWARE->indexReg = domainIOBase +
-           pVMWARE->PciInfo->ioBase[0] + SVGA_INDEX_PORT;
+           pVMWARE->portIOBase + SVGA_INDEX_PORT;
         pVMWARE->valueReg = domainIOBase +
-           pVMWARE->PciInfo->ioBase[0] + SVGA_VALUE_PORT;
+           pVMWARE->portIOBase + SVGA_VALUE_PORT;
     }
     xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
                "VMware SVGA regs at (0x%04lx, 0x%04lx)\n",
@@ -627,8 +653,10 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
         return FALSE;
     }
 
+#if !XSERVER_LIBPCIACCESS
     pVMWARE->PciTag = pciTag(pVMWARE->PciInfo->bus, pVMWARE->PciInfo->device,
                              pVMWARE->PciInfo->func);
+#endif
     pVMWARE->Primary = xf86IsPrimaryPci(pVMWARE->PciInfo);
 
     pScrn->monitor = pScrn->confScreen->monitor;
@@ -844,10 +872,10 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
     }
 
     from = X_PROBED;
-    pScrn->chipset = (char*)xf86TokenToString(VMWAREChipsets, pVMWARE->PciInfo->chipType);
+    pScrn->chipset = (char*)xf86TokenToString(VMWAREChipsets, DEVICE_ID(pVMWARE->PciInfo));
 
     if (!pScrn->chipset) {
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "ChipID 0x%04x is not recognised\n", pVMWARE->PciInfo->chipType);
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "ChipID 0x%04x is not recognised\n", DEVICE_ID(pVMWARE->PciInfo));
         return FALSE;
     }
 
@@ -863,38 +891,8 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
     }
     xf86DrvMsg(pScrn->scrnIndex, from, "Using %s cursor\n",
                pVMWARE->hwCursor ? "HW" : "SW");
-    if (xf86IsOptionSet(options, OPTION_NOACCEL)) {
-        pVMWARE->noAccel = TRUE;
-        xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Acceleration disabled\n");
-    } else {
-        pVMWARE->noAccel = FALSE;
-    }
     pScrn->videoRam = pVMWARE->videoRam / 1024;
     pScrn->memPhysBase = pVMWARE->memPhysBase;
-
-    /*
-     * Init xinerama preferences.
-     */
-    useXinerama = xf86ReturnOptValBool(options, OPTION_XINERAMA,
-                                       pVMWARE->vmwareCapability & SVGA_CAP_MULTIMON);
-    if (useXinerama && !(pVMWARE->vmwareCapability & SVGA_CAP_MULTIMON)) {
-       xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-                  "Xinerama is not safely supported by the current virtual hardware. "
-                  "Do not request resolutions that require > 16MB of framebuffer.\n");
-    }
-
-
-    if (useXinerama && xf86IsOptionSet(options, OPTION_STATIC_XINERAMA)) {
-       char *topology = xf86GetOptValString(options, OPTION_STATIC_XINERAMA);
-       if (topology) {
-          pVMWARE->xineramaState =
-             VMWAREParseTopologyString(pScrn, topology, &pVMWARE->xineramaNumOutputs);
-
-         pVMWARE->xineramaStatic = pVMWARE->xineramaState != NULL;
-
-         xfree(topology);
-       }
-    }
 
     xfree(options);
 
@@ -960,42 +958,38 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
         xf86LoaderReqSymLists(ramdacSymbols, NULL);
     }
 
-    if (!pVMWARE->noAccel) {
-        if (!xf86LoadSubModule(pScrn, "xaa")) {
-            VMWAREFreeRec(pScrn);
-            return FALSE;
-        }
-        xf86LoaderReqSymLists(vmwareXaaSymbols, NULL);
-    }
-
-    /* Initialise VMWARE_CTRL extension. */
-    VMwareCtrl_ExtInit(pScrn);
-
-    /* Initialise Xinerama extension. */
-    if (useXinerama) {
-       VMwareXinerama_ExtInit(pScrn);
-    }
-
-    if (pVMWARE->xinerama && pVMWARE->xineramaStatic) {
-       xf86DrvMsg(pScrn->scrnIndex, X_INFO, pVMWARE->xineramaState ?
-                                            "Using static Xinerama.\n" :
-                                            "Failed to configure static Xinerama.\n");
-    }
-
     return TRUE;
 }
 
 static Bool
 VMWAREMapMem(ScrnInfoPtr pScrn)
 {
-    VMWAREPtr pVMWARE;
+    VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
+#if XSERVER_LIBPCIACCESS
+    int err;
+    struct pci_device *const device = pVMWARE->PciInfo;
+#endif
 
-    pVMWARE = VMWAREPTR(pScrn);
+#if XSERVER_LIBPCIACCESS
+   err = pci_device_map_range(device,
+                              pVMWARE->memPhysBase,
+                              pVMWARE->videoRam,
+                              PCI_DEV_MAP_FLAG_WRITABLE | 
+                              PCI_DEV_MAP_FLAG_WRITE_COMBINE,
+                              (void **) &pVMWARE->FbBase);
+   if (err) {
+       xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                  "Unable to map frame buffer BAR. %s (%d)\n",
+                  strerror (err), err);
+       return FALSE;
+   }
 
+#else
     pVMWARE->FbBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
                                     pVMWARE->PciTag,
                                     pVMWARE->memPhysBase,
                                     pVMWARE->videoRam);
+#endif
     if (!pVMWARE->FbBase)
         return FALSE;
 
@@ -1014,7 +1008,11 @@ VMWAREUnmapMem(ScrnInfoPtr pScrn)
 
     VmwareLog(("Unmapped: %p/%u\n", pVMWARE->FbBase, pVMWARE->videoRam));
 
+#if XSERVER_LIBPCIACCESS
+    pci_device_unmap_range(pVMWARE->PciInfo, pVMWARE->FbBase, pVMWARE->videoRam);
+#else
     xf86UnMapVidMem(pScrn->scrnIndex, pVMWARE->FbBase, pVMWARE->videoRam);
+#endif
     pVMWARE->FbBase = NULL;
     return TRUE;
 }
@@ -1101,7 +1099,7 @@ VMWARERestore(ScrnInfoPtr pScrn)
 }
 
 static Bool
-VMWAREModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
+VMWAREModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode, Bool rebuildPixmap)
 {
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     vgaRegPtr vgaReg = &hwp->ModeReg;
@@ -1140,21 +1138,28 @@ VMWAREModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
     VmwareLog(("fbSize:        %u\n", pVMWARE->FbSize));
     VmwareLog(("New dispWidth: %u\n", pScrn->displayWidth));
 
+    vmwareCheckVideoSanity(pScrn);
+
+    if (rebuildPixmap) {
+        pScrn->pScreen->ModifyPixmapHeader((*pScrn->pScreen->GetScreenPixmap)(pScrn->pScreen),
+                                           pScrn->pScreen->width,
+                                           pScrn->pScreen->height,
+                                           pScrn->pScreen->rootDepth,
+                                           pScrn->bitsPerPixel,
+                                           PixmapBytePad(pScrn->displayWidth,
+                                                         pScrn->pScreen->rootDepth),
+                                           (pointer)(pVMWARE->FbBase + pScrn->fbOffset));
+
+        (*pScrn->EnableDisableFBAccess)(pScrn->pScreen->myNum, FALSE);
+        (*pScrn->EnableDisableFBAccess)(pScrn->pScreen->myNum, TRUE);
+    }
+
     vgaHWProtect(pScrn, FALSE);
 
     /*
      * XXX -- If we want to check that we got the mode we asked for, this
      * would be a good place.
      */
-
-    /*
-     * Let XAA know about the mode change.
-     */
-    if (!pVMWARE->noAccel) {
-        if (!vmwareXAAModeInit(pScrn, mode)) {
-            return FALSE;
-        }
-    }
 
     /*
      * Update Xinerama info appropriately.
@@ -1183,6 +1188,42 @@ VMWAREModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
        }
     }
 
+    /*
+     * Update host's view of guest topology.
+     */
+    if (pVMWARE->vmwareCapability & SVGA_CAP_DISPLAY_TOPOLOGY) {
+        if (pVMWARE->xinerama) {
+            int i = 0;
+            VMWAREXineramaPtr xineramaState = pVMWARE->xineramaState;
+            vmwareWriteReg(pVMWARE, SVGA_REG_NUM_GUEST_DISPLAYS,
+                           pVMWARE->xineramaNumOutputs);
+
+            for (i = 0; i < pVMWARE->xineramaNumOutputs; i++) {
+                vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_ID, i);
+                vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_IS_PRIMARY, TRUE);
+                vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_POSITION_X,
+                               xineramaState[i].x_org);
+                vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_POSITION_Y,
+                               xineramaState[i].y_org);
+                vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_WIDTH,
+                               xineramaState[i].width);
+                vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_HEIGHT,
+                               xineramaState[i].height);
+            }
+        } else {
+            vmwareWriteReg(pVMWARE, SVGA_REG_NUM_GUEST_DISPLAYS, 1);
+
+            vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_ID, 0);
+            vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_IS_PRIMARY, TRUE);
+            vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_POSITION_X, 0);
+            vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_POSITION_Y, 0);
+            vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_WIDTH, mode->HDisplay);
+            vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_HEIGHT, mode->VDisplay);
+        }
+
+        vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_ID, SVGA_INVALID_DISPLAY_ID);
+    }
+
     return TRUE;
 }
 
@@ -1196,6 +1237,10 @@ static void
 VMWAREInitFIFO(ScrnInfoPtr pScrn)
 {
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
+#if XSERVER_LIBPCIACCESS
+    struct pci_device *const device = pVMWARE->PciInfo;
+    int err;
+#endif
     CARD32* vmwareFIFO;
     Bool extendedFifo;
     int min;
@@ -1204,10 +1249,23 @@ VMWAREInitFIFO(ScrnInfoPtr pScrn)
 
     pVMWARE->mmioPhysBase = vmwareReadReg(pVMWARE, SVGA_REG_MEM_START);
     pVMWARE->mmioSize = vmwareReadReg(pVMWARE, SVGA_REG_MEM_SIZE) & ~3;
+#if XSERVER_LIBPCIACCESS
+    err = pci_device_map_range(device, pVMWARE->mmioPhysBase,
+                               pVMWARE->mmioSize,
+                               PCI_DEV_MAP_FLAG_WRITABLE,
+                               (void **) &pVMWARE->mmioVirtBase);
+    if (err) {
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                   "Unable to map mmio BAR. %s (%d)\n",
+                   strerror (err), err);
+        return;
+    }
+#else
     pVMWARE->mmioVirtBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO,
                                           pVMWARE->PciTag,
                                           pVMWARE->mmioPhysBase,
                                           pVMWARE->mmioSize);
+#endif
     vmwareFIFO = pVMWARE->vmwareFIFO = (CARD32*)pVMWARE->mmioVirtBase;
 
     extendedFifo = pVMWARE->vmwareCapability & SVGA_CAP_EXTENDED_FIFO;
@@ -1218,9 +1276,6 @@ VMWAREInitFIFO(ScrnInfoPtr pScrn)
     vmwareFIFO[SVGA_FIFO_NEXT_CMD] = min * sizeof(CARD32);
     vmwareFIFO[SVGA_FIFO_STOP] = min * sizeof(CARD32);
     vmwareWriteReg(pVMWARE, SVGA_REG_CONFIG_DONE, 1);
-
-    pVMWARE->hasPitchLockFIFOReg =
-        extendedFifo && (vmwareFIFO[SVGA_FIFO_CAPABILITIES] & SVGA_FIFO_CAP_PITCHLOCK);
 }
 
 static void
@@ -1231,7 +1286,11 @@ VMWAREStopFIFO(ScrnInfoPtr pScrn)
     TRACEPOINT
 
     vmwareWriteReg(pVMWARE, SVGA_REG_CONFIG_DONE, 0);
+#if XSERVER_LIBPCIACCESS
+    pci_device_unmap_range(pVMWARE->PciInfo, pVMWARE->mmioVirtBase, pVMWARE->mmioSize);
+#else
     xf86UnMapVidMem(pScrn->scrnIndex, pVMWARE->mmioVirtBase, pVMWARE->mmioSize);
+#endif
 }
 
 static Bool
@@ -1244,15 +1303,13 @@ VMWARECloseScreen(int scrnIndex, ScreenPtr pScreen)
     VmwareLog(("cursorSema: %d\n", pVMWARE->cursorSema));
 
     if (*pVMWARE->pvtSema) {
+        if (pVMWARE->videoStreams) {
+            vmwareVideoEnd(pScreen);
+        }
+
         if (pVMWARE->CursorInfoRec) {
             vmwareCursorCloseScreen(pScreen);
         }
-
-        if (pVMWARE->xaaInfo) {
-            vmwareXAACloseScreen(pScreen);
-        }
-
-        vmwareSetPitchLock(pVMWARE, 0);
 
         VMWARERestore(pScrn);
         VMWAREUnmapMem(pScrn);
@@ -1434,25 +1491,71 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     ScrnInfoPtr pScrn;
     vgaHWPtr hwp;
     VMWAREPtr pVMWARE;
+    OptionInfoPtr options;
+    Bool useXinerama = TRUE;
 
     /* Get the ScrnInfoRec */
     pScrn = xf86Screens[pScreen->myNum];
     pVMWARE = VMWAREPTR(pScrn);
 
+
+    xf86CollectOptions(pScrn, NULL);
+    if (!(options = xalloc(sizeof(VMWAREOptions))))
+        return FALSE;
+    memcpy(options, VMWAREOptions, sizeof(VMWAREOptions));
+    xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, options);
+
+    /*
+     * Init xinerama preferences.
+     */
+    useXinerama = xf86ReturnOptValBool(options, OPTION_XINERAMA,
+                                       pVMWARE->vmwareCapability & SVGA_CAP_MULTIMON);
+    if (useXinerama && !(pVMWARE->vmwareCapability & SVGA_CAP_MULTIMON)) {
+       xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+                  "Xinerama is not safely supported by the current virtual hardware. "
+                  "Do not request resolutions that require > 16MB of framebuffer.\n");
+    }
+
+
+    if (useXinerama && xf86IsOptionSet(options, OPTION_STATIC_XINERAMA)) {
+       char *topology = xf86GetOptValString(options, OPTION_STATIC_XINERAMA);
+       if (topology) {
+          pVMWARE->xineramaState =
+             VMWAREParseTopologyString(pScrn, topology, &pVMWARE->xineramaNumOutputs);
+
+         pVMWARE->xineramaStatic = pVMWARE->xineramaState != NULL;
+
+         xfree(topology);
+       }
+    }
+
+    xfree(options);
+
+    /* Initialise VMWARE_CTRL extension. */
+    VMwareCtrl_ExtInit(pScrn);
+
+    /* Initialise Xinerama extension. */
+    if (useXinerama) {
+       VMwareXinerama_ExtInit(pScrn);
+    }
+
+    if (pVMWARE->xinerama && pVMWARE->xineramaStatic) {
+       xf86DrvMsg(pScrn->scrnIndex, X_INFO, pVMWARE->xineramaState ?
+                                            "Using static Xinerama.\n" :
+                                            "Failed to configure static Xinerama.\n");
+    }
+
     /*
      * If using the vgahw module, its data structures and related
      * things are typically initialised/mapped here.
      */
-
     hwp = VGAHWPTR(pScrn);
     vgaHWGetIOBase(hwp);
 
     VMWAREInitFIFO(pScrn);
 
     /* Initialise the first mode */
-    VMWAREModeInit(pScrn, pScrn->currentMode);
-
-    vmwareSetPitchLock(pVMWARE, pVMWARE->fbPitch);
+    VMWAREModeInit(pScrn, pScrn->currentMode, FALSE);
 
     /* Set the viewport if supported */
     VMWAREAdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
@@ -1478,7 +1581,6 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
      * acceptable.  To deal with this, call miSetVisualTypes with
      * the appropriate visual mask.
      */
-
     if (pScrn->bitsPerPixel > 8) {
         if (!miSetVisualTypes(pScrn->depth, TrueColorMask,
                               pScrn->rgbBits, pScrn->defaultVisual)) {
@@ -1560,17 +1662,6 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     }
 
     /*
-     * Initialize acceleration.
-     */
-    if (!pVMWARE->noAccel) {
-        if (!vmwareXAAScreenInit(pScreen)) {
-            xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-                       "XAA initialization failed -- running unaccelerated!\n");
-            pVMWARE->noAccel = TRUE;
-        }
-    }
-
-    /*
      * If backing store is to be supported (as is usually the case),
      * initialise it.
      */
@@ -1598,7 +1689,6 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
      * Install colourmap functions.  If using the vgahw module,
      * vgaHandleColormaps would usually be called here.
      */
-
     if (!fbCreateDefColormap(pScreen))
         return FALSE;
 
@@ -1610,10 +1700,27 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     }
 
     /*
-     * The initial mode that fixes the framebuffer is the current mode
-     * at ScreenInit time.
+     * We explictly add a set of default modes because the X server will
+     * not include modes larger than the initial one.
      */
-    pVMWARE->initialMode = pScrn->currentMode;
+   {
+      unsigned int i;
+      unsigned int numModes = sizeof (VMWAREDefaultModes) / sizeof *(VMWAREDefaultModes);
+      char name[10];
+      for (i = 0; i < numModes; i++) {
+         const VMWAREDefaultMode *mode = &VMWAREDefaultModes[i];
+
+         /* Only modes that fit the hardware maximums should be added. */
+         if (mode->width <= pVMWARE->maxWidth && mode->height <= pVMWARE->maxHeight) {
+            snprintf(name, 10, "%dx%d", mode->width, mode->height);
+            VMWAREAddDisplayMode(pScrn, name, mode->width, mode->height);
+         }
+      }
+
+      /* Add the hardware maximums as a mode. */
+      snprintf(name, 10, "%dx%d", pVMWARE->maxWidth, pVMWARE->maxHeight);
+      VMWAREAddDisplayMode(pScrn, name, pVMWARE->maxWidth, pVMWARE->maxHeight);
+   }
 
     /*
      * We will lazily add the dynamic modes as the are needed when new
@@ -1631,6 +1738,15 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
         xf86ShowUnusedOptions(pScrn->scrnIndex, pScrn->options);
     }
 
+    /* Initialize Xv extension */
+    pVMWARE->videoStreams = NULL;
+    if (vmwareVideoEnabled(pVMWARE)) {
+        if (!vmwareVideoInit(pScreen)) {
+            xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Xv initialization failed\n");
+        }
+    }
+
+
     /* Done */
     return TRUE;
 }
@@ -1638,7 +1754,7 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 static Bool
 VMWARESwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
 {
-    return VMWAREModeInit(xf86Screens[scrnIndex], mode);
+    return VMWAREModeInit(xf86Screens[scrnIndex], mode, TRUE);
 }
 
 static Bool
@@ -1651,19 +1767,13 @@ VMWAREEnterVT(int scrnIndex, int flags)
         VMWAREInitFIFO(pScrn);
     }
 
-    vmwareSetPitchLock(pVMWARE, pVMWARE->fbPitch);
-
-    return VMWAREModeInit(pScrn, pScrn->currentMode);
+    return VMWAREModeInit(pScrn, pScrn->currentMode, TRUE);
 }
 
 static void
 VMWARELeaveVT(int scrnIndex, int flags)
 {
     ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-    VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
-
-    vmwareSetPitchLock(pVMWARE, 0);
-
     VMWARERestore(pScrn);
 }
 
@@ -1682,6 +1792,45 @@ VMWAREValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
 {
     return MODE_OK;
 }
+
+#if XSERVER_LIBPCIACCESS
+static Bool
+VMwarePciProbe (DriverPtr           drv,
+                int                 entity_num,
+                struct pci_device   *device,
+                intptr_t            match_data)
+{
+    ScrnInfoPtr     scrn = NULL;
+    EntityInfoPtr   entity;
+
+    scrn = xf86ConfigPciEntity(scrn, 0, entity_num, VMWAREPciChipsets,
+                               NULL, NULL, NULL, NULL, NULL);
+    if (scrn != NULL) {
+        scrn->driverVersion = VMWARE_DRIVER_VERSION;
+        scrn->driverName = VMWARE_DRIVER_NAME;
+        scrn->name = VMWARE_NAME;
+        scrn->Probe = NULL;
+    }
+
+    entity = xf86GetEntityInfo(entity_num);
+    switch (DEVICE_ID(device)) {
+    case PCI_CHIP_VMWARE0405:
+    case PCI_CHIP_VMWARE0710:
+        xf86MsgVerb(X_INFO, 4, "VMwarePciProbe: Valid device\n");
+        scrn->PreInit = VMWAREPreInit;
+        scrn->ScreenInit = VMWAREScreenInit;
+        scrn->SwitchMode = VMWARESwitchMode;
+        scrn->EnterVT = VMWAREEnterVT;
+        scrn->LeaveVT = VMWARELeaveVT;
+        scrn->FreeScreen = VMWAREFreeScreen;
+        scrn->ValidMode = VMWAREValidMode;
+        break;
+    default:
+        xf86MsgVerb(X_INFO, 4, "VMwarePciProbe: Unknown device\n");
+    }
+    return scrn != NULL;
+}
+#else 
 
 static Bool
 VMWAREProbe(DriverPtr drv, int flags)
@@ -1742,18 +1891,27 @@ VMWAREProbe(DriverPtr drv, int flags)
     }
     return foundScreen;
 }
+#endif
 
 
 _X_EXPORT DriverRec VMWARE = {
     VMWARE_DRIVER_VERSION,
     VMWARE_DRIVER_NAME,
     VMWAREIdentify,
+#if XSERVER_LIBPCIACCESS
+    NULL,
+#else
     VMWAREProbe,
+#endif
     VMWAREAvailableOptions,
     NULL,
     0,
 #if VMWARE_DRIVER_FUNC
     VMWareDriverFunc,
+#endif
+#if XSERVER_LIBPCIACCESS
+    VMwareDeviceMatch,
+    VMwarePciProbe,
 #endif
 };
 
@@ -1776,7 +1934,7 @@ vmwareSetup(pointer module, pointer opts, int *errmaj, int *errmin)
         xf86AddDriver(&VMWARE, module, VMWARE_DRIVER_FUNC);
 
         LoaderRefSymLists(vgahwSymbols, fbSymbols, ramdacSymbols,
-                          shadowfbSymbols, vmwareXaaSymbols, NULL);
+                          shadowfbSymbols, NULL);
 
         return (pointer)1;
     }
