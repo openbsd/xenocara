@@ -522,8 +522,6 @@
 ./usr/X11R6/lib/libpixman-1.so.11.0
 ./usr/X11R6/lib/libxkbfile.so.4.0
 ./usr/X11R6/lib/libxkbui.so.4.0
-./usr/X11R6/lib/modules/drivers/geode_drv.la
-./usr/X11R6/lib/modules/drivers/geode_drv.so
 ./usr/X11R6/lib/pkgconfig/gl.pc
 ./usr/X11R6/lib/pkgconfig/glu.pc
 ./usr/X11R6/lib/pkgconfig/glw.pc

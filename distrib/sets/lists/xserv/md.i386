@@ -194,6 +194,8 @@
 ./usr/X11R6/lib/modules/drivers/cyrix_drv.so
 ./usr/X11R6/lib/modules/drivers/dummy_drv.la
 ./usr/X11R6/lib/modules/drivers/dummy_drv.so
+./usr/X11R6/lib/modules/drivers/geode_drv.la
+./usr/X11R6/lib/modules/drivers/geode_drv.so
 ./usr/X11R6/lib/modules/drivers/glint_drv.la
 ./usr/X11R6/lib/modules/drivers/glint_drv.so
 ./usr/X11R6/lib/modules/drivers/i128_drv.la
