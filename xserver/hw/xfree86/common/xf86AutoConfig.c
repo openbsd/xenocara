@@ -168,7 +168,7 @@ videoPtrToDriverName(pciVideoPtr info)
     {
 	case 0x1022:
 		if (info->chipType == 0x2081)
-			return "amd";
+			return "geode";
 		else
 			return NULL;
 	case 0x1142:		    return "apm";
