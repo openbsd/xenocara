@@ -109,6 +109,7 @@ xf86StdIsaBusAccWindowsFromOS(void)
 resPtr
 xf86StdAccResFromOS(resPtr ret)
 {
+#ifndef __sparc64__
     resRange range;
 
     /*
@@ -170,6 +171,7 @@ xf86StdAccResFromOS(resPtr ret)
     ret = xf86AddResToList(ret, &range, -1);
 
     /* XXX add others */
+#endif
     return ret;
 }
 
