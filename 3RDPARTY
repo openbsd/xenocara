@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.31 2008/07/31 20:01:28 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.32 2008/07/31 20:23:59 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -33,7 +33,7 @@ Archive Site:	http://ftp.gnome.org/pub/GNOME/sources/ttf-bitstream-vera/
 
 Package:	xlockmore
 Version:	5.22
-Current Vers:	5.25
+Current Vers:	5.26.1
 Maintainer:	bagleyd@tux.org
 Archive Site:	http://www.tux.org/~bagleyd/latest/
 
