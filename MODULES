@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.36 2008/07/24 08:10:53 matthieu Exp $
+# $OpenBSD: MODULES,v 1.37 2008/07/31 06:18:14 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -42,7 +42,7 @@ app/xcursorgen		1.0.2	7.3	ports
 app/xdm			1.1.8	7.4	needs-update
 app/xdpyinfo		1.0.3	7.4
 app/xdriinfo		1.0.2	7.3
-app/xedit		1.0.2	7.1
+app/xedit		1.1.0	7.4	needs-update
 app/xev			1.0.3	7.4
 app/xeyes		1.0.1	7.0
 app/xf86dga		1.0.2	7.2RC1
@@ -138,13 +138,13 @@ driver/xf86-video-i128		1.3.0	7.4	needs-update
 driver/xf86-video-i740		1.2.0	7.4	needs-update
 driver/xf86-video-impact	0.2.0		need-rel
 driver/xf86-video-imstt		1.1.0	7.1
-driver/xf86-video-intel		2.3.2	7.4
+driver/xf86-video-intel		2.4.0	7.4	needs-update
 driver/xf86-video-mach64	6.8.0	7.4
-driver/xf86-video-mga		1.4.9	7.4	needs-update
-driver/xf86-video-neomagic	1.2.1	7.4	needs-update
+driver/xf86-video-mga		1.4.9	7.4
+driver/xf86-video-neomagic	1.2.1	7.4
 driver/xf86-video-newport	0.2.1	7.2RC1
 driver/xf86-video-nsc		2.8.3	7.3	needs-update
-driver/xf86-video-nv		2.1.10	7.4	needs-update
+driver/xf86-video-nv		2.1.10	7.4
 driver/xf86-video-openchrome	0.2.902
 driver/xf86-video-r128		6.8.0	7.4
 driver/xf86-video-radeonhd	1.2.1	7.4
@@ -169,7 +169,7 @@ driver/xf86-video-tseng		1.2.0	7.4	needs-update
 driver/xf86-video-vesa		1.3.0	7.2RC3
 driver/xf86-video-vga		4.1.0	7.1
 driver/xf86-video-via		0.2.2	7.2RC1	obsolete
-driver/xf86-video-vmware	10.16.4	7.4	needs-update
+driver/xf86-video-vmware	10.16.4	7.4
 driver/xf86-video-voodoo	1.2.0	7.4	needs-update
 driver/xf86-video-wsfb		0.2.1	7.2
 
