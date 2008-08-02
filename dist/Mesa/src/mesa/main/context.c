@@ -657,7 +657,7 @@ delete_renderbuffer_cb(GLuint id, void *data, void *userData)
    struct gl_renderbuffer *rb = (struct gl_renderbuffer *) data;
    rb->RefCount = 0;  /* see comment for FBOs above */
 
-   if (rb-Delete)
+   if (rb->Delete)
      rb->Delete(rb);
 }
 
