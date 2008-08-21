@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.25 2008/05/11 20:58:10 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.26 2008/08/21 05:54:41 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -48,6 +48,8 @@ CFLAGS+=	$(COPTS)
 CONFIG_SITE=	${XSRCDIR}/etc/config.site
 .endif
 
+_SRCDIR?=	${.CURDIR}
+
 CONFIGURE_ENV=	PKG_CONFIG_LIBDIR="$(PKG_CONFIG_LIBDIR)" \
 		CONFIG_SITE=$(CONFIG_SITE) \
 		XMLTO=: \
@@ -65,7 +67,7 @@ AUTOTOOLS_ENV=  AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 
 # pkgconfig
 .if defined(PKGCONFIG)
-PACKAGE_VERSION!=m4 ${XSRCDIR}/share/mk/package_version.m4 ${.CURDIR}/configure.ac
+PACKAGE_VERSION!=m4 ${XSRCDIR}/share/mk/package_version.m4 ${_SRCDIR}/configure.ac
 
 all:: ${PKGCONFIG}
 
@@ -75,7 +77,7 @@ ${PKGCONFIG}: ${PKGCONFIG}.in
 	    -e 's#@libdir@#$${exec_prefix}/lib#g' \
 	    -e 's#@includedir@#$${prefix}/include#g' \
 	    -e 's#@PACKAGE_VERSION@#${PACKAGE_VERSION}#g' \
-	< ${.CURDIR}/${PKGCONFIG}.in > $@
+	< ${_SRCDIR}/${PKGCONFIG}.in > $@
 
 install:: ${PKGCONFIG}
 	${INSTALL_DATA} ${PKGCONFIG} ${DESTDIR}${LIBDIR}/pkgconfig
@@ -88,7 +90,7 @@ clean::
 .if defined(HEADERS)
 install::
 	@echo installing ${HEADERS} in ${INCSDIR}/${HEADERS_SUBDIR}
-	@cd ${.CURDIR}; for i in ${HEADERS}; do \
+	@cd ${_SRCDIR}; for i in ${HEADERS}; do \
 	    cmp -s $$i ${DESTDIR}${INCSDIR}/${HEADERS_SUBDIR}$$i || \
 		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/${HEADERS_SUBDIR}$$i;\
 	done
@@ -97,7 +99,7 @@ install::
 .for d in ${HEADERS_SUBDIRS}
 install::
 	@echo installing ${HEADERS_${d:S/\//_/}} in ${INCSDIR}/${d}
-	@cd ${.CURDIR}; for i in ${HEADERS_${d:S/\//_/}}; do \
+	@cd ${_SRCDIR}; for i in ${HEADERS_${d:S/\//_/}}; do \
 	    cmp -s $$i ${DESTDIR}${INCSDIR}/$d/$$i || \
 		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/${d}; \
 	done
@@ -131,11 +133,11 @@ ECHO_REORDER ?= :
 .if !target(config.status)
 config.status:
 .if defined(XENOCARA_RERUN_AUTOCONF) && ${XENOCARA_RERUN_AUTOCONF:L} == "yes"
-	cd ${.CURDIR}; ${AUTOTOOLS_ENV} exec autoreconf -v --install --force
+	cd ${_SRCDIR}; ${AUTOTOOLS_ENV} exec autoreconf -v --install --force
 .else
 	@sed -e '/^#/d' ${REORDER_DEPENDENCIES} | \
 	  tsort -r|while read f; do \
-	    cd ${.CURDIR}; \
+	    cd ${_SRCDIR}; \
 		case $$f in \
 		/*) \
 			find . -name $${f#/} -print| while read i; \
@@ -148,7 +150,7 @@ config.status:
 			;; \
 		esac; done
 .endif
-	${CONFIGURE_ENV} exec sh ${.CURDIR}/configure --prefix=${X11BASE} \
+	${CONFIGURE_ENV} exec sh ${_SRCDIR}/configure --prefix=${X11BASE} \
 		--sysconfdir=/etc \
 		--mandir=${X11BASE}/man \
 		${_cache} \
