@@ -1,8 +1,8 @@
-#	$OpenBSD: Makefile,v 1.11 2008/06/22 17:37:35 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.12 2008/08/21 05:09:08 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
-FT_VERSION_INFO= 9.16.3 # Get it from builds/unix/configure.ac
+FT_VERSION_INFO= 9.18.3 # Get it from builds/unix/configure.ac
 
 .ifmake includes
 SUBDIR=	include
@@ -69,7 +69,7 @@ freetype-config: freetype-config.in
 		-e s%@LIBZ@%-lz% -e s%@FT2_EXTRA_LIBS@%% \
 		-e s%@enable_shared@%yes% \
 		-e 's%@hardcode_libdir_flag_spec@%%' \
-		-e 's%@ft_version@%9.7.3%' -e 's%@wl@%%' \
+		-e 's%@ft_version@%${FT_VERSION_INFO}%' -e 's%@wl@%%' \
 		< ${.CURDIR}/builds/unix/freetype-config.in \
 		> freetype-config
 
