@@ -26,7 +26,6 @@ Silicon Motion shall not be used in advertising or otherwise to promote the
 sale, use or other dealings in this Software without prior written
 authorization from the XFree86 Project and silicon Motion.
 */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/siliconmotion/smi_video.h,v 1.4 2002/09/16 18:06:01 eich Exp $ */
 
 #ifndef _SMI_VIDEO_H
 #define _SMI_VIDEO_H
@@ -69,14 +68,18 @@ authorization from the XFree86 Project and silicon Motion.
 
 typedef struct
 {
-	FBAreaPtr	area;
 	RegionRec	clip;
     /* Attributes */
     CARD32      Attribute[N_ATTRS];
-	CARD32		videoStatus;
-	Time		offTime;
-	Time		freeTime;
+    CARD32	videoStatus;
+    Time	offTime;
+    Time	freeTime;
     I2CDevRec   I2CDev;
+
+    /* Memory */
+    int		size;
+    void	*video_memory;
+    int		video_offset;
 
     /* Encodings */
     XF86VideoEncodingPtr        enc;
@@ -84,19 +87,20 @@ typedef struct
     int                         *norm;
     int                         *channel;
     int                         nenc,cenc;
+
 } SMI_PortRec, *SMI_PortPtr;
 
 typedef struct
 {
-	FBAreaPtr	area;
-	Bool		isOn;
+    void	*surface_memory;
+    Bool	isOn;
 
 } SMI_OffscreenRec, *SMI_OffscreenPtr;
 
 typedef struct
 {
-	CARD8		address;
-	CARD8		data;
+    CARD8	address;
+    CARD8	data;
 
 } SMI_I2CDataRec, *SMI_I2CDataPtr;
 

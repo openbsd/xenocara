@@ -26,7 +26,6 @@ Silicon Motion shall not be used in advertising or otherwise to promote the
 sale, use or other dealings in this Software without prior written
 authorization from the XFree86 Project and Silicon Motion.
 */
-/* $XFree86$ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -41,63 +40,65 @@ SMI_CommonCalcClock(int scrnIndex, long freq, int min_m, int min_n1,
 		    int max_n1, int min_n2, int max_n2, long freq_min, 
 		    long freq_max, unsigned char *mdiv, unsigned char *ndiv)
 {
-	double div, diff, best_diff;
-	unsigned int m;
-	unsigned char n1, n2;
-	unsigned char best_n1 = 63, best_n2 = 3, best_m = 255;
+    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SMIPtr pSmi = SMIPTR(pScrn);
+    double div, diff, best_diff;
+    unsigned int m;
+    unsigned char n1, n2;
+    unsigned char best_n1 = 63, best_n2 = 3, best_m = 255;
 
-	double ffreq     = freq     / 1000.0 / BASE_FREQ;
-	double ffreq_min = freq_min / 1000.0 / BASE_FREQ;
-	double ffreq_max = freq_max / 1000.0 / BASE_FREQ;
+    double ffreq     = freq     / 1000.0 / BASE_FREQ;
+    double ffreq_min = freq_min / 1000.0 / BASE_FREQ;
+    double ffreq_max = freq_max / 1000.0 / BASE_FREQ;
 
-	if (ffreq < ffreq_min / (1 << max_n2))
-	{
-		xf86DrvMsg(scrnIndex,X_WARNING,"invalid frequency %1.3f MHz  [freq >= %1.3f MHz]\n",
-				ffreq * BASE_FREQ, ffreq_min * BASE_FREQ / (1 << max_n2));
-		ffreq = ffreq_min / (1 << max_n2);
-	}
-	if (ffreq > ffreq_max / (1 << min_n2))
-	{
-		xf86DrvMsg(scrnIndex,X_WARNING,"invalid frequency %1.3f MHz  [freq <= %1.3f MHz]\n",
-				ffreq * BASE_FREQ, ffreq_max * BASE_FREQ / (1 << min_n2));
-		ffreq = ffreq_max / (1 << min_n2);
-	}
+    if (ffreq < ffreq_min / (1 << max_n2)) {
+	xf86DrvMsg(scrnIndex,X_WARNING,"invalid frequency %1.3f MHz  [freq >= %1.3f MHz]\n",
+		ffreq * BASE_FREQ, ffreq_min * BASE_FREQ / (1 << max_n2));
+	ffreq = ffreq_min / (1 << max_n2);
+    }
+    if (ffreq > ffreq_max / (1 << min_n2)) {
+	xf86DrvMsg(scrnIndex,X_WARNING,"invalid frequency %1.3f MHz  [freq <= %1.3f MHz]\n",
+		ffreq * BASE_FREQ, ffreq_max * BASE_FREQ / (1 << min_n2));
+	ffreq = ffreq_max / (1 << min_n2);
+    }
 
-	/* work out suitable timings */
-	best_diff = ffreq;
+    /* work out suitable timings */
+    best_diff = ffreq;
 
-	for (n2 = min_n2; n2 <= max_n2; n2++)
-	{
-		for (n1 = min_n1; n1 <= max_n1; n1++)
-		{
-			m = (int)(ffreq * n1 * (1 << n2) + 0.5);
-			if ( (m < min_m) || (m > 255) )
-			{
-				continue;
-			}
-			div = (double)(m) / (double)(n1);
-			if ( (div >= ffreq_min) && (div <= ffreq_max) )
-			{
-				diff = ffreq - div / (1 << n2);
-				if (diff < 0.0)
-				{
-					diff = -diff;
-				}
-				if (diff < best_diff)
-				{
-					best_diff = diff;
-					best_m    = m;
-					best_n1   = n1;
-					best_n2   = n2;
-				}
-			}
+    for (n2 = min_n2; n2 <= max_n2; n2++) {
+	for (n1 = min_n1; n1 <= max_n1; n1++) {
+	    m = (int)(ffreq * n1 * (1 << n2) + 0.5);
+	    if ( (m < min_m) || (m > 255) ) {
+		continue;
+	    }
+	    div = (double)(m) / (double)(n1);
+	    if ( (div >= ffreq_min) && (div <= ffreq_max) ) {
+		diff = ffreq - div / (1 << n2);
+		if (diff < 0.0) {
+		    diff = -diff;
 		}
+		if (diff < best_diff) {
+		    best_diff = diff;
+		    best_m    = m;
+		    best_n1   = n1;
+		    best_n2   = n2;
+		}
+	    }
 	}
+    }
 
-	DEBUG((VERBLEV, "Clock parameters for %1.6f MHz: m=%d, n1=%d, n2=%d\n",
-			((double)(best_m) / (double)(best_n1) / (1 << best_n2)) * BASE_FREQ,
-			best_m, best_n1, best_n2));
+    DEBUG((VERBLEV, "Clock parameters for %1.6f MHz: m=%d, n1=%d, n2=%d\n",
+	 ((double)(best_m) / (double)(best_n1) / (1 << best_n2)) * BASE_FREQ,
+	 best_m, best_n1, best_n2));
 
+    if (SMI_LYNX_SERIES(pSmi->Chipset)) {
 	*ndiv = best_n1 | (best_n2 << 6);
-	*mdiv = best_m;
+    } else {
+	*ndiv = best_n1 | (best_n2 << 7);
+	if (freq > 120000)
+	    *ndiv |= 1 << 6;
+    }
+
+    *mdiv = best_m;
 }
+
