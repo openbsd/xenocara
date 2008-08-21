@@ -1,0 +1,19 @@
+# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2008/08/21 05:48:42 matthieu Exp $
+
+.include <bsd.xconf.mk>
+
+_SRCDIR= ${.CURDIR}/../xserver
+
+CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
+		--disable-xorg \
+		--disable-xinput \
+		--enable-kdrive \
+		--disable-dmx \
+		--disable-xprint \
+		--disable-xnest \
+		--disable-xvfb
+
+realinstall:
+	${INSTALL} -c -m 755 hw/kdrive/ephyr/Xephyr ${DESDIR}${BINDIR}
+
+.include <bsd.xorg.mk>
