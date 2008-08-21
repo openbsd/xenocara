@@ -113,7 +113,7 @@ void
 xf86BusProbe(void)
 {
     xf86PciProbe();
-#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
+#if defined(__sparc__) || defined(__sparc)
     xf86SbusProbe();
 #endif
 }

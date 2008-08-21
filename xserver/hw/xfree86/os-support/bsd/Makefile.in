@@ -62,11 +62,12 @@ am__libbsd_la_SOURCES_DIST = $(srcdir)/../shared/libc_wrapper.c \
 	bsd_ev56.c bsd_axp.c $(srcdir)/../shared/xf86Axp.c arm_video.c \
 	$(srcdir)/../shared/ioperm_noop.c hp300_video.c hppa_video.c \
 	i386_video.c ppc_video.c sgi_video.c sparc64_video.c \
-	$(srcdir)/../shared/agp_noop.c bsd_agp.c \
+	bsd_sbus.c $(srcdir)/../shared/agp_noop.c bsd_agp.c \
 	$(srcdir)/../shared/pm_noop.c $(srcdir)/bsd_apm.c \
 	$(srcdir)/bsd_kqueue_apm.c $(srcdir)/../shared/kmod_noop.c \
 	bsd_kmod.c $(srcdir)/../shared/stdResource.c
 @ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HP300_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_FALSE@@SPARC64_VIDEO_TRUE@am__objects_1 = sparc64_video.lo \
+@ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HP300_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_FALSE@@SPARC64_VIDEO_TRUE@	bsd_sbus.lo \
 @ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HP300_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_FALSE@@SPARC64_VIDEO_TRUE@	ioperm_noop.lo
 @ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HP300_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_TRUE@am__objects_1 = sgi_video.lo \
 @ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HP300_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_TRUE@	ioperm_noop.lo
@@ -679,6 +680,7 @@ RES_SOURCES = $(srcdir)/../shared/stdResource.c
 # Cheat here and piggyback other sparc64 bits on SPARC64_VIDEO.
 @SPARC64_VIDEO_TRUE@ARCH_SOURCES = \
 @SPARC64_VIDEO_TRUE@	sparc64_video.c \
+@SPARC64_VIDEO_TRUE@	bsd_sbus.c \
 @SPARC64_VIDEO_TRUE@	$(srcdir)/../shared/ioperm_noop.c
 
 
@@ -784,6 +786,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsd_kmod.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsd_kqueue_apm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsd_mouse.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsd_sbus.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hp300_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hppa_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i386_video.Plo@am__quote@

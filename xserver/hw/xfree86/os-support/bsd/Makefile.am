@@ -69,6 +69,7 @@ if SPARC64_VIDEO
 # Cheat here and piggyback other sparc64 bits on SPARC64_VIDEO.
 ARCH_SOURCES = \
 	sparc64_video.c \
+	bsd_sbus.c \
 	$(srcdir)/../shared/ioperm_noop.c
 endif
 
