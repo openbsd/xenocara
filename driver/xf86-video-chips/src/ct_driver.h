@@ -1,4 +1,3 @@
-/* $XConsortium: ct_driver.h /main/3 1996/10/27 11:49:29 kaleb $ */
 /*
  * Modified 1996 by Egbert Eich <eich@xfree86.org>
  * Modified 1996 by David Bateman <dbateman@club-internet.fr>
@@ -22,12 +21,12 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/chips/ct_driver.h,v 1.33 2001/10/01 13:44:04 eich Exp $ */
 
 
 #ifndef _CT_DRIVER_H_
 #define _CT_DRIVER_H_
 
+#include "ct_pcirename.h"
 #include "xaa.h"
 #include "vbe.h"
 #include "xaalocal.h"		/* XAA internals as we replace some of XAA */

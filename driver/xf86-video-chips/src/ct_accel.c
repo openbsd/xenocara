@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/chips/ct_accel.c,v 1.40tsi Exp $ */
 /*
  * Copyright 1996, 1997, 1998 by David Bateman <dbateman@ee.uts.edu.au>
  *   Modified 1997, 1998 by Nozomi Ytow
@@ -1182,7 +1181,7 @@ CTNAME(CacheMonoStipple)(ScrnInfoPtr pScrn, PixmapPtr pPix)
     } else 		funcNo = 2;
 
     pad = (((pCache->w * bpp) + 31) >> 5) << 2;
-    dstPtr = data = (unsigned char*)ALLOCATE_LOCAL(pad * pCache->h);
+    dstPtr = data = (unsigned char*)xalloc(pad * pCache->h);
     srcPtr = (unsigned char*)pPix->devPrivate.ptr;
     StippleFunc = StippleTab[funcNo];
     
@@ -1210,7 +1209,7 @@ CTNAME(CacheMonoStipple)(ScrnInfoPtr pScrn, PixmapPtr pPix)
 	pScrn, pCache->x, pCache->y, pCache->w, pCache->h, data,
 	pad, bpp, pScrn->depth);
 
-    DEALLOCATE_LOCAL(data);
+    xfree(data);
 
     return pCache;
 }

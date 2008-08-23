@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/chips/ct_video.c,v 1.16tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -638,8 +637,8 @@ CHIPSDisplayVideo(
 	if (dblscan) 
 	    tmp = cPtr->VideoZoomMax >> 1;
 	if (drw_h > src_h)
-	    tmp = tmp * src_h / drw_h;
-	cPtr->writeMR(cPtr, 0x33, tmp);
+           tmp = 256 * src_h / drw_h;
+       cPtr->writeMR(cPtr, 0x33, tmp & 0xFC);
     }
     cPtr->writeMR(cPtr, 0x1F, m1f); 
     cPtr->writeMR(cPtr, 0x1E, m1e);

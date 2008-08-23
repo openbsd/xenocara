@@ -1,4 +1,3 @@
-/* $XFree86: Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

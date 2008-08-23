@@ -1,4 +1,3 @@
-/* $XConsortium: AsmMacros.h /main/13 1996/10/25 11:33:12 kaleb $ */
 /*
  * (c) Copyright 1993,1994 by David Wexelblat <dwex@xfree86.org>
  *
@@ -57,7 +56,6 @@
  *
  */
 
-/* $XFree86$ */
 
 #if defined(__GNUC__)
 #if defined(linux) && (defined(__alpha__) || defined(__ia64__))

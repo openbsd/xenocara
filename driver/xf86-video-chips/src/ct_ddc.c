@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/chips/ct_ddc.c,v 1.8 2001/05/09 19:57:04 dbateman Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
