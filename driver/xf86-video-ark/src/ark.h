@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ark/ark.h,v 1.2 2001/01/29 15:15:44 keithp Exp $ */
 /*
  * ark
  */
@@ -27,8 +26,12 @@ typedef struct _ARKRegRec {
 
 
 typedef struct _ARKRec {
+#ifndef XSERVER_LIBPCIACCESS	
 	pciVideoPtr		PciInfo;
 	PCITAG			PciTag;
+#else
+	struct pci_device       *PciInfo;
+#endif
 	EntityInfoPtr		pEnt;
 	CARD32			IOAddress;
 	CARD32			FBAddress;
@@ -55,10 +58,10 @@ typedef struct _ARKRec {
 
 
 #define DRIVER_NAME	"ark"
-#define DRIVER_VERSION	"0.6.0"
-#define VERSION_MAJOR	0
-#define VERSION_MINOR	6
-#define PATCHLEVEL	0
+#define DRIVER_VERSION	PACKAGE_VERSION
+#define VERSION_MAJOR	PACKAGE_VERSION_MAJOR
+#define VERSION_MINOR	PACKAGE_VERSION_MINOR
+#define PATCHLEVEL	PACKAGE_VERSION_PATCHLEVEL
 #define ARK_VERSION	((VERSION_MAJOR << 24) | \
 			 (VERSION_MINOR << 16) | \
 			  PATCHLEVEL)

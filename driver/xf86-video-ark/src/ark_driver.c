@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ark/ark_driver.c,v 1.22 2003/08/23 15:02:53 dawes Exp $ */
 /*
  *	Copyright 2000	Ani Joshi <ajoshi@unixbox.com>
  *
@@ -366,7 +365,11 @@ static Bool ARKPreInit(ScrnInfoPtr pScrn, int flags)
 		xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ChipID override: 0x%04X\n",
 			   pARK->Chipset);
 	} else {
+#ifndef XSERVER_LIBPCIACCESS
 		pARK->Chipset = pARK->PciInfo->chipType;
+#else
+		pARK->Chipset = pARK->PciInfo->device_id;
+#endif
 		pScrn->chipset = (char *)xf86TokenToString(ARKChipsets,
 							   pARK->Chipset);
 	}
@@ -375,15 +378,21 @@ static Bool ARKPreInit(ScrnInfoPtr pScrn, int flags)
 		pARK->ChipRev = pEnt->device->chipRev;
 		xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ChipRev override: %d\n",
 			   pARK->ChipRev);
-	} else
+	} else {
+#ifndef XSERVER_LIBPCIACCESS
 		pARK->ChipRev = pARK->PciInfo->chipRev;
-
+#else
+		pARK->ChipRev = pARK->PciInfo->revision;
+#endif
+	}
 	xfree(pEnt);
 
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Chipset: \"%s\"\n", pScrn->chipset);
 
+#ifndef XSERVER_LIBPCIACCESS
 	pARK->PciTag = pciTag(pARK->PciInfo->bus, pARK->PciInfo->device,
 			      pARK->PciInfo->func);
+#endif
 
 	/* unlock CRTC[0-7] */
 	outb(hwp->PIOOffset + hwp->IOBase + 4, 0x11);
@@ -1048,12 +1057,32 @@ static Bool ARKMapMem(ScrnInfoPtr pScrn)
 	/* extended to cover MMIO space at 0xB8000 */
 	hwp->MapSize = 0x20000;
 
+#ifndef XSERVER_LIBPCIACCESS
 	pARK->MMIOBase = xf86MapDomainMemory(pScrn->scrnIndex, VIDMEM_MMIO,
 					     pARK->PciTag, 0xb8000, 0x8000);
 
 	pARK->FBBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
 				     pARK->PciTag, pARK->FBAddress,
 				     pScrn->videoRam * 1024);
+#else
+
+	pARK->MMIOBase = xf86MapDomainMemory(pScrn->scrnIndex, VIDMEM_MMIO,
+					     pARK->PciInfo, 0xb8000, 0x8000);
+
+	{
+		void** result = (void**)&pARK->FBBase;
+		int err = pci_device_map_range(pARK->PciInfo,
+					       pARK->FBAddress,
+					       pScrn->videoRam * 1024,
+					       PCI_DEV_MAP_FLAG_WRITABLE |
+					       PCI_DEV_MAP_FLAG_WRITE_COMBINE,
+					       result);
+		
+		if (err) 
+			return FALSE;
+	}
+#endif
+
 	if (!pARK->FBBase) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			   "Cound not map framebuffer\n");
@@ -1071,8 +1100,12 @@ static void ARKUnmapMem(ScrnInfoPtr pScrn)
 	/* XXX vgaHWMapMem() isn't called explicitly, so is this correct? */
 	vgaHWUnmapMem(pScrn);
 
+#ifndef XSERVER_LIBPCIACCESS
 	xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pARK->FBBase,
 			pScrn->videoRam * 1024);
+#else
+	pci_device_unmap_range(pARK->PciInfo, pARK->FBBase, pScrn->videoRam * 1024);
+#endif
 }
 
 
