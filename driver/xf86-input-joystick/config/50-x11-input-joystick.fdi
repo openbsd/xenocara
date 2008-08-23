@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<deviceinfo version="0.2">
+  <device>
+    <match key="info.capabilities" contains="input">
+      <!-- Match on anything you like from lshal -->
+      <match key="input.product" string="Logitech Logitech Dual Action">
+        <!-- Currently Xorg looks for these two capabilities, so
+             we need to add them. This might confuse other hal clients. -->
+        <append key="info.capabilities" type="strlist">input.keys</append> 
+        <append key="info.capabilities" type="strlist">input.mouse</append>
+        <merge key="input.x11_driver" type="string">joystick</merge>
+        <!-- How to add custom parameters to configure the device? -->
+      </match>
+    </match>
+  </device>
+</deviceinfo>

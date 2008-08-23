@@ -26,11 +26,11 @@
 
 drivermandir = $(DRIVER_MAN_DIR)
 
-#driverman_PRE = @DRIVER_NAME@.man
+driverman_PRE = @DRIVER_NAME@.man
 
 driverman_DATA = $(driverman_PRE:man=@DRIVER_MAN_SUFFIX@)
 
-#EXTRA_DIST = @DRIVER_NAME@.man
+EXTRA_DIST = @DRIVER_NAME@.man
 
 CLEANFILES = $(driverman_DATA)
 

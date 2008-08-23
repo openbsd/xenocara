@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-joystick],
-        1.1.0,
+        1.3.2,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-joystick)
 
@@ -44,38 +44,35 @@ AC_PROG_CC
 
 AH_TOP([#include "xorg-server.h"])
 
-#AC_DEFINE(XFree86LOADER,1,[Stub define for loadable drivers])
-#
-#AC_ARG_ENABLE(XINPUT, AS_HELP_STRING([--enable-xinput],
-#              [Build XInput support (default: yes)]),
-#              [XINPUT=$enableval],[XINPUT=yes])
-#AM_CONDITIONAL(XINPUT, test "x$XINPUT" = "xyes")
-#if test "x$XINPUT" = "xyes" ; then
-#    AC_DEFINE(XINPUT,1,[Enable XInput support])
-#fi
-#
-#AC_ARG_ENABLE(XKB, AS_HELP_STRING([--enable-xkb],
-#              [Build XKB support (default: yes)]),
-#              [XKB=$enableval],[XKB=yes])
-#AM_CONDITIONAL(XKB, test "x$XKB" = "xyes")
-#if test "x$XKB" = "xyes" ; then
-#    AC_DEFINE(XKB,1,[Enable XKB support])
-#fi
-
 AC_ARG_WITH(xorg-module-dir,
             AC_HELP_STRING([--with-xorg-module-dir=DIR],
-                           [Default xorg module directory [[default=$libdir/xorg/modules]]]),
+                           [Default xorg module directory 
+                           [[default=$libdir/xorg/modules]]]),
             [moduledir="$withval"],
             [moduledir="$libdir/xorg/modules"])
+
+AC_ARG_ENABLE(debug,
+            AS_HELP_STRING([--enable-debug],
+                           [Enable debugging (default: enabled)]),
+			   [DEBUGGING=$enableval], [DEBUGGING=yes])
+if test "x$DEBUGGING" = xyes; then
+    AC_DEFINE(DEBUG, 1, [Enable debugging code])
+else
+    AC_DEFINE(NDEBUG, 1, [Disable some debugging code])
+fi
+AM_CONDITIONAL(DEBUG, [test "x$DEBUGGING" = xyes])
+
 inputdir=${moduledir}/input
 AC_SUBST(inputdir)
 
 # Checks for extensions
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
+XORG_DRIVER_CHECK_EXT(XKB, kbproto)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901] xproto $REQUIRED_MODULES)
+PKG_CHECK_MODULES(XORG, 
+               [xorg-server >= 1.3.99.901] xproto $REQUIRED_MODULES)
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 CFLAGS="$CFLAGS $XORG_CFLAGS "' -I$(top_srcdir)/src'
@@ -84,9 +81,44 @@ AC_SUBST([CFLAGS])
 # Checks for libraries.
 
 # Checks for header files.
+linux_backend=yes
+AC_CHECK_HEADERS([linux/joystick.h],, [linux_backend=no])
+AM_CONDITIONAL(LINUX_BACKEND, [test "x$linux_backend" = xyes])
+if test "x$linux_backend" = xyes; then
+    AC_DEFINE(LINUX_BACKEND, 1, [Compile Linux joystick backend])
+fi
+
+bsd_backend=yes
+AC_CHECK_HEADERS([usbhid.h dev/usb/usb.h dev/usb/usbhid.h],, [bsd_backend=no])
+AC_CHECK_LIB([usbhid],[hid_get_item],, [bsd_backend=no])
+AM_CONDITIONAL(BSD_BACKEND, [test "x$bsd_backend" = xyes])
+if test "x$bsd_backend" = xyes; then
+    AC_DEFINE(BSD_BACKEND, 1, [Compile BSD usbhid backend])
+fi
+
+evdev_backend=yes
+AC_CHECK_HEADERS([linux/input.h],, [evdev_backend=no])
+AM_CONDITIONAL(EVDEV_BACKEND, [test "x$evdev_backend" = xyes])
+if test "x$evdev_backend" = xyes; then
+    AC_DEFINE(EVDEV_BACKEND, 1, [Compile Linux evdev backend])
+fi
+
 AC_HEADER_STDC
 
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
 
-AC_OUTPUT([Makefile src/Makefile man/Makefile])
+AC_OUTPUT([Makefile src/Makefile man/Makefile config/Makefile])
+
+echo 
+echo Building Linux joystick backend: $linux_backend
+echo Building Linux evdev backend: $evdev_backend
+echo Building BSD usbhid backend: $bsd_backend
+
+if test "x$linux_backend" != "xyes" -a \
+	"x$bsd_backend" != "xyes" -a \
+	"x$evdev_backend" != "xyes"; then
+    AC_MSG_ERROR([No backends were found. Your operating is not supported by the
+                  joystick driver. Contact xorg@lists.freedesktop.org if you are 
+                  interested in porting it.])
+fi

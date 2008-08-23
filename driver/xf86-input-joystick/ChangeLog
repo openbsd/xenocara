@@ -1,45 +1,983 @@
-2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+commit 0961ffa84825f3f32d9c973f054400ab9d2b7c08
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Apr 27 19:16:29 2008 +0200
 
-	* configure.ac:
-	* src/xf86Jstk.c:
-	Unlibcwrap.  Bump server version requirement.  Bump to 1.1.0.
+    Bumped to version 1.3.2
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit c3e3fb8795c19a292ca37ab4d67b308fbb20911b
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Apr 9 15:09:46 2008 +0200
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    Display evdev bus/vendor/product/version in separate line
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit edcc8c26dfa3f89672a66c47665d89c7c9200b13
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Mar 30 13:21:22 2008 +0200
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Fixed keymap size to 8-256 to prevent crash
+    
+    Newer xservers don't like keymaps that are smaller than 248 keys.
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit fac2c42a01cf030a05d2305a01700f3677f6a8dc
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Mar 30 13:05:35 2008 +0200
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    Clear complete keymap instead of only the first element
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit a44e15ad7576b77b48ecb13aae1faeb2ec25d922
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Mar 30 13:03:57 2008 +0200
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Fixed off-by-one in keymap generation code
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 2aeaf7b7f3a5117db5cde9f704a2c612fbab75c8
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Mar 30 12:44:39 2008 +0200
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    Allow '+' as separator for key mapping as in "key=Alt_L+Tab"
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit ce01777488a0f1f9ba2d22d7315aebd431e9cb65
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 23:02:08 2008 +0100
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    Makefile.am: nuke RCS Id
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 94cc174cd80952418614dc9b2fbc95ad21b8598c
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Jan 6 18:58:47 2008 +0100
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    Added "StartMouseEnabled" and "StartKeysEnabled" options
+    
+    With the disable-mouse and disable-keys button mapping the event generation can be toggled.
+    These two options will start X with the event generation already disabled, so it can be
+    enabled later with the appropriate button mapping. Default: Event generation is enabled.
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit c968077dcb3e7dec4886e9bc60faa63e750695e2
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Dec 31 20:21:30 2007 +0100
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+    Changed copyrights to include year 2008
+
+commit 4bf88166207c79662fba45773c300f05ae5e00d7
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Dec 9 19:22:59 2007 +0100
+
+    Changed default deadzone in manpage from 1000 to 5000
+
+commit 1f61022d4d08c1dc07717576bcb31ace03d93060
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Dec 9 18:18:45 2007 +0100
+
+    Increased default deadzone from 1000 to 5000
+
+commit 847c36e1134e7fe5f9af69f49b8ed12d2aa0cb85
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Dec 9 11:54:38 2007 +0100
+
+    Typo in man page
+    
+    Last axis of default axis configurations was #3 instead of #7
+
+commit 01637abd2b059923f5c41ab80c80ab93579cbe9b
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Fri Dec 7 00:17:56 2007 +0100
+
+    Mentioned hotplugging and hal policy in man page
+
+commit 47cd8141f9bf3e69d5418f3b5f448366f500cf0d
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Dec 6 23:55:20 2007 +0100
+
+    Bumped to version 1.3.1
+
+commit c463776b8b35e6e721128a7348e088d306c4ee02
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Dec 6 23:48:49 2007 +0100
+
+    Added example hal policy file for input hotplugging of joysticks
+    
+    Hal policy config/50-x11-input-joystick.fdi is not installed by default and you probably
+    don't want to.
+
+commit 833454bd7bea04924b85105bf38ed57dd2b5e5c2
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Dec 6 23:22:43 2007 +0100
+
+    Looking for Path parameter besides Device (used by HAL+input hotplug)
+
+commit dca42ff25dde490073a798dc873b048c4bfeb0f4
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Dec 6 23:22:06 2007 +0100
+
+    Fixed default button mappings
+    
+    Default button mappings were set to buttons 4, 5 and 6 instead of 1, 2 and 3.
+
+commit fba24465bc4867568cbefc3d554bae756abc1204
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Dec 6 22:56:26 2007 +0100
+
+    Return NULL on device configure fail instead of unconfigured device, which made X segfault.
+
+commit 2fba11efcafdbc2002bc7083a2b74cb7d908b3a9
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Dec 6 22:28:12 2007 +0100
+
+    New: evdev backend
+
+commit 78616fb8174e93a2c3c523bd425acc33a4b8773c
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Dec 5 22:17:36 2007 +0100
+
+    Mentioned multiple backends in man page
+
+commit 9e5f4e6fccb8c9e1b6c4dfccb39f1f0c89f79b60
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Dec 5 21:33:27 2007 +0100
+
+    Fixed implicit declaration warnings because of missed header files
+
+commit 43790502b5d1077fc74e81b7eedd9c880673463c
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Dec 5 21:30:12 2007 +0100
+
+    Renamed backend files from *_jstk.{c,h} to backend_*.{c,h}
+
+commit 032138d7712f6d1e6a50bf83a2dde911b7f3d752
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Dec 5 21:22:50 2007 +0100
+
+    Added backend selection code.
+    
+    From all available backends they are tried in the order: evdev, linux joystick, bsd
+    usbhid. This needed to separate the backends which were usually used to replace each
+    other.
+
+commit 37aae4731320d4e1301f17a065bc5f1d5a3d1596
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Dec 5 18:00:12 2007 +0100
+
+    configure.ac: Checking for available kernel backends instead of OS
+    
+    The configure script now checks for availability of several backends like Linux's
+    joystick, Linux's evdev, BSD's usbhid. This way several backends can be compiled in and
+    used with the same binary module.
+    Backend selection code still missing!
+
+commit f581e2b0daf6c79c74728ab2e21a0836ff252a65
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Nov 11 18:02:42 2007 +0100
+
+    Add check for kbproto in configure script
+    
+    On systems without kbproto installed, the XKB headers might be missing and the build fails. Fixes Debian bug
+    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=448770
+
+commit c9e359fda611778da578f3699b8f2f4c9122852c
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Oct 27 18:50:08 2007 +0200
+
+    Added missing headerfiles to Makefile.am
+    
+    Files StrKeysym.h and ks_tables.h were missing. Sorry, guys.
+
+commit 8668189c26956922a9a10a80289162cfd5741bdf
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Oct 27 15:38:09 2007 +0200
+
+    Debug output of AutoRepeat option
+
+commit 68e4850b28c34d8e7a41fe2682a115183e3a22d4
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Oct 10 18:00:59 2007 +0200
+
+    Added AutoRepeat option to specify rate and delay for key events.
+    
+    So far the autorepeat settings of xorg were used, thus sharing the settings with all other keyboard. This is still the default but the
+    rate and delay can be changed per device, not conflicting with the settings of other keyboards.
+
+commit 15870ef9bf57475ad79b839613fabd951daceac6
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Oct 6 17:28:59 2007 +0200
+
+    Use XStringToKeysym to parse symbolic keys defined in xorg.conf.
+    
+    Users can map buttons to "key=space" or "key=Left" to map them to XK_space or XK_Left. As
+    fallback the numerical expression still works.
+
+commit 0897d8acdecf30f9496578019487263a22ed984b
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Oct 6 17:07:19 2007 +0200
+
+    Integrated XStringToKeysym from libX11 in the module.
+    
+    To look up Keysyms from Strings the method XStringToKeysym comes in handy, which would
+    require linking against libX11. By integrating the method in the module, this can be
+    avoided until similar functionallity get's included in xorg-server.
+
+commit 9e8f8d54bd300b562b9fe0a1b1e3bf8d45773651
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Oct 3 22:46:30 2007 +0200
+
+    Updated manpage to reflect keymap changes
+
+commit c2270222a88f8152c28568e4212ccc9937dccbbd
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Oct 3 22:13:37 2007 +0200
+
+    Prepared for 1.3.0 release. Raised dependency of xorg-server to at least 1.3.99.901 for new keymap
+    behaviour.
+
+commit a62abe36b8b0af91539cf7e7dfa90795a73434bb
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Oct 3 21:37:25 2007 +0200
+
+    Readded own keymap for Joystick keys. This changes meaning of key, keylow and
+    keyhigh values in xorg.conf from scancodes to keysyms!
+    
+    New xorg-server 1.4 fixes a lot of keyboard things. This makes it necessary to
+    provide an own mapping rather than using the mapping of the current keyboard. A
+    keymap is built dynamically from the options provided. The options now need to
+    provide a keysym for each button instead of the scancodes of another keyboard
+    attached keyboard.
+
+commit 65009ab568500fac9980239a752d346a0d9b5ff1
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Oct 3 00:33:09 2007 +0200
+
+    Added little check if device is enabled before disabling it
+
+commit 13c850fe77b0a9a8a719bedfa1439e96972a730b
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Aug 12 13:01:16 2007 +0200
+
+    configure.ac: prepared for 1.2.3 release
+
+commit 3651cc8ee6257a5c8f098c603b892aff45ee1e68
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Aug 12 12:49:59 2007 +0200
+
+    Added --enable-debug option to configure script
+    
+    The options --enable-debug and --disable-debug control if additional debugging messages shall be included in the binary, that can made
+    visible with the "DebugLevel" option in the xorg.conf. Default: Enabled.
+
+commit ca6968c1800ed30aec78b1e474c2b0ede77cd301
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Aug 12 00:04:35 2007 +0200
+
+    Explained new key generation features for axes in man page.
+    
+    Explained the behaviour of accelerated vs relative axes that are mapped to keys. Added example to man page.
+
+commit e24622b48e4304a7b8f9de5bdec0e0633821fa7b
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Aug 11 23:27:57 2007 +0200
+
+    Key autorepeat added for axes with mode=relative
+    
+    If axis is set to relative and keylow and keyhigh are assigned, autorepeat for these keys is emulated with a speed relative to the
+    value of the axis (keydown and keyup are generated frequently). A factor for this autorepeat speed can be assigned by
+    "axis=<factor>key".
+    If mode is "accelerated", the axis behaves like a button: only one keydown and one keyup, X does autorepeat for the key.
+
+commit 38297b06226f115ca4a25557bcb7f8c936424abc
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Aug 11 22:32:54 2007 +0200
+
+    Fixed button mapping to an axis needing amplify value.
+    
+    Button mapping without amplify value like "axis=x" used uninitialized value for amplify,
+    making an amplify value mandatory. With no amplify value, 1.0 is assumed.
+
+commit dd396931b76c682f03323566f28b248afb1cb79d
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Aug 11 22:22:49 2007 +0200
+
+    Move subpixel movement from global to per axis/button.
+    
+    Instead of using one global subpixel variable for all axes and buttons, the axis/button
+    struct for each axis/button holds it's own subpixel variable. This is neccessary to
+    implement mapping of relative axes to keys, which needs to save own "subpixel" values.
+
+commit b685505f1411ffa5f326aa3ba9e5cd5e172e5c5e
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Aug 11 20:47:13 2007 +0200
+
+    Reformatted whole source to 4-space-indents
+    
+    Large parts of the code were written with 2-space-indents only.
+    Upgraded to 4-space indents to improve readability. Sorry for touching almost
+    every line. :-S
+
+commit 32c6ba4c292957e40ec349a4bb993b6ad92f290b
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Aug 8 15:00:15 2007 +0200
+
+    Added example about mapping axes to keys to manpage.
+
+commit fd83fbc114fe1755a1c85b5e1dd98b1b84ff668d
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Aug 8 14:52:27 2007 +0200
+
+    Added "keylow" and "keyhigh" option to axes, which generates key events when the axis is moved.
+    
+    One can specify scancodes for negative and positive axis movement. When the axis is moved out of the deadzone,
+    keydown events are once generated, and keyrelease events are generated when the axis returns to 0.
+    One can map a pad to the four arrow keys to play games that do not support a joystick.
+
+commit 20bcf86f2abdeb0fd6cf2f9cc4fb96befc0c5cbc
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Aug 8 14:49:29 2007 +0200
+
+    Added "oldvalue" to axis struct, containing the exact last "value" of the axis
+
+commit f4c1519bffdb12f4337261a8a9a9b63a4fa19cad
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Aug 8 12:58:30 2007 +0200
+
+    Added note about SendCoreEvents keyword to ServerLayout in manpage.
+
+commit 382c116887b10e453a76ed540d4d42f44d4e0f6a
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Jul 11 03:18:07 2007 +0200
+
+    Added missing section about valuators to manpage
+    
+    The manpage was missing detailed information about the reported valuators per axis.
+    Made minor changes of style and grammar.
+
+commit 68df98082ca13d586891d67d03f7c426e6b4467c
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Jul 7 23:43:13 2007 +0200
+
+    Prepared for release 1.2.2
+
+commit 321e4395486b66b2b7be0510494f48b2a03a4cc8
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Jul 7 23:33:32 2007 +0200
+
+    Reverted commit a24a5eeb30b224abf2bb512619fe5ab7284fa252 (prepare for keymap)
+    
+    The files and methods will be added back when it is time. So far there is no need for jstk_key.* files and dummy methods.
+
+commit 1e72e8111b637a0dd784077b09c220d53a133520
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Jul 7 23:08:45 2007 +0200
+
+    Mark float constants with proper f suffix
+
+commit dc4c0a5e0d585647f649e41f80a859a2fdac4a26
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Jul 7 22:57:29 2007 +0200
+
+    Removed abundant debugging messages
+    
+    Debugging messages about loading and unloading the module were printed
+    every time, before debug_level could be set. Removed the messages
+    completely, because they use nobody except me.
+
+commit 2b54ee1b023bbce422429a0efe8a5958c0d08847
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Jul 7 22:52:24 2007 +0200
+
+    Added notes to the manpage
+
+commit a24a5eeb30b224abf2bb512619fe5ab7284fa252
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Apr 30 00:37:27 2007 -0400
+
+    Prepared for proper usage of keymap for device
+
+commit f0ab39f9d200cdf1387bf3ffa1583bfdddd1d427
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Apr 29 23:24:40 2007 -0400
+
+    Fixed dynamic button mapping properly.
+    linux_jstk: Button events only reported, when actually changed
+    
+    Button number and button map reported to X are now calculated correctly.
+
+commit 2bbc03ef668bc450fd50ecbbaa6f19398e994f74
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Apr 29 21:59:54 2007 -0400
+
+    Removed unnamed unions to compile with gcc 2.95
+    Only report correct amount of buttons to xorg-server-1.3
+    
+    Call InitButtonClassDeviceStruct with right number of buttons and right mapping. Works correctly
+    since xorg-server-1.3.
+
+commit 461b57cdb14e6bc2fe27f5351c2c3bd66aa1786a
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Apr 24 22:23:43 2007 -0400
+
+    Makefile.am: Rule to autogenerate ChangeLog from git on make dist
+
+commit 25b5234948b6231577d44c5ad97a85d3a82b514a
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Fri Apr 20 21:09:10 2007 -0400
+
+    Fixed wrong button number reported by bsd_jstk.c.
+    Fixed typo in reporting button and axes numbers in bsd_jstk.c
+
+commit e1871e21955d5403c2751e83b5c00b2fa4886f22
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Apr 19 12:39:53 2007 -0400
+
+    Fixed accelerated axis movement not working the first time after startup
+    
+    Modified used algorithm to produce slower and smoother acceleration
+
+commit 44aafff9e99ff02091580978a2dd7306eb9ad910
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Apr 16 23:01:31 2007 -0400
+
+    Considering JS_EVENT_INIT events as real events again
+    
+    We want to perform actions on JS_EVENT_INIT events, so we don't miss anything and follow the state of
+    the device
+
+commit 8cafcf33ec1dcffa0ecbe2647ebb89c879989d4c
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Apr 15 23:48:52 2007 -0400
+
+    Fixed possible double close of device in case of error.
+    Opening device in O_RDONLY mode, instead of O_RDWR.
+
+commit 1640d08d168241fd6168090841ef0d811d9dc3c2
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Apr 15 23:18:39 2007 -0400
+
+    Got rid of JoystickDevRec->axes and JoystickDevRec->buttons, since not really needed.
+
+commit 470acec6f440cf3cb1dc5ddcb056f717d74ccbef
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Apr 15 22:51:35 2007 -0400
+
+    Cosmetic changes to structs, got rid of XFree86LOADER blocks
+    
+    The XFree86LOADER is mandatory, without it it wouldn't compile anyway, so checks were deleted.
+    Named structs in jstk.h again
+    Added unions for mapping-relative data, given values more telling names
+
+commit 886e418b89ac673df3e4be0f7a4b1b8c648cad80
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Apr 12 18:12:29 2007 -0400
+
+    Wrapped enums and structs in typedefs
+    
+    Removed xisb.h include, since we are not going to need it.
+
+commit fa32161bc5b63baa22b78f25ec6daa4f8e53aa7a
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Apr 11 10:03:23 2007 -0400
+
+    Replaced xf86CheckXXXOption with xf86SetXXXOption, Fixed possible NULL pointer dereference
+    
+    Fixed possible NULL pointer dereference in xf86DeleteInput,
+    reformatted code in bsd_jstk.c
+
+commit f7f63037fd01433c325b4bb45e76d8a21dd327c0
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Apr 7 17:30:09 2007 -0400
+
+    Added USB-HID backend for *BSD
+    
+    Added checks for platform in configure.ac and Makefile.am
+
+commit fcc717eb281328cd2722ba8fe2395e6719b88d8a
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Apr 7 16:49:04 2007 -0400
+
+    Added extra device dependend data for different platforms.
+    
+    Renamed linux_jstk.h to jstk_hw.h
+
+commit 8d9507e694d4ef36f7409ffc14c476af609ec524
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Apr 7 16:23:34 2007 -0400
+
+    Fixed correct calculation of absolute axis position when centered
+    InitButtonClassDeviceStruct: fixed to MAXBUTTONS buttons since we don't have device data yet
+
+commit 4821113eb34f7bf55a601d59eaeddbfab67183fa
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Apr 7 15:10:13 2007 -0400
+
+    Typo in linux_jstk.c: Info about number of axes and buttons was interchanged
+
+commit 7676d3c519a9190e3c7f9ed2c9abec8e95752c36
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Apr 7 14:10:01 2007 -0400
+
+    Fixed wrong type in ioctl call for detecting buttons and axes
+    
+    The ioctl call for reading the number of buttons and axes expects an unsigned char as parameter,
+    not an int. Worked in Linux but not in FreeBSD. Changed to unsigned char though and added a check,
+    if buttons and axes are more than MAXBUTTONS/MAXAXES.
+
+commit d64b3bf18f09d893a219732225f3b327bd70e785
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Fri Apr 6 20:29:21 2007 -0400
+
+    Fixed DEVICE_ON still returning Success on error opening device, resulting in a crash
+    Removed jstkOpenDevice call from jstkCorePreInit
+
+commit 48c2570228f95d27c24aae4609c00d0ebd349654
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Fri Apr 6 20:27:05 2007 -0400
+
+    Fixed remaining opened filedescriptors, if ioctl fails
+    Showing Device information on every open
+
+commit 50c183833ea57ecc2ddd6d94ca84b89fb36af7b3
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Fri Apr 6 20:10:30 2007 -0400
+
+    Don't return NULL on jstCorePreInit fail, fixes X crash.
+
+commit a2e6c7430e0d25d2d27f9a4a1d4fa9ba2a77d768
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Apr 1 21:16:10 2007 -0400
+
+    Check for Joystick API Version >=1 instead of >=2
+
+commit 72ba1b382f2321c8740bcf8d4666902bf774b340
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Apr 1 16:12:12 2007 -0400
+
+    jstkVersionRec: Use macros for module version. Fixes #10498
+
+commit 76bea36fe8160e59d35a43f7062044f272b54c2f
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Mar 31 22:40:50 2007 -0400
+
+    Added missing include files to fix warnings about implicit declarations
+
+commit 6d88594bd9c6729e01a5cb20447af7fc111ae53a
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Mar 31 22:04:46 2007 -0400
+
+    Prettyfied code, added comments
+
+commit d6f3937e7db27a6bfbdd57dfe6a9f9f63e419710
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Fri Mar 30 23:03:39 2007 -0400
+
+    Added missing <stdio.h> and <string.h> to fix warnings
+
+commit 7c709f6a8a8e234b7b7122238bd2227caeaf17c8
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Fri Mar 30 14:25:13 2007 -0400
+
+    Added range for absolute axis configuration
+    Completed man page
+
+commit 70b1bba65880c27da13b77accc6f971c5cabca95
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Mar 29 16:01:12 2007 -0400
+
+    Made movement within deadzone be reported only one
+
+commit 28e4d50c1230ec2f405a73a851f6aff747efe213
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Mar 29 15:42:05 2007 -0400
+
+    More use of DBG output
+
+commit 1cdd0e74988f2d06de0d57ac42574b9302392438
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Mar 29 15:14:25 2007 -0400
+
+    Allowed axis being actually not mapped to an action
+    Changed default configuration to the minimum
+    Fixed that unmapped axis generated movements
+
+commit 32f06e29bfe82e85eabace80e60a20c32e1a11ba
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Mar 26 18:24:42 2007 -0400
+
+    disable-keys now really disables sending of keys
+
+commit 0a0b5a3e24701734c55679a7c05e022e01d831f8
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Mar 26 18:05:41 2007 -0400
+
+    Added code to generate key eventy
+
+commit 423a0e79266734e4dc2427673401c65f7e783305
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Mar 26 17:44:05 2007 -0400
+
+    jstkParseButtonOption: Added "key=<keycode>[,<keycode>]" Option
+
+commit a2487f95fe923624b4cb83f52f91b80d7b703db8
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Mar 26 17:42:18 2007 -0400
+
+    ReadJoystickData: Prevent from reporting JS_EVENT_INIT as events
+
+commit 7d3941e47bfe52d0519ef5cc1da8254bfac8f65e
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Mar 25 20:10:10 2007 -0400
+
+    Added "amplify", "disable-mouse", "disable-keys", "disable-all" options to code and manpage
+
+commit 9c12f5c9d9dac3a2129ab3ace2492d043f6740f6
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Mar 22 16:43:18 2007 -0400
+
+    Removed "amplifier" axis option
+    Added amplifier as factor to the "axis" option
+    Updated manpage
+
+commit 13cd3d91963c8d9175b1538a521644b039d70fad
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Mar 22 15:42:49 2007 -0400
+
+    Added axis option for buttons
+
+commit 373459c4c5e1e5d7ebfa7d5a8ecd014c39f1244e
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Mar 22 14:54:21 2007 -0400
+
+    Put options parsing to different files
+
+commit 58abdbe99b3d086822182b55cc1f5cfc2bd370be
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Mar 22 14:01:01 2007 -0400
+
+    Allowed negative amplify value for reverting axis direction
+
+commit 35d8ee1bb0fee84dd2bb3882ec169552d6477a39
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Mar 21 22:36:46 2007 -0400
+
+    Went back to one timer for all axes
+    Added "accelerated" axis mode
+    Added "absolute" axis mode
+    Added "amplify" axis option
+
+commit 3aa12466efa3c597694157f887ca27e99ff5466a
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Mar 20 22:47:27 2007 -0400
+
+    Splitted axis code to another file
+
+commit b05facffb89d4d0608e9e74e5286b243230ae737
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Mar 20 17:18:34 2007 -0400
+
+    Added axis options
+
+commit 549217f505ab6b29189514a5ec2dd93e464c30fb
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Mar 20 12:01:54 2007 -0400
+
+    Added by-value axis handling
+
+commit 5cb52bfcbc607bb2146931e9646749de1c9c0ce4
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Mar 19 19:46:13 2007 -0400
+
+    Man page matches current features of the driver
+
+commit 77c5baae7236093433f04c598615793f81445026
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Mar 18 23:34:41 2007 -0400
+
+    Added Option to map joystick buttons to mousebuttons
+
+commit b918c3430417d167066ab5190e1f6ad76930586b
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Mar 18 19:49:33 2007 -0400
+
+    Made driver report button events
+    Introduced empty manpage
+
+commit 0a8db6856da6a21594a39b7e0b067a78621624d7
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Mar 18 01:57:02 2007 -0400
+
+    added .gitignore to git
+
+commit 629d5faa8b2877fcc2a4c7cd78ec8c2dc35a831d
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Mar 18 01:56:04 2007 -0400
+
+    moved .cvsignore to .gitignore
+
+commit e3b851cf372d72ab547f703892162de865a3058e
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Mar 18 01:54:49 2007 -0400
+
+    Splitted to multiple files
+
+commit af7edfd1363598b48c4e12500316e9f689dbb1ca
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Mar 18 01:53:43 2007 -0400
+
+    Stripped everything down to the minimum
+    Added generic data structs
+    Splitted to multiple files
+    Moved to newer joystick.h interface
+    Added read_input function
+
+commit 3ca9b73dd791f7f4cf2cd8ba3fb22077839e13e6
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Mar 13 13:58:59 2007 -0400
+
+    Prepared for new release 1.1.1
+
+commit 161ef066f4daed3b555415a8aa4f50bddf71780e
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Mar 13 10:51:45 2007 -0400
+
+    Changed driver initializations to make it actually work with xorg 7.2.
+
+commit b785d61b96d6f16a96aa4bc60777aea444760b8a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Jan 8 19:07:36 2007 -0800
+
+    renamed: .cvsignore -> .gitignore
+
+commit f0c85f1ffc9be543c09f3e0ff598407a8028813c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Jan 8 19:07:06 2007 -0800
+
+    Fix warning: Undefined function PRIVATE()
+
+commit 57ab5f2de3bd4de1987b436822acdb7e7ef23dc5
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 17:40:06 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.1.0.
+
+commit c6d37e34b58991b68cccb2d098cce963e68ffd09
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:57 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 8a2817e0868d7e2e9805e6bd57fad084bcc5f6cb
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:50 2005 +0000
+
+    Stub COPYING files
+
+commit 714ce894fc8d456049a1a6f65792873dfde634e8
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:14 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit df603768f3b2c41c2fc3d6dff7df0c658508ef53
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:30 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit 49b3bbf7ef024db87e00e60351118bf1b6b24713
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:31 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 6d91b69c1cc17cc07e8b477b4ac43fdbd224a0f7
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:05 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit 5c3c4b1dedddce558ce718267b46afe67ba39953
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:56 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 6e2adafe15fdcc0a21da07a1aade0a2dc1b15b81
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:07 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 6556e4ad51488418ce007ea77a3f921df5ff87a4
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:04 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit 893fe68cca5ca0d354d6b0ae7e44b06c07d5bf61
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:12 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 9bae7c922063cd9fa0e57a1765a309586c36b092
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:50 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit 005b12af9722f32f4cfcbcdda76611b29413899b
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:00 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 668cb548e8f5e55db2680a94a0ed18da5d102941
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Oct 18 15:46:36 2005 +0000
+
+    Do the following to make the drivers pass distcheck:
+    - Only define EXTRA_DIST when there are actually man pages to be processed
+    - Add missing man pages to keyboard and ati drivers EXTRA_DIST
+
+commit aac3f60f1bfce0238698a76acb717f30f8c9303f
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:51 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 5e97ce410435e126486eabdd6bf28ca82abf3150
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:28 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit dc59b349eac072ba2d97138fcbba72e5aa0c0299
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:08:57 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 699f0d0028bdcbbb7fa5f5937a5acb48309d50e8
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:39 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit ff835930aee87f0cc3db60d5e03b0adf6b18d05f
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Aug 10 14:07:23 2005 +0000
+
+    Don\'t lose existing CFLAGS in all the input drivers and some of the video
+        drivers
+
+commit f5f5615ee52b78841c40b4b59aac7f5350929be3
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:41 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit a52f5ddc44da8c1256340020650763ecf7340ce9
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 13 20:03:22 2005 +0000
+
+    Make the module dir configurable
+
+commit 08ce1285ab33d3c00dffb221aed4ed0156b36f78
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 13 02:21:00 2005 +0000
+
+    Update all input drivers to pass distcheck
+
+commit 76a456f24caba545cafbc823c59f369cd72ae74b
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 13 02:18:12 2005 +0000
+
+    Change input drivers to get keysym's from <X11/keysym.h>.
+
+commit e094c4324e5a4683a90cc529402933adcf843e50
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Jul 12 06:15:09 2005 +0000
+
+    Build skeletons for input drivers. Should basically work.
+
+commit 3cb7f8c1d250f6d8bf3b28052aa53cb6c8e467e7
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:37:59 2005 +0000
+
+    Prep input drivers for modularizing by adding guarded #include "config.h"
+
+commit 910512c61fbc6aac3c75bd1d6687e70e4195a17f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Jul 3 08:53:45 2005 +0000
+
+    Change <X11/misc.h> and <X11/os.h> to "misc.h" and "os.h".
+
+commit 865d0119123f13b8f774036d0d736448b939fce0
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Jul 1 22:43:22 2005 +0000
+
+    Change all misc.h and os.h references to <X11/foo.h>.
+
+commit 102abb601266da7211859beefc61d6d0ccfe2dc3
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:17:02 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit dbbd0b4393ac40d3aa79d6ceeb23bfb6c05b7b41
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:34 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 61aeb5654bfa67ce225c1b102e9beb2aceb5e1a1
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:54:03 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 32ff75600605a2c4fbbe5dabc286e587158c72d2
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:52 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit b02ae094bcc146f2a6ba601c28bc3541663fdaa0
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:33 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit fe91525deeaca922efa0880bfa742f79499bb418
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:36:00 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit b48cb5e830d5dff825b89606eb7e7f4fde1e0c22
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:34 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 65408fc0e4e67fb9ce27f186434b1eacfbae3644
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:56 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 958562709a025168e7144b46ce128b8a928bce22
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:56 2003 +0000
+
+    Initial revision

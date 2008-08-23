@@ -1,0 +1,345 @@
+.ds q \N'34'
+.TH joystick __drivermansuffix__ __vendorversion__
+.SH NAME
+joystick \- Joystick input driver
+.SH SYNOPSIS
+.nf
+.B "Section \*qInputDevice\*q"
+.BI "  Identifier \*q" devname \*q
+.B  "  Driver \*qjoystick\*q"
+.BI "  Option \*qDevice\*q   \*q" devpath \*q
+\ \ ...
+.B EndSection
+.fi
+.SH DESCRIPTION
+.B joystick
+is an __xservername__ input driver for Joysticks. There are 3 backends available that are used in the following order, if support was found:
+
+.nf
+.B - Linux's evdev interface
+.B - Linux's joystick interface
+.B - BSD's usbhid interface
+.fi
+
+The driver reports cursor movement
+as well as raw axis values through valuators. 
+
+.SH SUPPORTED HARDWARE
+In general, every by the kernel supported joystick should be supported through the
+.B joystick
+driver. The driver assumes that the joystick is calibrated and reports axis values
+between 
+.IR "-32768 " and " 32768" .
+See the Linux kernel documentation for a complete list of supported devices. 
+
+.SH CONFIGURATION DETAILS
+Please refer to __xconfigfile__(__filemansuffix__) for general configuration
+details.  This section only covers configuration details specific to this
+driver.
+.PP
+The following Driver
+.B Options
+are supported:
+.TP 7
+.BI "Option \*qDevice\*q \*q" string \*q
+.TP 7
+.BI "Option \*qPath\*q \*q" string \*q
+Specifies the device through which the joystick can be accessed. This option is mandatory and there is no default setting.
+
+For Linux, joysticks are mostly accessible as
+.IR /dev/input/jsX " or " /dev/input/eventX .
+
+In *BSD, joysticks are usually recognized as 
+.IR /dev/uhidX .
+.TP 7
+.BI "Option \*qAutoRepeat\*q \*q" "delay rate" \*q
+Sets the auto repeat behaviour for key events.
+.I delay
+is the time in milliseconds before a key starts repeating.
+.I rate
+is the number of times a key repeats per second.  Default: Xorg default
+.TP 7
+.BI "Option \*qDebugLevel\*q \*q" integer \*q
+If compiled with debugging information, controls the verbosity of the driver.
+The higher the DebugLevel, the more output is produced.
+Default: 0
+.TP 7
+.BI "Option \*qMapButton<number>\*q \*q" string \*q
+Sets the mapping of the joystick button to the desired action. Counting of buttons starts with 
+.IR 1 ,
+Possible options are:
+.RS 7
+.TP 7
+.B "none"
+This joystick button won't do anything.
+.TP 7
+.BI "\*qbutton="<number> \*q
+The joystick button will generate a click with the specified button (starting with 1).
+.TP 7
+.BI "\*qaxis="[<factor>]<axis> \*q
+Where
+.I <axis>
+is one of:
+.B x, y, zx, zy
+
+and 
+.I <factor>
+is an optional amplifier of the axis, like
+.B -, +, -5, 0.4, 1.3, ...
+Use positive and negative values to control the direction. Default: 1.0
+.TP 7
+.BI "\*qamplify="<factor> \*q
+Amplifies the movement of all axes by the given factor when pressed. Different
+factors can be combined.
+.TP 7
+.BI "\*qkey="<keysym>[,<keysym>[,<keysym>[,<keysym>]]]
+When button is pressed, a series of keydown events with the specified keysym is
+generated. When the button is released, keyup events in the opposite
+order are generated. You can specify up to 4 keysyms per button.
+
+See special section about key events below.
+.TP 7
+.B "\*qdisable-mouse\*q"
+.TP 7
+.B "\*qdisable-keys\*q"
+.TP 7
+.B "\*qdisable-all\*q"
+Disables either the generation of mouse events, key events or the generation of
+all X events by the driver. Press button again to allow the driver to generate 
+events again.
+.RE
+.PP
+.TP 7
+.BI "Option \*qMapAxis<number>\*q \*q" string \*q
+Sets the mapping of the axis to the desired action. Counting of axes starts with
+.IR 1 ,
+the parameter may contain:
+.RS 7
+.TP 7
+.BI "\*qmode="<string> \*q
+Where
+.I <string>
+can be one of:
+
+.B none, relative, accelerated, absolute
+
+Every axis which's mode is not
+.B none
+will be reported as an additional valuator.
+.TP 7
+.BI "\*qaxis="[<factor>]<axis> \*q
+Where
+.I <axis>
+is one of:
+.B x, y, zx, zy, key (see keylow/keyhigh)
+
+and 
+.I <factor>
+is an optional amplifier of the axis, like
+.B -, +, -5, 0.4, 1.3, ...
+Negative values will invert the movement. Default: 1.0
+.TP 7
+.BI "\*qkeylow= "<keysym>[,<keysym>[,<keysym>[,<keysym>]]]
+.TP 7
+.BI "\*qkeyhigh="<keysym>[,<keysym>[,<keysym>[,<keysym>]]]
+When the axis is moved out of the deadzone, a series of keydown events according 
+to the direction of the movement is generated. When the axis is released, keyup 
+events will be generated. You can specify up to 4 keysyms for each direction. 
+
+.B keylow
+defines the keys to be generated when the axis is moved in negative direction (ie. left or up),
+.B keyhigh
+defines the keys to be generated when the axis is moved in positive direction (ie. right or down).
+
+If 
+.B mode
+is set to 
+.IR relative :
+The driver will emulate autorepeat according to the current value of the axis. A keydown and subsequent keyup event will be generated in short time intervals. To modify that interval and the autorepeat speed, supply the
+.BI "\*qaxis="[<factor>]KEY \*q
+parameter.
+
+If 
+.B mode
+is set to 
+.IR accelerated :
+One keydown event is generated, when the axis is moved out of the deadzone, the keyup event is generated, when the axis moves back to the deadzone. The keys will be autorepeated according to the keyboard settings.
+
+See special section about key events below.
+.TP 7
+.BI "\*qdeadzone="<number> \*q
+Sets the unresponsive range of the axis to
+.IR <number> .
+This can be between
+.IR "0" " and " "30000" .
+Default: 5000
+.RE
+.PP
+.TP 7
+.BI "Option \*qStartKeysEnabled\*q \*q" "boolean" \*q
+Set to
+.I False
+to disable key event generation after startup. You can toggle key event generation with the 
+.I disable-keys
+button mapping. Default: enabled
+.TP 7
+.BI "Option \*qStartMouseEnabled\*q \*q" "boolean" \*q
+Set to
+.I False
+to disable mouse event generation after startup. You can toggle mouse event generation with the 
+.I disable-mouse
+button mapping. Default: enabled
+.RE
+.PP
+
+
+.SH "DEFAULT CONFIGURATION"
+The default configuration is as follows:
+
+.nf
+.BI "  Option \*qDebugLevel\*q        \*q" 0 \*q
+.BI "  Option \*qStartKeysEnabled\*q  \*q" True \*q
+.BI "  Option \*qStartMouseEnabled\*q \*q" True \*q
+.BI "  Option \*qMapButton1\*q        \*q" button=1 \*q
+.BI "  Option \*qMapButton2\*q        \*q" button=2 \*q
+.BI "  Option \*qMapButton3\*q        \*q" button=3 \*q
+.BI "  Option \*qMapButton4\*q        \*q" none \*q
+\ \ ...
+.BI "  Option \*qMapAxis1\*q          \*q" "mode=relative    axis=+1x  deadzone=5000" \*q
+.BI "  Option \*qMapAxis2\*q          \*q" "mode=relative    axis=+1y  deadzone=5000" \*q
+.BI "  Option \*qMapAxis3\*q          \*q" "mode=relative    axis=+1zx deadzone=5000" \*q
+.BI "  Option \*qMapAxis4\*q          \*q" "mode=relative    axis=+1zy deadzone=5000" \*q
+.BI "  Option \*qMapAxis5\*q          \*q" "mode=accelerated axis=+1x  deadzone=5000" \*q
+.BI "  Option \*qMapAxis6\*q          \*q" "mode=accelerated axis=+1y  deadzone=5000" \*q
+.BI "  Option \*qMapAxis7\*q          \*q" "mode=none" \*q
+\ \ ...
+.fi
+
+.SH "ACCELERATED AXIS CONFIGURATION"
+.B Accelerated
+mode should be selected, if the axis is a
+.IR pad ,
+which reports only three states: negative, center, positive. It will produce a smooth acceleration of the movement
+when the axis is deflected. The speed will be affected by the factor of the axis, but not the acceleration speed.
+
+This example will set up the axis as scrolling vertically inverted, which half of the speed:
+.nf
+.BI "  Option \*qMapAxis1\*q     \*q" "mode=accelerated axis=-0.5zy" \*q
+.fi
+
+This example maps four buttons to the four half axes, so you can use them like a pad. The movement will get half
+the normal speed:
+.nf
+.BI "  Option \*qMapButton1\*q     \*q" "axis=+0.5x" \*q
+.BI "  Option \*qMapButton2\*q     \*q" "axis=-0.5x" \*q
+.BI "  Option \*qMapButton3\*q     \*q" "axis=+0.5y" \*q
+.BI "  Option \*qMapButton4\*q     \*q" "axis=-0.5y" \*q
+.fi
+
+.SH "ABSOLUTE AXIS CONFIGURATION"
+With the
+.B absolute
+axis mode, the position of the cursor will be fixed to the position, according to the deflection of the axis.
+This fixed position is calculated around the previous position of the cursor. You can specify the range in pixels,
+the cursor can move. The default range is the
+.I width
+of the screen, when mapped to the x-axis and the
+.I height
+of the screen, when mapped to the y-axis. This mode can be combines with the other modes without problems. 
+
+In this example the first axis gets a range from left to the right of the screen. The second axis gets a
+total range of 200 pixels, 100 to the top and 100 to the bottom:
+.nf 
+.BI "  Option \*qMapAxis1\*q     \*q" "mode=absolute axis=x" \*q
+.BI "  Option \*qMapAxis2\*q     \*q" "mode=absolute axis=200y" \*q
+.fi
+
+.SH "GENERATING KEY EVENTS"
+Providing a \*qkey=<keysym>[,<keysym>[...]]\*q option will generate X Events with the specified keysyms
+when the joystick button is pressed or the axis changed it's position. When the button/axis is released, the keys are released in the reverse order.
+
+The keysym parameter can be defined as a numerical value, which can be looked up in the file
+.IR /usr/include/X11/keysymdef.h ,
+or as the symbolic identifier (case sensitive, without the leading XK_).
+
+You can specify up to 4 keysyms per joystick button/axis, which is useful to use modificators. Make sure you use the modificators
+that are necessary to get a certain keysym.
+
+Examples:
+.nf
+.BI "  Option \*qMapButton1\*q     \*q" "key=0xffe9,0xff09" \*q
+.BI "  Option \*qMapButton1\*q     \*q" "key=Alt_L,Tab" \*q
+.fi
+will generate
+.I "Alt_L+Tab"
+when the button is pressed.
+
+.nf
+.BI "  Option \*qMapButton1\*q     \*q" "key=0xffe1,0x0064" \*q
+.BI "  Option \*qMapButton1\*q     \*q" "key=Shift_L,d" \*q
+.fi
+will generate an uppercase 
+.IR d .
+
+.nf
+.BI "  Option \*qMapButton1\*q     \*q" "key=0x0020" \*q
+.BI "  Option \*qMapButton1\*q     \*q" "key=32" \*q
+.BI "  Option \*qMapButton1\*q     \*q" "key=space" \*q
+.fi
+is for the  
+.IR "space " key.
+
+.nf
+.BI "  Option  \*qMapAxis1\*q      \*q" "mode=relative    keylow=Left keyhigh=Right axis=0.5key" \*q
+.BI "  Option  \*qMapAxis2\*q      \*q" "mode=relative    keylow=Up   keyhigh=Down" \*q
+.BI "  Option  \*qMapAxis3\*q      \*q" "mode=accelerated keylow=Left keyhigh=Right" \*q
+.BI "  Option  \*qMapAxis4\*q      \*q" "mode=accelerated keylow=Up   keyhigh=Down" \*q
+.fi
+will map the first and third axis to the arrow keys
+.IR left " and " right
+and the second and fourth axis to the arrow keys
+.IR up " and " down .
+The keys for the first two axes will be generated in an interval according to the value of the axis. The autorepeat speed of the first axis will be half the speed of that of the second axis.
+The keys for the third and fourth axis are generated once when the axis moves out of the deadzone and when it moves back into the deadzone. X.Org will autorepeat those keys according to current keyboard settings.
+
+.SH "VALUATORS"
+The driver reports relative cursor movement as valuators 0 and 1.
+
+Every axis will be associated with an additional valuator,
+reporting the absolute raw values of the axis in the range of
+.IR "-32768 " to " 32768" .
+
+Axes in the mode 
+.B "\*qnone\*q"
+will be ignored. The mode has no effect on the reported value. The axis does not need to be assigned to a direction.
+
+.SH "NOTES"
+The driver does not do hotplugging on it's own. The joystick needs to be plugged in when the driver is loaded.
+If the joystick is unplugged, the device will be automatically deactivated.
+.P
+There is an example hal policy in
+.I ${sourcecode}/config/50-x11-input-joystick.fdi
+which will take care of hotplugging. Place it in
+.I /etc/hal/fdi/policy 
+and customize it to your needs. This is HIGHLY experimental and you can't pass any options to the driver, yet.
+.P
+Make sure you add the 
+.I \*qSendCoreEvents\*q
+keyword to the device entry of your
+.B ServerLayout
+section of the 
+.I xorg.conf
+file, otherwise the device won't report core pointer and core key events.
+
+Example: 
+.nf
+.BI "    InputDevice     " "\*qJoystick1\*q     \*qSendCoreEvents\*q"
+.fi
+
+
+.SH "SEE ALSO"
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__), xmodmap(1)
+.SH AUTHORS
+Sascha Hlusiak (2007-2008),
+.fi
+Frederic Lepied (1995-1999)

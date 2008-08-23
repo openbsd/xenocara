@@ -28,4 +28,27 @@
 @DRIVER_NAME@_drv_la_LDFLAGS = -module -avoid-version
 @DRIVER_NAME@_drv_ladir = @inputdir@
 
-@DRIVER_NAME@_drv_la_SOURCES = xf86Jstk.c
+@DRIVER_NAME@_drv_la_SOURCES =  jstk.c jstk.h \
+				jstk_axis.c jstk_axis.h \
+				jstk_key.c jstk_key.h \
+				jstk_options.c jstk_options.h \
+				StrKeysym.c StrKeysym.h ks_tables.h
+
+BSD_SRCS   = backend_bsd.c backend_bsd.h
+LINUX_SRCS = backend_joystick.c backend_joystick.h
+EVDEV_SRCS = backend_evdev.c backend_evdev.h
+
+if BSD_BACKEND
+@DRIVER_NAME@_drv_la_SOURCES += $(BSD_SRCS)
+@DRIVER_NAME@_drv_la_LDFLAGS += -lusbhid
+endif
+
+if LINUX_BACKEND
+@DRIVER_NAME@_drv_la_SOURCES += $(LINUX_SRCS)
+endif
+
+if EVDEV_BACKEND
+@DRIVER_NAME@_drv_la_SOURCES += $(EVDEV_SRCS)
+endif
+
+EXTRA_DIST = $(BSD_SRCS) $(LINUX_SRCS)
