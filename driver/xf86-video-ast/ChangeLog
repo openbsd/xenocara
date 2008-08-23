@@ -1,3 +1,32 @@
+2008-03-18  Y.C. Chen  <yc_chen@aspeedtech.com>
+        * src/ast_2dtool.c
+        * src/ast_tool.c
+        Compiler Warning Fixed
+
+2008-03-01  Y.C. Chen  <yc_chen@aspeedtech.com>
+        * src/ast_driver.c:
+        Add _X_EXPORT for symbols public visibility
+
+2007-08-24  Y.C. Chen  <yc_chen@aspeedtech.com>
+         
+	* configure.ac:
+	* src/ast.h:
+	* src/ast_2dtool.c:
+	* src/ast_accel.c:
+	* src/ast_cursor.c:
+	* src/ast_driver.c:
+	* src/ast_mode.c:
+	* src/ast_tool.c:
+	* src/ast_vgatool.c:
+        * src/ast_2dtool.h
+        * src/ast_mode.h:
+        Support AST2100
+
+2006-04-17  Y.C. Chen  <yc_chen@aspeedtech.com>
+
+	* src/ast_vgatool.c: (GetMaxDCLK):
+        Fixed can't get correct MCLK in some platforms     
+
 2006-04-07  Adam Jackson  <ajax@freedesktop.org>
 
 	* configure.ac:

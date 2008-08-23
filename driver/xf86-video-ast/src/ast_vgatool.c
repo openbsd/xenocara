@@ -128,7 +128,13 @@ GetMaxDCLK(ScrnInfoPtr pScrn)
 
    *(ULONG *) (pAST->MMIOVirtualAddr + 0xF004) = 0x1e6e0000;
    *(ULONG *) (pAST->MMIOVirtualAddr + 0xF000) = 0x00000001;
-   
+
+   *(ULONG *) (pAST->MMIOVirtualAddr + 0x10100) = 0x000000A8;
+
+   do {
+      ;	
+   } while (*(volatile ULONG *) (pAST->MMIOVirtualAddr + 0x10100) != 0x000000A8);
+   	   
    /* Get BusWidth */
    ulData = *(ULONG * ) (pAST->MMIOVirtualAddr + 0x10004);       
    if (ulData & 0x40)
@@ -137,9 +143,7 @@ GetMaxDCLK(ScrnInfoPtr pScrn)
       ulDRAMBusWidth = 32;
           
    /* Get MCLK */
-   {
-       *(ULONG *) (pAST->MMIOVirtualAddr + 0x10100) = 0x000000A8;
-   	
+   {   	
        ulData = *(ULONG *) (pAST->MMIOVirtualAddr + 0x10120);       
        ulData2 = *(ULONG *) (pAST->MMIOVirtualAddr + 0x10170);       
        if (ulData2 & 0x2000)

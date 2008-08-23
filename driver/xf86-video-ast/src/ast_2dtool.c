@@ -254,7 +254,7 @@ Exit_vWaitEngIdle:
 }    
 
 /* ULONG ulGetCMDQLength() */
-__inline ULONG ulGetCMDQLength(ASTRecPtr pAST, ULONG ulWritePointer, ULONG ulCMDQMask)
+static __inline ULONG ulGetCMDQLength(ASTRecPtr pAST, ULONG ulWritePointer, ULONG ulCMDQMask)
 {
     ULONG ulReadPointer, ulReadPointer2;
     

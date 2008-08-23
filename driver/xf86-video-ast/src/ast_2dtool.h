@@ -61,23 +61,28 @@ typedef struct  _PKT_SC
 } PKT_SC, *PPKT_SC;
 
 /* Eng Reg. Limitation */
-#define	MAX_SRC_PITCH				0x1FFF
-#define	MAX_DST_PITCH				0x1FFF
-#define	MAX_DST_HEIGHT				0x7FF
 #define	MAX_SRC_X				0x7FF
 #define	MAX_SRC_Y				0x7FF
 #define	MAX_DST_X				0x7FF
 #define	MAX_DST_Y				0x7FF
-#define	MAX_RECT_WIDTH				0x7FF
-#define	MAX_RECT_HEIGHT				0x7FF
-#define MAX_CLIP				0xFFF
 
-#define MAX_LINE_X        			0x7FF   
-#define MAX_LINE_Y           			0x7FF
-#define MAX_LINE_ERR   				0x3FFFFF        
-#define MAX_LINE_WIDTH   			0x7FF        
-#define MAX_LINE_K1				0x3FFFFF           
-#define MAX_LINE_K2				0x3FFFFF
+#define	MASK_SRC_PITCH				0x1FFF
+#define	MASK_DST_PITCH				0x1FFF
+#define	MASK_DST_HEIGHT				0x7FF
+#define	MASK_SRC_X				0xFFF
+#define	MASK_SRC_Y				0xFFF
+#define	MASK_DST_X				0xFFF
+#define	MASK_DST_Y				0xFFF
+#define	MASK_RECT_WIDTH				0x7FF
+#define	MASK_RECT_HEIGHT			0x7FF
+#define MASK_CLIP				0xFFF
+
+#define MASK_LINE_X        			0xFFF   
+#define MASK_LINE_Y           			0xFFF
+#define MASK_LINE_ERR   			0x3FFFFF        
+#define MASK_LINE_WIDTH   			0x7FF        
+#define MASK_LINE_K1				0x3FFFFF           
+#define MASK_LINE_K2				0x3FFFFF
 
 #define MAX_PATReg_Size				256
 
@@ -195,10 +200,10 @@ typedef struct _LINEPARAM {
 
 typedef struct {
 	
-    ULONG X1;
-    ULONG Y1;
-    ULONG X2;
-    ULONG Y2;	
+    LONG X1;
+    LONG Y1;
+    LONG X2;
+    LONG Y2;	
     
 } _LINEInfo;
 
@@ -208,91 +213,91 @@ typedef struct {
       { \
         do { \
            *(ULONG *)(MMIOREG_SRC_BASE) = (ULONG) (base); \
-        } while (*(ULONG *)(MMIOREG_SRC_BASE) != (ULONG) (base)); \
+        } while (*(volatile ULONG *)(MMIOREG_SRC_BASE) != (ULONG) (base)); \
       }
 #define ASTSetupSRCPitch_MMIO(pitch) \
       { \
         do { \
            *(ULONG *)(MMIOREG_SRC_PITCH) = (ULONG)(pitch << 16); \
-        } while (*(ULONG *)(MMIOREG_SRC_PITCH) != (ULONG)(pitch << 16)); \
+        } while (*(volatile ULONG *)(MMIOREG_SRC_PITCH) != (ULONG)(pitch << 16)); \
       }
 #define ASTSetupDSTBase_MMIO(base) \
       { \
         do { \
            *(ULONG *)(MMIOREG_DST_BASE) = (ULONG)(base); \
-        } while (*(ULONG *)(MMIOREG_DST_BASE) != (ULONG)(base)); \
+        } while (*(volatile ULONG *)(MMIOREG_DST_BASE) != (ULONG)(base)); \
       }      
 #define ASTSetupDSTPitchHeight_MMIO(pitch, height) \
       { \
         ULONG dstpitch; \
-        dstpitch = (ULONG)((pitch << 16) + ((height) & MAX_DST_HEIGHT)); \
+        dstpitch = (ULONG)((pitch << 16) + ((height) & MASK_DST_HEIGHT)); \
         do { \
            *(ULONG *)(MMIOREG_DST_PITCH) = dstpitch; \
-        } while (*(ULONG *)(MMIOREG_DST_PITCH) != dstpitch); \
+        } while (*(volatile ULONG *)(MMIOREG_DST_PITCH) != dstpitch); \
       }      
 #define ASTSetupDSTXY_MMIO(x, y) \
       { \
         ULONG dstxy; \
-        dstxy = (ULONG)(((x & MAX_DST_X) << 16) + (y & MAX_DST_Y)); \
+        dstxy = (ULONG)(((x & MASK_DST_X) << 16) + (y & MASK_DST_Y)); \
         do { \
            *(ULONG *)(MMIOREG_DST_XY) = dstxy; \
-        } while (*(ULONG *)(MMIOREG_DST_XY) != dstxy); \
+        } while (*(volatile ULONG *)(MMIOREG_DST_XY) != dstxy); \
       }           
 #define ASTSetupSRCXY_MMIO(x, y) \
       { \
         ULONG srcxy; \
-        srcxy = (ULONG)(((x & MAX_SRC_X) << 16) + (y & MAX_SRC_Y)); \
+        srcxy = (ULONG)(((x & MASK_SRC_X) << 16) + (y & MASK_SRC_Y)); \
         do { \
            *(ULONG *)(MMIOREG_SRC_XY) = srcxy; \
-        } while (*(ULONG *)(MMIOREG_SRC_XY) != srcxy); \
+        } while (*(volatile ULONG *)(MMIOREG_SRC_XY) != srcxy); \
       }             
 #define ASTSetupRECTXY_MMIO(x, y) \
       { \
         ULONG rectxy; \
-        rectxy = (ULONG)(((x & MAX_RECT_WIDTH) << 16) + (y & MAX_RECT_WIDTH)); \
+        rectxy = (ULONG)(((x & MASK_RECT_WIDTH) << 16) + (y & MASK_RECT_WIDTH)); \
         do { \
            *(ULONG *)(MMIOREG_RECT_XY) = rectxy; \
-        } while (*(ULONG *)(MMIOREG_RECT_XY) != rectxy); \
+        } while (*(volatile ULONG *)(MMIOREG_RECT_XY) != rectxy); \
       }  
 #define ASTSetupFG_MMIO(color) \
       { \
         do { \
            *(ULONG *)(MMIOREG_FG) = (ULONG)(color); \
-        } while (*(ULONG *)(MMIOREG_FG) != (ULONG)(color)); \
+        } while (*(volatile ULONG *)(MMIOREG_FG) != (ULONG)(color)); \
       } 
 #define ASTSetupBG_MMIO(color) \
       { \
         do { \
            *(ULONG *)(MMIOREG_BG) = (ULONG)(color); \
-        } while (*(ULONG *)(MMIOREG_BG) != (ULONG)(color)); \
+        } while (*(volatile ULONG *)(MMIOREG_BG) != (ULONG)(color)); \
       }
 #define ASTSetupMONO1_MMIO(pat) \
       { \
         do { \
           *(ULONG *)(MMIOREG_MONO1) = (ULONG)(pat); \
-        } while (*(ULONG *)(MMIOREG_MONO1) != (ULONG)(pat)); \
+        } while (*(volatile ULONG *)(MMIOREG_MONO1) != (ULONG)(pat)); \
       } 
 #define ASTSetupMONO2_MMIO(pat) \
       { \
         do { \
           *(ULONG *)(MMIOREG_MONO2) = (ULONG)(pat); \
-        } while (*(ULONG *)(MMIOREG_MONO2) != (ULONG)(pat)); \
+        } while (*(volatile ULONG *)(MMIOREG_MONO2) != (ULONG)(pat)); \
       }
 #define ASTSetupCLIP1_MMIO(left, top) \
       { \
        ULONG clip1; \
-       clip1 = (ULONG)(((left & MAX_CLIP) << 16) + (top & MAX_CLIP)); \
+       clip1 = (ULONG)(((left & MASK_CLIP) << 16) + (top & MASK_CLIP)); \
        do { \
           *(ULONG *)(MMIOREG_CLIP1) = clip1; \
-       } while (*(ULONG *)(MMIOREG_CLIP1) != clip1); \
+       } while (*(volatile ULONG *)(MMIOREG_CLIP1) != clip1); \
       } 
 #define ASTSetupCLIP2_MMIO(right, bottom) \
       { \
        ULONG clip2; \
-       clip2 = (ULONG)(((right & MAX_CLIP) << 16) + (bottom & MAX_CLIP)); \
+       clip2 = (ULONG)(((right & MASK_CLIP) << 16) + (bottom & MASK_CLIP)); \
        do { \
           *(ULONG *)(MMIOREG_CLIP2) = clip2; \
-       } while (*(ULONG *)(MMIOREG_CLIP2) != clip2); \
+       } while (*(volatile ULONG *)(MMIOREG_CLIP2) != clip2); \
       }                                                                                               
 #define ASTSetupCMDReg_MMIO(reg) \
       { \
@@ -302,57 +307,57 @@ typedef struct {
       { \
        do { \
           *(ULONG *)(MMIOREG_PAT + patreg*4) = (ULONG)(pat); \
-       } while (*(ULONG *)(MMIOREG_PAT + patreg*4) != (ULONG)(pat)); \
+       } while (*(volatile ULONG *)(MMIOREG_PAT + patreg*4) != (ULONG)(pat)); \
       }      
                                 
 /* Line CMD */
 #define ASTSetupLineXY_MMIO(x, y) \
       { \
         ULONG linexy; \
-        linexy = (ULONG)(((x & MAX_LINE_X) << 16) + (y & MAX_LINE_Y)); \
+        linexy = (ULONG)(((x & MASK_LINE_X) << 16) + (y & MASK_LINE_Y)); \
         do { \
            *(ULONG *)(MMIOREG_LINE_XY) = linexy; \
-        } while (*(ULONG *)(MMIOREG_LINE_XY) != linexy); \
+        } while (*(volatile ULONG *)(MMIOREG_LINE_XY) != linexy); \
       }
 #define ASTSetupLineXMErrTerm_MMIO(xm, err) \
       { \
         ULONG lineerr; \
-        lineerr = (ULONG)((xm << 24) + (err & MAX_LINE_ERR)); \
+        lineerr = (ULONG)((xm << 24) + (err & MASK_LINE_ERR)); \
         do { \
            *(ULONG *)(MMIOREG_LINE_Err) = lineerr; \
-        } while (*(ULONG *)(MMIOREG_LINE_Err) != lineerr); \
+        } while (*(volatile ULONG *)(MMIOREG_LINE_Err) != lineerr); \
       }      
 #define ASTSetupLineWidth_MMIO(width) \
       { \
         ULONG linewidth; \
-        linewidth = (ULONG)((width & MAX_LINE_WIDTH) << 16); \
+        linewidth = (ULONG)((width & MASK_LINE_WIDTH) << 16); \
         do { \
           *(ULONG *)(MMIOREG_LINE_WIDTH) = linewidth; \
-        } while (*(ULONG *)(MMIOREG_LINE_WIDTH) != linewidth); \
+        } while (*(volatile ULONG *)(MMIOREG_LINE_WIDTH) != linewidth); \
       }
 #define ASTSetupLineK1Term_MMIO(err) \
       { \
         do { \
-          *(ULONG *)(MMIOREG_LINE_K1) = (ULONG)(err & MAX_LINE_K1); \
-        } while (*(ULONG *)(MMIOREG_LINE_K1) != (ULONG)(err & MAX_LINE_K1)); \
+          *(ULONG *)(MMIOREG_LINE_K1) = (ULONG)(err & MASK_LINE_K1); \
+        } while (*(volatile ULONG *)(MMIOREG_LINE_K1) != (ULONG)(err & MASK_LINE_K1)); \
       }            
 #define ASTSetupLineK2Term_MMIO(err) \
       { \
         do { \
-           *(ULONG *)(MMIOREG_LINE_K2) = (ULONG)(err & MAX_LINE_K2); \
-        } while (*(ULONG *)(MMIOREG_LINE_K2) != (ULONG)(err & MAX_LINE_K2)); \
+           *(ULONG *)(MMIOREG_LINE_K2) = (ULONG)(err & MASK_LINE_K2); \
+        } while (*(volatile ULONG *)(MMIOREG_LINE_K2) != (ULONG)(err & MASK_LINE_K2)); \
       }
 #define ASTSetupLineStyle1_MMIO(pat) \
       { \
         do { \
            *(ULONG *)(MMIOREG_LINE_STYLE1) = (ULONG)(pat); \
-        } while (*(ULONG *)(MMIOREG_LINE_STYLE1) != (ULONG)(pat)); \
+        } while (*(volatile ULONG *)(MMIOREG_LINE_STYLE1) != (ULONG)(pat)); \
       } 
 #define ASTSetupLineStyle2_MMIO(pat) \
       { \
         do { \
           *(ULONG *)(MMIOREG_LINE_STYLE2) = (ULONG)(pat); \
-        } while (*(ULONG *)(MMIOREG_LINE_STYLE2) != (ULONG)(pat)); \
+        } while (*(volatile ULONG *)(MMIOREG_LINE_STYLE2) != (ULONG)(pat)); \
       }     
                                 
 /* CMDQ Mode Macro */ 
@@ -377,22 +382,22 @@ typedef struct {
 #define ASTSetupDSTPitchHeight(addr, pitch, height) \
       { \
         addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_DST_PITCH); 	\
-        addr->PKT_SC_dwData[0] = (ULONG)((pitch << 16) + ((height) & MAX_DST_HEIGHT));					\
+        addr->PKT_SC_dwData[0] = (ULONG)((pitch << 16) + ((height) & MASK_DST_HEIGHT));					\
       }      
 #define ASTSetupDSTXY(addr, x, y) \
       { \
         addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_DST_XY); 	\
-        addr->PKT_SC_dwData[0] = (ULONG)(((x & MAX_DST_X) << 16) + (y & MAX_DST_Y));					\
+        addr->PKT_SC_dwData[0] = (ULONG)(((x & MASK_DST_X) << 16) + (y & MASK_DST_Y));					\
       }           
 #define ASTSetupSRCXY(addr, x, y) \
       { \
         addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_SRC_XY); 	\
-        addr->PKT_SC_dwData[0] = (ULONG)(((x & MAX_SRC_X) << 16) + (y & MAX_SRC_Y));					\
+        addr->PKT_SC_dwData[0] = (ULONG)(((x & MASK_SRC_X) << 16) + (y & MASK_SRC_Y));					\
       }             
 #define ASTSetupRECTXY(addr, x, y) \
       { \
         addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_RECT_XY); 	\
-        addr->PKT_SC_dwData[0] = (ULONG)(((x & MAX_RECT_WIDTH) << 16) + (y & MAX_RECT_WIDTH));					\
+        addr->PKT_SC_dwData[0] = (ULONG)(((x & MASK_RECT_WIDTH) << 16) + (y & MASK_RECT_WIDTH));					\
       }  
 #define ASTSetupFG(addr, color) \
       { \
@@ -417,12 +422,12 @@ typedef struct {
 #define ASTSetupCLIP1(addr, left, top) \
       { \
         addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_CLIP1); 	\
-        addr->PKT_SC_dwData[0] = (ULONG)(((left & MAX_CLIP) << 16) + (top & MAX_CLIP));	\
+        addr->PKT_SC_dwData[0] = (ULONG)(((left & MASK_CLIP) << 16) + (top & MASK_CLIP));	\
       }            
 #define ASTSetupCLIP2(addr, right, bottom) \
       { \
         addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_CLIP2); 	\
-        addr->PKT_SC_dwData[0] = (ULONG)(((right & MAX_CLIP) << 16) + (bottom & MAX_CLIP));	\
+        addr->PKT_SC_dwData[0] = (ULONG)(((right & MASK_CLIP) << 16) + (bottom & MASK_CLIP));	\
       }                                                                                                    
 #define ASTSetupCMDReg(addr, reg) \
       { \
@@ -439,27 +444,27 @@ typedef struct {
 #define ASTSetupLineXY(addr, x, y) \
       { \
         addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_LINE_XY); 	\
-        addr->PKT_SC_dwData[0] = (ULONG)(((x & MAX_LINE_X) << 16) + (y & MAX_LINE_Y));					\
+        addr->PKT_SC_dwData[0] = (ULONG)(((x & MASK_LINE_X) << 16) + (y & MASK_LINE_Y));					\
       }
 #define ASTSetupLineXMErrTerm(addr, xm, err) \
       { \
         addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_LINE_Err); 	\
-        addr->PKT_SC_dwData[0] = (ULONG)((xm << 24) + (err & MAX_LINE_ERR));					\
+        addr->PKT_SC_dwData[0] = (ULONG)((xm << 24) + (err & MASK_LINE_ERR));					\
       }      
 #define ASTSetupLineWidth(addr, width) \
       { \
         addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_LINE_WIDTH); 	\
-        addr->PKT_SC_dwData[0] = (ULONG)((width & MAX_LINE_WIDTH) << 16);				\
+        addr->PKT_SC_dwData[0] = (ULONG)((width & MASK_LINE_WIDTH) << 16);				\
       }            
 #define ASTSetupLineK1Term(addr, err) \
       { \
         addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_LINE_K1); 	\
-        addr->PKT_SC_dwData[0] = (ULONG)(err & MAX_LINE_K1);				\
+        addr->PKT_SC_dwData[0] = (ULONG)(err & MASK_LINE_K1);				\
       }            
 #define ASTSetupLineK2Term(addr, err) \
       { \
         addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_LINE_K2); 	\
-        addr->PKT_SC_dwData[0] = (ULONG)(err & MAX_LINE_K2);				\
+        addr->PKT_SC_dwData[0] = (ULONG)(err & MASK_LINE_K2);				\
       }     
 #define ASTSetupLineStyle1(addr, pat) \
       { \

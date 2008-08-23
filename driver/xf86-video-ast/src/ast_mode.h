@@ -21,7 +21,7 @@
  */
 
 /* Mode Limitation */
-#define MAX_HResolution		1600
+#define MAX_HResolution		1920
 #define MAX_VResolution		1200
  
 /* Std. Table Index Definition */
@@ -48,6 +48,7 @@
 #define VCLK135        		0x0D
 #define VCLK157_5      		0x0E
 #define VCLK162        		0x0F
+#define VCLK193_25     		0x10
 
 /* Flags Definition */
 #define Charx8Dot               0x00000001

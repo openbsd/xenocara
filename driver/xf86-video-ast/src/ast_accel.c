@@ -256,7 +256,6 @@ ASTAccelInit(ScreenPtr pScreen)
         infoPtr->ClippingFlags = HARDWARE_CLIP_SCREEN_TO_SCREEN_COPY 	|
                 		 HARDWARE_CLIP_MONO_8x8_FILL		|
                 		 HARDWARE_CLIP_COLOR_8x8_FILL	 	|
-                		 HARDWARE_CLIP_SOLID_FILL		|     
                 		 HARDWARE_CLIP_SOLID_LINE 		| 
                 		 HARDWARE_CLIP_DASHED_LINE 		| 
                 		 HARDWARE_CLIP_SOLID_LINE; 
@@ -338,11 +337,13 @@ ASTSubsequentScreenToScreenCopy(ScrnInfoPtr pScrn, int x1, int y1, int x2,
 /*
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ASTSubsequentScreenToScreenCopy\n");
 */
-
+        
     /* Modify Reg. Value */
     cmdreg = pAST->ulCMDReg;
     if (pAST->EnableClip)
         cmdreg |= CMD_ENABLE_CLIP;
+    else
+        cmdreg &= ~CMD_ENABLE_CLIP;            
     srcbase = dstbase = 0;
 
     if (y1 >= MAX_SRC_Y)
@@ -479,7 +480,9 @@ ASTSubsequentSolidFillRect(ScrnInfoPtr pScrn,
     /* Modify Reg. Value */
     cmdreg = pAST->ulCMDReg;
     if (pAST->EnableClip)
-        cmdreg |= CMD_ENABLE_CLIP;    
+        cmdreg |= CMD_ENABLE_CLIP;
+    else
+        cmdreg &= ~CMD_ENABLE_CLIP;               
     dstbase = 0;
 
     if (dst_y >= pScrn->virtualY) 
@@ -587,7 +590,9 @@ static void ASTSubsequentSolidHorVertLine(ScrnInfoPtr pScrn,
     /* Modify Reg. Value */
     cmdreg = (pAST->ulCMDReg & (~CMD_MASK)) | CMD_BITBLT;
     if (pAST->EnableClip)
-        cmdreg |= CMD_ENABLE_CLIP;    
+        cmdreg |= CMD_ENABLE_CLIP;
+    else
+        cmdreg &= ~CMD_ENABLE_CLIP;            
     dstbase = 0;
     
     if(dir == DEGREES_0) {			/* horizontal */
@@ -659,6 +664,8 @@ static void ASTSubsequentSolidTwoPointLine(ScrnInfoPtr pScrn,
         ulCommand &= ~CMD_NOT_DRAW_LAST_PIXEL;
     if (pAST->EnableClip)
         ulCommand |= CMD_ENABLE_CLIP;
+    else
+        ulCommand &= ~CMD_ENABLE_CLIP;        
     dstbase = 0;
     miny = (y1 > y2) ? y2 : y1;
     maxy = (y1 > y2) ? y1 : y2;
@@ -667,7 +674,7 @@ static void ASTSubsequentSolidTwoPointLine(ScrnInfoPtr pScrn,
         y1 -= miny;
         y2 -= miny;
     }
-    
+     
     LineInfo.X1 = x1;
     LineInfo.Y1 = y1;
     LineInfo.X2 = x2;
@@ -703,6 +710,9 @@ static void ASTSubsequentSolidTwoPointLine(ScrnInfoPtr pScrn,
               
         /* Update Write Pointer */
         mUpdateWritePointer;                
+
+        /* Patch KDE pass abnormal point, ycchen@052507 */
+        vWaitEngIdle(pScrn, pAST);
         
     }
     else
@@ -814,6 +824,8 @@ ASTSubsequentDashedTwoPointLine(ScrnInfoPtr pScrn,
         ulCommand &= ~CMD_NOT_DRAW_LAST_PIXEL;
     if (pAST->EnableClip)
         ulCommand |= CMD_ENABLE_CLIP;
+    else
+        ulCommand &= ~CMD_ENABLE_CLIP;          
     dstbase = 0;        
     miny = (y1 > y2) ? y2 : y1;
     maxy = (y1 > y2) ? y1 : y2;
@@ -822,7 +834,7 @@ ASTSubsequentDashedTwoPointLine(ScrnInfoPtr pScrn,
         y1 -= miny;
         y2 -= miny;
     }
-
+    
     LineInfo.X1 = x1;
     LineInfo.Y1 = y1;
     LineInfo.X2 = x2;
@@ -858,7 +870,10 @@ ASTSubsequentDashedTwoPointLine(ScrnInfoPtr pScrn,
               
         /* Update Write Pointer */
         mUpdateWritePointer;
-              
+
+        /* Patch KDE pass abnormal point, ycchen@052507 */
+        vWaitEngIdle(pScrn, pAST);
+               
     }
     else
     {                  
@@ -951,7 +966,9 @@ ASTSubsequentMonoPatternFill(ScrnInfoPtr pScrn,
     /* Modify Reg. Value */
     cmdreg = pAST->ulCMDReg;
     if (pAST->EnableClip)
-        cmdreg |= CMD_ENABLE_CLIP;    
+        cmdreg |= CMD_ENABLE_CLIP;
+    else
+        cmdreg &= ~CMD_ENABLE_CLIP;              
     dstbase = 0;
 
     if (dst_y >= pScrn->virtualY) 
@@ -1070,7 +1087,9 @@ ASTSubsequentColor8x8PatternFillRect(ScrnInfoPtr pScrn, int patx, int paty,
     /* Modify Reg. Value */
     cmdreg = pAST->ulCMDReg;
     if (pAST->EnableClip)
-        cmdreg |= CMD_ENABLE_CLIP;    
+        cmdreg |= CMD_ENABLE_CLIP;
+    else
+        cmdreg &= ~CMD_ENABLE_CLIP;              
     dstbase = 0;
 
     if (dst_y >= pScrn->virtualY) 
@@ -1184,7 +1203,9 @@ ASTSubsequentCPUToScreenColorExpandFill(ScrnInfoPtr pScrn,
     /* Modify Reg. Value */
     cmdreg = pAST->ulCMDReg;
     if (pAST->EnableClip)
-        cmdreg |= CMD_ENABLE_CLIP;    
+        cmdreg |= CMD_ENABLE_CLIP;
+    else
+        cmdreg &= ~CMD_ENABLE_CLIP;              
     dstbase = 0;
 
     if (dst_y >= pScrn->virtualY) 
@@ -1308,7 +1329,9 @@ ASTSubsequentScreenToScreenColorExpandFill(ScrnInfoPtr pScrn,
     /* Modify Reg. Value */
     cmdreg = pAST->ulCMDReg;
     if (pAST->EnableClip)
-        cmdreg |= CMD_ENABLE_CLIP;    
+        cmdreg |= CMD_ENABLE_CLIP;
+    else
+        cmdreg &= ~CMD_ENABLE_CLIP;            
     dstbase = 0;
     if (dst_y >= pScrn->virtualY) 
     {   

@@ -39,6 +39,7 @@ ast_drv_la_SOURCES =	\
 	ast_driver.c 	\
 	ast_mode.c 	\
 	ast_mode.h 	\
+	ast_pcirename.h \
 	ast_tool.c 	\
 	ast_vgatool.c 	\
 	ast_vgatool.h

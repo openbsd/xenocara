@@ -62,7 +62,7 @@
 Bool ASTCursorInit(ScreenPtr pScreen);
 Bool bInitHWC(ScrnInfoPtr pScrn, ASTRecPtr pAST);
 static void ASTShowCursor(ScrnInfoPtr pScrn); 
-static void ASTHideCursor(ScrnInfoPtr pScrn);
+void ASTHideCursor(ScrnInfoPtr pScrn);
 static void ASTSetCursorPosition(ScrnInfoPtr pScrn, int x, int y);
 static void ASTSetCursorColors(ScrnInfoPtr pScrn, int bg, int fg);
 static void ASTLoadCursorImage(ScrnInfoPtr pScrn, UCHAR *src);
@@ -146,7 +146,7 @@ ASTShowCursor(ScrnInfoPtr pScrn)
     
 }
 
-static void
+void
 ASTHideCursor(ScrnInfoPtr pScrn)
 {
     ASTRecPtr  pAST = ASTPTR(pScrn);
@@ -235,8 +235,8 @@ ASTLoadCursorImage(ScrnInfoPtr pScrn, UCHAR *src)
        	    for (k=7; k>0; k-=2)
        	    {
                 jTempSrcAnd32 = *((UCHAR *) pjSrcAnd);
-                jTempSrcXor32 = *((UCHAR *) pjSrcXor);   
-                ulTempDstAnd32[0] = ((jTempSrcAnd32 >> k) & 0x01) ? 0x00008000L:0x00L;   
+                jTempSrcXor32 = *((UCHAR *) pjSrcXor);
+                ulTempDstAnd32[0] = ((jTempSrcAnd32 >> k) & 0x01) ? 0x00008000L:0x00L;
                 ulTempDstXor32[0] = ((jTempSrcXor32 >> k) & 0x01) ? 0x00004000L:0x00L;                   	                                  	                 
                 ulTempDstData32[0] = ((jTempSrcXor32 >> k) & 0x01) ? pAST->HWCInfo.fg:pAST->HWCInfo.bg;                   	                                  	                                                   
                 ulTempDstAnd32[1] = ((jTempSrcAnd32 >> (k-1)) & 0x01) ? 0x80000000L:0x00L;   
