@@ -14,7 +14,6 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.in,v 1.1.1.1 2006/11/26 20:15:58 matthieu Exp $
 #
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 # 
@@ -69,7 +68,7 @@ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(install_sh) -d
+mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 SOURCES =
@@ -118,6 +117,7 @@ DRI_CFLAGS = @DRI_CFLAGS@
 DRI_FALSE = @DRI_FALSE@
 DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -146,6 +146,7 @@ MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -156,6 +157,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+SED = sed
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SPARC_FALSE = @SPARC_FALSE@
@@ -167,7 +169,9 @@ XORG_LIBS = @XORG_LIBS@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
@@ -214,7 +218,6 @@ driverman_PRE = @DRIVER_NAME@.man
 driverman_DATA = $(driverman_PRE:man=@DRIVER_MAN_SUFFIX@)
 EXTRA_DIST = @DRIVER_NAME@.man
 CLEANFILES = $(driverman_DATA)
-SED = sed
 
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@

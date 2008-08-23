@@ -56,7 +56,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@DRI_TRUE@am__append_1 = \
+@SPARC_TRUE@am__append_1 = -DUSE_VIS
+@DRI_TRUE@am__append_2 = \
 @DRI_TRUE@         ffb_dri.c \
 @DRI_TRUE@         ffb_drishare.h
 
@@ -66,7 +67,7 @@ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(install_sh) -d
+mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
@@ -142,6 +143,7 @@ DRI_CFLAGS = @DRI_CFLAGS@
 DRI_FALSE = @DRI_FALSE@
 DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -170,6 +172,7 @@ MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -180,6 +183,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SPARC_FALSE = @SPARC_FALSE@
@@ -191,7 +195,9 @@ XORG_LIBS = @XORG_LIBS@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
@@ -239,7 +245,7 @@ target_alias = @target_alias@
 # -avoid-version prevents gratuitous .0.0.0 version numbers on the end
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
-AM_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@
+AM_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@ $(am__append_1)
 sunffb_drv_la_LTLIBRARIES = sunffb_drv.la
 sunffb_drv_la_LDFLAGS = -module -avoid-version
 sunffb_drv_ladir = @moduledir@/drivers
@@ -247,7 +253,7 @@ sunffb_drv_ladir = @moduledir@/drivers
 sunffb_drv_la_SOURCES = ffb_accel.c ffb_attr.c ffb_cursor.c ffb_dac.c \
 	ffb_dac.h ffb_ddc.c ffb_dga.c ffb_driver.c ffb_fifo.h ffb.h \
 	ffb_loops.h ffb_rcache.h ffb_regs.h ffb_wid.c $(SPARC_ASM_SRC) \
-	$(am__append_1)
+	$(am__append_2)
 all: all-am
 
 .SUFFIXES:
