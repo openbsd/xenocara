@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.38 2008/08/21 19:59:41 matthieu Exp $
+# $OpenBSD: MODULES,v 1.39 2008/08/23 21:14:07 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -13,7 +13,6 @@ app/fslsfonts		1.0.2	7.4
 app/fstobdf		1.0.3 	7.4
 app/iceauth		1.0.2	7.3
 app/ico			1.0.2	7.3
-app/lbxproxy		1.0.1	7.0
 app/listres		1.0.1	7.0
 app/luit		1.0.2	7.2RC2	needs-rel
 app/mkfontdir		1.0.4	7.4
@@ -38,7 +37,6 @@ app/xclipboard		1.0.1	7.0
 app/xclock		1.0.3	7.3
 app/xcmsdb		1.0.1	7.0
 app/xconsole		1.0.3	7.3
-app/xcursorgen		1.0.2	7.3	ports
 app/xdm			1.1.8	7.4	needs-update
 app/xdpyinfo		1.0.3	7.4
 app/xdriinfo		1.0.2	7.3
@@ -71,10 +69,7 @@ app/xman		1.0.3	7.3
 app/xmessage		1.0.2	7.3
 app/xmodmap		1.0.3	7.3
 app/xmore		1.0.1	7.0
-app/xphelloworld	1.0.1	7.0	need-rel deprecated
-app/xplsprinters	1.0.1	7.0	deprecated
 app/xpr			1.0.2	7.2+
-app/xprehashprinterlist 1.0.1	7.0	deprecated
 app/xprop		1.0.4	7.4
 app/xrandr		1.2.3	7.4
 app/xrdb		1.0.5	7.4
@@ -98,41 +93,40 @@ data/xkbdata		1.0.1	7.0	obsolete
 doc/xorg-docs		1.4	7.3	needs-update
 doc/xorg-sgml-doctools	1.1.1	7.2RC2
 
-driver/xf86-input-acecad	1.2.2	7.4	needs-update
-driver/xf86-input-calcomp	1.1.2	7.4	needs-update
-driver/xf86-input-citron	2.2.1	7.4	needs-update
-driver/xf86-input-digitaledge	1.1.1	7.1	needs-update
-driver/xf86-input-dmc		1.1.2	7.4	needs-update
-driver/xf86-input-dynapro	1.1.2	7.4	needs-update
-driver/xf86-input-elo2300	1.1.2	7.4	needs-update
-driver/xf86-input-elographics	1.2.2	7.4	needs-update
-driver/xf86-input-fpit		1.2.0	7.4	needs-update
-driver/xf86-input-hyperpen	1.2.0	7.4	needs-update
-driver/xf86-input-jamstudio	1.2.0	7.4	needs-update
-driver/xf86-input-joystick	1.3.1	7.4	needs-update
+driver/xf86-input-acecad	1.2.2	7.4
+driver/xf86-input-calcomp	1.1.2	7.4
+driver/xf86-input-citron	2.2.1	7.4
+driver/xf86-input-digitaledge	1.1.1	7.1
+driver/xf86-input-dmc		1.1.2	7.4
+driver/xf86-input-dynapro	1.1.2	7.4
+driver/xf86-input-elo2300	1.1.2	7.4
+driver/xf86-input-elographics	1.2.2	7.4
+driver/xf86-input-fpit		1.2.0	7.4
+driver/xf86-input-hyperpen	1.2.0	7.4
+driver/xf86-input-jamstudio	1.2.0	7.4
+driver/xf86-input-joystick	1.3.2	7.4
 driver/xf86-input-keyboard	1.3.1	7.4	needs-update
-driver/xf86-input-magellan	1.2.0	7.4	needs-update
+driver/xf86-input-magellan	1.2.0	7.4
 driver/xf86-input-magictouch	1.0.0.5	7.0
-driver/xf86-input-microtouch	1.2.0	7.4	needs-update
+driver/xf86-input-microtouch	1.2.0	7.4
 driver/xf86-input-mouse		1.3.0	7.4	needs-update
-driver/xf86-input-mutouch	1.2.0	7.4	needs-update
-driver/xf86-input-palmax	1.2.0	7.4	needs-update
-driver/xf86-input-penmount	1.3.0	7.4	needs-update
-driver/xf86-input-spaceorb	1.1.1	7.1	needs-update
-driver/xf86-input-summa		1.2.0	7.4	needs-update
-driver/xf86-input-tek4957	1.2.0	7.4	needs-update
-driver/xf86-input-ur98		1.1.0	7.1
-driver/xf86-input-vmmouse	12.5.1	7.4	needs-update
-driver/xf86-input-void		1.1.1	7.1	needs-update
+driver/xf86-input-mutouch	1.2.0	7.4
+driver/xf86-input-palmax	1.2.0	7.4
+driver/xf86-input-penmount	1.3.0	7.4
+driver/xf86-input-spaceorb	1.1.1	7.1
+driver/xf86-input-summa		1.2.0	7.4
+driver/xf86-input-tek4957	1.2.0	7.4
+driver/xf86-input-vmmouse	12.5.1	7.4
+driver/xf86-input-void		1.1.1	7.1
 driver/xf86-video-apm		1.2.0	7.4
-driver/xf86-video-ark		0.7.0	7.4	needs-update
-driver/xf86-video-ast		0.85.0	7.4	needs-update
+driver/xf86-video-ark		0.7.0	7.4
+driver/xf86-video-ast		0.85.0	7.4
 driver/xf86-video-ati		6.9.0	7.4
-driver/xf86-video-chips		1.2.0	7.4	needs-update
+driver/xf86-video-chips		1.2.0	7.4
 driver/xf86-video-cirrus	1.2.1	7.4	needs-update
 driver/xf86-video-cyrix		1.1.0	7.1
 driver/xf86-video-dummy		0.3.0	7.4	needs-update
-driver/xf86-video-geode		2.10.0	7.4
+driver/xf86-video-geode		2.10.1	7.4	needs-update
 driver/xf86-video-glint		1.2.0	7.4	needs-update
 driver/xf86-video-i128		1.3.0	7.4	needs-update
 driver/xf86-video-i740		1.2.0	7.4	needs-update

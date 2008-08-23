@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.33 2008/08/21 05:10:48 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.34 2008/08/23 21:17:43 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -90,3 +90,7 @@ Version:	1.1
 Current Vers:	1.1
 Maintainer:	matthieu@openbsd.org
 Archive Site:	http://www.xenocara.org/src
+
+Package:	xf86-input-gunze
+Maintainer:	Alessandro Rubini <rubini@linux.it>
+Archive Site:	http://www.linux.it/~rubini/software/gunzets/gunzets.html
