@@ -29,6 +29,7 @@ sunffb_drv_la_LDFLAGS = -module -avoid-version
 sunffb_drv_ladir = @moduledir@/drivers
 
 if SPARC
+AM_CFLAGS += -DUSE_VIS
 SPARC_ASM_SRC = ffb_asm.s VISmoveImage.s
 endif
 
