@@ -1,45 +1,377 @@
-2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+commit 929b72352110b8d5dcdf74bec21694d8de9f948c
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Jun 10 22:01:08 2008 +0200
 
-	* configure.ac:
-	* src/xf86Elo.c:
-	Unlibcwrap.  Bump server version requirement.  Bump to 1.1.0.
+    elographics 1.2.2
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit e95226c25f2e3278c455473445c987c653bd0a12
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Jun 10 21:57:11 2008 +0200
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    remove ChangeLog, add dist hook
+    
+    Remove ChangeLog from the tree, and add a git dist hook to generate
+    it automatically.
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 5b62ac1efec42ad725733d8acaf1c2450224a9d0
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 26 22:06:55 2008 +0930
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Check for XINPUT ABI 3.
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 174a043bbad20de2959cc08736f894ef56536ece
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 15:00:44 2008 -0400
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    elographics 1.2.1
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 0133d754c10341ca5b572beeee72488b8f5ae8a8
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Thu May 1 12:03:44 2008 +0930
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Don't divide by zero. #14902
+    
+    X.Org Bug 14902 <http://bugs.freedesktop.org/show_bug.cgi?id=14902>
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit d639f87a52aac179ef9d0908c012e79baf5fa245
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 20 15:30:00 2008 -0400
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    elographics 1.2.0
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit 6726525b14d1ad222e16e30deffc37404dc196b4
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 22:55:12 2008 +0100
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    Makefile.am: nuke RCS Id
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 72408c2404246b9cb4698bd45be439be8ced3c23
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Thu Feb 28 09:30:24 2008 +1030
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    Wrap the content of ReadInput into a loop. Bug #14109
+    
+    There may be more than one packet waiting for us at a time, so loop until we
+    don't get one anymore.
+    
+    This patch is untested for lack of a device, but should fix
+    X.Org Bug 14109 <http:/bugs.freedesktop.org/show_bug.cgi?id=14109>
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit ed8626d307bb49ced738ac4a5b1d469cef030596
+Author: Benjamin Close <Benjamin.Close@clearchain.com>
+Date:   Wed Jan 9 09:58:11 2008 +1030
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+    Remove reliance on xf86_ansic.h
+    
+    xf86_ansic.h is no longer part of the xorg hence this causes
+    compilations failures on some architectures
+    
+    Found by: Tinderbox
+
+commit 79a2199b8c753aeca6cc9cbbf69e568558a61853
+Author: Jaroslaw Siebert <y0g1@poczta.wp.pl>
+Date:   Fri Dec 28 16:16:01 2007 +1030
+
+    Bug #13248: use -1, -1 as min/max value for valuators.
+    
+    If we specify a min/max value for our valuators, the X server will clip any
+    coordinates at these values.
+    
+    This fixes the second issue reported in #13248
+    
+    X.Org Bugzilla #13248 <https://bugs.freedesktop.org/show_bug.cgi?id=13248>
+
+commit 0e04b7142a04fa5e4af57a8056c6010ba49c1359
+Author: Jaroslaw Siebert <y0g1@poczta.wp.pl>
+Date:   Fri Dec 28 16:13:09 2007 +1030
+
+    Bug #13248: pass the correct coordinates to the DDX.
+    
+    cur_x and cur_y are the packets we get from the deviec, but after scaling the
+    actual coordinates we need to only deal with x and y.
+    
+    This fixes one issue reported Bug #13248.
+    
+    X.Org Bugzilla #13248 <https://bugs.freedesktop.org/attachment.cgi?id=13248>
+
+commit e4071358e3047127fe0476cab3e9fb63e180e940
+Author: Daniel Drake <d.drake@mmm.com>
+Date:   Fri Dec 28 16:04:11 2007 +1030
+
+    Bug #9803: Don't allow zero-sized width/height.
+    
+    A bad configuration can result in height or width being zero. This potentially
+    causes a divide-by-zero error in xf86EloConvert().
+    Detect the bad configuration early on and produce a meaningful error message.
+    
+    X.Org Bugzilla #9803 <https://bugs.freedesktop.org/show_bug.cgi?id=9803>
+
+commit 768c17328041e2f3e59d25251772cb3be164ba71
+Author: Daniel Drake <ddrake@brontes3d.com>
+Date:   Tue May 29 11:58:00 2007 -0800
+
+    Bug #11087: xf86-input-elographics COPYING file
+    
+    X.Org Bugzilla #11087 <https://bugs.freedesktop.org/show_bug.cgi?id=11087>
+
+commit 24aa22caacb99d6bb0b1187e3ad618ce3fba70c2
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:52:07 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit 6c08d0ebdedfabccf8aa5883757baefe68d66881
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:25:25 2007 -0400
+
+    Rename .cvsignore to .gitignore
+
+commit 9770760ddcbe14b0631ad1a6e25626c5560e4b81
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Mon Aug 6 23:12:51 2007 +0200
+
+    Use PACKAGE_VERSION_MAJOR/MINOR/PATCHLEVEL in version_rec
+
+commit b81e0064d99dd22d2bea8eaf65a9331da9166ab0
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:56 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 8317c2502e8cafb82b61754bbfe9e3c101a7699f
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:50 2005 +0000
+
+    Stub COPYING files
+
+commit 2d672e739310333da2bc480acc7afe6b09400d0b
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:14 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 1870d409267f67b8e1a7497deea8721a26ce9cb9
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:29 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit ffe759062efc75f69bc254ddbd595322f88fd1ad
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:30 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 15ec88033a6020f442746ff178bf87406fc2555d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:05 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit d882f2f5febc0bae5cd8fe5bbfeb37f756fa4eb7
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:55 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 4f8ade63683986e30ffd9281b0e58bc990b4d05c
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:06 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 46f8d88b896cb0415dd85640ae454640e82c2742
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:03 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit 970d941ec49ff81012a77f4f33ddc21f318626e5
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:11 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit b471db40377061af89f87634e31ced3d5ba8c98e
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:49 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit d371e549a4989280187a7394c64abe20c403b0db
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:00 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit b4809879c5b3697321cd5816ef2d0e0355c1064d
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:51 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 1845452d66d56b059504c746062b5713fa4dc16c
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:27 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit aafac4990d3b5a84a4417fd3695ab9491cd061ff
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:08:55 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 3d1ff1b859ab45975dcbeb22b4f313e5aed21849
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Aug 26 07:02:21 2005 +0000
+
+    Update elographics manpage to list supported options. (Debian #075)
+
+commit 6d7d6af9ac22ba89bdd48cbe3901fb47eab89b6e
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:38 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 5410d26cb4a8df005a1ee9cb7f4ec05d5371b0e0
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Aug 10 14:07:22 2005 +0000
+
+    Don\'t lose existing CFLAGS in all the input drivers and some of the video
+        drivers
+
+commit f61c90d5044b256497ea55fe032e3e67866cd27f
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:40 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit c81438a87f7848219d1a5755f02a784dfda92601
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 13 20:03:21 2005 +0000
+
+    Make the module dir configurable
+
+commit 9bf5e9b174d7c1e9c0633f0e170e5c15ba39c80f
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 13 02:20:59 2005 +0000
+
+    Update all input drivers to pass distcheck
+
+commit 7a0b4563a7adcd55248385201cf3753c1b41015a
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Jul 12 06:15:08 2005 +0000
+
+    Build skeletons for input drivers. Should basically work.
+
+commit f431f54c20f49bf7b97d4f2372c4e67539302fa8
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:37:59 2005 +0000
+
+    Prep input drivers for modularizing by adding guarded #include "config.h"
+
+commit cd258fd520d115a605affda749b4fd5f416c05e5
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Jul 3 08:53:45 2005 +0000
+
+    Change <X11/misc.h> and <X11/os.h> to "misc.h" and "os.h".
+
+commit 32567780acdea6626cb15ba5e38da1414c99ed68
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Jul 1 22:43:22 2005 +0000
+
+    Change all misc.h and os.h references to <X11/foo.h>.
+
+commit fe9ef3971d71d3a0433248bc410f8c2583971c77
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jun 27 18:32:54 2005 +0000
+
+    Various input drivers set their InputDriverRec to be static when doing a
+        loadable build, and the same symbol can't be both static and _X_EXPORT.
+        Pointed out by Alan Coopersmith.
+
+commit 281313f638e1f06a961c940b814b428e21f415de
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:17:01 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 349fefb716abd06a7f83c516b941b791d86d6f13
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:33 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 01dc1c093d816ed484b91c0497666bd8a440e3b4
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Sep 22 04:59:31 2004 +0000
+
+    Bug #506: Fix pointer behaviour when using multiple Elographics
+        touchscreens, from Miroslav Halas.
+
+commit 9a0f97bdde8102e82b51ea77bc03175008d9df77
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Jul 26 22:52:31 2004 +0000
+
+    - Use xf86RemoveEnabledDevice() in the DEVICE_OFF case too. Fixes a lock-up
+        after server reset.
+    - Call InitPtrFeedbackClassDeviceStruct() during DEVICE_INIT phase, in
+        order to avoid a segfault in the X server caused by 'xset q'.
+
+commit 1935b4e30e802f262a83e8f54bbd79495c91105d
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:54:03 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 7802f66b7de5f23346db1375e6ed05798090b5c3
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:51 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit d32fb56460dc7964a0b71bcad09109e9a35a3f51
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:33 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 79d5c25f6b29453b61783967180ce6fd94c67f84
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:36:00 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 9a9dded704fc947f9a7d7a070e6a472739c6bb08
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:34 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 9ca79d831761a0c9e6e115c4885f3dd8a11786f4
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:56 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 04636ebbd2f9ee1f360f8d731d00b2665e010e57
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:56 2003 +0000
+
+    Initial revision

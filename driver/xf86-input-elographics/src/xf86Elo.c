@@ -57,14 +57,13 @@
 
 #ifdef XFREE86_V4
 
+#ifndef XFree86LOADER
 #include <unistd.h>
 #include <errno.h>
-#include <string.h>
+#endif
 
 #include "misc.h"
 #include "xf86.h"
-#if !defined(DGUX)
-#endif
 #include "xf86_OSproc.h"
 #include "xf86Xinput.h"
 #include "exevents.h"
@@ -724,6 +723,9 @@ xf86EloConvert(LocalDevicePtr	local,
 
   DBG(3, ErrorF("EloConvert: Screen(%d) - v0(%d), v1(%d)\n", priv->screen_no, v0, v1));
 
+  if (width == 0) width = 1;
+  if (height == 0) height = 1;
+
   if (priv->swap_axes) {
     input_x = v1;
     input_y = v0;
@@ -805,69 +807,67 @@ xf86EloReadInput(LocalDevicePtr	local)
   /*
    * Try to get a packet.
    */
-  if (xf86EloGetPacket(priv->packet_buf,
+  while (xf86EloGetPacket(priv->packet_buf,
 		       &priv->packet_buf_p,
 		       &priv->checksum,
-		       local->fd) != Success) {
-    return;
-  }
+		       local->fd) == Success) {
+      /*
+       * Process only ELO_TOUCHs here.
+       */
+      if (priv->packet_buf[1] == ELO_TOUCH) {
+          /*
+           * First stick together the various pieces.
+           */
+          cur_x = WORD_ASSEMBLY(priv->packet_buf[3], priv->packet_buf[4]);
+          cur_y = WORD_ASSEMBLY(priv->packet_buf[5], priv->packet_buf[6]);
+          state = priv->packet_buf[2] & 0x07;
 
-  /*
-   * Process only ELO_TOUCHs here.
-   */
-  if (priv->packet_buf[1] == ELO_TOUCH) {
-    /*
-     * First stick together the various pieces.
-     */
-    cur_x = WORD_ASSEMBLY(priv->packet_buf[3], priv->packet_buf[4]);
-    cur_y = WORD_ASSEMBLY(priv->packet_buf[5], priv->packet_buf[6]);
-    state = priv->packet_buf[2] & 0x07;
-
-  /* 
-   * MHALAS: Based on the description in xf86XInputSetScreen
-   * this code must be called from ReadInput BEFORE any events
-   * are posted but this method is called FROM xf86PostMotionEvent
-   * Therefore I have moved this method into xf86EloReadInput
-   */
+          /* 
+           * MHALAS: Based on the description in xf86XInputSetScreen
+           * this code must be called from ReadInput BEFORE any events
+           * are posted but this method is called FROM xf86PostMotionEvent
+           * Therefore I have moved this method into xf86EloReadInput
+           */
 #ifdef XFREE86_V4
-  /*
-   * Need to check if still on the correct screen.
-   * This call is here so that this work can be done after
-   * calib and before posting the event.
-   */
+          /*
+           * Need to check if still on the correct screen.
+           * This call is here so that this work can be done after
+           * calib and before posting the event.
+           */
 
-   DBG(3, ErrorF("EloConvert Before Fix: Screen(%d) - x(%d), y(%d)\n", priv->screen_no, x, y));
-   v0 = cur_x; /* based on the debug output this is what v0 is */
-   v1 = cur_y; /* based on the debug output this is what v0 is */
-   /* 
-    * Use the conversion method to send correct coordinates
-    * since it contains all necessary logic
-    */
-   xf86EloConvert(local, first, num, v0, v1, v2, v3, v4, v5, &x, &y);
-   DBG(3, ErrorF("EloConvert During Fix: Screen(%d) - x(%d), y(%d)\n", priv->screen_no, x, y));
-   xf86XInputSetScreen(local, priv->screen_no, x, y);
-   DBG(3, ErrorF("EloConvert After Fix: Screen(%d) - x(%d), y(%d)\n", priv->screen_no, x, y));
+          DBG(3, ErrorF("EloConvert Before Fix: Screen(%d) - x(%d), y(%d)\n", priv->screen_no, x, y));
+          v0 = cur_x; /* based on the debug output this is what v0 is */
+          v1 = cur_y; /* based on the debug output this is what v0 is */
+          /* 
+           * Use the conversion method to send correct coordinates
+           * since it contains all necessary logic
+           */
+          xf86EloConvert(local, first, num, v0, v1, v2, v3, v4, v5, &x, &y);
+          DBG(3, ErrorF("EloConvert During Fix: Screen(%d) - x(%d), y(%d)\n", priv->screen_no, x, y));
+          xf86XInputSetScreen(local, priv->screen_no, x, y);
+          DBG(3, ErrorF("EloConvert After Fix: Screen(%d) - x(%d), y(%d)\n", priv->screen_no, x, y));
 #endif
 
-    /*
-     * Send events.
-     *
-     * We *must* generate a motion before a button change if pointer
-     * location has changed as DIX assumes this. This is why we always
-     * emit a motion, regardless of the kind of packet processed.
-     */
-    xf86PostMotionEvent(local->dev, TRUE, 0, 2, cur_x, cur_y);
-    
-    /*
-     * Emit a button press or release.
-     */
-    if (state == ELO_PRESS || state == ELO_RELEASE) {
-      xf86PostButtonEvent(local->dev, TRUE, 1, state == ELO_PRESS, 0, 2, cur_x, cur_y);
-    }
-    
-    DBG(3, ErrorF("TouchScreen: x(%d), y(%d), %s\n",
-		  cur_x, cur_y,
-		  (state == ELO_PRESS) ? "Press" : ((state == ELO_RELEASE) ? "Release" : "Stream")));
+          /*
+           * Send events.
+           *
+           * We *must* generate a motion before a button change if pointer
+           * location has changed as DIX assumes this. This is why we always
+           * emit a motion, regardless of the kind of packet processed.
+           */
+          xf86PostMotionEvent(local->dev, TRUE, 0, 2, x, y);
+
+          /*
+           * Emit a button press or release.
+           */
+          if (state == ELO_PRESS || state == ELO_RELEASE) {
+              xf86PostButtonEvent(local->dev, TRUE, 1, state == ELO_PRESS, 0, 2, x, y);
+          }
+
+          DBG(3, ErrorF("TouchScreen: x(%d), y(%d), %s\n",
+                      cur_x, cur_y,
+                      (state == ELO_PRESS) ? "Press" : ((state == ELO_RELEASE) ? "Release" : "Stream")));
+      }
   }
 }
 
@@ -1340,17 +1340,21 @@ xf86EloControl(DeviceIntPtr	dev,
        * max and min values scaled from the approximate size of the
        * screen to fit one meter.
        */
-      if (InitValuatorClassDeviceStruct(dev, 2, xf86GetMotionEvents,
+      if (InitValuatorClassDeviceStruct(dev, 2,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
+                  xf86GetMotionEvents,
+#endif
 					local->history_size, Absolute) == FALSE) {
 	ErrorF("Unable to allocate Elographics touchscreen ValuatorClassDeviceStruct\n");
 	return !Success;
       }
       else {
-	InitValuatorAxisStruct(dev, 0, priv->min_x, priv->max_x,
+	/* I will map coordinates myself */
+	InitValuatorAxisStruct(dev, 0, -1, -1,
 			       9500,
 			       0     /* min_res */,
 			       9500  /* max_res */);
-	InitValuatorAxisStruct(dev, 1, priv->min_y, priv->max_y,
+	InitValuatorAxisStruct(dev, 1, -1, -1,
 			       10500,
 			       0     /* min_res */,
 			       10500 /* max_res */);
@@ -1689,6 +1693,7 @@ xf86EloInit(InputDriverPtr	drv,
   EloPrivatePtr		priv=NULL;
   char			*str;
   int			portrait = 0;
+  int			height, width;
   
   local = xf86EloAllocate(drv);
   if (!local) {
@@ -1755,11 +1760,21 @@ xf86EloInit(InputDriverPtr	drv,
     str = "Landscape";
   }
   xf86Msg(X_CONFIG, "Elographics device will work in %s mode\n", str);      
-  
-  if (priv->max_x - priv->min_x <= 0) {
+
+  width = priv->max_x - priv->min_x;
+  height = priv->max_y - priv->min_y;
+  if (width == 0) {
+    xf86Msg(X_ERROR, "Elographics: Cannot configure touchscreen with width 0\n");
+    return local;
+  }
+  else if (width < 0) {
     xf86Msg(X_INFO, "Elographics: reverse x mode (minimum x position >= maximum x position)\n");
-  }  
-  if (priv->max_y - priv->min_y <= 0) {
+  }
+  if (height == 0) {
+    xf86Msg(X_ERROR, "Elographics: Cannot configure touchscreen with height 0\n");
+    return local;
+  }
+  else if (height < 0) {
     xf86Msg(X_INFO, "Elographics: reverse y mode (minimum y position >= maximum y position)\n");
   }
 
@@ -1823,7 +1838,7 @@ static XF86ModuleVersionInfo version_rec = {
   MODINFOSTRING1,
   MODINFOSTRING2,
   XORG_VERSION_CURRENT,
-  1, 1, 0,
+  PACKAGE_VERSION_MAJOR, PACKAGE_VERSION_MINOR, PACKAGE_VERSION_PATCHLEVEL,
   ABI_CLASS_XINPUT,
   ABI_XINPUT_VERSION,
   MOD_CLASS_XINPUT,
