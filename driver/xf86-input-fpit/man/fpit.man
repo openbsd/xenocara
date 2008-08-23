@@ -23,11 +23,15 @@ driver functions as a pointer input device, and may be used as the
 X server's core pointer.
 .SH SUPPORTED HARDWARE
 This driver supports the touchscreen of the Stylistic LT and (with
-special options) of the Stylistic 500, 1000 and 2300.
+special options) of the Stylistic 500, 1000, 1200, 2300, and 3400.
+Modern FinePoint MP800 devices will also work with this driver.
 
-Under Linux the Fujitsus serial port is not, by default, detected.
-Therefore the following must be added to one of your start-up scripts.
-(Either one of the X scripts, or to rc.local or similar).
+Under Linux the Fujitsu's serial port is not, by default, detected.
+Therefore the port must be configured manually as described in the
+accompanying readme.txt file.
+
+For example, add the following to your startup scripts for Stylistic xx00
+devices:
 
 .TP 4
 .B setserial /dev/ttyS3 autoconfig
@@ -70,12 +74,13 @@ Same as for X axis, but for Y axis.
 Invert the specified axis.
 .TP 4
 .B Option \fI"SwapXY"\fP
-Swap the X and Y axis.
+Swap the X and Y axis (after inversions).
 .TP 4
 .B Option \fI"Rotate"\fP \fI"CW"\fP
 .B Option \fI"Rotate"\fP \fI"CWW"\fP
 Manipulate the invert and swap options to match screen
-rotations.
+rotations. (Will behave strangely if combined with invert or swap options.)
+New users should consider the \fI"TrackRandR"\fP option instead.
 .TP 4
 .B Option \fI"DeviceName"\fP \fI"name"\fP
 .B Option \fI"DeviceName"\fP \fI"name"\fP
@@ -92,11 +97,14 @@ enabled for any other value.
 .B Option \fI"DebugLevel"\fP \fInumber \fP
 sets the level of debugging info reported.
 .TP 4
-.B Option \fI"BaudRate"\fP \fI"38400"\fP, \fI"19200"\fP or \fI"9600"\fP (default)
+.B Option \fI"BaudRate"\fP \fI"38400"\fP, \fI"19200"\fP (default) or \fI"9600"\fP
 changes the serial link speed.
 .TP 4
 .B Option \fI"Passive"\fP
 decodes the passive pen.
+.B Option \fI"TrackRandR"\fP
+automatically keeps the cursor synchronized with the pen's position, even when
+the screen is resized or rotated. (Recommended for tablet PC's.)
 .RE
 
 Example, for Stylistic LT setup is:
@@ -105,6 +113,7 @@ Example, for Stylistic LT setup is:
 .BI "  Identifier \*q" mouse0 \*q
 .B  "  Driver \*qfpit\*q"
 .BI "  Option \*qDevice\*q   \*q"/dev/ttyS3 \*q
+.BI "  # Option \*qTrackRandR\*q"
 .B EndSection
 .fi
 
@@ -120,6 +129,7 @@ And for other Stylistic devices try:
 .BI "  Option \*qMinimumXPosition\*q \*q"130 \*q
 .BI "  Option \*qMinimumYPosition\*q \*q"0 \*q
 .BI "  Option \*qInvertY\*q"
+.BI "  # Option \*qTrackRandR\*q"
 .B EndSection
 .fi
 
@@ -136,6 +146,7 @@ For Stylistic 3400:
 .BI "  Option \*qMinimumYPosition\*q \*q"0 \*q
 .BI "  Option \*qPassive\*q"
 .BI "  Option \*qSendCoreEvents\*q"
+.BI "  # Option \*qTrackRandR\*q"
 .B EndSection
 .fi
 

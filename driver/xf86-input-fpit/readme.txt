@@ -1,15 +1,8 @@
 xf86Fpit.c
 (and associated files).
 
-Documentation updated by John Apfelbaum, linuxslate.com Oct 2001
-
-***    P L E A S E     N O T E    ***
-*  Due to a Hardrive failure, the version of this driver that was previously
-*  on the linuxslate.com website was lost. This is a version came from a
-*  directory on my development system that was marked "Works", and I belive it
-*  to be the latest version I worked on (about a year ago), but I have not had
-*  time to build from this source and verify this driver.
-***
+Last updated Jan 2007
+This information applies to version 1.1.0 of this driver.
 
 Supported Hardware:
 
@@ -19,6 +12,8 @@ Supported Hardware:
 	Fujistu Stylistic 1000  (Should Work)
 	Fujistu Stylistic 1200  (Should Work)
 	Fujistu Stylistic 2300  (Should Work)
+	Fujitsu Stylistic 3400  (and possibly other passive-pen systems)
+	FinePoint MP800
 
 History and Contributors:
 
@@ -30,9 +25,11 @@ History and Contributors:
    project into the XFree86 4.0.2 Elographics driver by Patrick Lecoanet.
 -  John Apfelbaum continuted the work to produce a working XFree86 4.0.x driver for the
    Stylistic 1200.  
--  David Clay added support for Stylistic 3400 passive pen.
+-  David Clay added support for Stylistic 3400 passive pen, and possibly
+   others. (Also fixed processing of all packets, and enabled right mouse button.)
 
-Please visit http://linuxslate.com for the latest information.
+Please visit http://webcvs.freedesktop.org/xorg/driver/xf86-input-fpit/ for the
+latest version of this driver.
 
 License:
 
@@ -52,73 +49,56 @@ Please visit http://XFree86.org for license information.
 
 Installation:
 
-THIS RELEASE IS FOR XFree86 Version 4.0.2. Hopefully it will also work
-with other Version 4 systems. The source is written so that hopefully
-it can be compiled under 3.3.6 - THIS HAS NOT BEEN TESTED (yet).
-
-Copied from original xf86fpit.c readme:
-
 1.  Install and configure Linux w/o consideration of the digitizer tablet.
 2.  Get X working the way you want it. 
-3.  Add or Change your appropriate startup scripts to include:
+3.  Set up a serial device to be initialized at startup.
+    Modify /etc/serial.conf if your distribution uses it. Otherwise
+    add or modify your appropriate startup scripts to include:
 
 setserial /dev/ttyS3 autoconfig
-setserial /dev/ttyS3 IRQ 15 baud_base 115200
-(Some models may also have to specify:  port 0xfce8)
+setserial /dev/ttyS3 port ??? IRQ ?? baud_base 115200 [uart 16450]
 
-
-New/Different for Ver 4.0.2
+The uart setting may be necessary for the device to work.
+See below for appropriate port/IRQ values.
 
 4.  Copy fpit_drv.o to /usr/X11R6/lib/modules/input
 
-5.  Add the following to your XF86Config(-4) file:
+5.  Add the following to your X config file (XF86Config/XF86Config-4/xorg.conf)
 
 Section "InputDevice"
 	Identifier	"mouse0"
 	Driver		"fpit"
 	Option		"Device"	"/dev/ttyS3"
+	# These may need tweaking; see below.
 	Option		"BaudRate"	"19200"
 	Option		"MaximumXPosition"	"6250"
 	Option		"MaximumYPosition"	"4950"
 	Option		"MinimumXPosition"	"130"
 	Option		"MinimumYPosition"	"0"
 	Option		"InvertY"
+	# For a passive pen, e.g. Stylistic 3400
+	Option		"Passive"
+	# To make the touchscreen respond automatically to
+	# resolution changes and screen rotation:
+	Option		"TrackRandR"
 EndSection
 
 6. Remember to add this Input Device to the server description (Near the end of the file.)
 
 7. Start or restart X.
 
-8. If required adjust the Min/Max X/Y positions so that the pointer
+8. If required adjust the baud rate and Min/Max X/Y positions so that the pointer
    tracks the pen correctly.
 
+For Fujitsu Stylistic xx00 models, try IRQ 15, with port either unspecified
+ or set to 0xfce8.
 
-New for Ver 4.5.0
+For Fujitsu Stylistic 3400 models, try IRQ 4 and port 0xfd68.
+ Recommended X config settings are BaudRate 9600, Min X/Y 0, MaxX 4070, MaxY 4020.
 
- * supports Stylistic 3400 (and possibly other passive-pen systems)
- * Fixed processing of all packets
- * Fixed hover-mode pointer movement
- * Added Passive parameter for passive displays
- * Added switch 3 for "right" mouse button
-
-Try this serial configuration for the 3400:
-
-setserial /dev/ttyS3 autoconfig
-setserial /dev/ttyS3 uart 16450 irq 5 port 0xfd68
-
-Try this config for the 3400:
-Section "InputDevice"
-    Identifier "mouse0"
-    Driver     "fpit"       
-    Option     "Device"   "/dev/ttyS3"
-    Option     "BaudRate" "9600"   
-    Option     "Passive"
-    Option     "MaximumXPosition" "4070"  
-    Option     "MaximumYPosition" "4020"  
-    Option     "MinimumXPosition" "0"     
-    Option     "MinimumYPosition" "0"  
-    Option     "SendCoreEvents"
-EndSection
+In general you may wish to consult /proc/ioports or /sys/devices/pnp0/*
+(under Linux 2.6) for serial information. BaudRate should generally be 9600,
+19200, or 38400.
 
 
 Hints if you are having problems (Thanks to Aron Hsiao):
@@ -135,12 +115,18 @@ This should be re-stating the defaults, but Aron Hsiao agrees that it appears
 to be an XFree86 4.x bug. 
 
 Problem 2:  X Server crash during GUI startup (Particularly Gnome). 
+            Or: programs using high-resolution pen tracking via XInput
+            don't work.
 
 Solution:   You must have a regular mouse defined as the default pointer
 	    even if no mouse is used.  During startup, Gnome attempts to
 	    set mouse acceleration for the default pointer.  Since the
 	    pendrivers are absolute pointers, and acceleration is meaningless,
 	    they do not take well to attempts to set it :-)
+
+	    Additionally, setting the tablet as a core pointer prevents X
+            from sending XInput events. This lowers the pen-tracking
+            resolution available to programs by 1 or 2 orders of magnitude!
 
 Problem 3:  Jittery cursor and undesired mouse clicks (both buttons),
             particuarly on the Stylistic 1200, and particuarly after the
@@ -152,11 +138,12 @@ Solution:   (Not really a solution) This is a hardware problem.  Some
 	    actively using it extends battery life, and keeps the system from
 	    getting too hot.
 
+            If cursor movement seems completely random and mouse clicks seem
+            inexplicable, your baud rate may be set incorrectly.
+
 Bugs and Needed Work:
 
 (See above)
-
-X rotation (Portrait mode is not supported). -- I plan to add this soon.
 
 Adjusting the constants in the XF86Config(-4) is teedious and requires
 multiple restarts of the X Window system.  -- Somebody PLEASE write a
