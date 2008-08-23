@@ -267,9 +267,11 @@ VMMouseClient_GetInput (PVMMOUSE_INPUT_DATA pvmmouseInput) {
    pvmmouseInput->Flags = (packetInfo & 0xffff0000) >> 16;
    pvmmouseInput->Buttons = (packetInfo & 0x0000ffff);
 
-   pvmmouseInput->X = vmpc.out.vEbx & 0xffff;
-   pvmmouseInput->Y = vmpc.out.vEcx & 0xffff;
+   /* Note that Z is always signed, and X/Y are signed in relative mode. */
+   pvmmouseInput->X = (int)vmpc.out.vEbx;
+   pvmmouseInput->Y = (int)vmpc.out.vEcx;
    pvmmouseInput->Z = (int)vmpc.out.vEdx;
+
    /*
     * Return number of packets (including this one) in queue.
     */
