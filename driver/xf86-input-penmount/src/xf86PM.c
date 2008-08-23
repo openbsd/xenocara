@@ -2,6 +2,12 @@
  * Copyright (c) 1999  Machine Vision Holdings Incorporated
  * Author: David Woodhouse <David.Woodhouse@mvhi.com>
  * CoAuthor: Mayk Langer <langer@vsys.de>
+ * 
+ * History:
+ * 09/16/2005: Jaya Kumar <jayakumar.xorg@gmail.com> 
+ * - Added DMC9000 controller protocol support
+ * - DMC9000 support work was sponsored by CIS(M) Sdn Bhd
+ * 09/15/2005: Original code from David and Mark
  *
  * Template driver used: Copyright (c) 1998  Metro Link Incorporated
  *
@@ -67,7 +73,7 @@ static XF86ModuleVersionInfo VersionRec =
 	MODINFOSTRING1,
 	MODINFOSTRING2,
 	XORG_VERSION_CURRENT,
-	1, 1, 0,
+	PACKAGE_VERSION_MAJOR, PACKAGE_VERSION_MINOR, PACKAGE_VERSION_PATCHLEVEL,
 	ABI_CLASS_XINPUT,
 	ABI_XINPUT_VERSION,
 	MOD_CLASS_XINPUT,
@@ -115,7 +121,9 @@ static const char *reqSymbols[] = {
 	"xf86SetIntOption",
 	"xf86SetStrOption",
 	"xf86XInputSetScreen",
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 	"xf86XInputSetSendCoreEvents",
+#endif
 	NULL
 };
 
@@ -162,7 +170,155 @@ static const char *default_options[] =
  *	Function Definitions
  ****************************************************************************/
 
+static Bool
+ProcessDeviceInit(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr pInfo)
+{
+	unsigned char map[] =
+	{0, 1};
+	/*
+	 * these have to be here instead of in the SetupProc, because when the
+	 * SetupProc is run at server startup, screenInfo is not setup yet
+	 */
+	priv->screen_width = screenInfo.screens[priv->screen_num]->width;
+	priv->screen_height = screenInfo.screens[priv->screen_num]->height;
+		
+	/*
+	 * Device reports button press for 1 button.
+	 */
+	if (InitButtonClassDeviceStruct (dev, 1, map) == FALSE)
+		{
+			ErrorF ("Unable to allocate PenMount ButtonClassDeviceStruct\n");
+			return !Success;
+		}
+		
+	/*
+	 * Device reports motions on 2 axes in absolute coordinates.
+	 * Axes min and max values are reported in raw coordinates.
+	 */
+	if (InitValuatorClassDeviceStruct (dev, 2, xf86GetMotionEvents,
+					   pInfo->history_size, Absolute) == FALSE)
+		{
+			ErrorF ("Unable to allocate PenMount ValuatorClassDeviceStruct\n");
+			return !Success;
+		}
+	else
+		{
+			InitValuatorAxisStruct (dev, 0, priv->min_x, priv->max_x,
+						9500,
+						0 /* min_res */ ,
+						9500 /* max_res */ );
+			InitValuatorAxisStruct (dev, 1, priv->min_y, priv->max_y,
+						10500,
+						0 /* min_res */ ,
+						10500 /* max_res */ );
+		}
+		
+	if (InitProximityClassDeviceStruct (dev) == FALSE)
+		{
+			ErrorF ("unable to allocate PenMount ProximityClassDeviceStruct\n");
+			return !Success;
+		}
+		
+	if (InitPtrFeedbackClassDeviceStruct(dev, PenMountPtrCtrl) == FALSE)
+		{
+			ErrorF ("unable to allocate PenMount PtrFeedbackClassDeviceStruct\n");
+			return !Success;
+		}
+		
+	/* 
+	 * Allocate the motion events buffer.
+	 */
+	xf86MotionHistoryAllocate (pInfo);
+	return (Success);
+}
 
+static Bool
+DMC9000_ProcessDeviceOn(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr pInfo)
+{
+	unsigned char	buf[5] = { 0xF2, 0x00, 0x00, 0x00, 0x00 };
+	pInfo->fd = xf86OpenSerial(pInfo->options);
+	if (pInfo->fd == -1)
+	{
+		xf86Msg(X_WARNING, "%s: cannot open input device\n", pInfo->name);
+		return (!Success);
+	}
+
+	priv->buffer = XisbNew(pInfo->fd, 64);
+	if (!priv->buffer) 
+	{
+		xf86CloseSerial(pInfo->fd);
+		pInfo->fd = -1;
+		return (!Success);
+	}
+
+	XisbBlockDuration (priv->buffer, 500000);
+	if ( PenMountSendPacket(priv, buf, 5) == Success )
+	{
+		/* wait for right response */
+		priv->lex_mode = PenMount_Response0;
+		if (DMC9000_PenMountGetPacket (priv) == Success )
+		{
+			if ((priv->packet[0] == 0xF2) &&
+				(priv->packet[1] == 0xD9) &&
+				(priv->packet[2] == 0x0A)) 
+			{
+				/* enable the DMC9000 */	
+				buf[0] = 0xF1;
+				buf[1] = 0x00;
+				buf[2] = 0x00;
+				buf[3] = 0x00;
+				buf[4] = 0x00;
+				PenMountSendPacket(priv,buf,5);
+			}
+		}
+	}
+
+	XisbBlockDuration (priv->buffer, -1);
+	priv->lex_mode = PenMount_byte0;
+	
+	xf86FlushInput(pInfo->fd);
+	AddEnabledDevice (pInfo->fd);
+	dev->public.on = TRUE;
+	return (Success);
+}
+
+static Bool
+ProcessDeviceClose(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr pInfo)
+{
+	if (pInfo->fd != -1)
+		{ 
+			RemoveEnabledDevice (pInfo->fd);
+			if (priv->buffer)
+				{
+					XisbFree(priv->buffer);
+					priv->buffer = NULL;
+				}
+			xf86CloseSerial(pInfo->fd);
+		}
+	dev->public.on = FALSE;
+	return (Success);
+}
+
+static Bool
+DMC9000_DeviceControl (DeviceIntPtr dev, int mode)
+{
+	InputInfoPtr pInfo = dev->public.devicePrivate;
+	PenMountPrivatePtr priv = (PenMountPrivatePtr) (pInfo->private);
+
+	switch (mode)
+	{
+	case DEVICE_INIT:
+		return ProcessDeviceInit(priv, dev, pInfo);
+	case DEVICE_ON:
+		return DMC9000_ProcessDeviceOn(priv, dev, pInfo);
+	case DEVICE_OFF:
+	case DEVICE_CLOSE:
+		return ProcessDeviceClose(priv, dev, pInfo);
+	default:
+		return (BadValue);
+	}
+
+}
 
 static InputInfoPtr
 PenMountPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
@@ -228,12 +384,20 @@ PenMountPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->screen_num = xf86SetIntOption( pInfo->options, "ScreenNumber", 0 );
 	priv->button_number = xf86SetIntOption( pInfo->options, "ButtonNumber", 1 );
 	priv->swap_xy = xf86SetIntOption( pInfo->options, "SwapXY", 0 );
+	priv->invert_y = xf86SetIntOption( pInfo->options, "InvertY", 1 );
 	priv->buffer = NULL;
 	s = xf86FindOptionValue (pInfo->options, "ReportingMode");
 	if ((s) && (xf86NameCmp (s, "raw") == 0))
 		priv->reporting_mode = TS_Raw;
 	else
 		priv->reporting_mode = TS_Scaled;
+
+	s = xf86FindOptionValue (pInfo->options, "ControllerModel");
+	if ((s) && (xf86NameCmp (s, "DMC9000") == 0)) {
+		priv->chip = DMC9000;
+		pInfo->device_control = DMC9000_DeviceControl;
+		pInfo->read_input = DMC9000_ReadInput;
+	}
 
 	priv->proximity = FALSE;
 	priv->button_down = FALSE;
@@ -276,62 +440,7 @@ DeviceControl (DeviceIntPtr dev, int mode)
 	switch (mode)
 	{
 	case DEVICE_INIT:
-		/*
-		 * these have to be here instead of in the SetupProc, because when the
-		 * SetupProc is run at server startup, screenInfo is not setup yet
-		 */
-		priv->screen_width = screenInfo.screens[priv->screen_num]->width;
-		priv->screen_height = screenInfo.screens[priv->screen_num]->height;
-		
-		/*
-		 * Device reports button press for 1 button.
-		 */
-		if (InitButtonClassDeviceStruct (dev, 1, map) == FALSE)
-			{
-				ErrorF ("Unable to allocate PenMount ButtonClassDeviceStruct\n");
-				return !Success;
-			}
-		
-		/*
-		 * Device reports motions on 2 axes in absolute coordinates.
-		 * Axes min and max values are reported in raw coordinates.
-		 */
-		if (InitValuatorClassDeviceStruct (dev, 2, xf86GetMotionEvents,
-						   pInfo->history_size, Absolute) == FALSE)
-			{
-				ErrorF ("Unable to allocate PenMount ValuatorClassDeviceStruct\n");
-				return !Success;
-			}
-		else
-			{
-				InitValuatorAxisStruct (dev, 0, priv->min_x, priv->max_x,
-							9500,
-							0 /* min_res */ ,
-							9500 /* max_res */ );
-				InitValuatorAxisStruct (dev, 1, priv->min_y, priv->max_y,
-							10500,
-							0 /* min_res */ ,
-							10500 /* max_res */ );
-			}
-		
-		if (InitProximityClassDeviceStruct (dev) == FALSE)
-			{
-				ErrorF ("unable to allocate PenMount ProximityClassDeviceStruct\n");
-				return !Success;
-			}
-		
-		if (InitPtrFeedbackClassDeviceStruct(dev, PenMountPtrCtrl) == FALSE)
-			{
-				ErrorF ("unable to allocate PenMount PtrFeedbackClassDeviceStruct\n");
-				return !Success;
-			}
-		
-		/* 
-		 * Allocate the motion events buffer.
-		 */
-		xf86MotionHistoryAllocate (pInfo);
-		return (Success);
-		
+		return ProcessDeviceInit(priv, dev, pInfo);
 	case DEVICE_ON:
 		pInfo->fd = xf86OpenSerial(pInfo->options);
 		if (pInfo->fd == -1)
@@ -409,18 +518,7 @@ DeviceControl (DeviceIntPtr dev, int mode)
 		
 	case DEVICE_OFF:
 	case DEVICE_CLOSE:
-		if (pInfo->fd != -1)
-			{ 
-				RemoveEnabledDevice (pInfo->fd);
-				if (priv->buffer)
-					{
-						XisbFree(priv->buffer);
-						priv->buffer = NULL;
-					}
-				xf86CloseSerial(pInfo->fd);
-			}
-		dev->public.on = FALSE;
-		return (Success);
+		return ProcessDeviceClose(priv, dev, pInfo);
 	default:
 		return (BadValue);
 	}
@@ -552,13 +650,110 @@ ReadInput (InputInfoPtr pInfo)
 	}
 }
 
+static void
+DMC9000_ReadInput (InputInfoPtr pInfo)
+{
+	PenMountPrivatePtr priv = (PenMountPrivatePtr) (pInfo->private);
+	int x,y;
+	unsigned char opck[ PENMOUNT_PACKET_SIZE ];
+
+	/* 
+	 * set blocking to -1 on the first call because we know there is data to
+	 * read. Xisb automatically clears it after one successful read so that
+	 * succeeding reads are preceeded buy a select with a 0 timeout to prevent
+	 * read from blocking indefinately.
+	 */
+	XisbBlockDuration (priv->buffer, -1);
+	while (1)
+	{
+		unsigned int tmp;
+		memcpy(opck,priv->packet,5);
+		if ( DMC9000_PenMountGetPacket (priv) != Success )
+			break;
+		if ( priv->packet[0] == 0xff )
+		{
+			priv->pen_down = 1;
+		}
+		if ( priv->packet[0] == 0xbf ) 
+		{
+			priv->pen_down = 0;
+		}
+		x = ((((unsigned int) (priv->packet[1]&0x07)) << 7)  | (priv->packet[2]&0x7F));
+		y = ((((unsigned int) (priv->packet[3]&0x07)) << 7)  | (priv->packet[4]&0x7F));
+		if (priv->invert_y) 
+		{
+			y = priv->max_y - y;
+		}
+		if ( priv->swap_xy)
+		{
+			tmp = y;
+			y = x;
+			x = tmp;	
+		}
+		priv->packet[0] = priv->pen_down ? 0x01 : 0x00;
+
+		if (priv->reporting_mode == TS_Scaled)
+		{	
+			x = xf86ScaleAxis (x, 0, priv->screen_width, priv->min_x,
+					   priv->max_x);
+                        y = xf86ScaleAxis (y, 0, priv->screen_height, priv->min_y,
+					   priv->max_y);
+                }
+        		
+
+		xf86XInputSetScreen (pInfo, priv->screen_num, x, y);
+
+		if ((priv->proximity == FALSE) && (priv->packet[0] & 0x01))
+		{
+			priv->proximity = TRUE;
+			xf86PostProximityEvent (pInfo->dev, 1, 0, 2, x, y);
+		}              	
+		
+             /*
+                 * Send events.
+                 *
+                 * We *must* generate a motion before a button change if pointer
+                 * location has changed as DIX assumes this. This is why we always
+                 * emit a motion, regardless of the kind of packet processed.
+                 */
+
+                xf86PostMotionEvent (pInfo->dev, TRUE, 0, 2, x, y);
+
+                /*
+                 * Emit a button press or release.
+                 */
+                if ((priv->button_down == FALSE) && (priv->packet[0] & 0x01))
+
+                {
+                        xf86PostButtonEvent (pInfo->dev, TRUE,
+					     priv->button_number, 1, 0, 2, x, y);
+                        priv->button_down = TRUE;
+                }
+                if ((priv->button_down == TRUE) && !(priv->packet[0] & 0x01))
+                {
+                        xf86PostButtonEvent (pInfo->dev, TRUE,
+					     priv->button_number, 0, 0, 2, x, y);
+                        priv->button_down = FALSE;
+                }
+                /*
+                 * the untouch should always come after the button release
+                 */
+                if ((priv->proximity == TRUE) && !(priv->packet[0] & 0x01))
+                {
+                        priv->proximity = FALSE;
+                        xf86PostProximityEvent (pInfo->dev, 0, 0, 2, x, y);
+                }
+	}
+}
+
+
 /* 
  * The ControlProc function may need to be tailored for your device
  */
 static int
 ControlProc (InputInfoPtr pInfo, xDeviceCtl * control)
 {
-	xDeviceTSCalibrationCtl *c = (xDeviceTSCalibrationCtl *) control;
+	xDeviceAbsCalibCtl *c = (xDeviceAbsCalibCtl *) control;
 	PenMountPrivatePtr priv = (PenMountPrivatePtr) (pInfo->private);
 
         priv->min_x = c->min_x;
@@ -593,11 +788,13 @@ SwitchMode (ClientPtr client, DeviceIntPtr dev, int mode)
                 priv->reporting_mode = mode;
                 return (Success);
         }
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
         else if ((mode == SendCoreEvents) || (mode == DontSendCoreEvents))
         {
                 xf86XInputSetSendCoreEvents (pInfo, (mode == SendCoreEvents));
                 return (Success);
         }
+#endif
         else
                 return (!Success);   
 }
@@ -734,6 +931,72 @@ PenMountGetPacket (PenMountPrivatePtr priv)
 	}
 	return (!Success);
 }
+
+static Bool
+DMC9000_PenMountGetPacket (PenMountPrivatePtr priv)
+{
+	int count = 0;
+	int c;
+
+	while ((c = XisbRead (priv->buffer)) >= 0)
+	{
+		/* 
+		 * fail after 500 bytes so the server doesn't hang forever if a
+		 * device sends bad data.
+		 */
+		if (count++ > 500)
+			return (!Success);
+
+		switch (priv->lex_mode)
+		{
+		case PenMount_byte0:
+			if (( c != 0xff ) && ( c != 0xbf))
+				return (!Success);
+			priv->packet[0] = (unsigned char) c;
+			priv->lex_mode = PenMount_byte1;
+			break;
+
+		case PenMount_byte1:
+			priv->packet[1] = (unsigned char) c;
+			priv->lex_mode = PenMount_byte2;
+			break;
+			
+		case PenMount_byte2:
+			priv->packet[2] = (unsigned char) c;
+			priv->lex_mode = PenMount_byte3;
+			break;
+
+		case PenMount_byte3:
+			priv->packet[3] = (unsigned char) c;
+			priv->lex_mode = PenMount_byte4;
+			break;
+
+		case PenMount_byte4:
+			priv->packet[4] = (unsigned char) c;
+			priv->lex_mode = PenMount_byte0;
+			return (Success);
+			break;
+
+		case PenMount_Response0:
+			if ( c == 0xf2 )
+				priv->lex_mode = PenMount_Response1;
+			priv->packet[0] = (unsigned char) c;
+			break;
+
+		case PenMount_Response1:
+			priv->packet[1] = (unsigned char) c;
+			priv->lex_mode = PenMount_Response2;
+			break;
+		case PenMount_Response2:
+			priv->packet[2] = (unsigned char) c;
+			priv->lex_mode = PenMount_byte0;
+			return (Success);
+			break;
+		}
+	}
+	return (!Success);
+}
+
 
 static Bool
 PenMountSendPacket (PenMountPrivatePtr priv, unsigned char *buf, int len)

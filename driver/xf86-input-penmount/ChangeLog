@@ -1,45 +1,253 @@
-2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+commit 600e029c61c012c7a7eb1075a805fbc01681962a
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Jan 30 17:37:28 2008 -0200
 
-	* configure.ac:
-	* src/xf86PM.c:
-	Unlibcwrap.  Bump server version requirement.  Bump to 1.1.0.
+    Don't call xf86XInputSetSendCoreEvents.
+    
+    Only call that function if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0.
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit db7b7d03a7e9136badf994c218cd137b59a376c2
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Mon Sep 10 19:05:02 2007 +0200
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    Added man/penmount.? to .gitignore.
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 564d77fc97015fe5ae1dd7baf643524ad32ba19d
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Mon Sep 10 19:04:08 2007 +0200
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Bumped version to 1.2.1.
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 45808497336a336ed76450fbe8279f0e6a7d5a4d
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Mon Sep 10 19:03:30 2007 +0200
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    Generate ChangeLog from git.
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 395e77e359d7d95e57116e70393ddba8d753efcc
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:52:21 2007 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Add *~ to .gitignore to skip patch/emacs droppings
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 4f886668127dad7f561334459cd9723f9af93103
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:25:36 2007 -0400
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    Rename .cvsignore to .gitignore
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit 960f0207a4845b489a1c1ca9823821047722585d
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Aug 8 01:09:31 2007 +0300
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    Convert from TSCalibrationCtl to AbsCalibCtl
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 7810e0bb438525c005f66a9bc5cc0af489fa08a1
+Author: Drew Parsons <dparsons@debian.org>
+Date:   Thu Jun 14 21:52:28 2007 +1000
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    Update version using PACKAGE_VERSION_*
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 5b785515ddbf7e799a1a32b9957195966a5cd513
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Jun 3 09:35:42 2006 +0000
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+    Bug #4495: Add DMC9000 support. (Jaya Kumar). Bump to 1.2.0.
+
+commit f661f8975ff3940d8bff03e4090f235fe18a682e
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 18:06:50 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.1.0.
+
+commit 68ee6b856239014ce271102d63431bedf99f3f4e
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:58 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit dff9657264aa0a54452bfdd2391af8336cd1d424
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:51 2005 +0000
+
+    Stub COPYING files
+
+commit 5b6dcc48d42c63cf77daf51c7d50f1a47deedf4a
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:15 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 84251ccbe8c60a1526ff62290946071df87fd137
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:31 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit 1d6b5856c1f4c8aff95feba1670fd689b2e13fe4
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:31 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 94ffe20ab22ea7316eb29b96e9a9d8d0d8e9a1f1
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:06 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit dbec007fe040b83b4e8a9d2ecde42c61fd230de9
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:57 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 2d0449c9e99654dcd52968137bb38c7022efc24e
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:07 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 9576737f2a5e32804a138cab956ee6aa0f805bd7
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:07 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit cad99fd68ed79009fe4f17b09c0f8bbd5c152a0b
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:13 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 7d8b7d1f3c8ff4c9a9b36e20da8b5cdb4ba49066
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:51 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit be3d4203d254b2778b0f5c12fb08e4943b93198a
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:01 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit fe5c2db4f8a4cc83403d64e290bb3c6dda77ea1f
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:52 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit a0bf43dda49ed89eb9f46e9e85b0dc1d77d6555c
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:30 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit 65e6fa25c2ce5f11008d20b8ed0dd67232c8c3b8
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:00 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit b2285b3290f68584044c8b475d358916051c783a
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:40 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 869663ad207b3975a37d9c4ebc671afa51cc85dd
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Aug 10 14:07:24 2005 +0000
+
+    Don\'t lose existing CFLAGS in all the input drivers and some of the video
+        drivers
+
+commit af1694382dd22d3e060d57a3f7904e0cbd96e8a0
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:41 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit ce9805fa17620f95049a6337b9237a6c0df55253
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 13 20:03:23 2005 +0000
+
+    Make the module dir configurable
+
+commit 69ea32f73ddd3304679e2275fce17a0de3ee9e17
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 13 02:21:02 2005 +0000
+
+    Update all input drivers to pass distcheck
+
+commit db7a0e403e949fff010941a0bb71737ae4e1f3ac
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Jul 12 06:15:09 2005 +0000
+
+    Build skeletons for input drivers. Should basically work.
+
+commit 39bd1d974266114c2110c8fd14a8e98cb40862c6
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:38:00 2005 +0000
+
+    Prep input drivers for modularizing by adding guarded #include "config.h"
+
+commit 6cbcf72a9ea4340af320554fd64a692025744d19
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:17:02 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 2e05fc0dce5ddbbabaac4795152d2296a1167941
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:54:05 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit e6ad5c52b96444c15f499a6c119d55ba0b779efc
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:52 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit d3e15e8f0a6f2449977228a2b711047529dc501c
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:34 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit eb77df0294796b6a13edadc376309d2f486bb6a7
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:36:00 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 0ab885c5a0cce8734fd1343eef892c2d3b1f4c74
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:34 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit a872db7cd08ffa3406cdcf4c7052c558f6b30335
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:56 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit dfee8a2321bf8c77a14ffbc4a74e11dff7fdb54c
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:56 2003 +0000
+
+    Initial revision

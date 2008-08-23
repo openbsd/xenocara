@@ -62,6 +62,7 @@ typedef struct _PenMountPrivateRec
 	int screen_height;			/* Height of the screen             */
 	int proximity;
 	int swap_xy;
+	int invert_y;
 	XISBuffer *buffer;
 	unsigned char packet[PENMOUNT_PACKET_SIZE];	/* packet being/just read */
 	PenMountState lex_mode;
@@ -72,6 +73,7 @@ PenMountPrivateRec, *PenMountPrivatePtr;
 
 #define CHIP_UNKNOWN	0
 #define DMC8910			1
+#define DMC9000			2
 
 
 /******************************************************************************
@@ -80,12 +82,14 @@ PenMountPrivateRec, *PenMountPrivatePtr;
 
 static Bool DeviceControl (DeviceIntPtr, int);
 static void ReadInput (InputInfoPtr);
+static void DMC9000_ReadInput (InputInfoPtr);
 static int ControlProc (InputInfoPtr, xDeviceCtl *);
 static void CloseProc (InputInfoPtr);
 static int SwitchMode (ClientPtr, DeviceIntPtr, int);
 static Bool ConvertProc (InputInfoPtr, int, int, int, int, int, int, int, int, int *, int *);
 static Bool QueryHardware (PenMountPrivatePtr);
 static Bool PenMountGetPacket (PenMountPrivatePtr priv);
+static Bool DMC9000_PenMountGetPacket (PenMountPrivatePtr priv);
 static Bool PenMountSendPacket (PenMountPrivatePtr priv, unsigned char *buf, int len );
 
 static InputInfoPtr
