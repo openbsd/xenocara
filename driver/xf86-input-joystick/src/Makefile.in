@@ -56,6 +56,10 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@BSD_BACKEND_TRUE@am__append_1 = $(BSD_SRCS)
+@BSD_BACKEND_TRUE@am__append_2 = -lusbhid
+@LINUX_BACKEND_TRUE@am__append_3 = $(LINUX_SRCS)
+@EVDEV_BACKEND_TRUE@am__append_4 = $(EVDEV_SRCS)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -75,7 +79,20 @@ am__installdirs = "$(DESTDIR)$(@DRIVER_NAME@_drv_ladir)"
 @DRIVER_NAME@_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(@DRIVER_NAME@_drv_la_LTLIBRARIES)
 @DRIVER_NAME@_drv_la_LIBADD =
-am_@DRIVER_NAME@_drv_la_OBJECTS = xf86Jstk.lo
+am__@DRIVER_NAME@_drv_la_SOURCES_DIST = jstk.c jstk.h jstk_axis.c \
+	jstk_axis.h jstk_key.c jstk_key.h jstk_options.c \
+	jstk_options.h StrKeysym.c StrKeysym.h ks_tables.h \
+	backend_bsd.c backend_bsd.h backend_joystick.c \
+	backend_joystick.h backend_evdev.c backend_evdev.h
+am__objects_1 = backend_bsd.lo
+@BSD_BACKEND_TRUE@am__objects_2 = $(am__objects_1)
+am__objects_3 = backend_joystick.lo
+@LINUX_BACKEND_TRUE@am__objects_4 = $(am__objects_3)
+am__objects_5 = backend_evdev.lo
+@EVDEV_BACKEND_TRUE@am__objects_6 = $(am__objects_5)
+am_@DRIVER_NAME@_drv_la_OBJECTS = jstk.lo jstk_axis.lo jstk_key.lo \
+	jstk_options.lo StrKeysym.lo $(am__objects_2) $(am__objects_4) \
+	$(am__objects_6)
 @DRIVER_NAME@_drv_la_OBJECTS = $(am_@DRIVER_NAME@_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -89,7 +106,7 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(@DRIVER_NAME@_drv_la_SOURCES)
-DIST_SOURCES = $(@DRIVER_NAME@_drv_la_SOURCES)
+DIST_SOURCES = $(am__@DRIVER_NAME@_drv_la_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -106,6 +123,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BSD_BACKEND_FALSE = @BSD_BACKEND_FALSE@
+BSD_BACKEND_TRUE = @BSD_BACKEND_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -116,16 +135,21 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DEBUG_FALSE = @DEBUG_FALSE@
+DEBUG_TRUE = @DEBUG_TRUE@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+EVDEV_BACKEND_FALSE = @EVDEV_BACKEND_FALSE@
+EVDEV_BACKEND_TRUE = @EVDEV_BACKEND_TRUE@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
@@ -141,6 +165,8 @@ LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LINUX_BACKEND_FALSE = @LINUX_BACKEND_FALSE@
+LINUX_BACKEND_TRUE = @LINUX_BACKEND_TRUE@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -149,6 +175,7 @@ MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -159,6 +186,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -168,7 +196,9 @@ XORG_LIBS = @XORG_LIBS@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
@@ -217,9 +247,16 @@ target_alias = @target_alias@
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
 @DRIVER_NAME@_drv_la_LTLIBRARIES = @DRIVER_NAME@_drv.la
-@DRIVER_NAME@_drv_la_LDFLAGS = -module -avoid-version
+@DRIVER_NAME@_drv_la_LDFLAGS = -module -avoid-version $(am__append_2)
 @DRIVER_NAME@_drv_ladir = @inputdir@
-@DRIVER_NAME@_drv_la_SOURCES = xf86Jstk.c
+@DRIVER_NAME@_drv_la_SOURCES = jstk.c jstk.h jstk_axis.c jstk_axis.h \
+	jstk_key.c jstk_key.h jstk_options.c jstk_options.h \
+	StrKeysym.c StrKeysym.h ks_tables.h $(am__append_1) \
+	$(am__append_3) $(am__append_4)
+BSD_SRCS = backend_bsd.c backend_bsd.h
+LINUX_SRCS = backend_joystick.c backend_joystick.h
+EVDEV_SRCS = backend_evdev.c backend_evdev.h
+EXTRA_DIST = $(BSD_SRCS) $(LINUX_SRCS)
 all: all-am
 
 .SUFFIXES:
@@ -289,7 +326,14 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Jstk.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StrKeysym.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/backend_bsd.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/backend_evdev.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/backend_joystick.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jstk.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jstk_axis.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jstk_key.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jstk_options.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

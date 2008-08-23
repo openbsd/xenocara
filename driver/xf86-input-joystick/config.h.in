@@ -2,11 +2,35 @@
 
 #include "xorg-server.h"
 
+/* Compile BSD usbhid backend */
+#undef BSD_BACKEND
+
+/* Enable debugging code */
+#undef DEBUG
+
+/* Compile Linux evdev backend */
+#undef EVDEV_BACKEND
+
+/* Define to 1 if you have the <dev/usb/usbhid.h> header file. */
+#undef HAVE_DEV_USB_USBHID_H
+
+/* Define to 1 if you have the <dev/usb/usb.h> header file. */
+#undef HAVE_DEV_USB_USB_H
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `usbhid' library (-lusbhid). */
+#undef HAVE_LIBUSBHID
+
+/* Define to 1 if you have the <linux/input.h> header file. */
+#undef HAVE_LINUX_INPUT_H
+
+/* Define to 1 if you have the <linux/joystick.h> header file. */
+#undef HAVE_LINUX_JOYSTICK_H
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -31,6 +55,15 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the <usbhid.h> header file. */
+#undef HAVE_USBHID_H
+
+/* Compile Linux joystick backend */
+#undef LINUX_BACKEND
+
+/* Disable some debugging code */
+#undef NDEBUG
 
 /* Name of package */
 #undef PACKAGE
