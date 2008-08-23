@@ -2,6 +2,9 @@
 
 #include "xorg-server.h"
 
+/* Call conversion_proc from within the driver, as Xserver doesn't */
+#undef CALL_CONVERSION_PROC
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -31,6 +34,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Has version 1.1.0 or greater of the Xserver */
+#undef HAVE_XORG_SERVER_1_1_0
 
 /* Name of package */
 #undef PACKAGE
