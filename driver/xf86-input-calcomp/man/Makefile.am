@@ -1,3 +1,4 @@
+# $Id: Makefile.am,v 1.3 2008/08/23 12:56:39 matthieu Exp $
 #
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 # 

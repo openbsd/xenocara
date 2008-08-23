@@ -35,7 +35,7 @@
  *		Definitions
  *									structs, typedefs, #defines, enums
  *****************************************************************************/
-#define CALCOMP_PACKET_SIZE		5
+#define CALCOMP_PACKET_SIZE		6
 #define CALCOMP_INIT_CHECKSUM	0
 #define CALCOMP_BODY_LEN			6
 

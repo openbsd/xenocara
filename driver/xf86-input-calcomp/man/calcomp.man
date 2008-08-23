@@ -74,7 +74,6 @@ Y coordinate of the top right corner of the active zone.
 .TP 4
 .B Option \fI"DebugLevel"\fP \fInumber \fP
 sets the level of debugging info reported.
-.TP 4
 .RE
 .SH "SEE ALSO"
 __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__).
