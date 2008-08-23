@@ -24,6 +24,9 @@
  */
 /* $XFree86$ */
 
+.register %g2, #scratch
+.register %g3, #scratch
+
 /* Hardware register offsets */
 #define FFB_BY		0x0060
 #define FFB_DY		0x0068

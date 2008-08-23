@@ -77,6 +77,10 @@
  */
 
 #if defined(__sparc_v9__) || defined(__sparcv9) || defined(__arch64__)
+
+.register %g2, #scratch
+.register %g3, #scratch
+
 #define SMUL			mulx
 #define ICC			xcc
 #else
