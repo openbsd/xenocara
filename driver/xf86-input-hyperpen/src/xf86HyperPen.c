@@ -1565,6 +1565,7 @@ xf86HypInit(InputDriverPtr	drv,
     }
     
     local->name = dev->identifier;
+    priv->AutoPT = 1;
     
     /* Serial Device is mandatory */
     priv->hypDevice = xf86FindOptionValue(local->options, "Device");
@@ -1636,6 +1637,7 @@ xf86HypInit(InputDriverPtr	drv,
     if (priv->PT > 2) {
 	    xf86Msg(X_CONFIG, "%s: PMin = %d\n", 
 		    dev->identifier, priv->PT);
+	    priv->AutoPT = 0;
     }
     else
 	xf86Msg(X_ERROR, "%s: invalid PMin value (should be > 2)."
@@ -1759,7 +1761,7 @@ static XF86ModuleVersionInfo xf86HypVersionRec =
     MODINFOSTRING1,
     MODINFOSTRING2,
     XORG_VERSION_CURRENT,
-    1, 1, 0,
+    PACKAGE_VERSION_MAJOR, PACKAGE_VERSION_MINOR, PACKAGE_VERSION_PATCHLEVEL,
     ABI_CLASS_XINPUT,
     ABI_XINPUT_VERSION,
     MOD_CLASS_XINPUT,
