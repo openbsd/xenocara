@@ -1,3 +1,50 @@
+commit 60270d38257797a82eff74a56d1561068a6c348e
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sun Feb 10 08:52:46 2008 +0100
+
+    Bump to 1.2.2
+
+commit 7cabee107798341c6c78632f56518a722ed15f03
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Feb 9 22:32:13 2008 +0100
+
+    acecad: fix blotchy input in Inkscape and the Gimp by not pretending to be the core pointer by default
+
+commit 079e56633f700b2a0e0240501d31e4a9e5007a4f
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Feb 9 19:51:57 2008 +0100
+
+    acecad: improve handling of botched input versions
+
+commit bf27c55a83a83fea4afe0499d1b2d592110e945a
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sun Oct 28 01:12:28 2007 +0200
+
+    acecad: fake device limits == screen limits in xserver 1.4 for xinput
+    
+    xserver 1.4 does not do automatic coordinate scaling, so we have to do
+    it manually. But this breaks xinput clients that do their own scaling
+    using the device limits as reference. Pretend that they are the same as the
+    screen limits to work around this.
+
+commit 3089bc76c7e6a829caff4cb86ca3948401e1b6f3
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sat Oct 27 13:08:04 2007 +0200
+
+    acecad: set type_name to XI_TABLET
+
+commit 0ee57c9d8048c3e80356a3eab18b6871a21a3a96
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Fri Oct 26 21:00:19 2007 +0200
+
+    acecad: do our own scaling with USB device since it's not done in the kernel and ConverProc() isn't called automatically by X
+
+commit 253ea9de2321bccede3f0d74ee6a6f6b403e80ae
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Fri Oct 26 20:12:19 2007 +0200
+
+    acecad: don't crash when xf86IsCorePointer is not defined
+
 commit 38ba390f775e2f6001c8887328c5b925f623308a
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Fri Sep 7 02:17:29 2007 +0200

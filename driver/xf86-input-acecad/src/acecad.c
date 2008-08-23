@@ -29,6 +29,11 @@
 
 #include <xorgVersion.h>
 #define XORG_VERSION_BOTCHED XORG_VERSION_NUMERIC(1,4,0,0,0)
+#if XORG_VERSION_CURRENT >= XORG_VERSION_BOTCHED
+#define XORG_BOTCHED_INPUT 1
+#else
+#define XORG_BOTCHED_INPUT 0
+#endif
 
 #define _ACECAD_C_
 /*****************************************************************************
@@ -63,8 +68,8 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <errno.h>
 
+#include <errno.h>
 #ifdef LINUX_INPUT
 #include <fcntl.h>
 #ifdef LINUX_SYSFS
@@ -667,7 +672,7 @@ DeviceInit (DeviceIntPtr dev)
         InitValuatorAxisStruct(dev,
                 0,
                 0,			/* min val */
-#if XORG_VERSION_CURRENT == XORG_VERSION_BOTCHED
+#if XORG_BOTCHED_INPUT
                 screenInfo.screens[0]->width,
 #else
                 priv->acecadMaxX,	/* max val */
@@ -678,7 +683,7 @@ DeviceInit (DeviceIntPtr dev)
         InitValuatorAxisStruct(dev,
                 1,
                 0,			/* min val */
-#if XORG_VERSION_CURRENT == XORG_VERSION_BOTCHED
+#if XORG_BOTCHED_INPUT
                 screenInfo.screens[0]->height,
 #else
                 priv->acecadMaxY,	/* max val */
@@ -733,7 +738,7 @@ ReadInput (LocalDevicePtr local)
 {
     int x, y, z;
     int prox, buttons;
-    int is_core_pointer = 1, is_absolute;
+    int is_core_pointer = 0, is_absolute;
     AceCadPrivatePtr priv = (AceCadPrivatePtr) (local->private);
 
     /*xf86Msg(X_INFO, "ACECAD Tablet Read Input\n");*/
@@ -843,7 +848,7 @@ USBReadInput (LocalDevicePtr local)
     int report_x, report_y;
     int prox = priv->acecadOldProximity;
     int buttons = priv->acecadOldButtons;
-    int is_core_pointer = 1;
+    int is_core_pointer = 0;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
     is_core_pointer = xf86IsCorePointer(local->dev);
 #endif
@@ -938,7 +943,7 @@ USBReadInput (LocalDevicePtr local)
 
         if (prox)
         {
-#if XORG_VERSION_CURRENT == XORG_VERSION_BOTCHED
+#if XORG_BOTCHED_INPUT
             ConvertProc(local, 0, 3, x, y, 0, 0, 0, 0, &report_x, &report_y);
 #else
             report_x = x;
