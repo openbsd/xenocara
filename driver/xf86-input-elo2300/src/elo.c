@@ -54,6 +54,8 @@
 #include "config.h"
 #endif
 
+#include <errno.h>
+
 #define _elo_C_
 /*****************************************************************************
  *	Standard Headers
@@ -87,7 +89,7 @@ static XF86ModuleVersionInfo VersionRec =
 	MODINFOSTRING1,
 	MODINFOSTRING2,
 	XORG_VERSION_CURRENT,
-	1, 1, 0,
+	PACKAGE_VERSION_MAJOR, PACKAGE_VERSION_MINOR, PACKAGE_VERSION_PATCHLEVEL,
 	ABI_CLASS_XINPUT,
 	ABI_XINPUT_VERSION,
 	MOD_CLASS_XINPUT,
@@ -159,7 +161,7 @@ SetupProc(	pointer module,
 	{
 		xf86ErrorF ("ELO 2300 driver unable to open device\n");
 		*errmaj = LDR_NOPORTOPEN;
-		*errmin = xf86GetErrno ();
+		*errmin = errno;
 		goto SetupProc_fail;
 	}
 	xf86ErrorFVerb( 6, "tty port opened successfully\n" );
@@ -183,8 +185,6 @@ SetupProc(	pointer module,
 	priv->buffer = XisbNew (local->fd, 200);
 	priv->button_down = FALSE;
 
-	DBG (9, XisbTrace (priv->buffer, 1));
-
 	EloNewPacket (priv);
 	if (QueryHardware (priv, errmaj, errmin) != Success)
 	{
@@ -206,7 +206,9 @@ SetupProc(	pointer module,
 	local->private_flags = 0;
 	local->history_size = xf86SetIntOption( merged, "HistorySize", 0 );
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 	xf86AddLocalDevice (local, merged);
+#endif
 
 	/* prepare to process touch packets */
 	EloNewPacket (priv);
@@ -457,7 +459,7 @@ static int
 ControlProc( LocalDevicePtr local,
 			 xDeviceCtl * control )
 {
-	xDeviceTSCalibrationCtl *c = (xDeviceTSCalibrationCtl *) control;
+	xDeviceAbsCalibCtl *c = (xDeviceAbsCalibCtl *) control;
 	EloPrivatePtr priv = (EloPrivatePtr) (local->private);
 
 	priv->min_x = c->min_x;
@@ -490,11 +492,13 @@ SwitchMode(	ClientPtr client,
 		priv->reporting_mode = mode;
 		return (Success);
 	}
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 	else if ((mode == SendCoreEvents) || (mode == DontSendCoreEvents))
 	{
 		xf86XInputSetSendCoreEvents (local, (mode == SendCoreEvents));
 		return (Success);
 	}
+#endif
 	else
 		return (!Success);
 }
