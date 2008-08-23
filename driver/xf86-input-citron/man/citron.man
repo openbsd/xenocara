@@ -1,5 +1,4 @@
 .\" Copyright (c) 2000-2003 Peter Kunzmann <support@citron.de>
-.\" $Id: citron.man,v 1.1.1.1 2006/11/26 19:48:56 matthieu Exp $
 .\"
 .\" $XFree86: xc/programs/Xserver/hw/xfree86/input/citron/citron.man,v 1.2 2001/01/27 18:20:57 dawes Exp $
 .\" $XdotOrg: driver/xf86-input-citron/man/citron.man,v 1.5 2006/03/01 22:03:04 daniels Exp $
@@ -903,6 +902,6 @@ is the duration in [ms].
 "60" 
 
 .SH "SEE ALSO"
-XFree86(1), XF86Config(__filemansuffix__), xf86config(1), Xserver(1), X(__miscmansuffix__).
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1), X(__miscmansuffix__).
 .SH "AUTHORS"
 2000\-2005 \- written  by  Citron GmbH (support@citron.de)

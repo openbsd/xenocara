@@ -1,4 +1,4 @@
-/* $Id: citron.c,v 1.1.1.1 2006/11/26 19:48:58 matthieu Exp $
+/* $Id: citron.c,v 1.2 2008/08/23 13:05:44 matthieu Exp $
  * Copyright (c) 1998  Metro Link Incorporated
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -138,12 +138,12 @@
 #define INITT 0		/* Initialisation of touch in first loop */
 
 
-#define CITOUCH_VERSION	0x220
 char version[]="Touch Driver V2.2.0  (c) 1999-2006 Citron GmbH";
 
-#define CITOUCH_VERSION_MAJOR ((CITOUCH_VERSION >> 8) & 0xf)
-#define CITOUCH_VERSION_MINOR ((CITOUCH_VERSION >> 4) & 0xf)
-#define CITOUCH_VERSION_PATCH ((CITOUCH_VERSION >> 0) & 0xf)
+#define CITOUCH_VERSION PACKAGE_VERSION
+#define CITOUCH_VERSION_MAJOR PACKAGE_VERSION_MAJOR
+#define CITOUCH_VERSION_MINOR PACKAGE_VERSION_MINOR
+#define CITOUCH_VERSION_PATCH PACKAGE_VERSION_PATCHLEVEL
 
 
 /*****************************************************************************
@@ -2020,7 +2020,7 @@ static void cit_ProcessPacket(cit_PrivatePtr priv)
 static int
 ControlProc (LocalDevicePtr local, xDeviceCtl * control)
 {
-	xDeviceTSCalibrationCtl *c = (xDeviceTSCalibrationCtl *) control;
+	xDeviceAbsCalibCtl *c = (xDeviceAbsCalibCtl *) control;
 	cit_PrivatePtr priv = (cit_PrivatePtr) (local->private);
 
  	DBG(5, ErrorF("%sControlProc called\n", CI_INFO));
