@@ -74,7 +74,7 @@ static XF86ModuleVersionInfo VersionRec =
 	MODINFOSTRING1,
 	MODINFOSTRING2,
 	XORG_VERSION_CURRENT,
-	1, 1, 0,
+	PACKAGE_VERSION_MAJOR, PACKAGE_VERSION_MINOR, PACKAGE_VERSION_PATCHLEVEL,
 	ABI_CLASS_XINPUT,
 	ABI_XINPUT_VERSION,
 	MOD_CLASS_XINPUT,
@@ -122,7 +122,9 @@ static const char *reqSymbols[] = {
 	"xf86SetIntOption",
 	"xf86SetStrOption",
 	"xf86XInputSetScreen",
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 	"xf86XInputSetSendCoreEvents",
+#endif
 	NULL
 };
 
@@ -526,7 +528,7 @@ ReadInput (InputInfoPtr pInfo)
 static int
 ControlProc (InputInfoPtr pInfo, xDeviceCtl * control)
 {
-	xDeviceTSCalibrationCtl *c = (xDeviceTSCalibrationCtl *) control;
+	xDeviceAbsCalibCtl *c = (xDeviceAbsCalibCtl *) control;
 	DMCPrivatePtr priv = (DMCPrivatePtr) (pInfo->private);
 
         priv->min_x = c->min_x;
@@ -561,11 +563,13 @@ SwitchMode (ClientPtr client, DeviceIntPtr dev, int mode)
                 priv->reporting_mode = mode;
                 return (Success);
         }
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
         else if ((mode == SendCoreEvents) || (mode == DontSendCoreEvents))
         {
                 xf86XInputSetSendCoreEvents (pInfo, (mode == SendCoreEvents));
                 return (Success);
         }
+#endif
         else
                 return (!Success);   
 }
