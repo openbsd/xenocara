@@ -68,7 +68,7 @@ MAGELLANState;
 
 #define MagellanNibble(Value)       (Value&0x0F)
 
-#define milisleep(ms) xf86usleep (ms * 1000)
+#define milisleep(ms) usleep (ms * 1000)
 
 typedef struct _MagellanPrivateRec
 {

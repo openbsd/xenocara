@@ -1,3 +1,15 @@
+commit 08e727a32ffe0cb4543a5f297b62cce249e12cdd
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 20 16:10:31 2008 -0400
+
+    s/xf86usleep/usleep/
+
+commit c2fd043bb86066a4002c585c41f4dd9b8936e3f7
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 23:06:23 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
 commit bcee9eea6f6dfd53c604c2caa45048fb9fe2dc1e
 Author: Tilman Sauerbeck <tilman@code-monkey.de>
 Date:   Mon Sep 10 18:48:01 2007 +0200
