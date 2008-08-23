@@ -783,7 +783,7 @@ roll_wide:
 	 sub			%tmp3, %rightw, %curw
 
 return: return			%i7+8
-	 wr			%g0, 0, %fprs
+	 wr			%g0, 4, %fprs
 
 narrowst:
 	and			%leftw, 0x38, %tmp1
@@ -2178,7 +2178,7 @@ rroll_wide:
 	 sub			%curw, %rightw, %curw
 
 rreturn:return			%i7+8
-	 wr			%g0, 0, %fprs
+	 wr			%g0, 4, %fprs
 
 narrowstr:
 	cmp			%rightw, 64
