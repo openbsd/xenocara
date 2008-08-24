@@ -1837,7 +1837,6 @@ MouseProc(DeviceIntPtr device, int what)
 	    }
 	}
 	device->public.on = FALSE;
-	usleep(300000);
 	break;
     }
     return Success;

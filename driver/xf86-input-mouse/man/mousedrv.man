@@ -78,7 +78,8 @@ cannot be auto-detected, the default value is 3.  The maximum number is 24.
 .BI "Option \*qEmulate3Buttons\*q \*q" boolean \*q
 Enable/disable the emulation of the third (middle) mouse button for mice
 which only have two physical buttons.  The third button is emulated by
-pressing both buttons simultaneously.  Default: off
+pressing both buttons simultaneously.  Default: on, until a press of a
+physical button 3 is detected.
 .TP 7
 .BI "Option \*qEmulate3Timeout\*q \*q" integer \*q
 Sets the timeout (in milliseconds) that the driver waits before deciding
