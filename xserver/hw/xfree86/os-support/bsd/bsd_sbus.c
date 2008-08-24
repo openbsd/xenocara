@@ -93,6 +93,23 @@ xf86MatchSbusInstances(const char *driverName, int sbusDevId,
 
 	*foundEntities = NULL;
 	if (sbusDevId == sbusInfo.devId) {
+		if (xf86DoConfigure && xf86DoConfigurePass1) {
+			GDevPtr pGDev;
+
+			pGDev = xf86AddBusDeviceToConfigure(drvp->driverName,
+							    BUS_SBUS,
+							    &sbusInfo, -1);
+			if (pGDev) {
+				/*
+				 * XF86Match???Instances() treat
+				 * chipID and chipRev as overrides, so
+				 * clobber them here.
+				 */
+				pGDev->chipID = pGDev->chipRev = -1;
+			}
+			return 1;
+		}
+
 		sbusInfo.device = devList[0]->identifier;
 		num = xf86AllocateEntity();
 		p = xf86Entities[num];
@@ -167,4 +184,21 @@ xf86SbusHideOsHwCursor(sbusDevicePtr psdp)
 	if (ioctl(fd, WSDISPLAYIO_SCURSOR, &curs) == -1)
 		FatalError("%s: could not disable cursor (%s)",
 			   "xf86SbusHideOsHWCursor", strerror(errno));
+}
+
+int
+sparcPromInit(void)
+{
+	return -1;
+}
+
+char *
+sparcPromNode2Pathname(sbusPromNodePtr pnode)
+{
+	return NULL;
+}
+
+void
+sparcPromClose(void)
+{
 }
