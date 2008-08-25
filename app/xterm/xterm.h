@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.498 2008/01/30 00:50:07 tom Exp $ */
+/* $XTermId: xterm.h,v 1.502 2008/05/26 19:23:05 tom Exp $ */
 
 /************************************************************
 
@@ -397,6 +397,7 @@ extern char **environ;
 #define XtNfontDoublesize	"fontDoublesize"
 #define XtNfontStyle		"fontStyle"
 #define XtNforceBoxChars	"forceBoxChars"
+#define XtNformatOtherKeys	"formatOtherKeys"
 #define XtNfreeBoldBox		"freeBoldBox"
 #define XtNhighlightColor	"highlightColor"
 #define XtNhighlightColorMode	"highlightColorMode"
@@ -435,9 +436,9 @@ extern char **environ;
 #define XtNnMarginBell		"nMarginBell"
 #define XtNnumLock		"numLock"
 #define XtNoldXtermFKeys	"oldXtermFKeys"
-#define XtNpointerMode		"pointerMode"
 #define XtNpointerColor		"pointerColor"
 #define XtNpointerColorBackground "pointerColorBackground"
+#define XtNpointerMode		"pointerMode"
 #define XtNpointerShape		"pointerShape"
 #define XtNpopOnBell		"popOnBell"
 #define XtNprintAttributes	"printAttributes"
@@ -545,6 +546,7 @@ extern char **environ;
 #define XtCFontDoublesize	"FontDoublesize"
 #define XtCFontStyle		"FontStyle"
 #define XtCForceBoxChars	"ForceBoxChars"
+#define XtCFormatOtherKeys	"FormatOtherKeys"
 #define XtCFreeBoldBox		"FreeBoldBox"
 #define XtCHighlightColorMode	"HighlightColorMode"
 #define XtCHighlightReverse	"HighlightReverse"
@@ -749,6 +751,7 @@ extern void noleaks_cachedCgs (XtermWidget /* xw */);
 #endif
 
 /* charproc.c */
+extern Bool CheckBufPtrs (TScreen * /* screen */);
 extern int VTInit (void);
 extern int v_write (int  /* f */, Char * /* d */, unsigned  /* len */);
 extern void FindFontSelection (XtermWidget /* xw */, const char * /* atom_name */, Bool  /* justprobe */);
@@ -789,9 +792,10 @@ extern void noleaks_charproc (void);
 
 /* charsets.c */
 extern unsigned xtermCharSetIn (unsigned  /* code */, int  /* charset */);
-extern int xtermCharSetOut (IChar * /* buf */, IChar * /* ptr */, int  /* charset */);
+extern int xtermCharSetOut (XtermWidget /* xw */, IChar * /* buf */, IChar * /* ptr */, int  /* charset */);
 
 /* cursor.c */
+extern void AdjustSavedCursor (XtermWidget /* xw */, int /* adjust */);
 extern void CarriageReturn (TScreen * /* screen */);
 extern void CursorBack (XtermWidget /* xw */, int   /* n */);
 extern void CursorDown (TScreen * /* screen */, int   /* n */);

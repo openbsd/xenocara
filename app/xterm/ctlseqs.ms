@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.186 2008/01/27 17:39:00 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.190 2008/05/26 22:24:56 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2007,2008 by Thomas E. Dickey
@@ -468,7 +468,7 @@ Designate G2 Character Set (ISO 2022)
 .IP \\*(Es\\*+\\*(Cc
 Designate G3 Character Set (ISO 2022)
 .br
-Final character \*(Cc for designating character sets
+Final character \*(Cc for designating 94-character sets
 (\*0, \*A and \*(cB apply to VT100 and up, the remainder to VT220 and up):
   \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set
   \*(Cc = \*A \(-> United Kingdom (UK)
@@ -483,6 +483,24 @@ Final character \*(Cc for designating character sets
   \*(Cc = \*Z \(-> Spanish
   \*(Cc = \*H or \*7 \(-> Swedish
   \*(Cc = \*= \(-> Swiss
+.\" VT3xx and VT5xx (see vttest) add more selections, not implemented here.
+.
+.IP \\*(Es\\*-\\*(Cc
+Designate G1 Character Set (VT300)
+.
+.IP \\*(Es\\*.\\*(Cc
+Designate G2 Character Set (VT300)
+.
+.IP \\*(Es\\*/\\*(Cc
+Designate G3 Character Set (VT300)
+.br
+These work for 96-character sets only.
+  \*(Cc = \*A \(-> ISO Latin-1 Supplemental
+.\" VT5xx would implement these:
+.\"  \*(Cc = \*F \(-> ISO Greek Supplemental
+.\"  \*(Cc = \*H \(-> ISO Hebrew Supplemental
+.\"  \*(Cc = \*M \(-> ISO Latin-5 Supplemental
+.\"  \*(Cc = \*L \(-> ISO Latin-Cyrillic
 .
 .IP \\*(Es\\*7
 Save Cursor (DECSC)
@@ -772,10 +790,21 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*3\*4 \(-> Interpret "meta" key, sets eighth bit.
 (enables the \fBeightBitInput\fP resource).
-  \*(Ps = \*1\*0\*3\*5 \(-> Enable special modifiers for Alt and NumLock keys.
+  \*(Ps = \*1\*0\*3\*5 \(-> Enable special modifiers for Alt and NumLock keys
+(enables the \fBnumLock\fP resource).
   \*(Ps = \*1\*0\*3\*6 \(-> Send ESC when Meta modifies a key
 (enables the \fBmetaSendsEscape\fP resource).
   \*(Ps = \*1\*0\*3\*7 \(-> Send DEL from the editing-keypad Delete key
+  \*(Ps = \*1\*0\*3\*9 \(-> Send ESC when Alt modifies a key
+(enables the \fBaltSendsEscape\fP resource).
+  \*(Ps = \*1\*0\*4\*0 \(-> Keep selection even if not highlighted
+(enables the \fBkeepSelection\fP resource).
+  \*(Ps = \*1\*0\*4\*1 \(-> Use the CLIPBOARD selection
+(enables the \fBselectToClipboard\fP resource).
+  \*(Ps = \*1\*0\*4\*2 \(-> Enable Urgency window manager hint when Control-G is received
+(enables the \fBbellIsUrgent\fP resource).
+  \*(Ps = \*1\*0\*4\*3 \(-> Enable raising of the window when Control-G is received
+(enables the \fBpopOnBell\fP resource).
   \*(Ps = \*1\*0\*4\*7 \(-> Use Alternate Screen Buffer (unless
 disabled by the \fBtiteInhibit\fP resource)
   \*(Ps = \*1\*0\*4\*8 \(-> Save cursor as in DECSC (unless
@@ -853,10 +882,21 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*3\*4 \(-> Don't interpret "meta" key
 (disables the \fBeightBitInput\fP resource).
-  \*(Ps = \*1\*0\*3\*5 \(-> Disable special modifiers for Alt and NumLock keys.
+  \*(Ps = \*1\*0\*3\*5 \(-> Disable special modifiers for Alt and NumLock keys
+(disables the \fBnumLock\fP resource).
   \*(Ps = \*1\*0\*3\*6 \(-> Don't send ESC when Meta modifies a key
 (disables the \fBmetaSendsEscape\fP resource).
   \*(Ps = \*1\*0\*3\*7 \(-> Send VT220 Remove from the editing-keypad Delete key
+  \*(Ps = \*1\*0\*3\*9 \(-> Don't send ESC when Alt modifies a key
+(disables the \fBaltSendsEscape\fP resource).
+  \*(Ps = \*1\*0\*4\*0 \(-> Do not keep selection when not highlighted
+(disables the \fBkeepSelection\fP resource).
+  \*(Ps = \*1\*0\*4\*1 \(-> Use the PRIMARY selection.
+(disables the \fBselectToClipboard\fP resource).
+  \*(Ps = \*1\*0\*4\*2 \(-> Disable Urgency window manager hint when Control-G is received
+(disables the \fBbellIsUrgent\fP resource).
+  \*(Ps = \*1\*0\*4\*3 \(-> Disable raising of the window when Control-G is received
+(disables the \fBpopOnBell\fP resource).
   \*(Ps = \*1\*0\*4\*7 \(-> Use Normal Screen Buffer, clearing screen
 first if in the Alternate Screen (unless
 disabled by the \fBtiteInhibit\fP resource)

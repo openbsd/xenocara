@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.836 2008/02/29 01:55:13 tom Exp $ */
+/* $XTermId: charproc.c,v 1.848 2008/07/27 19:00:21 tom Exp $ */
 
 /*
 
@@ -614,6 +614,8 @@ static XtResource resources[] =
 	 keyboard.modify_1st.other_keys, 0),
     Ires(XtNmodifyStringKeys, XtCModifyStringKeys,
 	 keyboard.modify_1st.string_keys, 0),
+    Ires(XtNformatOtherKeys, XtCFormatOtherKeys,
+	 keyboard.format_keys, 0),
 #endif
 
 #if OPT_NUM_LOCK
@@ -1080,10 +1082,21 @@ which_table(Const PARSE_T * table)
     char *result = "?";
     /* *INDENT-OFF* */
     WHICH_TABLE (ansi_table);
-    else WHICH_TABLE (csi_table);
+    else WHICH_TABLE (cigtable);
     else WHICH_TABLE (csi2_table);
     else WHICH_TABLE (csi_ex_table);
     else WHICH_TABLE (csi_quo_table);
+    else WHICH_TABLE (csi_table);
+    else WHICH_TABLE (dec2_table);
+    else WHICH_TABLE (dec3_table);
+    else WHICH_TABLE (dec_table);
+    else WHICH_TABLE (eigtable);
+    else WHICH_TABLE (esc_sp_table);
+    else WHICH_TABLE (esc_table);
+    else WHICH_TABLE (scrtable);
+    else WHICH_TABLE (scs96table);
+    else WHICH_TABLE (scstable);
+    else WHICH_TABLE (sos_table);
 #if OPT_DEC_LOCATOR
     else WHICH_TABLE (csi_tick_table);
 #endif
@@ -1091,16 +1104,6 @@ which_table(Const PARSE_T * table)
     else WHICH_TABLE (csi_dollar_table);
     else WHICH_TABLE (csi_star_table);
 #endif
-    else WHICH_TABLE (dec_table);
-    else WHICH_TABLE (dec2_table);
-    else WHICH_TABLE (dec3_table);
-    else WHICH_TABLE (cigtable);
-    else WHICH_TABLE (eigtable);
-    else WHICH_TABLE (esc_table);
-    else WHICH_TABLE (esc_sp_table);
-    else WHICH_TABLE (scrtable);
-    else WHICH_TABLE (scstable);
-    else WHICH_TABLE (sos_table);
 #if OPT_WIDE_CHARS
     else WHICH_TABLE (esc_pct_table);
 #endif
@@ -1157,6 +1160,7 @@ struct ParseState {
     Const PARSE_T *groundtable;
     Const PARSE_T *parsestate;
     int scstype;
+    int scssize;
     Bool private_function;	/* distinguish private-mode from standard */
     int string_mode;		/* nonzero iff we're processing a string */
     int lastchar;		/* positive iff we had a graphic character */
@@ -1167,6 +1171,32 @@ struct ParseState {
 };
 
 static struct ParseState myState;
+
+static void
+init_groundtable(TScreen * screen, struct ParseState *sp)
+{
+#if OPT_VT52_MODE
+    if (!(screen->vtXX_level)) {
+	sp->groundtable = vt52_table;
+    } else if (screen->terminal_id >= 100)
+#endif
+    {
+	sp->groundtable = ansi_table;
+    }
+}
+
+static void
+select_charset(struct ParseState *sp, int type, int size)
+{
+    TRACE(("select_charset %#x %d\n", type, size));
+    sp->scstype = type;
+    sp->scssize = size;
+    if (size == 94) {
+	sp->parsestate = scstable;
+    } else {
+	sp->parsestate = scs96table;
+    }
+}
 
 static Boolean
 doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
@@ -1264,14 +1294,25 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	}
 #endif
 
-	/*
-	 * The parsing tables all have 256 entries.  If we're supporting
-	 * wide characters, we handle them by treating them the same as
-	 * printing characters.
-	 */
 	laststate = sp->nextstate;
+	if (c == ANSI_DEL
+	    && sp->parsestate == sp->groundtable
+	    && sp->scssize == 96
+	    && sp->scstype != 0) {
+	    /*
+	     * Handle special case of shifts for 96-character sets by checking
+	     * if we have a DEL.  The other special case for SPACE will always
+	     * be printable.
+	     */
+	    sp->nextstate = CASE_PRINT;
+	} else
 #if OPT_WIDE_CHARS
 	if (c > 255) {
+	    /*
+	     * The parsing tables all have 256 entries.  If we're supporting
+	     * wide characters, we handle them by treating them the same as
+	     * printing characters.
+	     */
 	    if (sp->parsestate == sp->groundtable) {
 		sp->nextstate = CASE_PRINT;
 	    } else if (sp->parsestate == sos_table) {
@@ -1589,26 +1630,37 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_SCS0_STATE:
 	    /* enter scs state 0 */
-	    sp->scstype = 0;
-	    sp->parsestate = scstable;
+	    select_charset(sp, 0, 94);
 	    break;
 
 	case CASE_SCS1_STATE:
 	    /* enter scs state 1 */
-	    sp->scstype = 1;
-	    sp->parsestate = scstable;
+	    select_charset(sp, 1, 94);
 	    break;
 
 	case CASE_SCS2_STATE:
 	    /* enter scs state 2 */
-	    sp->scstype = 2;
-	    sp->parsestate = scstable;
+	    select_charset(sp, 2, 94);
 	    break;
 
 	case CASE_SCS3_STATE:
 	    /* enter scs state 3 */
-	    sp->scstype = 3;
-	    sp->parsestate = scstable;
+	    select_charset(sp, 3, 94);
+	    break;
+
+	case CASE_SCS1A_STATE:
+	    /* enter scs state 1 */
+	    select_charset(sp, 1, 96);
+	    break;
+
+	case CASE_SCS2A_STATE:
+	    /* enter scs state 2 */
+	    select_charset(sp, 2, 96);
+	    break;
+
+	case CASE_SCS3A_STATE:
+	    /* enter scs state 3 */
+	    select_charset(sp, 3, 96);
 	    break;
 
 	case CASE_ESC_IGNORE:
@@ -2257,12 +2309,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECRST:
 	    /* DECRST */
 	    dpmodes(xw, bitclr);
-#if OPT_VT52_MODE
-	    if (screen->vtXX_level == 0)
-		sp->groundtable = vt52_table;
-	    else if (screen->terminal_id >= 100)
-		sp->groundtable = ansi_table;
-#endif
+	    init_groundtable(screen, sp);
 	    sp->parsestate = sp->groundtable;
 	    break;
 
@@ -2875,19 +2922,15 @@ VTparse(XtermWidget xw)
     (void) setjmp(vtjmpbuf);
     screen = &xw->screen;
     memset(&myState, 0, sizeof(myState));
-#if OPT_VT52_MODE
-    myState.groundtable = screen->vtXX_level ? ansi_table : vt52_table;
-#else
-    myState.groundtable = ansi_table;
-#endif
-    myState.parsestate = myState.groundtable;
+    myState.scssize = 94;	/* number of printable/nonspace ASCII */
     myState.lastchar = -1;	/* not a legal IChar */
     myState.nextstate = -1;	/* not a legal state */
 
-    for (;;) {
-	if (!doparsing(xw, doinput(), &myState))
-	    return;
-    }
+    init_groundtable(screen, &myState);
+    myState.parsestate = myState.groundtable;
+
+    do {
+    } while (doparsing(xw, doinput(), &myState));
 }
 
 static Char *v_buffer;		/* pointer to physical buffer */
@@ -3087,15 +3130,15 @@ in_put(XtermWidget xw)
 	if (tt_changed) {
 	    tt_changed = False;
 
-	    stat = XtMakeResizeRequest((Widget) xw,
-				       ((Dimension) FontWidth(screen)
-					* (tt_width)
-					+ 2 * screen->border
-					+ screen->fullVwin.sb_info.width),
-				       ((Dimension) FontHeight(screen)
-					* (tt_length)
-					+ 2 * screen->border),
-				       &replyWidth, &replyHeight);
+	    stat = REQ_RESIZE((Widget) xw,
+			      ((Dimension) FontWidth(screen)
+			       * (tt_width)
+			       + 2 * screen->border
+			       + screen->fullVwin.sb_info.width),
+			      ((Dimension) FontHeight(screen)
+			       * (tt_length)
+			       + 2 * screen->border),
+			      &replyWidth, &replyHeight);
 
 	    if (stat == XtGeometryYes || stat == XtGeometryDone) {
 		xw->core.width = replyWidth;
@@ -3380,10 +3423,9 @@ dotext(XtermWidget xw,
      * for line-drawing characters.
      */
     if ((screen->utf8_mode == uFalse)
-	|| (screen->vt100_graphics && charset == '0'))
+	|| (screen->vt100_graphics))
 #endif
-
-	if (!xtermCharSetOut(buf, buf + len, charset))
+	if (!xtermCharSetOut(xw, buf, buf + len, charset))
 	    return;
 
     if_OPT_XMC_GLITCH(screen, {
@@ -3560,7 +3602,8 @@ HandleStructNotify(Widget w GCC_UNUSED,
     {
 	{XtNiconName, (XtArgVal) & icon_name}
     };
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
     switch (event->type) {
     case MapNotify:
@@ -3590,14 +3633,30 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	break;
     case ConfigureNotify:
 	if (event->xconfigure.window == XtWindow(toplevel)) {
+	    int height, width;
+
+	    /*
+	     * Some window managers modify the configuration during
+	     * initialization.  Skip notification events that we know are
+	     * obsolete because there is already another in the queue.
+	     */
+	    do {
+		height = event->xconfigure.height;
+		width = event->xconfigure.width;
+		TRACE(("HandleStructNotify(ConfigureNotify) %d,%d %dx%d\n",
+		       event->xconfigure.y, event->xconfigure.x,
+		       event->xconfigure.height, event->xconfigure.width));
+
+	    } while (XCheckTypedWindowEvent(XtDisplay(xw),
+					    event->xconfigure.window,
+					    ConfigureNotify, event));
 #if OPT_TOOLBAR
-	    TRACE(("HandleStructNotify(ConfigureNotify)\n"));
 	    /*
 	     * The notification is for the top-level widget, but we care about
 	     * vt100 (ignore the tek4014 window).
 	     */
-	    if (term->screen.Vshow) {
-		VTwin *Vwin = WhichVWin(&(term->screen));
+	    if (xw->screen.Vshow) {
+		VTwin *Vwin = WhichVWin(&(xw->screen));
 		TbInfo *info = &(Vwin->tb_info);
 		TbInfo save = *info;
 
@@ -3620,36 +3679,19 @@ HandleStructNotify(Widget w GCC_UNUSED,
 			 * FIXME:  Window manager still may be using the old
 			 * values.  Try to fool it.
 			 */
-			XtMakeResizeRequest((Widget) term,
-					    screen->fullVwin.fullwidth,
-					    info->menu_height
-					    - save.menu_height
-					    + screen->fullVwin.fullheight,
-					    NULL, NULL);
+			REQ_RESIZE((Widget) xw,
+				   screen->fullVwin.fullwidth,
+				   info->menu_height
+				   - save.menu_height
+				   + screen->fullVwin.fullheight,
+				   NULL, NULL);
 			repairSizeHints();
 		    }
 		}
 	    }
 #else
-	    int height, width;
-
-	    /*
-	     * Some window managers modify the configuration during
-	     * initialization.  Skip notification events that we know are
-	     * obsolete because there is already another in the queue.
-	     */
-	    do {
-		height = event->xconfigure.height;
-		width = event->xconfigure.width;
-		TRACE(("HandleStructNotify(ConfigureNotify) %dx%d\n",
-		       event->xconfigure.height, event->xconfigure.width));
-
-	    } while (XCheckTypedWindowEvent(XtDisplay(term),
-					    event->xconfigure.window,
-					    ConfigureNotify, event));
-
-	    if (height != term->hints.height || width != term->hints.width)
-		RequestResize(term, height, width, False);
+	    if (height != xw->hints.height || width != xw->hints.width)
+		RequestResize(xw, height, width, False);
 #endif /* OPT_TOOLBAR */
 	}
 	break;
@@ -4002,6 +4044,28 @@ dpmodes(XtermWidget xw,
 	case 1037:
 	    set_bool_mode(screen->delete_is_del);
 	    update_delete_del();
+	    break;
+#if OPT_NUM_LOCK
+	case 1039:
+	    set_bool_mode(screen->alt_sends_esc);
+	    update_alt_esc();
+	    break;
+#endif
+	case 1040:
+	    set_bool_mode(screen->keepSelection);
+	    update_keepSelection();
+	    break;
+	case 1041:
+	    set_bool_mode(screen->selectToClipboard);
+	    update_selectToClipboard();
+	    break;
+	case 1042:
+	    set_bool_mode(screen->bellIsUrgent);
+	    update_bellIsUrgent();
+	    break;
+	case 1043:
+	    set_bool_mode(screen->poponbell);
+	    update_poponbell();
 	    break;
 	case 1048:
 	    if (!xw->misc.titeInhibit) {
@@ -4760,6 +4824,13 @@ SwitchBufs(XtermWidget xw)
     ScrnUpdate(xw, 0, 0, rows, MaxCols(screen), False);
 }
 
+Bool
+CheckBufPtrs(TScreen * screen)
+{
+    return (screen->visbuf != 0
+	    && screen->altbuf != 0);
+}
+
 /*
  * Swap buffer line pointers between alternate and regular screens.
  * visbuf contains pointers from allbuf or altbuf for the visible screen,
@@ -4770,11 +4841,13 @@ SwitchBufs(XtermWidget xw)
 void
 SwitchBufPtrs(TScreen * screen)
 {
-    size_t len = ScrnPointers(screen, (unsigned) MaxRows(screen));
+    if (CheckBufPtrs(screen)) {
+	size_t len = ScrnPointers(screen, (unsigned) MaxRows(screen));
 
-    memcpy((char *) screen->save_ptr, (char *) screen->visbuf, len);
-    memcpy((char *) screen->visbuf, (char *) screen->altbuf, len);
-    memcpy((char *) screen->altbuf, (char *) screen->save_ptr, len);
+	memcpy((char *) screen->save_ptr, (char *) screen->visbuf, len);
+	memcpy((char *) screen->visbuf, (char *) screen->altbuf, len);
+	memcpy((char *) screen->altbuf, (char *) screen->save_ptr, len);
+    }
 }
 
 void
@@ -4808,11 +4881,13 @@ VTRun(void)
 	Tpushb = Tpushback;
     }
 #endif
+    screen->is_running = True;
     if (!setjmp(VTend))
 	VTparse(term);
     StopBlinking(screen);
     HideCursor();
     screen->cursor_set = OFF;
+    TRACE(("... VTRun\n"));
 }
 
 /*ARGSUSED*/
@@ -4948,13 +5023,9 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
     getXtermSizeHints(xw);
 #endif
 
-    status = XtMakeResizeRequest((Widget) xw,
-				 askedWidth, askedHeight,
-				 &replyWidth, &replyHeight);
-    TRACE(("...RequestResize XtMakeResizeRequest %dx%d -> %dx%d (status %d)\n",
-	   askedHeight, askedWidth,
-	   replyHeight, replyWidth,
-	   status));
+    status = REQ_RESIZE((Widget) xw,
+			askedWidth, askedHeight,
+			&replyWidth, &replyHeight);
 
     if (status == XtGeometryYes ||
 	status == XtGeometryDone) {
@@ -5892,6 +5963,7 @@ VTInitialize(Widget wrequest,
     init_Ires(keyboard.modify_1st.keypad_keys);
     init_Ires(keyboard.modify_1st.other_keys);
     init_Ires(keyboard.modify_1st.string_keys);
+    init_Ires(keyboard.format_keys);
     wnew->keyboard.modify_now = wnew->keyboard.modify_1st;
 #endif
 
@@ -5992,6 +6064,12 @@ VTDestroy(Widget w GCC_UNUSED)
 #ifndef NO_ACTIVE_ICON
     releaseWindowGCs(xw, &(screen->iconVwin));
 #endif
+    XtUninstallTranslations((Widget)xw);
+    XtUninstallTranslations(screen->scrollWidget);
+#if OPT_TOOLBAR
+    XtUninstallTranslations((Widget)XtParent(xw));
+#endif
+    XtUninstallTranslations((Widget)SHELL_OF(xw));
 
     if (screen->hidden_cursor)
 	XFreeCursor(screen->display, screen->hidden_cursor);
@@ -6189,11 +6267,9 @@ VTRealize(Widget w,
      * Note that the size-hints are for the shell, while the resize-request
      * is for the vt100 widget.  They are not the same size.
      */
-    TRACE(("make resize request %dx%d\n", height, width));
-    (void) XtMakeResizeRequest((Widget) xw,
-			       (Dimension) width, (Dimension) height,
-			       &xw->core.width, &xw->core.height);
-    TRACE(("...made resize request %dx%d\n", xw->core.height, xw->core.width));
+    (void) REQ_RESIZE((Widget) xw,
+		      (Dimension) width, (Dimension) height,
+		      &xw->core.width, &xw->core.height);
 
     /* XXX This is bogus.  We are parsing geometries too late.  This
      * is information that the shell widget ought to have before we get
@@ -6338,13 +6414,17 @@ VTRealize(Widget w,
 
     screen->savedlines = 0;
 
-    if (xw->misc.scrollbar) {
-	screen->fullVwin.sb_info.width = 0;
-	ScrollBarOn(xw, False, True);
-    }
     for (i = 0; i < 2; ++i) {
 	screen->alternate = !screen->alternate;
 	CursorSave(xw);
+    }
+
+    /*
+     * Do this last, since it may change the layout via a resize.
+     */
+    if (xw->misc.scrollbar) {
+	screen->fullVwin.sb_info.width = 0;
+	ScrollBarOn(xw, False, True);
     }
     return;
 }
@@ -7273,11 +7353,10 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 
 	    TRACE(("Making resize-request to restore 80-columns %dx%d\n",
 		   reqHeight, reqWidth));
-	    XtMakeResizeRequest((Widget) xw,
-				reqWidth,
-				reqHeight,
-				&replyWidth, &replyHeight);
-	    TRACE(("...result %dx%d\n", replyHeight, replyWidth));
+	    REQ_RESIZE((Widget) xw,
+		       reqWidth,
+		       reqHeight,
+		       &replyWidth, &replyHeight);
 	    repairSizeHints();
 	    XSync(screen->display, False);	/* synchronize */
 	    if (XtAppPending(app_con))

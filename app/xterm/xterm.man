@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.406 2008/02/24 19:09:31 Alan.Coopersmith Exp $
+.\" $XTermId: xterm.man,v 1.408 2008/04/20 21:16:40 tom Exp $
 .\"
 .\" Copyright 1996-2007,2008 by Thomas E. Dickey
 .\"
@@ -1833,9 +1833,15 @@ The default is ``false.''
 .B "cursorColor (\fPclass\fB CursorColor)"
 Specifies the color to use for the text cursor.
 The default is ``XtDefaultForeground.''
-\fIXterm\fP attempts to keep this color from being the same as the background
+By default,
+\fIxterm\fP attempts to keep this color from being the same as the background
 color, since it draws the cursor by filling the background of a text cell.
 The same restriction applies to control sequences which may change this color.
+.IP
+Setting this resource overrides
+most of \fIxterm\fP's adjustments to cursor color.
+It will still use reverse-video to disallow some cases, such as a black
+cursor on a black background.
 .TP 8
 .B "cursorOffTime (\fPclass\fB CursorOffTime)"
 Specifies the duration of the "off" part of the cursor blink cycle-time
@@ -2051,7 +2057,19 @@ that would normally appear in the text color change color.
 The default
 is ``XtDefaultForeground.''
 .TP 8
-.B "freeBoldBox (\fPclass\fB freeBoldBox)"
+.B "formatOtherKeys (\fPclass\fB FormatOtherKeys)"
+Overrides the format of the escape sequence used to report modified keys
+with the \fImodifyOtherKeys\fP resource.
+.RS
+.TP 3
+0
+send modified keys as parameters for function-key 27 (default).
+.TP 3
+1
+send modified keys as parameters for CSI\ u.
+.RE
+.TP 8
+.B "freeBoldBox (\fPclass\fB FreeBoldBox)"
 Specifies whether \fIxterm\fP should assume the bounding boxes for
 normal and bold fonts are compatible.
 If ``false'', \fIxterm\fP compares them and will reject choices of

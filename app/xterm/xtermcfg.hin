@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.169 2008/02/24 21:47:48 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.171 2008/07/27 15:17:07 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.61 2006/06/19 00:36:52 dickey Exp $
@@ -37,6 +37,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef ALLOWLOGFILEEXEC		/* CF_ARG_ENABLE(enable-logfile-exec) */
 #undef ALLOWLOGGING		/* CF_ARG_ENABLE(enable-logging) */
 #undef CC_HAS_PROTOS		/* CF_ANSI_CC */
+#undef CSRG_BASED		/* CF_TYPE_FD_MASK */
 #undef DECL_ERRNO		/* CF_ERRNO */
 #undef DFT_COLORMODE		/* AC_ARG_WITH(default-color-mode) */
 #undef DFT_DECID		/* AC_ARG_WITH(default-terminal-id) */
@@ -71,6 +72,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_TERM_H		/* AC_CHECK_HEADERS(term.h) */
 #undef HAVE_TIGETSTR		/* AC_CHECK_FUNCS(tigetstr) */
 #undef HAVE_UNISTD_H		/* AC_CHECK_HEADERS(unistd.h) */
+#undef HAVE_USE_EXTENDED_NAMES	/* AC_CHECK_FUNCS(use_extended_names) */
 #undef HAVE_UTMP		/* CF_UTMP */
 #undef HAVE_UTMP_UT_HOST	/* CF_UTMP_UT_HOST */
 #undef HAVE_UTMP_UT_SESSION	/* CF_UTMP_UT_SESSION */

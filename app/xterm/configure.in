@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.241 2008/02/24 21:46:37 tom Exp $
+dnl $XTermId: configure.in,v 1.245 2008/07/27 15:03:56 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -46,7 +46,7 @@ esac
 
 AC_PROG_CC
 AC_PROG_CPP
-AC_GCC_TRADITIONAL
+AC_PROG_GCC_TRADITIONAL
 AC_PROG_AWK
 AC_PROG_INSTALL
 AC_PROG_LN_S
@@ -59,7 +59,7 @@ AC_ISC_POSIX
 
 ###	checks for compiler characteristics
 CF_ANSI_CC_CHECK
-AC_CONST
+AC_C_CONST
 CF_PROG_EXT
 CF_XOPEN_SOURCE
 CF_SIGWINCH
@@ -277,7 +277,7 @@ AC_CHECK_HEADERS( \
 	)
 
 CF_X_ATHENA
-CF_TYPE_FD_SET
+CF_TYPE_FD_MASK
 CF_TERMIO_C_ISPEED
 
 LIBS="$LIBS $X_EXTRA_LIBS"
@@ -883,6 +883,11 @@ fi
 
 dnl FIXME - extra test needed to make tcap-fkeys work on HPUX
 AC_CHECK_FUNCS(tigetstr)
+
+dnl only check for ncurses' use_extended_names if really not using termcap
+if test -n "$cf_cv_lib_part_tgetent"; then
+    AC_CHECK_FUNCS(use_extended_names)
+fi
 
 if test -n "$GCC" ; then
 AC_MSG_CHECKING(if you want to turn on gcc warnings)

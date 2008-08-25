@@ -1,4 +1,4 @@
-/* $XTermId: VTparse.h,v 1.43 2008/01/27 17:11:37 tom Exp $ */
+/* $XTermId: VTparse.h,v 1.45 2008/05/28 21:11:23 tom Exp $ */
 
 /*
  * Copyright 2002-2006,2008 by Thomas E. Dickey
@@ -75,6 +75,7 @@ extern Const PARSE_T eigtable[];
 extern Const PARSE_T esc_sp_table[];
 extern Const PARSE_T esc_table[];
 extern Const PARSE_T scrtable[];
+extern Const PARSE_T scs96table[];
 extern Const PARSE_T scstable[];
 extern Const PARSE_T sos_table[];
 
@@ -242,5 +243,8 @@ extern Const PARSE_T esc_pct_table[];
 #define CASE_SET_MOD_FKEYS 131
 #define CASE_SET_MOD_FKEYS0 132
 #define CASE_HIDE_POINTER 133
+#define CASE_SCS1A_STATE 134
+#define CASE_SCS2A_STATE 135
+#define CASE_SCS3A_STATE 136
 
 #endif /* included_VTparse_h */

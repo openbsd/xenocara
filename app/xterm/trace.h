@@ -1,8 +1,8 @@
-/* $XTermId: trace.h,v 1.42 2007/12/31 20:58:23 tom Exp $ */
+/* $XTermId: trace.h,v 1.44 2008/07/27 15:21:20 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2006,2007 by Thomas E. Dickey
+Copyright 1997-2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -61,10 +61,10 @@ extern	char	*trace_who;
 extern	void	TraceSizeHints(XSizeHints *);
 #define	TRACE_HINTS(hints) TraceSizeHints(hints)
 
-extern	void	TraceIds(const char *fname, int lnum);
+extern	void	TraceIds(const char * /* fname */, int  /* lnum */);
 #define	TRACE_IDS TraceIds(__FILE__, __LINE__)
 
-extern	void	TraceOptions(OptionHelp *options, XrmOptionDescRec *resources, Cardinal count);
+extern	void	TraceOptions(OptionHelp * /* options */, XrmOptionDescRec * /* resources */, Cardinal  /* count */);
 #define	TRACE_OPTS(opts,ress,lens) TraceOptions(opts,ress,lens)
 
 extern	void	TraceTranslations(const char *, Widget);
@@ -75,6 +75,17 @@ extern	void	TraceWMSizeHints(XtermWidget);
 
 extern	void	TraceXtermResources(void);
 #define	TRACE_XRES() TraceXtermResources()
+
+extern	int	TraceResizeRequest(const char * /* fn */, int  /* ln */, Widget  /* w */, Dimension  /* reqwide */, Dimension  /* reqhigh */, Dimension * /* gotwide */, Dimension * /* gothigh */);
+#define REQ_RESIZE(w, reqwide, reqhigh, gotwide, gothigh) \
+	TraceResizeRequest(__FILE__, __LINE__, w, reqwide, reqhigh, gotwide, gothigh)
+
+#else
+
+#define REQ_RESIZE(w, reqwide, reqhigh, gotwide, gothigh) \
+	XtMakeResizeRequest((Widget) (w), \
+			    (Dimension) (reqwide), (Dimension) (reqhigh), \
+			    (gotwide), (gothigh))
 
 #endif
 

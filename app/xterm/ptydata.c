@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.79 2008/02/21 22:19:03 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.80 2008/04/20 22:41:25 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/ptydata.c,v 1.25 2006/02/13 01:14:59 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1999-2006,2007 by Thomas E. Dickey
+Copyright 1999-2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 

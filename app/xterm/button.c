@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.285 2008/02/24 19:42:02 tom Exp $ */
+/* $XTermId: button.c,v 1.288 2008/07/27 19:36:37 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -270,7 +270,7 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
     }
 
     /* get button # */
-    button = event->xbutton.button - 1;
+    button = (int) event->xbutton.button - 1;
 
     LocatorCoords(row, col, event->xbutton.x, event->xbutton.y, oor);
 
@@ -368,7 +368,7 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
  * Button1 (left) and Button3 (right) are swapped in the mask relative to X.
  */
 #define	ButtonState(state, mask)	\
-{ (state) = ((mask) & (Button1Mask | Button2Mask | Button3Mask | Button4Mask)) >> 8;	\
+{ (state) = (int) (((mask) & (Button1Mask | Button2Mask | Button3Mask | Button4Mask)) >> 8);	\
   /* swap Button1 & Button3 */								\
   (state) = ((state) & ~(4|1)) | (((state)&1)?4:0) | (((state)&4)?1:0);			\
 }
@@ -632,10 +632,10 @@ isClick1_clean(TScreen * screen, XEvent * event)
 	delta = screen->multiClickTime + 1;
     } else if (event->xbutton.time > lastButtonDownTime) {
 	/* most of the time */
-	delta = event->xbutton.time - lastButtonDownTime;
+	delta = (int) (event->xbutton.time - lastButtonDownTime);
     } else {
 	/* time has rolled over since lastButtonUpTime */
-	delta = (((Time) ~ 0) - lastButtonDownTime) + event->xbutton.time;
+	delta = (int) ((((Time) ~ 0) - lastButtonDownTime) + event->xbutton.time);
     }
 
     return delta <= screen->multiClickTime;
@@ -658,10 +658,10 @@ isDoubleClick3(TScreen * screen, XEvent * event)
 	delta = screen->multiClickTime + 1;
     } else if (event->xbutton.time > lastButton3DoubleDownTime) {
 	/* most of the time */
-	delta = event->xbutton.time - lastButton3DoubleDownTime;
+	delta = (int) (event->xbutton.time - lastButton3DoubleDownTime);
     } else {
 	/* time has rolled over since lastButton3DoubleDownTime */
-	delta = (((Time) ~ 0) - lastButton3DoubleDownTime) + event->xbutton.time;
+	delta = (int) ((((Time) ~ 0) - lastButton3DoubleDownTime) + event->xbutton.time);
     }
     if (delta <= screen->multiClickTime) {
 	/* Double click */
@@ -697,10 +697,10 @@ CheckSecondPress3(TScreen * screen, XEvent * event)
 	delta = screen->multiClickTime + 1;
     } else if (event->xbutton.time > lastButton3UpTime) {
 	/* most of the time */
-	delta = event->xbutton.time - lastButton3UpTime;
+	delta = (int) (event->xbutton.time - lastButton3UpTime);
     } else {
 	/* time has rolled over since lastButton3UpTime */
-	delta = (((Time) ~ 0) - lastButton3UpTime) + event->xbutton.time;
+	delta = (int) ((((Time) ~ 0) - lastButton3UpTime) + event->xbutton.time);
     }
     if (delta <= screen->multiClickTime) {
 	CELL cell;
@@ -772,7 +772,7 @@ ReadLineMovePoint(TScreen * screen, int col, int ldelta)
 	line[count++] = ANSI_ESC;
 	line[count++] = '[';	/* XXX maybe sometimes O is better? */
     }
-    line[count++] = (col > 0 ? 'C' : 'D');
+    line[count++] = CharOf(col > 0 ? 'C' : 'D');
     if (col < 0)
 	col = -col;
     while (col--)
@@ -813,8 +813,8 @@ DiredButton(Widget w,
 	    Line[0] = CONTROL('X');
 	    Line[1] = ANSI_ESC;
 	    Line[2] = 'G';
-	    Line[3] = ' ' + col;
-	    Line[4] = ' ' + line;
+	    Line[3] = CharOf(' ' + col);
+	    Line[4] = CharOf(' ' + line);
 	    v_write(screen->respond, Line, 5);
 	}
     }
@@ -844,10 +844,10 @@ ReadLineButton(Widget w,
 		delta = screen->multiClickTime + 1;
 	    } else if (event->xbutton.time > lastButtonDownTime) {
 		/* most of the time */
-		delta = event->xbutton.time - lastButtonDownTime;
+		delta = (int) (event->xbutton.time - lastButtonDownTime);
 	    } else {
 		/* time has rolled over since lastButtonUpTime */
-		delta = (((Time) ~ 0) - lastButtonDownTime) + event->xbutton.time;
+		delta = (int) ((((Time) ~ 0) - lastButtonDownTime) + event->xbutton.time);
 	    }
 	    if (delta > screen->multiClickTime)
 		goto finish;	/* All this work for this... */
@@ -876,7 +876,7 @@ ReadLineButton(Widget w,
 	Line[0] = ANSI_ESC;
 	/* XXX: sometimes it is better to send '['? */
 	Line[1] = 'O';
-	Line[2] = (col > 0 ? 'C' : 'D');
+	Line[2] = CharOf(col > 0 ? 'C' : 'D');
 	if (col < 0)
 	    col = -col;
 	while (col--)
@@ -1042,8 +1042,8 @@ static unsigned
 DECtoASCII(unsigned ch)
 {
     if (xtermIsDecGraphic(ch)) {
-	ch = "###########+++++##-##++++|######"[ch];
-	/*    01234567890123456789012345678901 */
+	ch = CharOf("###########+++++##-##++++|######"[ch]);
+	/*           01234567890123456789012345678901 */
     }
     return ch;
 }
@@ -1076,7 +1076,7 @@ UTF8toLatin1(Char * s, unsigned len, unsigned long *result)
 	    if (value == UCS_REPL) {
 		*q++ = '#';
 	    } else if (value < 256) {
-		*q++ = value;
+		*q++ = CharOf(value);
 	    } else {
 		unsigned eqv = ucs2dec(value);
 		if (xtermIsDecGraphic(eqv)) {
@@ -1406,11 +1406,11 @@ base64_flush(TScreen * screen)
     case 0:
 	break;
     case 2:
-	x = base64_code[screen->base64_accu << 4];
+	x = CharOf(base64_code[screen->base64_accu << 4]);
 	tty_vwrite(screen->respond, &x, 1);
 	break;
     case 4:
-	x = base64_code[screen->base64_accu << 2];
+	x = CharOf(base64_code[screen->base64_accu << 2]);
 	tty_vwrite(screen->respond, &x, 1);
 	break;
     }
@@ -1436,20 +1436,20 @@ _qWriteSelectionData(TScreen * screen, Char * lag, unsigned length)
 	while (length--) {
 	    switch (screen->base64_count) {
 	    case 0:
-		buf[x++] = base64_code[*p >> 2];
+		buf[x++] = CharOf(base64_code[*p >> 2]);
 		screen->base64_accu = (*p & 0x3);
 		screen->base64_count = 2;
 		++p;
 		break;
 	    case 2:
-		buf[x++] = base64_code[(screen->base64_accu << 4) + (*p >> 4)];
+		buf[x++] = CharOf(base64_code[(screen->base64_accu << 4) + (*p >> 4)]);
 		screen->base64_accu = (*p & 0xF);
 		screen->base64_count = 4;
 		++p;
 		break;
 	    case 4:
-		buf[x++] = base64_code[(screen->base64_accu << 2) + (*p >> 6)];
-		buf[x++] = base64_code[*p & 0x3F];
+		buf[x++] = CharOf(base64_code[(screen->base64_accu << 2) + (*p >> 6)]);
+		buf[x++] = CharOf(base64_code[*p & 0x3F]);
 		screen->base64_accu = 0;
 		screen->base64_count = 0;
 		++p;
@@ -1617,15 +1617,35 @@ SelectionReceived(Widget w,
 		if (text_list != NULL && text_list_count != 0) {
 		    int i;
 		    Char *data;
-		    unsigned long size;
+		    char **new_text_list, *tmp;
+		    unsigned long size, new_size;
+		    /* XLib StringList actually uses only two
+		     * pointers, one for the list itself, and one for
+		     * the data. Pointer to the data is the first
+		     * element of the list, the rest (if any) list
+		     * elements point to the same memory block as the
+		     * first element
+		     */
+		    new_size = 0;
 		    for (i = 0; i < text_list_count; ++i) {
 			data = (Char *) text_list[i];
-			size = strlen(text_list[i]);
+			size = strlen(text_list[i]) + 1;
 			data = UTF8toLatin1(data, size, &size);
-			XFree(text_list[i]);
-			text_list[i] = XtMalloc(size + 1);
-			memcpy(text_list[i], data, size + 1);
+			new_size += size + 1;
 		    }
+		    new_text_list =
+			(char **) XtMalloc(sizeof(char *) * text_list_count);
+		    new_text_list[0] = tmp = XtMalloc(new_size);
+		    for (i = 0; i < text_list_count; ++i) {
+			data = (Char *) text_list[i];
+			size = strlen(text_list[i]) + 1;
+			data = UTF8toLatin1(data, size, &size);
+			memcpy(tmp, data, size + 1);
+			new_text_list[i] = tmp;
+			tmp += size + 1;
+		    }
+		    XFreeStringList(text_list);
+		    text_list = new_text_list;
 		}
 	    } else
 #endif
@@ -1737,10 +1757,10 @@ EvalSelectUnit(TScreen * screen,
 	delta = screen->multiClickTime + 1;
     } else if (buttonDownTime > screen->lastButtonUpTime) {
 	/* most of the time */
-	delta = buttonDownTime - screen->lastButtonUpTime;
+	delta = (int) (buttonDownTime - screen->lastButtonUpTime);
     } else {
 	/* time has rolled over since lastButtonUpTime */
-	delta = (((Time) ~ 0) - screen->lastButtonUpTime) + buttonDownTime;
+	delta = (int) ((((Time) ~ 0) - screen->lastButtonUpTime) + buttonDownTime);
     }
 
     if (delta > screen->multiClickTime) {
@@ -1923,17 +1943,17 @@ EndExtend(XtermWidget xw,
 		&& isSameCELL(&cell, &(screen->endSel))) {
 		/* Use short-form emacs select */
 		line[count++] = 't';
-		line[count++] = ' ' + screen->endSel.col + 1;
-		line[count++] = ' ' + screen->endSel.row + 1;
+		line[count++] = CharOf(' ' + screen->endSel.col + 1);
+		line[count++] = CharOf(' ' + screen->endSel.row + 1);
 	    } else {
 		/* long-form, specify everything */
 		line[count++] = 'T';
-		line[count++] = ' ' + screen->startSel.col + 1;
-		line[count++] = ' ' + screen->startSel.row + 1;
-		line[count++] = ' ' + screen->endSel.col + 1;
-		line[count++] = ' ' + screen->endSel.row + 1;
-		line[count++] = ' ' + cell.col + 1;
-		line[count++] = ' ' + cell.row + 1;
+		line[count++] = CharOf(' ' + screen->startSel.col + 1);
+		line[count++] = CharOf(' ' + screen->startSel.row + 1);
+		line[count++] = CharOf(' ' + screen->endSel.col + 1);
+		line[count++] = CharOf(' ' + screen->endSel.row + 1);
+		line[count++] = CharOf(' ' + cell.col + 1);
+		line[count++] = CharOf(' ' + cell.row + 1);
 	    }
 	    v_write(screen->respond, line, count);
 	    TrackText(xw, &zeroCELL, &zeroCELL);
@@ -2361,7 +2381,7 @@ class_of(TScreen * screen, CELL * cell)
     }
 #endif
 
-    value = XTERM_CELL(temp.row, temp.col);
+    value = (int) XTERM_CELL(temp.row, temp.col);
     if_OPT_WIDE_CHARS(screen, {
 	return CharacterClass(value);
     });
@@ -2442,7 +2462,7 @@ lengthOfLines(TScreen * screen, int firstRow, int lastRow)
     for (n = firstRow; n <= lastRow; ++n) {
 	int value = LastTextCol(screen, n);
 	if (value >= 0)
-	    length += (value + 1);
+	    length += (unsigned) (value + 1);
     }
     return length;
 }
@@ -2463,7 +2483,7 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
      * string were UTF-8.
      */
     if_OPT_WIDE_CHARS(screen, {
-	need *= (MAX_PTRS * 6);
+	need *= (unsigned) (MAX_PTRS * 6);
     });
 
     if ((result = TypeCallocN(Char, need + 1)) != 0) {
@@ -3086,20 +3106,20 @@ AppendToSelectionBuffer(TScreen * screen, unsigned c)
 	break;
 
     case 2:
-	ch = (screen->base64_accu << 6) + six;
+	ch = CharOf((screen->base64_accu << 6) + six);
 	screen->base64_count = 0;
 	AppendStrToSelectionBuffer(screen, &ch, 1);
 	break;
 
     case 4:
-	ch = (screen->base64_accu << 4) + (six >> 2);
+	ch = CharOf((screen->base64_accu << 4) + (six >> 2));
 	screen->base64_accu = (six & 0x3);
 	screen->base64_count = 2;
 	AppendStrToSelectionBuffer(screen, &ch, 1);
 	break;
 
     case 6:
-	ch = (screen->base64_accu << 2) + (six >> 4);
+	ch = CharOf((screen->base64_accu << 2) + (six >> 4));
 	screen->base64_accu = (six & 0xF);
 	screen->base64_count = 4;
 	AppendStrToSelectionBuffer(screen, &ch, 1);
@@ -3573,7 +3593,7 @@ SaveText(TScreen * screen,
 	    } else if (c == 0x7f) {
 		c = 0x5f;
 	    }
-	    *lp++ = A2E(c);
+	    *lp++ = CharOf(A2E(c));
 	}
 	if (c != E2A(' '))
 	    result = lp;
@@ -3601,7 +3621,7 @@ SaveText(TScreen * screen,
 
 /* Position: 32 - 255. */
 
-static int
+static Char
 BtnCode(XButtonEvent * event, int button)
 {
     int result = 32 + (KeyState(event->state) << 2);
@@ -3615,7 +3635,7 @@ BtnCode(XButtonEvent * event, int button)
 	    result += 32;
 	result += button;
     }
-    return result;
+    return CharOf(result);
 }
 
 #define MOUSE_LIMIT (255 - 32)
@@ -3675,7 +3695,7 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 
     /* Add event code to key sequence */
     if (screen->send_mouse_pos == X10_MOUSE) {
-	line[count++] = ' ' + button;
+	line[count++] = CharOf(' ' + button);
     } else {
 	/* Button-Motion events */
 	switch (event->type) {
@@ -3714,8 +3734,8 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 	screen->mouse_col = col;
 
 	/* Add pointer position to key sequence */
-	line[count++] = ' ' + col + 1;
-	line[count++] = ' ' + row + 1;
+	line[count++] = CharOf(' ' + col + 1);
+	line[count++] = CharOf(' ' + row + 1);
 
 	TRACE(("mouse at %d,%d button+mask = %#x\n", row, col,
 	       (screen->control_eight_bits) ? line[2] : line[3]));
@@ -3743,7 +3763,7 @@ SendFocusButton(XtermWidget xw, XFocusChangeEvent * event)
 	    reply.a_pintro = '>';
 	}
 #endif
-	reply.a_final = (event->type == FocusIn) ? 'I' : 'O';
+	reply.a_final = CharOf((event->type == FocusIn) ? 'I' : 'O');
 	unparseseq(xw, &reply);
     }
     return;

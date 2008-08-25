@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.159 2008/02/21 20:21:51 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.160 2008/06/03 20:55:56 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -1493,11 +1493,9 @@ TekRealize(Widget gw,
     else
 	tw->hints.flags |= PSize;
 
-    TRACE(("make resize request %dx%d\n", height, width));
-    (void) XtMakeResizeRequest((Widget) tw,
-			       width, height,
-			       &tw->core.width, &tw->core.height);
-    TRACE(("...made resize request %dx%d\n", tw->core.height, tw->core.width));
+    (void) REQ_RESIZE((Widget) tw,
+		      width, height,
+		      &tw->core.width, &tw->core.height);
 
     /* XXX This is bogus.  We are parsing geometries too late.  This
      * is information that the shell widget ought to have before we get

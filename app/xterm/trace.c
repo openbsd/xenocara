@@ -1,8 +1,8 @@
-/* $XTermId: trace.c,v 1.83 2007/12/31 20:58:29 tom Exp $ */
+/* $XTermId: trace.c,v 1.85 2008/06/03 20:52:34 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2006,2007 by Thomas E. Dickey
+Copyright 1997-2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -438,6 +438,8 @@ TraceSizeHints(XSizeHints * hints)
 	TRACE(("   max        %d,%d\n", hints->max_height, hints->max_width));
     if (hints->flags & PResizeInc)
 	TRACE(("   inc        %d,%d\n", hints->height_inc, hints->width_inc));
+    else
+	TRACE(("   inc        NONE!\n"));
     if (hints->flags & PAspect)
 	TRACE(("   min aspect %d/%d\n", hints->min_aspect.y, hints->min_aspect.y));
     if (hints->flags & PAspect)
@@ -492,6 +494,24 @@ TraceTranslations(const char *name, Widget w)
 	TRACE(("none (widget is null)\n"));
     }
     XSetErrorHandler(save);
+}
+
+int
+TraceResizeRequest(const char *fn, int ln, Widget w,
+		   Dimension reqwide,
+		   Dimension reqhigh,
+		   Dimension * gotwide,
+		   Dimension * gothigh)
+{
+    int rc;
+
+    TRACE(("%s@%d ResizeRequest %dx%d\n", fn, ln, reqhigh, reqwide));
+    rc = XtMakeResizeRequest((Widget) w, reqwide, reqhigh, gotwide, gothigh);
+    TRACE(("... ResizeRequest -> "));
+    if (gothigh && gotwide)
+	TRACE(("%dx%d ", *gothigh, *gotwide));
+    TRACE(("(%d)\n", rc));
+    return rc;
 }
 
 #define XRES_S(name) Trace(#name " = %s\n", NonNull(resp->name))

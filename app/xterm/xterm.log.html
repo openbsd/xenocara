@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.664 2008/03/02 23:32:51 tom Exp $
+  $XTermId: xterm.log.html,v 1.685 2008/07/27 23:10:10 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,7 +45,9 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
-<LI><A HREF="#xterm_234">Patch #234 - 2008-03/02</A>
+<LI><A HREF="#xterm_236">Patch #236 - 2008/07/27</A>
+<LI><A HREF="#xterm_235">Patch #235 - 2008/04/20</A>
+<LI><A HREF="#xterm_234">Patch #234 - 2008/03/02</A>
 <LI><A HREF="#xterm_233">Patch #233 - 2008/02/24</A>
 <LI><A HREF="#xterm_232">Patch #232 - 2008/01/30</A>
 <LI><A HREF="#xterm_231">Patch #231 - 2008/01/05</A>
@@ -282,7 +284,78 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
-<H1><A NAME="xterm_234">Patch #234 - 2008-03/02</A></H1>
+<H1><A NAME="xterm_236">Patch #236 - 2008/07/27</A></H1>
+<ul>
+	<li>correct memory reallocation when handling a paste of UTF-8 text
+	    from <a href="#xterm_225">patch #225</a> changes
+	    (report/patch by Max Mikhanosha).
+
+	<li>correct allocation of temporary buffer in
+	    <code>xtermFindShell</code> in case the user's <code>$PATH</code>
+	    contains no ":" (report/analysis by Victor Stinner,
+	    Freedesktop.Org Bugzilla #16790).
+
+	<li>modify CF_XOPEN_SOURCE to add case for DragonFly BSD, to fix
+	    new compile problem exposed by fix for fd_mask (patch by
+	    Hasso Tepper).
+
+	<li>add configure-check for ncurses <code>use_extended_names</code>,
+	    (report by Martin Mokrejs).
+
+	<li>correct computation for toolbar height; layout manager already
+	    takes into account <code>borderWidth</code> resource.
+
+	<li>implement VT320-style SCS (select character set) for ISO Latin-1
+	    supplemental.
+
+	<li>fixes for vt100-style character sets in UTF-8 mode (Ubuntu #230919).
+
+	<li>fix to make <code>luit</code> work with xterm's <code>-ls</code>
+	    option (report/patch by Marius Tolzmann).
+
+	<li>update config.guess, config.sub
+</ul>
+
+<H1><A NAME="xterm_235">Patch #235 - 2008/04/20</A></H1>
+<ul>
+	<li>add control sequences for some of the recent resource/menu
+	    settings:
+	    <ul>
+	    <li><code>altSendsEscape</code> (private mode 1039)
+	    <li><code>keepSelection</code> (private mode 1040)
+	    <li><code>selectToClipboard</code> (private mode 1041)
+	    <li><code>bellIsUrgent</code> (private mode 1042)
+	    <li><code>popOnBell</code> (private mode 1043)
+	    </ul>
+
+	<li>add resource <code>formatOtherKeys</code> to provide an alternate
+	    escape sequence format for the <code>modifyOtherKeys</code> 
+	    resource (request by Paul LeoNerd Evans).
+
+	<li>adjust saved-cursor position if the window is resized while
+	    displaying the alternate screen (Novell #196880, Debian #383384).
+
+	<li>improve pointer-checks to fix a bug exposed by resizing during
+	    initialization under StumpWM window manager
+	    (Fedora Bugzilla #437928).
+
+	<li>modify <code>unselectwindow()</code> to ensure that the mouse
+	    pointer is not hidden after xterm loses focus (report by Jeremy
+	    Huddleston).
+
+	<li>add special check for fd_mask on Mac OS X (report by Jeremy
+	    Huddleston).
+
+	<li>add <code>dylib</code> to autoconf's suffix list used for checking
+	    the result from <code>xmkmf</code>, to work with Mac OS X (report
+	    by Jeremy Huddleston).
+
+	<li>correct initialization of bold- and wide-, wide-bold fonts which
+	    may be set via the <code>utf8Fonts</code> subresource (Debian
+	    #347790).
+</ul>
+
+<H1><A NAME="xterm_234">Patch #234 - 2008/03/02</A></H1>
 <ul>
 	<li>modify <code>sinstall.sh</code> to use POSIX locale to 
 	    bypass GNU ls changes to date-format.

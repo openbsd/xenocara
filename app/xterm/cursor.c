@@ -1,9 +1,9 @@
-/* $XTermId: cursor.c,v 1.43 2007/07/07 12:14:51 tom Exp $ */
+/* $XTermId: cursor.c,v 1.45 2008/04/20 21:06:22 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/cursor.c,v 3.20 2006/02/13 01:14:58 dickey Exp $ */
 
 /*
- * Copyright 2002-2006,2007 by Thomas E. Dickey
+ * Copyright 2002-2007,2008 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -238,6 +238,26 @@ CarriageReturn(TScreen * screen)
     set_cur_col(screen, 0);
     screen->do_wrap = 0;
     do_xevents();
+}
+
+/*
+ * When resizing the window, if we're showing the alternate screen, we still
+ * have to adjust the saved cursor from the normal screen to account for
+ * shifting of the saved-line region in/out of the viewable window.
+ */
+void
+AdjustSavedCursor(XtermWidget xw, int adjust)
+{
+    TScreen *screen = &xw->screen;
+
+    if (screen->alternate) {
+	SavedCursor *sc = &screen->sc[screen->alternate == False];
+
+	if (adjust > 0) {
+	    TRACE(("AdjustSavedCursor %d -> %d\n", sc->row, sc->row - adjust));
+	    sc->row += adjust;
+	}
+    }
 }
 
 /*

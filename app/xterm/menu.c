@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.240 2008/01/20 15:16:43 tom Exp $ */
+/* $XTermId: menu.c,v 1.241 2008/06/03 20:05:49 tom Exp $ */
 
 /*
 
@@ -2487,7 +2487,6 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus, Dimension * menu_high)
 #if OPT_TOOLBAR
     Dimension button_height = 0;
     Dimension toolbar_hSpace;
-    Dimension toolbar_border;
     Arg args[10];
 #endif
 
@@ -2533,7 +2532,6 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus, Dimension * menu_high)
      */
     XtVaGetValues(*menus,
 		  XtNhSpace, &toolbar_hSpace,
-		  XtNborderWidth, &toolbar_border,
 		  (XtPointer) 0);
 
     if (shell == toplevel) {	/* vt100 */
@@ -2553,9 +2551,9 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus, Dimension * menu_high)
      * Tell the main program how high the toolbar is, to help with the initial
      * layout.
      */
-    *menu_high = (button_height + 2 * (toolbar_hSpace + toolbar_border));
-    TRACE(("...menuHeight:%d = (%d + 2 * (%d + %d))\n",
-	   *menu_high, button_height, toolbar_hSpace, toolbar_border));
+    *menu_high = (button_height + 2 * (toolbar_hSpace));
+    TRACE(("...menuHeight:%d = (%d + 2 * %d)\n",
+	   *menu_high, button_height, toolbar_hSpace));
 
 #else /* !OPT_TOOLBAR */
     *forms = shell;

@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.12 2007/12/31 17:27:42 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.13 2008/07/27 15:18:56 tom Exp $ */
 
 /*
  * Copyright 2007 by Thomas E. Dickey
@@ -46,6 +46,12 @@
 
 #ifndef USE_TERMINFO
 #define USE_TERMINFO 0
+#endif
+
+#if USE_TERMINFO && defined(NCURSES_VERSION) && defined(HAVE_USE_EXTENDED_NAMES)
+#define USE_EXTENDED_NAMES 1
+#else
+#define USE_EXTENDED_NAMES 0
 #endif
 
 #if OPT_TCAP_QUERY || OPT_TCAP_FKEYS
@@ -164,7 +170,7 @@ static TCAPINFO table[] = {
 	/* XK_COLORS is a fake code. */
 	DATA(	"Co",	"colors",	XK_COLORS,	0	),
 # endif
-#if USE_TERMINFO && defined(NCURSES_VERSION)
+#if USE_EXTENDED_NAMES
 #define DEXT(name, parm, code) DATA("", name, code, parm)
 #define D1ST(name, parm, code) DEXT("k" #name, parm, code)
 #define DMOD(name, parm, code) DEXT("k" #name #parm, parm, code)
@@ -378,7 +384,7 @@ get_termcap(char *name, char *buffer)
 {
     *buffer = 0;		/* initialize, in case we're using terminfo's tgetent */
 
-#if USE_TERMINFO && defined(NCURSES_VERSION)
+#if USE_EXTENDED_NAMES
     use_extended_names(TRUE);
 #endif
     if (name != 0) {

@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.234 2008/01/27 16:43:54 tom Exp $ */
+/* $XTermId: screen.c,v 1.241 2008/04/20 21:07:10 tom Exp $ */
 
 /*
- * Copyright 1999-2005,2006 by Thomas E. Dickey
+ * Copyright 1999-2007,2008 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1418,7 +1418,7 @@ ScreenResize(XtermWidget xw,
     TScreen *screen = &(xw->screen);
     int code, rows, cols;
     int border = 2 * screen->border;
-    int move_down_by;
+    int move_down_by = 0;
 #ifdef TTYSIZE_STRUCT
     TTYSIZE_STRUCT ts;
 #endif
@@ -1431,19 +1431,21 @@ ScreenResize(XtermWidget xw,
     assert(width > 0);
     assert(height > 0);
 
-    /* clear the right and bottom internal border because of NorthWest
-       gravity might have left junk on the right and bottom edges */
-    if (width >= FullWidth(screen)) {
-	XClearArea(screen->display, tw,
-		   FullWidth(screen), 0,	/* right edge */
-		   0, (unsigned) height,	/* from top to bottom */
-		   False);
-    }
-    if (height >= FullHeight(screen)) {
-	XClearArea(screen->display, tw,
-		   0, FullHeight(screen),	/* bottom */
-		   (unsigned) width, 0,		/* all across the bottom */
-		   False);
+    if (screen->is_running) {
+	/* clear the right and bottom internal border because of NorthWest
+	   gravity might have left junk on the right and bottom edges */
+	if (width >= FullWidth(screen)) {
+	    XClearArea(screen->display, tw,
+		       FullWidth(screen), 0,	/* right edge */
+		       0, (unsigned) height,	/* from top to bottom */
+		       False);
+	}
+	if (height >= FullHeight(screen)) {
+	    XClearArea(screen->display, tw,
+		       0, FullHeight(screen),	/* bottom */
+		       (unsigned) width, 0,	/* all across the bottom */
+		       False);
+	}
     }
 
     TRACE(("...computing rows/cols: %.2f %.2f\n",
@@ -1466,45 +1468,50 @@ ScreenResize(XtermWidget xw,
 
 	TRACE(("...ScreenResize chars %dx%d\n", rows, cols));
 
-	if (screen->cursor_state)
-	    HideCursor();
-	if (screen->alternate
-	    && xw->misc.resizeGravity == SouthWestGravity)
-	    /* swap buffer pointers back to make this work */
-	    SwitchBufPtrs(screen);
-	if (screen->altbuf)
-	    (void) Reallocate(xw,
-			      &screen->altbuf,
-			      &screen->abuf_address,
-			      rows,
-			      cols,
-			      MaxRows(screen),
-			      MaxCols(screen));
-	move_down_by = Reallocate(xw,
-				  &screen->allbuf,
-				  &screen->sbuf_address,
-				  rows + savelines, cols,
-				  MaxRows(screen) + savelines,
+	if (screen->is_running) {
+	    if (screen->cursor_state)
+		HideCursor();
+	    if (screen->alternate
+		&& xw->misc.resizeGravity == SouthWestGravity)
+		/* swap buffer pointers back to make this work */
+		SwitchBufPtrs(screen);
+	    if (screen->altbuf)
+		(void) Reallocate(xw,
+				  &screen->altbuf,
+				  &screen->abuf_address,
+				  rows,
+				  cols,
+				  MaxRows(screen),
 				  MaxCols(screen));
-	screen->visbuf = &screen->allbuf[MAX_PTRS * savelines];
+	    move_down_by = Reallocate(xw,
+				      &screen->allbuf,
+				      &screen->sbuf_address,
+				      rows + savelines, cols,
+				      MaxRows(screen) + savelines,
+				      MaxCols(screen));
+	    screen->visbuf = &screen->allbuf[MAX_PTRS * savelines];
+	}
 
+	AdjustSavedCursor(xw, move_down_by);
 	set_max_row(screen, screen->max_row + delta_rows);
 	set_max_col(screen, cols - 1);
 
-	if (xw->misc.resizeGravity == SouthWestGravity) {
-	    screen->savedlines -= move_down_by;
-	    if (screen->savedlines < 0)
-		screen->savedlines = 0;
-	    if (screen->savedlines > screen->savelines)
-		screen->savedlines = screen->savelines;
-	    if (screen->topline < -screen->savedlines)
-		screen->topline = -screen->savedlines;
-	    set_cur_row(screen, screen->cur_row + move_down_by);
-	    screen->cursorp.row += move_down_by;
-	    ScrollSelection(screen, move_down_by, True);
+	if (screen->is_running) {
+	    if (xw->misc.resizeGravity == SouthWestGravity) {
+		screen->savedlines -= move_down_by;
+		if (screen->savedlines < 0)
+		    screen->savedlines = 0;
+		if (screen->savedlines > screen->savelines)
+		    screen->savedlines = screen->savelines;
+		if (screen->topline < -screen->savedlines)
+		    screen->topline = -screen->savedlines;
+		set_cur_row(screen, screen->cur_row + move_down_by);
+		screen->cursorp.row += move_down_by;
+		ScrollSelection(screen, move_down_by, True);
 
-	    if (screen->alternate)
-		SwitchBufPtrs(screen);	/* put the pointers back */
+		if (screen->alternate)
+		    SwitchBufPtrs(screen);	/* put the pointers back */
+	    }
 	}
 
 	/* adjust scrolling region */
@@ -1525,9 +1532,7 @@ ScreenResize(XtermWidget xw,
     screen->fullVwin.fullheight = height;
     screen->fullVwin.fullwidth = width;
 
-    if (screen->scrollWidget)
-	ResizeScrollBar(xw);
-
+    ResizeScrollBar(xw);
     ResizeSelection(screen, rows, cols);
 
 #ifndef NO_ACTIVE_ICON

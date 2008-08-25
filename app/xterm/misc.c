@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.382 2008/01/27 15:37:18 tom Exp $ */
+/* $XTermId: misc.c,v 1.384 2008/07/27 15:38:05 tom Exp $ */
 
 /*
  *
@@ -189,6 +189,11 @@ static void
 unselectwindow(TScreen * screen, int flag)
 {
     TRACE(("unselectwindow(%d) flag=%d\n", screen->select, flag));
+
+    if (screen->hide_pointer) {
+	screen->hide_pointer = False;
+	xtermDisplayCursor(term);
+    }
 
     if (!screen->always_highlight) {
 #if OPT_TEK4014
@@ -3304,7 +3309,7 @@ xtermFindShell(char *leaf, Bool warning)
     if (*result != '\0' && strchr("+/-", *result) == 0) {
 	/* find it in $PATH */
 	if ((s = x_getenv("PATH")) != 0) {
-	    if ((tmp = TypeMallocN(char, strlen(leaf) + strlen(s) + 1)) != 0) {
+	    if ((tmp = TypeMallocN(char, strlen(leaf) + strlen(s) + 2)) != 0) {
 		Bool found = False;
 		while (*s != '\0') {
 		    strcpy(tmp, s);

@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.247 2008/02/24 19:30:23 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.253 2008/07/27 15:28:15 tom Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.65 2006/06/19 00:36:50 dickey Exp $
 dnl
@@ -219,7 +219,7 @@ ifelse($3,,[    :]dnl
 ])dnl
   ])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_CHECK_CACHE version: 10 updated: 2004/05/23 13:03:31
+dnl CF_CHECK_CACHE version: 11 updated: 2008/03/23 14:45:59
 dnl --------------
 dnl Check if we're accidentally using a cache from a different machine.
 dnl Derive the system name, as a check for reusing the autoconf cache.
@@ -250,7 +250,7 @@ test -n "$cf_cv_system_name" && AC_MSG_RESULT(Configuring for $cf_cv_system_name
 
 if test ".$system_name" != ".$cf_cv_system_name" ; then
 	AC_MSG_RESULT(Cached system name ($system_name) does not agree with actual ($cf_cv_system_name))
-	AC_ERROR("Please remove config.cache and try again.")
+	AC_MSG_ERROR("Please remove config.cache and try again.")
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -635,7 +635,7 @@ if test "$GCC" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 22 updated: 2007/07/29 09:55:12
+dnl CF_GCC_WARNINGS version: 23 updated: 2008/07/26 17:54:02
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
@@ -730,7 +730,7 @@ then
 				;;
 			Winline) #(vi
 				case $GCC_VERSION in
-				3.3*)
+				[[34]].*)
 					CF_VERBOSE(feature is broken in gcc $GCC_VERSION)
 					continue;;
 				esac
@@ -783,7 +783,7 @@ AC_DEFUN([CF_HELP_MESSAGE],
 [AC_DIVERT_HELP([$1])dnl
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_IMAKE_CFLAGS version: 29 updated: 2007/05/24 20:53:19
+dnl CF_IMAKE_CFLAGS version: 30 updated: 2008/03/23 15:04:54
 dnl ---------------
 dnl Use imake to obtain compiler flags.  We could, in principle, write tests to
 dnl get these, but if imake is properly configured there is no point in doing
@@ -864,14 +864,14 @@ CF_EOF
 			esac
 		done
 		if test -z "$cf_config" ; then
-			AC_WARN(Could not find imake config-directory)
+			AC_MSG_WARN(Could not find imake config-directory)
 		else
 			cf_imake_opts="$cf_imake_opts -I$cf_config"
 			if ( $IMAKE -v $cf_imake_opts 2>&AC_FD_CC)
 			then
 				CF_VERBOSE(Using $IMAKE $cf_config)
 			else
-				AC_WARN(Cannot run $IMAKE)
+				AC_MSG_WARN(Cannot run $IMAKE)
 			fi
 		fi
 	fi
@@ -1093,7 +1093,7 @@ if test -n "$cf_path_prog" ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PATH_SYNTAX version: 11 updated: 2006/09/02 08:55:46
+dnl CF_PATH_SYNTAX version: 12 updated: 2008/03/23 14:45:59
 dnl --------------
 dnl Check the argument to see that it looks like a pathname.  Rewrite it if it
 dnl begins with one of the prefix/exec_prefix variables, and then again if the
@@ -1125,7 +1125,7 @@ case ".[$]$1" in #(vi
   $1=`echo [$]$1 | sed -e s%NONE%$cf_path_syntax%`
   ;;
 *)
-  ifelse($2,,[AC_ERROR([expected a pathname, not \"[$]$1\"])],$2)
+  ifelse($2,,[AC_MSG_ERROR([expected a pathname, not \"[$]$1\"])],$2)
   ;;
 esac
 ])dnl
@@ -1809,7 +1809,36 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_TYPE_FD_SET version: 3 updated: 1999/10/16 13:49:00
+dnl CF_TYPE_FD_MASK version: 2 updated: 2008/03/25 20:59:57
+dnl ---------------
+dnl Check for the declaration of fd_mask, which is like fd_set, associated
+dnl with select().  The check for fd_set should have pulled in this as well,
+dnl but there is a special case for Mac OS X, possibly other BSD-derived
+dnl platforms.
+AC_DEFUN([CF_TYPE_FD_MASK],
+[
+AC_REQUIRE([CF_TYPE_FD_SET])
+
+AC_CACHE_CHECK(for declaration of fd_mask,cf_cv_type_fd_mask,[
+    if test x$cf_cv_type_fd_set = xX11/Xpoll.h ; then
+        AC_TRY_COMPILE([
+#include <X11/Xpoll.h>],[fd_mask x],,
+        [CF_MSG_LOG(if we must define CSRG_BASED)
+# Xosdefs.h on Mac OS X may not define this (but it should).
+            AC_TRY_COMPILE([
+#define CSRG_BASED
+#include <X11/Xpoll.h>],[fd_mask x],
+        cf_cv_type_fd_mask=CSRG_BASED)])
+    else
+        cf_cv_type_fd_mask=$cf_cv_type_fd_set
+    fi
+])
+if test x$cf_cv_type_fd_mask = xCSRG_BASED ; then
+    AC_DEFINE(CSRG_BASED)
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_TYPE_FD_SET version: 4 updated: 2008/03/25 20:56:03
 dnl --------------
 dnl Check for the declaration of fd_set.  Some platforms declare it in
 dnl <sys/types.h>, and some in <sys/select.h>, which requires <sys/types.h>.
@@ -1817,20 +1846,22 @@ dnl Finally, if we are using this for an X application, Xpoll.h may include
 dnl <sys/select.h>, so we don't want to do it twice.
 AC_DEFUN([CF_TYPE_FD_SET],
 [
+AC_CHECK_HEADERS(X11/Xpoll.h)
+
 AC_CACHE_CHECK(for declaration of fd_set,cf_cv_type_fd_set,
-	[echo "trying sys/types alone" 1>&AC_FD_CC
+	[CF_MSG_LOG(sys/types alone)
 AC_TRY_COMPILE([
 #include <sys/types.h>],
 	[fd_set x],
 	[cf_cv_type_fd_set=sys/types.h],
-	[echo "trying X11/Xpoll.h" 1>&AC_FD_CC
+	[CF_MSG_LOG(X11/Xpoll.h)
 AC_TRY_COMPILE([
 #ifdef HAVE_X11_XPOLL_H
 #include <X11/Xpoll.h>
 #endif],
 	[fd_set x],
 	[cf_cv_type_fd_set=X11/Xpoll.h],
-	[echo "trying sys/select.h" 1>&AC_FD_CC
+	[CF_MSG_LOG(sys/select.h)
 AC_TRY_COMPILE([
 #include <sys/types.h>
 #include <sys/select.h>],
@@ -2289,7 +2320,7 @@ int x = XkbBI_Info
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 25 updated: 2007/01/29 18:36:38
+dnl CF_XOPEN_SOURCE version: 26 updated: 2008/07/27 11:26:57
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -2309,7 +2340,7 @@ case $host_os in #(vi
 aix[[45]]*) #(vi
 	CPPFLAGS="$CPPFLAGS -D_ALL_SOURCE"
 	;;
-freebsd*) #(vi
+freebsd*|dragonfly*) #(vi
 	# 5.x headers associate
 	#	_XOPEN_SOURCE=600 with _POSIX_C_SOURCE=200112L
 	#	_XOPEN_SOURCE=500 with _POSIX_C_SOURCE=199506L
@@ -2475,7 +2506,7 @@ elif test "$cf_x_athena_include" != default ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_ATHENA_LIBS version: 6 updated: 2006/11/30 17:57:11
+dnl CF_X_ATHENA_LIBS version: 7 updated: 2008/03/23 14:46:03
 dnl ----------------
 dnl Normally invoked by CF_X_ATHENA, with $1 set to the appropriate flavor of
 dnl the Athena widgets, e.g., Xaw, Xaw3d, neXtaw.
@@ -2519,7 +2550,7 @@ do
 done
 
 if test -z "$cf_x_athena_lib" ; then
-	AC_ERROR(
+	AC_MSG_ERROR(
 [Unable to successfully link Athena library (-l$cf_x_athena_root) with test program])
 fi
 
@@ -2644,7 +2675,7 @@ AC_SUBST(HAVE_TYPE_FCCHAR32)
 AC_SUBST(HAVE_TYPE_XFTCHARSPEC)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_TOOLKIT version: 11 updated: 2006/11/29 19:05:14
+dnl CF_X_TOOLKIT version: 12 updated: 2008/03/23 15:04:54
 dnl ------------
 dnl Check for X Toolkit libraries
 dnl
@@ -2673,7 +2704,7 @@ AC_CHECK_LIB(Xt, XtAppInitialize,
 	[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])])
 
 if test $cf_have_X_LIBS = no ; then
-	AC_WARN(
+	AC_MSG_WARN(
 [Unable to successfully link X Toolkit library (-lXt) with
 test program.  You will have to check and add the proper libraries by hand
 to makefile.])
