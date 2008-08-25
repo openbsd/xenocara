@@ -176,14 +176,6 @@ xf86UnmapSbusMem(sbusDevicePtr psdp, pointer Base, unsigned long Size)
 _X_EXPORT void
 xf86SbusHideOsHwCursor(sbusDevicePtr psdp)
 {
-	int fd = xf86Info.screenFd;
-	struct wsdisplay_cursor curs;
-
-	curs.which = WSDISPLAY_CURSOR_DOCUR;
-	curs.enable = 0;
-	if (ioctl(fd, WSDISPLAYIO_SCURSOR, &curs) == -1)
-		FatalError("%s: could not disable cursor (%s)",
-			   "xf86SbusHideOsHWCursor", strerror(errno));
 }
 
 int
