@@ -35,6 +35,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <math.h>
+#include <sys/ioctl.h>
 
 #include "xf86.h"
 #include "i830.h"
@@ -730,6 +731,43 @@ i830_use_fb_compression(xf86CrtcPtr crtc)
     return TRUE;
 }
 
+#if defined(DRM_IOCTL_MODESET_CTL) && defined(XF86DRI)
+static void i830_modeset_ctl(xf86CrtcPtr crtc, int pre)
+{
+    ScrnInfoPtr pScrn = crtc->scrn;
+    I830Ptr pI830 = I830PTR(pScrn);
+    I830CrtcPrivatePtr intel_crtc = crtc->driver_private;
+    struct drm_modeset_ctl modeset;
+
+    if (!pI830->directRenderingEnabled)
+	return;
+
+    modeset.crtc = intel_crtc->plane;
+
+    /*
+     * DPMS will be called many times (especially off), but we only
+     * want to catch the transition from on->off and off->on.
+     */
+    if (pre && intel_crtc->dpms_mode != DPMSModeOff) {
+	/* On -> off is a pre modeset */
+	modeset.cmd = _DRM_PRE_MODESET;
+	ioctl(pI830->drmSubFD, DRM_IOCTL_MODESET_CTL, &modeset);
+	ErrorF("modeset: on -> off on plane %d\n", modeset.crtc);
+    } else if (!pre && intel_crtc->dpms_mode == DPMSModeOff) {
+	/* Off -> on means post modeset */
+	modeset.cmd = _DRM_POST_MODESET;
+	ioctl(pI830->drmSubFD, DRM_IOCTL_MODESET_CTL, &modeset);
+	ErrorF("modeset: off -> on on plane %d\n", modeset.crtc);
+    }
+}
+#else
+static void i830_modeset_ctl(xf86CrtcPtr crtc, int dpms_state)
+{
+    return;
+}
+#endif /* DRM_IOCTL_MODESET_CTL && XF86DRI */
+
+
 /**
  * Sets the power management mode of the pipe and plane.
  *
@@ -797,8 +835,10 @@ i830_crtc_dpms(xf86CrtcPtr crtc, int mode)
 	/* Reenable compression if needed */
 	if (i830_use_fb_compression(crtc))
 	    i830_enable_fb_compression(crtc);
+	i830_modeset_ctl(crtc, 0);
 	break;
     case DPMSModeOff:
+	i830_modeset_ctl(crtc, 1);
 	/* Shut off compression if in use */
 	if (i830_use_fb_compression(crtc))
 	    i830_disable_fb_compression(crtc);
