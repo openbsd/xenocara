@@ -42,37 +42,27 @@
  * backwards incompatibilities, (which should be avoided whenever possible).
  */
 
-#define VIA_DRM_DRIVER_DATE		"20060616"
+#define VIA_DRM_DRIVER_DATE		"20070202"
 
 #define VIA_DRM_DRIVER_MAJOR		2
-#define VIA_DRM_DRIVER_MINOR		10
-#define VIA_DRM_DRIVER_PATCHLEVEL	2
+#define VIA_DRM_DRIVER_MINOR		11
+#define VIA_DRM_DRIVER_PATCHLEVEL	1
 #define VIA_DRM_DRIVER_VERSION	  (((VIA_DRM_DRIVER_MAJOR) << 16) | (VIA_DRM_DRIVER_MINOR))
 
-#define VIA_NR_SAREA_CLIPRECTS 		8
+#define VIA_NR_SAREA_CLIPRECTS		8
 #define VIA_NR_XVMC_PORTS	       10
 #define VIA_NR_XVMC_LOCKS	       5
 #define VIA_MAX_CACHELINE_SIZE	  64
 #define XVMCLOCKPTR(saPriv,lockNo)					\
-	((volatile drm_hw_lock_t *)(((((unsigned long) (saPriv)->XvMCLockArea) + \
+	((volatile struct drm_hw_lock *)(((((unsigned long) (saPriv)->XvMCLockArea) + \
 				      (VIA_MAX_CACHELINE_SIZE - 1)) &	\
 				     ~(VIA_MAX_CACHELINE_SIZE - 1)) +	\
 				    VIA_MAX_CACHELINE_SIZE*(lockNo)))
-
-/* Each region is a minimum of 64k, and there are at most 64 of them.
- */
 #define VIA_NR_TEX_REGIONS 64
-#define VIA_LOG_MIN_TEX_REGION_SIZE 16
+
 #endif
 
-#define VIA_UPLOAD_TEX0IMAGE  0x1	/* handled clientside */
-#define VIA_UPLOAD_TEX1IMAGE  0x2	/* handled clientside */
-#define VIA_UPLOAD_CTX	0x4
-#define VIA_UPLOAD_BUFFERS    0x8
-#define VIA_UPLOAD_TEX0       0x10
-#define VIA_UPLOAD_TEX1       0x20
-#define VIA_UPLOAD_CLIPRECTS  0x40
-#define VIA_UPLOAD_ALL	0xff
+#define DRM_VIA_FENCE_TYPE_ACCEL 0x00000002
 
 /* VIA specific ioctls */
 #define DRM_VIA_ALLOCMEM	0x00
@@ -124,7 +114,7 @@
 
 #define VIA_MEM_VIDEO   0	/* matches drm constant */
 #define VIA_MEM_AGP     1	/* matches drm constant */
-#define VIA_MEM_SYSTEM  2		
+#define VIA_MEM_SYSTEM  2
 #define VIA_MEM_MIXED   3
 #define VIA_MEM_UNKNOWN 4
 
@@ -197,7 +187,7 @@ typedef struct _drm_via_tex_region {
 typedef struct _drm_via_sarea {
 	unsigned int dirty;
 	unsigned int nbox;
-	drm_clip_rect_t boxes[VIA_NR_SAREA_CLIPRECTS];
+	struct drm_clip_rect boxes[VIA_NR_SAREA_CLIPRECTS];
 	drm_via_tex_region_t texList[VIA_NR_TEX_REGIONS + 1];
 	int texAge;		/* last time texture was uploaded */
 	int ctxOwner;		/* last context to upload state */
@@ -213,7 +203,7 @@ typedef struct _drm_via_sarea {
 
 	unsigned int XvMCDisplaying[VIA_NR_XVMC_PORTS];
 	unsigned int XvMCSubPicOn[VIA_NR_XVMC_PORTS];
-	unsigned int XvMCCtxNoGrabbed;	/* Last context to hold decoder */	
+	unsigned int XvMCCtxNoGrabbed;	/* Last context to hold decoder */
 
 	/* Used by the 3d driver only at this point, for pageflipping:
 	 */
@@ -238,7 +228,7 @@ typedef enum {
 
 #define VIA_IRQ_FLAGS_MASK 0xF0000000
 
-enum drm_via_irqs{
+enum drm_via_irqs {
 	drm_via_irq_hqv0 = 0,
 	drm_via_irq_hqv1,
 	drm_via_irq_dma0_dd,
@@ -248,7 +238,7 @@ enum drm_via_irqs{
 	drm_via_irq_num
 };
 
-struct drm_via_wait_irq_request{
+struct drm_via_wait_irq_request {
 	unsigned irq;
 	via_irq_seq_type_t type;
 	uint32_t sequence;
@@ -260,14 +250,14 @@ typedef union drm_via_irqwait {
 	struct drm_wait_vblank_reply reply;
 } drm_via_irqwait_t;
 
-typedef struct drm_via_blitsync { 
+typedef struct drm_via_blitsync {
 	uint32_t sync_handle;
 	unsigned engine;
 } drm_via_blitsync_t;
 
-/* 
+/*
  * Below,"flags" is currently unused but will be used for possible future
- * extensions like kernel space bounce buffers for bad alignments and 
+ * extensions like kernel space bounce buffers for bad alignments and
  * blit engine busy-wait polling for better latency in the absence of
  * interrupts.
  */
@@ -280,12 +270,12 @@ typedef struct drm_via_dmablit {
 	uint32_t fb_stride;
 
 	unsigned char *mem_addr;
-	uint32_t  mem_stride;
-       
-	uint32_t  flags;
+	uint32_t mem_stride;
+
+	uint32_t flags;
 	int to_fb;
 
-	drm_via_blitsync_t sync;   
+	drm_via_blitsync_t sync;
 } drm_via_dmablit_t;
 
 

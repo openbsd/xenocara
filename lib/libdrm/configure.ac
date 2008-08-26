@@ -19,7 +19,7 @@
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 AC_PREREQ(2.57)
-AC_INIT([libdrm], 2.3.0, [dri-devel@lists.sourceforge.net], libdrm)
+AC_INIT([libdrm], 2.3.1, [dri-devel@lists.sourceforge.net], libdrm)
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([dist-bzip2])
 
@@ -35,7 +35,7 @@ AC_SYS_LARGEFILE
 dnl Privsep
 AC_ARG_ENABLE(privsep,
 	AC_HELP_STRING([--enable-privsep],
-         [Build support for X server privilege separation (default is NO)]),
+	  [Build support for X server privilege separation (default is NO)]),
 	[ENABLE_PRIVSEP="$enableval"], [ENABLE_PRIVSEP="no"])
 if test x$ENABLE_PRIVSEP = xyes ; then
 	AC_DEFINE(X_PRIVSEP, 1, [Use X server privilege separation])
@@ -45,4 +45,8 @@ AM_CONDITIONAL(X_PRIVSEP, [test x$ENABLE_PRIVSEP = xyes])
 pkgconfigdir=${libdir}/pkgconfig
 AC_SUBST(pkgconfigdir)
 
-AC_OUTPUT([Makefile libdrm/Makefile shared-core/Makefile libdrm.pc])
+AC_OUTPUT([
+	Makefile
+	libdrm/Makefile
+	shared-core/Makefile
+	libdrm.pc])
