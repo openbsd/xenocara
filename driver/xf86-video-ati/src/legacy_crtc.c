@@ -625,6 +625,9 @@ radeon_crtc_modeset_ioctl(xf86CrtcPtr crtc, Bool post)
     RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
     struct drm_modeset_ctl modeset;
 
+    if (!info->directRenderingEnabled)
+	return;
+
     modeset.crtc = radeon_crtc->crtc_id;
     modeset.cmd = post ? _DRM_POST_MODESET : _DRM_PRE_MODESET;
 
