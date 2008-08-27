@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.39 2008/08/23 21:14:07 matthieu Exp $
+# $OpenBSD: MODULES,v 1.40 2008/08/27 19:32:29 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -83,8 +83,8 @@ app/xstdcmap		1.0.1	7.0
 app/xtrap		1.0.2	7.1
 app/xvidtune		1.0.1	7.0
 app/xvinfo		1.0.2	7.3
-app/xwd			1.0.2	7.4	needs-update
-app/xwininfo		1.0.4	7.4	needs-update
+app/xwd			1.0.2	7.4
+app/xwininfo		1.0.4	7.4
 app/xwud		1.0.1	7.0
 
 data/bitmaps		1.0.1	7.0
@@ -138,7 +138,7 @@ driver/xf86-video-mga		1.4.9	7.4
 driver/xf86-video-neomagic	1.2.1	7.4
 driver/xf86-video-newport	0.2.1	7.2RC1
 driver/xf86-video-nsc		2.8.3	7.3	needs-update
-driver/xf86-video-nv		2.1.10	7.4
+driver/xf86-video-nv		2.1.11	7.4	needs-update
 driver/xf86-video-openchrome	0.2.903		needs-update
 driver/xf86-video-r128		6.8.0	7.4
 driver/xf86-video-radeonhd	1.2.1	7.4
@@ -213,7 +213,7 @@ lib/libX11			1.1.4	7.4
 lib/libXRes			1.0.3	7.2RC4
 lib/libXScrnSaver		1.1.3	7.4
 lib/libXTrap			1.0.0	7.0
-lib/libXau			1.0.3	7.2RC4
+lib/libXau			1.0.4	7.4	needs-update
 lib/libXaw			1.0.4	7.3
 lib/libXcomposite		0.4.0	7.3
 lib/libXcursor			1.1.9	7.3
