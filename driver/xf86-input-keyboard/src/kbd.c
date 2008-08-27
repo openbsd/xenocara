@@ -59,6 +59,8 @@ extern int XkbDfltRepeatInterval;
 #define SCROLLFLAG	4
 #define MODEFLAG	8
 #define COMPOSEFLAG	16
+/* Used to know when the first DEVICE_ON after a DEVICE_INIT is called */
+#define INITFLAG	(1 << 31)
 
 static InputInfoPtr KbdPreInit(InputDriverPtr drv, IDevPtr dev, int flags);
 static int KbdProc(DeviceIntPtr device, int what);
@@ -477,10 +479,9 @@ InitKBD(InputInfoPtr pInfo, Bool init)
   pKbd->scanPrefix      = 0;
 
   if (init) {
-      pKbd->keyLeds = 0;
-
+      pKbd->keyLeds = pKbd->GetLeds(pInfo);
       UpdateLeds(pInfo);
-
+      pKbd->keyLeds |= INITFLAG;
       if( pKbd->delay <= 375) rad = 0x00;
       else if (pKbd->delay <= 625) rad = 0x20;
       else if (pKbd->delay <= 875) rad = 0x40;
@@ -489,8 +490,22 @@ InitKBD(InputInfoPtr pInfo, Bool init)
       else if (pKbd->rate >= 30)   rad |= 0x00;
       else                         rad |= ((58 / pKbd->rate) - 2);
       pKbd->SetKbdRepeat(pInfo, rad);
-  } else
+  } else {
+      int leds = pKbd->keyLeds;
+
+      pKbd->keyLeds = pKbd->GetLeds(pInfo);
       UpdateLeds(pInfo);
+      if ((pKbd->keyLeds & CAPSFLAG) !=
+	  ((leds & INITFLAG) ? 0 : (leds & CAPSFLAG))) {
+	  pKbd->PostEvent(pInfo, KEY_CapsLock, TRUE);
+	  pKbd->PostEvent(pInfo, KEY_CapsLock, FALSE);
+      }
+      if ((pKbd->keyLeds & NUMFLAG) !=
+	  (leds & INITFLAG ? 0 : leds & NUMFLAG)) {
+	  pKbd->PostEvent(pInfo, KEY_NumLock, TRUE);
+	  pKbd->PostEvent(pInfo, KEY_NumLock, FALSE);
+      }
+  }
 }
 
 static int
@@ -550,7 +565,6 @@ KbdProc(DeviceIntPtr device, int what)
      * passing on parts of the VT switch sequence.
      */
     if (pInfo->fd >= 0) {
-	sleep(1);
 	xf86FlushInput(pInfo->fd);
 	AddEnabledDevice(pInfo->fd);
     }

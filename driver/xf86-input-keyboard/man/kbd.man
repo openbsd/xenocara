@@ -17,10 +17,10 @@ kbd \- Keyboard input driver
 .B kbd 
 is an __xservername__ input driver for keyboards.  The driver supports the standard
 OS-provided keyboard interface, but these are currently only available to
-this driver module for Linux, BSD, and Solaris.  This driver is planned to
-replace the built-in
+this driver module for Linux, BSD, and Solaris.  This driver is the
+replacement for the built-in
 .B keyboard
-driver in a future release of __xservername__.
+driver formerly included in __xservername__.
 .PP
 The
 .B kbd
@@ -73,7 +73,11 @@ specifies which XKB rules file to use for interpreting the
 and
 .B XkbOptions
 settings.  Default: "xorg" for most platforms, but "xfree98" for the
-Japanese PC-98 platforms.
+Japanese PC-98 platforms. If you use the "xorg" value then you can
+find listing of all valid values for these four options in the
+.I
+__xkb_path__/rules/xorg.lst
+file.
 .TP 7
 .BI "Option \*qXkbModel\*q \*q" modelname \*q
 specifies the XKB keyboard model name.  Default: "pc105" for most platforms,
@@ -95,5 +99,41 @@ enhance the keyboard behaviour.  Default: not set.
 Some other XKB-related options are available, but they are incompatible
 with the ones listed above and are not recommended, so they are not
 documented here.
+.SH EXAMPLE
+The following xorg.conf fragment ensures that user will be able to switch between
+.I us
+and
+.I sk
+layouts by pressing the "menu" key.
+.PP
+The
+.B XkbVariant
+option defines which variants of the two layouts should be used. In case of the
+.I us
+layout
+its default variant is used. In case of the
+.I sk
+layout
+its
+.I qwerty
+variant is used.
+.PP
+.nf
+.RS 4
+Section \*qInputDevice\*q
+.RS 4
+Identifier   "Generic Keyboard"
+Driver       "kbd"
+Option       "CoreKeyboard"
+Option       "XkbRules"      "xorg"
+Option       "XkbModel"      "pc105"
+Option       "XkbLayout"     "us,sk"
+Option       "XkbVariant"    ",qwerty"
+Option       "XkbOptions"    "grp:menu_toggle,grp_led:scroll"
+.RE
+EndSection
+.RE
+.fi
 .SH "SEE ALSO"
-keyboard(__drivermansuffix__), __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__).
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), 
+xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__).

@@ -40,12 +40,16 @@ SED = sed
 XORGRELSTRING = @PACKAGE_STRING@
   XORGMANNAME = X Version 11
 
+# should allow configure override like xserver's configure.ac does
+XKBPATH=${datadir}/X11/xkb
+
 MAN_SUBSTS = \
 	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xservername__|Xorg|g' \
 	-e 's|__xconfigfile__|xorg.conf|g' \
 	-e 's|__projectroot__|$(prefix)|g' \
+        -e 's|__xkb_path__|$(XKBPATH)|g' \
 	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
 	-e 's|__drivermansuffix__|$(DRIVER_MAN_SUFFIX)|g' \
 	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \

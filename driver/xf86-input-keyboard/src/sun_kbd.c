@@ -59,7 +59,6 @@
 #include "xf86_OSlib.h"
 #include "xf86OSKbd.h"
 #include "sun_kbd.h"
-#include "atKeynames.h"
 
 #include <sys/stropts.h>
 #include <sys/vuid_event.h>
@@ -208,42 +207,6 @@ KbdOn(InputInfoPtr pInfo, int what)
 	return BadImplementation;
     }
 
-    /* If Caps Lock or Num Lock LEDs are on when server starts,
-     * send a fake key down on those keys to set the server state
-     * to match the LED's.
-     */
-    if ( priv->oleds & (LED_CAPS_LOCK | LED_NUM_LOCK) ) {
-	int capslock = -1;
-	int numlock = -1;
-	int j;
-	TransMapPtr kmap = pKbd->scancodeMap;
-	
-	for (j = kmap->begin; j < kmap->end ; j++) {
-	    switch (kmap->map[j]) {
-	        case KEY_CapsLock:
-		    capslock = j;
-		    break;
-	    	case KEY_NumLock:	
-		    numlock = j;
-		    break;
-	        default:
-		    /* nothing to do */
-		    break;
-	    }
-	    if ((capslock >= 0) && (numlock >= 0)) {
-		break;
-	    }
-	}
-	if ((priv->oleds & LED_CAPS_LOCK) && (capslock > 0)) {
-	    pKbd->PostEvent(pInfo, capslock, TRUE);	/* Press */
-	    pKbd->PostEvent(pInfo, capslock, FALSE);	/* Release */
-	}
-	if ((priv->oleds & LED_NUM_LOCK) && (numlock > 0)) {
-	    pKbd->PostEvent(pInfo, numlock, TRUE);	/* Press */
-	    pKbd->PostEvent(pInfo, numlock, FALSE);	/* Release */
-	}
-    }
-    
     return Success;
 }
 
@@ -301,9 +264,39 @@ SoundKbdBell(InputInfoPtr pInfo, int loudness, int pitch, int duration)
     sunKbdPrivPtr priv = (sunKbdPrivPtr) pKbd->private;
 
     int	kbdCmd, i;
+#ifdef KIOCMKTONE
+    int cycles;
+    int mktonevalue;
+#endif
 
     if (loudness && pitch)
     {
+#ifdef KIOCMKTONE
+	if (pitch == 0)
+	    cycles = UINT16_MAX;
+	else if (pitch >= UINT16_MAX)
+	    cycles = 0;
+	else {
+	    cycles = (PIT_HZ + pitch / 2) / pitch;
+	    if (cycles > UINT16_MAX)
+		cycles = UINT16_MAX;
+	}
+
+	mktonevalue = cycles | (((duration * loudness * 20) / 1000) << 16);
+
+	errno = 0;
+	SYSCALL(i = ioctl (pInfo->fd, KIOCMKTONE, mktonevalue));
+	if (i == 0)
+	    return;
+
+	if (errno != EINVAL) {
+	    if (errno != EAGAIN)
+		xf86Msg(X_ERROR, "%s: Failed to activate bell: %s\n",
+			pInfo->name, strerror(errno));
+	    return;
+	}
+#endif
+
  	kbdCmd = KBD_CMD_BELL;
 		
 	SYSCALL(i = ioctl (pInfo->fd, KIOCCMD, &kbdCmd));
