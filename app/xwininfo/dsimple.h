@@ -76,7 +76,7 @@ void usage(void);
  * Send bugs, etc. to chariot@athena.mit.edu.
  */
 
-Window Select_Window(Display *);
+Window Select_Window(Display *, int);
 Window Window_With_Name(Display *, Window, char *);
 #ifdef __GNUC__
 void Fatal_Error(char *, ...) __attribute__((__noreturn__));

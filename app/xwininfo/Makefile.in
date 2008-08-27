@@ -76,7 +76,8 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xwininfo_OBJECTS = dsimple.$(OBJEXT) xwininfo.$(OBJEXT)
+am_xwininfo_OBJECTS = clientwin.$(OBJEXT) dsimple.$(OBJEXT) \
+	xwininfo.$(OBJEXT)
 xwininfo_OBJECTS = $(am_xwininfo_OBJECTS)
 am__DEPENDENCIES_1 =
 xwininfo_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -209,6 +210,8 @@ target_alias = @target_alias@
 AM_CFLAGS = $(XWININFO_CFLAGS)
 xwininfo_LDADD = $(XWININFO_LIBS)
 xwininfo_SOURCES = \
+        clientwin.c \
+        clientwin.h \
         dsimple.c \
         dsimple.h \
         xwininfo.c
@@ -328,6 +331,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clientwin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsimple.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xwininfo.Po@am__quote@
 

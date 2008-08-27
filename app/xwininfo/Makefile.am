@@ -25,6 +25,8 @@ AM_CFLAGS = $(XWININFO_CFLAGS)
 xwininfo_LDADD = $(XWININFO_LIBS)
 
 xwininfo_SOURCES =	\
+        clientwin.c \
+        clientwin.h \
         dsimple.c \
         dsimple.h \
         xwininfo.c

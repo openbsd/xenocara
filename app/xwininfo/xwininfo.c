@@ -51,7 +51,6 @@ of the copyright holder.
 #include <X11/Xatom.h>
 #include <X11/Xos.h>
 #include <X11/extensions/shape.h>
-#include <X11/Xmu/WinUtil.h>
 #ifndef NO_I18N
 #include <X11/Xlocale.h>
 #endif
@@ -388,17 +387,7 @@ main(int argc, char **argv)
 	  printf("xwininfo: Please select the window about which you\n");
 	  printf("          would like information by clicking the\n");
 	  printf("          mouse in that window.\n");
-	  window = Select_Window(dpy);
-	  if (window && !frame) {
-	      Window root;
-	      int dummyi;
-	      unsigned int dummy;
-
-	      if (XGetGeometry (dpy, window, &root, &dummyi, &dummyi,
-				&dummy, &dummy, &dummy, &dummy) &&
-		  window != root)
-	        window = XmuClientWindow (dpy, window);
-	  }
+	  window = Select_Window(dpy, !frame);
   }
 
   /*
