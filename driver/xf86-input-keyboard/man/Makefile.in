@@ -113,6 +113,7 @@ DEPDIR = @DEPDIR@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -145,6 +146,7 @@ MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -157,6 +159,7 @@ PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 SCO_FALSE = @SCO_FALSE@
 SCO_TRUE = @SCO_TRUE@
+SED = sed
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SOLARIS_FALSE = @SOLARIS_FALSE@
@@ -168,7 +171,9 @@ XORG_LIBS = @XORG_LIBS@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
@@ -215,17 +220,20 @@ driverman_PRE = @DRIVER_NAME@.man
 driverman_DATA = $(driverman_PRE:man=@DRIVER_MAN_SUFFIX@)
 EXTRA_DIST = @DRIVER_NAME@.man
 CLEANFILES = $(driverman_DATA)
-SED = sed
 
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
 XORGMANNAME = X Version 11
+
+# should allow configure override like xserver's configure.ac does
+XKBPATH = ${datadir}/X11/xkb
 MAN_SUBSTS = \
 	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xservername__|Xorg|g' \
 	-e 's|__xconfigfile__|xorg.conf|g' \
 	-e 's|__projectroot__|$(prefix)|g' \
+        -e 's|__xkb_path__|$(XKBPATH)|g' \
 	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
 	-e 's|__drivermansuffix__|$(DRIVER_MAN_SUFFIX)|g' \
 	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
