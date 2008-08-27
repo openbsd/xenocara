@@ -31,7 +31,7 @@ xwd - dump an image of an X window
 .SH SYNOPSIS
 .B "xwd"
 [-debug] [-help] [-nobdrs] [-out \fIfile\fP] [-xy] [-frame] [-add \fIvalue\fP]
-[-root | -id \fIid\fP | -name \fIname\fP ] [-icmap] [-screen]
+[-root | -id \fIid\fP | -name \fIname\fP ] [-icmap] [-screen] [-silent]
 [-display \fIdisplay\fP]
 .SH DESCRIPTION
 .PP

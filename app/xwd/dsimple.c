@@ -41,9 +41,7 @@ from The Open Group.
  * Written by Mark Lillibridge.   Last updated 7/1/87
  */
 
-#ifdef BUILD_PRINTSUPPORT
-#include <X11/XprintUtil/xprintutil.h>
-#endif /* BUILD_PRINTSUPPORT */
+#include "clientwin.h"
 #include "dsimple.h"
 
 /*
@@ -61,54 +59,15 @@ from The Open Group.
 char    *program_name = "unknown_program";
 Display *dpy = NULL;
 int      screen = 0;
-Bool     printer_output = False; /* Video or printer output ? */
-#ifdef BUILD_PRINTSUPPORT
-XPContext pcontext = None;
-#endif /* BUILD_PRINTSUPPORT */
-
-static void _bitmap_error(int, char *);
-
-/*
- * Malloc: like malloc but handles out of memory using Fatal_Error.
- */
-char *Malloc(size)
-     unsigned size;
-{
-	char *data;
-
-	if (!(data = malloc(size)))
-	  Fatal_Error("Out of memory!");
-
-	return(data);
-}
-	
-
-/*
- * Realloc: like Malloc except for realloc, handles NULL using Malloc.
- */
-char *Realloc(ptr, size)
-        char *ptr;
-        int size;
-{
-	char *new_ptr;
-
-	if (!ptr)
-	  return(Malloc(size));
-
-	if (!(new_ptr = realloc(ptr, size)))
-	  Fatal_Error("Out of memory!");
-
-	return(new_ptr);
-}
 
 
 /*
  * Get_Display_Name (argc, argv) Look for -display, -d, or host:dpy (obselete)
  * If found, remove it from command line.  Don't go past a lone -.
  */
-char *Get_Display_Name(pargc, argv)
-    int *pargc;  /* MODIFIED */
-    char **argv; /* MODIFIED */
+char *Get_Display_Name(
+    int *pargc,  /* MODIFIED */
+    char **argv) /* MODIFIED */
 {
     int argc = *pargc;
     char **pargv = argv+1;
@@ -138,49 +97,11 @@ char *Get_Display_Name(pargc, argv)
 }
 
 
-#ifdef BUILD_PRINTSUPPORT
-/*
- * Get_Printer_Name (argc, argv) Look for -printer, -p,
- * If found, remove it from command line.  Don't go past a lone -.
- */
-char *Get_Printer_Name(pargc, argv)
-    int *pargc;  /* MODIFIED */
-    char **argv; /* MODIFIED */
-{
-    int argc = *pargc;
-    char **pargv = argv+1;
-    char *printername = NULL;
-    int i;
-
-    for (i = 1; i < argc; i++) {
-	char *arg = argv[i];
-
-	if (!strcmp (arg, "-printer") || !strcmp (arg, "-p")) {
-	    if (++i >= argc) usage ();
-
-	    printername = argv[i];
-	    *pargc -= 2;
-	    continue;
-	}
-	if (!strcmp(arg,"-")) {
-		while (i<argc)
-			*pargv++ = argv[i++];
-		break;
-	}
-	*pargv++ = arg;
-    }
-
-    *pargv = NULL;
-    return (printername);
-}
-#endif /* BUILD_PRINTSUPPORT */
-
 /*
  * Open_Display: Routine to open a display with correct error handling.
  *               Does not require dpy or screen defined on entry.
  */
-Display *Open_Display(display_name)
-char *display_name;
+Display *Open_Display(const char *display_name)
 {
 	Display *d;
 
@@ -203,41 +124,15 @@ char *display_name;
  *                           for this display is then stored in screen.
  *                           Does not require dpy or screen defined.
  */
-void Setup_Display_And_Screen(argc, argv)
-int *argc;      /* MODIFIED */
-char **argv;    /* MODIFIED */
+void Setup_Display_And_Screen(
+    int *argc,      /* MODIFIED */
+    char **argv)    /* MODIFIED */
 {
-        char *displayname = NULL,
-             *printername = NULL;
-        
+        char *displayname = NULL;
+
         displayname = Get_Display_Name(argc, argv);
-#ifdef BUILD_PRINTSUPPORT
-        printername = Get_Printer_Name(argc, argv);
-        
-        if (displayname && printername) {
-	    fprintf (stderr, "%s:  you cannot specify -printer (-p) and -display (-d) at the same time.\n",
-		     program_name);
-	    usage ();
-        }
-
-        if (printername) {
-            printer_output = True;
-            
-            if (XpuGetPrinter(printername, &dpy, &pcontext) != 1) {
-                fprintf(stderr, "%s: Cannot open printer '%s'.\n", program_name, printername);
-                exit(EXIT_FAILURE);
-            }
-
-            screen = XScreenNumberOfScreen(XpGetScreenOfContext(dpy, pcontext));
-        }
-        else
-#endif /* BUILD_PRINTSUPPORT */
-        {
-            printer_output = False;
-
-	    dpy = Open_Display (displayname);
-	    screen = XDefaultScreen(dpy);
-        }
+	dpy = Open_Display (displayname);
+	screen = XDefaultScreen(dpy);
 }
 
 /*
@@ -248,95 +143,8 @@ void Close_Display(void)
     if (dpy == NULL)
       return;
       
-#ifdef BUILD_PRINTSUPPORT
-    if (printer_output) {
-        XpuClosePrinterDisplay(dpy, pcontext);
-        dpy            = NULL;
-        pcontext       = None;
-        printer_output = False;
-    }
-    else
-#endif /* BUILD_PRINTSUPPORT */
-    {
-        XCloseDisplay(dpy);
-        dpy = NULL;
-    }
-}
-
-
-/*
- * Open_Font: This routine opens a font with error handling.
- */
-XFontStruct *Open_Font(name)
-char *name;
-{
-	XFontStruct *font;
-
-	if (!(font=XLoadQueryFont(dpy, name)))
-	  Fatal_Error("Unable to open font %s!", name);
-
-	return(font);
-}
-
-
-/*
- * Beep: Routine to beep the display.
- */
-void Beep()
-{
-	XBell(dpy, 50);
-}
-
-
-/*
- * ReadBitmapFile: same as XReadBitmapFile except it returns the bitmap
- *                 directly and handles errors using Fatal_Error.
- */
-static void _bitmap_error(status, filename)
-     int status;
-     char *filename;
-{
-  if (status == BitmapOpenFailed)
-    Fatal_Error("Can't open file %s!", filename);
-  else if (status == BitmapFileInvalid)
-    Fatal_Error("file %s: Bad bitmap format.", filename);
-  else
-    Fatal_Error("Out of memory!");
-}
-
-Pixmap ReadBitmapFile(d, filename, width, height, x_hot, y_hot)
-     Drawable d;
-     char *filename;
-     int *width, *height, *x_hot, *y_hot;
-{
-  Pixmap bitmap;
-  int status;
-
-  status = XReadBitmapFile(dpy, RootWindow(dpy, screen), filename,
-			   (unsigned int *)width, (unsigned int *)height,
-			   &bitmap, x_hot, y_hot);
-  if (status != BitmapSuccess)
-    _bitmap_error(status, filename);
-
-  return(bitmap);
-}
-
-
-/*
- * WriteBitmapFile: same as XWriteBitmapFile except it handles errors
- *                  using Fatal_Error.
- */
-void WriteBitmapFile(filename, bitmap, width, height, x_hot, y_hot)
-     char *filename;
-     Pixmap bitmap;
-     int width, height, x_hot, y_hot;
-{
-  int status;
-
-  status= XWriteBitmapFile(dpy, filename, bitmap, width, height, x_hot,
-			   y_hot);
-  if (status != BitmapSuccess)
-    _bitmap_error(status, filename);
+    XCloseDisplay(dpy);
+    dpy = NULL;
 }
 
 
@@ -362,9 +170,9 @@ void WriteBitmapFile(filename, bitmap, width, height, x_hot, y_hot)
  *                     all command line arguments, and other setup is done.
  *                     For examples of usage, see xwininfo, xwd, or xprop.
  */
-Window Select_Window_Args(rargc, argv)
-     int *rargc;
-     char **argv;
+Window Select_Window_Args(
+    int *rargc,
+    char **argv)
 #define ARGC (*rargc)
 {
 	int nargc=1;
@@ -420,91 +228,12 @@ Window Select_Window_Args(rargc, argv)
  * Written by Mark Lillibridge.   Last updated 7/1/87
  */
 
-/*
- * Resolve_Color: This routine takes a color name and returns the pixel #
- *                that when used in the window w will be of color name.
- *                (WARNING:  The colormap of w MAY be modified! )
- *                If colors are run out of, only the first n colors will be
- *                as correct as the hardware can make them where n depends
- *                on the display.  This routine does not require wind to
- *                be defined.
- */
-unsigned long Resolve_Color(w, name)
-     Window w;
-     char *name;
-{
-	XColor c;
-	Colormap colormap;
-	XWindowAttributes wind_info;
-
-	/*
-	 * The following is a hack to insure machines without a rgb table
-	 * handle at least white & black right.
-	 */
-	if (!strcmp(name, "white"))
-	  name="#ffffffffffff";
-	if (!strcmp(name, "black"))
-	  name="#000000000000";
-
-	XGetWindowAttributes(dpy, w, &wind_info);
-	colormap = wind_info.colormap;
-
-	if (!XParseColor(dpy, colormap, name, &c))
-	  Fatal_Error("Bad color format '%s'.", name);
-
-	if (!XAllocColor(dpy, colormap, &c))
-	  Fatal_Error("XAllocColor failed!");
-
-	return(c.pixel);
-}
-
-
-/*
- * Bitmap_To_Pixmap: Convert a bitmap to a 2 colored pixmap.  The colors come
- *                   from the foreground and background colors of the gc.
- *                   Width and height are required solely for efficiency.
- *                   If needed, they can be obtained via. XGetGeometry.
- */
-Pixmap Bitmap_To_Pixmap(dpy, d, gc, bitmap, width, height)
-     Display *dpy;
-     Drawable d;
-     GC gc;
-     Pixmap bitmap;
-     int width, height;
-{
-  Pixmap pix;
-  int x;
-  unsigned int i, depth;
-  Drawable root;
-
-  if (!XGetGeometry(dpy, d, &root, &x, &x, &i, &i, &i, &depth))
-    return(0);
-
-  pix = XCreatePixmap(dpy, d, width, height, (int)depth);
-
-  XCopyPlane(dpy, bitmap, pix, gc, 0, 0, width, height, 0, 0, 1);
-
-  return(pix);
-}
-
-
-/*
- * blip: a debugging routine.  Prints Blip! on stderr with flushing. 
- */
-void blip()
-{
-    fflush(stdout);
-    fprintf(stderr, "blip!\n");
-    fflush(stderr);
-}
-
 
 /*
  * Routine to let user select a window using the mouse
  */
 
-Window Select_Window(dpy)
-     Display *dpy;
+Window Select_Window(Display *dpy, int descend)
 {
   int status;
   Cursor cursor;
@@ -543,6 +272,11 @@ Window Select_Window(dpy)
 
   XUngrabPointer(dpy, CurrentTime);      /* Done with pointer */
 
+  if (!descend || (target_win == root))
+    return(target_win);
+
+  target_win = Find_Client(dpy, root, target_win);
+
   return(target_win);
 }
 
@@ -554,10 +288,10 @@ Window Select_Window(dpy)
  *                   one found will be returned.  Only top and its subwindows
  *                   are looked at.  Normally, top should be the RootWindow.
  */
-Window Window_With_Name(dpy, top, name)
-     Display *dpy;
-     Window top;
-     char *name;
+Window Window_With_Name(
+    Display *dpy,
+    Window top,
+    const char *name)
 {
 	Window *children, dummy;
 	unsigned int nchildren;

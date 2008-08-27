@@ -74,7 +74,6 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-#include <X11/Xmu/WinUtil.h>
 typedef unsigned long Pixel;
 #include "X11/XWDFile.h"
 
@@ -199,22 +198,8 @@ main(argc, argv)
     /*
      * Let the user select the target window.
      */
-    if (!target_win) {
-	target_win = Select_Window(dpy);
-    }
-    
-    if (target_win != None && !frame_only) {
-        Window root;
-        int dummyi;
-        unsigned int dummy;
-
-        if (XGetGeometry (dpy, target_win, &root, &dummyi, &dummyi,
-			      &dummy, &dummy, &dummy, &dummy) &&
-                              target_win != root) {
-	      target_win = XmuClientWindow (dpy, target_win);
-	}
-    }
-
+    if (target_win == None)
+	target_win = Select_Window(dpy, !frame_only);
 
     /*
      * Dump it!

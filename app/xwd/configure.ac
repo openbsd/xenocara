@@ -22,17 +22,18 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xwd,[1.0.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xwd)
+AC_INIT(xwd,[1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xwd)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_INSTALL
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XWD, xmuu x11)
+PKG_CHECK_MODULES(XWD, x11)
 AC_SUBST(XWD_CFLAGS)
 AC_SUBST(XWD_LIBS)
 
