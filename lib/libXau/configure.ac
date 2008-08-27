@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.ac,v 1.1.1.2 2006/12/16 21:38:42 matthieu Exp $
+dnl  $Id: configure.ac,v 1.2 2008/08/27 19:42:20 matthieu Exp $
 dnl 
 dnl  Copyright © 2003 Keith Packard, Noah Levitt
 dnl 
@@ -24,7 +24,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(libXau, 1.0.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],libXau)
+AC_INIT(libXau, 1.0.4, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],libXau)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -55,8 +55,14 @@ AC_ARG_ENABLE(xthreads,
 
 if test "x$xthreads" = "xyes" ; then
     AC_DEFINE(XTHREADS,1,[Whether libXau is compiled with thread support])
-    AC_CHECK_LIB(c, gethostbyname_r, AC_DEFINE(XUSE_MTSAFE_API,1,
-			[Whether libXau needs to use MT safe API's]))
+    AC_CHECK_LIB(c, gethostbyname_r, [mtsafe=yes])
+    if test "x$mtsafe" = "x" ; then
+	AC_CHECK_LIB(nsl, gethostbyname_r, [mtsafe=yes])
+    fi
+    if test "x$mtsafe" = "xyes" ; then
+	AC_DEFINE(XUSE_MTSAFE_API, 1, 
+		  [Whether libXau needs to use MT safe API's])
+    fi
 
 dnl XXX incomplete, please fill this in
     case $host_os in

@@ -1,3 +1,33 @@
+commit 7f6275300243fd15ce974d1b5e478b47f7758485
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Aug 26 14:19:19 2008 -0700
+
+    Version bump: 1.0.4
+
+commit 753bf38ceca4a0c8d6c6c1845b4387e4b3c9e4f0
+Author: Damien Th?bault <damien.thebault@gmail.com>
+Date:   Tue Aug 26 14:16:44 2008 -0700
+
+    Bug 17314: libXau's Makefile.am should have proper man creation rules
+    
+    X.Org Bugzilla #17314 <http://bugs.freedesktop.org/show_bug.cgi?id=17314>
+    Patch #18528 <http://bugs.freedesktop.org/attachment.cgi?id=18528>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit a0b2aac596ea2cbe4d0ec1ef8c406ad98f0c499d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jul 8 15:08:35 2008 -0700
+
+    SVR4 (including Solaris) puts gethostbyname_r in libnsl instead of libc
+
+commit 1bc9f04963a8a236cc190e75e32282774b556932
+Author: Daniel Drake <ddrake@brontes3d.com>
+Date:   Tue May 29 14:06:00 2007 -0800
+
+    Bug #11097: libXau COPYING fix (add missing copyright dates)
+    
+    X.Org Bugzilla #11097 <https://bugs.freedesktop.org/show_bug.cgi?id=11097>
+
 commit 45d137fdbb9b21513aff68e945e19cdfdcbc28b1
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Dec 16 01:18:20 2006 +0200

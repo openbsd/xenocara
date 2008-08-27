@@ -139,6 +139,7 @@ DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -176,6 +177,7 @@ MAKE_LINT_LIB_FALSE = @MAKE_LINT_LIB_FALSE@
 MAKE_LINT_LIB_TRUE = @MAKE_LINT_LIB_TRUE@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -187,6 +189,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -198,7 +201,9 @@ ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
@@ -262,7 +267,7 @@ Autest_LDADD = libXau.la
 LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
 libmandir = $(LIB_MAN_DIR)
 libman_PRE = Xau.man
-BUILT_SOURCES = shadows.DONE
+BUILT_SOURCES = $(Xau_shadows:=.@LIB_MAN_SUFFIX@)
 CLEANFILES = $(libman_DATA) $(BUILT_SOURCES) $(lintlib_DATA)
 libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
 	      $(Xau_shadows:=.@LIB_MAN_SUFFIX@)
@@ -278,6 +283,7 @@ Xau_shadows = \
     XauGetAuthByAddr                        \
     XauGetBestAuthByAddr
 
+Xau_shadows_man = $(Xau_shadows:=.@LIB_MAN_SUFFIX@)
 XORGRELSTRING = @PACKAGE_STRING@
 XORGMANNAME = X Version 11
 all: $(BUILT_SOURCES) config.h
@@ -863,13 +869,8 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
 
 @MAKE_LINT_LIB_TRUE@$(LINTLIB): $(libXau_la_SOURCES)
 @MAKE_LINT_LIB_TRUE@	$(LINT) -y -oXau -x $(ALL_LINT_FLAGS) $(libXau_la_SOURCES)
-
-shadows.DONE:
-	-rm -f $(Xau_shadows:=.@LIB_MAN_SUFFIX@)
-	(for i in $(Xau_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/Xau.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	touch shadows.DONE
+$(Xau_shadows_man):
+	echo .so man$(LIB_MAN_DIR_SUFFIX)/Xau.$(LIB_MAN_SUFFIX) > $@
 
 Xau.$(LIB_MAN_SUFFIX): $(srcdir)/Xau.man
 	sed 's/__xorgversion__/"$(XORGRELSTRING)" "$(XORGMANNAME)"/' \

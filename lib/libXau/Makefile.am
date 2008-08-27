@@ -56,7 +56,7 @@ LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
 
 libmandir = $(LIB_MAN_DIR)
 libman_PRE = Xau.man
-BUILT_SOURCES = shadows.DONE
+BUILT_SOURCES = $(Xau_shadows:=.@LIB_MAN_SUFFIX@)
 CLEANFILES = $(libman_DATA) $(BUILT_SOURCES) $(lintlib_DATA)
 libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
 	      $(Xau_shadows:=.@LIB_MAN_SUFFIX@)
@@ -73,12 +73,9 @@ Xau_shadows =                               \
     XauGetAuthByAddr                        \
     XauGetBestAuthByAddr
 
-shadows.DONE:
-	-rm -f $(Xau_shadows:=.@LIB_MAN_SUFFIX@)
-	(for i in $(Xau_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/Xau.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	touch shadows.DONE
+Xau_shadows_man = $(Xau_shadows:=.@LIB_MAN_SUFFIX@)
+$(Xau_shadows_man):
+	echo .so man$(LIB_MAN_DIR_SUFFIX)/Xau.$(LIB_MAN_SUFFIX) > $@
 
 XORGRELSTRING = @PACKAGE_STRING@
   XORGMANNAME = X Version 11
