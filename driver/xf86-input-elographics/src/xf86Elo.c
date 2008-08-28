@@ -807,7 +807,7 @@ xf86EloReadInput(LocalDevicePtr	local)
   /*
    * Try to get a packet.
    */
-  while (xf86EloGetPacket(priv->packet_buf,
+  if (xf86EloGetPacket(priv->packet_buf,
 		       &priv->packet_buf_p,
 		       &priv->checksum,
 		       local->fd) == Success) {
