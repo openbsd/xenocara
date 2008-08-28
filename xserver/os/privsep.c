@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.9 2008/06/15 00:17:33 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.10 2008/08/28 17:50:21 mbalmer Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -81,6 +81,7 @@ struct okdev {
 	{"/dev/tty01", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/tty02", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/tty03", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/tty04", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/ttya", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/ttyb", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/ttyc", O_RDWR | O_NONBLOCK | O_EXCL},
