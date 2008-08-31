@@ -153,8 +153,9 @@ EndSection
 
 Single, accelerated display
 ---------------------------
-Accelerated access to the framebuffer is only supported on machines with
-PCI VGA framebuffers.  To use it, retrieve the PCI bus, device and function
+Accelerated access to the framebuffer is supported on machines with
+PCI VGA or UPA Creator framebuffers.  
+To use a PCI VGA framebuffer, retrieve the PCI bus, device and function
 of the video card, eg:
 
 	blade$ dmesg | grep vgafb
@@ -173,6 +174,15 @@ of the framebuffer):
 		Option		"composite_sync" "True"
 		# Use the following option on Blade-100 
 		# Option	"reference_clock" "29.5MHz"
+	EndSection
+
+For UPA Creator framebuffers, the device can be automatically detected if 
+you don't have an xorg.conf file. Otherwise the "Device" section would 
+be something like:
+
+	Section "Device"
+		Identifier	"Card0"
+		Driver		"sunffb"
 	EndSection
 
 It is also important that you modify the Monitor section and change the
@@ -254,4 +264,4 @@ See xorg.conf(5) for more options.
 
 problem_blurb
 
-$OpenBSD: README.sparc64,v 1.4 2007/08/26 07:38:37 matthieu Exp $
+$OpenBSD: README.sparc64,v 1.5 2008/08/31 07:30:43 matthieu Exp $
