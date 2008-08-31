@@ -1,7 +1,7 @@
 Post-installation instructions for X.Org on OpenBSD/zaurus
 ----------------------------------------------------------
 
-OpenBSD 3.7 and later uses the X.Org X server on zaurus. 
+OpenBSD uses the X.Org X server on zaurus. 
 
 A default /etc/X11/xorg.conf is installed so you can just use
 'startx' or xdm to start X without further configuration. 
@@ -11,4 +11,4 @@ To use xdm from rc.conf, it is necessary to disable /dev/ttyC0 in
 
 problem_blurb
 
-$OpenBSD: README.zaurus,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+$OpenBSD: README.zaurus,v 1.2 2008/08/31 07:33:29 matthieu Exp $

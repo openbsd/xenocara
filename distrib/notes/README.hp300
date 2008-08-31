@@ -1,7 +1,7 @@
 Post-installation instructions for X.Org on OpenBSD/hp300
 ---------------------------------------------------------
 
-OpenBSD 3.7 and later uses the X.Org X server on hp300. 
+OpenBSD uses the X.Org X server on hp300. 
 
 An unaccelerated frame buffer driver, wsfb, is provided for all frame
 buffers but those on the SGC bus (including the 425e built-in EVRX).
@@ -18,4 +18,4 @@ Alternatively, you can log in on console and use `startx'.
 
 problem_blurb
 
-$OpenBSD: README.hp300,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+$OpenBSD: README.hp300,v 1.2 2008/08/31 07:33:29 matthieu Exp $

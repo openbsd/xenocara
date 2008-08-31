@@ -1,7 +1,7 @@
 Post-installation instructions for X.Org on OpenBSD/mac68k
 ----------------------------------------------------------
 
-OpenBSD 3.9 and later uses the X.Org X server on mac68k.
+OpenBSD uses the X.Org X server on mac68k.
 
 An unaccelerated frame buffer driver, wsfb, is provided for all supported
 frame buffers. It uses whatever graphics mode the console is set to
@@ -17,4 +17,4 @@ Alternatively, you can log in on console and use `startx'.
 
 problem_blurb
 
-$OpenBSD: README.mac68k,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+$OpenBSD: README.mac68k,v 1.2 2008/08/31 07:33:29 matthieu Exp $

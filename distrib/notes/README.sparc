@@ -1,7 +1,7 @@
 Post-installation instructions for X.Org on OpenBSD/sparc
 ---------------------------------------------------------
 
-1. Sun setup is easy:
+1. Seting up X on sparc is easy:
 
    Typical Xorg use on Sun sparc-based machines requires no special
    configuration.  The provided /etc/X11/xorg.conf will work in most
@@ -73,4 +73,4 @@ Post-installation instructions for X.Org on OpenBSD/sparc
 
 problem_blurb
 
-$OpenBSD: README.sparc,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+$OpenBSD: README.sparc,v 1.2 2008/08/31 07:33:29 matthieu Exp $

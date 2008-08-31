@@ -1,7 +1,7 @@
 Post-installation instructions for X.Org on OpenBSD/sgi
 -------------------------------------------------------
 
-OpenBSD 4.3 and later use the X.Org X server on sgi.
+OpenBSD use the X.Org X server on sgi.
 
 Currently, the X server is only supported on SGI O2 workstations with a gbe(4)
 frame buffer. The wsfb driver provides an unaccelerated frame buffer for use 
@@ -24,4 +24,4 @@ Alternatively, you can log in at the console and run `startx'.
 
 problem_blurb
 
-$OpenBSD: README.sgi,v 1.2 2008/01/06 06:26:59 jsing Exp $
+$OpenBSD: README.sgi,v 1.3 2008/08/31 07:33:29 matthieu Exp $
