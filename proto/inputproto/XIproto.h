@@ -1600,7 +1600,7 @@ typedef struct
     BYTE        pad00;
     CARD16 	sequenceNumber B16;
     Time        time B32;
-    BYTE        devchange; /* Device{Added|Removed|Enabled|Disabled} */
+    BYTE        devchange; /* Device{Added|Removed|Enabled|Disabled|ControlChanged} */
     BYTE        deviceid;
     CARD16      control B16;
     CARD32	pad02 B32;
