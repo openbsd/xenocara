@@ -96,6 +96,7 @@
 ./usr/X11R6/bin/xhost
 ./usr/X11R6/bin/xidle
 ./usr/X11R6/bin/xinit
+./usr/X11R6/bin/xinput
 ./usr/X11R6/bin/xkbbell
 ./usr/X11R6/bin/xkbcomp
 ./usr/X11R6/bin/xkbevd
@@ -121,8 +122,6 @@
 ./usr/X11R6/bin/xrdb
 ./usr/X11R6/bin/xrefresh
 ./usr/X11R6/bin/xset
-./usr/X11R6/bin/xsetmode
-./usr/X11R6/bin/xsetpointer
 ./usr/X11R6/bin/xsetroot
 ./usr/X11R6/bin/xsm
 ./usr/X11R6/bin/xstdcmap
@@ -272,6 +271,7 @@
 ./usr/X11R6/lib/libxkbfile.la
 ./usr/X11R6/lib/libxkbui.a
 ./usr/X11R6/lib/libxkbui.la
+./usr/X11R6/lib/pkgconfig/pixman-1.pc
 ./usr/X11R6/man
 ./usr/X11R6/man/cat1
 ./usr/X11R6/man/cat4

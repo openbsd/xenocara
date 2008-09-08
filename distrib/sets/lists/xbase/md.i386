@@ -435,7 +435,6 @@
 ./usr/X11R6/include/pixman-1/pixman-version.h
 ./usr/X11R6/include/pixman-1/pixman.h
 ./usr/X11R6/include/xf86drm.h
-./usr/X11R6/include/xf86mm.h
 ./usr/X11R6/include/xorg/dri.h
 ./usr/X11R6/include/xorg/dristruct.h
 ./usr/X11R6/include/xorg/hotplug.h
@@ -526,7 +525,6 @@
 ./usr/X11R6/lib/pkgconfig/glu.pc
 ./usr/X11R6/lib/pkgconfig/glw.pc
 ./usr/X11R6/lib/pkgconfig/libdrm.pc
-./usr/X11R6/lib/pkgconfig/pixman-1.pc
 ./usr/X11R6/lib/pkgconfig/xf86driproto.pc
 ./usr/X11R6/man/cat1/glxgears.0
 ./usr/X11R6/man/cat1/glxinfo.0

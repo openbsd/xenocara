@@ -995,6 +995,7 @@
 ./usr/X11R6/man/man1/xgc.1
 ./usr/X11R6/man/man1/xhost.1
 ./usr/X11R6/man/man1/xinit.1
+./usr/X11R6/man/man1/xinput.1
 ./usr/X11R6/man/man1/xkbcomp.1
 ./usr/X11R6/man/man1/xkbevd.1
 ./usr/X11R6/man/man1/xkbprint.1
@@ -1018,8 +1019,6 @@
 ./usr/X11R6/man/man1/xrdb.1
 ./usr/X11R6/man/man1/xrefresh.1
 ./usr/X11R6/man/man1/xset.1
-./usr/X11R6/man/man1/xsetmode.1
-./usr/X11R6/man/man1/xsetpointer.1
 ./usr/X11R6/man/man1/xsetroot.1
 ./usr/X11R6/man/man1/xsm.1
 ./usr/X11R6/man/man1/xstdcmap.1
