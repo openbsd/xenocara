@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.10 2008/04/02 20:05:35 matthieu Exp $
+# $OpenBSD: Makefile,v 1.11 2008/09/08 12:20:47 todd Exp $
 
 .include <bsd.xconf.mk>
 
@@ -9,7 +9,8 @@ SUBDIR= freetype fontconfig libxtrans libXau libXdmcp \
 	libXdamage libXcursor libXevie libXfont libXfontcache \
 	libXi libXinerama libxkbfile libxkbui libXprintUtil \
 	libXprintAppUtil libXrandr libXRes libXScrnSaver libXTrap \
-	libXtst libXv libXvMC libXxf86dga libXxf86misc libXxf86vm
+	libXtst libXv libXvMC libXxf86dga libXxf86misc libXxf86vm \
+	pixman
 
 # libdrm is needed by the via driver built on i386 only
 .if ${XENOCARA_BUILD_DRI:L} == "yes" || ${MACHINE} == "i386"
@@ -18,11 +19,6 @@ SUBDIR+= libdrm
 
 .if ${XENOCARA_BUILD_GL:L} == "yes"
 SUBDIR+= libGL libGLU libGLw
-.endif
-
-# Gcc ICE on sh
-.if ${MACHINE_ARCH} != "sh"
-SUBDIR+= pixman
 .endif
 
 .include <bsd.subdir.mk>
