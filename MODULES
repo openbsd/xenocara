@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.41 2008/08/27 20:02:12 matthieu Exp $
+# $OpenBSD: MODULES,v 1.42 2008/09/09 06:15:35 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -14,7 +14,7 @@ app/fstobdf		1.0.3 	7.4
 app/iceauth		1.0.2	7.3
 app/ico			1.0.2	7.3
 app/listres		1.0.1	7.0
-app/luit		1.0.2	7.2RC2	needs-rel
+app/luit		1.0.3	7.4	needs-update
 app/mkfontdir		1.0.4	7.4
 app/mkfontscale		1.0.5	7.4
 app/oclock		1.0.1	7.0
@@ -54,6 +54,7 @@ app/xgamma		1.0.2	7.3
 app/xgc			1.0.1	7.0
 app/xhost		1.0.2	7.3
 app/xinit		1.1.0	7.4
+app/xinput		1.3.0	7.4
 app/xkbcomp		1.0.5	7.4
 app/xkbevd		1.0.2	7.1
 app/xkbprint		1.0.1	7.0
@@ -75,8 +76,8 @@ app/xrandr		1.2.3	7.4
 app/xrdb		1.0.5	7.4
 app/xrefresh		1.0.2	7.1
 app/xset		1.0.4	7.4
-app/xsetmode		1.0.0	7.0
-app/xsetpointer		1.0.1	7.3	needs-rel
+app/xsetmode		1.0.0	7.0	deprecated
+app/xsetpointer		1.0.1	7.3	deprecated
 app/xsetroot		1.0.2	7.3
 app/xsm			1.0.1	7.0
 app/xstdcmap		1.0.1	7.0
@@ -120,28 +121,28 @@ driver/xf86-input-vmmouse	12.5.1	7.4
 driver/xf86-input-void		1.1.1	7.1
 driver/xf86-video-apm		1.2.0	7.4
 driver/xf86-video-ark		0.7.0	7.4
-driver/xf86-video-ast		0.85.0	7.4
+driver/xf86-video-ast		0.85.0	7.4	
 driver/xf86-video-ati		6.9.0	7.4
 driver/xf86-video-chips		1.2.0	7.4
 driver/xf86-video-cirrus	1.2.1	7.4	needs-update
-driver/xf86-video-cyrix		1.1.0	7.1
+driver/xf86-video-cyrix		1.1.0	7.1	deprecated?
 driver/xf86-video-dummy		0.3.0	7.4	needs-update
 driver/xf86-video-geode		2.10.1	7.4	needs-update
-driver/xf86-video-glint		1.2.0	7.4	needs-update
-driver/xf86-video-i128		1.3.0	7.4	needs-update
+driver/xf86-video-glint		1.2.1	7.4	needs-update
+driver/xf86-video-i128		1.3.1	7.4	needs-update
 driver/xf86-video-i740		1.2.0	7.4	needs-update
 driver/xf86-video-impact	0.2.0		need-rel
-driver/xf86-video-imstt		1.1.0	7.1
-driver/xf86-video-intel		2.4.1	7.4	needs-update
+driver/xf86-video-imstt		1.1.0	7.1	deprecated?
+driver/xf86-video-intel		2.4.2	7.4	needs-update
 driver/xf86-video-mach64	6.8.0	7.4
 driver/xf86-video-mga		1.4.9	7.4
 driver/xf86-video-neomagic	1.2.1	7.4
 driver/xf86-video-newport	0.2.1	7.2RC1
-driver/xf86-video-nsc		2.8.3	7.3	needs-update
-driver/xf86-video-nv		2.1.11	7.4	needs-update
+driver/xf86-video-nsc		2.8.3	7.3	needs-update/deprecated?
+driver/xf86-video-nv		2.1.12	7.4	needs-update
 driver/xf86-video-openchrome	0.2.903		needs-update
 driver/xf86-video-r128		6.8.0	7.4
-driver/xf86-video-radeonhd	1.2.1	7.4
+driver/xf86-video-radeonhd	1.2.1	7.4	deprecated?
 driver/xf86-video-rendition	4.2.0	7.4	needs-update
 driver/xf86-video-s3		0.6.0	7.4	needs-update
 driver/xf86-video-s3virge	1.10.1	7.4	needs-update
@@ -153,16 +154,16 @@ driver/xf86-video-sunbw2	1.1.0	7.1
 driver/xf86-video-suncg14	1.1.0	7.1
 driver/xf86-video-suncg3	1.1.0	7.1
 driver/xf86-video-suncg6	1.1.0	7.1
-driver/xf86-video-sunffb	1.1.0	7.1
-driver/xf86-video-sunleo	1.1.0	7.1
+driver/xf86-video-sunffb	1.2.0	7.4	needs-update
+driver/xf86-video-sunleo	1.2.0	7.4	needs-update
 driver/xf86-video-suntcx	1.1.0	7.1
 driver/xf86-video-tdfx		1.4.0	7.4	needs-update
-driver/xf86-video-tga		1.1.0	7.0
+driver/xf86-video-tga		1.2.0	7.0	needs-update
 driver/xf86-video-trident	1.3.0	7.4	needs-update
 driver/xf86-video-tseng		1.2.0	7.4	needs-update
-driver/xf86-video-vesa		1.3.0	7.2RC3
-driver/xf86-video-vga		4.1.0	7.1
-driver/xf86-video-vmware	10.16.4	7.4
+driver/xf86-video-vesa		2.0.0	7.4	needs-update
+driver/xf86-video-vga		4.1.0	7.1	deprecated?
+driver/xf86-video-vmware	10.16.5	7.4	needs-update
 driver/xf86-video-voodoo	1.2.0	7.4	needs-update
 driver/xf86-video-wsfb		0.2.1	7.2
 
@@ -254,16 +255,16 @@ lib/pixman			0.10.0	7.4
 proto/bigreqsproto		1.0.2	7.0	needs-rel
 proto/compositeproto		0.4	7.3
 proto/damageproto		1.1.0	7.3
-proto/dri2proto			1.1	7.4	needs-import
+proto/dri2proto			1.1	7.5	needs-import
 proto/dmxproto			2.2.2	7.0
-proto/evieproto			1.0.2	7.0
+proto/evieproto			1.0.2	7.0	deprecated
 proto/fixesproto		4.0	7.1
 proto/fontcacheproto		0.1.2	7.0
 proto/fontsproto		2.0.2	7.0
 proto/glproto			1.4.9	7.4	needs-update
-proto/inputproto		1.4.3	7.4
+proto/inputproto		1.4.4	7.4
 proto/kbproto			1.0.3	7.2RC1
-proto/pmproto			1.0.2	7.0
+proto/pmproto			1.0.2	7.0	deprecated
 proto/printproto		1.0.4	7.4	deprecated
 proto/randrproto		1.2.1	7.3
 proto/recordproto		1.13.2	7.0
@@ -279,7 +280,7 @@ proto/xf86bigfontproto		1.1.2	7.0
 proto/xf86dgaproto		2.0.3	7.3
 proto/xf86driproto		2.0.4	7.4	needs-update
 proto/xf86miscproto		0.9.2	7.0
-proto/xf86rushproto		1.1.2	7.0
+proto/xf86rushproto		1.1.2	7.0	deprecated
 proto/xf86vidmodeproto		2.2.2	7.0
 proto/xineramaproto		1.1.2	7.0
 
@@ -289,4 +290,4 @@ util/imake			1.0.2
 util/macros			1.1.6	7.4
 util/makedepend			1.0.1	7.3
 
-xserver				1.4.2	7.3+	needs-update
+xserver				1.5	7.4	needs-update
