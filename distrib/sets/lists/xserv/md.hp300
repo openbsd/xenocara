@@ -167,6 +167,8 @@
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.la
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.so
 ./usr/X11R6/lib/modules/extensions
+./usr/X11R6/lib/modules/extensions/libGLcore.la
+./usr/X11R6/lib/modules/extensions/libGLcore.so
 ./usr/X11R6/lib/modules/extensions/libdbe.la
 ./usr/X11R6/lib/modules/extensions/libdbe.so
 ./usr/X11R6/lib/modules/extensions/libextmod.la

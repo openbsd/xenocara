@@ -419,15 +419,6 @@
 ./usr/X11R6/include/X11/extensions/xf86dgastr.h
 ./usr/X11R6/include/pixman-1/pixman-version.h
 ./usr/X11R6/include/pixman-1/pixman.h
-./usr/X11R6/include/xorg/hotplug.h
-./usr/X11R6/include/xorg/wfbrename.h
-./usr/X11R6/include/xorg/xf86Crtc.h
-./usr/X11R6/include/xorg/xf86Modes.h
-./usr/X11R6/include/xorg/xf86Optrec.h
-./usr/X11R6/include/xorg/xf86Parser.h
-./usr/X11R6/include/xorg/xf86RandR12.h
-./usr/X11R6/include/xorg/xf86Rename.h
-./usr/X11R6/include/xorg/xkbsrv.h
 ./usr/X11R6/lib/libFS.so.8.0
 ./usr/X11R6/lib/libGL.a
 ./usr/X11R6/lib/libGL.so.7.3
