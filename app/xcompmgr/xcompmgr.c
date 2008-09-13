@@ -1,5 +1,5 @@
 /*
- * $Id: xcompmgr.c,v 1.1.1.1 2008/09/13 16:15:44 matthieu Exp $
+ * $Id: xcompmgr.c,v 1.2 2008/09/13 16:22:25 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -1845,7 +1845,7 @@ ev_window (XEvent *ev)
 void
 usage (char *program)
 {
-    fprintf (stderr, "%s v1.1.3\n", program);
+    fprintf (stderr, "%s v1.1.4\n", program);
     fprintf (stderr, "usage: %s [options]\n", program);
     fprintf (stderr, "Options\n");
     fprintf (stderr, "   -d display\n      Specifies which display should be managed.\n");
