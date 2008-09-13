@@ -1,0 +1,429 @@
+commit 73f6ed3310d15300ba38f6a338d640705a83ef36
+Author: Dana Jansens <danakj@orodu.net>
+Date:   Wed Feb 13 11:24:32 2008 -0800
+
+    Fix a server resource leak on destroying windows.
+
+commit 80754042c691182bba4f55ca28b915f44edcc7bc
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Mon Nov 5 09:32:44 2007 -0800
+
+    Bug #13073: Fix broken word-wrapping in ChangeLog generation.
+    
+    Thanks to Peter Dyballa <Peter_Dyballa@Freenet.DE> for pointing out the
+    bug.
+
+commit 733e29ba0e4c05cbb35fefc5d66566907428713d
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:51:17 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit f88dba2d9c19b5397c14b7709cae714f0041d3f4
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 21:21:52 2007 -0400
+
+    Remove deprecated .cvsignore
+    The repo already has a .gitignore, so just rm the old .cvsignore.
+    
+    Also removed a blank line from .gitignore.
+
+commit de60732aff1baefdb1be72a332fbf8ca9bd54e87
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Mon Mar 12 14:44:31 2007 +0100
+
+    Make this loop slightly easier to read.
+
+commit fa689d8b3862656879ee887e2489ba795f270bbd
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Mon Mar 12 14:24:33 2007 +0100
+
+    Constified some variables.
+
+commit 7409bb892aca173cb56ab56bf940b486c0281aaf
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Mon Mar 12 14:18:25 2007 +0100
+
+    Include getopt.h for getopt().
+    
+    I think this should be portable. If it isn't, please yell at me and
+    I'll add the necessary autoconf magic.
+
+commit 3f8a32b0837a3b8da04d5e90d9d62e870e6e946d
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Mon Mar 12 13:38:59 2007 +0100
+
+    Added .gitignore.
+
+commit 491aa4b9a775a66d0adf10cbe3ce5685af3945f5
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Mon Mar 12 13:37:32 2007 +0100
+
+    Fixed a bunch of warnings.
+
+commit 08c9ac6cbb3405cfa4f0b60d7014c734a1990047
+Author: Mark Tiefenbruck <mark@fluxbox.org>
+Date:   Thu Jan 25 15:05:02 2007 -0500
+
+    Bug #9762: Fix opacity changes on unmapped windows.
+
+commit 1783d3bd50924ab4a74b86bc8b50c631d209071d
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Dec 21 18:36:33 2006 +1100
+
+    increase version number to 1.1.3
+
+commit 340f74b2180fafd3b851e85c501bdc34ce64795c
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Dec 21 18:36:08 2006 +1100
+
+    remove changelog from xcompmgr
+
+commit 6c539182a53a19144edbe1c49fd41c51757173a4
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Dec 3 13:15:39 2006 +0100
+
+    Bug #2703: Fixed a memory leak in the fading code.
+
+commit d75fd64f7aefd818dcac7ab2ebdf57e69bf12ea5
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Sep 6 19:04:47 2006 +0200
+
+    Set the _NET_WM_CM_S* atom on the screen we're running on.
+
+commit 82e467ece3bd9cd5e6ae79cfa3b5f36b750ae7ec
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 31 17:57:40 2005 +0000
+
+    Bump to 1.1.3 for anholt's named window hack
+
+commit ad4191d22b44c7ad79d93e17ea05cf5926497839
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Fri Oct 7 05:40:26 2005 +0000
+
+    Add the foreign flag so autotools doesn't incorrectly slap a GPL on this,
+        and add a .cvsignore for cvs up clarity.
+
+commit f5fe54f5fdafdeeec6c57742287d058735163899
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Fri Oct 7 00:08:02 2005 +0000
+
+    Make a dummy window with a name, so xrestop can point its finger at
+        xcompmgr for being such a pig.
+
+commit ea0f58928c45a558984e54da28a7dc30f8e96b97
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Thu Jan 27 21:03:39 2005 +0000
+
+    Bug #2391: Fix a use-after-free in run_fades. (Jonathan Briggs)
+
+commit 840fa5f33cd220ec39f038a111071a7cd628a751
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Thu Jan 27 01:27:44 2005 +0000
+
+    Include the autogen.sh in the distfile.
+
+commit f931341d9a4aea5d98a673da19c14fe0118d4f0f
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Sat Oct 16 22:53:09 2004 +0000
+
+    Make xcompmgr distcheck and have a sane package name/version, and bump
+        version to 1.1.1.
+
+commit 2427e4ea664ed5b0b16575ef1cdeb209afd941d0
+Author: dolio <dolio>
+Date:   Wed Sep 29 18:33:42 2004 +0000
+
+    Modified paint_all so that it doesn't draw off-screen windows, and doesn't
+        draw shadows on desktop 'root' windows.
+
+commit c262e75a8293e3f22cd1b4e747a9b019510efa99
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Sep 27 18:06:03 2004 +0000
+
+    bump version number
+
+commit fd2dc3730c8ee7884df8651e1c5fa03750a68c20
+Author: dolio <dolio>
+Date:   Thu Sep 23 07:17:48 2004 +0000
+
+    Added command-line options for changing values relevant to fading.
+
+commit 4d85ae8dbc4dbe75cef71f1280cea4ee15a1b6d7
+Author: dolio <dolio>
+Date:   Thu Sep 23 01:56:00 2004 +0000
+
+    Miscellaneous code cleanup and failed allocation checks.
+
+commit 26fd15f06be3911ebf53c0a3014d406761db84cf
+Author: dolio <dolio>
+Date:   Tue Sep 21 22:59:38 2004 +0000
+
+    Added shadow precomputation for large-enough windows.
+
+commit b73a269bf22358e32e599131bb3500c523d104bf
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Sep 20 21:36:07 2004 +0000
+
+    Print the version number in the usage summary.
+
+commit 34c09f7b7fdc0fd96fd4adf69a00f295858ac11a
+Author: dolio <dolio>
+Date:   Sat Sep 18 00:13:15 2004 +0000
+
+    Added various options for client-side shadows (offset, opacity,
+        blur-radius) based on the work of Thomas Luebking, along with the man
+        entries and usage information to go along with them.
+
+commit 76e259ed57f67c901c9f957a29bc3302dabf99e3
+Author: dolio <dolio>
+Date:   Fri Sep 17 23:51:48 2004 +0000
+
+    Changed the usage function to display information on the available options.
+
+commit ed88a4746832f69e65d866d732eadb2070456806
+Author: dolio <dolio>
+Date:   Fri Sep 17 05:20:35 2004 +0000
+
+    Added allocation failure checks in shadow_picture and caused it to exit
+        gracefully rather than writing to unallocated memory.
+
+commit 7abdf973ea7e98a6d23c8d149b3d7a95409768f1
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Sep 14 19:01:16 2004 +0000
+
+    Bug #1360: Fix a segfault by checking the return value of XQueryTree.
+        (Johan Kiviniemi)
+
+commit 36005e53a518c6e028d76ff82ac7ff54e1eac9b0
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Sep 10 05:55:19 2004 +0000
+
+    More effects, bug fixes, doc updates.
+
+commit ff13f4a4b951e3662a125132183a184a04bd78e8
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Thu Sep 9 03:27:16 2004 +0000
+
+    add a man page
+
+commit 576c3c435c1abc28b30fae0c74a4d875744d6a03
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Aug 14 21:39:51 2004 +0000
+
+    Remove abort call as it's just annoying. Add -a flag to just use Automatic
+        compositing. No glitz, but no screen mangling either.
+
+commit 018fc12ad45c012781a3e0fae297f4139b7b7b26
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Aug 13 08:25:51 2004 +0000
+
+    Add name window pixmap support
+
+commit 4b34993c830019b0f89a5b07004a7c8fb8cf90d5
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Jul 8 16:30:59 2004 +0000
+
+    Eliminate 'struct timezone tz' as it isn't used.
+    reviewed by: Keith Packard
+
+commit cd952da085147938c06a46440fd178382a74e0df
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Jul 8 07:07:26 2004 +0000
+
+    Add fade-in/fade-out support (-f option). Clean up leak of solid alpha
+        picture per redraw of constant-alpha windows.
+
+commit d140d97616ca359a1c069186ea26232a82052ab3
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Jun 27 21:29:23 2004 +0000
+
+    Only use XCompositeNameWindowPixmap when the library provides it
+
+commit 9616aa5ba62ad414b7ff2a7015fe3cd7df53ee8c
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Jun 27 05:08:33 2004 +0000
+
+    Make composite manager mode run-time selectable with command line option:
+    -s: server-side shadows (sharp, but follows window alpha)
+    -c: client-side shadows (blurred, but uses window extents only)
+    -n: no shadows (this is the default mode)
+
+commit def454cc5a25dbf40030e1829e82b6125085c9dc
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Jun 27 04:48:37 2004 +0000
+
+    Ok, this synchronizes all of my changes for the last many months. Has code
+        to do server-based shadows (SHARP_SHADOW). Has code to try and ignore
+        appropriate errors (helps somewhat). Has code to handle global window
+        translucency. Lots of other minor changes.
+
+commit 2d30f9363a94dba8a014fc67e421a1a9f8337993
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Tue May 18 00:01:50 2004 +0000
+
+    Autoconf 2.57 appears to work fine, as well.
+
+commit d5a8f367a2aadd14d674f74f4530ff539bae05b2
+Author: Phil Blundell <pb@reciva.com>
+Date:   Wed Mar 31 21:54:22 2004 +0000
+
+    Set INCLUDES, not xcompmgr_INCLUDES.
+
+commit 1c62c3bbf6c216ebf455968973b94b48e57ff9de
+Author: Phil Blundell <pb@reciva.com>
+Date:   Sun Mar 28 12:02:50 2004 +0000
+
+    New.
+
+commit 5025a4ed4ca1d47449d7b8164f985d48766be29d
+Author: Phil Blundell <pb@reciva.com>
+Date:   Thu Mar 25 23:57:55 2004 +0000
+
+    Autotoolized:
+    New files.
+    Likewise.
+    Deleted.
+
+commit 10d93f24f0afd15aeb59d61f469e7cf5bd5749c9
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Dec 2 09:51:12 2003 +0000
+
+    Track whether cliplists have changed and avoid computation when not. Shrink
+        shadows. Speed up shadow construction a bit by using memset. Eliminate
+        useless INTERVAL code. Use XSync after paint_all to gather more events
+        per update.
+
+commit 0963afc29c62e6350fffd188a382050889f04378
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Nov 24 17:11:00 2003 +0000
+
+    Add support for CM_TRANSLUCENT property.
+    reviewed by: Keith Packard <keithp@keithp.com>
+
+commit df3dc087f8aec21b9ffd6ac01b457c75b60f135d
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Nov 23 23:20:42 2003 +0000
+
+    Rename gussianMap to gaussianMap (who the heck is gus?) Allow for other
+        names for the root pixmap Handle non-zero border widths better (need
+        Composite change to display them though). Add MONITOR_UPDATE mode that
+        eliminates double buffering and blanks the screen to make sequence of
+        update operations visible. Leave damage object around to catch map
+        damage right. Add CirculateNotify support.
+
+commit c676d32456c2b9995532f38bdc1d050799ceac18
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Sun Nov 23 21:10:34 2003 +0000
+
+    Fix for latest Xfixes changes.
+    Submitted by: <stephan@wilkogazu.nl>
+
+commit 9f3bc6c0738ce4ec41f3ed5089defba1095ea5a5
+Author: Carl Worth <cworth@cworth.org>
+Date:   Wed Nov 19 16:12:15 2003 +0000
+
+    Eliminate several compiler warnings: missing includes, static functions,
+        unused variables. Remove confusing informational messages with the word
+        "error" in them.
+
+commit 9813c48fef704a85adb3ee733f15a7365fa49b5b
+Author: Matthew Allum <breakfast@10.am>
+Date:   Fri Nov 14 19:32:41 2003 +0000
+
+    Remove local changes to Makefile
+
+commit 03e138e2053eb99c83c17deb115635f92afe4c5f
+Author: Matthew Allum <breakfast@10.am>
+Date:   Fri Nov 14 19:27:00 2003 +0000
+
+    Made gussian_map get called just once rather than N times
+
+commit f0000349e7ccc2f5393150e6c615043aa6846f9a
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Nov 14 08:29:37 2003 +0000
+
+    Eliminate all delays in updates; let the X server scheduling handle things.
+
+commit bb2f664686508e26c6aad7c0c40e7e4c48e9b370
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Nov 13 09:18:07 2003 +0000
+
+    Reduce scheduling latency to 10ms
+
+commit 91c293c7e9b44013a2b40757d4c5e245333b9112
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Nov 13 09:16:18 2003 +0000
+
+    Use an alpha map instead of an ARGB picture for shadows. Update last_update
+        only when actually updating windows.
+
+commit 54fb13fa320dbebd5441ae4fdac22286391a3261
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Nov 11 08:59:15 2003 +0000
+
+    Detect ARGB windows, don't give them shadows, compose them correctly.
+
+commit 41293ef7559c2b6ed8f97ee3634f6399ccd241e7
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Nov 10 18:34:35 2003 +0000
+
+    Track changes to _XROOTPMAP_ID property
+
+commit 9e767b89cfa434e762f65f23c3be872cd5d99087
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Nov 10 05:48:23 2003 +0000
+
+    Add a bit of scheduling to updates; update every 30 ms instead of waiting
+        for more events. Smooths out window moving. Interval needs to be
+        configurable probably.
+
+commit 37280d7888001a613640b7d005f4482e7d886c47
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Nov 10 05:09:10 2003 +0000
+
+    Make sure _XROOTPMAP_ID property is right type, format and length before
+        attempting to use the resulting value.
+
+commit febeaf7ad1f81ac6b77fa35a5f21e7819c69ebb7
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Nov 10 04:46:24 2003 +0000
+
+    Configure damage must include shadow region, not just window. Also, leaking
+        region on each configure.
+
+commit b4fc0433c5d358595ed87a7a04183b7ec37e070c
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Nov 10 03:48:00 2003 +0000
+
+    oops. Left in an XSynchronize call.
+
+commit 6e99ed898c99d91a0ebbab4aecd5351cc65e0069
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Nov 10 03:45:17 2003 +0000
+
+    Double buffer updates. Check for InputOnly windows and ignore them
+
+commit e142128ddea840d8140fdd0b28fff121cb2b4598
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Nov 10 02:03:26 2003 +0000
+
+    Detect root pattern with undocumented _XROOTPMAP_ID property
+
+commit d98b963d75afa9d412ab56c9e2f1217cb9e1a699
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Nov 10 01:32:01 2003 +0000
+
+    Add drop shadows.
+
+commit 67810f32f46a6294bd5d0c199002a535d5a9945f
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Nov 9 07:08:23 2003 +0000
+
+    Prototype X compositing manager.
+
+commit 1685456c7eeb02668dcd7ce165b6482a32763df2
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Nov 9 07:08:23 2003 +0000
+
+    Initial revision

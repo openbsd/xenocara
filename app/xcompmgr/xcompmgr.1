@@ -1,0 +1,69 @@
+.ds q \N'34'
+.TH xcompmgr 1
+.SH NAME
+xcompmgr \- sample X compositing manager
+.SH SYNOPSIS
+.nf
+.B xcompmgr [\-d display] [\-r radius] [\-o opacity] [\-l left-offset] [\-t top-offset] [\-acCfFnsS]
+.fi
+.SH DESCRIPTION
+.B xcompmgr
+is a sample compositing manager for X servers supporting the XFIXES, DAMAGE,
+and COMPOSITE extensions.  It enables basic eye-candy effects.
+.SH OPTIONS
+.TP
+.BI \-d\ display
+Specifies the display to manage.
+.TP
+.BI \-r\ radius
+Specifies the blur radius for client-side shadows.
+.TP
+.BI \-o\ opacity
+Specifies the opacity for client-side shadows.
+.TP
+.BI \-l\ left-offset
+Specifies the left offset for client-side shadows.
+.TP
+.BI \-t\ top-offset
+Specifies the top offset for client-side shadows. 
+.TP
+.BI \-I\ fade-in-step
+Specifies the opacity change between steps while fading in.
+.TP
+.BI \-O\ fade-out-step
+Specifies the opacity change between steps while fading out.
+.TP
+.BI \-D\ fade-delta
+Specifies the time (in milliseconds) between steps in a fade.
+.TP
+.BI \-a
+Automatic server-side compositing.  This instructs the server to use the
+standard composition rules.  Useful for debugging.
+.TP
+.BI \-c
+Client-side compositing with soft shadows and translucency support.
+.TP
+.BI \-f
+When \-c is specified, enables a smooth fade effect for transient windows like
+menus, and for all windows on hide and restore events.
+.TP
+.BI \-n
+Simple client-side compositing.
+.TP
+.BI \-s
+Server-side compositing with hard-edged shadows.
+.TP
+.BI \-C
+When \-c is specified, attempts to avoid painting shadows on panels and docks.
+.TP
+.BI \-F
+When \-f is specified, also enables the fade effect when windows change their
+opacity, as with transset(1).
+.TP
+.BI \-S
+Enables synchronous operation.  Useful for debugging.
+.SH BUGS
+Probably.  Please report any you find to http://bugs.freedesktop.org/.
+.SH AUTHORS
+Keith Packard, with contributions from Matthew Allum, Eric Anholt, Dan Doel,
+Thomas Luebking, Matthew Hawn, Ely Levy, Phil Blundell, and Carl Worth.
