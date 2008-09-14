@@ -1,3 +1,195 @@
+commit 53859ee4e431c21000e282971894dbe9384ed205
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Wed May 28 17:17:38 2008 +0930
+
+    Bump to 7.0.13.
+
+commit 44e458285bb2e7771963a9ab9b5f03d2fb48e611
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Tue May 15 16:41:08 2007 +0930
+
+    Add GenericEvent and xGenericEvent definitions.
+    (cherry picked from commit 8a96cdca08db2563e8c4c7c9a110a3ab6d973fcc)
+
+commit 22878c30d21580146200c00070478f88d969bcaa
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu May 8 15:02:41 2008 -0700
+
+    Apple: Added a comment to explain _DARWIN_C_SOURCE
+
+commit e3035a7e6e56e01eb79478ea5342e032ec67a190
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu May 8 12:16:15 2008 -0700
+
+    Apple: Define _DARWIN_C_SOURCE otherwise _XOPEN_SOURCE, _POSIX_SOURCE, or _POSIX_C_SOURCE will cause fd_mask to not be defined due to the strict namespace
+
+commit 05b119d78e1c6a4db563b2a976cee0173489f9b6
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu May 8 11:36:03 2008 -0700
+
+    Apple: Cleaned up some Apple definitions
+
+commit c879dab58f82f4789f27933c22706c84015f8684
+Author: Alan Hourihane <alanh@tungstengraphics.com>
+Date:   Tue Apr 29 00:37:28 2008 +0100
+
+    avoid checking for fds_bits on mingw
+
+commit 8642ec676db0dd875f4d3a97d8a3cdbf6843a985
+Author: Colin Harrison <colin.harrison-at-virgin.net>
+Date:   Sat Apr 26 18:21:41 2008 +0100
+
+    Use Sleep() instead of sleep() on windows
+    
+    (was already done in Xwindows.h, just not Xw32defs.h)
+
+commit a893a6ac5d9fdfe9a420d1812402a01904e6482b
+Author: Colin Harrison <colin.harrison-at-virgin.net>
+Date:   Sat Apr 26 08:52:29 2008 +0100
+
+    Use winsock2.h
+
+commit c705bab0f6efcb6937b7ccc2fb415e701878fddb
+Author: Markus Kuhn <Markus.Kuhn@cl.cam.ac.uk>
+Date:   Mon Apr 21 21:27:26 2008 +0100
+
+    Added comment to slightly discourage the definition of ever more Unicode keysyms
+
+commit 44e24a27bca023cf7b799f191fe6d52e12efbe5f
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Sat Apr 12 15:48:46 2008 -0400
+
+    Add more dead key syms
+    Add dead keys to support input of the precomposed latin characters in
+    ISO 10747 which have ring, line, circumflex, tilde, breve or diaeresis
+    below.
+    
+    This addresses:  https://bugs.freedesktop.org/show_bug.cgi?id=15446
+
+commit 07e83988ec0b1c9577646daca3943badd5dcc0d1
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Mar 6 11:34:17 2008 -0500
+
+    Fix typo in XF86Keysym.h
+    
+    Fix typo reported in https://bugs.freedesktop.org/show_bug.cgi?id=11193
+    thereby making XF86Keysym.h match libX11’s XKeysymDB.
+
+commit d34310efef11264ddff79320b8c6f03705b1208a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 5 22:09:16 2008 -0500
+
+    x11proto 7.0.12
+
+commit e4ad7a8080e4ac0b868fa7cf39bc5ad9a6e0bee1
+Author: Jeremy Huddleston <jeremy@tifa.local>
+Date:   Sun Feb 10 19:07:49 2008 -0800
+
+    Fixed #ifdef checks that were using i386 to use __i386__
+    
+    """
+    It's simply obsolete, sloppy, compiler namespace pollution.  The
+    compiler is not allowed to predefine symbols that might conflict with
+    ordinary identifiers.  For backwards compatibility gcc currently
+    predefines i386 when compiling for x86 32-bit (but not 64-bit), but that
+    will go away.  It is also not defined if you specify -ansi when invoking
+    the compiler, because then it is seriously standards compliant.  Other
+    compilers shouldn't define it either.  Correct code shouldn't rely on it
+    being defined.  However __i386__ is safe and proper.
+    """
+
+commit e49280c1c33622dbf288b0ac4f8324b01ff9b4aa
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Mon Dec 10 21:33:01 2007 -0800
+
+    Changed __DARWIN__ to __APPLE__
+
+commit 5ae4d304ecb5fb4af0435c9f2efde3d2da5905d1
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Oct 30 18:44:49 2007 -0700
+
+    Make Xalloca.h work with Sun C++ compiler
+
+commit 5ccc71161283fdb2c42da1eeb4049650f6a2f429
+Author: Ben Byer <bbyer@bbyer.apple.com>
+Date:   Tue Oct 30 18:40:47 2007 -0700
+
+    fd_mask needs to be defined on OS X, too
+
+commit 8be48ca399c3efd0e5d59f53da1b37d02647f33b
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Sep 24 12:28:25 2007 +0300
+
+    Check headers before testing for fds_bits access method (bug #8442)
+    
+    HP-UX doesn't have sys/select.h, so make sure we don't overzealously include
+    headers when we try to find out how to use fds_bits.
+
+commit 68e841fb4bf489531635e6bee70f041d2c3cb87c
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Sat Sep 8 08:30:17 2007 -0400
+
+    bump to 7.0.11
+
+commit 11fd082a384499c38065e06065bf80f244e9909a
+Author: Eric Anholt <eric@anholt.net>
+Date:   Tue Aug 28 14:54:44 2007 -0700
+
+    Describe what XF86XK_Display does (or now is meant to do).
+
+commit 40ed4eef92e31fcf7ea0a436e1a00cdf49484c1b
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Wed Aug 22 21:10:47 2007 -0400
+
+    Add dead_abovecomma and dead_abovereversedcomma
+    
+    Also added aliases dead_psili and dead_dasia.
+    
+    The UCS unifies Combining Psili and Combining Dasia with
+    Combining Comma Above and Combining Reversed Comma Above.
+    These two aliases mirror that unification.
+
+commit ab74d270c76b17926504815ba43ee35b8b18d3be
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Wed Aug 22 21:01:48 2007 -0400
+
+    Comment on the new locations of the files referenced in keysymdef.h
+    keysymdef.h has a comment from the monolithic days suggesting that
+    the file be kept in sync with mappings inxc/lib/X11/KeyBind.c and
+    the protocol specication in xc/doc/specs/XProtocol/X11.keysyms.
+    
+    This commit adds pointers to the new locations of those two files.
+
+commit 1edcfdb7f5c51e5c8014c56c4d5937337b7d4302
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Tue Aug 21 00:10:08 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit d8a49874bbd05a927c42102c0c5c147cf72cb1dd
+Author: Colin Harrison <colin.harrison-at-virgin.net>
+Date:   Wed May 9 16:46:25 2007 +0100
+
+    bcopy needs definition in Xfuncs.h for Xming
+
+commit 7505880329d6b81f0c77d6aaa3995390659d5c63
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Tue May 1 14:54:27 2007 +0200
+
+    Added some more files to .gitignore.
+
+commit 0c55a57dca2e888ba089e280f62e1c5bb55db7d7
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Tue May 1 14:52:57 2007 +0200
+
+    Enable GCC's visibility attributes on GCC 4 or greater only.
+
+commit 30f5eedf800f6683161fca9fc3e2d6ddc9ce0ac3
+Author: Zephaniah E. Hull <warp@agamemnon.b5>
+Date:   Fri Feb 2 15:11:26 2007 -0500
+
+    Add keysym definitions from Jim Gettys.
+
 commit 5951f0355c6b1c591241bccb2023e6c4d493e701
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Dec 16 01:09:50 2006 +0200

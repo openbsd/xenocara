@@ -1,5 +1,5 @@
 AC_PREREQ([2.57])
-AC_INIT([Xproto], [7.0.10], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
+AC_INIT([Xproto], [7.0.13], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 AC_CONFIG_HEADER(do-not-use-config.h)
@@ -32,8 +32,14 @@ AC_ARG_ENABLE(wide-prototypes,
 	[WIDEPROTO=$enableval], [WIDEPROTO=auto])
 
 
+AC_CHECK_HEADERS([sys/select.h sys/param.h sys/types.h sys/time.h])
+
 # Handle Xpoll.h.in
-fds_bits_found=false;
+# Avoid determining fds_bits on WIN32 hosts (not including cygwin)
+case $host_os in
+	mingw*)		fds_bits_found=true;;
+	*)		fds_bits_found=false;;
+esac
 
 if test "x$fds_bits_found" = xfalse ; then
    AC_CHECK_MEMBER(fd_set.fds_bits, 
@@ -42,8 +48,18 @@ if test "x$fds_bits_found" = xfalse ; then
 			       USE_FDS_BITS="fds_bits"
 			   ],,
 			   [
+                               #ifdef HAVE_SYS_PARAM_H
+                               #include <sys/param.h>
+                               #endif
+                               #ifdef HAVE_SYS_TYPES_H
                                #include <sys/types.h>
+                               #endif
+                               #ifdef HAVE_SYS_TIME_H
+                               #include <sys/time.h>
+                               #endif
+                               #ifdef HAVE_SYS_SELECT_H
 			       #include <sys/select.h>
+                               #endif
 			   ])
 fi
 
@@ -54,8 +70,18 @@ if test "x$fds_bits_found" = xfalse ; then
 			    USE_FDS_BITS="__fds_bits"
 			],,
 			[
-                            #include <sys/types.h>
-			    #include <sys/select.h>
+                               #ifdef HAVE_SYS_PARAM_H
+                               #include <sys/param.h>
+                               #endif
+                               #ifdef HAVE_SYS_TYPES_H
+                               #include <sys/types.h>
+                               #endif
+                               #ifdef HAVE_SYS_TIME_H
+                               #include <sys/time.h>
+                               #endif
+                               #ifdef HAVE_SYS_SELECT_H
+			       #include <sys/select.h>
+                               #endif
 			])
 fi
 
