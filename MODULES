@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.42 2008/09/09 06:15:35 matthieu Exp $
+# $OpenBSD: MODULES,v 1.43 2008/09/14 07:34:08 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -261,7 +261,7 @@ proto/evieproto			1.0.2	7.0	deprecated
 proto/fixesproto		4.0	7.1
 proto/fontcacheproto		0.1.2	7.0
 proto/fontsproto		2.0.2	7.0
-proto/glproto			1.4.9	7.4	needs-update
+proto/glproto			1.4.9	7.4
 proto/inputproto		1.4.4	7.4
 proto/kbproto			1.0.3	7.2RC1
 proto/pmproto			1.0.2	7.0	deprecated
@@ -273,9 +273,9 @@ proto/resourceproto		1.0.2	7.0
 proto/scrnsaverproto		1.1.0	7.1
 proto/trapproto			3.4.3	7.0
 proto/videoproto		2.2.2	7.0
-proto/x11proto			7.0.13	7.4+	needs-update
+proto/x11proto			7.0.13	7.4
 proto/xcmiscproto		1.1.2	7.0
-proto/xextproto			7.0.3	7.4	needs-update
+proto/xextproto			7.0.3	7.4
 proto/xf86bigfontproto		1.1.2	7.0
 proto/xf86dgaproto		2.0.3	7.3
 proto/xf86driproto		2.0.4	7.4	needs-update
