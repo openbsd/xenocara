@@ -3,6 +3,9 @@ xext_HEADERS = \
 	dpms.h \
 	dpmsstr.h \
 	extutil.h \
+        ge.h \
+        geproto.h \
+        Xge.h \
 	lbxbuf.h \
 	lbxbufstr.h \
 	lbxdeltastr.h \
@@ -22,7 +25,6 @@ xext_HEADERS = \
 	sync.h \
 	syncstr.h \
 	Xag.h \
-	Xagsrv.h \
 	Xagstr.h \
 	Xcup.h \
 	Xcupstr.h \
@@ -41,3 +43,13 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xextproto.pc
 
 EXTRA_DIST = autogen.sh xextproto.pc.in
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
