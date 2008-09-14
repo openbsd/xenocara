@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2008/05/31 16:36:49 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2008/09/14 19:47:42 matthieu Exp $
 
 MESA=	${.CURDIR}/../../../dist/Mesa/src/mesa
 MESA_INCLUDE=	${.CURDIR}/../../../dist/Mesa/include
@@ -295,7 +295,7 @@ SRCS=	${SOLO_SOURCES}	\
 
 OBJS+=  ${SRCS:N*.h:R:S/$/.so/g}
 
-LIB=	mesa
+LIB=	libmesa
 
 all: ${LIB}_pic.a
 
@@ -305,7 +305,7 @@ install:
 	@echo "Not installing libmesa"
 
 clean:
-	rm -f ${LIB}_pic.a ${OBJS}
+	rm -f ${LIB}_pic.a ${OBJS} ${CLEANFILES}
 
 cleandir:	clean
 
@@ -327,9 +327,9 @@ cleandir:	clean
 	@rm -f ${.TARGET}.o
 
 ${LIB}_pic.a:	${OBJS} $(DPADD)
-	@rm -f lib${LIB}_pic.a
-	@${AR} cq lib${LIB}_pic.a `${LORDER} ${OBJS} | tsort -q`
-	${RANLIB} lib${LIB}_pic.a
+	@rm -f ${LIB}_pic.a
+	@${AR} cq ${LIB}_pic.a `${LORDER} ${OBJS} | tsort -q`
+	${RANLIB} ${LIB}_pic.a
 
 
 .if ${MACHINE_ARCH} == i386 || ${MACHINE_ARCH} == amd64
