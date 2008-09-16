@@ -10,7 +10,7 @@
  *  Inspired by cir.h
  */
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/cirrus/lg.h,v 1.11 2000/12/06 15:35:16 eich Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/cirrus/lg.h,v 1.12 2001/05/04 19:05:36 dawes Exp $ */
 
 #ifndef LG_H
 #define LG_H

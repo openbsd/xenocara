@@ -457,9 +457,9 @@ LgPreInit(ScrnInfoPtr pScrn, int flags)
 
 	/* Find the PCI info for this screen */
 	pCir->PciInfo = xf86GetPciInfoForEntity(pCir->pEnt->index);
-	pCir->PciTag = pciTag(pCir->PciInfo->bus,
-								pCir->PciInfo->device,
-								pCir->PciInfo->func);
+	pCir->PciTag = pciTag(PCI_DEV_BUS(pCir->PciInfo),
+			      PCI_DEV_DEV(pCir->PciInfo),
+			      PCI_DEV_FUNC(pCir->PciInfo));
 
 	if (xf86LoadSubModule(pScrn, "int10")) {
 	    xf86Int10InfoPtr int10InfoPtr;
@@ -560,7 +560,7 @@ LgPreInit(ScrnInfoPtr pScrn, int flags)
 		xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ChipRev override: %d\n",
 			pCir->ChipRev);
 	} else {
-		pCir->ChipRev = pCir->PciInfo->chipRev;
+	        pCir->ChipRev = PCI_DEV_REVISION(pCir->PciInfo);
 	}
 
 	/* Cirrus swapped the FB and IO registers in the 5465 (by design). */
@@ -584,8 +584,8 @@ LgPreInit(ScrnInfoPtr pScrn, int flags)
 		pCir->FbAddress = pCir->pEnt->device->MemBase;
 		from = X_CONFIG;
 	} else {
-		if (pCir->PciInfo->memBase[fbPCIReg] != 0) {
-			pCir->FbAddress = pCir->PciInfo->memBase[fbPCIReg] & 0xff000000;
+		if (PCI_REGION_BASE(pCir->PciInfo, fbPCIReg, REGION_MEM) != 0) {
+			pCir->FbAddress = PCI_REGION_BASE(pCir->PciInfo, fbPCIReg, REGION_MEM) & 0xff000000;
 			from = X_PROBED;
 		} else {
 			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -609,8 +609,8 @@ LgPreInit(ScrnInfoPtr pScrn, int flags)
 		pCir->IOAddress = pCir->pEnt->device->IOBase;
 		from = X_CONFIG;
 	} else {
-		if (pCir->PciInfo->memBase[ioPCIReg] != 0) {
-			pCir->IOAddress = pCir->PciInfo->memBase[ioPCIReg] & 0xfffff000;
+		if (PCI_REGION_BASE(pCir->PciInfo, ioPCIReg, REGION_MEM) != 0) {
+			pCir->IOAddress = PCI_REGION_BASE(pCir->PciInfo, ioPCIReg, REGION_MEM) & 0xfffff000;
 			from = X_PROBED;
 		} else {
 			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,

@@ -11,6 +11,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "cir_pcirename.h"
+
 /* Card-specific driver information */
 #define CIRPTR(p) ((CirPtr)((p)->driverPrivate))
 struct lgRec;
@@ -34,8 +36,8 @@ typedef struct {
 	Bool			HasFBitBlt;
 	CARD32			IOAddress;
 	CARD32			FbAddress;
-	unsigned char *		IOBase;
-	unsigned char *		FbBase;
+	void *			IOBase;
+	void *			FbBase;
 	long			FbMapSize;
 	long			IoMapSize;
 	int			MinClock;

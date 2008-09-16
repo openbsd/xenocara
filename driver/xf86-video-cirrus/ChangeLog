@@ -17,6 +17,9 @@
 	* src/lg_xaa.c:
 	Unlibcwrap.  Bump server version requirement.  Bump to 1.1.0.
 
+	* src/cir_driver.c:
+	VERSION -> CIR_VERSION
+
 2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
 
 	* configure.ac:

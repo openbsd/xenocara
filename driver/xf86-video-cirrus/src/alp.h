@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/cirrus/alp.h,v 1.6 2001/02/15 17:39:28 eich Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/cirrus/alp.h,v 1.8 2001/10/01 13:44:05 eich Exp $ */
 
 /* (c) Itai Nahshon */
 
