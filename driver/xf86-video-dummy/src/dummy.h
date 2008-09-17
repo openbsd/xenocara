@@ -1,4 +1,3 @@
-/* $XFree86$ */
 
 /* All drivers should typically include these */
 #include "xf86.h"

@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/dummy/dummy_driver.c,v 1.5tsi Exp $ */
 
 /*
  * Copyright 2002, SuSE Linux AG, Author: Egbert Eich
@@ -85,9 +84,9 @@ static Bool	dummyDriverFunc(ScrnInfoPtr pScrn, xorgDriverFuncOp op,
 #define DUMMY_NAME "DUMMY"
 #define DUMMY_DRIVER_NAME "dummy"
 
-#define DUMMY_MAJOR_VERSION 0
-#define DUMMY_MINOR_VERSION 2
-#define DUMMY_PATCHLEVEL 0
+#define DUMMY_MAJOR_VERSION PACKAGE_VERSION_MAJOR
+#define DUMMY_MINOR_VERSION PACKAGE_VERSION_MINOR
+#define DUMMY_PATCHLEVEL PACKAGE_VERSION_PATCHLEVEL
 
 /*
  * This is intentionally screen-independent.  It indicates the binding
@@ -281,7 +280,7 @@ DUMMYProbe(DriverPtr drv, int flags)
 	    /* Allocate a ScrnInfoRec and claim the slot */
 	    if ((pScrn = xf86AllocateScreen(drv,0 ))) {
 		   xf86AddEntityToScreen(pScrn,entityIndex);
-		    pScrn->driverVersion = VERSION;
+		    pScrn->driverVersion = DUMMY_VERSION;
 		    pScrn->driverName    = DUMMY_DRIVER_NAME;
 		    pScrn->name          = DUMMY_NAME;
 		    pScrn->Probe         = DUMMYProbe;

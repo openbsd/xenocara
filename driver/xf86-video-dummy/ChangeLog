@@ -7,6 +7,9 @@
 	* src/dummy_driver.c:
 	Unlibcwrap.  Bump server version requirement.  Bump to 0.2.0.
 
+	* src/dummy_driver.c:
+	VERSION -> DUMMY_VERSION
+
 2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
 
 	* configure.ac:
