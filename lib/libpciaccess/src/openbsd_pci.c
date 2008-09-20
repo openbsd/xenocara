@@ -33,7 +33,7 @@
 #include "pciaccess.h"
 #include "pciaccess_private.h"
 
-static int pcifd;
+static int pcifd = -1;
 static int aperturefd = -1;
 
 static int
@@ -216,6 +216,8 @@ pci_system_openbsd_destroy(void)
 {
 	close(aperturefd);
 	close(pcifd);
+	aperturefd = -1;
+	pcifd = -1;
 	free(pci_sys);
 	pci_sys = NULL;
 }
@@ -317,6 +319,9 @@ pci_system_openbsd_create(void)
 	struct pci_device_private *device;
 	int bus, dev, func, ndevs, nfuncs;
 	uint32_t reg;
+
+	if (pcifd != -1) 
+		return 0;
 
 	pcifd = open("/dev/pci", O_RDWR);
 	if (pcifd == -1)
