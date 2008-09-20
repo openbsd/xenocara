@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.5 2007/09/01 09:45:39 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.6 2008/09/20 16:07:42 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -648,8 +648,10 @@ wsOpen(InputInfoPtr pInfo)
 
 	DBG(1, ErrorF("WS open %s\n", priv->devName));
 	pInfo->fd = xf86OpenSerial(pInfo->options);
-	if (pInfo->fd == -1)
-	    xf86Msg(X_WARNING, "%s: cannot open input device\n", pInfo->name);
+	if (pInfo->fd == -1) {
+	    xf86Msg(X_ERROR, "%s: cannot open input device\n", pInfo->name);
+	    return !Success;
+	}
 	return Success;
 }
 
