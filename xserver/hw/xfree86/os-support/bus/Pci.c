@@ -1104,7 +1104,9 @@ xf86GetPciConfigFromTag(PCITAG Tag)
 CARD32
 pciCheckForBrokenBase(PCITAG Tag,int basereg)
 {
+#ifndef __sparc64__
     pciWriteLong(Tag, PCI_MAP_REG_START + (basereg << 2), 0xffffffff);
+#endif
     return pciReadLong(Tag, PCI_MAP_REG_START + (basereg << 2));
 }
 
