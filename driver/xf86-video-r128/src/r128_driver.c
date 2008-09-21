@@ -1758,7 +1758,7 @@ static Bool R128PreInitAccel(ScrnInfoPtr pScrn)
 static Bool R128PreInitInt10(ScrnInfoPtr pScrn, xf86Int10InfoPtr *ppInt10)
 {
     R128InfoPtr   info = R128PTR(pScrn);
-#if 1 && !defined(__alpha__)
+#if 1 && !defined(__alpha__) && !defined(__powerpc__)
     /* int10 is broken on some Alphas */
     if (xf86LoadSubModule(pScrn, "int10")) {
 	xf86DrvMsg(pScrn->scrnIndex,X_INFO,"initializing int10\n");
