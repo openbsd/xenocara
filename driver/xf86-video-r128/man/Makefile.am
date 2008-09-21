@@ -1,4 +1,3 @@
-# $Id: Makefile.am,v 1.1.1.1 2008/07/12 15:35:56 oga Exp $
 #
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 # 
