@@ -513,7 +513,7 @@ implementation dependent.
 If the name is not found, the color is looked up in the
 X server's database.
 The text form of this database is commonly stored in the file
-\fI\__projectroot__/lib/X11/rgb.txt\fP.
+\fI\__projectroot__/share/X11/rgb.txt\fP.
 .PP
 A numerical color specification
 consists of a color space name and a set of values in the following syntax:
