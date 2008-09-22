@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwmrc.5,v 1.16 2008/07/11 15:42:29 oga Exp $
+.\"	$OpenBSD: cwmrc.5,v 1.17 2008/09/22 14:35:16 oga Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -15,7 +15,7 @@
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
 .\" The following requests are required for all man pages.
-.Dd $Mdocdate: July 11 2008 $
+.Dd $Mdocdate: September 22 2008 $
 .Dt CWMRC 5
 .Os
 .Sh NAME
@@ -123,8 +123,9 @@ can be used for applications such as
 where the user may wish to remain visible.
 .Pp
 .It Ic ignore Ar windowname
-Ignore drawing borders around a window with the name
-.Ar windowname .
+Ignore windows with the name
+.Ar windowname
+when drawing borders and cycling through windows.
 .Pp
 .It Ic mousebind Ar buttons Ar command
 Cause the creation of a mouse binding, or replacement of a default
