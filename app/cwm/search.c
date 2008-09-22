@@ -14,7 +14,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: search.c,v 1.13 2008/09/03 04:39:12 canacar Exp $
+ * $Id: search.c,v 1.14 2008/09/22 14:15:03 oga Exp $
  */
 
 #include "headers.h"
@@ -132,7 +132,7 @@ search_print_client(struct menu *mi, int list)
 		flag = '&';
 
 	if (list)
-		cc->matchname = TAILQ_FIRST(&cc->nameq)->name;
+		cc->matchname = cc->name;
 
 	snprintf(mi->print, sizeof(mi->print), "%c%s", flag, cc->matchname);
 

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: headers.h,v 1.5 2008/04/15 20:24:41 oga Exp $
+ * $Id: headers.h,v 1.6 2008/09/22 14:15:03 oga Exp $
  */
 
 #ifndef _CALMWM_HEADERS_H_
@@ -41,6 +41,8 @@
 
 #include <X11/cursorfont.h>
 #include <X11/extensions/shape.h>
+#include <X11/extensions/Xrandr.h>
+#include <X11/extensions/Xinerama.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
