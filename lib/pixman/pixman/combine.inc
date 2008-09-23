@@ -5,6 +5,9 @@
 #include <string.h>
 
 #include "pixman-private.h"
+
+#include "pixman-combine.h"
+
 /*
  * There are two ways of handling alpha -- either as a single unified value or
  * a separate value for each component, hence each macro must have two
@@ -17,13 +20,13 @@
 /*
  * Combine src and mask
  */
-FASTCALL void
-pixman_fbCombineMaskU (uint32_t *src, const uint32_t *mask, int width)
+FASTCALL static void
+pixman_fbCombineMaskU (comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t a = *(mask + i) >> 24;
-        uint32_t s = *(src + i);
+        comp4_t a = *(mask + i) >> A_SHIFT;
+        comp4_t s = *(src + i);
         FbByteMul(s, a);
         *(src + i) = s;
     }
@@ -34,26 +37,26 @@ pixman_fbCombineMaskU (uint32_t *src, const uint32_t *mask, int width)
  */
 
 FASTCALL static void
-fbCombineClear (uint32_t *dest, const uint32_t *src, int width)
+fbCombineClear (comp4_t *dest, const comp4_t *src, int width)
 {
-    memset(dest, 0, width*sizeof(uint32_t));
+    memset(dest, 0, width*sizeof(comp4_t));
 }
 
 FASTCALL static void
-fbCombineSrcU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineSrcU (comp4_t *dest, const comp4_t *src, int width)
 {
-    memcpy(dest, src, width*sizeof(uint32_t));
+    memcpy(dest, src, width*sizeof(comp4_t));
 }
 
 /* if the Src is opaque, call fbCombineSrcU */
 FASTCALL static void
-fbCombineOverU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineOverU (comp4_t *dest, const comp4_t *src, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t s = *(src + i);
-        uint32_t d = *(dest + i);
-        uint32_t ia = Alpha(~s);
+        comp4_t s = *(src + i);
+        comp4_t d = *(dest + i);
+        comp4_t ia = Alpha(~s);
 
         FbByteMulAdd(d, ia, s);
 	*(dest + i) = d;
@@ -62,13 +65,13 @@ fbCombineOverU (uint32_t *dest, const uint32_t *src, int width)
 
 /* if the Dst is opaque, this is a noop */
 FASTCALL static void
-fbCombineOverReverseU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineOverReverseU (comp4_t *dest, const comp4_t *src, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t s = *(src + i);
-        uint32_t d = *(dest + i);
-        uint32_t ia = Alpha(~*(dest + i));
+        comp4_t s = *(src + i);
+        comp4_t d = *(dest + i);
+        comp4_t ia = Alpha(~*(dest + i));
         FbByteMulAdd(s, ia, d);
 	*(dest + i) = s;
     }
@@ -76,12 +79,12 @@ fbCombineOverReverseU (uint32_t *dest, const uint32_t *src, int width)
 
 /* if the Dst is opaque, call fbCombineSrcU */
 FASTCALL static void
-fbCombineInU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineInU (comp4_t *dest, const comp4_t *src, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t s = *(src + i);
-        uint32_t a = Alpha(*(dest + i));
+        comp4_t s = *(src + i);
+        comp4_t a = Alpha(*(dest + i));
         FbByteMul(s, a);
 	*(dest + i) = s;
     }
@@ -89,12 +92,12 @@ fbCombineInU (uint32_t *dest, const uint32_t *src, int width)
 
 /* if the Src is opaque, this is a noop */
 FASTCALL static void
-fbCombineInReverseU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineInReverseU (comp4_t *dest, const comp4_t *src, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t d = *(dest + i);
-        uint32_t a = Alpha(*(src + i));
+        comp4_t d = *(dest + i);
+        comp4_t a = Alpha(*(src + i));
         FbByteMul(d, a);
 	*(dest + i) = d;
     }
@@ -102,12 +105,12 @@ fbCombineInReverseU (uint32_t *dest, const uint32_t *src, int width)
 
 /* if the Dst is opaque, call fbCombineClear */
 FASTCALL static void
-fbCombineOutU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineOutU (comp4_t *dest, const comp4_t *src, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t s = *(src + i);
-        uint32_t a = Alpha(~*(dest + i));
+        comp4_t s = *(src + i);
+        comp4_t a = Alpha(~*(dest + i));
         FbByteMul(s, a);
 	*(dest + i) = s;
     }
@@ -115,12 +118,12 @@ fbCombineOutU (uint32_t *dest, const uint32_t *src, int width)
 
 /* if the Src is opaque, call fbCombineClear */
 FASTCALL static void
-fbCombineOutReverseU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineOutReverseU (comp4_t *dest, const comp4_t *src, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t d = *(dest + i);
-        uint32_t a = Alpha(~*(src + i));
+        comp4_t d = *(dest + i);
+        comp4_t a = Alpha(~*(src + i));
         FbByteMul(d, a);
 	*(dest + i) = d;
     }
@@ -130,14 +133,14 @@ fbCombineOutReverseU (uint32_t *dest, const uint32_t *src, int width)
 /* if the Dst is opaque, call fbCombineOverU */
 /* if both the Src and Dst are opaque, call fbCombineSrcU */
 FASTCALL static void
-fbCombineAtopU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineAtopU (comp4_t *dest, const comp4_t *src, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t s = *(src + i);
-        uint32_t d = *(dest + i);
-        uint32_t dest_a = Alpha(d);
-        uint32_t src_ia = Alpha(~s);
+        comp4_t s = *(src + i);
+        comp4_t d = *(dest + i);
+        comp4_t dest_a = Alpha(d);
+        comp4_t src_ia = Alpha(~s);
 
         FbByteAddMul(s, dest_a, d, src_ia);
 	*(dest + i) = s;
@@ -148,14 +151,14 @@ fbCombineAtopU (uint32_t *dest, const uint32_t *src, int width)
 /* if the Dst is opaque, call fbCombineInReverseU */
 /* if both the Src and Dst are opaque, call fbCombineDstU */
 FASTCALL static void
-fbCombineAtopReverseU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineAtopReverseU (comp4_t *dest, const comp4_t *src, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t s = *(src + i);
-        uint32_t d = *(dest + i);
-        uint32_t src_a = Alpha(s);
-        uint32_t dest_ia = Alpha(~d);
+        comp4_t s = *(src + i);
+        comp4_t d = *(dest + i);
+        comp4_t src_a = Alpha(s);
+        comp4_t dest_ia = Alpha(~d);
 
         FbByteAddMul(s, dest_ia, d, src_a);
 	*(dest + i) = s;
@@ -166,14 +169,14 @@ fbCombineAtopReverseU (uint32_t *dest, const uint32_t *src, int width)
 /* if the Dst is opaque, call fbCombineOverReverseU */
 /* if both the Src and Dst are opaque, call fbCombineClear */
 FASTCALL static void
-fbCombineXorU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineXorU (comp4_t *dest, const comp4_t *src, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t s = *(src + i);
-        uint32_t d = *(dest + i);
-        uint32_t src_ia = Alpha(~s);
-        uint32_t dest_ia = Alpha(~d);
+        comp4_t s = *(src + i);
+        comp4_t d = *(dest + i);
+        comp4_t src_ia = Alpha(~s);
+        comp4_t dest_ia = Alpha(~d);
 
         FbByteAddMul(s, dest_ia, d, src_ia);
 	*(dest + i) = s;
@@ -181,12 +184,12 @@ fbCombineXorU (uint32_t *dest, const uint32_t *src, int width)
 }
 
 FASTCALL static void
-fbCombineAddU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineAddU (comp4_t *dest, const comp4_t *src, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t s = *(src + i);
-        uint32_t d = *(dest + i);
+        comp4_t s = *(src + i);
+        comp4_t d = *(dest + i);
         FbByteAdd(d, s);
 	*(dest + i) = d;
     }
@@ -196,19 +199,19 @@ fbCombineAddU (uint32_t *dest, const uint32_t *src, int width)
 /* if the Dst is opaque, call fbCombineAddU */
 /* if both the Src and Dst are opaque, call fbCombineAddU */
 FASTCALL static void
-fbCombineSaturateU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineSaturateU (comp4_t *dest, const comp4_t *src, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t  s = *(src + i);
-        uint32_t d = *(dest + i);
-        uint16_t  sa, da;
+        comp4_t s = *(src + i);
+        comp4_t d = *(dest + i);
+        comp2_t sa, da;
 
-        sa = s >> 24;
-        da = ~d >> 24;
+        sa = s >> A_SHIFT;
+        da = ~d >> A_SHIFT;
         if (sa > da)
         {
-            sa = FbIntDiv(da, sa);
+            sa = IntDiv(da, sa);
             FbByteMul(s, sa);
         };
         FbByteAdd(d, s);
@@ -257,20 +260,20 @@ fbCombineSaturateU (uint32_t *dest, const uint32_t *src, int width)
 #define CombineXor	(CombineAOut|CombineBOut)
 
 /* portion covered by a but not b */
-FASTCALL static uint8_t
-fbCombineDisjointOutPart (uint8_t a, uint8_t b)
+FASTCALL static comp1_t
+fbCombineDisjointOutPart (comp1_t a, comp1_t b)
 {
     /* min (1, (1-b) / a) */
 
     b = ~b;		    /* 1 - b */
     if (b >= a)		    /* 1 - b >= a -> (1-b)/a >= 1 */
-	return 0xff;	    /* 1 */
-    return FbIntDiv(b,a);   /* (1-b) / a */
+	return MASK;	    /* 1 */
+    return IntDiv(b,a);     /* (1-b) / a */
 }
 
 /* portion covered by both a and b */
-FASTCALL static uint8_t
-fbCombineDisjointInPart (uint8_t a, uint8_t b)
+FASTCALL static comp1_t
+fbCombineDisjointInPart (comp1_t a, comp1_t b)
 {
     /* max (1-(1-b)/a,0) */
     /*  = - min ((1-b)/a - 1, 0) */
@@ -279,12 +282,12 @@ fbCombineDisjointInPart (uint8_t a, uint8_t b)
     b = ~b;		    /* 1 - b */
     if (b >= a)		    /* 1 - b >= a -> (1-b)/a >= 1 */
 	return 0;	    /* 1 - 1 */
-    return ~FbIntDiv(b,a);  /* 1 - (1-b) / a */
+    return ~IntDiv(b,a);    /* 1 - (1-b) / a */
 }
 
 /* portion covered by a but not b */
-FASTCALL static uint8_t
-fbCombineConjointOutPart (uint8_t a, uint8_t b)
+FASTCALL static comp1_t
+fbCombineConjointOutPart (comp1_t a, comp1_t b)
 {
     /* max (1-b/a,0) */
     /* = 1-min(b/a,1) */
@@ -293,31 +296,31 @@ fbCombineConjointOutPart (uint8_t a, uint8_t b)
 
     if (b >= a)		    /* b >= a -> b/a >= 1 */
 	return 0x00;	    /* 0 */
-    return ~FbIntDiv(b,a);   /* 1 - b/a */
+    return ~IntDiv(b,a);    /* 1 - b/a */
 }
 
 /* portion covered by both a and b */
-FASTCALL static uint8_t
-fbCombineConjointInPart (uint8_t a, uint8_t b)
+FASTCALL static comp1_t
+fbCombineConjointInPart (comp1_t a, comp1_t b)
 {
     /* min (1,b/a) */
 
     if (b >= a)		    /* b >= a -> b/a >= 1 */
-	return 0xff;	    /* 1 */
-    return FbIntDiv(b,a);   /* b/a */
+	return MASK;	    /* 1 */
+    return IntDiv(b,a);     /* b/a */
 }
 
 FASTCALL static void
-fbCombineDisjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8_t combine)
+fbCombineDisjointGeneralU (comp4_t *dest, const comp4_t *src, int width, comp1_t combine)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t s = *(src + i);
-        uint32_t d = *(dest + i);
-        uint32_t m,n,o,p;
-        uint16_t Fa, Fb, t, u, v;
-        uint8_t sa = s >> 24;
-        uint8_t da = d >> 24;
+        comp4_t s = *(src + i);
+        comp4_t d = *(dest + i);
+        comp4_t m,n,o,p;
+        comp2_t Fa, Fb, t, u, v;
+        comp1_t sa = s >> A_SHIFT;
+        comp1_t da = d >> A_SHIFT;
 
         switch (combine & CombineA) {
         default:
@@ -330,7 +333,7 @@ fbCombineDisjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8
             Fa = fbCombineDisjointInPart (sa, da);
             break;
         case CombineA:
-            Fa = 0xff;
+            Fa = MASK;
             break;
         }
 
@@ -345,32 +348,32 @@ fbCombineDisjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8
             Fb = fbCombineDisjointInPart (da, sa);
             break;
         case CombineB:
-            Fb = 0xff;
+            Fb = MASK;
             break;
         }
         m = FbGen (s,d,0,Fa,Fb,t, u, v);
-        n = FbGen (s,d,8,Fa,Fb,t, u, v);
-        o = FbGen (s,d,16,Fa,Fb,t, u, v);
-        p = FbGen (s,d,24,Fa,Fb,t, u, v);
+        n = FbGen (s,d,G_SHIFT,Fa,Fb,t, u, v);
+        o = FbGen (s,d,B_SHIFT,Fa,Fb,t, u, v);
+        p = FbGen (s,d,A_SHIFT,Fa,Fb,t, u, v);
         s = m|n|o|p;
 	*(dest + i) = s;
     }
 }
 
 FASTCALL static void
-fbCombineDisjointOverU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineDisjointOverU (comp4_t *dest, const comp4_t *src, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t  s = *(src + i);
-        uint16_t  a = s >> 24;
+        comp4_t s = *(src + i);
+        comp2_t a = s >> A_SHIFT;
 
         if (a != 0x00)
         {
-            if (a != 0xff)
+            if (a != MASK)
             {
-                uint32_t d = *(dest + i);
-                a = fbCombineDisjointOutPart (d >> 24, a);
+                comp4_t d = *(dest + i);
+                a = fbCombineDisjointOutPart (d >> A_SHIFT, a);
                 FbByteMulAdd(d, a, s);
                 s = d;
             }
@@ -380,58 +383,58 @@ fbCombineDisjointOverU (uint32_t *dest, const uint32_t *src, int width)
 }
 
 FASTCALL static void
-fbCombineDisjointInU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineDisjointInU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineDisjointGeneralU (dest, src, width, CombineAIn);
 }
 
 FASTCALL static void
-fbCombineDisjointInReverseU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineDisjointInReverseU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineDisjointGeneralU (dest, src, width, CombineBIn);
 }
 
 FASTCALL static void
-fbCombineDisjointOutU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineDisjointOutU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineDisjointGeneralU (dest, src, width, CombineAOut);
 }
 
 FASTCALL static void
-fbCombineDisjointOutReverseU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineDisjointOutReverseU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineDisjointGeneralU (dest, src, width, CombineBOut);
 }
 
 FASTCALL static void
-fbCombineDisjointAtopU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineDisjointAtopU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineDisjointGeneralU (dest, src, width, CombineAAtop);
 }
 
 FASTCALL static void
-fbCombineDisjointAtopReverseU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineDisjointAtopReverseU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineDisjointGeneralU (dest, src, width, CombineBAtop);
 }
 
 FASTCALL static void
-fbCombineDisjointXorU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineDisjointXorU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineDisjointGeneralU (dest, src, width, CombineXor);
 }
 
 FASTCALL static void
-fbCombineConjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8_t combine)
+fbCombineConjointGeneralU (comp4_t *dest, const comp4_t *src, int width, comp1_t combine)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        uint32_t  s = *(src + i);
-        uint32_t d = *(dest + i);
-        uint32_t  m,n,o,p;
-        uint16_t  Fa, Fb, t, u, v;
-        uint8_t sa = s >> 24;
-        uint8_t da = d >> 24;
+        comp4_t s = *(src + i);
+        comp4_t d = *(dest + i);
+        comp4_t m,n,o,p;
+        comp2_t Fa, Fb, t, u, v;
+        comp1_t sa = s >> A_SHIFT;
+        comp1_t da = d >> A_SHIFT;
 
         switch (combine & CombineA) {
         default:
@@ -444,7 +447,7 @@ fbCombineConjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8
             Fa = fbCombineConjointInPart (sa, da);
             break;
         case CombineA:
-            Fa = 0xff;
+            Fa = MASK;
             break;
         }
 
@@ -459,71 +462,71 @@ fbCombineConjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8
             Fb = fbCombineConjointInPart (da, sa);
             break;
         case CombineB:
-            Fb = 0xff;
+            Fb = MASK;
             break;
         }
         m = FbGen (s,d,0,Fa,Fb,t, u, v);
-        n = FbGen (s,d,8,Fa,Fb,t, u, v);
-        o = FbGen (s,d,16,Fa,Fb,t, u, v);
-        p = FbGen (s,d,24,Fa,Fb,t, u, v);
+        n = FbGen (s,d,G_SHIFT,Fa,Fb,t, u, v);
+        o = FbGen (s,d,B_SHIFT,Fa,Fb,t, u, v);
+        p = FbGen (s,d,A_SHIFT,Fa,Fb,t, u, v);
         s = m|n|o|p;
 	*(dest + i) = s;
     }
 }
 
 FASTCALL static void
-fbCombineConjointOverU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineConjointOverU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineAOver);
 }
 
 
 FASTCALL static void
-fbCombineConjointOverReverseU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineConjointOverReverseU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineBOver);
 }
 
 
 FASTCALL static void
-fbCombineConjointInU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineConjointInU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineAIn);
 }
 
 
 FASTCALL static void
-fbCombineConjointInReverseU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineConjointInReverseU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineBIn);
 }
 
 FASTCALL static void
-fbCombineConjointOutU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineConjointOutU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineAOut);
 }
 
 FASTCALL static void
-fbCombineConjointOutReverseU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineConjointOutReverseU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineBOut);
 }
 
 FASTCALL static void
-fbCombineConjointAtopU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineConjointAtopU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineAAtop);
 }
 
 FASTCALL static void
-fbCombineConjointAtopReverseU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineConjointAtopReverseU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineBAtop);
 }
 
 FASTCALL static void
-fbCombineConjointXorU (uint32_t *dest, const uint32_t *src, int width)
+fbCombineConjointXorU (comp4_t *dest, const comp4_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineXor);
 }
@@ -533,12 +536,12 @@ fbCombineConjointXorU (uint32_t *dest, const uint32_t *src, int width)
 /********************************************************************************/
 
 FASTCALL static void
-fbCombineMaskC (uint32_t *src, uint32_t *mask)
+fbCombineMaskC (comp4_t *src, comp4_t *mask)
 {
-    uint32_t a = *mask;
+    comp4_t a = *mask;
 
-    uint32_t	x;
-    uint16_t	xa;
+    comp4_t	x;
+    comp2_t	xa;
 
     if (!a)
     {
@@ -547,16 +550,16 @@ fbCombineMaskC (uint32_t *src, uint32_t *mask)
     }
 
     x = *(src);
-    if (a == 0xffffffff)
+    if (a == ~0)
     {
-	x = x >> 24;
-	x |= x << 8;
-	x |= x << 16;
+	x = x >> A_SHIFT;
+	x |= x << G_SHIFT;
+	x |= x << B_SHIFT;
 	*(mask) = x;
 	return;
     }
 
-    xa = x >> 24;
+    xa = x >> A_SHIFT;
     FbByteMulC(x, a);
     *(src) = x;
     FbByteMul(a, xa);
@@ -564,10 +567,10 @@ fbCombineMaskC (uint32_t *src, uint32_t *mask)
 }
 
 FASTCALL static void
-fbCombineMaskValueC (uint32_t *src, const uint32_t *mask)
+fbCombineMaskValueC (comp4_t *src, const comp4_t *mask)
 {
-    uint32_t a = *mask;
-    uint32_t	x;
+    comp4_t a = *mask;
+    comp4_t	x;
 
     if (!a)
     {
@@ -575,7 +578,7 @@ fbCombineMaskValueC (uint32_t *src, const uint32_t *mask)
 	return;
     }
 
-    if (a == 0xffffffff)
+    if (a == ~0)
 	return;
 
     x = *(src);
@@ -584,22 +587,22 @@ fbCombineMaskValueC (uint32_t *src, const uint32_t *mask)
 }
 
 FASTCALL static void
-fbCombineMaskAlphaC (const uint32_t *src, uint32_t *mask)
+fbCombineMaskAlphaC (const comp4_t *src, comp4_t *mask)
 {
-    uint32_t a = *(mask);
-    uint32_t	x;
+    comp4_t a = *(mask);
+    comp4_t	x;
 
     if (!a)
 	return;
 
-    x = *(src) >> 24;
-    if (x == 0xff)
+    x = *(src) >> A_SHIFT;
+    if (x == MASK)
 	return;
-    if (a == 0xffffffff)
+    if (a == ~0)
     {
-	x = x >> 24;
-	x |= x << 8;
-	x |= x << 16;
+	x = x >> A_SHIFT;
+	x |= x << G_SHIFT;
+	x |= x << B_SHIFT;
 	*(mask) = x;
 	return;
     }
@@ -611,19 +614,19 @@ fbCombineMaskAlphaC (const uint32_t *src, uint32_t *mask)
 
 
 FASTCALL static void
-fbCombineClearC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineClearC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
-    memset(dest, 0, width*sizeof(uint32_t));
+    memset(dest, 0, width*sizeof(comp4_t));
 }
 
 FASTCALL static void
-fbCombineSrcC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineSrcC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
-	uint32_t s = *(src + i);
-	uint32_t m = *(mask + i);
+	comp4_t s = *(src + i);
+	comp4_t m = *(mask + i);
 
 	fbCombineMaskValueC (&s, &m);
 
@@ -632,23 +635,23 @@ fbCombineSrcC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 FASTCALL static void
-fbCombineOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineOverC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
-	uint32_t s = *(src + i);
-	uint32_t m = *(mask + i);
-	uint32_t a;
+	comp4_t s = *(src + i);
+	comp4_t m = *(mask + i);
+	comp4_t a;
 
 	fbCombineMaskC (&s, &m);
 
 	a = ~m;
-        if (a != 0xffffffff)
+        if (a != ~0)
         {
             if (a)
             {
-                uint32_t d = *(dest + i);
+                comp4_t d = *(dest + i);
                 FbByteMulAddC(d, a, s);
                 s = d;
             }
@@ -658,22 +661,22 @@ fbCombineOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 FASTCALL static void
-fbCombineOverReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineOverReverseC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
-        uint32_t d = *(dest + i);
-        uint32_t a = ~d >> 24;
+        comp4_t d = *(dest + i);
+        comp4_t a = ~d >> A_SHIFT;
 
         if (a)
         {
-            uint32_t s = *(src + i);
-	    uint32_t m = *(mask + i);
+            comp4_t s = *(src + i);
+	    comp4_t m = *(mask + i);
 
 	    fbCombineMaskValueC (&s, &m);
 
-            if (a != 0xff)
+            if (a != MASK)
             {
                 FbByteMulAdd(s, a, d);
             }
@@ -683,21 +686,21 @@ fbCombineOverReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 FASTCALL static void
-fbCombineInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineInC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
-        uint32_t d = *(dest + i);
-        uint16_t a = d >> 24;
-        uint32_t s = 0;
+        comp4_t d = *(dest + i);
+        comp2_t a = d >> A_SHIFT;
+        comp4_t s = 0;
         if (a)
         {
-	    uint32_t m = *(mask + i);
+	    comp4_t m = *(mask + i);
 
 	    s = *(src + i);
 	    fbCombineMaskValueC (&s, &m);
-            if (a != 0xff)
+            if (a != MASK)
             {
                 FbByteMul(s, a);
             }
@@ -707,21 +710,21 @@ fbCombineInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 FASTCALL static void
-fbCombineInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineInReverseC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
-        uint32_t s = *(src + i);
-        uint32_t m = *(mask + i);
-        uint32_t a;
+        comp4_t s = *(src + i);
+        comp4_t m = *(mask + i);
+        comp4_t a;
 
 	fbCombineMaskAlphaC (&s, &m);
 
 	a = m;
-        if (a != 0xffffffff)
+        if (a != ~0)
         {
-            uint32_t d = 0;
+            comp4_t d = 0;
             if (a)
             {
                 d = *(dest + i);
@@ -733,22 +736,22 @@ fbCombineInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 FASTCALL static void
-fbCombineOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineOutC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
-        uint32_t d = *(dest + i);
-        uint16_t a = ~d >> 24;
-        uint32_t s = 0;
+        comp4_t d = *(dest + i);
+        comp2_t a = ~d >> A_SHIFT;
+        comp4_t s = 0;
         if (a)
         {
-	    uint32_t m = *(mask + i);
+	    comp4_t m = *(mask + i);
 
 	    s = *(src + i);
 	    fbCombineMaskValueC (&s, &m);
 
-            if (a != 0xff)
+            if (a != MASK)
             {
                 FbByteMul(s, a);
             }
@@ -758,21 +761,21 @@ fbCombineOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 FASTCALL static void
-fbCombineOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineOutReverseC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
-	uint32_t s = *(src + i);
-	uint32_t m = *(mask + i);
-	uint32_t a;
+	comp4_t s = *(src + i);
+	comp4_t m = *(mask + i);
+	comp4_t a;
 
 	fbCombineMaskAlphaC (&s, &m);
 
         a = ~m;
-        if (a != 0xffffffff)
+        if (a != ~0)
         {
-            uint32_t d = 0;
+            comp4_t d = 0;
             if (a)
             {
                 d = *(dest + i);
@@ -784,16 +787,16 @@ fbCombineOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 FASTCALL static void
-fbCombineAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineAtopC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
-        uint32_t d = *(dest + i);
-        uint32_t s = *(src + i);
-        uint32_t m = *(mask + i);
-        uint32_t ad;
-        uint16_t as = d >> 24;
+        comp4_t d = *(dest + i);
+        comp4_t s = *(src + i);
+        comp4_t m = *(mask + i);
+        comp4_t ad;
+        comp2_t as = d >> A_SHIFT;
 
 	fbCombineMaskC (&s, &m);
 
@@ -805,17 +808,17 @@ fbCombineAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 FASTCALL static void
-fbCombineAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineAtopReverseC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
 
-        uint32_t d = *(dest + i);
-        uint32_t s = *(src + i);
-        uint32_t m = *(mask + i);
-        uint32_t ad;
-        uint16_t as = ~d >> 24;
+        comp4_t d = *(dest + i);
+        comp4_t s = *(src + i);
+        comp4_t m = *(mask + i);
+        comp4_t ad;
+        comp2_t as = ~d >> A_SHIFT;
 
 	fbCombineMaskC (&s, &m);
 
@@ -827,16 +830,16 @@ fbCombineAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 FASTCALL static void
-fbCombineXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineXorC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
-        uint32_t d = *(dest + i);
-        uint32_t s = *(src + i);
-        uint32_t m = *(mask + i);
-        uint32_t ad;
-        uint16_t as = ~d >> 24;
+        comp4_t d = *(dest + i);
+        comp4_t s = *(src + i);
+        comp4_t m = *(mask + i);
+        comp4_t ad;
+        comp2_t as = ~d >> A_SHIFT;
 
 	fbCombineMaskC (&s, &m);
 
@@ -848,14 +851,14 @@ fbCombineXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 FASTCALL static void
-fbCombineAddC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineAddC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
-        uint32_t s = *(src + i);
-        uint32_t m = *(mask + i);
-        uint32_t d = *(dest + i);
+        comp4_t s = *(src + i);
+        comp4_t m = *(mask + i);
+        comp4_t d = *(dest + i);
 
 	fbCombineMaskValueC (&s, &m);
 
@@ -865,15 +868,15 @@ fbCombineAddC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 FASTCALL static void
-fbCombineSaturateC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineSaturateC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
-        uint32_t  s, d;
-        uint16_t  sa, sr, sg, sb, da;
-        uint16_t  t, u, v;
-        uint32_t  m,n,o,p;
+        comp4_t s, d;
+        comp2_t sa, sr, sg, sb, da;
+        comp2_t t, u, v;
+        comp4_t m,n,o,p;
 
         d = *(dest + i);
         s = *(src + i);
@@ -881,53 +884,53 @@ fbCombineSaturateC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 
 	fbCombineMaskC (&s, &m);
 
-        sa = (m >> 24);
-        sr = (m >> 16) & 0xff;
-        sg = (m >>  8) & 0xff;
-        sb = (m      ) & 0xff;
-        da = ~d >> 24;
+        sa = (m >> A_SHIFT);
+        sr = (m >> B_SHIFT) & MASK;
+        sg = (m >> G_SHIFT) & MASK;
+        sb =  m             & MASK;
+        da = ~d >> A_SHIFT;
 
         if (sb <= da)
-            m = FbAdd(s,d,0,t);
+            m = Add(s,d,0,t);
         else
-            m = FbGen (s, d, 0, (da << 8) / sb, 0xff, t, u, v);
+            m = FbGen (s, d, 0, (da << G_SHIFT) / sb, MASK, t, u, v);
 
         if (sg <= da)
-            n = FbAdd(s,d,8,t);
+            n = Add(s,d,G_SHIFT,t);
         else
-            n = FbGen (s, d, 8, (da << 8) / sg, 0xff, t, u, v);
+            n = FbGen (s, d, G_SHIFT, (da << G_SHIFT) / sg, MASK, t, u, v);
 
         if (sr <= da)
-            o = FbAdd(s,d,16,t);
+            o = Add(s,d,B_SHIFT,t);
         else
-            o = FbGen (s, d, 16, (da << 8) / sr, 0xff, t, u, v);
+            o = FbGen (s, d, B_SHIFT, (da << G_SHIFT) / sr, MASK, t, u, v);
 
         if (sa <= da)
-            p = FbAdd(s,d,24,t);
+            p = Add(s,d,A_SHIFT,t);
         else
-            p = FbGen (s, d, 24, (da << 8) / sa, 0xff, t, u, v);
+            p = FbGen (s, d, A_SHIFT, (da << G_SHIFT) / sa, MASK, t, u, v);
 
 	*(dest + i) = m|n|o|p;
     }
 }
 
 FASTCALL static void
-fbCombineDisjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width, uint8_t combine)
+fbCombineDisjointGeneralC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width, comp1_t combine)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
-        uint32_t  s, d;
-        uint32_t  m,n,o,p;
-        uint32_t  Fa, Fb;
-        uint16_t  t, u, v;
-        uint32_t  sa;
-        uint8_t   da;
+        comp4_t s, d;
+        comp4_t m,n,o,p;
+        comp4_t Fa, Fb;
+        comp2_t t, u, v;
+        comp4_t sa;
+        comp1_t da;
 
         s = *(src + i);
         m = *(mask + i);
         d = *(dest + i);
-        da = d >> 24;
+        da = d >> A_SHIFT;
 
 	fbCombineMaskC (&s, &m);
 
@@ -938,21 +941,21 @@ fbCombineDisjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
             Fa = 0;
             break;
         case CombineAOut:
-            m = fbCombineDisjointOutPart ((uint8_t) (sa >> 0), da);
-            n = fbCombineDisjointOutPart ((uint8_t) (sa >> 8), da) << 8;
-            o = fbCombineDisjointOutPart ((uint8_t) (sa >> 16), da) << 16;
-            p = fbCombineDisjointOutPart ((uint8_t) (sa >> 24), da) << 24;
+            m = (comp4_t)fbCombineDisjointOutPart ((comp1_t) (sa >> 0), da);
+            n = (comp4_t)fbCombineDisjointOutPart ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
+            o = (comp4_t)fbCombineDisjointOutPart ((comp1_t) (sa >> B_SHIFT), da) << B_SHIFT;
+            p = (comp4_t)fbCombineDisjointOutPart ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
             Fa = m|n|o|p;
             break;
         case CombineAIn:
-            m = fbCombineDisjointInPart ((uint8_t) (sa >> 0), da);
-            n = fbCombineDisjointInPart ((uint8_t) (sa >> 8), da) << 8;
-            o = fbCombineDisjointInPart ((uint8_t) (sa >> 16), da) << 16;
-            p = fbCombineDisjointInPart ((uint8_t) (sa >> 24), da) << 24;
+            m = (comp4_t)fbCombineDisjointInPart ((comp1_t) (sa >> 0), da);
+            n = (comp4_t)fbCombineDisjointInPart ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
+            o = (comp4_t)fbCombineDisjointInPart ((comp1_t) (sa >> B_SHIFT), da) << B_SHIFT;
+            p = (comp4_t)fbCombineDisjointInPart ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
             Fa = m|n|o|p;
             break;
         case CombineA:
-            Fa = 0xffffffff;
+            Fa = ~0;
             break;
         }
 
@@ -961,97 +964,97 @@ fbCombineDisjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
             Fb = 0;
             break;
         case CombineBOut:
-            m = fbCombineDisjointOutPart (da, (uint8_t) (sa >> 0));
-            n = fbCombineDisjointOutPart (da, (uint8_t) (sa >> 8)) << 8;
-            o = fbCombineDisjointOutPart (da, (uint8_t) (sa >> 16)) << 16;
-            p = fbCombineDisjointOutPart (da, (uint8_t) (sa >> 24)) << 24;
+            m = (comp4_t)fbCombineDisjointOutPart (da, (comp1_t) (sa >> 0));
+            n = (comp4_t)fbCombineDisjointOutPart (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
+            o = (comp4_t)fbCombineDisjointOutPart (da, (comp1_t) (sa >> B_SHIFT)) << B_SHIFT;
+            p = (comp4_t)fbCombineDisjointOutPart (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
             Fb = m|n|o|p;
             break;
         case CombineBIn:
-            m = fbCombineDisjointInPart (da, (uint8_t) (sa >> 0));
-            n = fbCombineDisjointInPart (da, (uint8_t) (sa >> 8)) << 8;
-            o = fbCombineDisjointInPart (da, (uint8_t) (sa >> 16)) << 16;
-            p = fbCombineDisjointInPart (da, (uint8_t) (sa >> 24)) << 24;
+            m = (comp4_t)fbCombineDisjointInPart (da, (comp1_t) (sa >> 0));
+            n = (comp4_t)fbCombineDisjointInPart (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
+            o = (comp4_t)fbCombineDisjointInPart (da, (comp1_t) (sa >> B_SHIFT)) << B_SHIFT;
+            p = (comp4_t)fbCombineDisjointInPart (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
             Fb = m|n|o|p;
             break;
         case CombineB:
-            Fb = 0xffffffff;
+            Fb = ~0;
             break;
         }
-        m = FbGen (s,d,0,FbGet8(Fa,0),FbGet8(Fb,0),t, u, v);
-        n = FbGen (s,d,8,FbGet8(Fa,8),FbGet8(Fb,8),t, u, v);
-        o = FbGen (s,d,16,FbGet8(Fa,16),FbGet8(Fb,16),t, u, v);
-        p = FbGen (s,d,24,FbGet8(Fa,24),FbGet8(Fb,24),t, u, v);
+        m = FbGen (s,d,0,GetComp(Fa,0),GetComp(Fb,0),t, u, v);
+        n = FbGen (s,d,G_SHIFT,GetComp(Fa,G_SHIFT),GetComp(Fb,G_SHIFT),t, u, v);
+        o = FbGen (s,d,B_SHIFT,GetComp(Fa,B_SHIFT),GetComp(Fb,B_SHIFT),t, u, v);
+        p = FbGen (s,d,A_SHIFT,GetComp(Fa,A_SHIFT),GetComp(Fb,A_SHIFT),t, u, v);
         s = m|n|o|p;
 	*(dest + i) = s;
     }
 }
 
 FASTCALL static void
-fbCombineDisjointOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineDisjointOverC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineAOver);
 }
 
 FASTCALL static void
-fbCombineDisjointInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineDisjointInC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineAIn);
 }
 
 FASTCALL static void
-fbCombineDisjointInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineDisjointInReverseC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineBIn);
 }
 
 FASTCALL static void
-fbCombineDisjointOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineDisjointOutC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineAOut);
 }
 
 FASTCALL static void
-fbCombineDisjointOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineDisjointOutReverseC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineBOut);
 }
 
 FASTCALL static void
-fbCombineDisjointAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineDisjointAtopC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineAAtop);
 }
 
 FASTCALL static void
-fbCombineDisjointAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineDisjointAtopReverseC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineBAtop);
 }
 
 FASTCALL static void
-fbCombineDisjointXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineDisjointXorC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineXor);
 }
 
 FASTCALL static void
-fbCombineConjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width, uint8_t combine)
+fbCombineConjointGeneralC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width, comp1_t combine)
 {
     int i;
 
     for (i = 0; i < width; ++i) {
-        uint32_t  s, d;
-        uint32_t  m,n,o,p;
-        uint32_t  Fa, Fb;
-        uint16_t  t, u, v;
-        uint32_t  sa;
-        uint8_t   da;
+        comp4_t s, d;
+        comp4_t m,n,o,p;
+        comp4_t Fa, Fb;
+        comp2_t t, u, v;
+        comp4_t sa;
+        comp1_t da;
 
         s = *(src + i);
         m = *(mask + i);
         d = *(dest + i);
-        da = d >> 24;
+        da = d >> A_SHIFT;
 
 	fbCombineMaskC (&s, &m);
 
@@ -1062,21 +1065,21 @@ fbCombineConjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
             Fa = 0;
             break;
         case CombineAOut:
-            m = fbCombineConjointOutPart ((uint8_t) (sa >> 0), da);
-            n = fbCombineConjointOutPart ((uint8_t) (sa >> 8), da) << 8;
-            o = fbCombineConjointOutPart ((uint8_t) (sa >> 16), da) << 16;
-            p = fbCombineConjointOutPart ((uint8_t) (sa >> 24), da) << 24;
+            m = (comp4_t)fbCombineConjointOutPart ((comp1_t) (sa >> 0), da);
+            n = (comp4_t)fbCombineConjointOutPart ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
+            o = (comp4_t)fbCombineConjointOutPart ((comp1_t) (sa >> B_SHIFT), da) << B_SHIFT;
+            p = (comp4_t)fbCombineConjointOutPart ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
             Fa = m|n|o|p;
             break;
         case CombineAIn:
-            m = fbCombineConjointInPart ((uint8_t) (sa >> 0), da);
-            n = fbCombineConjointInPart ((uint8_t) (sa >> 8), da) << 8;
-            o = fbCombineConjointInPart ((uint8_t) (sa >> 16), da) << 16;
-            p = fbCombineConjointInPart ((uint8_t) (sa >> 24), da) << 24;
+            m = (comp4_t)fbCombineConjointInPart ((comp1_t) (sa >> 0), da);
+            n = (comp4_t)fbCombineConjointInPart ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
+            o = (comp4_t)fbCombineConjointInPart ((comp1_t) (sa >> B_SHIFT), da) << B_SHIFT;
+            p = (comp4_t)fbCombineConjointInPart ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
             Fa = m|n|o|p;
             break;
         case CombineA:
-            Fa = 0xffffffff;
+            Fa = ~0;
             break;
         }
 
@@ -1085,87 +1088,87 @@ fbCombineConjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
             Fb = 0;
             break;
         case CombineBOut:
-            m = fbCombineConjointOutPart (da, (uint8_t) (sa >> 0));
-            n = fbCombineConjointOutPart (da, (uint8_t) (sa >> 8)) << 8;
-            o = fbCombineConjointOutPart (da, (uint8_t) (sa >> 16)) << 16;
-            p = fbCombineConjointOutPart (da, (uint8_t) (sa >> 24)) << 24;
+            m = (comp4_t)fbCombineConjointOutPart (da, (comp1_t) (sa >> 0));
+            n = (comp4_t)fbCombineConjointOutPart (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
+            o = (comp4_t)fbCombineConjointOutPart (da, (comp1_t) (sa >> B_SHIFT)) << B_SHIFT;
+            p = (comp4_t)fbCombineConjointOutPart (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
             Fb = m|n|o|p;
             break;
         case CombineBIn:
-            m = fbCombineConjointInPart (da, (uint8_t) (sa >> 0));
-            n = fbCombineConjointInPart (da, (uint8_t) (sa >> 8)) << 8;
-            o = fbCombineConjointInPart (da, (uint8_t) (sa >> 16)) << 16;
-            p = fbCombineConjointInPart (da, (uint8_t) (sa >> 24)) << 24;
+            m = (comp4_t)fbCombineConjointInPart (da, (comp1_t) (sa >> 0));
+            n = (comp4_t)fbCombineConjointInPart (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
+            o = (comp4_t)fbCombineConjointInPart (da, (comp1_t) (sa >> B_SHIFT)) << B_SHIFT;
+            p = (comp4_t)fbCombineConjointInPart (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
             Fb = m|n|o|p;
             break;
         case CombineB:
-            Fb = 0xffffffff;
+            Fb = ~0;
             break;
         }
-        m = FbGen (s,d,0,FbGet8(Fa,0),FbGet8(Fb,0),t, u, v);
-        n = FbGen (s,d,8,FbGet8(Fa,8),FbGet8(Fb,8),t, u, v);
-        o = FbGen (s,d,16,FbGet8(Fa,16),FbGet8(Fb,16),t, u, v);
-        p = FbGen (s,d,24,FbGet8(Fa,24),FbGet8(Fb,24),t, u, v);
+        m = FbGen (s,d,0,GetComp(Fa,0),GetComp(Fb,0),t, u, v);
+        n = FbGen (s,d,G_SHIFT,GetComp(Fa,G_SHIFT),GetComp(Fb,G_SHIFT),t, u, v);
+        o = FbGen (s,d,B_SHIFT,GetComp(Fa,B_SHIFT),GetComp(Fb,B_SHIFT),t, u, v);
+        p = FbGen (s,d,A_SHIFT,GetComp(Fa,A_SHIFT),GetComp(Fb,A_SHIFT),t, u, v);
         s = m|n|o|p;
 	*(dest + i) = s;
     }
 }
 
 FASTCALL static void
-fbCombineConjointOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineConjointOverC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineAOver);
 }
 
 FASTCALL static void
-fbCombineConjointOverReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineConjointOverReverseC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineBOver);
 }
 
 FASTCALL static void
-fbCombineConjointInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineConjointInC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineAIn);
 }
 
 FASTCALL static void
-fbCombineConjointInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineConjointInReverseC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineBIn);
 }
 
 FASTCALL static void
-fbCombineConjointOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineConjointOutC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineAOut);
 }
 
 FASTCALL static void
-fbCombineConjointOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineConjointOutReverseC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineBOut);
 }
 
 FASTCALL static void
-fbCombineConjointAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineConjointAtopC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineAAtop);
 }
 
 FASTCALL static void
-fbCombineConjointAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineConjointAtopReverseC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineBAtop);
 }
 
 FASTCALL static void
-fbCombineConjointXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+fbCombineConjointXorC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineXor);
 }
 
-CombineFuncU pixman_fbCombineFuncU[] = {
+static CombineFuncU pixman_fbCombineFuncU[] = {
     fbCombineClear,
     fbCombineSrcU,
     NULL, /* CombineDst */
@@ -1212,7 +1215,7 @@ CombineFuncU pixman_fbCombineFuncU[] = {
     fbCombineConjointXorU,
 };
 
-CombineFuncC pixman_fbCombineFuncC[] = {
+static CombineFuncC pixman_fbCombineFuncC[] = {
     fbCombineClearC,
     fbCombineSrcC,
     NULL, /* Dest */
@@ -1257,4 +1260,10 @@ CombineFuncC pixman_fbCombineFuncC[] = {
     fbCombineConjointAtopC,
     fbCombineConjointAtopReverseC,
     fbCombineConjointXorC,
+};
+
+FbComposeFunctions pixman_composeFunctions = {
+    pixman_fbCombineFuncU,
+    pixman_fbCombineFuncC,
+    pixman_fbCombineMaskU
 };

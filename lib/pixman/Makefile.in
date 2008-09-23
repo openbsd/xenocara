@@ -38,9 +38,10 @@ build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(srcdir)/pixman-1.pc.in $(top_srcdir)/configure AUTHORS \
-	COPYING ChangeLog INSTALL NEWS TODO compile config.guess \
-	config.sub depcomp install-sh ltmain.sh missing
+	$(srcdir)/pixman-1-uninstalled.pc.in $(srcdir)/pixman-1.pc.in \
+	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
+	TODO compile config.guess config.sub depcomp install-sh \
+	ltmain.sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -50,7 +51,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
 mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = pixman-1.pc
+CONFIG_CLEAN_FILES = pixman-1.pc pixman-1-uninstalled.pc
 SOURCES =
 DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -105,6 +106,7 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DEP_CFLAGS = @DEP_CFLAGS@
 DEP_LIBS = @DEP_LIBS@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -130,6 +132,7 @@ LTLIBOBJS = @LTLIBOBJS@
 LT_VERSION_INFO = @LT_VERSION_INFO@
 MAKEINFO = @MAKEINFO@
 MMX_CFLAGS = @MMX_CFLAGS@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -138,26 +141,31 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PERL = @PERL@
 PIXMAN_VERSION_MAJOR = @PIXMAN_VERSION_MAJOR@
 PIXMAN_VERSION_MICRO = @PIXMAN_VERSION_MICRO@
 PIXMAN_VERSION_MINOR = @PIXMAN_VERSION_MINOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
-SSE_CFLAGS = @SSE_CFLAGS@
+SSE2_CFLAGS = @SSE2_CFLAGS@
 STRIP = @STRIP@
 USE_MMX_FALSE = @USE_MMX_FALSE@
 USE_MMX_TRUE = @USE_MMX_TRUE@
 USE_SSE2_FALSE = @USE_SSE2_FALSE@
 USE_SSE2_TRUE = @USE_SSE2_TRUE@
-USE_SSE_FALSE = @USE_SSE_FALSE@
-USE_SSE_TRUE = @USE_SSE_TRUE@
+USE_VMX_FALSE = @USE_VMX_FALSE@
+USE_VMX_TRUE = @USE_VMX_TRUE@
 VERSION = @VERSION@
+VMX_CFLAGS = @VMX_CFLAGS@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
@@ -201,6 +209,7 @@ target_alias = @target_alias@
 SUBDIRS = pixman test
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = pixman-1.pc
+GPGKEY = 6FF7C1A8
 USERNAME = $$USER
 RELEASE_OR_SNAPSHOT = $$(if test "x$(CAIRO_VERSION_MINOR)" = "x$$(echo "$(CAIRO_VERSION_MINOR)/2*2" | bc)" ; then echo release; else echo snapshot; fi)
 RELEASE_CAIRO_HOST = $(USERNAME)@cairographics.org
@@ -272,6 +281,8 @@ $(srcdir)/config.h.in:  $(am__configure_deps)
 distclean-hdr:
 	-rm -f config.h stamp-h1
 pixman-1.pc: $(top_builddir)/config.status $(srcdir)/pixman-1.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+pixman-1-uninstalled.pc: $(top_builddir)/config.status $(srcdir)/pixman-1-uninstalled.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 mostlyclean-libtool:
@@ -719,22 +730,24 @@ ensure-prev:
 	@if [[ "$(PREV)" == "" ]]; then							\
 		echo ""							          &&	\
 		echo "You must set the PREV variable on the make command line to" &&	\
-		echo "the git tag of the last release."				  &&	\
+		echo "the last version."				  &&	\
 		echo ""								  &&	\
 		echo "For example:"						  &&	\
-		echo "      make PREV=pixman-0.7.3"				  &&	\
+		echo "      make PREV=0.7.3"				  &&	\
 		echo ""								  &&	\
 		false;									\
 	fi
 
 release-check: ensure-prev release-verify-newer release-remove-old distcheck
 
+release-tag:
+	git-tag -u $(GPGKEY) -m "$(PACKAGE) $(VERSION) release" $(PACKAGE)-$(VERSION)
+
 release-upload: release-check $(tar_gz) $(tar_bz2) $(sha1_tgz) $(gpg_file)
 	mkdir -p releases
 	scp $(tar_gz) $(sha1_tgz) $(gpg_file) $(RELEASE_CAIRO_HOST):$(RELEASE_CAIRO_DIR)
 	scp $(tar_gz) $(tar_bz2) $(RELEASE_XORG_HOST):$(RELEASE_XORG_DIR)
 	ssh $(RELEASE_CAIRO_HOST) "rm -f $(RELEASE_CAIRO_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(tar_gz) $(RELEASE_CAIRO_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
-	git-tag -s -m "$(PACKAGE) $(VERSION) release" $(PACKAGE)-$(VERSION)
 
 release-publish-message: $(sha1_tgz) $(md5_tgz) $(sha1_tbz2) $(md5_tbz2) ensure-prev
 	@echo "Please follow the instructions in RELEASING to push stuff out and"
@@ -764,20 +777,20 @@ release-publish-message: $(sha1_tgz) $(md5_tgz) $(sha1_tbz2) $(md5_tbz2) ensure-
 	@echo ""
 	@echo "GPG signature:"
 	@echo "	$(RELEASE_CAIRO_URL)/$(gpg_file)"
-	@echo "	(signed by `getent passwd "$$USER" | cut -d: -f 5 | cut -d, -f 1`)"
+	@echo "	(signed by `git config --get user.name` <`git config --get user.email`>)"
 	@echo ""
 	@echo "Git:"
 	@echo "	git://git.freedesktop.org/git/pixman"
 	@echo "	tag: $(PACKAGE)-$(VERSION)"
 	@echo ""
 	@echo "Log:"
-	@git-log --no-merges "$(PACKAGE)-$(PREV)".."$(PACKAGE)-$(VERSION)" | git shortlog | awk '{ printf "\t"; print ; }' | cut -b0-80
+	@git-log --no-merges "$(PACKAGE)-$(PREV)".."$(PACKAGE)-$(VERSION)" | git shortlog | awk '{ printf "\t"; print ; }' | cut -b1-80
 	@echo "============================== CUT HERE =============================="
 	@echo ""
 
-release-publish: release-upload release-publish-message
+release-publish: release-upload release-tag release-publish-message
 
-.PHONY: release-upload release-publish release-publish-message
+.PHONY: release-upload release-publish release-publish-message release-tag
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

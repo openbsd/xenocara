@@ -57,11 +57,11 @@
 /* use MMX compiler intrinsics */
 #undef USE_MMX
 
-/* use SSE compiler intrinsics */
-#undef USE_SSE
-
-/* use SSE compiler intrinsics */
+/* use SSE2 compiler intrinsics */
 #undef USE_SSE2
+
+/* use VMX compiler intrinsics */
+#undef USE_VMX
 
 /* Version number of package */
 #undef VERSION
@@ -69,3 +69,9 @@
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #undef WORDS_BIGENDIAN
+
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
+#undef inline
+#endif
