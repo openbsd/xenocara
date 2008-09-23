@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.848 2008/07/27 19:00:21 tom Exp $ */
+/* $XTermId: charproc.c,v 1.852 2008/09/14 21:27:54 tom Exp $ */
 
 /*
 
@@ -505,6 +505,7 @@ static XtResource resources[] =
 #if OPT_BLINK_CURS
     Bres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink, False),
 #endif
+    Bres(XtNcursorUnderline, XtCCursorUnderline, screen.cursor_underline, False),
 
 #if OPT_BLINK_TEXT
     Bres(XtNshowBlinkAsBold, XtCCursorBlink, screen.blink_as_bold, DEFBLINKASBOLD),
@@ -3635,21 +3636,12 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	if (event->xconfigure.window == XtWindow(toplevel)) {
 	    int height, width;
 
-	    /*
-	     * Some window managers modify the configuration during
-	     * initialization.  Skip notification events that we know are
-	     * obsolete because there is already another in the queue.
-	     */
-	    do {
-		height = event->xconfigure.height;
-		width = event->xconfigure.width;
-		TRACE(("HandleStructNotify(ConfigureNotify) %d,%d %dx%d\n",
-		       event->xconfigure.y, event->xconfigure.x,
-		       event->xconfigure.height, event->xconfigure.width));
+	    height = event->xconfigure.height;
+	    width = event->xconfigure.width;
+	    TRACE(("HandleStructNotify(ConfigureNotify) %d,%d %dx%d\n",
+		   event->xconfigure.y, event->xconfigure.x,
+		   event->xconfigure.height, event->xconfigure.width));
 
-	    } while (XCheckTypedWindowEvent(XtDisplay(xw),
-					    event->xconfigure.window,
-					    ConfigureNotify, event));
 #if OPT_TOOLBAR
 	    /*
 	     * The notification is for the top-level widget, but we care about
@@ -5119,9 +5111,9 @@ VTClassInit(void)
 #define init_Bres(name) \
 	TRACE(("init " #name " = %s\n", \
 		BtoS(wnew->name = request->name)))
-#define init_Dres(name) \
-	TRACE(("init " #name " = %f\n", \
-		wnew->name = request->name))
+#define init_Dres2(name,i) \
+	TRACE(("init " #name "[%d] = %f\n", i, \
+		wnew->name[i] = request->name[i]))
 #define init_Ires(name) \
 	TRACE(("init " #name " = %d\n", \
 		wnew->name = request->name))
@@ -5129,15 +5121,20 @@ VTClassInit(void)
 	TRACE(("init " #name " = \"%s\"\n", \
 		(wnew->name = x_strtrim(request->name)) != NULL \
 			? wnew->name : "<null>"))
+#define init_Sres2(name,i) \
+	TRACE(("init " #name "[%d] = \"%s\"\n", i, \
+		(wnew->name(i) = x_strtrim(request->name(i))) != NULL \
+			? wnew->name(i) : "<null>"))
 #define init_Tres(offset) \
 	TRACE(("init screen.Tcolors[" #offset "] = %#lx\n", \
 		fill_Tres(wnew, request, offset)))
 #else
-#define init_Bres(name) wnew->name = request->name
-#define init_Dres(name) wnew->name = request->name
-#define init_Ires(name) wnew->name = request->name
-#define init_Sres(name) wnew->name = x_strtrim(request->name)
-#define init_Tres(offset) fill_Tres(wnew, request, offset)
+#define init_Bres(name)    wnew->name = request->name
+#define init_Dres2(name,i) wnew->name[i] = request->name[i]
+#define init_Ires(name)    wnew->name = request->name
+#define init_Sres(name)    wnew->name = x_strtrim(request->name)
+#define init_Sres2(name,i) wnew->name(i) = x_strtrim(request->name(i))
+#define init_Tres(offset)  fill_Tres(wnew, request, offset)
 #endif
 
 #if OPT_COLOR_RES
@@ -5456,6 +5453,7 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.blink_off);
     wnew->screen.cursor_blink_res = wnew->screen.cursor_blink;
 #endif
+    init_Bres(screen.cursor_underline);
 #if OPT_BLINK_TEXT
     init_Ires(screen.blink_as_bold);
 #endif
@@ -5583,7 +5581,7 @@ VTInitialize(Widget wrequest,
     init_Bres(misc.tiXtraScroll);
     init_Bres(misc.dynamicColors);
     for (i = fontMenu_font1; i <= fontMenu_lastBuiltin; i++) {
-	init_Sres(screen.MenuFontName(i));
+	init_Sres2(screen.MenuFontName, i);
     }
     wnew->screen.MenuFontName(fontMenu_default) = wnew->misc.default_font.f_n;
     wnew->screen.MenuFontName(fontMenu_fontescape) = NULL;
@@ -5799,7 +5797,7 @@ VTInitialize(Widget wrequest,
 
 #if OPT_RENDERFONT
     for (i = 0; i <= fontMenu_lastBuiltin; ++i) {
-	init_Dres(misc.face_size[i]);
+	init_Dres2(misc.face_size, i);
     }
     init_Sres(misc.face_name);
     init_Sres(misc.face_wide_name);
@@ -6064,12 +6062,12 @@ VTDestroy(Widget w GCC_UNUSED)
 #ifndef NO_ACTIVE_ICON
     releaseWindowGCs(xw, &(screen->iconVwin));
 #endif
-    XtUninstallTranslations((Widget)xw);
+    XtUninstallTranslations((Widget) xw);
     XtUninstallTranslations(screen->scrollWidget);
 #if OPT_TOOLBAR
-    XtUninstallTranslations((Widget)XtParent(xw));
+    XtUninstallTranslations((Widget) XtParent(xw));
 #endif
-    XtUninstallTranslations((Widget)SHELL_OF(xw));
+    XtUninstallTranslations((Widget) SHELL_OF(xw));
 
     if (screen->hidden_cursor)
 	XFreeCursor(screen->display, screen->hidden_cursor);
@@ -6893,7 +6891,7 @@ ShowCursor(void)
      * whether the window has focus, since in that case we want just an
      * outline for the cursor.
      */
-    filled = (screen->select || screen->always_highlight);
+    filled = (screen->select || screen->always_highlight) && !screen->cursor_underline;
 #if OPT_HIGHLIGHT_COLOR
     use_selbg = isNotForeground(xw, fg_pix, bg_pix, selbg_pix);
     use_selfg = isNotBackground(xw, fg_pix, bg_pix, selfg_pix);
@@ -7014,7 +7012,10 @@ ShowCursor(void)
 		outlineGC = currentGC;
 
 	    screen->box->x = x;
-	    screen->box->y = y;
+	    if (!screen->cursor_underline)
+		screen->box->y = y;
+	    else
+		screen->box->y = y + FontHeight(screen) - 2;
 	    XDrawLines(screen->display, VWindow(screen), outlineGC,
 		       screen->box, NBOX, CoordModePrevious);
 	}

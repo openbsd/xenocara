@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.587 2008/05/26 18:25:54 Marius.Tolzmann Exp $ */
+/* $XTermId: main.c,v 1.588 2008/09/14 15:20:31 Paul.Lampert Exp $ */
 
 /*
  *				 W A R N I N G
@@ -1041,6 +1041,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-lcc",	"*localeFilter",XrmoptionSepArg,	(caddr_t) NULL},
 {"-en",		"*locale",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif
+{"-uc",		"*cursorUnderLine", XrmoptionNoArg,	(caddr_t) "on"},
+{"+uc",		"*cursorUnderLine", XrmoptionNoArg,	(caddr_t) "off"},
 {"-ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "off"},
 {"+ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-ulit",       "*italicULMode", XrmoptionNoArg,        (caddr_t) "off"},
@@ -1211,6 +1213,7 @@ static OptionHelp xtermOptions[] = {
 { "-/+lc",                 "turn on/off locale mode using luit" },
 { "-lcc path",             "filename of locale converter (" DEFLOCALEFILTER ")" },
 #endif
+{ "-/+uc",                 "turn on/off underline cursor" },
 { "-/+ulc",                "turn off/on display of underline as color" },
 { "-/+ulit",               "turn off/on display of underline as italics" },
 #ifdef HAVE_UTMP

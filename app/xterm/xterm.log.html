@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.685 2008/07/27 23:10:10 tom Exp $
+  $XTermId: xterm.log.html,v 1.690 2008/09/14 23:43:15 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_237">Patch #237 - 2008/09/14</A>
 <LI><A HREF="#xterm_236">Patch #236 - 2008/07/27</A>
 <LI><A HREF="#xterm_235">Patch #235 - 2008/04/20</A>
 <LI><A HREF="#xterm_234">Patch #234 - 2008/03/02</A>
@@ -284,6 +285,31 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
+<H1><A NAME="xterm_237">Patch #237 - 2008/09/14</A></H1>
+<ul>
+	<li>improve usability of TrueType fonts by making the font-size
+	    switching for shifted keypad plus/minus use the
+	    <code>faceSize</code> resources to determine the order of fonts
+	    (when TrueType fonts are used) rather than the bitmap fonts, since
+	    their sizes may not be in the same order (report by H Merijn
+	    Brand)
+
+	<li>remove an optimization of <code>ConfigureNotify</code> events
+	    from <a href="#xterm_236">patch #236</a>
+	    which seems to interfere with passing <code>SIGWINCH</code> to 
+	    applications (GenToo #233836).
+
+	<li>modify handling of <code>altSendsEscape</code> to reset the
+	    <code>eightBitInput</code> mode, like <code>metaSendsEscape</code> 
+	    (patch by Ted Phelps).
+
+	<li>add feature to show the text-cursor as an underline rather than a
+	    box, plus command-line options <code>-uc</code> and
+	    <code>+uc</code> and resource <code>cursorUnderLine</code> to
+	    control the feature (patch by Paul Lampert).
+
+	<li>update config.guess, config.sub
+</ul>
 <H1><A NAME="xterm_236">Patch #236 - 2008/07/27</A></H1>
 <ul>
 	<li>correct memory reallocation when handling a paste of UTF-8 text

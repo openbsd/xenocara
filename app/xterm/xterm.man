@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.408 2008/04/20 21:16:40 tom Exp $
+.\" $XTermId: xterm.man,v 1.411 2008/09/14 23:06:19 tom Exp $
 .\"
 .\" Copyright 1996-2007,2008 by Thomas E. Dickey
 .\"
@@ -527,13 +527,13 @@ It sets the \fBhpFunctionKeys\fP resource to ``false''.
 .TP 8
 .BI -hm
 Tells \fIxterm\fP to use
-\fBhighlightTextColor\fP and \fBhighlightColor\fP 
+\fBhighlightTextColor\fP and \fBhighlightColor\fP
 to override the reversed foreground/background colors in a selection.
 It sets the \fBhighlightColorMode\fP resource to ``true''.
 .TP 8
 .BI +hm
 Tells \fIxterm\fP not to use
-\fBhighlightTextColor\fP and \fBhighlightColor\fP 
+\fBhighlightTextColor\fP and \fBhighlightColor\fP
 to override the reversed foreground/background colors in a selection.
 It sets the \fBhighlightColorMode\fP resource to ``false''.
 .TP 8
@@ -948,6 +948,12 @@ when your operating system does not support locale.
 .TP 8
 .B +u8
 This option resets the \fButf8\fP resource.
+.TP 8
+.B "-uc"
+This option makes the cursor underlined instead of a box.
+.TP 8
+.B "+uc"
+This option makes the cursor a box instead of underlined.
 .TP 8
 .B "-ulc"
 This option disables the display of characters with underline attribute as
@@ -1861,6 +1867,10 @@ at the end of the line.
 If ``true'', the Newline is selected.
 The default is ``true.''
 .TP 8
+.B "cursorUnderLine (\fPclass\fB CursorUnderLine)"
+Specifies whether to make the cursor underlined or a box.
+The default is ``false.''
+.TP 8
 .B "cutToBeginningOfLine (\fPclass\fB CutToBeginningOfLine)"
 If ``false'', triple clicking to select a line selects only from the
 current word forward.
@@ -1951,13 +1961,22 @@ Specify the pointsize for fonts selected from the FreeType
 library if support for that library was compiled into \fIxterm\fR.
 The default is ``14.''
 On the \fBVT\ Fonts\fP menu, this corresponds to the \fIDefault\fP entry.
+.IP
 You can specify the pointsize for TrueType fonts selected with the other
 size-related menu entries such as Medium, Huge, etc., by using one of
 the following resource values.
 If you do not specify a value,
 they default to ``0.0'',
-which causes \fIxterm\fP to use the ratio of font sizes from the bitmap
+which causes \fIxterm\fP to use the ratio of font sizes
+from the corresponding bitmap
 font resources to obtain a TrueType pointsize.
+.IP
+If all of the \fBfaceSize\fP resources are set, then \fIxterm\fP
+will use this information to determine the next smaller/larger
+TrueType font for the 
+\fIlarger-vt-font()\fP and
+\fIsmaller-vt-font()\fP actions.
+If any are not set, \fIxterm\fP will use only the areas of the bitmap fonts.
 .TP 8
 .B "faceSize1 (\fPclass\fB FaceSize1)"
 Specifies the pointsize of the first alternative font.
@@ -2087,7 +2106,7 @@ The default is ``XtDefaultForeground.''
 .TP 8
 .B "highlightColorMode (\fPclass\fB HighlightColorMode)"
 Specifies whether \fIxterm\fP should use
-\fBhighlightTextColor\fP and \fBhighlightColor\fP 
+\fBhighlightTextColor\fP and \fBhighlightColor\fP
 to override the reversed foreground/background colors in a selection.
 The default is unspecified:
 at startup, \fIxterm\fP checks if those resources are set to something
@@ -2116,35 +2135,35 @@ l l l l l
 _ _ _ _ _
 l l l l l.
 \fIHCM\fR	\fIHR\fR	\fIHBG\fR	\fIHFG\fR	\fIHighlight\fP
-false	false	default	default	bg/fg\"0
-false	false	default	set	bg/fg\"1
-false	false	set	default	fg/HBG\"2
-false	false	set	set	fg/HBG\"3
+false	false	default	default	bg/fg
+false	false	default	set	bg/fg
+false	false	set	default	fg/HBG
+false	false	set	set	fg/HBG
 =
-false	true	default	default	bg/fg\"4
-false	true	default	set	bg/fg\"5
-false	true	set	default	fg/HBG\"6
-false	true	set	set	fg/HBG\"7
+false	true	default	default	bg/fg
+false	true	default	set	bg/fg
+false	true	set	default	fg/HBG
+false	true	set	set	fg/HBG
 =
-true	false	default	default	bg/fg\"8
-true	false	default	set	HFG/fg\"9
-true	false	set	default	bg/HBG\"10
-true	false	set	set	HFG/HBG\"11
+true	false	default	default	bg/fg
+true	false	default	set	HFG/fg
+true	false	set	default	bg/HBG
+true	false	set	set	HFG/HBG
 =
-true	true	default	default	fg/fg (useless)\"12
-true	true	default	set	HFG/fg\"13
-true	true	set	default	fg/HBG\"14
-true	true	set	set	HFG/HBG\"15
+true	true	default	default	fg/fg (useless)
+true	true	default	set	HFG/fg
+true	true	set	default	fg/HBG
+true	true	set	set	HFG/HBG
 =
-default	false	default	default	bg/fg\"16
-default	false	default	set	bg/fg\"17
-default	false	set	default	fg/HBG\"18
-default	false	set	set	HFG/HBG\"19
+default	false	default	default	bg/fg
+default	false	default	set	bg/fg
+default	false	set	default	fg/HBG
+default	false	set	set	HFG/HBG
 =
-default	true	default	default	bg/fg\"20
-default	true	default	set	bg/fg\"21
-default	true	set	default	fg/HBG\"22
-default	true	set	set	HFG/HBG\"23
+default	true	default	default	bg/fg
+default	true	default	set	bg/fg
+default	true	set	default	fg/HBG
+default	true	set	set	HFG/HBG
 =
 .TE
 .TP 8
@@ -2311,6 +2330,10 @@ Specifies the file name for the encoding converter from/to locale
 encodings and UTF-8 which is used with the \fB-lc\fR option or \fBlocale\fR resource.
 The help message shown by ``xterm -help'' lists the default value,
 which depends on your system configuration.
+.IP
+If the encoding converter requires command-line parameters,
+you should put those within a shell script to execute the converter,
+and set this resource to point to the shell script.
 .TP 8
 .B "loginShell (\fPclass\fB LoginShell)"
 Specifies whether or not the shell to be run in the window should be started
@@ -2606,7 +2629,7 @@ page function.
 The default is ``false.''
 .TP 8
 .B "quietGrab (\fPclass\fB QuietGrab)"
-Controls whether the cursor is repainted 
+Controls whether the cursor is repainted
 when \fINotifyGrab\fP and \fINotifyUngrab\fP
 event types are received during change of focus.
 The default is ``false.''

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.502 2008/05/26 19:23:05 tom Exp $ */
+/* $XTermId: xterm.h,v 1.503 2008/09/14 15:18:39 Paul.Lampert Exp $ */
 
 /************************************************************
 
@@ -377,6 +377,7 @@ extern char **environ;
 #define XtNcursorColor		"cursorColor"
 #define XtNcursorOffTime	"cursorOffTime"
 #define XtNcursorOnTime		"cursorOnTime"
+#define XtNcursorUnderline	"cursorUnderLine"
 #define XtNcutNewline		"cutNewline"
 #define XtNcutToBeginningOfLine	"cutToBeginningOfLine"
 #define XtNdecTerminalID	"decTerminalID"
@@ -526,6 +527,7 @@ extern char **environ;
 #define XtCCursorBlink		"CursorBlink"
 #define XtCCursorOffTime	"CursorOffTime"
 #define XtCCursorOnTime		"CursorOnTime"
+#define XtCCursorUnderline	"CursorUnderLine"
 #define XtCCutNewline		"CutNewline"
 #define XtCCutToBeginningOfLine	"CutToBeginningOfLine"
 #define XtCDecTerminalID	"DecTerminalID"

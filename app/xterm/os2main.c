@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.255 2007/11/30 01:25:03 tom Exp $ */
+/* $XTermId: os2main.c,v 1.256 2008/09/14 19:37:07 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -198,13 +198,13 @@ static struct termio d_tio;
  * POSIX termios has termios.c_cc, which is similar to SVR4.
  */
 #define TTYMODE(name) { name, sizeof(name)-1, 0, 0 }
-static int override_tty_modes = 0;
+static Boolean override_tty_modes = False;
 /* *INDENT-OFF* */
 static struct _xttymodes {
     char *name;
     size_t len;
     int set;
-    Char value;
+    int value;
 } ttymodelist[] = {
     TTYMODE("intr"),		/* tchars.t_intrc ; VINTR */
 #define XTTYMODE_intr	0
@@ -301,7 +301,8 @@ static XtResource application_resources[] =
 #endif
 #if OPT_PTY_HANDSHAKE
     Bres("waitForMap", "WaitForMap", wait_for_map, False),
-    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, DEF_PTY_HANDSHAKE),
+    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, True),
+    Bres("ptySttySize", "PtySttySize", ptySttySize, DEF_PTY_STTY_SIZE),
 #endif
 #if OPT_SAME_NAME
     Bres("sameName", "SameName", sameName, True),
@@ -465,6 +466,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-lcc",	"*localeFilter",XrmoptionSepArg,	(caddr_t) NULL},
 {"-en",		"*locale",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif
+{"-uc",		"*cursorUnderLine", XrmoptionNoArg,	(caddr_t) "on"},
+{"+uc",		"*cursorUnderLine", XrmoptionNoArg,	(caddr_t) "off"},
 {"-ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "off"},
 {"+ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-ulit",       "*italicULMode", XrmoptionNoArg,        (caddr_t) "off"},
@@ -635,6 +638,7 @@ static OptionHelp xtermOptions[] = {
 { "-/+lc",                 "turn on/off locale mode using luit" },
 { "-lcc path",             "filename of locale converter (" DEFLOCALEFILTER ")" },
 #endif
+{ "-/+uc",                 "turn on/off underline cursor" },
 { "-/+ulc",                "turn off/on display of underline as color" },
 { "-/+ut",                 "turn on/off utmp inhibit (not supported)" },
 { "-/+ulit",               "turn off/on display of underline as italics" },
@@ -668,21 +672,32 @@ static OptionHelp xtermOptions[] = {
 { NULL, NULL }};
 /* *INDENT-ON* */
 
-/*debug FILE *confd;*/
-/*static void opencons()
-{
-        if ((confd=fopen("/dev/console$","w")) < 0) {
-                fputs("!!! Cannot open console device.\n",
-                        stderr);
-                exit(1);
-        }
-}
+#ifdef DBG_CONSOLE
+FILE *confd;
 
-static void closecons(void)
+static void
+closecons(void)
 {
+    if (confs != 0) {
 	fclose(confd);
+	confd = 0;
+    }
 }
-*/
+static void
+opencons(void)
+{
+    closecons();
+    if ((confd = fopen("/dev/console$", "w")) < 0) {
+	fputs("!!! Cannot open console device.\n",
+	      stderr);
+	exit(1);
+    }
+}
+#else
+#define opencons()		/* nothing */
+#define closecons()		/* nothing */
+#endif
+
 static char *message[] =
 {
     "Fonts should be fixed width and, if both normal and bold are specified, should",
@@ -957,7 +972,7 @@ main(int argc, char **argv ENVP_ARG)
     setlocale(LC_ALL, NULL);
 #endif
 
-/*debug	opencons();*/
+    opencons();
 
     ttydev = TypeMallocN(char, PTMS_BUFSZ);
     ptydev = TypeMallocN(char, PTMS_BUFSZ);
@@ -1023,7 +1038,7 @@ main(int argc, char **argv ENVP_ARG)
 	    fprintf(stderr, "%s:  bad tty modes \"%s\"\n",
 		    ProgramName, resource.tty_modes);
 	} else if (n > 0) {
-	    override_tty_modes = 1;
+	    override_tty_modes = True;
 	}
     }
 #if OPT_ZICONBEEP
@@ -1701,8 +1716,7 @@ spawnXTerm(XtermWidget xw)
 	case 0:		/* child */
 	    whoami = THE_CHILD;
 
-/*debug fclose(confd);
-opencons();*/
+	    opencons();
 	    /* we don't need the socket, or the pty master anymore */
 	    close(ConnectionNumber(screen->display));
 	    close(screen->respond);
@@ -1758,7 +1772,7 @@ opencons();*/
 		    int on = 1;
 		    if (ioctl(ttyfd, TIOCCONS, (char *) &on) == -1)
 			fprintf(stderr, "%s: cannot open console: %s\n",
-				xterm_name, strerror(errno));
+				ProgramName, strerror(errno));
 		}
 	    }
 
@@ -1847,9 +1861,9 @@ opencons();*/
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s: %s\n",
-			xterm_name, *command_to_exec_with_luit, strerror(errno));
+			ProgramName, *command_to_exec_with_luit, strerror(errno));
 		fprintf(stderr, "%s: cannot support your locale.\n",
-			xterm_name);
+			ProgramName);
 	    }
 #endif
 	    if (command_to_exec) {
@@ -1860,7 +1874,7 @@ opencons();*/
 
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s\n",
-			xterm_name, *command_to_exec);
+			ProgramName, *command_to_exec);
 	    }
 
 	    /* use a layered mechanism to find a shell */
@@ -1891,13 +1905,13 @@ opencons();*/
 
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s\n",
-			xterm_name, *command_to_exec);
+			ProgramName, *command_to_exec);
 	    } else {
 		execlpe(ptr, shname, 0, gblenvp);
 
 		/* Exec failed. */
 		fprintf(stderr, "%s: Could not exec %s!\n",
-			xterm_name, ptr);
+			ProgramName, ptr);
 	    }
 	    sleep(5);
 

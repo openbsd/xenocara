@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.299 2008/04/20 20:27:18 tom Exp $ */
+/* $XTermId: input.c,v 1.300 2008/09/14 16:37:25 Ted.Phelps Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -1262,6 +1262,7 @@ Input(XtermWidget xw,
 		    evt_state &= ~xw->misc.alt_mods;
 		    if (screen->alt_sends_esc) {
 			TRACE(("...input-char is modified by ALT\n"));
+			eightbit = False;
 			prefix = ANSI_ESC;
 		    } else if (!eightbit) {
 			TRACE(("...input-char is shifted by ALT\n"));

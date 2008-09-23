@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.517 2008/07/27 19:38:00 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.518 2008/09/14 15:16:20 Paul.Lampert Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -1463,6 +1463,7 @@ typedef struct {
 
 	int		cursor_state;	/* ON, OFF, or BLINKED_OFF	*/
 	int		cursor_busy;	/* do not redraw...		*/
+	Boolean		cursor_underline; /* true if cursor is in underline mode */
 #if OPT_BLINK_CURS
 	Boolean		cursor_blink;	/* cursor blink enable		*/
 	Boolean		cursor_blink_res; /* initial cursor blink value	*/
