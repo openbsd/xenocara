@@ -332,7 +332,6 @@
 ./usr/X11R6/include/X11/extensions/XShm.h
 ./usr/X11R6/include/X11/extensions/XTest.h
 ./usr/X11R6/include/X11/extensions/Xag.h
-./usr/X11R6/include/X11/extensions/Xagsrv.h
 ./usr/X11R6/include/X11/extensions/Xagstr.h
 ./usr/X11R6/include/X11/extensions/Xcomposite.h
 ./usr/X11R6/include/X11/extensions/Xcup.h
@@ -344,6 +343,7 @@
 ./usr/X11R6/include/X11/extensions/Xeviestr.h
 ./usr/X11R6/include/X11/extensions/Xext.h
 ./usr/X11R6/include/X11/extensions/Xfixes.h
+./usr/X11R6/include/X11/extensions/Xge.h
 ./usr/X11R6/include/X11/extensions/Xinerama.h
 ./usr/X11R6/include/X11/extensions/Xrandr.h
 ./usr/X11R6/include/X11/extensions/Xrender.h
@@ -366,6 +366,8 @@
 ./usr/X11R6/include/X11/extensions/fontcache.h
 ./usr/X11R6/include/X11/extensions/fontcacheP.h
 ./usr/X11R6/include/X11/extensions/fontcachstr.h
+./usr/X11R6/include/X11/extensions/ge.h
+./usr/X11R6/include/X11/extensions/geproto.h
 ./usr/X11R6/include/X11/extensions/lbxbuf.h
 ./usr/X11R6/include/X11/extensions/lbxbufstr.h
 ./usr/X11R6/include/X11/extensions/lbxdeltastr.h
@@ -400,8 +402,6 @@
 ./usr/X11R6/include/X11/extensions/xf86bigfstr.h
 ./usr/X11R6/include/X11/extensions/xf86misc.h
 ./usr/X11R6/include/X11/extensions/xf86mscstr.h
-./usr/X11R6/include/X11/extensions/xf86rush.h
-./usr/X11R6/include/X11/extensions/xf86rushstr.h
 ./usr/X11R6/include/X11/extensions/xf86vmode.h
 ./usr/X11R6/include/X11/extensions/xf86vmstr.h
 ./usr/X11R6/include/X11/extensions/xfixesproto.h
@@ -860,7 +860,6 @@
 ./usr/X11R6/lib/pkgconfig/xf86bigfontproto.pc
 ./usr/X11R6/lib/pkgconfig/xf86dgaproto.pc
 ./usr/X11R6/lib/pkgconfig/xf86miscproto.pc
-./usr/X11R6/lib/pkgconfig/xf86rushproto.pc
 ./usr/X11R6/lib/pkgconfig/xf86vidmodeproto.pc
 ./usr/X11R6/lib/pkgconfig/xfixes.pc
 ./usr/X11R6/lib/pkgconfig/xfont.pc
@@ -978,6 +977,7 @@
 ./usr/X11R6/man/man1/xclipboard.1
 ./usr/X11R6/man/man1/xclock.1
 ./usr/X11R6/man/man1/xcmsdb.1
+./usr/X11R6/man/man1/xcompmgr.1
 ./usr/X11R6/man/man1/xconsole.1
 ./usr/X11R6/man/man1/xcutsel.1
 ./usr/X11R6/man/man1/xdm.1
