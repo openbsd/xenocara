@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.13 2008/01/20 18:45:06 jasper Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.14 2008/09/29 22:04:43 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -40,15 +40,16 @@
 #include "config.h"
 #endif
 
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 #include <sys/time.h>
 #include <dev/wscons/wsconsio.h>
 
 /* All drivers need this. */
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86_ansic.h"
 
 #include "mipointer.h"
 #include "mibstore.h"
@@ -68,12 +69,6 @@
 
 #ifdef XvExtension
 #include "xf86xv.h"
-#endif
-
-/* #include "wsconsio.h" */
-
-#ifndef XFree86LOADER
-#include <sys/mman.h>
 #endif
 
 #ifdef X_PRIVSEP
