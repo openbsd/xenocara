@@ -1,4 +1,3 @@
-./etc/X11/xkb/semantics/xtest
 ./usr/X11R6/bin/glxgears
 ./usr/X11R6/bin/glxinfo
 ./usr/X11R6/bin/ucs2any
