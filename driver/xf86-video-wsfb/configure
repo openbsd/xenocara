@@ -19877,7 +19877,7 @@ cat >>confdefs.h <<_ACEOF
 #define PACKAGE_VERSION_MAJOR `echo $PACKAGE_VERSION | cut -d . -f 1`
 _ACEOF
 
-	PVM=`echo $PACKAGE_VERSION | cut -d . -f 2`
+	PVM=`echo $PACKAGE_VERSION | cut -d . -f 2 | cut -d - -f 1`
 	if test "x$PVM" = "x"; then
 		PVM="0"
 	fi
@@ -19886,7 +19886,7 @@ cat >>confdefs.h <<_ACEOF
 #define PACKAGE_VERSION_MINOR $PVM
 _ACEOF
 
-	PVP=`echo $PACKAGE_VERSION | cut -d . -f 3`
+	PVP=`echo $PACKAGE_VERSION | cut -d . -f 3 | cut -d - -f 1`
 	if test "x$PVP" = "x"; then
 		PVP="0"
 	fi
