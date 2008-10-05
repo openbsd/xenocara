@@ -27,7 +27,7 @@ organisation used in X.Org:
 - lib:	     libraries
 - proto:     X protocol headers
 - util:	     utilities that don't fit anywhere else
-- xserver:   the source for the X servers 
+- xserver:   the source for the X servers
 
 In addition Xenocara uses the following directories:
 
@@ -70,7 +70,7 @@ If you want to use another obj directory see below.
 
 A freshly checked out xenocara tree is buildable without any external
 tool. Only the xenocara and the src (currently only the
-src/sys/dev/pci/pcidevs file) trees are needed. 
+src/sys/dev/pci/pcidevs file) trees are needed.
 
 However if you start modifying things in the automake build
 system used by many packages, you will need to have the following
@@ -87,7 +87,7 @@ drift will cause various problems during builds.
 
   Path
 
-To build Xenocara, you need to have /usr/X11R6/bin in your PATH. 
+To build Xenocara, you need to have /usr/X11R6/bin in your PATH.
 
   Sudo
 
@@ -98,7 +98,7 @@ root.
 
 If you have installed the full Xenocara X sets on your system, you
 don't need to build all of Xenocara to patch one element. You can go
-to any module sub-directory and run 'make build' from there. 
+to any module sub-directory and run 'make build' from there.
 
   Source directory
 
@@ -110,28 +110,28 @@ in a non-standard directory (the default is /usr/xenocara).
 
 Xenocara supports objdirs (and it's even the recommended way to build
 things). Just run 'make obj' at any level before 'make build' to make
-sure that the object directories are created. 
-XOBJDIR defines the obj directory that is used (defaults to /usr/xobj). 
+sure that the object directories are created.
+XOBJDIR defines the obj directory that is used (defaults to /usr/xobj).
 It should be created before running 'make obj'.
 
-  Shadow trees 
+  Shadow trees
 
 Alternatively, the old 'lndir(1)' method can still be used to build
 Xenocara outside of its source tree. Just don't use 'make obj' in this
-case. 
+case.
 
 o Regenerating configure scripts
   ------------------------------
 
 Whenever you touched an import file for GNU autotools (Makefile.am,
 configure.ac mostly), you need to rebuild the configure script and
-makefiles skeletons. For that use the following command in the 
+makefiles skeletons. For that use the following command in the
 directory where you edited the autotools source files:
 
  env XENOCARA_RERUN_AUTOCONF=Yes make -f Makefile.bsd-wrapper build
 
-You can also set XENOCARA_RERUN_AUTOCONF in /etc/mk.conf or in the 
-environment to force the regeneration of configure scripts 
+You can also set XENOCARA_RERUN_AUTOCONF in /etc/mk.conf or in the
+environment to force the regeneration of configure scripts
 in every component during a make build.
 
 o Cleaning in packages managed by autotools
@@ -139,9 +139,9 @@ o Cleaning in packages managed by autotools
 
 One common problem when building xenocara is the case where the obj
 directory didn't exist (or the symbolic link pointed to a non-existent
-directory) when the source was first built. After fixing this problem, 
-'configure' will refuse to work in the obj dir, because the source 
-is already configured. 
+directory) when the source was first built. After fixing this problem,
+'configure' will refuse to work in the obj dir, because the source
+is already configured.
 
 To recover from this in one package:
 
@@ -153,7 +153,7 @@ To recover from this in one package:
 
 or from the root of the xenocara tree:
 
- find . -type l -name obj | xargs rm -f 
+ find . -type l -name obj | xargs rm -f
  make cleandir
  mkdir XOBJDIR
  make obj
@@ -178,18 +178,18 @@ o How to get a core file out of the X server?
 Several things are needed:
 
 1) set kern.nosuidcoredump=2 in /etc/sysctl.conf
-2) put 
+2) put
 
         Option  "NoTrapSignals" "true"
 
-   in the "ServerFlags" section of /etc/X11/xorg.conf. If such a section 
+   in the "ServerFlags" section of /etc/X11/xorg.conf. If such a section
    doesn't exist, it can be added as follow:
 
    Section "ServerFlags"
         Option  "NoTrapSignals" "true"
    EndSection
 
-   anywhere in the configuration file. 
+   anywhere in the configuration file.
 
 3) start the X server as root, with the -keepPriv option. A regular
    user is not allowed to use this option. If you use xdm, you can add
@@ -208,4 +208,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.23 2008/10/05 08:08:33 matthieu Exp $
+$OpenBSD: README,v 1.24 2008/10/05 08:10:05 matthieu Exp $
