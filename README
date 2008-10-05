@@ -69,7 +69,10 @@ If you want to use another obj directory see below.
   Requirements
 
 A freshly checked out xenocara tree is buildable without any external
-tool. However if you start modifying things in the automake build
+tool. Only the xenocara and the src (currently only the
+src/sys/dev/pci/pcidevs file) trees are needed. 
+
+However if you start modifying things in the automake build
 system used by many packages, you will need to have the following
 GNU autotools packages installed:
 
@@ -79,9 +82,8 @@ GNU autotools packages installed:
     - libtool 1.5.22 (or later) (devel/libtool)
 
 If you have your source tree on an NFS partition, make sure the clock
-of your server and client are properly synchronised. A test run by
-configure will fail if the drift is more than one second. And larger 
-drifts will cause other problems during builds anyways. 
+of your server and client are properly synchronised. Any significant
+drift will cause various problems during builds.
 
   Path
 
@@ -206,4 +208,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.22 2008/03/13 20:34:19 matthieu Exp $
+$OpenBSD: README,v 1.23 2008/10/05 08:08:33 matthieu Exp $
