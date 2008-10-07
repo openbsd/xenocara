@@ -1829,7 +1829,8 @@ xf86RegisterResources(int entityIndex, resList list, unsigned long access)
 	    range.type = (range.type & ~ResAccMask) | (access & ResAccMask);
 	}
  	range.type &= ~ResEstimated;	/* Not allowed for drivers */
-#if !((defined(__alpha__) || (defined(__ia64__))) && defined(linux))
+#if !((defined(__alpha__) || (defined(__ia64__))) && defined(linux)) && \
+    !(defined(__alpha__) && defined(__OpenBSD__))
 	/* On Alpha Linux, do not check for conflicts, trust the kernel. */
 	if (checkConflict(&range, Acc, entityIndex, SETUP,TRUE)) 
 	    res = xf86AddResToList(res,&range,entityIndex);
@@ -2451,6 +2452,7 @@ xf86PostProbe(void)
     xf86FreeResList(acc);
 #if !(defined(__alpha__) && defined(linux)) && \
     !(defined(__ia64__) && defined(linux)) && \
+    !(defined(__alpha__) && defined(__OpenBSD__)) && \
     !(defined(__sparc64__) && defined(__OpenBSD__))
     /* 
      * No need to validate on Alpha Linux or OpenBSD/sparc64, 
