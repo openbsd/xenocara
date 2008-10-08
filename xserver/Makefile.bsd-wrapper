@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.22 2008/05/24 20:36:04 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.23 2008/10/08 02:24:29 todd Exp $
 
 .include <bsd.xconf.mk>
 
@@ -27,7 +27,7 @@ NO_XF86_UTIL_${M} = --disable-xfree86-utils
 .endfor
 NO_XF86_UTIL_OPTION=${NO_XF86_UTIL_${MACHINE}}
 
-.if ${XENOCARA_BUILD_GL:L} == "yes"
+.if ${XENOCARA_BUILD_GL:L} == "yes" && ${MACHINE_ARCH} != "mips64"
 MESA_SOURCE=	--with-mesa-source=${XSRCDIR}/dist/Mesa
 .endif
 
@@ -54,4 +54,9 @@ CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--disable-xnest \
 		--disable-xvfb
 .endif
+
+.if ${MACHINE_ARCH} == "mips64"
+CONFIGURE_ARGS+= --disable-glx
+.endif
+
 .include <bsd.xorg.mk>
