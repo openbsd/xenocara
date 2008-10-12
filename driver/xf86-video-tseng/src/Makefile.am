@@ -35,4 +35,5 @@ tseng_drv_la_SOURCES = \
          tseng_dga.c \
          tseng_driver.c \
          tseng.h \
-         tseng_mode.c
+         tseng_mode.c \
+	 tseng_pcirename.h

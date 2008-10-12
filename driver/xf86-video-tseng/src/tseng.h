@@ -1,9 +1,9 @@
-
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/tseng/tseng.h,v 1.37tsi Exp $ */
-
 #ifndef _TSENG_H
 #define _TSENG_H
 
+#include "config.h"
+
+#include "tseng_pcirename.h"
 #include <string.h>
 
 /* All drivers should typically include these */
@@ -35,8 +35,12 @@
 #include "micmap.h"
 
 /* Needed for the 1 and 4 bpp framebuffers */
+#ifdef HAVE_XF1BPP
 #include "xf1bpp.h"
+#endif
+#ifdef HAVE_XF4BPP
 #include "xf4bpp.h"
+#endif
 #include "fb.h"
 
 /* Drivers using the XAA interface ... */
@@ -106,7 +110,9 @@ typedef struct {
     unsigned char *BresenhamTable;
     /* normal stuff starts here */
     pciVideoPtr PciInfo;
+#ifndef XSERVER_LIBPCIACCESS
     PCITAG PciTag;
+#endif
 
     Bool UsePCIRetry;		       /* Do we use PCI-retry or busy-waiting */
     Bool UseAccel;		       /* Do we use the XAA acceleration architecture */

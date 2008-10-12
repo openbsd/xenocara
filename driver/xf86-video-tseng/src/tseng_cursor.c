@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/tseng/tseng_cursor.c,v 1.16 2000/09/19 12:46:19 eich Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

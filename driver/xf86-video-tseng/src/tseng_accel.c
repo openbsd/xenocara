@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/tseng/tseng_accel.c,v 1.29 1999/06/12 07:18:57 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

@@ -14,17 +14,17 @@ tseng \- Tseng Labs video driver
 .fi
 .SH DESCRIPTION
 .B tseng 
-is an XFree86 driver for Tseng Labs video cards.
+is an __xservername__ driver for Tseng Labs video cards.
 THIS MAN PAGE NEEDS TO BE FILLED IN.
 .SH SUPPORTED HARDWARE
 The
 .B tseng
 driver supports...
 .SH CONFIGURATION DETAILS
-Please refer to XF86Config(__filemansuffix__) for general configuration
+Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details.  This section only covers configuration details specific to this
 driver.
 .SH "SEE ALSO"
-XFree86(1), XF86Config(__filemansuffix__), xf86config(1), Xserver(1), X(__miscmansuffix__)
+__xservername__(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1), X(__miscmansuffix__)
 .SH AUTHORS
 Authors include: ...

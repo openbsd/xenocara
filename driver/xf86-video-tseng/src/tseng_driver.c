@@ -1,5 +1,4 @@
 /*
- * $XFree86: xc/programs/Xserver/hw/xfree86/drivers/tseng/tseng_driver.c,v 1.97tsi Exp $ 
  *
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
  *
@@ -26,7 +25,6 @@
  *
  * Large parts rewritten for XFree86 4.0 by Koen Gadeyne.
  */
-/* $XConsortium: et4_driver.c /main/27 1996/10/28 04:48:15 kaleb $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -417,9 +415,11 @@ TsengProbe(DriverPtr drv, int flags)
 	return FALSE;
     }
 
+#ifndef XSERVER_LIBPCIACCESS
     /* PCI only driver now. */
     if (!xf86GetPciVideoInfo())
         return FALSE;
+#endif
 
     /* XXX maybe this can go some time soon */
     /*
@@ -476,7 +476,7 @@ TsengPreInitPCI(ScrnInfoPtr pScrn)
     /* Set up ChipType, ChipRev and pScrn->chipset.
      * This last one is usually not done manually, but
      * it's for informative use only anyway. */
-    switch (pTseng->PciInfo->chipType) {
+    switch (PCI_DEV_DEVICE_ID(pTseng->PciInfo)) {
     case PCI_CHIP_ET4000_W32P_A:
 	pTseng->ChipType = ET4000;
 	pTseng->ChipRev = REV_A;
@@ -500,7 +500,7 @@ TsengPreInitPCI(ScrnInfoPtr pScrn)
     case PCI_CHIP_ET6000:
 	pTseng->ChipType = ET6000;
 
-        if (pTseng->PciInfo->chipRev < 0x70) {
+        if (PCI_DEV_REVISION(pTseng->PciInfo) < 0x70) {
             pScrn->chipset = "ET6000";
             pTseng->ChipRev = REV_ET6000;
         } else {
@@ -510,24 +510,26 @@ TsengPreInitPCI(ScrnInfoPtr pScrn)
 	break;
     default:
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Unknown Tseng PCI ID: %X\n",
-                   pTseng->PciInfo->chipType);
+                   PCI_DEV_DEVICE_ID(pTseng->PciInfo));
 	return FALSE;
     }
 
     xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "Chipset: \"%s\"\n", pScrn->chipset);
 
+#ifndef XSERVER_LIBPCIACCESS
     pTseng->PciTag = pciTag(pTseng->PciInfo->bus, pTseng->PciInfo->device,
 	pTseng->PciInfo->func);
+#endif
 
     /* only the ET6000 implements a PCI IO address */
     if (pTseng->ChipType == ET6000) {
-        if (!pTseng->PciInfo->ioBase[1]) {
+        if (!PCI_REGION_BASE(pTseng->PciInfo, 1, REGION_IO)) {
             xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                        "No valid PCI I/O address in PCI config space\n");
             return FALSE;
         }
 
-        pTseng->ET6000IOAddress = pTseng->PciInfo->ioBase[1];
+        pTseng->ET6000IOAddress = PCI_REGION_BASE(pTseng->PciInfo, 1, REGION_IO);
         
         xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "ET6000 PCI I/O registers at 0x%lX\n",
                    (unsigned long)pTseng->ET6000IOAddress);
@@ -942,12 +944,12 @@ TsengGetFbAddress(ScrnInfoPtr pScrn)
     PDEBUG("	TsengGetFbAddress\n");
 
     /* base0 is the framebuffer and base1 is the PCI IO space. */
-    if (!pTseng->PciInfo->memBase[0]) {
+    if (PCI_REGION_BASE(pTseng->PciInfo, 0, REGION_MEM)) {
         xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                    "No valid Framebuffer address in PCI config space;\n");
         return FALSE;
     } else
-        pTseng->FbAddress = pTseng->PciInfo->memBase[0];
+        pTseng->FbAddress = PCI_REGION_BASE(pTseng->PciInfo, 0, REGION_MEM);
 
 
     if (xf86RegisterResources(pTseng->pEnt->index,NULL,ResNone)) {
@@ -1680,10 +1682,25 @@ TsengMapMem(ScrnInfoPtr pScrn)
 	return FALSE;
     }
 
+#ifndef XSERVER_LIBPCIACCESS
     pTseng->FbBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
                                    pTseng->PciTag,
                                    (unsigned long)pTseng->FbAddress,
                                    pTseng->FbMapSize);
+#else
+    {
+      void** result = (void**)&pTseng->FbBase;
+      int err = pci_device_map_range(pTseng->PciInfo,
+				     pTseng->FbAddress,
+				     pTseng->FbMapSize,
+				     PCI_DEV_MAP_FLAG_WRITABLE |
+				     PCI_DEV_MAP_FLAG_WRITE_COMBINE,
+				     result);
+      
+      if (err) 
+	return FALSE;
+    }
+#endif
     if (pTseng->FbBase == NULL) {
         xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                    "Could not mmap linear video memory.\n");
@@ -1692,10 +1709,14 @@ TsengMapMem(ScrnInfoPtr pScrn)
 
     /* need some sanity here */
     if (pTseng->UseAccel) {
+#ifndef XSERVER_LIBPCIACCESS
         pTseng->MMioBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO,
                                          pTseng->PciTag,
                                          (unsigned long)pTseng->FbAddress,
                                          pTseng->FbMapSize);
+#else
+	pTseng->MMioBase = pTseng->FbBase;
+#endif
         if (!pTseng->MMioBase) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "Could not mmap mmio memory.\n");
@@ -1717,7 +1738,11 @@ TsengUnmapMem(ScrnInfoPtr pScrn)
 
     PDEBUG("	TsengUnmapMem\n");
 
+#ifndef XSERVER_LIBPCIACCESS
     xf86UnMapVidMem(pScrn->scrnIndex, (pointer) pTseng->FbBase, pTseng->FbMapSize);
+#else
+    pci_device_unmap_range(pTseng->PciInfo, pTseng->FbBase, pTseng->FbMapSize);
+#endif
 
     vgaHWUnmapMem(pScrn);
 
