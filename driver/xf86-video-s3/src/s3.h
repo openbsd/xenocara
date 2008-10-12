@@ -24,12 +24,12 @@
  *
  *
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/s3/s3.h,v 1.17 2003/07/04 16:24:28 eich Exp $ */
 
 
 #ifndef _S3_H
 #define _S3_H
 
+#include "s3_pcirename.h"
 #include <string.h>
 
 #include "xf86.h"
@@ -86,7 +86,9 @@ typedef struct {
 
 typedef struct _S3Rec {
         pciVideoPtr             PciInfo;
+#ifndef XSERVER_LIBPCIACCESS
         PCITAG                  PciTag;
+#endif
         EntityInfoPtr           pEnt;
         unsigned long           IOAddress;
         unsigned long           FBAddress; 
@@ -164,10 +166,10 @@ typedef struct _S3Rec {
 
 
 #define DRIVER_NAME     "s3"
-#define DRIVER_VERSION  "0.5.0"
-#define VERSION_MAJOR   0
-#define VERSION_MINOR   5
-#define PATCHLEVEL      0
+#define DRIVER_VERSION  PACKAGE_VERSION
+#define VERSION_MAJOR   PACKAGE_VERSION_MAJOR
+#define VERSION_MINOR   PACKAGE_VERSION_MINOR
+#define PATCHLEVEL      PACKAGE_VERSION_PATCHLEVEL
 #define S3_VERSION     ((VERSION_MAJOR << 24) | \
                         (VERSION_MINOR << 16) | PATCHLEVEL)
 

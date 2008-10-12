@@ -24,7 +24,6 @@
  *
  *
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/s3/s3_Ti.c,v 1.4 2001/10/28 03:33:44 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

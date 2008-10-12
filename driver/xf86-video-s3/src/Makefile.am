@@ -36,6 +36,7 @@ s3_drv_la_SOURCES = \
          s3_driver.c \
          s3.h \
          s3_IBMRGB.c \
+	 s3_pcirename.h \
          s3_reg.h \
          s3_Ti.c \
          s3_Trio64DAC.c \

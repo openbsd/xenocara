@@ -1,3 +1,11 @@
+2008-02-23  Evgeny M. Zubok <evgeny.zubok@tochka.ru>
+
+	* src/s3_driver.c: Add DPMS support for S3 Trio64V2 and possibly
+	others (need testing): S3 Trio64UV+. S3 Aurora64V+ and S3 Trio32/64
+	* src/s3_Trio64DAC: Change clocks for S3 Trio64V2 to make
+	the 1024x768@16bpp mode work.
+	Thanks to Richard Driscoll for these patches.
+	
 2006-04-07  Adam Jackson  <ajax@freedesktop.org>
 
 	* configure.ac:

@@ -24,8 +24,6 @@
  *
  *
  */
-/* $XdotOrg: xc/programs/Xserver/hw/xfree86/drivers/s3/s3_accel.c,v 1.2 2004/04/23 19:43:14 eich Exp $ */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/s3/s3_accel.c,v 1.2 2001/10/28 03:33:44 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

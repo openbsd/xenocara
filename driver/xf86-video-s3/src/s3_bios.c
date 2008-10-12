@@ -24,7 +24,6 @@
  *
  *
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/s3/s3_bios.c,v 1.2 2001/07/11 07:45:35 alanh Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -46,8 +45,13 @@ static unsigned char *find_bios_string(S3Ptr pS3, int BIOSbase,
 
 	if (!init) {
 		init = 1;
+#ifndef XSERVER_LIBPCIACCESS
 		if (xf86ReadDomainMemory(pS3->PciTag, BIOSbase, BIOS_BSIZE, bios) != BIOS_BSIZE)
 			return NULL;
+#else
+		if (pci_device_read_rom(pS3->PciInfo, bios))
+		        return NULL;
+#endif
 		if ((bios[0] != 0x55) || (bios[1] != 0xaa))
 			return NULL;
 	}
