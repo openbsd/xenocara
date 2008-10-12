@@ -32,7 +32,7 @@ mul (16)	temp_y<1>F	dst_y<8,8,1>F	dw_dy		{ compr align1 };
 add (16)	temp_x<1>F	temp_x<8,8,1>F	temp_y<8,8,1>F	{ compr align1 };
 add (16)	temp_x<1>F	temp_x<8,8,1>F	wo		{ compr align1 };
 send (8) 0	w_0<1>F		temp_x_0<8,8,1>F math inv mlen 1 rlen 1	{ align1 };
-send (8) 0	w_1<1>F		temp_x_1<8,8,1>F math inv mlen 1 rlen 1	{ align1 };
+send (8) 0	w_1<1>F		temp_x_1<8,8,1>F math inv mlen 1 rlen 1	{ sechalf align1 };
 
 /********** Compute u *************/
 

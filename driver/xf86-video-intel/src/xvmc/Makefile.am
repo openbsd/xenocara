@@ -11,6 +11,7 @@ libI810XvMC_la_LIBADD = @DRI_LIBS@
 
 libIntelXvMC_la_SOURCES = intel_xvmc.c \
 			 intel_xvmc.h \
+			 intel_xvmc_dump.c \
 			 i915_structs.h \
 			 i915_program.h \
 			 i915_xvmc.c \

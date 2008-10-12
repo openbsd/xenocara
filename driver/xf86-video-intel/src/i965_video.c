@@ -78,7 +78,7 @@ static const uint32_t sip_kernel_static[][4] = {
 #define SF_MAX_THREADS	   1
 
 static const uint32_t sf_kernel_static[][4] = {
-#include "packed_yuv_sf.g4b"
+#include "exa_sf.g4b"
 };
 
 /*
@@ -93,14 +93,24 @@ static const uint32_t sf_kernel_static[][4] = {
 
 #define BRW_GRF_BLOCKS(nreg)	((nreg + 15) / 16 - 1)
 
-static const uint32_t ps_kernel_static[][4] = {
-#include "packed_yuv_wm.g4b"
+static const uint32_t ps_kernel_packed_static[][4] = {
+#include "exa_wm_xy.g4b"
+#include "exa_wm_src_affine.g4b"
+#include "exa_wm_src_sample_argb.g4b"
+#include "exa_wm_yuv_rgb.g4b"
+#include "exa_wm_write.g4b"
+};
+
+static const uint32_t ps_kernel_planar_static[][4] = {
+#include "exa_wm_xy.g4b"
+#include "exa_wm_src_affine.g4b"
+#include "exa_wm_src_sample_planar.g4b"
+#include "exa_wm_yuv_rgb.g4b"
+#include "exa_wm_write.g4b"
 };
 
 #define ALIGN(i,m)    (((i) + (m) - 1) & ~((m) - 1))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
-
-#define WM_BINDING_TABLE_ENTRIES    2
 
 static uint32_t float_to_uint (float f) {
     union {uint32_t i; float f;} x;
@@ -161,8 +171,8 @@ I965DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
     int urb_sf_start, urb_sf_size;
     int urb_cs_start, urb_cs_size;
     struct brw_surface_state *dest_surf_state;
-    struct brw_surface_state *src_surf_state;
-    struct brw_sampler_state *src_sampler_state;
+    struct brw_surface_state *src_surf_state[6];
+    struct brw_sampler_state *src_sampler_state[6];
     struct brw_vs_unit_state *vs_state;
     struct brw_sf_unit_state *sf_state;
     struct brw_wm_unit_state *wm_state;
@@ -175,7 +185,7 @@ I965DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
     float src_scale_x, src_scale_y;
     uint32_t *binding_table;
     Bool first_output = TRUE;
-    int dest_surf_offset, src_surf_offset, src_sampler_offset, vs_offset;
+    int dest_surf_offset, src_surf_offset[6], src_sampler_offset[6], vs_offset;
     int sf_offset, wm_offset, cc_offset, vb_offset, cc_viewport_offset;
     int wm_scratch_offset;
     int sf_kernel_offset, ps_kernel_offset, sip_kernel_offset;
@@ -184,6 +194,16 @@ I965DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
     int vb_size = (4 * 4) * 4; /* 4 DWORDS per vertex */
     char *state_base;
     int state_base_offset;
+    int src_surf;
+    int n_src_surf;
+    uint32_t	src_surf_format;
+    uint32_t	src_surf_base[6];
+    int		src_width[6];
+    int		src_height[6];
+    int		src_pitch[6];
+    int wm_binding_table_entries;
+    const uint32_t	*ps_kernel_static;
+    int		ps_kernel_static_size;
 
 #if 0
     ErrorF("BroadwaterDisplayVideoTextured: %dx%d (pitch %d)\n", width, height,
@@ -198,7 +218,53 @@ I965DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
     ErrorF ("INST_PM 0x%08x\n", INREG(INST_PM));
 #endif
 
-    assert((id == FOURCC_UYVY) || (id == FOURCC_YUY2));
+    src_surf_base[0] = pPriv->YBuf0offset;
+    src_surf_base[1] = pPriv->YBuf0offset;
+    src_surf_base[2] = pPriv->VBuf0offset;
+    src_surf_base[3] = pPriv->VBuf0offset;
+    src_surf_base[4] = pPriv->UBuf0offset;
+    src_surf_base[5] = pPriv->UBuf0offset;
+#if 0
+    ErrorF ("base 0 0x%x base 1 0x%x base 2 0x%x\n",
+	    src_surf_base[0], src_surf_base[1], src_surf_base[2]);
+#endif
+    
+    switch (id) {
+    case FOURCC_UYVY:
+	src_surf_format = BRW_SURFACEFORMAT_YCRCB_SWAPY;
+	n_src_surf = 1;
+	ps_kernel_static = &ps_kernel_packed_static[0][0];
+	ps_kernel_static_size = sizeof (ps_kernel_packed_static);
+	src_width[0] = width;
+	src_height[0] = height;
+	src_pitch[0] = video_pitch;
+	break;
+    case FOURCC_YUY2:
+	src_surf_format = BRW_SURFACEFORMAT_YCRCB_NORMAL;
+	ps_kernel_static = &ps_kernel_packed_static[0][0];
+	ps_kernel_static_size = sizeof (ps_kernel_packed_static);
+	src_width[0] = width;
+	src_height[0] = height;
+	src_pitch[0] = video_pitch;
+	n_src_surf = 1;
+	break;
+    case FOURCC_I420:
+    case FOURCC_YV12:
+	src_surf_format = BRW_SURFACEFORMAT_R8_UNORM;
+	ps_kernel_static = &ps_kernel_planar_static[0][0];
+	ps_kernel_static_size = sizeof (ps_kernel_planar_static);
+	src_width[1] = src_width[0] = width;
+	src_width[1] = src_height[0] = height;
+	src_pitch[1] = src_pitch[0] = video_pitch * 2;
+	src_width[4] = src_width[5] = src_width[2] = src_width[3] = width / 2;
+	src_height[4] = src_height[5] = src_height[2] = src_height[3] = height / 2;
+	src_pitch[4] = src_pitch[5] = src_pitch[2] = src_pitch[3] = video_pitch;
+	n_src_surf = 6;
+	break;
+    default:
+	return;
+    }    
+    wm_binding_table_entries = 1 + n_src_surf;
 
     IntelEmitInvarientState(pScrn);
     *pI830->last_3d = LAST_3D_VIDEO;
@@ -220,15 +286,17 @@ I965DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
     sf_kernel_offset = ALIGN(next_offset, 64);
     next_offset = sf_kernel_offset + sizeof (sf_kernel_static);
     ps_kernel_offset = ALIGN(next_offset, 64);
-    next_offset = ps_kernel_offset + sizeof (ps_kernel_static);
+    next_offset = ps_kernel_offset + ps_kernel_static_size;
     sip_kernel_offset = ALIGN(next_offset, 64);
     next_offset = sip_kernel_offset + sizeof (sip_kernel_static);
     cc_viewport_offset = ALIGN(next_offset, 32);
     next_offset = cc_viewport_offset + sizeof(*cc_viewport);
 
-    src_sampler_offset = ALIGN(next_offset, 32);
-    next_offset = src_sampler_offset + sizeof(*src_sampler_state);
-
+    for (src_surf = 0; src_surf < n_src_surf; src_surf++) {    
+	src_sampler_offset[src_surf] = ALIGN(next_offset, 32);
+	next_offset = src_sampler_offset[src_surf] + sizeof(struct brw_sampler_state);
+    }
+    
     /* Align VB to native size of elements, for safety */
     vb_offset = ALIGN(next_offset, 8);
     next_offset = vb_offset + vb_size;
@@ -236,10 +304,14 @@ I965DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
     /* And then the general state: */
     dest_surf_offset = ALIGN(next_offset, 32);
     next_offset = dest_surf_offset + sizeof(*dest_surf_state);
-    src_surf_offset = ALIGN(next_offset, 32);
-    next_offset = src_surf_offset + sizeof(*src_surf_state);
+    
+    for (src_surf = 0; src_surf < n_src_surf; src_surf++) {
+	src_surf_offset[src_surf] = ALIGN(next_offset, 32);
+	next_offset = src_surf_offset[src_surf] + sizeof(struct brw_surface_state);
+    }
+    
     binding_table_offset = ALIGN(next_offset, 32);
-    next_offset = binding_table_offset + (WM_BINDING_TABLE_ENTRIES * 4);
+    next_offset = binding_table_offset + (wm_binding_table_entries * 4);
 
     /* Allocate an area in framebuffer for our state layout we just set up */
     total_state_size = next_offset;
@@ -266,8 +338,12 @@ I965DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
 
     cc_viewport = (void *)(state_base + cc_viewport_offset);
     dest_surf_state = (void *)(state_base + dest_surf_offset);
-    src_surf_state = (void *)(state_base + src_surf_offset);
-    src_sampler_state = (void *)(state_base + src_sampler_offset);
+    
+    for (src_surf = 0; src_surf < n_src_surf; src_surf++) 
+    {
+	src_surf_state[src_surf] = (void *)(state_base + src_surf_offset[src_surf]);
+	src_sampler_state[src_surf] = (void *)(state_base + src_sampler_offset[src_surf]);
+    }
     binding_table = (void *)(state_base + binding_table_offset);
     vb = (void *)(state_base + vb_offset);
 
@@ -380,50 +456,49 @@ I965DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
     dest_surf_state->ss3.tiled_surface = i830_pixmap_tiled(pPixmap);
     dest_surf_state->ss3.tile_walk = 0; /* TileX */
 
-    /* Set up the source surface state buffer */
-    memset(src_surf_state, 0, sizeof(*src_surf_state));
-    src_surf_state->ss0.surface_type = BRW_SURFACE_2D;
-    /* src_surf_state->ss0.data_return_format =
-       BRW_SURFACERETURNFORMAT_FLOAT32; */
-    switch (id) {
-    case FOURCC_YUY2:
-	src_surf_state->ss0.surface_format = BRW_SURFACEFORMAT_YCRCB_NORMAL;
-	break;
-    case FOURCC_UYVY:
-	src_surf_state->ss0.surface_format = BRW_SURFACEFORMAT_YCRCB_SWAPY;
-	break;
+    for (src_surf = 0; src_surf < n_src_surf; src_surf++)
+    {
+	/* Set up the source surface state buffer */
+	memset(src_surf_state[src_surf], 0, sizeof(struct brw_surface_state));
+	src_surf_state[src_surf]->ss0.surface_type = BRW_SURFACE_2D;
+	src_surf_state[src_surf]->ss0.surface_format = src_surf_format;
+	src_surf_state[src_surf]->ss0.writedisable_alpha = 0;
+	src_surf_state[src_surf]->ss0.writedisable_red = 0;
+	src_surf_state[src_surf]->ss0.writedisable_green = 0;
+	src_surf_state[src_surf]->ss0.writedisable_blue = 0;
+	src_surf_state[src_surf]->ss0.color_blend = 1;
+	src_surf_state[src_surf]->ss0.vert_line_stride = 0;
+	src_surf_state[src_surf]->ss0.vert_line_stride_ofs = 0;
+	src_surf_state[src_surf]->ss0.mipmap_layout_mode = 0;
+	src_surf_state[src_surf]->ss0.render_cache_read_mode = 0;
+    
+	src_surf_state[src_surf]->ss1.base_addr = src_surf_base[src_surf];
+	src_surf_state[src_surf]->ss2.width = src_width[src_surf] - 1;
+	src_surf_state[src_surf]->ss2.height = src_height[src_surf] - 1;
+	src_surf_state[src_surf]->ss2.mip_count = 0;
+	src_surf_state[src_surf]->ss2.render_target_rotation = 0;
+	src_surf_state[src_surf]->ss3.pitch = src_pitch[src_surf] - 1;
     }
-    src_surf_state->ss0.writedisable_alpha = 0;
-    src_surf_state->ss0.writedisable_red = 0;
-    src_surf_state->ss0.writedisable_green = 0;
-    src_surf_state->ss0.writedisable_blue = 0;
-    src_surf_state->ss0.color_blend = 1;
-    src_surf_state->ss0.vert_line_stride = 0;
-    src_surf_state->ss0.vert_line_stride_ofs = 0;
-    src_surf_state->ss0.mipmap_layout_mode = 0;
-    src_surf_state->ss0.render_cache_read_mode = 0;
-
-    src_surf_state->ss1.base_addr = pPriv->YBuf0offset;
-    src_surf_state->ss2.width = width - 1;
-    src_surf_state->ss2.height = height - 1;
-    src_surf_state->ss2.mip_count = 0;
-    src_surf_state->ss2.render_target_rotation = 0;
-    src_surf_state->ss3.pitch = video_pitch - 1;
     /* FIXME: account for tiling if we ever do it */
 
     /* Set up a binding table for our two surfaces.  Only the PS will use it */
     /* XXX: are these offset from the right place? */
     binding_table[0] = state_base_offset + dest_surf_offset;
-    binding_table[1] = state_base_offset + src_surf_offset;
+    
+    for (src_surf = 0; src_surf < n_src_surf; src_surf++)
+	binding_table[1 + src_surf] = state_base_offset + src_surf_offset[src_surf];
 
     /* Set up the packed YUV source sampler.  Doesn't do colorspace conversion.
      */
-    memset(src_sampler_state, 0, sizeof(*src_sampler_state));
-    src_sampler_state->ss0.min_filter = BRW_MAPFILTER_LINEAR;
-    src_sampler_state->ss0.mag_filter = BRW_MAPFILTER_LINEAR;
-    src_sampler_state->ss1.r_wrap_mode = BRW_TEXCOORDMODE_CLAMP;
-    src_sampler_state->ss1.s_wrap_mode = BRW_TEXCOORDMODE_CLAMP;
-    src_sampler_state->ss1.t_wrap_mode = BRW_TEXCOORDMODE_CLAMP;
+    for (src_surf = 0; src_surf < n_src_surf; src_surf++)
+    {
+	memset(src_sampler_state[src_surf], 0, sizeof(struct brw_sampler_state));
+	src_sampler_state[src_surf]->ss0.min_filter = BRW_MAPFILTER_LINEAR;
+	src_sampler_state[src_surf]->ss0.mag_filter = BRW_MAPFILTER_LINEAR;
+	src_sampler_state[src_surf]->ss1.r_wrap_mode = BRW_TEXCOORDMODE_CLAMP;
+	src_sampler_state[src_surf]->ss1.s_wrap_mode = BRW_TEXCOORDMODE_CLAMP;
+	src_sampler_state[src_surf]->ss1.t_wrap_mode = BRW_TEXCOORDMODE_CLAMP;
+    }
 
     /* Set up the vertex shader to be disabled (passthrough) */
     memset(vs_state, 0, sizeof(*vs_state));
@@ -468,13 +543,13 @@ I965DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
     sf_state->sf6.dest_org_vbias = 0x8;
     sf_state->sf6.dest_org_hbias = 0x8;
 
-    memcpy (ps_kernel, ps_kernel_static, sizeof (ps_kernel_static));
+    memcpy (ps_kernel, ps_kernel_static, ps_kernel_static_size);
     memset (wm_state, 0, sizeof (*wm_state));
     wm_state->thread0.kernel_start_pointer =
 	(state_base_offset + ps_kernel_offset) >> 6;
     wm_state->thread0.grf_reg_count = BRW_GRF_BLOCKS(PS_KERNEL_NUM_GRF);
     wm_state->thread1.single_program_flow = 1; /* XXX */
-    wm_state->thread1.binding_table_entry_count = 2;
+    wm_state->thread1.binding_table_entry_count = 1 + n_src_surf;
     /* Though we never use the scratch space in our WM kernel, it has to be
      * set, and the minimum allocation is 1024 bytes.
      */
@@ -488,7 +563,7 @@ I965DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
     wm_state->thread3.urb_entry_read_offset = 0; /* XXX */
     wm_state->wm4.stats_enable = 1;
     wm_state->wm4.sampler_state_pointer = (state_base_offset +
-					   src_sampler_offset) >> 5;
+					   src_sampler_offset[0]) >> 5;
     wm_state->wm4.sampler_count = 1; /* 1-4 samplers used */
     wm_state->wm5.max_threads = PS_MAX_THREADS - 1;
     wm_state->wm5.thread_dispatch_enable = 1;
@@ -509,7 +584,7 @@ I965DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
     {
 	BEGIN_BATCH(12);
 	/* Match Mesa driver setup */
-	if (IS_IGD_GM(pI830))
+	if (IS_GM45(pI830) || IS_G4X(pI830))
 	    OUT_BATCH(NEW_PIPELINE_SELECT | PIPELINE_SELECT_3D);
 	else
 	    OUT_BATCH(BRW_PIPELINE_SELECT | PIPELINE_SELECT_3D);

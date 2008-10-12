@@ -42,7 +42,7 @@
 void
 I915DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
 			 RegionPtr dstRegion,
-			 short width, short height, int video_pitch,
+			 short width, short height, int video_pitch, int video_pitch2,
 			 int x1, int y1, int x2, int y2,
 			 short src_w, short src_h, short drw_w, short drw_h,
 			 PixmapPtr pPixmap)
@@ -271,7 +271,13 @@ I915DisplayVideoTextured(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv, int id,
       ms3 |= (height - 1) << MS3_HEIGHT_SHIFT;
       ms3 |= (width - 1) << MS3_WIDTH_SHIFT;
       OUT_BATCH(ms3);
-      OUT_BATCH(((video_pitch * 2 / 4) - 1) << MS4_PITCH_SHIFT);
+      /* check to see if Y has special pitch than normal double u/v pitch,
+       * e.g i915 XvMC hw requires at least 1K alignment, so Y pitch might
+       * be same as U/V's.*/
+      if (video_pitch2)
+	  OUT_BATCH(((video_pitch2 / 4) - 1) << MS4_PITCH_SHIFT);
+      else
+	  OUT_BATCH(((video_pitch * 2 / 4) - 1) << MS4_PITCH_SHIFT);
 
       OUT_BATCH(pPriv->UBuf0offset);
       ms3 = MAPSURF_8BIT | MT_8BIT_I8 | MS3_USE_FENCE_REGS;

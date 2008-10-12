@@ -353,7 +353,37 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #define IPEIR                  0x2088
 #define IPEHR                  0x208C
+
 #define INST_DONE                0x2090
+# define IDCT_DONE			(1 << 30)
+# define IQ_DONE			(1 << 29)
+# define PR_DONE			(1 << 28)
+# define VLD_DONE			(1 << 27)
+# define IP_DONE			(1 << 26)
+# define FBC_DONE			(1 << 25)
+# define BINNER_DONE			(1 << 24)
+# define SF_DONE			(1 << 23)
+# define SE_DONE			(1 << 22)
+# define WM_DONE			(1 << 21)
+# define IZ_DONE			(1 << 20)
+# define PERSPECTIVE_INTERP_DONE	(1 << 19)
+# define DISPATCHER_DONE		(1 << 18)
+# define PROJECTION_DONE		(1 << 17)
+# define DEPENDENT_ADDRESS_DONE		(1 << 16)
+# define QUAD_CACHE_DONE		(1 << 15)
+# define TEXTURE_FETCH_DONE		(1 << 14)
+# define TEXTURE_DECOMPRESS_DONE	(1 << 13)
+# define SAMPLER_CACHE_DONE		(1 << 12)
+# define FILTER_DONE			(1 << 11)
+# define BYPASS_FIFO_DONE		(1 << 10)
+# define PS_DONE			(1 << 9)
+# define CC_DONE			(1 << 8)
+# define MAP_FILTER_DONE		(1 << 7)
+# define MAP_L2_IDLE			(1 << 6)
+# define RING_2_ENABLE			(1 << 2)
+# define RING_1_ENABLE			(1 << 1)
+# define RING_0_ENABLE			(1 << 0)
+
 #define SCPD0                    0x209c	/* debug */
 #define INST_PS                  0x20c4
 #define IPEIR_I965                  0x2064 /* i965 */
@@ -1186,6 +1216,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # define FP_M2_DIV_SHIFT			0
 
 #define PORT_HOTPLUG_EN		0x61110
+# define HDMIB_HOTPLUG_INT_EN			(1 << 29)
+# define HDMIC_HOTPLUG_INT_EN			(1 << 28)
+# define HDMID_HOTPLUG_INT_EN			(1 << 27)
 # define SDVOB_HOTPLUG_INT_EN			(1 << 26)
 # define SDVOC_HOTPLUG_INT_EN			(1 << 25)
 # define TV_HOTPLUG_INT_EN			(1 << 18)
@@ -1193,6 +1226,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # define CRT_HOTPLUG_FORCE_DETECT		(1 << 3)
 
 #define PORT_HOTPLUG_STAT	0x61114
+# define HDMIB_HOTPLUG_INT_STATUS		(1 << 29)
+# define HDMIC_HOTPLUG_INT_STATUS		(1 << 28)
+# define HDMID_HOTPLUG_INT_STATUS		(1 << 27)
 # define CRT_HOTPLUG_INT_STATUS			(1 << 11)
 # define TV_HOTPLUG_INT_STATUS			(1 << 10)
 # define CRT_HOTPLUG_MONITOR_MASK		(3 << 8)
@@ -1221,9 +1257,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define SDVO_PHASE_SELECT_DEFAULT		(6 << 19)
 #define SDVO_CLOCK_OUTPUT_INVERT		(1 << 18)
 #define SDVOC_GANG_MODE				(1 << 16)
+#define SDVO_ENCODING_SDVO			(0x0 << 10)
+#define SDVO_ENCODING_HDMI			(0x2 << 10)
+/** Requird for HDMI operation */
+#define SDVO_NULL_PACKETS_DURING_VSYNC		(1 << 9)
 #define SDVO_BORDER_ENABLE			(1 << 7)
-/** new with 965, default is to be set */
+/** New with 965, default is to be set */
 #define SDVO_VSYNC_ACTIVE_HIGH			(1 << 4)
+/** New with 965, default is to be set */
 #define SDVO_HSYNC_ACTIVE_HIGH			(1 << 3)
 /** 915/945 only, read-only bit */
 #define SDVOB_PCIE_CONCURRENCY			(1 << 3)
@@ -1420,6 +1461,30 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # define LVDS_B0B3_POWER_UP		(3 << 2)
 
 /** @} */
+
+#define DP_B			0x64100
+#define DPB_AUX_CH_CTL		0x64110
+#define DPB_AUX_CH_DATA1	0x64114
+#define DPB_AUX_CH_DATA2	0x64118
+#define DPB_AUX_CH_DATA3	0x6411c
+#define DPB_AUX_CH_DATA4	0x64120
+#define DPB_AUX_CH_DATA5	0x64124
+
+#define DP_C			0x64200
+#define DPC_AUX_CH_CTL		0x64210
+#define DPC_AUX_CH_DATA1	0x64214
+#define DPC_AUX_CH_DATA2	0x64218
+#define DPC_AUX_CH_DATA3	0x6421c
+#define DPC_AUX_CH_DATA4	0x64220
+#define DPC_AUX_CH_DATA5	0x64224
+
+#define DP_D			0x64300
+#define DPD_AUX_CH_CTL		0x64310
+#define DPD_AUX_CH_DATA1	0x64314
+#define DPD_AUX_CH_DATA2	0x64318
+#define DPD_AUX_CH_DATA3	0x6431c
+#define DPD_AUX_CH_DATA4	0x64320
+#define DPD_AUX_CH_DATA5	0x64324
 
 /*
  * Two channel clock control. Turn this on if you need clkb for two channel mode
@@ -2077,6 +2142,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				 
 
 #define DSPARB			0x70030
+#define   DSPARB_CSTART_SHIFT	7
+#define   DSPARB_BSTART_SHIFT	0
+#define   DSPARB_BEND_SHIFT	9 /* on 855 */
+#define   DSPARB_AEND_SHIFT	0
 #define DSPFW1			0x70034
 #define DSPFW2			0x70038
 #define DSPFW3			0x7003c
@@ -2236,6 +2305,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define I915G_GMCH_GMS_STOLEN_64M		(0x7 << 4)
 #define G33_GMCH_GMS_STOLEN_128M		(0x8 << 4)
 #define G33_GMCH_GMS_STOLEN_256M		(0x9 << 4)
+#define INTEL_GMCH_GMS_STOLEN_96M		(0xa << 4)
+#define INTEL_GMCH_GMS_STOLEN_160M		(0xb << 4)
+#define INTEL_GMCH_GMS_STOLEN_224M		(0xc << 4)
+#define INTEL_GMCH_GMS_STOLEN_352M		(0xd << 4)
+
 
 #define I85X_CAPID			0x44
 #define I85X_VARIANT_MASK			0x7
@@ -2738,5 +2812,7 @@ typedef enum {
 #define   DPFC_COMP_SEG_MASK	(0x000003ff)
 #define DPFC_STATUS2		0x3214
 #define DPFC_FENCE_YOFF		0x3218
+
+#define PEG_BAND_GAP_DATA	0x14d68
 
 #endif /* _I810_REG_H */

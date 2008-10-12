@@ -85,7 +85,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifdef I830_USE_EXA
 #include "exa.h"
 Bool I830EXAInit(ScreenPtr pScreen);
-#define EXA_LINEAR_EXTRA	(64*1024)
 unsigned long long I830TexOffsetStart(PixmapPtr pPix);
 #endif
 
@@ -239,6 +238,7 @@ typedef struct {
 #define I830_OUTPUT_SDVO 5
 #define I830_OUTPUT_LVDS 6
 #define I830_OUTPUT_TVOUT 7
+#define I830_OUTPUT_HDMI 8
 
 struct _I830DVODriver {
    int type;
@@ -251,8 +251,6 @@ struct _I830DVODriver {
    I830I2CVidOutputRec *vid_rec;
    void *dev_priv;
    pointer modhandle;
-   DisplayModePtr panel_fixed_mode;
-   Bool panel_wants_dither;
 };
 
 extern const char *i830_output_type_names[];
@@ -288,6 +286,7 @@ typedef struct _I830OutputPrivateRec {
    I2CBusPtr		    pDDCBus;
    struct _I830DVODriver    *i2c_drv;
    Bool			    load_detect_temp;
+   Bool			    needs_tv_clock;
    uint32_t		    lvds_bits;
    int                      pipe_mask;
    int			    clone_mask;
@@ -397,7 +396,7 @@ typedef struct _I830Rec {
    i830_memory *xaa_scratch_2;
 #ifdef I830_USE_EXA
    i830_memory *exa_offscreen;
-   i830_memory *exa_965_state;
+   i830_memory *gen4_render_state_mem;
 #endif
    /* Regions allocated either from the above pools, or from agpgart. */
    I830RingBuffer *LpRing;
@@ -416,7 +415,6 @@ typedef struct _I830Rec {
 #ifdef INTEL_XVMC
    /* For XvMC */
    Bool XvMCEnabled;
-   Bool IsXvMCSurface;
 #endif
 
    XF86ModReqInfo shadowReq; /* to test for later libshadow */
@@ -532,6 +530,9 @@ typedef struct _I830Rec {
    uint32_t mapstate[6];
    uint32_t samplerstate[6];
 
+   /* 965 render acceleration state */
+   struct gen4_render_state *gen4_render_state;
+
    Bool directRenderingDisabled;	/* DRI disabled in PreInit. */
    Bool directRenderingEnabled;		/* DRI enabled this generation. */
 
@@ -551,6 +552,13 @@ typedef struct _I830Rec {
    OptionInfoPtr Options;
 
    Bool lvds_24_bit_mode;
+   Bool lvds_use_ssc;
+   int lvds_ssc_freq; /* in MHz */
+   Bool lvds_dither;
+   DisplayModePtr lvds_fixed_mode;
+   Bool skip_panel_detect;
+
+   Bool tv_present; /* TV connector present (from VBIOS) */
 
    Bool StolenOnly;
 
@@ -575,6 +583,7 @@ typedef struct _I830Rec {
 
    enum backlight_control backlight_control_method;
 
+   uint32_t saveDSPARB;
    uint32_t saveDSPACNTR;
    uint32_t saveDSPBCNTR;
    uint32_t savePIPEACONF;
@@ -655,7 +664,6 @@ typedef struct _I830Rec {
 
    /** Enables logging of debug output related to mode switching. */
    Bool debug_modes;
-   Bool lvds_fixed_mode;
    unsigned int quirk_flag;
 } I830Rec;
 
@@ -798,6 +806,9 @@ void i830_crt_init(ScrnInfoPtr pScrn);
 /* i830_dvo.c */
 void i830_dvo_init(ScrnInfoPtr pScrn);
 
+/* i830_hdmi.c */
+void i830_hdmi_init(ScrnInfoPtr pScrn, int output_reg);
+
 /* i830_lvds.c */
 void i830_lvds_init(ScrnInfoPtr pScrn);
 
@@ -836,6 +847,9 @@ Bool i915_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMask,
 			    PicturePtr pDst, PixmapPtr pSrcPixmap,
 			    PixmapPtr pMaskPixmap, PixmapPtr pDstPixmap);
 /* i965_render.c */
+unsigned int gen4_render_state_size(ScrnInfoPtr pScrn);
+void gen4_render_state_init(ScrnInfoPtr pScrn);
+void gen4_render_state_cleanup(ScrnInfoPtr pScrn);
 Bool i965_check_composite(int op, PicturePtr pSrc, PicturePtr pMask,
 			  PicturePtr pDst);
 Bool i965_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMask,

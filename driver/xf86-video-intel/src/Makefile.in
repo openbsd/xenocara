@@ -56,19 +56,24 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@XMODES_TRUE@am__append_1 = \
+@XSERVER_LIBPCIACCESS_TRUE@am__append_1 = @PCIACCESS_LIBS@
+@XMODES_TRUE@am__append_2 = \
 @XMODES_TRUE@	$(XMODE_SRCS)
 
-@DRI_TRUE@am__append_2 = \
+@DRI_TRUE@am__append_3 = \
 @DRI_TRUE@	$(INTEL_DRI_SRCS)
 
-@XVMC_TRUE@am__append_3 = \
+@DRI_TRUE@am__append_4 = \
+@DRI_TRUE@	$(DRI_LIBS)
+
+@XVMC_TRUE@am__append_5 = \
 @XVMC_TRUE@	$(INTEL_XVMC_SRCS)
 
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -83,19 +88,22 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(intel_drv_ladir)"
 intel_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(intel_drv_la_LTLIBRARIES)
-intel_drv_la_LIBADD =
+am__DEPENDENCIES_1 =
+@DRI_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
+intel_drv_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 am__intel_drv_la_SOURCES_DIST = brw_defines.h brw_structs.h common.h \
 	i2c_vid.h i810_accel.c i810_common.h i810_cursor.c i810_dga.c \
 	i810_driver.c i810.h i810_io.c i810_memory.c i810_reg.h \
 	i810_ring.h i810_video.c i810_wmark.c i830_3d.c i830_accel.c \
 	i830_bios.c i830_bios.h i830_common.h i830_crt.c i830_cursor.c \
 	i830_debug.c i830_debug.h i830_display.c i830_display.h \
-	i830_quirks.c i830_driver.c i830_dvo.c i830.h i830_i2c.c \
-	i830_io.c i830_lvds.c i830_memory.c i830_modes.c i830_video.c \
-	i830_video.h i830_reg.h i830_ring.h i830_sdvo.c i830_sdvo.h \
-	i830_sdvo_regs.h i830_tv.c i915_3d.c i915_3d.h i915_reg.h \
-	i915_video.c i965_video.c i830_exa.c i830_xaa.c i830_render.c \
-	i915_render.c i965_render.c local_xf86Rename.h \
+	i830_quirks.c i830_driver.c i830_dvo.c i830.h i830_hdmi.c \
+	i830_i2c.c i830_io.c i830_lvds.c i830_memory.c i830_modes.c \
+	i830_video.c i830_video.h i830_reg.h i830_ring.h i830_sdvo.c \
+	i830_sdvo.h i830_sdvo_regs.h i830_tv.c i915_3d.c i915_3d.h \
+	i915_reg.h i915_video.c i965_video.c i830_exa.c i830_xaa.c \
+	i830_render.c i915_render.c i965_render.c local_xf86Rename.h \
 	parser/xf86Parser.h parser/xf86Optrec.h modes/xf86Modes.h \
 	modes/xf86Modes.c modes/xf86cvt.c modes/xf86Crtc.h \
 	modes/xf86Crtc.c modes/xf86Cursors.c modes/xf86EdidModes.c \
@@ -114,11 +122,11 @@ am_intel_drv_la_OBJECTS = i810_accel.lo i810_cursor.lo i810_dga.lo \
 	i810_driver.lo i810_io.lo i810_memory.lo i810_video.lo \
 	i810_wmark.lo i830_3d.lo i830_accel.lo i830_bios.lo \
 	i830_crt.lo i830_cursor.lo i830_debug.lo i830_display.lo \
-	i830_quirks.lo i830_driver.lo i830_dvo.lo i830_i2c.lo \
-	i830_io.lo i830_lvds.lo i830_memory.lo i830_modes.lo \
-	i830_video.lo i830_sdvo.lo i830_tv.lo i915_3d.lo i915_video.lo \
-	i965_video.lo i830_exa.lo i830_xaa.lo i830_render.lo \
-	i915_render.lo i965_render.lo $(am__objects_2) \
+	i830_quirks.lo i830_driver.lo i830_dvo.lo i830_hdmi.lo \
+	i830_i2c.lo i830_io.lo i830_lvds.lo i830_memory.lo \
+	i830_modes.lo i830_video.lo i830_sdvo.lo i830_tv.lo i915_3d.lo \
+	i915_video.lo i965_video.lo i830_exa.lo i830_xaa.lo \
+	i830_render.lo i915_render.lo i965_render.lo $(am__objects_2) \
 	$(am__objects_4) $(am__objects_6)
 intel_drv_la_OBJECTS = $(am_intel_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -126,9 +134,6 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
-	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
-	$(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -174,6 +179,7 @@ CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DOLT_BASH = @DOLT_BASH@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
@@ -210,6 +216,8 @@ LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINUXDOC = @LINUXDOC@
 LN_S = @LN_S@
+LTCOMPILE = @LTCOMPILE@
+LTCXXCOMPILE = @LTCXXCOMPILE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -316,6 +324,7 @@ AM_CFLAGS = @WARN_CFLAGS@ @XORG_CFLAGS@ @DRI_CFLAGS@ @PCIACCESS_CFLAGS@ \
 intel_drv_la_LTLIBRARIES = intel_drv.la
 intel_drv_la_LDFLAGS = -module -avoid-version
 intel_drv_ladir = @moduledir@/drivers
+intel_drv_la_LIBADD = $(am__append_1) $(am__append_4)
 XMODE_SRCS = \
 	 local_xf86Rename.h \
 	 parser/xf86Parser.h \
@@ -352,13 +361,13 @@ intel_drv_la_SOURCES = brw_defines.h brw_structs.h common.h i2c_vid.h \
 	i810_ring.h i810_video.c i810_wmark.c i830_3d.c i830_accel.c \
 	i830_bios.c i830_bios.h i830_common.h i830_crt.c i830_cursor.c \
 	i830_debug.c i830_debug.h i830_display.c i830_display.h \
-	i830_quirks.c i830_driver.c i830_dvo.c i830.h i830_i2c.c \
-	i830_io.c i830_lvds.c i830_memory.c i830_modes.c i830_video.c \
-	i830_video.h i830_reg.h i830_ring.h i830_sdvo.c i830_sdvo.h \
-	i830_sdvo_regs.h i830_tv.c i915_3d.c i915_3d.h i915_reg.h \
-	i915_video.c i965_video.c i830_exa.c i830_xaa.c i830_render.c \
-	i915_render.c i965_render.c $(am__append_1) $(am__append_2) \
-	$(am__append_3)
+	i830_quirks.c i830_driver.c i830_dvo.c i830.h i830_hdmi.c \
+	i830_i2c.c i830_io.c i830_lvds.c i830_memory.c i830_modes.c \
+	i830_video.c i830_video.h i830_reg.h i830_ring.h i830_sdvo.c \
+	i830_sdvo.h i830_sdvo_regs.h i830_tv.c i915_3d.c i915_3d.h \
+	i915_reg.h i915_video.c i965_video.c i830_exa.c i830_xaa.c \
+	i830_render.c i915_render.c i965_render.c $(am__append_2) \
+	$(am__append_3) $(am__append_5)
 INTEL_G4A = \
 	packed_yuv_sf.g4a		\
 	packed_yuv_wm.g4a		\
@@ -368,6 +377,7 @@ INTEL_G4A = \
 	exa_wm_src_projective.g4a 	\
 	exa_wm_src_sample_argb.g4a 	\
 	exa_wm_src_sample_a.g4a 	\
+	exa_wm_src_sample_planar.g4a 	\
 	exa_wm_mask_affine.g4a 		\
 	exa_wm_mask_projective.g4a 	\
 	exa_wm_mask_sample_argb.g4a 	\
@@ -376,6 +386,7 @@ INTEL_G4A = \
 	exa_wm_ca.g4a			\
 	exa_wm_ca_srcalpha.g4a		\
 	exa_wm_write.g4a 		\
+	exa_wm_yuv_rgb.g4a		\
 	exa_wm_xy.g4a
 
 INTEL_G4I = \
@@ -392,6 +403,7 @@ INTEL_G4B = \
 	exa_wm_src_projective.g4b 	\
 	exa_wm_src_sample_argb.g4b 	\
 	exa_wm_src_sample_a.g4b 	\
+	exa_wm_src_sample_planar.g4b 	\
 	exa_wm_mask_affine.g4b 		\
 	exa_wm_mask_projective.g4b 	\
 	exa_wm_mask_sample_argb.g4b 	\
@@ -400,6 +412,7 @@ INTEL_G4B = \
 	exa_wm_ca.g4b			\
 	exa_wm_ca_srcalpha.g4b		\
 	exa_wm_write.g4b 		\
+	exa_wm_yuv_rgb.g4b		\
 	exa_wm_xy.g4b
 
 EXTRA_DIST = \
@@ -503,6 +516,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_driver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_dvo.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_exa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_hdmi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_hwmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_i2c.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_io.Plo@am__quote@
@@ -898,7 +912,7 @@ uninstall-info: uninstall-info-recursive
 	uninstall-intel_drv_laLTLIBRARIES
 
 @HAVE_GEN4ASM_TRUE@.g4a.g4b:
-@HAVE_GEN4ASM_TRUE@	m4 -s $*.g4a > $*.g4m && intel-gen4asm -o $@ $*.g4m && rm $*.g4m
+@HAVE_GEN4ASM_TRUE@	m4 -I$(srcdir) -s $< > $*.g4m && intel-gen4asm -o $@ $*.g4m && rm $*.g4m
 
 @HAVE_GEN4ASM_TRUE@$(INTEL_G4B): $(INTEL_G4I)
 

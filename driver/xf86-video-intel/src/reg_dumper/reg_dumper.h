@@ -69,6 +69,8 @@ typedef struct _scrn {
 
 #define I830PTR(pScrn) (pScrn->pI830)
 
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+
 #define INREG8(reg) (*(volatile uint8_t *)((pI830)->mmio + (reg)))
 #define INREG16(reg) (*(volatile uint16_t *)((pI830)->mmio + (reg)))
 #define INREG(reg) (*(volatile uint32_t *)((pI830)->mmio + (reg)))

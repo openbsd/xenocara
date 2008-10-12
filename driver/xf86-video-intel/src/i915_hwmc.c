@@ -111,7 +111,7 @@ static XF86MCImageIDList yv12_subpicture_list =
 
 static XF86MCSurfaceInfoRec i915_YV12_mpg2_surface =
 {
-    FOURCC_YV12,
+    SURFACE_TYPE_MPEG2_MPML,
     XVMC_CHROMA_FORMAT_420,
     0,
     720,
@@ -127,7 +127,7 @@ static XF86MCSurfaceInfoRec i915_YV12_mpg2_surface =
 
 static XF86MCSurfaceInfoRec i915_YV12_mpg1_surface =
 {
-    FOURCC_YV12,
+    SURFACE_TYPE_MPEG1_MPML,
     XVMC_CHROMA_FORMAT_420,
     0,
     720,
@@ -319,8 +319,8 @@ static Bool i915_allocate_xvmc_buffers(ScrnInfoPtr pScrn, I915XvMCContextPriv *c
     I830Ptr pI830 = I830PTR(pScrn);
     int flags = ALIGN_BOTH_ENDS;
 
-    if (IS_I915G(pI830) || IS_I915GM(pI830) ||
-	    IS_I945G(pI830) || IS_I945GM(pI830))
+    /* on 915G/GM, load indirect can only use physical address...sigh */
+    if (IS_I915G(pI830) || IS_I915GM(pI830))
         flags |= NEED_PHYSICAL_ADDR;
 
     if (!i830_allocate_xvmc_buffer(pScrn, "[XvMC]Static Indirect State",
@@ -353,14 +353,14 @@ static Bool i915_allocate_xvmc_buffers(ScrnInfoPtr pScrn, I915XvMCContextPriv *c
         return FALSE;
     }
 
-    if (!i830_allocate_xvmc_buffer(pScrn, "[XvMC]Correction Data Buffer", 
+    if (!i830_allocate_xvmc_buffer(pScrn, "[XvMC]Correction Data Buffer",
                                    &(ctxpriv->mcCorrdata), 512 * 1024,
                                    ALIGN_BOTH_ENDS)) {
         return FALSE;
     }
 
-    if (0)
-	i830_describe_allocations(pScrn, 1, "");
+    if (1)
+	i830_describe_allocations(pScrn, 1, "i915_mc: ");
 
     return TRUE;
 }
@@ -500,28 +500,31 @@ static int i915_xvmc_create_context (ScrnInfoPtr pScrn, XvMCContextPtr pContext,
     contextRec->sis.handle = ctxpriv->sis_handle;
     contextRec->sis.offset = ctxpriv->mcStaticIndirectState->offset;
     contextRec->sis.size = ctxpriv->mcStaticIndirectState->size;
-    contextRec->sis.bus_addr = ctxpriv->mcStaticIndirectState->bus_addr;
     contextRec->ssb.handle = ctxpriv->ssb_handle;
     contextRec->ssb.offset = ctxpriv->mcSamplerState->offset;
     contextRec->ssb.size = ctxpriv->mcSamplerState->size;
-    contextRec->ssb.bus_addr = ctxpriv->mcSamplerState->bus_addr;
     contextRec->msb.handle = ctxpriv->msb_handle;
     contextRec->msb.offset = ctxpriv->mcMapState->offset;
     contextRec->msb.size = ctxpriv->mcMapState->size;
-    contextRec->msb.bus_addr = ctxpriv->mcMapState->bus_addr;
     contextRec->psp.handle = ctxpriv->psp_handle;
     contextRec->psp.offset = ctxpriv->mcPixelShaderProgram->offset;
     contextRec->psp.size = ctxpriv->mcPixelShaderProgram->size;
-    contextRec->psp.bus_addr = ctxpriv->mcPixelShaderProgram->bus_addr;
     contextRec->psc.handle = ctxpriv->psc_handle;
     contextRec->psc.offset = ctxpriv->mcPixelShaderConstants->offset;
     contextRec->psc.size = ctxpriv->mcPixelShaderConstants->size;
-    contextRec->psc.bus_addr = ctxpriv->mcPixelShaderConstants->bus_addr;
     contextRec->corrdata.handle = ctxpriv->corrdata_handle;
     contextRec->corrdata.offset = ctxpriv->mcCorrdata->offset;
     contextRec->corrdata.size = ctxpriv->mcCorrdata->size;
     contextRec->sarea_priv_offset = sizeof(XF86DRISAREARec);
     contextRec->deviceID = pI830DRI->deviceID;
+
+    if (IS_I915G(pI830) || IS_I915GM(pI830)) {
+	contextRec->sis.bus_addr = ctxpriv->mcStaticIndirectState->bus_addr;
+	contextRec->ssb.bus_addr = ctxpriv->mcSamplerState->bus_addr;
+	contextRec->msb.bus_addr = ctxpriv->mcMapState->bus_addr;
+	contextRec->psp.bus_addr = ctxpriv->mcPixelShaderProgram->bus_addr;
+	contextRec->psc.bus_addr = ctxpriv->mcPixelShaderConstants->bus_addr;
+    }
 
     pXvMC->ncontexts++;
     pXvMC->contexts[i] = pContext->context_id;
@@ -787,7 +790,6 @@ static int i915_xvmc_put_image(ScrnInfoPtr pScrn,
 	short height, Bool sync, RegionPtr clipBoxes, pointer data,
 	DrawablePtr pDraw)
 {
-    I830Ptr pI830 = I830PTR(pScrn);
     I915XvMCPtr pXvMC = (I915XvMCPtr)xvmc_driver->devPrivate;
     struct intel_xvmc_command *xvmc_cmd = (struct intel_xvmc_command *)buf;
     int ret;
@@ -803,10 +805,8 @@ static int i915_xvmc_put_image(ScrnInfoPtr pScrn,
 		    return 1;
 		}
 
-		buf = pI830->FbBase +
-		    pXvMC->sfprivs[xvmc_cmd->srfNo]->surface->offset;
-		id = xvmc_cmd->real_id;
-		pI830->IsXvMCSurface = 1;
+		/* use char *buf to hold our surface offset...hacky! */
+		buf = (unsigned char *)pXvMC->sfprivs[xvmc_cmd->srfNo]->surface->offset;
 		break;
 	    default:
 		return 0;
@@ -816,7 +816,6 @@ static int i915_xvmc_put_image(ScrnInfoPtr pScrn,
     ret = pXvMC->savePutImage(pScrn, src_x, src_y, drw_x, drw_y, src_w, src_h,
                         drw_w, drw_h, id, buf, width, height, sync, clipBoxes,
 			data, pDraw);
-    pI830->IsXvMCSurface = 0;
     return ret;
 }
 

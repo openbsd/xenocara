@@ -130,7 +130,6 @@ Status XvMCCreateContext(Display *display, XvPortID port,
 			 int surface_type_id, int width, int height, int flags,
 			 XvMCContext *context) {  
   i810XvMCContext *pI810XvMC;
-  char busIdString[10];
   int priv_count;
   uint *priv_data;
   uint magic;
@@ -217,7 +216,6 @@ Status XvMCCreateContext(Display *display, XvPortID port,
   /* Open DRI Device */
   if((pI810XvMC->fd = drmOpen("i810",NULL)) < 0) {
     printf("DRM Device for i810 could not be opened.\n");
-    free(busIdString);
     free(pI810XvMC);
     return BadAccess;
   } /* !pI810XvMC->fd */

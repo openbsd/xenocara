@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-intel],
-        2.3.2,
+        2.4.2,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-intel)
 
@@ -37,6 +37,7 @@ AM_MAINTAINER_MODE
 # Checks for programs.
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
+DOLT
 AC_PROG_CC
 AM_PROG_CC_C_O
 
@@ -90,8 +91,7 @@ sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 # Checks for header files.
 AC_HEADER_STDC
 
-AC_MSG_CHECKING([whether to include DRI support])
-if test x$DRI = xauto; then
+if test x$DRI != xno; then
         AC_CHECK_FILE([${sdkdir}/dri.h],
                       [have_dri_h="yes"], [have_dri_h="no"])
         AC_CHECK_FILE([${sdkdir}/sarea.h],
@@ -100,7 +100,9 @@ if test x$DRI = xauto; then
                       [have_dristruct_h="yes"], [have_dristruct_h="no"])
 	AC_CHECK_FILE([${sdkdir}/damage.h],
                       [have_damage_h="yes"], [have_damage_h="no"])
-
+fi
+AC_MSG_CHECKING([whether to include DRI support])
+if test x$DRI = xauto; then
         if test "$have_dri_h" = yes -a \
                 "$have_sarea_h" = yes -a \
                 "$have_dristruct_h" = yes; then

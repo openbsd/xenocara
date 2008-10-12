@@ -8196,3 +8196,4 @@ AC_DEFUN([XORG_RELEASE_VERSION],[
 		[Patch version of this package])
 ])
 
+m4_include([acinclude.m4])

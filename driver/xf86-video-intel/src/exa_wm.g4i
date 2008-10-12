@@ -103,23 +103,39 @@ define(`mask_w_1',  `src_w_1')
 
 /* sample src to these registers */
 define(`src_sample_base',	`g14')
+
+define(`src_sample_r',		`g14')
 define(`src_sample_r_01',	`g14')
 define(`src_sample_r_23',	`g15')
+
+define(`src_sample_g',		`g16')
 define(`src_sample_g_01',	`g16')
 define(`src_sample_g_23',	`g17')
+
+define(`src_sample_b',		`g18')
 define(`src_sample_b_01',	`g18')
 define(`src_sample_b_23',	`g19')
+
+define(`src_sample_a',		`g20')
 define(`src_sample_a_01',	`g20')
 define(`src_sample_a_23',	`g21')
 
 /* sample mask to these registers */
 define(`mask_sample_base',	`g22')
+    
+define(`mask_sample_r',		`g22')
 define(`mask_sample_r_01',	`g22')
 define(`mask_sample_r_23',	`g23')
+    
+define(`mask_sample_g',		`g24')
 define(`mask_sample_g_01',	`g24')
 define(`mask_sample_g_23',	`g25')
+    
+define(`mask_sample_b',		`g26')
 define(`mask_sample_b_01',	`g26')
 define(`mask_sample_b_23',	`g27')
+    
+define(`mask_sample_a',		`g28')
 define(`mask_sample_a_01',	`g28')
 define(`mask_sample_a_23',	`g29')
 

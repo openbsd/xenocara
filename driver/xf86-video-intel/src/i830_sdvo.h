@@ -25,7 +25,7 @@
  *
  */
 
-void
+Bool
 i830_sdvo_init(ScrnInfoPtr pScrn, int output_device);
 
 int

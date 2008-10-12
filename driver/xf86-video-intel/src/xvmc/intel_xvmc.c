@@ -26,9 +26,88 @@
  */
 #include "intel_xvmc.h"
 
+/* global */
 struct _intel_xvmc_driver *xvmc_driver = NULL;
+
+/* Lookup tables to speed common calculations for coded_block_pattern */
+/* each block is ((8*8) * sizeof(short)) */
+unsigned int mb_bytes_420[] = {
+    0, /* 0 */
+    128, /* 1 */
+    128, /* 10 */
+    256, /* 11 */
+    128, /* 100 */
+    256, /* 101 */
+    256, /* 110 */
+    384, /* 111 */
+    128, /* 1000 */
+    256, /* 1001 */
+    256, /* 1010 */
+    384, /* 1011 */
+    256, /* 1100 */
+    384, /* 1101 */
+    384, /* 1110 */
+    512, /* 1111 */
+    128, /* 10000 */
+    256, /* 10001 */
+    256, /* 10010 */
+    384, /* 10011 */
+    256, /* 10100 */
+    384, /* 10101 */
+    384, /* 10110 */
+    512, /* 10111 */
+    256, /* 11000 */
+    384, /* 11001 */
+    384, /* 11010 */
+    512, /* 11011 */
+    384, /* 11100 */
+    512, /* 11101 */
+    512, /* 11110 */
+    640, /* 11111 */
+    128, /* 100000 */
+    256, /* 100001 */
+    256, /* 100010 */
+    384, /* 100011 */
+    256, /* 100100 */
+    384, /* 100101 */
+    384, /* 100110 */
+    512, /* 100111 */
+    256, /* 101000 */
+    384, /* 101001 */
+    384, /* 101010 */
+    512, /* 101011 */
+    384, /* 101100 */
+    512, /* 101101 */
+    512, /* 101110 */
+    640, /* 101111 */
+    256, /* 110000 */
+    384, /* 110001 */
+    384, /* 110010 */
+    512, /* 110011 */
+    384, /* 110100 */
+    512, /* 110101 */
+    512, /* 110110 */
+    640, /* 110111 */
+    384, /* 111000 */
+    512, /* 111001 */
+    512, /* 111010 */
+    640, /* 111011 */
+    512, /* 111100 */
+    640, /* 111101 */
+    640, /* 111110 */
+    768  /* 111111 */
+};
+
+int DEBUG;
+
 static int error_base;
 static int event_base;
+
+static void intel_xvmc_debug_init(void)
+{
+    if (getenv("INTEL_XVMC_DEBUG"))
+	DEBUG = 1;
+}
 
 /* locking */
 static void intel_xvmc_try_heavy_lock(drm_context_t ctx)
@@ -211,6 +290,8 @@ Status XvMCCreateContext(Display *display, XvPortID port,
         return BadValue;
     }
 
+    intel_xvmc_debug_init();
+
     /* Open DRI Device */
     if((fd = drmOpen("i915", NULL)) < 0) {
         XVMC_ERR("DRM Device could not be opened.");
@@ -360,6 +441,8 @@ Status XvMCCreateContext(Display *display, XvPortID port,
 
     intelInitBatchBuffer();
 
+    intel_xvmc_dump_open();
+
     return Success;
 }
 
@@ -375,11 +458,11 @@ Status XvMCCreateContext(Display *display, XvPortID port,
 Status XvMCDestroyContext(Display *display, XvMCContext *context)
 {
     Status ret;
-    int screen = DefaultScreen(display);
+    int screen;
 
     if (!display || !context)
         return XvMCBadContext;
-
+    screen = DefaultScreen(display);
     ret = (xvmc_driver->destroy_context)(display, context);
     if (ret) {
 	XVMC_ERR("destroy context fail\n");
@@ -407,6 +490,8 @@ Status XvMCDestroyContext(Display *display, XvMCContext *context)
 	xvmc_driver->fd = -1;
 
 	intelFiniBatchBuffer();
+
+	intel_xvmc_dump_close();
     }
     return Success;
 }
@@ -594,6 +679,10 @@ Status XvMCRenderSurface(Display *display, XvMCContext *context,
     }
     if (!target_surface)
 	return XvMCBadSurface;
+
+    intel_xvmc_dump_render(context, picture_structure, target_surface,
+	    past_surface, future_surface, flags, num_macroblocks,
+	    first_macroblock, macroblock_array, blocks);
 
     ret = (xvmc_driver->render_surface)(display, context, picture_structure,
 	    target_surface, past_surface, future_surface, flags,

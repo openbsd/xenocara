@@ -40,13 +40,13 @@ mov (8) data_port_g_01<1>F	src_sample_g_01<8,8,1>F { align1 };
 mov (8) data_port_b_01<1>F	src_sample_b_01<8,8,1>F { align1 };
 mov (8) data_port_a_01<1>F	src_sample_a_01<8,8,1>F { align1 };
 
-mov (8) data_port_r_23<1>F	src_sample_r_23<8,8,1>F { align1 };
-mov (8) data_port_g_23<1>F	src_sample_g_23<8,8,1>F { align1 };
-mov (8) data_port_b_23<1>F	src_sample_b_23<8,8,1>F { align1 };
-mov (8) data_port_a_23<1>F 	src_sample_a_23<8,8,1>F { align1 };
+mov (8) data_port_r_23<1>F	src_sample_r_23<8,8,1>F { sechalf align1 };
+mov (8) data_port_g_23<1>F	src_sample_g_23<8,8,1>F { sechalf align1 };
+mov (8) data_port_b_23<1>F	src_sample_b_23<8,8,1>F { sechalf align1 };
+mov (8) data_port_a_23<1>F 	src_sample_a_23<8,8,1>F { sechalf align1 };
 
 /* m0, m1 are all direct passed by PS thread payload */
-mov (8) data_port_msg_1<1>UD	g1<8,8,1>UD		{ align1 };
+mov (8) data_port_msg_1<1>UD	g1<8,8,1>UD		{ mask_disable align1 };
 
 /* write */
 send (16) 

@@ -38,22 +38,10 @@
 #define VOFFSET(surface)        (surface->srf.offset + \
                                  SIZE_Y420(surface->width, surface->height))
 
-/* Lookup tables to speed common calculations */
-static unsigned int mb_bytes[] = {
-    000, 128, 128, 256, 128, 256, 256, 384,  // 0
-    128, 256, 256, 384, 256, 384, 384, 512,  // 1
-    128, 256, 256, 384, 256, 384, 384, 512,  // 10
-    256, 384, 384, 512, 384, 512, 512, 640,  // 11
-    128, 256, 256, 384, 256, 384, 384, 512,  // 100
-    256, 384, 384, 512, 384, 512, 512, 640,  // 101
-    256, 384, 384, 512, 384, 512, 512, 640,  // 110
-    384, 512, 512, 640, 512, 640, 640, 768   // 111
-};
-
 typedef union {
-    short s[4];
-    uint  u[2];
-} su_t;
+    int16_t component[2];
+    int32_t v;
+} vector_t;
 
 #if 0
 static int findOverlap(unsigned int width, unsigned int height,
@@ -93,6 +81,632 @@ static int findOverlap(unsigned int width, unsigned int height,
 }
 #endif
 
+static void i915_inst_arith(unsigned int *inst,
+                            unsigned int op,
+                            unsigned int dest,
+                            unsigned int mask,
+                            unsigned int saturate,
+                            unsigned int src0, unsigned int src1, unsigned int src2)
+{
+    dest = UREG(GET_UREG_TYPE(dest), GET_UREG_NR(dest));
+    *inst = (op | A0_DEST(dest) | mask | saturate | A0_SRC0(src0));
+    inst++;
+    *inst = (A1_SRC0(src0) | A1_SRC1(src1));
+    inst++;
+    *inst = (A2_SRC1(src1) | A2_SRC2(src2));
+}
+
+static void i915_inst_decl(unsigned int *inst,
+                           unsigned int type,
+                           unsigned int nr,
+                           unsigned int d0_flags)
+{
+    unsigned int reg = UREG(type, nr);
+
+    *inst = (D0_DCL | D0_DEST(reg) | d0_flags);
+    inst++;
+    *inst = D1_MBZ;
+    inst++;
+    *inst = D2_MBZ;
+}
+
+static void i915_inst_texld(unsigned int *inst,
+                              unsigned int op,
+                              unsigned int dest,
+                              unsigned int coord,
+                              unsigned int sampler)
+{
+   dest = UREG(GET_UREG_TYPE(dest), GET_UREG_NR(dest));
+   *inst = (op | T0_DEST(dest) | T0_SAMPLER(sampler));
+   inst++;
+   *inst = T1_ADDRESS_REG(coord);
+   inst++;
+   *inst = T2_MBZ;
+}
+
+static void i915_emit_batch(void *data, int size, int flag)
+{
+    intelBatchbufferData(data, size, flag);
+}
+
+/* one time context initialization buffer */
+static uint32_t *one_time_load_state_imm1;
+static uint32_t *one_time_load_indirect;
+static int one_time_load_state_imm1_size, one_time_load_indirect_size;
+
+/* load indirect buffer for mc rendering */
+static uint32_t *mc_render_load_indirect;
+static int mc_render_load_indirect_size;
+
+static void i915_mc_one_time_context_init(XvMCContext *context)
+{
+    unsigned int dest, src0, src1, src2;
+    i915XvMCContext *pI915XvMC = (i915XvMCContext *)context->privData;
+    int i;
+    struct i915_3dstate_sampler_state *sampler_state;
+    struct i915_3dstate_pixel_shader_program *pixel_shader_program;
+    struct i915_3dstate_pixel_shader_constants *pixel_shader_constants;
+
+    /* sampler static state */
+    sampler_state = (struct i915_3dstate_sampler_state *)pI915XvMC->ssb.map;
+    /* pixel shader static state */
+    pixel_shader_program = (struct i915_3dstate_pixel_shader_program *)pI915XvMC->psp.map;
+    /* pixel shader contant static state */
+    pixel_shader_constants = (struct i915_3dstate_pixel_shader_constants *)pI915XvMC->psc.map;
+
+    memset(sampler_state, 0, sizeof(*sampler_state));
+    sampler_state->dw0.type = CMD_3D;
+    sampler_state->dw0.opcode = OPC_3DSTATE_SAMPLER_STATE;
+    sampler_state->dw0.length = 6;
+    sampler_state->dw1.sampler_masker = SAMPLER_SAMPLER0 | SAMPLER_SAMPLER1;
+
+    sampler_state->sampler0.ts0.reverse_gamma = 0;
+    sampler_state->sampler0.ts0.planar2packet = 0;
+    sampler_state->sampler0.ts0.color_conversion = 0;
+    sampler_state->sampler0.ts0.chromakey_index = 0;
+    sampler_state->sampler0.ts0.base_level = 0;
+    sampler_state->sampler0.ts0.mip_filter = MIPFILTER_NONE;        /* NONE */
+    sampler_state->sampler0.ts0.mag_filter = MAPFILTER_LINEAR;      /* LINEAR */
+    sampler_state->sampler0.ts0.min_filter = MAPFILTER_LINEAR;      /* LINEAR */
+    sampler_state->sampler0.ts0.lod_bias = 0;       /* 0.0 */
+    sampler_state->sampler0.ts0.shadow_enable = 0;
+    sampler_state->sampler0.ts0.max_anisotropy = ANISORATIO_2;
+    sampler_state->sampler0.ts0.shadow_function = PREFILTEROP_ALWAYS;
+    sampler_state->sampler0.ts1.min_lod = 0;        /* 0.0 Maximum Mip Level */
+    sampler_state->sampler0.ts1.kill_pixel = 0;
+    sampler_state->sampler0.ts1.keyed_texture_filter = 0;
+    sampler_state->sampler0.ts1.chromakey_enable = 0;
+    sampler_state->sampler0.ts1.tcx_control = TEXCOORDMODE_CLAMP;
+    sampler_state->sampler0.ts1.tcy_control = TEXCOORDMODE_CLAMP;
+    sampler_state->sampler0.ts1.tcz_control = TEXCOORDMODE_CLAMP;
+    sampler_state->sampler0.ts1.normalized_coor = 0;
+    sampler_state->sampler0.ts1.map_index = 0;
+    sampler_state->sampler0.ts1.east_deinterlacer = 0;
+    sampler_state->sampler0.ts2.default_color = 0;
+
+    sampler_state->sampler1.ts0.reverse_gamma = 0;
+    sampler_state->sampler1.ts0.planar2packet = 0;
+    sampler_state->sampler1.ts0.color_conversion = 0;
+    sampler_state->sampler1.ts0.chromakey_index = 0;
+    sampler_state->sampler1.ts0.base_level = 0;
+    sampler_state->sampler1.ts0.mip_filter = MIPFILTER_NONE;        /* NONE */
+    sampler_state->sampler1.ts0.mag_filter = MAPFILTER_LINEAR;      /* LINEAR */
+    sampler_state->sampler1.ts0.min_filter = MAPFILTER_LINEAR;      /* LINEAR */
+    sampler_state->sampler1.ts0.lod_bias = 0;       /* 0.0 */
+    sampler_state->sampler1.ts0.shadow_enable = 0;
+    sampler_state->sampler1.ts0.max_anisotropy = ANISORATIO_2;
+    sampler_state->sampler1.ts0.shadow_function = PREFILTEROP_ALWAYS;
+    sampler_state->sampler1.ts1.min_lod = 0;        /* 0.0 Maximum Mip Level */
+    sampler_state->sampler1.ts1.kill_pixel = 0;
+    sampler_state->sampler1.ts1.keyed_texture_filter = 0;
+    sampler_state->sampler1.ts1.chromakey_enable = 0;
+    sampler_state->sampler1.ts1.tcx_control = TEXCOORDMODE_CLAMP;
+    sampler_state->sampler1.ts1.tcy_control = TEXCOORDMODE_CLAMP;
+    sampler_state->sampler1.ts1.tcz_control = TEXCOORDMODE_CLAMP;
+    sampler_state->sampler1.ts1.normalized_coor = 0;
+    sampler_state->sampler1.ts1.map_index = 1;
+    sampler_state->sampler1.ts1.east_deinterlacer = 0;
+    sampler_state->sampler1.ts2.default_color = 0;
+
+    memset(pixel_shader_program, 0, sizeof(*pixel_shader_program));
+    pixel_shader_program->shader0.type = CMD_3D;
+    pixel_shader_program->shader0.opcode = OPC_3DSTATE_PIXEL_SHADER_PROGRAM;
+    pixel_shader_program->shader0.retain = 1;
+    pixel_shader_program->shader0.length = 2; /* 1 inst */
+    i = 0;
+
+    dest = UREG(REG_TYPE_OC, 0);
+    src0 = UREG(REG_TYPE_CONST, 0);
+    src1 = 0;
+    src2 = 0;
+    i915_inst_arith(&pixel_shader_program->inst0[i], A0_MOV,
+	    dest, A0_DEST_CHANNEL_ALL, A0_DEST_SATURATE, src0, src1, src2);
+
+    pixel_shader_program->shader1.type = CMD_3D;
+    pixel_shader_program->shader1.opcode = OPC_3DSTATE_PIXEL_SHADER_PROGRAM;
+    pixel_shader_program->shader1.retain = 1;
+    pixel_shader_program->shader1.length = 14; /* 5 inst */
+    i = 0;
+    /* dcl t0.xy */
+    i915_inst_decl(&pixel_shader_program->inst1[i], REG_TYPE_T, T_TEX0, D0_CHANNEL_XY);
+    i+=3;
+    /* dcl t1.xy */
+    i915_inst_decl(&pixel_shader_program->inst1[i], REG_TYPE_T, T_TEX1, D0_CHANNEL_XY);
+    /* dcl_2D s0 */
+    i += 3;
+    i915_inst_decl(&pixel_shader_program->inst1[i], REG_TYPE_S, 0, D0_SAMPLE_TYPE_2D);
+    /* texld r0, t0, s0 */
+    i += 3;
+    dest = UREG(REG_TYPE_R, 0);
+    src0 = UREG(REG_TYPE_T, 0); /* COORD */
+    src1 = UREG(REG_TYPE_S, 0); /* SAMPLER */
+    i915_inst_texld(&pixel_shader_program->inst1[i], T0_TEXLD, dest, src0, src1);
+    /* mov oC, r0 */
+    i += 3;
+    dest = UREG(REG_TYPE_OC, 0);
+    src0 = UREG(REG_TYPE_R, 0);
+    src1 = src2 = 0;
+    i915_inst_arith(&pixel_shader_program->inst1[i], A0_MOV, dest, A0_DEST_CHANNEL_ALL,
+                    A0_DEST_SATURATE, src0, src1, src2);
+
+
+    pixel_shader_program->shader2.type = CMD_3D;
+    pixel_shader_program->shader2.opcode = OPC_3DSTATE_PIXEL_SHADER_PROGRAM;
+    pixel_shader_program->shader2.retain = 1;
+    pixel_shader_program->shader2.length = 14; /* 5 inst */
+    i = 0;
+    /* dcl t2.xy */
+    i915_inst_decl(&pixel_shader_program->inst2[i], REG_TYPE_T, T_TEX2, D0_CHANNEL_XY);
+    /* dcl t3.xy */
+    i += 3;
+    i915_inst_decl(&pixel_shader_program->inst2[i], REG_TYPE_T, T_TEX3, D0_CHANNEL_XY);
+    /* dcl_2D s1 */
+    i += 3;
+    i915_inst_decl(&pixel_shader_program->inst2[i], REG_TYPE_S, 1, D0_SAMPLE_TYPE_2D);
+    /* texld r0, t2, s1 */
+    i += 3;
+    dest = UREG(REG_TYPE_R, 0);
+    src0 = UREG(REG_TYPE_T, 2); /* COORD */
+    src1 = UREG(REG_TYPE_S, 1); /* SAMPLER */
+    i915_inst_texld(&pixel_shader_program->inst2[i], T0_TEXLD, dest, src0, src1);
+    /* mov oC, r0 */
+    i += 3;
+    dest = UREG(REG_TYPE_OC, 0);
+    src0 = UREG(REG_TYPE_R, 0);
+    src1 = src2 = 0;
+    i915_inst_arith(&pixel_shader_program->inst2[i], A0_MOV, dest, A0_DEST_CHANNEL_ALL,
+                    A0_DEST_SATURATE, src0, src1, src2);
+
+    /* Shader 3 */
+    pixel_shader_program->shader3.type = CMD_3D;
+    pixel_shader_program->shader3.opcode = OPC_3DSTATE_PIXEL_SHADER_PROGRAM;
+    pixel_shader_program->shader3.retain = 1;
+    pixel_shader_program->shader3.length = 29; /* 10 inst */
+    i = 0;
+    /* dcl t0.xy */
+    i915_inst_decl(&pixel_shader_program->inst3[i], REG_TYPE_T, T_TEX0, D0_CHANNEL_XY);
+    /* dcl t1.xy */
+    i += 3;
+    i915_inst_decl(&pixel_shader_program->inst3[i], REG_TYPE_T, T_TEX1, D0_CHANNEL_XY);
+    /* dcl t2.xy */
+    i += 3;
+    i915_inst_decl(&pixel_shader_program->inst3[i], REG_TYPE_T, T_TEX2, D0_CHANNEL_XY);
+    /* dcl t3.xy */
+    i += 3;
+    i915_inst_decl(&pixel_shader_program->inst3[i], REG_TYPE_T, T_TEX3, D0_CHANNEL_XY);
+    /* dcl_2D s0 */
+    i += 3;
+    i915_inst_decl(&pixel_shader_program->inst3[i], REG_TYPE_S, 0, D0_SAMPLE_TYPE_2D);
+    /* dcl_2D s1 */
+    i += 3;
+    i915_inst_decl(&pixel_shader_program->inst3[i], REG_TYPE_S, 1, D0_SAMPLE_TYPE_2D);
+    /* texld r0, t0, s0 */
+    i += 3;
+    dest = UREG(REG_TYPE_R, 0);
+    src0 = UREG(REG_TYPE_T, 0); /* COORD */
+    src1 = UREG(REG_TYPE_S, 0); /* SAMPLER */
+    i915_inst_texld(&pixel_shader_program->inst3[i], T0_TEXLD, dest, src0, src1);
+    /* texld r1, t2, s1 */
+    i += 3;
+    dest = UREG(REG_TYPE_R, 1);
+    src0 = UREG(REG_TYPE_T, 2); /* COORD */
+    src1 = UREG(REG_TYPE_S, 1); /* SAMPLER */
+    i915_inst_texld(&pixel_shader_program->inst3[i], T0_TEXLD, dest, src0, src1);
+    /* add r0, r0, r1 */
+    i += 3;
+    dest = UREG(REG_TYPE_R, 0);
+    src0 = UREG(REG_TYPE_R, 0);
+    src1 = UREG(REG_TYPE_R, 1);
+    src2 = 0;
+    i915_inst_arith(&pixel_shader_program->inst3[i], A0_ADD, dest, A0_DEST_CHANNEL_ALL,
+                    0 /* A0_DEST_SATURATE */, src0, src1, src2);
+    /* mul oC, r0, c0 */
+    i += 3;
+    dest = UREG(REG_TYPE_OC, 0);
+    src0 = UREG(REG_TYPE_R, 0);
+    src1 = UREG(REG_TYPE_CONST, 0);
+    src2 = 0;
+    i915_inst_arith(&pixel_shader_program->inst3[i], A0_MUL, dest, A0_DEST_CHANNEL_ALL,
+                    A0_DEST_SATURATE, src0, src1, src2);
+
+    memset(pixel_shader_constants, 0, sizeof(*pixel_shader_constants));
+    pixel_shader_constants->dw0.type = CMD_3D;
+    pixel_shader_constants->dw0.opcode = OPC_3DSTATE_PIXEL_SHADER_CONSTANTS;
+    pixel_shader_constants->dw0.length = 4;
+    pixel_shader_constants->dw1.reg_mask = REG_CR0;
+    pixel_shader_constants->value.x = 0.5;
+    pixel_shader_constants->value.y = 0.5;
+    pixel_shader_constants->value.z = 0.5;
+    pixel_shader_constants->value.w = 0.5;
+
+}
+
+static void i915_mc_one_time_state_init(XvMCContext *context)
+{
+    struct s3_dword *s3 = NULL;
+    struct s6_dword *s6 = NULL;
+    dis_state *dis = NULL;
+    ssb_state *ssb = NULL;
+    psp_state *psp = NULL;
+    psc_state *psc = NULL;
+    i915XvMCContext *pI915XvMC = (i915XvMCContext *)context->privData;
+    struct i915_3dstate_load_state_immediate_1 *load_state_immediate_1;
+    struct i915_3dstate_load_indirect *load_indirect;
+    int mem_select;
+
+    /* 3DSTATE_LOAD_STATE_IMMEDIATE_1 */
+    one_time_load_state_imm1_size = sizeof(*load_state_immediate_1) + sizeof(*s3) + sizeof(*s6);
+    one_time_load_state_imm1 = calloc(1, one_time_load_state_imm1_size);
+    load_state_immediate_1 = (struct i915_3dstate_load_state_immediate_1 *)one_time_load_state_imm1;
+    load_state_immediate_1->dw0.type = CMD_3D;
+    load_state_immediate_1->dw0.opcode = OPC_3DSTATE_LOAD_STATE_IMMEDIATE_1;
+    load_state_immediate_1->dw0.load_s3 = 1;
+    load_state_immediate_1->dw0.load_s6 = 1;
+    load_state_immediate_1->dw0.length = (one_time_load_state_imm1_size >> 2) - 2;
+
+    s3 = (struct s3_dword *)(++load_state_immediate_1);
+    s3->set0_pcd = 1;
+    s3->set1_pcd = 1;
+    s3->set2_pcd = 1;
+    s3->set3_pcd = 1;
+    s3->set4_pcd = 1;
+    s3->set5_pcd = 1;
+    s3->set6_pcd = 1;
+    s3->set7_pcd = 1;
+
+    s6 = (struct s6_dword *)(++s3);
+    s6->alpha_test_enable = 0;
+    s6->alpha_test_function = 0;
+    s6->alpha_reference_value = 0;
+    s6->depth_test_enable = 1;
+    s6->depth_test_function = 0;
+    s6->color_buffer_blend = 0;
+    s6->color_blend_function = 0;
+    s6->src_blend_factor = 1;
+    s6->dest_blend_factor = 1;
+    s6->depth_buffer_write = 0;
+    s6->color_buffer_write = 1;
+    s6->triangle_pv = 0;
+
+    /* 3DSTATE_LOAD_INDIRECT */
+    one_time_load_indirect_size = sizeof(*load_indirect) + sizeof(*dis) + sizeof(*ssb) + sizeof(*psp) + sizeof(*psc);
+    one_time_load_indirect = calloc(1, one_time_load_indirect_size);
+    load_indirect = (struct i915_3dstate_load_indirect *)one_time_load_indirect;
+    load_indirect->dw0.type = CMD_3D;
+    load_indirect->dw0.opcode = OPC_3DSTATE_LOAD_INDIRECT;
+    load_indirect->dw0.block_mask = BLOCK_DIS | BLOCK_SSB | BLOCK_PSP | BLOCK_PSC;
+    load_indirect->dw0.length = (one_time_load_indirect_size >> 2) - 2;
+
+    if (pI915XvMC->deviceID == PCI_CHIP_I915_G ||
+        pI915XvMC->deviceID == PCI_CHIP_I915_GM)
+	mem_select = 0; /* use physical address */
+    else
+	mem_select = 1; /* use gfx address */
+
+    load_indirect->dw0.mem_select = mem_select;
+
+
+    /* Dynamic indirect state buffer */
+    dis = (dis_state *)(++load_indirect);
+    dis->dw0.valid = 0;
+    dis->dw0.reset = 0;
+    dis->dw0.buffer_address = 0;
+
+    /* Sample state buffer */
+    ssb = (ssb_state *)(++dis);
+    ssb->dw0.valid = 1;
+    ssb->dw0.force = 1;
+    ssb->dw1.length = 7; /* 8 - 1 */
+
+    if (mem_select)
+        ssb->dw0.buffer_address = (pI915XvMC->ssb.offset >> 2);
+    else
+	ssb->dw0.buffer_address = (pI915XvMC->ssb.bus_addr >> 2);
+
+    /* Pixel shader program buffer */
+    psp = (psp_state *)(++ssb);
+    psp->dw0.valid = 1;
+    psp->dw0.force = 1;
+    psp->dw1.length = 66; /* 4 + 16 + 16 + 31 - 1 */
+
+    if (mem_select)
+	psp->dw0.buffer_address = (pI915XvMC->psp.offset >> 2);
+    else
+	psp->dw0.buffer_address = (pI915XvMC->psp.bus_addr >> 2);
+
+    /* Pixel shader constant buffer */
+    psc = (psc_state *)(++psp);
+    psc->dw0.valid = 1;
+    psc->dw0.force = 1;
+    psc->dw1.length = 5; /* 6 - 1 */
+
+    if (mem_select)
+        psc->dw0.buffer_address = (pI915XvMC->psc.offset >> 2);
+    else
+        psc->dw0.buffer_address = (pI915XvMC->psc.bus_addr >> 2);
+}
+
+static void i915_mc_one_time_state_emit(void)
+{
+    i915_emit_batch(one_time_load_state_imm1, one_time_load_state_imm1_size, 0);
+    i915_emit_batch(one_time_load_indirect, one_time_load_indirect_size, 0);
+}
+
+static void i915_mc_static_indirect_state_init(XvMCContext *context)
+{
+    i915XvMCContext *pI915XvMC = (i915XvMCContext *)context->privData;
+    struct i915_mc_static_indirect_state_buffer *buffer_info =
+	(struct i915_mc_static_indirect_state_buffer *)pI915XvMC->sis.map;
+
+    memset(buffer_info, 0, sizeof(*buffer_info));
+    /* dest Y */
+    buffer_info->dest_y.dw0.type = CMD_3D;
+    buffer_info->dest_y.dw0.opcode = OPC_3DSTATE_BUFFER_INFO;
+    buffer_info->dest_y.dw0.length = 1;
+    buffer_info->dest_y.dw1.aux_id = 0;
+    buffer_info->dest_y.dw1.buffer_id = BUFFERID_COLOR_BACK;
+    buffer_info->dest_y.dw1.fence_regs = 0;    /* disabled */ /* FIXME: tiled y for performance */
+    buffer_info->dest_y.dw1.tiled_surface = 0; /* linear */
+    buffer_info->dest_y.dw1.walk = TILEWALK_XMAJOR;
+
+    /* dest U */
+    buffer_info->dest_u.dw0.type = CMD_3D;
+    buffer_info->dest_u.dw0.opcode = OPC_3DSTATE_BUFFER_INFO;
+    buffer_info->dest_u.dw0.length = 1;
+    buffer_info->dest_u.dw1.aux_id = 0;
+    buffer_info->dest_u.dw1.buffer_id = BUFFERID_COLOR_AUX;
+    buffer_info->dest_u.dw1.fence_regs = 0;
+    buffer_info->dest_u.dw1.tiled_surface = 0;
+    buffer_info->dest_u.dw1.walk = TILEWALK_XMAJOR;
+
+    /* dest V */
+    buffer_info->dest_v.dw0.type = CMD_3D;
+    buffer_info->dest_v.dw0.opcode = OPC_3DSTATE_BUFFER_INFO;
+    buffer_info->dest_v.dw0.length = 1;
+    buffer_info->dest_v.dw1.aux_id = 1;
+    buffer_info->dest_v.dw1.buffer_id = BUFFERID_COLOR_AUX;
+    buffer_info->dest_v.dw1.fence_regs = 0;
+    buffer_info->dest_v.dw1.tiled_surface = 0;
+    buffer_info->dest_v.dw1.walk = TILEWALK_XMAJOR;
+
+    buffer_info->dest_buf.dw0.type = CMD_3D;
+    buffer_info->dest_buf.dw0.opcode = OPC_3DSTATE_DEST_BUFFER_VARIABLES;
+    buffer_info->dest_buf.dw0.length = 0;
+    buffer_info->dest_buf.dw1.dest_v_bias = 8; /* 0.5 */
+    buffer_info->dest_buf.dw1.dest_h_bias = 8; /* 0.5 */
+    buffer_info->dest_buf.dw1.color_fmt = COLORBUFFER_8BIT;
+    buffer_info->dest_buf.dw1.v_ls = 0; /* fill later */
+    buffer_info->dest_buf.dw1.v_ls_offset = 0; /* fill later */
+
+    buffer_info->dest_buf_mpeg.dw0.type = CMD_3D;
+    buffer_info->dest_buf_mpeg.dw0.opcode = OPC_3DSTATE_DEST_BUFFER_VARIABLES_MPEG;
+    buffer_info->dest_buf_mpeg.dw0.length = 1;
+    buffer_info->dest_buf_mpeg.dw1.decode_mode = MPEG_DECODE_MC;
+    buffer_info->dest_buf_mpeg.dw1.rcontrol = 0;               /* for MPEG-1/MPEG-2 */
+    buffer_info->dest_buf_mpeg.dw1.bidir_avrg_control = 0;     /* for MPEG-1/MPEG-2/MPEG-4 */
+    buffer_info->dest_buf_mpeg.dw1.abort_on_error = 1;
+    buffer_info->dest_buf_mpeg.dw1.intra8 = 0;         /* 16-bit formatted correction data */
+    buffer_info->dest_buf_mpeg.dw1.tff = 1; /* fill later */
+
+    buffer_info->dest_buf_mpeg.dw1.v_subsample_factor = MC_SUB_1V;
+    buffer_info->dest_buf_mpeg.dw1.h_subsample_factor = MC_SUB_1H;
+
+    buffer_info->corr.dw0.type = CMD_3D;
+    buffer_info->corr.dw0.opcode = OPC_3DSTATE_BUFFER_INFO;
+    buffer_info->corr.dw0.length = 1;
+    buffer_info->corr.dw1.aux_id = 0;
+    buffer_info->corr.dw1.buffer_id = BUFFERID_MC_INTRA_CORR;
+    buffer_info->corr.dw1.aux_id = 0;
+    buffer_info->corr.dw1.fence_regs = 0;
+    buffer_info->corr.dw1.tiled_surface = 0;
+    buffer_info->corr.dw1.walk = 0;
+    buffer_info->corr.dw1.pitch = 0;
+    buffer_info->corr.dw2.base_address = (pI915XvMC->corrdata.offset >> 2);  /* starting DWORD address */
+}
+
+static void i915_mc_static_indirect_state_set(XvMCContext *context, XvMCSurface *dest,
+	unsigned int picture_structure, unsigned int flags, unsigned int picture_coding_type)
+{
+    i915XvMCContext *pI915XvMC = (i915XvMCContext *)context->privData;
+    i915XvMCSurface *pI915Surface = (i915XvMCSurface *)dest->privData;
+    struct i915_mc_static_indirect_state_buffer *buffer_info =
+	(struct i915_mc_static_indirect_state_buffer *)pI915XvMC->sis.map;
+    unsigned int w = dest->width;
+
+    buffer_info->dest_y.dw1.pitch = (pI915Surface->yStride >> 2);      /* in DWords */
+    buffer_info->dest_y.dw2.base_address = (YOFFSET(pI915Surface) >> 2);    /* starting DWORD address */
+    buffer_info->dest_u.dw1.pitch = (pI915Surface->uvStride >> 2);      /* in DWords */
+    buffer_info->dest_u.dw2.base_address = (UOFFSET(pI915Surface) >> 2);      /* starting DWORD address */
+    buffer_info->dest_v.dw1.pitch = (pI915Surface->uvStride >> 2);      /* in Dwords */
+    buffer_info->dest_v.dw2.base_address = (VOFFSET(pI915Surface) >> 2);      /* starting DWORD address */
+
+    if ((picture_structure & XVMC_FRAME_PICTURE) == XVMC_FRAME_PICTURE) {
+        ;
+    } else if ((picture_structure & XVMC_FRAME_PICTURE) == XVMC_TOP_FIELD) {
+        buffer_info->dest_buf.dw1.v_ls = 1;
+    } else if ((picture_structure & XVMC_FRAME_PICTURE) == XVMC_BOTTOM_FIELD) {
+        buffer_info->dest_buf.dw1.v_ls = 1;
+        buffer_info->dest_buf.dw1.v_ls_offset = 1;
+    }
+
+    if (picture_structure & XVMC_FRAME_PICTURE) {
+        ;
+    } else if (picture_structure & XVMC_TOP_FIELD) {
+        if (flags & XVMC_SECOND_FIELD)
+            buffer_info->dest_buf_mpeg.dw1.tff = 0;
+        else
+            buffer_info->dest_buf_mpeg.dw1.tff = 1;
+    } else if (picture_structure & XVMC_BOTTOM_FIELD) {
+        if (flags & XVMC_SECOND_FIELD)
+            buffer_info->dest_buf_mpeg.dw1.tff = 1;
+        else
+            buffer_info->dest_buf_mpeg.dw1.tff = 0;
+    }
+
+    buffer_info->dest_buf_mpeg.dw1.picture_width = (dest->width >> 4);     /* in macroblocks */
+    buffer_info->dest_buf_mpeg.dw2.picture_coding_type = picture_coding_type;
+}
+
+static void i915_mc_map_state_init(XvMCContext *context)
+{
+    i915XvMCContext *pI915XvMC = (i915XvMCContext *)context->privData;
+    unsigned int w = context->width;
+    unsigned int h = context->height;
+    struct i915_mc_map_state *map_state;
+
+    map_state = (struct i915_mc_map_state *)pI915XvMC->msb.map;
+
+    memset(map_state, 0, sizeof(*map_state));
+
+    /* 3DSATE_MAP_STATE: Y */
+    map_state->y_map.dw0.type = CMD_3D;
+    map_state->y_map.dw0.opcode = OPC_3DSTATE_MAP_STATE;
+    map_state->y_map.dw0.retain = 1;
+    map_state->y_map.dw0.length = 6;
+    map_state->y_map.dw1.map_mask = MAP_MAP0 | MAP_MAP1;
+
+    /* Y Forward (Past) */
+    map_state->y_forward.tm0.v_ls_offset = 0;
+    map_state->y_forward.tm0.v_ls = 0;
+    map_state->y_forward.tm1.tile_walk = TILEWALK_XMAJOR;
+    map_state->y_forward.tm1.tiled_surface = 0;
+    map_state->y_forward.tm1.utilize_fence_regs = 0;
+    map_state->y_forward.tm1.texel_fmt = 0;      /* 8bit */
+    map_state->y_forward.tm1.surface_fmt = 1;    /* 8bit */
+    map_state->y_forward.tm1.width = w - 1;
+    map_state->y_forward.tm1.height = h - 1;
+    map_state->y_forward.tm2.depth = 0;
+    map_state->y_forward.tm2.max_lod = 0;
+    map_state->y_forward.tm2.cube_face = 0;
+
+    /* Y Backward (Future) */
+    map_state->y_backward.tm0.v_ls_offset = 0;
+    map_state->y_backward.tm0.v_ls = 0;
+    map_state->y_backward.tm1.tile_walk = TILEWALK_XMAJOR;
+    map_state->y_backward.tm1.tiled_surface = 0;
+    map_state->y_backward.tm1.utilize_fence_regs = 0;
+    map_state->y_backward.tm1.texel_fmt = 0;      /* 8bit */
+    map_state->y_backward.tm1.surface_fmt = 1;    /* 8bit */
+    map_state->y_backward.tm1.width = w - 1;
+    map_state->y_backward.tm1.height = h - 1;
+    map_state->y_backward.tm2.depth = 0;
+    map_state->y_backward.tm2.max_lod = 0;
+    map_state->y_backward.tm2.cube_face = 0;
+
+    /* 3DSATE_MAP_STATE: U */
+    map_state->u_map.dw0.type = CMD_3D;
+    map_state->u_map.dw0.opcode = OPC_3DSTATE_MAP_STATE;
+    map_state->u_map.dw0.retain = 1;
+    map_state->u_map.dw0.length = 6;
+    map_state->u_map.dw1.map_mask = MAP_MAP0 | MAP_MAP1;
+
+    /* U Forward */
+    map_state->u_forward.tm0.v_ls_offset = 0;
+    map_state->u_forward.tm0.v_ls = 0;
+    map_state->u_forward.tm1.tile_walk = TILEWALK_XMAJOR;
+    map_state->u_forward.tm1.tiled_surface = 0;
+    map_state->u_forward.tm1.utilize_fence_regs = 0;
+    map_state->u_forward.tm1.texel_fmt = 0;      /* 8bit */
+    map_state->u_forward.tm1.surface_fmt = 1;    /* 8bit */
+    map_state->u_forward.tm1.width = (w >> 1) - 1;
+    map_state->u_forward.tm1.height = (h >> 1) - 1;
+    map_state->u_forward.tm2.depth = 0;
+    map_state->u_forward.tm2.max_lod = 0;
+    map_state->u_forward.tm2.cube_face = 0;
+
+    /* U Backward */
+    map_state->u_backward.tm0.v_ls_offset = 0;
+    map_state->u_backward.tm0.v_ls = 0;
+    map_state->u_backward.tm1.tile_walk = TILEWALK_XMAJOR;
+    map_state->u_backward.tm1.tiled_surface = 0;
+    map_state->u_backward.tm1.utilize_fence_regs = 0;
+    map_state->u_backward.tm1.texel_fmt = 0;
+    map_state->u_backward.tm1.surface_fmt = 1;
+    map_state->u_backward.tm1.width = (w >> 1) - 1;
+    map_state->u_backward.tm1.height = (h >> 1) - 1;
+    map_state->u_backward.tm2.depth = 0;
+    map_state->u_backward.tm2.max_lod = 0;
+    map_state->u_backward.tm2.cube_face = 0;
+
+    /* 3DSATE_MAP_STATE: V */
+    map_state->v_map.dw0.type = CMD_3D;
+    map_state->v_map.dw0.opcode = OPC_3DSTATE_MAP_STATE;
+    map_state->v_map.dw0.retain = 1;
+    map_state->v_map.dw0.length = 6;
+    map_state->v_map.dw1.map_mask = MAP_MAP0 | MAP_MAP1;
+
+    /* V Forward */
+    map_state->v_forward.tm0.v_ls_offset = 0;
+    map_state->v_forward.tm0.v_ls = 0;
+    map_state->v_forward.tm1.tile_walk = TILEWALK_XMAJOR;
+    map_state->v_forward.tm1.tiled_surface = 0;
+    map_state->v_forward.tm1.utilize_fence_regs = 0;
+    map_state->v_forward.tm1.texel_fmt = 0;
+    map_state->v_forward.tm1.surface_fmt = 1;
+    map_state->v_forward.tm1.width = (w >> 1) - 1;
+    map_state->v_forward.tm1.height = (h >> 1) - 1;
+    map_state->v_forward.tm2.depth = 0;
+    map_state->v_forward.tm2.max_lod = 0;
+    map_state->v_forward.tm2.cube_face = 0;
+
+    /* V Backward */
+    map_state->v_backward.tm0.v_ls_offset = 0;
+    map_state->v_backward.tm0.v_ls = 0;
+    map_state->v_backward.tm1.tile_walk = TILEWALK_XMAJOR;
+    map_state->v_backward.tm1.tiled_surface = 0;
+    map_state->v_backward.tm1.utilize_fence_regs = 0;
+    map_state->v_backward.tm1.texel_fmt = 0;
+    map_state->v_backward.tm1.surface_fmt = 1;
+    map_state->v_backward.tm1.width = (w >> 1) - 1;
+    map_state->v_backward.tm1.height = (h >> 1) - 1;
+    map_state->v_backward.tm2.depth = 0;
+    map_state->v_backward.tm2.max_lod = 0;
+    map_state->v_backward.tm2.cube_face = 0;
+}
+
+static void i915_mc_map_state_set(XvMCContext *context,
+	i915XvMCSurface *privPast,
+	i915XvMCSurface *privFuture)
+{
+    i915XvMCContext *pI915XvMC = (i915XvMCContext *)context->privData;
+    struct i915_mc_map_state *map_state;
+
+    map_state = (struct i915_mc_map_state *)pI915XvMC->msb.map;
+
+    map_state->y_forward.tm0.base_address = (YOFFSET(privPast) >> 2);
+    map_state->y_forward.tm2.pitch = (privPast->yStride >> 2) - 1;       /* in DWords - 1 */
+    map_state->y_backward.tm0.base_address = (YOFFSET(privFuture) >> 2);
+    map_state->y_backward.tm2.pitch = (privFuture->yStride >> 2) - 1;
+    map_state->u_forward.tm0.base_address = (UOFFSET(privPast) >> 2);
+    map_state->u_forward.tm2.pitch = (privPast->uvStride >> 2) - 1;       /* in DWords - 1 */
+    map_state->u_backward.tm0.base_address = (UOFFSET(privFuture) >> 2);
+    map_state->u_backward.tm2.pitch = (privFuture->uvStride >> 2) - 1;
+    map_state->v_forward.tm0.base_address = (VOFFSET(privPast) >> 2);
+    map_state->v_forward.tm2.pitch = (privPast->uvStride >> 2) - 1;       /* in DWords - 1 */
+    map_state->v_backward.tm0.base_address = (VOFFSET(privFuture) >> 2);
+    map_state->v_backward.tm2.pitch = (privFuture->uvStride >> 2) - 1;
+}
+
 static void i915_flush(int map, int render)
 {
     struct i915_mi_flush mi_flush;
@@ -106,330 +720,58 @@ static void i915_flush(int map, int render)
     intelBatchbufferData(&mi_flush, sizeof(mi_flush), 0);
 }
 
-/* for MC picture rendering */
-static void i915_mc_static_indirect_state_buffer(XvMCContext *context,
-	XvMCSurface *surface,
-	unsigned int picture_structure,
-	unsigned int flags,
-	unsigned int picture_coding_type)
+static void i915_mc_load_indirect_render_init(XvMCContext *context)
 {
-    struct i915_3dstate_buffer_info *buffer_info;
-    struct i915_3dstate_dest_buffer_variables *dest_buffer_variables;
-    struct i915_3dstate_dest_buffer_variables_mpeg *dest_buffer_variables_mpeg;
-    i915XvMCSurface *pI915Surface = (i915XvMCSurface *)surface->privData;
     i915XvMCContext *pI915XvMC = (i915XvMCContext *)context->privData;
-    unsigned int w = surface->width;
-
-    /* 3DSTATE_BUFFER_INFO */
-    /* DEST Y */
-    buffer_info = (struct i915_3dstate_buffer_info *)pI915XvMC->sis.map;
-    memset(buffer_info, 0, sizeof(*buffer_info));
-    buffer_info->dw0.type = CMD_3D;
-    buffer_info->dw0.opcode = OPC_3DSTATE_BUFFER_INFO;
-    buffer_info->dw0.length = 1;
-    buffer_info->dw1.aux_id = 0;
-    buffer_info->dw1.buffer_id = BUFFERID_COLOR_BACK;
-    buffer_info->dw1.fence_regs = 0;    /* disabled */ /* FIXME: tiled y for performance */
-    buffer_info->dw1.tiled_surface = 0; /* linear */
-    buffer_info->dw1.walk = TILEWALK_XMAJOR;
-    buffer_info->dw1.pitch = (pI915Surface->yStride >> 2);      /* in DWords */
-    buffer_info->dw2.base_address = (YOFFSET(pI915Surface) >> 2);    /* starting DWORD address */
-
-    /* DEST U */
-    ++buffer_info;
-    memset(buffer_info, 0, sizeof(*buffer_info));
-    buffer_info->dw0.type = CMD_3D;
-    buffer_info->dw0.opcode = OPC_3DSTATE_BUFFER_INFO;
-    buffer_info->dw0.length = 1;
-    buffer_info->dw1.aux_id = 0;
-    buffer_info->dw1.buffer_id = BUFFERID_COLOR_AUX;
-    buffer_info->dw1.fence_regs = 0;
-    buffer_info->dw1.tiled_surface = 0;
-    buffer_info->dw1.walk = TILEWALK_XMAJOR;
-    buffer_info->dw1.pitch = (pI915Surface->uvStride >> 2);      /* in DWords */
-    buffer_info->dw2.base_address = (UOFFSET(pI915Surface) >> 2);      /* starting DWORD address */
-
-    /* DEST V */
-    ++buffer_info;
-    memset(buffer_info, 0, sizeof(*buffer_info));
-    buffer_info->dw0.type = CMD_3D;
-    buffer_info->dw0.opcode = OPC_3DSTATE_BUFFER_INFO;
-    buffer_info->dw0.length = 1;
-    buffer_info->dw1.aux_id = 1;
-    buffer_info->dw1.buffer_id = BUFFERID_COLOR_AUX;
-    buffer_info->dw1.fence_regs = 0;
-    buffer_info->dw1.tiled_surface = 0;
-    buffer_info->dw1.walk = TILEWALK_XMAJOR;
-    buffer_info->dw1.pitch = (pI915Surface->uvStride >> 2);      /* in Dwords */
-    buffer_info->dw2.base_address = (VOFFSET(pI915Surface) >> 2);      /* starting DWORD address */
-
-    /* 3DSTATE_DEST_BUFFER_VARIABLES */
-    dest_buffer_variables = (struct i915_3dstate_dest_buffer_variables *)(++buffer_info);
-    memset(dest_buffer_variables, 0, sizeof(*dest_buffer_variables));
-    dest_buffer_variables->dw0.type = CMD_3D;
-    dest_buffer_variables->dw0.opcode = OPC_3DSTATE_DEST_BUFFER_VARIABLES;
-    dest_buffer_variables->dw0.length = 0;
-    dest_buffer_variables->dw1.dest_v_bias = 8; /* 0.5 */
-    dest_buffer_variables->dw1.dest_h_bias = 8; /* 0.5 */
-    dest_buffer_variables->dw1.color_fmt = COLORBUFFER_8BIT;
-    dest_buffer_variables->dw1.v_ls = 0;
-    dest_buffer_variables->dw1.v_ls_offset = 0;
-
-    if ((picture_structure & XVMC_FRAME_PICTURE) == XVMC_FRAME_PICTURE) {
-        ;
-    } else if ((picture_structure & XVMC_FRAME_PICTURE) == XVMC_TOP_FIELD) {
-        dest_buffer_variables->dw1.v_ls = 1;
-    } else if ((picture_structure & XVMC_FRAME_PICTURE) == XVMC_BOTTOM_FIELD) {
-        dest_buffer_variables->dw1.v_ls = 1;
-        dest_buffer_variables->dw1.v_ls_offset = 1;
-    }
-
-    /* 3DSTATE_DEST_BUFFER_VARIABLES_MPEG */
-    dest_buffer_variables_mpeg = (struct i915_3dstate_dest_buffer_variables_mpeg *)(++dest_buffer_variables);
-    memset(dest_buffer_variables_mpeg, 0, sizeof(*dest_buffer_variables_mpeg));
-    dest_buffer_variables_mpeg->dw0.type = CMD_3D;
-    dest_buffer_variables_mpeg->dw0.opcode = OPC_3DSTATE_DEST_BUFFER_VARIABLES_MPEG;
-    dest_buffer_variables_mpeg->dw0.length = 1;
-    dest_buffer_variables_mpeg->dw1.decode_mode = MPEG_DECODE_MC;
-    dest_buffer_variables_mpeg->dw1.rcontrol = 0;               /* for MPEG-1/MPEG-2 */
-    dest_buffer_variables_mpeg->dw1.bidir_avrg_control = 0;     /* for MPEG-1/MPEG-2/MPEG-4 */
-    dest_buffer_variables_mpeg->dw1.abort_on_error = 1;
-    dest_buffer_variables_mpeg->dw1.intra8 = 0;         /* 16-bit formatted correction data */
-    dest_buffer_variables_mpeg->dw1.tff = 1;
-
-    if (picture_structure & XVMC_FRAME_PICTURE) {
-        ;
-    } else if (picture_structure & XVMC_TOP_FIELD) {
-        if (flags & XVMC_SECOND_FIELD)
-            dest_buffer_variables_mpeg->dw1.tff = 0;
-        else
-            dest_buffer_variables_mpeg->dw1.tff = 1;
-    } else if (picture_structure & XVMC_BOTTOM_FIELD) {
-        if (flags & XVMC_SECOND_FIELD)
-            dest_buffer_variables_mpeg->dw1.tff = 1;
-        else
-            dest_buffer_variables_mpeg->dw1.tff = 0;
-    }
-
-    dest_buffer_variables_mpeg->dw1.v_subsample_factor = MC_SUB_1V;
-    dest_buffer_variables_mpeg->dw1.h_subsample_factor = MC_SUB_1H;
-    dest_buffer_variables_mpeg->dw1.picture_width = (w >> 4);     /* in macroblocks */
-    dest_buffer_variables_mpeg->dw2.picture_coding_type = picture_coding_type;
-
-    /* 3DSATE_BUFFER_INFO */
-    /* CORRECTION DATA */
-    buffer_info = (struct i915_3dstate_buffer_info *)(++dest_buffer_variables_mpeg);
-    memset(buffer_info, 0, sizeof(*buffer_info));
-    buffer_info->dw0.type = CMD_3D;
-    buffer_info->dw0.opcode = OPC_3DSTATE_BUFFER_INFO;
-    buffer_info->dw0.length = 1;
-    buffer_info->dw1.aux_id = 0;
-    buffer_info->dw1.buffer_id = BUFFERID_MC_INTRA_CORR;
-    buffer_info->dw1.aux_id = 0;
-    buffer_info->dw1.fence_regs = 0;
-    buffer_info->dw1.tiled_surface = 0;
-    buffer_info->dw1.walk = 0;
-    buffer_info->dw1.pitch = 0;
-    buffer_info->dw2.base_address = (pI915XvMC->corrdata.offset >> 2);  /* starting DWORD address */
-}
-
-static void i915_mc_map_state_buffer(XvMCContext *context,
-                                       i915XvMCSurface *privTarget,
-                                       i915XvMCSurface *privPast,
-                                       i915XvMCSurface *privFuture)
-{
-    struct i915_3dstate_map_state *map_state;
-    struct texture_map *tm;
-    i915XvMCContext *pI915XvMC = (i915XvMCContext *)context->privData;
-    unsigned int w = context->width, h = context->height;
-
-    /* 3DSATE_MAP_STATE: Y */
-    map_state = (struct i915_3dstate_map_state *)pI915XvMC->msb.map;
-    memset(map_state, 0, sizeof(*map_state));
-    map_state->dw0.type = CMD_3D;
-    map_state->dw0.opcode = OPC_3DSTATE_MAP_STATE;
-    map_state->dw0.retain = 1;
-    map_state->dw0.length = 6;
-    map_state->dw1.map_mask = MAP_MAP0 | MAP_MAP1;
-
-    /* texture map: Forward (Past) */
-    tm = (struct texture_map *)(++map_state);
-    memset(tm, 0, sizeof(*tm));
-    tm->tm0.v_ls_offset = 0;
-    tm->tm0.v_ls = 0;
-    tm->tm0.base_address = (YOFFSET(privPast) >> 2);
-    tm->tm1.tile_walk = TILEWALK_XMAJOR;        /* FIXME: tiled y for performace */
-    tm->tm1.tiled_surface = 0;
-    tm->tm1.utilize_fence_regs = 0;
-    tm->tm1.texel_fmt = 0;      /* 8bit */
-    tm->tm1.surface_fmt = 1;    /* 8bit */
-    tm->tm1.width = w - 1;
-    tm->tm1.height = h - 1;
-    tm->tm2.depth = 0;
-    tm->tm2.max_lod = 0;
-    tm->tm2.cube_face = 0;
-    tm->tm2.pitch = (privPast->yStride >> 2) - 1;       /* in DWords - 1 */
-
-    /* texture map: Backward (Future) */
-    ++tm;
-    memset(tm, 0, sizeof(*tm));
-    tm->tm0.v_ls_offset = 0;
-    tm->tm0.v_ls = 0;
-    tm->tm0.base_address = (YOFFSET(privFuture) >> 2);
-    tm->tm1.tile_walk = TILEWALK_XMAJOR;
-    tm->tm1.tiled_surface = 0;
-    tm->tm1.utilize_fence_regs = 0;
-    tm->tm1.texel_fmt = 0;      /* 8bit */
-    tm->tm1.surface_fmt = 1;    /* 8bit */
-    tm->tm1.width = w - 1;
-    tm->tm1.height = h - 1;
-    tm->tm2.depth = 0;
-    tm->tm2.max_lod = 0;
-    tm->tm2.cube_face = 0;
-    tm->tm2.pitch = (privFuture->yStride >> 2) - 1;
-
-    /* 3DSATE_MAP_STATE: U */
-    map_state = (struct i915_3dstate_map_state *)(++tm);
-    memset(map_state, 0, sizeof(*map_state));
-    map_state->dw0.type = CMD_3D;
-    map_state->dw0.opcode = OPC_3DSTATE_MAP_STATE;
-    map_state->dw0.retain = 1;
-    map_state->dw0.length = 6;
-    map_state->dw1.map_mask = MAP_MAP0 | MAP_MAP1;
-
-    /* texture map: Forward */
-    tm = (struct texture_map *)(++map_state);
-    memset(tm, 0, sizeof(*tm));
-    tm->tm0.v_ls_offset = 0;
-    tm->tm0.v_ls = 0;
-    tm->tm0.base_address = (UOFFSET(privPast) >> 2);
-    tm->tm1.tile_walk = TILEWALK_XMAJOR;
-    tm->tm1.tiled_surface = 0;
-    tm->tm1.utilize_fence_regs = 0;
-    tm->tm1.texel_fmt = 0;      /* 8bit */
-    tm->tm1.surface_fmt = 1;    /* 8bit */
-    tm->tm1.width = (w >> 1) - 1;
-    tm->tm1.height = (h >> 1) - 1;
-    tm->tm2.depth = 0;
-    tm->tm2.max_lod = 0;
-    tm->tm2.cube_face = 0;
-    tm->tm2.pitch = (privPast->uvStride >> 2) - 1;       /* in DWords - 1 */
-
-    /* texture map: Backward */
-    ++tm;
-    memset(tm, 0, sizeof(*tm));
-    tm->tm0.v_ls_offset = 0;
-    tm->tm0.v_ls = 0;
-    tm->tm0.base_address = (UOFFSET(privFuture) >> 2);
-    tm->tm1.tile_walk = TILEWALK_XMAJOR;
-    tm->tm1.tiled_surface = 0;
-    tm->tm1.utilize_fence_regs = 0;
-    tm->tm1.texel_fmt = 0;
-    tm->tm1.surface_fmt = 1;
-    tm->tm1.width = (w >> 1) - 1;
-    tm->tm1.height = (h >> 1) - 1;
-    tm->tm2.depth = 0;
-    tm->tm2.max_lod = 0;
-    tm->tm2.cube_face = 0;
-    tm->tm2.pitch = (privFuture->uvStride >> 2) - 1;
-
-    /* 3DSATE_MAP_STATE: V */
-    map_state = (struct i915_3dstate_map_state *)(++tm);
-    memset(map_state, 0, sizeof(*map_state));
-    map_state->dw0.type = CMD_3D;
-    map_state->dw0.opcode = OPC_3DSTATE_MAP_STATE;
-    map_state->dw0.retain = 1;
-    map_state->dw0.length = 6;
-    map_state->dw1.map_mask = MAP_MAP0 | MAP_MAP1;
-
-    /* texture map: Forward */
-    tm = (struct texture_map *)(++map_state);
-    memset(tm, 0, sizeof(*tm));
-    tm->tm0.v_ls_offset = 0;
-    tm->tm0.v_ls = 0;
-    tm->tm0.base_address = (VOFFSET(privPast) >> 2);
-    tm->tm1.tile_walk = TILEWALK_XMAJOR;
-    tm->tm1.tiled_surface = 0;
-    tm->tm1.utilize_fence_regs = 0;
-    tm->tm1.texel_fmt = 0;
-    tm->tm1.surface_fmt = 1;
-    tm->tm1.width = (w >> 1) - 1;
-    tm->tm1.height = (h >> 1) - 1;
-    tm->tm2.depth = 0;
-    tm->tm2.max_lod = 0;
-    tm->tm2.cube_face = 0;
-    tm->tm2.pitch = (privPast->uvStride >> 2) - 1;       /* in DWords - 1 */
-
-    /* texture map: Backward */
-    ++tm;
-    memset(tm, 0, sizeof(*tm));
-    tm->tm0.v_ls_offset = 0;
-    tm->tm0.v_ls = 0;
-    tm->tm0.base_address = (VOFFSET(privFuture) >> 2);
-    tm->tm1.tile_walk = TILEWALK_XMAJOR;
-    tm->tm1.tiled_surface = 0;
-    tm->tm1.utilize_fence_regs = 0;
-    tm->tm1.texel_fmt = 0;
-    tm->tm1.surface_fmt = 1;
-    tm->tm1.width = (w >> 1) - 1;
-    tm->tm1.height = (h >> 1) - 1;
-    tm->tm2.depth = 0;
-    tm->tm2.max_lod = 0;
-    tm->tm2.cube_face = 0;
-    tm->tm2.pitch = (privFuture->uvStride >> 2) - 1;
-}
-
-static void i915_mc_load_sis_msb_buffers(XvMCContext *context)
-{
+    sis_state *sis;
+    msb_state *msb;
     struct i915_3dstate_load_indirect *load_indirect;
-    sis_state *sis = NULL;
-    msb_state *msb = NULL;
-    i915XvMCContext *pI915XvMC = (i915XvMCContext *)context->privData;
-    void *base = NULL;
-    unsigned int size;
-    int mem_select = 1;
+    int mem_select;
 
-    /* 3DSTATE_LOAD_INDIRECT */
-    size = sizeof(*load_indirect) + sizeof(*sis) + sizeof(*msb);
-    base = calloc(1, size);
-    load_indirect = (struct i915_3dstate_load_indirect *)base;
+    mc_render_load_indirect_size = sizeof(*load_indirect) + sizeof(*sis)
+					+ sizeof(*msb);
+    mc_render_load_indirect = calloc(1, mc_render_load_indirect_size);
+
+    load_indirect = (struct i915_3dstate_load_indirect *)mc_render_load_indirect;
     load_indirect->dw0.type = CMD_3D;
     load_indirect->dw0.opcode = OPC_3DSTATE_LOAD_INDIRECT;
     load_indirect->dw0.block_mask = BLOCK_SIS | BLOCK_MSB;
-    load_indirect->dw0.length = (size >> 2) - 2;
+    load_indirect->dw0.length = (mc_render_load_indirect_size >> 2) - 2;
 
     if (pI915XvMC->deviceID == PCI_CHIP_I915_G ||
-        pI915XvMC->deviceID == PCI_CHIP_I915_GM ||
-        pI915XvMC->deviceID == PCI_CHIP_I945_G ||
-        pI915XvMC->deviceID == PCI_CHIP_I945_GM)
+        pI915XvMC->deviceID == PCI_CHIP_I915_GM)
         mem_select = 0;
+    else
+	mem_select = 1;
 
     load_indirect->dw0.mem_select = mem_select;
 
-    /* SIS */
+    /* Static Indirect state buffer (dest buffer info) */
     sis = (sis_state *)(++load_indirect);
     sis->dw0.valid = 1;
     sis->dw0.force = 1;
-    sis->dw1.length = 16; // 4 * 3 + 2 + 3 - 1
+    sis->dw1.length = 16; /* 4 * 3 + 2 + 3 - 1 */
 
     if (mem_select)
-        sis->dw0.buffer_address = (pI915XvMC->sis.offset >> 2);
+	sis->dw0.buffer_address = (pI915XvMC->sis.offset >> 2);
     else
-        sis->dw0.buffer_address = (pI915XvMC->sis.bus_addr >> 2);
+	sis->dw0.buffer_address = (pI915XvMC->sis.bus_addr >> 2);
 
-    /* MSB */
+    /* Map state buffer (reference buffer info) */
     msb = (msb_state *)(++sis);
     msb->dw0.valid = 1;
     msb->dw0.force = 1;
-    msb->dw1.length = 23; // 3 * 8 - 1
+    msb->dw1.length = 23; /* 3 * 8 - 1 */
 
     if (mem_select)
-        msb->dw0.buffer_address = (pI915XvMC->msb.offset >> 2);
+	msb->dw0.buffer_address = (pI915XvMC->msb.offset >> 2);
     else
-        msb->dw0.buffer_address = (pI915XvMC->msb.bus_addr >> 2);
+	msb->dw0.buffer_address = (pI915XvMC->msb.bus_addr >> 2);
+}
 
-    intelBatchbufferData(base, size, 0);
-    free(base);
+static void i915_mc_load_indirect_render_emit(void)
+{
+    i915_emit_batch(mc_render_load_indirect, mc_render_load_indirect_size, 0);
 }
 
 static void i915_mc_mpeg_set_origin(XvMCContext *context, XvMCMacroBlock *mb)
@@ -493,10 +835,7 @@ static void i915_mc_mpeg_macroblock_0mv(XvMCContext *context, XvMCMacroBlock *mb
 static void i915_mc_mpeg_macroblock_1fbmv(XvMCContext *context, XvMCMacroBlock *mb)
 {
     struct i915_3dmpeg_macroblock_1fbmv macroblock_1fbmv;
-
-    /* Motion Vectors */
-    su_t fmv;
-    su_t bmv;
+    vector_t mv0[2];
 
     /* 3DMPEG_MACROBLOCK(1fbmv) */
     memset(&macroblock_1fbmv, 0, sizeof(macroblock_1fbmv));
@@ -517,13 +856,13 @@ static void i915_mc_mpeg_macroblock_1fbmv(XvMCContext *context, XvMCMacroBlock *
     macroblock_1fbmv.header.dw1.coded_block_pattern = mb->coded_block_pattern;
     macroblock_1fbmv.header.dw1.skipped_macroblocks = 0;
 
-    fmv.s[0] = mb->PMV[0][0][0];
-    fmv.s[1] = mb->PMV[0][0][1];
-    bmv.s[0] = mb->PMV[0][1][0];
-    bmv.s[1] = mb->PMV[0][1][1];
+    mv0[0].component[0] = mb->PMV[0][0][0];
+    mv0[0].component[1] = mb->PMV[0][0][1];
+    mv0[1].component[0] = mb->PMV[0][1][0];
+    mv0[1].component[1] = mb->PMV[0][1][1];
 
-    macroblock_1fbmv.dw2 = fmv.u[0];
-    macroblock_1fbmv.dw3 = bmv.u[0];
+    macroblock_1fbmv.dw2 = mv0[0].v;
+    macroblock_1fbmv.dw3 = mv0[1].v;
 
     intelBatchbufferData(&macroblock_1fbmv, sizeof(macroblock_1fbmv), 0);
 }
@@ -531,10 +870,8 @@ static void i915_mc_mpeg_macroblock_1fbmv(XvMCContext *context, XvMCMacroBlock *
 static void i915_mc_mpeg_macroblock_2fbmv(XvMCContext *context, XvMCMacroBlock *mb, unsigned int ps)
 {
     struct i915_3dmpeg_macroblock_2fbmv macroblock_2fbmv;
-
-    /* Motion Vectors */
-    su_t fmv;
-    su_t bmv;
+    vector_t mv0[2];
+    vector_t mv1[2];
 
     /* 3DMPEG_MACROBLOCK(2fbmv) */
     memset(&macroblock_2fbmv, 0, sizeof(macroblock_2fbmv));
@@ -555,429 +892,35 @@ static void i915_mc_mpeg_macroblock_2fbmv(XvMCContext *context, XvMCMacroBlock *
     macroblock_2fbmv.header.dw1.coded_block_pattern = mb->coded_block_pattern;
     macroblock_2fbmv.header.dw1.skipped_macroblocks = 0;
 
-    fmv.s[0] = mb->PMV[0][0][0];
-    fmv.s[1] = mb->PMV[0][0][1];
-    fmv.s[2] = mb->PMV[1][0][0];
-    fmv.s[3] = mb->PMV[1][0][1];
-    bmv.s[0] = mb->PMV[0][1][0];
-    bmv.s[1] = mb->PMV[0][1][1];
-    bmv.s[2] = mb->PMV[1][1][0];
-    bmv.s[3] = mb->PMV[1][1][1];
+    mv0[0].component[0] = mb->PMV[0][0][0];
+    mv0[0].component[1] = mb->PMV[0][0][1];
+    mv0[1].component[0] = mb->PMV[0][1][0];
+    mv0[1].component[1] = mb->PMV[0][1][1];
+    mv1[0].component[0] = mb->PMV[1][0][0];
+    mv1[0].component[1] = mb->PMV[1][0][1];
+    mv1[1].component[0] = mb->PMV[1][1][0];
+    mv1[1].component[1] = mb->PMV[1][1][1];
 
     if ((ps & XVMC_FRAME_PICTURE) == XVMC_FRAME_PICTURE) {
         if ((mb->motion_type & 3) == XVMC_PREDICTION_FIELD) {
-            fmv.s[0] = mb->PMV[0][0][0];
-            fmv.s[1] = mb->PMV[0][0][1] >> 1;
-            fmv.s[2] = mb->PMV[1][0][0];
-            fmv.s[3] = mb->PMV[1][0][1] >> 1;
-            bmv.s[0] = mb->PMV[0][1][0];
-            bmv.s[1] = mb->PMV[0][1][1] >> 1;
-            bmv.s[2] = mb->PMV[1][1][0];
-            bmv.s[3] = mb->PMV[1][1][1] >> 1;
+            mv0[0].component[1] = mb->PMV[0][0][1] >> 1;
+            mv0[1].component[1] = mb->PMV[0][1][1] >> 1;
+            mv1[0].component[1] = mb->PMV[1][0][1] >> 1;
+            mv1[1].component[1] = mb->PMV[1][1][1] >> 1;
         } else if ((mb->motion_type & 3) == XVMC_PREDICTION_DUAL_PRIME) {
-            fmv.s[0] = mb->PMV[0][0][0];
-            fmv.s[1] = mb->PMV[0][0][1] >> 1;
-            fmv.s[2] = mb->PMV[0][0][0];
-            fmv.s[3] = mb->PMV[0][0][1] >> 1;  // MPEG2 MV[0][1] isn't used
-            bmv.s[0] = mb->PMV[1][0][0];
-            bmv.s[1] = mb->PMV[1][0][1] >> 1;
-            bmv.s[2] = mb->PMV[1][1][0];
-            bmv.s[3] = mb->PMV[1][1][1] >> 1;
+            mv0[0].component[1] = mb->PMV[0][0][1] >> 1;
+            mv0[1].component[1] = mb->PMV[0][1][1] >> 1;  // MPEG2 MV[0][1] isn't used
+            mv1[0].component[1] = mb->PMV[1][0][1] >> 1;
+            mv1[1].component[1] = mb->PMV[1][1][1] >> 1;
         }
     }
 
-    macroblock_2fbmv.dw2 = fmv.u[0];
-    macroblock_2fbmv.dw3 = bmv.u[0];
-    macroblock_2fbmv.dw4 = fmv.u[1];
-    macroblock_2fbmv.dw5 = bmv.u[1];
+    macroblock_2fbmv.dw2 = mv0[0].v;
+    macroblock_2fbmv.dw3 = mv0[1].v;
+    macroblock_2fbmv.dw4 = mv1[0].v;
+    macroblock_2fbmv.dw5 = mv1[1].v;
 
     intelBatchbufferData(&macroblock_2fbmv, sizeof(macroblock_2fbmv), 0);
-}
-
-/* for MC context initialization */
-static void i915_mc_sampler_state_buffer(XvMCContext *context)
-{
-    struct i915_3dstate_sampler_state *sampler_state;
-    struct texture_sampler *ts;
-    i915XvMCContext *pI915XvMC = (i915XvMCContext *)context->privData;
-
-    /* 3DSATE_SAMPLER_STATE */
-    sampler_state = (struct i915_3dstate_sampler_state *)pI915XvMC->ssb.map;
-    memset(sampler_state, 0, sizeof(*sampler_state));
-    sampler_state->dw0.type = CMD_3D;
-    sampler_state->dw0.opcode = OPC_3DSTATE_SAMPLER_STATE;
-    sampler_state->dw0.length = 6;
-    sampler_state->dw1.sampler_masker = SAMPLER_SAMPLER0 | SAMPLER_SAMPLER1;
-
-    /* Sampler 0 */
-    ts = (struct texture_sampler *)(++sampler_state);
-    memset(ts, 0, sizeof(*ts));
-    ts->ts0.reverse_gamma = 0;
-    ts->ts0.planar2packet = 0;
-    ts->ts0.color_conversion = 0;
-    ts->ts0.chromakey_index = 0;
-    ts->ts0.base_level = 0;
-    ts->ts0.mip_filter = MIPFILTER_NONE;        /* NONE */
-    ts->ts0.mag_filter = MAPFILTER_LINEAR;      /* LINEAR */
-    ts->ts0.min_filter = MAPFILTER_LINEAR;      /* LINEAR */
-    ts->ts0.lod_bias = 0;       /* 0.0 */
-    ts->ts0.shadow_enable = 0;
-    ts->ts0.max_anisotropy = ANISORATIO_2;
-    ts->ts0.shadow_function = PREFILTEROP_ALWAYS;
-    ts->ts1.min_lod = 0;        /* 0.0 Maximum Mip Level */
-    ts->ts1.kill_pixel = 0;
-    ts->ts1.keyed_texture_filter = 0;
-    ts->ts1.chromakey_enable = 0;
-    ts->ts1.tcx_control = TEXCOORDMODE_CLAMP;
-    ts->ts1.tcy_control = TEXCOORDMODE_CLAMP;
-    ts->ts1.tcz_control = TEXCOORDMODE_CLAMP;
-    ts->ts1.normalized_coor = 0;
-    ts->ts1.map_index = 0;
-    ts->ts1.east_deinterlacer = 0;
-    ts->ts2.default_color = 0;
-
-    /* Sampler 1 */
-    ++ts;
-    memset(ts, 0, sizeof(*ts));
-    ts->ts0.reverse_gamma = 0;
-    ts->ts0.planar2packet = 0;
-    ts->ts0.color_conversion = 0;
-    ts->ts0.chromakey_index = 0;
-    ts->ts0.base_level = 0;
-    ts->ts0.mip_filter = MIPFILTER_NONE;        /* NONE */
-    ts->ts0.mag_filter = MAPFILTER_LINEAR;      /* LINEAR */
-    ts->ts0.min_filter = MAPFILTER_LINEAR;      /* LINEAR */
-    ts->ts0.lod_bias = 0;       /* 0.0 */
-    ts->ts0.shadow_enable = 0;
-    ts->ts0.max_anisotropy = ANISORATIO_2;
-    ts->ts0.shadow_function = PREFILTEROP_ALWAYS;
-    ts->ts1.min_lod = 0;        /* 0.0 Maximum Mip Level */
-    ts->ts1.kill_pixel = 0;
-    ts->ts1.keyed_texture_filter = 0;
-    ts->ts1.chromakey_enable = 0;
-    ts->ts1.tcx_control = TEXCOORDMODE_CLAMP;
-    ts->ts1.tcy_control = TEXCOORDMODE_CLAMP;
-    ts->ts1.tcz_control = TEXCOORDMODE_CLAMP;
-    ts->ts1.normalized_coor = 0;
-    ts->ts1.map_index = 1;
-    ts->ts1.east_deinterlacer = 0;
-    ts->ts2.default_color = 0;
-}
-
-static void i915_inst_arith(unsigned int *inst,
-                            unsigned int op,
-                            unsigned int dest,
-                            unsigned int mask,
-                            unsigned int saturate,
-                            unsigned int src0, unsigned int src1, unsigned int src2)
-{
-    dest = UREG(GET_UREG_TYPE(dest), GET_UREG_NR(dest));
-    *inst = (op | A0_DEST(dest) | mask | saturate | A0_SRC0(src0));
-    inst++;
-    *inst = (A1_SRC0(src0) | A1_SRC1(src1));
-    inst++;
-    *inst = (A2_SRC1(src1) | A2_SRC2(src2));
-}
-
-static void i915_inst_decl(unsigned int *inst,
-                           unsigned int type,
-                           unsigned int nr,
-                           unsigned int d0_flags)
-{
-    unsigned int reg = UREG(type, nr);
-
-    *inst = (D0_DCL | D0_DEST(reg) | d0_flags);
-    inst++;
-    *inst = D1_MBZ;
-    inst++;
-    *inst = D2_MBZ;
-}
-
-static void i915_inst_texld(unsigned int *inst,
-                              unsigned int op,
-                              unsigned int dest,
-                              unsigned int coord,
-                              unsigned int sampler)
-{
-   dest = UREG(GET_UREG_TYPE(dest), GET_UREG_NR(dest));
-   *inst = (op | T0_DEST(dest) | T0_SAMPLER(sampler));
-   inst++;
-   *inst = T1_ADDRESS_REG(coord);
-   inst++;
-   *inst = T2_MBZ;
-}
-
-static void i915_mc_pixel_shader_program_buffer(XvMCContext *context)
-{
-    struct i915_3dstate_pixel_shader_program *pixel_shader_program;
-    i915XvMCContext *pI915XvMC = (i915XvMCContext *)context->privData;
-    unsigned int *inst;
-    unsigned int dest, src0, src1, src2;
-
-    /* Shader 0 */
-    pixel_shader_program = (struct i915_3dstate_pixel_shader_program *)pI915XvMC->psp.map;
-    memset(pixel_shader_program, 0, sizeof(*pixel_shader_program));
-    pixel_shader_program->dw0.type = CMD_3D;
-    pixel_shader_program->dw0.opcode = OPC_3DSTATE_PIXEL_SHADER_PROGRAM;
-    pixel_shader_program->dw0.retain = 1;
-    pixel_shader_program->dw0.length = 2;
-    /* mov oC, c0.0000 */
-    inst = (unsigned int*)(++pixel_shader_program);
-    dest = UREG(REG_TYPE_OC, 0);
-    src0 = UREG(REG_TYPE_CONST, 0);
-    src1 = 0;
-    src2 = 0;
-    i915_inst_arith(inst, A0_MOV, dest, A0_DEST_CHANNEL_ALL,
-                    A0_DEST_SATURATE, src0, src1, src2);
-    inst += 3;
-
-    /* Shader 1 */
-    pixel_shader_program = (struct i915_3dstate_pixel_shader_program *)inst;
-    memset(pixel_shader_program, 0, sizeof(*pixel_shader_program));
-    pixel_shader_program->dw0.type = CMD_3D;
-    pixel_shader_program->dw0.opcode = OPC_3DSTATE_PIXEL_SHADER_PROGRAM;
-    pixel_shader_program->dw0.retain = 1;
-    pixel_shader_program->dw0.length = 14;
-    /* dcl t0.xy */
-    inst = (unsigned int*)(++pixel_shader_program);
-    i915_inst_decl(inst, REG_TYPE_T, T_TEX0, D0_CHANNEL_XY);
-    /* dcl t1.xy */
-    inst += 3;
-    i915_inst_decl(inst, REG_TYPE_T, T_TEX1, D0_CHANNEL_XY);
-    /* dcl_2D s0 */
-    inst += 3;
-    i915_inst_decl(inst, REG_TYPE_S, 0, D0_SAMPLE_TYPE_2D);
-    /* texld r0, t0, s0 */
-    inst += 3;
-    dest = UREG(REG_TYPE_R, 0);
-    src0 = UREG(REG_TYPE_T, 0); /* COORD */
-    src1 = UREG(REG_TYPE_S, 0); /* SAMPLER */
-    i915_inst_texld(inst, T0_TEXLD, dest, src0, src1);
-    /* mov oC, r0 */
-    inst += 3;
-    dest = UREG(REG_TYPE_OC, 0);
-    src0 = UREG(REG_TYPE_R, 0);
-    src1 = src2 = 0;
-    i915_inst_arith(inst, A0_MOV, dest, A0_DEST_CHANNEL_ALL,
-                    A0_DEST_SATURATE, src0, src1, src2);
-    inst += 3;
-
-    /* Shader 2 */
-    pixel_shader_program = (struct i915_3dstate_pixel_shader_program *)inst;
-    memset(pixel_shader_program, 0, sizeof(*pixel_shader_program));
-    pixel_shader_program->dw0.type = CMD_3D;
-    pixel_shader_program->dw0.opcode = OPC_3DSTATE_PIXEL_SHADER_PROGRAM;
-    pixel_shader_program->dw0.retain = 1;
-    pixel_shader_program->dw0.length = 14;
-    /* dcl t2.xy */
-    inst = (unsigned int*)(++pixel_shader_program);
-    i915_inst_decl(inst, REG_TYPE_T, T_TEX2, D0_CHANNEL_XY);
-    /* dcl t3.xy */
-    inst += 3;
-    i915_inst_decl(inst, REG_TYPE_T, T_TEX3, D0_CHANNEL_XY);
-    /* dcl_2D s1 */
-    inst += 3;
-    i915_inst_decl(inst, REG_TYPE_S, 1, D0_SAMPLE_TYPE_2D);
-    /* texld r0, t2, s1 */
-    inst += 3;
-    dest = UREG(REG_TYPE_R, 0);
-    src0 = UREG(REG_TYPE_T, 2); /* COORD */
-    src1 = UREG(REG_TYPE_S, 1); /* SAMPLER */
-    i915_inst_texld(inst, T0_TEXLD, dest, src0, src1);
-    /* mov oC, r0 */
-    inst += 3;
-    dest = UREG(REG_TYPE_OC, 0);
-    src0 = UREG(REG_TYPE_R, 0);
-    src1 = src2 = 0;
-    i915_inst_arith(inst, A0_MOV, dest, A0_DEST_CHANNEL_ALL,
-                    A0_DEST_SATURATE, src0, src1, src2);
-    inst += 3;
-
-    /* Shader 3 */
-    pixel_shader_program = (struct i915_3dstate_pixel_shader_program *)inst;
-    memset(pixel_shader_program, 0, sizeof(*pixel_shader_program));
-    pixel_shader_program->dw0.type = CMD_3D;
-    pixel_shader_program->dw0.opcode = OPC_3DSTATE_PIXEL_SHADER_PROGRAM;
-    pixel_shader_program->dw0.retain = 1;
-    pixel_shader_program->dw0.length = 29;
-    /* dcl t0.xy */
-    inst = (unsigned int*)(++pixel_shader_program);
-    i915_inst_decl(inst, REG_TYPE_T, T_TEX0, D0_CHANNEL_XY);
-    /* dcl t1.xy */
-    inst += 3;
-    i915_inst_decl(inst, REG_TYPE_T, T_TEX1, D0_CHANNEL_XY);
-    /* dcl t2.xy */
-    inst += 3;
-    i915_inst_decl(inst, REG_TYPE_T, T_TEX2, D0_CHANNEL_XY);
-    /* dcl t3.xy */
-    inst += 3;
-    i915_inst_decl(inst, REG_TYPE_T, T_TEX3, D0_CHANNEL_XY);
-    /* dcl_2D s0 */
-    inst += 3;
-    i915_inst_decl(inst, REG_TYPE_S, 0, D0_SAMPLE_TYPE_2D);
-    /* dcl_2D s1 */
-    inst += 3;
-    i915_inst_decl(inst, REG_TYPE_S, 1, D0_SAMPLE_TYPE_2D);
-    /* texld r0, t0, s0 */
-    inst += 3;
-    dest = UREG(REG_TYPE_R, 0);
-    src0 = UREG(REG_TYPE_T, 0); /* COORD */
-    src1 = UREG(REG_TYPE_S, 0); /* SAMPLER */
-    i915_inst_texld(inst, T0_TEXLD, dest, src0, src1);
-    /* texld r1, t2, s1 */
-    inst += 3;
-    dest = UREG(REG_TYPE_R, 1);
-    src0 = UREG(REG_TYPE_T, 2); /* COORD */
-    src1 = UREG(REG_TYPE_S, 1); /* SAMPLER */
-    i915_inst_texld(inst, T0_TEXLD, dest, src0, src1);
-    /* add r0, r0, r1 */
-    inst += 3;
-    dest = UREG(REG_TYPE_R, 0);
-    src0 = UREG(REG_TYPE_R, 0);
-    src1 = UREG(REG_TYPE_R, 1);
-    src2 = 0;
-    i915_inst_arith(inst, A0_ADD, dest, A0_DEST_CHANNEL_ALL,
-                    0 /* A0_DEST_SATURATE */, src0, src1, src2);
-    /* mul oC, r0, c0 */
-    inst += 3;
-    dest = UREG(REG_TYPE_OC, 0);
-    src0 = UREG(REG_TYPE_R, 0);
-    src1 = UREG(REG_TYPE_CONST, 0);
-    src2 = 0;
-    i915_inst_arith(inst, A0_MUL, dest, A0_DEST_CHANNEL_ALL,
-                    A0_DEST_SATURATE, src0, src1, src2);
-    inst += 3;
-}
-
-static void i915_mc_pixel_shader_constants_buffer(XvMCContext *context)
-{
-    struct i915_3dstate_pixel_shader_constants *pixel_shader_constants;
-    i915XvMCContext *pI915XvMC = (i915XvMCContext *)context->privData;
-    float *value;
-
-    pixel_shader_constants = (struct i915_3dstate_pixel_shader_constants *)pI915XvMC->psc.map;
-    memset(pixel_shader_constants, 0, sizeof(*pixel_shader_constants));
-    pixel_shader_constants->dw0.type = CMD_3D;
-    pixel_shader_constants->dw0.opcode = OPC_3DSTATE_PIXEL_SHADER_CONSTANTS;
-    pixel_shader_constants->dw0.length = 4;
-    pixel_shader_constants->dw1.reg_mask = REG_CR0;
-    value = (float *)(++pixel_shader_constants);
-    *(value++) = 0.5;
-    *(value++) = 0.5;
-    *(value++) = 0.5;
-    *(value++) = 0.5;
-}
-
-static void i915_mc_one_time_state_initialization(XvMCContext *context)
-{
-    struct i915_3dstate_load_state_immediate_1 *load_state_immediate_1 = NULL;
-    struct s3_dword *s3 = NULL;
-    struct s6_dword *s6 = NULL;
-    struct i915_3dstate_load_indirect *load_indirect = NULL;
-    dis_state *dis = NULL;
-    ssb_state *ssb = NULL;
-    psp_state *psp = NULL;
-    psc_state *psc = NULL;
-    i915XvMCContext *pI915XvMC = (i915XvMCContext *)context->privData;
-    unsigned int size;
-    void *base = NULL;
-    int mem_select = 1;
-
-    /* 3DSTATE_LOAD_STATE_IMMEDIATE_1 */
-    size = sizeof(*load_state_immediate_1) + sizeof(*s3) + sizeof(*s6);
-    base = calloc(1, size);
-    load_state_immediate_1 = (struct i915_3dstate_load_state_immediate_1 *)base;
-    load_state_immediate_1->dw0.type = CMD_3D;
-    load_state_immediate_1->dw0.opcode = OPC_3DSTATE_LOAD_STATE_IMMEDIATE_1;
-    load_state_immediate_1->dw0.load_s3 = 1;
-    load_state_immediate_1->dw0.load_s6 = 1;
-    load_state_immediate_1->dw0.length = (size >> 2) - 2;
-
-    s3 = (struct s3_dword *)(++load_state_immediate_1);
-    s3->set0_pcd = 1;
-    s3->set1_pcd = 1;
-    s3->set2_pcd = 1;
-    s3->set3_pcd = 1;
-    s3->set4_pcd = 1;
-    s3->set5_pcd = 1;
-    s3->set6_pcd = 1;
-    s3->set7_pcd = 1;
-
-    s6 = (struct s6_dword *)(++s3);
-    s6->alpha_test_enable = 0;
-    s6->alpha_test_function = 0;
-    s6->alpha_reference_value = 0;
-    s6->depth_test_enable = 1;
-    s6->depth_test_function = 0;
-    s6->color_buffer_blend = 0;
-    s6->color_blend_function = 0;
-    s6->src_blend_factor = 1;
-    s6->dest_blend_factor = 1;
-    s6->depth_buffer_write = 0;
-    s6->color_buffer_write = 1;
-    s6->triangle_pv = 0;
-
-    intelBatchbufferData(base, size, 0);
-    free(base);
-
-    /* 3DSTATE_LOAD_INDIRECT */
-    size = sizeof(*load_indirect) + sizeof(*dis) + sizeof(*ssb) + sizeof(*psp) + sizeof(*psc);
-    base = calloc(1, size);
-    load_indirect = (struct i915_3dstate_load_indirect *)base;
-    load_indirect->dw0.type = CMD_3D;
-    load_indirect->dw0.opcode = OPC_3DSTATE_LOAD_INDIRECT;
-    load_indirect->dw0.block_mask = BLOCK_DIS | BLOCK_SSB | BLOCK_PSP | BLOCK_PSC;
-    load_indirect->dw0.length = (size >> 2) - 2;
-
-    if (pI915XvMC->deviceID == PCI_CHIP_I915_G ||
-        pI915XvMC->deviceID == PCI_CHIP_I915_GM ||
-        pI915XvMC->deviceID == PCI_CHIP_I945_G ||
-        pI915XvMC->deviceID == PCI_CHIP_I945_GM)
-        mem_select = 0;
-
-    load_indirect->dw0.mem_select = mem_select;
-
-    /* DIS */
-    dis = (dis_state *)(++load_indirect);
-    dis->dw0.valid = 0;
-    dis->dw0.reset = 0;
-    dis->dw0.buffer_address = 0;
-
-    /* SSB */
-    ssb = (ssb_state *)(++dis);
-    ssb->dw0.valid = 1;
-    ssb->dw0.force = 1;
-    ssb->dw1.length = 7; /* 8 - 1 */
-
-    if (mem_select)
-        ssb->dw0.buffer_address = (pI915XvMC->ssb.offset >> 2);
-    else
-        ssb->dw0.buffer_address = (pI915XvMC->ssb.bus_addr >> 2);
-
-    /* PSP */
-    psp = (psp_state *)(++ssb);
-    psp->dw0.valid = 1;
-    psp->dw0.force = 1;
-    psp->dw1.length = 66; /* 4 + 16 + 16 + 31 - 1 */
-
-    if (mem_select)
-        psp->dw0.buffer_address = (pI915XvMC->psp.offset >> 2);
-    else
-        psp->dw0.buffer_address = (pI915XvMC->psp.bus_addr >> 2);
-
-    /* PSC */
-    psc = (psc_state *)(++psp);
-    psc->dw0.valid = 1;
-    psc->dw0.force = 1;
-    psc->dw1.length = 5; /* 6 - 1 */
-
-    if (mem_select)
-        psc->dw0.buffer_address = (pI915XvMC->psc.offset >> 2);
-    else
-        psc->dw0.buffer_address = (pI915XvMC->psc.bus_addr >> 2);
-
-    intelBatchbufferData(base, size, 0);
-    free(base);
 }
 
 #if 0
@@ -1658,9 +1601,7 @@ static Status i915_xvmc_mc_create_context(Display *display, XvMCContext *context
     pI915XvMC->psc.size = tmpComm->psc.size;
 
     if (pI915XvMC->deviceID == PCI_CHIP_I915_G ||
-        pI915XvMC->deviceID == PCI_CHIP_I915_GM ||
-        pI915XvMC->deviceID == PCI_CHIP_I945_G ||
-        pI915XvMC->deviceID == PCI_CHIP_I945_GM) {
+        pI915XvMC->deviceID == PCI_CHIP_I915_GM) {
         pI915XvMC->sis.bus_addr = tmpComm->sis.bus_addr;
         pI915XvMC->ssb.bus_addr = tmpComm->ssb.bus_addr;
         pI915XvMC->msb.bus_addr = tmpComm->msb.bus_addr;
@@ -1695,6 +1636,16 @@ static Status i915_xvmc_mc_create_context(Display *display, XvMCContext *context
     pI915XvMC->last_flip = 0;
     pI915XvMC->port = context->port;
     pI915XvMC->ref = 1;
+
+    /* pre-init state buffers */
+    i915_mc_one_time_context_init(context);
+    i915_mc_one_time_state_init(context);
+
+    i915_mc_static_indirect_state_init(context);
+
+    i915_mc_map_state_init(context);
+
+    i915_mc_load_indirect_render_init(context);
     return Success;
 }
 
@@ -1707,6 +1658,10 @@ static int i915_xvmc_mc_destroy_context(Display *display, XvMCContext *context)
 
     /* Pass Control to the X server to destroy the drm_context_t */
     i915_release_resource(display,context);
+
+    free(one_time_load_state_imm1);
+    free(one_time_load_indirect);
+    free(mc_render_load_indirect);
     return Success;
 }
 
@@ -1862,9 +1817,8 @@ static int i915_xvmc_mc_render_surface(Display *display, XvMCContext *context,
     if (!(privTarget = target_surface->privData))
         return XvMCBadSurface;
 
-    /* Test For YV12 Surface */
-    if (context->surface_type_id != FOURCC_YV12) {
-        XVMC_ERR("HWMC only possible on YV12 Surfaces.");
+    if (context->surface_type_id >= SURFACE_TYPE_MAX) {
+        XVMC_ERR("Unsupprted surface_type_id %d.", context->surface_type_id);
         return BadValue;
     }
 
@@ -1931,7 +1885,7 @@ static int i915_xvmc_mc_render_surface(Display *display, XvMCContext *context,
             XVMC_INFO("no coded blocks present!");
         }
 
-        bspm = mb_bytes[mb->coded_block_pattern];
+        bspm = mb_bytes_420[mb->coded_block_pattern];
 
         if (!bspm)
             continue;
@@ -1950,16 +1904,15 @@ static int i915_xvmc_mc_render_surface(Display *display, XvMCContext *context,
     // i915_mc_invalidate_subcontext_buffers(context, BLOCK_SIS | BLOCK_DIS | BLOCK_SSB
     // | BLOCK_MSB | BLOCK_PSP | BLOCK_PSC);
 
-    i915_mc_sampler_state_buffer(context);
-    i915_mc_pixel_shader_program_buffer(context);
-    i915_mc_pixel_shader_constants_buffer(context);
-    i915_mc_one_time_state_initialization(context);
+    i915_mc_one_time_state_emit();
 
-    i915_mc_static_indirect_state_buffer(context, target_surface,
-                                         picture_structure, flags,
-                                         picture_coding_type);
-    i915_mc_map_state_buffer(context, privTarget, privPast, privFuture);
-    i915_mc_load_sis_msb_buffers(context);
+    i915_mc_static_indirect_state_set(context, target_surface, picture_structure,
+	    flags, picture_coding_type);
+    /* setup reference surfaces */
+    i915_mc_map_state_set(context, privPast, privFuture);
+
+    i915_mc_load_indirect_render_emit();
+
     i915_mc_mpeg_set_origin(context, &macroblock_array->macro_blocks[first_macroblock]);
 
     for (i = first_macroblock; i < (num_macroblocks + first_macroblock); i++) {

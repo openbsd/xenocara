@@ -47,6 +47,13 @@
 #define XVMC_I945_MPEG2_VLD	0x04
 #define XVMC_I965_MPEG2_VLD	0x08
 
+/* supported surface types */
+enum {
+    SURFACE_TYPE_MPEG2_MPML = FOURCC_XVMC, /* mpeg2 MP@ML */
+    SURFACE_TYPE_MPEG1_MPML,		   /* mpeg1 MP@ML */
+    SURFACE_TYPE_MAX
+};
+
 /* common header for context private */
 struct hwmc_buffer
 {

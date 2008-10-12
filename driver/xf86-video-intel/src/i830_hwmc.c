@@ -56,7 +56,7 @@ Bool intel_xvmc_probe(ScrnInfoPtr pScrn)
 	return FALSE;
 
     if (IS_I9XX(pI830)) {
-	if (!IS_I965G(pI830))
+	if (IS_I915(pI830))
 	    ret = intel_xvmc_set_driver(&i915_xvmc_driver);
 	/*
 	else
@@ -122,9 +122,10 @@ Bool intel_xvmc_screen_init(ScreenPtr pScreen)
 Bool intel_xvmc_init_batch(ScrnInfoPtr pScrn)
 {
     I830Ptr pI830 = I830PTR(pScrn);
+    int size = KB(64);
 
     if (!i830_allocate_xvmc_buffer(pScrn, "[XvMC] batch buffer",
-                                   &(xvmc_driver->batch), 8 * 1024,
+                                   &(xvmc_driver->batch), size,
                                    ALIGN_BOTH_ENDS))
         return FALSE;
 

@@ -29,6 +29,7 @@
 
 #include "i830_hwmc.h"
 
+/* i915 hw requires surface to be at least 1KB aligned */
 #define STRIDE(w)               (((w) + 0x3ff) & ~0x3ff)
 #define SIZE_Y420(w, h)         (h * STRIDE(w))
 #define SIZE_UV420(w, h)        ((h >> 1) * STRIDE(w >> 1))

@@ -386,7 +386,7 @@ I830InitVisualConfigs(ScreenPtr pScreen)
 
       i = 0;
       for (accum = 0; accum <= 1; accum++) {
-	 for (depth = 0; depth <= 1; depth++) {	/* and stencil */
+	 for (depth = 1; depth >= 0; depth--) {	/* and stencil */
 	    for (db = 1; db >= 0; db--) {
 	       pConfigs[i].vid = -1;
 	       pConfigs[i].class = -1;

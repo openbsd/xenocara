@@ -28,6 +28,8 @@
 #ifndef _I915_STRUCTS_H
 #define _I915_STRUCTS_H
 
+#include <stdint.h>
+
 /* MI_INSTRUCTION */
 #define CMD_MI          0x00
 
@@ -352,7 +354,7 @@ struct i915_3dstate_dest_buffer_variables_mpeg
         unsigned rcontrol : 1;
         unsigned decode_mode : 2;
     } dw1;
-        
+
     struct {
         unsigned pad0 : 1;
         unsigned picture_coding_type : 2;
@@ -370,6 +372,15 @@ struct i915_3dstate_dest_buffer_variables_mpeg
         unsigned f_code10 : 4;
         unsigned f_code11 : 4;
     } dw2;
+};
+
+struct i915_mc_static_indirect_state_buffer {
+    struct i915_3dstate_buffer_info dest_y;
+    struct i915_3dstate_buffer_info dest_u;
+    struct i915_3dstate_buffer_info dest_v;
+    struct i915_3dstate_dest_buffer_variables dest_buf;
+    struct i915_3dstate_dest_buffer_variables_mpeg dest_buf_mpeg;
+    struct i915_3dstate_buffer_info corr;
 };
 
 #define MAP_MAP0        0x0001
@@ -432,7 +443,18 @@ struct i915_3dstate_map_state
         unsigned map_mask : 16;
         unsigned pad0 : 16;
     } dw1;
-//    struct texture_map *tms;
+};
+
+struct i915_mc_map_state {
+    struct i915_3dstate_map_state y_map;
+    struct texture_map y_forward;
+    struct texture_map y_backward;
+    struct i915_3dstate_map_state u_map;
+    struct texture_map u_forward;
+    struct texture_map u_backward;
+    struct i915_3dstate_map_state v_map;
+    struct texture_map v_forward;
+    struct texture_map v_backward;
 };
 
 #define SAMPLER_SAMPLER0        0x0001
@@ -532,6 +554,9 @@ struct i915_3dstate_sampler_state
         unsigned sampler_masker : 16;
         unsigned pad0 : 16;
     } dw1;
+    /* we always use two samplers for mc */
+    struct texture_sampler sampler0;
+    struct texture_sampler sampler1;
 };
 
 struct arithmetic_inst
@@ -641,17 +666,48 @@ union shader_inst
     struct declaration_inst d;
 };
 
+struct i915_3dstate_pixel_shader_header {
+    unsigned length : 9;
+    unsigned pad0 : 6;
+    unsigned retain : 1;
+    unsigned opcode : 13;
+    unsigned type : 3;
+};
+
 struct i915_3dstate_pixel_shader_program
 {
-    struct {
-        unsigned length : 9;
-        unsigned pad0 : 6;
-        unsigned retain : 1;
-        unsigned opcode : 13;
-        unsigned type : 3;
-    } dw0;
+    struct i915_3dstate_pixel_shader_header shader0;
+    /* mov oC, c0.0000 */
+    uint32_t inst0[3];
 
-    // union shader_inst *insts;
+    struct i915_3dstate_pixel_shader_header shader1;
+    /* dcl t0.xy */
+    /* dcl t1.xy */
+    /* dcl_2D s0 */
+    /* texld r0, t0, s0 */
+    /* mov oC, r0 */
+    uint32_t inst1[3*5];
+
+    struct i915_3dstate_pixel_shader_header shader2;
+    /* dcl t2.xy */
+    /* dcl t3.xy */
+    /* dcl_2D s1 */
+    /* texld r0, t2, s1 */
+    /* mov oC, r0 */
+    uint32_t inst2[3*5];
+
+    struct i915_3dstate_pixel_shader_header shader3;
+    /* dcl t0.xy */
+    /* dcl t1.xy */
+    /* dcl t2.xy */
+    /* dcl t3.xy */
+    /* dcl_2D s0 */
+    /* dcl_2D s1 */
+    /* texld r0, t0, s0 */
+    /* texld r0, t2, s1 */
+    /* add r0, r0, r1*/
+    /* mov oC, r0 */
+    uint32_t inst3[3*10];
 };
 
 #define REG_CR0         0x00000001
@@ -707,7 +763,8 @@ struct i915_3dstate_pixel_shader_constants
     struct {
         unsigned reg_mask;
     } dw1;
-    // struct shader_constant *consts;
+    /* we only need one constant */
+    struct shader_constant value;
 };
 
 #define BLOCK_SIS       0x01

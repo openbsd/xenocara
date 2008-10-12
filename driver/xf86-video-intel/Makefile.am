@@ -22,3 +22,4 @@ AUTOMAKE_OPTIONS = foreign
 SUBDIRS = src man
 
 EXTRA_DIST = README
+DISTCLEANFILES = doltcompile

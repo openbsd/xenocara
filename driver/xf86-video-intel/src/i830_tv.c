@@ -36,6 +36,7 @@
 #include "xf86.h"
 #include "i830.h"
 #include "i830_display.h"
+#include "i830_bios.h"
 #include "X11/Xatom.h"
 #include <string.h>
 
@@ -1713,6 +1714,9 @@ i830_tv_init(ScrnInfoPtr pScrn)
      */
     if ((tv_dac_on & TVDAC_STATE_CHG_EN) == 0 || 
 	    (tv_dac_off & TVDAC_STATE_CHG_EN) != 0)
+	return;
+
+    if (!pI830->tv_present) /* VBIOS claims no TV connector */
 	return;
 
     output = xf86OutputCreate (pScrn, &i830_tv_output_funcs, "TV");

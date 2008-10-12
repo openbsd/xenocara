@@ -121,7 +121,6 @@ i830_pixmap_tiled(PixmapPtr pPixmap)
     return FALSE;
 }
 
-#if EXA_VERSION_MINOR >= 2
 static Bool
 i830_exa_pixmap_is_offscreen(PixmapPtr pPixmap)
 {
@@ -137,7 +136,6 @@ i830_exa_pixmap_is_offscreen(PixmapPtr pPixmap)
 	return FALSE;
     }
 }
-#endif
 
 /**
  * I830EXASync - wait for a command to finish

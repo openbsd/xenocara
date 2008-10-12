@@ -203,7 +203,8 @@ static void quirk_lenovo_tv_dmi (I830Ptr pI830)
 	ErrorF("Failed to load DMI info, X60 TV quirk not applied.\n");
 	return;
     }
-    if (!strncmp(i830_dmi_data[bios_version], "7B", 2))
+    if (!strncmp(i830_dmi_data[bios_version], "7B", 2) || /* X60, X60s */
+	    !strncmp(i830_dmi_data[bios_version], "7E", 2)) /* R60e */
 	pI830->quirk_flag |= QUIRK_IGNORE_TV;
 }
 
@@ -221,6 +222,9 @@ static i830_quirk i830_quirk_list[] = {
 
     /* Apple Mac mini has no lvds, but macbook pro does */
     { PCI_CHIP_I945_GM, 0x8086, 0x7270, quirk_mac_mini },
+
+    /* Transtec Senyo 610 mini pc */
+    { PCI_CHIP_I965_GM, 0x1509, 0x2f15, quirk_ignore_lvds },
 
     /* Clevo M720R has no tv output */
     { PCI_CHIP_I965_GM, 0x1558, 0x0721, quirk_ignore_tv },
@@ -266,7 +270,7 @@ static i830_quirk i830_quirk_list[] = {
     { PCI_CHIP_I965_GM, 0x144d, 0xc510, quirk_ignore_tv },
 
     /* HP Compaq 6730s has no TV output */
-    { PCI_CHIP_IGD_GM, 0x103c, 0x30e8, quirk_ignore_tv },
+    { PCI_CHIP_GM45_GM, 0x103c, 0x30e8, quirk_ignore_tv },
 
     /* Thinkpad R31 needs pipe A force quirk */
     { PCI_CHIP_I830_M, 0x1014, 0x0505, quirk_pipea_force },
@@ -284,9 +288,16 @@ static i830_quirk i830_quirk_list[] = {
     { PCI_CHIP_I915_GM, 0x1179, 0x0001, quirk_pipea_force },
     /* Intel 855GM hardware (See LP: #216490) */
     { PCI_CHIP_I855_GM, 0x1028, 0x00c8, quirk_pipea_force },
+    /* Intel 855GM hardware (See Novell Bugzilla #406123) */
+    { PCI_CHIP_I855_GM, 0x10cf, 0x1215, quirk_pipea_force },
+    /* HP Pavilion ze4944ea needs pipe A force quirk (See LP: #242389) */
+    { PCI_CHIP_I855_GM, 0x103c, 0x3084, quirk_pipea_force },
 
     /* ThinkPad X40 needs pipe A force quirk */
     { PCI_CHIP_I855_GM, 0x1014, 0x0557, quirk_pipea_force },
+
+    /* ThinkPad T60 needs pipe A force quirk (bug #16494) */
+    { PCI_CHIP_I945_GM, 0x17aa, 0x201a, quirk_pipea_force },
 
     /* Sony vaio PCG-r600HFP (fix bug 13722) */
     { PCI_CHIP_I830_M, 0x104d, 0x8100, quirk_ivch_dvob },
@@ -301,6 +312,10 @@ static i830_quirk i830_quirk_list[] = {
 
     /* Littlebit Sepia X35 (rebranded Asus Z37E) (See LP: #201257) */
     { PCI_CHIP_I965_GM, 0x1043, 0x8265, quirk_ignore_tv },
+
+    /* 855 & before need to leave pipe A & dpll A up */
+    { PCI_CHIP_I855_GM, SUBSYS_ANY, SUBSYS_ANY, quirk_pipea_force },
+    { PCI_CHIP_845_G, SUBSYS_ANY, SUBSYS_ANY, quirk_pipea_force },
 
     { 0, 0, 0, NULL },
 };
@@ -318,9 +333,10 @@ void i830_fixup_devices(ScrnInfoPtr scrn)
 
     while (p && p->chipType != 0) {
 	if (DEVICE_ID(pI830->PciInfo) == p->chipType &&
-		SUBVENDOR_ID(pI830->PciInfo) == p->subsysVendor &&
-		(SUBSYS_ID(pI830->PciInfo) == p->subsysCard ||
-		 p->subsysCard == SUBSYS_ANY))
+	    (SUBVENDOR_ID(pI830->PciInfo) == p->subsysVendor ||
+	     p->subsysVendor == SUBSYS_ANY) &&
+	    (SUBSYS_ID(pI830->PciInfo) == p->subsysCard ||
+	     p->subsysCard == SUBSYS_ANY))
 	    p->hook(pI830);
 	++p;
     }

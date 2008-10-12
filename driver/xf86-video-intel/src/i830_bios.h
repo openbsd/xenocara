@@ -49,22 +49,112 @@ struct bdb_header {
     uint16_t bdb_size;			/**< in bytes */
 } __attribute__((packed));
 
-#define LVDS_CAP_EDID			(1 << 6)
-#define LVDS_CAP_DITHER			(1 << 5)
-#define LVDS_CAP_PFIT_AUTO_RATIO	(1 << 4)
-#define LVDS_CAP_PFIT_GRAPHICS_MODE	(1 << 3)
-#define LVDS_CAP_PFIT_TEXT_MODE		(1 << 2)
-#define LVDS_CAP_PFIT_GRAPHICS		(1 << 1)
-#define LVDS_CAP_PFIT_TEXT		(1 << 0)
-struct lvds_bdb_1 {
-    uint8_t id;				/**< 40 */
-    uint16_t size;
-    uint8_t panel_type;
-    uint8_t reserved0;
-    uint16_t caps;
+/*
+ * There are several types of BIOS data blocks (BDBs), each block has
+ * an ID and size in the first 3 bytes (ID in first, size in next 2).
+ * Known types are listed below.
+ */
+#define BDB_GENERAL_FEATURES	  1
+#define BDB_GENERAL_DEFINITIONS	  2
+#define BDB_OLD_TOGGLE_LIST	  3
+#define BDB_MODE_SUPPORT_LIST	  4
+#define BDB_GENERIC_MODE_TABLE	  5
+#define BDB_EXT_MMIO_REGS	  6
+#define BDB_SWF_IO		  7
+#define BDB_SWF_MMIO		  8
+#define BDB_DOT_CLOCK_TABLE	  9
+#define BDB_MODE_REMOVAL_TABLE	 10
+#define BDB_CHILD_DEVICE_TABLE	 11
+#define BDB_DRIVER_FEATURES	 12
+#define BDB_DRIVER_PERSISTENCE	 13
+#define BDB_EXT_TABLE_PTRS	 14
+#define BDB_DOT_CLOCK_OVERRIDE	 15
+#define BDB_DISPLAY_SELECT	 16
+/* 17 rsvd */
+#define BDB_DRIVER_ROTATION	 18
+#define BDB_DISPLAY_REMOVE	 19
+#define BDB_OEM_CUSTOM		 20
+#define BDB_EFP_LIST		 21 /* workarounds for VGA hsync/vsync */
+#define BDB_SDVO_LVDS_OPTIONS	 22
+#define BDB_SDVO_PANEL_DTDS	 23
+#define BDB_SDVO_LVDS_PNP_IDS	 24
+#define BDB_SDVO_LVDS_POWER_SEQ	 25
+#define BDB_TV_OPTIONS		 26
+#define BDB_LVDS_OPTIONS	 40
+#define BDB_LVDS_LFP_DATA_PTRS	 41
+#define BDB_LVDS_LFP_DATA	 42
+#define BDB_LVDS_BACKLIGHT	 43
+#define BDB_LVDS_POWER		 44
+#define BDB_SKIP		254 /* VBIOS private block, ignore */
+
+struct bdb_general_features {
+        /* bits 1 */
+	unsigned char panel_fitting:2;
+	unsigned char flexaim:1;
+	unsigned char msg_enable:1;
+	unsigned char clear_screen:3;
+	unsigned char color_flip:1;
+
+        /* bits 2 */
+	unsigned char download_ext_vbt:1;
+	unsigned char enable_ssc:1;
+	unsigned char ssc_freq:1;
+	unsigned char enable_lfp_on_override:1;
+	unsigned char disable_ssc_ddt:1;
+	unsigned char rsvd8:3; /* finish byte */
+
+        /* bits 3 */
+	unsigned char disable_smooth_vision:1;
+	unsigned char single_dvi:1;
+	unsigned char rsvd9:6; /* finish byte */
+
+        /* bits 4 */
+	unsigned char legacy_monitor_detect;
+
+        /* bits 5 */
+	unsigned char int_crt_support:1;
+	unsigned char int_tv_support:1;
+	unsigned char rsvd11:6; /* finish byte */
 } __attribute__((packed));
 
-struct lvds_bdb_2_fp_params {
+struct bdb_general_definitions {
+	/* DDC GPIO */
+	unsigned char crt_ddc_gmbus_pin;
+
+	/* DPMS bits */
+	unsigned char dpms_acpi:1;
+	unsigned char skip_boot_crt_detect:1;
+	unsigned char dpms_aim:1;
+	unsigned char rsvd1:5; /* finish byte */
+
+	/* boot device bits */
+	unsigned char boot_display[2];
+	unsigned char child_dev_size;
+
+	/* device info */
+	unsigned char tv_or_lvds_info[33];
+	unsigned char dev1[33];
+	unsigned char dev2[33];
+	unsigned char dev3[33];
+	unsigned char dev4[33];
+	/* may be another device block here on some platforms */
+} __attribute__((packed));
+
+struct bdb_lvds_options {
+    uint8_t panel_type;
+    uint8_t rsvd1;
+    /* LVDS capabilities, stored in a dword */
+    uint8_t pfit_mode:2;
+    uint8_t pfit_text_mode_enhanced:1;
+    uint8_t pfit_gfx_mode_enhanced:1;
+    uint8_t pfit_ratio_auto:1;
+    uint8_t pixel_dither:1;
+    uint8_t lvds_edid:1;
+    uint8_t rsvd2:1;
+    uint8_t rsvd4;
+} __attribute__((packed));
+
+struct lvds_fp_timing {
     uint16_t x_res;
     uint16_t y_res;
     uint32_t lvds_reg;
@@ -80,7 +170,7 @@ struct lvds_bdb_2_fp_params {
     uint16_t terminator;
 } __attribute__((packed));
 
-struct lvds_bdb_2_fp_edid_dtd {
+struct lvds_dvo_timing {
     uint16_t dclk;		/**< In 10khz */
     uint8_t hactive;
     uint8_t hblank;
@@ -98,24 +188,39 @@ struct lvds_bdb_2_fp_edid_dtd {
     uint8_t h_border;
     uint8_t v_border;
     uint8_t flags;
-#define FP_EDID_FLAG_VSYNC_POSITIVE	(1 << 2)
-#define FP_EDID_FLAG_HSYNC_POSITIVE	(1 << 1)
 } __attribute__((packed));
 
-struct lvds_bdb_2_entry {
-    uint16_t fp_params_offset;		/**< From beginning of BDB */
-    uint8_t fp_params_size;
-    uint16_t fp_edid_dtd_offset;
-    uint8_t fp_edid_dtd_size;
-    uint16_t fp_edid_pid_offset;
-    uint8_t fp_edid_pid_size;
+struct lvds_pnp_id {
+    uint16_t mfg_name;
+    uint16_t product_code;
+    uint32_t serial;
+    uint8_t mfg_week;
+    uint8_t mfg_year;
+} __attribute__((packed));;
+
+/* LFP pointer table contains entries to the struct below */
+struct bdb_lvds_lfp_data_ptr {
+    uint16_t fp_timing_offset; /* offsets are from start of bdb */
+    uint8_t fp_table_size;
+    uint16_t dvo_timing_offset;
+    uint8_t dvo_table_size;
+    uint16_t panel_pnp_id_offset;
+    uint8_t pnp_table_size;
 } __attribute__((packed));
 
-struct lvds_bdb_2 {
-    uint8_t id;			/**< 41 */
-    uint16_t size;
-    uint8_t table_size;	/* not sure on this one */
-    struct lvds_bdb_2_entry panels[16];
+struct bdb_lvds_lfp_data_ptrs {
+    uint8_t lvds_entries;
+    struct bdb_lvds_lfp_data_ptr ptr[16];
+} __attribute__((packed));
+
+struct bdb_lvds_lfp_data_entry {
+    struct lvds_fp_timing fp_timing;
+    struct lvds_dvo_timing dvo_timing;
+    struct lvds_pnp_id pnp_id;
+} __attribute__((packed));
+
+struct bdb_lvds_lfp_data {
+    struct bdb_lvds_lfp_data_entry data[16];
 } __attribute__((packed));
 
 struct aimdb_header {
@@ -147,12 +252,6 @@ struct vch_bdb_22 {
     struct vch_panel_data   panels[16];
 } __attribute__((packed));
 
-unsigned char *
-i830_bios_get (ScrnInfoPtr pScrn);
-
-DisplayModePtr i830_bios_get_panel_mode(ScrnInfoPtr pScrn, Bool *wants_dither);
-
-unsigned char *
-i830_bios_get_aim_data_block (ScrnInfoPtr pScrn, int aim, int data_block);
+int i830_bios_init(ScrnInfoPtr pScrn);
 
 #endif /* _I830_BIOS_H_ */

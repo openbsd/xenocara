@@ -25,10 +25,16 @@
  *
  */
 
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+
 
 #include "../i830_bios.h"
 
@@ -51,108 +57,223 @@ struct _fake_i830 *pI830 = &I830;
 				 (pI830->VBIOS[_addr + 2] << 16) \
 				 (pI830->VBIOS[_addr + 3] << 24))
 
+#define YESNO(val) ((val) ? "yes" : "no")
+
+static int tv_present;
+static int lvds_present;
+static int panel_type;
+
+static void *find_section(struct bdb_header *bdb, int section_id)
+{
+	unsigned char *base = (unsigned char *)bdb;
+	int index = 0;
+	uint16_t total, current_size;
+	unsigned char current_id;
+
+	/* skip to first section */
+	index += bdb->header_size;
+	total = bdb->bdb_size;
+
+	/* walk the sections looking for section_id */
+	while (index < total) {
+		current_id = *(base + index);
+		index++;
+		current_size = *((uint16_t *)(base + index));
+		index += 2;
+		if (current_id == section_id)
+			return base + index;
+		index += current_size;
+	}
+
+	return NULL;
+}
+
+static void dump_general_features(void *data)
+{
+    struct bdb_general_features *features = data;
+
+    if (!data)
+	return;
+
+    printf("General features block:\n");
+
+    printf("\tPanel fitting: ");
+    switch (features->panel_fitting) {
+    case 0:
+	printf("disabled\n");
+	break;
+    case 1:
+	printf("text only\n");
+	break;
+    case 2:
+	printf("graphics only\n");
+	break;
+    case 3:
+	printf("text & graphics\n");
+	break;
+    }
+    printf("\tFlexaim: %s\n", YESNO(features->flexaim));
+    printf("\tMessage: %s\n", YESNO(features->msg_enable));
+    printf("\tClear screen: %d\n", features->clear_screen);
+    printf("\tDVO color flip required: %s\n", YESNO(features->color_flip));
+    printf("\tExternal VBT: %s\n", YESNO(features->download_ext_vbt));
+    printf("\tEnable SSC: %s\n", YESNO(features->enable_ssc));
+    if (features->enable_ssc)
+	printf("\tSSC frequency: %s\n", features->ssc_freq ?
+	       "100 MHz (66 MHz on 855)" : "96 MHz (48 MHz on 855)");
+    printf("\tLFP on override: %s\n", YESNO(features->enable_lfp_on_override));
+    printf("\tDisable SSC on clone: %s\n", YESNO(features->disable_ssc_ddt));
+    printf("\tDisable smooth vision: %s\n",
+	   YESNO(features->disable_smooth_vision));
+    printf("\tSingle DVI for CRT/DVI: %s\n", YESNO(features->single_dvi));
+    printf("\tLegacy monitor detect: %s\n",
+	   YESNO(features->legacy_monitor_detect));
+    printf("\tIntegrated CRT: %s\n", YESNO(features->int_crt_support));
+    printf("\tIntegrated TV: %s\n", YESNO(features->int_tv_support));
+
+    tv_present = 1; /* should be based on whether TV DAC exists */
+    lvds_present = 1; /* should be based on IS_MOBILE() */
+}
+
+static void dump_general_definitions(void *data)
+{
+    struct bdb_general_definitions *defs = data;
+    unsigned char *lvds_data = defs->tv_or_lvds_info;
+
+    if (!data)
+	return;
+
+    printf("General definitions block:\n");
+
+    printf("\tCRT DDC GMBUS addr: 0x%02x\n", defs->crt_ddc_gmbus_pin);
+    printf("\tUse ACPI DPMS CRT power states: %s\n", YESNO(defs->dpms_acpi));
+    printf("\tSkip CRT detect at boot: %s\n",
+	   YESNO(defs->skip_boot_crt_detect));
+    printf("\tUse DPMS on AIM devices: %s\n", YESNO(defs->dpms_aim));
+    printf("\tBoot display type: 0x%02x%02x\n", defs->boot_display[1],
+	   defs->boot_display[0]);
+    printf("\tTV data block present: %s\n", YESNO(tv_present));
+    if (tv_present)
+	lvds_data += 33;
+    if (lvds_present)
+	printf("\tLFP DDC GMBUS addr: 0x%02x\n", lvds_data[19]);
+}
+
+static void dump_lvds_options(void *data)
+{
+    struct bdb_lvds_options *options = data;
+
+    if (!data)
+	return;
+
+    printf("LVDS options block:\n");
+
+    panel_type = options->panel_type;
+    printf("\tPanel type: %d\n", panel_type);
+    printf("\tLVDS EDID available: %s\n", YESNO(options->lvds_edid));
+    printf("\tPixel dither: %s\n", YESNO(options->pixel_dither));
+    printf("\tPFIT auto ratio: %s\n", YESNO(options->pfit_ratio_auto));
+    printf("\tPFIT enhanced graphics mode: %s\n",
+	   YESNO(options->pfit_gfx_mode_enhanced));
+    printf("\tPFIT enhanced text mode: %s\n",
+	   YESNO(options->pfit_text_mode_enhanced));
+    printf("\tPFIT mode: %d\n", options->pfit_mode);
+}
+
+static void dump_lvds_data(void *data, unsigned char *base)
+{
+    struct bdb_lvds_lfp_data *lvds_data = data;
+    int i;
+
+    if (!data)
+	return;
+
+    printf("LVDS panel data block (preferred block marked with '*'):\n");
+
+    for (i = 0; i < 16; i++) {
+	struct bdb_lvds_lfp_data_entry *lfp_data = &lvds_data->data[i];
+	uint8_t *timing_data = (uint8_t *)&lfp_data->dvo_timing;
+	char marker;
+
+	if (i == panel_type)
+	    marker = '*';
+	else
+	    marker = ' ';
+
+	printf("%c\tpanel type %02i: %dx%d clock %d\n", marker,
+	       i, lfp_data->fp_timing.x_res, lfp_data->fp_timing.y_res,
+	       _PIXEL_CLOCK(timing_data));
+	printf("\t\ttimings: %d %d %d %d %d %d %d %d\n",
+	       _H_ACTIVE(timing_data),
+	       _H_BLANK(timing_data),
+	       _H_SYNC_OFF(timing_data),
+	       _H_SYNC_WIDTH(timing_data),
+	       _V_ACTIVE(timing_data),
+	       _V_BLANK(timing_data),
+	       _V_SYNC_OFF(timing_data),
+	       _V_SYNC_WIDTH(timing_data));
+    }
+
+}
+
 int main(int argc, char **argv)
 {
-    FILE *f;
-    int bios_size = 65536;
-    struct vbt_header *vbt;
+    int fd;
+    struct vbt_header *vbt = NULL;
     struct bdb_header *bdb;
-    int vbt_off, bdb_off, bdb_block_off, block_size;
-    int panel_type = -1, i;
+    int vbt_off, bdb_off, i;
     char *filename = "bios";
+    struct stat finfo;
 
-    if (argc == 2)
-	filename = argv[1];
+    if (argc != 2) {
+	printf("usage: %s <rom file>\n", argv[0]);
+	return 1;
+    }
+	
+    filename = argv[1];
 
-    f = fopen(filename, "r");
-    if (!f) {
-	printf("Couldn't open %s\n", filename);
+    fd = open(filename, O_RDONLY);
+    if (fd == -1) {
+	printf("Couldn't open \"%s\": %s\n", filename, strerror(errno));
 	return 1;
     }
 
-    pI830->VBIOS = calloc(1, bios_size);
-    if (fread(pI830->VBIOS, 1, bios_size, f) != bios_size)
+    if (stat(filename, &finfo)) {
+	printf("failed to stat \"%s\": %s\n", filename, strerror(errno));
 	return 1;
+    }
 
-    vbt_off = INTEL_BIOS_16(0x1a);
-    printf("VBT offset: %08x\n", vbt_off);
-    vbt = (struct vbt_header *)(pI830->VBIOS + vbt_off);
-    printf("VBT sig: %20s\n", vbt->signature);
+    pI830->VBIOS = mmap(NULL, finfo.st_size, PROT_READ, MAP_SHARED, fd, 0);
+    if (pI830->VBIOS == MAP_FAILED) {
+	printf("failed to map \"%s\": %s\n", filename, strerror(errno));
+	return 1;
+    }
+
+    /* Scour memory looking for the VBT signature */
+    for (i = 0; i + 4 < finfo.st_size; i++) {
+	if (!memcmp(pI830->VBIOS + i, "$VBT", 4)) {
+	    vbt_off = i;
+	    vbt = (struct vbt_header *)(pI830->VBIOS + i);
+	    break;
+	}
+    }
+
+    if (!vbt) {
+	printf("VBT signature missing\n");
+	return 1;
+    }
+
     printf("VBT vers: %d.%d\n", vbt->version / 100, vbt->version % 100);
 
     bdb_off = vbt_off + vbt->bdb_offset;
     bdb = (struct bdb_header *)(pI830->VBIOS + bdb_off);
     printf("BDB sig: %16s\n", bdb->signature);
     printf("BDB vers: %d.%d\n", bdb->version / 100, bdb->version % 100);
-    for (bdb_block_off = bdb->header_size; bdb_block_off < bdb->bdb_size;
-	 bdb_block_off += block_size)
-    {
-	int start = bdb_off + bdb_block_off;
-	int id;
-	struct lvds_bdb_1 *lvds1;
-	struct lvds_bdb_2 *lvds2;
-	struct lvds_bdb_2_fp_params *fpparam;
-	struct lvds_bdb_2_fp_edid_dtd *fptiming;
-	uint8_t *timing_ptr;
 
-	id = INTEL_BIOS_8(start);
-	block_size = INTEL_BIOS_16(start + 1) + 3;
-	printf("BDB block type %03d size %d\n", id, block_size);
-	switch (id) {
-	case 40:
-	    lvds1 = (struct lvds_bdb_1 *)(pI830->VBIOS + start);
-	    panel_type = lvds1->panel_type;
-	    printf("Panel type: %d, caps %04x\n", panel_type, lvds1->caps);
-	    break;
-	case 41:
-	    if (panel_type == -1) {
-		printf("Found panel block with no panel type\n");
-		break;
-	    }
-
-	    lvds2 = (struct lvds_bdb_2 *)(pI830->VBIOS + start);
-
-	    printf("Entries per table: %d\n", lvds2->table_size);
-	    for (i = 0; i < 16; i++) {
-		char marker;
-		fpparam = (struct lvds_bdb_2_fp_params *)(pI830->VBIOS +
-		    bdb_off + lvds2->panels[i].fp_params_offset);
-		fptiming = (struct lvds_bdb_2_fp_edid_dtd *)(pI830->VBIOS +
-		    bdb_off + lvds2->panels[i].fp_edid_dtd_offset);
-		timing_ptr = pI830->VBIOS + bdb_off +
-		    lvds2->panels[i].fp_edid_dtd_offset;
-		if (fpparam->terminator != 0xffff) {
-		    /* Apparently the offsets are wrong for some BIOSes, so we
-		     * try the other offsets if we find a bad terminator.
-		     */
-		    fpparam = (struct lvds_bdb_2_fp_params *)(pI830->VBIOS +
-			bdb_off + lvds2->panels[i].fp_params_offset + 8);
-		    fptiming = (struct lvds_bdb_2_fp_edid_dtd *)(pI830->VBIOS +
-			bdb_off + lvds2->panels[i].fp_edid_dtd_offset + 8);
-		    timing_ptr = pI830->VBIOS + bdb_off +
-			lvds2->panels[i].fp_edid_dtd_offset + 8;
-
-		    if (fpparam->terminator != 0xffff)
-			continue;
-		}
-		if (i == panel_type)
-		    marker = '*';
-		else
-		    marker = ' ';
-		printf("%c Panel index %02i xres %d yres %d clock %d\n", marker,
-		       i, fpparam->x_res, fpparam->y_res,
-		       _PIXEL_CLOCK(timing_ptr));
-		printf("        %d %d %d %d %d %d %d %d\n",
-		       _H_ACTIVE(timing_ptr), _H_BLANK(timing_ptr),
-		       _H_SYNC_OFF(timing_ptr), _H_SYNC_WIDTH(timing_ptr),
-		       _V_ACTIVE(timing_ptr), _V_BLANK(timing_ptr),
-		       _V_SYNC_OFF(timing_ptr), _V_SYNC_WIDTH(timing_ptr));
-	    }
-
-	    printf("Panel of size %dx%d\n", fpparam->x_res, fpparam->y_res);
-	    break;
-	}
-    }
+    dump_general_features(find_section(bdb, BDB_GENERAL_FEATURES));
+    dump_general_definitions(find_section(bdb, BDB_GENERAL_DEFINITIONS));
+    dump_lvds_options(find_section(bdb, BDB_LVDS_OPTIONS));
+    dump_lvds_data(find_section(bdb, BDB_LVDS_LFP_DATA), bdb);
 
     return 0;
 }

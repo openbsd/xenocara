@@ -335,7 +335,7 @@ i830_reset_allocations(ScrnInfoPtr pScrn)
     pI830->xaa_scratch = NULL;
     pI830->xaa_scratch_2 = NULL;
     pI830->exa_offscreen = NULL;
-    pI830->exa_965_state = NULL;
+    pI830->gen4_render_state_mem = NULL;
     pI830->overlay_regs = NULL;
     pI830->logical_context = NULL;
     pI830->power_context = NULL;
@@ -447,7 +447,7 @@ i830_allocator_init(ScrnInfoPtr pScrn, unsigned long offset, unsigned long size)
 	/* Overlay and cursors, if physical, need to be allocated outside
 	 * of the kernel memory manager.
 	 */
-	if (!OVERLAY_NOPHYSICAL(pI830) && !IS_IGD_GM(pI830)) {
+	if (!OVERLAY_NOPHYSICAL(pI830) && !OVERLAY_NOEXIST(pI830)) {
 	    mmsize -= ROUND_TO(OVERLAY_SIZE, GTT_PAGE_SIZE);
 	}
 	if (pI830->CursorNeedsPhysical) {
@@ -459,7 +459,8 @@ i830_allocator_init(ScrnInfoPtr pScrn, unsigned long offset, unsigned long size)
 	/* Can't do TTM on stolen memory */
 	mmsize -= pI830->stolen_size;
 
-	if (HWS_NEED_GFX(pI830) && IS_IGD_GM(pI830))
+	/* new chipsets need non-stolen status page */
+	if (HWS_NEED_GFX(pI830) && HWS_NEED_NONSTOLEN(pI830))
 	    mmsize -= HWSTATUS_PAGE_SIZE;
 
 	/* Create the aperture allocation */
@@ -1027,7 +1028,7 @@ i830_allocate_overlay(ScrnInfoPtr pScrn)
     if (!pI830->XvEnabled)
 	return TRUE;
 
-    if (IS_IGD_GM(pI830))
+    if (OVERLAY_NOEXIST(pI830))
 	return TRUE;
 
     if (!OVERLAY_NOPHYSICAL(pI830))
@@ -1281,7 +1282,7 @@ static void i830_setup_fb_compression(ScrnInfoPtr pScrn)
 	goto out;
     }
 
-    if (IS_IGD_GM(pI830)) {
+    if (IS_GM45(pI830)) {
 	/* Update i830_display.c too if compression ratio changes */
 	compressed_size = fb_height * (pScrn->displayWidth / 4);
     } else {
@@ -1308,7 +1309,7 @@ static void i830_setup_fb_compression(ScrnInfoPtr pScrn)
 	goto out;
     }
 
-    if (!IS_IGD_GM(pI830)) {
+    if (!IS_GM45(pI830)) {
 	pI830->compressed_ll_buffer =
 	    i830_allocate_memory(pScrn, "compressed ll buffer",
 				 FBC_LL_SIZE + FBC_LL_PAD, KB(4),
@@ -1372,11 +1373,14 @@ i830_allocate_2d_memory(ScrnInfoPtr pScrn)
     }
 
     /* even in XAA, 965G needs state mem buffer for rendering */
-    if (IS_I965G(pI830) && !pI830->noAccel && pI830->exa_965_state == NULL) {
-	pI830->exa_965_state =
+    if (IS_I965G(pI830) && !pI830->noAccel &&
+	pI830->gen4_render_state_mem == NULL)
+    {
+	pI830->gen4_render_state_mem =
 	    i830_allocate_memory(pScrn, "exa G965 state buffer",
-		    EXA_LINEAR_EXTRA, GTT_PAGE_SIZE, 0);
-	if (pI830->exa_965_state == NULL) {
+				 gen4_render_state_size(pScrn),
+				 GTT_PAGE_SIZE, 0);
+	if (pI830->gen4_render_state_mem == NULL) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		    "Failed to allocate exa state buffer for 965.\n");
 	    return FALSE;
@@ -1643,7 +1647,7 @@ i830_allocate_hwstatus(ScrnInfoPtr pScrn)
      * (i.e. not through buffer objects).
      */
     flags = NEED_LIFETIME_FIXED;
-    if (IS_IGD_GM(pI830))
+    if (HWS_NEED_NONSTOLEN(pI830))
 	    flags |= NEED_NON_STOLEN;
     pI830->hw_status = i830_allocate_memory(pScrn, "HW status",
 	    HWSTATUS_PAGE_SIZE, GTT_PAGE_SIZE, flags);
