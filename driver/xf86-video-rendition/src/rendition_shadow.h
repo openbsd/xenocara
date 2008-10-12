@@ -3,7 +3,6 @@
  *
  * headfile for rendition_shadow.c
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/rendition/rendition_shadow.h,v 1.1 2000/03/01 00:25:25 dawes Exp $ */
 
 #ifndef __RENDITION_SHADOW_H__
 #define __RENDITION_SHADOW_H__

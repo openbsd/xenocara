@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/rendition/vloaduc.c,v 1.13tsi Exp $ */
 /*
  * includes
  */
@@ -17,6 +16,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <unistd.h>
 #ifdef HAVE_ELF_H
 #include <elf.h>
 #endif

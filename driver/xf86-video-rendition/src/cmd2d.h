@@ -4,7 +4,6 @@
 /*
  * commands the 2d microcode offers
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/rendition/cmd2d.h,v 1.2 1999/10/14 04:43:14 dawes Exp $ */
 
 #define CMD_SETUP					32
 #define CMD_SET_PIX_REG				2

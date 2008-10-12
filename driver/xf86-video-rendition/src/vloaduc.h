@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/rendition/vloaduc.h,v 1.4 2000/03/31 20:13:27 dawes Exp $ */
 
 /*
  * file vloaduc.h

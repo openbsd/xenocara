@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/rendition/rendition_options.h,v 1.5 2001/05/04 19:05:42 dawes Exp $ */
 
 #ifndef __RENDITION_OPTION_H__
 #define __RENDITION_OPTION_H__

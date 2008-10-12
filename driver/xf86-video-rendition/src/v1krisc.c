@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/rendition/v1krisc.c,v 1.6 2000/03/31 20:13:25 dawes Exp $ */
 /*
  *
  */

@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/rendition/v2kregs.h,v 1.4 1999/11/19 13:54:46 hohndel Exp $ */
 #ifndef __V2KREGS_H__
 #define __V2KREGS_H__
 

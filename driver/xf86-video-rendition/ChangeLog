@@ -1,3 +1,85 @@
+commit e943057ef844a7a3153b6158f3dd26ae02296e98
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 14:45:52 2008 -0400
+
+    Fix includes to silence a warning.
+    
+    Patch from opensuse, although it has no attribution there.
+
+commit 34db3fdcff85f151843fcae7d0aa307697291d5e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 14:41:58 2008 -0400
+
+    Death to RCS tags.
+
+commit cfff99db2648d49e9c3af3cb9d965ea5f306b1f7
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Mar 8 23:45:25 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit 99011b4380991cd56987f75a6d48ee609d931b2a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Feb 27 13:29:57 2008 +1000
+
+    pciaccess: do unmap path
+
+commit 7e343a778d302474fef1d177006b54743ce0a394
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Feb 27 12:50:43 2008 +1000
+
+    pciaccess: make auto-detect work
+
+commit 41cba91bc5572a66e8b6f09c9cf4c4c173b29f8f
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Tue Aug 7 12:10:15 2007 +0200
+
+    RENDITION_VERSION* using PACKAGE_VERSION_*
+
+commit 73c1f290c1ed767a8c9340ca1404f89baace762e
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Tue Mar 6 09:22:44 2007 -0800
+
+    Port driver to PCI-rework interfaces.
+    
+    Quick and dirty port to the PCI-rework interfaces.  Test on a V2100
+    cards.  This is the only Rendition hardware to which I have access.
+    V1000 and / or V2200 may be broken, but I doubt it.
+    
+    Comments in the source claim that acceleration is buggy, and it is
+    disabled by default.  I *did not* do any testing with acceleration.
+
+commit 1a2a9e76aa9b8fbd821c41fd67646a7c35180b48
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Tue Mar 6 09:16:44 2007 -0800
+
+    Move renditionTypes, renditionChipsets, and renditionPCIchipsets earlier in file.
+
+commit 5338846d8d76081c39402324c12cfec382ac2742
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Tue Mar 6 09:14:43 2007 -0800
+
+    Add prototype for renditionGetRec.
+
+commit 6d3e26e8311cf46a8c9ceb81debe5d8e97bf28bf
+Merge: 77647fe... ef00c3e...
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Mar 2 20:48:05 2007 -0800
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/driver/xf86-video-rendition
+
+commit 77647fed6e448cc0a46970c79e28062c6f5625bd
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Mar 2 20:47:42 2007 -0800
+
+    Supply NULL driverFunc pointer in DriverRec.
+
+commit ef00c3eb3e558da02080ed30274f1fa8b6d8b8eb
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Feb 27 10:38:53 2007 -0800
+
+    Man page updates - replace references to XFree86 & changes for XF86 4.0
+
 commit b3872c3317fe560d47a0a621d7a9bd6f81d3573a
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Dec 16 01:54:57 2006 +0200

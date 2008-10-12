@@ -4,7 +4,6 @@
  * The functions used by ShadowFB
  * Based on code written by Mark Vojkovich <markv@valinux.com>
  */
-/* $XFree86$ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

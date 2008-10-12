@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/rendition/vos.h,v 1.9 2002/01/25 21:56:07 tsi Exp $ */
 /*
  * file vos.h
  *

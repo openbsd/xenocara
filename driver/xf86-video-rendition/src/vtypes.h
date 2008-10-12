@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/rendition/vtypes.h,v 1.8 2001/10/28 03:33:44 tsi Exp $ */
 #ifndef _VTYPES_H_
 #define _VTYPES_H_
 
@@ -11,6 +10,9 @@
 #include <X11/Xmd.h>
 #include "xf86Pci.h"
 
+#ifdef XSERVER_LIBPCIACCESS
+#include <pciaccess.h>
+#endif
 
 /*
  * defines
@@ -177,8 +179,12 @@ typedef struct _renditionRec
 {
     struct verite_board_t board;        /* information on the board */
     struct verite_modeinfo_t mode;      /* information on the mode */
+#ifdef XSERVER_LIBPCIACCESS
+    struct pci_device * PciInfo;
+#else
     PCITAG pcitag;                      /* tag for the PCI config space */
     pciVideoPtr PciInfo;                /* PCI config data */
+#endif
     EntityInfoPtr pEnt;                 /* entity information */
     CloseScreenProcPtr CloseScreen;     /* wrap CloseScreen */
     xf86CursorInfoPtr CursorInfoRec;    /* Cursor data */
