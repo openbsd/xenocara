@@ -25,7 +25,6 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/i740/i740.h,v 1.7 2002/10/23 16:08:36 tsi Exp $ */
 
 /*
  * Authors:
@@ -35,6 +34,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #ifndef _I740_H_
 #define _I740_H_
+
+#include "i740_pcirename.h"
 
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
@@ -99,7 +100,9 @@ typedef struct _I740Rec {
   unsigned long MMIOAddr;
   EntityInfoPtr pEnt;
   pciVideoPtr PciInfo;
+#ifndef XSERVER_LIBPCIACCESS
   PCITAG PciTag;
+#endif
   int HasSGRAM;
   I740RegRec SavedReg;
   I740RegRec ModeReg;

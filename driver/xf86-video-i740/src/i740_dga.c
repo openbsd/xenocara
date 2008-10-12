@@ -21,7 +21,6 @@
  *
  * Authors:  Patrick LERDA
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/i740/i740_dga.c,v 1.1tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

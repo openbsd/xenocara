@@ -21,6 +21,5 @@
  *
  * Authors:  Patrick LERDA
  */
-/* $XFree86$ */
 
 Bool I740DGAInit(ScreenPtr pScreen);

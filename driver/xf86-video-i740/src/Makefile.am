@@ -38,5 +38,6 @@ i740_drv_la_SOURCES = \
          i740_i2c.c \
          i740_io.c \
          i740_macros.h \
+	 i740_pcirename.h \
          i740_reg.h \
          i740_video.c
