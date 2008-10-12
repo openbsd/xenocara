@@ -1,8 +1,6 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/i128/IBMRGB.h,v 1.1 2000/10/04 23:34:58 robin Exp $ */
 
 
 
-/* $XConsortium: $ */
 
 #define IBMRGB_REF_FREQ_1       14.31818
 #define IBMRGB_REF_FREQ_2       50.00000

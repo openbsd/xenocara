@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/i128/i128dga.c,v 1.3tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -6,7 +5,6 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86_ansic.h"
 #include "xf86Pci.h"
 #include "xf86PciInfo.h"
 #include "xaa.h"
@@ -266,7 +264,7 @@ I128_OpenFramebuffer(
    int *flags
 ){
     I128Ptr pI128 = I128PTR(pScrn);
-    unsigned long FbAddress = pI128->PciInfo->memBase[0] & 0xFFC00000;
+    unsigned long FbAddress = PCI_REGION_BASE(pI128->PciInfo, 0, REGION_MEM) & 0xFFC00000;
 
     *name = NULL; 		/* no special device */
     *mem = (unsigned char*)FbAddress;

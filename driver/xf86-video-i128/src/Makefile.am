@@ -36,6 +36,7 @@ i128_drv_la_SOURCES = \
          i128.h \
          i128IBMDAC.c \
          i128init.c \
+	 i128pcirename.h \
          i128reg.h \
          IBMRGB.h \
          Ti302X.h

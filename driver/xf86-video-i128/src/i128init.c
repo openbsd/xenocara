@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/i128/i128init.c,v 1.5 2000/11/03 00:50:53 robin Exp $ */
 /*
  * Copyright 1995-2000 by Robin Cutshaw <robin@XFree86.Org>
  * Copyright 1998 by Number Nine Visual Technology, Inc.
@@ -27,11 +26,9 @@
 #include "config.h"
 #endif
 
-/* $XConsortium: $ */
 
 
 #include "xf86.h"
-#include "xf86_ansic.h"
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
 
@@ -39,6 +36,8 @@
 #include "i128reg.h"
 #include "Ti302X.h"
 #include "IBMRGB.h"
+
+#include <unistd.h>
 
 static void I128SavePalette(I128Ptr pI128);
 static void I128RestorePalette(I128Ptr pI128);

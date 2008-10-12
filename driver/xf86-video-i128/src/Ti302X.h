@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/i128/Ti302X.h,v 1.2 2001/03/03 22:26:11 tsi Exp $ */
 /*
  * Copyright 1994-2000 by Robin Cutshaw <robin@XFree86.Org>
  *
@@ -21,7 +20,6 @@
  * PERFORMANCE OF THIS SOFTWARE.
  *
  */
-/* $XConsortium: $ */
 
 #include "compiler.h"
 

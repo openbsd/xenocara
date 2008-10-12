@@ -34,7 +34,6 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86_ansic.h"
 #include "xf86Pci.h"
 #include "xf86PciInfo.h"
 
@@ -453,11 +452,13 @@ static const struct dest_format dest_formats[] = {
     { 0, 0 }
 };
 
+#if 0
 static struct dest_format *
 i128MapDestFormat(int fmt)
 {
     return NULL;
 }
+#endif
 
 /* Composite is probably t2r and t2r4 only */
 static Bool

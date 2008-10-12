@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/i128/i128.h,v 1.5 2001/04/01 14:00:11 tsi Exp $ */
 /*
  * Number Nine I128 functions
  *
@@ -11,6 +10,8 @@
 
 #ifndef I128_H
 #define I128_H
+
+#include "i128pcirename.h"
 
 #include "compiler.h"
 #include "xaa.h"
@@ -35,7 +36,9 @@ struct source_format {
 typedef struct {
     EntityInfoPtr	pEnt;
     pciVideoPtr		PciInfo;
+#ifndef XSERVER_LIBPCIACCESS
     PCITAG		PciTag;
+#endif
     xf86AccessRec	Access;
     int			Chipset;
     int                 ChipRev;
