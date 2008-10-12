@@ -21,7 +21,6 @@
  *
  * Author:  Alan Hourihane, alanh@fairlite.demon.co.uk
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/trident/trident_bank.c,v 1.4 2000/12/07 16:48:04 alanh Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

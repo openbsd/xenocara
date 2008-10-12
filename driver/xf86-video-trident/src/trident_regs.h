@@ -21,7 +21,6 @@
  *
  * Author:  Alan Hourihane, alanh@fairlite.demon.co.uk
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/trident/trident_regs.h,v 1.27 2003/09/05 22:07:29 alanh Exp $ */
 
 #define DEBUG 1
 

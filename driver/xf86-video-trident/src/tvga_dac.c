@@ -21,7 +21,6 @@
  *
  * Author:  Alan Hourihane, alanh@fairlite.demon.co.uk
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/trident/tvga_dac.c,v 1.7tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

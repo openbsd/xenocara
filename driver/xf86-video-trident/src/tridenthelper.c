@@ -21,7 +21,6 @@
  *
  * Author:  Alan Hourihane, alanh@fairlite.demon.co.uk
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/trident/tridenthelper.c,v 1.20 2001/10/28 03:33:52 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

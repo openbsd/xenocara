@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-trident],
-        1.2.3,
+        1.3.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-trident)
 
@@ -57,6 +57,19 @@ XORG_DRIVER_CHECK_EXT(XFreeXDGA, xf86dgaproto)
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901 xproto fontsproto $REQUIRED_MODULES])
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
+
+SAVE_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
+AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
+              [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
+              [#include "xorg-server.h"])
+CPPFLAGS="$SAVE_CPPFLAGS"
+
+if test "x$XSERVER_LIBPCIACCESS" = xyes; then
+    PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.8.0])
+    XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
+fi
+AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
 
 # Checks for libraries.
 

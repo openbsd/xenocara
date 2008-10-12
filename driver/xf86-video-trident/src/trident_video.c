@@ -21,7 +21,6 @@
  *
  * Author:  Alan Hourihane, alanh@fairlite.demon.co.uk
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/trident/trident_video.c,v 1.45 2003/11/10 18:22:34 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -113,7 +112,7 @@ void TRIDENTInitVideo(ScreenPtr pScreen)
 
     if (pTrident->Chipset == CYBER9397DVD || 
 	pTrident->Chipset == CYBER9525DVD ||
-	pTrident->Chipset >= BLADE3D)
+	(pTrident->Chipset >= BLADE3D && pTrident->Chipset < CYBERBLADEXP4))
 		pTrident->videoFlags |= VID_DOUBLE_LINEBUFFER_FOR_WIDE_SRC;
 
     newAdaptor = TRIDENTSetupImageVideo(pScreen);
@@ -260,6 +259,9 @@ void TRIDENTResetVideo(ScrnInfoPtr pScrn)
     if (pTrident->Chipset >= BLADEXP) {
 	OUTW(0x3C4, 0x007A);
 	OUTW(0x3C4, 0x007D);
+    }
+    if (pTrident->Chipset == CYBERBLADEXP4) {
+    	OUTW(0x3CE, 0x0462);
     }
     switch (pScrn->depth) {
     case 8:
@@ -887,6 +889,13 @@ TRIDENTPutImage(
 
     offset += top * dstPitch;
 
+    /* Fix video position when using doublescan */
+    if(pScrn->currentMode->Flags & V_DBLSCAN) {
+	    dstBox.y1 <<= 1;
+	    dstBox.y2 <<= 1;
+	    drw_h <<= 1;
+    }
+    
     tridentFixFrame(pScrn,&pPriv->fixFrame);
     TRIDENTDisplayVideo(pScrn, id, offset, width, height, dstPitch,
 	     x1, y1, x2, y2, &dstBox, src_w, src_h, drw_w, drw_h);
@@ -1303,12 +1312,16 @@ tridentFixFrame(ScrnInfoPtr pScrn, int *fixFrame)
 	case CYBERBLADEE4:
 	    pTrident->hsync -= 8;
 	    break;
+	case CYBERBLADEXP4:
+	    pTrident->hsync -= 24;
+	    pTrident->hsync_rskew = -1;
+	    break;
 	case CYBER9397:
 	    pTrident->hsync -= 1;
   	    pTrident->vsync -= 0;	     
 	    pTrident->vsync_bskew = 0;
 	    break;
-    case CYBER9397DVD:
+	case CYBER9397DVD:
 	    pTrident->hsync_rskew = -1;
 	    pTrident->vsync_bskew = -1;
 	    break;
@@ -1330,6 +1343,8 @@ WaitForVBlank(ScrnInfoPtr pScrn)
      * full vblank has passed. 
      * - Alan.
      */
-    WAITFORVSYNC;
-    WAITFORVSYNC;
+    if (!xf86IsPc98()) {
+       WAITFORVSYNC;
+       WAITFORVSYNC;
+    }
 }

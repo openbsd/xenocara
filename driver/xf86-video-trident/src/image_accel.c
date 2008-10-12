@@ -23,7 +23,6 @@
  * 
  * Trident 3DImage' accelerated options.
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/trident/image_accel.c,v 1.26 2003/10/30 13:38:01 alanh Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
