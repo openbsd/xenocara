@@ -243,6 +243,11 @@ DisplayModeRec *VMWAREAddDisplayMode(
     int height
    );
 
+Bool vmwareIsRegionEqual(
+    const RegionPtr reg1,
+    const RegionPtr reg2
+   );
+
 /* vmwarecurs.c */
 Bool vmwareCursorInit(
    ScreenPtr pScr

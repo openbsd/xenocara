@@ -393,7 +393,8 @@ vmwareOffscreenFree(VMWAREOffscreenPtr memptr)
  *-----------------------------------------------------------------------------
  */
 
-Bool vmwareVideoEnabled(VMWAREPtr pVMWARE)
+Bool
+vmwareVideoEnabled(VMWAREPtr pVMWARE)
 {
     return ((pVMWARE->vmwareCapability & SVGA_CAP_EXTENDED_FIFO) &&
             (pVMWARE->vmwareFIFO[SVGA_FIFO_CAPABILITIES] &
@@ -418,7 +419,8 @@ Bool vmwareVideoEnabled(VMWAREPtr pVMWARE)
  *-----------------------------------------------------------------------------
  */
 
-Bool vmwareVideoInit(ScreenPtr pScreen)
+Bool
+vmwareVideoInit(ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = infoFromScreen(pScreen);
     XF86VideoAdaptorPtr *overlayAdaptors, *newAdaptors = NULL;
@@ -486,7 +488,8 @@ Bool vmwareVideoInit(ScreenPtr pScreen)
  *-----------------------------------------------------------------------------
  */
 
-void vmwareVideoEnd(ScreenPtr pScreen)
+void
+vmwareVideoEnd(ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = infoFromScreen(pScreen);
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
@@ -526,7 +529,8 @@ void vmwareVideoEnd(ScreenPtr pScreen)
  *-----------------------------------------------------------------------------
  */
 
-static XF86VideoAdaptorPtr vmwareVideoSetup(ScrnInfoPtr pScrn)
+static XF86VideoAdaptorPtr
+vmwareVideoSetup(ScrnInfoPtr pScrn)
 {
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
     XF86VideoAdaptorPtr adaptor;
@@ -614,12 +618,13 @@ static XF86VideoAdaptorPtr vmwareVideoSetup(ScrnInfoPtr pScrn)
  *-----------------------------------------------------------------------------
  */
 
-static int vmwareVideoInitStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
-                                 short src_x, short src_y, short drw_x,
-                                 short drw_y, short src_w, short src_h,
-                                 short drw_w, short drw_h, int format,
-                                 unsigned char *buf, short width,
-                                 short height, RegionPtr clipBoxes)
+static int
+vmwareVideoInitStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
+                      short src_x, short src_y, short drw_x,
+                      short drw_y, short src_w, short src_h,
+                      short drw_w, short drw_h, int format,
+                      unsigned char *buf, short width,
+                      short height, RegionPtr clipBoxes)
 {
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
     int i;
@@ -689,9 +694,10 @@ static int vmwareVideoInitStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
  *-----------------------------------------------------------------------------
  */
 
-static int vmwareVideoInitAttributes(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
-                                     int format, unsigned short width,
-                                     unsigned short height)
+static int
+vmwareVideoInitAttributes(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
+                          int format, unsigned short width,
+                          unsigned short height)
 {
     int size;
     VMWAREVideoFmtData *fmtData;
@@ -732,12 +738,13 @@ static int vmwareVideoInitAttributes(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
  *-----------------------------------------------------------------------------
  */
 
-static int vmwareVideoPlay(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
-                           short src_x, short src_y, short drw_x,
-                           short drw_y, short src_w, short src_h,
-                           short drw_w, short drw_h, int format,
-                           unsigned char *buf, short width,
-                           short height, RegionPtr clipBoxes)
+static int
+vmwareVideoPlay(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
+                short src_x, short src_y, short drw_x,
+                short drw_y, short src_w, short src_h,
+                short drw_w, short drw_h, int format,
+                unsigned char *buf, short width,
+                short height, RegionPtr clipBoxes)
 {
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
     uint32 *fifoItem;
@@ -823,10 +830,10 @@ static int vmwareVideoPlay(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
         vmwareWriteWordToFIFO(pVMWARE, fifoItem[i]);
     }
 
-    /* 
+    /*
      *  Update the clipList and paint the colorkey, if required.
      */
-    if (!REGION_EQUAL(pScrn->pScreen, &pVid->clipBoxes, clipBoxes)) {
+    if (!vmwareIsRegionEqual(&pVid->clipBoxes, clipBoxes)) {
         REGION_COPY(pScrn->pScreen, &pVid->clipBoxes, clipBoxes);
         if (pVid->isAutoPaintColorkey) {
             xf86XVFillKeyHelper(pScrn->pScreen, pVid->colorKey, clipBoxes);
@@ -858,7 +865,8 @@ static int vmwareVideoPlay(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
  *-----------------------------------------------------------------------------
  */
 
-static void vmwareVideoFlush(VMWAREPtr pVMWARE, uint32 streamId)
+static void
+vmwareVideoFlush(VMWAREPtr pVMWARE, uint32 streamId)
 {
     struct PACKED _body {
         uint32 escape;
@@ -904,8 +912,9 @@ static void vmwareVideoFlush(VMWAREPtr pVMWARE, uint32 streamId)
  *-----------------------------------------------------------------------------
  */
 
-static void vmwareVideoSetOneReg(VMWAREPtr pVMWARE, uint32 streamId,
-                                 uint32 regId, uint32 value)
+static void
+vmwareVideoSetOneReg(VMWAREPtr pVMWARE, uint32 streamId,
+                     uint32 regId, uint32 value)
 {
     struct PACKED _item {
         uint32 regId;
@@ -960,7 +969,8 @@ static void vmwareVideoSetOneReg(VMWAREPtr pVMWARE, uint32 streamId,
  *-----------------------------------------------------------------------------
  */
 
-static void vmwareVideoEndStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid)
+static void
+vmwareVideoEndStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid)
 {
     uint32 id, colorKey, flags;
     Bool isAutoPaintColorkey;
@@ -1019,18 +1029,20 @@ static void vmwareVideoEndStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid)
  */
 
 #ifdef HAVE_XORG_SERVER_1_0_99_901
-static int vmwareXvPutImage(ScrnInfoPtr pScrn, short src_x, short src_y,
-                            short drw_x, short drw_y, short src_w, short src_h,
-                            short drw_w, short drw_h, int format,
-                            unsigned char *buf, short width, short height,
-                            Bool sync, RegionPtr clipBoxes, pointer data,
-                            DrawablePtr dst)
+static int
+vmwareXvPutImage(ScrnInfoPtr pScrn, short src_x, short src_y,
+                 short drw_x, short drw_y, short src_w, short src_h,
+                 short drw_w, short drw_h, int format,
+                 unsigned char *buf, short width, short height,
+                 Bool sync, RegionPtr clipBoxes, pointer data,
+                 DrawablePtr dst)
 #else
-static int vmwareXvPutImage(ScrnInfoPtr pScrn, short src_x, short src_y,
-                            short drw_x, short drw_y, short src_w, short src_h,
-                            short drw_w, short drw_h, int format,
-                            unsigned char *buf, short width, short height,
-                            Bool sync, RegionPtr clipBoxes, pointer data)
+static int
+vmwareXvPutImage(ScrnInfoPtr pScrn, short src_x, short src_y,
+                 short drw_x, short drw_y, short src_w, short src_h,
+                 short drw_w, short drw_h, int format,
+                 unsigned char *buf, short width, short height,
+                 Bool sync, RegionPtr clipBoxes, pointer data)
 #endif
 {
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
@@ -1066,7 +1078,8 @@ static int vmwareXvPutImage(ScrnInfoPtr pScrn, short src_x, short src_y,
  *-----------------------------------------------------------------------------
  */
 
-static void vmwareStopVideo(ScrnInfoPtr pScrn, pointer data, Bool Cleanup)
+static void
+vmwareStopVideo(ScrnInfoPtr pScrn, pointer data, Bool Cleanup)
 {
     VMWAREVideoPtr pVid = data;
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
@@ -1107,10 +1120,10 @@ static void vmwareStopVideo(ScrnInfoPtr pScrn, pointer data, Bool Cleanup)
  *-----------------------------------------------------------------------------
  */
 
-static int vmwareQueryImageAttributes(ScrnInfoPtr pScrn, int format,
-                                      unsigned short *width,
-                                      unsigned short *height, int *pitches,
-                                      int *offsets)
+static int
+vmwareQueryImageAttributes(ScrnInfoPtr pScrn, int format,
+                           unsigned short *width, unsigned short *height,
+                           int *pitches, int *offsets)
 {
     INT32 size, tmp;
 
@@ -1184,8 +1197,9 @@ static int vmwareQueryImageAttributes(ScrnInfoPtr pScrn, int format,
  *-----------------------------------------------------------------------------
  */
 
-static int vmwareSetPortAttribute(ScrnInfoPtr pScrn, Atom attribute,
-                                  INT32 value, pointer data)
+static int
+vmwareSetPortAttribute(ScrnInfoPtr pScrn, Atom attribute,
+                       INT32 value, pointer data)
 {
     VMWAREVideoPtr pVid = (VMWAREVideoPtr) data;
     Atom xvColorKey = MAKE_ATOM("XV_COLORKEY");
@@ -1223,8 +1237,9 @@ static int vmwareSetPortAttribute(ScrnInfoPtr pScrn, Atom attribute,
  *-----------------------------------------------------------------------------
  */
 
-static int vmwareGetPortAttribute(ScrnInfoPtr pScrn, Atom attribute,
-                                  INT32 *value, pointer data)
+static int
+vmwareGetPortAttribute(ScrnInfoPtr pScrn, Atom attribute,
+                       INT32 *value, pointer data)
 {
     VMWAREVideoPtr pVid = (VMWAREVideoPtr) data;
     Atom xvColorKey = MAKE_ATOM("XV_COLORKEY");
@@ -1267,10 +1282,11 @@ static int vmwareGetPortAttribute(ScrnInfoPtr pScrn, Atom attribute,
  *-----------------------------------------------------------------------------
  */
 
-static void vmwareQueryBestSize(ScrnInfoPtr pScrn, Bool motion,
-                                short vid_w, short vid_h, short drw_w,
-                                short drw_h, unsigned int *p_w,
-                                unsigned int *p_h, pointer data)
+static void
+vmwareQueryBestSize(ScrnInfoPtr pScrn, Bool motion,
+                    short vid_w, short vid_h, short drw_w,
+                    short drw_h, unsigned int *p_w,
+                    unsigned int *p_h, pointer data)
 {
     *p_w = (drw_w + 1) & ~1;
     *p_h = drw_h;

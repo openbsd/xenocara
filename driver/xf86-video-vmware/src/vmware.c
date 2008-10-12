@@ -83,7 +83,7 @@ char rcsId_vmware[] =
 #define VMWARE_DRIVER_NAME "vmware"
 #define VMWARE_MAJOR_VERSION	10
 #define VMWARE_MINOR_VERSION	16
-#define VMWARE_PATCHLEVEL	4
+#define VMWARE_PATCHLEVEL	5
 #define VMWARE_DRIVER_VERSION \
    (VMWARE_MAJOR_VERSION * 65536 + VMWARE_MINOR_VERSION * 256 + VMWARE_PATCHLEVEL)
 #define VMWARE_DRIVER_VERSION_STRING \
@@ -1444,6 +1444,59 @@ VMWAREAddDisplayMode(ScrnInfoPtr pScrn,
    pScrn->modes->prev = mode;
 
    return mode;
+}
+
+
+/*
+ *-----------------------------------------------------------------------------
+ *
+ * vmwareIsRegionEqual --
+ *
+ *    This function implements REGION_EQUAL because older versions of
+ *    regionstr.h don't define it.
+ *    It is a slightly modified version of miRegionEqual from $Xorg: miregion.c
+ *
+ * Results:
+ *    TRUE if regions are equal; FALSE otherwise
+ *
+ * Side effects:
+ *    None.
+ *
+ *-----------------------------------------------------------------------------
+ */
+
+Bool
+vmwareIsRegionEqual(const RegionPtr reg1,
+                    const RegionPtr reg2)
+{
+    int i, num;
+    BoxPtr rects1, rects2;
+
+    if ((reg1->extents.x1 != reg2->extents.x1) ||
+        (reg1->extents.x2 != reg2->extents.x2) ||
+        (reg1->extents.y1 != reg2->extents.y1) ||
+        (reg1->extents.y2 != reg2->extents.y2)) {
+        return FALSE;
+    }
+
+    num = REGION_NUM_RECTS(reg1);
+    if (num != REGION_NUM_RECTS(reg2)) {
+        return FALSE;
+    }
+
+    rects1 = REGION_RECTS(reg1);
+    rects2 = REGION_RECTS(reg2);
+
+    for (i = 0; i < num; i++) {
+        if ((rects1[i].x1 != rects2[i].x1) ||
+            (rects1[i].x2 != rects2[i].x2) ||
+            (rects1[i].y1 != rects2[i].y1) ||
+            (rects1[i].y2 != rects2[i].y2)) {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
 }
 
 
