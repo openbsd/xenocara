@@ -467,8 +467,8 @@ static Bool SAVAGEDRIAgpInit(ScreenPtr pScreen)
    xf86DrvMsg( pScreen->myNum, X_INFO,
 	       "[agp] Mode 0x%08lx [AGP 0x%04x/0x%04x; Card 0x%04x/0x%04x]\n",
 	       mode, vendor, device,
-	       psav->PciInfo->vendor,
-	       psav->PciInfo->chipType );
+	       VENDOR_ID(psav->PciInfo),
+	       DEVICE_ID(psav->PciInfo));
 
    if ( drmAgpEnable( psav->drmFD, mode ) < 0 ) {
       xf86DrvMsg( pScreen->myNum, X_ERROR, "[agp] AGP not enabled\n" );
@@ -624,7 +624,7 @@ static Bool SAVAGEDRIMapInit( ScreenPtr pScreen )
    pSAVAGEDRIServer->registers.size = SAVAGEIOMAPSIZE;
 
    if ( drmAddMap( psav->drmFD,
-		   (drm_handle_t)psav->MmioBase,
+		   (drm_handle_t)psav->MmioRegion.base,
 		   pSAVAGEDRIServer->registers.size,
 		   DRM_REGISTERS,0,
 		   &pSAVAGEDRIServer->registers.handle ) < 0 ) {
@@ -636,7 +636,7 @@ static Bool SAVAGEDRIMapInit( ScreenPtr pScreen )
    pSAVAGEDRIServer->aperture.size = 5 * 0x01000000;
    
    if ( drmAddMap( psav->drmFD,
-		   (drm_handle_t)(psav->ApertureBase),
+		   (drm_handle_t)(psav->ApertureRegion.base),
 		   pSAVAGEDRIServer->aperture.size,
 		   DRM_FRAME_BUFFER,0,
 		   &pSAVAGEDRIServer->aperture.handle ) < 0 ) {
@@ -882,14 +882,18 @@ Bool SAVAGEDRIScreenInit( ScreenPtr pScreen )
       sprintf(pDRIInfo->busIdString,
               "PCI:%d:%d:%d",
               psav->PciInfo->bus,
+#ifdef XSERVER_LIBPCIACCESS
+              psav->PciInfo->dev,
+#else
               psav->PciInfo->device,
+#endif
               psav->PciInfo->func);
    }
    pDRIInfo->ddxDriverMajorVersion = SAVAGE_VERSION_MAJOR;
    pDRIInfo->ddxDriverMinorVersion = SAVAGE_VERSION_MINOR;
    pDRIInfo->ddxDriverPatchVersion = SAVAGE_PATCHLEVEL;
 
-   pDRIInfo->frameBufferPhysicalAddress = (pointer) psav->FrameBufferBase;
+   pDRIInfo->frameBufferPhysicalAddress = (pointer) psav->FbRegion.base;
    pDRIInfo->frameBufferSize = psav->videoRambytes;
    pDRIInfo->frameBufferStride = pScrn->displayWidth*(pScrn->bitsPerPixel/8);
    pDRIInfo->ddxDrawableTableEntry = SAVAGE_MAX_DRAWABLES;
@@ -1115,14 +1119,7 @@ Bool SAVAGEDRIFinishScreenInit( ScreenPtr pScreen )
 
    pSAVAGEDRI->apertureHandle	= pSAVAGEDRIServer->aperture.handle;
    pSAVAGEDRI->apertureSize	= pSAVAGEDRIServer->aperture.size;
-   {
-      unsigned int shift = 0;
-      
-      if(pSAVAGEDRI->width > 1024)
-        shift = 1; 
-
-      pSAVAGEDRI->aperturePitch = psav->ulAperturePitch;
-   }
+   pSAVAGEDRI->aperturePitch    = psav->ulAperturePitch;
 
    {
       unsigned int value = 0;
@@ -1432,11 +1429,11 @@ SAVAGEDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 
         if (nbox>1) {
 	    /* Keep ordering in each band, reverse order of bands */
-	    pboxNew1 = (BoxPtr)ALLOCATE_LOCAL(sizeof(BoxRec)*nbox);
+	    pboxNew1 = xalloc(sizeof(BoxRec)*nbox);
 	    if (!pboxNew1) return;
-	    pptNew1 = (DDXPointPtr)ALLOCATE_LOCAL(sizeof(DDXPointRec)*nbox);
+	    pptNew1 = xalloc(sizeof(DDXPointRec)*nbox);
 	    if (!pptNew1) {
-	        DEALLOCATE_LOCAL(pboxNew1);
+	        xfree(pboxNew1);
 	        return;
 	    }
 	    pboxBase = pboxNext = pbox+nbox-1;
@@ -1467,14 +1464,14 @@ SAVAGEDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 
         if (nbox > 1) {
 	    /*reverse orderof rects in each band */
-	    pboxNew2 = (BoxPtr)ALLOCATE_LOCAL(sizeof(BoxRec)*nbox);
-	    pptNew2 = (DDXPointPtr)ALLOCATE_LOCAL(sizeof(DDXPointRec)*nbox);
+	    pboxNew2 = xalloc(sizeof(BoxRec)*nbox);
+	    pptNew2 = xalloc(sizeof(DDXPointRec)*nbox);
 	    if (!pboxNew2 || !pptNew2) {
-	        if (pptNew2) DEALLOCATE_LOCAL(pptNew2);
-	        if (pboxNew2) DEALLOCATE_LOCAL(pboxNew2);
+	        if (pptNew2) xfree(pptNew2);
+	        if (pboxNew2) xfree(pboxNew2);
 	        if (pboxNew1) {
-		    DEALLOCATE_LOCAL(pptNew1);
-		    DEALLOCATE_LOCAL(pboxNew1);
+		    xfree(pptNew1);
+		    xfree(pboxNew1);
 		}
 	       return;
 	    }
@@ -1529,12 +1526,12 @@ SAVAGEDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
     SAVAGESelectBuffer(pScrn, SAVAGE_FRONT);
 
     if (pboxNew2) {
-        DEALLOCATE_LOCAL(pptNew2);
-        DEALLOCATE_LOCAL(pboxNew2);
+        xfree(pptNew2);
+        xfree(pboxNew2);
     }
     if (pboxNew1) {
-        DEALLOCATE_LOCAL(pptNew1);
-        DEALLOCATE_LOCAL(pboxNew1);
+        xfree(pptNew1);
+        xfree(pboxNew1);
     }
 
     BCI_SEND(0xc0020000); /* wait for 2D idle */

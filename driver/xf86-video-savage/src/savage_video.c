@@ -1177,7 +1177,7 @@ SavageCopyPlanarDataBCI(
     SavagePtr psav = SAVPTR(pScrn);
     /* half of the dest buffer for copying the YVU data to it ??? */
     unsigned char *dstCopy = (unsigned char *)(((unsigned long)dst
-                                                + 2 * srcPitch * h
+                                                + dstPitch * h
                                                 + 0x0f) & ~0x0f);
     /* for pixel transfer */
     unsigned long offsetY = (unsigned long)dstCopy - (unsigned long)psav->FBBase;
@@ -1189,21 +1189,15 @@ SavageCopyPlanarDataBCI(
     BCI_GET_PTR;
 
     /* copy Y planar */
-    for (i=0;i<srcPitch * h;i++) {
-        dstCopy[i] = srcY[i];
-    }
+    memcpy(dstCopy, srcY, srcPitch * h);
 
     /* copy V planar */    
     dstCopy = dstCopy + srcPitch * h;
-    for (i=0;i<srcPitch2 * (h>>1);i++) {
-        dstCopy[i] = srcV[i];
-    }
+    memcpy(dstCopy, srcV, srcPitch2 * (h>>1));
 
     /* copy U planar */
     dstCopy = dstCopy + srcPitch2 * (h>>1);    
-    for (i=0;i<srcPitch2 * (h>>1);i++) {
-        dstCopy[i] = srcU[i];        
-    }
+    memcpy(dstCopy, srcU, srcPitch2 * (h>>1));
 
     /*
      * Transfer pixel data from one memory location to another location
@@ -1253,6 +1247,9 @@ SavageCopyData(
   int w
 ){
     w <<= 1;
+    if (w == srcPitch && w == dstPitch) {
+        memcpy(dst, src, w * h);
+    } else
     while(h--) {
 	memcpy(dst, src, w);
 	src += srcPitch;
@@ -1469,11 +1466,12 @@ SavageDisplayVideoOld(
     if( psav->videoFourCC != id )
       SavageStreamsOff(pScrn);
 
-    if( !psav->videoFlags & VF_STREAMS_ON )
+    if( !(psav->videoFlags & VF_STREAMS_ON) )
       {
         SavageSetBlend(pScrn,id);
 	SavageStreamsOn(pScrn);
 	SavageResetVideo(pScrn);
+	pPriv->lastKnownPitch = 0;
       }
 
     if (S3_MOBILE_TWISTER_SERIES(psav->Chipset)
@@ -1491,31 +1489,42 @@ SavageDisplayVideoOld(
      * Process horizontal scaling
      *  upscaling and downscaling smaller than 2:1 controled by MM8198
      *  MM8190 controls downscaling mode larger than 2:1
+     *  Together MM8190 and MM8198 can set arbitrary downscale up to 64:1
      */
     scalratio = 0;
     ssControl = 0;
 
     if (src_w >= (drw_w * 2)) {
         if (src_w < (drw_w * 4)) {
-            scalratio = HSCALING(2,1);
-        } else if (src_w < (drw_w * 8)) {
             ssControl |= HDSCALE_4;
-        } else if (src_w < (drw_w * 16)) {
+            scalratio = HSCALING(src_w,(drw_w*4));
+        } else if (src_w < (drw_w * 8)) {
             ssControl |= HDSCALE_8;
-        } else if (src_w < (drw_w * 32)) {
+            scalratio = HSCALING(src_w,(drw_w*8));
+        } else if (src_w < (drw_w * 16)) {
             ssControl |= HDSCALE_16;
-        }  else if (src_w < (drw_w * 64)) {
+            scalratio = HSCALING(src_w,(drw_w*16));
+        } else if (src_w < (drw_w * 32)) {
             ssControl |= HDSCALE_32;
-        } else
+            scalratio = HSCALING(src_w,(drw_w*32));
+        } else if (src_w < (drw_w * 64)) {
             ssControl |= HDSCALE_64;
+            scalratio = HSCALING(src_w,(drw_w*64));
+        } else {
+            /* Request beyond maximum downscale! */
+            ssControl |= HDSCALE_64;
+            scalratio = HSCALING(2,1);
+        }
     } else 
         scalratio = HSCALING(src_w,drw_w);
 
     ssControl |= src_w;
     /*ssControl |= (1 << 24);*/
     ssControl |= (GetBlendForFourCC(psav->videoFourCC) << 24);
+#if 0
     /* Wait for VBLANK. */
     VerticalRetraceWait();
+#endif
     OUTREG(SSTREAM_CONTROL_REG, ssControl);
     if (scalratio)
         OUTREG(SSTREAM_STRETCH_REG,scalratio);
@@ -1612,11 +1621,12 @@ SavageDisplayVideoNew(
     if( psav->videoFourCC != id )
       SavageStreamsOff(pScrn);
 
-    if( !psav->videoFlags & VF_STREAMS_ON )
+    if( !(psav->videoFlags & VF_STREAMS_ON) )
       {
 	SavageSetBlend(pScrn,id);
 	SavageStreamsOn(pScrn);
 	SavageResetVideo(pScrn);
+	pPriv->lastKnownPitch = 0;
       }
 
     /* Calculate horizontal and vertical scale factors. */
@@ -1746,11 +1756,12 @@ SavageDisplayVideo2000(
     if( psav->videoFourCC != id )
         SavageStreamsOff(pScrn);
                                                                                                                              
-    if( !psav->videoFlags & VF_STREAMS_ON )
+    if( !(psav->videoFlags & VF_STREAMS_ON) )
     {
         SavageSetBlend(pScrn,id);
         SavageStreamsOn(pScrn);
         SavageResetVideo(pScrn);
+        pPriv->lastKnownPitch = 0;
     }
 
     if (src_w > drw_w)
@@ -1912,6 +1923,10 @@ SavagePutImage(
 	break;
     }  
 
+    if (srcPitch2 != 0 && S3_SAVAGE4_SERIES(psav->Chipset) && psav->BCIforXv) {
+        new_size = ((new_size + 0xF) & ~0xF) + srcPitch * height + srcPitch2 * height;
+    }
+
 /*    if(!(pPriv->area = SavageAllocateMemory(pScrn, pPriv->area, new_h)))
 	return BadAlloc;*/
     pPriv->video_offset = SavageAllocateMemory(pScrn, &pPriv->video_memory,
@@ -1937,7 +1952,7 @@ SavagePutImage(
 	offsetU += tmp;
 	offsetV += tmp;
 	nlines = ((((y2 + 0xffff) >> 16) + 1) & ~1) - top;
-        if (S3_SAVAGE4_SERIES(psav->Chipset) && psav->BCIforXv) {
+        if (S3_SAVAGE4_SERIES(psav->Chipset) && psav->BCIforXv && (npixels & 0xF) == 0) {
             SavageCopyPlanarDataBCI(
                 pScrn,
 	    	buf + (top * srcPitch) + (left >> 1), 

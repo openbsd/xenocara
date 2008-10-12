@@ -202,7 +202,7 @@ Bool SAVAGEInitMC(ScreenPtr pScreen)
     return FALSE;
   }
 
-  offset = pSAVAGE->hwmcOffset + pSAVAGE->FrameBufferBase;
+  offset = pSAVAGE->hwmcOffset + pSAVAGE->FbRegion.base;
 
   if(drmAddMap(pSAVAGE->drmFD, offset, pSAVAGE->hwmcSize,
                DRM_FRAME_BUFFER, 0, &pSAVAGEDriPriv->xvmcSurfHandle) < 0)

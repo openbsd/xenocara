@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/savage/savage_i2c.c,v 1.1 2001/02/13 21:15:19 dawes Exp $ */
 
 /*
 Copyright (C) 1994-2000 The XFree86 Project, Inc.  All Rights Reserved.

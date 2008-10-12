@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/savage/savage_vbe.c,v 1.11 2002/05/14 20:19:52 alanh Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -19,7 +18,6 @@
 #endif
 #define L_ADD(x)  (B_O32(x) & 0xffff) + ((B_O32(x) >> 12) & 0xffff00)
 
-Bool vbeModeInit( vbeInfoPtr, int );
 static int SavageGetDevice( SavagePtr psav );
 /*static int SavageGetTVType( SavagePtr psav );*/
 void SavageSetVESAModeCrtc1( SavagePtr psav, int n, int Refresh );
@@ -187,15 +185,6 @@ SavageSetVESAMode( SavagePtr psav, int n, int Refresh )
 	    ErrorF("Set video mode failed\n");
 	}
     }
-#ifdef XFree86LOADER
-    else
-    {
-	if( !vbeModeInit( psav->pVbe, n ) )
-	{
-	    ErrorF("Set video mode failed\n");
-	}
-    }
-#endif
 }
 
 void

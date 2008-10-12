@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/savage/savage_dga.c,v 1.6 2003/01/18 15:22:29 eich Exp $ */
 
 /*
 Copyright (C) 1994-2000 The XFree86 Project, Inc.  All Rights Reserved.
@@ -391,7 +390,7 @@ Savage_OpenFramebuffer(
     SavagePtr psav = SAVPTR(pScrn);
 
     *name = NULL;	 /* no special device */
-    *mem = (unsigned char*)psav->FrameBufferBase;
+    *mem = (unsigned char*)psav->FbRegion.base;
     *size = psav->videoRambytes;
     *offset = 0;
     *flags = DGA_NEED_ROOT;

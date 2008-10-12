@@ -460,7 +460,6 @@ SavageUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int 
     CARD32 * srcp; 
     
     Bpp = pDst->drawable.bitsPerPixel / 8;
-    dwords = (((w * Bpp) + 3) >> 2) * h;
 
     psav->sbd_offset = exaGetPixmapOffset(pDst);
     psav->sbd_high = SavageSetBD(psav, pDst);
@@ -486,17 +485,19 @@ SavageUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int 
     BCI_SEND(BCI_X_Y(x, y));
     BCI_SEND(BCI_W_H(w, h));
     
-    srcp = (CARD32 *)src;
     queue = 120 * 1024;
-    while (dwords) {
-	if (queue < 4) {
-	    BCI_RESET;
-	    queue = 120 * 1024;
+    dwords = (((w * Bpp) + 3) >> 2);
+    for (i = 0; i < h; i++) {
+	srcp = (CARD32 *)src;
+	for (j = 0; j < dwords; j++) {
+	    if (queue < 4) {
+		BCI_RESET;
+		queue = 120 * 1024;
+	    }
+	    BCI_SEND(*srcp++);
+	    queue -= 4;
 	}
-	BCI_SEND(*srcp);
-	queue -= 4;
-	dwords--;
-	srcp++;
+	src += src_pitch;
     }
 
     /*exaWaitSync(pDst->drawable.pScreen);*/
