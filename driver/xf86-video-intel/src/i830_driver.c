@@ -334,7 +334,7 @@ static OptionInfoRec I830Options[] = {
    {OPTION_CHECKDEVICES, "CheckDevices",OPTV_BOOLEAN,	{0},	FALSE},
    {OPTION_MODEDEBUG,	"ModeDebug",	OPTV_BOOLEAN,	{0},	FALSE},
    {OPTION_LVDS24BITMODE, "LVDS24Bit",	OPTV_BOOLEAN,	{0},	FALSE},
-   {OPTION_FBC,		"FramebufferCompression", OPTV_BOOLEAN, {0}, TRUE},
+   {OPTION_FBC,		"FramebufferCompression", OPTV_BOOLEAN, {0}, FALSE},
    {OPTION_TILING,	"Tiling",	OPTV_BOOLEAN,	{0},	TRUE},
 #ifdef XF86DRI_MM
    {OPTION_INTELTEXPOOL,"Legacy3D",     OPTV_BOOLEAN,	{0},	FALSE},
@@ -2854,11 +2854,15 @@ I830ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	   pI830->tiling = FALSE;
    }
 
+#ifdef notyet
    /* Enable FB compression if possible */
    if (i830_fb_compression_supported(pI830))
        pI830->fb_compression = TRUE;
    else
        pI830->fb_compression = FALSE;
+#else
+   pI830->fb_compression = FALSE;
+#endif
 
    /* Again, allow user override if set */
    if (xf86IsOptionSet(pI830->Options, OPTION_FBC)) {
