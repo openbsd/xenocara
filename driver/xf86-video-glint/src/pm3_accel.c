@@ -1,4 +1,4 @@
-/* $XdotOrg: driver/xf86-video-glint/src/pm3_accel.c,v 1.6 2006/04/07 19:07:59 ajax Exp $ */
+/* $XdotOrg: driver/xf86-video-glint/src/pm3_accel.c,v 1.5 2005/07/11 02:29:49 ajax Exp $ */
 /*
  * Copyright 2000-2001 by Sven Luther <luther@dpt-info.u-strasbg.fr>.
  *
@@ -67,7 +67,7 @@
 #define PM3_OTHERWRITEMASK \
   (pGlint->PM3_UsingSGRAM ? PM3FBSoftwareWriteMask : PM3FBHardwareWriteMask )
 
-#ifndef XF86DRI
+#ifndef XF86DRI_DEVEL
 #define PM3_PLANEMASK(planemask)				\
 { 								\
 	if (planemask != pGlint->planemask) {			\

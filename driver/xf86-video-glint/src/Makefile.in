@@ -81,11 +81,12 @@ glint_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(glint_drv_la_LTLIBRARIES)
 glint_drv_la_LIBADD =
 am__glint_drv_la_SOURCES_DIST = glint_common.h glint_dga.c \
-	glint_driver.c glint.h glint_regs.h glint_shadow.c IBMramdac.c \
-	pm2_accel.c pm2_dac.c pm2ramdac.c pm2v_dac.c pm2_video.c \
-	pm2vramdac.c pm3_accel.c pm3_dac.c pm3_regs.h pm3_video.c \
-	pm_accel.c pm_dac.c sx_accel.c TIramdac.c tx_accel.c tx_dac.c \
-	glint_dri.c glint_dri.h glint_dripriv.h
+	glint_driver.c glint.h glintpcirename.h glint_regs.h \
+	glint_shadow.c IBMramdac.c pm2_accel.c pm2_dac.c pm2ramdac.c \
+	pm2v_dac.c pm2_video.c pm2vramdac.c pm3_accel.c pm3_dac.c \
+	pm3_regs.h pm3_video.c pm_accel.c pm_dac.c sx_accel.c \
+	TIramdac.c tx_accel.c tx_dac.c glint_dri.c glint_dri.h \
+	glint_dripriv.h
 @DRI_TRUE@am__objects_1 = glint_dri.lo
 am_glint_drv_la_OBJECTS = glint_dga.lo glint_driver.lo glint_shadow.lo \
 	IBMramdac.lo pm2_accel.lo pm2_dac.lo pm2ramdac.lo pm2v_dac.lo \
@@ -141,6 +142,7 @@ DRI_CFLAGS = @DRI_CFLAGS@
 DRI_FALSE = @DRI_FALSE@
 DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -169,6 +171,7 @@ MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -177,18 +180,25 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
+PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
+XSERVER_LIBPCIACCESS_FALSE = @XSERVER_LIBPCIACCESS_FALSE@
+XSERVER_LIBPCIACCESS_TRUE = @XSERVER_LIBPCIACCESS_TRUE@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
@@ -241,11 +251,11 @@ glint_drv_la_LTLIBRARIES = glint_drv.la
 glint_drv_la_LDFLAGS = -module -avoid-version
 glint_drv_ladir = @moduledir@/drivers
 glint_drv_la_SOURCES = glint_common.h glint_dga.c glint_driver.c \
-	glint.h glint_regs.h glint_shadow.c IBMramdac.c pm2_accel.c \
-	pm2_dac.c pm2ramdac.c pm2v_dac.c pm2_video.c pm2vramdac.c \
-	pm3_accel.c pm3_dac.c pm3_regs.h pm3_video.c pm_accel.c \
-	pm_dac.c sx_accel.c TIramdac.c tx_accel.c tx_dac.c \
-	$(am__append_1)
+	glint.h glintpcirename.h glint_regs.h glint_shadow.c \
+	IBMramdac.c pm2_accel.c pm2_dac.c pm2ramdac.c pm2v_dac.c \
+	pm2_video.c pm2vramdac.c pm3_accel.c pm3_dac.c pm3_regs.h \
+	pm3_video.c pm_accel.c pm_dac.c sx_accel.c TIramdac.c \
+	tx_accel.c tx_dac.c $(am__append_1)
 all: all-am
 
 .SUFFIXES:

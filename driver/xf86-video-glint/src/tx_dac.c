@@ -69,10 +69,8 @@ TXInit(ScrnInfoPtr pScrn, DisplayModePtr mode, GLINTRegPtr pReg)
          * as incorrect scanline interleaving when software rendering.
          */
 	STOREREG(GMultGLINTAperture, pGlint->realWidth);
-	STOREREG(GMultGLINT1, 
-			pGlint->MultiPciInfo[0]->memBase[2] & 0xFF800000);
-	STOREREG(GMultGLINT2,
-			pGlint->MultiPciInfo[1]->memBase[2] & 0xFF800000);
+	STOREREG(GMultGLINT1, PCI_REGION_BASE(pGlint->MultiPciInfo[0], 2, REGION_MEM) & 0xFF800000);
+	STOREREG(GMultGLINT2, PCI_REGION_BASE(pGlint->MultiPciInfo[1], 2, REGION_MEM) & 0xFF800000);
     }
 
     if (IS_GMX2000 || IS_GLORIAXXL) {

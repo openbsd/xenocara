@@ -41,6 +41,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 #undef MIN
 #undef ABS
@@ -2767,9 +2769,9 @@ NewAdaptorPriv(ScrnInfoPtr pScrn, Bool VideoIO)
 	    xvipc.pAPriv = pAPriv;		/* Server head ID */
 	    xvipc.op = OP_CONNECT;
 
-	    xvipc.a = pGlint->PciInfo->bus;
-	    xvipc.b = pGlint->PciInfo->device;
-	    xvipc.c = pGlint->PciInfo->func;
+	    xvipc.a = PCI_DEV_BUS(pGlint->PciInfo);
+	    xvipc.b = PCI_DEV_DEV(pGlint->PciInfo);
+	    xvipc.c = PCI_DEV_FUNC(pGlint->PciInfo);
 
 	    xvipc.d = pScrn->videoRam << 10;	/* XF86Config overrides probing */
 
@@ -3004,8 +3006,10 @@ Permedia2VideoInit(ScreenPtr pScreen)
 	    break;
     }
 
-    if (VideoIO)
-	switch (pciReadLong(pGlint->PciTag, PCI_SUBSYSTEM_ID_REG)) {
+    if (VideoIO) {
+      unsigned int temp;
+      PCI_READ_LONG(pGlint->PciInfo, &temp, PCI_SUBSYSTEM_ID_REG);
+      switch (temp) {
 	case PCI_SUBSYSTEM_ID_WINNER_2000_P2A:
 	case PCI_SUBSYSTEM_ID_WINNER_2000_P2C:
 	case PCI_SUBSYSTEM_ID_GLORIA_SYNERGY_P2A:
@@ -3016,7 +3020,7 @@ Permedia2VideoInit(ScreenPtr pScreen)
 	    xf86DrvMsgVerb(pScrn->scrnIndex, X_PROBED, 1, "No Xv vio support for this board\n");
 	    VideoIO = FALSE;
 	}
-
+    }
     if (pGlint->NoAccel && !VideoIO)
 	return;
 

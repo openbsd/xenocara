@@ -33,6 +33,7 @@ glint_drv_la_SOURCES = \
          glint_dga.c \
          glint_driver.c \
          glint.h \
+	 glintpcirename.h \
          glint_regs.h \
          glint_shadow.c \
          IBMramdac.c \

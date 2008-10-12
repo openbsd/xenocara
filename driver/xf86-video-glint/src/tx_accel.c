@@ -296,7 +296,7 @@ static void TXLoadCoord(
 ){
     GLINTPtr pGlint = GLINTPTR(pScrn);
     
-#ifndef XF86DRI
+#ifndef XF86DRI_DEVEL
     if (w != pGlint->startxsub) {
     	GLINT_WRITE_REG(w<<16, StartXSub);
 	pGlint->startxsub = w;

@@ -30,13 +30,19 @@
 #ifndef _GLINT_H_
 #define _GLINT_H_
 
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+
+#include "glintpcirename.h"
+
 #include "xaa.h"
 #include "xf86RamDac.h"
 #include "xf86cmap.h"
 #include "xf86i2c.h"
 #include "xf86DDC.h"
 #include "xf86xv.h"
-#ifdef XF86DRI
+#ifdef XF86DRI_DEVEL
 #include "xf86drm.h"
 #include "sarea.h"
 #define _XF86DRI_SERVER_
@@ -44,18 +50,15 @@
 #include "GL/glxint.h"
 #include "glint_dripriv.h"
 #endif
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
 
 #define GLINT_MAX_MULTI_DEVICES 2
 
 #define GLINT_VERSION 4000
 #define GLINT_NAME "GLINT"
 #define GLINT_DRIVER_NAME "glint"
-#define GLINT_MAJOR_VERSION 1
-#define GLINT_MINOR_VERSION 1
-#define GLINT_PATCHLEVEL 1
+#define GLINT_MAJOR_VERSION PACKAGE_VERSION_MAJOR
+#define GLINT_MINOR_VERSION PACKAGE_VERSION_MINOR
+#define GLINT_PATCHLEVEL PACKAGE_VERSION_PATCHLEVEL
 
 typedef struct {
 	CARD32 glintRegs[0x2000];
@@ -77,7 +80,9 @@ typedef struct {
     int			numMultiDevices;
     int			MultiChip;
     Bool		MultiAperture;
+#ifndef XSERVER_LIBPCIACCESS
     PCITAG		PciTag;
+#endif
     EntityInfoPtr	pEnt;
     GLINTEntPtr		entityPrivate;	
     RamDacHelperRecPtr	RamDac;
@@ -169,7 +174,7 @@ typedef struct {
     void		(*VideoTimerCallback)(ScrnInfoPtr, Time);
     XF86VideoAdaptorPtr adaptor;
     int                 videoKey;
-#ifdef XF86DRI
+#ifdef XF86DRI_DEVEL
     Bool		directRenderingEnabled;
     Bool		PCIMode;
     DRIInfoPtr		pDRIInfo;

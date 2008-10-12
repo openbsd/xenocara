@@ -65,10 +65,24 @@ Permedia3MemorySizeDetect(ScrnInfoPtr pScrn)
      * regardless of memory configuration */
     pGlint->FbMapSize = 64*1024*1024;
 
+#ifndef XSERVER_LIBPCIACCESS    
     /* Mark as VIDMEM_MMIO to avoid write-combining while detecting memory */
     pGlint->FbBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO,
 			pGlint->PciTag, pGlint->FbAddress, pGlint->FbMapSize);
+#else
+    {
+      void** result = (void**)&pGlint->FbBase;
+      int err = pci_device_map_range(pGlint->PciInfo,
+				     pGlint->FbAddress,
+				     pGlint->FbMapSize,
+				     PCI_DEV_MAP_FLAG_WRITABLE,
+				     result);
+      
+      if (err) 
+	return FALSE;
+    }
 
+#endif
     if (pGlint->FbBase == NULL) 
 	return 0;
 
@@ -119,8 +133,12 @@ Permedia3MemorySizeDetect(ScrnInfoPtr pScrn)
 
     GLINT_SLOW_WRITE_REG(temp, PM3MemBypassWriteMask);
 
+#ifndef XSERVER_LIBPCIACCESS
     xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pGlint->FbBase, 
 							pGlint->FbMapSize);
+#else
+    pci_device_unmap_range(pGlint->PciInfo, pGlint->FbBase, pGlint->FbMapSize);
+#endif
 
     pGlint->FbBase = NULL;
     pGlint->FbMapSize = 0;
@@ -466,10 +484,8 @@ Permedia3Init(ScrnInfoPtr pScrn, DisplayModePtr mode, GLINTRegPtr pReg)
 
     if (pGlint->MultiAperture) {
 	STOREREG(GMultGLINTAperture, pGlint->realWidth);
-	STOREREG(GMultGLINT1, 
-			pGlint->MultiPciInfo[0]->memBase[2] & 0xFF800000);
-	STOREREG(GMultGLINT2,
-			pGlint->MultiPciInfo[1]->memBase[2] & 0xFF800000);
+	STOREREG(GMultGLINT1, PCI_REGION_BASE(pGlint->MultiPciInfo[0], 2, REGION_MEM) & 0xFF800000);
+	STOREREG(GMultGLINT2, PCI_REGION_BASE(pGlint->MultiPciInfo[1], 2, REGION_MEM) & 0xFF800000);
     }
 
     STOREREG(PM3MemBypassWriteMask, 	0xffffffff);

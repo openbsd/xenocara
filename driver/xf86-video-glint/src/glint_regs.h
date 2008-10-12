@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/glint/glint_regs.h,v 1.36tsi Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/glint/glint_regs.h,v 1.36 2003/01/12 03:55:47 tsi Exp $ */
 
 /*
  * glint register file 
@@ -34,46 +34,46 @@
 #define PCI_CHIP_3DLABS_GAMMA2					0x0E
 
 /* The boards we know */
-#define IS_GLORIAXXL	((pGlint->PciInfo->subsysVendor == 0x1048) && \
-			 (pGlint->PciInfo->subsysCard   == 0x0a42))
+#define IS_GLORIAXXL	((PCI_SUB_VENDOR_ID(pGlint->PciInfo) == 0x1048) && \
+			 (PCI_SUB_DEVICE_ID(pGlint->PciInfo)   == 0x0a42))
 
-#define IS_GLORIASYNERGY ((pGlint->PciInfo->subsysVendor == 0x1048) && \
-			 (pGlint->PciInfo->subsysCard   == 0x0a32))
+#define IS_GLORIASYNERGY ((PCI_SUB_VENDOR_ID(pGlint->PciInfo) == 0x1048) && \
+			 (PCI_SUB_DEVICE_ID(pGlint->PciInfo)   == 0x0a32))
 
-#define IS_GMX2000	((pGlint->PciInfo->subsysVendor == 0x3d3d) && \
-			 (pGlint->PciInfo->subsysCard   == 0x0106))
+#define IS_GMX2000	((PCI_SUB_VENDOR_ID(pGlint->PciInfo) == 0x3d3d) && \
+			 (PCI_SUB_DEVICE_ID(pGlint->PciInfo)   == 0x0106))
 
-#define IS_J2000	((pGlint->PciInfo->subsysVendor == 0x1097) && \
-			 (pGlint->PciInfo->subsysCard   == 0x3d32))
+#define IS_J2000	((PCI_SUB_VENDOR_ID(pGlint->PciInfo) == 0x1097) && \
+			 (PCI_SUB_DEVICE_ID(pGlint->PciInfo)   == 0x3d32))
 
-#define IS_JPRO		((pGlint->PciInfo->subsysVendor == 0x1097) && \
-			 (pGlint->PciInfo->subsysCard   == 0x3db3))
+#define IS_JPRO		((PCI_SUB_VENDOR_ID(pGlint->PciInfo) == 0x1097) && \
+			 (PCI_SUB_DEVICE_ID(pGlint->PciInfo)   == 0x3db3))
 
 /* COMPAQ OEM VX1 PCI
  *   subsys == 0x0121 if VGA is enabled
  *   subsys == 0x000a if VGA has never been enabled
  */
-#define IS_PCI_QVX1	(pGlint->PciInfo->subsysVendor == 0x3d3d &&  \
-                         ((pGlint->PciInfo->subsysCard == 0x0121) ||  \
-			  (pGlint->PciInfo->subsysCard == 0x000a)))
+#define IS_PCI_QVX1	(PCI_SUB_VENDOR_ID(pGlint->PciInfo) == 0x3d3d &&  \
+                         ((PCI_SUB_DEVICE_ID(pGlint->PciInfo) == 0x0121) ||  \
+			  (PCI_SUB_DEVICE_ID(pGlint->PciInfo) == 0x000a)))
 
 /* COMPAQ OEM VX1 AGP
  *   subsys == 0x0144 if VGA is enabled
  *   subsys == 0x000c if VGA has never been enabled
  */
-#define IS_AGP_QVX1	(pGlint->PciInfo->subsysVendor == 0x3d3d &&  \
-			 ((pGlint->PciInfo->subsysCard == 0x0144) ||  \
-			  (pGlint->PciInfo->subsysCard == 0x000c)))
+#define IS_AGP_QVX1	(PCI_SUB_VENDOR_ID(pGlint->PciInfo) == 0x3d3d &&  \
+			 ((PCI_SUB_DEVICE_ID(pGlint->PciInfo) == 0x0144) ||  \
+			  (PCI_SUB_DEVICE_ID(pGlint->PciInfo) == 0x000c)))
 
 #define IS_QVX1		(IS_PCI_QVX1 || IS_AGP_QVX1)
 
-#define IS_ELSA_SYNERGY	((pGlint->PciInfo->subsysVendor == 0x1048) && \
-			 (pGlint->PciInfo->subsysCard   == 0x0a32))
+#define IS_ELSA_SYNERGY	((PCI_SUB_VENDOR_ID(pGlint->PciInfo) == 0x1048) && \
+			 (PCI_SUB_DEVICE_ID(pGlint->PciInfo)   == 0x0a32))
 
 /* COMPAQ OEM Permedia 2V with VGA disable jumper - 0x13e9 ? */
-#define IS_QPM2V	((pGlint->PciInfo->subsysVendor == 0x13e9) && \
-			 ((pGlint->PciInfo->subsysCard == 0x0100) ||  \
-			  (pGlint->PciInfo->subsysCard == 0x0002)))
+#define IS_QPM2V	((PCI_SUB_VENDOR_ID(pGlint->PciInfo) == 0x13e9) && \
+			 ((PCI_SUB_DEVICE_ID(pGlint->PciInfo) == 0x0100) ||  \
+			  (PCI_SUB_DEVICE_ID(pGlint->PciInfo) == 0x0002)))
 
 /**********************************************
 *  GLINT 500TX Configuration Region Registers *
@@ -1248,7 +1248,8 @@ do{								\
 
 #define GLINTDACDelay(x) do {                                   \
         int delay = x;                                          \
-	while(delay--){(void)GLINT_READ_REG(InFIFOSpace);};     \
+        unsigned char tmp;                                      \
+	while(delay--){tmp = GLINT_READ_REG(InFIFOSpace);};     \
 	} while(0)
         
 #define GLINT_MASK_WRITE_REG(v,m,r)				\
@@ -1281,7 +1282,7 @@ do{								\
 	}							\
 }
 
-#ifndef XF86DRI
+#ifndef XF86DRI_DEVEL
 #define LOADROP(rop)						\
 {								\
 	if (pGlint->ROP != rop)	{				\
@@ -1306,7 +1307,7 @@ do{								\
 	}							\
 }
 
-#ifndef XF86DRI
+#ifndef XF86DRI_DEVEL
 #define DO_PLANEMASK(planemask)					\
 { 								\
 	if (planemask != pGlint->planemask) {			\
