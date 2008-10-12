@@ -32,4 +32,5 @@ voodoo_drv_la_SOURCES = \
          voodoo_dga.c \
          voodoo_driver.c \
          voodoo.h \
+	 voodoo_pcirename.h \
          voodoo_hardware.c

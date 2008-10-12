@@ -39,7 +39,6 @@
  * ANY KIND OR FORM.
  */
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/voodoo/voodoo_driver.c,v 1.27 2001/08/07 07:04:46 keithp Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -265,7 +264,10 @@ VoodooProbe(DriverPtr drv, int flags)
     }
 
     /* PCI BUS */
-    if (xf86GetPciVideoInfo() ) {
+#ifndef XSERVER_LIBPCIACCESS
+    if (xf86GetPciVideoInfo() )
+#endif
+    {
 	numUsed = xf86MatchPciInstances(VOODOO_NAME, PCI_VENDOR_3DFX,
 					VoodooChipsets, VoodooPCIChipsets, 
 					devSections,numDevSections,
@@ -400,8 +402,9 @@ VoodooPreInit(ScrnInfoPtr pScrn, int flags)
   pVoo->pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
   
   pVoo->PciInfo = xf86GetPciInfoForEntity(pVoo->pEnt->index);
+#ifndef XSERVER_LIBPCIACCESS
   pVoo->PciTag = pciTag(pVoo->PciInfo->bus, pVoo->PciInfo->device, pVoo->PciInfo->func);
-  
+#endif
 
   /* Collect all of the relevant option flags (fill in pScrn->options) */
   xf86CollectOptions(pScrn, NULL);
@@ -446,13 +449,38 @@ VoodooPreInit(ScrnInfoPtr pScrn, int flags)
   }
 
   /* MMIO at 0 , FB at 4Mb, Texture at 8Mb */
+  pVoo->PhysBase = PCI_REGION_BASE(pVoo->PciInfo, 0, REGION_MEM) + 0x400000;
+
+#ifndef XSERVER_LIBPCIACCESS
   pVoo->MMIO = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO, pVoo->PciTag,
-  		pVoo->PciInfo->memBase[0], 0x400000);
+			     pVoo->PciInfo->memBase[0], 0x400000);
   pVoo->FBBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO, pVoo->PciTag,
-  		pVoo->PciInfo->memBase[0] + 0x400000, 0x400000);
+			       pVoo->PciInfo->memBase[0] + 0x400000, 0x400000);
   		
-  pVoo->PhysBase = pVoo->PciInfo->memBase[0] + 0x400000;
-  		
+#else
+  {
+    void** result = (void**)&pVoo->MMIO;
+    int err = pci_device_map_range(pVoo->PciInfo,
+				   PCI_REGION_BASE(pVoo->PciInfo, 0, REGION_MEM),
+				   0x400000,
+				   PCI_DEV_MAP_FLAG_WRITABLE,
+				   result);
+    if (err)
+      return FALSE;
+  }
+
+  {
+    void** result = (void**)&pVoo->FBBase;
+    int err = pci_device_map_range(pVoo->PciInfo,
+				   PCI_REGION_BASE(pVoo->PciInfo, 0, REGION_MEM) + 0x400000,
+				   0x400000,
+				   PCI_DEV_MAP_FLAG_WRITABLE|
+				   PCI_DEV_MAP_FLAG_WRITE_COMBINE,
+				   result);
+    if (err)
+      return FALSE;
+  }
+#endif  		
   VoodooHardwareInit(pVoo);
   
   /*

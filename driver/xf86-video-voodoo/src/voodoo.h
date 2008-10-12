@@ -1,3 +1,4 @@
+#include "voodoo_pcirename.h"
 #include <string.h>
 
 typedef struct {

@@ -14,7 +14,7 @@ voodoo \- Voodoo video driver
 .fi
 .SH DESCRIPTION
 .B voodoo 
-is an XFree86 driver for Voodoo 1 and Voodoo 2 series video adapters.
+is an __xservername__ driver for Voodoo 1 and Voodoo 2 series video adapters.
 On the Voodoo 1 the driver uses a shadow buffer in system memory as
 the video adapter has only 3D acceleration. Selected portions of the shadow 
 framebuffer are copied out to the Voodoo board at the right time. Because 
@@ -67,6 +67,6 @@ The driver interacts badly with the
 sstfb frame buffer driver as there is insufficient information to restore
 the chip to its previous state. 
 .SH "SEE ALSO"
-XFree86(1), __xconfigfile__(__filemansuffix__), xf86config(1), Xserver(1), X(__miscmansuffix__)
+__xservername__(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1), X(__miscmansuffix__)
 .SH AUTHORS
 Authors: Alan Cox, Ghozlane Toumi, Henrik Harmsen.

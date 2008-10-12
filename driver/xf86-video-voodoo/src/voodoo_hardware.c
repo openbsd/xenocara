@@ -145,12 +145,13 @@ static void wait_idle(VoodooPtr pVoo)
 
 static void pci_enable(VoodooPtr pVoo, int wr, int dac, int fifo)
 {
-	CARD32 x = pciReadLong(pVoo->PciTag, 0x40);
+	CARD32 x;
+	PCI_READ_LONG(pVoo->PciInfo, &x, 0x40);
 	x &= ~7;
 	x |= wr;
 	x |= fifo<<1;
 	x |= dac<<2;
-	pciWriteLong(pVoo->PciTag, 0x40, x);
+	PCI_WRITE_LONG(pVoo->PciInfo, x, 0x40);
 }
 
 /*
@@ -160,9 +161,9 @@ static void pci_enable(VoodooPtr pVoo, int wr, int dac, int fifo)
 static void vclock_enable(VoodooPtr pVoo, int enable)
 {
 	if(enable)
-		pciWriteLong(pVoo->PciTag, 0xC0, 0);
+		PCI_WRITE_LONG(pVoo->PciInfo, 0, 0xc0);
 	else
-		pciWriteLong(pVoo->PciTag, 0xE0, 0);
+		PCI_WRITE_LONG(pVoo->PciInfo, 0, 0xe0);
 }
 
 /*

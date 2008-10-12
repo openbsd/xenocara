@@ -32,6 +32,12 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Have 1bpp support */
+#undef HAVE_XF1BPP
+
+/* Have 4bpp support */
+#undef HAVE_XF4BPP
+
 /* Name of package */
 #undef PACKAGE
 
