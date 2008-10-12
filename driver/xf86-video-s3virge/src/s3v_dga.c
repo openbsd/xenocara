@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/s3virge/s3v_dga.c,v 1.7 2002/01/14 18:02:58 dawes Exp $ */
 
 /*
 Copyright (C) 1994-2000 The XFree86 Project, Inc.  All Rights Reserved.
@@ -67,12 +66,7 @@ in this Software without prior written authorization from the XFree86 Project.
 #include "xaa.h"
 #include "xaalocal.h"
 #include "s3v.h"
-#if 0
-#include "mga_bios.h"
-#include "mga.h"
-#include "mga_reg.h"
-#include "mga_macros.h"
-#endif
+
 #include "dgaproc.h"
 
 
@@ -84,10 +78,7 @@ static void S3V_SetViewport(ScrnInfoPtr, int, int, int);
 static void S3V_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void S3V_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
 /* dummy... */
-#if 0
-static void MGA_BlitTransRect(ScrnInfoPtr, int, int, int, int, int, int, 
-					unsigned long);
-#endif
+
 
 static
 DGAFunctionRec S3V_DGAFuncs = {
@@ -326,19 +317,7 @@ S3V_BlitRect(
     }
 }
 
-#if 0
-static void 
-MGA_BlitTransRect(
-   ScrnInfoPtr pScrn, 
-   int srcx, int srcy, 
-   int w, int h, 
-   int dstx, int dsty,
-   unsigned long color
-){
-  /* this one should be separate since the XAA function would
-     prohibit usage of ~0 as the key */
-}
-#endif
+
 
 static Bool 
 S3V_OpenFramebuffer(
@@ -352,7 +331,7 @@ S3V_OpenFramebuffer(
     S3VPtr ps3v = S3VPTR(pScrn);
 
     *name = NULL; 		/* no special device */
-    *mem = (unsigned char*)ps3v->PciInfo->memBase[0];
+    *mem = (unsigned char*)PCI_REGION_BASE(ps3v->PciInfo, 0, REGION_MEM);
     *size = ps3v->videoRambytes;
     *offset = 0;
     *flags = DGA_NEED_ROOT;

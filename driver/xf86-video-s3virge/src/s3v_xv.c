@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/s3virge/s3v_xv.c,v 1.10tsi Exp $ */
 /*
 Copyright (C) 2000 The XFree86 Project, Inc.  All Rights Reserved.
 
@@ -64,11 +63,7 @@ static XF86VideoAdaptorPtr S3VSetupImageVideoOverlay(ScreenPtr);
 static int  S3VSetPortAttributeOverlay(ScrnInfoPtr, Atom, INT32, pointer);
 static int  S3VGetPortAttributeOverlay(ScrnInfoPtr, Atom ,INT32 *, pointer);
 
-#if 0
-static XF86VideoAdaptorPtr MGASetupImageVideoTexture(ScreenPtr);
-static int  MGASetPortAttributeTexture(ScrnInfoPtr, Atom, INT32, pointer);
-static int  MGAGetPortAttributeTexture(ScrnInfoPtr, Atom ,INT32 *, pointer);
-#endif
+
 static void S3VStopVideo(ScrnInfoPtr, pointer, Bool);
 static void S3VQueryBestSize(ScrnInfoPtr, Bool, short, short, short, short, 
 			unsigned int *, unsigned int *, pointer);
@@ -78,9 +73,6 @@ static int  S3VPutImage(ScrnInfoPtr, short, short, short, short, short,
 static int  S3VQueryImageAttributes(ScrnInfoPtr, int, unsigned short *, 
 			unsigned short *,  int *, int *);
 
-#if 0
-static void MGABlockHandler(int, pointer, pointer, pointer);
-#endif
 
 static void S3VResetVideoOverlay(ScrnInfoPtr);
 
@@ -132,28 +124,8 @@ void S3VInitVideo(ScreenPtr pScreen)
        && ps3v->XVideo
        )
     {
-#if 0
-	if((pMga->Overlay8Plus24 /* || dualhead */ || pMga->TexturedVideo) &&
-	   (pScrn->bitsPerPixel != 24))
-        {
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Using texture video\n");
-	    newAdaptor = MGASetupImageVideoTexture(pScreen);
-	    pMga->TexturedVideo = TRUE;
-	} else {
-#endif
-
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Using overlay video\n");
 	    newAdaptor = S3VSetupImageVideoOverlay(pScreen);
-
-#if 0
-	    pMga->TexturedVideo = FALSE;
-	}*/
-
-	if(!pMga->Overlay8Plus24 /* && !dualhead */)	  
-	  S3VInitOffscreenImages(pScreen);
-	pMga->BlockHandler = pScreen->BlockHandler;
-	pScreen->BlockHandler = MGABlockHandler;
-#endif
     }
     
 
@@ -241,43 +213,9 @@ S3VSetPortAttributeOverlay(
   INT32 value, 
   pointer data
 ){
-#if 0
-  MGAPtr pMga = MGAPTR(pScrn);
-  MGAPortPrivPtr pPriv = pMga->portPrivate;
-
-  CHECK_DMA_QUIESCENT(pMga, pScrn);
-
-  if(attribute == xvBrightness) {
-	if((value < -128) || (value > 127))
-	   return BadValue;
-	pPriv->brightness = value;
-	OUTREG(MGAREG_BESLUMACTL, ((pPriv->brightness & 0xff) << 16) |
-			           (pPriv->contrast & 0xff));
-  } else
-  if(attribute == xvContrast) {
-	if((value < 0) || (value > 255))
-	   return BadValue;
-	pPriv->contrast = value;
-	OUTREG(MGAREG_BESLUMACTL, ((pPriv->brightness & 0xff) << 16) |
-			           (pPriv->contrast & 0xff));
-  } else
-  if(attribute == xvColorKey) {
-	pPriv->colorKey = value;
-	outMGAdac(0x55, (pPriv->colorKey & pScrn->mask.red) >> 
-		    pScrn->offset.red);
-	outMGAdac(0x56, (pPriv->colorKey & pScrn->mask.green) >> 
-		    pScrn->offset.green);
-	outMGAdac(0x57, (pPriv->colorKey & pScrn->mask.blue) >> 
-		    pScrn->offset.blue);
-	REGION_EMPTY(pScrn->pScreen, &pPriv->clip);   
-  } else 
-#endif
 
 return BadMatch;
 
-#if 0
-  return Success;
-#endif
 }
 
 static int 
@@ -287,26 +225,10 @@ S3VGetPortAttributeOverlay(
   INT32 *value, 
   pointer data
 ){
-#if 0
-  MGAPtr pMga = MGAPTR(pScrn);
-  MGAPortPrivPtr pPriv = pMga->portPrivate;
 
-  if(attribute == xvBrightness) {
-	*value = pPriv->brightness;
-  } else
-  if(attribute == xvContrast) {
-	*value = pPriv->contrast;
-  } else
-  if(attribute == xvColorKey) {
-	*value = pPriv->colorKey;
-  } else 
-#endif
 
 return BadMatch;
 
-#if 0
-  return Success;
-#endif
 }
 
 
@@ -438,15 +360,8 @@ S3VSetupImageVideoOverlay(ScreenPtr pScreen)
     adapt->pFormats = Formats;
     adapt->nPorts = 1;
     adapt->pAttributes = NULL /*Attributes*/;
-#if 0
-    if (pMga->Chipset == PCI_CHIP_MGAG400) {
-	adapt->nImages = 4;
-	adapt->nAttributes = 3;
-    } else {
-#endif
-	adapt->nImages = 3;
-	adapt->nAttributes = 0;
-	/* }*/
+    adapt->nImages = 3;
+    adapt->nAttributes = 0;
     adapt->pImages = Images;
     adapt->PutVideo = NULL;
     adapt->PutStill = NULL;
@@ -474,13 +389,6 @@ S3VStopVideo(ScrnInfoPtr pScrn, pointer data, Bool shutdown)
 {
   S3VPtr ps3v = S3VPTR(pScrn);
   S3VPortPrivPtr pPriv = ps3v->portPrivate;
-
-#if 0
-  MGAPtr pMga = MGAPTR(pScrn);
-  MGAPortPrivPtr pPriv = pMga->portPrivate;
-
-  if(pMga->TexturedVideo) return;
-#endif
 
   REGION_EMPTY(pScrn->pScreen, &pPriv->clip);   
 
@@ -602,12 +510,6 @@ S3VDisplayVideoOverlay(
    if(!ps3v->NeedSTREAMS)
      return;
 
-#if 0
-    /* got 64 scanlines to do it in */
-    tmp = INREG(MGAREG_VCOUNT) + 64;
-    if(tmp > pScrn->currentMode->VDisplay)
-	tmp -= pScrn->currentMode->VDisplay;
-#endif
     
     /* Reference at http://www.webartz.com/fourcc/ */
       /* Looks like ViRGE only supports YUY2 and Y211?, */
@@ -860,14 +762,6 @@ S3VPutImage(
     dst_start = ps3v->FBStart + offset + left + (top * dstPitch);
     /*dst_start = pMga->FbStart + offset + left + (top * dstPitch);*/
 
-#if 0
-    if(pMga->TexturedVideo && pMga->AccelInfoRec->NeedToSync &&
-	((long)data != pPriv->lastPort)) 
-    {
-	MGAStormSync(pScrn);
-	pMga->AccelInfoRec->NeedToSync = FALSE;
-    }
-#endif
 
     switch(id) {
     case FOURCC_YV12:
@@ -895,17 +789,7 @@ S3VPutImage(
         break;
     }
 
-#if 0
-    if(pMga->TexturedVideo) {
-	pPriv->lastPort = (long)data;
-	MGADisplayVideoTexture(pScrn, id, offset, 
-		REGION_NUM_RECTS(clipBoxes), REGION_RECTS(clipBoxes),
-		width, height, dstPitch, src_x, src_y, src_w, src_h,
-		drw_x, drw_y, drw_w, drw_h);
-	pPriv->videoStatus = FREE_TIMER;
-	pPriv->freeTime = currentTime.milliseconds + FREE_DELAY;
-    } else {
-#endif
+
     /* update cliplist */
 	if(!REGION_EQUAL(pScrn->pScreen, &pPriv->clip, clipBoxes)) {
 	    REGION_COPY(pScrn->pScreen, &pPriv->clip, clipBoxes);
@@ -918,10 +802,7 @@ S3VPutImage(
 	     x1, y1, x2, y2, &dstBox, src_w, src_h, drw_w, drw_h);
 
 	pPriv->videoStatus = CLIENT_VIDEO_ON;
-#if 0
-    }
-    pMga->VideoTimerCallback = MGAVideoTimerCallback;
-#endif
+
 
     return Success;
 }
@@ -934,22 +815,11 @@ S3VQueryImageAttributes(
     unsigned short *w, unsigned short *h, 
     int *pitches, int *offsets
 ){
-#if 0
-    MGAPtr pMga = MGAPTR(pScrn);
-#endif
+
     int size, tmp;
 
-#if 0
-    if(pMga->TexturedVideo) {
-	if(*w > 2046) *w = 2046;
-	if(*h > 2046) *h = 2046;
-    } else {
-#endif
 	if(*w > 1024) *w = 1024;
 	if(*h > 1024) *h = 1024;
-#if 0
-    }
-#endif
 
     *w = (*w + 1) & ~1;
     if(offsets) offsets[0] = 0;

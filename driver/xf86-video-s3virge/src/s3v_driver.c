@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/s3virge/s3v_driver.c,v 1.93 2003/11/06 18:38:05 tsi Exp $ */
 
 /*
 Copyright (C) 1994-1999 The XFree86 Project, Inc.  All Rights Reserved.
@@ -29,6 +28,7 @@ in this Software without prior written authorization from the XFree86 Project.
 #include "config.h"
 #endif
 
+#include <unistd.h>
 #include "xf86Resources.h"
 /* Needed by Resources Access Control (RAC) */
 #include "xf86RAC.h"
@@ -121,10 +121,10 @@ static int pix24bpp = 0;
  
 #define S3VIRGE_NAME "S3VIRGE"
 #define S3VIRGE_DRIVER_NAME "s3virge"
-#define S3VIRGE_VERSION_NAME "1.9.1"
-#define S3VIRGE_VERSION_MAJOR   1
-#define S3VIRGE_VERSION_MINOR   9
-#define S3VIRGE_PATCHLEVEL      1
+#define S3VIRGE_VERSION_NAME PACKAGE_VERSION
+#define S3VIRGE_VERSION_MAJOR   PACKAGE_VERSION_MAJOR
+#define S3VIRGE_VERSION_MINOR   PACKAGE_VERSION_MINOR
+#define S3VIRGE_PATCHLEVEL      PACKAGE_VERSION_PATCHLEVEL
 #define S3VIRGE_DRIVER_VERSION ((S3VIRGE_VERSION_MAJOR << 24) | \
 				(S3VIRGE_VERSION_MINOR << 16) | \
 				S3VIRGE_PATCHLEVEL)
@@ -247,7 +247,6 @@ static const OptionInfoRec S3VOptions[] =
    { OPTION_SWCURSOR,		"SWCursor",     OPTV_BOOLEAN,	{0}, FALSE },
    { OPTION_SHADOW_FB,          "ShadowFB",	OPTV_BOOLEAN,	{0}, FALSE },
    { OPTION_ROTATE, 	        "Rotate",	OPTV_ANYSTR,	{0}, FALSE },
-   { OPTION_FB_DRAW,            "UseFB",	OPTV_BOOLEAN,	{0}, FALSE },
    { OPTION_MX_CR3A_FIX,        "mxcr3afix",	OPTV_BOOLEAN,	{0}, FALSE },
    { OPTION_XVIDEO,             "XVideo",	OPTV_BOOLEAN,	{0}, FALSE },
    {-1, NULL, OPTV_NONE,	{0}, FALSE}
@@ -418,7 +417,7 @@ s3virgeSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 #endif /* XFree86LOADER */
 
 
-static unsigned char *find_bios_string(PCITAG Tag, int BIOSbase, char *match1, char *match2)
+static unsigned char *find_bios_string(S3VPtr ps3v, int BIOSbase, char *match1, char *match2)
 {
 #define BIOS_BSIZE 1024
 #define BIOS_BASE  0xc0000
@@ -429,8 +428,13 @@ static unsigned char *find_bios_string(PCITAG Tag, int BIOSbase, char *match1, c
 
    if (!init) {
       init = 1;
-      if (xf86ReadDomainMemory(Tag, BIOSbase, BIOS_BSIZE, bios) != BIOS_BSIZE)
+#ifndef XSERVER_LIBPCIACCESS
+      if (xf86ReadDomainMemory(ps3v->PciTag, BIOSbase, BIOS_BSIZE, bios) != BIOS_BSIZE)
 	 return NULL;
+#else
+      if (pci_device_read_rom(ps3v->PciInfo, bios))
+	return NULL;
+#endif
       if ((bios[0] != 0x55) || (bios[1] != 0xaa))
 	 return NULL;
    }
@@ -521,9 +525,12 @@ S3VProbe(DriverPtr drv, int flags)
 	 */
 	return FALSE;
     }
+
+#ifndef XSERVER_LIBPCIACCESS
     if (xf86GetPciVideoInfo() == NULL) {
 	return FALSE;
     }
+#endif
 
     numUsed = xf86MatchPciInstances(S3VIRGE_NAME, PCI_S3_VENDOR_ID,
 				    S3VChipsets, S3VPciChipsets, devSections,
@@ -868,12 +875,6 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
 	ps3v->hwcursor = FALSE;
     }
 
-    ps3v->UseFB = TRUE;
-    xf86DrvMsg(pScrn->scrnIndex, X_DEFAULT, "Using fb.\n");
-    if (xf86IsOptionSet(ps3v->Options, OPTION_FB_DRAW)) 
-        xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
-	           "UseFB option is deprecated.\n");
-
     if (xf86IsOptionSet(ps3v->Options, OPTION_MX_CR3A_FIX)) 
       {
 	if (xf86GetOptValBool(ps3v->Options, OPTION_MX_CR3A_FIX ,&ps3v->mx_cr3a_fix))
@@ -941,7 +942,7 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
 		   ps3v->Chipset);
     } else {
 	from = X_PROBED;
-	ps3v->Chipset = ps3v->PciInfo->chipType;
+	ps3v->Chipset = PCI_DEV_DEVICE_ID(ps3v->PciInfo);
 	pScrn->chipset = (char *)xf86TokenToString(S3VChipsets, ps3v->Chipset);
     }								    
     
@@ -950,7 +951,7 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ChipRev override: %d\n",
 		   ps3v->ChipRev);
     } else {
-	ps3v->ChipRev = ps3v->PciInfo->chipRev;
+        ps3v->ChipRev = PCI_DEV_REVISION(ps3v->PciInfo);
     }
     xfree(pEnt);
     
@@ -975,8 +976,10 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
 
     xf86DrvMsg(pScrn->scrnIndex, from, "Chipset: \"%s\"\n", pScrn->chipset);
 	
+#ifndef XSERVER_LIBPCIACCESS
     ps3v->PciTag = pciTag(ps3v->PciInfo->bus, ps3v->PciInfo->device,
 			  ps3v->PciInfo->func);
+#endif
 
     /* Handle XVideo after we know chipset, so we can give an */
     /* intelligent comment about support */
@@ -1197,7 +1200,7 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
     *      <= 8bpp: 191500
     */
 
-   if (find_bios_string(ps3v->PciTag, BIOS_BASE, "S3 86C325",
+   if (find_bios_string(ps3v, BIOS_BASE, "S3 86C325",
 			"MELCO WGP-VG VIDEO BIOS") != NULL) {
       if (xf86GetVerbosity())
 	 xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "MELCO BIOS found\n");
@@ -1417,30 +1420,14 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
 
     /* Set display resolution */
     xf86SetDpi(pScrn, 0, 0);
-    					/* When running the STREAMS processor */
-					/* the max. stride is limited to 4096-1 */
-					/* so this is the virtualX limit. */
-					/* STREAMS is needed for 24 & 32 bpp, */
-					/* (all depth 24 modes) */
-					/* This should never happen... we */
-					/* checked it before ValidateModes */
-    if ( ((pScrn->depth == 24) || (pScrn->depth == 16)) && 
-         ((pScrn->bitsPerPixel/8) * pScrn->virtualX > 4095) ) {
-      xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Virtual width to large for ViRGE\n");
-      S3VFreeRec(pScrn);
-      return FALSE;
-    }
 
     /* Load bpp-specific modules */
-    if( ps3v->UseFB )
-      {
-	if( xf86LoadSubModule(pScrn, "fb") == NULL )
-	  {
-	      S3VFreeRec(pScrn);
-	      return FALSE;
-	  }	       
-	xf86LoaderReqSymLists(fbSymbols, NULL);       
-      }
+    if( xf86LoadSubModule(pScrn, "fb") == NULL )
+    {
+	S3VFreeRec(pScrn);
+	return FALSE;
+    }	       
+    xf86LoaderReqSymLists(fbSymbols, NULL);       
 
     /* Load XAA if needed */
     if (!ps3v->NoAccel || ps3v->hwcursor ) {
@@ -2298,15 +2285,30 @@ S3VMapMem(ScrnInfoPtr pScrn)
 					/* so that we can use registers map */
 					/* structure - see newmmio.h */
 					/* around 0x10000 from MemBase */
+#ifndef XSERVER_LIBPCIACCESS
   ps3v->MapBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO, ps3v->PciTag,
-			ps3v->PciInfo->memBase[0] + S3_NEWMMIO_REGBASE,
-			S3_NEWMMIO_REGSIZE);
+				PCI_REGION_BASE(ps3v->PciInfo, 0, REGION_MEM) + S3_NEWMMIO_REGBASE,
+				S3_NEWMMIO_REGSIZE);
 
   ps3v->MapBaseDense = xf86MapPciMem(pScrn->scrnIndex,
-			VIDMEM_MMIO_32BIT,
-			ps3v->PciTag,
-			ps3v->PciInfo->memBase[0] + S3_NEWMMIO_REGBASE,
-			0x8000);
+				     VIDMEM_MMIO_32BIT,
+				     ps3v->PciTag,
+				     PCI_REGION_BASE(ps3v->PciInfo, 0, REGION_MEM) + S3_NEWMMIO_REGBASE,
+				     0x8000);
+#else
+  {
+    void** result = (void**)&ps3v->MapBase;
+    int err = pci_device_map_range(ps3v->PciInfo,
+				   PCI_REGION_BASE(ps3v->PciInfo, 0, REGION_MEM) + S3_NEWMMIO_REGBASE,
+				   S3_NEWMMIO_REGSIZE,
+				   PCI_DEV_MAP_FLAG_WRITABLE,
+				   result);
+    
+    if (err) 
+      return FALSE;
+  }
+  ps3v->MapBaseDense = ps3v->MapBase;
+#endif
 
   if( !ps3v->MapBase ) {
     xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -2315,9 +2317,25 @@ S3VMapMem(ScrnInfoPtr pScrn)
   }
 					/* Map the framebuffer */
   if (ps3v->videoRambytes) { /* not set in PreInit() */
+#ifndef XSERVER_LIBPCIACCESS
       ps3v->FBBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER, 
-				   ps3v->PciTag, ps3v->PciInfo->memBase[0],
+				   ps3v->PciTag, PCI_REGION_BASE(ps3v->PciInfo, 0, REGION_MEM),
 				   ps3v->videoRambytes );
+
+#else
+      {
+	void** result = (void**)&ps3v->FBBase;
+	int err = pci_device_map_range(ps3v->PciInfo,
+				       PCI_REGION_BASE(ps3v->PciInfo, 0, REGION_MEM),
+				       ps3v->videoRambytes,
+				       PCI_DEV_MAP_FLAG_WRITABLE |
+				       PCI_DEV_MAP_FLAG_WRITE_COMBINE,
+				       result);
+	
+	if (err) 
+	  return FALSE;
+      }
+#endif
 
       if( !ps3v->FBBase ) {
 	  xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -2329,7 +2347,7 @@ S3VMapMem(ScrnInfoPtr pScrn)
       ps3v->FBStart = ps3v->FBBase;
   }
   
-  pScrn->memPhysBase = ps3v->PciInfo->memBase[0];
+  pScrn->memPhysBase = PCI_REGION_BASE(ps3v->PciInfo, 0, REGION_MEM);
   pScrn->fbOffset = 0;
 
   				/* Set up offset to hwcursor memory area */
@@ -2376,14 +2394,24 @@ S3VUnmapMem(ScrnInfoPtr pScrn)
     ps3v->PrimaryVidMapped = FALSE;
   }
 
+#ifndef XSERVER_LIBPCIACCESS
   xf86UnMapVidMem(pScrn->scrnIndex, (pointer)ps3v->MapBase,
 		  S3_NEWMMIO_REGSIZE);
+#else
+  pci_device_unmap_range(ps3v->PciInfo, ps3v->MapBase,
+			 S3_NEWMMIO_REGSIZE);
+#endif
+
+#ifndef XSERVER_LIBPCIACCESS
   if (ps3v->FBBase)
       xf86UnMapVidMem(pScrn->scrnIndex, (pointer)ps3v->FBBase,
 		      ps3v->videoRambytes);
   xf86UnMapVidMem(pScrn->scrnIndex, (pointer)ps3v->MapBaseDense,
 		  0x8000);
-
+#else
+  pci_device_unmap_range(ps3v->PciInfo, ps3v->FBBase,
+			 ps3v->videoRambytes);
+#endif
   return;
 }
 
@@ -2484,8 +2512,7 @@ S3VScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
   }
 
   /* must be after RGB ordering fixed */
-  if (ps3v->UseFB)
-    fbPictureInit (pScreen, 0, 0);
+  fbPictureInit (pScreen, 0, 0);
     
   	      				/* Initialize acceleration layer */
   if (!ps3v->NoAccel) {
@@ -2618,27 +2645,24 @@ S3VInternalScreenInit( int scrnIndex, ScreenPtr pScreen)
      * pScreen fields.
      */
 
-  if( ps3v->UseFB )
+    switch (pScrn->bitsPerPixel)
     {
-      xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Using FB\n");
-
-      switch (pScrn->bitsPerPixel) 
-	{
 	case 8:
 	case 16:
 	case 24:
-	  ret = fbScreenInit(pScreen, FBStart, pScrn->virtualX,
-			     pScrn->virtualY, pScrn->xDpi, pScrn->yDpi,
-			     displayWidth, pScrn->bitsPerPixel);
-	  break;
+	case 32:
+	    ret = fbScreenInit(pScreen, FBStart, pScrn->virtualX,
+			       pScrn->virtualY, pScrn->xDpi, pScrn->yDpi,
+			       displayWidth, pScrn->bitsPerPixel);
+	    break;
 	default:
-	  xf86DrvMsg(scrnIndex, X_ERROR,
-		     "Internal error: invalid bpp (%d) in S3VScreenInit\n",
-		     pScrn->bitsPerPixel);
-	  ret = FALSE;
-	  break;
-	}
+	    xf86DrvMsg(scrnIndex, X_ERROR,
+		       "Internal error: invalid bpp (%d) in S3VScreenInit\n",
+		       pScrn->bitsPerPixel);
+	    ret = FALSE;
+	    break;
     }
+
   return ret;
 }
 
@@ -2649,8 +2673,12 @@ S3VInternalScreenInit( int scrnIndex, ScreenPtr pScreen)
 static ModeStatus
 S3VValidMode(int index, DisplayModePtr mode, Bool verbose, int flags)
 {
+    ScrnInfoPtr pScrn = xf86Screens[index];
 
-  return MODE_OK;
+    if ((pScrn->bitsPerPixel + 7)/8 * mode->HDisplay > 4095)
+	return MODE_VIRTUAL_X;
+
+    return MODE_OK;
 }
 
 
@@ -3633,9 +3661,9 @@ S3VEnableMmio(ScrnInfoPtr pScrn)
    * (EE 06/03/99)
    */
   outb(vgaCRIndex, 0x59);         /*@@@EE*/
-  outb(vgaCRReg, ps3v->PciInfo->memBase[0] >> 24);  
+  outb(vgaCRReg, PCI_REGION_BASE(ps3v->PciInfo, 0, REGION_MEM) >> 24);  
   outb(vgaCRIndex, 0x5A);
-  outb(vgaCRReg, ps3v->PciInfo->memBase[0] >> 16);
+  outb(vgaCRReg, PCI_REGION_BASE(ps3v->PciInfo, 0, REGION_MEM) >> 16);
   outb(vgaCRIndex, 0x53);
 #endif
   /* Save register for restore */
