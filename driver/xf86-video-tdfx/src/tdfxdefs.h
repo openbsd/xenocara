@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/tdfx/tdfxdefs.h,v 1.14 2003/06/18 16:17:41 eich Exp $ */
 /*
    Voodoo Banshee driver version 1.0.1
 
@@ -110,6 +109,28 @@
 #define VIDINFORMAT 0x70
 #define VIDINSTATUS 0x74
 #define VIDSERIALPARALLELPORT 0x78
+#define VSP_TVOUT_RESET	0x80000000	/* 0 forces TVout reset */
+#define VSP_GPIO2_IN	0x40000000
+#define VSP_GPIO1_OUT	0x20000000
+#define VSP_VMI_RESET_N	0x10000000	/* 0 forces a VMI reset */
+#define VSP_SDA1_IN	0x08000000	/* i2c bus on the feature connector */
+#define VSP_SCL1_IN	0x04000000
+#define VSP_SDA1_OUT	0x02000000
+#define VSP_SCL1_OUT	0x01000000
+#define VSP_ENABLE_IIC1	0x00800000	/* 1 enables I2C bus 1 */
+#define VSP_SDA0_IN	0x00400000	/* i2c bus on the monitor connector */
+#define VSP_SCL0_IN	0x00200000
+#define VSP_SDA0_OUT	0x00100000
+#define VSP_SCL0_OUT	0x00080000
+#define VSP_ENABLE_IIC0	0x00040000	/* 1 enables I2C bus 0 */
+#define VSP_VMI_ADDRESS	0x0003c000	/* mask */
+#define VSP_VMI_DATA	0x00003fc0	/* mask */
+#define VSP_VMI_DISABLE	0x00000020	/* 0 enables VMI output */
+#define VSP_VMI_RDY_N	0x00000010
+#define VSP_RW_N	0x00000008
+#define VSP_DS_N	0x00000004
+#define VSP_CS_N	0x00000002
+#define VSP_HOST_ENABLE	0x00000001	/* 1 enables VMI host control*/
 #define VIDINXDECIMDELTAS 0x7c
 #define VIDINDECIMINITERRS 0x80
 #define VIDYDECIMDELTA 0x84

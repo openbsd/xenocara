@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/tdfx/tdfx_priv.h,v 1.11 2001/06/05 15:54:15 alanh Exp $ */
 
 
 #ifndef _TDFX_FIFO_H_

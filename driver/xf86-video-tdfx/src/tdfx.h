@@ -5,7 +5,6 @@
 
    Copyright: 1998,1999
 */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/tdfx/tdfx.h,v 1.26 2002/01/25 21:56:11 tsi Exp $ */
 
 #ifndef _TDFX_H_
 #define _TDFX_H_
@@ -15,6 +14,7 @@
 
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
+#include "xf86DDC.h"
 #include "xf86xv.h"
 #include "tdfxdefs.h"
 
@@ -31,9 +31,43 @@
 #define TDFX_VERSION 4000
 #define TDFX_NAME "TDFX"
 #define TDFX_DRIVER_NAME "tdfx"
-#define TDFX_MAJOR_VERSION 1
-#define TDFX_MINOR_VERSION 2
-#define TDFX_PATCHLEVEL 1
+#define TDFX_MAJOR_VERSION PACKAGE_VERSION_MAJOR
+#define TDFX_MINOR_VERSION PACKAGE_VERSION_MINOR
+#define TDFX_PATCHLEVEL PACKAGE_VERSION_PATCHLEVEL
+
+/* Macros to aid source compatibilty between pci-rework and "classic" builds.
+ */
+#ifdef XSERVER_LIBPCIACCESS
+#include <pciaccess.h>
+
+#define DEVICE_ID(p) (p)->device_id
+
+#define PCI_READ_LONG(value, offset, card_index) \
+    pci_device_cfg_read_u32(pTDFX->PciInfo[(card_index)], & (value), (offset))
+
+#define PCI_WRITE_LONG(value, offset, card_index) \
+    pci_device_cfg_write_u32(pTDFX->PciInfo[(card_index)], (value), (offset))
+
+#define PCI_IO_BASE(p, region) \
+    (p)->regions[region].base_addr
+
+#define PCI_MEM_BASE(p, region) \
+    (p)->regions[region].base_addr
+#else
+#define DEVICE_ID(p) (p)->chipType
+
+#define PCI_READ_LONG(value, offset, card_index) \
+    (value) = pciReadLong(pTDFX->PciTag[(card_index)], (offset))
+
+#define PCI_WRITE_LONG(value, offset, card_index) \
+    pciWriteLong(pTDFX->PciTag[(card_index)], (offset), (value))
+
+#define PCI_IO_BASE(p, region) \
+    (p)->ioBase[region]
+
+#define PCI_MEM_BASE(p, region) \
+    (p)->memBase[region]
+#endif
 
 struct _TDFXRec;
 typedef struct _TDFXRec *TDFXPtr;
@@ -136,10 +170,27 @@ typedef struct TextureData_t {
 
 #define MAXCHIPS 4
 
+#ifdef XSERVER_LIBPCIACCESS
+enum tdfx_chips {
+    Banshee = 0,
+    Voodoo3_2000,
+    Voodoo3_3000,
+    Voodoo3_Unknown,
+    Voodoo5,
+    MAX_VOODOO_CARDS
+};
+#endif
+
 typedef struct _TDFXRec {
+#ifdef XSERVER_LIBPCIACCESS
+    enum tdfx_chips match_id;
+    void *MMIOBase[MAXCHIPS];
+    void *FbBase;
+#else
   unsigned char *MMIOBase[MAXCHIPS];
   unsigned char *FbBase;
   unsigned char *myFbBase;
+#endif
   IOADDRESS PIOBase[MAXCHIPS];
   long FbMapSize;
   int pixelFormat;
@@ -148,12 +199,18 @@ typedef struct _TDFXRec {
   int maxClip;
   int MaxClock;
   int ChipType;
+#ifdef XSERVER_LIBPCIACCESS
+    struct pci_device *PciInfo[MAXCHIPS];
+#else
   pciVideoPtr PciInfo;
+#endif
   unsigned long LinearAddr[MAXCHIPS];
   unsigned long MMIOAddr[MAXCHIPS];
   EntityInfoPtr pEnt;
   int numChips;
+#ifndef XSERVER_PCIACCESS
   PCITAG PciTag[MAXCHIPS];
+#endif
   Bool Primary;
   int HasSGRAM;
   int PciCnt;
@@ -229,6 +286,12 @@ typedef struct _TDFXRec {
   XF86VideoAdaptorPtr textureAdaptor;
   ScreenBlockHandlerProcPtr BlockHandler;
   OptionInfoPtr Options;
+
+  ScreenWakeupHandlerProcPtr coreWakeupHandler;
+  ScreenBlockHandlerProcPtr coreBlockHandler;
+
+  I2CBusPtr pI2CBus;
+
 } TDFXRec;
 
 typedef struct {

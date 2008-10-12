@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/tdfx/tdfx_dripriv.h,v 1.2 1999/12/14 01:33:50 robin Exp $ */
 
 #ifndef _TDFX_DRIPRIV_H_
 #define _TDFX_DRIPRIV_H_

@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/tdfx/tdfx_dri.c,v 1.25 2003/02/08 21:26:59 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -249,6 +248,12 @@ TDFXDoWakeupHandler(int screenNum, pointer wakeupData, unsigned long result,
 {
   ScreenPtr pScreen = screenInfo.screens[screenNum];
   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+  TDFXPtr pTDFX = TDFXPTR(pScrn);
+
+  pTDFX->pDRIInfo->wrap.WakeupHandler = pTDFX->coreWakeupHandler;
+  (*pTDFX->pDRIInfo->wrap.WakeupHandler) (screenNum, wakeupData, result, pReadmask);
+  pTDFX->pDRIInfo->wrap.WakeupHandler = TDFXDoWakeupHandler;
+
 
   TDFXNeedSync(pScrn);
 }
@@ -259,8 +264,14 @@ TDFXDoBlockHandler(int screenNum, pointer blockData, pointer pTimeout,
 {
   ScreenPtr pScreen = screenInfo.screens[screenNum];
   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+  TDFXPtr pTDFX = TDFXPTR(pScrn);
 
   TDFXCheckSync(pScrn);
+
+  pTDFX->pDRIInfo->wrap.BlockHandler = pTDFX->coreBlockHandler;
+  (*pTDFX->pDRIInfo->wrap.BlockHandler) (screenNum, blockData, pTimeout, pReadmask);
+  pTDFX->pDRIInfo->wrap.BlockHandler = TDFXDoBlockHandler;
+
 }
 
 Bool TDFXDRIScreenInit(ScreenPtr pScreen)
@@ -333,6 +344,9 @@ Bool TDFXDRIScreenInit(ScreenPtr pScreen)
 
   pDRIInfo->drmDriverName = TDFXKernelDriverName;
   pDRIInfo->clientDriverName = TDFXClientDriverName;
+#ifdef XSERVER_LIBPCIACCESS
+    pDRIInfo->busIdString = DRICreatePCIBusID(pTDFX->PciInfo[0]);
+#else
   if (xf86LoaderCheckSymbol("DRICreatePCIBusID")) {
     pDRIInfo->busIdString = DRICreatePCIBusID(pTDFX->PciInfo);
   } else {
@@ -342,6 +356,7 @@ Bool TDFXDRIScreenInit(ScreenPtr pScreen)
 	    ((pciConfigPtr)pTDFX->PciInfo->thisCard)->devnum,
 	    ((pciConfigPtr)pTDFX->PciInfo->thisCard)->funcnum);
   }
+#endif
   pDRIInfo->ddxDriverMajorVersion = TDFX_MAJOR_VERSION;
   pDRIInfo->ddxDriverMinorVersion = TDFX_MINOR_VERSION;
   pDRIInfo->ddxDriverPatchVersion = TDFX_PATCHLEVEL;
@@ -352,7 +367,9 @@ Bool TDFXDRIScreenInit(ScreenPtr pScreen)
 
   pDRIInfo->wrap.ValidateTree = 0;
   pDRIInfo->wrap.PostValidateTree = 0;
+  pTDFX->coreBlockHandler = pDRIInfo->wrap.BlockHandler;
   pDRIInfo->wrap.BlockHandler = TDFXDoBlockHandler;
+  pTDFX->coreWakeupHandler = pDRIInfo->wrap.WakeupHandler;
   pDRIInfo->wrap.WakeupHandler = TDFXDoWakeupHandler;
 
   if (SAREA_MAX_DRAWABLES < TDFX_MAX_DRAWABLES)
@@ -500,7 +517,11 @@ TDFXDRIFinishScreenInit(ScreenPtr pScreen)
   pTDFX->pDRIInfo->driverSwapMethod = DRI_HIDE_X_CONTEXT;
 
   pTDFXDRI=(TDFXDRIPtr)pTDFX->pDRIInfo->devPrivate;
-  pTDFXDRI->deviceID=pTDFX->PciInfo->chipType;
+#ifdef XSERVER_LIBPCIACCESS
+  pTDFXDRI->deviceID = DEVICE_ID(pTDFX->PciInfo[0]);
+#else
+  pTDFXDRI->deviceID = DEVICE_ID(pTDFX->PciInfo);
+#endif
   pTDFXDRI->width=pScrn->virtualX;
   pTDFXDRI->height=pScrn->virtualY;
   pTDFXDRI->mem=pScrn->videoRam*1024;

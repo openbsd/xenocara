@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/tdfx/tdfx_priv.c,v 1.15 2001/04/05 21:29:17 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
