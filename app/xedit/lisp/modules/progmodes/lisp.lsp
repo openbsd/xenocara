@@ -43,7 +43,7 @@
 (defsynprop *prop-quote*
   "quote"
   :font		"*courier-bold-r*-12-*"
-  :foreground	"Red3"
+  :foreground	"Red4"
 )
 
 (defsynprop *prop-package*

@@ -1175,7 +1175,7 @@ ComAddVariable(LispCom *com, LispObj *symbol, LispObj *value)
 {
     LispAtom *atom = symbol->data.atom;
 
-    if (atom && atom->string && !com->macro) {
+    if (atom && atom->key && !com->macro) {
 	int i, length = com->block->variables.length;
 
 	i = BuildTablePointer(atom, (void***)&com->block->variables.symbols,
@@ -1216,7 +1216,7 @@ ComGetVariable(LispCom *com, LispObj *symbol)
     }
 
     offset = name->offset;
-    id = name->string;
+    id = name->key;
     base = lisp__data.env.lex;
     i = lisp__data.env.head - 1;
 
@@ -1238,7 +1238,7 @@ ComGetVariable(LispCom *com, LispObj *symbol)
     if (!name->a_object) {
 	++com->warnings;
 	LispWarning("variable %s is neither declared nor bound",
-		    name->string);
+		    name->key->value);
     }
 
     /* Not found, resolve <symbol> at run time */
@@ -1645,7 +1645,7 @@ rest_label:
 		constantp = 0;
 	}
 
-	string = builtin ? ATOMID(name) : NULL;
+	string = builtin ? ATOMID(name)->value : NULL;
 	/* XXX FIXME should have a flag indicating if function call
 	 * change the &REST arguments even if it is a constant list
 	 * (or if the returned value may be changed). */
@@ -1845,7 +1845,7 @@ ComFuncall(LispCom *com, LispObj *function, LispObj *arguments, int eval)
 		LispObj *definition = atom->property->structure.definition;
 
 		if (!CONSP(arguments) || CONSP(CDR(arguments)))
-		    LispDestroy("%s: too %s arguments", atom->string,
+		    LispDestroy("%s: too %s arguments", atom->key->value,
 				CONSP(arguments) ? "many" : "few");
 
 		ComEval(com, CAR(arguments));
@@ -1870,7 +1870,7 @@ ComFuncall(LispCom *com, LispObj *function, LispObj *arguments, int eval)
 	    else {
 		/* Not yet defined function/macro. */
 		++com->warnings;
-		LispWarning("call to undefined function %s", atom->string);
+		LispWarning("call to undefined function %s", atom->key->value);
 		com_Funcall(com, function, arguments);
 	    }
 	    break;

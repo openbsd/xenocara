@@ -28,7 +28,10 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+
+#include <libgen.h>		/* POSIX basename() */
 #include <stdlib.h>		/* for realpath() */
+#include <errno.h>		/* for ENOENT */
 #include "xedit.h"
 
 #include <X11/Xfuncs.h>
@@ -72,41 +75,63 @@ extern XawTextWrapMode wrapmodes[3];
 void
 XeditPrintf(const char *format, ...)
 {
-    char         *str;
-    size_t        size;
-    va_list       va,
-                  va2;
-    XawTextBlock  text;
-    XawTextPosition pos;
-    
+    static struct {
+	XawTextPosition	last;
+	int		size;
+	int		length;
+	int		repeat;
+	char		*buffer;
+    } info;
+
+    size_t		size;
+    va_list		va;
+    XawTextBlock	text;
+    XawTextPosition	left, right;
+    char		buffer[BUFSIZ];
+    char		*string, rbuffer[32];
+
     va_start(va, format);
-
-    va_copy(va2, va);
-    size = vsnprintf(NULL, 0, format, va2);
-    va_end(va2);
-
-    str = (char *)malloc(size + 1);
-    if (str == NULL)
-        return;
-
-    vsnprintf(str, size + 1, format, va);
-    str[size] = 0;
-    
+    size = vsnprintf(buffer, sizeof(buffer), format, va);
     va_end(va);
-    
-    pos = XawTextSourceScan(XawTextGetSource(messwidget),
-					    0, XawstAll, XawsdRight, 1, True);
 
-    text.length = strlen(str);
-    text.ptr = str;
-    text.firstPos = 0;
-    text.format = FMT8BIT;
+    /* Should never happen... */
+    if (size >= sizeof(buffer)) {
+	strcpy(buffer + sizeof(buffer) - 5, "...\n");
+	size = sizeof(buffer) - 1;
+    }
+    else if (size) {
+	left = right = XawTextSourceScan(XawTextGetSource(messwidget),
+					 0, XawstAll, XawsdRight, 1, True);
 
-    XawTextReplace(messwidget, pos, pos, &text);
+	if (left == info.last &&
+	    info.buffer &&
+	    strcmp(buffer, info.buffer) == 0) {
+	    string = rbuffer;
+	    if (info.repeat == 1)
+		left -= info.buffer[strlen(info.buffer) - 1] == '\n';
+	    else
+		left -= info.length;
+	    size = info.length = XmuSnprintf(rbuffer, sizeof(rbuffer),
+					     " [%d times]\n", ++info.repeat);
+	}
+	else {
+	    string = buffer;
+	    if (size >= info.size)
+		info.buffer = XtMalloc(size + 1);
+	    strcpy(info.buffer, buffer);
+	    info.repeat = 1;
+	}
 
-    XawTextSetInsertionPoint(messwidget, pos + text.length);
-    
-    free(str);
+	text.length = size;
+	text.ptr = string;
+	text.firstPos = 0;
+	text.format = FMT8BIT;
+
+	XawTextReplace(messwidget, left, right, &text);
+
+	info.last = left + text.length;
+	XawTextSetInsertionPoint(messwidget, info.last);
+    }
 }
 
 Widget
@@ -219,8 +244,11 @@ AddTextSource(Widget source, char *name, char *filename, int flags,
     item->file_access = file_access;
     item->display_position = item->insert_position = 0;
     item->mode = 0;
+    item->mtime = 0;
     item->properties = NULL;
     item->xldata = NULL;
+    /* Try to load associated tags file */
+    SearchTagsFile(item);
 
     flist.itens = (xedit_flist_item**)
 	XtRealloc((char*)flist.itens, sizeof(xedit_flist_item*)
@@ -243,7 +271,7 @@ AddTextSource(Widget source, char *name, char *filename, int flags,
     else
 	++wid_name;
     item->sme = XtVaCreateManagedWidget(wid_name, smeBSBObjectClass,
-					flist.popup, XtNlabel, filename,
+					flist.popup, XtNlabel, item->filename,
 					NULL, NULL);
     XtAddCallback(item->sme, XtNcallback,
 		  SwitchSourceCallback, (XtPointer)item);
@@ -454,18 +482,53 @@ SwitchTextSource(xedit_flist_item *item)
 	XtSetArg(args[num_args], XtNstring, NULL);		++num_args;
     }
     XtSetValues(filenamewindow, args, num_args);
+    /* XXX This probably should be done by the TextWidget, i.e. notice
+     * if the cursor became inivisible due to an horizontal scroll */
+    _XawTextShowPosition((TextWidget)filenamewindow);
 }
 
-/* XXX sizeof(name) must match argument size for realpath */
-static char name[BUFSIZ];
 char *
 ResolveName(char *filename)
 {
+#ifndef __UNIXOS2__
+    static char *name;
+    char	*result, *tmp = name;
+#endif
+
     if (filename == NULL)
 	filename = GetString(filenamewindow);
 
 #ifndef __UNIXOS2__
-    return (realpath(filename, name));
+    /* Ensure not passing the same pointer again to realpath */
+    name = XtMalloc(BUFSIZ);
+    XtFree(tmp);
+    result = realpath(filename, name);
+
+    if (result == NULL && errno == ENOENT) {
+	int	length;
+	char	*dir, *file;
+
+	length = strlen(filename);
+	tmp = dir = XtMalloc(length + 1);
+	strcpy(dir, filename);
+
+	file = basename(filename);
+	dir = dirname(tmp);
+
+	/* Creating a new file? */
+	if (dir && file && strcmp(dir, file) &&
+	    access(dir, F_OK) == 0 &&
+	    (result = realpath(dir, name)) == name) {
+	    int	length = strlen(result);
+
+	    XmuSnprintf(result + length, BUFSIZ - length, "%s%s",
+			dir[length - 1] == '/' ? "" : "/", file);
+	}
+
+	XtFree(tmp);
+    }
+
+    return (result);
 #else
     return filename;
 #endif
@@ -515,6 +578,8 @@ XeditFocus(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	XtSetArg(args[0], XtNstring, NULL);
 
     XtSetValues(filenamewindow, args, 1);
+
+    line_edit = False;
 }
 
 void

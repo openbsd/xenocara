@@ -556,7 +556,7 @@ format_ascii(LispObj *stream, LispObj *object, FmtArgs *args)
 	if (collon)
 	    LispWriteStr(stream, "()", 2);
 	else
-	    LispWriteStr(stream,  Snil, 3);
+	    LispWriteStr(stream,  Snil->value, 3);
     }
     else {
 	/* if string is not NIL, atsign was specified

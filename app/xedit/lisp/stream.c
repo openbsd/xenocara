@@ -303,7 +303,7 @@ Lisp_Open(LispBuiltin *builtin)
 	    ;	/* do nothing */
 	else
 	    LispDestroy("%s: only :%s and %s supported for :ELEMENT-TYPE, not %s",
-			STRFUN(builtin), Sdefault, Scharacter, STROBJ(element_type));
+			STRFUN(builtin), Sdefault->value, Scharacter->value, STROBJ(element_type));
     }
 
     if (if_exists != UNSPEC) {
@@ -360,7 +360,7 @@ Lisp_Open(LispBuiltin *builtin)
 	    ;	/* do nothing */
 	else
 	    LispDestroy("%s: only :%s and %s supported for :EXTERNAL-FORMAT, not %s",
-			STRFUN(builtin), Sdefault, Scharacter, STROBJ(external_format));
+			STRFUN(builtin), Sdefault->value, Scharacter->value, STROBJ(external_format));
     }
 
     /* string representation of pathname */
@@ -600,7 +600,7 @@ Lisp_MakeStringOutputStream(LispBuiltin *builtin)
 	    ;	/* do nothing */
 	else
 	    LispDestroy("%s: only :%s and %s supported for :ELEMENT-TYPE, not %s",
-			STRFUN(builtin), Sdefault, Scharacter, STROBJ(element_type));
+			STRFUN(builtin), Sdefault->value, Scharacter->value, STROBJ(element_type));
     }
 
     return (LSTRINGSTREAM("", STREAM_WRITE, 1));
@@ -695,7 +695,7 @@ Lisp_MakePipe(LispBuiltin *builtin)
 	    ;	/* do nothing */
 	else
 	    LispDestroy("%s: only :%s and %s supported for :ELEMENT-TYPE, not %s",
-			STRFUN(builtin), Sdefault, Scharacter, STROBJ(element_type));
+			STRFUN(builtin), Sdefault->value, Scharacter->value, STROBJ(element_type));
     }
 
     if (external_format != UNSPEC) {
@@ -707,7 +707,7 @@ Lisp_MakePipe(LispBuiltin *builtin)
 	    ;	/* do nothing */
 	else
 	    LispDestroy("%s: only :%s and %s supported for :EXTERNAL-FORMAT, not %s",
-			STRFUN(builtin), Sdefault, Scharacter, STROBJ(external_format));
+			STRFUN(builtin), Sdefault->value, Scharacter->value, STROBJ(external_format));
     }
 
     string = THESTR(command_line);

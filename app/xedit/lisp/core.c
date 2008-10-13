@@ -1070,7 +1070,7 @@ Lisp_Defmacro(LispBuiltin *builtin)
     name = ARGUMENT(0);
 
     CHECK_SYMBOL(name);
-    alist = LispCheckArguments(LispMacro, lambda_list, ATOMID(name), 0);
+    alist = LispCheckArguments(LispMacro, lambda_list, ATOMID(name)->value, 0);
 
     if (CONSP(body) && STRINGP(CAR(body))) {
 	LispAddDocumentation(name, CAR(body), LispDocFunction);
@@ -1086,7 +1086,8 @@ Lisp_Defmacro(LispBuiltin *builtin)
 	}
 	/* redefining these may cause surprises if bytecode
 	 * compiled functions references them */
-	LispWarning("%s: %s is being redefined", STRFUN(builtin), ATOMID(name));
+	LispWarning("%s: %s is being redefined", STRFUN(builtin),
+		    ATOMID(name)->value);
 
 	LispRemAtomBuiltinProperty(name->data.atom);
     }
@@ -1112,7 +1113,7 @@ Lisp_Defun(LispBuiltin *builtin)
     name = ARGUMENT(0);
 
     CHECK_SYMBOL(name);
-    alist = LispCheckArguments(LispFunction, lambda_list, ATOMID(name), 0);
+    alist = LispCheckArguments(LispFunction, lambda_list, ATOMID(name)->value, 0);
 
     if (CONSP(body) && STRINGP(CAR(body))) {
 	LispAddDocumentation(name, CAR(body), LispDocFunction);
@@ -1128,7 +1129,8 @@ Lisp_Defun(LispBuiltin *builtin)
 	}
 	/* redefining these may cause surprises if bytecode
 	 * compiled functions references them */
-	LispWarning("%s: %s is being redefined", STRFUN(builtin), ATOMID(name));
+	LispWarning("%s: %s is being redefined", STRFUN(builtin),
+		    ATOMID(name)->value);
 
 	LispRemAtomBuiltinProperty(name->data.atom);
     }
@@ -1166,7 +1168,7 @@ Lisp_Defsetf(LispBuiltin *builtin)
 	return (function);
     }
 
-    alist = LispCheckArguments(LispSetf, lambda_list, ATOMID(function), 0);
+    alist = LispCheckArguments(LispSetf, lambda_list, ATOMID(function)->value, 0);
 
     store = CAR(body);
     if (!CONSP(store))
@@ -2050,7 +2052,7 @@ Lisp_Lambda(LispBuiltin *builtin)
     body = ARGUMENT(1);
     lambda_list = ARGUMENT(0);
 
-    alist = LispCheckArguments(LispLambda, lambda_list, Snil, 0);
+    alist = LispCheckArguments(LispLambda, lambda_list, Snil->value, 0);
 
     name = OPAQUE(alist, LispArgList_t);
     lambda_list = LispListProtectedArguments(alist);
@@ -2675,7 +2677,7 @@ Lisp_MakeArray(LispBuiltin *builtin)
 		type = LispOpaque_t;
 	    else
 		LispDestroy("%s: unsupported element type %s",
-			    STRFUN(builtin), ATOMID(element_type));
+			    STRFUN(builtin), ATOMID(element_type)->value);
 	}
     }
 
@@ -3240,7 +3242,7 @@ Lisp_Member(LispBuiltin *builtin)
 	}
 	else {
 	    for (; CONSP(list); list = CDR(list))
-		if (FCOMPARE(lambda, item, CAR(list), code) == expect)
+		if ((FCOMPARE(lambda, item, CAR(list), code)) == expect)
 		    return (list);
 	}
     }
@@ -3253,7 +3255,7 @@ Lisp_Member(LispBuiltin *builtin)
 	else {
 	    for (; CONSP(list); list = CDR(list)) {
 		compare = APPLY1(key, CAR(list));
-		if (FCOMPARE(lambda, item, compare, code) == expect)
+		if ((FCOMPARE(lambda, item, compare, code)) == expect)
 		    return (list);
 	    }
 	}
@@ -3942,7 +3944,7 @@ Lisp_Proclaim(LispBuiltin *builtin)
     object = CAR(arguments);
     CHECK_SYMBOL(object);
 
-    operation = ATOMID(object);
+    operation = ATOMID(object)->value;
     if (strcmp(operation, "SPECIAL") == 0) {
 	for (arguments = CDR(arguments); CONSP(arguments);
 	     arguments = CDR(arguments)) {
@@ -4988,7 +4990,7 @@ LispDeleteRemoveXSubstitute(LispBuiltin *builtin,
 	    }
 
 	    /* Skip initial removed elements, if any */
-	    for (i = 0; objects[i] == NULL && i < xlength; i++)
+	    for (i = 0; i < xlength && objects[i] == NULL; i++)
 		;
 
 	    for (i = 0; i < xlength; i++, object = CDR(object)) {

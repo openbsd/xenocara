@@ -22,27 +22,45 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xedit,[1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xedit)
+AC_INIT(xedit,[1.1.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xedit)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_RANLIB
+PKG_PROG_PKG_CONFIG
 
-# Checks for pkg-config packages
-XAW_CHECK_XPRINT_SUPPORT(XEDIT)
-if test "x$xaw_use_xprint" = "xyes" ; then
-   PKG_CHECK_MODULES(XPRINT_UTIL, xprintutil xp)
-
-   XEDIT_CFLAGS="$XEDIT_CFLAGS $XPRINT_UTIL_CFLAGS"
-   XEDIT_LIBS="$XEDIT_LIBS $XPRINT_UTIL_LIBS"
+AC_ARG_ENABLE(xprint,
+	      AS_HELP_STRING([--enable-xprint],
+			     [Compile with xprint support (default: disabled)]),
+	      [enable_xprint=$enableval], [enable_xprint=no])
+AM_CONDITIONAL(USE_XPRINT, test x$enable_xprint = xyes)
+if test x$enable_xprint = xyes; then
+   PKG_CHECK_MODULES(PKGDEPS, xprintutil xp xaw8)
+else
+   PKG_CHECK_MODULES(PKGDEPS, xaw7)
 fi
 
-AC_SUBST(XEDIT_CFLAGS)
-AC_SUBST(XEDIT_LIBS)
+AC_ARG_WITH(lispdir, AS_HELP_STRING([--with-lispdir=PATH],
+	    [Directory to install lisp files (default: $libdir/X11/xedit/lisp)]),
+	    [ lispdir="$withval"],
+	    [ lispdir=${libdir}/X11/xedit/lisp ])
+LISPDIR=$lispdir
+AC_SUBST(LISPDIR)
+
+AC_CHECK_FUNC(realpath, [], [have_realpath=yes])
+AM_CONDITIONAL(NEED_REALPATH, test x$have_realpath = xyes)
+AC_CHECK_FUNC(strcasecmp, [], [have_strcasecmp=yes])
+AM_CONDITIONAL(NEED_STRCASECMP, test x$have_strcasecmp = xyes)
+AC_CHECK_FUNC(unsetenv, [], [have_unsetenv=yes])
+AM_CONDITIONAL(NEED_UNSETENV, test x$have_unsetenv = xyes)
+
+AC_SUBST(PKGDEPS_CFLAGS)
+AC_SUBST(PKGDEPS_LIBS)
 
 PKG_CHECK_MODULES(APPDEFS, xt)
 appdefaultdir=$(pkg-config --variable=appdefaultdir xt)

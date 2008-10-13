@@ -164,7 +164,7 @@ main(int argc, char *argv[])
 	else {
 	    if (failed) {
 		reerror(failed, &cod, buf, sizeof(buf));
-		fprintf(stderr, "%s, at line %d\n", line);
+		fprintf(stderr, "%s, at line %d\n", buf, line);
 		break;
 	    }
 	    if (sscanf(buf, "%ld,%ld:", &so, &eo) != 2) {

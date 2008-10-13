@@ -87,7 +87,7 @@ LispFindPackage(LispObj *name)
 	return (name);
 
     if (SYMBOLP(name))
-	string = ATOMID(name);
+	string = ATOMID(name)->value;
     else if (STRINGP(name))
 	string = THESTR(name);
     else
@@ -169,22 +169,18 @@ LispDoExport(LispBuiltin *builtin,
     if (package == PACKAGE)
 	symbol->data.atom->ext = export ? 1 : 0;
     else {
-	int i;
-	char *string;
+	Atom_id string;
 	LispAtom *atom;
 	LispPackage *pack;
 
 	string = ATOMID(symbol);
 	pack = package->data.package.package;
-	i = STRHASH(string);
-	atom = pack->atoms[i];
-	while (atom) {
-	    if (strcmp(atom->string, string) == 0) {
-		atom->ext = export ? 1 : 0;
-		return;
-	    }
+	atom = (LispAtom *)hash_check(pack->atoms,
+				      string->value, string->length);
 
-	    atom = atom->next;
+	if (atom) {
+	    atom->ext = export ? 1 : 0;
+	    return;
 	}
 
 	LispDestroy("%s: the symbol %s is not available in package %s",
@@ -203,9 +199,9 @@ LispDoImport(LispBuiltin *builtin, LispObj *symbol)
 static LispObj *
 LispReallyDoSymbols(LispBuiltin *builtin, int only_externs, int all_symbols)
 {
-    int i, head = lisp__data.env.length;
+    int head = lisp__data.env.length;
     LispPackage *pack = NULL;
-    LispAtom *atom, *next_atom;
+    LispAtom *atom;
     LispObj *variable, *package = NULL, *list, *code, *result_form;
 
     LispObj *init, *body;
@@ -251,21 +247,17 @@ LispReallyDoSymbols(LispBuiltin *builtin, int only_externs, int all_symbols)
 	}
 
 	/* Traverse the symbol list, executing body */
-	for (i = 0; i < STRTBLSZ; i++) {
-	    atom = pack->atoms[i];
-	    while (atom) {
+	for (atom = (LispAtom *)hash_iter_first(pack->atoms);
+	     atom;
+	     atom = (LispAtom *)hash_iter_next(pack->atoms)) {
 		/* Save pointer to next atom. If variable is removed,
 		 * predicatable result is only guaranteed if the bound
 		 * variable is removed. */
-		next_atom = atom->next;
 
-		if (LispDoSymbol(package, atom, only_externs, all_symbols)) {
-		    LispSetVar(variable, atom->object);
-		    for (code = body; CONSP(code); code = CDR(code))
-			EVAL(CAR(code));
-		}
-
-		atom = next_atom;
+	    if (LispDoSymbol(package, atom, only_externs, all_symbols)) {
+		LispSetVar(variable, atom->object);
+		for (code = body; CONSP(code); code = CDR(code))
+		    EVAL(CAR(code));
 	    }
 	}
 
@@ -306,7 +298,6 @@ LispDoSymbols(LispBuiltin *builtin, int only_externs, int all_symbols)
 LispObj *
 LispFindSymbol(LispBuiltin *builtin, int intern)
 {
-    int i;
     char *ptr;
     LispAtom *atom;
     LispObj *symbol;
@@ -342,15 +333,9 @@ LispFindSymbol(LispBuiltin *builtin, int intern)
 	return (symbol);
     }
 
-    i = STRHASH(ptr);
-    atom = pack->atoms[i];
-    while (atom) {
-	if (strcmp(atom->string, ptr) == 0) {
-	    symbol = atom->object;
-	    break;
-	}
-	atom = atom->next;
-    }
+    atom = (LispAtom *)hash_check(pack->atoms, ptr, strlen(ptr));
+    if (atom)
+	symbol = atom->object;
 
     if (symbol == NULL || symbol->data.atom->package == NULL) {
 	RETURN(0) = NIL;
@@ -436,46 +421,45 @@ Lisp_FindAllSymbols(LispBuiltin *builtin)
     LispAtom *atom;
     LispPackage *pack;
     LispObj *list, *package, *result;
-    int i;
+    int length = 0;
 
     LispObj *string_or_symbol;
 
     string_or_symbol = ARGUMENT(0);
 
-    if (STRINGP(string_or_symbol))
+    if (STRINGP(string_or_symbol)) {
 	string = THESTR(string_or_symbol);
-    else if (SYMBOLP(string_or_symbol))
-	string = ATOMID(string_or_symbol);
+	length = STRLEN(string_or_symbol);
+    }
+    else if (SYMBOLP(string_or_symbol)) {
+	string = ATOMID(string_or_symbol)->value;
+	length = ATOMID(string_or_symbol)->length;
+    }
     else
 	LispDestroy("%s: %s is not a string or symbol",
 		    STRFUN(builtin), STROBJ(string_or_symbol));
 
     result = NIL;
-    i = STRHASH(string);
 
     /* Traverse all packages, searching for symbols matching specified string */
     for (list = PACK; CONSP(list); list = CDR(list)) {
 	package = CAR(list);
 	pack = package->data.package.package;
 
-	atom = pack->atoms[i];
-	while (atom) {
-	    if (strcmp(atom->string, string) == 0 &&
-		LispDoSymbol(package, atom, 0, 1)) {
-		/* Return only one pointer to a matching symbol */
+	atom = (LispAtom *)hash_check(pack->atoms, string, length);
+	if (atom && LispDoSymbol(package, atom, 0, 1)) {
+	    /* Return only one pointer to a matching symbol */
 
-		if (result == NIL) {
-		    result = CONS(atom->object, NIL);
-		    GC_PROTECT(result);
-		}
-		else {
-		    /* Put symbols defined first in the
-		     * beginning of the result list */
-		    RPLACD(result, CONS(CAR(result), CDR(result)));
-		    RPLACA(result, atom->object);
-		}
+	    if (result == NIL) {
+		result = CONS(atom->object, NIL);
+		GC_PROTECT(result);
 	    }
-	    atom = atom->next;
+	    else {
+		/* Put symbols defined first in the
+		 * beginning of the result list */
+		RPLACD(result, CONS(CAR(result), CDR(result)));
+		RPLACA(result, atom->object);
+	    }
 	}
     }
     GC_LEAVE();
@@ -651,7 +635,7 @@ Lisp_MakePackage(LispBuiltin *builtin)
 
     /* Error checks done, package_name is either a symbol or string */
     if (!XSTRINGP(package_name))
-	package_name = STRING(ATOMID(package_name));
+	package_name = STRING(ATOMID(package_name)->value);
 
     GC_PROTECT(package_name);
 
@@ -667,7 +651,7 @@ Lisp_MakePackage(LispBuiltin *builtin)
 	/* Store all nicknames as strings */
 	package = CAR(list);
 	if (!XSTRINGP(package))
-	    package = STRING(ATOMID(package));
+	    package = STRING(ATOMID(package)->value);
 	if (nicks == NIL) {
 	    nicks = cons = CONS(package, NIL);
 	    GC_PROTECT(nicks);

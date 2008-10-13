@@ -5,7 +5,7 @@
 *enableBackups:				True
 *backupNameSuffix:			~
 *changedBitmap:				xlogo11
-*international:                         True
+*international:				False
 
 *hints:\
 Use Control-S and Control-R to Search.\n\
@@ -39,7 +39,9 @@ Use Control-X,k to close file being edited.\n\
 Use Control-X,o to switch to another splitted window.\n\
 Use Control-X,u to undo. Control-G to switch between Undo and Redo.\n\
 Use Insert to toggle Overwrite mode.\n\
-Use Control-G to interrupt the lisp subprocess
+Use Control-G to interrupt the lisp subprocess.\n\
+Use Escape to enter or leave regex search and replace mode.\n\
+Use Alt-. to search tags for the selected symbol or find the next match.
 
 *formWindow*defaultDistance:		2
 *formWindow.?.borderWidth:		0
@@ -201,6 +203,7 @@ m<Key>I:	no-op(r)
 <Ctrl>X,!<Key>u:undo()\n\
 <Ctrl>G:	xedit-keyboard-reset()\n\
 <Ctrl>J:	xedit-print-lisp-eval()\n\
+:m<Key>.:	tags()\n\
 <Key>Tab:	insert-char()\n\
 !l @Num_Lock<Key>b:insert-char()\n\
 !l <Key>b:	insert-char()\n\
@@ -235,7 +238,9 @@ c l @Num_Lock<Btn3Down>:xedit-focus() popup-menu(optionsMenu)\n\
 c @Num_Lock<Btn3Down>:xedit-focus() popup-menu(optionsMenu)\n\
 c l<Btn3Down>:xedit-focus() popup-menu(optionsMenu)\n\
 c<Btn3Down>:	xedit-focus() popup-menu(optionsMenu)\n\
-<Btn1Down>:	xedit-focus() select-start()
+<Btn1Down>:	xedit-focus() select-start()\n\
+<Btn4Down>:	scroll-one-line-down()\n\
+<Btn5Down>:	scroll-one-line-up()
 
 *filename.?.pieceSize:			256
 *filename.translations: #override \
@@ -257,7 +262,8 @@ c<Key>G:	cancel-find-file()\n\
 !*ispell.dictionary:			br
 !*ispell.dictionaries:			br american americanmed+ english
 !*ispell*br.wordChars:			·ÈÌÛ˙Á¡…Õ”⁄«‡¿‚ÍÙ¬ ‘¸‹„ı√’-
-!*ispell.ispellCommand:			/usr/local/bin/ispell -B -m
+*ispell.ispellCommand:			/usr/bin/aspell -B -m
+*ispell.lookCommand:			/bin/egrep
 !*ispell*text.skipLines:		.#
 
 *ispell.geometry:			0x0

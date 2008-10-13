@@ -522,15 +522,15 @@ LispPrintCircle(LispObj *stream, LispObj *object, long circle,
 static int
 LispWriteAlist(LispObj *stream, LispArgList *alist, write_info *info)
 {
-    char *name;
+    Atom_id name;
     int i, length = 0, need_space = 0;
 
 #define WRITE_ATOM(object)						\
     name = ATOMID(object);						\
-    length += LispDoWriteAtom(stream, name, strlen(name),		\
+    length += LispDoWriteAtom(stream, name->value, name->length,	\
 			      info->print_case)
-#define WRITE_STRING(string)						\
-    length += LispDoWriteAtom(stream, string, strlen(string),		\
+#define WRITE_ATOMID(atomid)						\
+    length += LispDoWriteAtom(stream, atomid->value, atomid->length,	\
 			      info->print_case)
 #define WRITE_OBJECT(object)						\
     length += LispDoWriteObject(stream, object, info, 1)
@@ -552,7 +552,7 @@ LispWriteAlist(LispObj *stream, LispArgList *alist, write_info *info)
     if (alist->optionals.num_symbols) {
 	if (need_space)
 	    WRITE_SPACE();
-	WRITE_STRING(Soptional);
+	WRITE_ATOMID(Soptional);
 	WRITE_SPACE();
 	for (i = 0; i < alist->optionals.num_symbols; i++) {
 	    WRITE_OPAREN();
@@ -572,7 +572,7 @@ LispWriteAlist(LispObj *stream, LispArgList *alist, write_info *info)
     if (alist->keys.num_symbols) {
 	if (need_space)
 	    WRITE_SPACE();
-	length += LispDoWriteAtom(stream, Skey, 4, info->print_case);
+	length += LispDoWriteAtom(stream, Skey->value, 4, info->print_case);
 	WRITE_SPACE();
 	for (i = 0; i < alist->keys.num_symbols; i++) {
 	    WRITE_OPAREN();
@@ -599,7 +599,7 @@ LispWriteAlist(LispObj *stream, LispArgList *alist, write_info *info)
     if (alist->rest) {
 	if (need_space)
 	    WRITE_SPACE();
-	WRITE_STRING(Srest);
+	WRITE_ATOMID(Srest);
 	WRITE_SPACE();
 	WRITE_ATOM(alist->rest);
 	need_space = 1;
@@ -607,7 +607,7 @@ LispWriteAlist(LispObj *stream, LispArgList *alist, write_info *info)
     if (alist->auxs.num_symbols) {
 	if (need_space)
 	    WRITE_SPACE();
-	WRITE_STRING(Saux);
+	WRITE_ATOMID(Saux);
 	WRITE_SPACE();
 	for (i = 0; i < alist->auxs.num_symbols; i++) {
 	    WRITE_OPAREN();
@@ -622,7 +622,7 @@ LispWriteAlist(LispObj *stream, LispArgList *alist, write_info *info)
     WRITE_CPAREN();
 
 #undef WRITE_ATOM
-#undef WRITE_STRING
+#undef WRITE_ATOMID
 #undef WRITE_OBJECT
 #undef WRITE_OPAREN
 #undef WRITE_SPACE
@@ -867,9 +867,9 @@ write_again:
     switch (OBJECT_TYPE(object)) {
 	case LispNil_t:
 	    if (object == NIL)
-		string = Snil;
+		string = Snil->value;
 	    else if (object == T)
-		string = St;
+		string = St->value;
 	    else if (object == DOT)
 		string = "#<DOT>";
 	    else if (object == UNSPEC)
@@ -1017,7 +1017,7 @@ write_again:
 					 ->data.atom->property->alist, info);
 	    }
 	    else {
-		length += LispDoWriteAtom(stream, Snil, 3, info->print_case);
+		length += LispDoWriteAtom(stream, "NIL", 3, info->print_case);
 		length += LispWriteChar(stream, ' ');
 		length += LispWriteAlist(stream, (LispArgList*)object->
 					 data.lambda.name->data.opaque.data,
@@ -1264,7 +1264,7 @@ LispWriteAtom(LispObj *stream, LispObj *object, write_info *info)
 {
     int length = 0;
     LispAtom *atom = object->data.atom;
-    Atom_id id = atom->string;
+    Atom_id id = atom->key;
 
     if (atom->package != PACKAGE) {
 	if (atom->package == lisp__data.keyword)
@@ -1299,7 +1299,7 @@ LispWriteAtom(LispObj *stream, LispObj *object, write_info *info)
     }
     if (atom->unreadable)
 	length += LispWriteChar(stream, '|');
-    length += LispDoWriteAtom(stream, id, strlen(id),
+    length += LispDoWriteAtom(stream, id->value, id->length,
 			      atom->unreadable ? UPCASE : info->print_case);
     if (atom->unreadable)
 	length += LispWriteChar(stream, '|');

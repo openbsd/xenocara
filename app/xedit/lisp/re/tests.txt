@@ -459,3 +459,12 @@
 
 /.*(\d+)/
 :BADRPT
+
+# Regression fix, was matching empty string
+/\\\d{3}|\\./
+>\\
+:NOMATCH
+
+/\\.|\\\d{3}/
+>\\
+:NOMATCH

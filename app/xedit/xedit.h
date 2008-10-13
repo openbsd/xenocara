@@ -29,6 +29,7 @@
 /* $XFree86: xc/programs/xedit/xedit.h,v 1.17 2002/10/06 17:11:39 paulo Exp $ */
 
 #include <stdio.h>
+#include <time.h>
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 #include <X11/cursorfont.h>
@@ -49,6 +50,11 @@
 
 #include <X11/Xmu/SysUtil.h>
 
+#define LSCAN(from, count, include)	\
+	XawTextSourceScan(source, from, XawstEOL, XawsdLeft, count, include)
+#define RSCAN(from, count, include)	\
+	XawTextSourceScan(source, from, XawstEOL, XawsdRight, count, include)
+
 typedef struct _xedit_hints {
     char *resource;
     unsigned long interval;
@@ -61,6 +67,7 @@ typedef struct _xedit_hints {
 typedef enum {NO_READ, READ_OK, WRITE_OK} FileAccess;
 
 typedef struct _XeditLispData XeditLispData;
+typedef struct _XeditTagsInfo XeditTagsInfo;
 
 #define CHANGED_BIT	0x01
 #define EXISTS_BIT	0x02
@@ -73,9 +80,11 @@ typedef struct _xedit_flist_item {
     FileAccess file_access;
     XawTextPosition display_position, insert_position;
     int mode;
+    time_t mtime;
     XawTextPropertyList *properties;
     XawTextWrapMode wrap;
     XeditLispData *xldata;
+    XeditTagsInfo *tags;
 } xedit_flist_item;
 
 extern struct _xedit_flist {
@@ -96,10 +105,13 @@ extern struct _app_resources {
     char *changed_pixmap_name;
     char *position_format;
     char *auto_replace;
+    char *tagsName;
+    Boolean loadTags;
 } app_resources;
 
 extern Widget topwindow, textwindow, labelwindow, filenamewindow, messwidget;
 extern Widget dirlabel, dirwindow;
+extern Boolean international;
 extern Boolean line_edit;
 
 /*	externals in xedit.c 	*/
@@ -137,6 +149,7 @@ void DoPrint(Widget, XtPointer, XtPointer);
 void CancelFindFile(Widget, XEvent*, String*, Cardinal*);
 void FindFile(Widget, XEvent*, String*, Cardinal*);
 void LoadFile(Widget, XEvent*, String*, Cardinal*);
+Bool LoadFileInTextwindow(char *name, char *resolved_name);
 #ifdef INCLUDE_XPRINT_SUPPORT
 void PrintFile(Widget, XEvent*, String*, Cardinal*);
 #endif /* INCLUDE_XPRINT_SUPPORT */
@@ -169,6 +182,10 @@ void SetTextProperties(xedit_flist_item*);
 void UnsetTextProperties(xedit_flist_item*);
 void CreateEditModePopup(Widget);
 void SetEditModeMenu(void);
+
+/* tags.c */
+void TagsAction(Widget, XEvent*, String*, Cardinal*);
+void SearchTagsFile(xedit_flist_item *item);
 
 /*	externs for system replacement functions */
 #ifdef NEED_STRCASECMP

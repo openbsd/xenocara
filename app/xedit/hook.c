@@ -39,6 +39,7 @@
 
 #include "xedit.h"
 #include "re.h"
+#include "util.h"
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -46,11 +47,11 @@
 /*
  * Types
  */
-typedef struct _ReplaceList {
-    char *word;
+typedef struct _ReplaceEntry {
+    hash_key *word;
+    struct _ReplaceEntry *next;
     char *replace;
-    struct _ReplaceList *next;
-} ReplaceList;
+} ReplaceEntry;
 
 typedef enum {
     SubstituteDisabled,
@@ -69,6 +70,8 @@ typedef struct _EditInfo {
 
     /* String and flags used to compile regex */
     char pattern[64];
+    char subst_pattern[64];
+    int pat_length;
     int flags;
 
     /* Substitution buffer */
@@ -108,7 +111,7 @@ static void SubstituteCallback(Widget, XtPointer, XtPointer);
  * Initialization
  */
 #define STRTBLSZ	11
-static ReplaceList *replace_list[STRTBLSZ];
+static hash_table *replace_hash;
 static EditInfo einfo;
 extern Widget scratch;
 
@@ -191,6 +194,8 @@ StartAutoReplace(void)
     if (!replace || !*replace)
 	return (False);
 
+    replace_hash = hash_new(STRTBLSZ, NULL);
+
     left = XtMalloc(llen = 256);
     right = XtMalloc(rlen = 256);
     while (*replace) {
@@ -247,34 +252,26 @@ StartAutoReplace(void)
 static char *
 ReplacedWord(char *word, char *replace)
 {
-    ReplaceList *list;
-    int ii = 0;
-    char *pp = word;
+    int length;
+    ReplaceEntry *entry;
 
-    while (*pp)
-	ii = (ii << 1) ^ *pp++;
-    if (ii < 0)
-	ii = -ii;
-    ii %= STRTBLSZ;
-    for (list = replace_list[ii]; list; list = list->next)
-	if (strcmp(list->word, word) == 0) {
-	    if (replace) {
-		XtFree(list->replace);
-		list->replace = XtNewString(replace);
-	    }
-	    return (list->replace);
-	}
+    length = strlen(word);
+    entry = (ReplaceEntry *)hash_check(replace_hash, word, length);
+    if (entry == NULL && replace != NULL) {
+	entry = XtNew(ReplaceEntry);
+	entry->word = XtNew(hash_key);
+	entry->word->value = XtNewString(word);
+	entry->word->length = length;
+	entry->next = NULL;
+	entry->replace = XtNewString(replace);
+	hash_put(replace_hash, (hash_entry *)entry);
+    }
+    else if (replace) {
+	XtFree(entry->replace);
+	entry->replace = XtNewString(replace);
+    }
 
-    if (!replace)
-	return (NULL);
-
-    list = XtNew(ReplaceList);
-    list->word = XtNewString(word);
-    list->replace = XtNewString(replace);
-    list->next = replace_list[ii];
-    replace_list[ii] = list;
-
-    return (list->replace);
+    return (entry ? entry->replace : NULL);
 }
 
 static void
@@ -388,7 +385,7 @@ LineEditAction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     XawTextBlock block;
 
-    if (True) {
+    if (international) {
 	/* XXX FIXME */
         fprintf(stderr, "LineEditAction: Not working in international mode.\n");
 	return;
@@ -405,10 +402,6 @@ LineEditAction(Widget w, XEvent *event, String *params, Cardinal *num_params)
     line_edit = True;
 }
 
-#define LSCAN(from, count, include)	\
-	XawTextSourceScan(source, from, XawstEOL, XawsdLeft, count, include)
-#define RSCAN(from, count, include)	\
-	XawTextSourceScan(source, from, XawstEOL, XawsdRight, count, include)
 void
 LineEdit(Widget w)
 {
@@ -762,8 +755,9 @@ LineEdit(Widget w)
 
     /* Need to (re)compile regular expression pattern? */
     if ((!!(einfo.flags & RE_ICASE) ^ icase) ||
-	strlen(einfo.pattern) < length ||
-	strncmp(pstart, einfo.pattern, length)) {
+	einfo.pat_length != length ||
+	memcmp(pstart, einfo.pattern,
+	       length > einfo.pat_length ? einfo.pat_length : length)) {
 	compile = 1;
 	memcpy(einfo.pattern, pstart, length);
 	einfo.pattern[length] = '\0';
@@ -799,45 +793,40 @@ LineEdit(Widget w)
 
     /* Check bounds to work on */
     if (replace) {
-	int i, csubst;
+	int i, j, ch;
 
 	/* Check number of required match results and remove/parse backslashes */
-	memcpy(einfo.subst, rstart, einfo.slen = rend - rstart);
+	einfo.slen = rend - rstart;
 	einfo.sref = 0;
 	einfo.soff = offset;
-	for (i = 0; i < einfo.slen - 1; i++) {
-	    if (einfo.subst[i] == '\\') {
-		csubst = -1;
-		switch (einfo.subst[i + 1]) {
- 		    case '0':	    csubst = '\0';  break;
-		    case 'a':	    csubst = '\b';  break;
-		    case 'b':	    csubst = '\b';  break;
-		    case 'f':	    csubst = '\f';  break;
-		    case 'n':	    csubst = '\n';  break;
-		    case 'r':	    csubst = '\r';  break;
-		    case 't':	    csubst = '\t';  break;
-		    case 'v':	    csubst = '\v';  break;
-		    case '1':	    case '2':	    case '3':
-		    case '4':	    case '5':	    case '6':
-		    case '7':	    case '8':	    case '9':
-			++i;
-			if (einfo.subst[i] - '0' > einfo.sref)
-			    einfo.sref = einfo.subst[i] - '0';
-			break;
+	for (i = j = 0; i < einfo.slen; i++) {
+	    ch = rstart[i];
+	    if (ch == '\\') {
+		++i;
+		switch (rstart[i]) {
+		    case '0':	ch = '\0';	break;
+		    case 'a':	ch = '\a';	break;
+		    case 'b':	ch = '\b';	break;
+		    case 'f':	ch = '\f';	break;
+		    case 'n':	ch = '\n';	break;
+		    case 'r':	ch = '\r';	break;
+		    case 't':	ch = '\t';	break;
+		    case 'v':	ch = '\v';	break;
+		    case '1':	case '2':	case '3':
+		    case '4':	case '5':	case '6':
+		    case '7':	case '8':	case '9':
+			einfo.subst[j++] = '\\';
+			if (rstart[i] - '0' > einfo.sref)
+			    einfo.sref = rstart[i] - '0';
+			/* FALLTHROUGH */
 		    default:
-			csubst = einfo.subst[i + 1];
+			ch = rstart[i];
 			break;
-		}
-		if (csubst >= 0) {
-		    memmove(einfo.subst + i, einfo.subst + i + 1,
-			    einfo.slen - i);
-		    einfo.subst[i] = csubst;
-		    --einfo.slen;
-		    ++i;
-		    csubst = -1;
 		}
 	    }
+	    einfo.subst[j++] = ch;
 	}
+	einfo.slen = j;
     }
     else if (einfo.widget != w) {
 	/* Just a flag for backward search */
@@ -847,8 +836,36 @@ LineEdit(Widget w)
 
     /* Compile pattern if required */
     if (compile) {
+	int ch;
+	char *eptr, *pptr;
+
+	/* Parse backslashes */
+	pptr = einfo.subst_pattern;
+	for (eptr = einfo.pattern, ch = *eptr++; ch; ch = *eptr++) {
+	    if (ch == '\\') {
+		switch (*eptr) {
+		    case '0':	ch = '\0';  einfo.flags |= RE_PEND; break;
+		    case 'a':	ch = '\a';	break;
+		    case 'b':	ch = '\b';	break;
+		    case 'f':	ch = '\f';	break;
+		    case 'n':	ch = '\n';	break;
+		    case 'r':	ch = '\r';	break;
+		    case 't':	ch = '\t';	break;
+		    case 'v':	ch = '\v';	break;
+		    default:			break;
+		}
+		if (ch != '\\')
+		    ++eptr;
+	    }
+	    *pptr++ = ch;
+	}
+	*pptr = '\0';
+
 	refree(&einfo.regex);
-	if ((ecode = recomp(&einfo.regex, einfo.pattern, einfo.flags)) != 0)
+	/* Allow nuls in search regex */
+	einfo.regex.re_endp = pptr;
+	ecode = recomp(&einfo.regex, einfo.subst_pattern, einfo.flags);
+	if (ecode)
 	    goto print;
     }
 
@@ -917,7 +934,9 @@ confirm_label:
 	    }
 	    memcpy(einfo.line, block.ptr, block.length);
 	    length = block.length;
-	    for (position += length; position < to; position += length) {
+	    for (position += length;
+		 position < to && block.length;
+		 position += block.length) {
 		XawTextSourceRead(source, position, &block, to - position);
 		memcpy(einfo.line + length, block.ptr, block.length);
 		length += block.length;
@@ -927,29 +946,39 @@ confirm_label:
 
 	/* Execute expression */
 	einfo.mats[0].rm_so = 0;
-	einfo.mats[0].rm_eo = to - from - !(from == to || to == last);
-	ecode = reexec(&einfo.regex, line,
-		       einfo.sref + 1, &einfo.mats[0], flags);
+	einfo.mats[0].rm_eo = to - from;
 
-	if (replace && einfo.mats[0].rm_so == einfo.mats[0].rm_eo)
-	    /* Ignore empty matches */
-	    ecode = RE_NOMATCH;
+	/* If not last line or if it ends in a newline */
+	if (to != from) {
+	    if (to < last || (to > from && line[einfo.mats[0].rm_eo - 1] == '\n'))
+		--einfo.mats[0].rm_eo;
 
-	if (ecode == 0 && confirm &&
-	    (einfo.soff == O_ALL || nth == einfo.soff)) {
-	    einfo.end = from + einfo.mats[0].rm_eo;
-	    einfo.start = from + einfo.mats[0].rm_so;
-	    XawTextSetInsertionPoint(w, einfo.end);
-	    XawTextSetSelection(w, einfo.start, einfo.end);
+	    ecode = reexec(&einfo.regex, line,
+			   einfo.sref + 1, &einfo.mats[0], flags);
 
-	    einfo.state = SubstituteAsk;
-	    einfo.from = from;
-	    einfo.to = to;
-	    einfo.first = first;
-	    einfo.last = last;
-	    einfo.text_line = line;
-	    break;
+	    if (replace && einfo.mats[0].rm_so == einfo.mats[0].rm_eo)
+		/* Ignore empty matches */
+		ecode = RE_NOMATCH;
+
+	    if (ecode == 0 && confirm &&
+		(einfo.soff == O_ALL || nth == einfo.soff)) {
+		einfo.end = from + einfo.mats[0].rm_eo;
+		einfo.start = from + einfo.mats[0].rm_so;
+		XawTextSetInsertionPoint(w, einfo.end);
+		XawTextSetSelection(w, einfo.start, einfo.end);
+
+		einfo.state = SubstituteAsk;
+		einfo.from = from;
+		einfo.to = to;
+		einfo.first = first;
+		einfo.last = last;
+		einfo.text_line = line;
+		break;
+	    }
 	}
+	else
+	    /* Check bellow will update offsets */
+	    ecode = RE_NOMATCH;
 
 substitute_label:
 	if (ecode == 0) {
@@ -1091,6 +1120,7 @@ no_substitute_label:
 	else
 	    XtSetArg(args[0], XtNstring, NULL);
 	XtSetValues(filenamewindow, args, 1);
+	line_edit = False;
     }
     return;
 
@@ -1103,7 +1133,7 @@ print:
     reerror(ecode, &einfo.regex,
 	     buffer + length, sizeof(buffer) - length - 2);
     strcat(buffer, "\n");
-    XeditPrintf(buffer);
+    XeditPrintf("%s", buffer);
     refree(&einfo.regex);
     einfo.state = SubstituteDisabled;
     Feep();
@@ -1164,8 +1194,7 @@ fail:
 		ptr = "Unknown error";
 		break;
 	}
-	XmuSnprintf(buffer, sizeof(buffer), "Error: %s.\n", ptr);
-	XeditPrintf(buffer);
+	XeditPrintf("Error: %s.\n", ptr);
     }
     if (redisplay)
 	XawTextEnableRedisplay(w);

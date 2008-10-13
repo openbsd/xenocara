@@ -343,8 +343,8 @@ LispCharacterCoerce(LispBuiltin *builtin, LispObj *object)
 	return (object);
     else if (STRINGP(object) && STRLEN(object) == 1)
 	return (SCHAR(THESTR(object)[0]));
-    else if (SYMBOLP(object) && ATOMID(object)[1] == '\0')
-	return (SCHAR(ATOMID(object)[0]));
+    else if (SYMBOLP(object) && ATOMID(object)->value[1] == '\0')
+	return (SCHAR(ATOMID(object)->value[0]));
     else if (INDEXP(object)) {
 	int c = FIXNUM_VALUE(object);
 
@@ -374,9 +374,9 @@ LispStringCoerce(LispBuiltin *builtin, LispObj *object)
 	return (LSTRING(string, 1));
     }
     else if (object == NIL)
-	return (LSTRING(Snil, 3));
+	return (LSTRING(Snil->value, 3));
     else if (object == T)
-	return (LSTRING(St, 1));
+	return (LSTRING(St->value, 1));
     else
 	LispDestroy("%s: cannot convert %s to string",
 		    STRFUN(builtin), STROBJ(object));
@@ -442,7 +442,7 @@ LispCoerce(LispBuiltin *builtin,
 	    type = LispPathname_t;
 	else
 	    LispDestroy("%s: invalid type specification %s",
-			STRFUN(builtin), ATOMID(result_type));
+			STRFUN(builtin), ATOMID(result_type)->value);
     }
 
     if (OBJECT_TYPE(object) == LispOpaque_t) {
@@ -559,7 +559,7 @@ LispCoerce(LispBuiltin *builtin,
 
 coerce_fail:
     LispDestroy("%s: cannot convert %s to %s",
-		STRFUN(builtin), STROBJ(object), ATOMID(result_type));
+		STRFUN(builtin), STROBJ(object), ATOMID(result_type)->value);
     /* NOTREACHED */
     return (NIL);
 }

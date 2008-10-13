@@ -782,7 +782,8 @@ next_lcstl:;
 	    case Re_AltNext:
 		bas = eng.off - 1;
 		/* Check if matched and if it is a better match */
-		if (eng.sv[eng.off] - eng.so[eng.off] <
+		if (eng.eo[eng.off] >= eng.so[eng.off] &&
+		    eng.sv[eng.off] - eng.so[eng.off] <
 		    eng.eo[eng.off] - eng.so[eng.off])
 		    eng.sv[eng.off] = eng.eo[eng.off];
 

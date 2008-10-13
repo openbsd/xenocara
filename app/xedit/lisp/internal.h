@@ -1,4 +1,4 @@
-/* $XdotOrg: app/xedit/lisp/internal.h,v 1.3 2004/12/04 00:43:13 kuhn Exp $ */
+/* $XdotOrg: xc/programs/xedit/lisp/internal.h,v 1.2 2004/04/23 19:54:44 eich Exp $ */
 /*
  * Copyright (c) 2001 by The XFree86 Project, Inc.
  *
@@ -38,6 +38,8 @@
 
 #include "mp.h"
 #include "re.h"
+
+#include "util.h"
 
 /*
  * Defines
@@ -110,14 +112,14 @@ typedef struct _LispMac LispMac;
 #define UPROTECT(key, list)	LispUProtect(key, list)
 
 /* create a new unique static atom string */
-#define GETATOMID(string)	LispGetAtomString(string, 1)
+#define GETATOMID(string)	LispGetAtomKey(string, 1)
 
 #define	GCDisable()		++gcpro
 #define	GCEnable()		--gcpro
 
 
 /* pointer to something unique to all atoms with the same print representation */
-#define ATOMID(object)		(object)->data.atom->string
+#define ATOMID(object)		(object)->data.atom->key
 
 
 
@@ -432,7 +434,7 @@ typedef struct _LispMac LispMac;
 
 #define LispFileno(file)	((file)->descriptor)
 
-#define STRFUN(builtin)		ATOMID(builtin->symbol)
+#define STRFUN(builtin)		ATOMID(builtin->symbol)->value
 #define STROBJ(obj)		LispStrObj(obj)
 
 /* fetch builtin function/macro argument value
@@ -457,9 +459,9 @@ typedef struct _LispMac LispMac;
 
 
 #define ERROR_CHECK_SPECIAL_FORM(atom)					\
-    if (atom->property->fun.builtin->compile)				\
+    if ((atom)->property->fun.builtin->compile)				\
 	LispDestroy("%s: the special form %s cannot be redefined",	\
-		    STRFUN(builtin), atom->string)
+		    STRFUN(builtin), (atom)->key->value)
 
 
 
@@ -489,7 +491,7 @@ typedef struct _LispHashTable LispHashTable;
 /* Bytecode compiler data */
 typedef struct _LispCom LispCom;
 
-typedef char *Atom_id;
+typedef hash_key *Atom_id;
 
 typedef enum _LispType {
     /* objects encoded in the LispObj pointer */

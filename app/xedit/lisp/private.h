@@ -27,7 +27,7 @@
  * Author: Paulo César Pereira de Andrade
  */
 
-/* $XdotOrg: app/xedit/lisp/private.h,v 1.3 2004/12/04 00:43:13 kuhn Exp $ */
+/* $XdotOrg: xc/programs/xedit/lisp/private.h,v 1.2 2004/04/23 19:54:44 eich Exp $ */
 /* $XFree86: xc/programs/xedit/lisp/private.h,v 1.41 2003/05/27 22:27:04 tsi Exp $ */
 
 #ifndef Lisp_private_h
@@ -192,6 +192,9 @@ struct _LispProperty {
 };
 
 struct _LispAtom {
+    hash_key *key;
+    struct _LispAtom *next;
+
     /* hint: dynamically binded variable */
     unsigned int dyn : 1;
 
@@ -222,14 +225,12 @@ struct _LispAtom {
     /* Symbol value is constant, cannot be changed */
     unsigned int constant : 1;
 
-    char *string;
     LispObj *object;		/* backpointer to object ATOM */
     int offset;			/* in the environment list */
     LispObj *package;		/* package home of symbol */
     LispObj *function;		/* symbol function */
     LispObj *name;		/* symbol string */
     LispProperty *property;
-    struct _LispAtom *next;
 
     LispObj *documentation[5];
 };
@@ -243,20 +244,13 @@ struct _LispObjList {
 struct _LispPackage {
     LispObjList glb;		/* global symbols in package */
     LispObjList use;		/* inherited packages */
-    LispAtom *atoms[STRTBLSZ];	/* atoms in this package */
+    hash_table *atoms;		/* atoms in this package */
 };
 
 struct _LispOpaque {
-    int type;
-    char *desc;
+    hash_key *desc;
     LispOpaque *next;
-};
-
-/* These strings are never released, they are used to avoid
- * the need of strcmp() on two symbol names, just compare pointers */
-struct _LispStringHash {
-    char *string;
-    LispStringHash *next;
+    int type;
 };
 
 typedef enum _LispBlockType {
@@ -357,8 +351,8 @@ struct _LispMac {
 	int average;			/* of cells freed after gc calls */
     } gc;
 
-    LispStringHash *strings[STRTBLSZ];
-    LispOpaque *opqs[STRTBLSZ];
+    hash_table	*strings;
+    hash_table	*opqs;
     int opaque;
 
     LispObj *standard_input, *input, *input_list;
@@ -452,6 +446,7 @@ void LispExportSymbol(LispObj*);
 void LispImportSymbol(LispObj*);
 
 	/* always returns the same string */
+hash_key *LispGetAtomKey(char*, int);
 char *LispGetAtomString(char*, int);
 
 /* destructive fast reverse, note that don't receive a LispMac* argument */
@@ -474,8 +469,6 @@ void LispBlockUnwind(LispBlock*);
 void LispUpdateResults(LispObj*, LispObj*);
 void LispTopLevel(void);
 
-#define STRHASH(string)		LispDoHashString(string)
-int LispDoHashString(char*);
 LispAtom *LispDoGetAtom(char *str, int);
 	/* get value from atom's property list */
 LispObj *LispGetAtomProperty(LispAtom*, LispObj*);

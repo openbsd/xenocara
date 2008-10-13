@@ -935,22 +935,20 @@ Lisp__GC(LispObj *car, LispObj *cdr)
 
 	/* Traverse atom list, protecting properties, and function/structure
 	 * definitions if lisp__data.gc.immutablebits set */
-	for (i = 0; i < STRTBLSZ; i++) {
-	    atom = pack->atoms[i];
-	    while (atom) {
-		if (atom->property != NOPROPERTY) {
-		    if (atom->a_property)
-			LispMark(atom->property->properties);
-		    if (lisp__data.gc.immutablebits) {
-			if (atom->a_function || atom->a_compiled)
-			    LispProt(atom->property->fun.function);
-			if (atom->a_defsetf)
-			    LispProt(atom->property->setf);
-			if (atom->a_defstruct)
-			    LispProt(atom->property->structure.definition);
-		    }
+	for (atom = (LispAtom *)hash_iter_first(pack->atoms);
+	     atom;
+	     atom = (LispAtom *)hash_iter_next(pack->atoms)) {
+	    if (atom->property != NOPROPERTY) {
+		if (atom->a_property)
+		    LispMark(atom->property->properties);
+		if (lisp__data.gc.immutablebits) {
+		    if (atom->a_function || atom->a_compiled)
+			LispProt(atom->property->fun.function);
+		    if (atom->a_defsetf)
+			LispProt(atom->property->setf);
+		    if (atom->a_defstruct)
+			LispProt(atom->property->structure.definition);
 		}
-		atom = atom->next;
 	    }
 	}
     }
@@ -1285,97 +1283,88 @@ LispSetVariable(LispObj *var, LispObj *val, char *fname, int eval)
 int
 LispRegisterOpaqueType(char *desc)
 {
+    int length;
     LispOpaque *opaque;
-    int ii = STRHASH(desc);
 
-    for (opaque = lisp__data.opqs[ii]; opaque; opaque = opaque->next)
-	if (strcmp(opaque->desc, desc) == 0)
-	    return (opaque->type);
-    opaque = (LispOpaque*)LispMalloc(sizeof(LispOpaque));
-    opaque->desc = LispStrdup(desc);
-    opaque->next = lisp__data.opqs[ii];
-    lisp__data.opqs[ii] = opaque;
-    LispMused(opaque->desc);
-    LispMused(opaque);
+    length = strlen(desc);
+    opaque = (LispOpaque *)hash_check(lisp__data.opqs, desc, length);
 
-    return (opaque->type = ++lisp__data.opaque);
+    if (opaque == NULL) {
+	opaque = (LispOpaque*)LispMalloc(sizeof(LispOpaque));
+	opaque->desc = (hash_key*)LispCalloc(1, sizeof(hash_key));
+	opaque->desc->value = LispStrdup(desc);
+	opaque->desc->length = length;
+	hash_put(lisp__data.opqs, (hash_entry *)opaque);
+	LispMused(opaque->desc->value);
+	LispMused(opaque->desc);
+	LispMused(opaque);
+	opaque->type = ++lisp__data.opaque;
+    }
+
+    return (opaque->type);
 }
 
 char *
 LispIntToOpaqueType(int type)
 {
-    int i;
     LispOpaque *opaque;
 
     if (type) {
-	for (i = 0; i < STRTBLSZ; i++) {
-	    opaque = lisp__data.opqs[i];
-	    while (opaque) {
-		if (opaque->type == type)
-		    return (opaque->desc);
-		opaque = opaque->next;
-	    }
+	for (opaque = (LispOpaque *)hash_iter_first(lisp__data.opqs);
+	     opaque;
+	     opaque = (LispOpaque *)hash_iter_next(lisp__data.opqs)) {
+	    if (opaque->type == type)
+		return (opaque->desc->value);
 	}
 	LispDestroy("Opaque type %d not registered", type);
     }
 
-    return (Snil);
+    return (Snil->value);
 }
 
-int
-LispDoHashString(char *string)
+hash_key *
+LispGetAtomKey(char *string, int perm)
 {
-    char *pp;
-    int ii, count;
+    int length;
+    hash_entry *entry;
 
-    for (pp = string, ii = count = 0; *pp && count < 32; pp++, count++)
-	ii = (ii << 1) ^ *pp;
-    if (ii < 0)
-	ii = -ii;
+    length = strlen(string);
+    entry = hash_check(lisp__data.strings, string, length);
+    if (entry == NULL) {
+	entry = LispCalloc(1, sizeof(hash_entry));
+	entry->key = LispCalloc(1, sizeof(hash_key));
+	if (perm)
+	    entry->key->value = string;
+	else
+	    entry->key->value = LispStrdup(string);
+	entry->key->length = length;
 
-    return (ii % STRTBLSZ);
-}
+	hash_put(lisp__data.strings, entry);
+	if (!perm)
+	    LispMused(entry->key->value);
+	LispMused(entry->key);
+	LispMused(entry);
+    }
 
-char *
-LispGetAtomString(char *string, int perm)
-{
-    LispStringHash *entry;
-    int ii = STRHASH(string);
-
-    for (entry = lisp__data.strings[ii]; entry != NULL; entry = entry->next)
-	if (strcmp(entry->string, string) == 0)
-	    return (entry->string);
-
-    entry = (LispStringHash*)LispCalloc(1, sizeof(LispStringHash));
-    if (perm)
-	entry->string = string;
-    else
-	entry->string = LispStrdup(string);
-    LispMused(entry);
-    if (!perm)
-	LispMused(entry->string);
-    entry->next = lisp__data.strings[ii];
-    lisp__data.strings[ii] = entry;
-
-    return (entry->string);
+    return (entry->key);
 }
 
 LispAtom *
 LispDoGetAtom(char *str, int perm)
 {
+    int length;
     LispAtom *atom;
-    int ii = STRHASH(str);
 
-    for (atom = lisp__data.pack->atoms[ii]; atom; atom = atom->next)
-	if (strcmp(atom->string, str) == 0)
-	    return (atom);
+    length = strlen(str);
+    atom = (LispAtom *)hash_check(lisp__data.pack->atoms, str, length);
 
-    atom = (LispAtom*)LispCalloc(1, sizeof(LispAtom));
-    atom->string = LispGetAtomString(str, perm);
-    LispMused(atom);
-    atom->next = lisp__data.pack->atoms[ii];
-    lisp__data.pack->atoms[ii] = atom;
-    atom->property = NOPROPERTY;
+    if (atom == NULL) {
+	atom = (LispAtom*)LispCalloc(1, sizeof(LispAtom));
+	atom->key = LispGetAtomKey(str, perm);
+	hash_put(lisp__data.pack->atoms, (hash_entry *)atom);
+	atom->property = NOPROPERTY;
+	LispMused(atom);
+    }
 
     return (atom);
 }
@@ -1464,7 +1453,7 @@ LispSetAtomObjectProperty(LispAtom *atom, LispObj *object)
 	if (atom->object == lisp__data.package) {
 	    if (!PACKAGEP(object))
 		LispDestroy("Symbol %s must be a package, not %s",
-			    ATOMID(lisp__data.package), STROBJ(object));
+			    ATOMID(lisp__data.package)->value, STROBJ(object));
 	    lisp__data.pack = object->data.package.package;
 	}
     }
@@ -1752,7 +1741,7 @@ LispCheckKeyword(LispObj *keyword)
     if (KEYWORDP(keyword))
 	return (keyword);
 
-    return (KEYWORD(ATOMID(keyword)));
+    return (KEYWORD(ATOMID(keyword)->value));
 }
 
 void
@@ -1904,7 +1893,7 @@ LispCheckArguments(LispFunType type, LispObj *list, char *name, int builtin)
 	if (list != NIL)
 	    LispDestroy("%s %s: %s cannot be a %s argument list",
 			fnames[type], name, STROBJ(list), types[type]);
-	alist->description = GETATOMID("");
+	alist->description = GETATOMID("")->value;
 
 	return (alist);
     }
@@ -2048,14 +2037,14 @@ LispCheckArguments(LispFunType type, LispObj *list, char *name, int builtin)
 	else {
 	    Atom_id atom = ATOMID(spec);
 
-	    if (atom[0] == '&') {
+	    if (atom->value[0] == '&') {
 		if (atom == Srest) {
 		    if (rest || aux || CDR(list) == NIL || !SYMBOLP(CADR(list))
 			/* only &aux allowed after &rest */
 			|| (CDDR(list) != NIL && !SYMBOLP(CAR(CDDR(list))) &&
 			    ATOMID(CAR(CDDR(list))) != Saux))
 			LispDestroy("%s %s: syntax error parsing %s",
-				    fnames[type], name, ATOMID(spec));
+				    fnames[type], name, ATOMID(spec)->value);
 		    if (key)
 			LispDestroy("%s %s: %s not allowed after %s",
 				    fnames[type], name, keys[IREST], keys[IKEY]);
@@ -2066,7 +2055,7 @@ LispCheckArguments(LispFunType type, LispObj *list, char *name, int builtin)
 		else if (atom == Skey) {
 		    if (rest || aux)
 			LispDestroy("%s %s: %s not allowed after %s",
-				    fnames[type], name, ATOMID(spec),
+				    fnames[type], name, ATOMID(spec)->value,
 				    rest ? keys[IREST] : keys[IAUX]);
 		    key = 1;
 		    continue;
@@ -2075,7 +2064,7 @@ LispCheckArguments(LispFunType type, LispObj *list, char *name, int builtin)
 		else if (atom == Soptional) {
 		    if (rest || optional || aux || key)
 			LispDestroy("%s %s: %s not allowed after %s",
-				    fnames[type], name, ATOMID(spec),
+				    fnames[type], name, ATOMID(spec)->value,
 				    rest ? keys[IREST] :
 					optional ?
 					keys[IOPTIONAL] :
@@ -2088,7 +2077,7 @@ LispCheckArguments(LispFunType type, LispObj *list, char *name, int builtin)
 		    /* &AUX must be the last keyword parameter */
 		    if (aux)
 			LispDestroy("%s %s: syntax error parsing %s",
-				    fnames[type], name, ATOMID(spec));
+				    fnames[type], name, ATOMID(spec)->value);
 		    else if (builtin)
 			LispDestroy("builtin function cannot have &AUX arguments");
 		    aux = 1;
@@ -2099,7 +2088,7 @@ LispCheckArguments(LispFunType type, LispObj *list, char *name, int builtin)
 		 * argument names starting with the '&' character */
 		else
 		    LispDestroy("%s %s: %s not allowed/implemented",
-				fnames[type], name, ATOMID(spec));
+				fnames[type], name, ATOMID(spec)->value);
 	    }
 
 	    /* Add argument to alist */
@@ -2170,7 +2159,7 @@ LispCheckArguments(LispFunType type, LispObj *list, char *name, int builtin)
 		    fnames[type], name, STROBJ(list), types[type]);
 
     *desc = '\0';
-    alist->description = LispGetAtomString(description, 0);
+    alist->description = LispGetAtomKey(description, 0)->value;
 
     return (alist);
 }
@@ -2214,7 +2203,7 @@ LispAddBuiltinFunction(LispBuiltin *builtin)
     LispPopInput(&stream);
 
     atom = name->data.atom;
-    alist = LispCheckArguments(builtin->type, CDR(list), atom->string, 1);
+    alist = LispCheckArguments(builtin->type, CDR(list), atom->key->value, 1);
     builtin->symbol = CAR(list);
     LispSetAtomBuiltinProperty(atom, builtin, alist);
     LispUseArgList(alist);
@@ -2758,8 +2747,8 @@ LispSymbolName(LispObj *symbol)
     --atomseg.nfree;
 
     name->type = LispString_t;
-    THESTR(name) = atom->string;
-    STRLEN(name) = strlen(atom->string);
+    THESTR(name) = atom->key->value;
+    STRLEN(name) = atom->key->length;
     name->data.string.writable = 0;
     atom->name = name;
 
@@ -3156,6 +3145,8 @@ LispNewPackage(LispObj *name, LispObj *nicknames)
     package->data.package.nicknames = nicknames;
     package->data.package.package = pack;
 
+    package->data.package.package->atoms = hash_new(STRTBLSZ, NULL);
+
     LispMused(pack);
 
     return (package);
@@ -3185,30 +3176,18 @@ LispSymbolFunction(LispObj *symbol)
 static INLINE LispObj *
 LispGetVarPack(LispObj *symbol)
 {
-    int ii;
-    char *string;
     LispAtom *atom;
 
-    string = ATOMID(symbol);
-    ii = STRHASH(string);
+    atom = (LispAtom *)hash_get(lisp__data.pack->atoms,
+				 symbol->data.atom->key);
 
-    atom = lisp__data.pack->atoms[ii];
-    while (atom) {
-	if (strcmp(atom->string, string) == 0)
-	    return (atom->object);
-
-	atom = atom->next;
-    }
-
-    /* Symbol not found, just import it */
-    return (NULL);
+    return (atom ? atom->object : NULL);
 }
 
 /* package must be of type LispPackage_t */
 void
 LispUsePackage(LispObj *package)
 {
-    unsigned i;
     LispAtom *atom;
     LispPackage *pack;
     LispObj **pentry, **eentry;
@@ -3242,13 +3221,11 @@ LispUsePackage(LispObj *package)
     pack = package->data.package.package;
 
     /* Traverse atom list, searching for extern symbols */
-    for (i = 0; i < STRTBLSZ; i++) {
-	atom = pack->atoms[i];
-	while (atom) {
-	    if (atom->ext)
-		LispImportSymbol(atom->object);
-	    atom = atom->next;
-	}
+    for (atom = (LispAtom *)hash_iter_first(pack->atoms);
+	 atom;
+	 atom = (LispAtom *)hash_iter_next(pack->atoms)) {
+	if (atom->ext)
+	    LispImportSymbol(atom->object);
     }
 }
 
@@ -3272,7 +3249,7 @@ LispImportSymbol(LispObj *symbol)
 	}
 
 	/* Create copy of atom in current package */
-	atom = LispDoGetAtom(ATOMID(symbol), 0);
+	atom = LispDoGetAtom(ATOMID(symbol)->value, 0);
 	/*   Need to create a copy because if anything new is atached to the
 	 * property, the current package is the owner, not the previous one. */
 
@@ -3285,7 +3262,7 @@ LispImportSymbol(LispObj *symbol)
 	/* Symbol already exists in the current package,
 	 * but does not reference the same variable */
 	LispContinuable("Symbol %s already defined in package %s. Redefine?",
-			ATOMID(symbol), THESTR(PACKAGE->data.package.name));
+			ATOMID(symbol)->value, THESTR(PACKAGE->data.package.name));
 
 	atom = current->data.atom;
 
@@ -3375,7 +3352,7 @@ LispGetVar(LispObj *atom)
      * binding if it is not -1, and if no binding is found, because the
      * lexical scope was left, reset offset to -1. */
     offset = name->offset;
-    id = name->string;
+    id = name->key;
     base = lisp__data.env.lex;
     i = lisp__data.env.head - 1;
 
@@ -3496,7 +3473,7 @@ LispDoAddVar(LispObj *symbol, LispObj *value)
 
     atom->offset = lisp__data.env.length;
     lisp__data.env.values[lisp__data.env.length] = value;
-    lisp__data.env.names[lisp__data.env.length++] = atom->string;
+    lisp__data.env.names[lisp__data.env.length++] = atom->key;
 }
 
 LispObj *
@@ -3509,7 +3486,7 @@ LispSetVar(LispObj *atom, LispObj *obj)
 
     name = atom->data.atom;
     offset = name->offset;
-    id = name->string;
+    id = name->key;
     base = lisp__data.env.lex;
     i = lisp__data.env.head - 1;
 
@@ -5192,6 +5169,9 @@ LispBegin(void)
     pagesize = LispGetPageSize();
     segsize = pagesize / sizeof(LispObj);
 
+    lisp__data.strings = hash_new(STRTBLSZ, NULL);
+    lisp__data.opqs = hash_new(STRTBLSZ, NULL);
+
     /* Initialize memory management */
     lisp__data.mem.mem = (void**)calloc(lisp__data.mem.space = 16,
 					sizeof(void*));
@@ -5275,7 +5255,7 @@ LispBegin(void)
 
     /* Create the KEYWORD package */
     Skeyword = GETATOMID("KEYWORD");
-    object = LispNewPackage(STRING(Skeyword),
+    object = LispNewPackage(STRING(Skeyword->value),
 			    CONS(STRING(""), NIL));
 
     /* Update list of packages */
@@ -5474,7 +5454,7 @@ LispBegin(void)
 }
 
 void
-LispEnd()
+LispEnd(void)
 {
     /* XXX needs to free all used memory, not just close file descriptors */
 }

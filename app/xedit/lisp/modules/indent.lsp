@@ -1038,6 +1038,12 @@
 	;; Initial input already read
 	(go :ind-loop)
 
+	;; Just to avoid a warning about unused variable, as this
+	;; variable is somewhat redundant as code should already
+	;; know before entering indent parser, but useful inside
+	;; indent macros.
+	*ind-point*
+
 ;------------------------------------------------------------------------
 ; Read a text line
 :ind-read

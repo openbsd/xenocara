@@ -27,15 +27,17 @@
  * Author: Paulo César Pereira de Andrade
  */
 
-/* $XdotOrg: app/xedit/ispell.c,v 1.7 2005/04/04 10:17:07 eich Exp $ */
+/* $XdotOrg: xc/programs/xedit/ispell.c,v 1.6 2004/12/04 00:43:13 kuhn Exp $ */
 /* $XFree86: xc/programs/xedit/ispell.c,v 1.19 2002/10/19 20:04:20 herrb Exp $ */
 
 #include "xedit.h"
+#include "util.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <ctype.h>
+#include <locale.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -133,17 +135,19 @@ struct _ispell {
     struct _ispell_format *format_info;
 };
 
-typedef struct _ReplaceList {
-    char *word;
-    char *replace;
-    struct _ReplaceList *next;
-} ReplaceList;
+typedef struct _ReplaceEntry ReplaceEntry;
+struct _ReplaceEntry {
+    hash_key	*word;
+    ReplaceEntry*next;
+    char	*replace;
+};
 
-typedef struct _IgnoreList {
-    char *word;
-    int add;
-    struct _IgnoreList *next;
-} IgnoreList;
+typedef struct _IgnoreEntry IgnoreEntry;
+struct _IgnoreEntry {
+    hash_key	*word;
+    IgnoreEntry	*next;
+    int		add;
+};
 
 /*
  * Prototypes
@@ -169,6 +173,7 @@ static void IspellSetSensitive(Bool);
 static void IspellSetStatus(char*);
 static void IspellSetTerseMode(Bool);
 static Bool IspellStartProcess(void);
+static Bool IspellCheckProcess(void);
 static Bool IspellEndProcess(Bool, Bool);
 static void LookIspell(Widget, XtPointer, XtPointer);
 static void PopdownIspell(Widget, XtPointer, XtPointer);
@@ -194,8 +199,8 @@ static struct _ispell ispell;
 
 #define RSTRTBLSZ	23
 #define ISTRTBLSZ	71
-static ReplaceList *replace_list[RSTRTBLSZ];
-static IgnoreList *ignore_list[ISTRTBLSZ];
+static hash_table *replace_hash;
+static hash_table *ignore_hash;
 
 #ifndef XtCStatus
 #define XtCStatus	"Status"
@@ -441,71 +446,59 @@ IspellCheckUndo(void)
 static char *
 IspellReplacedWord(char *word, char *replace)
 {
-    ReplaceList *list;
-    int ii = 0;
-    char *pp = word;
+    int			word_len;
+    hash_key		*word_key;
+    ReplaceEntry	*entry;
 
-    while (*pp)
-	ii = (ii << 1) ^ *pp++;
-    if (ii < 0)
-	ii = -ii;
-    ii %= RSTRTBLSZ;
-    for (list = replace_list[ii]; list; list = list->next)
-	if (strcmp(list->word, word) == 0) {
-	    if (replace) {
-		XtFree(list->replace);
-		list->replace = XtNewString(replace);
-	    }
-	    return (list->replace);
-	}
+    word_len = strlen(word);
+    entry = (ReplaceEntry *)hash_check(replace_hash, word, word_len);
+    if (entry == NULL) {
+	word_key = XtNew(hash_key);
+	word_key->value = XtNewString(word);
+	word_key->length = word_len;
+	entry = XtNew(ReplaceEntry);
+	entry->word = word_key;
+	entry->replace = NULL;
+	entry->next = NULL;
+	hash_put(replace_hash, (hash_entry *)entry);
+    }
 
-    if (!replace)
-	return (NULL);
+    if (replace) {
+	XtFree(entry->replace);
+	entry->replace = XtNewString(replace);
+    }
 
-    list = XtNew(ReplaceList);
-    list->word = XtNewString(word);
-    list->replace = XtNewString(replace);
-    list->next = replace_list[ii];
-    replace_list[ii] = list;
-
-    return (list->replace);
+    return (entry->replace);
 }
 
 static Bool
 IspellDoIgnoredWord(char *word, int cmd, int add)
 {
-    IgnoreList *list, *prev;
-    int ii = 0;
-    char *pp = word;
+    int		word_len;
+    hash_key	*word_key;
+    IgnoreEntry	*entry;
 
-    while (*pp)
-	ii = (ii << 1) ^ *pp++;
-    if (ii < 0)
-	ii = -ii;
-    ii %= ISTRTBLSZ;
-    for (prev = list = ignore_list[ii]; list; prev = list, list = list->next)
-	if (strcmp(list->word, word) == 0) {
-	    if (cmd == REMOVE) {
-		XtFree(list->word);
-		prev->next = list->next;
-		XtFree((char*)list);
-		if (prev == list)
-		    ignore_list[ii] = NULL;
-		return (True);
-	    }
-	    return (cmd == CHECK);
-	}
+    word_len = strlen(word);
+    entry = (IgnoreEntry *)hash_check(ignore_hash, word, word_len);
+    if (entry == NULL) {
+	if (cmd != ADD)
+	    return (False);
 
-    if (cmd != ADD)
-	return (False);
+	word_key = XtNew(hash_key);
+	word_key->value = XtNewString(word);
+	word_key->length = word_len;
+	entry = XtNew(IgnoreEntry);
+	entry->word = word_key;
+	entry->add = add;
+	entry->next = NULL;
+	hash_put(ignore_hash, (hash_entry *)entry);
 
-    list = XtNew(IgnoreList);
-    list->word = XtNewString(word);
-    list->add = add;
-    list->next = ignore_list[ii];
-    ignore_list[ii] = list;
+	return (True);
+    }
+    else if (cmd == REMOVE)
+	hash_rem(ignore_hash, (hash_entry *)entry);
 
-    return (True);
+    return (cmd == CHECK);
 }
 
 static Bool
@@ -938,7 +931,10 @@ IspellSend(void)
 	    return (-1);
 	}
 	for (i = 0; i < block.length; i++) {
-  	    wctomb(mb, ((wchar_t*)block.ptr)[i]);
+	    if (international)
+		wctomb(mb, ((wchar_t*)block.ptr)[i]);
+	    else
+		mb[0] = block.ptr[i];
 	    if (amplen) {
 		if (amplen + 2 >= sizeof(ampbuf)) {
 		    if (!ispell.terse_mode)
@@ -1036,7 +1032,10 @@ IspellSend(void)
 	    return (-1);
 	}
 	for (i = 0; i < block.length; i++) {
-	    wctomb(mb, ((wchar_t*)block.ptr)[i]);
+	    if (international)
+		wctomb(mb, ((wchar_t*)block.ptr)[i]);
+	    else
+		mb[0] = block.ptr[i];
 	    if (amplen) {
 		if (amplen + 2 >= sizeof(ampbuf)) {
 		    if (!ispell.terse_mode)
@@ -1322,14 +1321,26 @@ IspellStartProcess(void)
 {
     if (!ispell.pid) {
 	int len;
-	char *command;
+	char format[32];
+	static char *command;
 
 	ispell.source = XawTextGetSource(ispell.ascii);
 
-	len = strlen(ispell.cmd) + strlen(ispell.dictionary) +
-	      strlen(ispell.wchars) + 16;
+	if (command)
+	    XtFree(command);
+
+	strcpy(format, "%s -a");
+	len = strlen(ispell.cmd) + 4;
+	if (ispell.dictionary && *ispell.dictionary) {
+	    len += strlen(ispell.dictionary) + 6;
+	    strcat(format, " -d '%s'");
+	    if (ispell.wchars && *ispell.wchars) {
+		len += strlen(ispell.wchars + 6);
+		strcat(format, " -w '%s'");
+	    }
+	}
 	command = XtMalloc(len);
-	XmuSnprintf(command, len, "%s -a -d '%s' -w '%s'",
+	XmuSnprintf(command, len, format,
 		    ispell.cmd, ispell.dictionary, ispell.wchars);
 
 	pipe(ispell.ifd);
@@ -1343,7 +1354,9 @@ IspellStartProcess(void)
 	    close(ispell.ofd[1]);
 	    close(ispell.ifd[0]);
 	    close(ispell.ifd[1]);
-	    execl("/bin/sh", "sh", "-c", command, (void *)NULL);
+	    if (!international)
+		setlocale(LC_ALL, "ISO-8859-1");
+	    execl("/bin/sh", "sh", "-c", command, NULL);
 	    exit(-127);
 	}
 	else if (ispell.pid < 0) {
@@ -1373,44 +1386,48 @@ PopdownIspell(Widget w, XtPointer client_data, XtPointer call_data)
 }
 
 static Bool
+IspellCheckProcess(void)
+{
+    int status;
+
+    if (ispell.pid) {
+	waitpid(ispell.pid, &status, WNOHANG);
+	if (WIFEXITED(status)) {
+	    ispell.pid = 0;
+	}
+	else
+	    return (True);
+    }
+
+    return (False);
+}
+
+static Bool
 IspellEndProcess(Bool killit, Bool killundo)
 {
     ispell.source = NULL;
 
     if (ispell.pid) {
-	IgnoreList *il, *pil, *nil;
-	int i;
+	IgnoreEntry	*ientry;
+	ReplaceEntry	*rentry;
 
 	/* insert added words in private dictionary */
-	for (i = 0; i < ISTRTBLSZ; i++) {
-	    pil = il = ignore_list[i];
-	    while (il) {
-		if (il->add) {
-		    nil = il->next;
-		    if (il == pil)
-			ignore_list[i] = nil;
-		    else
-			pil->next = nil;
-		    if (il->add == UNCAP)
-			write(ispell.ofd[1], "&", 1);
-		    else
-			write(ispell.ofd[1], "*", 1);
-		    write(ispell.ofd[1], il->word, strlen(il->word));
-		    write(ispell.ofd[1], "\n", 1);
-		    XtFree(il->word);
-		    XtFree((char*)il);
-		    il = nil;
-		}
+	for (ientry = (IgnoreEntry *)hash_iter_first(ignore_hash);
+	     ientry;
+	     ientry = (IgnoreEntry *)hash_iter_next(ignore_hash)) {
+	    if (ientry->add) {
+		if (ientry->add == UNCAP)
+		    write(ispell.ofd[1], "&", 1);
 		else
-		    il = il->next;
-		pil = il;
+		    write(ispell.ofd[1], "*", 1);
+		write(ispell.ofd[1], ientry->word->value, ientry->word->length);
+		write(ispell.ofd[1], "\n", 1);
 	    }
 	}
 	write(ispell.ofd[1], "#\n", 2);		/* save dictionary */
+	hash_clr(ignore_hash);
 
 	if (killit) {
-	    ReplaceList *rl, *prl;
-
 	    XtRemoveInput(ispell.id);
 
 	    close(ispell.ofd[0]);
@@ -1430,27 +1447,13 @@ IspellEndProcess(Bool killit, Bool killundo)
 		XtFree(ispell.buf);
 	    ispell.buf = NULL;
 
-	    for (i = 0; i < RSTRTBLSZ; i++) {
-		prl = rl = replace_list[i];
-		while (prl) {
-		    rl = rl->next;
-		    XtFree(prl->word);
-		    XtFree(prl->replace);
-		    XtFree((char*)prl);
-		    prl = rl;
-		}
-		replace_list[i] = NULL;
+	    /* forget about replace matches */
+	    for (rentry = (ReplaceEntry *)hash_iter_first(replace_hash);
+		 rentry;
+		 rentry = (ReplaceEntry *)hash_iter_next(replace_hash)) {
+		XtFree(rentry->replace);
 	    }
-	    for (i = 0; i < ISTRTBLSZ; i++) {
-		pil = il = ignore_list[i];
-		while (pil) {
-		    il = il->next;
-		    XtFree(pil->word);
-		    XtFree((char*)pil);
-		    pil = il;
-		}
-		ignore_list[i] = NULL;
-	    }
+	    hash_clr(replace_hash);
 	}
 
 	if (killundo)
@@ -1560,12 +1563,18 @@ ReplaceIspell(Widget w, XtPointer client_data, XtPointer call_data)
 		char mb[sizeof(wchar_t)];
 
 		if (XawTextSourceRead(ispell.source, pos - 1, &check, 1) > 0) {
-		    wctomb(mb, *(wchar_t*)check.ptr);
+		    if (international)
+			wctomb(mb, *(wchar_t*)check.ptr);
+		    else
+			mb[0] = check.ptr[0];
 		    do_replace = !isalpha(*mb) && *mb && !strchr(ispell.wchars, *mb);
 		}
 		if (do_replace &&
 		    XawTextSourceRead(ispell.source, pos + search.length, &check, 1) > 0) {
-		    wctomb(mb, *(wchar_t*)check.ptr);
+		    if (international)
+			wctomb(mb, *(wchar_t*)check.ptr);
+		    else
+			mb[0] = check.ptr[0];
 		    do_replace = !isalpha(*mb) && *mb && !strchr(ispell.wchars, *mb);
 		}
 		if (do_replace) {
@@ -1957,8 +1966,10 @@ ChangeDictionaryIspell(Widget w, XtPointer client_data, XtPointer call_data)
 	return;
 
     if (!ispell.lock) {
-	Feep();
-	return;
+	if (IspellCheckProcess()) {
+	    Feep();
+	    return;
+	}
     }
 
     for (tmp = ispell.dict_info; tmp; tmp = tmp->next)
@@ -2024,6 +2035,7 @@ InitIspell(void)
     Atom delete_window;
     char *str, *list;
     XtResource dict_res;
+    ispell_dict *dict, *prev_dict;
     int i;
     static XtResource text_res[] = {
 	{"skipLines", "Skip", XtRString, sizeof(char*),
@@ -2032,6 +2044,9 @@ InitIspell(void)
 
     if (ispell.shell)
 	return (False);
+
+    replace_hash = hash_new(RSTRTBLSZ, NULL);
+    ignore_hash = hash_new(ISTRTBLSZ, NULL);
 
     ispell.shell	= XtCreatePopupShell("ispell", transientShellWidgetClass,
 					     topwindow, NULL, 0);
@@ -2169,36 +2184,43 @@ InitIspell(void)
     dict_res.default_addr = "";
 
     list = XtNewString(ispell.dict_list);
+
+    /* Create first empty entry */
+    dict = XtNew(ispell_dict);
+    dict->sme = XtCreateManagedWidget("", smeBSBObjectClass,
+				      ispell.dictMenu, NULL, 0);
+    dict->wchars = "";
+    XtAddCallback(dict->sme, XtNcallback, ChangeDictionaryIspell,
+		  (XtPointer)dict);
+    ispell.dict_info = prev_dict = dict;
+
     for (str = strtok(list, " \t,"); str; str = strtok(NULL, " \t,")) {
-	ispell_dict *dic = XtNew(ispell_dict);
-
-	dic->sme = XtCreateManagedWidget(str, smeBSBObjectClass,
-					 ispell.dictMenu, NULL, 0);
-	XtGetApplicationResources(dic->sme, (XtPointer)dic, &dict_res,
+	dict = XtNew(ispell_dict);
+	dict->sme = XtCreateManagedWidget(str, smeBSBObjectClass,
+					  ispell.dictMenu, NULL, 0);
+	XtGetApplicationResources(dict->sme, (XtPointer)dict, &dict_res,
 				  1, NULL, 0);
-	XtAddCallback(dic->sme, XtNcallback, ChangeDictionaryIspell,
-		      (XtPointer)dic);
-	dic->next = NULL;
-	if (!ispell.dict_info)
-	    ispell.dict_info = dic;
-	else {
-	    ispell_dict *tmp = ispell.dict_info;
+	XtAddCallback(dict->sme, XtNcallback, ChangeDictionaryIspell,
+		      (XtPointer)dict);
+	prev_dict->next = dict;
+	prev_dict = dict;
+	dict->next = NULL;
+    }
+    XtFree(list);
 
-	    for (; tmp->next; tmp = tmp->next)
-		;
-	    tmp->next = dic;
-	}
-	if (strcmp(str, ispell.dictionary) == 0) {
+    for (dict = ispell.dict_info; dict; dict = dict->next) {
+	if (strcmp(XtName(dict->sme), ispell.dictionary) == 0) {
 	    Arg args[1];
 
 	    XtSetArg(args[0], XtNleftBitmap, flist.pixmap);
-	    XtSetValues(dic->sme, args, 1);
-	    XtSetArg(args[0], XtNlabel, str);
+	    XtSetValues(dict->sme, args, 1);
+	    XtSetArg(args[0], XtNlabel, XtName(dict->sme));
 	    XtSetValues(ispell.dict, args, 1);
-	    ispell.wchars = dic->wchars;
+	    ispell.wchars = dict->wchars;
+	    break;
 	}
     }
-    XtFree(list);
+
 
     delete_window = XInternAtom(XtDisplay(ispell.shell), "WM_DELETE_WINDOW", False);
     XSetWMProtocols(XtDisplay(ispell.shell), XtWindow(ispell.shell), &delete_window, 1);

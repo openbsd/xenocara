@@ -55,7 +55,7 @@ Lisp_Defstruct(LispBuiltin *builtin)
     int intern;
     LispAtom *atom;
     int i, size, length, slength;
-    char *name, *strname, *sname;
+    char *name, *strname;
     LispObj *list, *cons, *object, *definition, *documentation;
 
     LispObj *oname, *description;
@@ -65,8 +65,8 @@ Lisp_Defstruct(LispBuiltin *builtin)
 
     CHECK_SYMBOL(oname);
 
-    strname = ATOMID(oname);
-    length = strlen(strname);
+    strname = ATOMID(oname)->value;
+    length  = ATOMID(oname)->length;
 
 	    /* MAKE- */
     size = length + 6;
@@ -101,13 +101,13 @@ Lisp_Defstruct(LispBuiltin *builtin)
 	    cons = object;
 	    object = CAR(object);
 	}
-	if (!SYMBOLP(object) || strcmp(ATOMID(object), "P") == 0)
+	if (!SYMBOLP(object) || strcmp(ATOMID(object)->value, "P") == 0)
 	    /* p is invalid as a field name due to `type'-p */
 	    LispDestroy("%s: %s cannot be a field for %s",
-			STRFUN(builtin), STROBJ(object), ATOMID(oname));
+			STRFUN(builtin), STROBJ(object), ATOMID(oname)->value);
 
 	if (!KEYWORDP(object))
-	    CAR(cons) = KEYWORD(ATOMID(object));
+	    CAR(cons) = KEYWORD(ATOMID(object)->value);
 
 	/* check for repeated field names */
 	for (object = description; object != list; object = CDR(object)) {
@@ -143,16 +143,18 @@ Lisp_Defstruct(LispBuiltin *builtin)
 	LispExportSymbol(object);
 
     for (i = 0, list = description; CONSP(list); i++, list = CDR(list)) {
+	Atom_id id;
+
 	if (CONSP(CAR(list)))
-	    sname = ATOMID(CAR(CAR(list)));
+	    id = ATOMID(CAR(CAR(list)));
 	else
-	    sname = ATOMID(CAR(list));
-	slength = strlen(sname);
+	    id = ATOMID(CAR(list));
+	slength = id->length;
 	if (length + slength + 2 > size) {
 	    size = length + slength + 2;
 	    name = LispRealloc(name, size);
 	}
-	sprintf(name, "%s-%s", strname, sname);
+	sprintf(name, "%s-%s", strname, id->value);
 	atom = (object = ATOM(name))->data.atom;
 	LispSetAtomStructProperty(atom, definition, i);
 	if (!intern)
@@ -202,7 +204,7 @@ Lisp_XeditMakeStruct(LispBuiltin *builtin)
 	CHECK_KEYWORD(CAR(list));
 	if (!CONSP(CDR(list)))
 	    LispDestroy("%s: values must be provided as pairs",
-			ATOMID(struc));
+			ATOMID(struc)->value);
 	nfld++;
 	list = CDR(list);
     }
@@ -272,8 +274,8 @@ Lisp_XeditMakeStruct(LispBuiltin *builtin)
 	    }
 	    if (!CONSP(object))
 		LispDestroy("%s: %s is not a field for %s",
-			    ATOMID(struc), STROBJ(CAR(list)),
-			    ATOMID(CAR(definition)));
+			    ATOMID(struc)->value, STROBJ(CAR(list)),
+			    ATOMID(CAR(definition))->value);
 	    list = CDR(list);
 	}
     }
@@ -316,7 +318,7 @@ LispStructAccessOrStore(LispBuiltin *builtin, int store)
     /* check if the object is of the required type */
     if (!STRUCTP(struc) || struc->data.struc.def != definition)
 	LispDestroy("%s: %s is not a %s",
-		    ATOMID(name), STROBJ(struc), ATOMID(CAR(definition)));
+		    ATOMID(name)->value, STROBJ(struc), ATOMID(CAR(definition))->value);
 
     for (list = struc->data.struc.fields; offset; list = CDR(list), offset--)
 	;

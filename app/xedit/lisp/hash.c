@@ -153,8 +153,6 @@ LispHashKey(LispObj *object, int function)
 	case LispString_t:
 	    string = THESTR(object);
 	    length = STRLEN(object);
-	    if (length > 32)
-		length = 32;
 	    for (i = 0, key = 0; i < length; i++)
 		key = (key << 1) ^ string[i];
 	    break;

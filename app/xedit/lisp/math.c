@@ -71,7 +71,7 @@ LispMathInit(void)
     obj_one = FIXNUM(1);
 
     Oequal_		= STATIC_ATOM("=");
-    Ocomplex		= STATIC_ATOM(Scomplex);
+    Ocomplex		= STATIC_ATOM(Scomplex->value);
     Oshort_float	= STATIC_ATOM("SHORT-FLOAT");
     LispExportSymbol(Oshort_float);
     Osingle_float	= STATIC_ATOM("SINGLE-FLOAT");

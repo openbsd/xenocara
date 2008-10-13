@@ -438,3 +438,14 @@ foo" :notbol t :noteol t)
 (setq re (re-comp "(.*a)?"))
 (re-test '((0 . 1)) re "aaaa")		; expected, minimal match
 (re-test '((0 . 1) (0 . 1)) re "aaaa" :count 2)
+
+
+;; Tue Dec 11 22:22:51 BRST 2007 Fix a regression with the pattern below
+;; returning a match to an empty string.
+;; Note that inverting the order of the "alternatives" works with the
+;; versions of libre prior to this (one line) fix
+(setq re (re-comp "\\\\\\d{3}|\\\\."))
+(re-test  :nomatch re "\\")
+;; previous version should work with the pattern inverted
+(setq re (re-comp "\\\\.|\\\\\\d{3}"))
+(re-test  :nomatch re "\\")

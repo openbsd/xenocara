@@ -633,26 +633,34 @@ LispFwrite(LispFile *file, void *data, int size)
 int
 LispSwrite(LispString *string, void *data, int size)
 {
+    int bytes;
+
     if (size < 0)
 	return (EOF);
 
     if (string->output + size >= string->space) {
 	if (string->fixed) {
 	    /* leave space for a ending nul character */
-	    size = string->space - string->output - 1;
+	    bytes = string->space - string->output - 1;
+
+	    if (bytes < size)
+		size = bytes;
 
 	    if (size <= 0)
 		return (-1);
 	}
 	else {
-	    char *tmp = realloc(string->string, string->space +
-				(size / pagesize) * pagesize + pagesize);
+	    char *tmp;
+
+	    bytes = string->space + size;
+	    bytes += pagesize - (bytes % pagesize);
+	    tmp = realloc(string->string, bytes);
 
 	    if (tmp == NULL)
 		return (-1);
 
 	    string->string = tmp;
-	    string->space += pagesize;
+	    string->space = bytes;
 	}
     }
     memcpy(string->string + string->output, data, size);

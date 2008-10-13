@@ -245,6 +245,14 @@ of the this button and displays it in the Edit window.
 .SH RESOURCES
 For \fIxedit\fP the available resources are:
 .TP 8
+.B tagsName (\fPClass\fB TagsName)
+Specifies the name of the tags file to search when loading a new file.
+Default value is \fItags\fP.
+.TP 8
+.B loadTags (\fPClass\fB LoadTags)
+Boolean value to enable or disabling searching for tags files.
+Default is \fITrue\fP.
+.TP 8
 .B enableBackups (\fPClass\fB EnableBackups)
 Specifies that, when edits made to an existing file are saved,
 .I xedit

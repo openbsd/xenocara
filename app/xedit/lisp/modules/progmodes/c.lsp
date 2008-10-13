@@ -1099,8 +1099,32 @@
 	;;  Preprocessor includes comments.
 	(syntoken "/*" :nospec t :begin :comment :contained t)
 
+	;;  Ignore strings and constants in the same line and finishes table
+	;; This is kind hackish, but must be done because the current parser
+	;; will not flag eol. Maybe it could be extended to properly handle
+	;; and have an internal flag to tell it to pass again if there
+	;; is a regex that can match eol on an empty string.
+	;;  A test is already done (but at compile time) to not allow patterns
+	;; that match an empty string (but allow patterns matching
+	;; bol, eol or both on an empty string).
+	(syntoken "\"([^\\\"]|\\\\.)*\"$" :property *prop-string* :switch -1)
+	(syntoken "'([^']|\\\\.)*'$" :property *prop-constant* :switch -1)
+
+	;;  Ignore strings and constants in the same line
+	(syntoken "\"([^\\\"]|\\\\.)*\"" :property *prop-string*)
+	(syntoken "'([^']|\\\\.)*'" :property *prop-constant*)
+
 	;;  Ignore lines finishing with a backslash.
 	(syntoken "\\\\$")
+
+	;; multiline strings
+	(syntoken "\"" :nospec t :begin :string)
+
+	;; multiline constants
+	(syntoken "'" :nospec t :begin :character)
+
+	;;  C++ style comments
+	(syntoken "//.*$" :property *prop-comment* :switch -1)
 
 	;; Return to previous state if end of line found.
 	(syntoken ".?$" :switch -1)

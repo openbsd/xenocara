@@ -239,7 +239,9 @@ c l @Num_Lock<Btn3Down>:xedit-focus() popup-menu(optionsMenu)\n\
 c @Num_Lock<Btn3Down>:xedit-focus() popup-menu(optionsMenu)\n\
 c l<Btn3Down>:xedit-focus() popup-menu(optionsMenu)\n\
 c<Btn3Down>:	xedit-focus() popup-menu(optionsMenu)\n\
-<Btn1Down>:	xedit-focus() select-start()
+<Btn1Down>:	xedit-focus() select-start()\n\
+<Btn4Down>:	scroll-one-line-down()\n\
+<Btn5Down>:	scroll-one-line-up()
 
 *filename.?.pieceSize:			256
 *filename.translations: #override \
@@ -261,7 +263,8 @@ c<Key>G:	cancel-find-file()\n\
 !*ispell.dictionary:			br
 !*ispell.dictionaries:			br american americanmed+ english
 !*ispell*br.wordChars:			áéíóúçÁÉÍÓÚÇàÀâêôÂÊÔüÜãõÃÕ-
-!*ispell.ispellCommand:			/usr/local/bin/ispell -B -m
+*ispell.ispellCommand:			/usr/bin/aspell -B -m
+*ispell.lookCommand:			/bin/egrep
 !*ispell*text.skipLines:		.#
 
 *ispell.geometry:			0x0

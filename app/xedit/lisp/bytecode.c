@@ -551,6 +551,8 @@ Lisp_Disassemble(LispBuiltin *builtin)
     name = bytecode = NULL;
 
     switch (OBJECT_TYPE(function)) {
+	case LispFunction_t:
+	    function = function->data.atom->object;
 	case LispAtom_t:
 	    name = function;
 	    atom = function->data.atom;
@@ -627,8 +629,8 @@ Lisp_Disassemble(LispBuiltin *builtin)
 	for (i = 0; i < alist->normals.num_symbols; i++) {
 	    LispWriteChar(NIL, i ? ',' : ':');
 	    LispWriteChar(NIL, ' ');
-	    LispWriteStr(NIL, ATOMID(alist->normals.symbols[i]),
-			 strlen(ATOMID(alist->normals.symbols[i])));
+	    LispWriteStr(NIL, ATOMID(alist->normals.symbols[i])->value,
+			 ATOMID(alist->normals.symbols[i])->length);
 	}
 	LispWriteChar(NIL, '\n');
 
@@ -639,8 +641,8 @@ Lisp_Disassemble(LispBuiltin *builtin)
 	for (i = 0; i < alist->optionals.num_symbols; i++) {
 	    LispWriteChar(NIL, i ? ',' : ':');
 	    LispWriteChar(NIL, ' ');
-	    LispWriteStr(NIL, ATOMID(alist->optionals.symbols[i]),
-			 strlen(ATOMID(alist->optionals.symbols[i])));
+	    LispWriteStr(NIL, ATOMID(alist->optionals.symbols[i])->value,
+			 ATOMID(alist->optionals.symbols[i])->length);
 	}
 	LispWriteChar(NIL, '\n');
 
@@ -657,8 +659,8 @@ Lisp_Disassemble(LispBuiltin *builtin)
 
 	if (alist->rest) {
 	    LispWriteStr(NIL, "Rest argument: ", 15);
-	    LispWriteStr(NIL, ATOMID(alist->rest),
-			 strlen(ATOMID(alist->rest)));
+	    LispWriteStr(NIL, ATOMID(alist->rest)->value,
+			 ATOMID(alist->rest)->length);
 	    LispWriteChar(NIL, '\n');
 	}
 	else
@@ -666,6 +668,7 @@ Lisp_Disassemble(LispBuiltin *builtin)
     }
 
     if (bytecode) {
+	Atom_id id;
 	char *ptr;
 	int *offsets[4];
 	int i, done, j, sym0, sym1, con0, con1, bui0, byt0, strd, strf;
@@ -724,11 +727,11 @@ Lisp_Disassemble(LispBuiltin *builtin)
  *	and called as XSTRING(atom->object)
  * it would also print the package name were the symbol was first defined,
  * but for local variables, only the symbol string is important. */
-#define XSTRING(string)		string ? string : "#<UNBOUND>"
+#define XSTRING(key)		key ? key->value : "#<UNBOUND>"
 
 	for (i = 0; i < num_symbols; i++) {
 	    sprintf(buffer, "Symbol %d = %s\n",
-		    i, XSTRING(symbols[i]->string));
+		    i, XSTRING(symbols[i]->key));
 	    LispWriteStr(NIL, buffer, strlen(buffer));
 	}
 	for (i = 0; i < num_builtins; i++) {
@@ -756,24 +759,24 @@ Lisp_Disassemble(LispBuiltin *builtin)
 		for (i = 0; i < alist->normals.num_symbols; i++, j++) {
 		    sprintf(buffer, "%d = ", j);
 		    LispWriteStr(NIL, buffer, strlen(buffer));
-		    ptr = alist->normals.symbols[i]->data.atom->string;
-		    LispWriteStr(NIL, ptr, strlen(ptr));
+		    id = alist->normals.symbols[i]->data.atom->key;
+		    LispWriteStr(NIL, id->value, id->length);
 		    LispWriteChar(NIL, '\n');
 		}
 
 		for (i = 0; i < alist->optionals.num_symbols; i++, j++) {
 		    sprintf(buffer, "%d = ", j);
 		    LispWriteStr(NIL, buffer, strlen(buffer));
-		    ptr = alist->optionals.symbols[i]->data.atom->string;
-		    LispWriteStr(NIL, ptr, strlen(ptr));
+		    id = alist->optionals.symbols[i]->data.atom->key;
+		    LispWriteStr(NIL, id->value, id->length);
 		    LispWriteChar(NIL, '\n');
 		    if (alist->optionals.sforms[i]) {
 			sprintf(buffer, "%d = ", j);
 			len1 = strlen(buffer);
 			LispWriteStr(NIL, buffer, len1);
-			ptr = alist->optionals.sforms[i]->data.atom->string;
-			len2 = strlen(ptr);
-			LispWriteStr(NIL, ptr, len2);
+			id = alist->optionals.sforms[i]->data.atom->key;
+			len2 = id->length;
+			LispWriteStr(NIL, id->value, len2);
 			LispWriteChars(NIL, ' ', 28 - (len1 + len2));
 			LispWriteStr(NIL, ";  sform\n", 9);
 			j++;
@@ -785,24 +788,24 @@ Lisp_Disassemble(LispBuiltin *builtin)
 		    len1 = strlen(buffer);
 		    LispWriteStr(NIL, buffer, len1);
 		    if (alist->keys.keys[i]) {
-			ptr = alist->keys.keys[i]->data.atom->string;
-			len2 = strlen(ptr);
-			LispWriteStr(NIL, ptr, strlen(ptr));
+			id = alist->keys.keys[i]->data.atom->key;
+			len2 = id->length;
+			LispWriteStr(NIL, id->value, id->length);
 			LispWriteChars(NIL, ' ', 28 - (len1 + len2));
 			LispWriteStr(NIL, ";  special key", 14);
 		    }
 		    else {
-			ptr = alist->keys.symbols[i]->data.atom->string;
-			LispWriteStr(NIL, ptr, strlen(ptr));
+			id = alist->keys.symbols[i]->data.atom->key;
+			LispWriteStr(NIL, id->value, id->length);
 		    }
 		    LispWriteChar(NIL, '\n');
 		    if (alist->keys.sforms[i]) {
 			sprintf(buffer, "%d = ", j);
 			len1 = strlen(buffer);
 			LispWriteStr(NIL, buffer, len1);
-			ptr = alist->keys.sforms[i]->data.atom->string;
-			len2 = strlen(ptr);
-			LispWriteStr(NIL, ptr, len2);
+			id = alist->keys.sforms[i]->data.atom->key;
+			len2 = id->length;
+			LispWriteStr(NIL, id->value, len2);
 			LispWriteChars(NIL, ' ', 28 - (len1 + len2));
 			LispWriteStr(NIL, ";  sform\n", 9);
 			j++;
@@ -813,9 +816,9 @@ Lisp_Disassemble(LispBuiltin *builtin)
 		    sprintf(buffer, "%d = ", j);
 		    len1 = strlen(buffer);
 		    LispWriteStr(NIL, buffer, len1);
-		    ptr = alist->rest->data.atom->string;
-		    len2 = strlen(ptr);
-		    LispWriteStr(NIL, ptr, len2);
+		    id = alist->rest->data.atom->key;
+		    len2 = id->length;
+		    LispWriteStr(NIL, id->value, len2);
 		    LispWriteChar(NIL, '\n');
 		    j++;
 		}
@@ -824,9 +827,9 @@ Lisp_Disassemble(LispBuiltin *builtin)
 		    sprintf(buffer, "%d = ", j);
 		    len1 = strlen(buffer);
 		    LispWriteStr(NIL, buffer, len1);
-		    ptr = alist->auxs.symbols[i]->data.atom->string;
-		    len2 = strlen(ptr);
-		    LispWriteStr(NIL, ptr, len2);
+		    id = alist->auxs.symbols[i]->data.atom->key;
+		    len2 = id->length;
+		    LispWriteStr(NIL, id->value, len2);
 		    LispWriteChars(NIL, ' ', 28 - (len1 + len2));
 		    LispWriteStr(NIL, ";  aux\n", 7);
 		}
@@ -1116,7 +1119,7 @@ integer:
 		    for (; strf >= 0; strf--)
 			fields = CDR(fields);		    
 		    strcpy(ptr, "  ");	    ptr += 2;
-		    strcpy(ptr, CAR(fields)->data.atom->string);
+		    strcpy(ptr, CAR(fields)->data.atom->key->value);
 		    ptr += strlen(ptr);
 		}
 		if (strd >= 0) {
@@ -1154,11 +1157,11 @@ integer:
 		/* Symbols */
 		if (sym0 >= 0) {
 		    strcpy(ptr, "  ");	ptr += 2;
-		    strcpy(ptr, XSTRING(symbols[sym0]->string));
+		    strcpy(ptr, XSTRING(symbols[sym0]->key));
 		    ptr += strlen(ptr);
 		    if (sym1 >= 0) {
 			strcpy(ptr, "  ");	ptr += 2;
-			strcpy(ptr, XSTRING(symbols[sym1]->string));
+			strcpy(ptr, XSTRING(symbols[sym1]->key));
 			ptr += strlen(ptr);
 		    }
 		}
@@ -1658,7 +1661,7 @@ LinkWarnUnused(LispCom *com, CodeBlock *block)
 	if (!(block->variables.flags[i] & (VARIABLE_USED | VARIABLE_ARGUMENT))) {
 	    ++com->warnings;
 	    LispWarning("the variable %s is unused",
-			block->variables.symbols[i]->string);
+			block->variables.symbols[i]->key->value);
 	}
 }
 
@@ -3274,7 +3277,7 @@ let_argument:
 	 * atom->constant field. */
 	atom = symbols[*stream++];
 	atom->offset = lisp__data.env.length;
-	lisp__data.env.names[lisp__data.env.length] = atom->string;
+	lisp__data.env.names[lisp__data.env.length] = atom->key;
 	lisp__data.env.values[lisp__data.env.length++] = reg0;
 	NEXT_OPCODE();
 
@@ -3282,7 +3285,7 @@ OPCODE_LABEL(XBC_LETX):
 letx_argument:
 	atom = symbols[*stream++];
 	atom->offset = lisp__data.env.length;
-	lisp__data.env.names[lisp__data.env.length] = atom->string;
+	lisp__data.env.names[lisp__data.env.length] = atom->key;
 	lisp__data.env.values[lisp__data.env.length++] = reg0;
 	lisp__data.env.head++;
 	NEXT_OPCODE();
@@ -3290,14 +3293,14 @@ letx_argument:
 OPCODE_LABEL(XBC_LET_NIL):
 	atom = symbols[*stream++];
 	atom->offset = lisp__data.env.length;
-	lisp__data.env.names[lisp__data.env.length] = atom->string;
+	lisp__data.env.names[lisp__data.env.length] = atom->key;
 	lisp__data.env.values[lisp__data.env.length++] = NIL;
 	NEXT_OPCODE();
 
 OPCODE_LABEL(XBC_LETX_NIL):
 	atom = symbols[*stream++];
 	atom->offset = lisp__data.env.length;
-	lisp__data.env.names[lisp__data.env.length] = atom->string;
+	lisp__data.env.names[lisp__data.env.length] = atom->key;
 	lisp__data.env.values[lisp__data.env.length++] = NIL;
 	lisp__data.env.head++;
 	NEXT_OPCODE();
@@ -3445,7 +3448,7 @@ OPCODE_LABEL(XBC_SETSYM):
 		/*  atom->dyn and atom->constant are exclusive, no
 		 * need to check if variable declared as constant. */
 		if (atom->offset < lisp__data.env.head &&
-		    lisp__data.env.names[atom->offset] == atom->string)
+		    lisp__data.env.names[atom->offset] == atom->key)
 		    lisp__data.env.values[atom->offset] = reg0;
 		else {
 		    if (atom->watch)
@@ -3468,7 +3471,7 @@ OPCODE_LABEL(XBC_SETSYM):
 		LispPackage *pack;
 
 		LispWarning("the variable %s was not declared",
-			    atom->string);
+			    atom->key->value);
 		LispSetAtomObjectProperty(atom, reg0);
 		pack = atom->package->data.package.package;
 		if (pack->glb.length >= pack->glb.space)
@@ -3482,7 +3485,7 @@ OPCODE_LABEL(XBC_SETSYM):
     atom = symbols[*stream++];					    \
     if (atom->dyn) {						    \
 	if (atom->offset < lisp__data.env.head &&		    \
-	    lisp__data.env.names[atom->offset] == atom->string)	    \
+	    lisp__data.env.names[atom->offset] == atom->key)	    \
 	    reg0 = lisp__data.env.values[atom->offset];		    \
 	else {							    \
 	    reg0 = atom->property->value;			    \
@@ -3631,12 +3634,12 @@ OPCODE_LABEL(XBC_STRUCT):
 	offset = *stream++;
 	reg1 = constants[*stream++];
 	if (!STRUCTP(reg0) || reg0->data.struc.def != reg1) {
-	    char *name = ATOMID(CAR(reg1));
+	    char *name = ATOMID(CAR(reg1))->value;
 
 	    for (reg1 = CDR(reg1); offset; offset--)
 		reg1 = CDR(reg1);
 	    LispDestroy("%s-%s: %s is not a %s",
-			name, ATOMID(CAR(reg1)), STROBJ(reg0), name);
+			name, ATOMID(CAR(reg1))->value, STROBJ(reg0), name);
 	}
 	for (reg0 = reg0->data.struc.fields; offset; offset--)
 	    reg0 = CDR(reg0);
