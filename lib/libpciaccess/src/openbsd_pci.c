@@ -74,6 +74,38 @@ pci_write(int bus, int dev, int func, uint32_t reg, uint32_t val)
 	return ioctl(pcifd, PCIOCWRITE, &io);
 }
 
+/**
+ * Read a VGA rom using the 0xc0000 mapping.
+ *
+ * This function should be extended to handle access through PCI resources,
+ * which should be more reliable when available.
+ */
+static int
+pci_device_openbsd_read_rom(struct pci_device * dev, void * buffer)
+{
+#if defined(__alpha__) || defined(__amd64__) || defined(__i386__)
+	void *bios;
+
+	if ((dev->device_class & 0x00ffff00) !=
+	    ((PCI_CLASS_DISPLAY << 16) | (PCI_SUBCLASS_DISPLAY_VGA << 8))) {
+		return ENOSYS;
+	}
+	
+	if (aperturefd == -1)
+		return ENOSYS;
+
+	bios = mmap(NULL, dev->rom_size, PROT_READ, 0, aperturefd, 0xc0000);
+	if (bios == MAP_FAILED)
+		return errno;
+	memcpy(buffer, bios, dev->rom_size);
+	munmap(bios, dev->rom_size);
+	
+	return 0;
+#else
+	return ENOSYS;
+#endif
+}
+
 static int
 pci_nfuncs(int bus, int dev)
 {
@@ -100,7 +132,7 @@ pci_device_openbsd_map_range(struct pci_device *dev,
 	    map->base);
 	if (map->memory == MAP_FAILED)
 		return  errno;
-
+#if defined(__i386__) || defined(__amd64__)
 	/* No need to set an MTRR if it's the default mode. */
 	if ((map->flags & PCI_DEV_MAP_FLAG_CACHABLE) ||
 	    (map->flags & PCI_DEV_MAP_FLAG_WRITE_COMBINE)) {
@@ -119,7 +151,7 @@ pci_device_openbsd_map_range(struct pci_device *dev,
 		if (ioctl(aperturefd, MEMRANGE_SET, &mo))
 			return errno;
 	}
-
+#endif
 	return 0;
 }
 
@@ -127,6 +159,7 @@ static int
 pci_device_openbsd_unmap_range(struct pci_device *dev,
     struct pci_device_mapping *map)
 {
+#if defined(__i386__) || defined(__amd64__)
 	struct mem_range_desc mr;
 	struct mem_range_op mo;
 
@@ -142,7 +175,7 @@ pci_device_openbsd_unmap_range(struct pci_device *dev,
 
 		(void)ioctl(aperturefd, MEMRANGE_SET, &mo);
 	}
-
+#endif
 	return pci_device_generic_unmap_range(dev, map);
 }
 
@@ -304,7 +337,7 @@ pci_device_openbsd_probe(struct pci_device *device)
 static const struct pci_system_methods openbsd_pci_methods = {
 	pci_system_openbsd_destroy,
 	NULL,
-	NULL,
+	pci_device_openbsd_read_rom,
 	pci_device_openbsd_probe,
 	pci_device_openbsd_map_range,
 	pci_device_openbsd_unmap_range,
