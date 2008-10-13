@@ -306,16 +306,12 @@ parseArgs(int argc, char **argv, char *argv0,
         char *shell;
         shell = getenv("SHELL");
         if(shell) {
-            path = malloc(strlen(shell) + 1);
-            if(!path)
-                goto bail;
-            strcpy(path, shell);
+            path = strdup(shell);
         } else {
-            path = malloc(strlen("/bin/sh") + 1);
-            if(!path)
-                goto bail;
-            strcpy(path, "/bin/sh");
+            path = strdup("/bin/sh");
         }
+        if(!path)
+            goto bail;
         child_argv = malloc(2 * sizeof(char*));
         if(!child_argv)
             goto bail;
@@ -325,10 +321,9 @@ parseArgs(int argc, char **argv, char *argv0,
             child_argv[0] = my_basename(path);
         child_argv[1] = NULL;
     } else {
-        path = malloc(strlen(argv[0]) + 1);
+        path = strdup(argv[0]);
         if(!path)
             goto bail;
-        strcpy(path, argv[0]);
         child_argv = malloc((argc + 1) * sizeof(char*));
         if(!child_argv) {
             goto bail;

@@ -167,7 +167,7 @@ parseTwoTokenLine(FILE *f, char *first, char *second)
 }
 
 char *
-resolveLocale(char *locale)
+resolveLocale(const char *locale)
 {
     FILE *f;
     char first[MAX_KEYWORD_LENGTH], second[MAX_KEYWORD_LENGTH];
@@ -183,19 +183,17 @@ resolveLocale(char *locale)
         if(rc < -1)
             goto bail;
         if(!strcmp(first, locale)) {
-            resolved = malloc(strlen(second) + 1);
+            resolved = strdup(second);
             if(resolved == NULL)
                 goto bail;
-            strcpy(resolved, second);
             break;
         }
     } while(rc >= 0);
 
     if(resolved == NULL) {
-        resolved = malloc(strlen(locale) + 1);
+        resolved = strdup(locale);
         if(resolved == NULL)
             goto bail;
-        strcpy(resolved, locale);
     }
 
     fclose(f);

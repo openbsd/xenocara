@@ -32,4 +32,4 @@ THE SOFTWARE.
 #define TOK_EQUALS 1
 #define TOK_KEYWORD 2
 
-char *resolveLocale(char *locale);
+char *resolveLocale(const char *locale);

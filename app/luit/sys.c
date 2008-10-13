@@ -361,12 +361,11 @@ allocatePty(int *pty_return, char **line_return)
         close(pty);
         goto bsd;
     }
-    line = malloc(strlen(temp_line) + 1);
+    line = strdup(temp_line);
     if(!line) {
         close(pty);
         return -1;
     }
-    strcpy(line, temp_line);
 
     fix_pty_perms(line);
 
@@ -394,8 +393,9 @@ allocatePty(int *pty_return, char **line_return)
     goto bail;
 
   found:
-    line = malloc(strlen(name) + 1);
-    strcpy(line, name);
+    line = strdup(name);
+    if(!line)
+	goto bail;
     line[5] = 't';
     fix_pty_perms(line);
     *pty_return = pty;
@@ -455,7 +455,7 @@ openTty(char *line)
    saved IDs at all, so there's no issue. */
 #if (defined(BSD) && !defined(_POSIX_SAVED_IDS)) || defined(_MINIX)
 int
-droppriv()
+droppriv(void)
 {
     int rc;
     rc = setuid(getuid());
@@ -465,7 +465,7 @@ droppriv()
 }
 #elif defined(_POSIX_SAVED_IDS)
 int
-droppriv()
+droppriv(void)
 {
     int uid = getuid();
     int euid = geteuid();
@@ -484,7 +484,7 @@ droppriv()
 }
 #else
 int
-droppriv()
+droppriv(void)
 {
     int uid = getuid();
     int euid = geteuid();

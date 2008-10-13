@@ -22,7 +22,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(luit,[1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],luit)
+AC_INIT(luit,[1.0.3], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],luit)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -36,9 +36,9 @@ AC_CHECK_LIB(z, gzopen,, AC_MSG_ERROR([zlib not found]))
 
 AC_ARG_WITH(localealiasfile,
         AC_HELP_STRING([--with-localealiasfile=<path>],
-                       [The locale alias file (default: ${libdir}/X11/locale/locale.alias)]),
+                       [The locale alias file (default: ${datadir}/X11/locale/locale.alias)]),
         [LOCALEALIASFILE="$withval"],
-        [LOCALEALIASFILE=${libdir}/X11/locale/locale.alias])
+        [LOCALEALIASFILE=${datadir}/X11/locale/locale.alias])
 AC_SUBST([LOCALEALIASFILE])
 
 # Checks for pkg-config packages
@@ -46,7 +46,7 @@ PKG_CHECK_MODULES(LUIT, x11 fontenc)
 
 case $host_os in
     linux*)
-        OS_CFLAGS="-D_XOPEN_SOURCE"
+        OS_CFLAGS="-D_XOPEN_SOURCE=500"
         ;;
     *)
         OS_CFLAGS=

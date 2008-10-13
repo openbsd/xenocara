@@ -23,7 +23,7 @@ bin_PROGRAMS = luit
 
 LOCALEALIASFILE = @LOCALEALIASFILE@
 
-luit_CFLAGS = $(LUIT_CFLAGS) -DLOCALE_ALIAS_FILE=\"$(LOCALEALIASFILE)\"
+AM_CFLAGS = $(LUIT_CFLAGS) -DLOCALE_ALIAS_FILE=\"$(LOCALEALIASFILE)\"
 luit_LDADD = $(LUIT_LIBS)
 
 luit_SOURCES =	\
@@ -49,10 +49,19 @@ appmandir = $(APP_MAN_DIR)
 
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) ChangeLog
 CLEANFILES = $(appman_DATA)
 
 SED = sed
+
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
@@ -63,6 +72,7 @@ MAN_SUBSTS = \
 	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xservername__|Xorg|g' \
 	-e 's|__xconfigfile__|xorg.conf|g' \
+	-e 's|__localealiasfile__|$(LOCALEALIASFILE)|g' \
 	-e 's|__projectroot__|$(prefix)|g' \
 	-e 's|__apploaddir__|$(appdefaultdir)|' \
 	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \

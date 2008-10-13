@@ -76,13 +76,13 @@ NullReverse(unsigned int n, CharsetPtr self)
 }
 
 CharsetRec Unknown94Charset = 
-{ "Unknown (94)", T_94, 0, IdentityRecode, NullReverse, 0, 0};
+{ "Unknown (94)", T_94, 0, IdentityRecode, NullReverse, NULL, NULL};
 CharsetRec Unknown96Charset = 
-{ "Unknown (96)", T_96, 0, IdentityRecode, NullReverse, 0, 0};
+{ "Unknown (96)", T_96, 0, IdentityRecode, NullReverse, NULL, NULL};
 CharsetRec Unknown9494Charset = 
-{ "Unknown (94x94)", T_9494, 0, IdentityRecode, NullReverse, 0, 0};
+{ "Unknown (94x94)", T_9494, 0, IdentityRecode, NullReverse, NULL, NULL};
 CharsetRec Unknown9696Charset = 
-{ "Unknown (96x96)", T_9696, 0, IdentityRecode, NullReverse, 0, 0};
+{ "Unknown (96x96)", T_9696, 0, IdentityRecode, NullReverse, NULL, NULL};
 
 typedef struct _FontencCharset {
     char *name;
@@ -95,55 +95,55 @@ typedef struct _FontencCharset {
 } FontencCharsetRec, *FontencCharsetPtr;
 
 FontencCharsetRec fontencCharsets[] = {
-    {"ISO 646 (1973)", T_94, '@', "iso646.1973-0", 0x00, 0, 0},
-    {"ASCII", T_94, 'B', "iso8859-1", 0x00, 0, 0},
-    {"JIS X 0201:GL", T_94, 'J', "jisx0201.1976-0", 0x00, 0, 0},
-    {"JIS X 0201:GR", T_94, 'I', "jisx0201.1976-0", 0x80, 0, 0},
-    {"DEC Special", T_94, '0', "dec-special", 0x00, 0, 0},
-    {"DEC Technical", T_94, '>', "dec-dectech", 0x00, 0, 0},
+    {"ISO 646 (1973)", T_94, '@', "iso646.1973-0", 0x00, NULL, NULL},
+    {"ASCII", T_94, 'B', "iso8859-1", 0x00, NULL, NULL},
+    {"JIS X 0201:GL", T_94, 'J', "jisx0201.1976-0", 0x00, NULL, NULL},
+    {"JIS X 0201:GR", T_94, 'I', "jisx0201.1976-0", 0x80, NULL, NULL},
+    {"DEC Special", T_94, '0', "dec-special", 0x00, NULL, NULL},
+    {"DEC Technical", T_94, '>', "dec-dectech", 0x00, NULL, NULL},
 
-    {"ISO 8859-1", T_96, 'A', "iso8859-1", 0x80, 0, 0},
-    {"ISO 8859-2", T_96, 'B', "iso8859-2", 0x80, 0, 0},
-    {"ISO 8859-3", T_96, 'C', "iso8859-3", 0x80, 0, 0},
-    {"ISO 8859-4", T_96, 'D', "iso8859-4", 0x80, 0, 0},
-    {"ISO 8859-5", T_96, 'L', "iso8859-5", 0x80, 0, 0},
-    {"ISO 8859-6", T_96, 'G', "iso8859-6", 0x80, 0, 0},
-    {"ISO 8859-7", T_96, 'F', "iso8859-7", 0x80, 0, 0},
-    {"ISO 8859-8", T_96, 'H', "iso8859-8", 0x80, 0, 0},
-    {"ISO 8859-9", T_96, 'M', "iso8859-9", 0x80, 0, 0},
-    {"ISO 8859-10", T_96, 'V', "iso8859-10", 0x80, 0, 0},
-    {"ISO 8859-11", T_96, 'T', "iso8859-11", 0x80, 0, 0},
-    {"TIS 620", T_96, 'T', "iso8859-11", 0x80, 0, 0},
-    {"ISO 8859-13", T_96, 'Y', "iso8859-13", 0x80, 0, 0},
-    {"ISO 8859-14", T_96, '_', "iso8859-14", 0x80, 0, 0},
-    {"ISO 8859-15", T_96, 'b', "iso8859-15", 0x80, 0, 0},
-    {"ISO 8859-16", T_96, 'f', "iso8859-16", 0x80, 0, 0},
-    {"KOI8-E", T_96, '@', "koi8-e", 0x80, 0, 0},
-    {"TCVN", T_96, 'Z', "tcvn-0", 0x80, 0, 0},
+    {"ISO 8859-1", T_96, 'A', "iso8859-1", 0x80, NULL, NULL},
+    {"ISO 8859-2", T_96, 'B', "iso8859-2", 0x80, NULL, NULL},
+    {"ISO 8859-3", T_96, 'C', "iso8859-3", 0x80, NULL, NULL},
+    {"ISO 8859-4", T_96, 'D', "iso8859-4", 0x80, NULL, NULL},
+    {"ISO 8859-5", T_96, 'L', "iso8859-5", 0x80, NULL, NULL},
+    {"ISO 8859-6", T_96, 'G', "iso8859-6", 0x80, NULL, NULL},
+    {"ISO 8859-7", T_96, 'F', "iso8859-7", 0x80, NULL, NULL},
+    {"ISO 8859-8", T_96, 'H', "iso8859-8", 0x80, NULL, NULL},
+    {"ISO 8859-9", T_96, 'M', "iso8859-9", 0x80, NULL, NULL},
+    {"ISO 8859-10", T_96, 'V', "iso8859-10", 0x80, NULL, NULL},
+    {"ISO 8859-11", T_96, 'T', "iso8859-11", 0x80, NULL, NULL},
+    {"TIS 620", T_96, 'T', "iso8859-11", 0x80, NULL, NULL},
+    {"ISO 8859-13", T_96, 'Y', "iso8859-13", 0x80, NULL, NULL},
+    {"ISO 8859-14", T_96, '_', "iso8859-14", 0x80, NULL, NULL},
+    {"ISO 8859-15", T_96, 'b', "iso8859-15", 0x80, NULL, NULL},
+    {"ISO 8859-16", T_96, 'f', "iso8859-16", 0x80, NULL, NULL},
+    {"KOI8-E", T_96, '@', "koi8-e", 0x80, NULL, NULL},
+    {"TCVN", T_96, 'Z', "tcvn-0", 0x80, NULL, NULL},
 
-    {"GB 2312", T_9494, 'A', "gb2312.1980-0", 0x0000, 0, 0},
-    {"JIS X 0208", T_9494, 'B', "jisx0208.1990-0", 0x0000, 0, 0},
-    {"KSC 5601", T_9494, 'C', "ksc5601.1987-0", 0x0000, 0, 0},
-    {"JIS X 0212", T_9494, 'D', "jisx0212.1990-0", 0x0000, 0, 0},
+    {"GB 2312", T_9494, 'A', "gb2312.1980-0", 0x0000, NULL, NULL},
+    {"JIS X 0208", T_9494, 'B', "jisx0208.1990-0", 0x0000, NULL, NULL},
+    {"KSC 5601", T_9494, 'C', "ksc5601.1987-0", 0x0000, NULL, NULL},
+    {"JIS X 0212", T_9494, 'D', "jisx0212.1990-0", 0x0000, NULL, NULL},
 
-    {"GB 2312", T_9696, 'A', "gb2312.1980-0", 0x0000, 0, 0},
-    {"JIS X 0208", T_9696, 'B', "jisx0208.1990-0", 0x0000, 0, 0},
-    {"KSC 5601", T_9696, 'C', "ksc5601.1987-0", 0x0000, 0, 0},
-    {"JIS X 0212", T_9696, 'D', "jisx0212.1990-0", 0x0000, 0, 0},
+    {"GB 2312", T_9696, 'A', "gb2312.1980-0", 0x0000, NULL, NULL},
+    {"JIS X 0208", T_9696, 'B', "jisx0208.1990-0", 0x0000, NULL, NULL},
+    {"KSC 5601", T_9696, 'C', "ksc5601.1987-0", 0x0000, NULL, NULL},
+    {"JIS X 0212", T_9696, 'D', "jisx0212.1990-0", 0x0000, NULL, NULL},
 
-    {"KOI8-R", T_128, 0, "koi8-r", 0x80, 0, 0},
-    {"KOI8-U", T_128, 0, "koi8-u", 0x80, 0, 0},
-    {"KOI8-RU", T_128, 0, "koi8-ru", 0x80, 0, 0},
-    {"CP 1252", T_128, 0, "microsoft-cp1252", 0x80, 0, 0},
-    {"CP 1251", T_128, 0, "microsoft-cp1251", 0x80, 0, 0},
-    {"CP 1250", T_128, 0, "microsoft-cp1250", 0x80, 0, 0},
+    {"KOI8-R", T_128, 0, "koi8-r", 0x80, NULL, NULL},
+    {"KOI8-U", T_128, 0, "koi8-u", 0x80, NULL, NULL},
+    {"KOI8-RU", T_128, 0, "koi8-ru", 0x80, NULL, NULL},
+    {"CP 1252", T_128, 0, "microsoft-cp1252", 0x80, NULL, NULL},
+    {"CP 1251", T_128, 0, "microsoft-cp1251", 0x80, NULL, NULL},
+    {"CP 1250", T_128, 0, "microsoft-cp1250", 0x80, NULL, NULL},
 
-    {"CP 437", T_128, 0, "ibm-cp437", 0x80, 0, 0},
-    {"CP 850", T_128, 0, "ibm-cp850", 0x80, 0, 0},
-    {"CP 866", T_128, 0, "ibm-cp866", 0x80, 0, 0},
+    {"CP 437", T_128, 0, "ibm-cp437", 0x80, NULL, NULL},
+    {"CP 850", T_128, 0, "ibm-cp850", 0x80, NULL, NULL},
+    {"CP 866", T_128, 0, "ibm-cp866", 0x80, NULL, NULL},
 
-    {"Big 5", T_94192, 0, "big5.eten-0", 0x8000, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0}
+    {"Big 5", T_94192, 0, "big5.eten-0", 0x8000, NULL, NULL},
+    {NULL, 0, 0, NULL, 0, NULL, NULL}
 };
 
 typedef struct _OtherCharset {
@@ -160,11 +160,11 @@ OtherCharsetRec otherCharsets[] = {
     {"SJIS", init_sjis, mapping_sjis, reverse_sjis, stack_sjis},
     {"BIG5-HKSCS", init_hkscs, mapping_hkscs, reverse_hkscs, stack_hkscs},
     {"GB18030", init_gb18030, mapping_gb18030, reverse_gb18030, stack_gb18030},
-    {0, 0, 0, 0, 0}
+    {NULL, NULL, NULL, NULL, NULL}
 };
 
 static int
-compare(char *s, char *t)
+compare(const char *s, const char *t)
 {
     while(*s || *t) {
         if(*s && (isspace(*s) || *s == '-' || *s == '_'))
@@ -229,7 +229,7 @@ FontencCharsetReverse(unsigned int i, CharsetPtr self)
 static CharsetPtr cachedCharsets = NULL;
 
 static CharsetPtr 
-getCachedCharset(unsigned char final, int type, char *name)
+getCachedCharset(unsigned char final, int type, const char *name)
 {
     CharsetPtr c;
     for(c = cachedCharsets; c; c = c->next) {
@@ -248,7 +248,7 @@ cacheCharset(CharsetPtr c) {
 }
 
 static CharsetPtr
-getFontencCharset(unsigned char final, int type, char *name)
+getFontencCharset(unsigned char final, int type, const char *name)
 {
     FontencCharsetPtr fc;
     CharsetPtr c;
@@ -298,7 +298,7 @@ getFontencCharset(unsigned char final, int type, char *name)
 }
 
 static CharsetPtr
-getOtherCharset(char *name)
+getOtherCharset(const char *name)
 {
     OtherCharsetPtr fc;
     CharsetPtr c;
@@ -371,7 +371,7 @@ getCharset(unsigned char final, int type)
 }
 
 CharsetPtr 
-getCharsetByName(char *name)
+getCharsetByName(const char *name)
 {
     CharsetPtr c;
 
@@ -393,7 +393,7 @@ getCharsetByName(char *name)
     return getUnknownCharset(T_94);
 }
 
-LocaleCharsetRec localeCharsets[] = {
+const LocaleCharsetRec localeCharsets[] = {
     { "C", 0, 2, "ASCII", NULL, "ISO 8859-1", NULL, NULL},
     { "POSIX", 0, 2, "ASCII", NULL, "ISO 8859-1", NULL, NULL},
     { "ISO8859-1", 0, 2, "ASCII", NULL, "ISO 8859-1", NULL, NULL},
@@ -426,13 +426,13 @@ LocaleCharsetRec localeCharsets[] = {
     { "SJIS", 0, 1, NULL, NULL, NULL, NULL, "SJIS"},
     { "Big5-HKSCS", 0, 1, NULL, NULL, NULL, NULL, "BIG5-HKSCS"},
     { "gb18030", 0, 1, NULL, NULL, NULL, NULL, "GB18030"},
-    { 0, 0, 0, 0, 0, 0, 0}
+    { NULL, 0, 0, NULL, NULL, NULL, NULL, NULL}
 };
 
 void
-reportCharsets()
+reportCharsets(void)
 {
-    LocaleCharsetPtr p;
+    const LocaleCharsetRec *p;
     FontencCharsetPtr q;
     printf("Known locale encodings:\n\n");
     for(p = localeCharsets; p->name; p++) {
@@ -455,14 +455,14 @@ reportCharsets()
 }
 
 int
-getLocaleState(char *locale, char *charset,
+getLocaleState(const char *locale, char *charset,
                int *gl_return, int *gr_return,
                CharsetPtr *g0_return, CharsetPtr *g1_return,
                CharsetPtr *g2_return, CharsetPtr *g3_return,
                CharsetPtr *other_return)
 {
-    char *resolved = 0;
-    LocaleCharsetPtr p;
+    char *resolved = NULL;
+    const LocaleCharsetRec *p;
 
     if(!charset) {
         resolved = resolveLocale(locale);

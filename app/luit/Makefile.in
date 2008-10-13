@@ -76,9 +76,8 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_luit_OBJECTS = luit-charset.$(OBJEXT) luit-iso2022.$(OBJEXT) \
-	luit-locale.$(OBJEXT) luit-luit.$(OBJEXT) luit-other.$(OBJEXT) \
-	luit-parser.$(OBJEXT) luit-sys.$(OBJEXT)
+am_luit_OBJECTS = charset.$(OBJEXT) iso2022.$(OBJEXT) locale.$(OBJEXT) \
+	luit.$(OBJEXT) other.$(OBJEXT) parser.$(OBJEXT) sys.$(OBJEXT)
 luit_OBJECTS = $(am_luit_OBJECTS)
 am__DEPENDENCIES_1 =
 luit_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -209,7 +208,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-luit_CFLAGS = $(LUIT_CFLAGS) -DLOCALE_ALIAS_FILE=\"$(LOCALEALIASFILE)\"
+AM_CFLAGS = $(LUIT_CFLAGS) -DLOCALE_ALIAS_FILE=\"$(LOCALEALIASFILE)\"
 luit_LDADD = $(LUIT_LIBS)
 luit_SOURCES = \
         charset.c \
@@ -231,9 +230,10 @@ appman_PRE = \
 
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) ChangeLog
 CLEANFILES = $(appman_DATA)
 SED = sed
+MAINTAINERCLEANFILES = ChangeLog
 
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
@@ -243,6 +243,7 @@ MAN_SUBSTS = \
 	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xservername__|Xorg|g' \
 	-e 's|__xconfigfile__|xorg.conf|g' \
+	-e 's|__localealiasfile__|$(LOCALEALIASFILE)|g' \
 	-e 's|__projectroot__|$(prefix)|g' \
 	-e 's|__apploaddir__|$(appdefaultdir)|' \
 	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
@@ -340,13 +341,13 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/luit-charset.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/luit-iso2022.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/luit-locale.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/luit-luit.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/luit-other.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/luit-parser.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/luit-sys.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/charset.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iso2022.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/locale.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/luit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/other.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sys.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -361,104 +362,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-luit-charset.o: charset.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -MT luit-charset.o -MD -MP -MF "$(DEPDIR)/luit-charset.Tpo" -c -o luit-charset.o `test -f 'charset.c' || echo '$(srcdir)/'`charset.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/luit-charset.Tpo" "$(DEPDIR)/luit-charset.Po"; else rm -f "$(DEPDIR)/luit-charset.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='charset.c' object='luit-charset.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -c -o luit-charset.o `test -f 'charset.c' || echo '$(srcdir)/'`charset.c
-
-luit-charset.obj: charset.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -MT luit-charset.obj -MD -MP -MF "$(DEPDIR)/luit-charset.Tpo" -c -o luit-charset.obj `if test -f 'charset.c'; then $(CYGPATH_W) 'charset.c'; else $(CYGPATH_W) '$(srcdir)/charset.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/luit-charset.Tpo" "$(DEPDIR)/luit-charset.Po"; else rm -f "$(DEPDIR)/luit-charset.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='charset.c' object='luit-charset.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -c -o luit-charset.obj `if test -f 'charset.c'; then $(CYGPATH_W) 'charset.c'; else $(CYGPATH_W) '$(srcdir)/charset.c'; fi`
-
-luit-iso2022.o: iso2022.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -MT luit-iso2022.o -MD -MP -MF "$(DEPDIR)/luit-iso2022.Tpo" -c -o luit-iso2022.o `test -f 'iso2022.c' || echo '$(srcdir)/'`iso2022.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/luit-iso2022.Tpo" "$(DEPDIR)/luit-iso2022.Po"; else rm -f "$(DEPDIR)/luit-iso2022.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='iso2022.c' object='luit-iso2022.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -c -o luit-iso2022.o `test -f 'iso2022.c' || echo '$(srcdir)/'`iso2022.c
-
-luit-iso2022.obj: iso2022.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -MT luit-iso2022.obj -MD -MP -MF "$(DEPDIR)/luit-iso2022.Tpo" -c -o luit-iso2022.obj `if test -f 'iso2022.c'; then $(CYGPATH_W) 'iso2022.c'; else $(CYGPATH_W) '$(srcdir)/iso2022.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/luit-iso2022.Tpo" "$(DEPDIR)/luit-iso2022.Po"; else rm -f "$(DEPDIR)/luit-iso2022.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='iso2022.c' object='luit-iso2022.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -c -o luit-iso2022.obj `if test -f 'iso2022.c'; then $(CYGPATH_W) 'iso2022.c'; else $(CYGPATH_W) '$(srcdir)/iso2022.c'; fi`
-
-luit-locale.o: locale.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -MT luit-locale.o -MD -MP -MF "$(DEPDIR)/luit-locale.Tpo" -c -o luit-locale.o `test -f 'locale.c' || echo '$(srcdir)/'`locale.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/luit-locale.Tpo" "$(DEPDIR)/luit-locale.Po"; else rm -f "$(DEPDIR)/luit-locale.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='locale.c' object='luit-locale.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -c -o luit-locale.o `test -f 'locale.c' || echo '$(srcdir)/'`locale.c
-
-luit-locale.obj: locale.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -MT luit-locale.obj -MD -MP -MF "$(DEPDIR)/luit-locale.Tpo" -c -o luit-locale.obj `if test -f 'locale.c'; then $(CYGPATH_W) 'locale.c'; else $(CYGPATH_W) '$(srcdir)/locale.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/luit-locale.Tpo" "$(DEPDIR)/luit-locale.Po"; else rm -f "$(DEPDIR)/luit-locale.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='locale.c' object='luit-locale.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -c -o luit-locale.obj `if test -f 'locale.c'; then $(CYGPATH_W) 'locale.c'; else $(CYGPATH_W) '$(srcdir)/locale.c'; fi`
-
-luit-luit.o: luit.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -MT luit-luit.o -MD -MP -MF "$(DEPDIR)/luit-luit.Tpo" -c -o luit-luit.o `test -f 'luit.c' || echo '$(srcdir)/'`luit.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/luit-luit.Tpo" "$(DEPDIR)/luit-luit.Po"; else rm -f "$(DEPDIR)/luit-luit.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='luit.c' object='luit-luit.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -c -o luit-luit.o `test -f 'luit.c' || echo '$(srcdir)/'`luit.c
-
-luit-luit.obj: luit.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -MT luit-luit.obj -MD -MP -MF "$(DEPDIR)/luit-luit.Tpo" -c -o luit-luit.obj `if test -f 'luit.c'; then $(CYGPATH_W) 'luit.c'; else $(CYGPATH_W) '$(srcdir)/luit.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/luit-luit.Tpo" "$(DEPDIR)/luit-luit.Po"; else rm -f "$(DEPDIR)/luit-luit.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='luit.c' object='luit-luit.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -c -o luit-luit.obj `if test -f 'luit.c'; then $(CYGPATH_W) 'luit.c'; else $(CYGPATH_W) '$(srcdir)/luit.c'; fi`
-
-luit-other.o: other.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -MT luit-other.o -MD -MP -MF "$(DEPDIR)/luit-other.Tpo" -c -o luit-other.o `test -f 'other.c' || echo '$(srcdir)/'`other.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/luit-other.Tpo" "$(DEPDIR)/luit-other.Po"; else rm -f "$(DEPDIR)/luit-other.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='other.c' object='luit-other.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -c -o luit-other.o `test -f 'other.c' || echo '$(srcdir)/'`other.c
-
-luit-other.obj: other.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -MT luit-other.obj -MD -MP -MF "$(DEPDIR)/luit-other.Tpo" -c -o luit-other.obj `if test -f 'other.c'; then $(CYGPATH_W) 'other.c'; else $(CYGPATH_W) '$(srcdir)/other.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/luit-other.Tpo" "$(DEPDIR)/luit-other.Po"; else rm -f "$(DEPDIR)/luit-other.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='other.c' object='luit-other.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -c -o luit-other.obj `if test -f 'other.c'; then $(CYGPATH_W) 'other.c'; else $(CYGPATH_W) '$(srcdir)/other.c'; fi`
-
-luit-parser.o: parser.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -MT luit-parser.o -MD -MP -MF "$(DEPDIR)/luit-parser.Tpo" -c -o luit-parser.o `test -f 'parser.c' || echo '$(srcdir)/'`parser.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/luit-parser.Tpo" "$(DEPDIR)/luit-parser.Po"; else rm -f "$(DEPDIR)/luit-parser.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='parser.c' object='luit-parser.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -c -o luit-parser.o `test -f 'parser.c' || echo '$(srcdir)/'`parser.c
-
-luit-parser.obj: parser.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -MT luit-parser.obj -MD -MP -MF "$(DEPDIR)/luit-parser.Tpo" -c -o luit-parser.obj `if test -f 'parser.c'; then $(CYGPATH_W) 'parser.c'; else $(CYGPATH_W) '$(srcdir)/parser.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/luit-parser.Tpo" "$(DEPDIR)/luit-parser.Po"; else rm -f "$(DEPDIR)/luit-parser.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='parser.c' object='luit-parser.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -c -o luit-parser.obj `if test -f 'parser.c'; then $(CYGPATH_W) 'parser.c'; else $(CYGPATH_W) '$(srcdir)/parser.c'; fi`
-
-luit-sys.o: sys.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -MT luit-sys.o -MD -MP -MF "$(DEPDIR)/luit-sys.Tpo" -c -o luit-sys.o `test -f 'sys.c' || echo '$(srcdir)/'`sys.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/luit-sys.Tpo" "$(DEPDIR)/luit-sys.Po"; else rm -f "$(DEPDIR)/luit-sys.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sys.c' object='luit-sys.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -c -o luit-sys.o `test -f 'sys.c' || echo '$(srcdir)/'`sys.c
-
-luit-sys.obj: sys.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -MT luit-sys.obj -MD -MP -MF "$(DEPDIR)/luit-sys.Tpo" -c -o luit-sys.obj `if test -f 'sys.c'; then $(CYGPATH_W) 'sys.c'; else $(CYGPATH_W) '$(srcdir)/sys.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/luit-sys.Tpo" "$(DEPDIR)/luit-sys.Po"; else rm -f "$(DEPDIR)/luit-sys.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sys.c' object='luit-sys.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(luit_CFLAGS) $(CFLAGS) -c -o luit-sys.obj `if test -f 'sys.c'; then $(CYGPATH_W) 'sys.c'; else $(CYGPATH_W) '$(srcdir)/sys.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
@@ -555,6 +458,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -684,6 +590,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -739,8 +646,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-data \
@@ -752,6 +659,13 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 	uninstall-am uninstall-appmanDATA uninstall-binPROGRAMS \
 	uninstall-info-am
 
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@

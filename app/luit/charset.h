@@ -50,21 +50,21 @@ typedef struct _Charset {
 } CharsetRec, *CharsetPtr;
 
 typedef struct _LocaleCharset {
-    char *name;
+    const char *name;
     int gl;
     int gr;
-    char *g0;
-    char *g1;
-    char *g2;
-    char *g3;
-    char *other;
+    const char *g0;
+    const char *g1;
+    const char *g2;
+    const char *g3;
+    const char *other;
 } LocaleCharsetRec, *LocaleCharsetPtr;
 
 CharsetPtr getUnknownCharset(int);
 CharsetPtr getCharset(unsigned char, int);
-CharsetPtr getCharsetByName(char*);
+CharsetPtr getCharsetByName(const char*);
 void reportCharsets(void);
-int getLocaleState(char *locale, char *charset,
+int getLocaleState(const char *locale, char *charset,
                    int *gl_return, int *gr_return,
                    CharsetPtr *g0_return, CharsetPtr *g1_return,
                    CharsetPtr *g2_return, CharsetPtr *g3_return,

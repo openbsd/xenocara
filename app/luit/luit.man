@@ -47,7 +47,7 @@ Function as a simple converter from standard input to standard output.
 .B \-x
 Exit as soon as the child dies.  This may cause
 .B luit
-to loose data at the end of the child's output.
+to lose data at the end of the child's output.
 .TP
 .BI \-argv0 " name"
 Set the child's name (as passed in argv[0]).
@@ -180,7 +180,7 @@ M-x set-terminal-coding-system RET iso-2022-8bit-ss2 RET
 .B __projectroot__/lib/X11/fonts/encodings/encodings.dir
 The system-wide encodings directory.
 .TP
-.B __projectroot__/lib/X11/locale/locale.alias
+.B __localealiasfile__
 The file mapping locales to locale encodings.
 .SH SECURITY
 On systems with SVR4 (``Unix-98'') ptys (Linux version 2.2 and later,
@@ -219,6 +219,6 @@ xterm(1), unicode(7), utf-8(7), charsets(7).
 .SH AUTHOR
 The version of
 .B Luit
-included in this X.org Foundataion release
+included in this X.Org Foundation release
 was originally written by Juliusz Chroboczek <jch@freedesktop.org>
 for the XFree86 Project.
