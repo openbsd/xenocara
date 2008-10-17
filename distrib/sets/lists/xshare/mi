@@ -799,6 +799,7 @@
 ./usr/X11R6/lib/X11/xedit/lisp/indent.lsp
 ./usr/X11R6/lib/X11/xedit/lisp/lisp.lsp
 ./usr/X11R6/lib/X11/xedit/lisp/progmodes
+./usr/X11R6/lib/X11/xedit/lisp/progmodes/auto.lsp
 ./usr/X11R6/lib/X11/xedit/lisp/progmodes/c.lsp
 ./usr/X11R6/lib/X11/xedit/lisp/progmodes/html.lsp
 ./usr/X11R6/lib/X11/xedit/lisp/progmodes/imake.lsp
@@ -806,6 +807,8 @@
 ./usr/X11R6/lib/X11/xedit/lisp/progmodes/make.lsp
 ./usr/X11R6/lib/X11/xedit/lisp/progmodes/man.lsp
 ./usr/X11R6/lib/X11/xedit/lisp/progmodes/patch.lsp
+./usr/X11R6/lib/X11/xedit/lisp/progmodes/perl.lsp
+./usr/X11R6/lib/X11/xedit/lisp/progmodes/python.lsp
 ./usr/X11R6/lib/X11/xedit/lisp/progmodes/rpm.lsp
 ./usr/X11R6/lib/X11/xedit/lisp/progmodes/sgml.lsp
 ./usr/X11R6/lib/X11/xedit/lisp/progmodes/sh.lsp
