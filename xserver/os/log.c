@@ -416,6 +416,7 @@ void AbortServer(void) __attribute__((noreturn));
 void
 AbortServer(void)
 {
+    CloseWellKnownConnections();
     OsCleanup(TRUE);
     CloseDownDevices();
     AbortDDX();
