@@ -507,10 +507,8 @@ RHDCursorsInit(RHDPtr rhdPtr)
 	Cursor->RegOffset = i * 0x0800;
 
 	/* grab our cursor FB */
-	/* I love a bit of a challenge, so move start instead of end */
-	Cursor->Base = rhdPtr->FbFreeStart;
-	rhdPtr->FbFreeStart += size;
-	rhdPtr->FbFreeSize -= size;
+	Cursor->Base = RHDAllocFb(rhdPtr, size, "Cursor Image");
+	ASSERT(Cursor->Base != -1);
 
 	rhdPtr->Crtc[i]->Cursor = Cursor;	/* HW is fixed anyway */
     }

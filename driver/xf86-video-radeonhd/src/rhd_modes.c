@@ -48,31 +48,6 @@
 #include "r5xx_accel.h"
 
 /*
- * Define a set of own mode errors.
- */
-#define RHD_MODE_STATUS 0x51B00
-#ifndef MONREC_HAS_REDUCED
-#define MODE_NO_REDUCED     0x01 + RHD_MODE_STATUS
-#endif
-#define MODE_MEM_BW         0x02 + RHD_MODE_STATUS
-#define MODE_OUTPUT_UNDEF   0x03 + RHD_MODE_STATUS
-#define MODE_NOT_PAL        0x04 + RHD_MODE_STATUS
-#define MODE_NOT_NTSC       0x05 + RHD_MODE_STATUS
-#define MODE_HTOTAL_WIDE    0x06 + RHD_MODE_STATUS
-#define MODE_HDISPLAY_WIDE  0x07 + RHD_MODE_STATUS
-#define MODE_HSYNC_RANGE    0x08 + RHD_MODE_STATUS
-#define MODE_HBLANK_RANGE   0x09 + RHD_MODE_STATUS
-#define MODE_VTOTAL_WIDE    0x0A + RHD_MODE_STATUS
-#define MODE_VDISPLAY_WIDE  0x0B + RHD_MODE_STATUS
-#define MODE_VSYNC_RANGE    0x0C + RHD_MODE_STATUS
-#define MODE_VBLANK_RANGE   0x0D + RHD_MODE_STATUS
-#define MODE_PITCH          0x0E + RHD_MODE_STATUS
-#define MODE_OFFSET         0x0F + RHD_MODE_STATUS
-#define MODE_MINHEIGHT      0x10 + RHD_MODE_STATUS
-#define MODE_FIXED          0x11 + RHD_MODE_STATUS
-
-
-/*
  * Don't bother with checking whether X offers this. Just use the internal one
  * I'm the author of the X side one anyway.
  */
@@ -352,6 +327,29 @@ add(char **p, char *new)
 /*
  *
  */
+Bool
+rhdModesEqual(DisplayModePtr mode1, DisplayModePtr mode2)
+{
+    if (mode1->Clock == mode2->Clock
+	&& mode1->HDisplay == mode2->HDisplay
+	&& mode1->HSyncStart == mode2->HSyncStart
+	&& mode1->HSyncEnd == mode2->HSyncEnd
+	&& mode1->HTotal == mode2->HTotal
+	&& mode1->HSkew == mode2->HSkew
+	&& mode1->VDisplay == mode2->VDisplay
+	&& mode1->VSyncStart == mode2->VSyncStart
+	&& mode1->VSyncEnd == mode2->VSyncEnd
+	&& mode1->VTotal == mode2->VTotal
+	&& mode1->VScan == mode2->VScan
+	&& mode1->Flags == mode2->Flags)
+	return TRUE;
+
+    return FALSE;
+}
+
+/*
+ *
+ */
 void
 RHDPrintModeline(DisplayModePtr mode)
 {
@@ -500,14 +498,17 @@ rhdModesDestroy(DisplayModePtr Modes)
  * Basic sanity checks.
  */
 static int
-rhdModeSanity(DisplayModePtr Mode)
+rhdModeSanity(RHDPtr rhdPtr, DisplayModePtr Mode)
 {
     /* do we need to bother at all? */
     if (Mode->status != MODE_OK)
         return Mode->status;
 
-    if (!Mode->name)
+    if (!Mode->name) {
+	xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR,
+		   "Validation found mode without name.\n");
         return MODE_ERROR;
+    }
 
     if (Mode->Clock <= 0)
         return MODE_NOCLOCK;
@@ -708,6 +709,10 @@ static int
 rhdMonitorValid(struct rhdMonitor *Monitor, DisplayModePtr Mode)
 {
     int i;
+    Bool isNative = FALSE;
+
+    if (Monitor->NativeMode && rhdModesEqual(Mode, Monitor->NativeMode))
+	isNative = TRUE;
 
     for (i = 0; i < Monitor->numHSync; i++)
         if ((Mode->HSync >= (Monitor->HSync[i].lo * (1.0 - SYNC_TOLERANCE))) &&
@@ -727,14 +732,26 @@ rhdMonitorValid(struct rhdMonitor *Monitor, DisplayModePtr Mode)
 	(Mode->SynthClock > (Monitor->Bandwidth * (1 + SYNC_TOLERANCE))))
         return MODE_CLOCK_HIGH;
 
-    if (Monitor->ReducedAllowed) {
-	if (((Mode->CrtcHTotal - Mode->CrtcHDisplay) != 160) && /* CVT -r */
-	    ((Mode->CrtcHTotal - Mode->CrtcHDisplay) != 70) && /* SGI 1600SW */
-	    ((Mode->CrtcHDisplay * 21) > (Mode->CrtcHTotal * 20))) /* 5% */
-	    return MODE_HBLANK_NARROW;
-    } else { /* no reduced blanking */
-	if ((Mode->CrtcHDisplay * 23) > (Mode->CrtcHTotal * 20)) /* 15% */
-	    return MODE_HBLANK_NARROW;
+    if (isNative) { /* if it's this monitor's native mode be less strict on validation */
+	if (Monitor->ReducedAllowed) {
+	    if ((Mode->CrtcHDisplay * 101) > (Mode->CrtcHTotal * 100)) /* 1% */
+		return MODE_HBLANK_NARROW;
+	} else { /* no reduced blanking */
+	    if ((Mode->CrtcHDisplay * 23) > (Mode->CrtcHTotal * 20)) /* 15% */
+		return MODE_HBLANK_NARROW;
+	}
+    } else {
+	if (((Mode->CrtcHDisplay * 5 / 4) & ~0x07) > Mode->CrtcHTotal) {
+	    /* is this a cvt -r Mode, and only a cvt -r Mode? */
+	    if (((Mode->CrtcHTotal - Mode->CrtcHDisplay) == 160) &&
+		((Mode->CrtcHSyncEnd - Mode->CrtcHDisplay) == 80) &&
+		((Mode->CrtcHSyncEnd - Mode->CrtcHSyncStart) == 32) &&
+		((Mode->CrtcVSyncStart - Mode->CrtcVDisplay) == 3)) {
+		if (!Monitor->ReducedAllowed)
+		    return MODE_NO_REDUCED;
+	    } else if ((Mode->CrtcHDisplay * 11) > (Mode->CrtcHTotal * 10))
+		return MODE_HSYNC_NARROW;
+	}
     }
 
     if (Monitor->UseFixedModes && !rhdMonitorFixedValid(Monitor, Mode))
@@ -743,11 +760,19 @@ rhdMonitorValid(struct rhdMonitor *Monitor, DisplayModePtr Mode)
     return MODE_OK;
 }
 
+#define RHD_MODE_VALIDATION_LOOPS 10
+
+enum ValidationKind {
+    VALIDATE_SCALE_NONE,
+    VALIDATE_SCALE_FROM,
+    VALIDATE_SCALE_TO
+};
+
 /*
  *
  */
 static int
-rhdModeValidateCrtc(struct rhdCrtc *Crtc, DisplayModePtr Mode)
+rhdModeValidateCrtc(struct rhdCrtc *Crtc, DisplayModePtr Mode, enum ValidationKind ValidateScaleModeKind)
 {
     ScrnInfoPtr pScrn = xf86Screens[Crtc->scrnIndex];
     RHDPtr rhdPtr = RHDPTR(pScrn);
@@ -755,14 +780,14 @@ rhdModeValidateCrtc(struct rhdCrtc *Crtc, DisplayModePtr Mode)
 
     RHDFUNC(Crtc);
 
-    Status = rhdModeSanity(Mode);
+    Status = rhdModeSanity(rhdPtr, Mode);
     if (Status != MODE_OK)
         return Status;
 
     rhdModeFillOutCrtcValues(Mode);
 
     /* We don't want to loop around this forever */
-    for (i = 10; i; i--) {
+    for (i = 0; i < RHD_MODE_VALIDATION_LOOPS; i++) {
         struct rhdOutput *Output;
 
         Mode->CrtcHAdjusted = FALSE;
@@ -774,54 +799,64 @@ rhdModeValidateCrtc(struct rhdCrtc *Crtc, DisplayModePtr Mode)
         if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
             continue;
 
-	Status = Crtc->FBValid(Crtc, Mode->CrtcHDisplay, Mode->CrtcVDisplay,
-			       pScrn->bitsPerPixel, rhdPtr->FbScanoutStart,
-			       rhdPtr->FbScanoutSize, NULL);
-        if (Status != MODE_OK)
-            return Status;
+	if (ValidateScaleModeKind != VALIDATE_SCALE_TO) {
 
-        Status = Crtc->ModeValid(Crtc, Mode);
-        if (Status != MODE_OK)
-            return Status;
-        if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
-            continue;
-
-	if (Crtc->ScaleValid) {
-	    Status = Crtc->ScaleValid(Crtc, RHD_CRTC_SCALE_TYPE_NONE, Mode, NULL);
+	    Status = Crtc->FBValid(Crtc, Mode->CrtcHDisplay, Mode->CrtcVDisplay,
+				   pScrn->bitsPerPixel, rhdPtr->FbScanoutStart,
+				   rhdPtr->FbScanoutSize, NULL);
 	    if (Status != MODE_OK)
 		return Status;
-	    if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
-		continue;
-	}
 
-	if (Crtc->PLL->Valid) {
-	    Status = Crtc->PLL->Valid(Crtc->PLL, Mode->Clock);
-	    if (Status != MODE_OK)
-		return Status;
-	    if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
-		continue;
-	}
-
-        for (Output = rhdPtr->Outputs; Output; Output = Output->Next)
-            if (Output->Active && (Output->Crtc == Crtc)) {
-		/* Check the output */
-                Status = Output->ModeValid(Output, Mode);
-                if (Status != MODE_OK)
-                    return Status;
-                if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
-                    break; /* restart. */
-
-		/* Check the monitor attached to this output */
-		if (Output->Connector && Output->Connector->Monitor)
-		    Status = rhdMonitorValid(Output->Connector->Monitor, Mode);
+	    if (Crtc->ScaleValid) {
+		if (ValidateScaleModeKind == VALIDATE_SCALE_NONE)
+		    Status = Crtc->ScaleValid(Crtc, RHD_CRTC_SCALE_TYPE_NONE, Mode, NULL);
+		else
+		    Status = Crtc->ScaleValid(Crtc, Crtc->ScaleType, Mode, Crtc->ScaledToMode);
 		if (Status != MODE_OK)
-                    return Status;
-                if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
-                    break; /* restart. */
-            }
+		    return Status;
+		if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
+		    continue;
+	    }
+	}
 
-        if (!Output) /* We're done. This must be a good mode. */
-            return MODE_OK;
+	if (ValidateScaleModeKind != VALIDATE_SCALE_FROM) {
+	    Status = Crtc->ModeValid(Crtc, Mode);
+	    if (Status != MODE_OK)
+		return Status;
+	    if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
+		continue;
+
+	    if (Crtc->PLL && Crtc->PLL->Valid) { /* RandR may not have PLL filled out. oh well... */
+		Status = Crtc->PLL->Valid(Crtc->PLL, Mode->Clock);
+		if (Status != MODE_OK)
+		    return Status;
+		if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
+		    continue;
+	    }
+
+	    for (Output = rhdPtr->Outputs; Output; Output = Output->Next)
+		if (Output->Active && (Output->Crtc == Crtc)) {
+		    /* Check the output */
+		    Status = Output->ModeValid(Output, Mode);
+		    if (Status != MODE_OK)
+			return Status;
+		    if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
+			break; /* restart. */
+
+		    /* Check the monitor attached to this output */
+		    if (Output->Connector && Output->Connector->Monitor)
+			Status = rhdMonitorValid(Output->Connector->Monitor, Mode);
+		    if (Status != MODE_OK)
+			return Status;
+		    if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
+			break; /* restart. */
+		}
+
+	    if (Output) /* We're done. This must be a good mode. */
+		continue;
+	}
+
+	return MODE_OK;
     }
 
     /* Mode has been bouncing around for ages, on adjustments */
@@ -829,6 +864,37 @@ rhdModeValidateCrtc(struct rhdCrtc *Crtc, DisplayModePtr Mode)
                " thrown around for too long.\n", __func__, Mode->name,
                Mode->HDisplay, Mode->VDisplay, Mode->Clock/1000.0);
     return MODE_ERROR;
+}
+
+/*
+ *
+ */
+int
+RHDValidateScaledToMode(struct rhdCrtc *Crtc, DisplayModePtr Mode)
+{
+    RHDPtr rhdPtr = RHDPTRI(Crtc);
+    int Status;
+
+    RHDFUNC(Crtc);
+
+    Status = rhdModeSanity(rhdPtr, Mode);
+    if (Status != MODE_OK)
+        return Status;
+
+    rhdModeFillOutCrtcValues(Mode);
+
+    Status = rhdModeValidateCrtc(Crtc, Mode, VALIDATE_SCALE_TO);
+    if (Status != MODE_OK)
+	return Status;
+
+    /* Do we want to also validate against a configured monitor? */
+    if (rhdPtr->ConfigMonitor) {
+	Status = rhdMonitorValid(rhdPtr->ConfigMonitor, Mode);
+	if (Status != MODE_OK)
+	    return Status;
+    }
+
+    return MODE_OK;
 }
 
 /*
@@ -842,7 +908,7 @@ rhdModeValidate(ScrnInfoPtr pScrn, DisplayModePtr Mode)
     int Status;
     int i;
 
-    Status = rhdModeSanity(Mode);
+    Status = rhdModeSanity(rhdPtr, Mode);
     if (Status != MODE_OK)
         return Status;
 
@@ -854,9 +920,17 @@ rhdModeValidate(ScrnInfoPtr pScrn, DisplayModePtr Mode)
         if (!Crtc->Active)
             continue;
 
-	Status = rhdModeValidateCrtc(Crtc, Mode);
-	if (Status != MODE_OK)
-	    return Status;
+	if (!Crtc->ScaledToMode) {
+
+	    Status = rhdModeValidateCrtc(Crtc, Mode, VALIDATE_SCALE_NONE);
+	    if (Status != MODE_OK)
+		return Status;
+
+	} else {
+	    Status = rhdModeValidateCrtc(Crtc, Mode, VALIDATE_SCALE_FROM);
+	    if (Status != MODE_OK)
+		return Status;
+	}
     }
 
     /* throw them at the configured monitor, so that the inadequate
@@ -902,11 +976,12 @@ struct {
     { MODE_OFFSET,        "Scanout buffer offset too high in FB."},
     { MODE_MINHEIGHT,     "Height too low."},
     { MODE_FIXED,         "Mode not compatible with fixed mode."},
+    { MODE_SCALE,         "Mode cannot be scaled to fixed mode."},
     { 0, NULL}
 };
 
-static const char *
-rhdModeStatusToString(int Status)
+const char *
+RHDModeStatusToString(int Status)
 {
     if ((Status & 0xFFF00) == RHD_MODE_STATUS) {
         int i;
@@ -1174,7 +1249,7 @@ rhdModeCreateFromName(ScrnInfoPtr pScrn, char *name, Bool Silent)
     if (!Silent)
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Rejected mode \"%s\" "
 		   "(%dx%d):\n\t %s\n", name, HDisplay, VDisplay,
-		   rhdModeStatusToString(Status));
+		   RHDModeStatusToString(Status));
     return NULL;
 }
 
@@ -1198,7 +1273,7 @@ rhdModesListValidateAndCopy(ScrnInfoPtr pScrn, DisplayModePtr Modes, Bool Silent
 		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Rejected mode \"%s\" "
 			   "(%dx%d:%3.1fMhz): %s\n", Mode->name,
 			   Mode->HDisplay, Mode->VDisplay,
-			   Mode->Clock / 1000.0, rhdModeStatusToString(Status));
+			   Mode->Clock / 1000.0, RHDModeStatusToString(Status));
 	    xfree(Mode->name);
 	    xfree(Mode);
 	}
@@ -1219,13 +1294,16 @@ rhdCreateModesListAndValidate(ScrnInfoPtr pScrn, Bool Silent)
     struct rhdOutput *Output;
     int i;
 
+    RHDFUNC(pScrn);
+
     /* Cycle through our monitors list, and find a fixed mode one */
     for (i = 0; i < 2; i++) {
 	Crtc = rhdPtr->Crtc[i];
 	for (Output = rhdPtr->Outputs; Output; Output = Output->Next) {
 	    if (Output->Active && (Output->Crtc == Crtc)) {
 		if (Output->Connector && Output->Connector->Monitor
-		    && Output->Connector->Monitor->UseFixedModes) {
+		    && Output->Connector->Monitor->UseFixedModes
+		    && !Crtc->ScaledToMode) {
 		    Modes = Output->Connector->Monitor->Modes;
 		    if (!Silent && Modes)
 			xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Validating Fixed"
@@ -1255,6 +1333,7 @@ rhdCreateModesListAndValidate(ScrnInfoPtr pScrn, Bool Silent)
     /* Cycle through our actual monitors list */
     for (i = 0; i < 2; i++) {
 	Crtc = rhdPtr->Crtc[i];
+
 	for (Output = rhdPtr->Outputs; Output; Output = Output->Next) {
 	    if (Output->Active && (Output->Crtc == Crtc)) {
 		if (Output->Connector && Output->Connector->Monitor) {
@@ -1284,6 +1363,8 @@ RHDModesPoolCreate(ScrnInfoPtr pScrn, Bool Silent)
     DisplayModePtr Pool = NULL, List, TempList, Temp;
     char **ModeNames = pScrn->display->modes;
     int i;
+
+    RHDFUNC(pScrn);
 
     List = rhdCreateModesListAndValidate(pScrn, Silent);
     if (!List)
@@ -1466,7 +1547,7 @@ RHDGetVirtualFromModesAndFilter(ScrnInfoPtr pScrn, DisplayModePtr Modes, Bool Si
 		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "%s rejected mode \"%s\" "
 			   "(%dx%d): %s\n", Crtc1->Name, Mode->name,
 			   Mode->HDisplay, Mode->VDisplay,
-			   rhdModeStatusToString(ret));
+			   RHDModeStatusToString(ret));
 		goto rejected;
 	    }
 
@@ -1477,7 +1558,7 @@ RHDGetVirtualFromModesAndFilter(ScrnInfoPtr pScrn, DisplayModePtr Modes, Bool Si
 		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "%s rejected mode \"%s\" "
 			   "(%dx%d): %s\n", Crtc2->Name, Mode->name,
 			   Mode->HDisplay, Mode->VDisplay,
-			   rhdModeStatusToString(ret));
+			   RHDModeStatusToString(ret));
 		goto rejected;
 	    }
 
@@ -1516,7 +1597,7 @@ RHDGetVirtualFromModesAndFilter(ScrnInfoPtr pScrn, DisplayModePtr Modes, Bool Si
 int
 RHDRRModeFixup(ScrnInfoPtr pScrn, DisplayModePtr Mode, struct rhdCrtc *Crtc,
 	       struct rhdConnector *Connector, struct rhdOutput *Output,
-	       struct rhdMonitor *Monitor)
+	       struct rhdMonitor *Monitor, Bool ScaledMode)
 {
     RHDPtr rhdPtr = RHDPTR(pScrn);
     int i, Status;
@@ -1525,90 +1606,99 @@ RHDRRModeFixup(ScrnInfoPtr pScrn, DisplayModePtr Mode, struct rhdCrtc *Crtc,
     ASSERT(Output);
     RHDFUNC(Output);
 
-    Status = rhdModeSanity(Mode);
+    Status = rhdModeSanity(rhdPtr, Mode);
     if (Status != MODE_OK)
         return Status;
 
     rhdModeFillOutCrtcValues(Mode);
 
-    /* We don't want to loop around this forever */
-    for (i = 10; i; i--) {
-        Mode->CrtcHAdjusted = FALSE;
-        Mode->CrtcVAdjusted = FALSE;
+    if (!ScaledMode) {
+	/* We don't want to loop around this forever */
+	for (i = 0; i < RHD_MODE_VALIDATION_LOOPS; i++) {
+	    Mode->CrtcHAdjusted = FALSE;
+	    Mode->CrtcVAdjusted = FALSE;
 
-	/* Sanitize */
-        Status = rhdModeCrtcSanity(Mode);
-        if (Status != MODE_OK)
-            return Status;
-        if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
-            continue;
-
-	if (Crtc) {
-	    /* Check FB */
-	    Status = Crtc->FBValid(Crtc, Mode->CrtcHDisplay, Mode->CrtcVDisplay,
-				   pScrn->bitsPerPixel, rhdPtr->FbScanoutStart,
-				   rhdPtr->FbScanoutSize, NULL);
-	    if (Status != MODE_OK)
-		return Status;
-
-	    /* Check Crtc */
-	    Status = Crtc->ModeValid(Crtc, Mode);
+	    /* Sanitize */
+	    Status = rhdModeCrtcSanity(Mode);
 	    if (Status != MODE_OK)
 		return Status;
 	    if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
 		continue;
 
-	    if (Crtc->ScaleValid) {
-		Status = Crtc->ScaleValid(Crtc, RHD_CRTC_SCALE_TYPE_NONE, Mode, NULL);
+	    if (Crtc) {
+		/* Check FB */
+		Status = Crtc->FBValid(Crtc, Mode->CrtcHDisplay, Mode->CrtcVDisplay,
+				       pScrn->bitsPerPixel, rhdPtr->FbScanoutStart,
+				       rhdPtr->FbScanoutSize, NULL);
+		if (Status != MODE_OK)
+		    return Status;
+
+		if (Crtc->ScaleValid) {
+		    Status = Crtc->ScaleValid(Crtc, RHD_CRTC_SCALE_TYPE_NONE, Mode, NULL);
+		    if (Status != MODE_OK)
+			return Status;
+		    if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
+			continue;
+		}
+
+		/* Check Crtc */
+		Status = Crtc->ModeValid(Crtc, Mode);
 		if (Status != MODE_OK)
 		    return Status;
 		if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
 		    continue;
+
+		/* Check PLL */
+		if (Crtc->PLL->Valid) {
+		    Status = Crtc->PLL->Valid(Crtc->PLL, Mode->Clock);
+		    if (Status != MODE_OK)
+			return Status;
+		    if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
+			continue;
+		}
 	    }
 
-	    /* Check PLL */
-	    if (Crtc->PLL->Valid) {
-		Status = Crtc->PLL->Valid(Crtc->PLL, Mode->Clock);
-		if (Status != MODE_OK)
-		    return Status;
-		if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
-		    continue;
-	    }
+	    /* Check Output */
+	    Status = Output->ModeValid(Output, Mode);
+	    if (Status != MODE_OK)
+		return Status;
+	    if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
+		continue;
+
+	    /* Check the monitor attached to this output */
+	    if (Connector->Monitor)
+		Status = rhdMonitorValid(Connector->Monitor, Mode);
+	    if (Status != MODE_OK)
+		return Status;
+	    if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
+		continue;
+
+	    /* Seems to be good */
+	    break;
 	}
 
-	/* Check Output */
-	Status = Output->ModeValid(Output, Mode);
-	if (Status != MODE_OK)
-	    return Status;
-	if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
-	    continue;
+	if (i == RHD_MODE_VALIDATION_LOOPS) {
+	    /* Mode has been bouncing around for ages, on adjustments */
+	    xf86DrvMsg(Output->scrnIndex, X_ERROR,
+		       "%s: Mode \"%s\" (%dx%d:%3.1fMhz) was thrown around"
+		       " for too long.\n", __func__, Mode->name,
+		       Mode->HDisplay, Mode->VDisplay, Mode->Clock/1000.0);
+	    return MODE_ERROR;
+	}
 
-	/* Check the monitor attached to this output */
-	if (Connector->Monitor)
-	    Status = rhdMonitorValid(Connector->Monitor, Mode);
-	if (Status != MODE_OK)
-	    return Status;
-	if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
-	    continue;
+	/* throw them at the configured monitor */
+	if (Monitor) {
+	    Status = rhdMonitorValid(Monitor, Mode);
+	    if (Status != MODE_OK)
+		return Status;
+	}
 
-	/* Seems to be good */
-	break;
-    }
-
-    if (!i) {
-	/* Mode has been bouncing around for ages, on adjustments */
-	xf86DrvMsg(Output->scrnIndex, X_ERROR,
-		   "%s: Mode \"%s\" (%dx%d:%3.1fMhz) was thrown around"
-		   " for too long.\n", __func__, Mode->name,
-		   Mode->HDisplay, Mode->VDisplay, Mode->Clock/1000.0);
-	return MODE_ERROR;
-    }
-
-    /* throw them at the configured monitor */
-    if (Monitor) {
-	Status = rhdMonitorValid(Monitor, Mode);
-	if (Status != MODE_OK)
-	    return Status;
+    } else {
+	if (Crtc) {
+	    Status = rhdModeValidateCrtc(Crtc, Mode, VALIDATE_SCALE_FROM);
+	    if (Status != MODE_OK)
+		return Status;
+	}
     }
 
     /* Did we set up virtual resolution already? */
@@ -1622,3 +1712,134 @@ RHDRRModeFixup(ScrnInfoPtr pScrn, DisplayModePtr Mode, struct rhdCrtc *Crtc,
     return MODE_OK;
 }
 
+/*
+ * RHDRRValidateScaledToMode(): like RHDValidateScaledMode() - but we cannot validate against a CRTC
+ * as this isn't known when this function is called. So at least validate against the 'output' here.
+ */
+int
+RHDRRValidateScaledToMode(struct rhdOutput *Output, DisplayModePtr Mode)
+{
+    RHDPtr rhdPtr = RHDPTRI(Output);
+    int Status;
+    int i;
+
+    RHDFUNC(Output);
+
+    Status = rhdModeSanity(rhdPtr, Mode);
+    if (Status != MODE_OK)
+        return Status;
+
+    rhdModeFillOutCrtcValues(Mode);
+
+    for (i = 0; i < RHD_MODE_VALIDATION_LOOPS; i++) {
+
+        Mode->CrtcHAdjusted = FALSE;
+        Mode->CrtcVAdjusted = FALSE;
+
+        Status = rhdModeCrtcSanity(Mode);
+        if (Status != MODE_OK)
+            return Status;
+        if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
+            continue;
+
+	/* Check the output */
+	Status = Output->ModeValid(Output, Mode);
+	if (Status != MODE_OK)
+	    return Status;
+	if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
+	    continue; /* restart. */
+
+	/* Check the monitor attached to this output */
+	if (Output->Connector && Output->Connector->Monitor)
+	    Status = rhdMonitorValid(Output->Connector->Monitor, Mode);
+	if (Status != MODE_OK)
+	    return Status;
+	if (Mode->CrtcHAdjusted || Mode->CrtcVAdjusted)
+	    continue;
+
+	break;
+    }
+
+    if (i == RHD_MODE_VALIDATION_LOOPS) {
+	/* Mode has been bouncing around for ages, on adjustments */
+	xf86DrvMsg(Output->scrnIndex, X_ERROR,
+		   "%s: Mode \"%s\" (%dx%d:%3.1fMhz) was thrown around"
+		   " for too long.\n", __func__, Mode->name,
+		   Mode->HDisplay, Mode->VDisplay, Mode->Clock/1000.0);
+	return MODE_ERROR;
+    }
+
+    /* Do we want to also validate against a configured monitor? */
+    if (rhdPtr->ConfigMonitor) {
+	Status = rhdMonitorValid(rhdPtr->ConfigMonitor, Mode);
+	if (Status != MODE_OK)
+	    return Status;
+    }
+
+    return MODE_OK;
+}
+
+/*
+ * RHDSynthModes(): synthesize CVT modes for well known resolutions.
+ * For now we assume we want reduced modes only.
+ */
+void
+RHDSynthModes(int scrnIndex, DisplayModePtr Mode)
+{
+    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    RHDPtr rhdPtr = RHDPTR(pScrn);
+    DisplayModePtr Tmp;
+    unsigned int i;
+
+    struct resolution{
+	int x;
+	int y;
+    } resolution_list[] = {
+	{  320,  200 },  /* CGA */
+	{  320,  240 },  /* QVGA */
+	{  640,  480 },  /* VGA */
+	{  720,  480 },  /* NTSC */
+	{  854,  480 },  /* WVGA */
+	{  768,  576 },  /* PAL */
+	{  800,  600 },  /* SVGA */
+	{ 1024,  768 },  /* XGA */
+	{ 1152,  768 },
+	{ 1280,  720 },  /* HD720 */
+	{ 1280,  960 },
+	{ 1280,  854 },
+	{ 1280,  960 },
+	{ 1280, 1024 },  /* SXGA */
+	{ 1440,  960 },
+ 	{ 1400, 1050 },  /* SXGA+ */
+	{ 1680, 1050 },  /* WSXGA+ */
+	{ 1600, 1200 },  /* UXGA */
+	{ 1920, 1080 },  /* HD1080 */
+	{ 1920, 1200 },  /* WUXGA */
+	{ 2048, 1536 },  /* QXGA */
+	{ 2560, 1600 },  /* WQXGA */
+	{ 2560, 2048 }   /* QSXGA */
+    };
+
+    RHDFUNC(pScrn);
+
+    for (i = 0; i < (sizeof(resolution_list) / sizeof(struct resolution)); i++) {
+	/*
+	 *  chances are that the native mode of a display is a CVT mode with 60 Hz.
+	 *  This will make RandR share the CRTC which is undesireable for scaling.
+	 *  This we 'tweak' the frequency to be slightly higher.
+	 *  Don't tell me it's ugly - I know this already.
+	 */
+	Tmp = RHDCVTMode(resolution_list[i].x, resolution_list[i].y, 60.5, TRUE, FALSE);
+	Tmp->status = MODE_OK;
+	rhdModeFillOutCrtcValues(Tmp);
+	xfree(Tmp->name);
+	Tmp->name = xnfalloc(20);
+	snprintf(Tmp->name, 20, "%ix%iScaled",resolution_list[i].x,resolution_list[i].y);
+	Tmp->type = M_T_BUILTIN;
+	if (rhdPtr->verbosity > 6) {
+	    xf86DrvMsg(scrnIndex, X_INFO, "%s: Adding Modeline ",__func__);
+	    RHDPrintModeline(Tmp);
+	}
+	RHDModesAdd(Mode, Tmp);
+    }
+}

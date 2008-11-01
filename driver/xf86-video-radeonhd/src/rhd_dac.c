@@ -43,7 +43,9 @@
 #include "rhd_output.h"
 #include "rhd_crtc.h"
 #include "rhd_regs.h"
-
+#ifdef ATOM_BIOS
+# include "rhd_atombios.h"
+#endif
 
 #define REG_DACA_OFFSET 0
 #define RV620_REG_DACA_OFFSET 0
@@ -84,19 +86,22 @@ DACSense(struct rhdOutput *Output, CARD32 offset, Bool TV)
     Enable = RHDRegRead(Output, offset + DACA_ENABLE);
 
     RHDRegWrite(Output, offset + DACA_ENABLE, 1);
+    /* ack autodetect */
+    RHDRegMask(Output, offset + DACA_AUTODETECT_INT_CONTROL, 0x01, 0x01);
     RHDRegMask(Output, offset + DACA_AUTODETECT_CONTROL, 0, 0x00000003);
     RHDRegMask(Output, offset + DACA_CONTROL2, 0, 0x00000001);
     RHDRegMask(Output, offset + DACA_CONTROL2, 0, 0x00ff0000);
 
-    if (TV)
-	RHDRegMask(Output, offset + DACA_CONTROL2, 0x00000100, 0x00000100);
-    else
-	RHDRegMask(Output, offset + DACA_CONTROL2, 0, 0x00000100);
-
+    if (offset) { /* We can do TV on DACA but only DACB has mux for separate connector */
+	if (TV)
+	    RHDRegMask(Output, offset + DACA_CONTROL2, 0x00000100, 0x00000100);
+	else
+	    RHDRegMask(Output, offset + DACA_CONTROL2, 0, 0x00000100);
+    }
     RHDRegWrite(Output, offset + DACA_FORCE_DATA, 0);
     RHDRegMask(Output, offset + DACA_CONTROL2, 0x00000001, 0x0000001);
 
-    RHDRegMask(Output, offset + DACA_COMPARATOR_ENABLE, 0x00070000, 0x00070000);
+    RHDRegMask(Output, offset + DACA_COMPARATOR_ENABLE, 0x00070000, 0x00070101);
     RHDRegWrite(Output, offset + DACA_CONTROL1, 0x00050802);
     RHDRegMask(Output, offset + DACA_POWERDOWN, 0, 0x00000001); /* Shut down Bandgap Voltage Reference Power */
     usleep(5);
@@ -135,8 +140,9 @@ DACSense(struct rhdOutput *Output, CARD32 offset, Bool TV)
  *
  */
 static enum rhdSensedOutput
-DACASense(struct rhdOutput *Output, enum rhdConnectorType Type)
+DACASense(struct rhdOutput *Output, struct rhdConnector *Connector)
 {
+    enum rhdConnectorType Type = Connector->Type;
     RHDFUNC(Output);
 
     switch (Type) {
@@ -146,20 +152,9 @@ DACASense(struct rhdOutput *Output, enum rhdConnectorType Type)
 	return  (DACSense(Output, REG_DACA_OFFSET, FALSE) == 0x7)
 	    ? RHD_SENSED_VGA
 	    : RHD_SENSED_NONE;
-    case RHD_CONNECTOR_TV:
-	switch (DACSense(Output, REG_DACA_OFFSET, TRUE) & 0x7) {
-	    case 0x7:
-		return RHD_SENSED_TV_COMPONENT;
-	    case 0x6:
-		return RHD_SENSED_TV_SVIDEO;
-	    case 0x1:
-		return RHD_SENSED_TV_COMPOSITE;
-	    default:
-		return RHD_SENSED_NONE;
-	}
     default:
 	xf86DrvMsg(Output->scrnIndex, X_WARNING,
-		   "%s: connector type %d is not supported.\n",
+		   "%s: connector type %d is not supported on DACA.\n",
 		   __func__, Type);
 	return RHD_SENSED_NONE;
     }
@@ -169,8 +164,9 @@ DACASense(struct rhdOutput *Output, enum rhdConnectorType Type)
  *
  */
 static enum rhdSensedOutput
-DACBSense(struct rhdOutput *Output, enum rhdConnectorType Type)
+DACBSense(struct rhdOutput *Output, struct rhdConnector *Connector)
 {
+    enum rhdConnectorType Type = Connector->Type;
     RHDFUNC(Output);
 
     switch (Type) {
@@ -193,10 +189,166 @@ DACBSense(struct rhdOutput *Output, enum rhdConnectorType Type)
 	}
     default:
 	xf86DrvMsg(Output->scrnIndex, X_WARNING,
-		   "%s: connector type %d is not supported.\n",
+		   "%s: connector type %d is not supported on DACB.\n",
 		   __func__, Type);
 	return RHD_SENSED_NONE;
     }
+}
+
+enum outputType {
+    TvPAL = 0,
+    TvNTSC,
+    VGA,
+    TvCV,
+    typeLast = VGA
+};
+
+/*
+ *
+ */
+static void
+DACGetElectrical(RHDPtr rhdPtr, enum outputType type, int dac, CARD8 *bandgap, CARD8 *whitefine)
+{
+#ifdef ATOM_BIOS
+    enum _AtomBiosRequestID bg = 0, wf = 0;
+    AtomBiosArgRec atomBiosArg;
+#endif
+    struct
+    {
+	CARD16 pciIdMin;
+	CARD16 pciIdMax;
+	CARD8 bandgap[2][4];
+	CARD8 whitefine[2][4];
+    } list[] = {
+	{ 0x791E, 0x791F,
+	  { { 0x07, 0x07, 0x07, 0x07 },
+	    { 0x07, 0x07, 0x07, 0x07 } },
+	  { { 0x09, 0x09, 0x04, 0x09 },
+	    { 0x09, 0x09, 0x04, 0x09 } },
+	},
+	{ 0x793F, 0x7942,
+	  { { 0x09, 0x09, 0x09, 0x09 },
+	    { 0x09, 0x09, 0x09, 0x09 } },
+	  { { 0x0a, 0x0a, 0x08, 0x0a },
+	    { 0x0a, 0x0a, 0x08, 0x0a } },
+	},
+	{ 0x9500, 0x9519,
+	  { { 0x00, 0x00, 0x00, 0x00 },
+	    { 0x00, 0x00, 0x00, 0x00 } },
+	  { { 0x00, 0x00, 0x20, 0x00 },
+	    { 0x25, 0x25, 0x26, 0x26 } },
+	},
+	{ 0, 0,
+	  { { 0, 0, 0, 0 },
+	    { 0, 0, 0, 0 } },
+	  { { 0, 0, 0, 0 },
+	    { 0, 0, 0, 0 } }
+	}
+    };
+
+    *bandgap = *whitefine = 0;
+
+#ifdef ATOM_BIOS
+    switch (type) {
+	case TvPAL:
+	    bg = ATOM_DAC2_PAL_BG_ADJ;
+	    wf = ATOM_DAC2_PAL_DAC_ADJ;
+	    break;
+	case TvNTSC:
+	    bg = ATOM_DAC2_NTSC_BG_ADJ;
+	    wf = ATOM_DAC2_NTSC_DAC_ADJ;
+	    break;
+	case TvCV:
+	    bg = ATOM_DAC2_CV_BG_ADJ;
+	    wf = ATOM_DAC2_CV_DAC_ADJ;
+	    break;
+	case VGA:
+	    switch (dac) {
+		case 0:
+		    bg = ATOM_DAC1_BG_ADJ;
+		    wf = ATOM_DAC1_DAC_ADJ;
+		    break;
+		default:
+		    bg = ATOM_DAC2_CRTC2_BG_ADJ;
+		    wf = ATOM_DAC2_CRTC2_DAC_ADJ;
+		    break;
+	    }
+	    break;
+    }
+    if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS, bg, &atomBiosArg)
+	== ATOM_SUCCESS) {
+	*bandgap = atomBiosArg.val;
+	RHDDebug(rhdPtr->scrnIndex, "%s: BandGap found in CompassionateData.\n",__func__);
+    }
+    if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS, wf, &atomBiosArg)
+	== ATOM_SUCCESS) {
+	*whitefine = atomBiosArg.val;
+	RHDDebug(rhdPtr->scrnIndex, "%s: WhiteFine found in CompassionateData.\n",__func__);
+    }
+    if (*whitefine == 0) {
+	CARD8 w_f = 0, b_g = 0;
+
+	if (atomBiosArg.val = 0x18,
+	    RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+				   ATOMBIOS_GET_CODE_DATA_TABLE,
+				   &atomBiosArg) == ATOM_SUCCESS) {
+	    struct AtomDacCodeTableData *data
+		= (struct AtomDacCodeTableData *)atomBiosArg.CommandDataTable.loc;
+	    if (atomBiosArg.CommandDataTable.size
+		< (sizeof (struct AtomDacCodeTableData) >> (dac ? 0 : 1))) { /* IGPs only have 1 DAC -> table_size / 2 */
+		xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR,
+			   "Code table data size: %i doesn't match expected size: %u\n",
+			   atomBiosArg.CommandDataTable.size,
+			   (unsigned int) sizeof (struct AtomDacCodeTableData));
+		return;
+	    }
+	    RHDDebug(rhdPtr->scrnIndex, "%s: WhiteFine found in Code Table.\n",__func__);
+	    switch (type) {
+		case TvPAL:
+		    w_f = dac ? data->DAC2PALWhiteFine : data->DAC1PALWhiteFine;
+		    b_g = dac ? data->DAC2PALBandGap : data->DAC1PALBandGap;
+		    break;
+		case TvNTSC:
+		    w_f = dac ? data->DAC2NTSCWhiteFine : data->DAC1NTSCWhiteFine;
+		    b_g = dac ? data->DAC2NTSCBandGap : data->DAC1NTSCBandGap;
+		    break;
+		case TvCV:
+		    w_f = dac ? data->DAC2CVWhiteFine : data->DAC1CVWhiteFine;
+		    b_g = dac ? data->DAC2CVBandGap : data->DAC1CVBandGap;
+		    break;
+		case VGA:
+		    w_f = dac ? data->DAC2VGAWhiteFine : data->DAC1VGAWhiteFine;
+		    b_g = dac ? data->DAC2VGABandGap : data->DAC1VGABandGap;
+		    break;
+	    }
+	    *whitefine = w_f;
+	    if (rhdPtr->ChipSet >= RHD_RV770)  /* Dunno why this is broken on older ASICs */
+		*bandgap = b_g;
+	}
+    }
+#endif
+    if (*bandgap == 0 || *whitefine == 0) {
+	int i = 0;
+	while (list[i].pciIdMin != 0) {
+	    if (list[i].pciIdMin <= rhdPtr->PciDeviceID
+		&& list[i].pciIdMax >= rhdPtr->PciDeviceID) {
+#if 0
+		ErrorF(">> %x %x %x -- %x %x\n",list[i].pciIdMin,
+		       rhdPtr->PciDeviceID,list[i].pciIdMax,
+		       list[i].bandgap[dac][type],list[i].whitefine[dac][type]);
+		ErrorF(">> %i %i\n",dac,type);
+#endif
+		if (*bandgap == 0) *bandgap = list[i].bandgap[dac][type];
+		if (*whitefine == 0) *whitefine = list[i].whitefine[dac][type];
+		break;
+	    }
+	    i++;
+	}
+	if (list[i].pciIdMin != 0)
+	    RHDDebug(rhdPtr->scrnIndex, "%s: BandGap and WhiteFine found in Table.\n",__func__);
+    }
+    RHDDebug(rhdPtr->scrnIndex, "%s: DAC[%i] BandGap: 0x%2.2x WhiteFine: 0x%2.2x\n",
+	     __func__, dac, *bandgap, *whitefine);
 }
 
 /*
@@ -206,61 +358,68 @@ static inline void
 DACSet(struct rhdOutput *Output, CARD16 offset)
 {
     RHDPtr rhdPtr = RHDPTRI(Output);
-    CARD32 source;
-    CARD32 mode;
-    CARD32 tv;
-    CARD32 powerdown;
-    CARD32 white_fine;
+    CARD8 Standard, WhiteFine, Bandgap;
+    Bool TV;
+    CARD32 Mask = 0;
 
-    switch (rhdPtr->tvMode) {
+    switch (Output->SensedType) {
+    case RHD_SENSED_TV_SVIDEO:
+    case RHD_SENSED_TV_COMPOSITE:
+	/* might want to selectively enable lines based on type */
+	TV = TRUE;
+
+	switch (rhdPtr->tvMode) {
 	case RHD_TV_NTSC:
 	case RHD_TV_NTSCJ:
-	    mode = 0x1;
+	    DACGetElectrical(rhdPtr, TvNTSC, offset ? 1 : 0, &Bandgap, &WhiteFine);
+	    Standard = 1; /* NTSC */
 	    break;
 	case RHD_TV_PAL:
 	case RHD_TV_PALN:
 	case RHD_TV_PALCN:
 	case RHD_TV_PAL60:
 	default:
-	    mode = 0x0;
+	    DACGetElectrical(rhdPtr, TvPAL, offset ? 1 : 0, &Bandgap, &WhiteFine);
+	    Standard = 0; /* PAL */
 	    break;
-    }
+	}
+	break;
 
-    white_fine = (offset > 0) ? 0x2000 : 0x2600;
-
-    switch (Output->SensedType) {
-	case RHD_SENSED_TV_SVIDEO:
-	    tv = 0x100;
-	    source = 0x2; /* tv encoder */
-	    powerdown = 0 /* 0x100 */;
-	    white_fine = 0x2500;
-	    break;
-	case RHD_SENSED_TV_COMPOSITE:
-	    tv = 0x100;
-	    source = 0x2; /* tv encoder */
-	    powerdown = 0 /* 0x1010000 */;
-	    white_fine = 0x2500;
-	    break;
 	case RHD_SENSED_TV_COMPONENT:
-	    mode = 3; /* HDTV */
-	    tv = 0x100; /* tv on?? */
-	    source = 0x2; /* tv encoder  ?? */
-	    powerdown = 0x0;
-	    break;
+	    TV = TRUE;
+	    DACGetElectrical(rhdPtr, TvCV, offset ? 1 : 0, &Bandgap, &WhiteFine);
+	    Standard = 3; /* HDTV */
+	break;
+
 	case RHD_SENSED_VGA:
 	default:
-	    mode = 2;
-	    tv = 0;
-	    source = Output->Crtc->Id;
-	    powerdown = 0;
-	    break;
+	    TV = FALSE;
+	    DACGetElectrical(rhdPtr, VGA, offset ? 1 : 0, &Bandgap, &WhiteFine);
+	    Standard = 2; /* VGA */
+	break;
     }
-    RHDRegMask(Output,  offset + DACB_CONTROL1, white_fine , 0xff00);
-    RHDRegMask(Output, offset + DACA_CONTROL1, mode, 0xff); /* no fine control yet */
-    RHDRegMask(Output,  offset + DACA_CONTROL2, tv, 0xff00); /* tv enable/disable */
-    RHDRegMask(Output,  offset + DACA_SOURCE_SELECT, source, 0x00000003);
-    RHDRegMask(Output,  offset + DACA_FORCE_OUTPUT_CNTL, 0x0701, 0x0701);
-    RHDRegMask(Output,  offset + DACA_FORCE_DATA, 0, 0x0000ffff);
+    if (Bandgap) Mask |= 0xFF << 16;
+    if (WhiteFine) Mask |= 0xFF << 8;
+
+    RHDRegMask(Output, offset + DACA_CONTROL1, Standard, 0x000000FF);
+    /* white level fine adjust */
+    RHDRegMask(Output, offset + DACA_CONTROL1, (Bandgap << 16) | (WhiteFine << 8), Mask);
+
+    if (TV) {
+	/* tv enable */
+	if (offset) /* TV mux only available on DACB */
+	    RHDRegMask(Output, offset + DACA_CONTROL2, 0x00000100, 0x0000FF00);
+	/* select tv encoder */
+	RHDRegMask(Output, offset + DACA_SOURCE_SELECT, 0x00000002, 0x00000003);
+    } else {
+	if (offset) /* TV mux only available on DACB */
+	    RHDRegMask(Output, offset + DACA_CONTROL2, 0, 0x0000FF00);
+	/* select a crtc */
+	RHDRegMask(Output, offset + DACA_SOURCE_SELECT, Output->Crtc->Id & 0x01, 0x00000003);
+    }
+
+    RHDRegMask(Output, offset + DACA_FORCE_OUTPUT_CNTL, 0x00000701, 0x00000701);
+    RHDRegMask(Output, offset + DACA_FORCE_DATA, 0, 0x0000FFFF);
 }
 
 /*
@@ -293,28 +452,30 @@ DACPower(struct rhdOutput *Output, CARD16 offset, int Power)
 {
     CARD32 powerdown;
 
+    RHDDebug(Output->scrnIndex, "%s(%s,%s)\n",__func__,Output->Name,
+	     rhdPowerString[Power]);
 
     switch (Power) {
     case RHD_POWER_ON:
 	switch (Output->SensedType) {
-	    case RHD_SENSED_TV_SVIDEO:
-		powerdown = 0 /* 0x100 */;
-		break;
-	    case RHD_SENSED_TV_COMPOSITE:
-		powerdown = 0 /* 0x1010000 */;
-		break;
-	    case RHD_SENSED_TV_COMPONENT:
-		powerdown = 0x0;
-		break;
-	    case RHD_SENSED_VGA:
-	    default:
-		powerdown = 0;
-		break;
+	case RHD_SENSED_TV_SVIDEO:
+	    powerdown = 0 /* 0x100 */;
+	    break;
+	case RHD_SENSED_TV_COMPOSITE:
+	    powerdown = 0 /* 0x1010000 */;
+	    break;
+	case RHD_SENSED_TV_COMPONENT:
+	    powerdown = 0;
+	    break;
+	case RHD_SENSED_VGA:
+	default:
+	    powerdown = 0;
+	    break;
 	}
  	RHDRegWrite(Output, offset + DACA_ENABLE, 1);
 	RHDRegWrite(Output, offset + DACA_POWERDOWN, 0);
 	usleep (14);
-	RHDRegMask(Output,  offset + DACA_POWERDOWN, powerdown, 0xffffff00);
+	RHDRegMask(Output,  offset + DACA_POWERDOWN, powerdown, 0xFFFFFF00);
 	usleep(2);
 	RHDRegWrite(Output, offset + DACA_FORCE_OUTPUT_CNTL, 0);
 	RHDRegMask(Output,  offset + DACA_SYNC_SELECT, 0, 0x00000101);
@@ -324,8 +485,8 @@ DACPower(struct rhdOutput *Output, CARD16 offset, int Power)
 	return;
     case RHD_POWER_SHUTDOWN:
     default:
-	RHDRegMask(Output, offset + DACA_FORCE_DATA, 0x0, 0xffff);
-	RHDRegMask(Output, offset + DACA_FORCE_OUTPUT_CNTL, 0x701, 0x701);
+	RHDRegMask(Output, offset + DACA_FORCE_DATA, 0, 0x0000FFFF);
+	RHDRegMask(Output, offset + DACA_FORCE_OUTPUT_CNTL, 0x0000701, 0x0000701);
 	RHDRegWrite(Output, offset + DACA_POWERDOWN, 0x01010100);
 	RHDRegWrite(Output, offset + DACA_POWERDOWN, 0x01010101);
 	RHDRegWrite(Output, offset + DACA_ENABLE, 0);
@@ -473,10 +634,12 @@ DACSenseRV620(struct rhdOutput *Output, CARD32 offset, Bool TV)
     DetectControl = RHDRegRead(Output, offset + RV620_DACA_AUTODETECT_CONTROL);
     CompEnable = RHDRegRead(Output, offset + RV620_DACA_COMPARATOR_ENABLE);
 
-    if (TV)
-	RHDRegMask(Output, offset + RV620_DACA_CONTROL2, 0x100, 0xff00);
-    else
-	RHDRegMask(Output, offset + RV620_DACA_CONTROL2, 0x00, 0xff00);
+    if (offset) {  /* We can do TV on DACA but only DACB has mux for separate connector */
+	if (TV)
+	    RHDRegMask(Output, offset + RV620_DACA_CONTROL2, 0x100, 0xff00);
+	else
+	    RHDRegMask(Output, offset + RV620_DACA_CONTROL2, 0x00, 0xff00);
+    }
     RHDRegMask(Output, offset + RV620_DACA_FORCE_DATA, 0x18, 0xffff);
     RHDRegMask(Output, offset + RV620_DACA_AUTODETECT_INT_CONTROL, 0x01, 0x01);
     RHDRegMask(Output, offset + RV620_DACA_AUTODETECT_CONTROL, 0x00, 0xff);
@@ -503,8 +666,9 @@ DACSenseRV620(struct rhdOutput *Output, CARD32 offset, Bool TV)
  *
  */
 static enum rhdSensedOutput
-DACASenseRV620(struct rhdOutput *Output, enum rhdConnectorType Type)
+DACASenseRV620(struct rhdOutput *Output, struct rhdConnector *Connector)
 {
+    enum rhdConnectorType Type = Connector->Type;
     RHDFUNC(Output);
 
     switch (Type) {
@@ -517,7 +681,7 @@ DACASenseRV620(struct rhdOutput *Output, enum rhdConnectorType Type)
 	switch (DACSenseRV620(Output, RV620_REG_DACA_OFFSET, TRUE)
 		& 0x1010100) {
 	    case 0x1010100:
-		return RHD_SENSED_TV_COMPONENT;
+		return RHD_SENSED_NONE; /* on DAC A we cannot distinguish VGA and CV */
 	    case 0x10100:
 		return RHD_SENSED_TV_SVIDEO;
 	    case 0x1000000:
@@ -537,8 +701,9 @@ DACASenseRV620(struct rhdOutput *Output, enum rhdConnectorType Type)
  *
  */
 static enum rhdSensedOutput
-DACBSenseRV620(struct rhdOutput *Output, enum rhdConnectorType Type)
+DACBSenseRV620(struct rhdOutput *Output, struct rhdConnector *Connector)
 {
+    enum rhdConnectorType Type = Connector->Type;
     RHDFUNC(Output);
 
     switch (Type) {
@@ -574,57 +739,60 @@ static inline void
 DACSetRV620(struct rhdOutput *Output, CARD16 offset)
 {
     RHDPtr rhdPtr = RHDPTRI(Output);
-    CARD32 source;
-    CARD32 mode;
-    CARD32 tv;
-    CARD32 white_fine;
-
-    switch (rhdPtr->tvMode) {
-	case RHD_TV_NTSC:
-	case RHD_TV_NTSCJ:
-	    white_fine = 0x2000;
-	    mode = 0x1;
-	    break;
-	case RHD_TV_PAL:
-	case RHD_TV_PALN:
-	case RHD_TV_PALCN:
-	case RHD_TV_PAL60:
-	default:
-	    white_fine = 0x2600;
-	    mode = 0x0;
-	    break;
-    }
+    CARD32 Source;
+    CARD32 Mode;
+    CARD32 TV;
+    CARD8 WhiteFine, Bandgap;
+    CARD32 Mask = 0;
 
     switch (Output->SensedType) {
 	case RHD_SENSED_TV_SVIDEO:
-	    tv = 0x100;
-	    source = 0x2; /* tv encoder */
-	    break;
 	case RHD_SENSED_TV_COMPOSITE:
-	    tv = 0x100;
-	    source = 0x2; /* tv encoder */
+	    TV = 0x1;
+	    Source = 0x2; /* tv encoder */
+	    switch (rhdPtr->tvMode) {
+		case RHD_TV_NTSC:
+		case RHD_TV_NTSCJ:
+		    DACGetElectrical(rhdPtr, TvNTSC, offset ? 1 : 0, &Bandgap, &WhiteFine);
+		    Mode = 1;
+		    break;
+		case RHD_TV_PAL:
+		case RHD_TV_PALN:
+		case RHD_TV_PALCN:
+		case RHD_TV_PAL60:
+		default:
+		    DACGetElectrical(rhdPtr, TvPAL, offset ? 1 : 0, &Bandgap, &WhiteFine);
+		    Mode = 0;
+		    break;
+	    }
 	    break;
 	case RHD_SENSED_TV_COMPONENT:
-	    white_fine = 0x2500;
-	    mode = 3; /* HDTV */
-	    tv = 0x100; /* tv on?? */
-	    source = 0x2; /* tv encoder  ?? */
+	    DACGetElectrical(rhdPtr, TvCV, offset ? 1 : 0, &Bandgap, &WhiteFine);
+	    Mode = 3; /* HDTV */
+	    TV = 0x1; /* tv on?? */
+	    Source = 0x2; /* tv encoder  ?? */
 	    break;
 	case RHD_SENSED_VGA:
 	default:
-	    white_fine = 0x2500;
-	    mode = 2;
-	    tv = 0;
-	    source = Output->Crtc->Id;
+	    DACGetElectrical(rhdPtr, VGA, offset ? 1 : 0, &Bandgap, &WhiteFine);
+	    Mode = 2;
+	    TV = 0;
+	    Source = Output->Crtc->Id;
 	    break;
     }
-    RHDRegWrite(Output, offset + RV620_DACA_MACRO_CNTL, mode); /* no fine control yet */
-    RHDRegMask(Output,  offset + RV620_DACA_SOURCE_SELECT, source, 0x00000003);
-    RHDRegMask(Output,  offset + RV620_DACA_CONTROL2, tv, 0x0100); /* tv enable/disable */
+    if (Bandgap) Mask |= 0xFF << 16;
+    if (WhiteFine) Mask |= 0xFF << 8;
+
+    RHDRegMask(Output, offset + RV620_DACA_MACRO_CNTL, Mode, 0xFF); /* no fine control yet */
+    RHDRegMask(Output,  offset + RV620_DACA_SOURCE_SELECT, Source, 0x00000003);
+    if (offset) /* TV mux only present on DACB */
+	RHDRegMask(Output,  offset + RV620_DACA_CONTROL2, TV << 8, 0x0100); /* tv enable/disable */
     /* use fine control from white_fine control register */
     RHDRegMask(Output, offset + RV620_DACA_AUTO_CALIB_CONTROL, 0x0, 0x4);
     RHDRegMask(Output, offset + RV620_DACA_BGADJ_SRC, 0x0, 0x30);
-    RHDRegMask(Output, offset + RV620_DACA_MACRO_CNTL, 0x210000 | white_fine, 0xffff00);
+    RHDRegMask(Output, offset + RV620_DACA_MACRO_CNTL, (Bandgap << 16) | (WhiteFine << 8), Mask);
+    /* Reset the FMT register on CRTC leading to this output */
+    Output->Crtc->FMTModeSet(Output->Crtc, NULL);
 }
 
 /*
@@ -667,7 +835,7 @@ DACPowerRV620(struct rhdOutput *Output, CARD16 offset, int Power)
 		    powerdown = 0 /* 0x1010000 */;
 		    break;
 		case RHD_SENSED_TV_COMPONENT:
-		    powerdown = 0x0;
+		    powerdown = 0;
 		    break;
 		case RHD_SENSED_VGA:
 		default:

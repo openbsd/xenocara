@@ -51,6 +51,9 @@ struct rhdCard {
     enum rhdCardFlag flags;
 
     struct rhdConnectorInfo ConnectorInfo[RHD_CONNECTORS_MAX];
+#ifdef ATOM_BIOS
+    enum atomDevice DeviceInfo[RHD_CONNECTORS_MAX][MAX_OUTPUTS_PER_CONNECTOR];
+#endif
 };
 
 void RhdPrintConnectorInfo(int scrnIndex, struct rhdConnectorInfo *cp);

@@ -133,6 +133,10 @@ rhdMonitorFromConfig(int scrnIndex, MonPtr Config)
         Monitor->ReducedAllowed = TRUE;
 #endif
 
+    /* allow user to override settings globally */
+    if (RHDPTRI(Monitor)->forceReduced.set)
+	Monitor->ReducedAllowed = RHDPTRI(Monitor)->forceReduced.val.bool;
+
 #ifdef MONREC_HAS_BANDWIDTH
     if (Config->maxPixClock)
         Monitor->Bandwidth = Config->maxPixClock;
@@ -175,6 +179,10 @@ rhdMonitorFromDefault(int scrnIndex, MonPtr Config)
     if (Config)
 	for (Mode = Config->Modes; Mode; Mode = Mode->next)
 	    Monitor->Modes = RHDModesAdd(Monitor->Modes, RHDModeCopy(Mode));
+
+    /* allow user to override settings globally */
+    if (RHDPTRI(Monitor)->forceReduced.set)
+	Monitor->ReducedAllowed = RHDPTRI(Monitor)->forceReduced.val.bool;
 
     return Monitor;
 }
@@ -276,8 +284,8 @@ rhdPanelEDIDModesFilter(struct rhdMonitor *Monitor)
     Best->next = NULL;
     Best->prev = NULL;
     Best->type |= M_T_PREFERRED;
-    Monitor->Modes = Best;
-
+    Monitor->NativeMode = Best;
+    Monitor->Modes = Monitor->NativeMode;
     Monitor->numHSync = 1;
     Monitor->HSync[0].lo = Best->HSync;
     Monitor->HSync[0].hi = Best->HSync;
@@ -309,6 +317,8 @@ rhdMonitorPanel(struct rhdConnector *Connector)
     struct rhdMonitor *Monitor;
     DisplayModeRec *Mode = NULL;
     xf86MonPtr EDID = NULL;
+
+    RHDFUNC(Connector);
 
     /* has priority over AtomBIOS EDID */
     if (Connector->DDC)
@@ -345,6 +355,7 @@ rhdMonitorPanel(struct rhdConnector *Connector)
     if (Mode) {
 	Monitor->Name = xstrdup("LVDS Panel");
 	Monitor->Modes = RHDModesAdd(Monitor->Modes, Mode);
+	Monitor->NativeMode = Mode;
 	Monitor->numHSync = 1;
 	Monitor->HSync[0].lo = Mode->HSync;
 	Monitor->HSync[0].hi = Mode->HSync;
@@ -397,7 +408,7 @@ rhdMonitorTV(struct rhdConnector *Connector)
     RHDFUNC(Connector);
 
     arg.tvMode = rhdPtr->tvMode;
-    if (RHDAtomBiosFunc(Connector->scrnIndex, rhdPtr->atomBIOS, 
+    if (RHDAtomBiosFunc(Connector->scrnIndex, rhdPtr->atomBIOS,
 			ATOM_ANALOG_TV_MODE, &arg)
 	!= ATOM_SUCCESS)
 	return NULL;
@@ -412,6 +423,7 @@ rhdMonitorTV(struct rhdConnector *Connector)
 
     Monitor->Name      = xstrdup("TV");
     Monitor->Modes     = RHDModesAdd(Monitor->Modes, Mode);
+    Monitor->NativeMode= Mode;
     Monitor->numHSync  = 1;
     Monitor->HSync[0].lo = Mode->HSync;
     Monitor->HSync[0].hi = Mode->HSync;
@@ -423,8 +435,8 @@ rhdMonitorTV(struct rhdConnector *Connector)
     /* TV should be driven at native resolution only. */
     Monitor->UseFixedModes = TRUE;
     Monitor->ReducedAllowed = FALSE;
-    /* 
-     *  hack: the TV encoder takes care of that. 
+    /*
+     *  hack: the TV encoder takes care of that.
      *  The mode that goes in isn't what comes out.
      */
     Mode->Flags &= ~(V_INTERLACE);
@@ -452,6 +464,7 @@ RHDMonitorInit(struct rhdConnector *Connector)
 	    Monitor = xnfcalloc(sizeof(struct rhdMonitor), 1);
 	    Monitor->scrnIndex = Connector->scrnIndex;
 	    Monitor->EDID      = EDID;
+	    Monitor->NativeMode = NULL;
 
 	    RHDMonitorEDIDSet(Monitor, EDID);
 	    rhdMonitorPrintEDID(Monitor, EDID);

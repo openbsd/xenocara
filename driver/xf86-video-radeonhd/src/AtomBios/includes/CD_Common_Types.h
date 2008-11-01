@@ -49,7 +49,7 @@ Revision History:
 		typedef __int32             int32_t;
 #elif defined (__linux__) || defined (__NetBSD__) \
     || defined(__sun) || defined(__OpenBSD__) \
-    || defined (__FreeBSD__) || defined(__DragonFly__)
+    || defined (__FreeBSD__) || defined(__DragonFly__) || defined(__GLIBC__)
 		typedef unsigned int uint32_t;
 		typedef int int32_t;
 	#else

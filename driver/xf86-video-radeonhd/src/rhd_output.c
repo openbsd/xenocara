@@ -34,6 +34,13 @@
 #include "rhd_output.h"
 #include "rhd_crtc.h"
 
+char *rhdPowerString[] = {
+    "POWER_ON",
+    "POWER_RESET",
+    "POWER_SHUTDOWN",
+    "POWER_UNKNOWN"
+};
+
 void
 RHDOutputAdd(RHDPtr rhdPtr, struct rhdOutput *New)
 {
@@ -163,6 +170,8 @@ RHDOutputsDestroy(RHDPtr rhdPtr)
 	if (Output->Destroy)
 	    Output->Destroy(Output);
 
+	if (Output->OutputDriverPrivate)
+	    xfree(Output->OutputDriverPrivate);
 	xfree(Output);
 
 	Output = Next;
@@ -175,7 +184,7 @@ RHDOutputsDestroy(RHDPtr rhdPtr)
 void
 RHDOutputPrintSensedType(struct rhdOutput *Output)
 {
-    struct { enum rhdSensedOutput type; char *name; } 
+    struct { enum rhdSensedOutput type; char *name; }
     list[] = { { RHD_SENSED_NONE, "none" },
 	     { RHD_SENSED_VGA, "VGA" },
 	     { RHD_SENSED_DVI, "DVI" },

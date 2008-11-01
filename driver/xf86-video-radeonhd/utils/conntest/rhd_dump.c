@@ -233,9 +233,37 @@ struct RHDDevice {
     { 0x1002, 0x958C, 2, RHD_R600},
     { 0x1002, 0x958D, 2, RHD_R600},
     { 0x1002, 0x958E, 2, RHD_R600},
+    { 0x1002, 0x958F, 2, RHD_R600},
+    { 0x1002, 0x9590, 2, RHD_RV620},
+    { 0x1002, 0x9591, 2, RHD_RV620},
+    { 0x1002, 0x9593, 2, RHD_RV620},
+    { 0x1002, 0x9594, 2, RHD_RV620},
+    { 0x1002, 0x9596, 2, RHD_RV620},
+    { 0x1002, 0x9597, 2, RHD_RV620},
     { 0x1002, 0x9598, 2, RHD_RV620},
+    { 0x1002, 0x9599, 2, RHD_RV620},
+    { 0x1002, 0x959B, 2, RHD_RV620},
+    { 0x1002, 0x95C0, 2, RHD_RV620},
+    { 0x1002, 0x95C2, 2, RHD_RV620},
+    { 0x1002, 0x95C4, 2, RHD_RV620},
     { 0x1002, 0x95C5, 2, RHD_RV620},
+    { 0x1002, 0x95C7, 2, RHD_RV620},
+    { 0x1002, 0x95CC, 2, RHD_RV620},
+    { 0x1002, 0x95CD, 2, RHD_RV620},
+    { 0x1002, 0x95CE, 2, RHD_RV620},
+    { 0x1002, 0x95CF, 2, RHD_RV620},
+    { 0x1002, 0x9610, 2, RHD_RV620},
+    { 0x1002, 0x9611, 2, RHD_RV620},
     { 0x1002, 0x9612, 2, RHD_RV620},
+    { 0x1002, 0x9613, 2, RHD_RV620},
+    { 0x1002, 0x9614, 2, RHD_RV620},
+    { 0x1002, 0x9440, 2, RHD_RV620},
+    { 0x1002, 0x9441, 2, RHD_RV620},
+    { 0x1002, 0x9442, 2, RHD_RV620},
+    { 0x1002, 0x9444, 2, RHD_RV620},
+    { 0x1002, 0x9446, 2, RHD_RV620},
+    { 0x1002, 0x944E, 2, RHD_RV620},
+    { 0x1002, 0x9456, 2, RHD_RV620},
     { 0, 0, 0, 0 }
 };
 
@@ -333,7 +361,7 @@ print_help(const char* progname, const char* message, const char* msgarg)
 {
 	if (message != NULL)
 	    fprintf(stderr, "%s %s\n", message, msgarg);
-	fprintf(stderr, "Usage: %s [start,end] PCI-tag\n"
+	fprintf(stderr, "Usage: %s [-r start,end | -w addr val] PCI-tag\n"
 			"       PCI-tag: bus:dev.func\n\n",
 		progname);
 }
@@ -355,12 +383,19 @@ main(int argc, char *argv[])
     int saved_errno;
     Bool deviceSet = FALSE;
     CARD32 start = DEFAULT_START, end = DEFAULT_END;
+    CARD32 addr, val;
+    enum {
+	NONE,
+	READ,
+	WRITE
+    } action = READ; /* default */
+
     int i;
     unsigned int j;
 
 
     printf("%s: v%s, %s\n",
-	   "rhd_conntest", PACKAGE_VERSION, GIT_MESSAGE);
+	   "rhd_dump", PACKAGE_VERSION, GIT_MESSAGE);
 
     /* init libpci */
     pciAccess = pci_alloc();
@@ -375,6 +410,8 @@ main(int argc, char *argv[])
 
     for (i = 1; i < argc; i++) {
 	if (!strncmp("-r",argv[i],3)) {
+	    action = READ;
+
 	    if (++i < argc)
 		ret = sscanf(argv[i], "%x,%x", &start, &end);
 	    else {
@@ -389,8 +426,30 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: range start 0x%4.4X not four byte aligned\n",argv[0], start);
 		return 1;
 	    }
-	}
-	else if (!strncmp("-",argv[i],1)) {
+	} else 	if (!strncmp("-w",argv[i],3)) {
+	    action = WRITE;
+
+	    if (++i < argc)
+		ret = sscanf(argv[i++], "%x", &addr);
+	    else {
+		i--;
+		ret = 0;
+	    }
+	    if (ret != 1) {
+		print_help(argv[0], "Unable to read addr: ", argv[i]);
+		return 1;
+	    }
+	    if (addr & 0x3) {
+		fprintf(stderr, "%s: addr 0x%4.4X not four byte aligned\n",argv[0], addr);
+		return 1;
+	    }
+	    if (i < argc)
+		ret = sscanf(argv[i], "%x", &val);
+	    else {
+		i--;
+		ret = 0;
+	    }
+	} else if (!strncmp("-",argv[i],1)) {
 	    print_help(argv[0], "Unknown option", argv[i]);
 	    return 1;
 	} else {
@@ -428,7 +487,12 @@ main(int argc, char *argv[])
 		    device->vendor_id, device->device_id, bus, dev, func);
 	    return 1;
 	}
+    } else {
+	fprintf(stderr, "No PCI tag provided. "
+		"Please provide a pci tag of the form xx:xx.x.\n");
+	return 1;
     }
+
 
     /* make sure we can actually read DEV_MEM before we do anything else */
     devMem = open(DEV_MEM, O_RDWR);
@@ -447,10 +511,16 @@ main(int argc, char *argv[])
     }
 
     ChipType = rhdDevice->type;
-
-    for (j = start; j <= end; j+=4) {
-	CARD32 val = RegRead(io, j);
-	printf("0x%4.4X: 0x%8.8X\n",j, val);
+    if (action == READ) {
+	for (j = start; j <= end; j+=4) {
+	    CARD32 val = RegRead(io, j);
+	    printf("0x%4.4X: 0x%8.8X\n",j, val);
+	}
+    } else if (action == WRITE) {
+	printf("Writing value: 0x%4.4X: 0x%8.8X\n",addr, val);
+	RegWrite(io, addr, val);
+	val = RegRead(io, addr);
+	printf("New value: 0x%4.4X: 0x%8.8X\n",addr, val);
     }
 
     return 0;

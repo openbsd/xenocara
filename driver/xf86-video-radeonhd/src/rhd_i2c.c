@@ -45,10 +45,36 @@
 #include "rhd_atombios.h"
 #endif
 
+#define RHD_I2C_STATUS_LOOPS 5000
+
+enum rhdDDClines {
+    rhdDdc1data = 0,
+    rhdDdc2data = 2,
+    rhdDdc3data = 4,
+    rhdDdc4data = 6, /* arbirarily choosen */
+    rhdVIP_DOUT_scl = 0x41,
+    rhdDvoData12 = 0x28,
+    rhdDdc1clk = 1,
+    rhdDdc2clk = 3,
+    rhdDdc3clk = 5,
+    rhdDdc4clk = 7, /* arbirarily choosen */
+    rhdVIP_DOUTvipclk = 0x42,
+    rhdDvoData13 = 0x29,
+    rhdDdcUnknown
+};
+
 typedef struct _rhdI2CRec
 {
     CARD16 prescale;
-    CARD8 line;
+    union {
+	CARD8 line;
+	struct i2cGpio {
+	    enum rhdDDClines Sda;
+	    enum rhdDDClines Scl;
+	    CARD32 SdaReg;
+	    CARD32 SclReg;
+	} Gpio;
+    } u;
     int scrnIndex;
 } rhdI2CRec;
 
@@ -173,6 +199,10 @@ enum _rhdRS69I2CBits {
     RS69_DC_I2C_SW_DONE_ACK   = (0x1 << 1),
     /* RS69_DC_I2C_SW_STATUS */
     RS69_DC_I2C_SW_DONE       = (0x1 << 2),
+    RS69_DC_I2C_SW_ABORTED    = (0x1 << 4),
+    RS69_DC_I2C_SW_TIMEOUT    = (0x1 << 5),
+    RS69_DC_I2C_SW_INTERRUPTED= (0x1 << 6),
+    RS69_DC_I2C_SW_BUFFER_OVERFLOW= (0x1 << 7),
     RS69_DC_I2C_SW_STOPPED_ON_NACK    = (0x1 << 8),
     RS69_DC_I2C_SW_NACK0      = (0x1 << 12),
     RS69_DC_I2C_SW_NACK1      = (0x1 << 13)
@@ -219,17 +249,139 @@ enum rv620I2CBits {
     RV62_GENERIC_I2C_INDEX    = (0xf << 16),
     RV62_GENERIC_I2C_INDEX_WRITE      = (0x1 << 31),
     /* GENERIC_I2C_PIN_SELECTION */
-    RV62_GENERIC_I2C_SCL_PIN_SEL      = (0x7f << 0),
-    RV62_GENERIC_I2C_SDA_PIN_SEL      = (0x7f << 8)
+    RV62_GENERIC_I2C_SCL_PIN_SEL_SHIFT = 0,
+    RV62_GENERIC_I2C_SCL_PIN_SEL      = (0x7f << RV62_GENERIC_I2C_SCL_PIN_SEL_SHIFT),
+    RV62_GENERIC_I2C_SDA_PIN_SEL_SHIFT = 8,
+    RV62_GENERIC_I2C_SDA_PIN_SEL      = (0x7f << RV62_GENERIC_I2C_SDA_PIN_SEL_SHIFT)
 };
+
+/*
+ *
+ */
+static enum rhdDDClines
+getDDCLineFromGPIO(int scrnIndex, CARD32 gpio, int shift)
+{
+    switch (gpio) {
+    case 0x1f90:
+	switch (shift) {
+	    case 0:
+		return rhdDdc1clk; /* ddc1 clk */
+	    case 8:
+		return rhdDdc1data; /* ddc1 data */
+	}
+	break;
+    case 0x1f94: /* ddc2 */
+	switch (shift) {
+	    case 0:
+		return rhdDdc2clk; /* ddc2 clk */
+	    case 8:
+		return rhdDdc2data; /* ddc2 data */
+	}
+	break;
+    case 0x1f98: /* ddc3 */
+	switch (shift) {
+	    case 0:
+		return rhdDdc3clk; /* ddc3 clk */
+	    case 8:
+		return rhdDdc3data; /* ddc3 data */
+	}
+    case 0x1f80: /* ddc4 - on r6xx */
+	switch (shift) {
+	    case 0:
+		return rhdDdc4clk; /* ddc4 clk */
+	    case 8:
+		return rhdDdc4data; /* ddc4 data */
+	}
+	break;
+    case 0x1f88: /* ddc5 */
+	switch (shift) {
+	    case 0:
+		return rhdVIP_DOUTvipclk; /* ddc5 clk */
+	    case 8:
+		return rhdVIP_DOUT_scl; /* ddc5 data */
+	}
+	break;
+    case 0x1fda: /* ddc6 */
+	switch (shift) {
+	    case 0:
+		return rhdDvoData13; /* ddc6 clk */
+	    case 1:
+		return rhdDvoData12; /* ddc6 data */
+	}
+	break;
+    }
+
+    xf86DrvMsg(scrnIndex, X_WARNING,
+	       "%s: Failed to match GPIO 0x%04X.%d with a known DDC line\n",
+	       __func__, (unsigned int) gpio, shift);
+    return rhdDdcUnknown;
+}
+
+/*
+ *
+ */
+static Bool
+rhdI2CGetDataClkLines(RHDPtr rhdPtr, int line,
+		      enum rhdDDClines *scl, enum rhdDDClines *sda,
+		      CARD32 *sda_reg, CARD32 *scl_reg)
+{
+#ifdef ATOM_BIOS
+    AtomBiosResult result;
+    AtomBiosArgRec data;
+
+    /* scl register */
+    data.val = line & 0x0f;
+    result = RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+			     ATOM_GPIO_I2C_CLK_MASK, &data);
+    if (result != ATOM_SUCCESS)
+	return FALSE;
+    *scl_reg = data.val;
+
+    /* scl DDC line */
+    data.val = line & 0x0f;
+    result = RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+			     ATOM_GPIO_I2C_CLK_MASK_SHIFT, &data);
+    if (result != ATOM_SUCCESS)
+	return FALSE;
+    *scl = getDDCLineFromGPIO(rhdPtr->scrnIndex, *scl_reg, data.val);
+
+    /* sda register */
+    data.val = line & 0x0f;
+    result = RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+			     ATOM_GPIO_I2C_DATA_MASK, &data);
+    if (result != ATOM_SUCCESS)
+	return FALSE;
+    *sda_reg = data.val;
+
+    /* sda DDC line */
+    data.val = line & 0x0f;
+    result = RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+			     ATOM_GPIO_I2C_DATA_MASK_SHIFT, &data);
+    if (result != ATOM_SUCCESS)
+	return FALSE;
+    *sda = getDDCLineFromGPIO(rhdPtr->scrnIndex, *sda_reg, data.val);
+
+    if ((*scl == rhdDdcUnknown) || (*sda == rhdDdcUnknown)) {
+	xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING,
+		   "%s: failed to map gpio lines for DDC line %d\n",
+		   __func__, line);
+	return FALSE;
+    }
+
+    return TRUE;
+#else /* ATOM_BIOS */
+    return FALSE;
+#endif
+}
 
 /* R5xx */
 static Bool
 rhd5xxI2CSetupStatus(I2CBusPtr I2CPtr, int line)
 {
+    RHDFUNC(I2CPtr);
+
     line &= 0xf;
 
-    RHDFUNC(I2CPtr);
 
     switch (line) {
 	case 0:
@@ -259,7 +411,7 @@ rhd5xxI2CSetupStatus(I2CBusPtr I2CPtr, int line)
 static Bool
 rhd5xxI2CStatus(I2CBusPtr I2CPtr)
 {
-    int count = 5000;
+    int count = RHD_I2C_STATUS_LOOPS;
     CARD32 res;
 
     RHDFUNC(I2CPtr);
@@ -281,13 +433,12 @@ rhd5xxI2CStatus(I2CBusPtr I2CPtr)
 }
 
 Bool
-rhd5xxWriteReadChunk(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer,
+rhd5xxWriteReadChunk(I2CDevPtr i2cDevPtr, int line, I2CByte *WriteBuffer,
 		int nWrite, I2CByte *ReadBuffer, int nRead)
 {
     I2CSlaveAddr slave = i2cDevPtr->SlaveAddr;
-    rhdI2CPtr I2C = (rhdI2CPtr)(i2cDevPtr->pI2CBus->DriverPrivate.ptr);
     I2CBusPtr I2CPtr = i2cDevPtr->pI2CBus;
-    CARD8 line = I2C->line;
+    rhdI2CPtr I2C = (rhdI2CPtr)(I2CPtr->DriverPrivate.ptr);
     int prescale = I2C->prescale;
     CARD32 save_I2C_CONTROL1, save_494;
     CARD32  tmp32;
@@ -399,6 +550,7 @@ rhd5xxWriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer, int nWrite, I2CByte *
      */
 
     I2CBusPtr I2CPtr = i2cDevPtr->pI2CBus;
+    int  ddc_line;
 
     RHDFUNC(I2CPtr);
 
@@ -409,13 +561,16 @@ rhd5xxWriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer, int nWrite, I2CByte *
 		   __func__);
 	return FALSE;
     }
-    rhd5xxI2CSetupStatus(I2CPtr, ((rhdI2CPtr)(I2CPtr->DriverPrivate.ptr))->line);
+
+    ddc_line = ((rhdI2CPtr)(I2CPtr->DriverPrivate.ptr))->u.line;
+
+    rhd5xxI2CSetupStatus(I2CPtr, ddc_line);
 
     if (nRead > 15) {
 	I2CByte offset = *WriteBuffer;
 	while (nRead) {
 	    int n = nRead > 15 ? 15 : nRead;
-	    if (!rhd5xxWriteReadChunk(i2cDevPtr, &offset, 1, ReadBuffer, n))
+	    if (!rhd5xxWriteReadChunk(i2cDevPtr, ddc_line, &offset, 1, ReadBuffer, n))
 		return FALSE;
 	    ReadBuffer += n;
 	    nRead -= n;
@@ -423,7 +578,7 @@ rhd5xxWriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer, int nWrite, I2CByte *
 	}
 	return TRUE;
     } else
-	return rhd5xxWriteReadChunk(i2cDevPtr, WriteBuffer, nWrite,
+	return rhd5xxWriteReadChunk(i2cDevPtr, ddc_line, WriteBuffer, nWrite,
 	    ReadBuffer, nRead);
 }
 
@@ -431,73 +586,83 @@ rhd5xxWriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer, int nWrite, I2CByte *
 static Bool
 rhdRS69I2CStatus(I2CBusPtr I2CPtr)
 {
-    int count = 5000;
     volatile CARD32 val;
+    int i;
 
     RHDFUNC(I2CPtr);
 
-    while (--count) {
-
+    for (i = 0; i < RHD_I2C_STATUS_LOOPS; i++) {
 	usleep(10);
+
 	val = RHDRegRead(I2CPtr, RS69_DC_I2C_SW_STATUS);
-	RHDDebugVerb(I2CPtr->scrnIndex,1,"SW_STATUS: 0x%x %i\n",(unsigned int)val,count);
+
+	RHDDebugVerb(I2CPtr->scrnIndex, 1, "SW_STATUS: 0x%x %i\n",
+		     (unsigned int) val, i);
+
 	if (val & RS69_DC_I2C_SW_DONE)
 	    break;
     }
+
     RHDRegMask(I2CPtr, RS69_DC_I2C_INTERRUPT_CONTROL, RS69_DC_I2C_SW_DONE_ACK,
 	       RS69_DC_I2C_SW_DONE_ACK);
-    if (!count || (val & (RS69_DC_I2C_SW_STOPPED_ON_NACK | RS69_DC_I2C_SW_NACK0 | RS69_DC_I2C_SW_NACK1 | 0x3)))
+
+    if ((i == RHD_I2C_STATUS_LOOPS) ||
+	(val & (RS69_DC_I2C_SW_ABORTED | RS69_DC_I2C_SW_TIMEOUT |
+		RS69_DC_I2C_SW_INTERRUPTED | RS69_DC_I2C_SW_BUFFER_OVERFLOW |
+		RS69_DC_I2C_SW_STOPPED_ON_NACK |
+		RS69_DC_I2C_SW_NACK0 | RS69_DC_I2C_SW_NACK1 | 0x3)))
 	return FALSE; /* 2 */
+
     return TRUE; /* 1 */
 }
 
 static Bool
-rhdRS69I2CSetupStatus(I2CBusPtr I2CPtr, int line, int prescale)
+rhdRS69I2CSetupStatus(I2CBusPtr I2CPtr, enum rhdDDClines sda, enum rhdDDClines scl, int prescale)
 {
-    CARD32 ddc;
-    unsigned int clk_line = 0; /* invalid clk register */
+    CARD32 clk_pin, data_pin;
 
     RHDFUNC(I2CPtr);
 
-#ifdef ATOM_BIOS
-    {
-	RHDPtr rhdPtr = RHDPTR(xf86Screens[I2CPtr->scrnIndex]);
-	AtomBiosArgRec atomBiosArg;
-
-	atomBiosArg.val = line & 0xf;
-	if (ATOM_SUCCESS != RHDAtomBiosFunc(rhdPtr->scrnIndex,
-					    rhdPtr->atomBIOS,
-					    ATOM_GPIO_I2C_CLK_MASK,
-					    &atomBiosArg))
+    switch (sda) {
+	case rhdDdc1data:
+	    data_pin = 0;
+	    break;
+	case rhdDdc2data:
+	    data_pin = 1;
+	    break;
+	case rhdDdc3data:
+	    data_pin = 2;
+	    break;
+	default:
 	    return FALSE;
-	clk_line = atomBiosArg.val;
-#endif /* ATOM_BIOS */
-
-	/* add SDVO handling later */
-	switch (clk_line) {
-	    case 0x1f90:
-		ddc = 0; /* ddc1 */
-		break;
-	    case 0x1f94: /* ddc2 */
-		ddc = 1;
-		break;
-	    case 0x1f98: /* ddc3 */
-		ddc = 2;
-		break;
-	    default:
-		xf86DrvMsg(I2CPtr->scrnIndex, X_ERROR, "Invalid ClkLine for DDC. "
-			   "AtomBIOS reported wrong or AtomBIOS unavailable\n");
-		return FALSE;
-	}
-
-	RHDDebug(I2CPtr->scrnIndex, "%s: DDC Line: %i val: %i port: 0x%x\n",
-		 __func__, line & 0xf, ddc, atomBiosArg.val);
+    }
+    switch (scl) {
+	case rhdDdc1data:
+	    clk_pin = 4;
+	    break;
+	case rhdDdc2data:
+	    clk_pin = 5;
+	    break;
+	case rhdDdc3data:
+	    clk_pin = 6;
+	    break;
+	case rhdDdc1clk:
+	    clk_pin = 0;
+	    break;
+	case rhdDdc2clk:
+	    clk_pin = 1;
+	    break;
+	case rhdDdc3clk:
+	    clk_pin = 2;
+	    break;
+	default:
+	    return FALSE;
     }
 
     RHDRegMask(I2CPtr, 0x28, 0x200, 0x200);
     RHDRegMask(I2CPtr, RS69_DC_I2C_UNKNOWN_1, prescale << 16 | 0x2, 0xffff00ff);
     RHDRegWrite(I2CPtr, RS69_DC_I2C_DDC_SETUP_Q, 0x30000000);
-    RHDRegMask(I2CPtr, RS69_DC_I2C_CONTROL, ((line & 0x3) << 16) | (ddc << 8), 0xffff00);
+    RHDRegMask(I2CPtr, RS69_DC_I2C_CONTROL, ((data_pin & 0x3) << 16) | (clk_pin << 8), 0xffff00);
     RHDRegMask(I2CPtr, RS69_DC_I2C_INTERRUPT_CONTROL, 0x2, 0x2);
     RHDRegMask(I2CPtr, RS69_DC_I2C_UNKNOWN_2, 0x2, 0xff);
 
@@ -513,7 +678,6 @@ rhdRS69WriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer,
     I2CBusPtr I2CPtr = i2cDevPtr->pI2CBus;
     I2CSlaveAddr slave = i2cDevPtr->SlaveAddr;
     rhdI2CPtr I2C = (rhdI2CPtr)I2CPtr->DriverPrivate.ptr;
-    CARD8 line = I2C->line;
     int prescale = I2C->prescale;
     int idx = 1;
 
@@ -541,7 +705,7 @@ rhdRS69WriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer,
 	return FALSE;
     }
 
-    if (!rhdRS69I2CSetupStatus(I2CPtr, line,  prescale))
+    if (!rhdRS69I2CSetupStatus(I2CPtr, I2C->u.Gpio.Sda, I2C->u.Gpio.Scl,  prescale))
 	return FALSE;
 
     RHDRegMask(I2CPtr, RS69_DC_I2C_CONTROL, (trans == TRANS_WRITE_READ)
@@ -601,23 +765,33 @@ rhdRS69WriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer,
 static Bool
 rhdR6xxI2CStatus(I2CBusPtr I2CPtr)
 {
-    int count = 5000;
     volatile CARD32 val;
+    int i;
 
     RHDFUNC(I2CPtr);
 
-    while (--count) {
-
+    for (i = 0; i < RHD_I2C_STATUS_LOOPS; i++) {
 	usleep(10);
+
 	val = RHDRegRead(I2CPtr, R6_DC_I2C_SW_STATUS);
-	RHDDebugVerb(I2CPtr->scrnIndex,1,"SW_STATUS: 0x%x %i\n",(unsigned int)val,count);
+
+	RHDDebugVerb(I2CPtr->scrnIndex, 1, "SW_STATUS: 0x%x %i\n",
+		     (unsigned int) val, i);
+
 	if (val & R6_DC_I2C_SW_DONE)
 	    break;
     }
+
     RHDRegMask(I2CPtr, R6_DC_I2C_INTERRUPT_CONTROL, R6_DC_I2C_SW_DONE_ACK,
 	       R6_DC_I2C_SW_DONE_ACK);
-    if (!count || (val & (R6_DC_I2C_SW_STOPPED_ON_NACK | R6_DC_I2C_SW_NACK0 | R6_DC_I2C_SW_NACK1 | 0x3)))
+
+    if ((i == RHD_I2C_STATUS_LOOPS) ||
+	(val & (R6_DC_I2C_SW_ABORTED | R6_DC_I2C_SW_TIMEOUT |
+		R6_DC_I2C_SW_INTERRUPTED | R6_DC_I2C_SW_BUFFER_OVERFLOW |
+		R6_DC_I2C_SW_STOPPED_ON_NACK |
+		R6_DC_I2C_SW_NACK0 | R6_DC_I2C_SW_NACK1 | 0x3)))
 	return FALSE; /* 2 */
+
     return TRUE; /* 1 */
 }
 
@@ -681,10 +855,9 @@ rhd6xxWriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer, int nWrite, I2CByte *
     I2CBusPtr I2CPtr = i2cDevPtr->pI2CBus;
     I2CSlaveAddr slave = i2cDevPtr->SlaveAddr;
     rhdI2CPtr I2C = (rhdI2CPtr)I2CPtr->DriverPrivate.ptr;
-    CARD8 line = I2C->line;
+    CARD32 ddc_line = I2C->u.line;
     int prescale = I2C->prescale;
     int idx = 1;
-
     enum {
 	TRANS_WRITE_READ,
 	TRANS_WRITE,
@@ -709,7 +882,7 @@ rhd6xxWriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer, int nWrite, I2CByte *
 	return FALSE;
     }
 
-    if (!rhd6xxI2CSetupStatus(I2CPtr, line,  prescale))
+    if (!rhd6xxI2CSetupStatus(I2CPtr, ddc_line,  prescale))
 	return FALSE;
 
     RHDRegMask(I2CPtr, R6_DC_I2C_CONTROL, (trans == TRANS_WRITE_READ)
@@ -768,84 +941,53 @@ rhd6xxWriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer, int nWrite, I2CByte *
 static Bool
 rhdRV620I2CStatus(I2CBusPtr I2CPtr)
 {
-    int count = 5000;
     volatile CARD32 val;
+    int i;
 
     RHDFUNC(I2CPtr);
 
-    while (--count) {
-
+    for (i = 0; i < RHD_I2C_STATUS_LOOPS; i++) {
 	usleep(10);
+
 	val = RHDRegRead(I2CPtr, RV62_GENERIC_I2C_STATUS);
-	RHDDebugVerb(I2CPtr->scrnIndex,1,
-		     "SW_STATUS: 0x%x %i\n",(unsigned int)val,count);
+
+	RHDDebugVerb(I2CPtr->scrnIndex, 1,
+		     "SW_STATUS: 0x%x %i\n", (unsigned int) val, i);
 	if (val & RV62_GENERIC_I2C_DONE)
 	    break;
     }
+
     RHDRegMask(I2CPtr, RV62_GENERIC_I2C_INTERRUPT_CONTROL, 0x2, 0xff);
 
-    if (!count
-	|| (val & (RV62_GENERIC_I2C_STOPPED_ON_NACK | RV62_GENERIC_I2C_NACK
-		| RV62_GENERIC_I2C_ABORTED | RV62_GENERIC_I2C_TIMEOUT)))
+    if ((i == RHD_I2C_STATUS_LOOPS) ||
+	(val & (RV62_GENERIC_I2C_STOPPED_ON_NACK | RV62_GENERIC_I2C_NACK |
+		RV62_GENERIC_I2C_ABORTED | RV62_GENERIC_I2C_TIMEOUT)))
 	return FALSE; /* 2 */
 
     return TRUE; /* 1 */
 }
 
+/*
+ *
+ */
 static  Bool
-rhdRV620I2CSetupStatus(I2CBusPtr I2CPtr, int line, int prescale)
+rhdRV620I2CSetupStatus(I2CBusPtr I2CPtr, struct i2cGpio *Gpio, int prescale)
 {
     CARD32 reg_7d9c = 0; /* 0 is invalid */
-#ifdef ATOM_BIOS
-    RHDPtr rhdPtr = RHDPTRI(I2CPtr);
-    AtomBiosArgRec data;
-    int i = 0;
-    struct atomGPIOTable {
-	unsigned char line;
-	unsigned char pad;
-	unsigned short reg_7d9c;
-    } *table;
+    CARD32 scl_reg;
 
     RHDFUNC(I2CPtr);
 
-    if (line > 3)
-	return FALSE;
+    scl_reg = Gpio->SclReg;
+    reg_7d9c = (Gpio->Scl << RV62_GENERIC_I2C_SCL_PIN_SEL_SHIFT)
+	| (Gpio->Sda << RV62_GENERIC_I2C_SDA_PIN_SEL_SHIFT);
 
-    data.val = 0x36;
-    if (RHDAtomBiosFunc(I2CPtr->scrnIndex,
-			rhdPtr->atomBIOS,
-			ATOMBIOS_GET_CODE_DATA_TABLE,
-			&data) == ATOM_SUCCESS) {
+    scl_reg = Gpio->SclReg;
+    /* Don't understand this yet */
+    if (scl_reg == 0x1fda)
+	scl_reg = 0x1f90;
 
-	table = (struct atomGPIOTable *)data.CommandDataTable.loc;
-
-	while (i * sizeof(struct atomGPIOTable) < data.CommandDataTable.size) {
-
-	    if (table[i].line == line) {
-
-		reg_7d9c = table[i].reg_7d9c;
-
-		DEBUGP( ErrorF("Line[%i] = 0x%4.4x\n",line, reg_7d9c)) ;
-
-		break;
-	    }
-	    i++;
-	}
-    }
-    if (!reg_7d9c)
-#endif
-    {
-	CARD32 regList7d9c[] = { 0x1, 0x0203 };
-	if (line > 1)
-	    return FALSE;
-
-	reg_7d9c = regList7d9c[line];
-    }
-
-    RHDRegWrite(I2CPtr, 0x7e40, 0);
-    RHDRegWrite(I2CPtr, 0x7e50, 0);
-    RHDRegWrite(I2CPtr, 0x7e60, 0);
-    RHDRegWrite(I2CPtr, 0x7e20, 0);
+    RHDRegWrite(I2CPtr, scl_reg << 2, 0);
 
     RHDRegWrite(I2CPtr, RV62_GENERIC_I2C_PIN_SELECTION, reg_7d9c);
     RHDRegMask(I2CPtr, RV62_GENERIC_I2C_SPEED,
@@ -868,7 +1010,7 @@ rhdRV620Transaction(I2CDevPtr i2cDevPtr, Bool Write, I2CByte *Buffer, int count)
 
 #define MAX 8
 
-    while (count > 0) {
+    while (count > 0 || (Write && Start)) {
 	int num;
 	int idx = 0;
 	CARD32 data = 0;
@@ -942,14 +1084,13 @@ rhdRV620WriteRead(I2CDevPtr i2cDevPtr, I2CByte *WriteBuffer, int nWrite, I2CByte
 {
     I2CBusPtr I2CPtr = i2cDevPtr->pI2CBus;
     rhdI2CPtr I2C = (rhdI2CPtr)I2CPtr->DriverPrivate.ptr;
-    CARD8 line = I2C->line;
     int prescale = I2C->prescale;
 
     RHDFUNC(I2C);
 
-    rhdRV620I2CSetupStatus(I2CPtr, line, prescale);
+    rhdRV620I2CSetupStatus(I2CPtr, &I2C->u.Gpio, prescale);
 
-    if (nWrite)
+    if (nWrite || !nRead)
 	if (!rhdRV620Transaction(i2cDevPtr, TRUE, WriteBuffer, nWrite))
 	    return FALSE;
     if (nRead)
@@ -982,7 +1123,9 @@ rhdTearDownI2C(I2CBusPtr *I2C)
 }
 
 #define TARGET_HW_I2C_CLOCK 25 /*  kHz */
-#define DEFAULT_ENGINE_CLOCK 700000 /* kHz (guessed) */
+#define DEFAULT_ENGINE_CLOCK 453000 /* kHz (guessed) */
+#define DEFAULT_REF_CLOCK 27000
+
 static CARD32
 rhdGetI2CPrescale(RHDPtr rhdPtr)
 {
@@ -991,18 +1134,26 @@ rhdGetI2CPrescale(RHDPtr rhdPtr)
     RHDFUNC(rhdPtr);
 
     if (rhdPtr->ChipSet < RHD_R600) {
-	RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
-			GET_DEFAULT_ENGINE_CLOCK, &atomBiosArg);
-	return (0x7f << 8)
-	    + (atomBiosArg.val / (4 * 0x7f * TARGET_HW_I2C_CLOCK));
+	if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+			    GET_DEFAULT_ENGINE_CLOCK, &atomBiosArg)
+	    == ATOM_SUCCESS)
+	    return (0x7f << 8)
+		+ (atomBiosArg.val / (4 * 0x7f * TARGET_HW_I2C_CLOCK));
+	else
+	    return (0x7f << 8)
+		+ (DEFAULT_ENGINE_CLOCK / (4 * 0x7f * TARGET_HW_I2C_CLOCK));
     } else if (rhdPtr->ChipSet < RHD_RV620) {
-	RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
-			GET_REF_CLOCK, &atomBiosArg);
-	return (atomBiosArg.val / TARGET_HW_I2C_CLOCK);
+	if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+			    GET_REF_CLOCK, &atomBiosArg) == ATOM_SUCCESS)
+	    return (atomBiosArg.val / TARGET_HW_I2C_CLOCK);
+	else
+	    return (DEFAULT_REF_CLOCK / TARGET_HW_I2C_CLOCK);
     } else {
-	RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
-			GET_REF_CLOCK, &atomBiosArg);
-	return (atomBiosArg.val / (4 * TARGET_HW_I2C_CLOCK));
+	if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+			    GET_REF_CLOCK, &atomBiosArg) == ATOM_SUCCESS)
+	    return (atomBiosArg.val / (4 * TARGET_HW_I2C_CLOCK));
+	else
+	    return (DEFAULT_REF_CLOCK / (4 * TARGET_HW_I2C_CLOCK));
     }
 #else
     RHDFUNC(rhdPtr);
@@ -1010,10 +1161,10 @@ rhdGetI2CPrescale(RHDPtr rhdPtr)
     if (rhdPtr->ChipSet < RHD_R600) {
 	return (0x7f << 8)
 	    + (DEFAULT_ENGINE_CLOCK) / (4 * 0x7f * TARGET_HW_I2C_CLOCK);
-    } else if {rhdPtr->ChipSet < RHD_RV620) {
-	return (DEFAULT_ENGINE_CLOCK / TARGET_HW_I2C_CLOCK);
+    } else if (rhdPtr->ChipSet < RHD_RV620) {
+	return (DEFAULT_REF_CLOCK / TARGET_HW_I2C_CLOCK);
     } else
-	  return (DEFAULT_ENGINE_CLOCK / (4 * TARGET_HW_I2C_CLOCK));
+	  return (DEFAULT_REF_CLOCK / (4 * TARGET_HW_I2C_CLOCK));
 #endif
 }
 
@@ -1040,10 +1191,20 @@ rhdInitI2C(int scrnIndex)
     I2CBusPtr I2CPtr = NULL;
     RHDPtr rhdPtr = RHDPTR(xf86Screens[scrnIndex]);
     I2CBusPtr *I2CList;
-    int numLines = (rhdPtr->ChipSet < RHD_R600) ? 3 : I2C_LINES;
+    int numLines;
     CARD16 prescale = rhdGetI2CPrescale(rhdPtr);
+    enum rhdDDClines sda = 0, scl = 0;
+    CARD32 scl_reg = 0, sda_reg = 0;
+    Bool valid;
 
     RHDFUNCI(scrnIndex);
+
+    if (rhdPtr->ChipSet < RHD_RS600)
+	numLines = 3;
+    else if (rhdPtr->ChipSet < RHD_R600)
+	numLines = 4;
+    else
+	numLines = I2C_LINES;
 
     if (!(I2CList = xcalloc(I2C_LINES, sizeof(I2CBusPtr)))) {
 	xf86DrvMsg(scrnIndex, X_ERROR,
@@ -1057,6 +1218,80 @@ rhdInitI2C(int scrnIndex)
 	    goto error;
 	}
 	I2C->scrnIndex = scrnIndex;
+
+	valid = rhdI2CGetDataClkLines(rhdPtr, i, &scl, &sda, &sda_reg, &scl_reg);
+	if (rhdPtr->ChipSet < RHD_RS600
+	    || (rhdPtr->ChipSet > RHD_RS740 && rhdPtr->ChipSet < RHD_RV620)) {
+
+	    if (valid) {
+		if (sda == rhdDdc1data && scl == rhdDdc1clk)
+		    I2C->u.line = 0;
+		else if (sda == rhdDdc2data && scl == rhdDdc2clk)
+		    I2C->u.line = 1;
+		else if (sda == rhdDdc3data && scl == rhdDdc3clk)
+		    I2C->u.line = 2;
+		else if (rhdPtr->ChipSet > RHD_RS740 && sda == rhdDdc4data && scl == rhdDdc4clk)
+		    I2C->u.line = 3; /* R6XX only */
+		else {
+		    xf86DrvMsg(I2CPtr->scrnIndex, X_ERROR, "No DDC line found for index %i: scl=0x%2.2x sda=0x%2.2x\n",
+			       i, scl, sda);
+		    xfree(I2C);
+		    continue;
+		}
+
+	    } else
+		I2C->u.line = i;
+
+	} else if (rhdPtr->ChipSet <= RHD_RS740) {
+
+	    if (valid) {
+		if (sda != rhdDdc1data && sda != rhdDdc2data && sda != rhdDdc3data) {
+		    xf86DrvMsg(I2CPtr->scrnIndex, X_ERROR, "Invalid DDC CLK pin found: %i\n",
+			       sda);
+		    xfree(I2C);
+		    continue;
+		}
+		if (scl != rhdDdc1data && scl != rhdDdc2data && scl != rhdDdc3data
+		    && scl != rhdDdc1clk && scl != rhdDdc2clk && scl != rhdDdc3clk) {
+		    xf86DrvMsg(I2CPtr->scrnIndex, X_ERROR, "Invalid DDC CLK pin found: %i\n",
+			       scl);
+		    xfree(I2C);
+		    continue;
+		}
+		I2C->u.Gpio.Sda = sda;
+		I2C->u.Gpio.Scl = scl;
+		I2C->u.Gpio.SdaReg = sda_reg;
+		I2C->u.Gpio.SclReg = scl_reg;
+
+	    } else {
+		xf86DrvMsg(I2CPtr->scrnIndex, X_ERROR, "Invalid ClkLine for DDC. "
+			   "AtomBIOS reported wrong or AtomBIOS unavailable\n");
+		xfree(I2C);
+		goto error;
+	    }
+
+	} else {
+
+	    if (valid) {
+		I2C->u.Gpio.Sda = sda;
+		I2C->u.Gpio.Scl = scl;
+		I2C->u.Gpio.SdaReg = sda_reg;
+		I2C->u.Gpio.SclReg = scl_reg;
+	    } else {
+		CARD32 gpioReg[] = { 0x1f90, 0x1f94, 0x1f98 };
+		enum rhdDDClines sdaList[] = { rhdDdc1data, rhdDdc2data, rhdDdc3data };
+		enum rhdDDClines sclList[] = { rhdDdc1clk, rhdDdc2clk, rhdDdc3clk };
+		if (i > 2) {
+		    xfree(I2C);
+		    continue;
+		}
+		I2C->u.Gpio.Sda = sdaList[i];
+		I2C->u.Gpio.Scl = sclList[i];
+		I2C->u.Gpio.SclReg = I2C->u.Gpio.SdaReg = gpioReg[i];
+	    }
+
+	}
+
         /*
 	 * This is a value that has been found to work on many cards.
 	 * It nees to be replaced by the proper calculation formula
@@ -1064,7 +1299,7 @@ rhdInitI2C(int scrnIndex)
 	 */
 	I2C->prescale = prescale;
 	xf86DrvMsgVerb(scrnIndex, X_INFO, 5, "I2C clock prescale value: %x\n",I2C->prescale);
-	I2C->line = i;
+
 	if (!(I2CPtr = xf86CreateI2CBusRec())) {
 	    xf86DrvMsg(scrnIndex, X_ERROR,
 		       "Cannot allocate I2C BusRec.\n");
@@ -1083,7 +1318,7 @@ rhdInitI2C(int scrnIndex)
 	I2CPtr->scrnIndex = scrnIndex;
 	if (rhdPtr->ChipSet < RHD_RS600)
 	    I2CPtr->I2CWriteRead = rhd5xxWriteRead;
-	else if (RHDFamily(rhdPtr->ChipSet) == RHD_FAMILY_RS690)
+	else if (rhdPtr->ChipSet >= RHD_RS600 && rhdPtr->ChipSet <= RHD_RS740)
 	    I2CPtr->I2CWriteRead = rhdRS69WriteRead;
 	else if (rhdPtr->ChipSet < RHD_RV620)
 	    I2CPtr->I2CWriteRead = rhd6xxWriteRead;
@@ -1109,28 +1344,43 @@ rhdInitI2C(int scrnIndex)
 }
 
 RHDI2CResult
-rhdI2CProbeAddress(int scrnIndex, I2CBusPtr *I2CList,
-		   int line, CARD8 slave)
+rhdI2CProbeAddress(int scrnIndex, I2CBusPtr I2CBusPtr, CARD8 slave)
 {
     I2CDevPtr dev;
-    int ret = FALSE;
     char *name = "I2CProbe";
 
-    if (line >= I2C_LINES || !I2CList[line])
-	return RHD_I2C_NOLINE;
-
     if ((dev = xf86CreateI2CDevRec())) {
-	dev->SlaveAddr = slave & 0xFE;
 	dev->DevName = name;
-	dev->pI2CBus = I2CList[line];
+	dev->pI2CBus = I2CBusPtr;
 
-	if (xf86I2CDevInit(dev))
+	if (xf86I2CDevInit(dev)) {
+	    Bool ret;
+
+	    dev->SlaveAddr = slave & 0xFE;
+
 	    ret = xf86I2CWriteRead(dev, NULL, 0, NULL, 0);
 
-	xf86DestroyI2CDevRec(dev, TRUE);
+	    if (ret) {
+		unsigned char offset = 0;
+		unsigned char buf[2];
+
+		/*
+		  ASUS M2A-VM (R690) motherboards ACK all I2C slaves on the
+		  HDMI line when the HDMI riser card is not installed.
+		  We therefore need to read the first two bytes and check
+		  if they are part of an I2C header.
+		*/
+		ret = xf86I2CWriteRead(dev, &offset, 1, buf, 2);
+		if (ret && (buf[0] != 0 || buf[1] != 0xff))
+		    ret = FALSE;
+	    }
+	    xf86DestroyI2CDevRec(dev, TRUE);
+
+	    return ret ? RHD_I2C_SUCCESS : RHD_I2C_FAILED;
+	}
     }
 
-    return ret;
+    return RHD_I2C_FAILED;
 }
 
 RHDI2CResult
@@ -1152,10 +1402,14 @@ RHDI2CFunc(int scrnIndex, I2CBusPtr *I2CList, RHDi2cFunc func,
 	datap->monitor = xf86DoEDID_DDC2(scrnIndex, I2CList[datap->i]);
 	return RHD_I2C_SUCCESS;
     }
+    if (func == RHD_I2C_PROBE_ADDR_LINE) {
+
+	if (datap->target.line >= I2C_LINES || !I2CList[datap->target.line])
+	    return RHD_I2C_NOLINE;
+	return rhdI2CProbeAddress(scrnIndex, I2CList[datap->target.line], datap->target.slave);
+    }
     if (func == RHD_I2C_PROBE_ADDR) {
-	return rhdI2CProbeAddress(scrnIndex, I2CList,
-				  datap->target.line,
-				  datap->target.slave);
+	return rhdI2CProbeAddress(scrnIndex, datap->probe.i2cBusPtr, datap->probe.slave);
     }
     if (func == RHD_I2C_GETBUS) {
 	if (datap->i >= I2C_LINES || !I2CList[datap->i])

@@ -52,6 +52,13 @@ typedef enum rhdSensedOutput {
     RHD_SENSED_TV_COMPONENT
 } rhdSensedOutput;
 
+enum rhdOutputProperty {
+    RHD_OUTPUT_BACKLIGHT,
+    RHD_OUTPUT_COHERENT
+};
+
+char *rhdPowerString[4];
+
 /*
  *
  * This structure should deal with everything output related.
@@ -73,14 +80,17 @@ struct rhdOutput {
     enum rhdSensedOutput SensedType;
 
     enum rhdSensedOutput (*Sense) (struct rhdOutput *Output,
-				   enum rhdConnectorType Type);
+				   struct rhdConnector *Connector);
     ModeStatus (*ModeValid) (struct rhdOutput *Output, DisplayModePtr Mode);
     void (*Mode) (struct rhdOutput *Output, DisplayModePtr Mode);
     void (*Power) (struct rhdOutput *Output, int Power);
     void (*Save) (struct rhdOutput *Output);
     void (*Restore) (struct rhdOutput *Output);
     void (*Destroy) (struct rhdOutput *Output);
-
+    Bool (*Property) (struct rhdOutput *Output,
+		      enum rhdPropertyAction Action, enum rhdOutputProperty Property, union rhdPropertyData *val);
+    /* Driver Private data */
+    rhdOutputDriverPrivate *OutputDriverPrivate;
     /* Output Private data */
     void *Private;
 };
@@ -100,5 +110,7 @@ struct rhdOutput *RHDDACBInit(RHDPtr rhdPtr);
 struct rhdOutput *RHDTMDSAInit(RHDPtr rhdPtr);
 struct rhdOutput *RHDLVTMAInit(RHDPtr rhdPtr, CARD8 Type);
 struct rhdOutput *RHDDIGInit(RHDPtr rhdPtr,  enum rhdOutputType outputType, CARD8 ConnectorType);
-struct rhdOutput *RHDDDIAInit(RHDPtr rhdPtr, enum rhdOutputType outputType);
+struct rhdOutput *RHDDDIAInit(RHDPtr rhdPtr);
+struct rhdOutput *RHDAtomOutputInit(RHDPtr rhdPtr, rhdConnectorType ConnectorType, rhdOutputType OutputType);
+
 #endif /* _RHD_OUTPUT_H */

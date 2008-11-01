@@ -33,7 +33,8 @@ typedef enum rhdConnectorType {
     RHD_CONNECTOR_DVI,
     RHD_CONNECTOR_DVI_SINGLE,
     RHD_CONNECTOR_PANEL,
-    RHD_CONNECTOR_TV
+    RHD_CONNECTOR_TV,
+    RHD_CONNECTOR_PCIE
 } rhdConnectorType;
 /* add whatever */
 
@@ -53,7 +54,8 @@ typedef enum _rhdHPD {
     RHD_HPD_NONE  = 0,
     RHD_HPD_0,
     RHD_HPD_1,
-    RHD_HPD_2
+    RHD_HPD_2,
+    RHD_HPD_3
 } rhdHPD;
 
 #define MAX_OUTPUTS_PER_CONNECTOR 2

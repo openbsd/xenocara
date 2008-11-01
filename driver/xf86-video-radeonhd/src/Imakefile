@@ -16,6 +16,7 @@ rhd_atomwrapper.o \
 AtomBios/CD_Operations.o \
 AtomBios/Decoder.o \
 AtomBios/hwserv_drv.o
+
 #endif
 
 SRCS =  \
@@ -42,6 +43,11 @@ rhd_randr.c \
 rhd_tmds.c \
 rhd_vga.c \
 rhd_shadow.c \
+rhd_biosscratch.c \
+rhd_atomout.c \
+rhd_atompll.c \
+rhd_atomcrtc.c \
+rhd_cs.c \
 r5xx_accel.c \
 r5xx_xaa.c \
 $(ATOM_BIOS_PARSER_SRCS) \
@@ -71,6 +77,11 @@ rhd_randr.o \
 rhd_tmds.o \
 rhd_vga.o \
 rhd_shadow.o \
+rhd_biosscratch.o \
+rhd_atomout.o \
+rhd_atompll.o \
+rhd_atomcrtc.o \
+rhd_cs.o \
 r5xx_accel.o \
 r5xx_xaa.o \
 $(ATOM_BIOS_PARSER_OBJS)

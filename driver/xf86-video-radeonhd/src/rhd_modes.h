@@ -27,6 +27,31 @@
 #define _RHD_MODES_H
 
 /*
+ * Define a set of own mode errors.
+ */
+#define RHD_MODE_STATUS 0x51B00
+#ifndef MONREC_HAS_REDUCED
+#define MODE_NO_REDUCED     0x01 + RHD_MODE_STATUS
+#endif
+#define MODE_MEM_BW         0x02 + RHD_MODE_STATUS
+#define MODE_OUTPUT_UNDEF   0x03 + RHD_MODE_STATUS
+#define MODE_NOT_PAL        0x04 + RHD_MODE_STATUS
+#define MODE_NOT_NTSC       0x05 + RHD_MODE_STATUS
+#define MODE_HTOTAL_WIDE    0x06 + RHD_MODE_STATUS
+#define MODE_HDISPLAY_WIDE  0x07 + RHD_MODE_STATUS
+#define MODE_HSYNC_RANGE    0x08 + RHD_MODE_STATUS
+#define MODE_HBLANK_RANGE   0x09 + RHD_MODE_STATUS
+#define MODE_VTOTAL_WIDE    0x0A + RHD_MODE_STATUS
+#define MODE_VDISPLAY_WIDE  0x0B + RHD_MODE_STATUS
+#define MODE_VSYNC_RANGE    0x0C + RHD_MODE_STATUS
+#define MODE_VBLANK_RANGE   0x0D + RHD_MODE_STATUS
+#define MODE_PITCH          0x0E + RHD_MODE_STATUS
+#define MODE_OFFSET         0x0F + RHD_MODE_STATUS
+#define MODE_MINHEIGHT      0x10 + RHD_MODE_STATUS
+#define MODE_FIXED          0x11 + RHD_MODE_STATUS
+#define MODE_SCALE          0x12 + RHD_MODE_STATUS
+
+/*
  * In case this isn't in xf86str.h yet.
  */
 #ifndef M_T_PREFERRED
@@ -40,6 +65,7 @@ DisplayModePtr RHDCVTMode(int HDisplay, int VDisplay, float VRefresh,
 			  Bool Reduced, Bool Interlaced);
 void RHDPrintModeline(DisplayModePtr mode);
 DisplayModePtr RHDModesAdd(DisplayModePtr Modes, DisplayModePtr Additions);
+const char *RHDModeStatusToString(int Status);
 
 DisplayModePtr RHDModesPoolCreate(ScrnInfoPtr pScrn, Bool Silent);
 void RHDModesAttach(ScrnInfoPtr pScrn, DisplayModePtr Modes);
@@ -50,6 +76,9 @@ void RHDGetVirtualFromModesAndFilter(ScrnInfoPtr pScrn, DisplayModePtr Modes, Bo
 
 int RHDRRModeFixup(ScrnInfoPtr pScrn, DisplayModePtr Mode, struct rhdCrtc *Crtc,
 		   struct rhdConnector *Connector, struct rhdOutput *Output,
-		   struct rhdMonitor *Monitor);
+		   struct rhdMonitor *Monitor, Bool ScaledMode);
+int RHDValidateScaledToMode(struct rhdCrtc *Crtc, DisplayModePtr Mode);
+int RHDRRValidateScaledToMode(struct rhdOutput *Output, DisplayModePtr Mode);
+void RHDSynthModes(int scrnIndex, DisplayModePtr Mode);
 
 #endif /* _RHD_MODES_H */

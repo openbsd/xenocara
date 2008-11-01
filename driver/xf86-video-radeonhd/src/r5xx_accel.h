@@ -37,50 +37,70 @@ struct R5xxRop {
     CARD32 pattern;
 };
 
-struct R5xx2DInfo {
-    int scrnIndex;
-
-    CARD32 dst_pitch_offset; /* Base value for R5XX_DST_PITCH_OFFSET */
-    CARD32 control; /* Base value for R5XX_DP_GUI_MASTER_CNTL */
-    CARD32 control_saved;
-    CARD32 surface_cntl;
-
-    int xdir;
-    int ydir;
-    int trans_color;
-    int scanline_bpp;
-    int scanline_h;
-    int scanline_words;
-
-    CARD8 *Buffer;
-
-#ifdef USE_EXA
-    int exaSyncMarker;
-    int exaMarkerSynced;
-#if X_BYTE_ORDER == X_BIG_ENDIAN
-    unsigned long swapper_surfaces[3];
-#endif /* X_BYTE_ORDER */
-#endif /* USE_EXA */
-};
-
-void R5xxFIFOWait(int scrnIndex, CARD32 required);
 void R5xx2DIdle(ScrnInfoPtr pScrn);
+
 void R5xx2DSetup(ScrnInfoPtr pScrn); /* to be called after VT switch and such */
-void R5xx2DInit(ScrnInfoPtr pScrn);
-void R5xx2DDestroy(ScrnInfoPtr pScrn);
+void R5xx2DStart(ScrnInfoPtr pScrn);
 
 Bool R5xx2DFBValid(RHDPtr rhdPtr, CARD16 Width, CARD16 Height, int bpp,
 		   CARD32 Offset, CARD32 Size, CARD32 Pitch);
 
-/* XAA specific -- #ifdef this? */
+/* Helper from r5xx_accel.c */
+CARD8 R5xx2DDatatypeGet(ScrnInfoPtr pScrn);
+
+/* XAA specific */
 Bool R5xxXAAInit(ScrnInfoPtr pScrn, ScreenPtr pScreen);
 void R5xxXAADestroy(ScrnInfoPtr pScrn);
 
 /* EXA specific */
 #ifdef USE_EXA
+
+/* r5xx_exa.c */
 Bool R5xxEXAInit(ScrnInfoPtr pScrn, ScreenPtr pScreen);
 void R5xxEXACloseScreen(ScreenPtr pScreen);
 void R5xxEXADestroy(ScrnInfoPtr pScrn);
+
+/* radeon_exa_render.c */
+void R5xxExaCompositeFuncs(int scrnIndex, struct _ExaDriver *Exa);
+
 #endif /* USE_EXA */
+
+/*
+ * EXA Composite and Textured Video both need to know the state of the
+ * 3d engine, so we provide the structure here.
+ */
+struct R5xx3D {
+    Bool XHas3DEngineState;
+
+#define R5XX_ENGINEMODE_UNKNOWN   0
+#define R5XX_ENGINEMODE_IDLE_FULL 1
+#define R5XX_ENGINEMODE_IDLE_2D   2
+#define R5XX_ENGINEMODE_IDLE_3D   3
+    int engineMode;
+
+    unsigned short texW[2];
+    unsigned short texH[2];
+
+    Bool is_transform[2];
+    struct _PictTransform *transform[2];
+    Bool has_mask;
+    /* Whether we are tiling horizontally and vertically */
+    Bool need_src_tile_x;
+    Bool need_src_tile_y;
+    /* Size of tiles ... set to 65536x65536 if not tiling in that direction */
+    Bool src_tile_width;
+    Bool src_tile_height;
+};
+
+void R5xx3DInit(ScrnInfoPtr pScrn);
+void R5xx3DSetup(int scrnIndex);
+void R5xx3DDestroy(ScrnInfoPtr pScrn);
+
+void R5xxDstCacheFlush(struct RhdCS *CS);
+void R5xxZCacheFlush(struct RhdCS *CS);
+
+void R5xxEngineWaitIdleFull(struct RhdCS *CS);
+void R5xxEngineWaitIdle3D(struct RhdCS *CS);
+void R5xxEngineWaitIdle2D(struct RhdCS *CS);
 
 #endif /* _RHD_ACCEL_H */

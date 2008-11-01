@@ -6,7 +6,7 @@ Main development is driven by Novell at the time of writing, in close
 relationship to AMD which provides free documentation for the chipsets.
 
 More detailed notes about
-  * supported chipsets
+  * supported chipsets (replicated below)
   * radeonhd driver options
   * troubleshooting
 are available in the included radeonhd(4) man page.
@@ -19,12 +19,61 @@ Further information about
 is available on the wiki at http://wiki.x.org/wiki/radeonhd
 
 This README file contains the following sections:
-  * Recent changes
+  * Supported Chipsets
+  * Major Changes
   * More Resources
-  * Installation
-  * Common problems during builds
-  * Getting and updating the radeonhd source code
-  * Feeding back source code
+
+Build and installation instructions are covered in the INSTALL file.
+
+
+
+Supported Chipsets
+==================
+
+This list is automatically generated from the RHDIdentify() function
+in src/rhd_id.c. Do not remove the begin/end markers.
+
+BEGIN_DEVICE_LIST
+  * RV505:	Radeon X1550, X1550 64bit
+  * RV515:	Radeon X1300, X1550, X1600; FireGL V3300, V3350
+  * RV516:	Radeon X1300, X1550, X1550 64-bit, X1600; FireMV 2250
+  * R520:	Radeon X1800; FireGL V5300, V7200, V7300, V7350
+  * RV530:	Radeon X1300 XT, X1600, X1600 Pro, X1650; FireGL V3400, V5200
+  * RV535:	Radeon X1300, X1650
+  * RV550:	Radeon X2300 HD
+  * RV560:	Radeon X1650
+  * RV570:	Radeon X1950, X1950 GT; FireGL V7400
+  * R580:	Radeon X1900, X1950; AMD Stream Processor
+  * R600:	Radeon HD 2900 GT/Pro/XT; FireGL V7600/V8600/V8650
+  * RV610:	Radeon HD 2350, HD 2400 Pro/XT, HD 2400 Pro AGP; FireGL V4000
+  * RV620:	Radeon HD 3450, HD 3470
+  * RV630:	Radeon HD 2600 LE/Pro/XT, HD 2600 Pro/XT AGP; Gemini RV630;
+         	FireGL V3600/V5600
+  * RV635:	Radeon HD 3650, HD 3670
+  * RV670:	Radeon HD 3690, 3850, HD 3870, FireGL V7700, FireStream 9170
+  * R680:	Radeon HD 3870 X2
+  * M52:	Mobility Radeon X1300
+  * M54:	Mobility Radeon X1400; M54-GL
+  * M56:	Mobility Radeon X1600; Mobility FireGL V5200
+  * M58:	Mobility Radeon X1800, X1800 XT; Mobility FireGL V7100, V7200
+  * M62:	Mobility Radeon X1350
+  * M64:	Mobility Radeon X1450, X2300
+  * M66:	Mobility Radeon X1700, X1700 XT; FireGL V5250
+  * M68:	Mobility Radeon X1900
+  * M71:	Mobility Radeon HD 2300
+  * M72:	Mobility Radeon HD 2400; Radeon E2400
+  * M74:	Mobility Radeon HD 2400 XT
+  * M76:	Mobility Radeon HD 2600;
+         	(Gemini ATI) Mobility Radeon HD 2600 XT
+  * M82:	Mobility Radeon HD 3400
+  * M86:	Mobility Radeon HD 3650, HD 3670, Mobility FireGL V5700
+  * M88:	Mobility Radeon HD 3850, HD 3850 X2, HD 3870, HD3870 X2
+  * RS600:	Radeon Xpress 1200, Xpress 1250
+  * RS690:	Radeon X1200, X1250, X1270
+  * RS740:	RS740, RS740M
+  * RS780:	Radeon HD 3100/3200/3300 Series
+  * RV770:	Radeon HD 4800 Series; Everest, K2, Denali ATI FirePro
+END_DEVICE_LIST
 
 
 
@@ -32,6 +81,22 @@ Major Changes
 =============
 
 Read ChangeLog for a complete list.
+
+- Version 1.2.3
+
+  - Added Command Submission infrastructure.
+
+- Version 1.2.2
+
+  - Added DRI support (R5xx and RS6xx).
+  - Added support for RV770, RS780, M82, M86, and M88.
+  - Added XVideo support.
+  - Added CP based 2D acceleration (R5xx and RS6xx).
+  - Added EXA render acceleration (R5xx and RS6xx).
+  - Added support for AtomBIOS based mode setting.
+  - Added support for scaled modes.
+  - Added RandR support for backlight control.
+  - Lots of modesetting related bug fixes.
 
 - Version 1.2.1
 
@@ -95,127 +160,4 @@ The git repository with the radeonhd source code:
 Report bugs at:
    https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/radeonhd
 
-
-
-Installation
-============
-
-With X.Org 7.0 and later:
-
-   $ ./autogen.sh
-   $ make
-   $ make install
-
-This will litter all kinds of compiled files throughout your source tree.
-
-With X.Org prior to 7.0:
-
-   $ xmkmf -a
-   $ make EXTRA_INCLUDES="-I/usr/include/xorg" all
-   $ make install
-
-This uses imake and is for compatibility with older systems.
-
-To avoid building in your source tree, do:
-
-   $ mkdir _b && cd _b
-   $ ../autogen.sh
-   $ make
-   $ make install
-
-Runs the build in _b/ - and if something is completely messed up, you can
-safely remove the _b/ directory and create a new one without affecting any
-source files.
-
-Hint: If you happen to have multiple branches in your git source tree, you
-      can have per-branch _b-BRANCH/ build trees and _i-BRANCH/ install
-      trees. ("... configure/autogen.sh ... --prefix=$PWD/_i-BRANCH")
-
-Note that none of these methods will install the rhd_conntest tool. The
-"xmkmf" method always requires a separate "make" run in utils/conntest. The
-other two will build rhd_conntest by default if its requirements are met.
-
-
-
-Common problems during builds
-=============================
-
-Problem:
---------
-
-,----[ output of ./autogen.sh ]----
-|autoreconf: running: /usr/bin/autoconf
-|configure.ac:35: error: possibly undefined macro: XORG_DRIVER_CHECK_EXT
-|      If this token and others are legitimate, please use m4_pattern_allow.
-|      See the Autoconf documentation.
-|autoreconf: /usr/bin/autoconf failed with exit status: 1
-`----
-
-Solution:
----------
-
-Your system lacks one or more of these files in /usr/share/aclocal:
-    xorg-macros.m4 xorg-server.m4 xorgversion.m4
-
-Make sure you have all required X.org development packages installed. These
-may be called xorg-dev, xorg-x11-server-sdk and xorg-x11-util-macros, or
-something similar.
-
-
-
-Getting and updating the radeonhd source code
-=============================================
-
-Released radeonhd tarballs can be downloaded from
-
-   ftp://ftp.freedesktop.org/pub/individual/driver/
-
-The name of the tarball will be xf86-video-radeonhd-<version>.tar.bz2
-
-
-The developer version of radeonhd is maintained in the git repository found at
-
-   git://anongit.freedesktop.org/git/xorg/driver/xf86-video-radeonhd
-
-You can find information on using git at the git website http://git.or.cz/
-and a short intro at
-
-   http://www.freedesktop.org/wiki/Infrastructure/git/Developers
-
-You can get a copy of the repository like this:
-
-   $ git clone git://anongit.freedesktop.org/git/xorg/driver/xf86-video-radeonhd
-
-This will create a directory xf86-video-radeonhd in the current directory.
-
-If you have not made any local changes and want to update you source code
-with the newest stuff from the official radeonhd repository, you can run this:
-
-   $ git pull
-
-If you HAVE made local changes and committed them locally to your master
-branch (with "git commit -a"), you will be better off running
-
-   $ git fetch
-   $ git rebase origin
-
-If you're using more branches, or run into a conflict during rebasing, read
-the git docs.
-
-
-
-Feeding back source code
-========================
-
-You can easily create patches to send to the developers using git.
-
-   $ vi some_file.c
-   $ git status
-   $ git diff
-   $ git commit -a
-
-   $ git format-patches origin
-
-Then you can sift through the 0*.patch files and choose a few to send to
-the radeonhd mailing list.
 

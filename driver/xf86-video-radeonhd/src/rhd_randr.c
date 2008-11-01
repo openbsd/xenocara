@@ -56,6 +56,7 @@
 
 /* Driver specific headers */
 #include "rhd.h"
+#include "rhd_atombios.h"
 #include "rhd_randr.h"
 
 #ifdef RANDR_12_SUPPORT
@@ -70,7 +71,7 @@
 # include "rhd_lut.h"
 # include "rhd_mc.h"
 # include "rhd_card.h"
-
+# include "rhd_i2c.h"
 /*
  * Driver internal
  */
@@ -89,11 +90,15 @@ struct rhdRandr {
     void         (*PointerMoved)(int, int, int);
 } ;
 
+#define MAX_CONNECTORS_PER_RR_OUTPUT 4
 /* Outputs and Connectors are combined for RandR due to missing abstraction */
 typedef struct _rhdRandrOutput {
     char                 Name[64];
     struct rhdConnector *Connector;
     struct rhdOutput    *Output;
+    DisplayModePtr	ScaledToMode;
+    struct rhdCrtc      *Crtc;
+    struct rhdConnector *AllConnectors[MAX_CONNECTORS_PER_RR_OUTPUT];
 } rhdRandrOutputRec, *rhdRandrOutputPtr;
 
 #define ATOM_SIGNAL_FORMAT    "RANDR_SIGNAL_FORMAT"
@@ -101,9 +106,11 @@ typedef struct _rhdRandrOutput {
 #define ATOM_CONNECTOR_NUMBER "RANDR_CONNECTOR_NUMBER"
 #define ATOM_OUTPUT_NUMBER    "RANDR_OUTPUT_NUMBER"
 #define ATOM_PANNING_AREA     "RANDR_PANNING_AREA"
+#define ATOM_BACKLIGHT        "BACKLIGHT"
+#define ATOM_COHERENT         "COHERENT"
 
 static Atom atomSignalFormat, atomConnectorType, atomConnectorNumber,
-	    atomOutputNumber, atomPanningArea;
+    atomOutputNumber, atomPanningArea, atomBacklight, atomCoherent;
 
 
 /* Get RandR property values */
@@ -284,15 +291,16 @@ rhdRRCrtcDpms(xf86CrtcPtr crtc, int mode)
     RHDDebugRandrState(rhdPtr, "POST-CrtcDpms");
 }
 
-/* Lock CRTC prior to mode setting, mostly for DRI.
- * Returns whether unlock is needed */
+/* Lock CRTC prior to mode setting. Returns whether unlock is needed */
 static Bool
 rhdRRCrtcLock(xf86CrtcPtr crtc)
 {
+    /* Looks like we don't have to lock for mode setting. Only as long as
+     * buffers are fixed, of course */
     return FALSE;
 }
 
-/* Unlock CRTC after mode setting, mostly for DRI */
+/* Unlock CRTC after mode setting */
 static void
 rhdRRCrtcUnlock (xf86CrtcPtr crtc)
 { }
@@ -346,6 +354,8 @@ rhdRRCrtcModeSet(xf86CrtcPtr  crtc,
     RHDPtr          rhdPtr = RHDPTR(crtc->scrn);
     ScrnInfoPtr     pScrn  = xf86Screens[rhdPtr->scrnIndex];
     struct rhdCrtc *Crtc   = (struct rhdCrtc *) crtc->driver_private;
+    xf86CrtcConfigPtr xf86CrtcConfig = XF86_CRTC_CONFIG_PTR(crtc->scrn);
+    int i;
 
     /* RandR may give us a mode without a name... (xf86RandRModeConvert) */
     if (!Mode->name && crtc->mode.name)
@@ -354,15 +364,39 @@ rhdRRCrtcModeSet(xf86CrtcPtr  crtc,
     RHDDebug(rhdPtr->scrnIndex, "%s: %s : %s at %d/%d\n", __func__,
 	     Crtc->Name, Mode->name, x, y);
 
+    /*
+     * for AtomBIOS SetPixelClock we need information about the outputs.
+     * So find the output(s) matching this Crtc and assign the Crtc to it.
+     */
+    for (i = 0; i < xf86CrtcConfig->num_output; i++) {
+	if (xf86CrtcConfig->output[i]->crtc == crtc) {
+	    rhdRandrOutputPtr rout = xf86CrtcConfig->output[i]->driver_private;
+	    rout->Output->Crtc = Crtc;
+	}
+    }
+
+    if (rhdPtr->verbosity >= 3) {
+	xf86DrvMsg(rhdPtr->scrnIndex, X_INFO, "On Crtc %i Setting %3.1f Hz Mode: ",
+		   Crtc->Id, Mode->VRefresh);
+	RHDPrintModeline(Mode);
+	if (OrigMode->VDisplay != Mode->VDisplay || OrigMode->HDisplay != Mode->HDisplay) {
+	    xf86DrvMsg(-1, X_NONE, "Scaled from: ");
+	    RHDPrintModeline(OrigMode);
+	}
+    }
+
     /* Set up mode */
     Crtc->FBSet(Crtc, pScrn->displayWidth, pScrn->virtualX, pScrn->virtualY,
 		pScrn->depth, rhdPtr->FbScanoutStart);
     Crtc->ModeSet(Crtc, Mode);
-    Crtc->ScaleSet(Crtc, RHD_CRTC_SCALE_TYPE_NONE, Mode, NULL);
+    if (OrigMode->VDisplay != Mode->VDisplay || OrigMode->HDisplay != Mode->HDisplay)
+	Crtc->ScaleSet(Crtc, Crtc->ScaleType, OrigMode, Mode);
+    else
+	Crtc->ScaleSet(Crtc, RHD_CRTC_SCALE_TYPE_NONE, Mode, NULL);
+
     Crtc->FrameSet(Crtc, x, y);
     rhdUpdateCrtcPos(Crtc, Crtc->Cursor->X, Crtc->Cursor->Y);
     RHDPLLSet(Crtc->PLL, Mode->Clock);		/* This also powers up PLL */
-    Crtc->PLLSelect(Crtc, Crtc->PLL);
     Crtc->LUTSelect(Crtc, Crtc->LUT);
 }
 static void
@@ -414,7 +448,9 @@ static Bool
 rhdRRCrtcModeFixupDUMMY(xf86CrtcPtr    crtc,
 			DisplayModePtr mode,
 			DisplayModePtr adjusted_mode)
-{ return TRUE; }
+{
+    return TRUE;
+}
 
 #if 0 /* Needed if we want to support rotation w/o own hardware support */
     void *
@@ -455,6 +491,8 @@ rhdRROutputCreateResources(xf86OutputPtr out)
     struct rhdOutput *o;
     const char       *val;
     CARD32            num;
+    int              err;
+    INT32            range[2];
 
     RHDFUNC(rhdPtr);
 
@@ -479,6 +517,61 @@ rhdRROutputCreateResources(xf86OutputPtr out)
 			      FALSE, FALSE, TRUE, 0, NULL);
     RRConfigureOutputProperty(out->randr_output, atomPanningArea,
 			      FALSE, FALSE, FALSE, 0, NULL);
+
+    if (rout->Output->Property) {
+	if (rout->Output->Property(rout->Output, rhdPropertyCheck, RHD_OUTPUT_BACKLIGHT, NULL)) {
+	    atomBacklight = MakeAtom(ATOM_BACKLIGHT,
+				     sizeof(ATOM_BACKLIGHT)-1, TRUE);
+
+	    range[0] = 0;
+	    range[1] = 255;
+	    err = RRConfigureOutputProperty(out->randr_output, atomBacklight,
+					    FALSE, TRUE, FALSE, 2, range);
+	    if (err != 0)
+		xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR,
+			   "RRConfigureOutputProperty error: %d\n", err);
+	    else {
+		union rhdPropertyData val;
+
+		if (!rout->Output->Property(rout->Output, rhdPropertyGet, RHD_OUTPUT_BACKLIGHT, &val))
+		    val.integer = 255;
+
+		err = RRChangeOutputProperty(out->randr_output, atomBacklight,
+					     XA_INTEGER, 32, PropModeReplace,
+					     1, &val.integer, FALSE, FALSE);
+		if (err != 0)
+		    xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR,
+			       "In %s RRChangeOutputProperty error: %d\n",
+			       __func__, err);
+	    }
+	}
+	if (rout->Output->Property(rout->Output, rhdPropertyCheck, RHD_OUTPUT_COHERENT, NULL)) {
+	    atomCoherent = MakeAtom(ATOM_COHERENT,
+				     sizeof(ATOM_COHERENT)-1, TRUE);
+
+	    range[0] = 0;
+	    range[1] = 1;
+	    err = RRConfigureOutputProperty(out->randr_output, atomCoherent,
+					    FALSE, TRUE, FALSE, 2, range);
+	    if (err != 0)
+		xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR,
+			   "RRConfigureOutputProperty error: %d\n", err);
+	    else {
+		union rhdPropertyData val;
+
+		if (!rout->Output->Property(rout->Output, rhdPropertyGet, RHD_OUTPUT_COHERENT, &val))
+		    val.Bool = 1;
+		err = RRChangeOutputProperty(out->randr_output, atomCoherent,
+					     XA_INTEGER, 32, PropModeReplace,
+					     1, &val.Bool, FALSE, FALSE);
+		if (err != 0)
+		    xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR,
+			       "In %s RRChangeOutputProperty error: %d\n",
+			       __func__, err);
+	    }
+	}
+    }
+
     val = rhdGetSignalFormat(rout);
     RRChangeOutputProperty(out->randr_output, atomSignalFormat,
 			   XA_STRING, 8, PropModeReplace,
@@ -537,7 +630,8 @@ rhdRROutputDpms(xf86OutputPtr       out,
 	rout->Output->Power(rout->Output, RHD_POWER_ON);
 	rout->Output->Active = TRUE;
 	ASSERT(Crtc);
-	rout->Output->Crtc = Crtc;
+	ASSERT(Crtc == rout->Output->Crtc);
+	rout->Crtc = Crtc;
 	break;
     case DPMSModeSuspend:
     case DPMSModeStandby:
@@ -550,7 +644,7 @@ rhdRROutputDpms(xf86OutputPtr       out,
 	}
 	rout->Output->Power(rout->Output, RHD_POWER_RESET);
 	rout->Output->Active = FALSE;
-	rout->Output->Crtc = NULL;
+	rout->Crtc = NULL;
 	break;
     case DPMSModeOff:
 	if (outUsedBy) {
@@ -562,7 +656,7 @@ rhdRROutputDpms(xf86OutputPtr       out,
 	}
 	rout->Output->Power(rout->Output, RHD_POWER_SHUTDOWN);
 	rout->Output->Active = FALSE;
-	rout->Output->Crtc = NULL;
+	rout->Crtc = NULL;
 	break;
     default:
 	ASSERT(!"Unknown DPMS mode");
@@ -590,6 +684,7 @@ rhdRROutputModeValid(xf86OutputPtr  out,
     DisplayModePtr     Mode   = xf86DuplicateMode(OrigMode);
     int                Status;
 
+    RHDFUNC(rhdPtr);
     /* RandR may give us a mode without a name... (xf86RandRModeConvert)
      * xf86DuplicateMode should fill it up, though */
     if (!Mode->name)
@@ -597,37 +692,28 @@ rhdRROutputModeValid(xf86OutputPtr  out,
 
     RHDDebug(rhdPtr->scrnIndex, "%s: Output %s : %s\n", __func__,
 	     rout->Name, Mode->name);
+    if (rhdPtr->verbosity >= LOG_DEBUG)
+	RHDPrintModeline(Mode);
     ASSERT(rout->Connector);
     ASSERT(rout->Output);
 
     /* If out->crtc is not NULL, it is not necessarily the Crtc that will
      * be used, so let's better skip crtc based checks... */
     /* Monitor is handled by RandR */
+    if (!rout->Output->Connector)
+	return MODE_OUTPUT_UNDEF;
     Status = RHDRRModeFixup(out->scrn, Mode, NULL, rout->Connector,
-			    rout->Output, NULL);
-    RHDDebug(rhdPtr->scrnIndex, "%s: %s -> Status %d\n", __func__,
-	     Mode->name, Status);
+			    rout->Output, NULL, rout->ScaledToMode ? TRUE : FALSE);
+    RHDDebug(rhdPtr->scrnIndex, "%s: %s: %s\n", __func__,
+	     Mode->name, RHDModeStatusToString(Status));
     xfree(Mode->name);
     xfree(Mode);
     return Status;
 }
 
-/* The crtc is only known on fixup time. Now it's actually to late to reject a
- * mode and give a reasonable answer why (return is bool), but we'll better not
- * set a mode than scrap our hardware */
-static Bool
-rhdRROutputModeFixup(xf86OutputPtr  out,
-		     DisplayModePtr OrigMode,
-		     DisplayModePtr Mode)
+static void
+rhdRRModeCopy(DisplayModePtr  OrigMode, DisplayModePtr Mode)
 {
-    RHDPtr             rhdPtr = RHDPTR(out->scrn);
-    rhdRandrOutputPtr  rout   = (rhdRandrOutputPtr) out->driver_private;
-    struct rhdCrtc    *Crtc   = NULL;
-    int                Status;
-
-    /* !@#$ xf86RandRModeConvert doesn't initialize Mode with 0
-     * Fixed in xserver git c6c284e6 */
-    xfree(Mode->name);
     memset(Mode, 0, sizeof(DisplayModeRec));
     Mode->name       = xstrdup(OrigMode->name ? OrigMode->name : "n/a");
     Mode->status     = OrigMode->status;
@@ -644,6 +730,91 @@ rhdRROutputModeFixup(xf86OutputPtr  out,
     Mode->VTotal     = OrigMode->VTotal;
     Mode->VScan      = OrigMode->VScan;
     Mode->Flags      = OrigMode->Flags;
+
+    if ((Mode->type & M_T_CRTC_C) == M_T_BUILTIN) {
+	Mode->CrtcHDisplay = OrigMode->CrtcHDisplay;
+	Mode->CrtcHBlankStart = OrigMode->CrtcHBlankStart;
+	Mode->CrtcHSyncStart = OrigMode->CrtcHSyncStart;
+	Mode->CrtcHBlankEnd = OrigMode->CrtcHBlankEnd;
+	Mode->CrtcHSyncEnd = OrigMode->CrtcHSyncEnd;
+	Mode->CrtcHTotal = OrigMode->CrtcHTotal;
+	Mode->CrtcVDisplay = OrigMode->CrtcVDisplay;
+	Mode->CrtcVBlankStart = OrigMode->CrtcVBlankStart;
+	Mode->CrtcVSyncStart = OrigMode->CrtcVSyncStart;
+	Mode->CrtcVSyncEnd = OrigMode->CrtcVSyncEnd;
+	Mode->CrtcVBlankEnd = OrigMode->CrtcVBlankEnd;
+	Mode->CrtcVTotal = OrigMode->CrtcVTotal;
+    }
+}
+
+/*
+ *
+ */
+static void
+rhdRRSanitizeMode(DisplayModePtr Mode)
+{
+    if (!Mode->name)
+	Mode->name = xstrdup("n/a");
+    Mode->status = MODE_OK;
+    if ((Mode->type & M_T_CRTC_C) != M_T_BUILTIN) {
+	Mode->CrtcHDisplay = Mode->CrtcHBlankStart =
+	    Mode->CrtcHSyncStart = Mode->CrtcHBlankEnd =
+	    Mode->CrtcHSyncEnd = Mode->CrtcHTotal = 0;
+	Mode->CrtcVDisplay = Mode->CrtcVBlankStart =
+	    Mode->CrtcVSyncStart = Mode->CrtcVSyncEnd =
+	    Mode->CrtcVBlankEnd = Mode->CrtcVTotal = 0;
+	Mode->SynthClock = 0;
+    }
+}
+
+/* The crtc is only known on fixup time. Now it's actually to late to reject a
+ * mode and give a reasonable answer why (return is bool), but we'll better not
+ * set a mode than scrap our hardware */
+static Bool
+rhdRROutputModeFixup(xf86OutputPtr  out,
+		     DisplayModePtr OrigMode,
+		     DisplayModePtr Mode)
+{
+    RHDPtr             rhdPtr = RHDPTR(out->scrn);
+    rhdRandrOutputPtr  rout   = (rhdRandrOutputPtr) out->driver_private;
+    struct rhdCrtc    *Crtc   = NULL;
+    int                Status;
+    DisplayModePtr     DisplayedMode;
+    Bool               Scaled = FALSE;
+
+    RHDFUNC(rhdPtr);
+    ASSERT(out->crtc);
+    Crtc = (struct rhdCrtc *) out->crtc->driver_private;
+
+    xfree(Mode->name);
+    if (rout->ScaledToMode) {
+	DisplayModePtr tmp = RHDModeCopy(rout->ScaledToMode);
+	/* validate against CRTC. */
+	if ((Status = RHDValidateScaledToMode(Crtc, tmp))!= MODE_OK) {
+	    RHDDebug(rhdPtr->scrnIndex, "%s: %s ScaledToMode INVALID: [0x%x] %s\n", __func__,
+		     tmp->name, Status, RHDModeStatusToString(Status));
+	    xfree(tmp);
+	    return FALSE; /* failing here doesn't help */
+	}
+	memcpy(Mode, tmp, sizeof(DisplayModeRec));
+	Mode->name = xstrdup(tmp->name);
+	Mode->prev = Mode->next = NULL;
+	xfree(tmp->name);
+	xfree(tmp);
+
+        /* sanitize OrigMode */
+	rhdRRSanitizeMode(OrigMode);
+	DisplayedMode = OrigMode;
+	Crtc->ScaledToMode = Mode;
+	Scaled = TRUE;
+    } else {
+	/* !@#$ xf86RandRModeConvert doesn't initialize Mode with 0
+	 * Fixed in xserver git c6c284e6 */
+	rhdRRModeCopy(OrigMode, Mode);
+
+	DisplayedMode = Mode;
+    }
+
     /* RHDRRModeFixup will set up the remaining bits */
 
     RHDDebug(rhdPtr->scrnIndex, "%s: Output %s : %s\n", __func__,
@@ -651,16 +822,14 @@ rhdRROutputModeFixup(xf86OutputPtr  out,
     ASSERT(rout->Connector);
     ASSERT(rout->Output);
 
-    if (out->crtc)
-	Crtc = (struct rhdCrtc *) out->crtc->driver_private;
     setupCrtc(rhdPtr, Crtc);
 
     /* Monitor is handled by RandR */
-    Status = RHDRRModeFixup(out->scrn, Mode, Crtc, rout->Connector,
-			    rout->Output, NULL);
+    Status = RHDRRModeFixup(out->scrn, DisplayedMode, Crtc, rout->Connector,
+			    rout->Output, NULL, Scaled);
     if (Status != MODE_OK) {
-	RHDDebug(rhdPtr->scrnIndex, "%s: %s FAILED: %d\n", __func__,
-		 Mode->name, Status);
+	RHDDebug(rhdPtr->scrnIndex, "%s: %s FAILED: [0x%x] %s\n", __func__,
+		 Mode->name, Status, RHDModeStatusToString(Status));
 	return FALSE;
     }
     return TRUE;
@@ -683,7 +852,7 @@ rhdRROutputPrepare(xf86OutputPtr out)
 
     /* no active output == no mess */
     rout->Output->Power(rout->Output, RHD_POWER_RESET);
-    rout->Output->Crtc = NULL;
+    rout->Output->Crtc = rout->Crtc = NULL;
 }
 static void
 rhdRROutputModeSet(xf86OutputPtr  out,
@@ -693,22 +862,26 @@ rhdRROutputModeSet(xf86OutputPtr  out,
     rhdRandrOutputPtr rout   = (rhdRandrOutputPtr) out->driver_private;
     struct rhdCrtc   *Crtc   = (struct rhdCrtc *) out->crtc->driver_private;
 
+    RHDFUNC(rhdPtr);
+
     /* RandR may give us a mode without a name... (xf86RandRModeConvert) */
     if (!Mode->name && out->crtc->mode.name)
 	Mode->name = xstrdup(out->crtc->mode.name);
 
     RHDDebug(rhdPtr->scrnIndex, "%s: Output %s : %s to %s\n", __func__,
-	     rout->Name, Mode->name, Crtc->Name);
+	     rout->Name, Mode->name,
+	     Crtc->Name);
 
     /* RandR might want to set up several outputs (RandR speech) with different
      * crtcs, while the outputs differ in fact only by the connector and thus
      * cannot be used by different crtcs */
-    if (rout->Output->Crtc && rout->Output->Crtc != Crtc)
+    if (rout->Crtc && rout->Crtc != Crtc)
 	xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR,
 		   "RandR: Output %s has already CRTC attached - "
 		   "assuming ouput/connector clash\n", rout->Name);
     /* Set up mode */
-    rout->Output->Crtc = Crtc;
+    rout->Crtc = Crtc;
+    ASSERT(Crtc == rout->Output->Crtc);
     rout->Output->Mode(rout->Output, Mode);
 }
 static void
@@ -745,7 +918,6 @@ rhdRROutputCommit(xf86OutputPtr out)
     RHDDebugRandrState(rhdPtr, rout->Name);
 }
 
-
 /* Probe for a connected output. */
 static xf86OutputStatus
 rhdRROutputDetect(xf86OutputPtr output)
@@ -760,7 +932,8 @@ rhdRROutputDetect(xf86OutputPtr output)
     if (rout->Connector->Type == RHD_CONNECTOR_PANEL) {
 	rout->Output->Connector = rout->Connector; /* @@@ */
 	return XF86OutputStatusConnected;
-    }
+    } else if (rout->Connector->Type ==  RHD_CONNECTOR_TV) /* until TV_OUT is fixed we bail here */
+	return XF86OutputStatusDisconnected;
 
     if (rout->Connector->HPDCheck) {
 	/* Hot Plug Detection available, use it */
@@ -771,7 +944,7 @@ rhdRROutputDetect(xf86OutputPtr output)
 	    if (rout->Output->Sense) {
 		if ((rout->Output->SensedType
 		     = rout->Output->Sense(rout->Output,
-					   rout->Connector->Type))) {
+					   rout->Connector)) != RHD_SENSED_NONE) {
 		    RHDOutputPrintSensedType(rout->Output);
 		    rout->Output->Connector = rout->Connector; /* @@@ */
 		    return XF86OutputStatusConnected;
@@ -783,6 +956,7 @@ rhdRROutputDetect(xf86OutputPtr output)
 		 * Check if there is another output attached to this connector
 		 * and use Sense() on that one to verify whether something
 		 * is attached to this one */
+
 		for (ro = rhdPtr->randr->RandrOutput; *ro; ro++) {
 		    rhdRandrOutputPtr o =
 			(rhdRandrOutputPtr) (*ro)->driver_private;
@@ -790,8 +964,9 @@ rhdRROutputDetect(xf86OutputPtr output)
 			o->Connector == rout->Connector &&
 			o->Output->Sense) {
 			/* Yes, this looks wrong, but is correct */
-			if ((o->Output->SensedType =
-			     o->Output->Sense(o->Output, o->Connector->Type))) {
+			enum rhdSensedOutput SensedType =
+			    o->Output->Sense(o->Output, o->Connector);
+			if (SensedType != RHD_SENSED_NONE) {
 			    RHDOutputPrintSensedType(o->Output);
 			    return XF86OutputStatusDisconnected;
 			}
@@ -809,13 +984,15 @@ rhdRROutputDetect(xf86OutputPtr output)
 	    if (rhdPtr->Card && (rhdPtr->Card->flags & RHD_CARD_FLAG_DMS59)) {
 		xf86DrvMsg(rhdPtr->scrnIndex, X_INFO,
 			   "RandR: Verifying state of DMS-59 VGA connector.\n");
-		if (rout->Output->Sense &&
-		    (rout->Output->SensedType
-		     = rout->Output->Sense(rout->Output,
-					   rout->Connector->Type))) {
-		    rout->Output->Connector = rout->Connector; /* @@@ */
-		    RHDOutputPrintSensedType(rout->Output);
-		    return XF86OutputStatusConnected;
+		if (rout->Output->Sense) {
+		    rout->Output->SensedType
+			= rout->Output->Sense(rout->Output,
+					      rout->Connector);
+		    if (rout->Output->SensedType != RHD_SENSED_NONE) {
+			rout->Output->Connector = rout->Connector; /* @@@ */
+			RHDOutputPrintSensedType(rout->Output);
+			return XF86OutputStatusConnected;
+		    }
 		}
 	    }
 	    return XF86OutputStatusDisconnected;
@@ -825,8 +1002,9 @@ rhdRROutputDetect(xf86OutputPtr output)
 	 * No HPD available, Sense() if possible
 	 */
 	if (rout->Output->Sense) {
-	    if ((rout->Output->SensedType
-		 = rout->Output->Sense(rout->Output, rout->Connector->Type))) {
+	    rout->Output->SensedType
+		= rout->Output->Sense(rout->Output, rout->Connector);
+	    if (rout->Output->SensedType != RHD_SENSED_NONE) {
 		    rout->Output->Connector = rout->Connector; /* @@@ */
 		    RHDOutputPrintSensedType(rout->Output);
 		    return XF86OutputStatusConnected;
@@ -835,15 +1013,37 @@ rhdRROutputDetect(xf86OutputPtr output)
 	}
 	/* Use DDC address probing if possible otherwise */
 	if (rout->Connector->DDC) {
-	    if (xf86I2CProbeAddress(rout->Connector->DDC, 0xa0)) {
+	    RHDI2CDataArg i2cRec;
+	    i2cRec.probe.slave = 0xa0;
+	    i2cRec.probe.i2cBusPtr = rout->Connector->DDC;
+	    if (RHDI2CFunc(rhdPtr->scrnIndex, rhdPtr->I2C,RHD_I2C_PROBE_ADDR,&i2cRec)
+		== RHD_I2C_SUCCESS) {
+		RHDDebug(rout->Output->scrnIndex, "DDC Probing for Output %s returned connected\n",rout->Output->Name);
 		rout->Output->Connector = rout->Connector; /* @@@ */
 		return XF86OutputStatusConnected;
 	    }  else
+		RHDDebug(rout->Output->scrnIndex, "DDC Probing for Output %s returned disconnected\n",rout->Output->Name);
 		return XF86OutputStatusDisconnected;
 	}
 	rout->Output->Connector = rout->Connector; /* @@@ */
 	return XF86OutputStatusUnknown;
     }
+}
+
+/*
+ * RHDRRMonitorInit(): adds synthesized modes for scaling to list generated by RHDMonitorInit()
+ * as with RandR this is the only chance we have access to the full modes list.
+ */
+static struct rhdMonitor *
+RHDRRMonitorInit(struct rhdConnector *Connector)
+{
+    struct rhdMonitor *m = RHDMonitorInit(Connector);
+
+    RHDFUNC(Connector);
+    if (RHDScalePolicy(m, Connector))
+	RHDSynthModes(Connector->scrnIndex, m->Modes);
+
+    return m;
 }
 
 /* Query the device for the modes it provides. Set MonInfo, mm_width/height. */
@@ -853,30 +1053,41 @@ rhdRROutputGetModes(xf86OutputPtr output)
     RHDPtr            rhdPtr = RHDPTR(output->scrn);
     rhdRandrOutputPtr rout = (rhdRandrOutputPtr) output->driver_private;
     xf86MonPtr	      edid_mon = NULL;
+    struct rhdOutput  *o;
 
     RHDDebug(rhdPtr->scrnIndex, "%s: Output %s\n", __func__, rout->Name);
     /* TODO: per-output options ForceReduced & UseXF86Edid */
 
-    /* Use RandR edid parsing if requested */
-    if (rhdPtr->rrUseXF86Edid.set && rhdPtr->rrUseXF86Edid.val.bool) {
-	if (rout->Connector->DDC)
-	    edid_mon = xf86OutputGetEDID (output, rout->Connector->DDC);
-	xf86OutputSetEDID (output, edid_mon);
-	return xf86OutputGetEDIDModes (output);
-    }
-
     /* Nuke old monitor */
     if (rout->Connector->Monitor) {
-	/* Modes and EDID are already freed by RandR (OutputSetEDID+return) */
-	rout->Connector->Monitor->Modes = NULL;
+	/* EDID is already freed by RandR (OutputSetEDID+return) */
 	rout->Connector->Monitor->EDID = NULL;
 	RHDMonitorDestroy(rout->Connector->Monitor);
     }
+
     /* Get new one */
-    if (! (rout->Connector->Monitor = RHDMonitorInit(rout->Connector)) ) {
+    if (! (rout->Connector->Monitor = RHDRRMonitorInit(rout->Connector)) ) {
 	xf86OutputSetEDID (output, NULL);
 	return NULL;
     }
+
+    ASSERT(rout->Output);
+    o = rout->Output;
+
+    if (RHDScalePolicy(rout->Connector->Monitor, rout->Connector)) {
+	if (o->Connector->Monitor) {
+	    rout->ScaledToMode = RHDModeCopy(o->Connector->Monitor->NativeMode);
+	    xf86DrvMsg(rhdPtr->scrnIndex, X_INFO, "Found native mode: ");
+	    RHDPrintModeline(rout->ScaledToMode);
+	    if (RHDRRValidateScaledToMode(rout->Output, rout->ScaledToMode) != MODE_OK) {
+		xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR, "Native mode doesn't validate: deleting\n");
+		xfree(rout->ScaledToMode->name);
+		xfree(rout->ScaledToMode);
+		rout->ScaledToMode = NULL;
+	    }
+	}
+    } else
+	rout->ScaledToMode = NULL;
 
     /* If digitally attached, enable reduced blanking */
     if (rout->Output->Id == RHD_OUTPUT_TMDSA ||
@@ -909,8 +1120,15 @@ rhdRROutputGetModes(xf86OutputPtr output)
 		       "No monitor size info, assuming 96dpi.\n");
 	}
     }
-
-    return rout->Connector->Monitor->Modes;
+    RHDDebug(rhdPtr->scrnIndex, "%s: Adding Output Modes:\n",__func__);
+    if (rhdPtr->verbosity >= 7) {
+	DisplayModePtr mode =  rout->Connector->Monitor->Modes;
+	while (mode) {
+	    RHDPrintModeline(mode);
+	    mode = mode->next;
+	}
+    }
+    return xf86DuplicateModes(output->scrn, rout->Connector->Monitor->Modes);
 }
 
 /* An output's property has changed. */
@@ -920,6 +1138,8 @@ rhdRROutputSetProperty(xf86OutputPtr out, Atom property,
 {
     RHDPtr            rhdPtr = RHDPTR(out->scrn);
     rhdRandrOutputPtr rout   = (rhdRandrOutputPtr) out->driver_private;
+
+    RHDFUNC(rhdPtr);
 
     if (property == atomPanningArea) {
 	int w = 0, h = 0, x = 0, y = 0;
@@ -946,11 +1166,79 @@ rhdRROutputSetProperty(xf86OutputPtr out, Atom property,
 	default:
 	    return FALSE;
 	}
+    } else if (property == atomBacklight) {
+	if (value->type != XA_INTEGER || value->format != 32) {
+	    xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR, "%s: wrong value\n", __func__);
+	    return FALSE;
+	}
+	if (rout->Output->Property) {
+	    union rhdPropertyData val;
+	    val.integer = *(int*)(value->data);
+	    return rout->Output->Property(rout->Output, rhdPropertySet,
+					  RHD_OUTPUT_BACKLIGHT, &val);
+	}
+	return FALSE;
+    } else if (property == atomCoherent) {
+	if (value->type != XA_INTEGER || value->format != 32) {
+	    xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR, "%s: wrong value\n", __func__);
+	    return FALSE;
+	}
+	if (rout->Output->Property) {
+	    union rhdPropertyData val;
+	    val.Bool = *(int*)(value->data);
+	    return rout->Output->Property(rout->Output, rhdPropertySet,
+					  RHD_OUTPUT_COHERENT, &val);
+	}
+	return FALSE;
     }
 
     return FALSE;	/* Others are not mutable */
 }
 
+
+#ifdef RANDR_13_INTERFACE
+static Bool
+rhdRROutputGetProperty(xf86OutputPtr out, Atom property)
+{
+    RHDPtr rhdPtr          = RHDPTR(out->scrn);
+    rhdRandrOutputPtr rout = (rhdRandrOutputPtr) out->driver_private;
+    int err = BadValue;
+    union rhdPropertyData val;
+
+    xf86DrvMsg(rhdPtr->scrnIndex, X_INFO, "In %s\n", __func__);
+
+    if (property == atomBacklight) {
+	if (rout->Output->Property == NULL)
+	    return FALSE;
+
+	if (!rout->Output->Property(rout->Output, rhdPropertyGet,
+				    RHD_OUTPUT_BACKLIGHT, &val))
+	    return FALSE;
+	err = RRChangeOutputProperty(out->randr_output, atomBacklight,
+				     XA_INTEGER, 32, PropModeReplace,
+				     1, &val.integer, FALSE, FALSE);
+
+    } else if (property == atomCoherent) {
+	if (rout->Output->Property == NULL)
+	    return FALSE;
+
+	if (!rout->Output->Property(rout->Output, rhdPropertyGet,
+				    RHD_OUTPUT_COHERENT, &val))
+	    return FALSE;
+
+	err = RRChangeOutputProperty(out->randr_output, atomCoherent,
+				     XA_INTEGER, 32, PropModeReplace,
+				     1, &val.Bool, FALSE, FALSE);
+    }
+
+    if (err != 0) {
+	xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR, "In %s RRChangeOutputProperty error: %d\n", __func__, err);
+	return FALSE;
+    }
+    return TRUE;
+}
+
+#endif
 
 /*
  * Xorg Interface
@@ -971,7 +1259,11 @@ static const xf86CrtcFuncsRec rhdRRCrtcFuncs = {
     NULL, NULL, NULL,
     /* SetCursorColors,SetCursorPosition,ShowCursor,HideCursor,
      * LoadCursorImage,LoadCursorArgb,CrtcDestroy */
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL
+#ifdef XF86CRTCFUNCS_HAS_SETMODEMAJOR
+    /* set_mode_major */
+    , NULL
+#endif
 };
 
 static const xf86OutputFuncsRec rhdRROutputFuncs = {
@@ -980,7 +1272,15 @@ static const xf86OutputFuncsRec rhdRROutputFuncs = {
     rhdRROutputModeValid, rhdRROutputModeFixup,
     rhdRROutputPrepare, rhdRROutputCommit,
     rhdRROutputModeSet, rhdRROutputDetect, rhdRROutputGetModes,
+#ifdef RANDR_12_INTERFACE
     rhdRROutputSetProperty,		       /* Only(!) RANDR_12_INTERFACE */
+#endif
+#ifdef RANDR_13_INTERFACE
+    rhdRROutputGetProperty,  /* get_property */
+#endif
+#ifdef RANDR_GET_CRTC_INTERFACE
+    NULL,
+#endif
     NULL						/* Destroy */
 };
 
@@ -1087,7 +1387,7 @@ RHDRandrPreInit(ScrnInfoPtr pScrn)
 {
     RHDPtr rhdPtr = RHDPTR(pScrn);
     struct rhdRandr *randr;
-    int i, j, numCombined = 0;
+    int i, j, k, numCombined = 0;
     rhdRandrOutputPtr *RandrOutput, *r;
     char *outputorder;
 
@@ -1130,6 +1430,31 @@ RHDRandrPreInit(ScrnInfoPtr pScrn)
 		struct rhdOutput *out = conn->Output[j];
 		if (out)
 		    *r++ = createRandrOutput(pScrn, conn, out);
+	    }
+	}
+    }
+
+    /*
+     * Each rhdRandrOutputRec carries a list of all connectors this output belongs to.
+     * Since the output can only drive one connector but RandR doesn't seem to have
+     * any notion of 'shared outputs' we need to probe them all and decide which
+     * output that reports connected we pass to RandR as connected.
+     */
+    for (i = 0; i < numCombined; i++) {
+	int cnt = 0;
+	for (j = 0; j < RHD_CONNECTORS_MAX; j++) {
+	    struct rhdConnector *conn = rhdPtr->Connector[j];
+	    if (!conn) continue;
+	    for (k = 0; k < MAX_OUTPUTS_PER_CONNECTOR; k++) {
+		if (conn->Output[k] == RandrOutput[i]->Output) {
+		    if (cnt >= MAX_CONNECTORS_PER_RR_OUTPUT)
+			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+				   "%s: Number of Connectors for Output %s exceeds %i\n",
+				   __func__,RandrOutput[i]->Name, MAX_CONNECTORS_PER_RR_OUTPUT);
+		    else
+			RandrOutput[i]->AllConnectors[cnt++] = conn;
+		    break;
+		}
 	    }
 	}
     }
@@ -1184,7 +1509,7 @@ RHDRandrPreInit(ScrnInfoPtr pScrn)
 
     if (!xf86InitialConfiguration(pScrn, FALSE)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		   "RandR: No valid modes. Disabled.\n");
+		   "RandR: No valid modes. Disabling RandR support.\n");
 	rhdPtr->randr = NULL;		/* TODO: not cleaning up correctly */
 	return FALSE;
     }
@@ -1199,6 +1524,7 @@ RHDRandrPreInit(ScrnInfoPtr pScrn)
 	rhdPtr->randr = NULL;		/* TODO: not cleaning up correctly */
 	return FALSE;
     }
+
     return TRUE;
 }
 
@@ -1244,11 +1570,16 @@ RHDRandrModeInit(ScrnInfoPtr pScrn)
     Bool ret;
     RHDPtr rhdPtr = RHDPTR(pScrn);
 
+    RHDFUNC(rhdPtr);
+
     /* Stop crap from being shown: gets reenabled through SaveScreen */
     rhdPtr->Crtc[0]->Blank(rhdPtr->Crtc[0], TRUE);
     rhdPtr->Crtc[1]->Blank(rhdPtr->Crtc[1], TRUE);
 
     RHDVGADisable(rhdPtr);
+
+    RHDAllIdle(pScrn);
+
     RHDMCSetup(rhdPtr);
 
     ret = xf86SetDesiredModes(pScrn);

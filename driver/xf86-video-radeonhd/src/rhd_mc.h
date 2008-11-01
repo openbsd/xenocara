@@ -1,8 +1,8 @@
 /*
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Egbert Eich   <eich@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
+ * Copyright 2007, 2008  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,11 +25,16 @@
 #ifndef RHD_MC_H
 # define RHD_MC_H
 
-void RHDMCInit(RHDPtr rhdPtr);
-void RHDMCDestroy(RHDPtr rhdPtr);
-void RHDSaveMC(RHDPtr rhdPtr);
-void RHDRestoreMC(RHDPtr rhdPtr);
-void RHDMCSetup(RHDPtr rhdPtr);
-Bool RHDMCIdle(RHDPtr rhdPtr, CARD32 count);
+extern void RHDMCInit(RHDPtr rhdPtr);
+extern void RHDMCDestroy(RHDPtr rhdPtr);
+extern void RHDSaveMC(RHDPtr rhdPtr);
+extern void RHDRestoreMC(RHDPtr rhdPtr);
+extern void RHDMCSetup(RHDPtr rhdPtr);
+extern Bool RHDMCIdle(RHDPtr rhdPtr, CARD32 count);
+extern void RHDTuneMCAccessForDisplay(RHDPtr rhdPtr, int crtc,
+				      DisplayModePtr Mode, DisplayModePtr ScaledToMode);
+extern CARD32 RHDGetFBLocation(RHDPtr rhdPtr, CARD32 *size);
+
+extern Bool RHD_MC_IGP_SideportMemoryPresent(RHDPtr rhdPtr);
 
 #endif /* RHD_MC_H */

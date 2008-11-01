@@ -41,16 +41,15 @@
 #endif
 
 #include "rhd.h"
+#ifdef ATOM_BIOS
+# include "rhd_atombios.h"
+#endif
 #include "rhd_connector.h"
 #include "rhd_output.h"
 #include "rhd_regs.h"
 #include "rhd_monitor.h"
 #include "rhd_card.h"
 #include "rhd_i2c.h"
-
-#ifdef ATOM_BIOS
-#include "rhd_atombios.h"
-#endif
 
 /*
  *
@@ -140,8 +139,9 @@ rhdConnectorSynthName(struct rhdConnectorInfo *ConnectorInfo,
 		      struct rhdCsState **state)
 {
     char *str = NULL;
-    char *typec;
+    char *TypeName;
     char *str1, *str2;
+    int cnt;
 
     ASSERT(state != NULL);
 
@@ -154,18 +154,27 @@ rhdConnectorSynthName(struct rhdConnectorInfo *ConnectorInfo,
 	    return NULL;
 	case RHD_CONNECTOR_DVI:
 	case RHD_CONNECTOR_DVI_SINGLE:
-	    if (ConnectorInfo->Output[0] && ConnectorInfo->Output[1])
-		typec = "I";
-	    else if (ConnectorInfo->Output[0] == RHD_OUTPUT_DACA
+	    if (ConnectorInfo->Output[0] && ConnectorInfo->Output[1]) {
+		TypeName = "DVI-I";
+		cnt = ++(*state)->dvi_cnt;
+	    } else if (ConnectorInfo->Output[0] == RHD_OUTPUT_DACA
 		     || ConnectorInfo->Output[0] == RHD_OUTPUT_DACB
 		     || ConnectorInfo->Output[1] == RHD_OUTPUT_DACA
 		     || ConnectorInfo->Output[1] == RHD_OUTPUT_DACB
-		)
-		typec = "A";
-	    else
-		typec = "D";
+		) {
+		if (ConnectorInfo->HPD == RHD_HPD_NONE) {
+		    TypeName = "VGA";
+		    cnt = ++(*state)->vga_cnt;
+		} else {
+		    TypeName = "DVI-A";
+		    cnt = ++(*state)->dvi_cnt;
+		}
+	    } else {
+		TypeName = "DVI-D";
+		cnt = ++(*state)->dvi_cnt;
+	    }
 	    str = xalloc(12);
-	    snprintf(str, 11, "DVI-%s %i",typec, ++(*state)->dvi_cnt);
+	    snprintf(str, 11, "%s %i",TypeName, cnt);
 	    return str;
 
 	case RHD_CONNECTOR_VGA:
@@ -185,8 +194,10 @@ rhdConnectorSynthName(struct rhdConnectorInfo *ConnectorInfo,
 	    if (str2) *(str2) = '\0';
 	    snprintf(str, 20, "TV %s",str1);
 	    xfree(str1);
-
 	    return str;
+
+	case RHD_CONNECTOR_PCIE: /* should never get here */
+	    return NULL;
     }
     return NULL;
 }
@@ -210,7 +221,7 @@ RHDConnectorsInit(RHDPtr rhdPtr, struct rhdCard *Card)
     if (Card && (Card->ConnectorInfo[0].Type != RHD_CONNECTOR_NONE)) {
 	ConnectorInfo = Card->ConnectorInfo;
 	xf86DrvMsg(rhdPtr->scrnIndex, X_INFO,
-		   "ConnectorInfo from quirk table:");
+		   "ConnectorInfo from quirk table:\n");
 	RhdPrintConnectorInfo (rhdPtr->scrnIndex, ConnectorInfo);
     } else {
 #ifdef ATOM_BIOS
@@ -222,7 +233,7 @@ RHDConnectorsInit(RHDPtr rhdPtr, struct rhdCard *Card)
 	result = RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
 				 ATOMBIOS_GET_CONNECTORS, &data);
 	if (result == ATOM_SUCCESS) {
-	    ConnectorInfo = data.connectorInfo;
+	    ConnectorInfo = data.ConnectorInfo;
 	    InfoAllocated = TRUE;
 	} else
 #endif
@@ -232,7 +243,6 @@ RHDConnectorsInit(RHDPtr rhdPtr, struct rhdCard *Card)
 	    return FALSE;
 	}
     }
-
     /* Init HPD */
     rhdPtr->HPD = xnfcalloc(sizeof(struct rhdHPD), 1);
     RHDHPDSave(rhdPtr);
@@ -299,6 +309,10 @@ RHDConnectorsInit(RHDPtr rhdPtr, struct rhdCard *Card)
 	    Connector->HPDMask = 0x00010000;
 	    Connector->HPDCheck = RHDHPDCheck;
 	    break;
+	case RHD_HPD_3:
+	    Connector->HPDMask = 0x01000000;
+	    Connector->HPDCheck = RHDHPDCheck;
+	    break;
 	default:
 	    Connector->HPDCheck = NULL;
 	    break;
@@ -315,40 +329,50 @@ RHDConnectorsInit(RHDPtr rhdPtr, struct rhdCard *Card)
 		    break;
 
 	    if (!Output) {
-		switch (ConnectorInfo[i].Output[k]) {
-		case RHD_OUTPUT_DACA:
-		    Output = RHDDACAInit(rhdPtr);
-		    RHDOutputAdd(rhdPtr, Output);
-		    break;
-		case RHD_OUTPUT_DACB:
-		    Output = RHDDACBInit(rhdPtr);
-		    RHDOutputAdd(rhdPtr, Output);
-		    break;
-		case RHD_OUTPUT_TMDSA:
-		    Output = RHDTMDSAInit(rhdPtr);
-		    RHDOutputAdd(rhdPtr, Output);
-		    break;
-		case RHD_OUTPUT_LVTMA:
-		    Output = RHDLVTMAInit(rhdPtr, ConnectorInfo[i].Type);
-		    RHDOutputAdd(rhdPtr, Output);
-		    break;
+		if (!RHDUseAtom(rhdPtr, NULL, atomUsageOutput)) {
+		    switch (ConnectorInfo[i].Output[k]) {
+		    case RHD_OUTPUT_DACA:
+			Output = RHDDACAInit(rhdPtr);
+			RHDOutputAdd(rhdPtr, Output);
+			break;
+		    case RHD_OUTPUT_DACB:
+			Output = RHDDACBInit(rhdPtr);
+			RHDOutputAdd(rhdPtr, Output);
+			break;
+		    case RHD_OUTPUT_TMDSA:
+			Output = RHDTMDSAInit(rhdPtr);
+			RHDOutputAdd(rhdPtr, Output);
+			break;
+		    case RHD_OUTPUT_LVTMA:
+			Output = RHDLVTMAInit(rhdPtr, ConnectorInfo[i].Type);
+			RHDOutputAdd(rhdPtr, Output);
+			break;
 		    case RHD_OUTPUT_DVO:
-		    Output = RHDDDIAInit(rhdPtr, ConnectorInfo[i].Type);
+			Output = RHDDDIAInit(rhdPtr);
+			if (Output)
+			    RHDOutputAdd(rhdPtr, Output);
+			break;
+		    case RHD_OUTPUT_KLDSKP_LVTMA:
+		    case RHD_OUTPUT_UNIPHYA:
+		    case RHD_OUTPUT_UNIPHYB:
+			Output = RHDDIGInit(rhdPtr, ConnectorInfo[i].Output[k], ConnectorInfo[i].Type);
+			RHDOutputAdd(rhdPtr, Output);
+			break;
+		    default:
+			xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR,
+				   "%s: unhandled output id: %d. Trying fallback to AtomBIOS\n", __func__,
+				   ConnectorInfo[i].Output[k]);
+			break;
+		    }
+		}
+#ifdef ATOM_BIOS
+		if (!Output) {
+		    Output = RHDAtomOutputInit(rhdPtr, ConnectorInfo[i].Type,
+					       ConnectorInfo[i].Output[k]);
 		    if (Output)
 			RHDOutputAdd(rhdPtr, Output);
-		    break;
-		case RHD_OUTPUT_KLDSKP_LVTMA:
-		case RHD_OUTPUT_UNIPHYA:
-		case RHD_OUTPUT_UNIPHYB:
-		    Output = RHDDIGInit(rhdPtr, ConnectorInfo[i].Output[k], ConnectorInfo[i].Type);
-		    RHDOutputAdd(rhdPtr, Output);
-		    break;
-		default:
-		    xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR,
-			       "%s: unhandled output id: %d\n", __func__,
-			       ConnectorInfo[i].Output[k]);
-		    break;
 		}
+#endif
 	    }
 
 	    if (Output) {
@@ -374,6 +398,7 @@ RHDConnectorsInit(RHDPtr rhdPtr, struct rhdCard *Card)
 	for (i = 0; i < RHD_CONNECTORS_MAX; i++)
 	    if (ConnectorInfo[i].Type != RHD_CONNECTOR_NONE)
 		xfree(ConnectorInfo[i].Name);
+	/* Don't free the Privates as they are hooked into the rhdConnector structures !!! */
 	xfree(ConnectorInfo);
     }
 
@@ -416,17 +441,18 @@ RhdPrintConnectorInfo(int scrnIndex, struct rhdConnectorInfo *cp)
 
     const char *c_name[] =
 	{ "RHD_CONNECTOR_NONE", "RHD_CONNECTOR_VGA", "RHD_CONNECTOR_DVI",
-	  "RHD_CONNECTOR_DVI_SINGLE", "RHD_CONNECTOR_PANEL", "RHD_CONNECTOR_TV" };
+	  "RHD_CONNECTOR_DVI_SINGLE", "RHD_CONNECTOR_PANEL",
+	  "RHD_CONNECTOR_TV", "RHD_CONNECTOR_PCIE" };
 
     const char *ddc_name[] =
 	{ "RHD_DDC_0", "RHD_DDC_1", "RHD_DDC_2", "RHD_DDC_3" };
 
     const char *hpd_name_normal[] =
-	{ "RHD_HPD_NONE", "RHD_HPD_0", "RHD_HPD_1", "RHD_HPD_2" };
+	{ "RHD_HPD_NONE", "RHD_HPD_0", "RHD_HPD_1", "RHD_HPD_2", "RHD_HPD_3" };
     const char *hpd_name_off[] =
-	{ "RHD_HPD_NONE", "RHD_HPD_NONE /*0*/", "RHD_HPD_NONE /*1*/", "RHD_HPD_NONE /*2*/" };
+	{ "RHD_HPD_NONE", "RHD_HPD_NONE /*0*/", "RHD_HPD_NONE /*1*/", "RHD_HPD_NONE /*2*/", "RHD_HPD_NONE /*3*/" };
     const char *hpd_name_swapped[] =
-	{ "RHD_HPD_NONE", "RHD_HPD_1 /*swapped*/", "RHD_HPD_0 /*swapped*/", "RHD_HPD_2" };
+	{ "RHD_HPD_NONE", "RHD_HPD_1 /*swapped*/", "RHD_HPD_0 /*swapped*/", "RHD_HPD_2", "RHD_HPD_3" };
 
     const char *output_name[] =
 	{ "RHD_OUTPUT_NONE", "RHD_OUTPUT_DACA", "RHD_OUTPUT_DACB", "RHD_OUTPUT_TMDSA",
@@ -453,7 +479,7 @@ RhdPrintConnectorInfo(int scrnIndex, struct rhdConnectorInfo *cp)
 	    break;
 	xf86DrvMsg(scrnIndex, X_INFO, "Connector[%i] {%s, \"%s\", %s, %s, { %s, %s } }\n",
 		   n, c_name[cp[n].Type], cp[n].Name,
-		   cp[n].DDC == RHD_DDC_NONE ? "DDC_NONE" : ddc_name[cp[n].DDC],
+		   cp[n].DDC == RHD_DDC_NONE ? "RHD_DDC_NONE" : ddc_name[cp[n].DDC],
 		   hpd_name[cp[n].HPD], output_name[cp[n].Output[0]],
 		   output_name[cp[n].Output[1]]);
     }

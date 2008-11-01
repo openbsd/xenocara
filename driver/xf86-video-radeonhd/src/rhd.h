@@ -1,8 +1,8 @@
 /*
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Egbert Eich   <eich@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
+ * Copyright 2007, 2008  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -82,29 +82,15 @@ enum RHD_CHIPSETS {
     RHD_M76,
     /* RV670 came into existence after RV6x0 and M7x */
     RHD_RV670,
+    RHD_M88,
     RHD_R680,
     RHD_RV620,
     RHD_M82,
     RHD_RV635,
     RHD_M86,
+    RHD_RS780,
+    RHD_RV770,
     RHD_CHIP_END
-};
-
-enum RHD_FAMILIES {
-    RHD_FAMILY_UNKNOWN = 0,
-    RHD_FAMILY_RV515,
-    RHD_FAMILY_R520,
-    RHD_FAMILY_RV530,
-    RHD_FAMILY_RV560,
-    RHD_FAMILY_RV570,
-    RHD_FAMILY_R580,
-    RHD_FAMILY_RS690,
-    RHD_FAMILY_R600,
-    RHD_FAMILY_RV610,
-    RHD_FAMILY_RV630,
-    RHD_FAMILY_RV670,
-    RHD_FAMILY_RV620,
-    RHD_FAMILY_RV635
 };
 
 enum RHD_HPD_USAGE {
@@ -129,7 +115,20 @@ enum RHD_TV_MODE {
     RHD_TV_CV = 1 << 9
 };
 
-#define RHD_CONNECTORS_MAX 4
+enum rhdPropertyAction {
+    rhdPropertyCheck,
+    rhdPropertyGet,
+    rhdPropertySet
+};
+
+union rhdPropertyData
+{
+    CARD32 integer;
+    char *string;
+    Bool Bool;
+};
+
+#define RHD_CONNECTORS_MAX 6
 
 /* Just define where which PCI BAR lives for now. Will deal with different
  * locations as soon as cards with a different BAR layout arrives.
@@ -141,9 +140,33 @@ enum RHD_TV_MODE {
 #define RHD_POWER_ON       0
 #define RHD_POWER_RESET    1   /* off temporarily */
 #define RHD_POWER_SHUTDOWN 2   /* long term shutdown */
+#define RHD_POWER_UNKNOWN  3   /* initial state */
 
 #define RHD_VBIOS_SIZE 0x10000
 
+#ifndef XSERVER_LIBPCIACCESS
+# define PCI_BUS(x)	((x)->bus)
+# define PCI_DEV(x)	((x)->device)
+# define PCI_FUNC(x)	((x)->func)
+#else
+# define PCI_BUS(x)	(((x)->domain << 8) | (x)->bus)
+# define PCI_DEV(x)	((x)->dev)
+# define PCI_FUNC(x)	((x)->func)
+typedef struct pci_device *pciVideoPtr;
+#endif
+
+enum rhdCardType {
+    RHD_CARD_NONE,
+    RHD_CARD_AGP,
+    RHD_CARD_PCIE
+};
+
+enum {
+    RHD_PCI_CAPID_AGP    = 0x02,
+    RHD_PCI_CAPID_PCIE   = 0x10
+};
+
+typedef struct BIOSScratchOutputPrivate rhdOutputDriverPrivate;
 typedef struct _rhdI2CRec *rhdI2CPtr;
 typedef struct _atomBiosHandle *atomBiosHandlePtr;
 typedef struct _rhdShadowRec *rhdShadowPtr;
@@ -172,7 +195,7 @@ enum AccelMethod {
 typedef struct RHDRec {
     int                 scrnIndex;
 
-    int                 ChipSet;
+    enum RHD_CHIPSETS   ChipSet;
 #ifdef XSERVER_LIBPCIACCESS
     struct pci_device   *PciInfo;
     struct pci_device   *NBPciInfo;
@@ -182,7 +205,9 @@ typedef struct RHDRec {
     PCITAG		NBPciTag;
 #endif
     unsigned int	PciDeviceID;
+    enum rhdCardType	cardType;
     int			entityIndex;
+    EntityInfoPtr       pEnt;
     struct rhdCard      *Card;
     OptionInfoPtr       Options;
     enum AccelMethod    AccelMethod;
@@ -193,15 +218,22 @@ typedef struct RHDRec {
     RHDOpt		noRandr;
     RHDOpt		rrUseXF86Edid;
     RHDOpt		rrOutputOrder;
+    RHDOpt		useDRI;
     RHDOpt		tvModeName;
+    RHDOpt		scaleTypeOpt;
+    RHDOpt		unverifiedFeatures;
     enum RHD_HPD_USAGE	hpdUsage;
     unsigned int        FbMapSize;
     pointer             FbBase;   /* map base of fb   */
+    unsigned int        FbPhysAddress; /* card PCI BAR address of FB */
     unsigned int        FbIntAddress; /* card internal address of FB */
+    unsigned int        FbPCIAddress; /* physical address of FB */
 
     /* Some simplistic memory handling */
+#define ALIGN(x,align)	(((x)+(align)-1)&~((align)-1))
+#define RHD_FB_ALIGNMENT 0x1000
     /* Use this macro to always chew up 4096byte aligned pieces. */
-#define RHD_FB_CHUNK(x)     (((x) + 0xFFF) & ~0xFFF) /* align */
+#define RHD_FB_CHUNK(x)     ALIGN((x), RHD_FB_ALIGNMENT)
     unsigned int        FbFreeStart;
     unsigned int        FbFreeSize;
 
@@ -215,7 +247,8 @@ typedef struct RHDRec {
     unsigned int        FbOffscreenSize;
 
     unsigned int        MMIOMapSize;
-    pointer             MMIOBase; /* map base if mmio */
+    pointer             MMIOBase; /* map base of mmio */
+    unsigned int        MMIOPCIAddress; /* physical address of mmio */
 
     struct _xf86CursorInfoRec  *CursorInfo;
     struct rhd_Cursor_Bits     *CursorBits; /* ARGB if NULL */
@@ -254,16 +287,31 @@ typedef struct RHDRec {
     enum RHD_TV_MODE   tvMode;
     rhdShadowPtr       shadowPtr;
 
+    struct RhdCS       *CS;
+
     struct _XAAInfoRec *XAAInfo;
 #ifdef USE_EXA
     struct _ExaDriver  *EXAInfo;
 #endif
-    void               *TwoDInfo;
+    void               *TwoDPrivate;
+
+    /* For EXA Render and Textured Video */
+    void               *ThreeDPrivate;
 
     /* RandR compatibility layer */
     struct rhdRandr    *randr;
     /* log verbosity - store this for convenience */
     int			verbosity;
+
+    /* DRI */
+    struct rhdDri      *dri;
+
+    /* BIOS Scratch registers */
+    struct rhdBiosScratchRegisters *BIOSScratch;
+
+    /* AtomBIOS usage */
+    RHDOpt		UseAtomBIOS;
+    CARD32		UseAtomFlags;
 } RHDRec, *RHDPtr;
 
 #define RHDPTR(p) 	((RHDPtr)((p)->driverPrivate))
@@ -278,26 +326,37 @@ typedef struct RHDRec {
 #endif
 
 
+enum atomSubSystem {
+    atomUsageCrtc,
+    atomUsagePLL,
+    atomUsageOutput,
+    atomUsageAny
+};
+
 /* rhd_driver.c */
 /* Some handy functions that makes life so much more readable */
-unsigned int RHDReadPCIBios(RHDPtr rhdPtr, unsigned char **prt);
-CARD32 _RHDRegRead(int scrnIndex, CARD16 offset);
+extern unsigned int RHDReadPCIBios(RHDPtr rhdPtr, unsigned char **prt);
+extern Bool RHDScalePolicy(struct rhdMonitor *Monitor, struct rhdConnector *Connector);
+extern void RHDAllIdle(ScrnInfoPtr pScrn);
+extern Bool RHDUseAtom(RHDPtr rhdPtr, enum RHD_CHIPSETS *BlackList, enum atomSubSystem subsys);
+
+extern CARD32 _RHDRegRead(int scrnIndex, CARD16 offset);
 #define RHDRegRead(ptr, offset) _RHDRegRead((ptr)->scrnIndex, (offset))
-void _RHDRegWrite(int scrnIndex, CARD16 offset, CARD32 value);
+extern void _RHDRegWrite(int scrnIndex, CARD16 offset, CARD32 value);
 #define RHDRegWrite(ptr, offset, value) _RHDRegWrite((ptr)->scrnIndex, (offset), (value))
-void _RHDRegMask(int scrnIndex, CARD16 offset, CARD32 value, CARD32 mask);
+extern void _RHDRegMask(int scrnIndex, CARD16 offset, CARD32 value, CARD32 mask);
 #define RHDRegMask(ptr, offset, value, mask) _RHDRegMask((ptr)->scrnIndex, (offset), (value), (mask))
-CARD32 _RHDReadMC(int scrnIndex, CARD32 addr);
+extern CARD32 _RHDReadMC(int scrnIndex, CARD32 addr);
 #define RHDReadMC(ptr,addr) _RHDReadMC((ptr)->scrnIndex,(addr))
-void _RHDWriteMC(int scrnIndex, CARD32 addr, CARD32 data);
+extern void _RHDWriteMC(int scrnIndex, CARD32 addr, CARD32 data);
 #define RHDWriteMC(ptr,addr,value) _RHDWriteMC((ptr)->scrnIndex,(addr),(value))
-CARD32 _RHDReadPLL(int scrnIndex, CARD16 offset);
+extern CARD32 _RHDReadPLL(int scrnIndex, CARD16 offset);
 #define RHDReadPLL(ptr, off) _RHDReadPLL((ptr)->scrnIndex,(off))
-void _RHDWritePLL(int scrnIndex, CARD16 offset, CARD32 data);
+extern void _RHDWritePLL(int scrnIndex, CARD16 offset, CARD32 data);
 #define RHDWritePLL(ptr, off, value) _RHDWritePLL((ptr)->scrnIndex,(off),(value))
+extern unsigned int RHDAllocFb(RHDPtr rhdPtr, unsigned int size, const char *name);
 
 /* rhd_id.c */
-enum RHD_FAMILIES RHDFamily(enum RHD_CHIPSETS chipset);
 Bool RHDIsIGP(enum RHD_CHIPSETS chipset);
 
 /* rhd_helper.c */

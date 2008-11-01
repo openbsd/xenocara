@@ -1,8 +1,8 @@
 /*
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Egbert Eich   <eich@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
+ * Copyright 2007, 2008  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -42,68 +42,79 @@
 #include "rhd_lut.h"
 #include "rhd_regs.h"
 #include "rhd_modes.h"
-
+#include "rhd_mc.h"
+#ifdef ATOM_BIOS
+# include "rhd_atombios.h"
+#endif
 #define D1_REG_OFFSET 0x0000
 #define D2_REG_OFFSET 0x0800
 #define FMT1_REG_OFFSET 0x0000
 #define FMT2_REG_OFFSET 0x800
 
-struct rhdCrtcStore {
-    CARD32 GrphEnable;
-    CARD32 GrphControl;
-    CARD32 GrphXStart;
-    CARD32 GrphYStart;
-    CARD32 GrphXEnd;
-    CARD32 GrphYEnd;
-    CARD32 GrphSwap;
-    CARD32 GrphPrimarySurfaceAddress;
-    CARD32 GrphSurfaceOffsetX;
-    CARD32 GrphSurfaceOffsetY;
-    CARD32 GrphPitch;
-    CARD32 GrphLutSel;
-
-    CARD32 ModeViewPortSize;
-    CARD32 ModeViewPortStart;
-    CARD32 ModeDesktopHeight;
-    CARD32 ModeOverScanH;
-    CARD32 ModeOverScanV;
-    CARD32 ModeDataFormat;
-
-    CARD32 ScaleEnable;
-    CARD32 ScaleTapControl;
-    CARD32 ModeCenter;
-    CARD32 ScaleHV;
-    CARD32 ScaleHFilter;
-    CARD32 ScaleVFilter;
-    CARD32 ScaleDither;
-
-    CARD32 CrtcControl;
-
-    CARD32 CrtcHTotal;
-    CARD32 CrtcHBlankStartEnd;
-    CARD32 CrtcHSyncA;
-    CARD32 CrtcHSyncACntl;
-    CARD32 CrtcHSyncB;
-    CARD32 CrtcHSyncBCntl;
-
-    CARD32 CrtcVTotal;
-    CARD32 CrtcVBlankStartEnd;
-    CARD32 CrtcVSyncA;
-    CARD32 CrtcVSyncACntl;
-    CARD32 CrtcVSyncB;
-    CARD32 CrtcVSyncBCntl;
-    CARD32 CrtcCountControl;
-    CARD32 CrtcInterlaceControl;
-
-    CARD32 CrtcBlackColor;
-    CARD32 CrtcBlankControl;
-    CARD32 CrtcPCLKControl;
+struct rhdCrtcFMTPrivate {
+    CARD32 StoreControl;
+    CARD32 StoreBitDepthControl;
+    CARD32 StoreClampCntl;
 };
 
-struct rhdFMTStore {
-    CARD32 Control;
-    CARD32 BitDepthControl;
-    CARD32 ClampCntl;
+struct rhdCrtcFBPrivate {
+    CARD32 StoreGrphEnable;
+    CARD32 StoreGrphControl;
+    CARD32 StoreGrphXStart;
+    CARD32 StoreGrphYStart;
+    CARD32 StoreGrphXEnd;
+    CARD32 StoreGrphYEnd;
+    CARD32 StoreGrphSwap;
+    CARD32 StoreGrphPrimarySurfaceAddress;
+    CARD32 StoreGrphSurfaceOffsetX;
+    CARD32 StoreGrphSurfaceOffsetY;
+    CARD32 StoreGrphPitch;
+    CARD32 StoreModeDesktopHeight;
+};
+
+struct rhdCrtcLUTPrivate {
+    CARD32 StoreGrphLutSel;
+};
+
+struct rhdCrtcScalePrivate {
+    CARD32 StoreModeViewPortSize;
+
+    CARD32 StoreModeOverScanH;
+    CARD32 StoreModeOverScanV;
+
+    CARD32 StoreModeViewPortStart;
+    CARD32 StoreScaleEnable;
+    CARD32 StoreScaleTapControl;
+    CARD32 StoreModeCenter;
+    CARD32 StoreScaleHV;
+    CARD32 StoreScaleHFilter;
+    CARD32 StoreScaleVFilter;
+    CARD32 StoreScaleDither;
+};
+
+struct rhdCrtcModePrivate {
+    CARD32 StoreCrtcControl;
+
+    CARD32 StoreCrtcHTotal;
+    CARD32 StoreCrtcHBlankStartEnd;
+    CARD32 StoreCrtcHSyncA;
+    CARD32 StoreCrtcHSyncACntl;
+    CARD32 StoreCrtcHSyncB;
+    CARD32 StoreCrtcHSyncBCntl;
+
+    CARD32 StoreCrtcVTotal;
+    CARD32 StoreCrtcVBlankStartEnd;
+    CARD32 StoreCrtcVSyncA;
+    CARD32 StoreCrtcVSyncACntl;
+    CARD32 StoreCrtcVSyncB;
+    CARD32 StoreCrtcVSyncBCntl;
+    CARD32 StoreCrtcCountControl;
+
+    CARD32 StoreModeDataFormat;
+    CARD32 StoreCrtcInterlaceControl;
+
+    CARD32 StoreCrtcBlackColor;
+    CARD32 StoreCrtcBlankControl;
 };
 
 /*
@@ -248,6 +259,105 @@ DxFBSet(struct rhdCrtc *Crtc, CARD16 Pitch, CARD16 Width, CARD16 Height,
 /*
  *
  */
+static void
+DxFBSave(struct rhdCrtc *Crtc)
+{
+    struct rhdCrtcFBPrivate *FBPriv;
+    CARD32 RegOff;
+
+    if (!Crtc->FBPriv)
+	FBPriv = xnfcalloc(1, sizeof(struct rhdCrtcFBPrivate));
+    else
+	FBPriv = Crtc->FBPriv;
+
+    if (Crtc->Id == RHD_CRTC_1)
+	RegOff = D1_REG_OFFSET;
+    else
+	RegOff = D2_REG_OFFSET;
+
+    FBPriv->StoreGrphEnable = RHDRegRead(Crtc, RegOff + D1GRPH_ENABLE);
+    FBPriv->StoreGrphControl = RHDRegRead(Crtc, RegOff + D1GRPH_CONTROL);
+    FBPriv->StoreGrphXStart = RHDRegRead(Crtc, RegOff + D1GRPH_X_START);
+    FBPriv->StoreGrphYStart = RHDRegRead(Crtc, RegOff + D1GRPH_Y_START);
+    FBPriv->StoreGrphXEnd = RHDRegRead(Crtc, RegOff + D1GRPH_X_END);
+    FBPriv->StoreGrphYEnd = RHDRegRead(Crtc, RegOff + D1GRPH_Y_END);
+    if (RHDPTRI(Crtc)->ChipSet >= RHD_R600)
+	FBPriv->StoreGrphSwap = RHDRegRead(Crtc, RegOff + D1GRPH_SWAP_CNTL);
+    FBPriv->StoreGrphPrimarySurfaceAddress =
+	RHDRegRead(Crtc, RegOff + D1GRPH_PRIMARY_SURFACE_ADDRESS);
+    FBPriv->StoreGrphSurfaceOffsetX =
+	RHDRegRead(Crtc, RegOff + D1GRPH_SURFACE_OFFSET_X);
+    FBPriv->StoreGrphSurfaceOffsetY =
+	RHDRegRead(Crtc, RegOff + D1GRPH_SURFACE_OFFSET_Y);
+    FBPriv->StoreGrphPitch = RHDRegRead(Crtc, RegOff + D1GRPH_PITCH);
+    FBPriv->StoreModeDesktopHeight = RHDRegRead(Crtc, RegOff + D1MODE_DESKTOP_HEIGHT);
+
+    Crtc->FBPriv = FBPriv;
+}
+
+/*
+ *
+ */
+static void
+DxFBRestore(struct rhdCrtc *Crtc)
+{
+    struct rhdCrtcFBPrivate *FBPriv = Crtc->FBPriv;
+    CARD32 RegOff;
+
+    if (!FBPriv) {
+	xf86DrvMsg(Crtc->scrnIndex, X_ERROR, "%s: no registers stored!\n",
+		   __func__);
+	return;
+    }
+
+    if (Crtc->Id == RHD_CRTC_1)
+	RegOff = D1_REG_OFFSET;
+    else
+	RegOff = D2_REG_OFFSET;
+
+    /* FBSet */
+    RHDRegWrite(Crtc, RegOff + D1GRPH_CONTROL, FBPriv->StoreGrphControl);
+    RHDRegWrite(Crtc, RegOff + D1GRPH_X_START, FBPriv->StoreGrphXStart);
+    RHDRegWrite(Crtc, RegOff + D1GRPH_Y_START, FBPriv->StoreGrphYStart);
+    RHDRegWrite(Crtc, RegOff + D1GRPH_X_END, FBPriv->StoreGrphXEnd);
+    RHDRegWrite(Crtc, RegOff + D1GRPH_Y_END, FBPriv->StoreGrphYEnd);
+    if (RHDPTRI(Crtc)->ChipSet >= RHD_R600)
+	RHDRegWrite(Crtc, RegOff + D1GRPH_SWAP_CNTL, FBPriv->StoreGrphSwap);
+
+    /* disable read requests */
+    RHDRegMask(Crtc, RegOff + D1CRTC_CONTROL, 0x01000000, 0x01000000);
+    RHDRegMask(Crtc, RegOff + D1GRPH_ENABLE, 0, 0x00000001);
+    usleep (10);
+
+    RHDRegWrite(Crtc, RegOff + D1GRPH_PRIMARY_SURFACE_ADDRESS,
+		FBPriv->StoreGrphPrimarySurfaceAddress);
+    usleep(10);
+
+    RHDRegWrite(Crtc, RegOff + D1GRPH_ENABLE, FBPriv->StoreGrphEnable);
+
+    RHDRegWrite(Crtc, RegOff + D1GRPH_SURFACE_OFFSET_X,
+		FBPriv->StoreGrphSurfaceOffsetX);
+    RHDRegWrite(Crtc, RegOff + D1GRPH_SURFACE_OFFSET_Y,
+		FBPriv->StoreGrphSurfaceOffsetY);
+
+    RHDRegWrite(Crtc, RegOff + D1GRPH_PITCH, FBPriv->StoreGrphPitch);
+    RHDRegWrite(Crtc, RegOff + D1MODE_DESKTOP_HEIGHT, FBPriv->StoreModeDesktopHeight);
+}
+
+/*
+ *
+ */
+static void
+DxFBDestroy(struct rhdCrtc *Crtc)
+{
+    if (Crtc->FBPriv)
+	xfree(Crtc->FBPriv);
+    Crtc->FBPriv = NULL;
+}
+
+/*
+ *
+ */
 static ModeStatus
 DxModeValid(struct rhdCrtc *Crtc, DisplayModePtr Mode)
 {
@@ -262,10 +372,6 @@ DxModeValid(struct rhdCrtc *Crtc, DisplayModePtr Mode)
 	Mode->CrtcVSyncStart = Mode->CrtcVDisplay + 2;
 	Mode->CrtcVAdjusted = TRUE;
     }
-
-    /* D1_MODE_VIEWPORT_WIDTH: 14bits */
-    if (Mode->CrtcHDisplay >= 0x4000)
-	return MODE_BAD_HVALUE;
 
     /* D1CRTC_H_TOTAL - 1 : 13bits */
     if (Mode->CrtcHTotal > 0x2000)
@@ -285,10 +391,6 @@ DxModeValid(struct rhdCrtc *Crtc, DisplayModePtr Mode)
     /* D1CRTC_H_SYNC_A_END: 13bits */
     if (tmp >= 0x2000)
 	return MODE_HSYNC_WIDE;
-
-    /* D1_MODE_VIEWPORT_HEIGHT: 14bits */
-    if (Mode->CrtcVDisplay >= 0x4000)
-	return MODE_BAD_VVALUE;
 
     /* D1CRTC_V_TOTAL - 1 : 13bits */
     if (Mode->CrtcVTotal > 0x2000)
@@ -379,14 +481,231 @@ DxModeSet(struct rhdCrtc *Crtc, DisplayModePtr Mode)
 /*
  *
  */
-static ModeStatus
-DxScaleValid(struct rhdCrtc *Crtc, CARD32 Type,
-	     DisplayModePtr Mode, DisplayModePtr ScaledMode)
+static void
+DxModeSave(struct rhdCrtc *Crtc)
 {
+    struct rhdCrtcModePrivate *ModePriv;
+    CARD32 RegOff;
 
-    /* Our hardware is nice: scale up/down, it doesn't care.
-     * Same for centering and such - it simply doesn't care.
-     */
+    if (!Crtc->ModePriv)
+	ModePriv = xnfcalloc(1, sizeof(struct rhdCrtcModePrivate));
+    else
+	ModePriv = Crtc->ModePriv;
+
+    if (Crtc->Id == RHD_CRTC_1)
+	RegOff = D1_REG_OFFSET;
+    else
+	RegOff = D2_REG_OFFSET;
+
+    ModePriv->StoreCrtcControl = RHDRegRead(Crtc, RegOff + D1CRTC_CONTROL);
+
+    ModePriv->StoreCrtcHTotal = RHDRegRead(Crtc, RegOff + D1CRTC_H_TOTAL);
+    ModePriv->StoreCrtcHBlankStartEnd =
+	RHDRegRead(Crtc, RegOff + D1CRTC_H_BLANK_START_END);
+    ModePriv->StoreCrtcHSyncA = RHDRegRead(Crtc, RegOff + D1CRTC_H_SYNC_A);
+    ModePriv->StoreCrtcHSyncACntl = RHDRegRead(Crtc, RegOff + D1CRTC_H_SYNC_A_CNTL);
+    ModePriv->StoreCrtcHSyncB = RHDRegRead(Crtc, RegOff + D1CRTC_H_SYNC_B);
+    ModePriv->StoreCrtcHSyncBCntl = RHDRegRead(Crtc, RegOff + D1CRTC_H_SYNC_B_CNTL);
+
+    ModePriv->StoreModeDataFormat = RHDRegRead(Crtc, RegOff + D1MODE_DATA_FORMAT);
+    ModePriv->StoreCrtcInterlaceControl = RHDRegRead(Crtc, RegOff + D1CRTC_INTERLACE_CONTROL);
+
+    ModePriv->StoreCrtcVTotal = RHDRegRead(Crtc, RegOff + D1CRTC_V_TOTAL);
+    ModePriv->StoreCrtcVBlankStartEnd =
+	RHDRegRead(Crtc, RegOff + D1CRTC_V_BLANK_START_END);
+    ModePriv->StoreCrtcVSyncA = RHDRegRead(Crtc, RegOff + D1CRTC_V_SYNC_A);
+    ModePriv->StoreCrtcVSyncACntl = RHDRegRead(Crtc, RegOff + D1CRTC_V_SYNC_A_CNTL);
+    ModePriv->StoreCrtcVSyncB = RHDRegRead(Crtc, RegOff + D1CRTC_V_SYNC_B);
+    ModePriv->StoreCrtcVSyncBCntl = RHDRegRead(Crtc, RegOff + D1CRTC_V_SYNC_B_CNTL);
+
+    ModePriv->StoreCrtcBlackColor = RHDRegRead(Crtc, RegOff + D1CRTC_BLACK_COLOR);
+    ModePriv->StoreCrtcBlankControl = RHDRegRead(Crtc, RegOff + D1CRTC_BLANK_CONTROL);
+
+    ModePriv->StoreCrtcCountControl = RHDRegRead(Crtc, RegOff + D1CRTC_COUNT_CONTROL);
+    RHDDebug(Crtc->scrnIndex, "Saved CrtcCountControl[%i] = 0x%8.8x\n",
+	     Crtc->Id,ModePriv->StoreCrtcCountControl);
+
+    Crtc->ModePriv = ModePriv;
+}
+
+/*
+ *
+ */
+static void
+DxModeRestore(struct rhdCrtc *Crtc)
+{
+    struct rhdCrtcModePrivate *ModePriv = Crtc->ModePriv;
+    CARD32 RegOff;
+
+    if (!ModePriv) {
+	xf86DrvMsg(Crtc->scrnIndex, X_ERROR, "%s: no registers stored!\n",
+		   __func__);
+	return;
+    }
+
+    if (Crtc->Id == RHD_CRTC_1)
+	RegOff = D1_REG_OFFSET;
+    else
+	RegOff = D2_REG_OFFSET;
+
+    /* ModeSet */
+    RHDRegWrite(Crtc, RegOff + D1CRTC_CONTROL, ModePriv->StoreCrtcControl);
+
+    RHDRegWrite(Crtc, RegOff + D1CRTC_H_TOTAL, ModePriv->StoreCrtcHTotal);
+    RHDRegWrite(Crtc, RegOff + D1CRTC_H_BLANK_START_END,
+		ModePriv->StoreCrtcHBlankStartEnd);
+    RHDRegWrite(Crtc, RegOff + D1CRTC_H_SYNC_A, ModePriv->StoreCrtcHSyncA);
+    RHDRegWrite(Crtc, RegOff + D1CRTC_H_SYNC_A_CNTL, ModePriv->StoreCrtcHSyncACntl);
+    RHDRegWrite(Crtc, RegOff + D1CRTC_H_SYNC_B, ModePriv->StoreCrtcHSyncB);
+    RHDRegWrite(Crtc, RegOff + D1CRTC_H_SYNC_B_CNTL, ModePriv->StoreCrtcHSyncBCntl);
+
+    RHDRegWrite(Crtc, RegOff + D1MODE_DATA_FORMAT, ModePriv->StoreModeDataFormat);
+    RHDRegWrite(Crtc, RegOff + D1CRTC_INTERLACE_CONTROL, ModePriv->StoreCrtcInterlaceControl);
+
+    RHDRegWrite(Crtc, RegOff + D1CRTC_V_TOTAL, ModePriv->StoreCrtcVTotal);
+    RHDRegWrite(Crtc, RegOff + D1CRTC_V_BLANK_START_END,
+		ModePriv->StoreCrtcVBlankStartEnd);
+    RHDRegWrite(Crtc, RegOff + D1CRTC_V_SYNC_A, ModePriv->StoreCrtcVSyncA);
+    RHDRegWrite(Crtc, RegOff + D1CRTC_V_SYNC_A_CNTL, ModePriv->StoreCrtcVSyncACntl);
+    RHDRegWrite(Crtc, RegOff + D1CRTC_V_SYNC_B, ModePriv->StoreCrtcVSyncB);
+    RHDRegWrite(Crtc, RegOff + D1CRTC_V_SYNC_B_CNTL, ModePriv->StoreCrtcVSyncBCntl);
+
+    RHDRegWrite(Crtc, RegOff + D1CRTC_COUNT_CONTROL, ModePriv->StoreCrtcCountControl);
+
+    /* Blank */
+    RHDRegWrite(Crtc, RegOff + D1CRTC_BLACK_COLOR, ModePriv->StoreCrtcBlackColor);
+    RHDRegWrite(Crtc, RegOff + D1CRTC_BLANK_CONTROL, ModePriv->StoreCrtcBlankControl);
+
+    /* When VGA is enabled, it imposes its timing on us, so our CRTC SYNC
+     * timing can be set to 0. This doesn't always restore properly...
+     * Workaround is to set a valid sync length for a bit so VGA can
+     * latch in. */
+    if (!ModePriv->StoreCrtcVSyncA && (ModePriv->StoreCrtcControl & 0x00000001)) {
+	RHDRegWrite(Crtc, RegOff + D1CRTC_V_SYNC_A, 0x00040000);
+	usleep(300000); /* seems a reliable timeout here */
+	RHDRegWrite(Crtc, RegOff + D1CRTC_V_SYNC_A, ModePriv->StoreCrtcVSyncA);
+    }
+}
+
+/*
+ *
+ */
+static void
+DxModeDestroy(struct rhdCrtc *Crtc)
+{
+    RHDFUNC(Crtc);
+
+    if (Crtc->ModePriv)
+	xfree(Crtc->ModePriv);
+    Crtc->ModePriv = NULL;
+}
+
+/*
+ *
+ */
+struct rhdScalerOverscan
+rhdCalculateOverscan(DisplayModePtr Mode, DisplayModePtr ScaledToMode, enum rhdCrtcScaleType Type)
+{
+    struct rhdScalerOverscan Overscan;
+    int tmp;
+
+    Overscan.OverscanTop = Overscan.OverscanBottom = Overscan.OverscanLeft = Overscan.OverscanRight = 0;
+    Overscan.Type = Type;
+
+    if (ScaledToMode) {
+	Overscan.OverscanTop = ScaledToMode->CrtcVDisplay - Mode->CrtcVDisplay;
+	Overscan.OverscanLeft = ScaledToMode->CrtcHDisplay - Mode->CrtcHDisplay;
+
+	if (!Overscan.OverscanTop && !Overscan.OverscanLeft)
+	    Overscan.Type = RHD_CRTC_SCALE_TYPE_NONE;
+
+	/* handle down scaling */
+	if (Overscan.OverscanTop < 0) {
+	    Overscan.Type = RHD_CRTC_SCALE_TYPE_SCALE;
+	    Overscan.OverscanTop = 0;
+	}
+	if (Overscan.OverscanLeft < 0) {
+	    Overscan.Type = RHD_CRTC_SCALE_TYPE_SCALE;
+	    Overscan.OverscanLeft = 0;
+	}
+    }
+
+    switch (Type) {
+	case RHD_CRTC_SCALE_TYPE_NONE:
+	    break;
+
+	case RHD_CRTC_SCALE_TYPE_CENTER:
+	    tmp = Overscan.OverscanTop;
+	    Overscan.OverscanTop >>= 1;
+	    Overscan.OverscanBottom = tmp - Overscan.OverscanTop;
+	    tmp = Overscan.OverscanLeft;
+	    Overscan.OverscanLeft >>= 1;
+	    Overscan.OverscanRight = tmp - Overscan.OverscanLeft;
+	    break;
+
+	case RHD_CRTC_SCALE_TYPE_SCALE:
+	    Overscan.OverscanLeft = Overscan.OverscanRight = Overscan.OverscanTop = Overscan.OverscanBottom = 0;
+	    break;
+	case RHD_CRTC_SCALE_TYPE_SCALE_KEEP_ASPECT_RATIO:
+	{
+	    int p1, p2, tmp;
+	    Overscan.OverscanLeft = Overscan.OverscanRight = Overscan.OverscanTop = Overscan.OverscanBottom = 0;
+	    p1 = Mode->CrtcVDisplay * ScaledToMode->CrtcHDisplay;
+	    p2 = ScaledToMode->CrtcVDisplay * Mode->CrtcHDisplay;
+	    if (p1 == p2) {
+		Overscan.Type = RHD_CRTC_SCALE_TYPE_SCALE;
+	    } else if (p1 > p2) {
+		tmp = (p2 / Mode->CrtcVDisplay);
+		tmp = ScaledToMode->CrtcHDisplay - tmp;
+		Overscan.OverscanLeft = tmp >> 1;
+		Overscan.OverscanRight = tmp - Overscan.OverscanLeft;
+		ErrorF("HScale %i %i\n", Overscan.OverscanLeft, Overscan.OverscanRight);
+	    } else {
+		tmp = (p1 / Mode->CrtcHDisplay);
+		tmp = ScaledToMode->CrtcVDisplay - tmp;
+		Overscan.OverscanTop = tmp >> 1;
+		Overscan.OverscanBottom = tmp - Overscan.OverscanTop;
+		ErrorF("VScale %i %i\n", Overscan.OverscanTop, Overscan.OverscanBottom);
+	    }
+	    break;
+	}
+    }
+
+    return Overscan;
+}
+
+/*
+ *
+ */
+static ModeStatus
+DxScaleValid(struct rhdCrtc *Crtc, enum rhdCrtcScaleType Type,
+	     DisplayModePtr Mode, DisplayModePtr ScaledToMode)
+{
+    struct rhdScalerOverscan Overscan;
+
+    /* D1_MODE_VIEWPORT_WIDTH: 14bits */
+    if (Mode->CrtcHDisplay >= 0x4000)
+	return MODE_BAD_HVALUE;
+
+    /* D1_MODE_VIEWPORT_HEIGHT: 14bits */
+    if (Mode->CrtcVDisplay >= 0x4000)
+	return MODE_BAD_VVALUE;
+
+    Overscan = rhdCalculateOverscan(Mode, ScaledToMode, Type);
+
+    if (Overscan.OverscanLeft >= 4096 || Overscan.OverscanRight >= 4096)
+	return MODE_HBLANK_WIDE;
+
+    if (Overscan.OverscanTop >= 4096 || Overscan.OverscanBottom >= 4096)
+	return MODE_VBLANK_WIDE;
+
+    if ((Type == RHD_CRTC_SCALE_TYPE_SCALE
+	 || Type == RHD_CRTC_SCALE_TYPE_SCALE_KEEP_ASPECT_RATIO)
+	&& (Mode->Flags & V_INTERLACE))
+	return MODE_NO_INTERLACE;
+
+    /* should we also fail of Type != Overscan.Type? */
+
     return MODE_OK;
 }
 
@@ -394,10 +713,12 @@ DxScaleValid(struct rhdCrtc *Crtc, CARD32 Type,
  *
  */
 static void
-DxScaleSet(struct rhdCrtc *Crtc, CARD32 Type,
-	   DisplayModePtr Mode, DisplayModePtr ScaledMode)
+DxScaleSet(struct rhdCrtc *Crtc, enum rhdCrtcScaleType Type,
+	   DisplayModePtr Mode, DisplayModePtr ScaledToMode)
 {
+    RHDPtr rhdPtr = RHDPTRI(Crtc);
     CARD16 RegOff;
+    struct rhdScalerOverscan Overscan;
 
     RHDDebug(Crtc->scrnIndex, "FUNCTION: %s: %s viewport: %ix%i\n", __func__, Crtc->Name,
 	     Mode->CrtcHDisplay, Mode->CrtcVDisplay);
@@ -407,38 +728,48 @@ DxScaleSet(struct rhdCrtc *Crtc, CARD32 Type,
     else
 	RegOff = D2_REG_OFFSET;
 
+    Overscan = rhdCalculateOverscan(Mode, ScaledToMode, Type);
+    Type = Overscan.Type;
+
+    RHDDebug(Crtc->scrnIndex, "FUNCTION: %s: %s viewport: %ix%i - OverScan: T: %i B: %i R: %i L: %i\n",
+	     __func__, Crtc->Name, Mode->CrtcHDisplay, Mode->CrtcVDisplay,
+	     Overscan.OverscanTop, Overscan.OverscanBottom,
+	     Overscan.OverscanLeft, Overscan.OverscanRight);
+
     /* D1Mode registers */
     RHDRegWrite(Crtc, RegOff + D1MODE_VIEWPORT_SIZE,
 		Mode->CrtcVDisplay | (Mode->CrtcHDisplay << 16));
     RHDRegWrite(Crtc, RegOff + D1MODE_VIEWPORT_START, 0);
 
     RHDRegWrite(Crtc, RegOff + D1MODE_EXT_OVERSCAN_LEFT_RIGHT,
-		((Mode->CrtcHTotal - Mode->CrtcHBlankEnd) << 16) |
-		(Mode->CrtcHBlankStart - Mode->CrtcHDisplay));
+		(Overscan.OverscanLeft << 16) | Overscan.OverscanRight);
     RHDRegWrite(Crtc, RegOff + D1MODE_EXT_OVERSCAN_TOP_BOTTOM,
-		((Mode->CrtcVTotal - Mode->CrtcVBlankEnd) << 16) |
-		(Mode->CrtcVBlankStart - Mode->CrtcVDisplay));
+		(Overscan.OverscanTop << 16) | Overscan.OverscanBottom);
 
-    if (!ScaledMode || (Mode == ScaledMode) ||
-	((Mode->CrtcHDisplay == ScaledMode->CrtcHDisplay) &&
-	 (Mode->CrtcVDisplay == ScaledMode->CrtcVDisplay))) {
-	/* No scaling whatsoever */
-	RHDRegWrite(Crtc, RegOff + D1SCL_ENABLE, 0);
-	RHDRegWrite(Crtc, RegOff + D1SCL_TAP_CONTROL, 0);
-	RHDRegWrite(Crtc, RegOff + D1MODE_CENTER, 0);
-    } else {
-	switch (Type) {
-	case RHD_CRTC_SCALE_TYPE_NONE: /* Top left corner */
+    switch (Type) {
+	case RHD_CRTC_SCALE_TYPE_NONE:  /* No scaling whatsoever */
+	    ErrorF("None\n");
 	    RHDRegWrite(Crtc, RegOff + D1SCL_ENABLE, 0);
 	    RHDRegWrite(Crtc, RegOff + D1SCL_TAP_CONTROL, 0);
 	    RHDRegWrite(Crtc, RegOff + D1MODE_CENTER, 0);
 	    break;
 	case RHD_CRTC_SCALE_TYPE_CENTER: /* center of the actual mode */
+	    ErrorF("Center\n");
 	    RHDRegWrite(Crtc, RegOff + D1SCL_ENABLE, 0);
 	    RHDRegWrite(Crtc, RegOff + D1SCL_TAP_CONTROL, 0);
 	    RHDRegWrite(Crtc, RegOff + D1MODE_CENTER, 1);
 	    break;
+	case RHD_CRTC_SCALE_TYPE_SCALE_KEEP_ASPECT_RATIO: /* scaled to fullscreen */
 	case RHD_CRTC_SCALE_TYPE_SCALE: /* scaled to fullscreen */
+	    ErrorF("Full\n");
+	    if (Type == RHD_CRTC_SCALE_TYPE_SCALE_KEEP_ASPECT_RATIO)
+		RHDRegWrite(Crtc, RegOff + D1MODE_CENTER, 1);
+	    else
+		RHDRegWrite(Crtc, RegOff + D1MODE_CENTER, 0);
+
+	    RHDRegWrite(Crtc, RegOff + D1SCL_UPDATE, 0);
+	    RHDRegWrite(Crtc, RegOff + D1SCL_DITHER, 0);
+
 	    RHDRegWrite(Crtc, RegOff + D1SCL_ENABLE, 1);
 	    RHDRegWrite(Crtc, RegOff + D1SCL_HVSCALE, 0x00010001); /* both h/v */
 
@@ -447,33 +778,102 @@ DxScaleSet(struct rhdCrtc *Crtc, CARD32 Type,
 	    RHDRegWrite(Crtc, RegOff + D1SCL_HFILTER, 0x00030100);
 	    RHDRegWrite(Crtc, RegOff + D1SCL_VFILTER, 0x00030100);
 
-	    RHDRegWrite(Crtc, RegOff + D1SCL_DITHER, 0x00000101);
+	    RHDRegWrite(Crtc, RegOff + D1SCL_DITHER, 0x00001010);
 	    break;
-	}
     }
-}
-/*
- *
- */
-static void
-D1PLLSelect(struct rhdCrtc *Crtc, struct rhdPLL *PLL)
-{
-    RHDFUNC(Crtc);
-
-    RHDRegMask(Crtc, PCLK_CRTC1_CNTL, PLL->Id << 16, 0x00010000);
-    Crtc->PLL = PLL;
+    RHDTuneMCAccessForDisplay(rhdPtr, Crtc->Id, Mode,
+			      ScaledToMode ? ScaledToMode : Mode);
 }
 
 /*
  *
  */
 static void
-D2PLLSelect(struct rhdCrtc *Crtc, struct rhdPLL *PLL)
+DxScaleSave(struct rhdCrtc *Crtc)
+{
+    struct rhdCrtcScalePrivate *ScalePriv;
+    CARD32 RegOff;
+
+    if (!Crtc->ScalePriv)
+	ScalePriv =  xnfcalloc(1, sizeof(struct rhdCrtcScalePrivate));
+    else
+	ScalePriv = Crtc->ScalePriv;
+
+    if (Crtc->Id == RHD_CRTC_1)
+	RegOff = D1_REG_OFFSET;
+    else
+	RegOff = D2_REG_OFFSET;
+
+    ScalePriv->StoreModeViewPortSize = RHDRegRead(Crtc, RegOff + D1MODE_VIEWPORT_SIZE);
+    ScalePriv->StoreModeViewPortStart = RHDRegRead(Crtc, RegOff + D1MODE_VIEWPORT_START);
+    ScalePriv->StoreModeOverScanH =
+	RHDRegRead(Crtc, RegOff + D1MODE_EXT_OVERSCAN_LEFT_RIGHT);
+    ScalePriv->StoreModeOverScanV =
+	RHDRegRead(Crtc, RegOff + D1MODE_EXT_OVERSCAN_TOP_BOTTOM);
+
+    ScalePriv->StoreScaleEnable = RHDRegRead(Crtc, RegOff + D1SCL_ENABLE);
+    ScalePriv->StoreScaleTapControl = RHDRegRead(Crtc, RegOff + D1SCL_TAP_CONTROL);
+    ScalePriv->StoreModeCenter = RHDRegRead(Crtc, RegOff + D1MODE_CENTER);
+    ScalePriv->StoreScaleHV = RHDRegRead(Crtc, RegOff + D1SCL_HVSCALE);
+    ScalePriv->StoreScaleHFilter = RHDRegRead(Crtc, RegOff + D1SCL_HFILTER);
+    ScalePriv->StoreScaleVFilter = RHDRegRead(Crtc, RegOff + D1SCL_VFILTER);
+    ScalePriv->StoreScaleDither = RHDRegRead(Crtc, RegOff + D1SCL_DITHER);
+
+    Crtc->ScalePriv = ScalePriv;
+}
+
+/*
+ *
+ */
+static void
+DxScaleRestore(struct rhdCrtc *Crtc)
+{
+    struct rhdCrtcScalePrivate *ScalePriv = Crtc->ScalePriv;
+    CARD32 RegOff;
+
+    if (!ScalePriv) {
+	xf86DrvMsg(Crtc->scrnIndex, X_ERROR, "%s: no registers stored!\n",
+		   __func__);
+	return;
+    }
+
+    if (Crtc->Id == RHD_CRTC_1)
+	RegOff = D1_REG_OFFSET;
+    else
+	RegOff = D2_REG_OFFSET;
+
+    /* ScaleSet */
+    RHDRegWrite(Crtc, RegOff + D1MODE_VIEWPORT_SIZE, ScalePriv->StoreModeViewPortSize);
+
+    /* ScaleSet/ViewPortStart */
+    RHDRegWrite(Crtc, RegOff + D1MODE_VIEWPORT_START, ScalePriv->StoreModeViewPortStart);
+
+    /* ScaleSet */
+    RHDRegWrite(Crtc, RegOff + D1MODE_EXT_OVERSCAN_LEFT_RIGHT,
+		ScalePriv->StoreModeOverScanH);
+    RHDRegWrite(Crtc, RegOff + D1MODE_EXT_OVERSCAN_TOP_BOTTOM,
+		ScalePriv->StoreModeOverScanV);
+
+    RHDRegWrite(Crtc, RegOff + D1SCL_ENABLE, ScalePriv->StoreScaleEnable);
+    RHDRegWrite(Crtc, RegOff + D1SCL_TAP_CONTROL, ScalePriv->StoreScaleTapControl);
+    RHDRegWrite(Crtc, RegOff + D1MODE_CENTER, ScalePriv->StoreModeCenter);
+    RHDRegWrite(Crtc, RegOff + D1SCL_HVSCALE, ScalePriv->StoreScaleHV);
+    RHDRegWrite(Crtc, RegOff + D1SCL_HFILTER, ScalePriv->StoreScaleHFilter);
+    RHDRegWrite(Crtc, RegOff + D1SCL_VFILTER, ScalePriv->StoreScaleVFilter);
+    RHDRegWrite(Crtc, RegOff + D1SCL_DITHER, ScalePriv->StoreScaleDither);
+}
+
+/*
+ *
+ */
+static void
+DxScaleDestroy(struct rhdCrtc *Crtc)
 {
     RHDFUNC(Crtc);
 
-    RHDRegMask(Crtc, PCLK_CRTC2_CNTL, PLL->Id << 16, 0x00010000);
-    Crtc->PLL = PLL;
+    if (Crtc->ScalePriv)
+	xfree(Crtc->ScalePriv);
+    Crtc->ScalePriv = NULL;
 }
 
 /*
@@ -498,6 +898,67 @@ D2LUTSelect(struct rhdCrtc *Crtc, struct rhdLUT *LUT)
 
     RHDRegWrite(Crtc, D2GRPH_LUT_SEL, LUT->Id & 1);
     Crtc->LUT = LUT;
+}
+
+/*
+ *
+ */
+static void
+DxLUTSave(struct rhdCrtc *Crtc)
+{
+    struct rhdCrtcLUTPrivate *LUTPriv;
+    CARD32 RegOff;
+
+    if (!Crtc->LUTPriv)
+	LUTPriv =  xnfcalloc(1, sizeof(struct rhdCrtcLUTPrivate));
+    else
+	LUTPriv = Crtc->LUTPriv;
+
+    if (Crtc->Id == RHD_CRTC_1)
+	RegOff = D1_REG_OFFSET;
+    else
+	RegOff = D2_REG_OFFSET;
+
+    LUTPriv->StoreGrphLutSel = RHDRegRead(Crtc, RegOff + D1GRPH_LUT_SEL);
+
+    Crtc->LUTPriv = LUTPriv;
+}
+
+/*
+ *
+ */
+static void
+DxLUTRestore(struct rhdCrtc *Crtc)
+{
+    struct rhdCrtcLUTPrivate *LUTPriv = Crtc->LUTPriv;
+    CARD32 RegOff;
+
+    if (!LUTPriv) {
+	xf86DrvMsg(Crtc->scrnIndex, X_ERROR, "%s: no registers stored!\n",
+		   __func__);
+	return;
+    }
+
+    if (Crtc->Id == RHD_CRTC_1)
+	RegOff = D1_REG_OFFSET;
+    else
+	RegOff = D2_REG_OFFSET;
+
+    /* LUTSelect */
+    RHDRegWrite(Crtc, RegOff + D1GRPH_LUT_SEL, LUTPriv->StoreGrphLutSel);
+}
+
+/*
+ *
+ */
+static void
+DxLUTDestroy(struct rhdCrtc *Crtc)
+{
+    RHDFUNC(Crtc);
+
+    if (Crtc->LUTPriv)
+	xfree(Crtc->LUTPriv);
+    Crtc->LUTPriv = NULL;
 }
 
 /*
@@ -554,6 +1015,7 @@ D1CRTCDisable(struct rhdCrtc *Crtc)
 	int i;
 
 	RHDRegMask(Crtc, D1CRTC_CONTROL, 0, 0x00000301);
+	(void)RHDRegRead(Crtc, D1CRTC_CONTROL);
 
 	for (i = 0; i < CRTC_SYNC_WAIT; i++)
 	    if (!(RHDRegRead(Crtc, D1CRTC_CONTROL) & 0x00010000)) {
@@ -578,6 +1040,7 @@ D2CRTCDisable(struct rhdCrtc *Crtc)
 	int i;
 
 	RHDRegMask(Crtc, D2CRTC_CONTROL, 0, 0x00000301);
+	(void)RHDRegRead(Crtc, D2CRTC_CONTROL);
 
 	for (i = 0; i < CRTC_SYNC_WAIT; i++)
 	    if (!(RHDRegRead(Crtc, D2CRTC_CONTROL) & 0x00010000)) {
@@ -684,210 +1147,7 @@ D2Blank(struct rhdCrtc *Crtc, Bool Blank)
  *
  */
 static void
-DxSave(struct rhdCrtc *Crtc)
-{
-    struct rhdCrtcStore *Store;
-    CARD16 RegOff;
-
-    RHDDebug(Crtc->scrnIndex, "%s: %s\n", __func__, Crtc->Name);
-
-    if (Crtc->FMTSave)
-	Crtc->FMTSave(Crtc);
-
-    if (Crtc->Id == RHD_CRTC_1)
-	RegOff = D1_REG_OFFSET;
-    else
-	RegOff = D2_REG_OFFSET;
-
-    if (!Crtc->Store)
-	Store = xnfcalloc(sizeof(struct rhdCrtcStore), 1);
-    else
-	Store = Crtc->Store;
-
-    Store->GrphEnable = RHDRegRead(Crtc, RegOff + D1GRPH_ENABLE);
-    Store->GrphControl = RHDRegRead(Crtc, RegOff + D1GRPH_CONTROL);
-    Store->GrphXStart = RHDRegRead(Crtc, RegOff + D1GRPH_X_START);
-    Store->GrphYStart = RHDRegRead(Crtc, RegOff + D1GRPH_Y_START);
-    Store->GrphXEnd = RHDRegRead(Crtc, RegOff + D1GRPH_X_END);
-    Store->GrphYEnd = RHDRegRead(Crtc, RegOff + D1GRPH_Y_END);
-    if (RHDPTRI(Crtc)->ChipSet >= RHD_R600)
-	Store->GrphSwap = RHDRegRead(Crtc, RegOff + D1GRPH_SWAP_CNTL);
-    Store->GrphPrimarySurfaceAddress =
-	RHDRegRead(Crtc, RegOff + D1GRPH_PRIMARY_SURFACE_ADDRESS);
-    Store->GrphSurfaceOffsetX =
-	RHDRegRead(Crtc, RegOff + D1GRPH_SURFACE_OFFSET_X);
-    Store->GrphSurfaceOffsetY =
-	RHDRegRead(Crtc, RegOff + D1GRPH_SURFACE_OFFSET_Y);
-    Store->GrphPitch = RHDRegRead(Crtc, RegOff + D1GRPH_PITCH);
-    Store->GrphLutSel = RHDRegRead(Crtc, RegOff + D1GRPH_LUT_SEL);
-
-    Store->ModeViewPortSize = RHDRegRead(Crtc, RegOff + D1MODE_VIEWPORT_SIZE);
-    Store->ModeViewPortStart = RHDRegRead(Crtc, RegOff + D1MODE_VIEWPORT_START);
-    Store->ModeDesktopHeight = RHDRegRead(Crtc, RegOff + D1MODE_DESKTOP_HEIGHT);
-    Store->ModeOverScanH =
-	RHDRegRead(Crtc, RegOff + D1MODE_EXT_OVERSCAN_LEFT_RIGHT);
-    Store->ModeOverScanV =
-	RHDRegRead(Crtc, RegOff + D1MODE_EXT_OVERSCAN_TOP_BOTTOM);
-
-    Store->ModeDataFormat = RHDRegRead(Crtc, RegOff + D1MODE_DATA_FORMAT);
-
-    Store->ScaleEnable = RHDRegRead(Crtc, RegOff + D1SCL_ENABLE);
-    Store->ScaleTapControl = RHDRegRead(Crtc, RegOff + D1SCL_TAP_CONTROL);
-    Store->ModeCenter = RHDRegRead(Crtc, RegOff + D1MODE_CENTER);
-    Store->ScaleHV = RHDRegRead(Crtc, RegOff + D1SCL_HVSCALE);
-    Store->ScaleHFilter = RHDRegRead(Crtc, RegOff + D1SCL_HFILTER);
-    Store->ScaleVFilter = RHDRegRead(Crtc, RegOff + D1SCL_VFILTER);
-    Store->ScaleDither = RHDRegRead(Crtc, RegOff + D1SCL_DITHER);
-
-    Store->CrtcControl = RHDRegRead(Crtc, RegOff + D1CRTC_CONTROL);
-
-    Store->CrtcHTotal = RHDRegRead(Crtc, RegOff + D1CRTC_H_TOTAL);
-    Store->CrtcHBlankStartEnd =
-	RHDRegRead(Crtc, RegOff + D1CRTC_H_BLANK_START_END);
-    Store->CrtcHSyncA = RHDRegRead(Crtc, RegOff + D1CRTC_H_SYNC_A);
-    Store->CrtcHSyncACntl = RHDRegRead(Crtc, RegOff + D1CRTC_H_SYNC_A_CNTL);
-    Store->CrtcHSyncB = RHDRegRead(Crtc, RegOff + D1CRTC_H_SYNC_B);
-    Store->CrtcHSyncBCntl = RHDRegRead(Crtc, RegOff + D1CRTC_H_SYNC_B_CNTL);
-
-    Store->CrtcVTotal = RHDRegRead(Crtc, RegOff + D1CRTC_V_TOTAL);
-    Store->CrtcVBlankStartEnd =
-	RHDRegRead(Crtc, RegOff + D1CRTC_V_BLANK_START_END);
-    Store->CrtcVSyncA = RHDRegRead(Crtc, RegOff + D1CRTC_V_SYNC_A);
-    Store->CrtcVSyncACntl = RHDRegRead(Crtc, RegOff + D1CRTC_V_SYNC_A_CNTL);
-    Store->CrtcVSyncB = RHDRegRead(Crtc, RegOff + D1CRTC_V_SYNC_B);
-    Store->CrtcVSyncBCntl = RHDRegRead(Crtc, RegOff + D1CRTC_V_SYNC_B_CNTL);
-
-    Store->CrtcBlackColor = RHDRegRead(Crtc, RegOff + D1CRTC_BLACK_COLOR);
-    Store->CrtcBlankControl = RHDRegRead(Crtc, RegOff + D1CRTC_BLANK_CONTROL);
-
-    Store->CrtcCountControl = RHDRegRead(Crtc, RegOff + D1CRTC_COUNT_CONTROL);
-    RHDDebug(Crtc->scrnIndex, "Saved CrtcCountControl[%i] = 0x%8.8x\n",
-	     Crtc->Id,Store->CrtcCountControl);
-    Store->CrtcInterlaceControl = RHDRegRead(Crtc, RegOff + D1CRTC_INTERLACE_CONTROL);
-
-    if (Crtc->Id == RHD_CRTC_1)
-	Store->CrtcPCLKControl = RHDRegRead(Crtc, PCLK_CRTC1_CNTL);
-    else
-	Store->CrtcPCLKControl = RHDRegRead(Crtc, PCLK_CRTC2_CNTL);
-
-    Crtc->Store = Store;
-}
-
-/*
- *
- */
-static void
-DxRestore(struct rhdCrtc *Crtc)
-{
-    struct rhdCrtcStore *Store = Crtc->Store;
-    CARD16 RegOff;
-
-    RHDDebug(Crtc->scrnIndex, "%s: %s\n", __func__, Crtc->Name);
-
-    if (Crtc->FMTRestore)
-	Crtc->FMTRestore(Crtc);
-
-    if (Crtc->Id == RHD_CRTC_1)
-	RegOff = D1_REG_OFFSET;
-    else
-	RegOff = D2_REG_OFFSET;
-
-    if (!Store) {
-	xf86DrvMsg(Crtc->scrnIndex, X_ERROR, "%s: no registers stored!\n",
-		   __func__);
-	return;
-    }
-
-    RHDRegWrite(Crtc, RegOff + D1GRPH_CONTROL, Store->GrphControl);
-    RHDRegWrite(Crtc, RegOff + D1GRPH_X_START, Store->GrphXStart);
-    RHDRegWrite(Crtc, RegOff + D1GRPH_Y_START, Store->GrphYStart);
-    RHDRegWrite(Crtc, RegOff + D1GRPH_X_END, Store->GrphXEnd);
-    RHDRegWrite(Crtc, RegOff + D1GRPH_Y_END, Store->GrphYEnd);
-    if (RHDPTRI(Crtc)->ChipSet >= RHD_R600)
-	RHDRegWrite(Crtc, RegOff + D1GRPH_SWAP_CNTL, Store->GrphSwap);
-
-    /* disable read requests */
-    RHDRegMask(Crtc, RegOff + D1CRTC_CONTROL, 0x01000000, 0x01000000);
-    RHDRegMask(Crtc, RegOff + D1GRPH_ENABLE, 0, 0x00000001);
-    usleep (10);
-
-    RHDRegWrite(Crtc, RegOff + D1GRPH_PRIMARY_SURFACE_ADDRESS,
-		Store->GrphPrimarySurfaceAddress);
-    usleep(10);
-
-    RHDRegWrite(Crtc, RegOff + D1GRPH_ENABLE, Store->GrphEnable);
-
-    RHDRegWrite(Crtc, RegOff + D1GRPH_SURFACE_OFFSET_X,
-		Store->GrphSurfaceOffsetX);
-    RHDRegWrite(Crtc, RegOff + D1GRPH_SURFACE_OFFSET_Y,
-		Store->GrphSurfaceOffsetY);
-
-    RHDRegWrite(Crtc, RegOff + D1GRPH_PITCH, Store->GrphPitch);
-    RHDRegWrite(Crtc, RegOff + D1GRPH_LUT_SEL, Store->GrphLutSel);
-
-    RHDRegWrite(Crtc, RegOff + D1MODE_VIEWPORT_SIZE, Store->ModeViewPortSize);
-    RHDRegWrite(Crtc, RegOff + D1MODE_VIEWPORT_START, Store->ModeViewPortStart);
-    RHDRegWrite(Crtc, RegOff + D1MODE_DESKTOP_HEIGHT, Store->ModeDesktopHeight);
-    RHDRegWrite(Crtc, RegOff + D1MODE_EXT_OVERSCAN_LEFT_RIGHT,
-		Store->ModeOverScanH);
-    RHDRegWrite(Crtc, RegOff + D1MODE_EXT_OVERSCAN_TOP_BOTTOM,
-		Store->ModeOverScanV);
-
-    RHDRegWrite(Crtc, RegOff + D1MODE_DATA_FORMAT, Store->ModeDataFormat);
-
-    RHDRegWrite(Crtc, RegOff + D1SCL_ENABLE, Store->ScaleEnable);
-    RHDRegWrite(Crtc, RegOff + D1SCL_TAP_CONTROL, Store->ScaleTapControl);
-    RHDRegWrite(Crtc, RegOff + D1MODE_CENTER, Store->ModeCenter);
-    RHDRegWrite(Crtc, RegOff + D1SCL_HVSCALE, Store->ScaleHV);
-    RHDRegWrite(Crtc, RegOff + D1SCL_HFILTER, Store->ScaleHFilter);
-    RHDRegWrite(Crtc, RegOff + D1SCL_VFILTER, Store->ScaleVFilter);
-    RHDRegWrite(Crtc, RegOff + D1SCL_DITHER, Store->ScaleDither);
-
-    RHDRegWrite(Crtc, RegOff + D1CRTC_CONTROL, Store->CrtcControl);
-
-    RHDRegWrite(Crtc, RegOff + D1CRTC_H_TOTAL, Store->CrtcHTotal);
-    RHDRegWrite(Crtc, RegOff + D1CRTC_H_BLANK_START_END,
-		Store->CrtcHBlankStartEnd);
-    RHDRegWrite(Crtc, RegOff + D1CRTC_H_SYNC_A, Store->CrtcHSyncA);
-    RHDRegWrite(Crtc, RegOff + D1CRTC_H_SYNC_A_CNTL, Store->CrtcHSyncACntl);
-    RHDRegWrite(Crtc, RegOff + D1CRTC_H_SYNC_B, Store->CrtcHSyncB);
-    RHDRegWrite(Crtc, RegOff + D1CRTC_H_SYNC_B_CNTL, Store->CrtcHSyncBCntl);
-
-    RHDRegWrite(Crtc, RegOff + D1CRTC_V_TOTAL, Store->CrtcVTotal);
-    RHDRegWrite(Crtc, RegOff + D1CRTC_V_BLANK_START_END,
-		Store->CrtcVBlankStartEnd);
-    RHDRegWrite(Crtc, RegOff + D1CRTC_V_SYNC_A, Store->CrtcVSyncA);
-    RHDRegWrite(Crtc, RegOff + D1CRTC_V_SYNC_A_CNTL, Store->CrtcVSyncACntl);
-    RHDRegWrite(Crtc, RegOff + D1CRTC_V_SYNC_B, Store->CrtcVSyncB);
-    RHDRegWrite(Crtc, RegOff + D1CRTC_V_SYNC_B_CNTL, Store->CrtcVSyncBCntl);
-
-    RHDRegWrite(Crtc, RegOff + D1CRTC_BLACK_COLOR, Store->CrtcBlackColor);
-    RHDRegWrite(Crtc, RegOff + D1CRTC_BLANK_CONTROL, Store->CrtcBlankControl);
-
-    RHDRegWrite(Crtc, RegOff + D1CRTC_COUNT_CONTROL, Store->CrtcCountControl);
-    RHDRegWrite(Crtc, RegOff + D1CRTC_INTERLACE_CONTROL, Store->CrtcInterlaceControl);
-
-    if (Crtc->Id == RHD_CRTC_1)
-	RHDRegWrite(Crtc, PCLK_CRTC1_CNTL, Store->CrtcPCLKControl);
-    else
-	RHDRegWrite(Crtc, PCLK_CRTC2_CNTL, Store->CrtcPCLKControl);
-
-    /* When VGA is enabled, it imposes its timing on us, so our CRTC SYNC
-     * timing can be set to 0. This doesn't always restore properly...
-     * Workaround is to set a valid sync length for a bit so VGA can
-     * latch in. */
-    if (!Store->CrtcVSyncA && (Store->CrtcControl & 0x00000001)) {
-	RHDRegWrite(Crtc, RegOff + D1CRTC_V_SYNC_A, 0x00040000);
-	usleep(300000); /* seems a reliable timeout here */
-	RHDRegWrite(Crtc, RegOff + D1CRTC_V_SYNC_A, Store->CrtcVSyncA);
-    }
-}
-
-/*
- *
- */
-void
-FMTSet(struct rhdCrtc *Crtc, struct rhdFMTDither *FMTDither)
+DxFMTSet(struct rhdCrtc *Crtc, struct rhdFMTDither *FMTDither)
 {
     CARD32 RegOff;
     CARD32 fmt_cntl = 0;
@@ -939,41 +1199,43 @@ FMTSet(struct rhdCrtc *Crtc, struct rhdFMTDither *FMTDither)
 /*
  *
  */
-void
-FMTSave(struct rhdCrtc *Crtc)
+static void
+DxFMTSave(struct rhdCrtc *Crtc)
 {
-    struct rhdFMTStore *FMTStore;
+    struct rhdCrtcFMTPrivate *FMTPrivate;
     CARD32 RegOff;
 
     RHDFUNC(Crtc);
 
-    if (!Crtc->FMTStore)
-	Crtc->FMTStore = (struct rhdFMTStore *) xnfcalloc(sizeof (struct rhdFMTStore),1);
-
-    FMTStore = Crtc->FMTStore;
+    if (!Crtc->FMTPriv)
+	FMTPrivate = xnfcalloc(sizeof (struct rhdCrtcFMTPrivate),1);
+    else
+	FMTPrivate = Crtc->FMTPriv;
 
     if (Crtc->Id == RHD_CRTC_1)
 	RegOff = FMT1_REG_OFFSET;
     else
 	RegOff = FMT2_REG_OFFSET;
 
-    FMTStore->Control         = RHDRegRead(Crtc, RegOff + RV620_FMT1_CONTROL);
-    FMTStore->BitDepthControl = RHDRegRead(Crtc, RegOff + RV620_FMT1_BIT_DEPTH_CONTROL);
-    FMTStore->ClampCntl       = RHDRegRead(Crtc, RegOff + RV620_FMT1_CLAMP_CNTL);
+    FMTPrivate->StoreControl         = RHDRegRead(Crtc, RegOff + RV620_FMT1_CONTROL);
+    FMTPrivate->StoreBitDepthControl = RHDRegRead(Crtc, RegOff + RV620_FMT1_BIT_DEPTH_CONTROL);
+    FMTPrivate->StoreClampCntl       = RHDRegRead(Crtc, RegOff + RV620_FMT1_CLAMP_CNTL);
+
+    Crtc->FMTPriv = FMTPrivate;
 }
 
 /*
  *
  */
-void
-FMTRestore(struct rhdCrtc *Crtc)
+static void
+DxFMTRestore(struct rhdCrtc *Crtc)
 {
-    struct rhdFMTStore *FMTStore = Crtc->FMTStore;
+    struct rhdCrtcFMTPrivate *FMTPrivate = Crtc->FMTPriv;
     CARD32 RegOff;
 
     RHDFUNC(Crtc);
 
-    if (!FMTStore)
+    if (!FMTPrivate)
 	return;
 
     if (Crtc->Id == RHD_CRTC_1)
@@ -981,49 +1243,113 @@ FMTRestore(struct rhdCrtc *Crtc)
     else
 	RegOff = FMT2_REG_OFFSET;
 
-    RHDRegWrite(Crtc, RegOff + RV620_FMT1_CONTROL, FMTStore->Control);
-    RHDRegWrite(Crtc, RegOff + RV620_FMT1_BIT_DEPTH_CONTROL, FMTStore->BitDepthControl);
-    RHDRegWrite(Crtc, RegOff + RV620_FMT1_CLAMP_CNTL, FMTStore->ClampCntl);
+    RHDRegWrite(Crtc, RegOff + RV620_FMT1_CONTROL, FMTPrivate->StoreControl);
+    RHDRegWrite(Crtc, RegOff + RV620_FMT1_BIT_DEPTH_CONTROL, FMTPrivate->StoreBitDepthControl);
+    RHDRegWrite(Crtc, RegOff + RV620_FMT1_CLAMP_CNTL, FMTPrivate->StoreClampCntl);
 }
 
 /*
  *
  */
-void
+static void
+DxFMTDestroy(struct rhdCrtc *Crtc)
+{
+    RHDFUNC(Crtc);
+
+    if (Crtc->FMTPriv)
+	xfree(Crtc->FMTPriv);
+    Crtc->FMTPriv = NULL;
+}
+
+/*
+ *
+ */
+static enum rhdCrtcScaleType
+rhdInitScaleType(RHDPtr rhdPtr)
+{
+    RHDFUNC(rhdPtr);
+
+    if (rhdPtr->scaleTypeOpt.set) {
+	if (!strcasecmp(rhdPtr->scaleTypeOpt.val.string, "none"))
+	    return RHD_CRTC_SCALE_TYPE_NONE;
+	else if (!strcasecmp(rhdPtr->scaleTypeOpt.val.string, "center"))
+	    return RHD_CRTC_SCALE_TYPE_CENTER;
+	else if (!strcasecmp(rhdPtr->scaleTypeOpt.val.string, "scale"))
+	    return RHD_CRTC_SCALE_TYPE_SCALE;
+	else if (!strcasecmp(rhdPtr->scaleTypeOpt.val.string, "scale_keep_aspect_ratio"))
+	    return RHD_CRTC_SCALE_TYPE_SCALE_KEEP_ASPECT_RATIO;
+	else if (!strcasecmp(rhdPtr->scaleTypeOpt.val.string, "default"))
+	    return RHD_CRTC_SCALE_TYPE_DEFAULT;
+	else {
+	    xf86DrvMsgVerb(rhdPtr->scrnIndex, X_ERROR, 0,
+			   "Unknown scale type: %s\n", rhdPtr->scaleTypeOpt.val.string);
+	    return RHD_CRTC_SCALE_TYPE_DEFAULT;
+	}
+    } else
+	return RHD_CRTC_SCALE_TYPE_DEFAULT;
+}
+
+/*
+ *
+ */
+Bool
 RHDCrtcsInit(RHDPtr rhdPtr)
 {
     struct rhdCrtc *Crtc;
+    enum rhdCrtcScaleType ScaleType;
+    Bool useAtom;
 
     RHDFUNC(rhdPtr);
+
+    useAtom = RHDUseAtom(rhdPtr, NULL, atomUsageCrtc);
+
+    ScaleType = rhdInitScaleType(rhdPtr);
 
     Crtc = xnfcalloc(sizeof(struct rhdCrtc), 1);
     Crtc->scrnIndex = rhdPtr->scrnIndex;
     Crtc->Name = "CRTC 1";
     Crtc->Id = RHD_CRTC_1;
 
-    Crtc->FMTStore = NULL;
+    Crtc->ScaleType = ScaleType;
+
+    if (rhdPtr->ChipSet >= RHD_RV620) {
+	Crtc->FMTDestroy = DxFMTDestroy;
+	Crtc->FMTSave = DxFMTSave;
+	Crtc->FMTRestore = DxFMTRestore;
+	Crtc->FMTModeSet = DxFMTSet;
+    }
+    Crtc->FMTPriv = NULL;
 
     Crtc->FBValid = DxFBValid;
     Crtc->FBSet = DxFBSet;
+    Crtc->FBSave = DxFBSave;
+    Crtc->FBRestore = DxFBRestore;
+    Crtc->FBDestroy = DxFBDestroy;
+
     Crtc->ModeValid = DxModeValid;
     Crtc->ModeSet = DxModeSet;
+    Crtc->ModeSave = DxModeSave;
+    Crtc->ModeRestore = DxModeRestore;
+    Crtc->ModeDestroy = DxModeDestroy;
+    Crtc->ModePriv = NULL;
+
     Crtc->ScaleValid = DxScaleValid;
     Crtc->ScaleSet = DxScaleSet;
-    Crtc->PLLSelect = D1PLLSelect;
+    Crtc->ScaleSave = DxScaleSave;
+    Crtc->ScaleRestore = DxScaleRestore;
+    Crtc->ScaleDestroy = DxScaleDestroy;
+    Crtc->ScalePriv = NULL;
+
     Crtc->LUTSelect = D1LUTSelect;
+    Crtc->LUTSave = DxLUTSave;
+    Crtc->LUTRestore = DxLUTRestore;
+    Crtc->LUTDestroy = DxLUTDestroy;
+    Crtc->LUTPriv = NULL;
+
     Crtc->FrameSet = D1ViewPortStart;
 
     Crtc->Power = D1Power;
     Crtc->Blank = D1Blank;
-
-    Crtc->Save = DxSave;
-    Crtc->Restore = DxRestore;
-
-    if (rhdPtr->ChipSet >= RHD_RV620) {
-	Crtc->FMTSave = FMTSave;
-	Crtc->FMTRestore = FMTRestore;
-	Crtc->FMTModeSet = FMTSet;
-    }
 
     rhdPtr->Crtc[0] = Crtc;
 
@@ -1032,31 +1358,50 @@ RHDCrtcsInit(RHDPtr rhdPtr)
     Crtc->Name = "CRTC 2";
     Crtc->Id = RHD_CRTC_2;
 
-    Crtc->FMTStore = NULL;
+    Crtc->ScaleType = ScaleType;
+
+    if (rhdPtr->ChipSet >= RHD_RV620) {
+	Crtc->FMTDestroy = DxFMTDestroy;
+	Crtc->FMTSave = DxFMTSave;
+	Crtc->FMTRestore = DxFMTRestore;
+	Crtc->FMTModeSet = DxFMTSet;
+    }
+    Crtc->FMTPriv = NULL;
 
     Crtc->FBValid = DxFBValid;
     Crtc->FBSet = DxFBSet;
+    Crtc->FBSave = DxFBSave;
+    Crtc->FBRestore = DxFBRestore;
+    Crtc->FBDestroy = DxFBDestroy;
+
     Crtc->ModeValid = DxModeValid;
     Crtc->ModeSet = DxModeSet;
+    Crtc->ModeSave = DxModeSave;
+    Crtc->ModeRestore = DxModeRestore;
+    Crtc->ModeDestroy = DxModeDestroy;
+    Crtc->ModePriv = NULL;
+
     Crtc->ScaleValid = DxScaleValid;
     Crtc->ScaleSet = DxScaleSet;
-    Crtc->PLLSelect = D2PLLSelect;
+    Crtc->ScaleSave = DxScaleSave;
+    Crtc->ScaleRestore = DxScaleRestore;
+    Crtc->ScaleDestroy = DxScaleDestroy;
+    Crtc->ScalePriv = NULL;
+
     Crtc->LUTSelect = D2LUTSelect;
+    Crtc->LUTSave = DxLUTSave;
+    Crtc->LUTRestore = DxLUTRestore;
+    Crtc->LUTDestroy = DxLUTDestroy;
+    Crtc->LUTPriv = NULL;
+
     Crtc->FrameSet = D2ViewPortStart;
 
     Crtc->Power = D2Power;
     Crtc->Blank = D2Blank;
 
-    Crtc->Save = DxSave;
-    Crtc->Restore = DxRestore;
-
-    if (rhdPtr->ChipSet >= RHD_RV620) {
-	Crtc->FMTSave = FMTSave;
-	Crtc->FMTRestore = FMTRestore;
-	Crtc->FMTModeSet = FMTSet;
-    }
-
     rhdPtr->Crtc[1] = Crtc;
+
+    return !useAtom;
 }
 
 /*
@@ -1066,24 +1411,80 @@ void
 RHDCrtcsDestroy(RHDPtr rhdPtr)
 {
     struct rhdCrtc *Crtc;
+    int i;
 
     RHDFUNC(rhdPtr);
 
-    Crtc = rhdPtr->Crtc[0];
-    if (Crtc) {
-	if (Crtc->Store)
-	    xfree(Crtc->Store);
-	if (Crtc->FMTStore)
-	    xfree(Crtc->FMTStore);
-	xfree(Crtc);
-    }
+    for (i = 0; i < 2; i++) {
+	Crtc = rhdPtr->Crtc[i];
+	if (Crtc) {
+	    if (Crtc->FMTDestroy)
+		Crtc->FMTDestroy(Crtc);
 
-    Crtc = rhdPtr->Crtc[1];
-    if (Crtc) {
-	if (Crtc->Store)
-	    xfree(Crtc->Store);
-	if (Crtc->FMTStore)
-	    xfree(Crtc->FMTStore);
-	xfree(Crtc);
+	    if (Crtc->LUTDestroy)
+		Crtc->LUTDestroy(Crtc);
+
+	    if (Crtc->FBDestroy)
+		Crtc->FBDestroy(Crtc);
+
+	    if (Crtc->ScaleDestroy)
+		Crtc->ScaleDestroy(Crtc);
+
+	    if (Crtc->ModeDestroy)
+		Crtc->ModeDestroy(Crtc);
+
+	    xfree(Crtc);
+	    rhdPtr->Crtc[i] = NULL;
+	}
     }
+}
+
+
+/*
+ *
+ */
+void
+RHDCrtcSave(struct rhdCrtc *Crtc)
+{
+    RHDDebug(Crtc->scrnIndex, "%s: %s\n", __func__, Crtc->Name);
+
+    if (Crtc->FMTSave)
+	Crtc->FMTSave(Crtc);
+
+    if (Crtc->FBSave)
+	Crtc->FBSave(Crtc);
+
+    if (Crtc->LUTSave)
+	Crtc->LUTSave(Crtc);
+
+    if (Crtc->ScaleSave)
+	Crtc->ScaleSave(Crtc);
+
+    if (Crtc->ModeSave)
+	Crtc->ModeSave(Crtc);
+}
+
+/*
+ *
+ */
+void
+RHDCrtcRestore(struct rhdCrtc *Crtc)
+{
+
+    RHDDebug(Crtc->scrnIndex, "%s: %s\n", __func__, Crtc->Name);
+
+    if (Crtc->FMTRestore)
+	Crtc->FMTRestore(Crtc);
+
+    if (Crtc->FBRestore)
+	Crtc->FBRestore(Crtc);
+
+    if (Crtc->LUTRestore)
+	Crtc->LUTRestore(Crtc);
+
+    if (Crtc->ScaleRestore)
+	Crtc->ScaleRestore(Crtc);
+
+    if (Crtc->ModeRestore)
+	Crtc->ModeRestore(Crtc);
 }

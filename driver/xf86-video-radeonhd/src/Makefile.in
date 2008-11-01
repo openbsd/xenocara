@@ -43,13 +43,15 @@ build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/RadeonHD.am
-@USE_EXA_TRUE@am__append_1 = r5xx_exa.c
-@ATOM_BIOS_TRUE@am__append_2 = \
+@USE_EXA_TRUE@am__append_1 = r5xx_exa.c radeon_exa_render.c
+@USE_DRI_TRUE@am__append_2 = rhd_dri.c rhd_dri.h radeon_dri.h radeon_drm.h
+@ATOM_BIOS_TRUE@am__append_3 = \
 @ATOM_BIOS_TRUE@	AtomBios/includes/atombios.h
 
-@ATOM_BIOS_PARSER_TRUE@am__append_3 = \
+@ATOM_BIOS_PARSER_TRUE@am__append_4 = \
 @ATOM_BIOS_PARSER_TRUE@	rhd_atomwrapper.h
 
+@MAINTAINER_MODE_TRUE@am__append_5 = radeonhd.man.new README.new
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -64,9 +66,9 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(radeonhd_drv_ladir)"
-radeonhd_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(noinst_LTLIBRARIES) $(radeonhd_drv_la_LTLIBRARIES)
+am__installdirs = "$(DESTDIR)$(driversdir)"
+driversLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(drivers_LTLIBRARIES) $(noinst_LTLIBRARIES)
 libatom_la_LIBADD =
 am__libatom_la_SOURCES_DIST = rhd_atomwrapper.c rhd_atomwrapper.h \
 	AtomBios/CD_Operations.c AtomBios/Decoder.c \
@@ -90,15 +92,22 @@ am__radeonhd_drv_la_SOURCES_DIST = rhd_atombios.c rhd_i2c.c rhd_crtc.c \
 	rhd_connector.c rhd_cursor.c rhd_dac.c rhd_driver.c rhd_edid.c \
 	rhd_helper.c rhd_id.c rhd_lut.c rhd_lvtma.c rhd_modes.c \
 	rhd_monitor.c rhd_output.c rhd_pll.c rhd_tmds.c rhd_vga.c \
-	rhd_mc.c rhd_shadow.c rhd_randr.c rhd_dig.c rhd_ddia.c \
-	rhd_atombios.h rhd.h rhd_i2c.h rhd_card.h rhd_crtc.h \
+	rhd_mc.c rhd_mc.h rhd_shadow.c rhd_randr.c rhd_dig.c \
+	rhd_ddia.c rhd_atomout.c rhd_atompll.c rhd_atomcrtc.c \
+	rhd_biosscratch.c rhd_biosscratch.h rhd_atombios.h \
+	rhd_atomout.h rhd.h rhd_i2c.h rhd_card.h rhd_crtc.h \
 	rhd_connector.h rhd_cursor.h rhd_lut.h rhd_modes.h \
 	rhd_monitor.h rhd_output.h rhd_pll.h rhd_randr.h rhd_regs.h \
-	rhd_vga.h rhd_shadow.h rhd_mc.h r5xx_accel.c r5xx_accel.h \
-	r5xx_xaa.c r5xx_2dregs.h r5xx_exa.c \
-	AtomBios/includes/atombios.h rhd_atomwrapper.h
-@USE_EXA_TRUE@am__objects_1 = radeonhd_drv_la-r5xx_exa.lo
-am__objects_2 =
+	rhd_vga.h rhd_shadow.h rhd_cs.c rhd_cs.h r5xx_accel.c \
+	r5xx_accel.h r5xx_xaa.c r5xx_regs.h r5xx_3dregs.h radeon_3d.c \
+	rhd_video.c rhd_video.h radeon_textured_videofuncs.c \
+	r5xx_exa.c radeon_exa_render.c rhd_dri.c rhd_dri.h \
+	radeon_dri.h radeon_drm.h AtomBios/includes/atombios.h \
+	rhd_atomwrapper.h
+@USE_EXA_TRUE@am__objects_1 = radeonhd_drv_la-r5xx_exa.lo \
+@USE_EXA_TRUE@	radeonhd_drv_la-radeon_exa_render.lo
+@USE_DRI_TRUE@am__objects_2 = radeonhd_drv_la-rhd_dri.lo
+am__objects_3 =
 am_radeonhd_drv_la_OBJECTS = radeonhd_drv_la-rhd_atombios.lo \
 	radeonhd_drv_la-rhd_i2c.lo radeonhd_drv_la-rhd_crtc.lo \
 	radeonhd_drv_la-rhd_connector.lo radeonhd_drv_la-rhd_cursor.lo \
@@ -111,8 +120,13 @@ am_radeonhd_drv_la_OBJECTS = radeonhd_drv_la-rhd_atombios.lo \
 	radeonhd_drv_la-rhd_vga.lo radeonhd_drv_la-rhd_mc.lo \
 	radeonhd_drv_la-rhd_shadow.lo radeonhd_drv_la-rhd_randr.lo \
 	radeonhd_drv_la-rhd_dig.lo radeonhd_drv_la-rhd_ddia.lo \
+	radeonhd_drv_la-rhd_atomout.lo radeonhd_drv_la-rhd_atompll.lo \
+	radeonhd_drv_la-rhd_atomcrtc.lo \
+	radeonhd_drv_la-rhd_biosscratch.lo radeonhd_drv_la-rhd_cs.lo \
 	radeonhd_drv_la-r5xx_accel.lo radeonhd_drv_la-r5xx_xaa.lo \
-	$(am__objects_1) $(am__objects_2) $(am__objects_2)
+	radeonhd_drv_la-radeon_3d.lo radeonhd_drv_la-rhd_video.lo \
+	radeonhd_drv_la-radeon_textured_videofuncs.lo $(am__objects_1) \
+	$(am__objects_2) $(am__objects_3) $(am__objects_3)
 nodist_radeonhd_drv_la_OBJECTS =
 radeonhd_drv_la_OBJECTS = $(am_radeonhd_drv_la_OBJECTS) \
 	$(nodist_radeonhd_drv_la_OBJECTS)
@@ -167,6 +181,9 @@ DEPDIR = @DEPDIR@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
+DRI_CFLAGS = @DRI_CFLAGS@
+DRI_LIBS = @DRI_LIBS@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -201,6 +218,7 @@ MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -215,9 +233,12 @@ PEDANTIC_CFLAGS = @PEDANTIC_CFLAGS@
 PKG_CONFIG = @PKG_CONFIG@
 RANDR_VERSION = @RANDR_VERSION@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+USE_DRI_FALSE = @USE_DRI_FALSE@
+USE_DRI_TRUE = @USE_DRI_TRUE@
 USE_EXA_FALSE = @USE_EXA_FALSE@
 USE_EXA_TRUE = @USE_EXA_TRUE@
 VERSION = @VERSION@
@@ -227,7 +248,9 @@ XORG_LIBS = @XORG_LIBS@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
@@ -276,25 +299,29 @@ target_alias = @target_alias@
 # instead of foo_SOURCES prevents shipping git_version.h in dist tarballs,
 # which may cause false GIT_FOO readings.
 BUILT_SOURCES = git_version.stamp
-CLEANFILES = git_version.h
+CLEANFILES = git_version.h $(am__append_5)
 GIT_VERSION_CMD = $(SHELL) $(top_srcdir)/git_version.sh
 EXTRA_DIST = Imakefile
-AM_CFLAGS = @XORG_CFLAGS@ @WARN_CFLAGS@
-radeonhd_drv_la_LTLIBRARIES = radeonhd_drv.la
+AM_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@ @WARN_CFLAGS@
+driversdir = ${moduledir}/drivers
+drivers_LTLIBRARIES = radeonhd_drv.la
 radeonhd_drv_la_LDFLAGS = -module -avoid-version
 radeonhd_drv_la_CFLAGS = $(AM_CFLAGS) @PEDANTIC_CFLAGS@
-radeonhd_drv_ladir = @moduledir@/drivers
 radeonhd_drv_la_SOURCES = rhd_atombios.c rhd_i2c.c rhd_crtc.c \
 	rhd_connector.c rhd_cursor.c rhd_dac.c rhd_driver.c rhd_edid.c \
 	rhd_helper.c rhd_id.c rhd_lut.c rhd_lvtma.c rhd_modes.c \
 	rhd_monitor.c rhd_output.c rhd_pll.c rhd_tmds.c rhd_vga.c \
-	rhd_mc.c rhd_shadow.c rhd_randr.c rhd_dig.c rhd_ddia.c \
-	rhd_atombios.h rhd.h rhd_i2c.h rhd_card.h rhd_crtc.h \
+	rhd_mc.c rhd_mc.h rhd_shadow.c rhd_randr.c rhd_dig.c \
+	rhd_ddia.c rhd_atomout.c rhd_atompll.c rhd_atomcrtc.c \
+	rhd_biosscratch.c rhd_biosscratch.h rhd_atombios.h \
+	rhd_atomout.h rhd.h rhd_i2c.h rhd_card.h rhd_crtc.h \
 	rhd_connector.h rhd_cursor.h rhd_lut.h rhd_modes.h \
 	rhd_monitor.h rhd_output.h rhd_pll.h rhd_randr.h rhd_regs.h \
-	rhd_vga.h rhd_shadow.h rhd_mc.h r5xx_accel.c r5xx_accel.h \
-	r5xx_xaa.c r5xx_2dregs.h $(am__append_1) $(am__append_2) \
-	$(am__append_3)
+	rhd_vga.h rhd_shadow.h rhd_cs.c rhd_cs.h r5xx_accel.c \
+	r5xx_accel.h r5xx_xaa.c r5xx_regs.h r5xx_3dregs.h radeon_3d.c \
+	rhd_video.c rhd_video.h radeon_textured_videofuncs.c \
+	$(am__append_1) $(am__append_2) $(am__append_3) \
+	$(am__append_4)
 nodist_radeonhd_drv_la_SOURCES = \
 	git_version.h
 
@@ -320,6 +347,8 @@ nodist_radeonhd_drv_la_SOURCES = \
 @ATOM_BIOS_PARSER_TRUE@	AtomBios/includes/regsdef.h
 
 @ATOM_BIOS_PARSER_TRUE@radeonhd_drv_la_LIBADD = libatom.la
+@MAINTAINER_MODE_TRUE@SRCMAN = $(top_srcdir)/man/radeonhd.man
+@MAINTAINER_MODE_TRUE@SRCREADME = $(top_srcdir)/README
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -354,6 +383,33 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+install-driversLTLIBRARIES: $(drivers_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	test -z "$(driversdir)" || $(mkdir_p) "$(DESTDIR)$(driversdir)"
+	@list='$(drivers_LTLIBRARIES)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    f=$(am__strip_dir) \
+	    echo " $(LIBTOOL) --mode=install $(driversLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(driversdir)/$$f'"; \
+	    $(LIBTOOL) --mode=install $(driversLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(driversdir)/$$f"; \
+	  else :; fi; \
+	done
+
+uninstall-driversLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@set -x; list='$(drivers_LTLIBRARIES)'; for p in $$list; do \
+	  p=$(am__strip_dir) \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(driversdir)/$$p'"; \
+	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(driversdir)/$$p"; \
+	done
+
+clean-driversLTLIBRARIES:
+	-test -z "$(drivers_LTLIBRARIES)" || rm -f $(drivers_LTLIBRARIES)
+	@list='$(drivers_LTLIBRARIES)'; for p in $$list; do \
+	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
+	  test "$$dir" != "$$p" || dir=.; \
+	  echo "rm -f \"$${dir}/so_locations\""; \
+	  rm -f "$${dir}/so_locations"; \
+	done
 
 clean-noinstLTLIBRARIES:
 	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
@@ -363,37 +419,10 @@ clean-noinstLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-install-radeonhd_drv_laLTLIBRARIES: $(radeonhd_drv_la_LTLIBRARIES)
-	@$(NORMAL_INSTALL)
-	test -z "$(radeonhd_drv_ladir)" || $(mkdir_p) "$(DESTDIR)$(radeonhd_drv_ladir)"
-	@list='$(radeonhd_drv_la_LTLIBRARIES)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    f=$(am__strip_dir) \
-	    echo " $(LIBTOOL) --mode=install $(radeonhd_drv_laLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(radeonhd_drv_ladir)/$$f'"; \
-	    $(LIBTOOL) --mode=install $(radeonhd_drv_laLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(radeonhd_drv_ladir)/$$f"; \
-	  else :; fi; \
-	done
-
-uninstall-radeonhd_drv_laLTLIBRARIES:
-	@$(NORMAL_UNINSTALL)
-	@set -x; list='$(radeonhd_drv_la_LTLIBRARIES)'; for p in $$list; do \
-	  p=$(am__strip_dir) \
-	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(radeonhd_drv_ladir)/$$p'"; \
-	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(radeonhd_drv_ladir)/$$p"; \
-	done
-
-clean-radeonhd_drv_laLTLIBRARIES:
-	-test -z "$(radeonhd_drv_la_LTLIBRARIES)" || rm -f $(radeonhd_drv_la_LTLIBRARIES)
-	@list='$(radeonhd_drv_la_LTLIBRARIES)'; for p in $$list; do \
-	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
-	  test "$$dir" != "$$p" || dir=.; \
-	  echo "rm -f \"$${dir}/so_locations\""; \
-	  rm -f "$${dir}/so_locations"; \
-	done
 libatom.la: $(libatom_la_OBJECTS) $(libatom_la_DEPENDENCIES) 
 	$(LINK) $(am_libatom_la_rpath) $(libatom_la_LDFLAGS) $(libatom_la_OBJECTS) $(libatom_la_LIBADD) $(LIBS)
 radeonhd_drv.la: $(radeonhd_drv_la_OBJECTS) $(radeonhd_drv_la_DEPENDENCIES) 
-	$(LINK) -rpath $(radeonhd_drv_ladir) $(radeonhd_drv_la_LDFLAGS) $(radeonhd_drv_la_OBJECTS) $(radeonhd_drv_la_LIBADD) $(LIBS)
+	$(LINK) -rpath $(driversdir) $(radeonhd_drv_la_LDFLAGS) $(radeonhd_drv_la_OBJECTS) $(radeonhd_drv_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -408,13 +437,22 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-r5xx_accel.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-r5xx_exa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-r5xx_xaa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-radeon_3d.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-radeon_exa_render.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-radeon_textured_videofuncs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_atombios.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_atomcrtc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_atomout.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_atompll.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_biosscratch.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_connector.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_crtc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_cs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_dac.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_ddia.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_dig.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_dri.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_driver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_edid.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_helper.Plo@am__quote@
@@ -431,6 +469,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_shadow.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_tmds.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_vga.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-rhd_video.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -642,6 +681,41 @@ radeonhd_drv_la-rhd_ddia.lo: rhd_ddia.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-rhd_ddia.lo `test -f 'rhd_ddia.c' || echo '$(srcdir)/'`rhd_ddia.c
 
+radeonhd_drv_la-rhd_atomout.lo: rhd_atomout.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-rhd_atomout.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-rhd_atomout.Tpo" -c -o radeonhd_drv_la-rhd_atomout.lo `test -f 'rhd_atomout.c' || echo '$(srcdir)/'`rhd_atomout.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-rhd_atomout.Tpo" "$(DEPDIR)/radeonhd_drv_la-rhd_atomout.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-rhd_atomout.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rhd_atomout.c' object='radeonhd_drv_la-rhd_atomout.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-rhd_atomout.lo `test -f 'rhd_atomout.c' || echo '$(srcdir)/'`rhd_atomout.c
+
+radeonhd_drv_la-rhd_atompll.lo: rhd_atompll.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-rhd_atompll.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-rhd_atompll.Tpo" -c -o radeonhd_drv_la-rhd_atompll.lo `test -f 'rhd_atompll.c' || echo '$(srcdir)/'`rhd_atompll.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-rhd_atompll.Tpo" "$(DEPDIR)/radeonhd_drv_la-rhd_atompll.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-rhd_atompll.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rhd_atompll.c' object='radeonhd_drv_la-rhd_atompll.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-rhd_atompll.lo `test -f 'rhd_atompll.c' || echo '$(srcdir)/'`rhd_atompll.c
+
+radeonhd_drv_la-rhd_atomcrtc.lo: rhd_atomcrtc.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-rhd_atomcrtc.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-rhd_atomcrtc.Tpo" -c -o radeonhd_drv_la-rhd_atomcrtc.lo `test -f 'rhd_atomcrtc.c' || echo '$(srcdir)/'`rhd_atomcrtc.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-rhd_atomcrtc.Tpo" "$(DEPDIR)/radeonhd_drv_la-rhd_atomcrtc.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-rhd_atomcrtc.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rhd_atomcrtc.c' object='radeonhd_drv_la-rhd_atomcrtc.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-rhd_atomcrtc.lo `test -f 'rhd_atomcrtc.c' || echo '$(srcdir)/'`rhd_atomcrtc.c
+
+radeonhd_drv_la-rhd_biosscratch.lo: rhd_biosscratch.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-rhd_biosscratch.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-rhd_biosscratch.Tpo" -c -o radeonhd_drv_la-rhd_biosscratch.lo `test -f 'rhd_biosscratch.c' || echo '$(srcdir)/'`rhd_biosscratch.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-rhd_biosscratch.Tpo" "$(DEPDIR)/radeonhd_drv_la-rhd_biosscratch.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-rhd_biosscratch.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rhd_biosscratch.c' object='radeonhd_drv_la-rhd_biosscratch.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-rhd_biosscratch.lo `test -f 'rhd_biosscratch.c' || echo '$(srcdir)/'`rhd_biosscratch.c
+
+radeonhd_drv_la-rhd_cs.lo: rhd_cs.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-rhd_cs.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-rhd_cs.Tpo" -c -o radeonhd_drv_la-rhd_cs.lo `test -f 'rhd_cs.c' || echo '$(srcdir)/'`rhd_cs.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-rhd_cs.Tpo" "$(DEPDIR)/radeonhd_drv_la-rhd_cs.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-rhd_cs.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rhd_cs.c' object='radeonhd_drv_la-rhd_cs.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-rhd_cs.lo `test -f 'rhd_cs.c' || echo '$(srcdir)/'`rhd_cs.c
+
 radeonhd_drv_la-r5xx_accel.lo: r5xx_accel.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-r5xx_accel.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-r5xx_accel.Tpo" -c -o radeonhd_drv_la-r5xx_accel.lo `test -f 'r5xx_accel.c' || echo '$(srcdir)/'`r5xx_accel.c; \
 @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-r5xx_accel.Tpo" "$(DEPDIR)/radeonhd_drv_la-r5xx_accel.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-r5xx_accel.Tpo"; exit 1; fi
@@ -656,12 +730,47 @@ radeonhd_drv_la-r5xx_xaa.lo: r5xx_xaa.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-r5xx_xaa.lo `test -f 'r5xx_xaa.c' || echo '$(srcdir)/'`r5xx_xaa.c
 
+radeonhd_drv_la-radeon_3d.lo: radeon_3d.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-radeon_3d.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-radeon_3d.Tpo" -c -o radeonhd_drv_la-radeon_3d.lo `test -f 'radeon_3d.c' || echo '$(srcdir)/'`radeon_3d.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-radeon_3d.Tpo" "$(DEPDIR)/radeonhd_drv_la-radeon_3d.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-radeon_3d.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='radeon_3d.c' object='radeonhd_drv_la-radeon_3d.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-radeon_3d.lo `test -f 'radeon_3d.c' || echo '$(srcdir)/'`radeon_3d.c
+
+radeonhd_drv_la-rhd_video.lo: rhd_video.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-rhd_video.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-rhd_video.Tpo" -c -o radeonhd_drv_la-rhd_video.lo `test -f 'rhd_video.c' || echo '$(srcdir)/'`rhd_video.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-rhd_video.Tpo" "$(DEPDIR)/radeonhd_drv_la-rhd_video.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-rhd_video.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rhd_video.c' object='radeonhd_drv_la-rhd_video.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-rhd_video.lo `test -f 'rhd_video.c' || echo '$(srcdir)/'`rhd_video.c
+
+radeonhd_drv_la-radeon_textured_videofuncs.lo: radeon_textured_videofuncs.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-radeon_textured_videofuncs.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-radeon_textured_videofuncs.Tpo" -c -o radeonhd_drv_la-radeon_textured_videofuncs.lo `test -f 'radeon_textured_videofuncs.c' || echo '$(srcdir)/'`radeon_textured_videofuncs.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-radeon_textured_videofuncs.Tpo" "$(DEPDIR)/radeonhd_drv_la-radeon_textured_videofuncs.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-radeon_textured_videofuncs.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='radeon_textured_videofuncs.c' object='radeonhd_drv_la-radeon_textured_videofuncs.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-radeon_textured_videofuncs.lo `test -f 'radeon_textured_videofuncs.c' || echo '$(srcdir)/'`radeon_textured_videofuncs.c
+
 radeonhd_drv_la-r5xx_exa.lo: r5xx_exa.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-r5xx_exa.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-r5xx_exa.Tpo" -c -o radeonhd_drv_la-r5xx_exa.lo `test -f 'r5xx_exa.c' || echo '$(srcdir)/'`r5xx_exa.c; \
 @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-r5xx_exa.Tpo" "$(DEPDIR)/radeonhd_drv_la-r5xx_exa.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-r5xx_exa.Tpo"; exit 1; fi
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='r5xx_exa.c' object='radeonhd_drv_la-r5xx_exa.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-r5xx_exa.lo `test -f 'r5xx_exa.c' || echo '$(srcdir)/'`r5xx_exa.c
+
+radeonhd_drv_la-radeon_exa_render.lo: radeon_exa_render.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-radeon_exa_render.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-radeon_exa_render.Tpo" -c -o radeonhd_drv_la-radeon_exa_render.lo `test -f 'radeon_exa_render.c' || echo '$(srcdir)/'`radeon_exa_render.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-radeon_exa_render.Tpo" "$(DEPDIR)/radeonhd_drv_la-radeon_exa_render.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-radeon_exa_render.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='radeon_exa_render.c' object='radeonhd_drv_la-radeon_exa_render.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-radeon_exa_render.lo `test -f 'radeon_exa_render.c' || echo '$(srcdir)/'`radeon_exa_render.c
+
+radeonhd_drv_la-rhd_dri.lo: rhd_dri.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-rhd_dri.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-rhd_dri.Tpo" -c -o radeonhd_drv_la-rhd_dri.lo `test -f 'rhd_dri.c' || echo '$(srcdir)/'`rhd_dri.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-rhd_dri.Tpo" "$(DEPDIR)/radeonhd_drv_la-rhd_dri.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-rhd_dri.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rhd_dri.c' object='radeonhd_drv_la-rhd_dri.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-rhd_dri.lo `test -f 'rhd_dri.c' || echo '$(srcdir)/'`rhd_dri.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -755,9 +864,10 @@ distdir: $(DISTFILES)
 check-am: all-am
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
-all-am: Makefile $(LTLIBRARIES)
+@MAINTAINER_MODE_FALSE@all-local:
+all-am: Makefile $(LTLIBRARIES) all-local
 installdirs:
-	for dir in "$(DESTDIR)$(radeonhd_drv_ladir)"; do \
+	for dir in "$(DESTDIR)$(driversdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -789,8 +899,8 @@ maintainer-clean-generic:
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
-	clean-radeonhd_drv_laLTLIBRARIES mostlyclean-am
+clean-am: clean-driversLTLIBRARIES clean-generic clean-libtool \
+	clean-noinstLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -808,7 +918,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-radeonhd_drv_laLTLIBRARIES
+install-data-am: install-driversLTLIBRARIES
 
 install-exec-am:
 
@@ -836,21 +946,21 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-radeonhd_drv_laLTLIBRARIES
+uninstall-am: uninstall-driversLTLIBRARIES uninstall-info-am
 
-.PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-noinstLTLIBRARIES \
-	clean-radeonhd_drv_laLTLIBRARIES ctags dist-hook distclean \
+.PHONY: CTAGS GTAGS all all-am all-local check check-am clean \
+	clean-driversLTLIBRARIES clean-generic clean-libtool \
+	clean-noinstLTLIBRARIES ctags dist-hook distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-radeonhd_drv_laLTLIBRARIES install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	install install-am install-data install-data-am \
+	install-driversLTLIBRARIES install-exec install-exec-am \
+	install-info install-info-am install-man install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-info-am \
-	uninstall-radeonhd_drv_laLTLIBRARIES
+	tags uninstall uninstall-am uninstall-driversLTLIBRARIES \
+	uninstall-info-am
 
 git_version.stamp:
 	@if test -f "$(srcdir)/git_version.h"; then \
@@ -874,6 +984,57 @@ dist-hook: git_version.stamp
 		$(SED) -e 's|^#undef GIT_IS_DIST.*|#define GIT_IS_DIST 1|' \
 			"git_version.h" > "$(distdir)/git_version.h"; \
 	fi
+@MAINTAINER_MODE_TRUE@radeonhd.man.new: rhd_id.c $(SRCMAN)
+@MAINTAINER_MODE_TRUE@	echo "Generating radeon.man.new..."; \
+@MAINTAINER_MODE_TRUE@	(	$(SED) -n '1,/^\.\\" START_DEVICE_LIST marker - do not delete/p' "$(SRCMAN)"; \
+@MAINTAINER_MODE_TRUE@		$(SED)	-e '1,/^[ 	]*\/\* START_DEVICE_LIST marker - do not delete \*\/ *$$/d' \
+@MAINTAINER_MODE_TRUE@			-e '/^[ 	]*\/\* END_DEVICE_LIST marker - do not delete \*\/ *$$/,$$d' \
+@MAINTAINER_MODE_TRUE@			-e '/^[ 	]\{1,\}xf86Msg(X_NONE,/d' \
+@MAINTAINER_MODE_TRUE@			-e '/^[ 	]\{1,\}\/\*/d' \
+@MAINTAINER_MODE_TRUE@			-e 's/^[ 	]\{1,\}"\\t\([A-Z0-9]\{1,\}\) \{1,\}: \(.*;\)\\n"$$/.TP 8\n.B \1\n\2/' \
+@MAINTAINER_MODE_TRUE@			-e 's/^[ 	]\{1,\}"\\t\\t\(.*\)\.\\n"\();\)\{0,1\}$$/\1/' \
+@MAINTAINER_MODE_TRUE@			-e 's/^[ 	]\{1,\}"\\t\([A-Z0-9]\{1,\}\) \{1,\}: \(.*\)\.\\n"\();\)\{0,1\}$$/.TP 8\n.B \1\n\2/' \
+@MAINTAINER_MODE_TRUE@			"$(srcdir)/rhd_id.c"; \
+@MAINTAINER_MODE_TRUE@		$(SED) -n '/^\.\\" END_DEVICE_LIST marker - do not delete/,$$p' "$(SRCMAN)" \
+@MAINTAINER_MODE_TRUE@	) > radeonhd.man.new
+@MAINTAINER_MODE_TRUE@README.new: rhd_id.c $(top_srcdir)/README
+@MAINTAINER_MODE_TRUE@	echo "Generating README.new..."; \
+@MAINTAINER_MODE_TRUE@	(	$(SED) -n '1,/^BEGIN_DEVICE_LIST$$/p' "$(SRCREADME)"; \
+@MAINTAINER_MODE_TRUE@		$(SED)	-e '1,/^[ 	]*\/\* START_DEVICE_LIST marker - do not delete \*\/ *$$/d' \
+@MAINTAINER_MODE_TRUE@			-e '/^[ 	]*\/\* END_DEVICE_LIST marker - do not delete \*\/ *$$/,$$d' \
+@MAINTAINER_MODE_TRUE@			-e '/^[ 	]\{1,\}xf86Msg(X_NONE,/d' \
+@MAINTAINER_MODE_TRUE@			-e '/^[ 	]\{1,\}\/\*/d' \
+@MAINTAINER_MODE_TRUE@			-e 's/^[ 	]\{1,\}"\\t\([A-Z0-9]\{1,\}\) \{1,\}: \(.*;\)\\n"$$/  * \1:\t\2/' \
+@MAINTAINER_MODE_TRUE@			-e 's/^[ 	]\{1,\}"\\t\\t\(.*\)\.\\n"\();\)\{0,1\}$$/         \t\1/' \
+@MAINTAINER_MODE_TRUE@			-e 's/^[ 	]\{1,\}"\\t\([A-Z0-9]\{1,\}\) \{1,\}: \(.*\)\.\\n"\();\)\{0,1\}$$/  * \1:\t\2/' \
+@MAINTAINER_MODE_TRUE@			"$(srcdir)/rhd_id.c"; \
+@MAINTAINER_MODE_TRUE@		$(SED) -n '/^END_DEVICE_LIST$$/,$$p' "$(SRCREADME)" \
+@MAINTAINER_MODE_TRUE@	) > README.new
+
+# Update man page and README from rhd_id.c RHDIdentify() output.
+# The exit(1) makes sure the updates do not go unnoticed.
+@MAINTAINER_MODE_TRUE@all-local: radeonhd.man.new README.new
+@MAINTAINER_MODE_TRUE@	@changed=""; \
+@MAINTAINER_MODE_TRUE@	if diff -u "$(SRCMAN)" radeonhd.man.new; then \
+@MAINTAINER_MODE_TRUE@		echo "radeon(4) man page is current."; \
+@MAINTAINER_MODE_TRUE@	else \
+@MAINTAINER_MODE_TRUE@                changed="$$changed $(SRCMAN)"; \
+@MAINTAINER_MODE_TRUE@		mv -f radeonhd.man.new "$(SRCMAN)"; \
+@MAINTAINER_MODE_TRUE@	fi; \
+@MAINTAINER_MODE_TRUE@	if diff -u "$(SRCREADME)" README.new; then \
+@MAINTAINER_MODE_TRUE@		echo "README file is current."; \
+@MAINTAINER_MODE_TRUE@	else \
+@MAINTAINER_MODE_TRUE@                changed="$$changed $(SRCREADME)"; \
+@MAINTAINER_MODE_TRUE@		mv -f README.new "$(SRCREADME)"; \
+@MAINTAINER_MODE_TRUE@	fi; \
+@MAINTAINER_MODE_TRUE@	if test "x$$changed" = "x"; then :; else \
+@MAINTAINER_MODE_TRUE@		echo "WARNING: Due to changes to src/rhd_id.c, some files differ from the original ones."; \
+@MAINTAINER_MODE_TRUE@		echo "         Please verify the changes to the following files"; \
+@MAINTAINER_MODE_TRUE@		for f in $$changed; do echo "              $$f"; done; \
+@MAINTAINER_MODE_TRUE@		echo "         and commit them together with your changes to"; \
+@MAINTAINER_MODE_TRUE@		echo "              $(srcdir)/rhd_id.c"; \
+@MAINTAINER_MODE_TRUE@		exit 1; \
+@MAINTAINER_MODE_TRUE@	fi
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

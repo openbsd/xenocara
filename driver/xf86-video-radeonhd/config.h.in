@@ -12,6 +12,9 @@
 /* Add support for AtomBIOS code */
 #undef ATOM_BIOS_PARSER
 
+/* Use Damage extension */
+#undef DAMAGE
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -84,10 +87,16 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* Build support for DRI */
+#undef USE_DRI
+
 /* Build support for Exa */
 #undef USE_EXA
 
 /* Version number of package */
 #undef VERSION
+
+/* xf86CrtcFuncsRec has member set_mode_major */
+#undef XF86CRTCFUNCS_HAS_SETMODEMAJOR
 
 #endif

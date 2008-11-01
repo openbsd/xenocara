@@ -2,7 +2,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-radeonhd],
-        1.2.1,
+        1.2.3,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/radeonhd],
         xf86-video-radeonhd)
 
@@ -16,8 +16,12 @@ AM_MAINTAINER_MODE
 
 # Program checks.
 AC_DISABLE_STATIC
-AC_PROG_LIBTOOL
 AC_PROG_CC
+dnl Define SED var without requiring AC_PROG_SED (new in autoconf-2.59b)
+m4_ifdef([AC_PROG_SED], [AC_PROG_SED], [AC_SUBST([SED], [${SED-sed}])])
+CXX=no
+F77=no
+AC_PROG_LIBTOOL
 
 
 AH_TOP([#ifndef _CONFIG_H])
@@ -36,6 +40,12 @@ AC_ARG_ENABLE(exa,
 	                     [Disable EXA support [[default enabled]]]),
               [EXA="$enableval"],
               [EXA=yes])
+
+AC_ARG_ENABLE(dri,
+              AC_HELP_STRING([--disable-dri],
+	                     [Disable DRI support [[default enabled]]]),
+              [DRI="$enableval"],
+              [DRI=yes])
 
 # Extensions checks.
 m4_pattern_forbid([XORG_DRIVER_CHECK_EXT])dnl
@@ -105,6 +115,26 @@ fi
 
 AM_CONDITIONAL(USE_EXA, test "x$USE_EXA" = xyes)
 
+# Handle DRI
+CPPFLAGS="$SAVED_CPPFLAGS $XORG_CFLAGS"
+CFLAGS="$SAVED_CFLAGS $XORG_CFLAGS"
+
+# basic dri check.
+USE_DRI=no
+if test "x$DRI" = xyes; then
+	USE_DRI="yes"
+	AC_CHECK_DECL(XF86DRI,, [USE_DRI=no], [#include <xorg-server.h>])
+	PKG_CHECK_MODULES(DRI, [libdrm >= 2.2 xf86driproto],, [USE_DRI=no])
+fi
+AC_MSG_CHECKING([whether to enable DRI support])
+AC_MSG_RESULT($USE_DRI)
+test "x$USE_DRI" = xyes && AC_DEFINE(USE_DRI, 1, [Build support for DRI])
+AM_CONDITIONAL(USE_DRI, test "x$USE_DRI" = xyes)
+
+AC_CHECK_FILE([${sdkdir}/damage.h],
+	[AC_DEFINE(DAMAGE,1,[Use Damage extension])], [])
+
+# check for xf86_ansic.h
 CFLAGS="$SAVED_CFLAGS"
 CPPFLAGS="$SAVED_CPPFLAGS"
 
@@ -131,6 +161,16 @@ AC_CHECK_MEMBER([MonRec.maxPixClock],
          [#include "${sdkdir}/xf86.h"])
 if test "x$MONREC_HAS_BANDWIDTH" = xyes; then
         AC_DEFINE(MONREC_HAS_BANDWIDTH, 1, [MonRec has member maxPixClock])
+fi
+
+# Check whether xf86CrtcFuncsRec has a set_mode_major member.
+AC_CHECK_MEMBER([xf86CrtcFuncsRec.set_mode_major],
+         [XF86CRTCFUNCS_HAS_SETMODEMAJOR=yes], [XF86CRTCFUNCS_HAS_SETMODEMAJOR=no],
+         [#include "${sdkdir}/xorg-server.h"
+#include "${sdkdir}/xf86.h"
+#include "${sdkdir}/xf86Crtc.h"])
+if test "x$XF86CRTCFUNCS_HAS_SETMODEMAJOR" = xyes; then
+        AC_DEFINE(XF86CRTCFUNCS_HAS_SETMODEMAJOR, 1, [xf86CrtcFuncsRec has member set_mode_major])
 fi
 
 CFLAGS="$SAVED_CFLAGS"
@@ -242,6 +282,7 @@ esac
 AC_SUBST([PCIUTILS_CFLAGS])
 AC_SUBST([PCIUTILS_LIBS])
 AC_SUBST([XORG_CFLAGS])
+AC_SUBST([DRI_CFLAGS])
 AC_SUBST([WARN_CFLAGS])
 AC_SUBST([PEDANTIC_CFLAGS])
 AC_SUBST([ATOMBIOS_CFLAGS])
@@ -277,3 +318,8 @@ AC_OUTPUT([
 	src/Makefile
 	utils/conntest/Makefile
 ])
+if test "x$USE_DRI" != xyes ; then
+  echo ""
+  echo "NOTE: DRI support is disabled"
+  echo ""
+fi

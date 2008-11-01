@@ -50,7 +50,7 @@ struct rhdPLL {
     CARD32 PixMax;
 
     ModeStatus (*Valid) (struct rhdPLL *PLL, CARD32 Clock);
-    void (*Set) (struct rhdPLL *PLL, CARD16 ReferenceDivider,
+    void (*Set) (struct rhdPLL *PLL, int PixelClock, CARD16 ReferenceDivider,
 		 CARD16 FeedbackDivider, CARD8 PostDivider);
     void (*Power) (struct rhdPLL *PLL, int Power);
     void (*Save) (struct rhdPLL *PLL);
@@ -58,7 +58,12 @@ struct rhdPLL {
 
     /* For save/restore: Move to a Private */
     Bool Stored;
+
+    void *Private;
+
     Bool StoreActive;
+    Bool StoreCrtc1Owner;
+    Bool StoreCrtc2Owner;
     CARD32 StoreRefDiv;
     CARD32 StoreFBDiv;
     CARD32 StorePostDiv;
@@ -70,9 +75,11 @@ struct rhdPLL {
     CARD32 StoreDCCGCLK;
     CARD8 StoreScalerPostDiv;
     CARD8 StoreSymPostDiv;
+    CARD32 StorePostDivSrc;
+    Bool StoreGlitchReset;
 };
 
-void RHDPLLsInit(RHDPtr rhdPtr);
+Bool RHDPLLsInit(RHDPtr rhdPtr);
 ModeStatus RHDPLLValid(struct rhdPLL *PLL, CARD32 Clock);
 void RHDPLLSet(struct rhdPLL *PLL, CARD32 Clock);
 void RHDPLLPower(struct rhdPLL *PLL, int Power);
@@ -81,5 +88,10 @@ void RHDPLLsShutdownInactive(RHDPtr rhdPtr);
 void RHDPLLsSave(RHDPtr rhdPtr);
 void RHDPLLsRestore(RHDPtr rhdPtr);
 void RHDPLLsDestroy(RHDPtr rhdPtr);
+
+void RHDSetupLimits(RHDPtr rhdPtr, CARD32 *RefClock,
+		    CARD32 *IntMin, CARD32 *IntMax,
+		    CARD32 *PixMin, CARD32 *PixMax);
+Bool RHDAtomPLLsInit(RHDPtr rhdPtr);
 
 #endif /* _RHD_PLL_H */

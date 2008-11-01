@@ -83,6 +83,7 @@ enum {
     DACA_ENABLE                    = 0x7800,
     DACA_SOURCE_SELECT             = 0x7804,
     DACA_AUTODETECT_CONTROL        = 0x7828,
+    DACA_AUTODETECT_INT_CONTROL    = 0x7838,
     DACA_FORCE_OUTPUT_CNTL         = 0x783C,
     DACA_FORCE_DATA                = 0x7840,
     DACA_POWERDOWN                 = 0x7850,
@@ -109,6 +110,7 @@ enum {
     DACB_ENABLE                    = 0x7A00,
     DACB_SOURCE_SELECT             = 0x7A04,
     DACB_AUTODETECT_CONTROL        = 0x7A28,
+    DACB_AUTODETECT_INT_CONTROL    = 0x7A38,
     DACB_FORCE_OUTPUT_CNTL         = 0x7A3C,
     DACB_FORCE_DATA                = 0x7A40,
     DACB_POWERDOWN                 = 0x7A50,
@@ -434,9 +436,37 @@ struct RHDDevice {
     { 0x1002, 0x958C, 2, RHD_R600},
     { 0x1002, 0x958D, 2, RHD_R600},
     { 0x1002, 0x958E, 2, RHD_R600},
+    { 0x1002, 0x958F, 2, RHD_R600},
+    { 0x1002, 0x9590, 2, RHD_RV620},
+    { 0x1002, 0x9591, 2, RHD_RV620},
+    { 0x1002, 0x9593, 2, RHD_RV620},
+    { 0x1002, 0x9594, 2, RHD_RV620},
+    { 0x1002, 0x9596, 2, RHD_RV620},
+    { 0x1002, 0x9597, 2, RHD_RV620},
     { 0x1002, 0x9598, 2, RHD_RV620},
+    { 0x1002, 0x9599, 2, RHD_RV620},
+    { 0x1002, 0x959B, 2, RHD_RV620},
+    { 0x1002, 0x95C0, 2, RHD_RV620},
+    { 0x1002, 0x95C2, 2, RHD_RV620},
+    { 0x1002, 0x95C4, 2, RHD_RV620},
     { 0x1002, 0x95C5, 2, RHD_RV620},
+    { 0x1002, 0x95C7, 2, RHD_RV620},
+    { 0x1002, 0x95CC, 2, RHD_RV620},
+    { 0x1002, 0x95CD, 2, RHD_RV620},
+    { 0x1002, 0x95CE, 2, RHD_RV620},
+    { 0x1002, 0x95CF, 2, RHD_RV620},
+    { 0x1002, 0x9610, 2, RHD_RV620},
+    { 0x1002, 0x9611, 2, RHD_RV620},
     { 0x1002, 0x9612, 2, RHD_RV620},
+    { 0x1002, 0x9613, 2, RHD_RV620},
+    { 0x1002, 0x9614, 2, RHD_RV620},
+    { 0x1002, 0x9440, 2, RHD_RV620},
+    { 0x1002, 0x9441, 2, RHD_RV620},
+    { 0x1002, 0x9442, 2, RHD_RV620},
+    { 0x1002, 0x9444, 2, RHD_RV620},
+    { 0x1002, 0x9446, 2, RHD_RV620},
+    { 0x1002, 0x944E, 2, RHD_RV620},
+    { 0x1002, 0x9456, 2, RHD_RV620},
     { 0, 0, 0, 0 }
 };
 
@@ -581,9 +611,12 @@ HPDReport(void *map)
 	if (HPD & 0x100)
 	    printf(" RHD_HPD_1");
 
-	if ((ChipType == RHD_R600) && (HPD & 0x00010000))
+	if ((ChipType >= RHD_R600) && (HPD & 0x00010000))
 	    printf(" RHD_HPD_2");
-    }
+
+    	if ((ChipType >= RHD_R600) && (HPD & 0x01000000))
+	    printf(" RHD_HPD_3");
+}
     printf("\n");
 }
 
@@ -605,20 +638,28 @@ DACLoadDetect(void *map, Bool tv, int dac)
     DetectControl = RegRead(map, offset + DACA_AUTODETECT_CONTROL);
     Enable = RegRead(map, offset + DACA_ENABLE);
 
+    /* enable */
     RegWrite(map, offset + DACA_ENABLE, 1);
+    /* ack autodetect */
+    RegMask(map, offset + DACA_AUTODETECT_INT_CONTROL, 0x01, 0x01);
+    /* autodetect off */
     RegMask(map, offset + DACA_AUTODETECT_CONTROL, 0, 0x3);
+    /* zscale shift off */
     RegMask(map, offset + DACA_CONTROL2, 0, 0xff0000);
+    /* dac force off */
     RegMask(map, offset + DACA_CONTROL2, 0, 0x1);
 
+    /* set TV */
     RegMask(map, offset + DACA_CONTROL2, tv ? 0x100 : 0, 0x100);
 
     RegWrite(map, offset + DACA_FORCE_DATA, 0);
     RegMask(map, offset + DACA_CONTROL2, 0x1, 0x1);
 
-    RegMask(map, offset + DACA_COMPARATOR_ENABLE, 0x00070000, 0x00070000);
+    RegMask(map, offset + DACA_COMPARATOR_ENABLE, 0x00070000, 0x00070101);
     RegWrite(map, offset + DACA_CONTROL1, 0x00050802);
+
     RegMask(map, offset + DACA_POWERDOWN, 0, 0x1); /* Shut down Bandgap Voltage Reference Power */
-    usleep(5);
+    usleep(5000);
 
     RegMask(map, offset + DACA_POWERDOWN, 0, 0x01010100); /* Shut down RGB */
 
@@ -632,6 +673,80 @@ DACLoadDetect(void *map, Bool tv, int dac)
 
     RegMask(map, offset + DACA_COMPARATOR_ENABLE, 0x100, 0x100);
     usleep(100);
+
+    /* Get RGB detect values
+     * If only G is detected, we could have a monochrome monitor,
+     * but we don't bother with this at the moment.
+     */
+    ret = (RegRead(map, offset + DACA_COMPARATOR_OUTPUT) & 0x0E) >> 1;
+#ifdef DEBUG
+    fprintf(stderr, "DAC%s: %x %s\n", dac ? "B" : "A", ret, tv ? "TV" : "");
+#endif
+    RegMask(map, offset + DACA_COMPARATOR_ENABLE, CompEnable, 0x00FFFFFF);
+    RegWrite(map, offset + DACA_CONTROL1, Control1);
+    RegMask(map, offset + DACA_CONTROL2, Control2, 0x1FF);
+    RegMask(map, offset + DACA_AUTODETECT_CONTROL, DetectControl, 0xFF);
+    RegMask(map, offset + DACA_ENABLE, Enable, 0xFF);
+
+    switch (ret & 0x7) {
+	case 0x7:
+	    if (tv)
+		return DAC_COMPONENT;
+	    else
+		return DAC_VGA;
+	case 0x1:
+	    if (tv)
+		return DAC_COMPOSITE;
+	    else
+		return DAC_NONE;
+	case 0x6:
+	    if (tv)
+		return DAC_SVIDEO;
+	    else
+		return DAC_NONE;
+	default:
+	    return DAC_NONE;
+    }
+}
+
+/*
+ *
+ */
+static dacOutput
+RS690DACLoadDetect(void *map, Bool tv, int dac)
+{
+    CARD32 CompEnable, Control1, Control2, DetectControl, Enable;
+    CARD8 ret;
+    unsigned int offset = 0;
+
+    if (dac) offset = 0x200;
+
+    CompEnable = RegRead(map, offset + DACA_COMPARATOR_ENABLE);
+    Control1 = RegRead(map, offset + DACA_CONTROL1);
+    Control2 = RegRead(map, offset + DACA_CONTROL2);
+    DetectControl = RegRead(map, offset + DACA_AUTODETECT_CONTROL);
+    Enable = RegRead(map, offset + DACA_ENABLE);
+
+     /* Shut down Bandgap Voltage Reference Power */
+    RegMask(map, offset + DACA_POWERDOWN, 0, 0x1);
+    /* enable */
+    RegWrite(map, offset + DACA_ENABLE, 1);
+    /* autodetect off */
+    RegMask(map, offset + DACA_AUTODETECT_CONTROL, 0, 0x3);
+    /* zscale shift off */
+    RegMask(map, offset + DACA_CONTROL2, 0, 0xff0000);
+    /* set TV */
+    RegMask(map, offset + DACA_CONTROL2, tv ? 0x100 : 0, 0x100);
+    /* electrical */
+    RegWrite(map, offset + DACA_CONTROL1, 0x000A0A02);
+    usleep(1000);
+    /* 486 out of 1024 */
+    RegWrite(map, offset + DACA_FORCE_DATA, 0x1e6);
+    /* dac force on */
+    RegMask(map, offset + DACA_CONTROL2, 0x1, 0x1);
+    usleep(1000);
+    RegMask(map, offset + DACA_COMPARATOR_ENABLE, 0x100, 0x100);
+    usleep(37000);
 
     /* Get RGB detect values
      * If only G is detected, we could have a monochrome monitor,
@@ -802,12 +917,17 @@ LoadReport(void *map)
 
     switch (ChipType) {
 	case RHD_R500:
-	case RHD_RS690:
 	case RHD_R600:
 	    DACA = DACLoadDetect(map, FALSE, 0);
 	    DACB = DACLoadDetect(map, FALSE, 1);
 	    TVA = DACLoadDetect(map, TRUE, 0);
 	    TVB = DACLoadDetect(map, TRUE, 1);
+	    break;
+	case RHD_RS690:
+	    DACA = RS690DACLoadDetect(map, FALSE, 0);
+	    DACB = RS690DACLoadDetect(map, FALSE, 1);
+	    TVA = RS690DACLoadDetect(map, TRUE, 0);
+	    TVB = RS690DACLoadDetect(map, TRUE, 1);
 	    break;
 	case RHD_RV620:
 	    DACA = RV620DACLoadDetect(map, FALSE, 0);
@@ -871,28 +991,33 @@ getDDCSpeed(void)
 {
     CARD32 clock, ref_clk, ret;
 
-    switch  (AtomData.FirmwareInfoVersion.crev) {
-	case 1:
-	    clock = AtomData.FirmwareInfo.FirmwareInfo->ulDefaultEngineClock;
-	    ref_clk = AtomData.FirmwareInfo.FirmwareInfo->usReferenceClock;
-	    break;
-	case 2:
-	    clock = AtomData.FirmwareInfo.FirmwareInfo_V_1_2->ulDefaultEngineClock;
-	    ref_clk = AtomData.FirmwareInfo.FirmwareInfo_V_1_2->usReferenceClock;
-	    break;
-	case 3:
-	    clock = AtomData.FirmwareInfo.FirmwareInfo_V_1_3->ulDefaultEngineClock;
-	    ref_clk = AtomData.FirmwareInfo.FirmwareInfo_V_1_3->usReferenceClock;
-	    break;
-	case 4:
-	    clock = AtomData.FirmwareInfo.FirmwareInfo_V_1_4->ulDefaultEngineClock;
-	    ref_clk = AtomData.FirmwareInfo.FirmwareInfo_V_1_4->usReferenceClock;
-	    break;
-	default:
-	    /* no AtomBIOS info; use save default */
-	    clock = 70000;
-	    ref_clk = 270;
+    /* if no AtomBIOS info; use save default */
+    clock = 40000;
+    ref_clk = 270;
+
+    if (AtomData.FirmwareInfo.base) {
+	switch  (AtomData.FirmwareInfoVersion.crev) {
+	    case 1:
+		clock = AtomData.FirmwareInfo.FirmwareInfo->ulDefaultEngineClock;
+		ref_clk = AtomData.FirmwareInfo.FirmwareInfo->usReferenceClock;
+		break;
+	    case 2:
+		clock = AtomData.FirmwareInfo.FirmwareInfo_V_1_2->ulDefaultEngineClock;
+		ref_clk = AtomData.FirmwareInfo.FirmwareInfo_V_1_2->usReferenceClock;
+		break;
+	    case 3:
+		clock = AtomData.FirmwareInfo.FirmwareInfo_V_1_3->ulDefaultEngineClock;
+		ref_clk = AtomData.FirmwareInfo.FirmwareInfo_V_1_3->usReferenceClock;
+		break;
+	    case 4:
+		clock = AtomData.FirmwareInfo.FirmwareInfo_V_1_4->ulDefaultEngineClock;
+		ref_clk = AtomData.FirmwareInfo.FirmwareInfo_V_1_4->usReferenceClock;
+		break;
+	    default:
+		break;
+	}
     }
+
     clock *= 10;
     ref_clk *= 10;
 
@@ -1059,6 +1184,9 @@ R6xxI2CStatus(void *map)
 	fprintf(stderr, "I2CStatus: %x\n",val);
 #endif
     if (!count || (val & (R6_DC_I2C_SW_STOPPED_ON_NACK
+			  | R6_DC_I2C_SW_ABORTED | R6_DC_I2C_SW_TIMEOUT
+			  | R6_DC_I2C_SW_INTERRUPTED
+			  | R6_DC_I2C_SW_BUFFER_OVERFLOW
 			  | R6_DC_I2C_SW_NACK0 | R6_DC_I2C_SW_NACK1 | 0x3)))
 	return FALSE; /* 2 */
     return TRUE; /* 1 */
@@ -1201,6 +1329,10 @@ enum _rhdRS69I2CBits {
     RS69_DC_I2C_SW_DONE_ACK   = (0x1 << 1),
     /* RS69_DC_I2C_SW_STATUS */
     RS69_DC_I2C_SW_DONE       = (0x1 << 2),
+    RS69_DC_I2C_SW_ABORTED    = (0x1 << 4),
+    RS69_DC_I2C_SW_TIMEOUT    = (0x1 << 5),
+    RS69_DC_I2C_SW_INTERRUPTED= (0x1 << 6),
+    RS69_DC_I2C_SW_BUFFER_OVERFLOW= (0x1 << 7),
     RS69_DC_I2C_SW_STOPPED_ON_NACK    = (0x1 << 8),
     RS69_DC_I2C_SW_NACK0      = (0x1 << 12),
     RS69_DC_I2C_SW_NACK1      = (0x1 << 13)
@@ -1212,7 +1344,7 @@ enum _rhdRS69I2CBits {
 static Bool
 RS69I2CStatus(void *map)
 {
-    int count = 800;
+    int count = 2000;
     volatile CARD32 val;
 
     while (--count) {
@@ -1228,6 +1360,9 @@ RS69I2CStatus(void *map)
     RegMask(map, RS69_DC_I2C_INTERRUPT_CONTROL, RS69_DC_I2C_SW_DONE_ACK,
 	    RS69_DC_I2C_SW_DONE_ACK);
     if (!count || (val & (RS69_DC_I2C_SW_STOPPED_ON_NACK
+			  | RS69_DC_I2C_SW_ABORTED | RS69_DC_I2C_SW_TIMEOUT
+			  | RS69_DC_I2C_SW_INTERRUPTED
+			  | RS69_DC_I2C_SW_BUFFER_OVERFLOW
 			  | RS69_DC_I2C_SW_NACK0 | RS69_DC_I2C_SW_NACK1
 			  | 0x3)))
 	return FALSE; /* 2 */
@@ -1244,7 +1379,7 @@ RS69I2CSetupStatus(void *map, int line)
     CARD16 prescale;
 
     prescale = getDDCSpeed();
-    if (!prescale)
+    if (!prescale || !AtomData.GPIO_I2C_Info)
 	return FALSE;
 
     RegMask(map, 0x28, 0x200, 0x200);
@@ -1268,13 +1403,12 @@ RS69I2CSetupStatus(void *map, int line)
 	    break;
     }
 #ifdef DEBUG
-    printf("DDC: line: %i -> %i port: %x\n",line,ddc,
+    fprintf(stderr, "DDC: line: %i -> %i port: %x\n",line,ddc,
 	   AtomData.GPIO_I2C_Info->asGPIO_Info[line & 0xf]
 	   .usClkMaskRegisterIndex);
 #endif
-    RegMask(map, RS69_DC_I2C_CONTROL, ddc << 8, 0xff << 8);
     RegWrite(map, RS69_DC_I2C_DDC_SETUP_Q, 0x30000000);
-    RegMask(map, RS69_DC_I2C_CONTROL, (line & 0x3) << 16, 0xff << 16);
+    RegMask(map, RS69_DC_I2C_CONTROL, ((line & 0x3) << 16) | ddc << 8, 0xffff << 8);
     RegMask(map, RS69_DC_I2C_INTERRUPT_CONTROL, 0x2, 0x2);
     RegMask(map, RS69_DC_I2C_UNKNOWN_2, 0x2, 0xff);
 
@@ -1371,6 +1505,13 @@ RS69xI2CWriteRead(void *map,  CARD8 line, CARD8 slave,
 static Bool
 RS69DDCProbe(void *map, int Channel, unsigned char slave)
 {
+    return RS69xI2CWriteRead(map, Channel, slave, NULL, 0, NULL, 0);
+}
+
+#if 0
+static Bool
+RS69DDCProbe(void *map, int Channel, unsigned char slave)
+{
     Bool ret = FALSE;
     CARD32 data;
 
@@ -1396,6 +1537,7 @@ RS69DDCProbe(void *map, int Channel, unsigned char slave)
 
     return ret;
 }
+#endif
 
 enum _rhdR5xxI2CBits {
  /* R5_DC_I2C_STATUS1 */
@@ -1486,7 +1628,8 @@ R5xxI2CStatus(void *map)
 #ifdef DEBUG
 	fprintf(stderr, "I2CStatus: %x\n",res);
 #endif
-	if (res & R5_DC_I2C_DONE)
+	if (res & R5_DC_I2C_DONE
+	    && !(res & (R5_DC_I2C_NACK | R5_DC_I2C_HALT)))
 	    return TRUE;
 	else
 	    return FALSE;
@@ -1774,38 +1917,92 @@ RV620I2CStatus(void *map)
 /*
  *
  */
+enum {
+    rhdDdc1data = 0,
+    rhdDdc2data = 2,
+    rhdDdc3data = 4,
+    rhdVIP_DOUT_scl = 0x41,
+    rhdDvoData12 = 0x28,
+    rhdDdc1clk = 1,
+    rhdDdc2clk = 3,
+    rhdDdc3clk = 5,
+    rhdVIP_DOUTvipclk = 0x42,
+    rhdDvoData13 = 0x29
+};
+
+static int
+getDDCLineFromGPIO(CARD32 gpio, int shift)
+{
+    switch (gpio) {
+    case 0x1f90:
+	switch (shift) {
+	    case 0:
+		return rhdDdc1clk; /* ddc1 clk */
+	    case 8:
+		return rhdDdc1data; /* ddc1 data */
+	}
+	break;
+    case 0x1f94: /* ddc2 */
+	switch (shift) {
+	    case 0:
+		return rhdDdc2clk; /* ddc2 clk */
+	    case 8:
+		return rhdDdc2data; /* ddc2 data */
+	}
+	break;
+    case 0x1f98: /* ddc3 */
+	switch (shift) {
+	    case 0:
+		return rhdDdc3clk; /* ddc3 clk */
+	    case 8:
+		return rhdDdc3data; /* ddc3 data */
+	}
+    case 0x1f88: /* ddc4 */
+	switch (shift) {
+	    case 0:
+		return rhdVIP_DOUTvipclk; /* ddc4 clk */
+	    case 8:
+		return rhdVIP_DOUT_scl; /* ddc4 data */
+	}
+	break;
+    case 0x1fda: /* ddc5 */
+	switch (shift) {
+	    case 0:
+		return rhdDvoData13; /* ddc5 clk */
+	    case 8:
+		return rhdDvoData12; /* ddc5 data */
+	}
+	break;
+    }
+    return -1;
+}
+
+/*
+ *
+ */
 static  Bool
 RV620I2CSetupStatus(void *map, int line, int prescale)
 {
 /*     CARD32 reg_7d9c[] = { 0x1, 0x0203,  0x0405, 0x0607 }; */
-    CARD32 reg_7d9c;
-    unsigned char *table;
-    short size = 0;
-    int i = 0;
+    CARD32 gpio, shift, sda, scl;
 
     if (line > 3)
 	return FALSE;
 
-    table = AtomBiosGetDataFromCodeTable(command_table, 0x36, &size);
-    while (i < size) {
-	if (table[i] == line) {
-	    reg_7d9c = table[i + 3] << 8 | table[i + 2];
-#ifdef DEBUG
-	    fprintf(stderr, "Line[%i] = 0x%4.4x\n",line, reg_7d9c);
-#endif
-	    break;
-	}
-	i += 4;
-    }
-    if (i >= size)
-	return FALSE;
+    gpio = AtomData.GPIO_I2C_Info->asGPIO_Info[line].usDataMaskRegisterIndex;
+    shift = AtomData.GPIO_I2C_Info->asGPIO_Info[line].ucDataMaskShift;
+    sda = getDDCLineFromGPIO(gpio, shift);
 
-    RegWrite(map, 0x7e40, 0);
-    RegWrite(map, 0x7e50, 0);
-    RegWrite(map, 0x7e60, 0);
-    RegWrite(map, 0x7e20, 0);
+    gpio = AtomData.GPIO_I2C_Info->asGPIO_Info[line].usClkMaskRegisterIndex;
+    shift = AtomData.GPIO_I2C_Info->asGPIO_Info[line].ucClkMaskShift;
+    scl = getDDCLineFromGPIO(gpio, shift);
 
-    RegWrite(map, RV62_GENERIC_I2C_PIN_SELECTION, reg_7d9c);
+    /* Don't understand this yet */
+    if (gpio == 0x1fda)
+	gpio = 0x1f90;
+
+    RegWrite(map, gpio << 2, 0);
+    RegWrite(map, RV62_GENERIC_I2C_PIN_SELECTION, scl | (sda << 8));
     RegMask(map, RV62_GENERIC_I2C_SPEED,
 	    (prescale & 0xffff) << 16 | 0x02, 0xffff00ff);
     RegWrite(map, RV62_GENERIC_I2C_SETUP, 0x30000000);
@@ -2011,11 +2208,11 @@ DDCScanBus(void *map, int count)
 {
     int channel;
     unsigned char slave;
-    int max_chan = ((ChipType >= RHD_R600) ? 3 : 2);
+    int max_chan = ((ChipType >= RHD_RS690) ? 3 : 2);
     unsigned char *data = NULL;
 
     if (count)
-	data = alloca(count);
+	data = malloc(count);
 
     for (channel = 0; channel < max_chan; channel ++) {
 	int state = 0;
@@ -2038,6 +2235,7 @@ DDCScanBus(void *map, int count)
 	if (state == 1)
 	    printf("\n");
     }
+    if (data) free(data);
 }
 
 /*
@@ -2293,11 +2491,13 @@ struct atomCodeDataTableHeader
 unsigned char *
 AtomBiosGetDataFromCodeTable(unsigned char **tablelist, int n, short *size)
 {
-    ATOM_COMMON_ROM_COMMAND_TABLE_HEADER *header = (ATOM_COMMON_ROM_COMMAND_TABLE_HEADER *)
-	tablelist[n];
+    ATOM_COMMON_ROM_COMMAND_TABLE_HEADER *header;
     unsigned char *code;
     int i;
 
+    if (!tablelist)
+	return FALSE;
+    header = (ATOM_COMMON_ROM_COMMAND_TABLE_HEADER *) tablelist[n];
     if (!header)
 	return NULL;
     if (!AnalyzeCommonHdr(&header->CommonHeader))
@@ -2494,14 +2694,13 @@ main(int argc, char *argv[])
     rombase = GetVBIOS(&size);
     if (!rombase) {
 	fprintf(stderr, "Cannot get VBIOS. Are we root?\n");
-	return 1;
-    }
+    } else
     if (!InterpretATOMBIOS(rombase)) {
 	fprintf(stderr, "Cannot analyze AtomBIOS\n");
 	return 1;
     }
 
-    if (dumpBios) {
+    if (dumpBios && rombase) {
 	char name[1024] = "posted.vga.rom";
 
 	if (deviceSet) {

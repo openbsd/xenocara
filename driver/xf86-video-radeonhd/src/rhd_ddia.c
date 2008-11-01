@@ -41,7 +41,6 @@
 #include "rhd_connector.h"
 #include "rhd_output.h"
 #include "rhd_regs.h"
-#include "rhd_card.h"
 #ifdef ATOM_BIOS
 #include "rhd_atombios.h"
 #endif
@@ -117,7 +116,7 @@ DDIAMode(struct rhdOutput *Output, DisplayModePtr Mode)
 	       RS69_DDIA_DUAL_LINK_ENABLE : 0, RS69_DDIA_DUAL_LINK_ENABLE);
     RHDRegMask(Output, RS69_DDIA_DCBALANCER_CONTROL,
 	       RS69_DDIA_DCBALANCER_EN,
-	       RS69_DDIA_DCBALANCER_EN);
+	       RS69_DDIA_SYNC_DCBAL_EN_MASK | RS69_DDIA_DCBALANCER_EN);
 
     RHDRegMask(Output,  RS69_DDIA_PCIE_PHY_CONTROL2, 0x0, 0x80);
     RHDRegMask(Output,  RS69_DDIA_PCIE_PHY_CONTROL2, 0x0, 0x100);
@@ -215,7 +214,8 @@ DDIAMode(struct rhdOutput *Output, DisplayModePtr Mode)
 static void
 DDIAPower(struct rhdOutput *Output, int Power)
 {
-    RHDFUNC(Output);
+    RHDDebug(Output->scrnIndex, "%s(%s,%s)\n",__func__,Output->Name,
+	     rhdPowerString[Power]);
 
     switch (Power) {
 	case RHD_POWER_ON:
@@ -326,21 +326,20 @@ DDIADestroy(struct rhdOutput *Output)
  *
  */
 struct rhdOutput *
-RHDDDIAInit(RHDPtr rhdPtr, enum rhdOutputType outputType)
+RHDDDIAInit(RHDPtr rhdPtr)
 {
-    RHDFUNC(rhdPtr);
-
 #ifdef ATOM_BIOS
     struct rhdOutput *Output;
     struct DDIAPrivate *Private;
     AtomBiosArgRec data;
 
+    RHDFUNC(rhdPtr);
 
     /*
      * This needs to be handled separately
      * for now we only deal with it here.
      */
-    if (RHDFamily(rhdPtr->ChipSet) != RHD_FAMILY_RS690)
+    if (rhdPtr->ChipSet < RHD_RS600 || rhdPtr->ChipSet >= RHD_RS740)
 	return FALSE;
 
     Output = xnfcalloc(sizeof(struct rhdOutput), 1);
@@ -348,7 +347,7 @@ RHDDDIAInit(RHDPtr rhdPtr, enum rhdOutputType outputType)
     Output->Name = "DDIA";
 
     Output->scrnIndex = rhdPtr->scrnIndex;
-    Output->Id = outputType;
+    Output->Id = RHD_OUTPUT_DVO;
 
     Output->Sense = NULL;
     Output->ModeValid = DDIAModeValid;

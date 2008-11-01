@@ -29,7 +29,7 @@
 struct rhdVGA {
     Bool Stored;
 
-    CARD32 FBOffset;
+    CARD32 FBBase;
     CARD8 *FB;
     int FBSize; /* most cases, 256kB */
 

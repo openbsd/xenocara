@@ -22,34 +22,29 @@ radeonhd \- AMD GPG (ATI) R5xx/R6xx video driver
 .\"
 .SH DESCRIPTION
 .B radeonhd
-is an __xservername__ driver for AMD GPG (ATI) R5xx/R6xx based video cards.
-
-.B "RADEONHD is still very much work in progress."
+is an __xservername__ driver for AMD GPG (ATI) R5xx/R6xx/R7xx based video cards.
 
 At the time of this writing,
 .B radeonhd
-has the following major limitations:
+has the following limitations:
 .\".TP "\w'\fB\(bu\fR'u+1n"
 .TP 2
 \(bu
+On R6xx and R7xx based cards:
 .B NO
-support for 2D & 3D acceleration, no support for Xvideo.
+support for hardware-based 2D & 3D acceleration, no support for Xvideo.
 .TP
 \(bu
-No TV, Component, and HDMI connector support so far.
-.TP
-\(bu
-Suspend & Resume is pretty much untested. Often it just works, but your
-milage may vary.
+No TV and Component connector support so far.
 .TP
 \(bu
 After using the
 .I fglrx
-driver, the display can get very jittery with
-.BR radeonhd .
-Also suspend & resume will probably fail.  A reboot fixes this problem in most
-cases, sometimes a powercycle is necessary.  Unloading the kernel module is
-typically not enough.
+driver,
+.B radeonhd
+might fail to work properly. This combination is not and probably will never be
+supported.  A reboot fixes problems in most cases, sometimes a powercycle is
+necessary.  Unloading the kernel module is typically not enough.
 .PP
 A more up-to-date list can be found on the wiki page.
 .PP
@@ -58,12 +53,10 @@ A more up-to-date list can be found on the wiki page.
 The
 .B radeonhd
 driver supports video cards based on the following ATI chips:
-.\" The following list was generated from "X -logverbose 7" by the following command:
-.\" sed -n '/^\t[RM][A-Z0-9]\+ * : /{ s/\.$//; s/^\t\([A-Z0-9]\+\) \+: \(.*\)/.TP 8\n.B \1\n\2/; p};' /var/log/Xorg.0.log
-.\" TODO: Note that this line doesn't deal with multi-line output correctly
-.\" The list replicates the output of RHDIdentify() in src/rhd_id.c.
 .PP
 .PD 0
+.\" This list is generated from the RHDIdentify() function in src/rhd_id.c.
+.\" START_DEVICE_LIST marker - do not delete
 .TP 8
 .B RV505
 Radeon X1550, X1550 64bit
@@ -105,13 +98,14 @@ Radeon HD 2350, HD 2400 Pro/XT, HD 2400 Pro AGP; FireGL V4000
 Radeon HD 3450, HD 3470
 .TP 8
 .B RV630
-Radeon HD 2600 LE/Pro/XT, HD 2600 Pro/XT AGP; Gemini RV630; FireGL V3600/V5600
+Radeon HD 2600 LE/Pro/XT, HD 2600 Pro/XT AGP; Gemini RV630;
+FireGL V3600/V5600
 .TP 8
 .B RV635
 Radeon HD 3650, HD 3670
 .TP 8
 .B RV670
-Radeon HD 3850, HD 3870, FireGL V7700
+Radeon HD 3690, 3850, HD 3870, FireGL V7700, FireStream 9170
 .TP 8
 .B R680
 Radeon HD 3870 X2
@@ -150,88 +144,80 @@ Mobility Radeon HD 2400; Radeon E2400
 Mobility Radeon HD 2400 XT
 .TP 8
 .B M76
-Mobility Radeon HD 2600; (Gemini ATI) Mobility Radeon HD 2600 XT
+Mobility Radeon HD 2600;
+(Gemini ATI) Mobility Radeon HD 2600 XT
 .TP 8
 .B M82
 Mobility Radeon HD 3400
 .TP 8
 .B M86
-Mobility Radeon HD 3600
+Mobility Radeon HD 3650, HD 3670, Mobility FireGL V5700
+.TP 8
+.B M88
+Mobility Radeon HD 3850, HD 3850 X2, HD 3870, HD3870 X2
 .TP 8
 .B RS600
 Radeon Xpress 1200, Xpress 1250
 .TP 8
 .B RS690
 Radeon X1200, X1250, X1270
+.TP 8
+.B RS740
+RS740, RS740M
+.TP 8
+.B RS780
+Radeon HD 3100/3200/3300 Series
+.TP 8
+.B RV770
+Radeon HD 4800 Series; Everest, K2, Denali ATI FirePro
+.\" END_DEVICE_LIST marker - do not delete
 .PD
 .\"
 .\"
 .PP
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general
-configuration details.  This section only covers configuration options
-specific to this driver. Some options may be deprecated and considered to be
+configuration details.
+.P
+This section only covers configuration options
+specific to this driver, for
+.BR "Section \*qDevice\*q" .
+Some options may be deprecated and considered to be
 removed or replaced by better implementations soon.
 .\"
 .TP
-.BI "Option \*qSWcursor\*q \*q" boolean \*q
-Enable or disable the software cursor. The hardware cursor is inactive
-when the software cursor is enabled. The default is
-.BR off .
-.TP
 .BI "Option \*qAccelMethod\*q \*q" none|default|shadowfb|xaa|exa \*q
-Use the indicated accleration method. The
-.B default
-is depending on chipset version and state of acceleration techniques and
-tries to give the best user experience.
-.B shadowfb
-is a software-only acceleration technique, while
-.B xaa
-and
-.B exa
-are hardware-based acceleration techniques.
-.br
-.TP
-.BI "Option \*qNoRandr\*q
-Disable RandR 1.2 support. This turns the driver back to use standard
-modesetting behavior. The default is to
-.B enable
-RandR 1.2 support.
-.TP
-.BI "Option \*qForceReduced\*q \*q" boolean \*q
-Force the use of reduced blanking modes. Use this if your LCD monitor does not
-provide correct EDID data and you need a reduced blanking mode to drive a high
-resolution mode over a single link DVI connection. The default is
-.BR off .
-.TP
-.BI "Option \*qHPD\*q \*q" "hpd-mode" \*q
-Change the use of the hot plug detection (HPD) pins. On R5xx the according
-connector tables are often broken and have to be worked around.
+Use the indicated accleration method.
 .RS
-.TP 8
+.TP 9
 .PD 0
-.B Auto
-Select method depending on chipset and board
+.B none
+does not accelerate anything at all. Discouraged.
 .TP
-.B Off
-Don't use HPD pins. Some connectors might not be able to detect connections
-at all
+.B shadowfb
+is a software-only acceleration technique. Does not work together with
+DRI at the moment.
 .TP
-.B Normal
-Use connector table information as-is
+.B xaa
+is the older but stable hardware-based acceleration technique.
 .TP
-.B Swap
-Swap HPD pin 1 and 2 in connector table
+.B exa
+is the newer but more experimental hardware-based acceleration technique.
 .RE
 .RS
 .PD
 .PP
-.B NOTE:
-Use of this option is discouraged. Whenever this option is needed to detect
-connected monitors correctly, please report to the mailing list.
 The default is
-.BR Auto .
+.BR "depending on the chipset" ,
+driver version, and state of acceleration techniques and tries to give the best
+user experience.
 .RE
+.TP
+.BI "Option \*qDRI\*q"
+Use this option to enable 3D acceleration using DRI (R5xx and RS6xx chips
+only for the moment).
+Currently, the default is
+.BR off .
 .TP
 .BI "Option \*qOffscreenSize\*q \*q" <integer>M|<integer>% \*q
 Specify the amount of framebuffer memory used for offscreen pixmaps, in
@@ -239,6 +225,66 @@ megabytes or percent of available memory. This amount of memory is not
 available for DRI. Certain hardware and software limits apply. The default
 is
 .BR 10% .
+.TP
+.BI "Option \*qScaleType\*q \*q" none|center|scale|scale_keep_aspect_ratio|default \*q
+Sets the scaling mode for laptop flat panels when used together with an external
+screen. The scaling engine is capable of scaling both up and down.i
+.RS
+.TP 9
+.PD 0
+.B none
+means to not scale at all, i.e. the image will be displayed in the top left
+corner of the panel if the resolution of the external display is lower than
+the panel resolution.
+.TP
+.B center
+means not to scale but center the image on the panel i.e. apply a black frame
+around the image on the panel in case the panel resolution is lower than the
+one of the external display.
+.TP
+.B scale
+means to always scale to the resolution of the external display filling
+the entire panel.
+.TP
+.B scale_keep_aspect_ratio
+scales the panel display but keeps the aspect ratio of the external display,
+which means if the external display has a different aspect ratio than the
+panel it black borders will be added to the top and bottom or left and right.
+.TP
+.B default
+keeps the aspect ratio, but does not to scale otherwise.
+.RE
+.RS
+.PD
+.PP
+The
+.B default
+is to keep the aspect ratio.
+.RE
+.TP
+.BI "Option \*qNoRandr\*q
+Disable RandR 1.2 support. This turns the driver back to use standard
+modesetting behavior. The default is to
+.B enable
+RandR 1.2 support.
+.TP
+.BI "Option \*qSWcursor\*q \*q" boolean \*q
+Enable or disable the software cursor. The hardware cursor is inactive
+when the software cursor is enabled. The default is
+.BR off .
+.TP
+.BI "Option \*qForceReduced\*q \*q" boolean \*q
+Force the use of reduced blanking modes. Use this if your LCD monitor does not
+provide correct EDID data and you need a reduced blanking mode to drive a high
+resolution mode over a single link DVI connection. The default is
+.BR off .
+.TP
+.BI "Option \*qUnverifiedFeatures\*q \*q" boolean \*q
+The
+.B radeonhd
+driver sometimes relies on unverified graphics card features. You can add
+.B "Option \*qUnverifiedFeatures\*q \*qoff\*q"
+to disable those when you run into difficulties.
 .TP
 .BI "Option \*qRROutputOrder\*q \*q" "list-of-outputs" \*q
 .IR "RandR modesetting only" .
@@ -276,36 +322,109 @@ Thus the default is
 Disable all hardware acceleration. The default is to
 .B enable
 hardware acceleration.
-.br
+.PP
+.RS
 .B NOTE:
 Use of this option is considered deprecated. The
 .B AccelMethod
 option is considered to be more flexible.
+.RE
 .TP
 .BI "Option \*qShadowFB\*q \*q" boolean \*q
 Enable or disable shadow framebuffer support. This greatly improves the
 speed of unaccelerated drivers. The default depends on chipset and
 acceleration state.
-.br
+.PP
+.RS
 .B NOTE:
 Use of this option is considered deprecated. The
 .B AccelMethod
 option is considered to be more flexible.
-.TP
-.BI "Option \*qRRUseXF86Edid\*q \*q" boolean \*q
-.IR "RandR modesetting only" .
-.br
-Enable or disable the use of xf86OutputGetEDID() and xf86OutputGetEDIDModes()
-instead of the default routines from
-.BR radeonhd ,
-which are better adapted to the chipset. Panels will often fail to work with
-these calls. The default is
-.BR off .
-.br
-.B NOTE:
-Use of this option is considered deprecated. Report to the mailing list
-if this is needed for your configuration.
 .RE
+.TP
+.BI "Option \*qHPD\*q \*q" "auto|off|normal|swap" \*q
+Change the use of the hot plug detection (HPD) pins. On R5xx the according
+connector tables are often broken and have to be worked around.
+.RS
+.TP 8
+.PD 0
+.B Auto
+Select method depending on chipset and board
+.TP
+.B Off
+Don't use HPD pins. Some connectors might not be able to detect connections
+at all
+.TP
+.B Normal
+Use connector table information as-is
+.TP
+.B Swap
+Swap HPD pin 1 and 2 in connector table
+.RE
+.RS
+.PD
+.PP
+.B NOTE:
+Use of this option is discouraged. Whenever this option is needed to detect
+connected monitors correctly, please report to the mailing list.
+The default is
+.BR Auto .
+.RE
+.TP
+.BI "Option \*qForceDPI\*q \*q" integer \*q
+Force the use of the specified pixel density in Dots Per Inch.
+The default is
+.BR "to use the monitor supplied values" .
+.PP
+.RS
+.B NOTE:
+Use of this option is discouraged. Monitors should return valid DPI values,
+and the Xserver should honour them correctly.
+.RE
+.TP
+.BI "Option \*qUseAtomBIOS\*q \*q" boolean \*q
+Selects the mode setting path. The default is
+.BR "chipset dependent" .
+.PP
+.RS
+.B NOTE:
+Use of this option is discouraged. The driver should select the right path. If
+this option is needed to get your card working correctly, please report to the
+mailing list.
+.RE
+.TP
+.BI "Option \*qTVMode\*q \*q" tv-mode \*q
+The TV standard to use on the TV output.
+.RS
+.TP 8
+.PD 0
+.B NTSC
+.TP
+.B NTSCJ
+.TP
+.B PAL
+.TP
+.B PALM
+.TP
+.B PALCN
+.TP
+.B PALN
+.TP
+.B PAL60
+.TP
+.B SECAM
+.TP
+.B CV
+Composite Video
+.RE
+.RS
+.PD
+.PP
+.B NOTE:
+This option isn't implemented yet and has no effect.
+.RE
+.PP
+.PD
 .\"
 .\"
 .SH RANDR OUTPUT PROPERTIES
@@ -455,9 +574,9 @@ configured that is using this size as its resolution.
 .SH KNOWN BUGS
 As the
 .B radeonhd
-driver is still in an early stage of development, many non-obvious things
-do not work yet. A list of major known bugs is maintained on the wiki.
-Other places to check for known bugs and solutions are the bugtracker at
+driver is still in development, some non-obvious things might not work yet. A
+list of major known bugs is maintained on the wiki.  Other places to check for
+known bugs and solutions are the bugtracker at
 .br
 .nf
 \%https://bugs.freedesktop.org/query.cgi?product=xorg&component=Driver/radeonhd
@@ -504,7 +623,5 @@ Query the bugtracker for radeonhd bugs
 .\"
 .\"
 .SH AUTHORS
-Driver written by Egbert Eich, Luc Verhaegen, Matthias Hopf, and others.
-.PP
-Man page written by Hans Ulrich Niedermann, Matthias Hopf, and others.
+Egbert Eich, Luc Verhaegen, Matthias Hopf, Hans Ulrich Niedermann, and others.
 .\" vim: syntax=nroff
