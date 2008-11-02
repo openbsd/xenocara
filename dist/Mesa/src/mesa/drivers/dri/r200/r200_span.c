@@ -1,4 +1,3 @@
-/* $XFree86: xc/lib/GL/mesa/src/drv/r200/r200_span.c,v 1.1 2002/10/30 12:51:52 alanh Exp $ */
 /*
 Copyright (C) The Weather Channel, Inc.  2002.  All Rights Reserved.
 
@@ -173,6 +172,7 @@ r200_mba_z16( driRenderbuffer *drb, GLint x, GLint y )
 
 /* 16-bit depth buffer functions
  */
+#define VALUE_TYPE GLushort
 
 #define WRITE_DEPTH( _x, _y, d )					\
    *(GLushort *)(buf + r200_mba_z16( drb, _x + xo, _y + yo )) = d;
@@ -186,6 +186,7 @@ r200_mba_z16( driRenderbuffer *drb, GLint x, GLint y )
 
 /* 24 bit depth, 8 bit stencil depthbuffer functions
  */
+#define VALUE_TYPE GLuint
 
 #define WRITE_DEPTH( _x, _y, d )					\
 do {									\
@@ -256,7 +257,7 @@ static void r200SpanRenderStart( GLcontext *ctx )
    {
       int p;
       driRenderbuffer *drb =
-	 (driRenderbuffer *) ctx->WinSysDrawBuffer->_ColorDrawBuffers[0][0];
+	 (driRenderbuffer *) ctx->WinSysDrawBuffer->_ColorDrawBuffers[0];
       volatile int *buf =
 	 (volatile int *)(rmesa->dri.screen->pFB + drb->offset);
       p = *buf;

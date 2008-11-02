@@ -1,4 +1,3 @@
-/* $XFree86: xc/lib/GL/mesa/src/drv/r200/r200_context.c,v 1.3 2003/05/06 23:52:08 daenzer Exp $ */
 /*
 Copyright (C) The Weather Channel, Inc.  2002.  All Rights Reserved.
 
@@ -70,6 +69,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define need_GL_ATI_fragment_shader
 #define need_GL_EXT_blend_minmax
 #define need_GL_EXT_fog_coord
+#define need_GL_EXT_multi_draw_arrays
 #define need_GL_EXT_secondary_color
 #define need_GL_EXT_blend_equation_separate
 #define need_GL_EXT_blend_func_separate
@@ -133,6 +133,7 @@ const struct dri_extension card_extensions[] =
     { "GL_EXT_blend_minmax",               GL_EXT_blend_minmax_functions },
     { "GL_EXT_blend_subtract",             NULL },
     { "GL_EXT_fog_coord",                  GL_EXT_fog_coord_functions },
+    { "GL_EXT_multi_draw_arrays",          GL_EXT_multi_draw_arrays_functions },
     { "GL_EXT_secondary_color",            GL_EXT_secondary_color_functions },
     { "GL_EXT_stencil_wrap",               NULL },
     { "GL_EXT_texture_edge_clamp",         NULL },
@@ -278,14 +279,14 @@ GLboolean r200CreateContext( const __GLcontextModes *glVisual,
                                                  "def_max_anisotropy");
 
    if ( driQueryOptionb( &rmesa->optionCache, "hyperz" ) ) {
-      if ( sPriv->drmMinor < 13 )
+      if ( sPriv->drm_version.minor < 13 )
 	 fprintf( stderr, "DRM version 1.%d too old to support HyperZ, "
-			  "disabling.\n",sPriv->drmMinor );
+			  "disabling.\n", sPriv->drm_version.minor );
       else
 	 rmesa->using_hyperz = GL_TRUE;
    }
  
-   if ( sPriv->drmMinor >= 15 )
+   if ( sPriv->drm_version.minor >= 15 )
       rmesa->texmicrotile = GL_TRUE;
 
    /* Init default driver functions then plug in our R200-specific functions
@@ -318,7 +319,7 @@ GLboolean r200CreateContext( const __GLcontextModes *glVisual,
    rmesa->dri.hwContext = driContextPriv->hHWContext;
    rmesa->dri.hwLock = &sPriv->pSAREA->lock;
    rmesa->dri.fd = sPriv->fd;
-   rmesa->dri.drmMinor = sPriv->drmMinor;
+   rmesa->dri.drmMinor = sPriv->drm_version.minor;
 
    rmesa->r200Screen = screen;
    rmesa->sarea = (drm_radeon_sarea_t *)((GLubyte *)sPriv->pSAREA +
@@ -500,13 +501,10 @@ GLboolean r200CreateContext( const __GLcontextModes *glVisual,
 	      fthrottle_mode,
 	      rmesa->r200Screen->irq);
 
-   rmesa->vblank_flags = (rmesa->r200Screen->irq != 0)
-       ? driGetDefaultVBlankFlags(&rmesa->optionCache) : VBLANK_FLAG_NO_IRQ;
-
    rmesa->prefer_gart_client_texturing = 
       (getenv("R200_GART_CLIENT_TEXTURES") != 0);
 
-   (*dri_interface->getUST)( & rmesa->swap_ust );
+   (*sPriv->systemTime->getUST)( & rmesa->swap_ust );
 
 
 #if DO_DEBUG
@@ -667,15 +665,18 @@ r200MakeCurrent( __DRIcontextPrivate *driContextPriv,
       if (R200_DEBUG & DEBUG_DRI)
 	 fprintf(stderr, "%s ctx %p\n", __FUNCTION__, (void *)newCtx->glCtx);
 
-      if ( newCtx->dri.drawable != driDrawPriv ) {
-	 driDrawableInitVBlank( driDrawPriv, newCtx->vblank_flags,
-				&newCtx->vbl_seq );
-      }
-
       newCtx->dri.readable = driReadPriv;
 
       if ( newCtx->dri.drawable != driDrawPriv ||
            newCtx->lastStamp != driDrawPriv->lastStamp ) {
+	 if (driDrawPriv->swap_interval == (unsigned)-1) {
+	    driDrawPriv->vblFlags = (newCtx->r200Screen->irq != 0)
+	       ? driGetDefaultVBlankFlags(&newCtx->optionCache)
+	       : VBLANK_FLAG_NO_IRQ;
+
+	    driDrawableInitVBlank( driDrawPriv );
+	 }
+
 	 newCtx->dri.drawable = driDrawPriv;
 
 	 r200SetCliprects(newCtx);

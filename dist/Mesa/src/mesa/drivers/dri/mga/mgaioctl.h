@@ -33,7 +33,7 @@
 #include "mgacontext.h"
 #include "mga_xmesa.h"
 
-void mgaCopyBuffer( const __DRIdrawablePrivate *dPriv );
+void mgaCopyBuffer( __DRIdrawablePrivate *dPriv );
 void mgaWaitForVBlank( mgaContextPtr mmesa );
 
 void mgaGetILoadBufferLocked( mgaContextPtr mmesa );
@@ -62,7 +62,7 @@ void mgaInitIoctlFuncs( struct dd_function_table *functions );
 
 extern drmBufPtr mga_get_buffer_ioctl( mgaContextPtr mmesa );
 
-static __inline
+static INLINE
 GLuint *mgaAllocDmaLow( mgaContextPtr mmesa, int bytes )
 {
    GLuint *head;

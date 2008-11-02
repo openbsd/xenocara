@@ -49,7 +49,7 @@
 #define CONTEXT_H
 
 
-#include "glapi.h"
+#include "glapi/glapi.h"
 #include "imports.h"
 #include "mtypes.h"
 
@@ -273,8 +273,10 @@ do {									\
      (CTX)->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR)	\
     || (CTX)->Fog.ColorSumEnabled					\
     || ((CTX)->VertexProgram._Current &&				\
+        ((CTX)->VertexProgram._Current != (CTX)->VertexProgram._TnlProgram) &&    \
         ((CTX)->VertexProgram._Current->Base.InputsRead & VERT_BIT_COLOR1)) \
     || ((CTX)->FragmentProgram._Current &&				\
+        ((CTX)->FragmentProgram._Current != (CTX)->FragmentProgram._TexEnvProgram) &&  \
         ((CTX)->FragmentProgram._Current->Base.InputsRead & FRAG_BIT_COL1)) \
    )
 

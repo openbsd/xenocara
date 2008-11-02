@@ -29,15 +29,15 @@
   *   Keith Whitwell <keith@tungstengraphics.com>
   */
   
+#include "main/imports.h"
+#include "main/enums.h"
 #include "shader/prog_parameter.h"
-#include "brw_context.h"
-#include "brw_aub.h"
-#include "brw_util.h"
-#include "program.h"
-#include "imports.h"
-#include "enums.h"
+#include "shader/program.h"
+#include "shader/programopt.h"
 #include "tnl/tnl.h"
 
+#include "brw_context.h"
+#include "brw_util.h"
 
 static void brwBindProgram( GLcontext *ctx,
 			    GLenum target, 
@@ -125,6 +125,9 @@ static void brwProgramStringNotify( GLcontext *ctx,
       struct brw_vertex_program *vp = (struct brw_vertex_program *)brw->vertex_program;
       if (p == vp)
 	 brw->state.dirty.brw |= BRW_NEW_VERTEX_PROGRAM;
+      if (p->program.IsPositionInvariant) {
+	 _mesa_insert_mvp_code(ctx, &p->program);
+      }
       p->id = brw->program_id++;      
       p->param_state = p->program.Base.Parameters->StateFlags;
 

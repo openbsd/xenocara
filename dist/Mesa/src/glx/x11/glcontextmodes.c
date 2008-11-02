@@ -118,7 +118,7 @@ _gl_convert_to_x_visual_type( int visualType )
  * of the fields in \c config are copied to \c mode.  Additional fields in
  * \c mode that can be derrived from the fields of \c config (i.e.,
  * \c haveDepthBuffer) are also filled in.  The remaining fields in \c mode
- * that cannot be derrived are set to default values.
+ * that cannot be derived are set to default values.
  * 
  * \param mode   Destination GL context mode.
  * \param config Source GLX visual config.
@@ -184,6 +184,9 @@ _gl_copy_visual_to_context_mode( __GLcontextModes * mode,
     mode->transparentBlue  = config->transparentBlue;
     mode->transparentAlpha = config->transparentAlpha;
     mode->transparentIndex = config->transparentIndex;
+    mode->samples = config->multiSampleSize;
+    mode->sampleBuffers = config->nMultiSampleBuffers;
+    /* mode->visualSelectGroup = config->visualSelectGroup; ? */
 
     mode->swapMethod = GLX_SWAP_UNDEFINED_OML;
 
@@ -333,7 +336,8 @@ _gl_get_context_mode_data(const __GLcontextModes *mode, int attribute,
 	*value_return = mode->bindToTextureRgba;
 	return 0;
       case GLX_BIND_TO_MIPMAP_TEXTURE_EXT:
-	*value_return = mode->bindToMipmapTexture;
+	*value_return = mode->bindToMipmapTexture == GL_TRUE ? GL_TRUE :
+	    GL_FALSE;
 	return 0;
       case GLX_BIND_TO_TEXTURE_TARGETS_EXT:
 	*value_return = mode->bindToTextureTargets;
@@ -414,7 +418,7 @@ _gl_context_modes_create( unsigned count, size_t minimum_size )
       (*next)->bindToTextureRgb = GLX_DONT_CARE;
       (*next)->bindToTextureRgba = GLX_DONT_CARE;
       (*next)->bindToMipmapTexture = GLX_DONT_CARE;
-      (*next)->bindToTextureTargets = 0;
+      (*next)->bindToTextureTargets = GLX_DONT_CARE;
       (*next)->yInverted = GLX_DONT_CARE;
 
       next = & ((*next)->next);
@@ -453,19 +457,28 @@ _gl_context_modes_destroy( __GLcontextModes * modes )
  */
 
 __GLcontextModes *
-_gl_context_modes_find_visual( __GLcontextModes * modes, int vid )
+_gl_context_modes_find_visual(__GLcontextModes *modes, int vid)
 {
-    while ( modes != NULL ) {
-	if ( modes->visualID == vid ) {
-	    break;
-	}
+    __GLcontextModes *m;
 
-	modes = modes->next;
-    }
+    for (m = modes; m != NULL; m = m->next)
+	if (m->visualID == vid)
+	    return m;
 
-    return modes;
+    return NULL;
 }
 
+__GLcontextModes *
+_gl_context_modes_find_fbconfig(__GLcontextModes *modes, int fbid)
+{
+    __GLcontextModes *m;
+
+    for (m = modes; m != NULL; m = m->next)
+	if (m->fbconfigID == fbid)
+	    return m;
+
+    return NULL;
+}
 
 /**
  * Determine if two context-modes are the same.  This is intended to be used

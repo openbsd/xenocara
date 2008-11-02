@@ -1,4 +1,4 @@
-/* $Id: svgamesa24.c,v 1.1.1.3 2007/11/24 17:30:17 matthieu Exp $ */
+/* $Id: svgamesa24.c,v 1.2 2008/11/02 14:58:19 matthieu Exp $ */
 
 /*
  * Mesa 3-D graphics library
@@ -40,7 +40,7 @@
 
 #if 0
 /* this doesn't compile with GCC on RedHat 6.1 */
-static inline int RGB2BGR24(int c)
+static INLINE int RGB2BGR24(int c)
 {
 	asm("rorw  $8, %0\n"	 
 	    "rorl $16, %0\n"	 

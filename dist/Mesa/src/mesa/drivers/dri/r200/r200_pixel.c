@@ -1,4 +1,3 @@
-/* $XFree86: xc/lib/GL/mesa/src/drv/r200/r200_pixel.c,v 1.2 2002/12/16 16:18:54 dawes Exp $ */
 /*
 Copyright (C) The Weather Channel, Inc.  2002.  All Rights Reserved.
 
@@ -295,7 +294,7 @@ static void do_draw_pix( GLcontext *ctx,
    r200ContextPtr rmesa = R200_CONTEXT(ctx);
    __DRIdrawablePrivate *dPriv = rmesa->dri.drawable;
    drm_clip_rect_t *box = dPriv->pClipRects;
-   struct gl_renderbuffer *rb = ctx->ReadBuffer->_ColorDrawBuffers[0][0];
+   struct gl_renderbuffer *rb = ctx->ReadBuffer->_ColorDrawBuffers[0];
    driRenderbuffer *drb = (driRenderbuffer *) rb;
    int nbox = dPriv->numClipRects;
    int i;
@@ -383,13 +382,13 @@ r200TryDrawPixels( GLcontext *ctx,
    GLint pitch = unpack->RowLength ? unpack->RowLength : width;
    GLuint planemask;
    GLuint cpp = rmesa->r200Screen->cpp;
-   GLint size = width * pitch * cpp;
+   GLint size = height * pitch * cpp;
 
    if (R200_DEBUG & DEBUG_PIXEL)
       fprintf(stderr, "%s\n", __FUNCTION__);
 
    /* check that we're drawing to exactly one color buffer */
-   if (ctx->DrawBuffer->_NumColorDrawBuffers[0] != 1)
+   if (ctx->DrawBuffer->_NumColorDrawBuffers != 1)
      return GL_FALSE;
 
    switch (format) {

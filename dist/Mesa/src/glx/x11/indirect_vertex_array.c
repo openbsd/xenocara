@@ -32,7 +32,7 @@
 #include <GL/glxproto.h>
 #include "glxextensions.h"
 #include "indirect_vertex_array.h"
-#include "indirect_va_private.h"
+#include "indirect_vertex_array_priv.h"
 
 #define __GLX_PAD(n) (((n)+3) & ~3)
 
@@ -62,7 +62,7 @@
  * "vbo", to support multiple texture coordinate arrays, generic attributes,
  * and vertex buffer objects.
  *
- * \author Ian Romanick <idr@us.ibm.com>
+ * \author Ian Romanick <ian.d.romanick@intel.com>
  */
 
 static void emit_DrawArrays_none( GLenum mode, GLint first, GLsizei count );
@@ -100,6 +100,31 @@ const GLuint __glXTypeSize_table[16] = {
     1, 1, 2, 2, 4, 4, 4, 0, 0, 0, 8, 0, 0, 0, 0, 0
 };
 
+
+/**
+ * Free the per-context array state that was allocated with
+ * __glXInitVertexArrayState().
+ */
+void
+__glXFreeVertexArrayState( __GLXcontext * gc )
+{
+    __GLXattribute * state = (__GLXattribute *)(gc->client_state_private);
+    struct array_state_vector* arrays = state->array_state;
+
+    if (arrays) {
+        if (arrays->stack) {
+            free(arrays->stack);
+            arrays->stack = NULL;
+        }
+        if (arrays->arrays) {
+            free(arrays->arrays);
+            arrays->arrays = NULL;
+        }
+        free(arrays);
+        arrays = NULL;
+        state->array_state = NULL;
+    }
+}
 
 
 /**
@@ -1601,17 +1626,21 @@ void __indirect_glClientActiveTextureARB(GLenum texture)
 
 
 /**
+ * Modify the enable state for the selected array
  */
 GLboolean
-__glXSetArrayEnable( __GLXattribute * state,
-		     GLenum key, unsigned index, GLboolean enable )
+__glXSetArrayEnable(__GLXattribute *state, GLenum key, unsigned index,
+                    GLboolean enable)
 {
     struct array_state_vector * arrays = state->array_state;
     struct array_state * a;
     
 
-    if ( key == GL_TEXTURE_COORD_ARRAY ) {
-	index = arrays->active_texture_unit;
+    /* Texture coordinate arrays have an implict index set when the
+     * application calls glClientActiveTexture.
+     */
+    if (key == GL_TEXTURE_COORD_ARRAY) {
+        index = arrays->active_texture_unit;
     }
 
     a = get_array_entry( arrays, key, index );

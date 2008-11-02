@@ -23,13 +23,13 @@
  * SOFTWARE.
  */
 
+#include "glheader.h"
 #include <inttypes.h>
 #include <GL/gl.h>
 #include "indirect.h"
 #include "glxclient.h"
 #include "indirect_vertex_array.h"
 #include <GL/glxproto.h>
-#include "glheader.h"
 
 static void
 do_vertex_attrib_enable( GLuint index, GLboolean val )
@@ -193,7 +193,13 @@ void __indirect_glGetVertexAttribivARB( GLuint index, GLenum pname,
     get_vertex_attrib( gc, 1303, index, pname, (xReply *) & reply );
 
     if ( reply.size != 0 ) {
-	if ( ! get_attrib_array_data( state, index, pname, params ) ) {
+	GLintptr data;
+
+
+	if ( get_attrib_array_data( state, index, pname, & data ) ) {
+	    *params = (GLint) data;
+	}
+	else {
 	    if (reply.size == 1) {
 		*params = (GLint) reply.pad3;
 	    } 

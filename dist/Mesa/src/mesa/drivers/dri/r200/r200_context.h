@@ -1,4 +1,3 @@
-/* $XFree86: xc/lib/GL/mesa/src/drv/r200/r200_context.h,v 1.2 2002/12/16 16:18:54 dawes Exp $ */
 /*
 Copyright (C) The Weather Channel, Inc.  2002.  All Rights Reserved.
 
@@ -894,11 +893,8 @@ struct r200_context {
    GLuint TexGenCompSel;
    GLmatrix tmpmat;
 
-   /* VBI / buffer swap
+   /* buffer swap
     */
-   GLuint vbl_seq;
-   GLuint vblank_flags;
-
    int64_t swap_ust;
    int64_t swap_missed_ust;
 
@@ -931,7 +927,7 @@ struct r200_context {
 #define R200_CONTEXT(ctx)		((r200ContextPtr)(ctx->DriverCtx))
 
 
-static __inline GLuint r200PackColor( GLuint cpp,
+static INLINE GLuint r200PackColor( GLuint cpp,
 					GLubyte r, GLubyte g,
 					GLubyte b, GLubyte a )
 {

@@ -1,4 +1,3 @@
-/* $XFree86: xc/lib/GL/mesa/src/drv/r200/r200_texstate.c,v 1.3 2003/02/15 22:18:47 dawes Exp $ */
 /*
 Copyright (C) The Weather Channel, Inc.  2002.  All Rights Reserved.
 
@@ -980,9 +979,7 @@ static GLboolean r200UpdateTextureEnv( GLcontext *ctx, int unit, int slot, GLuin
 void r200SetTexOffset(__DRIcontext * pDRICtx, GLint texname,
 		      unsigned long long offset, GLint depth, GLuint pitch)
 {
-	r200ContextPtr rmesa =
-	    (r200ContextPtr) ((__DRIcontextPrivate *) pDRICtx->private)->
-	    driverPrivate;
+	r200ContextPtr rmesa = pDRICtx->driverPrivate;
 	struct gl_texture_object *tObj =
 	    _mesa_lookup_texture(rmesa->glCtx, texname);
 	r200TexObjPtr t;
@@ -1817,6 +1814,12 @@ void r200UpdateTextureState( GLcontext *ctx )
    r200ContextPtr rmesa = R200_CONTEXT(ctx);
    GLboolean ok;
    GLuint dbg;
+
+   /* NOTE: must not manipulate rmesa->state.texture.unit[].unitneeded or
+      rmesa->state.envneeded before a R200_STATECHANGE (or R200_NEWPRIM) since
+      we use these to determine if we want to emit the corresponding state
+      atoms. */
+   R200_NEWPRIM( rmesa );
 
    if (ctx->ATIFragmentShader._Enabled) {
       GLuint i;

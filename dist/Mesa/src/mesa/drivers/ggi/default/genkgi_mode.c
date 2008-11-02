@@ -1,4 +1,4 @@
-/* $Id: genkgi_mode.c,v 1.1.1.1 2006/11/25 18:51:50 matthieu Exp $
+/* $Id: genkgi_mode.c,v 1.2 2008/11/02 14:58:19 matthieu Exp $
 ******************************************************************************
 
    display-fbdev-kgicon-generic-mesa

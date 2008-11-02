@@ -1,4 +1,4 @@
-/* $Id: wgl.c,v 1.2 2008/05/31 16:36:48 matthieu Exp $ */
+/* $Id: wgl.c,v 1.3 2008/11/02 14:58:19 matthieu Exp $ */
 
 /*
  * This library is free software; you can redistribute it and/or
@@ -581,6 +581,13 @@ WINGDIAPI BOOL GLAPIENTRY wglUseFontBitmapsA(HDC hdc, DWORD first,
     return success;
 }
 
+WINGDIAPI BOOL GLAPIENTRY wglShareLists(HGLRC hglrc1,
+					HGLRC hglrc2)
+{
+    WMesaShareLists((WMesaContext)hglrc1, (WMesaContext)hglrc2);
+    return(TRUE);
+}
+
 
 
 /* NOT IMPLEMENTED YET */
@@ -598,13 +605,6 @@ WINGDIAPI HGLRC GLAPIENTRY wglCreateLayerContext(HDC hdc,
     (void) hdc; (void) iLayerPlane;
     SetLastError(0);
     return(NULL);
-}
-
-WINGDIAPI BOOL GLAPIENTRY wglShareLists(HGLRC hglrc1,
-					HGLRC hglrc2)
-{
-    (void) hglrc1; (void) hglrc2;
-    return(TRUE);
 }
 
 

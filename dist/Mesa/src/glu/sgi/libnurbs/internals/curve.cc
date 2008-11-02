@@ -35,8 +35,8 @@
 /*
  * curve.c++
  *
- * $Date: 2007/11/24 17:27:04 $ $Revision: 1.1.1.2 $
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/curve.cc,v 1.1.1.2 2007/11/24 17:27:04 matthieu Exp $
+ * $Date: 2008/11/02 14:58:10 $ $Revision: 1.2 $
+ * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/curve.cc,v 1.2 2008/11/02 14:58:10 matthieu Exp $
  */
 
 #include "glimports.h"

@@ -35,8 +35,8 @@
 /*
  * hull.c++
  *
- * $Date: 2007/11/24 17:27:05 $ $Revision: 1.1.1.2 $
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/hull.cc,v 1.1.1.2 2007/11/24 17:27:05 matthieu Exp $
+ * $Date: 2008/11/02 14:58:11 $ $Revision: 1.2 $
+ * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/hull.cc,v 1.2 2008/11/02 14:58:11 matthieu Exp $
  */
 
 #include "glimports.h"

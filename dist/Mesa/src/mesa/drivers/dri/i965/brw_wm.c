@@ -29,12 +29,11 @@
   *   Keith Whitwell <keith@tungstengraphics.com>
   */
              
-
+#include "main/texformat.h"
 #include "brw_context.h"
 #include "brw_util.h"
 #include "brw_wm.h"
 #include "brw_state.h"
-#include "brw_hal.h"
 
 
 GLuint brw_wm_nr_args( GLuint opcode )
@@ -66,7 +65,11 @@ GLuint brw_wm_nr_args( GLuint opcode )
    case OPCODE_POW:
    case OPCODE_SUB:
    case OPCODE_SGE:
+   case OPCODE_SGT:
+   case OPCODE_SLE:
    case OPCODE_SLT:
+   case OPCODE_SEQ:
+   case OPCODE_SNE:
    case OPCODE_ADD:
    case OPCODE_MAX:
    case OPCODE_MIN:
@@ -116,20 +119,6 @@ GLuint brw_wm_is_scalar_result( GLuint opcode )
 }
 
 
-static void brw_wm_pass_hal (struct brw_wm_compile *c)
-{
-   static void (*hal_wm_pass) (struct brw_wm_compile *c);
-   static GLboolean hal_tried;
-   
-   if (!hal_tried)
-   {
-      hal_wm_pass = brw_hal_find_symbol ("intel_hal_wm_pass");
-      hal_tried = 1;
-   }
-   if (hal_wm_pass)
-      (*hal_wm_pass) (c);
-}
-
 static void do_wm_prog( struct brw_context *brw,
 			struct brw_fragment_program *fp, 
 			struct brw_wm_prog_key *key)
@@ -150,59 +139,53 @@ static void do_wm_prog( struct brw_context *brw,
    c->fp = fp;
    c->env_param = brw->intel.ctx.FragmentProgram.Parameters;
 
-   /* Augment fragment program.  Add instructions for pre- and
-    * post-fragment-program tasks such as interpolation and fogging.
-    */
-   brw_wm_pass_fp(c);
-   
-   /* Translate to intermediate representation.  Build register usage
-    * chains.
-    */
-   brw_wm_pass0(c);
-
-   /* Dead code removal.
-    */
-   brw_wm_pass1(c);
-
-   /* Hal optimization
-    */
-   brw_wm_pass_hal (c);
-   
-   /* Register allocation.
-    */
-   c->grf_limit = BRW_WM_MAX_GRF/2;
-
-   /* This is where we start emitting gen4 code:
-    */
-   brw_init_compile(brw, &c->func);    
-
-   brw_wm_pass2(c);
-
-   c->prog_data.total_grf = c->max_wm_grf;
-   if (c->last_scratch) {
-      c->prog_data.total_scratch =
-	 c->last_scratch + 0x40;
+    brw_init_compile(brw, &c->func);
+   if (brw_wm_is_glsl(&c->fp->program)) {
+       brw_wm_glsl_emit(brw, c);
    } else {
-      c->prog_data.total_scratch = 0;
+       /* Augment fragment program.  Add instructions for pre- and
+	* post-fragment-program tasks such as interpolation and fogging.
+	*/
+       brw_wm_pass_fp(c);
+
+       /* Translate to intermediate representation.  Build register usage
+	* chains.
+	*/
+       brw_wm_pass0(c);
+
+       /* Dead code removal.
+	*/
+       brw_wm_pass1(c);
+
+       /* Register allocation.
+	*/
+       c->grf_limit = BRW_WM_MAX_GRF/2;
+
+       brw_wm_pass2(c);
+
+       c->prog_data.total_grf = c->max_wm_grf;
+       if (c->last_scratch) {
+	   c->prog_data.total_scratch =
+	       c->last_scratch + 0x40;
+       } else {
+	   c->prog_data.total_scratch = 0;
+       }
+
+       /* Emit GEN4 code.
+	*/
+       brw_wm_emit(c);
    }
-
-   /* Emit GEN4 code.
-    */
-   brw_wm_emit(c);
-
    /* get the program
     */
    program = brw_get_program(&c->func, &program_size);
 
-   /*
-    */
-   brw->wm.prog_gs_offset = brw_upload_cache( &brw->cache[BRW_WM_PROG],
-					      &c->key,
-					      sizeof(c->key),
-					      program,
-					      program_size,
-					      &c->prog_data,
-					      &brw->wm.prog_data );
+   dri_bo_unreference(brw->wm.prog_bo);
+   brw->wm.prog_bo = brw_upload_cache( &brw->cache, BRW_WM_PROG,
+				       &c->key, sizeof(c->key),
+				       NULL, 0,
+				       program, program_size,
+				       &c->prog_data,
+				       &brw->wm.prog_data );
 }
 
 
@@ -242,7 +225,8 @@ static void brw_wm_populate_key( struct brw_context *brw,
       lookup |= IZ_STENCIL_TEST_ENABLE_BIT;
 
       if (brw->attribs.Stencil->WriteMask[0] ||
-	  (brw->attribs.Stencil->TestTwoSide && brw->attribs.Stencil->WriteMask[1]))
+	  (brw->attribs.Stencil->_TestTwoSide &&
+	   brw->attribs.Stencil->WriteMask[1]))
 	 lookup |= IZ_STENCIL_WRITE_ENABLE_BIT;
    }
 
@@ -284,7 +268,7 @@ static void brw_wm_populate_key( struct brw_context *brw,
 
 
    /* BRW_NEW_WM_INPUT_DIMENSIONS */
-   key->projtex_mask = brw->wm.input_size_masks[4-1]; 
+   key->projtex_mask = brw->wm.input_size_masks[4-1] >> (FRAG_ATTRIB_TEX0 - FRAG_ATTRIB_WPOS); 
 
    /* _NEW_LIGHT */
    key->flat_shade = (brw->attribs.Light->ShadeModel == GL_FLAT);
@@ -295,17 +279,41 @@ static void brw_wm_populate_key( struct brw_context *brw,
       const struct gl_texture_object *t = unit->_Current;
 
       if (unit->_ReallyEnabled) {
-
-	 if (t->CompareMode == GL_COMPARE_R_TO_TEXTURE_ARB &&
-	     t->Image[0][t->BaseLevel]->_BaseFormat == GL_DEPTH_COMPONENT) {
-	    key->shadowtex_mask |= 1<<i;
-	 }
-
-	 if (t->Image[0][t->BaseLevel]->InternalFormat == GL_YCBCR_MESA)
+	 if (t->Image[0][t->BaseLevel]->InternalFormat == GL_YCBCR_MESA) {
 	    key->yuvtex_mask |= 1<<i;
+	    if (t->Image[0][t->BaseLevel]->TexFormat->MesaFormat == 
+		    MESA_FORMAT_YCBCR)
+		key->yuvtex_swap_mask |= 1<< i;
+	 }
       }
    }
-	  
+
+   /* Shadow */
+   key->shadowtex_mask = fp->program.Base.ShadowSamplers;
+
+   /* _NEW_BUFFERS */
+   /*
+    * Include the draw buffer origin and height so that we can calculate
+    * fragment position values relative to the bottom left of the drawable,
+    * from the incoming screen origin relative position we get as part of our
+    * payload.
+    *
+    * We could avoid recompiling by including this as a constant referenced by
+    * our program, but if we were to do that it would also be nice to handle
+    * getting that constant updated at batchbuffer submit time (when we
+    * hold the lock and know where the buffer really is) rather than at emit
+    * time when we don't hold the lock and are just guessing.  We could also
+    * just avoid using this as key data if the program doesn't use
+    * fragment.position.
+    *
+    * This pretty much becomes moot with DRI2 and redirected buffers anyway,
+    * as our origins will always be zero then.
+    */
+   if (brw->intel.driDrawable != NULL) {
+      key->origin_x = brw->intel.driDrawable->x;
+      key->origin_y = brw->intel.driDrawable->y;
+      key->drawable_height = brw->intel.driDrawable->h;
+   }
 
    /* Extra info:
     */
@@ -314,7 +322,7 @@ static void brw_wm_populate_key( struct brw_context *brw,
 }
 
 
-static void brw_upload_wm_prog( struct brw_context *brw )
+static int brw_prepare_wm_prog( struct brw_context *brw )
 {
    struct brw_wm_prog_key key;
    struct brw_fragment_program *fp = (struct brw_fragment_program *)
@@ -324,13 +332,15 @@ static void brw_upload_wm_prog( struct brw_context *brw )
 
    /* Make an early check for the key.
     */
-   if (brw_search_cache(&brw->cache[BRW_WM_PROG], 
-			&key, sizeof(key),
-			&brw->wm.prog_data,
-			&brw->wm.prog_gs_offset))
-      return;
+   dri_bo_unreference(brw->wm.prog_bo);
+   brw->wm.prog_bo = brw_search_cache(&brw->cache, BRW_WM_PROG,
+				      &key, sizeof(key),
+				      NULL, 0,
+				      &brw->wm.prog_data);
+   if (brw->wm.prog_bo == NULL)
+      do_wm_prog(brw, fp, &key);
 
-   do_wm_prog(brw, fp, &key);
+   return dri_bufmgr_check_aperture_space(brw->wm.prog_bo);
 }
 
 
@@ -344,12 +354,13 @@ const struct brw_tracked_state brw_wm_prog = {
 		_NEW_POLYGON |
 		_NEW_LINE |
 		_NEW_LIGHT |
+		_NEW_BUFFERS |
 		_NEW_TEXTURE),
       .brw   = (BRW_NEW_FRAGMENT_PROGRAM |
 		BRW_NEW_WM_INPUT_DIMENSIONS |
 		BRW_NEW_REDUCED_PRIMITIVE),
       .cache = 0
    },
-   .update = brw_upload_wm_prog
+   .prepare = brw_prepare_wm_prog
 };
 

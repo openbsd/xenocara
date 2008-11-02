@@ -161,6 +161,8 @@ struct radeon_tex_obj {
 	drm_radeon_tex_image_t image[6][RADEON_MAX_TEXTURE_LEVELS];
 	/* Six, for the cube faces */
 
+	GLboolean image_override; /* Image overridden by GLX_EXT_tfp */
+
 	GLuint pp_txfilter;	/* hardware register values */
 	GLuint pp_txformat;
 	GLuint pp_txoffset;	/* Image location in texmem.
@@ -667,9 +669,6 @@ struct radeon_context {
 
 	/* VBI
 	 */
-	GLuint vbl_seq;
-	GLuint vblank_flags;
-
 	int64_t swap_ust;
 	int64_t swap_missed_ust;
 
@@ -708,9 +707,9 @@ struct radeon_context {
 
 #define RADEON_CONTEXT(ctx)		((radeonContextPtr)(ctx->DriverCtx))
 
-static __inline GLuint radeonPackColor(GLuint cpp,
-				       GLubyte r, GLubyte g,
-				       GLubyte b, GLubyte a)
+static INLINE GLuint radeonPackColor(GLuint cpp,
+                                     GLubyte r, GLubyte g,
+                                     GLubyte b, GLubyte a)
 {
 	switch (cpp) {
 	case 2:

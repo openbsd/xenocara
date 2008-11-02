@@ -1,4 +1,4 @@
-/* $Id: svgapix.h,v 1.1.1.1 2006/11/25 18:51:53 matthieu Exp $ */
+/* $Id: svgapix.h,v 1.2 2008/11/02 14:58:19 matthieu Exp $ */
 
 /*
  * Mesa 3-D graphics library

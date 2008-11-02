@@ -30,10 +30,10 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
  *   Aapo Tahkola <aet@rasterburn.org>
  *   Roland Scheidegger <rscheidegger_lists@hispeed.ch>
  */
-#include "glheader.h"
-#include "macros.h"
-#include "enums.h"
-#include "program.h"
+#include "main/glheader.h"
+#include "main/macros.h"
+#include "main/enums.h"
+#include "shader/program.h"
 #include "shader/prog_instruction.h"
 #include "shader/prog_parameter.h"
 #include "shader/prog_statevars.h"
@@ -154,7 +154,7 @@ static GLboolean r200VertexProgUpdateParams(GLcontext *ctx, struct r200_vertex_p
    return GL_TRUE;
 }
 
-static __inline unsigned long t_dst_mask(GLuint mask)
+static INLINE unsigned long t_dst_mask(GLuint mask)
 {
    /* WRITEMASK_* is equivalent to VSF_FLAG_* */
    return mask & VSF_FLAG_ALL;
@@ -215,6 +215,7 @@ static unsigned long t_src_class(enum register_file file)
    case PROGRAM_LOCAL_PARAM:
    case PROGRAM_ENV_PARAM:
    case PROGRAM_NAMED_PARAM:
+   case PROGRAM_CONSTANT:
    case PROGRAM_STATE_VAR:
       return VSF_IN_CLASS_PARAM;
    /*
@@ -228,7 +229,7 @@ static unsigned long t_src_class(enum register_file file)
    }
 }
 
-static __inline unsigned long t_swizzle(GLubyte swizzle)
+static INLINE unsigned long t_swizzle(GLubyte swizzle)
 {
 /* this is in fact a NOP as the Mesa SWIZZLE_* are all identical to VSF_IN_COMPONENT_* */
    return swizzle;
@@ -408,6 +409,7 @@ static GLboolean r200_translate_vertex_program(GLcontext *ctx, struct r200_verte
    int fog_temp_i = 0;
    int free_inputs;
    int array_count = 0;
+   int u_temp_used;
 
    vp->native = GL_FALSE;
    vp->translated = GL_TRUE;
@@ -744,9 +746,16 @@ static GLboolean r200_translate_vertex_program(GLcontext *ctx, struct r200_verte
 	 goto next;
 
       case OPCODE_MAD:
+	 /* only 2 read ports into temp memory thus may need the macro op MAD_2
+	    instead (requiring 2 clocks) if all inputs are in temp memory
+	    (and, only if they actually reference 3 distinct temps) */
 	 hw_op=(src[0].File == PROGRAM_TEMPORARY &&
 	    src[1].File == PROGRAM_TEMPORARY &&
-	    src[2].File == PROGRAM_TEMPORARY) ? R200_VPI_OUT_OP_MAD_2 : R200_VPI_OUT_OP_MAD;
+	    src[2].File == PROGRAM_TEMPORARY &&
+	    (((src[0].RelAddr << 8) | src[0].Index) != ((src[1].RelAddr << 8) | src[1].Index)) &&
+	    (((src[0].RelAddr << 8) | src[0].Index) != ((src[2].RelAddr << 8) | src[2].Index)) &&
+	    (((src[1].RelAddr << 8) | src[1].Index) != ((src[2].RelAddr << 8) | src[2].Index))) ?
+	    R200_VPI_OUT_OP_MAD_2 : R200_VPI_OUT_OP_MAD;
 
 	 o_inst->op = MAKE_VSF_OP(hw_op, t_dst(&dst),
 	    t_dst_mask(dst.WriteMask));
@@ -874,8 +883,11 @@ else {
       case OPCODE_XPD:
 	 /* mul r0, r1.yzxw, r2.zxyw
 	    mad r0, -r2.yzxw, r1.zxyw, r0
-	    NOTE: might need MAD_2
 	  */
+	 hw_op=(src[0].File == PROGRAM_TEMPORARY &&
+	    src[1].File == PROGRAM_TEMPORARY &&
+	    (((src[0].RelAddr << 8) | src[0].Index) != ((src[1].RelAddr << 8) | src[1].Index))) ?
+	    R200_VPI_OUT_OP_MAD_2 : R200_VPI_OUT_OP_MAD;
 
 	 o_inst->op = MAKE_VSF_OP(R200_VPI_OUT_OP_MUL,
 	    (u_temp_i << R200_VPI_OUT_REG_INDEX_SHIFT) | R200_VSF_OUT_CLASS_TMP,
@@ -901,7 +913,7 @@ else {
 	 o_inst++;
 	 u_temp_i--;
 
-	 o_inst->op = MAKE_VSF_OP(R200_VPI_OUT_OP_MAD, t_dst(&dst),
+	 o_inst->op = MAKE_VSF_OP(hw_op, t_dst(&dst),
 		t_dst_mask(dst.WriteMask));
 
 	 o_inst->src0 = MAKE_VSF_SOURCE(t_src_index(vp, &src[1]),
@@ -1051,14 +1063,15 @@ else {
          dofogfix = 0;
       }
 
+      u_temp_used = (R200_VSF_MAX_TEMPS - 1) - u_temp_i;
       if (mesa_vp->Base.NumNativeTemporaries <
-	 (mesa_vp->Base.NumTemporaries + (R200_VSF_MAX_TEMPS - 1 - u_temp_i))) {
+	 (mesa_vp->Base.NumTemporaries + u_temp_used)) {
 	 mesa_vp->Base.NumNativeTemporaries =
-	    mesa_vp->Base.NumTemporaries + (R200_VSF_MAX_TEMPS - 1 - u_temp_i);
+	    mesa_vp->Base.NumTemporaries + u_temp_used;
       }
-      if (u_temp_i < mesa_vp->Base.NumTemporaries) {
+      if ((mesa_vp->Base.NumTemporaries + u_temp_used) > R200_VSF_MAX_TEMPS) {
 	 if (R200_DEBUG & DEBUG_FALLBACKS) {
-	    fprintf(stderr, "Ran out of temps, num temps %d, us %d\n", mesa_vp->Base.NumTemporaries, u_temp_i);
+	    fprintf(stderr, "Ran out of temps, num temps %d, us %d\n", mesa_vp->Base.NumTemporaries, u_temp_used);
 	 }
 	 return GL_FALSE;
       }

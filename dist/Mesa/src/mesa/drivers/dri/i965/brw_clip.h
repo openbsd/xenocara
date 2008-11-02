@@ -42,7 +42,7 @@
  * up polygon offset and flatshading at this point:
  */
 struct brw_clip_prog_key {
-   GLuint attrs:16;		
+   GLuint attrs:32;		
    GLuint primitive:4;
    GLuint nr_userclip:3;
    GLuint do_flat_shading:1;
@@ -51,7 +51,7 @@ struct brw_clip_prog_key {
    GLuint fill_ccw:2;		/* includes cull information */
    GLuint offset_cw:1;
    GLuint offset_ccw:1;
-   GLuint pad0:1;
+   GLuint pad0:17;
 
    GLuint copy_bfc_cw:1;
    GLuint copy_bfc_ccw:1;
@@ -166,5 +166,10 @@ void brw_clip_copy_colors( struct brw_clip_compile *c,
 			   GLuint to, GLuint from );
 
 void brw_clip_init_clipmask( struct brw_clip_compile *c );
+
+struct brw_reg get_tmp( struct brw_clip_compile *c );
+
+void brw_clip_project_position(struct brw_clip_compile *c,
+             struct brw_reg pos );
 
 #endif

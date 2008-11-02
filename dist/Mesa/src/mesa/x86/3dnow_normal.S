@@ -1,4 +1,4 @@
-/* $Id: 3dnow_normal.S,v 1.1.1.2 2007/11/24 17:32:36 matthieu Exp $ */
+/* $Id: 3dnow_normal.S,v 1.2 2008/11/02 14:58:23 matthieu Exp $ */
 
 /*
  * Mesa 3-D graphics library

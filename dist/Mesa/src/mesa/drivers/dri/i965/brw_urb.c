@@ -35,7 +35,6 @@
 #include "brw_context.h"
 #include "brw_state.h"
 #include "brw_defines.h"
-#include "brw_hal.h"
 
 #define VS 0
 #define GS 1
@@ -53,7 +52,7 @@ static const struct {
    GLuint min_entry_size;
    GLuint max_entry_size;
 } limits[CS+1] = {
-   { 8, 32, 1, 5 },			/* vs */
+   { 16, 32, 1, 5 },			/* vs */
    { 4, 8,  1, 5 },			/* gs */
    { 6, 8,  1, 5 },			/* clp */
    { 1, 8,  1, 12 },		        /* sf */
@@ -75,26 +74,12 @@ static GLboolean check_urb_layout( struct brw_context *brw )
 /* Most minimal update, forces re-emit of URB fence packet after GS
  * unit turned on/off.
  */
-static void recalculate_urb_fence( struct brw_context *brw )
+static int recalculate_urb_fence( struct brw_context *brw )
 {
    GLuint csize = brw->curbe.total_size;
    GLuint vsize = brw->vs.prog_data->urb_entry_size;
    GLuint sfsize = brw->sf.prog_data->urb_entry_size;
 
-   static GLboolean (*hal_recalculate_urb_fence) (struct brw_context *brw);
-   static GLboolean hal_tried;
-
-   if (!hal_tried)
-   {
-      hal_recalculate_urb_fence = brw_hal_find_symbol ("intel_hal_recalculate_urb_fence");
-      hal_tried = 1;
-   }
-   if (hal_recalculate_urb_fence)
-   {
-      if ((*hal_recalculate_urb_fence) (brw))
-	 return;
-   }
-   
    if (csize < limits[CS].min_entry_size)
       csize = limits[CS].min_entry_size;
 
@@ -157,6 +142,7 @@ static void recalculate_urb_fence( struct brw_context *brw )
       
       brw->state.dirty.brw |= BRW_NEW_URB_FENCE;
    }
+   return 0;
 }
 
 
@@ -167,7 +153,7 @@ const struct brw_tracked_state brw_recalculate_urb_fence = {
       .cache = (CACHE_NEW_VS_PROG |
 		CACHE_NEW_SF_PROG)
    },
-   .update = recalculate_urb_fence
+   .prepare = recalculate_urb_fence
 };
 
 

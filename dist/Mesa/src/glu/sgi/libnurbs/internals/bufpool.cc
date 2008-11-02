@@ -35,8 +35,8 @@
 /*
  *  bufpool.c++
  *
- * $Date: 2007/11/24 17:27:03 $ $Revision: 1.1.1.2 $
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/bufpool.cc,v 1.1.1.2 2007/11/24 17:27:03 matthieu Exp $
+ * $Date: 2008/11/02 14:58:10 $ $Revision: 1.2 $
+ * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/bufpool.cc,v 1.2 2008/11/02 14:58:10 matthieu Exp $
  */
 
 #include "glimports.h"
@@ -48,7 +48,7 @@
  * Pool - allocate a new pool of buffers
  *-----------------------------------------------------------------------------
  */
-Pool::Pool( int _buffersize, int initpoolsize, char *n )
+Pool::Pool( int _buffersize, int initpoolsize, const char *n )
 {
     if((unsigned)_buffersize < sizeof(Buffer))
         buffersize = sizeof(Buffer);

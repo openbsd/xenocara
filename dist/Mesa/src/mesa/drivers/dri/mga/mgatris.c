@@ -67,7 +67,7 @@ do {						\
 } while (0)
 #endif
 
-static void __inline__ mga_draw_triangle( mgaContextPtr mmesa,
+static void INLINE mga_draw_triangle( mgaContextPtr mmesa,
 					   mgaVertexPtr v0,
 					   mgaVertexPtr v1,
 					   mgaVertexPtr v2 )
@@ -82,7 +82,7 @@ static void __inline__ mga_draw_triangle( mgaContextPtr mmesa,
 }
 
 
-static void __inline__ mga_draw_quad( mgaContextPtr mmesa,
+static void INLINE mga_draw_quad( mgaContextPtr mmesa,
 				       mgaVertexPtr v0,
 				       mgaVertexPtr v1,
 				       mgaVertexPtr v2,
@@ -101,11 +101,13 @@ static void __inline__ mga_draw_quad( mgaContextPtr mmesa,
 }
 
 
-static __inline__ void mga_draw_point( mgaContextPtr mmesa,
+static INLINE void mga_draw_point( mgaContextPtr mmesa,
 					mgaVertexPtr tmp )
 {
-   GLfloat sz = mmesa->glCtx->Point._Size * .5;
-   int vertex_size = mmesa->vertex_size;
+   const GLfloat sz = 0.5 * CLAMP(mmesa->glCtx->Point.Size,
+                                  mmesa->glCtx->Const.MinPointSize,
+                                  mmesa->glCtx->Const.MaxPointSize);
+   const int vertex_size = mmesa->vertex_size;
    GLuint *vb = mgaAllocDmaLow( mmesa, 6 * 4 * vertex_size );
    int j;
    
@@ -158,14 +160,16 @@ static __inline__ void mga_draw_point( mgaContextPtr mmesa,
 }
 
 
-static __inline__ void mga_draw_line( mgaContextPtr mmesa,
+static INLINE void mga_draw_line( mgaContextPtr mmesa,
 				      mgaVertexPtr v0,
 				      mgaVertexPtr v1 )
 {
    GLuint vertex_size = mmesa->vertex_size;
    GLuint *vb = mgaAllocDmaLow( mmesa, 6 * 4 * vertex_size );
    GLfloat dx, dy, ix, iy;
-   GLfloat width = mmesa->glCtx->Line._Width;
+   const GLfloat width = CLAMP(mmesa->glCtx->Line.Width,
+                               mmesa->glCtx->Const.MinLineWidth,
+                               mmesa->glCtx->Const.MaxLineWidth);
    GLint j;
 
 #if 0

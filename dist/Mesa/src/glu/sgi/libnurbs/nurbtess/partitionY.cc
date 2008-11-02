@@ -31,10 +31,10 @@
 ** published by SGI, but has not been independently verified as being
 ** compliant with the OpenGL(R) version 1.2.1 Specification.
 **
-** $Date: 2007/11/24 17:27:13 $ $Revision: 1.1.1.2 $
+** $Date: 2008/11/02 14:58:11 $ $Revision: 1.2 $
 */
 /*
-** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/nurbtess/Attic/partitionY.cc,v 1.1.1.2 2007/11/24 17:27:13 matthieu Exp $
+** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/nurbtess/Attic/partitionY.cc,v 1.2 2008/11/02 14:58:11 matthieu Exp $
 */
 
 #include <stdlib.h>

@@ -73,19 +73,17 @@ static void do_vs_prog( struct brw_context *brw,
     */
    program = brw_get_program(&c.func, &program_size);
 
-   /*
-    */
-   brw->vs.prog_gs_offset = brw_upload_cache( &brw->cache[BRW_VS_PROG],
-					      &c.key,
-					      sizeof(c.key),
-					      program,
-					      program_size,
-					      &c.prog_data,
-					      &brw->vs.prog_data);
+   dri_bo_unreference(brw->vs.prog_bo);
+   brw->vs.prog_bo = brw_upload_cache( &brw->cache, BRW_VS_PROG,
+				       &c.key, sizeof(c.key),
+				       NULL, 0,
+				       program, program_size,
+				       &c.prog_data,
+				       &brw->vs.prog_data );
 }
 
 
-static void brw_upload_vs_prog( struct brw_context *brw )
+static int brw_upload_vs_prog( struct brw_context *brw )
 {
    struct brw_vs_prog_key key;
    struct brw_vertex_program *vp = 
@@ -110,13 +108,14 @@ static void brw_upload_vs_prog( struct brw_context *brw )
 
    /* Make an early check for the key.
     */
-   if (brw_search_cache(&brw->cache[BRW_VS_PROG], 
-			&key, sizeof(key),
-			&brw->vs.prog_data,
-			&brw->vs.prog_gs_offset))
-       return;
-
-   do_vs_prog(brw, vp, &key);
+   dri_bo_unreference(brw->vs.prog_bo);
+   brw->vs.prog_bo = brw_search_cache(&brw->cache, BRW_VS_PROG,
+				      &key, sizeof(key),
+				      NULL, 0,
+				      &brw->vs.prog_data);
+   if (brw->vs.prog_bo == NULL)
+      do_vs_prog(brw, vp, &key);
+   return dri_bufmgr_check_aperture_space(brw->vs.prog_bo);
 }
 
 
@@ -128,5 +127,5 @@ const struct brw_tracked_state brw_vs_prog = {
       .brw   = BRW_NEW_VERTEX_PROGRAM | BRW_NEW_METAOPS,
       .cache = 0
    },
-   .update = brw_upload_vs_prog
+   .prepare = brw_upload_vs_prog
 };

@@ -32,12 +32,24 @@
 
 #include "intel_mipmap_tree.h"
 #include "intel_tex_layout.h"
+#include "intel_context.h"
 #include "macros.h"
 
-
-static int align(int value, int alignment)
+GLuint intel_compressed_alignment(GLenum internalFormat)
 {
-   return (value + alignment - 1) & ~(alignment - 1);
+    GLuint alignment = 4;
+
+    switch (internalFormat) {
+    case GL_COMPRESSED_RGB_FXT1_3DFX:
+    case GL_COMPRESSED_RGBA_FXT1_3DFX:
+        alignment = 8;
+        break;
+
+    default:
+        break;
+    }
+
+    return alignment;
 }
 
 void i945_miptree_layout_2d( struct intel_context *intel, struct intel_mipmap_tree *mt )
@@ -51,17 +63,30 @@ void i945_miptree_layout_2d( struct intel_context *intel, struct intel_mipmap_tr
 
    mt->pitch = mt->width0;
 
+   if (mt->compressed) {
+       align_w = intel_compressed_alignment(mt->internal_format);
+       mt->pitch = ALIGN(mt->width0, align_w);
+   }
+
    /* May need to adjust pitch to accomodate the placement of
     * the 2nd mipmap.  This occurs when the alignment
     * constraints of mipmap placement push the right edge of the
     * 2nd mipmap out past the width of its parent.
     */
    if (mt->first_level != mt->last_level) {
-      GLuint mip1_width = align(minify(mt->width0), align_w)
-			+ minify(minify(mt->width0));
+       GLuint mip1_width;
 
-      if (mip1_width > mt->width0)
-	 mt->pitch = mip1_width;
+       if (mt->compressed) {
+           mip1_width = ALIGN(minify(mt->width0), align_w)
+               + ALIGN(minify(minify(mt->width0)), align_w);
+       } else {
+           mip1_width = ALIGN(minify(mt->width0), align_w)
+               + minify(minify(mt->width0));
+       }
+
+       if (mip1_width > mt->pitch) {
+           mt->pitch = mip1_width;
+       }
    }
 
    /* Pitch must be a whole number of dwords, even though we
@@ -79,7 +104,7 @@ void i945_miptree_layout_2d( struct intel_context *intel, struct intel_mipmap_tr
       if (mt->compressed)
 	 img_height = MAX2(1, height/4);
       else
-	 img_height = align(height, align_h);
+	 img_height = ALIGN(height, align_h);
 
 
       /* Because the images are packed better, the final offset
@@ -90,7 +115,7 @@ void i945_miptree_layout_2d( struct intel_context *intel, struct intel_mipmap_tr
       /* Layout_below: step right after second mipmap.
        */
       if (level == mt->first_level + 1) {
-	 x += align(width, align_w);
+	 x += ALIGN(width, align_w);
       }
       else {
 	 y += img_height;
