@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.6 2008/04/19 07:15:17 matthieu Exp $
+# $OpenBSD: Makefile.inc,v 1.7 2008/11/02 15:01:32 matthieu Exp $
 .include <bsd.xconf.mk>
 
 MESA= ${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -7,7 +7,6 @@ TOP= ${.CURDIR}/../../../../dist/Mesa
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 
 COMMON_SOURCES = \
-	driverfuncs.c \
 	utils.c \
 	texmem.c \
 	vblank.c \
@@ -17,7 +16,7 @@ COMMON_SOURCES = \
 
 COMMON_BM_SOURCES = \
 	dri_bufmgr.c \
-	dri_drmpool.c
+        dri_bufmgr_fake.c
 
 CFLAGS+= -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING -DPTHREADS $(INCLUDES) $(DRIVER_DEFINES)
 
@@ -37,6 +36,16 @@ INCLUDES = \
 	-I$(TOP)/src/egl/drivers/dri \
 	-I$(X11BASE)/include \
 	-I$(X11BASE)/include/drm
+
+.if ${MACHINE_ARCH} == "i386"
+CPPFLAGS += \
+	-DUSE_X86_ASM \
+	-DUSE_MMX_ASM \
+	-DUSE_3DNOW_ASM \
+	-DUSE_SSE_ASM
+.elif ${MACHINE_ARCH} == "amd64"
+CPPFLAGS += -DUSE_X86_64_ASM
+.endif
 
 LDADD=	../../libmesa/libmesa_pic.a -L${X11BASE}/lib -lX11 -lexpat -ldrm -lm
 DPADD=	../../libmesa/libmesa_pic.a

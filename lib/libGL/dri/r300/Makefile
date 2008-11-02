@@ -1,15 +1,14 @@
-#	$OpenBSD: Makefile,v 1.1 2007/12/04 22:00:27 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2008/11/02 15:01:32 matthieu Exp $
 
 LIB=	r300_dri.so
 
 COMMON_SOURCES = \
-	../../common/driverfuncs.c \
-	../common/mm.c \
-	../common/utils.c \
-	../common/texmem.c \
-	../common/vblank.c \
-	../common/xmlconfig.c \
-	../common/dri_util.c
+	utils.c \
+	texmem.c \
+	vblank.c \
+	dri_util.c \
+	xmlconfig.c \
+	drirenderbuffer.c
 
 DRIVER_SOURCES = \
 		 radeon_screen.c \
@@ -28,10 +27,19 @@ DRIVER_SOURCES = \
 		 r300_texmem.c \
 		 r300_tex.c \
 		 r300_texstate.c \
+		 radeon_program.c \
+		 radeon_program_alu.c \
+	         radeon_program_pair.c \
+		 radeon_nqssadce.c \
 		 r300_vertprog.c \
 		 r300_fragprog.c \
+		 r300_fragprog_swizzle.c \
+		 r300_fragprog_emit.c \
+		 r500_fragprog.c \
+		 r500_fragprog_emit.c \
 		 r300_shader.c \
 		 r300_emit.c \
+		 r300_swtcl.c
 
 SRCS = $(COMMON_SOURCES) $(DRIVER_SOURCES)
 

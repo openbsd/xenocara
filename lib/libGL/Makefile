@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.19 2008/07/16 20:24:39 brad Exp $
+# $OpenBSD: Makefile,v 1.20 2008/11/02 15:01:32 matthieu Exp $
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
@@ -11,10 +11,11 @@ MESA=	${.CURDIR}/../../dist/Mesa/src/mesa
 GL=	${.CURDIR}/../../dist/Mesa/src/GL
 GLX=	${.CURDIR}/../../dist/Mesa/src/glx/x11
 MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
+MESA_DRI=	${.CURDIR}/../../dist/Mesa/src/mesa/drivers/dri
 
 MESA_MAJOR=	7
-MESA_MINOR=	0
-MESA_TINY=	3
+MESA_MINOR=	1
+MESA_TINY=	0
 
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 
@@ -52,7 +53,8 @@ CPPFLAGS+= \
 	-D_REENTRANT
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
-CPPFLAGS+=	-DGLX_DIRECT_RENDERING
+CPPFLAGS+=	-DGLX_DIRECT_RENDERING -DXF86VIDMODE \
+	-DDEFAULT_DRIVER_DIR=\"${DRI_DRIVER_INSTALL_DIR}\"
 .endif
 
 .if ${MACHINE_ARCH} == "i386"
@@ -90,9 +92,6 @@ ASM_API = glapi_x86-64.S
 SPARC_API = glapi_sparc.S
 .endif
 
-COMMON_DRIVER_SOURCES = \
-	driverfuncs.c
-
 X11_DRIVER_SOURCES = 	\
 	glxapi.c	\
 	fakeglx.c	\
@@ -111,12 +110,14 @@ GLX_SOURCES= \
 	compsize.c \
 	glxeval.c \
 	glxcmds.c \
+	glxcurrent.c \
 	glxext.c \
 	glxextensions.c \
 	indirect.c \
 	indirect_init.c \
 	indirect_size.c \
 	indirect_window_pos.c \
+	indirect_texture_compression.c \
 	indirect_transpose_matrix.c \
 	indirect_vertex_array.c \
 	indirect_vertex_program.c \
@@ -130,14 +131,16 @@ GLX_SOURCES= \
 	xfont.c \
 	glx_pbuffer.c \
 	glx_query.c \
-	glx_texture_compression.c \
+	drisw_glx.c \
+	dri_common.c \
 	dri_glx.c \
-	XF86dri.c
+	XF86dri.c \
+	glxhash.c \
 
 SRCS = $(GLX_SOURCES)	\
 	$(GLAPI_SOURCES) 
 
-includes:
+includes: _SUBDIRUSE
 	cd ${MESA_INCLUDE}/GL; for i in ${INCS}; do \
 	    j="cmp -s $$i ${DESTDIR}${INCSDIR}/GL/$$i || \
 		${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 \
@@ -172,9 +175,27 @@ gl.pc: ${MESA}/gl.pc.in Makefile
 	    -e 's,@VERSION@,$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY),' \
 	< ${MESA}/gl.pc.in > gl.pc
 
-afterinstall: gl.pc
+.if ${XENOCARA_BUILD_DRI:L} == "yes"
+DRI_PC=dri.pc
+
+dri.pc: ${MESA_DRI}/dri.pc.in
+	sed -e 's,@INSTALL_DIR@,${X11BASE},' \
+		-e 's,@INSTALL_LIB_DIR@,${LIBDIR},' \
+		-e 's,@INSTALL_INC_DIR@,${INCDIR},' \
+		-e 's,@DRI_DRIVER_DIR@,${DRI_DRIVER_INSTALL_DIR},' \
+		-e 's,@VERSION@,$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY),' \
+		< ${MESA_DRI}/dri.pc.in > dri.pc
+.endif
+
+afterinstall: gl.pc ${DRI_PC}
 	$(INSTALL) -c -m 644 -o root -g wheel gl.pc \
 		${DESTDIR}${LIBDIR}/pkgconfig
+.if ${XENOCARA_BUILD_DRI:L} == "yes"
+	$(INSTALL) -c -m 644 -o root -g wheel dri.pc \
+		${DESTDIR}${LIBDIR}/pkgconfig
+.endif
+
+CLEANFILES+= gl.pc ${DRI_PC}
 
 .if ${MACHINE_ARCH} == i386
 .PATH: ${MESA}/x86

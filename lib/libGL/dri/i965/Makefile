@@ -1,27 +1,33 @@
-#	$OpenBSD: Makefile,v 1.1 2007/12/04 22:00:27 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2008/11/02 15:01:32 matthieu Exp $
 
 LIB=	i965_dri.so
 
 DRIVER_SOURCES = \
-	bufmgr_fake.c \
 	intel_batchbuffer.c \
 	intel_blit.c \
 	intel_buffer_objects.c \
 	intel_buffers.c \
+	intel_bufmgr_ttm.c \
 	intel_context.c \
+	intel_decode.c \
+	intel_depthstencil.c \
+	intel_fbo.c \
 	intel_ioctl.c \
 	intel_mipmap_tree.c \
 	intel_regions.c \
 	intel_screen.c \
 	intel_span.c \
+	intel_pixel.c \
 	intel_pixel_copy.c \
 	intel_pixel_bitmap.c \
 	intel_state.c \
 	intel_tex.c \
+	intel_tex_copy.c \
+	intel_tex_format.c \
+	intel_tex_image.c \
 	intel_tex_layout.c \
+	intel_tex_subimage.c \
 	intel_tex_validate.c \
-	brw_aub.c \
-	brw_aub_playback.c \
 	brw_cc.c \
 	brw_clip.c \
 	brw_clip_line.c \
@@ -42,7 +48,6 @@ DRIVER_SOURCES = \
 	brw_gs.c \
 	brw_gs_emit.c \
 	brw_gs_state.c \
-	brw_hal.c \
 	brw_metaops.c \
 	brw_misc_state.c \
 	brw_program.c \
@@ -51,7 +56,7 @@ DRIVER_SOURCES = \
 	brw_sf_state.c \
 	brw_state_batch.c \
 	brw_state_cache.c \
-	brw_state_pool.c \
+	brw_state_dump.c \
 	brw_state_upload.c \
 	brw_tex.c \
 	brw_tex_layout.c \
@@ -68,6 +73,7 @@ DRIVER_SOURCES = \
 	brw_wm_emit.c \
 	brw_wm_fp.c \
 	brw_wm_iz.c \
+	brw_wm_glsl.c \
 	brw_wm_pass0.c \
 	brw_wm_pass1.c \
 	brw_wm_pass2.c \
@@ -77,13 +83,15 @@ DRIVER_SOURCES = \
 
 SRCS = \
 	$(COMMON_SOURCES) \
+	$(COMMON_BM_SOURCES) \
 	$(MINIGLX_SOURCES) \
 	$(DRIVER_SOURCES)
 
 DRIVER_DEFINES = \
 	-I$(MESA)/drivers/dri/i965 \
 	-I$(MESA)/drivers/dri/i965/server \
-	-I$(MESA)/drivers/dri/intel
+	-I$(MESA)/drivers/dri/intel \
+	-I$(MESA)/drivers/dri/intel/server
 
 .include <bsd.xorg.mk>
 

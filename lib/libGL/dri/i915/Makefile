@@ -1,18 +1,8 @@
-#	$OpenBSD: Makefile,v 1.1 2007/12/04 22:00:27 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2008/11/02 15:01:32 matthieu Exp $
 
 LIB=	i915_dri.so
 
 DRIVER_SOURCES = \
-	i915_context.c \
-	i915_debug.c \
-	i915_fragprog.c \
-	i915_metaops.c \
-	i915_program.c \
-	i915_state.c \
-	i915_tex.c \
-	i915_texprog.c \
-	i915_texstate.c \
-	i915_vtbl.c \
 	i830_context.c \
 	i830_metaops.c \
 	i830_state.c \
@@ -20,22 +10,57 @@ DRIVER_SOURCES = \
 	i830_tex.c \
 	i830_texstate.c \
 	i830_vtbl.c \
-	intel_batchbuffer.c \
-	intel_context.c \
-	intel_ioctl.c \
-	intel_pixel.c \
 	intel_render.c \
-	intel_rotate.c \
+	intel_regions.c \
+	intel_buffer_objects.c \
+	intel_batchbuffer.c \
+	intel_mipmap_tree.c \
+	i915_tex_layout.c \
+	intel_tex_layout.c \
+	intel_tex_image.c \
+	intel_tex_subimage.c \
+	intel_tex_copy.c \
+	intel_tex_validate.c \
+	intel_tex_format.c \
+	intel_tex.c \
+	intel_pixel.c \
+	intel_pixel_bitmap.c \
+	intel_pixel_copy.c \
+	intel_pixel_read.c \
+	intel_pixel_draw.c \
+	intel_buffers.c \
+	intel_blit.c \
+	i915_tex.c \
+	i915_texstate.c \
+	i915_context.c \
+	i915_debug.c \
+	i915_debug_fp.c \
+	i915_fragprog.c \
+	i915_metaops.c \
+	i915_program.c \
+	i915_state.c \
+	i915_vtbl.c \
+	intel_context.c \
+	intel_decode.c \
+	intel_ioctl.c \
 	intel_screen.c \
 	intel_span.c \
 	intel_state.c \
-	intel_tex.c \
-	intel_texmem.c \
-	intel_tris.c 
+	intel_tris.c \
+	intel_fbo.c \
+	intel_depthstencil.c \
+	intel_bufmgr_ttm.c
 
-SRCS= ${DRIVER_SOURCES} ${COMMON_SOURCES}
+SRCS= \
+	$(COMMON_SOURCES) \
+	$(COMMON_BM_SOURCES) \
+	$(DRIVER_SOURCES)
 
-DRIVER_DEFINES= -I$(MESA)/drivers/dri/i915/server
+DRIVER_DEFINES= \
+	-I$(MESA)/drivers/dri/i915/server \
+	-I$(MESA)/drivers/dri/intel \
+	-I$(MESA)/drivers/dri/intel/server \
+	-DI915 -DDRM_VBLANK_FLIP=DRM_VBLANK_FLIP
 
 .include <bsd.xorg.mk>
 

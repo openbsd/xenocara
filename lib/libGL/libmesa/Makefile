@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2008/09/14 19:47:42 matthieu Exp $
+# $OpenBSD: Makefile,v 1.5 2008/11/02 15:01:32 matthieu Exp $
 
 MESA=	${.CURDIR}/../../../dist/Mesa/src/mesa
 MESA_INCLUDE=	${.CURDIR}/../../../dist/Mesa/include
@@ -116,6 +116,62 @@ MATH_SOURCES= \
 	m_vector.c \
 	m_xform.c
 
+VBO_SOURCES = \
+	vbo_context.c \
+	vbo_exec.c \
+	vbo_exec_api.c \
+	vbo_exec_array.c \
+	vbo_exec_draw.c \
+	vbo_exec_eval.c \
+	vbo_rebase.c \
+	vbo_split.c \
+	vbo_split_copy.c \
+	vbo_split_inplace.c \
+	vbo_save.c \
+	vbo_save_api.c \
+	vbo_save_draw.c \
+	vbo_save_loopback.c 
+
+# tnl
+TNL_SOURCES= \
+	t_context.c \
+	t_pipeline.c \
+	t_draw.c \
+	t_vb_program.c \
+	t_vb_render.c \
+	t_vb_texgen.c \
+	t_vb_texmat.c \
+	t_vb_vertex.c \
+	t_vb_cull.c \
+	t_vb_fog.c \
+	t_vb_light.c \
+	t_vb_normals.c \
+	t_vb_points.c \
+	t_vp_build.c \
+	t_vertex.c \
+	t_vertex_sse.c \
+	t_vertex_generic.c \
+
+# shader
+SHADER_SOURCES=	\
+	arbprogparse.c \
+	arbprogram.c \
+	atifragshader.c \
+	grammar_mesa.c \
+	nvfragparse.c \
+	nvprogram.c \
+	nvvertparse.c \
+	program.c \
+	prog_debug.c \
+	prog_execute.c \
+	prog_instruction.c \
+	prog_parameter.c \
+	prog_print.c \
+	prog_statevars.c \
+	prog_uniform.c \
+	programopt.c \
+	shader_api.c \
+
 # swrast
 SWRAST_SOURCES= \
 	s_aaline.c \
@@ -153,60 +209,8 @@ SWRAST_SETUP_SOURCES= \
 	ss_context.c \
 	ss_triangle.c
 
-# tnl
-TNL_SOURCES= \
-	t_context.c \
-	t_pipeline.c \
-	t_draw.c \
-	t_vb_program.c \
-	t_vb_render.c \
-	t_vb_texgen.c \
-	t_vb_texmat.c \
-	t_vb_vertex.c \
-	t_vb_cull.c \
-	t_vb_fog.c \
-	t_vb_light.c \
-	t_vb_normals.c \
-	t_vb_points.c \
-	t_vp_build.c \
-	t_vertex.c \
-	t_vertex_sse.c \
-	t_vertex_generic.c \
-
-VBO_SOURCES = \
-	vbo_context.c \
-	vbo_exec.c \
-	vbo_exec_api.c \
-	vbo_exec_array.c \
-	vbo_exec_draw.c \
-	vbo_exec_eval.c \
-	vbo_rebase.c \
-	vbo_split.c \
-	vbo_split_copy.c \
-	vbo_split_inplace.c \
-	vbo_save.c \
-	vbo_save_api.c \
-	vbo_save_draw.c \
-	vbo_save_loopback.c 
-
-# shader
-SHADER_SOURCES=	\
-	arbprogparse.c \
-	arbprogram.c \
-	atifragshader.c \
-	grammar_mesa.c \
-	nvfragparse.c \
-	nvprogram.c \
-	nvvertparse.c \
-	program.c \
-	prog_debug.c \
-	prog_execute.c \
-	prog_instruction.c \
-	prog_parameter.c \
-	prog_print.c \
-	prog_statevars.c \
-	programopt.c \
-	shader_api.c \
+COMMON_DRIVER_SOURCES = \
+	driverfuncs.c
 
 # shader/slang
 SLANG_SOURCES= \
@@ -287,6 +291,7 @@ SOLO_SOURCES = \
 	$(SHADER_SOURCES)	\
 	$(SWRAST_SOURCES)	\
 	$(SWRAST_SETUP_SOURCES) \
+	$(COMMON_DRIVER_SOURCES) \
 	$(ASM_C_SOURCES)	\
 	$(SLANG_SOURCES)
 
@@ -305,7 +310,7 @@ install:
 	@echo "Not installing libmesa"
 
 clean:
-	rm -f ${LIB}_pic.a ${OBJS} ${CLEANFILES}
+	rm -f ${LIB}_pic.a ${OBJS} $(CLEANFILES)
 
 cleandir:	clean
 
@@ -392,3 +397,10 @@ x86_xform4.so: matypes.h
 .PATH: ${MESA}/drivers/common
 
 .include <bsd.xorg.mk>
+
+# Prevent a gcc ICE
+.if ${MACHINE_ARCH} == mips64
+s_copypix.so: s_copypix.c
+	${CC} -c -O0 ${CPPFLAGS} -fpic -DPIC $<
+.endif
+
