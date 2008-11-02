@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xconf.mk,v 1.7 2008/10/08 02:24:28 todd Exp $
+# $OpenBSD: bsd.xconf.mk,v 1.8 2008/11/02 15:20:26 matthieu Exp $
 
 # Shared libs?
 .if ${MACHINE} == "mvme88k" || ${MACHINE} == "vax"
@@ -7,16 +7,11 @@ XENOCARA_HAVE_SHARED_LIBS?=no
 XENOCARA_HAVE_SHARED_LIBS?=yes
 .endif
 
-# Build DRI?
-.if ${MACHINE} == "amd64" || ${MACHINE} == "i386"
-XENOCARA_BUILD_DRI?=yes
-.else
-XENOCARA_BUILD_DRI?=no
-.endif
-
 # Build GL libs and apps
-.if ${MACHINE_ARCH} == "m88k" || ${MACHINE} == "vax"
+.if ${MACHINE_ARCH} == "m88k" || ${MACHINE} == vax
 XENOCARA_BUILD_GL?=no
+XENOCARA_BUILD_DRI?=no
 .else
 XENOCARA_BUILD_GL?=yes
+XENOCARA_BUILD_DRI?=yes
 .endif
