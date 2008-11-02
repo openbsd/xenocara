@@ -1,5 +1,5 @@
-
-/* edid.h: defines to parse an EDID block 
+/*
+ * edid.h: defines to parse an EDID block 
  *
  * This file contains all information to interpret a standard EDIC block 
  * transmitted by a display device via DDC (Display Data Channel). So far 
@@ -125,7 +125,11 @@
 #define SYNC _SYNC(GET(D_INPUT))
 #define _DFP(x) (x & 0x01)
 #define DFP _DFP(GET(D_INPUT))
-#define _GAMMA(x) (x == 0xff ? 1.0 : ((x + 100.0)/100.0))
+#define _BPC(x) ((x & 0x70) >> 4)
+#define BPC _BPC(GET(D_INPUT))
+#define _DIGITAL_INTERFACE(x) (x & 0x0F)
+#define DIGITAL_INTERFACE _DIGITAL_INTERFACE(GET(D_INPUT))
+#define _GAMMA(x) (x == 0xff ? 0.0 : ((x + 100.0)/100.0))
 #define GAMMA _GAMMA(GET(D_GAMMA))
 #define HSIZE_MAX GET(D_HSIZE)
 #define VSIZE_MAX GET(D_VSIZE)
@@ -190,7 +194,14 @@
 
 
 /* EDID Ver. >= 1.2 */
-#define _IS_MONITOR_DESC(x) (x[0] == 0 && x[1] == 0 && x[2] == 0 && x[4] == 0)
+/**
+ * Returns true if the pointer is the start of a monitor descriptor block
+ * instead of a detailed timing descriptor.
+ *
+ * Checking the reserved pad fields for zeroes fails on some monitors with
+ * broken empty ASCII strings.  Only the first two bytes are reliable.
+ */
+#define _IS_MONITOR_DESC(x) (x[0] == 0 && x[1] == 0)
 #define IS_MONITOR_DESC _IS_MONITOR_DESC(c)
 #define _PIXEL_CLOCK(x) (x[0] + (x[1] << 8)) * 10000
 #define PIXEL_CLOCK _PIXEL_CLOCK(c)
@@ -234,14 +245,18 @@
 #define SERIAL_NUMBER 0xFF
 #define ASCII_STR 0xFE
 #define MONITOR_RANGES 0xFD
+#define _MIN_V_OFFSET(x) ((!!(x[4] & 0x01)) * 255)
+#define _MAX_V_OFFSET(x) ((!!(x[4] & 0x02)) * 255)
+#define _MIN_H_OFFSET(x) ((!!(x[4] & 0x04)) * 255)
+#define _MAX_H_OFFSET(x) ((!!(x[4] & 0x08)) * 255)
 #define _MIN_V(x) x[5]
-#define MIN_V _MIN_V(c) 
+#define MIN_V (_MIN_V(c) + _MIN_V_OFFSET(c))
 #define _MAX_V(x) x[6]
-#define MAX_V _MAX_V(c) 
+#define MAX_V (_MAX_V(c) + _MAX_V_OFFSET(c))
 #define _MIN_H(x) x[7]
-#define MIN_H _MIN_H(c) 
+#define MIN_H (_MIN_H(c) + _MIN_H_OFFSET(c))
 #define _MAX_H(x) x[8]
-#define MAX_H _MAX_H(c) 
+#define MAX_H (_MAX_H(c) + _MAX_H_OFFSET(c))
 #define _MAX_CLOCK(x) x[9]
 #define MAX_CLOCK _MAX_CLOCK(c) 
 #define _HAVE_2ND_GTF(x) (x[10] == 0x02)
@@ -256,6 +271,39 @@
 #define K_2ND_GTF _K_2ND_GTF(c)
 #define _J_2ND_GTF(x) (x[17] / 2)
 #define J_2ND_GTF _J_2ND_GTF(c)
+#define _HAVE_CVT(x) (x[10] == 0x04)
+#define HAVE_CVT _HAVE_CVT(c)
+#define _MAX_CLOCK_KHZ(x) (x[12] >> 2)
+#define MAX_CLOCK_KHZ (MAX_CLOCK * 10000) - (_MAX_CLOCK_KHZ(c) * 250)
+#define _MAXWIDTH(x) ((x[13] == 0 ? 0 : x[13] + ((x[12] & 0x03) << 8)) * 8)
+#define MAXWIDTH _MAXWIDTH(c)
+#define _SUPPORTED_ASPECT(x) x[14]
+#define SUPPORTED_ASPECT _SUPPORTED_ASPECT(c)
+#define  SUPPORTED_ASPECT_4_3   0x80
+#define  SUPPORTED_ASPECT_16_9  0x40
+#define  SUPPORTED_ASPECT_16_10 0x20
+#define  SUPPORTED_ASPECT_5_4   0x10
+#define  SUPPORTED_ASPECT_15_9  0x08
+#define _PREFERRED_ASPECT(x) ((x[15] & 0xe0) >> 5)
+#define PREFERRED_ASPECT _PREFERRED_ASPECT(c)
+#define  PREFERRED_ASPECT_4_3   0
+#define  PREFERRED_ASPECT_16_9  1
+#define  PREFERRED_ASPECT_16_10 2
+#define  PREFERRED_ASPECT_5_4   3
+#define  PREFERRED_ASPECT_15_9  4
+#define _SUPPORTED_BLANKING(x) ((x[15] & 0x18) >> 3)
+#define SUPPORTED_BLANKING _SUPPORTED_BLANKING(c)
+#define  CVT_STANDARD 0x01
+#define  CVT_REDUCED  0x02
+#define _SUPPORTED_SCALING(x) ((x[16] & 0xf0) >> 4)
+#define SUPPORTED_SCALING _SUPPORTED_SCALING(c)
+#define  SCALING_HSHRINK  0x08
+#define  SCALING_HSTRETCH 0x04
+#define  SCALING_VSHRINK  0x02
+#define  SCALING_VSTRETCH 0x01
+#define _PREFERRED_REFRESH(x) x[17]
+#define PREFERRED_REFRESH _PREFERRED_REFRESH(c)
+
 #define MONITOR_NAME 0xFC
 #define ADD_COLOR_POINT 0xFB
 #define WHITEX F_CC(I_CC((GET(D_BW_LOW)),(GET(D_WHITEX)),2))
@@ -275,6 +323,9 @@
 #define _WHITE_GAMMA2(x) _GAMMA(x[14])
 #define WHITE_GAMMA2 _WHITE_GAMMA2(c)
 #define ADD_STD_TIMINGS 0xFA
+#define COLOR_MANAGEMENT_DATA 0xF9
+#define CVT_3BYTE_DATA 0xF8
+#define ADD_EST_TIMINGS 0xF7
 #define ADD_DUMMY 0x10
 
 #define _NEXT_DT_MD_SECTION(x) (x = (x + DET_TIMING_INFO_LEN))
@@ -308,15 +359,21 @@
 #define DPMS_SUSPEND(x) (x & 0x02)
 #define DPMS_OFF(x) (x & 0x01)
 
-/* display type */
+/* display type, analog */
 #define DISP_MONO 0
 #define DISP_RGB 1
 #define DISP_MULTCOLOR 2
+
+/* display color encodings, digital */
+#define DISP_YCRCB444 0x01
+#define DISP_YCRCB422 0x02
 
 /* Msc stuff EDID Ver > 1.1 */
 #define STD_COLOR_SPACE(x) (x & 0x4)
 #define PREFERRED_TIMING_MODE(x) (x & 0x2)
 #define GFT_SUPPORTED(x) (x & 0x1)
+#define GTF_SUPPORTED(x) (x & 0x1)
+#define CVT_SUPPORTED(x) (x & 0x1)
 
 /* detailed timing misc */
 #define IS_INTERLACED(x)  (x) 
@@ -350,6 +407,9 @@ struct disp_features {
   unsigned int input_setup:1;
   unsigned int input_sync:5;
   unsigned int input_dfp:1;
+  unsigned int input_bpc:3;
+  unsigned int input_interface:4;
+  /* 15 bit hole */
   int hsize;
   int vsize;
   float gamma;
@@ -407,20 +467,32 @@ struct detailed_timings {
 #define DS_RANGES 0xFD
 #define DS_WHITE_P 0xFB
 #define DS_STD_TIMINGS 0xFA
+#define DS_CMD 0xF9
+#define DS_CVT 0xF8
+#define DS_EST_III 0xF7
 #define DS_DUMMY 0x10
 #define DS_UNKOWN 0x100 /* type is an int */
+#define DS_VENDOR 0x101
+#define DS_VENDOR_MAX 0x110
 
 struct monitor_ranges {
   int min_v;
   int max_v;
   int min_h;
   int max_h;
-  int max_clock;
+  int max_clock;    /* in mhz */
   int gtf_2nd_f;
   int gtf_2nd_c;
   int gtf_2nd_m;
   int gtf_2nd_k;
   int gtf_2nd_j;
+  int max_clock_khz;
+  int maxwidth;	    /* in pixels */
+  char supported_aspect;
+  char preferred_aspect;
+  char supported_blanking;
+  char supported_scaling;
+  int preferred_refresh; /* in hz */
 };
 
 struct whitePoints{
@@ -430,17 +502,33 @@ struct whitePoints{
   float white_gamma;
 };
 
+struct cvt_timings {
+    int width;
+    int height;
+    int rate;
+    int rates;
+};
+
+/*
+ * Be careful when adding new sections; this structure can't grow, it's
+ * embedded in the middle of xf86Monitor which is ABI.  Sizes below are
+ * in bytes, for ILP32 systems.  If all else fails just copy the section
+ * literally like serial and friends.
+ */
 struct detailed_monitor_section {
   int type;
   union {
-    struct detailed_timings d_timings;
+    struct detailed_timings d_timings;	/* 56 */
     Uchar serial[13];
     Uchar ascii_data[13];
     Uchar name[13];
-    struct monitor_ranges ranges;
-    struct std_timings std_t[5];
-    struct whitePoints wp[2];
-  } section;
+    struct monitor_ranges ranges;	/* 56 */
+    struct std_timings std_t[5];	/* 80 */
+    struct whitePoints wp[2];		/* 32 */
+    /* color management data */
+    struct cvt_timings cvt[4];		/* 64 */
+    /* established timings III */
+  } section;				/* max: 80 */
 };
 
 typedef struct {

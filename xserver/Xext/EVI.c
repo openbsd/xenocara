@@ -36,9 +36,6 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "modinit.h"
 #include "scrnintstr.h"
 
-#if 0
-static unsigned char XEVIReqCode = 0;
-#endif
 static EviPrivPtr eviPriv;
 
 static int
@@ -195,19 +192,9 @@ EVIResetProc(ExtensionEntry *extEntry)
 void
 EVIExtensionInit(INITARGS)
 {
-#if 0
-    ExtensionEntry *extEntry;
-
-    if ((extEntry = AddExtension(EVINAME, 0, 0,
-				ProcEVIDispatch,
-				SProcEVIDispatch,
-				EVIResetProc, StandardMinorOpcode))) {
-	XEVIReqCode = (unsigned char)extEntry->base;
-#else
     if (AddExtension(EVINAME, 0, 0,
 		     ProcEVIDispatch, SProcEVIDispatch,
 		     EVIResetProc, StandardMinorOpcode)) {
-#endif
 	eviPriv = eviDDXInit();
     }
 }

@@ -56,16 +56,12 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include <X11/X.h>	/* for inputstr.h    */
-#include <X11/Xproto.h>	/* Request macro     */
 #include "inputstr.h"	/* DeviceIntPtr      */
 #include "windowstr.h"	/* window structure  */
 #include "scrnintstr.h"	/* screen structure  */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include "XIstubs.h"
-#include "extnsionst.h"
-#include "extinit.h"	/* LookupDeviceIntRec */
 #include "exglobals.h"
 
 #include "closedev.h"
@@ -143,18 +139,16 @@ DeleteEventsFromChildren(DeviceIntPtr dev, WindowPtr p1, ClientPtr client)
 int
 ProcXCloseDevice(ClientPtr client)
 {
-    int i;
+    int rc, i;
     WindowPtr pWin, p1;
     DeviceIntPtr d;
 
     REQUEST(xCloseDeviceReq);
     REQUEST_SIZE_MATCH(xCloseDeviceReq);
 
-    d = LookupDeviceIntRec(stuff->deviceid);
-    if (d == NULL) {
-	SendErrorToClient(client, IReqCode, X_CloseDevice, 0, BadDevice);
-	return Success;
-    }
+    rc = dixLookupDevice(&d, stuff->deviceid, client, DixUseAccess);
+    if (rc != Success)
+	return rc;
 
     if (d->grab && SameClient(d->grab, client))
 	(*d->DeactivateGrab) (d);	/* release active grab */

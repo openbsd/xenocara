@@ -27,10 +27,13 @@ MACH64_LIBS =						\
 	$(top_builddir)/hw/kdrive/vesa/libvesa.a        
 
 
+if GLX
+Xmach64_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
+endif
+
 Xmach64_LDADD = 					\
 	$(MACH64_LIBS)					\
-	@KDRIVE_LIBS@					\
-	@XSERVER_LIBS@
+	@KDRIVE_LIBS@
 
 Xmach64_DEPENDENCIES =	\
 	libmach64.a 					\

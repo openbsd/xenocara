@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
+#include <libgen.h>
 
 #include "os.h"  		/* for OsSignal() */
 #include "kdrive.h"
@@ -70,6 +71,8 @@ typedef struct _ephyrScrPriv {
 extern KdCardFuncs ephyrFuncs;
 extern KdKeyboardInfo *ephyrKbd;
 extern KdPointerInfo *ephyrMouse;
+
+extern miPointerScreenFuncRec ephyrPointerScreenFuncs;
 
 Bool
 ephyrInitialize (KdCardInfo *card, EphyrPriv *priv);
@@ -191,5 +194,9 @@ ephyrDrawDisable(ScreenPtr pScreen);
 
 void
 ephyrDrawFini(ScreenPtr pScreen);
+
+/*ephyvideo.c*/
+
+Bool ephyrInitVideo(ScreenPtr pScreen) ;
 
 #endif

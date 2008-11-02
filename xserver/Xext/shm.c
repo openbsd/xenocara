@@ -57,9 +57,38 @@ in this Software without prior written authorization from The Open Group.
 #include "gcstruct.h"
 #include "extnsionst.h"
 #include "servermd.h"
+#include "shmint.h"
+#include "xace.h"
 #define _XSHM_SERVER_
 #include <X11/extensions/shmstr.h>
 #include <X11/Xfuncproto.h>
+
+/* Needed for Solaris cross-zone shared memory extension */
+#ifdef HAVE_SHMCTL64
+#include <sys/ipc_impl.h>
+#define SHMSTAT(id, buf)	shmctl64(id, IPC_STAT64, buf)
+#define SHMSTAT_TYPE 		struct shmid_ds64
+#define SHMPERM_TYPE 		struct ipc_perm64
+#define SHM_PERM(buf) 		buf.shmx_perm
+#define SHM_SEGSZ(buf)		buf.shmx_segsz
+#define SHMPERM_UID(p)		p->ipcx_uid
+#define SHMPERM_CUID(p)		p->ipcx_cuid
+#define SHMPERM_GID(p)		p->ipcx_gid
+#define SHMPERM_CGID(p)		p->ipcx_cgid
+#define SHMPERM_MODE(p)		p->ipcx_mode
+#define SHMPERM_ZONEID(p)	p->ipcx_zoneid
+#else
+#define SHMSTAT(id, buf) 	shmctl(id, IPC_STAT, buf)
+#define SHMSTAT_TYPE 		struct shmid_ds
+#define SHMPERM_TYPE 		struct ipc_perm
+#define SHM_PERM(buf) 		buf.shm_perm
+#define SHM_SEGSZ(buf)		buf.shm_segsz
+#define SHMPERM_UID(p)		p->uid
+#define SHMPERM_CUID(p)		p->cuid
+#define SHMPERM_GID(p)		p->gid
+#define SHMPERM_CGID(p)		p->cgid
+#define SHMPERM_MODE(p)		p->mode
+#endif
 
 #ifdef PANORAMIX
 #include "panoramiX.h"
@@ -77,8 +106,6 @@ typedef struct _ShmDesc {
     unsigned long size;
 } ShmDescRec, *ShmDescPtr;
 
-static void miShmPutImage(XSHM_PUT_IMAGE_ARGS);
-static void fbShmPutImage(XSHM_PUT_IMAGE_ARGS);
 static PixmapPtr fbShmCreatePixmap(XSHM_CREATE_PIXMAP_ARGS);
 static int ShmDetachSegment(
     pointer		/* value */,
@@ -119,9 +146,9 @@ static int pixmapFormat;
 static int shmPixFormat[MAXSCREENS];
 static ShmFuncsPtr shmFuncs[MAXSCREENS];
 static DestroyPixmapProcPtr destroyPixmap[MAXSCREENS];
-static int  shmPixmapPrivate;
-static ShmFuncs miFuncs = {NULL, miShmPutImage};
-static ShmFuncs fbFuncs = {fbShmCreatePixmap, fbShmPutImage};
+static DevPrivateKey shmPixmapPrivate = &shmPixmapPrivate;
+static ShmFuncs miFuncs = {NULL, NULL};
+static ShmFuncs fbFuncs = {fbShmCreatePixmap, NULL};
 
 #define VERIFY_SHMSEG(shmseg,shmdesc,client) \
 { \
@@ -229,20 +256,11 @@ ShmExtensionInit(INITARGS)
       if (!pixmapFormat)
 	pixmapFormat = ZPixmap;
       if (sharedPixmaps)
-      {
 	for (i = 0; i < screenInfo.numScreens; i++)
 	{
 	    destroyPixmap[i] = screenInfo.screens[i]->DestroyPixmap;
 	    screenInfo.screens[i]->DestroyPixmap = ShmDestroyPixmap;
 	}
-	shmPixmapPrivate = AllocatePixmapPrivateIndex();
-	for (i = 0; i < screenInfo.numScreens; i++)
-	{
-	    if (!AllocatePixmapPrivate(screenInfo.screens[i],
-				       shmPixmapPrivate, 0))
-		return;
-	}
-      }
     }
     ShmSegType = CreateNewResourceType(ShmDetachSegment);
     if (ShmSegType &&
@@ -295,7 +313,8 @@ ShmDestroyPixmap (PixmapPtr pPixmap)
     if (pPixmap->refcnt == 1)
     {
 	ShmDescPtr  shmdesc;
-	shmdesc = (ShmDescPtr) pPixmap->devPrivates[shmPixmapPrivate].ptr;
+	shmdesc = (ShmDescPtr)dixLookupPrivate(&pPixmap->devPrivates,
+					       shmPixmapPrivate);
 	if (shmdesc)
 	    ShmDetachSegment ((pointer) shmdesc, pPixmap->drawable.id);
     }
@@ -348,32 +367,57 @@ ProcShmQueryVersion(client)
  * using the credentials from the client if available
  */
 static int
-shm_access(ClientPtr client, struct ipc_perm *perm, int readonly)
+shm_access(ClientPtr client, SHMPERM_TYPE *perm, int readonly)
 {
     int uid, gid;
     mode_t mask;
+    int uidset = 0, gidset = 0;
+    LocalClientCredRec *lcc;
+    
+    if (GetLocalClientCreds(client, &lcc) != -1) {
 
-    if (LocalClientCred(client, &uid, &gid) != -1) {
+	if (lcc->fieldsSet & LCC_UID_SET) {
+	    uid = lcc->euid;
+	    uidset = 1;
+	}
+	if (lcc->fieldsSet & LCC_GID_SET) {
+	    gid = lcc->egid;
+	    gidset = 1;
+	}
+
+#if defined(HAVE_GETZONEID) && defined(SHMPERM_ZONEID)
+	if ( ((lcc->fieldsSet & LCC_ZID_SET) == 0) || (lcc->zoneid == -1)
+	     || (lcc->zoneid != SHMPERM_ZONEID(perm))) {
+		uidset = 0;
+		gidset = 0;
+	}
+#endif
+	FreeLocalClientCreds(lcc);
 	
-	/* User id 0 always gets access */
-	if (uid == 0) {
-	    return 0;
-	}
-	/* Check the owner */
-	if (perm->uid == uid || perm->cuid == uid) {
-	    mask = S_IRUSR;
-	    if (!readonly) {
-		mask |= S_IWUSR;
+	if (uidset) {
+	    /* User id 0 always gets access */
+	    if (uid == 0) {
+		return 0;
 	    }
-	    return (perm->mode & mask) == mask ? 0 : -1;
-	}
-	/* Check the group */
-	if (perm->gid == gid || perm->cgid == gid) {
-	    mask = S_IRGRP;
-	    if (!readonly) {
-		mask |= S_IWGRP;
+	    /* Check the owner */
+	    if (SHMPERM_UID(perm) == uid || SHMPERM_CUID(perm) == uid) {
+		mask = S_IRUSR;
+		if (!readonly) {
+		    mask |= S_IWUSR;
+		}
+		return (SHMPERM_MODE(perm) & mask) == mask ? 0 : -1;
 	    }
-	    return (perm->mode & mask) == mask ? 0 : -1;
+	}
+
+	if (gidset) {
+	    /* Check the group */
+	    if (SHMPERM_GID(perm) == gid || SHMPERM_CGID(perm) == gid) {
+		mask = S_IRGRP;
+		if (!readonly) {
+		    mask |= S_IWGRP;
+		}
+		return (SHMPERM_MODE(perm) & mask) == mask ? 0 : -1;
+	    }
 	}
     }
     /* Otherwise, check everyone else */
@@ -381,14 +425,14 @@ shm_access(ClientPtr client, struct ipc_perm *perm, int readonly)
     if (!readonly) {
 	mask |= S_IWOTH;
     }
-    return (perm->mode & mask) == mask ? 0 : -1;
+    return (SHMPERM_MODE(perm) & mask) == mask ? 0 : -1;
 }
 
 static int
 ProcShmAttach(client)
     register ClientPtr client;
 {
-    struct shmid_ds buf;
+    SHMSTAT_TYPE buf;
     ShmDescPtr shmdesc;
     REQUEST(xShmAttachReq);
 
@@ -417,7 +461,7 @@ ProcShmAttach(client)
 	shmdesc->addr = shmat(stuff->shmid, 0,
 			      stuff->readOnly ? SHM_RDONLY : 0);
 	if ((shmdesc->addr == ((char *)-1)) ||
-	    shmctl(stuff->shmid, IPC_STAT, &buf))
+	    SHMSTAT(stuff->shmid, &buf))
 	{
 	    xfree(shmdesc);
 	    return BadAccess;
@@ -427,7 +471,7 @@ ProcShmAttach(client)
 	 * do manual checking of access rights for the credentials 
 	 * of the client */
 
-	if (shm_access(client, &(buf.shm_perm), stuff->readOnly) == -1) {
+	if (shm_access(client, &(SHM_PERM(buf)), stuff->readOnly) == -1) {
 	    shmdt(shmdesc->addr);
 	    xfree(shmdesc);
 	    return BadAccess;
@@ -436,7 +480,7 @@ ProcShmAttach(client)
 	shmdesc->shmid = stuff->shmid;
 	shmdesc->refcnt = 1;
 	shmdesc->writable = !stuff->readOnly;
-	shmdesc->size = buf.shm_segsz;
+	shmdesc->size = SHM_SEGSZ(buf);
 	shmdesc->next = Shmsegs;
 	Shmsegs = shmdesc;
     }
@@ -477,68 +521,27 @@ ProcShmDetach(client)
     return(client->noClientException);
 }
 
+/*
+ * If the given request doesn't exactly match PutImage's constraints,
+ * wrap the image in a scratch pixmap header and let CopyArea sort it out.
+ */
 static void
-miShmPutImage(dst, pGC, depth, format, w, h, sx, sy, sw, sh, dx, dy, data)
-    DrawablePtr dst;
-    GCPtr	pGC;
-    int		depth, w, h, sx, sy, sw, sh, dx, dy;
-    unsigned int format;
-    char 	*data;
+doShmPutImage(DrawablePtr dst, GCPtr pGC,
+	      int depth, unsigned int format,
+	      int w, int h, int sx, int sy, int sw, int sh, int dx, int dy,
+	      char *data)
 {
-    PixmapPtr pmap;
-    GCPtr putGC;
-
-    putGC = GetScratchGC(depth, dst->pScreen);
-    if (!putGC)
+    PixmapPtr pPixmap;
+  
+    pPixmap = GetScratchPixmapHeader(dst->pScreen, w, h, depth,
+				     BitsPerPixel(depth),
+				     PixmapBytePad(w, depth),
+				     data);
+    if (!pPixmap)
 	return;
-    pmap = (*dst->pScreen->CreatePixmap)(dst->pScreen, sw, sh, depth);
-    if (!pmap)
-    {
-	FreeScratchGC(putGC);
-	return;
-    }
-    ValidateGC((DrawablePtr)pmap, putGC);
-    (*putGC->ops->PutImage)((DrawablePtr)pmap, putGC, depth, -sx, -sy, w, h, 0,
-			    (format == XYPixmap) ? XYPixmap : ZPixmap, data);
-    FreeScratchGC(putGC);
-    if (format == XYBitmap)
-	(void)(*pGC->ops->CopyPlane)((DrawablePtr)pmap, dst, pGC, 0, 0, sw, sh,
-				     dx, dy, 1L);
-    else
-	(void)(*pGC->ops->CopyArea)((DrawablePtr)pmap, dst, pGC, 0, 0, sw, sh,
-				    dx, dy);
-    (*pmap->drawable.pScreen->DestroyPixmap)(pmap);
+    pGC->ops->CopyArea((DrawablePtr)pPixmap, dst, pGC, sx, sy, sw, sh, dx, dy);
+    FreeScratchPixmapHeader(pPixmap);
 }
-
-static void
-fbShmPutImage(dst, pGC, depth, format, w, h, sx, sy, sw, sh, dx, dy, data)
-    DrawablePtr dst;
-    GCPtr	pGC;
-    int		depth, w, h, sx, sy, sw, sh, dx, dy;
-    unsigned int format;
-    char 	*data;
-{
-    if ((format == ZPixmap) || (depth == 1))
-    {
-	PixmapPtr pPixmap;
-
-	pPixmap = GetScratchPixmapHeader(dst->pScreen, w, h, depth,
-		BitsPerPixel(depth), PixmapBytePad(w, depth), (pointer)data);
-	if (!pPixmap)
-	    return;
-	if (format == XYBitmap)
-	    (void)(*pGC->ops->CopyPlane)((DrawablePtr)pPixmap, dst, pGC,
-					 sx, sy, sw, sh, dx, dy, 1L);
-	else
-	    (void)(*pGC->ops->CopyArea)((DrawablePtr)pPixmap, dst, pGC,
-					sx, sy, sw, sh, dx, dy);
-	FreeScratchPixmapHeader(pPixmap);
-    }
-    else
-	miShmPutImage(dst, pGC, depth, format, w, h, sx, sy, sw, sh, dx, dy,
-		      data);
-}
-
 
 #ifdef PANORAMIX
 static int 
@@ -609,7 +612,7 @@ ProcPanoramiXShmGetImage(ClientPtr client)
 	return ProcShmGetImage(client);
 
     rc = dixLookupDrawable(&pDraw, stuff->drawable, client, 0,
-			   DixUnknownAccess);
+			   DixReadAccess);
     if (rc != Success)
 	return rc;
 
@@ -646,7 +649,7 @@ ProcPanoramiXShmGetImage(ClientPtr client)
     drawables[0] = pDraw;
     for(i = 1; i < PanoramiXNumScreens; i++) {
 	rc = dixLookupDrawable(drawables+i, draw->info[i].id, client, 0, 
-			       DixUnknownAccess);
+			       DixReadAccess);
 	if (rc != Success)
 	    return rc;
     }
@@ -721,7 +724,7 @@ ProcPanoramiXShmCreatePixmap(
 	return BadImplementation;
     LEGAL_NEW_RESOURCE(stuff->pid, client);
     rc = dixLookupDrawable(&pDraw, stuff->drawable, client, M_ANY,
-			   DixUnknownAccess);
+			   DixGetAttrAccess);
     if (rc != Success)
 	return rc;
 
@@ -779,7 +782,7 @@ CreatePmap:
 				shmdesc->addr + stuff->offset);
 
 	if (pMap) {
-            pMap->devPrivates[shmPixmapPrivate].ptr = (pointer) shmdesc;
+	    dixSetPrivate(&pMap->devPrivates, shmPixmapPrivate, shmdesc);
             shmdesc->refcnt++;
 	    pMap->drawable.serialNumber = NEXT_SERIAL_NUMBER;
 	    pMap->drawable.id = newPix->info[j].id;
@@ -819,7 +822,7 @@ ProcShmPutImage(client)
     REQUEST(xShmPutImageReq);
 
     REQUEST_SIZE_MATCH(xShmPutImageReq);
-    VALIDATE_DRAWABLE_AND_GC(stuff->drawable, pDraw, pGC, client);
+    VALIDATE_DRAWABLE_AND_GC(stuff->drawable, pDraw, DixWriteAccess);
     VERIFY_SHMPTR(stuff->shmseg, stuff->offset, FALSE, shmdesc, client);
     if ((stuff->sendEvent != xTrue) && (stuff->sendEvent != xFalse))
 	return BadValue;
@@ -894,13 +897,12 @@ ProcShmPutImage(client)
 			       shmdesc->addr + stuff->offset +
 			       (stuff->srcY * length));
     else
-	(*shmFuncs[pDraw->pScreen->myNum]->PutImage)(
-			       pDraw, pGC, stuff->depth, stuff->format,
-			       stuff->totalWidth, stuff->totalHeight,
-			       stuff->srcX, stuff->srcY,
-			       stuff->srcWidth, stuff->srcHeight,
-			       stuff->dstX, stuff->dstY,
-                               shmdesc->addr + stuff->offset);
+	doShmPutImage(pDraw, pGC, stuff->depth, stuff->format,
+		      stuff->totalWidth, stuff->totalHeight,
+		      stuff->srcX, stuff->srcY,
+		      stuff->srcWidth, stuff->srcHeight,
+		      stuff->dstX, stuff->dstY,
+                      shmdesc->addr + stuff->offset);
 
     if (stuff->sendEvent)
     {
@@ -941,7 +943,7 @@ ProcShmGetImage(client)
         return(BadValue);
     }
     rc = dixLookupDrawable(&pDraw, stuff->drawable, client, 0,
-			   DixUnknownAccess);
+			   DixReadAccess);
     if (rc != Success)
 	return rc;
     VERIFY_SHMPTR(stuff->shmseg, stuff->offset, TRUE, shmdesc, client);
@@ -1044,7 +1046,7 @@ fbShmCreatePixmap (pScreen, width, height, depth, addr)
 {
     register PixmapPtr pPixmap;
 
-    pPixmap = (*pScreen->CreatePixmap)(pScreen, 0, 0, pScreen->rootDepth);
+    pPixmap = (*pScreen->CreatePixmap)(pScreen, 0, 0, pScreen->rootDepth, 0);
     if (!pPixmap)
 	return NullPixmap;
 
@@ -1075,7 +1077,7 @@ ProcShmCreatePixmap(client)
 	return BadImplementation;
     LEGAL_NEW_RESOURCE(stuff->pid, client);
     rc = dixLookupDrawable(&pDraw, stuff->drawable, client, M_ANY,
-			   DixUnknownAccess);
+			   DixGetAttrAccess);
     if (rc != Success)
 	return rc;
 
@@ -1119,7 +1121,13 @@ CreatePmap:
 			    shmdesc->addr + stuff->offset);
     if (pMap)
     {
-	pMap->devPrivates[shmPixmapPrivate].ptr = (pointer) shmdesc;
+	rc = XaceHook(XACE_RESOURCE_ACCESS, client, stuff->pid, RT_PIXMAP,
+		      pMap, RT_NONE, NULL, DixCreateAccess);
+	if (rc != Success) {
+	    pDraw->pScreen->DestroyPixmap(pMap);
+	    return rc;
+	}
+	dixSetPrivate(&pMap->devPrivates, shmPixmapPrivate, shmdesc);
 	shmdesc->refcnt++;
 	pMap->drawable.serialNumber = NEXT_SERIAL_NUMBER;
 	pMap->drawable.id = stuff->pid;
@@ -1127,6 +1135,7 @@ CreatePmap:
 	{
 	    return(client->noClientException);
 	}
+	pDraw->pScreen->DestroyPixmap(pMap);
     }
     return (BadAlloc);
 }

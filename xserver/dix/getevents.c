@@ -207,11 +207,13 @@ updateMotionHistory(DeviceIntPtr pDev, CARD32 ms, int first_valuator,
  *
  * Should be used in DIX as:
  * xEvent *events = xcalloc(sizeof(xEvent), GetMaximumEventsNum());
+ *
+ * This MUST be absolutely constant, from init until exit.
  */
 _X_EXPORT int
 GetMaximumEventsNum(void) {
     /* Two base events -- core and device, plus valuator events.  Multiply
-     * by two if we're doing key repeats. */
+     * by two if we're doing non-XKB key repeats. */
     int ret = 2 + MAX_VALUATOR_EVENTS;
 
 #ifdef XKB
@@ -274,7 +276,7 @@ acceleratePointer(DeviceIntPtr pDev, int first_valuator, int num_valuators,
             }
         }
         else {
-		mult = pow((float)dx * (float)dx + (float)dy * (float)dy,
+	    mult = pow((float)dx * (float)dx + (float)dy * (float)dy,
                        ((float)(pDev->ptrfeed->ctrl.num) /
                         (float)(pDev->ptrfeed->ctrl.den) - 1.0) /
                        2.0) / 2.0;
@@ -406,7 +408,7 @@ GetKeyboardValuatorEvents(xEvent *events, DeviceIntPtr pDev, int type,
     int numEvents = 0;
     CARD32 ms = 0;
     KeySym *map = pDev->key->curKeySyms.map;
-    KeySym sym = map[key_code * pDev->key->curKeySyms.mapWidth];
+    KeySym sym;
     deviceKeyButtonPointer *kbp = NULL;
 
     if (!events)
@@ -422,6 +424,9 @@ GetKeyboardValuatorEvents(xEvent *events, DeviceIntPtr pDev, int type,
 
     if (key_code < 8 || key_code > 255)
         return 0;
+
+    sym = map[(key_code - pDev->key->curKeySyms.minKeyCode)
+              * pDev->key->curKeySyms.mapWidth];
 
     if (pDev->coreEvents)
         numEvents = 2;
@@ -837,7 +842,8 @@ SwitchCoreKeyboard(DeviceIntPtr pDev)
     KeyClassPtr ckeyc = inputInfo.keyboard->key;
     int i = 0;
 
-    if (inputInfo.keyboard->devPrivates[CoreDevicePrivatesIndex].ptr != pDev) {
+    if (pDev != dixLookupPrivate(&inputInfo.keyboard->devPrivates,
+				 CoreDevicePrivateKey)) {
         memcpy(ckeyc->modifierMap, pDev->key->modifierMap, MAP_LENGTH);
         if (ckeyc->modifierKeyMap)
             xfree(ckeyc->modifierKeyMap);
@@ -881,7 +887,8 @@ SwitchCoreKeyboard(DeviceIntPtr pDev)
                           (ckeyc->curKeySyms.maxKeyCode -
                            ckeyc->curKeySyms.minKeyCode),
                           serverClient);
-        inputInfo.keyboard->devPrivates[CoreDevicePrivatesIndex].ptr = pDev;
+	dixSetPrivate(&inputInfo.keyboard->devPrivates, CoreDevicePrivateKey,
+		      pDev);
     }
 }
 
@@ -895,8 +902,10 @@ SwitchCoreKeyboard(DeviceIntPtr pDev)
 _X_EXPORT void
 SwitchCorePointer(DeviceIntPtr pDev)
 {
-    if (inputInfo.pointer->devPrivates[CoreDevicePrivatesIndex].ptr != pDev)
-        inputInfo.pointer->devPrivates[CoreDevicePrivatesIndex].ptr = pDev;
+    if (pDev != dixLookupPrivate(&inputInfo.pointer->devPrivates,
+				 CoreDevicePrivateKey))
+	dixSetPrivate(&inputInfo.pointer->devPrivates,
+		      CoreDevicePrivateKey, pDev);
 }
 
 

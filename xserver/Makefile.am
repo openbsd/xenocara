@@ -23,11 +23,15 @@ MFB_DIR=mfb
 endif
 
 if GLX
-GLX_DIR=GL
+GLX_DIR=glx
 endif
 
 if DBE
 DBE_DIR=dbe
+endif
+
+if RECORD
+RECORD_DIR=record
 endif
 
 SUBDIRS = \
@@ -48,7 +52,7 @@ SUBDIRS = \
 	$(AFB_DIR) \
 	$(CFB_DIR) \
 	$(CFB32_DIR) \
-	record \
+	$(RECORD_DIR) \
 	xfixes \
 	damageext \
 	$(XTRAP_DIR) \
@@ -99,7 +103,7 @@ DIST_SUBDIRS = \
 	damageext \
 	XTrap \
 	composite \
-	GL \
+	glx \
 	exa \
 	config \
 	hw

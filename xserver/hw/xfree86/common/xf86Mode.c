@@ -183,6 +183,8 @@ xf86ModeStatusToString(ModeStatus status)
         return "all modes must have the same resolution";
     case MODE_NO_REDUCED:
         return "monitor doesn't support reduced blanking";
+    case MODE_BANDWIDTH:
+	return "mode requires too much memory bandwidth";
     case MODE_BAD:
 	return "unknown reason";
     case MODE_ERROR:
@@ -367,52 +369,6 @@ xf86HandleBuiltinMode(ScrnInfoPtr scrp,
     
     return MODE_OK;
 }
-
-#if 0
-/** Calculates the horizontal sync rate of a mode */
-_X_EXPORT double
-xf86ModeHSync(DisplayModePtr mode)
-{
-    double hsync = 0.0;
-    
-    if (mode->HSync > 0.0)
-	    hsync = mode->HSync;
-    else if (mode->HTotal > 0)
-	    hsync = (float)mode->Clock / (float)mode->HTotal;
-
-    return hsync;
-}
-
-/** Calculates the vertical refresh rate of a mode */
-_X_EXPORT double
-xf86ModeVRefresh(DisplayModePtr mode)
-{
-    double refresh = 0.0;
-
-    if (mode->VRefresh > 0.0)
-	refresh = mode->VRefresh;
-    else if (mode->HTotal > 0 && mode->VTotal > 0) {
-	refresh = mode->Clock * 1000.0 / mode->HTotal / mode->VTotal;
-	if (mode->Flags & V_INTERLACE)
-	    refresh *= 2.0;
-	if (mode->Flags & V_DBLSCAN)
-	    refresh /= 2.0;
-	if (mode->VScan > 1)
-	    refresh /= (float)(mode->VScan);
-    }
-    return refresh;
-}
-
-/** Sets a default mode name of <width>x<height> on a mode. */
-_X_EXPORT void
-xf86SetModeDefaultName(DisplayModePtr mode)
-{
-    if (mode->name != NULL)
-	xfree(mode->name);
-
-    mode->name = XNFprintf("%dx%d", mode->HDisplay, mode->VDisplay);
-}
-#endif
 
 /*
  * xf86LookupMode
@@ -679,146 +635,6 @@ xf86LookupMode(ScrnInfoPtr scrp, DisplayModePtr modep,
 
     return MODE_OK;
 }
-
-
-#if 0
-/*
- * xf86SetModeCrtc
- *
- * Initialises the Crtc parameters for a mode.  The initialisation includes
- * adjustments for interlaced and double scan modes.
- */
-_X_EXPORT void
-xf86SetModeCrtc(DisplayModePtr p, int adjustFlags)
-{
-    if ((p == NULL) || ((p->type & M_T_CRTC_C) == M_T_BUILTIN))
-	return;
-
-    p->CrtcHDisplay             = p->HDisplay;
-    p->CrtcHSyncStart           = p->HSyncStart;
-    p->CrtcHSyncEnd             = p->HSyncEnd;
-    p->CrtcHTotal               = p->HTotal;
-    p->CrtcHSkew                = p->HSkew;
-    p->CrtcVDisplay             = p->VDisplay;
-    p->CrtcVSyncStart           = p->VSyncStart;
-    p->CrtcVSyncEnd             = p->VSyncEnd;
-    p->CrtcVTotal               = p->VTotal;
-    if (p->Flags & V_INTERLACE) {
-	if (adjustFlags & INTERLACE_HALVE_V) {
-	    p->CrtcVDisplay         /= 2;
-	    p->CrtcVSyncStart       /= 2;
-	    p->CrtcVSyncEnd         /= 2;
-	    p->CrtcVTotal           /= 2;
-	}
-	/* Force interlaced modes to have an odd VTotal */
-	/* maybe we should only do this when INTERLACE_HALVE_V is set? */
-	p->CrtcVTotal |= 1;
-    }
-
-    if (p->Flags & V_DBLSCAN) {
-        p->CrtcVDisplay         *= 2;
-        p->CrtcVSyncStart       *= 2;
-        p->CrtcVSyncEnd         *= 2;
-        p->CrtcVTotal           *= 2;
-    }
-    if (p->VScan > 1) {
-        p->CrtcVDisplay         *= p->VScan;
-        p->CrtcVSyncStart       *= p->VScan;
-        p->CrtcVSyncEnd         *= p->VScan;
-        p->CrtcVTotal           *= p->VScan;
-    }
-    p->CrtcVBlankStart = min(p->CrtcVSyncStart, p->CrtcVDisplay);
-    p->CrtcVBlankEnd = max(p->CrtcVSyncEnd, p->CrtcVTotal);
-    p->CrtcHBlankStart = min(p->CrtcHSyncStart, p->CrtcHDisplay);
-    p->CrtcHBlankEnd = max(p->CrtcHSyncEnd, p->CrtcHTotal);
-
-    p->CrtcHAdjusted = FALSE;
-    p->CrtcVAdjusted = FALSE;
-}
-#endif
-
-#if 0
-/**
- * Allocates and returns a copy of pMode, including pointers within pMode.
- */
-_X_EXPORT DisplayModePtr
-xf86DuplicateMode(DisplayModePtr pMode)
-{
-    DisplayModePtr pNew;
-
-    pNew = xnfalloc(sizeof(DisplayModeRec));
-    *pNew = *pMode;
-    pNew->next = NULL;
-    pNew->prev = NULL;
-    if (pNew->name == NULL) {
-	xf86SetModeDefaultName(pMode);
-    } else {
-	pNew->name = xnfstrdup(pMode->name);
-    }
-
-    return pNew;
-}
-
-/**
- * Duplicates every mode in the given list and returns a pointer to the first
- * mode.
- *
- * \param modeList doubly-linked mode list
- */
-_X_EXPORT DisplayModePtr
-xf86DuplicateModes(ScrnInfoPtr pScrn, DisplayModePtr modeList)
-{
-    DisplayModePtr first = NULL, last = NULL;
-    DisplayModePtr mode;
-
-    for (mode = modeList; mode != NULL; mode = mode->next) {
-	DisplayModePtr new;
-
-	new = xf86DuplicateMode(mode);
-
-	/* Insert pNew into modeList */
-	if (last) {
-	    last->next = new;
-	    new->prev = last;
-	} else {
-	    first = new;
-	    new->prev = NULL;
-	}
-	new->next = NULL;
-	last = new;
-    }
-
-    return first;
-}
-
-/**
- * Returns true if the given modes should program to the same timings.
- *
- * This doesn't use Crtc values, as it might be used on ModeRecs without the
- * Crtc values set.  So, it's assumed that the other numbers are enough.
- */
-_X_EXPORT Bool
-xf86ModesEqual(DisplayModePtr pMode1, DisplayModePtr pMode2)
-{
-     if (pMode1->Clock == pMode2->Clock &&
-	 pMode1->HDisplay == pMode2->HDisplay &&
-	 pMode1->HSyncStart == pMode2->HSyncStart &&
-	 pMode1->HSyncEnd == pMode2->HSyncEnd &&
-	 pMode1->HTotal == pMode2->HTotal &&
-	 pMode1->HSkew == pMode2->HSkew &&
-	 pMode1->VDisplay == pMode2->VDisplay &&
-	 pMode1->VSyncStart == pMode2->VSyncStart &&
-	 pMode1->VSyncEnd == pMode2->VSyncEnd &&
-	 pMode1->VTotal == pMode2->VTotal &&
-	 pMode1->VScan == pMode2->VScan &&
-	 pMode1->Flags == pMode2->Flags)
-     {
-	return TRUE;
-     } else {
-	return FALSE;
-     }
-}
-#endif
 
 /*
  * xf86CheckModeForMonitor
@@ -1259,20 +1075,40 @@ inferVirtualSize(ScrnInfoPtr scrp, DisplayModePtr modes, int *vx, int *vy)
 {
     float aspect = 0.0;
     MonPtr mon = scrp->monitor;
+    xf86MonPtr DDC;
     int x = 0, y = 0;
     DisplayModePtr mode;
 
     if (!mon) return 0;
+    DDC = mon->DDC;
+
+    if (DDC && DDC->ver.revision >= 4) {
+	/* For 1.4, we might actually get native pixel format.  How novel. */
+	if (PREFERRED_TIMING_MODE(DDC->features.msc)) {
+		for (mode = modes; mode; mode = mode->next) {
+		    if (mode->type & (M_T_DRIVER | M_T_PREFERRED)) {
+			x = mode->HDisplay;
+			y = mode->VDisplay;
+			goto found;
+		    }
+		}
+	}
+	/*
+	 * Even if we don't, we might get aspect ratio from extra CVT info
+	 * or from the monitor size fields.  TODO.
+	 */
+    }
 
     /*
-     * technically this triggers if _either_ is zero, which is not what EDID
-     * says, but if only one is zero this is best effort.  also we don't
-     * know that all projectors are 4:3, but we certainly suspect it.
+     * Technically this triggers if either is zero.  That wasn't legal
+     * before EDID 1.4, but right now we'll get that wrong. TODO.
      */
-    if (!mon->widthmm || !mon->heightmm)
-	aspect = 4.0/3.0;
-    else
-	aspect = (float)mon->widthmm / (float)mon->heightmm;
+    if (!aspect) {
+	if (!mon->widthmm || !mon->heightmm)
+	    aspect = 4.0/3.0;
+	else
+	    aspect = (float)mon->widthmm / (float)mon->heightmm;
+    }
 
     /* find the largest M_T_DRIVER mode with that aspect ratio */
     for (mode = modes; mode; mode = mode->next) {
@@ -1296,6 +1132,7 @@ inferVirtualSize(ScrnInfoPtr scrp, DisplayModePtr modes, int *vx, int *vy)
 	return 0;
     }
 
+found:
     *vx = x;
     *vy = y;
 

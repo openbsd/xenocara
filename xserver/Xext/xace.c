@@ -22,27 +22,61 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endif
 
 #include <stdarg.h>
-#include "windowstr.h"
 #include "scrnintstr.h"
+#include "extnsionst.h"
+#include "pixmapstr.h"
+#include "regionstr.h"
 #include "gcstruct.h"
 #include "xacestr.h"
-#include "modinit.h"
 
 CallbackListPtr XaceHooks[XACE_NUM_HOOKS] = {0};
 
-/* Proc vectors for untrusted clients, swapped and unswapped versions.
- * These are the same as the normal proc vectors except that extensions
- * that haven't declared themselves secure will have ProcBadRequest plugged
- * in for their major opcode dispatcher.  This prevents untrusted clients
- * from guessing extension major opcodes and using the extension even though
- * the extension can't be listed or queried.
+/* Special-cased hook functions.  Called by Xserver.
  */
-static int (*UntrustedProcVector[256])(
-    ClientPtr /*client*/
-);
-static int (*SwappedUntrustedProcVector[256])(
-    ClientPtr /*client*/
-);
+int XaceHookDispatch(ClientPtr client, int major)
+{
+    /* Call the audit begin callback, there is no return value. */
+    XaceAuditRec rec = { client, 0 };
+    CallCallbacks(&XaceHooks[XACE_AUDIT_BEGIN], &rec);
+
+    if (major < 128) {
+	/* Call the core dispatch hook */
+	XaceCoreDispatchRec rec = { client, Success /* default allow */ };
+	CallCallbacks(&XaceHooks[XACE_CORE_DISPATCH], &rec);
+	return rec.status;
+    } else {
+	/* Call the extension dispatch hook */
+	ExtensionEntry *ext = GetExtensionEntry(major);
+	XaceExtAccessRec rec = { client, ext, DixUseAccess, Success };
+	if (ext)
+	    CallCallbacks(&XaceHooks[XACE_EXT_DISPATCH], &rec);
+	/* On error, pretend extension doesn't exist */
+	return (rec.status == Success) ? Success : BadRequest;
+    }
+}
+
+int XaceHookPropertyAccess(ClientPtr client, WindowPtr pWin,
+			   PropertyPtr *ppProp, Mask access_mode)
+{
+    XacePropertyAccessRec rec = { client, pWin, ppProp, access_mode, Success };
+    CallCallbacks(&XaceHooks[XACE_PROPERTY_ACCESS], &rec);
+    return rec.status;
+}
+
+int XaceHookSelectionAccess(ClientPtr client,
+			    Selection **ppSel, Mask access_mode)
+{
+    XaceSelectionAccessRec rec = { client, ppSel, access_mode, Success };
+    CallCallbacks(&XaceHooks[XACE_SELECTION_ACCESS], &rec);
+    return rec.status;
+}
+
+void XaceHookAuditEnd(ClientPtr ptr, int result)
+{
+    XaceAuditRec rec = { ptr, result };
+    /* call callbacks, there is no return value. */
+    CallCallbacks(&XaceHooks[XACE_AUDIT_END], &rec);
+}
 
 /* Entry point for hook functions.  Called by Xserver.
  */
@@ -60,109 +94,99 @@ int XaceHook(int hook, ...)
      */
     switch (hook)
     {
-	case XACE_CORE_DISPATCH: {
-	    XaceCoreDispatchRec rec = {
-		va_arg(ap, ClientPtr),
-		TRUE	/* default allow */
-	    };
-	    calldata = &rec;
-	    prv = &rec.rval;
-	    break;
-	}
 	case XACE_RESOURCE_ACCESS: {
 	    XaceResourceAccessRec rec = {
 		va_arg(ap, ClientPtr),
 		va_arg(ap, XID),
 		va_arg(ap, RESTYPE),
-		va_arg(ap, Mask),
 		va_arg(ap, pointer),
-		TRUE	/* default allow */
+		va_arg(ap, RESTYPE),
+		va_arg(ap, pointer),
+		va_arg(ap, Mask),
+		Success /* default allow */
 	    };
 	    calldata = &rec;
-	    prv = &rec.rval;
+	    prv = &rec.status;
 	    break;
 	}
 	case XACE_DEVICE_ACCESS: {
 	    XaceDeviceAccessRec rec = {
 		va_arg(ap, ClientPtr),
 		va_arg(ap, DeviceIntPtr),
-		va_arg(ap, Bool),
-		TRUE	/* default allow */
-	    };
-	    calldata = &rec;
-	    prv = &rec.rval;
-	    break;
-	}
-	case XACE_PROPERTY_ACCESS: {
-	    XacePropertyAccessRec rec = {
-		va_arg(ap, ClientPtr),
-		va_arg(ap, WindowPtr),
-		va_arg(ap, Atom),
 		va_arg(ap, Mask),
-		XaceAllowOperation   /* default allow */
+		Success /* default allow */
 	    };
 	    calldata = &rec;
-	    prv = &rec.rval;
+	    prv = &rec.status;
 	    break;
 	}
-	case XACE_DRAWABLE_ACCESS: {
-	    XaceDrawableAccessRec rec = {
+	case XACE_SEND_ACCESS: {
+	    XaceSendAccessRec rec = {
 		va_arg(ap, ClientPtr),
-		va_arg(ap, DrawablePtr),
-		TRUE	/* default allow */
+		va_arg(ap, DeviceIntPtr),
+		va_arg(ap, WindowPtr),
+		va_arg(ap, xEventPtr),
+		va_arg(ap, int),
+		Success /* default allow */
 	    };
 	    calldata = &rec;
-	    prv = &rec.rval;
+	    prv = &rec.status;
 	    break;
 	}
-	case XACE_MAP_ACCESS:
-	case XACE_BACKGRND_ACCESS: {
-	    XaceMapAccessRec rec = {
+	case XACE_RECEIVE_ACCESS: {
+	    XaceReceiveAccessRec rec = {
 		va_arg(ap, ClientPtr),
 		va_arg(ap, WindowPtr),
-		TRUE	/* default allow */
+		va_arg(ap, xEventPtr),
+		va_arg(ap, int),
+		Success /* default allow */
 	    };
 	    calldata = &rec;
-	    prv = &rec.rval;
+	    prv = &rec.status;
 	    break;
 	}
-	case XACE_EXT_DISPATCH:
+	case XACE_CLIENT_ACCESS: {
+	    XaceClientAccessRec rec = {
+		va_arg(ap, ClientPtr),
+		va_arg(ap, ClientPtr),
+		va_arg(ap, Mask),
+		Success /* default allow */
+	    };
+	    calldata = &rec;
+	    prv = &rec.status;
+	    break;
+	}
 	case XACE_EXT_ACCESS: {
 	    XaceExtAccessRec rec = {
 		va_arg(ap, ClientPtr),
 		va_arg(ap, ExtensionEntry*),
-		TRUE	/* default allow */
+		DixGetAttrAccess,
+		Success /* default allow */
 	    };
 	    calldata = &rec;
-	    prv = &rec.rval;
+	    prv = &rec.status;
 	    break;
 	}
-	case XACE_HOSTLIST_ACCESS: {
-	    XaceHostlistAccessRec rec = {
+	case XACE_SERVER_ACCESS: {
+	    XaceServerAccessRec rec = {
 		va_arg(ap, ClientPtr),
 		va_arg(ap, Mask),
-		TRUE	/* default allow */
+		Success /* default allow */
 	    };
 	    calldata = &rec;
-	    prv = &rec.rval;
+	    prv = &rec.status;
 	    break;
 	}
-	case XACE_SITE_POLICY: {
-	    XaceSitePolicyRec rec = {
-		va_arg(ap, char*),
-		va_arg(ap, int),
-		FALSE	/* default unrecognized */
+	case XACE_SCREEN_ACCESS:
+	case XACE_SCREENSAVER_ACCESS: {
+	    XaceScreenAccessRec rec = {
+		va_arg(ap, ClientPtr),
+		va_arg(ap, ScreenPtr),
+		va_arg(ap, Mask),
+		Success /* default allow */
 	    };
 	    calldata = &rec;
-	    prv = &rec.rval;
-	    break;
-	}
-	case XACE_DECLARE_EXT_SECURE: {
-	    XaceDeclareExtSecureRec rec = {
-		va_arg(ap, ExtensionEntry*),
-		va_arg(ap, Bool)
-	    };
-	    calldata = &rec;
+	    prv = &rec.status;
 	    break;
 	}
 	case XACE_AUTH_AVAIL: {
@@ -182,30 +206,6 @@ int XaceHook(int hook, ...)
 	    calldata = &rec;
 	    break;
 	}
-	case XACE_WINDOW_INIT: {
-	    XaceWindowRec rec = {
-		va_arg(ap, ClientPtr),
-		va_arg(ap, WindowPtr)
-	    };
-	    calldata = &rec;
-	    break;
-	}
-	case XACE_AUDIT_BEGIN: {
-	    XaceAuditRec rec = {
-		va_arg(ap, ClientPtr),
-		0
-	    };
-	    calldata = &rec;
-	    break;
-	}
-	case XACE_AUDIT_END: {
-	    XaceAuditRec rec = {
-		va_arg(ap, ClientPtr),
-		va_arg(ap, int)
-	    };
-	    calldata = &rec;
-	    break;
-	}
 	default: {
 	    va_end(ap);
 	    return 0;	/* unimplemented hook number */
@@ -215,164 +215,7 @@ int XaceHook(int hook, ...)
  
     /* call callbacks and return result, if any. */
     CallCallbacks(&XaceHooks[hook], calldata);
-    return prv ? *prv : 0;
-}
-
-static int
-ProcXaceDispatch(ClientPtr client)
-{
-    REQUEST(xReq);
-
-    switch (stuff->data)
-    {
-	default:
-	    return BadRequest;
-    }
-} /* ProcXaceDispatch */
-
-static int
-SProcXaceDispatch(ClientPtr client)
-{
-    REQUEST(xReq);
-
-    switch (stuff->data)
-    {
-	default:
-	    return BadRequest;
-    }
-} /* SProcXaceDispatch */
-
-
-/* XaceResetProc
- *
- * Arguments:
- *	extEntry is the extension information for the XACE extension.
- *
- * Returns: nothing.
- *
- * Side Effects:
- *	Performs any cleanup needed by XACE at server shutdown time.
- */
-static void
-XaceResetProc(ExtensionEntry *extEntry)
-{
-    int i;
-
-    for (i=0; i<XACE_NUM_HOOKS; i++)
-    {
-	DeleteCallbackList(&XaceHooks[i]);
-	XaceHooks[i] = NULL;
-    }
-} /* XaceResetProc */
-
-
-static int
-XaceCatchDispatchProc(ClientPtr client)
-{
-    REQUEST(xReq);
-    int major = stuff->reqType;
-
-    if (!ProcVector[major])
-	return (BadRequest);
-
-    if (!XaceHook(XACE_CORE_DISPATCH, client))
-	return (BadAccess);
-
-    return client->swapped ? 
-	(* SwappedProcVector[major])(client) :
-	(* ProcVector[major])(client);
-}
-
-static int
-XaceCatchExtProc(ClientPtr client)
-{
-    REQUEST(xReq);
-    int major = stuff->reqType;
-    ExtensionEntry *ext = GetExtensionEntry(major);
-
-    if (!ext || !ProcVector[major])
-	return (BadRequest);
-
-    if (!XaceHook(XACE_EXT_DISPATCH, client, ext))
-	return (BadRequest); /* pretend extension doesn't exist */
-
-    return client->swapped ?
-	(* SwappedProcVector[major])(client) :
-	(* ProcVector[major])(client);
-}
-
-	
-/* SecurityClientStateCallback
- *
- * Arguments:
- *	pcbl is &ClientStateCallback.
- *	nullata is NULL.
- *	calldata is a pointer to a NewClientInfoRec (include/dixstruct.h)
- *	which contains information about client state changes.
- *
- * Returns: nothing.
- *
- * Side Effects:
- * 
- * If a new client is connecting, its authorization ID is copied to
- * client->authID.  If this is a generated authorization, its reference
- * count is bumped, its timer is cancelled if it was running, and its
- * trustlevel is copied to TRUSTLEVEL(client).
- * 
- * If a client is disconnecting and the client was using a generated
- * authorization, the authorization's reference count is decremented, and
- * if it is now zero, the timer for this authorization is started.
- */
-
-static void
-XaceClientStateCallback(
-    CallbackListPtr *pcbl,
-    pointer nulldata,
-    pointer calldata)
-{
-    NewClientInfoRec *pci = (NewClientInfoRec *)calldata;
-    ClientPtr client = pci->client;
-
-    switch (client->clientState)
-    {
-	case ClientStateRunning:
-	{ 
-	    client->requestVector = client->swapped ?
-		SwappedUntrustedProcVector : UntrustedProcVector;
-	    break;
-	}
-	default: break; 
-    }
-} /* XaceClientStateCallback */
-
-/* XaceExtensionInit
- *
- * Initialize the XACE Extension
- */
-void XaceExtensionInit(INITARGS)
-{
-    ExtensionEntry	*extEntry;
-    int i;
-
-    if (!AddCallback(&ClientStateCallback, XaceClientStateCallback, NULL))
-	return;
-
-    extEntry = AddExtension(XACE_EXTENSION_NAME,
-			    XaceNumberEvents, XaceNumberErrors,
-			    ProcXaceDispatch, SProcXaceDispatch,
-			    XaceResetProc, StandardMinorOpcode);
-
-    /* initialize dispatching intercept functions */
-    for (i = 0; i < 128; i++)
-    {
-	UntrustedProcVector[i] = XaceCatchDispatchProc;
-	SwappedUntrustedProcVector[i] = XaceCatchDispatchProc;
-    }
-    for (i = 128; i < 256; i++)
-    {
-	UntrustedProcVector[i] = XaceCatchExtProc;
-	SwappedUntrustedProcVector[i] = XaceCatchExtProc;
-    }
+    return prv ? *prv : Success;
 }
 
 /* XaceCensorImage
@@ -437,7 +280,7 @@ XaceCensorImage(client, pVisibleRegion, widthBytesLine, pDraw, x, y, w, h,
 
 	/* convert region to list-of-rectangles for PolyFillRect */
 
-	pRects = (xRectangle *)ALLOCATE_LOCAL(nRects * sizeof(xRectangle *));
+	pRects = (xRectangle *)xalloc(nRects * sizeof(xRectangle));
 	if (!pRects)
 	{
 	    failed = TRUE;
@@ -489,7 +332,7 @@ XaceCensorImage(client, pVisibleRegion, widthBytesLine, pDraw, x, y, w, h,
 	     */
 	    bzero(pBuf, (int)(widthBytesLine * h));
 	}
-	if (pRects)     DEALLOCATE_LOCAL(pRects);
+	if (pRects)     xfree(pRects);
 	if (pScratchGC) FreeScratchGC(pScratchGC);
 	if (pPix)       FreeScratchPixmapHeader(pPix);
     }

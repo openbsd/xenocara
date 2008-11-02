@@ -130,11 +130,9 @@ xEvent		xE;
     xE.u.u.type = type;
     xE.u.u.detail = keyCode;
     xE.u.keyButtonPointer.time = GetTimeInMillis();	    
-#ifdef DEBUG
     if (xkbDebugFlags&0x8) {
-	ErrorF("AXKE: Key %d %s\n",keyCode,(xE.u.u.type==KeyPress?"down":"up"));
+	DebugF("AXKE: Key %d %s\n",keyCode,(xE.u.u.type==KeyPress?"down":"up"));
     }
-#endif
 
     if (_XkbIsPressEvent(type))
 	XkbDDXKeyClick(keybd,keyCode,TRUE);
@@ -354,7 +352,9 @@ XkbControlsPtr	ctrls;
 	XkbSendAccessXNotify(keybd,&ev);
 	if (XkbAX_NeedFeedback(ctrls,XkbAX_SKAcceptFBMask))
 	    XkbDDXAccessXBeep(keybd,_BEEP_SLOW_ACCEPT,XkbSlowKeysMask);
-	AccessXKeyboardEvent(keybd,KeyPress,xkbi->slowKey,False);
+	AccessXKeyboardEvent(keybd,
+                (keybd == inputInfo.keyboard) ?  KeyPress : DeviceKeyPress,
+                xkbi->slowKey,False);
 	/* check for magic sequences */
 	if ((ctrls->enabled_ctrls&XkbAccessXKeysMask) &&
 	    ((sym[0]==XK_Shift_R)||(sym[0]==XK_Shift_L)))
@@ -533,10 +533,8 @@ KeySym *	sym = XkbKeySymsPtr(xkbi->desc,key);
 		((ctrls->enabled_ctrls&(XkbSlowKeysMask|XkbRepeatKeysMask))==
 							XkbRepeatKeysMask)) {
 	    if (BitIsOn(keybd->kbdfeed->ctrl.autoRepeats,key)) {
-#ifdef DEBUG
 		if (xkbDebugFlags&0x10)
-		    ErrorF("Starting software autorepeat...\n");
-#endif	    
+		    DebugF("Starting software autorepeat...\n");
 		xkbi->repeatKey = key;
 		xkbi->repeatKeyTimer= TimerSet(xkbi->repeatKeyTimer,
 					0, ctrls->repeat_delay,
@@ -694,7 +692,7 @@ ProcessPointerEvent(	register xEvent  *	xE,
 			register DeviceIntPtr	mouse, 
 			int		        count)
 {
-DeviceIntPtr	dev = (DeviceIntPtr)LookupKeyboardDevice();
+DeviceIntPtr	dev = inputInfo.keyboard;
 XkbSrvInfoPtr	xkbi = dev->key->xkbInfo;
 unsigned 	changed = 0;
 ProcessInputProc backupproc;

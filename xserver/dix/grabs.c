@@ -58,6 +58,7 @@ SOFTWARE.
 #include "inputstr.h"
 #include "cursorstr.h"
 #include "dixgrabs.h"
+#include "xace.h"
 
 #define BITMASK(i) (((Mask)1) << ((i) & 31))
 #define MASKIDX(i) ((i) >> 5)
@@ -306,9 +307,11 @@ GrabsAreIdentical(GrabPtr pFirstGrab, GrabPtr pSecondGrab)
  * @return Success or X error code on failure.
  */
 int
-AddPassiveGrabToList(GrabPtr pGrab)
+AddPassiveGrabToList(ClientPtr client, GrabPtr pGrab)
 {
     GrabPtr grab;
+    Mask access_mode = DixGrabAccess;
+    int rc;
 
     for (grab = wPassiveGrabs(pGrab->window); grab; grab = grab->next)
     {
@@ -321,6 +324,12 @@ AddPassiveGrabToList(GrabPtr pGrab)
 	    }
 	}
     }
+
+    if (pGrab->keyboardMode == GrabModeSync||pGrab->pointerMode == GrabModeSync)
+	access_mode |= DixFreezeAccess;
+    rc = XaceHook(XACE_DEVICE_ACCESS, client, pGrab->device, access_mode);
+    if (rc != Success)
+	return rc;
 
     /* Remove all grabs that match the new one exactly */
     for (grab = wPassiveGrabs(pGrab->window); grab; grab = grab->next)
@@ -369,16 +378,16 @@ DeletePassiveGrabFromList(GrabPtr pMinuendGrab)
 	i++;
     if (!i)
 	return TRUE;
-    deletes = (GrabPtr *)ALLOCATE_LOCAL(i * sizeof(GrabPtr));
-    adds = (GrabPtr *)ALLOCATE_LOCAL(i * sizeof(GrabPtr));
-    updates = (Mask ***)ALLOCATE_LOCAL(i * sizeof(Mask **));
-    details = (Mask **)ALLOCATE_LOCAL(i * sizeof(Mask *));
+    deletes = (GrabPtr *)xalloc(i * sizeof(GrabPtr));
+    adds = (GrabPtr *)xalloc(i * sizeof(GrabPtr));
+    updates = (Mask ***)xalloc(i * sizeof(Mask **));
+    details = (Mask **)xalloc(i * sizeof(Mask *));
     if (!deletes || !adds || !updates || !details)
     {
-	if (details) DEALLOCATE_LOCAL(details);
-	if (updates) DEALLOCATE_LOCAL(updates);
-	if (adds) DEALLOCATE_LOCAL(adds);
-	if (deletes) DEALLOCATE_LOCAL(deletes);
+	if (details) xfree(details);
+	if (updates) xfree(updates);
+	if (adds) xfree(adds);
+	if (deletes) xfree(deletes);
 	return FALSE;
     }
     ndels = nadds = nups = 0;
@@ -473,10 +482,10 @@ DeletePassiveGrabFromList(GrabPtr pMinuendGrab)
 	    *updates[i] = details[i];
 	}
     }
-    DEALLOCATE_LOCAL(details);
-    DEALLOCATE_LOCAL(updates);
-    DEALLOCATE_LOCAL(adds);
-    DEALLOCATE_LOCAL(deletes);
+    xfree(details);
+    xfree(updates);
+    xfree(adds);
+    xfree(deletes);
     return ok;
 
 #undef UPDATE

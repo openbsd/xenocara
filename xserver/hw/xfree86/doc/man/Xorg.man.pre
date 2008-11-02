@@ -386,13 +386,6 @@ and
 .B \-ggamma
 options.
 .TP 8
-.B \-scanpci
-When this option is specified, the
-.B __xservername__
-server scans the PCI bus, and prints out some information about each
-device that was detected.  See also scanpci(__appmansuffix__) 
-and pcitweak(__appmansuffix__).
-.TP 8
 .BI \-screen " screen-name"
 Use the __xconfigfile__(__filemansuffix__) file
 .B Screen
@@ -575,10 +568,10 @@ Libraries.
 .B __projectroot__/lib/X11/fonts/\(**
 Fonts.
 .TP 30
-.B __projectroot__/lib/X11/rgb.txt
+.B __projectroot__/share/X11/rgb.txt
 Color names to RGB mapping.
 .TP 30
-.B __projectroot__/lib/X11/XErrorDB
+.B __projectroot__/share/X11/XErrorDB
 Client error message database.
 .TP 30
 .B __projectroot__/lib/X11/app-defaults/\(**

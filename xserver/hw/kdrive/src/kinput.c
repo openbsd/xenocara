@@ -631,6 +631,18 @@ KdComputePointerMatrix (KdPointerMatrix *m, Rotation randr, int width,
     }
 }
 
+void
+KdScreenToPointerCoords (int *x, int *y)
+{
+    int	(*m)[3] = kdPointerMatrix.matrix;
+    int div = m[0][1] * m[1][0] - m[1][1] * m[0][0];
+    int sx = *x;
+    int sy = *y;
+
+    *x = (m[0][1] * sy - m[0][1] * m[1][2] + m[1][1] * m[0][2] - m[1][1] * sx) / div;
+    *y = (m[1][0] * sx + m[0][0] * m[1][2] - m[1][0] * m[0][2] - m[0][0] * sy) / div;
+}
+
 static void
 KdKbdCtrl (DeviceIntPtr pDevice, KeybdCtrl *ctrl)
 {
@@ -2066,7 +2078,7 @@ KdEnqueuePointerEvent(KdPointerInfo *pi, unsigned long flags, int rx, int ry,
     int           (*matrix)[3] = kdPointerMatrix.matrix;
     unsigned long button;
     int           n;
-    int           dixflags;
+    int           dixflags = 0;
 
     if (!pi)
 	return;
@@ -2097,11 +2109,15 @@ KdEnqueuePointerEvent(KdPointerInfo *pi, unsigned long flags, int rx, int ry,
     z = rz;
 
     if (flags & KD_MOUSE_DELTA)
-        dixflags = POINTER_RELATIVE & POINTER_ACCELERATE;
-    else
-        dixflags = POINTER_ABSOLUTE;
+    {
+        if (x || y || z)
+            dixflags = POINTER_RELATIVE | POINTER_ACCELERATE;
+    } else if ((pi->dixdev->valuator) && (x != pi->dixdev->valuator->lastx ||
+                                          y != pi->dixdev->valuator->lasty))
+            dixflags = POINTER_ABSOLUTE;
 
-    _KdEnqueuePointerEvent(pi, MotionNotify, x, y, z, 0, dixflags, FALSE);
+    if (dixflags)
+        _KdEnqueuePointerEvent(pi, MotionNotify, x, y, z, 0, dixflags, FALSE);
 
     buttons = flags;
 

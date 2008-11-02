@@ -184,7 +184,8 @@ MFBIMAGEGLYPHBLT(pDrawable, pGC, x, y, nglyph, ppci, pglyphBase)
        but that is usually not a cheap thing to do.
     */
 
-    pPrivGC = pGC->devPrivates[mfbGCPrivateIndex].ptr;
+    pPrivGC = (mfbPrivGC *)dixLookupPrivate(&pGC->devPrivates,
+					    mfbGetGCPrivateKey());
     oldFillArea = pPrivGC->FillArea;
 
     if (pGC->bgPixel & 1)
@@ -293,7 +294,7 @@ MFBIMAGEGLYPHBLT(pDrawable, pGC, x, y, nglyph, ppci, pglyphBase)
 	int getWidth;		/* bits to get from glyph */
 #endif
 
-	if(!(ppos = (TEXTPOS *)ALLOCATE_LOCAL(nglyph * sizeof(TEXTPOS))))
+	if(!(ppos = (TEXTPOS *)xalloc(nglyph * sizeof(TEXTPOS))))
 	    return;
 
 	pdstBase = mfbScanlineNoBankSwitch(pdstBase, x, y, widthDst);
@@ -434,7 +435,7 @@ MFBIMAGEGLYPHBLT(pDrawable, pGC, x, y, nglyph, ppci, pglyphBase)
 		}
 	    } /* for each glyph */
 	} /* while nbox-- */
-	DEALLOCATE_LOCAL(ppos);
+	xfree(ppos);
 	break;
       }
       default:

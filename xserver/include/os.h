@@ -50,9 +50,6 @@ SOFTWARE.
 #define OS_H
 
 #include "misc.h"
-#define ALLOCATE_LOCAL_FALLBACK(_size) Xalloc((unsigned long)(_size))
-#define DEALLOCATE_LOCAL_FALLBACK(_ptr) Xfree((pointer)(_ptr))
-#include <X11/Xalloca.h>
 #include <stdarg.h>
 
 #define NullFID ((FID) 0)
@@ -124,6 +121,8 @@ extern void ResetOsBuffers(void);
 
 extern void InitConnectionLimits(void);
 
+extern void NotifyParentProcess(void);
+
 extern void CreateWellKnownSockets(void);
 
 extern void ResetWellKnownSockets(void);
@@ -155,7 +154,7 @@ extern void AddEnabledDevice(int /*fd*/);
 
 extern void RemoveEnabledDevice(int /*fd*/);
 
-extern void OnlyListenToOneClient(ClientPtr /*client*/);
+extern int OnlyListenToOneClient(ClientPtr /*client*/);
 
 extern void ListenToAllClients(void);
 
@@ -325,6 +324,24 @@ extern int InvalidHost(sockaddrPtr /*saddr*/, int /*len*/, ClientPtr client);
 extern int LocalClient(ClientPtr /* client */);
 
 extern int LocalClientCred(ClientPtr, int *, int *);
+
+#define LCC_UID_SET	(1 << 0)
+#define LCC_GID_SET	(1 << 1)
+#define LCC_PID_SET	(1 << 2)
+#define LCC_ZID_SET	(1 << 3)
+
+typedef struct {
+    int fieldsSet;	/* Bit mask of fields set */
+    int	euid;		/* Effective uid */
+    int egid;		/* Primary effective group id */
+    int nSuppGids;	/* Number of supplementary group ids */
+    int *pSuppGids;	/* Array of supplementary group ids */
+    int pid;		/* Process id */
+    int zoneid;		/* Only set on Solaris 10 & later */
+} LocalClientCredRec;
+
+extern int GetLocalClientCreds(ClientPtr, LocalClientCredRec **);
+extern void FreeLocalClientCreds(LocalClientCredRec *); 
 
 extern int ChangeAccessControl(ClientPtr /*client*/, int /*fEnabled*/);
 
@@ -502,7 +519,7 @@ __attribute((noreturn))
 #ifdef DEBUG
 #define DebugF ErrorF
 #else
-#define DebugF(x, ...) /* */
+#define DebugF(...) /* */
 #endif
 
 extern void VErrorF(const char *f, va_list args);

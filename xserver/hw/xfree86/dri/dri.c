@@ -67,7 +67,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "dristruct.h"
 #include "xf86.h"
 #include "xf86drm.h"
-#include "glxserver.h"
 #include "mi.h"
 #include "mipointer.h"
 #include "xf86_OSproc.h"
@@ -79,8 +78,8 @@ extern Bool noPanoramiXExtension;
 #endif
 
 static int DRIEntPrivIndex = -1;
-static int DRIScreenPrivIndex = -1;
-static int DRIWindowPrivIndex = -1;
+static DevPrivateKey DRIScreenPrivKey = &DRIScreenPrivKey;
+static DevPrivateKey DRIWindowPrivKey = &DRIWindowPrivKey;
 static unsigned long DRIGeneration = 0;
 static unsigned int DRIDrawableValidationStamp = 0;
 
@@ -343,20 +342,18 @@ DRIScreenInit(ScreenPtr pScreen, DRIInfoPtr pDRIInfo, int *pDRMFD)
 
     pDRIEntPriv = DRI_ENT_PRIV(pScrn);
 
-    if (DRIGeneration != serverGeneration) {
-	if ((DRIScreenPrivIndex = AllocateScreenPrivateIndex()) < 0)
-	    return FALSE;
+    DRIScreenPrivKey = &DRIScreenPrivKey;
+    if (DRIGeneration != serverGeneration)
 	DRIGeneration = serverGeneration;
-    }
 
     pDRIPriv = (DRIScreenPrivPtr) xcalloc(1, sizeof(DRIScreenPrivRec));
     if (!pDRIPriv) {
-        pScreen->devPrivates[DRIScreenPrivIndex].ptr = NULL;
-        DRIScreenPrivIndex = -1;
+	dixSetPrivate(&pScreen->devPrivates, DRIScreenPrivKey, NULL);
+        DRIScreenPrivKey = NULL;
         return FALSE;
     }
 
-    pScreen->devPrivates[DRIScreenPrivIndex].ptr = (pointer) pDRIPriv;
+    dixSetPrivate(&pScreen->devPrivates, DRIScreenPrivKey, pDRIPriv);
     pDRIPriv->drmFD = pDRIEntPriv->drmFD;
     pDRIPriv->directRenderingSupport = TRUE;
     pDRIPriv->pDriverInfo = pDRIInfo;
@@ -381,7 +378,7 @@ DRIScreenInit(ScreenPtr pScreen, DRIInfoPtr pDRIInfo, int *pDRMFD)
 		       &pDRIPriv->hSAREA) < 0)
 	{
 	    pDRIPriv->directRenderingSupport = FALSE;
-	    pScreen->devPrivates[DRIScreenPrivIndex].ptr = NULL;
+	    dixSetPrivate(&pScreen->devPrivates, DRIScreenPrivKey, NULL);
 	    drmClose(pDRIPriv->drmFD);
 	    DRIDrvMsg(pScreen->myNum, X_INFO,
 		      "[drm] drmAddMap failed\n");
@@ -398,7 +395,7 @@ DRIScreenInit(ScreenPtr pScreen, DRIInfoPtr pDRIInfo, int *pDRMFD)
 		    (drmAddressPtr)(&pDRIPriv->pSAREA)) < 0)
 	{
 	    pDRIPriv->directRenderingSupport = FALSE;
-	    pScreen->devPrivates[DRIScreenPrivIndex].ptr = NULL;
+	    dixSetPrivate(&pScreen->devPrivates, DRIScreenPrivKey, NULL);
 	    drmClose(pDRIPriv->drmFD);
 	    DRIDrvMsg(pScreen->myNum, X_INFO,
 		      "[drm] drmMap failed\n");
@@ -428,7 +425,7 @@ DRIScreenInit(ScreenPtr pScreen, DRIInfoPtr pDRIInfo, int *pDRMFD)
 		       &pDRIPriv->pDriverInfo->hFrameBuffer) < 0)
 	    {
 		pDRIPriv->directRenderingSupport = FALSE;
-		pScreen->devPrivates[DRIScreenPrivIndex].ptr = NULL;
+		dixSetPrivate(&pScreen->devPrivates, DRIScreenPrivKey, NULL);
 		drmUnmap(pDRIPriv->pSAREA, pDRIPriv->pDriverInfo->SAREASize);
 		drmClose(pDRIPriv->drmFD);
 		DRIDrvMsg(pScreen->myNum, X_INFO,
@@ -744,8 +741,8 @@ DRICloseScreen(ScreenPtr pScreen)
 	}
 
 	xfree(pDRIPriv);
-	pScreen->devPrivates[DRIScreenPrivIndex].ptr = NULL;
-	DRIScreenPrivIndex = -1;
+	dixSetPrivate(&pScreen->devPrivates, DRIScreenPrivKey, NULL);
+	DRIScreenPrivKey = NULL;
     }
 }
 
@@ -772,29 +769,12 @@ drmServerInfo DRIDRMServerInfo =  {
 Bool
 DRIExtensionInit(void)
 {
-    int		    	i;
-    ScreenPtr		pScreen;
-
-    if (DRIScreenPrivIndex < 0 || DRIGeneration != serverGeneration) {
+    if (!DRIScreenPrivKey || DRIGeneration != serverGeneration) {
 	return FALSE;
     }
-
-    /* Allocate a window private index with a zero sized private area for
-     * each window, then should a window become a DRI window, we'll hang
-     * a DRIWindowPrivateRec off of this private index.
-     */
-    if ((DRIWindowPrivIndex = AllocateWindowPrivateIndex()) < 0)
-	return FALSE;
 
     DRIDrawablePrivResType = CreateNewResourceType(DRIDrawablePrivDelete);
     DRIContextPrivResType = CreateNewResourceType(DRIContextPrivDelete);
-
-    for (i = 0; i < screenInfo.numScreens; i++)
-    {
-	pScreen = screenInfo.screens[i];
-	if (!AllocateWindowPrivate(pScreen, DRIWindowPrivIndex, 0))
-	    return FALSE;
-    }
 
     RegisterBlockAndWakeupHandlers(DRIBlockHandler, DRIWakeupHandler, NULL);
 
@@ -972,24 +952,8 @@ static Bool
 DRICreateDummyContext(ScreenPtr pScreen, Bool needCtxPriv)
 {
     DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
-    __GLXscreen *pGLXScreen = __glXgetActiveScreen(pScreen->myNum);
-    __GLcontextModes *modes = pGLXScreen->modes;
-    void **pVisualConfigPriv = pGLXScreen->pVisualPriv;
     DRIContextPrivPtr pDRIContextPriv;
     void *contextStore;
-    VisualPtr visual;
-    int visNum;
-
-    visual = pScreen->visuals;
-
-    /* Find the X visual that corresponds the the first GLX visual */
-    for (visNum = 0;
-	 visNum < pScreen->numVisuals;
-	 visNum++, visual++) {
-	if (modes->visualID == visual->vid)
-	    break;
-    }
-    if (visNum == pScreen->numVisuals) return FALSE;
 
     if (!(pDRIContextPriv =
 	  DRICreateContextPriv(pScreen,
@@ -999,9 +963,9 @@ DRICreateDummyContext(ScreenPtr pScreen, Bool needCtxPriv)
 
     contextStore = DRIGetContextStore(pDRIContextPriv);
     if (pDRIPriv->pDriverInfo->CreateContext && needCtxPriv) {
-	if (!pDRIPriv->pDriverInfo->CreateContext(pScreen, visual,
+	if (!pDRIPriv->pDriverInfo->CreateContext(pScreen, NULL,
 						  pDRIPriv->pSAREA->dummy_context,
-						  *pVisualConfigPriv,
+						  NULL,
 						  (DRIContextType)(long)contextStore)) {
 	    DRIDestroyContextPriv(pDRIContextPriv);
 	    return FALSE;
@@ -1036,9 +1000,6 @@ DRICreateContext(ScreenPtr pScreen, VisualPtr visual,
                  XID context, drm_context_t * pHWContext)
 {
     DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
-    __GLXscreen *pGLXScreen = __glXgetActiveScreen(pScreen->myNum);
-    __GLcontextModes *modes = pGLXScreen->modes;
-    void **pVisualConfigPriv = pGLXScreen->pVisualPriv;
     DRIContextPrivPtr pDRIContextPriv;
     void *contextStore;
 
@@ -1050,26 +1011,14 @@ DRICreateContext(ScreenPtr pScreen, VisualPtr visual,
 	}
     }
 
-    /* Find the GLX visual associated with the one requested */
-    for (modes = pGLXScreen->modes; modes != NULL; modes = modes->next) {
-	if (modes->visualID == visual->vid)
-	    break;
-	pVisualConfigPriv++;
-    }
-
-    if (modes == NULL) {
-	/* No matching GLX visual found */
-	return FALSE;
-    }
-
     if (!(pDRIContextPriv = DRICreateContextPriv(pScreen, pHWContext, 0))) {
 	return FALSE;
     }
 
     contextStore = DRIGetContextStore(pDRIContextPriv);
     if (pDRIPriv->pDriverInfo->CreateContext) {
-	if (!((*pDRIPriv->pDriverInfo->CreateContext)(pScreen, visual,
-		*pHWContext, *pVisualConfigPriv,
+	if (!((*pDRIPriv->pDriverInfo->CreateContext)(pScreen, NULL,
+		*pHWContext, NULL,
 		(DRIContextType)(long)contextStore))) {
 	    DRIDestroyContextPriv(pDRIContextPriv);
 	    return FALSE;
@@ -1302,9 +1251,8 @@ DRICreateDrawable(ScreenPtr pScreen, ClientPtr client, DrawablePtr pDrawable,
 	    pDRIDrawablePriv->nrects = REGION_NUM_RECTS(&pWin->clipList);
 
 	    /* save private off of preallocated index */
-	    pWin->devPrivates[DRIWindowPrivIndex].ptr =
-						(pointer)pDRIDrawablePriv;
-
+	    dixSetPrivate(&pWin->devPrivates, DRIWindowPrivKey,
+			  pDRIDrawablePriv);
 	    pDRIPriv->nrWindows++;
 
 	    if (pDRIDrawablePriv->nrects)
@@ -1362,7 +1310,7 @@ DRIDrawablePrivDestroy(WindowPtr pWin)
     drmDestroyDrawable(pDRIPriv->drmFD, pDRIDrawablePriv->hwDrawable);
 
     xfree(pDRIDrawablePriv);
-    pWin->devPrivates[DRIWindowPrivIndex].ptr = NULL;
+    dixSetPrivate(&pWin->devPrivates, DRIWindowPrivKey, NULL);
 }
 
 static Bool
@@ -2449,20 +2397,17 @@ DRIMoveBuffersHelper(
 }
 
 char *
-DRICreatePCIBusID(pciVideoPtr PciInfo)
+DRICreatePCIBusID(const struct pci_device * dev)
 {
     char *busID;
-    int domain;
-    PCITAG tag;
 
     busID = xalloc(20);
     if (busID == NULL)
 	return NULL;
 
-    tag = pciTag(PciInfo->bus, PciInfo->device, PciInfo->func);
-    domain = xf86GetPciDomain(tag);
-    snprintf(busID, 20, "pci:%04x:%02x:%02x.%d", domain,
-	PCI_BUS_NO_DOMAIN(PciInfo->bus), PciInfo->device, PciInfo->func);
+    snprintf(busID, 20, "pci:%04x:%02x:%02x.%d", dev->domain, dev->bus,
+	dev->dev, dev->func);
+
     return busID;
 }
 

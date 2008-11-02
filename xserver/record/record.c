@@ -164,13 +164,13 @@ typedef struct {
     ProcFunctionPtr recordVector[256]; 
 } RecordClientPrivateRec, *RecordClientPrivatePtr;
 
-static int RecordClientPrivateIndex;
+static DevPrivateKey RecordClientPrivateKey = &RecordClientPrivateKey;
 
 /*  RecordClientPrivatePtr RecordClientPrivate(ClientPtr)
  *  gets the client private of the given client.  Syntactic sugar.
  */
 #define RecordClientPrivate(_pClient) (RecordClientPrivatePtr) \
-    ((_pClient)->devPrivates[RecordClientPrivateIndex].ptr)
+    dixLookupPrivate(&(_pClient)->devPrivates, RecordClientPrivateKey)
 
 
 /***************************************************************************/
@@ -982,8 +982,8 @@ RecordInstallHooks(RecordClientsAndProtocolPtr pRCAP, XID oneclient)
 		    memcpy(pClientPriv->recordVector, pClient->requestVector, 
 			   sizeof (pClientPriv->recordVector));
 		    pClientPriv->originalVector = pClient->requestVector;
-		    pClient->devPrivates[RecordClientPrivateIndex].ptr =
-			(pointer)pClientPriv;
+		    dixSetPrivate(&pClient->devPrivates,
+				  RecordClientPrivateKey, pClientPriv);
 		    pClient->requestVector = pClientPriv->recordVector;
 		}
 		while ((pIter = RecordIterateSet(pRCAP->pRequestMajorOpSet,
@@ -1096,7 +1096,8 @@ RecordUninstallHooks(RecordClientsAndProtocolPtr pRCAP, XID oneclient)
 		if (!otherRCAPwantsProcVector)
 		{ /* nobody needs it, so free it */
 		    pClient->requestVector = pClientPriv->originalVector;
-		    pClient->devPrivates[RecordClientPrivateIndex].ptr = NULL;
+		    dixSetPrivate(&pClient->devPrivates,
+				  RecordClientPrivateKey, NULL);
 		    xfree(pClientPriv);
 		}
 	    } /* end if this RCAP specifies any requests */
@@ -1724,7 +1725,7 @@ RecordRegisterClients(RecordContextPtr pContext, ClientPtr client, xRecordRegist
      * range for extension replies.
      */
     maxSets = PREDEFSETS + 2 * stuff->nRanges;
-    si = (SetInfoPtr)ALLOCATE_LOCAL(sizeof(SetInfoRec) * maxSets);
+    si = (SetInfoPtr)xalloc(sizeof(SetInfoRec) * maxSets);
     if (!si)
     {
 	err = BadAlloc;
@@ -1931,7 +1932,7 @@ bailout:
 	for (i = 0; i < maxSets; i++)
 	    if (si[i].intervals)
 		xfree(si[i].intervals);
-	DEALLOCATE_LOCAL(si);
+	xfree(si);
     }
     if (pCanonClients && pCanonClients != (XID *)&stuff[1])
 	xfree(pCanonClients);
@@ -2298,7 +2299,7 @@ ProcRecordGetContext(ClientPtr client)
 
     /* allocate and initialize space for record range info */
 
-    pRangeInfo = (GetContextRangeInfoPtr)ALLOCATE_LOCAL(
+    pRangeInfo = (GetContextRangeInfoPtr)xalloc(
 				nRCAPs * sizeof(GetContextRangeInfoRec));
     if (!pRangeInfo && nRCAPs > 0)
 	return BadAlloc;
@@ -2415,7 +2416,7 @@ bailout:
     {
 	if (pRangeInfo[i].pRanges) xfree(pRangeInfo[i].pRanges);
     }
-    DEALLOCATE_LOCAL(pRangeInfo);
+    xfree(pRangeInfo);
     return err;
 } /* ProcRecordGetContext */
 
@@ -2825,14 +2826,14 @@ RecordConnectionSetupInfo(RecordContextPtr pContext, NewClientInfoRec *pci)
 
     if (pci->client->swapped)
     {
-	char *pConnSetup = (char *)ALLOCATE_LOCAL(prefixsize + restsize);
+	char *pConnSetup = (char *)xalloc(prefixsize + restsize);
 	if (!pConnSetup)
 	    return;
 	SwapConnSetupPrefix(pci->prefix, pConnSetup);
 	SwapConnSetupInfo(pci->setup, pConnSetup + prefixsize);
 	RecordAProtocolElement(pContext, pci->client, XRecordClientStarted,
 			       (pointer)pConnSetup, prefixsize + restsize, 0);
-	DEALLOCATE_LOCAL(pConnSetup);
+	xfree(pConnSetup);
     }
     else
     {
@@ -2956,10 +2957,6 @@ RecordExtensionInit(void)
 
     RTContext = CreateNewResourceType(RecordDeleteContext);
     if (!RTContext)
-	return;
-
-    RecordClientPrivateIndex = AllocateClientPrivateIndex();
-    if (!AllocateClientPrivate(RecordClientPrivateIndex, 0))
 	return;
 
     ppAllContexts = NULL;

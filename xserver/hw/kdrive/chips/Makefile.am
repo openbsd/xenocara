@@ -20,10 +20,13 @@ CHIPS_LIBS =					 \
 	$(top_builddir)/hw/kdrive/vesa/libvesa.a \
 	@KDRIVE_LIBS@
 
+if GLX
+Xchips_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
+endif
+
 Xchips_LDADD = \
 	$(CHIPS_LIBS)				\
-	@KDRIVE_LIBS@                           \
-	@XSERVER_LIBS@				
+	@KDRIVE_LIBS@
 
 Xchips_DEPENDENCIES = 	\
 	libchips.a 				 \

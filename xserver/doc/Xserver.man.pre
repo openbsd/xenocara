@@ -407,15 +407,6 @@ elapse between autorepeat-generated keystrokes).
 .TP 8
 .B \-xkbmap \fIfilename\fP
 loads keyboard description in \fIfilename\fP on server startup.
-.SH SECURITY EXTENSION OPTIONS
-X servers that support the SECURITY extension accept the following option:
-.TP 8
-.B \-sp \fIfilename\fP
-causes the server to attempt to read and interpret filename as a security
-policy file with the format described below.  The file is read at server
-startup and reread at each server reset.
-The syntax of the security policy file is described in 
-\fISecurityPolicy\fP(__filemansuffix__).
 .SH "NETWORK CONNECTIONS"
 The X server supports client connections via a platform-dependent subset of
 the following transport types: TCP\/IP, Unix Domain sockets, DECnet,
@@ -508,8 +499,7 @@ its parent process after it has set up the various connection schemes.
 \fIXdm\fP uses this feature to recognize when connecting to the server
 is possible.
 .SH FONTS
-The X server
-can obtain fonts from directories and/or from font servers.
+The X server can obtain fonts from directories and/or from font servers.
 The list of directories and font servers
 the X server uses when trying to open a font is controlled
 by the \fIfont path\fP.  
@@ -517,8 +507,45 @@ by the \fIfont path\fP.
 The default font path is
 __default_font_path__ .
 .LP
+A special kind of directory can be specified using the \fBcatalogue\fP:
+prefix. Directories specified this way can contain symlinks pointing to the
+real font directories. See the FONTPATH.D section for details.
+.LP
 The font path can be set with the \fB\-fp\fP option or by \fIxset\fP(1)
 after the server has started.
+.SH "FONTPATH.D"
+You can specify a special kind of font path in the form \fBcatalogue:<dir>\fR.
+The directory specified after the catalogue: prefix will be scanned for symlinks
+and each symlink destination will be added as a local fontfile FPE.
+.PP
+The symlink can be suffixed by attributes such as '\fBunscaled\fR', which
+will be passed through to the underlying fontfile FPE. The only exception is
+the newly introduced '\fBpri\fR' attribute, which will be used for ordering
+the font paths specified by the symlinks.
+
+An example configuration:
+
+.nf
+    75dpi:unscaled:pri=20 \-> /usr/share/X11/fonts/75dpi
+    ghostscript:pri=60 \-> /usr/share/fonts/default/ghostscript
+    misc:unscaled:pri=10 \-> /usr/share/X11/fonts/misc
+    type1:pri=40 \-> /usr/share/X11/fonts/Type1
+    type1:pri=50 \-> /usr/share/fonts/default/Type1
+.fi
+
+This will add /usr/share/X11/fonts/misc as the first FPE with the attribute
+'unscaled', second FPE will be /usr/share/X11/fonts/75dpi, also with
+the attribute unscaled etc. This is functionally equivalent to setting
+the following font path:
+
+.nf
+    /usr/share/X11/fonts/misc:unscaled,
+    /usr/share/X11/fonts/75dpi:unscaled,
+    /usr/share/X11/fonts/Type1,
+    /usr/share/fonts/default/Type1,
+    /usr/share/fonts/default/ghostscript
+.fi
+
 .SH FILES
 .TP 30
 .I /etc/X\fBn\fP.hosts
@@ -544,9 +571,6 @@ Error log file for display number \fBn\fP if run from \fIinit\fP(__adminmansuffi
 .TP 30
 .I __projectroot__/lib/X11/xdm/xdm-errors
 Default error log file if the server is run from \fIxdm\fP(1)
-.TP 30
-.I __projectroot__/lib/xserver/SecurityPolicy
-Default X server security policy
 .SH "SEE ALSO"
 General information: \fIX\fP(__miscmansuffix__)
 .PP
@@ -561,7 +585,6 @@ Fonts: \fIbdftopcf\fP(1), \fImkfontdir\fP(1), \fImkfontscale\fP(1),
 .PP
 Security: \fIXsecurity\fP(__miscmansuffix__), \fIxauth\fP(1), \fIXau\fP(1), 
 \fIxdm\fP(1), \fIxhost\fP(1), \fIxfwp\fP(1),
-\fISecurityPolicy\fP(__filemansuffix__),
 .I "Security Extension Specification"
 .PP
 Starting the server: \fIxdm\fP(1), \fIxinit\fP(1)

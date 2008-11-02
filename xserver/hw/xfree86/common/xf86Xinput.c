@@ -77,7 +77,6 @@
 
 #define EXTENSION_PROC_ARGS void *
 #include "extnsionst.h"
-#include "extinit.h"	/* LookupDeviceIntRec */
 
 #include "windowstr.h"	/* screenIsSaved */
 
@@ -447,20 +446,38 @@ void
 DeleteInputDeviceRequest(DeviceIntPtr pDev)
 {
     LocalDevicePtr pInfo = (LocalDevicePtr) pDev->public.devicePrivate;
-    InputDriverPtr drv = pInfo->drv;
-    IDevRec *idev = pInfo->conf_idev;
+    InputDriverPtr drv;
+    IDevRec *idev;
+    BOOL found;
+    IDevPtr *it;
 
+    if (pInfo) /* need to get these before RemoveDevice */
+    {
+        drv = pInfo->drv;
+        idev = pInfo->conf_idev;
+    }
     RemoveDevice(pDev);
+
+    if (!pInfo) /* VCP and VCK */
+        return;
 
     if(drv->UnInit)
         drv->UnInit(drv, pInfo, 0);
     else
         xf86DeleteInput(pInfo, 0);
 
-    xfree(idev->driver);
-    xfree(idev->identifier);
-    xf86optionListFree(idev->commonOptions);
-    xfree(idev);
+    /* devices added through HAL aren't in the config layout */
+    it = xf86ConfigLayout.inputs;
+    while(*it && *it != idev)
+        it++;
+
+    if (!(*it)) /* end of list, not in the layout */
+    {
+        xfree(idev->driver);
+        xfree(idev->identifier);
+        xf86optionListFree(idev->commonOptions);
+        xfree(idev);
+    }
 }
 
 /* 
@@ -507,6 +524,12 @@ xf86PostMotionEventP(DeviceIntPtr	device,
     xEvent *xE = NULL;
     int index;
     int flags = 0;
+
+    if (num_valuators > MAX_VALUATORS) {
+	xf86Msg(X_ERROR, "xf86PostMotionEvent: num_valuator %d"
+	    " is greater than MAX_VALUATORS\n", num_valuators);
+	return;
+    }
 
     if (is_absolute)
         flags = POINTER_ABSOLUTE;
@@ -644,6 +667,12 @@ xf86PostKeyEvent(DeviceIntPtr	device,
     DebugF("this function has never been tested properly.  if things go quite "
            "badly south after this message, then xf86PostKeyEvent is "
            "broken.\n");
+
+    if (num_valuators > MAX_VALUATORS) {
+	xf86Msg(X_ERROR, "xf86PostMotionEvent: num_valuator %d"
+	    " is greater than MAX_VALUATORS\n", num_valuators);
+	return;
+    }
 
     if (!xf86Events)
         FatalError("Didn't allocate event store\n");

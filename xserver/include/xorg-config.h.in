@@ -54,11 +54,11 @@
 /* Building DRI-capable DDX. */
 #undef XF86DRI
 
+/* Build DRI2 extension */
+#undef DRI2
+
 /* Solaris 8 or later? */
 #undef __SOL8__
-
-/* Whether to use pixmap privates */
-#undef PIXPRIV
 
 /* Define to 1 if you have the `walkcontext' function (used on Solaris for
    xorg_backtrace in hw/xfree86/common/xf86Events.c */
@@ -117,6 +117,15 @@
 
 /* Have execinfo.h */
 #undef HAVE_EXECINFO_H
+
+/* Have pci_system_init_dev_mem() */
+#undef HAVE_PCI_SYSTEM_INIT_DEV_MEM
+
+/* Have pci_enable_device */
+#undef HAVE_PCI_DEVICE_ENABLE
+
+/* Path to text files containing PCI IDs */
+#undef PCI_TXT_IDS_PATH
 
 /* Use X server privilege separation */
 #undef X_PRIVSEP

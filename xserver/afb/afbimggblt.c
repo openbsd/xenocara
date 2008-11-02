@@ -145,8 +145,8 @@ afbImageGlyphBlt(pDrawable, pGC, x, y, nglyph, ppci, pglyphBase)
 	register int nFirst;/* bits of glyph in current longword */
 	PixelType *pdstSave;
 	int oldFill;
-	afbPrivGC *pPriv = (afbPrivGC *)(pGC->devPrivates[afbGCPrivateIndex].ptr);
-
+	afbPrivGC *pPriv = (afbPrivGC *)dixLookupPrivate(&pGC->devPrivates,
+							 afbGCPrivateKey);
 	xorg = pDrawable->x;
 	yorg = pDrawable->y;
 	afbGetPixelWidthSizeDepthAndPointer(pDrawable, widthDst, sizeDst, depthDst,
@@ -298,7 +298,7 @@ afbImageGlyphBlt(pDrawable, pGC, x, y, nglyph, ppci, pglyphBase)
 				int getWidth;				/* bits to get from glyph */
 #endif
 
-				if(!(ppos = (afbTEXTPOS *)ALLOCATE_LOCAL(nglyph * sizeof(afbTEXTPOS))))
+				if(!(ppos = (afbTEXTPOS *)xalloc(nglyph * sizeof(afbTEXTPOS))))
 					return;
 
 				pdstBase = afbScanlineNoBankSwitch(pdstBase, x, y, widthDst);
@@ -462,7 +462,7 @@ afbImageGlyphBlt(pDrawable, pGC, x, y, nglyph, ppci, pglyphBase)
 						} /* depth */
 					} /* for each glyph */
 				} /* while nbox-- */
-				DEALLOCATE_LOCAL(ppos);
+				xfree(ppos);
 				break;
 			}
 

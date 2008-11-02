@@ -224,10 +224,11 @@ typedef struct _xglGlyph {
     xglAreaPtr pArea;
 } xglGlyphRec, *xglGlyphPtr;
 
-extern int xglGlyphPrivateIndex;
+extern DevPrivateKey xglGlyphPrivateKey;
 
 #define XGL_GET_GLYPH_PRIV(pScreen, pGlyph) ((xglGlyphPtr)		     \
-    (GetGlyphPrivatesForScreen (pGlyph, pScreen))[xglGlyphPrivateIndex].ptr)
+    dixLookupPrivate(GetGlyphPrivatesForScreen (pGlyph, pScreen),	     \
+    					        xglGlyphPrivateKey))
 
 #define XGL_GLYPH_PRIV(pScreen, pGlyph)				  \
     xglGlyphPtr pGlyphPriv = XGL_GET_GLYPH_PRIV (pScreen, pGlyph)
@@ -272,8 +273,6 @@ typedef struct _xglScreen {
     CreateWindowProcPtr		  CreateWindow;
     DestroyWindowProcPtr	  DestroyWindow;
     ChangeWindowAttributesProcPtr ChangeWindowAttributes;
-    PaintWindowBackgroundProcPtr  PaintWindowBackground;
-    PaintWindowBorderProcPtr	  PaintWindowBorder;
     CopyWindowProcPtr		  CopyWindow;
     CreateGCProcPtr		  CreateGC;
     CloseScreenProcPtr		  CloseScreen;
@@ -293,17 +292,15 @@ typedef struct _xglScreen {
     RealizeGlyphProcPtr		  RealizeGlyph;
     UnrealizeGlyphProcPtr	  UnrealizeGlyph;
 #endif
-
-    BSFuncRec			  BackingStoreFuncs;
 } xglScreenRec, *xglScreenPtr;
 
-extern int xglScreenPrivateIndex;
+extern DevPrivateKey xglScreenPrivateKey;
 
-#define XGL_GET_SCREEN_PRIV(pScreen)				       \
-    ((xglScreenPtr) (pScreen)->devPrivates[xglScreenPrivateIndex].ptr)
+#define XGL_GET_SCREEN_PRIV(pScreen) ((xglScreenPtr) \
+    dixLookupPrivate(&(pScreen)->devPrivates, xglScreenPrivateKey))
 
-#define XGL_SET_SCREEN_PRIV(pScreen, v)				      \
-    ((pScreen)->devPrivates[xglScreenPrivateIndex].ptr = (pointer) v)
+#define XGL_SET_SCREEN_PRIV(pScreen, v) \
+    dixSetPrivate(&(pScreen)->devPrivates, xglScreenPrivateKey, v)
 
 #define XGL_SCREEN_PRIV(pScreen)			     \
     xglScreenPtr pScreenPriv = XGL_GET_SCREEN_PRIV (pScreen)
@@ -338,10 +335,10 @@ typedef struct _xglGC {
     GCOpsPtr	      ops;
 } xglGCRec, *xglGCPtr;
 
-extern int xglGCPrivateIndex;
+extern DevPrivateKey xglGCPrivateKey;
 
-#define XGL_GET_GC_PRIV(pGC)				   \
-    ((xglGCPtr) (pGC)->devPrivates[xglGCPrivateIndex].ptr)
+#define XGL_GET_GC_PRIV(pGC) ((xglGCPtr) \
+    dixLookupPrivate(&(pGC)->devPrivates, xglGCPrivateKey))
 
 #define XGL_GC_PRIV(pGC)		     \
     xglGCPtr pGCPriv = XGL_GET_GC_PRIV (pGC)
@@ -398,10 +395,10 @@ typedef struct _xglPixmap {
 
 } xglPixmapRec, *xglPixmapPtr;
 
-extern int xglPixmapPrivateIndex;
+extern DevPrivateKey xglPixmapPrivateKey;
 
-#define XGL_GET_PIXMAP_PRIV(pPixmap)				       \
-    ((xglPixmapPtr) (pPixmap)->devPrivates[xglPixmapPrivateIndex].ptr)
+#define XGL_GET_PIXMAP_PRIV(pPixmap) ((xglPixmapPtr) \
+    dixLookupPrivate(&(pPixmap)->devPrivates, xglPixmapPrivateKey))
 
 #define XGL_PIXMAP_PRIV(pPixmap)			     \
     xglPixmapPtr pPixmapPriv = XGL_GET_PIXMAP_PRIV (pPixmap)
@@ -413,10 +410,10 @@ typedef struct _xglWin {
     PixmapPtr    pPixmap;
 } xglWinRec, *xglWinPtr;
 
-extern int xglWinPrivateIndex;
+extern DevPrivateKey xglWinPrivateKey;
 
-#define XGL_GET_WINDOW_PRIV(pWin)			      \
-    ((xglWinPtr) (pWin)->devPrivates[xglWinPrivateIndex].ptr)
+#define XGL_GET_WINDOW_PRIV(pWin) ((xglWinPtr) \
+    dixLookupPrivate(&(pWin)->devPrivates, xglWinPrivateKey))
 
 #define XGL_WINDOW_PRIV(pWin)			    \
     xglWinPtr pWinPriv = XGL_GET_WINDOW_PRIV (pWin)
@@ -874,7 +871,8 @@ PixmapPtr
 xglCreatePixmap (ScreenPtr  pScreen,
 		 int	    width,
 		 int	    height,
-		 int	    depth);
+		 int	    depth,
+		 unsigned   usage_hint);
 
 void
 xglFiniPixmap (PixmapPtr pPixmap);
@@ -1092,39 +1090,12 @@ xglCopyWindow (WindowPtr   pWin,
 	       DDXPointRec ptOldOrg,
 	       RegionPtr   prgnSrc);
 
-void
-xglPaintWindowBackground (WindowPtr pWin,
-			  RegionPtr pRegion,
-			  int	    what);
-
-void
-xglPaintWindowBorder (WindowPtr pWin,
-		      RegionPtr pRegion,
-		      int	what);
-
 PixmapPtr
 xglGetWindowPixmap (WindowPtr pWin);
 
 void
 xglSetWindowPixmap (WindowPtr pWin,
 		    PixmapPtr pPixmap);
-
-
-/* xglbstore.c */
-
-void
-xglSaveAreas (PixmapPtr	pPixmap,
-	      RegionPtr	prgnSave,
-	      int	xorg,
-	      int	yorg,
-	      WindowPtr	pWin);
-
-void
-xglRestoreAreas (PixmapPtr pPixmap,
-		 RegionPtr prgnRestore,
-		 int	   xorg,
-		 int	   yorg,
-		 WindowPtr pWin);
 
 
 /* xglget.c */

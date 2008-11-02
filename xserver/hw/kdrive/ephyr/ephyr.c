@@ -23,22 +23,31 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-/*  TODO:
- *
- *  o Support multiple screens, shouldn't be hard just alot of rejigging.
- */
-
 #ifdef HAVE_CONFIG_H
 #include <kdrive-config.h>
 #endif
 #include "ephyr.h"
 
 #include "inputstr.h"
+#include "scrnintstr.h"
+#include "ephyrlog.h"
+
+#ifdef XEPHYR_DRI
+#include "ephyrdri.h"
+#include "ephyrdriext.h"
+#include "ephyrglxext.h"
+#endif /*XEPHYR_DRI*/
 
 extern int KdTsPhyScreen;
+#ifdef GLXEXT
+extern Bool noGlxVisualInit;
+#endif
+
 KdKeyboardInfo *ephyrKbd;
 KdPointerInfo *ephyrMouse;
 EphyrKeySyms ephyrKeySyms;
+Bool ephyrNoDRI=FALSE ;
+Bool ephyrNoXV=FALSE ;
 
 static int mouseState = 0;
 
@@ -47,6 +56,7 @@ typedef struct _EphyrInputPrivate {
 } EphyrKbdPrivate, EphyrPointerPrivate;
 
 Bool   EphyrWantGrayScale = 0;
+
 
 Bool
 ephyrInitialize (KdCardInfo *card, EphyrPriv *priv)
@@ -83,7 +93,7 @@ ephyrScreenInitialize (KdScreenInfo *screen, EphyrScrPriv *scrpriv)
   int width = 640, height = 480; 
   unsigned long redMask, greenMask, blueMask;
   
-  if (hostx_want_screen_size(&width, &height) 
+  if (hostx_want_screen_size(screen, &width, &height)
       || !screen->width || !screen->height)
     {
       screen->width = width;
@@ -99,13 +109,13 @@ ephyrScreenInitialize (KdScreenInfo *screen, EphyrScrPriv *scrpriv)
 	  && (screen->fb[0].depth == 24 || screen->fb[0].depth == 16
 	      || screen->fb[0].depth == 8))
 	{
-	  hostx_set_server_depth(screen->fb[0].depth);
+	  hostx_set_server_depth(screen, screen->fb[0].depth);
 	}
-      else 
+      else
 	ErrorF("\nXephyr: requested screen depth not supported, setting to match hosts.\n");
     }
   
-  screen->fb[0].depth = hostx_get_server_depth();
+  screen->fb[0].depth = hostx_get_server_depth(screen);
   screen->rate = 72;
   
   if (screen->fb[0].depth <= 8)
@@ -146,7 +156,7 @@ ephyrScreenInitialize (KdScreenInfo *screen, EphyrScrPriv *scrpriv)
 	  screen->fb[0].bitsPerPixel = 32;
 	}
 
-      hostx_get_visual_masks (&redMask, &greenMask, &blueMask);
+      hostx_get_visual_masks (screen, &redMask, &greenMask, &blueMask);
 
       screen->fb[0].redMask = (Pixel) redMask;
       screen->fb[0].greenMask = (Pixel) greenMask;
@@ -194,9 +204,7 @@ ephyrWindowLinear (ScreenPtr	pScreen,
   EphyrPriv	    *priv = pScreenPriv->card->driver;
   
   if (!pScreenPriv->enabled)
-    {
-      return 0;
-    }
+    return 0;
 
   *size = priv->bytes_per_line;
   return priv->base + row * priv->bytes_per_line + offset;
@@ -210,8 +218,8 @@ ephyrMapFramebuffer (KdScreenInfo *screen)
   KdPointerMatrix m;
   int buffer_height;
   
-  EPHYR_DBG(" screen->width: %d, screen->height: %d",
-	    screen->width, screen->height);
+  EPHYR_LOG("screen->width: %d, screen->height: %d index=%d",
+	     screen->width, screen->height, screen->mynum);
   
   KdComputePointerMatrix (&m, scrpriv->randr, screen->width, screen->height);
   KdSetPointerMatrix (&m);
@@ -226,8 +234,8 @@ ephyrMapFramebuffer (KdScreenInfo *screen)
     buffer_height = screen->height;
   else
     buffer_height = 3 * screen->height;
-  
-  priv->base = hostx_screen_init (screen->width, screen->height, buffer_height);
+
+  priv->base = hostx_screen_init (screen, screen->width, screen->height, buffer_height);
 
   screen->memory_base  = (CARD8 *) (priv->base);
   screen->memory_size  = priv->bytes_per_line * buffer_height;
@@ -246,7 +254,7 @@ ephyrMapFramebuffer (KdScreenInfo *screen)
       /* Rotated/Reflected so we need to use shadow fb */
       scrpriv->shadow = TRUE;
       
-      EPHYR_DBG("allocing shadow");
+      EPHYR_LOG("allocing shadow");
       
       KdShadowFbAlloc (screen, 0, 
 		       scrpriv->randr & (RR_Rotate_90|RR_Rotate_270));
@@ -297,14 +305,14 @@ ephyrShadowUpdate (ScreenPtr pScreen, shadowBufPtr pBuf)
   KdScreenPriv(pScreen);
   KdScreenInfo *screen = pScreenPriv->screen;
   
-  EPHYR_DBG("slow paint");
+  EPHYR_LOG("slow paint");
   
   /* FIXME: Slow Rotated/Reflected updates could be much
    * much faster efficiently updating via tranforming 
    * pBuf->pDamage  regions     
   */
   shadowUpdateRotatePacked(pScreen, pBuf);
-  hostx_paint_rect(0,0,0,0, screen->width, screen->height);
+  hostx_paint_rect(screen, 0,0,0,0, screen->width, screen->height);
 }
 
 static void
@@ -314,29 +322,29 @@ ephyrInternalDamageRedisplay (ScreenPtr pScreen)
   KdScreenInfo	*screen = pScreenPriv->screen;
   EphyrScrPriv	*scrpriv = screen->driver;
   RegionPtr	 pRegion;
-  
+
   if (!scrpriv || !scrpriv->pDamage)
     return;
-  
+
   pRegion = DamageRegion (scrpriv->pDamage);
-  
+
   if (REGION_NOTEMPTY (pScreen, pRegion))
     {
       int           nbox;
       BoxPtr        pbox;
-      
+
       nbox = REGION_NUM_RECTS (pRegion);
       pbox = REGION_RECTS (pRegion);
-      
+
       while (nbox--)
-	{
-	  hostx_paint_rect(pbox->x1, pbox->y1,
-			   pbox->x1, pbox->y1,
-			   pbox->x2 - pbox->x1,
-			   pbox->y2 - pbox->y1);
-	  pbox++;
-	}
-      
+        {
+          hostx_paint_rect(screen,
+                           pbox->x1, pbox->y1,
+                           pbox->x1, pbox->y1,
+                           pbox->x2 - pbox->x1,
+                           pbox->y2 - pbox->y1);
+          pbox++;
+        }
       DamageEmpty (scrpriv->pDamage);
     }
 }
@@ -412,7 +420,7 @@ ephyrRandRGetInfo (ScreenPtr pScreen, Rotation *rotations)
   Rotation		    randr;
   int			    n = 0;
   
-  EPHYR_DBG("mark");
+  EPHYR_LOG("mark");
   
   struct { int width, height; } sizes[] = 
     {
@@ -433,11 +441,11 @@ ephyrRandRGetInfo (ScreenPtr pScreen, Rotation *rotations)
       { 160, 160 }, 
       { 0, 0 }
     };
-  
+
   *rotations = RR_Rotate_All|RR_Reflect_All;
-  
-  if (!hostx_want_preexisting_window()
-      && !hostx_want_fullscreen()) /* only if no -parent switch */
+
+  if (!hostx_want_preexisting_window (screen)
+      && !hostx_want_fullscreen ()) /* only if no -parent switch */
     {
       while (sizes[n].width != 0 && sizes[n].height != 0)
 	{
@@ -565,7 +573,7 @@ ephyrRandRSetConfig (ScreenPtr		pScreen,
   return TRUE;
   
  bail4:
-  EPHYR_DBG("bailed");
+  EPHYR_LOG("bailed");
   
   ephyrUnmapFramebuffer (screen);
   *scrpriv = oldscr;
@@ -587,9 +595,7 @@ ephyrRandRInit (ScreenPtr pScreen)
   rrScrPrivPtr    pScrPriv;
   
   if (!RRScreenInit (pScreen))
-    {
-      return FALSE;
-    }
+    return FALSE;
   
   pScrPriv = rrGetScrPriv(pScreen);
   pScrPriv->rrGetInfo = ephyrRandRGetInfo;
@@ -607,7 +613,44 @@ ephyrCreateColormap (ColormapPtr pmap)
 Bool
 ephyrInitScreen (ScreenPtr pScreen)
 {
+  KdScreenPriv(pScreen);
+  KdScreenInfo	*screen    = pScreenPriv->screen;
+
+  EPHYR_LOG ("pScreen->myNum:%d\n", pScreen->myNum) ;
+  hostx_set_screen_number (screen, pScreen->myNum);
+  hostx_set_win_title (screen, "(ctrl+shift grabs mouse and keyboard)") ;
   pScreen->CreateColormap = ephyrCreateColormap;
+
+#ifdef XV
+  if (!ephyrNoXV) {
+      if (!ephyrInitVideo (pScreen)) {
+          EPHYR_LOG_ERROR ("failed to initialize xvideo\n") ;
+      } else {
+          EPHYR_LOG ("initialized xvideo okay\n") ;
+      }
+  }
+#endif /*XV*/
+
+#ifdef XEPHYR_DRI
+  if (!ephyrNoDRI && !hostx_has_dri ()) {
+      EPHYR_LOG ("host x does not support DRI. Disabling DRI forwarding\n") ;
+      ephyrNoDRI = TRUE ;
+#ifdef GLXEXT
+      noGlxVisualInit = FALSE ;
+#endif
+  }
+  if (!ephyrNoDRI) {
+    ephyrDRIExtensionInit (pScreen) ;
+    ephyrHijackGLXExtension () ;
+  }
+#endif
+
+#ifdef GLXEXT
+  if (ephyrNoDRI) {
+      noGlxVisualInit = FALSE ;
+  }
+#endif
+
   return TRUE;
 }
 
@@ -619,12 +662,12 @@ ephyrFinishInitScreen (ScreenPtr pScreen)
    */
   if (!shadowSetup (pScreen))
     return FALSE;
-  
+
 #ifdef RANDR
   if (!ephyrRandRInit (pScreen))
     return FALSE;
 #endif
-    
+
   return TRUE;
 }
 
@@ -635,7 +678,8 @@ ephyrCreateResources (ScreenPtr pScreen)
   KdScreenInfo	*screen    = pScreenPriv->screen;
   EphyrScrPriv	*scrpriv   = screen->driver;
 
-  EPHYR_DBG("mark");
+  EPHYR_LOG("mark pScreen=%p mynum=%d shadow=%d",
+            pScreen, pScreen->myNum, scrpriv->shadow);
 
   if (scrpriv->shadow) 
     return KdShadowSet (pScreen, 
@@ -676,6 +720,10 @@ ephyrRestore (KdCardInfo *card)
 void
 ephyrScreenFini (KdScreenInfo *screen)
 {
+    EphyrScrPriv  *scrpriv = screen->driver;
+    if (scrpriv->shadow) {
+        KdShadowFbFree (screen, 0);
+    }
     xfree(screen->driver);
     screen->driver = NULL;
 }
@@ -692,7 +740,7 @@ ephyrUpdateModifierState(unsigned int state)
   int          i;
   CARD8        mask;
 
-  pkeydev = (DeviceIntPtr)LookupKeyboardDevice();
+  pkeydev = inputInfo.keyboard;
 
   if (!pkeydev)
     return;
@@ -744,6 +792,89 @@ ephyrUpdateModifierState(unsigned int state)
     }
 }
 
+static void
+ephyrBlockSigio (void)
+{
+    sigset_t set;
+
+    sigemptyset (&set);
+    sigaddset (&set, SIGIO);
+    sigprocmask (SIG_BLOCK, &set, 0);
+}
+
+static void
+ephyrUnblockSigio (void)
+{
+    sigset_t set;
+
+    sigemptyset (&set);
+    sigaddset (&set, SIGIO);
+    sigprocmask (SIG_UNBLOCK, &set, 0);
+}
+
+static Bool
+ephyrCursorOffScreen(ScreenPtr *ppScreen, int *x, int *y)
+{
+  return FALSE;
+}
+
+static void
+ephyrCrossScreen (ScreenPtr pScreen, Bool entering)
+{
+}
+
+int ephyrCurScreen; /*current event screen*/
+
+static void
+ephyrWarpCursor (ScreenPtr pScreen, int x, int y)
+{
+    ephyrBlockSigio ();
+    ephyrCurScreen = pScreen->myNum;
+    miPointerWarpCursor (pScreen, x, y);
+    ephyrUnblockSigio ();
+}
+
+miPointerScreenFuncRec ephyrPointerScreenFuncs =
+{
+  ephyrCursorOffScreen,
+  ephyrCrossScreen,
+  ephyrWarpCursor
+};
+
+#ifdef XEPHYR_DRI
+/**
+ * find if the remote window denoted by a_remote
+ * is paired with an internal Window within the Xephyr server.
+ * If the remove window is paired with an internal window, send an
+ * expose event to the client insterested in the internal window expose event.
+ *
+ * Pairing happens when a drawable inside Xephyr is associated with
+ * a GL surface in a DRI environment.
+ * Look at the function ProcXF86DRICreateDrawable in ephyrdriext.c to
+ * know a paired window is created.
+ *
+ * This is useful to make GL drawables (only windows for now) handle
+ * expose events and send those events to clients.
+ */
+static void
+ephyrExposePairedWindow (int a_remote)
+{
+    EphyrWindowPair *pair = NULL;
+    RegionRec reg;
+    ScreenPtr screen;
+
+    if (!findWindowPairFromRemote (a_remote, &pair)) {
+	EPHYR_LOG ("did not find a pair for this window\n");
+	return;
+    }
+    screen = pair->local->drawable.pScreen;
+    REGION_NULL (screen, &reg);
+    REGION_COPY (screen, &reg, &pair->local->clipList);
+    screen->WindowExposures (pair->local, &reg, NullRegion);
+    REGION_UNINIT (screen, &reg);
+}
+#endif /*XEPHYR_DRI*/
+
 void
 ephyrPoll(void)
 {
@@ -752,21 +883,65 @@ ephyrPoll(void)
   while (hostx_get_event(&ev))
     {
       switch (ev.type)
-	{
-	case EPHYR_EV_MOUSE_MOTION:
+        {
+        case EPHYR_EV_MOUSE_MOTION:
           if (!ephyrMouse ||
-              !((EphyrPointerPrivate *)ephyrMouse->driverPrivate)->enabled)
+              !((EphyrPointerPrivate *)ephyrMouse->driverPrivate)->enabled) {
+              EPHYR_LOG ("skipping mouse motion:%d\n", ephyrCurScreen) ;
               continue;
-	  KdEnqueuePointerEvent(ephyrMouse, mouseState,  
-			        ev.data.mouse_motion.x, 
-			        ev.data.mouse_motion.y,
-                                0);
-	  break;
-	  
-	case EPHYR_EV_MOUSE_PRESS:
+          }
+          {
+            if (ev.data.mouse_motion.screen >=0
+                && (ephyrCurScreen != ev.data.mouse_motion.screen))
+              {
+                  EPHYR_LOG ("warping mouse cursor. "
+                             "cur_screen%d, motion_screen:%d\n",
+                             ephyrCurScreen, ev.data.mouse_motion.screen) ;
+                  if (ev.data.mouse_motion.screen >= 0)
+                    {
+                      ephyrWarpCursor
+                            (screenInfo.screens[ev.data.mouse_motion.screen],
+                             ev.data.mouse_motion.x,
+                             ev.data.mouse_motion.y );
+                    }
+              }
+            else
+              {
+                  int x=0, y=0;
+#ifdef XEPHYR_DRI
+                  EphyrWindowPair *pair = NULL;
+#endif
+                  EPHYR_LOG ("enqueuing mouse motion:%d\n", ephyrCurScreen) ;
+                  x = ev.data.mouse_motion.x;
+                  y = ev.data.mouse_motion.y;
+                  EPHYR_LOG ("initial (x,y):(%d,%d)\n", x, y) ;
+#ifdef XEPHYR_DRI
+                  EPHYR_LOG ("is this window peered by a gl drawable ?\n") ;
+                  if (findWindowPairFromRemote (ev.data.mouse_motion.window,
+                                                &pair))
+                    {
+                        EPHYR_LOG ("yes, it is peered\n") ;
+                        x += pair->local->drawable.x;
+                        y += pair->local->drawable.y;
+                    }
+                  else
+                    {
+                        EPHYR_LOG ("no, it is not peered\n") ;
+                    }
+                  EPHYR_LOG ("final (x,y):(%d,%d)\n", x, y) ;
+#endif
+                  KdEnqueuePointerEvent(ephyrMouse, mouseState, x, y, 0);
+              }
+          }
+          break;
+
+        case EPHYR_EV_MOUSE_PRESS:
           if (!ephyrMouse ||
-              !((EphyrPointerPrivate *)ephyrMouse->driverPrivate)->enabled)
+              !((EphyrPointerPrivate *)ephyrMouse->driverPrivate)->enabled) {
+              EPHYR_LOG ("skipping mouse press:%d\n", ephyrCurScreen) ;
               continue;
+          }
+          EPHYR_LOG ("enqueuing mouse press:%d\n", ephyrCurScreen) ;
 	  ephyrUpdateModifierState(ev.key_state);
 	  mouseState |= ev.data.mouse_down.button_num;
 	  KdEnqueuePointerEvent(ephyrMouse, mouseState|KD_MOUSE_DELTA, 0, 0, 0);
@@ -778,6 +953,7 @@ ephyrPoll(void)
               continue;
 	  ephyrUpdateModifierState(ev.key_state);
 	  mouseState &= ~ev.data.mouse_up.button_num;
+          EPHYR_LOG ("enqueuing mouse release:%d\n", ephyrCurScreen) ;
 	  KdEnqueuePointerEvent(ephyrMouse, mouseState|KD_MOUSE_DELTA, 0, 0, 0);
 	  break;
 
@@ -793,9 +969,20 @@ ephyrPoll(void)
           if (!ephyrKbd ||
               !((EphyrKbdPrivate *)ephyrKbd->driverPrivate)->enabled)
               continue;
-	  ephyrUpdateModifierState(ev.key_state);
 	  KdEnqueueKeyboardEvent (ephyrKbd, ev.data.key_up.scancode, TRUE);
 	  break;
+
+#ifdef XEPHYR_DRI
+	case EPHYR_EV_EXPOSE:
+	  /*
+	   * We only receive expose events when the expose event have
+	   * be generated for a drawable that is a host X window managed
+	   * by Xephyr. Host X windows managed by Xephyr exists for instance
+	   * when Xephyr is asked to create a GL drawable in a DRI environment.
+	   */
+	  ephyrExposePairedWindow (ev.data.expose.window);
+	  break;
+#endif /*XEPHYR_DRI*/
 
 	default:
 	  break;
@@ -815,7 +1002,7 @@ ephyrGetColors (ScreenPtr pScreen, int fb, int n, xColorItem *pdefs)
 {
   /* XXX Not sure if this is right */
   
-  EPHYR_DBG("mark");
+  EPHYR_LOG("mark");
   
   while (n--)
     {
@@ -954,6 +1141,7 @@ static void
 EphyrKeyboardBell (KdKeyboardInfo *ki, int volume, int frequency, int duration)
 {
 }
+
 
 KdKeyboardDriver EphyrKeyboardDriver = {
     "ephyr",

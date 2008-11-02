@@ -45,48 +45,26 @@ in this Software without prior written authorization from The Open Group.
 #include "mibstore.h"
 
 #if 1 || PSZ==8
-int cfbWindowPrivateIndex = -1;
-int cfbGCPrivateIndex = -1;
+DevPrivateKey cfbGCPrivateKey = &cfbGCPrivateKey;
 #endif
 #ifdef CFB_NEED_SCREEN_PRIVATE
-int cfbScreenPrivateIndex = -1;
-static unsigned long cfbGeneration = 0;
+DevPrivateKey cfbScreenPrivateKey = &cfbScreenPrivateKey;
 #endif
 
 
 Bool
-cfbAllocatePrivates(pScreen, window_index, gc_index)
-    ScreenPtr	pScreen;
-    int		*window_index, *gc_index;
+cfbAllocatePrivates(ScreenPtr pScreen, DevPrivateKey *gc_key)
 {
-    if (!window_index || !gc_index ||
-	(*window_index == -1 && *gc_index == -1))
+    if (!gc_key || !*gc_key)
     {
-    	if (!mfbAllocatePrivates(pScreen,
-			     	 &cfbWindowPrivateIndex, &cfbGCPrivateIndex))
+    	if (!mfbAllocatePrivates(pScreen, &cfbGCPrivateKey))
 	    return FALSE;
-    	if (window_index)
-	    *window_index = cfbWindowPrivateIndex;
-    	if (gc_index)
-	    *gc_index = cfbGCPrivateIndex;
+    	if (gc_key)
+	    *gc_key = cfbGCPrivateKey;
     }
     else
     {
-	cfbWindowPrivateIndex = *window_index;
-	cfbGCPrivateIndex = *gc_index;
+	cfbGCPrivateKey = *gc_key;
     }
-    if (!AllocateWindowPrivate(pScreen, cfbWindowPrivateIndex,
-			       sizeof(cfbPrivWin)) ||
-	!AllocateGCPrivate(pScreen, cfbGCPrivateIndex, sizeof(cfbPrivGC)))
-	return FALSE;
-#ifdef CFB_NEED_SCREEN_PRIVATE
-    if (cfbGeneration != serverGeneration)
-    {
-      cfbScreenPrivateIndex = AllocateScreenPrivateIndex ();
-      cfbGeneration = serverGeneration;
-    }
-    if (cfbScreenPrivateIndex == -1)
-	return FALSE;
-#endif
-    return TRUE;
+    return dixRequestPrivate(cfbGCPrivateKey, sizeof(cfbPrivGC));
 }

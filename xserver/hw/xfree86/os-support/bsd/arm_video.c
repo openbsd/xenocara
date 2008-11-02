@@ -1,5 +1,5 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/os-support/bsd/ppc_video.c,v 1.6 2003/10/07 23:14:55 herrb Exp $ */
-/* $OpenBSD: arm_video.c,v 1.3 2007/11/24 19:04:04 matthieu Exp $ */
+/* $OpenBSD: arm_video.c,v 1.4 2008/11/02 15:26:22 matthieu Exp $ */
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -201,9 +201,8 @@ xf86PrivilegedInit(void)
 			ErrorF("errno: %d\n", errno);
 			FatalError("xf86PrivilegedInit: open %s", DEV_MEM);
 		}
+		pci_system_init();
 	}
-
-	pciInit();
 	xf86OpenConsole();
 }
 

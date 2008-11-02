@@ -269,7 +269,7 @@ SOFTWARE.
 
 #if defined(ibm032) || defined (ibm)
 
-#ifdef i386
+#ifdef __i386__
 # define IMAGE_BYTE_ORDER	LSBFirst	/* Value for PS/2 only */
 #else
 # define IMAGE_BYTE_ORDER	MSBFirst        /* Values for the RT only*/
@@ -279,7 +279,7 @@ SOFTWARE.
 #define GETLEFTBITS_ALIGNMENT	4
 /* ibm pcc doesn't understand pragmas. */
 
-#ifdef i386
+#ifdef __i386__
 #define BITMAP_SCANLINE_UNIT	8
 #endif
 
@@ -402,7 +402,7 @@ SOFTWARE.
 
 #endif /* ia64 */
 
-#if defined(__amd64__) || defined(amd64) || defined(__amd64)
+#if defined(__amd64__) || defined(amd64) || defined(__amd64) || defined(__x86_64__)
 # define IMAGE_BYTE_ORDER	LSBFirst
 
 # if defined(XF86MONOVGA) || defined(XF86VGA16) || defined(XF86MONO)
@@ -453,10 +453,9 @@ SOFTWARE.
 
 #endif /* luna */
 
-#if	(defined(SVR4) && defined(i386)) || \
+#if	(defined(SVR4) && (defined(__i386__) || (defined(__i386)))) ||	\
 	defined(__alpha__) || defined(__alpha) || \
-	defined(__i386__) || defined(__i386) || \
-	defined(__QNX__) || \
+	defined(__i386__) || defined(__QNX__) || \
 	defined(__s390x__) || defined(__s390__)
   
 #ifndef IMAGE_BYTE_ORDER

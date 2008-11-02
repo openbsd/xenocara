@@ -17,8 +17,6 @@
 /* Avoid Imakefile changes */
 #include "bus/Pci.h"
 
-_X_EXPORT resRange PciAvoid[] = {_PCI_AVOID_PC_STYLE, _END};
-
 #ifdef INCLUDE_XF86_NO_DOMAIN
 
 #if defined(__alpha__) || defined(__sparc__) || defined(__sparc64__) \
@@ -117,52 +115,6 @@ xf86AccResFromOS(resPtr ret)
 }
 
 #elif defined(__powerpc__) || defined(__arm__) || defined(__mc68020__)	/* XXX hp300 */ || defined(__vax__)
-
-resPtr
-xf86BusAccWindowsFromOS(void)
-{
-    resPtr ret = NULL;
-    resRange range;
-
-    RANGE(range, 0x00000000, 0xffffffff, ResExcMemBlock);
-    ret = xf86AddResToList(ret, &range, -1);
-
-    RANGE(range, 0x00000000, 0x0000ffff, ResExcIoBlock);
-    ret = xf86AddResToList(ret, &range, -1);
-    return ret;
-}
-
-resPtr
-xf86PciBusAccWindowsFromOS(void)
-{
-    resPtr ret = NULL;
-    resRange range;
-
-    RANGE(range, 0x00000000, 0xffffffff, ResExcMemBlock);
-    ret = xf86AddResToList(ret, &range, -1);
-
-    RANGE(range, 0x00000000, 0x0000ffff, ResExcIoBlock);
-    ret = xf86AddResToList(ret, &range, -1);
-    return ret;
-}
-
-#ifdef INCLUDE_UNUSED
-
-resPtr
-xf86IsaBusAccWindowsFromOS(void)
-{
-    resPtr ret = NULL;
-    resRange range;
-
-    RANGE(range, 0x00000000, 0xffffffff, ResExcMemBlock);
-    ret = xf86AddResToList(ret, &range, -1);
-
-    RANGE(range, 0x00000000, 0x0000ffff, ResExcIoBlock);
-    ret = xf86AddResToList(ret, &range, -1);
-    return ret;
-}
-
-#endif /* INCLUDE_UNUSED */
 
 resPtr
 xf86AccResFromOS(resPtr ret)

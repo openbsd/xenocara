@@ -56,16 +56,13 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include <X11/X.h>	/* for inputstr.h    */
-#include <X11/Xproto.h>	/* Request macro     */
 #include "inputstr.h"	/* DeviceIntPtr      */
 #include "windowstr.h"	/* window structure  */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include "exevents.h"
-#include "extnsionst.h"
-#include "extinit.h"	/* LookupDeviceIntRec */
 #include "exglobals.h"
+#include "xace.h"
 
 #include "grabdev.h"
 #include "grabdevb.h"
@@ -113,43 +110,37 @@ ProcXGrabDeviceButton(ClientPtr client)
     REQUEST_AT_LEAST_SIZE(xGrabDeviceButtonReq);
 
     if (stuff->length !=
-	(sizeof(xGrabDeviceButtonReq) >> 2) + stuff->event_count) {
-	SendErrorToClient(client, IReqCode, X_GrabDeviceButton, 0, BadLength);
-	return Success;
-    }
+	(sizeof(xGrabDeviceButtonReq) >> 2) + stuff->event_count)
+	return BadLength;
 
-    dev = LookupDeviceIntRec(stuff->grabbed_device);
-    if (dev == NULL) {
-	SendErrorToClient(client, IReqCode, X_GrabDeviceButton, 0, BadDevice);
-	return Success;
-    }
+    ret = dixLookupDevice(&dev, stuff->grabbed_device, client, DixGrabAccess);
+    if (ret != Success)
+	return ret;
+
     if (stuff->modifier_device != UseXKeyboard) {
-	mdev = LookupDeviceIntRec(stuff->modifier_device);
-	if (mdev == NULL) {
-	    SendErrorToClient(client, IReqCode, X_GrabDeviceButton, 0,
-			      BadDevice);
-	    return Success;
-	}
-	if (mdev->key == NULL) {
-	    SendErrorToClient(client, IReqCode, X_GrabDeviceButton, 0,
-			      BadMatch);
-	    return Success;
-	}
-    } else
-	mdev = (DeviceIntPtr) LookupKeyboardDevice();
+	ret = dixLookupDevice(&mdev, stuff->modifier_device, client,
+			      DixReadAccess);
+	if (ret != Success)
+	    return ret;
+	if (mdev->key == NULL)
+	    return BadMatch;
+    } else {
+	mdev = inputInfo.keyboard;
+	ret = XaceHook(XACE_DEVICE_ACCESS, client, mdev, DixReadAccess);
+	if (ret != Success)
+	    return ret;
+    }
 
     class = (XEventClass *) (&stuff[1]);	/* first word of values */
 
     if ((ret = CreateMaskFromList(client, class,
 				  stuff->event_count, tmp, dev,
 				  X_GrabDeviceButton)) != Success)
-	return Success;
+	return ret;
     ret = GrabButton(client, dev, stuff->this_device_mode,
 		     stuff->other_devices_mode, stuff->modifiers, mdev,
 		     stuff->button, stuff->grabWindow, stuff->ownerEvents,
 		     (Cursor) 0, (Window) 0, tmp[stuff->grabbed_device].mask);
 
-    if (ret != Success)
-	SendErrorToClient(client, IReqCode, X_GrabDeviceButton, 0, ret);
-    return (Success);
+    return ret;
 }

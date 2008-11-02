@@ -38,12 +38,14 @@
 
 extern XF86ConfigPtr xf86configptr;
 
-/**
- * @file this file contains symbols from xf86Mode.c and friends that are static
- * there but we still want to use.  We need to come up with better API here.
+/*
+ * This is the version number where we epoched.  These files get copied
+ * into drivers that want to use this setup infrastructure on pre-1.3
+ * servers, so when that happens they need to define these symbols
+ * themselves.  However, _in_ the server, we basically always define them now.
  */
-
 #if XORG_VERSION_CURRENT <= XORG_VERSION_NUMERIC(7,2,99,2,0)
+
 /**
  * Calculates the horizontal sync rate of a mode.
  *
@@ -114,6 +116,24 @@ xf86ModeHeight (DisplayModePtr mode, Rotation rotation)
     default:
 	return 0;
     }
+}
+
+/** Calculates the memory bandwidth (in MiB/sec) of a mode. */
+_X_EXPORT unsigned int
+xf86ModeBandwidth(DisplayModePtr mode, int depth)
+{
+    float a_active, a_total, active_percent, pixels_per_second;
+    int bytes_per_pixel = (depth + 7) / 8;
+
+    if (!mode->HTotal || !mode->VTotal || !mode->Clock)
+	return 0;
+
+    a_active = mode->HDisplay * mode->VDisplay;
+    a_total = mode->HTotal * mode->VTotal;
+    active_percent = a_active / a_total;
+    pixels_per_second = active_percent * mode->Clock * 1000.0;
+
+    return (unsigned int)(pixels_per_second * bytes_per_pixel / (1024 * 1024));
 }
 
 /** Sets a default mode name of <width>x<height> on a mode. */
@@ -194,11 +214,11 @@ xf86DuplicateMode(DisplayModePtr pMode)
     *pNew = *pMode;
     pNew->next = NULL;
     pNew->prev = NULL;
-    if (pNew->name == NULL) {
-	xf86SetModeDefaultName(pMode);
-    } else {
+
+    if (pMode->name == NULL)
+	xf86SetModeDefaultName(pNew);
+    else
 	pNew->name = xnfstrdup(pMode->name);
-    }
 
     return pNew;
 }
@@ -320,12 +340,10 @@ xf86PrintModeline(int scrnIndex,DisplayModePtr mode)
 /**
  * Marks as bad any modes with unsupported flags.
  *
- * \param modeList doubly-linked or circular list of modes.
+ * \param modeList doubly-linked list of modes.
  * \param flags flags supported by the driver.
  *
  * \bug only V_INTERLACE and V_DBLSCAN are supported.  Is that enough?
- *
- * This is not in xf86Modes.c, but would be part of the proposed new API.
  */
 _X_EXPORT void
 xf86ValidateModesFlags(ScrnInfoPtr pScrn, DisplayModePtr modeList,
@@ -344,9 +362,7 @@ xf86ValidateModesFlags(ScrnInfoPtr pScrn, DisplayModePtr modeList,
 /**
  * Marks as bad any modes extending beyond the given max X, Y, or pitch.
  *
- * \param modeList doubly-linked or circular list of modes.
- *
- * This is not in xf86Modes.c, but would be part of the proposed new API.
+ * \param modeList doubly-linked list of modes.
  */
 _X_EXPORT void
 xf86ValidateModesSize(ScrnInfoPtr pScrn, DisplayModePtr modeList,
@@ -373,9 +389,7 @@ xf86ValidateModesSize(ScrnInfoPtr pScrn, DisplayModePtr modeList,
  * Marks as bad any modes that aren't supported by the given monitor's
  * hsync and vrefresh ranges.
  *
- * \param modeList doubly-linked or circular list of modes.
- *
- * This is not in xf86Modes.c, but would be part of the proposed new API.
+ * \param modeList doubly-linked list of modes.
  */
 _X_EXPORT void
 xf86ValidateModesSync(ScrnInfoPtr pScrn, DisplayModePtr modeList,
@@ -389,8 +403,8 @@ xf86ValidateModesSync(ScrnInfoPtr pScrn, DisplayModePtr modeList,
 
 	bad = TRUE;
 	for (i = 0; i < mon->nHsync; i++) {
-	    if (xf86ModeHSync(mode) >= mon->hsync[i].lo &&
-		xf86ModeHSync(mode) <= mon->hsync[i].hi)
+	    if (xf86ModeHSync(mode) >= mon->hsync[i].lo * (1-SYNC_TOLERANCE) &&
+		xf86ModeHSync(mode) <= mon->hsync[i].hi * (1+SYNC_TOLERANCE))
 	    {
 		bad = FALSE;
 	    }
@@ -400,8 +414,8 @@ xf86ValidateModesSync(ScrnInfoPtr pScrn, DisplayModePtr modeList,
 
 	bad = TRUE;
 	for (i = 0; i < mon->nVrefresh; i++) {
-	    if (xf86ModeVRefresh(mode) >= mon->vrefresh[i].lo &&
-		xf86ModeVRefresh(mode) <= mon->vrefresh[i].hi)
+	    if (xf86ModeVRefresh(mode) >= mon->vrefresh[i].lo * (1-SYNC_TOLERANCE) &&
+		xf86ModeVRefresh(mode) <= mon->vrefresh[i].hi * (1+SYNC_TOLERANCE))
 	    {
 		bad = FALSE;
 	    }
@@ -417,12 +431,10 @@ xf86ValidateModesSync(ScrnInfoPtr pScrn, DisplayModePtr modeList,
 /**
  * Marks as bad any modes extending beyond outside of the given clock ranges.
  *
- * \param modeList doubly-linked or circular list of modes.
+ * \param modeList doubly-linked list of modes.
  * \param min pointer to minimums of clock ranges
  * \param max pointer to maximums of clock ranges
  * \param n_ranges number of ranges.
- *
- * This is not in xf86Modes.c, but would be part of the proposed new API.
  */
 _X_EXPORT void
 xf86ValidateModesClocks(ScrnInfoPtr pScrn, DisplayModePtr modeList,
@@ -434,7 +446,8 @@ xf86ValidateModesClocks(ScrnInfoPtr pScrn, DisplayModePtr modeList,
     for (mode = modeList; mode != NULL; mode = mode->next) {
 	Bool good = FALSE;
 	for (i = 0; i < n_ranges; i++) {
-	    if (mode->Clock >= min[i] && mode->Clock <= max[i]) {
+	    if (mode->Clock >= min[i] * (1-SYNC_TOLERANCE) &&
+		mode->Clock <= max[i] * (1+SYNC_TOLERANCE)) {
 		good = TRUE;
 		break;
 	    }
@@ -454,9 +467,7 @@ xf86ValidateModesClocks(ScrnInfoPtr pScrn, DisplayModePtr modeList,
  *
  * MODE_BAD is used as the rejection flag, for lack of a better flag.
  *
- * \param modeList doubly-linked or circular list of modes.
- *
- * This is not in xf86Modes.c, but would be part of the proposed new API.
+ * \param modeList doubly-linked list of modes.
  */
 _X_EXPORT void
 xf86ValidateModesUserConfig(ScrnInfoPtr pScrn, DisplayModePtr modeList)
@@ -484,13 +495,52 @@ xf86ValidateModesUserConfig(ScrnInfoPtr pScrn, DisplayModePtr modeList)
 
 
 /**
+ * Marks as bad any modes exceeding the given bandwidth.
+ *
+ * \param modeList doubly-linked list of modes.
+ * \param bandwidth bandwidth in MHz.
+ * \param depth color depth.
+ */
+_X_EXPORT void
+xf86ValidateModesBandwidth(ScrnInfoPtr pScrn, DisplayModePtr modeList,
+			   unsigned int bandwidth, int depth)
+{
+    DisplayModePtr mode;
+
+    for (mode = modeList; mode != NULL; mode = mode->next) {
+	if (xf86ModeBandwidth(mode, depth) > bandwidth)
+	    mode->status = MODE_BANDWIDTH;
+    }
+}
+
+/**
+ * Marks as bad any reduced-blanking modes.
+ *
+ * \param modeList doubly-linked list of modes.
+ */
+_X_EXPORT void
+xf86ValidateModesReducedBlanking(ScrnInfoPtr pScrn, DisplayModePtr modeList)
+{
+    Bool mode_is_reduced = FALSE;
+    DisplayModePtr mode;
+
+    for (mode = modeList; mode != NULL; mode = mode->next) {
+	/* gratuitous duplication from pre-randr validation code */
+	if ((((mode->HDisplay * 5 / 4) & ~0x07) > mode->HTotal) &&
+	    ((mode->HTotal - mode->HDisplay) == 160) &&
+	    ((mode->HSyncEnd - mode->HDisplay) == 80) &&
+	    ((mode->HSyncEnd - mode->HSyncStart) == 32) &&
+	    ((mode->VSyncStart - mode->VDisplay) == 3))
+	    mode->status = MODE_NO_REDUCED;
+    }
+}
+
+/**
  * Frees any modes from the list with a status other than MODE_OK.
  *
  * \param modeList pointer to a doubly-linked or circular list of modes.
  * \param verbose determines whether the reason for mode invalidation is
  *	  printed.
- *
- * This is not in xf86Modes.c, but would be part of the proposed new API.
  */
 _X_EXPORT void
 xf86PruneInvalidModes(ScrnInfoPtr pScrn, DisplayModePtr *modeList,
@@ -630,7 +680,7 @@ xf86GetDefaultModes (Bool interlaceAllowed, Bool doubleScanAllowed)
     DisplayModePtr  head = NULL, prev = NULL, mode;
     int		    i;
 
-    for (i = 0; xf86DefaultModes[i].name != NULL; i++)
+    for (i = 0; i < xf86NumDefaultModes; i++)
     {
 	DisplayModePtr	defMode = &xf86DefaultModes[i];
 	
@@ -639,23 +689,9 @@ xf86GetDefaultModes (Bool interlaceAllowed, Bool doubleScanAllowed)
 	if (!doubleScanAllowed && (defMode->Flags & V_DBLSCAN))
 	    continue;
 
-	mode = xalloc(sizeof(DisplayModeRec));
-	if (!mode)
-	    continue;
-        memcpy(mode,&xf86DefaultModes[i],sizeof(DisplayModeRec));
-        mode->name = xstrdup(xf86DefaultModes[i].name);
-        if (!mode->name)
-	{
-	    xfree (mode);
-	    continue;
-	}
-        mode->prev = prev;
-	mode->next = NULL;
-	if (prev)
-	    prev->next = mode;
-	else
-	    head = mode;
-	prev = mode;
+	mode = xf86DuplicateMode(defMode);
+
+	head = xf86ModesAdd(head, mode);
     }
     return head;
 }

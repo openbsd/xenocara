@@ -39,7 +39,7 @@
 #include "fb.h"
 
 #define EXA_VERSION_MAJOR   2
-#define EXA_VERSION_MINOR   2
+#define EXA_VERSION_MINOR   4
 #define EXA_VERSION_RELEASE 0
 
 typedef struct _ExaOffscreenArea ExaOffscreenArea;
@@ -56,7 +56,7 @@ struct _ExaOffscreenArea {
     int                 base_offset;	/* allocation base */
     int                 offset;         /* aligned offset */
     int                 size;           /* total allocation size */
-    int                 score;
+    unsigned            last_use;
     pointer             privData;
 
     ExaOffscreenSaveProc save;
@@ -64,6 +64,8 @@ struct _ExaOffscreenArea {
     ExaOffscreenState   state;
 
     ExaOffscreenArea    *next;
+
+    unsigned            eviction_cost;
 };
 
 /**
@@ -671,6 +673,44 @@ typedef struct _ExaDriver {
 	 */
 	#define EXA_PREPARE_MASK	2
 	/** @} */
+
+    /**
+     * maxPitchPixels controls the pitch limitation for rendering from
+     * the card.
+     * The driver should never receive a request for rendering a pixmap
+     * that has a pitch (in pixels) beyond maxPitchPixels.
+     *
+     * Setting this field is optional -- if your hardware doesn't have
+     * a pitch limitation in pixels, don't set this. If neither this value
+     * nor maxPitchBytes is set, then maxPitchPixels is set to maxX.
+     * If set, it must not be smaller than maxX.
+     *
+     * @sa maxPitchBytes
+     */
+    int maxPitchPixels;
+
+    /**
+     * maxPitchBytes controls the pitch limitation for rendering from
+     * the card.
+     * The driver should never receive a request for rendering a pixmap
+     * that has a pitch (in bytes) beyond maxPitchBytes.
+     *
+     * Setting this field is optional -- if your hardware doesn't have
+     * a pitch limitation in bytes, don't set this.
+     * If set, it must not be smaller than maxX * 4.
+     * There's no default value for maxPitchBytes.
+     *
+     * @sa maxPitchPixels
+     */
+    int maxPitchBytes;
+
+    /* Hooks to allow driver to its own pixmap memory management */
+    void *(*CreatePixmap)(ScreenPtr pScreen, int size, int align);
+    void (*DestroyPixmap)(ScreenPtr pScreen, void *driverPriv);
+    Bool (*ModifyPixmapHeader)(PixmapPtr pPixmap, int width, int height,
+                              int depth, int bitsPerPixel, int devKind,
+                              pointer pPixData);
+
     /** @} */
 } ExaDriverRec, *ExaDriverPtr;
 
@@ -695,6 +735,13 @@ typedef struct _ExaDriver {
  * (right-to-left, bottom-to-top).
  */
 #define EXA_TWO_BITBLT_DIRECTIONS	(1 << 2)
+
+/**
+ * EXA_HANDLES_PIXMAPS indicates to EXA that the driver can handle
+ * all pixmap addressing and migration.
+ */
+#define EXA_HANDLES_PIXMAPS             (1 << 3)
+
 /** @} */
 
 ExaDriverPtr
@@ -741,6 +788,12 @@ exaMoveInPixmap (PixmapPtr pPixmap);
 
 void
 exaMoveOutPixmap (PixmapPtr pPixmap);
+
+void *
+exaGetPixmapDriverPrivate(PixmapPtr p);
+
+CARD32
+exaGetPixmapFirstPixel (PixmapPtr pPixmap);
 
 /**
  * Returns TRUE if the given planemask covers all the significant bits in the

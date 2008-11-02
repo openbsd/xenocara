@@ -29,6 +29,7 @@ SOFTWARE.
 #include "cursor.h"
 #include "gc.h"
 #include "pixmap.h"
+#include "privates.h"
 #include <X11/Xmd.h>
 
 /*
@@ -101,10 +102,6 @@ typedef struct _Client {
     int         clientGone;
     int         noClientException;	/* this client died or needs to be
 					 * killed */
-    DrawablePtr lastDrawable;
-    Drawable    lastDrawableID;
-    GCPtr       lastGC;
-    GContext    lastGCID;
     SaveSetElt	*saveSet;
     int         numSaved;
     pointer     screenPrivate[MAXSCREENS];
@@ -114,7 +111,7 @@ typedef struct _Client {
     Bool	big_requests;		/* supports large requests */
     int		priority;
     ClientState clientState;
-    DevUnion	*devPrivates;
+    PrivateRec	*devPrivates;
 #ifdef XKB
     unsigned short	xkbClientFlags;
     unsigned short	mapNotifyMask;
@@ -150,11 +147,9 @@ extern long SmartScheduleTime;
 extern long SmartScheduleInterval;
 extern long SmartScheduleSlice;
 extern long SmartScheduleMaxSlice;
-extern unsigned long SmartScheduleIdleCount;
 extern Bool SmartScheduleDisable;
-extern Bool SmartScheduleIdle;
-extern Bool SmartScheduleTimerStopped;
-extern Bool SmartScheduleStartTimer(void);
+extern void SmartScheduleStartTimer(void);
+extern void SmartScheduleStopTimer(void);
 #define SMART_MAX_PRIORITY  (20)
 #define SMART_MIN_PRIORITY  (-20)
 
@@ -192,7 +187,6 @@ typedef struct _CallbackRec {
 } CallbackRec, *CallbackPtr;
 
 typedef struct _CallbackList {
-  CallbackFuncsRec funcs;
   int inCallback;
   Bool deleted;
   int numDeleted;

@@ -56,13 +56,9 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include <X11/X.h>	/* for inputstr.h    */
-#include <X11/Xproto.h>	/* Request macro     */
 #include "inputstr.h"	/* DeviceIntPtr      */
 #include "windowstr.h"	/* window structure  */
 #include <X11/extensions/XIproto.h>
-#include "extnsionst.h"
-#include "extinit.h"	/* LookupDeviceIntRec */
 #include "exglobals.h"
 
 #include "ungrdev.h"
@@ -97,15 +93,14 @@ ProcXUngrabDevice(ClientPtr client)
     DeviceIntPtr dev;
     GrabPtr grab;
     TimeStamp time;
+    int rc;
 
     REQUEST(xUngrabDeviceReq);
     REQUEST_SIZE_MATCH(xUngrabDeviceReq);
 
-    dev = LookupDeviceIntRec(stuff->deviceid);
-    if (dev == NULL) {
-	SendErrorToClient(client, IReqCode, X_UngrabDevice, 0, BadDevice);
-	return Success;
-    }
+    rc = dixLookupDevice(&dev, stuff->deviceid, client, DixGetAttrAccess);
+    if (rc != Success)
+	return rc;
     grab = dev->grab;
 
     time = ClientTimeToServerTime(stuff->time);

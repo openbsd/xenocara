@@ -93,7 +93,8 @@ afbPolyFillRect(DrawablePtr pDrawable, GCPtr pGC, int nrectFill, xRectangle *pre
 	unsigned char *rrops;
 	unsigned char *rropsOS;
 
-	priv = (afbPrivGC *)pGC->devPrivates[afbGCPrivateIndex].ptr;
+	priv = (afbPrivGC *)dixLookupPrivate(&pGC->devPrivates,
+					     afbGCPrivateKey);
 	prgnClip = pGC->pCompositeClip;
 	rrops = priv->rrops;
 	rropsOS = priv->rropOS;
@@ -111,7 +112,7 @@ afbPolyFillRect(DrawablePtr pDrawable, GCPtr pGC, int nrectFill, xRectangle *pre
 
 	numRects = REGION_NUM_RECTS(prgnClip) * nrectFill;
 	if (numRects > NUM_STACK_RECTS) {
-		pboxClippedBase = (BoxPtr)ALLOCATE_LOCAL(numRects * sizeof(BoxRec));
+		pboxClippedBase = (BoxPtr)xalloc(numRects * sizeof(BoxRec));
 		if (!pboxClippedBase)
 			return;
 	}
@@ -287,5 +288,5 @@ afbPolyFillRect(DrawablePtr pDrawable, GCPtr pGC, int nrectFill, xRectangle *pre
 		}
 	}
 	if (pboxClippedBase != stackRects)
-			DEALLOCATE_LOCAL(pboxClippedBase);
+			xfree(pboxClippedBase);
 }

@@ -58,8 +58,6 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include <X11/X.h>
-#include <X11/Xproto.h>
 #include "inputstr.h"
 #include "gcstruct.h"	/* pointer for extnsionst.h */
 #include "extnsionst.h"	/* extension entry   */
@@ -71,6 +69,7 @@ SOFTWARE.
 #include "extinit.h"
 #include "exglobals.h"
 #include "swaprep.h"
+#include "registry.h"
 
 /* modules local to Xi */
 #include "allowev.h"
@@ -289,9 +288,7 @@ ProcIDispatch(ClientPtr client)
 	return (ProcXGetDeviceControl(client));
     else if (stuff->data == X_ChangeDeviceControl)
 	return (ProcXChangeDeviceControl(client));
-    else {
-	SendErrorToClient(client, IReqCode, stuff->data, 0, BadRequest);
-    }
+
     return (BadRequest);
 }
 
@@ -378,9 +375,7 @@ SProcIDispatch(ClientPtr client)
 	return (SProcXGetDeviceControl(client));
     else if (stuff->data == X_ChangeDeviceControl)
 	return (SProcXChangeDeviceControl(client));
-    else {
-	SendErrorToClient(client, IReqCode, stuff->data, 0, BadRequest);
-    }
+
     return (BadRequest);
 }
 
@@ -862,29 +857,6 @@ MakeDeviceTypeAtoms(void)
 	    MakeAtom(dev_type[i].name, strlen(dev_type[i].name), 1);
 }
 
-/**************************************************************************
- * Return a DeviceIntPtr corresponding to a specified device id.
- *
- */
-
-DeviceIntPtr
-LookupDeviceIntRec(CARD8 id)
-{
-    DeviceIntPtr dev;
-
-    for (dev = inputInfo.devices; dev; dev = dev->next) {
-	if (dev->id == id)
-	    return dev;
-    }
-
-    for (dev = inputInfo.off_devices; dev; dev = dev->next) {
-	if (dev->id == id)
-	    return dev;
-    }
-
-    return NULL;
-}
-
 /*****************************************************************************
  *
  *	SEventIDispatch
@@ -935,6 +907,8 @@ SEventIDispatch(xEvent * from, xEvent * to)
 	DO_SWAP(SDeviceMappingNotifyEvent, deviceMappingNotify);
     else if (type == ChangeDeviceNotify)
 	DO_SWAP(SChangeDeviceNotifyEvent, changeDeviceNotify);
+    else if (type == DevicePresenceNotify)
+	DO_SWAP(SDevicePresenceNotifyEvent, devicePresenceNotify);
     else {
 	FatalError("XInputExtension: Impossible event!\n");
     }
@@ -963,6 +937,7 @@ XInputExtensionInit(void)
 	AllExtensionVersions[IReqCode - 128] = thisversion;
 	MakeDeviceTypeAtoms();
 	RT_INPUTCLIENT = CreateNewResourceType((DeleteType) InputClientGone);
+	RegisterResourceName(RT_INPUTCLIENT, "INPUTCLIENT");
 	FixExtensionEvents(extEntry);
 	ReplySwapVector[IReqCode] = (ReplySwapPtr) SReplyIDispatch;
 	EventSwapVector[DeviceValuator] = SEventIDispatch;
@@ -980,6 +955,7 @@ XInputExtensionInit(void)
 	EventSwapVector[DeviceButtonStateNotify] = SEventIDispatch;
 	EventSwapVector[DeviceMappingNotify] = SEventIDispatch;
 	EventSwapVector[ChangeDeviceNotify] = SEventIDispatch;
+	EventSwapVector[DevicePresenceNotify] = SEventIDispatch;
     } else {
 	FatalError("IExtensionInit: AddExtensions failed\n");
     }

@@ -146,8 +146,8 @@ afbPolyGlyphBlt (pDrawable, pGC, x, y, nglyph, ppci, pglyphBase)
 	bbox.y1 = y - info.overallAscent;
 	bbox.y2 = y + info.overallDescent;
 
-	rrops = ((afbPrivGCPtr) pGC->devPrivates[afbGCPrivateIndex].ptr)->rrops;
-
+	rrops = ((afbPrivGCPtr)dixLookupPrivate(&pGC->devPrivates,
+						afbGCPrivateKey))->rrops;
 	switch (RECT_IN_REGION(pGC->pScreen, pGC->pCompositeClip, &bbox)) {
 		case rgnOUT:
 			break;
@@ -278,7 +278,7 @@ afbPolyGlyphBlt (pDrawable, pGC, x, y, nglyph, ppci, pglyphBase)
 				int getWidth;				/* bits to get from glyph */
 #endif
 
-				if(!(ppos = (afbTEXTPOS *)ALLOCATE_LOCAL(nglyph * sizeof(afbTEXTPOS))))
+				if(!(ppos = (afbTEXTPOS *)xalloc(nglyph * sizeof(afbTEXTPOS))))
 					return;
 
 				pdstBase = afbScanlineNoBankSwitch(pdstBase, x, y, widthDst);
@@ -453,7 +453,7 @@ afbPolyGlyphBlt (pDrawable, pGC, x, y, nglyph, ppci, pglyphBase)
 						} /* depth */
 					} /* for each glyph */
 				} /* while nbox-- */
-				DEALLOCATE_LOCAL(ppos);
+				xfree(ppos);
 				break;
 			}
 

@@ -56,9 +56,6 @@
 /* Support Damage extension */
 #undef DAMAGE
 
-/* Have Quartz */
-#undef DARWIN_WITH_QUARTZ
-
 /* Support DBE extension */
 #undef DBE
 
@@ -95,8 +92,8 @@
 /* Support DPMS extension */
 #undef DPMSExtension
 
-/* Built-in output drivers (none) */
-#undef DRIVERS
+/* Build DRI2 extension */
+#undef DRI2
 
 /* Default DRI driver path */
 #undef DRI_DRIVER_PATH
@@ -142,6 +139,9 @@
 
 /* Support SHM */
 #undef HAS_SHM
+
+/* Have the 'strlcpy' function */
+#undef HAS_STRLCPY
 
 /* Use Windows sockets */
 #undef HAS_WINSOCK
@@ -214,14 +214,29 @@
 /* Define to 1 if you have the `getuid' function. */
 #undef HAVE_GETUID
 
+/* Define to 1 if you have the `getzoneid' function. */
+#undef HAVE_GETZONEID
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* launchd support available */
+#undef HAVE_LAUNCHD
+
+/* Define to 1 if you have the `audit' library (-laudit). */
+#undef HAVE_LIBAUDIT
+
+/* Define to 1 if you have the <libaudit.h> header file. */
+#undef HAVE_LIBAUDIT_H
 
 /* Has version 2.2 (or newer) of the drm library */
 #undef HAVE_LIBDRM_2_2
 
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
+
+/* Define to 1 if you have the `selinux' library (-lselinux). */
+#undef HAVE_LIBSELINUX
 
 /* Define to 1 if you have the `link' function. */
 #undef HAVE_LINK
@@ -256,11 +271,26 @@
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
 
+/* Define to 1 if you have the `pci_device_enable' function. */
+#undef HAVE_PCI_DEVICE_ENABLE
+
+/* Define to 1 if you have the `pci_system_init_dev_mem' function. */
+#undef HAVE_PCI_SYSTEM_INIT_DEV_MEM
+
 /* Define to 1 if you have the <rpcsvc/dbm.h> header file. */
 #undef HAVE_RPCSVC_DBM_H
 
 /* Define to 1 if you have the <SDL/SDL.h> header file. */
 #undef HAVE_SDL_SDL_H
+
+/* Define to 1 if you have the <selinux/avc.h> header file. */
+#undef HAVE_SELINUX_AVC_H
+
+/* Define to 1 if you have the <selinux/selinux.h> header file. */
+#undef HAVE_SELINUX_SELINUX_H
+
+/* Define to 1 if you have the `shmctl64' function. */
+#undef HAVE_SHMCTL64
 
 /* Define to 1 if the system has the type `socklen_t'. */
 #undef HAVE_SOCKLEN_T
@@ -270,6 +300,9 @@
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the `strcasestr' function. */
+#undef HAVE_STRCASESTR
 
 /* Define to 1 if you have the `strchr' function. */
 #undef HAVE_STRCHR
@@ -321,6 +354,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Has /dev/urandom */
+#undef HAVE_URANDOM
+
 /* Define to 1 if you have the `vprintf' function. */
 #undef HAVE_VPRINTF
 
@@ -329,9 +365,6 @@
 
 /* Define to 1 if you have the `walkcontext' function. */
 #undef HAVE_WALKCONTEXT
-
-/* Built-in input drivers (none) */
-#undef IDRIVERS
 
 /* Support IPv6 for TCP connections */
 #undef IPv6
@@ -368,6 +401,12 @@
 
 /* Do not have 'strcasecmp'. */
 #undef NEED_STRCASECMP
+
+/* Do not have 'strcasestr'. */
+#undef NEED_STRCASESTR
+
+/* Do not have 'strncasecmp'. */
+#undef NEED_STRNCASECMP
 
 /* Need XFree86 helper functions */
 #undef NEED_XF86_PROTOTYPES
@@ -423,11 +462,11 @@
 /* System has PC console */
 #undef PCCONS_SUPPORT
 
+/* Default PCI text file ID path */
+#undef PCI_TXT_IDS_PATH
+
 /* System has PC console */
 #undef PCVT_SUPPORT
-
-/* Support pixmap privates */
-#undef PIXPRIV
 
 /* Overall prefix */
 #undef PROJECTROOT
@@ -447,9 +486,6 @@
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
 
-/* Default RGB path */
-#undef RGB_DB
-
 /* Build Rootless code */
 #undef ROOTLESS
 
@@ -459,11 +495,11 @@
 /* Support Secure RPC ("SUN-DES-1") authentication for X11 clients */
 #undef SECURE_RPC
 
-/* Server config path */
-#undef SERVERCONFIGdir
-
 /* Use a lock to prevent multiple servers on a display */
 #undef SERVER_LOCK
+
+/* Server miscellaneous config path */
+#undef SERVER_MISC_CONFIG_PATH
 
 /* Support SHAPE extension */
 #undef SHAPE
@@ -515,12 +551,6 @@
 /* BSD i386 iopl */
 #undef USE_I386_IOPL
 
-/* Use built-in RGB color database */
-#undef USE_RGB_BUILTIN
-
-/* Use rgb.txt directly */
-#undef USE_RGB_TXT
-
 /* Define to use byteswap macros from <sys/endian.h> */
 #undef USE_SYS_ENDIAN_H
 
@@ -551,8 +581,8 @@
 /* Support XDM Control Protocol */
 #undef XDMCP
 
-/* Path to XErrorDB file */
-#undef XERRORDB_PATH
+/* enable DRI extension in xephyr */
+#undef XEPHYR_DRI
 
 /* Build XEvIE extension */
 #undef XEVIE
@@ -635,8 +665,14 @@
 /* Support FreeType rasterizer in Xprint for nearly all font file formats */
 #undef XP_USE_FREETYPE
 
+/* Have Quartz */
+#undef XQUARTZ
+
 /* Support Record extension */
 #undef XRECORD
+
+/* Build registry module */
+#undef XREGISTRY
 
 /* Build XRes extension */
 #undef XResExtension
@@ -644,8 +680,14 @@
 /* Build Xsdl server */
 #undef XSDLSERVER
 
+/* Build SELinux extension */
+#undef XSELINUX
+
 /* Define to 1 if the DTrace Xserver provider probes should be built in. */
 #undef XSERVER_DTRACE
+
+/* Use libpciaccess for all pci manipulation */
+#undef XSERVER_LIBPCIACCESS
 
 /* Support XSync extension */
 #undef XSYNC

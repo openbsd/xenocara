@@ -36,13 +36,6 @@
 
 
 /*
- * References to external symbols
- */
-
-extern int			g_iPixmapPrivateIndex;
-
-
-/*
  * Local prototypes
  */
 
@@ -64,7 +57,7 @@ winCopyRotatePixmapNativeGDI (PixmapPtr psrcPix, PixmapPtr *ppdstPix,
 PixmapPtr
 winCreatePixmapNativeGDI (ScreenPtr pScreen,
 			  int iWidth, int iHeight,
-			  int iDepth)
+			  int iDepth, unsigned usage_hint)
 {
   winPrivPixmapPtr	pPixmapPriv = NULL;
   PixmapPtr		pPixmap = NULL;
@@ -78,8 +71,8 @@ winCreatePixmapNativeGDI (ScreenPtr pScreen,
     }
 
 #if CYGDEBUG
-  winDebug ("winCreatePixmap () - w %d h %d d %d bw %d\n",
-	  iWidth, iHeight, iDepth,
+  winDebug ("winCreatePixmap () - w %d h %d d %d uh %d bw %d\n",
+	  iWidth, iHeight, iDepth, usage_hint,
 	  PixmapBytePad (iWidth, iDepth));
 #endif
 
@@ -98,6 +91,7 @@ winCreatePixmapNativeGDI (ScreenPtr pScreen,
   pPixmap->devKind = 0;
   pPixmap->refcnt = 1;
   pPixmap->devPrivate.ptr = NULL;
+  pPixmap->usage_hint = usage_hint;
 
   /* Pixmap privates are allocated by AllocatePixmap */
   pPixmapPriv = winGetPixmapPriv (pPixmap);

@@ -44,12 +44,12 @@
 
 #include "pixmapstr.h"
 #include "servermd.h"
+#include "privates.h"
 
 /** Initialize a private area in \a pScreen for pixmap information. */
 Bool dmxInitPixmap(ScreenPtr pScreen)
 {
-    if (!AllocatePixmapPrivate(pScreen, dmxPixPrivateIndex,
-			       sizeof(dmxPixPrivRec)))
+    if (!dixRequestPrivate(dmxPixPrivateKey, sizeof(dmxPixPrivRec)))
 	return FALSE;
 
     return TRUE;
@@ -81,7 +81,8 @@ void dmxBECreatePixmap(PixmapPtr pPixmap)
 
 /** Create a pixmap for \a pScreen with the specified \a width, \a
  *  height, and \a depth. */
-PixmapPtr dmxCreatePixmap(ScreenPtr pScreen, int width, int height, int depth)
+PixmapPtr dmxCreatePixmap(ScreenPtr pScreen, int width, int height, int depth,
+			  unsigned usage_hint)
 {
     DMXScreenInfo *dmxScreen = &dmxScreens[pScreen->myNum];
     PixmapPtr      pPixmap;
@@ -115,6 +116,7 @@ PixmapPtr dmxCreatePixmap(ScreenPtr pScreen, int width, int height, int depth)
     pPixmap->drawable.height = height;
     pPixmap->devKind = PixmapBytePad(width, bpp);
     pPixmap->refcnt = 1;
+    pPixmap->usage_hint = usage_hint;
 
     pPixPriv = DMX_GET_PIXMAP_PRIV(pPixmap);
     pPixPriv->pixmap = (Pixmap)0;
@@ -172,6 +174,7 @@ Bool dmxDestroyPixmap(PixmapPtr pPixmap)
 	    dmxSync(dmxScreen, FALSE);
 	}
     }
+    dixFreePrivates(pPixmap->devPrivates);
     xfree(pPixmap);
 
 #if 0

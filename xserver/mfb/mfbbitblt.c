@@ -351,7 +351,7 @@ int dstx, dsty;
     numRects = REGION_NUM_RECTS(&rgnDst);
     if (numRects && width && height)
     {
-	if(!(pptSrc = (DDXPointPtr)ALLOCATE_LOCAL(numRects *
+	if(!(pptSrc = (DDXPointPtr)xalloc(numRects *
 						  sizeof(DDXPointRec))))
 	{
 	    REGION_UNINIT(pGC->pScreen, &rgnDst);
@@ -370,7 +370,7 @@ int dstx, dsty;
 	if (pGC->planemask & 1)
 	    (*localDoBitBlt) (pSrcDrawable, pDstDrawable, pGC->alu, &rgnDst, pptSrc);
 
-	DEALLOCATE_LOCAL(pptSrc);
+	xfree(pptSrc);
     }
 
     prgnExposed = NULL;
@@ -397,8 +397,7 @@ int dstx, dsty;
  * must register a function for n-to-1 copy operations
  */
 
-static unsigned long	copyPlaneGeneration;
-static int		copyPlaneScreenIndex = -1;
+static DevPrivateKey copyPlaneScreenKey = &copyPlaneScreenKey;
 
 Bool
 mfbRegisterCopyPlaneProc (pScreen, proc)
@@ -415,14 +414,7 @@ mfbRegisterCopyPlaneProc (pScreen, proc)
         int                 /* dsty */,
         unsigned long       /* bitPlane */);
 {
-    if (copyPlaneGeneration != serverGeneration)
-    {
-	copyPlaneScreenIndex = AllocateScreenPrivateIndex();
-	if (copyPlaneScreenIndex < 0)
-	    return FALSE;
-	copyPlaneGeneration = serverGeneration;
-    }
-    pScreen->devPrivates[copyPlaneScreenIndex].fptr = proc;
+    dixSetPrivate(&pScreen->devPrivates, copyPlaneScreenKey, proc);
     return TRUE;
 }
 
@@ -467,10 +459,8 @@ unsigned long plane;
 
     if (pSrcDrawable->depth != 1)
     {
-	if (copyPlaneScreenIndex >= 0 &&
-	    (copyPlane =
-		pSrcDrawable->pScreen->devPrivates[copyPlaneScreenIndex].fptr)
-	    )
+	if ((copyPlane = dixLookupPrivate(&pSrcDrawable->pScreen->devPrivates,
+					  copyPlaneScreenKey)))
 	{
 	    return (*copyPlane) (pSrcDrawable, pDstDrawable,
 			   pGC, srcx, srcy, width, height, dstx, dsty, plane);

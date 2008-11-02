@@ -73,9 +73,6 @@ winMWExtWMProcs = {
  * References to external symbols
  */
 
-extern winScreenInfo		g_ScreenInfo[];
-extern miPointerScreenFuncRec	g_winPointerCursorFuncs;
-extern int			g_iScreenPrivateIndex;
 extern Bool                     g_fSoftwareCursor;
 
 
@@ -335,13 +332,6 @@ winFinishScreenInitFB (int index,
 
   /* Place our save screen function */
   pScreen->SaveScreen = winSaveScreen;
-
-  /* Backing store functions */
-  /*
-   * FIXME: Backing store support still doesn't seem to be working.
-   */
-  pScreen->BackingStoreFuncs.SaveAreas = fbSaveAreas;
-  pScreen->BackingStoreFuncs.RestoreAreas = fbRestoreAreas;
 
   /* Finish fb initialization */
   if (!fbFinishScreenInit (pScreen,
@@ -724,8 +714,6 @@ winFinishScreenInitNativeGDI (int index,
   pScreen->UnrealizeWindow = winUnmapWindowNativeGDI;
 
   /* Paint window */
-  pScreen->PaintWindowBackground = miPaintWindow;
-  pScreen->PaintWindowBorder = miPaintWindow;
   pScreen->CopyWindow = winCopyWindowNativeGDI;
 
   /* Fonts */

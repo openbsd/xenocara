@@ -48,12 +48,15 @@ SRCS =	Args.c \
 libfbcmap_a_SOURCES = $(top_srcdir)/fb/fbcmap_mi.c
 libfbcmap_a_CFLAGS = $(AM_CFLAGS)
 
+XNEST_LIBS = \
+        @XNEST_LIBS@ \
+	libfbcmap.a
+
 Xnest_SOURCES = $(SRCS)
 
-Xnest_LDADD = $(XORG_CORE_LIBS) \
-              $(XNEST_LIBS) \
-              $(XNESTMODULES_LIBS) \
-	      libfbcmap.a
+Xnest_DEPENDENCIES = $(XNEST_LIBS)
+Xnest_LDADD = $(XNEST_LIBS) $(XNEST_SYS_LIBS) $(XSERVER_SYS_LIBS)
+Xnest_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
 
 EXTRA_DIST = icon \
              screensaver \

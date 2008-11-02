@@ -20,10 +20,13 @@ R128_LIBS =					\
 	$(top_builddir)/hw/kdrive/vesa/libvesa.a \
 	@KDRIVE_LIBS@
 
+if GLX
+Xr128_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
+endif
+
 Xr128_LDADD = \
 	$(R128_LIBS)				\
-	@KDRIVE_LIBS@                          \
-	@XSERVER_LIBS@					
+	@KDRIVE_LIBS@
 
 Xr128_DEPENDENCIES =	\
 	libr128.a 				\

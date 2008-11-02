@@ -58,10 +58,13 @@ ATI_LIBS =				\
 	$(DRI_LIBS)			\
 	@KDRIVE_LIBS@
 
+if GLX
+Xati_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
+endif
+
 Xati_LDADD = \
 	$(ATI_LIBS)			\
-	@KDRIVE_LIBS@			\
-	@XSERVER_LIBS@
+	@KDRIVE_LIBS@
 
 Xati_DEPENDENCIES =	\
 	libati.a 			\

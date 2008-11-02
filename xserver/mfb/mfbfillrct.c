@@ -96,7 +96,8 @@ mfbPolyFillRect(pDrawable, pGC, nrectFill, prectInit)
     if (!(pGC->planemask & 1))
 	return;
 
-    priv = (mfbPrivGC *) pGC->devPrivates[mfbGCPrivateIndex].ptr;
+    priv = (mfbPrivGC *)dixLookupPrivate(&pGC->devPrivates,
+					 mfbGetGCPrivateKey());
     alu = priv->ropFillArea;
     pfn = priv->FillArea;
     ppix = pGC->pRotatedPixmap;
@@ -118,7 +119,7 @@ mfbPolyFillRect(pDrawable, pGC, nrectFill, prectInit)
     numRects = REGION_NUM_RECTS(prgnClip) * nrectFill;
     if (numRects > NUM_STACK_RECTS)
     {
-	pboxClippedBase = (BoxPtr)ALLOCATE_LOCAL(numRects * sizeof(BoxRec));
+	pboxClippedBase = (BoxPtr)xalloc(numRects * sizeof(BoxRec));
 	if (!pboxClippedBase)
 	    return;
     }
@@ -222,5 +223,5 @@ mfbPolyFillRect(pDrawable, pGC, nrectFill, prectInit)
     if (pboxClipped != pboxClippedBase)
 	(*pfn) (pDrawable,pboxClipped-pboxClippedBase, pboxClippedBase, alu, ppix);
     if (pboxClippedBase != stackRects)
-    	DEALLOCATE_LOCAL(pboxClippedBase);
+    	xfree(pboxClippedBase);
 }

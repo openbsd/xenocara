@@ -66,10 +66,6 @@ fontsmoduleLTLIBRARIES_INSTALL = $(INSTALL)
 moduleLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(extsmodule_LTLIBRARIES) $(fontsmodule_LTLIBRARIES) \
 	$(module_LTLIBRARIES) $(noinst_LTLIBRARIES)
-libGLcore_la_DEPENDENCIES = $(top_builddir)/GL/mesa/libGLcore.la
-am_libGLcore_la_OBJECTS = GLcoremodule.lo
-libGLcore_la_OBJECTS = $(am_libGLcore_la_OBJECTS)
-@GLX_TRUE@am_libGLcore_la_rpath = -rpath $(extsmoduledir)
 libafb_la_DEPENDENCIES = $(top_builddir)/afb/libafb.la
 am_libafb_la_OBJECTS = afbmodule.lo
 libafb_la_OBJECTS = $(am_libafb_la_OBJECTS)
@@ -95,8 +91,8 @@ libfb_la_OBJECTS = $(am_libfb_la_OBJECTS)
 libfreetype_la_LIBADD =
 am_libfreetype_la_OBJECTS = ftmodule.lo
 libfreetype_la_OBJECTS = $(am_libfreetype_la_OBJECTS)
-@AIGLX_TRUE@am__DEPENDENCIES_1 = $(top_builddir)/GL/glx/libglxdri.la
-libglx_la_DEPENDENCIES = $(top_builddir)/GL/glx/libglx.la \
+@AIGLX_TRUE@am__DEPENDENCIES_1 = $(top_builddir)/glx/libglxdri.la
+libglx_la_DEPENDENCIES = $(top_builddir)/glx/libglx.la \
 	$(am__DEPENDENCIES_1)
 am_libglx_la_OBJECTS = glxmodule.lo
 libglx_la_OBJECTS = $(am_libglx_la_OBJECTS)
@@ -108,12 +104,10 @@ libmfb_la_OBJECTS = $(am_libmfb_la_OBJECTS)
 librecord_la_DEPENDENCIES = $(top_builddir)/record/librecord.la
 am_librecord_la_OBJECTS = recordmod.lo
 librecord_la_OBJECTS = $(am_librecord_la_OBJECTS)
+@RECORD_TRUE@am_librecord_la_rpath = -rpath $(extsmoduledir)
 libshadow_la_DEPENDENCIES = $(top_builddir)/miext/shadow/libshadow.la
 am_libshadow_la_OBJECTS = shmodule.lo
 libshadow_la_OBJECTS = $(am_libshadow_la_OBJECTS)
-libtype1_la_LIBADD =
-am_libtype1_la_OBJECTS = type1mod.lo
-libtype1_la_OBJECTS = $(am_libtype1_la_OBJECTS)
 libwfb_la_DEPENDENCIES = $(top_builddir)/fb/libwfb.la
 am_libwfb_la_OBJECTS = libwfb_la-fbcmap_mi.lo libwfb_la-fbmodule.lo
 libwfb_la_OBJECTS = $(am_libwfb_la_OBJECTS)
@@ -135,21 +129,19 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libGLcore_la_SOURCES) $(libafb_la_SOURCES) \
-	$(libcfb_la_SOURCES) $(libcfb32_la_SOURCES) \
-	$(libdbe_la_SOURCES) $(libdixmods_la_SOURCES) \
-	$(libfb_la_SOURCES) $(libfreetype_la_SOURCES) \
-	$(libglx_la_SOURCES) $(libmfb_la_SOURCES) \
-	$(librecord_la_SOURCES) $(libshadow_la_SOURCES) \
-	$(libtype1_la_SOURCES) $(libwfb_la_SOURCES) \
+SOURCES = $(libafb_la_SOURCES) $(libcfb_la_SOURCES) \
+	$(libcfb32_la_SOURCES) $(libdbe_la_SOURCES) \
+	$(libdixmods_la_SOURCES) $(libfb_la_SOURCES) \
+	$(libfreetype_la_SOURCES) $(libglx_la_SOURCES) \
+	$(libmfb_la_SOURCES) $(librecord_la_SOURCES) \
+	$(libshadow_la_SOURCES) $(libwfb_la_SOURCES) \
 	$(libxorgxkb_la_SOURCES) $(libxtrap_la_SOURCES)
-DIST_SOURCES = $(libGLcore_la_SOURCES) $(libafb_la_SOURCES) \
-	$(libcfb_la_SOURCES) $(libcfb32_la_SOURCES) \
-	$(libdbe_la_SOURCES) $(libdixmods_la_SOURCES) \
-	$(libfb_la_SOURCES) $(libfreetype_la_SOURCES) \
-	$(libglx_la_SOURCES) $(libmfb_la_SOURCES) \
-	$(librecord_la_SOURCES) $(libshadow_la_SOURCES) \
-	$(libtype1_la_SOURCES) $(libwfb_la_SOURCES) \
+DIST_SOURCES = $(libafb_la_SOURCES) $(libcfb_la_SOURCES) \
+	$(libcfb32_la_SOURCES) $(libdbe_la_SOURCES) \
+	$(libdixmods_la_SOURCES) $(libfb_la_SOURCES) \
+	$(libfreetype_la_SOURCES) $(libglx_la_SOURCES) \
+	$(libmfb_la_SOURCES) $(librecord_la_SOURCES) \
+	$(libshadow_la_SOURCES) $(libwfb_la_SOURCES) \
 	$(libxorgxkb_la_SOURCES) $(libxtrap_la_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
@@ -199,8 +191,6 @@ BSD_KQUEUE_APM_FALSE = @BSD_KQUEUE_APM_FALSE@
 BSD_KQUEUE_APM_TRUE = @BSD_KQUEUE_APM_TRUE@
 BUILDDOCS_FALSE = @BUILDDOCS_FALSE@
 BUILDDOCS_TRUE = @BUILDDOCS_TRUE@
-BUILD_DARWIN_FALSE = @BUILD_DARWIN_FALSE@
-BUILD_DARWIN_TRUE = @BUILD_DARWIN_TRUE@
 BUILD_DATE = @BUILD_DATE@
 BUILD_IOPORT_FALSE = @BUILD_IOPORT_FALSE@
 BUILD_IOPORT_TRUE = @BUILD_IOPORT_TRUE@
@@ -272,6 +262,10 @@ DMX_FALSE = @DMX_FALSE@
 DMX_TRUE = @DMX_TRUE@
 DPMSExtension_FALSE = @DPMSExtension_FALSE@
 DPMSExtension_TRUE = @DPMSExtension_TRUE@
+DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
+DRI2PROTO_LIBS = @DRI2PROTO_LIBS@
+DRI2_FALSE = @DRI2_FALSE@
+DRI2_TRUE = @DRI2_TRUE@
 DRIPROTO_CFLAGS = @DRIPROTO_CFLAGS@
 DRIPROTO_LIBS = @DRIPROTO_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
@@ -301,7 +295,7 @@ FREEBSD_KLDLOAD_FALSE = @FREEBSD_KLDLOAD_FALSE@
 FREEBSD_KLDLOAD_TRUE = @FREEBSD_KLDLOAD_TRUE@
 FREETYPE_CFLAGS = @FREETYPE_CFLAGS@
 FREETYPE_LIBS = @FREETYPE_LIBS@
-FREETYPE_REQUIRES = @FREETYPE_REQUIRES@
+GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_FALSE = @GLX_FALSE@
 GLX_TRUE = @GLX_TRUE@
@@ -315,8 +309,8 @@ HAVE_AGL_FRAMEWORK_FALSE = @HAVE_AGL_FRAMEWORK_FALSE@
 HAVE_AGL_FRAMEWORK_TRUE = @HAVE_AGL_FRAMEWORK_TRUE@
 HAVE_DBUS_FALSE = @HAVE_DBUS_FALSE@
 HAVE_DBUS_TRUE = @HAVE_DBUS_TRUE@
-HAVE_X_PLUGIN_FALSE = @HAVE_X_PLUGIN_FALSE@
-HAVE_X_PLUGIN_TRUE = @HAVE_X_PLUGIN_TRUE@
+HAVE_XPLUGIN_FALSE = @HAVE_XPLUGIN_FALSE@
+HAVE_XPLUGIN_TRUE = @HAVE_XPLUGIN_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
@@ -357,6 +351,9 @@ KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KDRIVE_TRUE = @KDRIVE_TRUE@
+LAUNCHD = @LAUNCHD@
+LAUNCHD_FALSE = @LAUNCHD_FALSE@
+LAUNCHD_TRUE = @LAUNCHD_TRUE@
 LDFLAGS = @LDFLAGS@
 LD_EXPORT_SYMBOLS_FLAG = @LD_EXPORT_SYMBOLS_FLAG@
 LEX = @LEX@
@@ -411,6 +408,8 @@ OBJCFLAGS = @OBJCFLAGS@
 OBJCLINK = @OBJCLINK@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
+OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
+OPENSSL_LIBS = @OPENSSL_LIBS@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -418,12 +417,11 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
+PCIACCESS_LIBS = @PCIACCESS_LIBS@
+PCI_TXT_IDS_PATH = @PCI_TXT_IDS_PATH@
 PERL = @PERL@
-PIXMAN_CFLAGS = @PIXMAN_CFLAGS@
-PIXMAN_LIBS = @PIXMAN_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
-PLIST_VENDOR_WEB = @PLIST_VENDOR_WEB@
-PLIST_VERSION_STRING = @PLIST_VERSION_STRING@
 PPC_VIDEO_FALSE = @PPC_VIDEO_FALSE@
 PPC_VIDEO_TRUE = @PPC_VIDEO_TRUE@
 PROJECTROOT = @PROJECTROOT@
@@ -435,13 +433,12 @@ RECORD_FALSE = @RECORD_FALSE@
 RECORD_TRUE = @RECORD_TRUE@
 RES_FALSE = @RES_FALSE@
 RES_TRUE = @RES_TRUE@
-RGB_DB = @RGB_DB@
 SCREENSAVER_FALSE = @SCREENSAVER_FALSE@
 SCREENSAVER_TRUE = @SCREENSAVER_TRUE@
 SECURE_RPC_FALSE = @SECURE_RPC_FALSE@
 SECURE_RPC_TRUE = @SECURE_RPC_TRUE@
 SED = @SED@
-SERVERCONFIGdir = @SERVERCONFIGdir@
+SERVER_MISC_CONFIG_PATH = @SERVER_MISC_CONFIG_PATH@
 SET_MAKE = @SET_MAKE@
 SGI_VIDEO_FALSE = @SGI_VIDEO_FALSE@
 SGI_VIDEO_TRUE = @SGI_VIDEO_TRUE@
@@ -457,20 +454,21 @@ SPARC64_VIDEO_TRUE = @SPARC64_VIDEO_TRUE@
 STRIP = @STRIP@
 SUN_KBD_MODE_FALSE = @SUN_KBD_MODE_FALSE@
 SUN_KBD_MODE_TRUE = @SUN_KBD_MODE_TRUE@
-SYS_LIBS = @SYS_LIBS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_FALSE = @TSLIB_FALSE@
 TSLIB_LIBS = @TSLIB_LIBS@
 TSLIB_TRUE = @TSLIB_TRUE@
 USE_CURSES_FALSE = @USE_CURSES_FALSE@
 USE_CURSES_TRUE = @USE_CURSES_TRUE@
-USE_RGB_BUILTIN_FALSE = @USE_RGB_BUILTIN_FALSE@
-USE_RGB_BUILTIN_TRUE = @USE_RGB_BUILTIN_TRUE@
+UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_MAN_VERSION = @VENDOR_MAN_VERSION@
 VENDOR_NAME = @VENDOR_NAME@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VENDOR_RELEASE = @VENDOR_RELEASE@
 VERSION = @VERSION@
+X11APP_ARCHS = @X11APP_ARCHS@
+X11APP_FALSE = @X11APP_FALSE@
+X11APP_TRUE = @X11APP_TRUE@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
 XACE_FALSE = @XACE_FALSE@
@@ -487,18 +485,22 @@ XDMCP_LIBS = @XDMCP_LIBS@
 XDMCP_TRUE = @XDMCP_TRUE@
 XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
 XDMXCONFIG_DEP_LIBS = @XDMXCONFIG_DEP_LIBS@
+XDMX_CFLAGS = @XDMX_CFLAGS@
 XDMX_LIBS = @XDMX_LIBS@
+XDMX_SYS_LIBS = @XDMX_SYS_LIBS@
 XEGLMODULES_CFLAGS = @XEGLMODULES_CFLAGS@
-XEGLMODULES_LIBS = @XEGLMODULES_LIBS@
 XEGL_FALSE = @XEGL_FALSE@
 XEGL_LIBS = @XEGL_LIBS@
+XEGL_SYS_LIBS = @XEGL_SYS_LIBS@
 XEGL_TRUE = @XEGL_TRUE@
 XEPHYR_CFLAGS = @XEPHYR_CFLAGS@
+XEPHYR_DRI_LIBS = @XEPHYR_DRI_LIBS@
 XEPHYR_FALSE = @XEPHYR_FALSE@
+XEPHYR_HAS_DRI_FALSE = @XEPHYR_HAS_DRI_FALSE@
+XEPHYR_HAS_DRI_TRUE = @XEPHYR_HAS_DRI_TRUE@
 XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
 XEPHYR_TRUE = @XEPHYR_TRUE@
-XERRORDB_PATH = @XERRORDB_PATH@
 XEVIE_FALSE = @XEVIE_FALSE@
 XEVIE_TRUE = @XEVIE_TRUE@
 XF86BIGFONT_FALSE = @XF86BIGFONT_FALSE@
@@ -522,10 +524,12 @@ XGLXMODULES_CFLAGS = @XGLXMODULES_CFLAGS@
 XGLXMODULES_LIBS = @XGLXMODULES_LIBS@
 XGLX_FALSE = @XGLX_FALSE@
 XGLX_LIBS = @XGLX_LIBS@
+XGLX_SYS_LIBS = @XGLX_SYS_LIBS@
 XGLX_TRUE = @XGLX_TRUE@
 XGL_FALSE = @XGL_FALSE@
 XGL_LIBS = @XGL_LIBS@
 XGL_MODULE_PATH = @XGL_MODULE_PATH@
+XGL_SYS_LIBS = @XGL_SYS_LIBS@
 XGL_TRUE = @XGL_TRUE@
 XINERAMA_FALSE = @XINERAMA_FALSE@
 XINERAMA_TRUE = @XINERAMA_TRUE@
@@ -539,19 +543,18 @@ XNESTMODULES_CFLAGS = @XNESTMODULES_CFLAGS@
 XNESTMODULES_LIBS = @XNESTMODULES_LIBS@
 XNEST_FALSE = @XNEST_FALSE@
 XNEST_LIBS = @XNEST_LIBS@
+XNEST_SYS_LIBS = @XNEST_SYS_LIBS@
 XNEST_TRUE = @XNEST_TRUE@
 XORGCFG_DEP_CFLAGS = @XORGCFG_DEP_CFLAGS@
 XORGCFG_DEP_LIBS = @XORGCFG_DEP_LIBS@
 XORGCONFIG_DEP_CFLAGS = @XORGCONFIG_DEP_CFLAGS@
 XORGCONFIG_DEP_LIBS = @XORGCONFIG_DEP_LIBS@
-XORG_BUS_FREEBSDPCI_FALSE = @XORG_BUS_FREEBSDPCI_FALSE@
-XORG_BUS_FREEBSDPCI_TRUE = @XORG_BUS_FREEBSDPCI_TRUE@
+XORG_BUS_BSDPCI_FALSE = @XORG_BUS_BSDPCI_FALSE@
+XORG_BUS_BSDPCI_TRUE = @XORG_BUS_BSDPCI_TRUE@
 XORG_BUS_IX86PCI_FALSE = @XORG_BUS_IX86PCI_FALSE@
 XORG_BUS_IX86PCI_TRUE = @XORG_BUS_IX86PCI_TRUE@
 XORG_BUS_LINUXPCI_FALSE = @XORG_BUS_LINUXPCI_FALSE@
 XORG_BUS_LINUXPCI_TRUE = @XORG_BUS_LINUXPCI_TRUE@
-XORG_BUS_NETBSDPCI_FALSE = @XORG_BUS_NETBSDPCI_FALSE@
-XORG_BUS_NETBSDPCI_TRUE = @XORG_BUS_NETBSDPCI_TRUE@
 XORG_BUS_PPCPCI_FALSE = @XORG_BUS_PPCPCI_FALSE@
 XORG_BUS_PPCPCI_TRUE = @XORG_BUS_PPCPCI_TRUE@
 XORG_BUS_SPARCPCI_FALSE = @XORG_BUS_SPARCPCI_FALSE@
@@ -559,7 +562,6 @@ XORG_BUS_SPARCPCI_TRUE = @XORG_BUS_SPARCPCI_TRUE@
 XORG_BUS_SPARC_FALSE = @XORG_BUS_SPARC_FALSE@
 XORG_BUS_SPARC_TRUE = @XORG_BUS_SPARC_TRUE@
 XORG_CFLAGS = @XORG_CFLAGS@
-XORG_CORE_LIBS = @XORG_CORE_LIBS@
 XORG_FALSE = @XORG_FALSE@
 XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
@@ -569,23 +571,31 @@ XORG_MODULES_CFLAGS = @XORG_MODULES_CFLAGS@
 XORG_MODULES_LIBS = @XORG_MODULES_LIBS@
 XORG_OS = @XORG_OS@
 XORG_OS_SUBDIR = @XORG_OS_SUBDIR@
+XORG_SYS_LIBS = @XORG_SYS_LIBS@
 XORG_TRUE = @XORG_TRUE@
+XPRINTMODULES_CFLAGS = @XPRINTMODULES_CFLAGS@
+XPRINTMODULES_LIBS = @XPRINTMODULES_LIBS@
 XPRINTPROTO_CFLAGS = @XPRINTPROTO_CFLAGS@
 XPRINTPROTO_LIBS = @XPRINTPROTO_LIBS@
 XPRINT_CFLAGS = @XPRINT_CFLAGS@
 XPRINT_FALSE = @XPRINT_FALSE@
 XPRINT_LIBS = @XPRINT_LIBS@
+XPRINT_SYS_LIBS = @XPRINT_SYS_LIBS@
 XPRINT_TRUE = @XPRINT_TRUE@
 XP_USE_FREETYPE_FALSE = @XP_USE_FREETYPE_FALSE@
 XP_USE_FREETYPE_TRUE = @XP_USE_FREETYPE_TRUE@
 XQUARTZ_FALSE = @XQUARTZ_FALSE@
 XQUARTZ_TRUE = @XQUARTZ_TRUE@
+XREGISTRY_FALSE = @XREGISTRY_FALSE@
+XREGISTRY_TRUE = @XREGISTRY_TRUE@
 XRESEXAMPLES_DEP_CFLAGS = @XRESEXAMPLES_DEP_CFLAGS@
 XRESEXAMPLES_DEP_LIBS = @XRESEXAMPLES_DEP_LIBS@
 XSDLSERVER_FALSE = @XSDLSERVER_FALSE@
 XSDLSERVER_TRUE = @XSDLSERVER_TRUE@
 XSDL_INCS = @XSDL_INCS@
 XSDL_LIBS = @XSDL_LIBS@
+XSELINUX_FALSE = @XSELINUX_FALSE@
+XSELINUX_TRUE = @XSELINUX_TRUE@
 XSERVERCFLAGS_CFLAGS = @XSERVERCFLAGS_CFLAGS@
 XSERVERCFLAGS_LIBS = @XSERVERCFLAGS_LIBS@
 XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
@@ -593,12 +603,14 @@ XSERVERLIBS_LIBS = @XSERVERLIBS_LIBS@
 XSERVER_DTRACE_FALSE = @XSERVER_DTRACE_FALSE@
 XSERVER_DTRACE_TRUE = @XSERVER_DTRACE_TRUE@
 XSERVER_LIBS = @XSERVER_LIBS@
+XSERVER_SYS_LIBS = @XSERVER_SYS_LIBS@
 XTRAP_FALSE = @XTRAP_FALSE@
 XTRAP_TRUE = @XTRAP_TRUE@
 XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
 XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
 XVFB_FALSE = @XVFB_FALSE@
 XVFB_LIBS = @XVFB_LIBS@
+XVFB_SYS_LIBS = @XVFB_SYS_LIBS@
 XVFB_TRUE = @XVFB_TRUE@
 XVMC_FALSE = @XVMC_FALSE@
 XVMC_TRUE = @XVMC_TRUE@
@@ -623,7 +635,7 @@ XWIN_PRIMARYFB_TRUE = @XWIN_PRIMARYFB_TRUE@
 XWIN_RANDR_FALSE = @XWIN_RANDR_FALSE@
 XWIN_RANDR_TRUE = @XWIN_RANDR_TRUE@
 XWIN_SERVER_NAME = @XWIN_SERVER_NAME@
-XWIN_SYSTEM_LIBS = @XWIN_SYSTEM_LIBS@
+XWIN_SYS_LIBS = @XWIN_SYS_LIBS@
 XWIN_TRUE = @XWIN_TRUE@
 XWIN_XV_FALSE = @XWIN_XV_FALSE@
 XWIN_XV_TRUE = @XWIN_XV_TRUE@
@@ -631,6 +643,11 @@ X_PRIVSEP_FALSE = @X_PRIVSEP_FALSE@
 X_PRIVSEP_TRUE = @X_PRIVSEP_TRUE@
 YACC = @YACC@
 __XCONFIGFILE__ = @__XCONFIGFILE__@
+abi_ansic = @abi_ansic@
+abi_extension = @abi_extension@
+abi_font = @abi_font@
+abi_videodrv = @abi_videodrv@
+abi_xinput = @abi_xinput@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
@@ -673,6 +690,7 @@ host_vendor = @host_vendor@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
+launchagentsdir = @launchagentsdir@
 libdir = @libdir@
 libexecdir = @libexecdir@
 localstatedir = @localstatedir@
@@ -692,12 +710,13 @@ xglmoduledir = @xglmoduledir@
 xpconfigdir = @xpconfigdir@
 noinst_LTLIBRARIES = libdixmods.la libxorgxkb.la
 SUBDIRS = extmod
-@GLX_TRUE@GLXMODS = libglx.la libGLcore.la
+@GLX_TRUE@GLXMODS = libglx.la
 @XTRAP_TRUE@XTRAPMOD = libxtrap.la
 @DBE_TRUE@DBEMOD = libdbe.la
 @AFB_TRUE@AFBMOD = libafb.la
 @CFB_TRUE@CFBMOD = libcfb.la libcfb32.la
 @MFB_TRUE@MFBMOD = libmfb.la
+@RECORD_TRUE@RECORDMOD = librecord.la
 module_LTLIBRARIES = $(AFBMOD) \
                      $(CFBMOD) \
                      libfb.la \
@@ -706,25 +725,20 @@ module_LTLIBRARIES = $(AFBMOD) \
                      libshadow.la
 
 extsmoduledir = $(moduledir)/extensions
-extsmodule_LTLIBRARIES = librecord.la \
+extsmodule_LTLIBRARIES = $(RECORDMOD) \
 			 $(DBEMOD) \
                          $(GLXMODS) \
                          $(XTRAPMOD)
 
 fontsmoduledir = $(moduledir)/fonts
-fontsmodule_LTLIBRARIES = libfreetype.la \
-                          libtype1.la
-
+fontsmodule_LTLIBRARIES = libfreetype.la
 AM_CFLAGS = @XORG_CFLAGS@ @DIX_CFLAGS@
 INCLUDES = @XORG_INCS@ \
            -I$(top_srcdir)/dbe \
            -I$(top_srcdir)/hw/xfree86/loader \
            -I$(top_srcdir)/miext/shadow \
-           -I$(top_srcdir)/GL/glx
+           -I$(top_srcdir)/glx
 
-libGLcore_la_LDFLAGS = -avoid-version
-libGLcore_la_LIBADD = $(top_builddir)/GL/mesa/libGLcore.la
-libGLcore_la_SOURCES = GLcoremodule.c
 libafb_la_LDFLAGS = -avoid-version
 libafb_la_LIBADD = $(top_builddir)/afb/libafb.la
 libafb_la_SOURCES = afbmodule.c
@@ -746,9 +760,9 @@ libwfb_la_LIBADD = $(top_builddir)/fb/libwfb.la
 libwfb_la_SOURCES = $(top_builddir)/fb/fbcmap_mi.c fbmodule.c
 libwfb_la_CFLAGS = $(AM_CFLAGS) -DFB_ACCESS_WRAPPER
 libglx_la_LDFLAGS = -avoid-version
-@AIGLX_TRUE@GLXDRI_LIBRARY = $(top_builddir)/GL/glx/libglxdri.la
+@AIGLX_TRUE@GLXDRI_LIBRARY = $(top_builddir)/glx/libglxdri.la
 libglx_la_LIBADD = \
-	$(top_builddir)/GL/glx/libglx.la \
+	$(top_builddir)/glx/libglx.la \
 	$(GLXDRI_LIBRARY)
 
 libglx_la_SOURCES = glxmodule.c
@@ -763,8 +777,6 @@ libshadow_la_LIBADD = $(top_builddir)/miext/shadow/libshadow.la
 libshadow_la_SOURCES = shmodule.c
 libfreetype_la_LDFLAGS = -avoid-version
 libfreetype_la_SOURCES = ftmodule.c
-libtype1_la_LDFLAGS = -avoid-version
-libtype1_la_SOURCES = type1mod.c
 libdixmods_la_SOURCES = $(top_srcdir)/mi/miinitext.c
 libdixmods_la_CFLAGS = -DXFree86LOADER $(AM_CFLAGS)
 libxorgxkb_la_SOURCES = xkbVT.c xkbPrivate.c xkbKillSrv.c
@@ -895,8 +907,6 @@ clean-noinstLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libGLcore.la: $(libGLcore_la_OBJECTS) $(libGLcore_la_DEPENDENCIES) 
-	$(LINK) $(am_libGLcore_la_rpath) $(libGLcore_la_LDFLAGS) $(libGLcore_la_OBJECTS) $(libGLcore_la_LIBADD) $(LIBS)
 libafb.la: $(libafb_la_OBJECTS) $(libafb_la_DEPENDENCIES) 
 	$(LINK) $(am_libafb_la_rpath) $(libafb_la_LDFLAGS) $(libafb_la_OBJECTS) $(libafb_la_LIBADD) $(LIBS)
 libcfb.la: $(libcfb_la_OBJECTS) $(libcfb_la_DEPENDENCIES) 
@@ -916,11 +926,9 @@ libglx.la: $(libglx_la_OBJECTS) $(libglx_la_DEPENDENCIES)
 libmfb.la: $(libmfb_la_OBJECTS) $(libmfb_la_DEPENDENCIES) 
 	$(LINK) $(am_libmfb_la_rpath) $(libmfb_la_LDFLAGS) $(libmfb_la_OBJECTS) $(libmfb_la_LIBADD) $(LIBS)
 librecord.la: $(librecord_la_OBJECTS) $(librecord_la_DEPENDENCIES) 
-	$(LINK) -rpath $(extsmoduledir) $(librecord_la_LDFLAGS) $(librecord_la_OBJECTS) $(librecord_la_LIBADD) $(LIBS)
+	$(LINK) $(am_librecord_la_rpath) $(librecord_la_LDFLAGS) $(librecord_la_OBJECTS) $(librecord_la_LIBADD) $(LIBS)
 libshadow.la: $(libshadow_la_OBJECTS) $(libshadow_la_DEPENDENCIES) 
 	$(LINK) -rpath $(moduledir) $(libshadow_la_LDFLAGS) $(libshadow_la_OBJECTS) $(libshadow_la_LIBADD) $(LIBS)
-libtype1.la: $(libtype1_la_OBJECTS) $(libtype1_la_DEPENDENCIES) 
-	$(LINK) -rpath $(fontsmoduledir) $(libtype1_la_LDFLAGS) $(libtype1_la_OBJECTS) $(libtype1_la_LIBADD) $(LIBS)
 libwfb.la: $(libwfb_la_OBJECTS) $(libwfb_la_DEPENDENCIES) 
 	$(LINK) -rpath $(moduledir) $(libwfb_la_LDFLAGS) $(libwfb_la_OBJECTS) $(libwfb_la_LIBADD) $(LIBS)
 libxorgxkb.la: $(libxorgxkb_la_OBJECTS) $(libxorgxkb_la_DEPENDENCIES) 
@@ -934,7 +942,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GLcoremodule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/afbmodule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cfb32module.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cfbmodule.Plo@am__quote@
@@ -949,7 +956,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mfbmodule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/recordmod.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shmodule.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/type1mod.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86XTrapModule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xkbKillSrv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xkbPrivate.Plo@am__quote@

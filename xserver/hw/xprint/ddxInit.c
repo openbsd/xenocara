@@ -205,7 +205,7 @@ ProcessInputEvents(void)
 {
 }
 
-#ifdef __DARWIN__
+#ifdef __APPLE__
 #include "micmap.h"
 
 void GlxExtensionInit(void);
@@ -290,6 +290,12 @@ ddxProcessArgument (
 #include <X11/extensions/XIproto.h>
 #include "XIstubs.h"
 #include "exglobals.h"
+
+/* Place dummy config functions here instead of config/config.c, 
+   since Xprint does not use D-BUS */
+void config_init() { }
+void config_fini() { }
+
 
 int
 ChangePointerDevice (

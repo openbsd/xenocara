@@ -21,6 +21,7 @@
  */
 
 #include "randrstr.h"
+#include "registry.h"
 
 RESTYPE	RROutputType;
 
@@ -95,6 +96,7 @@ RROutputCreate (ScreenPtr   pScreen,
     output->numUserModes = 0;
     output->userModes = NULL;
     output->properties = NULL;
+    output->pendingProperties = FALSE;
     output->changed = FALSE;
     output->devPrivate = devPrivate;
     
@@ -419,9 +421,7 @@ RROutputInit (void)
     RROutputType = CreateNewResourceType (RROutputDestroyResource);
     if (!RROutputType)
 	return FALSE;
-#ifdef XResExtension
-	RegisterResourceName (RROutputType, "OUTPUT");
-#endif
+    RegisterResourceName (RROutputType, "OUTPUT");
     return TRUE;
 }
 

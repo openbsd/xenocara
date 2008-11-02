@@ -33,7 +33,7 @@ INCLUDES = $(XORG_INCS) -I$(top_srcdir)/hw/xfree86/parser
 
 OPTIONSPATH=$(libdir)/X11
 
-xorgcfg_CFLAGS = $(XORG_CFLAGS) $(CURSESDEFINES) \
+xorgcfg_CFLAGS = $(DIX_CFLAGS) $(XORG_CFLAGS) $(CURSESDEFINES) \
 	$(XORGCFG_DEP_CFLAGS) -DXKB_RULES_DIR=\"$(XKB_BASE_DIRECTORY)/rules\" \
 	-DPROJECT_ROOT=\"$(PROJECTROOT)\" -DOPTIONSPATH=\"$(OPTIONSPATH)\"
 xorgcfg_LDADD = $(XORGCFG_DEP_LIBS) ../../parser/libxf86config.a $(LOADERLIB) \
@@ -42,7 +42,6 @@ xorgcfg_LDADD = $(XORGCFG_DEP_LIBS) ../../parser/libxf86config.a $(LOADERLIB) \
 
 #if DoLoadableServer
 LDSRCS  = \
-	$(top_srcdir)/hw/xfree86/os-support/shared/libc_wrapper.c \
 	loader.c loadmod.c
 LOADERLIB = ../../loader/libloader.a
 #endif

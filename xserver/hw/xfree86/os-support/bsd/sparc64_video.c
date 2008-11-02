@@ -34,6 +34,8 @@
 #include "xf86_OSlib.h"
 #include "xf86OSpriv.h"
 
+#include <pciaccess.h>
+
 #ifndef MAP_FAILED
 #define MAP_FAILED ((caddr_t)-1)
 #endif
@@ -51,6 +53,9 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 	pVidMem->linearSupported = TRUE;
 	pVidMem->mapMem = sparc64MapVidMem;
 	pVidMem->unmapMem = sparc64UnmapVidMem;
+#if HAVE_PCI_SYSTEM_INIT_DEV_MEM
+       pci_system_init_dev_mem(xf86Info.screenFd);
+#endif
 	pVidMem->initialised = TRUE;
 }
 
@@ -116,7 +121,7 @@ xf86EnableInterrupts()
 _X_EXPORT void
 xf86PrivilegedInit(void)
 {
-	pciInit();
+	pci_system_init();
 	xf86OpenConsole();
 }
 #endif

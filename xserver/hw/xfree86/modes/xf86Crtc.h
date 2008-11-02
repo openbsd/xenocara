@@ -29,6 +29,7 @@
 #endif
 #include "xf86Modes.h"
 #include "xf86Cursor.h"
+#include "xf86i2c.h"
 #include "damage.h"
 #include "picturestr.h"
 
@@ -38,6 +39,9 @@
 #endif
 #ifndef M_T_DRIVER
 #define M_T_DRIVER	0x40
+#endif
+#ifndef M_T_USERPREF
+#define M_T_USERPREF	0x80
 #endif
 #ifndef HARDWARE_CURSOR_ARGB
 #define HARDWARE_CURSOR_ARGB				0x00004000
@@ -58,12 +62,14 @@ typedef enum _xf86ConnectorType {
    XF86ConnectorComponent,
    XF86ConnectorLFP,
    XF86ConnectorProprietary,
+   XF86ConnectorHDMI,
+   XF86ConnectorDisplayPort,
 } xf86ConnectorType;
 
 typedef enum _xf86OutputStatus {
    XF86OutputStatusConnected,
    XF86OutputStatusDisconnected,
-   XF86OutputStatusUnknown,
+   XF86OutputStatusUnknown
 } xf86OutputStatus;
 
 typedef struct _xf86CrtcFuncs {
@@ -200,6 +206,13 @@ typedef struct _xf86CrtcFuncs {
      */
     void
     (*destroy) (xf86CrtcPtr	crtc);
+
+    /**
+     * Less fine-grained mode setting entry point for kernel modesetting
+     */
+    Bool
+    (*set_mode_major)(xf86CrtcPtr crtc, DisplayModePtr mode,
+		      Rotation rotation, int x, int y);
 } xf86CrtcFuncsRec, *xf86CrtcFuncsPtr;
 
 struct _xf86Crtc {

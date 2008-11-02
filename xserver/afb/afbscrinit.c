@@ -69,21 +69,10 @@ SOFTWARE.
 #include "servermd.h"
 
 #ifdef PIXMAP_PER_WINDOW
-int frameWindowPrivateIndex;
+DevPrivateKey frameWindowPrivateKey = &frameWindowPrivateKey;
 #endif
-int afbWindowPrivateIndex;
-int afbGCPrivateIndex;
-int afbScreenPrivateIndex;
-
-static unsigned long afbGeneration = 0;
-
-static BSFuncRec afbBSFuncRec = {
-	afbSaveAreas,
-	afbRestoreAreas,
-	(BackingStoreSetClipmaskRgnProcPtr) 0,
-	(BackingStoreGetImagePixmapProcPtr) 0,
-	(BackingStoreGetSpansPixmapProcPtr) 0,
-};
+DevPrivateKey afbGCPrivateKey = &afbGCPrivateKey;
+DevPrivateKey afbScreenPrivateKey = &afbScreenPrivateKey;
 
 static Bool
 afbCloseScreen(int index, ScreenPtr pScreen)
@@ -95,7 +84,7 @@ afbCloseScreen(int index, ScreenPtr pScreen)
 		xfree(depths[d].vids);
 	xfree(depths);
 	xfree(pScreen->visuals);
-	xfree(pScreen->devPrivates[afbScreenPrivateIndex].ptr);
+	xfree(dixLookupPrivate(&pScreen->devPrivates, afbScreenPrivateKey));
 	return(TRUE);
 }
 
@@ -106,7 +95,8 @@ afbCreateScreenResources(ScreenPtr pScreen)
 
 	pointer oldDevPrivate = pScreen->devPrivate;
 
-	pScreen->devPrivate = pScreen->devPrivates[afbScreenPrivateIndex].ptr;
+	pScreen->devPrivate = dixLookupPrivate(&pScreen->devPrivates,
+					       afbScreenPrivateKey);
 	retval = miCreateScreenResources(pScreen);
 
 	/* Modify screen's pixmap devKind value stored off devPrivate to
@@ -114,7 +104,8 @@ afbCreateScreenResources(ScreenPtr pScreen)
 	 * of a chunky screen in longs as incorrectly setup by the mi routine.
 	 */
 	((PixmapPtr)pScreen->devPrivate)->devKind = BitmapBytePad(pScreen->width);
-	pScreen->devPrivates[afbScreenPrivateIndex].ptr = pScreen->devPrivate;
+	dixSetPrivate(&pScreen->devPrivates, afbScreenPrivateKey,
+		      pScreen->devPrivate);
 	pScreen->devPrivate = oldDevPrivate;
 	return(retval);
 }
@@ -123,7 +114,8 @@ static PixmapPtr
 afbGetWindowPixmap(WindowPtr pWin)
 {
 #ifdef PIXMAP_PER_WINDOW
-    return (PixmapPtr)(pWin->devPrivates[frameWindowPrivateIndex].ptr);
+    return (PixmapPtr)dixLookupPrivate(&pWin->devPrivates,
+				       frameWindowPrivateKey);
 #else
     ScreenPtr pScreen = pWin->drawable.pScreen;
 
@@ -135,33 +127,21 @@ static void
 afbSetWindowPixmap(WindowPtr pWin, PixmapPtr pPix)
 {
 #ifdef PIXMAP_PER_WINDOW
-    pWin->devPrivates[frameWindowPrivateIndex].ptr = (pointer)pPix;
+    dixSetPrivate(&pWin->devPrivates, frameWindowPrivateKey, pPix);
 #else
     (* pWin->drawable.pScreen->SetScreenPixmap)(pPix);
 #endif
 }
 
 static Bool
-afbAllocatePrivates(ScreenPtr pScreen, int *pWinIndex, int *pGCIndex)
+afbAllocatePrivates(ScreenPtr pScreen, DevPrivateKey *pGCKey)
 {
-	if (afbGeneration != serverGeneration) {
-#ifdef PIXMAP_PER_WINDOW
-		frameWindowPrivateIndex = AllocateWindowPrivateIndex();
-#endif
-		afbWindowPrivateIndex = AllocateWindowPrivateIndex();
-		afbGCPrivateIndex = AllocateGCPrivateIndex();
-		afbGeneration = serverGeneration;
-	}
-	if (pWinIndex)
-		*pWinIndex = afbWindowPrivateIndex;
-	if (pGCIndex)
-		*pGCIndex = afbGCPrivateIndex;
+	if (pGCKey)
+		*pGCKey = afbGCPrivateKey;
 
-	afbScreenPrivateIndex = AllocateScreenPrivateIndex();
 	pScreen->GetWindowPixmap = afbGetWindowPixmap;
 	pScreen->SetWindowPixmap = afbSetWindowPixmap;
-	return(AllocateWindowPrivate(pScreen, afbWindowPrivateIndex, sizeof(afbPrivWin)) &&
-	       AllocateGCPrivate(pScreen, afbGCPrivateIndex, sizeof(afbPrivGC)));
+	return dixRequestPrivate(afbGCPrivateKey, sizeof(afbPrivGC));
 }
 
 /* dts * (inch/dot) * (25.4 mm / inch) = mm */
@@ -187,7 +167,7 @@ afbScreenInit(register ScreenPtr pScreen, pointer pbits, int xsize, int ysize, i
 		ErrorF("afbInitVisuals: FALSE\n");
 		return FALSE;
 	}
-	if (!afbAllocatePrivates(pScreen,(int *)NULL, (int *)NULL)) {
+	if (!afbAllocatePrivates(pScreen, NULL)) {
 		ErrorF("afbAllocatePrivates: FALSE\n");
 		return FALSE;
 	}
@@ -206,8 +186,6 @@ afbScreenInit(register ScreenPtr pScreen, pointer pbits, int xsize, int ysize, i
 	pScreen->ChangeWindowAttributes = afbChangeWindowAttributes;
 	pScreen->RealizeWindow = afbMapWindow;
 	pScreen->UnrealizeWindow = afbUnmapWindow;
-	pScreen->PaintWindowBackground = afbPaintWindow;
-	pScreen->PaintWindowBorder = afbPaintWindow;
 	pScreen->CopyWindow = afbCopyWindow;
 	pScreen->CreatePixmap = afbCreatePixmap;
 	pScreen->DestroyPixmap = afbDestroyPixmap;
@@ -231,9 +209,9 @@ afbScreenInit(register ScreenPtr pScreen, pointer pbits, int xsize, int ysize, i
 
 	pScreen->CloseScreen = afbCloseScreen;
 	pScreen->CreateScreenResources = afbCreateScreenResources;
-	pScreen->BackingStoreFuncs = afbBSFuncRec;
 
-	pScreen->devPrivates[afbScreenPrivateIndex].ptr = pScreen->devPrivate;
+	dixSetPrivate(&pScreen->devPrivates, afbScreenPrivateKey,
+		      pScreen->devPrivate);
 	pScreen->devPrivate = oldDevPrivate;
 
 	return TRUE;

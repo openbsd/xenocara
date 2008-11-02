@@ -52,7 +52,7 @@ SOFTWARE.
  * server executable.
  */
 #ifndef VENDOR_STRING
-#define VENDOR_STRING "The X.Org Group"
+#define VENDOR_STRING "The X.Org Foundation"
 #endif
 
 /*
@@ -74,9 +74,6 @@ SOFTWARE.
  */
 #ifndef COMPILEDDEFAULTFONTPATH
 #define COMPILEDDEFAULTFONTPATH	"/usr/lib/X11/fonts/misc/"
-#endif
-#ifndef RGB_DB
-#define RGB_DB			"/usr/lib/X11/rgb"
 #endif
 
 /*

@@ -96,17 +96,17 @@ xf4bppSolidWindowFS( pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted )
 	return ;
     }
 
-    if ( ( alu = ( (ppcPrivGC *) pGC->devPrivates[mfbGetGCPrivateIndex()].ptr )->colorRrop.alu ) == GXnoop )
+    if ( ( alu = ( (ppcPrivGC *)dixLookupPrivate(&pGC->devPrivates, mfbGetGCPrivateKey()) )->colorRrop.alu ) == GXnoop )
 	return ;
 
     n = nInit * miFindMaxBand( pGC->pCompositeClip ) ;
-    if ( !( pwidthFree = (int *) ALLOCATE_LOCAL( n * sizeof( int ) ) ) )
+    if ( !( pwidthFree = (int *) xalloc( n * sizeof( int ) ) ) )
 	return ;
     pwidth = pwidthFree ;
 
     if ( !( pptFree = (DDXPointRec *)
-			ALLOCATE_LOCAL( n * sizeof( DDXPointRec ) ) ) ) {
-	DEALLOCATE_LOCAL( pwidth ) ;
+			xalloc( n * sizeof( DDXPointRec ) ) ) ) {
+	xfree( pwidth ) ;
 	return ;
     }
     ppt = pptFree ;
@@ -114,16 +114,16 @@ xf4bppSolidWindowFS( pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted )
     n = miClipSpans( pGC->pCompositeClip, pptInit, pwidthInit, nInit,
 	ppt, pwidth, fSorted ) ;
 
-    pm = ( (ppcPrivGC *) pGC->devPrivates[mfbGetGCPrivateIndex()].ptr )->colorRrop.planemask ;
-    fg = ( (ppcPrivGC *) pGC->devPrivates[mfbGetGCPrivateIndex()].ptr )->colorRrop.fgPixel ;
+    pm = ( (ppcPrivGC *)dixLookupPrivate(&pGC->devPrivates, mfbGetGCPrivateKey()) )->colorRrop.planemask ;
+    fg = ( (ppcPrivGC *)dixLookupPrivate(&pGC->devPrivates, mfbGetGCPrivateKey()) )->colorRrop.fgPixel ;
 
     for ( ; n-- ; ppt++, pwidth++ )
 	if ( *pwidth )
 	    xf4bppFillSolid( (WindowPtr)pDrawable,
 		           fg, alu, pm, ppt->x, ppt->y, *pwidth, 1 ) ;
 
-    DEALLOCATE_LOCAL( pptFree ) ;
-    DEALLOCATE_LOCAL( pwidthFree ) ;
+    xfree( pptFree ) ;
+    xfree( pwidthFree ) ;
     return ;
 }
 
@@ -163,14 +163,14 @@ int fSorted ;
 	return ;
     }
 
-    if ( ( alu = ( (ppcPrivGC *) pGC->devPrivates[mfbGetGCPrivateIndex()].ptr )->colorRrop.alu ) == GXnoop )
+    if ( ( alu = ( (ppcPrivGC *)dixLookupPrivate(&pGC->devPrivates, mfbGetGCPrivateKey()) )->colorRrop.alu ) == GXnoop )
 	return ;
 
     SETSPANPTRS( nInit, n, pwidthInit, pwidthFree, pptInit,
 		 pptFree, pwidth, ppt, fSorted ) ;
 
-    pm = ( (ppcPrivGC *) pGC->devPrivates[mfbGetGCPrivateIndex()].ptr )->colorRrop.planemask ;
-    fg = ( (ppcPrivGC *) pGC->devPrivates[mfbGetGCPrivateIndex()].ptr )->colorRrop.fgPixel ;
+    pm = ( (ppcPrivGC *)dixLookupPrivate(&pGC->devPrivates, mfbGetGCPrivateKey()) )->colorRrop.planemask ;
+    fg = ( (ppcPrivGC *)dixLookupPrivate(&pGC->devPrivates, mfbGetGCPrivateKey()) )->colorRrop.fgPixel ;
 
     xSrc = pGC->patOrg.x + pDrawable->x ;
     ySrc = pGC->patOrg.y + pDrawable->y ;
@@ -180,8 +180,8 @@ int fSorted ;
 	xf4bppFillStipple( (WindowPtr)pDrawable, pTile, fg, alu, pm,
 			ppt->x, ppt->y, *pwidth, 1, xSrc, ySrc ) ;
 
-    DEALLOCATE_LOCAL( pptFree ) ;
-    DEALLOCATE_LOCAL( pwidthFree ) ;
+    xfree( pptFree ) ;
+    xfree( pwidthFree ) ;
 
     return ;
 }
@@ -215,15 +215,15 @@ int fSorted ;
 	return ;
     }
 
-    if ( ( alu = ( (ppcPrivGC *) pGC->devPrivates[mfbGetGCPrivateIndex()].ptr )->colorRrop.alu ) == GXnoop )
+    if ( ( alu = ( (ppcPrivGC *)dixLookupPrivate(&pGC->devPrivates, mfbGetGCPrivateKey()) )->colorRrop.alu ) == GXnoop )
 	return ;
 
     SETSPANPTRS( nInit, n, pwidthInit, pwidthFree, pptInit,
 		 pptFree, pwidth, ppt, fSorted ) ;
 
-    pm = ( (ppcPrivGC *) pGC->devPrivates[mfbGetGCPrivateIndex()].ptr )->colorRrop.planemask ;
-    fg = ( (ppcPrivGC *) pGC->devPrivates[mfbGetGCPrivateIndex()].ptr )->colorRrop.fgPixel ;
-    bg = ( (ppcPrivGC *) pGC->devPrivates[mfbGetGCPrivateIndex()].ptr )->colorRrop.bgPixel ;
+    pm = ( (ppcPrivGC *)dixLookupPrivate(&pGC->devPrivates, mfbGetGCPrivateKey()) )->colorRrop.planemask ;
+    fg = ( (ppcPrivGC *)dixLookupPrivate(&pGC->devPrivates, mfbGetGCPrivateKey()) )->colorRrop.fgPixel ;
+    bg = ( (ppcPrivGC *)dixLookupPrivate(&pGC->devPrivates, mfbGetGCPrivateKey()) )->colorRrop.bgPixel ;
 
     xSrc = pGC->patOrg.x + pDrawable->x ;
     ySrc = pGC->patOrg.y + pDrawable->y ;
@@ -232,8 +232,8 @@ int fSorted ;
 	xf4bppOpaqueStipple( (WindowPtr)pDrawable, pGC->stipple, fg, bg, alu, pm,
 		ppt->x, ppt->y, *pwidth, 1, xSrc, ySrc ) ;
 
-    DEALLOCATE_LOCAL( pptFree ) ;
-    DEALLOCATE_LOCAL( pwidthFree ) ;
+    xfree( pptFree ) ;
+    xfree( pwidthFree ) ;
     return ;
 }
 
@@ -260,7 +260,7 @@ int fSorted ;
     TRACE( ( "xf4bppTileWindowFS(pDrawable=0x%x,pGC=0x%x,nInit=%d,pptInit=0x%x,pwidthInit=0x%x,fSorted=%d)\n",
 	    pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted ) ) ;
 
-    if ( ( alu = ( (ppcPrivGC *) pGC->devPrivates[mfbGetGCPrivateIndex()].ptr )->colorRrop.alu ) == GXnoop )
+    if ( ( alu = ( (ppcPrivGC *)dixLookupPrivate(&pGC->devPrivates, mfbGetGCPrivateKey()) )->colorRrop.alu ) == GXnoop )
 	return ;
 
     SETSPANPTRS( nInit, n, pwidthInit, pwidthFree, pptInit,
@@ -268,13 +268,13 @@ int fSorted ;
 
     xSrc = pGC->patOrg.x + pDrawable->x ;
     ySrc = pGC->patOrg.y + pDrawable->y ;
-    pm = ( (ppcPrivGC *) pGC->devPrivates[mfbGetGCPrivateIndex()].ptr )->colorRrop.planemask ;
+    pm = ( (ppcPrivGC *)dixLookupPrivate(&pGC->devPrivates, mfbGetGCPrivateKey()) )->colorRrop.planemask ;
 
     for ( ; n-- ; ppt++, pwidth++ )
 	    xf4bppTileRect( (WindowPtr)pDrawable, pGC->tile.pixmap, alu, pm,
 		     ppt->x, ppt->y, *pwidth, 1, xSrc, ySrc ) ;
 
-    DEALLOCATE_LOCAL( pptFree ) ;
-    DEALLOCATE_LOCAL( pwidthFree ) ;
+    xfree( pptFree ) ;
+    xfree( pwidthFree ) ;
     return ;
 }

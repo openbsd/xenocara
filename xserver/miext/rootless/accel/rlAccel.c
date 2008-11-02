@@ -46,10 +46,13 @@ typedef struct _rlAccelScreenRec {
     CloseScreenProcPtr CloseScreen;
 } rlAccelScreenRec, *rlAccelScreenPtr;
 
-static int rlAccelScreenPrivateIndex = -1;
+static DevPrivateKey rlAccelScreenPrivateKey = &rlAccelScreenPrivateKey;
 
-#define RLACCELREC(pScreen) \
-   ((rlAccelScreenRec *)(pScreen)->devPrivates[rlAccelScreenPrivateIndex].ptr)
+#define RLACCELREC(pScreen) ((rlAccelScreenRec *) \
+    dixLookupPrivate(&(pScreen)->devPrivates, rlAccelScreenPrivateKey))
+
+#define SETRLACCELREC(pScreen, v) \
+    dixSetPrivate(&(pScreen)->devPrivates, rlAccelScreenPrivateKey, v)
 
 /* This is mostly identical to fbGCOps. */
 static GCOps rlAccelOps = {
@@ -128,18 +131,11 @@ rlCloseScreen (int iScreen, ScreenPtr pScreen)
 Bool
 RootlessAccelInit(ScreenPtr pScreen)
 {
-    static unsigned long rlAccelGeneration = 0;
     rlAccelScreenRec *s;
-
-    if (rlAccelGeneration != serverGeneration) {
-        rlAccelScreenPrivateIndex = AllocateScreenPrivateIndex();
-        if (rlAccelScreenPrivateIndex == -1) return FALSE;
-        rlAccelGeneration = serverGeneration;
-    }
 
     s = xalloc(sizeof(rlAccelScreenRec));
     if (!s) return FALSE;
-    RLACCELREC(pScreen) = s;
+    SETRLACCELREC(pScreen, s);
 
     // Wrap the screen functions we need
     s->CreateGC = pScreen->CreateGC;

@@ -30,6 +30,7 @@
 #include "screenint.h"
 #include "regionstr.h"
 #include "miscstruct.h"
+#include "privates.h"
 
 #define GlyphFormat1	0
 #define GlyphFormat4	1
@@ -39,12 +40,15 @@
 #define GlyphFormatNum	5
 
 typedef struct _Glyph {
-    CARD32	refcnt;
-    DevUnion	*devPrivates;
-    CARD32	size;	/* info + bitmap */
-    xGlyphInfo	info;
-    /* bits follow */
+    CARD32	    refcnt;
+    PrivateRec	*devPrivates;
+    unsigned char   sha1[20];
+    CARD32	    size; /* info + bitmap */
+    xGlyphInfo	    info;
+    /* per-screen pixmaps follow */
 } GlyphRec, *GlyphPtr;
+
+#define GlyphPicture(glyph) ((PicturePtr *) ((glyph) + 1))
 
 typedef struct _GlyphRef {
     CARD32	signature;
@@ -71,18 +75,14 @@ typedef struct _GlyphSet {
     int		    fdepth;
     GlyphHashRec    hash;
     int             maxPrivate;
-    pointer         *devPrivates;
+    PrivateRec      *devPrivates;
 } GlyphSetRec, *GlyphSetPtr;
 
-#define GlyphSetGetPrivate(pGlyphSet,n)					\
-	((n) > (pGlyphSet)->maxPrivate ?				\
-	 (pointer) 0 :							\
-	 (pGlyphSet)->devPrivates[n])
+#define GlyphSetGetPrivate(pGlyphSet,k)					\
+    dixLookupPrivate(&(pGlyphSet)->devPrivates, k)
 
-#define GlyphSetSetPrivate(pGlyphSet,n,ptr)				\
-	((n) > (pGlyphSet)->maxPrivate ?				\
-	 _GlyphSetSetNewPrivate(pGlyphSet, n, ptr) :			\
-	 ((((pGlyphSet)->devPrivates[n] = (ptr)) != 0) || TRUE))
+#define GlyphSetSetPrivate(pGlyphSet,k,ptr)				\
+    dixSetPrivate(&(pGlyphSet)->devPrivates, k, ptr)
 
 typedef struct _GlyphList {
     INT16	    xOff;
@@ -94,32 +94,6 @@ typedef struct _GlyphList {
 GlyphHashSetPtr
 FindGlyphHashSet (CARD32 filled);
 
-int
-AllocateGlyphSetPrivateIndex (void);
-
-void
-ResetGlyphSetPrivateIndex (void);
-
-Bool
-_GlyphSetSetNewPrivate (GlyphSetPtr glyphSet, int n, pointer ptr);
-
-void
-ResetGlyphPrivates (void);
-
-int
-AllocateGlyphPrivateIndex (void);
-
-Bool
-AllocateGlyphPrivate (ScreenPtr pScreen,
-		      int	index2,
-		      unsigned	amount);
-
-Bool
-GlyphInit (ScreenPtr pScreen);
-
-Bool
-GlyphFinishInit (ScreenPtr pScreen);
-
 void
 GlyphUninit (ScreenPtr pScreen);
 
@@ -127,10 +101,19 @@ GlyphHashSetPtr
 FindGlyphHashSet (CARD32 filled);
 
 GlyphRefPtr
-FindGlyphRef (GlyphHashPtr hash, CARD32 signature, Bool match, GlyphPtr compare);
+FindGlyphRef (GlyphHashPtr	hash,
+	      CARD32		signature,
+	      Bool		match,
+	      unsigned char	sha1[20]);
 
-CARD32
-HashGlyph (GlyphPtr glyph);
+GlyphPtr
+FindGlyphByHash (unsigned char sha1[20], int format);
+
+int
+HashGlyph (xGlyphInfo    *gi,
+	   CARD8	 *bits,
+	   unsigned long size,
+	   unsigned char sha1[20]);
 
 void
 FreeGlyph (GlyphPtr glyph, int format);

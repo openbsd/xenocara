@@ -602,8 +602,7 @@ xf86SbusUseBuiltinMode(ScrnInfoPtr pScrn, sbusDevicePtr psdp)
     pScrn->virtualY = psdp->height;
 }
 
-static int sbusPaletteIndex = -1;
-static unsigned long sbusPaletteGeneration = 0;
+static DevPrivateKey sbusPaletteKey = &sbusPaletteKey;
 typedef struct _sbusCmap {
     sbusDevicePtr psdp;
     CloseScreenProcPtr CloseScreen;
@@ -613,7 +612,8 @@ typedef struct _sbusCmap {
     unsigned char origBlue[16];
 } sbusCmapRec, *sbusCmapPtr;
 
-#define SBUSCMAPPTR(pScreen) ((sbusCmapPtr)((pScreen)->devPrivates[sbusPaletteIndex].ptr))
+#define SBUSCMAPPTR(pScreen) ((sbusCmapPtr) \
+    dixLookupPrivate(&(pScreen)->devPrivates, sbusPaletteKey))
 
 static void
 xf86SbusCmapLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
@@ -622,7 +622,7 @@ xf86SbusCmapLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
     int i, index;
     sbusCmapPtr cmap;
     struct fbcmap fbcmap;
-    unsigned char *data = ALLOCATE_LOCAL(numColors*3);
+    unsigned char *data = xalloc(numColors*3);
                              
     cmap = SBUSCMAPPTR(pScrn->pScreen);
     if (!cmap) return;
@@ -643,7 +643,7 @@ xf86SbusCmapLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
 	fbcmap.blue[fbcmap.count++] = colors[index].blue;
     }
     ioctl (cmap->psdp->fd, FBIOPUTCMAP, &fbcmap);
-    DEALLOCATE_LOCAL(data);
+    xfree(data);
 }
 
 static Bool
@@ -673,13 +673,8 @@ xf86SbusHandleColormaps(ScreenPtr pScreen, sbusDevicePtr psdp)
     struct fbcmap fbcmap;
     unsigned char data[2];
 
-    if(sbusPaletteGeneration != serverGeneration) {
-	if((sbusPaletteIndex = AllocateScreenPrivateIndex()) < 0)
-	    return FALSE;
-	sbusPaletteGeneration = serverGeneration;
-    }
     cmap = xnfcalloc(1, sizeof(sbusCmapRec));
-    pScreen->devPrivates[sbusPaletteIndex].ptr = cmap;
+    dixSetPrivate(&pScreen->devPrivates, sbusPaletteKey, cmap);
     cmap->psdp = psdp;
     fbcmap.index = 0;
     fbcmap.count = 16;

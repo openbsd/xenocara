@@ -149,7 +149,8 @@ xf4bppImageGlyphBlt(pDrawable, pGC, x, y, nglyph, ppci, pglyphBase)
        backrect.height = FONTASCENT(pGC->font) + FONTDESCENT(pGC->font);
 
 
-       pPrivGC = pGC->devPrivates[mfbGetGCPrivateIndex()].ptr;
+       pPrivGC = (ppcPrivGC *)dixLookupPrivate(&pGC->devPrivates,
+					       mfbGetGCPrivateKey());
        oldfillStyle = pPrivGC->colorRrop.fillStyle; /* GJA */
        oldfg = pPrivGC->colorRrop.fgPixel; /* GJA */
        oldalu = pPrivGC->colorRrop.alu; /* GJA */
@@ -355,7 +356,7 @@ doImageGlyphBlt(pDrawable, pGC, x, y, nglyph, ppci, pglyphBase,infop)
 	int getWidth;		/* bits to get from glyph */
 #endif
 
-	if(!(ppos = (TEXTPOS *)ALLOCATE_LOCAL(nglyph * sizeof(TEXTPOS))))
+	if(!(ppos = (TEXTPOS *)xalloc(nglyph * sizeof(TEXTPOS))))
 	    return;
 
         pdstBase = pdstBase + (widthDst * y) + (x >> PWSH);
@@ -494,7 +495,7 @@ doImageGlyphBlt(pDrawable, pGC, x, y, nglyph, ppci, pglyphBase,infop)
 		}
 	    } /* for each glyph */
 	} /* while nbox-- */
-	DEALLOCATE_LOCAL(ppos);
+	xfree(ppos);
 	break;
       }
       default:

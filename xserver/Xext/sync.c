@@ -433,18 +433,18 @@ SyncInitTrigger(client, pTrigger, counter, changes)
     Mask	     changes;
 {
     SyncCounter *pCounter = pTrigger->pCounter;
-    int		status;
+    int		rc;
     Bool	newcounter = FALSE;
 
     if (changes & XSyncCACounter)
     {
 	if (counter == None)
 	    pCounter = NULL;
-	else if (!(pCounter = (SyncCounter *)SecurityLookupIDByType(
-			client, counter, RTCounter, DixReadAccess)))
+	else if (Success != (rc = dixLookupResource((pointer *)&pCounter,
+				counter, RTCounter, client, DixReadAccess)))
 	{
 	    client->errorValue = counter;
-	    return SyncErrorBase + XSyncBadCounter;
+	    return (rc == BadValue) ? SyncErrorBase + XSyncBadCounter : rc;
 	}
 	if (pCounter != pTrigger->pCounter)
 	{ /* new counter for trigger */
@@ -526,8 +526,8 @@ SyncInitTrigger(client, pTrigger, counter, changes)
      */
     if (newcounter)
     {
-	if ((status = SyncAddTriggerToCounter(pTrigger)) != Success)
-	    return status;
+	if ((rc = SyncAddTriggerToCounter(pTrigger)) != Success)
+	    return rc;
     }
     else if (IsSystemCounter(pCounter))
     {
@@ -601,7 +601,7 @@ SyncSendCounterNotifyEvents(client, ppAwait, num_events)
     if (client->clientGone)
 	return;
     pev = pEvents = (xSyncCounterNotifyEvent *)
-		 ALLOCATE_LOCAL(num_events * sizeof(xSyncCounterNotifyEvent));
+		 xalloc(num_events * sizeof(xSyncCounterNotifyEvent));
     if (!pEvents) 
 	return;
     UpdateCurrentTime();
@@ -622,7 +622,7 @@ SyncSendCounterNotifyEvents(client, ppAwait, num_events)
     }
     /* swapping will be taken care of by this */
     WriteEventsToClient(client, num_events, (xEvent *)pEvents);
-    DEALLOCATE_LOCAL(pEvents);
+    xfree(pEvents);
 }
 
 
@@ -732,7 +732,7 @@ SyncAwaitTriggerFired(pTrigger)
 
     pAwaitUnion = (SyncAwaitUnion *)pAwait->pHeader;
     numwaits = pAwaitUnion->header.num_waitconditions;
-    ppAwait = (SyncAwait **)ALLOCATE_LOCAL(numwaits * sizeof(SyncAwait *));
+    ppAwait = (SyncAwait **)xalloc(numwaits * sizeof(SyncAwait *));
     if (!ppAwait)
 	goto bail;
 
@@ -801,7 +801,7 @@ SyncAwaitTriggerFired(pTrigger)
     if (num_events)
 	SyncSendCounterNotifyEvents(pAwaitUnion->header.client, ppAwait,
 				    num_events);
-    DEALLOCATE_LOCAL(ppAwait);
+    xfree(ppAwait);
 
 bail:
     /* unblock the client */
@@ -1396,7 +1396,7 @@ ProcSyncListSystemCounters(client)
 
     if (len)
     {
-	walklist = list = (xSyncSystemCounter *) ALLOCATE_LOCAL(len);
+	walklist = list = (xSyncSystemCounter *) xalloc(len);
 	if (!list)
 	    return BadAlloc;
     }
@@ -1442,7 +1442,7 @@ ProcSyncListSystemCounters(client)
     if (len) 
     {
 	WriteToClient(client, len, (char *) list);
-	DEALLOCATE_LOCAL(list);
+	xfree(list);
     }
 
     return (client->noClientException);
@@ -1465,7 +1465,7 @@ ProcSyncSetPriority(client)
 	priorityclient = client;
     else {
 	rc = dixLookupClient(&priorityclient, stuff->id, client,
-			     DixUnknownAccess);
+			     DixSetAttrAccess);
 	if (rc != Success)
 	    return rc;
     }
@@ -1502,7 +1502,7 @@ ProcSyncGetPriority(client)
 	priorityclient = client;
     else {
 	rc = dixLookupClient(&priorityclient, stuff->id, client,
-			     DixUnknownAccess);
+			     DixGetAttrAccess);
 	if (rc != Success)
 	    return rc;
     }

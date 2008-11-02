@@ -71,11 +71,14 @@
 #include <stddef.h>
 #include "xf86Parser.h"
 
+typedef enum { PARSE_DECIMAL, PARSE_OCTAL, PARSE_HEX } ParserNumType;
+
 typedef struct
 {
 	int num;		/* returned number */
 	char *str;		/* private copy of the return-string */
 	double realnum;		/* returned number as a real */
+        ParserNumType numType;  /* used to enforce correct number formatting */
 }
 LexRec, *LexPtr;
 
@@ -186,8 +189,6 @@ else\
 "The Inactive keyword must be followed by a Device name in quotes."
 #define UNDEFINED_SCREEN_MSG \
 "Undefined Screen \"%s\" referenced by ServerLayout \"%s\"."
-#define UNDEFINED_MONITOR_MSG \
-"Undefined Monitor \"%s\" referenced by Screen \"%s\"."
 #define UNDEFINED_MODES_MSG \
 "Undefined Modes Section \"%s\" referenced by Monitor \"%s\"."
 #define UNDEFINED_DEVICE_MSG \
@@ -204,8 +205,6 @@ else\
 "This section must have an Identifier line."
 #define ONLY_ONE_MSG \
 "This section must have only one of either %s line."
-#define UNDEFINED_DRIVER_MSG \
-"Device section \"%s\" must have a Driver line."
 #define UNDEFINED_INPUTDRIVER_MSG \
 "InputDevice section \"%s\" must have a Driver line."
 #define INVALID_GAMMA_MSG \
@@ -215,6 +214,8 @@ else\
 "\ta numerical group id."
 #define MULTIPLE_MSG \
 "Multiple \"%s\" lines."
+#define MUST_BE_OCTAL_MSG \
+"The number \"%d\" given in this section must be in octal (0xxx) format."
 
 /* Warning messages */
 #define OBSOLETE_MSG \

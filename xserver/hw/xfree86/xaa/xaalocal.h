@@ -45,11 +45,8 @@ typedef struct _XAAScreen {
    CloseScreenProcPtr 		CloseScreen;
    GetImageProcPtr 		GetImage;
    GetSpansProcPtr 		GetSpans;
-   PaintWindowBackgroundProcPtr PaintWindowBackground;
-   PaintWindowBorderProcPtr 	PaintWindowBorder;
    CopyWindowProcPtr 		CopyWindow;
    WindowExposuresProcPtr	WindowExposures;
-   BSFuncRec 			BackingStoreFuncs;
    CreatePixmapProcPtr 		CreatePixmap;
    DestroyPixmapProcPtr 	DestroyPixmap;
    ChangeWindowAttributesProcPtr ChangeWindowAttributes;
@@ -1316,14 +1313,6 @@ XAAWritePixmapToCacheLinear(
    int bpp, int depth
 );
 
-
-void
-XAAPaintWindow(
-  WindowPtr pWin,
-  RegionPtr prgn,
-  int what 
-);
-
 void 
 XAASolidHorVertLineAsRects(
    ScrnInfoPtr pScrn,
@@ -1640,9 +1629,9 @@ XAAGetPixelFromRGBA (
 extern GCOps XAAFallbackOps;
 extern GCOps *XAAGetFallbackOps(void);
 extern GCFuncs XAAGCFuncs;
-extern int XAAGetScreenIndex(void);
-extern int XAAGetGCIndex(void);
-extern int XAAGetPixmapIndex(void);
+extern DevPrivateKey XAAGetScreenKey(void);
+extern DevPrivateKey XAAGetGCKey(void);
+extern DevPrivateKey XAAGetPixmapKey(void);
 
 extern unsigned int XAAShiftMasks[32];
 
@@ -1651,28 +1640,28 @@ extern unsigned int byte_expand3[256], byte_reversed_expand3[256];
 CARD32 XAAReverseBitOrder(CARD32 data);
 
 #define GET_XAASCREENPTR_FROM_SCREEN(pScreen)\
-	(pScreen)->devPrivates[XAAGetScreenIndex()].ptr
+    dixLookupPrivate(&(pScreen)->devPrivates, XAAGetScreenKey())
 
 #define GET_XAASCREENPTR_FROM_GC(pGC)\
-	(pGC)->pScreen->devPrivates[XAAGetScreenIndex()].ptr
+    dixLookupPrivate(&(pGC)->pScreen->devPrivates, XAAGetScreenKey())
 
 #define GET_XAASCREENPTR_FROM_DRAWABLE(pDraw)\
-	(pDraw)->pScreen->devPrivates[XAAGetScreenIndex()].ptr
+    dixLookupPrivate(&(pDraw)->pScreen->devPrivates, XAAGetScreenKey())
 
 #define GET_XAAINFORECPTR_FROM_SCREEN(pScreen)\
-   ((XAAScreenPtr)((pScreen)->devPrivates[XAAGetScreenIndex()].ptr))->AccelInfoRec
+((XAAScreenPtr)dixLookupPrivate(&(pScreen)->devPrivates, XAAGetScreenKey()))->AccelInfoRec
 
 #define GET_XAAINFORECPTR_FROM_GC(pGC)\
-((XAAScreenPtr)((pGC)->pScreen->devPrivates[XAAGetScreenIndex()].ptr))->AccelInfoRec
+((XAAScreenPtr)dixLookupPrivate(&(pGC)->pScreen->devPrivates, XAAGetScreenKey()))->AccelInfoRec
 
 #define GET_XAAINFORECPTR_FROM_DRAWABLE(pDraw)\
-((XAAScreenPtr)((pDraw)->pScreen->devPrivates[XAAGetScreenIndex()].ptr))->AccelInfoRec
+((XAAScreenPtr)dixLookupPrivate(&(pDraw)->pScreen->devPrivates, XAAGetScreenKey()))->AccelInfoRec
 
 #define GET_XAAINFORECPTR_FROM_SCRNINFOPTR(pScrn)\
-((XAAScreenPtr)((pScrn)->pScreen->devPrivates[XAAGetScreenIndex()].ptr))->AccelInfoRec
+((XAAScreenPtr)dixLookupPrivate(&(pScrn)->pScreen->devPrivates, XAAGetScreenKey()))->AccelInfoRec
 
 #define XAA_GET_PIXMAP_PRIVATE(pix)\
-	(XAAPixmapPtr)((pix)->devPrivates[XAAGetPixmapIndex()].ptr)
+    (XAAPixmapPtr)dixLookupPrivate(&(pix)->devPrivates, XAAGetPixmapKey())
 
 #define CHECK_RGB_EQUAL(c) (!((((c) >> 8) ^ (c)) & 0xffff))
 

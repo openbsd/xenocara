@@ -63,7 +63,9 @@
 #include "globals.h"
 #include "os.h"
 #include "osdep.h"
+#include "privates.h"
 #include "resource.h"
+#include "registry.h"
 #include "servermd.h"
 #include "scrnintstr.h"
 #include "windowstr.h"
@@ -94,9 +96,6 @@ extern int XkbDfltRepeatDelay, XkbDfltRepeatInterval;
 extern int priv_open_device(const char *);
 #endif
 
-extern Selection *CurrentSelections;
-extern int NumCurrentSelections;
-
 /* DIX things */
 
 _X_HIDDEN void *dixLookupTab[] = {
@@ -117,6 +116,16 @@ _X_HIDDEN void *dixLookupTab[] = {
     SYMFUNC(QueryColors)
     /* cursor.c */
     SYMFUNC(FreeCursor)
+    /* deprecated.c */
+    SYMFUNC(LookupClient)
+    SYMFUNC(LookupDrawable)
+    SYMFUNC(LookupWindow)
+    SYMFUNC(SecurityLookupDrawable)
+    SYMFUNC(SecurityLookupWindow)
+    SYMFUNC(LookupIDByType)
+    SYMFUNC(LookupIDByClass)
+    SYMFUNC(SecurityLookupIDByClass)
+    SYMFUNC(SecurityLookupIDByType)
     /* devices.c */
     SYMFUNC(Ones)
     SYMFUNC(InitButtonClassDeviceStruct)
@@ -132,8 +141,6 @@ _X_HIDDEN void *dixLookupTab[] = {
     SYMFUNC(InitKeyboardDeviceStruct)
     SYMFUNC(SendMappingNotify)
     SYMFUNC(InitPointerDeviceStruct)
-    SYMFUNC(LookupKeyboardDevice)
-    SYMFUNC(LookupPointerDevice)
     /* dispatch.c */
     SYMFUNC(SetInputCheck)
     SYMFUNC(SendErrorToClient)
@@ -144,8 +151,6 @@ _X_HIDDEN void *dixLookupTab[] = {
     SYMVAR(isItTimeToYield)
     SYMVAR(ClientStateCallback)
     SYMVAR(ServerGrabCallback)
-    SYMVAR(CurrentSelections)
-    SYMVAR(NumCurrentSelections)
     /* dixfonts.c */
     SYMFUNC(CloseFont)
     SYMFUNC(FontToXError)
@@ -163,13 +168,6 @@ _X_HIDDEN void *dixLookupTab[] = {
     SYMFUNC(dixLookupWindow)
     SYMFUNC(dixLookupClient)
     SYMFUNC(dixLookupGC)
-    /* following are deprecated */
-    SYMFUNC(LookupClient)
-    SYMFUNC(LookupDrawable)
-    SYMFUNC(LookupWindow)
-    SYMFUNC(SecurityLookupDrawable)
-    SYMFUNC(SecurityLookupWindow)
-    /* end deprecated */
     SYMFUNC(NoopDDA)
     SYMFUNC(QueueWorkProc)
     SYMFUNC(RegisterBlockAndWakeupHandlers)
@@ -194,12 +192,16 @@ _X_HIDDEN void *dixLookupTab[] = {
     SYMFUNC(XineramaGetCursorScreen)
 #endif
     /* property.c */
+    SYMFUNC(dixLookupProperty)
     SYMFUNC(ChangeWindowProperty)
+    SYMFUNC(dixChangeWindowProperty)
+    /* selection.c */
+    SYMFUNC(dixLookupSelection)
+    SYMVAR(CurrentSelections)
     /* extension.c */
     SYMFUNC(AddExtension)
     SYMFUNC(AddExtensionAlias)
     SYMFUNC(CheckExtension)
-    SYMFUNC(DeclareExtensionSecurity)
     SYMFUNC(MinorOpcodeOfRequest)
     SYMFUNC(StandardMinorOpcode)
 #ifdef XEVIE
@@ -238,7 +240,7 @@ _X_HIDDEN void *dixLookupTab[] = {
 #ifdef XV
     /* XXX These are exported from the DDX, not DIX. */
     SYMVAR(XvScreenInitProc)
-    SYMVAR(XvGetScreenIndexProc)
+    SYMVAR(XvGetScreenKeyProc)
     SYMVAR(XvGetRTPortProc)
     SYMVAR(XvMCScreenInitProc)
 #endif
@@ -263,42 +265,41 @@ _X_HIDDEN void *dixLookupTab[] = {
     SYMFUNC(GetScratchPixmapHeader)
     SYMFUNC(FreeScratchPixmapHeader)
     /* privates.c */
-    SYMFUNC(AllocateExtensionPrivate)
-    SYMFUNC(AllocateExtensionPrivateIndex)
-    SYMFUNC(AllocateClientPrivate)
-    SYMFUNC(AllocateClientPrivateIndex)
-    SYMFUNC(AllocateGCPrivate)
-    SYMFUNC(AllocateGCPrivateIndex)
-    SYMFUNC(AllocateWindowPrivate)
-    SYMFUNC(AllocateWindowPrivateIndex)
-    SYMFUNC(AllocateScreenPrivateIndex)
-    SYMFUNC(AllocateColormapPrivateIndex)
-    SYMFUNC(AllocateDevicePrivateIndex)
-    SYMFUNC(AllocateDevicePrivate)
-    SYMFUNC(AllocatePixmapPrivateIndex)
-    SYMFUNC(AllocatePixmapPrivate)
+    SYMFUNC(dixRequestPrivate)
+    SYMFUNC(dixRegisterPrivateInitFunc)
+    SYMFUNC(dixRegisterPrivateDeleteFunc)
+    SYMFUNC(dixAllocatePrivate)
+    SYMFUNC(dixLookupPrivate)
+    SYMFUNC(dixLookupPrivateAddr)
+    SYMFUNC(dixSetPrivate)
+    SYMFUNC(dixFreePrivates)
+    SYMFUNC(dixRegisterPrivateOffset)
+    SYMFUNC(dixLookupPrivateOffset)
     /* resource.c */
     SYMFUNC(AddResource)
     SYMFUNC(ChangeResourceValue)
     SYMFUNC(CreateNewResourceClass)
     SYMFUNC(CreateNewResourceType)
+    SYMFUNC(dixLookupResource)
     SYMFUNC(FakeClientID)
     SYMFUNC(FreeResource)
     SYMFUNC(FreeResourceByType)
     SYMFUNC(GetXIDList)
     SYMFUNC(GetXIDRange)
-    SYMFUNC(LookupIDByType)
-    SYMFUNC(LookupIDByClass)
     SYMFUNC(LegalNewID)
-    SYMFUNC(SecurityLookupIDByClass)
-    SYMFUNC(SecurityLookupIDByType)
     SYMFUNC(FindClientResourcesByType)
     SYMFUNC(FindAllClientResources)
     SYMVAR(lastResourceType)
     SYMVAR(TypeMask)
-#ifdef RES
+    SYMVAR(ResourceStateCallback)
+    /* registry.c */
+#ifdef XREGISTRY
     SYMFUNC(RegisterResourceName)
-    SYMVAR(ResourceNames)
+    SYMFUNC(LookupMajorName)
+    SYMFUNC(LookupRequestName)
+    SYMFUNC(LookupEventName)
+    SYMFUNC(LookupErrorName)
+    SYMFUNC(LookupResourceName)
 #endif
     /* swaprep.c */
     SYMFUNC(CopySwap32Write)
@@ -326,6 +327,7 @@ _X_HIDDEN void *dixLookupTab[] = {
     SYMFUNC(NotClippedByChildren)
     SYMFUNC(ResizeChildrenWinSize)
     SYMFUNC(SaveScreens)
+    SYMFUNC(dixSaveScreens)
     SYMFUNC(SendVisibilityNotify)
     SYMFUNC(SetWinSize)
     SYMFUNC(SetBorderSize)
@@ -449,6 +451,9 @@ _X_HIDDEN void *dixLookupTab[] = {
 #ifdef XIDLE
     SYMVAR(noXIdleExtension)
 #endif
+#ifdef XSELINUX
+    SYMVAR(noSELinuxExtension)
+#endif
 #ifdef XV
     SYMVAR(noXvExtension)
 #endif
@@ -520,7 +525,7 @@ _X_HIDDEN void *dixLookupTab[] = {
     SYMFUNC(PictureTransformPoint3d)
     SYMFUNC(PictureGetSubpixelOrder)
     SYMFUNC(PictureSetSubpixelOrder)
-    SYMVAR(PictureScreenPrivateIndex)
+    SYMVAR(PictureScreenPrivateKey)
     /* mipict.c */
     SYMFUNC(miPictureInit)
     SYMFUNC(miComputeCompositeRegion)

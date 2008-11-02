@@ -16,7 +16,6 @@ extern Bool screenSaverSuspended;
 #endif
 
 extern char *defaultFontPath;
-extern char *rgbPath;
 extern int monitorResolution;
 extern Bool loadableFonts;
 extern int defaultColorVisualClass;
@@ -174,6 +173,16 @@ extern Bool noXInputExtension;
 
 #ifdef XIDLE
 extern Bool noXIdleExtension;
+#endif
+
+#ifdef XSELINUX
+extern Bool noSELinuxExtension;
+
+#define SELINUX_MODE_DEFAULT    0
+#define SELINUX_MODE_DISABLED   1
+#define SELINUX_MODE_PERMISSIVE 2
+#define SELINUX_MODE_ENFORCING  3
+extern int selinuxEnforcingState;
 #endif
 
 #ifdef XV

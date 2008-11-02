@@ -39,9 +39,8 @@
                                   pScreen->x = y;}
 #define UNWRAP_SCREEN(x)    pScreen->x = pScreenPriv->x
 
-#define SCREEN_PROLOG(x) \
-            pScreen->x = \
-             ((RACScreenPtr) (pScreen)->devPrivates[RACScreenIndex].ptr)->x
+#define SCREEN_PROLOG(x) pScreen->x = ((RACScreenPtr) \
+    dixLookupPrivate(&(pScreen)->devPrivates, RACScreenKey))->x
 #define SCREEN_EPILOG(x,y) pScreen->x = y;
 
 #define WRAP_PICT_COND(x,y,cond) if (ps)\
@@ -50,9 +49,8 @@
 					ps->x = y;}
 #define UNWRAP_PICT(x) 	if (ps) {ps->x = pScreenPriv->x;}
 
-#define PICTURE_PROLOGUE(field) \
-	ps->field = \
-	((RACScreenPtr) (pScreen)->devPrivates[RACScreenIndex].ptr)->field
+#define PICTURE_PROLOGUE(field) ps->field = \
+	((RACScreenPtr)dixLookupPrivate(&(pScreen)->devPrivates, RACScreenKey))->field
 #define PICTURE_EPILOGUE(field, wrap) \
 	ps->field = wrap
 
@@ -65,9 +63,9 @@
 #define UNWRAP_SCREEN_INFO(x)    pScrn->x = pScreenPriv->x
 
 #define SPRITE_PROLOG     miPointerScreenPtr PointPriv = \
-(miPointerScreenPtr)pScreen->devPrivates[miPointerScreenIndex].ptr;\
-                               RACScreenPtr pScreenPriv = \
-((RACScreenPtr) (pScreen)->devPrivates[RACScreenIndex].ptr);\
+    (miPointerScreenPtr)dixLookupPrivate(&pScreen->devPrivates, miPointerScreenKey); \
+    RACScreenPtr pScreenPriv = \
+    ((RACScreenPtr)dixLookupPrivate(&(pScreen)->devPrivates, RACScreenKey));\
 			PointPriv->spriteFuncs = pScreenPriv->miSprite;
 #define SPRITE_EPILOG pScreenPriv->miSprite = PointPriv->spriteFuncs;\
 	              PointPriv->spriteFuncs  = &RACSpriteFuncs;
@@ -82,7 +80,7 @@
                            (x)->ops = &RACGCOps;\
                          (x)->funcs = &RACGCFuncs;
 #define GC_UNWRAP(x)\
-           RACGCPtr  pGCPriv = (RACGCPtr) (x)->devPrivates[RACGCIndex].ptr;\
+    RACGCPtr  pGCPriv = (RACGCPtr)dixLookupPrivate(&(x)->devPrivates, RACGCKey);\
                     (x)->ops = pGCPriv->wrapOps;\
 	          (x)->funcs = pGCPriv->wrapFuncs;
 
@@ -98,11 +96,8 @@ typedef struct _RACScreen {
     GetImageProcPtr 		GetImage;
     GetSpansProcPtr 		GetSpans;
     SourceValidateProcPtr 	SourceValidate;
-    PaintWindowBackgroundProcPtr PaintWindowBackground;
-    PaintWindowBorderProcPtr 	PaintWindowBorder;
     CopyWindowProcPtr 		CopyWindow;
     ClearToBackgroundProcPtr 	ClearToBackground;
-    BSFuncRec 			BackingStoreFuncs;
     CreatePixmapProcPtr         CreatePixmap;
     SaveScreenProcPtr           SaveScreen;
     /* Colormap */
@@ -140,17 +135,12 @@ static void RACGetSpans (DrawablePtr pDrawable, int wMax, DDXPointPtr	ppt,
 			 int *pwidth, int nspans, char	*pdstStart);
 static void RACSourceValidate (DrawablePtr	pDrawable,
 			       int x, int y, int width, int height );
-static void RACPaintWindowBackground(WindowPtr pWin, RegionPtr prgn, int what);
-static void RACPaintWindowBorder(WindowPtr pWin, RegionPtr prgn, int what);
 static void RACCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg,
 			  RegionPtr prgnSrc );
 static void RACClearToBackground (WindowPtr pWin, int x, int y,
 				  int w, int h, Bool generateExposures );
-static void RACSaveAreas (PixmapPtr pPixmap, RegionPtr prgnSave,
-			  int xorg, int yorg, WindowPtr pWin);
-static void RACRestoreAreas (PixmapPtr pPixmap, RegionPtr prgnRestore,
-			     int xorg, int yorg, WindowPtr pWin);
-static PixmapPtr RACCreatePixmap(ScreenPtr pScreen, int w, int h, int depth);
+static PixmapPtr RACCreatePixmap(ScreenPtr pScreen, int w, int h, int depth,
+				 unsigned usage_hint);
 static Bool  RACCreateGC(GCPtr pGC);
 static Bool RACSaveScreen(ScreenPtr pScreen, Bool unblank);
 static void RACStoreColors (ColormapPtr pmap, int ndef, xColorItem *pdefs);
@@ -260,9 +250,8 @@ static miPointerSpriteFuncRec RACSpriteFuncs = {
     RACSpriteMoveCursor
 };
 
-static int RACScreenIndex = -1;
-static int RACGCIndex = -1;
-static unsigned long RACGeneration = 0;
+static DevPrivateKey RACScreenKey = &RACScreenKey;
+static DevPrivateKey RACGCKey = &RACGCKey;
 
 
 Bool 
@@ -276,24 +265,17 @@ xf86RACInit(ScreenPtr pScreen, unsigned int flag)
 #endif
 
     pScrn = xf86Screens[pScreen->myNum];
-    PointPriv = (miPointerScreenPtr)pScreen->devPrivates[miPointerScreenIndex].ptr;
-
+    PointPriv = (miPointerScreenPtr)dixLookupPrivate(&pScreen->devPrivates,
+						     miPointerScreenKey);
     DPRINT_S("RACInit",pScreen->myNum);
-    if (RACGeneration != serverGeneration) {
-	if (	((RACScreenIndex = AllocateScreenPrivateIndex()) < 0) ||
-		((RACGCIndex = AllocateGCPrivateIndex()) < 0))
-	    return FALSE;
 
-	RACGeneration = serverGeneration;
-    }
-
-    if (!AllocateGCPrivate(pScreen, RACGCIndex, sizeof(RACGCRec)))
+    if (!dixRequestPrivate(RACGCKey, sizeof(RACGCRec)))
 	return FALSE;
 
     if (!(pScreenPriv = xalloc(sizeof(RACScreenRec))))
 	return FALSE;
 
-    pScreen->devPrivates[RACScreenIndex].ptr = (pointer)pScreenPriv;
+    dixSetPrivate(&pScreen->devPrivates, RACScreenKey, pScreenPriv);
     
     WRAP_SCREEN(CloseScreen, RACCloseScreen);
     WRAP_SCREEN(SaveScreen, RACSaveScreen);
@@ -301,13 +283,9 @@ xf86RACInit(ScreenPtr pScreen, unsigned int flag)
     WRAP_SCREEN_COND(GetImage, RACGetImage, RAC_FB);
     WRAP_SCREEN_COND(GetSpans, RACGetSpans, RAC_FB);
     WRAP_SCREEN_COND(SourceValidate, RACSourceValidate, RAC_FB);
-    WRAP_SCREEN_COND(PaintWindowBackground, RACPaintWindowBackground, RAC_FB);
-    WRAP_SCREEN_COND(PaintWindowBorder, RACPaintWindowBorder, RAC_FB);
     WRAP_SCREEN_COND(CopyWindow, RACCopyWindow, RAC_FB);
     WRAP_SCREEN_COND(ClearToBackground, RACClearToBackground, RAC_FB);
     WRAP_SCREEN_COND(CreatePixmap, RACCreatePixmap, RAC_FB);
-    WRAP_SCREEN_COND(BackingStoreFuncs.RestoreAreas, RACRestoreAreas, RAC_FB);
-    WRAP_SCREEN_COND(BackingStoreFuncs.SaveAreas, RACSaveAreas, RAC_FB);
     WRAP_SCREEN_COND(StoreColors, RACStoreColors, RAC_COLORMAP);
     WRAP_SCREEN_COND(DisplayCursor, RACDisplayCursor, RAC_CURSOR);
     WRAP_SCREEN_COND(RealizeCursor, RACRealizeCursor, RAC_CURSOR);
@@ -334,10 +312,10 @@ static Bool
 RACCloseScreen (int i, ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-    RACScreenPtr pScreenPriv = 
-	(RACScreenPtr) pScreen->devPrivates[RACScreenIndex].ptr;
-    miPointerScreenPtr PointPriv
-	= (miPointerScreenPtr)pScreen->devPrivates[miPointerScreenIndex].ptr;
+    RACScreenPtr pScreenPriv = (RACScreenPtr)dixLookupPrivate(
+	&pScreen->devPrivates, RACScreenKey);
+    miPointerScreenPtr PointPriv = (miPointerScreenPtr)dixLookupPrivate(
+	&pScreen->devPrivates, miPointerScreenKey);
 #ifdef RENDER
     PictureScreenPtr	ps = GetPictureScreenIfSet(pScreen);
 #endif
@@ -348,12 +326,8 @@ RACCloseScreen (int i, ScreenPtr pScreen)
     UNWRAP_SCREEN(GetImage);
     UNWRAP_SCREEN(GetSpans);
     UNWRAP_SCREEN(SourceValidate);
-    UNWRAP_SCREEN(PaintWindowBackground);
-    UNWRAP_SCREEN(PaintWindowBorder);
     UNWRAP_SCREEN(CopyWindow);
     UNWRAP_SCREEN(ClearToBackground);
-    UNWRAP_SCREEN(BackingStoreFuncs.RestoreAreas);
-    UNWRAP_SCREEN(BackingStoreFuncs.SaveAreas);
     UNWRAP_SCREEN(SaveScreen);
     UNWRAP_SCREEN(StoreColors);
     UNWRAP_SCREEN(DisplayCursor);
@@ -436,38 +410,6 @@ RACSourceValidate (
 }
 
 static void
-RACPaintWindowBackground(
-  WindowPtr pWin,
-  RegionPtr prgn,
-  int what 
-  )
-{
-    ScreenPtr pScreen = pWin->drawable.pScreen;
-
-    DPRINT_S("RACPaintWindowBackground",pScreen->myNum);
-    SCREEN_PROLOG (PaintWindowBackground);
-    ENABLE;
-    (*pScreen->PaintWindowBackground) (pWin, prgn, what);
-    SCREEN_EPILOG (PaintWindowBackground, RACPaintWindowBackground);
-}
-
-static void
-RACPaintWindowBorder(
-  WindowPtr pWin,
-  RegionPtr prgn,
-  int what 
-)
-{
-    ScreenPtr pScreen = pWin->drawable.pScreen;
-
-    DPRINT_S("RACPaintWindowBorder",pScreen->myNum);
-    SCREEN_PROLOG (PaintWindowBorder);
-    ENABLE;
-    (*pScreen->PaintWindowBorder) (pWin, prgn, what);
-    SCREEN_EPILOG (PaintWindowBorder, RACPaintWindowBorder);
-}
-
-static void
 RACCopyWindow(
     WindowPtr pWin,
     DDXPointRec ptOldOrg,
@@ -498,54 +440,15 @@ RACClearToBackground (
     SCREEN_EPILOG (ClearToBackground, RACClearToBackground);
 }
 
-static void
-RACSaveAreas (
-    PixmapPtr pPixmap,
-    RegionPtr prgnSave,
-    int       xorg,
-    int       yorg,
-    WindowPtr pWin
-    )
-{
-    ScreenPtr pScreen = pPixmap->drawable.pScreen;
-    DPRINT_S("RACSaveAreas",pScreen->myNum);
-    SCREEN_PROLOG (BackingStoreFuncs.SaveAreas);
-    ENABLE;
-    (*pScreen->BackingStoreFuncs.SaveAreas) (
-	pPixmap, prgnSave, xorg, yorg, pWin);
-
-    SCREEN_EPILOG (BackingStoreFuncs.SaveAreas, RACSaveAreas);
-}
-
-static void
-RACRestoreAreas (    
-    PixmapPtr pPixmap,
-    RegionPtr prgnRestore,
-    int       xorg,
-    int       yorg,
-    WindowPtr pWin 
-    )
-{
-    ScreenPtr pScreen = pPixmap->drawable.pScreen;
-
-    DPRINT_S("RACRestoreAreas",pScreen->myNum);
-    SCREEN_PROLOG (BackingStoreFuncs.RestoreAreas);
-    ENABLE;
-    (*pScreen->BackingStoreFuncs.RestoreAreas) (
-	pPixmap, prgnRestore, xorg, yorg, pWin);
-
-    SCREEN_EPILOG ( BackingStoreFuncs.RestoreAreas, RACRestoreAreas);
-}
-
 static PixmapPtr 
-RACCreatePixmap(ScreenPtr pScreen, int w, int h, int depth)
+RACCreatePixmap(ScreenPtr pScreen, int w, int h, int depth, unsigned usage_hint)
 {
     PixmapPtr pPix;
 
     DPRINT_S("RACCreatePixmap",pScreen->myNum);
     SCREEN_PROLOG ( CreatePixmap);
     ENABLE;
-    pPix = (*pScreen->CreatePixmap) (pScreen, w, h, depth);
+    pPix = (*pScreen->CreatePixmap) (pScreen, w, h, depth, usage_hint);
     SCREEN_EPILOG (CreatePixmap, RACCreatePixmap);
 
     return pPix;
@@ -668,8 +571,8 @@ static void
 RACAdjustFrame(int index, int x, int y, int flags)
 {
     ScreenPtr pScreen = screenInfo.screens[index];
-    RACScreenPtr pScreenPriv =
-	(RACScreenPtr) pScreen->devPrivates[RACScreenIndex].ptr;
+    RACScreenPtr pScreenPriv = (RACScreenPtr)dixLookupPrivate(
+	&pScreen->devPrivates, RACScreenKey);
 
     DPRINT_S("RACAdjustFrame",index);
     xf86EnableAccess(xf86Screens[index]);
@@ -681,8 +584,8 @@ static Bool
 RACSwitchMode(int index, DisplayModePtr mode, int flags)
 {
     ScreenPtr pScreen = screenInfo.screens[index];
-    RACScreenPtr pScreenPriv =
-	(RACScreenPtr) pScreen->devPrivates[RACScreenIndex].ptr;
+    RACScreenPtr pScreenPriv = (RACScreenPtr)dixLookupPrivate(
+	&pScreen->devPrivates, RACScreenKey);
 
     DPRINT_S("RACSwitchMode",index);
     xf86EnableAccess(xf86Screens[index]);
@@ -694,8 +597,8 @@ static Bool
 RACEnterVT(int index, int flags)
 {
     ScreenPtr pScreen = screenInfo.screens[index];
-    RACScreenPtr pScreenPriv =
-	(RACScreenPtr) pScreen->devPrivates[RACScreenIndex].ptr;
+    RACScreenPtr pScreenPriv = (RACScreenPtr)dixLookupPrivate(
+	&pScreen->devPrivates, RACScreenKey);
 
     DPRINT_S("RACEnterVT",index);
     xf86EnableAccess(xf86Screens[index]);
@@ -707,8 +610,8 @@ static void
 RACLeaveVT(int index, int flags)
 {
     ScreenPtr pScreen = screenInfo.screens[index];
-    RACScreenPtr pScreenPriv =
-	(RACScreenPtr) pScreen->devPrivates[RACScreenIndex].ptr;
+    RACScreenPtr pScreenPriv = (RACScreenPtr)dixLookupPrivate(
+	&pScreen->devPrivates, RACScreenKey);
 
     DPRINT_S("RACLeaveVT",index);
     xf86EnableAccess(xf86Screens[index]);
@@ -720,8 +623,8 @@ static void
 RACFreeScreen(int index, int flags)
 {
     ScreenPtr pScreen = screenInfo.screens[index];
-    RACScreenPtr pScreenPriv =
-	(RACScreenPtr) pScreen->devPrivates[RACScreenIndex].ptr;
+    RACScreenPtr pScreenPriv = (RACScreenPtr)dixLookupPrivate(
+	&pScreen->devPrivates, RACScreenKey);
 
     DPRINT_S("RACFreeScreen",index);
     xf86EnableAccess(xf86Screens[index]);
@@ -733,7 +636,7 @@ static Bool
 RACCreateGC(GCPtr pGC)
 {
     ScreenPtr    pScreen = pGC->pScreen;
-    RACGCPtr     pGCPriv = (RACGCPtr) (pGC)->devPrivates[RACGCIndex].ptr;
+    RACGCPtr pGCPriv = (RACGCPtr)dixLookupPrivate(&pGC->devPrivates, RACGCKey);
     Bool         ret;
 
     DPRINT_S("RACCreateGC",pScreen->myNum);

@@ -56,17 +56,12 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include <X11/X.h>	/* for inputstr.h    */
-#include <X11/Xproto.h>	/* Request macro     */
 #include "inputstr.h"	/* DeviceIntPtr      */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include "XIstubs.h"
 #include "windowstr.h"	/* window structure  */
 #include "scrnintstr.h"	/* screen structure  */
-
-#include "extnsionst.h"
-#include "extinit.h"	/* LookupDeviceIntRec */
 
 #include "dixevents.h"
 #include "exevents.h"
@@ -101,10 +96,8 @@ SProcXChangePointerDevice(ClientPtr client)
 int
 ProcXChangePointerDevice(ClientPtr client)
 {
-    REQUEST(xChangePointerDeviceReq);
+    /* REQUEST(xChangePointerDeviceReq); */
     REQUEST_SIZE_MATCH(xChangePointerDeviceReq);
 
-    SendErrorToClient(client, IReqCode, X_ChangePointerDevice, 0,
-                      BadDevice);
-    return Success;
+    return BadDevice;
 }

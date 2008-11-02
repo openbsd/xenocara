@@ -21,6 +21,9 @@
 /* Default font path */
 #undef COMPILEDDEFAULTFONTPATH
 
+/* Miscellaneous server configuration files path */
+#undef SERVER_MISC_CONFIG_PATH
+
 /* Support Composite Extension */
 #undef COMPOSITE
 
@@ -136,11 +139,17 @@
 /* Define to 1 if you have the `getuid' function. */
 #undef HAVE_GETUID
 
+/* Define to 1 if you have the `getzoneid' function. */
+#undef HAVE_GETZONEID
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
 /* Define to 1 if you have version 2.2 (or newer) of the drm library */
 #undef HAVE_LIBDRM_2_2
+
+/* Have Quartz */
+#undef XQUARTZ
 
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
@@ -180,6 +189,9 @@
 
 /* Define to 1 if you have the <rpcsvc/dbm.h> header file. */
 #undef HAVE_RPCSVC_DBM_H
+
+/* Define to 1 if you have the `shmctl64' function. */
+#undef HAVE_SHMCTL64
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -234,6 +246,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Have /dev/urandom */
+#undef HAVE_URANDOM
+
 /* Define to 1 if you have the `vprintf' function. */
 #undef HAVE_VPRINTF
 
@@ -260,9 +275,6 @@
 
 /* Internal define for Xinerama */
 #undef PANORAMIX
-
-/* Support pixmap privates */
-#undef PIXPRIV
 
 /* Overall prefix */
 #undef PROJECTROOT
@@ -320,20 +332,20 @@
 /* Support UNIX socket connections */
 #undef UNIXCONN
 
-/* Use builtin rgb color database */
-#undef USE_RGB_BUILTIN
-
-/* Use rgb.txt directly */
-#undef USE_RGB_TXT
-
 /* Define to use byteswap macros from <sys/endian.h> */
 #undef USE_SYS_ENDIAN_H
 
 /* unaligned word accesses behave as expected */
 #undef WORKING_UNALIGNED_INT
 
+/* Build X string registry */
+#undef XREGISTRY
+
 /* Build X-ACE extension */
 #undef XACE
+
+/* Build SELinux extension */
+#undef XSELINUX
 
 /* Support XCMisc extension */
 #undef XCMISC
@@ -422,6 +434,11 @@
 /* Support DRI extension */
 #undef XF86DRI
 
+#undef XEPHYR_DRI
+
+/* Build DRI2 extension */
+#undef DRI2
+
 /* Build DBE support */
 #undef DBE
 
@@ -455,9 +472,6 @@
 
 /* Define to 1 if unsigned long is 64 bits. */
 #undef _XSERVER64
-
-/* Define to location of RGB database */
-#undef RGB_DB
 
 /* System is BSD-like */
 #undef CSRG_BASED
@@ -495,9 +509,6 @@
 /* Define to 1 if the DTrace Xserver provider probes should be built in */
 #undef XSERVER_DTRACE
 
-/* Path to XErrorDB file */
-#undef XERRORDB_PATH
-
 /* Define to 16-bit byteswap macro */
 #undef bswap_16
 
@@ -506,5 +517,14 @@
 
 /* Define to 64-bit byteswap macro */
 #undef bswap_64
+
+/* Need the strcasecmp function. */
+#undef NEED_STRCASECMP
+
+/* Need the strncasecmp function. */
+#undef NEED_STRNCASECMP
+
+/* Need the strcasestr function. */
+#undef NEED_STRCASESTR
 
 #endif /* _DIX_CONFIG_H_ */

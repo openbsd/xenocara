@@ -56,13 +56,9 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include <X11/X.h>	/* for inputstr.h    */
-#include <X11/Xproto.h>	/* Request macro     */
 #include "inputstr.h"	/* DeviceIntPtr      */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
-#include "extnsionst.h"
-#include "extinit.h"	/* LookupDeviceIntRec */
 #include "exevents.h"
 #include "exglobals.h"
 
@@ -110,19 +106,14 @@ ProcXChangeDeviceKeyMapping(ClientPtr client)
     count = stuff->keyCodes * stuff->keySymsPerKeyCode;
     REQUEST_FIXED_SIZE(xChangeDeviceKeyMappingReq, count * sizeof(CARD32));
 
-    dev = LookupDeviceIntRec(stuff->deviceid);
-    if (dev == NULL) {
-	SendErrorToClient(client, IReqCode, X_ChangeDeviceKeyMapping, 0,
-			  BadDevice);
-	return Success;
-    }
+    ret = dixLookupDevice(&dev, stuff->deviceid, client, DixManageAccess);
+    if (ret != Success)
+	return ret;
     len = stuff->length - (sizeof(xChangeDeviceKeyMappingReq) >> 2);
 
     ret = ChangeKeyMapping(client, dev, len, DeviceMappingNotify,
 			   stuff->firstKeyCode, stuff->keyCodes,
 			   stuff->keySymsPerKeyCode, (KeySym *) & stuff[1]);
 
-    if (ret != Success)
-	SendErrorToClient(client, IReqCode, X_ChangeDeviceKeyMapping, 0, ret);
-    return Success;
+    return ret;
 }

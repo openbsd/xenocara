@@ -971,7 +971,7 @@ winMWExtWMRootlessSwitchWindow (RootlessWindowPtr pFrame, WindowPtr oldWin)
   SetWindowLongPtr (pRLWinPriv->hWnd, GWL_STYLE,
 		    WS_POPUP | WS_CLIPCHILDREN);
 
-  DeleteProperty (oldWin, AtmWindowsWmNativeHwnd ());
+  DeleteProperty (serverClient, oldWin, AtmWindowsWmNativeHwnd ());
   winMWExtWMSetNativeProperty (pFrame);
 #if CYGMULTIWINDOW_DEBUG
 #if 0
@@ -1087,6 +1087,6 @@ winMWExtWMSetNativeProperty (RootlessWindowPtr pFrame)
   /* FIXME: move this to WindowsWM extension */
 
   lData = (long) pRLWinPriv->hWnd;
-  ChangeWindowProperty (pFrame->win, AtmWindowsWmNativeHwnd (),
-			XA_INTEGER, 32, PropModeReplace, 1, &lData, TRUE);
+  dixChangeWindowProperty(serverClient, pFrame->win, AtmWindowsWmNativeHwnd(),
+			  XA_INTEGER, 32, PropModeReplace, 1, &lData, TRUE);
 }

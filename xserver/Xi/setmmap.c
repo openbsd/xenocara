@@ -56,14 +56,10 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include <X11/X.h>	/* for inputstr.h    */
-#include <X11/Xproto.h>	/* Request macro     */
 #include "inputstr.h"	/* DeviceIntPtr      */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include "exevents.h"
-#include "extnsionst.h"
-#include "extinit.h"	/* LookupDeviceIntRec */
 #include "exglobals.h"
 
 #include "setmmap.h"
@@ -102,12 +98,9 @@ ProcXSetDeviceModifierMapping(ClientPtr client)
     REQUEST(xSetDeviceModifierMappingReq);
     REQUEST_AT_LEAST_SIZE(xSetDeviceModifierMappingReq);
 
-    dev = LookupDeviceIntRec(stuff->deviceid);
-    if (dev == NULL) {
-	SendErrorToClient(client, IReqCode, X_SetDeviceModifierMapping, 0,
-			  BadDevice);
-	return Success;
-    }
+    ret = dixLookupDevice(&dev, stuff->deviceid, client, DixManageAccess);
+    if (ret != Success)
+	return ret;
 
     rep.repType = X_Reply;
     rep.RepType = X_SetDeviceModifierMapping;
@@ -125,11 +118,8 @@ ProcXSetDeviceModifierMapping(ClientPtr client)
 	    SendDeviceMappingNotify(client, MappingModifier, 0, 0, dev);
 	WriteReplyToClient(client, sizeof(xSetDeviceModifierMappingReply),
 			   &rep);
-    } else {
-	if (ret == -1)
-	    ret = BadValue;
-	SendErrorToClient(client, IReqCode, X_SetDeviceModifierMapping, 0, ret);
-    }
+    } else if (ret == -1)
+	return BadValue;
 
     return Success;
 }

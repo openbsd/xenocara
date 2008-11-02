@@ -15,21 +15,21 @@ is" without express or implied warranty.
 #ifndef XNESTPIXMAP_H
 #define XNESTPIXMAP_H
 
-extern int xnestPixmapPrivateIndex;
+extern DevPrivateKey xnestPixmapPrivateKey;
 
 typedef struct {
   Pixmap pixmap;
 } xnestPrivPixmap;
 
-#define xnestPixmapPriv(pPixmap) \
-  ((xnestPrivPixmap *)((pPixmap)->devPrivates[xnestPixmapPrivateIndex].ptr))
+#define xnestPixmapPriv(pPixmap) ((xnestPrivPixmap *) \
+    dixLookupPrivate(&(pPixmap)->devPrivates, xnestPixmapPrivateKey))
 
 #define xnestPixmap(pPixmap) (xnestPixmapPriv(pPixmap)->pixmap)
 
 #define xnestSharePixmap(pPixmap) ((pPixmap)->refcnt++)
 
 PixmapPtr xnestCreatePixmap(ScreenPtr pScreen, int width, int height,
-			    int depth);
+			    int depth, unsigned usage_hint);
 Bool xnestDestroyPixmap(PixmapPtr pPixmap);
 RegionPtr xnestPixmapToRegion(PixmapPtr pPixmap);
 

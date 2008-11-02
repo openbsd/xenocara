@@ -213,7 +213,7 @@ remove_device(DBusMessage *message, DBusMessage *reply, DBusError *error)
         MALFORMED_MESSAGE_ERROR();
     }
 
-    dev = LookupDeviceIntRec(deviceid);
+    dixLookupDevice(&dev, deviceid, serverClient, DixDestroyAccess);
     if (!dev) {
         DebugF("[config/dbus] bogus device id %d given\n", deviceid);
         ret = BadMatch;
@@ -396,9 +396,6 @@ err_start:
 static void
 disconnect_hook(void *data)
 {
-    struct connection_info *info = data;
-
-    reset_info(info);
 }
 
 #if 0
@@ -440,4 +437,6 @@ void
 config_dbus_fini(void)
 {
     config_dbus_core_remove_hook(&core_hook);
+    connection_data.busname[0] = '\0';
+    connection_data.busobject[0] = '\0';
 }

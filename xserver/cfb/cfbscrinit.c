@@ -46,14 +46,6 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "cfbmskbits.h"
 #include "mibstore.h"
 
-BSFuncRec cfbBSFuncRec = {
-    cfbSaveAreas,
-    cfbRestoreAreas,
-    (BackingStoreSetClipmaskRgnProcPtr) 0,
-    (BackingStoreGetImagePixmapProcPtr) 0,
-    (BackingStoreGetSpansPixmapProcPtr) 0,
-};
-
 Bool
 cfbCloseScreen (index, pScreen)
     int		index;
@@ -67,7 +59,7 @@ cfbCloseScreen (index, pScreen)
     xfree (depths);
     xfree (pScreen->visuals);
 #ifdef CFB_NEED_SCREEN_PRIVATE
-    xfree (pScreen->devPrivates[cfbScreenPrivateIndex].ptr);
+    xfree (dixLookupPrivate(&pScreen->devPrivates, cfbScreenPrivateKey));
 #else
     xfree (pScreen->devPrivate);
 #endif
@@ -96,7 +88,7 @@ cfbSetupScreen(pScreen, pbits, xsize, ysize, dpix, dpiy, width)
     int dpix, dpiy;		/* dots per inch */
     int width;			/* pixel width of frame buffer */
 {
-    if (!cfbAllocatePrivates(pScreen, (int *) 0, (int *) 0))
+    if (!cfbAllocatePrivates(pScreen, NULL))
 	return FALSE;
     pScreen->defColormap = FakeClientID(0);
     /* let CreateDefColormap do whatever it wants for pixels */ 
@@ -111,8 +103,6 @@ cfbSetupScreen(pScreen, pbits, xsize, ysize, dpix, dpiy, width)
     pScreen->ChangeWindowAttributes = cfbChangeWindowAttributes;
     pScreen->RealizeWindow = cfbMapWindow;
     pScreen->UnrealizeWindow = cfbUnmapWindow;
-    pScreen->PaintWindowBackground = cfbPaintWindow;
-    pScreen->PaintWindowBorder = cfbPaintWindow;
     pScreen->CopyWindow = cfbCopyWindow;
     pScreen->CreatePixmap = cfbCreatePixmap;
     pScreen->DestroyPixmap = cfbDestroyPixmap;
@@ -140,9 +130,11 @@ cfbCreateScreenResources(pScreen)
     Bool retval;
 
     pointer oldDevPrivate = pScreen->devPrivate;
-    pScreen->devPrivate = pScreen->devPrivates[cfbScreenPrivateIndex].ptr;
+    pScreen->devPrivate = dixLookupPrivate(&pScreen->devPrivates,
+					   cfbScreenPrivateKey);
     retval = miCreateScreenResources(pScreen);
-    pScreen->devPrivates[cfbScreenPrivateIndex].ptr = pScreen->devPrivate;
+    dixSetPrivate(&pScreen->devPrivates, cfbScreenPrivateKey,
+		  pScreen->devPrivate);
     pScreen->devPrivate = oldDevPrivate;
     return retval;
 }
@@ -181,10 +173,10 @@ cfbFinishScreenInit(pScreen, pbits, xsize, ysize, dpix, dpiy, width)
     pScreen->CloseScreen = cfbCloseScreen;
 #ifdef CFB_NEED_SCREEN_PRIVATE
     pScreen->CreateScreenResources = cfbCreateScreenResources;
-    pScreen->devPrivates[cfbScreenPrivateIndex].ptr = pScreen->devPrivate;
+    dixSetPrivate(&pScreen->devPrivates, cfbScreenPrivateKey,
+		  pScreen->devPrivate);
     pScreen->devPrivate = oldDevPrivate;
 #endif
-    pScreen->BackingStoreFuncs = cfbBSFuncRec;
     pScreen->GetScreenPixmap = cfbGetScreenPixmap;
     pScreen->SetScreenPixmap = cfbSetScreenPixmap;
     return TRUE;
@@ -209,7 +201,8 @@ cfbGetScreenPixmap(pScreen)
     ScreenPtr pScreen;
 {
 #ifdef CFB_NEED_SCREEN_PRIVATE
-    return (PixmapPtr)pScreen->devPrivates[cfbScreenPrivateIndex].ptr;
+    return (PixmapPtr)dixLookupPrivate(&pScreen->devPrivates,
+				       cfbScreenPrivateKey);
 #else
     return (PixmapPtr)pScreen->devPrivate;
 #endif
@@ -221,8 +214,8 @@ cfbSetScreenPixmap(pPix)
 {
 #ifdef CFB_NEED_SCREEN_PRIVATE
     if (pPix)
-	pPix->drawable.pScreen->devPrivates[cfbScreenPrivateIndex].ptr =
-	    (pointer)pPix;
+	dixSetPrivate(&pPix->drawable.pScreen->devPrivates,
+		      cfbScreenPrivateKey, pPix);
 #else
     if (pPix)
 	pPix->drawable.pScreen->devPrivate = (pointer)pPix;

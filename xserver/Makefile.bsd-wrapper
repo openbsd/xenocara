@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.24 2008/10/12 10:46:40 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.25 2008/11/02 15:26:08 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -20,19 +20,23 @@ NO_XF86_UTIL_${M} = --disable-xfree86-utils
 .endfor
 NO_XF86_UTIL_OPTION=${NO_XF86_UTIL_${MACHINE}}
 
-.if ${XENOCARA_BUILD_GL:L} == "yes" && ${MACHINE_ARCH} != "mips64"
-MESA_SOURCE=	--with-mesa-source=${XSRCDIR}/dist/Mesa
+.if ${XENOCARA_BUILD_GL:L} == "yes"
+GLX_OPTION=	--with-mesa-source=${XSRCDIR}/dist/Mesa
+.else
+GLX_OPTION=	--disable-glx
 .endif
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
 DRI_OPTION=	--enable-dri --with-dri-driver-path=${X11BASE}/lib/modules/dri
+.else
+DRI_OPTION=	--disable-dri
 .endif
 
 .if !defined(KDRIVE)
 CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--with-xkb-path=/etc/X11/xkb \
 		--with-xkb-output=/var/db/xkb \
-		--with-module-dir=${LIBDIR}/modules ${MESA_SOURCE} \
+		--with-module-dir=${LIBDIR}/modules ${GLX_OPTION} \
 		--enable-install-setuid --enable-privsep \
 		--disable-dmx ${NO_XORG_OPTION} ${NO_XF86_UTIL_OPTION} \
 		--disable-ioport ${DRI_OPTION}
@@ -42,12 +46,9 @@ CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--disable-xinput \
 		--enable-kdrive \
 		--disable-dmx \
+		--disable-xprint \
 		--disable-xnest \
 		--disable-xvfb
-.endif
-
-.if ${MACHINE_ARCH} == "mips64"
-CONFIGURE_ARGS+= --disable-glx
 .endif
 
 .include <bsd.xorg.mk>

@@ -56,14 +56,10 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include <X11/X.h>	/* for inputstr.h    */
-#include <X11/Xproto.h>	/* Request macro     */
 #include "inputstr.h"	/* DeviceIntPtr      */
 #include "windowstr.h"	/* window structure  */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
-#include "extnsionst.h"
-#include "extinit.h"	/* LookupDeviceIntRec */
 #include "exglobals.h"
 #include "dixgrabs.h"
 
@@ -110,46 +106,34 @@ ProcXUngrabDeviceKey(ClientPtr client)
     REQUEST(xUngrabDeviceKeyReq);
     REQUEST_SIZE_MATCH(xUngrabDeviceKeyReq);
 
-    dev = LookupDeviceIntRec(stuff->grabbed_device);
-    if (dev == NULL) {
-	SendErrorToClient(client, IReqCode, X_UngrabDeviceKey, 0, BadDevice);
-	return Success;
-    }
-    if (dev->key == NULL) {
-	SendErrorToClient(client, IReqCode, X_UngrabDeviceKey, 0, BadMatch);
-	return Success;
-    }
+    rc = dixLookupDevice(&dev, stuff->grabbed_device, client, DixGrabAccess);
+    if (rc != Success)
+	return rc;
+    if (dev->key == NULL)
+	return BadMatch;
 
     if (stuff->modifier_device != UseXKeyboard) {
-	mdev = LookupDeviceIntRec(stuff->modifier_device);
-	if (mdev == NULL) {
-	    SendErrorToClient(client, IReqCode, X_UngrabDeviceKey, 0,
-			      BadDevice);
-	    return Success;
-	}
-	if (mdev->key == NULL) {
-	    SendErrorToClient(client, IReqCode, X_UngrabDeviceKey, 0, BadMatch);
-	    return Success;
-	}
+	rc = dixLookupDevice(&mdev, stuff->modifier_device, client,
+			     DixReadAccess);
+	if (rc != Success)
+	    return BadDevice;
+	if (mdev->key == NULL)
+	    return BadMatch;
     } else
-	mdev = (DeviceIntPtr) LookupKeyboardDevice();
+	mdev = inputInfo.keyboard;
 
-    rc = dixLookupWindow(&pWin, stuff->grabWindow, client, DixUnknownAccess);
-    if (rc != Success) {
-	SendErrorToClient(client, IReqCode, X_UngrabDeviceKey, 0, rc);
-	return Success;
-    }
+    rc = dixLookupWindow(&pWin, stuff->grabWindow, client, DixSetAttrAccess);
+    if (rc != Success)
+	return rc;
+
     if (((stuff->key > dev->key->curKeySyms.maxKeyCode) ||
 	 (stuff->key < dev->key->curKeySyms.minKeyCode))
-	&& (stuff->key != AnyKey)) {
-	SendErrorToClient(client, IReqCode, X_UngrabDeviceKey, 0, BadValue);
-	return Success;
-    }
+	&& (stuff->key != AnyKey))
+	return BadValue;
+
     if ((stuff->modifiers != AnyModifier) &&
-	(stuff->modifiers & ~AllModifiersMask)) {
-	SendErrorToClient(client, IReqCode, X_UngrabDeviceKey, 0, BadValue);
-	return Success;
-    }
+	(stuff->modifiers & ~AllModifiersMask))
+	return BadValue;
 
     temporaryGrab.resource = client->clientAsMask;
     temporaryGrab.device = dev;

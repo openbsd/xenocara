@@ -27,11 +27,20 @@
 #include <kdrive-config.h>
 #endif
 #include "ephyr.h"
+#include "ephyrlog.h"
 
 extern Window EphyrPreExistingHostWin;
 extern Bool   EphyrWantGrayScale;
 extern Bool   kdHasPointer;
 extern Bool   kdHasKbd;
+
+#ifdef GLXEXT
+extern Bool   ephyrNoDRI;
+extern Bool noGlxVisualInit;
+#endif
+extern Bool   ephyrNoXV;
+
+void processScreenArg (char *screen_size, char *parent_id) ;
 
 void
 InitCard (char *name)
@@ -47,9 +56,6 @@ InitCard (char *name)
 void
 InitOutput (ScreenInfo *pScreenInfo, int argc, char **argv)
 {
-#ifdef GLXEXT
-  noGlxExtension=TRUE;
-#endif
   KdInitOutput (pScreenInfo, argc, argv);
 }
 
@@ -93,29 +99,80 @@ ddxUseMsg (void)
   KdUseMsg();
 
   ErrorF("\nXephyr Option Usage:\n");
-  ErrorF("-parent XID   Use existing window as Xephyr root win\n");
-  ErrorF("-host-cursor  Re-use exisiting X host server cursor\n");
-  ErrorF("-fullscreen   Attempt to run Xephyr fullscreen\n");
-  ErrorF("-grayscale    Simulate 8bit grayscale\n");
-  ErrorF("-fakexa       Simulate acceleration using software rendering\n");
+  ErrorF("-parent <XID>        Use existing window as Xephyr root win\n");
+  ErrorF("-host-cursor         Re-use exisiting X host server cursor\n");
+  ErrorF("-fullscreen          Attempt to run Xephyr fullscreen\n");
+  ErrorF("-grayscale           Simulate 8bit grayscale\n");
+  ErrorF("-fakexa              Simulate acceleration using software rendering\n");
+  ErrorF("-verbosity <level>   Set log verbosity level\n");
+#ifdef GLXEXT
+  ErrorF("-nodri               do not use DRI\n");
+#endif
+  ErrorF("-noxv                do not use XV\n");
+  ErrorF("-name [name]         define the name in the WM_CLASS property\n");
   ErrorF("\n");
 
   exit(1);
 }
 
+void
+processScreenArg (char *screen_size, char *parent_id)
+{
+  KdCardInfo   *card;
+
+  InitCard (0);  /*Put each screen on a separate card*/
+  card = KdCardInfoLast ();
+
+  if (card)
+    {
+      KdScreenInfo *screen;
+      unsigned long p_id = 0;
+
+      screen = KdScreenInfoAdd (card);
+      KdParseScreen (screen, screen_size);
+
+      if (parent_id)
+        {
+          p_id = strtol (parent_id, NULL, 0);
+        }
+      EPHYR_DBG ("screen number:%d\n", screen->mynum) ;
+      hostx_add_screen (screen, p_id, screen->mynum);
+    }
+  else
+    {
+      ErrorF("No matching card found!\n");
+    }
+}
+
 int
 ddxProcessArgument (int argc, char **argv, int i)
 {
-  EPHYR_DBG("mark");
+  EPHYR_DBG("mark argv[%d]='%s'", i, argv[i] );
+
+  if (i == 1)
+    {
+      hostx_use_resname(basename(argv[0]), 0);
+    }
 
   if (!strcmp (argv[i], "-parent"))
     {
-      if(i+1 < argc) 
+      if(i+1 < argc)
 	{
-	  hostx_use_preexisting_window(strtol(argv[i+1], NULL, 0));
+	  processScreenArg ("100x100", argv[i+1]);
 	  return 2;
-	} 
-      
+	}
+
+      UseMsg();
+      exit(1);
+    }
+  else if (!strcmp (argv[i], "-screen"))
+    {
+      if ((i+1) < argc)
+	{
+	  processScreenArg (argv[i+1], NULL);
+	  return 2;
+	}
+
       UseMsg();
       exit(1);
     }
@@ -142,6 +199,49 @@ ddxProcessArgument (int argc, char **argv, int i)
       ephyrFuncs.finiAccel = ephyrDrawFini;
       return 1;
     }
+  else if (!strcmp (argv[i], "-verbosity"))
+    {
+      if(i+1 < argc && argv[i+1][0] != '-')
+	{
+	  int verbosity=atoi (argv[i+1]) ;
+	  LogSetParameter (XLOG_VERBOSITY, verbosity) ;
+	  EPHYR_LOG ("set verbosiry to %d\n", verbosity) ;
+	  return 2 ;
+	}
+      else
+	{
+	  UseMsg() ;
+	  exit(1) ;
+	}
+    }
+#ifdef GLXEXT
+  else if (!strcmp (argv[i], "-nodri"))
+   {
+       noGlxVisualInit = FALSE ;
+       ephyrNoDRI = TRUE ;
+       EPHYR_LOG ("no direct rendering enabled\n") ;
+       return 1 ;
+   }
+#endif
+  else if (!strcmp (argv[i], "-noxv"))
+   {
+       ephyrNoXV = TRUE ;
+       EPHYR_LOG ("no XVideo enabled\n") ;
+       return 1 ;
+   }
+  else if (!strcmp (argv[i], "-name"))
+   {
+       if (i+1 < argc && argv[i+1][0] != '-')
+         {
+           hostx_use_resname(argv[i+1], 1);
+           return 2;
+         }
+       else
+         {
+           UseMsg();
+           return 0;
+         }
+   }
   else if (argv[i][0] == ':')
     {
       hostx_set_display_name(argv[i]);
@@ -201,8 +301,10 @@ miPointerSpriteFuncRec EphyrPointerSpriteFuncs = {
 Bool
 ephyrCursorInit(ScreenPtr pScreen)
 {
-  miPointerInitialize(pScreen, &EphyrPointerSpriteFuncs,
-		      &kdPointerScreenFuncs, FALSE);
+  miPointerInitialize(pScreen, 
+		      &EphyrPointerSpriteFuncs,
+		      &ephyrPointerScreenFuncs, 
+		      FALSE);
 
   return TRUE;
 }

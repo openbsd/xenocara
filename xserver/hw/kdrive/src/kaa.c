@@ -42,9 +42,8 @@
 #define DBG_PIXMAP(a)
 #endif
  
-int kaaGeneration;
-int kaaScreenPrivateIndex;
-int kaaPixmapPrivateIndex;
+DevPrivateKey kaaScreenPrivateKey = &kaaScreenPrivateKey;
+DevPrivateKey kaaPixmapPrivateKey = &kaaPixmapPrivateKey;
 
 #define KAA_PIXMAP_SCORE_MOVE_IN    10
 #define KAA_PIXMAP_SCORE_MAX	    20
@@ -294,7 +293,7 @@ kaaDestroyPixmap (PixmapPtr pPixmap)
 }
 
 static PixmapPtr 
-kaaCreatePixmap(ScreenPtr pScreen, int w, int h, int depth)
+kaaCreatePixmap(ScreenPtr pScreen, int w, int h, int depth, unsigned usage_hint)
 {
     PixmapPtr		pPixmap;
     KaaPixmapPrivPtr	pKaaPixmap;
@@ -314,7 +313,7 @@ kaaCreatePixmap(ScreenPtr pScreen, int w, int h, int depth)
 	    }
     }
 
-    pPixmap = fbCreatePixmapBpp (pScreen, w, h, depth, bpp);
+    pPixmap = fbCreatePixmapBpp (pScreen, w, h, depth, bpp, usage_hint);
     if (!pPixmap)
 	return NULL;
     pKaaPixmap = KaaGetPixmapPriv(pPixmap);
@@ -997,64 +996,6 @@ kaaFillRegionSolid (DrawablePtr	pDrawable,
     kaaDrawableDirty (pDrawable);
 }
 
-#if 0
-static void
-kaaFillRegionTiled (DrawablePtr pDrawable,
-		    RegionPtr	pRegion,
-		    Pixmap	pTile)
-{
-    else
-    {
-	kaaWaitSync
-}
-#endif
-
-static void
-kaaPaintWindow(WindowPtr pWin, RegionPtr pRegion, int what)
-{
-
-    if (!REGION_NUM_RECTS(pRegion)) 
-	return;
-    switch (what) {
-    case PW_BACKGROUND:
-	switch (pWin->backgroundState) {
-	case None:
-	    return;
-	case ParentRelative:
-	    do {
-		pWin = pWin->parent;
-	    } while (pWin->backgroundState == ParentRelative);
-	    (*pWin->drawable.pScreen->PaintWindowBackground)(pWin, pRegion,
-							     what);
-	    return;
-	case BackgroundPixel:
-	    kaaFillRegionSolid((DrawablePtr)pWin, pRegion, pWin->background.pixel);
-	    return;
-#if 0	    
-	case BackgroundPixmap:
-	    kaaFillRegionTiled((DrawablePtr)pWin, pRegion, pWin->background.pixmap);
-	    return;
-#endif
-    	}
-    	break;
-    case PW_BORDER:
-	if (pWin->borderIsPixel)
-	{
-	    kaaFillRegionSolid((DrawablePtr)pWin, pRegion, pWin->border.pixel);
-	    return;
-	}
-#if 0
-	else
-	{
-	    kaaFillRegionTiled((DrawablePtr)pWin, pRegion, pWin->border.pixmap);
-	    return;
-	}
-#endif
-	break;
-    }
-    KdCheckPaintWindow (pWin, pRegion, what);
-}
-
 Bool
 kaaDrawInit (ScreenPtr		pScreen,
 	     KaaScreenInfoPtr	pScreenInfo)
@@ -1066,13 +1007,6 @@ kaaDrawInit (ScreenPtr		pScreen,
     PictureScreenPtr	ps = GetPictureScreenIfSet(pScreen);
 #endif
     
-    if (kaaGeneration != serverGeneration)
-    {
-	kaaScreenPrivateIndex = AllocateScreenPrivateIndex();
-	kaaPixmapPrivateIndex = AllocatePixmapPrivateIndex();
-	kaaGeneration = serverGeneration;
-    }
-
     pKaaScr = xalloc (sizeof (KaaScreenPrivRec));
 
     if (!pKaaScr)
@@ -1080,7 +1014,7 @@ kaaDrawInit (ScreenPtr		pScreen,
     
     pKaaScr->info = pScreenInfo;
     
-    pScreen->devPrivates[kaaScreenPrivateIndex].ptr = (pointer) pKaaScr;
+    dixSetPrivate(&pScreen->devPrivates, kaaScreenPrivateKey, pKaaScr);
     
     /*
      * Hook up asynchronous drawing
@@ -1091,8 +1025,6 @@ kaaDrawInit (ScreenPtr		pScreen,
      */
     pScreen->CreateGC = kaaCreateGC;
     pScreen->CopyWindow = kaaCopyWindow;
-    pScreen->PaintWindowBackground = kaaPaintWindow;
-    pScreen->PaintWindowBorder = kaaPaintWindow;
 #ifdef RENDER
     if (ps) {
 	ps->Composite = kaaComposite;
@@ -1106,16 +1038,10 @@ kaaDrawInit (ScreenPtr		pScreen,
     if ((pKaaScr->info->flags & KAA_OFFSCREEN_PIXMAPS) &&
 	screen->off_screen_base < screen->memory_size)
     {
-	if (!AllocatePixmapPrivate(pScreen, kaaPixmapPrivateIndex,
-				   sizeof (KaaPixmapPrivRec)))
+	if (!dixRequestPrivate(kaaPixmapPrivateKey, sizeof (KaaPixmapPrivRec)))
 	    return FALSE;
 	pScreen->CreatePixmap = kaaCreatePixmap;
 	pScreen->DestroyPixmap = kaaDestroyPixmap;
-    }
-    else
-    {
-	if (!AllocatePixmapPrivate(pScreen, kaaPixmapPrivateIndex, 0))
-	    return FALSE;
     }
 
     return TRUE;

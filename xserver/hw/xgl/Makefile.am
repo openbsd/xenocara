@@ -22,7 +22,7 @@ AM_CFLAGS = \
 	 $(DIX_CFLAGS) \
 	-DHAVE_XGL_CONFIG_H \
 	-DHAVE_DIX_CONFIG_H \
-	-I$(top_srcdir)/GL/glx			\
+	-I$(top_srcdir)/glx			\
 	-I$(top_srcdir)/GL/include		\
 	-I@MESA_SOURCE@/include \
 	-I@MESA_SOURCE@/src/mesa/glapi \
@@ -48,7 +48,6 @@ libxgl_a_SOURCES =     \
 	xglcopy.c      \
 	xglfill.c      \
 	xglwindow.c    \
-	xglbstore.c    \
 	xglget.c       \
 	xglgc.c	       \
 	xglshm.c       \
@@ -71,12 +70,14 @@ Xgl_SOURCES = \
 	$(top_srcdir)/Xext/dpmsstubs.c \
 	$(top_srcdir)/Xi/stubs.c \
 	$(top_srcdir)/fb/fbcmap.c
-Xgl_LDADD = \
+
+XGL_LIBS = \
 	libxgl.a \
-	$(XORG_CORE_LIBS) \
-	$(XGL_LIBS) \
-	$(XSERVER_LIBS) \
-	$(EXTENSION_LIBS) -lglitz -ldl
+	@XGL_LIBS@ \
+	$(XSERVER_LIBS)
+
+Xgl_DEPENDENCIES = $(XGL_LIBS)
+Xgl_LDADD = $(XGL_LIBS) $(XSERVER_SYS_LIBS) $(XGL_SYS_LIBS)
 Xgl_programs = Xgl
 
 bin_PROGRAMS = $(Xgl_programs)

@@ -67,11 +67,11 @@ SOFTWARE.
 #include "region.h"
 #include "exevents.h"
 #include "extnsionst.h"
-#include "extinit.h"	/* LookupDeviceIntRec */
 #include "exglobals.h"
 #include "dixevents.h"	/* DeliverFocusedEvent */
 #include "dixgrabs.h"	/* CreateGrab() */
 #include "scrnintstr.h"
+#include "xace.h"
 
 #ifdef XKB
 #include "xkbsrv.h"
@@ -123,14 +123,9 @@ ProcessOtherEvent(xEventPtr xE, DeviceIntPtr other, int count)
     deviceValuator *xV = (deviceValuator *) xE;
 
     if (xE->u.u.type != DeviceValuator) {
-        /* Other types already have root{X,Y} filled in. */
-        if (xE->u.u.type == DeviceKeyPress ||
-            xE->u.u.type == DeviceKeyRelease) {
-	    GetSpritePosition(&rootX, &rootY);
-	    xE->u.keyButtonPointer.rootX = rootX;
-	    xE->u.keyButtonPointer.rootY = rootY;
-        }
-
+	GetSpritePosition(&rootX, &rootY);
+	xE->u.keyButtonPointer.rootX = rootX;
+	xE->u.keyButtonPointer.rootY = rootY;
 	key = xE->u.u.detail;
 	NoticeEventTime(xE);
 	xE->u.keyButtonPointer.state = inputInfo.keyboard->key->state |
@@ -516,6 +511,7 @@ GrabButton(ClientPtr client, DeviceIntPtr dev, BYTE this_device_mode,
     WindowPtr pWin, confineTo;
     CursorPtr cursor;
     GrabPtr grab;
+    Mask access_mode = DixGrabAccess;
     int rc;
 
     if ((this_device_mode != GrabModeSync) &&
@@ -536,25 +532,33 @@ GrabButton(ClientPtr client, DeviceIntPtr dev, BYTE this_device_mode,
 	client->errorValue = ownerEvents;
 	return BadValue;
     }
-    rc = dixLookupWindow(&pWin, grabWindow, client, DixUnknownAccess);
+    rc = dixLookupWindow(&pWin, grabWindow, client, DixSetAttrAccess);
     if (rc != Success)
 	return rc;
     if (rconfineTo == None)
 	confineTo = NullWindow;
     else {
-	rc = dixLookupWindow(&confineTo, rconfineTo, client, DixUnknownAccess);
+	rc = dixLookupWindow(&confineTo, rconfineTo, client, DixSetAttrAccess);
 	if (rc != Success)
 	    return rc;
     }
     if (rcursor == None)
 	cursor = NullCursor;
     else {
-	cursor = (CursorPtr) LookupIDByType(rcursor, RT_CURSOR);
-	if (!cursor) {
+	rc = dixLookupResource((pointer *)&cursor, rcursor, RT_CURSOR,
+			       client, DixUseAccess);
+	if (rc != Success)
+	{
 	    client->errorValue = rcursor;
-	    return BadCursor;
+	    return (rc == BadValue) ? BadCursor : rc;
 	}
+	access_mode |= DixForceAccess;
     }
+    if (this_device_mode == GrabModeSync || other_devices_mode == GrabModeSync)
+	access_mode |= DixFreezeAccess;
+    rc = XaceHook(XACE_DEVICE_ACCESS, client, dev, access_mode);
+    if (rc != Success)
+	return rc;
 
     grab = CreateGrab(client->index, dev, pWin, eventMask,
 		      (Bool) ownerEvents, (Bool) this_device_mode,
@@ -562,7 +566,7 @@ GrabButton(ClientPtr client, DeviceIntPtr dev, BYTE this_device_mode,
 		      DeviceButtonPress, button, confineTo, cursor);
     if (!grab)
 	return BadAlloc;
-    return AddPassiveGrabToList(grab);
+    return AddPassiveGrabToList(client, grab);
 }
 
 int
@@ -574,6 +578,7 @@ GrabKey(ClientPtr client, DeviceIntPtr dev, BYTE this_device_mode,
     WindowPtr pWin;
     GrabPtr grab;
     KeyClassPtr k = dev->key;
+    Mask access_mode = DixGrabAccess;
     int rc;
 
     if (k == NULL)
@@ -601,7 +606,12 @@ GrabKey(ClientPtr client, DeviceIntPtr dev, BYTE this_device_mode,
 	client->errorValue = ownerEvents;
 	return BadValue;
     }
-    rc = dixLookupWindow(&pWin, grabWindow, client, DixUnknownAccess);
+    rc = dixLookupWindow(&pWin, grabWindow, client, DixSetAttrAccess);
+    if (rc != Success)
+	return rc;
+    if (this_device_mode == GrabModeSync || other_devices_mode == GrabModeSync)
+	access_mode |= DixFreezeAccess;
+    rc = XaceHook(XACE_DEVICE_ACCESS, client, dev, access_mode);
     if (rc != Success)
 	return rc;
 
@@ -611,7 +621,7 @@ GrabKey(ClientPtr client, DeviceIntPtr dev, BYTE this_device_mode,
 		      NullWindow, NullCursor);
     if (!grab)
 	return BadAlloc;
-    return AddPassiveGrabToList(grab);
+    return AddPassiveGrabToList(client, grab);
 }
 
 int
@@ -823,7 +833,7 @@ SendEvent(ClientPtr client, DeviceIntPtr d, Window dest, Bool propagate,
 	} else
 	    effectiveFocus = pWin = inputFocus;
     } else
-	dixLookupWindow(&pWin, dest, client, DixUnknownAccess);
+	dixLookupWindow(&pWin, dest, client, DixSendAccess);
     if (!pWin)
 	return BadWindow;
     if ((propagate != xFalse) && (propagate != xTrue)) {
@@ -842,7 +852,7 @@ SendEvent(ClientPtr client, DeviceIntPtr d, Window dest, Bool propagate,
 	    if (!mask)
 		break;
 	}
-    } else
+    } else if (!XaceHook(XACE_SEND_ACCESS, client, NULL, pWin, ev, count))
 	(void)(DeliverEventsToWindow(pWin, ev, count, mask, NullGrab, d->id));
     return Success;
 }
@@ -1106,7 +1116,8 @@ MaybeSendDeviceMotionNotifyHint(deviceKeyButtonPointer * pEvents, Mask mask)
 {
     DeviceIntPtr dev;
 
-    dev = LookupDeviceIntRec(pEvents->deviceid & DEVICE_BITS);
+    dixLookupDevice(&dev, pEvents->deviceid & DEVICE_BITS, serverClient,
+		    DixReadAccess);
     if (!dev)
         return 0;
 
@@ -1130,7 +1141,8 @@ CheckDeviceGrabAndHintWindow(WindowPtr pWin, int type,
 {
     DeviceIntPtr dev;
 
-    dev = LookupDeviceIntRec(xE->deviceid & DEVICE_BITS);
+    dixLookupDevice(&dev, xE->deviceid & DEVICE_BITS, serverClient,
+		    DixReadAccess);
     if (!dev)
         return;
 
@@ -1267,6 +1279,8 @@ SendEventToAllWindows(DeviceIntPtr dev, Mask mask, xEvent * ev, int count)
 
     for (i = 0; i < screenInfo.numScreens; i++) {
         pWin = WindowTable[i];
+        if (!pWin)
+            continue;
         (void)DeliverEventsToWindow(pWin, ev, count, mask, NullGrab, dev->id);
         p1 = pWin->firstChild;
         FindInterestedChildren(dev, p1, mask, ev, count);

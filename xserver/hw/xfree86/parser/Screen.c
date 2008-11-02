@@ -214,6 +214,7 @@ static xf86ConfigSymTabRec ScreenTab[] =
 	{DEFAULTDEPTH, "defaultdepth"},
 	{DEFAULTBPP, "defaultbpp"},
 	{DEFAULTFBBPP, "defaultfbbpp"},
+	{VIRTUAL, "virtual"},
 	{OPTION, "option"},
 	{-1, ""},
 };
@@ -299,6 +300,14 @@ xf86parseScreenSection (void)
 				}
 			}
 			break;
+		case VIRTUAL:
+			if (xf86getSubToken (&(ptr->scrn_comment)) != NUMBER)
+				Error (VIRTUAL_MSG, NULL);
+			ptr->scrn_virtualX = val.num;
+			if (xf86getSubToken (&(ptr->scrn_comment)) != NUMBER)
+				Error (VIRTUAL_MSG, NULL);
+			ptr->scrn_virtualY = val.num;
+			break;
 		case OPTION:
 			ptr->scrn_option_lst = xf86parseOption(ptr->scrn_option_lst);
 			break;
@@ -364,6 +373,10 @@ xf86printScreenSection (FILE * cf, XF86ConfScreenPtr ptr)
 		{
 			fprintf (cf, "\tVideoAdaptor \"%s\"\n", aptr->al_adaptor_str);
 		}
+		if (ptr->scrn_virtualX && ptr->scrn_virtualY)
+			fprintf (cf, "\tVirtual     %d %d\n",
+				 ptr->scrn_virtualX,
+				 ptr->scrn_virtualY);
 		for (dptr = ptr->scrn_display_lst; dptr; dptr = dptr->list.next)
 		{
 			fprintf (cf, "\tSubSection \"Display\"\n");
@@ -495,14 +508,7 @@ xf86validateScreen (XF86ConfigPtr p)
 {
 	XF86ConfScreenPtr screen = p->conf_screen_lst;
 	XF86ConfMonitorPtr monitor;
-	XF86ConfDevicePtr device;
 	XF86ConfAdaptorLinkPtr adaptor;
-
-	if (!screen)
-	{
-		xf86validationError ("At least one Screen section is required.");
-		return (FALSE);
-	}
 
 	while (screen)
 	{
@@ -512,13 +518,7 @@ xf86validateScreen (XF86ConfigPtr p)
 		monitor = xf86findMonitor (screen->scrn_monitor_str, p->conf_monitor_lst);
 		if (screen->scrn_monitor_str)
 		{
-			if (!monitor)
-			{
-				xf86validationError (UNDEFINED_MONITOR_MSG,
-						 	screen->scrn_monitor_str, screen->scrn_identifier);
-				return (FALSE);
-			}
-			else
+			if (monitor)
 			{
 				screen->scrn_monitor = monitor;
 				if (!xf86validateMonitor(p, screen))
@@ -526,15 +526,7 @@ xf86validateScreen (XF86ConfigPtr p)
 			}
 		}
 
-		device = xf86findDevice (screen->scrn_device_str, p->conf_device_lst);
-		if (!device)
-		{
-			xf86validationError (UNDEFINED_DEVICE_MSG,
-						  screen->scrn_device_str, screen->scrn_identifier);
-			return (FALSE);
-		}
-		else
-			screen->scrn_device = device;
+		screen->scrn_device= xf86findDevice (screen->scrn_device_str, p->conf_device_lst);
 
 		adaptor = screen->scrn_adaptor_lst;
 		while (adaptor)

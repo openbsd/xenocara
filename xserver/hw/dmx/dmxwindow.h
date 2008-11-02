@@ -81,10 +81,6 @@ extern Bool dmxUnrealizeWindow(WindowPtr pWindow);
 extern void dmxRestackWindow(WindowPtr pWindow, WindowPtr pOldNextSib);
 extern void dmxWindowExposures(WindowPtr pWindow, RegionPtr prgn,
 			       RegionPtr other_exposed);
-extern void dmxPaintWindowBackground(WindowPtr pWindow, RegionPtr pRegion,
-				     int what);
-extern void dmxPaintWindowBorder(WindowPtr pWindow, RegionPtr pRegion,
-				 int what);
 extern void dmxCopyWindow(WindowPtr pWindow, DDXPointRec ptOldOrg,
 			  RegionPtr prgnSrc);
 
@@ -107,11 +103,11 @@ extern void dmxSetShape(WindowPtr pWindow);
 #endif
 
 /** Private index.  \see dmxwindow.c \see dmxscrinit.c */
-extern int dmxWinPrivateIndex;
+extern DevPrivateKey dmxWinPrivateKey;
 
 /** Get window private pointer. */
-#define DMX_GET_WINDOW_PRIV(_pWin)					\
-    ((dmxWinPrivPtr)(_pWin)->devPrivates[dmxWinPrivateIndex].ptr)
+#define DMX_GET_WINDOW_PRIV(_pWin) ((dmxWinPrivPtr) \
+    dixLookupPrivate(&(_pWin)->devPrivates, dmxWinPrivateKey))
 
 /* All of these macros are only used in dmxwindow.c */
 #define DMX_WINDOW_FUNC_PROLOGUE(_pGC)					\

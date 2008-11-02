@@ -163,7 +163,9 @@ xf86OpenConsole()
     xf86ConsOpen_t *driver;
 #if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
     int result;
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
     struct utsname uts;
+#endif
     vtmode_t vtmode;
 #endif
     
@@ -260,6 +262,7 @@ xf86OpenConsole()
 #endif
 	    /* otherwise fall through */
 	case PCVT:
+#if !(defined(__NetBSD__) && (__NetBSD_Version__ >= 200000000))
 	    /*
 	     * First activate the #1 VT.  This is a hack to allow a server
 	     * to be started while another one is active.  There should be
@@ -274,7 +277,7 @@ xf86OpenConsole()
 		}
 		sleep(1);
 	    }
-
+#endif
 acquire_vt:
 	    /*
 	     * now get the VT

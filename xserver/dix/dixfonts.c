@@ -65,6 +65,7 @@ Equipment Corporation.
 #include "dixfontstr.h"
 #include "closestr.h"
 #include "dixfont.h"
+#include "xace.h"
 
 #ifdef DEBUG
 #include	<stdio.h>
@@ -784,7 +785,7 @@ finish:
     reply.nFonts = nnames;
     reply.sequenceNumber = client->sequence;
 
-    bufptr = bufferStart = (char *) ALLOCATE_LOCAL(reply.length << 2);
+    bufptr = bufferStart = (char *) xalloc(reply.length << 2);
 
     if (!bufptr && reply.length) {
 	SendErrorToClient(client, X_ListFonts, 0, 0, BadAlloc);
@@ -809,7 +810,7 @@ finish:
     client->pSwapReplyFunc = ReplySwapVector[X_ListFonts];
     WriteSwappedDataToClient(client, sizeof(xListFontsReply), &reply);
     (void) WriteToClient(client, stringLens + nnames, bufferStart);
-    DEALLOCATE_LOCAL(bufferStart);
+    xfree(bufferStart);
 
 bail:
     if (c->slept)
@@ -839,6 +840,10 @@ ListFonts(ClientPtr client, unsigned char *pattern, unsigned length,
      */
     if (length > XLFDMAXFONTNAMELEN)
 	return BadAlloc;
+
+    i = XaceHook(XACE_SERVER_ACCESS, client, DixGetAttrAccess);
+    if (i != Success)
+	return i;
 
     if (!(c = (LFclosurePtr) xalloc(sizeof *c)))
 	return BadAlloc;
@@ -1111,6 +1116,10 @@ StartListFontsWithInfo(ClientPtr client, int length, unsigned char *pattern,
      */
     if (length > XLFDMAXFONTNAMELEN)
 	return BadAlloc;
+
+    i = XaceHook(XACE_SERVER_ACCESS, client, DixGetAttrAccess);
+    if (i != Success)
+	return i;
 
     if (!(c = (LFWIclosurePtr) xalloc(sizeof *c)))
 	goto badAlloc;
@@ -1635,9 +1644,6 @@ FreeFontPath(FontPathElementPtr *list, int n, Bool force)
 		    found++;
 	    }
 	    if (list[i]->refcount != found) {
-		ErrorF("FreeFontPath: FPE \"%.*s\" refcount is %d, should be %d; fixing.\n",
-		       list[i]->name_length, list[i]->name,
-		       list[i]->refcount, found);
 		list[i]->refcount = found; /* ensure it will get freed */
 	    }
 	}
@@ -1778,7 +1784,9 @@ bail:
 int
 SetFontPath(ClientPtr client, int npaths, unsigned char *paths, int *error)
 {
-    int   err = Success;
+    int err = XaceHook(XACE_SERVER_ACCESS, client, DixManageAccess);
+    if (err != Success)
+	return err;
 
     if (npaths == 0) {
 	if (SetDefaultFontPath(defaultFontPath) != Success)
@@ -1804,7 +1812,7 @@ SetDefaultFontPath(char *path)
 
     /* get enough for string, plus values -- use up commas */
     len = strlen(path) + 1;
-    nump = cp = newpath = (unsigned char *) ALLOCATE_LOCAL(len);
+    nump = cp = newpath = (unsigned char *) xalloc(len);
     if (!newpath)
 	return BadAlloc;
     pp = (unsigned char *) path;
@@ -1825,18 +1833,22 @@ SetDefaultFontPath(char *path)
 
     err = SetFontPathElements(num, newpath, &bad, TRUE);
 
-    DEALLOCATE_LOCAL(newpath);
+    xfree(newpath);
 
     return err;
 }
 
-unsigned char *
-GetFontPath(int *count, int *length)
+int
+GetFontPath(ClientPtr client, int *count, int *length, unsigned char **result)
 {
     int			i;
     unsigned char       *c;
     int			len;
     FontPathElementPtr	fpe;
+
+    i = XaceHook(XACE_SERVER_ACCESS, client, DixGetAttrAccess);
+    if (i != Success)
+	return i;
 
     len = 0;
     for (i = 0; i < num_fpes; i++) {
@@ -1845,7 +1857,7 @@ GetFontPath(int *count, int *length)
     }
     font_path_string = (unsigned char *) xrealloc(font_path_string, len);
     if (!font_path_string)
-	return NULL;
+	return BadAlloc;
 
     c = font_path_string;
     *length = 0;
@@ -1857,7 +1869,8 @@ GetFontPath(int *count, int *length)
 	c += fpe->name_length;
     }
     *count = num_fpes;
-    return font_path_string;
+    *result = font_path_string;
+    return Success;
 }
 
 _X_EXPORT int
@@ -1918,12 +1931,15 @@ GetDefaultPointSize ()
 FontResolutionPtr
 GetClientResolutions (int *num)
 {
+#ifdef XPRINT
     if (requestingClient && requestingClient->fontResFunc != NULL &&
 	!requestingClient->clientGone)
     {
 	return (*requestingClient->fontResFunc)(requestingClient, num);
     }
-    else {
+    else
+#endif
+    {
 	static struct _FontResolution res;
 	ScreenPtr   pScreen;
 

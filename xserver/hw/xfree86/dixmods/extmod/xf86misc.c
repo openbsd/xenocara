@@ -41,8 +41,7 @@
 #endif
 
 static int miscErrorBase;
-static int MiscGeneration = 0;
-static int MiscClientPrivateIndex;
+static DevPrivateKey MiscClientPrivateKey = &MiscClientPrivateKey;
 
 /* This holds the client's version information */
 typedef struct {
@@ -50,7 +49,10 @@ typedef struct {
     int		minor;
 } MiscPrivRec, *MiscPrivPtr;
 
-#define MPRIV(c) ((c)->devPrivates[MiscClientPrivateIndex].ptr)
+#define M_GETPRIV(c) ((MiscPrivPtr) \
+    dixLookupPrivate(&(c)->devPrivates, MiscClientPrivateKey))
+#define M_SETPRIV(c,p) \
+    dixSetPrivate(&(c)->devPrivates, MiscClientPrivateKey, p)
 
 static void XF86MiscResetProc(
     ExtensionEntry* /* extEntry */
@@ -61,7 +63,7 @@ ClientVersion(ClientPtr client, int *major, int *minor)
 {
     MiscPrivPtr pPriv;
 
-    pPriv = MPRIV(client);
+    pPriv = M_GETPRIV(client);
     if (!pPriv) {
 	if (major) *major = 0;
 	if (minor) *minor = 0;
@@ -106,9 +108,9 @@ static unsigned char XF86MiscReqCode = 0;
 #endif
 
 #ifdef DEBUG
-# define DEBUG_P(x) ErrorF(x"\n");
+# define DEBUG_P(x) ErrorF x;
 #else
-# define DEBUG_P(x) /**/
+# define DEBUG_P(x) do {} while (0)
 #endif
 
 #define MISCERR(x)	(miscErrorBase + x)
@@ -118,29 +120,9 @@ XFree86MiscExtensionInit(void)
 {
     ExtensionEntry* extEntry;
 
-    DEBUG_P("XFree86MiscExtensionInit");
-
     if (!xf86GetModInDevEnabled())
 	return;
 
-    /*
-     * Allocate a client private index to hold the client's version
-     * information.
-     */
-    if (MiscGeneration != serverGeneration) {
-	MiscClientPrivateIndex = AllocateClientPrivateIndex();
-	/*
-	 * Allocate 0 length, and use the private to hold a pointer to our
-	 * MiscPrivRec.
-	 */
-	if (!AllocateClientPrivate(MiscClientPrivateIndex, 0)) {
-	    ErrorF("XFree86MiscExtensionInit: "
-		   "AllocateClientPrivate failed\n");
-	    return;
-	}
-	MiscGeneration = serverGeneration;
-    }
-    
     if (
 	(extEntry = AddExtension(XF86MISCNAME,
 				XF86MiscNumberEvents,
@@ -169,8 +151,6 @@ ProcXF86MiscQueryVersion(client)
 {
     xXF86MiscQueryVersionReply rep;
     register int n;
-
-    DEBUG_P("XF86MiscQueryVersion");
 
     REQUEST_SIZE_MATCH(xXF86MiscQueryVersionReq);
     rep.type = X_Reply;
@@ -205,7 +185,9 @@ ProcXF86MiscSetSaver(client)
     if (stuff->screen > screenInfo.numScreens)
 	return BadValue;
 
-    vptr = (ScrnInfoPtr) screenInfo.screens[stuff->screen]->devPrivates[xf86ScreenIndex].ptr;
+    vptr = (ScrnInfoPtr)
+	dixLookupPrivate(&screenInfo.screens[stuff->screen]->devPrivates,
+			 xf86ScreenKey);
 
     REQUEST_SIZE_MATCH(xXF86MiscSetSaverReq);
 
@@ -233,7 +215,9 @@ ProcXF86MiscGetSaver(client)
     if (stuff->screen > screenInfo.numScreens)
 	return BadValue;
 
-    vptr = (ScrnInfoPtr) screenInfo.screens[stuff->screen]->devPrivates[xf86ScreenIndex].ptr;
+    vptr = (ScrnInfoPtr)
+	dixLookupPrivate(&screenInfo.screens[stuff->screen]->devPrivates,
+			 xf86ScreenKey);
 
     REQUEST_SIZE_MATCH(xXF86MiscGetSaverReq);
     rep.type = X_Reply;
@@ -262,8 +246,7 @@ ProcXF86MiscGetMouseSettings(client)
     char *devname;
     pointer mouse;
     register int n;
-
-    DEBUG_P("XF86MiscGetMouseSettings");
+    int devnamelen;
 
     REQUEST_SIZE_MATCH(xXF86MiscGetMouseSettingsReq);
     rep.type = X_Reply;
@@ -281,7 +264,7 @@ ProcXF86MiscGetMouseSettings(client)
     rep.emulate3timeout = MiscExtGetMouseValue(mouse, MISC_MSE_EM3TIMEOUT);
     rep.chordmiddle =	  MiscExtGetMouseValue(mouse, MISC_MSE_CHORDMIDDLE);
     rep.flags =		  MiscExtGetMouseValue(mouse, MISC_MSE_FLAGS);
-    rep.devnamelen = (devname? strlen(devname): 0);
+    devnamelen = rep.devnamelen = (devname? strlen(devname): 0);
     rep.length = (sizeof(xXF86MiscGetMouseSettingsReply) -
 		  sizeof(xGenericReply) + ((rep.devnamelen+3) & ~3)) >> 2;
     
@@ -301,8 +284,8 @@ ProcXF86MiscGetMouseSettings(client)
     WriteToClient(client, SIZEOF(xXF86MiscGetMouseSettingsReply), (char *)&rep);
     MiscExtDestroyStruct(mouse, MISC_POINTER);
     
-    if (rep.devnamelen)
-        WriteToClient(client, rep.devnamelen, devname);
+    if (devnamelen)
+        WriteToClient(client, devnamelen, devname);
     return (client->noClientException);
 }
 
@@ -313,8 +296,6 @@ ProcXF86MiscGetKbdSettings(client)
     xXF86MiscGetKbdSettingsReply rep;
     pointer kbd;
     register int n;
-
-    DEBUG_P("XF86MiscGetKbdSettings");
 
     REQUEST_SIZE_MATCH(xXF86MiscGetKbdSettingsReq);
     rep.type = X_Reply;
@@ -349,19 +330,17 @@ ProcXF86MiscSetMouseSettings(client)
     
     REQUEST(xXF86MiscSetMouseSettingsReq);
 
-    DEBUG_P("XF86MiscSetMouseSettings");
-
     REQUEST_AT_LEAST_SIZE(xXF86MiscSetMouseSettingsReq);
 
     ClientVersion(client, &major, &minor);
     
     if (xf86GetVerbosity() > 1) {
-	ErrorF("SetMouseSettings - type: %d brate: %d srate: %d chdmid: %d\n",
+	DEBUG_P(("SetMouseSettings - type: %d brate: %d srate: %d chdmid: %d\n",
 		(int)stuff->mousetype, (int)stuff->baudrate,
-		(int)stuff->samplerate, stuff->chordmiddle);
-	ErrorF("                   em3but: %d em3tim: %d res: %d flags: %ld\n",
+		(int)stuff->samplerate, stuff->chordmiddle));
+	DEBUG_P(("                   em3but: %d em3tim: %d res: %d flags: %ld\n",
 		stuff->emulate3buttons, (int)stuff->emulate3timeout,
-		(int)stuff->resolution, (unsigned long)stuff->flags);
+		(int)stuff->resolution, (unsigned long)stuff->flags));
     }
 
     if ((mouse = MiscExtCreateStruct(MISC_POINTER)) == (pointer) 0)
@@ -387,7 +366,7 @@ ProcXF86MiscSetMouseSettings(client)
 		return BadAlloc;
 	    strncpy(devname,(char*)(&stuff[1]),stuff->devnamelen);
 	    if (xf86GetVerbosity() > 1)
-		ErrorF("SetMouseSettings - device: %s\n",devname);
+		DEBUG_P(("SetMouseSettings - device: %s\n",devname));
 	    MiscExtSetMouseDevice(mouse, devname);
 	}
     }
@@ -406,12 +385,12 @@ ProcXF86MiscSetMouseSettings(client)
         case MISC_RET_BADCOMBO:     return MISCERR(XF86MiscBadMouseCombo);
         case MISC_RET_NOMODULE:     return MISCERR(XF86MiscNoModule);
         default:
-	    ErrorF("Unexpected return from MiscExtApply(POINTER) = %d\n", ret);
+	    DEBUG_P(("Unexpected return from MiscExtApply(POINTER) = %d\n", ret));
 	    return BadImplementation;
     }
 
     if (xf86GetVerbosity() > 1)
-	ErrorF("SetMouseSettings - Succeeded\n");
+	DEBUG_P(("SetMouseSettings - Succeeded\n"));
     return (client->noClientException);
 }
 
@@ -423,14 +402,12 @@ ProcXF86MiscSetKbdSettings(client)
     pointer kbd;
     REQUEST(xXF86MiscSetKbdSettingsReq);
 
-    DEBUG_P("XF86MiscSetKbdSettings");
-
     REQUEST_SIZE_MATCH(xXF86MiscSetKbdSettingsReq);
 
     if (xf86GetVerbosity() > 1)
-	ErrorF("SetKbdSettings - type: %d rate: %d delay: %d snumlk: %d\n",
+	DEBUG_P(("SetKbdSettings - type: %d rate: %d delay: %d snumlk: %d\n",
 		(int)stuff->kbdtype, (int)stuff->rate,
-		(int)stuff->delay, stuff->servnumlock);
+		(int)stuff->delay, stuff->servnumlock));
 
     if ((kbd = MiscExtCreateStruct(MISC_KEYBOARD)) == (pointer) 0)
 	return BadAlloc;
@@ -445,12 +422,12 @@ ProcXF86MiscSetKbdSettings(client)
 	case MISC_RET_BADVAL:       return BadValue;
 	case MISC_RET_BADKBDTYPE:   return MISCERR(XF86MiscBadKbdType);
 	default:
-	    ErrorF("Unexpected return from MiscExtApply(KEYBOARD) = %d\n", ret);
+	    DEBUG_P(("Unexpected return from MiscExtApply(KEYBOARD) = %d\n", ret));
 	    return BadImplementation;
     }
 
     if (xf86GetVerbosity() > 1)
-	ErrorF("SetKbdSettings - Succeeded\n");
+	DEBUG_P(("SetKbdSettings - Succeeded\n"));
     return (client->noClientException);
 }
 
@@ -462,14 +439,12 @@ ProcXF86MiscSetGrabKeysState(client)
     xXF86MiscSetGrabKeysStateReply rep;
     REQUEST(xXF86MiscSetGrabKeysStateReq);
 
-    DEBUG_P("XF86MiscSetGrabKeysState");
-
     REQUEST_SIZE_MATCH(xXF86MiscSetGrabKeysStateReq);
 
     if ((status = MiscExtSetGrabKeysState(client, stuff->enable)) == 0) {
 	if (xf86GetVerbosity() > 1)
-	    ErrorF("SetGrabKeysState - %s\n",
-		   stuff->enable ? "enabled" : "disabled");
+	    DEBUG_P(("SetGrabKeysState - %s\n",
+		   stuff->enable ? "enabled" : "disabled"));
     }
 
     rep.type = X_Reply;
@@ -493,18 +468,16 @@ ProcXF86MiscSetClientVersion(ClientPtr client)
 
     MiscPrivPtr pPriv;
 
-    DEBUG_P("XF86MiscSetClientVersion");
-
     REQUEST_SIZE_MATCH(xXF86MiscSetClientVersionReq);
 
-    if ((pPriv = MPRIV(client)) == NULL) {
+    if ((pPriv = M_GETPRIV(client)) == NULL) {
 	pPriv = xalloc(sizeof(MiscPrivRec));
 	if (!pPriv)
 	    return BadAlloc;
-	MPRIV(client) = pPriv;
+	M_SETPRIV(client, pPriv);
     }
     if (xf86GetVerbosity() > 1) 
-	    ErrorF("SetClientVersion: %i %i\n",stuff->major,stuff->minor);
+	    DEBUG_P(("SetClientVersion: %i %i\n",stuff->major,stuff->minor));
     pPriv->major = stuff->major;
     pPriv->minor = stuff->minor;
     
@@ -520,8 +493,7 @@ ProcXF86MiscGetFilePaths(client)
     const char *modulepath;
     const char *logfile;
     register int n;
-
-    DEBUG_P("XF86MiscGetFilePaths");
+    int configlen, modulelen, loglen;
 
     REQUEST_SIZE_MATCH(xXF86MiscGetFilePathsReq);
     rep.type = X_Reply;
@@ -530,9 +502,9 @@ ProcXF86MiscGetFilePaths(client)
     if (!MiscExtGetFilePaths(&configfile, &modulepath, &logfile))
 	return BadValue;
 
-    rep.configlen = (configfile? strlen(configfile): 0);
-    rep.modulelen = (modulepath? strlen(modulepath): 0);
-    rep.loglen = (logfile? strlen(logfile): 0);
+    configlen = rep.configlen = (configfile? strlen(configfile): 0);
+    modulelen = rep.modulelen = (modulepath? strlen(modulepath): 0);
+    loglen = rep.loglen = (logfile? strlen(logfile): 0);
     rep.length = (SIZEOF(xXF86MiscGetFilePathsReply) - SIZEOF(xGenericReply) +
 		  ((rep.configlen + 3) & ~3) +
 		  ((rep.modulelen + 3) & ~3) +
@@ -547,12 +519,12 @@ ProcXF86MiscGetFilePaths(client)
     }
     WriteToClient(client, SIZEOF(xXF86MiscGetFilePathsReply), (char *)&rep);
     
-    if (rep.configlen)
-        WriteToClient(client, rep.configlen, (char *)configfile);
-    if (rep.modulelen)
-        WriteToClient(client, rep.modulelen, (char *)modulepath);
-    if (rep.loglen)
-        WriteToClient(client, rep.loglen, (char *)logfile);
+    if (configlen)
+        WriteToClient(client, configlen, (char *)configfile);
+    if (modulelen)
+        WriteToClient(client, modulelen, (char *)modulepath);
+    if (loglen)
+        WriteToClient(client, loglen, (char *)logfile);
 
     return (client->noClientException);
 }
@@ -565,10 +537,9 @@ ProcXF86MiscPassMessage(client)
     char *msgtype, *msgval, *retstr;
     int retval, size;
     register int n;
+    int mesglen;
 
     REQUEST(xXF86MiscPassMessageReq);
-
-    DEBUG_P("XF86MiscPassMessage");
 
     REQUEST_AT_LEAST_SIZE(xXF86MiscPassMessageReq);
     size = (sizeof(xXF86MiscPassMessageReq) + 3) >> 2;
@@ -601,7 +572,7 @@ ProcXF86MiscPassMessage(client)
 
     rep.type = X_Reply;
     rep.sequenceNumber = client->sequence;
-    rep.mesglen = (retstr? strlen(retstr): 0);
+    mesglen = rep.mesglen = (retstr? strlen(retstr): 0);
     rep.length = (SIZEOF(xXF86MiscPassMessageReply) - SIZEOF(xGenericReply) +
 		  ((rep.mesglen + 3) & ~3)) >> 2;
     rep.status = 0;
@@ -613,8 +584,8 @@ ProcXF86MiscPassMessage(client)
     }
     WriteToClient(client, SIZEOF(xXF86MiscPassMessageReply), (char *)&rep);
     
-    if (rep.mesglen)
-        WriteToClient(client, rep.mesglen, (char *)retstr);
+    if (mesglen)
+        WriteToClient(client, mesglen, (char *)retstr);
 
     xfree(msgtype);
     xfree(msgval);

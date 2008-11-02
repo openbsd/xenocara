@@ -122,7 +122,7 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
      * motion event they need to be attached to.  Sigh. */
     if (e->u.u.type == DeviceValuator) {
         if (laste->nevents > 6) {
-            ErrorF("mieqEnqueue: more than six valuator events; dropping.\n");
+            ErrorF("[mi] mieqEnqueue: more than six valuator events; dropping.\n");
             return;
         }
         if (oldtail == miEventQueue.head ||
@@ -133,7 +133,7 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
               lastkbp->type == ProximityOut) ||
             ((lastkbp->deviceid & DEVICE_BITS) !=
              (v->deviceid & DEVICE_BITS))) {
-            ErrorF("mieqEnequeue: out-of-order valuator event; dropping.\n");
+            ErrorF("[mi] mieqEnequeue: out-of-order valuator event; dropping.\n");
             return;
         }
         memcpy(&(laste->event[laste->nevents++]), e, sizeof(xEvent));
@@ -145,12 +145,13 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
 	oldtail = (oldtail - 1) % QUEUE_SIZE;
     }
     else {
-    	newtail = (oldtail + 1) % QUEUE_SIZE;
-    	/* Toss events which come in late.  Usually this means your server's
+	newtail = (oldtail + 1) % QUEUE_SIZE;
+	/* Toss events which come in late.  Usually this means your server's
          * stuck in an infinite loop somewhere, but SIGIO is still getting
          * handled. */
-    	if (newtail == miEventQueue.head) {
-            ErrorF("tossed event which came in late\n");
+	if (newtail == miEventQueue.head) {
+            ErrorF("[mi] EQ overflowing. The server is probably stuck "
+                   "in an infinite loop.\n");
 	    return;
         }
 	miEventQueue.tail = newtail;
@@ -202,13 +203,13 @@ mieqProcessInputEvents(void)
 
     while (miEventQueue.head != miEventQueue.tail) {
         if (screenIsSaved == SCREEN_SAVER_ON)
-            SaveScreens (SCREEN_SAVER_OFF, ScreenSaverReset);
+            dixSaveScreens (serverClient, SCREEN_SAVER_OFF, ScreenSaverReset);
 #ifdef DPMSExtension
         else if (DPMSPowerLevel != DPMSModeOn)
             SetScreenSaverTimer();
 
         if (DPMSPowerLevel != DPMSModeOn)
-            DPMSSet(DPMSModeOn);
+            DPMSSet(serverClient, DPMSModeOn);
 #endif
 
         e = &miEventQueue.events[miEventQueue.head];

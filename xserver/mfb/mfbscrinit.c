@@ -68,13 +68,11 @@ SOFTWARE.
 #include "servermd.h"
 
 #ifdef PIXMAP_PER_WINDOW
-int frameWindowPrivateIndex;
-int frameGetWindowPrivateIndex(void) { return frameWindowPrivateIndex; }
+static DevPrivateKey frameWindowPrivateKey = &frameWindowPrivateKey;
+DevPrivateKey frameGetWindowPrivateKey(void) { return frameWindowPrivateKey; }
 #endif
-int mfbWindowPrivateIndex;
-int mfbGetWindowPrivateIndex(void) { return mfbWindowPrivateIndex; }
-int mfbGCPrivateIndex;
-int mfbGetGCPrivateIndex(void) { return mfbGCPrivateIndex; }
+static DevPrivateKey mfbGCPrivateKey = &mfbGCPrivateKey;
+DevPrivateKey mfbGetGCPrivateKey(void) { return mfbGCPrivateKey; }
 static unsigned long mfbGeneration = 0;
 
 static VisualRec visual = {
@@ -89,41 +87,20 @@ static DepthRec depth = {
     1,		1,		&VID
 };
 
-
-BSFuncRec mfbBSFuncRec = {
-    mfbSaveAreas,
-    mfbRestoreAreas,
-    (BackingStoreSetClipmaskRgnProcPtr) 0,
-    (BackingStoreGetImagePixmapProcPtr) 0,
-    (BackingStoreGetSpansPixmapProcPtr) 0,
-};
-
-
 Bool
-mfbAllocatePrivates(pScreen, pWinIndex, pGCIndex)
-    ScreenPtr pScreen;
-    int *pWinIndex, *pGCIndex;
+mfbAllocatePrivates(ScreenPtr pScreen, DevPrivateKey *pGCKey)
 {
     if (mfbGeneration != serverGeneration)
     {
-#ifdef PIXMAP_PER_WINDOW
-	frameWindowPrivateIndex = AllocateWindowPrivateIndex();
-#endif
-	mfbWindowPrivateIndex = AllocateWindowPrivateIndex();
-	mfbGCPrivateIndex = miAllocateGCPrivateIndex();
 	visual.vid = FakeClientID(0);
 	VID = visual.vid;
 	mfbGeneration = serverGeneration;
     }
-    if (pWinIndex)
-	*pWinIndex = mfbWindowPrivateIndex;
-    if (pGCIndex)
-	*pGCIndex = mfbGCPrivateIndex;
+    if (pGCKey)
+	*pGCKey = mfbGCPrivateKey;
     pScreen->GetWindowPixmap = mfbGetWindowPixmap;
     pScreen->SetWindowPixmap = mfbSetWindowPixmap;
-    return (AllocateWindowPrivate(pScreen, mfbWindowPrivateIndex,
-				  sizeof(mfbPrivWin)) &&
-	    AllocateGCPrivate(pScreen, mfbGCPrivateIndex, sizeof(mfbPrivGC)));
+    return dixRequestPrivate(mfbGCPrivateKey, sizeof(mfbPrivGC));
 }
 
 
@@ -136,7 +113,7 @@ mfbScreenInit(pScreen, pbits, xsize, ysize, dpix, dpiy, width)
     int dpix, dpiy;		/* dots per inch */
     int width;			/* pixel width of frame buffer */
 {
-    if 	(!mfbAllocatePrivates(pScreen, (int *)NULL, (int *)NULL))
+    if (!mfbAllocatePrivates(pScreen, NULL))
 	return FALSE;
     pScreen->defColormap = (Colormap) FakeClientID(0);
     /* whitePixel, blackPixel */
@@ -145,13 +122,9 @@ mfbScreenInit(pScreen, pbits, xsize, ysize, dpix, dpiy, width)
     pScreen->GetImage = mfbGetImage;
     pScreen->GetSpans = mfbGetSpans;
     pScreen->CreateWindow = mfbCreateWindow;
-    pScreen->DestroyWindow = mfbDestroyWindow;
     pScreen->PositionWindow = mfbPositionWindow;
-    pScreen->ChangeWindowAttributes = mfbChangeWindowAttributes;
     pScreen->RealizeWindow = mfbMapWindow;
     pScreen->UnrealizeWindow = mfbUnmapWindow;
-    pScreen->PaintWindowBackground = mfbPaintWindow;
-    pScreen->PaintWindowBorder = mfbPaintWindow;
     pScreen->CopyWindow = mfbCopyWindow;
     pScreen->CreatePixmap = mfbCreatePixmap;
     pScreen->DestroyPixmap = mfbDestroyPixmap;
@@ -169,7 +142,6 @@ mfbScreenInit(pScreen, pbits, xsize, ysize, dpix, dpiy, width)
     if (!miScreenInit(pScreen, pbits, xsize, ysize, dpix, dpiy, width,
 			1, 1, &depth, VID, 1, &visual))
 	return FALSE;
-    pScreen->BackingStoreFuncs = mfbBSFuncRec;
     return TRUE;
 }
 
@@ -178,7 +150,8 @@ mfbGetWindowPixmap(pWin)
     WindowPtr pWin;
 {
 #ifdef PIXMAP_PER_WINDOW
-    return (PixmapPtr)(pWin->devPrivates[frameWindowPrivateIndex].ptr);
+    return (PixmapPtr)dixLookupPrivate(&pWin->devPrivates,
+				       frameWindowPrivateKey);
 #else
     ScreenPtr pScreen = pWin->drawable.pScreen;
 
@@ -192,7 +165,7 @@ mfbSetWindowPixmap(pWin, pPix)
     PixmapPtr pPix;
 {
 #ifdef PIXMAP_PER_WINDOW
-    pWin->devPrivates[frameWindowPrivateIndex].ptr = (pointer)pPix;
+    dixSetPrivate(&pWin->devPrivates, frameWindowPrivateKey, pPix);
 #else
     (* pWin->drawable.pScreen->SetScreenPixmap)(pPix);
 #endif
@@ -200,7 +173,6 @@ mfbSetWindowPixmap(pWin, pPix)
 
 void mfbFillInScreen(ScreenPtr pScreen)
 {
-    pScreen->ChangeWindowAttributes = mfbChangeWindowAttributes;
     pScreen->RealizeWindow = mfbMapWindow;
     pScreen->UnrealizeWindow = mfbUnmapWindow;
     pScreen->DestroyPixmap = mfbDestroyPixmap;

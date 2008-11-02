@@ -52,6 +52,7 @@ SOFTWARE.
 #include "input.h"
 #include "window.h"
 #include "dixstruct.h"
+#include "privates.h"
 
 #define BitIsOn(ptr, bit) (((BYTE *) (ptr))[(bit)>>3] & (1 << ((bit) & 7)))
 
@@ -62,7 +63,7 @@ SOFTWARE.
 
 #define EMASKSIZE	MAX_DEVICES
 
-extern int CoreDevicePrivatesIndex;
+extern DevPrivateKey CoreDevicePrivateKey;
 
 /* Kludge: OtherClients and InputClients must be compatible, see code */
 
@@ -159,7 +160,7 @@ typedef struct _ValuatorClassRec {
     int			  *axisVal;
     int                   lastx, lasty; /* last event recorded, not posted to
                                          * client; see dix/devices.c */
-    int                   dxremaind, dyremaind; /* for acceleration */
+    float                 dxremaind, dyremaind; /* for acceleration */
     CARD8	 	  mode;
 } ValuatorClassRec, *ValuatorClassPtr;
 
@@ -328,7 +329,7 @@ typedef struct _DeviceIntRec {
     void                *pad0;
 #endif
     char                *config_info; /* used by the hotplug layer */
-    DevUnion		*devPrivates;
+    PrivateRec		*devPrivates;
     int			nPrivates;
     DeviceUnwrapProc    unwrapProc;
 } DeviceIntRec;

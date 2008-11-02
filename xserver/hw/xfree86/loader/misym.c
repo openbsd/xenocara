@@ -200,14 +200,11 @@ _X_HIDDEN void *miLookupTab[] = {
     SYMFUNC(miOverlaySetRootClip)
     SYMVAR(miEmptyBox)
     SYMVAR(miEmptyData)
-    SYMVAR(miZeroLineScreenIndex)
+    SYMVAR(miZeroLineScreenKey)
     SYMVAR(miSpritePointerFuncs)
-    SYMVAR(miPointerScreenIndex)
+    SYMVAR(miPointerScreenKey)
     SYMVAR(miInstalledMaps)
     SYMVAR(miInitVisualsProc)
-#ifdef RENDER
-    SYMFUNC(miGlyphExtents)
-#endif
 #ifdef DAMAGE
     SYMFUNC(DamageDamageRegion)
 #endif

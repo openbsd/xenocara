@@ -111,12 +111,12 @@ mfbBlackSolidFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	return;
 
     n = nInit * miFindMaxBand(pGC->pCompositeClip);
-    pwidthFree = (int *)ALLOCATE_LOCAL(n * sizeof(int));
-    pptFree = (DDXPointRec *)ALLOCATE_LOCAL(n * sizeof(DDXPointRec));
+    pwidthFree = (int *)xalloc(n * sizeof(int));
+    pptFree = (DDXPointRec *)xalloc(n * sizeof(DDXPointRec));
     if(!pptFree || !pwidthFree)
     {
-	if (pptFree) DEALLOCATE_LOCAL(pptFree);
-	if (pwidthFree) DEALLOCATE_LOCAL(pwidthFree);
+	if (pptFree) xfree(pptFree);
+	if (pwidthFree) xfree(pwidthFree);
 	return;
     }
     pwidth = pwidthFree;
@@ -151,8 +151,8 @@ mfbBlackSolidFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	pwidth++;
 	ppt++;
     }
-    DEALLOCATE_LOCAL(pptFree);
-    DEALLOCATE_LOCAL(pwidthFree);
+    xfree(pptFree);
+    xfree(pwidthFree);
 }
 
 
@@ -183,12 +183,12 @@ mfbWhiteSolidFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	return;
 
     n = nInit * miFindMaxBand(pGC->pCompositeClip);
-    pwidthFree = (int *)ALLOCATE_LOCAL(n * sizeof(int));
-    pptFree = (DDXPointRec *)ALLOCATE_LOCAL(n * sizeof(DDXPointRec));
+    pwidthFree = (int *)xalloc(n * sizeof(int));
+    pptFree = (DDXPointRec *)xalloc(n * sizeof(DDXPointRec));
     if(!pptFree || !pwidthFree)
     {
-	if (pptFree) DEALLOCATE_LOCAL(pptFree);
-	if (pwidthFree) DEALLOCATE_LOCAL(pwidthFree);
+	if (pptFree) xfree(pptFree);
+	if (pwidthFree) xfree(pwidthFree);
 	return;
     }
     pwidth = pwidthFree;
@@ -223,8 +223,8 @@ mfbWhiteSolidFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	pwidth++;
 	ppt++;
     }
-    DEALLOCATE_LOCAL(pptFree);
-    DEALLOCATE_LOCAL(pwidthFree);
+    xfree(pptFree);
+    xfree(pwidthFree);
 }
 
 
@@ -255,12 +255,12 @@ mfbInvertSolidFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	return;
 
     n = nInit * miFindMaxBand(pGC->pCompositeClip);
-    pwidthFree = (int *)ALLOCATE_LOCAL(n * sizeof(int));
-    pptFree = (DDXPointRec *)ALLOCATE_LOCAL(n * sizeof(DDXPointRec));
+    pwidthFree = (int *)xalloc(n * sizeof(int));
+    pptFree = (DDXPointRec *)xalloc(n * sizeof(DDXPointRec));
     if(!pptFree || !pwidthFree)
     {
-	if (pptFree) DEALLOCATE_LOCAL(pptFree);
-	if (pwidthFree) DEALLOCATE_LOCAL(pwidthFree);
+	if (pptFree) xfree(pptFree);
+	if (pwidthFree) xfree(pwidthFree);
 	return;
     }
     pwidth = pwidthFree;
@@ -295,8 +295,8 @@ mfbInvertSolidFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	pwidth++;
 	ppt++;
     }
-    DEALLOCATE_LOCAL(pptFree);
-    DEALLOCATE_LOCAL(pwidthFree);
+    xfree(pptFree);
+    xfree(pwidthFree);
 }
 
 
@@ -330,12 +330,12 @@ mfbWhiteStippleFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	return;
 
     n = nInit * miFindMaxBand(pGC->pCompositeClip);
-    pwidthFree = (int *)ALLOCATE_LOCAL(n * sizeof(int));
-    pptFree = (DDXPointRec *)ALLOCATE_LOCAL(n * sizeof(DDXPointRec));
+    pwidthFree = (int *)xalloc(n * sizeof(int));
+    pptFree = (DDXPointRec *)xalloc(n * sizeof(DDXPointRec));
     if(!pptFree || !pwidthFree)
     {
-	if (pptFree) DEALLOCATE_LOCAL(pptFree);
-	if (pwidthFree) DEALLOCATE_LOCAL(pwidthFree);
+	if (pptFree) xfree(pptFree);
+	if (pwidthFree) xfree(pwidthFree);
 	return;
     }
     pwidth = pwidthFree;
@@ -372,8 +372,8 @@ mfbWhiteStippleFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	pwidth++;
 	ppt++;
     }
-    DEALLOCATE_LOCAL(pptFree);
-    DEALLOCATE_LOCAL(pwidthFree);
+    xfree(pptFree);
+    xfree(pwidthFree);
 }
 
 
@@ -407,12 +407,12 @@ mfbBlackStippleFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	return;
 
     n = nInit * miFindMaxBand(pGC->pCompositeClip);
-    pwidthFree = (int *)ALLOCATE_LOCAL(n * sizeof(int));
-    pptFree = (DDXPointRec *)ALLOCATE_LOCAL(n * sizeof(DDXPointRec));
+    pwidthFree = (int *)xalloc(n * sizeof(int));
+    pptFree = (DDXPointRec *)xalloc(n * sizeof(DDXPointRec));
     if(!pptFree || !pwidthFree)
     {
-	if (pptFree) DEALLOCATE_LOCAL(pptFree);
-	if (pwidthFree) DEALLOCATE_LOCAL(pwidthFree);
+	if (pptFree) xfree(pptFree);
+	if (pwidthFree) xfree(pwidthFree);
 	return;
     }
     pwidth = pwidthFree;
@@ -449,8 +449,8 @@ mfbBlackStippleFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	pwidth++;
 	ppt++;
     }
-    DEALLOCATE_LOCAL(pptFree);
-    DEALLOCATE_LOCAL(pwidthFree);
+    xfree(pptFree);
+    xfree(pwidthFree);
 }
 
 
@@ -484,12 +484,12 @@ mfbInvertStippleFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	return;
 
     n = nInit * miFindMaxBand(pGC->pCompositeClip);
-    pwidthFree = (int *)ALLOCATE_LOCAL(n * sizeof(int));
-    pptFree = (DDXPointRec *)ALLOCATE_LOCAL(n * sizeof(DDXPointRec));
+    pwidthFree = (int *)xalloc(n * sizeof(int));
+    pptFree = (DDXPointRec *)xalloc(n * sizeof(DDXPointRec));
     if(!pptFree || !pwidthFree)
     {
-	if (pptFree) DEALLOCATE_LOCAL(pptFree);
-	if (pwidthFree) DEALLOCATE_LOCAL(pwidthFree);
+	if (pptFree) xfree(pptFree);
+	if (pwidthFree) xfree(pwidthFree);
 	return;
     }
     pwidth = pwidthFree;
@@ -526,8 +526,8 @@ mfbInvertStippleFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	pwidth++;
 	ppt++;
     }
-    DEALLOCATE_LOCAL(pptFree);
-    DEALLOCATE_LOCAL(pwidthFree);
+    xfree(pptFree);
+    xfree(pwidthFree);
 }
 
 
@@ -603,12 +603,12 @@ mfbTileFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	return;
 
     n = nInit * miFindMaxBand(pGC->pCompositeClip);
-    pwidthFree = (int *)ALLOCATE_LOCAL(n * sizeof(int));
-    pptFree = (DDXPointRec *)ALLOCATE_LOCAL(n * sizeof(DDXPointRec));
+    pwidthFree = (int *)xalloc(n * sizeof(int));
+    pptFree = (DDXPointRec *)xalloc(n * sizeof(DDXPointRec));
     if(!pptFree || !pwidthFree)
     {
-	if (pptFree) DEALLOCATE_LOCAL(pptFree);
-	if (pwidthFree) DEALLOCATE_LOCAL(pwidthFree);
+	if (pptFree) xfree(pptFree);
+	if (pwidthFree) xfree(pwidthFree);
 	return;
     }
     pwidth = pwidthFree;
@@ -624,7 +624,8 @@ mfbTileFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
     if (pGC->fillStyle == FillTiled)
 	rop = pGC->alu;
     else
-	rop = ((mfbPrivGC *)(pGC->devPrivates[mfbGCPrivateIndex].ptr))->ropOpStip;
+	rop = ((mfbPrivGC *)dixLookupPrivate(&pGC->devPrivates,
+					     mfbGetGCPrivateKey()))->ropOpStip;
 
     flip = 0;
     switch(rop)
@@ -708,8 +709,8 @@ mfbTileFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	}
 	break;
     }
-    DEALLOCATE_LOCAL(pptFree);
-    DEALLOCATE_LOCAL(pwidthFree);
+    xfree(pptFree);
+    xfree(pwidthFree);
 }
 
 
@@ -746,12 +747,12 @@ mfbUnnaturalTileFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	return;
 
     n = nInit * miFindMaxBand(pGC->pCompositeClip);
-    pwidthFree = (int *)ALLOCATE_LOCAL(n * sizeof(int));
-    pptFree = (DDXPointRec *)ALLOCATE_LOCAL(n * sizeof(DDXPointRec));
+    pwidthFree = (int *)xalloc(n * sizeof(int));
+    pptFree = (DDXPointRec *)xalloc(n * sizeof(DDXPointRec));
     if(!pptFree || !pwidthFree)
     {
-	if (pptFree) DEALLOCATE_LOCAL(pptFree);
-	if (pwidthFree) DEALLOCATE_LOCAL(pwidthFree);
+	if (pptFree) xfree(pptFree);
+	if (pwidthFree) xfree(pwidthFree);
 	return;
     }
     pwidth = pwidthFree;
@@ -769,7 +770,8 @@ mfbUnnaturalTileFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
     {
 	pTile = pGC->stipple;
 	tlwidth = pTile->devKind / PGSZB;
-	rop = ((mfbPrivGC *)(pGC->devPrivates[mfbGCPrivateIndex].ptr))->ropOpStip;
+	rop = ((mfbPrivGC *)dixLookupPrivate(&pGC->devPrivates,
+					     mfbGetGCPrivateKey()))->ropOpStip;
     }
 
     xSrc = pDrawable->x;
@@ -873,8 +875,8 @@ mfbUnnaturalTileFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	ppt++;
 	pwidth++;
     }
-    DEALLOCATE_LOCAL(pptFree);
-    DEALLOCATE_LOCAL(pwidthFree);
+    xfree(pptFree);
+    xfree(pwidthFree);
 }
 
 
@@ -912,12 +914,12 @@ mfbUnnaturalStippleFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	return;
 
     n = nInit * miFindMaxBand(pGC->pCompositeClip);
-    pwidthFree = (int *)ALLOCATE_LOCAL(n * sizeof(int));
-    pptFree = (DDXPointRec *)ALLOCATE_LOCAL(n * sizeof(DDXPointRec));
+    pwidthFree = (int *)xalloc(n * sizeof(int));
+    pptFree = (DDXPointRec *)xalloc(n * sizeof(DDXPointRec));
     if(!pptFree || !pwidthFree)
     {
-	if (pptFree) DEALLOCATE_LOCAL(pptFree);
-	if (pwidthFree) DEALLOCATE_LOCAL(pwidthFree);
+	if (pptFree) xfree(pptFree);
+	if (pwidthFree) xfree(pwidthFree);
 	return;
     }
     pwidth = pwidthFree;
@@ -926,7 +928,8 @@ mfbUnnaturalStippleFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 		    ppt, pwidth, fSorted);
 
     pTile = pGC->stipple;
-    rop = ((mfbPrivGC *)(pGC->devPrivates[mfbGCPrivateIndex].ptr))->rop;
+    rop = ((mfbPrivGC *)dixLookupPrivate(&pGC->devPrivates,
+					 mfbGetGCPrivateKey()))->rop;
     tlwidth = pTile->devKind / PGSZB;
     xSrc = pDrawable->x;
     ySrc = pDrawable->y;
@@ -1021,6 +1024,6 @@ mfbUnnaturalStippleFS(pDrawable, pGC, nInit, pptInit, pwidthInit, fSorted)
 	ppt++;
 	pwidth++;
     }
-    DEALLOCATE_LOCAL(pptFree);
-    DEALLOCATE_LOCAL(pwidthFree);
+    xfree(pptFree);
+    xfree(pwidthFree);
 }

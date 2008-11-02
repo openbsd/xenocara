@@ -23,15 +23,15 @@ BUSSOURCES = xf86isaBus.c xf86pciBus.c xf86fbBus.c xf86noBus.c $(SBUS_SOURCES)
 
 MODEDEFSOURCES = $(srcdir)/vesamodes $(srcdir)/extramodes
 
-xf86DefModeSet.c: $(srcdir)/modeline2c.pl $(MODEDEFSOURCES)
-	cat $(MODEDEFSOURCES) | $(PERL) $(srcdir)/modeline2c.pl > $@
+xf86DefModeSet.c: $(srcdir)/modeline2c.awk $(MODEDEFSOURCES)
+	cat $(MODEDEFSOURCES) | $(AWK) -f $(srcdir)/modeline2c.awk > $@
 
 BUILT_SOURCES = xf86DefModeSet.c
 
 AM_LDFLAGS = -r
 libcommon_la_SOURCES = xf86Configure.c xf86Bus.c xf86Config.c \
-                      xf86Cursor.c xf86cvt.c xf86DGA.c xf86DPMS.c \
-                      xf86DoProbe.c xf86DoScanPci.c xf86Events.c \
+                      xf86Cursor.c xf86DGA.c xf86DPMS.c \
+                      xf86DoProbe.c xf86Events.c \
                       xf86Globals.c xf86AutoConfig.c \
                       xf86MiscExt.c xf86Option.c \
                       xf86VidMode.c xf86fbman.c xf86cmap.c \
@@ -44,7 +44,7 @@ libinit_a_SOURCES = xf86Build.h xf86Init.c
 
 INCLUDES = $(XORG_INCS) -I$(srcdir)/../ddc -I$(srcdir)/../i2c \
 	   -I$(srcdir)/../loader -I$(srcdir)/../rac -I$(srcdir)/../parser \
-           -I$(srcdir)/../scanpci -I$(srcdir)/../vbe -I$(srcdir)/../int10 \
+           -I$(srcdir)/../vbe -I$(srcdir)/../int10 \
 	   -I$(srcdir)/../vgahw -I$(srcdir)/../dixmods/extmod
 
 sdk_HEADERS = compiler.h fourcc.h xf86.h xf86Module.h xf86Opt.h \
@@ -85,9 +85,8 @@ EXTRA_DIST = \
 	xf86Version.h \
 	xorgVersion.h \
 	xf86Date.h \
-	xf86DefModes.c \
 	$(MODEDEFSOURCES) \
-	modeline2c.pl \
+	modeline2c.awk \
         $(DISTKBDSOURCES)
 
 if LNXACPI

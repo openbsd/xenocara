@@ -43,11 +43,21 @@
 #include "xf86Opt.h"
 #include "xf86Pci.h"
 
-/*
- * memType is of the size of the addressable memory (machine size)
- * usually unsigned long.
+#include <pciaccess.h>
+
+/**
+ * Integer type that is of the size of the addressable memory (machine size).
+ * On most platforms \c uintptr_t will suffice.  However, on some mixed
+ * 32-bit / 64-bit platforms, such as 32-bit binaries on 64-bit PowerPC, this
+ * must be 64-bits.
  */
-typedef unsigned long memType;
+#include <inttypes.h>
+#if defined(__powerpc__)
+typedef uint64_t memType;
+#else
+typedef uintptr_t memType;
+#endif
+
 
 /* Video mode flags */
 
@@ -115,6 +125,7 @@ typedef enum {
     MODE_ONE_HEIGHT,    /* only one height is supported */
     MODE_ONE_SIZE,      /* only one resolution is supported */
     MODE_NO_REDUCED,    /* monitor doesn't accept reduced blanking */
+    MODE_BANDWIDTH,	/* mode requires too much memory bandwidth */
     MODE_BAD = -2,	/* unspecified reason */
     MODE_ERROR	= -1	/* error condition */
 } ModeStatus;
@@ -132,6 +143,7 @@ typedef enum {
 # define M_T_DEFAULT 0x10	/* (VESA) default modes */
 # define M_T_USERDEF 0x20	/* One of the modes from the config file */
 # define M_T_DRIVER  0x40	/* Supplied by the driver (EDID, etc) */
+# define M_T_USERPREF 0x80	/* mode preferred by the user config */
 
 /* Video mode */
 typedef struct _DisplayModeRec {
@@ -307,6 +319,9 @@ typedef struct {
     int			refCount;
 } DriverRec1;
 
+struct _SymTabRec;
+struct _PciChipsets;
+
 typedef struct _DriverRec {
     int			driverVersion;
     char *		driverName;
@@ -316,6 +331,10 @@ typedef struct _DriverRec {
     pointer		module;
     int			refCount;
     xorgDriverFuncProc  *driverFunc;
+
+    const struct pci_id_match * supported_devices;
+    Bool (*PciProbe)( struct _DriverRec * drv, int entity_num,
+        struct pci_device * dev, intptr_t match_data );
 } DriverRec, *DriverPtr;
 
 /*
@@ -329,7 +348,7 @@ typedef struct _DriverRec {
  * functions to configuration tools, the Xserver, or any other
  * application/module interested in such information.
  */
-typedef struct _ModuleInfoRec {
+_X_DEPRECATED typedef struct _ModuleInfoRec {
     int			moduleVersion;
     char *		moduleName;
     pointer		module;
@@ -361,11 +380,7 @@ typedef enum {
     BUS_last    /* Keep last */
 } BusType;
 
-typedef struct {
-    int		bus;
-    int		device;
-    int		func;
-} PciBusId;
+struct pci_device;
 
 typedef struct {
     unsigned int dummy;
@@ -379,7 +394,7 @@ typedef struct _bus {
     BusType type;
     union {
 	IsaBusId isa;
-	PciBusId pci;
+	struct pci_device *pci;
 	SbusBusId sbus;
     } id;
 } BusRec, *BusPtr;
@@ -429,29 +444,6 @@ typedef struct {
    pointer		 	commonOptions;
    pointer			extraOptions;
 } IDevRec, *IDevPtr;
-
-typedef struct {
-    int			vendor;
-    int			chipType;
-    int			chipRev;
-    int			subsysVendor;
-    int			subsysCard;
-    int			bus;
-    int			device;
-    int			func;
-    int			class;
-    int			subclass;
-    int			interface;
-    memType  	        memBase[6];
-    memType  	        ioBase[6];
-    int			size[6];
-    unsigned char	type[6];
-    memType   	        biosBase;
-    int			biosSize;
-    pointer		thisCard;
-    Bool                validSize;
-    Bool                validate;
-} pciVideoRec, *pciVideoPtr;
 
 typedef struct {
     int			frameX0;
@@ -735,7 +727,7 @@ typedef struct {
     resRange *resList;
 } IsaChipsets;
 
-typedef struct {
+typedef struct _PciChipsets {
     /**
      * Key used to match this device with its name in an array of
      * \c SymTabRec.
@@ -1064,7 +1056,7 @@ typedef struct {
    );
 } DGAFunctionRec, *DGAFunctionPtr;
 
-typedef struct {
+typedef struct _SymTabRec {
     int			token;		/* id of the token */
     const char *	name;		/* token name */
 } SymTabRec, *SymTabPtr;

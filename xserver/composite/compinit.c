@@ -46,10 +46,9 @@
 
 #include "compint.h"
 
-int	CompScreenPrivateIndex;
-int	CompWindowPrivateIndex;
-int	CompSubwindowsPrivateIndex;
-static int	CompGeneration;
+DevPrivateKey CompScreenPrivateKey = &CompScreenPrivateKey;
+DevPrivateKey CompWindowPrivateKey = &CompWindowPrivateKey;
+DevPrivateKey CompSubwindowsPrivateKey = &CompSubwindowsPrivateKey;
 
 
 static Bool
@@ -63,13 +62,13 @@ compCloseScreen (int index, ScreenPtr pScreen)
     pScreen->CloseScreen = cs->CloseScreen;
     pScreen->BlockHandler = cs->BlockHandler;
     pScreen->InstallColormap = cs->InstallColormap;
+    pScreen->ChangeWindowAttributes = cs->ChangeWindowAttributes;
     pScreen->ReparentWindow = cs->ReparentWindow;
     pScreen->MoveWindow = cs->MoveWindow;
     pScreen->ResizeWindow = cs->ResizeWindow;
     pScreen->ChangeBorderWidth = cs->ChangeBorderWidth;
     
     pScreen->ClipNotify = cs->ClipNotify;
-    pScreen->PaintWindowBackground = cs->PaintWindowBackground;
     pScreen->UnrealizeWindow = cs->UnrealizeWindow;
     pScreen->RealizeWindow = cs->RealizeWindow;
     pScreen->DestroyWindow = cs->DestroyWindow;
@@ -86,7 +85,7 @@ compCloseScreen (int index, ScreenPtr pScreen)
     cs->pOverlayWin = NULL;
 
     xfree (cs);
-    pScreen->devPrivates[CompScreenPrivateIndex].ptr = 0;
+    dixSetPrivate(&pScreen->devPrivates, CompScreenPrivateKey, NULL);
     ret = (*pScreen->CloseScreen) (index, pScreen);
 
     return ret;
@@ -107,6 +106,34 @@ compInstallColormap (ColormapPtr pColormap)
     (*pScreen->InstallColormap) (pColormap);
     cs->InstallColormap = pScreen->InstallColormap;
     pScreen->InstallColormap = compInstallColormap;
+}
+
+/* Fake backing store via automatic redirection */
+static Bool
+compChangeWindowAttributes(WindowPtr pWin, unsigned long mask)
+{
+    ScreenPtr pScreen = pWin->drawable.pScreen;
+    CompScreenPtr cs = GetCompScreen (pScreen);
+    Bool ret;
+
+    pScreen->ChangeWindowAttributes = cs->ChangeWindowAttributes;
+    ret = pScreen->ChangeWindowAttributes(pWin, mask);
+
+    if (ret && (mask & CWBackingStore) &&
+	    pScreen->backingStoreSupport != NotUseful) {
+	if (pWin->backingStore != NotUseful) {
+	    compRedirectWindow(serverClient, pWin, CompositeRedirectAutomatic);
+	    pWin->backStorage = TRUE;
+	} else {
+	    compUnredirectWindow(serverClient, pWin,
+				 CompositeRedirectAutomatic);
+	    pWin->backStorage = FALSE;
+	}
+    }
+
+    pScreen->ChangeWindowAttributes = compChangeWindowAttributes;
+
+    return ret;
 }
 
 static void
@@ -347,25 +374,6 @@ compScreenInit (ScreenPtr pScreen)
 {
     CompScreenPtr   cs;
 
-    if (CompGeneration != serverGeneration)
-    {
-	CompScreenPrivateIndex = AllocateScreenPrivateIndex ();
-	if (CompScreenPrivateIndex == -1)
-	    return FALSE;
-	CompWindowPrivateIndex = AllocateWindowPrivateIndex ();
-	if (CompWindowPrivateIndex == -1)
-	    return FALSE;
-	CompSubwindowsPrivateIndex = AllocateWindowPrivateIndex ();
-	if (CompSubwindowsPrivateIndex == -1)
-	    return FALSE;
-	CompGeneration = serverGeneration;
-    }
-    if (!AllocateWindowPrivate (pScreen, CompWindowPrivateIndex, 0))
-	return FALSE;
-
-    if (!AllocateWindowPrivate (pScreen, CompSubwindowsPrivateIndex, 0))
-	return FALSE;
-
     if (GetCompScreen (pScreen))
 	return TRUE;
     cs = (CompScreenPtr) xalloc (sizeof (CompScreenRec));
@@ -403,9 +411,6 @@ compScreenInit (ScreenPtr pScreen)
     cs->UnrealizeWindow = pScreen->UnrealizeWindow;
     pScreen->UnrealizeWindow = compUnrealizeWindow;
 
-    cs->PaintWindowBackground = pScreen->PaintWindowBackground;
-    pScreen->PaintWindowBackground = compPaintWindowBackground;
-
     cs->ClipNotify = pScreen->ClipNotify;
     pScreen->ClipNotify = compClipNotify;
 
@@ -424,13 +429,16 @@ compScreenInit (ScreenPtr pScreen)
     cs->InstallColormap = pScreen->InstallColormap;
     pScreen->InstallColormap = compInstallColormap;
 
+    cs->ChangeWindowAttributes = pScreen->ChangeWindowAttributes;
+    pScreen->ChangeWindowAttributes = compChangeWindowAttributes;
+
     cs->BlockHandler = pScreen->BlockHandler;
     pScreen->BlockHandler = compBlockHandler;
 
     cs->CloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = compCloseScreen;
 
-    pScreen->devPrivates[CompScreenPrivateIndex].ptr = (pointer) cs;
+    dixSetPrivate(&pScreen->devPrivates, CompScreenPrivateKey, cs);
 
     RegisterRealChildHeadProc(CompositeRealChildHead);
 

@@ -42,14 +42,14 @@ typedef struct _ExaXorgScreenPrivRec {
     OptionInfoPtr		 options;
 } ExaXorgScreenPrivRec, *ExaXorgScreenPrivPtr;
 
-static int exaXorgServerGeneration;
-static int exaXorgScreenPrivateIndex;
+static DevPrivateKey exaXorgScreenPrivateKey = &exaXorgScreenPrivateKey;
 
 typedef enum {
     EXAOPT_MIGRATION_HEURISTIC,
     EXAOPT_NO_COMPOSITE,
     EXAOPT_NO_UTS,
     EXAOPT_NO_DFS,
+    EXAOPT_OPTIMIZE_MIGRATION
 } EXAOpts;
 
 static const OptionInfoRec EXAOptions[] = {
@@ -61,6 +61,8 @@ static const OptionInfoRec EXAOptions[] = {
 				OPTV_BOOLEAN,	{0}, FALSE },
     { EXAOPT_NO_DFS,			"EXANoDownloadFromScreen",
 				OPTV_BOOLEAN,	{0}, FALSE },
+    { EXAOPT_OPTIMIZE_MIGRATION,	"EXAOptimizeMigration",
+				OPTV_BOOLEAN,	{0}, FALSE },
     { -1,				NULL,
 				OPTV_NONE,	{0}, FALSE }
 };
@@ -69,8 +71,8 @@ static Bool
 exaXorgCloseScreen (int i, ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = XF86SCRNINFO(pScreen);
-    ExaXorgScreenPrivPtr pScreenPriv =
-	pScreen->devPrivates[exaXorgScreenPrivateIndex].ptr;
+    ExaXorgScreenPrivPtr pScreenPriv = (ExaXorgScreenPrivPtr)
+	dixLookupPrivate(&pScreen->devPrivates, exaXorgScreenPrivateKey);
 
     pScreen->CloseScreen = pScreenPriv->SavedCloseScreen;
 
@@ -86,8 +88,8 @@ static void
 exaXorgEnableDisableFBAccess (int index, Bool enable)
 {
     ScreenPtr pScreen = screenInfo.screens[index];
-    ExaXorgScreenPrivPtr pScreenPriv =
-	pScreen->devPrivates[exaXorgScreenPrivateIndex].ptr;
+    ExaXorgScreenPrivPtr pScreenPriv = (ExaXorgScreenPrivPtr)
+	dixLookupPrivate(&pScreen->devPrivates, exaXorgScreenPrivateKey);
 
     if (!enable)
 	exaEnableDisableFBAccess (index, enable);
@@ -110,11 +112,6 @@ exaDDXDriverInit(ScreenPtr pScreen)
     /* Do NOT use XF86SCRNINFO macro here!! */
     ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
     ExaXorgScreenPrivPtr pScreenPriv;
-
-    if (exaXorgServerGeneration != serverGeneration) {
-	exaXorgScreenPrivateIndex = AllocateScreenPrivateIndex();
-	exaXorgServerGeneration = serverGeneration;
-    }
 
     pScreenPriv = xcalloc (1, sizeof(ExaXorgScreenPrivRec));
     if (pScreenPriv == NULL)
@@ -144,29 +141,35 @@ exaDDXDriverInit(ScreenPtr pScreen)
 			    heuristicName);
 	    }
 	}
+
+	pExaScr->optimize_migration =
+	    xf86ReturnOptValBool(pScreenPriv->options,
+				 EXAOPT_OPTIMIZE_MIGRATION,
+				 FALSE);
     }
 
-    if (xf86IsOptionSet(pScreenPriv->options, EXAOPT_NO_COMPOSITE)) {
-	xf86DrvMsg(pScreen->myNum, X_INFO,
+    if (xf86ReturnOptValBool(pScreenPriv->options,
+                             EXAOPT_NO_COMPOSITE, FALSE)) {
+	xf86DrvMsg(pScreen->myNum, X_CONFIG,
 		   "EXA: Disabling Composite operation "
 		   "(RENDER acceleration)\n");
 	pExaScr->info->CheckComposite = NULL;
 	pExaScr->info->PrepareComposite = NULL;
     }
 
-    if (xf86IsOptionSet(pScreenPriv->options, EXAOPT_NO_UTS)) {
-	xf86DrvMsg(pScreen->myNum, X_INFO,
+    if (xf86ReturnOptValBool(pScreenPriv->options, EXAOPT_NO_UTS, FALSE)) {
+	xf86DrvMsg(pScreen->myNum, X_CONFIG,
 		   "EXA: Disabling UploadToScreen\n");
 	pExaScr->info->UploadToScreen = NULL;
     }
 
-    if (xf86IsOptionSet(pScreenPriv->options, EXAOPT_NO_DFS)) {
-	xf86DrvMsg(pScreen->myNum, X_INFO,
+    if (xf86ReturnOptValBool(pScreenPriv->options, EXAOPT_NO_DFS, FALSE)) {
+	xf86DrvMsg(pScreen->myNum, X_CONFIG,
 		   "EXA: Disabling DownloadFromScreen\n");
 	pExaScr->info->DownloadFromScreen = NULL;
     }
 
-    pScreen->devPrivates[exaXorgScreenPrivateIndex].ptr = pScreenPriv;
+    dixSetPrivate(&pScreen->devPrivates, exaXorgScreenPrivateKey, pScreenPriv);
 
     pScreenPriv->SavedEnableDisableFBAccess = pScrn->EnableDisableFBAccess;
     pScrn->EnableDisableFBAccess = exaXorgEnableDisableFBAccess;
@@ -175,8 +178,6 @@ exaDDXDriverInit(ScreenPtr pScreen)
     pScreen->CloseScreen = exaXorgCloseScreen;
     
 }
-
-static MODULESETUPPROTO(exaSetup);
 
 /*ARGSUSED*/
 static const OptionInfoRec *
@@ -199,26 +200,4 @@ static XF86ModuleVersionInfo exaVersRec =
 	{0,0,0,0}
 };
 
-_X_EXPORT XF86ModuleData exaModuleData = { &exaVersRec, exaSetup, NULL };
-
-static ModuleInfoRec EXA = {
-    1,
-    "EXA",
-    NULL,
-    0,
-    EXAAvailableOptions,
-};
-
-/*ARGSUSED*/
-static pointer
-exaSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
-{
-    static Bool Initialised = FALSE;
-
-    if (!Initialised) {
-	Initialised = TRUE;
-	xf86AddModuleInfo(&EXA, Module);
-    }
-
-    return (pointer)TRUE;
-}
+_X_EXPORT XF86ModuleData exaModuleData = { &exaVersRec, NULL, NULL };

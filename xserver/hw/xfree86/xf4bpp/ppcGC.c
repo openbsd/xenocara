@@ -176,14 +176,13 @@ register GCPtr pGC ;
 
 	pGC->fExpose = TRUE;
 	pGC->freeCompClip = FALSE;
-	pGC->pRotatedPixmap = NullPixmap;
-	
+
 	/* GJA: I don't like this code:
          * they allocated a mfbPrivGC, ignore the allocated data and place
          * a pointer to a ppcPrivGC in its slot.
          */
 	*pPriv = vgaPrototypeGCPriv;
-	(pGC->devPrivates[mfbGetGCPrivateIndex()].ptr) = (pointer) pPriv;
+	dixSetPrivate(&pGC->devPrivates, mfbGetGCPrivateKey(), pPriv);
 
 	/* Set the vgaGCOps */
 	*pOps = vgaGCOps;
@@ -200,16 +199,10 @@ xf4bppDestroyGC( pGC )
 {
     TRACE( ( "xf4bppDestroyGC(pGC=0x%x)\n", pGC ) ) ;
 
-    /* (ef) 11/9/87 -- ppc doesn't use rotated tile or stipple, but */
-    /*		*does* call mfbValidateGC under some conditions.    */
-    /*		mfbValidateGC *does* use rotated tile and stipple   */
-    if ( pGC->pRotatedPixmap )
-	mfbDestroyPixmap( pGC->pRotatedPixmap ) ;
-
     if ( pGC->freeCompClip && pGC->pCompositeClip )
 	REGION_DESTROY(pGC->pScreen, pGC->pCompositeClip);
     if(pGC->ops->devPrivate.val) xfree( pGC->ops );
-    xfree( pGC->devPrivates[mfbGetGCPrivateIndex()].ptr ) ;
+    xfree(dixLookupPrivate(&pGC->devPrivates, mfbGetGCPrivateKey()));
     return ;
 }
 
@@ -220,7 +213,7 @@ ppcChangePixmapGC
 	register Mask changes
 )
 {
-register ppcPrivGCPtr devPriv = (ppcPrivGCPtr) (pGC->devPrivates[mfbGetGCPrivateIndex()].ptr ) ;
+register ppcPrivGCPtr devPriv = (ppcPrivGCPtr)dixLookupPrivate(&pGC->devPrivates, mfbGetGCPrivateKey());
 register unsigned long int idx ; /* used for stepping through bitfields */
 
 #define LOWBIT( x ) ( x & - x ) /* Two's complement */
@@ -298,8 +291,8 @@ xf4bppValidateGC( pGC, changes, pDrawable )
     register ppcPrivGCPtr devPriv ;
     WindowPtr pWin ;
 
-    devPriv = (ppcPrivGCPtr) (pGC->devPrivates[mfbGetGCPrivateIndex()].ptr ) ;
-
+    devPriv = (ppcPrivGCPtr)dixLookupPrivate(&pGC->devPrivates,
+					     mfbGetGCPrivateKey());
     if ( pDrawable->type != devPriv->lastDrawableType ) {
 	devPriv->lastDrawableType = pDrawable->type ;
 	xf4bppChangeGCtype( pGC, devPriv ) ;

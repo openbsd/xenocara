@@ -30,135 +30,6 @@ in this Software without prior written authorization from The Open Group.
  * Map names around so that multiple depths can be supported simultaneously
  */
 
-#if 0
-#undef QuartetBitsTable
-#undef QuartetPixelMaskTable
-#undef cfb8ClippedLineCopy
-#undef cfb8ClippedLineGeneral 
-#undef cfb8ClippedLineXor
-#undef cfb8LineSS1Rect
-#undef cfb8LineSS1RectCopy
-#undef cfb8LineSS1RectGeneral 
-#undef cfb8LineSS1RectPreviousCopy
-#undef cfb8LineSS1RectXor
-#undef cfb8SegmentSS1Rect
-#undef cfb8SegmentSS1RectCopy
-#undef cfb8SegmentSS1RectGeneral 
-#undef cfb8SegmentSS1RectShiftCopy
-#undef cfb8SegmentSS1RectXor
-#undef cfbAllocatePrivates
-#undef cfbBSFuncRec
-#undef cfbBitBlt
-#undef cfbBresD
-#undef cfbBresS
-#undef cfbChangeWindowAttributes
-#undef cfbCloseScreen
-#undef cfbCopyArea
-#undef cfbCopyImagePlane
-#undef cfbCopyPixmap
-#undef cfbCopyPlane
-#undef cfbCopyPlaneReduce
-#undef cfbCopyRotatePixmap
-#undef cfbCopyWindow
-#undef cfbCreateGC
-#undef cfbCreatePixmap
-#undef cfbCreateScreenResources
-#undef cfbCreateWindow
-#undef cfbDestroyPixmap
-#undef cfbDestroyWindow
-#undef cfbDoBitblt
-#undef cfbDoBitbltCopy
-#undef cfbDoBitbltGeneral
-#undef cfbDoBitbltOr
-#undef cfbDoBitbltXor
-#undef cfbFillBoxSolid
-#undef cfbFillBoxTile32
-#undef cfbFillBoxTile32sCopy
-#undef cfbFillBoxTile32sGeneral
-#undef cfbFillBoxTileOdd
-#undef cfbFillBoxTileOddCopy
-#undef cfbFillBoxTileOddGeneral
-#undef cfbFillPoly1RectCopy
-#undef cfbFillPoly1RectGeneral
-#undef cfbFillRectSolidCopy
-#undef cfbFillRectSolidGeneral
-#undef cfbFillRectSolidXor
-#undef cfbFillRectTile32Copy
-#undef cfbFillRectTile32General
-#undef cfbFillRectTileOdd
-#undef cfbFillSpanTile32sCopy
-#undef cfbFillSpanTile32sGeneral
-#undef cfbFillSpanTileOddCopy
-#undef cfbFillSpanTileOddGeneral
-#undef cfbFinishScreenInit
-#undef cfbGCFuncs
-#undef cfbGCPrivateIndex
-#undef cfbGetImage
-#undef cfbGetScreenPixmap
-#undef cfbGetSpans
-#undef cfbHorzS
-#undef cfbImageGlyphBlt8
-#undef cfbInitializeColormap
-#undef cfbInstallColormap
-#undef cfbLineSD
-#undef cfbLineSS
-#undef cfbListInstalledColormaps
-#undef cfbMapWindow
-#undef cfbMatchCommon
-#undef cfbNonTEOps
-#undef cfbNonTEOps1Rect
-#undef cfbPadPixmap
-#undef cfbPaintWindow
-#undef cfbPolyFillArcSolidCopy
-#undef cfbPolyFillArcSolidGeneral
-#undef cfbPolyFillRect
-#undef cfbPolyGlyphBlt8
-#undef cfbPolyGlyphRop8
-#undef cfbPolyPoint
-#undef cfbPositionWindow
-#undef cfbPutImage
-#undef cfbReduceRasterOp
-#undef cfbResolveColor
-#undef cfbRestoreAreas
-#undef cfbSaveAreas
-#undef cfbScreenInit
-#undef cfbScreenPrivateIndex
-#undef cfbSegmentSD
-#undef cfbSegmentSS
-#undef cfbSetScanline
-#undef cfbSetScreenPixmap
-#undef cfbSetSpans
-#undef cfbSetupScreen
-#undef cfbSolidSpansCopy
-#undef cfbSolidSpansGeneral
-#undef cfbSolidSpansXor
-#undef cfbStippleStack
-#undef cfbStippleStackTE
-#undef cfbTEGlyphBlt
-#undef cfbTEOps
-#undef cfbTEOps1Rect
-#undef cfbTile32FSCopy
-#undef cfbTile32FSGeneral
-#undef cfbUninstallColormap
-#undef cfbUnmapWindow
-#undef cfbUnnaturalStippleFS
-#undef cfbUnnaturalTileFS
-#undef cfbValidateGC
-#undef cfbVertS
-#undef cfbWindowPrivateIndex
-#undef cfbXRotatePixmap
-#undef cfbYRotatePixmap
-#undef cfbZeroPolyArcSS8Copy
-#undef cfbZeroPolyArcSS8General
-#undef cfbZeroPolyArcSS8Xor
-#undef cfbendpartial
-#undef cfbendtab
-#undef cfbmask
-#undef cfbrmask
-#undef cfbstartpartial
-#undef cfbstarttab
-#endif
-
 /* a losing vendor cpp dumps core if we define CFBNAME in terms of CATNAME */
 
 #if PSZ != 8
@@ -250,8 +121,6 @@ cfb can not hack PSZ yet
 #define cfbDoBitbltOr CFBNAME(DoBitbltOr)
 #define cfbDoBitbltXor CFBNAME(DoBitbltXor)
 #define cfbExpandDirectColors CFBNAME(cfbExpandDirectColors)
-#define cfbFillBoxSolid CFBNAME(FillBoxSolid)
-#define cfbFillBoxTile32 CFBNAME(FillBoxTile32)
 #define cfbFillBoxTile32sCopy CFBNAME(FillBoxTile32sCopy)
 #define cfbFillBoxTile32sGeneral CFBNAME(FillBoxTile32sGeneral)
 #define cfbFillBoxTileOdd CFBNAME(FillBoxTileOdd)
@@ -271,7 +140,7 @@ cfb can not hack PSZ yet
 #define cfbFillSpanTileOddGeneral CFBNAME(FillSpanTileOddGeneral)
 #define cfbFinishScreenInit CFBNAME(FinishScreenInit)
 #define cfbGCFuncs CFBNAME(GCFuncs)
-#define cfbGCPrivateIndex CFBNAME(GCPrivateIndex)
+#define cfbGCPrivateKey CFBNAME(GCPrivateKey)
 #define cfbGetImage CFBNAME(GetImage)
 #define cfbGetScreenPixmap CFBNAME(GetScreenPixmap)
 #define cfbGetSpans CFBNAME(GetSpans)
@@ -288,7 +157,6 @@ cfb can not hack PSZ yet
 #define cfbNonTEOps CFBNAME(NonTEOps)
 #define cfbNonTEOps1Rect CFBNAME(NonTEOps1Rect)
 #define cfbPadPixmap CFBNAME(PadPixmap)
-#define cfbPaintWindow CFBNAME(PaintWindow)
 #define cfbPolyFillArcSolidCopy CFBNAME(PolyFillArcSolidCopy)
 #define cfbPolyFillArcSolidGeneral CFBNAME(PolyFillArcSolidGeneral)
 #define cfbPolyFillRect CFBNAME(PolyFillRect)
@@ -302,7 +170,7 @@ cfb can not hack PSZ yet
 #define cfbRestoreAreas CFBNAME(RestoreAreas)
 #define cfbSaveAreas CFBNAME(SaveAreas)
 #define cfbScreenInit CFBNAME(ScreenInit)
-#define cfbScreenPrivateIndex CFBNAME(ScreenPrivateIndex)
+#define cfbScreenPrivateKey CFBNAME(ScreenPrivateKey)
 #define cfbSegmentSD CFBNAME(SegmentSD)
 #define cfbSegmentSS CFBNAME(SegmentSS)
 #define cfbSetScanline CFBNAME(SetScanline)
@@ -326,7 +194,7 @@ cfb can not hack PSZ yet
 #define cfbUnnaturalTileFS CFBNAME(UnnaturalTileFS)
 #define cfbValidateGC CFBNAME(ValidateGC)
 #define cfbVertS CFBNAME(VertS)
-#define cfbWindowPrivateIndex CFBNAME(WindowPrivateIndex)
+#define cfbWindowPrivateKey CFBNAME(WindowPrivateKey)
 #define cfbXRotatePixmap CFBNAME(XRotatePixmap)
 #define cfbYRotatePixmap CFBNAME(YRotatePixmap)
 #define cfbZeroPolyArcSS8Copy CFBNAME(ZeroPolyArcSSCopy)

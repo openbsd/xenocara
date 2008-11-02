@@ -187,6 +187,11 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 	pVidMem->mapMem = mapVidMem;
 	pVidMem->unmapMem = unmapVidMem;
 
+#if HAVE_PCI_SYSTEM_INIT_DEV_MEM
+	if (useDevMem)
+		pci_system_init_dev_mem(devMemFd);
+#endif
+
 #ifdef HAS_MTRR_SUPPORT
 	if (useDevMem) {
 		if (cleanMTRR()) {
@@ -271,7 +276,7 @@ xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
 	    return(-1);
 	}
 
-	psize = xf86getpagesize();
+	psize = getpagesize();
 	Offset += Base & (psize - 1);
 	Base &= ~(psize - 1);
 	mlen = (Offset + Len + psize - 1) & ~(psize - 1);
@@ -575,7 +580,7 @@ cleanMTRR()
 #ifdef DEBUG
 			ErrorF("Clean for (0x%lx,0x%lx)\n",
 				(unsigned long)mrd[i].mr_base,
-				(unsigned long)rd[i].mr_len);
+				(unsigned long)mrd[i].mr_len);
 #endif
 			if (mrd[i].mr_flags & MDF_FIXACTIVE) {
 				mro.mo_arg[0] = MEMRANGE_SET_UPDATE;
@@ -817,10 +822,6 @@ static pointer
 setWC(int screenNum, unsigned long base, unsigned long size, Bool enable,
 	MessageType from)
 {
-	xf86DrvMsg(screenNum, X_WARNING,
-		"%s MTRR %lx - %lx\n", enable ? "set" : "remove",
-		base, (base + size));
-
 	if (enable)
 		return addWC(screenNum, base, size, from);
 	else
@@ -926,6 +927,8 @@ NetBSDundoWC(int screenNum, pointer list)
 #endif
 
 #ifdef X_PRIVSEP
+#include <pciaccess.h>
+
 /*
  * Do all things that need root privileges early 
  * and revoke those privileges 
@@ -935,6 +938,7 @@ xf86PrivilegedInit(void)
 {
 	checkDevMem(TRUE);
 	xf86EnableIO();
+	pci_system_init();
 	xf86OpenConsole();
 }
 #endif

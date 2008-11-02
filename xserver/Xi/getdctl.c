@@ -56,13 +56,9 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include <X11/X.h>	/* for inputstr.h    */
-#include <X11/Xproto.h>	/* Request macro     */
 #include "inputstr.h"	/* DeviceIntPtr      */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
-#include "extnsionst.h"
-#include "extinit.h"	/* LookupDeviceIntRec */
 #include "exglobals.h"
 
 #include "getdctl.h"
@@ -131,7 +127,7 @@ static void CopySwapDeviceAbsCalib (ClientPtr client, AbsoluteClassPtr dts,
     xDeviceAbsCalibState *calib = (xDeviceAbsCalibState *) buf;
 
     calib->control = DEVICE_ABS_CALIB;
-    calib->length = sizeof(calib);
+    calib->length = sizeof(xDeviceAbsCalibState);
     calib->min_x = dts->min_x;
     calib->max_x = dts->max_x;
     calib->min_y = dts->min_y;
@@ -162,7 +158,7 @@ static void CopySwapDeviceAbsArea (ClientPtr client, AbsoluteClassPtr dts,
     xDeviceAbsAreaState *area = (xDeviceAbsAreaState *) buf;
 
     area->control = DEVICE_ABS_AREA;
-    area->length = sizeof(area);
+    area->length = sizeof(xDeviceAbsAreaState);
     area->offset_x = dts->offset_x;
     area->offset_y = dts->offset_y;
     area->width = dts->width;
@@ -188,7 +184,7 @@ static void CopySwapDeviceCore (ClientPtr client, DeviceIntPtr dev, char *buf)
     xDeviceCoreState *c = (xDeviceCoreState *) buf;
 
     c->control = DEVICE_CORE;
-    c->length = sizeof(c);
+    c->length = sizeof(xDeviceCoreState);
     c->status = dev->coreEvents;
     c->iscore = (dev == inputInfo.keyboard || dev == inputInfo.pointer);
 
@@ -205,7 +201,7 @@ static void CopySwapDeviceEnable (ClientPtr client, DeviceIntPtr dev, char *buf)
     xDeviceEnableState *e = (xDeviceEnableState *) buf;
 
     e->control = DEVICE_ENABLE;
-    e->length = sizeof(e);
+    e->length = sizeof(xDeviceEnableState);
     e->enable = dev->enabled;
 
     if (client->swapped) {
@@ -241,7 +237,7 @@ SRepXGetDeviceControl(ClientPtr client, int size, xGetDeviceControlReply * rep)
 int
 ProcXGetDeviceControl(ClientPtr client)
 {
-    int total_length = 0;
+    int rc, total_length = 0;
     char *buf, *savbuf;
     DeviceIntPtr dev;
     xGetDeviceControlReply rep;
@@ -249,11 +245,9 @@ ProcXGetDeviceControl(ClientPtr client)
     REQUEST(xGetDeviceControlReq);
     REQUEST_SIZE_MATCH(xGetDeviceControlReq);
 
-    dev = LookupDeviceIntRec(stuff->deviceid);
-    if (dev == NULL) {
-	SendErrorToClient(client, IReqCode, X_GetDeviceControl, 0, BadDevice);
-	return Success;
-    }
+    rc = dixLookupDevice(&dev, stuff->deviceid, client, DixGetAttrAccess);
+    if (rc != Success)
+	return rc;
 
     rep.repType = X_Reply;
     rep.RepType = X_GetDeviceControl;
@@ -262,48 +256,36 @@ ProcXGetDeviceControl(ClientPtr client)
 
     switch (stuff->control) {
     case DEVICE_RESOLUTION:
-	if (!dev->valuator) {
-	    SendErrorToClient(client, IReqCode, X_GetDeviceControl, 0,
-			      BadMatch);
-	    return Success;
-	}
+	if (!dev->valuator)
+	    return BadMatch;
 	total_length = sizeof(xDeviceResolutionState) +
 	    (3 * sizeof(int) * dev->valuator->numAxes);
 	break;
     case DEVICE_ABS_CALIB:
-        if (!dev->absolute) {
-            SendErrorToClient(client, IReqCode, X_GetDeviceControl, 0,
-                              BadMatch);
-            return Success;
-        }
+        if (!dev->absolute)
+	    return BadMatch;
 
-        total_length = sizeof(xDeviceAbsCalibCtl);
+        total_length = sizeof(xDeviceAbsCalibState);
         break;
     case DEVICE_ABS_AREA:
-        if (!dev->absolute) {
-            SendErrorToClient(client, IReqCode, X_GetDeviceControl, 0,
-                              BadMatch);
-            return Success;
-        }
+        if (!dev->absolute)
+	    return BadMatch;
 
-        total_length = sizeof(xDeviceAbsAreaCtl);
+        total_length = sizeof(xDeviceAbsAreaState);
         break;
     case DEVICE_CORE:
-        total_length = sizeof(xDeviceCoreCtl);
+        total_length = sizeof(xDeviceCoreState);
         break;
     case DEVICE_ENABLE:
-        total_length = sizeof(xDeviceEnableCtl);
+        total_length = sizeof(xDeviceEnableState);
         break;
     default:
-	SendErrorToClient(client, IReqCode, X_GetDeviceControl, 0, BadValue);
-	return Success;
+	return BadValue;
     }
 
     buf = (char *)xalloc(total_length);
-    if (!buf) {
-	SendErrorToClient(client, IReqCode, X_GetDeviceControl, 0, BadAlloc);
-	return Success;
-    }
+    if (!buf)
+	return BadAlloc;
     savbuf = buf;
 
     switch (stuff->control) {

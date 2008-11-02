@@ -56,15 +56,11 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include <X11/X.h>	/* for inputstr.h    */
-#include <X11/Xproto.h>	/* Request macro     */
 #include "inputstr.h"	/* DeviceIntPtr      */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>	/* control constants */
 #include "XIstubs.h"
 
-#include "extnsionst.h"
-#include "extinit.h"	/* LookupDeviceIntRec */
 #include "exglobals.h"
 #include "exevents.h"
 
@@ -81,11 +77,46 @@ int
 SProcXChangeDeviceControl(ClientPtr client)
 {
     char n;
+    xDeviceCtl *ctl;
+    xDeviceAbsCalibCtl *calib;
+    xDeviceAbsAreaCtl *area;
 
     REQUEST(xChangeDeviceControlReq);
     swaps(&stuff->length, n);
     REQUEST_AT_LEAST_SIZE(xChangeDeviceControlReq);
     swaps(&stuff->control, n);
+    ctl = (xDeviceCtl*)&stuff[1];
+    swaps(&ctl->control, n);
+    swaps(&ctl->length, n);
+    switch(stuff->control) {
+        case DEVICE_ABS_CALIB:
+            calib = (xDeviceAbsCalibCtl*)ctl;
+            swaps(&calib->length, n);
+            swapl(&calib->min_x, n);
+            swapl(&calib->max_x, n);
+            swapl(&calib->min_y, n);
+            swapl(&calib->max_y, n);
+            swapl(&calib->flip_x, n);
+            swapl(&calib->flip_y, n);
+            swapl(&calib->rotation, n);
+            swapl(&calib->button_threshold, n);
+            break;
+        case DEVICE_ABS_AREA:
+            area = (xDeviceAbsAreaCtl*)ctl;
+            swapl(&area->offset_x, n);
+            swapl(&area->offset_y, n);
+            swapl(&area->width, n);
+            swapl(&area->height, n);
+            swapl(&area->screen, n);
+            swapl(&area->following, n);
+            break;
+        case DEVICE_CORE:
+        case DEVICE_ENABLE:
+        case DEVICE_RESOLUTION:
+            /* hmm. beer. *drool* */
+            break;
+
+    }
     return (ProcXChangeDeviceControl(client));
 }
 
@@ -115,11 +146,9 @@ ProcXChangeDeviceControl(ClientPtr client)
     REQUEST_AT_LEAST_SIZE(xChangeDeviceControlReq);
 
     len = stuff->length - (sizeof(xChangeDeviceControlReq) >> 2);
-    dev = LookupDeviceIntRec(stuff->deviceid);
-    if (dev == NULL) {
-        ret = BadDevice;
+    ret = dixLookupDevice(&dev, stuff->deviceid, client, DixManageAccess);
+    if (ret != Success)
         goto out;
-    }
 
     rep.repType = X_Reply;
     rep.RepType = X_ChangeDeviceControl;
@@ -153,11 +182,8 @@ ProcXChangeDeviceControl(ClientPtr client)
 	    a = &dev->valuator->axes[r->first_valuator];
 	    for (i = 0; i < r->num_valuators; i++)
 		if (*(resolution + i) < (a + i)->min_resolution ||
-		    *(resolution + i) > (a + i)->max_resolution) {
-		    SendErrorToClient(client, IReqCode,
-				      X_ChangeDeviceControl, 0, BadValue);
-		    return Success;
-		}
+		    *(resolution + i) > (a + i)->max_resolution)
+		    return BadValue;
 	    for (i = 0; i < r->num_valuators; i++)
 		(a++)->resolution = *resolution++;
 
@@ -261,7 +287,7 @@ out:
     if (ret == Success) {
         dpn.type = DevicePresenceNotify;
         dpn.time = currentTime.milliseconds;
-        dpn.devchange = 1;
+        dpn.devchange = DeviceControlChanged;
         dpn.deviceid = dev->id;
         dpn.control = stuff->control;
         SendEventToAllWindows(dev, DevicePresenceNotifyMask,
@@ -269,11 +295,8 @@ out:
 
         WriteReplyToClient(client, sizeof(xChangeDeviceControlReply), &rep);
     }
-    else {
-        SendErrorToClient(client, IReqCode, X_ChangeDeviceControl, 0, ret);
-    }
 
-    return Success;
+    return ret;
 }
 
 /***********************************************************************

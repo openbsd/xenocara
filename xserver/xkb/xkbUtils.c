@@ -42,99 +42,122 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define	XKBSRV_NEED_FILE_FUNCS
 #include <xkbsrv.h>
-#include <X11/extensions/XKBgeom.h>
+#include "xkbgeom.h"
 #include "xkb.h"
 
 int	XkbDisableLockActions = 0;
 
 /***====================================================================***/
 
-DeviceIntPtr
-_XkbLookupAnyDevice(int id,int *why_rtrn)
+int
+_XkbLookupAnyDevice(DeviceIntPtr *pDev, int id, ClientPtr client,
+		    Mask access_mode, int *xkb_err)
 {
-DeviceIntPtr dev = NULL;
+    int rc = XkbKeyboardErrorCode;
 
-    dev= (DeviceIntPtr)LookupKeyboardDevice();
-    if ((id==XkbUseCoreKbd)||(dev->id==id))
-	return dev;
-
-    dev= (DeviceIntPtr)LookupPointerDevice();
-    if ((id==XkbUseCorePtr)||(dev->id==id))
-	return dev;
-
-    if (id&(~0xff))
-	 dev = NULL;
-
-    dev= (DeviceIntPtr)LookupDevice(id);
-    if (dev!=NULL) 
-	return dev;
-    if ((!dev)&&(why_rtrn))
-	*why_rtrn= XkbErr_BadDevice;
-    return dev;
+    if (id == XkbUseCoreKbd) {
+	if (inputInfo.keyboard)
+	    id = inputInfo.keyboard->id;
+	else
+	    goto out;
+    }
+    if (id == XkbUseCorePtr) {
+	if (inputInfo.pointer)
+	    id = inputInfo.pointer->id;
+	else
+	    goto out;
+    }
+    rc = dixLookupDevice(pDev, id, client, access_mode);
+out:
+    if (rc != Success)
+	*xkb_err = XkbErr_BadDevice;
+    return rc;
 }
 
-DeviceIntPtr
-_XkbLookupKeyboard(int id,int *why_rtrn)
+int
+_XkbLookupKeyboard(DeviceIntPtr *pDev, int id, ClientPtr client,
+		   Mask access_mode, int *xkb_err)
 {
-DeviceIntPtr dev = NULL;
+    DeviceIntPtr dev;
+    int rc;
 
     if (id == XkbDfltXIId)
         id = XkbUseCoreKbd;
-    if ((dev= _XkbLookupAnyDevice(id,why_rtrn))==NULL)
-	return NULL;
-    else if ((!dev->key)||(!dev->key->xkbInfo)) {
-	if (why_rtrn)
-	   *why_rtrn= XkbErr_BadClass;
-	return NULL;
+
+    rc = _XkbLookupAnyDevice(pDev, id, client, access_mode, xkb_err);
+    if (rc != Success)
+	return rc;
+
+    dev = *pDev;
+    if (!dev->key || !dev->key->xkbInfo) {
+	*pDev = NULL;
+	*xkb_err= XkbErr_BadClass;
+	return XkbKeyboardErrorCode;
     }
-    return dev;
+    return Success;
 }
 
-DeviceIntPtr
-_XkbLookupBellDevice(int id,int *why_rtrn)
+int
+_XkbLookupBellDevice(DeviceIntPtr *pDev, int id, ClientPtr client,
+		     Mask access_mode, int *xkb_err)
 {
-DeviceIntPtr dev = NULL;
+    DeviceIntPtr dev;
+    int rc;
 
-    if ((dev= _XkbLookupAnyDevice(id,why_rtrn))==NULL)
-	return NULL;
-    else if ((!dev->kbdfeed)&&(!dev->bell)) {
-	if (why_rtrn)
-	   *why_rtrn= XkbErr_BadClass;
-	return NULL;
+    rc = _XkbLookupAnyDevice(pDev, id, client, access_mode, xkb_err);
+    if (rc != Success)
+	return rc;
+
+    dev = *pDev;
+    if (!dev->kbdfeed && !dev->bell) {
+	*pDev = NULL;
+	*xkb_err= XkbErr_BadClass;
+	return XkbKeyboardErrorCode;
     }
-    return dev;
+    return Success;
 }
 
-DeviceIntPtr
-_XkbLookupLedDevice(int id,int *why_rtrn)
+int
+_XkbLookupLedDevice(DeviceIntPtr *pDev, int id, ClientPtr client,
+		    Mask access_mode, int *xkb_err)
 {
-DeviceIntPtr dev = NULL;
+    DeviceIntPtr dev;
+    int rc;
 
     if (id == XkbDfltXIId)
         id = XkbUseCorePtr;
-    if ((dev= _XkbLookupAnyDevice(id,why_rtrn))==NULL)
-	return NULL;
-    else if ((!dev->kbdfeed)&&(!dev->leds)) {
-	if (why_rtrn)
-	   *why_rtrn= XkbErr_BadClass;
-	return NULL;
+
+    rc = _XkbLookupAnyDevice(pDev, id, client, access_mode, xkb_err);
+    if (rc != Success)
+	return rc;
+
+    dev = *pDev;
+    if (!dev->kbdfeed && !dev->leds) {
+	*pDev = NULL;
+	*xkb_err= XkbErr_BadClass;
+	return XkbKeyboardErrorCode;
     }
-    return dev;
+    return Success;
 }
 
-DeviceIntPtr
-_XkbLookupButtonDevice(int id,int *why_rtrn)
+int
+_XkbLookupButtonDevice(DeviceIntPtr *pDev, int id, ClientPtr client,
+		       Mask access_mode, int *xkb_err)
 {
-DeviceIntPtr dev = NULL;
+    DeviceIntPtr dev;
+    int rc;
 
-    if ((dev= _XkbLookupAnyDevice(id,why_rtrn))==NULL)
-	return NULL;
-    else if (!dev->button) {
-	if (why_rtrn)
-	   *why_rtrn= XkbErr_BadClass;
-	return NULL;
+    rc = _XkbLookupAnyDevice(pDev, id, client, access_mode, xkb_err);
+    if (rc != Success)
+	return rc;
+
+    dev = *pDev;
+    if (!dev->button) {
+	*pDev = NULL;
+	*xkb_err= XkbErr_BadClass;
+	return XkbKeyboardErrorCode;
     }
-    return dev;
+    return Success;
 }
 
 void
@@ -188,16 +211,6 @@ KeySym			tsyms[XkbMaxSymsPerKey],*syms;
 XkbMapChangesPtr	mc;
 
     xkb= pXDev->key->xkbInfo->desc;
-#ifdef NOTYET
-    if (first<xkb->min_key_code) {
-	if (first>=XkbMinLegalKeyCode) {
-	    xkb->min_key_code= first;
-	    /* 1/12/95 (ef) -- XXX! should zero out the new maps */
-	    changes->map.changed|= XkbKeycodesMask;
-/* generate a NewKeyboard notify here? */
-	}
-    }
-#endif
     if (first+num-1>xkb->max_key_code) {
 	/* 1/12/95 (ef) -- XXX! should allow XKB structures to grow */
 	num= xkb->max_key_code-first+1;
@@ -473,6 +486,40 @@ CARD8			keysPerMod[XkbNumModifiers];
 		if (groupWidth>2)
 		    nOut= groupWidth;
 	    }
+
+	    /* See XKB Protocol Sec, Section 12.4.
+	       A 1-group key with ABCDE on a 2 group keyboard must be
+	       duplicated across all groups as ABABCDECDE.
+	     */
+	    if (nGroups == 1)
+	    {
+		int idx;
+
+		groupWidth = XkbKeyGroupWidth(xkb, key, XkbGroup1Index);
+
+		/* AB..CDE... -> ABABCDE... */
+		if (groupWidth > 0 && maxSymsPerKey >= 3)
+		    pCore[2] = pCore[0];
+		if (groupWidth > 1 && maxSymsPerKey >= 4)
+		    pCore[3] = pCore[1];
+
+		/* ABABCDE... -> ABABCDECDE */
+		idx = 2 + groupWidth;
+		while (groupWidth > 2 &&
+			idx < maxSymsPerKey &&
+			idx < groupWidth * 2)
+		{
+		    pCore[idx] = pCore[idx - groupWidth + 2];
+		    idx++;
+		}
+		idx = 2 * groupWidth;
+		if (idx < 4)
+		    idx = 4;
+		/* 3 or more groups: ABABCDECDEABCDEABCDE */
+		for (n = 0; n < groupWidth && idx < maxSymsPerKey; n++)
+		    pCore[idx++] = pXKB[n];
+	    }
+
 	    pXKB+= XkbKeyGroupsWidth(xkb,key);
 	    nOut+= 2;
 	    if (nGroups>1) {
@@ -493,11 +540,6 @@ CARD8			keysPerMod[XkbNumModifiers];
 		    pCore[nOut++]= pXKB[s];
 		}
 		pXKB+= XkbKeyGroupsWidth(xkb,key);
-	    }
-	    if (!pCore[2] && !pCore[3] && maxSymsPerKey >= 6 &&
-                (pCore[4] || pCore[5])) {
-                pCore[2] = pCore[4];
-                pCore[3] = pCore[5];
 	    }
 	}
 	if (keyc->modifierMap[key]!=0) {
@@ -1493,10 +1535,12 @@ XkbCopyKeymap(XkbDescPtr src, XkbDescPtr dst, Bool sendNotifies)
         /* properties */
         if (src->geom->num_properties) {
             if (src->geom->num_properties != dst->geom->sz_properties) {
+                /* If we've got more properties in the destination than
+                 * the source, run through and free all the excess ones
+                 * first. */
                 if (src->geom->num_properties < dst->geom->sz_properties) {
                     for (i = src->geom->num_properties,
-                          dprop = dst->geom->properties +
-                                  src->geom->num_properties;
+                         dprop = dst->geom->properties + i;
                          i < dst->geom->num_properties;
                          i++, dprop++) {
                         xfree(dprop->name);
@@ -1516,6 +1560,8 @@ XkbCopyKeymap(XkbDescPtr src, XkbDescPtr dst, Bool sendNotifies)
                 dst->geom->properties = tmp;
             }
 
+            /* We don't set num_properties as we need it to try and avoid
+             * too much reallocing. */
             dst->geom->sz_properties = src->geom->num_properties;
 
             if (dst->geom->sz_properties > dst->geom->num_properties) {
@@ -1551,6 +1597,7 @@ XkbCopyKeymap(XkbDescPtr src, XkbDescPtr dst, Bool sendNotifies)
                 }
             }
 
+            /* ... which is already src->geom->num_properties. */
             dst->geom->num_properties = dst->geom->sz_properties;
         }
         else {
@@ -1574,8 +1621,7 @@ XkbCopyKeymap(XkbDescPtr src, XkbDescPtr dst, Bool sendNotifies)
             if (src->geom->num_colors != dst->geom->sz_colors) {
                 if (src->geom->num_colors < dst->geom->sz_colors) {
                     for (i = src->geom->num_colors,
-                          dcolor = dst->geom->colors +
-                                   src->geom->num_colors;
+                         dcolor = dst->geom->colors + i;
                          i < dst->geom->num_colors;
                          i++, dcolor++) {
                         xfree(dcolor->spec);
@@ -1693,7 +1739,7 @@ XkbCopyKeymap(XkbDescPtr src, XkbDescPtr dst, Bool sendNotifies)
                         }
 
                         doutline->num_points = soutline->num_points;
-                        doutline->sz_points = soutline->sz_points;
+                        doutline->sz_points = soutline->num_points;
                     }
                 }
 
@@ -1772,18 +1818,23 @@ XkbCopyKeymap(XkbDescPtr src, XkbDescPtr dst, Bool sendNotifies)
             memset(tmp, 0, src->geom->num_sections * sizeof(XkbSectionRec));
             dst->geom->sections = tmp;
             dst->geom->num_sections = src->geom->num_sections;
+            dst->geom->sz_sections = src->geom->num_sections;
 
             for (i = 0,
                   ssection = src->geom->sections,
                   dsection = dst->geom->sections;
                  i < src->geom->num_sections;
                  i++, ssection++, dsection++) {
+                *dsection = *ssection;
                 if (ssection->num_rows) {
                     tmp = xcalloc(ssection->num_rows, sizeof(XkbRowRec));
                     if (!tmp)
                         return FALSE;
                     dsection->rows = tmp;
                 }
+                dsection->num_rows = ssection->num_rows;
+                dsection->sz_rows = ssection->num_rows;
+
                 for (j = 0, srow = ssection->rows, drow = dsection->rows;
                      j < ssection->num_rows;
                      j++, srow++, drow++) {
@@ -1809,6 +1860,7 @@ XkbCopyKeymap(XkbDescPtr src, XkbDescPtr dst, Bool sendNotifies)
                     dsection->doodads = NULL;
                 }
 
+                dsection->sz_doodads = ssection->num_doodads;
                 for (k = 0,
                       sdoodad = ssection->doodads,
                       ddoodad = dsection->doodads;
@@ -1829,8 +1881,9 @@ XkbCopyKeymap(XkbDescPtr src, XkbDescPtr dst, Bool sendNotifies)
                     }
                     ddoodad->any.type = sdoodad->any.type;
                 }
-                dsection->num_doodads = ssection->num_doodads;
-                dsection->sz_doodads = ssection->num_doodads;
+                dsection->overlays = NULL;
+                dsection->sz_overlays = 0;
+                dsection->num_overlays = 0;
             }
         }
         else {

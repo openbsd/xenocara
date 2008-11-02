@@ -83,10 +83,10 @@ typedef char *XPointer;
 /******
  * externally visible variables from PclInit.c
  ******/
-extern int PclScreenPrivateIndex, PclWindowPrivateIndex;
-extern int PclContextPrivateIndex;
-extern int PclPixmapPrivateIndex;
-extern int PclGCPrivateIndex;
+extern DevPrivateKey PclScreenPrivateKey, PclWindowPrivateKey;
+extern DevPrivateKey PclContextPrivateKey;
+extern DevPrivateKey PclPixmapPrivateKey;
+extern DevPrivateKey PclGCPrivateKey;
 
 /******
  * externally visible variables from PclAttVal.c
@@ -568,10 +568,6 @@ extern void PclCopyWindow(
 extern Bool PclChangeWindowAttributes(
     register WindowPtr pWin,
     register unsigned long mask);
-extern void PclPaintWindow(
-    WindowPtr   pWin,
-    RegionPtr   pRegion,
-    int         what);
 
 /******
  * Functions in PclFonts.c

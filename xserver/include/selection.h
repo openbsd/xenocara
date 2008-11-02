@@ -1,7 +1,3 @@
-
-#ifndef SELECTION_H
-#define SELECTION_H 1
-
 /***********************************************************
 
 Copyright 1987, 1998  The Open Group
@@ -49,9 +45,13 @@ SOFTWARE.
 
 ******************************************************************/
 
+#ifndef SELECTION_H
+#define SELECTION_H 1
+
 #include "dixstruct.h"
+#include "privates.h"
+
 /*
- *
  *  Selection data structures 
  */
 
@@ -61,7 +61,44 @@ typedef struct _Selection {
     Window window;
     WindowPtr pWin;
     ClientPtr client;
+    struct _Selection *next;
+    PrivateRec *devPrivates;
 } Selection;
+
+
+/*
+ *  Selection API
+ */
+
+int dixLookupSelection(Selection **result, Atom name,
+		       ClientPtr client, Mask access_mode);
+
+extern Selection *CurrentSelections;
+
+extern CallbackListPtr SelectionCallback;
+
+typedef enum {
+    SelectionSetOwner,
+    SelectionWindowDestroy,
+    SelectionClientClose
+} SelectionCallbackKind;
+
+typedef struct {
+    struct _Selection	    *selection;
+    ClientPtr		    client;
+    SelectionCallbackKind   kind;
+} SelectionInfoRec;
+
+
+/*
+ *  Selection server internals
+ */
+
+void InitSelections(void);
+
+void DeleteWindowFromAnySelections(WindowPtr pWin);
+
+void DeleteClientFromAnySelections(ClientPtr client);
 
 #endif /* SELECTION_H */
 

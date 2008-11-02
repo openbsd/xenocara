@@ -37,6 +37,7 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "colormap.h"
 #include "miscstruct.h"
 #include "servermd.h"
+#include "privates.h"
 #include "windowstr.h"
 #include "mfb.h"
 #undef PixelType
@@ -55,8 +56,7 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
    pixmap.devKind = width_of_pixmap_in_bytes
 */
 
-extern int  cfbGCPrivateIndex;
-extern int  cfbWindowPrivateIndex;
+extern DevPrivateKey cfbGCPrivateKey;
 
 /* private field of GC */
 typedef struct {
@@ -71,7 +71,7 @@ typedef struct {
 typedef cfbPrivGC	*cfbPrivGCPtr;
 
 #define cfbGetGCPrivate(pGC)	((cfbPrivGCPtr)\
-	(pGC)->devPrivates[cfbGCPrivateIndex].ptr)
+    dixLookupPrivate(&(pGC)->devPrivates, cfbGCPrivateKey))
 
 #define cfbGetCompositeClip(pGC) ((pGC)->pCompositeClip)
 
@@ -80,20 +80,6 @@ typedef struct {
     unsigned char	rop;
     CfbBits	xor, and;
 } cfbRRopRec, *cfbRRopPtr;
-
-/* private field of window */
-typedef struct {
-    unsigned	char fastBorder; /* non-zero if border is 32 bits wide */
-    unsigned	char fastBackground;
-    unsigned short unused; /* pad for alignment with Sun compiler */
-    DDXPointRec	oldRotate;
-    PixmapPtr	pRotatedBackground;
-    PixmapPtr	pRotatedBorder;
-    } cfbPrivWin;
-
-#define cfbGetWindowPrivate(_pWin) ((cfbPrivWin *)\
-	(_pWin)->devPrivates[cfbWindowPrivateIndex].ptr)
-
 
 /* cfb8bit.c */
 
@@ -313,8 +299,7 @@ extern int cfb8SegmentSS1RectXor(
 
 extern Bool cfbAllocatePrivates(
     ScreenPtr /*pScreen*/,
-    int * /*window_index*/,
-    int * /*gc_index*/
+    DevPrivateKey * /*gc_key*/
 );
 /* cfbbitblt.c */
 
@@ -486,23 +471,7 @@ extern void cfbBresD(
     int /*e2*/,
     int /*len*/
 );
-/* cfbbstore.c */
 
-extern void cfbSaveAreas(
-    PixmapPtr /*pPixmap*/,
-    RegionPtr /*prgnSave*/,
-    int /*xorg*/,
-    int /*yorg*/,
-    WindowPtr /*pWin*/
-);
-
-extern void cfbRestoreAreas(
-    PixmapPtr /*pPixmap*/,
-    RegionPtr /*prgnRestore*/,
-    int /*xorg*/,
-    int /*yorg*/,
-    WindowPtr /*pWin*/
-);
 /* cfbcmap.c */
 
 #ifndef CFB_PROTOTYPES_ONLY
@@ -771,7 +740,8 @@ extern PixmapPtr cfbCreatePixmap(
     ScreenPtr /*pScreen*/,
     int /*width*/,
     int /*height*/,
-    int /*depth*/
+    int /*depth*/,
+    unsigned /*usage_hint*/
 );
 
 extern Bool cfbDestroyPixmap(
@@ -821,27 +791,6 @@ extern void cfbFillPoly1RectGeneral(
     int /*mode*/,
     int /*count*/,
     DDXPointPtr /*ptsIn*/
-);
-/* cfbpntwin.c */
-
-extern void cfbPaintWindow(
-    WindowPtr /*pWin*/,
-    RegionPtr /*pRegion*/,
-    int /*what*/
-);
-
-extern void cfbFillBoxSolid(
-    DrawablePtr /*pDrawable*/,
-    int /*nBox*/,
-    BoxPtr /*pBox*/,
-    unsigned long /*pixel*/
-);
-
-extern void cfbFillBoxTile32(
-    DrawablePtr /*pDrawable*/,
-    int /*nBox*/,
-    BoxPtr /*pBox*/,
-    PixmapPtr /*tile*/
 );
 /* cfbpolypnt.c */
 
@@ -1245,7 +1194,7 @@ extern void cfbZeroPolyArcSS8Xor(
 
 #define CFB_NEED_SCREEN_PRIVATE
 
-extern int cfbScreenPrivateIndex;
+extern DevPrivateKey cfbScreenPrivateKey;
 #endif
 
 #ifndef CFB_PROTOTYPES_ONLY

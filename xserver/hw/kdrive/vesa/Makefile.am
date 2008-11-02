@@ -21,12 +21,13 @@ Xvesa_SOURCES = \
 
 Xvesa_LDADD = \
 	libvesa.a 				\
-	@KDRIVE_LIBS@				\
-	@XSERVER_LIBS@
+	@KDRIVE_LIBS@
 
 Xvesa_DEPENDENCIES =	\
 	libvesa.a 				\
 	@KDRIVE_LOCAL_LIBS@
+
+Xvesa_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
 
 relink:
 	rm -f $(bin_PROGRAMS) && make $(bin_PROGRAMS)

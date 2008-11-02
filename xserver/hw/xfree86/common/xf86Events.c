@@ -317,7 +317,7 @@ xf86ProcessActionEvent(ActionEvent action, void *arg)
 	}
 	break;
 #if !defined(__SOL8__) && !defined(sgi) && \
-    (!defined(sun) || defined(i386)) && defined(VT_ACTIVATE)
+    (!defined(sun) || defined(__i386__)) && defined(VT_ACTIVATE)
     case ACTION_SWITCHSCREEN:
 	if (VTSwitchEnabled && !xf86Info.dontVTSwitch && arg) {
 	    int vtno = *((int *) arg);
@@ -340,7 +340,7 @@ xf86ProcessActionEvent(ActionEvent action, void *arg)
 #else
 	    if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, xf86Info.vtno + 1) < 0)
 #endif
-#if defined (__SCO__) || (defined(sun) && defined (i386) && defined (SVR4)) || defined(__UNIXWARE__)
+#if defined (__SCO__) || (defined(sun) && defined (__i386__) && defined (SVR4)) || defined(__UNIXWARE__)
 		if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, 0) < 0)
 #else
 		if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, 1) < 0)
@@ -857,7 +857,7 @@ xf86VTSwitch()
 #endif
 #ifdef DPMSExtension
     if (DPMSPowerLevel != DPMSModeOn)
-	DPMSSet(DPMSModeOn);
+	DPMSSet(serverClient, DPMSModeOn);
 #endif
     for (i = 0; i < xf86NumScreens; i++) {
       if (!(dispatchException & DE_TERMINATE))
@@ -906,7 +906,7 @@ xf86VTSwitch()
 	    (*xf86Screens[i]->EnableDisableFBAccess) (i, TRUE);
 	}
       }
-      SaveScreens(SCREEN_SAVER_FORCER, ScreenSaverReset);
+      dixSaveScreens(serverClient, SCREEN_SAVER_FORCER, ScreenSaverReset);
 
       pInfo = xf86InputDevs;
       while (pInfo) {
@@ -970,7 +970,7 @@ xf86VTSwitch()
     }
 
     /* Turn screen saver off when switching back */
-    SaveScreens(SCREEN_SAVER_FORCER,ScreenSaverReset);
+    dixSaveScreens(serverClient, SCREEN_SAVER_FORCER, ScreenSaverReset);
 
     pInfo = xf86InputDevs;
     while (pInfo) {

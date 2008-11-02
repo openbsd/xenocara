@@ -42,8 +42,7 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <ctype.h>
 #define EXTENSION_EVENT_BASE 64
 
-static unsigned int _xkbServerGeneration;
-int xkbDevicePrivateIndex = -1;
+DevPrivateKey xkbDevicePrivateKey = &xkbDevicePrivateKey;
 
 void
 xkbUnwrapProc(DeviceIntPtr device, DeviceHandleProc proc,
@@ -66,20 +65,12 @@ XkbSetExtension(DeviceIntPtr device, ProcessInputProc proc)
 {
     xkbDeviceInfoPtr xkbPrivPtr;
 
-    if (serverGeneration != _xkbServerGeneration) {
-	if ((xkbDevicePrivateIndex = AllocateDevicePrivateIndex()) == -1)
-	    return;
-	_xkbServerGeneration = serverGeneration;
-    }
-    if (!AllocateDevicePrivate(device, xkbDevicePrivateIndex))
-	return;
-
     xkbPrivPtr = (xkbDeviceInfoPtr) xcalloc(1, sizeof(xkbDeviceInfoRec));
     if (!xkbPrivPtr)
 	return;
     xkbPrivPtr->unwrapProc = NULL;
 
-    device->devPrivates[xkbDevicePrivateIndex].ptr = xkbPrivPtr;
+    dixSetPrivate(&device->devPrivates, xkbDevicePrivateKey, xkbPrivPtr);
     WRAP_PROCESS_INPUT_PROC(device, xkbPrivPtr, proc, xkbUnwrapProc);
 }
 
@@ -851,7 +842,7 @@ _XkbFilterRedirectKey(	XkbSrvInfoPtr	xkbi,
 			unsigned	keycode,
 			XkbAction *	pAction)
 {
-unsigned	realMods;
+unsigned	realMods = 0;
 xEvent 		ev;
 int		x,y;
 XkbStateRec	old;
@@ -1044,8 +1035,9 @@ int		button;
         return 0;
 
     if (filter->keycode==0) {		/* initial press */
-	dev= _XkbLookupButtonDevice(pAction->devbtn.device,NULL);
-	if ((!dev)||(!dev->public.on)||(&dev->public==LookupPointerDevice()))
+	_XkbLookupButtonDevice(&dev, pAction->devbtn.device, serverClient,
+			       DixUnknownAccess, &button);
+	if (!dev || !dev->public.on || dev == inputInfo.pointer)
 	    return 1;
 
 	button= pAction->devbtn.button;
@@ -1084,8 +1076,9 @@ int		button;
 	int	button;
 
 	filter->active= 0;
-	dev= _XkbLookupButtonDevice(filter->upAction.devbtn.device,NULL);
-	if ((!dev)||(!dev->public.on)||(&dev->public==LookupPointerDevice()))
+	_XkbLookupButtonDevice(&dev, filter->upAction.devbtn.device,
+			       serverClient, DixUnknownAccess, &button);
+	if (!dev || !dev->public.on || dev == inputInfo.pointer)
 	    return 1;
 
 	button= filter->upAction.btn.button;
@@ -1151,7 +1144,7 @@ void
 XkbHandleActions(DeviceIntPtr dev,DeviceIntPtr kbd,xEvent *xE,int count)
 {
 int		key,bit,i;
-CARD8		realMods;
+CARD8		realMods = 0;
 XkbSrvInfoPtr	xkbi;
 KeyClassPtr	keyc;
 int		changed,sendEvent;
