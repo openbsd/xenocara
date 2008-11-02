@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.23 2008/08/23 15:55:59 matthieu Exp $
+# $OpenBSD: Makefile,v 1.24 2008/11/02 15:17:58 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	openbsd-input-usbtablet \
@@ -13,7 +13,7 @@ INPUT_DRV_COMMON= \
 	xf86-input-digitaledge xf86-input-dmc xf86-input-dynapro \
 	xf86-input-elo2300 xf86-input-elographics xf86-input-fpit \
 	xf86-input-hyperpen xf86-input-jamstudio xf86-input-joystick \
-	xf86-input-magellan xf86-input-magictouch \
+	xf86-input-magellan \
 	xf86-input-microtouch xf86-input-mutouch xf86-input-penmount \
 	xf86-input-palmax xf86-input-spaceorb \
 	xf86-input-summa xf86-input-tek4957
@@ -40,22 +40,28 @@ INPUT_DRV_vax=
 
 INPUT_DRV_zaurus= ${INPUT_DRV_DEFAULT}
 
+# deprecated
+# xf86-input-magictouch
+
 .if defined(INPUT_DRV_${MACHINE})
 INPUT_DRV= ${INPUT_DRV_${MACHINE}}
 .else
 INPUT_DRV= ${INPUT_DRV_DEFAULT}
 .endif
 
-
 VIDEO_DRV_COMMON= \
 	xf86-video-apm xf86-video-ark xf86-video-ati xf86-video-chips  \
-	xf86-video-cirrus xf86-video-cyrix xf86-video-dummy \
+	xf86-video-cirrus xf86-video-dummy \
 	xf86-video-glint xf86-video-i128 xf86-video-mach64 xf86-video-mga \
 	xf86-video-neomagic \
 	xf86-video-nv xf86-video-r128 xf86-video-rendition xf86-video-s3 \
 	xf86-video-s3virge xf86-video-savage xf86-video-siliconmotion \
 	xf86-video-sis xf86-video-tdfx xf86-video-trident \
-	xf86-video-tseng xf86-video-vesa xf86-video-vga  \
+	xf86-video-tseng xf86-video-vesa \
+
+# deprecated
+#  xf86-video-cyrix  
+#  xf86-video-vga
 
 VIDEO_DRV_alpha= \
 	${VIDEO_DRV_COMMON} \
@@ -74,14 +80,14 @@ VIDEO_DRV_hppa=
 VIDEO_DRV_i386= \
 	${VIDEO_DRV_COMMON} \
 	xf86-video-geode \
-	xf86-video-i740 \
-	xf86-video-i810 \
 	xf86-video-intel \
 	xf86-video-nsc \
 	xf86-video-openchrome \
 	xf86-video-radeonhd \
-	xf86-video-vmware \
-	xf86-video-voodoo
+	xf86-video-vmware
+
+# xf86-video-i740 xf86-video-i810 xf86-video-voodoo
+
 
 VIDEO_DRV_landisk=
 
