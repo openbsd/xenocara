@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.38 2008/10/20 08:49:03 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.39 2008/11/02 16:54:56 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -14,14 +14,14 @@ Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
-Version		7.0.3
+Version		7.2
 Current Vers:	7.2
 Maintainer:	Brian Paul
 Archive Site:	http://www.mesa3d.org/
 
 Package:	libdrm
 Version:	2.3.1
-Current Vers:	2.4.0
+Current Vers:	2.4.1
 Maintainer:	Eric Anholt
 Archive Site:	http://dri.freedesktop.org/
 
