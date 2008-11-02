@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2008/11/02 15:01:32 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2008/11/02 16:07:40 matthieu Exp $
 
 LIB=	i915_dri.so
 
@@ -57,7 +57,7 @@ SRCS= \
 	$(DRIVER_SOURCES)
 
 DRIVER_DEFINES= \
-	-I$(MESA)/drivers/dri/i915/server \
+	-I$(MESA)/drivers/dri/i915 \
 	-I$(MESA)/drivers/dri/intel \
 	-I$(MESA)/drivers/dri/intel/server \
 	-DI915 -DDRM_VBLANK_FLIP=DRM_VBLANK_FLIP
@@ -65,3 +65,4 @@ DRIVER_DEFINES= \
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA}/drivers/dri/i915
+.PATH: ${MESA}/drivers/dri/intel
