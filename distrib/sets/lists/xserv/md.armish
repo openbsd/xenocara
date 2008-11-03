@@ -153,10 +153,13 @@
 ./usr/X11R6/include/xorg/xorgVersion.h
 ./usr/X11R6/include/xorg/xvdix.h
 ./usr/X11R6/include/xorg/xvmcext.h
+./usr/X11R6/lib/modules/dri/swrast_dri.so
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.la
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.so
 ./usr/X11R6/lib/modules/extensions/libdbe.la
 ./usr/X11R6/lib/modules/extensions/libdbe.so
+./usr/X11R6/lib/modules/extensions/libdri.la
+./usr/X11R6/lib/modules/extensions/libdri.so
 ./usr/X11R6/lib/modules/extensions/libextmod.la
 ./usr/X11R6/lib/modules/extensions/libextmod.so
 ./usr/X11R6/lib/modules/extensions/libglx.la
@@ -245,6 +248,3 @@
 ./usr/X11R6/share/aclocal/xorg-server.m4
 ./var/db/xkb
 ./var/log
-xbase/md.armish:./usr/X11R6/lib/modules/dri/swrast_dri.so
-xbase/md.armish:./usr/X11R6/lib/modules/extensions/libdri.la
-xbase/md.armish:./usr/X11R6/lib/modules/extensions/libdri.so
