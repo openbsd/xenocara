@@ -149,7 +149,8 @@ pci_device_openbsd_map_range(struct pci_device *dev,
 		mo.mo_arg[0] = MEMRANGE_SET_UPDATE;
 
 		if (ioctl(aperturefd, MEMRANGE_SET, &mo))
-			return errno;
+			(void)fprintf(stderr, "mtrr set failed: %s\n",
+			    strerror(errno));
 	}
 #endif
 	return 0;
