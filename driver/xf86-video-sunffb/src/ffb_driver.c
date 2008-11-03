@@ -20,7 +20,6 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/sunffb/ffb_driver.c,v 1.11 2002/12/06 02:44:04 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -30,7 +29,6 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86Version.h"
 #include "mipointer.h"
 #include "mibstore.h"
 #include "micmap.h"
@@ -70,9 +68,9 @@ void FFBSync(ScrnInfoPtr pScrn);
 #define FFB_VERSION 4000
 #define FFB_NAME "SUNFFB"
 #define FFB_DRIVER_NAME "sunffb"
-#define FFB_MAJOR_VERSION 1
-#define FFB_MINOR_VERSION 1
-#define FFB_PATCHLEVEL 0
+#define FFB_MAJOR_VERSION PACKAGE_VERSION_MAJOR
+#define FFB_MINOR_VERSION PACKAGE_VERSION_MINOR
+#define FFB_PATCHLEVEL PACKAGE_VERSION_PATCHLEVEL
 
 /* 
  * This contains the functions needed by the server after loading the driver
@@ -432,22 +430,6 @@ FFBPreInit(ScrnInfoPtr pScrn, int flags)
 	return FALSE;
     }
 
-#if 0
-/*#ifdef XF86DRI*/
-/*
- * Loading this automatically isn't compatible
- * to the behavior of other drivers
- */
-    if (xf86LoadSubModule(pScrn, "drm") == NULL) {
-	FFBFreeRec(pScrn);
-	return FALSE;
-    }
-
-    if (xf86LoadSubModule(pScrn, "dri") == NULL) {
-	FFBFreeRec(pScrn);
-	return FALSE;
-    }
-#endif
 
     /*********************
     set up clock and mode stuff
@@ -740,21 +722,6 @@ FFBScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     if (!miSetPixmapDepths())
         return FALSE;
 
-#if 0 /*def XF86DRI*/
-    if (pFfb->ffb_type != afb_m3 && pFfb->ffb_type != afb_m6 &&
-	pFfb->NoAccel == FALSE) {
-	    pFfb->dri_enabled = FFBDRIScreenInit(pScreen);
-	    if (pFfb->dri_enabled == TRUE)
-		    xf86Msg(X_INFO, "%s: DRM initialized\n",
-			    pFfb->psdp->device);
-	    else
-		    xf86Msg(X_INFO, "%s: DRM setup failed\n",
-			    pFfb->psdp->device);
-    } else {
-	    pFfb->dri_enabled = FALSE;
-    }
-#endif
-
     /*
      * Call the framebuffer layer's ScreenInit function, and fill in other
      * pScreen fields.
@@ -831,21 +798,6 @@ FFBScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     /* Setup DGA support. */
     if (!pFfb->NoAccel)
 	    FFB_InitDGA(pScreen);
-
-#if 0 /*def XF86DRI*/
-    if (pFfb->dri_enabled) {
-	    /* Now that mi, fb, drm and others have done their thing, 
-	     * complete the DRI setup.
-	     */
-	    pFfb->dri_enabled = FFBDRIFinishScreenInit(pScreen);
-	    if (pFfb->dri_enabled)
-		    xf86Msg(X_INFO, "%s: DRM finish setup complete\n",
-			    pFfb->psdp->device);
-	    else
-		    xf86Msg(X_INFO, "%s: DRM finish setup failed\n",
-			    pFfb->psdp->device);
-    }
-#endif
 
     xf86DPMSInit(pScreen, FFBDPMSSet, 0);
 
@@ -948,11 +900,6 @@ FFBCloseScreen(int scrnIndex, ScreenPtr pScreen)
 	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
 	FFBPtr pFfb = GET_FFB_FROM_SCRN(pScrn);
 
-#if 0 /*def XF86DRI*/
-	if (pFfb->dri_enabled)
-		FFBDRICloseScreen(pScreen);
-#endif
-
 	/* Restore kernel ramdac state before we unmap registers. */
 	FFBDacFini(pFfb);
 
@@ -1010,7 +957,9 @@ FFBSaveScreen(ScreenPtr pScreen, int mode)
        done in "ffb_dac.c" `for aesthetic reasons.'
     */
 {
-    return FFBDacSaveScreen(GET_FFB_FROM_SCREEN(pScreen), mode);
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+
+    return FFBDacSaveScreen(GET_FFB_FROM_SCRN(pScrn), mode);
 }
 
 static void

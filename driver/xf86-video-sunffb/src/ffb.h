@@ -39,10 +39,6 @@
 #include "ffb_regs.h"
 #include "xf86sbusBus.h"
 #include "ffb_dac.h"
-#ifdef XF86DRI
-#include "xf86drm.h"
-#include "ffb_drishare.h"
-#endif
 #ifndef  DPMS_SERVER
 #define  DPMS_SERVER
 #endif   /* DPMS_SERVER */
@@ -97,14 +93,6 @@ typedef struct {
 	unsigned int bits[32];			/* The stipple bits themselves	*/
 } CreatorStippleRec, *CreatorStipplePtr;
 
-typedef struct {
-	int type;
-	unsigned int linepat;
-	CreatorStipplePtr stipple;
-	void (*PolySegment)(DrawablePtr, GCPtr, int, xSegment *);
-	void (*Polylines)(DrawablePtr, GCPtr, int, int, DDXPointPtr);
-} CreatorPrivGCRec, *CreatorPrivGCPtr;
-
 /* WID and framebuffer controls are a property of the
  * window.
  */
@@ -134,12 +122,6 @@ enum ffb_chip_type {
 	afb_m3,			/* FCS Elite3D, 3 float chips */
 	afb_m6			/* FCS Elite3D, 6 float chips */
 };
-
-#ifdef XF86DRI
-typedef struct {
-	int	index;
-} FFBConfigPrivRec, *FFBConfigPrivPtr;
-#endif
 
 typedef struct {
 	unsigned short fifo_cache;
@@ -221,16 +203,6 @@ typedef struct {
 	void *I2C;
 	struct ffb_dac_info dac_info;
 
-#ifdef XF86DRI
-	void *pDRIInfo;
-	int numVisualConfigs;
-	void *pVisualConfigs;
-	FFBConfigPrivPtr pVisualConfigsPriv;
-	int drmSubFD;
-	Bool dri_enabled;
-	ffb_dri_state_t *pFfbSarea;
-#endif
-
 	OptionInfoPtr Options;
 } FFBRec, *FFBPtr;
 
@@ -261,17 +233,9 @@ extern void FFBWidFree(FFBPtr, unsigned int);
 extern unsigned int FFBWidUnshare(FFBPtr, unsigned int);
 extern unsigned int FFBWidReshare(FFBPtr, unsigned int);
 extern void FFBWidChangeBuffer(FFBPtr, unsigned int, int);
-extern Bool FFBWidIsShared(FFBPtr pFfb, unsigned int wid);
 
 /* Accelerated double-buffering. */
 extern Bool FFBDbePreInit(ScreenPtr);
-
-#ifdef XF86DRI
-/* DRI support */
-extern Bool FFBDRIScreenInit(ScreenPtr);
-extern Bool FFBDRIFinishScreenInit(ScreenPtr);
-extern void FFBDRICloseScreen(ScreenPtr);
-#endif
 
 /* The fastfill and pagefill buffer sizes change based upon
  * the resolution.
@@ -290,23 +254,7 @@ extern struct fastfill_parms ffb_fastfill_parms[];
 
 #define FFB_FFPARMS(__fpriv)	(ffb_fastfill_parms[(__fpriv)->ffb_res])
 
-extern int  CreatorScreenPrivateIndex;
-extern int  CreatorGCPrivateIndex;
-extern int  CreatorWindowPrivateIndex;
-
 #define GET_FFB_FROM_SCRN(p)	((FFBPtr)((p)->driverPrivate))
-
-#define GET_FFB_FROM_SCREEN(s)						\
-((FFBPtr)(s)->devPrivates[CreatorScreenPrivateIndex].ptr)
-
-#define CreatorGetGCPrivate(g)						\
-((CreatorPrivGCPtr) (g)->devPrivates [CreatorGCPrivateIndex].ptr)
-
-#define CreatorGetWindowPrivate(w)					\
-((CreatorPrivWinPtr) (w)->devPrivates[CreatorWindowPrivateIndex].ptr)
-                            
-#define CreatorSetWindowPrivate(w,p) 					\
-((w)->devPrivates[CreatorWindowPrivateIndex].ptr = (pointer) p)
 
 #undef DEBUG_FFB
 

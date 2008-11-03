@@ -49,9 +49,3 @@ sunffb_drv_la_SOURCES = \
          ffb_regs.h \
          ffb_wid.c \
          $(SPARC_ASM_SRC)
-
-if DRI 
-sunffb_drv_la_SOURCES += \
-         ffb_dri.c \
-         ffb_drishare.h
-endif

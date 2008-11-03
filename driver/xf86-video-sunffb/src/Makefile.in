@@ -57,10 +57,6 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @SPARC_TRUE@am__append_1 = -DUSE_VIS
-@DRI_TRUE@am__append_2 = \
-@DRI_TRUE@         ffb_dri.c \
-@DRI_TRUE@         ffb_drishare.h
-
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -83,12 +79,11 @@ sunffb_drv_la_LIBADD =
 am__sunffb_drv_la_SOURCES_DIST = ffb_accel.c ffb_attr.c ffb_cursor.c \
 	ffb_dac.c ffb_dac.h ffb_ddc.c ffb_dga.c ffb_driver.c \
 	ffb_fifo.h ffb.h ffb_loops.h ffb_rcache.h ffb_regs.h ffb_wid.c \
-	ffb_asm.s VISmoveImage.s ffb_dri.c ffb_drishare.h
+	ffb_asm.s VISmoveImage.s
 @SPARC_TRUE@am__objects_1 = ffb_asm.lo VISmoveImage.lo
-@DRI_TRUE@am__objects_2 = ffb_dri.lo
 am_sunffb_drv_la_OBJECTS = ffb_accel.lo ffb_attr.lo ffb_cursor.lo \
 	ffb_dac.lo ffb_ddc.lo ffb_dga.lo ffb_driver.lo ffb_wid.lo \
-	$(am__objects_1) $(am__objects_2)
+	$(am__objects_1)
 sunffb_drv_la_OBJECTS = $(am_sunffb_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -250,10 +245,23 @@ sunffb_drv_la_LTLIBRARIES = sunffb_drv.la
 sunffb_drv_la_LDFLAGS = -module -avoid-version
 sunffb_drv_ladir = @moduledir@/drivers
 @SPARC_TRUE@SPARC_ASM_SRC = ffb_asm.s VISmoveImage.s
-sunffb_drv_la_SOURCES = ffb_accel.c ffb_attr.c ffb_cursor.c ffb_dac.c \
-	ffb_dac.h ffb_ddc.c ffb_dga.c ffb_driver.c ffb_fifo.h ffb.h \
-	ffb_loops.h ffb_rcache.h ffb_regs.h ffb_wid.c $(SPARC_ASM_SRC) \
-	$(am__append_2)
+sunffb_drv_la_SOURCES = \
+         ffb_accel.c \
+         ffb_attr.c \
+         ffb_cursor.c \
+         ffb_dac.c \
+         ffb_dac.h \
+         ffb_ddc.c \
+         ffb_dga.c \
+         ffb_driver.c \
+         ffb_fifo.h \
+         ffb.h \
+         ffb_loops.h \
+         ffb_rcache.h \
+         ffb_regs.h \
+         ffb_wid.c \
+         $(SPARC_ASM_SRC)
+
 all: all-am
 
 .SUFFIXES:
@@ -329,7 +337,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ffb_dac.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ffb_ddc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ffb_dga.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ffb_dri.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ffb_driver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ffb_wid.Plo@am__quote@
 

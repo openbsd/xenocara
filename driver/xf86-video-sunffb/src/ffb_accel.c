@@ -44,11 +44,6 @@
 #include	"ffb_loops.h"
 #include	"ffb_regs.h"
 
-int	CreatorScreenPrivateIndex;
-int	CreatorGCPrivateIndex;
-int	CreatorWindowPrivateIndex;
-int	CreatorGeneration;
-
 /* Indexed by ffb resolution enum. */
 struct fastfill_parms ffb_fastfill_parms[] = {
 	/* fsmall, psmall,  ffh,  ffw,  pfh,  pfw */
@@ -61,7 +56,8 @@ struct fastfill_parms ffb_fastfill_parms[] = {
 void
 CreatorVtChange (ScreenPtr pScreen, int enter)
 {
-	FFBPtr pFfb = GET_FFB_FROM_SCREEN (pScreen);
+	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	FFBPtr pFfb = GET_FFB_FROM_SCRN (pScrn);
 	ffb_fbcPtr ffb = pFfb->regs;
 
 	pFfb->rp_active = 1;
@@ -846,22 +842,6 @@ Bool FFBAccelInit(ScreenPtr pScreen, FFBPtr pFfb)
 {
 	XAAInfoRecPtr infoRec;
 	ffb_fbcPtr ffb = pFfb->regs;
-
-	if (serverGeneration != CreatorGeneration) {
-		CreatorScreenPrivateIndex = AllocateScreenPrivateIndex ();
-		if (CreatorScreenPrivateIndex == -1)
-			return FALSE;
-		CreatorGCPrivateIndex = AllocateGCPrivateIndex ();
-		CreatorWindowPrivateIndex = AllocateWindowPrivateIndex ();
-		CreatorGeneration = serverGeneration;
-	}
-	
-	if (!AllocateGCPrivate(pScreen, CreatorGCPrivateIndex, sizeof(CreatorPrivGCRec)))
-		return FALSE;
-	if (!AllocateWindowPrivate(pScreen, CreatorWindowPrivateIndex, 0))
-		return FALSE;
-
-	pScreen->devPrivates[CreatorScreenPrivateIndex].ptr = pFfb;
 
 	pFfb->xaa_fbc = (FFB_FBC_WB_A | FFB_FBC_WM_COMBINED | FFB_FBC_RB_A |
 			 FFB_FBC_WE_FORCEON |

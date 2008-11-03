@@ -449,20 +449,3 @@ FFBWidChangeBuffer(FFBPtr pFfb, unsigned int wid, int visible)
 		update_wids(pFfb, index);
 	}
 }
-
-/* Used by DRI part of driver. */
-Bool
-FFBWidIsShared(FFBPtr pFfb, unsigned int wid)
-{
-	ffb_dac_info_t *p = &pFfb->dac_info;
-	ffb_wid_pool_t *table = &p->wid_table;
-	int index = wid >> table->wid_shift;
-
-	if (index < 0 || index >= table->num_wids)
-		return TRUE;
-
-	if (table->wid_pool[index].canshare == TRUE)
-		return TRUE;
-
-	return FALSE;
-}
