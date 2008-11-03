@@ -245,3 +245,6 @@
 ./usr/X11R6/share/aclocal/xorg-server.m4
 ./var/db/xkb
 ./var/log
+xbase/md.armish:./usr/X11R6/lib/modules/dri/swrast_dri.so
+xbase/md.armish:./usr/X11R6/lib/modules/extensions/libdri.la
+xbase/md.armish:./usr/X11R6/lib/modules/extensions/libdri.so
