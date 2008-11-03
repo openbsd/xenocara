@@ -113,7 +113,7 @@ _X_EXPORT DriverRec NV = {
 #endif
 };
 
-/* Known cards as of 2008/06/16 */
+/* Known cards as of 2008/08/26 */
 
 static SymTabRec NVKnownChipsets[] =
 {
@@ -363,6 +363,7 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE0400, "GeForce 8600 GTS" },
   { 0x10DE0401, "GeForce 8600 GT" },
   { 0x10DE0402, "GeForce 8600 GT" },
+  { 0x10DE0403, "GeForce 8600 GS" },
   { 0x10DE0404, "GeForce 8400 GS" },
   { 0x10DE0405, "GeForce 9500M GS" },
   { 0x10DE0407, "GeForce 8600M GT" },
@@ -386,6 +387,7 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE0429, "Quadro NVS 140M" },
   { 0x10DE042A, "Quadro NVS 130M" },
   { 0x10DE042B, "Quadro NVS 135M" },
+  { 0x10DE042C, "GeForce 9400 GT" },
   { 0x10DE042D, "Quadro FX 360M" },
   { 0x10DE042F, "Quadro NVS 290" },
   { 0x10DE0611, "GeForce 8800 GT" },

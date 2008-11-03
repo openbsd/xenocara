@@ -191,15 +191,14 @@ G80DispCommand(ScrnInfoPtr pScrn, CARD32 addr, CARD32 data)
         if(super) {
             if(super == 2) {
                 xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
-                const CARD32 r = pNv->reg[0x00610030/4];
                 int i;
 
                 for(i = 0; i < xf86_config->num_crtc; i++)
                 {
                     xf86CrtcPtr crtc = xf86_config->crtc[i];
-                    G80CrtcPrivPtr pPriv = crtc->driver_private;
+                    const int headOff = 0x800 * G80CrtcGetHead(crtc);
 
-                    if(r & (0x200 << pPriv->head))
+                    if((pNv->reg[(0x00614200+headOff)/4] & 0xc0) == 0x80)
                         G80CrtcSetPClk(crtc);
                 }
             }

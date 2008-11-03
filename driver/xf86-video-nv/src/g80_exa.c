@@ -109,7 +109,7 @@ prepareSolid(PixmapPtr      pPixmap,
     if(pPixmap->drawable.depth > 24) return FALSE;
     if(!setDst(pNv, pPixmap)) return FALSE;
     G80DmaStart(pNv, 0x2ac, 1);
-    G80DmaNext (pNv, 1);
+    G80DmaNext (pNv, 4);
     G80SetRopSolid(pNv, alu, planemask);
     G80DmaStart(pNv, 0x580, 1);
     G80DmaNext (pNv, 4);
@@ -160,7 +160,7 @@ prepareCopy(PixmapPtr       pSrcPixmap,
     if(alu == GXcopy && planemask == ~0) {
         G80DmaNext (pNv, 3);
     } else {
-        G80DmaNext (pNv, 1);
+        G80DmaNext (pNv, 4);
         G80SetRopSolid(pNv, alu, planemask);
     }
     pNv->DMAKickoffCallback = G80DMAKickoffCallback;

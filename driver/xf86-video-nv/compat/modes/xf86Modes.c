@@ -509,8 +509,25 @@ xf86ValidateModesBandwidth(ScrnInfoPtr pScrn, DisplayModePtr modeList,
 
     for (mode = modeList; mode != NULL; mode = mode->next) {
 	if (xf86ModeBandwidth(mode, depth) > bandwidth)
+#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(7,0,0,0,0)
 	    mode->status = MODE_BANDWIDTH;
+#else
+	    /* MODE_BANDWIDTH didn't exist in xserver 1.2 */
+	    mode->status = MODE_BAD;
+#endif
     }
+}
+
+Bool
+xf86ModeIsReduced(DisplayModePtr mode)
+{
+    if ((((mode->HDisplay * 5 / 4) & ~0x07) > mode->HTotal) &&
+        ((mode->HTotal - mode->HDisplay) == 160) &&
+	((mode->HSyncEnd - mode->HDisplay) == 80) &&
+	((mode->HSyncEnd - mode->HSyncStart) == 32) &&
+	((mode->VSyncStart - mode->VDisplay) == 3))
+	return TRUE;
+    return FALSE;
 }
 
 /**
@@ -521,7 +538,6 @@ xf86ValidateModesBandwidth(ScrnInfoPtr pScrn, DisplayModePtr modeList,
 _X_EXPORT void
 xf86ValidateModesReducedBlanking(ScrnInfoPtr pScrn, DisplayModePtr modeList)
 {
-    Bool mode_is_reduced = FALSE;
     DisplayModePtr mode;
 
     for (mode = modeList; mode != NULL; mode = mode->next) {
@@ -677,7 +693,7 @@ xf86GetMonitorModes (ScrnInfoPtr pScrn, XF86ConfMonitorPtr conf_monitor)
 _X_EXPORT DisplayModePtr
 xf86GetDefaultModes (Bool interlaceAllowed, Bool doubleScanAllowed)
 {
-    DisplayModePtr  head = NULL, prev = NULL, mode;
+    DisplayModePtr  head = NULL, mode;
     int		    i;
 
     for (i = 0; i < xf86NumDefaultModes; i++)

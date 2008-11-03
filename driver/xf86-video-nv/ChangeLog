@@ -1,3 +1,83 @@
+commit 27e2a98531e8b190a73d126508400283e0fb02df
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Aug 28 11:19:04 2008 -0700
+
+    Bump to 2.1.12.
+
+commit 75bcdc7ab1f3a4b715aad96e9739bedf4bc33321
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Aug 28 11:18:29 2008 -0700
+
+    G80: Fix a CPUToScreenColorExpandFill bug introduced by commit 2e0416c.
+
+commit c3aa93fa478d78f8d57c5dbfc871eec84f7f7bd2
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Aug 26 22:27:46 2008 -0700
+
+    Bump to 2.1.11.
+
+commit 36af14dfdb1feb4d5d47b1542803f1d292585fdf
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Aug 26 13:47:04 2008 -0700
+
+    One more missing GPU name.
+
+commit 02001d2298dc61dcd904bc149a64147b2dadba9f
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Aug 25 10:31:01 2008 -0700
+
+    More chips names.
+
+commit 7884f5918715a8df35cd0d7601cb50c7c5b56e70
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sun Aug 24 00:23:54 2008 -0700
+
+    Bug #15309: Set the pixel clock even if the hardware doesn't think it needs it.
+    
+    Fixes a problem where switching from DVI to VGA hangs.
+
+commit ff32eb25f8edde7343da3d4782f0f59896515ebd
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sat Aug 23 10:41:00 2008 -0700
+
+    Fix warnings.
+
+commit c2128e5a8682e407b37f88c67a1709309247fc5d
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sat Aug 23 10:36:37 2008 -0700
+
+    G80: Log the i2c port number for LVDS, when there is one.
+
+commit f485c553c23c67fd060fdea82f57128fd4a1749e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri May 9 15:23:49 2008 -0700
+
+    Print error message when pci_device_map_range fails
+
+commit 319ee20c9bd4f764297cf252723a23bb6a95051a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri May 9 15:23:14 2008 -0700
+
+    Fix pciaccess READ_LONG to work with Sun compilers
+    
+    Sun compilers don't allow nesting {} inside () apparently
+
+commit 2e0416cf8970ab4e3065a0109129b2121982c031
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sun Aug 3 19:29:34 2008 -0700
+
+    G80: Fix some ROP bugs.
+
+commit 9b727b8384d51e3657bb50efa090adde91c17a73
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Jul 24 18:03:31 2008 -0700
+
+    Move hardware cursor initialization to after AcquireDisplay.
+    
+    The original order works fine when the server starts, but on the second server
+    generation the server tries to call G80CrtcHideCursor before the display engine
+    has been initialized, causing a hang.
+
 commit 6cd80057fadbb8d63d3e1a623515206800fefc8e
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Mon Jun 30 16:26:09 2008 -0700
