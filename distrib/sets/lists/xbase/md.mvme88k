@@ -1,4 +1,11 @@
 ./usr/X11R6/bin/ucs2any
+./usr/X11R6/include/xorg/dixaccess.h
+./usr/X11R6/include/xorg/privates.h
+./usr/X11R6/include/xorg/registry.h
+./usr/X11R6/include/xorg/xkbfile.h
+./usr/X11R6/include/xorg/xkbstr.h
+./usr/X11R6/lib/libGL.so.8.0
+./usr/X11R6/lib/libpciaccess.so.0.10
 ./usr/X11R6/man/man1/bdftruncate.1
 ./usr/X11R6/man/man1/dga.1
 ./usr/X11R6/man/man1/ucs2any.1

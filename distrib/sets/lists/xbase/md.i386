@@ -29,9 +29,12 @@
 ./usr/X11R6/include/drm/via_3d_reg.h
 ./usr/X11R6/include/drm/via_drm.h
 ./usr/X11R6/include/xf86drm.h
+./usr/X11R6/include/xorg/dixaccess.h
 ./usr/X11R6/include/xorg/dri.h
 ./usr/X11R6/include/xorg/dristruct.h
 ./usr/X11R6/include/xorg/hotplug.h
+./usr/X11R6/include/xorg/privates.h
+./usr/X11R6/include/xorg/registry.h
 ./usr/X11R6/include/xorg/sarea.h
 ./usr/X11R6/include/xorg/wfbrename.h
 ./usr/X11R6/include/xorg/xf86Crtc.h
@@ -40,12 +43,14 @@
 ./usr/X11R6/include/xorg/xf86Parser.h
 ./usr/X11R6/include/xorg/xf86RandR12.h
 ./usr/X11R6/include/xorg/xf86Rename.h
+./usr/X11R6/include/xorg/xkbfile.h
 ./usr/X11R6/include/xorg/xkbsrv.h
+./usr/X11R6/include/xorg/xkbstr.h
 ./usr/X11R6/lib/X11/Cards
 ./usr/X11R6/lib/X11/Options
 ./usr/X11R6/lib/libFS.so.8.0
 ./usr/X11R6/lib/libGL.a
-./usr/X11R6/lib/libGL.so.7.3
+./usr/X11R6/lib/libGL.so.8.0
 ./usr/X11R6/lib/libGLU.a
 ./usr/X11R6/lib/libGLU.so.7.0
 ./usr/X11R6/lib/libGLU_pic.a
@@ -108,6 +113,7 @@
 ./usr/X11R6/lib/libfreetype_pic.a
 ./usr/X11R6/lib/liblbxutil.so.1.0
 ./usr/X11R6/lib/liboldX.so.10.0
+./usr/X11R6/lib/libpciaccess.so.0.10
 ./usr/X11R6/lib/libpixman-1.so.12.0
 ./usr/X11R6/lib/libxkbfile.so.4.0
 ./usr/X11R6/lib/libxkbui.so.4.0

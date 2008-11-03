@@ -14,6 +14,7 @@
 ./usr/X11R6/bin/x11perfcomp
 ./usr/X11R6/bin/xmkmf
 ./usr/X11R6/bin/xon
+./usr/X11R6/include/GL/internal/dri_sarea.h
 ./usr/X11R6/include/X11/CallbackI.h
 ./usr/X11R6/include/X11/Composite.h
 ./usr/X11R6/include/X11/CompositeP.h
@@ -667,6 +668,7 @@
 ./usr/X11R6/include/freetype2/freetype/tttables.h
 ./usr/X11R6/include/freetype2/freetype/tttags.h
 ./usr/X11R6/include/freetype2/freetype/ttunpat.h
+./usr/X11R6/include/pciaccess.h
 ./usr/X11R6/lib/X11/config
 ./usr/X11R6/lib/X11/config/Amoeba.cf
 ./usr/X11R6/lib/X11/config/DGUX.cf
@@ -823,6 +825,7 @@
 ./usr/X11R6/lib/pkgconfig/damageproto.pc
 ./usr/X11R6/lib/pkgconfig/dmx.pc
 ./usr/X11R6/lib/pkgconfig/dmxproto.pc
+./usr/X11R6/lib/pkgconfig/dri.pc
 ./usr/X11R6/lib/pkgconfig/evieproto.pc
 ./usr/X11R6/lib/pkgconfig/fixesproto.pc
 ./usr/X11R6/lib/pkgconfig/fontcacheproto.pc
@@ -838,6 +841,7 @@
 ./usr/X11R6/lib/pkgconfig/lbxutil.pc
 ./usr/X11R6/lib/pkgconfig/libfs.pc
 ./usr/X11R6/lib/pkgconfig/oldx.pc
+./usr/X11R6/lib/pkgconfig/pciaccess.pc
 ./usr/X11R6/lib/pkgconfig/printproto.pc
 ./usr/X11R6/lib/pkgconfig/randrproto.pc
 ./usr/X11R6/lib/pkgconfig/recordproto.pc
@@ -894,6 +898,8 @@
 ./usr/X11R6/lib/pkgconfig/xxf86dga.pc
 ./usr/X11R6/lib/pkgconfig/xxf86misc.pc
 ./usr/X11R6/lib/pkgconfig/xxf86vm.pc
+./usr/X11R6/lib/xorg
+./usr/X11R6/lib/xorg/protocol.txt
 ./usr/X11R6/man/cat1/FvwmAuto.0
 ./usr/X11R6/man/cat1/FvwmBacker.0
 ./usr/X11R6/man/cat1/FvwmBanner.0

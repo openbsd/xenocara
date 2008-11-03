@@ -676,6 +676,8 @@
 ./usr/X11R6/lib/liblbxutil.la
 ./usr/X11R6/lib/liboldX.a
 ./usr/X11R6/lib/liboldX.la
+./usr/X11R6/lib/libpciaccess.a
+./usr/X11R6/lib/libpciaccess.la
 ./usr/X11R6/lib/libpixman-1.a
 ./usr/X11R6/lib/libpixman-1.la
 ./usr/X11R6/lib/libxkbfile.a
