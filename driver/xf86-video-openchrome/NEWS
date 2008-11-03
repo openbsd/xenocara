@@ -1,4 +1,22 @@
-openchrome 0.2.902 (29/03/2008)
+openchrome 0.2.903 (19/08/2008)
+-------------------------------
+* Enhancements and bug fixes:
+- Simplify memory bandwidth setting.
+- Fix compilation without EXA. 
+- Fix interpolation for CN400.
+- Fix Xv on LCD for K8M890 and CX700.
+- Disable XvDMA for P4M890 and K8M890, it is broken...
+- Replace xf86strstr by the unwrapped version.
+- Fix chipset revision detection in libpciaccess code path.
+- Print driver version in the libpciaccess code path.
+
+* New boards:
+- Biostar P4M890-M7 TE, ECS CLE266, FIC CE261, Foxconn P4M9007MB-8RS2H,
+  Hewlett Packard 2133 Mini-Note, KamLAB KINO-LUKE-533-R20, Mercury P4VM800M7,
+  MSI K9MM-V, MSI VR321, PCChips (unknown model), Samsung Q1B.
+
+
+openchrome 0.2.902 (08/04/2008)
 -------------------------------
 * Enhancements and bug fixes:
 - libpciaccess support.

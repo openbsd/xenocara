@@ -794,37 +794,23 @@ ViaGetMemoryBandwidth(ScrnInfoPtr pScrn)
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaGetMemoryBandwidth\n"));
 
-    switch (pVia->Chipset) {
-        case VIA_CLE266:
-            if (CLE266_REV_IS_AX(pVia->ChipRev))
-                return ViaBandwidthTable[VIA_BW_CLE266A].Bandwidth[pVia->
-                                                                   MemClk];
-            else
-                return ViaBandwidthTable[VIA_BW_CLE266C].Bandwidth[pVia->
-                                                                   MemClk];
-        case VIA_KM400:
-            /* 0x84 is earliest public device, 0x80 is more likely though */
-            if (pVia->ChipRev < 0x84)
-                return ViaBandwidthTable[VIA_BW_KM400].Bandwidth[pVia->MemClk];
-            else
-                return ViaBandwidthTable[VIA_BW_KM400A].Bandwidth[pVia->MemClk];
-        case VIA_K8M800:
-            return ViaBandwidthTable[VIA_BW_K8M800].Bandwidth[pVia->MemClk];
-        case VIA_PM800:
-            return ViaBandwidthTable[VIA_BW_PM800].Bandwidth[pVia->MemClk];
-        case VIA_VM800:
-            return ViaBandwidthTable[VIA_BW_VM800].Bandwidth[pVia->MemClk];
-        case VIA_K8M890:
-            return ViaBandwidthTable[VIA_BW_K8M890].Bandwidth[pVia->MemClk];
-        case VIA_P4M900:
-            return ViaBandwidthTable[VIA_BW_P4M900].Bandwidth[pVia->MemClk];
-        case VIA_CX700:
-            return ViaBandwidthTable[VIA_BW_CX700].Bandwidth[pVia->MemClk];
-        case VIA_P4M890:
-            return ViaBandwidthTable[VIA_BW_P4M890].Bandwidth[pVia->MemClk];
+    switch (pVia->MemClk) {
+        case VIA_MEM_SDR66:
+        case VIA_MEM_SDR100:
+        case VIA_MEM_SDR133:
+            return VIA_BW_MIN;
+        case VIA_MEM_DDR200:
+            return VIA_BW_DDR200;
+        case VIA_MEM_DDR266:
+        case VIA_MEM_DDR333:
+        case VIA_MEM_DDR400:
+            return VIA_BW_DDR400;
+        case VIA_MEM_DDR533:
+        case VIA_MEM_DDR667:
+            return VIA_BW_DDR667;
         default:
             xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-                       "ViaBandwidthAllowed: Unknown Chipset.\n");
+                       "ViaBandwidthAllowed: Unknown memory type: %d\n", pVia->MemClk);
             return VIA_BW_MIN;
     }
 }

@@ -52,6 +52,7 @@
  *	2  -  DRM
  */
 
+#ifdef VIA_HAVE_EXA
 static void
 viaExaFBSave(ScreenPtr pScreen, ExaOffscreenArea * exa)
 {
@@ -60,6 +61,7 @@ viaExaFBSave(ScreenPtr pScreen, ExaOffscreenArea * exa)
                "\t\thttp://wiki.openchrome.org/tikiwiki/tiki-index"
                ".php?page=EXAAcceleration .\n");
 }
+#endif
 
 void
 VIAFreeLinear(VIAMemPtr mem)

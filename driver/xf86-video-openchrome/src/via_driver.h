@@ -102,7 +102,7 @@
 #define VERSION_MAJOR   0
 #define VERSION_MINOR   2
 #ifdef USE_NEW_XVABI
-#define PATCHLEVEL      902
+#define PATCHLEVEL      903
 #else
 #define PATCHLEVEL      0
 #endif

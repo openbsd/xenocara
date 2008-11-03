@@ -600,6 +600,9 @@ via_pci_probe(DriverPtr driver, int entity_num,
                 "VIA Technologies does not support this driver in any way.\n");
         xf86Msg(X_NOTICE,
                 "For support, please refer to http://www.openchrome.org/.\n");
+#ifdef BUILDCOMMENT
+        xf86Msg(X_NOTICE, BUILDCOMMENT"\n");
+#endif
     }
     return scrn != NULL;
 }
@@ -820,12 +823,16 @@ VIASetupDefaultOptions(ScrnInfoPtr pScrn)
             pVia->agpEnable = FALSE;
             pVia->DRIIrqEnable = FALSE;
             break;
+        case VIA_PM800:
+            pVia->VideoEngine = VIDEO_ENGINE_CME;
+            break;
         case VIA_VM800:
             pVia->agpEnable = FALSE;
             break;
         case VIA_K8M890:
             pVia->VideoEngine = VIDEO_ENGINE_CME;
             pVia->agpEnable = FALSE;
+            pVia->dmaXV = FALSE;
             break;
         case VIA_P4M900:
             pVia->VideoEngine = VIDEO_ENGINE_CME;
@@ -835,13 +842,13 @@ VIASetupDefaultOptions(ScrnInfoPtr pScrn)
             pVia->dmaXV = FALSE;
             break;
         case VIA_CX700:
-        case VIA_PM800:
             pVia->VideoEngine = VIDEO_ENGINE_CME;
             pVia->swov.maxWInterp = 1920;
             pVia->swov.maxHInterp = 1080;
             break;
         case VIA_P4M890:
             pVia->VideoEngine = VIDEO_ENGINE_CME;
+            pVia->dmaXV = FALSE;
             break;
     }
 
@@ -1062,7 +1069,7 @@ VIAPreInit(ScrnInfoPtr pScrn, int flags)
 #ifdef XSERVER_LIBPCIACCESS
         struct pci_device *bridge = via_host_bridge();
 
-        pci_device_cfg_read_u32(bridge, &pVia->ChipRev, 0xF6);
+        pci_device_cfg_read_u8(bridge, &pVia->ChipRev, 0xF6);
 #else
         pVia->ChipRev = pciReadByte(pciTag(0, 0, 0), 0xF6);
 #endif
@@ -1335,13 +1342,13 @@ VIAPreInit(ScrnInfoPtr pScrn, int flags)
     /* ActiveDevice Option for device selection */
     //pVia->ActiveDevice = 0x00;
     if ((s = xf86GetOptValString(VIAOptions, OPTION_ACTIVEDEVICE))) {
-        if (xf86strstr(s, "CRT"))
+        if (strstr(s, "CRT"))
             pVia->ActiveDevice |= VIA_DEVICE_CRT;
-        if (xf86strstr(s, "LCD"))
+        if (strstr(s, "LCD"))
             pVia->ActiveDevice |= VIA_DEVICE_LCD;
-        if (xf86strstr(s, "DFP"))  /* just treat this the same as LCD */
+        if (strstr(s, "DFP"))  /* just treat this the same as LCD */
             pVia->ActiveDevice |= VIA_DEVICE_LCD;
-        if (xf86strstr(s, "TV"))
+        if (strstr(s, "TV"))
             pVia->ActiveDevice |= VIA_DEVICE_TV;
     }
 
