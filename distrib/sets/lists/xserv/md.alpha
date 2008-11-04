@@ -153,9 +153,7 @@
 ./usr/X11R6/include/xorg/xorgVersion.h
 ./usr/X11R6/include/xorg/xvdix.h
 ./usr/X11R6/include/xorg/xvmcext.h
-./usr/X11R6/lib/modules/dri/s3v_dri.so
 ./usr/X11R6/lib/modules/dri/swrast_dri.so
-./usr/X11R6/lib/modules/dri/trident_dri.so
 ./usr/X11R6/lib/modules/drivers/apm_drv.la
 ./usr/X11R6/lib/modules/drivers/apm_drv.so
 ./usr/X11R6/lib/modules/drivers/ark_drv.la
@@ -172,8 +170,6 @@
 ./usr/X11R6/lib/modules/drivers/cirrus_laguna.so
 ./usr/X11R6/lib/modules/drivers/dummy_drv.la
 ./usr/X11R6/lib/modules/drivers/dummy_drv.so
-./usr/X11R6/lib/modules/drivers/glint_drv.la
-./usr/X11R6/lib/modules/drivers/glint_drv.so
 ./usr/X11R6/lib/modules/drivers/i128_drv.la
 ./usr/X11R6/lib/modules/drivers/i128_drv.so
 ./usr/X11R6/lib/modules/drivers/mach64_drv.la
@@ -198,8 +194,6 @@
 ./usr/X11R6/lib/modules/drivers/savage_drv.so
 ./usr/X11R6/lib/modules/drivers/siliconmotion_drv.la
 ./usr/X11R6/lib/modules/drivers/siliconmotion_drv.so
-./usr/X11R6/lib/modules/drivers/sis_drv.la
-./usr/X11R6/lib/modules/drivers/sis_drv.so
 ./usr/X11R6/lib/modules/drivers/tdfx_drv.la
 ./usr/X11R6/lib/modules/drivers/tdfx_drv.so
 ./usr/X11R6/lib/modules/drivers/trident_drv.la
@@ -212,6 +206,8 @@
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.so
 ./usr/X11R6/lib/modules/extensions/libdbe.la
 ./usr/X11R6/lib/modules/extensions/libdbe.so
+./usr/X11R6/lib/modules/extensions/libdri.la
+./usr/X11R6/lib/modules/extensions/libdri.so
 ./usr/X11R6/lib/modules/extensions/libextmod.la
 ./usr/X11R6/lib/modules/extensions/libextmod.so
 ./usr/X11R6/lib/modules/extensions/libglx.la
@@ -347,7 +343,6 @@
 ./usr/X11R6/man/man4/exa.4
 ./usr/X11R6/man/man4/fbdevhw.4
 ./usr/X11R6/man/man4/fpit.4
-./usr/X11R6/man/man4/glint.4
 ./usr/X11R6/man/man4/i128.4
 ./usr/X11R6/man/man4/joystick.4
 ./usr/X11R6/man/man4/js_x.4
@@ -367,7 +362,6 @@
 ./usr/X11R6/man/man4/s3virge.4
 ./usr/X11R6/man/man4/savage.4
 ./usr/X11R6/man/man4/siliconmotion.4
-./usr/X11R6/man/man4/sis.4
 ./usr/X11R6/man/man4/tdfx.4
 ./usr/X11R6/man/man4/tek4957.4
 ./usr/X11R6/man/man4/trident.4
