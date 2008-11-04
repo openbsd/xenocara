@@ -295,6 +295,10 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
             sparse_size = xf86AXPParams[axpSystem].size;
 #endif /* __NetBSD__ */
 	}
+#if HAVE_PCI_SYSTEM_INIT_DEV_MEM
+	if (useDevMem)
+		pci_system_init_dev_mem(devMemFd);
+#endif
 	pVidMem->initialised = TRUE;
 }
 
