@@ -14,7 +14,6 @@
 ./usr/X11R6/bin/x11perfcomp
 ./usr/X11R6/bin/xmkmf
 ./usr/X11R6/bin/xon
-./usr/X11R6/include/GL/internal/dri_sarea.h
 ./usr/X11R6/include/X11/CallbackI.h
 ./usr/X11R6/include/X11/Composite.h
 ./usr/X11R6/include/X11/CompositeP.h
@@ -825,7 +824,6 @@
 ./usr/X11R6/lib/pkgconfig/damageproto.pc
 ./usr/X11R6/lib/pkgconfig/dmx.pc
 ./usr/X11R6/lib/pkgconfig/dmxproto.pc
-./usr/X11R6/lib/pkgconfig/dri.pc
 ./usr/X11R6/lib/pkgconfig/evieproto.pc
 ./usr/X11R6/lib/pkgconfig/fixesproto.pc
 ./usr/X11R6/lib/pkgconfig/fontcacheproto.pc

@@ -13,6 +13,7 @@
 ./usr/X11R6/include/GL/glx.h
 ./usr/X11R6/include/GL/glxext.h
 ./usr/X11R6/include/GL/internal/dri_interface.h
+./usr/X11R6/include/GL/internal/dri_sarea.h
 ./usr/X11R6/include/GL/osmesa.h
 ./usr/X11R6/include/X11/dri/xf86dri.h
 ./usr/X11R6/include/X11/dri/xf86dristr.h
@@ -91,6 +92,7 @@
 ./usr/X11R6/lib/libpixman-1.so.12.0
 ./usr/X11R6/lib/libxkbfile.so.4.0
 ./usr/X11R6/lib/libxkbui.so.4.0
+./usr/X11R6/lib/pkgconfig/dri.pc
 ./usr/X11R6/lib/pkgconfig/gl.pc
 ./usr/X11R6/lib/pkgconfig/glu.pc
 ./usr/X11R6/lib/pkgconfig/glw.pc
