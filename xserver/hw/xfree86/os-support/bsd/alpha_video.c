@@ -739,6 +739,6 @@ xf86PrivilegedInit(void)
 {
 	xf86EnableIO();
 	checkDevMem(TRUE);
-	pciInit();
+	pci_system_init();
 	xf86OpenConsole();
 }
