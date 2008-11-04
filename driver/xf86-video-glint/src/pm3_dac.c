@@ -437,9 +437,9 @@ Permedia3PreInit(ScrnInfoPtr pScrn)
 		       "VX1 secondary enabling VGA before int10\n");
 
 	    /* Enable VGA on the current card. */
-	    pciWriteByte( pGlint->PciTag, 0xf8, 0 );
-	    pciWriteByte( pGlint->PciTag, 0xf4, 0 );
-	    pciWriteByte( pGlint->PciTag, 0xfc, 0 );
+	    PCI_WRITE_LONG( pGlint->PciInfo, 0, 0xf8 );
+	    PCI_WRITE_LONG( pGlint->PciInfo, 0, 0xf4 );
+	    PCI_WRITE_LONG( pGlint->PciInfo, 0, 0xfc );
 
 	    /* The card we are on should be VGA-enabled now, so run int10. */
 	    if (xf86LoadSubModule(pScrn, "int10")) {
@@ -455,9 +455,9 @@ Permedia3PreInit(ScrnInfoPtr pScrn)
 		       "VX1 secondary disabling VGA after int10\n");
 
 	    /* Finally, disable VGA on the current card. */
-	    pciWriteByte( pGlint->PciTag, 0xf8, 0x70 );
-	    pciWriteByte( pGlint->PciTag, 0xf4, 0x01 );
-	    pciWriteByte( pGlint->PciTag, 0xfc, 0x00 );
+	    PCI_WRITE_LONG( pGlint->PciInfo, 0x70, 0xf8 );
+	    PCI_WRITE_LONG( pGlint->PciInfo, 0x01, 0xf4 );
+	    PCI_WRITE_LONG( pGlint->PciInfo, 0x00, 0xfc );
 	}
     }
 #endif /* __alpha__ */
