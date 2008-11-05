@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.5 2008/11/02 15:01:32 matthieu Exp $
+# $OpenBSD: Makefile,v 1.6 2008/11/05 07:18:26 todd Exp $
 
 MESA=	${.CURDIR}/../../../dist/Mesa/src/mesa
 MESA_INCLUDE=	${.CURDIR}/../../../dist/Mesa/include
@@ -404,3 +404,6 @@ s_copypix.so: s_copypix.c
 	${CC} -c -O0 ${CPPFLAGS} -fpic -DPIC $<
 .endif
 
+.if ${MACHINE} == sparc
+PICFLAG=-fPIC
+.endif

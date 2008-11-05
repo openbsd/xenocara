@@ -1,6 +1,11 @@
-#	$OpenBSD: Makefile,v 1.1 2008/11/02 15:01:32 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2008/11/05 07:18:25 todd Exp $
 
 LIB=	swrast_dri.so
+
+.if ${MACHINE} == "sparc"
+PICFLAG = -fPIC
+.endif
+
 
 SWRAST_COMMON_SOURCES = \
         driverfuncs.c \
