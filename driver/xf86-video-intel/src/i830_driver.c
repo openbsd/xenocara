@@ -1564,17 +1564,17 @@ I830PreInit(ScrnInfoPtr pScrn, int flags)
     * If either XAA or EXA (exclusive) is compiled in, default to it.
     * 
     * If both are compiled in, and the user didn't specify noAccel, use the
-    * config option AccelMethod to determine which to use, defaulting to XAA
+    * config option AccelMethod to determine which to use, defaulting to EXA
     * if none is specified, or if the string was unrecognized.
     *
     * All this *could* go away if we removed XAA support from this driver,
     * for example. :)
     */
    if (!pI830->noAccel) {
-#ifdef I830_USE_XAA
-       pI830->useEXA = FALSE;
-#else
+#ifdef I830_USE_EXA
        pI830->useEXA = TRUE;
+#else
+       pI830->useEXA = FALSE;
 #endif
 #if defined(I830_USE_XAA) && defined(I830_USE_EXA)
        from = X_DEFAULT;
