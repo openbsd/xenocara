@@ -206,11 +206,8 @@ G80PreInit(ScrnInfoPtr pScrn, int flags)
     CARD32 tmp;
     memType BAR1sizeKB;
 
-    if(flags & PROBE_DETECT) {
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-                "G80 PROBE_DETECT unimplemented\n");
-        return FALSE;
-    }
+    if(flags & PROBE_DETECT)
+        return TRUE;
 
     /* Check the number of entities, and fail if it isn't one. */
     if(pScrn->numEntities != 1)
