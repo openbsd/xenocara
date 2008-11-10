@@ -2944,6 +2944,7 @@
 ./usr/X11R6/share/mk/automake.dep
 ./usr/X11R6/share/mk/bsd.xconf.mk
 ./usr/X11R6/share/mk/bsd.xorg.mk
+./usr/X11R6/share/pci.ids
 ./usr/local
 ./usr/local/lib
 ./usr/local/lib/X11
