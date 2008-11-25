@@ -220,7 +220,7 @@ pci_device_openbsd_write(struct pci_device *dev, const void *data,
 {
 	struct pci_io io;
 
-	if ((offset % 4) == 0 || (size % 4) == 0)
+	if ((offset % 4) != 0 || (size % 4) != 0)
 		return EINVAL;
 
 	io.pi_sel.pc_bus = dev->bus;
