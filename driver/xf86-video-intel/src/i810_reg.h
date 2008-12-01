@@ -2815,4 +2815,7 @@ typedef enum {
 
 #define PEG_BAND_GAP_DATA	0x14d68
 
+#define MCHBAR_RENDER_STANDBY	0x111B8
+#define RENDER_STANDBY_ENABLE	(1 << 30)
+
 #endif /* _I810_REG_H */

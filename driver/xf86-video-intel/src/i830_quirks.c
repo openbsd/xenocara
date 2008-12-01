@@ -243,6 +243,8 @@ static i830_quirk i830_quirk_list[] = {
     { PCI_CHIP_I965_GM, 0x1028, 0x0286, quirk_ignore_tv },
     /* Dell Vostro A840 (LP: #235155) */
     { PCI_CHIP_I965_GM, 0x1028, 0x0298, quirk_ignore_tv },
+    /* Dell Studio Hybrid */
+    { PCI_CHIP_I965_GM, 0x1028, 0x0279, quirk_ignore_lvds },
 
     /* Lenovo Napa TV (use dmi)*/
     { PCI_CHIP_I945_GM, 0x17aa, SUBSYS_ANY, quirk_lenovo_tv_dmi },
@@ -316,6 +318,9 @@ static i830_quirk i830_quirk_list[] = {
     /* 855 & before need to leave pipe A & dpll A up */
     { PCI_CHIP_I855_GM, SUBSYS_ANY, SUBSYS_ANY, quirk_pipea_force },
     { PCI_CHIP_845_G, SUBSYS_ANY, SUBSYS_ANY, quirk_pipea_force },
+
+    /* Asus Eee Box has no LVDS */
+    { PCI_CHIP_I945_GME, 0x1043, 0x1252, quirk_ignore_lvds },
 
     { 0, 0, 0, NULL },
 };
