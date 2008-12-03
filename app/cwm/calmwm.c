@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.30 2008/09/29 23:16:46 oga Exp $
+ * $Id: calmwm.c,v 1.31 2008/12/03 23:55:46 oga Exp $
  */
 
 #include "headers.h"
@@ -69,10 +69,6 @@ main(int argc, char **argv)
 	}
 	argc -= optind;
 	argv += optind;
-
-	/* Ignore a few signals. */
-	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
-		err(1, "signal");
 
 	if (signal(SIGCHLD, _sigchld_cb) == SIG_ERR)
 		err(1, "signal");
