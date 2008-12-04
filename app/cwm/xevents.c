@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.29 2008/09/29 23:16:46 oga Exp $
+ * $Id: xevents.c,v 1.30 2008/12/04 23:55:04 oga Exp $
  */
 
 /*
@@ -51,8 +51,7 @@ xev_handle_maprequest(struct xevent *xev, XEvent *ee)
 		XGetWindowAttributes(X_Dpy, e->window, &xattr);
 		cc = client_new(e->window, screen_fromroot(xattr.root), 1);
 		sc = CCTOSC(cc);
-	} else
-		cc->beepbeep = 1;
+	}
 
 #ifdef notyet			/* XXX - possibly, we shouldn't map if
 				 * the window is withdrawn. */
