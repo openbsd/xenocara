@@ -91,19 +91,19 @@ pci_device_openbsd_read_rom(struct pci_device *device, void *buffer)
 	bus = device->bus;
 	dev = device->dev;
 	func = device->func;
-	
+
 	if (aperturefd == -1)
 		return ENOSYS;
 
 	if (priv->base.rom_size == 0) {
 #if defined(__alpha__) || defined(__amd64__) || defined(__i386__)
 		if ((device->device_class & 0x00ffff00) ==
-		    ((PCI_CLASS_DISPLAY << 16) | 
+		    ((PCI_CLASS_DISPLAY << 16) |
 			(PCI_SUBCLASS_DISPLAY_VGA << 8))) {
 			rom_base = 0xc0000;
 			rom_size = 0x10000;
 			pci_rom = 0;
-		} else 
+		} else
 #endif
 			return ENOSYS;
 	} else {
@@ -118,7 +118,7 @@ pci_device_openbsd_read_rom(struct pci_device *device, void *buffer)
 		pci_write(bus, dev, func, PCI_ROM_REG, rom | PCI_ROM_ENABLE);
 	}
 
-	bios = mmap(NULL, rom_size, PROT_READ, MAP_SHARED, 
+	bios = mmap(NULL, rom_size, PROT_READ, MAP_SHARED,
 	    aperturefd, (off_t)rom_base);
 	if (bios == MAP_FAILED)
 		return errno;
@@ -261,7 +261,7 @@ pci_device_openbsd_write(struct pci_device *dev, const void *data,
 		io.pi_width = 4;
 		memcpy(&io.pi_data, data, 4);
 
-		if (ioctl(pcifd, PCIOCWRITE, &io) == -1) 
+		if (ioctl(pcifd, PCIOCWRITE, &io) == -1)
 			return errno;
 
 		offset += 4;
@@ -370,7 +370,7 @@ pci_device_openbsd_probe(struct pci_device *device)
 			return err;
 		pci_read(bus, dev, func, PCI_ROM_REG, &size);
 		pci_write(bus, dev, func, PCI_ROM_REG, reg);
-		
+
 		if (PCI_ROM_ADDR(reg) != 0) {
 			priv->rom_base = PCI_ROM_ADDR(reg);
 			device->rom_size = PCI_ROM_SIZE(size);
@@ -398,7 +398,7 @@ pci_system_openbsd_create(void)
 	int bus, dev, func, ndevs, nfuncs;
 	uint32_t reg;
 
-	if (pcifd != -1) 
+	if (pcifd != -1)
 		return 0;
 
 	pcifd = open("/dev/pci", O_RDWR);
