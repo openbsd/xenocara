@@ -75,35 +75,63 @@ pci_write(int bus, int dev, int func, uint32_t reg, uint32_t val)
 }
 
 /**
- * Read a VGA rom using the 0xc0000 mapping.
+ * Read a VGA ROM
  *
- * This function should be extended to handle access through PCI resources,
- * which should be more reliable when available.
  */
 static int
-pci_device_openbsd_read_rom(struct pci_device * dev, void * buffer)
+pci_device_openbsd_read_rom(struct pci_device *device, void *buffer)
 {
-#if defined(__alpha__) || defined(__amd64__) || defined(__i386__)
-	void *bios;
+	struct pci_device_private *priv = (struct pci_device_private *)device;
+	unsigned char *bios;
+	pciaddr_t rom_base;
+	pciaddr_t rom_size;
+	u_int32_t csr, rom;
+	int pci_rom, bus, dev, func;
 
-	if ((dev->device_class & 0x00ffff00) !=
-	    ((PCI_CLASS_DISPLAY << 16) | (PCI_SUBCLASS_DISPLAY_VGA << 8))) {
-		return ENOSYS;
-	}
+	bus = device->bus;
+	dev = device->dev;
+	func = device->func;
 	
 	if (aperturefd == -1)
 		return ENOSYS;
 
-	bios = mmap(NULL, dev->rom_size, PROT_READ, 0, aperturefd, 0xc0000);
+	if (priv->base.rom_size == 0) {
+#if defined(__alpha__) || defined(__amd64__) || defined(__i386__)
+		if ((device->device_class & 0x00ffff00) ==
+		    ((PCI_CLASS_DISPLAY << 16) | 
+			(PCI_SUBCLASS_DISPLAY_VGA << 8))) {
+			rom_base = 0xc0000;
+			rom_size = 0x10000;
+			pci_rom = 0;
+		} else 
+#endif
+			return ENOSYS;
+	} else {
+		rom_base = priv->rom_base;
+		rom_size = priv->base.rom_size;
+		pci_rom = 1;
+
+		pci_read(bus, dev, func, PCI_COMMAND_STATUS_REG, &csr);
+		pci_write(bus, dev, func, PCI_COMMAND_STATUS_REG,
+		    csr | PCI_COMMAND_MEM_ENABLE);
+		pci_read(bus, dev, func, PCI_ROM_REG, &rom);
+		pci_write(bus, dev, func, PCI_ROM_REG, rom | PCI_ROM_ENABLE);
+	}
+
+	bios = mmap(NULL, rom_size, PROT_READ, MAP_SHARED, 
+	    aperturefd, (off_t)rom_base);
 	if (bios == MAP_FAILED)
 		return errno;
-	memcpy(buffer, bios, dev->rom_size);
-	munmap(bios, dev->rom_size);
-	
+
+	memcpy(buffer, bios, device->rom_size);
+	munmap(bios, device->rom_size);
+
+	if (pci_rom) {
+		/* Restore PCI config space */
+		pci_write(bus, dev, func, PCI_ROM_REG, rom);
+		pci_write(bus, dev, func, PCI_COMMAND_STATUS_REG, csr);
+	}
 	return 0;
-#else
-	return ENOSYS;
-#endif
 }
 
 static int
@@ -332,6 +360,22 @@ pci_device_openbsd_probe(struct pci_device *device)
 		}
 	}
 
+	/* Probe expansion ROM if present */
+	err = pci_read(bus, dev, func, PCI_ROM_REG, &reg);
+	if (err)
+		return err;
+	if (reg != 0) {
+		err = pci_write(bus, dev, func, PCI_ROM_REG, ~PCI_ROM_ENABLE);
+		if (err)
+			return err;
+		pci_read(bus, dev, func, PCI_ROM_REG, &size);
+		pci_write(bus, dev, func, PCI_ROM_REG, reg);
+		
+		if (PCI_ROM_ADDR(reg) != 0) {
+			priv->rom_base = PCI_ROM_ADDR(reg);
+			device->rom_size = PCI_ROM_SIZE(size);
+		}
+	}
 	return 0;
 }
 
