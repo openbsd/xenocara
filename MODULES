@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.53 2008/12/23 08:45:57 matthieu Exp $
+# $OpenBSD: MODULES,v 1.54 2008/12/23 09:28:02 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -76,8 +76,6 @@ app/xrandr		1.2.99.3	7.4+	needs-update
 app/xrdb		1.0.5	7.4
 app/xrefresh		1.0.2	7.1
 app/xset		1.0.4	7.4
-app/xsetmode		1.0.0	7.0	deprecated
-app/xsetpointer		1.0.1	7.3	deprecated
 app/xsetroot		1.0.2	7.3
 app/xsm			1.0.1	7.0
 app/xstdcmap		1.0.1	7.0
@@ -136,7 +134,6 @@ driver/xf86-video-mach64	6.8.0	7.4
 driver/xf86-video-mga		1.4.9	7.4
 driver/xf86-video-neomagic	1.2.2	7.4	needs-update
 driver/xf86-video-newport	0.2.1	7.2RC1
-driver/xf86-video-nsc		2.8.3	7.3	deprecated
 driver/xf86-video-nv		2.1.12	7.4
 driver/xf86-video-openchrome	0.2.903	7.4
 driver/xf86-video-r128		6.8.0	7.4
@@ -242,7 +239,6 @@ lib/libXxf86vm			1.0.1	7.1
 lib/libdmx			1.0.2	7.1
 lib/libfontenc			1.0.3	7.2RC1
 lib/liblbxutil			1.0.4	7.2RC4	deprecated
-lib/liboldX			1.0.1	7.0	deprecated
 lib/libpciaccess		0.10.5	7.4+	needs-update
 lib/libxcb			1.1	7.3	needs-import
 lib/libxkbfile			1.0.5	7.4
