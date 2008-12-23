@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.25 2008/11/06 21:52:10 matthieu Exp $
+# $OpenBSD: Makefile,v 1.26 2008/12/23 09:10:17 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	openbsd-input-usbtablet \
@@ -80,13 +80,12 @@ VIDEO_DRV_hppa=
 VIDEO_DRV_i386= \
 	${VIDEO_DRV_COMMON} \
 	xf86-video-geode \
+	xf86-video-i740 \
 	xf86-video-intel \
 	xf86-video-openchrome \
 	xf86-video-radeonhd \
-	xf86-video-vmware
-
-# xf86-video-i740 xf86-video-i810 xf86-video-nsc xf86-video-voodoo
-
+	xf86-video-vmware \
+	xf86-video-voodoo
 
 VIDEO_DRV_landisk=
 
