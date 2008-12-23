@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.52 2008/11/15 16:03:52 matthieu Exp $
+# $OpenBSD: MODULES,v 1.53 2008/12/23 08:45:57 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -16,7 +16,7 @@ app/ico			1.0.2	7.3
 app/listres		1.0.1	7.0
 app/luit		1.0.3	7.4
 app/mkfontdir		1.0.4	7.4
-app/mkfontscale		1.0.5	7.4
+app/mkfontscale		1.0.6	7.4+	needs-update
 app/oclock		1.0.1	7.0
 app/proxymngr		1.0.1	7.0	deprecated
 app/rgb			1.0.3	7.4
@@ -40,7 +40,7 @@ app/xconsole		1.0.3	7.3
 app/xdm			1.1.8	7.4	needs-update
 app/xdpyinfo		1.0.3	7.4
 app/xdriinfo		1.0.2	7.3
-app/xedit		1.1.1	7.4
+app/xedit		1.1.2	7.4	needs-update
 app/xev			1.0.3	7.4
 app/xeyes		1.0.1	7.0
 app/xf86dga		1.0.2	7.2RC1
@@ -53,7 +53,7 @@ app/xfwp		1.0.1	7.0
 app/xgamma		1.0.2	7.3
 app/xgc			1.0.1	7.0
 app/xhost		1.0.2	7.3
-app/xinit		1.1.0	7.4
+app/xinit		1.1.1	7.4+	needs-update
 app/xinput		1.3.0	7.4
 app/xkbcomp		1.0.5	7.4
 app/xkbevd		1.0.2	7.1
@@ -72,7 +72,7 @@ app/xmodmap		1.0.3	7.3
 app/xmore		1.0.1	7.0
 app/xpr			1.0.2	7.2+
 app/xprop		1.0.4	7.4
-app/xrandr		1.2.3	7.4
+app/xrandr		1.2.99.3	7.4+	needs-update
 app/xrdb		1.0.5	7.4
 app/xrefresh		1.0.2	7.1
 app/xset		1.0.4	7.4
@@ -117,36 +117,36 @@ driver/xf86-input-penmount	1.3.0	7.4
 driver/xf86-input-spaceorb	1.1.1	7.1
 driver/xf86-input-summa		1.2.0	7.4
 driver/xf86-input-tek4957	1.2.0	7.4
-driver/xf86-input-vmmouse	12.6.2	7.4+	needs-update
+driver/xf86-input-vmmouse	12.6.3	7.4+	needs-update
 driver/xf86-input-void		1.1.1	7.1
-driver/xf86-video-apm		1.2.0	7.4
-driver/xf86-video-ark		0.7.0	7.4
-driver/xf86-video-ast		0.85.0	7.4	
+driver/xf86-video-apm		1.2.1	7.4+	needs-update
+driver/xf86-video-ark		0.7.1	7.4+	needs-update
+driver/xf86-video-ast		0.87.0	7.4+	needs-update
 driver/xf86-video-ati		6.9.0	7.4
-driver/xf86-video-chips		1.2.0	7.4
+driver/xf86-video-chips		1.2.1	7.4+	needs-update
 driver/xf86-video-cirrus	1.2.1	7.4
 driver/xf86-video-cyrix		1.1.0	7.1	deprecated?
 driver/xf86-video-dummy		0.3.0	7.4
-driver/xf86-video-geode		2.10.1	7.4	needs-update
-driver/xf86-video-glint		1.2.1	7.4
+driver/xf86-video-geode		2.11.0	7.4	needs-update
+driver/xf86-video-glint		1.2.2	7.4+	needs-update
 driver/xf86-video-i128		1.3.1	7.4
 driver/xf86-video-i740		1.2.0	7.4
 driver/xf86-video-intel		2.5.1	7.4+	needs-update
 driver/xf86-video-mach64	6.8.0	7.4
 driver/xf86-video-mga		1.4.9	7.4
-driver/xf86-video-neomagic	1.2.1	7.4
+driver/xf86-video-neomagic	1.2.2	7.4	needs-update
 driver/xf86-video-newport	0.2.1	7.2RC1
 driver/xf86-video-nsc		2.8.3	7.3	deprecated
 driver/xf86-video-nv		2.1.12	7.4
 driver/xf86-video-openchrome	0.2.903	7.4
 driver/xf86-video-r128		6.8.0	7.4
-driver/xf86-video-radeonhd	1.2.3	7.4+
+driver/xf86-video-radeonhd	1.2.4	7.4+	needs-update
 driver/xf86-video-rendition	4.2.0	7.4
-driver/xf86-video-s3		0.6.0	7.4
-driver/xf86-video-s3virge	1.10.1	7.4
+driver/xf86-video-s3		0.6.1	7.4+	needs-update
+driver/xf86-video-s3virge	1.10.2	7.4+	needs-update
 driver/xf86-video-savage	2.2.1	7.4
 driver/xf86-video-siliconmotion	1.6.0	7.4
-driver/xf86-video-sis		0.10.0	7.4
+driver/xf86-video-sis		0.10.1	7.4+	needs-update
 driver/xf86-video-sisusb	0.9.0	7.4	needs-update
 driver/xf86-video-sunbw2	1.1.0	7.1
 driver/xf86-video-suncg14	1.1.0	7.1
@@ -155,11 +155,11 @@ driver/xf86-video-suncg6	1.1.0	7.1
 driver/xf86-video-sunffb	1.2.0	7.4	needs-update
 driver/xf86-video-sunleo	1.2.0	7.4	needs-update
 driver/xf86-video-suntcx	1.1.0	7.1
-driver/xf86-video-tdfx		1.4.0	7.4
+driver/xf86-video-tdfx		1.4.1	7.4+	needs-update
 driver/xf86-video-tga		1.2.0	7.0	needs-update
-driver/xf86-video-trident	1.3.0	7.4
-driver/xf86-video-tseng		1.2.0	7.4
-driver/xf86-video-vesa		2.0.0	7.4
+driver/xf86-video-trident	1.3.1	7.4+	needs-update
+driver/xf86-video-tseng		1.2.1	7.4+	needs-update
+driver/xf86-video-vesa		2.1.0	7.4+	needs-update
 driver/xf86-video-vga		4.1.0	7.1	deprecated
 driver/xf86-video-vmware	10.16.5	7.4
 driver/xf86-video-voodoo	1.2.0	7.4
@@ -212,7 +212,7 @@ lib/libXRes			1.0.3	7.2RC4
 lib/libXScrnSaver		1.1.3	7.4
 lib/libXTrap			1.0.0	7.0
 lib/libXau			1.0.4	7.4
-lib/libXaw			1.0.4	7.3
+lib/libXaw			1.0.5	7.4+	needs-update
 lib/libXcomposite		0.4.0	7.3
 lib/libXcursor			1.1.9	7.3
 lib/libXdamage			1.1.1	7.3+
@@ -220,17 +220,17 @@ lib/libXdmcp			1.0.2	7.2RC1
 lib/libXevie			1.0.2	7.2RC1
 lib/libXext			1.0.4	7.4
 lib/libXfixes			4.0.3	7.2RC2
-lib/libXfont			1.3.2	7.4
+lib/libXfont			1.3.4	7.4+	needs-update
 lib/libXfontcache		1.0.4	7.2RC4
 lib/libXft			2.1.12	7.2RC4
-lib/libXi			1.1.3	7.3
+lib/libXi			1.2.0	7.4+	needs-update
 lib/libXinerama			1.0.3	7.4
 lib/libXmu			1.0.3	7.2RC2
 lib/libXp			1.0.0	7.0
 lib/libXpm			3.5.7	7.3
 lib/libXprintAppUtil		1.0.1	7.0	deprecated
 lib/libXprintUtil		1.0.1	7.0	deprecated
-lib/libXrandr			1.2.2	7.3
+lib/libXrandr			1.2.99.4	7.4+	needs-update
 lib/libXrender			0.9.4	7.3
 lib/libXt			1.0.5	7.2+
 lib/libXtst			1.0.3	7.3
@@ -248,23 +248,23 @@ lib/libxcb			1.1	7.3	needs-import
 lib/libxkbfile			1.0.5	7.4
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.2.2	7.4+	needs-update
-lib/pixman			0.12.0	7.4
+lib/pixman			0.13.2	7.4+	needs-update
 
 proto/bigreqsproto		1.0.2	7.0	needs-rel
 proto/compositeproto		0.4	7.3
 proto/damageproto		1.1.0	7.3
-proto/dri2proto			1.1	7.5	needs-import
+proto/dri2proto			1.99.3	7.5	needs-import
 proto/dmxproto			2.2.2	7.0
 proto/evieproto			1.0.2	7.0	deprecated
 proto/fixesproto		4.0	7.1
 proto/fontcacheproto		0.1.2	7.0
 proto/fontsproto		2.0.2	7.0
 proto/glproto			1.4.9	7.4
-proto/inputproto		1.4.4	7.4
+proto/inputproto		1.5.0	7.4+	needs-update
 proto/kbproto			1.0.3	7.2RC1
 proto/pmproto			1.0.2	7.0	deprecated
 proto/printproto		1.0.4	7.4	deprecated
-proto/randrproto		1.2.2	7.4	needs-update
+proto/randrproto		1.2.99.3	7.4+	needs-update
 proto/recordproto		1.13.2	7.0
 proto/renderproto		0.9.3	7.3
 proto/resourceproto		1.0.2	7.0
@@ -273,7 +273,7 @@ proto/trapproto			3.4.3	7.0
 proto/videoproto		2.2.2	7.0
 proto/x11proto			7.0.14	7.4+	needs-update
 proto/xcmiscproto		1.1.2	7.0
-proto/xextproto			7.0.3	7.4
+proto/xextproto			7.0.4	7.4+	needs-update
 proto/xf86bigfontproto		1.1.2	7.0
 proto/xf86dgaproto		2.0.3	7.3
 proto/xf86driproto		2.0.4	7.4
@@ -285,7 +285,7 @@ proto/xineramaproto		1.1.2	7.0
 util/cf				1.0.2
 util/gccmakedep			1.0.2
 util/imake			1.0.2
-util/macros			1.1.6	7.4
+util/macros			1.2.1	7.4+	needs-update
 util/makedepend			1.0.1	7.3
 
-xserver				1.5.2	7.4+
+xserver				1.5.3	7.4+	needs-update
