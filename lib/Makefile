@@ -1,10 +1,10 @@
-# $OpenBSD: Makefile,v 1.12 2008/11/02 15:18:49 matthieu Exp $
+# $OpenBSD: Makefile,v 1.13 2008/12/23 21:55:41 david Exp $
 
 .include <bsd.xconf.mk>
 
 SUBDIR= freetype fontconfig libxtrans libXau libXdmcp \
 	libX11  libXext  libXrender libXft libdmx libfontenc \
-	libFS libICE liblbxutil liboldX libSM libXt \
+	libFS libICE liblbxutil libSM libXt \
 	libXmu libXpm libXp libXaw libXfixes libXcomposite \
 	libXdamage libXcursor libXevie libXfont libXfontcache \
 	libXi libXinerama libxkbfile libxkbui libXprintUtil \
