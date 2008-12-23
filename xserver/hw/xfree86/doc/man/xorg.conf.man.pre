@@ -2187,8 +2187,9 @@ Display drivers:
 .BR trident (__drivermansuffix__),
 .BR tseng (__drivermansuffix__),
 .BR vesa (__drivermansuffix__),
-.BR via (__drivermansuffix__),
-.BR vmware (__drivermansuffix__).
+.BR openchrome (__drivermansuffix__),
+.BR vmware (__drivermansuffix__),
+.BR wsfb (__drivermansuffix__).
 .PP
 Input drivers:
 .\" .BR acecad (__drivermansuffix__),
@@ -2210,8 +2211,7 @@ Input drivers:
 .BR tek4957 (__drivermansuffix__),
 .\" .BR ur98 (__drivermansuffix__),
 .BR void (__drivermansuffix__),
-.BR wacom (__drivermansuffix__),
-.BR wsfb (__drivermansuffix__).
+.BR wacom (__drivermansuffix__).
 .PP
 Other modules and interfaces:
 .BR fbdevhw (__drivermansuffix__),
