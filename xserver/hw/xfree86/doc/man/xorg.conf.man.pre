@@ -698,6 +698,7 @@ the X server to load. Disabled by default.
 If enabled, don't add the standard keyboard and mouse drivers, if there are no
 input devices in the config file.  Enabled by default if AutoAddDevices and
 AutoEnableDevices is enabled, otherwise disabled.
+If AllowEmptyInput is on, devices using the kbd or mouse driver are ignored.
 .TP 7
 .BI "Option \*qAutoAddDevices\*q \*q" boolean \*q
 If this option is disabled, then no devices will be added from HAL events.
@@ -2163,7 +2164,7 @@ Display drivers:
 .BR glint (__drivermansuffix__),
 .BR i128 (__drivermansuffix__),
 .BR i740 (__drivermansuffix__),
-.BR i810 (__drivermansuffix__),
+.BR intel (__drivermansuffix__),
 .BR imstt (__drivermansuffix__),
 .BR mga (__drivermansuffix__),
 .BR neomagic (__drivermansuffix__),
@@ -2186,7 +2187,6 @@ Display drivers:
 .BR trident (__drivermansuffix__),
 .BR tseng (__drivermansuffix__),
 .BR vesa (__drivermansuffix__),
-.BR vga (__drivermansuffix__),
 .BR via (__drivermansuffix__),
 .BR vmware (__drivermansuffix__).
 .PP
@@ -2210,7 +2210,8 @@ Input drivers:
 .BR tek4957 (__drivermansuffix__),
 .\" .BR ur98 (__drivermansuffix__),
 .BR void (__drivermansuffix__),
-.BR wacom (__drivermansuffix__).
+.BR wacom (__drivermansuffix__),
+.BR wsfb (__drivermansuffix__).
 .PP
 Other modules and interfaces:
 .BR fbdevhw (__drivermansuffix__),
