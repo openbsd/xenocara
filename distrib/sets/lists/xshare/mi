@@ -65,7 +65,6 @@
 ./usr/X11R6/include/X11/Vendor.h
 ./usr/X11R6/include/X11/VendorP.h
 ./usr/X11R6/include/X11/X.h
-./usr/X11R6/include/X11/X10.h
 ./usr/X11R6/include/X11/XF86keysym.h
 ./usr/X11R6/include/X11/XKBlib.h
 ./usr/X11R6/include/X11/XWDFile.h
@@ -838,7 +837,6 @@
 ./usr/X11R6/lib/pkgconfig/kbproto.pc
 ./usr/X11R6/lib/pkgconfig/lbxutil.pc
 ./usr/X11R6/lib/pkgconfig/libfs.pc
-./usr/X11R6/lib/pkgconfig/oldx.pc
 ./usr/X11R6/lib/pkgconfig/pciaccess.pc
 ./usr/X11R6/lib/pkgconfig/printproto.pc
 ./usr/X11R6/lib/pkgconfig/randrproto.pc
@@ -960,7 +958,6 @@
 ./usr/X11R6/man/man1/mkfontscale.1
 ./usr/X11R6/man/man1/mkhtmlindex.1
 ./usr/X11R6/man/man1/oclock.1
-./usr/X11R6/man/man1/proxymngr.1
 ./usr/X11R6/man/man1/revpath.1
 ./usr/X11R6/man/man1/rstart.1
 ./usr/X11R6/man/man1/rstartd.1
@@ -992,7 +989,6 @@
 ./usr/X11R6/man/man1/xev.1
 ./usr/X11R6/man/man1/xeyes.1
 ./usr/X11R6/man/man1/xfd.1
-./usr/X11R6/man/man1/xfindproxy.1
 ./usr/X11R6/man/man1/xfontsel.1
 ./usr/X11R6/man/man1/xft-config.1
 ./usr/X11R6/man/man1/xfwp.1

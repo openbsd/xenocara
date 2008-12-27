@@ -35,7 +35,6 @@
 ./etc/X11/app-defaults/Xmessage-color
 ./etc/X11/app-defaults/Xsystrace
 ./etc/X11/app-defaults/Xvidtune
-./etc/X11/proxymngr/pmconfig
 ./etc/X11/rstart/commands/@List
 ./etc/X11/rstart/commands/ListContexts
 ./etc/X11/rstart/commands/ListGenericCommands

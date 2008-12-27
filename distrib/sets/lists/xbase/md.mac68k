@@ -82,7 +82,6 @@
 ./usr/X11R6/lib/libfreetype.so.16.1
 ./usr/X11R6/lib/libfreetype_pic.a
 ./usr/X11R6/lib/liblbxutil.so.1.0
-./usr/X11R6/lib/liboldX.so.10.0
 ./usr/X11R6/lib/libpciaccess.so.0.10
 ./usr/X11R6/lib/libpixman-1.so.12.0
 ./usr/X11R6/lib/libxkbfile.so.4.0

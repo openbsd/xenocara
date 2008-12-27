@@ -195,6 +195,8 @@
 ./usr/X11R6/lib/modules/drivers/glint_drv.so
 ./usr/X11R6/lib/modules/drivers/i128_drv.la
 ./usr/X11R6/lib/modules/drivers/i128_drv.so
+./usr/X11R6/lib/modules/drivers/i740_drv.la
+./usr/X11R6/lib/modules/drivers/i740_drv.so
 ./usr/X11R6/lib/modules/drivers/intel_drv.la
 ./usr/X11R6/lib/modules/drivers/intel_drv.so
 ./usr/X11R6/lib/modules/drivers/ivch.la
@@ -241,6 +243,8 @@
 ./usr/X11R6/lib/modules/drivers/vesa_drv.so
 ./usr/X11R6/lib/modules/drivers/vmware_drv.la
 ./usr/X11R6/lib/modules/drivers/vmware_drv.so
+./usr/X11R6/lib/modules/drivers/voodoo_drv.la
+./usr/X11R6/lib/modules/drivers/voodoo_drv.so
 ./usr/X11R6/lib/modules/extensions/libdbe.la
 ./usr/X11R6/lib/modules/extensions/libdbe.so
 ./usr/X11R6/lib/modules/extensions/libdri.la
@@ -384,6 +388,7 @@
 ./usr/X11R6/man/man4/fpit.4
 ./usr/X11R6/man/man4/glint.4
 ./usr/X11R6/man/man4/i128.4
+./usr/X11R6/man/man4/i740.4
 ./usr/X11R6/man/man4/intel.4
 ./usr/X11R6/man/man4/joystick.4
 ./usr/X11R6/man/man4/js_x.4
@@ -415,6 +420,7 @@
 ./usr/X11R6/man/man4/vmmouse.4
 ./usr/X11R6/man/man4/vmware.4
 ./usr/X11R6/man/man4/void.4
+./usr/X11R6/man/man4/voodoo.4
 ./usr/X11R6/man/man4/ws.4
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/man/man7/Xprint.7

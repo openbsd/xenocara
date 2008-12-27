@@ -447,7 +447,6 @@
 ./usr/X11R6/bin/mkfontscale
 ./usr/X11R6/bin/mkhtmlindex
 ./usr/X11R6/bin/oclock
-./usr/X11R6/bin/proxymngr
 ./usr/X11R6/bin/resize
 ./usr/X11R6/bin/revpath
 ./usr/X11R6/bin/sessreg
@@ -480,7 +479,6 @@
 ./usr/X11R6/bin/xev
 ./usr/X11R6/bin/xeyes
 ./usr/X11R6/bin/xfd
-./usr/X11R6/bin/xfindproxy
 ./usr/X11R6/bin/xfontsel
 ./usr/X11R6/bin/xfsinfo
 ./usr/X11R6/bin/xft-config
@@ -674,8 +672,6 @@
 ./usr/X11R6/lib/libfreetype.a
 ./usr/X11R6/lib/liblbxutil.a
 ./usr/X11R6/lib/liblbxutil.la
-./usr/X11R6/lib/liboldX.a
-./usr/X11R6/lib/liboldX.la
 ./usr/X11R6/lib/libpciaccess.a
 ./usr/X11R6/lib/libpciaccess.la
 ./usr/X11R6/lib/libpixman-1.a
