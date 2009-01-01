@@ -1,0 +1,59 @@
+.\" $OpenBSD: wildcatfb.man,v 1.1.1.1 2009/01/01 19:29:22 miod Exp $
+.\"
+.\" Copyright (c) 2009 Miodrag Vallat.
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH WILDCATFB __drivermansuffix__ __vendorversion__
+.SH NAME
+wildcatfb \- video driver for Sun Expert3D framebuffer family
+.SH SYNOPSIS
+.nf
+.B "Section \*qDevice\*q"
+.BI "  Identifier \*q"  devname \*q
+.B  "  Driver \*qwildcatfb\*q"
+\ \ ...
+.B EndSection
+.fi
+.SH DESCRIPTION
+.B wildcatfb
+is an __xservername__ driver for the Sun Expert3D framebuffer family,
+relying upon the OpenBSD console mode framebuffer driver of the same name.
+This driver is not accelerated yet, and only supports a 7-bit framebuffer
+depth.
+.br
+All visual types are supported.
+Multi-head configurations are supported.
+.SH CONFIGURATION DETAILS
+Please refer to __xconfigfile__(__filemansuffix__) for general configuration
+details.
+This section only covers configuration details specific to this driver.
+.PP
+For this driver it is not required to specify modes in the 
+.B Screen
+section of the configuration file.
+The
+.B wildcatfb
+driver picks up the currently used video mode from the framebuffer
+driver and uses it.
+Video modes specifications in the configuration file are ignored.
+.SH "SEE ALSO"
+XFree86(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1),
+X(__miscmansuffix__), wsdisplay(__drivermansuffix__)
+.SH AUTHORS
+This driver has been written by Miod Vallat, reusing code from the wsfb driver
+whose authors include Matthieu Herrb, Gerd Knorr, Michel Dänzer,
+Geert Uytterhoeven, as well as code from the shadow extension written by
+Keith Packard.

@@ -1,0 +1,3 @@
+# $OpenBSD: Makefile.bsd-wrapper,v 1.1.1.1 2009/01/01 19:29:21 miod Exp $
+
+.include <bsd.xorg.mk>
