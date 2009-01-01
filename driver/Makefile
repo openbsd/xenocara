@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.26 2008/12/23 09:10:17 matthieu Exp $
+# $OpenBSD: Makefile,v 1.27 2009/01/01 19:30:21 miod Exp $
 
 INPUT_DRV_DEFAULT= \
 	openbsd-input-usbtablet \
@@ -99,7 +99,7 @@ VIDEO_DRV_sgi= xf86-video-wsfb
 
 VIDEO_DRV_sparc64= \
 	xf86-video-ati xf86-video-mach64 xf86-video-r128 xf86-video-sunffb \
-	xf86-video-wsfb
+	xf86-video-wildcatfb xf86-video-wsfb
 
 VIDEO_DRV_vax=
 

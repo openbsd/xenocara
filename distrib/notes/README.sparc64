@@ -54,6 +54,11 @@ etc).
 	DefaultDepth 24
   in the "Screen" section.
 
+- For systems with Expert3D framebuffers (using the ifb(4) kernel
+  driver), the driver name in the "Device" section should be "wildcatfb"
+  instead of "wsfb":
+	Driver		"wildcatfb"
+
 - What follows is a  whole sample configuration file. Copy it to
   /etc/X11/xorg.conf and customize it as described above. 
 
@@ -264,4 +269,4 @@ See xorg.conf(5) for more options.
 
 problem_blurb
 
-$OpenBSD: README.sparc64,v 1.5 2008/08/31 07:30:43 matthieu Exp $
+$OpenBSD: README.sparc64,v 1.6 2009/01/01 19:30:20 miod Exp $

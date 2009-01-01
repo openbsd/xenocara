@@ -169,6 +169,8 @@
 ./usr/X11R6/lib/modules/drivers/radeon_drv.so
 ./usr/X11R6/lib/modules/drivers/sunffb_drv.la
 ./usr/X11R6/lib/modules/drivers/sunffb_drv.so
+./usr/X11R6/lib/modules/drivers/wildcatfb_drv.la
+./usr/X11R6/lib/modules/drivers/wildcatfb_drv.so
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.la
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.so
 ./usr/X11R6/lib/modules/extensions/libdbe.la
@@ -320,6 +322,7 @@
 ./usr/X11R6/man/man4/tek4957.4
 ./usr/X11R6/man/man4/usbtablet.4
 ./usr/X11R6/man/man4/void.4
+./usr/X11R6/man/man4/wildcatfb.4
 ./usr/X11R6/man/man4/ws.4
 ./usr/X11R6/man/man4/wsfb.4
 ./usr/X11R6/man/man5/xorg.conf.5
