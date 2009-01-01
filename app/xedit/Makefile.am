@@ -164,26 +164,29 @@ lisp_re_tests_SOURCES = lisp/re/tests.c
 # App default files  (*.ad)
 
 APPDEFAULTFILES = \
-        Xedit-color \
-	Xedit
+        app-defaults/Xedit-color \
+	app-defaults/Xedit
 
 if USE_XPRINT
-Xedit.ad: 
-	cp $(top_srcdir)/Xedit-xprint.ad Xedit.ad
+app-defaults/Xedit.ad: 
+	test -d app-defaults || mkdir app-defaults
+	cp $(top_srcdir)/app-defaults/Xedit-xprint.ad app-defaults/Xedit.ad
 else
-Xedit.ad:
-	cp $(top_srcdir)/Xedit-noxprint.ad Xedit.ad
+app-defaults/Xedit.ad:
+	test -d app-defaults || mkdir app-defaults
+	cp $(top_srcdir)/app-defaults/Xedit-noxprint.ad app-defaults/Xedit.ad
 endif
 
 SUFFIXES = .ad 
 
 .ad:
+	test -d app-defaults || mkdir app-defaults
 	cp $< $@
 
 appdefaultdir = @appdefaultdir@
 appdefault_DATA = $(APPDEFAULTFILES)
 
-CLEANFILES = $(APPDEFAULTFILES) Xedit.ad
+CLEANFILES = $(APPDEFAULTFILES) app-defaults/Xedit.ad
 
 lispdir = $(LISPDIR)
 dist_lisp_DATA = ${srcdir}/lisp/modules/lisp.lsp \
@@ -213,10 +216,10 @@ dist_progmodes_DATA = \
 appman_PRE = xedit.man
 
 EXTRA_DIST = \
-	Xedit-color.ad \
-	Xedit-xprint.ad \
-	Xedit-noxprint.ad \
-	Xedit-sample \
+	app-defaults/Xedit-color.ad \
+	app-defaults/Xedit-xprint.ad \
+	app-defaults/Xedit-noxprint.ad \
+	app-defaults/Xedit-sample \
 	lisp/README \
 	lisp/TODO \
 	lisp/compile.c \
@@ -275,6 +278,6 @@ MAINTAINERCLEANFILES = ChangeLog
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	(GIT_DIR=$(top_srcdir)/.git git log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
 
 dist-hook: ChangeLog

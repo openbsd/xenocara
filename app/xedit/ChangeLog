@@ -1,3 +1,63 @@
+commit 0d133999449ce7c5db19d46680430ab16e81e4fd
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Thu Nov 6 21:19:56 2008 +0100
+
+    enabled VPATH build
+
+commit f5edc6424b6553d58e271f64471cef32e063dd19
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Oct 8 19:21:28 2008 -0300
+
+    Rewrite double click confirmation code.
+    
+      Remove the double_click global boolean, and change dc_state to a bit
+    field, instead of a single state variable.
+      The old code was the xedit original code with minimal changes, but was
+    a bit confusing when two confirmations would be required.
+      Also, this patch moves the check for file overwriting before
+    MaybeCreateFile() as it can actually call creat(), what means that it
+    can no longer ask for confirmations, as the file has been just backed up,
+    and a zero sized one created.
+
+commit d96491aad5542f052b722b94d86f0ce7661ae98b
+Merge: cc7cb04... f1efec7...
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Sep 26 17:47:32 2008 -0300
+
+    Merge branch 'master' of ssh://pcpa@git.freedesktop.org/git/xorg/app/xedit
+
+commit cc7cb041c4144f1401fd520f05018028c0e0c87e
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Sep 26 17:34:50 2008 -0300
+
+    Proper implementation of AddDoubleClickCallback
+    
+      I tracked it down to
+    http://cvsweb.xfree86.org/cvsweb/xc/programs/xedit/commands.c?rev=1.5&content-type=text/vnd.viewcvs-markup
+    After my patches to libXaw. Instead of checking for
+    "if (XtIsSubclass(w, asciiSrcObjectClass)) {" it should really
+    do something like "if (isXaw7orNewer) {". But I believe only XFree86
+    and Xorg versions of Xaw have the XawVersion macro in XawInit.h...
+    
+      This corrects the problem described in
+    http://bugs.freedesktop.org/show_bug.cgi?id=17726
+    
+      And the main reason is that xedit always default'ed to use a 8 bits
+    iso8859-x locale, while in Xorg it was modified to use multibyte by
+    default.
+
+commit f1efec76814500a14acf7c64184ebef1a28e264d
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Mon Aug 4 13:22:52 2008 -0700
+
+    Fixed filename conflict during compilation on case-insensitive file systems.
+
+commit dc857b78c00432de6d57124ca2e060ef0a76684f
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jul 31 14:17:17 2008 -0300
+
+    Correct make dist and update to xedit-1.1.1.
+
 commit bc470a831ee3c8d5aa254661122187048f245c92
 Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
 Date:   Wed Jul 30 18:52:32 2008 -0300

@@ -279,8 +279,10 @@ main(int argc, char *argv[])
 				     flags, file_access);
 		XtAddCallback(item->source, XtNcallback, SourceChanged,
 			      (XtPointer)item);
-		if (exists && file_access == WRITE_OK)
+		if (exists && file_access == WRITE_OK) {
 		    item->mode = st.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
+		    item->mtime = st.st_mtime;
+		}
 		if (!num_loaded)
 		    SwitchTextSource(item);
 		++num_loaded;

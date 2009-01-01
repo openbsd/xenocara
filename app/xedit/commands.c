@@ -73,44 +73,22 @@ static char *makeBackupName(String, String, unsigned);
 extern void _XawTextShowPosition(TextWidget);
 
 extern Widget scratch, texts[3], labels[3];
-static Boolean double_click = FALSE;
 
-#define DC_UNSAVED	1
-#define DC_LOADED	2
-#define DC_CLOBBER	3
-#define DC_KILL		4
-#define DC_SAVE		5
-#define DC_NEWER	6
+#define DC_UNSAVED	(1 << 0)
+#define DC_LOADED	(1 << 1)
+#define DC_CLOBBER	(1 << 2)
+#define DC_KILL		(1 << 3)
+#define DC_SAVE		(1 << 4)
+#define DC_NEWER	(1 << 5)
 static int dc_state;
 
-/*	Function Name: AddDoubleClickCallback(w)
- *	Description: Adds a callback that will reset the double_click flag
- *                   to false when the text is changed.
- *	Arguments: w - widget to set callback upon.
- *                 state - If true add the callback, else remove it.
- *	Returns: none.
- */
 static void
 AddDoubleClickCallback(Widget w, Bool state)
 {
-  Arg args[1];
-  static XtCallbackRec cb[] = { {NULL, NULL}, {NULL, NULL} };
-
-  if (XtIsSubclass(w, asciiSrcObjectClass)) {
-      if (state)
-	  XtAddCallback(w, XtNcallback, ResetDC, NULL);
-      else
-	  XtRemoveCallback(w, XtNcallback, ResetDC, NULL);
-  }
-  else {
-      if (state)
-	  cb[0].callback = ResetDC;
-      else
-	  cb[0].callback = NULL;
-
-      XtSetArg(args[0], XtNcallback, cb);
-      XtSetValues(w, args, ONE);
-  }
+    if (state)
+	XtAddCallback(w, XtNcallback, ResetDC, NULL);
+    else
+	XtRemoveCallback(w, XtNcallback, ResetDC, NULL);
 }
   
 /*	Function Name: ResetDC
@@ -124,9 +102,7 @@ AddDoubleClickCallback(Widget w, Bool state)
 static void
 ResetDC(Widget w, XtPointer junk, XtPointer garbage)
 {
-  double_click = FALSE;
-
-  AddDoubleClickCallback(w, FALSE);
+    AddDoubleClickCallback(w, FALSE);
 }
 
 /*ARGSUSED*/
@@ -143,14 +119,14 @@ DoQuit(Widget w, XtPointer client_data, XtPointer call_data)
     unsigned i;
     Bool source_changed = False;
 
-    if (!double_click || (dc_state && dc_state != DC_UNSAVED)) {
+    if (!(dc_state & DC_UNSAVED)) {
 	for (i = 0; i < flist.num_itens; i++)
 	    if (flist.itens[i]->flags & CHANGED_BIT) {
 		source_changed = True;
 		break;
 	    }
     }
-    if(!source_changed) {
+    if (!source_changed) {
 #ifndef __UNIXOS2__
 	XeditLispCleanUp();
 #endif
@@ -159,8 +135,7 @@ DoQuit(Widget w, XtPointer client_data, XtPointer call_data)
 
     XeditPrintf("Unsaved changes. Save them, or Quit again.\n");
     Feep();
-    double_click = TRUE;
-    dc_state = DC_UNSAVED;
+    dc_state |= DC_UNSAVED;
     AddDoubleClickCallback(XawTextGetSource(textwindow), True);
 }
 
@@ -254,34 +229,33 @@ DoSave(Widget w, XtPointer client_data, XtPointer call_data)
 
     item = FindTextSource(NULL, filename);
     if (item != NULL && item->source != source) {
-	if (!double_click || (dc_state && dc_state != DC_LOADED)) {
+	if (!(dc_state & DC_LOADED)) {
 	    XmuSnprintf(buffer, sizeof(buffer), "%s%s%s%s",
 			"Save: file ", name, " is already loaded, "
 			"Save again to unload it", nothing_saved);
 	    Feep();
-	    double_click = TRUE;
-	    dc_state = DC_LOADED;
+	    dc_state |= DC_LOADED;
 	    AddDoubleClickCallback(XawTextGetSource(textwindow), True);
 	    goto error;
 	}
-	KillTextSource(item);
-	item = FindTextSource(source = XawTextGetSource(textwindow), NULL);
-	double_click = FALSE;
-	dc_state = 0;
+	else {
+	    KillTextSource(item);
+	    item = FindTextSource(source = XawTextGetSource(textwindow), NULL);
+	    dc_state &= ~DC_LOADED;
+	}
     }
     else if (item && !(item->flags & CHANGED_BIT)) {
-	if (!double_click || (dc_state && dc_state != DC_SAVE)) {
+	if (!(dc_state & DC_SAVE)) {
 	    XmuSnprintf(buffer, sizeof(buffer), "%s%s",
 			"Save: No changes need to be saved, "
 			"save again to override", nothing_saved);
 	    Feep();
-	    double_click = TRUE;
-	    dc_state = DC_SAVE;
+	    dc_state |= DC_SAVE;
 	    AddDoubleClickCallback(XawTextGetSource(textwindow), True);
 	    goto error;
 	}
-	double_click = FALSE;
-	dc_state = 0;
+	else
+	    dc_state &= ~DC_SAVE;
     }
 
     file_access = CheckFilePermissions(filename, &exists);
@@ -301,21 +275,34 @@ DoSave(Widget w, XtPointer client_data, XtPointer call_data)
 
     if (!item || strcmp(item->filename, filename)) {
 	if (file_access == WRITE_OK && exists) {
-	    if (!double_click || (dc_state && dc_state != DC_CLOBBER)) {
+	    if (!(dc_state & DC_CLOBBER)) {
 		XmuSnprintf(buffer, sizeof(buffer), "%s%s%s%s",
 			    "Save: file ", name, " already exists, "
 			    "save again to override", nothing_saved);
 		Feep();
-		double_click = TRUE;
-		dc_state = DC_CLOBBER;
+		dc_state |= DC_CLOBBER;
 		AddDoubleClickCallback(XawTextGetSource(textwindow), True);
 		goto error;
 	    }
-	    double_click = FALSE;
-	    dc_state = 0;
+	    else
+		dc_state &= ~DC_CLOBBER;
 	}
 	if (!item)
 	    item = FindTextSource(source, NULL);
+    }
+
+    if (item && item->mtime && exists && item->mtime < st.st_mtime) {
+	if (!(dc_state & DC_NEWER)) {
+	    XmuSnprintf(buffer, sizeof(buffer), "%s%s",
+			"Save: Newer file exists, "
+			"save again to override", nothing_saved);
+	    Feep();
+	    dc_state |= DC_NEWER;
+	    AddDoubleClickCallback(XawTextGetSource(textwindow), True);
+	    goto error;
+	}
+	else
+	    dc_state &= DC_NEWER;
     }
 
     if (app_resources.enableBackups && exists) {
@@ -334,21 +321,6 @@ DoSave(Widget w, XtPointer client_data, XtPointer call_data)
 	    Feep();
 	    break;
 	case WRITE_OK:
-	    if (item && item->mtime && exists && item->mtime < st.st_mtime) {
-		if (!double_click || (dc_state && dc_state != DC_NEWER)) {
-		    XmuSnprintf(buffer, sizeof(buffer), "%s%s",
-				"Save: Newer file exists, "
-				"save again to override", nothing_saved);
-		    Feep();
-		    double_click = TRUE;
-		    dc_state = DC_NEWER;
-		    AddDoubleClickCallback(XawTextGetSource(textwindow), True);
-		    goto error;
-		}
-		double_click = FALSE;
-		dc_state = 0;
-	    }
-
 	    if (XawAsciiSaveAsFile(source, filename)) {
 		int i;
 		Arg args[1];
@@ -715,7 +687,6 @@ ResetSourceChanged(xedit_flist_item *item)
     XtSetValues(item->sme, args, num_args);
 
     dc_state = 0;
-    double_click = FALSE;
     for (i = 0; i < 3; i++) {
 	if (XawTextGetSource(texts[i]) == item->source)
 	    XtSetValues(labels[i], args, num_args);
@@ -741,16 +712,14 @@ KillFile(Widget w, XEvent *event, String *params, Cardinal *num_params)
     }
 
     if (item->flags & CHANGED_BIT) {
-	if (!double_click || (dc_state && dc_state != DC_KILL)) {
+	if (!(dc_state & DC_KILL)) {
 	    XeditPrintf("Kill: Unsaved changes. Kill again to override.\n");
 	    Feep();
-	    double_click = TRUE;
-	    dc_state = DC_KILL;
+	    dc_state |= DC_KILL;
 	    AddDoubleClickCallback(XawTextGetSource(textwindow), True);
 	    return;
 	}
-	double_click = FALSE;
-	dc_state = 0;
+	dc_state &= ~DC_KILL;
     }
     KillTextSource(item);
 }

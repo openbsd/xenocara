@@ -371,12 +371,12 @@ lisp_re_tests_SOURCES = lisp/re/tests.c
 
 # App default files  (*.ad)
 APPDEFAULTFILES = \
-        Xedit-color \
-	Xedit
+        app-defaults/Xedit-color \
+	app-defaults/Xedit
 
 SUFFIXES = .ad .$(APP_MAN_SUFFIX) .man
 appdefault_DATA = $(APPDEFAULTFILES)
-CLEANFILES = $(APPDEFAULTFILES) Xedit.ad $(appman_DATA)
+CLEANFILES = $(APPDEFAULTFILES) app-defaults/Xedit.ad $(appman_DATA)
 lispdir = $(LISPDIR)
 dist_lisp_DATA = ${srcdir}/lisp/modules/lisp.lsp \
 	${srcdir}/lisp/modules/xedit.lsp \
@@ -403,14 +403,15 @@ dist_progmodes_DATA = \
 	${srcdir}/lisp/modules/progmodes/xrdb.lsp
 
 appman_PRE = xedit.man
-EXTRA_DIST = Xedit-color.ad Xedit-xprint.ad Xedit-noxprint.ad \
-	Xedit-sample lisp/README lisp/TODO lisp/compile.c lisp/env.c \
-	lisp/mathimp.c lisp/modules/psql.c lisp/modules/x11.c \
-	lisp/modules/xaw.c lisp/modules/xt.c lisp/re/README \
-	lisp/re/tests.txt lisp/test/hello.lsp lisp/test/list.lsp \
-	lisp/test/math.lsp lisp/test/psql-1.lsp lisp/test/psql-2.lsp \
-	lisp/test/psql-3.lsp lisp/test/regex.lsp lisp/test/stream.lsp \
-	lisp/test/widgets.lsp $(appman_PRE) ChangeLog
+EXTRA_DIST = app-defaults/Xedit-color.ad app-defaults/Xedit-xprint.ad \
+	app-defaults/Xedit-noxprint.ad app-defaults/Xedit-sample \
+	lisp/README lisp/TODO lisp/compile.c lisp/env.c lisp/mathimp.c \
+	lisp/modules/psql.c lisp/modules/x11.c lisp/modules/xaw.c \
+	lisp/modules/xt.c lisp/re/README lisp/re/tests.txt \
+	lisp/test/hello.lsp lisp/test/list.lsp lisp/test/math.lsp \
+	lisp/test/psql-1.lsp lisp/test/psql-2.lsp lisp/test/psql-3.lsp \
+	lisp/test/regex.lsp lisp/test/stream.lsp lisp/test/widgets.lsp \
+	$(appman_PRE) ChangeLog
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 SED = sed
@@ -1360,7 +1361,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/${srcdir}/lisp/modules $(distdir)/${srcdir}/lisp/modules/progmodes $(distdir)/lisp $(distdir)/lisp/modules $(distdir)/lisp/re $(distdir)/lisp/test
+	$(mkdir_p) $(distdir)/${srcdir}/lisp/modules $(distdir)/${srcdir}/lisp/modules/progmodes $(distdir)/app-defaults $(distdir)/lisp $(distdir)/lisp/modules $(distdir)/lisp/re $(distdir)/lisp/test
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -1597,12 +1598,15 @@ uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
 	uninstall-dist_progmodesDATA uninstall-info-am
 
 
-@USE_XPRINT_TRUE@Xedit.ad: 
-@USE_XPRINT_TRUE@	cp $(top_srcdir)/Xedit-xprint.ad Xedit.ad
-@USE_XPRINT_FALSE@Xedit.ad:
-@USE_XPRINT_FALSE@	cp $(top_srcdir)/Xedit-noxprint.ad Xedit.ad
+@USE_XPRINT_TRUE@app-defaults/Xedit.ad: 
+@USE_XPRINT_TRUE@	test -d app-defaults || mkdir app-defaults
+@USE_XPRINT_TRUE@	cp $(top_srcdir)/app-defaults/Xedit-xprint.ad app-defaults/Xedit.ad
+@USE_XPRINT_FALSE@app-defaults/Xedit.ad:
+@USE_XPRINT_FALSE@	test -d app-defaults || mkdir app-defaults
+@USE_XPRINT_FALSE@	cp $(top_srcdir)/app-defaults/Xedit-noxprint.ad app-defaults/Xedit.ad
 
 .ad:
+	test -d app-defaults || mkdir app-defaults
 	cp $< $@
 
 .man.$(APP_MAN_SUFFIX):
@@ -1611,7 +1615,7 @@ uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	(GIT_DIR=$(top_srcdir)/.git git log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
 
 dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
