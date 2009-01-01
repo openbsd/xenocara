@@ -1,3 +1,39 @@
+commit a34031ea9074a453aee217b5845d07333019f26c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Dec 18 16:56:12 2008 -0800
+
+    Version 1.0.6
+
+commit 95c7da3a2717a0352cdd08830fdd1dd1a4024dda
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Dec 18 16:55:56 2008 -0800
+
+    man page typo fix
+
+commit 0d1a2b7970c0eadb834fc2a6c3a68a09691b84ea
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Dec 17 19:29:54 2008 -0800
+
+    Add hooks for checking sources with lint/sparse/etc.
+
+commit 3ae585a3f08cb660c6ce6838557c94f88821b7a5
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Dec 17 19:22:27 2008 -0800
+
+    Add basic README with URL's of git, bugzilla & mailing list
+
+commit 03f6a08c503ff12e2457a9ccc13bfbb801e2161d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Dec 17 19:19:03 2008 -0800
+
+    Use XORG_CWARNFLAGS & XORG_CHANGELOG from xorg-macros 1.2
+
+commit 0ca983a6bac03489fb0d2ad158114a811eb276a2
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Nov 5 10:07:33 2008 -0800
+
+    Add support for bzip2 compressed fonts if configured --with-bzip2
+
 commit 8126d2b694f48cc8137be05705a125f7d02e7e12
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Sun May 11 00:03:44 2008 +0200

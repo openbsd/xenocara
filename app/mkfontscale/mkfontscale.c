@@ -740,6 +740,10 @@ filePrio(char *filename)
         return 4;
     if(strcmp(filename + n - 3, ".gz") == 0)
         return 3;
+#ifdef X_BZIP2_FONT_COMPRESSION
+    if(strcmp(filename + n - 4, ".bz2") == 0)
+        return 2;
+#endif
     if(strcmp(filename + n - 2, ".Z") == 0)
         return 2;
     if(strcmp(filename + n - 4, ".bdf") == 0)

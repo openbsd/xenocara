@@ -110,7 +110,7 @@ written to an "encodings.dir" file in every font directory.
 .B -p
 Specifies a prefix that is prepended to the encoding file path names
 when they are written to the "encodings.dir" file.  The prefix is
-prepended litterally: if a `/' is required between the prefix and the path
+prepended literally: if a `/' is required between the prefix and the path
 names, it must be supplied explicitly as part of the prefix.
 .TP
 .B \-r

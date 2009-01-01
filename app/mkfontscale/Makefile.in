@@ -76,9 +76,8 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_mkfontscale_OBJECTS = mkfontscale-hash.$(OBJEXT) \
-	mkfontscale-ident.$(OBJEXT) mkfontscale-list.$(OBJEXT) \
-	mkfontscale-mkfontscale.$(OBJEXT)
+am_mkfontscale_OBJECTS = hash.$(OBJEXT) ident.$(OBJEXT) list.$(OBJEXT) \
+	mkfontscale.$(OBJEXT)
 mkfontscale_OBJECTS = $(am_mkfontscale_OBJECTS)
 mkfontscale_DEPENDENCIES =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
@@ -147,6 +146,10 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LINT = @LINT@
+LINT_FALSE = @LINT_FALSE@
+LINT_FLAGS = @LINT_FLAGS@
+LINT_TRUE = @LINT_TRUE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -209,7 +212,8 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-mkfontscale_CFLAGS = @MKFONTSCALE_CFLAGS@ @X11_CFLAGS@ -D_BSD_SOURCE
+AM_CPPFLAGS = @MKFONTSCALE_CFLAGS@ @X11_CFLAGS@ -D_BSD_SOURCE
+AM_CFLAGS = $(CWARNFLAGS)
 mkfontscale_LDADD = @MKFONTSCALE_LIBS@
 mkfontscale_SOURCES = \
 	data.h \
@@ -224,7 +228,7 @@ mkfontscale_SOURCES = \
 appman_PRE = mkfontscale.man
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-EXTRA_DIST = $(appman_PRE) ChangeLog
+EXTRA_DIST = $(appman_PRE)
 CLEANFILES = $(appman_DATA)
 SED = sed
 
@@ -245,7 +249,9 @@ MAN_SUBSTS = \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
-MAINTAINERCLEANFILES = ChangeLog
+@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+@LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS)
+
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -334,10 +340,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mkfontscale-hash.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mkfontscale-ident.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mkfontscale-list.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mkfontscale-mkfontscale.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ident.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mkfontscale.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -352,62 +358,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-mkfontscale-hash.o: hash.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -MT mkfontscale-hash.o -MD -MP -MF "$(DEPDIR)/mkfontscale-hash.Tpo" -c -o mkfontscale-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mkfontscale-hash.Tpo" "$(DEPDIR)/mkfontscale-hash.Po"; else rm -f "$(DEPDIR)/mkfontscale-hash.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='mkfontscale-hash.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -c -o mkfontscale-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
-
-mkfontscale-hash.obj: hash.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -MT mkfontscale-hash.obj -MD -MP -MF "$(DEPDIR)/mkfontscale-hash.Tpo" -c -o mkfontscale-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mkfontscale-hash.Tpo" "$(DEPDIR)/mkfontscale-hash.Po"; else rm -f "$(DEPDIR)/mkfontscale-hash.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='mkfontscale-hash.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -c -o mkfontscale-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`
-
-mkfontscale-ident.o: ident.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -MT mkfontscale-ident.o -MD -MP -MF "$(DEPDIR)/mkfontscale-ident.Tpo" -c -o mkfontscale-ident.o `test -f 'ident.c' || echo '$(srcdir)/'`ident.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mkfontscale-ident.Tpo" "$(DEPDIR)/mkfontscale-ident.Po"; else rm -f "$(DEPDIR)/mkfontscale-ident.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ident.c' object='mkfontscale-ident.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -c -o mkfontscale-ident.o `test -f 'ident.c' || echo '$(srcdir)/'`ident.c
-
-mkfontscale-ident.obj: ident.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -MT mkfontscale-ident.obj -MD -MP -MF "$(DEPDIR)/mkfontscale-ident.Tpo" -c -o mkfontscale-ident.obj `if test -f 'ident.c'; then $(CYGPATH_W) 'ident.c'; else $(CYGPATH_W) '$(srcdir)/ident.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mkfontscale-ident.Tpo" "$(DEPDIR)/mkfontscale-ident.Po"; else rm -f "$(DEPDIR)/mkfontscale-ident.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ident.c' object='mkfontscale-ident.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -c -o mkfontscale-ident.obj `if test -f 'ident.c'; then $(CYGPATH_W) 'ident.c'; else $(CYGPATH_W) '$(srcdir)/ident.c'; fi`
-
-mkfontscale-list.o: list.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -MT mkfontscale-list.o -MD -MP -MF "$(DEPDIR)/mkfontscale-list.Tpo" -c -o mkfontscale-list.o `test -f 'list.c' || echo '$(srcdir)/'`list.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mkfontscale-list.Tpo" "$(DEPDIR)/mkfontscale-list.Po"; else rm -f "$(DEPDIR)/mkfontscale-list.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='list.c' object='mkfontscale-list.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -c -o mkfontscale-list.o `test -f 'list.c' || echo '$(srcdir)/'`list.c
-
-mkfontscale-list.obj: list.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -MT mkfontscale-list.obj -MD -MP -MF "$(DEPDIR)/mkfontscale-list.Tpo" -c -o mkfontscale-list.obj `if test -f 'list.c'; then $(CYGPATH_W) 'list.c'; else $(CYGPATH_W) '$(srcdir)/list.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mkfontscale-list.Tpo" "$(DEPDIR)/mkfontscale-list.Po"; else rm -f "$(DEPDIR)/mkfontscale-list.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='list.c' object='mkfontscale-list.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -c -o mkfontscale-list.obj `if test -f 'list.c'; then $(CYGPATH_W) 'list.c'; else $(CYGPATH_W) '$(srcdir)/list.c'; fi`
-
-mkfontscale-mkfontscale.o: mkfontscale.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -MT mkfontscale-mkfontscale.o -MD -MP -MF "$(DEPDIR)/mkfontscale-mkfontscale.Tpo" -c -o mkfontscale-mkfontscale.o `test -f 'mkfontscale.c' || echo '$(srcdir)/'`mkfontscale.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mkfontscale-mkfontscale.Tpo" "$(DEPDIR)/mkfontscale-mkfontscale.Po"; else rm -f "$(DEPDIR)/mkfontscale-mkfontscale.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mkfontscale.c' object='mkfontscale-mkfontscale.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -c -o mkfontscale-mkfontscale.o `test -f 'mkfontscale.c' || echo '$(srcdir)/'`mkfontscale.c
-
-mkfontscale-mkfontscale.obj: mkfontscale.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -MT mkfontscale-mkfontscale.obj -MD -MP -MF "$(DEPDIR)/mkfontscale-mkfontscale.Tpo" -c -o mkfontscale-mkfontscale.obj `if test -f 'mkfontscale.c'; then $(CYGPATH_W) 'mkfontscale.c'; else $(CYGPATH_W) '$(srcdir)/mkfontscale.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mkfontscale-mkfontscale.Tpo" "$(DEPDIR)/mkfontscale-mkfontscale.Po"; else rm -f "$(DEPDIR)/mkfontscale-mkfontscale.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mkfontscale.c' object='mkfontscale-mkfontscale.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mkfontscale_CFLAGS) $(CFLAGS) -c -o mkfontscale-mkfontscale.obj `if test -f 'mkfontscale.c'; then $(CYGPATH_W) 'mkfontscale.c'; else $(CYGPATH_W) '$(srcdir)/mkfontscale.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
@@ -636,7 +586,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -712,9 +661,12 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
+
+@LINT_TRUE@lint:
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(mkfontscale_SOURCES)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

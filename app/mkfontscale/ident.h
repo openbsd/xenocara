@@ -25,6 +25,6 @@
 #ifndef _MKS_IDENT_H_
 #define _MKS_IDENT_H_ 1
 
-int bitmapIdentify(char *filename, char **xlfd);
+int bitmapIdentify(const char *filename, char **xlfd);
 
 #endif /* _MKS_IDENT_H_ */

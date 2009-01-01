@@ -43,8 +43,12 @@ AC_SUBST(MKFONTSCALE_LIBS)
 PKG_CHECK_MODULES(X11, xproto)
 AC_SUBST(X11_CFLAGS)
 
+dnl Allow checking code with lint, sparse, etc.
+XORG_WITH_LINT
+
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
+XORG_CHANGELOG
 
 if test $host_cpu = sh; then
 	case $host_os in

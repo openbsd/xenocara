@@ -273,7 +273,7 @@ PACKAGE_VERSION='1.0.5'
 PACKAGE_STRING='mkfontscale 1.0.5'
 PACKAGE_BUGREPORT='https://bugs.freedesktop.org/enter_bug.cgi?product=xorg'
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE PKG_CONFIG ac_pt_PKG_CONFIG MKFONTSCALE_CFLAGS MKFONTSCALE_LIBS X11_CFLAGS X11_LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE PKG_CONFIG ac_pt_PKG_CONFIG MKFONTSCALE_CFLAGS MKFONTSCALE_LIBS X11_CFLAGS X11_LIBS LINT LINT_FLAGS LINT_TRUE LINT_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -839,6 +839,8 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-lint             Use a lint-style source code checker (default:
+                          disabled)
   --with-release-version=STRING
                           Use release version string in package name
 
@@ -3325,6 +3327,49 @@ echo "${ECHO_T}yes" >&6
 fi
 
 
+
+
+# Allow checking code with lint, sparse, etc.
+
+# Check whether --with-lint or --without-lint was given.
+if test "${with_lint+set}" = set; then
+  withval="$with_lint"
+  use_lint=$withval
+else
+  use_lint=no
+fi;
+if test "x$use_lint" = "xyes" ; then
+	LINT="lint"
+else
+	LINT="$use_lint"
+fi
+if test "x$LINT_FLAGS" = "x" -a "x$LINT" != "xno" ; then
+    case $LINT in
+	lint|*/lint)
+	    case $host_os in
+		solaris*)
+			LINT_FLAGS="-u -b -h -erroff=E_INDISTING_FROM_TRUNC2"
+			;;
+	    esac
+	    ;;
+    esac
+fi
+
+
+
+
+
+if test x$LINT != xno; then
+  LINT_TRUE=
+  LINT_FALSE='#'
+else
+  LINT_TRUE='#'
+  LINT_FALSE=
+fi
+
+
+
+
 # Make sure we can run config.sub.
 $ac_config_sub sun4 >/dev/null 2>&1 ||
   { { echo "$as_me:$LINENO: error: cannot run $ac_config_sub" >&5
@@ -3489,6 +3534,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
+XORG_CHANGELOG
 
 if test $host_cpu = sh; then
 	case $host_os in
@@ -3608,6 +3654,13 @@ if test -z "${am__fastdepCC_TRUE}" && test -z "${am__fastdepCC_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"am__fastdepCC\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"am__fastdepCC\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${LINT_TRUE}" && test -z "${LINT_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"LINT\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"LINT\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -4190,6 +4243,10 @@ s,@MKFONTSCALE_CFLAGS@,$MKFONTSCALE_CFLAGS,;t t
 s,@MKFONTSCALE_LIBS@,$MKFONTSCALE_LIBS,;t t
 s,@X11_CFLAGS@,$X11_CFLAGS,;t t
 s,@X11_LIBS@,$X11_LIBS,;t t
+s,@LINT@,$LINT,;t t
+s,@LINT_FLAGS@,$LINT_FLAGS,;t t
+s,@LINT_TRUE@,$LINT_TRUE,;t t
+s,@LINT_FALSE@,$LINT_FALSE,;t t
 s,@build@,$build,;t t
 s,@build_cpu@,$build_cpu,;t t
 s,@build_vendor@,$build_vendor,;t t

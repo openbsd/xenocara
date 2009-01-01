@@ -19,6 +19,33 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   THE SOFTWARE.
 */
+/* Copyright 2008 Sun Microsystems, Inc.  All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, and/or sell copies of the Software, and to permit persons
+ * to whom the Software is furnished to do so, provided that the above
+ * copyright notice(s) and this permission notice appear in all copies of
+ * the Software and that both the above copyright notice(s) and this
+ * permission notice appear in supporting documentation.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+ * OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+ * HOLDERS INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL
+ * INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING
+ * FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+ * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
+ * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * Except as contained in this notice, the name of a copyright holder
+ * shall not be used in advertising or otherwise to promote the sale, use
+ * or other dealings in this Software without prior written authorization
+ * of the copyright holder.
+ */ 
 /* $XFree86: xc/programs/mkfontscale/ident.c,v 1.3tsi Exp $ */
 
 /* The function identifyBitmap returns -1 if filename is definitively not
@@ -26,10 +53,16 @@
    and 0 if it should be processed normally.  identifyBitmap is
    much faster than parsing the whole font. */
 
+#include "config.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include "zlib.h"
 #include "ident.h"
+
+#ifdef X_BZIP2_FONT_COMPRESSION
+# include <bzlib.h>
+#endif
 
 #define PCF_VERSION (('p'<<24)|('c'<<16)|('f'<<8)|1)
 #define PCF_PROPERTIES (1 << 0)
@@ -40,40 +73,150 @@ typedef struct _Prop {
     unsigned value;
 } PropRec, *PropPtr;
 
-static int pcfIdentify(gzFile f, char **name);
-static int bdfIdentify(gzFile f, char **name);
+#ifdef X_BZIP2_FONT_COMPRESSION
+typedef struct {
+    enum { gzFontFile, bz2FontFile } type;
+    union {
+	gzFile gz;
+	BZFILE *bz2;
+    } f;
+    unsigned pos;
+} fontFile;
+
+static inline void *
+fontFileOpen(fontFile *ff, const char *filename) {
+    int n = strlen(filename);
+
+    if (strcmp(filename + n - 4, ".bz2") == 0) {
+	ff->type = bz2FontFile;
+	ff->f.bz2 = BZ2_bzopen(filename, "rb");
+	ff->pos = 0;
+	return ff->f.bz2;
+    } else {
+	ff->type = gzFontFile;
+	ff->f.gz = gzopen(filename, "rb");
+	return ff->f.gz;
+    }
+}
+
+static inline int
+fontFileRead(fontFile *ff, void *buf, unsigned len)
+{
+    if (ff->type == gzFontFile) {
+	return gzread(ff->f.gz, buf, len);
+    } else {
+	int r = BZ2_bzread(ff->f.bz2, buf, len);
+	ff->pos += r;
+	return r;
+    }
+}
+
+static inline int
+fontFileGetc(fontFile *ff)
+{
+    if (ff->type == gzFontFile) {
+	return gzgetc(ff->f.gz);
+    } else {
+	char buf;
+	if (BZ2_bzread(ff->f.bz2, &buf, 1) != 1) {
+	    return -1;
+	} else {
+	    ff->pos += 1;
+	    return (int) buf;
+	}
+    }
+}
 
 static int
-getLSB32(gzFile f)
+fontFileSeek(fontFile *ff, z_off_t offset, int whence)
+{
+    if (ff->type == gzFontFile) {
+	return gzseek(ff->f.gz, offset, whence);
+    } else {
+	/* bzlib has no easy equivalent so we have to fake it,
+	 * fortunately, we only have to handle a couple of cases
+	 */
+	int n;
+	char buf[BUFSIZ];
+
+	switch (whence) {
+	  case SEEK_SET:
+	    n = offset - ff->pos;
+	    break;
+	  case SEEK_CUR:
+	    n = offset;
+	    break;
+	  default:
+	    return -1;
+	} 
+	
+	while (n > BUFSIZ) {
+	    if (BZ2_bzread(ff->f.bz2, buf, BUFSIZ) != BUFSIZ)
+		return -1;
+	    n -= BUFSIZ;
+	}
+	if (BZ2_bzread(ff->f.bz2, buf, n) != n)
+	    return -1;
+	ff->pos = offset;
+	return offset;
+    }
+}
+
+
+static inline int
+fontFileClose(fontFile *ff)
+{
+    if (ff->type == gzFontFile) {
+	return gzclose(ff->f.gz);
+    } else {
+	BZ2_bzclose(ff->f.bz2);
+	return 0;
+    }
+}
+
+#else /* no bzip2, only gzip */
+typedef gzFile fontFile;
+# define fontFileOpen(ff, filename)	(*(ff) = gzopen(filename, "rb"))
+# define fontFileRead(ff, buf, len)	gzread(*(ff), buf, len)
+# define fontFileGetc(ff)		gzgetc(*(ff))
+# define fontFileSeek(ff, off, whence)	gzseek(*(ff), off, whence)
+# define fontFileClose(ff)		gzclose(*(ff))
+#endif
+
+static int pcfIdentify(fontFile *f, char **name);
+static int bdfIdentify(fontFile *f, char **name);
+
+static int
+getLSB32(fontFile *f)
 {
     int rc;
     unsigned char c[4];
 
-    rc = gzread(f, c, 4);
+    rc = fontFileRead(f, c, 4);
     if(rc != 4)
         return -1;
     return (c[0]) | (c[1] << 8) | (c[2] << 16) | (c[3] << 24);
 }
 
 static int
-getInt8(gzFile f, int format)
+getInt8(fontFile *f, int format)
 {
     unsigned char c;
     int rc;
 
-    rc = gzread(f, &c, 1);
+    rc = fontFileRead(f, &c, 1);
     if(rc != 1)
         return -1;
     return c;
 }
 
 static int
-getInt32(gzFile f, int format)
+getInt32(fontFile *f, int format)
 {
     int rc;
     unsigned char c[4];
 
-    rc = gzread(f, c, 4);
+    rc = fontFileRead(f, c, 4);
     if(rc != 4)
         return -1;
 
@@ -84,43 +227,27 @@ getInt32(gzFile f, int format)
     }
 }
 
-static int
-pcfskip(gzFile f, int n)
-{
-    char buf[32];
-    int i, rc;
-    while(n > 0) {
-        i = (n > 32 ? 32 : n);
-        rc = gzread(f, buf, i);
-        if(rc != i)
-            return -1;
-        n -= rc;
-    }
-    return 1;
-}
-
 int 
-bitmapIdentify(char *filename, char **name)
+bitmapIdentify(const char *filename, char **name)
 {
-    gzFile f;
+    fontFile ff;
     int magic;
 
-    f = gzopen(filename, "rb");
-    if(f == NULL)
-        return -1;
+    if (fontFileOpen(&ff, filename) == NULL)
+	return -1;
 
-    magic = getLSB32(f);
+    magic = getLSB32(&ff);
     if(magic == PCF_VERSION)
-        return pcfIdentify(f, name);
+        return pcfIdentify(&ff, name);
     else if(magic == ('S' | ('T' << 8) | ('A' << 16) | ('R') << 24))
-        return bdfIdentify(f, name);
+        return bdfIdentify(&ff, name);
 
-    gzclose(f);
+    fontFileClose(&ff);
     return 0;
 }
 
 static int
-pcfIdentify(gzFile f, char **name)
+pcfIdentify(fontFile *f, char **name)
 {
     int prop_position;
     PropPtr props = NULL;
@@ -146,7 +273,7 @@ pcfIdentify(gzFile f, char **name)
     if(prop_position < 0)
         goto fail;
 
-    rc = gzseek(f, prop_position, SEEK_SET);
+    rc = fontFileSeek(f, prop_position, SEEK_SET);
     if(rc < 0)
         goto fail;
     
@@ -166,7 +293,7 @@ pcfIdentify(gzFile f, char **name)
         props[i].value = getInt32(f, format);
     }
     if(nprops & 3) {
-        rc = pcfskip(f, 4 - (nprops & 3));
+	rc = fontFileSeek(f, 4 - (nprops & 3), SEEK_CUR);
         if(rc < 0)
             goto fail;
     }
@@ -178,7 +305,7 @@ pcfIdentify(gzFile f, char **name)
     if(!strings)
         goto fail;
 
-    rc = gzread(f, strings, string_size);
+    rc = fontFileRead(f, strings, string_size);
     if(rc != string_size)
         goto fail;
 
@@ -201,26 +328,26 @@ pcfIdentify(gzFile f, char **name)
     *name = s;
     free(strings);
     free(props);
-    gzclose(f);
+    fontFileClose(f);
     return 1;
 
  fail:
     if(strings) free(strings);
     if(props) free(props);
-    gzclose(f);
+    fontFileClose(f);
     return 0;
 }
 
 #define NKEY 20
 
 static char*
-getKeyword(gzFile *f, int *eol)
+getKeyword(fontFile *f, int *eol)
 {
     static char keyword[NKEY + 1];
     int c, i;
     i = 0;
     while(i < NKEY) {
-        c = gzgetc(f);
+        c = fontFileGetc(f);
         if(c == ' ' || c == '\n') {
             if(i <= 0)
                 return NULL;
@@ -237,11 +364,11 @@ getKeyword(gzFile *f, int *eol)
 }
 
 static int
-bdfskip(gzFile *f)
+bdfskip(fontFile *f)
 {
     int c;
     do {
-        c = gzgetc(f);
+        c = fontFileGetc(f);
     } while(c >= 0 && c != '\n');
     if(c < 0)
         return -1;
@@ -249,7 +376,7 @@ bdfskip(gzFile *f)
 }
 
 static char *
-bdfend(gzFile *f)
+bdfend(fontFile *f)
 {
     int c;
     char *buf = NULL;
@@ -257,7 +384,7 @@ bdfend(gzFile *f)
     int i = 0;
 
     do {
-        c = gzgetc(f);
+        c = fontFileGetc(f);
     } while (c == ' ');
 
     while(i < 1000) {
@@ -282,7 +409,7 @@ bdfend(gzFile *f)
             return buf;
         }
         buf[i++] = c;
-        c = gzgetc(f);
+        c = fontFileGetc(f);
     }
 
  fail:
@@ -292,7 +419,7 @@ bdfend(gzFile *f)
 }
 
 static int
-bdfIdentify(gzFile f, char **name)
+bdfIdentify(fontFile *f, char **name)
 {
     char *k;
     int rc;
@@ -320,12 +447,12 @@ bdfIdentify(gzFile f, char **name)
             if(k == NULL)
                 goto fail;
             *name = k;
-            gzclose(f);
+            fontFileClose(f);
             return 1;
         } else if(strcmp(k, "CHARS") == 0)
             goto fail;
     }
  fail:
-    gzclose(f);
+    fontFileClose(f);
     return 0;
 }
