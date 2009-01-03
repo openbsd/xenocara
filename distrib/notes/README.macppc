@@ -81,8 +81,8 @@ Section "Device"
 # 	These options are required for use on the Ti PBG4.
 #	Option      "PanelWidth"  "1152"
 #	Option      "PanelHeight" "768"
-#	This option may help if your iBook or Mac mini has screen sync problems
-#	Option      "iBookHacks" "on"
+#	This option enable quirks for specified Mac model, details in Radeon(4)
+#	Option      "MacModel" "ibook"
 
 EndSection
 
@@ -168,4 +168,4 @@ button 2 and mouse button 3 respectively.
 
 problem_blurb
 
-$OpenBSD: README.macppc,v 1.4 2008/08/31 07:33:29 matthieu Exp $
+$OpenBSD: README.macppc,v 1.5 2009/01/03 08:18:10 matthieu Exp $
