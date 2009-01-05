@@ -400,8 +400,41 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE042B, "Quadro NVS 135M" },
   { 0x10DE042C, "GeForce 9400 GT" },
   { 0x10DE042D, "Quadro FX 360M" },
+  { 0x10DE042E, "GeForce 9300M G" },
   { 0x10DE042F, "Quadro NVS 290" },
+  { 0x10DE05E1, "GeForce GTX 280" },
+  { 0x10DE05E2, "GeForce GTX 260" },
+  { 0x10DE0600, "GeForce 8800 GTS 512" },
+  { 0x10DE0602, "GeForce 8800 GT" },
+  { 0x10DE0604, "GeForce 9800 GX2" },
+  { 0x10DE0606, "GeForce 8800 GS" },
+  { 0x10DE0609, "GeForce 8800M GTS" },
+  { 0x10DE060C, "GeForce 8800M GTX" },
+  { 0x10DE060D, "GeForce 8800 GS" },
+  { 0x10DE0610, "GeForce 9600 GSO" },
   { 0x10DE0611, "GeForce 8800 GT" },
+  { 0x10DE0612, "GeForce 9800 GTX" },
+  { 0x10DE0613, "GeForce 9800 GTK+" },
+  { 0x10DE0614, "GeForce 9800 GT" },
+  { 0x10DE061A, "Quadro FX 3700" },
+  { 0x10DE061C, "Quadro FX 3600M" },
+  { 0x10DE0622, "GeForce 9600 GT" },
+  { 0x10DE0623, "GeForce 9600 GS" },
+  { 0x10DE0628, "GeForce 9800M GTS" },
+  { 0x10DE062A, "GeForce 9700M GTS" },
+  { 0x10DE062C, "GeForce 9800M GTS" },
+  { 0x10DE0640, "GeForce 9500 GT" },
+  { 0x10DE0647, "GeForce 9600M GT" },
+  { 0x10DE0648, "GeForce 9600M GS" },
+  { 0x10DE0649, "GeForce 9600M GT" },
+  { 0x10DE064B, "GeForce 9500M G" },
+  { 0x10DE06E1, "GeForce 9300 GS" },
+  { 0x10DE06E4, "GeForce 8400 GS" },
+  { 0x10DE06E5, "GeForce 9300M GS" },
+  { 0x10DE06E8, "GeForce 9200M GS" },
+  { 0x10DE06E9, "GeForce 9300M GS" },
+  { 0x10DE06EA, "Quadro NVS 150M" },
+  { 0x10DE06EB, "Quadro NVS 160M" },
 
   {-1, NULL}
 };
@@ -767,7 +800,15 @@ NVIsG80(int chipType)
         case 0x0190:
         case 0x0400:
         case 0x0420:
+        case 0x05e0:
+        case 0x05f0:
+        case 0x0600:
         case 0x0610:
+        case 0x0620:
+        case 0x0630:
+        case 0x0640:
+        case 0x06e0:
+        case 0x06f0:
             return TRUE;
     }
 
