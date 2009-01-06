@@ -428,6 +428,7 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE0648, "GeForce 9600M GS" },
   { 0x10DE0649, "GeForce 9600M GT" },
   { 0x10DE064B, "GeForce 9500M G" },
+  { 0x10DE06E0, "GeForce 9300 GE" },
   { 0x10DE06E1, "GeForce 9300 GS" },
   { 0x10DE06E4, "GeForce 8400 GS" },
   { 0x10DE06E5, "GeForce 9300M GS" },
@@ -435,6 +436,7 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE06E9, "GeForce 9300M GS" },
   { 0x10DE06EA, "Quadro NVS 150M" },
   { 0x10DE06EB, "Quadro NVS 160M" },
+  { 0x10DE084B, "GeForce 9300 GE" },
 
   {-1, NULL}
 };
