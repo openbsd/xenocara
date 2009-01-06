@@ -389,10 +389,10 @@ static XtActionsRec actionsList[] = {
 static XtResource resources[] =
 {
     Bres(XtNallowSendEvents, XtCAllowSendEvents, screen.allowSendEvent0, False),
-    Bres(XtNallowFontOps, XtCAllowFontOps, screen.allowFontOp0, True),
-    Bres(XtNallowTcapOps, XtCAllowTcapOps, screen.allowTcapOp0, True),
+    Bres(XtNallowFontOps, XtCAllowFontOps, screen.allowFontOp0, False),
+    Bres(XtNallowTcapOps, XtCAllowTcapOps, screen.allowTcapOp0, False),
     Bres(XtNallowTitleOps, XtCAllowTitleOps, screen.allowTitleOp0, True),
-    Bres(XtNallowWindowOps, XtCAllowWindowOps, screen.allowWindowOp0, True),
+    Bres(XtNallowWindowOps, XtCAllowWindowOps, screen.allowWindowOp0, False),
     Bres(XtNaltIsNotMeta, XtCAltIsNotMeta, screen.alt_is_not_meta, False),
     Bres(XtNaltSendsEscape, XtCAltSendsEscape, screen.alt_sends_esc, False),
     Bres(XtNalwaysBoldMode, XtCAlwaysBoldMode, screen.always_bold_mode, False),

@@ -5100,8 +5100,12 @@ Thomas Dickey (invisible-island.net).
 .SH OPENBSD SPECIFICS
 On OpenBSD, the following resources have different default values: 
 .TP 8
+.B allowFontOps: false
+.TP 8
+.B allowTcapOps: false
+.TP 8
 .B allowWindowOps: false
-Extended window control sequences are disabled.
+Various, potentially dangerous, extended window control sequences are disabled.
 .TP 8
 .B deleteIsDEL: true
 The Delete key generates \fB^?\fP. 
