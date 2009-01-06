@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.136 2008/06/03 20:55:33 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.137 2008/12/30 15:40:13 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/scrollbar.c,v 3.48 2006/02/13 01:14:59 dickey Exp $ */
 
@@ -72,6 +72,7 @@
 #include <error.h>
 #include <menu.h>
 #include <xcharmouse.h>
+#include <xstrings.h>
 
 /*
  * The scrollbar's border overlaps the border of the vt100 window.  If there
@@ -593,11 +594,12 @@ ScrollTextUpDownBy(
 }
 
 /*
- * assume that b is lower case and allow plural
+ * assume that b is alphabetic and allow plural
  */
 static int
-specialcmplowerwiths(char *a, char *b, int *modifier)
+CompareWidths(char *a, char *b, int *modifier)
 {
+    int result;
     char ca, cb;
 
     *modifier = 0;
@@ -605,8 +607,8 @@ specialcmplowerwiths(char *a, char *b, int *modifier)
 	return 0;
 
     while (1) {
-	ca = char2lower(*a);
-	cb = *b;
+	ca = x_toupper(*a);
+	cb = x_toupper(*b);
 	if (ca != cb || ca == '\0')
 	    break;		/* if not eq else both nul */
 	a++, b++;
@@ -614,21 +616,25 @@ specialcmplowerwiths(char *a, char *b, int *modifier)
     if (cb != '\0')
 	return 0;
 
-    if (ca == 's')
+    if (ca == 'S')
 	ca = *++a;
 
     switch (ca) {
     case '+':
     case '-':
 	*modifier = (ca == '-' ? -1 : 1) * atoi(a + 1);
-	return 1;
+	result = 1;
+	break;
 
     case '\0':
-	return 1;
+	result = 1;
+	break;
 
     default:
-	return 0;
+	result = 0;
+	break;
     }
+    return result;
 }
 
 static long
@@ -641,11 +647,11 @@ params_to_pixels(TScreen * screen, String * params, Cardinal n)
     switch (n > 2 ? 2 : n) {
     case 2:
 	s = params[1];
-	if (specialcmplowerwiths(s, "page", &modifier)) {
+	if (CompareWidths(s, "PAGE", &modifier)) {
 	    mult = (MaxRows(screen) + modifier) * FontHeight(screen);
-	} else if (specialcmplowerwiths(s, "halfpage", &modifier)) {
+	} else if (CompareWidths(s, "HALFPAGE", &modifier)) {
 	    mult = ((MaxRows(screen) + modifier) * FontHeight(screen)) / 2;
-	} else if (specialcmplowerwiths(s, "pixel", &modifier)) {
+	} else if (CompareWidths(s, "PIXEL", &modifier)) {
 	    mult = 1;
 	} else {
 	    /* else assume that it is Line */

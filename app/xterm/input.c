@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.300 2008/09/14 16:37:25 Ted.Phelps Exp $ */
+/* $XTermId: input.c,v 1.302 2008/12/30 17:20:39 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -82,6 +82,7 @@
 
 #include <data.h>
 #include <fontutils.h>
+#include <xstrings.h>
 #include <xtermcap.h>
 
 /*
@@ -825,7 +826,7 @@ Input(XtermWidget xw,
     kd.is_fkey = False;
 #if OPT_TCAP_QUERY
     if (screen->tc_query_code >= 0) {
-	kd.keysym = screen->tc_query_code;
+	kd.keysym = (KeySym) screen->tc_query_code;
 	kd.is_fkey = screen->tc_query_fkey;
 	if (kd.keysym != XK_BackSpace) {
 	    kd.nbytes = 0;
@@ -862,7 +863,7 @@ Input(XtermWidget xw,
 		&& (keyboard->modify_now.other_keys > 1)
 		&& !IsControlInput(&kd)) {
 		kd.nbytes = 1;
-		kd.strbuf[0] = kd.keysym;
+		kd.strbuf[0] = (char) kd.keysym;
 	    }
 #endif /* OPT_MOD_FKEYS */
 	} else
@@ -983,7 +984,7 @@ Input(XtermWidget xw,
 #ifdef XK_KP_Home
 	if (kd.keysym >= XK_KP_Home && kd.keysym <= XK_KP_Begin) {
 	    TRACE(("...Input keypad before was " KEYSYM_FMT "\n", kd.keysym));
-	    kd.keysym += XK_Home - XK_KP_Home;
+	    kd.keysym += (unsigned) (XK_Home - XK_KP_Home);
 	    TRACE(("...Input keypad changed to " KEYSYM_FMT "\n", kd.keysym));
 	}
 #endif
@@ -1028,7 +1029,7 @@ Input(XtermWidget xw,
 
 	    TRACE(("...map XK_F%ld", kd.keysym - XK_Fn(1) + 1));
 	    if (evt_state & ControlMask) {
-		kd.keysym += xw->misc.ctrl_fkeys;
+		kd.keysym += (KeySym) xw->misc.ctrl_fkeys;
 		evt_state &= ~ControlMask;
 	    }
 	    TRACE((" to XK_F%ld\n", kd.keysym - XK_Fn(1) + 1));
@@ -1039,11 +1040,11 @@ Input(XtermWidget xw,
 
 	    TRACE(("...map XK_F%ld", kd.keysym - XK_Fn(1) + 1));
 	    if (evt_state & ShiftMask) {
-		kd.keysym += xw->misc.ctrl_fkeys * 1;
+		kd.keysym += (KeySym) (xw->misc.ctrl_fkeys * 1);
 		evt_state &= ~ShiftMask;
 	    }
 	    if (evt_state & ControlMask) {
-		kd.keysym += xw->misc.ctrl_fkeys * 2;
+		kd.keysym += (KeySym) (xw->misc.ctrl_fkeys * 2);
 		evt_state &= ~ControlMask;
 	    }
 	    TRACE((" to XK_F%ld\n", kd.keysym - XK_Fn(1) + 1));
@@ -1124,7 +1125,7 @@ Input(XtermWidget xw,
 		 && (dec_code >= 11 && dec_code <= 14)) {
 	    reply.a_type = ANSI_SS3;
 	    VT52_CURSOR_KEYS;
-	    reply.a_final = A2E(dec_code - 11 + E2A('P'));
+	    reply.a_final = (Char) A2E(dec_code - 11 + E2A('P'));
 	    modifyCursorKey(&reply,
 			    keyboard->modify_now.function_keys,
 			    &modify_parm);
@@ -1167,7 +1168,7 @@ Input(XtermWidget xw,
 	key = True;
     } else if (IsPFKey(kd.keysym)) {
 	reply.a_type = ANSI_SS3;
-	reply.a_final = kd.keysym - XK_KP_F1 + 'P';
+	reply.a_final = (Char) ((kd.keysym - XK_KP_F1) + 'P');
 	VT52_CURSOR_KEYS;
 	MODIFIER_PARM;
 	unparseseq(xw, &reply);
@@ -1175,7 +1176,7 @@ Input(XtermWidget xw,
     } else if (IsKeypadKey(kd.keysym)) {
 	if (keypad_mode) {
 	    reply.a_type = ANSI_SS3;
-	    reply.a_final = kypd_apl[kd.keysym - XK_KP_Space];
+	    reply.a_final = (Char) (kypd_apl[kd.keysym - XK_KP_Space]);
 	    VT52_KEYPAD;
 	    MODIFIER_PARM;
 	    unparseseq(xw, &reply);
@@ -1190,7 +1191,7 @@ Input(XtermWidget xw,
 	    reply.a_type = ANSI_CSI;
 	}
 	modifyCursorKey(&reply, keyboard->modify_now.cursor_keys, &modify_parm);
-	reply.a_final = curfinal[kd.keysym - XK_Home];
+	reply.a_final = (Char) (curfinal[kd.keysym - XK_Home]);
 	VT52_CURSOR_KEYS;
 	MODIFIER_PARM;
 	unparseseq(xw, &reply);
@@ -1286,7 +1287,7 @@ Input(XtermWidget xw,
 	    if (eightbit && (kd.nbytes == 1) && screen->input_eight_bits) {
 		IChar ch = CharOf(kd.strbuf[0]);
 		if (ch < 128) {
-		    kd.strbuf[0] |= 0x80;
+		    kd.strbuf[0] |= (char) 0x80;
 		    TRACE(("...input shift from %d to %d (%#x to %#x)\n",
 			   ch, CharOf(kd.strbuf[0]),
 			   ch, CharOf(kd.strbuf[0])));
@@ -1299,8 +1300,8 @@ Input(XtermWidget xw,
 			 */
 			ch = CharOf(kd.strbuf[0]);
 			kd.nbytes = 2;
-			kd.strbuf[0] = 0xc0 | ((ch >> 6) & 0x3);
-			kd.strbuf[1] = 0x80 | (ch & 0x3f);
+			kd.strbuf[0] = (char) (0xc0 | ((ch >> 6) & 0x3));
+			kd.strbuf[1] = (char) (0x80 | (ch & 0x3f));
 			TRACE(("...encoded %#x in UTF-8 as %#x,%#x\n",
 			       ch, CharOf(kd.strbuf[0]), CharOf(kd.strbuf[1])));
 		    }
@@ -1314,15 +1315,15 @@ Input(XtermWidget xw,
 	    {
 		/* VT220 & up: National Replacement Characters */
 		if ((xw->flags & NATIONAL) != 0) {
-		    int cmp = xtermCharSetIn(CharOf(kd.strbuf[0]),
-					     screen->keyboard_dialect[0]);
+		    unsigned cmp = xtermCharSetIn(CharOf(kd.strbuf[0]),
+						  screen->keyboard_dialect[0]);
 		    TRACE(("...input NRC %d, %s %d\n",
 			   CharOf(kd.strbuf[0]),
 			   (CharOf(kd.strbuf[0]) == cmp)
 			   ? "unchanged"
 			   : "changed to",
 			   CharOf(cmp)));
-		    kd.strbuf[0] = cmp;
+		    kd.strbuf[0] = (char) cmp;
 		} else if (eightbit) {
 		    prefix = ANSI_ESC;
 		} else if (kd.strbuf[0] == '?'
@@ -1399,7 +1400,7 @@ decfuncvalue(KEY_DATA * kd)
 	    /* after F20 the codes are made up and do not correspond to any
 	     * real terminal.  So they are simply numbered sequentially.
 	     */
-	    result = 42 + (kd->keysym - XK_Fn(21));
+	    result = 42 + (int) (kd->keysym - XK_Fn(21));
 	    break;
 	}
     } else {
@@ -1479,7 +1480,7 @@ hpfuncvalue(ANSI * reply, KEY_DATA * kd)
     }
     if (result > 0) {
 	reply->a_type = ANSI_ESC;
-	reply->a_final = result;
+	reply->a_final = (Char) result;
     }
 #else
     (void) reply;
@@ -1569,7 +1570,7 @@ scofuncvalue(ANSI * reply, KEY_DATA * kd)
     }
     if (result > 0) {
 	reply->a_type = ANSI_CSI;
-	reply->a_final = result;
+	reply->a_final = (Char) result;
     }
 #else
     (void) reply;
@@ -1666,7 +1667,7 @@ sunfuncvalue(ANSI * reply, KEY_DATA * kd)
 	reply->a_final = 'z';
     } else if (IsCursorKey(kd->keysym)) {
 	reply->a_type = ANSI_SS3;
-	reply->a_final = curfinal[kd->keysym - XK_Home];
+	reply->a_final = (Char) curfinal[kd->keysym - XK_Home];
     }
 #else
     (void) reply;
@@ -1678,7 +1679,7 @@ sunfuncvalue(ANSI * reply, KEY_DATA * kd)
 #define isName(c) ((c) == '_' || isalnum(CharOf(c)))
 
 /*
- * Strip unneeded whitespace from a translations resource, lowercasing and
+ * Strip unneeded whitespace from a translations resource, mono-casing and
  * returning a malloc'd copy of the result.
  */
 static char *
@@ -1700,7 +1701,7 @@ stripTranslations(const char *s)
 		ch = *s++;
 		if (ch == '\n') {
 		    if (d != dst)
-			*d++ = ch;
+			*d++ = (char) ch;
 		    state = 0;
 		} else if (strchr(":!#", ch) != 0) {
 		    while (d != dst && isspace(CharOf(d[-1])))
@@ -1714,7 +1715,7 @@ stripTranslations(const char *s)
 			while (d != dst && isspace(CharOf(d[-1])))
 			    --d;
 		    }
-		    *d++ = char2lower(ch);
+		    *d++ = x_toupper(ch);
 		    ++state;
 		}
 		prv = ch;

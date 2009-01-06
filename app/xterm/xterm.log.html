@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.690 2008/09/14 23:43:15 tom Exp $
+  $XTermId: xterm.log.html,v 1.703 2008/12/30 19:09:49 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_238">Patch #238 - 2008/12/30</A>
 <LI><A HREF="#xterm_237">Patch #237 - 2008/09/14</A>
 <LI><A HREF="#xterm_236">Patch #236 - 2008/07/27</A>
 <LI><A HREF="#xterm_235">Patch #235 - 2008/04/20</A>
@@ -284,6 +285,53 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_238">Patch #238 - 2008/12/30</A></H1>
+<ul>
+	<li>update configure macro CF_XOPEN_SOURCE for AIX 6.x and Mint
+	    platforms.
+
+	<li>reset the screen wrapping-flag at the end of
+	    <code>ClearRight</code> to fix an occasional case where the last
+	    character of a scrolled and wrapped line would be cleared (patch by
+	    Joe Peterson).
+
+	<li>modify to use POSIX coding for comparing resource settings such
+	    as <code>locale</code>, to work with locales such as Turkish
+	    (report by M Vefa Bicakci).
+
+	<li>turn on configure <code>paste64</code> feature by default
+	    (request by Jean-Philippe Bernardy).
+	    It is runtime enabled/disabled with <code>allowWindowOps</code>.
+
+	<li>turn on configure <code>tcap-query</code> feature by default,
+	    add resource <code>allowTcapOps</code>
+	    to make this runtime enabled/disabled.
+
+	<li>make <code>OSC 3</code> (change X property, from
+	    <a href="#xterm_110">patch #110</a>)
+	    subject to <code>allowWindowOps</code> resource.
+
+	<li>make VT220 <code>DSR</code> responses inactive in VT100-mode.
+
+	<li>make <code>DECUDK</code> feature inactive in VT100-mode.
+
+	<li>respond to incorrectly formatted <code>DECRQSS</code> with a
+	    cancel.
+
+	<li>add <code>allowFontOps</code> 
+	    resource to allow the fontsize-switching and font query/set
+	    control sequences to be enabled/disabled
+	    (prompted by Debian #510030).
+
+	<li>some code cleanup based on gcc 4.x <code>-Wconversion</code>
+	    warnings in button.c and charproc.c
+
+	<li>modify <code>tcap-query</code> feature to not return data for
+	    shifted cursor-keys when the keyboard type is set to vt220,
+	    since returning the same string for shifted/unshifted keys may
+	    confuse some applications (GenToo #212546).
+</ul>
 
 <H1><A NAME="xterm_237">Patch #237 - 2008/09/14</A></H1>
 <ul>

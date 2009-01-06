@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.48 2008/02/20 20:54:54 Julien.Cristau Exp $ */
+/* $XTermId: cachedGCs.c,v 1.49 2008/12/30 17:33:30 tom Exp $ */
 
 /************************************************************
 
@@ -396,16 +396,16 @@ newCache(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, CgsCache * me)
 static Boolean
 HaveFont(XTermFonts * a)
 {
-    return (a != 0 && a->fs != 0);
+    return (Boolean) (a != 0 && a->fs != 0);
 }
 
 static Boolean
 SameFont(XTermFonts * a, XTermFonts * b)
 {
-    return (HaveFont(a)
-	    && HaveFont(b)
-	    && ((a->fs == b->fs)
-		|| !memcmp(a->fs, b->fs, sizeof(*(a->fs)))));
+    return (Boolean) (HaveFont(a)
+		      && HaveFont(b)
+		      && ((a->fs == b->fs)
+			  || !memcmp(a->fs, b->fs, sizeof(*(a->fs)))));
 }
 
 #define SameColor(a,b) ((a) == (b))

@@ -1,10 +1,10 @@
-/* $XTermId: xstrings.h,v 1.12 2007/06/09 13:35:28 tom Exp $ */
+/* $XTermId: xstrings.h,v 1.14 2008/12/30 17:10:43 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xstrings.h,v 1.5 2006/02/13 01:14:59 dickey Exp $ */
 
 /************************************************************
 
-Copyright 2000-2006,2007 by Thomas E. Dickey
+Copyright 2000-2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -45,6 +45,7 @@ extern char *x_skip_nonblanks(char * /* s */);
 extern char *x_strdup(const char * /* s */);
 extern char *x_strindex(char * /* s1 */, char * /* s2 */);
 extern char *x_strtrim(char * /* s */);
+extern char x_toupper(int /* ch */);
 extern int x_strcasecmp(const char * /* s1 */, const char * /* s2 */);
 extern int x_strncasecmp(const char * /* s1 */, const char * /* s2 */, unsigned  /* n */);
 

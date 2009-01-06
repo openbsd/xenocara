@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.253 2008/07/27 15:28:15 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.254 2008/12/30 17:01:41 tom Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.65 2006/06/19 00:36:50 dickey Exp $
 dnl
@@ -276,13 +276,14 @@ AC_TRY_LINK([#include <stdio.h>],[printf("Hello world");],,
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_CHECK_ERRNO version: 9 updated: 2001/12/30 18:03:23
+dnl CF_CHECK_ERRNO version: 10 updated: 2008/08/22 16:33:22
 dnl --------------
 dnl Check for data that is usually declared in <stdio.h> or <errno.h>, e.g.,
 dnl the 'errno' variable.  Define a DECL_xxx symbol if we must declare it
 dnl ourselves.
 dnl
 dnl $1 = the name to check
+dnl $2 = the assumed type
 AC_DEFUN([CF_CHECK_ERRNO],
 [
 AC_CACHE_CHECK(if external $1 is declared, cf_cv_dcl_$1,[
@@ -293,7 +294,7 @@ AC_CACHE_CHECK(if external $1 is declared, cf_cv_dcl_$1,[
 #include <stdio.h>
 #include <sys/types.h>
 #include <errno.h> ],
-    [long x = (long) $1],
+    ifelse($2,,int,$2) x = (ifelse($2,,int,$2)) $1,
     [cf_cv_dcl_$1=yes],
     [cf_cv_dcl_$1=no])
 ])
@@ -304,7 +305,7 @@ if test "$cf_cv_dcl_$1" = no ; then
 fi
 
 # It's possible (for near-UNIX clones) that the data doesn't exist
-CF_CHECK_EXTERN_DATA($1,int)
+CF_CHECK_EXTERN_DATA($1,ifelse($2,,int,$2))
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_CHECK_EXTERN_DATA version: 3 updated: 2001/12/30 18:03:23
@@ -2320,7 +2321,7 @@ int x = XkbBI_Info
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 26 updated: 2008/07/27 11:26:57
+dnl CF_XOPEN_SOURCE version: 28 updated: 2008/12/27 12:30:03
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -2337,7 +2338,7 @@ cf_XOPEN_SOURCE=ifelse($1,,500,$1)
 cf_POSIX_C_SOURCE=ifelse($2,,199506L,$2)
 
 case $host_os in #(vi
-aix[[45]]*) #(vi
+aix[[456]]*) #(vi
 	CPPFLAGS="$CPPFLAGS -D_ALL_SOURCE"
 	;;
 freebsd*|dragonfly*) #(vi
@@ -2354,7 +2355,7 @@ hpux*) #(vi
 irix[[56]].*) #(vi
 	CPPFLAGS="$CPPFLAGS -D_SGI_SOURCE"
 	;;
-linux*|gnu*|k*bsd*-gnu) #(vi
+linux*|gnu*|mint*|k*bsd*-gnu) #(vi
 	CF_GNU_SOURCE
 	;;
 mirbsd*) #(vi

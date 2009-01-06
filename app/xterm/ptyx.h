@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.518 2008/09/14 15:16:20 Paul.Lampert Exp $ */
+/* $XTermId: ptyx.h,v 1.536 2008/12/30 17:22:55 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -339,13 +339,15 @@ typedef struct {
 	char *desc;
 } OptionHelp;
 
+typedef short ParmType;
+
 typedef struct {
-	unsigned char	a_type;		/* CSI, etc., see unparseq()	*/
-	unsigned char	a_pintro;	/* private-mode char, if any	*/
-	unsigned char	a_inters;	/* special (before final-char)	*/
-	unsigned char	a_final;	/* final-char			*/
-	short	a_nparam;		/* # of parameters		*/
-	short	a_param[NPARAM];	/* Parameters			*/
+	Char		a_type;		/* CSI, etc., see unparseq()	*/
+	Char		a_pintro;	/* private-mode char, if any	*/
+	Char		a_inters;	/* special (before final-char)	*/
+	Char		a_final;	/* final-char			*/
+	ParmType	a_nparam;	/* # of parameters		*/
+	ParmType	a_param[NPARAM]; /* Parameters			*/
 } ANSI;
 
 #define TEK_FONT_LARGE 0
@@ -1010,8 +1012,12 @@ extern int A2E(int);
 
 /***====================================================================***/
 
-#define LO_BYTE(ch) ((ch) & 0xff)
-#define HI_BYTE(ch) ((ch) >> 8)
+#define LO_BYTE(ch) CharOf((ch) & 0xff)
+#define HI_BYTE(ch) CharOf((ch) >> 8)
+
+#define PACK_FGBG(screen, row, col) \
+	    (unsigned) ((SCRN_BUF_FGRND(screen, row)[col] << 8) \
+		      | (SCRN_BUF_BGRND(screen, row)[col]))
 
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
@@ -1200,8 +1206,9 @@ typedef enum {
 	DP_LAST
 } SaveModes;
 
-#define DoSM(code,value) screen->save_modes[code] = value
-#define DoRM(code,value) value = screen->save_modes[code]
+#define DoSM(code,value)  screen->save_modes[code] = (unsigned) (value)
+#define DoRM(code,value)  value = (Boolean) screen->save_modes[code]
+#define DoRM0(code,value) value = screen->save_modes[code]
 
 	/* index into vt_shell[] or tek_shell[] */
 typedef enum {
@@ -1235,9 +1242,9 @@ typedef struct {
 	int		row;
 	int		col;
 	unsigned	flags;		/* VTxxx saves graphics rendition */
-	char		curgl;
-	char		curgr;
-	char		gsets[4];
+	Char		curgl;
+	Char		curgr;
+	Char		gsets[4];
 #if OPT_ISO_COLORS
 	int		cur_foreground; /* current foreground color	*/
 	int		cur_background; /* current background color	*/
@@ -1366,8 +1373,8 @@ typedef struct {
 #endif
 	int		border;		/* inner border			*/
 	int		scrollBarBorder; /* scrollBar border		*/
-	unsigned long	event_mask;
-	unsigned short	send_mouse_pos;	/* user wants mouse transition  */
+	long		event_mask;
+	unsigned	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
 	Boolean		send_focus_pos; /* user wants focus in/out info */
 	Boolean		quiet_grab;	/* true if no cursor change on focus */
@@ -1378,8 +1385,8 @@ typedef struct {
 	 * base64_flush() is the last step of the conversion, it clears these
 	 * variables.
 	 */
-	int		base64_accu;
-	int		base64_count;
+	unsigned	base64_accu;
+	unsigned	base64_count;
 	unsigned	base64_pad;
 #endif
 #if OPT_READLINE
@@ -1394,7 +1401,7 @@ typedef struct {
 	Boolean		locator_reset;	/* turn mouse off after 1 report? */
 	Boolean		locator_pixels;	/* report in pixels?		*/
 					/* if false, report in cells	*/
-	unsigned short	locator_events;	/* what events to report	*/
+	unsigned	locator_events;	/* what events to report	*/
 	Boolean		loc_filter;	/* is filter rectangle active?	*/
 	int		loc_filter_top;	/* filter rectangle for DEC Locator */
 	int		loc_filter_left;
@@ -1408,12 +1415,19 @@ typedef struct {
 	Boolean		bellOnReset;	/* bellOnReset			*/
 	Boolean		visualbell;	/* visual bell mode		*/
 	Boolean		poponbell;	/* pop on bell mode		*/
+
+	Boolean		allowFontOps;	/* FontOps mode			*/
 	Boolean		allowSendEvents;/* SendEvent mode		*/
+	Boolean		allowTcapOps;	/* TcapOps mode			*/
 	Boolean		allowTitleOps;	/* TitleOps mode		*/
 	Boolean		allowWindowOps;	/* WindowOps mode		*/
+
+	Boolean		allowFontOp0;	/* initial FontOps mode		*/
 	Boolean		allowSendEvent0;/* initial SendEvent mode	*/
+	Boolean		allowTcapOp0;	/* initial TcapOps mode		*/
 	Boolean		allowTitleOp0;	/* initial TitleOps mode	*/
 	Boolean		allowWindowOp0;	/* initial WindowOps mode	*/
+
 	Boolean		awaitInput;	/* select-timeout mode		*/
 	Boolean		grabbedKbd;	/* keyboard is grabbed		*/
 #ifdef ALLOWLOGGING
@@ -1529,7 +1543,7 @@ typedef struct {
 	Boolean		scrollkey;	/* scroll to bottom on key	*/
 	Boolean		cursor_moved;	/* scrolling makes cursor move	*/
 
-	unsigned short	do_wrap;	/* true if cursor in last column
+	Boolean		do_wrap;	/* true if cursor in last column
 					    and character just output    */
 
 	int		incopy;		/* 0 idle; 1 XCopyArea issued;
@@ -1552,11 +1566,11 @@ typedef struct {
 	int		scrolls;	/* outstanding scroll count,
 					    used only with multiscroll	*/
 	SavedCursor	sc[SAVED_CURSORS]; /* data for restore cursor	*/
-	unsigned char	save_modes[DP_LAST]; /* save dec/xterm private modes */
+	unsigned 	save_modes[DP_LAST]; /* save dec/xterm private modes */
 
 	/* Improved VT100 emulation stuff.				*/
 	String		keyboard_dialect; /* default keyboard dialect	*/
-	char		gsets[4];	/* G0 through G3.		*/
+	Char		gsets[4];	/* G0 through G3.		*/
 	Char		curgl;		/* Current GL setting.		*/
 	Char		curgr;		/* Current GR setting.		*/
 	Char		curss;		/* Current single shift.	*/
@@ -1583,10 +1597,10 @@ typedef struct {
 
 #if OPT_VT52_MODE
 	int		vt52_save_level; /* save-area for DECANM	*/
-	char		vt52_save_curgl;
-	char		vt52_save_curgr;
-	char		vt52_save_curss;
-	char		vt52_save_gsets[4];
+	Char		vt52_save_curgl;
+	Char		vt52_save_curgr;
+	Char		vt52_save_curss;
+	Char		vt52_save_gsets[4];
 #endif
 	/* Testing */
 #if OPT_XMC_GLITCH
@@ -1628,7 +1642,7 @@ typedef struct {
 	Boolean		replyToEmacs;	/* Send emacs escape code when done selecting or extending? */
 	Char		*selection_data; /* the current selection */
 	int		selection_size; /* size of allocated buffer */
-	int		selection_length; /* number of significant bytes */
+	unsigned long	selection_length; /* number of significant bytes */
 	EventMode	eventMode;
 	Time		selection_time;	/* latest event timestamp */
 	Time		lastButtonUpTime;

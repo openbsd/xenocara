@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.275 2008/09/14 22:21:14 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.278 2008/12/30 17:32:06 tom Exp $ */
 
 /************************************************************
 
@@ -119,7 +119,7 @@ static void lookupOneFontSize(XtermWidget, int);
 #endif
 
 #if OPT_WIDE_CHARS
-static Bool
+static unsigned
 countGlyphs(XFontStruct * fp)
 {
     unsigned count = 0;
@@ -505,8 +505,8 @@ same_font_name(char *pattern, char *match)
 		return False;
 	    }
 	} else {
-	    int p = char2lower(*pattern++);
-	    int m = char2lower(*match++);
+	    int p = x_toupper(*pattern++);
+	    int m = x_toupper(*match++);
 	    if (p != m)
 		return False;
 	}
@@ -1301,9 +1301,8 @@ HandleLoadVTFonts(Widget w,
 
 	TRACE(("HandleLoadVTFonts(%d)\n", *param_count));
 	strcpy(myClass, convert);
-	if (*param_count == 1
-	    && islower(CharOf(myClass[0])))
-	    myClass[0] = toupper(CharOf(myClass[0]));
+	if (*param_count == 1)
+	    myClass[0] = x_toupper(myClass[0]);
 
 	if (xtermLoadVTFonts(xw, myName, myClass)) {
 	    /*
@@ -1340,10 +1339,10 @@ xtermSetCursorBox(TScreen * screen)
     int hh = screen->cursor_underline ? 1 : fh;
 
     vp = &VTbox[1];
-    (vp++)->x = fw;
-    (vp++)->y = hh;
-    (vp++)->x = -fw;
-    vp->y = -hh;
+    (vp++)->x = (short) fw;
+    (vp++)->y = (short) hh;
+    (vp++)->x = (short) -fw;
+    vp->y = (short) -hh;
 
     screen->box = VTbox;
 }
@@ -2150,7 +2149,7 @@ xtermDrawBoxChar(XtermWidget xw,
 		 360 * 64);
     } else if (ch < (sizeof(lines) / sizeof(lines[0]))
 	       && (p = lines[ch]) != 0) {
-	int coord[4];
+	unsigned coord[4];
 	int n = 0;
 	while (*p >= 0) {
 	    coord[n++] = *p++;

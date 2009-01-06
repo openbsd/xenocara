@@ -1,4 +1,4 @@
-/* $XTermId: xcharmouse.h,v 1.10 2007/02/07 23:32:03 tom Exp $ */
+/* $XTermId: xcharmouse.h,v 1.11 2008/10/05 21:18:49 tom Exp $ */
 
 /************************************************************
 
@@ -65,7 +65,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #endif /* OPT_DEC_LOCATOR */
 
 /* Values for screen->send_mouse_pos */
-enum {
+typedef enum {
     MOUSE_OFF
     ,X10_MOUSE
     ,VT200_MOUSE
@@ -73,6 +73,6 @@ enum {
     ,BTN_EVENT_MOUSE
     ,ANY_EVENT_MOUSE
     ,DEC_LOCATOR
-};
+} XtermMouseModes;
 
 #endif /* included_xcharmouse_h */

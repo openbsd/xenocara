@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $XTermId: tcapquery.pl,v 1.12 2007/12/16 14:02:35 tom Exp $
+# $XTermId: tcapquery.pl,v 1.13 2008/10/05 16:20:14 tom Exp $
 #
 # -- Thomas Dickey (2004/3/3)
 # Test the tcap-query option of xterm.
@@ -227,12 +227,15 @@ query_tcap(	"Fr",	"kf63");
 
 if ( defined($opt_a) || defined($opt_k) ) {
 query_tcap(	"K1",	"ka1");
+query_tcap(	"K3",	"ka3");
 query_tcap(	"K4",	"kc1");
+query_tcap(	"K5",	"kc3");
 }
 
 if ( defined($opt_a) || defined($opt_m) ) {
 query_tcap(	"kB",	"kcbt");
 query_tcap(	"kC",	"kclr");
+query_tcap(	"&8",	"kund");
 
 query_tcap(	"kb",	"kbs");
 

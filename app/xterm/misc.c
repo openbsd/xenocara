@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.384 2008/07/27 15:38:05 tom Exp $ */
+/* $XTermId: misc.c,v 1.391 2008/12/30 17:44:50 tom Exp $ */
 
 /*
  *
@@ -552,22 +552,27 @@ HandleStringEvent(Widget w GCC_UNUSED,
 	return;
 
     if ((*params)[0] == '0' && (*params)[1] == 'x' && (*params)[2] != '\0') {
+	const char *abcdef = "ABCDEF";
+	const char *xxxxxx;
 	Char c, *p;
-	Char hexval[2];
-	hexval[0] = hexval[1] = 0;
-	for (p = (Char *) (*params + 2); (c = *p); p++) {
-	    hexval[0] *= 16;
-	    if (isupper(c))
-		c = tolower(c);
+	unsigned value = 0;
+
+	for (p = (Char *) (*params + 2); (c = CharOf(x_toupper(*p))) !=
+	     '\0'; p++) {
+	    value *= 16;
 	    if (c >= '0' && c <= '9')
-		hexval[0] += c - '0';
-	    else if (c >= 'a' && c <= 'f')
-		hexval[0] += c - 'a' + 10;
+		value += (unsigned) (c - '0');
+	    else if ((xxxxxx = strchr(abcdef, c)) != 0)
+		value += (unsigned) (xxxxxx - abcdef) + 10;
 	    else
 		break;
 	}
-	if (c == '\0')
+	if (c == '\0') {
+	    Char hexval[2];
+	    hexval[0] = (Char) value;
+	    hexval[1] = 0;
 	    StringInput(term, hexval, 1);
+	}
     } else {
 	StringInput(term, (Char *) * params, strlen(*params));
     }
@@ -635,9 +640,9 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 	    || setgid(screen->gid) == -1) {
 	    fprintf(stderr, "Cannot reset uid/gid\n");
 	} else {
-	    int myargc = *nparams + 1;
+	    unsigned myargc = *nparams + 1;
 	    char **myargv = TypeMallocN(char *, myargc + 1);
-	    int n = 0;
+	    unsigned n = 0;
 
 	    myargv[n++] = child_exe;
 
@@ -1676,10 +1681,10 @@ ReportAnsiColorRequest(XtermWidget xw, int colornum, int final)
     unparse_end(xw);
 }
 
-static int
+static unsigned
 getColormapSize(Display * display)
 {
-    int result;
+    unsigned result;
     int numFound;
     XVisualInfo myTemplate, *visInfoPtr;
 
@@ -1687,7 +1692,7 @@ getColormapSize(Display * display)
 							    XDefaultScreen(display)));
     visInfoPtr = XGetVisualInfo(display, (long) VisualIDMask,
 				&myTemplate, &numFound);
-    result = (numFound >= 1) ? visInfoPtr->colormap_size : 0;
+    result = (numFound >= 1) ? (unsigned) visInfoPtr->colormap_size : 0;
 
     XFree((char *) visInfoPtr);
     return result;
@@ -2330,8 +2335,10 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	    }
 	}
     }
-    if (buf == 0)
+    if (buf == 0) {
+	TRACE(("do_osc found no data\n"));
 	return;
+    }
 
     switch (mode) {
     case 0:			/* new icon name and title */
@@ -2348,7 +2355,8 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	break;
 
     case 3:			/* change X property */
-	ChangeXprop(buf);
+	if (screen->allowWindowOps)
+	    ChangeXprop(buf);
 	break;
 #if OPT_ISO_COLORS
     case 4:
@@ -2401,7 +2409,9 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
     case 50:
 #if OPT_SHIFT_FONTS
-	if (buf != 0 && !strcmp(buf, "?")) {
+	if (!screen->allowFontOps && xw->misc.shift_fonts) {
+	    ;			/* disabled via resource or control-sequence */
+	} else if (buf != 0 && !strcmp(buf, "?")) {
 	    int num = screen->menu_font_number;
 
 	    unparseputc1(xw, ANSI_OSC);
@@ -2472,7 +2482,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
 #if OPT_PASTE64
     case 52:
-	if (screen->allowWindowOps && (buf != 0))
+	if (screen->allowWindowOps)
 	    ManipulateSelectionData(xw, screen, buf, final);
 	break;
 #endif
@@ -2546,12 +2556,12 @@ parse_decudk(char *cp)
 	int len = 0;
 
 	while (isdigit(CharOf(*cp)))
-	    key = (key * 10) + (*cp++ - '0');
+	    key = (key * 10) + (unsigned) (*cp++ - '0');
 	if (*cp == '/') {
 	    cp++;
 	    while ((hi = udk_value(&cp)) >= 0
 		   && (lo = udk_value(&cp)) >= 0) {
-		str[len++] = (hi << 4) | lo;
+		str[len++] = (char) ((hi << 4) | lo);
 	    }
 	}
 	if (len > 0 && key < MAX_UDK) {
@@ -2813,14 +2823,17 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 	    } else
 		okay = False;
 
-	    unparseputc1(xw, ANSI_DCS);
-	    unparseputc(xw, okay ? '1' : '0');
-	    unparseputc(xw, '$');
-	    unparseputc(xw, 'r');
-	    if (okay)
+	    if (okay) {
+		unparseputc1(xw, ANSI_DCS);
+		unparseputc(xw, okay ? '1' : '0');
+		unparseputc(xw, '$');
+		unparseputc(xw, 'r');
 		cp = reply;
-	    unparseputs(xw, cp);
-	    unparseputc1(xw, ANSI_ST);
+		unparseputs(xw, cp);
+		unparseputc1(xw, ANSI_ST);
+	    } else {
+		unparseputc(xw, ANSI_CAN);
+	    }
 	} else {
 	    unparseputc(xw, ANSI_CAN);
 	}
@@ -2828,7 +2841,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 #if OPT_TCAP_QUERY
     case '+':
 	cp++;
-	if (*cp == 'q') {
+	if ((*cp == 'q') && screen->allowTcapOps) {
 	    Bool fkey;
 	    unsigned state;
 	    int code;
@@ -2892,16 +2905,18 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 	break;
 #endif
     default:
-	parse_ansi_params(&params, &cp);
-	switch (params.a_final) {
-	case '|':		/* DECUDK */
-	    if (params.a_param[0] == 0)
-		reset_decudk();
-	    parse_decudk(cp);
-	    break;
-	case '{':		/* DECDLD (no '}' case though) */
-	    parse_decdld(&params, cp);
-	    break;
+	if (screen->terminal_id >= 200) {	/* VT220 */
+	    parse_ansi_params(&params, &cp);
+	    switch (params.a_final) {
+	    case '|':		/* DECUDK */
+		if (params.a_param[0] == 0)
+		    reset_decudk();
+		parse_decudk(cp);
+		break;
+	    case '{':		/* DECDLD (no '}' case though) */
+		parse_decdld(&params, cp);
+		break;
+	    }
 	}
 	break;
     }
@@ -3351,7 +3366,7 @@ xtermFindShell(char *leaf, Bool warning)
 }
 #endif /* VMS */
 
-#define ENV_HUNK(n)	((((n) + 1) | 31) + 1)
+#define ENV_HUNK(n)	(unsigned) ((((n) + 1) | 31) + 1)
 
 /*
  * copy the environment before Setenv'ing.

@@ -1,10 +1,10 @@
-/* $XTermId: xstrings.c,v 1.26 2007/06/09 13:43:00 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.28 2008/12/30 17:10:37 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xstrings.c,v 1.10 2006/02/13 01:14:59 dickey Exp $ */
 
 /************************************************************
 
-Copyright 2000-2006,2007 by Thomas E. Dickey
+Copyright 2000-2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -111,8 +111,8 @@ int
 x_strncasecmp(const char *s1, const char *s2, unsigned n)
 {
     while (n-- != 0) {
-	int c1 = toupper(CharOf(*s1));
-	int c2 = toupper(CharOf(*s2));
+	char c1 = x_toupper(*s1);
+	char c2 = x_toupper(*s2);
 	if (c1 != c2)
 	    return 1;
 	if (c1 == 0)
@@ -185,4 +185,30 @@ x_strtrim(char *s)
 	base = t;
     }
     return base;
+}
+
+/*
+ * Avoid using system locale for upper/lowercase conversion, since there are
+ * a few locales where toupper(tolower(c)) != c.
+ */
+char
+x_toupper(int ch)
+{
+    static char table[256];
+    char result = table[CharOf(ch)];
+
+    if (result == '\0') {
+	unsigned n;
+	const char *s = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+	for (n = 0; n < sizeof(table); ++n) {
+	    table[n] = (char) n;
+	}
+	for (n = 0; s[n] != '\0'; ++n) {
+	    table[CharOf(s[n])] = s[n % 26];
+	}
+	result = table[CharOf(ch)];
+    }
+
+    return result;
 }

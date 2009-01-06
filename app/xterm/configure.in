@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.245 2008/07/27 15:03:56 tom Exp $
+dnl $XTermId: configure.in,v 1.246 2008/12/30 11:30:48 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -644,10 +644,10 @@ test "$enable_numlock" = no && AC_DEFINE(OPT_NUM_LOCK,0)
 
 AC_MSG_CHECKING(if you want support for get/set of base64 selection data)
 
-CF_ARG_ENABLE(paste64,
-	[  --enable-paste64        enable get/set base64 selection data],
-	[enable_paste64=yes],
-	[enable_paste64=no])
+CF_ARG_DISABLE(paste64,
+	[  --disable-paste64       disable get/set base64 selection data],
+	[enable_paste64=no],
+	[enable_paste64=yes])
 AC_MSG_RESULT($enable_paste64)
 if test "$enable_paste64" = yes ; then
 	AC_DEFINE(OPT_PASTE64,1)
@@ -730,10 +730,10 @@ AC_MSG_RESULT($enable_tcap_fkeys)
 test "$enable_tcap_fkeys" = yes && AC_DEFINE(OPT_TCAP_FKEYS,1)
 
 AC_MSG_CHECKING(if you want to use termcap-query/report)
-CF_ARG_ENABLE(tcap-query,
-	[  --enable-tcap-query     compile-in termcap-query support],
-	[enable_tcap_query=yes],
-	[enable_tcap_query=no])
+CF_ARG_DISABLE(tcap-query,
+	[  --disable-tcap-query    disable compiled-in termcap-query support],
+	[enable_tcap_query=no],
+	[enable_tcap_query=yes])
 AC_MSG_RESULT($enable_tcap_query)
 test "$enable_tcap_query" = yes && AC_DEFINE(OPT_TCAP_QUERY,1)
 

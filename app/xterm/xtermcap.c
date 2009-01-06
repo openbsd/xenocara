@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.13 2008/07/27 15:18:56 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.14 2008/10/05 16:43:36 tom Exp $ */
 
 /*
- * Copyright 2007 by Thomas E. Dickey
+ * Copyright 2007,2008 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -156,6 +156,8 @@ static TCAPINFO table[] = {
 
 	DATA(	"K1",	"ka1",		XK_KP_Home,	0	),
 	DATA(	"K4",	"kc1",		XK_KP_End,	0	),
+	DATA(	"K3",	"ka3",		XK_KP_Prior,	0	),
+	DATA(	"K5",	"kc3",		XK_KP_Next,	0	),
 
 #ifdef XK_ISO_Left_Tab
 	DATA(	"kB",	"kcbt",		XK_ISO_Left_Tab, 0	),
@@ -165,6 +167,7 @@ static TCAPINFO table[] = {
 	DATA(	"kI",	"kich1",	XK_Insert,	0	),
 	DATA(	"kN",	"knp",		XK_Next,	0	),
 	DATA(	"kP",	"kpp",		XK_Prior,	0	),
+	DATA(	"&8",	"kund",		XK_Undo,	0	),
 	DATA(	"kb",	"kbs",		XK_BackSpace,	0	),
 # if OPT_TCAP_QUERY && OPT_ISO_COLORS
 	/* XK_COLORS is a fake code. */
@@ -213,7 +216,7 @@ hex2int(int c)
 }
 
 static TCAPINFO *
-lookupTcapByName(const char *name)
+lookupTcapByName(XtermWidget xw, const char *name)
 {
     TCAPINFO *result = 0;
     Cardinal n;
@@ -225,6 +228,24 @@ lookupTcapByName(const char *name)
 		break;
 	    }
 	}
+    }
+
+    /*
+     * The vt220-keyboard will not return distinct key sequences for shifted
+     * cursor-keys.  Just pretend they do not exist, since some programs may
+     * be confused if we return the same data for shifted/unshifted keys.
+     */
+    if (xw->keyboard.type == keyboardIsVT220
+	&& result != 0
+	&& result->state == 2) {
+	result = 0;
+    }
+
+    if (result != 0) {
+	TRACE(("lookupTcapByName(%s) tc=%s, ti=%s code %#x, state %#x\n",
+	       name, result->tc, result->ti, result->code, result->state));
+    } else {
+	TRACE(("lookupTcapByName(%s) FAIL\n", name));
     }
     return result;
 }
@@ -263,7 +284,7 @@ xtermcapKeycode(XtermWidget xw, char **params, unsigned *state, Bool * fkey)
     *fkey = False;
 
     if (*p == 0 || *p == ';') {
-	if ((data = lookupTcapByName(name)) != 0) {
+	if ((data = lookupTcapByName(xw, name)) != 0) {
 	    code = data->code;
 	    *state = xtermParamToState(xw, data->state);
 	    if (IsFunctionKey(code)) {

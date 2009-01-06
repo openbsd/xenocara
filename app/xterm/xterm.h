@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.503 2008/09/14 15:18:39 Paul.Lampert Exp $ */
+/* $XTermId: xterm.h,v 1.507 2008/12/30 15:46:41 tom Exp $ */
 
 /************************************************************
 
@@ -337,7 +337,9 @@ extern char **environ;
 /***====================================================================***/
 
 #define XtNallowC1Printable	"allowC1Printable"
+#define XtNallowFontOps		"allowFontOps"
 #define XtNallowSendEvents	"allowSendEvents"
+#define XtNallowTcapOps		"allowTcapOps"
 #define XtNallowTitleOps	"allowTitleOps"
 #define XtNallowWindowOps	"allowWindowOps"
 #define XtNaltIsNotMeta		"altIsNotMeta"
@@ -492,7 +494,9 @@ extern char **environ;
 #define XtNxmcMoveSGR		"xmcMoveSGR"
 
 #define XtCAllowC1Printable	"AllowC1Printable"
+#define XtCAllowFontOps		"AllowFontOps"
 #define XtCAllowSendEvents	"AllowSendEvents"
+#define XtCAllowTcapOps		"AllowTcapOps"
 #define XtCAllowTitleOps	"AllowTitleOps"
 #define XtCAllowWindowOps	"AllowWindowOps"
 #define XtCAltIsNotMeta		"AltIsNotMeta"
@@ -1105,7 +1109,6 @@ extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, unsigned 
 extern int AddToRefresh (XtermWidget /* xw */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
-extern int char2lower (int  /* ch */);
 extern int drawXtermText (XtermWidget /* xw */, unsigned  /* flags */, GC  /* gc */, int  /* x */, int  /* y */, int  /* chrset */, PAIRED_CHARS(Char * /* text */, Char * /* text2 */), Cardinal  /* len */, int  /* on_wide */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);
@@ -1229,15 +1232,15 @@ extern void putXtermCell (TScreen * /* screen */, int  /* row */, int  /* col */
 
 #if OPT_HIGHLIGHT_COLOR
 #define isNotForeground(xw, fg, bg, sel) \
-		((sel) != T_COLOR(&((xw)->screen), TEXT_FG) \
-		 && (sel) != (fg) \
-		 && (sel) != (bg) \
-		 && (sel) != (xw)->dft_foreground)
+		(Boolean) ((sel) != T_COLOR(&((xw)->screen), TEXT_FG) \
+			   && (sel) != (fg) \
+			   && (sel) != (bg) \
+			   && (sel) != (xw)->dft_foreground)
 #define isNotBackground(xw, fg, bg, sel) \
-		((sel) != T_COLOR(&((xw)->screen), TEXT_BG) \
-		 && (sel) != (fg) \
-		 && (sel) != (bg) \
-		 && (sel) != (xw)->dft_background)
+		(Boolean) ((sel) != T_COLOR(&((xw)->screen), TEXT_BG) \
+			   && (sel) != (fg) \
+			   && (sel) != (bg) \
+			   && (sel) != (xw)->dft_background)
 #endif
 
 #if OPT_WIDE_CHARS

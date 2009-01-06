@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.117 2007/12/12 01:30:43 tom Exp $
+-- $XTermId: INSTALL,v 1.118 2008/12/30 11:43:45 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2006,2007 by Thomas E. Dickey
+-- Copyright 1997-2007,2008 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -221,6 +221,13 @@ The options (in alphabetic order):
 
 	(The same ifdef controls the metaSendsEscape support).
 
+  --disable-paste64       disable support for bracketed paste mode
+
+	Do not compile-in code to support experimental bracketed paste mode,
+	i.e., provide functions for setting/getting the selection data.
+
+	(see ctlseqs.ms description of OSC 52).
+
   --disable-pty-handshake disable support for pty handshakes
 
 	This feature is used to ensure that the child process's terminal modes
@@ -272,9 +279,16 @@ The options (in alphabetic order):
 
   --disable-tcap-fkeys    disable termcap function-keys
 
-	Compile-in code to support feature which allows xterm to use the
+	Do not compile-in code to support feature which allows xterm to use the
 	function-key definitions from the termcap/terminfo entry which it used
 	to set the $TERM variable on startup.
+
+  --disable-tcap-query    disable termcap query/report
+
+	Do not compile-in code to support DCS '+' control sequence, which
+	allows an application to ask xterm what control sequences it would
+	transmit for specified function keys, given the termcap or terminfo
+	names.
 
   --disable-tek4014       disable tek4014 emulation
 
@@ -399,13 +413,6 @@ The options (in alphabetic order):
 
 		configure --disable-imake --disable-narrowproto
 
-  --enable-paste64        enable support for bracketed paste mode
-
-	Compile-in code to support experimental bracketed paste mode, i.e.,
-	provide functions for setting/getting the selection data.
-
-	(see ctlseqs.ms description of OSC 52).
-
   --enable-readline-mouse enable support for mouse in readline applications
 
 	Compile-in code to support experimental bracketed paste mode, i.e.,
@@ -422,13 +429,6 @@ The options (in alphabetic order):
   --enable-sun-fkeys      enable support for Sun-style function keys
 
   	Compile-in code to support Sun-style function keys.
-
-  --enable-tcap-query     enable termcap query/report
-
-	Compile-in code to support experimental DCS '+' control sequence, which
-	allows an application to ask xterm what control sequences it would
-	transmit for specified function keys, given the termcap or terminfo
-	names.
 
   --enable-toolbar        enable pulldown menus on toolbar
 

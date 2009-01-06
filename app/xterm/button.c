@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.288 2008/07/27 19:36:37 tom Exp $ */
+/* $XTermId: button.c,v 1.297 2008/10/05 23:32:52 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -106,7 +106,8 @@ button.c	Handles button events in the terminal emulator.
 
 #define KeyModifiers (event->xbutton.state & OurModifiers)
 
-#define KeyState(x) (((x) & (ShiftMask|ControlMask)) + (((x) & Mod1Mask) ? 2 : 0))
+#define KeyState(x) (((int) ((x) & (ShiftMask|ControlMask))) \
+			  + (((x) & Mod1Mask) ? 2 : 0))
     /* adds together the bits:
        shift key -> 1
        meta key  -> 2
@@ -204,6 +205,9 @@ SendMousePosition(XtermWidget xw, XEvent * event)
     case BTN_EVENT_MOUSE:
     case ANY_EVENT_MOUSE:
 	if (KeyModifiers == 0 || KeyModifiers == ControlMask) {
+	    if (event->type == MotionNotify) {
+		((XButtonEvent *) event)->button = 0;
+	    }
 	    EditorButton(xw, (XButtonEvent *) event);
 	    return True;
 	}
@@ -249,7 +253,7 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
     int row, col;
     Bool oor;
     int button;
-    int state;
+    unsigned state;
 
     /* Make sure the event is an appropriate type */
     if ((event->type != ButtonPress &&
@@ -311,10 +315,10 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
     reply.a_nparam = 4;
     switch (event->type) {
     case ButtonPress:
-	reply.a_param[0] = 2 + (button << 1);
+	reply.a_param[0] = (ParmType) (2 + (button << 1));
 	break;
     case ButtonRelease:
-	reply.a_param[0] = 3 + (button << 1);
+	reply.a_param[0] = (ParmType) (3 + (button << 1));
 	break;
     default:
 	return (True);
@@ -333,9 +337,9 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
     state ^= 1 << button;	/* update mask to "after" state */
     state = (state & ~(4 | 1)) | ((state & 1) ? 4 : 0) | ((state & 4) ? 1 : 0);		/* swap Button1 & Button3 */
 
-    reply.a_param[1] = state;
-    reply.a_param[2] = row;
-    reply.a_param[3] = col;
+    reply.a_param[1] = (ParmType) state;
+    reply.a_param[2] = (ParmType) row;
+    reply.a_param[3] = (ParmType) col;
     reply.a_inters = '&';
     reply.a_final = 'w';
 
@@ -425,9 +429,9 @@ GetLocatorPosition(XtermWidget xw)
 
     reply.a_nparam = 4;
     reply.a_param[0] = 1;	/* Event - 1 = response to locator request */
-    reply.a_param[1] = state;
-    reply.a_param[2] = row;
-    reply.a_param[3] = col;
+    reply.a_param[1] = (ParmType) state;
+    reply.a_param[2] = (ParmType) row;
+    reply.a_param[3] = (ParmType) col;
     reply.a_inters = '&';
     reply.a_final = 'w';
     unparseseq(xw, &reply);
@@ -537,9 +541,9 @@ InitLocatorFilter(XtermWidget xw)
 	reply.a_type = ANSI_CSI;
 	reply.a_nparam = 4;
 	reply.a_param[0] = 10;	/* Event - 10 = locator outside filter */
-	reply.a_param[1] = state;
-	reply.a_param[2] = row;
-	reply.a_param[3] = col;
+	reply.a_param[1] = (ParmType) state;
+	reply.a_param[2] = (ParmType) row;
+	reply.a_param[3] = (ParmType) col;
 	reply.a_inters = '&';
 	reply.a_final = 'w';
 	unparseseq(xw, &reply);
@@ -594,9 +598,9 @@ CheckLocatorPosition(XtermWidget xw, XEvent * event)
 
 	    reply.a_nparam = 4;
 	    reply.a_param[0] = 10;	/* Event - 10 = locator outside filter */
-	    reply.a_param[1] = state;
-	    reply.a_param[2] = row;
-	    reply.a_param[3] = col;
+	    reply.a_param[1] = (ParmType) state;
+	    reply.a_param[2] = (ParmType) row;
+	    reply.a_param[3] = (ParmType) col;
 	}
 
 	reply.a_inters = '&';
@@ -807,9 +811,13 @@ DiredButton(Widget w,
 	Char Line[6];
 	unsigned line, col;
 
-	if (event->type == ButtonPress || event->type == ButtonRelease) {
-	    line = (event->xbutton.y - screen->border) / FontHeight(screen);
-	    col = (event->xbutton.x - OriginX(screen)) / FontWidth(screen);
+	if ((event->type == ButtonPress || event->type == ButtonRelease)
+	    && (event->xbutton.y >= screen->border)
+	    && (event->xbutton.x >= OriginX(screen))) {
+	    line = ((unsigned) (event->xbutton.y - screen->border)
+		    / FontHeight(screen));
+	    col = ((unsigned) (event->xbutton.x - OriginX(screen))
+		   / FontWidth(screen));
 	    Line[0] = CONTROL('X');
 	    Line[1] = ANSI_ESC;
 	    Line[2] = 'G';
@@ -1080,19 +1088,19 @@ UTF8toLatin1(Char * s, unsigned len, unsigned long *result)
 	    } else {
 		unsigned eqv = ucs2dec(value);
 		if (xtermIsDecGraphic(eqv)) {
-		    *q++ = DECtoASCII(eqv);
+		    *q++ = (Char) DECtoASCII(eqv);
 		} else {
 		    eqv = AsciiEquivs(value);
 		    if (eqv == value)
 			eqv = '#';
-		    *q++ = eqv;
+		    *q++ = (Char) eqv;
 		    if (iswide((wchar_t) value))
 			*q++ = ' ';
 		}
 	    }
 	}
 	*q = 0;
-	*result = q - buffer;
+	*result = (unsigned long) (q - buffer);
     } else {
 	*result = 0;
     }
@@ -1437,18 +1445,20 @@ _qWriteSelectionData(TScreen * screen, Char * lag, unsigned length)
 	    switch (screen->base64_count) {
 	    case 0:
 		buf[x++] = CharOf(base64_code[*p >> 2]);
-		screen->base64_accu = (*p & 0x3);
+		screen->base64_accu = (unsigned) (*p & 0x3);
 		screen->base64_count = 2;
 		++p;
 		break;
 	    case 2:
-		buf[x++] = CharOf(base64_code[(screen->base64_accu << 4) + (*p >> 4)]);
-		screen->base64_accu = (*p & 0xF);
+		buf[x++] = CharOf(base64_code[(screen->base64_accu << 4) +
+					      (*p >> 4)]);
+		screen->base64_accu = (unsigned) (*p & 0xF);
 		screen->base64_count = 4;
 		++p;
 		break;
 	    case 4:
-		buf[x++] = CharOf(base64_code[(screen->base64_accu << 2) + (*p >> 6)]);
+		buf[x++] = CharOf(base64_code[(screen->base64_accu << 2) +
+					      (*p >> 6)]);
 		buf[x++] = CharOf(base64_code[*p & 0x3F]);
 		screen->base64_accu = 0;
 		screen->base64_count = 0;
@@ -1480,7 +1490,7 @@ _qWriteSelectionData(TScreen * screen, Char * lag, unsigned length)
 }
 
 static void
-_WriteSelectionData(TScreen * screen, Char * line, int length)
+_WriteSelectionData(TScreen * screen, Char * line, unsigned length)
 {
     /* Write data to pty a line at a time. */
     /* Doing this one line at a time may no longer be necessary
@@ -1634,7 +1644,7 @@ SelectionReceived(Widget w,
 			new_size += size + 1;
 		    }
 		    new_text_list =
-			(char **) XtMalloc(sizeof(char *) * text_list_count);
+			(char **) XtMalloc(sizeof(char *) * (unsigned) text_list_count);
 		    new_text_list[0] = tmp = XtMalloc(new_size);
 		    for (i = 0; i < text_list_count; ++i) {
 			data = (Char *) text_list[i];
@@ -1678,7 +1688,7 @@ SelectionReceived(Widget w,
 	}
 #endif
 	for (i = 0; i < text_list_count; i++) {
-	    int len = strlen(text_list[i]);
+	    unsigned len = strlen(text_list[i]);
 	    _WriteSelectionData(screen, (Char *) text_list[i], len);
 	}
 #if OPT_PASTE64
@@ -2621,7 +2631,7 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 						firstRow,
 						size,
 						indexed)) != 0) {
-		    int len = strlen(search);
+		    int len = (int) strlen(search);
 		    int col;
 		    int best_col = -1;
 		    int best_len = -1;
@@ -3036,7 +3046,7 @@ SaltTextAway(XtermWidget xw,
     TRACE(("Salted TEXT:%d:%s\n", lp - line,
 	   visibleChars(PAIRED_CHARS(line, 0), (unsigned) (lp - line))));
 
-    screen->selection_length = (lp - line);
+    screen->selection_length = (unsigned long) (lp - line);
     _OwnSelection(xw, params, num_params);
 }
 
@@ -3052,7 +3062,7 @@ static void
 AppendStrToSelectionBuffer(TScreen * screen, Char * text, unsigned len)
 {
     if (len != 0) {
-	int j = screen->selection_length + len;		/* New length */
+	int j = (int) (screen->selection_length + len);		/* New length */
 	int k = j + (j >> 2) + 80;	/* New size if we grow buffer: grow by ~50% */
 	if (j + 1 >= screen->selection_size) {
 	    if (!screen->selection_length) {
@@ -3081,7 +3091,7 @@ AppendStrToSelectionBuffer(TScreen * screen, Char * text, unsigned len)
 void
 AppendToSelectionBuffer(TScreen * screen, unsigned c)
 {
-    int six;
+    unsigned six;
     Char ch;
 
     /* Decode base64 character */
@@ -3168,6 +3178,29 @@ _ConvertSelectionHelper(Widget w,
 }
 
 static Boolean
+SaveConvertedLength(XtPointer *target, unsigned long source)
+{
+    Boolean result = False;
+
+    *target = XtMalloc(4);
+    if (*target != 0) {
+	result = True;
+	if (sizeof(unsigned long) == 4) {
+	    *(unsigned long *) *target = source;
+	} else if (sizeof(unsigned) == 4) {
+	    *(unsigned *) *target = source;
+	} else if (sizeof(unsigned short) == 4) {
+	    *(unsigned short *) *target = (unsigned short) source;
+	} else {
+	    /* FIXME - does this depend on byte-order? */
+	    unsigned long temp = source;
+	    memcpy((char *) *target, ((char *) &temp) + sizeof(temp) - 4, 4);
+	}
+    }
+    return result;
+}
+
+static Boolean
 ConvertSelection(Widget w,
 		 Atom * selection,
 		 Atom * target,
@@ -3222,7 +3255,7 @@ ConvertSelection(Widget w,
 	    *targetP++ = XA_LENGTH(dpy);
 	    *targetP++ = XA_LIST_LENGTH(dpy);
 
-	    *length = std_length + (targetP - allocP);
+	    *length = std_length + (unsigned long) (targetP - allocP);
 
 	    memcpy(targetP, std_targets, sizeof(Atom) * std_length);
 	    XtFree((char *) std_targets);
@@ -3303,31 +3336,17 @@ ConvertSelection(Widget w,
 #endif
     else if (*target == XA_LIST_LENGTH(dpy)) {
 	TRACE(("ConvertSelection XA_LIST_LENGTH(dpy)\n"));
-	*value = XtMalloc(4);
-	if (sizeof(long) == 4)
-	     *(long *) *value = 1;
-	else {
-	    long temp = 1;
-	    memcpy((char *) *value, ((char *) &temp) + sizeof(long) - 4, 4);
-	}
+	result = SaveConvertedLength(value, 1);
 	*type = XA_INTEGER;
 	*length = 1;
 	*format = 32;
-	result = True;
     } else if (*target == XA_LENGTH(dpy)) {
 	TRACE(("ConvertSelection XA_LENGTH(dpy)\n"));
 	/* This value is wrong if we have UTF-8 text */
-	*value = XtMalloc(4);
-	if (sizeof(long) == 4) {
-	    *(long *) *value = screen->selection_length;
-	} else {
-	    long temp = screen->selection_length;
-	    memcpy((char *) *value, ((char *) &temp) + sizeof(long) - 4, 4);
-	}
+	result = SaveConvertedLength(value, screen->selection_length);
 	*type = XA_INTEGER;
 	*length = 1;
 	*format = 32;
-	result = True;
     } else if (XmuConvertStandardSelection(w,
 					   screen->selection_time, selection,
 					   target, type, (XPointer *) value,
@@ -3337,7 +3356,7 @@ ConvertSelection(Widget w,
     }
 
     /* else */
-    return result;
+    return (Boolean) result;
 }
 
 static void
@@ -3396,7 +3415,7 @@ _OwnSelection(XtermWidget xw,
     Cardinal i;
     Bool have_selection = False;
 
-    if (screen->selection_length < 0)
+    if (screen->selection_length == 0)
 	return;
 
     TRACE(("_OwnSelection\n"));
@@ -3412,10 +3431,11 @@ _OwnSelection(XtermWidget xw,
     for (i = 0; i < count; i++) {
 	int cutbuffer = CutBuffer(atoms[i]);
 	if (cutbuffer >= 0) {
-	    if (screen->selection_length >
-		4 * XMaxRequestSize(XtDisplay((Widget) xw)) - 32) {
+	    unsigned long limit =
+	    (unsigned long) (4 * XMaxRequestSize(XtDisplay((Widget) xw)) - 32);
+	    if (screen->selection_length > limit) {
 		fprintf(stderr,
-			"%s: selection too big (%d bytes), not storing in CUT_BUFFER%d\n",
+			"%s: selection too big (%ld bytes), not storing in CUT_BUFFER%d\n",
 			xterm_name, screen->selection_length, cutbuffer);
 	    } else {
 		/* This used to just use the UTF-8 data, which was totally
@@ -3536,7 +3556,7 @@ SaveText(TScreen * screen,
     unsigned c;
     Char *result = lp;
 #if OPT_WIDE_CHARS
-    int previous = 0;
+    unsigned previous = 0;
 #endif
 
     i = Length(screen, row, scol, ecol);
@@ -3554,7 +3574,7 @@ SaveText(TScreen * screen,
 	/* We want to strip out every occurrence of HIDDEN_CHAR AFTER a
 	 * wide character.
 	 */
-	if (c == HIDDEN_CHAR && iswide(previous)) {
+	if (c == HIDDEN_CHAR && iswide((int) previous)) {
 	    previous = c;
 	    /* Combining characters attached to double-width characters
 	       are in memory attached to the HIDDEN_CHAR */
@@ -3624,7 +3644,7 @@ SaveText(TScreen * screen,
 static Char
 BtnCode(XButtonEvent * event, int button)
 {
-    int result = 32 + (KeyState(event->state) << 2);
+    int result = (int) (32 + (KeyState(event->state) << 2));
 
     if (button < 0 || button > 5) {
 	result += 3;
@@ -3652,7 +3672,7 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
     Boolean changed = True;
 
     /* If button event, get button # adjusted for DEC compatibility */
-    button = event->button - 1;
+    button = (int) (event->button - 1);
     if (button >= 3)
 	button++;
 

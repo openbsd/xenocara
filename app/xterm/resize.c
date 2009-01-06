@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.106 2007/12/31 21:10:07 tom Exp $ */
+/* $XTermId: resize.c,v 1.107 2008/12/30 17:07:56 tom Exp $ */
 
 /*
- * Copyright 2003-2006,2007 by Thomas E. Dickey
+ * Copyright 2003-2007,2008 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -225,10 +225,10 @@ int
 main(int argc, char **argv ENVP_ARG)
 {
 #ifdef USE_TERMCAP
-    register char *env;
+    char *env;
 #endif
-    register char *ptr;
-    register int emu = VT100;
+    char *ptr;
+    int emu = VT100;
     char *shell;
     struct passwd *pw;
     int i;
@@ -500,7 +500,7 @@ main(int argc, char **argv ENVP_ARG)
 }
 
 static int
-checkdigits(register char *str)
+checkdigits(char *str)
 {
     while (*str) {
 	if (!isdigit(CharOf(*str)))
@@ -511,9 +511,9 @@ checkdigits(register char *str)
 }
 
 static void
-readstring(register FILE *fp, register char *buf, char *str)
+readstring(FILE *fp, char *buf, char *str)
 {
-    register int last, c;
+    int last, c;
 #if !defined(USG) && !defined(__UNIXOS2__)
     /* What is the advantage of setitimer() over alarm()? */
     struct itimerval it;
@@ -528,17 +528,20 @@ readstring(register FILE *fp, register char *buf, char *str)
     setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
 #endif
     if ((c = getc(fp)) == 0233) {	/* meta-escape, CSI */
-	*buf++ = c = ESCAPE("")[0];
+	c = ESCAPE("")[0];
+	*buf++ = (char) c;
 	*buf++ = '[';
     } else {
-	*buf++ = c;
+	*buf++ = (char) c;
     }
     if (c != *str) {
 	fprintf(stderr, "%s: unknown character, exiting.\r\n", myname);
 	onintr(0);
     }
     last = str[strlen(str) - 1];
-    while ((*buf++ = getc(fp)) != last) ;
+    while ((*buf++ = (char) getc(fp)) != last) {
+	;
+    }
 #if defined(USG) || defined(__UNIXOS2__)
     alarm(0);
 #else
