@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.30 2008/12/04 23:55:04 oga Exp $
+ * $Id: xevents.c,v 1.31 2009/01/06 00:18:07 okan Exp $
  */
 
 /*
@@ -38,7 +38,6 @@ xev_handle_maprequest(struct xevent *xev, XEvent *ee)
 	XMapRequestEvent	*e = &ee->xmaprequest;
 	XWindowAttributes	 xattr;
 	struct client_ctx	*cc = NULL, *old_cc;
-	struct screen_ctx	*sc;
 
 #ifdef notyet
 	int state;
@@ -50,7 +49,6 @@ xev_handle_maprequest(struct xevent *xev, XEvent *ee)
 	if ((cc = client_find(e->window)) == NULL) {
 		XGetWindowAttributes(X_Dpy, e->window, &xattr);
 		cc = client_new(e->window, screen_fromroot(xattr.root), 1);
-		sc = CCTOSC(cc);
 	}
 
 #ifdef notyet			/* XXX - possibly, we shouldn't map if
