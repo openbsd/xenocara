@@ -34,7 +34,7 @@
 #include "xf86fbman.h"
 #include "regionstr.h"
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 
 #include "via.h"
 #include "via_drm.h"

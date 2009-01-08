@@ -32,14 +32,14 @@
 #include "xf86fbman.h"
 
 #include "via.h"
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 #include "xf86drm.h"
 #endif
 
 #include "via_driver.h"
 #include "via_priv.h"
 #include "via_swov.h"
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 #include "via_drm.h"
 #endif
 #include "via_vgahw.h"

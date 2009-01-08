@@ -21076,12 +21076,12 @@ echo "${ECHO_T}yes" >&6
 fi
 
 cat >>confdefs.h <<\_ACEOF
-#define XF86DRI 1
+#define CHROMEDRI 1
 _ACEOF
 
 
 cat >>confdefs.h <<\_ACEOF
-#define XF86DRI_DEVEL 1
+#define CHROMEDRI_DEVEL 1
 _ACEOF
 
         case "$host_cpu" in

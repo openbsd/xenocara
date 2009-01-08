@@ -26,7 +26,7 @@
 #ifndef _VIA_PRIV_H_
 #define _VIA_PRIV_H_ 1
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 #include "via_drm.h"
 #endif
 #ifdef VIA_HAVE_EXA
@@ -141,7 +141,7 @@ typedef struct
 typedef struct {
     unsigned long   base;		/* Offset into fb */
     int    pool;			/* Pool we drew from */
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     int    drm_fd;			/* Fd in DRM mode */
     drm_via_mem_t drm;			/* DRM management object */
 #endif

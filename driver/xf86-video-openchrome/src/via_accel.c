@@ -127,7 +127,7 @@ viaFlushPCI(ViaCommandBuffer * buf)
     buf->has3dState = FALSE;
 }
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 /*
  * Flush the command buffer using DRM. If in PCI mode, we can bypass DRM,
  * but not for command buffers that contain 3D engine state, since then
@@ -180,7 +180,7 @@ viaFlushDRIEnabled(ViaCommandBuffer * cb)
 int
 viaSetupCBuffer(ScrnInfoPtr pScrn, ViaCommandBuffer * buf, unsigned size)
 {
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     VIAPtr pVia = VIAPTR(pScrn);
 #endif
 
@@ -196,7 +196,7 @@ viaSetupCBuffer(ScrnInfoPtr pScrn, ViaCommandBuffer * buf, unsigned size)
     buf->rindex = 0;
     buf->has3dState = FALSE;
     buf->flushFunc = viaFlushPCI;
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     if (pVia->directRenderingEnabled) {
         buf->flushFunc = viaFlushDRIEnabled;
     }
@@ -1214,7 +1214,7 @@ viaCheckUpload(ScrnInfoPtr pScrn, Via3DState * v3d)
     forceUpload = (pVia->lastToUpload != v3d);
     pVia->lastToUpload = v3d;
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     if (pVia->directRenderingEnabled) {
         volatile drm_via_sarea_t *saPriv = (drm_via_sarea_t *)
                 DRIGetSAREAPrivate(pScrn->pScreen);
@@ -1511,7 +1511,7 @@ viaExpandablePixel(int format)
             formatType == PICT_TYPE_ABGR || formatType == PICT_TYPE_ARGB);
 }
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 
 static int
 viaAccelDMADownload(ScrnInfoPtr pScrn, unsigned long fbOffset,
@@ -1957,7 +1957,7 @@ viaExaCheckComposite(int op, PicturePtr pSrcPicture,
 static Bool
 viaIsAGP(VIAPtr pVia, PixmapPtr pPix, unsigned long *offset)
 {
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     unsigned long offs;
 
     if (pVia->directRenderingEnabled && !pVia->IsPCI) {
@@ -2144,7 +2144,7 @@ viaInitExa(ScreenPtr pScreen)
     pExa->Copy = viaExaCopy;
     pExa->DoneCopy = viaExaDoneSolidCopy;
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     if (pVia->directRenderingEnabled) {
 #ifdef linux
         if ((pVia->drmVerMajor > 2) ||
@@ -2219,7 +2219,7 @@ viaInitExa(ScreenPtr pScreen)
     pExa->accel.Copy = viaExaCopy;
     pExa->accel.DoneCopy = viaExaDoneSolidCopy;
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     if (pVia->directRenderingEnabled) {
 #ifdef linux
         if ((pVia->drmVerMajor > 2) ||
@@ -2301,7 +2301,7 @@ viaInitAccel(ScreenPtr pScreen)
      */
 
     nPOTSupported = TRUE;
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     nPOTSupported = ((!pVia->directRenderingEnabled) ||
                      (pVia->drmVerMajor > 2) ||
                      ((pVia->drmVerMajor == 2) && (pVia->drmVerMinor >= 11)));
@@ -2310,7 +2310,7 @@ viaInitAccel(ScreenPtr pScreen)
     pVia->nPOT[1] = nPOTSupported;
 
 #ifdef VIA_HAVE_EXA
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     pVia->texAddr = NULL;
     pVia->dBounce = NULL;
     pVia->scratchAddr = NULL;
@@ -2354,7 +2354,7 @@ viaInitAccel(ScreenPtr pScreen)
      * XAA may get slow for some undetermined reason. 
      */
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     if (pVia->directRenderingEnabled) {
         pVia->driSize = (pVia->FBFreeEnd - pVia->FBFreeStart) / 2;
         maxY = pScrn->virtualY + (pVia->driSize / pVia->Bpl);
@@ -2397,7 +2397,7 @@ viaExitAccel(ScreenPtr pScreen)
 
 #ifdef VIA_HAVE_EXA
     if (pVia->useEXA) {
-#ifdef XF86DRI
+#ifdef CHROMEDRI
         if (pVia->directRenderingEnabled) {
             if (pVia->texAddr) {
                 drmCommandWrite(pVia->drmFD, DRM_VIA_FREEMEM,
@@ -2445,7 +2445,7 @@ viaFinishInitAccel(ScreenPtr pScreen)
     VIAPtr pVia = VIAPTR(pScrn);
 
 #ifdef VIA_HAVE_EXA
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     int size, ret;
 
     if (pVia->directRenderingEnabled && pVia->useEXA) {

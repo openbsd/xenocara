@@ -31,14 +31,14 @@
 
 #include "via.h"
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 #include "xf86drm.h"
 #endif
 
 #include "via_driver.h"
 #include "via_priv.h"
 #include "via_swov.h"
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 #include "via_drm.h"
 #endif
 
@@ -88,7 +88,7 @@ VIAFreeLinear(VIAMemPtr mem)
             mem->pool = 0;
             return;
         case 2:
-#ifdef XF86DRI
+#ifdef CHROMEDRI
             if (drmCommandWrite(mem->drm_fd, DRM_VIA_FREEMEM,
                                 &mem->drm, sizeof(drm_via_mem_t)) < 0)
                 ErrorF("DRM module failed free.\n");
@@ -134,7 +134,7 @@ viaOffScreenLinear(VIAMemPtr mem, ScrnInfoPtr pScrn, unsigned long size)
 int
 VIAAllocLinear(VIAMemPtr mem, ScrnInfoPtr pScrn, unsigned long size)
 {
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     VIAPtr pVia = VIAPTR(pScrn);
     int ret;
 

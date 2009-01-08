@@ -70,7 +70,7 @@
 #include <pciaccess.h>
 #endif
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 #define _XF86DRI_SERVER_
 #include "sarea.h"
 #include "dri.h"
@@ -139,7 +139,7 @@ typedef struct {
     Bool b3DRegsInitialized;
 } ViaSharedRec, *ViaSharedPtr;
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 
 #define VIA_XVMC_MAX_BUFFERS 2
 #define VIA_XVMC_MAX_CONTEXTS 4
@@ -291,7 +291,7 @@ typedef struct _VIA {
     int                 exaScratchSize;
     char *              scratchAddr;
     Bool                noComposite;
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     drm_via_mem_t       scratchAGPBuffer;
     drm_via_mem_t       texAGPBuffer;
     unsigned            texOffset;
@@ -325,7 +325,7 @@ typedef struct _VIA {
     Bool                HasSecondary;
     Bool                SAMM;
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     Bool		directRenderingEnabled;
     Bool                XvMCEnabled;
     DRIInfoPtr		pDRIInfo;
@@ -457,7 +457,7 @@ void VIAInitLinear(ScreenPtr pScreen);
 
 /* In via_xwmc.c */
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 /* Basic init and exit functions */
 void ViaInitXVMC(ScreenPtr pScreen);    
 void ViaCleanupXVMC(ScrnInfoPtr pScrn, XF86VideoAdaptorPtr *XvAdaptors, int XvAdaptorCount);
@@ -473,7 +473,7 @@ unsigned long viaXvMCPutImageSize(ScrnInfoPtr pScrn);
 /* via_i2c.c */
 void ViaI2CInit(ScrnInfoPtr pScrn);
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 Bool VIADRIScreenInit(ScreenPtr pScreen);
 void VIADRICloseScreen(ScreenPtr pScreen);
 Bool VIADRIFinishScreenInit(ScreenPtr pScreen);

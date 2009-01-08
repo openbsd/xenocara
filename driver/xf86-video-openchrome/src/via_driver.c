@@ -42,7 +42,7 @@
 #include "via_video.h"
 #include "via.h"
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 #include "dri.h"
 #endif
 #include "via_vgahw.h"
@@ -390,7 +390,7 @@ static const char *cfbSymbols[] = {
 #endif
 
 #ifdef XFree86LOADER
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 static const char *drmSymbols[] = {
     "drmAddBufs",
     "drmAddMap",
@@ -493,7 +493,7 @@ VIASetup(pointer module, pointer opts, int *errmaj, int *errmin)
                           vbeSymbols,
                           i2cSymbols,
                           ddcSymbols,
-#ifdef XF86DRI
+#ifdef CHROMEDRI
                           drmSymbols,
                           driSymbols,
 #endif
@@ -718,7 +718,7 @@ VIAProbe(DriverPtr drv, int flags)
 } /* VIAProbe */
 #endif /* !XSERVER_LIBPCIACCESS */
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
 static void
 kickVblank(ScrnInfoPtr pScrn)
 {
@@ -1842,7 +1842,7 @@ VIAEnterVT(int scrnIndex, int flags)
     if (!pVia->IsSecondary)
         viaRestoreVideo(pScrn);
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     if (pVia->directRenderingEnabled) {
         kickVblank(pScrn);
         VIADRIRingBufferInit(pScrn);
@@ -1858,7 +1858,7 @@ VIAEnterVT(int scrnIndex, int flags)
         viaAccelSyncMarker(pScrn);
     }
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     if (pVia->directRenderingEnabled) {
         DRIUnlock(screenInfo.screens[scrnIndex]);
     }
@@ -1877,7 +1877,7 @@ VIALeaveVT(int scrnIndex, int flags)
 
     DEBUG(xf86DrvMsg(scrnIndex, X_INFO, "VIALeaveVT\n"));
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     if (pVia->directRenderingEnabled) {
         volatile drm_via_sarea_t *saPriv = (drm_via_sarea_t *)
                 DRIGetSAREAPrivate(pScrn->pScreen);
@@ -1893,7 +1893,7 @@ VIALeaveVT(int scrnIndex, int flags)
     if (pVia->Chipset != VIA_K8M890 && pVia->Chipset != VIA_P4M900)
         hwp->writeSeq(hwp, 0x1A, pVia->SavedReg.SR1A | 0x40);
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     if (pVia->directRenderingEnabled) {
         VIADRIRingBufferCleanup(pScrn);
         viaDRIOffscreenSave(pScrn);
@@ -2573,7 +2573,7 @@ VIAScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
             return FALSE;
     }
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     pVia->directRenderingEnabled = VIADRIScreenInit(pScreen);
 #endif
 
@@ -2653,7 +2653,7 @@ VIAScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "- Color maps etc. set up\n"));
     pVia->agpDMA = FALSE;
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     if (pVia->directRenderingEnabled)
         pVia->directRenderingEnabled = VIADRIFinishScreenInit(pScreen);
 
@@ -2672,14 +2672,14 @@ VIAScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     if (pVia->NoAccel) {
         memset(pVia->FBBase, 0x00, pVia->videoRambytes);
     } else {
-#ifdef XF86DRI
+#ifdef CHROMEDRI
         if (pVia->directRenderingEnabled)
             DRILock(screenInfo.screens[scrnIndex], 0);
 #endif
         viaAccelFillRect(pScrn, pScrn->frameX0, pScrn->frameY0,
                          pScrn->displayWidth, pScrn->virtualY, 0x00000000);
         viaAccelSyncMarker(pScrn);
-#ifdef XF86DRI
+#ifdef CHROMEDRI
         if (pVia->directRenderingEnabled)
             DRIUnlock(screenInfo.screens[scrnIndex]);
 #endif
@@ -2848,7 +2848,7 @@ VIACloseScreen(int scrnIndex, ScreenPtr pScreen)
 
     /* Is the display currently visible? */
     if (pScrn->vtSema) {
-#ifdef XF86DRI
+#ifdef CHROMEDRI
         if (pVia->directRenderingEnabled)
             DRILock(screenInfo.screens[scrnIndex], 0);
 #endif
@@ -2869,7 +2869,7 @@ VIACloseScreen(int scrnIndex, ScreenPtr pScreen)
         if (pVia->VQEnable)
             viaDisableVQ(pScrn);
     }
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     if (pVia->directRenderingEnabled)
         VIADRICloseScreen(pScreen);
 #endif
@@ -2969,14 +2969,14 @@ VIASwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
 
     DEBUG(xf86DrvMsg(scrnIndex, X_INFO, "VIASwitchMode\n"));
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     if (pVia->directRenderingEnabled)
         DRILock(screenInfo.screens[scrnIndex], 0);
 #endif
 
     viaAccelSync(pScrn);
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     if (pVia->directRenderingEnabled)
         VIADRIRingBufferCleanup(pScrn);
 #endif
@@ -2986,7 +2986,7 @@ VIASwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
 
     ret = VIAWriteMode(pScrn, mode);
 
-#ifdef XF86DRI
+#ifdef CHROMEDRI
     if (pVia->directRenderingEnabled) {
         kickVblank(pScrn);
         VIADRIRingBufferInit(pScrn);

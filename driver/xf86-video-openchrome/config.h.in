@@ -2,6 +2,12 @@
 
 #include "xorg-server.h"
 
+/* Enable DRI driver support */
+#undef CHROMEDRI
+
+/* Enable developmental DRI driver support */
+#undef CHROMEDRI_DEVEL
+
 /* Enable debug support */
 #undef HAVE_DEBUG
 
@@ -76,12 +82,6 @@
 
 /* Build support for Exa */
 #undef VIA_HAVE_EXA
-
-/* Enable DRI driver support */
-#undef XF86DRI
-
-/* Enable developmental DRI driver support */
-#undef XF86DRI_DEVEL
 
 /* Enable libpciaccess */
 #undef XSERVER_LIBPCIACCESS
