@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.54 2008/12/23 09:28:02 matthieu Exp $
+# $OpenBSD: MODULES,v 1.55 2009/01/08 21:40:49 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -104,7 +104,7 @@ driver/xf86-input-fpit		1.2.0	7.4
 driver/xf86-input-hyperpen	1.2.0	7.4
 driver/xf86-input-jamstudio	1.2.0	7.4
 driver/xf86-input-joystick	1.3.2	7.4
-driver/xf86-input-keyboard	1.3.1	7.4
+driver/xf86-input-keyboard	1.3.2	7.4+	needs-update
 driver/xf86-input-magellan	1.2.0	7.4
 driver/xf86-input-magictouch	1.0.0.5	7.0	deprecated
 driver/xf86-input-microtouch	1.2.0	7.4
@@ -120,7 +120,7 @@ driver/xf86-input-void		1.1.1	7.1
 driver/xf86-video-apm		1.2.1	7.4+	needs-update
 driver/xf86-video-ark		0.7.1	7.4+	needs-update
 driver/xf86-video-ast		0.87.0	7.4+	needs-update
-driver/xf86-video-ati		6.9.0	7.4
+driver/xf86-video-ati		6.10.0	7.4+	needs-update
 driver/xf86-video-chips		1.2.1	7.4+	needs-update
 driver/xf86-video-cirrus	1.2.1	7.4
 driver/xf86-video-cyrix		1.1.0	7.1	deprecated?
@@ -202,7 +202,7 @@ fonts/winitzki-cyrillic		1.0.0
 fonts/xfree86-type1		1.0.1
 
 lib/libFS			1.0.1	7.4
-lib/libICE			1.0.4	7.3
+lib/libICE			1.0.5	7.4+	needs-update
 lib/libSM			1.0.3	7.3
 lib/libX11			1.1.5	7.4	needs-update
 lib/libXRes			1.0.3	7.2RC4
