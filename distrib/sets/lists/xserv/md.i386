@@ -168,7 +168,6 @@
 ./usr/X11R6/lib/modules/dri/swrast_dri.so
 ./usr/X11R6/lib/modules/dri/tdfx_dri.so
 ./usr/X11R6/lib/modules/dri/trident_dri.so
-./usr/X11R6/lib/modules/dri/unichrome_dri.so
 ./usr/X11R6/lib/modules/drivers/apm_drv.la
 ./usr/X11R6/lib/modules/drivers/apm_drv.so
 ./usr/X11R6/lib/modules/drivers/ark_drv.la
