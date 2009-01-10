@@ -539,9 +539,6 @@ typedef struct {
 
     drm_handle_t      fbHandle;
 
-    drmSize           registerSize;
-    drm_handle_t      registerHandle;
-
     RADEONCardType    cardType;            /* Current card is a PCI card */
     drmSize           pciSize;
     drm_handle_t      pciMemHandle;

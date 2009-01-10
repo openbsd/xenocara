@@ -1073,15 +1073,6 @@ static Bool RADEONDRIPciInit(RADEONInfoPtr info, ScreenPtr pScreen)
  */
 static Bool RADEONDRIMapInit(RADEONInfoPtr info, ScreenPtr pScreen)
 {
-				/* Map registers */
-    info->registerSize = info->MMIOSize;
-    if (drmAddMap(info->drmFD, info->MMIOAddr, info->registerSize,
-		  DRM_REGISTERS, DRM_READ_ONLY, &info->registerHandle) < 0) {
-	return FALSE;
-    }
-    xf86DrvMsg(pScreen->myNum, X_INFO,
-	       "[drm] register handle = 0x%08x\n", info->registerHandle);
-
     return TRUE;
 }
 
@@ -1119,7 +1110,7 @@ static int RADEONDRIKernelInit(RADEONInfoPtr info, ScreenPtr pScreen)
     drmInfo.depth_pitch         = info->depthPitch * drmInfo.depth_bpp / 8;
 
     drmInfo.fb_offset           = info->fbHandle;
-    drmInfo.mmio_offset         = info->registerHandle;
+    drmInfo.mmio_offset         = -1;
     drmInfo.ring_offset         = info->ringHandle;
     drmInfo.ring_rptr_offset    = info->ringReadPtrHandle;
     drmInfo.buffers_offset      = info->bufHandle;
@@ -1679,8 +1670,8 @@ Bool RADEONDRIFinishScreenInit(ScreenPtr pScreen)
     pRADEONDRI->textureSize       = info->textureSize;
     pRADEONDRI->log2TexGran       = info->log2TexGran;
 
-    pRADEONDRI->registerHandle    = info->registerHandle;
-    pRADEONDRI->registerSize      = info->registerSize;
+    pRADEONDRI->registerHandle    = -1;
+    pRADEONDRI->registerSize      = 0;
 
     pRADEONDRI->statusHandle      = info->ringReadPtrHandle;
     pRADEONDRI->statusSize        = info->ringReadMapSize;
