@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
  *****************************************************************************
- * Copyright 1996-2007,2008 by Thomas E. Dickey                              *
+ * Copyright 1996-2008,2009 by Thomas E. Dickey                              *
  * All Rights Reserved.                                                      *
  *                                                                           *
  * Permission to use, copy, modify, and distribute this software and its     *
@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.703 2008/12/30 19:09:49 tom Exp $
+  $XTermId: xterm.log.html,v 1.707 2009/01/09 02:02:49 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -30,7 +30,7 @@
 </HEAD>
 <BODY>
 <HR>
-Copyright &copy; 1997-2007,2008 by <A
+Copyright &copy; 1997-2008,2009 by <A
 HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <HR>
 <H1>Contents</H1>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_239">Patch #239 - 2001/1/8</A>
 <LI><A HREF="#xterm_238">Patch #238 - 2008/12/30</A>
 <LI><A HREF="#xterm_237">Patch #237 - 2008/09/14</A>
 <LI><A HREF="#xterm_236">Patch #236 - 2008/07/27</A>
@@ -285,6 +286,13 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_239">Patch #239 - 2009/1/8</A></H1>
+<ul>
+	<li>correct a cast in input.c, which broke translation of numeric
+	    keypad codes to pageup, pagedown, etc., on 64-bit platform
+	    (Debian #511138, report by Larry Doolittle).
+</ul>
 
 <H1><A NAME="xterm_238">Patch #238 - 2008/12/30</A></H1>
 <ul>

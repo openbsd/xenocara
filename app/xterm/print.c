@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.80 2007/03/19 23:49:51 tom Exp $ */
+/* $XTermId: print.c,v 1.81 2009/01/09 01:43:01 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/print.c,v 1.24 2006/06/19 00:36:51 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1997-2006,2007 by Thomas E. Dickey
+Copyright 1997-2007,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -193,7 +193,7 @@ printLine(int row, unsigned chr)
 #endif
 		)
 		&& ch) {
-		attr = (a[col] & SGR_MASK);
+		attr = CharOf(a[col] & SGR_MASK);
 		last_fg = fg;
 		last_bg = bg;
 		if (screen->print_attributes)
@@ -556,7 +556,7 @@ xtermPrinterControl(int chr)
     case '4':
     case '5':
     case 'i':
-	bfr[length++] = chr;
+	bfr[length++] = CharOf(chr);
 	for (n = 0; n < sizeof(tbl) / sizeof(tbl[0]); n++) {
 	    size_t len = Strlen(tbl[n].seq);
 
@@ -580,7 +580,7 @@ xtermPrinterControl(int chr)
     default:
 	for (n = 0; n < length; n++)
 	    charToPrinter(bfr[n]);
-	bfr[0] = chr;
+	bfr[0] = CharOf(chr);
 	length = 1;
 	return 0;
     }

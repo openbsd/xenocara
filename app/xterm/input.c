@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.302 2008/12/30 17:20:39 tom Exp $ */
+/* $XTermId: input.c,v 1.303 2009/01/08 23:28:36 tom Exp $ */
 
 /*
- * Copyright 1999-2007,2008 by Thomas E. Dickey
+ * Copyright 1999-2008,2009 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -984,7 +984,7 @@ Input(XtermWidget xw,
 #ifdef XK_KP_Home
 	if (kd.keysym >= XK_KP_Home && kd.keysym <= XK_KP_Begin) {
 	    TRACE(("...Input keypad before was " KEYSYM_FMT "\n", kd.keysym));
-	    kd.keysym += (unsigned) (XK_Home - XK_KP_Home);
+	    kd.keysym += (KeySym) (XK_Home - XK_KP_Home);
 	    TRACE(("...Input keypad changed to " KEYSYM_FMT "\n", kd.keysym));
 	}
 #endif

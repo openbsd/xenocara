@@ -1,4 +1,4 @@
-/* $XTermId: testxmc.c,v 1.34 2006/07/23 18:53:12 tom Exp $ */
+/* $XTermId: testxmc.c,v 1.35 2009/01/09 01:40:17 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/testxmc.c,v 3.14 2006/02/13 01:14:59 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1997-2005,2006 by Thomas E. Dickey
+Copyright 1997-2006,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -92,8 +92,8 @@ authorization.
 #include <xterm.h>
 #include <data.h>
 
-#define MARK_ON(a)  (my_attrs & a) != 0 && (xw->flags & (whichone = a)) == 0
-#define MARK_OFF(a) (my_attrs & a) != 0 && (xw->flags & (whichone = a)) != 0
+#define MARK_ON(a)  (my_attrs & a) != 0 && (xw->flags & (whichone = CharOf(a))) == 0
+#define MARK_OFF(a) (my_attrs & a) != 0 && (xw->flags & (whichone = CharOf(a))) != 0
 
 void
 Mark_XMC(XtermWidget xw, int param)
@@ -102,7 +102,7 @@ Mark_XMC(XtermWidget xw, int param)
 
     TScreen *screen = &(xw->screen);
     Bool found = False;
-    Char my_attrs = (screen->xmc_attributes & XMC_FLAGS);
+    Char my_attrs = CharOf(screen->xmc_attributes & XMC_FLAGS);
     Char whichone = 0;
 
     if (glitch == 0) {
@@ -180,7 +180,7 @@ Resolve_XMC(XtermWidget xw)
     TScreen *screen = &(xw->screen);
     Bool changed = False;
     Char start;
-    Char my_attrs = (screen->xmc_attributes & XMC_FLAGS);
+    Char my_attrs = CharOf(screen->xmc_attributes & XMC_FLAGS);
     int row = screen->cur_row;
     int col = screen->cur_col;
 
@@ -210,8 +210,8 @@ Resolve_XMC(XtermWidget xw)
 	if (XTERM_CELL(row, col) == XMC_GLITCH)
 	    break;
 	if ((SCRN_BUF_ATTRS(screen, row)[col] & my_attrs) != start) {
-	    SCRN_BUF_ATTRS(screen, row)[col] = start |
-		(SCRN_BUF_ATTRS(screen, row)[col] & ~my_attrs);
+	    SCRN_BUF_ATTRS(screen, row)[col] =
+		CharOf(start | (SCRN_BUF_ATTRS(screen, row)[col] & ~my_attrs));
 	    changed = True;
 	}
     }

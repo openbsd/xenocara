@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.297 2008/10/05 23:32:52 tom Exp $ */
+/* $XTermId: button.c,v 1.298 2009/01/09 01:29:52 tom Exp $ */
 
 /*
- * Copyright 1999-2007,2008 by Thomas E. Dickey
+ * Copyright 1999-2008,2009 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -334,8 +334,10 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
      */
     state = (event->xbutton.state
 	     & (Button1Mask | Button2Mask | Button3Mask | Button4Mask)) >> 8;
-    state ^= 1 << button;	/* update mask to "after" state */
-    state = (state & ~(4 | 1)) | ((state & 1) ? 4 : 0) | ((state & 4) ? 1 : 0);		/* swap Button1 & Button3 */
+    /* update mask to "after" state */
+    state ^= 1 << button;
+    /* swap Button1 & Button3 */
+    state = (state & ~(4 | 1)) | ((state & 1) ? 4 : 0) | ((state & 4) ? 1 : 0);
 
     reply.a_param[1] = (ParmType) state;
     reply.a_param[2] = (ParmType) row;
