@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2008/11/02 16:07:40 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.4 2009/01/10 16:02:04 oga Exp $
 
 LIB=	i915_dri.so
 
@@ -48,8 +48,7 @@ DRIVER_SOURCES = \
 	intel_state.c \
 	intel_tris.c \
 	intel_fbo.c \
-	intel_depthstencil.c \
-	intel_bufmgr_ttm.c
+	intel_depthstencil.c
 
 SRCS= \
 	$(COMMON_SOURCES) \

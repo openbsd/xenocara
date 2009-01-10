@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2008/11/02 15:01:32 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2009/01/10 16:02:04 oga Exp $
 
 LIB=	i965_dri.so
 
@@ -7,7 +7,6 @@ DRIVER_SOURCES = \
 	intel_blit.c \
 	intel_buffer_objects.c \
 	intel_buffers.c \
-	intel_bufmgr_ttm.c \
 	intel_context.c \
 	intel_decode.c \
 	intel_depthstencil.c \
@@ -79,7 +78,7 @@ DRIVER_SOURCES = \
 	brw_wm_pass2.c \
 	brw_wm_sampler_state.c \
 	brw_wm_state.c \
-	brw_wm_surface_state.c 
+	brw_wm_surface_state.c
 
 SRCS = \
 	$(COMMON_SOURCES) \
