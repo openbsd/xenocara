@@ -43,8 +43,6 @@
 #include "drm.h"
 #include "i915_drm.h"
 
-#include "intel_bufmgr_ttm.h"
-
 #define FILE_DEBUG_FLAG DEBUG_IOCTL
 
 int

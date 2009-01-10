@@ -49,7 +49,6 @@
 #include "i830_dri.h"
 #include "intel_regions.h"
 #include "intel_batchbuffer.h"
-#include "intel_bufmgr_ttm.h"
 
 PUBLIC const char __driConfigOptions[] =
    DRI_CONF_BEGIN
@@ -242,16 +241,6 @@ intelUpdateScreenFromSAREA(intelScreenPrivate * intelScreen,
    intelScreen->depth.handle = sarea->depth_handle;
    intelScreen->depth.size = sarea->depth_size;
    intelScreen->depth.tiled = sarea->depth_tiled;
-
-   if (intelScreen->driScrnPriv->ddx_version.minor >= 9) {
-      intelScreen->front.bo_handle = sarea->front_bo_handle;
-      intelScreen->back.bo_handle = sarea->back_bo_handle;
-      intelScreen->depth.bo_handle = sarea->depth_bo_handle;
-   } else {
-      intelScreen->front.bo_handle = -1;
-      intelScreen->back.bo_handle = -1;
-      intelScreen->depth.bo_handle = -1;
-   }
 
    intelScreen->tex.offset = sarea->tex_offset;
    intelScreen->logTextureGranularity = sarea->log_tex_granularity;

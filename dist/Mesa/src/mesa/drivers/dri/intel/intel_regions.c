@@ -44,7 +44,6 @@
 #include "intel_blit.h"
 #include "intel_buffer_objects.h"
 #include "dri_bufmgr.h"
-#include "intel_bufmgr_ttm.h"
 #include "intel_batchbuffer.h"
 
 #define FILE_DEBUG_FLAG DEBUG_REGION
@@ -112,19 +111,6 @@ intel_region_alloc(struct intel_context *intel,
 			 DRM_BO_FLAG_CACHED_MAPPED);
 
    return intel_region_alloc_internal(intel, cpp, pitch, height, 0, buffer);
-}
-
-struct intel_region *
-intel_region_alloc_for_handle(struct intel_context *intel,
-			      GLuint cpp, GLuint pitch, GLuint height,
-			      GLuint tiled, GLuint handle)
-{
-   dri_bo *buffer;
-
-   buffer = intel_ttm_bo_create_from_handle(intel->bufmgr, "region", handle);
-
-   return intel_region_alloc_internal(intel,
-				      cpp, pitch, height, tiled, buffer);
 }
 
 void
@@ -437,20 +423,13 @@ intel_recreate_static(struct intel_context *intel,
    region->height = intelScreen->height;     /* needed? */
    region->tiled = region_desc->tiled;
 
-   if (intel->ttm) {
-      assert(region_desc->bo_handle != -1);
-      region->buffer = intel_ttm_bo_create_from_handle(intel->bufmgr,
-						       name,
-						       region_desc->bo_handle);
-   } else {
-      region->buffer = dri_bo_alloc_static(intel->bufmgr,
-					   name,
-					   region_desc->offset,
-					   intelScreen->pitch *
-					   intelScreen->height,
-					   region_desc->map,
-					   DRM_BO_FLAG_MEM_TT);
-   }
+   region->buffer = dri_bo_alloc_static(intel->bufmgr,
+					name,
+					region_desc->offset,
+					intelScreen->pitch *
+					intelScreen->height,
+					region_desc->map,
+					DRM_BO_FLAG_MEM_TT);
 
    assert(region->buffer != NULL);
 

@@ -59,7 +59,6 @@
 #include "intel_buffer_objects.h"
 #include "intel_fbo.h"
 #include "intel_decode.h"
-#include "intel_bufmgr_ttm.h"
 
 #include "drirenderbuffer.h"
 #include "vblank.h"
@@ -271,12 +270,6 @@ static const struct dri_extension brw_extensions[] = {
    { NULL,                                NULL }
 };
 
-static const struct dri_extension ttm_extensions[] = {
-   {"GL_EXT_framebuffer_object", GL_EXT_framebuffer_object_functions},
-   {"GL_ARB_pixel_buffer_object", NULL},
-   {NULL, NULL}
-};
-
 /**
  * Initializes potential list of extensions if ctx == NULL, or actually enables
  * extensions for a context.
@@ -290,9 +283,6 @@ void intelInitExtensions(GLcontext *ctx, GLboolean enable_imaging)
    enable_imaging = GL_FALSE;
 
    driInitExtensions(ctx, card_extensions, enable_imaging);
-
-   if (intel == NULL || intel->ttm)
-      driInitExtensions(ctx, ttm_extensions, GL_FALSE);
 
    if (intel == NULL || IS_965(intel->intelScreen->deviceID))
       driInitExtensions(ctx, brw_extensions, GL_FALSE);
@@ -409,63 +399,24 @@ static GLboolean
 intel_init_bufmgr(struct intel_context *intel)
 {
    intelScreenPrivate *intelScreen = intel->intelScreen;
-   GLboolean ttm_disable = getenv("INTEL_NO_TTM") != NULL;
-   GLboolean ttm_supported;
 
    /* If we've got a new enough DDX that's initializing TTM and giving us
     * object handles for the shared buffers, use that.
     */
    intel->ttm = GL_FALSE;
-   if (intel->intelScreen->driScrnPriv->dri2.enabled)
-       ttm_supported = GL_TRUE;
-   else if (intel->intelScreen->driScrnPriv->ddx_version.minor >= 9 &&
-	    intel->intelScreen->drmMinor >= 11 &&
-	    intel->intelScreen->front.bo_handle != -1)
-       ttm_supported = GL_TRUE;
-   else
-       ttm_supported = GL_FALSE;
 
-   if (!ttm_disable && ttm_supported) {
-      int bo_reuse_mode;
-      intel->bufmgr = intel_bufmgr_ttm_init(intel->driFd,
-					    DRM_FENCE_TYPE_EXE,
-					    DRM_FENCE_TYPE_EXE |
-					    DRM_I915_FENCE_TYPE_RW,
-					    BATCH_SZ);
-      if (intel->bufmgr != NULL)
-	 intel->ttm = GL_TRUE;
-
-      bo_reuse_mode = driQueryOptioni(&intel->optionCache, "bo_reuse");
-      switch (bo_reuse_mode) {
-      case DRI_CONF_BO_REUSE_DISABLED:
-	 break;
-      case DRI_CONF_BO_REUSE_ALL:
-	 intel_ttm_enable_bo_reuse(intel->bufmgr);
-	 break;
-      }
+   if (intelScreen->tex.size == 0) {
+      fprintf(stderr, "[%s:%u] Error initializing buffer manager.\n",
+           __func__, __LINE__);
+       return GL_FALSE;
    }
-   /* Otherwise, use the classic buffer manager. */
-   if (intel->bufmgr == NULL) {
-      if (ttm_disable) {
-	 fprintf(stderr, "TTM buffer manager disabled.  Using classic.\n");
-      } else {
-	 fprintf(stderr, "Failed to initialize TTM buffer manager.  "
-		 "Falling back to classic.\n");
-      }
 
-      if (intelScreen->tex.size == 0) {
-	 fprintf(stderr, "[%s:%u] Error initializing buffer manager.\n",
-		 __func__, __LINE__);
-	 return GL_FALSE;
-      }
-
-      intel->bufmgr = dri_bufmgr_fake_init(intelScreen->tex.offset,
-					   intelScreen->tex.map,
-					   intelScreen->tex.size,
-					   intel_fence_emit,
-					   intel_fence_wait,
-					   intel);
-   }
+   intel->bufmgr = dri_bufmgr_fake_init(intelScreen->tex.offset,
+					intelScreen->tex.map,
+					intelScreen->tex.size,
+					intel_fence_emit,
+					intel_fence_wait,
+					intel);
 
    return GL_TRUE;
 }
