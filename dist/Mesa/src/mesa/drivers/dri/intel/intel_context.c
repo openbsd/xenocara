@@ -76,7 +76,6 @@ int INTEL_DEBUG = (0);
 #define need_GL_ARB_vertex_buffer_object
 #define need_GL_ARB_vertex_program
 #define need_GL_ARB_window_pos
-#define need_GL_ARB_occlusion_query
 #define need_GL_EXT_blend_color
 #define need_GL_EXT_blend_equation_separate
 #define need_GL_EXT_blend_func_separate
@@ -272,11 +271,6 @@ static const struct dri_extension brw_extensions[] = {
    { NULL,                                NULL }
 };
 
-static const struct dri_extension arb_oc_extensions[] = {
-   {"GL_ARB_occlusion_query",            GL_ARB_occlusion_query_functions},
-   {NULL, NULL}
-};
-
 static const struct dri_extension ttm_extensions[] = {
    {"GL_EXT_framebuffer_object", GL_EXT_framebuffer_object_functions},
    {"GL_ARB_pixel_buffer_object", NULL},
@@ -299,11 +293,6 @@ void intelInitExtensions(GLcontext *ctx, GLboolean enable_imaging)
 
    if (intel == NULL || intel->ttm)
       driInitExtensions(ctx, ttm_extensions, GL_FALSE);
-
-   if (intel == NULL || 
-       (IS_965(intel->intelScreen->deviceID) && 
-	intel->intelScreen->drmMinor >= 8))
-      driInitExtensions(ctx, arb_oc_extensions, GL_FALSE);
 
    if (intel == NULL || IS_965(intel->intelScreen->deviceID))
       driInitExtensions(ctx, brw_extensions, GL_FALSE);
@@ -387,37 +376,6 @@ intelFinish(GLcontext * ctx)
       dri_fence_unreference(intel->batch->last_fence);
       intel->batch->last_fence = NULL;
    }
-}
-
-static void
-intelBeginQuery(GLcontext *ctx, GLenum target, struct gl_query_object *q)
-{
-	struct intel_context *intel = intel_context( ctx );
-	struct drm_i915_mmio io = {
-		.read_write = I915_MMIO_READ,
-		.reg = MMIO_REGS_PS_DEPTH_COUNT,
-		.data = &q->Result 
-	};
-	intel->stats_wm++;
-	intelFinish(&intel->ctx);
-	drmCommandWrite(intel->driFd, DRM_I915_MMIO, &io, sizeof(io));
-}
-
-static void
-intelEndQuery(GLcontext *ctx, GLenum target, struct gl_query_object *q)
-{
-	struct intel_context *intel = intel_context( ctx );
-	GLuint64EXT tmp;	
-	struct drm_i915_mmio io = {
-		.read_write = I915_MMIO_READ,
-		.reg = MMIO_REGS_PS_DEPTH_COUNT,
-		.data = &tmp
-	};
-	intelFinish(&intel->ctx);
-	drmCommandWrite(intel->driFd, DRM_I915_MMIO, &io, sizeof(io));
-	q->Result = tmp - q->Result;
-	q->Ready = GL_TRUE;
-	intel->stats_wm--;
 }
 
 /** Driver-specific fence emit implementation for the fake memory manager. */
@@ -526,9 +484,6 @@ intelInitDriverFunctions(struct dd_function_table *functions)
    functions->CopyColorSubTable = _swrast_CopyColorSubTable;
    functions->CopyConvolutionFilter1D = _swrast_CopyConvolutionFilter1D;
    functions->CopyConvolutionFilter2D = _swrast_CopyConvolutionFilter2D;
-
-   functions->BeginQuery = intelBeginQuery;
-   functions->EndQuery = intelEndQuery;
 
    intelInitTextureFuncs(functions);
    intelInitStateFuncs(functions);
