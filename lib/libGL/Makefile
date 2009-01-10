@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.21 2008/11/02 16:45:34 matthieu Exp $
+# $OpenBSD: Makefile,v 1.22 2009/01/10 16:04:43 oga Exp $
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
@@ -171,20 +171,21 @@ CLEANFILES+= glxeval.c glxpixel.c
 
 gl.pc: ${MESA}/gl.pc.in Makefile
 	sed -e 's,@INSTALL_DIR@,$(X11BASE),' \
-	    -e 's,@LIB_DIR@,lib,' \
+	    -e 's,@INSTALL_LIB_DIR@,${LIBDIR},' \
+	    -e 's,@INSTALL_INC_DIR@,${INCSDIR},' \
 	    -e 's,@VERSION@,$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY),' \
 	< ${MESA}/gl.pc.in > gl.pc
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
 DRI_PC=dri.pc
 
-dri.pc: ${MESA_DRI}/dri.pc.in
+dri.pc: ${MESA_DRI}/dri.pc.in Makefile
 	sed -e 's,@INSTALL_DIR@,${X11BASE},' \
-		-e 's,@INSTALL_LIB_DIR@,${LIBDIR},' \
-		-e 's,@INSTALL_INC_DIR@,${INCDIR},' \
-		-e 's,@DRI_DRIVER_DIR@,${DRI_DRIVER_INSTALL_DIR},' \
-		-e 's,@VERSION@,$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY),' \
-		< ${MESA_DRI}/dri.pc.in > dri.pc
+	    -e 's,@INSTALL_LIB_DIR@,${LIBDIR},' \
+	    -e 's,@INSTALL_INC_DIR@,${INCSDIR},' \
+	    -e 's,@DRI_DRIVER_DIR@,${DRI_DRIVER_INSTALL_DIR},' \
+	    -e 's,@VERSION@,$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY),' \
+	< ${MESA_DRI}/dri.pc.in > dri.pc
 .endif
 
 afterinstall: gl.pc ${DRI_PC}
