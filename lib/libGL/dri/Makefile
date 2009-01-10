@@ -2,7 +2,7 @@ SUBDIR= swrast
 
 .if ${MACHINE} == i386 || ${MACHINE} == amd64
 SUBDIR+= i810 i915 i965 mach64 mga r128 \
-	r200 r300 radeon s3v savage sis tdfx trident unichrome
+	r200 r300 radeon s3v savage sis tdfx trident
 .endif
 .if ${MACHINE} == sparc64
 SUBDIR+= mach64 r128 r200 r300 radeon
