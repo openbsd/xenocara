@@ -176,7 +176,7 @@ I830InitDma(ScrnInfoPtr pScrn)
    info.ring_end = ring->mem->end + pI830->LinearAddr;
    info.ring_size = ring->mem->size;
 
-   info.mmio_offset = (unsigned int)pI830DRI->regs;
+   info.mmio_offset = -1;
 
    info.sarea_priv_offset = sizeof(XF86DRISAREARec);
 
@@ -785,16 +785,6 @@ I830DRIDoMappings(ScreenPtr pScreen)
    drmI830Sarea *sarea = (drmI830Sarea *) DRIGetSAREAPrivate(pScreen);
 
    DPRINTF(PFX, "I830DRIDoMappings\n");
-   pI830DRI->regsSize = I830_REG_SIZE;
-   if (drmAddMap(pI830->drmSubFD, (drm_handle_t)pI830->MMIOAddr,
-		 pI830DRI->regsSize, DRM_REGISTERS, 0,
-		 (drmAddress) &pI830DRI->regs) < 0) {
-      xf86DrvMsg(pScreen->myNum, X_ERROR, "[drm] drmAddMap(regs) failed\n");
-      DRICloseScreen(pScreen);
-      return FALSE;
-   }
-   xf86DrvMsg(pScreen->myNum, X_INFO, "[drm] Registers = 0x%08x\n",
-	      (int)pI830DRI->regs);
 
    if (drmAddMap(pI830->drmSubFD,
 		 (drm_handle_t)pI830->LpRing->mem->offset + pI830->LinearAddr,
