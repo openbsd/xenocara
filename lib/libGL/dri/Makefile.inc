@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.7 2008/11/02 15:01:32 matthieu Exp $
+# $OpenBSD: Makefile.inc,v 1.8 2009/01/10 16:06:51 oga Exp $
 .include <bsd.xconf.mk>
 
 MESA= ${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -35,7 +35,7 @@ INCLUDES = \
 	-I$(TOP)/src/egl/main \
 	-I$(TOP)/src/egl/drivers/dri \
 	-I$(X11BASE)/include \
-	-I$(X11BASE)/include/drm
+	-I/usr/include/dev/pci/drm
 
 .if ${MACHINE_ARCH} == "i386"
 CPPFLAGS += \

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.6 2008/11/05 07:18:26 todd Exp $
+# $OpenBSD: Makefile,v 1.7 2009/01/10 16:06:51 oga Exp $
 
 MESA=	${.CURDIR}/../../../dist/Mesa/src/mesa
 MESA_INCLUDE=	${.CURDIR}/../../../dist/Mesa/include
@@ -18,7 +18,7 @@ CPPFLAGS+= \
 	-I${MESA}/shader/grammar \
 	-I${MESA}/shader/slang \
 	-I${X11BASE}/include \
-	-I${X11BASE}/include/drm \
+	-I/usr/include/dev/pci/drm \
 	-DGLX_INDIRECT_RENDERING \
 	-DGLX_DIRECT_RENDERING \
 	-DUSE_EXTERNAL_DXTN_LIB=1 \

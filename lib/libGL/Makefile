@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.22 2009/01/10 16:04:43 oga Exp $
+# $OpenBSD: Makefile,v 1.23 2009/01/10 16:06:51 oga Exp $
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
@@ -46,7 +46,7 @@ CPPFLAGS+= \
 	-I${MESA}/shader/slang \
 	-I${GLX} \
 	-I${X11BASE}/include \
-	-I${X11BASE}/include/drm \
+	-I/usr/include/dev/pci/drm \
 	-DGLX_INDIRECT_RENDERING \
 	-DPTHREADS \
 	-DHAVE_ALIAS \
