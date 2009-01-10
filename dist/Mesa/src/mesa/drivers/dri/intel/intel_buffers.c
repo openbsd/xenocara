@@ -43,22 +43,6 @@
 #include "vblank.h"
 #include "i915_drm.h"
 
-/* This block can be removed when libdrm >= 2.3.1 is required */
-
-#ifndef DRM_IOCTL_I915_FLIP
-
-#define DRM_VBLANK_FLIP 0x8000000
-
-typedef struct drm_i915_flip {
-   int pipes;
-} drm_i915_flip_t;
-
-#undef DRM_IOCTL_I915_FLIP
-#define DRM_IOCTL_I915_FLIP DRM_IOW(DRM_COMMAND_BASE + DRM_I915_FLIP, \
-				    drm_i915_flip_t)
-
-#endif
-
 #define FILE_DEBUG_FLAG DEBUG_BLIT
 
 /**
@@ -218,7 +202,7 @@ intelUpdatePageFlipping(struct intel_context *intel,
    intel_fb->pf_current_page = (intel->sarea->pf_current_page >>
 				(intel_fb->pf_planes & 0x2)) & 0x3;
 
-   intel_fb->pf_num_pages = intel->intelScreen->third.handle ? 3 : 2;
+   intel_fb->pf_num_pages = 2;
 
    pf_active = pf_planes && (pf_planes & intel->sarea->pf_active) == pf_planes;
 
@@ -226,41 +210,6 @@ intelUpdatePageFlipping(struct intel_context *intel,
       if (pf_active != intel_fb->pf_active)
 	 _mesa_printf("%s - Page flipping %sactive\n", __progname,
 		      pf_active ? "" : "in");
-
-   if (pf_active) {
-      /* Sync pages between planes if flipping on both at the same time */
-      if (pf_planes == 0x3 && pf_planes != intel_fb->pf_planes &&
-	  (intel->sarea->pf_current_page & 0x3) !=
-	  (((intel->sarea->pf_current_page) >> 2) & 0x3)) {
-	 drm_i915_flip_t flip;
-
-	 if (intel_fb->pf_current_page ==
-	     (intel->sarea->pf_current_page & 0x3)) {
-	    /* XXX: This is ugly, but emitting two flips 'in a row' can cause
-	     * lockups for unknown reasons.
-	     */
-	    intel->sarea->pf_current_page =
-	       intel->sarea->pf_current_page & 0x3;
-	    intel->sarea->pf_current_page |=
-	       ((intel_fb->pf_current_page + intel_fb->pf_num_pages - 1) %
-		intel_fb->pf_num_pages) << 2;
-
-	    flip.pipes = 0x2;
-	 } else {
-	    intel->sarea->pf_current_page =
-	       intel->sarea->pf_current_page & (0x3 << 2);
-	    intel->sarea->pf_current_page |=
-	       (intel_fb->pf_current_page + intel_fb->pf_num_pages - 1) %
-	       intel_fb->pf_num_pages;
-
-	    flip.pipes = 0x1;
-	 }
-
-	 drmCommandWrite(intel->driFd, DRM_I915_FLIP, &flip, sizeof(flip));
-      }
-
-      intel_fb->pf_planes = pf_planes;
-   }
 
    intel_fb->pf_active = pf_active;
    intel_flip_renderbuffers(intel_fb);
@@ -641,58 +590,7 @@ intel_wait_flips(struct intel_context *intel)
 static GLboolean
 intelPageFlip(const __DRIdrawablePrivate * dPriv)
 {
-   struct intel_context *intel;
-   int ret;
-   struct intel_framebuffer *intel_fb = dPriv->driverPrivate;
-
-   if (INTEL_DEBUG & DEBUG_IOCTL)
-      fprintf(stderr, "%s\n", __FUNCTION__);
-
-   assert(dPriv);
-   assert(dPriv->driContextPriv);
-   assert(dPriv->driContextPriv->driverPrivate);
-
-   intel = (struct intel_context *) dPriv->driContextPriv->driverPrivate;
-
-   if (intel->intelScreen->drmMinor < 9)
-      return GL_FALSE;
-
-   intelFlush(&intel->ctx);
-
-   ret = 0;
-
-   LOCK_HARDWARE(intel);
-
-   if (dPriv->numClipRects && intel_fb->pf_active) {
-      drm_i915_flip_t flip;
-
-      flip.pipes = intel_fb->pf_planes;
-
-      ret = drmCommandWrite(intel->driFd, DRM_I915_FLIP, &flip, sizeof(flip));
-   }
-
-   UNLOCK_HARDWARE(intel);
-
-   if (ret || !intel_fb->pf_active)
-      return GL_FALSE;
-
-   if (!dPriv->numClipRects) {
-      usleep(10000);	/* throttle invisible client 10ms */
-   }
-
-   intel_fb->pf_current_page = (intel->sarea->pf_current_page >>
-				(intel_fb->pf_planes & 0x2)) & 0x3;
-
-   if (dPriv->numClipRects != 0) {
-      intel_get_renderbuffer(&intel_fb->Base, BUFFER_FRONT_LEFT)->pf_pending =
-      intel_get_renderbuffer(&intel_fb->Base, BUFFER_BACK_LEFT)->pf_pending =
-	 ++intel_fb->pf_seq;
-   }
-
-   intel_flip_renderbuffers(intel_fb);
-   intel_draw_buffer(&intel->ctx, &intel_fb->Base);
-
-   return GL_TRUE;
+   return GL_FALSE;
 }
 
 static GLboolean
