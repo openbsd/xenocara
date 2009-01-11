@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.14 2009/01/11 21:33:45 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.15 2009/01/11 21:46:48 oga Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -53,8 +53,6 @@ int			 lungetc(int);
 int			 findeol(void);
 
 static struct conf	*conf;
-
-extern char		*shortcut_to_name[];
 
 typedef struct {
 	union {

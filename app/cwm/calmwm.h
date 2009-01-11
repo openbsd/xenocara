@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.71 2009/01/11 21:34:22 okan Exp $
+ * $Id: calmwm.h,v 1.72 2009/01/11 21:46:48 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -140,11 +140,7 @@ struct client_ctx {
 
 TAILQ_HEAD(client_ctx_q, client_ctx);
 
-static char *shortcut_to_name[] = {
-	"nogroup", "one", "two", "three",
-	"four", "five", "six", "seven",
-	"eight", "nine"
-};
+extern const char *shortcut_to_name[];
 
 struct group_ctx {
 	TAILQ_ENTRY(group_ctx)	 entry;
