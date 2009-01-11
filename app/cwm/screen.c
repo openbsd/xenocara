@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: screen.c,v 1.12 2009/01/06 00:19:55 okan Exp $
+ * $Id: screen.c,v 1.13 2009/01/11 18:25:49 okan Exp $
  */
 
 #include "headers.h"
@@ -71,8 +71,8 @@ screen_updatestackingorder(void)
 void
 screen_init_xinerama(struct screen_ctx *sc)
 {
-	XineramaScreenInfo *info;
-	int no, fake;
+	XineramaScreenInfo	*info;
+	int			 no;
 
 	if (HasXinerama == 0 || XineramaIsActive(X_Dpy) == 0) {
 		HasXinerama = 0;

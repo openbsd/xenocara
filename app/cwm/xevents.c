@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.31 2009/01/06 00:18:07 okan Exp $
+ * $Id: xevents.c,v 1.32 2009/01/11 18:25:49 okan Exp $
  */
 
 /*
@@ -222,7 +222,6 @@ xev_handle_buttonpress(struct xevent *xev, XEvent *ee)
 	struct client_ctx	*cc;
 	struct screen_ctx	*sc;
 	struct mousebinding	*mb;
-	char			*wname;
 
 	sc = screen_fromroot(e->root);
 	cc = client_find(e->window);
