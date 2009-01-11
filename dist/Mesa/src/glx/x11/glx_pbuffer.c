@@ -221,7 +221,6 @@ GetDrawableAttribute( Display *dpy, GLXDrawable drawable,
    unsigned int i;
    unsigned int num_attributes;
    GLboolean use_glx_1_3;
-			    || (priv->minorVersion >= 3));
 
    if ( (dpy == NULL) || (drawable == 0) ) {
       return 0;
