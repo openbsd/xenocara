@@ -1,10 +1,10 @@
-# $OpenBSD: Makefile,v 1.12 2008/09/29 23:16:46 oga Exp $
+# $OpenBSD: Makefile,v 1.13 2009/01/11 18:34:46 okan Exp $
 
 .include <bsd.xconf.mk>
 
 PROG=		cwm
 
-SRCS=		calmwm.c screen.c xmalloc.c client.c grab.c menu.c \
+SRCS=		calmwm.c screen.c xmalloc.c client.c menu.c \
 		search.c util.c xutil.c conf.c input.c xevents.c group.c \
 		kbfunc.c mousefunc.c font.c parse.y
 
