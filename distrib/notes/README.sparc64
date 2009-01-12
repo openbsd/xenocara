@@ -84,9 +84,7 @@ EndSection
 # All Sun keyboards (USB Type 6, Serial Type 3/4/5/6)
 Section "InputDevice"
 	Identifier  "Keyboard0"
-	Driver      "keyboard"
-	Option	    "Protocol" 	  "wskbd"
-	Option	    "Device" 	  "/dev/wskbd0"
+	Driver      "kbd"
 	Option	    "XkbRules" 	  "xorg"
 	Option	    "XkbLayout"   "us"
 EndSection
@@ -96,7 +94,7 @@ Section "InputDevice"
 	Identifier	"wsmouse0"
 	Driver		"mouse"
 	Option		"Protocol" "wsmouse"
-	Option		"Device"   "/dev/wsmouse0"
+	Option		"Device"   "/dev/wsmouse"
 EndSection
 
 # Serial mice on zstty ports
@@ -269,4 +267,4 @@ See xorg.conf(5) for more options.
 
 problem_blurb
 
-$OpenBSD: README.sparc64,v 1.6 2009/01/01 19:30:20 miod Exp $
+$OpenBSD: README.sparc64,v 1.7 2009/01/12 20:46:58 miod Exp $
