@@ -406,10 +406,10 @@ ProcXF86DRIDestroyDrawable(
     register ClientPtr client
 )
 {
-    int rc;
     REQUEST(xXF86DRIDestroyDrawableReq);
     DrawablePtr pDrawable;
     REQUEST_SIZE_MATCH(xXF86DRIDestroyDrawableReq);
+    int rc;
 
     if (stuff->screen >= screenInfo.numScreens) {
 	client->errorValue = stuff->screen;
