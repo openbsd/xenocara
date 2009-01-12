@@ -1074,7 +1074,8 @@ uninstall-am: uninstall-info-am uninstall-sdkHEADERS
 
 
 xf86DefModeSet.c: $(srcdir)/modeline2c.awk $(MODEDEFSOURCES)
-	cat $(MODEDEFSOURCES) | $(AWK) -f $(srcdir)/modeline2c.awk > $@
+	cat $(MODEDEFSOURCES) | LC_ALL=C $(AWK) -f $(srcdir)/modeline2c.awk > $@
+	echo >> $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

@@ -61,10 +61,10 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libos_la_LIBADD =
-am__libos_la_SOURCES_DIST = WaitFor.c access.c auth.c connection.c \
-	io.c mitauth.c oscolor.c oscolor.h osdep.h osinit.c utils.c \
-	xdmauth.c xstrans.c xprintf.c log.c rpcauth.c xdmcp.c \
-	strlcat.c strlcpy.c privsep.c
+am__libos_la_SOURCES_DIST = WaitFor.c access.c auth.c backtrace.c \
+	connection.c io.c mitauth.c oscolor.c oscolor.h osdep.h \
+	osinit.c utils.c xdmauth.c xstrans.c xprintf.c log.c rpcauth.c \
+	xdmcp.c strlcat.c strlcpy.c privsep.c
 am__objects_1 = log.lo
 am__objects_2 = rpcauth.lo
 @SECURE_RPC_TRUE@am__objects_3 = $(am__objects_2)
@@ -74,10 +74,11 @@ am__objects_6 = strlcat.lo strlcpy.lo
 @NEED_STRLCAT_TRUE@am__objects_7 = $(am__objects_6)
 am__objects_8 = privsep.lo
 @X_PRIVSEP_TRUE@am__objects_9 = $(am__objects_8)
-am_libos_la_OBJECTS = WaitFor.lo access.lo auth.lo connection.lo io.lo \
-	mitauth.lo oscolor.lo osinit.lo utils.lo xdmauth.lo xstrans.lo \
-	xprintf.lo $(am__objects_1) $(am__objects_3) $(am__objects_5) \
-	$(am__objects_7) $(am__objects_9)
+am_libos_la_OBJECTS = WaitFor.lo access.lo auth.lo backtrace.lo \
+	connection.lo io.lo mitauth.lo oscolor.lo osinit.lo utils.lo \
+	xdmauth.lo xstrans.lo xprintf.lo $(am__objects_1) \
+	$(am__objects_3) $(am__objects_5) $(am__objects_7) \
+	$(am__objects_9)
 libos_la_OBJECTS = $(am_libos_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 os_O_SOURCES = os.c
@@ -661,8 +662,8 @@ XDMCP_SRCS = xdmcp.c
 STRLCAT_SRCS = strlcat.c strlcpy.c
 XORG_SRCS = log.c
 PRIVSEP_SRCS = privsep.c
-libos_la_SOURCES = WaitFor.c access.c auth.c connection.c io.c \
-	mitauth.c oscolor.c oscolor.h osdep.h osinit.c utils.c \
+libos_la_SOURCES = WaitFor.c access.c auth.c backtrace.c connection.c \
+	io.c mitauth.c oscolor.c oscolor.h osdep.h osinit.c utils.c \
 	xdmauth.c xstrans.c xprintf.c $(XORG_SRCS) $(am__append_1) \
 	$(am__append_2) $(am__append_3) $(am__append_4)
 EXTRA_DIST = $(SECURERPC_SRCS) $(INTERNALMALLOC_SRCS) \
@@ -733,6 +734,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/WaitFor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/access.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auth.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/backtrace.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/connection.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log.Plo@am__quote@
