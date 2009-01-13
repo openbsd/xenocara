@@ -682,7 +682,7 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
   MessageType		 pix24From = X_DEFAULT;
   Bool			 pix24Fail = FALSE;
   Bool			 autoconfig = FALSE;
-  GDevPtr		 configured_device
+  GDevPtr		 configured_device;
   
   xf86Initialising = TRUE;
 
