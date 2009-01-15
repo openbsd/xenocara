@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.20 2009/01/11 21:46:48 oga Exp $
+ * $Id: group.c,v 1.21 2009/01/15 00:32:35 okan Exp $
  */
 
 #include "headers.h"
@@ -24,14 +24,20 @@
 
 #define CALMWM_NGROUPS 9
 
+static void		 _group_add(struct group_ctx *, struct client_ctx *);
+static void		 _group_remove(struct client_ctx *);
+static void		 _group_hide(struct group_ctx *);
+static void		 _group_show(struct group_ctx *);
+static void		 _group_fix_hidden_state(struct group_ctx *);
+
 struct group_ctx	*Group_active = NULL;
 struct group_ctx	 Groups[CALMWM_NGROUPS];
 int			 Grouphideall = 0;
 struct group_ctx_q	 Groupq;
 
 const char *shortcut_to_name[] = {
-        "nogroup", "one", "two", "three", "four", "five", "six",
-        "seven", "eight", "nine"
+	"nogroup", "one", "two", "three", "four", "five", "six",
+	"seven", "eight", "nine"
 };
 
 static void
@@ -161,12 +167,9 @@ group_sticky_toggle_exit(struct client_ctx *cc)
 }
 
 /*
- * selection list display
+ * if group_hidetoggle would produce no effect, toggle the group's hidden state
  */
-
-/* if group_hidetoggle would produce no effect, toggle the group's hidden state
- */
-void
+static void
 _group_fix_hidden_state(struct group_ctx *gc)
 {
 	struct client_ctx	*cc;

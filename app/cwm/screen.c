@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: screen.c,v 1.13 2009/01/11 18:25:49 okan Exp $
+ * $Id: screen.c,v 1.14 2009/01/15 00:32:35 okan Exp $
  */
 
 #include "headers.h"
@@ -91,4 +91,22 @@ screen_init_xinerama(struct screen_ctx *sc)
 		XFree(sc->xinerama);
 	sc->xinerama = info;
 	sc->xinerama_no = no;
+}
+
+/*
+ * Find which xinerama screen the coordinates (x,y) is on.
+ */
+XineramaScreenInfo *
+screen_find_xinerama(struct screen_ctx *sc, int x, int y)
+{
+	XineramaScreenInfo	*info;
+	int			 i;
+
+	for (i = 0; i < sc->xinerama_no; i++) {
+		info = &sc->xinerama[i];
+		if (x > info->x_org && x < info->x_org + info->width &&
+		    y > info->y_org && y < info->y_org + info->height)
+			return (info);
+	}
+	return (NULL);
 }

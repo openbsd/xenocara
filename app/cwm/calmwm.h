@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.72 2009/01/11 21:46:48 oga Exp $
+ * $Id: calmwm.h,v 1.73 2009/01/15 00:32:35 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -413,6 +413,7 @@ struct screen_ctx	*screen_fromroot(Window);
 struct screen_ctx	*screen_current(void);
 void			 screen_updatestackingorder(void);
 void			 screen_init_xinerama(struct screen_ctx *);
+XineramaScreenInfo	*screen_find_xinerama(struct screen_ctx *, int, int);
 
 void			 conf_setup(struct conf *, const char *);
 void			 conf_client(struct client_ctx *);
