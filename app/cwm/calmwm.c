@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.31 2008/12/03 23:55:46 oga Exp $
+ * $Id: calmwm.c,v 1.32 2009/01/15 17:23:12 oga Exp $
  */
 
 #include "headers.h"
@@ -229,11 +229,8 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 	for (i = 0; i < nwins; i++) {
 		XGetWindowAttributes(X_Dpy, wins[i], &winattr);
 		if (winattr.override_redirect ||
-		    winattr.map_state != IsViewable) {
-			char *name;
-			XFetchName(X_Dpy, wins[i], &name);
+		    winattr.map_state != IsViewable)
 			continue;
-		}
 		client_new(wins[i], sc, winattr.map_state != IsUnmapped);
 	}
 	XFree(wins);
