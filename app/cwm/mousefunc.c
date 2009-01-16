@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: mousefunc.c,v 1.5 2009/01/11 18:34:46 okan Exp $
+ * $Id: mousefunc.c,v 1.6 2009/01/16 15:24:14 okan Exp $
  */
 
 #include "headers.h"
@@ -117,16 +117,11 @@ mousefunc_window_resize(struct client_ctx *cc, void *arg)
 				/* Recompute window output */
 				_mousefunc_sweep_draw(cc, dx, dy);
 
-			XMoveResizeWindow(X_Dpy, cc->pwin,
+			XMoveResizeWindow(X_Dpy, cc->win,
 			    cc->geom.x - cc->bwidth,
 			    cc->geom.y - cc->bwidth,
 			    cc->geom.width + cc->bwidth * 2,
 			    cc->geom.height + cc->bwidth * 2);
-			XMoveResizeWindow(X_Dpy, cc->win,
-			    cc->bwidth, cc->bwidth,
-			    cc->geom.width, cc->geom.height);
-
-			client_do_shape(cc);
 			break;
 		case ButtonRelease:
 			XUnmapWindow(X_Dpy, sc->menuwin);
@@ -172,7 +167,7 @@ mousefunc_window_move(struct client_ctx *cc, void *arg)
 			cc->geom.x = x + (ev.xmotion.x - mx);
 			cc->geom.y = y + (ev.xmotion.y - my);
 
-			XMoveWindow(X_Dpy, cc->pwin,
+			XMoveWindow(X_Dpy, cc->win,
 			    cc->geom.x - cc->bwidth, cc->geom.y - cc->bwidth);
 
 			break;

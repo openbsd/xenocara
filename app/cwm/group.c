@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.21 2009/01/15 00:32:35 okan Exp $
+ * $Id: group.c,v 1.22 2009/01/16 15:24:14 okan Exp $
  */
 
 #include "headers.h"
@@ -99,7 +99,7 @@ _group_show(struct group_ctx *gc)
 	 * top-to-bottom.
 	 */
 	TAILQ_FOREACH(cc, &gc->clients, group_entry) {
-		winlist[gc->highstack - cc->stackingorder] = cc->pwin;
+		winlist[gc->highstack - cc->stackingorder] = cc->win;
 		client_unhide(cc);
 	}
 

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.51 2009/01/08 21:35:19 oga Exp $
+ * $Id: conf.c,v 1.52 2009/01/16 15:24:14 okan Exp $
  */
 
 #include "headers.h"
@@ -201,7 +201,7 @@ conf_client(struct client_ctx *cc)
 	} else
 		ignore = 1;
 
-	cc->bwidth = ignore ? 0 : 3;
+	cc->bwidth = ignore ? 0 : CLIENT_BWIDTH;
 	cc->flags |= ignore ? CLIENT_IGNORE : 0;
 }
 
@@ -530,6 +530,6 @@ conf_grab_mouse(struct client_ctx *cc)
 			warnx("strange button in mousebinding\n");
 			continue;
 		}
-		xu_btn_grab(cc->pwin, mb->modmask, button);
+		xu_btn_grab(cc->win, mb->modmask, button);
 	}
 }
