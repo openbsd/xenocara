@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.43 2009/01/16 15:24:14 okan Exp $
+ * $Id: client.c,v 1.44 2009/01/17 18:41:50 oga Exp $
  */
 
 #include "headers.h"
@@ -144,13 +144,10 @@ client_new(Window win, struct screen_ctx *sc, int mapped)
 }
 
 int
-client_delete(struct client_ctx *cc, int sendevent, int ignorewindow)
+client_delete(struct client_ctx *cc)
 {
 	struct screen_ctx	*sc = CCTOSC(cc);
 	struct winname		*wn;
-
-	if (cc->state == IconicState && !sendevent)
-		return (1);
 
 	group_client_delete(cc);
 
