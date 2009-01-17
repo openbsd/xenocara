@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.35 2009/01/17 18:41:50 oga Exp $
+ * $Id: xevents.c,v 1.36 2009/01/17 20:39:24 okan Exp $
  */
 
 /*
@@ -192,17 +192,7 @@ xev_handle_enternotify(struct xevent *xev, XEvent *ee)
 	XCrossingEvent		*e = &ee->xcrossing;
 	struct client_ctx	*cc;
 
-	if ((cc = client_find(e->window)) == NULL) {
-		/*
-		 * XXX - later.  messes up unclutter.  but may be
-		 * needed when we introduce menu windows and such into
-		 * the main event loop.
-		 */
-#ifdef notyet
-		if (e->window != e->root)
-			client_nocurrent();
-#endif
-	} else
+	if ((cc = client_find(e->window)) != NULL)
 		client_setactive(cc, 1);
 
 	xev_register(xev);
