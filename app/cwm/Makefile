@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.14 2009/01/11 21:48:27 oga Exp $
+# $OpenBSD: Makefile,v 1.15 2009/01/19 20:23:19 todd Exp $
 
 .include <bsd.xconf.mk>
 
@@ -12,8 +12,8 @@ CPPFLAGS+=	-I${X11BASE}/include -I${X11BASE}/include/freetype2 -I${.CURDIR}
 
 CFLAGS+=	-Wall
 
-LDADD+=		-L${X11BASE}/lib -lXft -lXrender -lX11 -lXau -lXdmcp -lXext \
-		-lfontconfig -lexpat -lfreetype -lz -lXinerama -lXrandr
+LDADD+=		-L${X11BASE}/lib -lXft -lXrender -lX11 -lXau -lXdmcp \
+		-lfontconfig -lexpat -lfreetype -lz -lXinerama -lXrandr -lXext
 
 MANDIR=		${X11BASE}/man/cat
 MAN=		cwm.1 cwmrc.5
