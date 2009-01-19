@@ -201,10 +201,8 @@
 ./usr/X11R6/include/X11/Xtrans
 ./usr/X11R6/include/X11/Xtrans/Xtrans.c
 ./usr/X11R6/include/X11/Xtrans/Xtrans.h
-./usr/X11R6/include/X11/Xtrans/Xtransdnet.c
 ./usr/X11R6/include/X11/Xtrans/Xtransint.h
 ./usr/X11R6/include/X11/Xtrans/Xtranslcl.c
-./usr/X11R6/include/X11/Xtrans/Xtransos2.c
 ./usr/X11R6/include/X11/Xtrans/Xtranssock.c
 ./usr/X11R6/include/X11/Xtrans/Xtranstli.c
 ./usr/X11R6/include/X11/Xtrans/Xtransutil.c
@@ -2785,7 +2783,6 @@
 ./usr/X11R6/share/aclocal/fontutil.m4
 ./usr/X11R6/share/aclocal/xaw.m4
 ./usr/X11R6/share/aclocal/xorg-macros.m4
-./usr/X11R6/share/aclocal/xorgversion.m4
 ./usr/X11R6/share/aclocal/xtrans.m4
 ./usr/X11R6/share/doc
 ./usr/X11R6/share/doc/compositeproto
