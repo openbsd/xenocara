@@ -117,9 +117,11 @@ static DevPrivateKey ShadowGCKey = &ShadowGCKey;
     }
 
 #define SHADOW_GC_OP_PROLOGUE(pGC)\
-    ShadowScreenPtr pPriv = GET_SCREEN_PRIVATE(pGC->pScreen); \
-    ShadowGCPtr pGCPriv = GET_GC_PRIVATE(pGC);\
+    ShadowScreenPtr pPriv;\
+    ShadowGCPtr pGCPriv;\
     GCFuncs *oldFuncs = pGC->funcs;\
+    pGCPriv = GET_GC_PRIVATE(pGC);\
+    pPriv = GET_SCREEN_PRIVATE(pGC->pScreen);\
     pGC->funcs = pGCPriv->funcs;\
     pGC->ops = pGCPriv->ops
 
@@ -433,9 +435,11 @@ static Bool
 ShadowCreateGC(GCPtr pGC)
 {
     ScreenPtr pScreen = pGC->pScreen;
-    ShadowScreenPtr pPriv = GET_SCREEN_PRIVATE(pScreen);
-    ShadowGCPtr pGCPriv = GET_GC_PRIVATE(pGC);
+    ShadowScreenPtr pPriv;
+    ShadowGCPtr pGCPriv;
     Bool ret;
+    pPriv = GET_SCREEN_PRIVATE(pScreen);
+    pGCPriv = GET_GC_PRIVATE(pGC);
    
     pScreen->CreateGC = pPriv->CreateGC;
     if((ret = (*pScreen->CreateGC) (pGC))) {
