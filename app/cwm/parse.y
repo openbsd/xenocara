@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.15 2009/01/11 21:46:48 oga Exp $ */
+/*	$OpenBSD: parse.y,v 1.16 2009/01/21 15:04:38 todd Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -66,7 +66,7 @@ typedef struct {
 
 %token	FONTNAME STICKY GAP MOUSEBIND
 %token	AUTOGROUP BIND COMMAND IGNORE
-%token	YES NO
+%token	YES NO BORDERWIDTH
 %token	ERROR
 %token	<v.string>		STRING
 %token	<v.number>		NUMBER
@@ -106,6 +106,9 @@ main		: FONTNAME STRING		{
 				conf->flags &= ~CONF_STICKY_GROUPS;
 			else
 				conf->flags |= CONF_STICKY_GROUPS;
+		}
+		| BORDERWIDTH NUMBER {
+			conf->bwidth = $2;
 		}
 		| COMMAND STRING string		{
 			conf_cmd_add(conf, $3, $2, 0);
@@ -198,6 +201,7 @@ lookup(char *s)
 	static const struct keywords keywords[] = {
 		{ "autogroup",		AUTOGROUP},
 		{ "bind",		BIND},
+		{ "borderwidth",	BORDERWIDTH},
 		{ "command",		COMMAND},
 		{ "fontname",		FONTNAME},
 		{ "gap",		GAP},
@@ -538,6 +542,7 @@ parse_config(const char *filename, struct conf *xconf)
 		conf_clear(xconf);
 
 		xconf->flags = conf->flags;
+		xconf->bwidth = conf->bwidth;
 
 		while ((cmd = TAILQ_FIRST(&conf->cmdq)) != NULL) {
 			TAILQ_REMOVE(&conf->cmdq, cmd, entry);

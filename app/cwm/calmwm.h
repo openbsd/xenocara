@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.76 2009/01/17 20:39:24 okan Exp $
+ * $Id: calmwm.h,v 1.77 2009/01/21 15:04:38 todd Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -79,7 +79,6 @@ TAILQ_HEAD(screen_ctx_q, screen_ctx);
 #define CLIENT_DOVMAXIMIZE	0x10
 #define CLIENT_VMAXIMIZED	0x20
 
-#define CLIENT_BWIDTH		1
 #define CLIENT_HIGHLIGHT_BLUE	1
 #define CLIENT_HIGHLIGHT_RED	2
 
@@ -250,6 +249,8 @@ struct conf {
 
 #define	CONF_STICKY_GROUPS	 0x0001
 	int			 flags;
+#define CONF_BWIDTH		 1
+	int			 bwidth;
 
 	char			 termpath[MAXPATHLEN];
 	char			 lockpath[MAXPATHLEN];
