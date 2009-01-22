@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.33 2009/01/16 15:24:14 okan Exp $
+ * $Id: calmwm.c,v 1.34 2009/01/22 15:26:33 oga Exp $
  */
 
 #include "headers.h"
@@ -74,10 +74,12 @@ main(int argc, char **argv)
 	bzero(&Conf, sizeof(Conf));
 	conf_setup(&Conf, conf_file);
 	client_setup();
+	xu_getatoms();
 	x_setup();
 	Starting = 0;
 
 	xev_init();
+
 	XEV_QUICK(NULL, NULL, MapRequest, xev_handle_maprequest, NULL);
 	XEV_QUICK(NULL, NULL, UnmapNotify, xev_handle_unmapnotify, NULL);
 	XEV_QUICK(NULL, NULL, ConfigureRequest,
