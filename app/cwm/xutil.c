@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xutil.c,v 1.10 2009/01/22 15:26:33 oga Exp $
+ * $Id: xutil.c,v 1.11 2009/01/22 18:06:16 oga Exp $
  */
 
 #include "headers.h"
@@ -178,4 +178,5 @@ xu_getatoms(void)
 	WM_DELETE_WINDOW = XInternAtom(X_Dpy, "WM_DELETE_WINDOW", False);	
 	WM_TAKE_FOCUS = XInternAtom(X_Dpy, "WM_TAKE_FOCUS", False);
 	WM_PROTOCOLS = XInternAtom(X_Dpy, "WM_PROTOCOLS", False);
+	_MOTIF_WM_HINTS = XInternAtom(X_Dpy, "_MOTIF_WM_HINTS", False);
 }
