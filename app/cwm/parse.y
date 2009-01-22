@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.16 2009/01/21 15:04:38 todd Exp $ */
+/*	$OpenBSD: parse.y,v 1.17 2009/01/22 18:16:38 oga Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -502,8 +502,7 @@ conf_clear(struct conf *c)
 		free(mb);
 	}
 
-	if (c->DefaultFontName != NULL &&
-	    c->DefaultFontName != DEFAULTFONTNAME)
+	if (c->DefaultFontName != NULL)
 		free(c->DefaultFontName);
 }
 
