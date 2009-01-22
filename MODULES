@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.56 2009/01/13 20:51:03 matthieu Exp $
+# $OpenBSD: MODULES,v 1.57 2009/01/22 23:08:47 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -16,7 +16,7 @@ app/ico			1.0.2	7.3
 app/listres		1.0.1	7.0
 app/luit		1.0.3	7.4
 app/mkfontdir		1.0.4	7.4
-app/mkfontscale		1.0.6	7.4+	needs-update
+app/mkfontscale		1.0.6	7.4+
 app/oclock		1.0.1	7.0
 app/proxymngr		1.0.1	7.0	deprecated
 app/rgb			1.0.3	7.4
@@ -40,7 +40,7 @@ app/xconsole		1.0.3	7.3
 app/xdm			1.1.8	7.4	needs-update
 app/xdpyinfo		1.0.3	7.4
 app/xdriinfo		1.0.2	7.3
-app/xedit		1.1.2	7.4	needs-update
+app/xedit		1.1.2	7.4
 app/xev			1.0.3	7.4
 app/xeyes		1.0.1	7.0
 app/xf86dga		1.0.2	7.2RC1
@@ -119,7 +119,7 @@ driver/xf86-input-vmmouse	12.6.3	7.4+	needs-update
 driver/xf86-input-void		1.1.1	7.1
 driver/xf86-video-apm		1.2.1	7.4+	needs-update
 driver/xf86-video-ark		0.7.1	7.4+	needs-update
-driver/xf86-video-ast		0.87.0	7.4+	needs-update
+driver/xf86-video-ast		0.88.8	7.4+	needs-update
 driver/xf86-video-ati		6.10.0	7.4+	needs-update
 driver/xf86-video-chips		1.2.1	7.4+	needs-update
 driver/xf86-video-cirrus	1.2.1	7.4
@@ -243,7 +243,7 @@ lib/libpciaccess		0.10.5	7.4+	needs-update
 lib/libxcb			1.1	7.3	needs-import
 lib/libxkbfile			1.0.5	7.4
 lib/libxkbui			1.0.2	7.1
-lib/libxtrans			1.2.2	7.4+	needs-update
+lib/libxtrans			1.2.3	7.4+	needs-update
 lib/pixman			0.13.2	7.4+	needs-update
 
 proto/bigreqsproto		1.0.2	7.0	needs-rel
