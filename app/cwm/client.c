@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.46 2009/01/22 19:01:56 okan Exp $
+ * $Id: client.c,v 1.47 2009/01/23 20:47:45 okan Exp $
  */
 
 #include "headers.h"
@@ -699,8 +699,7 @@ client_freehints(struct client_ctx *cc)
 		XFree(cc->app_name);
 	if (cc->app_class != NULL)
 		XFree(cc->app_class);
-	if (cc->app_cliarg != NULL)
-		xfree(cc->app_cliarg);
+	xfree(cc->app_cliarg);
 }
 
 static int
