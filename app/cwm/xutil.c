@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xutil.c,v 1.12 2009/01/23 20:04:30 oga Exp $
+ * $Id: xutil.c,v 1.13 2009/01/23 20:07:20 oga Exp $
  */
 
 #include "headers.h"
@@ -177,7 +177,6 @@ char 		*atoms[CWM_NO_ATOMS] = {
 	"WM_PROTOCOLS",
 	"_MOTIF_WM_HINTS"
 };
-
 
 void
 xu_getatoms(void)
