@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.37 2009/01/22 19:01:56 okan Exp $
+ * $Id: xevents.c,v 1.38 2009/01/23 18:58:40 oga Exp $
  */
 
 /*
@@ -294,7 +294,7 @@ xev_handle_keypress(struct xevent *xev, XEvent *ee)
 		if (kb->flags & KBFLAG_NEEDCLIENT)
 			goto out;
 
-	(*kb->callback)(cc, kb->argument);
+	(*kb->callback)(cc, &kb->argument);
 
 out:
 	xev_register(xev);

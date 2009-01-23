@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.78 2009/01/22 15:26:33 oga Exp $
+ * $Id: calmwm.h,v 1.79 2009/01/23 18:58:40 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -205,14 +205,19 @@ TAILQ_HEAD(winmatch_q, winmatch);
 
 #define KBTOGROUP(X) ((X) - 1)
 
+union arg {
+	char	*c;
+	int	 i;
+};
+
 struct keybinding {
+	TAILQ_ENTRY(keybinding)	 entry;
+	void			(*callback)(struct client_ctx *, union arg *);
+	union arg		 argument;
 	int			 modmask;
 	int			 keysym;
 	int			 keycode;
 	int			 flags;
-	void			 (*callback)(struct client_ctx *, void *);
-	void			*argument;
-	TAILQ_ENTRY(keybinding)	 entry;
 };
 
 struct cmd {
@@ -423,29 +428,34 @@ void			 conf_cmd_add(struct conf *, char *, char *, int);
 
 int			 parse_config(const char *, struct conf *);
 
-void			 kbfunc_client_lower(struct client_ctx *, void *);
-void			 kbfunc_client_raise(struct client_ctx *, void *);
-void			 kbfunc_client_search(struct client_ctx *, void *);
-void			 kbfunc_client_hide(struct client_ctx *, void *);
-void			 kbfunc_client_cycle(struct client_ctx *, void *);
-void			 kbfunc_client_rcycle(struct client_ctx *, void *);
-void			 kbfunc_cmdexec(struct client_ctx *, void *);
-void			 kbfunc_client_label(struct client_ctx *, void *);
-void			 kbfunc_client_delete(struct client_ctx *, void *);
-void			 kbfunc_client_group(struct client_ctx *, void *);
-void			 kbfunc_client_cyclegroup(struct client_ctx *, void *);
-void			 kbfunc_client_nogroup(struct client_ctx *, void *);
-void			 kbfunc_client_grouptoggle(struct client_ctx *, void *);
-void			 kbfunc_client_maximize(struct client_ctx *, void *);
-void			 kbfunc_client_vmaximize(struct client_ctx *, void *);
-void			 kbfunc_reload(struct client_ctx *, void *);
-void			 kbfunc_quit_wm(struct client_ctx *, void *);
-void			 kbfunc_moveresize(struct client_ctx *, void *);
-void			 kbfunc_menu_search(struct client_ctx *, void *);
-void			 kbfunc_exec(struct client_ctx *, void *);
-void			 kbfunc_ssh(struct client_ctx *, void *);
-void			 kbfunc_term(struct client_ctx *, void *);
-void			 kbfunc_lock(struct client_ctx *, void *);
+void			 kbfunc_client_lower(struct client_ctx *, union arg *);
+void			 kbfunc_client_raise(struct client_ctx *, union arg *);
+void			 kbfunc_client_search(struct client_ctx *, union arg *);
+void			 kbfunc_client_hide(struct client_ctx *, union arg *);
+void			 kbfunc_client_cycle(struct client_ctx *, union arg *);
+void			 kbfunc_client_rcycle(struct client_ctx *, union arg *);
+void			 kbfunc_cmdexec(struct client_ctx *, union arg *);
+void			 kbfunc_client_label(struct client_ctx *, union arg *);
+void			 kbfunc_client_delete(struct client_ctx *, union arg *);
+void			 kbfunc_client_group(struct client_ctx *, union arg *);
+void			 kbfunc_client_cyclegroup(struct client_ctx *,
+			     union arg *);
+void			 kbfunc_client_nogroup(struct client_ctx *,
+			     union arg *);
+void			 kbfunc_client_grouptoggle(struct client_ctx *,
+			     union arg *);
+void			 kbfunc_client_maximize(struct client_ctx *,
+			     union arg *);
+void			 kbfunc_client_vmaximize(struct client_ctx *,
+			     union arg *);
+void			 kbfunc_reload(struct client_ctx *, union arg *);
+void			 kbfunc_quit_wm(struct client_ctx *, union arg *);
+void			 kbfunc_moveresize(struct client_ctx *, union arg *);
+void			 kbfunc_menu_search(struct client_ctx *, union arg *);
+void			 kbfunc_exec(struct client_ctx *, union arg *);
+void			 kbfunc_ssh(struct client_ctx *, union arg *);
+void			 kbfunc_term(struct client_ctx *, union arg *);
+void			 kbfunc_lock(struct client_ctx *, union arg *);
 
 void			 mousefunc_window_resize(struct client_ctx *, void *);
 void			 mousefunc_window_move(struct client_ctx *, void *);
