@@ -1,26 +1,32 @@
-# $OpenBSD: Makefile,v 1.1 2009/01/10 16:29:26 oga Exp $
+# $OpenBSD: Makefile,v 1.2 2009/01/26 23:14:37 oga Exp $
 .include <bsd.xconf.mk>
+
+.if ${MACHINE_ARCH} == "i386" || ${MACHINE_ARCH} == "amd64"
+SUBDIR=intel
+.endif
 
 LIB=		drm
 
 DRM_MAJOR=	2
-DRM_MINOR=	3
-DRM_TINY=	1
+DRM_MINOR=	4
+DRM_TINY=	4
 
 INCSDIR=	${X11BASE}/include/
 
 CPP=		cpp -notraditional
 DEBUG?=
 
-CPPFLAGS+=	-I. \
+CPPFLAGS+=	-I${.CURDIR} \
 		-I${X11BASE}/include \
 		-I/usr/include/dev/pci/drm \
 		-DX_PRIVSEP
 
-INCS= 		xf86drm.h
+INCS= 		xf86drm.h	\
+		xf86drmMode.h
 
 SRCS=		xf86drm.c	\
 		xf86drmHash.c	\
+		xf86drmMode.c	\
 		xf86drmRandom.c	\
 		xf86drmSL.c	
 
