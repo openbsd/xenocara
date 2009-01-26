@@ -202,10 +202,6 @@ if test "$DRI" = yes; then
         PKG_CHECK_MODULES(DRI, [libdrm xf86driproto glproto])
         AC_DEFINE(XF86DRI,1,[Enable DRI driver support])
         AC_DEFINE(XF86DRI_DEVEL,1,[Enable developmental DRI driver support])
-	PKG_CHECK_MODULES(DRI_MM, [libdrm >= 2.4.0],[DRI_MM=yes], [DRI_MM=no])
-	if test "x$DRI_MM" = xyes; then
-		AC_DEFINE(XF86DRI_MM,1,[Extended DRI memory management])
-	fi
 	if test "$have_damage_h" = yes; then
 		AC_DEFINE(DAMAGE,1,[Use Damage extension])
 	fi

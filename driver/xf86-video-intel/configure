@@ -465,7 +465,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE SED EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DSYMUTIL ac_ct_DSYMUTIL NMEDIT ac_ct_NMEDIT CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL DOLT_BASH LTCOMPILE LTCXXCOMPILE gen4asm HAVE_GEN4ASM_TRUE HAVE_GEN4ASM_FALSE PKG_CONFIG ac_pt_PKG_CONFIG XORG_CFLAGS XORG_LIBS PCIACCESS_CFLAGS PCIACCESS_LIBS XSERVER_LIBPCIACCESS_TRUE XSERVER_LIBPCIACCESS_FALSE LIBPCIACCESS_TRUE LIBPCIACCESS_FALSE XMODES_TRUE XMODES_FALSE XMODES_CFLAGS DRI_TRUE DRI_FALSE DRI_CFLAGS DRI_LIBS DRI_MM_CFLAGS DRI_MM_LIBS VIDEO_DEBUG_TRUE VIDEO_DEBUG_FALSE XVMCLIB_CFLAGS XVMCLIB_LIBS XVMC_TRUE XVMC_FALSE WARN_CFLAGS moduledir DRIVER_NAME APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LINUXDOC PS2PDF BUILD_LINUXDOC_TRUE BUILD_LINUXDOC_FALSE BUILD_PDFDOC_TRUE BUILD_PDFDOC_FALSE MAKE_TEXT MAKE_PS MAKE_PDF MAKE_HTML LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE SED EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DSYMUTIL ac_ct_DSYMUTIL NMEDIT ac_ct_NMEDIT CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL DOLT_BASH LTCOMPILE LTCXXCOMPILE gen4asm HAVE_GEN4ASM_TRUE HAVE_GEN4ASM_FALSE PKG_CONFIG ac_pt_PKG_CONFIG XORG_CFLAGS XORG_LIBS PCIACCESS_CFLAGS PCIACCESS_LIBS XSERVER_LIBPCIACCESS_TRUE XSERVER_LIBPCIACCESS_FALSE LIBPCIACCESS_TRUE LIBPCIACCESS_FALSE XMODES_TRUE XMODES_FALSE XMODES_CFLAGS DRI_TRUE DRI_FALSE DRI_CFLAGS DRI_LIBS VIDEO_DEBUG_TRUE VIDEO_DEBUG_FALSE XVMCLIB_CFLAGS XVMCLIB_LIBS XVMC_TRUE XVMC_FALSE WARN_CFLAGS moduledir DRIVER_NAME APP_MAN_SUFFIX LIB_MAN_SUFFIX FILE_MAN_SUFFIX MISC_MAN_SUFFIX DRIVER_MAN_SUFFIX ADMIN_MAN_SUFFIX APP_MAN_DIR LIB_MAN_DIR FILE_MAN_DIR MISC_MAN_DIR DRIVER_MAN_DIR ADMIN_MAN_DIR LINUXDOC PS2PDF BUILD_LINUXDOC_TRUE BUILD_LINUXDOC_FALSE BUILD_PDFDOC_TRUE BUILD_PDFDOC_FALSE MAKE_TEXT MAKE_PS MAKE_PDF MAKE_HTML LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -974,14 +974,6 @@ ac_env_DRI_LIBS_set=${DRI_LIBS+set}
 ac_env_DRI_LIBS_value=$DRI_LIBS
 ac_cv_env_DRI_LIBS_set=${DRI_LIBS+set}
 ac_cv_env_DRI_LIBS_value=$DRI_LIBS
-ac_env_DRI_MM_CFLAGS_set=${DRI_MM_CFLAGS+set}
-ac_env_DRI_MM_CFLAGS_value=$DRI_MM_CFLAGS
-ac_cv_env_DRI_MM_CFLAGS_set=${DRI_MM_CFLAGS+set}
-ac_cv_env_DRI_MM_CFLAGS_value=$DRI_MM_CFLAGS
-ac_env_DRI_MM_LIBS_set=${DRI_MM_LIBS+set}
-ac_env_DRI_MM_LIBS_value=$DRI_MM_LIBS
-ac_cv_env_DRI_MM_LIBS_set=${DRI_MM_LIBS+set}
-ac_cv_env_DRI_MM_LIBS_value=$DRI_MM_LIBS
 ac_env_XVMCLIB_CFLAGS_set=${XVMCLIB_CFLAGS+set}
 ac_env_XVMCLIB_CFLAGS_value=$XVMCLIB_CFLAGS
 ac_cv_env_XVMCLIB_CFLAGS_set=${XVMCLIB_CFLAGS+set}
@@ -1124,9 +1116,6 @@ Some influential environment variables:
               linker flags for PCIACCESS, overriding pkg-config
   DRI_CFLAGS  C compiler flags for DRI, overriding pkg-config
   DRI_LIBS    linker flags for DRI, overriding pkg-config
-  DRI_MM_CFLAGS
-              C compiler flags for DRI_MM, overriding pkg-config
-  DRI_MM_LIBS linker flags for DRI_MM, overriding pkg-config
   XVMCLIB_CFLAGS
               C compiler flags for XVMCLIB, overriding pkg-config
   XVMCLIB_LIBS
@@ -3742,7 +3731,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 3745 "configure"' > conftest.$ac_ext
+  echo '#line 3734 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -5352,7 +5341,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:5355:" \
+echo "$as_me:5344:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -6701,11 +6690,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6704: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6693: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6708: \$? = $ac_status" >&5
+   echo "$as_me:6697: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -6991,11 +6980,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6994: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6983: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6998: \$? = $ac_status" >&5
+   echo "$as_me:6987: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7095,11 +7084,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7098: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7087: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7102: \$? = $ac_status" >&5
+   echo "$as_me:7091: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9496,7 +9485,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9499 "configure"
+#line 9488 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9596,7 +9585,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9599 "configure"
+#line 9588 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12001,11 +11990,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12004: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11993: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12008: \$? = $ac_status" >&5
+   echo "$as_me:11997: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12105,11 +12094,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12108: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12097: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12112: \$? = $ac_status" >&5
+   echo "$as_me:12101: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13688,11 +13677,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13691: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13680: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13695: \$? = $ac_status" >&5
+   echo "$as_me:13684: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13792,11 +13781,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13795: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13784: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13799: \$? = $ac_status" >&5
+   echo "$as_me:13788: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16004,11 +15993,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16007: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15996: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16011: \$? = $ac_status" >&5
+   echo "$as_me:16000: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16294,11 +16283,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16297: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16286: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16301: \$? = $ac_status" >&5
+   echo "$as_me:16290: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16398,11 +16387,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16401: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16390: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16405: \$? = $ac_status" >&5
+   echo "$as_me:16394: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -21947,84 +21936,6 @@ cat >>confdefs.h <<\_ACEOF
 #define XF86DRI_DEVEL 1
 _ACEOF
 
-
-pkg_failed=no
-echo "$as_me:$LINENO: checking for DRI_MM" >&5
-echo $ECHO_N "checking for DRI_MM... $ECHO_C" >&6
-
-if test -n "$PKG_CONFIG"; then
-    if test -n "$DRI_MM_CFLAGS"; then
-        pkg_cv_DRI_MM_CFLAGS="$DRI_MM_CFLAGS"
-    else
-        if test -n "$PKG_CONFIG" && \
-    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"libdrm >= 2.4.0\"") >&5
-  ($PKG_CONFIG --exists --print-errors "libdrm >= 2.4.0") 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  pkg_cv_DRI_MM_CFLAGS=`$PKG_CONFIG --cflags "libdrm >= 2.4.0" 2>/dev/null`
-else
-  pkg_failed=yes
-fi
-    fi
-else
-	pkg_failed=untried
-fi
-if test -n "$PKG_CONFIG"; then
-    if test -n "$DRI_MM_LIBS"; then
-        pkg_cv_DRI_MM_LIBS="$DRI_MM_LIBS"
-    else
-        if test -n "$PKG_CONFIG" && \
-    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"libdrm >= 2.4.0\"") >&5
-  ($PKG_CONFIG --exists --print-errors "libdrm >= 2.4.0") 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  pkg_cv_DRI_MM_LIBS=`$PKG_CONFIG --libs "libdrm >= 2.4.0" 2>/dev/null`
-else
-  pkg_failed=yes
-fi
-    fi
-else
-	pkg_failed=untried
-fi
-
-
-
-if test $pkg_failed = yes; then
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        DRI_MM_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "libdrm >= 2.4.0"`
-        else
-	        DRI_MM_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "libdrm >= 2.4.0"`
-        fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$DRI_MM_PKG_ERRORS" >&5
-
-	echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-                DRI_MM=no
-elif test $pkg_failed = untried; then
-	DRI_MM=no
-else
-	DRI_MM_CFLAGS=$pkg_cv_DRI_MM_CFLAGS
-	DRI_MM_LIBS=$pkg_cv_DRI_MM_LIBS
-        echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-	DRI_MM=yes
-fi
-	if test "x$DRI_MM" = xyes; then
-
-cat >>confdefs.h <<\_ACEOF
-#define XF86DRI_MM 1
-_ACEOF
-
-	fi
 	if test "$have_damage_h" = yes; then
 
 cat >>confdefs.h <<\_ACEOF
@@ -23366,8 +23277,6 @@ s,@DRI_TRUE@,$DRI_TRUE,;t t
 s,@DRI_FALSE@,$DRI_FALSE,;t t
 s,@DRI_CFLAGS@,$DRI_CFLAGS,;t t
 s,@DRI_LIBS@,$DRI_LIBS,;t t
-s,@DRI_MM_CFLAGS@,$DRI_MM_CFLAGS,;t t
-s,@DRI_MM_LIBS@,$DRI_MM_LIBS,;t t
 s,@VIDEO_DEBUG_TRUE@,$VIDEO_DEBUG_TRUE,;t t
 s,@VIDEO_DEBUG_FALSE@,$VIDEO_DEBUG_FALSE,;t t
 s,@XVMCLIB_CFLAGS@,$XVMCLIB_CFLAGS,;t t
