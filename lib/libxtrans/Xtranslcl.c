@@ -76,12 +76,7 @@ from The Open Group.
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #if defined(SVR4)
-#if !defined(DGUX)
 #include <sys/filio.h>
-#else /* DGUX */
-#include <sys/stream.h>
-#include <sys/ptms.h>
-#endif
 #endif
 #ifdef sun
 # include <stropts.h>
@@ -103,10 +98,6 @@ from The Open Group.
 #include <sys/un.h>
 #endif
 
-#if defined(ISC) && !defined(_POSIX_SOURCE)
-typedef unsigned short  mode_t;
-/* POSIX needed for mode_t define in sys/types.h */
-#endif
 
 /* Types of local connections supported:
  *  - PTS
@@ -119,10 +110,6 @@ typedef unsigned short  mode_t;
 #endif
 #if defined(SVR4) || defined(__SVR4)
 # define LOCAL_TRANS_NAMED
-#endif
-#if !defined(sun) && !defined(__SCO__) && !defined(__UNIXWARE__)
-/* SCO doesnt use the ISC transport type - it causes problems */
-# define LOCAL_TRANS_ISC
 #endif
 #if defined(__SCO__) || defined(__UNIXWARE__)
 # define LOCAL_TRANS_SCO
@@ -179,7 +166,7 @@ TRANS(FillAddrInfo)(XtransConnInfo ciptr, char *sun_path, char *peer_sun_path)
 	return 0;
     }
     strcpy (sunaddr->sun_path, sun_path);
-#if defined(BSD44SOCKETS) && !defined(Lynx)
+#if defined(BSD44SOCKETS) 
     sunaddr->sun_len = strlen (sunaddr->sun_path);
 #endif
 
@@ -206,7 +193,7 @@ TRANS(FillAddrInfo)(XtransConnInfo ciptr, char *sun_path, char *peer_sun_path)
 	return 0;
     }
     strcpy (p_sunaddr->sun_path, peer_sun_path);
-#if defined(BSD44SOCKETS) && !defined(Lynx)
+#if defined(BSD44SOCKETS) 
     p_sunaddr->sun_len = strlen (p_sunaddr->sun_path);
 #endif
 
@@ -220,7 +207,7 @@ TRANS(FillAddrInfo)(XtransConnInfo ciptr, char *sun_path, char *peer_sun_path)
 #ifdef LOCAL_TRANS_PTS
 /* PTS */
 
-#if defined(SYSV) && !defined(__SCO__) && !defined(ISC)
+#if defined(SYSV) && !defined(__SCO__) 
 #define SIGNAL_T int
 #else
 #define SIGNAL_T void
@@ -251,11 +238,7 @@ static void _dummy(int sig)
 #endif
 #endif
 
-#ifdef _AIX
-#define DEV_PTMX	"/dev/ptc"
-#else
 #define DEV_PTMX	"/dev/ptmx"
-#endif
 
 #if defined(X11_t)
 
@@ -270,9 +253,6 @@ static void _dummy(int sig)
  * backwards binary compatability only.
  */
 
-#define X_ISC_DIR	"/dev/X/ISCCONN"
-#define ISCDEVNODENAME	"/dev/X/ISCCONN/X%s"
-#define ISCTMPNODENAME	"/tmp/.X11-unix/X%s"
 #define SCORNODENAME	"/dev/X%1sR"
 #define SCOSNODENAME	"/dev/X%1sS"
 #endif /* !sun */
@@ -657,7 +637,7 @@ TRANS(PTSAccept)(XtransConnInfo ciptr, XtransConnInfo newciptr, int *status)
 
     sunaddr->sun_family=AF_UNIX;
     strcpy(sunaddr->sun_path,buf);
-#if defined(BSD44SOCKETS) && !defined(Lynx)
+#if defined(BSD44SOCKETS) 
     sunaddr->sun_len=strlen(sunaddr->sun_path);
 #endif
 
@@ -858,7 +838,7 @@ TRANS(NAMEDOpenServer)(XtransConnInfo ciptr, char *port)
     if (TRANS(FillAddrInfo) (ciptr, server_path, server_path) == 0)
     {
 	PRMSG(1,"NAMEDOpenServer: failed to fill in addr info\n", 0,0,0);
-	TRANS(LocalClose)(fd);
+	TRANS(LocalClose)(ciptr);
 	return -1;
     }
 
@@ -950,7 +930,7 @@ TRANS(NAMEDAccept)(XtransConnInfo ciptr, XtransConnInfo newciptr, int *status)
 
 
 
-#if defined(LOCAL_TRANS_ISC) || defined(LOCAL_TRANS_SCO)
+#if defined(LOCAL_TRANS_SCO)
 
 /*
  * connect_spipe is used by the SCO and ISC connection types.
@@ -1004,294 +984,9 @@ named_spipe(int fd, char *path)
     return(ret);
 }
 
-#endif /* defined(LOCAL_TRANS_ISC) || defined(LOCAL_TRANS_SCO) */
+#endif /* defined(LOCAL_TRANS_SCO) */
 
 
-#if defined(LOCAL_TRANS_ISC)
-
-
-/* ISC */
-
-#ifdef TRANS_CLIENT
-
-static int
-TRANS(ISCOpenClient)(XtransConnInfo ciptr, char *port)
-
-{
-#ifdef ISCDEVNODENAME
-    int		fd,fds,server;
-    char	server_path[64];
-    char	server_dev_path[64];
-    struct 	strfdinsert buf;
-    long	temp;
-    mode_t 	spmode;
-    struct stat 	filestat;
-#endif
-
-    PRMSG(2,"ISCOpenClient(%s)\n", port, 0,0 );
-
-#if !defined(ISCDEVNODENAME)
-    PRMSG(1,"ISCOpenClient: Protocol is not supported by a ISC connection\n", 0,0,0);
-    return -1;
-#else
-    (void) sprintf(server_path, ISCTMPNODENAME, port);
-    (void) sprintf(server_dev_path, ISCDEVNODENAME, port);
-
-    fd = fds = server = -1;
-
-    if (stat(DEV_SPX, &filestat) == -1) {
-	PRMSG(1, "ISCOpenClient: stat(%s) failed, errno=%d\n", DEV_SPX, errno, 0 );
-	return(-1);
-    }
-
-    spmode = (filestat.st_mode & S_IFMT);
-
-    if (stat(server_path, &filestat) != -1) {
-	if ((filestat.st_mode & S_IFMT) == spmode) {
-	    if ((server = open(server_path, O_RDWR)) < 0) {
-		PRMSG(1,"ISCOpenClient: failed to open %s\n",
-		      server_path, 0,0 );
-	    }
-	}
-    }
-
-    if (server < 0) {
-	/* try the alternate path */
-	if (stat(server_dev_path, &filestat) != -1) {
-	    if ((filestat.st_mode & S_IFMT) == spmode) {
-		if ((server = open(server_dev_path, O_RDWR)) < 0) {
-		    PRMSG(1,"ISCOpenClient: failed to open %s\n",
-			  server_dev_path, 0,0 );
-		}
-	    }
-	}
-    }
-
-    if (server < 0) {
-	PRMSG(1,"ISCOpenClient: can't open either device %s or %s\n",
-	      server_path, server_dev_path, 0 );
-	return -1;
-    }
-
-    if ((fds = open(DEV_SPX, O_RDWR)) < 0 ||
-	(fd  = open(DEV_SPX, O_RDWR)) < 0) {
-	/* Failed to open all of the devices */
-	PRMSG(1,"ISCOpenClient: can't open %s\n", DEV_SPX, 0,0 );
-	(void) close(server);
-	if (fds != -1)
-	    (void) close(fds);
-	if (fd != -1)
-	    (void) close(fd);
-	return -1;
-    }
-
-    /* make a STREAMS-pipe */
-
-    buf.databuf.maxlen = -1;
-    buf.databuf.len = -1;
-    buf.databuf.buf = NULL;
-    buf.ctlbuf.maxlen = sizeof(long);
-    buf.ctlbuf.len = sizeof(long);
-    buf.ctlbuf.buf = (caddr_t)&temp;
-    buf.offset = 0;
-    buf.fildes = fd;
-    buf.flags = 0;
-
-    if (ioctl(fds, I_FDINSERT, &buf) < 0 ||
-	ioctl(server, I_SENDFD, fds) < 0) {
-	PRMSG(1,"ISCOpenClient: ioctl(I_FDINSERT or I_SENDFD) failed\n",
-								0,0,0 );
-	(void) close(server);
-	(void) close(fds);
-	(void) close(fd);
-	return -1;
-    }
-
-    /*
-     * Everything looks good: fill in the XtransConnInfo structure.
-     */
-
-    if (TRANS(FillAddrInfo) (ciptr, server_path, server_path) == 0)
-    {
-	PRMSG(1,"ISCOpenClient: failed to fill in addr info\n", 0, 0, 0);
-	close(fd);
-	return -1;
-    }
-
-    return (fd);
-
-#endif /* !ISCDEVNODENAME */
-}
-
-#endif /* TRANS_CLIENT */
-
-
-#ifdef TRANS_SERVER
-
-static int
-TRANS(ISCOpenServer)(XtransConnInfo ciptr, char *port)
-
-{
-#ifdef ISCDEVNODENAME
-    int	fd = -1,fds = -1;
-    char	server_path[64],server_unix_path[64];
-    unsigned int mode = 0;
-#endif
-
-    PRMSG(2,"ISCOpenServer(%s)\n", port, 0,0 );
-
-#if !defined(ISCDEVNODENAME)
-    PRMSG(1,"ISCOpenServer: Protocol is not supported by a ISC connection\n", 0,0,0);
-    return -1;
-#else
-    (void) sprintf(server_path, ISCDEVNODENAME, port);
-    (void) sprintf(server_unix_path, ISCTMPNODENAME, port);
-
-#ifdef HAS_STICKY_DIR_BIT
-    mode = 01777;
-#else
-    mode = 0777;
-#endif
-
-    /* "/dev/X" */
-    if (trans_mkdir(X_STREAMS_DIR, mode) == -1) {
-	PRMSG (1, "ISCOpenServer: mkdir(%s) failed, errno = %d\n",
-	       X_STREAMS_DIR, errno, 0);
-	return(-1);
-    }
-    /* "/dev/X/ISCCONN" */
-    if (trans_mkdir(X_ISC_DIR, mode) == -1) {
-	PRMSG (1, "ISCOpenServer: mkdir(%s) failed, errno = %d\n",
-	       X_ISC_DIR, errno, 0);
-	return(-1);
-    }
-
-    unlink(server_path);
-
-    if( ((fds=open(DEV_SPX, O_RDWR)) < 0) ||
-       ((fd =open(DEV_SPX, O_RDWR)) < 0)) {
-	PRMSG(1,"ISCOpenServer: failed to open %s\n", DEV_SPX, 0,0 );
-	return -1;
-    }
-
-    if( (connect_spipe(fds, fd) < 0) ||
-       (named_spipe(fds, server_path) < 0)) {
-	PRMSG(1,"ISCOpenServer: failed connect pipes\n", 0,0,0 );
-	close(fd);
-	close(fds);
-	return -1;
-    }
-
-#if !defined(UNIXCONN)
-    /*
-     * If the UNIX Domain socket transport is not being used, then link this
-     * device to the path /tmp/.X11-unix/X path.
-     */
-#define X_UNIX_DIR	"/tmp/.X11-unix"
-
-    if (trans_mkdir(X_UNIX_DIR, mode) == -1) {
-	PRMSG (1, "ISCOpenServer: mkdir(%s) failed, errno = %d\n",
-	       X_UNIX_DIR, errno, 0);
-	return(-1);
-    }
-
-    unlink(server_unix_path);
-
-#ifdef SVR4
-    /* we prefer symbolic links because hard links can't cross file systems */
-    if( symlink(server_path, server_unix_path) < 0 )
-	PRMSG(1,"ISCOpenServer: failed to link %s to %s\n",
-	      server_path, server_unix_path, 0 );
-    /*
-     * Don't make this failure fatal since the listener 
-     * is already established, and this just for compatability
-     */
-#else
-#ifdef ISC40
-    /* catch SIGSYS on symlink for ISC40 compiled binaries running on ISC30 */
-    signal(SIGSYS,_dummy);
-#endif
-    if( link(server_path, server_unix_path) < 0 )
-#ifdef ISC40
-      if( symlink(server_path, server_unix_path) < 0 )
-#endif
-	PRMSG(1,"ISCOpenServer: failed to link %s to %s\n",
-	      server_path, server_unix_path, 0 );
-    /*
-     * Don't make this failure fatal since the listener 
-     * is already established, and this just for compatability
-     */
-#endif /* SVR4 */
-#endif /* !UNIXCONN */
-
-    /*
-     * Everything looks good: fill in the XtransConnInfo structure.
-     */
-
-    if (TRANS(FillAddrInfo) (ciptr, server_path, server_path) == 0)
-    {
-	PRMSG(1,"ISCOpenServer: failed to fill in addr info\n", 0, 0, 0);
-	close(fd);
-	return -1;
-    }
-
-    return fd;
-
-#endif /* !ISCDEVNODENAME */
-}
-
-static int
-TRANS(ISCAccept)(XtransConnInfo ciptr, XtransConnInfo newciptr, int *status)
-
-{
-    struct strrecvfd str;
-
-    PRMSG(2,"ISCAccept(%d)\n", ciptr->fd, 0,0 );
-
-    while (ioctl(ciptr->fd, I_RECVFD, &str) < 0) {
-	if (errno != EAGAIN) {
-	    PRMSG(1,"ISCAccept: Can't read fildes", 0,0,0 );
-	    *status = TRANS_ACCEPT_MISC_ERROR;
-	    return(-1);
-	}
-    }
-
-    /*
-     * Everything looks good: fill in the XtransConnInfo structure.
-     */
-
-    newciptr->addrlen=ciptr->addrlen;
-    if( (newciptr->addr=(char *)xalloc(newciptr->addrlen)) == NULL ) {
-	PRMSG(1,
-	      "ISCAccept: failed to allocate memory for peer addr\n",
-	      0,0,0);
-	close(str.fd);
-	*status = TRANS_ACCEPT_BAD_MALLOC;
-	return -1;
-    }
-
-    memcpy(newciptr->addr,ciptr->addr,newciptr->addrlen);
-
-    newciptr->peeraddrlen=newciptr->addrlen;
-    if( (newciptr->peeraddr=(char *)xalloc(newciptr->peeraddrlen)) == NULL ) {
-	PRMSG(1,
-	      "ISCAccept: failed to allocate memory for peer addr\n",
-	      0,0,0);
-	xfree(newciptr->addr);
-	close(str.fd);
-	*status = TRANS_ACCEPT_BAD_MALLOC;
-	return -1;
-    }
-
-    memcpy(newciptr->peeraddr,newciptr->addr,newciptr->peeraddrlen);
-
-    *status = 0;
-
-    return(str.fd);
-}
-
-#endif /* TRANS_SERVER */
-#endif /* LOCAL_TRANS_ISC */
 
 
 #ifdef LOCAL_TRANS_SCO
@@ -1654,35 +1349,6 @@ TRANS(NAMEDReopenServer)(XtransConnInfo ciptr, int fd, char *port)
 
 #endif /* LOCAL_TRANS_NAMED */
 
-#ifdef LOCAL_TRANS_ISC
-static int
-TRANS(ISCReopenServer)(XtransConnInfo ciptr, int fd, char *port)
-
-{
-#ifdef ISCDEVNODENAME
-    char server_path[64], server_unix_path[64];
-#endif
-
-    PRMSG(2,"ISCReopenServer(%s)\n", port, 0,0 );
-
-#if !defined(ISCDEVNODENAME)
-    PRMSG(1,"ISCReopenServer: Protocol is not supported by a ISC connection\n", 0,0,0);
-    return 0;
-#else
-    (void) sprintf(server_path, ISCDEVNODENAME, port);
-    (void) sprintf(server_unix_path, ISCTMPNODENAME, port);
-
-    if (TRANS(FillAddrInfo) (ciptr, server_path, server_path) == 0)
-    {
-	PRMSG(1, "ISCReopenServer: failed to fill in addr info\n", 0,0,0);
-	return 0;
-    }
-
-    return 1;
-
-#endif /* !ISCDEVNODENAME */
-}
-#endif /* LOCAL_TRANS_ISC */
 
 #ifdef LOCAL_TRANS_SCO
 static int
@@ -1962,30 +1628,6 @@ static LOCALtrans2dev LOCALtrans2devtab[] = {
 #endif /* sun */
 #endif /* LOCAL_TRANS_NAMED */
 
-#ifdef LOCAL_TRANS_ISC
-{"isc",
-#ifdef TRANS_CLIENT
-     TRANS(ISCOpenClient),
-#endif /* TRANS_CLIENT */
-#ifdef TRANS_SERVER
-     TRANS(ISCOpenServer),
-#endif /* TRANS_SERVER */
-#ifdef TRANS_CLIENT
-     TRANS(OpenFail),
-#endif /* TRANS_CLIENT */
-#ifdef TRANS_SERVER
-     TRANS(OpenFail),
-#endif /* TRANS_SERVER */
-#ifdef TRANS_REOPEN
-     TRANS(ISCReopenServer),
-     TRANS(ReopenFail),
-#endif
-#ifdef TRANS_SERVER
-     NULL,		/* ResetListener */
-     TRANS(ISCAccept)
-#endif /* TRANS_SERVER */
-},
-#endif /* LOCAL_TRANS_ISC */
 
 #ifdef LOCAL_TRANS_SCO
 {"sco",
@@ -2590,7 +2232,7 @@ TRANS(LocalBytesReadable)(XtransConnInfo ciptr, BytesReadable_t *pend )
 {
     PRMSG(2,"LocalBytesReadable(%x->%d,%x)\n", ciptr, ciptr->fd, pend);
 
-#if defined(ISC) || defined(SCO325)
+#if defined(SCO325)
     return ioctl(ciptr->fd, I_NREAD, (char *)pend);
 #else
     return ioctl(ciptr->fd, FIONREAD, (char *)pend);
@@ -2700,9 +2342,6 @@ static char * local_aliases[] = {
 # ifdef sun
 				  "pipe", /* compatibility with Solaris Xlib */
 # endif				  
-# ifdef LOCAL_TRANS_ISC
-				  "isc",
-# endif
 # ifdef LOCAL_TRANS_SCO				  
 				  "sco",
 # endif
@@ -2878,47 +2517,6 @@ Xtransport	TRANS(PIPEFuncs) = {
 #endif /* sun */
 #endif /* LOCAL_TRANS_NAMED */
 
-#ifdef LOCAL_TRANS_ISC
-Xtransport	TRANS(ISCFuncs) = {
-	/* Local Interface */
-	"isc",
-	TRANS_LOCAL,
-#ifdef TRANS_CLIENT
-	TRANS(LocalOpenCOTSClient),
-#endif /* TRANS_CLIENT */
-#ifdef TRANS_SERVER
-	NULL,
-	TRANS(LocalOpenCOTSServer),
-#endif /* TRANS_SERVER */
-#ifdef TRANS_CLIENT
-	TRANS(LocalOpenCLTSClient),
-#endif /* TRANS_CLIENT */
-#ifdef TRANS_SERVER
-	TRANS(LocalOpenCLTSServer),
-#endif /* TRANS_SERVER */
-#ifdef TRANS_REOPEN
-	TRANS(LocalReopenCOTSServer),
-	TRANS(LocalReopenCLTSServer),
-#endif
-	TRANS(LocalSetOption),
-#ifdef TRANS_SERVER
-	TRANS(LocalCreateListener),
-	TRANS(LocalResetListener),
-	TRANS(LocalAccept),
-#endif /* TRANS_SERVER */
-#ifdef TRANS_CLIENT
-	TRANS(LocalConnect),
-#endif /* TRANS_CLIENT */
-	TRANS(LocalBytesReadable),
-	TRANS(LocalRead),
-	TRANS(LocalWrite),
-	TRANS(LocalReadv),
-	TRANS(LocalWritev),
-	TRANS(LocalDisconnect),
-	TRANS(LocalClose),
-	TRANS(LocalCloseForCloning),
-};
-#endif /* LOCAL_TRANS_ISC */
 
 #ifdef LOCAL_TRANS_SCO
 Xtransport	TRANS(SCOFuncs) = {

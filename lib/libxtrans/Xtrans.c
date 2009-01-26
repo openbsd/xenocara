@@ -48,9 +48,6 @@ from The Open Group.
  */
 
 #include <ctype.h>
-#ifdef HAVE_LAUNCHD
-#include <launch.h>
-#endif
 
 /*
  * The transport table contains a definition for every transport (protocol)
@@ -95,18 +92,12 @@ Xtransport_table Xtransports[] = {
 #endif /* IPv6 */
     { &TRANS(SocketINETFuncs),	TRANS_SOCKET_INET_INDEX },
 #endif /* TCPCONN */
-#if defined(DNETCONN)
-    { &TRANS(DNETFuncs),	TRANS_DNET_INDEX },
-#endif /* DNETCONN */
 #if defined(UNIXCONN)
 #if !defined(LOCALCONN)
     { &TRANS(SocketLocalFuncs),	TRANS_SOCKET_LOCAL_INDEX },
 #endif /* !LOCALCONN */
     { &TRANS(SocketUNIXFuncs),	TRANS_SOCKET_UNIX_INDEX },
 #endif /* UNIXCONN */
-#if defined(OS2PIPECONN)
-    { &TRANS(OS2LocalFuncs),	TRANS_LOCAL_LOCAL_INDEX },
-#endif /* OS2PIPECONN */
 #if defined(LOCALCONN)
     { &TRANS(LocalFuncs),	TRANS_LOCAL_LOCAL_INDEX },
 #ifndef sun
@@ -437,7 +428,7 @@ TRANS(Open) (int type, char *address)
 
     PRMSG (2,"Open(%d,%s)\n", type, address, 0);
 
-#if defined(WIN32) && (defined(TCPCONN) || defined(DNETCONN))
+#if defined(WIN32) && defined(TCPCONN) 
     if (TRANS(WSAStartup)())
     {
 	PRMSG (1,"Open: WSAStartup failed\n", 0, 0, 0);
@@ -730,7 +721,7 @@ TRANS(SetOption) (XtransConnInfo ciptr, int option, int arg)
 	    break;
 	case 1: /* Set to non-blocking mode */
 
-#if defined(O_NONBLOCK) && (!defined(ultrix) && !defined(hpux) && !defined(AIXV3) && !defined(uniosu) && !defined(__UNIXOS2__) && !defined(SCO325)) && !defined(__QNX__)
+#if defined(O_NONBLOCK) && !defined(SCO325) 
 	    ret = fcntl (fd, F_GETFL, 0);
 	    if (ret != -1)
 		ret = fcntl (fd, F_SETFL, ret | O_NONBLOCK);
@@ -742,7 +733,7 @@ TRANS(SetOption) (XtransConnInfo ciptr, int option, int arg)
 	    ret = ioctl (fd, FIOSNBIO, &arg);
 	}
 #else
-#if (defined(AIXV3) || defined(uniosu) || defined(WIN32) || defined(__UNIXOS2__) || defined(__QNX__)) && defined(FIONBIO)
+#if defined(WIN32) 
 	{
 #ifdef WIN32
 	    u_long arg;
@@ -752,11 +743,7 @@ TRANS(SetOption) (XtransConnInfo ciptr, int option, int arg)
 	    arg = 1;
 /* IBM TCP/IP understands this option too well: it causes TRANS(Read) to fail
  * eventually with EWOULDBLOCK */
-#ifndef __UNIXOS2__
 	    ret = ioctl (fd, FIONBIO, &arg);
-#else
-/*	    ret = ioctl(fd, FIONBIO, &arg, sizeof(int));*/
-#endif
 	}
 #else
 	    ret = fcntl (fd, F_GETFL, 0);
@@ -874,7 +861,7 @@ TRANS(Connect) (XtransConnInfo ciptr, char *address)
     }
 
 #ifdef HAVE_LAUNCHD
-    if (!host || !*host) host=strdup("");
+    if (!host) host=strdup("");
 #endif
 
     if (!port || !*port)
@@ -1063,6 +1050,9 @@ complete_network_count (void)
 }
 
 
+#ifdef XQUARTZ_EXPORTS_LAUNCHD_FD
+extern int xquartz_launchd_fd;
+#endif
 
 int
 TRANS(MakeAllCOTSServerListeners) (char *port, int *partial, int *count_ret, 
@@ -1072,11 +1062,6 @@ TRANS(MakeAllCOTSServerListeners) (char *port, int *partial, int *count_ret,
     char		buffer[256]; /* ??? What size ?? */
     XtransConnInfo	ciptr, temp_ciptrs[NUMTRANS];
     int			status, i, j;
-#ifdef HAVE_LAUNCHD
-    int                 launchd_fd;
-    launch_data_t       sockets_dict, checkin_request, checkin_response;
-    launch_data_t       listening_fd_array, listening_fd;
-#endif
 
 #if defined(IPv6) && defined(AF_INET6)
     int		ipv6_succ = 0;
@@ -1086,57 +1071,15 @@ TRANS(MakeAllCOTSServerListeners) (char *port, int *partial, int *count_ret,
 
     *count_ret = 0;
 
-#ifdef HAVE_LAUNCHD
-    /* Get launchd fd */
-    if ((checkin_request = launch_data_new_string(LAUNCH_KEY_CHECKIN)) == NULL) {
-      fprintf(stderr,"launch_data_new_string(\"" LAUNCH_KEY_CHECKIN "\") Unable to create string.\n");
-	  goto not_launchd;
-	  }
-
-    if ((checkin_response = launch_msg(checkin_request)) == NULL) {
-       fprintf(stderr,"launch_msg(\"" LAUNCH_KEY_CHECKIN "\") IPC failure: %s\n",strerror(errno));
-	   goto not_launchd;
-	}
-
-    if (LAUNCH_DATA_ERRNO == launch_data_get_type(checkin_response)) {
-      // ignore EACCES, which is common if we weren't started by launchd
-      if (launch_data_get_errno(checkin_response) != EACCES)
-       fprintf(stderr,"launchd check-in failed: %s\n",strerror(launch_data_get_errno(checkin_response)));
-	   goto not_launchd;
-	} 
-
-	sockets_dict = launch_data_dict_lookup(checkin_response, LAUNCH_JOBKEY_SOCKETS);
-    if (NULL == sockets_dict) {
-       fprintf(stderr,"launchd check-in: no sockets found to answer requests on!\n");
-	   goto not_launchd;
-	}
-
-    if (launch_data_dict_get_count(sockets_dict) > 1) {
-       fprintf(stderr,"launchd check-in: some sockets will be ignored!\n");
-	   goto not_launchd;
-	}
-
-    listening_fd_array = launch_data_dict_lookup(sockets_dict, ":0");
-    if (NULL == listening_fd_array) {
-       fprintf(stderr,"launchd check-in: No known sockets found to answer requests on!\n");
-	   goto not_launchd;
-	}
-
-    if (launch_data_array_get_count(listening_fd_array)!=1) {
-       fprintf(stderr,"launchd check-in: Expected 1 socket from launchd, got %d)\n",
-                       launch_data_array_get_count(listening_fd_array));
-	   goto not_launchd;
-	}
-
-    listening_fd=launch_data_array_get_index(listening_fd_array, 0);
-    launchd_fd=launch_data_get_fd(listening_fd);
-    fprintf(stderr,"Xquartz: run by launchd for fd %d\n",launchd_fd);
-    if((ciptr = TRANS(ReopenCOTSServer(TRANS_SOCKET_LOCAL_INDEX,
-                                       launchd_fd, getenv("DISPLAY"))))==NULL)
-        fprintf(stderr,"Got NULL while trying to Reopen launchd port\n");
-        else temp_ciptrs[(*count_ret)++] = ciptr;
-
-not_launchd:
+#ifdef XQUARTZ_EXPORTS_LAUNCHD_FD
+    fprintf(stderr, "Launchd socket fd: %d\n", xquartz_launchd_fd);
+    if(xquartz_launchd_fd != -1) {
+        if((ciptr = TRANS(ReopenCOTSServer(TRANS_SOCKET_LOCAL_INDEX,
+                                           xquartz_launchd_fd, getenv("DISPLAY"))))==NULL)
+            fprintf(stderr,"Got NULL while trying to Reopen launchd port\n");
+        else 
+            temp_ciptrs[(*count_ret)++] = ciptr;
+    }
 #endif
 
     for (i = 0; i < NUMTRANS; i++)
@@ -1347,45 +1290,8 @@ TRANS(MakeAllCLTSServerListeners) (char *port, int *partial, int *count_ret,
  * may be used by it.
  */
 
-#ifdef CRAY
 
-/*
- * Cray UniCOS does not have readv and writev so we emulate
- */
-
-static int TRANS(ReadV) (XtransConnInfo ciptr, struct iovec *iov, int iovcnt)
-
-{
-    struct msghdr hdr;
-
-    hdr.msg_iov = iov;
-    hdr.msg_iovlen = iovcnt;
-    hdr.msg_accrights = 0;
-    hdr.msg_accrightslen = 0;
-    hdr.msg_name = 0;
-    hdr.msg_namelen = 0;
-
-    return (recvmsg (ciptr->fd, &hdr, 0));
-}
-
-static int TRANS(WriteV) (XtransConnInfo ciptr, struct iovec *iov, int iovcnt)
-
-{
-    struct msghdr hdr;
-
-    hdr.msg_iov = iov;
-    hdr.msg_iovlen = iovcnt;
-    hdr.msg_accrights = 0;
-    hdr.msg_accrightslen = 0;
-    hdr.msg_name = 0;
-    hdr.msg_namelen = 0;
-
-    return (sendmsg (ciptr->fd, &hdr, 0));
-}
-
-#endif /* CRAY */
-
-#if (defined(SYSV) && defined(__i386__) && !defined(__SCO__) && !defined(sun)) || defined(WIN32) || defined(__sxg__) || defined(__UNIXOS2__)
+#if defined(SYSV) && defined(__i386__) && !defined(__SCO__) && !defined(sun) || defined(WIN32) 
 
 /*
  * emulate readv
@@ -1417,7 +1323,7 @@ static int TRANS(ReadV) (XtransConnInfo ciptr, struct iovec *iov, int iovcnt)
 
 #endif /* SYSV && __i386__ || WIN32 || __sxg__ */
 
-#if (defined(SYSV) && defined(__i386__) && !defined(__SCO__) && !defined(sun)) || defined(WIN32) || defined(__sxg__) || defined(__UNIXOS2__)
+#if defined(SYSV) && defined(__i386__) && !defined(__SCO__) && !defined(sun) || defined(WIN32) 
 
 /*
  * emulate writev
@@ -1450,7 +1356,7 @@ static int TRANS(WriteV) (XtransConnInfo ciptr, struct iovec *iov, int iovcnt)
 #endif /* SYSV && __i386__ || WIN32 || __sxg__ */
 
 
-#if (defined(_POSIX_SOURCE) && !defined(AIXV3) && !defined(__QNX__)) || defined(hpux) || defined(USG) || defined(SVR4) || defined(__SCO__)
+#if defined(_POSIX_SOURCE) || defined(USG) || defined(SVR4) || defined(__SCO__)
 #ifndef NEED_UTSNAME
 #define NEED_UTSNAME
 #endif

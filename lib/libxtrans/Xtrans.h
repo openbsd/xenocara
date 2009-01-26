@@ -54,11 +54,7 @@ from The Open Group.
 #include <X11/Xos.h>
 
 #ifndef WIN32
-#ifndef Lynx
 #include <sys/socket.h>
-#else
-#include <socket.h>
-#endif
 #endif
 
 
@@ -194,7 +190,7 @@ typedef long BytesReadable_t;
 #endif
 
 
-#if defined(WIN32) || (defined(USG) && !defined(CRAY) && !defined(umips) && !defined(MOTOROLA) && !defined(uniosu) && !defined(__sxg__))
+#if defined(WIN32) || defined(USG) 
 
 /*
  *      TRANS(Readv) and TRANS(Writev) use struct iovec, normally found
@@ -208,11 +204,7 @@ struct iovec {
 };
 
 #else
-#ifndef Lynx
 #include <sys/uio.h>
-#else
-#include <uio.h>
-#endif
 #endif
 
 typedef struct _XtransConnInfo *XtransConnInfo;
@@ -479,7 +471,7 @@ TRANS(GetHostname) (
     int 	/* maxlen */
 );
 
-#if defined(WIN32) && (defined(TCPCONN) || defined(DNETCONN))
+#if defined(WIN32) && defined(TCPCONN) 
 int TRANS(WSAStartup)();
 #endif
 

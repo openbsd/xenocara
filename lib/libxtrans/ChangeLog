@@ -1,3 +1,127 @@
+commit 1cf4a1a6716f2c0adf5ee4d0a194a1013be53105
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sun Jan 11 10:54:52 2009 -0800
+
+    Version 1.2.3
+
+commit d0c5592142369afa93dcd58ca6f390dbd127a28a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sun Jan 11 10:51:49 2009 -0800
+
+    Add bugzilla, mailing list & git repo pointers to README
+
+commit 9f12a154437554938a4fa18b7d3948c7dff8d631
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Dec 1 13:58:31 2008 -0800
+
+    Switch ChangeLog generation to use XORG_CHANGELOG from xorg-macros 1.2
+
+commit 8c313881a0c586179c09922a7e00a1f8d669a68a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Dec 1 08:37:42 2008 -0800
+
+    18748: xtrans.m4 causes configure --help to list --enable-ipv6 in wrong case.
+    
+    X.Org Bug #18748 <http://bugs.freedesktop.org/show_bug.cgi?id=18748>
+
+commit c626a4298e98f4988701dd587bc8355c62542ec4
+Author: Alan Hourihane <alanh@tungstengraphics.com>
+Date:   Wed Oct 15 11:19:41 2008 +0100
+
+    add winsock check for windows builds
+
+commit 005bd80a9eab736aea737869b8a1079c565e1cd6
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Oct 7 09:56:49 2008 -0400
+
+    xtrans 1.2.2
+
+commit 1185dd2966521e1a19474dfd4206306cb383fc89
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Oct 7 09:55:22 2008 -0400
+
+    Finish removing OS/2 support
+
+commit 51b2e85aeb172f4a058d8ceceec91021ffd0b2a5
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Oct 7 09:51:27 2008 -0400
+
+    Remove DECNET support.
+    
+    This hasn't been consumed in the server or libs since 7.0.
+
+commit 892ec928da3a0653ae54c321e4c3b1aa06c4e678
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Aug 7 10:32:11 2008 -0400
+
+    Drastically simplify TRANS_OPEN_MAX.
+    
+    If your OS doesn't have sysconf(3), then life is already hard for you.
+
+commit 339ddc413559d4cb117a72f87b2a70dae6911c32
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Aug 7 10:23:19 2008 -0400
+
+    Massive ifdef cleanup, dropping a ton of unsupported platform code.
+
+commit a78b9819cbbbddccb4a6bf364b88ec4f27d25c1f
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Tue Aug 5 17:46:37 2008 -0700
+
+    Added a flag to enable "The OS already took care of securing this, please skip checking xauth" for use with Apple launchd sockets.
+
+commit 3db805979b476d233baa881e83950ef1d2731841
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Tue Jul 15 16:56:12 2008 -0700
+
+    Apple: Allow Xquartz to provide an additional fd to xtrans since the dynamic addition code in the server isn't bulletproof yet.
+
+commit 81d8bdced6b45ab2ab3d3a0bc164ddbf1659fea1
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jul 2 15:24:20 2008 -0400
+
+    xtrans 1.2.1
+
+commit 302af17c4d5f0293a9af4d6c1097ab57a57d3f0f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jun 24 15:45:38 2008 -0700
+
+    Clear some pointer type mismatch warnings
+
+commit 4d184e41d30a8fe27380e04beb24f775d4a40782
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jun 24 15:45:18 2008 -0700
+
+    LocalClose() takes a ConnInfoPtr, not an fd
+
+commit 177c2fd41727bd0110b493933dcbdbf21878fe09
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Fri May 23 09:48:59 2008 -0700
+
+    Launchd: This functionality has been moved into xorg-server
+
+commit 02fcb08803dca5bb2df4f8be490a845659bd7ed3
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon May 12 17:49:41 2008 -0400
+
+    Connection failure for abstract socket is ECONNREFUSED, not ENOENT.
+    
+    Apropos of bug #15884.
+
+commit 906294025573d07c739894fa3b2eedc82813a379
+Author: Bill Nottingham <notting@redhat.com>
+Date:   Mon May 12 17:43:36 2008 -0400
+
+    Ignore mkdir() errors when creating the abstract socket.
+    
+    Red Hat bug #445303.
+
+commit 08134c2ce72bc43c172b6ae134d8a94a40b45c9b
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Sat May 10 07:02:09 2008 -0400
+
+    Remove extraneous execute bit from .c file
+
 commit e75b9dad0ae4bc0869af81652d8259675a3c5cac
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Thu May 8 16:27:29 2008 +0200

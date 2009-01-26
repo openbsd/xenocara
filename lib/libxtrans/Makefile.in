@@ -75,7 +75,6 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
@@ -87,6 +86,7 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
@@ -131,6 +131,7 @@ am__untar = @am__untar@
 bindir = @bindir@
 build_alias = @build_alias@
 datadir = @datadir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
 exec_prefix = @exec_prefix@
 fchown_define = @fchown_define@
 host_alias = @host_alias@
@@ -154,10 +155,8 @@ Xtransincludedir = $(includedir)/X11/Xtrans
 Xtransinclude_HEADERS = \
 	Xtrans.h \
 	Xtrans.c \
-	Xtransdnet.c \
 	Xtransint.h \
 	Xtranslcl.c \
-	Xtransos2.c \
 	Xtranssock.c \
 	Xtranstli.c \
 	Xtransutil.c \
@@ -540,7 +539,7 @@ uninstall-am: uninstall-XtransincludeHEADERS uninstall-aclocalDATA \
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

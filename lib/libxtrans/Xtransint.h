@@ -69,11 +69,7 @@ from The Open Group.
  */
 
 #ifndef XTRANSDEBUG
-# ifndef __UNIXOS2__
 #  define XTRANSDEBUG 1
-# else
-#  define XTRANSDEBUG 1
-# endif
 #endif
 
 #ifdef WIN32
@@ -89,87 +85,23 @@ from The Open Group.
 #include <errno.h>
 
 #ifndef WIN32
-# ifndef Lynx
 #  include <sys/socket.h>
-# else
-#  include <socket.h>
-# endif
 # include <netinet/in.h>
 # include <arpa/inet.h>
-# ifdef __UNIXOS2__
-#  include <sys/ioctl.h>
-# endif
 
 /*
  * Moved the setting of NEED_UTSNAME to this header file from Xtrans.c,
  * to avoid a race condition. JKJ (6/5/97)
  */
 
-# if (defined(_POSIX_SOURCE) && !defined(AIXV3) && !defined(__QNX__)) || defined(hpux) || defined(USG) || defined(SVR4) || defined(__SCO__)
+# if defined(_POSIX_SOURCE) || defined(USG) || defined(SVR4) || defined(__SCO__)
 #  ifndef NEED_UTSNAME
 #   define NEED_UTSNAME
 #  endif
 #  include <sys/utsname.h>
 # endif
 
-/*
- * makedepend screws up on #undef OPEN_MAX, so we define a new symbol
- */
-
-# ifndef TRANS_OPEN_MAX
-
-#  ifndef X_NOT_POSIX
-#   ifdef _POSIX_SOURCE
-#    include <limits.h>
-#   else
-#    define _POSIX_SOURCE
-#    include <limits.h>
-#    undef _POSIX_SOURCE
-#   endif
-#  endif
-#  ifndef OPEN_MAX
-#   if defined(_SC_OPEN_MAX) && !defined(__UNIXOS2__)
-#    define OPEN_MAX (sysconf(_SC_OPEN_MAX))
-#   else
-#    ifdef SVR4
-#     define OPEN_MAX 256
-#    else
-#     include <sys/param.h>
-#     ifndef OPEN_MAX
-#      ifdef __OSF1__
-#       define OPEN_MAX 256
-#      else
-#       ifdef NOFILE
-#        define OPEN_MAX NOFILE
-#       else
-#        if !defined(__UNIXOS2__) && !defined(__QNX__)
-#         define OPEN_MAX NOFILES_MAX
-#        else
-#         define OPEN_MAX 256
-#        endif
-#       endif
-#      endif
-#     endif
-#    endif
-#   endif
-#  endif
-#  if defined(_SC_OPEN_MAX)
-#   define TRANS_OPEN_MAX OPEN_MAX
-#  else /* !__GNU__ */
-#   if OPEN_MAX > 256
-#    define TRANS_OPEN_MAX 256
-#   else
-#    define TRANS_OPEN_MAX OPEN_MAX
-#   endif
-#  endif /*__GNU__*/
-
-# endif /* TRANS_OPEN_MAX */
-
-# ifdef __UNIXOS2__
-#  define ESET(val)
-# else
 #  define ESET(val) errno = val
-# endif
 # define EGET() errno
 
 #else /* WIN32 */
@@ -370,6 +302,7 @@ typedef struct _Xtransport_table {
 #define TRANS_NOLISTEN  (1<<3)  /* Don't listen on this one */
 #define TRANS_NOUNLINK	(1<<4)	/* Dont unlink transport endpoints */
 #define TRANS_ABSTRACT	(1<<5)	/* Use abstract sockets if available */
+#define TRANS_NOXAUTH	(1<<6)	/* Don't verify authentication (because it's secure some other way at the OS layer) */
 
 /* Flags to preserve when setting others */
 #define TRANS_KEEPFLAGS	(TRANS_NOUNLINK|TRANS_ABSTRACT)
@@ -379,7 +312,7 @@ typedef struct _Xtransport_table {
  * systems, so they may be emulated.
  */
 
-#if defined(CRAY) || (defined(SYSV) && defined(__i386__) && !defined(__SCO__) && !defined(sun)) || defined(WIN32) || defined(__sxg__) || defined(__UNIXOS2__)
+#if defined(SYSV) && defined(__i386__) && !defined(__SCO__) && !defined(sun) || defined(WIN32) 
 
 #define READV(ciptr, iov, iovcnt)	TRANS(ReadV)(ciptr, iov, iovcnt)
 
@@ -396,7 +329,7 @@ static	int TRANS(ReadV)(
 #endif /* CRAY || (SYSV && __i386__) || WIN32 || __sxg__ || */
 
 
-#if defined(CRAY) || (defined(SYSV) && defined(__i386__) && !defined(__SCO__) && !defined(sun)) || defined(WIN32) || defined(__sxg__) || defined(__UNIXOS2__)
+#if defined(SYSV) && defined(__i386__) && !defined(__SCO__) && !defined(sun) || defined(WIN32) 
 
 #define WRITEV(ciptr, iov, iovcnt)	TRANS(WriteV)(ciptr, iov, iovcnt)
 
