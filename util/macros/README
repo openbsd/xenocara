@@ -15,7 +15,7 @@ The master development code repository can be found at:
 
 	git://anongit.freedesktop.org/git/xorg/util/macros
 	
-	http://gitweb.freedesktop.org/?p=xorg-util-macros;a=summary	
+	http://cgit.freedesktop.org/xorg/util/macros/
 
 For more information on the git code manager, see:
 

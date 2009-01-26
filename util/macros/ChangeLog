@@ -1,3 +1,90 @@
+commit 58803c60b73110a49aecec4202e7820887633bcc
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Dec 16 15:05:46 2008 -0800
+
+    Version bump: 1.2.1
+
+commit e1d9461d1325bb7e48ef616650eb1d49f8945c2b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Dec 16 15:05:05 2008 -0800
+
+    Replace gitweb URL with cgit URL in README
+
+commit 55e8d740881ef622376440819119641e67aeb285
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Mon Dec 8 17:40:31 2008 +0100
+
+    fix distcheck target
+    
+    Arrange that distcleancheck ignores ChangeLog left over by distclean.
+    
+    Don't mention ChangeLog under *CLEANFILES, can't be rebuilt from release
+    tarball; ChangeLog is automatically distributed, no need to mention it.
+
+commit 88920d0896be5194f626888d5d8b54edd1ffe1f6
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Wed Dec 10 08:45:56 2008 +0100
+
+    use more CWARNFLAGS with gcc 3.4 too.
+    
+    Only gcc 3.3 and earlier version don't support them.
+    Reported and tested by Peter Breitenlohner.
+
+commit 9ff834493ece0a0ea7d7f15c1706bab022362cc5
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Dec 7 11:54:39 2008 +0100
+
+    Fix CWARNFLAGS for gcc versions < 4
+
+commit 1d2a0c58ffa7be9c47ea0a097f54e012cf5d44de
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jul 30 13:47:04 2008 -0700
+
+    Allow setting XORG_SGML_PATH to a non-default path when running configure
+
+commit dcbbcb582cf712e59c1474632380943bea8f1a5e
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Fri Nov 14 23:06:48 2008 +0100
+
+    bump to 1.2.0
+
+commit 0e8c41dd09080cf692b7437bb23435137febaf26
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Fri Nov 14 23:05:45 2008 +0100
+
+    fix XORG_PROG_RAWCPP for cygwin
+    
+    Patch by Yaakov Selkowitz from xorg mailing list
+    http://lists.freedesktop.org/archives/xorg/attachments/20081016/04a64242/attachment.asc
+
+commit 4cce4c8169a252bce129411dbf70c3212974e7ca
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Fri Nov 14 22:59:28 2008 +0100
+
+    define XORG_CWARNFLAGS macro
+
+commit 2663b7a6b31e5e3d03b42a50b27f64737a35e9aa
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Fri Nov 14 22:38:27 2008 +0100
+
+    define and use XORG_CHANGELOG macro
+
+commit b8a5186c585b4f01971457f0d59cc7480cf528e8
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Fri Nov 14 22:26:06 2008 +0100
+
+    reorganize autoconf macro files
+    
+    append xorgversion.m4 to xorg-macros.m4.in, instead of installing
+    it as separate file.
+    Avoid copying some code from xorgversion.m4 to configure.ac.
+
+commit a3a533044de7c8c360d0de312ac75b32db04e35e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 5 14:53:00 2008 -0500
+
+    bump to 1.1.6
+
 commit e1c1ee013e72dafd7b00ca96a8d4a25273b88e15
 Author: Jeremy Huddleston <jeremy@tifa-2.local>
 Date:   Sat Feb 16 02:18:50 2008 -0800

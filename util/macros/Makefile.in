@@ -58,9 +58,11 @@ POST_UNINSTALL = :
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/xorg-macros.m4.in \
-	$(top_srcdir)/configure COPYING ChangeLog install-sh missing
+	$(srcdir)/xorgversion.m4 $(top_srcdir)/configure COPYING \
+	ChangeLog install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/xorgversion.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -88,13 +90,13 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 ECHO_C = @ECHO_C@
@@ -126,6 +128,7 @@ am__untar = @am__untar@
 bindir = @bindir@
 build_alias = @build_alias@
 datadir = @datadir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
 exec_prefix = @exec_prefix@
 host_alias = @host_alias@
 includedir = @includedir@
@@ -144,9 +147,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 aclocaldir = $(datadir)/aclocal
-aclocal_DATA = xorgversion.m4 xorg-macros.m4
-EXTRA_DIST = $(aclocal_DATA) ChangeLog
-DISTCLEANFILES = ChangeLog
+aclocal_DATA = xorg-macros.m4
 all: all-am
 
 .SUFFIXES:
@@ -183,7 +184,7 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(srcdir) && $(AUTOCONF)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
-xorg-macros.m4: $(top_builddir)/config.status $(srcdir)/xorg-macros.m4.in
+xorg-macros.m4: $(top_builddir)/config.status $(srcdir)/xorg-macros.m4.in $(srcdir)/xorgversion.m4
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 uninstall-info-am:
 install-aclocalDATA: $(aclocal_DATA)
@@ -367,7 +368,6 @@ clean-generic:
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
-	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -392,6 +392,8 @@ info: info-am
 info-am:
 
 install-data-am: install-aclocalDATA
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-data-hook
 
 install-exec-am:
 
@@ -426,18 +428,24 @@ uninstall-am: uninstall-aclocalDATA uninstall-info-am
 	dist-zip distcheck distclean distclean-generic distcleancheck \
 	distdir distuninstallcheck dvi dvi-am html html-am info \
 	info-am install install-aclocalDATA install-am install-data \
-	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	install-data-am install-data-hook install-exec install-exec-am \
+	install-info install-info-am install-man install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
 	pdf-am ps ps-am uninstall uninstall-aclocalDATA uninstall-am \
 	uninstall-info-am
 
 
+# Previous versions used to install xorgversion.m4, now integrated
+# into xorg-macros.m4.  Explicitly remove that old file in order not
+# to have a macro defined in two different files.
+install-data-hook:
+	rm -f $(DESTDIR)$(aclocaldir)/xorgversion.m4
+
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
