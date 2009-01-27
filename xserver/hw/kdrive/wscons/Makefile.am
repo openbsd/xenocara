@@ -19,8 +19,7 @@ Xwscons_SOURCES = \
 
 Xwscons_LDADD = \
 	libwscons.a \
-	@KDRIVE_LIBS@ \
-	@XSERVER_LIBS@
+	@KDRIVE_LIBS@
 
 Xwscons_DEPENDENCIES = \
 	libwscons.a
