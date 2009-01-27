@@ -20785,6 +20785,11 @@ else
 		RAWCPPFLAGS=-undef
 		echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
+	# under Cygwin unix is still defined even with -undef
+	elif test `${RAWCPP} -undef -ansi < conftest.$ac_ext | grep -c 'unix'` -eq 1 ; then
+		RAWCPPFLAGS="-undef -ansi"
+		echo "$as_me:$LINENO: result: yes, with -ansi" >&5
+echo "${ECHO_T}yes, with -ansi" >&6
 	else
 		{ { echo "$as_me:$LINENO: error: ${RAWCPP} defines unix with or without -undef.  I don't know what to do." >&5
 echo "$as_me: error: ${RAWCPP} defines unix with or without -undef.  I don't know what to do." >&2;}
@@ -27973,6 +27978,75 @@ if test "$ac_cv_search_gethostbyname" != no; then
 fi
 
 
+echo "$as_me:$LINENO: checking for main in -lws2_32" >&5
+echo $ECHO_N "checking for main in -lws2_32... $ECHO_C" >&6
+if test "${ac_cv_lib_ws2_32_main+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lws2_32  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+
+int
+main ()
+{
+main ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_ws2_32_main=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_ws2_32_main=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_ws2_32_main" >&5
+echo "${ECHO_T}$ac_cv_lib_ws2_32_main" >&6
+if test $ac_cv_lib_ws2_32_main = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBWS2_32 1
+_ACEOF
+
+  LIBS="-lws2_32 $LIBS"
+
+fi
+ac_cv_lib_ws2_32=ac_cv_lib_ws2_32_main
+
+
  # Needs to come after above checks for libsocket & libnsl for SVR4 systems
  # Check whether --enable-ipv6 or --disable-ipv6 was given.
 if test "${enable_ipv6+set}" = set; then
@@ -28777,7 +28851,9 @@ fi
 
 
 
-XORG_SGML_PATH=$prefix/share/sgml
+if test x$XORG_SGML_PATH = x ; then
+    XORG_SGML_PATH=$prefix/share/sgml
+fi
 HAVE_DEFS_ENT=
 
 if test x"$cross_compiling" = x"yes" ; then

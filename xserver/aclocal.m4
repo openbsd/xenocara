@@ -7640,6 +7640,7 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
+dnl xorg-macros.m4.  Generated from xorg-macros.m4.in:xorgversion.m4 by configure.
 dnl
 dnl Copyright 2005-2006 Sun Microsystems, Inc.  All rights reserved.
 dnl 
@@ -7687,7 +7688,7 @@ AC_DEFUN([XORG_MACROS_VERSION],[
 	XORG_MACROS_needed_major=`echo $XORG_MACROS_needed_version | sed 's/\..*$//'`
 	XORG_MACROS_needed_minor=`echo $XORG_MACROS_needed_version | sed -e 's/^[0-9]*\.//' -e 's/\..*$//'`]
 	AC_MSG_CHECKING([if xorg-macros used to generate configure is at least ${XORG_MACROS_needed_major}.${XORG_MACROS_needed_minor}])
-	[XORG_MACROS_version=1.1.6
+	[XORG_MACROS_version=1.2.1
 	XORG_MACROS_major=`echo $XORG_MACROS_version | sed 's/\..*$//'`
 	XORG_MACROS_minor=`echo $XORG_MACROS_version | sed -e 's/^[0-9]*\.//' -e 's/\..*$//'`]
 	if test $XORG_MACROS_major -ne $XORG_MACROS_needed_major ; then
@@ -7721,6 +7722,10 @@ else
 	if test `${RAWCPP} -undef < conftest.$ac_ext | grep -c 'unix'` -eq 1 ; then
 		RAWCPPFLAGS=-undef
 		AC_MSG_RESULT([yes])
+	# under Cygwin unix is still defined even with -undef
+	elif test `${RAWCPP} -undef -ansi < conftest.$ac_ext | grep -c 'unix'` -eq 1 ; then
+		RAWCPPFLAGS="-undef -ansi"
+		AC_MSG_RESULT([yes, with -ansi])
 	else
 		AC_MSG_ERROR([${RAWCPP} defines unix with or without -undef.  I don't know what to do.])
 	fi
@@ -7833,7 +7838,9 @@ AC_SUBST([ADMIN_MAN_DIR])
 # Whether or not the necessary tools and files are found can be checked
 # with the AM_CONDITIONAL "BUILD_LINUXDOC"
 AC_DEFUN([XORG_CHECK_LINUXDOC],[
-XORG_SGML_PATH=$prefix/share/sgml
+if test x$XORG_SGML_PATH = x ; then
+    XORG_SGML_PATH=$prefix/share/sgml
+fi
 HAVE_DEFS_ENT=
 
 if test x"$cross_compiling" = x"yes" ; then
@@ -7889,7 +7896,9 @@ AC_SUBST(MAKE_HTML)
 # indicates whether the necessary tools and files are found and, if set,
 # $(MAKE_XXX) blah.sgml will produce blah.xxx.
 AC_DEFUN([XORG_CHECK_DOCBOOK],[
-XORG_SGML_PATH=$prefix/share/sgml
+if test x$XORG_SGML_PATH = x ; then
+    XORG_SGML_PATH=$prefix/share/sgml
+fi
 HAVE_DEFS_ENT=
 BUILDTXTDOC=no
 BUILDPDFDOC=no
@@ -8066,6 +8075,31 @@ AM_CONDITIONAL(MAKE_LINT_LIB, [test x$make_lint_lib != xno])
 
 ]) # XORG_LINT_LIBRARY
 
+# XORG_CWARNFLAGS
+# ---------------
+# Minimum version: 1.2.0
+#
+# Defines CWARNFLAGS to enable C compiler warnings.
+#
+AC_DEFUN([XORG_CWARNFLAGS], [
+AC_REQUIRE([AC_PROG_CC])
+if  test "x$GCC" = xyes ; then
+    CWARNFLAGS="-Wall -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes \
+-Wmissing-declarations -Wnested-externs -fno-strict-aliasing \
+-Wbad-function-cast"
+    case `gcc -dumpversion` in
+    3.4.* | 4.*)
+	CWARNFLAGS+=" -Wold-style-definition -Wdeclaration-after-statement"
+	;;
+    esac
+else
+    AC_CHECK_DECL([__SUNPRO_C], [SUNCC="yes"], [SUNCC="no"])
+    if test "x$SUNCC" = "xyes"; then
+	CWARNFLAGS="-v"
+    fi
+fi
+AC_SUBST(CWARNFLAGS)
+]) # XORG_CWARNFLAGS
 dnl Copyright 2005 Red Hat, Inc
 dnl
 dnl Permission to use, copy, modify, distribute, and sell this software and its
@@ -8128,6 +8162,23 @@ AC_DEFUN([XORG_RELEASE_VERSION],[
 		[Patch version of this package])
 ])
 
+# XORG_CHANGELOG()
+# ----------------
+# Minimum version: 1.2.0
+#
+# Defines the variable CHANGELOG_CMD as the command to generate
+# ChangeLog from git.
+#
+# Arrange that distcleancheck ignores ChangeLog left over by distclean.
+#
+AC_DEFUN([XORG_CHANGELOG], [
+CHANGELOG_CMD="(GIT_DIR=\$(top_srcdir)/.git git log > .changelog.tmp && \
+mv .changelog.tmp ChangeLog) || (rm -f .changelog.tmp; touch ChangeLog; \
+echo 'git directory not found: installing possibly empty changelog.' >&2)"
+AC_SUBST([CHANGELOG_CMD])
+AC_SUBST([distcleancheck_listfiles], ['find . -type f ! -name ChangeLog -print'])
+]) # XORG_CHANGELOG
+
 dnl $XdotOrg: lib/xtrans/xtrans.m4,v 1.6 2005/07/26 18:59:11 alanc Exp $
 dnl
 dnl Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
@@ -8162,10 +8213,11 @@ AC_DEFUN([XTRANS_TCP_FLAGS],[
  # SVR4 hides these in libraries other than libc
  AC_SEARCH_LIBS(socket, [socket])
  AC_SEARCH_LIBS(gethostbyname, [nsl])
+ AC_HAVE_LIBRARY([ws2_32])
 
  # Needs to come after above checks for libsocket & libnsl for SVR4 systems
  AC_ARG_ENABLE(ipv6, 
-	AC_HELP_STRING([--enable-IPv6],[Enable IPv6 support]),
+	AC_HELP_STRING([--enable-ipv6],[Enable IPv6 support]),
 	[IPV6CONN=$enableval], 
 	[AC_CHECK_FUNC(getaddrinfo,[IPV6CONN=yes],[IPV6CONN=no])])
  AC_MSG_CHECKING([if IPv6 support should be built])
