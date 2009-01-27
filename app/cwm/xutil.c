@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xutil.c,v 1.13 2009/01/23 20:07:20 oga Exp $
+ * $Id: xutil.c,v 1.14 2009/01/27 00:42:53 oga Exp $
  */
 
 #include "headers.h"
@@ -175,7 +175,8 @@ char 		*atoms[CWM_NO_ATOMS] = {
 	"WM_DELETE_WINDOW",
 	"WM_TAKE_FOCUS",
 	"WM_PROTOCOLS",
-	"_MOTIF_WM_HINTS"
+	"_MOTIF_WM_HINTS",
+	"_CWM_GRP",
 };
 
 void

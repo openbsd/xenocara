@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.80 2009/01/23 19:00:59 okan Exp $
+ * $Id: calmwm.h,v 1.81 2009/01/27 00:42:53 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -140,6 +140,7 @@ extern const char *shortcut_to_name[];
 struct group_ctx {
 	TAILQ_ENTRY(group_ctx)	 entry;
 	struct client_ctx_q	 clients;
+	const char		*name;
 	int			 shortcut;
 	int			 hidden;
 	int			 nhidden;
@@ -523,7 +524,8 @@ extern struct conf			 Conf;
 #define WM_TAKE_FOCUS			 cwm_atoms[2]
 #define WM_PROTOCOLS			 cwm_atoms[3]
 #define _MOTIF_WM_HINTS			 cwm_atoms[4]
-#define CWM_NO_ATOMS			 5
+#define	_CWM_GRP			 cwm_atoms[5]
+#define CWM_NO_ATOMS			 6
 
 extern Atom				 cwm_atoms[CWM_NO_ATOMS];
 
