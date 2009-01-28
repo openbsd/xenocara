@@ -1,3 +1,5 @@
+#	$OpenBSD: Makefile,v 1.2 2009/01/28 16:10:44 matthieu Exp $
+
 LIB=	i810_dri.so
 
 DRIVER_SOURCES = \

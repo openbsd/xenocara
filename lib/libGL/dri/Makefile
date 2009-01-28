@@ -1,3 +1,5 @@
+#	$OpenBSD: Makefile,v 1.6 2009/01/28 16:10:44 matthieu Exp $
+
 SUBDIR= swrast
 
 .if ${MACHINE} == i386 || ${MACHINE} == amd64
