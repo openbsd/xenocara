@@ -977,6 +977,7 @@ struct {
     { MODE_MINHEIGHT,     "Height too low."},
     { MODE_FIXED,         "Mode not compatible with fixed mode."},
     { MODE_SCALE,         "Mode cannot be scaled to fixed mode."},
+    { MODE_NO_ENCODER,    "No encoder available for this output."},
     { 0, NULL}
 };
 

@@ -63,4 +63,10 @@ void rhdReloadCursor(ScrnInfoPtr pScrn);
 void rhdSaveCursor(ScrnInfoPtr pScrn);
 void rhdRestoreCursor(ScrnInfoPtr pScrn);
 
+void rhdCrtcShowCursor(struct rhdCrtc *Crtc);      /* */
+void rhdCrtcHideCursor(struct rhdCrtc *Crtc);      /* */
+void rhdCrtcLoadCursorARGB(struct rhdCrtc *Crtc, CARD32 *Image);  /* */
+void rhdCrtcSetCursorColors(struct rhdCrtc *Crtc, int bg, int fg);
+void rhdCrtcSetCursorPosition(struct rhdCrtc *Crtc, int x, int y);
+
 #endif

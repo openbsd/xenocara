@@ -18,6 +18,9 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
+/* have RotateFreeShadow API */
+#undef HAVE_FREE_SHADOW
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
@@ -83,6 +86,9 @@
 
 /* Patchlevel Version */
 #undef PACKAGE_VERSION_PATCHLEVEL
+
+/* Build RandR 1.2 Support */
+#undef RANDR_12_SUPPORT
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS

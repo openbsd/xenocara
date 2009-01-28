@@ -57,7 +57,7 @@ static void
 CSMMIORBBMStuff(struct RhdCS *CS)
 {
     CARD8 *MMIOBase = RHDPTRI(CS)->MMIOBase;
-    CARD32 BufferEntries = ((CS->Wptr + CS->Size - CS->Flushed) & CS->Mask) / 2;
+    CARD32 BufferEntries = (CS->Wptr - CS->Flushed) / 2;
     CARD32 RBBMEntries = CSMMIORegRead(R5XX_RBBM_STATUS) & R5XX_RBBM_FIFOCNT_MASK;
     int i, Entries;
 
@@ -68,8 +68,8 @@ CSMMIORBBMStuff(struct RhdCS *CS)
 
     for (i = 0; i < Entries; i++) {
 	CSMMIORegWrite((CS->Buffer[CS->Flushed] & 0x3FFF) << 2,
-		       CS->Buffer[(CS->Flushed + 1) & CS->Mask]);
-	CS->Flushed = (CS->Flushed + 2) & CS->Mask;
+		       CS->Buffer[CS->Flushed + 1]);
+	CS->Flushed += 2;
 #ifdef RHD_CS_DEBUG
 	CS->Grabbed -= 2;
 #endif
@@ -127,10 +127,13 @@ CSMMIOGrab(struct RhdCS *CS, CARD32 Count)
 #endif
 
     for (i = 0; i < CS_LOOP_COUNT; i++) {
-	if (CS->Wptr == CS->Flushed) /* 16kB should be big enough */
+	if ((CS->Size - CS->Wptr) >= Count)
 	    return;
-	if (((CS->Wptr + CS->Size - CS->Flushed) & CS->Mask) >= Count)
+	if (CS->Flushed == CS->Wptr) {
+	    CS->Wptr = 0;
+	    CS->Flushed = 0;
 	    return;
+	}
 	CSMMIORBBMStuff(CS);
     }
 
@@ -165,7 +168,6 @@ CSMMIOInit(struct RhdCS *CS)
     /* allocate a 64kB buffer here as well */
     CS->Size = (64 << 10) / 4;
     CS->Buffer = xnfcalloc(1, 4 * CS->Size);
-    CS->Mask = CS->Size - 1; /* easy wrap around */
 
     CS->Grab = CSMMIOGrab;
     CS->Flush = CSMMIOFlush;
@@ -188,6 +190,11 @@ CSMMIOInit(struct RhdCS *CS)
  */
 
 #include "xf86drm.h"
+/* Workaround for header mismatches */
+#ifndef DEPRECATED
+#  define DEPRECATED __attribute__ ((deprecated))
+#  define __user
+#endif
 #include "radeon_drm.h"
 
 #define R5XX_IDLE_RETRY 16 /* Fall out of idle loops after this count */
@@ -423,7 +430,6 @@ CSDRMCPInit(struct RhdCS *CS)
     CS->Type = RHD_CS_CPDMA;
 
     CS->Size = (64 << 10) / 4;
-    CS->Mask = 0xFFFFFFFF;
 
     CS->Grab = DRMCPGrab;
     CS->Flush = DRMCPFlush;
@@ -461,7 +467,7 @@ RHDCSGrabDebug(struct RhdCS *CS, CARD32 Count, const char *func)
 	xf86DrvMsg(CS->scrnIndex, X_ERROR,
                    "%s: Grabbing while CS is not started!\n", func);
 
-   if (CS->Wptr != ((CS->Flushed + CS->Grabbed) & CS->Mask))
+   if (CS->Wptr != (CS->Flushed + CS->Grabbed))
 	xf86DrvMsg(CS->scrnIndex, X_ERROR,
 		   "%s: Wptr != Flushed + Grabbed (%d vs %d + %d) (%s -> %s)\n",
 		   func, (unsigned int) CS->Wptr, (unsigned int) CS->Flushed,
@@ -487,7 +493,7 @@ RHDCSFlush(struct RhdCS *CS)
 	return;
     }
 
-    if (CS->Wptr != ((CS->Flushed + CS->Grabbed) & CS->Mask))
+    if (CS->Wptr != (CS->Flushed + CS->Grabbed))
 	xf86DrvMsg(CS->scrnIndex, X_ERROR,
 		   "%s: Wptr != Flushed + Grabbed (%d vs %d + %d) (From %s)\n",
 		   __func__, (unsigned int) CS->Wptr, (unsigned int) CS->Flushed,

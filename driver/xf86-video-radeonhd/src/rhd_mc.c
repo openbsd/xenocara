@@ -826,7 +826,7 @@ RHDMCInit(RHDPtr rhdPtr)
 	MC->GetFBLocation = rs780GetFBLocation;
     }
 #endif
-    else if (rhdPtr->ChipSet == RHD_RV770) {
+    else if (rhdPtr->ChipSet >= RHD_RV770) {
 	MC->SaveMC = r7xxSaveMC;
 	MC->RestoreMC = r7xxRestoreMC;
 	MC->SetupMC = r7xxSetupMC;

@@ -45,6 +45,8 @@
 #include "rhd_atombios.h"
 #endif
 
+#define MAX_I2C_LINES 6
+
 #define RHD_I2C_STATUS_LOOPS 5000
 
 enum rhdDDClines {
@@ -54,12 +56,16 @@ enum rhdDDClines {
     rhdDdc4data = 6, /* arbirarily choosen */
     rhdVIP_DOUT_scl = 0x41,
     rhdDvoData12 = 0x28,
+    rhdDdc5data = 0x48,
+    rhdDdc6data = 0x4a,
     rhdDdc1clk = 1,
     rhdDdc2clk = 3,
     rhdDdc3clk = 5,
     rhdDdc4clk = 7, /* arbirarily choosen */
     rhdVIP_DOUTvipclk = 0x42,
     rhdDvoData13 = 0x29,
+    rhdDdc5clk  = 0x49,
+    rhdDdc6clk  = 0x4b,
     rhdDdcUnknown
 };
 
@@ -307,6 +313,22 @@ getDDCLineFromGPIO(int scrnIndex, CARD32 gpio, int shift)
 		return rhdDvoData13; /* ddc6 clk */
 	    case 1:
 		return rhdDvoData12; /* ddc6 data */
+	}
+	break;
+    case 0x1fc4:
+	switch (shift) {
+	    case 0:
+		return rhdDdc5clk;
+	    case 8:
+		return rhdDdc5data;
+	}
+	break;
+    case 0x1fe8: /* ddc6 */
+	switch (shift) {
+	    case 0:
+		return rhdDdc6clk; /* ddc6 clk */
+	    case 8:
+		return rhdDdc6data; /* ddc6 data */
 	}
 	break;
     }
@@ -1110,7 +1132,7 @@ rhdTearDownI2C(I2CBusPtr *I2C)
      * broken in older server versions.
      * So we cannot use it. How bad!
      */
-    for (i = 0; i < I2C_LINES; i++) {
+    for (i = 0; i < MAX_I2C_LINES; i++) {
 	char *name;
 	if (!I2C[i])
 	    break;
@@ -1203,10 +1225,12 @@ rhdInitI2C(int scrnIndex)
 	numLines = 3;
     else if (rhdPtr->ChipSet < RHD_R600)
 	numLines = 4;
+    else if (rhdPtr->ChipSet < RHD_RV730)
+	numLines = 4;
     else
-	numLines = I2C_LINES;
+	numLines = MAX_I2C_LINES;
 
-    if (!(I2CList = xcalloc(I2C_LINES, sizeof(I2CBusPtr)))) {
+    if (!(I2CList = xcalloc(MAX_I2C_LINES, sizeof(I2CBusPtr)))) {
 	xf86DrvMsg(scrnIndex, X_ERROR,
 		   "%s: Out of memory.\n",__func__);
     }
@@ -1396,7 +1420,7 @@ RHDI2CFunc(int scrnIndex, I2CBusPtr *I2CList, RHDi2cFunc func,
 	    return RHD_I2C_SUCCESS;
     }
     if (func == RHD_I2C_DDC) {
-	if (datap->i >= I2C_LINES || !I2CList[datap->i])
+	if (datap->i >= MAX_I2C_LINES || !I2CList[datap->i])
 	    return RHD_I2C_NOLINE;
 
 	datap->monitor = xf86DoEDID_DDC2(scrnIndex, I2CList[datap->i]);
@@ -1404,7 +1428,7 @@ RHDI2CFunc(int scrnIndex, I2CBusPtr *I2CList, RHDi2cFunc func,
     }
     if (func == RHD_I2C_PROBE_ADDR_LINE) {
 
-	if (datap->target.line >= I2C_LINES || !I2CList[datap->target.line])
+	if (datap->target.line >= MAX_I2C_LINES || !I2CList[datap->target.line])
 	    return RHD_I2C_NOLINE;
 	return rhdI2CProbeAddress(scrnIndex, I2CList[datap->target.line], datap->target.slave);
     }
@@ -1412,7 +1436,7 @@ RHDI2CFunc(int scrnIndex, I2CBusPtr *I2CList, RHDi2cFunc func,
 	return rhdI2CProbeAddress(scrnIndex, datap->probe.i2cBusPtr, datap->probe.slave);
     }
     if (func == RHD_I2C_GETBUS) {
-	if (datap->i >= I2C_LINES || !I2CList[datap->i])
+	if (datap->i >= MAX_I2C_LINES || !I2CList[datap->i])
 	    return RHD_I2C_NOLINE;
 
 	datap->i2cBusPtr = I2CList[datap->i];

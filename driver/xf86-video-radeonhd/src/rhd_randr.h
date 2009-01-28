@@ -32,9 +32,11 @@
 #ifndef _RHD_RANDR_H
 #define _RHD_RANDR_H
 
-Bool RHDRandrPreInit(ScrnInfoPtr pScrn);
-Bool RHDRandrScreenInit(ScreenPtr pScreen);
-Bool RHDRandrModeInit(ScrnInfoPtr pScrn);
-Bool RHDRandrSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode);
+extern Bool RHDRandrPreInit(ScrnInfoPtr pScrn);
+extern Bool RHDRandrScreenInit(ScreenPtr pScreen);
+extern Bool RHDRandrModeInit(ScrnInfoPtr pScrn);
+extern Bool RHDRandrSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode);
+extern void RHDRRFreeShadow(ScrnInfoPtr pScrn);
+extern Bool RHDRRInitCursor(ScreenPtr pScreen);
 
 #endif

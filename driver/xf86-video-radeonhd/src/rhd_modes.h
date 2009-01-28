@@ -50,6 +50,7 @@
 #define MODE_MINHEIGHT      0x10 + RHD_MODE_STATUS
 #define MODE_FIXED          0x11 + RHD_MODE_STATUS
 #define MODE_SCALE          0x12 + RHD_MODE_STATUS
+#define MODE_NO_ENCODER     0x13 + RHD_MODE_STATUS
 
 /*
  * In case this isn't in xf86str.h yet.

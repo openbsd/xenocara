@@ -849,6 +849,10 @@ rhdAtomSetTVEncoder(atomBiosHandlePtr handle, Bool enable, int mode)
 /*
  *
  */
+#if (ATOM_TRANSMITTER_CONFIG_COHERENT != ATOM_TRANSMITTER_CONFIG_V2_COHERENT)
+# error
+#endif
+
 Bool
 rhdAtomDigTransmitterControl(atomBiosHandlePtr handle, enum atomTransmitter id,
 			     enum atomTransmitterAction action, struct atomTransmitterConfig *config)
@@ -856,6 +860,7 @@ rhdAtomDigTransmitterControl(atomBiosHandlePtr handle, enum atomTransmitter id,
     DIG_TRANSMITTER_CONTROL_PARAMETERS Transmitter;
     AtomBiosArgRec data;
     char *name = NULL;
+    struct atomCodeTableVersion version;
 
     RHDFUNC(handle);
 
@@ -909,64 +914,128 @@ rhdAtomDigTransmitterControl(atomBiosHandlePtr handle, enum atomTransmitter id,
     switch (id) {
 	case atomTransmitterDIG1:
 	case atomTransmitterUNIPHY:
+	case atomTransmitterUNIPHY1:
+	case atomTransmitterUNIPHY2:
 	case atomTransmitterPCIEPHY:
-	    switch (config->Link) {
-		case atomTransLinkA:
-		    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LINKA;
-		    break;
-		case atomTransLinkAB:
-		    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LINKA_B;
-		    break;
-		case atomTransLinkB:
-		    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LINKB;
-		    break;
-		case atomTransLinkBA:
-		    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LINKB_A;
-		    break;
-	    }
-	    switch (config->Encoder) {
-		case atomEncoderDIG1:
-		    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_DIG1_ENCODER;
-		    break;
-
-		case atomEncoderDIG2:
-		    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_DIG2_ENCODER;
-		    break;
-		default:
-		    xf86DrvMsg(handle->scrnIndex, X_ERROR,
-			       "%s called with invalid encoder %x for DIG transmitter\n",
-			       __func__, config->Encoder);
-		    return FALSE;
-	    }
-	    if (id == atomTransmitterPCIEPHY) {
-		switch (config->Lanes) {
-		    case atomPCIELaneNONE:
-			Transmitter.ucConfig |= 0;
-			break;
-		    case atomPCIELane0_3:
-			Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LANE_0_3;
-			break;
-		    case atomPCIELane0_7:
-			Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LANE_0_7;
-			break;
-		    case atomPCIELane4_7:
-			Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LANE_4_7;
-			break;
-		    case atomPCIELane8_11:
-			Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LANE_8_11;
-			break;
-		    case atomPCIELane8_15:
-			Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LANE_8_15;
-			break;
-		    case atomPCIELane12_15:
-			Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LANE_12_15;
-			break;
-		}
-		/* According to ATI this is the only one used so far */
-		Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_CLKSRC_PPLL;
-	    }
 	    data.exec.index =  GetIndexIntoMasterTable(COMMAND, UNIPHYTransmitterControl);
 	    name = "UNIPHYTransmitterControl";
+
+	    rhdAtomGetCommandTableRevisionSize(handle, data.exec.index, &version.cref, &version.fref, NULL);
+
+	    if (version.fref > 1 || version.cref > 2)
+		return FALSE;
+
+	    switch (version.cref) {
+		case 1:
+
+		    switch (config->Link) {
+			case atomTransLinkA:
+			    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LINKA;
+			    break;
+			case atomTransLinkAB:
+			    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LINKA_B;
+			    break;
+			case atomTransLinkB:
+			    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LINKB;
+			    break;
+			case atomTransLinkBA:
+			    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LINKB_A;
+			    break;
+		    }
+		    switch (config->Encoder) {
+			case atomEncoderDIG1:
+			    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_DIG1_ENCODER;
+			    break;
+			case atomEncoderDIG2:
+			    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_DIG2_ENCODER;
+			    break;
+			default:
+			    xf86DrvMsg(handle->scrnIndex, X_ERROR,
+				       "%s called with invalid encoder %x for DIG transmitter\n",
+				       __func__, config->Encoder);
+			    return FALSE;
+		    }
+		    if (id == atomTransmitterPCIEPHY) {
+			switch (config->Lanes) {
+			    case atomPCIELaneNONE:
+				Transmitter.ucConfig |= 0;
+				break;
+			    case atomPCIELane0_3:
+				Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LANE_0_3;
+				break;
+			    case atomPCIELane0_7:
+				Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LANE_0_7;
+				break;
+			    case atomPCIELane4_7:
+				Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LANE_4_7;
+				break;
+			    case atomPCIELane8_11:
+				Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LANE_8_11;
+				break;
+			    case atomPCIELane8_15:
+				Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LANE_8_15;
+				break;
+			    case atomPCIELane12_15:
+				Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_LANE_12_15;
+				break;
+			}
+			/* According to ATI this is the only one used so far */
+			Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_CLKSRC_PPLL;
+		    }
+		    break;
+		case 2:
+		    if (id == atomTransmitterPCIEPHY) {
+			xf86DrvMsg(handle->scrnIndex, X_ERROR,
+				   "%s PCIPHY not valid for DCE 3.2\n",
+				   __func__);
+			return FALSE;
+		    }
+		    switch (config->Link) {
+			case atomTransLinkA:
+			case atomTransLinkAB:
+			    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_V2_LINKA;
+			    break;
+			case atomTransLinkB:
+			case atomTransLinkBA:
+			    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_V2_LINKB;
+			    break;
+			default:
+			    xf86DrvMsg(handle->scrnIndex, X_ERROR,
+				       "%s called with invalid transmitter link selection %x for DIG transmitter\n",
+				       __func__, config->Link);
+			    return FALSE;
+		    }
+		    switch (config->Encoder) {
+			case atomEncoderDIG1:
+			    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_V2_DIG1_ENCODER;
+			    break;
+			case atomEncoderDIG2:
+			    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_V2_DIG2_ENCODER;
+			    break;
+			default:
+			    xf86DrvMsg(handle->scrnIndex, X_ERROR,
+				       "%s called with invalid encoder %x for DIG transmitter\n",
+				       __func__, config->Encoder);
+			    return FALSE;
+		    }
+		    switch (id) {
+			case atomTransmitterUNIPHY:
+			    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_V2_TRANSMITTER1;
+			    break;
+			case atomTransmitterUNIPHY1:
+			    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_V2_TRANSMITTER2;
+			    break;
+			case atomTransmitterUNIPHY2:
+			    Transmitter.ucConfig |= ATOM_TRANSMITTER_CONFIG_V2_TRANSMITTER3;
+			    break;
+			default:
+			    break;
+		    }
+
+		    if (config->Mode == atomDP)
+			Transmitter.ucConfig |= ATOM_TRASMITTER_CONFIG_V2_DP_CONNECTOR;
+		    break;
+	    }
 
 	    break;
 
@@ -1240,6 +1309,8 @@ AtomDACLoadDetection(atomBiosHandlePtr handle, enum atomDevice Device, enum atom
 	case atomLCD2:
 	case atomDFP2:
 	case atomDFP3:
+	case atomDFP4:
+	case atomDFP5:
 	case atomNone:
 	    xf86DrvMsg(handle->scrnIndex, X_ERROR, "Unsupported device for load detection.\n");
 	    return FALSE;
@@ -1506,6 +1577,7 @@ rhdAtomEncoderControl(atomBiosHandlePtr handle, enum atomEncoder EncoderId,
 	case atomEncoderExternal:
 	{
 	    DIG_ENCODER_CONTROL_PARAMETERS *dig = &ps.dig;
+	    struct atomCodeTableVersion version;
 
 	    if (EncoderId == atomEncoderDIG1) {
 		name = "DIG1EncoderControl";
@@ -1517,35 +1589,87 @@ rhdAtomEncoderControl(atomBiosHandlePtr handle, enum atomEncoder EncoderId,
 		name = "ExternalEncoderControl";
 		data.exec.index = GetIndexIntoMasterTable(COMMAND, ExternalEncoderControl);
 	    }
+	    rhdAtomGetCommandTableRevisionSize(handle, data.exec.index, &version.cref, &version.fref, NULL);
+	    if (version.fref > 1 || version.cref > 2)
+		return FALSE;
 
 	    dig->ucConfig = 0;
-	    switch (Config->u.dig.Link) {
-		case atomTransLinkA:
-		    dig->ucConfig |= ATOM_ENCODER_CONFIG_LINKA;
-		    break;
-		case atomTransLinkAB:
-		    dig->ucConfig |= ATOM_ENCODER_CONFIG_LINKA_B;
-		    break;
-		case atomTransLinkB:
-		    dig->ucConfig |= ATOM_ENCODER_CONFIG_LINKB;
-		    break;
-		case atomTransLinkBA:
-		    dig->ucConfig |= ATOM_ENCODER_CONFIG_LINKB_A;
-		    break;
-	    }
+	    switch (version.cref) {
+		case 1:
+		    switch (Config->u.dig.Link) {
+			case atomTransLinkA:
+			    dig->ucConfig |= ATOM_ENCODER_CONFIG_LINKA;
+			    break;
+			case atomTransLinkAB:
+			    dig->ucConfig |= ATOM_ENCODER_CONFIG_LINKA_B;
+			    break;
+			case atomTransLinkB:
+			    dig->ucConfig |= ATOM_ENCODER_CONFIG_LINKB;
+			    break;
+			case atomTransLinkBA:
+			    dig->ucConfig |= ATOM_ENCODER_CONFIG_LINKB_A;
+			    break;
+		    }
 
-	    if (EncoderId != atomEncoderExternal) {
-		switch (Config->u.dig.Transmitter) {
-		    case atomTransmitterUNIPHY:
-		    case atomTransmitterPCIEPHY:
-		    case atomTransmitterDIG1:
-			dig->ucConfig |= ATOM_ENCODER_CONFIG_UNIPHY;
-			break;
-		    case atomTransmitterLVTMA:
-		    case atomTransmitterDIG2:
-			dig->ucConfig |= ATOM_ENCODER_CONFIG_LVTMA;
-			break;
-		}
+		    if (EncoderId != atomEncoderExternal) {
+			switch (Config->u.dig.Transmitter) {
+			    case atomTransmitterUNIPHY:
+			    case atomTransmitterPCIEPHY:
+			    case atomTransmitterDIG1:
+				dig->ucConfig |= ATOM_ENCODER_CONFIG_UNIPHY;
+				break;
+			    case atomTransmitterLVTMA:
+			    case atomTransmitterDIG2:
+				dig->ucConfig |= ATOM_ENCODER_CONFIG_LVTMA;
+				break;
+			/*
+			 * these are not DCE3.0 but we need them here as DIGxEncoderControl tables for
+			 * DCE3.2 still report cref 1.
+			 */
+			    case atomTransmitterUNIPHY1:
+				dig->ucConfig |= ATOM_ENCODER_CONFIG_V2_TRANSMITTER2;
+				break;
+			    case atomTransmitterUNIPHY2:
+				dig->ucConfig |= ATOM_ENCODER_CONFIG_V2_TRANSMITTER3;
+				break;
+			    default:
+				xf86DrvMsg(handle->scrnIndex, X_ERROR, "%s: Invalid Transmitter for DCE3.0: %x\n",
+					   __func__, Config->u.dig.Transmitter);
+				return FALSE;
+			}
+		    }
+		    break;
+
+		case 2:
+		    switch (Config->u.dig.Link) {
+			case atomTransLinkA:
+			case atomTransLinkAB:
+			    dig->ucConfig |= ATOM_ENCODER_CONFIG_V2_LINKA;
+			    break;
+			case atomTransLinkB:
+			case atomTransLinkBA:
+			    dig->ucConfig |= ATOM_ENCODER_CONFIG_V2_LINKB;
+			    break;
+		    }
+		    switch (Config->u.dig.Transmitter) {
+			case atomTransmitterUNIPHY:
+			    dig->ucConfig |= ATOM_ENCODER_CONFIG_UNIPHY;
+			    break;
+			case atomTransmitterUNIPHY1:
+			    dig->ucConfig |= ATOM_ENCODER_CONFIG_V2_TRANSMITTER2;
+			    break;
+			case atomTransmitterUNIPHY2:
+			    dig->ucConfig |= ATOM_ENCODER_CONFIG_V2_TRANSMITTER3;
+			    break;
+			default:
+			    xf86DrvMsg(handle->scrnIndex, X_ERROR, "%s: Invalid Encoder for DCE3.2: %x\n",
+				       __func__, Config->u.dig.Transmitter);
+			    return FALSE;
+			}
+		    break;
+
+		default:
+		    return FALSE;
 	    }
 
 	    switch (Config->u.dig.EncoderMode) {
@@ -1599,9 +1723,9 @@ rhdAtomEncoderControl(atomBiosHandlePtr handle, enum atomEncoder EncoderId,
 	case atomEncoderDVO:
 	    name = "DVOEncoderControl";
 	    data.exec.index = GetIndexIntoMasterTable(COMMAND, DVOEncoderControl);
-	    if (!rhdAtomGetCommandTableRevisionSize(handle, data.exec.index, &version, NULL, NULL))
+	    if (!rhdAtomGetCommandTableRevisionSize(handle, data.exec.index, &version.cref, NULL, NULL))
 		return FALSE;
-	    switch  (version) {
+	    switch  (version.cref) {
 		case 1:
 		case 2:
 		{
@@ -1619,6 +1743,8 @@ rhdAtomEncoderControl(atomBiosHandlePtr handle, enum atomEncoder EncoderId,
 			case atomDFP1:
 			case atomDFP2:
 			case atomDFP3:
+			case atomDFP4:
+			case atomDFP5:
 			    dvo->ucDeviceType = ATOM_DEVICE_DFP1_INDEX;
 			    break;
 			case atomTV1:
@@ -1714,6 +1840,8 @@ rhdAtomEncoderControl(atomBiosHandlePtr handle, enum atomEncoder EncoderId,
 	    }
 	    break;
 	}
+	case atomEncoderNone:
+	    return FALSE;
     }
 
     data.exec.dataSpace = NULL;
@@ -2167,7 +2295,7 @@ rhdAtomBlankCRTC(atomBiosHandlePtr handle, enum atomCrtc id, struct atomCrtcBlan
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "BlankCRTC Successful\n");
 	return TRUE;
     }
-    xf86DrvMsg(handle->scrnIndex, X_INFO, "SetCRTC_OverScan Failed\n");
+    xf86DrvMsg(handle->scrnIndex, X_INFO, "BlankCRTC Failed\n");
     return FALSE;
 }
 
@@ -2212,6 +2340,10 @@ atomGetDevice(atomBiosHandlePtr handle, enum atomDevice Device)
 	    return ATOM_DEVICE_CV_INDEX;
 	case atomDFP3:
 	    return ATOM_DEVICE_DFP3_INDEX;
+	case atomDFP4:
+	    return ATOM_DEVICE_DFP4_INDEX;
+	case atomDFP5:
+	    return ATOM_DEVICE_DFP5_INDEX;
 	case atomNone:
 	    xf86DrvMsg(handle->scrnIndex, X_ERROR, "Invalid Device\n");
 	    return ATOM_MAX_SUPPORTED_DEVICE;
@@ -2340,6 +2472,17 @@ rhdAtomSetPixelClock(atomBiosHandlePtr handle, enum atomPxclk PCLKId, struct ato
 		    ps.pclk_v3.ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_UNIPHY;
 		    NeedMode = TRUE;
 		    break;
+		case atomOutputUniphyC:
+		case atomOutputUniphyD:
+		    ps.pclk_v3.ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_UNIPHY1;
+		    NeedMode = TRUE;
+		    break;
+		case atomOutputUniphyE:
+		case atomOutputUniphyF:
+		    ps.pclk_v3.ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_UNIPHY2;
+		    NeedMode = TRUE;
+		    break;
+
 		case atomOutputDacA:
 		    ps.pclk_v3.ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC1;
 		    break;
@@ -2497,6 +2640,12 @@ rhdAtomSelectCrtcSource(atomBiosHandlePtr handle, enum atomCrtc CrtcId,
 		case atomDFP3:
 		    ps.crtc.ucDevice = ATOM_DEVICE_DFP3_INDEX;
 		    break;
+		case atomDFP4:
+		    ps.crtc.ucDevice = ATOM_DEVICE_DFP4_INDEX;
+		    break;
+		case atomDFP5:
+		    ps.crtc.ucDevice = ATOM_DEVICE_DFP5_INDEX;
+		    break;
 		case atomNone:
 		    return FALSE;
 	    }
@@ -2537,6 +2686,7 @@ rhdAtomSelectCrtcSource(atomBiosHandlePtr handle, enum atomCrtc CrtcId,
 		case atomEncoderTMDS1:
 		case atomEncoderTMDS2:
 		case atomEncoderLVDS:
+		case atomEncoderNone:
 		    return FALSE;
 	    }
 	    if (NeedMode) {
@@ -3741,7 +3891,9 @@ static const struct _rhd_encoders
     { "AN9801", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
     { "DP501",  { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }},
     { "UNIPHY",  { RHD_OUTPUT_UNIPHYA, RHD_OUTPUT_UNIPHYB }},
-    { "KLDSCP_LVTMA", { RHD_OUTPUT_KLDSKP_LVTMA, RHD_OUTPUT_NONE }}
+    { "KLDSCP_LVTMA", { RHD_OUTPUT_KLDSKP_LVTMA, RHD_OUTPUT_NONE }},
+    { "UNIPHY1",  { RHD_OUTPUT_UNIPHYC, RHD_OUTPUT_UNIPHYD }},
+    { "UNIPHY2",  { RHD_OUTPUT_UNIPHYE, RHD_OUTPUT_UNIPHYF }}
 };
 static const int n_rhd_encoders = sizeof (rhd_encoders) / sizeof(struct _rhd_encoders);
 
@@ -3784,11 +3936,13 @@ static const struct _rhd_devices
     {" TV2",  { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }, atomTV2 },
     {" DFP2", { RHD_OUTPUT_LVTMA, RHD_OUTPUT_DVO }, atomDFP2 },
     {" CV",   { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }, atomCV },
-    {" DFP3", { RHD_OUTPUT_LVTMA, RHD_OUTPUT_LVTMA }, atomDFP3 }
+    {" DFP3", { RHD_OUTPUT_LVTMA, RHD_OUTPUT_LVTMA }, atomDFP3 },
+    {" DFP4", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }, atomDFP4 },
+    {" DFP5", { RHD_OUTPUT_NONE, RHD_OUTPUT_NONE }, atomDFP5 }
 };
 static const int n_rhd_devices = sizeof(rhd_devices) / sizeof(struct _rhd_devices);
 
-static const rhdDDC hwddc[] = { RHD_DDC_0, RHD_DDC_1, RHD_DDC_2, RHD_DDC_3 };
+static const rhdDDC hwddc[] = { RHD_DDC_0, RHD_DDC_1, RHD_DDC_2, RHD_DDC_3, RHD_DDC_4 };
 static const int n_hwddc = sizeof(hwddc) / sizeof(rhdDDC);
 
 static const rhdOutputType acc_dac[] = { RHD_OUTPUT_NONE, RHD_OUTPUT_DACA,
@@ -3811,11 +3965,11 @@ rhdAtomInterpretObjectID(atomBiosHandlePtr handle,
 
     switch (*obj_type) {
 	case GRAPH_OBJECT_TYPE_CONNECTOR:
-	    if (!Limit(*obj_id, n_rhd_connector_objs, "obj_id"))
+	    if (!Limit(*obj_id, n_rhd_connector_objs, "connector_obj"))
 		*name = rhd_connector_objs[*obj_id].name;
 	    break;
 	case GRAPH_OBJECT_TYPE_ENCODER:
-	    if (!Limit(*obj_id, n_rhd_encoders, "obj_id"))
+	    if (!Limit(*obj_id, n_rhd_encoders, "encoder_obj"))
 		*name = rhd_encoders[*obj_id].name;
 	    break;
 	default:

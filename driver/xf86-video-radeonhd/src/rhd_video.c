@@ -497,8 +497,8 @@ R5xxXvCopyPlanar(RHDPtr rhdPtr, CARD8 *src1, CARD8 *src2, CARD8 *src3,
 		 CARD16 dstPitch, CARD16 h, CARD16 w)
 {
 #if X_BYTE_ORDER == X_BIG_ENDIAN
-    CARD32 val = RHDRegRead(pScrn, R5XX_SURFACE_CNTL);
-    RHDRegWrite(pScrn, R5XX_SURFACE_CNTL,
+    CARD32 val = RHDRegRead(rhdPtr, R5XX_SURFACE_CNTL);
+    RHDRegWrite(rhdPtr, R5XX_SURFACE_CNTL,
 		(val | R5XX_NONSURF_AP0_SWP_32BPP) & ~R5XX_NONSURF_AP0_SWP_16BPP);
 #endif
 
@@ -507,7 +507,7 @@ R5xxXvCopyPlanar(RHDPtr rhdPtr, CARD8 *src1, CARD8 *src2, CARD8 *src3,
 
 #if X_BYTE_ORDER == X_BIG_ENDIAN
     /* restore byte swapping */
-    RHDRegWrite(pScrn, R5XX_SURFACE_CNTL, val);
+    RHDRegWrite(rhdPtr, R5XX_SURFACE_CNTL, val);
 #endif
 }
 
@@ -787,18 +787,22 @@ RHDInitVideo(ScreenPtr pScreen)
     memcpy(newAdaptors, adaptors, num_adaptors * sizeof(XF86VideoAdaptorPtr));
     adaptors = newAdaptors;
 
-    if ((rhdPtr->ChipSet < RHD_R600) && rhdPtr->TwoDPrivate &&
-	((rhdPtr->CS->Type == RHD_CS_CP) || (rhdPtr->CS->Type == RHD_CS_CPDMA))) {
+    if (rhdPtr->ChipSet < RHD_R600) {
+	if (rhdPtr->TwoDPrivate &&
+	    ((rhdPtr->CS->Type == RHD_CS_CP) ||
+	     (rhdPtr->CS->Type == RHD_CS_CPDMA))) {
 
-	texturedAdaptor = rhdSetupImageTexturedVideo(pScreen);
+	    texturedAdaptor = rhdSetupImageTexturedVideo(pScreen);
 
-	adaptors[num_adaptors++] = texturedAdaptor;
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Xv: Textured Video initialised.\n");
+	    adaptors[num_adaptors++] = texturedAdaptor;
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Xv: Textured Video initialised.\n");
 
-	/* EXA could've initialised this already */
-	if (!rhdPtr->ThreeDPrivate)
-	    R5xx3DInit(pScrn);
-
+	    /* EXA could've initialised this already */
+	    if (!rhdPtr->ThreeDPrivate)
+		R5xx3DInit(pScrn);
+	} else
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Xv: No Textured Video "
+		       "possible without the Command Processor.\n");
     } else
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		   "Xv: No Textured Video possible for %s.\n", pScrn->chipset);

@@ -1,4 +1,5 @@
 /*
+ * Copyright 2008  Christian König <deathsimple@vodafone.de>
  * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
  * Copyright 2007  Matthias Hopf <mhopf@novell.com>
  * Copyright 2007  Egbert Eich   <eich@novell.com>
@@ -22,49 +23,59 @@
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef RHD_I2C_H_
-# define RHD_I2C_H_
 
-#include "xf86DDC.h"
-#include "rhd.h"
+#ifndef _RHD_HDMI_H
+#define _RHD_HDMI_H
 
-typedef enum {
-    RHD_I2C_INIT,
-    RHD_I2C_DDC,
-    RHD_I2C_PROBE_ADDR_LINE,
-    RHD_I2C_PROBE_ADDR,
-    RHD_I2C_GETBUS,
-    RHD_I2C_TEARDOWN
-} RHDi2cFunc;
+struct rhdHdmi {
+	struct rhdHdmi* Next;
 
-typedef union RHDI2CDataArg
-{
-    I2CBusPtr *I2CBusList;
-    int i;
-    struct {
-	int line;
-	CARD8 slave;
-    } target;
-    struct {
-	CARD8 slave;
-	I2CBusPtr i2cBusPtr;
-    } probe;
-    struct
-    {
-	int line;
-    CARD32 slaves[4];
-    } scanbus;
-    xf86MonPtr monitor;
-    I2CBusPtr i2cBusPtr;
-} RHDI2CDataArg, *RHDI2CDataArgPtr;
+	int scrnIndex;
 
-typedef enum {
-    RHD_I2C_SUCCESS,
-    RHD_I2C_NOLINE,
-    RHD_I2C_FAILED
-} RHDI2CResult;
+	struct rhdOutput* Output;
+	CARD16 Offset;
 
-RHDI2CResult
-RHDI2CFunc(int scrnIndex, I2CBusPtr *I2CList, RHDi2cFunc func,
-			RHDI2CDataArgPtr data);
-#endif
+	Bool Stored;
+	CARD32 StoreEnable;
+	CARD32 StoreControl;
+	CARD32 StoreUnknown[0x3];
+	CARD32 StoredAudioDebugWorkaround;
+
+	CARD32 StoredFrameVersion;
+	CARD32 StoredVideoControl;
+	CARD32 StoreVideoInfoFrame[0x4];
+	CARD32 StoredAudioControl;
+	CARD32 StoreAudioInfoFrame[0x2];
+
+	CARD32 Store_32kHz_N;
+	CARD32 Store_32kHz_CTS;
+
+	CARD32 Store_44_1kHz_N;
+	CARD32 Store_44_1kHz_CTS;
+
+	CARD32 Store_48kHz_N;
+	CARD32 Store_48kHz_CTS;
+
+	CARD32 StoreIEC60958[2];
+};
+
+struct rhdHdmi* RHDHdmiInit(RHDPtr rhdPtr, struct rhdOutput* Output);
+
+void RHDHdmiSetMode(struct rhdHdmi* rhdHdmi, DisplayModePtr Mode);
+void RHDHdmiEnable(struct rhdHdmi* rhdHdmi, Bool Enable);
+void RHDHdmiUpdateAudioSettings(
+	struct rhdHdmi* rhdHdmi,
+	Bool playing,
+	int channels,
+	int rate,
+	int bps,
+	CARD8 status_bits,
+	CARD8 catgory_code
+);
+
+void RHDHdmiSave(struct rhdHdmi* rhdHdmi);
+void RHDHdmiRestore(struct rhdHdmi* rhdHdmi);
+
+void RHDHdmiDestroy(struct rhdHdmi* rhdHdmi);
+
+#endif /* _RHD_HDMI_H */

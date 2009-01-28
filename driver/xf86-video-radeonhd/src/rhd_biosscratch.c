@@ -110,6 +110,8 @@ rhdAtomBIOSScratchDACSenseResults(struct rhdOutput *Output, enum atomDAC DAC, en
 	case atomDFP1:
 	case atomDFP2:
 	case atomDFP3:
+	case atomDFP4:
+	case atomDFP5:
 	    TV = FALSE;
 	    break;
 	case atomTV1:
@@ -261,6 +263,12 @@ rhdAtomBIOSScratchUpdateAttachedState(RHDPtr rhdPtr, enum atomDevice dev, Bool a
 	case atomDFP3:
 	    Mask = ATOM_S0_DFP3;
 	    break;
+	case atomDFP4:
+	    Mask = ATOM_S0_DFP4;
+	    break;
+	case atomDFP5:
+	    Mask = ATOM_S0_DFP5;
+	    break;
 	default:
 	    return;
     }
@@ -321,6 +329,12 @@ rhdAtomBIOSScratchUpdateOnState(RHDPtr rhdPtr, enum atomDevice dev, Bool on)
 	    break;
 	case atomDFP3:
 	    Mask = ATOM_S3_DFP3_ACTIVE;
+	    break;
+	case atomDFP4:
+	    Mask = ATOM_S3_DFP4_ACTIVE;
+	    break;
+	case atomDFP5:
+	    Mask = ATOM_S3_DFP5_ACTIVE;
 	    break;
 	case atomNone:
 	    return;
@@ -396,6 +410,12 @@ rhdAtomBIOSScratchSetAcceleratorModeForDevice(RHDPtr rhdPtr,
 	case atomDFP3:
 	    Mask = ATOM_S6_ACC_REQ_DFP3;
 	    break;
+	case atomDFP4:
+	    Mask = ATOM_S6_ACC_REQ_DFP4;
+	    break;
+	case atomDFP5:
+	    Mask = ATOM_S6_ACC_REQ_DFP5;
+	    break;
 	case atomNone:
 	    return;
     }
@@ -451,6 +471,12 @@ rhdAtomBIOSScratchSetCrtcState(RHDPtr rhdPtr, enum atomDevice dev, enum atomCrtc
 	    break;
 	case atomDFP3:
 	    Mask = ATOM_S3_DFP3_CRTC_ACTIVE;
+	    break;
+	case atomDFP4:
+	    Mask = ATOM_S3_DFP4_CRTC_ACTIVE;
+	    break;
+	case atomDFP5:
+	    Mask = ATOM_S3_DFP5_CRTC_ACTIVE;
 	    break;
 	case atomNone:
 	    return;
@@ -508,6 +534,12 @@ RHDAtomBIOSScratchPMState(RHDPtr rhdPtr, struct rhdOutput *Output, int PowerMana
 	    break;
 	case atomDFP3:
 	    Mask = ATOM_S2_DFP3_DPMS_STATE;
+	    break;
+	case atomDFP4:
+	    Mask = ATOM_S2_DFP4_DPMS_STATE;
+	    break;
+	case atomDFP5:
+	    Mask = ATOM_S2_DFP5_DPMS_STATE;
 	    break;
 	case atomNone:
 	    return;
@@ -584,7 +616,8 @@ rhdBIOSScratchSetDeviceForOutput(struct rhdOutput *Output)
 	    switch (Output->OutputDriverPrivate->OutputDevices[i].DeviceId) {
 		case atomCrtc1:
 		case atomCrtc2:
-		    if (Output->SensedType == RHD_SENSED_VGA)
+		    if (Output->SensedType == RHD_SENSED_VGA
+			|| Output->SensedType == RHD_SENSED_NONE) /* if nothing was sensed default to VGA */
 			break;
 		    i++;
 		    continue;
@@ -638,8 +671,7 @@ rhdBIOSScratchUpdateBIOSScratchForOutput(struct rhdOutput *Output)
 	Device = rhdBIOSScratchSetDeviceForOutput(Output);
 
 	if (Device == atomNone && rhdPtr->Card->ConnectorInfo[0].Type != RHD_CONNECTOR_NONE) {
-	    xf86DrvMsg(Output->scrnIndex, X_WARNING,
-		       "%s: AtomBIOS DeviceID unknown\n", __func__);
+	    xf86DrvMsg(Output->scrnIndex, X_WARNING, "%s: AtomBIOS DeviceID unknown\n",__func__);
 	    return Device;
 	}
 
@@ -851,6 +883,12 @@ RHDGetDeviceOnCrtc(RHDPtr rhdPtr, enum atomCrtc Crtc)
     else if (BIOS_3 & ATOM_S3_DFP3_ACTIVE
 	     && ((BIOS_3 ^ Mask) & ATOM_S3_DFP3_CRTC_ACTIVE))
 	return atomDFP3;
+    else if (BIOS_3 & ATOM_S3_DFP4_ACTIVE
+	     && ((BIOS_3 ^ Mask) & ATOM_S3_DFP4_CRTC_ACTIVE))
+	return atomDFP4;
+    else if (BIOS_3 & ATOM_S3_DFP5_ACTIVE
+	     && ((BIOS_3 ^ Mask) & ATOM_S3_DFP5_CRTC_ACTIVE))
+	return atomDFP5;
     else
 	return atomNone;
 }

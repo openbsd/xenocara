@@ -28,7 +28,10 @@
 
 extern int RhdAtomSetupBacklightControlProperty(struct rhdOutput *Output,
 						Bool (**PropertyFunc)(struct rhdOutput *Output,
-								       enum rhdPropertyAction Action,
-								       enum rhdOutputProperty Property,
-								       union rhdPropertyData *val));
+								      enum rhdPropertyAction Action,
+								      enum rhdOutputProperty Property,
+								      union rhdPropertyData *val),
+						void **PrivatePtr);
+extern void RhdAtomDestroyBacklightControlProperty(struct rhdOutput *Output, void *PrivatePtr);
+
 #endif

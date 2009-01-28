@@ -32,12 +32,9 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
+
 /* Xserver interface */
 #include "xf86.h"
-
-#if (RANDR_MAJOR == 1 && RANDR_MINOR >= 2) || RANDR_MAJOR >= 2
-# define RANDR_12_SUPPORT
-#endif
 
 #ifdef RANDR_12_SUPPORT
 /* Xserver interface */
@@ -45,6 +42,8 @@
 # include "xf86i2c.h"		/* Missing in old versions of xf86Crtc.h */
 # include "xf86Crtc.h"
 # include "xf86RandR12.h"
+# include "xaa.h"
+# include "exa.h"
 # define DPMS_SERVER
 # include "X11/extensions/dpms.h"
 # include "X11/Xatom.h"
@@ -72,6 +71,8 @@
 # include "rhd_mc.h"
 # include "rhd_card.h"
 # include "rhd_i2c.h"
+# include "rhd_audio.h"
+
 /*
  * Driver internal
  */
@@ -99,7 +100,16 @@ typedef struct _rhdRandrOutput {
     DisplayModePtr	ScaledToMode;
     struct rhdCrtc      *Crtc;
     struct rhdConnector *AllConnectors[MAX_CONNECTORS_PER_RR_OUTPUT];
+    Bool	        OutputActive;
 } rhdRandrOutputRec, *rhdRandrOutputPtr;
+
+struct rhdRandrCrtc {
+    struct rhdCrtc    *rhdCrtc;
+    union {
+	FBLinearPtr MemXAA;
+	ExaOffscreenArea *MemEXA;
+    } u;
+};
 
 #define ATOM_SIGNAL_FORMAT    "RANDR_SIGNAL_FORMAT"
 #define ATOM_CONNECTOR_TYPE   "RANDR_CONNECTOR_TYPE"
@@ -134,6 +144,10 @@ rhdGetSignalFormat(rhdRandrOutputPtr ro)
     case RHD_OUTPUT_LVDS:
     case RHD_OUTPUT_UNIPHYA:
     case RHD_OUTPUT_UNIPHYB:
+    case RHD_OUTPUT_UNIPHYC:
+    case RHD_OUTPUT_UNIPHYD:
+    case RHD_OUTPUT_UNIPHYE:
+    case RHD_OUTPUT_UNIPHYF:
 #if RHD_OUTPUT_LVTMB != RHD_OUTPUT_LVDS
     case RHD_OUTPUT_LVTMB:
 #endif
@@ -176,8 +190,10 @@ rhdGetConnectorType(rhdRandrOutputPtr ro)
 
 /* Set crtc pos according to mouse pos and panning information */
 static void
-rhdUpdateCrtcPos(struct rhdCrtc *Crtc, int x, int y)
+rhdUpdateCrtcPos(RHDPtr rhdPtr, struct rhdCrtc *Crtc, int x, int y)
 {
+    int i;
+
     if (Crtc->MaxX > 0) {
 	int cx = Crtc->X, cy = Crtc->Y;
 	int w  = Crtc->CurrentMode->HDisplay;
@@ -192,6 +208,13 @@ rhdUpdateCrtcPos(struct rhdCrtc *Crtc, int x, int y)
 	    cy = y < Crtc->MaxY ? y-h+1 : Crtc->MaxY-h;
 	if (cx != Crtc->X || cy != Crtc->Y)
 	    Crtc->FrameSet(Crtc, cx, cy);
+	for (i = 0; i < 2; i++) {
+	    xf86CrtcPtr crtc = (xf86CrtcPtr) rhdPtr->randr->RandrCrtc[i];
+	    if (Crtc == ((struct rhdRandrCrtc *)crtc->driver_private)->rhdCrtc) {
+		crtc->x = cx;
+		crtc->y = cy;
+	    }
+	}
     }
 }
 
@@ -202,15 +225,16 @@ RHDDebugRandrState (RHDPtr rhdPtr, const char *msg)
     int i;
     xf86OutputPtr *ro;
     RHDDebug(rhdPtr->scrnIndex, "State at %s:\n", msg);
+
     for (i = 0; i < 2; i++) {
-	xf86CrtcPtr    rc = rhdPtr->randr->RandrCrtc[i];
-	struct rhdCrtc *c = (struct rhdCrtc *) rc->driver_private;
+	xf86CrtcPtr    crtc = rhdPtr->randr->RandrCrtc[i];
+	struct rhdCrtc *c = ((struct rhdRandrCrtc *)crtc->driver_private)->rhdCrtc;
 	RHDDebugCont("   RRCrtc #%d [rhd %s]: active %d [%d]  "
 		     "mode %s (%dx%d) +%d+%d\n",
-		     i, c->Name, rc->enabled, c->Active,
-		     rc->mode.name ? rc->mode.name : "unnamed",
-		     rc->mode.HDisplay, rc->mode.VDisplay,
-		     rc->x, rc->y);
+		     i, c->Name, crtc->enabled, c->Active,
+		     crtc->mode.name ? crtc->mode.name : "unnamed",
+		     crtc->mode.HDisplay, crtc->mode.VDisplay,
+		     crtc->x, crtc->y);
     }
     for (ro = rhdPtr->randr->RandrOutput; *ro; ro++) {
 	rhdRandrOutputPtr o = (rhdRandrOutputPtr) (*ro)->driver_private;
@@ -218,7 +242,7 @@ RHDDebugRandrState (RHDPtr rhdPtr, const char *msg)
 	RHDDebugCont("   RROut  %s [Out %s Conn %s]  Crtc %s [%s]  "
 		     "[%sactive]  %s\n",
 		     (*ro)->name, o->Output->Name, o->Connector->Name,
-		     (*ro)->crtc ? ((struct rhdCrtc *)(*ro)->crtc->driver_private)->Name : "null",
+		     (*ro)->crtc ? ((struct rhdRandrCrtc *)((*ro)->crtc->driver_private))->rhdCrtc->Name : "null",
 		     o->Output->Crtc ? o->Output->Crtc->Name : "null",
 		     o->Output->Active ? "" : "in",
 		     (*ro)->status == XF86OutputStatusConnected ? "connected" :
@@ -257,33 +281,33 @@ rhdRRXF86CrtcResize(ScrnInfoPtr pScrn, int width, int height)
 
 /* Turns the crtc on/off, or sets intermediate power levels if available. */
 static void
-rhdRRCrtcDpms(xf86CrtcPtr crtc, int mode)
+rhdRRCrtcDpms(xf86CrtcPtr Crtc, int mode)
 {
-    RHDPtr rhdPtr        = RHDPTR(crtc->scrn);
-    struct rhdCrtc *Crtc = (struct rhdCrtc *) crtc->driver_private;
+    RHDPtr rhdPtr        = RHDPTR(Crtc->scrn);
+    struct rhdCrtc *rhdCrtc = ((struct rhdRandrCrtc *)(Crtc->driver_private))->rhdCrtc;
 
-    RHDDebug(Crtc->scrnIndex, "%s: %s: %s\n", __func__, Crtc->Name,
+    RHDDebug(rhdCrtc->scrnIndex, "%s: %s: %s\n", __func__, rhdCrtc->Name,
 	     mode==DPMSModeOn ? "On" : mode==DPMSModeOff ? "Off" : "Other");
 
     switch (mode) {
     case DPMSModeOn:
-	if (Crtc->PLL)
-	    Crtc->PLL->Power(Crtc->PLL, RHD_POWER_ON);
-	Crtc->Power(Crtc, RHD_POWER_ON);
-	Crtc->Active = TRUE;
+	if (rhdCrtc->PLL)
+	    rhdCrtc->PLL->Power(rhdCrtc->PLL, RHD_POWER_ON);
+	rhdCrtc->Power(rhdCrtc, RHD_POWER_ON);
+	rhdCrtc->Active = TRUE;
 	break;
     case DPMSModeSuspend:
     case DPMSModeStandby:
-	Crtc->Power(Crtc, RHD_POWER_RESET);
-	if (Crtc->PLL)
-	    Crtc->PLL->Power(Crtc->PLL, RHD_POWER_RESET);
-	Crtc->Active = FALSE;
+	rhdCrtc->Power(rhdCrtc, RHD_POWER_RESET);
+	if (rhdCrtc->PLL)
+	    rhdCrtc->PLL->Power(rhdCrtc->PLL, RHD_POWER_RESET);
+	rhdCrtc->Active = FALSE;
 	break;
     case DPMSModeOff:
-	Crtc->Power(Crtc, RHD_POWER_SHUTDOWN);
-	if (Crtc->PLL)
-	    Crtc->PLL->Power(Crtc->PLL, RHD_POWER_SHUTDOWN);
-	Crtc->Active = FALSE;
+	rhdCrtc->Power(rhdCrtc, RHD_POWER_SHUTDOWN);
+	if (rhdCrtc->PLL)
+	    rhdCrtc->PLL->Power(rhdCrtc->PLL, RHD_POWER_SHUTDOWN);
+	rhdCrtc->Active = FALSE;
 	break;
     default:
 	ASSERT(!"Unknown DPMS mode");
@@ -330,20 +354,20 @@ rhdRRCrtcPrepare(xf86CrtcPtr crtc)
 {
     RHDPtr          rhdPtr = RHDPTR(crtc->scrn);
     ScrnInfoPtr     pScrn  = xf86Screens[rhdPtr->scrnIndex];
-    struct rhdCrtc *Crtc   = (struct rhdCrtc *) crtc->driver_private;
+    struct rhdCrtc *rhdCrtc = ((struct rhdRandrCrtc *)(crtc->driver_private))->rhdCrtc;
 
     RHDFUNC(rhdPtr);
-    setupCrtc(rhdPtr, Crtc);
+    setupCrtc(rhdPtr, rhdCrtc);
     pScrn->vtSema = TRUE;
 
     /* Disable CRTCs to stop noise from appearing. */
-    Crtc->Power(Crtc, RHD_POWER_RESET);
+    rhdCrtc->Power(rhdCrtc, RHD_POWER_RESET);
 
     /* Verify panning area */
-    if (Crtc->MaxX > Crtc->Width)
-	Crtc->MaxX = Crtc->Width;
-    if (Crtc->MaxY > Crtc->Height)
-	Crtc->MaxY = Crtc->Height;
+    if (rhdCrtc->MaxX > rhdCrtc->Width)
+	rhdCrtc->MaxX = rhdCrtc->Width;
+    if (rhdCrtc->MaxY > rhdCrtc->Height)
+	rhdCrtc->MaxY = rhdCrtc->Height;
 }
 
 static void
@@ -353,8 +377,9 @@ rhdRRCrtcModeSet(xf86CrtcPtr  crtc,
 {
     RHDPtr          rhdPtr = RHDPTR(crtc->scrn);
     ScrnInfoPtr     pScrn  = xf86Screens[rhdPtr->scrnIndex];
-    struct rhdCrtc *Crtc   = (struct rhdCrtc *) crtc->driver_private;
+    struct rhdCrtc  *rhdCrtc  = ((struct rhdRandrCrtc*) (crtc->driver_private))->rhdCrtc;
     xf86CrtcConfigPtr xf86CrtcConfig = XF86_CRTC_CONFIG_PTR(crtc->scrn);
+    CARD32 ScanOutOffset;
     int i;
 
     /* RandR may give us a mode without a name... (xf86RandRModeConvert) */
@@ -362,7 +387,7 @@ rhdRRCrtcModeSet(xf86CrtcPtr  crtc,
 	Mode->name = xstrdup(crtc->mode.name);
 
     RHDDebug(rhdPtr->scrnIndex, "%s: %s : %s at %d/%d\n", __func__,
-	     Crtc->Name, Mode->name, x, y);
+	     rhdCrtc->Name, Mode->name, x, y);
 
     /*
      * for AtomBIOS SetPixelClock we need information about the outputs.
@@ -371,46 +396,68 @@ rhdRRCrtcModeSet(xf86CrtcPtr  crtc,
     for (i = 0; i < xf86CrtcConfig->num_output; i++) {
 	if (xf86CrtcConfig->output[i]->crtc == crtc) {
 	    rhdRandrOutputPtr rout = xf86CrtcConfig->output[i]->driver_private;
-	    rout->Output->Crtc = Crtc;
+	    rout->Output->Crtc = rhdCrtc;
 	}
     }
 
     if (rhdPtr->verbosity >= 3) {
 	xf86DrvMsg(rhdPtr->scrnIndex, X_INFO, "On Crtc %i Setting %3.1f Hz Mode: ",
-		   Crtc->Id, Mode->VRefresh);
+		   rhdCrtc->Id, Mode->VRefresh);
 	RHDPrintModeline(Mode);
 	if (OrigMode->VDisplay != Mode->VDisplay || OrigMode->HDisplay != Mode->HDisplay) {
 	    xf86DrvMsg(-1, X_NONE, "Scaled from: ");
 	    RHDPrintModeline(OrigMode);
 	}
     }
-
     /* Set up mode */
-    Crtc->FBSet(Crtc, pScrn->displayWidth, pScrn->virtualX, pScrn->virtualY,
-		pScrn->depth, rhdPtr->FbScanoutStart);
-    Crtc->ModeSet(Crtc, Mode);
+    if (crtc->rotatedData != NULL) {
+	ScanOutOffset = (unsigned long) crtc->rotatedData - (unsigned long)rhdPtr->FbBase;
+	x = y = 0;
+    } else {
+	ScanOutOffset = rhdPtr->FbScanoutStart;
+    }
+    rhdCrtc->FBSet(rhdCrtc, pScrn->displayWidth, pScrn->virtualX, pScrn->virtualY,
+		pScrn->depth, ScanOutOffset);
+    rhdCrtc->ModeSet(rhdCrtc, Mode);
     if (OrigMode->VDisplay != Mode->VDisplay || OrigMode->HDisplay != Mode->HDisplay)
-	Crtc->ScaleSet(Crtc, Crtc->ScaleType, OrigMode, Mode);
+	rhdCrtc->ScaleSet(rhdCrtc, rhdCrtc->ScaleType, OrigMode, Mode);
     else
-	Crtc->ScaleSet(Crtc, RHD_CRTC_SCALE_TYPE_NONE, Mode, NULL);
+	rhdCrtc->ScaleSet(rhdCrtc, RHD_CRTC_SCALE_TYPE_NONE, Mode, NULL);
 
-    Crtc->FrameSet(Crtc, x, y);
-    rhdUpdateCrtcPos(Crtc, Crtc->Cursor->X, Crtc->Cursor->Y);
-    RHDPLLSet(Crtc->PLL, Mode->Clock);		/* This also powers up PLL */
-    Crtc->LUTSelect(Crtc, Crtc->LUT);
+    rhdCrtc->FrameSet(rhdCrtc, x, y);
+    rhdUpdateCrtcPos(rhdPtr, rhdCrtc, rhdCrtc->Cursor->X, rhdCrtc->Cursor->Y);
+    RHDPLLSet(rhdCrtc->PLL, Mode->Clock);		/* This also powers up PLL */
+    rhdCrtc->LUTSelect(rhdCrtc, rhdCrtc->LUT);
+
+    /*
+     * RandR is able to bring up new Crtcs, but can't be bothered to set up
+     * a cmap on them.
+     *
+     * The pScreen check tells us whether we are still in PreInit. If we are
+     * still in PreInit, the xserver will still do the right thing and call
+     * LoadPalette accordingly after the modeset. VT switch will also do the
+     * right thing still, but at that time no new CRTC gets initialised, so
+     * LUT->Initialised is either set, or the current function isn't called.
+     */
+    if (!rhdCrtc->LUT->Initialised && pScrn->pScreen)
+	RHDLUTCopyForRR(rhdCrtc->LUT);
 }
+
 static void
 rhdRRCrtcCommit(xf86CrtcPtr crtc)
 {
     RHDPtr          rhdPtr = RHDPTR(crtc->scrn);
-    struct rhdCrtc *Crtc   = (struct rhdCrtc *) crtc->driver_private;
+    struct rhdCrtc *rhdCrtc = ((struct rhdRandrCrtc *)(crtc->driver_private))->rhdCrtc;
 
     RHDFUNC(rhdPtr);
 
-    Crtc->Active = TRUE;
-    Crtc->Power(Crtc, RHD_POWER_ON);
+    rhdCrtc->Active = TRUE;
+    rhdCrtc->Power(rhdCrtc, RHD_POWER_ON);
 
-    RHDDebugRandrState(rhdPtr, Crtc->Name);
+    if (crtc->scrn->pScreen != NULL)
+	xf86_reload_cursors(crtc->scrn->pScreen);
+
+    RHDDebugRandrState(rhdPtr, rhdCrtc->Name);
 }
 
 /*
@@ -425,12 +472,12 @@ static void
 rhdRRCrtcGammaSet(xf86CrtcPtr crtc, CARD16 *red, CARD16 *green, CARD16 *blue,
 		  int size)
 {
-    struct rhdCrtc *Crtc = (struct rhdCrtc *) crtc->driver_private;
+    struct rhdCrtc *rhdCrtc = ((struct rhdRandrCrtc *)(crtc->driver_private))->rhdCrtc;
     int indices[0x100]; /* would RandR use a size larger than 256? */
     LOCO colors[0x100];
     int i;
 
-    RHDDebug(Crtc->scrnIndex, "%s: %s.\n", __func__, Crtc->Name);
+    RHDDebug(rhdCrtc->scrnIndex, "%s: %s.\n", __func__, rhdCrtc->Name);
 
     /* thanks so very much */
     for (i = 0; i < size; i++) {
@@ -440,7 +487,7 @@ rhdRRCrtcGammaSet(xf86CrtcPtr crtc, CARD16 *red, CARD16 *green, CARD16 *blue,
 	colors[i].blue = blue[i];
     }
 
-    Crtc->LUT->Set(Crtc->LUT, size, indices, colors);
+    rhdCrtc->LUT->Set(rhdCrtc->LUT, size, indices, colors);
 }
 
 /* Dummy, because not tested for NULL */
@@ -452,31 +499,13 @@ rhdRRCrtcModeFixupDUMMY(xf86CrtcPtr    crtc,
     return TRUE;
 }
 
-#if 0 /* Needed if we want to support rotation w/o own hardware support */
-    void *
-    crtc->funcs->shadow_allocate (xf86CrtcPtr crtc, int width, int height)
+static void
+rhdRRCrtcSetOrigin(xf86CrtcPtr  crtc, int x, int y)
+{
+    struct rhdCrtc  *rhdCrtc  = ((struct rhdRandrCrtc*) (crtc->driver_private))->rhdCrtc;
 
-This function allocates frame buffer space for a shadow frame buffer. When
-allocated, the crtc must scan from the shadow instead of the main frame
-buffer. This is used for rotation. The address returned is passed to the
-shadow_create function. This function should return NULL on failure.
-
-    PixmapPtr
-    crtc->funcs->shadow_create (xf86CrtcPtr crtc, void *data,
-                                int width, int height)
-
-This function creates a pixmap object that will be used as a shadow of the
-main frame buffer for CRTCs which are rotated or reflected. 'data' is the
-value returned by shadow_allocate.
-
-    void
-    crtc->funcs->shadow_destroy (xf86CrtcPtr crtc, PixmapPtr pPixmap,
-                                 void *data)
-
-Destroys any associated shadow objects. If pPixmap is NULL, then a pixmap
-was not created, but 'data' may still be non-NULL indicating that the shadow
-had been allocated.
-#endif
+    rhdCrtc->FrameSet(rhdCrtc, x, y);
+}
 
 
 /*
@@ -613,8 +642,7 @@ rhdRROutputDpms(xf86OutputPtr       out,
     RHDPtr rhdPtr          = RHDPTR(out->scrn);
     rhdRandrOutputPtr rout = (rhdRandrOutputPtr) out->driver_private;
     xf86OutputPtr    *ro;
-    struct rhdCrtc   *Crtc = out->crtc ?
-        (struct rhdCrtc *) out->crtc->driver_private : NULL;
+    struct rhdCrtc   *rhdCrtc = out->crtc ? ((struct rhdRandrCrtc *)(out->crtc->driver_private))->rhdCrtc : NULL;
     const char *outUsedBy = NULL;
 
     RHDDebug(rhdPtr->scrnIndex, "%s: Output %s : %s\n", __func__, rout->Name,
@@ -629,9 +657,9 @@ rhdRROutputDpms(xf86OutputPtr       out,
     case DPMSModeOn:
 	rout->Output->Power(rout->Output, RHD_POWER_ON);
 	rout->Output->Active = TRUE;
-	ASSERT(Crtc);
-	ASSERT(Crtc == rout->Output->Crtc);
-	rout->Crtc = Crtc;
+	ASSERT(rhdCrtc);
+	ASSERT(rhdCrtc == rout->Output->Crtc);
+	rout->Crtc = rhdCrtc;
 	break;
     case DPMSModeSuspend:
     case DPMSModeStandby:
@@ -685,6 +713,7 @@ rhdRROutputModeValid(xf86OutputPtr  out,
     int                Status;
 
     RHDFUNC(rhdPtr);
+
     /* RandR may give us a mode without a name... (xf86RandRModeConvert)
      * xf86DuplicateMode should fill it up, though */
     if (!Mode->name)
@@ -767,6 +796,36 @@ rhdRRSanitizeMode(DisplayModePtr Mode)
     }
 }
 
+/*
+ *
+ */
+static void
+rhdRRFreeOutputs( RHDPtr rhdPtr)
+{
+    xf86OutputPtr *ro;
+    struct rhdOutput *Output;
+    /*
+     * modesUpdated indicates if we are entering here for a first time after a
+     * OutputsModeValid(). In this case a new mode setting round starts, thus
+     * we need to free all outputs so that all inactive outputs are freed.
+     * We later on allocate each output.
+     */
+    for (Output = rhdPtr->Outputs; Output; Output = Output->Next) {
+	if (Output->AllocFree) {
+	    for (ro = rhdPtr->randr->RandrOutput; *ro; ro++) {
+		rhdRandrOutputPtr o = (rhdRandrOutputPtr) (*ro)->driver_private;
+		if (o->Output == Output) {
+		    if (!(*ro)->crtc) {
+			Output->AllocFree(Output, RHD_OUTPUT_FREE);
+			RHDDebug(rhdPtr->scrnIndex, "%s: Freeing Output: %s\n",__func__,
+				 Output->Name);
+		    }
+		}
+	    }
+	}
+    }
+}
+
 /* The crtc is only known on fixup time. Now it's actually to late to reject a
  * mode and give a reasonable answer why (return is bool), but we'll better not
  * set a mode than scrap our hardware */
@@ -777,20 +836,22 @@ rhdRROutputModeFixup(xf86OutputPtr  out,
 {
     RHDPtr             rhdPtr = RHDPTR(out->scrn);
     rhdRandrOutputPtr  rout   = (rhdRandrOutputPtr) out->driver_private;
-    struct rhdCrtc    *Crtc   = NULL;
+    struct rhdCrtc    *rhdCrtc   = NULL;
     int                Status;
     DisplayModePtr     DisplayedMode;
     Bool               Scaled = FALSE;
 
     RHDFUNC(rhdPtr);
     ASSERT(out->crtc);
-    Crtc = (struct rhdCrtc *) out->crtc->driver_private;
+    rhdCrtc = ((struct rhdRandrCrtc *)(out->crtc->driver_private))->rhdCrtc;
+
+    rhdRRFreeOutputs(rhdPtr);
 
     xfree(Mode->name);
     if (rout->ScaledToMode) {
 	DisplayModePtr tmp = RHDModeCopy(rout->ScaledToMode);
 	/* validate against CRTC. */
-	if ((Status = RHDValidateScaledToMode(Crtc, tmp))!= MODE_OK) {
+	if ((Status = RHDValidateScaledToMode(rhdCrtc, tmp))!= MODE_OK) {
 	    RHDDebug(rhdPtr->scrnIndex, "%s: %s ScaledToMode INVALID: [0x%x] %s\n", __func__,
 		     tmp->name, Status, RHDModeStatusToString(Status));
 	    xfree(tmp);
@@ -805,7 +866,7 @@ rhdRROutputModeFixup(xf86OutputPtr  out,
         /* sanitize OrigMode */
 	rhdRRSanitizeMode(OrigMode);
 	DisplayedMode = OrigMode;
-	Crtc->ScaledToMode = Mode;
+	rhdCrtc->ScaledToMode = Mode;
 	Scaled = TRUE;
     } else {
 	/* !@#$ xf86RandRModeConvert doesn't initialize Mode with 0
@@ -822,16 +883,22 @@ rhdRROutputModeFixup(xf86OutputPtr  out,
     ASSERT(rout->Connector);
     ASSERT(rout->Output);
 
-    setupCrtc(rhdPtr, Crtc);
+    setupCrtc(rhdPtr, rhdCrtc);
 
     /* Monitor is handled by RandR */
-    Status = RHDRRModeFixup(out->scrn, DisplayedMode, Crtc, rout->Connector,
-			    rout->Output, NULL, Scaled);
+    if (!rout->Output->AllocFree || rout->Output->AllocFree(rout->Output, RHD_OUTPUT_ALLOC)) {
+	Status = RHDRRModeFixup(out->scrn, DisplayedMode, rhdCrtc, rout->Connector,
+				rout->Output, NULL, Scaled);
+    } else
+	Status = MODE_NO_ENCODER;
+
     if (Status != MODE_OK) {
+	rout->OutputActive = FALSE;
 	RHDDebug(rhdPtr->scrnIndex, "%s: %s FAILED: [0x%x] %s\n", __func__,
 		 Mode->name, Status, RHDModeStatusToString(Status));
 	return FALSE;
     }
+    rout->OutputActive = TRUE;
     return TRUE;
 }
 
@@ -860,7 +927,7 @@ rhdRROutputModeSet(xf86OutputPtr  out,
 {
     RHDPtr            rhdPtr = RHDPTR(out->scrn);
     rhdRandrOutputPtr rout   = (rhdRandrOutputPtr) out->driver_private;
-    struct rhdCrtc   *Crtc   = (struct rhdCrtc *) out->crtc->driver_private;
+    struct rhdCrtc   *rhdCrtc   = ((struct rhdRandrCrtc *)(out->crtc->driver_private))->rhdCrtc;
 
     RHDFUNC(rhdPtr);
 
@@ -870,18 +937,18 @@ rhdRROutputModeSet(xf86OutputPtr  out,
 
     RHDDebug(rhdPtr->scrnIndex, "%s: Output %s : %s to %s\n", __func__,
 	     rout->Name, Mode->name,
-	     Crtc->Name);
+	     rhdCrtc->Name);
 
     /* RandR might want to set up several outputs (RandR speech) with different
      * crtcs, while the outputs differ in fact only by the connector and thus
      * cannot be used by different crtcs */
-    if (rout->Crtc && rout->Crtc != Crtc)
+    if (rout->Crtc && rout->Crtc != rhdCrtc)
 	xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR,
 		   "RandR: Output %s has already CRTC attached - "
 		   "assuming ouput/connector clash\n", rout->Name);
     /* Set up mode */
-    rout->Crtc = Crtc;
-    ASSERT(Crtc == rout->Output->Crtc);
+    rout->Crtc = rhdCrtc;
+    ASSERT(rhdCrtc == rout->Output->Crtc);
     rout->Output->Mode(rout->Output, Mode);
 }
 static void
@@ -891,10 +958,10 @@ rhdRROutputCommit(xf86OutputPtr out)
     rhdRandrOutputPtr rout   = (rhdRandrOutputPtr) out->driver_private;
     const char       *val;
     char              buf[32];
-    struct rhdCrtc   *Crtc   = (struct rhdCrtc *) out->crtc->driver_private;
+    struct rhdCrtc   *rhdCrtc   = ((struct rhdRandrCrtc *)(out->crtc->driver_private))->rhdCrtc;
 
     RHDFUNC(rhdPtr);
-    ASSERT(Crtc == rout->Output->Crtc);
+    ASSERT(rhdCrtc == rout->Output->Crtc);
 
     rout->Output->Active    = TRUE;
     rout->Output->Connector = rout->Connector; /* @@@ */
@@ -906,9 +973,9 @@ rhdRROutputCommit(xf86OutputPtr out)
 			   XA_STRING, 8, PropModeReplace,
 			   strlen(val), (char *) val, TRUE, FALSE);
     /* Should be a crtc property */
-    if (Crtc->MaxX > Crtc->MinX && Crtc->MaxY > Crtc->MinY)
-	sprintf(buf, "%dx%d+%d+%d", Crtc->MaxX - Crtc->MinX,
-		Crtc->MaxY - Crtc->MinY, Crtc->MinX, Crtc->MinY);
+    if (rhdCrtc->MaxX > rhdCrtc->MinX && rhdCrtc->MaxY > rhdCrtc->MinY)
+	sprintf(buf, "%dx%d+%d+%d", rhdCrtc->MaxX - rhdCrtc->MinX,
+		rhdCrtc->MaxY - rhdCrtc->MinY, rhdCrtc->MinX, rhdCrtc->MinY);
     else
 	buf[0] = 0;
     RRChangeOutputProperty(out->randr_output, atomPanningArea,
@@ -918,13 +985,40 @@ rhdRROutputCommit(xf86OutputPtr out)
     RHDDebugRandrState(rhdPtr, rout->Name);
 }
 
+/*
+ * This function looks for other outputs on the connector rout is connected to.
+ * If one of those outputs can be sensed and is sensed the function will return
+ * one of those.
+ */
+static rhdRandrOutputPtr
+rhdRROtherOutputOnConnectorHelper(RHDPtr rhdPtr, rhdRandrOutputPtr rout)
+{
+    xf86OutputPtr    *ro;
+
+    for (ro = rhdPtr->randr->RandrOutput; *ro; ro++) {
+	rhdRandrOutputPtr o =
+	    (rhdRandrOutputPtr) (*ro)->driver_private;
+	if (o != rout &&
+	    o->Connector == rout->Connector &&
+	    o->Output->Sense) {
+	    /* Yes, this looks wrong, but is correct */
+	    enum rhdSensedOutput SensedType =
+		o->Output->Sense(o->Output, o->Connector);
+	    if (SensedType != RHD_SENSED_NONE) {
+		RHDOutputPrintSensedType(o->Output);
+		return o;
+	    }
+	}
+    }
+    return NULL;
+}
+
 /* Probe for a connected output. */
 static xf86OutputStatus
 rhdRROutputDetect(xf86OutputPtr output)
 {
     RHDPtr            rhdPtr = RHDPTR(output->scrn);
     rhdRandrOutputPtr rout   = (rhdRandrOutputPtr) output->driver_private;
-    xf86OutputPtr    *ro;
 
     RHDDebug(rhdPtr->scrnIndex, "%s: Output %s\n", __func__, rout->Name);
 
@@ -956,22 +1050,8 @@ rhdRROutputDetect(xf86OutputPtr output)
 		 * Check if there is another output attached to this connector
 		 * and use Sense() on that one to verify whether something
 		 * is attached to this one */
-
-		for (ro = rhdPtr->randr->RandrOutput; *ro; ro++) {
-		    rhdRandrOutputPtr o =
-			(rhdRandrOutputPtr) (*ro)->driver_private;
-		    if (o != rout &&
-			o->Connector == rout->Connector &&
-			o->Output->Sense) {
-			/* Yes, this looks wrong, but is correct */
-			enum rhdSensedOutput SensedType =
-			    o->Output->Sense(o->Output, o->Connector);
-			if (SensedType != RHD_SENSED_NONE) {
-			    RHDOutputPrintSensedType(o->Output);
-			    return XF86OutputStatusDisconnected;
-			}
-		    }
-		}
+		if (rhdRROtherOutputOnConnectorHelper(rhdPtr, rout))
+		    return XF86OutputStatusDisconnected;
 		rout->Output->Connector = rout->Connector; /* @@@ */
 		return XF86OutputStatusConnected;
 	    }
@@ -1018,12 +1098,21 @@ rhdRROutputDetect(xf86OutputPtr output)
 	    i2cRec.probe.i2cBusPtr = rout->Connector->DDC;
 	    if (RHDI2CFunc(rhdPtr->scrnIndex, rhdPtr->I2C,RHD_I2C_PROBE_ADDR,&i2cRec)
 		== RHD_I2C_SUCCESS) {
-		RHDDebug(rout->Output->scrnIndex, "DDC Probing for Output %s returned connected\n",rout->Output->Name);
+		rhdRandrOutputPtr rout_tmp;
+		RHDDebug(rout->Output->scrnIndex, "DDC Probing for Output %s returned connected\n",
+			 rout->Output->Name);
+		if ((rout_tmp = rhdRROtherOutputOnConnectorHelper(rhdPtr, rout))) {
+		RHDDebug(rout->Output->scrnIndex, "Output %s on same connector already connected\n",
+			 rout_tmp->Output->Name);
+		    return XF86OutputStatusDisconnected;
+		}
 		rout->Output->Connector = rout->Connector; /* @@@ */
 		return XF86OutputStatusConnected;
-	    }  else
-		RHDDebug(rout->Output->scrnIndex, "DDC Probing for Output %s returned disconnected\n",rout->Output->Name);
+	    } else {
+		RHDDebug(rout->Output->scrnIndex, "DDC Probing for Output %s returned disconnected\n",
+			 rout->Output->Name);
 		return XF86OutputStatusDisconnected;
+	    }
 	}
 	rout->Output->Connector = rout->Connector; /* @@@ */
 	return XF86OutputStatusUnknown;
@@ -1052,7 +1141,6 @@ rhdRROutputGetModes(xf86OutputPtr output)
 {
     RHDPtr            rhdPtr = RHDPTR(output->scrn);
     rhdRandrOutputPtr rout = (rhdRandrOutputPtr) output->driver_private;
-    xf86MonPtr	      edid_mon = NULL;
     struct rhdOutput  *o;
 
     RHDDebug(rhdPtr->scrnIndex, "%s: Output %s\n", __func__, rout->Name);
@@ -1094,7 +1182,12 @@ rhdRROutputGetModes(xf86OutputPtr output)
 	rout->Output->Id == RHD_OUTPUT_LVTMA ||
 	rout->Output->Id == RHD_OUTPUT_KLDSKP_LVTMA ||
 	rout->Output->Id == RHD_OUTPUT_UNIPHYA ||
-	rout->Output->Id == RHD_OUTPUT_UNIPHYB)
+	rout->Output->Id == RHD_OUTPUT_UNIPHYB ||
+	rout->Output->Id == RHD_OUTPUT_UNIPHYC ||
+	rout->Output->Id == RHD_OUTPUT_UNIPHYD ||
+	rout->Output->Id == RHD_OUTPUT_UNIPHYE ||
+	rout->Output->Id == RHD_OUTPUT_UNIPHYF
+	)
 	rout->Connector->Monitor->ReducedAllowed = TRUE;
     /* Allow user overrides */
     if (rhdPtr->forceReduced.set)
@@ -1144,8 +1237,20 @@ rhdRROutputSetProperty(xf86OutputPtr out, Atom property,
     if (property == atomPanningArea) {
 	int w = 0, h = 0, x = 0, y = 0;
 	struct rhdCrtc *Crtc = rout->Output->Crtc;
+	int i;
+
 	if (!Crtc)
 	    return FALSE;
+	for (i = 0; i < 2; i++) {
+	    xf86CrtcPtr crtc = (xf86CrtcPtr) rhdPtr->randr->RandrCrtc[i];
+	    if (Crtc == ((struct rhdRandrCrtc *)crtc->driver_private)->rhdCrtc) {
+		/* Don't allow panning while rotated */
+		if (crtc->rotation != RR_Rotate_0)
+		    return FALSE;
+		else
+		    break;
+	    }
+	}
 	if (value->type != XA_STRING || value->format != 8)
 	    return FALSE;
 	switch (sscanf(value->data, "%dx%d+%d+%d", &w, &h, &x, &y)) {
@@ -1159,7 +1264,7 @@ rhdRROutputSetProperty(xf86OutputPtr out, Atom property,
 	    Crtc->MinY = y;
 	    Crtc->MaxX = x + w;
 	    Crtc->MaxY = y + h;
-	    rhdUpdateCrtcPos(Crtc, Crtc->Cursor->X, Crtc->Cursor->Y);
+	    rhdUpdateCrtcPos(rhdPtr, Crtc, Crtc->Cursor->X, Crtc->Cursor->Y);
 	    RHDDebug(rhdPtr->scrnIndex, "%s: PanningArea %d/%d - %d/%d\n",
 		     x, y, x+w, y+h);
 	    return TRUE;
@@ -1193,6 +1298,118 @@ rhdRROutputSetProperty(xf86OutputPtr out, Atom property,
     }
 
     return FALSE;	/* Others are not mutable */
+}
+
+/*
+ *
+ */
+static void *
+rhdRRCrtcShadowAllocate(xf86CrtcPtr crtc, int Width, int Height)
+{
+    ScrnInfoPtr	      pScrn = crtc->scrn;
+    RHDPtr            rhdPtr = RHDPTR(crtc->scrn);
+    ScreenPtr         pScreen = screenInfo.screens[pScrn->scrnIndex];
+    struct rhdRandrCrtc *rhdRRCrtc = (struct rhdRandrCrtc*) crtc->driver_private;
+    int		      OctPerPixel = pScrn->bitsPerPixel >> 3;
+    int               Size = (pScrn->displayWidth * OctPerPixel) * Height;
+
+    if (rhdPtr->AccelMethod == RHD_ACCEL_SHADOWFB
+	|| rhdPtr->AccelMethod == RHD_ACCEL_NONE)
+	return NULL;
+
+#ifdef USE_EXA
+    if (rhdPtr->AccelMethod == RHD_ACCEL_EXA) {
+
+	ASSERT(rhdRRCrtc->u.MemEXA == NULL);
+
+	rhdRRCrtc->u.MemEXA = exaOffscreenAlloc(pScreen, Size, 4096,
+						TRUE, NULL, NULL);
+	if (rhdRRCrtc->u.MemEXA == NULL) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "Unable to allocate shadow memory for rotated CRTC\n");
+	    return NULL;
+	}
+	return ((char *)rhdPtr->FbBase
+		+ rhdRRCrtc->u.MemEXA->offset);
+    }
+
+#endif /* USE_EXA */
+    if (rhdPtr->AccelMethod == RHD_ACCEL_XAA) {
+	int Align = (4096 + OctPerPixel - 1) / OctPerPixel;
+	Size = (Size + OctPerPixel - 1) / OctPerPixel;
+
+	ASSERT(rhdRRCrtc->u.MemXAA == NULL);
+
+	rhdRRCrtc->u.MemXAA =
+	    xf86AllocateOffscreenLinear(pScreen, Size, Align,  /* @@@ */
+					       NULL, NULL, NULL);
+	if (rhdRRCrtc->u.MemXAA == NULL) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "Unable to allocate shadow memory for rotated CRTC\n");
+	    return NULL;
+	}
+
+	return  ((char *)rhdPtr->FbBase
+		 + rhdPtr->FbScanoutStart
+		 + rhdRRCrtc->u.MemXAA->offset * OctPerPixel);
+    }
+
+    return NULL;
+}
+
+/*
+ *
+ */
+static PixmapPtr
+rhdRRCrtcShadowCreate(xf86CrtcPtr Crtc, void *Data, int Width, int Height)
+{
+    ScrnInfoPtr pScrn = Crtc->scrn;
+    PixmapPtr RPixmap;
+
+    if (!Data)
+	Data = rhdRRCrtcShadowAllocate(Crtc, Width, Height);
+
+    RPixmap = GetScratchPixmapHeader(pScrn->pScreen,
+					   Width, Height,
+					   pScrn->depth,
+					   pScrn->bitsPerPixel,
+					   pScrn->displayWidth * pScrn->bitsPerPixel >> 3,
+					   Data);
+
+    if (RPixmap == NULL)
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "Unable to allocate shadow pixmap for rotated CRTC\n");
+
+    return RPixmap;
+}
+
+/*
+ *
+ */
+static void
+rhdRRCrtcShadowDestroy(xf86CrtcPtr crtc, PixmapPtr RPixmap, void *Data)
+{
+
+    ScrnInfoPtr pScrn = crtc->scrn;
+    RHDPtr rhdPtr = RHDPTR(crtc->scrn);
+    struct rhdRandrCrtc *rhdRRCrtc = (struct rhdRandrCrtc*) crtc->driver_private;
+
+    if (RPixmap)
+	FreeScratchPixmapHeader(RPixmap);
+
+    if (Data) {
+#ifdef USE_EXA
+	if (rhdPtr->AccelMethod == RHD_ACCEL_EXA) {
+	    exaOffscreenFree(pScrn->pScreen, rhdRRCrtc->u.MemEXA);
+	    rhdRRCrtc->u.MemEXA = NULL;
+	}
+
+#endif /* USE_EXA */
+	if (rhdPtr->AccelMethod == RHD_ACCEL_XAA) {
+	    xf86FreeOffscreenLinear(rhdRRCrtc->u.MemXAA);
+	    rhdRRCrtc->u.MemXAA = NULL;
+	}
+    }
 }
 
 
@@ -1241,6 +1458,83 @@ rhdRROutputGetProperty(xf86OutputPtr out, Atom property)
 #endif
 
 /*
+ *
+ */
+Bool
+RHDRRInitCursor(ScreenPtr pScreen)
+{
+    RHDFUNCI(pScreen->myNum);
+
+    /* still need to alloc fb mem for cursors */
+    return xf86_cursors_init(pScreen, MAX_CURSOR_WIDTH, MAX_CURSOR_HEIGHT,
+			     HARDWARE_CURSOR_TRUECOLOR_AT_8BPP
+			     | HARDWARE_CURSOR_UPDATE_UNHIDDEN
+			     | HARDWARE_CURSOR_AND_SOURCE_WITH_MASK
+			     | HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_1
+			     | HARDWARE_CURSOR_ARGB);
+}
+
+/*
+ *
+ */
+static void
+rhdRRShowCursor(xf86CrtcPtr crtc)
+{
+    struct rhdCrtc *rhdCrtc = ((struct rhdRandrCrtc *)crtc->driver_private)->rhdCrtc;
+    rhdCrtcShowCursor(rhdCrtc);
+}
+
+/*
+ *
+ */
+static void
+rhdRRHideCursor(xf86CrtcPtr crtc)
+{
+    struct rhdCrtc *rhdCrtc = ((struct rhdRandrCrtc *)crtc->driver_private)->rhdCrtc;
+    rhdCrtcHideCursor(rhdCrtc);
+}
+
+/*
+ *
+ */
+static void
+rhdRRLoadCursorARGB(xf86CrtcPtr crtc, CARD32 *Image)
+{
+    struct rhdCrtc *rhdCrtc = ((struct rhdRandrCrtc *)crtc->driver_private)->rhdCrtc;
+    rhdCrtcLoadCursorARGB(rhdCrtc, Image);
+}
+
+/*
+ *
+ */
+static void
+rhdRRSetCursorColors(xf86CrtcPtr crtc, int bg, int fg)
+{
+    struct rhdCrtc *rhdCrtc = ((struct rhdRandrCrtc *)crtc->driver_private)->rhdCrtc;
+    rhdCrtcSetCursorColors(rhdCrtc, bg, fg);
+}
+
+/*
+ *
+ */
+static void
+rhdRRSetCursorPosition(xf86CrtcPtr crtc, int x, int y)
+{
+    struct rhdCrtc *rhdCrtc = ((struct rhdRandrCrtc *)crtc->driver_private)->rhdCrtc;
+    /*
+     * Given cursor pos is always relative to frame - make absolute
+     * NOTE: This is hardware specific, it doesn't really fit here,
+     * but it's the only place where the relevant information is
+     * available.
+     */
+    if (!crtc->rotatedData) {
+	x += crtc->x;
+	y += crtc->y;
+    }
+    rhdCrtcSetCursorPosition(rhdCrtc, x, y);
+}
+
+/*
  * Xorg Interface
  */
 
@@ -1248,23 +1542,51 @@ static const xf86CrtcConfigFuncsRec rhdRRCrtcConfigFuncs = {
     rhdRRXF86CrtcResize
 };
 
-static const xf86CrtcFuncsRec rhdRRCrtcFuncs = {
+static xf86CrtcFuncsRec rhdRRCrtcFuncs = {
     rhdRRCrtcDpms,
     NULL, NULL,						/* Save,Restore */
     rhdRRCrtcLock, rhdRRCrtcUnlock,
     rhdRRCrtcModeFixupDUMMY,
     rhdRRCrtcPrepare, rhdRRCrtcModeSet, rhdRRCrtcCommit,
     rhdRRCrtcGammaSet,
-    /* rhdRRCrtcShadowAllocate,rhdRRCrtcShadowCreate,rhdRRCrtcShadowDestroy */
-    NULL, NULL, NULL,
+    rhdRRCrtcShadowAllocate, rhdRRCrtcShadowCreate, rhdRRCrtcShadowDestroy,
+    rhdRRSetCursorColors, rhdRRSetCursorPosition, rhdRRShowCursor, rhdRRHideCursor,
+    NULL, rhdRRLoadCursorARGB, NULL
     /* SetCursorColors,SetCursorPosition,ShowCursor,HideCursor,
      * LoadCursorImage,LoadCursorArgb,CrtcDestroy */
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL
 #ifdef XF86CRTCFUNCS_HAS_SETMODEMAJOR
     /* set_mode_major */
     , NULL
 #endif
+#if XF86_CRTC_VERSION >= 2
+    /* set_origin */
+    , rhdRRCrtcSetOrigin
+#endif
 };
+
+/*
+ *
+ */
+void
+RHDRRFreeShadow(ScrnInfoPtr pScrn)
+{
+#ifndef HAVE_FREE_SHADOW
+    int i;
+    xf86CrtcConfigPtr   CrtcConfig = XF86_CRTC_CONFIG_PTR(pScrn);
+
+    for (i = 0; i < CrtcConfig->num_crtc; i++) {
+	xf86CrtcPtr Crtc = CrtcConfig->crtc[i];
+	if (Crtc->rotatedPixmap || Crtc->rotatedData) {
+	    Crtc->funcs->shadow_destroy(Crtc, Crtc->rotatedPixmap,
+					Crtc->rotatedData);
+	    Crtc->rotatedPixmap = NULL;
+	    Crtc->rotatedData = NULL;
+	}
+    }
+#else
+    xf86RotateFreeShadow(pScrn);
+#endif
+}
 
 static const xf86OutputFuncsRec rhdRROutputFuncs = {
     rhdRROutputCreateResources, rhdRROutputDpms,
@@ -1328,6 +1650,10 @@ consolidateRandrOutputNames(rhdRandrOutputPtr *rop, int num)
 		    case RHD_OUTPUT_KLDSKP_LVTMA:
 		    case RHD_OUTPUT_UNIPHYA:
 		    case RHD_OUTPUT_UNIPHYB:
+		    case RHD_OUTPUT_UNIPHYC:
+		    case RHD_OUTPUT_UNIPHYD:
+		    case RHD_OUTPUT_UNIPHYE:
+		    case RHD_OUTPUT_UNIPHYF:
 			outname = "digital";
 			break;
 		    default:
@@ -1406,7 +1732,8 @@ RHDRandrPreInit(ScrnInfoPtr pScrn)
     for (i = 0; i < 2; i++) {
 	randr->RandrCrtc[i] = xf86CrtcCreate(pScrn, &rhdRRCrtcFuncs);
 	ASSERT(randr->RandrCrtc[i]);
-	randr->RandrCrtc[i]->driver_private = rhdPtr->Crtc[i];
+	randr->RandrCrtc[i]->driver_private = xnfcalloc(sizeof(struct rhdRandrCrtc),1);
+	((struct rhdRandrCrtc*) randr->RandrCrtc[i]->driver_private)->rhdCrtc = rhdPtr->Crtc[i]; /* TODO: not cleaning up correctly */
     }
 
     /* First count, then allocate */
@@ -1510,6 +1837,9 @@ RHDRandrPreInit(ScrnInfoPtr pScrn)
     if (!xf86InitialConfiguration(pScrn, FALSE)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "RandR: No valid modes. Disabling RandR support.\n");
+	for (i = 0; i < 2; i++)
+	    xfree(randr->RandrCrtc[i]->driver_private);
+	xfree(randr);
 	rhdPtr->randr = NULL;		/* TODO: not cleaning up correctly */
 	return FALSE;
     }
@@ -1521,6 +1851,9 @@ RHDRandrPreInit(ScrnInfoPtr pScrn)
     if (!xf86RandR12PreInit (pScrn)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "RandR: xf86RandR12PreInit failed. Disabled.\n");
+	for (i = 0; i < 2; i++)
+	    xfree(randr->RandrCrtc[i]->driver_private);
+	xfree(randr);
 	rhdPtr->randr = NULL;		/* TODO: not cleaning up correctly */
 	return FALSE;
     }
@@ -1539,7 +1872,7 @@ rhdRRPointerMoved(int scrnIndex, int x, int y)
     for (i = 0; i < 2; i++) {
 	struct rhdCrtc *Crtc = rhdPtr->Crtc[i];
 	if (Crtc->scrnIndex == scrnIndex && Crtc->Active)
-	    rhdUpdateCrtcPos(Crtc, x + pScrn->frameX0, y + pScrn->frameY0);
+	    rhdUpdateCrtcPos(rhdPtr, Crtc, x + pScrn->frameX0, y + pScrn->frameY0);
     }
     UNWRAP_SCRNINFO(PointerMoved);
     pScrn->PointerMoved(scrnIndex, x, y);
@@ -1554,6 +1887,13 @@ RHDRandrScreenInit(ScreenPtr pScreen)
     RHDPtr rhdPtr = RHDPTR(pScrn);
 
     RHDFUNC(rhdPtr);
+
+    if (rhdPtr->AccelMethod == RHD_ACCEL_NONE || rhdPtr->AccelMethod == RHD_ACCEL_SHADOWFB) {
+	rhdRRCrtcFuncs.shadow_allocate = NULL;
+	rhdRRCrtcFuncs.shadow_create = NULL;
+	rhdRRCrtcFuncs.shadow_destroy = NULL;
+    }
+
     if (!xf86CrtcScreenInit(pScreen))
 	return FALSE;
     /* Wrap cursor for driver-level panning */
@@ -1576,12 +1916,7 @@ RHDRandrModeInit(ScrnInfoPtr pScrn)
     rhdPtr->Crtc[0]->Blank(rhdPtr->Crtc[0], TRUE);
     rhdPtr->Crtc[1]->Blank(rhdPtr->Crtc[1], TRUE);
 
-    RHDVGADisable(rhdPtr);
-
-    RHDAllIdle(pScrn);
-
-    RHDMCSetup(rhdPtr);
-
+    RHDPrepareMode(rhdPtr);
     ret = xf86SetDesiredModes(pScrn);
     RHDDebugRandrState(rhdPtr, "POST-ModeInit");
 

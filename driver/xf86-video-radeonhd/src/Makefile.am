@@ -11,65 +11,74 @@ drivers_LTLIBRARIES = radeonhd_drv.la
 
 radeonhd_drv_la_LDFLAGS = -module -avoid-version
 radeonhd_drv_la_CFLAGS = $(AM_CFLAGS) @PEDANTIC_CFLAGS@
+radeonhd_drv_la_LIBADD =
+
+if XSERVER_LIBPCIACCESS
+radeonhd_drv_la_LIBADD += @PCIACCESS_LIBS@
+endif
 
 radeonhd_drv_la_SOURCES = \
-	rhd_atombios.c \
-	rhd_i2c.c \
-	rhd_crtc.c \
-	rhd_connector.c \
-	rhd_cursor.c \
-	rhd_dac.c \
-	rhd_driver.c \
-	rhd_edid.c \
-	rhd_helper.c \
-	rhd_id.c \
-	rhd_lut.c \
-	rhd_lvtma.c \
-	rhd_modes.c \
-	rhd_monitor.c \
-	rhd_output.c \
-	rhd_pll.c \
-	rhd_tmds.c \
-	rhd_vga.c \
-	rhd_mc.c \
-	rhd_mc.h \
-	rhd_shadow.c \
-	rhd_randr.c \
-	rhd_dig.c \
-	rhd_ddia.c \
-	rhd_atomout.c \
-	rhd_atompll.c \
-	rhd_atomcrtc.c \
-	rhd_biosscratch.c \
-	rhd_biosscratch.h \
-	rhd_atombios.h \
-	rhd_atomout.h \
-	rhd.h \
-	rhd_i2c.h \
-	rhd_card.h \
-	rhd_crtc.h \
-	rhd_connector.h \
-	rhd_cursor.h \
-	rhd_lut.h \
-	rhd_modes.h \
-	rhd_monitor.h \
-	rhd_output.h \
-	rhd_pll.h \
-	rhd_randr.h \
-	rhd_regs.h \
-	rhd_vga.h \
-	rhd_shadow.h \
-	rhd_cs.c \
-	rhd_cs.h \
+	r5xx_3dregs.h \
 	r5xx_accel.c \
 	r5xx_accel.h \
-	r5xx_xaa.c \
 	r5xx_regs.h \
-	r5xx_3dregs.h \
+	r5xx_xaa.c \
 	radeon_3d.c \
+	radeon_textured_videofuncs.c \
+	rhd_atombios.c \
+	rhd_atombios.h \
+	rhd_atomcrtc.c \
+	rhd_atomout.c \
+	rhd_atomout.h \
+	rhd_atompll.c \
+	rhd_audio.c \
+	rhd_audio.h \
+	rhd_biosscratch.c \
+	rhd_biosscratch.h \
+	rhd_card.h \
+	rhd_connector.c \
+	rhd_connector.h \
+	rhd_crtc.c \
+	rhd_crtc.h \
+	rhd_cs.c \
+	rhd_cs.h \
+	rhd_cursor.c \
+	rhd_cursor.h \
+	rhd_dac.c \
+	rhd_ddia.c \
+	rhd_dig.c \
+	rhd_driver.c \
+	rhd_edid.c \
+	rhd.h \
+	rhd_hdmi.c \
+	rhd_hdmi.h \
+	rhd_helper.c \
+	rhd_i2c.c \
+	rhd_i2c.h \
+	rhd_id.c \
+	rhd_lut.c \
+	rhd_lut.h \
+	rhd_lvtma.c \
+	rhd_mc.c \
+	rhd_mc.h \
+	rhd_modes.c \
+	rhd_modes.h \
+	rhd_monitor.c \
+	rhd_monitor.h \
+	rhd_output.c \
+	rhd_output.h \
+	rhd_pll.c \
+	rhd_pll.h \
+	rhd_randr.c \
+	rhd_randr.h \
+	rhd_regs.h \
+	rhd_shadow.c \
+	rhd_shadow.h \
+	rhd_tmds.c \
+	rhd_vga.c \
+	rhd_vga.h \
 	rhd_video.c \
-	rhd_video.h \
-	radeon_textured_videofuncs.c
+	rhd_video.h
 
 nodist_radeonhd_drv_la_SOURCES = \
 	git_version.h
@@ -80,6 +89,7 @@ endif
 
 if USE_DRI
 radeonhd_drv_la_SOURCES += rhd_dri.c rhd_dri.h radeon_dri.h radeon_drm.h
+radeonhd_drv_la_LIBADD += @DRI_LIBS@
 endif
 
 if ATOM_BIOS
@@ -118,11 +128,12 @@ libatom_la_SOURCES = \
 	AtomBios/includes/ObjectID.h \
 	AtomBios/includes/regsdef.h
 
-radeonhd_drv_la_LIBADD = libatom.la
+radeonhd_drv_la_LIBADD += libatom.la
 
 endif
 
 if MAINTAINER_MODE
+if HAVE_SED_WITH_REASONABLE_SUBSTITUTION
 SRCMAN = $(top_srcdir)/man/radeonhd.man
 CLEANFILES += radeonhd.man.new
 radeonhd.man.new: rhd_id.c $(SRCMAN)
@@ -179,4 +190,5 @@ all-local: radeonhd.man.new README.new
 		echo "              $(srcdir)/rhd_id.c"; \
 		exit 1; \
 	fi
+endif
 endif

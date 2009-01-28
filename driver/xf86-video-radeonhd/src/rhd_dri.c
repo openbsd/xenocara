@@ -57,6 +57,11 @@
 /* GLX/DRI/DRM definitions */
 #define _XF86DRI_SERVER_
 #include "dri.h"
+/* Workaround for header mismatches */
+#ifndef DEPRECATED
+#  define DEPRECATED __attribute__ ((deprecated))
+#  define __user
+#endif
 #include "radeon_drm.h"
 #include "GL/glxint.h"
 #include "GL/glxtokens.h"
@@ -82,6 +87,7 @@
 #include "radeon_dri.h"
 
 #ifdef RANDR_12_SUPPORT		// FIXME check / move to rhd_randr.c
+# include "xf86i2c.h" /* this is complete BS, stop using unnamed structs! */
 # include "xf86Crtc.h"
 #endif
 
@@ -380,8 +386,6 @@ static void RHDEnterServer(ScreenPtr pScreen)
     if (rhdPtr->EXAInfo)
 	exaMarkSync(pScrn->pScreen);
 #endif
-    if (rhdPtr->XAAInfo)
-	SET_SYNC_FLAG(rhdPtr->XAAInfo);
 
     pSAREAPriv = (drm_radeon_sarea_t *)DRIGetSAREAPrivate(pScreen);
     if (pSAREAPriv->ctx_owner != (signed) DRIGetContext(pScreen)) {
@@ -1109,6 +1113,8 @@ Bool RHDDRIPreInit(ScrnInfoPtr pScrn)
 
     RHDFUNC(rhdPtr);
 
+    rhdPtr->directRenderingEnabled = FALSE;
+
     if (!rhdPtr->useDRI.val.bool) {
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Direct rendering turned off by"
 		   " default. Use Option \"DRI\" to enable.\n");
@@ -1151,6 +1157,8 @@ Bool RHDDRIPreInit(ScrnInfoPtr pScrn)
     rhdDRI->gartSize      = RHD_DEFAULT_GART_SIZE;
     rhdDRI->ringSize      = RHD_DEFAULT_RING_SIZE;
     rhdDRI->bufSize       = RHD_DEFAULT_BUFFER_SIZE;
+
+    rhdDRI->drmFD         = -1;
 
     rhdDRI->gartLocation  = 0;
 
@@ -1244,7 +1252,6 @@ Bool RHDDRIAllocateBuffers(ScrnInfoPtr pScrn)
 	rhdPtr->FbFreeStart = old_freeoffset;
 	rhdPtr->FbFreeSize  = old_freesize;
 
-	/* return RHDDRICloseScreen(pScrn->pScreen); */
 	/* so far we are called from PreInit(): if we fail we free the DRI struct */
 	xfree(rhdPtr->dri);
 	rhdPtr->dri = NULL;
@@ -1347,12 +1354,15 @@ Bool RHDDRIScreenInit(ScreenPtr pScreen)
      * in the SAREA header */
     if (sizeof(XF86DRISAREARec)+sizeof(drm_radeon_sarea_t) > SAREA_MAX) {
 	ErrorF("Data does not fit in SAREA\n");
-	return RHDDRICloseScreen(pScreen);
+	RHDDRICloseScreen(pScreen);
+	return FALSE;
     }
     pDRIInfo->SAREASize = SAREA_MAX;
 
-    if (!(pRADEONDRI = (RADEONDRIPtr)xcalloc(sizeof(RADEONDRIRec),1)))
-	return RHDDRICloseScreen(pScreen);
+    if (!(pRADEONDRI = (RADEONDRIPtr)xcalloc(sizeof(RADEONDRIRec),1))) {
+	RHDDRICloseScreen(pScreen);
+	return FALSE;
+    }
 
     pDRIInfo->devPrivate     = pRADEONDRI;
     pDRIInfo->devPrivateSize = sizeof(RADEONDRIRec);
@@ -1375,7 +1385,8 @@ Bool RHDDRIScreenInit(ScreenPtr pScreen)
     if (!DRIScreenInit(pScreen, pDRIInfo, &rhdDRI->drmFD)) {
 	xf86DrvMsg(pScreen->myNum, X_ERROR,
 		   "[dri] DRIScreenInit failed.  Disabling DRI.\n");
-	return RHDDRICloseScreen(pScreen);
+	RHDDRICloseScreen(pScreen);
+	return FALSE;
     }
 
     /* Initialize AGP */
@@ -1386,7 +1397,8 @@ Bool RHDDRIScreenInit(ScreenPtr pScreen)
 	xf86DrvMsg(pScreen->myNum, X_INFO,
 		   "[agp] You may want to make sure the agpgart kernel "
 		   "module\nis loaded before the radeon kernel module.\n");
-	return RHDDRICloseScreen(pScreen);
+	RHDDRICloseScreen(pScreen);
+	return FALSE;
     }
 
     /* Initialize PCI */
@@ -1394,17 +1406,22 @@ Bool RHDDRIScreenInit(ScreenPtr pScreen)
 	!RHDDRIPciInit(rhdDRI, pScreen)) {
 	xf86DrvMsg(pScreen->myNum, X_ERROR,
 		   "[pci] PCI failed to initialize. Disabling the DRI.\n" );
-	return RHDDRICloseScreen(pScreen);
+	RHDDRICloseScreen(pScreen);
+	return FALSE;
     }
 
     /* DRIScreenInit doesn't add all the common mappings.  Add additional
      * mappings here. */
-    if (!RHDDRIMapInit(rhdPtr, pScreen))
-	return RHDDRICloseScreen(pScreen);
+    if (!RHDDRIMapInit(rhdPtr, pScreen)) {
+	RHDDRICloseScreen(pScreen);
+	return FALSE;
+    }
 
     /* FIXME: When are these mappings unmapped? */
-    if (!RHDInitVisualConfigs(pScreen))
-	return RHDDRICloseScreen(pScreen);
+    if (!RHDInitVisualConfigs(pScreen)) {
+	RHDDRICloseScreen(pScreen);
+	return FALSE;
+    }
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "[dri] Visual configs initialized\n");
 
@@ -1412,7 +1429,8 @@ Bool RHDDRIScreenInit(ScreenPtr pScreen)
     if (RHDDRISetParam(pScrn, RADEON_SETPARAM_NEW_MEMMAP, 1) < 0) {
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "[drm] failed to enable new memory map\n");
-	return RHDDRICloseScreen(pScreen);
+	RHDDRICloseScreen(pScreen);
+	return FALSE;
     }
 
     return TRUE;
@@ -1576,6 +1594,9 @@ void RHDDRIEnterVT(ScreenPtr pScreen)
 
     RHDFUNC(rhdPtr);
 
+    if (rhdDRI->drmFD == -1)
+	return;
+
     if (rhdPtr->cardType == RHD_CARD_AGP) {
 	if (!RHDSetAgpMode(rhdDRI, pScreen))
 	    return;
@@ -1607,6 +1628,9 @@ void RHDDRILeaveVT(ScreenPtr pScreen)
     struct rhdDri *rhdDRI   = rhdPtr->dri;
 
     RHDFUNC(rhdPtr);
+
+    if (rhdDRI->drmFD == -1)
+	return;
 
     RHDDRISetVBlankInterrupt (pScrn, FALSE);
     DRILock(pScrn->pScreen, 0);
@@ -1697,6 +1721,7 @@ Bool RHDDRICloseScreen(ScreenPtr pScreen)
 
     /* De-allocate all DRI resources */
     DRICloseScreen(pScreen);
+    rhdDRI->drmFD = -1;
 
     /* De-allocate all DRI data structures */
     if (rhdDRI->pDRIInfo) {
@@ -1716,10 +1741,9 @@ Bool RHDDRICloseScreen(ScreenPtr pScreen)
 	rhdDRI->pVisualConfigsPriv = NULL;
     }
 
-    xfree(rhdDRI);
-    rhdPtr->dri = NULL;
+    rhdPtr->directRenderingEnabled = FALSE;
 
-    return FALSE;
+    return TRUE;
 }
 
 
@@ -1940,3 +1964,4 @@ RHDDRMIndirectBufferDiscard(int scrnIndex, CARD8 *Buffer)
 	       "%s: Unable to retrieve the indirect Buffer at address %p!\n",
 	       __func__, Buffer);
 }
+

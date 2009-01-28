@@ -96,6 +96,15 @@ enum {
     PCLK_CRTC1_CNTL                = 0x0480,
     PCLK_CRTC2_CNTL                = 0x0484,
 
+    /* these regs were reverse enginered,
+     * so the chance is high that the naming is wrong
+     * R6xx+ ??? */
+    AUDIO_PLL1_MUL		   = 0x0514,
+    AUDIO_PLL1_DIV		   = 0x0518,
+    AUDIO_PLL2_MUL		   = 0x0524,
+    AUDIO_PLL2_DIV		   = 0x0528,
+    AUDIO_CLK_SRCSEL		   = 0x0534,
+
     DCCG_DISP_CLK_SRCSEL           = 0x0538, /* rv620+ */
 
     SRBM_STATUS                    = 0x0E50,
@@ -260,6 +269,38 @@ enum {
     D2SCL_UPDATE                   = 0x6DCC,
     D2SCL_DITHER                   = 0x6DD4, /* guess */
     D2SCL_FLIP_CONTROL             = 0x6DD8, /* guess */
+
+    /* Audio, reverse enginered */
+    AUDIO_ENABLE		   = 0x7300, /* RW */
+    AUDIO_TIMING		   = 0x7344, /* RW */
+    /* Audio params */
+    AUDIO_VENDOR_ID                = 0x7380, /* RW */
+    AUDIO_REVISION_ID              = 0x7384, /* RW */
+    AUDIO_ROOT_NODE_COUNT          = 0x7388, /* RW */
+    AUDIO_NID1_NODE_COUNT          = 0x738c, /* RW */
+    AUDIO_NID1_TYPE                = 0x7390, /* RW */
+    AUDIO_SUPPORTED_SIZE_RATE      = 0x7394, /* RW */
+    AUDIO_SUPPORTED_CODEC          = 0x7398, /* RW */
+    AUDIO_SUPPORTED_POWER_STATES   = 0x739c, /* RW */
+    AUDIO_NID2_CAPS                = 0x73a0, /* RW */
+    AUDIO_NID3_CAPS                = 0x73a4, /* RW */
+    AUDIO_NID3_PIN_CAPS            = 0x73a8, /* RW */
+    /* Audio conn list */
+    AUDIO_CONN_LIST_LEN            = 0x73ac, /* RW */
+    AUDIO_CONN_LIST                = 0x73b0, /* RW */
+    /* Audio verbs */
+    AUDIO_RATE_BPS_CHANNEL         = 0x73c0, /* RO */
+    AUDIO_PLAYING                  = 0x73c4, /* RO */
+    AUDIO_IMPLEMENTATION_ID        = 0x73c8, /* RW */
+    AUDIO_CONFIG_DEFAULT           = 0x73cc, /* RW */
+    AUDIO_PIN_SENSE                = 0x73d0, /* RW */
+    AUDIO_PIN_WIDGET_CNTL          = 0x73d4, /* RO */
+    AUDIO_STATUS_BITS              = 0x73d8, /* RO */
+
+    /* HDMI */
+    HDMI_TMDS			   = 0x7400,
+    HDMI_LVTMA			   = 0x7700,
+    HDMI_DIG			   = 0x7800,
 
     /* R500 DAC A */
     DACA_ENABLE                    = 0x7800,
@@ -467,7 +508,7 @@ enum RV620_EXT1_DIFF_POST_DIV_CNTL_BITS {
 enum RV620_EXT2_DIFF_POST_DIV_CNTL_BITS {
     RV62_EXT2_DIFF_POST_DIV_RESET = 1 << 0,
     RV62_EXT2_DIFF_POST_DIV_SELECT = 1 << 4,
-    RV62_EXT2_DIFF_DRIVER_ENABLE_SHIFT = 8
+    RV62_EXT2_DIFF_DRIVER_ENABLE = 1 << 8
 };
 
 enum RV620_LVTMA_PWRSEQ_CNTL_BITS {
@@ -1044,5 +1085,31 @@ enum AGP_STATUS_BITS {
     AGPv3_8X_MODE        = 0x02
 };
 
+enum {
+    /* HDMI registers */
+    HDMI_ENABLE           = 0x00,
+    HDMI_CNTL             = 0x08,
+    HDMI_UNKNOWN_0        = 0x0C,
+    HDMI_AUDIOCNTL        = 0x10,
+    HDMI_VIDEOCNTL        = 0x14,
+    HDMI_VERSION          = 0x18,
+    HDMI_UNKNOWN_1        = 0x28,
+    HDMI_VIDEOINFOFRAME_0 = 0x54,
+    HDMI_VIDEOINFOFRAME_1 = 0x58,
+    HDMI_VIDEOINFOFRAME_2 = 0x5c,
+    HDMI_VIDEOINFOFRAME_3 = 0x60,
+    HDMI_32kHz_CTS        = 0xac,
+    HDMI_32kHz_N          = 0xb0,
+    HDMI_44_1kHz_CTS      = 0xb4,
+    HDMI_44_1kHz_N        = 0xb8,
+    HDMI_48kHz_CTS        = 0xbc,
+    HDMI_48kHz_N          = 0xc0,
+    HDMI_AUDIOINFOFRAME_0 = 0xcc,
+    HDMI_AUDIOINFOFRAME_1 = 0xd0,
+    HDMI_IEC60958_1       = 0xd4,
+    HDMI_IEC60958_2       = 0xd8,
+    HDMI_UNKNOWN_2        = 0xdc,
+    HDMI_AUDIO_DEBUG      = 0xe0
+};
 
 #endif /* _RHD_REGS_H */

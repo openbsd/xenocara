@@ -117,6 +117,18 @@ getSetPixelClockParameters(struct rhdPLL *PLL, struct atomPixelClockConfig *Conf
 		case RHD_OUTPUT_UNIPHYB:
 		    Config->u.v3.OutputType = atomOutputUniphyB;
 		    break;
+		case RHD_OUTPUT_UNIPHYC:
+		    Config->u.v3.OutputType = atomOutputUniphyC;
+		    break;
+		case RHD_OUTPUT_UNIPHYD:
+		    Config->u.v3.OutputType = atomOutputUniphyD;
+		    break;
+		case RHD_OUTPUT_UNIPHYE:
+		    Config->u.v3.OutputType = atomOutputUniphyE;
+		    break;
+		case RHD_OUTPUT_UNIPHYF:
+		    Config->u.v3.OutputType = atomOutputUniphyF;
+		    break;
 		case RHD_OUTPUT_DVO:
 		    Config->u.v3.OutputType = atomOutputDvo;
 		    break;

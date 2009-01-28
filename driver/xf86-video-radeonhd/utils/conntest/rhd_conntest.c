@@ -467,6 +467,8 @@ struct RHDDevice {
     { 0x1002, 0x9446, 2, RHD_RV620},
     { 0x1002, 0x944E, 2, RHD_RV620},
     { 0x1002, 0x9456, 2, RHD_RV620},
+    { 0x1002, 0x9590, 2, RHD_RV620},
+    { 0x1002, 0x954F, 2, RHD_RV620},
     { 0, 0, 0, 0 }
 };
 
@@ -543,13 +545,19 @@ MapBar(struct pci_dev *device, int ioBar, int devMem)
 {
     void *map;
 
-    if (!device->base_addr[ioBar] || !device->size[ioBar])
+    pci_fill_info(device, PCI_FILL_BASES | PCI_FILL_SIZES);
+    if (!device->base_addr[ioBar]
+#if !defined (__FreeBSD__)
+	|| !device->size[ioBar]
+#endif
+	)
 	return NULL;
-
-    map = mmap(0, device->size[ioBar], PROT_WRITE | PROT_READ, MAP_SHARED,
-	       devMem, device->base_addr[ioBar]);
-    /* printf("Mapped IO at 0x%08llX (BAR %1d: 0x%08llX)\n",
-       device->base_addr[io_bar], io_bar, device->size[io_bar]); */
+    /* on FreeBSD the PCI bar sizes don't get filled in; pick a sane default size */
+    map = mmap(0, device->size[ioBar] ? device->size[ioBar] : 0x10000,
+	       PROT_WRITE | PROT_READ, MAP_SHARED, devMem,
+	       device->base_addr[ioBar]);
+    /* printf("Mapped IO at 0x%08X (BAR %1d: 0x%08X)\n",
+       device->base_addr[ioBar], ioBar, device->size[ioBar]); */
 
     return map;
 }

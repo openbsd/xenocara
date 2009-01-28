@@ -90,6 +90,11 @@ enum RHD_CHIPSETS {
     RHD_M86,
     RHD_RS780,
     RHD_RV770,
+    RHD_R700,
+    RHD_M98,
+    RHD_RV730,
+    RHD_M96,
+    RHD_RV710,
     RHD_CHIP_END
 };
 
@@ -171,7 +176,7 @@ typedef struct _rhdI2CRec *rhdI2CPtr;
 typedef struct _atomBiosHandle *atomBiosHandlePtr;
 typedef struct _rhdShadowRec *rhdShadowPtr;
 
-typedef struct _RHDopt {
+typedef struct RHDOpt {
     Bool set;
     union  {
         Bool bool;
@@ -222,12 +227,17 @@ typedef struct RHDRec {
     RHDOpt		tvModeName;
     RHDOpt		scaleTypeOpt;
     RHDOpt		unverifiedFeatures;
+    RHDOpt		audio;
+    RHDOpt		hdmi;
+    RHDOpt		coherent;
     enum RHD_HPD_USAGE	hpdUsage;
     unsigned int        FbMapSize;
     pointer             FbBase;   /* map base of fb   */
     unsigned int        FbPhysAddress; /* card PCI BAR address of FB */
     unsigned int        FbIntAddress; /* card internal address of FB */
     unsigned int        FbPCIAddress; /* physical address of FB */
+
+    Bool		directRenderingEnabled;
 
     /* Some simplistic memory handling */
 #define ALIGN(x,align)	(((x)+(align)-1)&~((align)-1))
@@ -270,6 +280,7 @@ typedef struct RHDRec {
     struct rhdVGA      *VGA; /* VGA compatibility HW */
     struct rhdCrtc     *Crtc[2];
     struct rhdPLL      *PLLs[2]; /* Pixelclock PLLs */
+    struct rhdAudio    *Audio;
 
     struct rhdLUTStore  *LUTStore;
     struct rhdLUT       *LUT[2];
@@ -312,6 +323,8 @@ typedef struct RHDRec {
     /* AtomBIOS usage */
     RHDOpt		UseAtomBIOS;
     CARD32		UseAtomFlags;
+
+    struct rhdOutput *DigEncoderOutput[2];
 } RHDRec, *RHDPtr;
 
 #define RHDPTR(p) 	((RHDPtr)((p)->driverPrivate))
@@ -333,11 +346,18 @@ enum atomSubSystem {
     atomUsageAny
 };
 
+enum rhdOptStatus {
+    RHD_OPTION_NOT_SET,
+    RHD_OPTION_DEFAULT,
+    RHD_OPTION_OFF,
+    RHD_OPTION_ON
+};
+
 /* rhd_driver.c */
 /* Some handy functions that makes life so much more readable */
 extern unsigned int RHDReadPCIBios(RHDPtr rhdPtr, unsigned char **prt);
 extern Bool RHDScalePolicy(struct rhdMonitor *Monitor, struct rhdConnector *Connector);
-extern void RHDAllIdle(ScrnInfoPtr pScrn);
+extern void RHDPrepareMode(RHDPtr rhdPtr);
 extern Bool RHDUseAtom(RHDPtr rhdPtr, enum RHD_CHIPSETS *BlackList, enum atomSubSystem subsys);
 
 extern CARD32 _RHDRegRead(int scrnIndex, CARD16 offset);
@@ -372,6 +392,7 @@ void RhdGetOptValFreq(const OptionInfoRec *table, int token,
                       OptFreqUnits expectedUnits, RHDOptPtr optp, double def);
 void RhdGetOptValString(const OptionInfoRec *table, int token,
                         RHDOptPtr optp, char *def);
+enum rhdOptStatus RhdParseBooleanOption(struct RHDOpt *Option, char *Name);
 char *RhdAppendString(char *s1, const char *s2);
 void RhdAssertFailed(const char *str,
 		     const char *file, int line, const char *func) NORETURN;

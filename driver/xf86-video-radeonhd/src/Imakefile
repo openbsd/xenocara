@@ -50,6 +50,10 @@ rhd_atomcrtc.c \
 rhd_cs.c \
 r5xx_accel.c \
 r5xx_xaa.c \
+rhd_video.c \
+radeon_textured_videofuncs.c \
+rhd_audio.c \
+rhd_hdmi.c \
 $(ATOM_BIOS_PARSER_SRCS) \
 git_version.h
 
@@ -84,6 +88,10 @@ rhd_atomcrtc.o \
 rhd_cs.o \
 r5xx_accel.o \
 r5xx_xaa.o \
+rhd_video.o \
+radeon_textured_videofuncs.o \
+rhd_audio.o \
+rhd_hdmi.o \
 $(ATOM_BIOS_PARSER_OBJS)
 
 INCLUDES = -I. -I$(XF86COMSRC) -I$(XF86OSSRC) \

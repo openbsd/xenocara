@@ -22,15 +22,17 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 AUTOMAKE_OPTIONS = foreign
-SUBDIRS = man src 
+# src before man: src/ may update sources in man/
+SUBDIRS = src man
 
-EXTRA_DIST = RadeonHD.tmpl Imakefile git_version.sh ChangeLog
+EXTRA_DIST = RadeonHD.tmpl Imakefile git_version.sh ChangeLog INSTALL
 MAINTAINERCLEANFILES = ChangeLog
 
 .PHONY: ChangeLog
 
+# "git log" with the space should be available since git 1.3.0
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	(GIT_DIR=$(top_srcdir)/.git git log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
 
 dist-hook: ChangeLog
 

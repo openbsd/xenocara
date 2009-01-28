@@ -42,7 +42,6 @@
 #endif
 
 #if SEGV_ON_ASSERT
-# include <sys/types.h>
 # include <signal.h>
 #endif
 
@@ -115,6 +114,52 @@ RhdGetOptValString(const OptionInfoRec *table, int token,
 	optp->set = TRUE;
 }
 
+/*
+ *
+ */
+enum rhdOptStatus
+RhdParseBooleanOption(struct RHDOpt *Option, char *Name)
+{
+    char* c;
+    char* str = strdup(Name);
+
+    /* first fixup the name to match the randr names */
+    for (c = str; *c; c++)
+	if (isspace(*c))
+	    *c='_';
+
+    if (Option->set) {
+	char *ptr = Option->val.string;
+	while (*ptr != '\0') {
+	    while (isspace(*ptr))
+		ptr++;
+	    if (*ptr == '\0')
+		break;
+
+	    if (!strncasecmp(str,ptr,strlen(str)) || !strncasecmp("all",ptr,3)) {
+		if(!strncasecmp("all",ptr,3))
+		    ptr += 3;
+		else
+		    ptr += strlen(str);
+		xfree(str);
+
+		if (isspace(*ptr) || *ptr == '=') {
+		    ptr++;
+		}
+		if (!strncasecmp("off",ptr,3) || !strncasecmp("0",ptr,1) || !strncasecmp("no",ptr,2)) {
+		    return RHD_OPTION_OFF;
+		} else if (!strncasecmp("on",ptr,2) || !strncasecmp("1",ptr,1) || !strncasecmp("yes",ptr,3))  {
+		    return RHD_OPTION_ON;
+		} else
+		    return RHD_OPTION_DEFAULT;
+	    } else
+		while (*ptr != '\0' && !isspace(*ptr))
+		    ptr++;
+	}
+    }
+    xfree(str);
+    return RHD_OPTION_NOT_SET;
+}
 
 void
 RhdDebugDump(int scrnIndex, unsigned char *start, int size)

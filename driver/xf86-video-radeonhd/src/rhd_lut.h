@@ -38,6 +38,10 @@ struct rhdLUT {
     void (*Restore) (struct rhdLUT *LUT);
     void (*Set) (struct rhdLUT *LUT, int numColors, int *indices, LOCO *colors);
 
+    /* because RandR does not specifically initialise a gamma ramp when
+       setting up a CRTC */
+    Bool Initialised;
+
     Bool Stored;
 
     CARD32 StoreControl;
@@ -57,5 +61,8 @@ void RHDLUTsInit(RHDPtr rhdPtr);
 void RHDLUTsSave(RHDPtr rhdPtr);
 void RHDLUTsRestore(RHDPtr rhdPtr);
 void RHDLUTsDestroy(RHDPtr rhdPtr);
+
+/* For missing RandR functionality */
+void RHDLUTCopyForRR(struct rhdLUT *LUT);
 
 #endif /* _RHD_LUT_H */

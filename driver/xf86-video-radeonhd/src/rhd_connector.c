@@ -445,7 +445,7 @@ RhdPrintConnectorInfo(int scrnIndex, struct rhdConnectorInfo *cp)
 	  "RHD_CONNECTOR_TV", "RHD_CONNECTOR_PCIE" };
 
     const char *ddc_name[] =
-	{ "RHD_DDC_0", "RHD_DDC_1", "RHD_DDC_2", "RHD_DDC_3" };
+	{ "RHD_DDC_0", "RHD_DDC_1", "RHD_DDC_2", "RHD_DDC_3", "RHD_DDC_4" };
 
     const char *hpd_name_normal[] =
 	{ "RHD_HPD_NONE", "RHD_HPD_0", "RHD_HPD_1", "RHD_HPD_2", "RHD_HPD_3" };
@@ -457,7 +457,8 @@ RhdPrintConnectorInfo(int scrnIndex, struct rhdConnectorInfo *cp)
     const char *output_name[] =
 	{ "RHD_OUTPUT_NONE", "RHD_OUTPUT_DACA", "RHD_OUTPUT_DACB", "RHD_OUTPUT_TMDSA",
 	  "RHD_OUTPUT_LVTMA", "RHD_OUTPUT_DVO", "RHD_OUTPUT_KLDSKP_LVTMA",
-	  "RHD_OUTPUT_UNIPHYA", "RHD_OUTPUT_UNIPHYB" };
+	  "RHD_OUTPUT_UNIPHYA", "RHD_OUTPUT_UNIPHYB", "RHD_OUTPUT_UNIPHYC", "RHD_OUTPUT_UNIPHYD",
+	  "RHD_OUTPUT_UNIPHYE", "RHD_OUTPUT_UNIPHYF" };
     const char **hpd_name;
 
     switch (rhdPtr->hpdUsage) {
@@ -483,4 +484,30 @@ RhdPrintConnectorInfo(int scrnIndex, struct rhdConnectorInfo *cp)
 		   hpd_name[cp[n].HPD], output_name[cp[n].Output[0]],
 		   output_name[cp[n].Output[1]]);
     }
+}
+
+/*
+ * Should we enable HDMI on this connector?
+ */
+Bool RHDConnectorEnableHDMI(struct rhdConnector *Connector)
+{
+    RHDPtr rhdPtr = RHDPTRI(Connector);
+    RHDFUNC(rhdPtr);
+
+    /* check if user forced HDMI on this connector */
+    switch(RhdParseBooleanOption(&rhdPtr->hdmi, Connector->Name)) {
+	case RHD_OPTION_ON:
+	case RHD_OPTION_DEFAULT:
+	    xf86DrvMsg(rhdPtr->scrnIndex, X_INFO, "Enabling HDMI on %s because of config option\n", Connector->Name);
+	    return TRUE;
+	case RHD_OPTION_OFF:
+	    xf86DrvMsg(rhdPtr->scrnIndex, X_INFO, "Disabling HDMI on %s because of config option\n", Connector->Name);
+	    return FALSE;
+	case RHD_OPTION_NOT_SET:
+	    /* ask connected monitor if it supports HDMI */
+	    /* TODO: Not implemented yet! */
+	    return FALSE;
+    }
+
+    return FALSE;
 }

@@ -170,6 +170,21 @@ Radeon HD 3100/3200/3300 Series
 .TP 8
 .B RV770
 Radeon HD 4800 Series; Everest, K2, Denali ATI FirePro
+.TP 8
+.B R700
+Radeon R700
+.TP 8
+.B M98
+Radeon M98 Mobility
+.TP 8
+.B RV730
+Radeon HD4670, HD4650
+.TP 8
+.B M96
+Radeon M96 Mobility
+.TP 8
+.B RV710
+Radeon HD4570, HD4350
 .\" END_DEVICE_LIST marker - do not delete
 .PD
 .\"
@@ -211,11 +226,13 @@ The default is
 .BR "depending on the chipset" ,
 driver version, and state of acceleration techniques and tries to give the best
 user experience.
+.br
+Rotation isn't supported for the AccelMethods \*qnone\*q and \*qshadowfb\*q.
 .RE
 .TP
 .BI "Option \*qDRI\*q"
-Use this option to enable 3D acceleration using DRI (R5xx and RS6xx chips
-only for the moment).
+Use this option to enable 3D and Xv acceleration using DRI
+(R5xx and RS6xx chips only for the moment).
 Currently, the default is
 .BR off .
 .TP
@@ -330,18 +347,6 @@ Use of this option is considered deprecated. The
 option is considered to be more flexible.
 .RE
 .TP
-.BI "Option \*qShadowFB\*q \*q" boolean \*q
-Enable or disable shadow framebuffer support. This greatly improves the
-speed of unaccelerated drivers. The default depends on chipset and
-acceleration state.
-.PP
-.RS
-.B NOTE:
-Use of this option is considered deprecated. The
-.B AccelMethod
-option is considered to be more flexible.
-.RE
-.TP
 .BI "Option \*qHPD\*q \*q" "auto|off|normal|swap" \*q
 Change the use of the hot plug detection (HPD) pins. On R5xx the according
 connector tables are often broken and have to be worked around.
@@ -393,6 +398,46 @@ this option is needed to get your card working correctly, please report to the
 mailing list.
 .RE
 .TP
+.BI "Option \*qAudio\*q \*q" boolean \*q
+This option enables the audio hardware, wich is responsible for delivering audio data
+to the different HDMI capable conntectors and used to communicate with the audio
+driver of the operation system. The default is
+.BR off .
+.TP
+.BI "Option \*qHDMI\*q \*q" boolean \*q
+Possible values are "DVI-I 0", "DVI-I 1"..,"DVI-D 0","DVI-I 1",.., "all".
+This option enables HDMI-Audio and HDMI-Info packets on the specified connector.
+This is the only way enabling HDMI at the moment, since decoding E-EDID data to check if monitor supports HDMI is not implemented (yet).
+.TP
+.BI "Option \*qCoherent\*q \*q" string \*q
+There are two different ways to program the TMDS encoder in an output
+for best signal quality for the transmitter chip used inside a digital 
+monitor. This option may be used to set the programming for each output 
+individually. The string is a space separated list of
+.B <output_transmitter>=on|off. 
+Possible  values for 
+.B <output_transmitter> 
+are: 
+.B TMDS_A, 
+.B TMDS_B,
+.B UNIPHY_A,
+.B UNIPHY_B,
+.B AtomOutputTMDSA,
+.B AtomOutputLVTMA,
+.B AtomOutputKldskpLvtma,
+.B AtomOutputUniphyA,
+.B  AtomOutputUniphyB. 
+The log file should be consulted 
+on which ones to use. The line:
+.B "Option \*qCoherent\*q \*qTMDS_A=off TMDS_B=on\*q"
+will set coherent mode to 
+.B off 
+for TMDS A and to 
+.B on 
+for TMDS B.
+The default for all outputs is
+.BR off .
+.TP
 .BI "Option \*qTVMode\*q \*q" tv-mode \*q
 The TV standard to use on the TV output.
 .RS
@@ -432,9 +477,10 @@ The following properties can be queried with
 .B xrandr --prop
 and some of them can be set with
 .BR "xrandr --output" " <output> " --set " <property> <value> ."
-Those marked with RR13 are probably merged into a RandR 1.3 standard.
-Properties marked Read-Only are provided by the driver for informational
-purpose only, those marked Static won't change during runtime.
+Those marked with RR13 will be merged into a RandR 1.3 standard, though
+substantially changed.  Properties marked Read-Only are provided by the driver
+for informational purpose only, those marked Static won't change during
+runtime.
 .TP
 .BR RANDR_SIGNAL_FORMAT "   Read-Only RR13"
 .RS
@@ -569,6 +615,14 @@ application typically always resets the framebuffer size with every action,
 .BR --fb " <width>" x <height>
 has to be added on every invocation, unless there is an additional output
 configured that is using this size as its resolution.
+.br
+This property cannot be changed when in a rotated mode.
+.PP
+.B NOTE:
+Use of this option is considered deprecated.  The driver supports
+.B RandR 1.3
+panning, which is included in Xserver 1.6.  It is considerable more flexible,
+and should support rotated pans.
 .\"
 .\"
 .SH KNOWN BUGS
@@ -623,5 +677,5 @@ Query the bugtracker for radeonhd bugs
 .\"
 .\"
 .SH AUTHORS
-Egbert Eich, Luc Verhaegen, Matthias Hopf, Hans Ulrich Niedermann, and others.
+Egbert Eich, Luc Verhaegen, Matthias Hopf, Hans Ulrich Niedermann, Christian Koenig, Alexander Deucher, and others.
 .\" vim: syntax=nroff

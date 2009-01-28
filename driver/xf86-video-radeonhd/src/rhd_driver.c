@@ -116,6 +116,7 @@
 #include "rhd_card.h"
 #include "rhd_randr.h"
 #include "rhd_cs.h"
+#include "rhd_audio.h"
 #include "r5xx_accel.h"
 #include "rhd_video.h"
 
@@ -156,7 +157,7 @@ static void     rhdRestore(RHDPtr rhdPtr);
 static Bool     rhdModeLayoutSelect(RHDPtr rhdPtr);
 static void     rhdModeLayoutPrint(RHDPtr rhdPtr);
 static void     rhdModeDPISet(ScrnInfoPtr pScrn);
-static void	rhdPrepareMode(RHDPtr rhdPtr);
+static void     rhdAllIdle(RHDPtr rhdPtr);
 static void     rhdModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
 static void	rhdSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode);
 static Bool     rhdMapMMIO(RHDPtr rhdPtr);
@@ -247,7 +248,10 @@ typedef enum {
     OPTION_USE_ATOMBIOS,
     OPTION_ATOMBIOS,     /* only for testing, don't document in man page! */
 #endif
-    OPTION_UNVERIFIED_FEAT
+    OPTION_UNVERIFIED_FEAT,
+    OPTION_AUDIO,
+    OPTION_HDMI,
+    OPTION_COHERENT
 } RHDOpts;
 
 static const OptionInfoRec RHDOptions[] = {
@@ -274,6 +278,9 @@ static const OptionInfoRec RHDOptions[] = {
     { OPTION_ATOMBIOS,	           "AtomBIOS",             OPTV_ANYSTR,  {0}, FALSE },
 #endif
     { OPTION_UNVERIFIED_FEAT,	   "UnverifiedFeatures",   OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_AUDIO,		   "Audio",	           OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_HDMI,		   "HDMI",	           OPTV_ANYSTR,  {0}, FALSE },
+    { OPTION_COHERENT,             "COHERENT",		   OPTV_ANYSTR,  {0}, FALSE },
     { -1, NULL, OPTV_NONE,	{0}, FALSE }
 };
 
@@ -345,6 +352,7 @@ RHDFreeRec(ScrnInfoPtr pScrn)
     RHDMCDestroy(rhdPtr);
     RHDVGADestroy(rhdPtr);
     RHDPLLsDestroy(rhdPtr);
+    RHDAudioDestroy(rhdPtr);
     RHDLUTsDestroy(rhdPtr);
     RHDOutputsDestroy(rhdPtr);
     RHDConnectorsDestroy(rhdPtr);
@@ -785,6 +793,7 @@ RHDPreInit(ScrnInfoPtr pScrn, int flags)
 	RHDAtomCrtcsInit(rhdPtr);
     if (!RHDPLLsInit(rhdPtr))
 	RHDAtomPLLsInit(rhdPtr);
+    RHDAudioInit(rhdPtr);
     RHDLUTsInit(rhdPtr);
     RHDCursorsInit(rhdPtr); /* do this irrespective of hw/sw cursor setting */
 
@@ -793,41 +802,42 @@ RHDPreInit(ScrnInfoPtr pScrn, int flags)
 		   "Card information has invalid connector information\n");
 	goto error1;
     }
-#ifdef ATOM_BIOS
-    if (rhdPtr->Card
-	&& rhdPtr->Card->ConnectorInfo[0].Type != RHD_CONNECTOR_NONE
-	&& (rhdPtr->Card->DeviceInfo[0][0] != atomNone
-	    || rhdPtr->Card->DeviceInfo[0][1] != atomNone)) {
-	int i, k = 0;
+    {
 	struct rhdAtomOutputDeviceList *OutputDeviceList = NULL;
+#ifdef ATOM_BIOS
+	if (rhdPtr->Card
+	    && rhdPtr->Card->ConnectorInfo[0].Type != RHD_CONNECTOR_NONE
+	    && (rhdPtr->Card->DeviceInfo[0][0] != atomNone
+		|| rhdPtr->Card->DeviceInfo[0][1] != atomNone)) {
+	    int i, k = 0;
 
-	for (i = 0; i < RHD_CONNECTORS_MAX; i++) {
-	    int j;
-	    if (rhdPtr->Card->ConnectorInfo[i].Type == RHD_CONNECTOR_NONE)
-		break;
-	    for (j = 0; j < MAX_OUTPUTS_PER_CONNECTOR; j++) {
-		if (rhdPtr->Card->ConnectorInfo[i].Output[j] != RHD_OUTPUT_NONE) {
-		    if (!(OutputDeviceList = (struct rhdAtomOutputDeviceList *)xrealloc(
-			      OutputDeviceList, sizeof (struct rhdAtomOutputDeviceList) * (k + 1))))
-			break;
-		    OutputDeviceList[k].ConnectorType = rhdPtr->Card->ConnectorInfo[i].Type;
-		    OutputDeviceList[k].DeviceId = rhdPtr->Card->DeviceInfo[i][j];
-		    OutputDeviceList[k].OutputType = rhdPtr->Card->ConnectorInfo[i].Output[j];
-		    RHDDebug(rhdPtr->scrnIndex, "OutputDevice: C: 0x%2.2x O: 0x%2.2x DevID: 0x%2.2x\n",
-			     OutputDeviceList[k].ConnectorType, OutputDeviceList[k].OutputType,
-			     OutputDeviceList[k].DeviceId);
-		    k++;
+	    for (i = 0; i < RHD_CONNECTORS_MAX; i++) {
+		int j;
+		if (rhdPtr->Card->ConnectorInfo[i].Type == RHD_CONNECTOR_NONE)
+		    break;
+		for (j = 0; j < MAX_OUTPUTS_PER_CONNECTOR; j++) {
+		    if (rhdPtr->Card->ConnectorInfo[i].Output[j] != RHD_OUTPUT_NONE) {
+			if (!(OutputDeviceList = (struct rhdAtomOutputDeviceList *)xrealloc(
+				  OutputDeviceList, sizeof (struct rhdAtomOutputDeviceList) * (k + 1))))
+			    break;
+			OutputDeviceList[k].ConnectorType = rhdPtr->Card->ConnectorInfo[i].Type;
+			OutputDeviceList[k].DeviceId = rhdPtr->Card->DeviceInfo[i][j];
+			OutputDeviceList[k].OutputType = rhdPtr->Card->ConnectorInfo[i].Output[j];
+			RHDDebug(rhdPtr->scrnIndex, "OutputDevice: C: 0x%2.2x O: 0x%2.2x DevID: 0x%2.2x\n",
+				 OutputDeviceList[k].ConnectorType, OutputDeviceList[k].OutputType,
+				 OutputDeviceList[k].DeviceId);
+			k++;
+		    }
 		}
 	    }
-	}
-    } else {
-	struct rhdAtomOutputDeviceList *OutputDeviceList = NULL;
-	AtomBiosArgRec data;
+	} else {
+	    AtomBiosArgRec data;
 
-	data.chipset = rhdPtr->ChipSet;
-	if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
-			    ATOMBIOS_GET_OUTPUT_DEVICE_LIST, &data) == ATOM_SUCCESS)
-	    OutputDeviceList = data.OutputDeviceList;
+	    data.chipset = rhdPtr->ChipSet;
+	    if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
+				ATOMBIOS_GET_OUTPUT_DEVICE_LIST, &data) == ATOM_SUCCESS)
+		OutputDeviceList = data.OutputDeviceList;
+	}
 
 	if (OutputDeviceList) {
 	    struct rhdOutput *Output;
@@ -836,8 +846,9 @@ RHDPreInit(ScrnInfoPtr pScrn, int flags)
 		RHDAtomSetupOutputDriverPrivate(OutputDeviceList, Output);
 	    xfree(OutputDeviceList);
 	}
-    }
 #endif
+    }
+
     /*
      * Set this here as we might need it for the validation of a fixed mode in
      * rhdModeLayoutSelect(). Later it is used for Virtual selection and mode
@@ -1053,14 +1064,6 @@ RHDScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     if (!miSetPixmapDepths())
 	return FALSE;
 
-#ifdef USE_DRI
-    /* Setup DRI after visuals have been established, but before fbScreenInit is
-     * called.  fbScreenInit will eventually call the driver's InitGLXVisuals
-     * call back. */
-    if (rhdPtr->dri)
-	DriScreenInited = RHDDRIScreenInit(pScreen);
-#endif
-
     /* Setup memory to which we draw; either shadow (RAM) or scanout (FB) */
     if (rhdPtr->AccelMethod == RHD_ACCEL_SHADOWFB) {
 	if (!RHDShadowScreenInit(pScreen)) {
@@ -1069,6 +1072,21 @@ RHDScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	    rhdPtr->AccelMethod = RHD_ACCEL_NONE;
 	}
     }
+
+    /* disable all memory accesses for MC setup */
+    RHDVGADisable(rhdPtr);
+    rhdAllIdle(rhdPtr);
+
+    /* now set up the MC - has to be done before DRI init */
+    RHDMCSetup(rhdPtr);
+
+#ifdef USE_DRI
+    /* Setup DRI after visuals have been established, but before fbScreenInit is
+     * called.  fbScreenInit will eventually call the driver's InitGLXVisuals
+     * call back. */
+    if (rhdPtr->dri)
+	DriScreenInited = RHDDRIScreenInit(pScreen);
+#endif
 
     /* shadowfb is allowed to fail gracefully too */
     if ((rhdPtr->AccelMethod != RHD_ACCEL_SHADOWFB) &&
@@ -1080,6 +1098,7 @@ RHDScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	return FALSE;
     }
 
+    /* must be done after fbScreenInit() */
     if (pScrn->depth > 8) {
         /* Fixup RGB ordering */
         visual = pScreen->visuals + pScreen->numVisuals;
@@ -1102,7 +1121,7 @@ RHDScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
 #ifdef USE_DRI
     if (DriScreenInited)
-	RHDDRIFinishScreenInit(pScreen);
+	rhdPtr->directRenderingEnabled = RHDDRIFinishScreenInit(pScreen);
 #endif
 
     /* Initialize command submission backend */
@@ -1159,6 +1178,7 @@ RHDScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     RHDAtomBIOSScratchSetAccelratorMode(rhdPtr, TRUE);
 #endif
 
+    RHDPrepareMode(rhdPtr);
     /* now init the new mode */
     if (rhdPtr->randr)
 	RHDRandrModeInit(pScrn);
@@ -1168,15 +1188,23 @@ RHDScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     /* fix viewport */
     RHDAdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
 
+    /* enable/disable audio */
+    RHDAudioSetEnable(rhdPtr, rhdPtr->audio.val.bool);
+
     /* Initialise cursor functions */
     miDCInitialize (pScreen, xf86GetPointerScreenFuncs());
 
     /* Inititalize HW cursor */
-    if (!rhdPtr->swCursor.val.bool)
-        if (!RHDxf86InitCursor(pScreen))
+    if (!rhdPtr->swCursor.val.bool) {
+	Bool ret;
+	if (rhdPtr->randr == NULL)
+	    ret = RHDxf86InitCursor(pScreen);
+	else
+	    ret = RHDRRInitCursor(pScreen);
+	if (!ret)
             xf86DrvMsg(scrnIndex, X_ERROR,
                        "Hardware cursor initialization failed\n");
-
+    }
     /* default colormap */
     if(!miCreateDefColormap(pScreen))
 	return FALSE;
@@ -1212,22 +1240,17 @@ RHDScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     return TRUE;
 }
 
-void
-RHDAllIdle(ScrnInfoPtr pScrn)
+static void
+rhdAllIdle(RHDPtr rhdPtr)
 {
-    RHDPtr rhdPtr = RHDPTR(pScrn);
     int i;
-    struct rhdCrtc *Crtc;
 
     /* stop scanout */
-    for (i = 0; i < 2; i++) {
-	Crtc = rhdPtr->Crtc[i];
-	if (pScrn->scrnIndex == Crtc->scrnIndex)
-	    Crtc->Power(Crtc, RHD_POWER_RESET);
-    }
+    for (i = 0; i < 2; i++)
+	rhdPtr->Crtc[i]->Power(rhdPtr->Crtc[i], RHD_POWER_RESET);
 
     if (!RHDMCIdle(rhdPtr, 1000))
-	xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "MC not idle\n");
+	xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING, "MC not idle\n");
 
 }
 
@@ -1287,7 +1310,7 @@ RHDCloseScreen(int scrnIndex, ScreenPtr pScreen)
 	RHDCSStop(rhdPtr->CS);
 
     if (pScrn->vtSema)
-	RHDAllIdle(pScrn);
+	rhdAllIdle(rhdPtr);
 
 #ifdef USE_DRI
     if (rhdPtr->dri)
@@ -1322,6 +1345,13 @@ RHDEnterVT(int scrnIndex, int flags)
 
     rhdSave(rhdPtr);
 
+    /* disable all memory accesses for MC setup */
+    RHDVGADisable(rhdPtr);
+    rhdAllIdle(rhdPtr);
+
+    /* now set up the MC - has to be done before DRI init */
+    RHDMCSetup(rhdPtr);
+
 #ifdef ATOM_BIOS
     /* Set accelerator mode in the BIOSScratch registers */
     RHDAtomBIOSScratchSetAccelratorMode(rhdPtr, TRUE);
@@ -1340,15 +1370,24 @@ RHDEnterVT(int scrnIndex, int flags)
 
     RHDAdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
 
+    /* enable/disable audio */
+    RHDAudioSetEnable(rhdPtr, rhdPtr->audio.val.bool);
+
 #ifdef USE_DRI
     if (rhdPtr->dri)
 	RHDDRIEnterVT(pScrn->pScreen);
 #endif
 
     if (rhdPtr->CS) {
-	if ((rhdPtr->ChipSet < RHD_R600) && rhdPtr->TwoDPrivate) {
-	    R5xx2DSetup(pScrn);
-	    R5xx2DIdle(pScrn);
+	if (rhdPtr->ChipSet < RHD_R600) {
+	    if (rhdPtr->TwoDPrivate) {
+		R5xx2DSetup(pScrn);
+		R5xx2DIdle(pScrn);
+	    }
+
+	    if (rhdPtr->ThreeDPrivate)
+		((struct R5xx3D *) rhdPtr->ThreeDPrivate)->XHas3DEngineState =
+		    FALSE;
 	}
 
 	RHDCSStart(rhdPtr->CS);
@@ -1382,7 +1421,10 @@ RHDLeaveVT(int scrnIndex, int flags)
     if (rhdPtr->CS)
 	RHDCSStop(rhdPtr->CS);
 
-    RHDAllIdle(pScrn);
+    rhdAllIdle(rhdPtr);
+
+    if (rhdPtr->randr)
+	RHDRRFreeShadow(pScrn);
 
     rhdRestore(rhdPtr);
 }
@@ -1400,7 +1442,7 @@ RHDSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
     if (rhdPtr->randr)
 	RHDRandrSwitchMode(pScrn, mode);
     else {
-	rhdPrepareMode(rhdPtr);
+	RHDPrepareMode(rhdPtr);
 	rhdSetMode(xf86Screens[scrnIndex], mode);
     }
 
@@ -1730,6 +1772,8 @@ rhdMapFB(RHDPtr rhdPtr)
 	    }
 	}
 	if (SetIGPMemory) {
+	    CARD32 FbMapSizePCI =  rhdPtr->FbMapSize;
+
 	    xf86DrvMsg(rhdPtr->scrnIndex, option, "Mapping IGP memory @ 0x%8.8x\n",rhdPtr->FbPhysAddress);
 	    rhdPtr->FbMapSize = pScrn->videoRam * 1024;
 #ifdef XSERVER_LIBPCIACCESS
@@ -1748,6 +1792,9 @@ rhdMapFB(RHDPtr rhdPtr)
 			      rhdPtr->FbPhysAddress,
 			      rhdPtr->FbMapSize);
 #endif
+	    /* If mapping was unsuccessful restore old size */
+	    if (!rhdPtr->FbBase)
+		rhdPtr->FbMapSize = FbMapSizePCI;
 	} else {
 	    xf86DrvMsg(rhdPtr->scrnIndex, option, "Not Mapping IGP memory\n");
 	}
@@ -1918,7 +1965,7 @@ rhdModeLayoutSelect(RHDPtr rhdPtr)
     struct rhdOutput *Output;
     struct rhdConnector *Connector;
     Bool Found = FALSE;
-    char *ignore = NULL;
+    RHDOpt ignore;
     Bool ConnectorIsDMS59 = FALSE;
     int i = 0;
 
@@ -1939,7 +1986,7 @@ rhdModeLayoutSelect(RHDPtr rhdPtr)
     }
 
     /* quick and dirty option so that some output choice exists */
-    ignore = xf86GetOptValString(rhdPtr->Options, OPTION_IGNORECONNECTOR);
+    RhdGetOptValString (rhdPtr->Options, OPTION_IGNORECONNECTOR, &ignore, "");
 
     /* handle cards with DMS-59 connectors appropriately. The DMS-59 to VGA
        adapter does not raise HPD at all, so we need a fallback there. */
@@ -1957,10 +2004,15 @@ rhdModeLayoutSelect(RHDPtr rhdPtr)
 	if (!Connector)
 	    continue;
 
-	if (ignore && !strcasecmp(Connector->Name, ignore)) {
-	    xf86DrvMsg(rhdPtr->scrnIndex, X_INFO,
-		       "Skipping connector \"%s\"\n", ignore);
-	    continue;
+	switch(RhdParseBooleanOption(&ignore, Connector->Name)) {
+	    case RHD_OPTION_ON:
+	    case RHD_OPTION_DEFAULT:
+		xf86DrvMsg(rhdPtr->scrnIndex, X_INFO,
+		           "Skipping connector \"%s\"\n", Connector->Name);
+		continue;
+	    case RHD_OPTION_OFF:
+	    case RHD_OPTION_NOT_SET:
+		break;
 	}
 
 	if (Connector->HPDCheck) {
@@ -1990,7 +2042,7 @@ rhdModeLayoutSelect(RHDPtr rhdPtr)
 		xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING, "Unable to attach a"
 			   " monitor to connector \"%s\"\n", Connector->Name);
 		Output->Active = FALSE;
-	    } else {
+	    } else if (!Output->AllocFree || Output->AllocFree(Output, RHD_OUTPUT_ALLOC)){
 		Connector->Monitor = Monitor;
 
 		Output->Active = TRUE;
@@ -2230,17 +2282,16 @@ rhdModeLayoutPrint(RHDPtr rhdPtr)
 /*
  *
  */
-static void
-rhdPrepareMode(RHDPtr rhdPtr)
+void
+RHDPrepareMode(RHDPtr rhdPtr)
 {
     RHDFUNC(rhdPtr);
 
+    /* Stop crap from being shown: gets reenabled through SaveScreen */
+    rhdPtr->Crtc[0]->Blank(rhdPtr->Crtc[0], TRUE);
+    rhdPtr->Crtc[1]->Blank(rhdPtr->Crtc[1], TRUE);
     /* no active outputs == no mess */
     RHDOutputsPower(rhdPtr, RHD_POWER_RESET);
-
-    /* Disable CRTCs to stop noise from appearing. */
-    rhdPtr->Crtc[0]->Power(rhdPtr->Crtc[0], RHD_POWER_RESET);
-    rhdPtr->Crtc[1]->Power(rhdPtr->Crtc[1], RHD_POWER_RESET);
 }
 
 /*
@@ -2253,18 +2304,6 @@ rhdModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 
     RHDFUNC(rhdPtr);
     pScrn->vtSema = TRUE;
-
-    /* Stop crap from being shown: gets reenabled through SaveScreen */
-    rhdPtr->Crtc[0]->Blank(rhdPtr->Crtc[0], TRUE);
-    rhdPtr->Crtc[1]->Blank(rhdPtr->Crtc[1], TRUE);
-
-    rhdPrepareMode(rhdPtr);
-
-    /* now disable our VGA Mode */
-    RHDVGADisable(rhdPtr);
-
-    /* now set up the MC */
-    RHDMCSetup(rhdPtr);
 
     rhdSetMode(pScrn, mode);
 }
@@ -2344,6 +2383,7 @@ rhdSave(RHDPtr rhdPtr)
     rhdPtr->BIOSScratch = RHDSaveBiosScratchRegisters(rhdPtr);
 #endif
     RHDPLLsSave(rhdPtr);
+    RHDAudioSave(rhdPtr);
     RHDLUTsSave(rhdPtr);
 
     RHDCrtcSave(rhdPtr->Crtc[0]);
@@ -2363,10 +2403,10 @@ rhdRestore(RHDPtr rhdPtr)
 
     RHDRestoreMC(rhdPtr);
 
-    if (rhdPtr->CursorInfo)
-	rhdRestoreCursor(pScrn);
+    rhdRestoreCursor(pScrn);
 
     RHDPLLsRestore(rhdPtr);
+    RHDAudioRestore(rhdPtr);
     RHDLUTsRestore(rhdPtr);
 
     RHDVGARestore(rhdPtr);
@@ -2742,7 +2782,12 @@ rhdProcessOptions(ScrnInfoPtr pScrn)
 			&rhdPtr->unverifiedFeatures, FALSE);
     RhdGetOptValBool   (rhdPtr->Options, OPTION_USE_ATOMBIOS,
 			&rhdPtr->UseAtomBIOS, FALSE);
-
+    RhdGetOptValBool   (rhdPtr->Options, OPTION_AUDIO,
+			&rhdPtr->audio, TRUE);
+    RhdGetOptValString (rhdPtr->Options, OPTION_HDMI,
+			&rhdPtr->hdmi, "none");
+    RhdGetOptValString(rhdPtr->Options, OPTION_COHERENT,
+		       &rhdPtr->coherent, NULL);
 #ifdef ATOM_BIOS
     rhdParseAtomBIOSUsage(pScrn);
 #endif
@@ -2765,6 +2810,7 @@ rhdProcessOptions(ScrnInfoPtr pScrn)
 	"     This shall only be used to work around broken connector tables.\n"
 	"     Please report your findings to radeonhd@opensuse.org\n");
 }
+
 
 /*
  *  rhdDoReadPCIBios(): do the actual reading, return size and copy in ptr

@@ -174,7 +174,9 @@ enum atomDevice {
     atomTV2,  /* 7 */
     atomDFP2, /* 8 */
     atomCV,   /* 9 */
-    atomDFP3  /* a */
+    atomDFP3, /* a */
+    atomDFP4, /* b */
+    atomDFP5  /* c */
 };
 
 typedef struct AtomGoldenSettings
@@ -227,6 +229,8 @@ enum atomOutputLinks {
 enum atomTransmitter {
     atomTransmitterLVTMA,
     atomTransmitterUNIPHY,
+    atomTransmitterUNIPHY1,
+    atomTransmitterUNIPHY2,
     atomTransmitterPCIEPHY,
     atomTransmitterDIG1,
     atomTransmitterDIG2
@@ -245,6 +249,7 @@ enum atomTransmitterAction {
 };
 
 enum atomEncoder {
+    atomEncoderNone,
     atomEncoderDACA,
     atomEncoderDACB,
     atomEncoderTV,
@@ -295,7 +300,11 @@ enum atomOutputType {
     atomOutputDvo,
     atomOutputKldskpLvtma,
     atomOutputUniphyA,
-    atomOutputUniphyB
+    atomOutputUniphyB,
+    atomOutputUniphyC,
+    atomOutputUniphyD,
+    atomOutputUniphyE,
+    atomOutputUniphyF
 };
 
 enum atomOutputAction {
