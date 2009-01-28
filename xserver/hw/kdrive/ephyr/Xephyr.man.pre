@@ -77,8 +77,6 @@ Keyboard handling is basic but works.
 .TP \(bu 2
 Mouse button 5 probably wont work. 
 .SH "SEE ALSO"
-X(__miscmansuffix), Xserver(__appmansuffix__)
+X(__miscmansuffix__), Xserver(__appmansuffix__)
 .SH AUTHOR
 Matthew Allum <mallum@o-hand.com> 2004 
-
-
