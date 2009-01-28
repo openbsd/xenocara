@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2009/01/28 14:51:56 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2009/01/28 22:16:07 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -18,6 +18,6 @@ CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--disable-xvfb
 
 realinstall:
-	${INSTALL} -c -m 755 hw/kdrive/ephyr/Xephyr ${DESDIR}${BINDIR}
+	(cd hw/kdrive/ephyr ; make install)
 
 .include <bsd.xorg.mk>
