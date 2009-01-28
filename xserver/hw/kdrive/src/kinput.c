@@ -976,7 +976,7 @@ KdNewKeyboard (void)
     ki->next = NULL;
     ki->options = NULL;
 #ifdef XKB
-    ki->xkbRules = KdSaveString("base");
+    ki->xkbRules = KdSaveString("xorg");
     ki->xkbModel = KdSaveString("pc105");
     ki->xkbLayout = KdSaveString("us");
     ki->xkbVariant = NULL;
