@@ -970,7 +970,7 @@ not_success:
  ***************************************************************************
  */
 static LocalDevicePtr
-xf86EloAllocate(InputDriverPtr	drv)
+xf86EloAllocate(InputDriverPtr	drv, IDevPtr dev)
 {
   LocalDevicePtr	local;
   EloPrivatePtr		priv;
@@ -1002,7 +1002,7 @@ xf86EloAllocate(InputDriverPtr	drv)
   priv->packet_buf_p = 0;
   priv->swap_axes = 0;
 
-  local->name = XI_TOUCHSCREEN;
+  local->name = xstrdup(dev->identifier);
   local->flags = 0 /* XI86_NO_OPEN_ON_INIT */;
   local->device_control = xf86EloControl;
   local->read_input   = xf86EloReadInput;
@@ -1029,12 +1029,8 @@ xf86EloUninit(InputDriverPtr	drv,
 {
   EloPrivatePtr		priv = (EloPrivatePtr) local->private;
 
-  xf86EloControl(local->dev, DEVICE_OFF);
-
   xfree(priv->input_dev);
   xfree(priv);
-  xfree(local->name);
-  xfree(local);
 
   xf86DeleteInput(local, 0);
 }
@@ -1064,7 +1060,7 @@ xf86EloInit(InputDriverPtr	drv,
   Model*		model;
 
 
-  local = xf86EloAllocate(drv);
+  local = xf86EloAllocate(drv, dev);
   if (!local) {
     return NULL;
   }
