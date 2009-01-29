@@ -1,0 +1,5 @@
+To use the reg dumper program on a running X server you need :
+
+- to build a kernel with 'options INSECURE' and reboot in it
+- to set 'securelevel=-1' in /etc/rc.securelevel
+- to run intel_reg_dumper as root. 
