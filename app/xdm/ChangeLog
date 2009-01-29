@@ -1,3 +1,69 @@
+commit c9cdec25130bc957b584ec15187e068f9c08862d
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 14:24:58 2008 -0400
+
+    xdm 1.1.8
+
+commit 5f94cf40697145678c96e9899df69ad2550a4509
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Thu May 15 16:52:09 2008 +0200
+
+    $(builddir) is the current directory
+    
+    Apparently automake doesn't always export the builddir variable.
+    This fixes the previous commit.
+
+commit 46d72e82f4069d281f61a9fdbae11157241f3553
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Tue May 6 17:57:22 2008 -0700
+
+    Bug 10145: xdm passes file descriptors to children
+    
+    X.Org Bugzilla #10145 <https://bugs.freedesktop.org/show_bug.cgi?id=10145>
+    Patch #14644 <https://bugs.freedesktop.org/attachment.cgi?id=14644>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b4ac133b92e08a34054d0af9481ab59b03571818
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Apr 20 19:32:12 2008 +0200
+
+    Fix build with builddir != srcdir
+
+commit 1b14e9391500d06dd0b61967db8099c3cf27f90c
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Mar 27 19:57:08 2008 -0700
+
+    Build fix for case-insensitive file systems
+
+commit c0f0d3adebb9b133e26a6e25738cfe38b36e5314
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Mar 27 19:52:33 2008 -0700
+
+    Added include of pwd.h so we build correctly on OS-X - see xorg mailing list
+
+commit c2de936fe580d82da3c5b3590a1acb9e28ec68c1
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Mar 8 06:40:14 2008 +0100
+
+    Fix installation of app-defaults
+    
+    Add a configure option for appdefaultdir, and use it for
+    make distcheck, because it wants everything under $prefix.
+    By default, still use `pkg-config --variable=appdefaultdir xt'.
+
+commit f2f2eed7c284ced3ddc3fe3451ec7a8af9dfdbb4
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 22:21:57 2008 +0100
+
+    README: nuke RCS Id
+
+commit 576861d7e6158790e18ae79b8d566919b88d0cae
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Mar 7 17:12:33 2008 -0500
+
+    xdm 1.1.7
+
 commit 996fea2fb1ae1e419e673b89cc3778e371a29324
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Fri Mar 7 17:10:30 2008 -0500

@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 dnl $XdotOrg: app/xdm/configure.ac,v 1.42 2006/06/03 01:01:21 alanc Exp $
 
 AC_PREREQ([2.57])
-AC_INIT(xdm,[1.1.7],[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xdm)
+AC_INIT(xdm,[1.1.8],[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xdm)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -538,8 +538,13 @@ AC_DEFINE_DIR(DEF_GREETER_LIB, XDMLIBDIR/libXdmGreet.so,
 	[Define to pathname where greeter shared object is installed (if used)])
 
 PKG_CHECK_MODULES(APPDEFS, xt)
-appdefaultdir=$(pkg-config --variable=appdefaultdir xt)
+xt_appdefaultdir=$(pkg-config --variable=appdefaultdir xt)
+AC_ARG_WITH(appdefaultdir,
+	AC_HELP_STRING([--with-appdefaultdir=<pathname>],
+	  [specify directory for app-defaults files (default is autodetected)]),
+	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(appdefaultdir)
+
 AC_SUBST(MKTEMP_COMMAND)
 
 XORG_WITH_LINT

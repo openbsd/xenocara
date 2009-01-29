@@ -228,6 +228,7 @@ DMCP_CFLAGS = @DMCP_CFLAGS@
 DMCP_LIBS = @DMCP_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
+DSYMUTIL = @DSYMUTIL@
 DYNAMIC_GREETER_FALSE = @DYNAMIC_GREETER_FALSE@
 DYNAMIC_GREETER_TRUE = @DYNAMIC_GREETER_TRUE@
 ECHO = @ECHO@
@@ -273,6 +274,7 @@ MAKEINFO = @MAKEINFO@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MKTEMP_COMMAND = @MKTEMP_COMMAND@
+NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -287,6 +289,7 @@ RANDOMMANDEFS = @RANDOMMANDEFS@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
+SED = sed
 SERVERSTYPE = @SERVERSTYPE@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -331,7 +334,9 @@ ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
@@ -345,8 +350,6 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
-
-# App default files  (*.ad)
 appdefaultdir = @appdefaultdir@
 bindir = @bindir@
 build = @build@
@@ -401,7 +404,6 @@ appman_DATA = $(appman_PRE:man.cpp=@APP_MAN_SUFFIX@)
 CLEANFILES = $(appman_DATA) $(APPDEFAULTFILES)
 EXTRA_DIST = $(appman_PRE) ChangeLog $(APPDEFAULTFILES:%=%.ad)
 MAINTAINERCLEANFILES = ChangeLog
-SED = sed
 SUFFIXES = .cpp .$(APP_MAN_SUFFIX) .man.cpp .ad
 WCHAR32_FLAGS = -DWCHAR32=@WCHAR32@
 
@@ -449,7 +451,9 @@ chooser_LDADD = $(CHOOSER_LIBS)
 chooser_SOURCES = \
 	chooser.c
 
-APPDEFAULTFILES = Chooser
+
+# App default files  (*.ad)
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
 appdefault_DATA = $(APPDEFAULTFILES)
 @LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 @LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
@@ -1495,6 +1499,7 @@ uninstall-info: uninstall-info-recursive
 	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
 
 .ad:
+	[ -d app-defaults ] || mkdir app-defaults
 	cp $< $@
 
 @LINT_TRUE@lint:

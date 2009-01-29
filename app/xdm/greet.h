@@ -31,7 +31,7 @@ from The Open Group.
 /*
  * greet.h - interface to xdm's dynamically-loadable modular greeter
  */
-
+#include <pwd.h>
 #include <X11/Xlib.h>
 
 /*

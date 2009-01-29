@@ -846,6 +846,10 @@ runAndWait (char **args, char **environ)
     switch (pid = fork ()) {
     case 0:
 	CleanUpChild ();
+#ifdef XDMCP
+	/* The chooser socket is not closed by CleanUpChild() */
+	DestroyWellKnownSockets();
+#endif
 	execute (args, environ);
 	LogError ("can't execute \"%s\" (err %d)\n", args[0], errno);
 	exit (1);

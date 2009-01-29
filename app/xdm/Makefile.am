@@ -151,13 +151,14 @@ chooser_SOURCES =	\
 
 # App default files  (*.ad)
 
-appdefaultdir = @appdefaultdir@
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
 
-APPDEFAULTFILES = Chooser
+appdefaultdir = @appdefaultdir@
 
 SUFFIXES += .ad
 
 .ad:
+	[ -d app-defaults ] || mkdir app-defaults
 	cp $< $@
 
 appdefault_DATA = $(APPDEFAULTFILES)
