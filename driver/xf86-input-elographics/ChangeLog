@@ -1,3 +1,86 @@
+commit 37cd09e99c7f5fa4ce7511b8ed171a3ae130300f
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Tue Oct 21 15:33:43 2008 +1030
+
+    elographics 1.2.3
+
+commit 117a54598043df6497fbc1ae4f047cc248441072
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Tue Oct 14 10:22:29 2008 +1030
+
+    Add special handling for Sunit dSeries. RH #445193
+    
+    This model does not reply to queries about touchscreen identification. After
+    opening the fd, we can skip right to enabling the device.
+    
+    Red Hat Bug <https://bugzilla.redhat.com/show_bug.cgi?id=445193>
+
+commit d0aa1083c0130861a2c78509b72847fc3f7ee5f3
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Tue Oct 14 10:11:11 2008 +1030
+
+    Add Option "Model" to supported list of options.
+    
+    Some touchscreens supported by this driver need  special handling, hence the
+    explicit specification of the model. Note that this commit does not actually
+    do anything with the information, it just sets some internal state.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@redhat.com>
+
+commit bf0e1bf915cb679bd425712300f5dc5c80ed190a
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Thu Aug 14 15:34:51 2008 +0930
+
+    Fix build, xf86Version.h -> xorgVersion.h
+
+commit 038798931482575adb411129f016e207034e2dee
+Author: William Brack <wbrack@mmm.com.hk>
+Date:   Wed Jun 18 13:42:44 2008 +0930
+
+    Don't convert coordinates for servers 1.4 and above.
+    
+    These servers do the coordinate conversion themselves, so no need to do it in
+    the driver.
+    
+    Signed-off-by: Peter Hutterer <peter@cs.unisa.edu.au>
+
+commit c73c44d8f68448737695a112b2e9d15b785ade2f
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Tue Jun 17 14:11:58 2008 +0930
+
+    Remove RCS tags.
+
+commit a932fd4174ae4bf511e1418055f1470ba2860b43
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Tue Jun 17 14:18:31 2008 +0930
+
+    Remove XFREE_V4 define and all code that expects it to be unset.
+    
+    If you're still not running something more recent than X11 3, then you have
+    other issues anyway.
+
+commit b489fb3c176f9f0c3a98e3145b72fd0d9a6587b6
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Thu Jun 12 21:56:04 2008 +0930
+
+    Remove trailing whitespaces.
+
+commit 086e9d2056c8fbb5138b54b95f4559acf8f0f158
+Author: William M. Brack <wbrack@mmm.com.hk>
+Date:   Tue Jun 17 09:00:32 2008 +0930
+
+    WaitForInput before trying to xf86EloGetPacket. #14109
+    
+    Followup to 72408c2404246b9cb4698bd45be439be8ced3c23.
+    
+    This patch isn't perfect yet, usage of O_NONBLOCK would be preferred and some
+    better error handling for incomplete packages, but at least it's less broken
+    than without this patch.
+    
+    Signed-off-by: Peter Hutterer <peter@cs.unisa.edu.au>
+    
+    X.Org Bug 14109 <http://bugs.freedesktop.org/show_bug.cgi?id=14109>
+
 commit 929b72352110b8d5dcdf74bec21694d8de9f948c
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Tue Jun 10 22:01:08 2008 +0200

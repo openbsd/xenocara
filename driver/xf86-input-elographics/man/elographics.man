@@ -1,4 +1,3 @@
-.\" $XFree86: xc/programs/Xserver/hw/xfree86/input/elographics/elographics.man,v 1.1 2001/01/24 00:06:36 dawes Exp $
 .\" shorthand for double quote that works everywhere.
 .ds q \N'34'
 .TH elographics __drivermansuffix__ __vendorversion__
@@ -72,6 +71,9 @@ event to occur. Default: 5 (50ms).
 .TP
 .BI "Option \*qReportDelay\*q \*q" integer \*q
 Delay between report packets. Default: 1 (10ms).
+.TP
+.BI "Option \*qModel\*q \*q" string \*q
+The touchscreen model. Default: unset. Supported models: "Sunit dSeries".
 .SH "SEE ALSO"
 __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__).
 .SH AUTHORS
