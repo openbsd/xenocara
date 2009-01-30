@@ -274,6 +274,8 @@ main(int argc, char *argv[])
 
     /* alloc window name */
     win_name_size = (header.header_size - SIZEOF(XWDheader));
+    if (win_name_size < 1)
+      Error("win_name_size");
     if((win_name = malloc((unsigned) win_name_size + 6)) == NULL)
       Error("Can't malloc window name storage.");
     strcpy(win_name, "xwud: ");
@@ -281,6 +283,7 @@ main(int argc, char *argv[])
      /* read in window name */
     if(!Read(win_name + 6, sizeof(char), win_name_size, in_file))
       Error("Unable to read window name from dump file.");
+    (win_name + 6)[win_name_size - 1] = 0;
 
     if (dump_header) {
 	DumpHeader(&header, win_name);
