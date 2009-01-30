@@ -139,8 +139,17 @@ getLocalAddress (void)
 	struct hostent	*hostent;
 
 	hostent = gethostbyname (localHostname());
-	XdmcpAllocARRAY8 (&localAddress, hostent->h_length);
-	memmove( localAddress.data, hostent->h_addr, hostent->h_length);
+	if (hostent != NULL) {
+	    XdmcpAllocARRAY8 (&localAddress, hostent->h_length);
+	    memmove(localAddress.data, hostent->h_addr, hostent->h_length);
+	} else {
+	    /* Assume 127.0.0.1 */
+	    XdmcpAllocARRAY8 (&localAddress, 4);
+	    localAddress.data[0] = 127;
+	    localAddress.data[1] = 0;
+	    localAddress.data[2] = 0;
+	    localAddress.data[3] = 1;
+	}
 #endif
 
     }
