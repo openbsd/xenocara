@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.27 2008/10/05 08:06:06 matthieu Exp $
+# $OpenBSD: Makefile,v 1.28 2009/02/02 20:57:55 matthieu Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
@@ -9,6 +9,10 @@ RM?=rm
 
 .if ${MACHINE_ARCH} != "sh"
 XSERVER= xserver
+.endif
+
+.if ${USE_GCC3:L} == "yes"
+XSERVER+= kdrive
 .endif
 
 SUBDIR= proto data/bitmaps lib app data/xkbdata ${XSERVER} driver util doc
