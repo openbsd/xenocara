@@ -1,5 +1,5 @@
 ! $Xorg: Xresources,v 1.3 2000/08/17 19:54:17 cpqbld Exp $
-! $OpenBSD: Xresources.cpp,v 1.6 2008/01/05 17:23:14 matthieu Exp $
+! $OpenBSD: Xresources.cpp,v 1.7 2009/02/02 21:01:57 matthieu Exp $
 !
 !
 !
@@ -142,10 +142,12 @@ XConsole.verbose:	true
 XConsole*iconic:	true
 XConsole*font:		fixed
 
-Chooser*geometry:		700x500+300+200
+Chooser*geometry:		640x480
 Chooser*allowShellResize:	false
 Chooser*viewport.forceBars:	true
-Chooser*label.font:		*-new century schoolbook-bold-i-normal-*-240-*
-Chooser*label.label:		XDMCP Host Menu from CLIENTHOST
-Chooser*list.font:		-*-*-medium-r-normal-*-*-230-*-*-c-*-iso8859-1
-Chooser*Command.font:		*-new century schoolbook-bold-r-normal-*-180-*
+
+Chooser*label.font:	  -adobe-helvetica-bold-o-normal--24-*-p-*-iso8859-1
+Chooser*label.label:	  XDMCP Host Menu from CLIENTHOST
+Chooser*label.foreground: black
+Chooser*list.font:	  lucidasanstypewriter-12
+Chooser*Command.font:	  -adobe-helvetica-medium-r-normal--18-*-p-*-iso8859-1

@@ -1,6 +1,36 @@
-! $XFree86$
+! XDM chooser application defaults
 !
-*ShapeStyle:		Oval
+
+! 3D frames
+*box*displayList:\
+	line-width	4;\
+	join-style	bevel;\
+	foreground	#82a2e6;\
+	lines		0,0,-0,0,-0,-0;\
+	line-width	2;\
+	foreground	#325296;\
+	lines		0,0,0,-0,-0,-0;
+
+*list*displayList:\
+	line-width	4;\
+	join-style	bevel;\
+	foreground	#82a2e6;\
+	lines		0,0,-0,0,-0,-0;\
+	line-width	2;\
+	foreground	#325296;\
+	lines		0,0,0,-0,-0,-0;
+
+*label*displayList:\
+	line-width	4;\
+	join-style	bevel;\
+	foreground	#82a2e6;\
+	lines		0,0,-0,0,-0,-0;\
+	line-width	2;\
+	foreground	#325296;\
+	lines		0,0,0,-0,-0,-0;
+
+*background:	#5272b6
+
 *cursor:		left_ptr
 *allowShellResize:	true
 *label.label:		XDMCP Host Menu
@@ -44,8 +74,24 @@
 *accept.right:		ChainRight
 
 *cancel.translations:	#override \
-	<BtnUp>:		Cancel() unset()
+	<Map>:     get-values(1, $fg, foreground, $bg, background)\n\
+	<Enter>:   set-values(1, foreground, $bg, background, white)\n\
+	<Leave>:   set-values(1, foreground, $fg, background, $bg)\n\
+	<BtnDown>: set-values(1, foreground, black, background, #325296)\n\
+	<BtnUp>:   set-values(1, foreground, $fg, background, $bg) \
+		   Cancel() unset()
 *accept.translations:	#override \
-	<BtnUp>:		Accept() unset()
+	<Map>:	   get-values(1, $fg, foreground, $bg, background)\n\
+	<Enter>:   set-values(1, foreground, $bg, background, white)\n\
+	<Leave>:   set-values(1, foreground, $fg, background, $bg)\n\
+	<BtnDown>: set-values(1, foreground, black, background, #325296)\n\
+	<BtnUp>:   set-values(1, foreground, $fg, background, $bg) \
+		   Accept() unset()
 *ping.translations:	#override \
-	<BtnUp>:		Ping() unset()
+	<Map>:	   get-values(1, $fg, foreground, $bg, background)\n\
+	<Enter>:   set-values(1, foreground, $bg, background, white)\n\
+	<Leave>:   set-values(1, foreground, $fg, background, $bg)\n\
+	<BtnDown>: set-values(1, foreground, black, background, #325296)\n\
+	<BtnUp>:   set-values(1, foreground, $fg, background, $bg) \
+	           Ping() unset()
+
