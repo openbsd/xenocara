@@ -665,6 +665,7 @@
 ./usr/X11R6/include/freetype2/freetype/tttags.h
 ./usr/X11R6/include/freetype2/freetype/ttunpat.h
 ./usr/X11R6/include/pciaccess.h
+./usr/X11R6/include/xf86drmMode.h
 ./usr/X11R6/lib/X11/config
 ./usr/X11R6/lib/X11/config/Amoeba.cf
 ./usr/X11R6/lib/X11/config/DGUX.cf

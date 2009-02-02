@@ -2,7 +2,6 @@
 ./etc/X11/app-defaults/Bitmap
 ./etc/X11/app-defaults/Bitmap-color
 ./etc/X11/app-defaults/Bitmap-nocase
-./etc/X11/app-defaults/Chooser
 ./etc/X11/app-defaults/Clock-color
 ./etc/X11/app-defaults/Editres
 ./etc/X11/app-defaults/Editres-color
