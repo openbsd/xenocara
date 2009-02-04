@@ -17,6 +17,7 @@
 ./usr/X11R6/include/GL/osmesa.h
 ./usr/X11R6/include/X11/dri/xf86dri.h
 ./usr/X11R6/include/X11/dri/xf86dristr.h
+./usr/X11R6/include/intel_bufmgr.h
 ./usr/X11R6/include/xf86drm.h
 ./usr/X11R6/include/xorg/dixaccess.h
 ./usr/X11R6/include/xorg/dri.h
@@ -86,7 +87,10 @@
 ./usr/X11R6/lib/libXxf86vm.so.5.0
 ./usr/X11R6/lib/libdmx.so.1.0
 ./usr/X11R6/lib/libdrm.a
-./usr/X11R6/lib/libdrm.so.2.3
+./usr/X11R6/lib/libdrm.so.2.4
+./usr/X11R6/lib/libdrm_intel.a
+./usr/X11R6/lib/libdrm_intel.so.1.0
+./usr/X11R6/lib/libdrm_intel_pic.a
 ./usr/X11R6/lib/libdrm_pic.a
 ./usr/X11R6/lib/libfontconfig.so.5.1
 ./usr/X11R6/lib/libfontenc.so.3.0

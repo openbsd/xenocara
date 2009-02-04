@@ -14,6 +14,7 @@
 ./usr/X11R6/include/GL/glxext.h
 ./usr/X11R6/include/GL/internal/dri_sarea.h
 ./usr/X11R6/include/GL/osmesa.h
+./usr/X11R6/include/intel_bufmgr.h
 ./usr/X11R6/include/xorg/dixaccess.h
 ./usr/X11R6/include/xorg/hotplug.h
 ./usr/X11R6/include/xorg/privates.h
@@ -77,6 +78,9 @@
 ./usr/X11R6/lib/libXxf86misc.so.5.0
 ./usr/X11R6/lib/libXxf86vm.so.5.0
 ./usr/X11R6/lib/libdmx.so.1.0
+./usr/X11R6/lib/libdrm_intel.a
+./usr/X11R6/lib/libdrm_intel.so.1.0
+./usr/X11R6/lib/libdrm_intel_pic.a
 ./usr/X11R6/lib/libdrm_pic.a
 ./usr/X11R6/lib/libfontconfig.so.5.1
 ./usr/X11R6/lib/libfontenc.so.3.0
