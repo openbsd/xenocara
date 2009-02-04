@@ -216,16 +216,13 @@ intelUpdatePageFlipping(struct intel_context *intel,
    intel_draw_buffer(&intel->ctx, intel->ctx.DrawBuffer);
 }
 
-/**
- * This will be called whenever the currently bound window is moved/resized.
- * XXX: actually, it seems to NOT be called when the window is only moved (BP).
+/*
+ * Correct a drawablePrivate's set of vblank flags WRT the current context.
+ * When considering multiple crtcs.
  */
-void
-intelWindowMoved(struct intel_context *intel)
+GLuint
+intelFixupVblank(struct intel_context *intel, __DRIdrawablePrivate *dPriv)
 {
-   GLcontext *ctx = &intel->ctx;
-   __DRIdrawablePrivate *dPriv = intel->driDrawable;
-   struct intel_framebuffer *intel_fb = dPriv->driverPrivate;
 
    if (!intel->ctx.DrawBuffer) {
       /* when would this happen? -BP */
@@ -274,6 +271,35 @@ intelWindowMoved(struct intel_context *intel)
       } else {
 	 flags = dPriv->vblFlags & ~VBLANK_FLAG_SECONDARY;
       }
+
+      /* Do the stupid test: Is one of them actually disabled?
+       */
+      if (sarea->planeA_w == 0 || sarea->planeA_h == 0) {
+	 flags = dPriv->vblFlags | VBLANK_FLAG_SECONDARY;
+      } else if (sarea->planeB_w == 0 || sarea->planeB_h == 0) {
+	 flags = dPriv->vblFlags & ~VBLANK_FLAG_SECONDARY;
+      }
+
+      return flags;
+   } else {
+	return dPriv->vblFlags & ~VBLANK_FLAG_SECONDARY;
+   }
+}
+
+/**
+ * This will be called whenever the currently bound window is moved/resized.
+ * XXX: actually, it seems to NOT be called when the window is only moved (BP).
+ */
+void
+intelWindowMoved(struct intel_context *intel)
+{
+   GLcontext *ctx = &intel->ctx;
+   __DRIdrawablePrivate *dPriv = intel->driDrawable;
+   struct intel_framebuffer *intel_fb = dPriv->driverPrivate;
+
+   if (!intel->intelScreen->driScrnPriv->dri2.enabled &&
+       intel->intelScreen->driScrnPriv->ddx_version.minor >= 7) {
+      GLuint flags = intelFixupVblank(intel, dPriv);
 
       /* Check to see if we changed pipes */
       if (flags != dPriv->vblFlags && dPriv->vblFlags &&
