@@ -223,30 +223,6 @@ intelUpdatePageFlipping(struct intel_context *intel,
 GLuint
 intelFixupVblank(struct intel_context *intel, __DRIdrawablePrivate *dPriv)
 {
-
-   if (!intel->ctx.DrawBuffer) {
-      /* when would this happen? -BP */
-      intelSetFrontClipRects(intel);
-   }
-   else if (intel->ctx.DrawBuffer->Name != 0) {
-      /* drawing to user-created FBO - do nothing */
-      /* Cliprects would be set from intelDrawBuffer() */
-   }
-   else {
-      /* drawing to a window */
-      switch (intel_fb->Base._ColorDrawBufferIndexes[0]) {
-      case BUFFER_FRONT_LEFT:
-         intelSetFrontClipRects(intel);
-         break;
-      case BUFFER_BACK_LEFT:
-         intelSetBackClipRects(intel);
-         break;
-      default:
-         intelSetFrontClipRects(intel);
-      }
-	
-   }
-
    if (!intel->intelScreen->driScrnPriv->dri2.enabled &&
        intel->intelScreen->driScrnPriv->ddx_version.minor >= 7) {
       volatile struct drm_i915_sarea *sarea = intel->sarea;
@@ -261,8 +237,6 @@ intelFixupVblank(struct intel_context *intel, __DRIdrawablePrivate *dPriv)
       GLint areaA = driIntersectArea( drw_rect, planeA_rect );
       GLint areaB = driIntersectArea( drw_rect, planeB_rect );
       GLuint flags = dPriv->vblFlags;
-
-      intelUpdatePageFlipping(intel, areaA, areaB);
 
       /* Update vblank info
        */
@@ -296,6 +270,29 @@ intelWindowMoved(struct intel_context *intel)
    GLcontext *ctx = &intel->ctx;
    __DRIdrawablePrivate *dPriv = intel->driDrawable;
    struct intel_framebuffer *intel_fb = dPriv->driverPrivate;
+
+   if (!intel->ctx.DrawBuffer) {
+      /* when would this happen? -BP */
+      intelSetFrontClipRects(intel);
+   }
+   else if (intel->ctx.DrawBuffer->Name != 0) {
+      /* drawing to user-created FBO - do nothing */
+      /* Cliprects would be set from intelDrawBuffer() */
+   }
+   else {
+      /* drawing to a window */
+      switch (intel_fb->Base._ColorDrawBufferIndexes[0]) {
+      case BUFFER_FRONT_LEFT:
+         intelSetFrontClipRects(intel);
+         break;
+      case BUFFER_BACK_LEFT:
+         intelSetBackClipRects(intel);
+         break;
+      default:
+         intelSetFrontClipRects(intel);
+      }
+	
+   }
 
    if (!intel->intelScreen->driScrnPriv->dri2.enabled &&
        intel->intelScreen->driScrnPriv->ddx_version.minor >= 7) {
