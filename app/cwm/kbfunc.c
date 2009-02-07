@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.35 2009/02/03 22:20:31 martynas Exp $
+ * $Id: kbfunc.c,v 1.36 2009/02/07 21:07:00 martynas Exp $
  */
 
 #include <paths.h>
@@ -25,7 +25,6 @@
 
 #define KNOWN_HOSTS	".ssh/known_hosts"
 #define HASH_MARKER	"|1|"
-#define MOVE_AMOUNT	1
 
 extern int		_xev_quit;
 
@@ -54,7 +53,7 @@ kbfunc_moveresize(struct client_ctx *cc, union arg *arg)
 	mx = my = 0;
 
 	flags = arg->i;
-	amt = MOVE_AMOUNT;
+	amt = Conf.mamount;
 
 	if (flags & CWM_BIGMOVE) {
 		flags -= CWM_BIGMOVE;

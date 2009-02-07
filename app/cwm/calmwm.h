@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.82 2009/01/27 02:16:20 okan Exp $
+ * $Id: calmwm.h,v 1.83 2009/02/07 21:07:00 martynas Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -256,6 +256,8 @@ struct conf {
 	int			 flags;
 #define CONF_BWIDTH		 1
 	int			 bwidth;
+#define	CONF_MAMOUNT		 1
+	int			 mamount;
 
 	char			 termpath[MAXPATHLEN];
 	char			 lockpath[MAXPATHLEN];

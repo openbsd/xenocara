@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.56 2009/01/23 20:47:45 okan Exp $
+ * $Id: conf.c,v 1.57 2009/02/07 21:07:00 martynas Exp $
  */
 
 #include "headers.h"
@@ -77,6 +77,7 @@ conf_init(struct conf *c)
 {
 	c->flags = 0;
 	c->bwidth = CONF_BWIDTH;
+	c->mamount = CONF_MAMOUNT;
 
 	TAILQ_INIT(&c->ignoreq);
 	TAILQ_INIT(&c->cmdq);
