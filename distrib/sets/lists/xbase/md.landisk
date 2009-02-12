@@ -1,4 +1,3 @@
-./etc/X11/app-defaults/Chooser
 ./usr/X11R6/bin/glxgears
 ./usr/X11R6/bin/glxinfo
 ./usr/X11R6/bin/ucs2any
@@ -19,7 +18,6 @@
 ./usr/X11R6/include/X11/dri/xf86dri.h
 ./usr/X11R6/include/X11/dri/xf86dristr.h
 ./usr/X11R6/include/xf86drm.h
-./usr/X11R6/include/xf86drmMode.h
 ./usr/X11R6/include/xorg
 ./usr/X11R6/lib/libFS.so.8.0
 ./usr/X11R6/lib/libGL.a
