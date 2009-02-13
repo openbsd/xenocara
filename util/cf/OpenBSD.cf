@@ -436,8 +436,6 @@ install:: fonts.alias							@@\
 #ifdef AMD64Architecture
 
 # define HasWeakSymbols		YES
-# define HasSharedLibraries	YES
-# define HasDlopen		YES
 
 # define XorgServer		YES
 
@@ -666,51 +664,26 @@ install:: fonts.alias							@@\
 
 
 /*
- * Definitions for the mips architecture (currently arc, pmax)
+ * Definitions for the mips architecture (currently sgi)
  */
 #ifdef MipsArchitecture
 
- /*
-  * Mips ELF shared libs need some special handling.
-  */
-# define PositionIndependentCFlags
-# define SharedLibraryLoadFlags -x -shared --whole-archive -soname `echo $@ | sed 's/\.[0-9]*$$//'`
-# define SharedXtReqs -L$(BUILDLIBDIR) $(XONLYLIB) $(SMLIB) $(ICELIB)
-# define SharedXmuReqs $(LDPRELIB) $(XTOOLONLYLIB) $(XLIB)
+# define HasWeakSymbols		YES
 
-#endif /* MipsArchitecture */
+# define XorgServer		YES
 
-
-/*
- * Definitions for the arc architecture
- */
-#ifdef ArcArchitecture
-
-#  define ServerExtraDefines GccGasOption XFree86ServerDefines
-#  ifndef XFree86ConsoleDefines
-#    define XFree86ConsoleDefines -DPCCONS_SUPPORT
+# if XorgServer
+#  ifndef DoLoadableServer
+#    define DoLoadableServer	YES
 #  endif
+#  define XF86CardDrivers	wsfb
+#  define XFree86ConsoleDefines -DWSCONS_SUPPORT
+# endif
 
 # include <xorg.cf>
 
-#endif /* ArcArchitecture */
+#endif /* MipsArchitecture */
 
-
-/*
- * Definitions for the pmax architecture
- */
-#ifdef PmaxArchitecture
-
-# include <xf86.rules>
-# ifndef BuildServer
-#  define BuildServer		NO
-# endif
-/* For the X11R5 server */
-# define CompressAllFonts	NO
-# define InstallFontAliases	InstallFontAliasesNoComment
-# define UseRgbTxt		NO
-
-#endif /* PmaxArchitecture */
 
 /*
  * Definitions for the PowerPC architecture 
