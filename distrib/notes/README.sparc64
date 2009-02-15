@@ -85,8 +85,7 @@ EndSection
 Section "InputDevice"
 	Identifier  "Keyboard0"
 	Driver      "kbd"
-	Option	    "XkbRules" 	  "xorg"
-	Option	    "XkbLayout"   "us"
+	Option	    "XkbModel" 	  "sun"
 EndSection
 
 # USB Mice
@@ -267,4 +266,4 @@ See xorg.conf(5) for more options.
 
 problem_blurb
 
-$OpenBSD: README.sparc64,v 1.7 2009/01/12 20:46:58 miod Exp $
+$OpenBSD: README.sparc64,v 1.8 2009/02/15 15:27:40 matthieu Exp $
