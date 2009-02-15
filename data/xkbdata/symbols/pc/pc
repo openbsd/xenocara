@@ -171,6 +171,19 @@ xkb_symbols "basic" {
     key <KPDL> {  	[  KP_Delete,	KP_Decimal ]	};
     // End "Keypad" section
 
+    // Begin "Sun LKeys" section
+    key <STOP>	{ [ Cancel 	],	[ F11	]	};
+    key <AGAI>	{ [ Redo	],	[ F12	]	};
+    key <PROP>	{ [ SunProps	],	[ F13	]	};
+    key <UNDO>	{ [ Undo	],	[ F14	]	};
+    key <FRNT>	{ [ SunFront	],	[ F15	]	};
+    key <COPY>	{ [ SunCopy	],	[ F16	]	};
+    key <OPEN>	{ [ SunOpen	],	[ F17	]	};
+    key <PAST>	{ [ SunPaste	],	[ F18	]	};
+    key <FIND>	{ [ Find	],	[ F19	]	};
+    key <CUT>	{ [ SunCut	],	[ F20	]	};
+    // End "Sun LKeys" section
+
     // begin modifier mappings
     modifier_map Shift  { Shift_L, Shift_R };
     modifier_map Lock   { Caps_Lock, ISO_Lock };
