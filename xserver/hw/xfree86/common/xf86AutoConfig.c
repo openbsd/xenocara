@@ -453,6 +453,36 @@ chooseVideoDriver(void)
     } else {
 	if (info != NULL)
 	    chosen_driver = videoPtrToDriverName(info);
+#ifdef __OpenBSD__
+	if (chosen_driver == NULL) {
+	    int fd = xf86Info.screenFd;
+	    int type;
+
+	    if (ioctl(fd, WSDISPLAYIO_GTYPE, &type) != -1) {
+		switch (type) {
+		    case WSDISPLAY_TYPE_SUNFFB:
+			chosen_driver = "sunffb";
+			break;
+#ifdef notyet
+		    case WSDISPLAY_TYPE_SUNCG6:
+			chosen_driver = "suncg6";
+			break;
+#endif
+		    case WSDISPLAY_TYPE_IFB:
+			chosen_driver = "wildcatfb";
+			break;
+
+		    default:
+#if defined(__i386__) || defined(__amd64__)
+			chosen_driver = "vesa";
+#else
+			chosen_driver = "wsfb";
+#endif
+			break;
+		}
+	    }
+	}
+#endif
 	if (chosen_driver == NULL) {
 #if defined  __i386__ || defined __amd64__ || defined __x86_64__ || defined __hurd__
 	    chosen_driver = "vesa";
