@@ -556,7 +556,6 @@
 ./usr/X11R6/include/pixman-1
 ./usr/X11R6/include/pixman-1/pixman-version.h
 ./usr/X11R6/include/pixman-1/pixman.h
-./usr/X11R6/include/xf86drmMode.h
 ./usr/X11R6/lib
 ./usr/X11R6/lib/X11
 ./usr/X11R6/lib/X11/Xcms.txt

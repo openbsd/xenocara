@@ -14,6 +14,7 @@
 ./usr/X11R6/include/GL/glxext.h
 ./usr/X11R6/include/GL/internal/dri_sarea.h
 ./usr/X11R6/include/GL/osmesa.h
+./usr/X11R6/include/xf86drmMode.h
 ./usr/X11R6/include/xorg/dixaccess.h
 ./usr/X11R6/include/xorg/hotplug.h
 ./usr/X11R6/include/xorg/privates.h
