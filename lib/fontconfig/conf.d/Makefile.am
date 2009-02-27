@@ -35,6 +35,7 @@ CONF_FILES = \
 	20-unhint-small-vera.conf \
 	30-amt-aliases.conf \
 	30-urw-aliases.conf \
+	31-nonmst.conf \
 	40-generic.conf \
 	49-sansserif.conf \
 	50-user.conf \
@@ -55,6 +56,7 @@ CONF_LINKS = \
 	20-unhint-small-vera.conf \
 	30-amt-aliases.conf \
 	30-urw-aliases.conf \
+	31-nonmst.conf \
 	40-generic.conf \
 	49-sansserif.conf \
 	50-user.conf \
