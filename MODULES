@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.61 2009/03/03 20:37:06 matthieu Exp $
+# $OpenBSD: MODULES,v 1.62 2009/03/03 20:49:51 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -93,28 +93,28 @@ doc/xorg-docs		1.4	7.3	needs-update
 doc/xorg-sgml-doctools	1.1.1	7.2RC2
 
 driver/xf86-input-acecad	1.3.0	7.4+	needs-update
-driver/xf86-input-calcomp	1.1.2	7.4
+driver/xf86-input-calcomp	1.1.2	7.4	deprectated
 driver/xf86-input-citron	2.2.1	7.4
-driver/xf86-input-digitaledge	1.1.1	7.1
-driver/xf86-input-dmc		1.1.2	7.4
-driver/xf86-input-dynapro	1.1.2	7.4
-driver/xf86-input-elo2300	1.1.2	7.4
+driver/xf86-input-digitaledge	1.1.1	7.1	deprecated
+driver/xf86-input-dmc		1.1.2	7.4	deprecated
+driver/xf86-input-dynapro	1.1.2	7.4	deprecated
+driver/xf86-input-elo2300	1.1.2	7.4	deprecated
 driver/xf86-input-elographics	1.2.3	7.4+
 driver/xf86-input-fpit		1.3.0	7.4+	needs-update
 driver/xf86-input-hyperpen	1.3.0	7.4+	needs-update
-driver/xf86-input-jamstudio	1.2.0	7.4
+driver/xf86-input-jamstudio	1.2.0	7.4	deprecated
 driver/xf86-input-joystick	1.4.0	7.4+	needs-update
 driver/xf86-input-keyboard	1.3.2	7.4+	needs-update
-driver/xf86-input-magellan	1.2.0	7.4
+driver/xf86-input-magellan	1.2.0	7.4	deprecated
 driver/xf86-input-magictouch	1.0.0.5	7.0	deprecated
-driver/xf86-input-microtouch	1.2.0	7.4
+driver/xf86-input-microtouch	1.2.0	7.4	deprecated
 driver/xf86-input-mouse		1.4.0	7.4+	needs-update
 driver/xf86-input-mutouch	1.2.1	7.4+
-driver/xf86-input-palmax	1.2.0	7.4
+driver/xf86-input-palmax	1.2.0	7.4	deprecated
 driver/xf86-input-penmount	1.4.0	7.4+	needs-update
-driver/xf86-input-spaceorb	1.1.1	7.1
-driver/xf86-input-summa		1.2.0	7.4
-driver/xf86-input-tek4957	1.2.0	7.4
+driver/xf86-input-spaceorb	1.1.1	7.1	deprecated
+driver/xf86-input-summa		1.2.0	7.4	deprecated
+driver/xf86-input-tek4957	1.2.0	7.4	deprecated
 driver/xf86-input-vmmouse	12.6.3	7.4+	needs-update
 driver/xf86-input-void		1.2.0	7.4+	needs-update
 driver/xf86-video-apm		1.2.1	7.4+	needs-update
