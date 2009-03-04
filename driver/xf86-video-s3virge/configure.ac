@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-s3virge],
-        1.10.1,
+        1.10.2,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-s3virge)
 
