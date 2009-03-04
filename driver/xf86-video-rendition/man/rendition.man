@@ -107,6 +107,6 @@ as there has been indications of problems with it. Use
 .B "Option \*qMTRR\*q"
 to let the driver request write-combining of memory access on the video board.
 .SH "SEE ALSO"
-__xservername__(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1), X(__miscmansuffix__)
+__xservername__(1), __xconfigfile__(__filemansuffix__), Xserver(1), X(__miscmansuffix__)
 .SH AUTHORS
 Authors include: Marc Langenbach, Dejan Ilic

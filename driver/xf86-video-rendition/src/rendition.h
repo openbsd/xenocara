@@ -14,9 +14,6 @@
 /* Everything using inb/outb, etc needs "compiler.h" */
 #include "compiler.h"
 
-/* This is used for module versioning */
-#include "xf86Version.h"
-
 /* Drivers for PCI hardware need this */
 #include "xf86PciInfo.h"
 
