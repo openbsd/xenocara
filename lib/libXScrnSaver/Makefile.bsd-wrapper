@@ -1,5 +1,8 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.2 2007/03/15 23:00:47 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2009/03/05 12:45:30 ajacoutot Exp $
 
 SHARED_LIBS=	Xss 5.0
+
+afterinstall:
+	cd ${DESTDIR}${X11BASE}/man/man3 ; ln -sf Xss.3 XScreenSaver.3
 
 .include <bsd.xorg.mk>
