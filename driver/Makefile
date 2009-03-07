@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.28 2009/03/07 10:38:59 matthieu Exp $
+# $OpenBSD: Makefile,v 1.29 2009/03/07 10:59:52 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	openbsd-input-usbtablet \
@@ -9,14 +9,16 @@ INPUT_DRV_DEFAULT= \
 
 INPUT_DRV_COMMON= \
 	${INPUT_DRV_DEFAULT} \
-	xf86-input-acecad xf86-input-calcomp xf86-input-citron \
-	xf86-input-digitaledge xf86-input-dmc xf86-input-dynapro \
-	xf86-input-elo2300 xf86-input-elographics xf86-input-fpit \
-	xf86-input-hyperpen xf86-input-jamstudio xf86-input-joystick \
-	xf86-input-magellan \
-	xf86-input-microtouch xf86-input-mutouch xf86-input-penmount \
-	xf86-input-palmax xf86-input-spaceorb \
-	xf86-input-summa xf86-input-tek4957
+	xf86-input-acecad xf86-input-citron \
+	xf86-input-elographics xf86-input-fpit \
+	xf86-input-hyperpen xf86-input-joystick \
+	xf86-input-mutouch xf86-input-penmount
+
+# deprecated
+# xf86-input-calcomp xf86-input-digitaledge xf86-input-dmc 
+# xf86-input-dynapro xf86-input-elo2300  xf86-input-jamstudio 
+# xf86-input-magellan xf86-input-microtouch xf86-input-palmax 
+# xf86-input-spaceorb xf86-input-summa xf86-input-tek4957
 
 INPUT_DRV_alpha= ${INPUT_DRV_COMMON}
 
