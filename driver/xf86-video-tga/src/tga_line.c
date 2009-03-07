@@ -416,7 +416,11 @@ TGAPolySegment(
 #endif
 					  ){
     XAAInfoRecPtr infoRec = GET_XAAINFORECPTR_FROM_GC(pGC);
+#if TGA_OLDPRIV
     XAAGCPtr   pGCPriv = (XAAGCPtr) (pGC)->devPrivates[XAAGetGCIndex()].ptr;
+#else
+    XAAGCPtr   pGCPriv = (XAAGCPtr)dixLookupPrivate(&(pGC)->devPrivates, XAAGetGCKey());
+#endif
     BoxPtr pboxInit = REGION_RECTS(pGC->pCompositeClip);
     int nboxInit = REGION_NUM_RECTS(pGC->pCompositeClip);
     unsigned int bias = miGetZeroLineBias(pDrawable->pScreen);

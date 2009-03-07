@@ -21,11 +21,12 @@
  *
  * Authors:  Alan Hourihane, <alanh@fairlite.demon.co.uk>
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/tga/tga.h,v 1.17 2001/05/04 19:05:47 dawes Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/tga/tga.h,v 1.18 2001/11/21 22:32:58 alanh Exp $ */
 
 #ifndef _TGA_H_
 #define _TGA_H_
 
+#include "tga_pcirename.h"
 #include "xaa.h"
 #include "xf86RamDac.h"
 
@@ -33,12 +34,15 @@ typedef struct {
 	unsigned long tgaRegs[0x100];
 } TGARegRec, *TGARegPtr;
 
+#define TGA_OLDPRIV (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 4)
 
 #define TGAPTR(p)	((TGAPtr)((p)->driverPrivate))
 
 typedef struct {
     pciVideoPtr		PciInfo;
+#ifndef XSERVER_LIBPCIACCESS
     PCITAG		PciTag;
+#endif
     int			Chipset;
     RamDacHelperRecPtr	RamDac;
     int                 ChipRev;
