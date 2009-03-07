@@ -569,7 +569,7 @@ ProcXF86RushOverlayPixmap(ClientPtr client)
 	return (BadMatch);
     }
 
-    status = XVCALL(diMatchPort)(pPort, pDraw);
+    status = XvdiMatchPort(pPort, pDraw);
     if (status != Success)
 	return status;
 
@@ -580,7 +580,7 @@ ProcXF86RushOverlayPixmap(ClientPtr client)
 	client->errorValue = stuff->pixmap;
 	return (BadPixmap);
     }
-    status = XVCALL(diMatchPort)(pPort, (DrawablePtr)pPixmap);
+    status = XvdiMatchPort(pPort, (DrawablePtr)pPixmap);
     if (status != Success)
 	return status;
     pPriv = APM_GET_PIXMAP_PRIVATE(pPixmap);
@@ -604,7 +604,7 @@ ProcXF86RushOverlayPixmap(ClientPtr client)
 	return BadMatch;
 
     pApm->PutImageStride = pPixmap->devKind;
-    status = XVCALL(diPutImage)(client, pDraw, pPort, pGC,
+    status = XvdiPutImage(client, pDraw, pPort, pGC,
 				stuff->src_x, stuff->src_y,
 				stuff->src_w, stuff->src_h,
 				stuff->drw_x, stuff->drw_y,

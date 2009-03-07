@@ -53,9 +53,10 @@ static void	ApmDisplayPowerManagementSet(ScrnInfoPtr pScrn,
 					     int flags);
 static void	ApmProbeDDC(ScrnInfoPtr pScrn, int index);
 
-
+#ifdef XF86RUSH
 int ApmPixmapIndex = -1;
 static unsigned long ApmGeneration = 0;
+#endif
 
 _X_EXPORT DriverRec APM = {
 	APM_VERSION,
@@ -81,10 +82,12 @@ static PciChipsets ApmPciChipsets[] = {
     { -1,			-1,		RES_UNDEFINED }
 };
 
+#ifdef HAVE_ISA
 static IsaChipsets ApmIsaChipsets[] = {
     { PCI_CHIP_AP6422,	RES_EXCLUSIVE_VGA},
     {-1,		RES_UNDEFINED}
 };
+#endif
 
 typedef enum {
     OPTION_SET_MCLK,
@@ -327,6 +330,7 @@ ApmAvailableOptions(int chipid, int busid)
     return ApmOptions;
 }
 
+#ifdef HAVE_ISA
 static int
 ApmFindIsaDevice(GDevPtr dev)
 {
@@ -375,6 +379,7 @@ ApmFindIsaDevice(GDevPtr dev)
 
     return apmChip;
 }
+#endif
 
 static void
 ApmAssignFPtr(ScrnInfoPtr pScrn)
@@ -446,6 +451,7 @@ ApmProbe(DriverPtr drv, int flags)
 	}
     }
 
+#ifdef HAVE_ISA
     /* Check for non-PCI cards */
     numUsed = xf86MatchIsaInstances(APM_NAME, ApmChipsets,
 			ApmIsaChipsets, drv, ApmFindIsaDevice, DevSections,
@@ -466,6 +472,8 @@ ApmProbe(DriverPtr drv, int flags)
 	    }
 	}
     }
+#endif
+
     xfree(DevSections);
     return foundScreen;
 }
@@ -974,8 +982,10 @@ ApmPreInit(ScrnInfoPtr pScrn, int flags)
 	}
 	if (0 && !MonInfo)
 	    MonInfo = xf86DoEDID_DDC1(pScrn->scrnIndex,vgaHWddc1SetSpeed,ddc1Read);
-	if (MonInfo)
+	if (MonInfo) {
 	    xf86PrintEDID(MonInfo);
+	    xf86SetDDCproperties(pScrn, MonInfo);
+	}
 	pScrn->monitor->DDC = MonInfo;
     }
 
@@ -1998,7 +2008,7 @@ ApmScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     miSetPixmapDepths();
 
     switch (pScrn->bitsPerPixel) {
-#ifndef HAVE_XF1BPP
+#ifdef HAVE_XF1BPP
     case 1:
 	ret = xf1bppScreenInit(pScreen, FbBase,
 			pScrn->virtualX, pScrn->virtualY,
@@ -2120,6 +2130,7 @@ ApmScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	xf86ShowUnusedOptions(pScrn->scrnIndex, pScrn->options);
     }
 
+#ifdef XF86RUSH
     if (ApmGeneration != serverGeneration) {
 	if ((ApmPixmapIndex = AllocatePixmapPrivateIndex()) < 0)
 	    return FALSE;
@@ -2128,6 +2139,7 @@ ApmScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     if (!AllocatePixmapPrivate(pScreen, ApmPixmapIndex, sizeof(ApmPixmapRec)))
 	return FALSE;
+#endif
 
     /* Done */
     return TRUE;

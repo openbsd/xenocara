@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-apm],
-        1.2.0,
+        1.2.1,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-apm)
 
@@ -66,6 +66,14 @@ CFLAGS="$CFLAGS $XORG_CFLAGS $XF86RUSH_CFLAGS"' -I$(top_srcdir)/src'
 INCLUDES="$XORG_INCS -I${sdkdir} $XF86RUSH_INCS "'-I$(top_srcdir)/src -I$(prefix)/include'
 AC_SUBST([CFLAGS])
 AC_SUBST([INCLUDES])
+
+save_CFLAGS="$CFLAGS"
+CFLAGS="$XORG_CFLAGS"
+AC_CHECK_DECL(xf86ConfigIsaEntity,
+	      [AC_DEFINE(HAVE_ISA, 1, [Have ISA support])],
+	      [],
+	      [#include "xf86.h"])
+CFLAGS="$save_CFLAGS"
 
 # Checks for libraries.
 SAVE_CPPFLAGS="$CPPFLAGS"
