@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sisusb/src/sisusb_types.h,v 1.7 2005/08/15 22:57:51 twini Exp $ */
 /*
  * General type definitions for universal mode switching modules
  *
@@ -95,12 +93,7 @@ typedef unsigned char BOOLEAN;
 
 #define SISIOMEMTYPE
 
-#if XF86_VERSION_CURRENT < XF86_VERSION_NUMERIC(4,2,0,0,0)
-typedef unsigned long IOADDRESS;
-typedef unsigned long SISIOADDRESS;
-#else
 typedef IOADDRESS SISIOADDRESS;
-#endif
 
 typedef enum _SIS_CHIP_TYPE {
     SIS_VGALegacy = 0,

@@ -1,5 +1,5 @@
 .\" $XFree86$
-.\" $XdotOrg: driver/xf86-video-sisusb/man/sisusb.man,v 1.2 2005/01/25 16:11:05 twini Exp $
+.\" $XdotOrg$
 .\" shorthand for double quote that works everywhere.
 .ds q \N'34'
 #ifdef __xservername__
@@ -82,7 +82,7 @@ for device reconnection).
 none.
 .SH "SEE ALSO"
 #ifdef __xservername__
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__), sis(__drivermansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__), sis(__drivermansuffix__)
 #else
 XFree86(1), XF86Config(__filemansuffix__), xf86config(1), Xserver(1), X(__miscmansuffix__), sis(__drivermansuffix__)
 #endif

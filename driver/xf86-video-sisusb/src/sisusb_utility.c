@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sisusb/src/sisusb_utility.c,v 1.8 2005/09/16 13:52:16 twini Exp $ */
 /*
  * SiSUSB driver utility interface & routines
  *
@@ -40,8 +38,6 @@
 #define NEED_EVENTS
 #include <X11/X.h>
 #include "dixstruct.h"
-#define _XF86MISC_SERVER_
-#include <X11/extensions/xf86misc.h>
 
 #include "sisusb_videostr.h"
 
@@ -247,10 +243,6 @@ typedef struct {
     int		 (*HandleSiSDirectCommand[SISCTRL_MAX_SCREENS])(xSiSCtrlCommandReply *);
 } xSiSCtrlScreenTable;
 
-#ifdef X_XF86MiscPassMessage
-int		SISUSBHandleMessage(int scrnIndex, const char *msgtype,
-					const char *msgval, char **retmsg);
-#endif
 void		SiSUSBCtrlExtInit(ScrnInfoPtr pScrn);
 void		SiSUSBCtrlExtUnregister(SISUSBPtr pSiSUSB, int index);
 
@@ -266,19 +258,6 @@ extern void	SiSUSBUpdateXvGamma(SISUSBPtr pSiSUSB, SISUSBPortPrivPtr pPriv);
 #endif
 extern void	SISUSBSetPortDefaults(ScrnInfoPtr pScrn, SISUSBPortPrivPtr pPriv);
 #endif /* SIS_GLOBAL_ENABLEXV */
-
-/***********************************
- *     MessageHandler interface    *
- *   (unused now; use extension)   *
- ***********************************/
-
-#ifdef X_XF86MiscPassMessage
-int
-SISUSBHandleMessage(int scrnIndex, const char *msgtype, const char *msgval, char **retmsg)
-{
-    return BadMatch;
-}
-#endif
 
 /***********************************
  *   SiSCtrl extension interface   *

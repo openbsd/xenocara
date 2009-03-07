@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sisusb/src/sisusb_vga.c,v 1.5 2005/07/11 02:30:00 ajax Exp $ */
 /*
  * Mode setup and basic video bridge detection
  *

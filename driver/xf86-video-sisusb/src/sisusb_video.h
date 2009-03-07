@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sisusb/src/sisusb_video.h,v 1.3 2005/07/09 02:50:34 twini Exp $ */
 /*
  * Xv driver for SiS 315 USB
  *

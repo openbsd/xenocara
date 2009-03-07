@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sisusb/src/sisusb_regs.h,v 1.5 2005/07/09 02:50:34 twini Exp $ */
 /*
  * Register access macros and register definitions
  *

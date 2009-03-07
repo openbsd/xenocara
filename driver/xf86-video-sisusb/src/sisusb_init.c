@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sisusb/src/sisusb_init.c,v 1.8 2005/07/11 02:30:00 ajax Exp $ */
 /*
  * Mode initializing code (CRT1 section) for SiS315/USB
  * (Universal module for Linux kernel framebuffer and X.org/XFree86 4.x)

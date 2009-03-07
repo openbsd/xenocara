@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sisusb/src/sisusb_init.h,v 1.6 2005/07/09 02:50:34 twini Exp $ */
 /*
  * Data and prototypes for init.c
  *

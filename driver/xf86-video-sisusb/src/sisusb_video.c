@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sisusb/src/sisusb_video.c,v 1.9 2006/04/07 23:15:17 aplattner Exp $ */
 /*
  * Xv driver for SiS 315 USB
  *
@@ -563,7 +561,7 @@ SISUSBSetupImageVideo(ScreenPtr pScreen)
 }
 
 #ifdef SIS_ENABLEXV
-#if XF86_VERSION_CURRENT < XF86_VERSION_NUMERIC(4,3,99,3,0)
+#if XF86_VERSION_CURRENT < XF86_VERSION_NUMERIC(4,3,99,3)
 static Bool
 RegionsEqual(RegionPtr A, RegionPtr B)
 {
@@ -1656,7 +1654,7 @@ SISUSBPutImage(
    /* update cliplist */
    if(pPriv->autopaintColorKey &&
       (pPriv->grabbedByV4L ||
-#if XF86_VERSION_CURRENT < XF86_VERSION_NUMERIC(4,3,99,3,0)
+#if XF86_VERSION_CURRENT < XF86_VERSION_NUMERIC(4,3,99,3)
        (!RegionsEqual(&pPriv->clip, clipBoxes)) ||
 #else
        (!REGION_EQUAL(pScrn->pScreen, &pPriv->clip, clipBoxes)) ||

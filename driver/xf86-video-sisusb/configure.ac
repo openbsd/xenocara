@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-sisusb],
-        0.8.1,
+        0.9.1,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-sisusb)
 
@@ -53,7 +53,6 @@ XORG_DRIVER_CHECK_EXT(XINERAMA, xineramaproto)
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(RENDER, renderproto)
 XORG_DRIVER_CHECK_EXT(XV, videoproto)
-XORG_DRIVER_CHECK_EXT(XF86MISC, xf86miscproto)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Checks for pkg-config packages

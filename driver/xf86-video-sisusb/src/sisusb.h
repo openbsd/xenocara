@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sisusb/src/sisusb.h,v 1.16 2006/04/07 21:10:49 ajax Exp $ */
 /*
  * Main global data and definitions
  *
@@ -41,6 +39,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <sys/ioctl.h>
 
 #define SISUSBDRIVERVERSIONYEAR    5
 #define SISUSBDRIVERVERSIONMONTH   9
@@ -70,9 +69,9 @@
 #define SISUSB_NAME                "SISUSB"
 #define SISUSB_DRIVER_NAME         "sisusb"
 
-#define SISUSB_MAJOR_VERSION       0
-#define SISUSB_MINOR_VERSION       8
-#define SISUSB_PATCHLEVEL          1
+#define SISUSB_MAJOR_VERSION       PACKAGE_VERSION_MAJOR
+#define SISUSB_MINOR_VERSION       PACKAGE_VERSION_MINOR
+#define SISUSB_PATCHLEVEL          PACKAGE_VERSION_PATCHLEVEL
 #define SISUSB_CURRENT_VERSION     ((SISUSB_MAJOR_VERSION << 16) | 	\
                                    (SISUSB_MINOR_VERSION << 8)   |	\
 				   SISUSB_PATCHLEVEL)
@@ -96,7 +95,7 @@
 #include "xorgVersion.h"
 #define SISUSBMYSERVERNAME "X.org"
 #ifndef XF86_VERSION_NUMERIC
-#define XF86_VERSION_NUMERIC(major,minor,patch,snap,dummy) \
+#define XF86_VERSION_NUMERIC(major,minor,patch,snap) \
 	(((major) * 10000000) + ((minor) * 100000) + ((patch) * 1000) + snap)
 #define XF86_VERSION_CURRENT XF86_VERSION_NUMERIC(4,3,99,902)
 #endif
@@ -110,7 +109,7 @@
 #define SISUSBMYSERVERNAME "XFree86"
 #endif
 
-#if (XF86_VERSION_CURRENT >= XF86_VERSION_NUMERIC(4,3,99,0,0)) || (defined(XvExtension))
+#if (XF86_VERSION_CURRENT >= XF86_VERSION_NUMERIC(4,3,99,0)) || (defined(XvExtension))
 #include "xf86xv.h"
 #include <X11/extensions/Xv.h>
 #endif
@@ -150,7 +149,7 @@
 
 #undef SISGAMMARAMP
 #ifdef XORG_VERSION_CURRENT
-#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(6,8,99,13,0)
+#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(6,8,99,13,0) || XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(4,0,0,0,0)
 #define SISGAMMARAMP		/* Driver can set gamma ramp; requires additional symbols in xf86sym.h */
 #endif
 #endif

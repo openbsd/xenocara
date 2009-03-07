@@ -1,5 +1,3 @@
-/* $XFree86$ */
-/* $XdotOrg: driver/xf86-video-sisusb/src/sisusb_shadow.c,v 1.5 2005/07/11 02:30:00 ajax Exp $ */
 /*
  * SiS USB driver shadow framebuffer handling
  *
