@@ -64,9 +64,6 @@
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"
 
-/* This is used for module versioning */
-#include "xf86Version.h"
-
 /* Driver specific headers */
 #include "ct_driver.h"
 

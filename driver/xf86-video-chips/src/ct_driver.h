@@ -36,6 +36,7 @@
 #include "xf86xv.h"
 #include "vgaHW.h"
 #include <string.h>
+#include <unistd.h>
 
 /* Supported chipsets */
 typedef enum {
@@ -274,11 +275,7 @@ typedef struct _CHIPSRec {
     PCITAG		PciTag;
     int			Chipset;
     EntityInfoPtr       pEnt;
-#if XF86_VERSION_CURRENT > XF86_VERSION_NUMERIC(4,1,0,0,0)
-      IOADDRESS		PIOBase;
-#else
-    int			PIOBase; /* unused variable : here for compatibility reason with newer version */
-#endif
+    IOADDRESS		PIOBase;
     CARD32		IOAddress;
     unsigned long	FbAddress;
     unsigned int	IOBase;

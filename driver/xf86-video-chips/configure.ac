@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-chips],
-        1.2.0,
+        1.2.1,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-chips)
 
@@ -72,6 +72,14 @@ if test "x$XSERVER_LIBPCIACCESS" = xyes; then
     XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
 fi
 AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
+
+save_CFLAGS="$CFLAGS"
+CFLAGS="$XORG_CFLAGS"
+AC_CHECK_DECL(xf86ConfigIsaEntity,
+	      [AC_DEFINE(HAVE_ISA, 1, [Have ISA support])],
+	      [],
+	      [#include "xf86.h"])
+CFLAGS="$save_CFLAGS"
 
 # Checks for header files.
 AC_HEADER_STDC

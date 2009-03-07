@@ -1,4 +1,3 @@
-
 /*
  * Copyright 1993 by Jon Block <block@frc.com>
  * Modified by Mike Hollick <hollick@graphics.cis.upenn.edu>
@@ -85,9 +84,6 @@
 
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"
-
-/* This is used for module versioning */
-#include "xf86Version.h"
 
 /* Standard resources are defined here */
 #include "xf86Resources.h"
@@ -558,6 +554,7 @@ static PciChipsets CHIPSPCIchipsets[] = {
     { -1,	     -1,	     RES_UNDEFINED}
 };
 
+#ifdef HAVE_ISA
 static IsaChipsets CHIPSISAchipsets[] = {
     { CHIPS_CT65520,		RES_EXCLUSIVE_VGA },
     { CHIPS_CT65525,		RES_EXCLUSIVE_VGA },
@@ -577,6 +574,7 @@ static IsaChipsets CHIPSISAchipsets[] = {
     { CHIPS_CT64300,		RES_EXCLUSIVE_VGA },
     { -1,			RES_UNDEFINED }
 };
+#endif
 
 /* The options supported by the Chips and Technologies Driver */
 typedef enum {
@@ -1043,7 +1041,8 @@ CHIPSProbe(DriverPtr drv, int flags)
 	    xfree(usedChips);
 	}
     }
-    
+
+#ifdef HAVE_ISA 
     /* Isa Bus */
     numUsed = xf86MatchIsaInstances(CHIPS_NAME,CHIPSChipsets,CHIPSISAchipsets,
 				    drv,chipsFindIsaDevice,devSections,
@@ -1057,7 +1056,7 @@ CHIPSProbe(DriverPtr drv, int flags)
 						   usedChips[i],
 						   CHIPSISAchipsets,NULL,
 						   NULL,NULL,NULL,NULL))) {
-		pScrn->driverVersion = VERSION;
+		pScrn->driverVersion = CHIPS_VERSION;
 		pScrn->driverName    = CHIPS_DRIVER_NAME;
 		pScrn->name          = CHIPS_NAME;
 		pScrn->Probe         = CHIPSProbe;
@@ -1074,12 +1073,14 @@ CHIPSProbe(DriverPtr drv, int flags)
 	    xfree(usedChips);
 	}
     }
+#endif
     
     xfree(devSections);
     return foundScreen;
 }
 #endif
 
+#ifdef HAVE_ISA
 static int
 chipsFindIsaDevice(GDevPtr dev)
 {
@@ -1163,6 +1164,7 @@ chipsFindIsaDevice(GDevPtr dev)
     }
     return found;
 }
+#endif
 
 /* Mandatory */
 Bool
@@ -1542,11 +1544,7 @@ chipsPreInitHiQV(ScrnInfoPtr pScrn, int flags)
 
     hwp = VGAHWPTR(pScrn);
     vgaHWGetIOBase(hwp);
-#if XF86_VERSION_CURRENT > XF86_VERSION_NUMERIC(4,1,0,0,0)
     cPtr->PIOBase = hwp->PIOOffset;
-#else
-     cPtr->PIOBase = 0 ; /* for old version the IO offset is global */
-#endif
     /*
      * Must allow ensure that storage for the 2nd set of vga registers is
      * allocated for dual channel cards
