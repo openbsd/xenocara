@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.27 2009/01/01 19:30:21 miod Exp $
+# $OpenBSD: Makefile,v 1.28 2009/03/07 10:38:59 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	openbsd-input-usbtablet \
@@ -58,10 +58,6 @@ VIDEO_DRV_COMMON= \
 	xf86-video-s3virge xf86-video-savage xf86-video-siliconmotion \
 	xf86-video-sis xf86-video-tdfx xf86-video-trident \
 	xf86-video-tseng xf86-video-vesa \
-
-# deprecated
-#  xf86-video-cyrix  
-#  xf86-video-vga
 
 VIDEO_DRV_alpha= \
 	${VIDEO_DRV_COMMON} \
