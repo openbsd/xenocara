@@ -40,10 +40,17 @@
 #define PCI_CHIP_AST2000		0x2000		
 #endif
 
+#ifndef	PCI_CHIP_AST2100
+#define PCI_CHIP_AST2100		0x2010
+#endif
+
 typedef enum _CHIP_ID {
     VGALegacy,
     AST2000,
-    AST2100	
+    AST2100,
+    AST1100,
+    AST2200,
+    AST2150
 } CHIP_ID;
 
 /* AST REC Info */
@@ -156,6 +163,7 @@ typedef struct _ASTRec {
     Bool 		MMIO2D;
     int			ENGCaps;
     int			DBGSelect;
+    Bool		VGA2Clone;
               	
     ULONG     		FBPhysAddr;		/* Frame buffer physical address     */
     ULONG     		MMIOPhysAddr;     	/* MMIO region physical address      */

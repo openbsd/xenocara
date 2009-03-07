@@ -25,6 +25,7 @@
 #define VIDEOMEM_SIZE_16M	0x01000000
 #define VIDEOMEM_SIZE_32M	0x02000000
 #define VIDEOMEM_SIZE_64M	0x04000000
+#define VIDEOMEM_SIZE_128M	0x08000000
 
 #define AR_PORT_WRITE		(pAST->RelocateIO + 0x40)
 #define MISC_PORT_WRITE		(pAST->RelocateIO + 0x42)
@@ -34,6 +35,7 @@
 #define GR_PORT			(pAST->RelocateIO + 0x4E)
 #define CRTC_PORT 		(pAST->RelocateIO + 0x54)
 #define INPUT_STATUS1_READ	(pAST->RelocateIO + 0x5A)
+#define MISC_PORT_READ		(pAST->RelocateIO + 0x4C)
 
 #define GetReg(base)				inb(base)
 #define SetReg(base,val)			outb(base,val)

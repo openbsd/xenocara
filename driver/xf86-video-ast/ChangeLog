@@ -1,3 +1,38 @@
+2009-01-16  Y.C. Chen  <yc_chen@aspedtech.com>
+        * src/ast_driver.c
+        - Fixed Support Modes Incorrect Issues on Solaris 10 x86
+
+2009-01-08  Y.C. Chen  >yc_chen@aspedtech.com>
+        * src/ast.h
+        * src/ast_driver.c
+        * src/ast_2dtool.c, ast_2dtool.h
+        * src/ast_accel.c
+        * src/ast_cursor.c
+        * src/ast_mode.c
+        * src/ast_vgatool.c
+        - Support AST2200/2150
+        - Support ASPEED Graphics as Secondary
+        - Fixed AST1100 1280x1024x32bpp thershold issue
+        - Fixed Screen saver - celtic, DecayScreen abnormal issues
+        - Fixed Game - Potato Guys abnormal issue
+        
+2008-08-22  Y.C. Chen  <yc_chen@aspeedtech.com>
+        * src/ast.h
+        * src/ast_driver.c
+        * src/ast_vgatool.c, ast_vgatool.h
+        Support AST1100/2050/2100
+        
+        * src/ast_mode.c ast_mode.h
+        Modify the display timing of 1920x1200 to reduce blanking timing
+
+        * src/ast_driver.c
+        * src/ast_vgatool.c
+        Support Clone Display for Two VGA
+        
+2008-07-21  Y.C. Chen  <yc_chen@aspeedtech.com>
+        * src/ast_mode.c
+        Fixed Incorrect Settings for Graphices Registers 
+
 2008-03-18  Y.C. Chen  <yc_chen@aspeedtech.com>
         * src/ast_2dtool.c
         * src/ast_tool.c

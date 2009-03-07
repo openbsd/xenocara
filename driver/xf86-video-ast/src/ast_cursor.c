@@ -242,6 +242,12 @@ ASTLoadCursorImage(ScrnInfoPtr pScrn, UCHAR *src)
                 ulTempDstAnd32[1] = ((jTempSrcAnd32 >> (k-1)) & 0x01) ? 0x80000000L:0x00L;   
                 ulTempDstXor32[1] = ((jTempSrcXor32 >> (k-1)) & 0x01) ? 0x40000000L:0x00L;                   	                                  	  
                 ulTempDstData32[1] = ((jTempSrcXor32 >> (k-1)) & 0x01) ? (pAST->HWCInfo.fg << 16):(pAST->HWCInfo.bg << 16);
+                ulTempDstData32[1] = ((jTempSrcXor32 >> (k-1)) & 0x01) ? (pAST->HWCInfo.fg << 16):(pAST->HWCInfo.bg << 16);               
+                /* No inverse for X Window cursor, ycchen@111808 */
+                if (ulTempDstAnd32[0])
+                    ulTempDstXor32[0] = 0;
+                if (ulTempDstAnd32[1])
+                    ulTempDstXor32[1] = 0;                
                 *((ULONG *) pjDstData) = ulTempDstAnd32[0] | ulTempDstXor32[0] | ulTempDstData32[0] | ulTempDstAnd32[1] | ulTempDstXor32[1] | ulTempDstData32[1];
                 ulCheckSum += *((ULONG *) pjDstData);                               
                 pjDstData += 4;
@@ -276,6 +282,9 @@ ASTLoadCursorImage(ScrnInfoPtr pScrn, UCHAR *src)
 static Bool 
 ASTUseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
 {
+    if ( (pCurs->bits->width > MAX_HWC_WIDTH) || (pCurs->bits->height > MAX_HWC_HEIGHT) )
+        return FALSE;
+        
     return TRUE;
 }
 
@@ -377,6 +386,9 @@ ASTLoadCursorARGB(ScrnInfoPtr pScrn, CursorPtr pCurs)
 static Bool 
 ASTUseHWCursorARGB(ScreenPtr pScreen, CursorPtr pCurs)
 {
+    if ( (pCurs->bits->width > MAX_HWC_WIDTH) || (pCurs->bits->height > MAX_HWC_HEIGHT) )
+        return FALSE;
+        
     return TRUE;
 }
 

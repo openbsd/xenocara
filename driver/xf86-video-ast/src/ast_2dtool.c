@@ -167,7 +167,7 @@ bEnableCMDQ(ScrnInfoPtr pScrn, ASTRecPtr pAST)
         }     
                                  
         *(ULONG *) (pAST->CMDQInfo.pjCmdQBasePort) = ulVMCmdQBasePort;         
-        pAST->CMDQInfo.ulWritePointer = *(ULONG *) (pAST->CMDQInfo.pjWritePort);                 
+        pAST->CMDQInfo.ulWritePointer = *(ULONG *) (pAST->CMDQInfo.pjWritePort) << 3;
         break;
         
     case VM_CMD_MMIO:
@@ -189,6 +189,22 @@ bEnableCMDQ(ScrnInfoPtr pScrn, ASTRecPtr pAST)
 Bool
 bEnable2D(ScrnInfoPtr pScrn, ASTRecPtr pAST)
 {
+    ULONG ulData;
+    	
+    switch (pAST->jChipType)
+    {
+    case AST2100:
+    case AST1100:
+    case AST2200:
+    case AST2150:    
+       *(ULONG *) (pAST->MMIOVirtualAddr + 0xF004) = 0x1e6e0000;
+       *(ULONG *) (pAST->MMIOVirtualAddr + 0xF000) = 0x1;        
+       
+       ulData = *(ULONG *) (pAST->MMIOVirtualAddr + 0x1200c);
+       *(ULONG *) (pAST->MMIOVirtualAddr + 0x1200c) = (ulData & 0xFFFFFFFD);
+       break;
+    }
+	
     SetIndexRegMask(CRTC_PORT, 0xA4, 0xFE, 0x01);		/* enable 2D */  
    
     if (!bInitCMDQInfo(pScrn, pAST))

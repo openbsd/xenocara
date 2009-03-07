@@ -66,10 +66,13 @@ extern void vASTOpenKey(ScrnInfoPtr pScrn);
 extern Bool bASTRegInit(ScrnInfoPtr pScrn);
 extern ULONG GetVRAMInfo(ScrnInfoPtr pScrn);
 extern ULONG GetMaxDCLK(ScrnInfoPtr pScrn);
+extern void GetChipType(ScrnInfoPtr pScrn);
 extern void vASTLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices, LOCO *colors, VisualPtr pVisual);
 extern void ASTDisplayPowerManagementSet(ScrnInfoPtr pScrn, int PowerManagementMode, int flags);
 extern void vSetStartAddressCRT1(ASTRecPtr pAST, ULONG base);
 extern Bool ASTSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode);
+extern Bool GetVGA2EDID(ScrnInfoPtr pScrn, unsigned char *pEDIDBuffer);
+extern void vInitDRAMReg(ScrnInfoPtr pScrn);
 
 extern Bool bInitCMDQInfo(ScrnInfoPtr pScrn, ASTRecPtr pAST);
 extern Bool bEnableCMDQ(ScrnInfoPtr pScrn, ASTRecPtr pAST);
@@ -121,12 +124,14 @@ _X_EXPORT DriverRec AST = {
 
 /* Chipsets */
 static SymTabRec ASTChipsets[] = {
-   {PCI_CHIP_AST2000,	"AST2000"},
+   {PCI_CHIP_AST2000,	"ASPEED Graphics Family"},
+   {PCI_CHIP_AST2100,	"ASPEED Graphics Family"},
    {-1,			NULL}
 };
 
 static PciChipsets ASTPciChipsets[] = {
    {PCI_CHIP_AST2000,		PCI_CHIP_AST2000,	RES_SHARED_VGA},
+   {PCI_CHIP_AST2100,		PCI_CHIP_AST2100,	RES_SHARED_VGA},
    {-1,				-1, 			RES_UNDEFINED }
 };
 
@@ -137,17 +142,19 @@ typedef enum {
    OPTION_HWC_NUM,
    OPTION_ENG_CAPS,   
    OPTION_DBG_SELECT,
-   OPTION_NO_DDC
+   OPTION_NO_DDC,
+   OPTION_VGA2_CLONE
 } ASTOpts;
 
 static const OptionInfoRec ASTOptions[] = {
    {OPTION_NOACCEL,	"NoAccel",	OPTV_BOOLEAN,	{0},	FALSE},
-   {OPTION_MMIO2D,	"MMIO2D",	OPTV_BOOLEAN,	{0},	FALSE},   
-   {OPTION_SW_CURSOR,	"SWCursor",	OPTV_BOOLEAN,	{0},	FALSE},	
+   {OPTION_MMIO2D,	"MMIO2D",	OPTV_BOOLEAN,	{0},	FALSE},
+   {OPTION_SW_CURSOR,	"SWCursor",	OPTV_BOOLEAN,	{0},	FALSE},
    {OPTION_HWC_NUM,	"HWCNumber",	OPTV_INTEGER,	{0},	FALSE},
-   {OPTION_ENG_CAPS,	"ENGCaps",	OPTV_INTEGER,	{0},	FALSE},	          	  
-   {OPTION_DBG_SELECT,	"DBGSelect",	OPTV_INTEGER,	{0},	FALSE},	       
-   {OPTION_NO_DDC,	"NoDDC",	OPTV_BOOLEAN,	{0}, 	FALSE},   
+   {OPTION_ENG_CAPS,	"ENGCaps",	OPTV_INTEGER,	{0},	FALSE},
+   {OPTION_DBG_SELECT,	"DBGSelect",	OPTV_INTEGER,	{0},	FALSE},
+   {OPTION_NO_DDC,	"NoDDC",	OPTV_BOOLEAN,	{0}, 	FALSE},
+   {OPTION_VGA2_CLONE,	"VGA2Clone",	OPTV_BOOLEAN,	{0}, 	FALSE},
    {-1,			NULL,		OPTV_NONE,	{0}, 	FALSE}
 };
 
@@ -217,6 +224,7 @@ const char *int10Symbols[] = {
    "xf86InitInt10",
    "xf86Int10AllocPages",
    "xf86int10Addr",
+   "xf86FreeInt10",
    NULL
 };
 
@@ -564,11 +572,7 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
 	      (pScrn->chipset != NULL) ? pScrn->chipset : "Unknown ast");
 
    /* Resource Allocation */
-#if XF86_VERSION_CURRENT < XF86_VERSION_NUMERIC(4,2,99,0,0)
-    pAST->IODBase = 0;
-#else
     pAST->IODBase = pScrn->domainIOBase;  
-#endif
     /* "Patch" the PIOOffset inside vgaHW in order to force
      * the vgaHW module to use our relocated i/o ports.
      */
@@ -598,7 +602,7 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
       from = X_CONFIG;
    } else {
       if (PCI_REGION_BASE(pAST->PciInfo, 1, REGION_MEM)) {
-	 pAST->MMIOPhysAddr = PCI_REGION_BASE(pAST->PciInfo, 1, REGION_IO) & 0xFFFF0000;
+	 pAST->MMIOPhysAddr = PCI_REGION_BASE(pAST->PciInfo, 1, REGION_MEM) & 0xFFFF0000;
 	 from = X_PROBED;
       } else {
 	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -610,37 +614,57 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "IO registers at addr 0x%lX\n",
 	      (unsigned long) pAST->MMIOPhysAddr);
 	      
-   pScrn->videoRam = GetVRAMInfo(pScrn) / 1024;
-   from = X_DEFAULT;
-
-
-   if (pAST->pEnt->device->videoRam) {
-      pScrn->videoRam = pAST->pEnt->device->videoRam;
-      from = X_CONFIG;
-   }
-
-   pAST->FbMapSize = pScrn->videoRam * 1024;
-   pAST->MMIOMapSize = DEFAULT_MMIO_SIZE;
-
-   /* Map resource */
-   if (!ASTMapMem(pScrn)) {
-      xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Map FB Memory Failed \n");      	
-      return FALSE;
-   }
-   
+   /* Map MMIO */
+   pAST->MMIOMapSize = DEFAULT_MMIO_SIZE; 
    if (!ASTMapMMIO(pScrn)) {
       xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Map Memory Map IO Failed \n");      	
       return FALSE;
    }
 
-   pScrn->memPhysBase = (ULONG)pAST->FBPhysAddr;
-   pScrn->fbOffset = 0;
+   /* Init VGA Adapter */
+   if (!xf86IsPrimaryPci(pAST->PciInfo))
+   {
+       if (xf86LoadSubModule(pScrn, "int10")) {
+ 	       xf86Int10InfoPtr pInt10;
+	       xf86LoaderReqSymLists(int10Symbols, NULL);
+	       xf86DrvMsg(pScrn->scrnIndex,X_INFO,"initializing int10\n");
+	       pInt10 = xf86InitInt10(pAST->pEnt->index);
+	       xf86FreeInt10(pInt10);
+       }
+   }
 
-   /* Get Revision */
+   vASTOpenKey(pScrn);
+   bASTRegInit(pScrn);
+
+   /* Get Chip Type */
    if (PCI_DEV_REVISION(pAST->PciInfo) >= 0x10)
-       pAST->jChipType = AST2100;
+       GetChipType(pScrn);
    else
        pAST->jChipType = AST2000;
+
+   if (!xf86IsPrimaryPci(pAST->PciInfo))
+   {   
+       vInitDRAMReg (pScrn);
+   }
+      
+   /* Map Framebuffer */
+   pScrn->videoRam = GetVRAMInfo(pScrn) / 1024;
+   from = X_DEFAULT;
+
+   if (pAST->pEnt->device->videoRam) {
+      pScrn->videoRam = pAST->pEnt->device->videoRam;
+      from = X_CONFIG;
+   }
+   
+   pAST->FbMapSize = pScrn->videoRam * 1024;
+   
+   if (!ASTMapMem(pScrn)) {
+      xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Map FB Memory Failed \n");      	
+      return FALSE;
+   }
+
+   pScrn->memPhysBase = (ULONG)pAST->FBPhysAddr;
+   pScrn->fbOffset = 0;
 
    /* Do DDC 
     * should be done after xf86CollectOptions
@@ -657,7 +681,7 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
    clockRanges->doubleScanAllowed = FALSE;
    
    /* Add for AST2100, ycchen@061807 */
-   if (pAST->jChipType == AST2100)
+   if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST2200))
        i = xf86ValidateModes(pScrn, pScrn->monitor->Modes,
 			 pScrn->display->modes, clockRanges,
 			 0, 320, 1920, 8 * pScrn->bitsPerPixel,
@@ -1018,7 +1042,7 @@ ASTValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
    }
 
    /* Add for AST2100, ycchen@061807 */
-   if (pAST->jChipType == AST2100)
+   if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST2200))
    {
        if ( (mode->CrtcHDisplay == 1920) && (mode->CrtcVDisplay == 1200) )
            return MODE_OK;
@@ -1082,7 +1106,6 @@ ASTFreeRec(ScrnInfoPtr pScrn)
 static Bool
 ASTSaveScreen(ScreenPtr pScreen, Bool unblack)
 {
-   /* more ref. SiS */	
    return vgaHWSaveScreen(pScreen, unblack);
 }
 
@@ -1146,7 +1169,12 @@ ASTSave(ScrnInfoPtr pScrn)
    astReg = &pAST->SavedReg;
     
    /* do save */    
-   vgaHWSave(pScrn, vgaReg, VGA_SR_ALL);
+   if (xf86IsPrimaryPci(pAST->PciInfo)) {
+       vgaHWSave(pScrn, vgaReg, VGA_SR_ALL);
+   }
+   else {
+       vgaHWSave(pScrn, vgaReg, VGA_SR_MODE);
+   }
    
    /* Ext. Save */
    vASTOpenKey(pScrn);
@@ -1173,8 +1201,11 @@ ASTRestore(ScrnInfoPtr pScrn)
    astReg = &pAST->SavedReg;
     
    /* do restore */    
-   vgaHWProtect(pScrn, TRUE);   
-   vgaHWRestore(pScrn, vgaReg, VGA_SR_ALL);	      
+   vgaHWProtect(pScrn, TRUE);
+   if (xf86IsPrimaryPci(pAST->PciInfo))
+       vgaHWRestore(pScrn, vgaReg, VGA_SR_ALL);
+   else
+       vgaHWRestore(pScrn, vgaReg, VGA_SR_MODE);     
    vgaHWProtect(pScrn, FALSE);   
    
    /* Ext. restore */
@@ -1201,13 +1232,22 @@ ASTProbeDDC(ScrnInfoPtr pScrn, int index)
    }
 }
 
+#define SkipDT	0x00
+#define DT1	0x01
+#define DT2 	0x02
+	
 static xf86MonPtr
 ASTDoDDC(ScrnInfoPtr pScrn, int index)
 {
    vbeInfoPtr pVbe;
-   xf86MonPtr MonInfo = NULL;
+   xf86MonPtr MonInfo = NULL, MonInfo1 = NULL, MonInfo2 = NULL;
    ASTRecPtr pAST = ASTPTR(pScrn);
-
+   unsigned long i, j, k;
+   unsigned char DDC_data[128];
+   struct monitor_ranges ranges, ranges1, ranges2;
+   int DTSelect, dclock1=0, h_active1=0, v_active1=0, dclock2=0, h_active2=0, v_active2=0;
+   struct std_timings stdtiming, *stdtiming1, *stdtiming2;
+   
    /* Honour Option "noDDC" */
    if (xf86ReturnOptValBool(pAST->Options, OPTION_NO_DDC, FALSE)) {
       return MonInfo;
@@ -1215,7 +1255,150 @@ ASTDoDDC(ScrnInfoPtr pScrn, int index)
 
    if (xf86LoadSubModule(pScrn, "vbe") && (pVbe = VBEInit(NULL, index))) {
       xf86LoaderReqSymLists(vbeSymbols, NULL);
-      MonInfo = vbeDoEDID(pVbe, NULL);
+      MonInfo1 = vbeDoEDID(pVbe, NULL);
+      MonInfo = MonInfo1;
+      
+      /* For VGA2 CLONE Support, ycchen@012508 */
+      if ((xf86ReturnOptValBool(pAST->Options, OPTION_VGA2_CLONE, FALSE)) || pAST->VGA2Clone) {
+          if (GetVGA2EDID(pScrn, DDC_data) == TRUE) {
+              xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Get VGA2 EDID Correctly!! \n");	
+              MonInfo2 = xf86InterpretEDID(pScrn->scrnIndex, DDC_data);
+              if (MonInfo1 == NULL)	/* No DDC1 EDID */
+                  MonInfo = MonInfo2;
+              else {			/* Check with VGA1 & VGA2 EDID */
+                  /* Update establishment timing */
+                  MonInfo->timings1.t1 = MonInfo1->timings1.t1 & MonInfo2->timings1.t1;
+                  MonInfo->timings1.t2 = MonInfo1->timings1.t2 & MonInfo2->timings1.t2;
+                  MonInfo->timings1.t_manu = MonInfo1->timings1.t_manu & MonInfo2->timings1.t_manu;
+                  
+                  /* Update Std. Timing */
+                  for (i=0; i<8; i++) {
+	              stdtiming.hsize = stdtiming.vsize = stdtiming.refresh = stdtiming.id = 0;	              
+                      for (j=0; j<8; j++) {                      	
+                          if ((MonInfo1->timings2[i].hsize == MonInfo2->timings2[j].hsize) && \
+                              (MonInfo1->timings2[i].vsize == MonInfo2->timings2[j].vsize) && \
+                              (MonInfo1->timings2[i].refresh == MonInfo2->timings2[j].refresh)) {
+                               stdtiming = MonInfo1->timings2[i];
+                               break;
+                          }        
+                      }
+                      
+                      MonInfo->timings2[i] = stdtiming;
+                  } /* Std. Timing */
+               
+                  /* Get Detailed Timing */
+                  for (i=0;i<4;i++) {
+                    if (MonInfo1->det_mon[i].type == 0xFD)
+                        ranges1 = MonInfo1->det_mon[i].section.ranges;
+                    else if (MonInfo1->det_mon[i].type == 0xFA)
+                        stdtiming1 = MonInfo1->det_mon[i].section.std_t;    
+                    else if (MonInfo1->det_mon[i].type == 0x00) {
+                        if (MonInfo1->det_mon[i].section.d_timings.clock > dclock1)
+                            dclock1 = MonInfo1->det_mon[i].section.d_timings.clock;
+                        if (MonInfo1->det_mon[i].section.d_timings.h_active > h_active1)
+                            h_active1 = MonInfo1->det_mon[i].section.d_timings.h_active;
+                        if (MonInfo1->det_mon[i].section.d_timings.v_active > v_active1)
+                            v_active1 = MonInfo1->det_mon[i].section.d_timings.v_active;                            
+                    }	
+                    if (MonInfo2->det_mon[i].type == 0xFD)
+                        ranges2 = MonInfo2->det_mon[i].section.ranges;
+                    else if (MonInfo1->det_mon[i].type == 0xFA)
+                        stdtiming2 = MonInfo2->det_mon[i].section.std_t;                        
+                    else if (MonInfo2->det_mon[i].type == 0x00) {
+                        if (MonInfo2->det_mon[i].section.d_timings.clock > dclock2)
+                            dclock2 = MonInfo2->det_mon[i].section.d_timings.clock;
+                        if (MonInfo2->det_mon[i].section.d_timings.h_active > h_active2)
+                            h_active2 = MonInfo2->det_mon[i].section.d_timings.h_active;
+                        if (MonInfo2->det_mon[i].section.d_timings.v_active > v_active2)
+                            v_active2 = MonInfo2->det_mon[i].section.d_timings.v_active;                            
+                    }                                                            	 
+                  } /* Get Detailed Timing */
+
+                  /* Chk Detailed Timing */
+                  if ((dclock1 >= dclock2) && (h_active1 >= h_active2) && (v_active1 >= v_active2))
+                      DTSelect = DT2;
+                  else if ((dclock2 >= dclock1) && (h_active2 >= h_active1) && (v_active2 >= v_active1))
+                      DTSelect = DT1;
+                  else
+                      DTSelect = SkipDT;
+
+                  /* Chk Monitor Descriptor */    
+                  ranges = ranges1;
+                  ranges.min_h = ranges1.min_h > ranges2.min_h ? ranges1.min_h:ranges2.min_h;
+                  ranges.min_v = ranges1.min_v > ranges2.min_v ? ranges1.min_v:ranges2.min_v;                  
+                  ranges.max_h = ranges1.max_h < ranges2.max_h ? ranges1.max_h:ranges2.max_h;
+                  ranges.max_v = ranges1.max_v < ranges2.max_v ? ranges1.max_v:ranges2.max_v;
+                  ranges.max_clock = ranges1.max_clock < ranges2.max_clock ? ranges1.max_clock:ranges2.max_clock;
+                  
+                  /* Update Detailed Timing */
+                  for (i=0; i<4; i++)
+                  {
+                      if (MonInfo->det_mon[i].type == 0xFD) {
+                          MonInfo->det_mon[i].section.ranges = ranges;
+                      }                      
+                      else if (MonInfo->det_mon[i].type == 0xFA) {
+                         for (j=0; j<5; j++) {
+            	             stdtiming.hsize = stdtiming.vsize = stdtiming.refresh = stdtiming.id = 0;
+                             for (k=0; k<5; k++) {
+                                 if ((stdtiming1[j].hsize == stdtiming2[k].hsize) && \
+                                     (stdtiming1[j].vsize == stdtiming2[k].vsize) && \
+                                     (stdtiming1[j].refresh == stdtiming2[k].refresh)) {
+                                      stdtiming = stdtiming1[j];
+                                      break;
+                                 }        
+                             }
+                             stdtiming1[j] = stdtiming;
+                         } /* Std. Timing */                                                    
+                      } /* FA */
+                      else if (MonInfo->det_mon[i].type == 0x00) {
+                          if (DTSelect == DT2)
+                              MonInfo->det_mon[i] = MonInfo2->det_mon[i];
+                          else if (DTSelect == DT1)
+                              MonInfo->det_mon[i] = MonInfo1->det_mon[i];
+                          else /* SkipDT */
+                          {   /* use 1024x768 as default */
+                              MonInfo->det_mon[i] = MonInfo1->det_mon[i];
+                              MonInfo->det_mon[i].section.d_timings.clock = 65000000;
+                              MonInfo->det_mon[i].section.d_timings.h_active = 1024;
+                              MonInfo->det_mon[i].section.d_timings.h_blanking = 320;
+                              MonInfo->det_mon[i].section.d_timings.v_active = 768;
+                              MonInfo->det_mon[i].section.d_timings.v_blanking = 38;
+                              MonInfo->det_mon[i].section.d_timings.h_sync_off = 24;
+                              MonInfo->det_mon[i].section.d_timings.h_sync_width = 136;
+                              MonInfo->det_mon[i].section.d_timings.v_sync_off = 3;
+                              MonInfo->det_mon[i].section.d_timings.v_sync_width = 6;
+                          }                                                	
+                      } /* 00 */
+                      else { /* use Monitor 1 as default */
+                          MonInfo->det_mon[i] = MonInfo1->det_mon[i];                      
+                      }
+                
+                  } /* Update Detailed Timing */
+                  
+                  /* set feature size */
+                  if (DTSelect == DT2)  {
+                      MonInfo->features.hsize = MonInfo2->features.hsize;
+                      MonInfo->features.vsize = MonInfo2->features.vsize;                          	
+                  }
+                  else if (DTSelect == DT1)  {
+                      MonInfo->features.hsize = MonInfo1->features.hsize;
+                      MonInfo->features.vsize = MonInfo1->features.vsize;                          	
+                  }
+                  else	/* Skip DT */
+                  {   /* use 1024x768 as default */
+                      MonInfo->features.hsize = 0x20;
+                      MonInfo->features.vsize = 0x18;                  	
+                  }	
+                                  	               	
+              } /* Check with VGA1 & VGA2 EDID */
+        	    
+          } /* GetVGA2EDID */
+          else {
+              xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Can't Get VGA2 EDID Correctly!! \n");
+          }    
+         
+      }
+      
       xf86PrintEDID(MonInfo);
       xf86SetDDCproperties(pScrn, MonInfo);
       vbeFree(pVbe);
@@ -1223,7 +1406,7 @@ ASTDoDDC(ScrnInfoPtr pScrn, int index)
       xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		 "this driver cannot do DDC without VBE\n");
    }
-
+	
    return MonInfo;
 }
 
