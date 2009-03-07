@@ -322,8 +322,12 @@ typedef enum {
 
 #define IsPciCard	(pTrident->pEnt->location.type == BUS_PCI)
 
-#define IsPrimaryCard	((xf86IsPrimaryPci(pTrident->PciInfo)) || \
+#ifdef HAVE_ISA
+# define IsPrimaryCard	((xf86IsPrimaryPci(pTrident->PciInfo)) || \
 			 (xf86IsPrimaryIsa()))
+#else
+# define IsPrimaryCard	(xf86IsPrimaryPci(pTrident->PciInfo))
+#endif
 
 #define HAS_DST_TRANS	((pTrident->Chipset == PROVIDIA9682) || \
 			 (pTrident->Chipset == PROVIDIA9685) || \
