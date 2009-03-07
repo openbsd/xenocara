@@ -39,7 +39,9 @@
 void
 LeoPolyFillRect(DrawablePtr pDrawable, GCPtr pGC, int nrectFill, xRectangle *prectInit)
 {
-	LeoPtr pLeo = LeoGetScreenPrivate (pDrawable->pScreen);
+	ScreenPtr pScreen = pDrawable->pScreen;
+	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	LeoPtr pLeo = GET_LEO_FROM_SCRN(pScrn);
 	LeoCommand0 	*lc0 = pLeo->lc0;
 	LeoDraw		*ld0 = pLeo->ld0;
 	xRectangle	*prect;
@@ -166,7 +168,9 @@ LeoPolyFillRect(DrawablePtr pDrawable, GCPtr pGC, int nrectFill, xRectangle *pre
 void
 LeoPolyFillRect1Rect(DrawablePtr pDrawable, GCPtr pGC, int nrectFill, xRectangle *prectInit)
 {
-	LeoPtr pLeo = LeoGetScreenPrivate (pDrawable->pScreen);
+	ScreenPtr pScreen = pDrawable->pScreen;
+	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	LeoPtr pLeo = GET_LEO_FROM_SCRN(pScrn);
 	LeoCommand0 	*lc0 = pLeo->lc0;
 	LeoDraw		*ld0 = pLeo->ld0;
 	xRectangle	*prect;

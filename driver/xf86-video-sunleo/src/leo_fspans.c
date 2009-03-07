@@ -42,7 +42,9 @@ LeoFillSpansSolid (DrawablePtr pDrawable, GCPtr pGC,
 		   int n, DDXPointPtr ppt,
 		   int *pwidth, int fSorted)
 {
-	LeoPtr pLeo = LeoGetScreenPrivate (pGC->pScreen);
+	ScreenPtr pScreen = pDrawable->pScreen;
+	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	LeoPtr pLeo = GET_LEO_FROM_SCRN(pScrn);
 	LeoCommand0 *lc0 = pLeo->lc0;
 	LeoDraw *ld0 = pLeo->ld0;
 	int numRects, *pwidthFree;
@@ -66,11 +68,11 @@ LeoFillSpansSolid (DrawablePtr pDrawable, GCPtr pGC,
 	} else {
 		int nTmp = n * miFindMaxBand(clip);
 
-		pwidthFree = (int *)ALLOCATE_LOCAL(nTmp * sizeof(int));
-		pptFree = (DDXPointRec *)ALLOCATE_LOCAL(nTmp * sizeof(DDXPointRec));
+		pwidthFree = (int *)xalloc(nTmp * sizeof(int));
+		pptFree = (DDXPointRec *)xalloc(nTmp * sizeof(DDXPointRec));
 		if (!pptFree || !pwidthFree) {
-			if (pptFree) DEALLOCATE_LOCAL(pptFree);
-			if (pwidthFree) DEALLOCATE_LOCAL(pwidthFree);
+			if (pptFree) xfree(pptFree);
+			if (pwidthFree) xfree(pwidthFree);
 			return;
 		}
 		n = miClipSpans(clip,
@@ -121,8 +123,8 @@ LeoFillSpansSolid (DrawablePtr pDrawable, GCPtr pGC,
 	}
 	
 	if (numRects != 1) {
-		DEALLOCATE_LOCAL(pptFree);
-		DEALLOCATE_LOCAL(pwidthFree);
+		xfree(pptFree);
+		xfree(pwidthFree);
 	}
 	if (pGC->alu != GXcopy)
 		ld0->rop = LEO_ATTR_RGBE_ENABLE|LEO_ROP_NEW;

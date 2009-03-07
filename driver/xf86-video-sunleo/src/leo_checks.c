@@ -129,7 +129,9 @@ int
 LeoCheckFill (GCPtr pGC, DrawablePtr pDrawable)
 {
 	LeoPrivGCPtr gcPriv = LeoGetGCPrivate (pGC);
-	LeoPtr pLeo = LeoGetScreenPrivate(pDrawable->pScreen);
+	ScreenPtr pScreen = pDrawable->pScreen;
+	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	LeoPtr pLeo = GET_LEO_FROM_SCRN(pScrn);
 	LeoStipplePtr stipple;
 	unsigned int alu;
 	int xrot, yrot;
