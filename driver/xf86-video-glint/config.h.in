@@ -2,6 +2,9 @@
 
 #include "xorg-server.h"
 
+/* Have cfb8_32 support */
+#undef HAVE_CFB8_32
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 

@@ -76,14 +76,15 @@ s3_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(noinst_LTLIBRARIES) $(s3_drv_la_LTLIBRARIES)
 libs3_accel_newmmio_la_LIBADD =
 am_libs3_accel_newmmio_la_OBJECTS =  \
-	libs3_accel_newmmio_la-s3_accel.lo
+	libs3_accel_newmmio_la-s3_accel.lo \
+	libs3_accel_newmmio_la-s3_video.lo
 libs3_accel_newmmio_la_OBJECTS = $(am_libs3_accel_newmmio_la_OBJECTS)
 libs3_accel_pio_la_LIBADD =
 am_libs3_accel_pio_la_OBJECTS = libs3_accel_pio_la-s3_accel.lo
 libs3_accel_pio_la_OBJECTS = $(am_libs3_accel_pio_la_OBJECTS)
 s3_drv_la_DEPENDENCIES = libs3_accel_newmmio.la libs3_accel_pio.la
 am_s3_drv_la_OBJECTS = s3_bios.lo s3_cursor.lo s3_dga.lo s3_driver.lo \
-	s3_IBMRGB.lo s3_Ti.lo s3_Trio64DAC.lo s3_video.lo
+	s3_IBMRGB.lo s3_Ti.lo s3_Trio64DAC.lo
 s3_drv_la_OBJECTS = $(am_s3_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -250,12 +251,11 @@ s3_drv_la_SOURCES = \
 	 s3_pcirename.h \
          s3_reg.h \
          s3_Ti.c \
-         s3_Trio64DAC.c \
-         s3_video.c
+         s3_Trio64DAC.c
 
 noinst_LTLIBRARIES = libs3_accel_newmmio.la libs3_accel_pio.la
 s3_drv_la_LIBADD = libs3_accel_newmmio.la libs3_accel_pio.la
-libs3_accel_newmmio_la_SOURCES = s3_accel.c
+libs3_accel_newmmio_la_SOURCES = s3_accel.c s3_video.c
 libs3_accel_newmmio_la_CFLAGS = $(AM_CFLAGS) -DS3_NEWMMIO=1
 libs3_accel_pio_la_SOURCES = s3_accel.c
 libs3_accel_pio_la_CFLAGS = $(AM_CFLAGS)
@@ -342,6 +342,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libs3_accel_newmmio_la-s3_accel.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libs3_accel_newmmio_la-s3_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libs3_accel_pio_la-s3_accel.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/s3_IBMRGB.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/s3_Ti.Plo@am__quote@
@@ -350,7 +351,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/s3_cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/s3_dga.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/s3_driver.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/s3_video.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -379,6 +379,13 @@ libs3_accel_newmmio_la-s3_accel.lo: s3_accel.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='s3_accel.c' object='libs3_accel_newmmio_la-s3_accel.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libs3_accel_newmmio_la_CFLAGS) $(CFLAGS) -c -o libs3_accel_newmmio_la-s3_accel.lo `test -f 's3_accel.c' || echo '$(srcdir)/'`s3_accel.c
+
+libs3_accel_newmmio_la-s3_video.lo: s3_video.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libs3_accel_newmmio_la_CFLAGS) $(CFLAGS) -MT libs3_accel_newmmio_la-s3_video.lo -MD -MP -MF "$(DEPDIR)/libs3_accel_newmmio_la-s3_video.Tpo" -c -o libs3_accel_newmmio_la-s3_video.lo `test -f 's3_video.c' || echo '$(srcdir)/'`s3_video.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libs3_accel_newmmio_la-s3_video.Tpo" "$(DEPDIR)/libs3_accel_newmmio_la-s3_video.Plo"; else rm -f "$(DEPDIR)/libs3_accel_newmmio_la-s3_video.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='s3_video.c' object='libs3_accel_newmmio_la-s3_video.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libs3_accel_newmmio_la_CFLAGS) $(CFLAGS) -c -o libs3_accel_newmmio_la-s3_video.lo `test -f 's3_video.c' || echo '$(srcdir)/'`s3_video.c
 
 libs3_accel_pio_la-s3_accel.lo: s3_accel.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libs3_accel_pio_la_CFLAGS) $(CFLAGS) -MT libs3_accel_pio_la-s3_accel.lo -MD -MP -MF "$(DEPDIR)/libs3_accel_pio_la-s3_accel.Tpo" -c -o libs3_accel_pio_la-s3_accel.lo `test -f 's3_accel.c' || echo '$(srcdir)/'`s3_accel.c; \
