@@ -956,6 +956,7 @@ TDFXPreInit(ScrnInfoPtr pScrn, int flags)
 
 #ifdef XSERVER_LIBPCIACCESS
     match = pTDFX->PciInfo[0];
+    pTDFX->ChipType = DEVICE_ID(match);
 #else
   match=pTDFX->PciInfo=xf86GetPciInfoForEntity(pTDFX->pEnt->index);
   TDFXFindChips(pScrn, match);

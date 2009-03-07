@@ -104,7 +104,7 @@ static void TDFXResetFifo(ScrnInfoPtr pScrn)
 {
   TDFXPtr pTDFX;
   int oldValue;
-  long start_sec, end_sec, dummy;
+  struct timeval start, stop;
 
   pTDFX=TDFXPTR(pScrn);
   ErrorF("Resetting FIFO\n");
@@ -113,17 +113,17 @@ static void TDFXResetFifo(ScrnInfoPtr pScrn)
   /* Toggle the reset bits */
   oldValue=TDFXReadLongMMIO(pTDFX, MISCINIT0);
   TDFXWriteLongMMIO(pTDFX, MISCINIT0, oldValue|0x23);
-  xf86getsecs(&start_sec, &dummy);
+  gettimeofday(&start, NULL);
   do {
-    xf86getsecs(&end_sec, &dummy);
-  } while (end_sec-start_sec<2);
+    gettimeofday(&stop, NULL);
+  } while (stop.tv_sec - start.tv_sec < 2);
   TDFXWriteLongMMIO(pTDFX, MISCINIT0, oldValue);
   oldValue=TDFXReadLongMMIO(pTDFX, MISCINIT1);
   TDFXWriteLongMMIO(pTDFX, MISCINIT1, oldValue|BIT(19));
-  xf86getsecs(&start_sec, &dummy);
+  gettimeofday(&start, NULL);
   do {
-    xf86getsecs(&end_sec, &dummy);
-  } while (end_sec-start_sec<2);
+    gettimeofday(&stop, NULL);
+  } while (stop.tv_sec - start.tv_sec < 2);
   TDFXWriteLongMMIO(pTDFX, MISCINIT1, oldValue);
   InstallFifo(pScrn);
 }
@@ -141,14 +141,16 @@ static void TDFXSyncFifo(ScrnInfoPtr pScrn)
   TDFXPtr pTDFX;
   int i, cnt, resets=0;
   int stat;
-  long start_sec, end_sec, dummy, readptr;
+  long tmp, readptr;
+  struct timeval start, stop;
 
   TDFXTRACEACCEL("TDFXSyncFifo start\n");
   pTDFX=TDFXPTR(pScrn);
   TDFXSendNOPFifo(pScrn);
   i=0;
   cnt=0;
-  start_sec=0;
+  start.tv_sec=0;
+
   readptr=TDFXReadLongMMIO(pTDFX, SST_FIFO_RDPTRL0);
   do {
     readptr=TDFXReadLongMMIO(pTDFX, SST_FIFO_RDPTRL0);
@@ -156,15 +158,15 @@ static void TDFXSyncFifo(ScrnInfoPtr pScrn)
     if (stat&SST_BUSY) i=0; else i++;
     cnt++;
     if (cnt==1000) {
-      if (!start_sec) {
-	xf86getsecs(&start_sec, &dummy);
+      if (!start.tv_sec) {
+        gettimeofday(&start, NULL);
       } else {
-	xf86getsecs(&end_sec, &dummy);
-	if (end_sec-start_sec>3) {
-	  dummy=TDFXReadLongMMIO(pTDFX, SST_FIFO_RDPTRL0);
-	  if (dummy==readptr) {
+        gettimeofday(&stop, NULL);
+	if (stop.tv_sec - start.tv_sec > 3) {
+	  tmp = TDFXReadLongMMIO(pTDFX, SST_FIFO_RDPTRL0);
+	  if (tmp == readptr) {
 	    TDFXResetFifo(pScrn);
-	    readptr=dummy;
+	    readptr = tmp;
 	    resets++;
 	    if (resets==3) {
 	      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -172,7 +174,7 @@ static void TDFXSyncFifo(ScrnInfoPtr pScrn)
 	      return;
 	    }
 	  }
-	  start_sec=0;
+	  start.tv_sec=0;
         }
       }
       cnt=0;
