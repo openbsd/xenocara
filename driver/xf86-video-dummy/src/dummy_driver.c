@@ -11,9 +11,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
-/* This is used for module versioning */
-#include "xf86Version.h"
-
 /* All drivers initialising the SW cursor need this */
 #include "mipointer.h"
 
