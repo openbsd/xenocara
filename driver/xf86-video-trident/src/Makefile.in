@@ -74,7 +74,7 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(trident_drv_ladir)"
 trident_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(trident_drv_la_LTLIBRARIES)
-trident_drv_la_LIBADD =
+trident_drv_la_DEPENDENCIES =
 am_trident_drv_la_OBJECTS = blade_accel.lo blade_accel_exa.lo \
 	image_accel.lo trident_accel.lo trident_bank.lo trident_dac.lo \
 	trident_dga.lo trident_driver.lo tridenthelper.lo \
@@ -233,6 +233,7 @@ target_alias = @target_alias@
 AM_CFLAGS = @XORG_CFLAGS@
 trident_drv_la_LTLIBRARIES = trident_drv.la
 trident_drv_la_LDFLAGS = -module -avoid-version
+trident_drv_la_LIBADD = -lm
 trident_drv_ladir = @moduledir@/drivers
 trident_drv_la_SOURCES = \
          blade_accel.c \
