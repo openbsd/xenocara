@@ -28,7 +28,6 @@
  * this work is sponsored by S.u.S.E. GmbH, Fuerth, Elsa GmbH, Aachen, 
  * Siemens Nixdorf Informationssysteme and Appian Graphics.
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/glint/glint_driver.c,v 1.162 2003/11/03 05:11:11 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -38,7 +37,6 @@
 #include "micmap.h"
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86Version.h"
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "xf86cmap.h"
@@ -694,17 +692,8 @@ GLINTProbe(DriverPtr drv, int flags)
  		    if (pScrn)
   			xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
   				   "claimed PCI slot %d:%d:%d\n",bus,device,func);
- 		} else {
- 		    /* XXX This is a quick hack */
- 		    int entity;
- 		    
- 		    entity = xf86ClaimIsaSlot(drv, 0,
- 					      devSections[i], TRUE);
- 		    pScrn = xf86ConfigIsaEntity(pScrn,0,entity,
- 					      NULL,RES_SHARED_VGA,
- 					      NULL,NULL,NULL,NULL);
  		}
- 		if (pScrn) {
+		if (pScrn) {
   		    /* Fill in what we can of the ScrnInfoRec */
  		    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
  			       "%s successfully probed\n", dev ? dev : "default framebuffer device");
@@ -2060,6 +2049,64 @@ GLINTPreInit(ScrnInfoPtr pScrn, int flags)
     xf86DrvMsg(pScrn->scrnIndex, from, "Max pixel clock is %d MHz\n",
 	       pGlint->MaxClock / 1000);
 
+    /* Load DDC */
+    if (!xf86LoadSubModule(pScrn, "ddc")) {
+	GLINTFreeRec(pScrn);
+	return FALSE;
+    }
+    xf86LoaderReqSymLists(ddcSymbols, NULL);
+    /* Load I2C if needed */
+    if ((pGlint->Chipset == PCI_VENDOR_3DLABS_CHIP_PERMEDIA2) ||
+	(pGlint->Chipset == PCI_VENDOR_3DLABS_CHIP_PERMEDIA2V) ||
+	(pGlint->Chipset == PCI_VENDOR_3DLABS_CHIP_PERMEDIA3) ||
+	(pGlint->Chipset == PCI_VENDOR_3DLABS_CHIP_PERMEDIA4) ||
+	(pGlint->Chipset == PCI_VENDOR_3DLABS_CHIP_R4) ||
+	(pGlint->Chipset == PCI_VENDOR_TI_CHIP_PERMEDIA2)) {
+	if (xf86LoadSubModule(pScrn, "i2c")) {
+	    I2CBusPtr pBus;
+
+	    xf86LoaderReqSymLists(i2cSymbols, NULL);
+	    if ((pBus = xf86CreateI2CBusRec())) {
+		pBus->BusName = "DDC";
+		pBus->scrnIndex = pScrn->scrnIndex;
+		pBus->I2CUDelay = Permedia2I2CUDelay;
+		pBus->I2CPutBits = Permedia2I2CPutBits;
+		pBus->I2CGetBits = Permedia2I2CGetBits;
+		pBus->DriverPrivate.ptr = pGlint;
+		if (!xf86I2CBusInit(pBus)) {
+		    xf86DestroyI2CBusRec(pBus, TRUE, TRUE);
+		} else
+		    pGlint->DDCBus = pBus; 
+	    }
+
+	    if ((pBus = xf86CreateI2CBusRec())) {
+	        pBus->BusName = "Video";
+	        pBus->scrnIndex = pScrn->scrnIndex;
+		pBus->I2CUDelay = Permedia2I2CUDelay;
+		pBus->I2CPutBits = Permedia2I2CPutBits;
+		pBus->I2CGetBits = Permedia2I2CGetBits;
+		pBus->DriverPrivate.ptr = pGlint;
+		if (!xf86I2CBusInit(pBus)) {
+		    xf86DestroyI2CBusRec(pBus, TRUE, TRUE);
+		} else
+		    pGlint->VSBus = pBus;
+	    }
+	}
+    }
+    
+    /* DDC */
+    {
+	xf86MonPtr pMon = NULL;
+	
+	if (pGlint->DDCBus)
+	    pMon = xf86DoEDID_DDC2(pScrn->scrnIndex, pGlint->DDCBus);
+	    
+	if (!pMon)
+	    /* Try DDC1 */;
+	    
+	xf86SetDDCproperties(pScrn,xf86PrintEDID(pMon));
+    }
+
     /*
      * Setup the ClockRanges, which describe what clock ranges are available,
      * and what sort of modes they can be used for.
@@ -2386,51 +2433,6 @@ GLINTPreInit(ScrnInfoPtr pScrn, int flags)
 	xf86LoaderReqSymLists(shadowSymbols, NULL);
     }
 
-    /* Load DDC */
-    if (!xf86LoadSubModule(pScrn, "ddc")) {
-	GLINTFreeRec(pScrn);
-	return FALSE;
-    }
-    xf86LoaderReqSymLists(ddcSymbols, NULL);
-    /* Load I2C if needed */
-    if ((pGlint->Chipset == PCI_VENDOR_3DLABS_CHIP_PERMEDIA2) ||
-	(pGlint->Chipset == PCI_VENDOR_3DLABS_CHIP_PERMEDIA2V) ||
-	(pGlint->Chipset == PCI_VENDOR_3DLABS_CHIP_PERMEDIA3) ||
-	(pGlint->Chipset == PCI_VENDOR_3DLABS_CHIP_PERMEDIA4) ||
-	(pGlint->Chipset == PCI_VENDOR_3DLABS_CHIP_R4) ||
-	(pGlint->Chipset == PCI_VENDOR_TI_CHIP_PERMEDIA2)) {
-	if (xf86LoadSubModule(pScrn, "i2c")) {
-	    I2CBusPtr pBus;
-
-	    xf86LoaderReqSymLists(i2cSymbols, NULL);
-	    if ((pBus = xf86CreateI2CBusRec())) {
-		pBus->BusName = "DDC";
-		pBus->scrnIndex = pScrn->scrnIndex;
-		pBus->I2CUDelay = Permedia2I2CUDelay;
-		pBus->I2CPutBits = Permedia2I2CPutBits;
-		pBus->I2CGetBits = Permedia2I2CGetBits;
-		pBus->DriverPrivate.ptr = pGlint;
-		if (!xf86I2CBusInit(pBus)) {
-		    xf86DestroyI2CBusRec(pBus, TRUE, TRUE);
-		} else
-		    pGlint->DDCBus = pBus; 
-	    }
-
-	    if ((pBus = xf86CreateI2CBusRec())) {
-	        pBus->BusName = "Video";
-	        pBus->scrnIndex = pScrn->scrnIndex;
-		pBus->I2CUDelay = Permedia2I2CUDelay;
-		pBus->I2CPutBits = Permedia2I2CPutBits;
-		pBus->I2CGetBits = Permedia2I2CGetBits;
-		pBus->DriverPrivate.ptr = pGlint;
-		if (!xf86I2CBusInit(pBus)) {
-		    xf86DestroyI2CBusRec(pBus, TRUE, TRUE);
-		} else
-		    pGlint->VSBus = pBus;
-	    }
-	}
-    }
-    
     TRACE_EXIT("GLINTPreInit");
     return TRUE;
 }
@@ -2885,7 +2887,9 @@ GLINTScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
     GLINTPtr pGlint = GLINTPTR(pScrn);
     int ret, displayWidth;
+#if HAVE_CFB8_32
     int init_picture = 0;
+#endif
     unsigned char *FBStart;
     VisualPtr visual;
     
@@ -2904,19 +2908,6 @@ GLINTScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     } else
     /* Save the current state */
     GLINTSave(pScrn);
-
-    /* DDC */
-    {
-	xf86MonPtr pMon = NULL;
-	
-	if (pGlint->DDCBus)
-	    pMon = xf86DoEDID_DDC2(pScrn->scrnIndex, pGlint->DDCBus);
-	    
-	if (!pMon)
-	    /* Try DDC1 */;
-	    
-	xf86SetDDCproperties(pScrn,xf86PrintEDID(pMon));
-    }
 
     /* Initialise the first mode */
     if ( (!pGlint->FBDev) && !(GLINTModeInit(pScrn, pScrn->currentMode))) {
@@ -3003,10 +2994,14 @@ GLINTScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     case 8:
     case 16:
     case 24:
+#if !HAVE_CFB8_32
+    case 32:
+#endif
 	ret = fbScreenInit(pScreen, FBStart,
 			pScrn->virtualX, pScrn->virtualY,
 			pScrn->xDpi, pScrn->yDpi,
 			displayWidth, pScrn->bitsPerPixel);
+#if HAVE_CFB8_32
 	init_picture = 1;
 	break;
     case 32:
@@ -3022,6 +3017,7 @@ GLINTScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 			displayWidth, pScrn->bitsPerPixel);
 	    init_picture = 1;
 	}
+#endif
 	break;
     default:
 	xf86DrvMsg(scrnIndex, X_ERROR,
@@ -3059,7 +3055,9 @@ GLINTScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     }
 
     /* must be after RGB ordering fixed */
+#if HAVE_CFB8_32
     if (init_picture)
+#endif
 	fbPictureInit(pScreen, 0, 0);
     if (!pGlint->NoAccel) {
         switch (pGlint->Chipset)
@@ -3188,11 +3186,13 @@ GLINTScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	}
     }
 
+#if HAVE_CFB8_32
     if((pScrn->overlayFlags & OVERLAY_8_32_PLANAR) && 
 						(pScrn->bitsPerPixel == 32)) {
 	if(!xf86Overlay8Plus32Init(pScreen))
 	    return FALSE;
     }
+#endif
 
     if(pGlint->ShadowFB)
 	ShadowFBInit(pScreen, GLINTRefreshArea);

@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-glint],
-        1.2.1,
+        1.2.2,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-glint)
 
@@ -69,6 +69,7 @@ CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
 AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
               [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
               [#include "xorg-server.h"])
+AC_CHECK_HEADER(cfb8_32.h,[AC_DEFINE(HAVE_CFB8_32, 1, [Have cfb8_32 support])],[])
 CPPFLAGS="$SAVE_CPPFLAGS"
 
 # Checks for header files.
