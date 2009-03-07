@@ -43,13 +43,11 @@
 #include "micmap.h"
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86Version.h"
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "xf86cmap.h"
 #include "shadowfb.h"
 #include "vgaHW.h"
-#include "xf86DDC.h"
 #include "xf86RAC.h"
 #include "xf86Resources.h"
 #include "xaa.h"
@@ -64,6 +62,24 @@
 #include <X11/extensions/dpms.h>
 #include "mipict.h"
 #include "dixstruct.h"
+
+#include <unistd.h>
+
+
+#if 0
+static void VoodooReadWriteBank(ScreenPtr pScreen, int bank);
+#endif
+static Bool VoodooSetupForCPUToScreenAlphaTexture(ScrnInfoPtr pScrn, int op,
+	CARD16 red, CARD16 green, CARD16 blue, CARD16 alpha, int alphaType,
+	CARD8 *alphaPtr, int alphaPitch, int width, int height, int flags);
+static void VoodooSubsequentCPUToScreenAlphaTexture(ScrnInfoPtr pScrn,
+	int dstx, int dsty, int srcx, int srcy, int width, int height);
+static Bool VoodooSetupForCPUToScreenTexture(ScrnInfoPtr pScrn, int op,
+	int texType, CARD8 *texPtr, int texPitch, int width, int height,
+	int flags);
+static void VoodooSubsequentCPUToScreenTexture(ScrnInfoPtr pScrn,
+	int dstx, int dsty, int srcx, int srcy, int width, int height);
+
 
 static int debug = 0;
 
@@ -669,6 +685,17 @@ int VoodooHardwareInit(VoodooPtr pVoo)
 }	
 
 /*
+ *     Voodoo exit logic
+ */
+
+void VoodooRestorePassThrough(VoodooPtr pVoo)
+{
+    pci_enable(pVoo, 1, 0, 0);
+    mmio32_w(pVoo, 0x210, 0);
+    pci_enable(pVoo, 0, 0, 1);
+}
+
+/*
  *	Copiers for Voodoo1
  *
  *	Voodoo1 has no CPU to screen blit, and also lacks SGRAM fill
@@ -814,7 +841,8 @@ void VoodooWriteBank(ScreenPtr pScreen, int bank)
 	mmio32_w(pVoo, 0x114, pVoo->lfbMode);
 }
 
-void VoodooReadWriteBank(ScreenPtr pScreen, int bank)
+#if 0
+static void VoodooReadWriteBank(ScreenPtr pScreen, int bank)
 {
 	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
 	VoodooPtr pVoo = VoodooPTR(pScrn);
@@ -832,6 +860,7 @@ void VoodooReadWriteBank(ScreenPtr pScreen, int bank)
 	}
 	mmio32_w(pVoo, 0x114, pVoo->lfbMode);
 }
+#endif
 
 /*
  *	We normally want to load all four rop variants at once so
@@ -951,6 +980,9 @@ static void Voodoo2SetupForSolidFill(ScrnInfoPtr pScrn, int color,
 			int rop, unsigned int planemask)
 {
 	VoodooPtr pVoo = VoodooPTR(pScrn);
+	if (debug)
+	    ErrorF("Setup for solid fill colour %04X, rop %d, Mask %04X.\n",
+		   color, rop, planemask);
 	Voodoo2Setup2D(pVoo);
 	mmio32_w_chuck(pVoo, 0x2EC, ropxlate[rop]); 	/* rop */
 	mmio32_w_chuck(pVoo, 0x2F0, color);		/* fg color */
@@ -961,6 +993,8 @@ static void Voodoo2SubsequentSolidFillRect(ScrnInfoPtr pScrn, int x, int y,
 			int w, int h)
 {
 	VoodooPtr pVoo = VoodooPTR(pScrn);
+	if (debug)
+	    ErrorF("Fill (%d, %d) for (%d, %d)\n", x, y, w, h);
 	wait_idle(pVoo);
 	mmio32_w_chuck(pVoo, 0x2E4, (y<<16) | x);	/* Dst x,y */
 	/* Set size and fire */
@@ -1183,9 +1217,9 @@ static void Voodoo2DisableClipping(ScrnInfoPtr pScrn)
  */
  
 
-Bool VoodooSetupForCPUToScreenAlphaTexture(ScrnInfoPtr pScrn, int op, CARD16 red, 
-	CARD16 green, CARD16 blue, CARD16 alpha, int alphaType, CARD8 *alphaPtr,
-	int alphaPitch,	int width, int height, int flags)
+static Bool VoodooSetupForCPUToScreenAlphaTexture(ScrnInfoPtr pScrn, int op,
+	CARD16 red, CARD16 green, CARD16 blue, CARD16 alpha, int alphaType,
+	CARD8 *alphaPtr, int alphaPitch, int width, int height, int flags)
 {
 	VoodooPtr pVoo = VoodooPTR(pScrn);
 
@@ -1210,7 +1244,8 @@ Bool VoodooSetupForCPUToScreenAlphaTexture(ScrnInfoPtr pScrn, int op, CARD16 red
 	return TRUE;	
 }	
 
-void VoodooSubsequentCPUToScreenAlphaTexture(ScrnInfoPtr pScrn, int dstx, int dsty, int srcx, int srcy, int width, int height)
+static void VoodooSubsequentCPUToScreenAlphaTexture(ScrnInfoPtr pScrn,
+	int dstx, int dsty, int srcx, int srcy, int width, int height)
 {
 	VoodooPtr pVoo = VoodooPTR(pScrn);
 	/* 32bit LFB write mode */
@@ -1258,8 +1293,9 @@ void VoodooSubsequentCPUToScreenAlphaTexture(ScrnInfoPtr pScrn, int dstx, int ds
 	mmio32_w(pVoo, 0x10C, 0);
 }
 
-Bool VoodooSetupForCPUToScreenTexture(ScrnInfoPtr pScrn, int op, int texType,
-	CARD8 *texPtr, int texPitch, int width, int height, int flags)
+static Bool VoodooSetupForCPUToScreenTexture(ScrnInfoPtr pScrn, int op,
+	int texType, CARD8 *texPtr, int texPitch, int width, int height,
+	int flags)
 {
 	VoodooPtr pVoo = VoodooPTR(pScrn);
 	
@@ -1283,7 +1319,8 @@ Bool VoodooSetupForCPUToScreenTexture(ScrnInfoPtr pScrn, int op, int texType,
 	return TRUE;
 }
 
-void VoodooSubsequentCPUToScreenTexture(ScrnInfoPtr pScrn, int dstx, int dsty, int srcx, int srcy, int width, int height)
+static void VoodooSubsequentCPUToScreenTexture(ScrnInfoPtr pScrn,
+	int dstx, int dsty, int srcx, int srcy, int width, int height)
 {
 	VoodooPtr pVoo = VoodooPTR(pScrn);
 	/* 32bit LFB write mode */

@@ -13,7 +13,7 @@ typedef struct {
   CloseScreenProcPtr  CloseScreen;	/* Wrapped Close */
   XAAInfoRecPtr	      AccelInfoRec;	/* Cached Accel rec for close */
   Bool                Blanked;
-  Bool                OnAtExit;
+  Bool                PassThrough;     /* Set to restore pass through on exit */
   EntityInfoPtr       pEnt;
   OptionInfoPtr       Options;
   
