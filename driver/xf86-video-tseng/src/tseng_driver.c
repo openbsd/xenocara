@@ -1453,18 +1453,22 @@ TsengScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
      */
 
     switch (pScrn->bitsPerPixel) {
+#if HAVE_XF1BPP
     case 1:
 	ret = xf1bppScreenInit(pScreen, pTseng->FbBase,
 			pScrn->virtualX, pScrn->virtualY,
 			pScrn->xDpi, pScrn->yDpi,
 			pScrn->displayWidth);
 	break;
+#endif
+#if HAVE_XF4BPP
     case 4:
 	ret = xf4bppScreenInit(pScreen, pTseng->FbBase,
 			pScrn->virtualX, pScrn->virtualY,
 			pScrn->xDpi, pScrn->yDpi,
 			pScrn->displayWidth);
 	break;
+#endif
     default:
         ret  = fbScreenInit(pScreen, pTseng->FbBase,
 			pScrn->virtualX, pScrn->virtualY,
@@ -1493,8 +1497,10 @@ TsengScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	}
     }
 
+#if HAVE_XF1BPP
     /* must be after RGB ordering fixed */
     if (pScrn->bitsPerPixel > 4)
+#endif
 	fbPictureInit(pScreen, 0, 0);
 
     if (pScrn->depth >= 8)
