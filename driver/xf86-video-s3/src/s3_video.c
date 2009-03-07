@@ -29,8 +29,6 @@
 #include "config.h"
 #endif
 
-#define S3_NEWMMIO	/* previously defined in Imakefile in monolith */
-
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
@@ -59,7 +57,7 @@ static int  S3PutImage(ScrnInfoPtr, short, short, short, short, short,
 static int  S3QueryImageAttributes(ScrnInfoPtr, int, unsigned short *,
                         	   unsigned short *,  int *, int *);
 static void S3ResetVideoOverlay(ScrnInfoPtr);
-
+static FBLinearPtr S3XVMemAlloc(ScrnInfoPtr pScrn, pointer pVideo, int size);
 
 
 void S3InitVideo(ScreenPtr pScreen)
@@ -70,12 +68,8 @@ void S3InitVideo(ScreenPtr pScreen)
 	XF86VideoAdaptorPtr newAdaptor = NULL;
 	int num_adaptors;
 
-	if (((pScrn->bitsPerPixel == 16) ||
-	     (pScrn->bitsPerPixel == 24)) && (pS3->S3NewMMIO)) {
-		newAdaptor = S3SetupImageVideoOverlay(pScreen);
-		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Using overlay video\n");
-	} else
-		return;
+	newAdaptor = S3SetupImageVideoOverlay(pScreen);
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Using overlay video\n");
 
 	num_adaptors = xf86XVListGenericAdaptors(pScrn, &adaptors);
 
@@ -92,7 +86,7 @@ void S3InitVideo(ScreenPtr pScreen)
                 		newAdaptors[num_adaptors] = newAdaptor;
                 		adaptors = newAdaptors;
                 		num_adaptors++;
-            		} 
+           		} 
         	}
     	}
 
@@ -122,12 +116,42 @@ static XF86VideoEncodingRec DummyEncoding[2] =
 };
 
 
+static FBLinearPtr S3XVMemAlloc(ScrnInfoPtr pScrn, pointer pVideo, int size)
+{
+	FBLinearPtr pLinear = (FBLinearPtr)pVideo;
+	ScreenPtr pScreen = pScrn->pScreen;
 
+	if (pLinear) {
+		if ((pLinear->size >= size) ||
+		    xf86ResizeOffscreenLinear(pLinear, size)) {
+			pLinear->MoveLinearCallback = NULL;
+			pLinear->RemoveLinearCallback = NULL;
+			return pLinear;
+		}
+		xf86FreeOffscreenLinear(pLinear);
+	}
+	pLinear = xf86AllocateOffscreenLinear(pScreen, size, 16, 
+					      NULL, NULL, NULL);
+	
+	if (!pLinear) {
+		int maxSize;
+		
+		xf86QueryLargestOffscreenLinear(pScreen, &maxSize, 16,
+						PRIORITY_EXTREME);
+		if (maxSize < size)
+			return NULL;
+		
+		xf86PurgeUnlockedOffscreenAreas(pScreen);
+		pLinear = xf86AllocateOffscreenLinear(pScreen, size, 16, 
+						      NULL, NULL, NULL);
+	}
+	return pLinear;
+}
 
 static XF86VideoFormatRec Formats[NUM_FORMATS_TEXTURE] =
 {
-  	/*{15, TrueColor},*/ {16, TrueColor}, {24, TrueColor} /* ,
-    	{15, DirectColor}*/, {16, DirectColor}, {24, DirectColor}
+  	{16, TrueColor}, {24, TrueColor},
+	{16, DirectColor}, {24, DirectColor}
 };
 
 
@@ -188,7 +212,7 @@ static XF86VideoAdaptorPtr S3AllocAdaptor(ScrnInfoPtr pScrn)
         	return NULL;
    
     	if(!(pPriv = xcalloc(1, sizeof(S3PortPrivRec)  +
-        	                (sizeof(DevUnion) * S3_MAX_PORTS))))
+			     (sizeof(DevUnion) * S3_MAX_PORTS))))
     	{
         	xfree(adapt);
         	return NULL;
@@ -199,15 +223,16 @@ static XF86VideoAdaptorPtr S3AllocAdaptor(ScrnInfoPtr pScrn)
     	for(i = 0; i < S3_MAX_PORTS; i++)
         	adapt->pPortPrivates[i].val = i;
 
-	pPriv->colorKey = (1 << pScrn->offset.red) | (1 << pScrn->offset.green) |
-			  (((pScrn->mask.blue >> pScrn->offset.blue) - 1) << pScrn->offset.blue);
+	pPriv->colorKey = (1 << pScrn->offset.red) | 
+		(1 << pScrn->offset.green) |
+		(((pScrn->mask.blue >> pScrn->offset.blue) - 1) << pScrn->offset.blue);
 
 	pPriv->videoStatus = 0;
 	pPriv->lastPort = -1;
 
 	pS3->adaptor = adapt;
 	pS3->portPrivate = pPriv;
-
+	
 	return adapt;
 }
 
@@ -262,58 +287,19 @@ static void S3StopVideo(ScrnInfoPtr pScrn, pointer data, Bool exit)
 	REGION_EMPTY(pScrn->pScreen, &pPriv->clip);
 
 	if (exit) {
+		SET_FIFO_CNTL(0x00080000 | FIFO_PS24_SS0);
+
 		if (pPriv->videoStatus & CLIENT_VIDEO_ON)
 			SET_BLEND_CNTL(0x01000000);
-
+		
 		if (pPriv->area) {
-			xf86FreeOffscreenArea(pPriv->area);
+			xf86FreeOffscreenLinear(pPriv->area);
 	        	pPriv->area = NULL;
 		}
 
 		pPriv->videoStatus = 0;
 	}
 }
-
-
-static FBAreaPtr S3AllocateMemory(ScrnInfoPtr pScrn, FBAreaPtr area,
-				  int numlines)
-{
-	ScreenPtr pScreen;
-	FBAreaPtr new_area;
-
-   if(area) {
-        if((area->box.y2 - area->box.y1) >= numlines)
-           return area;
-            
-        if(xf86ResizeOffscreenArea(area, pScrn->displayWidth, numlines))
-           return area;
-     
-        xf86FreeOffscreenArea(area);
-   }
-      
-   pScreen = screenInfo.screens[pScrn->scrnIndex];
-  
-   new_area = xf86AllocateOffscreenArea(pScreen, pScrn->displayWidth,
-                                numlines, 0, NULL, NULL, NULL);
-
-   if(!new_area) {
-        int max_w, max_h;
-
-        xf86QueryLargestOffscreenArea(pScreen, &max_w, &max_h, 0,
-                        FAVOR_WIDTH_THEN_AREA, PRIORITY_EXTREME);
-           
-        if((max_w < pScrn->displayWidth) || (max_h < numlines))
-           return NULL;
-
-        xf86PurgeUnlockedOffscreenAreas(pScreen);
-        new_area = xf86AllocateOffscreenArea(pScreen, pScrn->displayWidth,
-                                numlines, 0, NULL, NULL, NULL);
-   }
-  
-   return new_area;  
-}
-
-
 
 static void S3DisplayVideoOverlay(ScrnInfoPtr pScrn, int id, int offset,
 				  short width, short height, int pitch,
@@ -330,139 +316,162 @@ static void S3DisplayVideoOverlay(ScrnInfoPtr pScrn, int id, int offset,
 	else
 		tmp = 2;
 
-	SET_SSTREAM_CNTL(tmp << 28 | 0x01000000 |
-			 ((((src_w-1)<<1)-(drw_w-1)) & 0xfff));
-	SET_SSTRETCH(((src_w - 1) & 0x7ff) | (((src_w-drw_w) & 0x7ff) << 16));
+	SET_SSTREAM_CNTL((tmp << 28) | 0x01000000 |
+			 ((((src_w - 1) << 1) - (drw_w - 1)) & 0xfff));
+	SET_SSTRETCH(((src_w - 1) & 0x7ff) | 
+		     (((src_w - drw_w) & 0x7ff) << 16));
 	SET_BLEND_CNTL(0x05000000);
-	SET_SSTREAM_FBADDR(offset & 0x3fffff);
+	SET_SSTREAM_FBADDR0(offset & 0x3fffff);
+	SET_SSTREAM_FBADDR1(offset & 0x3fffff);
 	SET_SSTREAM_STRIDE(pitch & 0xfff);
+	SET_SSTREAM_START(((dstBox->x1 + 1) << 16) | (dstBox->y1 + 1));
+	SET_SSTREAM_WIND((((drw_w - 1) << 16) | drw_h) & 0x7ff07ff);
 
 	SET_K1_VSCALE(src_h - 1);
 	SET_K2_VSCALE((src_h - drw_h) & 0x7ff);
-
-	SET_DDA_VERT((((~drw_h)-1)) & 0xfff);
-
-	SET_SSTREAM_START(((dstBox->x1 +1) << 16) | (dstBox->y1 +1));
-	SET_SSTREAM_WIND(( ((drw_w-1) << 16) | (drw_h ) ) & 0x7ff07ff);
+	SET_DDA_VERT(((~drw_h - 1)) & 0xfff);
 
 	SET_CHROMA_KEY(0x10000000 |
 		       ((pScrn->weight.red-1) << 24) |
 		       ((pPriv->colorKey & pScrn->mask.red) >> pScrn->offset.red) <<
-			(16 + 8-pScrn->weight.red) |
+		       (16 + 8-pScrn->weight.red) |
 		       ((pPriv->colorKey & pScrn->mask.green) >> pScrn->offset.green) <<
-			(8 + 8-pScrn->weight.green) |
+		       (8 + 8-pScrn->weight.green) |
 		       ((pPriv->colorKey & pScrn->mask.blue) >> pScrn->offset.blue) <<
-			(8-pScrn->weight.blue));
+		       (8-pScrn->weight.blue));
+
+	SET_FIFO_CNTL(0x00080000 | pS3->Streams_FIFO);
 }
 
-
 static int S3PutImage(ScrnInfoPtr pScrn, short src_x, short src_y,
-		  short drw_x, short drw_y, short src_w, short src_h,
-		  short drw_w, short drw_h, int id, unsigned char *buf,
-		  short width, short height, Bool sync, RegionPtr clipBoxes,
-		  pointer data, DrawablePtr pDraw)
+		      short drw_x, short drw_y, short src_w, short src_h,
+		      short drw_w, short drw_h, int id, unsigned char *buf,
+		      short width, short height, Bool sync, 
+		      RegionPtr clipBoxes, pointer data, DrawablePtr pDraw)
 {
 	S3Ptr pS3 = S3PTR(pScrn);
 	S3PortPrivPtr pPriv = pS3->portPrivate;
    	INT32 x1, x2, y1, y2;
-   	unsigned char *dst_start; 
-   	int pitch, new_h, offset, offset2=0, offset3=0;
-   	int srcPitch, srcPitch2=0, dstPitch;
-   	int top, left, npixels, nlines;
+   	CARD8 *dst_start; 
+   	int pitch, new_h, offset, offsetV = 0, offsetU = 0;
+   	int srcPitch, srcPitchUV = 0, dstPitch, dstSize;
+   	int top, bottom, right, left, npixels, nlines;
    	BoxRec dstBox;
-   	CARD32 tmp;
+	CARD32 tmp;
+	int cpp = (pScrn->bitsPerPixel + 7) >> 3;
 
-   /* Clip */
-   x1 = src_x;
-   x2 = src_x + src_w;
-   y1 = src_y;
-   y2 = src_y + src_h;
+	/* Clip */
+	x1 = src_x;
+	x2 = src_x + src_w;
+	y1 = src_y;
+	y2 = src_y + src_h;
    
-   dstBox.x1 = drw_x;
-   dstBox.x2 = drw_x + drw_w;
-   dstBox.y1 = drw_y;
-   dstBox.y2 = drw_y + drw_h;
+	dstBox.x1 = drw_x;
+	dstBox.x2 = drw_x + drw_w;
+	dstBox.y1 = drw_y;
+	dstBox.y2 = drw_y + drw_h;
    
-   if(!xf86XVClipVideoHelper(&dstBox, &x1, &x2, &y1, &y2,
-			     clipBoxes, width, height))
-        return Success;
+	if(!xf86XVClipVideoHelper(&dstBox, &x1, &x2, &y1, &y2, clipBoxes, 
+				  width, height))
+		return Success;
+   
+	dstBox.x1 -= pScrn->frameX0;
+	dstBox.x2 -= pScrn->frameX0;
+	dstBox.y1 -= pScrn->frameY0;
+	dstBox.y2 -= pScrn->frameY0;
         
-   /*if(!pMga->TexturedVideo) {*/
-        dstBox.x1 -= pScrn->frameX0;
-        dstBox.x2 -= pScrn->frameX0;
-        dstBox.y1 -= pScrn->frameY0;
-        dstBox.y2 -= pScrn->frameY0;
-        /*}*/
-        
-   pitch = pScrn->bitsPerPixel * pScrn->displayWidth >> 3;
-   dstPitch = ((width << 1) + 15) & ~15;
-   new_h = ((dstPitch * height) + pitch - 1) / pitch;
+	/* requested size in bytes */
+	dstPitch = ((width << 1) + 15) & ~15;
+	dstSize = dstPitch * height;
+
+	pPriv->area = S3XVMemAlloc(pScrn, pPriv->area,
+				   (dstSize + cpp - 1) / cpp);
+	if (!pPriv->area) 
+		return BadAlloc;
+
+	offset = pPriv->area->offset * cpp;
+	dst_start = pS3->FBBase + offset;
+
+	switch (id) {
+        case FOURCC_YV12:
+        case FOURCC_I420:
+		left = (x1 >> 16) & ~1;
+		right = ((x2 + 0x1ffff) >> 16) & ~1;
+		top = (y1 >> 16) & ~1;
+		bottom = ((y2 + 0x1ffff) >> 16) & ~1;
+
+		if ((right < width) && ((x1 & 0x1ffff) <= (x2 & 0x1ffff)))
+			right += 2;
+		if ((bottom < height) && ((y1 & 0x1ffff) <= (y2 & 0x1ffff)))
+			bottom += 2;
+
+		npixels = right - left;
+		nlines = bottom - top;
+
+		srcPitch = (width + 3) & ~3;
+		offsetV = srcPitch * height;
+		srcPitchUV = ((width >> 1) + 3) & ~3;
+		offsetU = ((height >> 1) * srcPitchUV) + offsetV;
+
+		tmp = ((top >> 1) * srcPitchUV) + (left >> 1);
+		offsetV += tmp;
+		offsetU += tmp;
+
+		if (id == FOURCC_I420)
+		{
+			tmp = offsetV;
+			offsetV = offsetU;
+			offsetU = tmp;
+		}
+
+		dst_start += top * dstPitch + (left << 1);
+
+		xf86XVCopyYUV12ToPacked(buf + (top * srcPitch) + left,
+					buf + offsetV, buf + offsetU, 
+					dst_start, srcPitch, srcPitchUV,
+					dstPitch, nlines, npixels);
+		break;
+
+        case FOURCC_UYVY:
+        case FOURCC_YUY2:
+        default:
+		left = (x1 >> 16) & ~1;
+		right = ((x2 + 0x1ffff) >> 16) & ~1;
+		top = y1 >> 16;
+		bottom = (y2 + 0x0ffff) >> 16;
+
+		if ((right < width) && ((x1 & 0x1ffff) <= (x2 & 0x1ffff)))
+			right += 2;
+		if ((bottom < height) && ((y1 & 0x0ffff) <= (y2 & 0x0ffff)))
+			bottom++;
+
+		npixels = right - left;
+		nlines = bottom - top;
+
+		srcPitch = width << 1;
+		buf += (top * srcPitch) + (left << 1);
+		dst_start += top * dstPitch + (left << 1);
+
+		xf86XVCopyPacked(buf, dst_start, srcPitch, dstPitch, 
+				 nlines, npixels);
+		break;
+	}
+
+	/* update cliplist */
+	if(!REGION_EQUAL(pScrn->pScreen, &pPriv->clip, clipBoxes)) {
+		REGION_COPY(pScrn->pScreen, &pPriv->clip, clipBoxes);
+		/* draw these */
+		xf86XVFillKeyHelper(pScrn->pScreen, pPriv->colorKey, 
+				    clipBoxes);
+	}
    
-   switch(id) {
-   case FOURCC_YV12:
-   case FOURCC_I420:
-        srcPitch = (width + 3) & ~3;
-        offset2 = srcPitch * height;
-        srcPitch2 = ((width >> 1) + 3) & ~3;
-        offset3 = (srcPitch2 * (height >> 1)) + offset2;
-        break;
-   case FOURCC_UYVY:  
-   case FOURCC_YUY2:
-   default:
-        srcPitch = (width << 1);
-        break;
-   }
+	offset += (left << 1) + (top * dstPitch);
+	S3DisplayVideoOverlay(pScrn, id, offset, width, height, dstPitch,
+			      x1, y1, x2, y2, &dstBox, 
+			      src_w, src_h, drw_w, drw_h);
    
-   if(!(pPriv->area = S3AllocateMemory(pScrn, pPriv->area, new_h)))
-        return BadAlloc;
-   
-    /* copy data */
-    top = y1 >> 16;
-    left = (x1 >> 16) & ~1;
-    npixels = ((((x2 + 0xffff) >> 16) + 1) & ~1) - left;
-    left <<= 1;
-        
-    offset = pPriv->area->box.y1 * pitch;
-    dst_start = pS3->FBBase + offset + left + (top * dstPitch);
-    switch(id) {
-    case FOURCC_YV12:
-    case FOURCC_I420:
-        top &= ~1;    
-        tmp = ((top >> 1) * srcPitch2) + (left >> 2);
-        offset2 += tmp;
-        offset3 += tmp;
-        if(id == FOURCC_I420) {
-           tmp = offset2;
-           offset2 = offset3;
-           offset3 = tmp;
-        }
-        nlines = ((((y2 + 0xffff) >> 16) + 1) & ~1) - top;
-        xf86XVCopyYUV12ToPacked(buf + (top * srcPitch) + (left >> 1),
-                                buf + offset2, buf + offset3, dst_start,
-                                srcPitch, srcPitch2, dstPitch, nlines, npixels);
-        break; 
-    case FOURCC_UYVY:
-    case FOURCC_YUY2:
-    default:
-        buf += (top * srcPitch) + left;
-        nlines = ((y2 + 0xffff) >> 16) - top;
-        xf86XVCopyPacked(buf, dst_start, srcPitch, dstPitch, nlines, npixels);
-        break;
-    }
-        
-    /* update cliplist */
-        if(!REGION_EQUAL(pScrn->pScreen, &pPriv->clip, clipBoxes)) {
-            REGION_COPY(pScrn->pScreen, &pPriv->clip, clipBoxes);
-            /* draw these */
-	    xf86XVFillKeyHelper(pScrn->pScreen, pPriv->colorKey, clipBoxes);
-        }
-                          
-        offset += left + (top * dstPitch);
-        S3DisplayVideoOverlay(pScrn, id, offset, width, height, dstPitch,
-             x1, y1, x2, y2, &dstBox, src_w, src_h, drw_w, drw_h);
-    
-        pPriv->videoStatus = CLIENT_VIDEO_ON;
-    return Success;
+	pPriv->videoStatus = CLIENT_VIDEO_ON;
+	return Success;
 }       
 
 
@@ -472,37 +481,36 @@ static int S3QueryImageAttributes(ScrnInfoPtr pScrn, int id,
 				  int *pitches, int *offsets)
 {
 	int size, tmp;
-
-    *w = (*w + 1) & ~1;
-    if(offsets) offsets[0] = 0;
-    
-    switch(id) {
-    case FOURCC_YV12:
-    case FOURCC_I420:
-        *h = (*h + 1) & ~1;
-        size = (*w + 3) & ~3;
-        if(pitches) pitches[0] = size;
-        size *= *h;
-        if(offsets) offsets[1] = size;
-        tmp = ((*w >> 1) + 3) & ~3;
-        if(pitches) pitches[1] = pitches[2] = tmp;
-        tmp *= (*h >> 1);
-        size += tmp;
-        if(offsets) offsets[2] = size;
-        size += tmp;
-        break;
-    case FOURCC_UYVY:
-    case FOURCC_YUY2:
-    default:
-        size = *w << 1;
-        if(pitches) pitches[0] = size;
-        size *= *h;
-        break;
-    } 
+	
+	*w = (*w + 1) & ~1;
+	if(offsets) offsets[0] = 0;
+	
+	switch(id) {
+	case FOURCC_YV12:
+	case FOURCC_I420:
+		*h = (*h + 1) & ~1;
+		size = (*w + 3) & ~3;
+		if(pitches) pitches[0] = size;
+		size *= *h;
+		if(offsets) offsets[1] = size;
+		tmp = ((*w >> 1) + 3) & ~3;
+		if(pitches) pitches[1] = pitches[2] = tmp;
+		tmp *= (*h >> 1);
+		size += tmp;
+		if(offsets) offsets[2] = size;
+		size += tmp;
+		break;
+	case FOURCC_UYVY:
+	case FOURCC_YUY2:
+	default:
+		size = *w << 1;
+		if(pitches) pitches[0] = size;
+		size *= *h;
+		break;
+	} 
         
-    return size;
+	return size;
 }
-
 
 
 void S3InitStreams(ScrnInfoPtr pScrn, DisplayModePtr mode)
@@ -510,16 +518,55 @@ void S3InitStreams(ScrnInfoPtr pScrn, DisplayModePtr mode)
         S3Ptr pS3 = S3PTR(pScrn);
         unsigned int pst_wind = (mode->HDisplay-1) << 16 | (mode->VDisplay);
         
-        SET_PSTREAM_CNTL(0x05000000 & 0x77000000);
-        SET_CHROMA_KEY(0x00);
-        SET_SSTREAM_CNTL(0x03000000);
-        SET_BLEND_CNTL(0x01000000);
-        SET_PSTREAM_STRIDE((pScrn->displayWidth * 2) & 0x0fff);
-        SET_SSTREAM_STRIDE(0x01);
-        SET_OPAQUE_OVERLAY(0x40000000);
-        SET_PSTREAM_START(0x00010001);
+	WaitVSync();
+
+	switch (pScrn->bitsPerPixel) {
+	case 8: 
+		SET_PSTREAM_CNTL(0x00000000);
+		break;
+	case 15:
+		SET_PSTREAM_CNTL(0x03000000);
+		break;
+	case 16: 
+		SET_PSTREAM_CNTL(0x05000000);
+		break;
+	case 24:
+		SET_PSTREAM_CNTL(0x06000000);
+		break;
+	case 32:
+		SET_PSTREAM_CNTL(0x07000000);
+		break;
+	}
+
+	SET_PSTREAM_FBADDR0(0x00000000);
+	SET_PSTREAM_FBADDR1(0x00000000);
+	
+	SET_PSTREAM_STRIDE(pS3->s3BppDisplayWidth & 0x0fff);
+
         SET_PSTREAM_WIND(pst_wind & 0x07ff07ff);
+        SET_PSTREAM_START(0x00010001);
+
+        SET_CHROMA_KEY(0x00000000);
+	SET_SSTRETCH(0x00000000);
+        SET_BLEND_CNTL(0x01000000);
+	SET_DOUBLE_BUFFER(0x00000000);
+
+        SET_SSTREAM_CNTL(0x03000000);
+	SET_SSTREAM_FBADDR0(0x00000000);
+	SET_SSTREAM_FBADDR1(0x00000000);
+        SET_SSTREAM_STRIDE(0x00000001);
         SET_SSTREAM_START(0x07ff07ff);
         SET_SSTREAM_WIND(0x00010001);
+
+        SET_OPAQUE_OVERLAY(0x40000000);
+	SET_K1_VSCALE(0x00000000);
+	SET_K2_VSCALE(0x00000000);
+	SET_DDA_VERT(0x00000000);
+
+	/*
+	  ps thr | ss thr | ss fifo slots
+	  set primary stream FIFO to 24 slots and 12 slots for threshold 
+	*/
+	SET_FIFO_CNTL(0x00080000 | FIFO_PS24_SS0);
 }       
 

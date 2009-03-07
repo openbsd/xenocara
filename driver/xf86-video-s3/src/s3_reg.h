@@ -139,6 +139,16 @@ the
 #define VECDIR_315      0x00e0
 #define SSVDRAW         0x0010
 
+/* 
+ * Some values for Streams FIFO.
+ * primary stream threshold | secondary stream threshold | 
+ * secondary stream slots (can be 0, 8, 12, 16, 24) from 24 total
+ */
+#define FIFO_PS0_SS24  (0 << 10) | (12 << 5) | 24
+#define FIFO_PS8_SS16  (8 << 10) | (12 << 5) | 16
+#define FIFO_PS12_SS12 (6 << 10) | (8 << 5) | 12
+#define FIFO_PS16_SS8  (8 << 10) | (4 << 5) | 8
+#define FIFO_PS24_SS0  (12 << 10) | (0 << 5) | 0
 
 #define S3_OUTW(p,n)		outw(p, n)
 #define S3_OUTL(p,n)		outl(p, n)
@@ -153,6 +163,10 @@ the
 		while(inw(GP_STAT) & GPBUSY);	\
 	} while(0)
 
+#define WaitVSync() {					\
+	while (inb(0x3da) & 8);                         \
+	while (!(inb(0x3da) & 8));			\
+}
 
 #ifdef S3_NEWMMIO
 #include "newmmio.h"
@@ -162,13 +176,15 @@ the
  */
 #define SET_BLEND_CNTL(val)     ((mmtr)s3MmioMem)->streams_regs.regs.blend_cntl = (val)
 #define SET_PSTREAM_CNTL(val)   ((mmtr)s3MmioMem)->streams_regs.regs.prim_stream_cntl = (val)
-#define SET_PSTREAM_FBADDR(val) ((mmtr)s3MmioMem)->streams_regs.regs.prim_fbaddr0 = (val)
+#define SET_PSTREAM_FBADDR0(val) ((mmtr)s3MmioMem)->streams_regs.regs.prim_fbaddr0 = (val)
+#define SET_PSTREAM_FBADDR1(val) ((mmtr)s3MmioMem)->streams_regs.regs.prim_fbaddr1 = (val)
 #define SET_PSTREAM_STRIDE(val) ((mmtr)s3MmioMem)->streams_regs.regs.prim_stream_stride = (val)
 #define SET_PSTREAM_START(val)  ((mmtr)s3MmioMem)->streams_regs.regs.prim_start_coord = (val)
 #define SET_PSTREAM_WIND(val)   ((mmtr)s3MmioMem)->streams_regs.regs.prim_window_size = (val)
 #define SET_SSTREAM_CNTL(val)   ((mmtr)s3MmioMem)->streams_regs.regs.second_stream_cntl = (val)
 #define SET_SSTRETCH(val)       ((mmtr)s3MmioMem)->streams_regs.regs.second_stream_stretch = (val)
-#define SET_SSTREAM_FBADDR(val) ((mmtr)s3MmioMem)->streams_regs.regs.second_fbaddr0 = (val)
+#define SET_SSTREAM_FBADDR0(val) ((mmtr)s3MmioMem)->streams_regs.regs.second_fbaddr0 = (val)
+#define SET_SSTREAM_FBADDR1(val) ((mmtr)s3MmioMem)->streams_regs.regs.second_fbaddr1 = (val)
 #define SET_SSTREAM_STRIDE(val) ((mmtr)s3MmioMem)->streams_regs.regs.second_stream_stride = (val)
 #define SET_SSTREAM_START(val)  ((mmtr)s3MmioMem)->streams_regs.regs.second_start_coord = (val)
 #define SET_SSTREAM_WIND(val)   ((mmtr)s3MmioMem)->streams_regs.regs.second_window_size = (val)
@@ -178,6 +194,7 @@ the
 #define SET_CHROMA_KEY(val)     ((mmtr)s3MmioMem)->streams_regs.regs.col_chroma_key_cntl = (val)
 #define SET_DOUBLE_BUFFER(val)  ((mmtr)s3MmioMem)->streams_regs.regs.double_buffer = (val)
 #define SET_OPAQUE_OVERLAY(val) ((mmtr)s3MmioMem)->streams_regs.regs.opaq_overlay_cntl = (val)
+#define SET_FIFO_CNTL(val)     ((mmtr)s3MmioMem)->streams_regs.regs.streams_fifo = (val)
 
 #else
 

@@ -248,10 +248,10 @@ typedef struct {
 
 	
 #define WaitQueue(v)					\
-	if(!(pS3->PCIRetry)) {				\
+        if(!(pS3->PCIRetry)) {				\
 	   mem_barrier();				\
-	   while(inb(GP_STAT) & (0x0100 >> (v)));	\
-	}
+	   while(INB_GP_STAT() & (0x0100 >> (v)));      \
+        }				
 
 #define CMD_REG_WIDTH  0x200  	/* select 32bit command register */
 

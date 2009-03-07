@@ -1,3 +1,27 @@
+2008-07-06  Evgeny M. Zubok <evgeny.zubok@tochka.ru>
+
+	* src/s3_video.c: 
+
+	Streams Processor initialization.
+
+	XVideo support for 16, 24 and 32 bpp (only for TRIO64V2).
+
+	* src/s3_driver.c: 
+
+	Add XVideo option (enabled by default).
+
+	Replace "swcursor" by "hwcursor" option (HW cursor 
+	not implemented yet for all chipsets).
+
+	Close bug #5527: 24-bit colour depth support (24bpp and 
+	32bpp framebuffer) for TRIO64V2. Acceleration doesn't work
+	with packed colour mode (24 bpp FB) but works with 32bpp 
+	framebuffer mode (hardware limitation? -- need data).
+
+	Fix system hang-up when switching between console and X session.
+
+	Some minor changes of driver messages.
+
 2008-02-23  Evgeny M. Zubok <evgeny.zubok@tochka.ru>
 
 	* src/s3_driver.c: Add DPMS support for S3 Trio64V2 and possibly

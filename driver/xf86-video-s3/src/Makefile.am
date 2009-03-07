@@ -39,13 +39,12 @@ s3_drv_la_SOURCES = \
 	 s3_pcirename.h \
          s3_reg.h \
          s3_Ti.c \
-         s3_Trio64DAC.c \
-         s3_video.c
+         s3_Trio64DAC.c
 
 noinst_LTLIBRARIES = libs3_accel_newmmio.la libs3_accel_pio.la
 s3_drv_la_LIBADD = libs3_accel_newmmio.la libs3_accel_pio.la
 
-libs3_accel_newmmio_la_SOURCES = s3_accel.c
+libs3_accel_newmmio_la_SOURCES = s3_accel.c s3_video.c
 libs3_accel_newmmio_la_CFLAGS = $(AM_CFLAGS) -DS3_NEWMMIO=1
 
 libs3_accel_pio_la_SOURCES = s3_accel.c

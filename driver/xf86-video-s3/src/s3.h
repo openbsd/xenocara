@@ -64,7 +64,7 @@ typedef struct _S3RegRec {
 typedef struct {
         unsigned char brightness;
         unsigned char contrast;
-        FBAreaPtr     area;
+        FBLinearPtr   area;
         RegionRec     clip;
         CARD32        colorKey;
         CARD32        videoStatus;
@@ -98,12 +98,15 @@ typedef struct _S3Rec {
         OptionInfoPtr           Options;
         unsigned int            Flags;
         Bool                    NoAccel;
-	Bool			SWCursor;
+	Bool			HWCursor;
 	Bool			SlowDRAMRefresh;
 	Bool			SlowDRAM;
 	Bool			SlowEDODRAM;
 	Bool			SlowVRAM;
 	Bool			S3NewMMIO;
+	Bool                    hasStreams;
+	int                     Streams_FIFO;
+	Bool                    XVideo;
 	Bool			PCIRetry;
 	Bool			ColorExpandBug;
 
@@ -159,7 +162,7 @@ typedef struct _S3Rec {
 	unsigned char		*imageBuffer;
 	int			imageWidth;
 	int			imageHeight;
-    Bool			hwCursor;
+	Bool			hwCursor;
 } S3Rec, *S3Ptr;
 
 #define S3PTR(p)		((S3Ptr)((p)->driverPrivate))
@@ -234,8 +237,13 @@ Bool S3_CursorInit(ScreenPtr pScreen);
 
 #define S3_964_SERIES()		((pS3->Chipset == PCI_CHIP_964_0) ||	\
 			 	 (pS3->Chipset == PCI_CHIP_964_1))
+
 #define	S3_TRIO_SERIES()	((pS3->Chipset == PCI_CHIP_TRIO) ||	\
 			 	 (pS3->Chipset == PCI_CHIP_AURORA64VP) || \
+				 (pS3->Chipset == PCI_CHIP_TRIO64UVP) || \
+				 (pS3->Chipset == PCI_CHIP_TRIO64V2_DXGX))
+
+#define HAS_STREAMS_PROCESSOR() ((pS3->Chipset == PCI_CHIP_AURORA64VP) || \
 				 (pS3->Chipset == PCI_CHIP_TRIO64UVP) || \
 				 (pS3->Chipset == PCI_CHIP_TRIO64V2_DXGX))
 
