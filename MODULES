@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.63 2009/03/07 20:34:36 matthieu Exp $
+# $OpenBSD: MODULES,v 1.64 2009/03/08 09:50:36 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -29,7 +29,7 @@ app/smproxy		1.0.2	7.1
 app/twm			1.0.4	7.4
 app/viewres		1.0.1	7.0
 app/x11perf		1.5	7.3
-app/xauth		1.0.2	7.2RC4
+app/xauth		1.0.3	7.4
 app/xbacklight		1.1	7.3
 app/xbiff		1.0.1	7.0
 app/xcalc		1.0.2	7.3
