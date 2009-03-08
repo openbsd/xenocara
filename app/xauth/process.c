@@ -484,6 +484,9 @@ get_displayname_auth(char *displayname, AuthList **authl)
     cp = strchr(displayname, '/');
     if (cp && strncmp (cp, "/unix:", 6) == 0)
       prelen = (cp - displayname);
+    
+    if (strncmp (displayname, "/tmp/launch", 11) == 0)
+        displayname = strrchr(displayname, '/') + 1;
 
     if (!parse_displayname (displayname + ((prelen > 0) ? prelen + 1 : 0),
 			    &family, &host, &dpynum, &scrnum, &rest)) {
@@ -957,7 +960,7 @@ fprintfhex(register FILE *fp, int len, char *cp)
     char *hex;
 
     hex = bintohex(len, cp);
-    fprintf(fp, hex);
+    fprintf(fp, "%s", hex);
     free(hex);
 }
 

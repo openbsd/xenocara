@@ -1,3 +1,29 @@
+commit 65a0917d4661e370b50beed8f06f5577bfeea59f
+Author: Jeremy Huddleston <jeremy@tifa.local>
+Date:   Thu Jan 10 21:15:56 2008 -0800
+
+    get_address_info: don't allow duplicate entries to be returned in the list
+    OS-X's getaddrinfo() can return duplicate entries (and does for localhost with
+    the default 10.5 /etc/hosts).  This caused some annoying crashes which this
+    patch takes care of.
+    
+    See http://trac.macosforge.org/projects/xquartz/ticket/44
+
+commit 40e1769f4c631713c32c73a5244f3d65aea89ab7
+Author: Jeremy Huddleston <jeremy@tifa.local>
+Date:   Sat Dec 1 20:01:23 2007 -0800
+
+    Added support for launchd socket
+    From Martin Costabel
+
+commit 60615bc52f685b7ddfd574e10ed8fdcf2b6e43f5
+Author: Daniel Drake <ddrake@brontes3d.com>
+Date:   Wed May 16 14:24:00 2007 -0800
+
+    Bug #10971: xauth COPYING file
+    
+    X.Org Bugzilla #10971 <https://bugs.freedesktop.org/show_bug.cgi?id=10971>
+
 commit a1602ecd22a800a6c5348c00fece3287cdcf00ce
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Dec 12 15:00:29 2006 -0800
