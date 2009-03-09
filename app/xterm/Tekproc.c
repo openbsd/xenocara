@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.160 2008/06/03 20:55:56 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.163 2009/02/13 20:01:21 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -7,7 +7,7 @@
 
 /*
 
-Copyright 2001-2007,2008 by Thomas E. Dickey
+Copyright 2001-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -146,7 +146,7 @@ in this Software without prior written authorization from The Open Group.
 
 #define	TekMove(tw,x,y)	tekscr->cur_X = x; tekscr->cur_Y = y
 #define	input()		Tinput(tw)
-#define	unput(c)	*Tpushback++ = c
+#define	unput(c)	*Tpushback++ = (Char) c
 /* *INDENT-OFF* */
 static struct Tek_Char {
     int hsize;			/* in Tek units */
@@ -708,7 +708,7 @@ Tekparse(TekWidget tw)
 	case CASE_PRINT:
 	    TRACE(("case: printable character\n"));
 	    ch = c;
-	    c = tekscr->cur.fontsize;
+	    c = (IChar) tekscr->cur.fontsize;
 	    x = (int) (tekscr->cur_X * TekScale(tekscr))
 		+ screen->border;
 	    y = (int) ((TEKHEIGHT + TEKTOPPAD - tekscr->cur_Y) * TekScale(tekscr))
@@ -757,10 +757,10 @@ Tekparse(TekWidget tw)
 		IChar c2;
 		unsigned len = 0;
 		while ((c2 = input()) != ANSI_BEL) {
-		    if (!isprint(c2 & 0x7f)
+		    if (!isprint((int) (c2 & 0x7f))
 			|| len + 2 >= (int) sizeof(buf2))
 			break;
-		    buf2[len++] = c2;
+		    buf2[len++] = (Char) c2;
 		}
 		buf2[len] = 0;
 		if (!nested++) {
@@ -790,13 +790,13 @@ Tinput(TekWidget tw)
 	return (*--Tpushback);
     if (tekRefreshList) {
 	if (rcnt-- > 0)
-	    return (*rptr++);
+	    return (IChar) (*rptr++);
 	if ((tek = tekRefreshList->next) != 0) {
 	    tekRefreshList = tek;
 	    rptr = tek->data;
 	    rcnt = tek->count - 1;
 	    TekSetFontSize(tw, tek->fontsize);
-	    return (*rptr++);
+	    return (IChar) (*rptr++);
 	}
 	tekRefreshList = (TekLink *) 0;
 	longjmp(Tekjump, 1);
@@ -876,14 +876,14 @@ Tinput(TekWidget tw)
 	    Panic("Tinput: malloc error (%d)\n", errno);
 	tek = tek->next;
 	tek->next = (TekLink *) 0;
-	tek->fontsize = tekscr->cur.fontsize;
+	tek->fontsize = (unsigned short) tekscr->cur.fontsize;
 	tek->count = 0;
 	tek->ptr = tek->data;
     }
     tek->count++;
 
     (void) morePtyData(screen, VTbuffer);
-    return (*tek->ptr++ = nextPtyData(screen, VTbuffer));
+    return (IChar) (*tek->ptr++ = (char) nextPtyData(screen, VTbuffer));
 }
 
 static void
@@ -999,7 +999,7 @@ TekPage(TekWidget tw)
     if (tekscr->TekGIN)
 	TekGINoff(tw);
     tek = TekRecord = &Tek0;
-    tek->fontsize = tekscr->cur.fontsize;
+    tek->fontsize = (unsigned short) tekscr->cur.fontsize;
     tek->count = 0;
     tek->ptr = tek->data;
     tek = tek->next;
@@ -1033,7 +1033,7 @@ getpoint(TekWidget tw)
     x = tekscr->cur.x;
     y = tekscr->cur.y;
     for (;;) {
-	if ((c = input()) < ' ') {	/* control character */
+	if ((c = (int) input()) < ' ') {	/* control character */
 	    unput(c);
 	    return (0);
 	}
@@ -1164,12 +1164,12 @@ AddToDraw(TekWidget tw, int x1, int y1, int x2, int y2)
 	TekFlush(tw);
     }
     lp = line_pt++;
-    lp->x1 = x1 = (int) (x1 * TekScale(tekscr) + screen->border);
-    lp->y1 = y1 = (int) ((TEKHEIGHT + TEKTOPPAD - y1) * TekScale(tekscr) +
-			 screen->border);
-    lp->x2 = x2 = (int) (x2 * TekScale(tekscr) + screen->border);
-    lp->y2 = y2 = (int) ((TEKHEIGHT + TEKTOPPAD - y2) * TekScale(tekscr) +
-			 screen->border);
+    lp->x1 = (short) (x1 * TekScale(tekscr) + screen->border);
+    lp->y1 = (short) ((TEKHEIGHT + TEKTOPPAD - y1) * TekScale(tekscr) +
+		      screen->border);
+    lp->x2 = (short) (x2 * TekScale(tekscr) + screen->border);
+    lp->y2 = (short) ((TEKHEIGHT + TEKTOPPAD - y2) * TekScale(tekscr) +
+		      screen->border);
     nplot++;
     TRACE(("...AddToDraw %d points\n", nplot));
 }
@@ -1264,12 +1264,12 @@ TekEnq(TekWidget tw,
     int adj = (status != 0) ? 0 : 1;
 
     TRACE(("TekEnq\n"));
-    cplot[0] = status;
+    cplot[0] = (Char) status;
     /* Translate x and y to Tektronix code */
-    cplot[1] = 040 | ((x >> SHIFTHI) & FIVEBITS);
-    cplot[2] = 040 | ((x >> SHIFTLO) & FIVEBITS);
-    cplot[3] = 040 | ((y >> SHIFTHI) & FIVEBITS);
-    cplot[4] = 040 | ((y >> SHIFTLO) & FIVEBITS);
+    cplot[1] = (Char) (040 | ((x >> SHIFTHI) & FIVEBITS));
+    cplot[2] = (Char) (040 | ((x >> SHIFTLO) & FIVEBITS));
+    cplot[3] = (Char) (040 | ((y >> SHIFTHI) & FIVEBITS));
+    cplot[4] = (Char) (040 | ((y >> SHIFTLO) & FIVEBITS));
 
     if (tekscr->gin_terminator != GIN_TERM_NONE)
 	cplot[len++] = '\r';
@@ -1521,8 +1521,8 @@ TekRealize(Widget gw,
 		      ((*valuemaskp) | CWBackPixel | CWWinGravity),
 		      values);
 
-    TFullWidth(tekscr) = width;
-    TFullHeight(tekscr) = height;
+    TFullWidth(tekscr) = (Dimension) width;
+    TFullHeight(tekscr) = (Dimension) height;
     TWidth(tekscr) = width - border;
     THeight(tekscr) = height - border;
     TekScale(tekscr) = (double) TWidth(tekscr) / TEKWIDTH;
@@ -1598,10 +1598,10 @@ TekRealize(Widget gw,
 	args[0].value = (XtArgVal) & icon_name;
 	args[1].value = (XtArgVal) & title;
 	XtGetValues(SHELL_OF(tw), args, 2);
-	tek_icon_name = XtMalloc(strlen(icon_name) + 7);
+	tek_icon_name = XtMalloc((Cardinal) strlen(icon_name) + 7);
 	strcpy(tek_icon_name, icon_name);
 	strcat(tek_icon_name, "(Tek)");
-	tek_title = XtMalloc(strlen(title) + 7);
+	tek_title = XtMalloc((Cardinal) strlen(title) + 7);
 	strcpy(tek_title, title);
 	strcat(tek_title, "(Tek)");
 	args[0].value = (XtArgVal) tek_icon_name;
@@ -1613,7 +1613,7 @@ TekRealize(Widget gw,
 
     tek = TekRecord = &Tek0;
     tek->next = (TekLink *) 0;
-    tek->fontsize = tekscr->cur.fontsize;
+    tek->fontsize = (unsigned short) tekscr->cur.fontsize;
     tek->count = 0;
     tek->ptr = tek->data;
     Tpushback = Tpushb;
@@ -1740,9 +1740,10 @@ TekReverseVideo(TekWidget tw)
     TScreen *screen = TScreenOf(term);
     TekScreen *tekscr = TekScreenOf(tw);
     int i;
+    Pixel tmp;
     XGCValues gcv;
 
-    EXCHANGE(T_COLOR(screen, TEK_FG), T_COLOR(screen, TEK_BG), i);
+    EXCHANGE(T_COLOR(screen, TEK_FG), T_COLOR(screen, TEK_BG), tmp);
 
     T_COLOR(screen, TEK_CURSOR) = T_COLOR(screen, TEK_FG);
 

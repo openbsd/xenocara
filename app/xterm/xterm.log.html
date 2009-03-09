@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.707 2009/01/09 02:02:49 tom Exp $
+  $XTermId: xterm.log.html,v 1.731 2009/02/16 00:26:07 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,7 +45,10 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
-<LI><A HREF="#xterm_239">Patch #239 - 2001/1/8</A>
+<LI><A HREF="#xterm_242">Patch #242 - 2009/2/15</A>
+<LI><A HREF="#xterm_241">Patch #241 - 2009/1/26</A>
+<LI><A HREF="#xterm_240">Patch #240 - 2009/1/25</A>
+<LI><A HREF="#xterm_239">Patch #239 - 2009/1/8</A>
 <LI><A HREF="#xterm_238">Patch #238 - 2008/12/30</A>
 <LI><A HREF="#xterm_237">Patch #237 - 2008/09/14</A>
 <LI><A HREF="#xterm_236">Patch #236 - 2008/07/27</A>
@@ -286,6 +289,90 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_242">Patch #242 - 2009/2/15</A></H1>
+<ul>
+	<li>fix configure check for <code>XkbBell</code> and provide
+	    appropriate parameter for it.
+
+	<li>fix a caching problem with double-size fonts versus reverse video
+	    that could cause core dump.
+
+	<li>repair double-size fonts from workaround
+	    used in <a href="#xterm_240">patch #240</a>.
+
+	<li>add new section to the VT Fonts menu which allows enabling or
+	    disabling the font, termcap (tcap-query), title and window
+	    operations.
+
+	<li>add <code>fontWarnings</code> resource, to control whether to show
+	    warnings on failure to load a font.
+
+	<li>improve warnings for unloadable fonts introduced in
+	    <a href="#xterm_240">patch #240</a>
+	    by limiting those to the cases where a font would be specified
+	    directly by a resource setting rather than a derived fontname.
+
+	<li>further amend fix for Debian #252873
+	    from <a href="#xterm_197">patch #197</a> to
+	    treat a blank cell which does not have both foreground and background
+	    colored as a non-colored cell.
+	    This improves a special case where the cursor is on a blank
+	    cell which had foreground color scrolled in
+	    (report by Miroslav Lichvar).
+	    <p>
+	    Also add the same logic when hiding cursor, so the outline matches
+	    the in-focus cursor.
+
+	<li>modify internals to reduce places PAIRED_CHARS() is used, making
+	    WriteText() and ScrnWriteText() accept IChar array, as well as
+	    providing a wrapper for drawXtermText().
+
+	<li>change default XIM font from "*" to "fixed" to improve startup
+	    time in zh_CN.UTF-8 locale (Mike Fabian, SuSE Bugzilla #464930).
+
+	<li>typo in #240 log (Slava Semushin)
+</ul>
+
+<H1><A NAME="xterm_241">Patch #241 - 2009/1/26</A></H1>
+<ul>
+	<li>improve checks for missing bitmap fonts, fallback to "fixed" as
+	    needed to work around broken font-packages (report by Jacek
+	    Luczak).
+
+	<li>fix breakage from <a href="#xterm_240">patch #240</a> changes for
+	    <code>xtermAddInput()</code> (patches by Jeff Chua, Julien Cristau).
+</ul>
+
+<H1><A NAME="xterm_240">Patch #240 - 2009/1/25</A></H1>
+<ul>
+	<li>use <code>plink.sh</code> for linking xterm (suggested by Larry
+	    Doolittle).
+
+	<li>add resource descriptions for input method to xterm manpage.
+
+	<li>update configure script; consistently append to $CFLAGS rather
+	    than prepend.
+
+	<li>add <code>install-scripts</code> rule to makefile, to allow
+	    koi8rxterm and uxterm scripts to be altered independently of
+	    <code>install-bin</code> 
+
+	<li>add <code>-maximized</code> command-line option and corresponding
+	    resource (prompted by alt.os.linux newsgroup comment).
+
+	<li>modify translations of scrollbar widget using
+	    <code>xtermAddInput()</code>
+	    (see <a href="#xterm_181">patch #181</a>) to accept the actions
+	    that the vt100 widget accepts, such as shift-insert to perform
+	    a paste operation (request by Martin Zwickel).
+
+	<li>change default for <code>allowTcapsOps</code> resource to false,
+	    since it causes unexpected behavior for vim users with
+	    <code>AltGr</code>.
+
+	<li>update config.guess, config.sub
+</ul>
 
 <H1><A NAME="xterm_239">Patch #239 - 2009/1/8</A></H1>
 <ul>

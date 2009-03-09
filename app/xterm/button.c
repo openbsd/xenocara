@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.298 2009/01/09 01:29:52 tom Exp $ */
+/* $XTermId: button.c,v 1.306 2009/02/13 21:09:08 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -156,7 +156,7 @@ static void do_select_end(XtermWidget xw, XEvent * event, String * params,
 Bool
 SendMousePosition(XtermWidget xw, XEvent * event)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
 
     /* If send_mouse_pos mode isn't on, we shouldn't be here */
     if (screen->send_mouse_pos == MOUSE_OFF)
@@ -249,7 +249,7 @@ static Bool
 SendLocatorPosition(XtermWidget xw, XEvent * event)
 {
     ANSI reply;
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     int row, col;
     Bool oor;
     int button;
@@ -337,7 +337,9 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
     /* update mask to "after" state */
     state ^= 1 << button;
     /* swap Button1 & Button3 */
-    state = (state & ~(4 | 1)) | ((state & 1) ? 4 : 0) | ((state & 4) ? 1 : 0);
+    state = ((state & (unsigned) ~(4 | 1))
+	     | ((state & 1) ? 4 : 0)
+	     | ((state & 4) ? 1 : 0));
 
     reply.a_param[1] = (ParmType) state;
     reply.a_param[2] = (ParmType) row;
@@ -383,7 +385,7 @@ void
 GetLocatorPosition(XtermWidget xw)
 {
     ANSI reply;
-    TScreen *screen = &xw->screen;
+    TScreen *screen = TScreenOf(xw);
     Window root, child;
     int rx, ry, x, y;
     unsigned int mask;
@@ -448,7 +450,7 @@ void
 InitLocatorFilter(XtermWidget xw)
 {
     ANSI reply;
-    TScreen *screen = &xw->screen;
+    TScreen *screen = TScreenOf(xw);
     Window root, child;
     int rx, ry, x, y;
     unsigned int mask;
@@ -569,7 +571,7 @@ static void
 CheckLocatorPosition(XtermWidget xw, XEvent * event)
 {
     ANSI reply;
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     int row, col;
     Bool oor;
     int state;
@@ -807,9 +809,10 @@ DiredButton(Widget w,
 	    String * params GCC_UNUSED,		/* selections */
 	    Cardinal *num_params GCC_UNUSED)
 {
-    if (IsXtermWidget(w)) {
-	XtermWidget xw = (XtermWidget) w;
-	TScreen *screen = &(xw->screen);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = TScreenOf(xw);
 	Char Line[6];
 	unsigned line, col;
 
@@ -837,9 +840,10 @@ ReadLineButton(Widget w,
 	       String * params GCC_UNUSED,	/* selections */
 	       Cardinal *num_params GCC_UNUSED)
 {
-    if (IsXtermWidget(w)) {
-	XtermWidget xw = (XtermWidget) w;
-	TScreen *screen = &(xw->screen);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = TScreenOf(xw);
 	Char Line[6];
 	int line, col, ldelta = 0;
 
@@ -905,9 +909,10 @@ ViButton(Widget w,
 	 String * params GCC_UNUSED,	/* selections */
 	 Cardinal *num_params GCC_UNUSED)
 {
-    if (IsXtermWidget(w)) {
-	XtermWidget xw = (XtermWidget) w;
-	TScreen *screen = &(xw->screen);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = TScreenOf(xw);
 	int pty = screen->respond;
 	Char Line[6];
 	int line;
@@ -943,9 +948,10 @@ HandleSelectExtend(Widget w,
 		   String * params GCC_UNUSED,
 		   Cardinal *num_params GCC_UNUSED)
 {
-    if (IsXtermWidget(w)) {
-	XtermWidget xw = (XtermWidget) w;
-	TScreen *screen = &(xw->screen);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = TScreenOf(xw);
 	CELL cell;
 
 	screen->selection_time = event->xmotion.time;
@@ -976,9 +982,10 @@ HandleKeyboardSelectExtend(Widget w,
 			   String * params GCC_UNUSED,
 			   Cardinal *num_params GCC_UNUSED)
 {
-    if (IsXtermWidget(w)) {
-	XtermWidget xw = (XtermWidget) w;
-	TScreen *screen = &xw->screen;
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = TScreenOf(xw);
 	ExtendExtend(xw, &screen->cursorp);
     }
 }
@@ -993,7 +1000,7 @@ do_select_end(XtermWidget xw,
 #if OPT_READLINE
     int ldelta1, ldelta2;
 #endif
-    TScreen *screen = &xw->screen;
+    TScreen *screen = TScreenOf(xw);
 
     screen->selection_time = event->xbutton.time;
     switch (screen->eventMode) {
@@ -1027,8 +1034,11 @@ HandleSelectEnd(Widget w,
 		String * params,	/* selections */
 		Cardinal *num_params)
 {
-    if (IsXtermWidget(w))
-	do_select_end((XtermWidget) w, event, params, num_params, False);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	do_select_end(xw, event, params, num_params, False);
+    }
 }
 
 void
@@ -1037,8 +1047,11 @@ HandleKeyboardSelectEnd(Widget w,
 			String * params,	/* selections */
 			Cardinal *num_params)
 {
-    if (IsXtermWidget(w))
-	do_select_end((XtermWidget) w, event, params, num_params, True);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	do_select_end(xw, event, params, num_params, True);
+    }
 }
 
 struct _SelectionList {
@@ -1066,14 +1079,13 @@ static Char *
 UTF8toLatin1(Char * s, unsigned len, unsigned long *result)
 {
     static Char *buffer;
-    static size_t used;
+    static Cardinal used;
 
     Char *q;
 
-    if (used == 0) {
-	buffer = (Char *) XtMalloc(1 + (used = len));
-    } else if (len > used) {
-	buffer = (Char *) XtRealloc((char *) buffer, 1 + (used = len));
+    if (len > used) {
+	used = 1 + (2 * len);
+	allocXtermChars(&buffer, used);
     }
 
     if (buffer != 0) {
@@ -1096,7 +1108,7 @@ UTF8toLatin1(Char * s, unsigned len, unsigned long *result)
 		    if (eqv == value)
 			eqv = '#';
 		    *q++ = (Char) eqv;
-		    if (iswide((wchar_t) value))
+		    if (isWide((wchar_t) value))
 			*q++ = ' ';
 		}
 	    }
@@ -1117,10 +1129,12 @@ _SelectionTargets(Widget w)
     TScreen *screen;
     int n;
 
-    if (!IsXtermWidget(w))
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) == 0)
 	return NULL;
 
-    screen = TScreenOf((XtermWidget) w);
+    screen = TScreenOf(xw);
 
 #if OPT_WIDE_CHARS
     if (screen->wide_chars) {
@@ -1173,7 +1187,7 @@ _SelectionTargets(Widget w)
 static void
 UnmapSelections(XtermWidget xw)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     Cardinal n;
 
     if (screen->mappedSelect) {
@@ -1208,7 +1222,8 @@ MapSelections(XtermWidget xw, String * params, Cardinal num_params)
 	    }
 	}
 	if (map) {
-	    const char *mapTo = (xw->screen.selectToClipboard
+	    TScreen *screen = TScreenOf(xw);
+	    const char *mapTo = (screen->selectToClipboard
 				 ? "CLIPBOARD"
 				 : "PRIMARY");
 
@@ -1225,7 +1240,7 @@ MapSelections(XtermWidget xw, String * params, Cardinal num_params)
 			break;
 		    }
 		}
-		xw->screen.mappedSelect = result;
+		screen->mappedSelect = result;
 	    }
 	}
     }
@@ -1276,10 +1291,12 @@ CutBuffer(unsigned code)
 static void
 FinishPaste64(XtermWidget xw)
 {
-    TRACE(("FinishPaste64(%d)\n", xw->screen.base64_paste));
-    if (xw->screen.base64_paste) {
-	xw->screen.base64_paste = 0;
-	unparseputc1(xw, xw->screen.base64_final);
+    TScreen *screen = TScreenOf(xw);
+
+    TRACE(("FinishPaste64(%d)\n", screen->base64_paste));
+    if (screen->base64_paste) {
+	screen->base64_paste = 0;
+	unparseputc1(xw, screen->base64_final);
 	unparse_end(xw);
     }
 }
@@ -1299,11 +1316,13 @@ xtermGetSelection(Widget w,
     int cutbuffer;
     Atom target;
 
-    if (!IsXtermWidget(w))
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) == 0)
 	return;
 
     TRACE(("xtermGetSelection\n"));
-    params = MapSelections((XtermWidget) w, params, num_params);
+    params = MapSelections(xw, params, num_params);
 
     XmuInternStrings(XtDisplay(w), params, (Cardinal) 1, &selection);
     cutbuffer = CutBuffer(selection);
@@ -1330,7 +1349,7 @@ xtermGetSelection(Widget w,
 	}
 #if OPT_PASTE64
 	else {
-	    FinishPaste64((XtermWidget) w);
+	    FinishPaste64(xw);
 	}
 #endif
 	return;
@@ -1581,9 +1600,12 @@ SelectionReceived(Widget w,
     Char *line = (Char *) value;
 #endif
 
-    if (!IsXtermWidget(w))
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) == 0)
 	return;
-    screen = TScreenOf((XtermWidget) w);
+
+    screen = TScreenOf(xw);
     dpy = XtDisplay(w);
 
     if (*type == 0		/*XT_CONVERT_FAIL */
@@ -1695,7 +1717,7 @@ SelectionReceived(Widget w,
 	}
 #if OPT_PASTE64
 	if (screen->base64_paste) {
-	    FinishPaste64((XtermWidget) w);
+	    FinishPaste64(xw);
 	} else
 #endif
 #if OPT_READLINE
@@ -1720,7 +1742,7 @@ SelectionReceived(Widget w,
 	XtFree((char *) client_data);
 #if OPT_PASTE64
     } else {
-	FinishPaste64((XtermWidget) w);
+	FinishPaste64(xw);
 #endif
     }
     return;
@@ -1732,13 +1754,13 @@ HandleInsertSelection(Widget w,
 		      String * params,	/* selections in precedence order */
 		      Cardinal *num_params)
 {
-    if (IsXtermWidget(w)) {
-	XtermWidget xw = (XtermWidget) w;
+    XtermWidget xw;
 
+    if ((xw = getXtermWidget(w)) != 0) {
 	if (!SendMousePosition(xw, event)) {
 #if OPT_READLINE
 	    int ldelta;
-	    TScreen *screen = &(xw->screen);
+	    TScreen *screen = TScreenOf(xw);
 	    if ((event->type == ButtonPress || event->type == ButtonRelease)
 	    /* Disable on Shift-mouse, including the application-mouse modes */
 		&& !(KeyModifiers & ShiftMask)
@@ -1754,16 +1776,17 @@ HandleInsertSelection(Widget w,
 }
 
 static SelectUnit
-EvalSelectUnit(TScreen * screen,
+EvalSelectUnit(XtermWidget xw,
 	       Time buttonDownTime,
 	       SelectUnit defaultUnit,
 	       unsigned int button)
 {
+    TScreen *screen = TScreenOf(xw);
     SelectUnit result;
     int delta;
 
     if (button != screen->lastButton) {
-	delta = term->screen.multiClickTime + 1;
+	delta = xw->screen.multiClickTime + 1;
     } else if (screen->lastButtonUpTime == (Time) 0) {
 	/* first time and once in a blue moon */
 	delta = screen->multiClickTime + 1;
@@ -1791,11 +1814,11 @@ do_select_start(XtermWidget xw,
 		XEvent * event,	/* must be XButtonEvent* */
 		CELL * cell)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
 
     if (SendMousePosition(xw, event))
 	return;
-    screen->selectUnit = EvalSelectUnit(screen,
+    screen->selectUnit = EvalSelectUnit(xw,
 					event->xbutton.time,
 					Select_CHAR,
 					event->xbutton.button);
@@ -1815,9 +1838,10 @@ HandleSelectStart(Widget w,
 		  String * params GCC_UNUSED,
 		  Cardinal *num_params GCC_UNUSED)
 {
-    if (IsXtermWidget(w)) {
-	XtermWidget xw = (XtermWidget) w;
-	TScreen *screen = &(xw->screen);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = TScreenOf(xw);
 	CELL cell;
 
 	screen->firstValidRow = 0;
@@ -1839,9 +1863,10 @@ HandleKeyboardSelectStart(Widget w,
 			  String * params GCC_UNUSED,
 			  Cardinal *num_params GCC_UNUSED)
 {
-    if (IsXtermWidget(w)) {
-	XtermWidget xw = (XtermWidget) w;
-	TScreen *screen = &(xw->screen);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = TScreenOf(xw);
 	do_select_start(xw, event, &screen->cursorp);
     }
 }
@@ -1849,10 +1874,10 @@ HandleKeyboardSelectStart(Widget w,
 static void
 TrackDown(XtermWidget xw, XButtonEvent * event)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     CELL cell;
 
-    screen->selectUnit = EvalSelectUnit(screen,
+    screen->selectUnit = EvalSelectUnit(xw,
 					event->time,
 					Select_CHAR,
 					event->button);
@@ -1878,7 +1903,7 @@ TrackMouse(XtermWidget xw,
 	   int firstrow,
 	   int lastrow)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
 
     if (screen->waitingForTrackInfo) {	/* if Timed, ignore */
 	screen->waitingForTrackInfo = False;
@@ -1900,7 +1925,7 @@ TrackMouse(XtermWidget xw,
 static void
 StartSelect(XtermWidget xw, const CELL * cell)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
 
     TRACE(("StartSelect row=%d, col=%d\n", cell->row, cell->col));
     if (screen->cursor_state)
@@ -1931,7 +1956,7 @@ EndExtend(XtermWidget xw,
 {
     CELL cell;
     unsigned count;
-    TScreen *screen = &xw->screen;
+    TScreen *screen = TScreenOf(xw);
     Char line[9];
 
     if (use_cursor_loc) {
@@ -1981,8 +2006,10 @@ HandleSelectSet(Widget w,
 		String * params,
 		Cardinal *num_params)
 {
-    if (IsXtermWidget(w)) {
-	SelectSet((XtermWidget) w, event, params, *num_params);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	SelectSet(xw, event, params, *num_params);
     }
 }
 
@@ -1993,7 +2020,7 @@ SelectSet(XtermWidget xw,
 	  String * params,
 	  Cardinal num_params)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
 
     TRACE(("SelectSet\n"));
     /* Only do select stuff if non-null select */
@@ -2014,12 +2041,9 @@ do_start_extend(XtermWidget xw,
 		Cardinal *num_params GCC_UNUSED,
 		Bool use_cursor_loc)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     int coord;
     CELL cell;
-
-    if (!IsXtermWidget(xw))
-	return;
 
     if (SendMousePosition(xw, event))
 	return;
@@ -2031,7 +2055,7 @@ do_start_extend(XtermWidget xw,
 	|| event->xbutton.button != Button3
 	|| !(SCREEN_FLAG(screen, dclick3_deletes)))
 #endif
-	screen->selectUnit = EvalSelectUnit(screen,
+	screen->selectUnit = EvalSelectUnit(xw,
 					    event->xbutton.time,
 					    screen->selectUnit,
 					    event->xbutton.button);
@@ -2082,7 +2106,7 @@ do_start_extend(XtermWidget xw,
 static void
 ExtendExtend(XtermWidget xw, const CELL * cell)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     int coord = Coordinate(screen, cell);
 
     TRACE(("ExtendExtend row=%d, col=%d\n", cell->row, cell->col));
@@ -2117,8 +2141,11 @@ HandleStartExtend(Widget w,
 		  String * params,	/* unused */
 		  Cardinal *num_params)		/* unused */
 {
-    if (IsXtermWidget(w))
-	do_start_extend((XtermWidget) w, event, params, num_params, False);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	do_start_extend(xw, event, params, num_params, False);
+    }
 }
 
 void
@@ -2127,8 +2154,11 @@ HandleKeyboardStartExtend(Widget w,
 			  String * params,	/* unused */
 			  Cardinal *num_params)		/* unused */
 {
-    if (IsXtermWidget(w))
-	do_start_extend((XtermWidget) w, event, params, num_params, True);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	do_start_extend(xw, event, params, num_params, True);
+    }
 }
 
 void
@@ -2218,7 +2248,7 @@ ResizeSelection(TScreen * screen GCC_UNUSED, int rows, int cols)
 Bool
 iswide(int i)
 {
-    return (i == HIDDEN_CHAR) || (my_wcwidth(i) == 2);
+    return (i == HIDDEN_CHAR) || ((i >= FIRST_WIDECHAR) && my_wcwidth(i) == 2);
 }
 
 #define isWideCell(row, col) iswide((int)XTERM_CELL(row, col))
@@ -2699,7 +2729,7 @@ ComputeSelect(XtermWidget xw,
 	      CELL * endc,
 	      Bool extend)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     int length;
     int cclass;
     CELL first = *startc;
@@ -2883,7 +2913,7 @@ TrackText(XtermWidget xw,
 	  const CELL * firstp,
 	  const CELL * lastp)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     int from, to;
     CELL old_start, old_end;
     CELL first = *firstp;
@@ -2931,7 +2961,7 @@ ReHiliteText(XtermWidget xw,
 	     CELL * firstp,
 	     CELL * lastp)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     int i;
     CELL first = *firstp;
     CELL last = *lastp;
@@ -2979,7 +3009,7 @@ SaltTextAway(XtermWidget xw,
 	     String * params,	/* selections */
 	     Cardinal num_params)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     int i, j = 0;
     int eol;
     Char *line;
@@ -3142,8 +3172,10 @@ AppendToSelectionBuffer(TScreen * screen, unsigned c)
 void
 CompleteSelection(XtermWidget xw, char **args, Cardinal len)
 {
-    xw->screen.base64_count = 0;
-    xw->screen.base64_accu = 0;
+    TScreen *screen = TScreenOf(xw);
+
+    screen->base64_count = 0;
+    screen->base64_accu = 0;
     _OwnSelection(xw, args, len);
 }
 #endif /* OPT_PASTE64 */
@@ -3160,9 +3192,11 @@ _ConvertSelectionHelper(Widget w,
 						    XTextProperty *),
 			XICCEncodingStyle conversion_style)
 {
-    if (IsXtermWidget(w)) {
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = TScreenOf(xw);
 	Display *dpy = XtDisplay(w);
-	TScreen *screen = TScreenOf((XtermWidget) w);
 	XTextProperty textprop;
 	char *the_data = (char *) screen->selection_data;
 
@@ -3215,10 +3249,12 @@ ConvertSelection(Widget w,
     TScreen *screen;
     Bool result = False;
 
-    if (!IsXtermWidget(w))
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) == 0)
 	return False;
 
-    screen = TScreenOf((XtermWidget) w);
+    screen = TScreenOf(xw);
 
     if (screen->selection_data == NULL)
 	return False;		/* can this happen? */
@@ -3368,10 +3404,12 @@ LoseSelection(Widget w, Atom * selection)
     Atom *atomP;
     Cardinal i;
 
-    if (!IsXtermWidget(w))
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) == 0)
 	return;
 
-    screen = TScreenOf((XtermWidget) w);
+    screen = TScreenOf(xw);
     for (i = 0, atomP = screen->selection_atoms;
 	 i < screen->selection_count; i++, atomP++) {
 	if (*selection == *atomP)
@@ -3395,7 +3433,7 @@ LoseSelection(Widget w, Atom * selection)
     }
 
     if (screen->selection_count == 0)
-	TrackText((XtermWidget) w, &zeroCELL, &zeroCELL);
+	TrackText(xw, &zeroCELL, &zeroCELL);
 }
 
 /* ARGSUSED */
@@ -3412,7 +3450,7 @@ _OwnSelection(XtermWidget xw,
 	      String * selections,
 	      Cardinal count)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     Atom *atoms = screen->selection_atoms;
     Cardinal i;
     Bool have_selection = False;
@@ -3437,7 +3475,7 @@ _OwnSelection(XtermWidget xw,
 	    (unsigned long) (4 * XMaxRequestSize(XtDisplay((Widget) xw)) - 32);
 	    if (screen->selection_length > limit) {
 		fprintf(stderr,
-			"%s: selection too big (%ld bytes), not storing in CUT_BUFFER%d\n",
+			"%s: selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
 			xterm_name, screen->selection_length, cutbuffer);
 	    } else {
 		/* This used to just use the UTF-8 data, which was totally
@@ -3480,7 +3518,7 @@ ResetSelectionState(TScreen * screen)
 void
 DisownSelection(XtermWidget xw)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     Atom *atoms = screen->selection_atoms;
     Cardinal count = screen->selection_count;
     Cardinal i;
@@ -3518,7 +3556,7 @@ DisownSelection(XtermWidget xw)
 void
 UnhiliteSelection(XtermWidget xw)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
 
     if (ScrnHaveSelection(screen)) {
 	CELL first = screen->startH;
@@ -3576,7 +3614,7 @@ SaveText(TScreen * screen,
 	/* We want to strip out every occurrence of HIDDEN_CHAR AFTER a
 	 * wide character.
 	 */
-	if (c == HIDDEN_CHAR && iswide((int) previous)) {
+	if (c == HIDDEN_CHAR && isWide((int) previous)) {
 	    previous = c;
 	    /* Combining characters attached to double-width characters
 	       are in memory attached to the HIDDEN_CHAR */
@@ -3665,7 +3703,7 @@ BtnCode(XButtonEvent * event, int button)
 static void
 EditorButton(XtermWidget xw, XButtonEvent * event)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     int pty = screen->respond;
     Char line[6];
     int row, col;
@@ -3772,7 +3810,7 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 void
 SendFocusButton(XtermWidget xw, XFocusChangeEvent * event)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
 
     if (screen->send_focus_pos) {
 	ANSI reply;

@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.413 2008/12/30 11:23:59 tom Exp $
+.\" $XTermId: xterm.man,v 1.420 2009/02/11 00:11:56 tom Exp $
 .\"
-.\" Copyright 1996-2007,2008 by Thomas E. Dickey
+.\" Copyright 1996-2008,2009 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -56,13 +56,15 @@
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
 .
-.de DS
+.\" these would be fallbacks for DS/DE,
+.\" but groff changed the meaning of the macros.
+.de NS
 .sp
 .in +4
 .nf
 .ft C			\" Courier
 ..
-.de DE
+.de NE
 .fi
 .ft P
 .sp
@@ -693,6 +695,18 @@ because \fIxterm\ -ls\ -e\fP does write a \fI/etc/wtmp\fP entry
 (if configured to do so),
 whereas \fIxterm\ -e\fP does not.
 .TP 8
+.B -maximized
+This option indicates that \fIxterm\fP should ask the window manager to
+maximize its layout on startup.
+This corresponds to the \fBmaximized\fP resource.
+.IP
+Maximizing is not the reverse of iconifying;
+it is possible to do both with certain window managers.
+.TP 8
+.B +maximized
+This option indicates that \fIxterm\fP should ask the window manager to
+maximize its layout on startup.
+.TP 8
 .B +ls
 This option indicates that the shell that is started should not be a login
 shell (i.e., it will be a normal ``subshell'').
@@ -1216,6 +1230,12 @@ On some systems you may want to increase one or both of the
 \fBminBufSize\fP resource values to achieve better performance
 if the operating system prefers larger buffer sizes.
 .TP 8
+.B "maximized (\fPclass\fB Maximized)"
+Specifies whether or not \fIxterm\fP should ask the window manager to
+maximize its layout on startup.
+The default is
+``false.''
+.TP 8
 .B "messages (\fPclass\fB Messages)"
 Specifies whether write access to the terminal is allowed initially.
 See
@@ -1424,8 +1444,14 @@ The default is ``false.''
 .SS VT100 Widget Resources
 .PP
 The following resources are specified as part
-of the \fIvt100\fP widget (class \fIVT100\fP):
-These are specified by patterns such as "\fBXTerm.vt100.\fP\fINAME\fP":
+of the \fIvt100\fP widget (class \fIVT100\fP).
+They are specified by patterns such as "\fBXTerm.vt100.\fP\fINAME\fP".
+.PP
+If your \fIxterm\fP is configured to support the "toolbar", then those
+patterns need an extra level for the form-widget which holds the
+toolbar and vt100 widget.  A wildcard between the top-level
+"XTerm" and the "vt100" widget makes the resource settings work for
+either, e.g., "\fBXTerm*vt100.\fP\fINAME\fP".
 .TP 8
 .B "activeIcon (\fPclass\fB ActiveIcon)"
 Specifies whether or not active icon windows are to be used when the
@@ -1462,7 +1488,25 @@ The default is ``false.''
 Specifies whether control sequences that query the terminal's
 notion of its function-key strings, as termcap or terminfo capabilities
 should be allowed.
-The default is ``true.''
+The default is ``false.''
+.IP
+A few programs, e.g,. \fIvim\fP, use this feature to get an accurate
+description of the terminal's capabilities,
+independent of the termcap/terminfo setting:
+.RS
+.TP 3
+-
+\fIxterm\fP can tell the querying program how many colors it supports.
+This is a constant, depending on how it is compiled, typically 16.
+It does not change if you alter resource settings,
+e.g., the \fBboldColors\fP resource.
+.TP 3
+-
+\fIxterm\fP can tell the querying program what strings are sent by modified
+(shift-, control-, alt-) function- and keypad-keys.
+Reporting control- and alt-modifiers is a feature that relies on the
+\fIncurses\fP extended naming.
+.RE
 .TP
 .B "allowTitleOps (\fPclass\fB AllowTitleOps)"
 Specifies whether control sequences that modify the window title or icon name
@@ -2057,6 +2101,20 @@ The default is ``true''.
 If disabled, \fIxterm\fP will simulate doublesize characters by drawing
 normal characters with spaces between them.
 .TP 8
+.B "fontWarnings (\fPclass\fB FontWarnings)"
+Specify whether \fIxterm\fP should report an error if it fails to load a font:
+.RS
+.TP 5
+0
+Never report an error (though the X libraries may).
+.TP 5
+1
+Report an error if the font name was given as a resource setting.
+.TP 5
+2
+Always report an error on failure to load a font.
+.RE
+.TP 8
 .B "forceBoxChars (\fPclass\fB ForceBoxChars)"
 Specifies whether \fIxterm\fP should assume the normal and bold fonts
 have VT100 line-drawing characters:
@@ -2245,6 +2303,10 @@ The default is "nil2".
 Specifies which of the VT100 fonts to use initially.
 Values are the same as for the \fIset-vt-font\fP action.
 The default is ``d'', i.e., "default".
+.TP 8
+.B "inputMethod (\fPclass\fB XtCInputMethod)"
+Tells \fIxterm\fP which type of input method to use.
+There is no default method.
 .TP 8
 .B "internalBorder (\fPclass\fB BorderWidth)"
 Specifies the number of pixels between the characters and the window border.
@@ -2559,6 +2621,10 @@ making those inactive.
 On startup, \fIxterm\fP determines the maximum number of clicks
 by the \fBon\fP\fIX\fP\fBClicks\fP resource values which are set.
 .TP 8
+.B "openIm (\fPclass\fB XtCOpenIm)"
+Tells \fIxterm\fP whether to open the input method at startup.
+The default is ``true''.
+.TP 8
 .B "pointerColor (\fPclass\fB PointerColor)"
 Specifies the foreground color of the pointer.
 The default is
@@ -2593,6 +2659,10 @@ The default is ``xterm.''
 .B "popOnBell (\fPclass\fB PopOnBell)"
 Specifies whether the window would be raised when Control-G is received.
 The default is ``false.''
+.TP 8
+.B "preeditType (\fPclass\fB XtCPreeditType)"
+Tells \fIxterm\fP which types of preedit (preconversion) string to display.
+The default is ``OverTheSpot,Root''.
 .TP 8
 .B "printAttributes (\fPclass\fB PrintAttributes)"
 Specifies whether to print graphic attributes along with the text.
@@ -3411,7 +3481,7 @@ mode is helpful when typing in passwords or other sensitive data in an
 unsecure environment;
 see \fBSECURITY\fP below (but read the limitations carefully).
 .TP
-Allow SendEvents (allowsends )
+Allow SendEvents (allowsends)
 Specifies whether or not synthetic key and button events generated using
 the X protocol SendEvent request should be interpreted or discarded.
 This corresponds to the \fBallowSendEvents\fP resource.
@@ -3781,7 +3851,7 @@ The \fIfontMenu\fP pops up when
 when the ``control'' key and pointer button three are pressed in a window.
 It sets the font used in the VT102 window,
 or modifies the way the font is specified or displayed.
-There are three sections.
+There are several sections.
 .PP
 The first section allows you to select the font from a set of alternatives:
 .RS
@@ -3857,6 +3927,29 @@ UTF-8 (utf8-mode)
 This controls whether \fIxterm\fP uses UTF-8 encoding of input/output.
 It is useful for temporarily switching \fIxterm\fP to display
 text from an application which does not follow the locale settings.
+.RE
+.PP
+The fourth section allows you to enable or disable special operations
+which can be controlled by writing escape sequences to the terminal.
+These are disabled if the SendEvents feature is enabled:
+.RS
+.TP
+Allow Font Ops (allow-font-ops)
+This corresponds to the \fBallowFontOps\fP resource.
+Enable or disable control sequences that set/query the font.
+.TP
+Allow Tcap Ops (allow-tcap-ops)
+Enable or disable control sequences that query the terminal's
+notion of its function-key strings, as termcap or terminfo capabilities.
+This corresponds to the \fBallowTcapOps\fP resource.
+.TP
+Allow Title Ops (allow-title-ops)
+Enable or disable control sequences that modify the window title or icon name.
+This corresponds to the \fBallowTitleOps\fP resource.
+.TP
+Allow Window Ops (allow-window-ops)
+Enable or disable extended window control sequences (as used in dtterm).
+This corresponds to the \fBallowWindowOps\fP resource.
 .RE
 .
 .SS "TEK Options"
@@ -3998,7 +4091,7 @@ UTF-8 mode, only the first 256 bytes of this table will be used.
 .
 .PP
 The default table starts as follows -
-.DS
+.NS
 static int charClass[256] = {
 /\(** NUL  SOH  STX  ETX  EOT  ENQ  ACK  BEL */
     32,   1,   1,   1,   1,   1,   1,   1,
@@ -4065,7 +4158,7 @@ static int charClass[256] = {
     48,  48,  48,  48,  48,  48,  48, 247,
 /\(**  o/   u`   u'   u^   u:   y'    P   y: */
     48,  48,  48,  48,  48,  48,  48,  48};
-.DE
+.NE
 For example, the string ``33:48,37:48,45-47:48,38:48'' indicates that the
 exclamation mark, percent sign, dash, period, slash, and ampersand characters
 should be treated the same way as characters and numbers.
@@ -4084,9 +4177,25 @@ The following
 actions are provided for use within the \fIvt100\fP or \fItek4014\fP
 \fBtranslations\fP resources:
 .TP 8
+.B "allow-font-ops(\fIon/off/toggle\fP)"
+This action set or toggles the \fBallowFontOps\fP resource and is also
+invoked by the \fBallow-font-ops\fP entry in \fIfontMenu\fP.
+.TP 8
 .B "allow-send-events(\fIon/off/toggle\fP)"
 This action set or toggles the \fBallowSendEvents\fP resource and is also
 invoked by the \fBallowsends\fP entry in \fImainMenu\fP.
+.TP 8
+.B "allow-tcap-ops(\fIon/off/toggle\fP)"
+This action set or toggles the \fBallowTcapOps\fP resource and is also
+invoked by the \fBallow-tcap-ops\fP entry in \fIfontMenu\fP.
+.TP 8
+.B "allow-title-ops(\fIon/off/toggle\fP)"
+This action set or toggles the \fBallowTitleOps\fP resource and is also
+invoked by the \fBallow-title-ops\fP entry in \fIfontMenu\fP.
+.TP 8
+.B "allow-window-ops(\fIon/off/toggle\fP)"
+This action set or toggles the \fBallowWindowOps\fP resource and is also
+invoked by the \fBallow-window-ops\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "alt-sends-escape()"
 This action toggles the state of the \fBeightBitInput\fP resource.
@@ -4122,10 +4231,10 @@ The word here is defined as a sequence of non-whitespace characters.
 This feature partially emulates the behavior
 of `dynamic abbreviation' expansion in Emacs (bound there to M-/).
 Here is a resource setting for \fIxterm\fP which will do the same thing:
-.DS
+.NS
 *VT100*translations:    #override \\n\\\&
 	Meta <KeyPress> /:dabbrev-expand()
-.DE
+.NE
 .TP 8
 .B "deiconify()"
 Changes the window state back to normal, if it was iconified.
@@ -4592,7 +4701,7 @@ This action sends the indicated graphics input code.
 .PP
 The default bindings in the VT102 window use the SELECT token,
 which is set by the \fBselectToClipboard\fP resource:
-.DS
+.NS
 .ta 2.5i
           Shift <KeyPress> Prior:scroll-back(1,halfpage) \\n\\\&
            Shift <KeyPress> Next:scroll-forw(1,halfpage) \\n\\\&
@@ -4637,11 +4746,11 @@ which is set by the \fBselectToClipboard\fP resource:
                       <Btn5Down>:scroll-forw(5,line,m)     \\n\\\&
                          <BtnUp>:select-end(SELECT, CUT_BUFFER0) \\n\\\&
                        <BtnDown>:ignore()
-.DE
+.NE
 .PP
 The default bindings for the scrollbar widget
 are separate from the VT100 widget:
-.DS
+.NS
 .ta 2.5i
                       <Btn5Down>: StartScroll(Forward) \\n\\\&
                       <Btn1Down>: StartScroll(Forward) \\n\\\&
@@ -4650,10 +4759,10 @@ are separate from the VT100 widget:
                       <Btn4Down>: StartScroll(Backward) \\n\\\&
                       <Btn2Motion>: MoveThumb() NotifyThumb() \\n\\\&
                       <BtnUp>:    NotifyScroll(Proportional) EndScroll()
-.DE
+.NE
 .PP
 The default bindings in the Tektronix window are:
-.DS
+.NS
 .ta 2.5i
                  ~Meta<KeyPress>: insert-seven-bit() \\n\\\&
                   Meta<KeyPress>: insert-eight-bit() \\n\\\&
@@ -4671,7 +4780,7 @@ The default bindings in the Tektronix window are:
                  ~Meta<Btn2Down>: gin-press(m) \\n\\\&
            Shift ~Meta<Btn3Down>: gin-press(R) \\n\\\&
                  ~Meta<Btn3Down>: gin-press(r)
-.DE
+.NE
 .PP
 Here is an example which uses shifted select/paste to copy to the clipboard,
 and unshifted select/paste for the primary selection.
@@ -4683,18 +4792,18 @@ while selections can store data in a variety of formats and encodings.
 While \fIxterm\fP owns the selection, it highlights it.
 When it loses the selection, it removes the corresponding highlight.
 But you can still paste from the corresponding cut buffer.
-.DS
+.NS
 .ta .5i 1.5i
 *VT100*translations:    #override \\n\\\&
     ~Shift~Ctrl<Btn2Up>: insert-selection(PRIMARY, CUT_BUFFER0) \\n\\\&
     Shift~Ctrl<Btn2Up>:  insert-selection(CLIPBOARD, CUT_BUFFER1) \\n\\\&
     ~Shift<BtnUp>:       select-end(PRIMARY, CUT_BUFFER0) \\n\\\&
     Shift<BtnUp>:        select-end(CLIPBOARD, CUT_BUFFER1)
-.DE
+.NE
 .PP
 Below is a sample how of the \fBkeymap()\fP action is used to add special
 keys for entering commonly-typed works:
-.DS
+.NS
 .ta .5i 1.5i
 *VT100.Translations: #override <Key>F13: keymap(dbx)
 *VT100.dbxKeymap.translations: \\\&
@@ -4703,12 +4812,12 @@ keys for entering commonly-typed works:
 	<Key>F18:	string("step") string(0x0d) \\n\\\&
 	<Key>F19:	string("continue") string(0x0d) \\n\\\&
 	<Key>F20:	string("print ") insert-selection(PRIMARY, CUT_BUFFER0)
-.DE
+.NE
 .PP
 Some people prefer using the left pointer button
 for dragging the scrollbar thumb.
 That can be setup by altering the translations resource, e.g.,
-.DS
+.NS
 .ta .5i 1.5i
 *VT100.scrollbar.translations:	#override \\n\\\&
 	<Btn5Down>:	StartScroll(Forward) \\n\\\&
@@ -4716,7 +4825,7 @@ That can be setup by altering the translations resource, e.g.,
 	<Btn4Down>:	StartScroll(Backward) \\n\\\&
 	<Btn1Motion>:	MoveThumb() NotifyThumb() \\n\\\&
 	<BtnUp>:	NotifyScroll(Proportional) EndScroll()
-.DE
+.NE
 .SH "CONTROL SEQUENCES AND KEYBOARD"
 The \fIXterm Control Sequences\fP document lists the control sequences which
 an application can send \fIxterm\fP to make it perform various operations.
@@ -5101,8 +5210,6 @@ Thomas Dickey (invisible-island.net).
 On OpenBSD, the following resources have different default values: 
 .TP 8
 .B allowFontOps: false
-.TP 8
-.B allowTcapOps: false
 .TP 8
 .B allowWindowOps: false
 Various, potentially dangerous, extended window control sequences are disabled.

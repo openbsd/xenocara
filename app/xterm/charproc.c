@@ -1,8 +1,8 @@
-/* $XTermId: charproc.c,v 1.865 2008/12/30 14:45:41 tom Exp $ */
+/* $XTermId: charproc.c,v 1.892 2009/02/13 21:15:35 tom Exp $ */
 
 /*
 
-Copyright 1999-2007,2008 by Thomas E. Dickey
+Copyright 1999-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -317,6 +317,12 @@ static XtActionsRec actionsList[] = {
 #ifdef ALLOWLOGGING
     { "set-logging",		HandleLogging },
 #endif
+#if OPT_ALLOW_XXX_OPS
+    { "allow-font-ops",		HandleAllowFontOps },
+    { "allow-tcap-ops",		HandleAllowTcapOps },
+    { "allow-title-ops",	HandleAllowTitleOps },
+    { "allow-window-ops",	HandleAllowWindowOps },
+#endif
 #if OPT_BLINK_CURS
     { "set-cursorblink",	HandleCursorBlink },
 #endif
@@ -448,6 +454,7 @@ static XtResource resources[] =
     Bres(XtNvisualBell, XtCVisualBell, screen.visualbell, False),
 
     Ires(XtNbellSuppressTime, XtCBellSuppressTime, screen.bellSuppressTime, BELLSUPPRESSMSEC),
+    Ires(XtNfontWarnings, XtCFontWarnings, misc.fontWarnings, fwResource),
     Ires(XtNinternalBorder, XtCBorderWidth, screen.border, DEFBORDER),
     Ires(XtNlimitResize, XtCLimitResize, misc.limit_resize, 1),
     Ires(XtNmultiClickTime, XtCMultiClickTime, screen.multiClickTime, MULTICLICKTIME),
@@ -782,7 +789,6 @@ WidgetClass xtermWidgetClass = (WidgetClass) & xtermClassRec;
 void
 xtermAddInput(Widget w)
 {
-#if OPT_TOOLBAR
     /* *INDENT-OFF* */
     XtActionsRec input_actions[] = {
 	{ "insert",		    HandleKeyPressed }, /* alias */
@@ -814,9 +820,10 @@ xtermAddInput(Widget w)
     };
     /* *INDENT-ON* */
 
+    TRACE_TRANS("BEFORE", w);
     XtAppAddActions(app_con, input_actions, XtNumber(input_actions));
-#endif
     XtAugmentTranslations(w, XtParseTranslationTable(defaultTranslations));
+    TRACE_TRANS("AFTER:", w);
 
 #if OPT_EXTRA_PASTE
     if (term && term->keyboard.extra_translations)
@@ -825,6 +832,42 @@ xtermAddInput(Widget w)
 }
 
 #if OPT_ISO_COLORS
+static Bool
+CheckBogusForeground(TScreen * screen, const char *tag)
+{
+    int row = -1, col = -1, pass;
+    Bool isClear = True;
+
+    (void) tag;
+    for (pass = 0; pass < 2; ++pass) {
+	row = screen->cur_row;
+	for (; isClear && (row <= screen->max_row); ++row) {
+	    col = (row == screen->cur_row) ? screen->cur_col : 0;
+	    for (; isClear && (col <= screen->max_col); ++col) {
+		unsigned flags = SCRN_BUF_ATTRS(screen, row)[col];
+		if (pass) {
+		    flags &= ~FG_COLOR;
+		    SCRN_BUF_ATTRS(screen, row)[col] = (Char) flags;
+		} else if ((flags & BG_COLOR)) {
+		    isClear = False;
+		} else if ((flags & FG_COLOR)) {
+		    unsigned ch = getXtermCell(screen, row, col);
+		    isClear = ((ch == ' ') || (ch == 0));
+		} else {
+		    isClear = False;
+		}
+	    }
+	}
+    }
+    TRACE(("%s checked %d,%d to %d,%d %s pass %d\n",
+	   tag, screen->cur_row, screen->cur_col,
+	   row, col,
+	   isClear && pass ? "cleared" : "unchanged",
+	   pass));
+
+    return isClear;
+}
+
 /*
  * The terminal's foreground and background colors are set via two mechanisms:
  *	text (cur_foreground, cur_background values that are passed down to
@@ -850,6 +893,19 @@ SGR_Foreground(XtermWidget xw, int color)
 
     setCgsFore(xw, WhichVWin(screen), gcBold, fg);
     setCgsBack(xw, WhichVWin(screen), gcBoldReverse, fg);
+
+    /*
+     * If we've just turned off the foreground color, check for blank cells
+     * which have no background color, but do have foreground color.  This
+     * could happen due to setting the foreground color just before scrolling.
+     *
+     * Those cells look uncolored, but will confuse ShowCursor(), which looks
+     * for the colors in the current cell, and will see the foreground color. 
+     * In that case, remove the foreground color from the blank cells.
+     */
+    if (color < 0) {
+	CheckBogusForeground(screen, "SGR_Foreground");
+    }
 }
 
 void
@@ -1224,6 +1280,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
     do {
 #if OPT_WIDE_CHARS
+	int this_is_wide = 0;
 
 	/*
 	 * Handle zero-width combining characters.  Make it faster by noting
@@ -1421,7 +1478,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 * If this character is a different width than the last one, put the
 	 * previous text into the buffer and draw it now.
 	 */
-	if (iswide((int) c) != sp->last_was_wide) {
+	this_is_wide = isWide((int) c);
+	if (this_is_wide != sp->last_was_wide) {
 	    WriteNow();
 	}
 #endif
@@ -1452,7 +1510,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    print_area[print_used++] = c;
 	    sp->lastchar = thischar = (int) c;
 #if OPT_WIDE_CHARS
-	    sp->last_was_wide = iswide((int) c);
+	    sp->last_was_wide = this_is_wide;
 #endif
 	    if (morePtyData(screen, VTbuffer)) {
 		continue;
@@ -2852,7 +2910,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_XTERM_WINOPS:
 	    TRACE(("CASE_XTERM_WINOPS\n"));
-	    if (screen->allowWindowOps)
+	    if (AllowWindowOps(xw))
 		window_ops(xw);
 	    sp->parsestate = sp->groundtable;
 	    break;
@@ -2964,7 +3022,7 @@ v_write(int f, Char * data, unsigned len)
     unsigned c = len;
 
     if (v_bufstr == NULL && len > 0) {
-	v_buffer = (Char *) XtMalloc(len);
+	v_buffer = (Char *) XtMalloc((Cardinal) len);
 	v_bufstr = v_buffer;
 	v_bufptr = v_buffer;
 	v_bufend = v_buffer + len;
@@ -3506,41 +3564,7 @@ dotext(XtermWidget xw,
 	 * buffers (perhaps this is simpler).
 	 */
 	if (chars_chomped != 0 && next_col <= screen->max_col) {
-	    static unsigned limit;
-	    static Char *hibyte, *lobyte;
-	    Bool both = False;
-	    unsigned j, k;
-
-	    if (chars_chomped >= limit) {
-		limit = (chars_chomped + 1) * 2;
-		lobyte = (Char *) XtRealloc((char *) lobyte, limit);
-		hibyte = (Char *) XtRealloc((char *) hibyte, limit);
-	    }
-	    for (j = offset, k = 0; j < offset + chars_chomped; j++) {
-		if (buf[j] == HIDDEN_CHAR)
-		    continue;
-		lobyte[k] = LO_BYTE(buf[j]);
-		if (buf[j] > 255) {
-		    hibyte[k] = HI_BYTE(buf[j]);
-		    both = True;
-		} else {
-		    hibyte[k] = 0;
-		}
-		++k;
-	    }
-
-	    WriteText(xw, PAIRED_CHARS(lobyte,
-				       (both ? hibyte : 0)),
-		      k);
-#ifdef NO_LEAKS
-	    if (limit != 0) {
-		limit = 0;
-		XtFree((char *) lobyte);
-		XtFree((char *) hibyte);
-		lobyte = 0;
-		hibyte = 0;
-	    }
-#endif
+	    WriteText(xw, buf + offset, chars_chomped);
 	}
 	next_col += width_here;
 	screen->do_wrap = need_wrap;
@@ -3564,9 +3588,7 @@ dotext(XtermWidget xw,
 	}
 	next_col = screen->cur_col + this_col;
 
-	WriteText(xw, PAIRED_CHARS(buf + offset,
-				   buf2 ? buf2 + offset : 0),
-		  (unsigned) this_col);
+	WriteText(xw, buf + offset, (unsigned) this_col);
 
 	/*
 	 * The call to WriteText updates screen->cur_col.
@@ -3581,20 +3603,14 @@ dotext(XtermWidget xw,
 
 #if OPT_WIDE_CHARS
 unsigned
-visual_width(PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
+visual_width(IChar * str, Cardinal len)
 {
     /* returns the visual width of a string (doublewide characters count
        as 2, normalwide characters count as 1) */
     unsigned my_len = 0;
     while (len) {
-	int ch = *str;
-	if (str2)
-	    ch |= *str2 << 8;
-	if (str)
-	    str++;
-	if (str2)
-	    str2++;
-	if (iswide(ch))
+	int ch = (int) *str++;
+	if (isWide(ch))
 	    my_len += 2;
 	else
 	    my_len++;
@@ -3636,7 +3652,7 @@ HandleStructNotify(Widget w GCC_UNUSED,
 		    return;
 		}
 		strcpy(buf, icon_name + 4);
-		ChangeIconName(buf);
+		ChangeIconName(xw, buf);
 		free(buf);
 	    }
 	}
@@ -5607,7 +5623,14 @@ VTInitialize(Widget wrequest,
     for (i = fontMenu_font1; i <= fontMenu_lastBuiltin; i++) {
 	init_Sres2(screen.MenuFontName, i);
     }
-    wnew->screen.MenuFontName(fontMenu_default) = wnew->misc.default_font.f_n;
+    init_Ires(misc.fontWarnings);
+#define DefaultFontNames wnew->screen.menu_font_names[fontMenu_default]
+    DefaultFontNames[fNorm] = wnew->misc.default_font.f_n;
+    DefaultFontNames[fBold] = wnew->misc.default_font.f_b;
+#if OPT_WIDE_CHARS
+    DefaultFontNames[fWide] = wnew->misc.default_font.f_w;
+    DefaultFontNames[fWBold] = wnew->misc.default_font.f_wb;
+#endif
     wnew->screen.MenuFontName(fontMenu_fontescape) = NULL;
     wnew->screen.MenuFontName(fontMenu_fontsel) = NULL;
 
@@ -6801,6 +6824,7 @@ ShowCursor(void)
     XtermWidget xw = term;
     TScreen *screen = &xw->screen;
     int x, y;
+    int base;
     Char clo;
     unsigned flags;
     unsigned fg_bg = 0;
@@ -6822,7 +6846,6 @@ ShowCursor(void)
 #endif
 #if OPT_WIDE_CHARS
     Char chi = 0;
-    int base;
     int off;
     int my_col = 0;
 #endif
@@ -6848,10 +6871,9 @@ ShowCursor(void)
     }
 #endif /* NO_ACTIVE_ICON */
 
-#if OPT_WIDE_CHARS
     base =
-#endif
 	clo = SCRN_BUF_CHARS(screen, screen->cursorp.row)[cursor_col];
+    flags = SCRN_BUF_ATTRS(screen, screen->cursorp.row)[cursor_col];
 
     if_OPT_WIDE_CHARS(screen, {
 	chi = SCRN_BUF_WIDEC(screen, screen->cursorp.row)[cursor_col];
@@ -6865,31 +6887,31 @@ ShowCursor(void)
 	}
 	my_col = cursor_col;
 	base = (chi << 8) | clo;
-	if (iswide(base))
+	if (base == 0)
+	    base = clo = ' ';
+	if (isWide(base))
 	    my_col += 1;
     });
 
-    flags = SCRN_BUF_ATTRS(screen, screen->cursorp.row)[cursor_col];
-
-    if (clo == 0
-#if OPT_WIDE_CHARS
-	&& chi == 0
-#endif
-	) {
-	clo = ' ';
+    if (base == 0) {
+	base = clo = ' ';
     }
 
     /*
-     * If the cursor happens to be on blanks, and the foreground color is set
-     * but not the background, do not treat it as a colored cell.
+     * If the cursor happens to be on blanks, and we have not set both
+     * foreground and background color, do not treat it as a colored cell.
      */
 #if OPT_ISO_COLORS
-    if ((flags & TERM_COLOR_FLAGS(xw)) == BG_COLOR
-#if OPT_WIDE_CHARS
-	&& chi == 0
-#endif
-	&& clo == ' ') {
-	flags &= ~TERM_COLOR_FLAGS(xw);
+    if (base == ' ') {
+	if ((flags & (FG_COLOR | BG_COLOR)) == BG_COLOR) {
+	    TRACE(("ShowCursor - do not treat as a colored cell\n"));
+	    flags &= ~(FG_COLOR | BG_COLOR);
+	} else if ((flags & (FG_COLOR | BG_COLOR)) == FG_COLOR) {
+	    TRACE(("ShowCursor - should we treat as a colored cell?\n"));
+	    if (!(xw->flags & FG_COLOR))
+		if (CheckBogusForeground(screen, "ShowCursor"))
+		    flags &= ~(FG_COLOR | BG_COLOR);
+	}
     }
 #endif
 
@@ -7007,9 +7029,9 @@ ShowCursor(void)
 	&& (screen->cursor_state != ON || screen->cursor_GC != set_at)) {
 
 	screen->cursor_GC = set_at;
-	TRACE(("ShowCursor calling drawXtermText cur(%d,%d) %s\n",
+	TRACE(("ShowCursor calling drawXtermText cur(%d,%d) %s, set_at %d\n",
 	       screen->cur_row, screen->cur_col,
-	       (filled ? "filled" : "outline")));
+	       (filled ? "filled" : "outline"), set_at));
 
 	currentGC = getCgsGC(xw, currentWin, currentCgs);
 	drawXtermText(xw, flags & DRAWX_MASK, currentGC,
@@ -7028,7 +7050,7 @@ ShowCursor(void)
 		drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
 			      currentGC, x, y,
 			      curXtermChrSet(xw, screen->cur_row),
-			      PAIRED_CHARS(&clo, &chi), 1, iswide(base));
+			      PAIRED_CHARS(&clo, &chi), 1, isWide(base));
 	    }
 	});
 #endif
@@ -7059,14 +7081,14 @@ HideCursor(void)
     XtermWidget xw = term;
     TScreen *screen = &xw->screen;
     GC currentGC;
+    int x, y;
+    int base;
+    Char clo;
     unsigned flags;
     unsigned fg_bg = 0;
-    int x, y;
-    Char clo;
     Bool in_selection;
 #if OPT_WIDE_CHARS
     Char chi = 0;
-    int base;
     int off;
     int my_col = 0;
 #endif
@@ -7086,15 +7108,13 @@ HideCursor(void)
     }
 #endif /* NO_ACTIVE_ICON */
 
-#if OPT_WIDE_CHARS
     base =
-#endif
 	clo = SCRN_BUF_CHARS(screen, screen->cursorp.row)[cursor_col];
     flags = SCRN_BUF_ATTRS(screen, screen->cursorp.row)[cursor_col];
 
     if_OPT_WIDE_CHARS(screen, {
 	chi = SCRN_BUF_WIDEC(screen, screen->cursorp.row)[cursor_col];
-	if (clo == HIDDEN_LO && chi == HIDDEN_HI) {
+	if (clo == HIDDEN_LO && chi == HIDDEN_HI && cursor_col > 0) {
 	    /* if cursor points to non-initial part of wide character,
 	     * back it up
 	     */
@@ -7104,10 +7124,38 @@ HideCursor(void)
 	}
 	my_col = cursor_col;
 	base = (chi << 8) | clo;
-	if (iswide(base))
+	if (base == 0)
+	    base = clo = ' ';
+	if (isWide(base))
 	    my_col += 1;
     });
 
+    if (base == 0) {
+	base = clo = ' ';
+    }
+
+    /*
+     * If the cursor happens to be on blanks, and we have not set both
+     * foreground and background color, do not treat it as a colored cell.
+     */
+#if OPT_ISO_COLORS
+    if (base == ' ') {
+	if ((flags & (FG_COLOR | BG_COLOR)) == BG_COLOR) {
+	    TRACE(("HideCursor - do not treat as a colored cell\n"));
+	    flags &= ~(FG_COLOR | BG_COLOR);
+	} else if ((flags & (FG_COLOR | BG_COLOR)) == FG_COLOR) {
+	    TRACE(("HideCursor - should we treat as a colored cell?\n"));
+	    if (!(xw->flags & FG_COLOR))
+		if (CheckBogusForeground(screen, "HideCursor"))
+		    flags &= ~(FG_COLOR | BG_COLOR);
+	}
+    }
+#endif
+
+    /*
+     * Compare the current cell to the last set of colors used for the
+     * cursor and update the GC's if needed.
+     */
     if_OPT_EXT_COLORS(screen, {
 	fg_bg = PACK_FGBG(screen, screen->cursorp.row, cursor_col);
     });
@@ -7121,14 +7169,6 @@ HideCursor(void)
 	in_selection = True;
 
     currentGC = updatedXtermGC(xw, flags, fg_bg, in_selection);
-
-    if (clo == 0
-#if OPT_WIDE_CHARS
-	&& chi == 0
-#endif
-	) {
-	clo = ' ';
-    }
 
     TRACE(("HideCursor calling drawXtermText cur(%d,%d)\n",
 	   screen->cursorp.row, screen->cursorp.col));
@@ -7148,7 +7188,7 @@ HideCursor(void)
 	    drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
 			  currentGC, x, y,
 			  curXtermChrSet(xw, screen->cur_row),
-			  PAIRED_CHARS(&clo, &chi), 1, iswide(base));
+			  PAIRED_CHARS(&clo, &chi), 1, isWide(base));
 	}
     });
 #endif
@@ -7603,9 +7643,12 @@ HandleIgnore(Widget w,
 	     String * params GCC_UNUSED,
 	     Cardinal *param_count GCC_UNUSED)
 {
-    if (IsXtermWidget(w)) {
+    XtermWidget xw;
+
+    TRACE(("Handle ignore for %p\n", w));
+    if ((xw = getXtermWidget(w)) != 0) {
 	/* do nothing, but check for funny escape sequences */
-	(void) SendMousePosition((XtermWidget) w, event);
+	(void) SendMousePosition(xw, event);
     }
 }
 
@@ -7619,11 +7662,12 @@ DoSetSelectedFont(Widget w,
 		  unsigned long *length,
 		  int *format)
 {
-    if (!IsXtermWidget(w) || *type != XA_STRING || *format != 8) {
+    XtermWidget xw = getXtermWidget(w);
+
+    if ((xw == 0) || *type != XA_STRING || *format != 8) {
 	Bell(XkbBI_MinorError, 0);
     } else {
 	Boolean failed = False;
-	XtermWidget xw = (XtermWidget) w;
 	int oldFont = xw->screen.menu_font_number;
 	char *save = xw->screen.MenuFontName(fontMenu_fontsel);
 	char *val;
@@ -7683,6 +7727,7 @@ DoSetSelectedFont(Widget w,
 void
 FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
 {
+    TScreen *screen = &(xw->screen);
     static AtomPtr *atoms;
     unsigned int atomCount = 0;
     AtomPtr *pAtom;
@@ -7690,8 +7735,8 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
     Atom target;
 
     if (!atom_name)
-	atom_name = (xw->screen.mappedSelect
-		     ? xw->screen.mappedSelect[0]
+	atom_name = (screen->mappedSelect
+		     ? screen->mappedSelect[0]
 		     : "PRIMARY");
     TRACE(("FindFontSelection(%s)\n", atom_name));
 
@@ -7707,8 +7752,10 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
 
     target = XmuInternAtom(XtDisplay(xw), *pAtom);
     if (justprobe) {
-	xw->screen.MenuFontName(fontMenu_fontsel) =
+	screen->MenuFontName(fontMenu_fontsel) =
 	    XGetSelectionOwner(XtDisplay(xw), target) ? _Font_Selected_ : 0;
+	TRACE(("...selected fontname '%s'\n",
+	       NonNull(screen->MenuFontName(fontMenu_fontsel))));
     } else {
 	XtGetSelectionValue((Widget) xw, target, XA_STRING,
 			    DoSetSelectedFont, NULL,

@@ -1,8 +1,8 @@
-/* $XTermId: cachedGCs.c,v 1.49 2008/12/30 17:33:30 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.51 2009/02/13 00:37:46 tom Exp $ */
 
 /************************************************************
 
-Copyright 2007,2008 by Thomas E. Dickey
+Copyright 2007-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -70,6 +70,8 @@ typedef struct {
 #define LINK(item)  me->data = (me->list + (item))
 #define THIS(field) me->data->field
 #define NEXT(field) me->next.field
+
+#define HaveFont(font) (Boolean) ((font) != 0 && (font)->fs != 0)
 
 #define GC_CSet GCFunction
 
@@ -163,9 +165,9 @@ static String
 traceFont(XTermFonts * font)
 {
     static char result[80];
-    XFontStruct *fs;
 
-    if (font != 0 && (fs = font->fs) != 0) {
+    if (HaveFont(font)) {
+	XFontStruct *fs = font->fs;
 	sprintf(result, "%p(%dx%d %d %#lx)",
 		fs,
 		fs->max_bounds.width,
@@ -394,12 +396,6 @@ newCache(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, CgsCache * me)
 }
 
 static Boolean
-HaveFont(XTermFonts * a)
-{
-    return (Boolean) (a != 0 && a->fs != 0);
-}
-
-static Boolean
 SameFont(XTermFonts * a, XTermFonts * b)
 {
     return (Boolean) (HaveFont(a)
@@ -412,7 +408,7 @@ SameFont(XTermFonts * a, XTermFonts * b)
 #define SameCSet(a,b)  ((a) == (b))
 
 static GC
-chgCache(XtermWidget xw, CgsEnum cgsId GCC_UNUSED, CgsCache * me)
+chgCache(XtermWidget xw, CgsEnum cgsId GCC_UNUSED, CgsCache * me, Bool both)
 {
     XGCValues xgcv;
     XtGCMask mask = (GCForeground | GCBackground | GCFont);
@@ -436,8 +432,10 @@ chgCache(XtermWidget xw, CgsEnum cgsId GCC_UNUSED, CgsCache * me)
 	TRACE2(("...chgCache new bg=%s\n", tracePixel(xw, NEXT(bg))));
 #endif
 
-    THIS(font) = NEXT(font);
-    THIS(cset) = NEXT(cset);
+    if (both) {
+	THIS(font) = NEXT(font);
+	THIS(cset) = NEXT(cset);
+    }
     THIS(fg) = NEXT(fg);
     THIS(bg) = NEXT(bg);
 
@@ -514,7 +512,7 @@ setCgsFont(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, XTermFonts * font)
 #endif
 		font = &(xw->screen.fnts[fNorm]);
 	}
-	if (okFont(font->fs) && !SameFont(NEXT(font), font)) {
+	if (HaveFont(font) && okFont(font->fs) && !SameFont(NEXT(font), font)) {
 	    TRACE2(("...updated next font for %s to %s\n",
 		    traceCgsEnum(cgsId), traceFont(font)));
 	    TRACE2(("...next font was %s\n", traceFont(NEXT(font))));
@@ -638,7 +636,7 @@ getCgsGC(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId)
 		}
 		LINK(k);
 		TRACE(("...getCgsGC least-used(%d) was %d\n", k, THIS(used)));
-		result = chgCache(xw, cgsId, me);
+		result = chgCache(xw, cgsId, me, True);
 	    }
 	    me->next = *(me->data);
 	} else {
@@ -776,7 +774,7 @@ redoCgs(XtermWidget xw, Pixel fg, Pixel bg, CgsEnum cgsId)
 	CgsCacheData *save_data = me->data;
 
 	for (n = 0; n < DEPTH; ++n) {
-	    if (LIST(n).gc != 0) {
+	    if (LIST(n).gc != 0 && HaveFont(LIST(n).font)) {
 		LINK(n);
 
 		if (LIST(n).fg == fg
@@ -791,7 +789,7 @@ redoCgs(XtermWidget xw, Pixel fg, Pixel bg, CgsEnum cgsId)
 		    continue;
 		}
 
-		(void) chgCache(xw, cgsId, me);
+		(void) chgCache(xw, cgsId, me, False);
 	    }
 	}
 	me->data = save_data;

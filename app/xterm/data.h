@@ -1,9 +1,9 @@
-/* $XTermId: data.h,v 1.105 2007/07/22 16:03:16 tom Exp $ */
+/* $XTermId: data.h,v 1.106 2009/01/24 16:24:06 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.h,v 3.39 2006/02/13 01:14:58 dickey Exp $ */
 
 /*
- * Copyright 2002-2006,2007 by Thomas E. Dickey
+ * Copyright 2002-2007,2009 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -205,6 +205,9 @@ typedef struct XTERM_RESOURCE {
 #endif
 #if OPT_TOOLBAR
     Boolean toolBar;
+#endif
+#if OPT_MAXIMIZE
+    Boolean maximized;
 #endif
 } XTERM_RESOURCE;
 

@@ -1,8 +1,8 @@
-/* $XTermId: charsets.c,v 1.40 2008/05/26 22:49:57 tom Exp $ */
+/* $XTermId: charsets.c,v 1.41 2009/01/25 23:39:12 tom Exp $ */
 
 /************************************************************
 
-Copyright 1998-2007,2008 by Thomas E. Dickey
+Copyright 1998-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -308,7 +308,7 @@ xtermCharSetOut(XtermWidget xw, IChar * buf, IChar * ptr, int leftset)
 	    if (seven > 0x5f && seven <= 0x7e) {
 #if OPT_WIDE_CHARS
 		if (screen->utf8_mode)
-		    chr = dec2ucs((unsigned) (seven - 0x5f));
+		    chr = (int) dec2ucs((unsigned) (seven - 0x5f));
 		else
 #endif
 		    chr = seven - 0x5f;
@@ -476,7 +476,7 @@ xtermCharSetOut(XtermWidget xw, IChar * buf, IChar * ptr, int leftset)
 	 */
 	if (chr == ANSI_DEL)
 	    chr = ' ';
-	*s = A2E(chr);
+	*s = (IChar) A2E(chr);
     }
     TRACE(("%d\t%s\n",
 	   count,

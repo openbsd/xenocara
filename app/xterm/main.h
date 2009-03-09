@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.38 2008/01/27 17:40:31 tom Exp $ */
+/* $XTermId: main.h,v 1.39 2009/02/08 18:03:56 tom Exp $ */
 
 /*
- * Copyright 2000-2007,2008 by Thomas E. Dickey
+ * Copyright 2000-2008,2009 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -72,7 +72,7 @@
 #endif
 
 #ifndef DEFXIMFONT
-#define DEFXIMFONT		"*"
+#define DEFXIMFONT		"fixed"
 #endif
 
 #ifndef DEFBOLDFONT

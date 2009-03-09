@@ -1,8 +1,8 @@
-/* $XTermId: misc.c,v 1.391 2008/12/30 17:44:50 tom Exp $ */
+/* $XTermId: misc.c,v 1.405 2009/02/13 23:39:29 tom Exp $ */
 
 /*
  *
- * Copyright 1999-2007,2008 by Thomas E. Dickey
+ * Copyright 1999-2008,2009 by Thomas E. Dickey
  *
  *                        All Rights Reserved
  *
@@ -54,6 +54,7 @@
  */
 
 #include <version.h>
+#include <main.h>
 #include <xterm.h>
 
 #include <sys/stat.h>
@@ -473,12 +474,12 @@ make_hidden_cursor(XtermWidget xw)
     /*
      * Prefer nil2 (which is normally available) to "fixed" (which is supposed
      * to be "always" available), since it's a smaller glyph in case the
-     * server insists on drawing _somethng_.
+     * server insists on drawing _something_.
      */
     TRACE(("Ask for nil2 font\n"));
     if ((fn = XLoadQueryFont(dpy, "nil2")) == 0) {
 	TRACE(("...Ask for fixed font\n"));
-	fn = XLoadQueryFont(dpy, "fixed");
+	fn = XLoadQueryFont(dpy, DEFFONT);
     }
 
     if (fn != 0) {
@@ -515,7 +516,7 @@ HandleKeyPressed(Widget w GCC_UNUSED,
 		 String * params GCC_UNUSED,
 		 Cardinal *nparams GCC_UNUSED)
 {
-    TRACE(("Handle 7bit-key\n"));
+    TRACE(("Handle insert-seven-bit for %p\n", w));
 #ifdef ACTIVEWINDOWINPUTONLY
     if (w == CURRENT_EMU())
 #endif
@@ -529,7 +530,7 @@ HandleEightBitKeyPressed(Widget w GCC_UNUSED,
 			 String * params GCC_UNUSED,
 			 Cardinal *nparams GCC_UNUSED)
 {
-    TRACE(("Handle 8bit-key\n"));
+    TRACE(("Handle insert-eight-bit for %p\n", w));
 #ifdef ACTIVEWINDOWINPUTONLY
     if (w == CURRENT_EMU())
 #endif
@@ -688,7 +689,7 @@ HandleInterpret(Widget w GCC_UNUSED,
 {
     if (*param_count == 1) {
 	char *value = params[0];
-	int need = strlen(value);
+	int need = (int) strlen(value);
 	int used = VTbuffer->next - VTbuffer->buffer;
 	int have = VTbuffer->last - VTbuffer->buffer;
 
@@ -790,15 +791,58 @@ HandleFocusChange(Widget w GCC_UNUSED,
 
 static long lastBellTime;	/* in milliseconds */
 
-void
-Bell(Atom which GCC_UNUSED, int percent)
+#if defined(HAVE_XKB_BELL_EXT)
+static Atom
+AtomBell(XtermWidget xw, int which)
 {
-    TScreen *screen = TScreenOf(term);
+#define DATA(name) { XkbBI_##name, XkbBN_##name }
+    static struct {
+	int value;
+	const char *name;
+    } table[] = {
+	DATA(Info),
+	    DATA(MarginBell),
+	    DATA(MinorError),
+	    DATA(TerminalBell)
+    };
+    Cardinal n;
+    Atom result = None;
+
+    for (n = 0; n < XtNumber(table); ++n) {
+	if (table[n].value == which) {
+	    result = XInternAtom(XtDisplay(xw), table[n].name, True);
+	    break;
+	}
+    }
+    return result;
+}
+#endif
+
+void
+xtermBell(XtermWidget xw, int which, int percent)
+{
+    if (percent > 0) {
+	TScreen *screen = TScreenOf(xw);
+#if defined(HAVE_XKB_BELL_EXT)
+	Atom tony = AtomBell(xw, which);
+	if (tony != None) {
+	    XkbBell(screen->display, VShellWindow, percent, tony);
+	} else
+#endif
+	    XBell(screen->display, percent);
+    }
+}
+
+void
+Bell(int which GCC_UNUSED, int percent)
+{
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
     struct timeval curtime;
     long now_msecs;
 
-    TRACE(("BELL %ld %d%%\n", (long) which, percent));
-    if (!XtIsRealized((Widget) term)) {
+    TRACE(("BELL %d %d%%\n", which, percent));
+    if (!XtIsRealized((Widget) xw)) {
 	return;
     }
 
@@ -825,11 +869,7 @@ Bell(Atom which GCC_UNUSED, int percent)
     if (screen->visualbell) {
 	VisualBell();
     } else {
-#if defined(HAVE_XKB_BELL_EXT)
-	XkbBell(screen->display, VShellWindow, percent, which);
-#else
-	XBell(screen->display, percent);
-#endif
+	xtermBell(xw, which, percent);
     }
 
     if (screen->poponbell)
@@ -971,7 +1011,7 @@ dabbrev_prev_word(int *xp, int *yp, TScreen * screen)
     while ((c = dabbrev_prev_char(xp, yp, screen)) >= 0 &&
 	   IS_WORD_CONSTITUENT(c))
 	if (abword > ab)	/* store only |MAXWLEN| last chars */
-	    *(--abword) = c;
+	    *(--abword) = (char) c;
     if (c < 0) {
 	if (abword < ab + MAXWLEN - 1)
 	    return abword;
@@ -1060,14 +1100,16 @@ dabbrev_expand(TScreen * screen)
 
 /*ARGSUSED*/
 void
-HandleDabbrevExpand(Widget gw,
+HandleDabbrevExpand(Widget w,
 		    XEvent * event GCC_UNUSED,
 		    String * params GCC_UNUSED,
 		    Cardinal *nparams GCC_UNUSED)
 {
-    if (IsXtermWidget(gw)) {
-	XtermWidget w = (XtermWidget) gw;
-	TScreen *screen = &w->screen;
+    XtermWidget xw;
+
+    TRACE(("Handle dabbrev-expand for %p\n", w));
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = &xw->screen;
 	if (!dabbrev_expand(screen))
 	    Bell(XkbBI_TerminalBell, 0);
     }
@@ -1077,26 +1119,30 @@ HandleDabbrevExpand(Widget gw,
 #if OPT_MAXIMIZE
 /*ARGSUSED*/
 void
-HandleDeIconify(Widget gw,
+HandleDeIconify(Widget w,
 		XEvent * event GCC_UNUSED,
 		String * params GCC_UNUSED,
 		Cardinal *nparams GCC_UNUSED)
 {
-    if (IsXtermWidget(gw)) {
-	TScreen *screen = TScreenOf((XtermWidget) gw);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = TScreenOf(xw);
 	XMapWindow(screen->display, VShellWindow);
     }
 }
 
 /*ARGSUSED*/
 void
-HandleIconify(Widget gw,
+HandleIconify(Widget w,
 	      XEvent * event GCC_UNUSED,
 	      String * params GCC_UNUSED,
 	      Cardinal *nparams GCC_UNUSED)
 {
-    if (IsXtermWidget(gw)) {
-	TScreen *screen = TScreenOf((XtermWidget) gw);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = TScreenOf(xw);
 	XIconifyWindow(screen->display,
 		       VShellWindow,
 		       DefaultScreen(screen->display));
@@ -1146,9 +1192,9 @@ QueryMaximize(XtermWidget termw, unsigned *width, unsigned *height)
 		   hints.max_height));
 
 	    if ((unsigned) hints.max_width < *width)
-		*width = hints.max_width;
+		*width = (unsigned) hints.max_width;
 	    if ((unsigned) hints.max_height < *height)
-		*height = hints.max_height;
+		*height = (unsigned) hints.max_height;
 	}
 	return 1;
     }
@@ -1180,8 +1226,8 @@ RequestMaximize(XtermWidget termw, int maximize)
 			screen->restore_data = True;
 			screen->restore_x = wm_attrs.x + wm_attrs.border_width;
 			screen->restore_y = wm_attrs.y + wm_attrs.border_width;
-			screen->restore_width = vshell_attrs.width;
-			screen->restore_height = vshell_attrs.height;
+			screen->restore_width = (unsigned) vshell_attrs.width;
+			screen->restore_height = (unsigned) vshell_attrs.height;
 			TRACE(("HandleMaximize: save window position %d,%d size %d,%d\n",
 			       screen->restore_x,
 			       screen->restore_y,
@@ -1190,9 +1236,11 @@ RequestMaximize(XtermWidget termw, int maximize)
 		    }
 
 		    /* subtract wm decoration dimensions */
-		    root_width -= ((wm_attrs.width - vshell_attrs.width)
-				   + (wm_attrs.border_width * 2));
-		    root_height -= ((wm_attrs.height - vshell_attrs.height)
+		    root_width -=
+			(unsigned) ((wm_attrs.width - vshell_attrs.width)
+				    + (wm_attrs.border_width * 2));
+		    root_height -=
+			(unsigned) ((wm_attrs.height - vshell_attrs.height)
 				    + (wm_attrs.border_width * 2));
 
 		    XMoveResizeWindow(screen->display, VShellWindow,
@@ -1224,25 +1272,29 @@ RequestMaximize(XtermWidget termw, int maximize)
 
 /*ARGSUSED*/
 void
-HandleMaximize(Widget gw,
+HandleMaximize(Widget w,
 	       XEvent * event GCC_UNUSED,
 	       String * params GCC_UNUSED,
 	       Cardinal *nparams GCC_UNUSED)
 {
-    if (IsXtermWidget(gw)) {
-	RequestMaximize((XtermWidget) gw, 1);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	RequestMaximize(xw, 1);
     }
 }
 
 /*ARGSUSED*/
 void
-HandleRestoreSize(Widget gw,
+HandleRestoreSize(Widget w,
 		  XEvent * event GCC_UNUSED,
 		  String * params GCC_UNUSED,
 		  Cardinal *nparams GCC_UNUSED)
 {
-    if (IsXtermWidget(gw)) {
-	RequestMaximize((XtermWidget) gw, 0);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	RequestMaximize(xw, 0);
     }
 }
 #endif /* OPT_MAXIMIZE */
@@ -2342,20 +2394,20 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
     switch (mode) {
     case 0:			/* new icon name and title */
-	ChangeIconName(buf);
-	ChangeTitle(buf);
+	ChangeIconName(xw, buf);
+	ChangeTitle(xw, buf);
 	break;
 
     case 1:			/* new icon name only */
-	ChangeIconName(buf);
+	ChangeIconName(xw, buf);
 	break;
 
     case 2:			/* new title only */
-	ChangeTitle(buf);
+	ChangeTitle(xw, buf);
 	break;
 
     case 3:			/* change X property */
-	if (screen->allowWindowOps)
+	if (AllowWindowOps(xw))
 	    ChangeXprop(buf);
 	break;
 #if OPT_ISO_COLORS
@@ -2409,7 +2461,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
     case 50:
 #if OPT_SHIFT_FONTS
-	if (!screen->allowFontOps && xw->misc.shift_fonts) {
+	if (!AllowFontOps(xw) && xw->misc.shift_fonts) {
 	    ;			/* disabled via resource or control-sequence */
 	} else if (buf != 0 && !strcmp(buf, "?")) {
 	    int num = screen->menu_font_number;
@@ -2482,7 +2534,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
 #if OPT_PASTE64
     case 52:
-	if (screen->allowWindowOps)
+	if (AllowWindowOps(xw))
 	    ManipulateSelectionData(xw, screen, buf, final);
 	break;
 #endif
@@ -2701,7 +2753,7 @@ static void
 parse_ansi_params(ANSI * params, char **string)
 {
     char *cp = *string;
-    short nparam = 0;
+    ParmType nparam = 0;
 
     memset(params, 0, sizeof(*params));
     while (*cp != '\0') {
@@ -2841,7 +2893,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 #if OPT_TCAP_QUERY
     case '+':
 	cp++;
-	if ((*cp == 'q') && screen->allowTcapOps) {
+	if ((*cp == 'q') && AllowTcapOps(xw)) {
 	    Bool fkey;
 	    unsigned state;
 	    int code;
@@ -2934,7 +2986,7 @@ udk_lookup(int keycode, int *len)
 }
 
 static void
-ChangeGroup(String attribute, char *value)
+ChangeGroup(XtermWidget xw, String attribute, char *value)
 {
 #if OPT_WIDE_CHARS
     static Char *converted;	/* NO_LEAKS */
@@ -2944,7 +2996,7 @@ ChangeGroup(String attribute, char *value)
     Arg args[1];
     char *original = (value != 0) ? value : empty;
     char *name = original;
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
     Widget w = CURRENT_EMU();
     Widget top = SHELL_OF(w);
     unsigned limit = strlen(name);
@@ -2953,7 +3005,7 @@ ChangeGroup(String attribute, char *value)
 
     TRACE(("ChangeGroup(attribute=%s, value=%s)\n", attribute, name));
 
-    if (!screen->allowTitleOps)
+    if (!AllowTitleOps(xw))
 	return;
 
     /*
@@ -3020,7 +3072,7 @@ ChangeGroup(String attribute, char *value)
 
 #if OPT_WIDE_CHARS
     if (xtermEnvUTF8()) {
-	Display *dpy = XtDisplay(term);
+	Display *dpy = XtDisplay(xw);
 	Atom my_atom;
 
 	const char *propname = (!strcmp(attribute, XtNtitle)
@@ -3044,12 +3096,12 @@ ChangeGroup(String attribute, char *value)
 }
 
 void
-ChangeIconName(char *name)
+ChangeIconName(XtermWidget xw, char *name)
 {
     if (name == 0)
 	name = "";
 #if OPT_ZICONBEEP		/* If warning should be given then give it */
-    if (resource.zIconBeep && term->screen.zIconBeep_flagged) {
+    if (resource.zIconBeep && xw->screen.zIconBeep_flagged) {
 	char *newname = CastMallocN(char, strlen(name) + 4);
 	if (!newname) {
 	    fprintf(stderr, "malloc failed in ChangeIconName\n");
@@ -3057,17 +3109,17 @@ ChangeIconName(char *name)
 	}
 	strcpy(newname, "*** ");
 	strcat(newname, name);
-	ChangeGroup(XtNiconName, newname);
+	ChangeGroup(xw, XtNiconName, newname);
 	free(newname);
     } else
 #endif /* OPT_ZICONBEEP */
-	ChangeGroup(XtNiconName, name);
+	ChangeGroup(xw, XtNiconName, name);
 }
 
 void
-ChangeTitle(char *name)
+ChangeTitle(XtermWidget xw, char *name)
 {
-    ChangeGroup(XtNtitle, name);
+    ChangeGroup(xw, XtNtitle, name);
 }
 
 #define Strlen(s) strlen((char *)(s))
@@ -3875,4 +3927,26 @@ xtermVersion(void)
 	}
     }
     return result;
+}
+
+/*
+ * Check if the current widget, or any parent, is the VT100 "xterm" widget.
+ */
+XtermWidget
+getXtermWidget(Widget w)
+{
+    XtermWidget xw;
+
+    if (w == 0) {
+	xw = (XtermWidget) CURRENT_EMU();
+	if (!IsXtermWidget(xw)) {
+	    xw = 0;
+	}
+    } else if (IsXtermWidget(w)) {
+	xw = (XtermWidget) w;
+    } else {
+	xw = getXtermWidget(XtParent(w));
+    }
+    TRACE(("getXtermWidget %p -> %p\n", w, xw));
+    return xw;
 }

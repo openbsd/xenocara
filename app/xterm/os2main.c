@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.256 2008/09/14 19:37:07 tom Exp $ */
+/* $XTermId: os2main.c,v 1.257 2009/01/24 16:24:36 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -313,6 +313,9 @@ static XtResource application_resources[] =
 #if OPT_TOOLBAR
     Bres(XtNtoolBar, XtCToolBar, toolBar, True),
 #endif
+#if OPT_MAXIMIZE
+    Bres(XtNmaximized, XtCMaximized, maximized, False),
+#endif
 };
 
 static char *fallback_resources[] =
@@ -505,6 +508,10 @@ static XrmOptionDescRec optionDescList[] = {
 {"-tb",		"*"XtNtoolBar,	XrmoptionNoArg,		(caddr_t) "on"},
 {"+tb",		"*"XtNtoolBar,	XrmoptionNoArg,		(caddr_t) "off"},
 #endif
+#if OPT_MAXIMIZE
+{"-maximized",	"*maximized",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+maximized",	"*maximized",	XrmoptionNoArg,		(caddr_t) "off"},
+#endif
 /* options that we process ourselves */
 {"-help",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
 {"-version",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
@@ -668,6 +675,9 @@ static OptionHelp xtermOptions[] = {
 #endif
 #if OPT_SESSION_MGT
 { "-/+sm",                 "turn on/off the session-management support" },
+#endif
+#if OPT_MAXIMIZE
+{"-/+maximized",           "turn on/off maxmize on startup" },
 #endif
 { NULL, NULL }};
 /* *INDENT-ON* */
@@ -860,6 +870,22 @@ save_callback(Widget w GCC_UNUSED,
     /* we have nothing to save */
     token->save_success = True;
 }
+
+static void
+icewatch(IceConn iceConn,
+	 IcePointer clientData GCC_UNUSED,
+	 Bool opening,
+	 IcePointer * watchData GCC_UNUSED)
+{
+    if (opening) {
+	ice_fd = IceConnectionNumber(iceConn);
+	TRACE(("got IceConnectionNumber %d\n", ice_fd));
+    } else {
+	ice_fd = -1;
+	TRACE(("reset IceConnectionNumber\n"));
+    }
+}
+
 #endif /* OPT_SESSION_MGT */
 
 /*
@@ -1010,6 +1036,7 @@ main(int argc, char **argv ENVP_ARG)
 				 &argc, argv, fallback_resources,
 				 sessionShellWidgetClass,
 				 NULL, 0);
+    IceAddConnectionWatch(icewatch, NULL);
 #else
     toplevel = XtAppInitialize(&app_con, my_class,
 			       optionDescList,
@@ -1163,6 +1190,7 @@ main(int argc, char **argv ENVP_ARG)
 
     screen = TScreenOf(term);
     screen->inhibit = 0;
+
 #ifdef ALLOWLOGGING
     if (term->misc.logInhibit)
 	screen->inhibit |= I_LOG;
@@ -1182,7 +1210,7 @@ main(int argc, char **argv ENVP_ARG)
 	TEK4014_ACTIVE(term) = False;
 
     if (TEK4014_ACTIVE(term) && !TekInit())
-	exit(ERROR_INIT);
+	SysError(ERROR_INIT);
 #endif
 
     /*
@@ -1243,7 +1271,7 @@ main(int argc, char **argv ENVP_ARG)
 	    c[1 + u] = "--";
 	    command_to_exec_with_luit = c;
 	} else {
-	    static char *luit[4];
+	    static char *luit[6];
 	    luit[0] = term->misc.localefilter;
 	    if (u) {
 		luit[1] = "-encoding";
@@ -1351,6 +1379,10 @@ main(int argc, char **argv ENVP_ARG)
 	ReverseVideo(term);
 #endif /* OPT_COLOR_RES */
 
+#if OPT_MAXIMIZE
+    if (resource.maximized)
+	RequestMaximize(term, True);
+#endif
     for (;;) {
 #if OPT_TEK4014
 	if (TEK4014_ACTIVE(term))
@@ -1798,6 +1830,7 @@ spawnXTerm(XtermWidget xw)
 	    xtermSetenv("DISPLAY", XDisplayString(screen->display));
 
 	    xtermSetenv("XTERM_VERSION", xtermVersion());
+	    xtermSetenv("XTERM_LOCALE", xtermEnvLocale());
 
 	    signal(SIGTERM, SIG_DFL);
 
@@ -1818,6 +1851,8 @@ spawnXTerm(XtermWidget xw)
 	    (void) xtermResetIds(screen);
 
 	    if (handshake.rows > 0 && handshake.cols > 0) {
+		TRACE(("handshake ttysize: %dx%d\n",
+		       handshake.rows, handshake.cols));
 		set_max_row(screen, handshake.rows);
 		set_max_col(screen, handshake.cols);
 		TTYSIZE_ROWS(ts) = MaxRows(screen);
@@ -1955,6 +1990,45 @@ Exit(int n)
 	set_owner(ttydev, 0, 0, 0666U);
 	set_owner(ptydev, 0, 0, 0666U);
     }
+
+    /*
+     * Close after releasing ownership to avoid race condition: other programs 
+     * grabbing it, and *then* having us release ownership....
+     */
+    close(screen->respond);	/* close explicitly to avoid race with slave side */
+#ifdef ALLOWLOGGING
+    if (screen->logging)
+	CloseLog(screen);
+#endif
+
+#ifdef NO_LEAKS
+    if (n == 0) {
+	TRACE(("Freeing memory leaks\n"));
+	if (term != 0) {
+	    Display *dpy = term->screen.display;
+
+	    if (toplevel) {
+		XtDestroyWidget(toplevel);
+		TRACE(("destroyed top-level widget\n"));
+	    }
+	    sortedOpts(0, 0, 0);
+	    noleaks_charproc();
+	    noleaks_ptydata();
+#if OPT_WIDE_CHARS
+	    noleaks_CharacterClass();
+#endif
+	    /* XrmSetDatabase(dpy, 0); increases leaks ;-) */
+	    XtCloseDisplay(dpy);
+	    XtDestroyApplicationContext(app_con);
+#if OPT_SESSION_MGT
+	    IceRemoveConnectionWatch(icewatch, NULL);
+#endif
+	    TRACE(("closed display\n"));
+	}
+	TRACE((0));
+    }
+#endif
+
     exit(n);
     SIGNAL_RETURN;
 }

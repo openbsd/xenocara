@@ -1,4 +1,4 @@
-/* $XTermId: wcwidth.c,v 1.21 2007/06/13 00:14:29 tom Exp $ */
+/* $XTermId: wcwidth.c,v 1.22 2009/02/13 19:53:12 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/wcwidth.c,v 1.9 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -190,7 +190,7 @@ int mk_wcwidth(wchar_t ucs)
 
   /* binary search in table of non-spacing characters */
   if (bisearch(cmp, combining,
-               sizeof(combining) / sizeof(struct interval) - 1))
+               (int) (sizeof(combining) / sizeof(struct interval) - 1)))
     return 0;
 
   /* if we arrive here, cmp is not a combining or C0/C1 control character */
@@ -310,7 +310,7 @@ int mk_wcwidth_cjk(wchar_t ucs)
 
   /* binary search in table of non-spacing characters */
   if (bisearch((unsigned long) ucs, ambiguous,
-               sizeof(ambiguous) / sizeof(struct interval) - 1))
+               (int) (sizeof(ambiguous) / sizeof(struct interval) - 1)))
     return 2;
 
   return mk_wcwidth(ucs);

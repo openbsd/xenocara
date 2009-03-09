@@ -1,8 +1,8 @@
-/* $XTermId: doublechr.c,v 1.60 2008/01/27 15:07:16 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.64 2009/02/12 01:23:54 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2007,2008 by Thomas E. Dickey
+Copyright 1997-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -55,8 +55,8 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
     register TScreen *screen = &xw->screen;
     int curcol = screen->cur_col;
     int currow = screen->cur_row;
-    unsigned len = MaxCols(screen);
-    int width = len;
+    int width = MaxCols(screen);
+    unsigned len = (unsigned) width;
     unsigned oldChrSet = SCRN_BUF_CSETS(screen, currow)[0];
 
     assert(width > 0);
@@ -89,7 +89,7 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
 		       CursorY(screen, currow),
 		       CurCursorX(screen, currow, 0),
 		       (unsigned) FontHeight(screen),
-		       len * CurFontWidth(screen, currow));
+		       len * (unsigned) CurFontWidth(screen, currow));
 
     /* FIXME: do VT220 softchars allow double-sizes? */
     memset(SCRN_BUF_CSETS(screen, currow), (Char) newChrSet, len);
@@ -263,12 +263,13 @@ xterm_DoubleGC(XtermWidget xw,
 	    temp.chrset = chrset;
 	    temp.flags = (flags & BOLD);
 
-	    if (!xtermOpenFont(xw, name, &temp)) {
+	    if (!xtermOpenFont(xw, name, &temp, fwAlways, False)) {
 		/* Retry with * in resolutions */
 		char *nname = xtermSpecialFont(screen, flags | NORESOLUTION, chrset);
 
 		if (nname != 0) {
-		    found = xtermOpenFont(xw, nname, &temp);
+		    found = (Boolean) xtermOpenFont(xw, nname, &temp,
+						    fwAlways, False);
 		    free(nname);
 		}
 	    } else {

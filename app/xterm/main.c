@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.588 2008/09/14 15:20:31 Paul.Lampert Exp $ */
+/* $XTermId: main.c,v 1.589 2009/01/24 16:08:01 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -15,7 +15,7 @@
 
 /***********************************************************
 
-Copyright 2002-2007,2008 by Thomas E. Dickey
+Copyright 2002-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -888,6 +888,9 @@ static XtResource application_resources[] =
 #if OPT_TOOLBAR
     Bres(XtNtoolBar, XtCToolBar, toolBar, True),
 #endif
+#if OPT_MAXIMIZE
+    Bres(XtNmaximized, XtCMaximized, maximized, False),
+#endif
 };
 
 static char *fallback_resources[] =
@@ -1080,6 +1083,10 @@ static XrmOptionDescRec optionDescList[] = {
 {"-tb",		"*"XtNtoolBar,	XrmoptionNoArg,		(caddr_t) "on"},
 {"+tb",		"*"XtNtoolBar,	XrmoptionNoArg,		(caddr_t) "off"},
 #endif
+#if OPT_MAXIMIZE
+{"-maximized",	"*maximized",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+maximized",	"*maximized",	XrmoptionNoArg,		(caddr_t) "off"},
+#endif
 /* options that we process ourselves */
 {"-help",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
 {"-version",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
@@ -1251,6 +1258,9 @@ static OptionHelp xtermOptions[] = {
 #endif
 #if OPT_SESSION_MGT
 { "-/+sm",                 "turn on/off the session-management support" },
+#endif
+#if OPT_MAXIMIZE
+{"-/+maximized",           "turn on/off maxmize on startup" },
 #endif
 { NULL, NULL }};
 /* *INDENT-ON* */
@@ -2396,6 +2406,10 @@ main(int argc, char *argv[]ENVP_ARG)
 	ReverseVideo(term);
 #endif /* OPT_COLOR_RES */
 
+#if OPT_MAXIMIZE
+    if (resource.maximized)
+	RequestMaximize(term, True);
+#endif
     for (;;) {
 #if OPT_TEK4014
 	if (TEK4014_ACTIVE(term))

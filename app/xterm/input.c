@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.303 2009/01/08 23:28:36 tom Exp $ */
+/* $XTermId: input.c,v 1.304 2009/01/26 00:09:29 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -354,10 +354,10 @@ allowModifierParm(XtermWidget xw, KEY_DATA * kd)
 #define MODIFIER_NAME(parm, name) \
 	(((parm > UNMOD) && ((parm - UNMOD) & name)) ? " "#name : "")
 
-int
+unsigned
 xtermParamToState(XtermWidget xw, unsigned param)
 {
-    int result = 0;
+    unsigned result = 0;
 #if OPT_NUM_LOCK
     if (param > UNMOD
 	&& ((ShiftMask
@@ -386,10 +386,10 @@ xtermParamToState(XtermWidget xw, unsigned param)
     return result;
 }
 
-int
+unsigned
 xtermStateToParam(XtermWidget xw, unsigned state)
 {
-    int modify_parm = UNMOD;
+    unsigned modify_parm = UNMOD;
 
 #if OPT_NUM_LOCK
     if ((state & xw->misc.other_mods) == 0) {
@@ -532,7 +532,7 @@ static Bool
 ModifyOtherKeys(XtermWidget xw,
 		unsigned state,
 		KEY_DATA * kd,
-		int modify_parm)
+		unsigned modify_parm)
 {
     TKeyboard *keyboard = &(xw->keyboard);
     Bool result = False;
@@ -642,8 +642,8 @@ ModifyOtherKeys(XtermWidget xw,
 }
 
 #define APPEND_PARM(number) \
-	    reply->a_param[(int) reply->a_nparam] = number, \
-	    reply->a_nparam += 1
+	    reply->a_param[reply->a_nparam] = (ParmType) number; \
+	    reply->a_nparam++
 
 /*
  * Function-key code 27 happens to not be used in the vt220-style encoding.
@@ -652,7 +652,7 @@ ModifyOtherKeys(XtermWidget xw,
  * for more information.
  */
 static Bool
-modifyOtherKey(ANSI * reply, int input_char, int modify_parm, int format_keys)
+modifyOtherKey(ANSI * reply, int input_char, unsigned modify_parm, int format_keys)
 {
     Bool result = False;
 
@@ -675,7 +675,7 @@ modifyOtherKey(ANSI * reply, int input_char, int modify_parm, int format_keys)
 }
 
 static void
-modifyCursorKey(ANSI * reply, int modify, int *modify_parm)
+modifyCursorKey(ANSI * reply, int modify, unsigned *modify_parm)
 {
     if (*modify_parm > 1) {
 	if (modify < 0) {
@@ -758,8 +758,8 @@ TranslateFromSUNPC(KeySym keysym)
 
 #undef  APPEND_PARM
 #define APPEND_PARM(number) \
-	    reply.a_param[(int) reply.a_nparam] = number, \
-	    reply.a_nparam += 1
+	    reply.a_param[reply.a_nparam] = (ParmType) number, \
+	    reply.a_nparam++
 
 #if OPT_MOD_FKEYS
 #define MODIFIER_PARM \
@@ -812,7 +812,7 @@ Input(XtermWidget xw,
     int key = False;
     ANSI reply;
     int dec_code;
-    int modify_parm = 0;
+    unsigned modify_parm = 0;
     int keypad_mode = ((keyboard->flags & MODE_DECKPAM) != 0);
     unsigned evt_state = event->state;
     unsigned mod_state;
@@ -1158,7 +1158,7 @@ Input(XtermWidget xw,
 		}
 		MODIFIER_PARM;
 #endif
-		reply.a_param[0] = dec_code;
+		reply.a_param[0] = (ParmType) dec_code;
 		reply.a_final = '~';
 	    }
 	    if (reply.a_final != 0
@@ -1582,7 +1582,7 @@ static void
 sunfuncvalue(ANSI * reply, KEY_DATA * kd)
 {
 #if OPT_SUN_FUNC_KEYS
-    int result;
+    ParmType result;
 
     if (kd->is_fkey) {
 	switch (kd->keysym) {
@@ -1873,7 +1873,7 @@ VTInitModifiers(XtermWidget xw)
 	XDisplayKeycodes(dpy, &min_keycode, &max_keycode);
 	keycode_count = (max_keycode - min_keycode + 1);
 	theMap = XGetKeyboardMapping(dpy,
-				     min_keycode,
+				     (KeyCode) min_keycode,
 				     keycode_count,
 				     &keysyms_per_keycode);
 

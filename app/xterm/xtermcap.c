@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.14 2008/10/05 16:43:36 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.15 2009/01/26 00:10:15 tom Exp $ */
 
 /*
- * Copyright 2007,2008 by Thomas E. Dickey
+ * Copyright 2007-2008,2009 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -275,7 +275,7 @@ xtermcapKeycode(XtermWidget xw, char **params, unsigned *state, Bool * fkey)
     for (p = *params; hex2int(p[0]) >= 0 && hex2int(p[1]) >= 0; p += 2) {
 	if (len >= MAX_TNAME_LEN)
 	    break;
-	name[len++] = (hex2int(p[0]) << 4) + hex2int(p[1]);
+	name[len++] = (char) ((hex2int(p[0]) << 4) + hex2int(p[1]));
     }
     name[len] = 0;
     *params = p;

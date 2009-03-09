@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.80 2008/04/20 22:41:25 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.81 2009/01/26 00:22:33 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/ptydata.c,v 1.25 2006/02/13 01:14:59 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1999-2007,2008 by Thomas E. Dickey
+Copyright 1999-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -305,7 +305,7 @@ switchPtyData(TScreen * screen, int flag)
 {
     if (screen->utf8_mode != flag) {
 	screen->utf8_mode = flag;
-	screen->utf8_inparse = (flag != 0);
+	screen->utf8_inparse = (Boolean) (flag != 0);
 
 	TRACE(("turning UTF-8 mode %s\n", BtoS(flag)));
 	update_font_utf8_mode();
@@ -334,7 +334,7 @@ initPtyData(PtyData ** result)
     TRACE(("initPtyData using minBufSize %d, maxBufSize %d\n",
 	   FRG_SIZE, BUF_SIZE));
 
-    data = (PtyData *) XtMalloc(sizeof(*data) + BUF_SIZE + FRG_SIZE);
+    data = (PtyData *) XtMalloc(sizeof(*data) + (unsigned) (BUF_SIZE + FRG_SIZE));
 
     memset(data, 0, sizeof(*data));
     data->next = data->buffer;
@@ -413,14 +413,14 @@ Char *
 convertToUTF8(Char * lp, unsigned c)
 {
     if (c < 0x80) {		/*  0*******  */
-	*lp++ = (c);
+	*lp++ = (Char) (c);
     } else if (c < 0x800) {	/*  110***** 10******  */
-	*lp++ = (0xc0 | (c >> 6));
-	*lp++ = (0x80 | (c & 0x3f));
+	*lp++ = (Char) (0xc0 | (c >> 6));
+	*lp++ = (Char) (0x80 | (c & 0x3f));
     } else {			/*  1110**** 10****** 10******  */
-	*lp++ = (0xe0 | (c >> 12));
-	*lp++ = (0x80 | ((c >> 6) & 0x3f));
-	*lp++ = (0x80 | (c & 0x3f));
+	*lp++ = (Char) (0xe0 | (c >> 12));
+	*lp++ = (Char) (0x80 | ((c >> 6) & 0x3f));
+	*lp++ = (Char) (0x80 | (c & 0x3f));
     }
     /*
      * UTF-8 is defined for words of up to 31 bits, but we need only 16
@@ -444,7 +444,7 @@ writePtyData(int f, IChar * d, unsigned len)
     }
 
     for (n = 0; n < len; n++)
-	VTbuffer->write_buf[n] = d[n];
+	VTbuffer->write_buf[n] = (Char) d[n];
 
     TRACE(("writePtyData %d:%s\n", n,
 	   visibleChars(PAIRED_CHARS(VTbuffer->write_buf, 0), n)));
