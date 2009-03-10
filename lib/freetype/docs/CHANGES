@@ -1,3 +1,76 @@
+CHANGES BETWEEN 2.3.8 and 2.3.7
+
+  I. IMPORTANT BUG FIXES
+
+    - CID-keyed fonts in an SFNT wrapper were not handled correctly.
+
+    - The smooth renderer produced truncated images (on the right) for
+      outline parts with negative horizontal values.  Most fonts don't
+      contain outlines left  to the y coordinate axis, but  the effect
+      was very noticeable for outlines processed with FT_Glyph_Stroke,
+      using thick strokes.
+
+    - `FT_Get_TrueType_Engine_Type'  returned a  wrong  value if  both
+      configuration  macros  TT_CONFIG_OPTION_BYTECODE_INTERPRETER and
+      TT_CONFIG_OPTION_UNPATENTED_HINTING were defined.
+
+    - The  `face_index'  field  in   the  `FT_Face'  structure  wasn't
+      initialized properly after calling FT_Open_Face and friends with
+      a positive face index for CFFs,  WinFNTs, and, most importantly,
+      for TrueType Collections (TTCs).
+
+
+  II. IMPORTANT CHANGES
+
+    - Rudimentary support for Type 1  fonts and CID-keyed Type 1 fonts
+      in an SFNT wrapper has been  added -- such fonts are used on the
+      Mac.  The core  SFNT tables `TYP1' and `CID '  are passed to the
+      PS Type 1  and CID-keyed PS font drivers;  other tables (`ALMX',
+      `BBOX', etc.) are not supported yet.
+
+    - A  new interface  to extract  advance values  of glyphs  without
+      loading their outlines has been added.  The functions are called
+      `FT_Get_Advance' and `FT_Get_Advances'; they are defined in file
+      `ftadvanc.h' (to be accessed as FT_ADVANCES_H).
+
+    - A new function `FT_Get_FSType_Flags' (in FT_FREETYPE_H) has been
+      contributed  by   David  Bevan  to  access   the  embedding  and
+      subsetting restriction information of fonts.
+
+
+  III. MISCELLANEOUS
+
+    - FT_MulFix is now an inlined function; by default, assembler code
+      is provided for x86 and ARM.  See FT_CONFIG_OPTION_INLINE_MULFIX
+      and FT_CONFIG_OPTION_NO_ASSEMBLER (in ftoption.h) for more.
+
+    - The handling of `tricky' fonts  (this is, fonts which don't work
+      with the  autohinter, needing the font  format's hinting engine)
+      has been generalized and changed slightly:
+
+      . A new  face flag  FT_FACE_FLAG_TRICKY indicates that  the font
+        format's  hinting engine is  necessary for  correct rendering.
+        The macro FT_IS_TRICKY can be used to check this flag.
+
+      . FT_LOAD_NO_HINTING is now ignored for tricky fonts.  To really
+        force  raw  loading  of  such fonts  (without  hinting),  both
+        FT_LOAD_NO_HINTING  and FT_LOAD_NO_AUTOHINT  must  be used  --
+        this is something which you probably never want to do.
+
+      . Tricky  TrueType fonts  always use  the  bytecode interpreter,
+        either the patented or unpatented version.
+
+    - The  function  `FT_GlyphSlot_Own_Bitmap'  has  been  moved  from
+      FT_SYNTHESIS_H to FT_BITMAP_H; it  is now part of the `official'
+      API.   (The functions  in  FT_SYNTHESIS_H are  still subject  to
+      change, however.)
+
+    - In the  `ftdiff'  demo  program you  can now  toggle the  use of
+      FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH with key `a'.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.3.7 and 2.3.6
 
   I. IMPORTANT BUG FIXES
@@ -3167,7 +3240,7 @@ Extensions support:
 
 ------------------------------------------------------------------------
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by
+Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file  is  part  of the  FreeType  project, and may  only be  used,
