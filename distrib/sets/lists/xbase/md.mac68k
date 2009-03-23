@@ -81,7 +81,7 @@
 ./usr/X11R6/lib/libdrm_pic.a
 ./usr/X11R6/lib/libfontconfig.so.5.1
 ./usr/X11R6/lib/libfontenc.so.3.0
-./usr/X11R6/lib/libfreetype.so.16.1
+./usr/X11R6/lib/libfreetype.so.16.2
 ./usr/X11R6/lib/libfreetype_pic.a
 ./usr/X11R6/lib/liblbxutil.so.1.0
 ./usr/X11R6/lib/libpciaccess.so.0.10

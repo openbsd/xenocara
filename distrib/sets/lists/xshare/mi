@@ -595,6 +595,7 @@
 ./usr/X11R6/include/freetype2/freetype/config/ftoption.h
 ./usr/X11R6/include/freetype2/freetype/config/ftstdlib.h
 ./usr/X11R6/include/freetype2/freetype/freetype.h
+./usr/X11R6/include/freetype2/freetype/ftadvanc.h
 ./usr/X11R6/include/freetype2/freetype/ftbbox.h
 ./usr/X11R6/include/freetype2/freetype/ftbdf.h
 ./usr/X11R6/include/freetype2/freetype/ftbitmap.h
@@ -1640,6 +1641,7 @@
 ./usr/X11R6/man/man3/XSaveContext.3
 ./usr/X11R6/man/man3/XScreenNumberOfScreen.3
 ./usr/X11R6/man/man3/XScreenResourceString.3
+./usr/X11R6/man/man3/XScreenSaver.3
 ./usr/X11R6/man/man3/XScreenSaverAllocInfo.3
 ./usr/X11R6/man/man3/XScreenSaverGetRegistered.3
 ./usr/X11R6/man/man3/XScreenSaverQueryExtension.3
