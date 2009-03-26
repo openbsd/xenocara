@@ -22,9 +22,14 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-siliconmotion],
-        1.6.0,
+        1.7.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-siliconmotion)
+
+# Require xorg-macros version 1.2 or newer for XORG_CWARNFLAGS and
+# XORG_CHANGELOG macros
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2.1 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.2.1)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
@@ -63,6 +68,8 @@ CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
 AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
               [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
               [#include "xorg-server.h"])
+AC_CHECK_HEADER(xf86Modes.h,
+		[XMODES=yes], [XMODES=no], [#include "xorg-server.h"])
 CPPFLAGS="$SAVE_CPPFLAGS"
 
 # Checks for header files.
@@ -73,7 +80,14 @@ if test "x$XSERVER_LIBPCIACCESS" = xyes; then
     XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
 fi
 AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
+AM_CONDITIONAL(XMODES, test "x$XMODES" = xyes)
 
+if test "x$XMODES" = xyes; then
+    AC_DEFINE(HAVE_XMODES, 1, [X server has new mode code])
+fi
+
+XORG_CWARNFLAGS
+XORG_CFLAGS="$CWARNFLAGS $XORG_CFLAGS"
 AC_SUBST([XORG_CFLAGS])
 AC_SUBST([moduledir])
 
@@ -82,6 +96,7 @@ AC_SUBST([DRIVER_NAME])
 
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
+XORG_CHANGELOG
 
 AC_OUTPUT([
 	Makefile

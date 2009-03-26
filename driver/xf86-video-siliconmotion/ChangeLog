@@ -1,68 +1,1945 @@
-2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+commit fdc2c50682b240e5966e4e5a7b45552ee2043bfc
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Dec 29 18:41:05 2008 -0200
 
-	* configure.ac:
-	* src/smi_driver.c:
-	Bump to 1.4.1 for Xv changes.
+    Bump release to 1.7.0.
+    
+      This driver supports smi 50x chipsets, randr 1.2, exa, dual head,
+    etc.
+    
+      Special thanks to Teddy Wang <teddy.wang AT siliconmotion.com.cn>
+    for support and help in responding and/or triaging hardware related
+    questions.
 
-2006-04-07  Aaron Plattner  <aplattner@nvidia.com>
+commit 97eb5da1040ca7882e60b86ffaf25b6c021a3df5
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Dec 29 18:39:54 2008 -0200
 
-	* src/smi_video.c: (SMI_PutVideo), (SMI_PutImage):
-	Add a DrawablePtr argument to the XV functions to pave the way for
-	redirected video.
+    Use util-macros XORG_CHANGELOG and XORG_CWARNFLAGS.
+    
+      Also correct only compilation warning about possibly
+    uninitialized variable.
 
-2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+commit deb2f845dd370ba819d02cb21b8a481827497af6
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Dec 29 18:35:22 2008 -0200
 
-	* configure.ac:
-	* src/smi.h:
-	* src/smi_dga.c:
-	* src/smi_driver.c:
-	* src/smi_i2c.c:
-	* src/smi_shadow.c:
-	Unlibcwrap.  Bump server version requirement.  Bump to 1.4.0.
+    Simplification and redundancy removal in video code.
+    
+      FOURCC_YV12 and FOURCC_I420 handling also was buggy. First it was
+    doing a noop by swapping offset2 and offset3 values twice, and second,
+    swap is not required when using smi 501/502 CSC video.
+      Changed SMI_DisplayVideo0501_CSC() to not set static values to
+    registers in a possible loop, if there is clipping.
 
-2006-02-08  Luc Verhaegen <libv@skynet.be>
+commit 46741589529809c17aa1e9719492a4b623de6ddf
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sat Dec 27 00:52:05 2008 +0100
 
-	* src/smi.h:
-	* src/smi_driver.c: (SMI_PreInit), (SMI_ModeInit):
-	
-	Clean up insane pScrn->clock usage.
+    Some more quirks for the SM712.
+    
+    * Program the MCLK to 157MHz on startup.
+    * Adjust the requested pixel clock if it's near one of the known
+      stable frequencies.
+    * Prefer the clock alternative with post scalar turned on when the
+      denominator is even.
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 439adf4455c651926040eeeec52a092f14f3196b
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Mon Dec 22 17:28:35 2008 +0100
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    Add support for clone mode on Lynx chipsets.
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 2b3fa385a6da4be5ad6719dd115834b96d1ea3e3
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sun Dec 21 19:37:14 2008 +0100
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Add a CRTC/Output implementation using BIOS for modesetting.
+    
+    After the RandR1.2 implementation the "UseBIOS" option wasn't actually
+    programming the hardware through VESA BIOS, this brings back that
+    functionality.
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 75b1c309f1418d70e8cf112744ff95f372d4ef75
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sun Dec 21 16:58:29 2008 +0100
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    Fix SMI_CrtcShadowAllocate.
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 068de9c0a302aba21e4d6a27eb6d330375ff2d2f
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sun Dec 21 16:02:57 2008 +0100
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Allocate crtc->funcs and output->funcs in the heap.
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 373440667636d4e3214028710e33ac89d8f18ff1
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sun Dec 21 13:51:01 2008 +0100
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    Cleanup the Lynx register saving/restoring code.
+    
+    Save some registers not previously tracked, and use pSmi->mode instead
+    of continuously reading the hardware state.
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit 67a1e4b090d6647b6c45f1534c67d9ea8a223d44
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sat Dec 20 15:41:13 2008 +0100
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    Add some quirks for SM712 modesetting.
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 7f252345c0c6b260c5b37aff98a22679eb5c6c82
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Dec 19 21:15:01 2008 -0200
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    Enable the SMI 501/502 command list interpreter in a "debug" build.
+    
+      To enable it, set SMI501_CLI_DEBUG to 1 in smi.h, and use
+    Option "AcellMethod "EXA"
+    in the Device section of /etc/X11/xorg.conf
+    This code is enabled mainly for debug purposes. To make if have an
+    actual performance gain (like when using a sm50x with a "low profile"
+    "main" processor") it should be required to actually do busy loops
+    in kernel mode (and hope the costs of context switch will pay it).
+    In kernel mode it is possible to wait for an interrupt being triggered
+    when the command list is processed, or when the 2d engine is idle.
+    
+      This commit should be functional, but, mainly due to debug messages,
+    should be significantly slower then a build with MI501_CLI_DEBUG
+    defined to 0.
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 6a91bcc111902c45cc75c865893848b7c6c0a0b1
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Dec 18 20:47:24 2008 -0200
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+    Add definitions for the SMI 501/502 "command list interpreter".
+    
+      This also changes some bit operations to use a "bitfield" equivalent
+    one, with named fields, that should make it easier to understand what
+    is being tested.
+    
+      The enum smi_cli_cmd_code in smi_501.h is code that was added to a
+    experimental smi_drm.h, but the hardware only supports basic 2d accel,
+    and to compensate for the extra overhead for maintaining a command
+    list (assuming it worked correctly) it would be required to have a
+    special handling, like calling an ioctl to do the "busy loop" in the
+    kernel (that is, should wait for an irq or a timeout).
+    
+      The problem is that even if waiting for a idle engine before crafting
+    a command, and waiting again after submitting the command, there would
+    be corruption on screen after some time. So, the "busy loop" in the
+    kernel would only be useful if still using direct writes to mmio
+    registers.
+
+commit 5a07709ae41600bc02205753c64d764f11838240
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Tue Dec 16 02:39:49 2008 +0100
+
+    Fix crashes when switching VTs with EXA enabled.
+    
+    Call ModifyPixmapHeader on SMI_EnterVT to update the screen pixmap
+    address tracked by EXA.
+    
+    Set memoryBase in the ExaDriverRec to NULL when switching out: some
+    pixmap could get allocated near the former aperture address and it
+    could be erroneously considered as being in offscreen memory.
+
+commit 47bcfb505886d16ff864f26a9cfa5f43b5da710e
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sat Dec 13 19:13:50 2008 +0100
+
+    Enable linear memory mode on SMI_MapMmio.
+    
+    Set UseBIOS to off by default for SM720. Some improvements on the
+    debugging output.
+
+commit 6f972c9022fc3a315b60246a69399807443d2ca0
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Thu Dec 11 16:21:17 2008 +0100
+
+    Fall back to UseBIOS off when VBEInit fails.
+
+commit 1fc340dcf0abd7fa0837fef2c711aaec4fa8bcb8
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Thu Dec 11 16:18:50 2008 +0100
+
+    Fix XAA SolidFill with 32 bpp framebuffer.
+
+commit dfc4510e8f4adeed520be47621ad429bc2d18f7e
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Thu Dec 4 15:35:22 2008 +0100
+
+    Some corrections on the Lynx modesetting code.
+    
+    This fixes 1280x1024 modes on the VGA output with dual head on.
+    Also, solve a build problem when using -DSMI_DEBUG, as pointed by
+    Richard Schwarting.
+
+commit 6e1d29d19b205eac85b2f83de126ba88501e9b74
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Tue Dec 2 23:43:26 2008 +0100
+
+    Disable screen centering on mode initialization.
+
+commit 695a6066cfe7ad0e568edc596b8704bb9bf8754f
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Sat Dec 13 04:20:20 2008 -0200
+
+    Janitor/maintenance patches.
+    
+    o Define HAVE_XMODES in config.h.
+    o Correct the LEAVE() macro declaration when SMI_DEBUG is defined.
+    o Remove prototype for SMI_DGAInit() if HAVE_XMODES is not defined.
+    o Properly scale value read from sm501 CURRENT_CLOCK register, to
+      print an appropriate message on startup.
+
+commit 191cbd3f8419cc5b428f262607d7a8594e574f67
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Dec 12 15:50:53 2008 -0200
+
+    Unless there is a xorg.conf option, don't modify mclck neither mxclck.
+    
+      The option set_mclck was renamed to just MCLK, and a new MXCLCK option
+    was added for smi501/502 chips.
+      Note that previously, on MSOC chips, the set_mclck option actually
+    changed mxclck, what is now done by the MXCLK option.
+      The manpage was also update to reflect the options usage.
+      A new SMI501_FindMemClock() function was added, as a possible
+    placeholder for choosing alternate clocks when programming MMIO 0x68.
+    But it should be noted that the smi 501 databook says:
+    Miscellaneous Timing
+    	Read/Write MMIO_base + 0x000068
+    	Power-on Default 0x00000000
+    	[...]
+    	5:4 Divider Output Frequency Selection for Second PLL.
+    		00: 336 MHz.
+    		01: 288 MHz.
+    		10: 240 MHz.
+    		11: 192 MHz.
+    while the 502 databook says:
+    	Miscellaneous Timing
+    	Read/Write MMIO_base + 0x000068
+    	Power-on Default 0b0000.00xx.0000.1001.0000.1001.0000.0000
+    	[...]
+    	5:4 Reserved These bits are reserved.
+    but still tells to refer to those bits.
+
+commit a2352ff23787f37530dff68e03028dd78925e4b4
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Nov 28 20:23:11 2008 -0200
+
+    Properly restore console on the smi 501/502.
+    
+      The current kernel framebuffer module expects accelerations registers
+    in the default boot state, otherwise, it will display some corruption,
+    or not correctly clear the screen, among other side effects.
+      Now it should be restoring everything the kernel framebuffer relies
+    on not being modified.
+
+commit 5a65559e12452a47f9848c47cfa6e30cfb871f0b
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Nov 28 19:49:20 2008 -0200
+
+    DGA is dependent on HAVE_XMODES.
+
+commit 06c78cee718a86b1521c1fc1075d08bb9ad257f1
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Nov 25 19:57:05 2008 -0200
+
+    Remove smi_dga.c and polylines code from smi_xaa.c.
+    
+      DGA was also not being properly test to not enable the pSmi fields,
+    but since the dga implementation is very basic, it is better to just
+    remove it (if compiling the sources on pre 1.4 X Server, DGA will be
+    disabled).
+    
+      The polylines code in xmi_xaa.c was already if 0'ed for some time,
+    but it may be reinstantiated to accelerate (back) xaa rotated modes.
+    Currently only randr+exa accelerates rotated modes.
+
+commit 9570cfdc132b0acb1d2b70edc6a3a5a812ef9691
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Nov 25 15:07:39 2008 -0200
+
+    Ensure the engine is idle before switching to a virtual terminal.
+    
+      At least in the smi501/502, it may even completely lock in some special
+    cases (like when there is a browser playing some youtube video).
+      The code in SMI_CloseScreen() was almost identical to SMI_LeaveVT(),
+    so it now just call SMI_Leave() if required.
+
+commit 26ce0b163d9cf44ec1bc1d1bd460887aa5b405a7
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Nov 24 15:15:43 2008 -0200
+
+    Use a single debug macro for leaving functions.
+    
+      The LEAVE() macro, when debug is disabled, now is defined as:
+    <hash>define LEAVE(...)		return __VA_ARGS__
+    This avoids the requirement of a return statement after the LEAVE()
+    macro call, what can be confusing.
+
+commit 2057d7ae05ef269f75a4d53fe5c4914a10856cb1
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Nov 19 16:22:29 2008 -0200
+
+    Declare DGA fields only when not using xf86DiDGAInit.
+
+commit c2e318eaec3ac281457acdca4ea10fa368f646d3
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Nov 17 20:08:49 2008 -0200
+
+    Enable XAA and randr rotated modes.
+    
+      Use the same logic for offscreen memory management as used in
+    smi_video.c. This also makes the functions SMI_AllocateMemory and
+    SMI_FreeMemory no longer static in smi_video.c.
+
+commit ed6aba73259a1412e23a954d6a8dba439ad98a8a
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Nov 14 22:37:56 2008 -0200
+
+    Correct EXA+Randr+rotated mode.
+    
+      The smi 501/502 cannot rotate-blt more than 32 bytes at a time.
+    Patch based on smi's sample smi_shadow.c.
+      XAA + randr + rotated mode currently not supported.
+
+commit 85d118ee288fe7aa32db003bfa322ddf06944bf6
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Nov 14 22:04:17 2008 -0200
+
+    Don't explicitly call the cursor routines.
+    
+      On the MSOC, the hardware cursor was remaining on screen, when using
+    EXA and a randr rotated mode.
+
+commit cd10af22240b9df7c264b15c483d8cc4505ee359
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Nov 14 20:36:09 2008 -0200
+
+    Only compile smi_dga.c when xf86DiDGAInit is not available.
+    
+      Besides reducing driver size, this should make DGA+EXA accelerated.
+
+commit 41ef793b0ed6014ed49bef011259f977833aef5d
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Nov 14 19:24:45 2008 -0200
+
+    Correct regressions in CSCVideo
+    
+      Commit 0870d46718fe4e01953efd63cec46c54140b20f9 broke the clipping
+    code. That has been corrected in this patch. Anyway, the hardware color
+    space conversion should not be hidden down in the driver code, instead
+    it should be usable by external programs as well, instead of having
+    some applications doing it by software.
+
+commit be226bfaad76e7b48e006fe55ebae09b044ba4b7
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Nov 14 16:56:46 2008 -0200
+
+    MSOC: Hide cursor on mode setup when using software cursor.
+    
+      The kernel framebuffer module uses the hw cursor for the console cursor,
+    so the driver must ensure it is hidden when setting a video mode.
+
+commit 5b8583fc2e5626ed98877858158d9687d7c94469
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Nov 14 15:47:52 2008 -0200
+
+    Be more liberal about mode width validation.
+    
+      The code was inherited from first import of latest smi sources, but
+    the driver actually programs a mode, so there is no need to check if
+    there will be a table entry with register contents matching the requested
+    mode.
+
+commit ffb4be763ced82158a3a1d2e06fb0e81815e057b
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Nov 13 20:01:18 2008 -0200
+
+    Don't restore alpha registers, as they are not being modified.
+    
+      Restoring the registers "without need" caused some instability, with
+    random locks.
+
+commit 6b6da04d566ec5b9d723c9f28791c604f76526dd
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Nov 13 19:44:14 2008 -0200
+
+    Changed to use panel plane tl and tr to center modes smaller then panel size.
+    
+      The code is under "<hash>ifdef USE_PANEL_CENTER", as it is buggy, and
+    regardless of value set to right and bottom, it will crop from 0 to
+    mode-width/mode-height, and then display a lot of screen artifacts, due
+    to improper programming. Either way, the CRT in clone mode will display
+    correctly.
+
+commit d2709b1af22a06b24606ec8c01f39f1ca27ca8d3
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Nov 13 18:00:46 2008 -0200
+
+    Enable gamma correction on the MSOC.
+
+commit 0870d46718fe4e01953efd63cec46c54140b20f9
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Nov 11 19:14:36 2008 -0200
+
+    Correct a problem in CSC video on the smi 501/502.
+    
+      This significantly simplify the function SMI_DisplayVideo0501_CSC(),
+    but the real cause of the problem that this patch corrects is that
+    whenever MMIO 0x1000fc bit 24 (Vertical Linear Filter Control)  is
+    set, the last line of the rendered video will display only noisy,
+    regardless of video being rendered 1x1, or scaled up or down.
+
+commit 09644ad3da4cf4c2576532137fdc81156e9c06e6
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Nov 11 15:34:27 2008 -0200
+
+    Disable detection of crt for the smi 501/502.
+    
+      As described by siliconmotion, it does not work on the smi 502.
+    Does it work on older revisions? Keeping <hash>ifdef'ed out for now
+    as it hopefully will be corrected in a newer hardware revision.
+
+commit caac648932df69419b8f86c5793a6b33f5997099
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Nov 11 15:06:15 2008 -0200
+
+    Implement an argb cursor using the alpha layer.
+    
+      The code is <hash>ifdef'ed out by <hash>if SMI_CURSOR_ALPHA_PLANE
+    because the smi 502 hardware is buggy, but it appears to have worked
+    for some older hardware revisions (by looking at code available at
+    ftp.siliconmotion.com.tw).
+      Keeping it at least for now, as it serves as a simple way to reproduce
+    the problems described in smi.h.
+
+commit 61dd360a30c8e530185bc71b134c287ab1cdde2c
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Nov 11 14:47:58 2008 -0200
+
+    Add support for the reading/writing the alpha layer registers.
+
+commit d018ea2272cc1938cc0236eeb210692c1d1fd1df
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Nov 11 14:35:36 2008 -0200
+
+    Correct wrong offset value for secondary hardware cursor.
+    
+      Hardware cursor is still disabled in dual head mode due to some problems,
+    usually when having both panel and crt mapped to the same address, what
+    appears to confuse the "modes" code.
+
+commit f97c57873cd7622c373a394548ed435c1975abbc
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sat Nov 8 21:40:49 2008 +0100
+
+    Remove unused fifo_* options.
+
+commit 418b28028e69d14e74bf673be56123e99103e5bf
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Sat Nov 8 16:04:58 2008 -0200
+
+    Remove the ZoomOnLCD option and update manpage for PCIRetry.
+    
+      ZoomOnLCD controlled if Ctrl/Alt/+ or Ctrl/Alt/- could be used to
+    reprogram the mode on the panel. The option was not used, and now, if
+    different resolutions could be used, it should be advertised by randr.
+    
+      PCIBurst and PCIRetry options are now enabled by default.
+    
+      The fifo_xxx options need a review, as they appear to be associated
+    with the older WaitQueue macro, that did ignore its argument. But these
+    options are not used, and may be removed or reimplemented at some time.
+
+commit bbc38b2a14d748bb9d9e153fcdcb259e5b10bdc8
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Fri Nov 7 16:57:50 2008 +0100
+
+    Update the man page
+    
+    Reflect changes in the configuration options, additional supported
+    chipsets and RandR1.2 interface.
+
+commit 7f8b7535a9a905c1d6c1d89cd1dd4dd506025429
+Author: Nathael Pajani <nathael.pajani@ed3l.fr>
+Date:   Thu Mar 20 07:25:00 2008 -0800
+
+    Bit twelve on CPR00 bitfield is not bit eleven...
+
+commit 98969b1b96244085ff5b0c76d2a463c1e436bcfa
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Nov 6 16:35:15 2008 -0200
+
+    Use the CRT Monitor Detect MSOC register.
+    
+      Probably I misunderstood the usage of this register, as it will always
+    show the same value, regardless of having a crt connected to the "vga"
+    port or not. Only difference is that while the detect bit is set,
+    the crt will be blank. This patch should be more of a placeholder for
+    a possible correction, but it should not cause any side effects, unless
+    the data field can be zero on a valid situation.
+      In my test computer, this field, in base 2 is always 1000000010000100,
+    what doesn't really look like data in rgb 8:8:8...
+
+commit 87a3cc0652666c1796fd56f00810834193f3eca0
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Nov 4 16:38:12 2008 -0200
+
+    Allow setting modes larger then panel for secondary output.
+    
+      Sample usage on sm502:
+    $ DISPLAY=:0 xrandr --output VGA --newmode 1280x1024 109.00 1280 1368 1496 1712  1024 1027 1034 1063 -hsync +vsync
+    $ DISPLAY=:0 xrandr --addmode VGA 1280x1024
+    $ DISPLAY=:0 xrandr --output VGA --mode 1280x1024 --pos 768x176
+      Last command assuming using XAA (with ``Virtual 2048 1024''), so that it
+    will have panel in top-left, and crt in bottom-right.
+
+commit 1d7b9547e1d37601f14410857c22f256e5c74f14
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Nov 4 15:57:12 2008 -0200
+
+    Add CSCVideo option to smi 501/502.
+    
+      This code is an adaptation of SMI sample implementation.
+      CSCVideo is an alternate way to render video, that should reduce memory
+    bandwidth usage, and uses the color space conversion hardware to render
+    video directly to the framebuffer memory.
+      When using randr dual head mode, currently only XAA is supported. As it
+    has a fixed format framebuffer (when using the Virtual xorg.conf option).
+      This patch also ensures that pScrn->displayWidth, pScrn->virtualX and
+    pScrn->virtualY are only changed by the driver when using EXA.
+
+commit 93308d067c93126dd0aba9b718d9e0ba28dde9f4
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Oct 30 19:07:40 2008 -0200
+
+    Make MSOC work with EXA offscreen manager.
+
+commit e5cd9e4640555b9a3d4fab205e4b77faaca89d89
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Oct 30 19:05:40 2008 -0200
+
+      Update memory detection for MSOC.
+    
+      Use "local memory" field of mmio 0x010 and not "system memory", as
+    it uses system memory values whenever there is a choice (just sets
+    bits to zero).
+
+commit 5acf7e22c256637ba7139733cdba1c59557dd7ff
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Oct 30 19:01:54 2008 -0200
+
+      Disable HW cursor in dualhead mode in smi 501/502
+    
+      Other chipsets are doing the same. But this apparently is to circumvent
+    a problem in randr/cursor implementation, that appears to not work very
+    well with hardware that supports two hw cursors, but not argb cursors.
+
+commit c756ed67cbcf5bdd40c300627802d8bcd3d95123
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Oct 29 19:17:54 2008 -0200
+
+      SMI501/502 cursor fixes.
+    
+      Use separate buffers for crt and panel hw cursors.
+      Describe, and workaround a problem with Dualhead and hw cursor enabled.
+    It still has the inconvenient of having a blinking X when exiting the server
+    or switching to a VT; maybe should also save the image currently configured
+    also (and restore on exit), or just disable hw cursor on dual head mode.
+      Also revert change to not initialize video on dualhead. Better to have
+    fully functional video only on panel, that can be resized, then non
+    resizable video..
+
+commit 2671776999a5add36e1aeaad4080bfccedc2b1a5
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Oct 28 19:45:31 2008 -0200
+
+    Update msoc to use randr cursor routines
+    
+      pSmi->IsSecondary was not used, and there should not exist two
+    instances of the driver managing the same card.
+      Macro CHECK_SECONDARY() was dependant on a second instance of the driver
+    for the same card, and also removed.
+      Some rework should still be done in the cursor code, as it sometimes,
+    when displaying different data, will leave the hw cursor visible, while
+    using an argb cursor.
+
+commit 91b5613fb07fec0f319623ca7ec1efd67f04379b
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Tue Oct 28 00:13:55 2008 +0100
+
+    Remove shadowfb based rotation support.
+    
+    Also done some clean up, like removing unused/redundant members of the
+    screen private structure, and removing now unused configuration file
+    options.
+
+commit 0faeddb208d8fade4737be4bcadb8814696bd7b4
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Tue Oct 28 00:06:37 2008 +0100
+
+    Lynx hardware cursor code adapted to the CRTC interfaces.
+
+commit 5d151781515cf2e3af1322ce6ed5f8d871c05791
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Mon Oct 27 23:37:30 2008 +0100
+
+    Changes in the video overlay clipping code.
+    
+    Clip the video to the CRTC viewport by using
+    xf86_crtc_clip_video_helper, and allow XV in
+    dual head mode.
+
+commit 486e92399f09b9d765d03184fe29a32b3bc4ecc5
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Mon Oct 27 23:12:36 2008 +0100
+
+    Simple EXA Composite implementation.
+    
+    * Implementation of the PictOpSrc render operation with a
+      source coordinate transformation through 2D engine rotate-BITBLTs.
+    * Fix EXA Copy and Solid in 24 bpp packed color mode.
+
+commit c0447d33c82829248e642b3156fd9a3c0d0eb709
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Mon Oct 27 22:39:52 2008 +0100
+
+    Some corrections in the CRTC code.
+    
+    * Make screen resizing behave better with XAA.
+    * Move some local variable declarations to the top of
+      the function definition to conform ANSI C.
+    * Make the Lynx panel modesetting code to actually
+      program the panel sync pulse width in dualhead mode.
+    * Also, fix a crash when using libpciaccess
+      (the memory wasn't being unmapped).
+
+commit f2c83671cccc42345bfc9b506365936bbb6b9ef0
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Oct 24 17:55:02 2008 -0200
+
+    Make Dualhead option functional.
+    
+      Slightly change clock selection code to start using 501 compatible values,
+    before checking 502 values, if it is a 502.
+      DPMS for the VGA/second output was being set with bits inverted, that is
+    dpms-on was programmed as dpms-off and vice versa. This was one of the
+    reasons of dual head not working.
+      Corrected wrong vsync programming for the crt. Cut&paste/typo caused
+    programming vsync with hsync values, and thus, never getting the crt
+    to accept the mode being programmed.
+      If adding:
+      Option "Dualhead" "True"
+    to xorg.conf, now you should be able to do things like:
+    $ DISPLAY=:0.0 xrandr --output VGA --right-of LVDS
+    $ DISPLAY=:0.0 xrandr --output VGA --below LVDS
+    and so on.
+      *Iff* there is some way to not have any limitations for video playback,
+    this option should be made default or automatically configured.
+
+commit 1efe36ed5cf5b0931daa915ca3ce231b78168d87
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Oct 22 19:06:06 2008 -0200
+
+    Make UseFBDev option functional again.
+    
+      It is mean't to be a fallback option, that as long as kernel boots
+    in framebuffer mode, the X Server should also work.
+      Correct incorrect value being checked when printing state of Dualhead
+    option.
+      The M value when programming PLL3 is actually an 8 bits integer,
+    so correct it and comments about it.
+
+commit dd083c26de400cee8c67977f46cf90d048b22ff9
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Oct 21 19:41:55 2008 -0200
+
+    Use existing "Dualhead" option in MSOC.
+    
+      If Dualhead is set, it will attempt to use setups that allow different
+    outputs with different contents, instead of crt always cloning panel.
+      Still not fully functional.
+
+commit 197b4231586b9ada1c590a01b8dd7a5fcda936e6
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Oct 21 14:22:01 2008 -0200
+
+    Crt interface corrections.
+    
+      Correct wrong clock calculation for the 501 clock setting, that is used
+    for pre 502 panel interface and crt.
+      Adds a few new programmable fields to MSOCRegRec:crt_display_ctl.
+      Call SMI501_CrtcAdjustFrame() after adjusting a mode, instead of
+    before changing registers.
+
+commit 71990e0beece6e60ffbffccfdf56e5a71641a120
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Oct 20 15:09:09 2008 -0200
+
+    Don't change M1XCLK unless option specified in xorg.conf.
+    
+      Also add more complete description of programmable clocks.
+
+commit 8b7ce66e26113ec5859566e7f3d0fd15d3e29eaa
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Oct 17 18:58:45 2008 -0300
+
+    Update sm502 pll3 programming.
+    
+      Also print the value of sm502 registers (should be a noop on sm501).
+      Added the frequency field to the MSOCRegRec's misc_ctl, as it is
+    a read/write registers, and changing bit 24 may change the logic
+    of pll3 programming (needs clarification with SMI).
+
+commit de1b633f916f4fcaaa95b226a8622d37041c86d4
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Oct 16 15:41:44 2008 -0300
+
+    Revert/modify some RandR changes to reenable XAA.
+    
+      XAA was not initialized anymore in RandR patch, but it is still the
+    default accel method. Also reenable offscreen fb manager.
+      At least on the MSOC OEM sample (using X Server 1.4), needs some more
+    work as EXA is crashing in a call to exaPrepareAccess() when switching
+    to a terminal; this seems to be related to disabling exa offscreen
+    pixmaps on the smi501.
+
+commit e020afa359434b4da06ef8509a3e504423f824d2
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Oct 16 15:11:36 2008 -0300
+
+    Correct incorrect pll3 calculation.
+    
+      Double value must be truncated when calculating the difference from the
+    possible clock and requested clock.
+
+commit f686d1b4fdd11d3d969ff4db21128d7867c9044d
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Oct 14 19:05:31 2008 -0300
+
+    Extra MSOC tweaks for the RandR1.2 changes.
+    
+      The "prototype" computer no longer locks, and only "missing feature"
+    from before the patch is that video and Xaa don't work (only with Exa).
+      For the moment, just force crt as not connected, and set the proper
+    registers to make the secondary output clone the panel.
+
+commit fc722212d297a5141245beb7c8ae396606a8f221
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Oct 14 15:46:52 2008 -0300
+
+    Remove dependency on xf86cvt.c.
+    
+      It actually was not added in a previous commit (due to using git reset
+    to remake a commit, and not readding it), but now, changed only call
+    xf86CVTMode if it is available in the X Server, otherwise, for older
+    X Servers, a modeline should be specified in xorg.conf.
+
+commit 5adb3b502ef79827b89fb11926b6198c3a57d2e6
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Oct 14 14:48:42 2008 -0300
+
+    Minor corrections for smi501 for the randr1.2 integration.
+    
+      Also correct printing information about MCLK in the smi501/502, it
+    should print M2CLK (aka M1CLK o the 502) as it is the clock that
+    controls video engine/memory.
+
+commit 6e0837305533f940adb7a09f9b013077c0888f2d
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sat Oct 11 14:24:48 2008 +0200
+
+    RandR1.2 initial implementation (WIP)
+    
+    Moved most of the Lynx-specific code out of the main
+    functions at smi_driver.c to some new files: smilynx_hw.c
+    (With CRTC-independent code like global hardware initialization and
+    mode saving/restoring), smilynx_crtc.c (With the CRTC-local
+    procedures) and smilynx_output.c (Output power management, DDC and
+    monitor detection, currently).
+    
+      Done something similar with the SMI501 code: split
+    SMI501_ModeInit in three separate functions: SMI501_HWInit that does
+    the global initialization, and the CRTC mode_set callbacks
+    SMI501_ModeSet_crt and SMI501_ModeSet_lcd at smi501_crtc.c.
+    
+      The SMI501_ModeSet code is divided into SMI501_WriteMode_common,
+    SMI501_WriteMode_lcd and SMI501_WriteMode_crt, each one updates a
+    different register set in the hardware.
+    
+      Inside smi_crtc.c, there is mainly hardware independent
+    code... Initial CRT controller allocation, shadows, rotation and
+    framebuffer resizing code.
+    
+      The shadow code currently relies on EXA... I'm not sure what are the
+    problems of the EXA implementation in MSOC. Does it work?
+    
+      I think it would be a good thing to get rid of XAA soon: The next
+    thing I'll be working on will be EXA Composite... I hope it's possible
+    to get EXA acceleration working at least as fast as the current
+    XAA. (Although Teddy Wang confirmed me that the SMI720 DMA engine is
+    broken...)
+    
+      So, the patch adds some features like new Lynx dualhead modesetting
+    code, but it probably breaks some other things:
+    * Video Overlay: I suppose it does work with EXA activated. It seems
+    it is also possible to have simultaneous overlays in both CRTCs with the
+    Lynx hardware (I have some code for this, but still work in progress).
+    * Hardware Cursor (It needs more integration in the CRTC interfaces).
+    * The old Shadow FB / rotation code, which we should probably drop.
+    
+      These are in my TODO list... Along with some more cleaning and other
+    minor issues in the modesetting code.
+    
+      About the SMI501 RandR1.2 implementation... I suppose it's specially
+    lacking per-output DPMS (The DPMS field in the System Control register
+    only affects the CRT, doesn't it?).
+
+commit 605199b1fa80d5a65e11a38270f6d0974466d1dc
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Oct 9 18:51:50 2008 -0300
+
+    Add a PanelSize/60Hz CVT mode at driver initialization
+    
+      This driver is expected to be used with XServer 1.4 or newer, but a
+    (probably temporary) copy of xf86cvt.c was also added to the build.
+      This modeline automatically added implies it would not be required
+    to specify one in xorg.conf, as it should not be uncommon "non standard"
+    modes, like 800x480 or 1024x600.
+
+commit 55052509d75492f0936273686826c51fcbc831c1
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Oct 9 18:12:02 2008 -0300
+
+    Make the input frequency in SMI501_FindPLLClock a variable
+    
+      Instead of using a fixed 24Mhz input frequency, as "unofficially"
+    specified by SMI, a guess of using a 12 multiplier was used, and it
+    corrects the screen flicker problem as well as make a secondary output
+    work again.
+
+commit 61f814d1c8ad9440bab89eda44e64b01ba0eb703
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Oct 8 18:36:11 2008 -0300
+
+    Rewrite WaitQueue and WaitIdle accell macros
+    
+      WaitQueue() did receive an unused parameter, that was removed. The
+    parameter was unused since version 1.0 in XFree86 CVS, so probably
+    nobody knows for what it was used.
+      WaitIdle() now also replaces WaitIdleEmpty(), as an idle engine
+    should also have an empty fifo.
+      SMI_SubsequentScreenToScreenCopy() was changed to use WaitIdle()
+    instead of WaitQueue() before submitting the commands to the engine.
+    This fixes a nasty lockup when using XaaOffscreenPixmaps (what is
+    desired/wanted to help improve performance), and the lockup in the
+    MSOC was clearly due to an engine overrun, when sending commands
+    faster then the engine could process.
+
+commit 1656fb6de5308ff586676e8d6a8aa8d4579ebf4c
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Oct 3 18:55:14 2008 -0300
+
+    Don't use the 1 multiplier on older chipsets.
+    
+      It is not in the specs, so don't use it on chipsets older then the 502.
+      Some review should be done in SMI501_FindPLLClock() as when hardcoding it
+    to use the clock selection code for older chips, it appears to choose a
+    better refresh rate (no flicking at 1024x600).
+
+commit da789f720e2d772dff92adc10aa024a6a921fbbd
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Oct 3 16:30:23 2008 -0300
+
+    Simplify regsmi.h by removing most unused SMI501 defines.
+    
+      The values that should be used, should also have a more meaningful name,
+    as something like:
+    doesn't help much, and the fact that these "ports" can be accessed from
+    several "bases" may be confusing also, as there is SCRBase, DCRBase,
+    FPRBase, DPRBase, CPRBase (and IOBase). The 501 code should probably be
+    changed to just use IOBase, as currently it uses SCRBase, that happens
+    to be at pSmi->MapBase + 0x0000.
+    
+      This patch also completely transforms the WaitQueue macro in a noop
+    for the MSOC. In SMI sample code it is almost the current code, just
+    that the macro body is commented out. Hopefully this will be addressed
+    soon.
+
+commit bacddd1d31a5f3de14477914958f27b6f081c125
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Oct 3 15:10:55 2008 -0300
+
+    Rename macro "bitfield" to "bits" and correct a wrong division.
+
+commit 22a7fd6711e2a40633981cd21fa3808c9246f13a
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Oct 2 16:11:59 2008 -0300
+
+    Remove the IN_SEQ and OUT_SEQ macros.
+    
+      These macros access vga registers, but don't make it clear in their name.
+
+commit 973f68bf0464c4d2aec2acf7c8e6db201782f4ec
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Oct 2 15:48:51 2008 -0300
+
+    Rewrite some macros to not have side effects in if/else nesting.
+
+commit 82e17c442c3969938435a8b46d2679995af64425
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Oct 2 15:25:41 2008 -0300
+
+    Add support for the extra divider in the alternate pixel clock setting.
+    
+      Also remove extra includes that were not used.
+
+commit b32769305275519f7f4d1e0871a71514636ca026
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Oct 1 18:27:27 2008 -0300
+
+    Correct clock programming for the SMI 501/502
+    
+      The new code is based on the file SM502Clock.pdf provide by SMI engineers
+    (many thanks). And now it is expected to work correctly. The few remaining
+    details that are unclear (for the extended 502 modesetting mode) should be
+    resolved soon, and those are:
+    *  MMIO:0x74:bit15 (PLL Output Divided by 2)
+    	0: Disable.
+    	1: Enable.
+       (does this mean it can use a 12MHz clock instead of 24? or anything else?)
+    *  Should bit 31 of "current clock" always be set when using the alternate
+       mode setting for the 502? The alternate modesetting allows a very closer
+       pixel clock programming option, usually with 0 difference from the
+       xf86 mode.
+    
+      I will ask SMI to make SM502Clock.pdf also available in the ftp site, it
+    is just 3 pages, or possibly even better, an update for the existing
+    documentation.
+
+commit ea34e20852ee6007e2f0fcacd5068c151865be1e
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Sep 30 17:49:25 2008 -0300
+
+    Remove the macro field, and rename the detail structure to f.
+    
+      Now access to bitfields looks like:
+    record->register.f.field
+      instead of:
+    field(record->register, field)
+      what should be easier to read and understand.
+
+commit a91872f813a6299f32b9f833876c54afd0b53aaa
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Sep 30 17:33:36 2008 -0300
+
+    Update to match the SMI 502 chipset specs.
+    
+      The 502 is a superset of the 501, also recognized as PCI_CHIP_SMI501.
+      The driver is only known to work with smi_501 chipset
+    "SM501 VoyagerGX Rev. AA (rev c0)".
+
+commit e830572bca9b8eaf50a36a12d1fe31cdfec6280e
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Sep 26 19:43:45 2008 -0300
+
+    Don't always program CRT clock and registers.
+    
+      This causes instabilities, and there was also a bug where it would
+    tell the crt to not select panel data (due to removing the "else").
+
+commit 314eecb6628840a942ff2e76d8c7402301feac77
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Sep 26 19:30:17 2008 -0300
+
+    Properly check pScrn->driverPrivate before deferencing it.
+    
+       Add missing divide by 1000 in smi_501.c, as well as a FIXME comment
+    about a crash, and possible cause as well as possible ways to program
+    other clocks.
+
+commit f18222ffcff8e78b3cfcd220cad06a1daa3fc920
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Sep 26 17:55:42 2008 -0300
+
+      Don't try to find the closest clock, just use highest one.
+    
+      Previous patch wasn't fully correct, just that the values were generating
+    the same register dump as the smi 2.2.5 driver version.
+      When correcting it to not mix Mhz and Khz in the math, the problems
+    returned.... Anyway, it just works when selecting the highest clock, and
+    the attached CRT will display the panel image. This is illogical, so maybe
+    the specs are outdated... The previous code has been #ifdef'ed out in
+    "CALC_CLOCK".
+      Note that it still changes the boot default clock, from the default
+    288Mhz to 336Mhz, and in this patch, it also always sets both, panel and
+    crt clocks (what happens here, is that most likely, by doing this, it
+    forces the hardware to "somehow" autoconfigure itself; will try to get
+    some information from SMI about this, but this is the boot default,
+    and what smi sources do...).
+
+commit bdba7c1397186cd15d519db55c2345db44990be4
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Sep 24 18:58:35 2008 -0300
+
+    Fix incorrect understanding of the pixel clock from specs.
+    
+      The clock that should be programmed is the bandwidth, and not the pixel
+    clock itself. Based on analysis of register contents, after "importing"
+    a slightly modified version of xf86ModeBandwidth() and properly converting
+    values, now it properly programs both, the LCD and a "clone" CRT or just
+    a secondary panel.
+    
+      Modes generated by either gtf or cvt correctly works.
+    
+      A (hopefully temporary) fallback was also added, and if the option
+    "UseFBDev" is used, the driver will not attempt to set/modify the
+    current video mode.
+    
+      TODO: Generate a modeline "on the fly", based on monitor configured
+    specs, or some set of defaults, so that it should not be required to
+    specify a modeline in xorg.conf.
+
+commit e64b3d63be2a4148c4d10ac160e2bd2f3e8c7fd3
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Sep 22 22:01:16 2008 -0300
+
+    Correct problems in clock setting.
+    
+      One clock must be changed at a time, first setting the pll value,
+    then waiting for 16ms (one vsync), then setting the divider/shift
+    values, and again waiting 16ms.
+      Code was working after split of SMI501_ModeInit(), because some
+    clocks were already using system boot default, but would most likely
+    cause a crash when actually changing values (currently only p2_xxx
+    or v2_xxx is changed, but it would cause problems on some system where
+    the initial values don't match the ones set by the driver).
+    
+      TODO: Either don't change m2clk and mclk or ensure other values
+    work correctly (don't change because the kernel should already
+    have set those if a value other then the boot default should be
+    used).
+
+commit 1f0af5ea50e3e3b2c9ed882f7ef2fb8871e780bd
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Sep 22 21:41:12 2008 -0300
+
+    Correct logic in sw cursor handling and add missing entries to .gitignore.
+
+commit 862cbd8c1845b54a38996b92e8e22d153f38cdd2
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Sep 22 19:09:12 2008 -0300
+
+    Split SMI501_ModeInit in two functions.
+    
+      This allows using alternate MSOCRegRec structures to set a mode.
+    This should be useful to restore the initial mode.
+
+commit bcbf1854be851b8fa1ec3f384b11c312b0533bf3
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Sep 22 18:29:31 2008 -0300
+
+    Remove unused .cvsignore files.
+
+commit 1014ffe0a2c55119d6bfbcf632f3d4ebe77af212
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Sep 22 18:15:21 2008 -0300
+
+    Simplify hw cursor and sw cursor option handling.
+    
+      Also rename SMIRec field hwcursor to HwCursor, as there are few usages,
+    and this way, match the case usage for other field names.
+
+commit 6b5c22d8680573c8a6b259d78ba3c8435514fde9
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Sep 22 17:05:21 2008 -0300
+
+    Rework/simplify debug macros.
+    
+      Instead of cut&paste of the name of the current function everywhere,
+    just use cpp's __FUNCTION__ predefined macro.
+      Create two macros to exit a function, named LEAVE() and RETURN().
+    Functions returning void should call LEAVE() and then explicitly return
+    for now. "Logged" function calls are indented, so a review was done to
+    ensure functions with a ENTER() also have the proper exit macro.
+      The DEBUG macro was changed to have variadic arguments, and this way
+    it is no longer required to prefix arguments with VERBLEV, but now it
+    also is not possible to use another "verbosity value", but it wasn't used
+    in any of the DEBUG macro calls.
+
+commit cf7097c19b31671a53bc8161bd29b9f79f1d3d85
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Sep 22 14:25:04 2008 -0300
+
+    Fix a leak and minor cosmetic change.
+    
+      Leak was due to only releasing return value of xf86GetEntityInfo
+    if the chipset was PCI_CHIP_SMI501.
+      Cosmetic change was to log pci burst and pci retry default values
+    as X_DEFAULT instead of X_PROBED.
+
+commit ee1e72a248b2df6522283c0dd3e5433d7f961c62
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Sep 19 18:06:20 2008 -0300
+
+    Kludge to not lock the SMI 501 when running at 8bpp.
+
+commit 9ae840a358959615020fa4adb76c1487231927f3
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Sep 19 18:00:16 2008 -0300
+
+    Add MSOC palette support to run at 8 bpp.
+    
+      Colors should be correctly set, but most output using Render is not
+    properly drawn, i.e. anti aliased fonts, etc. Need to investigate
+    further, but it should be a general problem, not exclusive to the
+    driver.
+
+commit f4339a6a7aa077cb355dd23b77ea568ad2a481e3
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Sep 19 16:52:17 2008 -0300
+
+    Enable pci retry and pci burst by default.
+    
+      Rename fields pci_burst and NoPCIRetry to PCIBurst and PCIRetry,
+    to match field names case usage, and updated logic for the removal
+    of "No" from the pci retry option.
+      Pci retry and pci burst greatly increase video playback speed,
+    allowing smooth video play on the SMI 501.
+
+commit 782ef31a9273e33100ae6b4bd20a4d1d3f493aa4
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Sep 19 15:48:34 2008 -0300
+
+    Add initial exa support for SMI501.
+    
+      This just allows exa to run, with a minimal ammount of features avaiable.
+
+commit 5d9ab8195e692f78dd7e57e7d17d8b46f7f59221
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Sep 18 18:27:51 2008 -0300
+
+    Add a missing CHECK_SECONDARY macro call.
+
+commit 2876b55c3ed82b9be023acbfc4ddf993494c3c9b
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Sep 18 18:23:37 2008 -0300
+
+    Correct video offscreen memory allocation routines.
+    
+      It was always failing in the first allocation, if using XAA, what caused
+    some players to not work correct. This is a major problem for the MSOC as
+    it still only supports XAA.
+      Also add a workaround for a hardware problem, as described in
+    "SM501 Rev.AA engineering addendum v0.1.pdf"
+    "A-27 PIXELS TOO BRIGHT ON VIDEO SHRINK".
+
+commit 79297e797de3497773539eb9f89e8594797ee512
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Sep 18 18:16:21 2008 -0300
+
+    Update for new smi_501 interfaces.
+    
+      This also adds some simplification for the driver code, by adding
+    some function pointers to avoid the need to check the chipset everywhere.
+      The new SMI_DetectMCLK function doesn't actually change pSmi->MCLK to
+    avoid chances of it stoping working on non MSOC chipsets, as it
+    previously not did set it, and for the MSOC, for the moment, default to
+    whatever value is already set, i.e. doesn't reprogram it.
+      Added new memory detection code for the MSOC, that better matches the
+    documentation.
+
+commit 95e312b712a1e4a476ef31c5302faf77c22915a9
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Sep 18 18:10:54 2008 -0300
+
+      Complete rewrite of smi_501.c and smi_501.h.
+    
+      The previous version was dependant on kernel framebuffer, as it was
+    just failing a test if not having a modeline defined, and in the test
+    case, it is running at 1024x600.
+      Now it properly programs the video hardware, and the procedure is
+    expected to be very well documented.
+
+commit cf5132907e4709c872089fe2d79837b2de4e45b7
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Sep 2 18:16:41 2008 -0300
+
+    Rename global smi501 functions to have SMI501 prefix.
+    
+      Functions renamed were setDPMS -> SMI501_SetDPMS,
+    regRead32 -> SMI501_Read32 and regWrite32 -> SMI501_Write32.
+      Also moved SMI_SetDPMS to start of smi_501.c to have extern
+    functions at start of the file.
+
+commit a2a090e10f031aed6dbf6d143d6ce8abdf7a2392
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Sep 2 17:55:16 2008 -0300
+
+    Correct all compiler warning messages.
+    
+      Code compiled with:
+    gcc -Wall -Wbad-function-cast -Wdeclaration-after-statement \
+        -Wmissing-prototypes -Wmissing-declarations -Wnested-externs \
+        -fno-strict-aliasing -Wold-style-definition -Wpointer-arith \
+        -Wstrict-prototypes
+    
+      This patch also makes most smi_501.c functions static, as they are not
+    called from anywhere else.
+      Also removed prototypes for non existent functions in smi_501.h.
+
+commit 2d5ba5f7310fa8e11f7349d116aa871a239ac35f
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Sep 2 16:32:31 2008 -0300
+
+    Correct xv video problems on MSOC.
+    
+      Set VIDEO_CLIP_TO_VIEWPORT as it is used in MSI sources, and also add
+    proper code to detect panel size, as this information is used to manage
+    offscreen memory (but shouldn't it be using pScrn->virtualY, etc?)
+
+commit e111c85d6cca3f2206b6bce119b284edccf0cd4f
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Sep 1 18:41:43 2008 -0300
+
+    Don't pretend this driver compiles on XFree86.
+    
+      Either remove check for XF86_VERSION_CURRENT or at least add the
+    implementation of RegionsEqual() to smi_video.c.
+
+commit b23c5c5e434aaba2128abcae61a8564a62d2e7a1
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Mon Sep 1 21:28:13 2008 +0200
+
+    Fix XAA, ShadowFB and VT switching for non-sm501 chipsets
+    
+    Signed-off-by: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+
+commit 6a01c87b7c75f698ff2b783f8d341526159ebfe2
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Sep 1 18:00:03 2008 -0300
+
+    Split SMI_MapMem in SMI_MapMem and SMI_MapMmio
+    
+      This is required because MSOC needs mmio to detect ammount of memory.
+      The patch also creates a SMI_DetectMem() function, that should slightly
+    simplify SMI_PreInit().
+
+commit c45ef4676812f72dcff53ba85e9fa95836704c75
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Aug 29 19:33:31 2008 -0300
+
+    Bump version to 1.6.1.
+
+commit 4eee032811d1487df9dcf94708b1bcafc7e63392
+Author: Arnaud Patard <apatard@mandriva.com>
+Date:   Fri Aug 29 19:33:31 2008 -0300
+
+    Correct a problem when handling i420 format.
+    
+    The problem was that the driver was converting i420->YV12 2 times
+    instead of only once.
+
+commit 76c931e149917563485ae6ad2950aa28a531b0d1
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Aug 29 19:31:57 2008 -0300
+
+    Update MSOC video interface.
+    
+      This synchronizes smi_video.c with smi 2.2.5 sources.
+
+commit 0eb35f2065314807a604a44e571bbb898db23543
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Aug 29 19:20:54 2008 -0300
+
+    Update xaa and generic acceleration code for the MSOC.
+    
+      Currently, the support for EXA is not functional, neither is
+    ShadowFB or bpp/depth other than 16.
+
+commit 375e35fc7df4a21c2e0bc933774cc2f5f29b89d1
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Aug 29 19:36:35 2008 -0300
+
+    MSOC doesn't access VGA registers or VBE/INT10
+    
+      This should be the biggest patch in the "merge". Done in a single chunk
+    to have it compilable at all stages.
+
+commit 164d921465ae7b3a0fa2551358f7c0b5a18a425a
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Aug 29 18:47:14 2008 -0300
+
+    Add code to probe and recognize the SMI501 chipset
+
+commit db330497c3b757361ac9c3602b3a4ece0a401dd3
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Aug 29 15:58:16 2008 -0300
+
+    Change SILICONMOTION_NAME value
+    
+      xf86VDrvMsgVerb prints up to 14 characters prefix, where prefix has the
+    format "%s(%d): " so, use name "SMI" instead of "Silicon Motion"
+
+commit 36309132aef067822a8901ce24fda817be58546d
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Aug 29 15:52:36 2008 -0300
+
+    Add initial support and macros for the MSOC.
+    
+    This patch add the new files and basic required definitions.
+
+commit 96166eafc2b0e5db627aa4f8b0422f953837772b
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Aug 29 14:48:44 2008 -0300
+
+    Fix build for removal of xf86Version.h
+    
+      This is the first patch of series to merge code from the version 2.2.5
+    from SiliconMotion and code from
+    http://cgit.freedesktop.org/~agd5f/xf86-video-smi501
+    
+      After the merge, work will continue, to correct some extra problems,
+    and make it work with EXA at least (as only the Xorg version has
+    EXA support).
+
+commit 682b9a1b97a82c7d084c63860a8c753cc45d9faf
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sat Aug 16 13:24:27 2008 +0200
+
+    Allow using XV and RandR rotation simultaneously.
+    
+     As it doesn't seem feasible to rotate the video, I did some modifications
+    at SMI_PutImage and SMI_ClipVideo to make PutImage work (incorrectly) with
+    rotation enabled. The image is displayed unrotated.
+    
+    Signed-off-by: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+
+commit f6110b1ef5934b45812ee95e70b1e64f44386dda
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sat Aug 16 13:08:25 2008 +0200
+
+    Some fixes in the EXA UTS/DTS code.
+    
+     In DTS:
+      * It uses the screen Bpp inestead of the pixmap Bpp...
+        this gives some problems when using pixmaps with different depth
+        to the screen.
+     In UTS:
+      * aligned_pitch was computed from src_pitch inestead of the
+        pixmap width.
+      * When writing the target coordinates to the DE registers, it does
+        y*0xFFFF inestead of y & 0xFFFF.
+      * I renamed source_pitch to src_pixelpitch as it is very confusing
+        to have src_pitch and source_pitch.
+      * It isn't necessary to call WaitQueue before copying each scanline,
+        but it seems it almost doesn't affect performance.
+    
+    Signed-off-by: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+
+commit 209097ba5b44a0ce0da7f1ea52150dcace2b5244
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sat Aug 16 13:00:31 2008 +0200
+
+    RandR rotation implemented.
+    
+    * I added the configuration file option "RandRRotation".
+    * I replaced pSmi->ShadowPitch with pSmi->screenStride, it seems it
+       makes more sense because the lower word of ShadowPitch may change
+       independently.
+    * I moved the SMI_DEDataFormat to smi_accel.c because it seems it is
+      a piece of code repeated many times in the driver.
+    * At some places, it is assumed the framebuffer is at FBOffset:
+      when using a shadow framebuffer, FBOffset is the location of the
+      on-screen framebuffer (0 should be used). This made e.g. EXA
+      completly useless with ShadowFB enabled (it crashed).
+    * In the FBManager initialization, I have replaced xf86InitFBManager
+      with xf86InitFBManagerRegion to reserve some additional space as
+      screen fb: it's unlikely to be the case, but a less efficient
+      alignment in the rotated mode could make the rotated mode need more
+      memory than the unrotated one.
+      This is not a problem with EXA as the offscreen memory parameters
+      can be easily modified when doing the rotation.
+    * In SMI_RefreshArea it's assumed that some DE registers are already
+      in some state, this is specially not true when using EXA.
+    * SMI_ValidMode rejects a rotated mode with different dimensions
+      than the panel. This seems to work now.
+    
+    Signed-off-by: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+
+commit 45c6aedd6fe4e4d6abe58d1bb39ec01049404f09
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sat Aug 16 12:50:26 2008 +0200
+
+    Updates in SMI_EnterVT when remapping memory.
+    
+      Update the screen pixmap header with the new aperture address
+    when remapping framebuffer memory in SMI_EnterVT.
+      Update pSmi->EXADriverPtr->memoryBase too, in case EXA is
+    being used.
+    
+    Signed-off-by: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+
+commit 8feca790a6e92799019237ac69a4ef618cacfaae
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sat Aug 16 12:40:52 2008 +0200
+
+    Make the int10/VBE initialization depend on the UseBIOS configuration option.
+    
+    Signed-off-by: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+
+commit 772e899e71efab208b844b09c75f9f49ff453386
+Author: Francisco Jerez <currojerez@gmail.com>
+Date:   Sat Aug 16 12:25:18 2008 +0200
+
+    Memory detection moved before memory mapping in SMI_PreInit.
+    
+    Take into account the VideoRam configuration option.
+    
+    Signed-off-by: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+
+commit d28ed6aa0d28fdcf8f555b2bb8a58fe28d1b464b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Aug 15 14:24:31 2008 -0400
+
+    Dead code removal.
+
+commit 7cfecd313aaea74ad5675c53b4d0099d6e9dec39
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 15:26:14 2008 -0400
+
+    siliconmotion 1.6.0
+
+commit c0e80b14a8af7c9df44919b2df58030e59ecbf88
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 15:25:23 2008 -0400
+
+    Fix distcheck
+
+commit e53d07525952e1281170db01c48d7a14a6983049
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 15:24:11 2008 -0400
+
+    Death to RCS tags.
+
+commit 46e68bf899754f6f70a0f5a7b0d42c5e208aaa5a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Mar 10 13:53:00 2008 +1000
+
+    smi: add pciaccess support
+
+commit 75182ca115cba8fcf31304aea88ca3d4b9aa66ac
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Mar 8 23:49:58 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit ae556406ab6c4de410b68b3c8bcebb434b3efc9d
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Tue Aug 7 10:00:25 2007 +0200
+
+    Define SILICONMOTION_VERSION* using PACKAGE_VERSION*
+
+commit 1a803a8f91a931c00106f9d3d41cfa5d74c19f55
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Mar 20 21:08:38 2007 -0400
+
+    minor fixup
+
+commit 503027d38dab759277c0a67746ac205a1dfa9277
+Author: Dennis De Winter <dennis.de.winter@gmail.com>
+Date:   Fri Mar 16 21:29:19 2007 -0400
+
+    Fix UTS issues with flash
+    
+    Also remove safety padding on memory manager calculation
+
+commit fe4114033f2853e2df8d37c490deba26bf0366e8
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Mar 15 02:11:24 2007 -0400
+
+    hostdata blit UTS works, but SW is faster
+    
+    UTS is working, but SW is faster so leave it disabled
+
+commit 62442ce9e62b484e4f2067e3c52c153cd356be2c
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Mar 14 20:13:28 2007 -0400
+
+    more clock fixes
+
+commit 6ff1241636e25d2c0f20bd14e92c8585f209aeb0
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Mar 13 02:32:52 2007 -0400
+
+    bump to 1.5.1
+
+commit b53db3bc5ba7648d392dc630ef47e57fb8a0afb4
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Mar 13 02:31:30 2007 -0400
+
+    fix clk calculation on older lynx chips
+
+commit 7d1392be291e99fd3dde2292b82423b5f78d3a21
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Mar 13 00:44:29 2007 -0400
+
+    bump to 1.5.0
+
+commit 449fedec0e38289d10d75799bbf995b0e7189911
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Mar 13 00:13:35 2007 -0400
+
+    fix Solid()
+    
+    Unforunately, for 32 bpp solid fills the HW ignores alpha.
+
+commit 6d40f87d6cddde2d88f25be686b6392449cdecf1
+Author: Alex Deucher <alex@botch2.com>
+Date:   Mon Mar 12 23:58:41 2007 -0400
+
+    remove spurious waitqueue() line
+
+commit 452cabd6e3870b832cb19c8ad8a1fce27eef9c48
+Author: Alex Deucher <alex@botch2.com>
+Date:   Mon Mar 12 01:11:16 2007 -0400
+
+    Update copyright.
+
+commit 55266778ac693582131acae80def32211e09f18f
+Author: Alex Deucher <alex@botch2.com>
+Date:   Mon Mar 12 01:02:53 2007 -0400
+
+    switch the engine to quick start mode
+    
+    Rather than writing to the engine command register for every
+    operation, set quick start mode, and the operation executes
+    automatically when the width register is written.
+
+commit 4b37b514907da4a567261569eaebcc5a35aff6db
+Author: Alex Deucher <alex@botch2.com>
+Date:   Mon Mar 12 00:12:23 2007 -0400
+
+    fixup waitqueue slots
+
+commit 493c93de288437501fd898800bce45300379ebc3
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Mar 11 18:49:48 2007 -0400
+
+    more exa fixups, disable UTS for now.
+
+commit c1d6373624428c8c52e4d1d295b1d77ed75391a0
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Mar 11 16:22:05 2007 -0400
+
+    engine likes to use blit command for solid fills
+
+commit 9db380c99decdb9ab7fbf481788a5b63a84cd6e0
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Mar 11 15:53:29 2007 -0400
+
+    fix postscalar shift
+
+commit b6082e628289221864e96ebc41ce93d8efe2d2ce
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Mar 11 14:09:45 2007 -0400
+
+    support 32 bpp
+
+commit 3ebbc2e55a1584e01949ec760501ac4a3c086b04
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Mar 11 13:40:06 2007 -0400
+
+    fix up vclk1 setup
+
+commit 3e62ec8736ea9ea64a2c0c5c41df9c6d742397ca
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Mar 6 02:42:52 2007 -0500
+
+    revert the last commit.
+    
+    FBBase already take the register offset into account.
+
+commit 7da75a99159f80f215ee409377128f7dcbc4064d
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Mar 6 02:38:02 2007 -0500
+
+    fix memoryBase
+    
+    pSmi->FBOffset is the offset from the start of the framebuffer
+    pScrn->fbOffset is the aperture offset where the framebuffer
+    starts
+
+commit ba0b2492269ea81e91f7ce4fb8da618187a3997f
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Mar 6 02:24:08 2007 -0500
+
+    first pass at UTS
+
+commit e650ca36da5cf7614e4f1a0a524eadb46b1cc21d
+Author: Alex Deucher <alex@botch2.com>
+Date:   Mon Mar 5 23:58:25 2007 -0500
+
+    fix up EXA code
+
+commit c5b23ba581a3a4395b528d4ed824d5df986527e4
+Author: Dennis De Winter <de.winter.dennis@gmail.com>
+Date:   Sun Mar 4 23:17:57 2007 -0500
+
+    Initial import of EXA support
+    
+    Based on Dennis' code from bug 8721 with some minor
+    changes by me.
+
+commit cf83ef7685609cd9daea193b4c842d232edcf506
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Mar 4 17:18:10 2007 -0500
+
+    actually calculate and use vclk1
+
+commit 3030e5a6afda5d05ddee5b586295a9e608b7a0de
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Mar 4 02:45:55 2007 -0500
+
+    Whitespace and formatting changes
+
+commit 606971fc8a323b0b33bb43524941b4bae6a0c334
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Feb 27 13:04:31 2007 -0800
+
+    renamed: .cvsignore -> .gitignore
+
+commit 4b3d28435d2f046d48a38694d89166fe38b00597
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Feb 27 13:04:01 2007 -0800
+
+    Replace XFree86 references in man page
+
+commit 3ff1d1aaf93df90f3a96b87bd8447db44b1722f5
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Jan 10 21:58:47 2007 -0500
+
+    only idle the engine on mode switches
+    
+    on the initial mode set the engine doesn't idle
+    for some users.
+
+commit 72c1d44182a49dbd502bbdc0b48f69a43ad5aed0
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Oct 13 18:41:44 2006 -0400
+
+    Bump to 1.4.2
+
+commit 36bbaaf3f44321fc7bb8ff1b71ff1d7f87f3b19b
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sat Sep 16 15:48:54 2006 -0400
+
+    make siliconmotion build again.  somehow a bunch of defines in
+    regsmi.h got lost?  commit 9a58bc9adbc982680dd8df27caeb9a5819f2adad looks
+    like the culprit, but siliconmotion has built fine subsequent to that commit.
+    Not sure exactly what's going on.
+
+commit c090b2d97dbedfc278a4691b70cf3f73f9799aa6
+Author:  <alex@samba.(none)>
+Date:   Thu Jul 20 23:35:30 2006 -0400
+
+    - add dualhead support for lynx chips (pretty limited due to severe hardware
+    limitations -- I'll improve it a bit at some point)
+    - small driver clean ups
+
+commit 845d45cd2066be53f6e2e53d5af6375045dac6e2
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Apr 8 01:43:52 2006 +0000
+
+    Bump to 1.4.1 for Xv changes.
+
+commit 2951e947c56909c9d51bf3f937502d0f682b1d76
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Apr 7 23:13:59 2006 +0000
+
+    Add a DrawablePtr argument to the XV functions to pave the way for
+        redirected video.
+
+commit 9a316eaea700e3a356f922506bf2c79e00fd9d83
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 20:58:57 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.4.0.
+
+commit c394f38c9a998eebec134a9a77ced46b9c005b9d
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Wed Feb 8 16:52:34 2006 +0000
+
+    SiliconMotion: Clean up insane pScrn->clock usage.
+
+commit 2453cfe259dec826fceab3cff1b2c3803d3d8042
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:30:02 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit e398882fba13cd081916d2ff04ead4f9023c9bfb
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:54 2005 +0000
+
+    Stub COPYING files
+
+commit 818baab410deef2b3a3b6653dd2134dea29e98de
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:19 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 6c95cd7b0ac0c113c25bf985365f3ccb1d30d7c9
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:37 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit 10d5542f95e86463b96cc1fd31378473c2394bc0
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:35 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 8180ea0cb0df275831b900836d9387bb2a730de4
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:10 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit 73e22f89e205a61c315ffaca63cc7f5ab1f2df5f
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:30:03 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 8b156b75c37fb642d6c680cc9fb5361fb0a8ff74
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:10 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 8ad5ff0aa74eabc5b4dca2e0422d36713415b1b1
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:18 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit 0d4f340f197b14dacc5c33d82f0094ee1f9bb2a8
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:20 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 280644786854eea8e8dbe7873e6c79d18f8048f0
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:54 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit bcc4f2555d4e4fa7ba2cf022165d3dd8ef331cd9
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:04 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 2da8c99697874a012dccfc582561a0b89e111ecd
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:54 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 9f9d3fcd3dca04b7d960d8777e8f8ba612fa1510
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:35 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit 286bf9de5baebd75ca129e50af9dc5f66dbf4e4f
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:05 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 0db428f930db99d70897ca90b9ec0e130f4e6635
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Sep 27 22:04:08 2005 +0000
+
+    Add some more documentation files for siliconmotion driver
+
+commit bdc896858ed819dcb79bb7443bfa57d63c8e0fad
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:48 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit a3add2e05412767c49ca1c0a1069cd5805ea09e9
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:44 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 5754df51d9b0f8bb8dac7b8c0072da929f1241f0
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 22:12:58 2005 +0000
+
+    Build system for siliconmotion
+
+commit 4b98eb4b30d694139d5e597c445d65d637ab7472
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:29:59 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit 6389dd3dc1259865a4b5fcc6b6c7b3f4429593cf
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Jul 1 22:43:12 2005 +0000
+
+    Change all misc.h and os.h references to <X11/foo.h>.
+
+commit 1dc135becf5898950e04c84cc4d87870840140c1
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Thu Jun 30 00:14:26 2005 +0000
+
+    - add 800x480 mode to smi driver (bug 3639)
+
+commit 0670b675c2133dd7c29f79bdf17d24d64181537d
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:56 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 39112b558fdccd2b0a15b8e41d6215e3b0e6e7bd
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:29 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit c34e24d83a0f84ad90b7cbaba78d54cc779f74d5
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Sep 17 03:04:54 2004 +0000
+
+    Bug #1192: Remove cfb support from drivers where its use is an option.
+        Delete xf24_32bpp, as s3virge was the last user. Fix up some comments
+        to refer to fb rather than cfb.
+
+commit 61457616aea5d5d7d98e869d3b24e989c2404d6b
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Aug 16 09:13:15 2004 +0000
+
+    Bug #1087: Make sure all the *Weak symbols are documented in the import
+        list, so the loader knows not to complain about unresolved symbols when
+        an optional module isn't loaded. This typically manifests as warnings
+        about fbdevHW symbols when the user isn't using the framebuffer
+        console.
+
+commit 74176c460a4f5206cbc7cd7b9f48d1b6cedae7cb
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Sat Jul 31 01:21:51 2004 +0000
+
+    Rename some COMPOSITE macros and enums to avoid conflicting with the
+        COMPOSITE extension's new macro. These appear to only be used
+        internally.
+
+commit 0f239a7f12e1c0a0b7ede424b0f1eb0fe189e9d6
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jul 31 01:21:19 2004 +0000
+
+    Change several LoaderSymbol calls introduced by the bug #400 patch to
+    *Weak() resolver functions.
+
+commit 865ba2a4c1107bb82d22ed648f8a1d63c833d6fc
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Jul 30 20:30:54 2004 +0000
+
+    Bug #400 (partial): Driver fixes for the dlloader. When using dlloader, all
+        framebuffer formats except cfb and the overlay modes should work, and
+        r128 and radeon need to be loaded from the ati driver (both issues to
+        be fixed soon). Tested on i740, s3virge, mach64, tdfx, vesa, and vga
+        drivers. elfloader users shouldn't be affected.
+
+commit 9a58bc9adbc982680dd8df27caeb9a5819f2adad
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:23:38 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit 1f957fb7e44762197b0fc5a3b7def25c7888929a
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed May 26 16:24:09 2004 +0000
+
+    Fixing setting of physical framebuffer base for several drivers. C&T
+        driver: Fixed setting of minimal clocks for HiQV chipsets. Neomagic
+        driver: improved support for lowres double scan modes.
+
+commit 445708ff1249e96628dd6b11e20f83e568fb4ad1
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:45:06 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 90141c8b6da8e6b57f2e4bae486a3d39c4069a8b
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:31 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit 1082b4e0760359234cb5f51b953bbffc65d594ec
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:24 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit b1c51d42211f715043a3252550ef2fde1a3065e5
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:54 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 2ae35696e96079b192c2cac4e092f6deeb300325
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:23 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit ac5b2461e620df7026eefda6a389127e7d41f67d
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Dec 19 20:55:14 2003 +0000
+
+    XFree86 4.3.99.902 (RC 2)
+
+commit 14cd4af100e1deb1c7b63e9f19587e38ce1f08f2
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:39 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 1684aa7a21a194b6e7dd518f3895c9b2dfce229a
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 78af703cb019a60cc93843efcd4889ccb15abd13
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision

@@ -48,11 +48,26 @@ SM712
 .TP 12
 .B Lynx3DM
 SM720
+.TP 12
+.B Cougar3DR
+SM731
+.TP 12
+.B MSOC
+SM501,SM502
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details.  This section only covers configuration details specific to this
 driver.  All options names are case and white space insensitive when
 parsed by the server, for example,  "lynxe" and "LynxE" are equivalent.
+.PP
+Multihead mode configuration is done through the RandR1.2 interface
+(see __xconfigfile__(__filemansuffix__) and xrandr(__appmansuffix__)
+for further information). Hardware accelerated screen rotation and
+framebuffer resizing are only supported with the
+.B EXA
+acceleration architecture (see the
+.B AccelMethod
+option below).
 .PP
 The driver auto-detects the chipset type, but the following
 .B ChipSet
@@ -61,7 +76,7 @@ names may optionally be specified in the config file
 section, and will override the auto-detection:
 .PP
 .RS 4
-"lynx", "lynxe", "lynx3d", "lynxem", "lynxem+", "lynx3dm".
+"lynx", "lynxe", "lynx3d", "lynxem", "lynxem+", "lynx3dm", "cougar3dr", "msoc".
 .RE
 
 .PP
@@ -80,15 +95,6 @@ The following display
 .B Options
 are supported:
 .TP
-.BI "Option \*qShadowFB\*q \*q" boolean \*q
-Use shadow framebuffer.  Default: off.
-.TP
-.BI "Option \*qRotate\*q \*qCW\*q"
-.TP
-.BI "Option \*qRotate\*q \*qCCW\*q"
-Rotate the screen CW - clockwise or CCW - counter clockwise.
-Uses ShadowFB.  Default: no rotation.
-.TP
 .BI "Option \*qVideoKey\*q \*q" integer \*q
 Set the video color key.  Default: a little off full blue.
 .TP
@@ -102,32 +108,45 @@ Turn on interlaced video capturing.  Default: off.
 Use the BIOS to set the modes. This is used for custom panel timings.
 Default: on.
 .TP
-.BI "Option \*qZoomOnLCD\*q \*q" boolean \*q
-Allow changing resolution on LCD (Ctrl-Alt-Plus and Ctrl-Alt-Minus).
+.BI "Option \*qDualhead\*q \*q" boolean \*q
+Enable dualhead mode.
+Currently not all chips are supported and on lynx chipsets hardware video
+overlay (XV) will only work on the secondary VGA output.
 Default: off.
 .TP
-.BI "Option \*qDualhead\*q \*q" boolean \*q
-Enable dualhead mode.  Due to hardware limitations, dualhead is limited 
-to depth 16 and to the panel size and timings on both the flat panel and 
-the CRT and the CRT must be to the right of the flat panel.  Only lynx 
-chips are supported at the moment.
-Default: off.
-
+.BI "Option \*qPanelSize\*q \*q" width x height \*q
+Override LCD panel dimension autodetection.
+.TP
+.BI "Option \*qUseFBDev\*q \*q"  boolean \*q
+Don't actually program the hardware mode registers, but leave it as
+set by the operating system. Only available on MSOC chips. Default: off.
+.TP
+.BI "Option \*qCSCVideo\*q \*q"  boolean \*q
+CSC video uses color space conversion to render video directly to
+the framebuffer, without using an overlay.
+Only available on MSOC chips. Default: on.
 .PP
+
 The following video memory
 .B Options
 are supported:
 .TP
-.BI "Option \*qset_mclk\*q \*q" integer \*q
-sets the memory clock, where
-.I integer
-is in kHz, and
-.I integer
-<= 100000.  Default: probe the memory clock value,
-and use it at server start.
-
-
+.BI "Option \*qmclk\*q \*q" integer \*q
+Sets the memory clock. You must specify the units.  For example \fI50Mhz\fP
+is the same as \fI50000Khz\fP or \fI50000000Hz\fP.
+On MSOC chips this is the main clock source for all functional blocks, such
+as the 2D engine, GPIO, Video Engine, and DMA Engine. This option is only
+used for debugging purposes on MSOC chips.
+Default: probe the memory clock value, and use it at server start.
+.TP
+.BI "Option \*qmxclk\*q \*q" integer \*q
+Sets the memory clock. You must specify the units.  For example \fI50Mhz\fP
+is the same as \fI50000Khz\fP or \fI50000000Hz\fP.
+Clock source for the local SDRAM controller. This option is only available
+on MSOC chips and used only for debugging purposes.
+Default: probe the memory clock value, and use it at server start.
 .PP
+
 The following acceleration and graphics engine
 .B Options
 are supported:
@@ -139,45 +158,6 @@ option to try if your server runs but you see graphic corruption on the screen.
 Using it decreases performance, as it uses software emulation for drawing
 operations the video driver can accelerate with hardware.
 Default: acceleration is enabled.
-.TP
-.B "Option \*qfifo_aggressive\*q"
-.TP
-.B "Option \*qfifo_moderate\*q"
-.TP
-.B "Option \*qfifo_conservative\*q"
-alter the settings
-for the threshold at which the pixel FIFO takes over the internal 
-memory bus to refill itself. The smaller this threshold, the better
-the acceleration performance of the card. You may try the fastest 
-setting
-.RB ( "fifo_aggressive" )
-and move down if you encounter pixel corruption.
-The optimal setting will probably depend on dot-clock and on color 
-depth. Note that specifying any of these options will also alter other
-memory settings which may increase performance, so trying
-.B "fifo_conservative"
-will in most cases be a slight benefit (this uses the chip defaults).
-If pixel corruption or transient streaking is observed during drawing
-operations then removing any fifo options is recommended.  Default: none.
-
-.PP
-The following PCI bus
-.B Options
-are supported:
-.TP
-.BI "Option \*qpci_burst\*q \*q" boolean \*q
-will enable PCI burst mode. This should work on all but a
-few broken PCI chipsets, and will increase performance.  Default: off.
-.TP
-.BI "Option \*qpci_retry\*q \*q" boolean \*q
-will allow the driver to rely on PCI Retry to program the 
-ViRGE registers. 
-.B "pci_burst"
-must be enabled for this to work. 
-This will increase performance, especially for small fills/blits, 
-because the driver does not have to poll the ViRGE before sending it 
-commands to make sure it is ready. It should work on most 
-recent PCI chipsets.  Default: off.
 .TP
 .BI "Option \*qAccelMethod\*q \*q" "string" \*q
 Chooses between available acceleration architectures.  Valid options are
@@ -191,13 +171,24 @@ possibly unstable.  The default is
 .B XAA.
 
 .PP
-The following additional
+The following PCI bus
 .B Options
 are supported:
 .TP
-.BI "Option \*qShowCache\*q \*q" boolean \*q
-Enable or disable viewing offscreen cache memory.  A
-development debug option.  Default: off.
+.BI "Option \*qPciBurst\*q \*q" boolean \*q
+will enable PCI burst mode. This should work on all but a
+few broken PCI chipsets, and will increase performance.  Default: on.
+.TP
+.BI "Option \*qPciRetry\*q \*q" boolean \*q
+will allow the driver to rely on PCI Retry to program the registers.
+.B "PciBurst"
+must be enabled for this to work. 
+This will increase performance, especially for small fills/blits, 
+because the driver does not have to poll the card before sending it
+commands to make sure it is ready. It should work on most 
+recent PCI chipsets.  Default: value of
+.I PciBurst
+option.
 
 .SH SEE ALSO
 __xservername__(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1), X(__miscmansuffix__)

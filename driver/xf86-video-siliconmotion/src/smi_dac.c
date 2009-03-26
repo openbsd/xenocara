@@ -87,14 +87,25 @@ SMI_CommonCalcClock(int scrnIndex, long freq, int min_m, int min_n1,
 	}
     }
 
-    DEBUG((VERBLEV, "Clock parameters for %1.6f MHz: m=%d, n1=%d, n2=%d\n",
-	 ((double)(best_m) / (double)(best_n1) / (1 << best_n2)) * BASE_FREQ,
-	 best_m, best_n1, best_n2));
+    DEBUG("Clock parameters for %1.6f MHz: m=%d, n1=%d, n2=%d\n",
+	  ((double)(best_m) / (double)(best_n1) / (1 << best_n2)) * BASE_FREQ,
+	  best_m, best_n1, best_n2);
 
     if (SMI_LYNX_SERIES(pSmi->Chipset)) {
-	*ndiv = best_n1 | (best_n2 << 6);
+	/* Prefer post scalar enabled for even denominators */
+	if (freq < 70000 && max_n2 > 0 &&
+	    best_n2 == 0 && best_n1 % 2 == 0){
+	    best_n1 >>= 1;
+	    best_n2 = 1;
+	}
+
+	*ndiv = best_n1 |
+	    (best_n2 & 0x1) << 7 |
+	    (best_n2 & 0x2) >> 1 <<6;
     } else {
 	*ndiv = best_n1 | (best_n2 << 7);
+
+	/* Enable second VCO */
 	if (freq > 120000)
 	    *ndiv |= 1 << 6;
     }

@@ -40,31 +40,16 @@ authorization from the XFree86 Project and Silicon Motion.
 
 #include "smi.h"
 
-#undef VERBLEV
-#undef ENTER_PROC
-#undef DEBUG_PROC
-#undef LEAVE_PROC
-#undef DEBUG
-#define VERBLEV 2
-#define ENTER_PROC(PROCNAME)
-#define DEBUG_PROC(PROCNAME)
-#define LEAVE_PROC(PROCNAME)
-#define DEBUG(arg)
-
 static void
 SMI_I2CPutBits(I2CBusPtr b, int clock,  int data)
 {
     SMIPtr pSmi = SMIPTR(xf86Screens[b->scrnIndex]);
     unsigned int reg = 0x30;
 
-    ENTER_PROC("SMI_I2CPutBits");
-
     if (clock) reg |= 0x01;
     if (data)  reg |= 0x02;
 
     VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x72, reg);
-
-    LEAVE_PROC("SMI_I2CPutBits");
 }
 
 static void
@@ -73,12 +58,8 @@ SMI_I2CGetBits(I2CBusPtr b, int *clock, int *data)
     SMIPtr pSmi = SMIPTR(xf86Screens[b->scrnIndex]);
     unsigned int reg = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x72);
 
-    ENTER_PROC("SMI_I2CGetBits");
-
     *clock = reg & 0x04;
     *data  = reg & 0x08;
-
-    LEAVE_PROC("SMI_I2CGetBits");
 }
 
 Bool
@@ -86,14 +67,10 @@ SMI_I2CInit(ScrnInfoPtr pScrn)
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_I2CInit");
-
     if (pSmi->I2C == NULL) {
 	I2CBusPtr I2CPtr = xf86CreateI2CBusRec();
-	if (I2CPtr == NULL) {
-	    LEAVE_PROC("SMI_I2CInit");
+	if (I2CPtr == NULL)
 	    return FALSE;
-	}
 
 	I2CPtr->BusName    = "I2C bus";
 	I2CPtr->scrnIndex  = pScrn->scrnIndex;
@@ -102,14 +79,12 @@ SMI_I2CInit(ScrnInfoPtr pScrn)
 
 	if (!xf86I2CBusInit(I2CPtr)) {
 	    xf86DestroyI2CBusRec(I2CPtr, TRUE, TRUE);
-	    LEAVE_PROC("SMI_I2CInit");
 	    return FALSE;
 	}
 
 	pSmi->I2C = I2CPtr;
     }
 
-    LEAVE_PROC("SMI_I2CInit");
     return TRUE;
 }
 

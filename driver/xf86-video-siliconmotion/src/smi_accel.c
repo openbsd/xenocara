@@ -32,32 +32,45 @@ authorization from the XFree86 Project and silicon Motion.
 #endif
 
 #include "smi.h"
+#include "smi_501.h"
 
 void
 SMI_GEReset(ScrnInfoPtr pScrn, int from_timeout, int line, char *file)
 {
-    SMIPtr pSmi = SMIPTR(pScrn);
-    CARD8 tmp;
+    SMIPtr	pSmi = SMIPTR(pScrn);
+    int32_t	tmp;
 
-    ENTER_PROC("SMI_GEReset");
+    ENTER();
 
     if (from_timeout) {
-	if (pSmi->GEResetCnt++ < 10 || xf86GetVerbosity() > 1) {
-	    xf86DrvMsg(pScrn->scrnIndex,X_INFO,"\tSMI_GEReset called from %s line %d\n", file, line);
-	}
-    } else {
-	WaitIdleEmpty();
+	if (pSmi->GEResetCnt++ < 10 || xf86GetVerbosity() > 1)
+	    xf86DrvMsg(pScrn->scrnIndex,X_INFO,
+		       "\tSMI_GEReset called from %s line %d\n", file, line);
+    }
+    else
+	WaitIdle();
+
+    if (IS_MSOC(pSmi)) {
+	/*	12:13	Drawing Engine Abort
+	 *		00:	Normal
+	 *		11:	Abort 2D Engine
+	 *	(0x3000 == bits 12 and 13 set)
+	 */
+	tmp = READ_SCR(pSmi, 0x0000) & ~0x00003000;
+	WRITE_SCR(pSmi, 0x0000, tmp | 0x00003000);
+	/* FIXME No need to wait here? */
+	WRITE_SCR(pSmi, 0x0000, tmp);
+    }
+    else {
+	tmp = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x15);
+	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x15, tmp | 0x30);
     }
 
-    tmp = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x15);
-    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x15, tmp | 0x30);
-
-    WaitIdleEmpty();
-
-    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x15, tmp);
+    if (!IS_MSOC(pSmi))
+	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x15, tmp);
     SMI_EngineReset(pScrn);
 
-    LEAVE_PROC("SMI_GEReset");
+    LEAVE();
 }
 
 /* The sync function for the GE */
@@ -66,11 +79,11 @@ SMI_AccelSync(ScrnInfoPtr pScrn)
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_AccelSync");
+    ENTER();
 
-    WaitIdleEmpty(); /* #161 */
+    WaitIdle();
 
-    LEAVE_PROC("SMI_AccelSync");
+    LEAVE();
 }
 
 void
@@ -78,56 +91,35 @@ SMI_EngineReset(ScrnInfoPtr pScrn)
 {
     SMIPtr pSmi = SMIPTR(pScrn);
     CARD32 DEDataFormat = 0;
-    int i;
+    int i, stride;
     int xyAddress[] = { 320, 400, 512, 640, 800, 1024, 1280, 1600, 2048 };
 
-    ENTER_PROC("SMI_EngineReset");
+    ENTER();
 
-    pSmi->Stride = (pSmi->width * pSmi->Bpp + 15) & ~15;
-
-    switch (pScrn->bitsPerPixel) {
-    case 8:
-	DEDataFormat = 0x00000000;
-	break;
-    case 16:
-	pSmi->Stride >>= 1;
-	DEDataFormat = 0x00100000;
-	break;
-    case 24:
-	DEDataFormat = 0x00300000;
-	break;
-    case 32:
-	pSmi->Stride >>= 2;
-	DEDataFormat = 0x00200000;
-	break;
-    }
-
+    DEDataFormat = SMI_DEDataFormat(pScrn->bitsPerPixel);
     for (i = 0; i < sizeof(xyAddress) / sizeof(xyAddress[0]); i++) {
-	if (pSmi->rotate) {
-	    if (xyAddress[i] == pSmi->height) {
-		DEDataFormat |= i << 16;
-		break;
-	    }
-	} else {
-	    if (xyAddress[i] == pSmi->width) {
-		DEDataFormat |= i << 16;
-		break;
-	    }
+	if (xyAddress[i] == pScrn->virtualX) {
+	    DEDataFormat |= i << 16;
+	    break;
 	}
     }
+    DEDataFormat |= 0x40000000; /* Force pattern origin coordinates to (0,0) */
 
-    WaitIdleEmpty();
-    WRITE_DPR(pSmi, 0x10, (pSmi->Stride << 16) | pSmi->Stride);
+    WaitIdle();
+    stride = pScrn->displayWidth;
+    if (pSmi->Bpp == 3)
+	stride *= 3;
+    WRITE_DPR(pSmi, 0x10, (stride << 16) | stride);
     WRITE_DPR(pSmi, 0x1C, DEDataFormat);
     WRITE_DPR(pSmi, 0x24, 0xFFFFFFFF);
     WRITE_DPR(pSmi, 0x28, 0xFFFFFFFF);
-    WRITE_DPR(pSmi, 0x3C, (pSmi->Stride << 16) | pSmi->Stride);
+    WRITE_DPR(pSmi, 0x3C, (stride << 16) | stride);
     WRITE_DPR(pSmi, 0x40, pSmi->FBOffset >> 3);
     WRITE_DPR(pSmi, 0x44, pSmi->FBOffset >> 3);
 
     SMI_DisableClipping(pScrn);
 
-    LEAVE_PROC("SMI_EngineReset");
+    LEAVE();
 }
 
 /******************************************************************************/
@@ -140,16 +132,8 @@ SMI_SetClippingRectangle(ScrnInfoPtr pScrn, int left, int top, int right,
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_SetClippingRectangle");
-    DEBUG((VERBLEV, "left=%d top=%d right=%d bottom=%d\n", left, top, right,
-	   bottom));
-
-    /* CZ 26.10.2001: this code prevents offscreen pixmaps being drawn ???
-	left   = max(left, 0);
-	top    = max(top, 0);
-	right  = min(right, pSmi->width);
-	bottom = min(bottom, pSmi->height);
-    */
+    ENTER();
+    DEBUG("left=%d top=%d right=%d bottom=%d\n", left, top, right, bottom);
 
     if (pScrn->bitsPerPixel == 24) {
 	left  *= 3;
@@ -161,16 +145,21 @@ SMI_SetClippingRectangle(ScrnInfoPtr pScrn, int left, int top, int right,
 	}
     }
 
+    if (IS_MSOC(pSmi)) {
+	++right;
+	++bottom;
+    }
+
     pSmi->ScissorsLeft = (top << 16) | (left & 0xFFFF) | 0x2000;
     pSmi->ScissorsRight = (bottom << 16) | (right & 0xFFFF);
 
     pSmi->ClipTurnedOn = FALSE;
 
-    WaitQueue(2);
+    WaitQueue();
     WRITE_DPR(pSmi, 0x2C, pSmi->ScissorsLeft);
     WRITE_DPR(pSmi, 0x30, pSmi->ScissorsRight);
 
-    LEAVE_PROC("SMI_SetClippingRectangle");
+    LEAVE();
 }
 
 void
@@ -178,25 +167,46 @@ SMI_DisableClipping(ScrnInfoPtr pScrn)
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_DisableClipping");
+    ENTER();
 
     pSmi->ScissorsLeft = 0;
     if (pScrn->bitsPerPixel == 24) {
 	if (pSmi->Chipset == SMI_LYNX) {
-	    pSmi->ScissorsRight = ((pSmi->height * 3) << 16) | (pSmi->width * 3);
+	    pSmi->ScissorsRight = ((pScrn->virtualY * 3) << 16) | (pScrn->virtualX * 3);
 	} else {
-	    pSmi->ScissorsRight = (pSmi->height << 16) | (pSmi->width * 3);
+	    pSmi->ScissorsRight = (pScrn->virtualY << 16) | (pScrn->virtualX * 3);
 	}
     } else {
-	pSmi->ScissorsRight = (pSmi->height << 16) | pSmi->width;
+	pSmi->ScissorsRight = (pScrn->virtualY << 16) | pScrn->virtualX;
     }
 
     pSmi->ClipTurnedOn = FALSE;
 
-    WaitQueue(2);
+    WaitQueue();
     WRITE_DPR(pSmi, 0x2C, pSmi->ScissorsLeft);
     WRITE_DPR(pSmi, 0x30, pSmi->ScissorsRight);
 
-    LEAVE_PROC("SMI_DisableClipping");
+    LEAVE();
+}
+
+CARD32
+SMI_DEDataFormat(int bpp) {
+    CARD32 DEDataFormat = 0;
+
+    switch (bpp) {
+    case 8:
+	DEDataFormat = 0x00000000;
+	break;
+    case 16:
+	DEDataFormat = 0x00100000;
+	break;
+    case 24:
+	DEDataFormat = 0x00300000;
+	break;
+    case 32:
+	DEDataFormat = 0x00200000;
+	break;
+    }
+    return DEDataFormat;
 }
 

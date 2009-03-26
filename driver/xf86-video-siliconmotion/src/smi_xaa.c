@@ -30,6 +30,7 @@ authorization from the XFree86 Project and silicon Motion.
 #endif
 
 #include "smi.h"
+#include "smi_501.h"
 
 #include "miline.h"
 #include "xaalocal.h"
@@ -60,10 +61,6 @@ static void SMI_SetupForImageWrite(ScrnInfoPtr, int, unsigned int, int, int,
 				   int);
 static void SMI_SubsequentImageWriteRect(ScrnInfoPtr, int, int, int, int, int);
 #endif
-/* #671 */
-static void SMI_ValidatePolylines(GCPtr, unsigned long, DrawablePtr);
-static void SMI_Polylines(DrawablePtr, GCPtr, int, int, DDXPointPtr);
-
 
 Bool
 SMI_XAAInit(ScreenPtr pScreen)
@@ -75,19 +72,20 @@ SMI_XAAInit(ScreenPtr pScreen)
     Bool ret;
     /*int numLines, maxLines;*/
 
-    ENTER_PROC("SMI_XAAInit");
+    ENTER();
 
     pSmi->XAAInfoRec = infoPtr = XAACreateInfoRec();
-    if (infoPtr == NULL) {
-	LEAVE_PROC("SMI_AccelInit");
-	return FALSE;
-    }
+    if (infoPtr == NULL)
+	LEAVE(FALSE);
 
     infoPtr->Flags = PIXMAP_CACHE
 		   | LINEAR_FRAMEBUFFER
 		   | OFFSCREEN_PIXMAPS;
 
     infoPtr->Sync = SMI_AccelSync;
+
+    if (xf86IsEntityShared(pScrn->entityList[0]))
+	infoPtr->RestoreAccelState = SMI_EngineReset;
 
     /* Screen to screen copies */
     infoPtr->ScreenToScreenCopyFlags = NO_PLANEMASK
@@ -186,41 +184,9 @@ SMI_XAAInit(ScreenPtr pScreen)
 
     SMI_EngineReset(pScrn);
 
-
-    /* CZ 18.06.2001: moved to smi_driver.c before the NoAccel question
-       to have offscreen framebuffer in NoAccel mode */
-#if 0
-    maxLines = pSmi->FBReserved / (pSmi->width * pSmi->Bpp);
-    if (pSmi->rotate) {
-	numLines = maxLines;
-    } else {
-#if SMI_USE_VIDEO
-	numLines = ((pSmi->FBReserved - pSmi->width * pSmi->Bpp * pSmi->height)
-		   * 25 / 100 + pSmi->width * pSmi->Bpp - 1)
-		   / (pSmi->width * pSmi->Bpp);
-	numLines += pSmi->height;
-#else
-	numLines = maxLines;
-#endif
-    }
-
-    AvailFBArea.x1 = 0;
-    AvailFBArea.y1 = 0;
-    AvailFBArea.x2 = pSmi->width;
-    AvailFBArea.y2 = numLines;
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "FrameBuffer Box: %d,%d - %d,%d\n",
-		AvailFBArea.x1, AvailFBArea.y1, AvailFBArea.x2, AvailFBArea.y2);
-    xf86InitFBManager(pScreen, &AvailFBArea);
-#endif
-
     ret = XAAInit(pScreen, infoPtr);
-    if (ret && pSmi->shadowFB)	/* #671 */ {
-	pSmi->ValidatePolylines = infoPtr->ValidatePolylines;
-	infoPtr->ValidatePolylines = SMI_ValidatePolylines;
-    }
 
-    LEAVE_PROC("SMI_XAAInit");
-    return ret;
+    LEAVE(ret);
 }
 
 /******************************************************************************/
@@ -233,10 +199,13 @@ SMI_SetupForScreenToScreenCopy(ScrnInfoPtr pScrn, int xdir, int ydir, int rop,
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_SetupForScreenToScreenCopy");
-    DEBUG((VERBLEV, "xdir=%d ydir=%d rop=%02X trans=%08X\n", xdir, ydir,
-	   rop, trans));
+    ENTER();
+    DEBUG("xdir=%d ydir=%d rop=%02X trans=%08X\n", xdir, ydir, rop, trans);
 
+#if __BYTE_ORDER == __BIG_ENDIAN
+    if (pScrn->depth >= 24)
+	trans = lswapl(trans);
+#endif
     pSmi->AccelCmd = XAAGetCopyROP(rop)
 		   | SMI_BITBLT
 		   | SMI_START_ENGINE;
@@ -247,17 +216,17 @@ SMI_SetupForScreenToScreenCopy(ScrnInfoPtr pScrn, int xdir, int ydir, int rop,
 
     if (trans != -1) {
 	pSmi->AccelCmd |= SMI_TRANSPARENT_SRC | SMI_TRANSPARENT_PXL;
-	WaitQueue(1);
+	WaitQueue();
 	WRITE_DPR(pSmi, 0x20, trans);
     }
 
     if (pSmi->ClipTurnedOn) {
-	WaitQueue(1);
+	WaitQueue();
 	WRITE_DPR(pSmi, 0x2C, pSmi->ScissorsLeft);
 	pSmi->ClipTurnedOn = FALSE;
     }
 
-    LEAVE_PROC("SMI_SetupForScreenToScreenCopy");
+    LEAVE();
 }
 
 static void
@@ -266,8 +235,8 @@ SMI_SubsequentScreenToScreenCopy(ScrnInfoPtr pScrn, int x1, int y1, int x2,
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_SubsequentScreenToScreenCopy");
-    DEBUG((VERBLEV, "x1=%d y1=%d x2=%d y2=%d w=%d h=%d\n", x1, y1, x2, y2, w, h));
+    ENTER();
+    DEBUG("x1=%d y1=%d x2=%d y2=%d w=%d h=%d\n", x1, y1, x2, y2, w, h);
 
     if (pSmi->AccelCmd & SMI_RIGHT_TO_LEFT) {
 	x1 += w - 1;
@@ -292,13 +261,13 @@ SMI_SubsequentScreenToScreenCopy(ScrnInfoPtr pScrn, int x1, int y1, int x2,
 	}
     }
 
-    WaitQueue(4);
+    WaitIdle();
     WRITE_DPR(pSmi, 0x00, (x1 << 16) + (y1 & 0xFFFF));
     WRITE_DPR(pSmi, 0x04, (x2 << 16) + (y2 & 0xFFFF));
     WRITE_DPR(pSmi, 0x08, (w  << 16) + (h  & 0xFFFF));
     WRITE_DPR(pSmi, 0x0C, pSmi->AccelCmd);
 
-    LEAVE_PROC("SMI_SubsequentScreenToScreenCopy");
+    LEAVE();
 }
 
 /******************************************************************************/
@@ -311,25 +280,38 @@ SMI_SetupForSolidFill(ScrnInfoPtr pScrn, int color, int rop,
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_SetupForSolidFill");
-    DEBUG((VERBLEV, "color=%08X rop=%02X\n", color, rop));
+    ENTER();
+    DEBUG("color=%08X rop=%02X\n", color, rop);
 
     pSmi->AccelCmd = XAAGetPatternROP(rop)
 		   | SMI_BITBLT
 		   | SMI_START_ENGINE;
 
+#if __BYTE_ORDER == __BIG_ENDIAN
+    if (pScrn->depth >= 24) {
+	/* because of the BGR values are in the MSB bytes,
+	 * 'white' is not possible and -1 has a different meaning.
+	 * As a work around (assuming white is more used as
+	 * light yellow (#FFFF7F), we handle this as beining white.
+	 * Thanks to the SM501 not being able to work in MSB on PCI
+	 * on the PowerPC */
+	if (color == 0x7FFFFFFF)
+	    color = -1;
+	color = lswapl(color);
+    }
+#endif
     if (pSmi->ClipTurnedOn) {
-	WaitQueue(4);
+	WaitQueue();
 	WRITE_DPR(pSmi, 0x2C, pSmi->ScissorsLeft);
 	pSmi->ClipTurnedOn = FALSE;
     } else {
-	WaitQueue(3);
+	WaitQueue();
     }
     WRITE_DPR(pSmi, 0x14, color);
     WRITE_DPR(pSmi, 0x34, 0xFFFFFFFF);
     WRITE_DPR(pSmi, 0x38, 0xFFFFFFFF);
 
-    LEAVE_PROC("SMI_SetupForSolidFill");
+    LEAVE();
 }
 
 void
@@ -337,8 +319,8 @@ SMI_SubsequentSolidFillRect(ScrnInfoPtr pScrn, int x, int y, int w, int h)
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_SubsequentSolidFillRect");
-    DEBUG((VERBLEV, "x=%d y=%d w=%d h=%d\n", x, y, w, h));
+    ENTER();
+    DEBUG("x=%d y=%d w=%d h=%d\n", x, y, w, h);
 
     if (pScrn->bitsPerPixel == 24) {
 	x *= 3;
@@ -349,12 +331,20 @@ SMI_SubsequentSolidFillRect(ScrnInfoPtr pScrn, int x, int y, int w, int h)
 	}
     }
 
-    WaitQueue(3);
+    if (IS_MSOC(pSmi)) {
+	/* Clip to prevent negative screen coordinates */
+	if (x < 0)
+	    x = 0;
+	if (y < 0)
+	    y = 0;
+    }
+
+    WaitQueue();
     WRITE_DPR(pSmi, 0x04, (x << 16) | (y & 0xFFFF));
     WRITE_DPR(pSmi, 0x08, (w << 16) | (h & 0xFFFF));
     WRITE_DPR(pSmi, 0x0C, pSmi->AccelCmd);
 
-    LEAVE_PROC("SMI_SubsequentSolidFillRect");
+    LEAVE();
 }
 
 /******************************************************************************/
@@ -368,8 +358,8 @@ SMI_SubsequentSolidHorVertLine(ScrnInfoPtr pScrn, int x, int y, int len,
     SMIPtr pSmi = SMIPTR(pScrn);
     int w, h;
 
-    ENTER_PROC("SMI_SubsequentSolidHorVertLine");
-    DEBUG((VERBLEV, "x=%d y=%d len=%d dir=%d\n", x, y, len, dir));
+    ENTER();
+    DEBUG("x=%d y=%d len=%d dir=%d\n", x, y, len, dir);
 
     if (dir == DEGREES_0) {
 	w = len;
@@ -388,12 +378,12 @@ SMI_SubsequentSolidHorVertLine(ScrnInfoPtr pScrn, int x, int y, int len,
 	}
     }
 
-    WaitQueue(3);
+    WaitQueue();
     WRITE_DPR(pSmi, 0x04, (x << 16) | (y & 0xFFFF));
     WRITE_DPR(pSmi, 0x08, (w << 16) | (h & 0xFFFF));
     WRITE_DPR(pSmi, 0x0C, pSmi->AccelCmd);
 
-    LEAVE_PROC("SMI_SubsequentSolidHorVertLine");
+    LEAVE();
 }
 
 /******************************************************************************/
@@ -406,8 +396,18 @@ SMI_SetupForCPUToScreenColorExpandFill(ScrnInfoPtr pScrn, int fg, int bg,
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_SetupForCPUToScreenColorExpandFill");
-    DEBUG((VERBLEV, "fg=%08X bg=%08X rop=%02X\n", fg, bg, rop));
+    ENTER();
+    DEBUG("fg=%08X bg=%08X rop=%02X\n", fg, bg, rop);
+
+#if __BYTE_ORDER == __BIG_ENDIAN
+    if (pScrn->depth >= 24) {
+	/* see remark elswere */
+	if (fg == 0x7FFFFFFF)
+	    fg = -1;
+	fg = lswapl(fg);
+	bg = lswapl(bg);
+    }
+#endif
 
     pSmi->AccelCmd = XAAGetCopyROP(rop)
 		   | SMI_HOSTBLT_WRITE
@@ -417,17 +417,21 @@ SMI_SetupForCPUToScreenColorExpandFill(ScrnInfoPtr pScrn, int fg, int bg,
     if (bg == -1) {
 	pSmi->AccelCmd |= SMI_TRANSPARENT_SRC;
 
-	WaitQueue(3);
+	WaitQueue();
 	WRITE_DPR(pSmi, 0x14, fg);
 	WRITE_DPR(pSmi, 0x18, ~fg);
 	WRITE_DPR(pSmi, 0x20, fg);
     } else {
-	WaitQueue(2);
+#if __BYTE_ORDER == __BIG_ENDIAN
+	if (bg == 0xFFFFFF7F)
+	    bg = -1;
+#endif
+	WaitQueue();
 	WRITE_DPR(pSmi, 0x14, fg);
 	WRITE_DPR(pSmi, 0x18, bg);
     }
 
-    LEAVE_PROC("SMI_SetupForCPUToScreenColorExpandFill");
+    LEAVE();
 }
 
 void
@@ -436,8 +440,8 @@ SMI_SubsequentCPUToScreenColorExpandFill(ScrnInfoPtr pScrn, int x, int y, int w,
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_SubsequentCPUToScreenColorExpandFill");
-    DEBUG((VERBLEV, "x=%d y=%d w=%d h=%d skipleft=%d\n", x, y, w, h, skipleft));
+    ENTER();
+    DEBUG("x=%d y=%d w=%d h=%d skipleft=%d\n", x, y, w, h, skipleft);
 
     if (pScrn->bitsPerPixel == 24) {
 	x        *= 3;
@@ -450,17 +454,17 @@ SMI_SubsequentCPUToScreenColorExpandFill(ScrnInfoPtr pScrn, int x, int y, int w,
     }
 
     if (skipleft) {
-	WaitQueue(5);
+	WaitQueue();
 	WRITE_DPR(pSmi, 0x2C, (pSmi->ScissorsLeft & 0xFFFF0000)
 			      | (x + skipleft) | 0x2000);
 	pSmi->ClipTurnedOn = TRUE;
     } else {
 	if (pSmi->ClipTurnedOn) {
-	    WaitQueue(5);
+	    WaitQueue();
 	    WRITE_DPR(pSmi, 0x2C, pSmi->ScissorsLeft);
 	    pSmi->ClipTurnedOn = FALSE;
 	} else {
-	    WaitQueue(4);
+	    WaitQueue();
 	}
     }
     WRITE_DPR(pSmi, 0x00, 0);
@@ -468,7 +472,7 @@ SMI_SubsequentCPUToScreenColorExpandFill(ScrnInfoPtr pScrn, int x, int y, int w,
     WRITE_DPR(pSmi, 0x08, (w << 16) | (h & 0xFFFF));
     WRITE_DPR(pSmi, 0x0C, pSmi->AccelCmd);
 
-    LEAVE_PROC("SMI_SubsequentCPUToScreenColorExpandFill");
+    LEAVE();
 }
 
 /******************************************************************************/
@@ -481,36 +485,48 @@ SMI_SetupForMono8x8PatternFill(ScrnInfoPtr pScrn, int patx, int paty, int fg,
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_SetupForMono8x8PatternFill");
-    DEBUG((VERBLEV, "patx=%08X paty=%08X fg=%08X bg=%08X rop=%02X\n", patx,
-	   paty, fg, bg, rop));
+    ENTER();
+    DEBUG("patx=%08X paty=%08X fg=%08X bg=%08X rop=%02X\n",
+	  patx, paty, fg, bg, rop);
 
+#if __BYTE_ORDER == __BIG_ENDIAN
+    if (pScrn->depth >= 24) {
+	if (fg == 0x7FFFFFFF)
+	    fg = -1;
+	fg = lswapl(fg);
+	bg = lswapl(bg);
+    }
+#endif
     pSmi->AccelCmd = XAAGetPatternROP(rop)
 		   | SMI_BITBLT
 		   | SMI_START_ENGINE;
 
     if (pSmi->ClipTurnedOn) {
-	WaitQueue(1);
+	WaitQueue();
 	WRITE_DPR(pSmi, 0x2C, pSmi->ScissorsLeft);
 	pSmi->ClipTurnedOn = FALSE;
     }
 
     if (bg == -1) {
-	WaitQueue(5);
+	WaitQueue();
 	WRITE_DPR(pSmi, 0x14, fg);
 	WRITE_DPR(pSmi, 0x18, ~fg);
 	WRITE_DPR(pSmi, 0x20, fg);
 	WRITE_DPR(pSmi, 0x34, patx);
 	WRITE_DPR(pSmi, 0x38, paty);
     } else {
-	WaitQueue(4);
+#if __BYTE_ORDER == __BIG_ENDIAN
+	if (bg == 0xFFFFFF7F)
+	    bg = -1;
+#endif
+	WaitQueue();
 	WRITE_DPR(pSmi, 0x14, fg);
 	WRITE_DPR(pSmi, 0x18, bg);
 	WRITE_DPR(pSmi, 0x34, patx);
 	WRITE_DPR(pSmi, 0x38, paty);
     }
 
-    LEAVE_PROC("SMI_SetupForMono8x8PatternFill");
+    LEAVE();
 }
 
 static void
@@ -519,8 +535,8 @@ SMI_SubsequentMono8x8PatternFillRect(ScrnInfoPtr pScrn, int patx, int paty,
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_SubsequentMono8x8PatternFillRect");
-    DEBUG((VERBLEV, "x=%d y=%d w=%d h=%d\n", x, y, w, h));
+    ENTER();
+    DEBUG("x=%d y=%d w=%d h=%d\n", x, y, w, h);
 
     if (pScrn->bitsPerPixel == 24) {
 	x *= 3;
@@ -530,12 +546,12 @@ SMI_SubsequentMono8x8PatternFillRect(ScrnInfoPtr pScrn, int patx, int paty,
 	}
     }
 
-    WaitQueue(3);
+    WaitQueue();
     WRITE_DPR(pSmi, 0x04, (x << 16) | (y & 0xFFFF));
     WRITE_DPR(pSmi, 0x08, (w << 16) | (h & 0xFFFF));
     WRITE_DPR(pSmi, 0x0C, pSmi->AccelCmd);
 
-    LEAVE_PROC("SMI_SubsequentMono8x8PatternFillRect");
+    LEAVE();
 }
 
 /******************************************************************************/
@@ -548,20 +564,25 @@ SMI_SetupForColor8x8PatternFill(ScrnInfoPtr pScrn, int patx, int paty, int rop,
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_SetupForColor8x8PatternFill");
-    DEBUG((VERBLEV, "patx=%d paty=%d rop=%02X trans_color=%08X\n", patx, paty,
-	   rop, trans_color));
+    ENTER();
+    DEBUG("patx=%d paty=%d rop=%02X trans_color=%08X\n",
+	  patx, paty, rop, trans_color);
 
     pSmi->AccelCmd = XAAGetPatternROP(rop)
 		   | SMI_BITBLT
 		   | SMI_COLOR_PATTERN
 		   | SMI_START_ENGINE;
 
+#if __BYTE_ORDER == __BIG_ENDIAN
+    if (pScrn->depth >= 24)
+	trans_color = lswapl(trans_color);
+#endif
     if (pScrn->bitsPerPixel <= 16) {
 	/* PDR#950 */
-	CARD8* pattern = pSmi->FBBase + (patx + paty * pSmi->Stride) * pSmi->Bpp;
+	CARD8* pattern = pSmi->FBBase +
+	    (patx + paty * pScrn->displayWidth) * pSmi->Bpp;
 
-	WaitIdleEmpty();
+	WaitIdle();
 	WRITE_DPR(pSmi, 0x0C, SMI_BITBLT | SMI_COLOR_PATTERN);
 	memcpy(pSmi->DataPortBase, pattern, 8 * pSmi->Bpp * 8);
     } else {
@@ -573,24 +594,26 @@ SMI_SetupForColor8x8PatternFill(ScrnInfoPtr pScrn, int patx, int paty, int rop,
 	    }
 	}
 
-	WaitQueue(1);
+	WaitQueue();
 	WRITE_DPR(pSmi, 0x00, (patx << 16) | (paty & 0xFFFF));
     }
+
+    WaitQueue();
 
     if (trans_color == -1) {
 	pSmi->AccelCmd |= SMI_TRANSPARENT_SRC | SMI_TRANSPARENT_PXL;
 
-	WaitQueue(1);
+	WaitQueue();
 	WRITE_DPR(pSmi, 0x20, trans_color);
     }
 
     if (pSmi->ClipTurnedOn) {
-	WaitQueue(1);
+	WaitQueue();
 	WRITE_DPR(pSmi, 0x2C, pSmi->ScissorsLeft);
 	pSmi->ClipTurnedOn = FALSE;
     }
 
-    LEAVE_PROC("SMI_SetupForColor8x8PatternFill");
+    LEAVE();
 }
 
 static void
@@ -599,8 +622,8 @@ SMI_SubsequentColor8x8PatternFillRect(ScrnInfoPtr pScrn, int patx, int paty,
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_SubsequentColor8x8PatternFillRect");
-    DEBUG((VERBLEV, "x=%d y=%d w=%d h=%d\n", x, y, w, h));
+    ENTER();
+    DEBUG("x=%d y=%d w=%d h=%d\n", x, y, w, h);
 
     if (pScrn->bitsPerPixel == 24) {
 	x *= 3;
@@ -611,12 +634,12 @@ SMI_SubsequentColor8x8PatternFillRect(ScrnInfoPtr pScrn, int patx, int paty,
 	}
     }
 
-    WaitQueue(3);
+    WaitQueue();
     WRITE_DPR(pSmi, 0x04, (x << 16) | (y & 0xFFFF));
     WRITE_DPR(pSmi, 0x08, (w << 16) | (h & 0xFFFF));	/* PDR#950 */
     WRITE_DPR(pSmi, 0x0C, pSmi->AccelCmd);
 
-    LEAVE_PROC("SMI_SubsequentColor8x8PatternFillRect");
+    LEAVE();
 }
 
 #if SMI_USE_IMAGE_WRITES
@@ -630,22 +653,30 @@ SMI_SetupForImageWrite(ScrnInfoPtr pScrn, int rop, unsigned int planemask,
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_SetupForImageWrite");
-    DEBUG((VERBLEV, "rop=%02X trans_color=%08X bpp=%d depth=%d\n", rop,
-	   trans_color, bpp, depth));
+    ENTER();
+    DEBUG("rop=%02X trans_color=%08X bpp=%d depth=%d\n",
+	  rop, trans_color, bpp, depth);
 
+#if __BYTE_ORDER == __BIG_ENDIAN
+    if (pScrn->depth >= 24)
+	trans_color = lswapl(trans_color);
+#endif
     pSmi->AccelCmd = XAAGetCopyROP(rop)
 		   | SMI_HOSTBLT_WRITE
 		   | SMI_START_ENGINE;
 
     if (trans_color != -1) {
+#if __BYTE_ORDER == __BIG_ENDIAN
+	if (trans_color == 0xFFFFFF7F)
+	    trans_color = -1;
+#endif
 	pSmi->AccelCmd |= SMI_TRANSPARENT_SRC | SMI_TRANSPARENT_PXL;
 
-	WaitQueue(1);
+	WaitQueue();
 	WRITE_DPR(pSmi, 0x20, trans_color);
     }
 
-    LEAVE_PROC("SMI_SetupForImageWrite");
+    LEAVE();
 }
 
 static void
@@ -654,8 +685,8 @@ SMI_SubsequentImageWriteRect(ScrnInfoPtr pScrn, int x, int y, int w, int h,
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_SubsequentImageWriteRect");
-    DEBUG((VERBLEV, "x=%d y=%d w=%d h=%d skipleft=%d\n", x, y, w, h, skipleft));
+    ENTER();
+    DEBUG("x=%d y=%d w=%d h=%d skipleft=%d\n", x, y, w, h, skipleft);
 
     if (pScrn->bitsPerPixel == 24) {
 	x        *= 3;
@@ -668,17 +699,17 @@ SMI_SubsequentImageWriteRect(ScrnInfoPtr pScrn, int x, int y, int w, int h,
     }
 
     if (skipleft) {
-	WaitQueue(5);
+	WaitQueue();
 	WRITE_DPR(pSmi, 0x2C, (pSmi->ScissorsLeft & 0xFFFF0000) |
 			      (x + skipleft) | 0x2000);
 	pSmi->ClipTurnedOn = TRUE;
     } else {
 	if (pSmi->ClipTurnedOn) {
-	    WaitQueue(5);
+	    WaitQueue();
 	    WRITE_DPR(pSmi, 0x2C, pSmi->ScissorsLeft);
 	    pSmi->ClipTurnedOn = FALSE;
 	} else {
-	    WaitQueue(4);
+	    WaitQueue();
 	}
     }
     WRITE_DPR(pSmi, 0x00, 0);
@@ -686,159 +717,6 @@ SMI_SubsequentImageWriteRect(ScrnInfoPtr pScrn, int x, int y, int w, int h,
     WRITE_DPR(pSmi, 0x08, (w << 16) | (h & 0xFFFF));
     WRITE_DPR(pSmi, 0x0C, pSmi->AccelCmd);
 
-    LEAVE_PROC("SMI_SubsequentImageWriteRect");
+    LEAVE();
 }
 #endif
-
-/******************************************************************************/
-/*  Polylines							         #671 */
-/******************************************************************************/
-
-/*
-
-In order to speed up the "logout" screen in rotated modes, we need to intercept
-the Polylines function. Normally, the polylines are drawn and the shadowFB is
-then sending a request of the bounding rectangle of those poylines. This should
-be okay, if it weren't for the fact that the Gnome logout screen is drawing
-polylines in rectangles and this asks for a rotation of the entire rectangle.
-This is very slow.
-
-To circumvent this slowness, we intercept the ValidatePolylines function and
-override the default "Fallback" Polylines with our own Polylines function. Our
-Polylines function first draws the polylines through the original Fallback
-function and then rotates the lines, line by line. We then set a flag and
-return control to the shadowFB which will try to rotate the bounding rectangle.
-However, the flag has been set and the RefreshArea function does nothing but
-clear the flag so the next Refresh that comes in shoiuld be handled correctly.
-
-All this code improves the speed quite a bit.
-
-*/
-
-#define IS_VISIBLE(pWin) \
-( \
-    pScrn->vtSema \
-    && (((WindowPtr) pWin)->visibility != VisibilityFullyObscured) \
-)
-
-#define TRIM_BOX(box, pGC) \
-{ \
-    BoxPtr extents = &pGC->pCompositeClip->extents; \
-    if (box.x1 < extents->x1) box.x1 = extents->x1; \
-    if (box.y1 < extents->y1) box.y1 = extents->y1; \
-    if (box.x2 > extents->x2) box.x2 = extents->x2; \
-    if (box.y2 > extents->y2) box.y2 = extents->y2; \
-}
-
-#define TRANSLATE_BOX(box, pDraw) \
-{ \
-    box.x1 += pDraw->x; \
-    box.y1 += pDraw->y; \
-    box.x2 += pDraw->x; \
-    box.y2 += pDraw->y; \
-}
-
-#define BOX_NOT_EMPTY(box) \
-    ((box.x2 > box.x1) && (box.y2 > box.y1))
-
-static void
-SMI_ValidatePolylines(GCPtr pGC, unsigned long changes, DrawablePtr pDraw)
-{
-    XAAInfoRecPtr infoRec = GET_XAAINFORECPTR_FROM_GC(pGC);
-    SMIPtr pSmi = SMIPTR(infoRec->pScrn);
-
-    ENTER_PROC("SMI_ValidatePolylines");
-
-    pSmi->ValidatePolylines(pGC, changes, pDraw);
-    if (pGC->ops->Polylines == XAAGetFallbackOps()->Polylines) {
-	/* Override the Polylines function with our own Polylines function. */
-	pGC->ops->Polylines = SMI_Polylines;
-    }
-
-    LEAVE_PROC("SMI_ValidatePolylines");
-}
-
-static void
-SMI_Polylines(DrawablePtr pDraw, GCPtr pGC, int mode, int npt,
-	      DDXPointPtr pptInit)
-{
-    XAAInfoRecPtr infoRec = GET_XAAINFORECPTR_FROM_GC(pGC);
-    ScrnInfoPtr pScrn = infoRec->pScrn;
-    SMIPtr pSmi = SMIPTR(pScrn);
-
-    ENTER_PROC("SMI_Polylines");
-
-    /* Call the original Polylines function. */
-    pGC->ops->Polylines = XAAGetFallbackOps()->Polylines;
-    (*pGC->ops->Polylines)(pDraw, pGC, mode, npt, pptInit);
-    pGC->ops->Polylines = SMI_Polylines;
-
-    if (IS_VISIBLE(pDraw) && npt) {
-	/* Allocate a temporary buffer for all segments of the polyline. */
-	BoxPtr pBox = xnfcalloc(sizeof(BoxRec), npt);
-	int extra = pGC->lineWidth >> 1, box;
-
-	if (npt > 1) {
-	    /* Adjust the extra space required per polyline segment. */
-	    if (pGC->joinStyle == JoinMiter) {
-		extra = 6 * pGC->lineWidth;
-	    } else if (pGC->capStyle == CapProjecting) {
-		extra = pGC->lineWidth;
-	    }
-	}
-
-	for (box = 0; --npt;) {
-	    /* Setup the bounding box for one polyline segment. */
-	    pBox[box].x1 = pptInit->x;
-	    pBox[box].y1 = pptInit->y;
-	    pptInit++;
-	    pBox[box].x2 = pptInit->x;
-	    pBox[box].y2 = pptInit->y;
-	    if (mode == CoordModePrevious) {
-		pBox[box].x2 += pBox[box].x1;
-		pBox[box].y2 += pBox[box].y1;
-	    }
-
-	    /* Sort coordinates. */
-	    if (pBox[box].x1 > pBox[box].x2) {
-		int tmp = pBox[box].x1;
-		pBox[box].x1 = pBox[box].x2;
-		pBox[box].x2 = tmp;
-	    }
-	    if (pBox[box].y1 > pBox[box].y2) {
-		int tmp = pBox[box].y1;
-		pBox[box].y1 = pBox[box].y2;
-		pBox[box].y2 = tmp;
-	    }
-
-	    /* Add extra space required for each polyline segment. */
-	    pBox[box].x1 -= extra;
-	    pBox[box].y1 -= extra;
-	    pBox[box].x2 += extra + 1;
-	    pBox[box].y2 += extra + 1;
-
-	    /* See if we need to draw this polyline segment. */
-	    TRANSLATE_BOX(pBox[box], pDraw);
-	    TRIM_BOX(pBox[box], pGC);
-	    if (BOX_NOT_EMPTY(pBox[box])) {
-		box++;
-	    }
-	}
-
-	if (box) {
-	    /* Refresh all polyline segments now. */
-	    if (pSmi->Chipset == SMI_COUGAR3DR) {
-		SMI_RefreshArea730(pScrn, box, pBox);
-	    } else {
-		SMI_RefreshArea(pScrn, box, pBox);
-	    }
-	}
-
-	/* Free the temporary buffer. */
-	xfree(pBox);
-    }
-
-    pSmi->polyLines = TRUE;
-    LEAVE_PROC("SMI_Polylines");
-}
-

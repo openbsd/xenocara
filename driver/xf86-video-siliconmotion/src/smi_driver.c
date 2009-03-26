@@ -36,9 +36,11 @@ authorization from The XFree86 Project or Silicon Motion.
 #include "xf86DDC.h"
 #include "xf86int10.h"
 #include "vbe.h"
-#include "shadowfb.h"
 
 #include "smi.h"
+#include "smi_501.h"
+#include "smilynx.h"
+#include "smi_crtc.h"
 
 #include "globals.h"
 #define DPMS_SERVER
@@ -47,8 +49,11 @@ authorization from The XFree86 Project or Silicon Motion.
 /*
  * Internals
  */
+static Bool SMI_MapMmio(ScrnInfoPtr pScrn);
+static Bool SMI_DetectMem(ScrnInfoPtr pScrn);
 static void SMI_EnableMmio(ScrnInfoPtr pScrn);
 static void SMI_DisableMmio(ScrnInfoPtr pScrn);
+static Bool SMI_HWInit(ScrnInfoPtr pScrn);
 
 /*
  * Forward definitions for the functions that make up the driver.
@@ -60,33 +65,22 @@ static Bool SMI_Probe(DriverPtr drv, int flags);
 static Bool SMI_PreInit(ScrnInfoPtr pScrn, int flags);
 static Bool SMI_EnterVT(int scrnIndex, int flags);
 static void SMI_LeaveVT(int scrnIndex, int flags);
-static void SMI_Save (ScrnInfoPtr pScrn);
-static void SMI_WriteMode (ScrnInfoPtr pScrn, vgaRegPtr, SMIRegPtr);
 static Bool SMI_ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc,
                            char **argv);
-static int SMI_InternalScreenInit(int scrnIndex, ScreenPtr pScreen);
-static void SMI_PrintRegs(ScrnInfoPtr);
-static ModeStatus SMI_ValidMode(int scrnIndex, DisplayModePtr mode,
-                                Bool verbose, int flags);
 static void SMI_DisableVideo(ScrnInfoPtr pScrn);
 static void SMI_EnableVideo(ScrnInfoPtr pScrn);
-static Bool SMI_MapMem(ScrnInfoPtr pScrn);
-static void SMI_UnmapMem(ScrnInfoPtr pScrn);
-static Bool SMI_ModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
 static Bool SMI_CloseScreen(int scrnIndex, ScreenPtr pScreen);
 static Bool SMI_SaveScreen(ScreenPtr pScreen, int mode);
-static void SMI_LoadPalette(ScrnInfoPtr pScrn, int numColors, int *indicies,
-                            LOCO *colors, VisualPtr pVisual);
-static void SMI_DisplayPowerManagementSet(ScrnInfoPtr pScrn,
-                                          int PowerManagementMode, int flags);
-static Bool SMI_ddc1(int scrnIndex);
-static unsigned int SMI_ddc1Read(ScrnInfoPtr pScrn);
 static void SMI_FreeScreen(int ScrnIndex, int flags);
 static void SMI_ProbeDDC(ScrnInfoPtr pScrn, int index);
 static void SMI_DetectPanelSize(ScrnInfoPtr pScrn);
+static void SMI_DetectMCLK(ScrnInfoPtr pScrn);
 
-
-#define SILICONMOTION_NAME          "Silicon Motion"
+/*
+ * xf86VDrvMsgVerb prints up to 14 characters prefix, where prefix has the
+ * format "%s(%d): " so, use name "SMI" instead of "Silicon Motion"
+ */
+#define SILICONMOTION_NAME          "SMI"
 #define SILICONMOTION_DRIVER_NAME   "siliconmotion"
 #define SILICONMOTION_VERSION_NAME  PACKAGE_VERSION
 #define SILICONMOTION_VERSION_MAJOR PACKAGE_VERSION_MAJOR
@@ -95,6 +89,13 @@ static void SMI_DetectPanelSize(ScrnInfoPtr pScrn);
 #define SILICONMOTION_DRIVER_VERSION ((SILICONMOTION_VERSION_MAJOR << 24) | \
                                       (SILICONMOTION_VERSION_MINOR << 16) | \
                                       (SILICONMOTION_PATCHLEVEL))
+
+#if SMI_DEBUG
+int smi_indent = 1;
+#endif
+
+/* for dualhead */
+int gSMIEntityIndex = -1;
 
 /*
  * This contains the functions needed by the server after loading the
@@ -125,12 +126,13 @@ static SymTabRec SMIChipsets[] =
     { PCI_CHIP_SMI712, "LynxEM+" },
     { PCI_CHIP_SMI720, "Lynx3DM" },
     { PCI_CHIP_SMI731, "Cougar3DR" },
+    { PCI_CHIP_SMI501, "MSOC"	 },
     { -1,             NULL      }
 };
 
 static PciChipsets SMIPciChipsets[] =
 {
-    /* numChipset,		PciID,				Resource */
+    /* numChipset,	PciID,			Resource */
     { PCI_CHIP_SMI910,	PCI_CHIP_SMI910,	RES_SHARED_VGA },
     { PCI_CHIP_SMI810,	PCI_CHIP_SMI810,	RES_SHARED_VGA },
     { PCI_CHIP_SMI820,	PCI_CHIP_SMI820,	RES_SHARED_VGA },
@@ -138,58 +140,53 @@ static PciChipsets SMIPciChipsets[] =
     { PCI_CHIP_SMI712,	PCI_CHIP_SMI712,	RES_SHARED_VGA },
     { PCI_CHIP_SMI720,	PCI_CHIP_SMI720,	RES_SHARED_VGA },
     { PCI_CHIP_SMI731,	PCI_CHIP_SMI731,	RES_SHARED_VGA },
-    { -1,				-1,					RES_UNDEFINED  }
+    { PCI_CHIP_SMI501,	PCI_CHIP_SMI501,	RES_UNDEFINED  },
+    { -1,		-1,			RES_UNDEFINED  }
 };
 
 typedef enum
 {
     OPTION_PCI_BURST,
-    OPTION_FIFO_CONSERV,
-    OPTION_FIFO_MODERATE,
-    OPTION_FIFO_AGGRESSIVE,
     OPTION_PCI_RETRY,
     OPTION_NOACCEL,
     OPTION_MCLK,
-    OPTION_SHOWCACHE,
+    OPTION_MXCLK,
     OPTION_SWCURSOR,
     OPTION_HWCURSOR,
-    OPTION_SHADOW_FB,
-    OPTION_ROTATE,
     OPTION_VIDEOKEY,
     OPTION_BYTESWAP,
     /* CZ 26.10.2001: interlaced video */
     OPTION_INTERLACED,
     /* end CZ */
     OPTION_USEBIOS,
-    OPTION_ZOOMONLCD,
     OPTION_DUALHEAD,
     OPTION_ACCELMETHOD,
+    OPTION_PANEL_SIZE,
+    OPTION_USE_FBDEV,
+    OPTION_CSCVIDEO,
     NUMBER_OF_OPTIONS
 } SMIOpts;
 
 static const OptionInfoRec SMIOptions[] =
 {
-    { OPTION_PCI_BURST,	     "pci_burst",	  OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_FIFO_CONSERV,    "fifo_conservative", OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_FIFO_MODERATE,   "fifo_moderate",	  OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_FIFO_AGGRESSIVE, "fifo_aggressive",	  OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_PCI_RETRY,	     "pci_retry",	  OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_PCI_BURST,	     "pci_burst",	  OPTV_BOOLEAN, {0}, TRUE },
+    { OPTION_PCI_RETRY,	     "pci_retry",	  OPTV_BOOLEAN, {0}, TRUE },
     { OPTION_NOACCEL,	     "NoAccel",		  OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_MCLK,	     "set_mclk",	  OPTV_FREQ,	{0}, FALSE },
-    { OPTION_SHOWCACHE,	     "show_cache",	  OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_HWCURSOR,	     "HWCursor",	  OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_MCLK,	     "MCLK",		  OPTV_FREQ,	{0}, FALSE },
+    { OPTION_MXCLK,	     "MXCLK",		  OPTV_FREQ,	{0}, FALSE },
+    { OPTION_HWCURSOR,	     "HWCursor",	  OPTV_BOOLEAN, {0}, TRUE },
     { OPTION_SWCURSOR,	     "SWCursor",	  OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_SHADOW_FB,	     "ShadowFB",	  OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_ROTATE,	     "Rotate",		  OPTV_ANYSTR,  {0}, FALSE },
     { OPTION_VIDEOKEY,	     "VideoKey",	  OPTV_INTEGER, {0}, FALSE },
     { OPTION_BYTESWAP,	     "ByteSwap",	  OPTV_BOOLEAN, {0}, FALSE },
     /* CZ 26.10.2001: interlaced video */
-    { OPTION_INTERLACED,	     "Interlaced",        OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_INTERLACED,     "Interlaced",        OPTV_BOOLEAN, {0}, FALSE },
     /* end CZ */
     { OPTION_USEBIOS,	     "UseBIOS",		  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_ZOOMONLCD,	     "ZoomOnLCD",	  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_DUALHEAD,	     "Dualhead",	  OPTV_BOOLEAN,	{0}, FALSE },
+    { OPTION_DUALHEAD,	     "Dualhead",	  OPTV_BOOLEAN,	{0}, TRUE },
     { OPTION_ACCELMETHOD,    "AccelMethod",       OPTV_STRING,  {0}, FALSE },
+    { OPTION_PANEL_SIZE,     "PanelSize",	  OPTV_ANYSTR,	{0}, FALSE },
+    { OPTION_USE_FBDEV,	     "UseFBDev",	  OPTV_BOOLEAN,	{0}, FALSE },
+    { OPTION_CSCVIDEO,	     "CSCVideo",	  OPTV_BOOLEAN, {0}, TRUE },
     { -1,		     NULL,		  OPTV_NONE,	{0}, FALSE }
 };
 
@@ -246,14 +243,6 @@ static const char *exaSymbols[] =
     NULL
 };
 
-static const char *ramdacSymbols[] =
-{
-    "xf86CreateCursorInfoRec",
-    "xf86DestroyCursorInfoRec",
-    "xf86InitCursor",
-    NULL
-};
-
 static const char *ddcSymbols[] =
 {
     "xf86PrintEDID",
@@ -273,12 +262,6 @@ static const char *i2cSymbols[] =
     "xf86I2CDevInit",
     "xf86I2CReadBytes",
     "xf86I2CWriteByte",
-    NULL
-};
-
-static const char *shadowSymbols[] =
-{
-    "ShadowFBInit",
     NULL
 };
 
@@ -355,9 +338,9 @@ siliconmotionSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 	 * Tell the loader about symbols from other modules that this module
 	 * might refer to.
 	 */
-	LoaderRefSymLists(vgahwSymbols, fbSymbols, xaaSymbols, exaSymbols, ramdacSymbols,
+	LoaderRefSymLists(vgahwSymbols, fbSymbols, xaaSymbols, exaSymbols,
 					  ddcSymbols, i2cSymbols, int10Symbols, vbeSymbols,
-					  shadowSymbols, NULL);
+					  NULL);
 
 	/*
 	 * The return value must be non-NULL on success even though there
@@ -378,7 +361,7 @@ siliconmotionSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 static Bool
 SMI_GetRec(ScrnInfoPtr pScrn)
 {
-    ENTER_PROC("SMI_GetRec");
+    ENTER();
 
     /*
      * Allocate an 'Chip'Rec, and hook it into pScrn->driverPrivate.
@@ -389,41 +372,44 @@ SMI_GetRec(ScrnInfoPtr pScrn)
 	pScrn->driverPrivate = xnfcalloc(sizeof(SMIRec), 1);
     }
 
-    LEAVE_PROC("SMI_GetRec");
-    return TRUE;
+    LEAVE(TRUE);
 }
 
 static void
 SMI_FreeRec(ScrnInfoPtr pScrn)
 {
-    ENTER_PROC("SMI_FreeRec");
+    SMIPtr	pSmi = SMIPTR(pScrn);
 
-    if (pScrn->driverPrivate != NULL) {
+    ENTER();
+
+    if (pSmi) {
+	xfree(pSmi->save);
+	xfree(pSmi->mode);
 	xfree(pScrn->driverPrivate);
 	pScrn->driverPrivate = NULL;
     }
 
-    LEAVE_PROC("SMI_FreeRec");
+    LEAVE();
 }
 
 static const OptionInfoRec *
 SMI_AvailableOptions(int chipid, int busid)
 {
-    ENTER_PROC("SMI_AvailableOptions");
-    LEAVE_PROC("SMI_AvailableOptions");
-    return SMIOptions;
+    ENTER();
+
+    LEAVE(SMIOptions);
 }
 
 static void
 SMI_Identify(int flags)
 {
-    ENTER_PROC("SMI_Identify");
+    ENTER();
 
     xf86PrintChipsets(SILICONMOTION_NAME, "driver (version "
 		SILICONMOTION_VERSION_NAME ") for Silicon Motion Lynx chipsets",
 		SMIChipsets);
 
-    LEAVE_PROC("SMI_Identify");
+    LEAVE();
 }
 
 static Bool
@@ -436,21 +422,17 @@ SMI_Probe(DriverPtr drv, int flags)
     int numUsed;
     Bool foundScreen = FALSE;
 
-    ENTER_PROC("SMI_Probe");
+    ENTER();
 
     numDevSections = xf86MatchDevice(SILICONMOTION_DRIVER_NAME, &devSections);
 
-    if (numDevSections <= 0) {
+    if (numDevSections <= 0)
 	/* There's no matching device section in the config file, so quit now. */
-	LEAVE_PROC("SMI_Probe");
-	return FALSE;
-    }
+	LEAVE(FALSE);
 
 #ifndef XSERVER_LIBPCIACCESS
-    if (xf86GetPciVideoInfo() == NULL) {
-	LEAVE_PROC("SMI_Probe");
-	return FALSE;
-    }
+    if (xf86GetPciVideoInfo() == NULL)
+	LEAVE(FALSE);
 #endif
 
     numUsed = xf86MatchPciInstances(SILICONMOTION_NAME, PCI_SMI_VENDOR_ID,
@@ -459,41 +441,41 @@ SMI_Probe(DriverPtr drv, int flags)
 
     /* Free it since we don't need that list after this */
     xfree(devSections);
-    if (numUsed <= 0) {
-	LEAVE_PROC("SMI_Probe");
-	return FALSE;
-    }
+    if (numUsed <= 0)
+	LEAVE(FALSE);
 
-    if (flags & PROBE_DETECT) {
-		foundScreen = TRUE;
-    } else {
+    if (flags & PROBE_DETECT)
+	foundScreen = TRUE;
+    else {
+	ScrnInfoPtr	pScrn;
+	EntityInfoPtr	pEnt;
+
 	for (i = 0; i < numUsed; i++) {
-	    /* Allocate a ScrnInfoRec and claim the slot */
-	    ScrnInfoPtr pScrn = xf86AllocateScreen(drv, 0);
+	    if ((pScrn = xf86ConfigPciEntity(NULL, 0, usedChips[i],
+					     SMIPciChipsets, NULL,
+					     NULL, NULL, NULL, NULL))) {
+		pScrn->driverVersion = SILICONMOTION_DRIVER_VERSION;
+		pScrn->driverName    = SILICONMOTION_DRIVER_NAME;
+		pScrn->name	     = SILICONMOTION_NAME;
+		pScrn->Probe	     = SMI_Probe;
+		pScrn->PreInit	     = SMI_PreInit;
+		pScrn->ScreenInit    = SMI_ScreenInit;
+		pScrn->SwitchMode    = SMI_SwitchMode;
+		pScrn->AdjustFrame   = SMI_AdjustFrame;
 
-	    /* Fill in what we can of the ScrnInfoRec */
-	    pScrn->driverVersion = SILICONMOTION_DRIVER_VERSION;
-	    pScrn->driverName	 = SILICONMOTION_DRIVER_NAME;
-	    pScrn->name		 = SILICONMOTION_NAME;
-	    pScrn->Probe	 = SMI_Probe;
-	    pScrn->PreInit	 = SMI_PreInit;
-	    pScrn->ScreenInit	 = SMI_ScreenInit;
-	    pScrn->SwitchMode	 = SMI_SwitchMode;
-	    pScrn->AdjustFrame	 = SMI_AdjustFrame;
-	    pScrn->EnterVT	 = SMI_EnterVT;
-	    pScrn->LeaveVT	 = SMI_LeaveVT;
-	    pScrn->FreeScreen	 = SMI_FreeScreen;
-	    pScrn->ValidMode	 = SMI_ValidMode;
-	    foundScreen		 = TRUE;
-
-	    xf86ConfigActivePciEntity(pScrn, usedChips[i], SMIPciChipsets, NULL,
-				      NULL, NULL, NULL, NULL);
+		if ((pEnt = xf86GetEntityInfo(usedChips[i]))) {
+			pScrn->EnterVT   = SMI_EnterVT;
+			pScrn->LeaveVT   = SMI_LeaveVT;
+		    xfree(pEnt);
+		}
+		pScrn->FreeScreen    = SMI_FreeScreen;
+		foundScreen	     = TRUE;
+	    }
 	}
     }
     xfree(usedChips);
 
-    LEAVE_PROC("SMI_Probe");
-    return foundScreen;
+    LEAVE(foundScreen);
 }
 
 static Bool
@@ -502,80 +484,96 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
     EntityInfoPtr pEnt;
     SMIPtr pSmi;
     MessageType from;
-    int i;
-    double real;
-    ClockRangePtr clockRanges;
-    char *s;
-    unsigned char config, m, n, shift;
-    int mclk;
     vgaHWPtr hwp;
-    int vgaCRIndex, vgaIOBase;
-    vbeInfoPtr pVbe = NULL;
 	
-    ENTER_PROC("SMI_PreInit");
-
-    if (flags & PROBE_DETECT) {
-	SMI_ProbeDDC(pScrn, xf86GetEntityInfo(pScrn->entityList[0])->index);
-	LEAVE_PROC("SMI_PreInit");
-	return TRUE;
-    }
+    ENTER();
 
     /* Ignoring the Type list for now.  It might be needed when multiple cards
      * are supported.
      */
-    if (pScrn->numEntities > 1) {
-	LEAVE_PROC("SMI_PreInit");
-	return FALSE;
-    }
-
-    /* The vgahw module should be loaded here when needed */
-    if (!xf86LoadSubModule(pScrn, "vgahw")) {
-	LEAVE_PROC("SMI_PreInit");
-	return FALSE;
-    }
-
-    xf86LoaderReqSymLists(vgahwSymbols, NULL);
-
-    /*
-     * Allocate a vgaHWRec
-     */
-    if (!vgaHWGetHWRec(pScrn)) {
-	LEAVE_PROC("SMI_PreInit");
-	return FALSE;
-    }
+    if (pScrn->numEntities > 1)
+	LEAVE(FALSE);
 
     /* Allocate the SMIRec driverPrivate */
-    if (!SMI_GetRec(pScrn)) {
-	LEAVE_PROC("SMI_PreInit");
-	return FALSE;
-    }
+    if (!SMI_GetRec(pScrn))
+	LEAVE(FALSE);
     pSmi = SMIPTR(pScrn);
+
+    /* Find the PCI slot for this screen */
+    pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
+
+    pSmi->PciInfo = xf86GetPciInfoForEntity(pEnt->index);
+    pSmi->Chipset = PCI_DEV_DEVICE_ID(pSmi->PciInfo);
+
+    if (IS_MSOC(pSmi)) {
+	pSmi->Save = SMI501_Save;
+	pSmi->save = xnfcalloc(sizeof(MSOCRegRec), 1);
+	pSmi->mode = xnfcalloc(sizeof(MSOCRegRec), 1);
+    }
+    else {
+	pSmi->Save = SMILynx_Save;
+	pSmi->save = xnfcalloc(sizeof(SMIRegRec), 1);
+	pSmi->mode = xnfcalloc(sizeof(SMIRegRec), 1);
+    }
+
+    if (flags & PROBE_DETECT) {
+	if (!IS_MSOC(pSmi))
+	    SMI_ProbeDDC(pScrn, xf86GetEntityInfo(pScrn->entityList[0])->index);
+	LEAVE(TRUE);
+    }
+
+    if (pEnt->location.type != BUS_PCI || pEnt->resources) {
+	xfree(pEnt);
+	SMI_FreeRec(pScrn);
+	LEAVE(FALSE);
+    }
+    pSmi->PciInfo = xf86GetPciInfoForEntity(pEnt->index);
 
     /* Set pScrn->monitor */
     pScrn->monitor = pScrn->confScreen->monitor;
 
+    if (!IS_MSOC(pSmi)) {
+	/* The vgahw module should be loaded here when needed */
+	if (!xf86LoadSubModule(pScrn, "vgahw"))
+	    LEAVE(FALSE);
+
+	xf86LoaderReqSymLists(vgahwSymbols, NULL);
+
+	/*
+	 * Allocate a vgaHWRec
+	 */
+	if (!vgaHWGetHWRec(pScrn))
+	    LEAVE(FALSE);
+
+	hwp = VGAHWPTR(pScrn);
+	pSmi->PIOBase = hwp->PIOOffset;
+
+	xf86ErrorFVerb(VERBLEV, "\tSMI_PreInit vgaCRIndex=%x, vgaIOBase=%x, "
+		       "MMIOBase=%p\n", hwp->IOBase + VGA_CRTC_INDEX_OFFSET,
+		       hwp->IOBase, hwp->MMIOBase);
+    }
+
     /*
      * The first thing we should figure out is the depth, bpp, etc.
      */
-    if (!xf86SetDepthBpp(pScrn, 0, 0, 0, Support32bppFb)) {
-	LEAVE_PROC("SMI_PreInit");
-	return FALSE;
-    }
+    if (!xf86SetDepthBpp(pScrn, 0, 0, 0, Support32bppFb))
+	LEAVE(FALSE);
 
     /* Check that the returned depth is one we support */
-    switch (pScrn->depth) {
-    case 8:
-    case 16:
-    case 24:
-	/* OK */
-	break;
-
-    default:
+    if (pScrn->depth != 8 && pScrn->depth != 16 && pScrn->depth != 24) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "Given depth (%d) is not supported by this driver\n",
 		   pScrn->depth);
-	LEAVE_PROC("SMI_PreInit");
-	return FALSE;
+	LEAVE(FALSE);
+    }
+
+
+    if(pScrn->bitsPerPixel != 8 && pScrn->bitsPerPixel != 16 &&
+       pScrn->bitsPerPixel != 24 && pScrn->bitsPerPixel != 32){
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "Given bpp (%d) is not supported by this driver\n",
+		   pScrn->bitsPerPixel);
+	LEAVE(FALSE);
     }
 
     xf86PrintDepthBpp(pScrn);
@@ -587,25 +585,25 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
     if (pScrn->depth > 8) {
 	/* The defaults are OK for us */
 	rgb zeros = {0, 0, 0};
+#if __BYTE_ORDER == __BIG_ENDIAN
+	rgb masks = {0xff00,0xff0000,0xff000000};
+#else
+	rgb masks = {0, 0, 0};
+#endif
 
-	if (!xf86SetWeight(pScrn, zeros, zeros)) {
-	    LEAVE_PROC("SMI_PreInit");
-	    return FALSE;
-	}
+	if (!xf86SetWeight(pScrn, zeros, masks))
+	    LEAVE(FALSE);
     }
 
-    if (!xf86SetDefaultVisual(pScrn, -1)) {
-	LEAVE_PROC("SMI_PreInit");
-	return FALSE;
-    }
+    if (!xf86SetDefaultVisual(pScrn, -1))
+	LEAVE(FALSE);
 
     /* We don't currently support DirectColor at > 8bpp */
-    if ((pScrn->depth > 8) && (pScrn->defaultVisual != TrueColor)) {
+    if (pScrn->depth > 8 && pScrn->defaultVisual != TrueColor) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Given default visual (%s) "
 		   "is not supported at depth %d\n",
 		   xf86GetVisualName(pScrn->defaultVisual), pScrn->depth);
-	LEAVE_PROC("SMI_PreInit");
-	return FALSE;
+	LEAVE(FALSE);
     }
 
     /* We use a programmable clock */
@@ -615,56 +613,41 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
     xf86CollectOptions(pScrn, NULL);
 
     /* Set the bits per RGB for 8bpp mode */
-    if (pScrn->depth == 8) {
-	pScrn->rgbBits = 6;
+    if (pScrn->depth == 8){
+	pScrn->rgbBits = IS_MSOC(pSmi) ? 8 : 6;
+    }else if(pScrn->depth == 16){
+	/* Use 8 bit LUT for gamma correction*/
+	pScrn->rgbBits = 8;
     }
 
     /* Process the options */
     if (!(pSmi->Options = xalloc(sizeof(SMIOptions))))
-	return FALSE;
+	LEAVE(FALSE);
+
     memcpy(pSmi->Options, SMIOptions, sizeof(SMIOptions));
     xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, pSmi->Options);
 
-    if (xf86ReturnOptValBool(pSmi->Options, OPTION_PCI_BURST, FALSE)) {
-	pSmi->pci_burst = TRUE;
-	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Option: pci_burst - PCI burst "
-		   "read enabled\n");
-    } else {
-	pSmi->pci_burst = FALSE;
-    }
+    /* Enable pci burst by default */
+    from = X_DEFAULT;
+    pSmi->PCIBurst = TRUE;
+    if (xf86GetOptValBool(pSmi->Options, OPTION_PCI_BURST, &pSmi->PCIBurst))
+	from = X_CONFIG;
+    xf86DrvMsg(pScrn->scrnIndex, from, "PCI Burst %sabled\n",
+	       pSmi->PCIBurst ? "en" : "dis");
 
-    pSmi->NoPCIRetry = TRUE;
-    if (xf86ReturnOptValBool(pSmi->Options, OPTION_PCI_RETRY, FALSE)) {
-	if (xf86ReturnOptValBool(pSmi->Options, OPTION_PCI_BURST, FALSE)) {
-	    pSmi->NoPCIRetry = FALSE;
-	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Option: pci_retry\n");
-	} else {
-	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "\"pci_retry\" option "
-		       "requires \"pci_burst\".\n");
+    /* Pci retry enabled by default if pci burst also enabled */
+    from = X_DEFAULT;
+    pSmi->PCIRetry = pSmi->PCIBurst ? TRUE : FALSE;
+    if (xf86GetOptValBool(pSmi->Options, OPTION_PCI_RETRY, &pSmi->PCIRetry)) {
+	from = X_CONFIG;
+	if (pSmi->PCIRetry && !pSmi->PCIBurst) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		       "\"pci_retry\" option requires \"pci_burst\".\n");
+	    pSmi->PCIRetry = FALSE;
 	}
     }
-
-    if (xf86IsOptionSet(pSmi->Options, OPTION_FIFO_CONSERV)) {
-	pSmi->fifo_conservative = TRUE;
-	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Option: fifo_conservative "
-		   "set\n");
-    } else {
-	pSmi->fifo_conservative = FALSE;
-    }
-
-    if (xf86IsOptionSet(pSmi->Options, OPTION_FIFO_MODERATE)) {
-	pSmi->fifo_moderate = TRUE;
-	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Option: fifo_moderate set\n");
-    } else {
-	pSmi->fifo_moderate = FALSE;
-    }
-
-    if (xf86IsOptionSet(pSmi->Options, OPTION_FIFO_AGGRESSIVE)) {
-	pSmi->fifo_aggressive = TRUE;
-	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Option: fifo_aggressive set\n");
-    } else {
-	pSmi->fifo_aggressive = FALSE;
-    }
+    xf86DrvMsg(pScrn->scrnIndex, from, "PCI Retry %sabled\n",
+	       pSmi->PCIRetry ? "en" : "dis");
 
     if (xf86ReturnOptValBool(pSmi->Options, OPTION_NOACCEL, FALSE)) {
 	pSmi->NoAccel = TRUE;
@@ -674,72 +657,25 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 	pSmi->NoAccel = FALSE;
     }
 
-    if (xf86ReturnOptValBool(pSmi->Options, OPTION_SHOWCACHE, FALSE)) {
-	pSmi->ShowCache = TRUE;
-	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Option: show_cache set\n");
-    } else {
-	pSmi->ShowCache = FALSE;
+    if (IS_MSOC(pSmi)) {
+	from = X_DEFAULT;
+	if (xf86GetOptValBool(pSmi->Options, OPTION_USE_FBDEV, &pSmi->UseFBDev))
+	    from = X_CONFIG;
+	xf86DrvMsg(pScrn->scrnIndex, from, "UseFBDev %s.\n",
+		   pSmi->UseFBDev ? "enabled" : "disabled");
     }
 
-    if (xf86GetOptValFreq(pSmi->Options, OPTION_MCLK, OPTUNITS_MHZ, &real)) {
-	pSmi->MCLK = (int)(real * 1000.0);
-	if (pSmi->MCLK <= 120000) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Option: set_mclk set to "
-		       "%1.3f MHz\n", pSmi->MCLK / 1000.0);
-	} else {
-	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "Memory Clock value of "
-		       "%1.3f MHz is larger than limit of 120 MHz\n",
-		       pSmi->MCLK / 1000.0);
-	    pSmi->MCLK = 0;
-	}
-    } else {
-	pSmi->MCLK = 0;
-    }
+    from = X_CONFIG;
+    pSmi->HwCursor = TRUE;
+    /* SWCursor overrides HWCusor if both specified */
+    if (xf86ReturnOptValBool(pSmi->Options, OPTION_SWCURSOR, FALSE))
+	pSmi->HwCursor = FALSE;
+    else if (!xf86GetOptValBool(pSmi->Options, OPTION_HWCURSOR, &pSmi->HwCursor))
+	from = X_DEFAULT;
 
-    from = X_DEFAULT;
-    pSmi->hwcursor = TRUE;
-    if (xf86GetOptValBool(pSmi->Options, OPTION_HWCURSOR, &pSmi->hwcursor)) {
-	from = X_CONFIG;
-    }
-    if (xf86ReturnOptValBool(pSmi->Options, OPTION_SWCURSOR, FALSE)) {
-	pSmi->hwcursor = FALSE;
-	from = X_CONFIG;
-    }
-    xf86DrvMsg(pScrn->scrnIndex, from, "Using %s Cursor\n",
-	       pSmi->hwcursor ? "Hardware" : "Software");
+    xf86DrvMsg(pScrn->scrnIndex, from, "Using %sware Cursor\n",
+	       pSmi->HwCursor ? "Hard" : "Soft");
 
-    if (xf86GetOptValBool(pSmi->Options, OPTION_SHADOW_FB, &pSmi->shadowFB)) {
-	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ShadowFB %s.\n",
-		   pSmi->shadowFB ? "enabled" : "disabled");
-    }
-
-#if 1 /* PDR#932 */
-    if ((pScrn->depth == 8) || (pScrn->depth == 16))
-#endif /* PDR#932 */
-	if ((s = xf86GetOptValString(pSmi->Options, OPTION_ROTATE))) {
-	    if (!xf86NameCmp(s, "CW")) {
-		pSmi->shadowFB = TRUE;
-		pSmi->rotate = SMI_ROTATE_CCW;
-		xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Rotating screen "
-			   "clockwise\n");
-	    } else if (!xf86NameCmp(s, "CCW")) {
-		pSmi->shadowFB = TRUE;
-		pSmi->rotate = SMI_ROTATE_CW;
-		xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Rotating screen counter "
-			   "clockwise\n");
-	    } else {
-		xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "\"%s\" is not a valid "
-			   "value for Option \"Rotate\"\n", s);
-		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Valid options are \"CW\" or "
-			   "\"CCW\"\n");
-	    }
-	}
-
-    if (pSmi->rotate) {
-	/* Disable the RandR extension, it messes up the internal rotation stuff */
-	xf86DisableRandR();
-    }
-		
     if (xf86GetOptValInteger(pSmi->Options, OPTION_VIDEOKEY, &pSmi->videoKey)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Option: Video key set to "
 		   "0x%08X\n", pSmi->videoKey);
@@ -766,42 +702,38 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
     }
     /* end CZ */
 
-    if (xf86GetOptValBool(pSmi->Options, OPTION_USEBIOS, &pSmi->useBIOS)) {
+    if (IS_MSOC(pSmi))
+	pSmi->useBIOS = FALSE;
+    else if (xf86GetOptValBool(pSmi->Options, OPTION_USEBIOS, &pSmi->useBIOS)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Option: UseBIOS %s.\n",
 		   pSmi->useBIOS ? "enabled" : "disabled");
-    } else {
+    }
+    else if(pSmi->Chipset == SMI_LYNX3DM){
+	/* Default to UseBIOS disabled. */
+	pSmi->useBIOS = FALSE;
+    }
+    else {
 	/* Default to UseBIOS enabled. */
 	pSmi->useBIOS = TRUE;
     }
 
-    if (xf86GetOptValBool(pSmi->Options, OPTION_ZOOMONLCD, &pSmi->zoomOnLCD)) {
-	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Option: ZoomOnLCD %s.\n",
-		   pSmi->zoomOnLCD ? "enabled" : "disabled");
-    } else {
-	/* Default to ZoomOnLCD enabled. */
-	pSmi->zoomOnLCD = TRUE;
+    if (pSmi->useBIOS) {
+	if (xf86LoadSubModule(pScrn,"int10")) {
+	    xf86LoaderReqSymLists(int10Symbols,NULL);
+	    pSmi->pInt10 = xf86InitInt10(pEnt->index);
+	}
+
+	if (pSmi->pInt10 && xf86LoadSubModule(pScrn, "vbe")) {
+	    xf86LoaderReqSymLists(vbeSymbols, NULL);
+	    pSmi->pVbe = VBEInit(pSmi->pInt10, pEnt->index);
+	}
+
+	if(!pSmi->pVbe){
+	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "VBE initialization failed: falling back to UseBIOS disabled.\n");
+	    pSmi->useBIOS = FALSE;
+	}
     }
 
-    /* Find the PCI slot for this screen */
-    pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
-    if ((pEnt->location.type != BUS_PCI) || (pEnt->resources)) {
-	xfree(pEnt);
-	SMI_FreeRec(pScrn);
-	LEAVE_PROC("SMI_PreInit");
-	return FALSE;
-    }
-
-    if (xf86LoadSubModule(pScrn,"int10")) {
-	xf86LoaderReqSymLists(int10Symbols,NULL);
-	pSmi->pInt10 = xf86InitInt10(pEnt->index);
-    }
-	
-    if (pSmi->pInt10 && xf86LoadSubModule(pScrn, "vbe")) {
-	xf86LoaderReqSymLists(vbeSymbols, NULL);
-	pVbe = VBEInit(pSmi->pInt10, pEnt->index);
-    }
-
-    pSmi->PciInfo = xf86GetPciInfoForEntity(pEnt->index);
     xf86RegisterResources(pEnt->index, NULL, ResExclusive);
 /*  xf86SetOperatingState(resVgaIo, pEnt->index, ResUnusedOpr); */
 /*  xf86SetOperatingState(resVgaMem, pEnt->index, ResDisableOpr); */
@@ -814,13 +746,15 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 	pScrn->chipset = pEnt->device->chipset;
 	pSmi->Chipset = xf86StringToToken(SMIChipsets, pScrn->chipset);
 	from = X_CONFIG;
-    } else if (pEnt->device->chipID >= 0) {
+    }
+    else if (pEnt->device->chipID >= 0) {
 	pSmi->Chipset = pEnt->device->chipID;
 	pScrn->chipset = (char *) xf86TokenToString(SMIChipsets, pSmi->Chipset);
 	from = X_CONFIG;
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ChipID override: 0x%04X\n",
 		   pSmi->Chipset);
-    } else {
+    }
+    else {
 	from = X_PROBED;
 	pSmi->Chipset = PCI_DEV_DEVICE_ID(pSmi->PciInfo);
 	pScrn->chipset = (char *) xf86TokenToString(SMIChipsets, pSmi->Chipset);
@@ -830,9 +764,9 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 	pSmi->ChipRev = pEnt->device->chipRev;
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ChipRev override: %d\n",
 		   pSmi->ChipRev);
-    } else {
-        pSmi->ChipRev = PCI_DEV_REVISION(pSmi->PciInfo);
     }
+    else
+        pSmi->ChipRev = PCI_DEV_REVISION(pSmi->PciInfo);
     xfree(pEnt);
 
     /*
@@ -842,15 +776,13 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
     if (pScrn->chipset == NULL) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "ChipID 0x%04X is not "
 				"recognised\n", pSmi->Chipset);
-	LEAVE_PROC("SMI_PreInit");
-	return FALSE;
+	LEAVE(FALSE);
     }
 
     if (pSmi->Chipset < 0) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Chipset \"%s\" is not "
 		   "recognised\n", pScrn->chipset);
-	LEAVE_PROC("SMI_PreInit");
-	return FALSE;
+	LEAVE(FALSE);
     }
 
     xf86DrvMsg(pScrn->scrnIndex, from, "Chipset: \"%s\"\n", pScrn->chipset);
@@ -861,250 +793,56 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 #endif
 
     pSmi->Dualhead = FALSE;
-    if (xf86ReturnOptValBool(pSmi->Options, OPTION_DUALHEAD, FALSE) &&
-	SMI_LYNXM_SERIES(pSmi->Chipset)) {
-	pSmi->Dualhead = TRUE;
-    }
 
-    /* tweak options for dualhead */
-    if (pSmi->Dualhead) {
-	pSmi->useBIOS = FALSE;
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "UseBIOS disabled in dualhead mode\n");
-	pSmi->hwcursor = FALSE;
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "No hardware cursor in dualhead mode\n");
-	if (pScrn->bitsPerPixel != 16) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Dualhead only supported at "
-		       "depth 16\n");
-	    return FALSE;
+    from = X_DEFAULT;
+    if (xf86GetOptValBool(pSmi->Options, OPTION_DUALHEAD, &pSmi->Dualhead))
+	from = X_CONFIG;
+
+    if (IS_MSOC(pSmi)) {
+	pSmi->lcd = TRUE;
+	if (pSmi->Dualhead && pSmi->UseFBDev) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		       "Dual head disabled in fbdev mode\n");
+	    pSmi->Dualhead = FALSE;
+	}
+	/* FIXME Randr cursor code only works properly when argb cursors
+	 * are also supported.
+	 * FIXME This probably is a randr cursor bug, and since access to
+	 * hw/xfree86/ramdac/xf86CursorPriv.h:xf86CursorScreenRec.SWCursor
+	 * field is not available, one cannot easily workaround the problem,
+	 * so, just disable it...
+	 * TODO Check with a X Server newer then 1.4.0.90 (that is being
+	 * used in the 502 OEM image).
+	 * */
+	if (pSmi->Dualhead && pSmi->HwCursor) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		       "HW Cursor disabled in dual head mode\n");
+	    pSmi->HwCursor = FALSE;
 	}
     }
-
-    SMI_MapMem(pScrn);
-    SMI_DisableVideo(pScrn);
-
-    hwp = VGAHWPTR(pScrn);
-    vgaIOBase  = hwp->IOBase;
-    vgaCRIndex = vgaIOBase + VGA_CRTC_INDEX_OFFSET;
-    pSmi->PIOBase = hwp->PIOOffset;
-
-    xf86ErrorFVerb(VERBLEV, "\tSMI_PreInit vgaCRIndex=%x, vgaIOBase=%x, "
-		   "MMIOBase=%p\n", vgaCRIndex, vgaIOBase, hwp->MMIOBase);
-
-    /* detect the panel size */
-    SMI_DetectPanelSize(pScrn);
-
-    if (xf86LoadSubModule(pScrn, "i2c")) {
-	xf86LoaderReqSymLists(i2cSymbols, NULL);
-	SMI_I2CInit(pScrn);
-    }
-
-    if (xf86LoadSubModule(pScrn, "ddc")) {
-	xf86MonPtr pMon = NULL;
-
-	xf86LoaderReqSymLists(ddcSymbols, NULL);
-#if 1 /* PDR#579 */
-	if (pVbe) {
-	    pMon = vbeDoEDID(pVbe, NULL);
-	    if (pMon != NULL) {
-		if ((pMon->rawData[0] == 0x00) &&
-		    (pMon->rawData[1] == 0xFF) &&
-		    (pMon->rawData[2] == 0xFF) &&
-		    (pMon->rawData[3] == 0xFF) &&
-		    (pMon->rawData[4] == 0xFF) &&
-		    (pMon->rawData[5] == 0xFF) &&
-		    (pMon->rawData[6] == 0xFF) &&
-		    (pMon->rawData[7] == 0x00)) {
-		    pMon = xf86PrintEDID(pMon);
-		    if (pMon != NULL) {
-			xf86SetDDCproperties(pScrn, pMon);
-		    }
-		}
+    else if (SMI_LYNXM_SERIES(pSmi->Chipset)) {
+	/* tweak options for dualhead */
+	if (pSmi->Dualhead) {
+	    pSmi->useBIOS = FALSE;
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "UseBIOS disabled in dualhead mode\n");
+	    pSmi->HwCursor = FALSE;
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "No hardware cursor in dualhead mode\n");
+	    if (pScrn->bitsPerPixel != 16) {
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Dualhead only supported at "
+			   "depth 16\n");
+		LEAVE(FALSE);
 	    }
-#else
-	if ((pVbe) && 
-	    ((pMon = xf86PrintEDID(vbeDoEDID(pVbe, NULL))) != NULL)) {
-	    xf86SetDDCproperties(pScrn, pMon);
-#endif
-    	} else if (!SMI_ddc1(pScrn->scrnIndex)) {
-	    if (pSmi->I2C) {
-	    	xf86SetDDCproperties(pScrn,
-			xf86PrintEDID(xf86DoEDID_DDC2(pScrn->scrnIndex,
-			pSmi->I2C)));
-	    }
-    	}
-    }
-
-    vbeFree(pVbe);
-    xf86FreeInt10(pSmi->pInt10);
-    pSmi->pInt10 = NULL;
-
-    /*
-     * If the driver can do gamma correction, it should call xf86SetGamma()
-     * here. (from MGA, no ViRGE gamma support yet, but needed for
-     * xf86HandleColormaps support.)
-     */
-    {
-	Gamma zeros = { 0.0, 0.0, 0.0 };
-
-	if (!xf86SetGamma(pScrn, zeros)) {
-	    LEAVE_PROC("SMI_PreInit");
-	    SMI_EnableVideo(pScrn);
-	    SMI_UnmapMem(pScrn);
-	    return FALSE;
 	}
     }
-
-
-    /* Next go on to detect amount of installed ram */
-    config = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x71);
-
-    /* And compute the amount of video memory and offscreen memory */
-    pSmi->videoRAMKBytes = 0;
-
-    if (!pScrn->videoRam) {
-	switch (pSmi->Chipset) {
-	default:
-	{
-	    int mem_table[4] = { 1, 2, 4, 0 };
-	    pSmi->videoRAMKBytes = mem_table[(config >> 6)] * 1024;
-	    break;
-	}
-	case SMI_LYNX3D:
-	{
-	    int mem_table[4] = { 0, 2, 4, 6 };
-	    pSmi->videoRAMKBytes = mem_table[(config >> 6)] * 1024 + 512;
-	    break;
-	}
-	case SMI_LYNX3DM:
-	{
-	    int mem_table[4] = { 16, 2, 4, 8 };
-	    pSmi->videoRAMKBytes = mem_table[(config >> 6)] * 1024;
-	    break;
-	}
-	case SMI_COUGAR3DR:
-	{
-	    /* DANGER - Cougar3DR BIOS is broken - hardcode video ram size */
-	    /* per instructions from Silicon Motion engineers */
-	    pSmi->videoRAMKBytes = 16 * 1024;
-	    break;
-        }
-	}
-	pSmi->videoRAMBytes = pSmi->videoRAMKBytes * 1024;
-	pScrn->videoRam     = pSmi->videoRAMKBytes;
-
-	xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "videoram: %dkB\n",
-		   pSmi->videoRAMKBytes);
-    } else {
-	pSmi->videoRAMKBytes = pScrn->videoRam;
-	pSmi->videoRAMBytes  = pScrn->videoRam * 1024;
-
-	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "videoram: %dk\n",
-		   pSmi->videoRAMKBytes);
-    }
-
-    /* Detect current MCLK and print it for user */
-    m = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6A);
-    n = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6B);
-    switch (n >> 6) {
-    default:
-	shift = 1;
-	break;
-    case 1:
-	shift = 4;
-	break;
-    case 2:
-	shift = 2;
-	break;
-    }
-    n &= 0x3F;
-    mclk = ((1431818 * m) / n / shift + 50) / 100;
-    xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "Detected current MCLK value of "
-	       "%1.3f MHz\n", mclk / 1000.0);
-
-    SMI_EnableVideo(pScrn);
-    SMI_UnmapMem(pScrn);
-
-    pSmi->IsSwitching = FALSE;
-
-    if (pSmi->Dualhead) {
-	pScrn->display->virtualX = 2 * pSmi->lcdWidth;
-	pScrn->display->virtualY = pSmi->lcdHeight;
-    }
-
-    pScrn->virtualX = pScrn->display->virtualX;
-
-    /*
-     * Setup the ClockRanges, which describe what clock ranges are available,
-     * and what sort of modes they can be used for.
-     */
-    clockRanges = xnfcalloc(sizeof(ClockRange),1);
-    clockRanges->next = NULL;
-    clockRanges->minClock = 20000;
-
-    if ((pSmi->Chipset == SMI_LYNX3DM) || (pSmi->Chipset == SMI_COUGAR3DR))
-	clockRanges->maxClock = 200000;
-    else
-        clockRanges->maxClock = 135000;
-
-    clockRanges->clockIndex = -1;
-    clockRanges->interlaceAllowed = FALSE;
-    clockRanges->doubleScanAllowed = FALSE;
-		
-    i = xf86ValidateModes(
-		pScrn,				/* Screen pointer			  */
-		pScrn->monitor->Modes,		/* Available monitor modes		  */
-		pScrn->display->modes,		/* req mode names for screen		  */
-		clockRanges,			/* list of clock ranges allowed		  */
-		NULL,				/* use min/max below			  */
-		128,				/* min line pitch (width)		  */
-		4096,				/* maximum line pitch (width)		  */
-		128,				/* bits of granularity for line pitch     */
-						/* (width) above			  */
-		128,				/* min virtual height			  */
-		4096,				/* max virtual height			  */
-		pScrn->display->virtualX,	/* force virtual x			  */
-		pScrn->display->virtualY,	/* force virtual Y			  */
-		pSmi->videoRAMBytes,		/* size of aperture used to access	  */
-						/* video memory				  */
-		LOOKUP_BEST_REFRESH);		/* how to pick modes			  */
-
-    if (i == -1) {
-	SMI_FreeRec(pScrn);
-	LEAVE_PROC("SMI_PreInit");
-	return FALSE;
-    }
-
-    /* Prune the modes marked as invalid */
-    xf86PruneDriverModes(pScrn);
-
-    if ((i == 0) || (pScrn->modes == NULL)) {
-	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "No valid modes found\n");
-	SMI_FreeRec(pScrn);
-	LEAVE_PROC("SMI_PreInit");
-	return FALSE;
-    }
-    xf86SetCrtcForModes(pScrn, 0);
-
-    /* Set the current mode to the first in the list */
-    pScrn->currentMode = pScrn->modes;
-
-    /* Print the list of modes being used */
-    xf86PrintModes(pScrn);
-
-    /* Set display resolution */
-    xf86SetDpi(pScrn, 0, 0);
-
-    if ((xf86LoadSubModule(pScrn, "fb") == NULL)) {
-	SMI_FreeRec(pScrn);
-	LEAVE_PROC("SMI_PreInit");
-	return FALSE;
-    }
+    xf86DrvMsg(pScrn->scrnIndex, from, "Dual head %sabled\n",
+	       pSmi->Dualhead ? "en" : "dis");
 
     if (!pSmi->NoAccel) {
-	from = X_DEFAULT;
 	char *strptr;
-		
-	if ((strptr = (char *)xf86GetOptValString(pSmi->Options, OPTION_ACCELMETHOD))) {
+
+	from = X_DEFAULT;
+	if ((strptr = (char *)xf86GetOptValString(pSmi->Options,
+						  OPTION_ACCELMETHOD))) {
 	    if (!xf86NameCmp(strptr,"XAA")) {
 		from = X_CONFIG;
 		pSmi->useEXA = FALSE;
@@ -1113,9 +851,111 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 		pSmi->useEXA = TRUE;
 	    }
 	}
-	
+
 	xf86DrvMsg(pScrn->scrnIndex, from, "Using %s acceleration architecture\n",
-        	pSmi->useEXA ? "EXA" : "XAA");
+		pSmi->useEXA ? "EXA" : "XAA");
+    }
+
+    if (IS_MSOC(pSmi)) {
+	pSmi->CSCVideo = !pSmi->useEXA || !pSmi->Dualhead;
+	from = X_DEFAULT;
+	if (xf86GetOptValBool(pSmi->Options, OPTION_CSCVIDEO, &pSmi->CSCVideo)) {
+	    from = X_CONFIG;
+
+	    /* FIXME */
+	    if (pSmi->CSCVideo && pSmi->useEXA && pSmi->Dualhead) {
+		xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+			   "CSCVideo requires XAA or EXA in single head mode.\n");
+		pSmi->CSCVideo = FALSE;
+	    }
+	}
+
+	xf86DrvMsg(pScrn->scrnIndex, from, "CSC Video %sabled\n",
+		   pSmi->CSCVideo ? "en" : "dis");
+    }
+
+    SMI_MapMmio(pScrn);
+    SMI_DetectMem(pScrn);
+    SMI_MapMem(pScrn);
+    SMI_DisableVideo(pScrn);
+
+    /* detect the panel size */
+    SMI_DetectPanelSize(pScrn);
+
+    if(!IS_MSOC(pSmi)){
+	if (xf86LoadSubModule(pScrn, "i2c")) {
+	    xf86LoaderReqSymLists(i2cSymbols, NULL);
+	    SMI_I2CInit(pScrn);
+	}
+	if (xf86LoadSubModule(pScrn, "ddc")) {
+	    xf86LoaderReqSymLists(ddcSymbols, NULL);
+	}
+    }
+
+    /*
+     * If the driver can do gamma correction, it should call xf86SetGamma()
+     */
+    {
+	Gamma zeros = { 0.0, 0.0, 0.0 };
+
+	if (!xf86SetGamma(pScrn, zeros)) {
+	    SMI_EnableVideo(pScrn);
+	    SMI_UnmapMem(pScrn);
+	    LEAVE(FALSE);
+	}
+    }
+
+    SMI_DetectMCLK(pScrn);
+
+    /*
+     * Setup the ClockRanges, which describe what clock ranges are available,
+     * and what sort of modes they can be used for.
+     */
+    pSmi->clockRange.next = NULL;
+    pSmi->clockRange.minClock = 20000;
+
+    if (pSmi->Chipset == SMI_LYNX3DM ||
+	pSmi->Chipset == SMI_COUGAR3DR ||
+	IS_MSOC(pSmi))
+	pSmi->clockRange.maxClock = 200000;
+    else
+        pSmi->clockRange.maxClock = 135000;
+
+    pSmi->clockRange.clockIndex = -1;
+    pSmi->clockRange.interlaceAllowed = FALSE;
+    pSmi->clockRange.doubleScanAllowed = FALSE;
+
+    if(!SMI_CrtcPreInit(pScrn))
+	LEAVE(FALSE);
+
+    if(!SMI_OutputPreInit(pScrn))
+	LEAVE(FALSE);
+
+    /* Only allow growing the screen dimensions if EXA is being used */
+    if (!xf86InitialConfiguration (pScrn, !pSmi->NoAccel && pSmi->useEXA)){
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "No valid modes found\n");
+	LEAVE(FALSE);
+    }
+
+
+    SMI_EnableVideo(pScrn);
+    SMI_UnmapMem(pScrn);
+
+    if(pSmi->pVbe){
+       vbeFree(pSmi->pVbe);
+       pSmi->pVbe = NULL;
+    }
+    if(pSmi->pInt10){
+       xf86FreeInt10(pSmi->pInt10);
+       pSmi->pInt10 = NULL;
+    }
+
+    /* Set display resolution */
+    xf86SetDpi(pScrn, 0, 0);
+
+    if (xf86LoadSubModule(pScrn, "fb") == NULL) {
+	SMI_FreeRec(pScrn);
+	LEAVE(FALSE);
     }
 
     xf86LoaderReqSymLists(fbSymbols, NULL);
@@ -1125,8 +965,7 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 	if (!pSmi->useEXA) {
 	    if (!xf86LoadSubModule(pScrn, "xaa")) {
 		SMI_FreeRec(pScrn);
-		LEAVE_PROC("SMI_PreInit");
-		return FALSE;
+		LEAVE(FALSE);
 	    }
 	    xf86LoaderReqSymLists(xaaSymbols, NULL);
 	} else {
@@ -1135,40 +974,27 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 
 	    memset(&req, 0, sizeof(XF86ModReqInfo));
 	    req.majorversion = 2;
-	    req.minorversion = 0;
+	    req.minorversion = 1;
 			
 	    if (!LoadSubModule(pScrn->module, "exa", NULL, NULL, NULL,
 				&req, &errmaj, &errmin)) {
 		LoaderErrorMsg(NULL, "exa", errmaj, errmin);
 		SMI_FreeRec(pScrn);
-		LEAVE_PROC("SMI_PreInit");
-		return FALSE;
+		LEAVE(FALSE);
 	    }
 	    xf86LoaderReqSymLists(exaSymbols, NULL);
 	}
     }
 
     /* Load ramdac if needed */
-    if (pSmi->hwcursor) {
+    if (pSmi->HwCursor) {
 	if (!xf86LoadSubModule(pScrn, "ramdac")) {
 	    SMI_FreeRec(pScrn);
-	    LEAVE_PROC("SMI_PreInit");
-	    return FALSE;
+	    LEAVE(FALSE);
 	}
-	xf86LoaderReqSymLists(ramdacSymbols, NULL);
     }
 
-    if (pSmi->shadowFB) {
-	if (!xf86LoadSubModule(pScrn, "shadowfb")) {
-	    SMI_FreeRec(pScrn);
-	    LEAVE_PROC("SMI_PreInit");
-	    return FALSE;
-	}
-	xf86LoaderReqSymLists(shadowSymbols, NULL);
-    }
-
-    LEAVE_PROC("SMI_PreInit");
-    return TRUE;
+    LEAVE(TRUE);
 }
 
 /*
@@ -1181,61 +1007,39 @@ SMI_EnterVT(int scrnIndex, int flags)
 {
     ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     SMIPtr pSmi = SMIPTR(pScrn);
-    Bool ret;
 
-    ENTER_PROC("SMI_EnterVT");
+    ENTER();
 
     /* Enable MMIO and map memory */
     SMI_MapMem(pScrn);
-    SMI_Save(pScrn);
 
-    /* #670 */
-    if (pSmi->shadowFB) {
-	pSmi->FBOffset = pSmi->savedFBOffset;
-	pSmi->FBReserved = pSmi->savedFBReserved;
-    }
+    pSmi->Save(pScrn);
 
-    ret = SMI_ModeInit(pScrn, pScrn->currentMode);
+    /* FBBase may have changed after remapping the memory */
+    pScrn->pScreen->ModifyPixmapHeader(pScrn->pScreen->GetScreenPixmap(pScrn->pScreen),
+				       -1,-1,-1,-1,-1, pSmi->FBBase + pSmi->FBOffset);
+    pScrn->pixmapPrivate.ptr=pSmi->FBBase + pSmi->FBOffset;
 
-    /* #670 */
-    if (ret && pSmi->shadowFB) {
-	BoxRec box;
+    if(pSmi->useEXA)
+       pSmi->EXADriverPtr->memoryBase=pSmi->FBBase;
 
-	/* #920 */
-	if (pSmi->paletteBuffer) {
-	    int i;
+    /* Do the CRTC independent initialization */
+    if(!SMI_HWInit(pScrn))
+	LEAVE(FALSE);
 
-	    VGAOUT8(pSmi, VGA_DAC_WRITE_ADDR, 0);
-	    for (i = 0; i < 256 * 3; i++) {
-		VGAOUT8(pSmi, VGA_DAC_DATA, pSmi->paletteBuffer[i]);
-	    }
-	    xfree(pSmi->paletteBuffer);
-	    pSmi->paletteBuffer = NULL;
-	}
+    /* Initialize the chosen modes */
+    if (!xf86SetDesiredModes(pScrn))
+	LEAVE(FALSE);
 
-	if (pSmi->pSaveBuffer) {
-	    memcpy(pSmi->FBBase, pSmi->pSaveBuffer, pSmi->saveBufferSize);
-	    xfree(pSmi->pSaveBuffer);
-	    pSmi->pSaveBuffer = NULL;
-	}
-
-	box.x1 = 0;
-	box.y1 = 0;
-	box.x2 = pScrn->virtualY;
-	box.y2 = pScrn->virtualX;
-	if (pSmi->Chipset == SMI_COUGAR3DR) {
-	    SMI_RefreshArea730(pScrn, 1, &box);
-	} else {
-	    SMI_RefreshArea(pScrn, 1, &box);
-	}
-    }
+    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, VERBLEV,
+		   "Done writing mode.  Register dump:\n");
+    SMI_PrintRegs(pScrn);
 
     /* Reset the grapics engine */
     if (!pSmi->NoAccel)
 	SMI_EngineReset(pScrn);
 
-    LEAVE_PROC("SMI_EnterVT");
-    return ret;
+    LEAVE(TRUE);
 }
 
 /*
@@ -1247,528 +1051,162 @@ SMI_EnterVT(int scrnIndex, int flags)
 static void
 SMI_LeaveVT(int scrnIndex, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
-    SMIPtr pSmi = SMIPTR(pScrn);
-    vgaRegPtr vgaSavePtr = &hwp->SavedReg;
-    SMIRegPtr SMISavePtr = &pSmi->SavedReg;
+    ScrnInfoPtr	pScrn = xf86Screens[scrnIndex];
+    SMIPtr	pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_LeaveVT");
+    ENTER();
 
-    /* #670 */
-    if (pSmi->shadowFB) {
-	pSmi->pSaveBuffer = xnfalloc(pSmi->saveBufferSize);
-	if (pSmi->pSaveBuffer) {
-	    memcpy(pSmi->pSaveBuffer, pSmi->FBBase, pSmi->saveBufferSize);
-	}
+    SMI_AccelSync(pScrn);
 
-	pSmi->savedFBOffset = pSmi->FBOffset;
-	pSmi->savedFBReserved = pSmi->FBReserved;
+    /* Ensure that the rotation BlockHandler is unwrapped, and the shadow
+       pixmaps are deallocated, as the video memory is going to be
+       unmapped.  */
+    xf86RotateCloseScreen(pScrn->pScreen);
 
-	/* #920 */
-	if (pSmi->Bpp == 1) {
-	    pSmi->paletteBuffer = xnfalloc(256 * 3);
-	    if (pSmi->paletteBuffer) {
-		int i;
+    /* Pixmaps that by chance get allocated near the former aperture
+       address shouldn't be considered offscreen. */
+    if(pSmi->useEXA)
+       pSmi->EXADriverPtr->memoryBase=NULL;
 
-		VGAOUT8(pSmi, VGA_DAC_READ_ADDR, 0);
-		for (i = 0; i < 256 * 3; i++) {
-		    pSmi->paletteBuffer[i] = VGAIN8(pSmi, VGA_DAC_DATA);
-		}
-	    }
-	}
+    /* Clear frame buffer */
+    memset(pSmi->FBBase, 0, pSmi->videoRAMBytes);
+
+    if (!IS_MSOC(pSmi)) {
+	vgaHWPtr	hwp = VGAHWPTR(pScrn);
+
+	SMILynx_WriteMode(pScrn, &hwp->SavedReg, pSmi->save);
     }
+    else
+	SMI501_WriteMode(pScrn, pSmi->save);
 
-    memset(pSmi->FBBase, 0, 256 * 1024);	/* #689 */
-    SMI_WriteMode(pScrn, vgaSavePtr, SMISavePtr);
     SMI_UnmapMem(pScrn);
 
-    LEAVE_PROC("SMI_LeaveVT");
-}
-
-/*
- * This function performs the inverse of the restore function: It saves all the
- * standard and extended registers that we are going to modify to set up a video
- * mode.
- */
-
-static void
-SMI_Save(ScrnInfoPtr pScrn)
-{
-    int i;
-    CARD32 offset;
-
-    vgaHWPtr hwp         = VGAHWPTR(pScrn);
-    vgaRegPtr vgaSavePtr = &hwp->SavedReg;
-    SMIPtr pSmi          = SMIPTR(pScrn);
-    SMIRegPtr save       = &pSmi->SavedReg;
-
-    int vgaIOBase  = hwp->IOBase;
-    int vgaCRIndex = vgaIOBase + VGA_CRTC_INDEX_OFFSET;
-    int vgaCRData  = vgaIOBase + VGA_CRTC_DATA_OFFSET;
-
-    ENTER_PROC("SMI_Save");
-
-    /* Save the standard VGA registers */
-    vgaHWSave(pScrn, vgaSavePtr, VGA_SR_ALL);
-    save->smiDACMask = VGAIN8(pSmi, VGA_DAC_MASK);
-    VGAOUT8(pSmi, VGA_DAC_READ_ADDR, 0);
-    for (i = 0; i < 256; i++) {
-	save->smiDacRegs[i][0] = VGAIN8(pSmi, VGA_DAC_DATA);
-	save->smiDacRegs[i][1] = VGAIN8(pSmi, VGA_DAC_DATA);
-	save->smiDacRegs[i][2] = VGAIN8(pSmi, VGA_DAC_DATA);
-    }
-    for (i = 0, offset = 2; i < 8192; i++, offset += 8) {
-	save->smiFont[i] = *(pSmi->FBBase + offset);
-    }
-
-    /* Now we save all the extended registers we need. */
-    save->SR17 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x17);
-    save->SR18 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x18);
-    save->SR21 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x21);
-    save->SR31 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x31);
-    save->SR32 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x32);
-    save->SR6A = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6A);
-    save->SR6B = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6B);
-    save->SR81 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x81);
-    save->SRA0 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0xA0);
-
-    /* vclk1 */
-    save->SR6C = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6C);
-    save->SR6D = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6D);
-    /* vclk1 control */
-    save->SR68 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x68);
-
-    if (pSmi->Dualhead) {
-	/* dualhead stuff */
-	save->SR22 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x22);
-	save->SR40 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x40);
-	save->SR41 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x41);
-	save->SR42 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x42);
-	save->SR43 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x43);
-	save->SR44 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x44);
-	save->SR45 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x45);
-	save->SR48 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x48);
-	save->SR49 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x49);
-	save->SR4A = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x4A);
-	save->SR4B = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x4B);
-	save->SR4C = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x4C);
-	/* PLL2 stuff */
-	save->SR69 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x69);
-	save->SR6E = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6E);
-	save->SR6F = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6F);
-    }
-
-    if (SMI_LYNXM_SERIES(pSmi->Chipset)) {
-	/* Save primary registers */
-	save->CR90[14] = VGAIN8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x9E);
-	VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x9E, save->CR90[14] & ~0x20);
-
-	for (i = 0; i < 16; i++) {
-	    save->CR90[i] = VGAIN8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x90 + i);
-	}
-	save->CR33 = VGAIN8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x33);
-	save->CR3A = VGAIN8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x3A);
-	for (i = 0; i < 14; i++) {
-	    save->CR40[i] = VGAIN8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x40 + i);
-	}
-
-	/* Save secondary registers */
-	VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x9E, save->CR90[14] | 0x20);
-	save->CR33_2 = VGAIN8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x33);
-	for (i = 0; i < 14; i++) {
-	    save->CR40_2[i] = VGAIN8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x40 + i);
-	}
-	save->CR9F_2 = VGAIN8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x9F);
-
-	/* Save common registers */
-	for (i = 0; i < 14; i++) {
-	    save->CRA0[i] = VGAIN8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0xA0 + i);
-	}
-
-	/* PDR#1069 */
-	VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x9E, save->CR90[14]);
-    } else {
-	save->CR33 = VGAIN8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x33);
-	save->CR3A = VGAIN8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x3A);
-	for (i = 0; i < 14; i++) {
-	    save->CR40[i] = VGAIN8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x40 + i);
-	}
-    }
-
-    /* CZ 2.11.2001: for gamma correction (TODO: other chipsets?) */
-    if ((pSmi->Chipset == SMI_LYNX3DM) || (pSmi->Chipset == SMI_COUGAR3DR)) {
-	save->CCR66 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x66);
-    }
-    /* end CZ */
-
-    save->DPR10 = READ_DPR(pSmi, 0x10);
-    save->DPR1C = READ_DPR(pSmi, 0x1C);
-    save->DPR20 = READ_DPR(pSmi, 0x20);
-    save->DPR24 = READ_DPR(pSmi, 0x24);
-    save->DPR28 = READ_DPR(pSmi, 0x28);
-    save->DPR2C = READ_DPR(pSmi, 0x2C);
-    save->DPR30 = READ_DPR(pSmi, 0x30);
-    save->DPR3C = READ_DPR(pSmi, 0x3C);
-    save->DPR40 = READ_DPR(pSmi, 0x40);
-    save->DPR44 = READ_DPR(pSmi, 0x44);
-
-    save->VPR00 = READ_VPR(pSmi, 0x00);
-    save->VPR0C = READ_VPR(pSmi, 0x0C);
-    save->VPR10 = READ_VPR(pSmi, 0x10);
-
-    if (pSmi->Chipset == SMI_COUGAR3DR) {
-	save->FPR00_ = READ_FPR(pSmi, FPR00); 
-	save->FPR0C_ = READ_FPR(pSmi, FPR0C);
-	save->FPR10_ = READ_FPR(pSmi, FPR10);
-    }
-
-    save->CPR00 = READ_CPR(pSmi, 0x00);
-
-    if (!pSmi->ModeStructInit) {
-	/* XXX Should check the return value of vgaHWCopyReg() */
-	vgaHWCopyReg(&hwp->ModeReg, vgaSavePtr);
-	memcpy(&pSmi->ModeReg, save, sizeof(SMIRegRec));
-	pSmi->ModeStructInit = TRUE;
-    }
-
-    if (pSmi->useBIOS && (pSmi->pInt10 != NULL)) {
-	pSmi->pInt10->num = 0x10;
-	pSmi->pInt10->ax = 0x0F00;
-	xf86ExecX86int10(pSmi->pInt10);
-	save->mode = pSmi->pInt10->ax & 0x007F;
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Current mode 0x%02X.\n",
-		   save->mode);
-    }
-
-    if (xf86GetVerbosity() > 1) {
-	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, VERBLEV,
-		       "Saved current video mode.  Register dump:\n");
-	SMI_PrintRegs(pScrn);
-    }
-
-    LEAVE_PROC("SMI_Save");
-}
-
-/*
- * This function is used to restore a video mode. It writes out all of the
- * standard VGA and extended registers needed to setup a video mode.
- */
-
-static void
-SMI_WriteMode(ScrnInfoPtr pScrn, vgaRegPtr vgaSavePtr, SMIRegPtr restore)
-{
-    int i;
-    CARD8 tmp;
-    CARD32 offset;
-
-    vgaHWPtr hwp   = VGAHWPTR(pScrn);
-    SMIPtr pSmi    = SMIPTR(pScrn);
-    int vgaIOBase  = hwp->IOBase;
-    int vgaCRIndex = vgaIOBase + VGA_CRTC_INDEX_OFFSET;
-    int vgaCRData  = vgaIOBase + VGA_CRTC_DATA_OFFSET;
-
-    ENTER_PROC("SMI_WriteMode");
-
-    vgaHWProtect(pScrn, TRUE);
-
-    /* Wait for engine to become idle */
-    if (pSmi->IsSwitching)
-	WaitIdle();
-
-    if (pSmi->useBIOS && (pSmi->pInt10 != NULL) && (restore->mode != 0)) {
-	pSmi->pInt10->num = 0x10;
-	pSmi->pInt10->ax = restore->mode | 0x80;
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Setting mode 0x%02X\n",
-		   restore->mode);
-	xf86ExecX86int10(pSmi->pInt10);
-
-	/* Enable linear mode. */
-	outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x18);
-	tmp = inb(pSmi->PIOBase + VGA_SEQ_DATA);
-	outb(pSmi->PIOBase + VGA_SEQ_DATA, tmp | 0x01);
-
-	/* Enable DPR/VPR registers. */
-	tmp = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x21);
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x21, tmp & ~0x03);
-    } else {
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x17, restore->SR17);
-	tmp = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x18) & ~0x1F;
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x18, tmp |
-		      (restore->SR18 & 0x1F));
-	tmp = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x21);
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x21, tmp & ~0x03);
-	tmp = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x31) & ~0xC0;
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x31, tmp |
-		      (restore->SR31 & 0xC0));
-	tmp = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x32) & ~0x07;
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x32, tmp |
-		      (restore->SR32 & 0x07));
-	if (restore->SR6B != 0xFF) {
-	    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6A, restore->SR6A);
-	    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6B, restore->SR6B);
-	}
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x81, restore->SR81);
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0xA0, restore->SRA0);
-
-	/* Restore the standard VGA registers */
-	vgaHWRestore(pScrn, vgaSavePtr, VGA_SR_ALL);
-	if (restore->smiDACMask) {
-	    VGAOUT8(pSmi, VGA_DAC_MASK, restore->smiDACMask);
-	} else {
-	    VGAOUT8(pSmi, VGA_DAC_MASK, 0xFF);
-	}
-	VGAOUT8(pSmi, VGA_DAC_WRITE_ADDR, 0);
-	for (i = 0; i < 256; i++) {
-	    VGAOUT8(pSmi, VGA_DAC_DATA, restore->smiDacRegs[i][0]);
-	    VGAOUT8(pSmi, VGA_DAC_DATA, restore->smiDacRegs[i][1]);
-	    VGAOUT8(pSmi, VGA_DAC_DATA, restore->smiDacRegs[i][2]);
-	}
-	for (i = 0, offset = 2; i < 8192; i++, offset += 8) {
-	    *(pSmi->FBBase + offset) = restore->smiFont[i];
-	}
-
-	if (SMI_LYNXM_SERIES(pSmi->Chipset)) {
-	    /* Restore secondary registers */
-	    VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x9E,
-			  restore->CR90[14] | 0x20);
-
-	    VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x33, restore->CR33_2);
-	    for (i = 0; i < 14; i++) {
-		VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x40 + i,
-			      restore->CR40_2[i]);
-	    }
-	    VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x9F, restore->CR9F_2);
-
-	    /* Restore primary registers */
-	    VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x9E,
-			  restore->CR90[14] & ~0x20);
-
-	    VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x33, restore->CR33);
-	    VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x3A, restore->CR3A);
-	    for (i = 0; i < 14; i++) {
-		VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x40 + i,
-			      restore->CR40[i]);
-	    }
-	    for (i = 0; i < 16; i++) {
-		if (i != 14) {
-		    VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x90 + i,
-				  restore->CR90[i]);
-		}
-	    }
-	    VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x9E, restore->CR90[14]);
-
-	    /* Restore common registers */
-	    for (i = 0; i < 14; i++) {
-		VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0xA0 + i,
-			      restore->CRA0[i]);
-	    }
-	}
-
-	/* Restore the standard VGA registers */
-	if (xf86IsPrimaryPci(pSmi->PciInfo)) {
-	    vgaHWRestore(pScrn, vgaSavePtr, VGA_SR_CMAP | VGA_SR_FONTS);
-	} 
-
-	if (restore->modeInit)
-	    vgaHWRestore(pScrn, vgaSavePtr, VGA_SR_ALL);
-
-	if (!SMI_LYNXM_SERIES(pSmi->Chipset)) {
-	    VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x33, restore->CR33);
-	    VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x3A, restore->CR3A);
-	    for (i = 0; i < 14; i++) {
-		VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x40 + i,
-			      restore->CR40[i]);
-	    }
-	}
-
-	/* vclk1 */
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x68, restore->SR68);
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6C, restore->SR6C);
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6D, restore->SR6D);
-
-	if (pSmi->Dualhead) {
-
-	/* TFT panel uses FIFO1, DSTN panel uses FIFO1 for upper panel and 
-	 * FIFO2 for lower panel.  I don't have a DSTN panel, so it's untested.
-	 * -- AGD
-	 */
-
-	    /* PLL2 regs */
-
-	    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x69, restore->SR69);
-
-	    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6E, restore->SR6E);
-	    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6F, restore->SR6F);
-
-	    /* setting SR21 bit 2 disables ZV circuitry, 
-	     * if ZV is needed, SR21 = 0x20
-	     */
-	    /* enable DAC, PLL, etc. */
-	    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x21, restore->SR21);
-
-	    /* clear DPMS state */
-	    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x22, restore->SR22);
-
-	    /* enable virtual refresh and LCD and CRT outputs */
-	    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x31, restore->SR31);
-
-	    /* FIFO1 Read Offset */
-	    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x44, restore->SR44);
-	    /* FIFO2 Read Offset */
-	    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x4B, restore->SR4B);
-	    /* FIFO1/2 Read Offset overflow */
-	    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x4C, restore->SR4C);
-
-	    /* FIFO Write Offset */
-	    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x48, restore->SR48);
-	    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x49, restore->SR49);
-
-	    /* set FIFO levels */
-	    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x4A, restore->SR4A);
-
-	    VGAOUT8_INDEX(pSmi, vgaCRIndex, vgaCRData, 0x33, restore->CR33);
-
-	}
-    }
-
-    /* CZ 2.11.2001: for gamma correction (TODO: other chipsets?) */
-    if ((pSmi->Chipset == SMI_LYNX3DM) || (pSmi->Chipset == SMI_COUGAR3DR)) {
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x66, restore->CCR66);
-    }
-    /* end CZ */
-
-    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x81, 0x00);
-
-    /* Reset the graphics engine */
-    WRITE_DPR(pSmi, 0x10, restore->DPR10);
-    WRITE_DPR(pSmi, 0x1C, restore->DPR1C);
-    WRITE_DPR(pSmi, 0x20, restore->DPR20);
-    WRITE_DPR(pSmi, 0x24, restore->DPR24);
-    WRITE_DPR(pSmi, 0x28, restore->DPR28);
-    WRITE_DPR(pSmi, 0x2C, restore->DPR2C);
-    WRITE_DPR(pSmi, 0x30, restore->DPR30);
-    WRITE_DPR(pSmi, 0x3C, restore->DPR3C);
-    WRITE_DPR(pSmi, 0x40, restore->DPR40);
-    WRITE_DPR(pSmi, 0x44, restore->DPR44);
-
-    /* write video controller regs */
-    WRITE_VPR(pSmi, 0x00, restore->VPR00);
-    WRITE_VPR(pSmi, 0x0C, restore->VPR0C);
-    WRITE_VPR(pSmi, 0x10, restore->VPR10);
-
-    if(pSmi->Chipset == SMI_COUGAR3DR) {
-	WRITE_FPR(pSmi, FPR00, restore->FPR00_);
-	WRITE_FPR(pSmi, FPR0C, restore->FPR0C_);
-	WRITE_FPR(pSmi, FPR10, restore->FPR10_);
-    }
-
-    WRITE_CPR(pSmi, 0x00, restore->CPR00);
-
-    if (xf86GetVerbosity() > 1) {
-	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, VERBLEV,
-		       "Done restoring mode.  Register dump:\n");
-	SMI_PrintRegs(pScrn);
-    }
-
-    vgaHWProtect(pScrn, FALSE);
-
-    LEAVE_PROC("SMI_WriteMode");
+    LEAVE();
 }
 
 static void
 SMI_DetectPanelSize(ScrnInfoPtr pScrn)
 {
-    SMIPtr pSmi = SMIPTR(pScrn);
+    char	*s;
+    int		 width, height;
+    SMIPtr	 pSmi = SMIPTR(pScrn);
 
-    /* panel size detection ... requires BIOS call on 730 hardware */
-    if (pSmi->Chipset == SMI_COUGAR3DR) {
-	if (pSmi->pInt10 != NULL) {
-	    pSmi->pInt10->num = 0x10;
-	    pSmi->pInt10->ax  = 0x5F00;
-	    pSmi->pInt10->bx  = 0;
-	    pSmi->pInt10->cx  = 0;
-	    pSmi->pInt10->dx  = 0;
-	    xf86ExecX86int10(pSmi->pInt10);
-	    if (pSmi->pInt10->ax == 0x005F) {
-		switch (pSmi->pInt10->cx & 0x0F) {
-		case PANEL_640x480:
+    pSmi->lcdWidth  = 0;
+    pSmi->lcdHeight = 0;
+    if ((s = xf86GetOptValString(pSmi->Options, OPTION_PANEL_SIZE)) != NULL) {
+	if (sscanf(s, "%dx%d", &width, &height) != 2)
+	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		       "Invalid PanelSize option: %s\n", s);
+	else {
+	    pSmi->lcdWidth  = width;
+	    pSmi->lcdHeight = height;
+	}
+    }
+
+    if (pSmi->lcdWidth == 0 || pSmi->lcdHeight == 0) {
+	/* panel size detection ... requires BIOS call on 730 hardware */
+	if (pSmi->Chipset == SMI_COUGAR3DR) {
+	    if (pSmi->pInt10 != NULL) {
+		pSmi->pInt10->num = 0x10;
+		pSmi->pInt10->ax  = 0x5F00;
+		pSmi->pInt10->bx  = 0;
+		pSmi->pInt10->cx  = 0;
+		pSmi->pInt10->dx  = 0;
+		xf86ExecX86int10(pSmi->pInt10);
+		if (pSmi->pInt10->ax == 0x005F) {
+		    switch (pSmi->pInt10->cx & 0x0F) {
+			case PANEL_640x480:
+			    pSmi->lcdWidth  = 640;
+			    pSmi->lcdHeight = 480;
+			    break;
+			case PANEL_800x600:
+			    pSmi->lcdWidth  = 800;
+			    pSmi->lcdHeight = 600;
+			    break;
+			case PANEL_1024x768:
+			    pSmi->lcdWidth  = 1024;
+			    pSmi->lcdHeight = 768;
+			    break;
+			case PANEL_1280x1024:
+			    pSmi->lcdWidth  = 1280;
+			    pSmi->lcdHeight = 1024;
+			    break;
+			case PANEL_1600x1200:
+			    pSmi->lcdWidth  = 1600;
+			    pSmi->lcdHeight = 1200;
+			    break;
+			case PANEL_1400x1050:
+			    pSmi->lcdWidth  = 1400;
+			    pSmi->lcdHeight = 1050;
+			    break;
+		    }
+
+		    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+			       "Detected panel size via BIOS: %d x %d\n",
+			       pSmi->lcdWidth, pSmi->lcdHeight);
+		}
+		else
+		    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+			       "BIOS error during 730 panel detection!\n");
+	    }
+	    else  {
+		/* int10 support isn't setup on the second call to this function,
+		  o if this is the second call, don't do detection again */
+		if (pSmi->lcd == 0)
+		    /* If we get here, int10 support is not loaded or not working */ 
+		    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+			       "No BIOS support for 730 panel detection!\n");
+	    }
+
+	    /* Set this to indicate that we've done the detection */
+	    pSmi->lcd = 1;
+	}
+	else if (IS_MSOC(pSmi)) {
+	    pSmi->lcdWidth  = (READ_SCR(pSmi, PANEL_WWIDTH)  >> 16) & 2047;
+	    pSmi->lcdHeight = (READ_SCR(pSmi, PANEL_WHEIGHT) >> 16) & 2047;
+	}
+	else {
+	    /* panel size detection for hardware other than 730 */
+	    pSmi->lcd = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA,
+				     0x31) & 0x01;
+
+	    if (VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA,
+			     0x30) & 0x01) {
+		pSmi->lcd <<= 1;
+	    }
+	    switch (VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA,
+				 0x30) & 0x0C) {
+		case 0x00:
 		    pSmi->lcdWidth  = 640;
 		    pSmi->lcdHeight = 480;
 		    break;
-		case PANEL_800x600:
+		case 0x04:
 		    pSmi->lcdWidth  = 800;
 		    pSmi->lcdHeight = 600;
 		    break;
-		case PANEL_1024x768:
-		    pSmi->lcdWidth  = 1024;
-		    pSmi->lcdHeight = 768;
+		case 0x08:
+		    if (VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA,
+				     0x74) & 0x02) {
+			pSmi->lcdWidth  = 1024;
+			pSmi->lcdHeight = 600;
+		    }
+		    else {
+			pSmi->lcdWidth  = 1024;
+			pSmi->lcdHeight = 768;
+		    }
 		    break;
-		case PANEL_1280x1024:
+		case 0x0C:
 		    pSmi->lcdWidth  = 1280;
 		    pSmi->lcdHeight = 1024;
 		    break;
-		case PANEL_1600x1200:
-		    pSmi->lcdWidth  = 1600;
-		    pSmi->lcdHeight = 1200;
-		    break;
-		case PANEL_1400x1050:
-		    pSmi->lcdWidth  = 1400;
-		    pSmi->lcdHeight = 1050;
-		    break;
-		}
-	
-		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Detected panel size via BIOS: %d x %d\n",
-			   pSmi->lcdWidth, pSmi->lcdHeight);
-	    } else {
-		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "BIOS error during 730 panel detection!\n");
-			   pSmi->lcdWidth  = pScrn->virtualX;
-		pSmi->lcdHeight = pScrn->virtualY;
 	    }
-	} else  {
-	    /* int10 support isn't setup on the second call to this function,
-	       so if this is the second call, don't do detection again */
-	    if (pSmi->lcd == 0) {
-		/* If we get here, int10 support is not loaded or not working */ 
-		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "No BIOS support for 730 panel detection!\n");
-		pSmi->lcdWidth  = pScrn->virtualX;
-		pSmi->lcdHeight = pScrn->virtualY;
-	    }
-	}
-
-	/* Set this to indicate that we've done the detection */
-	pSmi->lcd = 1;
-    } else {
-	/* panel size detection for hardware other than 730 */
-	pSmi->lcd = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x31) & 0x01;
-	
-	if (VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x30) & 0x01) {
-	    pSmi->lcd <<= 1;
-	}
-	switch (VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x30) & 0x0C) {
-	case 0x00:
-	    pSmi->lcdWidth  = 640;
-	    pSmi->lcdHeight = 480;
-	    break;
-	case 0x04:
-	    pSmi->lcdWidth  = 800;
-	    pSmi->lcdHeight = 600;
-	    break;
-	case 0x08:
-	    if (VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x74) & 0x02) {
-		pSmi->lcdWidth  = 1024;
-		pSmi->lcdHeight = 600;
-	    } else {
-		pSmi->lcdWidth  = 1024;
-		pSmi->lcdHeight = 768;
-	    }
-	    break;
-	case 0x0C:
-	    pSmi->lcdWidth  = 1280;
-	    pSmi->lcdHeight = 1024;
-	    break;
 	}
     }
+
+    if (!pSmi->lcdWidth && (pSmi->lcdWidth = pScrn->virtualX) == 0)
+	pSmi->lcdWidth = 1024;
+    if (!pSmi->lcdHeight && (pSmi->lcdHeight = pScrn->virtualY) == 0)
+	pSmi->lcdHeight = 768;
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "%s Panel Size = %dx%d\n",
 	       (pSmi->lcd == 0) ? "OFF" : (pSmi->lcd == 1) ? "TFT" : "DSTN",
@@ -1776,106 +1214,197 @@ SMI_DetectPanelSize(ScrnInfoPtr pScrn)
 
 }
 
-static Bool
-SMI_MapMem(ScrnInfoPtr pScrn)
+static void
+SMI_DetectMCLK(ScrnInfoPtr pScrn)
 {
-    SMIPtr pSmi = SMIPTR(pScrn);
-    vgaHWPtr hwp;
-    CARD32 memBase;
+    double		real;
+    MSOCClockRec	clock;
+    int			mclk, mxclk;
+    SMIPtr		pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_MapMem");
+    /* MCLK defaults */
+    if (pSmi->Chipset == SMI_LYNXEMplus){
+	/* The SM712 can be safely clocked up to 157MHz, according to
+	   Silicon Motion engineers. */
+	pSmi->MCLK = 157000;
+    }else
+	pSmi->MCLK = 0;
 
-    /* Map the Lynx register space */
-    switch (pSmi->Chipset) {
-    default:
-      memBase = PCI_REGION_BASE(pSmi->PciInfo, 0, REGION_MEM) + 0x400000;
-	pSmi->MapSize = 0x10000;
-	break;
-    case SMI_COUGAR3DR:
-        memBase = PCI_REGION_BASE(pSmi->PciInfo, 1, REGION_MEM);
-	pSmi->MapSize = 0x200000;
-	break;
-    case SMI_LYNX3D:
-	memBase = PCI_REGION_BASE(pSmi->PciInfo, 0, REGION_MEM) + 0x680000;
-	pSmi->MapSize = 0x180000;
-	break;
-    case SMI_LYNXEM:
-    case SMI_LYNXEMplus:
-	memBase = PCI_REGION_BASE(pSmi->PciInfo, 0, REGION_MEM) + 0x400000;
-	pSmi->MapSize = 0x400000;
-	break;
-    case SMI_LYNX3DM:
-	memBase = PCI_REGION_BASE(pSmi->PciInfo, 0, REGION_MEM);
-	pSmi->MapSize = 0x200000;
-	break;
+    pSmi->MXCLK = 0;
+
+    /* MCLK from user settings */
+    if (xf86GetOptValFreq(pSmi->Options, OPTION_MCLK, OPTUNITS_MHZ, &real)) {
+	if (IS_MSOC(pSmi) || (int)real <= 120) {
+	    pSmi->MCLK = (int)(real * 1000.0);
+	} else {
+	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		       "Memory Clock %1.3f MHz larger than limit of 120 MHz\n",
+		       real);
+	}
     }
+    mclk = pSmi->MCLK;
+
+    if (IS_MSOC(pSmi)) {
+	clock.value = READ_SCR(pSmi, CURRENT_CLOCK);
+	if (xf86GetOptValFreq(pSmi->Options, OPTION_MXCLK,
+			      OPTUNITS_MHZ, &real))
+	    pSmi->MXCLK = (int)(real * 1000.0);
+    }
+
+    /* Already programmed MCLK */
+    if (pSmi->MCLK == 0) {
+	if (IS_MSOC(pSmi))
+	    mclk = ((clock.f.m_select ? 336 : 288) /
+		    ((clock.f.m_divider ? 3 : 1) <<
+		     (unsigned)clock.f.m_shift)) * 1000;
+	else {
+	    unsigned char	shift, m, n;
+
+	    m = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6A);
+	    n = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x6B);
+	    switch (n >> 6) {
+		case 1:
+		    shift = 4;
+		    break;
+		case 2:
+		    shift = 2;
+		    break;
+		default:
+		    shift = 1;
+		    break;
+	    }
+	    n &= 0x3F;
+	    mclk = ((1431818 * m) / n / shift + 50) / 100;
+	}
+    }
+
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "MCLK = %1.3f\n", mclk / 1000.0);
+    if (IS_MSOC(pSmi)) {
+	if (pSmi->MXCLK == 0) {
+	    mxclk = ((clock.f.m1_select ? 336 : 288) /
+		     ((clock.f.m1_divider ? 3 : 1) <<
+		      (unsigned)clock.f.m1_shift)) * 1000;
+	}
+	else
+	    mxclk = pSmi->MXCLK;
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "MXCLK = %1.3f\n", mxclk / 1000.0);
+    }
+}
+
+static Bool
+SMI_MapMmio(ScrnInfoPtr pScrn)
+{
+    SMIPtr	pSmi = SMIPTR(pScrn);
+    CARD32	memBase;
+
+    SMI_EnableMmio(pScrn);
+
+    switch (pSmi->Chipset) {
+	case SMI_COUGAR3DR:
+	    memBase = PCI_REGION_BASE(pSmi->PciInfo, 1, REGION_MEM);
+	    pSmi->MapSize = 0x200000;
+	    break;
+	case SMI_LYNX3D:
+	    memBase = PCI_REGION_BASE(pSmi->PciInfo, 0, REGION_MEM) + 0x680000;
+	    pSmi->MapSize = 0x180000;
+	    break;
+	case SMI_LYNXEM:
+	case SMI_LYNXEMplus:
+	    memBase = PCI_REGION_BASE(pSmi->PciInfo, 0, REGION_MEM) + 0x400000;
+	    pSmi->MapSize = 0x400000;
+	    break;
+	case SMI_LYNX3DM:
+	    memBase = PCI_REGION_BASE(pSmi->PciInfo, 0, REGION_MEM);
+	    pSmi->MapSize = 0x200000;
+	    break;
+	case SMI_MSOC:
+	    memBase = PCI_REGION_BASE(pSmi->PciInfo, 1, REGION_MEM);
+	    pSmi->MapSize = 0x200000;
+	    break;
+	default:
+	    memBase = PCI_REGION_BASE(pSmi->PciInfo, 0, REGION_MEM) + 0x400000;
+	    pSmi->MapSize = 0x10000;
+	    break;
+    }
+
 #ifndef XSERVER_LIBPCIACCESS
     pSmi->MapBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO, pSmi->PciTag,
 				  memBase, pSmi->MapSize);
 #else
     {
-      void** result = (void**)&pSmi->MapBase;
-      int err = pci_device_map_range(pSmi->PciInfo,
-				     memBase,
-				     pSmi->MapSize,
-				     PCI_DEV_MAP_FLAG_WRITABLE,
-				     result);
-      
-      if (err) 
-	return FALSE;
+	void	**result = (void**)&pSmi->MapBase;
+	int	  err = pci_device_map_range(pSmi->PciInfo,
+					     memBase,
+					     pSmi->MapSize,
+					     PCI_DEV_MAP_FLAG_WRITABLE,
+					     result);
+
+	if (err)
+	    return (FALSE);
     }
 #endif
+
     if (pSmi->MapBase == NULL) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Internal error: could not map "
 		   "MMIO registers.\n");
-	LEAVE_PROC("SMI_MapMem");
-	return FALSE;
+	return (FALSE);
     }
 
     switch (pSmi->Chipset) {
-    default:
-	pSmi->DPRBase = pSmi->MapBase + 0x8000;
-	pSmi->VPRBase = pSmi->MapBase + 0xC000;
-	pSmi->CPRBase = pSmi->MapBase + 0xE000;
-	pSmi->IOBase  = NULL;
-	pSmi->DataPortBase = pSmi->MapBase;
-	pSmi->DataPortSize = 0x8000;
-	break;
-    case SMI_COUGAR3DR:
-	pSmi->DPRBase = pSmi->MapBase + 0x000000;
-	pSmi->VPRBase = pSmi->MapBase + 0x000800;
-	pSmi->CPRBase = pSmi->MapBase + 0x001000;
-	pSmi->FPRBase = pSmi->MapBase + 0x005800;
-	pSmi->IOBase  = pSmi->MapBase + 0x0C0000;
-	pSmi->DataPortBase = pSmi->MapBase + 0x100000;
-	pSmi->DataPortSize = 0x100000;
-	break;
-    case SMI_LYNX3D:
-	pSmi->DPRBase = pSmi->MapBase + 0x000000;
-	pSmi->VPRBase = pSmi->MapBase + 0x000800;
-	pSmi->CPRBase = pSmi->MapBase + 0x001000;
-	pSmi->IOBase  = pSmi->MapBase + 0x040000;
-	pSmi->DataPortBase = pSmi->MapBase + 0x080000;
-	pSmi->DataPortSize = 0x100000;
-	break;
-    case SMI_LYNXEM:
-    case SMI_LYNXEMplus:
-	pSmi->DPRBase = pSmi->MapBase + 0x008000;
-	pSmi->VPRBase = pSmi->MapBase + 0x00C000;
-	pSmi->CPRBase = pSmi->MapBase + 0x00E000;
-	pSmi->IOBase  = pSmi->MapBase + 0x300000;
-	pSmi->DataPortBase = pSmi->MapBase /*+ 0x100000*/;
-	pSmi->DataPortSize = 0x8000 /*0x200000*/;
-	break;
-    case SMI_LYNX3DM:
-	pSmi->DPRBase = pSmi->MapBase + 0x000000;
-	pSmi->VPRBase = pSmi->MapBase + 0x000800;
-	pSmi->CPRBase = pSmi->MapBase + 0x001000;
-	pSmi->IOBase  = pSmi->MapBase + 0x0C0000;
-	pSmi->DataPortBase = pSmi->MapBase + 0x100000;
-	pSmi->DataPortSize = 0x100000;
-	break;
+	case SMI_COUGAR3DR:
+	    pSmi->DPRBase = pSmi->MapBase + 0x000000;
+	    pSmi->VPRBase = pSmi->MapBase + 0x000800;
+	    pSmi->CPRBase = pSmi->MapBase + 0x001000;
+	    pSmi->FPRBase = pSmi->MapBase + 0x005800;
+	    pSmi->IOBase  = pSmi->MapBase + 0x0C0000;
+	    pSmi->DataPortBase = pSmi->MapBase + 0x100000;
+	    pSmi->DataPortSize = 0x100000;
+	    break;
+	case SMI_LYNX3D:
+	    pSmi->DPRBase = pSmi->MapBase + 0x000000;
+	    pSmi->VPRBase = pSmi->MapBase + 0x000800;
+	    pSmi->CPRBase = pSmi->MapBase + 0x001000;
+	    pSmi->IOBase  = pSmi->MapBase + 0x040000;
+	    pSmi->DataPortBase = pSmi->MapBase + 0x080000;
+	    pSmi->DataPortSize = 0x100000;
+	    break;
+	case SMI_LYNXEM:
+	case SMI_LYNXEMplus:
+	    pSmi->DPRBase = pSmi->MapBase + 0x008000;
+	    pSmi->VPRBase = pSmi->MapBase + 0x00C000;
+	    pSmi->CPRBase = pSmi->MapBase + 0x00E000;
+	    pSmi->IOBase  = pSmi->MapBase + 0x300000;
+	    pSmi->DataPortBase = pSmi->MapBase /*+ 0x100000*/;
+	    pSmi->DataPortSize = 0x8000 /*0x200000*/;
+	    break;
+	case SMI_LYNX3DM:
+	    pSmi->DPRBase = pSmi->MapBase + 0x000000;
+	    pSmi->VPRBase = pSmi->MapBase + 0x000800;
+	    pSmi->CPRBase = pSmi->MapBase + 0x001000;
+	    pSmi->IOBase  = pSmi->MapBase + 0x0C0000;
+	    pSmi->DataPortBase = pSmi->MapBase + 0x100000;
+	    pSmi->DataPortSize = 0x100000;
+	    break;
+	case SMI_MSOC:
+	    pSmi->DPRBase = pSmi->MapBase + 0x100000;
+	    pSmi->VPRBase = pSmi->MapBase + 0x000000;
+	    pSmi->CPRBase = pSmi->MapBase + 0x090000;
+	    pSmi->DCRBase = pSmi->MapBase + 0x080000;
+	    pSmi->SCRBase = pSmi->MapBase + 0x000000;
+	    pSmi->IOBase = 0;
+	    pSmi->DataPortBase = pSmi->MapBase + 0x110000;
+	    pSmi->DataPortSize = 0x10000;
+	    break;
+	default:
+	    pSmi->DPRBase = pSmi->MapBase + 0x8000;
+	    pSmi->VPRBase = pSmi->MapBase + 0xC000;
+	    pSmi->CPRBase = pSmi->MapBase + 0xE000;
+	    pSmi->IOBase  = NULL;
+	    pSmi->DataPortBase = pSmi->MapBase;
+	    pSmi->DataPortSize = 0x8000;
+	    break;
     }
+
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, VERBLEV,
 		   "Physical MMIO at 0x%08lX\n", (unsigned long)memBase);
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, VERBLEV,
@@ -1888,113 +1417,193 @@ SMI_MapMem(ScrnInfoPtr pScrn)
 		   "DataPort=%p - %p\n", pSmi->DataPortBase,
 		   pSmi->DataPortBase + pSmi->DataPortSize - 1);
 
+    return (TRUE);
+}
+
+static Bool
+SMI_DetectMem(ScrnInfoPtr pScrn)
+{
+    SMIPtr	pSmi = SMIPTR(pScrn);
+    MessageType from;
+
+    if ((pScrn->videoRam = pScrn->confScreen->device->videoRam)){
+	pSmi->videoRAMKBytes = pScrn->videoRam;
+	from = X_CONFIG;
+    }
+    else {
+	unsigned char	 config;
+	static int	 lynx3d_table[4]  = {  0, 2, 4, 6 };
+	static int	 lynx3dm_table[4] = { 16, 2, 4, 8 };
+	static int	 msoc_table[8]    = {  4, 8, 16, 32, 64, 2, 0, 0 };
+	static int	 default_table[4] = {  1, 2, 4, 0 };
+
+	if (IS_MSOC(pSmi)) {
+	    config = (READ_SCR(pSmi, DRAM_CTL) >> 13) & 7;
+	    pSmi->videoRAMKBytes = msoc_table[config] * 1024 -
+		SHARED_USB_DMA_BUFFER_SIZE;
+	}
+	else {
+	    config = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x71);
+	    switch (pSmi->Chipset) {
+		case SMI_LYNX3D:
+		    pSmi->videoRAMKBytes = lynx3d_table[config >> 6] * 1024 +
+			512;
+		    break;
+		case SMI_LYNX3DM:
+		    pSmi->videoRAMKBytes = lynx3dm_table[config >> 6] * 1024;
+		    break;
+		case SMI_COUGAR3DR:
+		    /* DANGER - Cougar3DR BIOS is broken - hardcode video ram
+		     * size per instructions from Silicon Motion engineers */
+		    pSmi->videoRAMKBytes = 16 * 1024;
+		    break;
+		default:
+		    pSmi->videoRAMKBytes = default_table[config >> 6] * 1024;
+		    break;
+	    }
+	}
+	from = X_PROBED;
+    }
+
+    pSmi->videoRAMBytes = pSmi->videoRAMKBytes * 1024;
+    pScrn->videoRam     = pSmi->videoRAMKBytes;
+    xf86DrvMsg(pScrn->scrnIndex, from,
+	       "videoram: %dkB\n", pSmi->videoRAMKBytes);
+
+    return (TRUE);
+}
+
+Bool
+SMI_MapMem(ScrnInfoPtr pScrn)
+{
+    SMIPtr pSmi = SMIPTR(pScrn);
+    vgaHWPtr hwp;
+
+    ENTER();
+
+    if (pSmi->MapBase == NULL && SMI_MapMmio(pScrn) == FALSE)
+	LEAVE(FALSE);
+
     pScrn->memPhysBase = PCI_REGION_BASE(pSmi->PciInfo, 0, REGION_MEM);
 
-    SMI_EnableMmio(pScrn);
-
-    if (pSmi->videoRAMBytes) {
-	/* Map the frame buffer */
-	if (pSmi->Chipset == SMI_LYNX3DM) 
-	    pSmi->fbMapOffset = 0x200000;
-	else
-	    pSmi->fbMapOffset = 0x0;
-
-	pSmi->FBOffset = 0;
-
-	pScrn->fbOffset = pSmi->FBOffset + pSmi->fbMapOffset;
+    if (pSmi->Chipset == SMI_LYNX3DM)
+	pSmi->fbMapOffset = 0x200000;
+    else
+	pSmi->fbMapOffset = 0x0;
 
 #ifndef XSERVER_LIBPCIACCESS
-	pSmi->FBBase = xf86MapPciMem(pScrn->scrnIndex,
-				     VIDMEM_FRAMEBUFFER,
-				     pSmi->PciTag,
-				     pScrn->memPhysBase + pSmi->fbMapOffset,
-				     pSmi->videoRAMBytes);
+    pSmi->FBBase = xf86MapPciMem(pScrn->scrnIndex,
+				 VIDMEM_FRAMEBUFFER,
+				 pSmi->PciTag,
+				 pScrn->memPhysBase + pSmi->fbMapOffset,
+				 pSmi->videoRAMBytes);
 #else
-	{
-	  void** result = (void**)&pSmi->FBBase;
-	  int err = pci_device_map_range(pSmi->PciInfo,
-					 pScrn->memPhysBase + pSmi->fbMapOffset,
-					 pSmi->videoRAMBytes,
-					 PCI_DEV_MAP_FLAG_WRITABLE |
-					 PCI_DEV_MAP_FLAG_WRITE_COMBINE,
-					 result);
-	  
-	  if (err) 
-	    return FALSE;
-	}
+    {
+	void	**result = (void**)&pSmi->FBBase;
+	int	  err = pci_device_map_range(pSmi->PciInfo,
+					     pScrn->memPhysBase +
+					     pSmi->fbMapOffset,
+					     pSmi->videoRAMBytes,
+					     PCI_DEV_MAP_FLAG_WRITABLE |
+					     PCI_DEV_MAP_FLAG_WRITE_COMBINE,
+					     result);
+
+	if (err)
+	    LEAVE(FALSE);
+    }
 #endif
-	    
-	if (pSmi->FBBase == NULL) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Internal error: could not "
-		       "map framebuffer.\n");
-	    LEAVE_PROC("SMI_MapMem");
-	    return FALSE;
+
+    if (pSmi->FBBase == NULL) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "Internal error: could not map framebuffer.\n");
+	LEAVE(FALSE);
+    }
+
+    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, VERBLEV,
+		   "Physical frame buffer at 0x%08lX offset: 0x%08lX\n",
+		   pScrn->memPhysBase, pSmi->fbMapOffset);
+    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, VERBLEV,
+		   "Logical frame buffer at %p - %p\n", pSmi->FBBase,
+		   pSmi->FBBase + pSmi->videoRAMBytes - 1);
+
+    if (IS_MSOC(pSmi)) {
+	/* Reserve space for panel cursr, and crt if in dual head mode */
+#if SMI_CURSOR_ALPHA_PLANE
+	pSmi->FBReserved = pSmi->FBCursorOffset = pSmi->videoRAMBytes -
+	    (pSmi->Dualhead ? SMI501_CURSOR_SIZE << 1 : SMI501_ARGB_CURSOR_SIZE);
+#else
+	pSmi->FBReserved = pSmi->FBCursorOffset = pSmi->videoRAMBytes -
+	    (pSmi->Dualhead ? SMI501_CURSOR_SIZE << 1 : SMI501_CURSOR_SIZE);
+
+# ifdef SMI501_CLI_DEBUG
+	if (pSmi->useEXA) {
+	    pSmi->batch_active = FALSE;
+	    pSmi->batch_length = 4096;
+	    pSmi->FBReserved -= pSmi->batch_length << 3;
+	    pSmi->batch_offset = pSmi->FBReserved;
+	    pSmi->batch_handle = (int64_t *)(pSmi->FBBase + pSmi->batch_offset);
+	    pSmi->batch_finish = -1;
+	    pSmi->batch_index = 0;
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		       "Using command list interpreter debug code\n");
 	}
+# endif
 
-	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, VERBLEV,
-		       "Physical frame buffer at 0x%08lX offset: 0x%08lX\n",
-		       pScrn->memPhysBase, pScrn->fbOffset);
-	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, VERBLEV,
-		       "Logical frame buffer at %p - %p\n", pSmi->FBBase,
-		       pSmi->FBBase + pSmi->videoRAMBytes - 1);
-
-	/* Set up offset to hwcursor memory area.  It's a 1K chunk at the end of
+#endif
+    }
+    else {
+	/* Set up offset to hwcursor memory area, at the end of
 	 * the frame buffer.
 	 */
-	pSmi->FBCursorOffset = pSmi->videoRAMBytes - 1024;
-
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		   "Cursor Offset: %08lX\n",
-		   (unsigned long)pSmi->FBCursorOffset);
-
+	pSmi->FBCursorOffset = pSmi->videoRAMBytes - SMILYNX_CURSOR_SIZE;
 	/* set up the fifo reserved space */
 	if (VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x30) & 0x01)/* #1074 */ {
 	    CARD32 fifoOffset = 0;
-	    fifoOffset |= VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x46) << 3;
-	    fifoOffset |= VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x47) << 11;
-	    fifoOffset |= (VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x49)
-			& 0x1C) << 17;
+	    fifoOffset |= VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA,
+				       0x46) << 3;
+	    fifoOffset |= VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA,
+				       0x47) << 11;
+	    fifoOffset |= (VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA,
+					0x49) & 0x1C) << 17;
 	    pSmi->FBReserved = fifoOffset;	/* PDR#1074 */
-	} else {
+	}
+	else
 	    pSmi->FBReserved = pSmi->videoRAMBytes - 2048;
+
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Cursor Offset: %08lX\n",
+		   (unsigned long)pSmi->FBCursorOffset);
+
+	/* Assign hwp->MemBase & IOBase here */
+	hwp = VGAHWPTR(pScrn);
+	if (pSmi->IOBase != NULL)
+	    vgaHWSetMmioFuncs(hwp, pSmi->MapBase, pSmi->IOBase - pSmi->MapBase);
+	vgaHWGetIOBase(hwp);
+
+	/* Map the VGA memory when the primary video */
+	if (xf86IsPrimaryPci(pSmi->PciInfo)) {
+	    hwp->MapSize = 0x10000;
+	    if (!vgaHWMapMem(pScrn))
+		LEAVE(FALSE);
+	    pSmi->PrimaryVidMapped = TRUE;
 	}
-
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Reserved: %08lX\n",
-		   (unsigned long)pSmi->FBReserved);
-
     }
 
-    /* Assign hwp->MemBase & IOBase here */
-    hwp = VGAHWPTR(pScrn);
-    if (pSmi->IOBase != NULL) {
-	vgaHWSetMmioFuncs(hwp, pSmi->MapBase, pSmi->IOBase - pSmi->MapBase);
-    }
-    vgaHWGetIOBase(hwp);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Reserved: %08lX\n",
+	       (unsigned long)pSmi->FBReserved);
 
-    /* Map the VGA memory when the primary video */
-    if (xf86IsPrimaryPci(pSmi->PciInfo)) {
-	hwp->MapSize = 0x10000;
-	if (!vgaHWMapMem(pScrn)) {
-	    LEAVE_PROC("SMI_MapMem");
-	    return FALSE;
-	}
-	pSmi->PrimaryVidMapped = TRUE;
-    }
-
-    LEAVE_PROC("SMI_MapMem");
-    return TRUE;
+    LEAVE(TRUE);
 }
 
 /* UnMapMem - contains half of pre-4.0 EnterLeave function.  The EnterLeave
  * function which en/disable access to IO ports and ext. regs
  */
 
-static void
+void
 SMI_UnmapMem(ScrnInfoPtr pScrn)
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_UnmapMem");
+    ENTER();
 
     /* Unmap VGA mem if mapped. */
     if (pSmi->PrimaryVidMapped) {
@@ -2004,13 +1613,29 @@ SMI_UnmapMem(ScrnInfoPtr pScrn)
 
     SMI_DisableMmio(pScrn);
 
-    xf86UnMapVidMem(pScrn->scrnIndex, (pointer) pSmi->MapBase, pSmi->MapSize);
-    if (pSmi->FBBase != NULL) {
-	xf86UnMapVidMem(pScrn->scrnIndex, (pointer) pSmi->FBBase,
-			pSmi->videoRAMBytes);
+    if (pSmi->MapBase) {
+#ifndef XSERVER_LIBPCIACCESS
+	xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pSmi->MapBase,
+			pSmi->MapSize);
+#else
+	pci_device_unmap_range(pSmi->PciInfo, (pointer)pSmi->MapBase,
+			       pSmi->MapSize);
+#endif
+	pSmi->MapBase = NULL;
     }
 
-    LEAVE_PROC("SMI_UnmapMem");
+    if (pSmi->FBBase) {
+#ifndef XSERVER_LIBPCIACCESS
+	xf86UnMapVidMem(pScrn->scrnIndex, (pointer) pSmi->FBBase,
+			pSmi->videoRAMBytes);
+#else
+	pci_device_unmap_range(pSmi->PciInfo, (pointer)pSmi->FBBase,
+			       pSmi->videoRAMBytes);
+#endif
+	pSmi->FBBase = NULL;
+    }
+
+    LEAVE();
 }
 
 /* This gets called at the start of each server generation. */
@@ -2018,35 +1643,41 @@ SMI_UnmapMem(ScrnInfoPtr pScrn)
 static Bool
 SMI_ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-    SMIPtr pSmi = SMIPTR(pScrn);
-    EntityInfoPtr pEnt;
+    ScrnInfoPtr		pScrn = xf86Screens[pScreen->myNum];
+    SMIPtr		pSmi = SMIPTR(pScrn);
+    EntityInfoPtr	pEnt;
 	
-    ENTER_PROC("SMI_ScreenInit");
+    ENTER();
 
     /* Map MMIO regs and framebuffer */
-    if (!SMI_MapMem(pScrn)) {
-	LEAVE_PROC("SMI_ScreenInit");
-	return FALSE;
-    }
+    if (!SMI_MapMem(pScrn))
+	LEAVE(FALSE);
 
     pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
-	
-    if (!pSmi->pInt10) {
+
+    if (!pSmi->pInt10 && pSmi->useBIOS) {
 	pSmi->pInt10 = xf86InitInt10(pEnt->index);
+    }
+    if (!pSmi->pVbe && pSmi->pInt10 && xf86LoaderCheckSymbol("VBEInit")) {
+	pSmi->pVbe = VBEInit(pSmi->pInt10, pEnt->index);
     }
 
     /* Save the chip/graphics state */
-    SMI_Save(pScrn);
-	
-    /* Zero the frame buffer, #258 */
-    memset(pSmi->FBBase, 0, pSmi->videoRAMBytes);
+    pSmi->Save(pScrn);
 
-    /* Initialize the first mode */
-    if (!SMI_ModeInit(pScrn, pScrn->currentMode)) {
-	LEAVE_PROC("SMI_ScreenInit");
-	return FALSE;
-    }
+    /* Fill in some needed pScrn fields */
+    pScrn->vtSema = TRUE;
+    pScrn->pScreen = pScreen;
+
+    pSmi->Bpp = pScrn->bitsPerPixel >> 3;
+    pScrn->displayWidth = ((pScrn->virtualX * pSmi->Bpp + 15) & ~15) / pSmi->Bpp;
+
+    pSmi->fbArea = NULL;
+    pSmi->FBOffset = 0;
+    pScrn->fbOffset = pSmi->FBOffset + pSmi->fbMapOffset;
+
+    /* Clear frame buffer */
+    memset(pSmi->FBBase, 0, pSmi->videoRAMBytes);
 
     /*
      * The next step is to setup the screen's visuals, and initialise the
@@ -2065,16 +1696,21 @@ SMI_ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     /* Setup the visuals we support. */
 
     if (!miSetVisualTypes(pScrn->depth, miGetDefaultVisualMask(pScrn->depth),
-			  pScrn->rgbBits, pScrn->defaultVisual)) {
-	LEAVE_PROC("SMI_ScreenInit");
-	return FALSE;
-    }
-    if (!miSetPixmapDepths ()) return FALSE;
+			  pScrn->rgbBits, pScrn->defaultVisual))
+	LEAVE(FALSE);
 
-    if (!SMI_InternalScreenInit(scrnIndex, pScreen)) {
-	LEAVE_PROC("SMI_ScreenInit");
-	return FALSE;
-    }
+    if (!miSetPixmapDepths ())
+	LEAVE(FALSE);
+
+    /*
+     * Call the framebuffer layer's ScreenInit function
+     */
+
+    DEBUG("\tInitializing FB @ 0x%08X for %dx%d (%d)\n",
+	  pSmi->FBBase, pScrn->virtualX, pScrn->virtualY, pScrn->displayWidth);
+    if(!fbScreenInit(pScreen, pSmi->FBBase, pScrn->virtualX, pScrn->virtualY, pScrn->xDpi,
+		     pScrn->yDpi, pScrn->displayWidth, pScrn->bitsPerPixel))
+	LEAVE(FALSE);
 
     xf86SetBlackWhitePixels(pScreen);
 
@@ -2097,708 +1733,117 @@ SMI_ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     /* must be after RGB ordering fixed */
     fbPictureInit(pScreen, 0, 0);
  
-    /* CZ 18.06.2001: moved here from smi_accel.c to have offscreen
-       framebuffer in NoAccel mode */
-    if (!pSmi->useEXA) {
-	int numLines, maxLines;
-	BoxRec AvailFBArea;
- 
-	maxLines = pSmi->FBReserved / (pSmi->width * pSmi->Bpp);
-	if (pSmi->rotate) {
-	    numLines = maxLines;
-	} else {
-	    /* CZ 3.11.2001: What does the following code? see also smi_video.c aaa line 1226 */
-/*#if SMI_USE_VIDEO */
-#if 0
-	    numLines = ((pSmi->FBReserved - pSmi->width * pSmi->Bpp
-			* pSmi->height) * 25 / 100 + pSmi->width
-			* pSmi->Bpp - 1) / (pSmi->width * pSmi->Bpp);
-	    numLines += pSmi->height;
-#else
-	    numLines = maxLines;
-#endif
-	}
- 
+    /* Do the CRTC independent initialization */
+    if(!SMI_HWInit(pScrn))
+	LEAVE(FALSE);
+
+    /* Unless using EXA, regardless or using XAA or not, needs offscreen
+     * management at least for video. */
+    if (pSmi->NoAccel || !pSmi->useEXA) {
+	int		numLines;
+	BoxRec		AvailFBArea;
+
+	numLines = pSmi->FBReserved / (pScrn->displayWidth * pSmi->Bpp);
 	AvailFBArea.x1 = 0;
 	AvailFBArea.y1 = 0;
-	AvailFBArea.x2 = pSmi->width;
+	AvailFBArea.x2 = pScrn->virtualX;
 	AvailFBArea.y2 = numLines;
+
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		   "FrameBuffer Box: %d,%d - %d,%d\n",
 		   AvailFBArea.x1, AvailFBArea.y1, AvailFBArea.x2,
 		   AvailFBArea.y2);
+
 	xf86InitFBManager(pScreen, &AvailFBArea);
     }
-    /* end CZ */
-	
-	
+
     /* Initialize acceleration layer */
     if (!pSmi->NoAccel) {
-	if (!pSmi->useEXA) {
-	    if (!SMI_XAAInit(pScreen)) {
-		LEAVE_PROC("SMI_ScreenInit");
-		return FALSE;
-	    }
-	} else {
-	    if (!SMI_EXAInit(pScreen)) {
-		LEAVE_PROC("SMI_ScreenInit");
-		return FALSE;
-	    }
-	}
+	if (pSmi->useEXA && !SMI_EXAInit(pScreen))
+	    LEAVE(FALSE);
+	else if (!pSmi->useEXA && !SMI_XAAInit(pScreen))
+	    LEAVE(FALSE);
     }
-	
+
+    /* Initialize the chosen modes */
+    if (!xf86SetDesiredModes(pScrn))
+	    LEAVE(FALSE);
+
+    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, VERBLEV,
+		   "Done writing mode.  Register dump:\n");
+    SMI_PrintRegs(pScrn);
+
     miInitializeBackingStore(pScreen);
-	
-    /* hardware cursor needs to wrap this layer */
-    if(!pSmi->NoAccel && !pSmi->useEXA)
-	SMI_DGAInit(pScreen);
-	
+
+#ifdef HAVE_XMODES
+    xf86DiDGAInit(pScreen, (unsigned long)(pSmi->FBBase + pScrn->fbOffset));
+#endif
+
     /* Initialise cursor functions */
     miDCInitialize(pScreen, xf86GetPointerScreenFuncs());
 
     /* Initialize HW cursor layer.  Must follow software cursor
      * initialization.
      */
-    if (pSmi->hwcursor) {
-	if (!SMI_HWCursorInit(pScreen)) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Hardware cursor "
-		       "initialization failed\n");
+    if (pSmi->HwCursor) {
+	int	size, flags;
+
+	if (IS_MSOC(pSmi)) {
+	    size = SMI501_MAX_CURSOR;
+	    flags = (HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_1 |
+		     HARDWARE_CURSOR_SWAP_SOURCE_AND_MASK);
+#if SMI_CURSOR_ALPHA_PLANE
+	    if (!pSmi->Dualhead)
+		flags |= HARDWARE_CURSOR_ARGB;
+#endif
 	}
-    }
-
-    if (pSmi->shadowFB) {
-	RefreshAreaFuncPtr refreshArea;
-
-	if (pSmi->Chipset == SMI_COUGAR3DR) {
-	    refreshArea = SMI_RefreshArea730;
-	} else {
-	    refreshArea = SMI_RefreshArea;
+	else {
+	    size = SMILYNX_MAX_CURSOR;
+	    flags = (HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_8 |
+		     HARDWARE_CURSOR_SWAP_SOURCE_AND_MASK |
+		     HARDWARE_CURSOR_AND_SOURCE_WITH_MASK |
+		     HARDWARE_CURSOR_BIT_ORDER_MSBFIRST |
+		     HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
+		     HARDWARE_CURSOR_INVERT_MASK);
 	}
 
-	if (pSmi->rotate) {
-	    if (pSmi->PointerMoved == NULL) {
-		pSmi->PointerMoved  = pScrn->PointerMoved;
-		pScrn->PointerMoved = SMI_PointerMoved;
-	    }
-	}
-
-	ShadowFBInit(pScreen, refreshArea);
+	if (!xf86_cursors_init(pScreen, size, size, flags))
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "Hardware cursor initialization failed\n");
     }
 
     /* Initialise default colormap */
-    if (!miCreateDefColormap(pScreen)) {
-	LEAVE_PROC("SMI_ScreenInit");
-	return FALSE;
-    }
+    if (!miCreateDefColormap(pScreen))
+	LEAVE(FALSE);
 
     /* Initialize colormap layer.  Must follow initialization of the default
      * colormap.  And SetGamma call, else it will load palette with solid white.
      */
-    /* CZ 2.11.2001: CMAP_PALETTED_TRUECOLOR for gamma correction */
-    if (!xf86HandleColormaps(pScreen, 256, pScrn->rgbBits, SMI_LoadPalette, NULL,
-            CMAP_RELOAD_ON_MODE_SWITCH | CMAP_PALETTED_TRUECOLOR)) {
-	LEAVE_PROC("SMI_ScreenInit");
-	return FALSE;
-    }
+    if (!xf86HandleColormaps(pScreen, 256, pScrn->rgbBits,SMI_LoadPalette, NULL,
+			     CMAP_RELOAD_ON_MODE_SWITCH | CMAP_PALETTED_TRUECOLOR))
+	LEAVE(FALSE);
 
     pScreen->SaveScreen = SMI_SaveScreen;
     pSmi->CloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = SMI_CloseScreen;
 
-    if (!xf86DPMSInit(pScreen, SMI_DisplayPowerManagementSet, 0)) {
+    if ((IS_MSOC(pSmi) &&
+	 !xf86DPMSInit(pScreen, SMI501_DisplayPowerManagementSet, 0)) ||
+	(!IS_MSOC(pSmi) &&
+	 !xf86DPMSInit(pScreen, SMILynx_DisplayPowerManagementSet, 0)))
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "DPMS initialization failed!\n");
-    }
 
-    if (!pSmi->Dualhead)
-  	SMI_InitVideo(pScreen);
-    else 
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "No overlay in dualhead mode\n");
+    SMI_InitVideo(pScreen);
+
+    if(!xf86CrtcScreenInit(pScreen))
+	LEAVE(FALSE);
 
     /* Report any unused options (only for the first generation) */
     if (serverGeneration == 1) {
 	xf86ShowUnusedOptions(pScrn->scrnIndex, pScrn->options);
     }
-	
-    LEAVE_PROC("SMI_ScreenInit");
-    return TRUE;
-}
 
-/* Common init routines needed in EnterVT and ScreenInit */
-
-static int
-SMI_InternalScreenInit(int scrnIndex, ScreenPtr pScreen)
-{
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-    SMIPtr pSmi = SMIPTR(pScrn);
-    int width, height, displayWidth;
-    int bytesPerPixel = pScrn->bitsPerPixel / 8;
-    int xDpi, yDpi;
-    int ret;
-
-    ENTER_PROC("SMI_InternalScreenInit");
-
-    if (pSmi->rotate) {
-	width        = pScrn->virtualY;
-	height       = pScrn->virtualX;
-	xDpi         = pScrn->yDpi;
-	yDpi         = pScrn->xDpi;
-	displayWidth = ((width * bytesPerPixel + 15) & ~15) / bytesPerPixel;
-    } else {
-	width        = pScrn->virtualX;
-	height       = pScrn->virtualY;
-	xDpi		 = pScrn->xDpi;
-	yDpi		 = pScrn->yDpi;
-	displayWidth = pScrn->displayWidth;
-    }
-
-    if (pSmi->shadowFB) {
-	pSmi->ShadowWidth      = width;
-	pSmi->ShadowHeight     = height;
-	pSmi->ShadowWidthBytes = (width * bytesPerPixel + 15) & ~15;
-	if (bytesPerPixel == 3) {
-	    pSmi->ShadowPitch = ((height * 3) << 16)
-			      | pSmi->ShadowWidthBytes;
-	} else {
-	    pSmi->ShadowPitch = (height << 16)
-			      | (pSmi->ShadowWidthBytes / bytesPerPixel);
-	}
-
-	pSmi->saveBufferSize = pSmi->ShadowWidthBytes * pSmi->ShadowHeight;
-	pSmi->FBReserved -= pSmi->saveBufferSize;
-	pSmi->FBReserved &= ~0x15;
-	WRITE_VPR(pSmi, 0x0C, (pSmi->FBOffset = pSmi->FBReserved) >> 3);
-	if (pSmi->Chipset == SMI_COUGAR3DR) {
-	    WRITE_FPR(pSmi, FPR0C, (pSmi->FBOffset = pSmi->FBReserved) >> 3);
-	}
-	pScrn->fbOffset = pSmi->FBOffset + pSmi->fbMapOffset;
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		   "Shadow: width=%d height=%d "
-		   "offset=0x%08lX pitch=0x%08X\n",
-		   pSmi->ShadowWidth, pSmi->ShadowHeight,
-		   (unsigned long)pSmi->FBOffset,
-		   pSmi->ShadowPitch);
-    } else {
-	pSmi->FBOffset = 0;
-	pScrn->fbOffset = pSmi->FBOffset + pSmi->fbMapOffset;
-    }
-
-    /*
-     * Call the framebuffer layer's ScreenInit function, and fill in other
-     * pScreen fields.
-     */
-
-    DEBUG((VERBLEV, "\tInitializing FB @ 0x%08X for %dx%d (%d)\n",
-	   pSmi->FBBase, width, height, displayWidth));
-    switch (pScrn->bitsPerPixel) {
-    case 8:
-    case 16:
-    case 24:
-    case 32:
-	ret = fbScreenInit(pScreen, pSmi->FBBase, width, height, xDpi,
-			   yDpi, displayWidth, pScrn->bitsPerPixel);
-	break;
-    default:
-	xf86DrvMsg(scrnIndex, X_ERROR, "Internal error: invalid bpp (%d) "
-		   "in SMI_InternalScreenInit\n", pScrn->bitsPerPixel);
-	LEAVE_PROC("SMI_InternalScreenInit");
-	return FALSE;
-    }
-	
-    LEAVE_PROC("SMI_InternalScreenInit");
-    return ret;
-}
-
-/* Checks if a mode is suitable for the selected configuration. */
-static ModeStatus
-SMI_ValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
-{
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-    SMIPtr pSmi = SMIPTR(pScrn);
-    float refresh;
-
-    ENTER_PROC("SMI_ValidMode");
-    refresh = (mode->VRefresh > 0) ? mode->VRefresh 
-	    : mode->Clock * 1000.0 / mode->VTotal / mode->HTotal;
-    xf86DrvMsg(scrnIndex, X_INFO, "Mode: %dx%d %d-bpp, %fHz\n", mode->HDisplay,
-	       mode->VDisplay, pScrn->bitsPerPixel, refresh);
-
-    if (pSmi->shadowFB) {
-	int mem;
-
-	if (pScrn->bitsPerPixel == 24) {
-	    LEAVE_PROC("SMI_ValidMode");
-	    return MODE_BAD;
-	}
-
-	mem  = (pScrn->virtualX * pScrn->bitsPerPixel / 8 + 15) & ~15;
-	mem *= pScrn->virtualY * 2;
-
-	if (mem > pSmi->FBReserved) /* PDR#1074 */ {
-	    LEAVE_PROC("SMI_ValidMode");
-	    return MODE_MEM;
-	}
-    }
-
-    if (!pSmi->useBIOS || pSmi->lcd) {
-#if 1 /* PDR#983 */
-	if (pSmi->zoomOnLCD) {
-	    if ((mode->HDisplay > pSmi->lcdWidth) ||
-		(mode->VDisplay > pSmi->lcdHeight)) {
-		LEAVE_PROC("SMI_ValidMode");
-		return MODE_PANEL;
-	    }
-	} else
-#endif
-	{
-	    if ((mode->HDisplay != pSmi->lcdWidth) ||
-		(mode->VDisplay != pSmi->lcdHeight)) {
-		LEAVE_PROC("SMI_ValidMode");
-		return MODE_PANEL;
-	    }
-	}
-    }
-
-#if 1 /* PDR#944 */
-    if (pSmi->rotate) {
-	if ((mode->HDisplay != pSmi->lcdWidth) ||
-	    (mode->VDisplay != pSmi->lcdHeight)) {
-	    LEAVE_PROC("SMI_ValidMode");
-	    return MODE_PANEL;
-	}
-    }
-#endif
-
-    LEAVE_PROC("SMI_ValidMode");
-    return MODE_OK;
-}
-
-static void
-SMI_DPRInit(ScrnInfoPtr pScrn)
-{
-    SMIPtr pSmi = SMIPTR(pScrn);
-    int i;
-    int xyAddress[] = { 320, 400, 512, 640, 800, 1024, 1280, 1600, 2048 };
-    CARD32 DEDataFormat = 0;
-
-    /* Store values to current mode register structs */
-    SMIRegPtr new = &pSmi->ModeReg;
-
-    /* Set DPR registers */
-    pSmi->Stride = (pSmi->width * pSmi->Bpp + 15) & ~15;
-    switch (pScrn->bitsPerPixel) {
-    case 8:
-	DEDataFormat = 0x00000000;
-	break;
-    case 16:
-	pSmi->Stride >>= 1;
-	DEDataFormat = 0x00100000;
-	break;
-    case 24:
-	DEDataFormat = 0x00300000;
-	break;
-    case 32:
-	pSmi->Stride >>= 2;
-	DEDataFormat = 0x00200000;
-	break;
-    }
-
-    for (i = 0; i < sizeof(xyAddress) / sizeof(xyAddress[0]); i++) {
-	if (pSmi->rotate) {
-	    if (xyAddress[i] == pSmi->height) {
-		DEDataFormat |= i << 16;
-		break;
-	    }
-	} else {
-	    if (xyAddress[i] == pSmi->width) {
-		DEDataFormat |= i << 16;
-		break;
-	    }
-	}
-    }
-
-    new->DPR10 = (pSmi->Stride << 16) | pSmi->Stride;
-    new->DPR1C = DEDataFormat;
-    new->DPR20 = 0;
-    new->DPR24 = 0xFFFFFFFF;
-    new->DPR28 = 0xFFFFFFFF;
-    new->DPR2C = 0;
-    new->DPR30 = 0;
-    new->DPR3C = (pSmi->Stride << 16) | pSmi->Stride;
-    new->DPR40 = pSmi->FBOffset >> 3;
-    new->DPR44 = pSmi->FBOffset >> 3;
-
-}
-
-static Bool
-SMI_ModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
-{
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
-    SMIPtr pSmi = SMIPTR(pScrn);
-    unsigned char tmp;
-    int panelIndex, modeIndex, i, vclk;
-
-    /* Store values to current mode register structs */
-    SMIRegPtr new = &pSmi->ModeReg;
-    vgaRegPtr vganew = &hwp->ModeReg;
-	
-    ENTER_PROC("SMI_ModeInit");
-
-    if (!vgaHWInit(pScrn, mode)) {
-	LEAVE_PROC("SMI_ModeInit");
-	return FALSE;
-    }
-
-    new->modeInit = TRUE;
-
-    if (pSmi->rotate) {
-	pSmi->width  = pScrn->virtualY;
-	pSmi->height = pScrn->virtualX;
-    } else {
-	pSmi->width  = pScrn->virtualX;
-	pSmi->height = pScrn->virtualY;
-    }
-    pSmi->Bpp    = pScrn->bitsPerPixel / 8;
-
-    outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x17);
-    tmp = inb(pSmi->PIOBase + VGA_SEQ_DATA);
-    if (pSmi->pci_burst) {
-	new->SR17 = tmp | 0x20;
-    } else {
-	new->SR17 = tmp & ~0x20;
-    }
-
-    outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x18);
-    new->SR18 = inb(pSmi->PIOBase + VGA_SEQ_DATA) | 0x11;
-
-    outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x21);
-    new->SR21 = inb(pSmi->PIOBase + VGA_SEQ_DATA) & ~0x03;
-
-    if (pSmi->Chipset != SMI_COUGAR3DR) {
-	outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x31);
-	new->SR31 = inb(pSmi->PIOBase + VGA_SEQ_DATA) & ~0xC0;
-
-	outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x32);
-	new->SR32 = inb(pSmi->PIOBase + VGA_SEQ_DATA) & ~0x07;
-
-	if (SMI_LYNXM_SERIES(pSmi->Chipset)) {
-	    new->SR32 |= 0x04;
-	}
-    }
-
-    new->SRA0 = new->CR33 = new->CR3A = 0x00;
-
-    if (pSmi->lcdWidth == 640) {
-	panelIndex = 0;
-    } else if (pSmi->lcdWidth == 800) {
-	panelIndex = 1;
-    } else {
-	panelIndex = 2;
-    }
-
-    if (mode->HDisplay == 640) {
-	modeIndex = 0;
-    } else if (mode->HDisplay == 800) {
-	modeIndex = 1;
-    } else {
-	modeIndex = 2;
-    }
-
-    if (SMI_LYNXM_SERIES(pSmi->Chipset)) {
-	static unsigned char PanelTable[3][14] =
-	    {
-		{ 0x5F, 0x4F, 0x00, 0x52, 0x1E, 0x0B, 0xDF, 0x00, 0xE9, 0x0B, 0x2E,
-		  0x00, 0x4F, 0xDF },
-		{ 0x7F, 0x63, 0x00, 0x69, 0x19, 0x72, 0x57, 0x00, 0x58, 0x0C, 0xA2,
-		  0x20, 0x4F, 0xDF },
-		{ 0xA3, 0x7F, 0x00, 0x83, 0x14, 0x24, 0xFF, 0x00, 0x02, 0x08, 0xA7,
-		  0xE0, 0x4F, 0xDF },
-	    };
-
-	for (i = 0; i < 14; i++) {
-	    new->CR40[i] = PanelTable[panelIndex][i];
-	}
-	new->CR90[14] = 0x03;
-	new->CR90[15] = 0x00;
-	if (mode->VDisplay < pSmi->lcdHeight) {
-	    new->CRA0[6] = (pSmi->lcdHeight - mode->VDisplay) / 8;
-	} else {
-	    new->CRA0[6] = 0;
-	}
-
-	if (mode->HDisplay < pSmi->lcdWidth) {
-	    new->CRA0[7] = (pSmi->lcdWidth - mode->HDisplay) / 16;
-	} else {
-	    new->CRA0[7] = 0;
-	}
-    } else {
-	static unsigned char PanelTable[3][3][14] =
-	    {
-		{ /* 640x480 panel */
-		    { 0x5F, 0x4F, 0x00, 0x53, 0x00, 0x0B, 0xDF, 0x00, 0xEA, 0x0C,
-		      0x2E, 0x00, 0x4F, 0xDF },
-		    { 0x5F, 0x4F, 0x00, 0x53, 0x00, 0x0B, 0xDF, 0x00, 0xEA, 0x0C,
-		      0x2E, 0x00, 0x4F, 0xDF },
-		    { 0x5F, 0x4F, 0x00, 0x53, 0x00, 0x0B, 0xDF, 0x00, 0xEA, 0x0C,
-		      0x2E, 0x00, 0x4F, 0xDF },
-		},
-		{ /* 800x600 panel */
-		    { 0x7F, 0x59, 0x19, 0x5E, 0x8E, 0x72, 0x1C, 0x37, 0x1D, 0x00,
-		      0xA2, 0x20, 0x4F, 0xDF },
-		    { 0x7F, 0x63, 0x00, 0x68, 0x18, 0x72, 0x58, 0x00, 0x59, 0x0C,
-		      0xE0, 0x20, 0x63, 0x57 },
-		    { 0x7F, 0x63, 0x00, 0x68, 0x18, 0x72, 0x58, 0x00, 0x59, 0x0C,
-		      0xE0, 0x20, 0x63, 0x57 },
-		},
-		{ /* 1024x768 panel */
-		    { 0xA3, 0x67, 0x0F, 0x6D, 0x1D, 0x24, 0x70, 0x95, 0x72, 0x07,
-		      0xA3, 0x20, 0x4F, 0xDF },
-		    { 0xA3, 0x71, 0x19, 0x77, 0x07, 0x24, 0xAC, 0xD1, 0xAE, 0x03,
-		      0xE1, 0x20, 0x63, 0x57 },
-		    { 0xA3, 0x7F, 0x00, 0x85, 0x15, 0x24, 0xFF, 0x00, 0x01, 0x07,
-		      0xE5, 0x20, 0x7F, 0xFF },
-		},
-	    };
-
-	for (i = 0; i < 14; i++) {
-	    new->CR40[i] = PanelTable[panelIndex][modeIndex][i];
-	}
-    }
-
-    /* CZ 2.11.2001: for gamma correction (TODO: other chipsets?) */
-    new->CCR66 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x66);
-    if ((pSmi->Chipset == SMI_LYNX3DM) || (pSmi->Chipset == SMI_COUGAR3DR)) {
-	switch (pScrn->bitsPerPixel) {
-	case 8:
-	    new->CCR66 = (new->CCR66 & 0xF3) | 0x00; /* 6 bits-RAM */
-	    break;
-	case 16:
-	    new->CCR66 = (new->CCR66 & 0xF3) | 0x00; /* 6 bits-RAM */
-	    /* no Gamma correction in 16 Bit mode (s. Release.txt 1.3.1) */
-	    break;
-	case 24:
-	case 32:
-	    new->CCR66 = (new->CCR66 & 0xF3) | 0x04; /* Gamma correct ON */
-	    break;
-	default:
-	    LEAVE_PROC("SMI_ModeInit");
-	    return FALSE;
-	}
-    }
-
-    if (pSmi->Chipset != SMI_COUGAR3DR) {
-	outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x30);
-	if (inb(pSmi->PIOBase + VGA_SEQ_DATA) & 0x01) {
-	    new->SR21 = 0x00;
-	}
-    }
-
-    if (pSmi->MCLK > 0) {
-	SMI_CommonCalcClock(pScrn->scrnIndex, pSmi->MCLK,
-			    1, 1, 63, 0, 0,
-                            pScrn->clockRanges->minClock,
-                            pScrn->clockRanges->maxClock,
-                            &new->SR6A, &new->SR6B);
-    } else {
-	new->SR6B = 0xFF;
-    }
-
-    if ((mode->HDisplay == 640) && SMI_LYNXM_SERIES(pSmi->Chipset)) {
-	vganew->MiscOutReg &= ~0x0C;
-    } else {
-	vganew->MiscOutReg |= 0x0C;
-    }
-    vganew->MiscOutReg |= 0xE0;
-    if (mode->HDisplay == 800) {
-	vganew->MiscOutReg &= ~0xC0;
-    }
-    if ((mode->HDisplay == 1024) && SMI_LYNXM_SERIES(pSmi->Chipset)) {
-	vganew->MiscOutReg &= ~0xC0;
-    }
-
-    /* calculate vclk1 */
-    vclk = mode->Clock;
-    if (SMI_LYNX_SERIES(pSmi->Chipset)) {
-        SMI_CommonCalcClock(pScrn->scrnIndex, vclk,
-			1, 1, 63, 0, 3,
-                        pScrn->clockRanges->minClock,
-                        pScrn->clockRanges->maxClock,
-                        &new->SR6C, &new->SR6D);
-    } else {
-        SMI_CommonCalcClock(pScrn->scrnIndex, vclk,
-			1, 1, 63, 0, 1,
-                        pScrn->clockRanges->minClock,
-                        pScrn->clockRanges->maxClock,
-                        &new->SR6C, &new->SR6D);
-    }
-
-    /* use vclk1 */
-    new->SR68 = 0x54;
-
-    /* dualhead */
-    if (pSmi->Dualhead) {
-	/* PLL controls */
-	/* set LCD to vclk2 */
-	new->SR69 = 0x04;
-
-	if (pSmi->lcdWidth == 640) {
-	    /* vclk */
-	    new->SR6C = 0x07;
-	    new->SR6D = 0x04;
-
-	    /* vclk2 */
-	    new->SR6E = 0x07;
-	    new->SR6F = 0x04;
-	} else if (pSmi->lcdWidth == 800) {
-	    /* vclk */
-	    new->SR6C = 0x0B;
-	    new->SR6D = 0x82;
-
-	    /* vclk2 */
-	    new->SR6E = 0x0B;
-	    new->SR6F = 0x82;
-	} else {
-	    /* vclk */
-	    new->SR6C = 0x52;
-	    new->SR6D = 0x89;
-
-	    /* vclk2 */
-	    new->SR6E = 0x52;
-	    new->SR6F = 0x89;
-	}
-
-	/* TFT panel uses FIFO1, DSTN panel uses FIFO1 for upper panel and 
-	 * FIFO2 for lower panel.  I don't have a DSTN panel, so it's untested.
-	 * -- AGD
-	 */
-	CARD32 fifo1_readoffset, fifo2_readoffset, fifo_writeoffset;
-
-	/* setting SR21 bit 2 disables ZV circuitry, 
-	 * if ZV is needed, SR21 = 0x20
-	 */
-	/* enable DAC, PLL, etc. */
-	new->SR21 = 0x24;
-
-	/* clear DPMS state */
-	new->SR22 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x22) & ~0x30;
-
-	/* enable virtual refresh and LCD and CRT outputs */
-	if (pScrn->bitsPerPixel > 8)
-	    new->SR31 = /*0xCB*/ 0xC3; /* 16 bpp */
-	else
-	    new->SR31 = /*0x8B*/ 0x83; /* 8 bpp */
-
-	/* FIFO1 Read Offset */
-	fifo1_readoffset = pSmi->lcdWidth / 2;
-	fifo2_readoffset = pSmi->lcdWidth / 2;
-	new->SR44 = fifo1_readoffset & 0x000000FF;
-	/* FIFO2 Read Offset */
-	new->SR4B = fifo2_readoffset & 0x000000FF;
-	/* FIFO1/2 Read Offset overflow */
-	new->SR4C = (((fifo1_readoffset & 0x00000300) >> 8) << 2) |
-		    (((fifo2_readoffset & 0x00000300) >> 8) << 6);
-
-	/* FIFO Write Offset */
-	fifo_writeoffset = pSmi->lcdWidth / 4;
-	new->SR48 = fifo_writeoffset & 0x000000FF;
-	new->SR49 = (fifo_writeoffset & 0x00000300) >> 8;
-
-	/* set FIFO levels */
-	new->SR4A = 0x41;
-
-	/* something related to tv... */
-	new->CR33 |= 0x07;
-
-    }
-
-    /* init graphics engine regs */
-    SMI_DPRInit(pScrn);
-
-    /* Set VPR registers (and FPR registers for SM731) */
-    switch (pScrn->bitsPerPixel) {
-    case 8:
-	new->VPR00 = 0x00000000;
-	new->FPR00_= 0x00080000;
-	break;
-    case 16:
-	new->VPR00 = 0x00020000;
-	new->FPR00_= 0x000A0000;
-	break;
-    case 24:
-	new->VPR00 = 0x00040000;
-	new->FPR00_= 0x000C0000;
-	break;
-    case 32:
-	new->VPR00 = 0x00030000;
-	new->FPR00_= 0x000B0000;
-	break;
-    }
-    new->VPR0C = pSmi->FBOffset >> 3;
-    if (pSmi->rotate) {
-	new->VPR10 = (((( pSmi->height * pSmi->Bpp) >> 3) + 2) << 16) |
-		     ((pSmi->height * pSmi->Bpp) >> 3);
-    } else {
-	new->VPR10 = ((((pSmi->width * pSmi->Bpp) >> 3) + 2) << 16) |
-		     ((pSmi->width * pSmi->Bpp) >> 3);
-    }
-
-    new->FPR0C_ = new->VPR0C;
-    new->FPR10_ = new->VPR10;
-
-    /* Set CPR registers */
-    new->CPR00 = 0x00000000;
-
-    pScrn->vtSema = TRUE;
-
-    /* Find the INT 10 mode number */
-    {
-	static struct {
-	    int x, y, bpp;
-	    CARD16 mode;
-	} modeTable[] =
-	    {
-		{  640,  480,  8, 0x50 },
-		{  640,  480, 16, 0x52 },
-		{  640,  480, 24, 0x53 },
-		{  640,  480, 32, 0x54 },
-		{  800,  480,  8, 0x4A },
-		{  800,  480, 16, 0x4C },
-		{  800,  480, 24, 0x4D },
-		{  800,  600,  8, 0x55 },
-		{  800,  600, 16, 0x57 },
-		{  800,  600, 24, 0x58 },
-		{  800,  600, 32, 0x59 },
-		{ 1024,  768,  8, 0x60 },
-		{ 1024,  768, 16, 0x62 },
-		{ 1024,  768, 24, 0x63 },
-		{ 1024,  768, 32, 0x64 },
-		{ 1280, 1024,  8, 0x65 },
-		{ 1280, 1024, 16, 0x67 },
-		{ 1280, 1024, 24, 0x68 },
-		{ 1280, 1024, 32, 0x69 },
-	    };
-
-	new->mode = 0;
-	for (i = 0; i < sizeof(modeTable) / sizeof(modeTable[0]); i++) {
-	    if ((modeTable[i].x == mode->HDisplay) &&
-		(modeTable[i].y == mode->VDisplay) &&
-		(modeTable[i].bpp == pScrn->bitsPerPixel)) {
-		new->mode = modeTable[i].mode;
-		break;
-	    }
-	}
-    }
-
-    /* Zero the font memory */
-    memset(new->smiFont, 0, sizeof(new->smiFont));
-
-    /* Write the mode registers to hardware */
-    SMI_WriteMode(pScrn, vganew, new);
-
-    /* Adjust the viewport */
-    SMI_AdjustFrame(pScrn->scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
-
-    LEAVE_PROC("SMI_ModeInit");
-    return TRUE;
+    LEAVE(TRUE);
 }
 
 /*
@@ -2811,20 +1856,18 @@ SMI_ModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 static Bool
 SMI_CloseScreen(int scrnIndex, ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
-    SMIPtr pSmi = SMIPTR(pScrn);
-    vgaRegPtr vgaSavePtr = &hwp->SavedReg;
-    SMIRegPtr SMISavePtr = &pSmi->SavedReg;
-    Bool ret;
+    ScrnInfoPtr	pScrn = xf86Screens[scrnIndex];
+    SMIPtr	pSmi = SMIPTR(pScrn);
+    Bool	ret;
 	
-    ENTER_PROC("SMI_CloseScreen");
+    ENTER();
 
-    if (pScrn->vtSema) {
-	SMI_WriteMode(pScrn, vgaSavePtr, SMISavePtr);
-	vgaHWLock(hwp);
-	SMI_UnmapMem(pScrn);
-    }
+    if (pSmi->HwCursor)
+	xf86_cursors_fini(pScreen);
+
+    if (pScrn->vtSema)
+	/* Restore console mode and unmap framebuffer */
+	SMI_LeaveVT(scrnIndex, 0);
 
     if (pSmi->XAAInfoRec != NULL) {
 	XAADestroyInfoRec(pSmi->XAAInfoRec);
@@ -2833,11 +1876,9 @@ SMI_CloseScreen(int scrnIndex, ScreenPtr pScreen)
 	exaDriverFini(pScreen);
 	pSmi->EXADriverPtr = NULL;
     }
-    if (pSmi->CursorInfoRec != NULL) {
-	xf86DestroyCursorInfoRec(pSmi->CursorInfoRec);
-    }
-    if (pSmi->DGAModes != NULL) {
-	xfree(pSmi->DGAModes);
+    if (pSmi->pVbe != NULL) {
+	vbeFree(pSmi->pVbe);
+	pSmi->pVbe = NULL;
     }
     if (pSmi->pInt10 != NULL) {
 	xf86FreeInt10(pSmi->pInt10);
@@ -2849,21 +1890,12 @@ SMI_CloseScreen(int scrnIndex, ScreenPtr pScreen)
     if (pSmi->BlockHandler != NULL) {
 	pScreen->BlockHandler = pSmi->BlockHandler;
     }
-    /* #670 */
-    if (pSmi->pSaveBuffer) {
-	xfree(pSmi->pSaveBuffer);
-    }
-/* #920 */
-    if (pSmi->paletteBuffer) {
-	xfree(pSmi->paletteBuffer);
-    }
 
     pScrn->vtSema = FALSE;
     pScreen->CloseScreen = pSmi->CloseScreen;
     ret = (*pScreen->CloseScreen)(scrnIndex, pScreen);
 
-    LEAVE_PROC("SMI_CloseScreen");
-    return ret;
+    LEAVE(ret);
 }
 
 static void
@@ -2875,126 +1907,97 @@ SMI_FreeScreen(int scrnIndex, int flags)
 static Bool
 SMI_SaveScreen(ScreenPtr pScreen, int mode)
 {
-    Bool ret;
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
 
-    ENTER_PROC("SMI_SaveScreen");
+    ENTER();
 
-    ret = vgaHWSaveScreen(pScreen, mode);
+    if(xf86IsUnblank(mode)){
+	pScrn->DPMSSet(pScrn, DPMSModeOn, 0);
+    }else{
+	pScrn->DPMSSet(pScrn, DPMSModeOff, 0);
+    }
 
-    LEAVE_PROC("SMI_SaveScreen");
-    return ret;
+    LEAVE(TRUE);
 }
 
 void
 SMI_AdjustFrame(int scrnIndex, int x, int y, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-    SMIPtr pSmi = SMIPTR(pScrn);
-    CARD32 Base, lcdBase;
+    xf86CrtcConfigPtr crtcConf = XF86_CRTC_CONFIG_PTR(xf86Screens[scrnIndex]);
+    xf86CrtcPtr compat_crtc = crtcConf->output[crtcConf->compat_output]->crtc;
 
-    ENTER_PROC("SMI_AdjustFrame");
+    ENTER();
 
-    if (pSmi->ShowCache && y) {
-	y += pScrn->virtualY - 1;
-    }
+    SMICRTC(compat_crtc)->adjust_frame(compat_crtc,x,y);
 
-    if (pSmi->Dualhead) {
-	lcdBase = 0;
-	x = pSmi->lcdWidth;
-	y = 0;
-    }
-
-    Base = pSmi->FBOffset + (x + y * pScrn->virtualX) * pSmi->Bpp;
-    if (SMI_LYNX3D_SERIES(pSmi->Chipset) ||
-	SMI_COUGAR_SERIES(pSmi->Chipset)) {
-	Base = (Base + 15) & ~15;
-#if 1 /* PDR#1058 */
-	while ((Base % pSmi->Bpp) > 0) {
-	    Base -= 16;
-	}
-#endif
-    } else {
-	Base = (Base + 7) & ~7;
-#if 1 /* PDR#1058 */
-	while ((Base % pSmi->Bpp) > 0) {
-	    Base -= 8;
-	}
-#endif
-    }
-
-    if (pSmi->Dualhead) {
-
-	/* FIFO1 read start address */
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x40, 
-			 (lcdBase & 0x000000FF));
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x41, 
-			 ((lcdBase & 0x0000FF00) >> 8));
-
-	/* FIFO2 read start address */
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x42, 
-			 (lcdBase & 0x000000FF));
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x43, 
-			 ((lcdBase & 0x0000FF00) >> 8));
-
-	/* FIFO1/2 read start address overflow */
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x45, 
-		((lcdBase & 0x000F0000) >> 12) | (((lcdBase & 0x000F0000) >> 12) << 4));
-
-    }
-
-    WRITE_VPR(pSmi, 0x0C, Base >> 3);
-    if (pSmi->Chipset == SMI_COUGAR3DR) {
-	WRITE_FPR(pSmi, FPR0C, Base >> 3);
-    }
-
-    LEAVE_PROC("SMI_AdjustFrame");
+    LEAVE();
 }
 
 Bool
 SMI_SwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
 {
     Bool ret;
-    SMIPtr pSmi = SMIPTR(xf86Screens[scrnIndex]);
+    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_SwitchMode");
+    ENTER();
 
-    pSmi->IsSwitching = TRUE;
-    ret = SMI_ModeInit(xf86Screens[scrnIndex], mode);
-    pSmi->IsSwitching = FALSE;
+    ret = xf86SetSingleMode(pScrn, mode, RR_Rotate_0);
 
-    LEAVE_PROC("SMI_SwitchMode");
-    return ret;
+    if (!pSmi->NoAccel)
+	SMI_EngineReset(pScrn);
+
+    LEAVE(ret);
 }
 
 void
-SMI_LoadPalette(ScrnInfoPtr pScrn, int numColors, int *indicies, LOCO *colors,
-				VisualPtr pVisual)
+SMI_LoadPalette(ScrnInfoPtr pScrn, int numColors, int *indicies,
+		LOCO *colors, VisualPtr pVisual)
 {
-    SMIPtr pSmi = SMIPTR(pScrn);
-    int i;
+    xf86CrtcConfigPtr crtcConf = XF86_CRTC_CONFIG_PTR(pScrn);
+    int crtc_idx,i,j;
 
-    ENTER_PROC("SMI_LoadPalette");
+    ENTER();
 
-    /* Enable both the CRT and LCD DAC RAM paths, so both palettes are updated */
-    if ((pSmi->Chipset == SMI_LYNX3DM) ||
-	(pSmi->Chipset == SMI_COUGAR3DR)) {
-	CARD8 ccr66;
+    if(pScrn->bitsPerPixel == 16){
+	/* Expand the RGB 565 palette into the 256-elements LUT */
 
-	ccr66  = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x66);
-	ccr66 &= 0x0f;
-	VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x66, ccr66);
+	for(crtc_idx=0; crtc_idx<crtcConf->num_crtc; crtc_idx++){
+	    SMICrtcPrivatePtr crtcPriv = SMICRTC(crtcConf->crtc[crtc_idx]);
+
+	    for(i=0; i<numColors; i++){
+		int idx = indicies[i];
+
+		if(idx<32){
+		    for(j=0; j<8; j++){
+			crtcPriv->lut_r[idx*8 + j] = colors[idx].red << 8;
+			crtcPriv->lut_b[idx*8 + j] = colors[idx].blue << 8;
+		    }
+		}
+
+		for(j=0; j<4; j++)
+		    crtcPriv->lut_g[idx*4 + j] = colors[idx].green << 8;
+	    }
+
+	    crtcPriv->load_lut(crtcConf->crtc[crtc_idx]);
     }
+    }else{
+	for(crtc_idx=0; crtc_idx<crtcConf->num_crtc; crtc_idx++){
+	    SMICrtcPrivatePtr crtcPriv = SMICRTC(crtcConf->crtc[crtc_idx]);
 
     for(i = 0; i < numColors; i++) {
-        DEBUG((VERBLEV, "pal[%d] = %d %d %d\n", indicies[i],
-        colors[indicies[i]].red, colors[indicies[i]].green, colors[indicies[i]].blue));
-	VGAOUT8(pSmi, VGA_DAC_WRITE_ADDR, indicies[i]);
-	VGAOUT8(pSmi, VGA_DAC_DATA, colors[indicies[i]].red);
-	VGAOUT8(pSmi, VGA_DAC_DATA, colors[indicies[i]].green);
-	VGAOUT8(pSmi, VGA_DAC_DATA, colors[indicies[i]].blue);
+		int idx = indicies[i];
+
+		crtcPriv->lut_r[idx] = colors[idx].red << 8;
+		crtcPriv->lut_g[idx] = colors[idx].green << 8;
+		crtcPriv->lut_b[idx] = colors[idx].blue << 8;
+	    }
+
+	    crtcPriv->load_lut(crtcConf->crtc[crtc_idx]);
+	}
     }
 
-    LEAVE_PROC("SMI_LoadPalette");
+    LEAVE();
 }
 
 static void
@@ -3003,10 +2006,12 @@ SMI_DisableVideo(ScrnInfoPtr pScrn)
     SMIPtr pSmi = SMIPTR(pScrn);
     CARD8 tmp;
 
-    if (!(tmp = VGAIN8(pSmi, VGA_DAC_MASK)))
-	return;
-    pSmi->DACmask = tmp;
-    VGAOUT8(pSmi, VGA_DAC_MASK, 0);
+    if (!IS_MSOC(pSmi)) {
+	if (!(tmp = VGAIN8(pSmi, VGA_DAC_MASK)))
+	    return;
+	pSmi->DACmask = tmp;
+	VGAOUT8(pSmi, VGA_DAC_MASK, 0);
+    }
 }
 
 static void
@@ -3014,118 +2019,109 @@ SMI_EnableVideo(ScrnInfoPtr pScrn)
 {
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    VGAOUT8(pSmi, VGA_DAC_MASK, pSmi->DACmask);
+    if (!IS_MSOC(pSmi)) {
+	VGAOUT8(pSmi, VGA_DAC_MASK, pSmi->DACmask);
+    }
 }
 
 
 void
 SMI_EnableMmio(ScrnInfoPtr pScrn)
 {
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
     SMIPtr pSmi = SMIPTR(pScrn);
-    CARD8 tmp;
 
-    ENTER_PROC("SMI_EnableMmio");
+    ENTER();
 
-    /*
-     * Enable chipset (seen on uninitialized secondary cards) might not be
-     * needed once we use the VGA softbooter
-     */
-    vgaHWSetStdFuncs(hwp);
+    if (!IS_MSOC(pSmi)) {
+	vgaHWPtr hwp = VGAHWPTR(pScrn);
+	CARD8 tmp;
 
-    /* Enable linear mode */
-    outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x18);
-    tmp = inb(pSmi->PIOBase + VGA_SEQ_DATA);
-    pSmi->SR18Value = tmp;					/* PDR#521 */
-    outb(pSmi->PIOBase + VGA_SEQ_DATA, tmp | 0x11);
+	/*
+	 * Enable chipset (seen on uninitialized secondary cards) might not be
+	 * needed once we use the VGA softbooter
+	 */
+	vgaHWSetStdFuncs(hwp);
 
-    /* Enable 2D/3D Engine and Video Processor */
-    outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x21);
-    tmp = inb(pSmi->PIOBase + VGA_SEQ_DATA);
-    pSmi->SR21Value = tmp;					/* PDR#521 */
-    outb(pSmi->PIOBase + VGA_SEQ_DATA, tmp & ~0x03);
+	/* Enable linear mode */
+	outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x18);
+	tmp = inb(pSmi->PIOBase + VGA_SEQ_DATA);
+	pSmi->SR18Value = tmp;					/* PDR#521 */
+	outb(pSmi->PIOBase + VGA_SEQ_DATA, tmp | 0x11);
 
-    LEAVE_PROC("SMI_EnableMmio");
+	/* Enable 2D/3D Engine and Video Processor */
+	outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x21);
+	tmp = inb(pSmi->PIOBase + VGA_SEQ_DATA);
+	pSmi->SR21Value = tmp;					/* PDR#521 */
+	outb(pSmi->PIOBase + VGA_SEQ_DATA, tmp & ~0x03);
+    }
+
+    LEAVE();
 }
 
 void
 SMI_DisableMmio(ScrnInfoPtr pScrn)
 {
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
     SMIPtr pSmi = SMIPTR(pScrn);
 
-    ENTER_PROC("SMI_DisableMmio");
+    ENTER();
 
-    vgaHWSetStdFuncs(hwp);
+    if (!IS_MSOC(pSmi)) {
+	vgaHWPtr hwp = VGAHWPTR(pScrn);
 
-    /* Disable 2D/3D Engine and Video Processor */
-    outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x21);
-    outb(pSmi->PIOBase + VGA_SEQ_DATA, pSmi->SR21Value);	/* PDR#521 */
+	vgaHWSetStdFuncs(hwp);
 
-    /* Disable linear mode */
-    outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x18);
-    outb(pSmi->PIOBase + VGA_SEQ_DATA, pSmi->SR18Value);	/* PDR#521 */
+	/* Disable 2D/3D Engine and Video Processor */
+	outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x21);
+	outb(pSmi->PIOBase + VGA_SEQ_DATA, pSmi->SR21Value);	/* PDR#521 */
 
-    LEAVE_PROC("SMI_DisableMmio");
+	/* Disable linear mode */
+	outb(pSmi->PIOBase + VGA_SEQ_INDEX, 0x18);
+	outb(pSmi->PIOBase + VGA_SEQ_DATA, pSmi->SR18Value);	/* PDR#521 */
+    }
+
+    LEAVE();
 }
 
-/* This function is used to debug, it prints out the contents of Lynx regs */
 static void
+SMI_ProbeDDC(ScrnInfoPtr pScrn, int index)
+{
+    vbeInfoPtr pVbe;
+    if (xf86LoadSubModule(pScrn, "vbe")) {
+	pVbe = VBEInit(NULL, index);
+	ConfiguredMonitor = vbeDoEDID(pVbe, NULL);
+	vbeFree(pVbe);
+    }
+}
+
+static Bool
+SMI_HWInit(ScrnInfoPtr pScrn)
+{
+    SMIPtr pSmi = SMIPTR(pScrn);
+
+    ENTER();
+
+    if(IS_MSOC(pSmi))
+	LEAVE(SMI501_HWInit(pScrn));
+    else
+	LEAVE(SMILynx_HWInit(pScrn));
+}
+
+void
 SMI_PrintRegs(ScrnInfoPtr pScrn)
 {
-    unsigned char i;
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
     SMIPtr pSmi = SMIPTR(pScrn);
-    int vgaCRIndex = hwp->IOBase + VGA_CRTC_INDEX_OFFSET;
-    int vgaCRReg   = hwp->IOBase + VGA_CRTC_DATA_OFFSET;
-    int vgaStatus  = hwp->IOBase + VGA_IN_STAT_1_OFFSET;
+    int i;
+
+    ENTER();
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, VERBLEV,
 		"START register dump ------------------\n");
 
-    xf86ErrorFVerb(VERBLEV, "MISCELLANEOUS OUTPUT\n    %02X\n",
-		VGAIN8(pSmi, VGA_MISC_OUT_R));
+    if(IS_MSOC(pSmi))
+	SMI501_PrintRegs(pScrn);
+    else
+	SMILynx_PrintRegs(pScrn);
 
-    xf86ErrorFVerb(VERBLEV, "\nSEQUENCER\n"
-		"    x0 x1 x2 x3  x4 x5 x6 x7  x8 x9 xA xB  xC xD xE xF");
-    for (i = 0x00; i <= 0xAF; i++) {
-	if ((i & 0xF) == 0x0) xf86ErrorFVerb(VERBLEV, "\n%02X|", i);
-	if ((i & 0x3) == 0x0) xf86ErrorFVerb(VERBLEV, " ");
-	xf86ErrorFVerb(VERBLEV, "%02X ",
-	    VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, i));
-    }
-
-    xf86ErrorFVerb(VERBLEV, "\n\nCRT CONTROLLER\n"
-		"    x0 x1 x2 x3  x4 x5 x6 x7  x8 x9 xA xB  xC xD xE xF");
-    for (i = 0x00; i <= 0xAD; i++) {
-	if (i == 0x20) i = 0x30;
-	if (i == 0x50) i = 0x90;
-	if ((i & 0xF) == 0x0) xf86ErrorFVerb(VERBLEV, "\n%02X|", i);
-	if ((i & 0x3) == 0x0) xf86ErrorFVerb(VERBLEV, " ");
-	xf86ErrorFVerb(VERBLEV, "%02X ",
-	    VGAIN8_INDEX(pSmi, vgaCRIndex, vgaCRReg, i));
-    }
-
-    xf86ErrorFVerb(VERBLEV, "\n\nGRAPHICS CONTROLLER\n"
-		"    x0 x1 x2 x3  x4 x5 x6 x7  x8 x9 xA xB  xC xD xE xF");
-    for (i = 0x00; i <= 0x08; i++) {
-	if ((i & 0xF) == 0x0) xf86ErrorFVerb(VERBLEV, "\n%02X|", i);
-	if ((i & 0x3) == 0x0) xf86ErrorFVerb(VERBLEV, " ");
-	xf86ErrorFVerb(VERBLEV, "%02X ",
-	    VGAIN8_INDEX(pSmi, VGA_GRAPH_INDEX, VGA_GRAPH_DATA, i));
-    }
-
-    xf86ErrorFVerb(VERBLEV, "\n\nATTRIBUTE 0CONTROLLER\n"
-		"    x0 x1 x2 x3  x4 x5 x6 x7  x8 x9 xA xB  xC xD xE xF");
-    for (i = 0x00; i <= 0x14; i++) {
-	(void) VGAIN8(pSmi, vgaStatus);
-	if ((i & 0xF) == 0x0) xf86ErrorFVerb(VERBLEV, "\n%02X|", i);
-	if ((i & 0x3) == 0x0) xf86ErrorFVerb(VERBLEV, " ");
-	xf86ErrorFVerb(VERBLEV, "%02X ",
-	    VGAIN8_INDEX(pSmi, VGA_ATTR_INDEX, VGA_ATTR_DATA_R, i));
-    }
-    (void) VGAIN8(pSmi, vgaStatus);
-    VGAOUT8(pSmi, VGA_ATTR_INDEX, 0x20);
 
     xf86ErrorFVerb(VERBLEV, "\n\nDPR    x0       x4       x8       xC");
     for (i = 0x00; i <= 0x44; i += 4) {
@@ -3148,207 +2144,6 @@ SMI_PrintRegs(ScrnInfoPtr pScrn)
     xf86ErrorFVerb(VERBLEV, "\n\n");
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, VERBLEV,
 		"END register dump --------------------\n");
+
+    LEAVE();
 }
-
-/*
- * SMI_DisplayPowerManagementSet -- Sets VESA Display Power Management
- * Signaling (DPMS) Mode.
- */
-static void
-SMI_DisplayPowerManagementSet(ScrnInfoPtr pScrn, int PowerManagementMode,
-							  int flags)
-{
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
-    SMIPtr pSmi = SMIPTR(pScrn);
-    CARD8 SR01, SR20, SR21, SR22, SR23, SR24, SR31, SR34;
-
-    ENTER_PROC("SMI_DisplayPowerManagementSet");
-
-    /* If we already are in the requested DPMS mode, just return */
-    if (pSmi->CurrentDPMS == PowerManagementMode) {
-	LEAVE_PROC("SMI_DisplayPowerManagementSet");
-	return;
-    }
-
-#if 1 /* PDR#735 */
-    if (pSmi->useBIOS && pSmi->pInt10 != NULL) {
-	pSmi->pInt10->ax = 0x4F10;
-	switch (PowerManagementMode) {
-	case DPMSModeOn:
-	    pSmi->pInt10->bx = 0x0001;
-	    break;
-	case DPMSModeStandby:
-	    pSmi->pInt10->bx = 0x0101;
-	    break;
-	case DPMSModeSuspend:
-	    pSmi->pInt10->bx = 0x0201;
-	    break;
-	case DPMSModeOff:
-	    pSmi->pInt10->bx = 0x0401;
-	    break;
-	}
-	pSmi->pInt10->cx = 0x0000;
-	pSmi->pInt10->num = 0x10;
-	xf86ExecX86int10(pSmi->pInt10);
-	if (pSmi->pInt10->ax == 0x004F) {
-	    pSmi->CurrentDPMS = PowerManagementMode;
-#if 1 /* PDR#835 */
-	    if (PowerManagementMode == DPMSModeOn) {
-		SR01 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x01);
-		VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x01,
-				SR01 & ~0x20);
-	    }
-#endif
-	    LEAVE_PROC("SMI_DisplayPowerManagementSet");
-	    return;
-	}
-    }
-#endif
-
-    /* Save the current SR registers */
-    if (pSmi->CurrentDPMS == DPMSModeOn) {
-	pSmi->DPMS_SR20 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x20);
-	pSmi->DPMS_SR21 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x21);
-	pSmi->DPMS_SR31 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x31);
-	pSmi->DPMS_SR34 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x34);
-    }
-
-    /* Read the required SR registers for the DPMS handler */
-    SR01 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x01);
-    SR20 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x20);
-    SR21 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x21);
-    SR22 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x22);
-    SR23 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x23);
-    SR24 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x24);
-    SR31 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x31);
-    SR34 = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x34);
-
-    switch (PowerManagementMode) {
-    case DPMSModeOn:
-	/* Screen On: HSync: On, VSync : On */
-	SR01 &= ~0x20;
-	SR20  = pSmi->DPMS_SR20;
-	SR21  = pSmi->DPMS_SR21;
-	SR22 &= ~0x30;
-	SR23 &= ~0xC0;
-	SR24 |= 0x01;
-	SR31  = pSmi->DPMS_SR31;
-	SR34  = pSmi->DPMS_SR34;
-	break;
-    case DPMSModeStandby:
-	/* Screen: Off; HSync: Off, VSync: On */
-	SR01 |= 0x20;
-	SR20  = (SR20 & ~0xB0) | 0x10;
-	SR21 |= 0x88;
-	SR22  = (SR22 & ~0x30) | 0x10;
-	SR23  = (SR23 & ~0x07) | 0xD8;
-	SR24 &= ~0x01;
-	SR31  = (SR31 & ~0x07) | 0x00;
-	SR34 |= 0x80;
-	break;
-    case DPMSModeSuspend:
-	/* Screen: Off; HSync: On, VSync: Off */
-	SR01 |= 0x20;
-	SR20  = (SR20 & ~0xB0) | 0x10;
-	SR21 |= 0x88;
-	SR22  = (SR22 & ~0x30) | 0x20;
-	SR23  = (SR23 & ~0x07) | 0xD8;
-	SR24 &= ~0x01;
-	SR31  = (SR31 & ~0x07) | 0x00;
-	SR34 |= 0x80;
-	break;
-    case DPMSModeOff:
-	/* Screen: Off; HSync: Off, VSync: Off */
-	SR01 |= 0x20;
-	SR20  = (SR20 & ~0xB0) | 0x10;
-	SR21 |= 0x88;
-	SR22  = (SR22 & ~0x30) | 0x30;
-	SR23  = (SR23 & ~0x07) | 0xD8;
-	SR24 &= ~0x01;
-	SR31  = (SR31 & ~0x07) | 0x00;
-	SR34 |= 0x80;
-	break;
-    default:
-	xf86ErrorFVerb(VERBLEV, "Invalid PowerManagementMode %d passed to "
-		"SMI_DisplayPowerManagementSet\n", PowerManagementMode);
-	LEAVE_PROC("SMI_DisplayPowerManagementSet");
-	return;
-    }
-
-    /* Wait for vertical retrace */
-    while (hwp->readST01(hwp) & 0x8) ;
-    while (!(hwp->readST01(hwp) & 0x8)) ;
-
-    /* Write the registers */
-    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x01, SR01);
-    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x34, SR34);
-    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x31, SR31);
-    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x20, SR20);
-    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x22, SR22);
-    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x23, SR23);
-    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x21, SR21);
-    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x24, SR24);
-
-    /* Save the current power state */
-    pSmi->CurrentDPMS = PowerManagementMode;
-
-    LEAVE_PROC("SMI_DisplayPowerManagementSet");
-}
-
-static void
-SMI_ProbeDDC(ScrnInfoPtr pScrn, int index)
-{
-    vbeInfoPtr pVbe;
-    if (xf86LoadSubModule(pScrn, "vbe")) {
-	pVbe = VBEInit(NULL, index);
-	ConfiguredMonitor = vbeDoEDID(pVbe, NULL);
-	vbeFree(pVbe);
-    }
-}
-
-static unsigned int
-SMI_ddc1Read(ScrnInfoPtr pScrn)
-{
-    register vgaHWPtr hwp = VGAHWPTR(pScrn);
-    SMIPtr pSmi = SMIPTR(pScrn);
-    unsigned int ret;
-
-    ENTER_PROC("SMI_ddc1Read");
-
-    while (hwp->readST01(hwp) & 0x8) ;
-    while (!(hwp->readST01(hwp) & 0x8)) ;
-
-    ret = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x72) & 0x08;
-
-    LEAVE_PROC("SMI_ddc1Read");
-    return ret;
-}
-
-static Bool
-SMI_ddc1(int scrnIndex)
-{
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-    SMIPtr pSmi = SMIPTR(pScrn);
-    Bool success = FALSE;
-    xf86MonPtr pMon;
-    unsigned char tmp;
-
-    ENTER_PROC("SMI_ddc1");
-
-    tmp = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x72);
-    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x72, tmp | 0x20);
-
-    pMon = xf86PrintEDID(xf86DoEDID_DDC1(scrnIndex,
-					 vgaHWddc1SetSpeedWeak(),
-					 SMI_ddc1Read));
-    if (pMon != NULL) {
-	success = TRUE;
-    }
-    xf86SetDDCproperties(pScrn, pMon);
-
-    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x72, tmp);
-
-    LEAVE_PROC("SMI_ddc1");
-    return success;
-}
-

@@ -65,12 +65,49 @@ authorization from the XFree86 Project and Silicon Motion.
 /******************************************************************************/
 
 #ifndef SMI_DEBUG
-#    define SMI_DEBUG	0
+#define SMI_DEBUG		0
 #endif
 
 #define SMI_USE_IMAGE_WRITES	0
 #define SMI_USE_VIDEO		1
 #define SMI_USE_CAPTURE		1
+#define SMI501_CLI_DEBUG	0
+
+/*
+ *   Leaving attempt implementation of an argb cursor using alpha plane
+ * for the smi 501/502 under this ifdef for now. Maybe it will be fixed
+ * in a subsequent hardware revision.
+ *   The problem is that the alpha plane will only work (that is, become
+ * visible) if alpha_plane_tl is set to top:=0 and left:=0.
+ *   Also, if alpha_plane_br does not match panel dimensions, the alpha
+ * plane will be displayed tilled in the "first" row, with corruption on
+ * on all odd columns.
+ *   Since setting the alpha fb_address works, to implement an argb cursor
+ * using the alpha plane, with the current hardware bugs, it would be
+ * required to:
+ *	o allocate an offscreen area of pSmi->lcdWidth * pSmi->lcdHeight * 2
+ *	o set statically tl/tr to 0,0,pSmi->lcdWidth-1,pSmi->lcdHeight-1
+ *	o use alpha format 3 (argb 4:4:4:4), or alternatively format 1
+ *	  (rgb 5:6:5), and in the last case, a global 50% alpha is the
+ *	  best bet, and for the argb cursors being used at the time of this
+ *	  writing, they look correct, while 100% opaque looks wrong.
+ *	o when positioning the pointer, first erase it from the offscreen
+ *	  area, then repaint it at the proper offset in the alpha offscreen
+ *	  area.
+ *  .... argb software cursor works way better
+ *   (There are some other alternatives, like using 8 bits indexed mode,
+ * but when using a global alpha value, instead of per pixel, most argb
+ * cursors will not look correctly, regardless of the alpha value, that
+ * should be from 50 to 100% transparency).
+ *   But still there would be the problem of memory requiring a 128 bit
+ * alignment, what would require either moving the image in the memory,
+ * and/or some trick with the vsync pixel panning.
+ *
+ *   Until the alpha layer is corrected in some newer revision (or removed?),
+ * it could be used as something like an alternate crt, that happens to be
+ * on top of the panel (and has 16 transparency levels).
+ */
+#define SMI_CURSOR_ALPHA_PLANE	0
 
 /******************************************************************************/
 /*			S T R U C T U R E S				      */
@@ -79,62 +116,92 @@ authorization from the XFree86 Project and Silicon Motion.
 /* Driver data structure; this should contain all needed info for a mode */
 typedef struct
 {
-    Bool    modeInit;
-    CARD16	mode;
-    CARD8	SR17, SR18, SR21, SR31, SR32, SR6A, SR6B, SR81, SRA0;
-    CARD8	CR33, CR33_2, CR3A;
-    CARD8	CR40[14], CR40_2[14];
-    CARD8	CR90[16], CR9F_2;
-    CARD8	CRA0[14];
+    CARD16 mode;
+
+    CARD8 SR17, SR18;
+    CARD8 SR20, SR21, SR22, SR23, SR24;
+    CARD8 SR30, SR31, SR32, SR34;
+    CARD8 SR40, SR41, SR42, SR43, SR44, SR45, SR48, SR49, SR4A, SR4B, SR4C;
+    CARD8 SR50, SR51, SR52, SR53, SR54, SR55, SR56, SR57, SR5A;
+    CARD8 SR66, SR68, SR69, SR6A, SR6B, SR6C, SR6D, SR6E, SR6F;
+    CARD8 SR81, SRA0;
+
+    CARD8 CR30, CR33, CR33_2, CR3A;
+    CARD8 CR40[14], CR40_2[14];
+    CARD8 CR90[15], CR9F, CR9F_2;
+    CARD8 CRA0[14];
+
     CARD8	smiDACMask, smiDacRegs[256][3];
-    /* CZ 2.11.2001: for gamma correction */
-    CARD8   CCR66;
-    /* end CZ */
     CARD8	smiFont[8192];
+
     CARD32	DPR10, DPR1C, DPR20, DPR24, DPR28, DPR2C, DPR30, DPR3C, DPR40,
 		DPR44;
     CARD32	VPR00, VPR0C, VPR10;
     CARD32	CPR00;
     CARD32	FPR00_, FPR0C_, FPR10_;
-    /* LCD FIFO regs, etc. - dualhead */
-    CARD8   SR22, SR40, SR41, SR42, SR43, SR44, SR45, SR48, SR49,
-	    SR4A, SR4B, SR4C;
-    /* PLL controls */
-    CARD8   SR68, SR69, SR6C, SR6D, SR6E, SR6F;
-
 } SMIRegRec, *SMIRegPtr;
 
 /* Global PDEV structure. */
 typedef struct
 {
-    /* accel additions */
-    CARD32		AccelCmd;	/* Value for DPR0C */
-    CARD32		Stride;		/* Stride of frame buffer */
-    CARD32		ScissorsLeft;	/* Left/top of current
-					   scissors */
-    CARD32		ScissorsRight;	/* Right/bottom of current
-					   scissors */
-    Bool		ClipTurnedOn;	/* Clipping was turned on by
-					   the previous command */
+    int			Bpp;		/* Bytes per pixel */
+    int			MCLK;		/* Memory Clock  */
+    int			MXCLK;		/* MSOC Clock for local sdram */
+    ClockRanges		clockRange;	/* Allowed pixel clock range */
+    CloseScreenProcPtr	CloseScreen;	/* Pointer used to save wrapped
+					   CloseScreen function */
+
+    I2CBusPtr		I2C;		/* Pointer into I2C module */
+    xf86Int10InfoPtr	pInt10;		/* Pointer to INT10 module */
+    vbeInfoPtr          pVbe;           /* Pointer to VBE module */
+
+    pciVideoPtr		PciInfo;	/* PCI info vars */
+#ifndef XSERVER_LIBPCIACCESS
+    PCITAG		PciTag;
+#endif
+    int			Chipset;	/* Chip info, set using PCI
+					   above */
+    int			ChipRev;
+
+    OptionInfoPtr	Options;
+    Bool		Dualhead;
+
+    /* Don't attempt to program a video mode. Use kernel framebuffer
+     * mode instead. */
+    Bool		UseFBDev;
+
+    /* CSC video uses color space conversion to render video directly to
+     * the framebuffer, without using an overlay. */
+    Bool		CSCVideo;
+
+    Bool		PCIBurst;	/* Enable PCI burst mode for
+					   reads? */
+    Bool		PCIRetry;	/* Enable PCI retries */
+    Bool		HwCursor;	/* hardware cursor enabled */
+
+    CARD8		DACmask;
+    int			vgaCRIndex, vgaCRReg;
+    Bool		PrimaryVidMapped;	/* Flag indicating if
+						   vgaHWMapMem was used
+						   successfully for
+						   this screen */
+    Bool		ModeStructInit;	/* Flag indicating ModeReg has
+					   been duped from console
+					   state */
+
+    /* Hardware state */
+    void		(*Save)(ScrnInfoPtr pScrn); /* Function used to save the
+						       current register state */
     CARD8		SR18Value;	/* PDR#521: original SR18
 					   value */
     CARD8		SR21Value;	/* PDR#521: original SR21
 					   value */
-    SMIRegRec		SavedReg;	/* console saved mode
+    void		*save;		/* console saved mode
 					   registers */
-    SMIRegRec		ModeReg;	/* XServer video state mode
+    void		*mode;		/* XServer video state mode
 					   registers */
-    xf86CursorInfoPtr	CursorInfoRec;	/* HW Cursor info */
 
-    Bool		ModeStructInit;	/* Flag indicating ModeReg has
-					   been duped from console
-					   state */
-    int			vgaCRIndex, vgaCRReg;
-    int			width, height;	/* Width and height of the
-					   screen */
-    int			Bpp;		/* Bytes per pixel */
-
-    /* XAA */
+    /* Memory layout */
     int			videoRAMBytes;	/* In units as noted, set in
 					   PreInit  */
     int			videoRAMKBytes;	/* In units as noted, set in
@@ -145,121 +212,67 @@ typedef struct
     CARD8 *		VPRBase;	/* Base of VPR registers */
     CARD8 *		CPRBase;	/* Base of CPR registers */
     CARD8 *		FPRBase;    /* Base of FPR registers - for 0730 chipset */
+    CARD8 *		DCRBase;		/* Base of DCR registers - for 0501 chipset */
+    CARD8 *		SCRBase;        /* Base of SCR registers - for 0501 chipset */
     CARD8 *		DataPortBase;	/* Base of data port */
     int			DataPortSize;	/* Size of data port */
     CARD8 *		IOBase;		/* Base of MMIO VGA ports */
     IOADDRESS		PIOBase;	/* Base of I/O ports */
     unsigned char *	FBBase;		/* Base of FB */
+    CARD32		fbMapOffset;    /* offset for fb mapping */
     CARD32		FBOffset;	/* Current visual FB starting
 					   location */
     CARD32		FBCursorOffset;	/* Cursor storage location */
     CARD32		FBReserved;	/* Reserved memory in frame
 					   buffer */
-	
-    Bool		PrimaryVidMapped;	/* Flag indicating if
-						   vgaHWMapMem was used
-						   successfully for
-						   this screen */
-    int			MCLK;		/* Memory Clock  */
+
+    /* accel additions */
+    CARD32		AccelCmd;	/* Value for DPR0C */
+    Bool		NoAccel;	/* Disable Acceleration */
+    CARD32		ScissorsLeft;	/* Left/top of current
+					   scissors */
+    CARD32		ScissorsRight;	/* Right/bottom of current
+					   scissors */
+    Bool		ClipTurnedOn;	/* Clipping was turned on by
+					   the previous command */
     int			GEResetCnt;	/* Limit the number of errors
 					   printed using a counter */
 
-    Bool		pci_burst;	/* Enable PCI burst mode for
-					   reads? */
-    Bool		NoPCIRetry;	/* Disable PCI retries */
-    Bool		fifo_conservative;	/* Adjust fifo for
-						   acceleration? */
-    Bool		fifo_moderate;	/* Adjust fifo for
-					   acceleration? */
-    Bool		fifo_aggressive;	/* Adjust fifo for
-						   acceleration? */
-    Bool		NoAccel;	/* Disable Acceleration */
-    Bool		hwcursor;	/* hardware cursor enabled */
-    Bool		ShowCache;	/* Debugging option */
     Bool		useBIOS;	/* Use BIOS for mode sets */
-    Bool		zoomOnLCD;	/* Zoom on LCD */
-	
-    CloseScreenProcPtr	CloseScreen;	/* Pointer used to save wrapped
-					   CloseScreen function */
     XAAInfoRecPtr	XAAInfoRec;	/* XAA info Rec */
 
     /* EXA */
     ExaDriverPtr	EXADriverPtr;
-    Bool		useEXA;	/* enable exa acceleration */
-
-    pciVideoPtr		PciInfo;	/* PCI info vars */
-#ifndef XSERVER_LIBPCIACCESS
-    PCITAG		PciTag;
-#endif
-    int			Chipset;	/* Chip info, set using PCI
-					   above */
-    int			ChipRev;
-
-    /* DGA */
-    DGAModePtr		DGAModes;	/* Pointer to DGA modes */
-    int			numDGAModes;	/* Number of DGA modes */
-    Bool		DGAactive;	/* Flag if DGA is active */
-    int			DGAViewportStatus;
+    Bool		useEXA;		/* enable exa acceleration */
+    ExaOffscreenArea*	fbArea;		/* EXA offscreen area used
+					   as framebuffer */
+    PictTransformPtr	renderTransform;
 
     /* DPMS */
     int			CurrentDPMS;	/* Current DPMS state */
-    unsigned char	DPMS_SR20;	/* Saved DPMS SR20 register */
-    unsigned char	DPMS_SR21;	/* Saved DPMS SR21 register */
-    unsigned char	DPMS_SR31;	/* Saved DPMS SR31 register */
-    unsigned char	DPMS_SR34;	/* Saved DPMS SR34 register */
 
     /* Panel information */
     Bool		lcd;		/* LCD active, 1=DSTN, 2=TFT */
     int			lcdWidth;	/* LCD width */
     int			lcdHeight;	/* LCD height */
 
-    I2CBusPtr		I2C;		/* Pointer into I2C module */
-    xf86Int10InfoPtr	pInt10;		/* Pointer to INT10 module */
-
-    /* Shadow frame buffer (rotation) */
-    Bool		shadowFB;	/* Flag if shadow buffer is
-						   used */
-    int			rotate;		/* Rotation flags */
-    int			ShadowPitch;	/* Pitch of shadow buffer */
-    int			ShadowWidthBytes;	/* Width of shadow
-						   buffer in bytes */
-    int			ShadowWidth;	/* Width of shadow buffer in
-					   pixels */
-    int			ShadowHeight;	/* Height of shadow buffer in
-					   pixels */
-    CARD32		saveBufferSize;	/* #670 - FB save buffer size */
-    void *		pSaveBuffer;	/* #670 - FB save buffer */
-    CARD32		fbMapOffset;    /* offset for fb mapping */
-    CARD32		savedFBOffset;	/* #670 - Saved FBOffset value */
-    CARD32		savedFBReserved;	/* #670 - Saved
-						   FBReserved value */
-    CARD8 *		paletteBuffer;	/* #920 - Palette save buffer */
-
-    /* Polylines - #671 */
-    ValidateGCProcPtr	ValidatePolylines;	/* Org.
-						   ValidatePolylines
-						   function */
-    Bool		polyLines;	/* Our polylines patch is
-					   active */
-
-    void (*PointerMoved)(int index, int x, int y);
-
+    /* XvExtension */
     int			videoKey;	/* Video chroma key */
     Bool		ByteSwap;	/* Byte swap for ZV port */
     Bool		interlaced;	/* True: Interlaced Video */
-    /* XvExtension */
     XF86VideoAdaptorPtr	ptrAdaptor;	/* Pointer to VideoAdapter
 					   structure */
     void (*BlockHandler)(int i, pointer blockData, pointer pTimeout,
 					 pointer pReadMask);
-    GCPtr		videoGC;
-    OptionInfoPtr	Options;
-    CARD8		DACmask;
-
-    Bool		Dualhead;
-
-    Bool		IsSwitching; /* when switching modes */
-
+#ifdef SMI501_CLI_DEBUG
+    /* SMI 501/502 Command List Interpreter */
+    Bool		 batch_active;
+    int64_t		*batch_handle;	/* Virtual address */
+    int			 batch_offset;	/* Physical smi 501 address */
+    int			 batch_length;	/* Length in 8 byte units */
+    int			 batch_finish;	/* Last finish command offset */
+    int			 batch_index;
+#endif
 } SMIRec, *SMIPtr;
 
 #define SMIPTR(p) ((SMIPtr)((p)->driverPrivate))
@@ -269,20 +282,22 @@ typedef struct
 /******************************************************************************/
 
 #if SMI_DEBUG
-#    define VERBLEV 1
-#    define ENTER_PROC(PROCNAME)	xf86ErrorFVerb(VERBLEV, "ENTER\t" PROCNAME \
-								"(%d)\n", __LINE__); xf86Break1()
-#    define DEBUG_PROC(PROCNAME)	xf86ErrorFVerb(VERBLEV, "DEBUG\t" PROCNAME \
-								"(%d)\n", __LINE__); xf86Break2()
-#    define LEAVE_PROC(PROCNAME)	xf86ErrorFVerb(VERBLEV, "LEAVE\t" PROCNAME \
-								"(%d)\n", __LINE__); xf86Break1()
-#    define DEBUG(arg)			xf86ErrorFVerb arg
+extern int smi_indent;
+# define VERBLEV	1
+# define ENTER()	xf86ErrorFVerb(VERBLEV, "%*c %s\n",\
+				       smi_indent++, '>', __FUNCTION__)
+# define LEAVE(...)							\
+    do {								\
+	xf86ErrorFVerb(VERBLEV, "%*c %s\n",				\
+		       --smi_indent, '<', __FUNCTION__);		\
+	return __VA_ARGS__;						\
+    } while (0)
+# define DEBUG(...)	xf86ErrorFVerb(VERBLEV, __VA_ARGS__)
 #else
-#    define VERBLEV	4
-#    define ENTER_PROC(PROCNAME)
-#    define DEBUG_PROC(PROCNAME)
-#    define LEAVE_PROC(PROCNAME)
-#    define DEBUG(arg)
+# define VERBLEV	4
+# define ENTER()	/**/
+# define LEAVE(...)	return __VA_ARGS__
+# define DEBUG(...)	/**/
 #endif
 
 /* Some Silicon Motion structs & registers */
@@ -343,30 +358,36 @@ void SMI_CommonCalcClock(int scrnIndex, long freq, int min_m, int min_n1,
 Bool SMI_I2CInit(ScrnInfoPtr pScrn);
 
 /* smi_accel.c */
-Bool SMI_XAAInit(ScreenPtr pScrn);
-Bool SMI_EXAInit(ScreenPtr pScrn);
 void SMI_AccelSync(ScrnInfoPtr pScrn);
 void SMI_GEReset(ScrnInfoPtr pScrn, int from_timeout, int line, char *file);
 void SMI_EngineReset(ScrnInfoPtr);
 void SMI_SetClippingRectangle(ScrnInfoPtr, int, int, int, int);
 void SMI_DisableClipping(ScrnInfoPtr);
+CARD32 SMI_DEDataFormat(int bpp);
+
+/* smi_xaa.c */
+Bool SMI_XAAInit(ScreenPtr pScrn);
+
+/* smi_exa.c */
+Bool SMI_EXAInit(ScreenPtr pScrn);
 
 /* smi_hwcurs.c */
 Bool SMI_HWCursorInit(ScreenPtr pScrn);
 
 /* smi_driver.c */
+Bool SMI_MapMem(ScrnInfoPtr pScrn);
+void SMI_UnmapMem(ScrnInfoPtr pScrn);
 void SMI_AdjustFrame(int scrnIndex, int x, int y, int flags);
 Bool SMI_SwitchMode(int scrnIndex, DisplayModePtr mode, int flags);
-
-/* smi_dga.c */
-Bool SMI_DGAInit(ScreenPtr pScrn);
-
-/* smi_shadow.c */
-void SMI_PointerMoved(int index, int x, int y);
-void SMI_RefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
-void SMI_RefreshArea730(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
+void SMI_LoadPalette(ScrnInfoPtr pScrn, int numColors, int *indicies,
+		     LOCO *colors, VisualPtr pVisual);
+xf86MonPtr SMI_ddc1(ScrnInfoPtr pScrn);
+void SMI_PrintRegs(ScrnInfoPtr pScrn);
 
 /* smi_video.c */
 void SMI_InitVideo(ScreenPtr pScreen);
+CARD32 SMI_AllocateMemory(ScrnInfoPtr pScrn, void **mem_struct, int size);
+void SMI_FreeMemory(ScrnInfoPtr pScrn, void *mem_struct);
+
 
 #endif  /*_SMI_H*/

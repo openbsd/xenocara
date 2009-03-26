@@ -75,9 +75,10 @@ am__installdirs = "$(DESTDIR)$(siliconmotion_drv_ladir)"
 siliconmotion_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(siliconmotion_drv_la_LTLIBRARIES)
 siliconmotion_drv_la_LIBADD =
-am_siliconmotion_drv_la_OBJECTS = smi_accel.lo smi_xaa.lo smi_exa.lo \
-	smi_dac.lo smi_dga.lo smi_driver.lo smi_hwcurs.lo smi_i2c.lo \
-	smi_shadow.lo smi_video.lo
+am_siliconmotion_drv_la_OBJECTS = smi_501.lo smi_accel.lo smi_xaa.lo \
+	smi_exa.lo smi_dac.lo smi_driver.lo smi_i2c.lo smi_video.lo \
+	smi_crtc.lo smilynx_crtc.lo smi_output.lo smilynx_output.lo \
+	smilynx_hw.lo smi501_crtc.lo smi501_output.lo
 siliconmotion_drv_la_OBJECTS = $(am_siliconmotion_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -111,8 +112,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -170,6 +173,8 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+XMODES_FALSE = @XMODES_FALSE@
+XMODES_TRUE = @XMODES_TRUE@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 XSERVER_LIBPCIACCESS_FALSE = @XSERVER_LIBPCIACCESS_FALSE@
@@ -199,6 +204,7 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
@@ -233,19 +239,27 @@ siliconmotion_drv_la_LDFLAGS = -module -avoid-version
 siliconmotion_drv_ladir = @moduledir@/drivers
 siliconmotion_drv_la_SOURCES = \
          regsmi.h \
+         smi_501.c \
+         smi_501.h \
          smi_accel.c \
          smi_xaa.c \
          smi_exa.c \
          smi_dac.c \
-         smi_dga.c \
          smi_driver.c \
          smi.h \
-         smi_hwcurs.c \
          smi_i2c.c \
 	 smi_pcirename.h \
-         smi_shadow.c \
          smi_video.c \
-         smi_video.h
+         smi_video.h \
+	 smi_crtc.h \
+	 smi_crtc.c \
+	 smilynx_crtc.c \
+	 smi_output.c \
+	 smilynx_output.c \
+	 smilynx_hw.c \
+	 smilynx.h \
+	 smi501_crtc.c \
+	 smi501_output.c
 
 all: all-am
 
@@ -316,16 +330,21 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi501_crtc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi501_output.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi_501.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi_accel.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi_crtc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi_dac.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi_dga.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi_driver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi_exa.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi_hwcurs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi_i2c.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi_shadow.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi_output.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smi_xaa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smilynx_crtc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smilynx_hw.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smilynx_output.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

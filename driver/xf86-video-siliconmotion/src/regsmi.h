@@ -30,11 +30,16 @@ authorization from the XFree86 Project and SIlicon Motion.
 #ifndef _REGSMI_H
 #define _REGSMI_H
 
+#ifndef PCI_CHIP_SMI501
+#define PCI_CHIP_SMI501		0x0501
+#endif
+
 #define SMI_LYNX_SERIES(chip)	((chip & 0xF0F0) == 0x0010)
 #define SMI_LYNX3D_SERIES(chip)	((chip & 0xF0F0) == 0x0020)
 #define SMI_COUGAR_SERIES(chip) ((chip & 0xF0F0) == 0x0030)
 #define SMI_LYNXEM_SERIES(chip) ((chip & 0xFFF0) == 0x0710)
 #define SMI_LYNXM_SERIES(chip)	((chip & 0xFF00) == 0x0700)
+#define SMI_MSOC_SERIES(chip)	((chip & 0xFF00) == 0x0500)
 
 /* Chip tags */
 #define PCI_SMI_VENDOR_ID	PCI_VENDOR_SMI
@@ -46,6 +51,10 @@ authorization from the XFree86 Project and SIlicon Motion.
 #define SMI_LYNXEMplus		PCI_CHIP_SMI712
 #define SMI_LYNX3DM		PCI_CHIP_SMI720
 #define SMI_COUGAR3DR           PCI_CHIP_SMI731
+#define SMI_MSOC		PCI_CHIP_SMI501
+
+/* Mobile-System-on-a-Chip */
+#define IS_MSOC(pSmi)		((pSmi)->Chipset == SMI_MSOC)
 
 /* I/O Functions */
 static __inline__ CARD8
@@ -92,19 +101,42 @@ VGAOUT8(SMIPtr pSmi, int port, CARD8 data)
     }
 }
 
-#define OUT_SEQ(pSmi, index, data)	\
-	VGAOUT8_INDEX((pSmi), VGA_SEQ_INDEX, VGA_SEQ_DATA, (index), (data))
-#define IN_SEQ(pSmi, index)			\
-	VGAIN8_INDEX((pSmi), VGA_SEQ_INDEX, VGA_SEQ_DATA, (index))
-
-#define WRITE_DPR(pSmi, dpr, data)	MMIO_OUT32(pSmi->DPRBase, dpr, data); DEBUG((VERBLEV, "DPR%02X = %08X\n", dpr, data))
-#define READ_DPR(pSmi, dpr)			MMIO_IN32(pSmi->DPRBase, dpr)
-#define WRITE_VPR(pSmi, vpr, data)	MMIO_OUT32(pSmi->VPRBase, vpr, data); DEBUG((VERBLEV, "VPR%02X = %08X\n", vpr, data))
-#define READ_VPR(pSmi, vpr)			MMIO_IN32(pSmi->VPRBase, vpr)
-#define WRITE_CPR(pSmi, cpr, data)	MMIO_OUT32(pSmi->CPRBase, cpr, data); DEBUG((VERBLEV, "CPR%02X = %08X\n", cpr, data))
-#define READ_CPR(pSmi, cpr)			MMIO_IN32(pSmi->CPRBase, cpr)
-#define WRITE_FPR(pSmi, fpr, data)      MMIO_OUT32(pSmi->FPRBase, fpr, data); DEBUG((VERBLEV, "FPR%02X = %08X\n", fpr, data))
-#define READ_FPR(pSmi, fpr)                     MMIO_IN32(pSmi->FPRBase, fpr)
+#define WRITE_DPR(pSmi, dpr, data)					\
+    do {								\
+	MMIO_OUT32(pSmi->DPRBase, dpr, data);				\
+	DEBUG("DPR%02X = %08X\n", dpr, data);				\
+    } while (0)
+#define READ_DPR(pSmi, dpr)		MMIO_IN32(pSmi->DPRBase, dpr)
+#define WRITE_VPR(pSmi, vpr, data)					\
+    do {								\
+	MMIO_OUT32(pSmi->VPRBase, vpr, data);				\
+	DEBUG("VPR%02X = %08X\n", vpr, data);				\
+    } while (0)
+#define READ_VPR(pSmi, vpr)		MMIO_IN32(pSmi->VPRBase, vpr)
+#define WRITE_CPR(pSmi, cpr, data)					\
+    do {								\
+	MMIO_OUT32(pSmi->CPRBase, cpr, data);				\
+	DEBUG("CPR%02X = %08X\n", cpr, data);				\
+    } while (0)
+#define READ_CPR(pSmi, cpr)		MMIO_IN32(pSmi->CPRBase, cpr)
+#define WRITE_FPR(pSmi, fpr, data)					\
+    do {								\
+	MMIO_OUT32(pSmi->FPRBase, fpr, data);				\
+	DEBUG("FPR%02X = %08X\n", fpr, data);				\
+    } while (0)
+#define READ_FPR(pSmi, fpr)		MMIO_IN32(pSmi->FPRBase, fpr)
+#define WRITE_DCR(pSmi, dcr, data)					\
+    do {								\
+	MMIO_OUT32(pSmi->DCRBase, dcr, data);				\
+	DEBUG("DCR%02X = %08X\n", dcr, data);				\
+    } while (0)
+#define READ_DCR(pSmi, dcr)		MMIO_IN32(pSmi->DCRBase, dcr)
+#define WRITE_SCR(pSmi, scr, data)					\
+    do {								\
+	MMIO_OUT32(pSmi->SCRBase, scr, data);				\
+	DEBUG("SCR%02X = %08X\n", scr, data);				\
+    } while (0)
+#define READ_SCR(pSmi, scr)		MMIO_IN32(pSmi->SCRBase, scr)
 
 /* 2D Engine commands */
 #define SMI_TRANSPARENT_SRC	0x00000100
@@ -150,39 +182,74 @@ VGAOUT8(SMIPtr pSmi, int port, CARD8 data)
 #define SMI_QUICK_START		0x10000000
 #define SMI_START_ENGINE	0x80000000
 
-#define MAXLOOP 0x100000	/* timeout value for engine waits */
+/* timeout value for engine waits */
+#define MAXLOOP			0x100000
 
-#define ENGINE_IDLE()		\
-	((VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x16) & 0x08) == 0)
-#define FIFO_EMPTY()		\
-	((VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x16) & 0x10) != 0)
-
-/* Wait until "v" queue entries are free */
-#define	WaitQueue(v)	  \
-    do {		   \
-	if (pSmi->NoPCIRetry) {	  \
-	    int loop = MAXLOOP; mem_barrier();	  \
-	    while (!FIFO_EMPTY())	   \
-		if (loop-- == 0) break;	  \
-	    if (loop <= 0) SMI_GEReset(pScrn, 1, __LINE__, __FILE__);  \
-	}		   \
+/* Wait until 2d engine queue is empty */
+#define	WaitQueue()							\
+    do {								\
+	int	loop = MAXLOOP;						\
+									\
+	mem_barrier();							\
+	if (IS_MSOC(pSmi)) {						\
+	    /*	20:20	2D Engine FIFO Status. This bit is read-only.
+	     *		0:	FIFO not emtpy.
+	     *		1:	FIFO empty.
+	     */								\
+	    while (loop-- &&						\
+		   (READ_SCR(pSmi, 0x0000) & (1 << 20)) == 0)		\
+	        ;							\
+	}								\
+	else {								\
+	    while (loop-- &&						\
+		   !(VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX,			\
+				 VGA_SEQ_DATA, 0x16) & 0x10))		\
+	        ;							\
+	}								\
+	if (loop <= 0)							\
+	    SMI_GEReset(pScrn, 1, __LINE__, __FILE__);			\
     } while (0)
 
 /* Wait until GP is idle */
-#define WaitIdle()  \
-    do {		  \
-	int loop = MAXLOOP; mem_barrier(); \
-	while (!ENGINE_IDLE())		   \
-	    if (loop-- == 0) break;	   \
-	if (loop <= 0) SMI_GEReset(pScrn, 1, __LINE__, __FILE__);   \
+#define WaitIdle()							\
+    do {								\
+	int	loop = MAXLOOP;						\
+									\
+	mem_barrier();							\
+	if (IS_MSOC(pSmi)) {						\
+	    MSOCCmdStatusRec	status;					\
+									\
+	    /* bit 0:	2d engine idle if *not set*
+	     * bit 1:	2d fifo empty if *set*
+	     * bit 2:	2d setup idle if if *not set*
+	     * bit 18:  color conversion idle if *not set*
+	     * bit 19:  command fifo empty if *set*
+	     * bit 20:  2d memory fifo empty idle if *set*
+	     */								\
+	    for (status.value = READ_SCR(pSmi, CMD_STATUS);		\
+		 loop && (status.f.engine	||			\
+			  !status.f.cmdfifo	||			\
+			  status.f.setup	||			\
+			  status.f.csc		||			\
+			  !status.f.cmdhif	||			\
+			  !status.f.memfifo);				\
+		 status.value = READ_SCR(pSmi, CMD_STATUS), loop--)	\
+		 ;							\
+	}								\
+	else {								\
+	    int	status;							\
+									\
+	    for (status = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX,		\
+				       VGA_SEQ_DATA, 0x16);		\
+		 loop && (status & 0x18) != 0x10;			\
+		 status = VGAIN8_INDEX(pSmi, VGA_SEQ_INDEX,		\
+				       VGA_SEQ_DATA, 0x16), loop--)	\
+		;				       			\
+	}								\
+	if (loop <= 0)							\
+	    SMI_GEReset(pScrn, 1, __LINE__, __FILE__);			\
     } while (0)
 
-/* Wait until GP is idle and queue is empty */
-#define	WaitIdleEmpty()	   \
-    do {		   \
-	WaitQueue(MAXFIFO);	   \
-	WaitIdle();		 \
-    } while (0)
 
 #define RGB8_PSEUDO      (-1)
 #define RGB16_565         0
@@ -239,6 +306,23 @@ VGAOUT8(SMIPtr pSmi, int port, CARD8 data)
 #define FPR15C_MASK_HWCCOLORS       0x0000FFFF
 #define FPR15C_MASK_HWCADDREN       0xFFFF0000
 #define FPR15C_MASK_HWCENABLE       0x80000000
+
+/* Maximum hardware cursor dimensions */
+#define SMILYNX_MAX_CURSOR	32
+#define SMI501_MAX_CURSOR	64
+#define SMILYNX_CURSOR_SIZE	1024
+#define SMI501_CURSOR_SIZE	2048
+#if SMI_CURSOR_ALPHA_PLANE
+/* Stored in either 4:4:4:4 or 5:6:5 format */
+# define SMI501_ARGB_CURSOR_SIZE					\
+    (SMI501_MAX_CURSOR * SMI501_MAX_CURSOR * 2)
+#endif
+
+/* HWCursor definitons for Panel AND CRT */
+#define SMI501_MASK_HWCENABLE			0x80000000
+#define SMI501_MASK_MAXBITS			0x000007FF
+#define SMI501_MASK_BOUNDARY			0x00000800
+#define SMI501_HWCFBADDR_MASK			0x0CFFFFFF
 
 /* panel sizes returned by the bios */
 
