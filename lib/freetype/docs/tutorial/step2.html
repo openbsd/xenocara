@@ -47,9 +47,9 @@
 </h1>
 
 <h3 align=center>
-  &copy; 2003, 2006, 2007 David Turner
+  &copy; 2009 David Turner
     (<a href="mailto:david@freetype.org">david@freetype.org</a>)<br>
-  &copy; 2003, 2006, 2007 The FreeType Development Team
+  &copy; 2009 The FreeType Development Team
     (<a href="http://www.freetype.org">www.freetype.org</a>)
 </h3>
 
@@ -63,8 +63,8 @@
     Introduction
   </h2>
 
-  <p>This is the second section of the FreeType 2 tutorial. It describes
-  how to</p>
+  <p>This is the second section of the FreeType&nbsp;2 tutorial.  It
+  describes how to</p>
 
   <ul>
     <li>retrieve glyph metrics</li>
@@ -99,7 +99,7 @@
     <p>Individual glyph metrics can be accessed by first loading the glyph
     in a face's glyph slot, then accessing them through the
     <tt>face-&gt;glyph-&gt;metrics</tt> structure, whose type is <a
-[A    href="../reference/ft2-base_interface.html#FT_Glyph_Metrics">
+    href="../reference/ft2-base_interface.html#FT_Glyph_Metrics">
     <tt>FT_Glyph_Metrics</tt></a>.  We will discuss this in more detail
     below; for now, we only note that it contains the following fields:</p>
 
@@ -279,7 +279,7 @@
     and even perform additional transformations and measures on it before
     converting it to a bitmap.</p>
 
-    <p>The FreeType 2 API has a specific extension which is capable of
+    <p>The FreeType&nbsp;2 API has a specific extension which is capable of
     dealing with glyph images in a flexible and generic way.  To use it, you
     first need to include the <a
     href="../reference/ft2-header_file_macros.html#FT_GLYPH_H">
@@ -465,7 +465,7 @@
       <p>You may need to convert the glyph object to a bitmap once you have
       conveniently cached or transformed it.  This can be done easily with
       the <a href="../reference/ft2-glyph_management.html">
-      <tt>FT_Glyph_To_Bitmap</tt></a> function. It is in charge of
+      <tt>FT_Glyph_To_Bitmap</tt></a> function.  It is in charge of
       converting any glyph object into a bitmap, as in:</p>
 
       <div class="pre">
@@ -605,12 +605,11 @@
       </tr>
       <tr valign=top>
         <td>
-          <tt>global_bbox</tt>
+          <tt>bbox</tt>
         </td>
         <td>
           <p>The global bounding box is defined as the largest rectangle
-          that can enclose all the glyphs in a font face.  It is defined for
-          horizontal layouts only.</p>
+          that can enclose all the glyphs in a font face.</p>
         </td>
       </tr>
       <tr valign=top>
@@ -624,7 +623,7 @@
           differently.  For some, it represents the ascent of all capital
           latin characters (without accents), for others it is the ascent of
           the highest accented character, and finally, other formats define
-          it as being equal to <tt>global_bbox.yMax</tt>.</p>
+          it as being equal to <tt>bbox.yMax</tt>.</p>
         </td>
       </tr>
       <tr valign=top>
@@ -638,20 +637,20 @@
           differently.  For some, it represents the descent of all capital
           latin characters (without accents), for others it is the ascent of
           the lowest accented character, and finally, other formats define
-          it as being equal to <tt>global_bbox.yMin</tt>.  This field is
+          it as being equal to <tt>bbox.yMin</tt>.  This field is
           negative for values below the baseline.</p>
         </td>
       </tr>
       <tr valign=top>
         <td>
-          <tt>text_height</tt>
+          <tt>height</tt>
         </td>
         <td>
-          <p>This field is simply used to compute a default line spacing
-          (i.e., the baseline-to-baseline distance) when writing text with
-          this font.  Note that it usually is larger than the sum of the
-          ascender and descender taken as absolute values.  There is also no
-          guarantee that no glyphs extend above or below subsequent
+          <p>This field is simply used to compute a <i>default</i> line
+          spacing (i.e., the baseline-to-baseline distance) when writing
+          text with this font.  Note that it usually is larger than the sum
+          of the ascender and descender taken as absolute values.  There is
+          also no guarantee that no glyphs extend above or below subsequent
           baselines when using this distance.</p>
         </td>
       </tr>
@@ -672,8 +671,7 @@
         </td>
         <td>
           <p>Same as <tt>max_advance_width</tt> but for vertical text
-          layout.  It is only available in fonts providing vertical glyph
-          metrics.</p>
+          layout.</p>
         </td>
       </tr>
       <tr valign=top>
@@ -683,7 +681,7 @@
         <td>
           <p>When displaying or rendering underlined text, this value
           corresponds to the vertical position, relative to the baseline, of
-          the underline bar.  It is negative if it is below the
+          the underline bar's center.  It is negative if it is below the
           baseline.</p>
         </td>
       </tr>
@@ -712,7 +710,7 @@
       the <tt>face-&gt;size-&gt;metrics</tt> structure.</p>
 
       <p>Note that these values correspond to scaled versions of the design
-      global metrics, <em>with no rounding/grid-fitting performed</em>.
+      global metrics, <em>with no rounding or grid-fitting performed</em>.
       They are also completely independent of any hinting process.  In other
       words, don't rely on them to get exact metrics at the pixel level.
       They are expressed in 26.6 pixel format.</p>
@@ -1347,7 +1345,7 @@
 
 
   ... load glyph sequence ...
-  ... setup "matrix" and "delta" ...
+  ... set up "matrix" and "delta" ...
 
   <span class="comment">/* transform glyphs */</span>
   for ( n = 0; n &lt; num_glyphs; n++ )
@@ -1656,17 +1654,17 @@
     <p>The next section will deal with FreeType&nbsp;2 internals (like
     modules, vector outlines, font drivers, renderers), as well as a few
     font format specific issues (mainly, how to access certain TrueType or
-    Type&nbsp;1 tables).  [This section has not been written yet.]</p>
+    Type&nbsp;1 tables).</p>
 
 </td></tr>
 </table>
 </center>
 
 <h3 align=center>
-  <a href="step1.html">FreeType&nbsp;2 Tutorial Step&nbsp;1</a>
+  <a href="step3.html">FreeType&nbsp;2 Tutorial Step&nbsp;3</a>
 </h3>
 
-<p><font size=-3>Last update: 06-Feb-2007</font></p>
+<p><font size=-3>Last update: 07-Mar-2009</font></p>
 
 </body>
 </html>

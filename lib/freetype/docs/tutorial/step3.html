@@ -1,0 +1,96 @@
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <style type="text/css">
+    body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
+           color: #000000;
+           background: #FFFFFF; }
+
+    p { text-align: justify; }
+    h1 { text-align: center; }
+    li { text-align: justify; }
+    td { padding: 0 0.5em 0 0.5em; }
+
+    a:link { color: #0000EF; }
+    a:visited { color: #51188E; }
+    a:hover { color: #FF0000; }
+
+    div.pre { font-family: monospace;
+              text-align:  left;
+              white-space: pre;
+              color:       blue; }
+
+    div.example { font-family: monospace;
+                  text-align:  left;
+                  white-space: pre;
+                  color:       purple; }
+
+    span.comment { color: gray; }
+  </style>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=iso-8859-1">
+  <meta name="Author"
+        content="David Turner">
+  <title>FreeType 2 Tutorial</title>
+</head>
+
+<body text="#000000"
+      bgcolor="#FFFFFF"
+      link="#0000EF"
+      vlink="#51188E"
+      alink="#FF0000">
+
+<h1 align=center>
+  FreeType&nbsp;2 Tutorial<br>
+  Step&nbsp;3 &mdash; handling internals
+</h1>
+
+<h3 align=center>
+  &copy; 2009 Werner Lemberg
+    (<a href="mailto:wl@gnu.org">wl@gnu.org</a>)<br>
+  &copy; 2009 The FreeType Development Team
+    (<a href="http://www.freetype.org">www.freetype.org</a>)
+</h3>
+
+<center>
+<table width="70%">
+<tr><td>
+
+  <hr>
+
+  <h2>
+    Introduction
+  </h2>
+
+  <p>This is the third section of the FreeType&nbsp;2 tutorial.  It
+  describes how to deal with various internals of the library like</p>
+
+  <ul>
+    <li>the module interface</li>
+    <li>functions for manipulating vector outlines</li>
+    <li>font driver issues</li>
+    <li>interaction with renderers using callbacks</li>
+    <li>accessing font specific data, for example PostScript font
+    dictionaries and TrueType tables</li>
+  </ul>
+
+  <p>None of these items have been written yet.  However, <a
+  href="mailto:erik@timetrap.se">Erik Möller</a> contributed a very nice C++
+  example which shows renderer callbacks in action to draw a coloured glyph
+  with a differently coloured outline.</p>
+
+  <p>The source code can be found <a href="example2.cpp">here</a>.</p>
+
+</td></tr>
+</table>
+</center>
+
+<h3 align=center>
+  <a href="step1.html">FreeType&nbsp;2 Tutorial Step&nbsp;1</a>
+</h3>
+
+<p><font size=-3>Last update: 07-Mar-2009</font></p>
+
+</body>
+</html>
