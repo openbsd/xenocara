@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.65 2009/03/08 13:40:19 matthieu Exp $
+# $OpenBSD: MODULES,v 1.66 2009/03/26 22:10:41 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -139,7 +139,7 @@ driver/xf86-video-rendition	4.2.1	7.4+
 driver/xf86-video-s3		0.6.1	7.4+
 driver/xf86-video-s3virge	1.10.2	7.4+
 driver/xf86-video-savage	2.2.1	7.4
-driver/xf86-video-siliconmotion	1.7.0	7.4+	needs-update
+driver/xf86-video-siliconmotion	1.7.0	7.4+
 driver/xf86-video-sis		0.10.1	7.4+	needs-update
 driver/xf86-video-sisusb	0.9.1	7.4
 driver/xf86-video-sunbw2	1.1.0	7.1
