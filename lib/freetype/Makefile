@@ -1,8 +1,8 @@
-#	$OpenBSD: Makefile,v 1.13 2009/03/10 20:28:33 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.14 2009/03/26 07:31:44 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
-FT_VERSION_INFO= 9.19.3 # Get it from builds/unix/configure.ac
+FT_VERSION_INFO= 9.20.3 # Get it from builds/unix/configure.ac
 
 .ifmake includes
 SUBDIR=	include
@@ -13,7 +13,7 @@ DEBUG?=
 LIB=	freetype
 
 SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
-	ftcid.c ftgasp.c ftglyph.c \
+	ftcid.c ftfstype.c ftgasp.c ftglyph.c \
 	ftgxval.c ftlcdfil.c ftotval.c ftpatent.c \
         ftinit.c ftlzw.c ftmm.c ftpfr.c ftstroke.c ftsynth.c ftsystem.c \
         fttype1.c ftwinfnt.c ftxf86.c autofit.c bdf.c cff.c \

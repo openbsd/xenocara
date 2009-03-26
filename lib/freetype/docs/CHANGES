@@ -1,3 +1,62 @@
+CHANGES BETWEEN 2.3.9 and 2.3.8
+
+  I. IMPORTANT BUG FIXES
+
+    - Very unfortunately, FreeType 2.3.8 contained a change that broke
+      its  official ABI.  The  end result  is  that programs  compiled
+      against previous versions of the library, but dynamically linked
+      to  2.3.8 can  experience  memory corruption  if  they call  the
+      `FT_Get_PS_Font_Info' function.
+
+      We recommend all users to  upgrade to 2.3.9 as soon as possible,
+      or to downgrade to a previous  release of the library if this is
+      not an option.
+
+      The  origin of the  bug is  that a  new field  was added  to the
+      publicly  defined  `PS_FontInfoRec'  structure.   Unfortunately,
+      objects of this  type can be stack or  heap allocated by callers
+      of   `FT_Get_PS_Font_Info',  resulting   in   a  memory   buffer
+      overwrite with its implementation in 2.3.8.
+
+      If  you want to  know whether  your code  is vulnerable  to this
+      issue,  simply  search  for  the  substrings  `PS_FontInfo'  and
+      `PS_Font_Info' in your source code.  If none is found, your code
+      is safe and is not affected.
+
+      The FreeType team apologizes for the problem.
+
+    - The POSIX support  of MacOS resource-fork fonts  (Suitcase fonts
+      and LaserWriter Type1 PostScript fonts) was broken in 2.3.8.  If
+      FreeType2 is built without Carbon framework, these fonts are not
+      handled correctly.  Version 2.3.7 didn't have this bug.
+
+    - `FT_Get_Advance' (and `FT_Get_Advances') returned bad values for
+      almost all font formats except TrueType fonts.
+
+    - Fix a bug  in the SFNT  kerning table  loader/parser which could
+      crash the engine if certain malformed tables were encountered.
+
+    - Composite SFNT bitmaps are now handled correctly.
+
+
+  II. IMPORTANT CHANGES
+
+    - The   new  functions   `FT_Get_CID_Is_Internally_CID_keyed'  and
+      `FT_Get_CID_From_Glyph_Index'  can be  used to  access CID-keyed
+      CFF fonts  via CID  values.  This code  has been  contributed by
+      Michael Toftdal.
+
+
+  III. MISCELLANEOUS
+
+    - `FT_Outline_Get_InsideBorder'  returns   FT_STROKER_BORDER_RIGHT
+      for empty outlines.  This was incorrectly documented.
+
+    - The `ftview' demo program now supports UTF-8 encoded strings.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.3.8 and 2.3.7
 
   I. IMPORTANT BUG FIXES

@@ -327,7 +327,7 @@ FT_BEGIN_HEADER
       "adds   %1, %1, %0\n\t"       /* %1 += %0 */
       "adc    %2, %2, #0\n\t"       /* %2 += carry */
       "mov    %0, %1, lsr #16\n\t"  /* %0  = %1 >> 16 */
-      "orr    %0, %2, lsl #16\n\t"  /* %0 |= %2 << 16 */
+      "orr    %0, %0, %2, lsl #16\n\t"  /* %0 |= %2 << 16 */
       : "=r"(a), "=&r"(t2), "=&r"(t)
       : "r"(a), "r"(b) );
     return a;
@@ -357,9 +357,9 @@ FT_BEGIN_HEADER
       "shrl  $16, %%eax\n"
       "shll  $16, %%edx\n"
       "addl  %%edx, %%eax\n"
-      : "=a"(result), "+d"(b)
-      : "a"(a)
-      : "%ecx" );
+      : "=a"(result), "=d"(b)
+      : "a"(a), "d"(b)
+      : "%ecx", "cc" );
     return result;
   }
 
