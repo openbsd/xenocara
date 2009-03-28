@@ -1,4 +1,4 @@
-#	$OpenBSD: BSD.x11.dist,v 1.13 2009/01/27 15:44:45 matthieu Exp $
+#	$OpenBSD: BSD.x11.dist,v 1.14 2009/03/28 16:18:44 matthieu Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 .
@@ -7,18 +7,6 @@
             app-defaults
             ..
             fs
-            ..
-            lbxproxy
-            ..
-            proxymngr
-            ..
-            rstart
-                commands
-                    x11r6
-                    ..
-                ..
-                contexts
-                ..
             ..
             twm
             ..
