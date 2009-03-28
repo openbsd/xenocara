@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.38 2009/01/23 18:58:40 oga Exp $
+ * $Id: xevents.c,v 1.39 2009/03/28 16:38:54 martynas Exp $
  */
 
 /*
@@ -431,7 +431,7 @@ xev_register(struct xevent *xev)
 	TAILQ_INSERT_TAIL(xq, xev, entry);
 }
 
-void
+static void
 _xev_reincorporate(void)
 {
 	struct xevent	*xev;
