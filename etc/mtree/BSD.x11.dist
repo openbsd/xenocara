@@ -1,4 +1,4 @@
-#	$OpenBSD: BSD.x11.dist,v 1.14 2009/03/28 16:18:44 matthieu Exp $
+#	$OpenBSD: BSD.x11.dist,v 1.15 2009/03/28 21:51:07 matthieu Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 .
@@ -346,58 +346,6 @@
                         zh_TW.UTF-8
                         ..
                         zh_TW.big5
-                        ..
-                    ..
-                    xserver
-                        C
-                            print
-                                attributes
-                                ..
-                                ddx-config
-                                    raster
-                                    ..
-                                ..
-                                models
-                                    CANONBJ10E-GS
-                                    ..
-                                    CANONC3200-PS
-                                        fonts
-                                        ..
-                                    ..
-                                    GSdefault
-                                    ..
-                                    HPDJ1600C
-                                        fonts
-                                        ..
-                                    ..
-                                    HPLJ4050-PS
-                                        fonts
-                                        ..
-                                    ..
-                                    HPLJ4family
-                                        fonts
-                                        ..
-                                    ..
-                                    PS2PDFspooldir-GS
-                                    ..
-                                    PSdefault
-                                        fonts
-                                        ..
-                                    ..
-                                    PSspooldir
-                                    ..
-                                    SPSPARC2
-                                        fonts
-                                        ..
-                                    ..
-                                ..
-                            ..
-                        ..
-                        en_US
-                            print
-                                attributes
-                                ..
-                            ..
                         ..
                     ..
                 ..
