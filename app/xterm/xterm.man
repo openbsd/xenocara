@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.420 2009/02/11 00:11:56 tom Exp $
+.\" $XTermId: xterm.man,v 1.423 2009/03/25 22:39:57 tom Exp $
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
 .\"
@@ -496,7 +496,7 @@ This option specifies the font to be used for displaying wide text.
 By default,
 it will attempt to use a font twice as wide as the font that will be used to
 draw normal text.
-If no doublewidth font is found, it will improvise, by stretching
+If no double-width font is found, it will improvise, by stretching
 the normal font.
 This corresponds to the \fBwideFont\fP resource.
 .TP 8
@@ -505,7 +505,7 @@ This option specifies the font to be used for displaying bold wide text.
 By default,
 it will attempt to use a font twice as wide as the font that will be used to
 draw bold text.
-If no doublewidth font is found, it will improvise, by stretching
+If no double-width font is found, it will improvise, by stretching
 the bold font.
 This corresponds to the \fBwideBoldFont\fP resource.
 .TP 8
@@ -1686,6 +1686,9 @@ Depending on your configuration, the font server may have its own configuration
 file.
 The same ":unscaled" can be added to its configuration file at the
 end of the directory specification for "misc".
+.IP
+The bitmap scaling feature is also used by \fIxterm\fP to implement
+VT102 double-width and double-height characters.
 .TP 8
 .B "brokenLinuxOSC (\fPclass\fB BrokenLinuxOSC)"
 If true, \fIxterm\fP applies a workaround to ignore malformed control
@@ -1719,7 +1722,7 @@ The default is ``false.''
 .TP 8
 .B "cacheDoublesize (\fPclass\fB CacheDoublesize)"
 Tells whether to cache double-sized fonts by \fIxterm\fR.
-Set this to zero to disable doublesize fonts altogether.
+Set this to zero to disable double-sized fonts altogether.
 .TP 8
 .B "charClass (\fPclass\fB CharClass)"
 Specifies comma-separated lists of character class bindings of the form
@@ -1937,6 +1940,19 @@ the type of response to a DA control sequence.
 Leading non-digit characters are ignored, e.g., "vt100" and "100" are the same.
 The default is 100.
 .TP 8
+.B "defaultString (\fPclass\fB DefaultString)"
+Specify the character (or string) which \fIxterm\fP will substitute when
+pasted text includes a character which cannot be represented in the
+current encoding.
+For instance, pasting UTF-8 text into a display of ISO-8859-1 characters
+will only be able to display codes 0-255, while UTF-8 text can include
+Unicode values above 255.
+The default is ``#'' (a single pound sign).
+.IP
+If the undisplayable text would be double-width,
+\fIxterm\fP will add a space after the ``#'' character, to give roughly
+the same layout on the screen as the original text.
+.TP 8
 .B "deleteIsDEL (\fPclass\fB DeleteIsDEL)"
 Specifies whether the Delete key on the editing keypad should send DEL (127)
 or the VT220-style Remove escape sequence.
@@ -1994,6 +2010,11 @@ Specifies whether or not eight-bit characters sent from the host should be
 accepted as is or stripped when printed.
 The default is ``true,''
 which means that they are accepted as is.
+.TP 8
+.B "eightBitSelectTypes (\fPclass\fB EightBitSelectTypes\fP)"
+Override \fIxterm\fP's default selection target list (see SELECT/PASTE) for
+selections in normal (ISO-8859-1) mode.
+The default is an empty string, which does not override anything.
 .TP 8
 .B "faceName (\fPclass\fB FaceName)"
 Specify the pattern for fonts selected from the FreeType
@@ -2094,11 +2115,11 @@ Specifies the name of the sixth alternative font.
 .TP 8
 .B "fontDoublesize (\fPclass\fB FontDoublesize)"
 Specifies whether \fIxterm\fP should attempt to use font scaling to draw
-doublesize characters.
+double-sized characters.
 Some older font servers cannot do this properly, will return misleading
 font metrics.
 The default is ``true''.
-If disabled, \fIxterm\fP will simulate doublesize characters by drawing
+If disabled, \fIxterm\fP will simulate double-sized characters by drawing
 normal characters with spaces between them.
 .TP 8
 .B "fontWarnings (\fPclass\fB FontWarnings)"
@@ -2275,7 +2296,7 @@ lower left corner of the screen.
 The default is ``false.''
 .TP 8
 .B "i18nSelections (\fPclass\fB I18nSelections)"
-If false, \fIxterm\fP will never request the targets
+If false, \fIxterm\fP will not request the targets
 .B COMPOUND_TEXT
 or
 .BR TEXT .
@@ -2937,6 +2958,11 @@ font to be combined with an ISO-10646 font if the latter is given
 via the \fB-fw\fP option or its corresponding resource value.
 The default is ``false.''
 .TP 8
+.B "utf8SelectTypes (\fPclass\fB Utf8SelectTypes)"
+Override \fIxterm\fP's default selection target list (see SELECT/PASTE) for
+selections in wide-character (UTF-8) mode.
+The default is an empty string, which does not override anything.
+.TP 8
 .B "utf8Title (\fPclass\fB Utf8Title)"
 Applications can set \fIxterm\fP's title by writing a control sequence.
 Normally this control sequence follows the VT220 convention,
@@ -2989,7 +3015,7 @@ This option specifies the font to be used for displaying bold wide text.
 By default,
 it will attempt to use a font twice as wide as the font that will be used to
 draw bold text.
-If no doublewidth font is found, it will improvise, by stretching
+If no double-width font is found, it will improvise, by stretching
 the bold font.
 .TP 8
 .B "wideChars (\fPclass\fB WideChars)"
@@ -3002,7 +3028,7 @@ This option specifies the font to be used for displaying wide text.
 By default,
 it will attempt to use a font twice as wide as the font that will be used to
 draw normal text.
-If no doublewidth font is found, it will improvise, by stretching
+If no double-width font is found, it will improvise, by stretching
 the normal font.
 .TP 8
 .B "ximFont (\fPclass\fB XimFont)"
@@ -3436,6 +3462,89 @@ see
 .IR tty (4)
 for details).
 .
+.
+.SH SELECT/PASTE
+X clients provide select and paste support by responding to requests conveyed
+by the server.
+.SS PRIMARY
+When configured to use the primary selection,
+(the default) \fIxterm\fP can
+provide the selection data in ways which help to retain character
+encoding information as it is pasted. 
+.PP
+A user "selects" text on xterm, which highlights the selected text.
+A subsequent "paste" to another client forwards a request to the client owning
+the selection.
+If \fIxterm\fP owns the primary selection, it makes the data
+available in the form of one or more "selection targets".
+If it does not own the primary selection,
+e.g., if it has released it or another client has
+asserted ownership, it relies on cut-buffers to pass the data.
+But cut-buffers handle only ISO-8859-1 data
+(officially \- some clients ignore the rules).
+.
+.SS CLIPBOARD
+When configured to use the clipboard (see resource \fBselectToClipboard\fP),
+the problem with persistence of ownership is bypassed.
+Otherwise, there is no difference regarding the data which can be
+passed via selection.
+.
+.SS SELECTION TARGETS
+The different types of data which are passed depend on what the receiving
+client asks for.
+These are termed \fIselection targets\fP.
+.PP
+When asking for the selection data,
+\fIxterm\fP tries the following types in this order: 
+.RS
+.TP 5
+UTF8_STRING
+This is an XFree86 extension, which denotes that the data is encoded in UTF-8.
+When \fIxterm\fP is built with wide-character support,
+it both accepts and provides this type.
+.TP 5
+TEXT
+the text is in the encoding which corresponds to your current locale.
+.TP 5
+.\" see xc/doc/specs/CTEXT/ctext.tbl.ms
+.\" (it says the data is stored as a type of ISO 2022)
+COMPOUND_TEXT
+this is a format for multiple character set data, such as multi-lingual text.
+It can store UTF-8 data as a special case.
+.TP 5
+STRING
+This is Latin 1 (ISO-8859-1) data.
+.RE
+.PP
+The middle two (TEXT and COMPOUND_TEXT) are added if \fIxterm\fP
+is configured with the \fBi18nSelections\fP resource set to ``true''.
+.PP
+UTF8_STRING is preferred (therefore first in the list)
+since \fIxterm\fP stores text as Unicode data when
+running in wide-character mode, and no translation is needed.
+On the other hand, TEXT and COMPOUND_TEXT may require translation.
+If the translation is incomplete, they will insert X's ``defaultString''
+whose value cannot be set, and may simply be empty.
+\fIXterm\fP's \fBdefaultString\fP resource specifies the string to
+use for incomplete translations of the UTF8_STRING.
+.PP
+You can alter the types which \fIxterm\fP tries using the
+\fBeightBitSelectTypes\fP or \fButf8SelectTypes\fP resources.
+For instance, you might have some specific locale setting
+which does not use UTF-8 encoding.
+The resource value is a comma-separated list of the selection targets,
+which consist of the names shown.  You can use the special name I18N
+to denote the optional inclusion of TEXT and COMPOUND_TEXT.
+The names are matched ignoring case, and can be abbreviated.
+The default list can be expressed in several ways, e.g.,
+.sp
+.RS
+.nf
+UTF8_STRING,I18N,STRING
+utf8,i18n,string
+u,i,s
+.fi
+.RE
 .
 .SH MENUS
 .

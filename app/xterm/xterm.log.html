@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.731 2009/02/16 00:26:07 tom Exp $
+  $XTermId: xterm.log.html,v 1.744 2009/03/29 00:29:55 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_243">Patch #243 - 2009/3/28</A>
 <LI><A HREF="#xterm_242">Patch #242 - 2009/2/15</A>
 <LI><A HREF="#xterm_241">Patch #241 - 2009/1/26</A>
 <LI><A HREF="#xterm_240">Patch #240 - 2009/1/25</A>
@@ -289,6 +290,57 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_243">Patch #243 - 2009/3/28</A></H1>
+<ul>
+	<li>revert change to default for <code>allowTcapOps</code> (request by
+	    Bram Moolenaar).
+
+	<li>reallocate result returned by <code>xtermEnvLocale()</code> to
+	    avoid reference to freed memory after handling
+	    <code>menuLocale</code> resource.
+
+	<li>fix an old (X11R5) bug in tek4014 for switching fontsizes.
+
+	<li>add resource <code>defaultString</code> to make configurable the
+	    use of "#" when pastes of UTF-8 text fail due to limitations in
+	    the current locale settings.
+
+	<li>make the set of selection target Atom's configurable by two new
+	    resources <code>eightBitSelectTypes</code> and
+	    <code>utf8SelectTypes</code>, e.g., to use the <code>TEXT</code>
+	    Atom in preference to <code>UTF8_STRING</code> (discussion with
+	    Stanislav Sedov regarding koi8rxterm and the FreeBSD port).
+
+	<li>modify handling of <code>TARGETS</code> Atom by making it return
+	    exactly the set of targets as those which xterm is currently
+	    providing.
+
+	<li>set <code>MANPAGER</code> and <code>PAGER</code> explicitly to
+	    /bin/cat in <code>minstall.sh</code> to work around /etc/man.conf's
+	    with those variables already set
+	    (report by &#1052;&#1072;&#1088;&#1100;&#1103;&#1089;&#1080;&#1085;
+	    &#1057;&#1077;&#1084;&#1105;&#1085;).
+	<li>improve error-checking of tcap-query parser.
+
+	<li>add check for keyboard <code>tcap</code>), which ensures that
+	    terminal descriptions containing the same string for
+	    shifted/unshifted keys will be seen by tcap-query as only the
+	    unshifted key.  (This would only happen with an incorrect terminal
+	    description).
+
+	<li>fix conversion for input event-state to modifier-parameter which
+	    made tcap-query feature not work with <code>tcapFunctionKeys</code>
+	    (keyboard type <code>tcap</code>).
+
+	<li>add "DEF_ALLOW_<em>XXX</em>" definitions to main.h to allow
+	    overriding the default compiled-in values for
+	    "allow<em>xxx</em>" resources.
+
+	<li>remove check on bell-percentage added in
+	    <a href="#xterm_242">patch #242</a>,
+	    which disallowed zero/negative values (Redhat Bugzilla #487829).
+</ul>
 
 <H1><A NAME="xterm_242">Patch #242 - 2009/2/15</A></H1>
 <ul>

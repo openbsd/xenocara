@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.405 2009/02/13 23:39:29 tom Exp $ */
+/* $XTermId: misc.c,v 1.410 2009/03/28 17:33:52 tom Exp $ */
 
 /*
  *
@@ -821,16 +821,14 @@ AtomBell(XtermWidget xw, int which)
 void
 xtermBell(XtermWidget xw, int which, int percent)
 {
-    if (percent > 0) {
-	TScreen *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(xw);
 #if defined(HAVE_XKB_BELL_EXT)
-	Atom tony = AtomBell(xw, which);
-	if (tony != None) {
-	    XkbBell(screen->display, VShellWindow, percent, tony);
-	} else
+    Atom tony = AtomBell(xw, which);
+    if (tony != None) {
+	XkbBell(screen->display, VShellWindow, percent, tony);
+    } else
 #endif
-	    XBell(screen->display, percent);
-    }
+	XBell(screen->display, percent);
 }
 
 void
@@ -2900,16 +2898,16 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 	    char *tmp;
 	    char *parsed = ++cp;
 
-	    unparseputc1(xw, ANSI_DCS);
-
 	    code = xtermcapKeycode(xw, &parsed, &state, &fkey);
+
+	    unparseputc1(xw, ANSI_DCS);
 
 	    unparseputc(xw, code >= 0 ? '1' : '0');
 
 	    unparseputc(xw, '+');
 	    unparseputc(xw, 'r');
 
-	    while (*cp != 0) {
+	    while (*cp != 0 && (code >= -1)) {
 		if (cp == parsed)
 		    break;	/* no data found, error */
 
@@ -2926,14 +2924,6 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 		    if (code == XK_COLORS) {
 			unparseputn(xw, NUM_ANSI_COLORS);
 		    } else
-#endif
-#if OPT_TCAP_FKEYS
-			/*
-			 * First ensure that we handle the extended cursor- and
-			 * editing-keypad keys.
-			 */
-			if ((code <= XK_Fn(MAX_FKEY))
-			    || xtermcapString(xw, CodeToXkey(code), 0) == 0)
 #endif
 		    {
 			XKeyEvent event;
@@ -3841,6 +3831,7 @@ xtermEnvLocale(void)
 	if ((result = x_nonempty(setlocale(LC_CTYPE, 0))) == 0) {
 	    result = "C";
 	}
+	result = x_strdup(result);
 	TRACE(("xtermEnvLocale ->%s\n", result));
     }
     return result;
@@ -3947,6 +3938,6 @@ getXtermWidget(Widget w)
     } else {
 	xw = getXtermWidget(XtParent(w));
     }
-    TRACE(("getXtermWidget %p -> %p\n", w, xw));
+    TRACE2(("getXtermWidget %p -> %p\n", w, xw));
     return xw;
 }

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.420 2009/02/13 23:38:26 tom Exp $ */
+/* $XTermId: util.c,v 1.421 2009/03/16 00:37:25 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -3104,9 +3104,9 @@ drawXtermText(XtermWidget xw,
 		&& text2[src] == 0
 		&& (text[src] == ANSI_DEL ||
 		    text[src] < ANSI_SPA)) {
-		int ni = dec2ucs((unsigned) ((text[src] == ANSI_DEL)
-					     ? 0
-					     : text[src]));
+		unsigned ni = dec2ucs((unsigned) ((text[src] == ANSI_DEL)
+						  ? 0
+						  : text[src]));
 		UCS2SBUF(ni);
 	    }
 #endif /* OPT_MINI_LUIT */

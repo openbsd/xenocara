@@ -1,8 +1,8 @@
-/* $XTermId: xtermcap.h,v 1.5 2007/12/06 00:09:44 tom Exp $ */
+/* $XTermId: xtermcap.h,v 1.7 2009/03/15 18:18:11 tom Exp $ */
 
 /************************************************************
 
-Copyright 2007 by Thomas E. Dickey
+Copyright 2007,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -68,16 +68,14 @@ authorization.
 extern "C" {
 #endif
 
-#define MAX_FKEY 64
-#define MAX_FMOD 16
+#define	MOD_NONE	1
+#define	MOD_SHIFT	1
+#define	MOD_ALT		2
+#define	MOD_CTRL	4
+#define	MOD_META	8
 
-#define CodeToXkey(code) (XK_Fn(MAX_FKEY) - (int) code)
-
-/*
- * Store Xkey-data internally as a negative value, past the last values used
- * for function keys.
- */
-#define XkeyData(code,mods) (-((mods-1) + (code*MAX_FMOD) + MAX_FKEY))
+#define MODIFIER_NAME(parm, name) \
+	(((parm > MOD_NONE) && ((parm - MOD_NONE) & name)) ? " "#name : "")
 
 /* xtermcap.c */
 extern Bool get_termcap(char * /* name */, char * /* buffer */);

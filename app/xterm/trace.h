@@ -1,8 +1,8 @@
-/* $XTermId: trace.h,v 1.44 2008/07/27 15:21:20 tom Exp $ */
+/* $XTermId: trace.h,v 1.45 2009/03/19 23:47:59 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2007,2008 by Thomas E. Dickey
+Copyright 1997-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -40,6 +40,7 @@ extern	void	Trace ( const char *, ... )
 	__attribute__ ((format(printf,1,2)))
 #endif
 	;
+#undef  TRACE
 #define TRACE(p) Trace p
 
 #if OPT_TRACE > 1
@@ -50,33 +51,43 @@ extern  const char * visibleChrsetName(int /* chrset */);
 extern	char *	visibleChars (PAIRED_CHARS(Char * /* buf */, Char * /* buf2 */), unsigned /* len */);
 extern	char *	visibleIChar (IChar *, unsigned);
 extern	const char * visibleEventType (int);
+extern	const char * visibleSelectionTarget(Display * /* d */, Atom /* a */);
 extern	const char * visibleXError (int /* code */);
 
 extern	void	TraceArgv(const char * /* tag */, char ** /* argv */);
+#undef  TRACE_ARGV
 #define	TRACE_ARGV(tag,argv) TraceArgv(tag,argv)
 
 extern	char	*trace_who;
+#undef  TRACE_CHILD
 #define TRACE_CHILD int tracing_child = (trace_who = "child") != 0; (void) tracing_child;
 
 extern	void	TraceSizeHints(XSizeHints *);
+#undef  TRACE_HINTS
 #define	TRACE_HINTS(hints) TraceSizeHints(hints)
 
 extern	void	TraceIds(const char * /* fname */, int  /* lnum */);
+#undef  TRACE_IDS
 #define	TRACE_IDS TraceIds(__FILE__, __LINE__)
 
 extern	void	TraceOptions(OptionHelp * /* options */, XrmOptionDescRec * /* resources */, Cardinal  /* count */);
+#undef  TRACE_OPTS
 #define	TRACE_OPTS(opts,ress,lens) TraceOptions(opts,ress,lens)
 
 extern	void	TraceTranslations(const char *, Widget);
+#undef  TRACE_TRANS
 #define	TRACE_TRANS(name,w) TraceTranslations(name,w)
 
 extern	void	TraceWMSizeHints(XtermWidget);
+#undef  TRACE_WM_HINTS
 #define	TRACE_WM_HINTS(w) TraceWMSizeHints(w)
 
 extern	void	TraceXtermResources(void);
+#undef  TRACE_XRES
 #define	TRACE_XRES() TraceXtermResources()
 
 extern	int	TraceResizeRequest(const char * /* fn */, int  /* ln */, Widget  /* w */, Dimension  /* reqwide */, Dimension  /* reqhigh */, Dimension * /* gotwide */, Dimension * /* gothigh */);
+#undef  REQ_RESIZE
 #define REQ_RESIZE(w, reqwide, reqhigh, gotwide, gothigh) \
 	TraceResizeRequest(__FILE__, __LINE__, w, reqwide, reqhigh, gotwide, gothigh)
 

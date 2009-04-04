@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.11 2008/03/25 23:41:50 matthieu Exp $
+# $OpenBSD: Makefile,v 1.12 2009/04/04 15:10:44 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
@@ -12,7 +12,9 @@ BINMODE=	2755
 CPPFLAGS+=	-I${.CURDIR} -I${X11BASE}/include \
 		-I${X11BASE}/include/freetype2 \
 		-DHAVE_CONFIG_H -DCSRG_BASED \
-		-DFUNCPROTO=15 -DNARROWPROTO -DXFREE86_FT2 -DUTMP
+		-DFUNCPROTO=15 -DNARROWPROTO -DXFREE86_FT2 -DUTMP \
+		-DDEF_ALLOW_FONT=False -DDEF_ALLOW_TCAP=False \
+		-DDEF_ALLOW_WINDOW=False
 LDADD+=		-L${X11BASE}/lib -lXaw -lXpm -lXt -lSM -lICE \
 		-lXmu -lXft -lXrender -lX11 -lXext -lXau -lXdmcp \
 		-lfontconfig -lexpat -lfreetype -lutil -ltermcap -lz

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.542 2009/02/10 23:24:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.546 2009/03/24 22:20:06 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1383,7 +1383,7 @@ typedef struct {
 	Boolean		send_focus_pos; /* user wants focus in/out info */
 	Boolean		quiet_grab;	/* true if no cursor change on focus */
 #if OPT_PASTE64
-	int		base64_paste;	/* set to send paste in base64	*/
+	Cardinal	base64_paste;	/* set to send paste in base64	*/
 	int		base64_final;	/* string-terminator for paste	*/
 	/* _qWriteSelectionData expects these to be initialized to zero.
 	 * base64_flush() is the last step of the conversion, it clears these
@@ -1668,6 +1668,13 @@ typedef struct {
 	int		firstValidRow;	/* Valid rows for selection clipping */
 	int		lastValidRow;	/* " " */
 
+	String		default_string;
+	String		eightbit_select_types;
+	Atom*		selection_targets_8bit;
+#if OPT_WIDE_CHARS
+	String		utf8_select_types;
+	Atom*		selection_targets_utf8;
+#endif
 	Atom*		selection_atoms; /* which selections we own */
 	Cardinal	sel_atoms_size;	/*  how many atoms allocated */
 	Cardinal	selection_count; /* how many atoms in use */

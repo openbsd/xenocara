@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.51 2009/02/13 00:37:46 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.52 2009/03/26 23:59:32 tom Exp $ */
 
 /************************************************************
 
@@ -812,9 +812,7 @@ swapCgs(XtermWidget xw, VTwin * cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
 		int srcIndex = dataIndex(src);
 		int dstIndex = dataIndex(dst);
 
-		tmp = *dst;
-		*dst = *src;
-		*src = tmp;
+		EXCHANGE(*src, *dst, tmp);
 
 		relinkData(src, dstIndex);
 		relinkData(dst, srcIndex);

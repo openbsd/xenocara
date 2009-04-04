@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.520 2009/02/13 23:39:20 tom Exp $ */
+/* $XTermId: xterm.h,v 1.523 2009/03/28 14:56:54 tom Exp $ */
 
 /************************************************************
 
@@ -383,11 +383,13 @@ extern char **environ;
 #define XtNcutNewline		"cutNewline"
 #define XtNcutToBeginningOfLine	"cutToBeginningOfLine"
 #define XtNdecTerminalID	"decTerminalID"
+#define XtNdefaultString	"defaultString"
 #define XtNdeleteIsDEL		"deleteIsDEL"
 #define XtNdynamicColors	"dynamicColors"
 #define XtNeightBitControl	"eightBitControl"
 #define XtNeightBitInput	"eightBitInput"
 #define XtNeightBitOutput	"eightBitOutput"
+#define XtNeightBitSelectTypes	"eightBitSelectTypes"
 #define XtNfaceName		"faceName"
 #define XtNfaceNameDoublesize	"faceNameDoublesize"
 #define XtNfaceSize		"faceSize"
@@ -412,7 +414,7 @@ extern char **environ;
 #define XtNi18nSelections	"i18nSelections"
 #define XtNinitialFont		"initialFont"
 #define XtNinternalBorder	"internalBorder"
-#define XtNitalicULMode         "italicULMode"
+#define XtNitalicULMode		"italicULMode"
 #define XtNjumpScroll		"jumpScroll"
 #define XtNkeepSelection	"keepSelection"
 #define XtNkeyboardDialect	"keyboardDialect"
@@ -424,7 +426,7 @@ extern char **environ;
 #define XtNlogging		"logging"
 #define XtNloginShell		"loginShell"
 #define XtNmarginBell		"marginBell"
-#define XtNmaximized            "maximized"
+#define XtNmaximized		"maximized"
 #define XtNmenuBar		"menuBar"
 #define XtNmenuHeight		"menuHeight"
 #define XtNmetaSendsEscape	"metaSendsEscape"
@@ -481,6 +483,7 @@ extern char **environ;
 #define XtNuseClipping		"useClipping"
 #define XtNutf8			"utf8"
 #define XtNutf8Latin1		"utf8Latin1"
+#define XtNutf8SelectTypes	"utf8SelectTypes"
 #define XtNutf8Title		"utf8Title"
 #define XtNveryBoldColors	"veryBoldColors"
 #define XtNvisualBell		"visualBell"
@@ -524,7 +527,7 @@ extern char **environ;
 #define XtCCacheDoublesize	"CacheDoublesize"
 #define XtCCharClass		"CharClass"
 #define XtCCjkWidth 		"CjkWidth"
-#define XtCColorAttrMode        "ColorAttrMode"
+#define XtCColorAttrMode	"ColorAttrMode"
 #define XtCColorMode		"ColorMode"
 #define XtCColumn		"Column"
 #define XtCCombiningChars	"CombiningChars"
@@ -537,11 +540,13 @@ extern char **environ;
 #define XtCCutNewline		"CutNewline"
 #define XtCCutToBeginningOfLine	"CutToBeginningOfLine"
 #define XtCDecTerminalID	"DecTerminalID"
+#define XtCDefaultString	"DefaultString"
 #define XtCDeleteIsDEL		"DeleteIsDEL"
 #define XtCDynamicColors	"DynamicColors"
 #define XtCEightBitControl	"EightBitControl"
 #define XtCEightBitInput	"EightBitInput"
 #define XtCEightBitOutput	"EightBitOutput"
+#define XtCEightBitSelectTypes	"EightBitSelectTypes"
 #define XtCFaceName		"FaceName"
 #define XtCFaceNameDoublesize	"FaceNameDoublesize"
 #define XtCFaceSize		"FaceSize"
@@ -574,7 +579,7 @@ extern char **environ;
 #define XtCLogging		"Logging"
 #define XtCLoginShell		"LoginShell"
 #define XtCMarginBell		"MarginBell"
-#define XtCMaximized            "Maximized"
+#define XtCMaximized		"Maximized"
 #define XtCMenuBar		"MenuBar"
 #define XtCMenuHeight		"MenuHeight"
 #define XtCMetaSendsEscape	"MetaSendsEscape"
@@ -625,6 +630,7 @@ extern char **environ;
 #define XtCUseClipping		"UseClipping"
 #define XtCUtf8			"Utf8"
 #define XtCUtf8Latin1		"Utf8Latin1"
+#define XtCUtf8SelectTypes	"Utf8SelectTypes"
 #define XtCUtf8Title		"Utf8Title"
 #define XtCVT100Graphics	"VT100Graphics"
 #define XtCVeryBoldColors	"VeryBoldColors"
@@ -666,6 +672,7 @@ struct XTERM_RESOURCE;
 
 /* Tekproc.c */
 #if OPT_TEK4014
+extern TekWidget getTekWidget(Widget /* w */);
 extern int TekGetFontSize (const char * /* param */);
 extern int TekInit (void);
 extern int TekPtyData(void);

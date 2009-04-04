@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.246 2009/02/13 19:56:04 tom Exp $ */
+/* $XTermId: menu.c,v 1.248 2009/03/28 17:27:57 tom Exp $ */
 
 /*
 
@@ -1566,59 +1566,59 @@ do_font_utf8_title(Widget gw GCC_UNUSED,
 
 #if OPT_TEK4014
 static void
-do_tektextlarge(Widget gw GCC_UNUSED,
+do_tektextlarge(Widget gw,
 		XtPointer closure GCC_UNUSED,
 		XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(tekWidget, tekMenu_tektextlarge);
+    TekSetFontSize(getTekWidget(gw), tekMenu_tektextlarge);
 }
 
 static void
-do_tektext2(Widget gw GCC_UNUSED,
+do_tektext2(Widget gw,
 	    XtPointer closure GCC_UNUSED,
 	    XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(tekWidget, tekMenu_tektext2);
+    TekSetFontSize(getTekWidget(gw), tekMenu_tektext2);
 }
 
 static void
-do_tektext3(Widget gw GCC_UNUSED,
+do_tektext3(Widget gw,
 	    XtPointer closure GCC_UNUSED,
 	    XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(tekWidget, tekMenu_tektext3);
+    TekSetFontSize(getTekWidget(gw), tekMenu_tektext3);
 }
 
 static void
-do_tektextsmall(Widget gw GCC_UNUSED,
+do_tektextsmall(Widget gw,
 		XtPointer closure GCC_UNUSED,
 		XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(tekWidget, tekMenu_tektextsmall);
+    TekSetFontSize(getTekWidget(gw), tekMenu_tektextsmall);
 }
 
 static void
-do_tekpage(Widget gw GCC_UNUSED,
+do_tekpage(Widget gw,
 	   XtPointer closure GCC_UNUSED,
 	   XtPointer data GCC_UNUSED)
 {
-    TekSimulatePageButton(tekWidget, False);
+    TekSimulatePageButton(getTekWidget(gw), False);
 }
 
 static void
-do_tekreset(Widget gw GCC_UNUSED,
+do_tekreset(Widget gw,
 	    XtPointer closure GCC_UNUSED,
 	    XtPointer data GCC_UNUSED)
 {
-    TekSimulatePageButton(tekWidget, True);
+    TekSimulatePageButton(getTekWidget(gw), True);
 }
 
 static void
-do_tekcopy(Widget gw GCC_UNUSED,
+do_tekcopy(Widget gw,
 	   XtPointer closure GCC_UNUSED,
 	   XtPointer data GCC_UNUSED)
 {
-    TekCopy(tekWidget);
+    TekCopy(getTekWidget(gw));
 }
 
 static void
@@ -2504,7 +2504,7 @@ SetupShell(Widget *menus, MenuList * shell, int n, int m)
 		  XtNborderWidth, &button_border,
 		  (XtPointer) 0);
 
-    (void) setMenuLocale(True, saveLocale);
+    (void) setMenuLocale(False, saveLocale);
     return (Dimension) (button_height + (button_border * 2));
 }
 #endif /* OPT_TOOLBAR */

@@ -1,8 +1,8 @@
-/* $XTermId: trace.c,v 1.85 2008/06/03 20:52:34 tom Exp $ */
+/* $XTermId: trace.c,v 1.87 2009/03/23 20:08:03 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2007,2008 by Thomas E. Dickey
+Copyright 1997-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -40,6 +40,9 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <stdio.h>
 #include <stdarg.h>
 #include <assert.h>
+
+#include <X11/Xatom.h>
+#include <X11/Xmu/Atoms.h>
 
 #ifdef HAVE_X11_TRANSLATEI_H
 #include <X11/TranslateI.h>
@@ -293,6 +296,26 @@ visibleEventType(int type)
 	CASETYPE(ClientMessage);
 	CASETYPE(MappingNotify);
     }
+    return result;
+}
+
+const char *
+visibleSelectionTarget(Display * d, Atom a)
+{
+    const char *result = "?";
+
+    if (a == XA_STRING) {
+	result = "XA_STRING";
+    } else if (a == XA_TEXT(d)) {
+	result = "XA_TEXT()";
+    } else if (a == XA_COMPOUND_TEXT(d)) {
+	result = "XA_COMPOUND_TEXT()";
+    } else if (a == XA_UTF8_STRING(d)) {
+	result = "XA_UTF8_STRING()";
+    } else if (a == XA_TARGETS(d)) {
+	result = "XA_TARGETS()";
+    }
+
     return result;
 }
 

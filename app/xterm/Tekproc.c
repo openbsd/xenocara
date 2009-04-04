@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.163 2009/02/13 20:01:21 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.167 2009/03/28 17:03:35 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -899,8 +899,8 @@ TekClear(TekWidget tw)
 static void
 TekConfigure(Widget w)
 {
-    if (IsTekWidget(w)) {
-	TekWidget tw = (TekWidget) w;
+    TekWidget tw = getTekWidget(w);
+    if (tw != 0) {
 	TekScreen *tekscr = TekScreenOf(tw);
 	TScreen *screen = TScreenOf(term);
 	int border = 2 * screen->border;
@@ -924,11 +924,11 @@ TekExpose(Widget w,
 	  XEvent * event GCC_UNUSED,
 	  Region region GCC_UNUSED)
 {
-    if (IsTekWidget(w)) {
-	TekWidget tw = (TekWidget) w;
+    TekWidget tw = getTekWidget(w);
+    if (tw != 0) {
 	TekScreen *tekscr = TekScreenOf(tw);
 
-	TRACE(("TekExpose\n"));
+	TRACE(("TekExpose {{\n"));
 
 #ifdef lint
 	region = region;
@@ -939,8 +939,8 @@ TekExpose(Widget w,
 	Tpushback = Tpushb;
 	tekscr->cur_X = 0;
 	tekscr->cur_Y = TEKHOME;
-	TekSetFontSize(tw, tekscr->page.fontsize);
 	tekscr->cur = tekscr->page;
+	TekSetFontSize(tw, tekscr->cur.fontsize);
 	tekscr->margin = MARGIN1;
 	if (tekscr->TekGIN) {
 	    tekscr->TekGIN = NULL;
@@ -954,6 +954,7 @@ TekExpose(Widget w,
 	first_map_occurred();
 	if (!tekscr->waitrefresh)
 	    TekRefresh(tw);
+	TRACE(("}} TekExpose\n"));
     }
 }
 
@@ -981,6 +982,7 @@ TekRefresh(TekWidget tw)
 void
 TekRepaint(TekWidget tw)
 {
+    TRACE(("TekRepaint\n"));
     TekClear(tw);
     TekExpose((Widget) tw, (XEvent *) NULL, (Region) NULL);
 }
@@ -1657,13 +1659,16 @@ TekSetFontSize(TekWidget tw, int newitem)
 	int newsize = MI2FS(newitem);
 	Font fid;
 
-	TRACE(("TekSetFontSize(%d)\n", newitem));
+	TRACE(("TekSetFontSize(%d) size %d ->%d\n", newitem, oldsize, newsize));
 	if (newsize < 0 || newsize >= TEKNUMFONTS) {
 	    Bell(XkbBI_MinorError, 0);
 	} else if (oldsize != newsize) {
 	    if (!Ttoggled)
 		TCursorToggle(tw, TOGGLE);
 	    set_tekfont_menu_item(oldsize, False);
+
+	    tekscr->cur.fontsize = newsize;
+	    tekscr->page.fontsize = newsize;
 
 	    fid = tw->tek.Tfont[newsize]->fid;
 	    if (fid == DefaultGCID) {
@@ -1676,10 +1681,15 @@ TekSetFontSize(TekWidget tw, int newitem)
 		XSetFont(XtDisplay(tw), tekscr->TnormalGC, fid);
 	    }
 
-	    tekscr->cur.fontsize = newsize;
 	    set_tekfont_menu_item(newsize, True);
 	    if (!Ttoggled)
 		TCursorToggle(tw, TOGGLE);
+
+	    /* we'll get an exposure event after changing fontsize, so we
+	     * have to clear the screen to avoid painting over the previous
+	     * text.
+	     */
+	    TekClear(tw);
 	}
     }
 }
@@ -1796,6 +1806,7 @@ TCursorToggle(TekWidget tw, int toggle)		/* TOGGLE or CLEAR */
     if (!TEK4014_SHOWN(term))
 	return;
 
+    TRACE(("TCursorToggle %s\n", (toggle == TOGGLE) ? "toggle" : "clear"));
     c = tekscr->cur.fontsize;
     cellwidth = (unsigned) tw->tek.Tfont[c]->max_bounds.width;
     cellheight = (unsigned) (tw->tek.Tfont[c]->ascent +
@@ -1893,8 +1904,8 @@ HandleGINInput(Widget w,
 	       String * param_list,
 	       Cardinal *nparamsp)
 {
-    if (IsTekWidget(w)) {
-	TekWidget tw = (TekWidget) w;
+    TekWidget tw = getTekWidget(w);
+    if (tw != 0) {
 	TekScreen *tekscr = TekScreenOf(tw);
 
 	if (tekscr->TekGIN && *nparamsp == 1) {
@@ -1917,4 +1928,26 @@ HandleGINInput(Widget w,
 	    Bell(XkbBI_MinorError, 0);
 	}
     }
+}
+
+/*
+ * Check if the current widget, or any parent, is the VT100 "xterm" widget.
+ */
+TekWidget
+getTekWidget(Widget w)
+{
+    TekWidget xw;
+
+    if (w == 0) {
+	xw = (TekWidget) CURRENT_EMU();
+	if (!IsTekWidget(xw)) {
+	    xw = 0;
+	}
+    } else if (IsTekWidget(w)) {
+	xw = (TekWidget) w;
+    } else {
+	xw = getTekWidget(XtParent(w));
+    }
+    TRACE2(("getTekWidget %p -> %p\n", w, xw));
+    return xw;
 }

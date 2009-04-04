@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: minstall.sh,v 1.13 2008/01/27 15:45:03 tom Exp $
+# $XTermId: minstall.sh,v 1.14 2009/03/15 23:06:08 tom Exp $
 #
 # Install manpages, substituting a reasonable section value since XFree86 4.x
 # and derived imakes do not use constants...
@@ -18,9 +18,15 @@ LC_ALL=C;	export LC_ALL
 LC_CTYPE=C;	export LC_CTYPE
 XTERM_LOCALE=C	export XTERM_LOCALE
 
-# these could interfere with the "man" command.
-unset MANPAGER
-unset PAGER
+# avoid interference by the "man" command.
+for p in /bin /usr/bin
+do
+if test -f $p/cat ; then
+MANPAGER=cat;   export MANPAGER
+PAGER=cat;      export PAGER
+break
+fi
+done
 
 # get parameters
 MINSTALL="$1"

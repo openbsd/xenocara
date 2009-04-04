@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.15 2009/01/26 00:10:15 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.21 2009/03/16 00:31:06 tom Exp $ */
 
 /*
  * Copyright 2007-2008,2009 by Thomas E. Dickey
@@ -56,37 +56,41 @@
 
 #if OPT_TCAP_QUERY || OPT_TCAP_FKEYS
 
+#define SHIFT (MOD_NONE + MOD_SHIFT)
+
+#define NO_STRING (char *)(-1)
+
 typedef struct {
     char *tc;
     char *ti;
     int code;
-    unsigned state;
+    unsigned param;		/* see xtermStateToParam() */
 } TCAPINFO;
 /* *INDENT-OFF* */
 #define DATA(tc,ti,x,y) { tc, ti, x, y }
 static TCAPINFO table[] = {
-	/*	tcap	terminfo	code		param */
+	/*	tcap	terminfo	code		state */
 	DATA(	"%1",	"khlp",		XK_Help,	0	),
-	DATA(	"#1",	"kHLP",		XK_Help,	2	),
+	DATA(	"#1",	"kHLP",		XK_Help,	SHIFT	),
 	DATA(	"@0",	"kfnd",		XK_Find,	0	),
-	DATA(	"*0",	"kFND",		XK_Find,	2	),
+	DATA(	"*0",	"kFND",		XK_Find,	SHIFT	),
 	DATA(	"*6",	"kslt",		XK_Select,	0	),
-	DATA(	"#6",	"kSLT",		XK_Select,	2	),
+	DATA(	"#6",	"kSLT",		XK_Select,	SHIFT	),
 
 	DATA(	"kh",	"khome",	XK_Home,	0	),
-	DATA(	"#2",	"kHOM",		XK_Home,	2	),
+	DATA(	"#2",	"kHOM",		XK_Home,	SHIFT	),
 	DATA(	"@7",	"kend",		XK_End,		0	),
-	DATA(	"*7",	"kEND",		XK_End,		2	),
+	DATA(	"*7",	"kEND",		XK_End,		SHIFT	),
 
 	DATA(	"kl",	"kcub1",	XK_Left,	0	),
 	DATA(	"kr",	"kcuf1",	XK_Right,	0	),
 	DATA(	"ku",	"kcuu1",	XK_Up,		0	),
 	DATA(	"kd",	"kcud1",	XK_Down,	0	),
 
-	DATA(	"#4",	"kLFT",		XK_Left,	2	),
-	DATA(	"%i",	"kRIT",		XK_Right,	2	),
-	DATA(	"%e",	"kPRV",		XK_Up,		2	),
-	DATA(	"%c",	"kNXT",		XK_Down,	2	),
+	DATA(	"#4",	"kLFT",		XK_Left,	SHIFT	),
+	DATA(	"%i",	"kRIT",		XK_Right,	SHIFT	),
+	DATA(	"%e",	"kPRV",		XK_Up,		SHIFT	),
+	DATA(	"%c",	"kNXT",		XK_Down,	SHIFT	),
 
 	DATA(	"k1",	"kf1",		XK_Fn(1),	0	),
 	DATA(	"k2",	"kf2",		XK_Fn(2),	0	),
@@ -202,6 +206,37 @@ static TCAPINFO table[] = {
 #undef DATA
 /* *INDENT-ON* */
 
+#if OPT_TCAP_FKEYS
+static void
+loadTermcapStrings(TScreen * screen)
+{
+    if (screen->tcap_fkeys == 0) {
+	Cardinal want = XtNumber(table);
+	Cardinal have;
+	char *fkey;
+
+#if !(USE_TERMINFO && defined(HAVE_TIGETSTR))
+	char *area = screen->tcap_area;
+#endif
+
+	if ((screen->tcap_fkeys = TypeCallocN(char *, want)) != 0) {
+	    for (have = 0; have < want; ++have) {
+#if USE_TERMINFO && defined(HAVE_TIGETSTR)
+		fkey = tigetstr(table[have].ti);
+#else
+		fkey = tgetstr(table[have].tc, &area);
+#endif
+		if (fkey != 0 && fkey != NO_STRING) {
+		    screen->tcap_fkeys[have] = x_strdup(fkey);
+		} else {
+		    screen->tcap_fkeys[have] = NO_STRING;
+		}
+	    }
+	}
+    }
+}
+#endif
+
 #if OPT_TCAP_QUERY
 static int
 hex2int(int c)
@@ -215,35 +250,84 @@ hex2int(int c)
     return -1;
 }
 
-static TCAPINFO *
-lookupTcapByName(XtermWidget xw, const char *name)
+static Boolean
+keyIsDistinct(XtermWidget xw, int which)
 {
-    TCAPINFO *result = 0;
-    Cardinal n;
+    Boolean result = True;
+
+    switch (xw->keyboard.type) {
+    case keyboardIsTermcap:
+#if OPT_TCAP_FKEYS
+	if (table[which].param == SHIFT) {
+	    TScreen *screen = TScreenOf(xw);
+	    Cardinal k;
+	    char *fkey;
+
+	    loadTermcapStrings(screen);
+	    if ((fkey = screen->tcap_fkeys[which]) != NO_STRING) {
+		for (k = 0; k < XtNumber(table); k++) {
+		    if (table[k].code == table[which].code
+			&& table[k].param == 0) {
+			if ((fkey = screen->tcap_fkeys[k]) != NO_STRING
+			    && !strcmp(fkey, screen->tcap_fkeys[which])) {
+			    TRACE(("shifted/unshifted keys do not differ\n"));
+			    result = False;
+			}
+			break;
+		    }
+		}
+	    } else {
+		/* there is no data for the shifted key */
+		result = -1;
+	    }
+	}
+#endif
+	break;
+	/*
+	 * The vt220-keyboard will not return distinct key sequences for
+	 * shifted cursor-keys.  Just pretend they do not exist, since some
+	 * programs may be confused if we return the same data for
+	 * shifted/unshifted keys.
+	 */
+    case keyboardIsVT220:
+	if (table[which].param == SHIFT) {
+	    TRACE(("shifted/unshifted keys do not differ\n"));
+	    result = False;
+	}
+	break;
+    case keyboardIsLegacy:
+    case keyboardIsDefault:
+    case keyboardIsHP:
+    case keyboardIsSCO:
+    case keyboardIsSun:
+	break;
+    }
+
+    return result;
+}
+
+static int
+lookupTcapByName(const char *name)
+{
+    int result = -2;
+    Cardinal j;
 
     if (name != 0 && *name != '\0') {
-	for (n = 0; n < XtNumber(table); n++) {
-	    if (!strcmp(table[n].ti, name) || !strcmp(table[n].tc, name)) {
-		result = table + n;
+	for (j = 0; j < XtNumber(table); j++) {
+	    if (!strcmp(table[j].ti, name) || !strcmp(table[j].tc, name)) {
+		result = (int) j;
 		break;
 	    }
 	}
     }
 
-    /*
-     * The vt220-keyboard will not return distinct key sequences for shifted
-     * cursor-keys.  Just pretend they do not exist, since some programs may
-     * be confused if we return the same data for shifted/unshifted keys.
-     */
-    if (xw->keyboard.type == keyboardIsVT220
-	&& result != 0
-	&& result->state == 2) {
-	result = 0;
-    }
-
-    if (result != 0) {
-	TRACE(("lookupTcapByName(%s) tc=%s, ti=%s code %#x, state %#x\n",
-	       name, result->tc, result->ti, result->code, result->state));
+    if (result >= 0) {
+	TRACE(("lookupTcapByName(%s) tc=%s, ti=%s code %#x, param %#x\n",
+	       name,
+	       table[result].tc,
+	       table[result].ti,
+	       table[result].code,
+	       table[result].param));
     } else {
 	TRACE(("lookupTcapByName(%s) FAIL\n", name));
     }
@@ -264,6 +348,7 @@ xtermcapKeycode(XtermWidget xw, char **params, unsigned *state, Bool * fkey)
 {
     TCAPINFO *data;
     unsigned len = 0;
+    int which;
     int code = -1;
 #define MAX_TNAME_LEN 6
     char name[MAX_TNAME_LEN + 1];
@@ -283,40 +368,52 @@ xtermcapKeycode(XtermWidget xw, char **params, unsigned *state, Bool * fkey)
     *state = 0;
     *fkey = False;
 
-    if (*p == 0 || *p == ';') {
-	if ((data = lookupTcapByName(xw, name)) != 0) {
-	    code = data->code;
-	    *state = xtermParamToState(xw, data->state);
-	    if (IsFunctionKey(code)) {
-		*fkey = True;
-	    } else if (code < 0) {
-		*fkey = True;
-		code = XK_Fn((-code));
-	    }
+    if (len && (*p == 0 || *p == ';')) {
+	if ((which = lookupTcapByName(name)) >= 0) {
+	    if (keyIsDistinct(xw, which)) {
+		data = table + which;
+		code = data->code;
+		*state = xtermParamToState(xw, data->param);
+		if (IsFunctionKey(code)) {
+		    *fkey = True;
+		} else if (code < 0) {
+		    *fkey = True;
+		    code = XK_Fn((-code));
+		}
 #if OPT_SUN_FUNC_KEYS
-	    if (*fkey && xw->keyboard.type == keyboardIsSun) {
-		int num = code - XK_Fn(0);
+		if (*fkey && xw->keyboard.type == keyboardIsSun) {
+		    int num = code - XK_Fn(0);
 
-		/* match function-key case in sunfuncvalue() */
-		if (num > 20) {
-		    if (num <= 30 || num > 47) {
-			code = -1;
-		    } else {
-			code -= 10;
-			switch (num) {
-			case 37:	/* khome */
-			case 39:	/* kpp */
-			case 41:	/* kb2 */
-			case 43:	/* kend */
-			case 45:	/* knp */
+		    /* match function-key case in sunfuncvalue() */
+		    if (num > 20) {
+			if (num <= 30 || num > 47) {
 			    code = -1;
-			    break;
+			} else {
+			    code -= 10;
+			    switch (num) {
+			    case 37:	/* khome */
+			    case 39:	/* kpp */
+			    case 41:	/* kb2 */
+			    case 43:	/* kend */
+			    case 45:	/* knp */
+				code = -1;
+				break;
+			    }
 			}
 		    }
 		}
-	    }
 #endif
+	    } else {
+		TRACE(("... name ok, data not ok\n"));
+		code = -1;
+	    }
+	} else {
+	    TRACE(("... name not ok\n"));
+	    code = -2;
 	}
+    } else {
+	TRACE(("... name not ok\n"));
+	code = -2;
     }
 
     TRACE(("... xtermcapKeycode(%s, %u, %d) -> %#06x\n",
@@ -327,24 +424,22 @@ xtermcapKeycode(XtermWidget xw, char **params, unsigned *state, Bool * fkey)
 
 #if OPT_TCAP_FKEYS
 static TCAPINFO *
-lookupTcapByCode(int code, unsigned mask)
+lookupTcapByCode(int code, unsigned param)
 {
     TCAPINFO *result = 0;
     Cardinal n;
 
-    TRACE(("lookupTcapByCode %d:%#x\n", code, mask));
+    TRACE(("lookupTcapByCode %#x:%#x\n", code, param));
     for (n = 0; n < XtNumber(table); n++) {
 	if (table[n].code == code &&
-	    table[n].state == mask) {
-	    TRACE(("lookupTcapByCode %d:%s\n", n, table[n].ti));
+	    table[n].param == param) {
+	    TRACE(("->lookupTcapByCode %d:%s\n", n, table[n].ti));
 	    result = table + n;
 	    break;
 	}
     }
     return result;
 }
-
-#define NO_STRING (char *)(-1)
 
 int
 xtermcapString(XtermWidget xw, int keycode, unsigned mask)
@@ -355,31 +450,10 @@ xtermcapString(XtermWidget xw, int keycode, unsigned mask)
 
     if ((data = lookupTcapByCode(keycode, param)) != 0) {
 	TScreen *screen = TScreenOf(xw);
-	Cardinal which = data - table;
+	Cardinal which = (Cardinal) (data - table);
 	char *fkey;
 
-	if (screen->tcap_fkeys == 0) {
-	    Cardinal want = XtNumber(table);
-	    Cardinal have;
-#if !(USE_TERMINFO && defined(HAVE_TIGETSTR))
-	    char *area = screen->tcap_area;
-#endif
-
-	    if ((screen->tcap_fkeys = TypeCallocN(char *, want)) != 0) {
-		for (have = 0; have < want; ++have) {
-#if USE_TERMINFO && defined(HAVE_TIGETSTR)
-		    fkey = tigetstr(table[have].ti);
-#else
-		    fkey = tgetstr(table[have].tc, &area);
-#endif
-		    if (fkey != 0 && fkey != NO_STRING) {
-			screen->tcap_fkeys[have] = x_strdup(fkey);
-		    } else {
-			screen->tcap_fkeys[have] = NO_STRING;
-		    }
-		}
-	    }
-	}
+	loadTermcapStrings(screen);
 	if (screen->tcap_fkeys != 0) {
 	    if ((fkey = screen->tcap_fkeys[which]) != NO_STRING) {
 		StringInput(xw, (Char *) fkey, strlen(fkey));

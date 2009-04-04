@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.39 2009/02/08 18:03:56 tom Exp $ */
+/* $XTermId: main.h,v 1.42 2009/03/28 17:39:51 tom Exp $ */
 
 /*
  * Copyright 2000-2008,2009 by Thomas E. Dickey
@@ -89,6 +89,22 @@
 
 #ifndef DEFFACESIZE
 #define DEFFACESIZE		"14.0"
+#endif
+
+#ifndef DEF_ALLOW_FONT
+#define DEF_ALLOW_FONT		True
+#endif
+
+#ifndef DEF_ALLOW_TCAP
+#define DEF_ALLOW_TCAP		True
+#endif
+
+#ifndef DEF_ALLOW_TITLE
+#define DEF_ALLOW_TITLE		True
+#endif
+
+#ifndef DEF_ALLOW_WINDOW
+#define DEF_ALLOW_WINDOW	True
 #endif
 
 #if OPT_BLINK_TEXT
