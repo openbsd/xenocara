@@ -90,7 +90,7 @@
 ./usr/X11R6/lib/libdrm.a
 ./usr/X11R6/lib/libdrm.so.2.4
 ./usr/X11R6/lib/libdrm_pic.a
-./usr/X11R6/lib/libfontconfig.so.5.1
+./usr/X11R6/lib/libfontconfig.so.6.0
 ./usr/X11R6/lib/libfontenc.so.3.0
 ./usr/X11R6/lib/libfreetype.so.17.0
 ./usr/X11R6/lib/libfreetype_pic.a
