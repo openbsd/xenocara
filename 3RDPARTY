@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.48 2009/03/26 22:10:41 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.49 2009/04/05 17:07:59 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -8,8 +8,8 @@ Maintainer:	Freetype.org
 Archive Site:	http://download.savannah.gnu.org/releases/freetype/
 
 Package:	xterm 
-Version:	242
-Current Vers:	242
+Version:	243
+Current Vers:	243
 Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
 
@@ -26,7 +26,7 @@ Maintainer:	Eric Anholt
 Archive Site:	http://dri.freedesktop.org/
 
 Package:	fontconfig
-Version:	2.4.2
+Version:	2.6.0
 Current Vers:	2.6.0
 Maintainer:	Keith Packard
 Archive Site:	http://www.fontconfig.org/
