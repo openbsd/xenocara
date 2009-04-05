@@ -3,10 +3,10 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcStrCmpIgnoreCase" "3" "02 December 2006" "" ""
+.TH "FcStrCmpIgnoreCase" "3" "31 May 2008" "" ""
 
 .SH NAME
-FcStrCmpIgnoreCase \- compare UTF-8 strings ignoring ASCII case
+FcStrCmpIgnoreCase \- compare UTF-8 strings ignoring case
 .SH SYNOPSIS
 .sp
 \fB#include <fontconfig.h>
@@ -16,9 +16,8 @@ int FcStrCmpIgnoreCase (const FcChar8 *\fIs1\fB, const FcChar8 *\fIs2\fB);
 .SH "DESCRIPTION"
 .PP
 Returns the usual <0, 0, >0 result of comparing
-\fIs1\fR and \fIs2\fR\&.  This test is
-case-insensitive in the ASCII range and will operate properly with UTF8
-encoded strings, although it does not check for well formed strings.
+\fIs1\fR and \fIs2\fR\&. This test is
+case-insensitive for all proper UTF-8 encoded strings.
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.2
+Fontconfig version 2.6.0

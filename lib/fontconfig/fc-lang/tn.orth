@@ -24,6 +24,7 @@
 # Tswana (TN)
 #
 # Orthography from http://www.eki.ee/letter
+# and http://www.inference.phy.cam.ac.uk/dasher/download/alphabets/alphabet.Tswana.xml
 #
 0041-005a
 0061-007a
@@ -31,3 +32,4 @@
 00ea
 00d4
 00f4
+0160-0161

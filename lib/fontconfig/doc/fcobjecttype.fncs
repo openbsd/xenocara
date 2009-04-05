@@ -1,5 +1,5 @@
 /*
- * $Id: fcobjecttype.fncs,v 1.1.1.2 2006/12/31 14:58:00 matthieu Exp $
+ * $Id: fcobjecttype.fncs,v 1.2 2009/04/05 16:43:35 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -27,7 +27,9 @@
 @TYPE2@		int%				@ARG2@		ntype
 @PURPOSE@	Register object types
 @DESC@
-Register <parameter>ntype</parameter> new object types.
+Register <parameter>ntype</parameter> new object types. Returns FcFalse if
+some of the names cannot be
+registered (due to allocation failure). Otherwise returns FcTrue.
 @@
 
 @RET@		FcBool
@@ -36,7 +38,7 @@ Register <parameter>ntype</parameter> new object types.
 @TYPE2@		int% 				@ARG2@		ntype
 @PURPOSE@	Unregister object types
 @DESC@
-Unregister <parameter>ntype</parameter> object types.
+Unregister <parameter>ntype</parameter> object types. Returns FcTrue.
 @@
 
 @RET@		const FcObjectType *

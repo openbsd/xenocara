@@ -558,6 +558,10 @@ FcTypecheckExpr (FcConfigParse *parse, FcExpr *expr, FcType type)
     const FcObjectType	*o;
     const FcConstant	*c;
     
+    /* If parsing the expression failed, some nodes may be NULL */
+    if (!expr)
+	return;
+
     switch (expr->op) {
     case FcOpInteger:
     case FcOpDouble:
@@ -964,7 +968,12 @@ FcPStackPush (FcConfigParse *parse, FcElement element, const XML_Char **attr)
     {
 	new->attr = FcConfigSaveAttr (attr);
 	if (!new->attr)
+	{
 	    FcConfigMessage (parse, FcSevereError, "out of memory");
+	    FcMemFree (FC_MEM_PSTACK, sizeof (FcPStack));
+	    free (new);
+	    return FcFalse;
+	}
     }
     else
 	new->attr = 0;
@@ -1284,6 +1293,33 @@ FcParseBool (FcConfigParse *parse)
     FcStrFree (s);
 }
 
+static FcBool
+FcConfigLexBinding (FcConfigParse   *parse,
+		    const FcChar8   *binding_string,
+		    FcValueBinding  *binding_ret)
+{
+    FcValueBinding binding;
+    
+    if (!binding_string)
+	binding = FcValueBindingWeak;
+    else
+    {
+	if (!strcmp ((char *) binding_string, "weak"))
+	    binding = FcValueBindingWeak;
+	else if (!strcmp ((char *) binding_string, "strong"))
+	    binding = FcValueBindingStrong;
+	else if (!strcmp ((char *) binding_string, "same"))
+	    binding = FcValueBindingSame;
+	else
+	{
+	    FcConfigMessage (parse, FcSevereWarning, "invalid binding \"%s\"", binding_string);
+	    return FcFalse;
+	}
+    }
+    *binding_ret = binding;
+    return FcTrue;
+}
+
 static void
 FcParseFamilies (FcConfigParse *parse, FcVStackTag tag)
 {
@@ -1353,7 +1389,10 @@ FcParseAlias (FcConfigParse *parse)
     FcEdit	*edit = 0, *next;
     FcVStack	*vstack;
     FcTest	*test;
+    FcValueBinding  binding;
 
+    if (!FcConfigLexBinding (parse, FcConfigGetAttribute (parse, "binding"), &binding))
+	return;
     while ((vstack = FcVStackPop (parse))) 
     {
 	switch (vstack->tag) {
@@ -1415,7 +1454,7 @@ FcParseAlias (FcConfigParse *parse)
 			     FC_FAMILY_OBJECT,
 			     FcOpPrepend,
 			     prefer,
-			     FcValueBindingWeak);
+			     binding);
 	if (edit)
 	    edit->next = 0;
 	else
@@ -1428,7 +1467,7 @@ FcParseAlias (FcConfigParse *parse)
 			     FC_FAMILY_OBJECT,
 			     FcOpAppend,
 			     accept,
-			     FcValueBindingWeak);
+			     binding);
 	if (edit)
 	    edit->next = next;
 	else
@@ -1441,7 +1480,7 @@ FcParseAlias (FcConfigParse *parse)
 			     FC_FAMILY_OBJECT,
 			     FcOpAppendLast,
 			     def,
-			     FcValueBindingWeak);
+			     binding);
 	if (edit)
 	    edit->next = next;
 	else
@@ -1646,7 +1685,6 @@ FcConfigLexCompare (const FcChar8 *compare)
     return FcConfigLexOp (compare, fcCompareOps, NUM_COMPARE_OPS);
 }
 
-
 static void
 FcParseTest (FcConfigParse *parse)
 {
@@ -1753,7 +1791,6 @@ FcParseEdit (FcConfigParse *parse)
 {
     const FcChar8   *name;
     const FcChar8   *mode_string;
-    const FcChar8   *binding_string;
     FcOp	    mode;
     FcValueBinding  binding;
     FcExpr	    *expr;
@@ -1777,23 +1814,9 @@ FcParseEdit (FcConfigParse *parse)
 	    return;
 	}
     }
-    binding_string = FcConfigGetAttribute (parse, "binding");
-    if (!binding_string)
-	binding = FcValueBindingWeak;
-    else
-    {
-	if (!strcmp ((char *) binding_string, "weak"))
-	    binding = FcValueBindingWeak;
-	else if (!strcmp ((char *) binding_string, "strong"))
-	    binding = FcValueBindingStrong;
-	else if (!strcmp ((char *) binding_string, "same"))
-	    binding = FcValueBindingSame;
-	else
-	{
-	    FcConfigMessage (parse, FcSevereWarning, "invalid edit binding \"%s\"", binding_string);
-	    return;
-	}
-    }
+    if (!FcConfigLexBinding (parse, FcConfigGetAttribute (parse, "binding"), &binding))
+	return;
+
     expr = FcPopBinary (parse, FcOpComma);
     edit = FcEditCreate (parse, FcObjectFromName ((char *) name),
 			 mode, expr, binding);
@@ -2035,7 +2058,27 @@ FcEndElement(void *userData, const XML_Char *name)
 	    break;
 	}
 #ifdef _WIN32
-	if (strcmp (data, "WINDOWSFONTDIR") == 0)
+	if (strcmp (data, "CUSTOMFONTDIR") == 0)
+	{
+		FcStrFree (data);
+		data = malloc (1000);
+		if (!data)
+		{
+			FcConfigMessage (parse, FcSevereError, "out of memory");
+			break;
+		}
+		FcMemAlloc (FC_MEM_STRING, 1000);
+		if(!GetModuleFileName(NULL, data, 1000))
+		{
+			FcConfigMessage (parse, FcSevereError, "GetModuleFileName failed");
+			FcStrFree (data);
+			break;
+		}
+		char *p = strrchr (data, '\\');
+		if (p) *p = '\0';
+		strcat (data, "\\fonts");
+	}
+	else if (strcmp (data, "WINDOWSFONTDIR") == 0)
 	{
 	    int rc;
 	    FcStrFree (data);
@@ -2058,7 +2101,9 @@ FcEndElement(void *userData, const XML_Char *name)
 	    strcat (data, "fonts");
 	}
 #endif
-	if (!FcStrUsesHome (data) || FcConfigHome ())
+	if (strlen ((char *) data) == 0)
+	    FcConfigMessage (parse, FcSevereWarning, "empty font directory name ignored");
+	else if (!FcStrUsesHome (data) || FcConfigHome ())
 	{
 	    if (!FcConfigAddDir (parse->config, data))
 		FcConfigMessage (parse, FcSevereError, "out of memory; cannot add directory %s", data);
@@ -2072,6 +2117,30 @@ FcEndElement(void *userData, const XML_Char *name)
 	    FcConfigMessage (parse, FcSevereError, "out of memory");
 	    break;
 	}
+#ifdef _WIN32
+	if (strcmp (data, "WINDOWSTEMPDIR_FONTCONFIG_CACHE") == 0)
+	{
+	    int rc;
+	    FcStrFree (data);
+	    data = malloc (1000);
+	    if (!data)
+	    {
+		FcConfigMessage (parse, FcSevereError, "out of memory");
+		break;
+	    }
+	    FcMemAlloc (FC_MEM_STRING, 1000);
+	    rc = GetTempPath (800, data);
+	    if (rc == 0 || rc > 800)
+	    {
+		FcConfigMessage (parse, FcSevereError, "GetWindowsDirectory failed");
+		FcStrFree (data);
+		break;
+	    }
+	    if (data [strlen (data) - 1] != '\\')
+		strcat (data, "\\");
+	    strcat (data, "fontconfig\\cache");
+	}
+#endif
 	if (!FcStrUsesHome (data) || FcConfigHome ())
 	{
 	    if (!FcConfigAddCacheDir (parse->config, data))

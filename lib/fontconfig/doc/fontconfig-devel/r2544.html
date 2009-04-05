@@ -2,20 +2,20 @@
 <HTML
 ><HEAD
 ><TITLE
->FcAtomicCreate</TITLE
+>FcConfigGetFontDirs</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
 REL="HOME"
 HREF="index.html"><LINK
 REL="UP"
-TITLE="FcAtomic"
-HREF="x93.html#AEN2541"><LINK
+TITLE="FcConfig"
+HREF="x102.html#AEN2346"><LINK
 REL="PREVIOUS"
-TITLE="FUNCTIONS"
-HREF="x93.html"><LINK
+TITLE="FcConfigGetConfigDirs"
+HREF="r2522.html"><LINK
 REL="NEXT"
-TITLE="FcAtomicLock"
+TITLE="FcConfigGetConfigFiles"
 HREF="r2566.html"></HEAD
 ><BODY
 CLASS="REFENTRY"
@@ -44,7 +44,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="x93.html"
+HREF="r2522.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -69,9 +69,9 @@ ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><H1
 ><A
-NAME="FCATOMICCREATE"
+NAME="FCCONFIGGETFONTDIRS"
 ></A
->FcAtomicCreate</H1
+>FcConfigGetFontDirs</H1
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
@@ -79,7 +79,7 @@ NAME="AEN2548"
 ></A
 ><H2
 >Name</H2
->FcAtomicCreate&nbsp;--&nbsp;create an FcAtomic object</DIV
+>FcConfigGetFontDirs&nbsp;--&nbsp;Get font directories</DIV
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
@@ -102,8 +102,8 @@ CLASS="FUNCSYNOPSISINFO"
 ><CODE
 ><CODE
 CLASS="FUNCDEF"
->FcAtomic * FcAtomicCreate</CODE
->(const FcChar8   *file);</CODE
+>FcStrList * FcConfigGetFontDirs</CODE
+>(FcConfig *config);</CODE
 ></P
 ><P
 ></P
@@ -117,13 +117,12 @@ NAME="AEN2559"
 ><H2
 >Description</H2
 ><P
->Creates a data structure containing data needed to control access to <CODE
+>Returns the list of font directories in <CODE
 CLASS="PARAMETER"
->file</CODE
->.
-Writing is done to a separate file.  Once that file is complete, the original
-configuration file is atomically replaced so that reading process always see
-a consistent and complete file without the need to lock for reading.
+>config</CODE
+>. This includes the
+configured font directories along with any directories below those in the
+filesystem.
 	    </P
 ></DIV
 ><DIV
@@ -134,7 +133,7 @@ NAME="AEN2563"
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.4.2
+>Fontconfig version 2.6.0
 
 	    </P
 ></DIV
@@ -154,7 +153,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="x93.html"
+HREF="r2522.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -182,13 +181,13 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->FUNCTIONS</TD
+>FcConfigGetConfigDirs</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x93.html#AEN2541"
+HREF="x102.html#AEN2346"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -196,7 +195,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->FcAtomicLock</TD
+>FcConfigGetConfigFiles</TD
 ></TR
 ></TABLE
 ></DIV

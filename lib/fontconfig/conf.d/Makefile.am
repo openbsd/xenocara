@@ -21,8 +21,10 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+DOC_FILES= \
+	README
+
 CONF_FILES = \
-	README \
 	10-autohint.conf \
 	10-no-sub-pixel.conf \
 	10-sub-pixel-bgr.conf \
@@ -31,17 +33,18 @@ CONF_FILES = \
 	10-sub-pixel-vrgb.conf \
 	10-unhinted.conf \
 	20-fix-globaladvance.conf \
-	20-lohit-gujarati.conf \
 	20-unhint-small-vera.conf \
-	30-amt-aliases.conf \
+	25-unhint-nonlatin.conf \
 	30-urw-aliases.conf \
-	31-nonmst.conf \
-	40-generic.conf \
+	30-metric-aliases.conf \
+	40-nonlatin.conf \
+	45-latin.conf \
 	49-sansserif.conf \
 	50-user.conf \
 	51-local.conf \
 	60-latin.conf \
 	65-fonts-persian.conf \
+	65-khmer.conf \
 	65-nonlatin.conf \
 	69-unifont.conf \
 	70-no-bitmaps.conf \
@@ -52,12 +55,11 @@ CONF_FILES = \
 CONF_LINKS = \
 	10-autohint.conf \
 	20-fix-globaladvance.conf \
-	20-lohit-gujarati.conf \
 	20-unhint-small-vera.conf \
-	30-amt-aliases.conf \
 	30-urw-aliases.conf \
-	31-nonmst.conf \
-	40-generic.conf \
+	30-metric-aliases.conf \
+	40-nonlatin.conf \
+	45-latin.conf \
 	49-sansserif.conf \
 	50-user.conf \
 	51-local.conf \
@@ -68,13 +70,14 @@ CONF_LINKS = \
 	80-delicious.conf \
 	90-synthetic.conf
 
-EXTRA_DIST = $(CONF_FILES)
+EXTRA_DIST = $(CONF_FILES) $(DOC_FILES)
 
 configdir=$(CONFDIR)
 confavaildir=$(configdir)/conf.avail
 confddir=$(configdir)/conf.d
 
 confavail_DATA=$(CONF_FILES)
+confd_DATA=$(DOC_FILES)
 
 install-data-local:
 	mkdir -p ${DESTDIR}${confddir}

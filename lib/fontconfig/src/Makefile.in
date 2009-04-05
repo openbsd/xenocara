@@ -63,7 +63,8 @@ subdir = src
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.in
+am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
+	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -90,9 +91,6 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
-	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
-	$(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -134,6 +132,8 @@ DLLTOOL = @DLLTOOL@
 DOCDIR = @DOCDIR@
 DOCMAN3 = @DOCMAN3@
 DOCSRC = @DOCSRC@
+DOLT_BASH = @DOLT_BASH@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -166,20 +166,23 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LIBT_CURRENT = @LIBT_CURRENT@
+LIBT_CURRENT_MINUS_AGE = @LIBT_CURRENT_MINUS_AGE@
+LIBT_REVISION = @LIBT_REVISION@
+LIBT_VERSION_INFO = @LIBT_VERSION_INFO@
 LIBXML2_CFLAGS = @LIBXML2_CFLAGS@
 LIBXML2_LIBS = @LIBXML2_LIBS@
 LN_S = @LN_S@
+LTCOMPILE = @LTCOMPILE@
+LTCXXCOMPILE = @LTCXXCOMPILE@
 LTLIBOBJS = @LTLIBOBJS@
-LT_CURRENT = @LT_CURRENT@
-LT_CURRENT_MINUS_AGE = @LT_CURRENT_MINUS_AGE@
-LT_REVISION = @LT_REVISION@
-LT_VERSION_INFO = @LT_VERSION_INFO@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MS_LIB_AVAILABLE_FALSE = @MS_LIB_AVAILABLE_FALSE@
 MS_LIB_AVAILABLE_TRUE = @MS_LIB_AVAILABLE_TRUE@
+NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 ORTH_FILES = @ORTH_FILES@
@@ -194,6 +197,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -206,7 +210,9 @@ ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
@@ -269,8 +275,8 @@ INCLUDES = \
 	-DFONTCONFIG_PATH='"$(CONFDIR)"'
 
 EXTRA_DIST = makealias
-noinst_HEADERS = fcint.h
-ALIAS_FILES = fcalias.h fcaliastail.h
+noinst_HEADERS = fcint.h fcftint.h fcdeprecate.h
+ALIAS_FILES = fcalias.h fcaliastail.h fcftalias.h fcftaliastail.h
 BUILT_SOURCES = $(ALIAS_FILES)
 libfontconfig_la_SOURCES = \
 	fcatomic.c \
@@ -298,16 +304,19 @@ libfontconfig_la_SOURCES = \
 
 lib_LTLIBRARIES = libfontconfig.la
 libfontconfig_la_LDFLAGS = \
-	-version-info @LT_VERSION_INFO@ -no-undefined $(export_symbols)
+	-version-info @LIBT_VERSION_INFO@ -no-undefined $(export_symbols)
 
 libfontconfig_la_LIBADD = $(ICONV_LIBS) $(FREETYPE_LIBS) $(LIBXML2_LIBS) $(EXPAT_LIBS)
 libfontconfig_la_DEPENDENCIES = $(fontconfig_def_dependency)
 PUBLIC_FILES = \
 	$(top_srcdir)/fontconfig/fontconfig.h \
-	$(top_srcdir)/fontconfig/fcfreetype.h \
+	$(top_srcdir)/src/fcdeprecate.h \
 	$(top_srcdir)/fontconfig/fcprivate.h
 
-CLEANFILES := $(ALIAS_FILES)
+PUBLIC_FT_FILES = \
+	$(top_srcdir)/fontconfig/fcfreetype.h
+
+CLEANFILES = $(ALIAS_FILES)
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -638,16 +647,21 @@ uninstall-local: uninstall-ms-import-lib uninstall-libtool-import-lib
 fcaliastail.h: fcalias.h
 
 fcalias.h: $(top_srcdir)/src/makealias $(PUBLIC_FILES)
-	sh $(top_srcdir)/src/makealias "$(top_srcdir)/src" $(PUBLIC_FILES)
+	sh $(top_srcdir)/src/makealias "$(top_srcdir)/src" fcalias.h fcaliastail.h $(PUBLIC_FILES)
 
-fontconfig.def: $(PUBLIC_FILES)
+fcftaliastail.h: fcftalias.h
+
+fcftalias.h: $(top_srcdir)/src/makealias $(PUBLIC_FT_FILES)
+	sh $(top_srcdir)/src/makealias "$(top_srcdir)/src" fcftalias.h fcftaliastail.h $(PUBLIC_FT_FILES)
+
+fontconfig.def: $(PUBLIC_FILES) $(PUBLIC_FT_FILES)
 	echo Generating $@
 	(echo EXPORTS; \
-	(cat $(PUBLIC_FILES) || echo 'FcERROR ()' ) | \
+	(cat $(PUBLIC_FILES) $(PUBLIC_FT_FILES) || echo 'FcERROR ()' ) | \
  	grep '^Fc[^ ]* *(' | sed -e 's/ *(.*$$//' -e 's/^/	/' | \
 	sort; \
-	echo LIBRARY libfontconfig-@LT_CURRENT_MINUS_AGE@.dll; \
-	echo VERSION @LT_CURRENT@.@LT_REVISION@) >$@
+	echo LIBRARY libfontconfig-@LIBT_CURRENT_MINUS_AGE@.dll; \
+	echo VERSION @LIBT_CURRENT@.@LIBT_REVISION@) >$@
 	@ ! grep -q FcERROR $@ || ($(RM) $@; false)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -40,13 +40,16 @@ FNCS_TMPL = ${DOC_SRC}/func.sgml
 DOC_FUNCS_FNCS=\
 	fcatomic.fncs \
 	fcblanks.fncs \
+	fccache.fncs \
 	fccharset.fncs \
 	fcconfig.fncs \
 	fcconstant.fncs \
+	fcdircache.fncs \
 	fcfile.fncs \
 	fcfontset.fncs \
 	fcfreetype.fncs \
 	fcinit.fncs \
+	fclangset.fncs \
 	fcmatrix.fncs \
 	fcobjectset.fncs \
 	fcobjecttype.fncs \
@@ -58,13 +61,16 @@ DOC_FUNCS_FNCS=\
 DOC_FUNCS_SGML=\
 	fcatomic.sgml \
 	fcblanks.sgml \
+	fccache.sgml \
 	fccharset.sgml \
 	fcconfig.sgml \
 	fcconstant.sgml \
+	fcdircache.sgml \
 	fcfile.sgml \
 	fcfontset.sgml \
 	fcfreetype.sgml \
 	fcinit.sgml \
+	fclangset.sgml \
 	fcmatrix.sgml \
 	fcobjectset.sgml \
 	fcobjecttype.sgml \
@@ -84,7 +90,11 @@ docdir=@DOCDIR@
 DOC_FILES=$(TXT) $(PDF) $(HTML_FILES)
 LOCAL_DOCS=$(man3_MANS) $(man5_MANS) $(DOC_FILES) $(HTML_DIR)/*.html
 
-EXTRA_DIST=$(LOCAL_DOCS) $(SGML) $(DOC_FUNCS_FNCS) func.sgml confdir.sgml.in
+check_SCRIPTS=check-missing-doc
+TESTS_ENVIRONMENT=top_srcdir=${top_srcdir} sh
+TESTS=check-missing-doc
+
+EXTRA_DIST=$(LOCAL_DOCS) $(SGML) $(DOC_FUNCS_FNCS) $(check_SCRIPTS) func.sgml confdir.sgml.in
 
 SUFFIXES=.fncs .sgml .txt .html
 
@@ -106,9 +116,11 @@ $(man3_MANS): func.refs
 
 func.refs: local-fontconfig-devel.sgml $(DOC_FUNCS_SGML) version.sgml confdir.sgml
 	$(RM) func.refs
-	$(DOC2MAN) local-fontconfig-devel.sgml
-	mv manpage.refs func.refs
-	$(RM) manpage.links
+	$(DOC2MAN) -o devel-man local-fontconfig-devel.sgml && \
+	mv devel-man/manpage.refs func.refs && \
+	mv devel-man/*.3 . && \
+	$(RM) devel-man/manpage.links && \
+	rmdir devel-man
 
 local-fontconfig-devel.sgml: fontconfig-devel.sgml
 	$(LN_S) $< $@
@@ -117,7 +129,7 @@ $(DOC_FUNCS_SGML): edit-sgml$(EXEEXT) $(FNCS_TMPL)
 
 fonts-conf.5: local-fontconfig-user.sgml version.sgml confdir.sgml
 	$(RM) $@
-	$(DOC2MAN) local-fontconfig-user.sgml
+	$(DOC2MAN) local-fontconfig-user.sgml && \
 	$(RM) manpage.refs manpage.links
 	
 local-fontconfig-user.sgml: fontconfig-user.sgml

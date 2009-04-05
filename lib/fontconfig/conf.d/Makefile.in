@@ -62,7 +62,8 @@ host_triplet = @host@
 subdir = conf.d
 DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.in
+am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
+	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -76,9 +77,10 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(confavaildir)"
+am__installdirs = "$(DESTDIR)$(confavaildir)" "$(DESTDIR)$(confddir)"
 confavailDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(confavail_DATA)
+confdDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(confavail_DATA) $(confd_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -111,6 +113,8 @@ DLLTOOL = @DLLTOOL@
 DOCDIR = @DOCDIR@
 DOCMAN3 = @DOCMAN3@
 DOCSRC = @DOCSRC@
+DOLT_BASH = @DOLT_BASH@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -143,20 +147,23 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LIBT_CURRENT = @LIBT_CURRENT@
+LIBT_CURRENT_MINUS_AGE = @LIBT_CURRENT_MINUS_AGE@
+LIBT_REVISION = @LIBT_REVISION@
+LIBT_VERSION_INFO = @LIBT_VERSION_INFO@
 LIBXML2_CFLAGS = @LIBXML2_CFLAGS@
 LIBXML2_LIBS = @LIBXML2_LIBS@
 LN_S = @LN_S@
+LTCOMPILE = @LTCOMPILE@
+LTCXXCOMPILE = @LTCXXCOMPILE@
 LTLIBOBJS = @LTLIBOBJS@
-LT_CURRENT = @LT_CURRENT@
-LT_CURRENT_MINUS_AGE = @LT_CURRENT_MINUS_AGE@
-LT_REVISION = @LT_REVISION@
-LT_VERSION_INFO = @LT_VERSION_INFO@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MS_LIB_AVAILABLE_FALSE = @MS_LIB_AVAILABLE_FALSE@
 MS_LIB_AVAILABLE_TRUE = @MS_LIB_AVAILABLE_TRUE@
+NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 ORTH_FILES = @ORTH_FILES@
@@ -171,6 +178,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -183,7 +191,9 @@ ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
@@ -229,8 +239,10 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
+DOC_FILES = \
+	README
+
 CONF_FILES = \
-	README \
 	10-autohint.conf \
 	10-no-sub-pixel.conf \
 	10-sub-pixel-bgr.conf \
@@ -239,17 +251,18 @@ CONF_FILES = \
 	10-sub-pixel-vrgb.conf \
 	10-unhinted.conf \
 	20-fix-globaladvance.conf \
-	20-lohit-gujarati.conf \
 	20-unhint-small-vera.conf \
-	30-amt-aliases.conf \
+	25-unhint-nonlatin.conf \
 	30-urw-aliases.conf \
-	31-nonmst.conf \
-	40-generic.conf \
+	30-metric-aliases.conf \
+	40-nonlatin.conf \
+	45-latin.conf \
 	49-sansserif.conf \
 	50-user.conf \
 	51-local.conf \
 	60-latin.conf \
 	65-fonts-persian.conf \
+	65-khmer.conf \
 	65-nonlatin.conf \
 	69-unifont.conf \
 	70-no-bitmaps.conf \
@@ -260,12 +273,11 @@ CONF_FILES = \
 CONF_LINKS = \
 	10-autohint.conf \
 	20-fix-globaladvance.conf \
-	20-lohit-gujarati.conf \
 	20-unhint-small-vera.conf \
-	30-amt-aliases.conf \
 	30-urw-aliases.conf \
-	31-nonmst.conf \
-	40-generic.conf \
+	30-metric-aliases.conf \
+	40-nonlatin.conf \
+	45-latin.conf \
 	49-sansserif.conf \
 	50-user.conf \
 	51-local.conf \
@@ -276,11 +288,12 @@ CONF_LINKS = \
 	80-delicious.conf \
 	90-synthetic.conf
 
-EXTRA_DIST = $(CONF_FILES)
+EXTRA_DIST = $(CONF_FILES) $(DOC_FILES)
 configdir = $(CONFDIR)
 confavaildir = $(configdir)/conf.avail
 confddir = $(configdir)/conf.d
 confavail_DATA = $(CONF_FILES)
+confd_DATA = $(DOC_FILES)
 all: all-am
 
 .SUFFIXES:
@@ -340,6 +353,23 @@ uninstall-confavailDATA:
 	  echo " rm -f '$(DESTDIR)$(confavaildir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(confavaildir)/$$f"; \
 	done
+install-confdDATA: $(confd_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(confddir)" || $(mkdir_p) "$(DESTDIR)$(confddir)"
+	@list='$(confd_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(confdDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(confddir)/$$f'"; \
+	  $(confdDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(confddir)/$$f"; \
+	done
+
+uninstall-confdDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(confd_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(confddir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(confddir)/$$f"; \
+	done
 tags: TAGS
 TAGS:
 
@@ -378,7 +408,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(confavaildir)"; do \
+	for dir in "$(DESTDIR)$(confavaildir)" "$(DESTDIR)$(confddir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -423,7 +453,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-confavailDATA install-data-local
+install-data-am: install-confavailDATA install-confdDATA \
+	install-data-local
 
 install-exec-am:
 
@@ -449,18 +480,20 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-confavailDATA uninstall-info-am
+uninstall-am: uninstall-confavailDATA uninstall-confdDATA \
+	uninstall-info-am
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
 	distclean distclean-generic distclean-libtool distdir dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-confavailDATA install-data install-data-am \
-	install-data-local install-exec install-exec-am install-info \
-	install-info-am install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
-	uninstall-confavailDATA uninstall-info-am
+	install-confavailDATA install-confdDATA install-data \
+	install-data-am install-data-local install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	uninstall uninstall-am uninstall-confavailDATA \
+	uninstall-confdDATA uninstall-info-am
 
 
 install-data-local:

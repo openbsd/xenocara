@@ -26,15 +26,13 @@ CC = @CC_FOR_BUILD@
 EXEEXT = @EXEEXT_FOR_BUILD@
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 
-INCLUDES=-I${top_srcdir}/src -I${top_srcdir} $(FREETYPE_CFLAGS) $(WARN_CFLAGS)
+INCLUDES=-I${top_srcdir}/src -I${top_srcdir} $(WARN_CFLAGS)
 
 TMPL=fclang.tmpl.h
 STMPL=${top_srcdir}/fc-lang/fclang.tmpl.h
 TARG=fclang.h
 
 noinst_PROGRAMS=fc-lang
-
-noinst_HEADERS=$(TARG)
 
 noinst_MANS=fc-lang.man
 
@@ -48,7 +46,7 @@ $(TARG):$(ORTH) fc-lang${EXEEXT} $(STMPL)
 
 ALIAS_FILES = fcalias.h fcaliastail.h
 
-BUILT_SOURCES = $(ALIAS_FILES)
+BUILT_SOURCES = $(ALIAS_FILES) $(TARG)
 
 $(ALIAS_FILES): 
 	touch $(ALIAS_FILES)

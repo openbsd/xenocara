@@ -1,6 +1,6 @@
-#	$OpenBSD: Makefile.bsd-wrapper,v 1.9 2007/05/31 21:18:47 matthieu Exp $
+#	$OpenBSD: Makefile.bsd-wrapper,v 1.10 2009/04/05 16:43:35 matthieu Exp $
 
-SHARED_LIBS=	fontconfig 5.1
+SHARED_LIBS=	fontconfig 6.0
 
 CONFIGURE_ARGS= --with-expat=${X11BASE} --sysconfdir=/etc \
 	--mandir=${X11BASE}/man \

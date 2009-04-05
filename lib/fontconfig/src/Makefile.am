@@ -77,9 +77,9 @@ INCLUDES = 						\
 
 EXTRA_DIST = makealias
 
-noinst_HEADERS=fcint.h
+noinst_HEADERS=fcint.h fcftint.h fcdeprecate.h
 
-ALIAS_FILES = fcalias.h fcaliastail.h
+ALIAS_FILES = fcalias.h fcaliastail.h fcftalias.h fcftaliastail.h
 
 BUILT_SOURCES = $(ALIAS_FILES)
 
@@ -110,7 +110,7 @@ libfontconfig_la_SOURCES = \
 lib_LTLIBRARIES = libfontconfig.la
 
 libfontconfig_la_LDFLAGS =			\
-	-version-info @LT_VERSION_INFO@ -no-undefined $(export_symbols)
+	-version-info @LIBT_VERSION_INFO@ -no-undefined $(export_symbols)
 
 libfontconfig_la_LIBADD = $(ICONV_LIBS) $(FREETYPE_LIBS) $(LIBXML2_LIBS) $(EXPAT_LIBS)
 
@@ -122,22 +122,30 @@ uninstall-local: uninstall-ms-import-lib uninstall-libtool-import-lib
 
 PUBLIC_FILES = \
 	$(top_srcdir)/fontconfig/fontconfig.h \
-	$(top_srcdir)/fontconfig/fcfreetype.h \
+	$(top_srcdir)/src/fcdeprecate.h \
 	$(top_srcdir)/fontconfig/fcprivate.h
 	
+PUBLIC_FT_FILES = \
+	$(top_srcdir)/fontconfig/fcfreetype.h
+
 fcaliastail.h: fcalias.h
 
 fcalias.h: $(top_srcdir)/src/makealias $(PUBLIC_FILES)
-	sh $(top_srcdir)/src/makealias "$(top_srcdir)/src" $(PUBLIC_FILES)
+	sh $(top_srcdir)/src/makealias "$(top_srcdir)/src" fcalias.h fcaliastail.h $(PUBLIC_FILES)
 
-CLEANFILES := $(ALIAS_FILES)
+fcftaliastail.h: fcftalias.h
 
-fontconfig.def: $(PUBLIC_FILES)
+fcftalias.h: $(top_srcdir)/src/makealias $(PUBLIC_FT_FILES)
+	sh $(top_srcdir)/src/makealias "$(top_srcdir)/src" fcftalias.h fcftaliastail.h $(PUBLIC_FT_FILES)
+
+CLEANFILES = $(ALIAS_FILES)
+
+fontconfig.def: $(PUBLIC_FILES) $(PUBLIC_FT_FILES)
 	echo Generating $@
 	(echo EXPORTS; \
-	(cat $(PUBLIC_FILES) || echo 'FcERROR ()' ) | \
+	(cat $(PUBLIC_FILES) $(PUBLIC_FT_FILES) || echo 'FcERROR ()' ) | \
  	grep '^Fc[^ ]* *(' | sed -e 's/ *(.*$$//' -e 's/^/	/' | \
 	sort; \
-	echo LIBRARY libfontconfig-@LT_CURRENT_MINUS_AGE@.dll; \
-	echo VERSION @LT_CURRENT@.@LT_REVISION@) >$@
+	echo LIBRARY libfontconfig-@LIBT_CURRENT_MINUS_AGE@.dll; \
+	echo VERSION @LIBT_CURRENT@.@LIBT_REVISION@) >$@
 	@ ! grep -q FcERROR $@ || ($(RM) $@; false)

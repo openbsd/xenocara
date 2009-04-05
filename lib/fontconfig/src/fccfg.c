@@ -138,23 +138,10 @@ FcConfigNewestFile (FcStrSet *files)
     return newest;
 }
 
-FcFileTime
-FcConfigModifiedTime (FcConfig *config)
-{
-    if (!config)
-    {
-	FcFileTime v = { 0, FcFalse };
-	config = FcConfigGetCurrent ();
-	if (!config)
-	    return v;
-    }
-    return FcConfigNewestFile (config->configFiles);
-}
-
 FcBool
 FcConfigUptoDate (FcConfig *config)
 {
-    FcFileTime	config_time, font_time;
+    FcFileTime	config_time, config_dir_time, font_time;
     time_t	now = time(0);
     if (!config)
     {
@@ -163,11 +150,24 @@ FcConfigUptoDate (FcConfig *config)
 	    return FcFalse;
     }
     config_time = FcConfigNewestFile (config->configFiles);
+    config_dir_time = FcConfigNewestFile (config->configDirs);
     font_time = FcConfigNewestFile (config->fontDirs);
     if ((config_time.set && config_time.time - config->rescanTime > 0) ||
+	(config_dir_time.set && (config_dir_time.time - config->rescanTime) > 0) ||
 	(font_time.set && (font_time.time - config->rescanTime) > 0))
     {
-	return FcFalse;
+	/* We need to check for potential clock problems here (OLPC ticket #6046) */
+	if ((config_time.set && (config_time.time - now) > 0) ||
+    	(config_dir_time.set && (config_dir_time.time - now) > 0) ||
+        (font_time.set && (font_time.time - now) > 0))
+	{
+	    fprintf (stderr,
+                    "Fontconfig warning: Directory/file mtime in the future. New fonts may not be detected\n");
+	    config->rescanTime = now;
+	    return FcTrue;
+	}
+	else
+	    return FcFalse;
     }
     config->rescanTime = now;
     return FcTrue;
@@ -343,6 +343,9 @@ FcConfigBuildFonts (FcConfig *config)
 FcBool
 FcConfigSetCurrent (FcConfig *config)
 {
+    if (config == _fcConfig)
+	return FcTrue;
+
     if (!config->fonts)
 	if (!FcConfigBuildFonts (config))
 	    return FcFalse;
@@ -519,7 +522,7 @@ FcConfigAddBlank (FcConfig	*config,
 }
 
 int
-FcConfigGetRescanInverval (FcConfig *config)
+FcConfigGetRescanInterval (FcConfig *config)
 {
     if (!config)
     {
@@ -531,7 +534,7 @@ FcConfigGetRescanInverval (FcConfig *config)
 }
 
 FcBool
-FcConfigSetRescanInverval (FcConfig *config, int rescanInterval)
+FcConfigSetRescanInterval (FcConfig *config, int rescanInterval)
 {
     if (!config)
     {
@@ -543,6 +546,22 @@ FcConfigSetRescanInverval (FcConfig *config, int rescanInterval)
     return FcTrue;
 }
 
+/*
+ * A couple of typos escaped into the library
+ */
+int
+FcConfigGetRescanInverval (FcConfig *config)
+{
+    return FcConfigGetRescanInterval (config);
+}
+
+FcBool
+FcConfigSetRescanInverval (FcConfig *config, int rescanInterval)
+{
+    return FcConfigSetRescanInterval (config, rescanInterval);
+}
+
+    
 FcBool
 FcConfigAddEdit (FcConfig	*config,
 		 FcTest		*test,
@@ -689,7 +708,7 @@ FcConfigCompareValue (const FcValue	*left_o,
 		ret = FcStrCmpIgnoreCase (left.u.s, right.u.s) != 0;
 		break;
 	    case FcOpNotContains:
-		ret = FcStrCmpIgnoreCase (left.u.s, right.u.s) == 0;
+		ret = FcStrStrIgnoreCase (left.u.s, right.u.s) == 0;
 		break;
 	    default:
 		break;
@@ -1512,9 +1531,15 @@ FcConfigSubstitute (FcConfig	*config,
     return FcConfigSubstituteWithPat (config, p, 0, kind);
 }
 
-#if defined (_WIN32) && (defined (PIC) || defined (DLL_EXPORT))
+#if defined (_WIN32)
+
+#  define WIN32_LEAN_AND_MEAN
+#  define WIN32_EXTRA_LEAN
+#  include <windows.h>
 
 static FcChar8 fontconfig_path[1000] = "";
+
+#  if (defined (PIC) || defined (DLL_EXPORT))
 
 BOOL WINAPI
 DllMain (HINSTANCE hinstDLL,
@@ -1553,12 +1578,12 @@ DllMain (HINSTANCE hinstDLL,
   return TRUE;
 }
 
+#  endif /* !PIC */
+
 #undef FONTCONFIG_PATH
 #define FONTCONFIG_PATH fontconfig_path
 
-#else /* !(_WIN32 && PIC) */
-
-#endif /* !(_WIN32 && PIC) */
+#endif /* !_WIN32 */
 
 #ifndef FONTCONFIG_FILE
 #define FONTCONFIG_FILE	"fonts.conf"
@@ -1643,6 +1668,16 @@ FcConfigGetPath (void)
 	}
     }
     
+#ifdef _WIN32
+	if (fontconfig_path[0] == '\0')
+	{
+		if(!GetModuleFileName(NULL, fontconfig_path, sizeof(fontconfig_path)))
+			goto bail1;
+		char *p = strrchr (fontconfig_path, '\\');
+		if (p) *p = '\0';
+		strcat (fontconfig_path, "\\fonts");
+	}
+#endif
     dir = (FcChar8 *) FONTCONFIG_PATH;
     path[i] = malloc (strlen ((char *) dir) + 1);
     if (!path[i])
@@ -1699,7 +1734,7 @@ FcChar8 *
 FcConfigFilename (const FcChar8 *url)
 {
     FcChar8    *file, *dir, **path, **p;
-    
+
     if (!url || !*url)
     {
 	url = (FcChar8 *) getenv ("FONTCONFIG_FILE");

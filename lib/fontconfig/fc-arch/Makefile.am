@@ -26,7 +26,7 @@ CC = @CC_FOR_BUILD@
 EXEEXT = @EXEEXT_FOR_BUILD@
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 
-INCLUDES=-I${top_srcdir}/src -I${top_srcdir} $(FREETYPE_CFLAGS) $(WARN_CFLAGS)
+INCLUDES=-I${top_srcdir}/src -I${top_srcdir} $(WARN_CFLAGS)
 
 TMPL=fcarch.tmpl.h
 STMPL=${top_srcdir}/fc-arch/fcarch.tmpl.h
@@ -36,8 +36,6 @@ ARCHITECTURE=@ARCHITECTURE@
 .PRECIOUS: $(TARG)
 
 noinst_PROGRAMS=fc-arch
-
-noinst_HEADERS=$(TARG)
 
 noinst_MANS=fc-arch.man
 
@@ -49,7 +47,7 @@ $(TARG):fc-arch${EXEEXT} $(STMPL) ${top_srcdir}/src/fcint.h ../config.h
 
 ALIAS_FILES = fcalias.h fcaliastail.h
 
-BUILT_SOURCES = $(ALIAS_FILES)
+BUILT_SOURCES = $(ALIAS_FILES) $(TARG)
 
 $(ALIAS_FILES): 
 	touch $(ALIAS_FILES)

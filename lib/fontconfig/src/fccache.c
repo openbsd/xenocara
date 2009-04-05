@@ -33,6 +33,7 @@
 #  include <unistd.h>
 #  include <sys/mman.h>
 #elif defined(_WIN32)
+#  define _WIN32_WINNT 0x0500
 #  include <windows.h>
 #endif
 
@@ -47,11 +48,95 @@ struct MD5Context {
 };
 
 static void MD5Init(struct MD5Context *ctx);
-static void MD5Update(struct MD5Context *ctx, unsigned char *buf, unsigned len);
+static void MD5Update(struct MD5Context *ctx, const unsigned char *buf, unsigned len);
 static void MD5Final(unsigned char digest[16], struct MD5Context *ctx);
 static void MD5Transform(FcChar32 buf[4], FcChar32 in[16]);
 
 #define CACHEBASE_LEN (1 + 32 + 1 + sizeof (FC_ARCHITECTURE) + sizeof (FC_CACHE_SUFFIX))
+
+#ifdef _WIN32
+
+#include <windows.h>
+
+#ifdef __GNUC__
+typedef long long INT64;
+#define EPOCH_OFFSET 11644473600ll
+#else
+#define EPOCH_OFFSET 11644473600i64
+typedef __int64 INT64;
+#endif
+
+/* Workaround for problems in the stat() in the Microsoft C library:
+ *
+ * 1) stat() uses FindFirstFile() to get the file
+ * attributes. Unfortunately this API doesn't return correct values
+ * for modification time of a directory until some time after a file
+ * or subdirectory has been added to the directory. (This causes
+ * run-test.sh to fail, for instance.) GetFileAttributesEx() is
+ * better, it returns the updated timestamp right away.
+ *
+ * 2) stat() does some strange things related to backward
+ * compatibility with the local time timestamps on FAT volumes and
+ * daylight saving time. This causes problems after the switches
+ * to/from daylight saving time. See
+ * http://bugzilla.gnome.org/show_bug.cgi?id=154968 , especially
+ * comment #30, and http://www.codeproject.com/datetime/dstbugs.asp .
+ * We don't need any of that, FAT and Win9x are as good as dead. So
+ * just use the UTC timestamps from NTFS, converted to the Unix epoch.
+ */
+
+static int
+FcStat (const char *file, struct stat *statb)
+{
+    WIN32_FILE_ATTRIBUTE_DATA wfad;
+    char full_path_name[MAX_PATH];
+    char *basename;
+    DWORD rc;
+    
+    if (!GetFileAttributesEx (file, GetFileExInfoStandard, &wfad))
+	return -1;
+    
+    statb->st_dev = 0;
+
+    /* Calculate a pseudo inode number as a hash of the full path name.
+     * Call GetLongPathName() to get the spelling of the path name as it
+     * is on disk.
+     */
+    rc = GetFullPathName (file, sizeof (full_path_name), full_path_name, &basename);
+    if (rc == 0 || rc > sizeof (full_path_name))
+	return -1;
+
+    rc = GetLongPathName (full_path_name, full_path_name, sizeof (full_path_name));
+    statb->st_ino = FcStringHash (full_path_name);
+    
+    statb->st_mode = _S_IREAD | _S_IWRITE;
+    statb->st_mode |= (statb->st_mode >> 3) | (statb->st_mode >> 6);
+
+    if (wfad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	statb->st_mode |= _S_IFDIR;
+    else
+	statb->st_mode |= _S_IFREG;
+    
+    statb->st_nlink = 1;
+    statb->st_uid = statb->st_gid = 0;
+    statb->st_rdev = 0;
+    
+    if (wfad.nFileSizeHigh > 0)
+	return -1;
+    statb->st_size = wfad.nFileSizeLow;
+    
+    statb->st_atime = (*(INT64 *)&wfad.ftLastAccessTime)/10000000 - EPOCH_OFFSET;
+    statb->st_mtime = (*(INT64 *)&wfad.ftLastWriteTime)/10000000 - EPOCH_OFFSET;
+    statb->st_ctime = statb->st_mtime;
+    
+    return 0;
+}
+
+#else
+
+#define FcStat stat
+
+#endif
 
 static const char bin2hex[] = { '0', '1', '2', '3',
 				'4', '5', '6', '7',
@@ -67,7 +152,7 @@ FcDirCacheBasename (const FcChar8 * dir, FcChar8 cache_base[CACHEBASE_LEN])
     struct MD5Context 	ctx;
 
     MD5Init (&ctx);
-    MD5Update (&ctx, (unsigned char *)dir, strlen ((char *) dir));
+    MD5Update (&ctx, (const unsigned char *)dir, strlen ((const char *) dir));
 
     MD5Final (hash, &ctx);
 
@@ -104,6 +189,7 @@ FcDirCacheUnlink (const FcChar8 *dir, FcConfig *config)
         if (!cache_hashed)
 	    break;
 	(void) unlink ((char *) cache_hashed);
+	FcStrFree (cache_hashed);
     }
     FcStrListDone (list);
     /* return FcFalse if something went wrong */
@@ -117,14 +203,20 @@ FcDirCacheOpenFile (const FcChar8 *cache_file, struct stat *file_stat)
 {
     int	fd;
 
+#ifdef _WIN32
+    if (FcStat (cache_file, file_stat) < 0)
+        return -1;
+#endif
     fd = open((char *) cache_file, O_RDONLY | O_BINARY);
     if (fd < 0)
 	return fd;
+#ifndef _WIN32
     if (fstat (fd, file_stat) < 0)
     {
 	close (fd);
 	return -1;
     }
+#endif
     return fd;
 }
 
@@ -135,7 +227,8 @@ FcDirCacheOpenFile (const FcChar8 *cache_file, struct stat *file_stat)
  */
 static FcBool
 FcDirCacheProcess (FcConfig *config, const FcChar8 *dir, 
-		   FcBool (*callback) (int fd, struct stat *stat, void *closure),
+		   FcBool (*callback) (int fd, struct stat *fd_stat,
+				       struct stat *dir_stat, void *closure),
 		   void *closure, FcChar8 **cache_file_ret)
 {
     int		fd = -1;
@@ -145,7 +238,7 @@ FcDirCacheProcess (FcConfig *config, const FcChar8 *dir,
     struct stat file_stat, dir_stat;
     FcBool	ret = FcFalse;
 
-    if (stat ((char *) dir, &dir_stat) < 0)
+    if (FcStat ((char *) dir, &dir_stat) < 0)
         return FcFalse;
 
     FcDirCacheBasename (dir, cache_base);
@@ -161,20 +254,16 @@ FcDirCacheProcess (FcConfig *config, const FcChar8 *dir,
 	    break;
         fd = FcDirCacheOpenFile (cache_hashed, &file_stat);
         if (fd >= 0) {
-	    if (dir_stat.st_mtime <= file_stat.st_mtime)
-	    {
-		ret = (*callback) (fd, &file_stat, closure);
-		if (ret)
-		{
-		    if (cache_file_ret)
-			*cache_file_ret = cache_hashed;
-		    else
-			FcStrFree (cache_hashed);
-		    close (fd);
-		    break;
-		}
-	    }
+	    ret = (*callback) (fd, &file_stat, &dir_stat, closure);
 	    close (fd);
+	    if (ret)
+	    {
+		if (cache_file_ret)
+		    *cache_file_ret = cache_hashed;
+		else
+		    FcStrFree (cache_hashed);
+		break;
+	    }
 	}
     	FcStrFree (cache_hashed);
     }
@@ -424,11 +513,28 @@ FcCacheFini (void)
     assert (fcCacheMaxLevel == 0);
 }
 
+static FcBool
+FcCacheTimeValid (FcCache *cache, struct stat *dir_stat)
+{
+    struct stat	dir_static;
+
+    if (!dir_stat)
+    {
+	if (stat ((const char *) FcCacheDir (cache), &dir_static) < 0)
+	    return FcFalse;
+	dir_stat = &dir_static;
+    }
+    if (FcDebug () & FC_DBG_CACHE)
+	printf ("FcCacheTimeValid dir \"%s\" cache time %d dir time %d\n",
+		FcCacheDir (cache), cache->mtime, (int) dir_stat->st_mtime);
+    return cache->mtime == (int) dir_stat->st_mtime;
+}
+
 /*
  * Map a cache file into memory
  */
 static FcCache *
-FcDirCacheMapFd (int fd, struct stat *fd_stat)
+FcDirCacheMapFd (int fd, struct stat *fd_stat, struct stat *dir_stat)
 {
     FcCache	*cache;
     FcBool	allocated = FcFalse;
@@ -439,7 +545,8 @@ FcDirCacheMapFd (int fd, struct stat *fd_stat)
     if (cache)
 	return cache;
     /*
-     * For small cache files, just read them into memory
+     * Lage cache files are mmap'ed, smaller cache files are read. This
+     * balances the system cost of mmap against per-process memory usage.
      */
     if (fd_stat->st_size >= FC_CACHE_MIN_MMAP)
     {
@@ -477,6 +584,7 @@ FcDirCacheMapFd (int fd, struct stat *fd_stat)
     if (cache->magic != FC_CACHE_MAGIC_MMAP || 
 	cache->version < FC_CACHE_CONTENT_VERSION ||
 	cache->size != fd_stat->st_size ||
+	!FcCacheTimeValid (cache, dir_stat) ||
 	!FcCacheInsert (cache, fd_stat))
     {
 	if (allocated)
@@ -515,9 +623,9 @@ FcDirCacheUnload (FcCache *cache)
 }
 
 static FcBool
-FcDirCacheMapHelper (int fd, struct stat *fd_stat, void *closure)
+FcDirCacheMapHelper (int fd, struct stat *fd_stat, struct stat *dir_stat, void *closure)
 {
-    FcCache *cache = FcDirCacheMapFd (fd, fd_stat);
+    FcCache *cache = FcDirCacheMapFd (fd, fd_stat, dir_stat);
 
     if (!cache)
 	return FcFalse;
@@ -542,11 +650,14 @@ FcDirCacheLoadFile (const FcChar8 *cache_file, struct stat *file_stat)
 {
     int	fd;
     FcCache *cache;
+    struct stat	my_file_stat;
 
+    if (!file_stat)
+	file_stat = &my_file_stat;
     fd = FcDirCacheOpenFile (cache_file, file_stat);
     if (fd < 0)
 	return NULL;
-    cache = FcDirCacheMapFd (fd, file_stat);
+    cache = FcDirCacheMapFd (fd, file_stat, NULL);
     close (fd);
     return cache;
 }
@@ -556,7 +667,7 @@ FcDirCacheLoadFile (const FcChar8 *cache_file, struct stat *file_stat)
  * the magic number and the size field
  */
 static FcBool
-FcDirCacheValidateHelper (int fd, struct stat *fd_stat, void *closure)
+FcDirCacheValidateHelper (int fd, struct stat *fd_stat, struct stat *dir_stat, void *closure)
 {
     FcBool  ret = FcTrue;
     FcCache	c;
@@ -568,6 +679,8 @@ FcDirCacheValidateHelper (int fd, struct stat *fd_stat, void *closure)
     else if (c.version < FC_CACHE_CONTENT_VERSION)
 	ret = FcFalse;
     else if (fd_stat->st_size != c.size)
+	ret = FcFalse;
+    else if (c.mtime != (int) dir_stat->st_mtime)
 	ret = FcFalse;
     return ret;
 }
@@ -596,7 +709,7 @@ FcDirCacheValid (const FcChar8 *dir)
  * Build a cache structure from the given contents
  */
 FcCache *
-FcDirCacheBuild (FcFontSet *set, const FcChar8 *dir, FcStrSet *dirs)
+FcDirCacheBuild (FcFontSet *set, const FcChar8 *dir, struct stat *dir_stat, FcStrSet *dirs)
 {
     FcSerialize	*serialize = FcSerializeCreate ();
     FcCache *cache;
@@ -644,6 +757,7 @@ FcDirCacheBuild (FcFontSet *set, const FcChar8 *dir, FcStrSet *dirs)
     cache->magic = FC_CACHE_MAGIC_ALLOC;
     cache->version = FC_CACHE_CONTENT_VERSION;
     cache->size = serialize->size;
+    cache->mtime = (int) dir_stat->st_mtime;
 
     /*
      * Serialize directory name
@@ -707,7 +821,7 @@ FcMakeDirectory (const FcChar8 *dir)
     parent = FcStrDirname (dir);
     if (!parent)
 	return FcFalse;
-    if (access ((char *) parent, W_OK|X_OK) == 0)
+    if (access ((char *) parent, F_OK) == 0)
 	ret = mkdir ((char *) dir, 0777) == 0;
     else if (access ((char *) parent, F_OK) == -1)
 	ret = FcMakeDirectory (parent) && (mkdir ((char *) dir, 0777) == 0);
@@ -740,7 +854,7 @@ FcDirCacheWrite (FcCache *cache, FcConfig *config)
     if (!list)
 	return FcFalse;
     while ((test_dir = FcStrListNext (list))) {
-	if (access ((char *) test_dir, W_OK|X_OK) == 0)
+	if (access ((char *) test_dir, W_OK) == 0)
 	{
 	    cache_dir = test_dir;
 	    break;
@@ -930,7 +1044,7 @@ static void MD5Init(struct MD5Context *ctx)
  * Update context to reflect the concatenation of another buffer full
  * of bytes.
  */
-static void MD5Update(struct MD5Context *ctx, unsigned char *buf, unsigned len)
+static void MD5Update(struct MD5Context *ctx, const unsigned char *buf, unsigned len)
 {
     FcChar32 t;
 

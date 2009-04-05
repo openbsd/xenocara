@@ -2,20 +2,20 @@
 <HTML
 ><HEAD
 ><TITLE
->FcAtomicLock</TITLE
+>FcConfigGetConfigFiles</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
 REL="HOME"
 HREF="index.html"><LINK
 REL="UP"
-TITLE="FcAtomic"
-HREF="x93.html#AEN2541"><LINK
+TITLE="FcConfig"
+HREF="x102.html#AEN2346"><LINK
 REL="PREVIOUS"
-TITLE="FcAtomicCreate"
+TITLE="FcConfigGetFontDirs"
 HREF="r2544.html"><LINK
 REL="NEXT"
-TITLE="FcAtomicNewFile"
+TITLE="FcConfigGetCache"
 HREF="r2588.html"></HEAD
 ><BODY
 CLASS="REFENTRY"
@@ -69,9 +69,9 @@ ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><H1
 ><A
-NAME="FCATOMICLOCK"
+NAME="FCCONFIGGETCONFIGFILES"
 ></A
->FcAtomicLock</H1
+>FcConfigGetConfigFiles</H1
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
@@ -79,7 +79,7 @@ NAME="AEN2570"
 ></A
 ><H2
 >Name</H2
->FcAtomicLock&nbsp;--&nbsp;lock a file</DIV
+>FcConfigGetConfigFiles&nbsp;--&nbsp;Get config files</DIV
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
@@ -102,8 +102,8 @@ CLASS="FUNCSYNOPSISINFO"
 ><CODE
 ><CODE
 CLASS="FUNCDEF"
->FcBool FcAtomicLock</CODE
->(FcAtomic *atomic);</CODE
+>FcStrList * FcConfigGetConfigFiles</CODE
+>(FcConfig *config);</CODE
 ></P
 ><P
 ></P
@@ -117,12 +117,10 @@ NAME="AEN2581"
 ><H2
 >Description</H2
 ><P
->Attempts to lock the file referenced by <CODE
+>Returns the list of known configuration files used to generate <CODE
 CLASS="PARAMETER"
->atomic</CODE
->.  Returns FcFalse if the
-file is locked by another process, else returns FcTrue and leaves the file
-locked.
+>config</CODE
+>.
 	    </P
 ></DIV
 ><DIV
@@ -133,7 +131,7 @@ NAME="AEN2585"
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.4.2
+>Fontconfig version 2.6.0
 
 	    </P
 ></DIV
@@ -181,13 +179,13 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->FcAtomicCreate</TD
+>FcConfigGetFontDirs</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x93.html#AEN2541"
+HREF="x102.html#AEN2346"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -195,7 +193,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->FcAtomicNewFile</TD
+>FcConfigGetCache</TD
 ></TR
 ></TABLE
 ></DIV

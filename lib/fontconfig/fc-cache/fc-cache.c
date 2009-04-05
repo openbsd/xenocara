@@ -154,35 +154,23 @@ scanDirs (FcStrList *list, FcConfig *config, FcBool force, FcBool really_force, 
 	    continue;
 	}
 
-	if (access ((char *) dir, W_OK) < 0)
+	if (stat ((char *) dir, &statb) == -1)
 	{
 	    switch (errno) {
 	    case ENOENT:
 	    case ENOTDIR:
 		if (verbose)
 		    printf ("skipping, no such directory\n");
-		continue;
-	    case EACCES:
-	    case EROFS:
-		/* That's ok, caches go to /var anyway. */
-		/* Ideally we'd do an access on the hashed_name. */
-		/* But we hid that behind an abstraction barrier. */
 		break;
 	    default:
 		fprintf (stderr, "\"%s\": ", dir);
 		perror ("");
 		ret++;
-
-		continue;
+		break;
 	    }
-	}
-	if (stat ((char *) dir, &statb) == -1)
-	{
-	    fprintf (stderr, "\"%s\": ", dir);
-	    perror ("");
-	    ret++;
 	    continue;
 	}
+
 	if (!S_ISDIR (statb.st_mode))
 	{
 	    fprintf (stderr, "\"%s\": not a directory, skipping\n", dir);
@@ -214,13 +202,13 @@ scanDirs (FcStrList *list, FcConfig *config, FcBool force, FcBool really_force, 
 	if (was_valid)
 	{
 	    if (verbose)
-		printf ("skipping, %d fonts, %d dirs\n",
+		printf ("skipping, existing cache is valid: %d fonts, %d dirs\n",
 			FcCacheNumFont (cache), FcCacheNumSubdir (cache));
 	}
 	else
 	{
 	    if (verbose)
-		printf ("caching, %d fonts, %d dirs\n", 
+		printf ("caching, new cache contents: %d fonts, %d dirs\n", 
 			FcCacheNumFont (cache), FcCacheNumSubdir (cache));
 
 	    if (!FcDirCacheValid (dir))
@@ -268,7 +256,6 @@ cleanCacheDirectory (FcConfig *config, FcChar8 *dir, FcBool verbose)
     FcBool	ret = FcTrue;
     FcBool	remove;
     FcCache	*cache;
-    struct stat	file_stat;
     struct stat	target_stat;
 
     dir_base = FcStrPlus (dir, (FcChar8 *) "/");
@@ -277,10 +264,11 @@ cleanCacheDirectory (FcConfig *config, FcChar8 *dir, FcBool verbose)
 	fprintf (stderr, "%s: out of memory\n", dir);
 	return FcFalse;
     }
-    if (access ((char *) dir, W_OK|X_OK) != 0)
+    if (access ((char *) dir, W_OK) != 0)
     {
 	if (verbose)
-	    printf ("%s: not cleaning unwritable cache directory\n", dir);
+	    printf ("%s: not cleaning %s cache directory\n", dir,
+		    access ((char *) dir, F_OK) == 0 ? "unwritable" : "non-existent");
 	FcStrFree (dir_base);
 	return FcTrue;
     }
@@ -313,29 +301,24 @@ cleanCacheDirectory (FcConfig *config, FcChar8 *dir, FcBool verbose)
 	    ret = FcFalse;
 	    break;
 	}
-	cache = FcDirCacheLoadFile (file_name, &file_stat);
+	remove = FcFalse;
+	cache = FcDirCacheLoadFile (file_name, NULL);
 	if (!cache)
 	{
-	    fprintf (stderr, "%s: invalid cache file: %s\n", dir, ent->d_name);
-	    FcStrFree (file_name);
-	    ret = FcFalse;
-	    continue;
-	}
-	target_dir = FcCacheDir (cache);
-	remove = FcFalse;
-	if (stat ((char *) target_dir, &target_stat) < 0)
-	{
 	    if (verbose)
-		printf ("%s: %s: missing directory: %s \n",
-			dir, ent->d_name, target_dir);
+		printf ("%s: invalid cache file: %s\n", dir, ent->d_name);
 	    remove = FcTrue;
 	}
-	else if (target_stat.st_mtime > file_stat.st_mtime)
+	else
 	{
-	    if (verbose)
-		printf ("%s: %s: cache outdated: %s\n",
-			dir, ent->d_name, target_dir);
-	    remove = FcTrue;
+	    target_dir = FcCacheDir (cache);
+	    if (stat ((char *) target_dir, &target_stat) < 0)
+	    {
+		if (verbose)
+		    printf ("%s: %s: missing directory: %s \n",
+			    dir, ent->d_name, target_dir);
+		remove = FcTrue;
+	    }
 	}
 	if (remove)
 	{
@@ -486,6 +469,7 @@ main (int argc, char **argv)
      * library, and there aren't any signals flying around here.
      */
     FcConfigDestroy (config);
+    FcFini ();
     sleep (2);
     if (verbose)
 	printf ("%s: %s\n", argv[0], ret ? "failed" : "succeeded");

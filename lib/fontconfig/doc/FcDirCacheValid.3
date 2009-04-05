@@ -3,20 +3,20 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcDirCacheValid" "3" "02 December 2006" "" ""
+.TH "FcDirCacheValid" "3" "31 May 2008" "" ""
 
 .SH NAME
-FcDirCacheValid \- check directory cache timestamp
+FcDirCacheValid \- check directory cache
 .SH SYNOPSIS
 .sp
 \fB#include <fontconfig.h>
 .sp
-FcBool FcDirCacheValid (const FcChar8 *\fIcache_file\fB);
+FcBool FcDirCacheValid (const FcChar8 *\fIdir\fB);
 \fR
 .SH "DESCRIPTION"
 .PP
-Returns FcTrue if \fIcache_file\fR is no older than the
-directory containing it, else FcFalse.
+Returns FcTrue if \fIdir\fR has an associated valid cache
+file, else returns FcFalse
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.2
+Fontconfig version 2.6.0

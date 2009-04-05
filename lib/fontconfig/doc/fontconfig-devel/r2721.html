@@ -2,21 +2,21 @@
 <HTML
 ><HEAD
 ><TITLE
->FcFileScan</TITLE
+>FcConfigAppFontAddFile</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
 REL="HOME"
 HREF="index.html"><LINK
 REL="UP"
-TITLE="File and Directory routines"
-HREF="x93.html#AEN2718"><LINK
+TITLE="FcConfig"
+HREF="x102.html#AEN2346"><LINK
 REL="PREVIOUS"
-TITLE="FUNCTIONS"
-HREF="x93.html"><LINK
+TITLE="FcConfigSetRescanInterval"
+HREF="r2698.html"><LINK
 REL="NEXT"
-TITLE="FcDirScan"
-HREF="r2757.html"></HEAD
+TITLE="FcConfigAppFontAddDir"
+HREF="r2744.html"></HEAD
 ><BODY
 CLASS="REFENTRY"
 BGCOLOR="#FFFFFF"
@@ -44,7 +44,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="x93.html"
+HREF="r2698.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -58,7 +58,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="r2757.html"
+HREF="r2744.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -69,9 +69,9 @@ ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><H1
 ><A
-NAME="FCFILESCAN"
+NAME="FCCONFIGAPPFONTADDFILE"
 ></A
->FcFileScan</H1
+>FcConfigAppFontAddFile</H1
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
@@ -79,7 +79,7 @@ NAME="AEN2725"
 ></A
 ><H2
 >Name</H2
->FcFileScan&nbsp;--&nbsp;scan a font file</DIV
+>FcConfigAppFontAddFile&nbsp;--&nbsp;Add font file to font database</DIV
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
@@ -102,8 +102,8 @@ CLASS="FUNCSYNOPSISINFO"
 ><CODE
 ><CODE
 CLASS="FUNCDEF"
->FcBool FcFileScan</CODE
->(FcFontSet *set, FcStrSet *dirs, FcFileCache *cache, FcBlanks *blanks, const char *file, FcBool force);</CODE
+>FcBool FcConfigAppFontAddFile</CODE
+>(FcConfig *config, const FcChar8 *file);</CODE
 ></P
 ><P
 ></P
@@ -112,42 +112,24 @@ CLASS="FUNCDEF"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN2746"
+NAME="AEN2738"
 ></A
 ><H2
 >Description</H2
 ><P
->Scans a single file and adds all fonts found to <CODE
-CLASS="PARAMETER"
->set</CODE
->.
-If <CODE
-CLASS="PARAMETER"
->force</CODE
-> is FcTrue, then the file is scanned even if
-associated information is found in <CODE
-CLASS="PARAMETER"
->cache</CODE
->.  If
-<CODE
-CLASS="PARAMETER"
->file</CODE
-> is a directory, it is added to
-<CODE
-CLASS="PARAMETER"
->dirs</CODE
->.
+>Adds an application-specific font to the configuration. Returns FcFalse
+if the fonts cannot be added (due to allocation failure). Otherwise returns FcTrue.
 	    </P
 ></DIV
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN2754"
+NAME="AEN2741"
 ></A
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.4.2
+>Fontconfig version 2.6.0
 
 	    </P
 ></DIV
@@ -167,7 +149,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="x93.html"
+HREF="r2698.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -185,7 +167,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="r2757.html"
+HREF="r2744.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -195,13 +177,13 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->FUNCTIONS</TD
+>FcConfigSetRescanInterval</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x93.html#AEN2718"
+HREF="x102.html#AEN2346"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -209,7 +191,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->FcDirScan</TD
+>FcConfigAppFontAddDir</TD
 ></TR
 ></TABLE
 ></DIV

@@ -2,21 +2,21 @@
 <HTML
 ><HEAD
 ><TITLE
->FcStrCopy</TITLE
+>FcBlanksDestroy</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
 REL="HOME"
 HREF="index.html"><LINK
 REL="UP"
-TITLE="String utilities"
-HREF="x93.html#AEN3055"><LINK
+TITLE="FcBlanks"
+HREF="x102.html#AEN3189"><LINK
 REL="PREVIOUS"
-TITLE="FcUtf16Len"
-HREF="r3177.html"><LINK
+TITLE="FcBlanksCreate"
+HREF="r3192.html"><LINK
 REL="NEXT"
-TITLE="FcStrDowncase"
-HREF="r3236.html"></HEAD
+TITLE="FcBlanksAdd"
+HREF="r3234.html"></HEAD
 ><BODY
 CLASS="REFENTRY"
 BGCOLOR="#FFFFFF"
@@ -44,7 +44,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="r3177.html"
+HREF="r3192.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -58,7 +58,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="r3236.html"
+HREF="r3234.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -69,9 +69,9 @@ ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><H1
 ><A
-NAME="FCSTRCOPY"
+NAME="FCBLANKSDESTROY"
 ></A
->FcStrCopy</H1
+>FcBlanksDestroy</H1
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
@@ -79,7 +79,7 @@ NAME="AEN3217"
 ></A
 ><H2
 >Name</H2
->FcStrCopy&nbsp;--&nbsp;duplicate a string</DIV
+>FcBlanksDestroy&nbsp;--&nbsp;Destroy and FcBlanks</DIV
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
@@ -102,8 +102,8 @@ CLASS="FUNCSYNOPSISINFO"
 ><CODE
 ><CODE
 CLASS="FUNCDEF"
->FcChar8 * FcStrCopy</CODE
->(const FcChar8 *s);</CODE
+>void FcBlanksDestroy</CODE
+>(FcBlanks *b);</CODE
 ></P
 ><P
 ></P
@@ -117,26 +117,18 @@ NAME="AEN3228"
 ><H2
 >Description</H2
 ><P
->Allocates memory, copies <CODE
-CLASS="PARAMETER"
->s</CODE
-> and returns the resulting
-buffer.  Yes, this is <CODE
-CLASS="FUNCTION"
->strdup</CODE
->, but that function isn't
-available on every platform.
+>Destroys an FcBlanks object, freeing any associated memory.
 	    </P
 ></DIV
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN3233"
+NAME="AEN3231"
 ></A
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.4.2
+>Fontconfig version 2.6.0
 
 	    </P
 ></DIV
@@ -156,7 +148,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="r3177.html"
+HREF="r3192.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -174,7 +166,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="r3236.html"
+HREF="r3234.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -184,13 +176,13 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->FcUtf16Len</TD
+>FcBlanksCreate</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x93.html#AEN3055"
+HREF="x102.html#AEN3189"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -198,7 +190,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->FcStrDowncase</TD
+>FcBlanksAdd</TD
 ></TR
 ></TABLE
 ></DIV

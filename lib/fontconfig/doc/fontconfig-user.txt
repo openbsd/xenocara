@@ -1,5 +1,4 @@
-
-                              fonts-conf
+                               fonts-conf
 
 Name
 
@@ -21,15 +20,15 @@ Functional Overview
 
    Fontconfig contains two essential modules, the configuration
    module which builds an internal configuration from XML files
-   and the matching module which accepts font patterns and
-   returns the nearest matching font.
+   and the matching module which accepts font patterns and returns
+   the nearest matching font.
 
 Font Configuration
 
    The configuration module consists of the FcConfig datatype,
    libexpat and FcConfigParse which walks over an XML tree and
-   amends a configuration with data found within. From an
-   external perspective, configuration of the library consists of
+   amends a configuration with data found within. From an external
+   perspective, configuration of the library consists of
    generating a valid XML tree and feeding that to FcConfigParse.
    The only other mechanism provided to applications for changing
    the running configuration is to add fonts and directories to
@@ -39,20 +38,20 @@ Font Configuration
    and shared by as many applications as possible. It is hoped
    that this will lead to more stable font selection when passing
    names from one application to another. XML was chosen as a
-   configuration file format because it provides a format which
-   is easy for external agents to edit while retaining the
-   correct structure and syntax.
+   configuration file format because it provides a format which is
+   easy for external agents to edit while retaining the correct
+   structure and syntax.
 
-   Font configuration is separate from font matching;
-   applications needing to do their own matching can access the
-   available fonts from the library and perform private matching.
-   The intent is to permit applications to pick and choose
-   appropriate functionality from the library instead of forcing
-   them to choose between this library and a private
-   configuration mechanism. The hope is that this will ensure
-   that configuration of fonts for all applications can be
-   centralized in one place. Centralizing font configuration will
-   simplify and regularize font installation and customization.
+   Font configuration is separate from font matching; applications
+   needing to do their own matching can access the available fonts
+   from the library and perform private matching. The intent is to
+   permit applications to pick and choose appropriate
+   functionality from the library instead of forcing them to
+   choose between this library and a private configuration
+   mechanism. The hope is that this will ensure that configuration
+   of fonts for all applications can be centralized in one place.
+   Centralizing font configuration will simplify and regularize
+   font installation and customization.
 
 Font Properties
 
@@ -75,8 +74,8 @@ Font Properties
   width           Int     Condensed, normal or expanded
   aspect          Double  Stretches glyphs horizontally before hinting
   pixelsize       Double  Pixel size
-  spacing         Int     Proportional, dual-width, monospace or charce
-ll
+  spacing         Int     Proportional, dual-width, monospace or charcel
+l
   foundry         String  Font foundry name
   antialias       Bool    Whether glyphs can be antialiased
   hinting         Bool    Whether the rasterizer should use hinting
@@ -94,42 +93,42 @@ ll
   dpi             Double  Target dots per inch
   rgba            Int     unknown, rgb, bgr, vrgb, vbgr,
                           none - subpixel geometry
+  lcdfilter       Int     Type of LCD filter
   minspace        Bool    Eliminate leading from line spacing
   charset         CharSet Unicode chars encoded by the font
   lang            String  List of RFC-3066-style languages this
                           font supports
   fontversion     Int     Version number of the font
   capability      String  List of layout capabilities in the font
-  embolden        Bool    Rasterizer should synthetically embolden the
-font
-
+  embolden        Bool    Rasterizer should synthetically embolden the f
+ont
 
 Font Matching
 
    Fontconfig performs matching by measuring the distance from a
    provided pattern to all of the available fonts in the system.
-   The closest matching font is selected. This ensures that a
-   font will always be returned, but doesn't ensure that it is
-   anything like the requested pattern.
+   The closest matching font is selected. This ensures that a font
+   will always be returned, but doesn't ensure that it is anything
+   like the requested pattern.
 
    Font matching starts with an application constructed pattern.
    The desired attributes of the resulting font are collected
-   together in a pattern. Each property of the pattern can
-   contain one or more values; these are listed in priority
-   order; matches earlier in the list are considered "closer"
-   than matches later in the list.
+   together in a pattern. Each property of the pattern can contain
+   one or more values; these are listed in priority order; matches
+   earlier in the list are considered "closer" than matches later
+   in the list.
 
-   The initial pattern is modified by applying the list of
-   editing instructions specific to patterns found in the
-   configuration; each consists of a match predicate and a set of
-   editing operations. They are executed in the order they
-   appeared in the configuration. Each match causes the
-   associated sequence of editing operations to be applied.
+   The initial pattern is modified by applying the list of editing
+   instructions specific to patterns found in the configuration;
+   each consists of a match predicate and a set of editing
+   operations. They are executed in the order they appeared in the
+   configuration. Each match causes the associated sequence of
+   editing operations to be applied.
 
    After the pattern has been edited, a sequence of default
    substitutions are performed to canonicalize the set of
-   available properties; this avoids the need for the lower
-   layers to constantly provide default values for various font
+   available properties; this avoids the need for the lower layers
+   to constantly provide default values for various font
    properties during rendering.
 
    The canonical font pattern is finally matched against all
@@ -167,17 +166,16 @@ Font Matching
    operations necessary -- the first is to modify how fonts are
    selected; aliasing families and adding suitable defaults. The
    second is to modify how the selected fonts are rasterized.
-   Those must apply to the selected font, not the original
-   pattern as false matches will often occur.
+   Those must apply to the selected font, not the original pattern
+   as false matches will often occur.
 
 Font Names
 
    Fontconfig provides a textual representation for patterns that
-   the library can both accept and generate. The representation
-   is in three parts, first a list of family names, second a list
-   of point sizes and finally a list of additional properties:
+   the library can both accept and generate. The representation is
+   in three parts, first a list of family names, second a list of
+   point sizes and finally a list of additional properties:
         <families>-<point sizes>:<name1>=<values1>:<name2>=<values2>...
-
 
    Values in a list are separated with commas. The name needn't
    include either families or point sizes; they can be elided. In
@@ -191,22 +189,20 @@ Font Names
   Monospace:matrix=1 .1 0 1       The users preferred monospace font
                                   with artificial obliquing
 
-
    The '\', '-', ':' and ',' characters in family names must be
    preceeded by a '\' character to avoid having them
-   misinterpreted. Similarly, values containing '\', '=', '_',
-   ':' and ',' must also have them preceeded by a '\' character.
-   The '\' characters are stripped out of the family name and
-   values as the font name is read.
+   misinterpreted. Similarly, values containing '\', '=', '_', ':'
+   and ',' must also have them preceeded by a '\' character. The
+   '\' characters are stripped out of the family name and values
+   as the font name is read.
 
 Debugging Applications
 
    To help diagnose font and applications problems, fontconfig is
    built with a large amount of internal debugging left enabled.
-   It is controlled by means of the FC_DEBUG environment
-   variable. The value of this variable is interpreted as a
-   number, and each bit within that value controls different
-   debugging messages.
+   It is controlled by means of the FC_DEBUG environment variable.
+   The value of this variable is interpreted as a number, and each
+   bit within that value controls different debugging messages.
   Name         Value    Meaning
   ---------------------------------------------------------
   MATCH            1    Brief information about font matching
@@ -223,7 +219,6 @@ Debugging Applications
   LANGSET       2048    Dump char sets used to construct lang values
   OBJTYPES      4096    Display message when value typechecks fail
 
-
    Add the value of the desired debug levels together and assign
    that (in base 10) to the FC_DEBUG environment variable before
    running the application. Output from these statements is sent
@@ -232,20 +227,20 @@ Debugging Applications
 Lang Tags
 
    Each font in the database contains a list of languages it
-   supports. This is computed by comparing the Unicode coverage
-   of the font with the orthography of each language. Languages
-   are tagged using an RFC-3066 compatible naming and occur in
-   two parts -- the ISO 639 language tag followed a hyphen and
-   then by the ISO 3166 country code. The hyphen and country code
-   may be elided.
+   supports. This is computed by comparing the Unicode coverage of
+   the font with the orthography of each language. Languages are
+   tagged using an RFC-3066 compatible naming and occur in two
+   parts -- the ISO 639 language tag followed a hyphen and then by
+   the ISO 3166 country code. The hyphen and country code may be
+   elided.
 
    Fontconfig has orthographies for several languages built into
    the library. No provision has been made for adding new ones
-   aside from rebuilding the library. It currently supports 122
-   of the 139 languages named in ISO 639-1, 141 of the languages
-   with two-letter codes from ISO 639-2 and another 30 languages
-   with only three-letter codes. Languages with both two and
-   three letter codes are provided with only the two letter code.
+   aside from rebuilding the library. It currently supports 122 of
+   the 139 languages named in ISO 639-1, 141 of the languages with
+   two-letter codes from ISO 639-2 and another 30 languages with
+   only three-letter codes. Languages with both two and three
+   letter codes are provided with only the two letter code.
 
    For languages used in multiple territories with radically
    different character sets, fontconfig includes per-territory
@@ -257,13 +252,13 @@ Configuration File Format
    Configuration files for fontconfig are stored in XML format;
    this format makes external configuration tools easier to write
    and ensures that they will generate syntactically correct
-   configuration files. As XML files are plain text, they can
-   also be manipulated by the expert user using a text editor.
+   configuration files. As XML files are plain text, they can also
+   be manipulated by the expert user using a text editor.
 
-   The fontconfig document type definition resides in the
-   external entity "fonts.dtd"; this is normally stored in the
-   default font configuration directory (/etc/fonts). Each
-   configuration file should contain the following structure:
+   The fontconfig document type definition resides in the external
+   entity "fonts.dtd"; this is normally stored in the default font
+   configuration directory (/etc/fonts). Each configuration file
+   should contain the following structure:
         <?xml version="1.0"?>
         <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
         <fontconfig>
@@ -273,8 +268,8 @@ Configuration File Format
 <fontconfig>
 
    This is the top level element for a font configuration and can
-   contain <dir>, <cache>, <include>, <match> and <alias>
-   elements in any order.
+   contain <dir>, <cache>, <include>, <match> and <alias> elements
+   in any order.
 
 <dir>
 
@@ -284,11 +279,11 @@ Configuration File Format
 <cache>
 
    This element contains a file name for the per-user cache of
-   font information. If it starts with '~', it refers to a file
-   in the users home directory. This file is used to hold
-   information about fonts that isn't present in the
-   per-directory cache files. It is automatically maintained by
-   the fontconfig library. The default for this file is
+   font information. If it starts with '~', it refers to a file in
+   the users home directory. This file is used to hold information
+   about fonts that isn't present in the per-directory cache
+   files. It is automatically maintained by the fontconfig
+   library. The default for this file is
    ``~/.fonts.cache-<version>'', where <version> is the font
    configuration file version number (currently 2).
 
@@ -298,8 +293,8 @@ Configuration File Format
    file or directory. If a directory, every file within that
    directory starting with an ASCII digit (U+0030 - U+0039) and
    ending with the string ``.conf'' will be processed in sorted
-   order. When the XML datatype is traversed by FcConfigParse,
-   the contents of the file(s) will also be incorporated into the
+   order. When the XML datatype is traversed by FcConfigParse, the
+   contents of the file(s) will also be incorporated into the
    configuration by passing the filename(s) to
    FcConfigLoadAndParse. If 'ignore_missing' is set to "yes"
    instead of the default "no", a missing file or directory will
@@ -316,14 +311,14 @@ Configuration File Format
    Fonts often include "broken" glyphs which appear in the
    encoding but are drawn as blanks on the screen. Within the
    <blank> element, place each Unicode characters which is
-   supposed to be blank in an <int> element. Characters outside
-   of this set which are drawn as blank will be elided from the
-   set of characters supported by the font.
+   supposed to be blank in an <int> element. Characters outside of
+   this set which are drawn as blank will be elided from the set
+   of characters supported by the font.
 
 <rescan>
 
-   The <rescan> element holds an <int> element which indicates
-   the default interval between automatic checks for font
+   The <rescan> element holds an <int> element which indicates the
+   default interval between automatic checks for font
    configuration changes. Fontconfig will validate all of the
    configuration files and directories and automatically rebuild
    the internal datastructures when this interval passes.
@@ -339,17 +334,17 @@ Configuration File Format
    Fonts matched by an acceptfont element are "whitelisted"; such
    fonts are explicitly included in the set of fonts used to
    resolve list and match requests; including them in this list
-   protects them from being "blacklisted" by a rejectfont
-   element. Acceptfont elements include glob and pattern elements
-   which are used to match fonts.
+   protects them from being "blacklisted" by a rejectfont element.
+   Acceptfont elements include glob and pattern elements which are
+   used to match fonts.
 
 <rejectfont>
 
    Fonts matched by an rejectfont element are "blacklisted"; such
    fonts are excluded from the set of fonts used to resolve list
    and match requests as if they didn't exist in the system.
-   Rejectfont elements include glob and pattern elements which
-   are used to match fonts.
+   Rejectfont elements include glob and pattern elements which are
+   used to match fonts.
 
 <glob>
 
@@ -363,13 +358,13 @@ Configuration File Format
 
 <pattern>
 
-   Pattern elements perform list-style matching on incoming
-   fonts; that is, they hold a list of elements and associated
-   values. If all of those elements have a matching value, then
-   the pattern matches the font. This can be used to select fonts
-   based on attributes of the font (scalable, bold, etc), which
-   is a more reliable mechanism than using file extensions.
-   Pattern elements include patelt elements.
+   Pattern elements perform list-style matching on incoming fonts;
+   that is, they hold a list of elements and associated values. If
+   all of those elements have a matching value, then the pattern
+   matches the font. This can be used to select fonts based on
+   attributes of the font (scalable, bold, etc), which is a more
+   reliable mechanism than using file extensions. Pattern elements
+   include patelt elements.
 
 <patelt name="property">
 
@@ -384,16 +379,15 @@ Configuration File Format
    elements and then a (possibly empty) list of <edit> elements.
    Patterns which match all of the tests are subjected to all the
    edits. If 'target' is set to "font" instead of the default
-   "pattern", then this element applies to the font name
-   resulting from a match rather than a font pattern to be
-   matched. If 'target' is set to "scan", then this element
-   applies when the font is scanned to build the fontconfig
-   database.
+   "pattern", then this element applies to the font name resulting
+   from a match rather than a font pattern to be matched. If
+   'target' is set to "scan", then this element applies when the
+   font is scanned to build the fontconfig database.
 
 <test qual="any" name="property" target="default" compare="eq">
 
-   This element contains a single value which is compared with
-   the target ('pattern', 'font', 'scan' or 'default') property
+   This element contains a single value which is compared with the
+   target ('pattern', 'font', 'scan' or 'default') property
    "property" (substitute any of the property names seen above).
    'compare' can be one of "eq", "not_eq", "less", "less_eq",
    "more", or "more_eq". 'qual' may either be the default, "any",
@@ -407,8 +401,8 @@ Configuration File Format
 
 <edit name="property" mode="assign" binding="weak">
 
-   This element contains a list of expression elements (any of
-   the value or operator elements). The expression elements are
+   This element contains a list of expression elements (any of the
+   value or operator elements). The expression elements are
    evaluated at run-time and modify the property "property". The
    modification depends on whether "property" was matched by one
    of the associated <test> elements, if so, the modification may
@@ -420,23 +414,19 @@ Configuration File Format
   ---------------------------------------------------------------------
   "assign"                Replace matching value  Replace all values
   "assign_replace"        Replace all values      Replace all values
-  "prepend"               Insert before matching  Insert at head of lis
-t
-  "prepend_first"         Insert at head of list  Insert at head of lis
-t
+  "prepend"               Insert before matching  Insert at head of list
+  "prepend_first"         Insert at head of list  Insert at head of list
   "append"                Append after matching   Append at end of list
   "append_last"           Append at end of list   Append at end of list
-
 
 <int>, <double>, <string>, <bool>
 
    These elements hold a single value of the indicated type.
    <bool> elements hold either true or false. An important
    limitation exists in the parsing of floating point numbers --
-   fontconfig requires that the mantissa start with a digit, not
-   a decimal point, so insert a leading zero for purely
-   fractional values (e.g. use 0.5 instead of .5 and -0.5 instead
-   of -.5).
+   fontconfig requires that the mantissa start with a digit, not a
+   decimal point, so insert a leading zero for purely fractional
+   values (e.g. use 0.5 instead of .5 and -0.5 instead of -.5).
 
 <matrix>
 
@@ -490,11 +480,14 @@ t
   vrgb            rgba            3
   vbgr            rgba            4
   none            rgba            5
+  lcdnone         lcdfilter       0
+  lcddefault      lcdfilter       1
+  lcdlight        lcdfilter       2
+  lcdlegacy       lcdfilter       3
   hintnone        hintstyle       0
   hintslight      hintstyle       1
   hintmedium      hintstyle       2
   hintfull        hintstyle       3
-
 
 <or>, <and>, <plus>, <minus>, <times>, <divide>
 
@@ -521,10 +514,10 @@ t
    common match operations needed to substitute one font family
    for another. They contain a <family> element followed by
    optional <prefer>, <accept> and <default> elements. Fonts
-   matching the <family> element are edited to prepend the list
-   of <prefer>ed families before the matching <family>, append
-   the <accept>able families after the matching <family> and
-   append the <default> families to the end of the family list.
+   matching the <family> element are edited to prepend the list of
+   <prefer>ed families before the matching <family>, append the
+   <accept>able families after the matching <family> and append
+   the <default> families to the end of the family list.
 
 <family>
 
@@ -555,8 +548,8 @@ System configuration file
 -->
 <match target="pattern">
         <test qual="any" name="family"><string>mono</string></test>
-        <edit name="family" mode="assign"><string>monospace</string></e
-dit>
+        <edit name="family" mode="assign"><string>monospace</string></ed
+it>
 </match>
 
 <!--
@@ -566,8 +559,8 @@ dit>
         <test qual="all" name="family" mode="not_eq">sans</test>
         <test qual="all" name="family" mode="not_eq">serif</test>
         <test qual="all" name="family" mode="not_eq">monospace</test>
-        <edit name="family" mode="append_last"><string>sans</string></e
-dit>
+        <edit name="family" mode="append_last"><string>sans</string></ed
+it>
 </match>
 
 <!--
@@ -623,7 +616,6 @@ dit>
 </alias>
 </fontconfig>
 
-
 User configuration file
 
    This is an example of a per-user configuration file that lives
@@ -648,7 +640,6 @@ User configuration file
 </match>
 </fontconfig>
 
-
 Files
 
    fonts.conf contains configuration information for the
@@ -659,18 +650,18 @@ Files
 
    conf.d is the conventional name for a directory of additional
    configuration files managed by external applications or the
-   local administrator. The filenames starting with decimal
-   digits are sorted in lexicographic order and used as
-   additional configuration files. All of these files are in xml
-   format. The master fonts.conf file references this directory
-   in an <include> directive.
+   local administrator. The filenames starting with decimal digits
+   are sorted in lexicographic order and used as additional
+   configuration files. All of these files are in xml format. The
+   master fonts.conf file references this directory in an
+   <include> directive.
 
    fonts.dtd is a DTD that describes the format of the
    configuration files.
 
    ~/.fonts.conf is the conventional location for per-user font
-   configuration, although the actual location is specified in
-   the global fonts.conf file.
+   configuration, although the actual location is specified in the
+   global fonts.conf file.
 
    ~/.fonts.cache-* is the conventional repository of font
    information that isn't found in the per-directory caches. This
@@ -682,4 +673,4 @@ See Also
 
 Version
 
-   Fontconfig version 2.4.2
+   Fontconfig version 2.6.0

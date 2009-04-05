@@ -146,6 +146,7 @@ CLASS="PROGRAMLISTING"
   dpi             Double  Target dots per inch
   rgba            Int     unknown, rgb, bgr, vrgb, vbgr,
                           none - subpixel geometry
+  lcdfilter       Int     Type of LCD filter
   minspace        Bool    Eliminate leading from line spacing
   charset         CharSet Unicode chars encoded by the font
   lang            String  List of RFC-3066-style languages this
@@ -836,6 +837,10 @@ CLASS="PROGRAMLISTING"
   vrgb            rgba            3
   vbgr            rgba            4
   none            rgba            5
+  lcdnone         lcdfilter       0
+  lcddefault      lcdfilter       1
+  lcdlight        lcdfilter       2
+  lcdlegacy       lcdfilter       3
   hintnone        hintstyle       0
   hintslight      hintstyle       1
   hintmedium      hintstyle       2
@@ -1253,7 +1258,7 @@ NAME="AEN241"
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.4.2
+>Fontconfig version 2.6.0
 
 	    </P
 ></DIV

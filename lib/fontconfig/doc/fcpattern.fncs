@@ -1,5 +1,5 @@
 /*
- * $Id: fcpattern.fncs,v 1.1.1.2 2006/12/31 14:58:00 matthieu Exp $
+ * $Id: fcpattern.fncs,v 1.2 2009/04/05 16:43:35 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -29,12 +29,32 @@
 Creates a pattern with no properties; used to build patterns from scratch.
 @@
 
+@RET@		FcPattern *	
+@FUNC@		FcPatternDuplicate
+@TYPE1@		FcPattern * 			@ARG1@		 p
+@PURPOSE@	Copy a pattern
+@DESC@
+Copy a pattern, returning a new pattern that matches
+<parameter>p</parameter>. Each pattern may be modified without affecting the
+other.
+@@
+
+@RET@		void
+@FUNC@		FcPatternReference
+@TYPE1@		FcPattern * 			@ARG1@		 p
+@PURPOSE@	Increment pattern reference count
+@DESC@
+Add another reference to <parameter>p</parameter>. Patterns are freed only
+when the reference count reaches zero.
+@@
+
 @RET@		void
 @FUNC@		FcPatternDestroy
 @TYPE1@		FcPattern * 			@ARG1@		 p
 @PURPOSE@	Destroy a pattern
 @DESC@
-Destroys a pattern, in the process destroying all related values.
+Decrement the pattern reference count. If all references are gone, destroys
+the pattern, in the process destroying all related values.
 @@
 
 @RET@		FcBool
@@ -112,7 +132,7 @@ values added to the list have binding <parameter>weak</parameter> instead of <pa
 @FUNC++@	FcPatternAddString
 @TYPE1++@ 	FcPattern * 			@ARG1++@ 	p
 @TYPE2++@	const char *			@ARG2++@	object
-@TYPE3++@	const char *			@ARG3++@	s
+@TYPE3++@	const FcChar8 *			@ARG3++@	s
 
 @PROTOTYPE+++@
 @RET+++@	FcBool
@@ -134,6 +154,21 @@ values added to the list have binding <parameter>weak</parameter> instead of <pa
 @TYPE1+++++@ 	FcPattern * 			@ARG1+++++@ 	p
 @TYPE2+++++@	const char *			@ARG2+++++@	object
 @TYPE3+++++@	FcBool%				@ARG3+++++@	b
+
+@PROTOTYPE++++++@
+@RET++++++@	FcBool
+@FUNC++++++@	FcPatternAddFTFace
+@TYPE1++++++@ 	FcPattern * 			@ARG1++++++@ 	p
+@TYPE2++++++@	const char *			@ARG2++++++@	object
+@TYPE3++++++@	const FT_Face 			@ARG3++++++@	f
+
+@PROTOTYPE+++++++@
+@RET+++++++@	FcBool
+@FUNC+++++++@	FcPatternAddLangSet
+@TYPE1+++++++@ 	FcPattern * 			@ARG1+++++++@ 	p
+@TYPE2+++++++@	const char *			@ARG2+++++++@	object
+@TYPE3+++++++@	const FcLangSet *		@ARG3+++++++@	l
+
 @PURPOSE@	Add a typed value to a pattern
 @DESC@
 These are all convenience functions that insert objects of the specified
@@ -179,7 +214,7 @@ within the pattern directly.  Applications must not free this value.
 @TYPE1++@	FcPattern *			@ARG1++@	p
 @TYPE2++@	const char *			@ARG2++@	object
 @TYPE3++@	int%				@ARG3++@	n
-@TYPE4++@	char **const			@ARG4++@	s
+@TYPE4++@	FcChar8 **			@ARG4++@	s
 
 @PROTOTYPE+++@
 @RET+++@	FcResult
@@ -204,6 +239,21 @@ within the pattern directly.  Applications must not free this value.
 @TYPE2+++++@ 	const char * 			@ARG2+++++@ 	object 
 @TYPE3+++++@ 	int%  				@ARG3+++++@ 	n 
 @TYPE4+++++@ 	FcBool * 			@ARG4+++++@ 	b 
+
+@PROTOTYPE++++++@
+@RET++++++@	FcBool
+@FUNC++++++@	FcPatternGetFTFace
+@TYPE1++++++@ 	FcPattern * 			@ARG1++++++@ 	p
+@TYPE2++++++@	const char *			@ARG2++++++@	object
+@TYPE3++++++@	const FT_Face *			@ARG3++++++@	f
+
+@PROTOTYPE+++++++@
+@RET+++++++@	FcBool
+@FUNC+++++++@	FcPatternGetLangSet
+@TYPE1+++++++@ 	FcPattern * 			@ARG1+++++++@ 	p
+@TYPE2+++++++@	const char *			@ARG2+++++++@	object
+@TYPE3+++++++@	const FcLangSet **		@ARG3+++++++@	l
+
 @PURPOSE@	Return a typed value from a pattern
 @DESC@
 These are convenience functions that call FcPatternGet and verify that the
@@ -223,6 +273,14 @@ in preference to FcPatternGet to provide compile-time typechecking.
 @FUNC+@		FcPatternVaBuild
 @TYPE1+@	FcPattern *			@ARG1+@		orig
 @TYPE2+@	va_list% 			@ARG2+@		va
+
+@PROTOTYPE++@
+@RET++@		void
+@FUNC++@	FcPatternVapBuild
+@TYPE1++@	FcPattern *			@ARG1++@	result
+@TYPE2++@	FcPattern *			@ARG2++@	orig
+@TYPE3++@	va_list%			@ARG3++@	va
+
 @PURPOSE@	Create patterns from arguments
 @DESC@
 Builds a pattern using a list of objects, types and values.  Each
@@ -250,7 +308,9 @@ pattern = FcPatternBuild (0, FC_FAMILY, FcTypeString, "Times", (char *) 0);
 </programlisting>
 <para>
 FcPatternVaBuild is used when the arguments are already in the form of a
-varargs value.
+varargs value. FcPatternVapBuild is a macro version of FcPatternVaBuild
+which returns its result directly in the <parameter>result</parameter>
+variable.
 @@
 
 @RET@		FcBool
@@ -306,7 +366,7 @@ specified point size (default 12), dpi (default 75) and scale (default 1).
 
 @RET@		FcPattern *
 @FUNC@		FcNameParse
-@TYPE1@		const char *			@ARG1@		name 
+@TYPE1@		const FcChar8 *			@ARG1@		name 
 @PURPOSE@	Parse a pattern string
 @DESC@
 Converts <parameter>name</parameter> from the standard text format described above into a pattern.

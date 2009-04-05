@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcConfigUptoDate" "3" "02 December 2006" "" ""
+.TH "FcConfigUptoDate" "3" "31 May 2008" "" ""
 
 .SH NAME
 FcConfigUptoDate \- Check timestamps on config files
@@ -15,8 +15,8 @@ FcBool FcConfigUptoDate (FcConfig *\fIconfig\fB);
 \fR
 .SH "DESCRIPTION"
 .PP
-Checks all of the files related to \fIconfig\fR and returns whether the
-in-memory version is in sync with the disk version.
+Checks all of the files related to \fIconfig\fR and returns
+whether any of them has been modified since the configuration was created.
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.2
+Fontconfig version 2.6.0

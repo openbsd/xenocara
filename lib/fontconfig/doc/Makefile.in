@@ -63,7 +63,8 @@ subdir = doc
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/version.sgml.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.in
+am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
+	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -78,9 +79,6 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
-	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
-	$(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 SOURCES = $(edit_sgml_SOURCES)
 DIST_SOURCES = $(edit_sgml_SOURCES)
@@ -133,6 +131,8 @@ DLLTOOL = @DLLTOOL@
 DOCDIR = @DOCDIR@
 DOCMAN3 = @DOCMAN3@
 DOCSRC = @DOCSRC@
+DOLT_BASH = @DOLT_BASH@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -165,20 +165,23 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LIBT_CURRENT = @LIBT_CURRENT@
+LIBT_CURRENT_MINUS_AGE = @LIBT_CURRENT_MINUS_AGE@
+LIBT_REVISION = @LIBT_REVISION@
+LIBT_VERSION_INFO = @LIBT_VERSION_INFO@
 LIBXML2_CFLAGS = @LIBXML2_CFLAGS@
 LIBXML2_LIBS = @LIBXML2_LIBS@
 LN_S = @LN_S@
+LTCOMPILE = @LTCOMPILE@
+LTCXXCOMPILE = @LTCXXCOMPILE@
 LTLIBOBJS = @LTLIBOBJS@
-LT_CURRENT = @LT_CURRENT@
-LT_CURRENT_MINUS_AGE = @LT_CURRENT_MINUS_AGE@
-LT_REVISION = @LT_REVISION@
-LT_VERSION_INFO = @LT_VERSION_INFO@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MS_LIB_AVAILABLE_FALSE = @MS_LIB_AVAILABLE_FALSE@
 MS_LIB_AVAILABLE_TRUE = @MS_LIB_AVAILABLE_TRUE@
+NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 ORTH_FILES = @ORTH_FILES@
@@ -193,6 +196,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -205,7 +209,9 @@ ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
+ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_NMEDIT = @ac_ct_NMEDIT@
 ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
@@ -267,13 +273,16 @@ FNCS_TMPL = ${DOC_SRC}/func.sgml
 DOC_FUNCS_FNCS = \
 	fcatomic.fncs \
 	fcblanks.fncs \
+	fccache.fncs \
 	fccharset.fncs \
 	fcconfig.fncs \
 	fcconstant.fncs \
+	fcdircache.fncs \
 	fcfile.fncs \
 	fcfontset.fncs \
 	fcfreetype.fncs \
 	fcinit.fncs \
+	fclangset.fncs \
 	fcmatrix.fncs \
 	fcobjectset.fncs \
 	fcobjecttype.fncs \
@@ -285,13 +294,16 @@ DOC_FUNCS_FNCS = \
 DOC_FUNCS_SGML = \
 	fcatomic.sgml \
 	fcblanks.sgml \
+	fccache.sgml \
 	fccharset.sgml \
 	fcconfig.sgml \
 	fcconstant.sgml \
+	fcdircache.sgml \
 	fcfile.sgml \
 	fcfontset.sgml \
 	fcfreetype.sgml \
 	fcinit.sgml \
+	fclangset.sgml \
 	fcmatrix.sgml \
 	fcobjectset.sgml \
 	fcobjecttype.sgml \
@@ -306,7 +318,10 @@ edit_sgml_SOURCES = edit-sgml.c
 docdir = @DOCDIR@
 DOC_FILES = $(TXT) $(PDF) $(HTML_FILES)
 LOCAL_DOCS = $(man3_MANS) $(man5_MANS) $(DOC_FILES) $(HTML_DIR)/*.html
-EXTRA_DIST = $(LOCAL_DOCS) $(SGML) $(DOC_FUNCS_FNCS) func.sgml confdir.sgml.in
+check_SCRIPTS = check-missing-doc
+TESTS_ENVIRONMENT = top_srcdir=${top_srcdir} sh
+TESTS = check-missing-doc
+EXTRA_DIST = $(LOCAL_DOCS) $(SGML) $(DOC_FUNCS_FNCS) $(check_SCRIPTS) func.sgml confdir.sgml.in
 SUFFIXES = .fncs .sgml .txt .html
 @USEDOCBOOK_TRUE@STRIPNL = awk '{ if (NR > 1) printf ("\n"); printf ("%s", $$0); }'
 @USEDOCBOOK_TRUE@CLEANFILES = confdir.sgml local-fontconfig-user.sgml local-fontconfig-devel.sgml
@@ -571,6 +586,79 @@ GTAGS:
 distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
+check-TESTS: $(TESTS)
+	@failed=0; all=0; xfail=0; xpass=0; skip=0; \
+	srcdir=$(srcdir); export srcdir; \
+	list='$(TESTS)'; \
+	if test -n "$$list"; then \
+	  for tst in $$list; do \
+	    if test -f ./$$tst; then dir=./; \
+	    elif test -f $$tst; then dir=; \
+	    else dir="$(srcdir)/"; fi; \
+	    if $(TESTS_ENVIRONMENT) $${dir}$$tst; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *" $$tst "*) \
+		xpass=`expr $$xpass + 1`; \
+		failed=`expr $$failed + 1`; \
+		echo "XPASS: $$tst"; \
+	      ;; \
+	      *) \
+		echo "PASS: $$tst"; \
+	      ;; \
+	      esac; \
+	    elif test $$? -ne 77; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *" $$tst "*) \
+		xfail=`expr $$xfail + 1`; \
+		echo "XFAIL: $$tst"; \
+	      ;; \
+	      *) \
+		failed=`expr $$failed + 1`; \
+		echo "FAIL: $$tst"; \
+	      ;; \
+	      esac; \
+	    else \
+	      skip=`expr $$skip + 1`; \
+	      echo "SKIP: $$tst"; \
+	    fi; \
+	  done; \
+	  if test "$$failed" -eq 0; then \
+	    if test "$$xfail" -eq 0; then \
+	      banner="All $$all tests passed"; \
+	    else \
+	      banner="All $$all tests behaved as expected ($$xfail expected failures)"; \
+	    fi; \
+	  else \
+	    if test "$$xpass" -eq 0; then \
+	      banner="$$failed of $$all tests failed"; \
+	    else \
+	      banner="$$failed of $$all tests did not behave as expected ($$xpass unexpected passes)"; \
+	    fi; \
+	  fi; \
+	  dashes="$$banner"; \
+	  skipped=""; \
+	  if test "$$skip" -ne 0; then \
+	    skipped="($$skip tests were not run)"; \
+	    test `echo "$$skipped" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$skipped"; \
+	  fi; \
+	  report=""; \
+	  if test "$$failed" -ne 0 && test -n "$(PACKAGE_BUGREPORT)"; then \
+	    report="Please report to $(PACKAGE_BUGREPORT)"; \
+	    test `echo "$$report" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$report"; \
+	  fi; \
+	  dashes=`echo "$$dashes" | sed s/./=/g`; \
+	  echo "$$dashes"; \
+	  echo "$$banner"; \
+	  test -z "$$skipped" || echo "$$skipped"; \
+	  test -z "$$report" || echo "$$report"; \
+	  echo "$$dashes"; \
+	  test "$$failed" -eq 0; \
+	else :; fi
+
 distdir: $(DISTFILES)
 	$(mkdir_p) $(distdir)/$(HTML_DIR)
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
@@ -600,6 +688,8 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
+	$(MAKE) $(AM_MAKEFLAGS) $(check_SCRIPTS)
+	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
 all-am: Makefile $(PROGRAMS) $(MANS) $(DATA) all-local
 installdirs:
@@ -685,20 +775,20 @@ uninstall-am: uninstall-docDATA uninstall-htmldocDATA \
 
 uninstall-man: uninstall-man3 uninstall-man5
 
-.PHONY: CTAGS GTAGS all all-am all-local check check-am clean \
-	clean-generic clean-libtool clean-local clean-noinstPROGRAMS \
-	ctags distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-docDATA install-exec install-exec-am \
-	install-htmldocDATA install-info install-info-am install-man \
-	install-man3 install-man5 install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-docDATA \
-	uninstall-htmldocDATA uninstall-info-am uninstall-man \
-	uninstall-man3 uninstall-man5
+.PHONY: CTAGS GTAGS all all-am all-local check check-TESTS check-am \
+	clean clean-generic clean-libtool clean-local \
+	clean-noinstPROGRAMS ctags distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-docDATA install-exec \
+	install-exec-am install-htmldocDATA install-info \
+	install-info-am install-man install-man3 install-man5 \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags uninstall uninstall-am \
+	uninstall-docDATA uninstall-htmldocDATA uninstall-info-am \
+	uninstall-man uninstall-man3 uninstall-man5
 
 
 @USEDOCBOOK_TRUE@.fncs.sgml:
@@ -717,9 +807,11 @@ uninstall-man: uninstall-man3 uninstall-man5
 
 @USEDOCBOOK_TRUE@func.refs: local-fontconfig-devel.sgml $(DOC_FUNCS_SGML) version.sgml confdir.sgml
 @USEDOCBOOK_TRUE@	$(RM) func.refs
-@USEDOCBOOK_TRUE@	$(DOC2MAN) local-fontconfig-devel.sgml
-@USEDOCBOOK_TRUE@	mv manpage.refs func.refs
-@USEDOCBOOK_TRUE@	$(RM) manpage.links
+@USEDOCBOOK_TRUE@	$(DOC2MAN) -o devel-man local-fontconfig-devel.sgml && \
+@USEDOCBOOK_TRUE@	mv devel-man/manpage.refs func.refs && \
+@USEDOCBOOK_TRUE@	mv devel-man/*.3 . && \
+@USEDOCBOOK_TRUE@	$(RM) devel-man/manpage.links && \
+@USEDOCBOOK_TRUE@	rmdir devel-man
 
 @USEDOCBOOK_TRUE@local-fontconfig-devel.sgml: fontconfig-devel.sgml
 @USEDOCBOOK_TRUE@	$(LN_S) $< $@
@@ -728,7 +820,7 @@ uninstall-man: uninstall-man3 uninstall-man5
 
 @USEDOCBOOK_TRUE@fonts-conf.5: local-fontconfig-user.sgml version.sgml confdir.sgml
 @USEDOCBOOK_TRUE@	$(RM) $@
-@USEDOCBOOK_TRUE@	$(DOC2MAN) local-fontconfig-user.sgml
+@USEDOCBOOK_TRUE@	$(DOC2MAN) local-fontconfig-user.sgml && \
 @USEDOCBOOK_TRUE@	$(RM) manpage.refs manpage.links
 
 @USEDOCBOOK_TRUE@local-fontconfig-user.sgml: fontconfig-user.sgml

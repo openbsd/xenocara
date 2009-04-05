@@ -1,5 +1,5 @@
 /*
- * $Id: fcstrset.fncs,v 1.1.1.1 2006/11/25 18:42:14 matthieu Exp $
+ * $Id: fcstrset.fncs,v 1.2 2009/04/05 16:43:35 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -39,6 +39,17 @@ Create an empty set.
 @DESC@
 Returns whether <parameter>s</parameter> is a member of
 <parameter>set</parameter>.
+@@
+
+@RET@		FcBool
+@FUNC@		FcStrSetEqual
+@TYPE1@		FcStrSet *			@ARG1@		set_a
+@TYPE2@		FcStrSet *			@ARG2@		set_b
+@PURPOSE@	check sets for equality
+@DESC@
+Returns whether <parameter>set_a</parameter> contains precisely the same
+strings as <parameter>set_b</parameter>. Ordering of strings within the two
+sets is not considered.
 @@
 
 @RET@		FcBool

@@ -3,10 +3,10 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcPatternGet-Type" "3" "02 December 2006" "" ""
+.TH "FcPatternGet-Type" "3" "31 May 2008" "" ""
 
 .SH NAME
-FcPatternGetInteger, FcPatternGetDouble, FcPatternGetString, FcPatternGetMatrix, FcPatternGetCharSet, FcPatternGetBool \- Return a typed value from a pattern
+FcPatternGetInteger, FcPatternGetDouble, FcPatternGetString, FcPatternGetMatrix, FcPatternGetCharSet, FcPatternGetBool, FcPatternGetFTFace, FcPatternGetLangSet \- Return a typed value from a pattern
 .SH SYNOPSIS
 .sp
 \fB#include <fontconfig.h>
@@ -15,13 +15,17 @@ FcResult FcPatternGetInteger (FcPattern *\fIp\fB, const char *\fIobject\fB, int 
 .sp
 FcResult FcPatternGetDouble (FcPattern *\fIp\fB, const char *\fIobject\fB, int \fIn\fB, double *\fId\fB);
 .sp
-FcResult FcPatternGetString (FcPattern *\fIp\fB, const char *\fIobject\fB, int \fIn\fB, char **const\fIs\fB);
+FcResult FcPatternGetString (FcPattern *\fIp\fB, const char *\fIobject\fB, int \fIn\fB, FcChar8 **\fIs\fB);
 .sp
 FcResult FcPatternGetMatrix (FcPattern *\fIp\fB, const char *\fIobject\fB, int \fIn\fB, FcMatrix **\fIs\fB);
 .sp
 FcResult FcPatternGetCharSet (FcPattern *\fIp\fB, const char *\fIobject\fB, int \fIn\fB, FcCharSet **\fIc\fB);
 .sp
 FcResult FcPatternGetBool (FcPattern *\fIp\fB, const char *\fIobject\fB, int \fIn\fB, FcBool *\fIb\fB);
+.sp
+FcBool FcPatternGetFTFace (FcPattern *\fIp\fB, const char *\fIobject\fB, const FT_Face *\fIf\fB);
+.sp
+FcBool FcPatternGetLangSet (FcPattern *\fIp\fB, const char *\fIobject\fB, const FcLangSet **\fIl\fB);
 \fR
 .SH "DESCRIPTION"
 .PP
@@ -32,4 +36,4 @@ copy of any data structure referenced by the return value.  Use these
 in preference to FcPatternGet to provide compile-time typechecking.
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.2
+Fontconfig version 2.6.0

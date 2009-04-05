@@ -2,21 +2,21 @@
 <HTML
 ><HEAD
 ><TITLE
->FcCharSetHasChar</TITLE
+>FcFreeTypeQuery</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
 REL="HOME"
 HREF="index.html"><LINK
 REL="UP"
-TITLE="FcCharSet"
-HREF="x93.html#AEN1114"><LINK
+TITLE="FreeType specific functions"
+HREF="x102.html#AEN1234"><LINK
 REL="PREVIOUS"
-TITLE="FcCharSetSubtract"
-HREF="r1284.html"><LINK
+TITLE="FcFreeTypeCharSetAndSpacing"
+HREF="r1283.html"><LINK
 REL="NEXT"
-TITLE="FcCharSetCount"
-HREF="r1334.html"></HEAD
+TITLE="FcFreeTypeQueryFace"
+HREF="r1336.html"></HEAD
 ><BODY
 CLASS="REFENTRY"
 BGCOLOR="#FFFFFF"
@@ -44,7 +44,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="r1284.html"
+HREF="r1283.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -58,7 +58,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="r1334.html"
+HREF="r1336.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -69,9 +69,9 @@ ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><H1
 ><A
-NAME="FCCHARSETHASCHAR"
+NAME="FCFREETYPEQUERY"
 ></A
->FcCharSetHasChar</H1
+>FcFreeTypeQuery</H1
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
@@ -79,7 +79,7 @@ NAME="AEN1313"
 ></A
 ><H2
 >Name</H2
->FcCharSetHasChar&nbsp;--&nbsp;Check a charset for a char</DIV
+>FcFreeTypeQuery&nbsp;--&nbsp;compute pattern from font file (and index)</DIV
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
@@ -97,13 +97,14 @@ NAME="AEN1317"
 ><PRE
 CLASS="FUNCSYNOPSISINFO"
 >#include &lt;fontconfig.h&gt;
+#include &lt;fcfreetype.h&gt;
 	</PRE
 ><P
 ><CODE
 ><CODE
 CLASS="FUNCDEF"
->FcBool FcCharSetHasChar</CODE
->(const FcCharSet *fcs, FcChar32 ucs4);</CODE
+>FcPattern * FcFreeTypeQuery</CODE
+>(const FcChar8 *file, int id, FcBlanks *blanks, int *count);</CODE
 ></P
 ><P
 ></P
@@ -112,29 +113,24 @@ CLASS="FUNCDEF"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN1326"
+NAME="AEN1330"
 ></A
 ><H2
 >Description</H2
 ><P
->Returns whether <CODE
-CLASS="PARAMETER"
->fcs</CODE
-> contains the char <CODE
-CLASS="PARAMETER"
->ucs4</CODE
->.
+>Constructs a pattern representing the 'id'th font in 'file'.  The number
+of fonts in 'file' is returned in 'count'.
 	    </P
 ></DIV
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN1331"
+NAME="AEN1333"
 ></A
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.4.2
+>Fontconfig version 2.6.0
 
 	    </P
 ></DIV
@@ -154,7 +150,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="r1284.html"
+HREF="r1283.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -172,7 +168,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="r1334.html"
+HREF="r1336.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -182,13 +178,13 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->FcCharSetSubtract</TD
+>FcFreeTypeCharSetAndSpacing</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x93.html#AEN1114"
+HREF="x102.html#AEN1234"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -196,7 +192,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->FcCharSetCount</TD
+>FcFreeTypeQueryFace</TD
 ></TR
 ></TABLE
 ></DIV

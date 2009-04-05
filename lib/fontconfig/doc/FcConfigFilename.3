@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcConfigFilename" "3" "02 December 2006" "" ""
+.TH "FcConfigFilename" "3" "31 May 2008" "" ""
 
 .SH NAME
 FcConfigFilename \- Find a config file
@@ -11,7 +11,7 @@ FcConfigFilename \- Find a config file
 .sp
 \fB#include <fontconfig.h>
 .sp
-char * FcConfigFilename (const char *\fIname\fB);
+FcChar8 * FcConfigFilename (const FcChar8 *\fIname\fB);
 \fR
 .SH "DESCRIPTION"
 .PP
@@ -28,4 +28,4 @@ directory; the built-in default directory can be overridden with the
 FC_CONFIG_DIR environment variable.
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.2
+Fontconfig version 2.6.0

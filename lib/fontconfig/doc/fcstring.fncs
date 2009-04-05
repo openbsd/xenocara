@@ -1,5 +1,5 @@
 /*
- * $Id: fcstring.fncs,v 1.1.1.2 2006/12/31 14:58:00 matthieu Exp $
+ * $Id: fcstring.fncs,v 1.2 2009/04/05 16:43:35 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -32,7 +32,7 @@
 @DESC@
 Converts the next Unicode char from <parameter>src</parameter> into
 <parameter>dst</parameter> and returns the number of bytes containing the
-char.  <parameter>src</parameter> nust be at least
+char.  <parameter>src</parameter> must be at least
 <parameter>len</parameter> bytes long.
 @@
 
@@ -97,6 +97,33 @@ indicates whether <parameter>string</parameter> is a well-formed UTF16
 string.
 @@
 
+@RET@		FcBool
+@FUNC@		FcIsLower
+@TYPE1@		FcChar8				@ARG1@		c
+@PURPOSE@	check for lower case ASCII character
+@DESC@
+This macro checks whether <parameter>c</parameter> is an lower case ASCII
+letter.
+@@
+
+@RET@		FcBool
+@FUNC@		FcIsUpper
+@TYPE1@		FcChar8				@ARG1@		c
+@PURPOSE@	check for upper case ASCII character
+@DESC@
+This macro checks whether <parameter>c</parameter> is a upper case ASCII
+letter.
+@@
+
+@RET@		FcChar8
+@FUNC@		FcToLower
+@TYPE1@		FcChar8				@ARG1@		c
+@PURPOSE@	convert upper case ASCII to lower case
+@DESC@
+This macro converts upper case ASCII <parameter>c</parameter> to the
+equivalent lower case letter.
+@@
+
 @RET@		FcChar8 *
 @FUNC@		FcStrCopy
 @TYPE1@		const FcChar8 *			@ARG1@		s
@@ -119,50 +146,81 @@ letters to lower case and returns the allocated buffer.
 @RET@		FcChar8 *
 @FUNC@		FcStrCopyFilename
 @TYPE1@		const FcChar8 *			@ARG1@		s
-@PURPOSE@	copy a string, expanding '~'
+@PURPOSE@	create a complete path from a filename
 @DESC@
-Just like FcStrCopy except that it converts any leading '~' characters in
-<parameter>s</parameter> to the value of the HOME environment variable.
-Returns NULL if '~' is present in <parameter>s</parameter> and HOME is unset.
+<function>FcStrCopyFilename</function> constructs an absolute pathname from
+<parameter>s</parameter>. It converts any leading '~' characters in
+to the value of the HOME environment variable, and any relative paths are
+converted to absolute paths using the current working directory. Sequences
+of '/' characters are converted to a single '/', and names containing the
+current directory '.' or parent directory '..' are correctly reconstructed.
+Returns NULL if '~' is the leading character and HOME is unset or disabled
+(see <function>FcConfigEnableHome</function>).
+@@
+
+@RET@		int
+@FUNC@		FcStrCmp
+@TYPE1@		const FcChar8 *			@ARG1@		s1
+@TYPE2@		const FcChar8 *			@ARG2@		s2
+@PURPOSE@	compare UTF-8 strings
+@DESC@
+Returns the usual &lt;0, 0, &gt;0 result of comparing
+<parameter>s1</parameter> and <parameter>s2</parameter>. 
 @@
 
 @RET@		int
 @FUNC@		FcStrCmpIgnoreCase
 @TYPE1@		const FcChar8 *			@ARG1@		s1
 @TYPE2@		const FcChar8 *			@ARG2@		s2
-@PURPOSE@	compare UTF-8 strings ignoring ASCII case
+@PURPOSE@	compare UTF-8 strings ignoring case
 @DESC@
 Returns the usual &lt;0, 0, &gt;0 result of comparing
-<parameter>s1</parameter> and <parameter>s2</parameter>.  This test is
-case-insensitive in the ASCII range and will operate properly with UTF8
-encoded strings, although it does not check for well formed strings.
+<parameter>s1</parameter> and <parameter>s2</parameter>. This test is
+case-insensitive for all proper UTF-8 encoded strings.
 @@
 
 @RET@		FcChar8 *
 @FUNC@		FcStrStr
-@TYPE1@		const char *			@ARG1@		s1
-@TYPE2@		const char *			@ARG2@		s2
+@TYPE1@		const FcChar8 *			@ARG1@		s1
+@TYPE2@		const FcChar8 *			@ARG2@		s2
 @PURPOSE@	locate UTF-8 substring
 @DESC@
 Returns the location of <parameter>s2</parameter> in
 <parameter>s1</parameter>.  Returns NULL if <parameter>s2</parameter>
 is not present in <parameter>s1</parameter>. This test will operate properly
-with UTF8 encoded strings, although it does not check for well formed
-strings.
+with UTF8 encoded strings.
 @@
 
 @RET@		FcChar8 *
 @FUNC@		FcStrStrIgnoreCase
-@TYPE1@		const char *			@ARG1@		s1
-@TYPE2@		const char *			@ARG2@		s2
+@TYPE1@		const FcChar8 *			@ARG1@		s1
+@TYPE2@		const FcChar8 *			@ARG2@		s2
 @PURPOSE@	locate UTF-8 substring ignoring ASCII case
 @DESC@
 Returns the location of <parameter>s2</parameter> in 
-<parameter>s1</parameter>, ignoring ASCII case.  Returns NULL if
+<parameter>s1</parameter>, ignoring case.  Returns NULL if
 <parameter>s2</parameter> is not present in <parameter>s1</parameter>.
-This test is case-insensitive in the ASCII range and will operate properly
-with UTF8 encoded strings, although it does not check for well formed
-strings.
+This test is case-insensitive for all proper UTF-8 encoded strings.
+@@
+
+@RET@		FcChar8 *
+@FUNC@		FcStrPlus
+@TYPE1@		const FcChar8 *			@ARG1@		s1
+@TYPE2@		const FcChar8 *			@ARG2@		s2
+@PURPOSE@	concatenate two strings
+@DESC@
+This function allocates new storage and places the concatenation of
+<parameter>s1</parameter> and <parameter>s2</parameter> there, returning the
+new string.
+@@
+
+@RET@		void
+@FUNC@		FcStrFree
+@TYPE1@		FcChar8 *			@ARG1@		s
+@PURPOSE@	free a string
+@DESC@
+This is just a wrapper around free(3) which helps track memory usage of
+strings within the fontconfig library.
 @@
 
 @RET@		FcChar8 *

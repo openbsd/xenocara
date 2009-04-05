@@ -32,7 +32,7 @@ EXTRA_DIST = \
         fontconfig.spec.in \
         fontconfig.spec \
 	fontconfig-zip.in
-DISTCLEANFILES = config.cache
+DISTCLEANFILES = config.cache ChangeLog doltcompile
 MAINTAINERCLEANFILES = \
 	$(srcdir)/aclocal.m4 \
 	$(srcdir)/autoscan.log \
@@ -66,12 +66,9 @@ MAINTAINERCLEANFILES += ChangeLog
 
 EXTRA_DIST += ChangeLog
 
-ChangeLog: $(srcdir)/ChangeLog
-
-$(srcdir)/ChangeLog:
-	@if test -d "$(srcdir)/.git"; then \
-	  (cd "$(srcdir)" && \
-	  ./missing --run git-log --stat) | fmt --split-only > $@.tmp \
+ChangeLog:
+	if test -d "$(srcdir)/.git"; then \
+	  (GIT_DIR=$(top_srcdir)/.git ./missing --run git-log --stat) | fmt --split-only > $@.tmp \
 	  && mv -f $@.tmp $@ \
 	  || ($(RM) $@.tmp; \
 	      echo Failed to generate ChangeLog, your ChangeLog may be outdated >&2; \
@@ -82,7 +79,7 @@ $(srcdir)/ChangeLog:
 	  echo A git checkout and git-log is required to generate this file >> $@); \
 	fi
 
-.PHONY: ChangeLog $(srcdir)/ChangeLog
+.PHONY: ChangeLog
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(configdir) $(DESTDIR)$(fc_cachedir)
@@ -98,8 +95,8 @@ install-data-local:
 	  $(INSTALL_DATA) fonts.conf $(DESTDIR)$(configdir)/fonts.conf; \
 	fi; fi
 	@(if $(RUN_FC_CACHE_TEST); then \
-	    echo " fc-cache/fc-cache -s -f -v"; \
-	    fc-cache/fc-cache -s -f -v; \
+	    echo " $(bindir)/fc-cache -s -f -v"; \
+	    $(bindir)/fc-cache -s -f -v; \
 	else \
 	    echo "***"; \
 	    echo "*** Warning: fonts.cache not built"; \

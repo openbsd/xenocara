@@ -21,6 +21,7 @@
  */
 
 #include "fcint.h"
+#include "fcftint.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -925,10 +926,14 @@ FcPatternDuplicate (const FcPattern *orig)
     for (i = 0; i < orig->num; i++)
     {
 	for (l = FcPatternEltValues(e + i); l; l = FcValueListNext(l))
-	    if (!FcPatternObjectAdd (new, e[i].object,
-				     FcValueCanonicalize(&l->value),
-				     FcTrue))
+	{
+	    if (!FcPatternObjectAddWithBinding (new, e[i].object,
+						FcValueCanonicalize(&l->value),
+						l->binding,
+						FcTrue))
 		goto bail1;
+	    
+	}
     }
 
     return new;
@@ -1049,7 +1054,7 @@ FcStrStaticNameFini (void)
 	    next = b->next;
 	    name = (char *) (b + 1);
 	    size = sizeof (struct objectBucket) + strlen (name) + 1;
-	    FcMemFree (FC_MEM_STATICSTR, size);
+	    FcMemFree (FC_MEM_STATICSTR, size + sizeof (int));
 	    free (b);
 	}
 	FcObjectBuckets[i] = 0;
@@ -1225,4 +1230,5 @@ FcValueListSerialize (FcSerialize *serialize, const FcValueList *vl)
 }
 #define __fcpat__
 #include "fcaliastail.h"
+#include "fcftaliastail.h"
 #undef __fcpat__

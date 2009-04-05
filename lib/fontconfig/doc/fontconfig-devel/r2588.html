@@ -2,21 +2,21 @@
 <HTML
 ><HEAD
 ><TITLE
->FcAtomicNewFile</TITLE
+>FcConfigGetCache</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
 REL="HOME"
 HREF="index.html"><LINK
 REL="UP"
-TITLE="FcAtomic"
-HREF="x93.html#AEN2541"><LINK
+TITLE="FcConfig"
+HREF="x102.html#AEN2346"><LINK
 REL="PREVIOUS"
-TITLE="FcAtomicLock"
+TITLE="FcConfigGetConfigFiles"
 HREF="r2566.html"><LINK
 REL="NEXT"
-TITLE="FcAtomicOrigFile"
-HREF="r2610.html"></HEAD
+TITLE="FcConfigGetCacheDirs"
+HREF="r2609.html"></HEAD
 ><BODY
 CLASS="REFENTRY"
 BGCOLOR="#FFFFFF"
@@ -58,7 +58,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="r2610.html"
+HREF="r2609.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -69,9 +69,9 @@ ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><H1
 ><A
-NAME="FCATOMICNEWFILE"
+NAME="FCCONFIGGETCACHE"
 ></A
->FcAtomicNewFile</H1
+>FcConfigGetCache</H1
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
@@ -79,7 +79,7 @@ NAME="AEN2592"
 ></A
 ><H2
 >Name</H2
->FcAtomicNewFile&nbsp;--&nbsp;return new temporary file name</DIV
+>FcConfigGetCache&nbsp;--&nbsp;DEPRECATED used to return per-user cache filename</DIV
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
@@ -102,8 +102,8 @@ CLASS="FUNCSYNOPSISINFO"
 ><CODE
 ><CODE
 CLASS="FUNCDEF"
->FcChar8 * FcAtomicNewFile</CODE
->(FcAtomic *atomic);</CODE
+>FcChar8 * FcConfigGetCache</CODE
+>(FcConfig *config);</CODE
 ></P
 ><P
 ></P
@@ -117,22 +117,19 @@ NAME="AEN2603"
 ><H2
 >Description</H2
 ><P
->Returns the filename for writing a new version of the file referenced
-by <CODE
-CLASS="PARAMETER"
->atomic</CODE
->.
+>With fontconfig no longer using per-user cache files, this function now
+simply returns NULL to indicate that no per-user file exists.
 	    </P
 ></DIV
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN2607"
+NAME="AEN2606"
 ></A
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.4.2
+>Fontconfig version 2.6.0
 
 	    </P
 ></DIV
@@ -170,7 +167,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="r2610.html"
+HREF="r2609.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -180,13 +177,13 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->FcAtomicLock</TD
+>FcConfigGetConfigFiles</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x93.html#AEN2541"
+HREF="x102.html#AEN2346"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -194,7 +191,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->FcAtomicOrigFile</TD
+>FcConfigGetCacheDirs</TD
 ></TR
 ></TABLE
 ></DIV

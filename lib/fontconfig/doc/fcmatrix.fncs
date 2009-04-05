@@ -1,5 +1,5 @@
 /*
- * $Id: fcmatrix.fncs,v 1.1.1.2 2006/12/31 14:58:00 matthieu Exp $
+ * $Id: fcmatrix.fncs,v 1.2 2009/04/05 16:43:35 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -21,6 +21,8 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
+
+@RET@		void
 @FUNC@		FcMatrixInit
 @PURPOSE@	initialize an FcMatrix structure
 @TYPE1@		FcMatrix *

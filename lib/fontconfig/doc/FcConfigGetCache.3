@@ -3,19 +3,20 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcConfigGetCache" "3" "02 December 2006" "" ""
+.TH "FcConfigGetCache" "3" "31 May 2008" "" ""
 
 .SH NAME
-FcConfigGetCache \- Get cache filename
+FcConfigGetCache \- DEPRECATED used to return per-user cache filename
 .SH SYNOPSIS
 .sp
 \fB#include <fontconfig.h>
 .sp
-char * FcConfigGetCache (FcConfig *\fIconfig\fB);
+FcChar8 * FcConfigGetCache (FcConfig *\fIconfig\fB);
 \fR
 .SH "DESCRIPTION"
 .PP
-Returns the name of the file used to store per-user font information.
+With fontconfig no longer using per-user cache files, this function now
+simply returns NULL to indicate that no per-user file exists.
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.2
+Fontconfig version 2.6.0

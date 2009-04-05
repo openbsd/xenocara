@@ -123,7 +123,7 @@ FcInit (void)
 	return FcTrue;
     config = FcInitLoadConfigAndFonts ();
     if (!config)
-	return FcTrue;
+	return FcFalse;
     FcConfigSetCurrent (config);
     if (FcDebug() & FC_DBG_MEMORY)
 	FcMemReport ();
@@ -141,6 +141,8 @@ FcFini (void)
 
     FcPatternFini ();
     FcCacheFini ();
+    if (FcDebug() & FC_DBG_MEMORY)
+	FcMemReport ();
 }
 
 /*

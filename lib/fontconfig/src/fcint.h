@@ -42,12 +42,13 @@
 #include <ctype.h>
 #include <errno.h>
 #include <unistd.h>
+#include <stddef.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <fontconfig/fontconfig.h>
 #include <fontconfig/fcprivate.h>
-#include <fontconfig/fcfreetype.h>
+#include "fcdeprecate.h"
 
 #ifndef FC_CONFIG_PATH
 #define FC_CONFIG_PATH "fonts.conf"
@@ -111,7 +112,7 @@
 #define FC_BANK_LANGS	    0xfcfcfcfc
 
 /* slim_internal.h */
-#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__)
+#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__) && !defined(__sun)
 #define FcPrivate		__attribute__((__visibility__("hidden")))
 #define HAVE_GNUC_ATTRIBUTE 1
 #include "fcalias.h"
@@ -322,6 +323,7 @@ struct _FcCache {
     intptr_t	dirs;		    /* offset to subdirs */
     int		dirs_count;	    /* number of subdir strings */
     intptr_t	set;		    /* offset to font set */
+    int		mtime;		    /* low bits of directory mtime */
 };
 
 #undef FcCacheDir
@@ -408,7 +410,7 @@ typedef struct _FcCaseFold {
 
 #define FC_CACHE_MAGIC_MMAP	    0xFC02FC04
 #define FC_CACHE_MAGIC_ALLOC	    0xFC02FC05
-#define FC_CACHE_CONTENT_VERSION    1
+#define FC_CACHE_CONTENT_VERSION    2
 
 struct _FcAtomic {
     FcChar8	*file;		/* original file name */
@@ -503,7 +505,7 @@ FcPrivate FcCache *
 FcDirCacheScan (const FcChar8 *dir, FcConfig *config);
 
 FcPrivate FcCache *
-FcDirCacheBuild (FcFontSet *set, const FcChar8 *dir, FcStrSet *dirs);
+FcDirCacheBuild (FcFontSet *set, const FcChar8 *dir, struct stat *dir_stat, FcStrSet *dirs);
 
 FcPrivate FcBool
 FcDirCacheWrite (FcCache *cache, FcConfig *config);
@@ -703,22 +705,6 @@ FcDirScanConfig (FcFontSet	*set,
 FcPrivate int
 FcFontDebug (void);
     
-/* fcfreetype.c */
-FcPrivate FcBool
-FcFreeTypeIsExclusiveLang (const FcChar8  *lang);
-
-FcPrivate FcBool
-FcFreeTypeHasLang (FcPattern *pattern, const FcChar8 *lang);
-
-FcPrivate FcChar32
-FcFreeTypeUcs4ToPrivate (FcChar32 ucs4, const FcCharMap *map);
-
-FcPrivate FcChar32
-FcFreeTypePrivateToUcs4 (FcChar32 private, const FcCharMap *map);
-
-FcPrivate const FcCharMap *
-FcFreeTypeGetPrivateMap (FT_Encoding encoding);
-    
 /* fcfs.c */
 
 FcPrivate FcBool
@@ -795,9 +781,6 @@ FcFreeTypeLangSet (const FcCharSet  *charset,
 FcPrivate FcLangResult
 FcLangCompare (const FcChar8 *s1, const FcChar8 *s2);
     
-FcPrivate const FcCharSet *
-FcCharSetForLang (const FcChar8 *lang);
-
 FcPrivate FcLangSet *
 FcLangSetPromote (const FcChar8 *lang);
 
@@ -865,7 +848,8 @@ FcListPatternMatchAny (const FcPattern *p,
 #define FC_EMBOLDEN_OBJECT	38
 #define FC_EMBEDDED_BITMAP_OBJECT	39
 #define FC_DECORATIVE_OBJECT	40
-#define FC_MAX_BASE_OBJECT	FC_DECORATIVE_OBJECT
+#define FC_LCD_FILTER_OBJECT	41
+#define FC_MAX_BASE_OBJECT	FC_LCD_FILTER_OBJECT
 
 FcPrivate FcBool
 FcNameBool (const FcChar8 *v, FcBool *result);
@@ -1028,6 +1012,9 @@ FcStrContainsIgnoreBlanksAndCase (const FcChar8 *s1, const FcChar8 *s2);
 
 FcPrivate const FcChar8 *
 FcStrContainsIgnoreCase (const FcChar8 *s1, const FcChar8 *s2);
+
+FcPrivate const FcChar8 *
+FcStrContainsWord (const FcChar8 *s1, const FcChar8 *s2);
 
 FcPrivate FcBool
 FcStrUsesHome (const FcChar8 *s);

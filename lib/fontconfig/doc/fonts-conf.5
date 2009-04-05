@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FONTS-CONF" "5" "02 December 2006" "" ""
+.TH "FONTS-CONF" "5" "31 May 2008" "" ""
 
 .SH NAME
 fonts.conf \- Font configuration files
@@ -89,6 +89,7 @@ convenience for the applications' rendering mechanism.
   dpi             Double  Target dots per inch
   rgba            Int     unknown, rgb, bgr, vrgb, vbgr,
                           none - subpixel geometry
+  lcdfilter       Int     Type of LCD filter
   minspace        Bool    Eliminate leading from line spacing
   charset         CharSet Unicode chars encoded by the font
   lang            String  List of RFC-3066-style languages this
@@ -443,6 +444,10 @@ symbolic names for common font values:
   vrgb            rgba            3
   vbgr            rgba            4
   none            rgba            5
+  lcdnone         lcdfilter       0
+  lcddefault      lcdfilter       1
+  lcdlight        lcdfilter       2
+  lcdlegacy       lcdfilter       3
   hintnone        hintstyle       0
   hintslight      hintstyle       1
   hintmedium      hintstyle       2
@@ -625,4 +630,4 @@ per-directory caches.  This file is automatically maintained by fontconfig.
 fc-cache(1), fc-match(1), fc-list(1)
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.2
+Fontconfig version 2.6.0

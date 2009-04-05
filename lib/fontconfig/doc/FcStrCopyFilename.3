@@ -3,10 +3,10 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcStrCopyFilename" "3" "02 December 2006" "" ""
+.TH "FcStrCopyFilename" "3" "31 May 2008" "" ""
 
 .SH NAME
-FcStrCopyFilename \- copy a string, expanding '~'
+FcStrCopyFilename \- create a complete path from a filename
 .SH SYNOPSIS
 .sp
 \fB#include <fontconfig.h>
@@ -15,9 +15,14 @@ FcChar8 * FcStrCopyFilename (const FcChar8 *\fIs\fB);
 \fR
 .SH "DESCRIPTION"
 .PP
-Just like FcStrCopy except that it converts any leading '~' characters in
-\fIs\fR to the value of the HOME environment variable.
-Returns NULL if '~' is present in \fIs\fR and HOME is unset.
+\fBFcStrCopyFilename\fR constructs an absolute pathname from
+\fIs\fR\&. It converts any leading '~' characters in
+to the value of the HOME environment variable, and any relative paths are
+converted to absolute paths using the current working directory. Sequences
+of '/' characters are converted to a single '/', and names containing the
+current directory '.' or parent directory '..' are correctly reconstructed.
+Returns NULL if '~' is the leading character and HOME is unset or disabled
+(see \fBFcConfigEnableHome\fR).
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.2
+Fontconfig version 2.6.0

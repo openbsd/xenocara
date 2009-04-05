@@ -1,5 +1,5 @@
 # 
-#  $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 18:42:47 matthieu Exp $
+#  $Id: Makefile.am,v 1.5 2009/04/05 16:43:36 matthieu Exp $
 # 
 #  Copyright © 2003 Keith Packard
 # 
@@ -27,21 +27,28 @@ FC_CACHE_SRC=${top_srcdir}/fc-cache
 
 SGML = ${FC_CACHE_SRC}/fc-cache.sgml
 
+if OS_WIN32
+else
 install-data-local:
 	-$(mkinstalldirs) "$(DESTDIR)$(fc_cachedir)"
 
 uninstall-local:
 	-$(RM) -rf "$(DESTDIR)$(fc_cachedir)"
+endif
 
-INCLUDES=-I${top_srcdir} -I${top_srcdir}/src $(FREETYPE_CFLAGS) $(WARN_CFLAGS)
+INCLUDES=-I${top_srcdir} -I${top_srcdir}/src $(WARN_CFLAGS)
 
 bin_PROGRAMS=fc-cache
 
-EXTRA_DIST=fc-cache.sgml
+BUILT_MANS=fc-cache.1
 
-fc_cache_LDADD = ${top_builddir}/src/libfontconfig.la $(FREETYPE_LIBS) $(LIBXML2_LIBS) $(EXPAT_LIBS)
+if ENABLE_DOCS
+man_MANS=${BUILT_MANS}
+endif
 
-man_MANS=fc-cache.1
+EXTRA_DIST=fc-cache.sgml $(BUILT_MANS)
+
+fc_cache_LDADD = ${top_builddir}/src/libfontconfig.la
 
 if USEDOCBOOK
 

@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "FcFontSort" "3" "02 December 2006" "" ""
+.TH "FcFontSort" "3" "31 May 2008" "" ""
 
 .SH NAME
 FcFontSort \- Return list of matching fonts
@@ -25,9 +25,9 @@ been called for \fIp\fR; otherwise the results will not be correct.
 The returned FcFontSet references FcPattern structures which may be shared
 by the return value from multiple FcFontSort calls, applications must not
 modify these patterns.  Instead, they should be passed, along with \fIp\fR to
-FcFontRenderPrepare which combines them into a complete pattern.
+\fBFcFontRenderPrepare\fR which combines them into a complete pattern.
 .PP
 The FcFontSet returned by FcFontSort is destroyed by caling FcFontSetDestroy.
 .SH "VERSION"
 .PP
-Fontconfig version 2.4.2
+Fontconfig version 2.6.0

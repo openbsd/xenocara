@@ -23,9 +23,10 @@
  */
 
 #include "fcint.h"
+#include "fcftint.h"
 
 typedef struct {
-    const FcChar8	*lang;
+    const FcChar8    	lang[8];
     const FcCharSet	charset;
 } FcLangCharSet;
 
@@ -54,7 +55,7 @@ FcFreeTypeLangSet (const FcCharSet  *charset,
     FcLangSet	    *ls;
 
     if (exclusiveLang)
-	exclusiveCharset = FcCharSetForLang (exclusiveLang);
+	exclusiveCharset = FcLangGetCharSet (exclusiveLang);
     ls = FcLangSetCreate ();
     if (!ls)
 	return 0;
@@ -150,13 +151,13 @@ FcLangCompare (const FcChar8 *s1, const FcChar8 *s2)
 	if (c1 != c2)
 	{
 	    if (FcLangEnd (c1) && FcLangEnd (c2))
-		result = FcLangDifferentCountry;
+		result = FcLangDifferentTerritory;
 	    return result;
 	}
 	else if (!c1)
 	    return FcLangEqual;
 	else if (c1 == '-')
-	    result = FcLangDifferentCountry;
+	    result = FcLangDifferentTerritory;
     }
 }
 
@@ -196,7 +197,7 @@ FcLangContains (const FcChar8 *super, const FcChar8 *sub)
 }
 
 const FcCharSet *
-FcCharSetForLang (const FcChar8 *lang)
+FcLangGetCharSet (const FcChar8 *lang)
 {
     int		i;
     int		country = -1;
@@ -206,7 +207,7 @@ FcCharSetForLang (const FcChar8 *lang)
 	switch (FcLangCompare (lang, fcLangCharSets[i].lang)) {
 	case FcLangEqual:
 	    return &fcLangCharSets[i].charset;
-	case FcLangDifferentCountry:
+	case FcLangDifferentTerritory:
 	    if (country == -1)
 		country = i;
 	default:
@@ -216,6 +217,22 @@ FcCharSetForLang (const FcChar8 *lang)
     if (country == -1)
 	return 0;
     return &fcLangCharSets[country].charset;
+}
+
+FcStrSet *
+FcGetLangs (void)
+{
+    FcStrSet *langs;
+    int	i;
+
+    langs = FcStrSetCreate();
+    if (!langs)
+	return 0;
+
+    for (i = 0; i < NUM_LANG_CHAR_SET; i++)
+	FcStrSetAdd (langs, fcLangCharSets[i].lang);
+
+    return langs;
 }
 
 FcLangSet *
@@ -437,7 +454,7 @@ FcLangSetCompare (const FcLangSet *lsa, const FcLangSet *lsb)
 	    if ((lsa->map[i] & fcLangCountrySets[j][i]) &&
 		(lsb->map[i] & fcLangCountrySets[j][i]))
 	    {
-		best = FcLangDifferentCountry;
+		best = FcLangDifferentTerritory;
 		break;
 	    }
     if (lsa->extra)
@@ -729,4 +746,5 @@ FcLangSetSerialize(FcSerialize *serialize, const FcLangSet *l)
 }
 #define __fclang__
 #include "fcaliastail.h"
+#include "fcftaliastail.h"
 #undef __fclang__

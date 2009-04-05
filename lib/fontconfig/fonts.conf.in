@@ -27,11 +27,6 @@
 	@FC_FONTPATH@
 	<dir>~/.fonts</dir>
 
-<!-- Font cache directory list -->
-
-	<cachedir>@FC_CACHEDIR@</cachedir>
-	<cachedir>~/.fontconfig</cachedir>
-
 <!--
   Accept deprecated 'mono' alias, replacing it with 'monospace'
 -->
@@ -72,6 +67,11 @@
   Load local system customization file
 -->
 	<include ignore_missing="yes">conf.d</include>
+
+<!-- Font cache directory list -->
+
+	<cachedir>@FC_CACHEDIR@</cachedir>
+	<cachedir>~/.fontconfig</cachedir>
 
 	<config>
 <!--
@@ -131,6 +131,7 @@
 			<int>0x206D</int>	<!-- ACTIVATE ARABIC FORM SHAPING -->
 			<int>0x206E</int>	<!-- NATIONAL DIGIT SHAPES -->
 			<int>0x206F</int>	<!-- NOMINAL DIGIT SHAPES -->
+			<int>0x2800</int>	<!-- BRAILLE PATTERN BLANK -->
 			<int>0x3000</int>	<!-- IDEOGRAPHIC SPACE -->
 			<int>0x3164</int>	<!-- HANGUL FILLER -->
 			<int>0xFEFF</int>	<!-- ZERO WIDTH NO-BREAK SPACE -->

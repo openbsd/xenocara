@@ -2,18 +2,21 @@
 <HTML
 ><HEAD
 ><TITLE
->FcConfigParseAndLoad</TITLE
+>FcMatrixRotate</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
 REL="HOME"
 HREF="index.html"><LINK
 REL="UP"
-TITLE="FcConfig"
-HREF="x93.html#AEN1680"><LINK
+TITLE="FcMatrix"
+HREF="x102.html#AEN2152"><LINK
 REL="PREVIOUS"
-TITLE="FcConfigFilename"
-HREF="r2232.html"></HEAD
+TITLE="FcMatrixMultiply"
+HREF="r2227.html"><LINK
+REL="NEXT"
+TITLE="FcMatrixScale"
+HREF="r2286.html"></HEAD
 ><BODY
 CLASS="REFENTRY"
 BGCOLOR="#FFFFFF"
@@ -41,7 +44,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="r2232.html"
+HREF="r2227.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -54,7 +57,11 @@ VALIGN="bottom"
 WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
->&nbsp;</TD
+><A
+HREF="r2286.html"
+ACCESSKEY="N"
+>Next</A
+></TD
 ></TR
 ></TABLE
 ><HR
@@ -62,9 +69,9 @@ ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><H1
 ><A
-NAME="FCCONFIGPARSEANDLOAD"
+NAME="FCMATRIXROTATE"
 ></A
->FcConfigParseAndLoad</H1
+>FcMatrixRotate</H1
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
@@ -72,7 +79,7 @@ NAME="AEN2260"
 ></A
 ><H2
 >Name</H2
->FcConfigParseAndLoad&nbsp;--&nbsp;load a configuration file</DIV
+>FcMatrixRotate&nbsp;--&nbsp;Rotate a matrix</DIV
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
@@ -95,8 +102,8 @@ CLASS="FUNCSYNOPSISINFO"
 ><CODE
 ><CODE
 CLASS="FUNCDEF"
->FcBool FcConfigParseAndLoad</CODE
->(FcConfig *config, const FcChar8 *file);</CODE
+>void FcMatrixRotate</CODE
+>(FcMatrix *matrix, double cos, double sin);</CODE
 ></P
 ><P
 ></P
@@ -105,26 +112,43 @@ CLASS="FUNCDEF"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN2273"
+NAME="AEN2275"
 ></A
 ><H2
 >Description</H2
 ><P
->Walks the configuration in 'file' and constructs the internal representation
-in 'config'.  Any include files referenced from within 'file' will be loaded
-with FcConfigLoad and also parsed.  If 'complain' is FcFalse, no warning
-will be displayed if 'file' does not exist.
+><CODE
+CLASS="FUNCTION"
+>FcMatrixRotate</CODE
+> rotates <CODE
+CLASS="PARAMETER"
+>matrix</CODE
+>
+by the angle who's sine is <CODE
+CLASS="PARAMETER"
+>sin</CODE
+> and cosine is
+<CODE
+CLASS="PARAMETER"
+>cos</CODE
+>.  This is done by multiplying by the
+matrix:
+<PRE
+CLASS="PROGRAMLISTING"
+>  cos -sin
+  sin  cos</PRE
+>
 	    </P
 ></DIV
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN2276"
+NAME="AEN2283"
 ></A
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.4.2
+>Fontconfig version 2.6.0
 
 	    </P
 ></DIV
@@ -144,7 +168,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="r2232.html"
+HREF="r2227.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -161,20 +185,24 @@ ACCESSKEY="H"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->&nbsp;</TD
+><A
+HREF="r2286.html"
+ACCESSKEY="N"
+>Next</A
+></TD
 ></TR
 ><TR
 ><TD
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->FcConfigFilename</TD
+>FcMatrixMultiply</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x93.html#AEN1680"
+HREF="x102.html#AEN2152"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -182,7 +210,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->&nbsp;</TD
+>FcMatrixScale</TD
 ></TR
 ></TABLE
 ></DIV

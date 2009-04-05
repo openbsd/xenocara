@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.in,v 1.1.1.2 2006/12/31 14:57:18 matthieu Exp $
+dnl  $Id: configure.in,v 1.2 2009/04/05 16:43:35 matthieu Exp $
 dnl 
 dnl  Copyright © 2003 Keith Packard
 dnl 
@@ -33,7 +33,7 @@ dnl This is the package version number, not the shared library
 dnl version.  This same version number must appear in fontconfig/fontconfig.h
 dnl Yes, it is a pain to synchronize version numbers.  Unfortunately, it's
 dnl not possible to extract the version number here from fontconfig.h
-AM_INIT_AUTOMAKE(fontconfig, 2.4.2)
+AM_INIT_AUTOMAKE(fontconfig, 2.6.0)
 AM_MAINTAINER_MODE
 
 dnl libtool versioning
@@ -41,17 +41,17 @@ dnl libtool versioning
 dnl bump revision when fixing bugs
 dnl bump current and age, reset revision to zero when adding APIs
 dnl bump current, leave age, reset revision to zero when changing/removing APIS
-LT_CURRENT=3
-LT_REVISION=0
-AC_SUBST(LT_CURRENT)
-AC_SUBST(LT_REVISION)
-LT_AGE=2
+LIBT_CURRENT=4
+LIBT_REVISION=0
+AC_SUBST(LIBT_CURRENT)
+AC_SUBST(LIBT_REVISION)
+LIBT_AGE=3
 
-LT_VERSION_INFO="$LT_CURRENT:$LT_REVISION:$LT_AGE"
-AC_SUBST(LT_VERSION_INFO)
+LIBT_VERSION_INFO="$LIBT_CURRENT:$LIBT_REVISION:$LIBT_AGE"
+AC_SUBST(LIBT_VERSION_INFO)
 
-LT_CURRENT_MINUS_AGE=`expr $LT_CURRENT - $LT_AGE`
-AC_SUBST(LT_CURRENT_MINUS_AGE)
+LIBT_CURRENT_MINUS_AGE=`expr $LIBT_CURRENT - $LIBT_AGE`
+AC_SUBST(LIBT_CURRENT_MINUS_AGE)
 
 dnl ==========================================================================
 
@@ -62,6 +62,7 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
+DOLT
 AC_PROG_MAKE_SET
 
 dnl ==========================================================================
@@ -186,8 +187,8 @@ else
 
 	AC_TRY_LINK([#include <iconv.h>],
 		    [iconv_open ("from", "to");],
-		    [use_iconv=true],
-		    [use_iconv=false])
+		    [use_iconv=1],
+		    [use_iconv=0])
 	
 	if test x$use_iconv = x1; then
 		ICONV_LIBS="-liconv"
@@ -459,7 +460,11 @@ AC_ARG_WITH(cache-dir,         [ --with-cache-dir=DIR           Use DIR to store
 
 case $fc_cachedir in
 no|yes)
-	fc_cachedir=`eval echo "${localstatedir}/cache/"${PACKAGE}`
+	if test "$os_win32" = "yes"; then
+		fc_cachedir="WINDOWSTEMPDIR_FONTCONFIG_CACHE"
+	else
+		fc_cachedir=`eval echo "${localstatedir}/cache/"${PACKAGE}`
+	fi
 	;;
 *)
 	;;
