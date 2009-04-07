@@ -1156,8 +1156,8 @@
 ./usr/X11R6/man/man3/FcDirCacheUnload.3
 ./usr/X11R6/man/man3/FcDirCacheValid.3
 ./usr/X11R6/man/man3/FcDirSave.3
-./usr/X11R6/man/man3/FcFileIsDir.3
 ./usr/X11R6/man/man3/FcDirScan.3
+./usr/X11R6/man/man3/FcFileIsDir.3
 ./usr/X11R6/man/man3/FcFileScan.3
 ./usr/X11R6/man/man3/FcFini.3
 ./usr/X11R6/man/man3/FcFontList.3

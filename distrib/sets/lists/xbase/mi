@@ -3,12 +3,6 @@
 ./etc/X11/app-defaults
 ./etc/X11/app-defaults/Chooser
 ./etc/X11/fs
-./etc/X11/lbxproxy
-./etc/X11/proxymngr
-./etc/X11/rstart
-./etc/X11/rstart/commands
-./etc/X11/rstart/commands/x11r6
-./etc/X11/rstart/contexts
 ./etc/X11/twm
 ./etc/X11/xdm
 ./etc/X11/xdm/pixmaps
