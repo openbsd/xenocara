@@ -47,10 +47,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * DGA
  */
 
-#ifndef USE_DDC2
-#define USE_DDC2 0
-#endif
-
 /*
  * These are X and server generic header files.
  */
@@ -239,22 +235,6 @@ static const char *vbeSymbols[] = {
 };
 #endif
 
-#if USE_DDC2
-static const char *ddcSymbols[] = {
-  "xf86PrintEDID",
-  "xf86DoEDID_DDC1",
-  "xf86DoEDID_DDC2",
-    NULL
-};
-
-static const char *i2cSymbols[] = {
-  "xf86CreateI2CBusRec",
-  "xf86I2CBusInit",
-    NULL
-};
-#endif
-
-
 #ifdef XFree86LOADER
 
 static MODULESETUPPROTO(i740Setup);
@@ -297,9 +277,6 @@ i740Setup(pointer module, pointer opts, int *errmaj, int *errmin)
 	 */
 	LoaderRefSymLists(vgahwSymbols, fbSymbols, xaaSymbols, 
 			  ramdacSymbols, vbeSymbols,
-#if USE_DDC2
-			  ddcSymbols, i2cSymbols,
-#endif
 			  NULL);
 
 	/*
@@ -454,6 +431,7 @@ I740Probe(DriverPtr drv, int flags) {
   return foundScreen;
 }
 
+/* Ugh.  Can we not do this? */
 static void
 I740ProbeDDC(ScrnInfoPtr pScrn, int index)
 {
@@ -745,6 +723,32 @@ I740PreInit(ScrnInfoPtr pScrn, int flags) {
   clockRanges->interlaceAllowed = FALSE; /*PL*/
   clockRanges->doubleScanAllowed = TRUE; /*PL*/
 
+  { /*PL*/
+
+   if (xf86LoadSubModule(pScrn, "ddc")) {
+     if (xf86LoadSubModule(pScrn, "i2c") ) {
+       if (I740MapMem(pScrn)) {
+	   if (I740_I2CInit(pScrn))
+	     {
+	       xf86MonPtr MonInfo;
+	       if ((MonInfo = xf86DoEDID_DDC2(pScrn->scrnIndex,pI740->rc_i2c))) {
+		 xf86DrvMsg(pScrn->scrnIndex, X_INFO, "DDC Monitor info: %p\n",
+			    MonInfo);
+		 xf86PrintEDID( MonInfo );
+		 xf86DrvMsg(pScrn->scrnIndex, X_INFO, "end of DDC Monitor "
+			    "info\n\n");
+		 xf86SetDDCproperties(pScrn,MonInfo);
+	       }
+	     }
+	   else
+	     xf86DrvMsg(pScrn->scrnIndex,X_ERROR,"I2C initialization failed\n");
+	   
+	   I740UnmapMem(pScrn);
+	 }
+     }
+   }
+  }
+
   i = xf86ValidateModes(pScrn, pScrn->monitor->Modes,
 			pScrn->display->modes, clockRanges,
 			0, 320, 1600,
@@ -819,40 +823,6 @@ I740PreInit(ScrnInfoPtr pScrn, int flags) {
     pI740->usevgacompat=FALSE;
 
 
-#if USE_DDC2 /*DDC2*/
-  { /*PL*/
-
-   if (xf86LoadSubModule(pScrn, "ddc")) {
-     xf86LoaderReqSymLists(ddcSymbols, NULL);
-     if ( xf86LoadSubModule(pScrn, "i2c") ) {
-       xf86LoaderReqSymLists(i2cSymbols,NULL);
-
-       if (I740MapMem(pScrn))
-	 {
-	   if (I740_I2CInit(pScrn))
-	     {
-	       xf86MonPtr MonInfo;
-
-	       if ((MonInfo = xf86DoEDID_DDC2(pScrn->scrnIndex,pI740->rc_i2c))) {
-		 xf86DrvMsg(pScrn->scrnIndex, X_INFO, "DDC Monitor info: %p\n",
-			    MonInfo);
-		 xf86PrintEDID( MonInfo );
-		 xf86DrvMsg(pScrn->scrnIndex, X_INFO, "end of DDC Monitor "
-			    "info\n\n");
-		 xf86SetDDCproperties(pScrn,MonInfo);
-	       }
-
-	       //xf86SetDDCproperties(pScrn,xf86PrintEDID(  xf86DoEDID_DDC2(pScrn->scrnIndex,pI740->rc_i2c)));
-	     }
-	   else
-	     xf86DrvMsg(pScrn->scrnIndex,X_ERROR,"I2C initialization failed\n");
-	   
-	   I740UnmapMem(pScrn);
-	 }
-     }
-   }
-  }
-#endif /*DDC2*/
 
   { /* Overlay */
     pI740->colorKey = (1 << pScrn->offset.red) | (1 << pScrn->offset.green) |
