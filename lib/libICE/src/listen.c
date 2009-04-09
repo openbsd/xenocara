@@ -37,13 +37,12 @@ Author: Ralph Mor,  X Consortium
 
 
 Status
-IceListenForConnections (countRet, listenObjsRet, errorLength, errorStringRet)
-
-int		*countRet;
-IceListenObj	**listenObjsRet;
-int		errorLength;
-char		*errorStringRet;
-
+IceListenForConnections (
+	int		*countRet,
+	IceListenObj	**listenObjsRet,
+	int		errorLength,
+	char		*errorStringRet
+)
 {
     struct _IceListenObj	*listenObjs;
     char			*networkId;
@@ -161,10 +160,9 @@ char		*errorStringRet;
 
 
 int
-IceGetListenConnectionNumber (listenObj)
-
-IceListenObj listenObj;
-
+IceGetListenConnectionNumber (
+	IceListenObj listenObj
+)
 {
     return (_IceTransGetConnectionNumber (listenObj->trans_conn));
 }
@@ -172,10 +170,9 @@ IceListenObj listenObj;
 
 
 char *
-IceGetListenConnectionString (listenObj)
-
-IceListenObj listenObj;
-
+IceGetListenConnectionString (
+	IceListenObj listenObj
+)
 {
     return strdup(listenObj->network_id);
 }
@@ -183,11 +180,10 @@ IceListenObj listenObj;
 
 
 char *
-IceComposeNetworkIdList (count, listenObjs)
-
-int		count;
-IceListenObj	*listenObjs;
-
+IceComposeNetworkIdList (
+	int		count,
+	IceListenObj	*listenObjs
+)
 {
     char *list;
     int len = 0;
@@ -241,11 +237,10 @@ IceListenObj	*listenObjs;
 
 
 void
-IceFreeListenObjs (count, listenObjs)
-
-int	     count;
-IceListenObj *listenObjs;
-
+IceFreeListenObjs (
+	int	     count,
+	IceListenObj *listenObjs
+)
 {
     int i;
 
@@ -268,11 +263,10 @@ IceListenObj *listenObjs;
  */
 
 void
-IceSetHostBasedAuthProc (listenObj, hostBasedAuthProc)
-
-IceListenObj		listenObj;
-IceHostBasedAuthProc	hostBasedAuthProc;
-
+IceSetHostBasedAuthProc (
+	IceListenObj		listenObj,
+	IceHostBasedAuthProc	hostBasedAuthProc
+)
 {
     listenObj->host_based_auth_proc = hostBasedAuthProc;
 }

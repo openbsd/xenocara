@@ -1,3 +1,128 @@
+commit ab9dff549534c6d7b33f440bff7a841d60c1206c
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Mon Dec 8 18:45:44 2008 +0100
+
+    bump to 1.0.5
+
+commit 71695c4bf7ae07228605683f6cdeca0457c8495a
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Mon Dec 8 18:44:26 2008 +0100
+
+    remove ChangeLog from EXTRA_DIST and CLEANFILES
+
+commit 653f659fe65ae8c2a9fe5b1fdbfc78da43f2cf90
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Mon Dec 8 18:41:34 2008 +0100
+
+    use memcmp instead of binaryEqual
+    
+    suggested by Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+    http://lists.freedesktop.org/archives/xorg/2008-December/041222.html
+
+commit bf138553afe6eecd0e6c218dc6ae4f63065e4196
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Tue Dec 2 22:06:15 2008 +0100
+
+    Use NULL, not zero, for pointers
+    
+    From Magnus Kessler <Magnus.Kessler@gmx.net>
+    http://lists.freedesktop.org/archives/xorg/2008-October/039799.html
+    http://lists.freedesktop.org/archives/xorg/attachments/20081030/b2ea5b1c/attachment-0001.bin
+
+commit b01e82ce1deedb36c9696d4d27a3b9a5d5a52d08
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Thu Oct 30 12:01:06 2008 +0100
+
+    ANSI C
+    
+    convert all old style function declarations
+    
+    see also: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+    http://bugs.freedesktop.org/show_bug.cgi?id=14683
+    http://bugs.freedesktop.org/attachment.cgi?id=14582
+    
+    see also: Magnus Kessler <Magnus.Kessler@gmx.net>
+    http://lists.freedesktop.org/archives/xorg/2008-October/039799.html
+    http://lists.freedesktop.org/archives/xorg/attachments/20081030/b2ea5b1c/attachment-0001.bin
+
+commit 2aba1bc0583aeb3ee6e26e3bfacd123abef744d9
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Mon Dec 1 23:06:22 2008 +0100
+
+    towards ANSI C
+    
+    make _IceProcessCoreMessage and default error handlers static
+
+commit 69a1b4b6d34291738dfbc3aa19d0ce3f2842ec8f
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Mon Dec 1 22:22:12 2008 +0100
+
+    Activate CWARNFLAGS with lots of gcc warnings
+
+commit 898ed95cad1133940a83dcf428865c5d3fb2c939
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Mon Dec 1 22:18:45 2008 +0100
+
+    use xorg-macros-1.2.1
+    
+    Use XORG_CHANGELOG for rule to generate ChangeLog from git log
+    Use XORG_CWARNFLAGS for compiler warning flags, leave CFLAGS to user
+
+commit a99fbad09ab850e65ddd57e4d4488e4726295e14
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Tue Oct 7 13:21:48 2008 -0700
+
+    Constify some arguments in libICE to clear warnings in libSM
+    
+    This patch avoids the gcc (3.4.6) warnings:
+     ../../libSM-1.0.3/src/sm_client.c:104: warning: passing arg 7 of `IceRegisterForProtocolSetup' from incompatible pointer type
+     ../../libSM-1.0.3/src/sm_manager.c:168: warning: passing arg 7 of `IceRegisterForProtocolReply' from incompatible pointer type
+    when compiling libSM
+
+commit 3bceaeb3192ca75a14854d614e1621d28fb82274
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Tue Oct 7 11:25:42 2008 -0700
+
+    define macros to 1 in icetrans.c to avoid redefined macro warnings
+    
+    X.Org Bug #17947 <http://bugs.freedesktop.org/show_bug.cgi?id=17947>
+    Patch #19444 <http://bugs.freedesktop.org/attachment.cgi?id=19444>
+    
+    Define as 1 (one) as done by autoconf and the command line
+    option, e.g. -DICE_t, not as empty.
+    
+    This avoids the gcc (3.4.6) warnings:
+     ../../libICE-1.0.4/src/icetrans.c:29:1: warning: "ICE_t" redefined
+     ../config.h:38:1: warning: this is the location of the previous definition
+     ../../libICE-1.0.4/src/icetrans.c:30:1: warning: "TRANS_CLIENT" redefined
+     <command line>:6:1: warning: this is the location of the previous definition
+     ../../libICE-1.0.4/src/icetrans.c:31:1: warning: "TRANS_SERVER" redefined
+     <command line>:7:1: warning: this is the location of the previous definition
+
+commit b707104f4dba0963ab17c1d6a29c1e3a848ea408
+Author: Alan Hourihane <alanh@tungstengraphics.com>
+Date:   Tue Apr 29 00:41:40 2008 +0100
+
+    silence warning
+
+commit e6b525aefc05b5203391699b00053ad52243cc6b
+Author: Colin Harrison <colin.harrison-at-virgin.net>
+Date:   Tue Apr 29 00:40:48 2008 +0100
+
+    include for sleep()
+
+commit ef58f37724b841ef2246757be27111775aa86559
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 09:02:40 2008 +0100
+
+    nuke RCS Ids
+
+commit 47d86e8343d3d0201166c4d75da2ec9c12638cc1
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:13 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
 commit f415da71dd26f128df7d550ecd7631f8888eb1d2
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Aug 20 13:21:07 2007 -0700

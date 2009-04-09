@@ -72,7 +72,6 @@ static Status write_counted_string (FILE *file, unsigned short count, char *stri
 
 char *
 IceAuthFileName (void)
-
 {
     static char slashDotICEauthority[] = "/.ICEauthority";
     char    	*name;
@@ -101,7 +100,7 @@ IceAuthFileName (void)
     if ((ptr1 = getenv("HOMEDRIVE")) && (ptr2 = getenv("HOMEDIR"))) {
 	len1 = strlen (ptr1);
 	len2 = strlen (ptr2);
-    } else if (ptr2 = getenv("USERNAME")) {
+    } else if ((ptr2 = getenv("USERNAME"))) {
 	len1 = strlen (ptr1 = "/users/");
 	len2 = strlen (ptr2);
     }
@@ -140,13 +139,12 @@ IceAuthFileName (void)
 
 
 int
-IceLockAuthFile (file_name, retries, timeout, dead)
-
-char	*file_name;
-int	retries;
-int	timeout;
-long	dead;
-
+IceLockAuthFile (
+	char	*file_name,
+	int	retries,
+	int	timeout,
+	long	dead
+)
 {
     char	creat_name[1025], link_name[1025];
     struct stat	statb;
@@ -217,10 +215,9 @@ long	dead;
 
 
 void
-IceUnlockAuthFile (file_name)
-
-char	*file_name;
-
+IceUnlockAuthFile (
+	char	*file_name
+)
 {
 #ifndef WIN32
     char	creat_name[1025];
@@ -246,10 +243,9 @@ char	*file_name;
 
 
 IceAuthFileEntry *
-IceReadAuthFileEntry (auth_file)
-
-FILE	*auth_file;
-
+IceReadAuthFileEntry (
+	FILE	*auth_file
+)
 {
     IceAuthFileEntry   	local;
     IceAuthFileEntry   	*ret;
@@ -298,10 +294,9 @@ FILE	*auth_file;
 
 
 void
-IceFreeAuthFileEntry (auth)
-
-IceAuthFileEntry	*auth;
-
+IceFreeAuthFileEntry (
+	IceAuthFileEntry	*auth
+)
 {
     if (auth)
     {
@@ -317,11 +312,10 @@ IceAuthFileEntry	*auth;
 
 
 Status
-IceWriteAuthFileEntry (auth_file, auth)
-
-FILE			*auth_file;
-IceAuthFileEntry	*auth;
-
+IceWriteAuthFileEntry (
+	FILE			*auth_file,
+	IceAuthFileEntry	*auth
+)
 {
     if (!write_string (auth_file, auth->protocol_name))
 	return (0);
@@ -346,12 +340,11 @@ IceAuthFileEntry	*auth;
 
 
 IceAuthFileEntry *
-IceGetAuthFileEntry (protocol_name, network_id, auth_name)
-
-char	*protocol_name;
-char	*network_id;
-char	*auth_name;
-
+IceGetAuthFileEntry (
+	char	*protocol_name,
+	char	*network_id,
+	char	*auth_name
+)
 {
     FILE    		*auth_file;
     char    		*filename;
@@ -448,7 +441,7 @@ read_counted_string (FILE *file, unsigned short	*countp, char **stringp)
 
     if (len == 0)
     {
-	data = 0;
+	data = NULL;
     }
     else
     {

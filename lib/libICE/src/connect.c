@@ -42,16 +42,14 @@ static XtransConnInfo ConnectToPeer(char *networkIdsList,
 #define Strstr strstr
 
 IceConn
-IceOpenConnection (networkIdsList, context, mustAuthenticate, majorOpcodeCheck,
-    errorLength, errorStringRet)
-
-char 	   *networkIdsList;
-IcePointer context;
-Bool 	   mustAuthenticate;
-int  	   majorOpcodeCheck;
-int  	   errorLength;
-char 	   *errorStringRet;
-
+IceOpenConnection (
+	char 	   *networkIdsList,
+	IcePointer context,
+	Bool 	   mustAuthenticate,
+	int  	   majorOpcodeCheck,
+	int  	   errorLength,
+	char 	   *errorStringRet
+)
 {
     IceConn			iceConn;
     int				extra, i, j;
@@ -432,10 +430,9 @@ char 	   *errorStringRet;
 
 
 IcePointer
-IceGetConnectionContext (iceConn)
-
-IceConn    iceConn;
-
+IceGetConnectionContext (
+	IceConn    iceConn
+)
 {
     return (iceConn->context);
 }

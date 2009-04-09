@@ -214,7 +214,7 @@ extern int IceRegisterForProtocolSetup (
     int				/* versionCount */,
     IcePoVersionRec *		/* versionRecs */,
     int				/* authCount */,
-    char **			/* authNames */,
+    const char **		/* authNames */,
     IcePoAuthProc *		/* authProcs */,
     IceIOErrorProc		/* IOErrorProc */
 );
@@ -226,7 +226,7 @@ extern int IceRegisterForProtocolReply (
     int				/* versionCount */,
     IcePaVersionRec *		/* versionRecs */,
     int				/* authCount */,
-    char **			/* authNames */,
+    const char **		/* authNames */,
     IcePaAuthProc *		/* authProcs */,
     IceHostBasedAuthProc	/* hostBasedAuthProc */,
     IceProtocolSetupProc	/* protocolSetupProc */,

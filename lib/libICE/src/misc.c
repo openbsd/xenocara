@@ -49,11 +49,10 @@ Author: Ralph Mor, X Consortium
  */
 
 char *
-IceAllocScratch (iceConn, size)
-
-IceConn		iceConn;
-unsigned long	size;
-
+IceAllocScratch (
+	IceConn		iceConn,
+	unsigned long	size
+)
 {
     if (!iceConn->scratch || size > iceConn->scratch_size)
     {
@@ -74,10 +73,9 @@ unsigned long	size;
  */
 
 int
-IceFlush (iceConn)
-     
-IceConn iceConn;
-
+IceFlush (
+	IceConn iceConn
+)
 {
     _IceWrite (iceConn,
 	(unsigned long) (iceConn->outbufptr - iceConn->outbuf),
@@ -89,20 +87,18 @@ IceConn iceConn;
 
 
 int
-IceGetOutBufSize (iceConn)
-
-IceConn iceConn;
-
+IceGetOutBufSize (
+	IceConn iceConn
+)
 {
     return (iceConn->outbufmax - iceConn->outbuf);
 }
 
 
 int
-IceGetInBufSize (iceConn)
-
-IceConn iceConn;
-
+IceGetInBufSize (
+	IceConn iceConn
+)
 {
     return (iceConn->inbufmax - iceConn->inbuf);
 }
@@ -114,70 +110,63 @@ IceConn iceConn;
  */
 
 IceConnectStatus
-IceConnectionStatus (iceConn)
-
-IceConn iceConn;
-
+IceConnectionStatus (
+	IceConn iceConn
+)
 {
     return (iceConn->connection_status);
 }
 
 
 char *
-IceVendor (iceConn)
-
-IceConn iceConn;
-
+IceVendor (
+	IceConn iceConn
+)
 {
     return strdup(iceConn->vendor);
 }
 
 
 char *
-IceRelease (iceConn)
-
-IceConn iceConn;
-
+IceRelease (
+	IceConn iceConn
+)
 {
     return strdup(iceConn->release);
 }
 
 
 int
-IceProtocolVersion (iceConn)
-
-IceConn iceConn;
-
+IceProtocolVersion (
+	IceConn iceConn
+)
 {
     return (_IceVersions[iceConn->my_ice_version_index].major_version);
 }
 
 
 int
-IceProtocolRevision (iceConn)
-
-IceConn iceConn;
-
+IceProtocolRevision (
+	IceConn iceConn
+)
 {
     return (_IceVersions[iceConn->my_ice_version_index].minor_version);
 }
 
 
 int
-IceConnectionNumber (iceConn)
-
-IceConn iceConn;
-
+IceConnectionNumber (
+	IceConn iceConn
+)
 {
     return (_IceTransGetConnectionNumber (iceConn->trans_conn));
 }
 
 
 char *
-IceConnectionString (iceConn)
-
-IceConn iceConn;
-
+IceConnectionString (
+	IceConn iceConn
+)
 {
     if (iceConn->connection_string)
     {
@@ -189,30 +178,27 @@ IceConn iceConn;
 
 
 unsigned long
-IceLastSentSequenceNumber (iceConn)
-
-IceConn iceConn;
-
+IceLastSentSequenceNumber (
+	IceConn iceConn
+)
 {
     return (iceConn->send_sequence);
 }
 
 
 unsigned long
-IceLastReceivedSequenceNumber (iceConn)
-
-IceConn iceConn;
-
+IceLastReceivedSequenceNumber (
+	IceConn iceConn
+)
 {
     return (iceConn->receive_sequence);
 }
 
 
 Bool
-IceSwapping (iceConn)
-
-IceConn iceConn;
-
+IceSwapping (
+	IceConn iceConn
+)
 {
     return (iceConn->swap);
 }
@@ -227,12 +213,11 @@ IceConn iceConn;
  */
 
 Status
-_IceRead (iceConn, nbytes, ptr)
-
-register IceConn iceConn;
-unsigned long	 nbytes;
-register char	 *ptr;
-
+_IceRead (
+	register IceConn iceConn,
+	unsigned long	 nbytes,
+	register char	 *ptr
+)
 {
     register unsigned long nleft;
 
@@ -327,11 +312,10 @@ register char	 *ptr;
  */
 
 void
-_IceReadSkip (iceConn, nbytes)
-
-register IceConn	iceConn;
-register unsigned long	nbytes;
-
+_IceReadSkip (
+	register IceConn	iceConn,
+	register unsigned long	nbytes
+)
 {
     char temp[512];
 
@@ -351,12 +335,11 @@ register unsigned long	nbytes;
  */
 
 void
-_IceWrite (iceConn, nbytes, ptr)
-
-register IceConn iceConn;
-unsigned long	 nbytes;
-register char	 *ptr;
-
+_IceWrite (
+	register IceConn iceConn,
+	unsigned long	 nbytes,
+	register char	 *ptr
+)
 {
     register unsigned long nleft;
 
@@ -427,12 +410,11 @@ register char	 *ptr;
 
 #ifdef WORD64
 
-IceWriteData16 (iceConn, nbytes, data)
-
-IceConn 	iceConn;
-unsigned long 	nbytes;
-short  		*data;
-
+IceWriteData16 (
+	IceConn 	iceConn,
+	unsigned long 	nbytes,
+	short  		*data
+)
 {
     int numShorts = nbytes / 2;
     int index = 0;
@@ -458,12 +440,11 @@ short  		*data;
 }
 
 
-IceWriteData32 (iceConn, nbytes, data)
-
-IceConn 	iceConn;
-unsigned long  	nbytes;
-int	 	*data;
-
+IceWriteData32 (
+	IceConn 	iceConn,
+	unsigned long  	nbytes,
+	int	 	*data
+)
 {
     int numLongs = nbytes / 4;
     int index = 0;
@@ -489,25 +470,23 @@ int	 	*data;
 }
 
 
-IceReadData16 (iceConn, swap, nbytes, data)
-
-IceConn 	iceConn;
-Bool		swap;
-unsigned long 	nbytes;
-short  		*data;
-
+IceReadData16 (
+	IceConn 	iceConn,
+	Bool		swap,
+	unsigned long 	nbytes,
+	short  		*data
+)
 {
     /* NOT IMPLEMENTED YET */
 }
 
 
-IceReadData32 (iceConn, swap, nbytes, data)
-
-IceConn 	iceConn;
-Bool		swap;
-unsigned long  	nbytes;
-int	 	*data;
-
+IceReadData32 (
+	IceConn 	iceConn,
+	Bool		swap,
+	unsigned long  	nbytes,
+	int	 	*data
+)
 {
     /* NOT IMPLEMENTED YET */
 }
@@ -517,12 +496,11 @@ int	 	*data;
 
 
 void
-_IceAddOpcodeMapping (iceConn, hisOpcode, myOpcode)
-
-IceConn	iceConn;
-int 	hisOpcode;
-int 	myOpcode;
-
+_IceAddOpcodeMapping (
+	IceConn	iceConn,
+	int 	hisOpcode,
+	int 	myOpcode
+)
 {
     if (hisOpcode <= 0 || hisOpcode > 255)
     {

@@ -34,12 +34,11 @@ Author: Ralph Mor, X Consortium
 #include "ICElibint.h"
 
 Status
-IcePing (iceConn, pingReplyProc, clientData)
-
-IceConn		 iceConn;
-IcePingReplyProc pingReplyProc;
-IcePointer	 clientData;
-
+IcePing (
+	IceConn		 iceConn,
+	IcePingReplyProc pingReplyProc,
+	IcePointer	 clientData
+)
 {
     _IcePingWait *newping = (_IcePingWait *) malloc (sizeof (_IcePingWait));
     _IcePingWait *ptr = iceConn->ping_waits;

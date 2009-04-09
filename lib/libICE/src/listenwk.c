@@ -40,14 +40,13 @@ in this Software without prior written authorization from The Open Group.
 
 
 Status
-IceListenForWellKnownConnections (port, countRet, listenObjsRet, errorLength, errorStringRet)
-
-char		*port;
-int		*countRet;
-IceListenObj	**listenObjsRet;
-int		errorLength;
-char		*errorStringRet;
-
+IceListenForWellKnownConnections (
+	char		*port,
+	int		*countRet,
+	IceListenObj	**listenObjsRet,
+	int		errorLength,
+	char		*errorStringRet
+)
 {
     struct _IceListenObj	*listenObjs;
     char			*networkId;

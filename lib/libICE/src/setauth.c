@@ -60,11 +60,10 @@ IceAuthDataEntry _IcePaAuthDataEntries[ICE_MAX_AUTH_DATA_ENTRIES] = {0};
 
 
 void
-IceSetPaAuthData (numEntries, entries)
-
-int			numEntries;
-IceAuthDataEntry	*entries;
-
+IceSetPaAuthData (
+	int			numEntries,
+	IceAuthDataEntry	*entries
+)
 {
     /*
      * _IcePaAuthDataEntries should really be a linked list.

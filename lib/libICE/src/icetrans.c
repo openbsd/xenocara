@@ -1,6 +1,4 @@
 /*
- * $Id: icetrans.c,v 1.1.1.1 2006/11/25 16:45:58 matthieu Exp $
- *
  * Copyright © 2003 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -26,8 +24,8 @@
 #include <config.h>
 #endif
 
-#define ICE_t
-#define TRANS_CLIENT
-#define TRANS_SERVER
+#define ICE_t 1
+#define TRANS_CLIENT 1
+#define TRANS_SERVER 1
 
 #include <X11/Xtrans/transport.c>

@@ -40,28 +40,27 @@ Author: Ralph Mor, X Consortium
 
 
 Status
-IceInitThreads ()
-
+IceInitThreads (
+	void
+)
 {
     return (0);
 }
 
 
 void
-IceAppLockConn (iceConn)
-
-IceConn iceConn;
-
+IceAppLockConn (
+	IceConn	iceConn
+)
 {
     IceLockConn (iceConn);
 }
 
 
 void
-IceAppUnlockConn (iceConn)
-
-IceConn iceConn;
-
+IceAppUnlockConn (
+	IceConn iceConn
+)
 {
     IceUnlockConn (iceConn);
 }

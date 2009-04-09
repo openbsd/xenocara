@@ -36,21 +36,18 @@ Author: Ralph Mor, X Consortium
 
 
 IceProtocolSetupStatus
-IceProtocolSetup (iceConn, myOpcode, clientData, mustAuthenticate,
-    majorVersionRet, minorVersionRet, vendorRet, releaseRet,
-    errorLength, errorStringRet)
-
-IceConn	   iceConn;
-int 	   myOpcode;
-IcePointer clientData;
-Bool       mustAuthenticate;
-int	   *majorVersionRet;
-int	   *minorVersionRet;
-char	   **vendorRet;
-char	   **releaseRet;
-int  	   errorLength;
-char 	   *errorStringRet;
-
+IceProtocolSetup (
+	IceConn	   iceConn,
+	int 	   myOpcode,
+	IcePointer clientData,
+	Bool       mustAuthenticate,
+	int	   *majorVersionRet,
+	int	   *minorVersionRet,
+	char	   **vendorRet,
+	char	   **releaseRet,
+	int  	   errorLength,
+	char 	   *errorStringRet
+)
 {
     iceProtocolSetupMsg	*pMsg;
     char		*pData;

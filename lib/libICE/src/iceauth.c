@@ -38,8 +38,6 @@ Author: Ralph Mor, X Consortium
 #include <time.h>
 #define Time_t time_t
 
-static int binaryEqual (const char *a, const char *b, unsigned len);
-
 static int was_called_state;
 
 /*
@@ -49,10 +47,9 @@ static int was_called_state;
 
 
 char *
-IceGenerateMagicCookie (len)
-
-int len;
-
+IceGenerateMagicCookie (
+	int len
+)
 {
     char    *auth;
     long    ldata[2];
@@ -94,19 +91,17 @@ int len;
 
 
 IcePoAuthStatus
-_IcePoMagicCookie1Proc (iceConn, authStatePtr, cleanUp, swap,
-    authDataLen, authData, replyDataLenRet, replyDataRet, errorStringRet)
-
-IceConn		iceConn;
-IcePointer	*authStatePtr;
-Bool 		cleanUp;
-Bool		swap;
-int     	authDataLen;
-IcePointer	authData;
-int 		*replyDataLenRet;
-IcePointer	*replyDataRet;
-char    	**errorStringRet;
-
+_IcePoMagicCookie1Proc (
+	IceConn		iceConn,
+	IcePointer	*authStatePtr,
+	Bool 		cleanUp,
+	Bool		swap,
+	int     	authDataLen,
+	IcePointer	authData,
+	int 		*replyDataLenRet,
+	IcePointer	*replyDataRet,
+	char    	**errorStringRet
+)
 {
     if (cleanUp)
     {
@@ -168,21 +163,20 @@ char    	**errorStringRet;
     }
 }
 
+IcePoAuthProc	_IcePoAuthProcs[] = {_IcePoMagicCookie1Proc};
 
 
 IcePaAuthStatus
-_IcePaMagicCookie1Proc (iceConn, authStatePtr, swap,
-    authDataLen, authData, replyDataLenRet, replyDataRet, errorStringRet)
-
-IceConn		iceConn;
-IcePointer	*authStatePtr;
-Bool		swap;
-int     	authDataLen;
-IcePointer	authData;
-int 		*replyDataLenRet;
-IcePointer	*replyDataRet;
-char    	**errorStringRet;
-
+_IcePaMagicCookie1Proc (
+	IceConn		iceConn,
+	IcePointer	*authStatePtr,
+	Bool		swap,
+	int     	authDataLen,
+	IcePointer	authData,
+	int 		*replyDataLenRet,
+	IcePointer	*replyDataRet,
+	char    	**errorStringRet
+)
 {
     *errorStringRet = NULL;
     *replyDataLenRet = 0;
@@ -217,7 +211,7 @@ char    	**errorStringRet;
 	    IcePaAuthStatus stat;
 
 	    if (authDataLen == length &&
-	        binaryEqual ((char *) authData, data, authDataLen))
+	        memcmp (authData, data, authDataLen) == 0)
 	    {
 		stat = IcePaAuthAccepted;
 	    }
@@ -252,18 +246,4 @@ char    	**errorStringRet;
     }
 }
 
-
-
-/*
- * local routines
- */
-
-static int
-binaryEqual (const char *a, const char *b, unsigned len)
-
-{
-    while (len--)
-	if (*a++ != *b++)
-	    return 0;
-    return 1;
-}
+IcePaAuthProc	_IcePaAuthProcs[] = {_IcePaMagicCookie1Proc};

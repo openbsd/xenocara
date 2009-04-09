@@ -89,6 +89,29 @@ extern void _IceErrorBadValue (
     IcePointer		/* value */
 );
 
+extern IcePoAuthStatus _IcePoMagicCookie1Proc (
+    IceConn		/* iceConn */,
+    IcePointer *	/* authStatePtr */,
+    Bool 		/* cleanUp */,
+    Bool		/* swap */,
+    int     		/* authDataLen */,
+    IcePointer		/* authData */,
+    int *		/* replyDataLenRet */,
+    IcePointer *	/* replyDataRet */,
+    char **		/* errorStringRet */
+);
+
+extern IcePaAuthStatus _IcePaMagicCookie1Proc (
+    IceConn		/* iceConn */,
+    IcePointer *	/* authStatePtr */,
+    Bool		/* swap */,
+    int     		/* authDataLen */,
+    IcePointer		/* authData */,
+    int *		/* replyDataLenRet */,
+    IcePointer *	/* replyDataRet */,
+    char **		/* errorStringRet */
+);
+
 
 /*
  * Macro to check if IO operations are valid on an ICE connection.

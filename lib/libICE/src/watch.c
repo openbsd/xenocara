@@ -35,11 +35,10 @@ Author: Ralph Mor, X Consortium
 
 
 Status
-IceAddConnectionWatch (watchProc, clientData)
-
-IceWatchProc	watchProc;
-IcePointer	clientData;
-
+IceAddConnectionWatch (
+	IceWatchProc	watchProc,
+	IcePointer	clientData
+)
 {
     /*
      * watchProc will be called each time an ICE connection is
@@ -94,11 +93,10 @@ IcePointer	clientData;
 
 
 void
-IceRemoveConnectionWatch (watchProc, clientData)
-
-IceWatchProc	watchProc;
-IcePointer	clientData;
-
+IceRemoveConnectionWatch (
+	IceWatchProc	watchProc,
+	IcePointer	clientData
+)
 {
     _IceWatchProc	*currWatchProc = _IceWatchProcs;
     _IceWatchProc	*prevWatchProc = NULL;
@@ -135,10 +133,9 @@ IcePointer	clientData;
 
 
 void
-_IceConnectionOpened (iceConn)
-
-IceConn	iceConn;
-
+_IceConnectionOpened (
+	IceConn	iceConn
+)
 {
     _IceWatchProc *watchProc = _IceWatchProcs;
 
@@ -170,10 +167,9 @@ IceConn	iceConn;
 
 
 void
-_IceConnectionClosed (iceConn)
-
-IceConn	iceConn;
-
+_IceConnectionClosed (
+	IceConn	iceConn
+)
 {
     _IceWatchProc *watchProc = _IceWatchProcs;
 

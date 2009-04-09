@@ -37,6 +37,9 @@ Author: Ralph Mor, X Consortium
 #include <X11/ICE/ICEproto.h>
 #include <X11/ICE/ICEconn.h>
 #include <X11/ICE/ICEmsg.h>
+#ifdef WIN32
+#include <X11/Xwindows.h>
+#endif
 
 #include <stdlib.h>
 #include <stddef.h>

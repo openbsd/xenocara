@@ -36,11 +36,10 @@ Author: Ralph Mor, X Consortium
 
 
 IceConn
-IceAcceptConnection (listenObj, statusRet)
-
-IceListenObj 	listenObj;
-IceAcceptStatus	*statusRet;
-
+IceAcceptConnection (
+	IceListenObj 	listenObj,
+	IceAcceptStatus	*statusRet
+)
 {
     IceConn    		iceConn;
     XtransConnInfo	newconn;
@@ -51,7 +50,7 @@ IceAcceptStatus	*statusRet;
      * Accept the connection.
      */
 
-    if ((newconn = _IceTransAccept (listenObj->trans_conn, &status)) == 0)
+    if ((newconn = _IceTransAccept (listenObj->trans_conn, &status)) == NULL)
     {
 	if (status == TRANS_ACCEPT_BAD_MALLOC)
 	    *statusRet = IceAcceptBadMalloc;

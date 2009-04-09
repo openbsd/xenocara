@@ -34,19 +34,17 @@ Author: Ralph Mor, X Consortium
 #include "ICElibint.h"
 
 int
-IceRegisterForProtocolSetup (protocolName, vendor, release,
-    versionCount, versionRecs, authCount, authNames, authProcs, IOErrorProc)
-
-char			*protocolName;
-char			*vendor;
-char			*release;
-int			versionCount;
-IcePoVersionRec		*versionRecs;
-int			authCount;
-char		        **authNames;
-IcePoAuthProc		*authProcs;
-IceIOErrorProc		IOErrorProc;
-
+IceRegisterForProtocolSetup (
+	char			*protocolName,
+	char			*vendor,
+	char			*release,
+	int			versionCount,
+	IcePoVersionRec		*versionRecs,
+	int			authCount,
+	const char	        **authNames,
+	IcePoAuthProc		*authProcs,
+	IceIOErrorProc		IOErrorProc
+)
 {
     _IcePoProtocol 	*p;
     int			opcodeRet, i;
@@ -133,24 +131,20 @@ IceIOErrorProc		IOErrorProc;
 
 
 int
-IceRegisterForProtocolReply (protocolName, vendor, release,
-    versionCount, versionRecs, authCount, authNames, authProcs,
-    hostBasedAuthProc, protocolSetupProc, protocolActivateProc,
-    IOErrorProc)
-
-char				*protocolName;
-char				*vendor;
-char				*release;
-int				versionCount;
-IcePaVersionRec			*versionRecs;
-int				authCount;
-char				**authNames;
-IcePaAuthProc			*authProcs;
-IceHostBasedAuthProc		hostBasedAuthProc;
-IceProtocolSetupProc		protocolSetupProc;
-IceProtocolActivateProc		protocolActivateProc;
-IceIOErrorProc			IOErrorProc;
-
+IceRegisterForProtocolReply (
+	char				*protocolName,
+	char				*vendor,
+	char				*release,
+	int				versionCount,
+	IcePaVersionRec			*versionRecs,
+	int				authCount,
+	const char			**authNames,
+	IcePaAuthProc			*authProcs,
+	IceHostBasedAuthProc		hostBasedAuthProc,
+	IceProtocolSetupProc		protocolSetupProc,
+	IceProtocolActivateProc		protocolActivateProc,
+	IceIOErrorProc			IOErrorProc
+)
 {
     _IcePaProtocol 	*p;
     int			opcodeRet, i;

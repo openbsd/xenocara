@@ -37,11 +37,10 @@ Author: Ralph Mor, X Consortium
 
 
 Status
-IceProtocolShutdown (iceConn, majorOpcode)
-
-IceConn iceConn;
-int	majorOpcode;
-
+IceProtocolShutdown (
+	IceConn iceConn,
+	int	majorOpcode
+)
 {
     if (iceConn->proto_ref_count == 0 || iceConn->process_msg_info == NULL ||
         majorOpcode < 1 || majorOpcode > _IceLastMajorOpcode)
@@ -87,11 +86,10 @@ int	majorOpcode;
 
 
 void
-IceSetShutdownNegotiation (iceConn, negotiate)
-
-IceConn     	iceConn;
-Bool		negotiate;
-
+IceSetShutdownNegotiation (
+	IceConn     	iceConn,
+	Bool		negotiate
+)
 {
     iceConn->skip_want_to_close = negotiate ? False : True;
 }
@@ -99,10 +97,9 @@ Bool		negotiate;
 
 
 Bool
-IceCheckShutdownNegotiation (iceConn)
-
-IceConn     iceConn;
-
+IceCheckShutdownNegotiation (
+	IceConn     iceConn
+)
 {
     return (iceConn->skip_want_to_close ? False : True);
 }
@@ -110,10 +107,9 @@ IceConn     iceConn;
 
 
 IceCloseStatus
-IceCloseConnection (iceConn)
-
-IceConn     iceConn;
-
+IceCloseConnection (
+	IceConn     iceConn
+)
 {
     int refCountReachedZero;
     IceCloseStatus status;
@@ -253,10 +249,9 @@ IceConn     iceConn;
 
 
 void
-_IceFreeConnection (iceConn)
-
-IceConn iceConn;
-
+_IceFreeConnection (
+	IceConn iceConn
+)
 {
     if (iceConn->listen_obj == NULL)
     {

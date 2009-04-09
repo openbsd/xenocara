@@ -35,11 +35,10 @@ Author: Ralph Mor, X Consortium
 
 
 void
-_IceAddReplyWait (iceConn, replyWait)
-
-IceConn			iceConn;
-IceReplyWaitInfo	*replyWait;
-
+_IceAddReplyWait (
+	IceConn			iceConn,
+	IceReplyWaitInfo	*replyWait
+)
 {
     /*
      * Add this replyWait to the end of the list (only if the
@@ -77,11 +76,10 @@ IceReplyWaitInfo	*replyWait;
 
 
 IceReplyWaitInfo *
-_IceSearchReplyWaits (iceConn, majorOpcode)
-
-IceConn	iceConn;
-int	majorOpcode;
-
+_IceSearchReplyWaits (
+	IceConn	iceConn,
+	int	majorOpcode
+)
 {
     /*
      * Return the first replyWait in the list with the given majorOpcode
@@ -101,11 +99,10 @@ int	majorOpcode;
 
 
 void
-_IceSetReplyReady (iceConn, replyWait)
-
-IceConn			iceConn;
-IceReplyWaitInfo	*replyWait;
-
+_IceSetReplyReady (
+	IceConn			iceConn,
+	IceReplyWaitInfo	*replyWait
+)
 {
     /*
      * The replyWait specified has a reply ready.
@@ -123,11 +120,10 @@ IceReplyWaitInfo	*replyWait;
 
 
 Bool
-_IceCheckReplyReady (iceConn, replyWait)
-
-IceConn			iceConn;
-IceReplyWaitInfo	*replyWait;
-
+_IceCheckReplyReady (
+	IceConn			iceConn,
+	IceReplyWaitInfo	*replyWait
+)
 {
     _IceSavedReplyWait	*savedReplyWait = iceConn->saved_reply_waits;
     _IceSavedReplyWait	*prev = NULL;
