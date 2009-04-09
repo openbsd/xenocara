@@ -54,6 +54,6 @@ clear the screen during mode setting. If you experience problems try
 to turn this option off. Default: on.
 
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgcfg(__appmansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
 .SH AUTHORS
 Authors include: Paulo Ce\'sar Pereira de Andrade.

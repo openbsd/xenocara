@@ -31,6 +31,14 @@
  *          Adam Jackson <ajax@redhat.com>
  */
 
+/*
+ * TODO:
+ * - PanelID might give us useful size hints.
+ * - Port to RANDR 1.2 setup to make mode selection slightly better
+ * - Port to RANDR 1.2 to drop the old-school DGA junk
+ * - VBE/SCI for secondary DDC method?
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -93,8 +101,6 @@ static void RestoreFonts(ScrnInfoPtr pScrn);
 static Bool 
 VESASaveRestore(ScrnInfoPtr pScrn, vbeSaveRestoreFunction function);
 
-static void *VESAWindowPlanar(ScreenPtr pScrn, CARD32 row, CARD32 offset,
-			      int mode, CARD32 *size, void *closure);
 static void *VESAWindowLinear(ScreenPtr pScrn, CARD32 row, CARD32 offset,
 			      int mode, CARD32 *size, void *closure);
 static void *VESAWindowWindowed(ScreenPtr pScrn, CARD32 row, CARD32 offset,
@@ -125,15 +131,19 @@ static SymTabRec VESAChipsets[] =
     {-1,		 NULL}
 };
 
+#ifndef XSERVER_LIBPCIACCESS
 static PciChipsets VESAPCIchipsets[] = {
   { CHIP_VESA_GENERIC, PCI_CHIP_VGA, RES_SHARED_VGA },
   { -1,		-1,	   RES_UNDEFINED },
 };
+#endif
 
+#ifdef HAVE_ISA
 static IsaChipsets VESAISAchipsets[] = {
   {CHIP_VESA_GENERIC, RES_EXCLUSIVE_VGA},
   {-1,		0 }
 };
+#endif
 
 
 /* 
@@ -278,7 +288,7 @@ VESAValidMode(int scrn, DisplayModePtr p, Bool flag, int pass)
     ScrnInfoPtr pScrn = xf86Screens[scrn];
     VESAPtr pVesa = VESAGetRec(pScrn);
     MonPtr mon = pScrn->monitor;
-    ModeStatus ret;
+    ModeStatus ret = MODE_BAD;
     DisplayModePtr mode;
     float v;
 
@@ -440,6 +450,7 @@ VESAProbe(DriverPtr drv, int flags)
     }
 #endif
 
+#ifdef HAVE_ISA
     /* Isa Bus */
     numUsed = xf86MatchIsaInstances(VESA_NAME,VESAChipsets,
 				    VESAISAchipsets, drv,
@@ -459,12 +470,14 @@ VESAProbe(DriverPtr drv, int flags)
 	}
 	xfree(usedChips);
     }
+#endif
 
     xfree(devSections);
 
     return (foundScreen);
 }
 
+#ifdef HAVE_ISA
 static int
 VESAFindIsaDevice(GDevPtr dev)
 {
@@ -489,6 +502,7 @@ VESAFindIsaDevice(GDevPtr dev)
 #endif
     return (int)CHIP_VESA_GENERIC;
 }
+#endif
 
 static void
 VESAFreeRec(ScrnInfoPtr pScrn)
@@ -522,6 +536,22 @@ VESAFreeRec(ScrnInfoPtr pScrn)
     xfree(pVesa->fonts);
     xfree(pScrn->driverPrivate);
     pScrn->driverPrivate = NULL;
+}
+
+static int
+VESAValidateModes(ScrnInfoPtr pScrn)
+{
+    VESAPtr pVesa = VESAGetRec(pScrn);
+    DisplayModePtr mode;
+
+    for (mode = pScrn->monitor->Modes; mode; mode = mode->next)
+	mode->status = MODE_OK;
+
+    return VBEValidateModes(pScrn, NULL, pScrn->display->modes, 
+			    NULL, NULL, 0, 2048, 1, 0, 2048,
+			    pScrn->display->virtualX,
+			    pScrn->display->virtualY,
+			    pVesa->mapSize, LOOKUP_BEST_REFRESH);
 }
 
 /*
@@ -670,27 +700,37 @@ VESAPreInit(ScrnInfoPtr pScrn, int flags)
     VBESetModeNames(pScrn->modePool);
 
     pVesa->strict_validation = TRUE;
-    i = VBEValidateModes(pScrn, NULL, pScrn->display->modes, 
-			  NULL, NULL, 0, 2048, 1, 0, 2048,
-			  pScrn->display->virtualX,
-			  pScrn->display->virtualY,
-			  pVesa->mapSize, LOOKUP_BEST_REFRESH);
+    i = VESAValidateModes(pScrn);
 
     if (i <= 0) {
-	DisplayModePtr mode;
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		"No valid modes left.  Trying less strict filter...\n");
-	for (mode = pScrn->monitor->Modes; mode; mode = mode->next)
-	    mode->status = MODE_OK;
+		"No valid modes left. Trying less strict filter...\n");
 	pVesa->strict_validation = FALSE;
-	i = VBEValidateModes(pScrn, NULL, pScrn->display->modes, 
-		NULL, NULL, 0, 2048, 1, 0, 2048,
-		pScrn->display->virtualX,
-		pScrn->display->virtualY,
-		pVesa->mapSize, LOOKUP_BEST_REFRESH);
+	i = VESAValidateModes(pScrn);
     }
 
+    if (i <= 0) do {
+	Bool changed = FALSE;
+	/* maybe there's more modes at the bottom... */
+	if (pScrn->monitor->vrefresh[0].lo > 50) {
+	    changed = TRUE;
+	    pScrn->monitor->vrefresh[0].lo = 50;
+	}
+	if (pScrn->monitor->hsync[0].lo > 31.5) {
+	    changed = TRUE;
+	    pScrn->monitor->hsync[0].lo = 31.5;
+	}
+
+	if (!changed)
+	    break;
+
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		   "No valid modes left. Trying aggressive sync range...\n");
+	i = VESAValidateModes(pScrn);
+    } while (0);	
+
     if (i <= 0) {
+	/* alright, i'm out of ideas */
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "No valid modes\n");
         vbeFree(pVesa->pVbe);
 	return (FALSE);
@@ -1093,6 +1133,10 @@ VESASetMode(ScrnInfoPtr pScrn, DisplayModePtr pMode)
 
     data = (VbeModeInfoData*)pMode->Private;
 
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+	       "Setting up VESA Mode 0x%X (%dx%d)\n",
+	       data->mode & 0x7FF, pMode->HDisplay, pMode->VDisplay);
+
     /* careful, setting the bit means don't clear the screen */
     mode = data->mode | (pVesa->ModeSetClearScreen ? 0 : (1U << 15));
 
@@ -1234,28 +1278,6 @@ VESAUnmapVidMem(ScrnInfoPtr pScrn)
     pVesa->base = NULL;
 }
 
-void *
-VESAWindowPlanar(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
-		 CARD32 *size, void *closure)
-{
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-    VESAPtr pVesa = VESAGetRec(pScrn);
-    VbeModeInfoBlock *data = ((VbeModeInfoData*)(pScrn->currentMode->Private))->data;
-    int window;
-    int mask = 1 << (offset & 3);
-
-    outb(pVesa->ioBase + VGA_SEQ_INDEX, 2);
-    outb(pVesa->ioBase + VGA_SEQ_DATA, mask);
-    offset = (offset >> 2) + pVesa->maxBytesPerScanline * row;
-    window = offset / (data->WinGranularity * 1024);
-    pVesa->windowAoffset = window * data->WinGranularity * 1024;
-    VESABankSwitch(pScreen, window);
-    *size = data->WinSize * 1024 - (offset - pVesa->windowAoffset);
-
-    return (void *)((unsigned long)pVesa->base +
-		   (offset - pVesa->windowAoffset));
-}
-
 static void *
 VESAWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
 		 CARD32 *size, void *closure)
@@ -1394,13 +1416,6 @@ ReadGr(VESAPtr pVesa, int index)
 #define WriteCrtc(index, value)						     \
     outb(pVesa->ioBase + (VGA_IOBASE_COLOR + VGA_CRTC_INDEX_OFFSET), index); \
     outb(pVesa->ioBase + (VGA_IOBASE_COLOR + VGA_CRTC_DATA_OFFSET), value)
-
-static int
-ReadCrtc(VESAPtr pVesa, int index)
-{
-    outb(pVesa->ioBase + (VGA_IOBASE_COLOR + VGA_CRTC_INDEX_OFFSET), index);
-    return inb(pVesa->ioBase + (VGA_IOBASE_COLOR + VGA_CRTC_DATA_OFFSET));
-}
 
 static void
 SeqReset(VESAPtr pVesa, Bool start)
@@ -1658,44 +1673,12 @@ VESADisplayPowerManagementSet(ScrnInfoPtr pScrn, int mode,
                 int flags)
 {
     VESAPtr pVesa = VESAGetRec(pScrn);
-    unsigned char seq1 = 0, crtc17 = 0;
 
     if (!pScrn->vtSema)
 	return;
 
-    switch (mode) {
-	case DPMSModeOn:
-	    /* Screen: On; HSync: On, VSync: On */
-	    seq1 = 0x00;
-	    crtc17 = 0x80;
-	    break;
-	case DPMSModeStandby:
-	    /* Screen: Off; HSync: Off, VSync: On -- Not Supported */
-	    seq1 = 0x20;
-	    crtc17 = 0x80;
-	    break;
-	case DPMSModeSuspend:
-	    /* Screen: Off; HSync: On, VSync: Off -- Not Supported */
-	    seq1 = 0x20;
-	    crtc17 = 0x80;
-	    break;
-	case DPMSModeOff:
-	    /* Screen: Off; HSync: Off, VSync: Off */
-	    seq1 = 0x20;
-	    crtc17 = 0x00;
-	    break;
-    }
-    WriteSeq(0x00, 0x01);		  /* Synchronous Reset */
-    seq1 |= ReadSeq(pVesa, 0x01) & ~0x20;
-    WriteSeq(0x01, seq1);
-    crtc17 |= ReadCrtc(pVesa, 0x17) & ~0x80;
-    usleep(10000);
-    WriteCrtc(0x17, crtc17);
-    WriteSeq(0x00, 0x03);		  /* End Reset */
+    VBEDPMSSet(pVesa->pVbe, mode);
 }
-
-
-
 
 /***********************************************************************
  * DGA stuff
