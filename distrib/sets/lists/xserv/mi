@@ -6,6 +6,5 @@
 ./usr/X11R6/lib/modules/input
 ./usr/X11R6/lib/modules/linux
 ./usr/X11R6/lib/modules/multimedia
-./usr/X11R6/lib/xserver
 ./var/db
 ./var/db/xkb/README.compiled
