@@ -15,42 +15,39 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: headers.h,v 1.9 2009/01/16 15:24:14 okan Exp $
+ * $Id: headers.h,v 1.10 2009/04/12 23:51:10 okan Exp $
  */
 
 #ifndef _CALMWM_HEADERS_H_
 #define _CALMWM_HEADERS_H_
 
-#include <sys/types.h>
-
-#include <sys/queue.h>
-#include <sys/wait.h>
 #include <sys/param.h>
+#include <sys/queue.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 #include <assert.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
+#include <ctype.h>
+#include <err.h>
+#include <errno.h>
 #include <dirent.h>
 #include <getopt.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
-#include <errno.h>
 #include <unistd.h>
-#include <ctype.h>
 
+#include <X11/Intrinsic.h>
+#include <X11/Xatom.h>
+#include <X11/Xft/Xft.h>
+#include <X11/Xlib.h>
+#include <X11/Xos.h>
+#include <X11/Xproto.h>
+#include <X11/Xutil.h>
 #include <X11/cursorfont.h>
 #include <X11/extensions/Xinerama.h>
 #include <X11/extensions/Xrandr.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
 #include <X11/keysym.h>
-#include <X11/Xatom.h>
-#include <X11/Xproto.h>
-#include <X11/Intrinsic.h>
-#include <X11/Xos.h>
-#include <X11/Xft/Xft.h>
-
-#include <err.h>
 
 #endif /* _CALMWM_HEADERS_H_ */
