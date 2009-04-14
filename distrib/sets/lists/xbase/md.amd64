@@ -51,7 +51,7 @@
 ./usr/X11R6/lib/libGLw_pic.a
 ./usr/X11R6/lib/libI810XvMC.la
 ./usr/X11R6/lib/libI810XvMC.so.1.0
-./usr/X11R6/lib/libICE.so.8.1
+./usr/X11R6/lib/libICE.so.9.0
 ./usr/X11R6/lib/libIntelXvMC.la
 ./usr/X11R6/lib/libIntelXvMC.so.1.0
 ./usr/X11R6/lib/libSM.so.8.0
