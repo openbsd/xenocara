@@ -64,7 +64,7 @@
 #define HTOLE_16(x)	htole16(x)
 #define HTOLE_32(x)	htole32(x)
 
-#if defined(__FreeBSD__) || defined(__DragonFly__)
+#if defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__)
 #define LETOH_16(x)	le16toh(x)
 #define LETOH_32(x)	le32toh(x)
 #else
@@ -110,7 +110,7 @@ pci_device_read_rom( struct pci_device * dev, void * buffer )
  * \param dev  Device to be probed.
  * 
  * \return
- * Zero on succes or an \c errno value on failure.
+ * Zero on success or an \c errno value on failure.
  */
 int
 pci_device_probe( struct pci_device * dev )
@@ -127,7 +127,7 @@ pci_device_probe( struct pci_device * dev )
 /**
  * Map the specified BAR so that it can be accessed by the CPU.
  *
- * Maps the specified BAR for acces by the processor.  The pointer to the
+ * Maps the specified BAR for access by the processor.  The pointer to the
  * mapped region is stored in the \c pci_mem_region::memory pointer for the
  * BAR.
  *
@@ -166,7 +166,7 @@ pci_device_map_region(struct pci_device * dev, unsigned region,
  * Map the specified memory range so that it can be accessed by the CPU.
  *
  * Maps the specified memory range for access by the processor.  The pointer
- * to the mapped region is stored in \c addr.  In addtion, the
+ * to the mapped region is stored in \c addr.  In addition, the
  * \c pci_mem_region::memory pointer for the BAR will be updated.
  *
  * \param dev          Device whose memory region is to be mapped.
@@ -194,7 +194,7 @@ int pci_device_map_memory_range(struct pci_device *dev,
  * Map the specified memory range so that it can be accessed by the CPU.
  *
  * Maps the specified memory range for access by the processor.  The pointer
- * to the mapped region is stored in \c addr.  In addtion, the
+ * to the mapped region is stored in \c addr.  In addition, the
  * \c pci_mem_region::memory pointer for the BAR will be updated.
  *
  * \param dev          Device whose memory region is to be mapped.
@@ -415,7 +415,7 @@ pci_device_unmap_range(struct pci_device *dev, void *memory,
  *
  * Reads data from the device's PCI configuration space.  As with the system
  * read command, less data may be returned, without an error, than was
- * requested.  This is particuarly the case if a non-root user tries to read
+ * requested.  This is particularly the case if a non-root user tries to read
  * beyond the first 64-bytes of configuration space.
  *
  * \param dev         Device whose PCI configuration data is to be read.
@@ -429,7 +429,7 @@ pci_device_unmap_range(struct pci_device *dev, void *memory,
  * Zero on success or an errno value on failure.
  *
  * \note
- * Data read from PCI configuartion space using this routine is \b not
+ * Data read from PCI configuration space using this routine is \b not
  * byte-swapped to the host's byte order.  PCI configuration data is always
  * stored in little-endian order, and that is what this routine returns.
  */
@@ -500,7 +500,7 @@ pci_device_cfg_read_u32( struct pci_device * dev, uint32_t * data,
 /**
  * Write arbitrary bytes to device's PCI config space
  *
- * Writess data to the device's PCI configuration space.  As with the system
+ * Writes data to the device's PCI configuration space.  As with the system
  * write command, less data may be written, without an error, than was
  * requested.
  *
@@ -515,7 +515,7 @@ pci_device_cfg_read_u32( struct pci_device * dev, uint32_t * data,
  * Zero on success or an errno value on failure.
  *
  * \note
- * Data written to PCI configuartion space using this routine is \b not
+ * Data written to PCI configuration space using this routine is \b not
  * byte-swapped from the host's byte order.  PCI configuration data is always
  * stored in little-endian order, so data written with this routine should be
  * put in that order in advance.

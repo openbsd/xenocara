@@ -26,7 +26,7 @@ SUBDIRS = src
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = pciaccess.pc
 
-EXTRA_DIST = pciaccess.pc.in autogen.sh src/scanpci.c
+EXTRA_DIST = pciaccess.pc.in autogen.sh src/scanpci.c src/scanpci.man
 
 EXTRA_DIST += ChangeLog
 MAINTAINERCLEANFILES = ChangeLog

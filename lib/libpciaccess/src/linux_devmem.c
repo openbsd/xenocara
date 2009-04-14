@@ -145,7 +145,7 @@ pci_device_linux_devmem_read_rom(struct pci_device *dev, void *buffer)
 	const int tmp_err = pci_device_cfg_write_u32(& priv->base,
 						     rom_base_tmp, 48);
 
-	/* Prefer to return the first error that occured.
+	/* Prefer to return the first error that occurred.
 	 */
 	if (err == 0) {
 	    err = tmp_err;

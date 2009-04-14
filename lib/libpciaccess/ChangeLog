@@ -136,6 +136,169 @@ Date:   Thu Oct 18 15:59:14 2007 -0700
 
     Update bug reporting link.
 
+commit 7aca9465a61934d57781352f4fcc42b779392cd0
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Oct 31 18:07:52 2008 +0100
+
+    Bump to 0.10.5
+
+commit 8b0be8751279f9bc8f15ced4e5384fa2b0f78711
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Oct 31 17:33:50 2008 +0100
+
+    Make --without-zlib work
+
+commit 7a5ed759f13c3fc5f379cce2ca02c9ebfae5eae9
+Author: Robert Noland <rnoland@2hip.net>
+Date:   Wed Oct 29 22:20:35 2008 -0400
+
+    Fix FreeBSD systems which support pci domains.
+    
+    Support for FreeBSD based systems which support pci domains was broken
+    in the commit to support kFreeBSD.  Include config.h so that things are
+    happy again.
+
+commit 067f979cbd410ddb82aee702d8434552e35c7154
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 17 14:09:52 2008 -0700
+
+    Version 0.10.4
+
+commit 714fef70e66b651e9a535d3d3cb20d055595a12d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 17 14:09:43 2008 -0700
+
+    Add scanpci.man to EXTRA_DIST
+
+commit 77f274b6386301cb31c074061a8c947a78b49da9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 17 13:51:28 2008 -0700
+
+    Update COPYING with the rest of the copyright/license notices from the code
+
+commit 482d1da02498a6a31a6d829a5be41727f6333f94
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 17 13:48:46 2008 -0700
+
+    Add scanpci man page from Xorg
+
+commit f537fc50e014063d1a1297bfd82680ae3f170281
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 16 21:17:24 2008 -0700
+
+    More minor Solaris cleanups
+
+commit 9a5565c72c13aa107167c9c4a4469dd11ac13714
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 16 18:18:09 2008 -0700
+
+    Clean up formatting of solx_devfs.c
+
+commit de97e7e4c63146032c0badb9e0f0b1899dc8debf
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 16 16:55:27 2008 -0700
+
+    Fix bus probing on Solaris/SPARC
+
+commit 110cdac97ca1bca3ec811ce0a71b2b24c1f80525
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 16 13:33:01 2008 -0700
+
+    Correct Sun license notice
+
+commit 4c0d050c72a38e66a7b4ccb134e7e872eb0bf557
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Oct 15 18:23:03 2008 -0700
+
+    scanpci: add -v flag to enable verbose mode like old scanpci
+
+commit 64d0c836d547847b752da6539792b94c803f206b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Oct 15 16:14:18 2008 -0700
+
+    Correct comment about devices used on Solaris
+
+commit d43d21c8cb0f917b65228852a03a7d501636f227
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Oct 15 15:35:25 2008 -0700
+
+    Fix various typos (mostly in comments)
+
+commit 4c1c607c602e5e8d9277b9c01edfa7a8d10333cd
+Author: Juan RP <xtraeme@gmail.com>
+Date:   Sat Oct 11 20:28:03 2008 +0200
+
+    Add NetBSD support
+    
+    It's based in the OpenBSD code, but with differences because on NetBSD,
+    to set MTRRs we have to use i386/x86_64_set_mtrr() and link to libi386
+    or libx86_64.
+    
+    X.Org bug#17931 <http://bugs.freedesktop.org/show_bug.cgi?id=17931>
+
+commit 6ae378611bb4caaf57311734d3adcb7e10ac3622
+Author: Petr Salinger <petr.salinger@seznam.cz>
+Date:   Sat Oct 11 20:22:28 2008 +0200
+
+    Add support for GNU/kFreeBSD
+    
+    We need to initialize the FreeBSD backend on GNU/kFreeBSD and detect
+    whether pci_io.pi_sel.pc_domain member exists.
+    
+    X.Org bug#17882 <http://bugs.freedesktop.org/show_bug.cgi?id=17882>
+
+commit 968289fc3137ac0863c62d3c343153fa3e4aeb10
+Author: John Tapsell <johnflux@gmail.com>
+Date:   Tue Sep 23 17:26:09 2008 +0300
+
+    configure.ac: Make mtrr.h test more portable
+    
+    Use the standard AC_CHECK_HEADERS, which works for cross-compiling as
+    well as in various other locations.
+
+commit 79ed41882fd721a15c8b0bea7efeb98864d85dfb
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Sep 20 18:28:59 2008 +0200
+
+    OpenBSD: allow 2 successives calls to pci_system_init().
+    
+    And fix pci_system_cleanup() to make it possible to call pci_system_init()
+    again.
+    ok kettenis at openbsd.
+
+commit 45015ab30b36bdaefd3f3aeab73d287023928826
+Author: Kel Modderman <kel@otaku42.de>
+Date:   Tue Jul 8 13:09:52 2008 +0200
+
+    Handle compressed pci.ids
+    
+    Add an option to build with zlib support so we can find
+    vendor/device information if the pci.ids file is gzipped.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 32c64bb2386c55d5c7a3878ae9e3f95577f00875
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Mar 12 15:00:26 2008 +0100
+
+    Hide one more private symbol
+
+commit 7282b53c47c2435c1ea23948272c9ccf1798178a
+Author: Jesse Barnes <jbarnes@hobbes.(none)>
+Date:   Mon Jun 23 11:24:04 2008 -0700
+
+    Support write combine resource files in Linux sysfs
+    
+    Starting with version 2.6.26, Linux will support resourceN_wc files which
+    export write combining mappings of PCI resource ranges, so support them if
+    present in libpciaccess.
+
+commit f49f66710b6c3cc5edfd0681cf7b69063cb4b893
+Author: Stefan Dirsch <sndirsch@suse.de>
+Date:   Mon Jun 23 10:50:30 2008 +0200
+
+    Fixed typo in output ("performace" --> "performance").
+
 commit ed0555e4225aec26aaaa40f4f3c15fd914390817
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Tue Jun 10 15:24:56 2008 -0400

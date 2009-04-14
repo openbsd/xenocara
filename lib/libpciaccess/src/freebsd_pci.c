@@ -43,12 +43,7 @@
 #include <sys/mman.h>
 #include <sys/memrange.h>
 
-#if __FreeBSD_version >= 700053
-#define DOMAIN_SUPPORT 1
-#else
-#define DOMAIN_SUPPORT 0
-#endif
-
+#include "config.h"
 #include "pciaccess.h"
 #include "pciaccess_private.h"
 
@@ -64,6 +59,7 @@
  *
  * It is initialized once and used as a global, just as pci_system is used.
  */
+_pci_hidden
 struct freebsd_pci_system {
     /* This must be the first entry in the structure, as pci_system_cleanup()
      * frees pci_sys.
@@ -167,7 +163,7 @@ pci_device_freebsd_read( struct pci_device * dev, void * data,
 {
     struct pci_io io;
 
-#if DOMAIN_SUPPORT
+#if HAVE_PCI_IO_PC_DOMAIN
     io.pi_sel.pc_domain = dev->domain;
 #endif
     io.pi_sel.pc_bus = dev->bus;
@@ -207,7 +203,7 @@ pci_device_freebsd_write( struct pci_device * dev, const void * data,
 {
     struct pci_io io;
 
-#if DOMAIN_SUPPORT
+#if HAVE_PCI_IO_PC_DOMAIN
     io.pi_sel.pc_domain = dev->domain;
 #endif
     io.pi_sel.pc_bus = dev->bus;
@@ -487,7 +483,7 @@ pci_system_freebsd_create( void )
     for ( i = 0; i < pciconfio.num_matches; i++ ) {
 	struct pci_conf *p = &pciconf[ i ];
 
-#if DOMAIN_SUPPORT
+#if HAVE_PCI_IO_PC_DOMAIN
 	pci_sys->devices[ i ].base.domain = p->pc_sel.pc_domain;
 #else
 	pci_sys->devices[ i ].base.domain = 0;

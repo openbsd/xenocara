@@ -181,6 +181,23 @@ int main( int argc, char ** argv )
     struct pci_device_iterator * iter;
     struct pci_device * dev;
     int ret;
+    int verbose = 0;
+    int c;
+    int errors = 0;
+
+    while ((c = getopt(argc, argv, "v")) != -1) {
+	switch (c) {
+	case 'v':
+	    verbose = 1;
+	    break;
+	case '?':
+	    errors++;
+	}
+    }
+    if (errors != 0) {
+	fprintf(stderr, "usage: %s [-v]\n", argv[0]);
+	exit(2);
+    }
 
     ret = pci_system_init();
     if (ret != 0)
@@ -189,7 +206,7 @@ int main( int argc, char ** argv )
     iter = pci_slot_match_iterator_create( NULL );
 
     while ( (dev = pci_device_next( iter )) != NULL ) {
-	print_pci_device( dev, 1 );
+	print_pci_device( dev, verbose );
     }
 
     pci_system_cleanup();

@@ -40,7 +40,7 @@ dnl refers to ${prefix}.  Thus we have to use `eval' twice.
 
 AC_PREREQ([2.57])
 
-AC_INIT(libpciaccess, 0.10.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=libpciaccess], libpciaccess)
+AC_INIT(libpciaccess, 0.10.5, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=libpciaccess], libpciaccess)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -58,6 +58,19 @@ AC_ARG_WITH(pciids-path,
 	[PCIIDS_PATH="$withval"],
 	[PCIIDS_PATH="$DEFAULT_PCIIDS_PATH"])
 AC_DEFINE_DIR(PCIIDS_PATH, PCIIDS_PATH, [Path to pci.ids])
+
+AC_ARG_WITH(zlib,
+	AS_HELP_STRING([--with-zlib], [Enable zlib support to read gzip compressed pci.ids]),
+	[use_zlib="$withval"],
+	[use_zlib="no"])
+if test "x$use_zlib" = xyes; then
+	AC_CHECK_LIB(z, gzopen,
+	[PCIACCESS_LIBS="$PCIACCESS_LIBS -lz"],
+	[AC_MSG_ERROR(Check for zlib library failed)])
+	AC_CHECK_HEADER([zlib.h],
+	[AC_DEFINE(HAVE_ZLIB, 1, [Use zlib to read gzip compressed pci.ids])],
+	[AC_MSG_ERROR(Check for zlib.h header file failed)])
+fi
 
 if test "x$GCC" = "xyes"; then
        GCC_WARNINGS1="-Wall -Wpointer-arith -Wstrict-prototypes"
@@ -77,6 +90,17 @@ case $host_os in
 	*linux*)
 		linux=yes
 		;;
+	*netbsd*)
+		case $host in
+		*i386*)
+			PCIACCESS_LIBS="-li386"
+			;;
+		*x86_64*|*amd64*)
+			PCIACCESS_LIBS="-lx86_64"
+			;;
+		esac
+		netbsd=yes
+		;;
 	*openbsd*)
 		openbsd=yes
 		;;
@@ -88,14 +112,23 @@ esac
 
 AM_CONDITIONAL(LINUX, [test "x$linux" = xyes])
 AM_CONDITIONAL(FREEBSD, [test "x$freebsd" = xyes])
+AM_CONDITIONAL(NETBSD, [test "x$netbsd" = xyes])
 AM_CONDITIONAL(OPENBSD, [test "x$openbsd" = xyes])
 AM_CONDITIONAL(SOLARIS, [test "x$solaris" = xyes])
 
-AC_CHECK_FILE([/usr/include/asm/mtrr.h],
-              [have_mtrr_h="yes"], [have_mtrr_h="no"])
+AC_CHECK_HEADER([asm/mtrr.h], [have_mtrr_h="yes"], [have_mtrr_h="no"])
+
 if test "x$have_mtrr_h" = xyes; then
     AC_DEFINE(HAVE_MTRR, 1, [Use MTRRs on mappings])
 fi
+
+dnl check for the pci_io.pi_sel.pc_domain
+AC_CHECK_MEMBER([struct pci_io.pi_sel.pc_domain],
+               [AC_DEFINE(HAVE_PCI_IO_PC_DOMAIN,1,[Have the pci_io.pi_sel.pc_domain member.])],
+               [],
+               [ #include <sys/types.h>
+                 #include <sys/pciio.h>
+               ])
 
 AC_SUBST(PCIACCESS_CFLAGS)
 AC_SUBST(PCIACCESS_LIBS)

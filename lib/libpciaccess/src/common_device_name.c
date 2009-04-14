@@ -50,6 +50,31 @@
 
 #define DO_MATCH(a,b)  (((a) == PCI_MATCH_ANY) || ((a) == (b)))
 
+#ifdef HAVE_ZLIB
+#include <zlib.h>
+typedef gzFile pci_id_file;
+
+static pci_id_file
+pci_id_file_open()
+{
+    pci_id_file result;
+
+    result = gzopen(PCIIDS_PATH "/pci.ids.gz", "rb");
+    if (result)
+        return result;
+
+    return gzopen(PCIIDS_PATH "/pci.ids", "rb");
+}
+
+#define pci_id_file_gets(l, s, f)	gzgets(f, l, s)
+#define pci_id_file_close(f)		gzclose(f)
+#else
+typedef FILE pci_id_file;
+#define pci_id_file_open()		fopen(PCIIDS_PATH "/pci.ids", "r")
+#define pci_id_file_gets(l, s, f)	fgets(l, s, f)
+#define pci_id_file_close(f)		fclose(f)
+#endif
+
 /**
  * Node for sorting vendor IDs.
  * 
@@ -94,12 +119,6 @@ struct pci_device_leaf {
  * Root of the PCI vendor ID search tree.
  */
 _pci_hidden struct pci_id_node * tree = NULL;
-
-/**
- * Name of the file containing the PCI ID information.
- */
-static const char pci_id_file[] = PCIIDS_PATH "/pci.ids";
-
 
 /**
  * Get a pointer to the leaf node for a vendor ID.
@@ -170,7 +189,7 @@ insert( uint16_t vendor )
 static void
 populate_vendor( struct pci_id_leaf * vend, int fill_device_data )
 {
-    FILE * f = fopen( pci_id_file, "r" );
+    pci_id_file * f = pci_id_file_open();
     char buf[128];
     unsigned vendor = PCI_MATCH_ANY;
 
@@ -186,12 +205,12 @@ populate_vendor( struct pci_id_leaf * vend, int fill_device_data )
      * anything.  This avoids wasted processing and potential memory leaks.
      */
     if (vend->num_devices != 0) {
-	fclose(f);
+	pci_id_file_close( f );
 	return;
     }
 
 
-    while( fgets( buf, sizeof( buf ), f ) != NULL ) {
+    while( pci_id_file_gets( buf, sizeof( buf ), f ) != NULL ) {
 	unsigned num_tabs;
 	char * new_line;
 	size_t length;
@@ -284,7 +303,7 @@ populate_vendor( struct pci_id_leaf * vend, int fill_device_data )
 	}
     }
     
-    fclose( f );
+    pci_id_file_close( f );
 }
 
 

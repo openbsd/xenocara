@@ -153,6 +153,8 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+NETBSD_FALSE = @NETBSD_FALSE@
+NETBSD_TRUE = @NETBSD_TRUE@
 NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 OPENBSD_FALSE = @OPENBSD_FALSE@
@@ -223,7 +225,8 @@ target_alias = @target_alias@
 SUBDIRS = src
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = pciaccess.pc
-EXTRA_DIST = pciaccess.pc.in autogen.sh src/scanpci.c ChangeLog
+EXTRA_DIST = pciaccess.pc.in autogen.sh src/scanpci.c src/scanpci.man \
+	ChangeLog
 MAINTAINERCLEANFILES = ChangeLog
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
