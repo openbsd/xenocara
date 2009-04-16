@@ -675,6 +675,7 @@
 ./usr/X11R6/lib/libxkbui.a
 ./usr/X11R6/lib/libxkbui.la
 ./usr/X11R6/lib/pkgconfig/pixman-1.pc
+./usr/X11R6/lib/xorg
 ./usr/X11R6/man
 ./usr/X11R6/man/cat1
 ./usr/X11R6/man/cat3/GLwCreateMDrawingArea.0

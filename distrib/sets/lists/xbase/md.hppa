@@ -86,7 +86,6 @@
 ./usr/X11R6/lib/pkgconfig/glw.pc
 ./usr/X11R6/lib/pkgconfig/libdrm.pc
 ./usr/X11R6/lib/pkgconfig/xf86driproto.pc
-./usr/X11R6/lib/xorg
 ./usr/X11R6/lib/xorg/protocol.txt
 ./usr/X11R6/man/cat1/glxgears.0
 ./usr/X11R6/man/cat1/glxinfo.0
