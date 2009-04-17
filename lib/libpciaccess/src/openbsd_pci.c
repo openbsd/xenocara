@@ -135,8 +135,8 @@ pci_device_openbsd_read_rom(struct pci_device *device, void *buffer)
 	if (bios == MAP_FAILED)
 		return errno;
 
-	memcpy(buffer, bios, device->rom_size);
-	munmap(bios, device->rom_size);
+	memcpy(buffer, bios, rom_size);
+	munmap(bios, rom_size);
 
 	if (pci_rom) {
 		/* Restore PCI config space */
