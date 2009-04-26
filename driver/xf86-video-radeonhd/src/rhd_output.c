@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Luc Verhaegen <libv@exsuse.de>
  * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
  * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
  * Copyright 2007, 2008  Advanced Micro Devices, Inc.
@@ -203,5 +203,61 @@ RHDOutputPrintSensedType(struct rhdOutput *Output)
 	    return;
 	}
 	i++;
+    }
+}
+
+/*
+ * Attach an connector to the specified output and set output properties depending on the connector
+ */
+void
+RHDOutputAttachConnector(struct rhdOutput *Output, struct rhdConnector *Connector)
+{
+    RHDPtr rhdPtr = RHDPTRI(Output);
+
+    if(Output->Connector == Connector)
+	return; /* output is allready attached to this connector -> nothing todo */
+
+    Output->Connector = Connector;
+
+    if(!Output->Property) /* property controll available? */
+	return;  /* no -> we are done here */
+
+    /* yes -> check if we need to set any properties */
+    if (Output->Property(Output, rhdPropertyCheck, RHD_OUTPUT_COHERENT, NULL)) {
+	union rhdPropertyData val;
+	switch(RhdParseBooleanOption(&rhdPtr->coherent, Connector->Name)) {
+	    case RHD_OPTION_NOT_SET:
+		/* for compatibility with old implementation, test also output name */
+		switch(RhdParseBooleanOption(&rhdPtr->coherent, Output->Name)) {
+		    case RHD_OPTION_NOT_SET:
+		    case RHD_OPTION_DEFAULT:
+		    case RHD_OPTION_OFF:
+			val.Bool = FALSE;
+			break;
+		    case RHD_OPTION_ON:
+			val.Bool = TRUE;
+			break;
+		}
+		break;
+	    case RHD_OPTION_DEFAULT:
+	    case RHD_OPTION_OFF:
+		val.Bool = FALSE;
+		break;
+	    case RHD_OPTION_ON:
+		val.Bool = TRUE;
+		break;
+	}
+	if(Output->Property(Output, rhdPropertySet, RHD_OUTPUT_COHERENT, &val))
+	    xf86DrvMsg(rhdPtr->scrnIndex, X_INFO, "Setting %s to %scoherent\n", Output->Name, val.Bool ? "" : "in");
+	else
+	    xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING, "Failed to set %s to %scoherent\n", Output->Name, val.Bool ? "" : "in");
+    }
+
+    /* ask attached connector if EEDID or config options say we should enable HDMI */
+    if (Output->Property(Output, rhdPropertyCheck, RHD_OUTPUT_HDMI, NULL)) {
+	union rhdPropertyData val;
+	val.Bool = RHDConnectorEnableHDMI(Connector);
+	if(!Output->Property(Output, rhdPropertySet, RHD_OUTPUT_HDMI, &val))
+	    xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING, "Failed to %s HDMI on %s\n", val.Bool ? "disable" : "enable", Output->Name);
     }
 }

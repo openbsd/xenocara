@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Luc Verhaegen <libv@exsuse.de>
  * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
  * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
  * Copyright 2007, 2008  Advanced Micro Devices, Inc.
@@ -141,8 +141,8 @@ rhdAtomScaleSet(struct rhdCrtc *Crtc, enum rhdCrtcScaleType Type,
     data.Address = NULL;
     RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS, ATOM_SET_REGISTER_LIST_LOCATION, &data);
 
-    RHDTuneMCAccessForDisplay(rhdPtr, Crtc->Id, Mode,
-			      ScaledToMode ? ScaledToMode : Mode);
+    RHDMCTuneAccessForDisplay(rhdPtr, Crtc->Id, Mode,
+			ScaledToMode ? ScaledToMode : Mode);
 }
 
 /*
@@ -256,7 +256,7 @@ rhdAtomModeSet(struct rhdCrtc *Crtc, DisplayModePtr Mode)
 /*
  *
  */
-static void
+static Bool
 rhdAtomCrtcPower(struct rhdCrtc *Crtc, int Power)
 {
     RHDPtr rhdPtr = RHDPTRI(Crtc);
@@ -294,6 +294,13 @@ rhdAtomCrtcPower(struct rhdCrtc *Crtc, int Power)
     }
     data.Address = NULL;
     RHDAtomBiosFunc(Crtc->scrnIndex, rhdPtr->atomBIOS, ATOM_SET_REGISTER_LIST_LOCATION, &data);
+
+    /*
+     * we always claim we succeeded here, after all, we know, AtomBIOS knows
+     * how to do things, right?
+     * Err, no, when we use AtomBIOS we should not have a clue how to find out.
+     */
+    return TRUE;
 }
 
 /*

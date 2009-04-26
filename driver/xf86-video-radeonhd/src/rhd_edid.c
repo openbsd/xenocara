@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007 Luc Verhaegen <lverhaegen@novell.com>.
+ * Copyright 2006-2007 Luc Verhaegen <libv@exsuse.de>.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),

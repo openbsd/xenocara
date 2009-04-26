@@ -1,5 +1,5 @@
 /*
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007  Luc Verhaegen <libv@exsuse.de>
  * Copyright 2007  Matthias Hopf <mhopf@novell.com>
  * Copyright 2007  Egbert Eich   <eich@novell.com>
  * Copyright 2007  Advanced Micro Devices, Inc.
@@ -120,8 +120,22 @@ RhdGetOptValString(const OptionInfoRec *table, int token,
 enum rhdOptStatus
 RhdParseBooleanOption(struct RHDOpt *Option, char *Name)
 {
+    unsigned int i;
     char* c;
     char* str = strdup(Name);
+
+    const char* off[] = {
+	"false",
+	"off",
+	"no",
+	"0"
+    };
+    const char* on[] = {
+	"true",
+	"on",
+	"yes",
+	"1"
+    };
 
     /* first fixup the name to match the randr names */
     for (c = str; *c; c++)
@@ -146,12 +160,16 @@ RhdParseBooleanOption(struct RHDOpt *Option, char *Name)
 		if (isspace(*ptr) || *ptr == '=') {
 		    ptr++;
 		}
-		if (!strncasecmp("off",ptr,3) || !strncasecmp("0",ptr,1) || !strncasecmp("no",ptr,2)) {
-		    return RHD_OPTION_OFF;
-		} else if (!strncasecmp("on",ptr,2) || !strncasecmp("1",ptr,1) || !strncasecmp("yes",ptr,3))  {
-		    return RHD_OPTION_ON;
-		} else
-		    return RHD_OPTION_DEFAULT;
+
+		for(i=0; i<sizeof(on)/sizeof(char*); i++)
+		    if (!strncasecmp(on[i],ptr,strlen(on[i])))
+			return RHD_OPTION_OFF;
+
+		for(i=0; i<sizeof(off)/sizeof(char*); i++)
+		    if (!strncasecmp(off[i],ptr,strlen(off[i])))
+			return RHD_OPTION_ON;
+
+		return RHD_OPTION_DEFAULT;
 	    } else
 		while (*ptr != '\0' && !isspace(*ptr))
 		    ptr++;

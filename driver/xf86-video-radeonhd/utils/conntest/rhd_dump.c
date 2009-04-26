@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Luc Verhaegen <libv@exsuse.de>
  * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
  * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
  * Copyright 2007, 2008  Advanced Micro Devices, Inc.
@@ -363,7 +363,7 @@ print_help(const char* progname, const char* message, const char* msgarg)
 {
 	if (message != NULL)
 	    fprintf(stderr, "%s %s\n", message, msgarg);
-	fprintf(stderr, "Usage: %s [-r start,end | -w addr val] PCI-tag\n"
+	fprintf(stderr, "Usage: %s [-r start,end | -w addr val | -l {0|1}] PCI-tag\n"
 			"       PCI-tag: bus:dev.func\n\n",
 		progname);
 }
@@ -389,7 +389,8 @@ main(int argc, char *argv[])
     enum {
 	NONE,
 	READ,
-	WRITE
+	WRITE,
+	LUT
     } action = READ; /* default */
 
     int i;
@@ -450,6 +451,21 @@ main(int argc, char *argv[])
 	    else {
 		i--;
 		ret = 0;
+	    }
+	} else if (!strncmp("-l", argv[i], 3)) {
+	    action = LUT;
+
+	    if (++i < argc)
+		ret = sscanf(argv[i], "%d", &addr);
+	    else {
+		i--;
+		ret = 0;
+	    }
+	    
+	    if (addr > 1) ret = 0;
+	    if (ret != 1) {
+		print_help(argv[0], "Invalid LUT id:", argv[i]);
+		return 1;
 	    }
 	} else if (!strncmp("-",argv[i],1)) {
 	    print_help(argv[0], "Unknown option", argv[i]);
@@ -523,6 +539,22 @@ main(int argc, char *argv[])
 	RegWrite(io, addr, val);
 	val = RegRead(io, addr);
 	printf("New value: 0x%4.4X: 0x%8.8X\n",addr, val);
+    }
+    else if (action == LUT) {
+	RegWrite(io, 0x6480, addr); /* lower half of LUT */
+	RegWrite(io, 0x6484, 0);    /* table mode */
+	RegWrite(io, 0x6488, 0);    /* start at 0 */
+
+	CARD32 r, g, b;
+
+	printf("Printing LUT %d\n", addr);
+	printf("     R   G   B\n");
+	for (j = 0; j < 256; j++) {
+	    r = RegRead(io, 0x648C) >> 6;
+	    g = RegRead(io, 0x648C) >> 6;
+	    b = RegRead(io, 0x648C) >> 6;
+	    printf("%02X: %3X %3X %3X\n", j, r, g, b);
+	}
     }
 
     return 0;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2004-2008  Luc Verhaegen <libv@exsuse.de>
  * Copyright 2007, 2008 Matthias Hopf <mhopf@novell.com>
  * Copyright 2007, 2008 Egbert Eich   <eich@novell.com>
  *
@@ -108,7 +108,7 @@ struct rhdCrtc {
     void (*LUTRestore) (struct rhdCrtc *Crtc);
     void (*LUTDestroy) (struct rhdCrtc *Crtc);
 
-    void (*Power) (struct rhdCrtc *Crtc, int Power);
+    Bool (*Power) (struct rhdCrtc *Crtc, int Power);
     void (*Blank) (struct rhdCrtc *Crtc, Bool Blank);
 };
 

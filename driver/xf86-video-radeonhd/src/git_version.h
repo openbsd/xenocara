@@ -14,13 +14,13 @@
 
 /* git utilities found */
 #undef GIT_NOT_FOUND
-#define GIT_VERSION "git version 1.5.6"
+#define GIT_VERSION "git version 1.6.0.2"
 
 /* git repo found */
 #define GIT_REPO 1
 
 /* Git SHA ID of last commit */
-#define GIT_SHAID "4e897263"
+#define GIT_SHAID "cb54f48b"
 
 /* Branch this tree is on */
 #define GIT_BRANCH "master"

@@ -45,7 +45,9 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/RadeonHD.am
 @XSERVER_LIBPCIACCESS_TRUE@am__append_1 = @PCIACCESS_LIBS@
 @USE_EXA_TRUE@am__append_2 = r5xx_exa.c radeon_exa_render.c
-@USE_DRI_TRUE@am__append_3 = rhd_dri.c rhd_dri.h radeon_dri.h radeon_drm.h
+@USE_DRI_TRUE@am__append_3 = rhd_dri.c rhd_dri.h radeon_dri.h \
+@USE_DRI_TRUE@	radeon_drm.h r6xx_accel.c r6xx_accel.h \
+@USE_DRI_TRUE@	r600_exa.c r600_textured_videofuncs.c
 @USE_DRI_TRUE@am__append_4 = @DRI_LIBS@
 @ATOM_BIOS_TRUE@am__append_5 = \
 @ATOM_BIOS_TRUE@	AtomBios/includes/atombios.h
@@ -96,7 +98,9 @@ am__DEPENDENCIES_1 =
 radeonhd_drv_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
 am__radeonhd_drv_la_SOURCES_DIST = r5xx_3dregs.h r5xx_accel.c \
-	r5xx_accel.h r5xx_regs.h r5xx_xaa.c radeon_3d.c \
+	r5xx_accel.h r5xx_regs.h r5xx_xaa.c r600_reg.h \
+	r600_reg_auto_r6xx.h r600_reg_r6xx.h r600_reg_r7xx.h \
+	r600_shader.h r600_shader.c r600_state.h radeon_3d.c \
 	radeon_textured_videofuncs.c rhd_atombios.c rhd_atombios.h \
 	rhd_atomcrtc.c rhd_atomout.c rhd_atomout.h rhd_atompll.c \
 	rhd_audio.c rhd_audio.h rhd_biosscratch.c rhd_biosscratch.h \
@@ -110,13 +114,19 @@ am__radeonhd_drv_la_SOURCES_DIST = r5xx_3dregs.h r5xx_accel.c \
 	rhd_randr.h rhd_regs.h rhd_shadow.c rhd_shadow.h rhd_tmds.c \
 	rhd_vga.c rhd_vga.h rhd_video.c rhd_video.h r5xx_exa.c \
 	radeon_exa_render.c rhd_dri.c rhd_dri.h radeon_dri.h \
-	radeon_drm.h AtomBios/includes/atombios.h rhd_atomwrapper.h
+	radeon_drm.h r6xx_accel.c r6xx_accel.h r600_exa.c \
+	r600_textured_videofuncs.c AtomBios/includes/atombios.h \
+	rhd_atomwrapper.h
 @USE_EXA_TRUE@am__objects_1 = radeonhd_drv_la-r5xx_exa.lo \
 @USE_EXA_TRUE@	radeonhd_drv_la-radeon_exa_render.lo
-@USE_DRI_TRUE@am__objects_2 = radeonhd_drv_la-rhd_dri.lo
+@USE_DRI_TRUE@am__objects_2 = radeonhd_drv_la-rhd_dri.lo \
+@USE_DRI_TRUE@	radeonhd_drv_la-r6xx_accel.lo \
+@USE_DRI_TRUE@	radeonhd_drv_la-r600_exa.lo \
+@USE_DRI_TRUE@	radeonhd_drv_la-r600_textured_videofuncs.lo
 am__objects_3 =
 am_radeonhd_drv_la_OBJECTS = radeonhd_drv_la-r5xx_accel.lo \
-	radeonhd_drv_la-r5xx_xaa.lo radeonhd_drv_la-radeon_3d.lo \
+	radeonhd_drv_la-r5xx_xaa.lo radeonhd_drv_la-r600_shader.lo \
+	radeonhd_drv_la-radeon_3d.lo \
 	radeonhd_drv_la-radeon_textured_videofuncs.lo \
 	radeonhd_drv_la-rhd_atombios.lo \
 	radeonhd_drv_la-rhd_atomcrtc.lo radeonhd_drv_la-rhd_atomout.lo \
@@ -325,20 +335,22 @@ radeonhd_drv_la_CFLAGS = $(AM_CFLAGS) @PEDANTIC_CFLAGS@
 radeonhd_drv_la_LIBADD = $(am__append_1) $(am__append_4) \
 	$(am__append_7)
 radeonhd_drv_la_SOURCES = r5xx_3dregs.h r5xx_accel.c r5xx_accel.h \
-	r5xx_regs.h r5xx_xaa.c radeon_3d.c \
-	radeon_textured_videofuncs.c rhd_atombios.c rhd_atombios.h \
-	rhd_atomcrtc.c rhd_atomout.c rhd_atomout.h rhd_atompll.c \
-	rhd_audio.c rhd_audio.h rhd_biosscratch.c rhd_biosscratch.h \
-	rhd_card.h rhd_connector.c rhd_connector.h rhd_crtc.c \
-	rhd_crtc.h rhd_cs.c rhd_cs.h rhd_cursor.c rhd_cursor.h \
-	rhd_dac.c rhd_ddia.c rhd_dig.c rhd_driver.c rhd_edid.c rhd.h \
-	rhd_hdmi.c rhd_hdmi.h rhd_helper.c rhd_i2c.c rhd_i2c.h \
-	rhd_id.c rhd_lut.c rhd_lut.h rhd_lvtma.c rhd_mc.c rhd_mc.h \
-	rhd_modes.c rhd_modes.h rhd_monitor.c rhd_monitor.h \
-	rhd_output.c rhd_output.h rhd_pll.c rhd_pll.h rhd_randr.c \
-	rhd_randr.h rhd_regs.h rhd_shadow.c rhd_shadow.h rhd_tmds.c \
-	rhd_vga.c rhd_vga.h rhd_video.c rhd_video.h $(am__append_2) \
-	$(am__append_3) $(am__append_5) $(am__append_6)
+	r5xx_regs.h r5xx_xaa.c r600_reg.h r600_reg_auto_r6xx.h \
+	r600_reg_r6xx.h r600_reg_r7xx.h r600_shader.h r600_shader.c \
+	r600_state.h radeon_3d.c radeon_textured_videofuncs.c \
+	rhd_atombios.c rhd_atombios.h rhd_atomcrtc.c rhd_atomout.c \
+	rhd_atomout.h rhd_atompll.c rhd_audio.c rhd_audio.h \
+	rhd_biosscratch.c rhd_biosscratch.h rhd_card.h rhd_connector.c \
+	rhd_connector.h rhd_crtc.c rhd_crtc.h rhd_cs.c rhd_cs.h \
+	rhd_cursor.c rhd_cursor.h rhd_dac.c rhd_ddia.c rhd_dig.c \
+	rhd_driver.c rhd_edid.c rhd.h rhd_hdmi.c rhd_hdmi.h \
+	rhd_helper.c rhd_i2c.c rhd_i2c.h rhd_id.c rhd_lut.c rhd_lut.h \
+	rhd_lvtma.c rhd_mc.c rhd_mc.h rhd_modes.c rhd_modes.h \
+	rhd_monitor.c rhd_monitor.h rhd_output.c rhd_output.h \
+	rhd_pll.c rhd_pll.h rhd_randr.c rhd_randr.h rhd_regs.h \
+	rhd_shadow.c rhd_shadow.h rhd_tmds.c rhd_vga.c rhd_vga.h \
+	rhd_video.c rhd_video.h $(am__append_2) $(am__append_3) \
+	$(am__append_5) $(am__append_6)
 nodist_radeonhd_drv_la_SOURCES = \
 	git_version.h
 
@@ -453,6 +465,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-r5xx_accel.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-r5xx_exa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-r5xx_xaa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-r600_exa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-r600_shader.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-r600_textured_videofuncs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-r6xx_accel.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-radeon_3d.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-radeon_exa_render.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeonhd_drv_la-radeon_textured_videofuncs.Plo@am__quote@
@@ -551,6 +567,13 @@ radeonhd_drv_la-r5xx_xaa.lo: r5xx_xaa.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='r5xx_xaa.c' object='radeonhd_drv_la-r5xx_xaa.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-r5xx_xaa.lo `test -f 'r5xx_xaa.c' || echo '$(srcdir)/'`r5xx_xaa.c
+
+radeonhd_drv_la-r600_shader.lo: r600_shader.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-r600_shader.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-r600_shader.Tpo" -c -o radeonhd_drv_la-r600_shader.lo `test -f 'r600_shader.c' || echo '$(srcdir)/'`r600_shader.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-r600_shader.Tpo" "$(DEPDIR)/radeonhd_drv_la-r600_shader.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-r600_shader.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='r600_shader.c' object='radeonhd_drv_la-r600_shader.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-r600_shader.lo `test -f 'r600_shader.c' || echo '$(srcdir)/'`r600_shader.c
 
 radeonhd_drv_la-radeon_3d.lo: radeon_3d.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-radeon_3d.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-radeon_3d.Tpo" -c -o radeonhd_drv_la-radeon_3d.lo `test -f 'radeon_3d.c' || echo '$(srcdir)/'`radeon_3d.c; \
@@ -803,6 +826,27 @@ radeonhd_drv_la-rhd_dri.lo: rhd_dri.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rhd_dri.c' object='radeonhd_drv_la-rhd_dri.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-rhd_dri.lo `test -f 'rhd_dri.c' || echo '$(srcdir)/'`rhd_dri.c
+
+radeonhd_drv_la-r6xx_accel.lo: r6xx_accel.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-r6xx_accel.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-r6xx_accel.Tpo" -c -o radeonhd_drv_la-r6xx_accel.lo `test -f 'r6xx_accel.c' || echo '$(srcdir)/'`r6xx_accel.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-r6xx_accel.Tpo" "$(DEPDIR)/radeonhd_drv_la-r6xx_accel.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-r6xx_accel.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='r6xx_accel.c' object='radeonhd_drv_la-r6xx_accel.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-r6xx_accel.lo `test -f 'r6xx_accel.c' || echo '$(srcdir)/'`r6xx_accel.c
+
+radeonhd_drv_la-r600_exa.lo: r600_exa.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-r600_exa.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-r600_exa.Tpo" -c -o radeonhd_drv_la-r600_exa.lo `test -f 'r600_exa.c' || echo '$(srcdir)/'`r600_exa.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-r600_exa.Tpo" "$(DEPDIR)/radeonhd_drv_la-r600_exa.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-r600_exa.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='r600_exa.c' object='radeonhd_drv_la-r600_exa.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-r600_exa.lo `test -f 'r600_exa.c' || echo '$(srcdir)/'`r600_exa.c
+
+radeonhd_drv_la-r600_textured_videofuncs.lo: r600_textured_videofuncs.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -MT radeonhd_drv_la-r600_textured_videofuncs.lo -MD -MP -MF "$(DEPDIR)/radeonhd_drv_la-r600_textured_videofuncs.Tpo" -c -o radeonhd_drv_la-r600_textured_videofuncs.lo `test -f 'r600_textured_videofuncs.c' || echo '$(srcdir)/'`r600_textured_videofuncs.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/radeonhd_drv_la-r600_textured_videofuncs.Tpo" "$(DEPDIR)/radeonhd_drv_la-r600_textured_videofuncs.Plo"; else rm -f "$(DEPDIR)/radeonhd_drv_la-r600_textured_videofuncs.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='r600_textured_videofuncs.c' object='radeonhd_drv_la-r600_textured_videofuncs.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(radeonhd_drv_la_CFLAGS) $(CFLAGS) -c -o radeonhd_drv_la-r600_textured_videofuncs.lo `test -f 'r600_textured_videofuncs.c' || echo '$(srcdir)/'`r600_textured_videofuncs.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

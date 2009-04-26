@@ -1,8 +1,7 @@
 /*
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Egbert Eich   <eich@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2007-2008  Luc Verhaegen <libv@exsuse.de>
+ * Copyright 2007-2008  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007-2008  Egbert Eich   <eich@novell.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -37,6 +36,20 @@
 #include "rhd_regs.h"
 #include "rhd_mc.h"
 
+struct rhdVGA {
+    Bool Stored;
+
+    CARD32 FBOffset;
+    CARD8 *FB;
+    int FBSize; /* 256kB */
+
+    CARD32 Render_Control;
+    CARD32 Mode_Control;
+    CARD32 HDP_Control;
+    CARD32 D1_Control;
+    CARD32 D2_Control;
+};
+
 /*
  *
  */
@@ -63,65 +76,72 @@ RHDVGAInit(RHDPtr rhdPtr)
 }
 
 /*
- *
+ * Thoroughly check whether our VGA FB is accessible.
+ */
+static CARD32
+rhdVGAFBOffsetGet(RHDPtr rhdPtr)
+{
+    CARD32 FBSize, VGAFBOffset, VGAFBSize = 256 * 1024;
+    CARD64 FBAddress = RHDMCGetFBLocation(rhdPtr, &FBSize);
+    CARD64 VGAFBAddress = RHDRegRead(rhdPtr, VGA_MEMORY_BASE_ADDRESS);
+
+    if (VGAFBAddress < FBAddress)
+	return 0xFFFFFFFF;
+
+    if ((VGAFBAddress + VGAFBSize) > (FBAddress + FBSize))
+	return 0xFFFFFFFF;
+
+    VGAFBOffset = VGAFBAddress - FBAddress; /* < FBSize, so 32bit */
+
+    if ((VGAFBOffset + VGAFBSize) >= rhdPtr->FbMapSize)
+	return 0xFFFFFFFF;
+
+    return VGAFBOffset;
+}
+
+/*
+ * This is (usually) ok, as VGASave is called after the memory has been mapped,
+ * but before the MC is set up. So the use of RHDMCGetFBLocation is correct in
+ * rhdVGAFBOffsetGet.
  */
 static void
 rhdVGASaveFB(RHDPtr rhdPtr)
 {
     struct rhdVGA *VGA = rhdPtr->VGA;
-    CARD32 FBLocation;
-    CARD32 FBSize;
-    CARD32 VGAFBOffset;
+
+    ASSERT(rhdPtr->FbBase);
 
     RHDFUNC(rhdPtr);
 
-    if (!VGA)
-	return; /* We don't need to warn , this is intended use */
+    VGA->FBOffset = rhdVGAFBOffsetGet(rhdPtr);
 
-    /* Store our VGA FB */
-    FBLocation = RHDGetFBLocation(rhdPtr, &FBSize);
-    VGA->FBBase =
-	RHDRegRead(rhdPtr, VGA_MEMORY_BASE_ADDRESS);
-    VGAFBOffset = VGA->FBBase - FBLocation;
-    RHDDebug(rhdPtr->scrnIndex, "%s: VGAFBOffset: 0x%8.8x FBLocation: 0x%8.8x FBSize: 0x%8.8x\n",
-	     __func__, VGAFBOffset, FBLocation, FBSize);
-
-    /* Could be that the VGA internal address no longer is pointing to what
-       we know as our FB memory, in which case we should give up cleanly. */
-    if (VGAFBOffset < (unsigned) (rhdPtr->FbMapSize)) {
-
-	VGA->FBSize = 256 * 1024;
-
-	if ((VGAFBOffset + VGA->FBSize) > (unsigned) (rhdPtr->FbMapSize)) {
-	    /* clamp to the size of the aperture. Otherwise we would have to
-	       remap here */
-	    VGA->FBSize = (unsigned) (rhdPtr->FbMapSize) - VGAFBOffset;
-		RHDDebug(rhdPtr->scrnIndex,
-			 "%s: saving %i bytes of VGA memory\n",__func__,
-			 VGA->FBSize);
-	}
-
-	VGA->FB = xcalloc(VGA->FBSize, 1);
-	if (VGA->FB) {
-	    RHDDebug(rhdPtr->scrnIndex,"%s: memcpy(%p, %p, 0x%x)\n",
-		     __func__,VGA->FB, ((CARD8 *) rhdPtr->FbBase)
-		     + VGAFBOffset, VGA->FBSize);
-	    memcpy(VGA->FB, ((CARD8 *) rhdPtr->FbBase) + VGAFBOffset,
-		   VGA->FBSize);
-	} else {
-	    xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING, "%s: Failed to allocate"
-		       " space for storing the VGA framebuffer.\n", __func__);
-	    VGA->FBSize = 0;
-	    VGA->FB = NULL;
-	}
-    } else {
-	xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR, "%s: VGA FB Offset (0x%08X) is "
-		   "out of range of the Cards Internal FB Address (0x%08X)\n",
-		   __func__, (int) RHDRegRead(rhdPtr, VGA_MEMORY_BASE_ADDRESS),
-		   rhdPtr->FbIntAddress);
-	VGA->FBBase = 0xFFFFFFFF;
-	VGA->FBSize = 0;
+    if (VGA->FBOffset == 0xFFFFFFFF) {
+	xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING, "%s: Unable to access the VGA "
+		   "framebuffer (0x%08X)\n", __func__,
+		   (unsigned int) RHDRegRead(rhdPtr, VGA_MEMORY_BASE_ADDRESS));
+	if (VGA->FB)
+	    xfree(VGA->FB);
 	VGA->FB = NULL;
+	VGA->FBSize = 0;
+	return;
+    }
+
+    VGA->FBSize = 256 * 1024;
+
+    RHDDebug(rhdPtr->scrnIndex, "%s: VGA FB Offset 0x%08X [0x%08X]\n",
+	     __func__, VGA->FBOffset, VGA->FBSize);
+
+    if (!VGA->FB)
+	VGA->FB = xcalloc(VGA->FBSize, 1);
+
+    if (VGA->FB)
+	memcpy(VGA->FB, ((CARD8 *) rhdPtr->FbBase) + VGA->FBOffset,
+	       VGA->FBSize);
+    else {
+	xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING, "%s: Failed to allocate"
+		   " space for storing the VGA framebuffer.\n", __func__);
+	VGA->FBOffset = 0xFFFFFFFF;
+	VGA->FBSize = 0;
     }
 }
 
@@ -167,18 +187,16 @@ RHDVGARestore(RHDPtr rhdPtr)
 	return;
     }
 
-    if (VGA->FB) {
-	CARD32 VGAFBOffset = VGA->FBBase - RHDGetFBLocation(rhdPtr, NULL);
-
-	memcpy(((CARD8 *) rhdPtr->FbBase) + VGAFBOffset,
-	       VGA->FB, VGA->FBSize);
-    }
+    if (VGA->FB)
+	memcpy(((CARD8 *) rhdPtr->FbBase) + VGA->FBOffset, VGA->FB,
+	       VGA->FBSize);
 
     RHDRegWrite(rhdPtr, VGA_RENDER_CONTROL, VGA->Render_Control);
     RHDRegWrite(rhdPtr, VGA_MODE_CONTROL, VGA->Mode_Control);
     RHDRegWrite(rhdPtr, VGA_HDP_CONTROL, VGA->HDP_Control);
     RHDRegWrite(rhdPtr, D1VGA_CONTROL, VGA->D1_Control);
     RHDRegWrite(rhdPtr, D2VGA_CONTROL, VGA->D2_Control);
+    RHD_UNSETDEBUGFLAG(rhdPtr, VGA_SETUP);
 }
 
 /*
@@ -194,6 +212,7 @@ RHDVGADisable(RHDPtr rhdPtr)
     RHDRegMask(rhdPtr, VGA_HDP_CONTROL, 0x00010010, 0x00010010);
     RHDRegMask(rhdPtr, D1VGA_CONTROL, 0, D1VGA_MODE_ENABLE);
     RHDRegMask(rhdPtr, D2VGA_CONTROL, 0, D2VGA_MODE_ENABLE);
+    RHD_SETDEBUGFLAG(rhdPtr, VGA_SETUP);
 }
 
 /*

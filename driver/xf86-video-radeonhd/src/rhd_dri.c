@@ -1,7 +1,7 @@
 /*
  * Copyright 2000  ATI Technologies Inc., Markham, Ontario,
  * Copyright 2000  VA Linux Systems Inc., Fremont, California.
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007  Luc Verhaegen <libv@exsuse.de>
  * Copyright 2007  Matthias Hopf <mhopf@novell.com>
  * Copyright 2007  Egbert Eich   <eich@novell.com>
  * Copyright 2007  Advanced Micro Devices, Inc.
@@ -81,6 +81,7 @@
 #include "rhd_dri.h"
 #include "r5xx_accel.h"
 #include "r5xx_regs.h"
+#include "r6xx_accel.h"
 #include "rhd_cs.h"
 
 #define IS_RADEONHD_DRIVER 1
@@ -120,7 +121,6 @@ typedef struct {
     /* Nothing here yet */
     int dummy;
 } RADEONDRIContextRec, *RADEONDRIContextPtr;
-
 
 /* driver data only needed by dri */
 struct rhdDri {
@@ -389,18 +389,32 @@ static void RHDEnterServer(ScreenPtr pScreen)
 
     pSAREAPriv = (drm_radeon_sarea_t *)DRIGetSAREAPrivate(pScreen);
     if (pSAREAPriv->ctx_owner != (signed) DRIGetContext(pScreen)) {
-	struct R5xx3D *R5xx3D = rhdPtr->ThreeDPrivate;
+	if (rhdPtr->ChipSet < RHD_R600) {
+	    struct R5xx3D *R5xx3D = rhdPtr->ThreeDPrivate;
 
-	if (CS->Clean != RHD_CS_CLEAN_QUEUED) {
-	    R5xxDstCacheFlush(CS);
-	    R5xxZCacheFlush(CS);
-	    R5xxEngineWaitIdleFull(CS);
+	    if (CS->Clean != RHD_CS_CLEAN_QUEUED) {
+		R5xxDstCacheFlush(CS);
+		R5xxZCacheFlush(CS);
+		R5xxEngineWaitIdleFull(CS);
 
-	    CS->Clean = RHD_CS_CLEAN_QUEUED;
+		CS->Clean = RHD_CS_CLEAN_QUEUED;
+	    }
+
+	    if (R5xx3D)
+		R5xx3D->XHas3DEngineState = FALSE;
+	} else {
+	    struct r6xx_accel_state *accel_state = rhdPtr->TwoDPrivate;
+
+	    if (CS->Clean != RHD_CS_CLEAN_QUEUED) {
+		R6xxCacheFlush(CS);
+		R6xxEngineWaitIdleFull(CS);
+
+		CS->Clean = RHD_CS_CLEAN_QUEUED;
+	    }
+
+	    if (accel_state)
+		accel_state->XHas3DEngineState = FALSE;
 	}
-
-	if (R5xx3D)
-	    R5xx3D->XHas3DEngineState = FALSE;
     } else {
 	/* if the engine has been untouched, we need to track this too. */
 	if (CS->Clean != RHD_CS_CLEAN_QUEUED)
@@ -417,13 +431,18 @@ static void RHDEnterServer(ScreenPtr pScreen)
 static void RHDLeaveServer(ScreenPtr pScreen)
 {
     struct RhdCS *CS = RHDPTR(xf86Screens[pScreen->myNum])->CS;
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     /* The CP is always running, but if we've generated any CP commands
      * we must flush them to the kernel module now. */
     if (CS->Clean == RHD_CS_CLEAN_DONE) {
-
-	R5xxDstCacheFlush(CS);
-	R5xxZCacheFlush(CS);
+	    if (rhdPtr->ChipSet >= RHD_R600) {
+		R6xxCacheFlush(CS);
+	    } else {
+		R5xxDstCacheFlush(CS);
+		R5xxZCacheFlush(CS);
+	    }
 
 	RHDCSFlush(CS); /* was a Release... */
 
@@ -510,42 +529,48 @@ static void RHDDRIInitGARTValues(struct rhdDri * rhdDRI)
 /* Set AGP transfer mode according to requests and constraints */
 static Bool RHDSetAgpMode(struct rhdDri * rhdDRI, ScreenPtr pScreen)
 {
+    ScrnInfoPtr    pScrn  = xf86Screens[pScreen->myNum];
+    RHDPtr rhdPtr = RHDPTR(pScrn);
     unsigned long mode   = drmAgpGetMode(rhdDRI->drmFD);	/* Default mode */
     unsigned int  vendor = drmAgpVendorId(rhdDRI->drmFD);
     unsigned int  device = drmAgpDeviceId(rhdDRI->drmFD);
-    /* ignore agp 3.0 mode bit from the chip as it's buggy on some cards with
-       pcie-agp rialto bridge chip - use the one from bridge which must match */
-    CARD32 agp_status = (RHDRegRead (rhdDRI, AGP_STATUS) | AGPv3_MODE) & mode;
-    Bool is_v3 = (agp_status & AGPv3_MODE);
 
-     RHDFUNC(rhdDRI);
+    if (rhdPtr->ChipSet < RHD_R600) {
+	/* ignore agp 3.0 mode bit from the chip as it's buggy on some cards with
+	   pcie-agp rialto bridge chip - use the one from bridge which must match */
+	CARD32 agp_status = (RHDRegRead (rhdDRI, AGP_STATUS) | AGPv3_MODE) & mode;
+	Bool is_v3 = (agp_status & AGPv3_MODE);
 
-   if (is_v3) {
-	rhdDRI->agpMode = (agp_status & AGPv3_8X_MODE) ? 8 : 4;
-    } else {
-	if (agp_status & AGP_4X_MODE)
-	    rhdDRI->agpMode = 4;
-	else if (agp_status & AGP_2X_MODE)
-	    rhdDRI->agpMode = 2;
-	else
-	    rhdDRI->agpMode = 1;
-    }
-    xf86DrvMsg(pScreen->myNum, X_DEFAULT, "Using AGP %dx\n", rhdDRI->agpMode);
+	RHDFUNC(rhdDRI);
 
-    mode &= ~AGP_MODE_MASK;
-    if (is_v3) {
-	/* only set one mode bit for AGPv3 */
-	switch (rhdDRI->agpMode) {
-	case 8:          mode |= AGPv3_8X_MODE; break;
-	case 4: default: mode |= AGPv3_4X_MODE;
+	if (is_v3) {
+	    rhdDRI->agpMode = (agp_status & AGPv3_8X_MODE) ? 8 : 4;
+	} else {
+	    if (agp_status & AGP_4X_MODE)
+		rhdDRI->agpMode = 4;
+	    else if (agp_status & AGP_2X_MODE)
+		rhdDRI->agpMode = 2;
+	    else
+		rhdDRI->agpMode = 1;
 	}
-    } else {
-	switch (rhdDRI->agpMode) {
-	case 4:          mode |= AGP_4X_MODE;
-	case 2:          mode |= AGP_2X_MODE;
-	case 1: default: mode |= AGP_1X_MODE;
+	xf86DrvMsg(pScreen->myNum, X_DEFAULT, "Using AGP %dx\n", rhdDRI->agpMode);
+
+	mode &= ~AGP_MODE_MASK;
+	if (is_v3) {
+	    /* only set one mode bit for AGPv3 */
+	    switch (rhdDRI->agpMode) {
+	    case 8:          mode |= AGPv3_8X_MODE; break;
+	    case 4: default: mode |= AGPv3_4X_MODE;
+	    }
+	} else {
+	    switch (rhdDRI->agpMode) {
+	    case 4:          mode |= AGP_4X_MODE;
+	    case 2:          mode |= AGP_2X_MODE;
+	    case 1: default: mode |= AGP_1X_MODE;
+	    }
 	}
-    }
+    } else
+	rhdDRI->agpMode = 8; /* doesn't matter at this point */
 
     xf86DrvMsg(pScreen->myNum, X_INFO,
 	       "[agp] Mode 0x%08lx [AGP 0x%04x/0x%04x]\n",
@@ -561,9 +586,13 @@ static Bool RHDSetAgpMode(struct rhdDri * rhdDRI, ScreenPtr pScreen)
 }
 
 /* Initialize Radeon's AGP registers */
-static void RHDSetAgpBase(struct rhdDri * rhdDRI)
+static void RHDSetAgpBase(struct rhdDri * rhdDRI, ScreenPtr pScreen)
 {
-    RHDRegWrite (rhdDRI, AGP_BASE, drmAgpBase(rhdDRI->drmFD));
+    ScrnInfoPtr    pScrn  = xf86Screens[pScreen->myNum];
+    RHDPtr rhdPtr = RHDPTR(pScrn);
+
+    if (rhdPtr->ChipSet < RHD_R600)
+	RHDRegWrite (rhdDRI, AGP_BASE, drmAgpBase(rhdDRI->drmFD));
 }
 
 /* Initialize the AGP state.  Request memory for use in AGP space, and
@@ -680,7 +709,7 @@ static Bool RHDDRIAgpInit(struct rhdDri * rhdDRI, ScreenPtr pScreen)
 	       "[agp] GART Texture map mapped at 0x%08lx\n",
 	       (unsigned long)rhdDRI->gartTex);
 
-    RHDSetAgpBase(rhdDRI);
+    RHDSetAgpBase(rhdDRI, pScreen);
 
     return TRUE;
 }
@@ -853,6 +882,9 @@ static int RHDDRIKernelInit(RHDPtr rhdPtr, ScreenPtr pScreen)
     drmInfo.ring_rptr_offset    = rhdDRI->ringReadPtrHandle;
     drmInfo.buffers_offset      = rhdDRI->bufHandle;
     drmInfo.gart_textures_offset= rhdDRI->gartTexHandle;
+
+    /* Make sure the MC has been set up before DRM_RADEON_CP_INIT is called */
+    ASSERT((RHD_CHECKDEBUGFLAG(rhdPtr, MC_SETUP)));
 
     if (drmCommandWrite(rhdDRI->drmFD, DRM_RADEON_CP_INIT,
 			&drmInfo, sizeof(drm_radeon_init_t)) < 0) {
@@ -1116,8 +1148,8 @@ Bool RHDDRIPreInit(ScrnInfoPtr pScrn)
     rhdPtr->directRenderingEnabled = FALSE;
 
     if (!rhdPtr->useDRI.val.bool) {
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Direct rendering turned off by"
-		   " default. Use Option \"DRI\" to enable.\n");
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		   "Direct rendering explicitly turned off.\n");
 	return FALSE;
     }
 
@@ -1134,8 +1166,8 @@ Bool RHDDRIPreInit(ScrnInfoPtr pScrn)
     if (rhdPtr->ChipSet >= RHD_R600) {
 	if (rhdPtr->useDRI.set && rhdPtr->useDRI.val.bool) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		       "Direct rendering for R600 an up forced on - "
-		       "This is NOT officially supported at the hardware level "
+		       "Direct rendering for R600 and up forced on - "
+		       "This is NOT officially supported yet "
 		       "and may cause instability or lockups\n");
 	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -1446,12 +1478,6 @@ RHDDRIGARTBaseGet(RHDPtr rhdPtr)
     drm_radeon_getparam_t gp;
     int gart_base;
 
-    if (rhdPtr->cardType == RHD_CARD_AGP) {
-	xf86DrvMsg(rhdPtr->scrnIndex, X_INFO,
-		   "%s: Unable to get GART address (AGP card).\n", __func__);
-	return 0;
-    }
-
     memset(&gp, 0, sizeof(gp));
     gp.param = RADEON_PARAM_GART_BASE;
     gp.value = &gart_base;
@@ -1462,7 +1488,7 @@ RHDDRIGARTBaseGet(RHDPtr rhdPtr)
 		   "%s: Failed to determine GART area MC location.\n", __func__);
 	return 0;
     } else {
-	RHDDebug(rhdPtr->scrnIndex, "GART location: 0x08X\n", gart_base);
+	RHDDebug(rhdPtr->scrnIndex, "GART location: 0x%08X\n", gart_base);
 	return gart_base;
     }
 }
@@ -1600,12 +1626,8 @@ void RHDDRIEnterVT(ScreenPtr pScreen)
     if (rhdPtr->cardType == RHD_CARD_AGP) {
 	if (!RHDSetAgpMode(rhdDRI, pScreen))
 	    return;
-	RHDSetAgpBase(rhdDRI);
+	RHDSetAgpBase(rhdDRI, pScreen);
     }
-
-    if ( (ret = drmCommandNone(rhdDRI->drmFD, DRM_RADEON_CP_RESUME)) )
-	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		   "%s: CP resume %d\n", __func__, ret);
 
     /* TODO: maybe using CP_INIT instead of CP_RESUME is enough, so we wouldn't
      * need an additional copy of the GART table in main memory. OTOH the table
@@ -1617,7 +1639,9 @@ void RHDDRIEnterVT(ScreenPtr pScreen)
 
     RHDDRISetVBlankInterrupt(pScrn, rhdDRI->have3Dwindows);
 
-    DRIUnlock(pScrn->pScreen);
+    if ( (ret = drmCommandNone(rhdDRI->drmFD, DRM_RADEON_CP_RESUME)) )
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "%s: CP resume %d\n", __func__, ret);
 }
 
 /* Stop all before vt switch / suspend */
@@ -1803,13 +1827,18 @@ static void RHDDRITransitionTo2d(ScreenPtr pScreen)
 
 static int RHDDRIGetPciAperTableSize(ScrnInfoPtr pScrn)
 {
+    RHDPtr rhdPtr = RHDPTR(pScrn);
     int page_size  = getpagesize();
     int ret_size;
     int num_pages;
 
     num_pages = (RHD_DEFAULT_PCI_APER_SIZE * 1024 * 1024) / page_size;
 
-    ret_size = num_pages * sizeof(unsigned int);
+    if ((rhdPtr->ChipSet >= RHD_R600) ||
+	(rhdPtr->ChipSet == RHD_RS600))
+	ret_size = num_pages * sizeof(uint64_t);
+    else
+	ret_size = num_pages * sizeof(unsigned int);
 
     return ret_size;
 }
@@ -1898,7 +1927,8 @@ RHDDRMCPBuffer(int scrnIndex)
 	int ret = drmDMA(Dri->drmFD, &dma);
 	if (!ret) {
 	    buf = &Dri->buffers->list[indx];
-	    /* RHDDebug(scrnIndex, "%s: index %d, addr %p\n",  __func__, buf->idx, buf->address); */
+	    //xf86DrvMsg(scrnIndex, X_INFO, "%s: index %d, addr %p\n",  __func__, buf->idx, buf->address);
+	    buf->used = 0;
 	    return buf;
 	} else if (ret != -16)
 	    xf86DrvMsg(scrnIndex, X_ERROR, "%s: drmDMA returned %d\n",
@@ -1965,3 +1995,14 @@ RHDDRMIndirectBufferDiscard(int scrnIndex, CARD8 *Buffer)
 	       __func__, Buffer);
 }
 
+unsigned int
+RHDDRIGetIntGARTLocation(ScrnInfoPtr pScrn)
+{
+    RHDPtr         rhdPtr  = RHDPTR(pScrn);
+    struct rhdDri *rhdDRI    = rhdPtr->dri;
+
+    if (!rhdDRI->gartLocation)
+        return 0;
+
+    return rhdDRI->gartLocation + rhdDRI->bufStart;
+}

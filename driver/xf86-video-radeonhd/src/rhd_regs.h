@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Luc Verhaegen <libv@exsuse.de>
  * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
  * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
  * Copyright 2007, 2008  Advanced Micro Devices, Inc.
@@ -189,6 +189,8 @@ enum {
 
     /* D1MODE */
     D1MODE_DESKTOP_HEIGHT          = 0x652C,
+    D1MODE_VLINE_START_END         = 0x6538,
+    D1MODE_VLINE_STATUS            = 0x653C,
     D1MODE_VIEWPORT_START          = 0x6580,
     D1MODE_VIEWPORT_SIZE           = 0x6584,
     D1MODE_EXT_OVERSCAN_LEFT_RIGHT = 0x6588,
@@ -253,6 +255,8 @@ enum {
 
     /* D2MODE */
     D2MODE_DESKTOP_HEIGHT          = 0x6D2C,
+    D2MODE_VLINE_START_END         = 0x6D38,
+    D2MODE_VLINE_STATUS            = 0x6D3C,
     D2MODE_VIEWPORT_START          = 0x6D80,
     D2MODE_VIEWPORT_SIZE           = 0x6D84,
     D2MODE_EXT_OVERSCAN_LEFT_RIGHT = 0x6D88,

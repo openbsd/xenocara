@@ -2,7 +2,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-radeonhd],
-        1.2.4,
+        1.2.5,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/radeonhd],
         xf86-video-radeonhd)
 
@@ -77,6 +77,7 @@ XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 # @@@ do we really need fontsproto here?
 PKG_CHECK_MODULES(XORG, [xorg-server xproto fontsproto $REQUIRED_MODULES])
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
+
 
 # Header files checks.
 AC_HEADER_STDC

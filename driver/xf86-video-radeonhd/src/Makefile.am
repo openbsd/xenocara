@@ -23,6 +23,13 @@ radeonhd_drv_la_SOURCES = \
 	r5xx_accel.h \
 	r5xx_regs.h \
 	r5xx_xaa.c \
+	r600_reg.h \
+	r600_reg_auto_r6xx.h \
+	r600_reg_r6xx.h \
+	r600_reg_r7xx.h \
+	r600_shader.h \
+	r600_shader.c \
+	r600_state.h \
 	radeon_3d.c \
 	radeon_textured_videofuncs.c \
 	rhd_atombios.c \
@@ -89,6 +96,8 @@ endif
 
 if USE_DRI
 radeonhd_drv_la_SOURCES += rhd_dri.c rhd_dri.h radeon_dri.h radeon_drm.h
+radeonhd_drv_la_SOURCES += r6xx_accel.c r6xx_accel.h
+radeonhd_drv_la_SOURCES += r600_exa.c r600_textured_videofuncs.c
 radeonhd_drv_la_LIBADD += @DRI_LIBS@
 endif
 

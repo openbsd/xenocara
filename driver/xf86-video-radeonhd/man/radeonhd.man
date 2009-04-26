@@ -7,7 +7,7 @@
 .\"
 .\"
 .SH NAME
-radeonhd \- AMD GPG (ATI) R5xx/R6xx video driver
+radeonhd \- AMD GPG (ATI) R5xx/R6xx/R7xx video driver
 .\"
 .\"
 .SH SYNOPSIS
@@ -30,9 +30,7 @@ has the following limitations:
 .\".TP "\w'\fB\(bu\fR'u+1n"
 .TP 2
 \(bu
-On R6xx and R7xx based cards:
-.B NO
-support for hardware-based 2D & 3D acceleration, no support for Xvideo.
+Support for hardware-based 2D acceleration and Xvideo needs more testing on R6xx and R7xx based cards.
 .TP
 \(bu
 No TV and Component connector support so far.
@@ -231,10 +229,12 @@ Rotation isn't supported for the AccelMethods \*qnone\*q and \*qshadowfb\*q.
 .RE
 .TP
 .BI "Option \*qDRI\*q"
-Use this option to enable 3D and Xv acceleration using DRI
-(R5xx and RS6xx chips only for the moment).
+Use this option to enable 3D and Xv acceleration using DRI.
 Currently, the default is
-.BR off .
+.B on
+on R5xx and RS6xx chips, and
+.B off
+on all others.
 .TP
 .BI "Option \*qOffscreenSize\*q \*q" <integer>M|<integer>% \*q
 Specify the amount of framebuffer memory used for offscreen pixmaps, in
@@ -245,7 +245,7 @@ is
 .TP
 .BI "Option \*qScaleType\*q \*q" none|center|scale|scale_keep_aspect_ratio|default \*q
 Sets the scaling mode for laptop flat panels when used together with an external
-screen. The scaling engine is capable of scaling both up and down.i
+screen. The scaling engine is capable of scaling both up and down.
 .RS
 .TP 9
 .PD 0
@@ -256,8 +256,8 @@ the panel resolution.
 .TP
 .B center
 means not to scale but center the image on the panel i.e. apply a black frame
-around the image on the panel in case the panel resolution is lower than the
-one of the external display.
+around the image on the panel if the resolution of the external display is
+lower than the panel resolution.
 .TP
 .B scale
 means to always scale to the resolution of the external display filling
@@ -399,13 +399,13 @@ mailing list.
 .RE
 .TP
 .BI "Option \*qAudio\*q \*q" boolean \*q
-This option enables the audio hardware, wich is responsible for delivering audio data
+This option enables the audio hardware, which is responsible for delivering audio data
 to the different HDMI capable conntectors and used to communicate with the audio
 driver of the operation system. The default is
 .BR off .
 .TP
-.BI "Option \*qHDMI\*q \*q" boolean \*q
-Possible values are "DVI-I 0", "DVI-I 1"..,"DVI-D 0","DVI-I 1",.., "all".
+.BI "Option \*qHDMI\*q \*q" string \*q
+Possible values are "DVI-I_0", "DVI-I_1"..,"DVI-D_0","DVI-I_1",.., "all".
 This option enables HDMI-Audio and HDMI-Info packets on the specified connector.
 This is the only way enabling HDMI at the moment, since decoding E-EDID data to check if monitor supports HDMI is not implemented (yet).
 .TP
@@ -477,12 +477,12 @@ The following properties can be queried with
 .B xrandr --prop
 and some of them can be set with
 .BR "xrandr --output" " <output> " --set " <property> <value> ."
-Those marked with RR13 will be merged into a RandR 1.3 standard, though
-substantially changed.  Properties marked Read-Only are provided by the driver
-for informational purpose only, those marked Static won't change during
-runtime.
+Those not starting with an underscore '_' are RandR 1.3 standard properties.
+See the RandR 1.3 protocol description for more details.   Properties marked
+Read-Only are provided by the driver for informational purpose only, those
+marked Static won't change during runtime.
 .TP
-.BR RANDR_SIGNAL_FORMAT "   Read-Only RR13"
+.BR SignalFormat "   Read-Only"
 .RS
 .TP 16
 .PD 0
@@ -490,24 +490,16 @@ runtime.
 string
 .TP
 .IR Range/List :
-unknown VGA TMDS LVDS FBAS FBAS-PAL FBAS-NTSC FBAS-SECAM SVideo YPbPr
-DisplayPort
+unknown VGA TMDS LVDS DisplayPort
 .RE
 .RS
 .PD
 .PP
 Signal format / physical protocol format that is used for the specified
 output.
-.br
-A driver MAY change this property of an output if the underlying hardware
-indicates a protocol change (e.g. TV formats).  Values with dashes
-.RI ( FBAS-PAL )
-describe more specific versions of the base values
-.RI ( FBAS )
-and SHOULD be used if known to the driver.
 .RE
 .TP
-.BR RANDR_CONNECTOR_TYPE "   Read-Only Static RR13"
+.BR ConnectorType "   Read-Only Static"
 .RS
 .TP 16
 .PD 0
@@ -515,38 +507,17 @@ and SHOULD be used if known to the driver.
 string
 .TP
 .IR Range/List :
-unknown VGA DVI DVI-I DVI-A DVI-D HDMI PANEL TV TV-FBAS TV-SVideo TV-YPbPr
-TV-SCART TV-C4 DisplayPort
+unknown VGA DVI DVI-I DVI-A DVI-D HDMI Panel DisplayPort
 .RE
 .RS
 .PD
 .PP
 Connector type, as far as known to the driver.
-.br
-Values with dashes
-.RI ( TV-FBAS )
-describe more specific versions of the base values
-.RI ( TV ).
-The former SHOULD be used if the connector is not capable of producing other
-signal formats. The later SHOULD be used if the exact connector is unknown, or
-the connector is a multi-format connector that is not described otherwise.
-.IR DVI ,
-for instance, SHOULD be handled like a
-.I DVI-I
-connector, unless additional information is available to the user agent.
-.I PANEL
+.I Panel
 describes laptop-internal (normally LVDS) displays.
-.IR TV ,
-.IR TV-SCART ,
-.IR TV-YPbPr ,
-and
-.I TV-C4
-with signal format
-.I VGA
-are valid combinations and describe RGB TV signals.
 .RE
 .TP
-.BR RANDR_CONNECTOR_NUMBER "   Read-Only Static RR13"
+.BR ConnectorNumber "   Read-Only Static"
 .RS
 .TP 16
 .PD 0
@@ -562,15 +533,10 @@ int32
 Outputs that route their signal to the same connector MUST have the same
 connector number. Outputs with the same connector number MUST route their
 signal to the same connector, except if it is 0, which indicates unknown
-connectivity. 1 is called the primary connector, 2 the secondary. 3 is often a
-TV connector, but that is completely driver / hardware dependent.
-.br
-Outputs with the same connector number SHOULD have the same connector type.
-Meaning and client behavior for mismatching connector types is undefined at
-the moment.
+connectivity.
 .RE
 .TP
-.BR RANDR_OUTPUT_NUMBER "   Read-Only Static RR13"
+.BR _OutputNumber "   Read-Only Static"
 .RS
 .TP 16
 .PD 0
@@ -593,7 +559,7 @@ Internal outputs are numbered from 1, 0 indicates that output routing is
 unknown.
 .RE
 .TP
-.B RANDR_PANNING_AREA
+.B _PanningArea
 .RS
 .TP 16
 .PD 0
@@ -623,6 +589,40 @@ Use of this option is considered deprecated.  The driver supports
 .B RandR 1.3
 panning, which is included in Xserver 1.6.  It is considerable more flexible,
 and should support rotated pans.
+.RE
+.TP
+.B _Backlight
+.RS
+.TP 16
+.PD 0
+.IR Type :
+int32
+.TP
+.IR Range/List :
+0-255
+.RE
+.RS
+.PD
+.PP
+Specifies the backlight intensity on laptop panels, if controlable by the driver.
+.RE
+.TP
+.B _Coherent
+.RS
+.TP 16
+.PD 0
+.IR Type :
+int32
+.TP
+.IR Range/List :
+0-1
+.RE
+.RS
+.PD
+.PP
+Sets the coherent flag for TMDS signals. See also
+.I Option
+.IR "Coherent" .
 .\"
 .\"
 .SH KNOWN BUGS
@@ -651,7 +651,7 @@ on the xrandr(__appmansuffix__) command line.
 .\"
 .\"
 .SH SEE ALSO
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
 .IP " 1." 4
 The official radeonhd wiki
 .RS 4
@@ -665,7 +665,7 @@ The radeonhd mailing list
 .IP " 3." 4
 Overview about radeonhd development code
 .RS 4
-\%http://gitweb.freedesktop.org/?p=xorg/driver/xf86-video-radeonhd
+\%http://cgit.freedesktop.org/xorg/driver/xf86-video-radeonhd/
 .RE
 .IP " 4." 4
 Query the bugtracker for radeonhd bugs

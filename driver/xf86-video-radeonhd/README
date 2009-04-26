@@ -87,6 +87,18 @@ Major Changes
 
 Read ChangeLog for a complete list.
 
+- Version 1.2.5
+
+  - Added 2D acceleration for R6xx and R7xx.
+  - Added XVideo support for R6xx and R7xx.
+  - Added support for RS880 and RV790.
+  - Added RandR 1.3 mandatory properties.
+  - Refactoring of MC code.
+  - Enable DRI support by default on R5xx and RS6xx.
+  - LUT (color lookup table) fixes.
+  - Tons of quirk table entries and bug fixes.
+  - Fix register accesses for processors that reorder memory writes.
+
 - Version 1.2.4
 
   - Added HDMI support.
@@ -165,7 +177,7 @@ The mailing list on radeonhd:
    http://lists.opensuse.org/radeonhd/
 
 Overview over recent updates to radeonhd:
-   http://gitweb.freedesktop.org/?p=xorg/driver/xf86-video-radeonhd
+   http://cgit.freedesktop.org/xorg/driver/xf86-video-radeonhd/
 
 The git repository with the radeonhd source code:
    git://anongit.freedesktop.org/git/xorg/driver/xf86-video-radeonhd

@@ -422,7 +422,7 @@ static Bool RADEONSetupSourceTile(PicturePtr pPict,
     return TRUE;
 }
 
-static PixmapPtr
+PixmapPtr
 RADEONGetDrawablePixmap(DrawablePtr pDrawable)
 {
     if (pDrawable->type == DRAWABLE_WINDOW)

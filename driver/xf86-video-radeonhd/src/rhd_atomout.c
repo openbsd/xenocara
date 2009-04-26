@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Luc Verhaegen <libv@exsuse.de>
  * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
  * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
  * Copyright 2007, 2008  Advanced Micro Devices, Inc.
@@ -278,13 +278,14 @@ atomSetBacklightFromBIOSScratch(struct rhdOutput *Output)
  *
  */
 static void
-atomSetBacklight(struct rhdOutput *Output, int value)
+atomSetBacklight(struct rhdOutput *Output)
 {
     RHDPtr rhdPtr = RHDPTRI(Output);
+    struct rhdAtomOutputPrivate *Private = (struct rhdAtomOutputPrivate *) Output->Private;
 
     RHDFUNC(Output);
 
-    RHDAtomBIOSScratchBlLevel(rhdPtr, rhdBIOSScratchBlSet, &value);
+    RHDAtomBIOSScratchBlLevel(rhdPtr, rhdBIOSScratchBlSet, &Private->BlLevel);
 
     atomSetBacklightFromBIOSScratch(Output);
 }
@@ -352,6 +353,63 @@ rhdAtomOutputSet(struct rhdOutput *Output, DisplayModePtr Mode)
 /*
  *
  */
+static Bool
+atomIsHdmiEnabled(struct rhdOutput *Output)
+{
+    struct rhdAtomOutputPrivate *Private = (struct rhdAtomOutputPrivate *) Output->Private;
+    switch(Output->Id) {
+	case RHD_OUTPUT_TMDSA:
+	case RHD_OUTPUT_LVTMA:
+	    return Private->EncoderConfig.u.lvds2.Hdmi;
+
+	case RHD_OUTPUT_UNIPHYA:
+	case RHD_OUTPUT_UNIPHYB:
+	case RHD_OUTPUT_UNIPHYC:
+	case RHD_OUTPUT_UNIPHYD:
+	case RHD_OUTPUT_UNIPHYE:
+	case RHD_OUTPUT_UNIPHYF:
+	case RHD_OUTPUT_KLDSKP_LVTMA:
+	    return Private->TransmitterConfig.Mode == atomHDMI &&
+		Private->EncoderConfig.u.dig.EncoderMode == atomHDMI;
+
+	default:
+	    return FALSE;
+    }
+}
+
+/*
+ *
+ */
+static void
+atomSetHdmiEnabled(struct rhdOutput *Output, Bool value)
+{
+    struct rhdAtomOutputPrivate *Private = (struct rhdAtomOutputPrivate *) Output->Private;
+    switch(Output->Id) {
+	case RHD_OUTPUT_TMDSA:
+	case RHD_OUTPUT_LVTMA:
+	    Private->EncoderConfig.u.lvds2.Hdmi = value;
+	    break;
+
+	case RHD_OUTPUT_UNIPHYA:
+	case RHD_OUTPUT_UNIPHYB:
+	case RHD_OUTPUT_UNIPHYC:
+	case RHD_OUTPUT_UNIPHYD:
+	case RHD_OUTPUT_UNIPHYE:
+	case RHD_OUTPUT_UNIPHYF:
+	case RHD_OUTPUT_KLDSKP_LVTMA:
+	    Private->TransmitterConfig.Mode =
+		Private->EncoderConfig.u.dig.EncoderMode =
+		value ? atomHDMI : atomDVI;
+	    break;
+
+	default:
+	    break;
+    }
+}
+
+/*
+ *
+ */
 static inline void
 rhdAtomOutputPower(struct rhdOutput *Output, int Power)
 {
@@ -359,38 +417,8 @@ rhdAtomOutputPower(struct rhdOutput *Output, int Power)
     struct rhdAtomOutputPrivate *Private = (struct rhdAtomOutputPrivate *) Output->Private;
     struct atomEncoderConfig *EncoderConfig = &Private->EncoderConfig;
     union AtomBiosArg data;
-    Bool enableHDMI = FALSE;
 
     RHDFUNC(Output);
-
-    if(Output->Connector != NULL) {
-	enableHDMI = RHDConnectorEnableHDMI(Output->Connector);
-	switch(Output->Id) {
-	    case RHD_OUTPUT_TMDSA:
-	    case RHD_OUTPUT_LVTMA:
-		if(enableHDMI && !Private->EncoderConfig.u.lvds2.Hdmi)
-		    Private->EncoderConfig.u.lvds2.Hdmi = TRUE;
-		else if(!enableHDMI && Private->EncoderConfig.u.lvds2.Hdmi)
-		    Private->EncoderConfig.u.lvds2.Hdmi = FALSE;
-		break;
-
-	    case RHD_OUTPUT_UNIPHYA:
-	    case RHD_OUTPUT_UNIPHYB:
-	    case RHD_OUTPUT_KLDSKP_LVTMA:
-		if(enableHDMI && Private->TransmitterConfig.Mode == atomDVI) {
-		    Private->TransmitterConfig.Mode = atomHDMI;
-		    Private->EncoderConfig.u.dig.EncoderMode = atomHDMI;
-
-		} else if(!enableHDMI && Private->TransmitterConfig.Mode == atomHDMI) {
-		    Private->TransmitterConfig.Mode = atomDVI;
-		    Private->EncoderConfig.u.dig.EncoderMode = atomDVI;
-		}
-		break;
-
-	    default:
-		break;
-	}
-    }
 
     data.Address = &Private->Save;
     RHDAtomBiosFunc(Output->scrnIndex, rhdPtr->atomBIOS, ATOM_SET_REGISTER_LIST_LOCATION, &data);
@@ -423,7 +451,7 @@ rhdAtomOutputPower(struct rhdOutput *Output, int Power)
 			ERROR_MSG("rhdAtomOutputControl(atomOutputEnable)");
 		    break;
 	    }
-	    RHDHdmiEnable(Private->Hdmi, enableHDMI);
+	    RHDHdmiEnable(Private->Hdmi, atomIsHdmiEnabled(Output));
 	    break;
 	case RHD_POWER_RESET:
 	    RHDDebug(Output->scrnIndex, "RHD_POWER_RESET\n");
@@ -517,9 +545,6 @@ rhdAtomOutputModeValid(struct rhdOutput *Output, DisplayModePtr Mode)
 {
 
     RHDFUNC(Output);
-
-    if (Mode->Flags & V_INTERLACE)
-	return MODE_NO_INTERLACE;
 
     if (Mode->Clock < 25000)
 	return MODE_CLOCK_LOW;
@@ -656,7 +681,16 @@ atomLVDSPropertyControl(struct rhdOutput *Output,
 		return FALSE;
 	    switch (Property) {
 		case RHD_OUTPUT_BACKLIGHT:
-		    atomSetBacklight(Output, val->integer);
+		    Private->BlLevel = val->integer;
+		    return TRUE;
+		default:
+		    return FALSE;
+	    }
+	    break;
+	case rhdPropertyCommit:
+	    switch (Property) {
+		case RHD_OUTPUT_BACKLIGHT:
+		    atomSetBacklight(Output);
 		    return TRUE;
 		default:
 		    return FALSE;
@@ -678,16 +712,20 @@ atomTMDSPropertyControl(struct rhdOutput *Output,
     RHDFUNC(Output);
     switch (Action) {
 	case rhdPropertyCheck:
-	switch (Property) {
-	    case RHD_OUTPUT_COHERENT:
+	    switch (Property) {
+		case RHD_OUTPUT_COHERENT:
+		case RHD_OUTPUT_HDMI:
 		    return TRUE;
-	    default:
-		return FALSE;
-	}
+		default:
+		    return FALSE;
+	    }
 	case rhdPropertyGet:
 	    switch (Property) {
 		case RHD_OUTPUT_COHERENT:
 		    val->Bool =  Private->Coherent;
+		    return TRUE;
+		case RHD_OUTPUT_HDMI:
+		    val->Bool = atomIsHdmiEnabled(Output);
 		    return TRUE;
 		default:
 		    return FALSE;
@@ -697,6 +735,18 @@ atomTMDSPropertyControl(struct rhdOutput *Output,
 	    switch (Property) {
 		case RHD_OUTPUT_COHERENT:
 		    Private->Coherent = val->Bool;
+		    break;
+		case RHD_OUTPUT_HDMI:
+		    atomSetHdmiEnabled(Output, val->Bool);
+		    break;
+		default:
+		    return FALSE;
+	    }
+	    break;
+	case rhdPropertyCommit:
+	    switch (Property) {
+		case RHD_OUTPUT_COHERENT:
+		case RHD_OUTPUT_HDMI:
 		    Output->Mode(Output, Private->Mode);
 		    Output->Power(Output, RHD_POWER_ON);
 		    break;
@@ -1004,23 +1054,9 @@ RHDAtomOutputInit(RHDPtr rhdPtr, rhdConnectorType ConnectorType,
 		LVDSInfoRetrieve(rhdPtr, Private);
 		Private->Hdmi = NULL;
 	    } else {
-		int from = X_CONFIG;
 		TransmitterConfig->Mode = EncoderConfig->u.dig.EncoderMode = atomDVI;
 		TMDSInfoRetrieve(rhdPtr, Private);
-		switch (RhdParseBooleanOption(&rhdPtr->coherent, Output->Name)) {
-		    case RHD_OPTION_NOT_SET:
-		    case RHD_OPTION_DEFAULT:
-			from = X_DEFAULT;
-			Private->Coherent = FALSE;
-			break;
-		    case RHD_OPTION_ON:
-			Private->Coherent = TRUE;
-			break;
-		    case RHD_OPTION_OFF:
-			Private->Coherent = FALSE;
-			break;
-		}
-		xf86DrvMsg(rhdPtr->scrnIndex,from,"Setting %s to %scoherent\n",Output->Name,Private->Coherent ? "" : "in");
+		Private->Coherent = FALSE;
 		Private->Hdmi = RHDHdmiInit(rhdPtr, Output);
 	    }
 	    break;

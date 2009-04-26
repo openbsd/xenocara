@@ -1,8 +1,8 @@
 /*
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Egbert Eich   <eich@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2007-2009  Luc Verhaegen <libv@exsuse.de>
+ * Copyright 2007-2009  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007-2009  Egbert Eich   <eich@novell.com>
+ * Copyright 2007-2009  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -121,6 +121,7 @@
 #include "rhd_video.h"
 
 #ifdef USE_DRI
+#include "r6xx_accel.h"
 #include "rhd_dri.h"
 #endif
 
@@ -157,7 +158,7 @@ static void     rhdRestore(RHDPtr rhdPtr);
 static Bool     rhdModeLayoutSelect(RHDPtr rhdPtr);
 static void     rhdModeLayoutPrint(RHDPtr rhdPtr);
 static void     rhdModeDPISet(ScrnInfoPtr pScrn);
-static void     rhdAllIdle(RHDPtr rhdPtr);
+static Bool     rhdAllIdle(RHDPtr rhdPtr);
 static void     rhdModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
 static void	rhdSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode);
 static Bool     rhdMapMMIO(RHDPtr rhdPtr);
@@ -765,6 +766,8 @@ RHDPreInit(ScrnInfoPtr pScrn, int flags)
     xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 	       "DRI support has been disabled at compile time\n");
 #endif
+    if (rhdPtr->AccelMethod == RHD_ACCEL_FORCE_SHADOWFB)
+	rhdPtr->AccelMethod = RHD_ACCEL_SHADOWFB;
 
     if (xf86LoadSubModule(pScrn, "i2c")) {
 	if (RHDI2CFunc(pScrn->scrnIndex, NULL, RHD_I2C_INIT, &i2cArg)
@@ -803,8 +806,9 @@ RHDPreInit(ScrnInfoPtr pScrn, int flags)
 	goto error1;
     }
     {
-	struct rhdAtomOutputDeviceList *OutputDeviceList = NULL;
 #ifdef ATOM_BIOS
+	struct rhdAtomOutputDeviceList *OutputDeviceList = NULL;
+
 	if (rhdPtr->Card
 	    && rhdPtr->Card->ConnectorInfo[0].Type != RHD_CONNECTOR_NONE
 	    && (rhdPtr->Card->DeviceInfo[0][0] != atomNone
@@ -1075,10 +1079,13 @@ RHDScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     /* disable all memory accesses for MC setup */
     RHDVGADisable(rhdPtr);
-    rhdAllIdle(rhdPtr);
 
-    /* now set up the MC - has to be done before DRI init */
-    RHDMCSetup(rhdPtr);
+    if (!rhdAllIdle(rhdPtr))
+	return FALSE;
+
+    /* now set up the MC - has to be done after AllIdle and before DRI init */
+    if (!RHDMCSetupFBLocation(rhdPtr, rhdPtr->FbIntAddress, rhdPtr->FbIntSize))
+	return FALSE;
 
 #ifdef USE_DRI
     /* Setup DRI after visuals have been established, but before fbScreenInit is
@@ -1143,15 +1150,17 @@ RHDScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	} else
 	    rhdPtr->AccelMethod = RHD_ACCEL_NONE;
 	break;
-#ifdef USE_EXA
+#ifdef USE_DRI
     case RHD_ACCEL_EXA:
 	if (rhdPtr->ChipSet < RHD_R600) {
 	    if (!R5xxEXAInit(pScrn, pScreen))
 		rhdPtr->AccelMethod = RHD_ACCEL_NONE;
-	} else
-	    rhdPtr->AccelMethod = RHD_ACCEL_NONE;
+	} else {
+	    if (!R6xxEXAInit(pScrn, pScreen))
+		rhdPtr->AccelMethod = RHD_ACCEL_NONE;
+	}
 	break;
-#endif /* USE_EXA */
+#endif /* USE_DRI */
     default:
 	rhdPtr->AccelMethod = RHD_ACCEL_NONE;
 	break;
@@ -1209,7 +1218,8 @@ RHDScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     if(!miCreateDefColormap(pScreen))
 	return FALSE;
     /* fixme */
-    if (!xf86HandleColormaps(pScreen, 256, pScrn->rgbBits,
+    /* Support 10-bits of precision in LUT */
+    if (!xf86HandleColormaps(pScreen, 256, 10,
                          RHDLoadPalette, NULL,
                          CMAP_PALETTED_TRUECOLOR | CMAP_RELOAD_ON_MODE_SWITCH))
 	return FALSE;
@@ -1240,18 +1250,27 @@ RHDScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     return TRUE;
 }
 
-static void
+static Bool
 rhdAllIdle(RHDPtr rhdPtr)
 {
     int i;
 
+    /* Make sure that VGA has been disabled before calling AllIdle() */
+    ASSERT(RHD_CHECKDEBUGFLAG(rhdPtr, VGA_SETUP));
+
     /* stop scanout */
     for (i = 0; i < 2; i++)
-	rhdPtr->Crtc[i]->Power(rhdPtr->Crtc[i], RHD_POWER_RESET);
+	if (!rhdPtr->Crtc[i]->Power(rhdPtr->Crtc[i], RHD_POWER_RESET)) {
+	    xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR, "%s: unable to stop CRTC: cannot idle MC\n",
+		       __func__);
+	    return FALSE;
+	}
 
-    if (!RHDMCIdle(rhdPtr, 1000))
-	xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING, "MC not idle\n");
-
+    if (!RHDMCIdleWait(rhdPtr, 1000)) {
+	xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR, "MC not idle\n");
+	return FALSE;
+    }
+    return TRUE;
 }
 
 /*
@@ -1273,8 +1292,15 @@ rhdEngineIdle(ScrnInfoPtr pScrn)
 	RHDCSIdle(CS);
     }
 
-    if ((rhdPtr->ChipSet < RHD_R600) && rhdPtr->TwoDPrivate)
-	R5xx2DIdle(pScrn);
+    if (rhdPtr->TwoDPrivate) {
+#ifdef USE_DRI
+	if (rhdPtr->ChipSet >= RHD_R600)
+	    R6xxIdle(pScrn);
+	else
+#endif /* USE_DRI */
+	    R5xx2DIdle(pScrn);
+    }
+
 }
 
 /* Mandatory */
@@ -1283,21 +1309,26 @@ RHDCloseScreen(int scrnIndex, ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     RHDPtr rhdPtr = RHDPTR(pScrn);
-
+    Bool Idle = TRUE; /* yes, this is correct! */
+    
     /* Make sure our CS and 2D status is clean before destroying it */
-    rhdEngineIdle(pScrn);
+    if (pScrn->vtSema)
+	rhdEngineIdle(pScrn);
 
     /* tear down 2d accel infrastructure */
     if (rhdPtr->AccelMethod == RHD_ACCEL_SHADOWFB)
 	RHDShadowCloseScreen(pScreen);
-#ifdef USE_EXA
+#ifdef USE_DRI
     else if (rhdPtr->AccelMethod == RHD_ACCEL_EXA) {
 	if (rhdPtr->ChipSet < RHD_R600) {
 	    R5xxEXACloseScreen(pScreen);
 	    R5xxEXADestroy(pScrn);
+	} else {
+	    R6xxEXACloseScreen(pScreen);
+	    R6xxEXADestroy(pScrn);
 	}
     } else
-#endif /* USE_EXA */
+#endif /* USE_DRI */
 	if (rhdPtr->AccelMethod == RHD_ACCEL_XAA) {
 	    if (rhdPtr->ChipSet < RHD_R600)
 		R5xxXAADestroy(pScrn);
@@ -1310,11 +1341,15 @@ RHDCloseScreen(int scrnIndex, ScreenPtr pScreen)
 	RHDCSStop(rhdPtr->CS);
 
     if (pScrn->vtSema)
-	rhdAllIdle(rhdPtr);
+	Idle = rhdAllIdle(rhdPtr);
 
 #ifdef USE_DRI
-    if (rhdPtr->dri)
-	RHDDRICloseScreen(pScreen);
+    if (rhdPtr->dri) {
+	if (Idle)
+	    RHDDRICloseScreen(pScreen);
+	else
+	    xf86DrvMsg(scrnIndex, X_ERROR, "MC not idle, cannot close DRI\n");
+    }
 #endif
     if (pScrn->vtSema)
 	rhdRestore(rhdPtr);
@@ -1347,10 +1382,12 @@ RHDEnterVT(int scrnIndex, int flags)
 
     /* disable all memory accesses for MC setup */
     RHDVGADisable(rhdPtr);
-    rhdAllIdle(rhdPtr);
+
+    if (!rhdAllIdle(rhdPtr))
+	return FALSE;
 
     /* now set up the MC - has to be done before DRI init */
-    RHDMCSetup(rhdPtr);
+    RHDMCSetupFBLocation(rhdPtr, rhdPtr->FbIntAddress, rhdPtr->FbIntSize);
 
 #ifdef ATOM_BIOS
     /* Set accelerator mode in the BIOSScratch registers */
@@ -1379,7 +1416,17 @@ RHDEnterVT(int scrnIndex, int flags)
 #endif
 
     if (rhdPtr->CS) {
-	if (rhdPtr->ChipSet < RHD_R600) {
+#ifdef USE_DRI
+	if (rhdPtr->ChipSet >= RHD_R600) {
+	    if (rhdPtr->TwoDPrivate) {
+		R600LoadShaders(pScrn);
+		R6xxIdle(pScrn);
+
+		((struct r6xx_accel_state *) rhdPtr->TwoDPrivate)->XHas3DEngineState =
+		    FALSE;
+	    }
+	} else {
+#endif
 	    if (rhdPtr->TwoDPrivate) {
 		R5xx2DSetup(pScrn);
 		R5xx2DIdle(pScrn);
@@ -1388,7 +1435,9 @@ RHDEnterVT(int scrnIndex, int flags)
 	    if (rhdPtr->ThreeDPrivate)
 		((struct R5xx3D *) rhdPtr->ThreeDPrivate)->XHas3DEngineState =
 		    FALSE;
+#ifdef USE_DRI
 	}
+#endif
 
 	RHDCSStart(rhdPtr->CS);
 
@@ -1398,6 +1447,12 @@ RHDEnterVT(int scrnIndex, int flags)
 	RHDCSFlush(rhdPtr->CS);
 	RHDCSIdle(rhdPtr->CS);
     }
+
+#ifdef USE_DRI
+    if (rhdPtr->dri) {
+        DRIUnlock(pScrn->pScreen);
+    }
+#endif
 
     return TRUE;
 }
@@ -1843,6 +1898,7 @@ rhdUnmapFB(RHDPtr rhdPtr)
 
     if (!rhdPtr->FbBase)
 	return;
+
     switch (rhdPtr->ChipSet) {
    	case RHD_RS690:
 	case RHD_RS740:
@@ -1858,7 +1914,8 @@ rhdUnmapFB(RHDPtr rhdPtr)
 			    rhdPtr->FbMapSize);
 #endif
     }
-    rhdPtr->FbBase = 0;
+
+    rhdPtr->FbBase = NULL;
 }
 
 /*
@@ -1937,7 +1994,7 @@ rhdOutputConnectorCheck(struct rhdConnector *Connector)
 		/* Do this before sensing as AtomBIOS sense needs this info */
 		if ((Output->SensedType = Output->Sense(Output, Connector)) != RHD_SENSED_NONE) {
 		    RHDOutputPrintSensedType(Output);
-		    Output->Connector = Connector;
+		    RHDOutputAttachConnector(Output, Connector);
 		    break;
 		}
 	    }
@@ -1949,7 +2006,7 @@ rhdOutputConnectorCheck(struct rhdConnector *Connector)
 	for (i = 0; i < 2; i++) {
 	    Output = Connector->Output[i];
 	    if (Output && !Output->Sense) {
-		Output->Connector = Connector;
+		RHDOutputAttachConnector(Output, Connector);
 		break;
 	    }
 	}
@@ -2374,7 +2431,7 @@ rhdSave(RHDPtr rhdPtr)
 
     RHDFUNC(rhdPtr);
 
-    RHDSaveMC(rhdPtr);
+    RHDMCSave(rhdPtr);
 
     RHDVGASave(rhdPtr);
 
@@ -2401,7 +2458,7 @@ rhdRestore(RHDPtr rhdPtr)
 
     RHDFUNC(rhdPtr);
 
-    RHDRestoreMC(rhdPtr);
+    RHDMCRestore(rhdPtr);
 
     rhdRestoreCursor(pScrn);
 
@@ -2411,6 +2468,7 @@ rhdRestore(RHDPtr rhdPtr)
 
     RHDVGARestore(rhdPtr);
 
+    /* restore after restoring CRTCs - check rhd_crtc.c for why */
     RHDCrtcRestore(rhdPtr->Crtc[0]);
     RHDCrtcRestore(rhdPtr->Crtc[1]);
 
@@ -2420,38 +2478,6 @@ rhdRestore(RHDPtr rhdPtr)
 #endif
 }
 
-/*
- *
- */
-CARD32
-_RHDRegRead(int scrnIndex, CARD16 offset)
-{
-    return *(volatile CARD32 *)((CARD8 *) RHDPTR(xf86Screens[scrnIndex])->MMIOBase + offset);
-}
-
-/*
- *
- */
-void
-_RHDRegWrite(int scrnIndex, CARD16 offset, CARD32 value)
-{
-    *(volatile CARD32 *)((CARD8 *) RHDPTR(xf86Screens[scrnIndex])->MMIOBase + offset) = value;
-}
-
-/*
- * This one might seem clueless, but it is an actual lifesaver.
- */
-void
-_RHDRegMask(int scrnIndex, CARD16 offset, CARD32 value, CARD32 mask)
-{
-    CARD32 tmp;
-
-    tmp = _RHDRegRead(scrnIndex, offset);
-    tmp &= ~mask;
-    tmp |= (value & mask);
-    _RHDRegWrite(scrnIndex, offset, tmp);
-}
-
 #ifdef RHD_DEBUG
 /*
  *
@@ -2459,7 +2485,7 @@ _RHDRegMask(int scrnIndex, CARD16 offset, CARD32 value, CARD32 mask)
 CARD32
 _RHDRegReadD(int scrnIndex, CARD16 offset)
 {
-    CARD32 tmp =  *(volatile CARD32 *)((CARD8 *) RHDPTR(xf86Screens[scrnIndex])->MMIOBase + offset);
+    CARD32 tmp =  MMIO_IN32(RHDPTR(xf86Screens[scrnIndex])->MMIOBase, offset);
     xf86DrvMsg(scrnIndex, X_INFO, "RHDRegRead(0x%4.4x) = 0x%4.4x\n",offset,tmp);
     return tmp;
 }
@@ -2471,7 +2497,7 @@ void
 _RHDRegWriteD(int scrnIndex, CARD16 offset, CARD32 value)
 {
     xf86DrvMsg(scrnIndex, X_INFO, "RHDRegWrite(0x%4.4x,0x%4.4x)\n",offset,tmp);
-    *(volatile CARD32 *)((CARD8 *) RHDPTR(xf86Screens[scrnIndex])->MMIOBase + offset) = value;
+    MMIO_OUT32(RHDPTR(xf86Screens[scrnIndex])->MMIOBase, offset, value);
 }
 
 /*
@@ -2497,11 +2523,11 @@ _RHDReadMC(int scrnIndex, CARD32 addr)
     CARD32 ret;
 
     if (rhdPtr->ChipSet < RHD_RS600) {
-	_RHDRegWrite(scrnIndex, MC_IND_INDEX, addr);
-	ret = _RHDRegRead(scrnIndex, MC_IND_DATA);
+	RHDRegWrite(rhdPtr, MC_IND_INDEX, addr);
+	ret = RHDRegRead(rhdPtr, MC_IND_DATA);
     } else if (rhdPtr->ChipSet == RHD_RS600) {
-	_RHDRegWrite(scrnIndex, RS60_MC_NB_MC_INDEX, addr);
-	ret = _RHDRegRead(scrnIndex, RS60_MC_NB_MC_DATA);
+	RHDRegWrite(rhdPtr, RS60_MC_NB_MC_INDEX, addr);
+	ret = RHDRegRead(rhdPtr, RS60_MC_NB_MC_DATA);
     } else if (rhdPtr->ChipSet == RHD_RS690 || rhdPtr->ChipSet == RHD_RS740) {
 #ifdef XSERVER_LIBPCIACCESS
 	CARD32 data = addr & ~RS69_MC_IND_WR_EN;
@@ -2521,9 +2547,10 @@ _RHDReadMC(int scrnIndex, CARD32 addr)
 	ret = pciReadLong(rhdPtr->NBPciTag, RS78_NB_MC_IND_DATA);
 #endif
     }
-
+#ifdef RHD_DEBUG
     RHDDebug(scrnIndex,"%s(0x%08X) = 0x%08X\n",__func__,(unsigned int)addr,
 	     (unsigned int)ret);
+#endif
     return ret;
 }
 
@@ -2532,15 +2559,17 @@ _RHDWriteMC(int scrnIndex, CARD32 addr, CARD32 data)
 {
     RHDPtr rhdPtr = RHDPTR(xf86Screens[scrnIndex]);
 
+#ifdef RHD_DEBUG
     RHDDebug(scrnIndex,"%s(0x%08X, 0x%08X)\n",__func__,(unsigned int)addr,
 	     (unsigned int)data);
+#endif
 
     if (rhdPtr->ChipSet < RHD_RS600) {
-	_RHDRegWrite(scrnIndex, MC_IND_INDEX, addr | MC_IND_WR_EN);
-	_RHDRegWrite(scrnIndex, MC_IND_DATA, data);
+	RHDRegWrite(rhdPtr, MC_IND_INDEX, addr | MC_IND_WR_EN);
+	RHDRegWrite(rhdPtr, MC_IND_DATA, data);
     } else if (rhdPtr->ChipSet == RHD_RS600) {
-	_RHDRegWrite(scrnIndex, RS60_MC_NB_MC_INDEX, addr | RS60_NB_MC_IND_WR_EN);
-	_RHDRegWrite(scrnIndex, RS60_MC_NB_MC_DATA, data);
+	RHDRegWrite(rhdPtr, RS60_MC_NB_MC_INDEX, addr | RS60_NB_MC_IND_WR_EN);
+	RHDRegWrite(rhdPtr, RS60_MC_NB_MC_DATA, data);
     } else if (rhdPtr->ChipSet == RHD_RS690 || rhdPtr->ChipSet == RHD_RS740) {
 #ifdef XSERVER_LIBPCIACCESS
 	CARD32 tmp = addr | RS69_MC_IND_WR_EN;
@@ -2567,15 +2596,17 @@ _RHDWriteMC(int scrnIndex, CARD32 addr, CARD32 data)
 CARD32
 _RHDReadPLL(int scrnIndex, CARD16 offset)
 {
-    _RHDRegWrite(scrnIndex, CLOCK_CNTL_INDEX, (offset & PLL_ADDR));
-    return _RHDRegRead(scrnIndex, CLOCK_CNTL_DATA);
+    RHDPtr rhdPtr = RHDPTR(xf86Screens[scrnIndex]);
+    RHDRegWrite(rhdPtr, CLOCK_CNTL_INDEX, (offset & PLL_ADDR));
+    return RHDRegRead(rhdPtr, CLOCK_CNTL_DATA);
 }
 
 void
 _RHDWritePLL(int scrnIndex, CARD16 offset, CARD32 data)
 {
-    _RHDRegWrite(scrnIndex, CLOCK_CNTL_INDEX, (offset & PLL_ADDR) | PLL_WR_EN);
-    _RHDRegWrite(scrnIndex, CLOCK_CNTL_DATA, data);
+    RHDPtr rhdPtr = RHDPTR(xf86Screens[scrnIndex]);
+    RHDRegWrite(rhdPtr, CLOCK_CNTL_INDEX, (offset & PLL_ADDR) | PLL_WR_EN);
+    RHDRegWrite(rhdPtr, CLOCK_CNTL_DATA, data);
 }
 
 #ifdef ATOM_BIOS
@@ -2685,6 +2716,8 @@ rhdAccelOptionsHandle(ScrnInfoPtr pScrn)
     if (method.set) {
 	if (!strcasecmp(method.val.string, "none"))
 	    rhdPtr->AccelMethod = RHD_ACCEL_NONE;
+	else if (!strcasecmp(method.val.string, "force-shadowfb"))
+	    rhdPtr->AccelMethod = RHD_ACCEL_FORCE_SHADOWFB;
 	else if (!strcasecmp(method.val.string, "shadowfb"))
 	    rhdPtr->AccelMethod = RHD_ACCEL_SHADOWFB;
 	else if (!strcasecmp(method.val.string, "xaa"))
@@ -2716,6 +2749,7 @@ rhdAccelOptionsHandle(ScrnInfoPtr pScrn)
 	rhdPtr->AccelMethod = RHD_ACCEL_SHADOWFB;
     }
 
+#if 0
     if (rhdPtr->ChipSet >= RHD_R600) {
 	if (rhdPtr->AccelMethod > RHD_ACCEL_SHADOWFB) {
 	    xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING, "%s: HW 2D acceleration is"
@@ -2723,6 +2757,7 @@ rhdAccelOptionsHandle(ScrnInfoPtr pScrn)
 	    rhdPtr->AccelMethod = RHD_ACCEL_SHADOWFB;
 	}
     }
+#endif
     /* Now for some pretty print */
     switch (rhdPtr->AccelMethod) {
 #ifdef USE_EXA
@@ -2732,6 +2767,9 @@ rhdAccelOptionsHandle(ScrnInfoPtr pScrn)
 #endif /* USE_EXA */
     case RHD_ACCEL_XAA:
 	xf86DrvMsg(rhdPtr->scrnIndex, X_CONFIG, "Selected XAA 2D acceleration.\n");
+	break;
+    case RHD_ACCEL_FORCE_SHADOWFB:
+	xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING, "Selected forced ShadowFB (even with DRI). Known to have issues.\n");
 	break;
     case RHD_ACCEL_SHADOWFB:
 	xf86DrvMsg(rhdPtr->scrnIndex, X_CONFIG, "Selected ShadowFB.\n");
@@ -2773,15 +2811,17 @@ rhdProcessOptions(ScrnInfoPtr pScrn)
     RhdGetOptValString (rhdPtr->Options, OPTION_RROUTPUTORDER,
 			&rhdPtr->rrOutputOrder, NULL);
     RhdGetOptValBool   (rhdPtr->Options, OPTION_DRI,
-			&rhdPtr->useDRI, FALSE);
+			&rhdPtr->useDRI, TRUE);
     RhdGetOptValString (rhdPtr->Options, OPTION_TV_MODE,
 			&rhdPtr->tvModeName, NULL);
     RhdGetOptValString (rhdPtr->Options, OPTION_SCALE_TYPE,
 		       &rhdPtr->scaleTypeOpt, "default");
     RhdGetOptValBool   (rhdPtr->Options, OPTION_UNVERIFIED_FEAT,
 			&rhdPtr->unverifiedFeatures, FALSE);
+#ifdef ATOM_BIOS
     RhdGetOptValBool   (rhdPtr->Options, OPTION_USE_ATOMBIOS,
 			&rhdPtr->UseAtomBIOS, FALSE);
+#endif
     RhdGetOptValBool   (rhdPtr->Options, OPTION_AUDIO,
 			&rhdPtr->audio, TRUE);
     RhdGetOptValString (rhdPtr->Options, OPTION_HDMI,
@@ -2981,7 +3021,10 @@ rhdGetIGPNorthBridgeInfo(RHDPtr rhdPtr)
 static enum rhdCardType
 rhdGetCardType(RHDPtr rhdPtr)
 {
-    CARD32 cmd_stat;
+    uint32_t cmd_stat;
+
+    if (rhdPtr->ChipSet == RHD_RS780)
+	return RHD_CARD_PCIE;
 
 #ifdef XSERVER_LIBPCIACCESS
     pci_device_cfg_read_u32(rhdPtr->PciInfo, &cmd_stat, PCI_CMD_STAT_REG);
@@ -2989,7 +3032,7 @@ rhdGetCardType(RHDPtr rhdPtr)
     cmd_stat = pciReadLong(rhdPtr->PciTag, PCI_CMD_STAT_REG);
 #endif
     if (cmd_stat & 0x100000) {
-        CARD32 cap_ptr, cap_id;
+        uint32_t cap_ptr, cap_id;
 
 #ifdef XSERVER_LIBPCIACCESS
         pci_device_cfg_read_u32(rhdPtr->PciInfo, &cap_ptr, 0x34);

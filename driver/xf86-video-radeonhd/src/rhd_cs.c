@@ -1,5 +1,5 @@
 /*
- * Copyright 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2008  Luc Verhaegen <libv@exsuse.de>
  * Copyright 2008  Matthias Hopf <mhopf@novell.com>
  * Copyright 2008  Egbert Eich   <eich@novell.com>
  *
@@ -31,6 +31,8 @@
 
 #include "xf86.h"
 
+#include <compiler.h>
+
 #include "rhd.h"
 #include "rhd_cs.h"
 #include "r5xx_regs.h"
@@ -50,8 +52,8 @@
 
 /* First... provide some macro's for accessing the registers, which will
    somewhat speed up things */
-#define CSMMIORegRead(Reg) (*(volatile CARD32 *) (MMIOBase + (Reg)))
-#define CSMMIORegWrite(Reg, Value) (*(volatile CARD32 *) (MMIOBase + (Reg))) = (Value)
+#define CSMMIORegRead(Reg) MMIO_IN32(MMIOBase, (Reg))
+#define CSMMIORegWrite(Reg, Value) MMIO_OUT32(MMIOBase, (Reg), (Value))
 
 static void
 CSMMIORBBMStuff(struct RhdCS *CS)
@@ -210,11 +212,20 @@ struct RhdDRMCP {
 static void
 DRMCPFlush(struct RhdCS *CS)
 {
+    RHDPtr rhdPtr = RHDPTRI(CS);
     struct RhdDRMCP *CP = CS->Private;
     struct drm_radeon_indirect indirect;
 
     if (!CP->DrmBuffer)
 	return;
+
+    if (rhdPtr->ChipSet >= RHD_R600) {
+	while ((CS->Wptr * 4) & 0x3c) {
+	    RHDCSGrab(CS, 1);
+	    RHDCSWrite(CS, CP_PACKET2());
+	    RHDCSAdvance(CS);
+	}
+    }
 
     indirect.idx = CP->DrmBuffer->idx;
     indirect.start = CS->Flushed * 4;
@@ -228,6 +239,7 @@ DRMCPFlush(struct RhdCS *CS)
     if (CS->Wptr & 1)
 	CS->Wptr++;
 
+
     CS->Flushed = CS->Wptr;
 #ifdef RHD_CS_DEBUG
     CS->Grabbed = 0;
@@ -240,8 +252,17 @@ DRMCPFlush(struct RhdCS *CS)
 static void
 DRMCPBufferDiscard(struct RhdCS *CS)
 {
+    RHDPtr rhdPtr = RHDPTRI(CS);
     struct RhdDRMCP *CP = CS->Private;
     struct drm_radeon_indirect indirect;
+
+    if (rhdPtr->ChipSet >= RHD_R600) {
+	while ((CS->Wptr * 4) & 0x3c){
+	    RHDCSGrab(CS, 1);
+	    RHDCSWrite(CS, CP_PACKET2());
+	    RHDCSAdvance(CS);
+	}
+    }
 
     indirect.idx = CP->DrmBuffer->idx;
     indirect.start = CS->Flushed * 4;

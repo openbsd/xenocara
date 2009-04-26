@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Luc Verhaegen <libv@exsuse.de>
  * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
  * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
  * Copyright 2007, 2008  Advanced Micro Devices, Inc.
@@ -30,6 +30,8 @@
 #  error "config.h missing!"
 # endif
 
+#include <compiler.h>
+
 #define RHD_MAJOR_VERSION (PACKAGE_VERSION_MAJOR)
 #define RHD_MINOR_VERSION (PACKAGE_VERSION_MINOR)
 #define RHD_PATCHLEVEL    (PACKAGE_VERSION_PATCHLEVEL)
@@ -43,7 +45,6 @@
 
 #define RHD_NAME "RADEONHD"
 #define RHD_DRIVER_NAME "radeonhd"
-
 
 enum RHD_CHIPSETS {
     RHD_UNKNOWN = 0,
@@ -89,6 +90,7 @@ enum RHD_CHIPSETS {
     RHD_RV635,
     RHD_M86,
     RHD_RS780,
+    RHD_RS880,
     RHD_RV770,
     RHD_R700,
     RHD_M98,
@@ -123,7 +125,8 @@ enum RHD_TV_MODE {
 enum rhdPropertyAction {
     rhdPropertyCheck,
     rhdPropertyGet,
-    rhdPropertySet
+    rhdPropertySet,
+    rhdPropertyCommit
 };
 
 union rhdPropertyData
@@ -160,6 +163,13 @@ union rhdPropertyData
 typedef struct pci_device *pciVideoPtr;
 #endif
 
+#ifndef NO_ASSERT
+enum debugFlags {
+    VGA_SETUP,
+    MC_SETUP
+};
+#endif
+
 enum rhdCardType {
     RHD_CARD_NONE,
     RHD_CARD_AGP,
@@ -191,10 +201,11 @@ typedef struct RHDOpt {
 /* Some more intelligent handling of chosing which acceleration to use */
 enum AccelMethod {
     RHD_ACCEL_NONE = 0, /* ultra slow, but might be desired for debugging. */
-    RHD_ACCEL_SHADOWFB = 1, /* cache in main ram. */
-    RHD_ACCEL_XAA = 2, /* "old" X acceleration architecture. */
-    RHD_ACCEL_EXA = 3, /* not done yet. */
-    RHD_ACCEL_DEFAULT = 4 /* keep as highest. */
+    RHD_ACCEL_FORCE_SHADOWFB = 1, /* shadowfb even with dri enabled. Known to have damage issues. */
+    RHD_ACCEL_SHADOWFB = 2, /* cache in main ram. */
+    RHD_ACCEL_XAA = 3, /* "old" X acceleration architecture. */
+    RHD_ACCEL_EXA = 4, /* not done yet. */
+    RHD_ACCEL_DEFAULT = 5 /* keep as highest. */
 };
 
 typedef struct RHDRec {
@@ -235,6 +246,7 @@ typedef struct RHDRec {
     pointer             FbBase;   /* map base of fb   */
     unsigned int        FbPhysAddress; /* card PCI BAR address of FB */
     unsigned int        FbIntAddress; /* card internal address of FB */
+    CARD32              FbIntSize; /* card internal FB aperture size */
     unsigned int        FbPCIAddress; /* physical address of FB */
 
     Bool		directRenderingEnabled;
@@ -325,6 +337,12 @@ typedef struct RHDRec {
     CARD32		UseAtomFlags;
 
     struct rhdOutput *DigEncoderOutput[2];
+# define RHD_CHECKDEBUGFLAG(rhdPtr, FLAG) (rhdPtr->DebugFlags & (1 << FLAG))
+#ifndef NO_ASSERT
+# define RHD_SETDEBUGFLAG(rhdPtr, FLAG) (rhdPtr->DebugFlags |= (1 << FLAG))
+# define RHD_UNSETDEBUGFLAG(rhdPtr, FLAG) (rhdPtr->DebugFlags &= ~((CARD32)1 << FLAG))
+    CARD32 DebugFlags;
+#endif
 } RHDRec, *RHDPtr;
 
 #define RHDPTR(p) 	((RHDPtr)((p)->driverPrivate))
@@ -360,12 +378,17 @@ extern Bool RHDScalePolicy(struct rhdMonitor *Monitor, struct rhdConnector *Conn
 extern void RHDPrepareMode(RHDPtr rhdPtr);
 extern Bool RHDUseAtom(RHDPtr rhdPtr, enum RHD_CHIPSETS *BlackList, enum atomSubSystem subsys);
 
-extern CARD32 _RHDRegRead(int scrnIndex, CARD16 offset);
-#define RHDRegRead(ptr, offset) _RHDRegRead((ptr)->scrnIndex, (offset))
-extern void _RHDRegWrite(int scrnIndex, CARD16 offset, CARD32 value);
-#define RHDRegWrite(ptr, offset, value) _RHDRegWrite((ptr)->scrnIndex, (offset), (value))
-extern void _RHDRegMask(int scrnIndex, CARD16 offset, CARD32 value, CARD32 mask);
-#define RHDRegMask(ptr, offset, value, mask) _RHDRegMask((ptr)->scrnIndex, (offset), (value), (mask))
+#define RHDRegRead(ptr, offset) MMIO_IN32(RHDPTRI(ptr)->MMIOBase, offset)
+#define RHDRegWrite(ptr, offset, value) MMIO_OUT32(RHDPTRI(ptr)->MMIOBase, offset, value)
+#define RHDRegMask(ptr, offset, value, mask)	\
+do {						\
+    CARD32 tmp;					\
+    tmp = RHDRegRead((ptr), (offset));		\
+    tmp &= ~(mask);				\
+    tmp |= ((value) & (mask));			\
+    RHDRegWrite((ptr), (offset), tmp);		\
+} while(0)
+
 extern CARD32 _RHDReadMC(int scrnIndex, CARD32 addr);
 #define RHDReadMC(ptr,addr) _RHDReadMC((ptr)->scrnIndex,(addr))
 extern void _RHDWriteMC(int scrnIndex, CARD32 addr, CARD32 data);

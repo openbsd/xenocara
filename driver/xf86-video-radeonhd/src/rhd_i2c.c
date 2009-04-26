@@ -1,8 +1,8 @@
 /*
- * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
- * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007, 2008  Advanced Micro Devices, Inc.
+ * Copyright 2007-2009  Egbert Eich   <eich@novell.com>
+ * Copyright 2007-2009  Luc Verhaegen <libv@exsuse.de>
+ * Copyright 2007-2009  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007-2009  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -1257,7 +1257,7 @@ rhdInitI2C(int scrnIndex)
 		else if (rhdPtr->ChipSet > RHD_RS740 && sda == rhdDdc4data && scl == rhdDdc4clk)
 		    I2C->u.line = 3; /* R6XX only */
 		else {
-		    xf86DrvMsg(I2CPtr->scrnIndex, X_ERROR, "No DDC line found for index %i: scl=0x%2.2x sda=0x%2.2x\n",
+		    xf86DrvMsg(scrnIndex, X_ERROR, "No DDC line found for index %i: scl=0x%2.2x sda=0x%2.2x\n",
 			       i, scl, sda);
 		    xfree(I2C);
 		    continue;
@@ -1270,14 +1270,14 @@ rhdInitI2C(int scrnIndex)
 
 	    if (valid) {
 		if (sda != rhdDdc1data && sda != rhdDdc2data && sda != rhdDdc3data) {
-		    xf86DrvMsg(I2CPtr->scrnIndex, X_ERROR, "Invalid DDC CLK pin found: %i\n",
+		    xf86DrvMsg(scrnIndex, X_ERROR, "Invalid DDC CLK pin found: %i\n",
 			       sda);
 		    xfree(I2C);
 		    continue;
 		}
 		if (scl != rhdDdc1data && scl != rhdDdc2data && scl != rhdDdc3data
 		    && scl != rhdDdc1clk && scl != rhdDdc2clk && scl != rhdDdc3clk) {
-		    xf86DrvMsg(I2CPtr->scrnIndex, X_ERROR, "Invalid DDC CLK pin found: %i\n",
+		    xf86DrvMsg(scrnIndex, X_ERROR, "Invalid DDC CLK pin found: %i\n",
 			       scl);
 		    xfree(I2C);
 		    continue;
@@ -1288,7 +1288,7 @@ rhdInitI2C(int scrnIndex)
 		I2C->u.Gpio.SclReg = scl_reg;
 
 	    } else {
-		xf86DrvMsg(I2CPtr->scrnIndex, X_ERROR, "Invalid ClkLine for DDC. "
+		xf86DrvMsg(scrnIndex, X_ERROR, "Invalid ClkLine for DDC. "
 			   "AtomBIOS reported wrong or AtomBIOS unavailable\n");
 		xfree(I2C);
 		goto error;

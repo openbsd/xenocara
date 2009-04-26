@@ -2,7 +2,7 @@
  * Copyright 2005  Eric Anholt
  * Copyright 2005  Benjamin Herrenschmidt
  * Copyright 2006  Tungsten Graphics, Inc.
- * Copyright 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2008  Luc Verhaegen <libv@exsuse.de>
  * Copyright 2008  Matthias Hopf <mhopf@novell.com>
  * Copyright 2008  Egbert Eich   <eich@novell.com>
  *
@@ -32,7 +32,7 @@
  *    Zack Rusin <zrusin@trolltech.com>
  *    Benjamin Herrenschmidt <benh@kernel.crashing.org>
  *    Michel Dänzer <michel@tungstengraphics.com>
- *    Luc Verhaegen <libv@skynet.be>
+ *    Luc Verhaegen <libv@exsuse.de>
  *
  */
 
@@ -73,7 +73,7 @@ struct R5xxExaPrivate {
     int exaSyncMarker;
     int exaMarkerSynced;
 #if X_BYTE_ORDER == X_BIG_ENDIAN
-    unsigned long swapper_surfaces[3];
+    unsigned long swapper_surfaces[6];
 #endif /* X_BYTE_ORDER */
 };
 
@@ -780,7 +780,11 @@ R5xxEXAInit(ScrnInfoPtr pScrn, ScreenPtr pScreen)
     EXAInfo->exa_major = EXA_VERSION_MAJOR;
     EXAInfo->exa_minor = EXA_VERSION_MINOR;
 
-    EXAInfo->flags = EXA_OFFSCREEN_PIXMAPS;
+    EXAInfo->flags = EXA_OFFSCREEN_PIXMAPS
+#ifdef EXA_SUPPORTS_PREPARE_AUX
+	| EXA_SUPPORTS_PREPARE_AUX
+#endif
+	;
     EXAInfo->pixmapOffsetAlign = 0x1000;
     EXAInfo->pixmapPitchAlign = 64;
 

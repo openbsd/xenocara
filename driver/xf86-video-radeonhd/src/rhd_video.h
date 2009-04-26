@@ -1,5 +1,5 @@
 /*
- * Copyright 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2008  Luc Verhaegen <libv@exsuse.de>
  * Copyright 2008  Matthias Hopf <mhopf@novell.com>
  * Copyright 2008  Egbert Eich   <eich@novell.com>
  *
@@ -26,6 +26,10 @@
 #ifndef _RHD_VIDEO_H
 #define _RHD_VIDEO_H
 
+/* seriously ?! @#$%% */
+# define uint32_t CARD32
+# define uint64_t CARD64
+
 /* Xvideo port struct */
 struct RHDPortPriv {
     DrawablePtr pDraw;
@@ -50,5 +54,11 @@ struct RHDPortPriv {
 
 extern void RHDRADEONDisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv);
 extern void RHDInitVideo(ScreenPtr pScreen);
+extern void R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv);
+extern Bool
+R600CopyToVRAM(ScrnInfoPtr pScrn,
+	       char *src, int src_pitch,
+	       uint32_t dst_pitch, uint32_t dst_mc_addr, uint32_t dst_height, int bpp,
+	       int x, int y, int w, int h);
 
 #endif /* _RHD_VIDEO_H */

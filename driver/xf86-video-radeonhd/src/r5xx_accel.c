@@ -1,5 +1,5 @@
 /*
- * Copyright 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2008  Luc Verhaegen <libv@exsuse.de>
  * Copyright 2008  Matthias Hopf <mhopf@novell.com>
  * Copyright 2008  Egbert Eich   <eich@novell.com>
  * Copyright 2008  Advanced Micro Devices, Inc.
@@ -121,9 +121,10 @@ R5xxFIFOWait(RHDPtr rhdPtr, CARD32 required)
 static Bool
 R5xx2DFlush(int scrnIndex)
 {
+    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     int i;
 
-    _RHDRegMask(scrnIndex, R5XX_DSTCACHE_CTLSTAT,
+    RHDRegMask(pScrn, R5XX_DSTCACHE_CTLSTAT,
 		/* Radeon code:
 		   R5XX_RB2D_DC_FLUSH_ALL, R5XX_RB2D_DC_FLUSH_ALL */
 		R5XX_DSTCACHE_FLUSH_ALL, R5XX_DSTCACHE_FLUSH_ALL);
@@ -131,11 +132,11 @@ R5xx2DFlush(int scrnIndex)
     for (i = 0; i < R5XX_LOOP_COUNT; i++)
 	/* Radeon code:
 	   & R5XX_RB2D_DC_BUSY */
-	if (!(_RHDRegRead(scrnIndex, R5XX_DSTCACHE_CTLSTAT) & R5XX_DSTCACHE_BUSY))
+	if (!(RHDRegRead(pScrn, R5XX_DSTCACHE_CTLSTAT) & R5XX_DSTCACHE_BUSY))
 	    return TRUE;
 
     xf86DrvMsg(scrnIndex, X_ERROR, "%s: Timeout 0x%08x.\n", __func__,
-	       (unsigned int)_RHDRegRead(scrnIndex, R5XX_DSTCACHE_CTLSTAT));
+	       (unsigned int) RHDRegRead(pScrn, R5XX_DSTCACHE_CTLSTAT));
     return FALSE;
 }
 

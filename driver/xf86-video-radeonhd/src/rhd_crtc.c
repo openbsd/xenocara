@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, 2008  Luc Verhaegen <lverhaegen@novell.com>
+ * Copyright 2007, 2008  Luc Verhaegen <libv@exsuse.de>
  * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
  * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
  * Copyright 2007, 2008  Advanced Micro Devices, Inc.
@@ -536,6 +536,7 @@ DxModeRestore(struct rhdCrtc *Crtc)
 {
     struct rhdCrtcModePrivate *ModePriv = Crtc->ModePriv;
     CARD32 RegOff;
+    RHDPtr rhdPtr = RHDPTRI(Crtc);
 
     if (!ModePriv) {
 	xf86DrvMsg(Crtc->scrnIndex, X_ERROR, "%s: no registers stored!\n",
@@ -580,6 +581,10 @@ DxModeRestore(struct rhdCrtc *Crtc)
      * timing can be set to 0. This doesn't always restore properly...
      * Workaround is to set a valid sync length for a bit so VGA can
      * latch in. */
+
+    /* Make sure VGA is restored already */
+    ASSERT(!RHD_CHECKDEBUGFLAG(rhdPtr, VGA_SETUP));
+
     if (!ModePriv->StoreCrtcVSyncA && (ModePriv->StoreCrtcControl & 0x00000001)) {
 	RHDRegWrite(Crtc, RegOff + D1CRTC_V_SYNC_A, 0x00040000);
 	usleep(300000); /* seems a reliable timeout here */
@@ -781,8 +786,8 @@ DxScaleSet(struct rhdCrtc *Crtc, enum rhdCrtcScaleType Type,
 	    RHDRegWrite(Crtc, RegOff + D1SCL_DITHER, 0x00001010);
 	    break;
     }
-    RHDTuneMCAccessForDisplay(rhdPtr, Crtc->Id, Mode,
-			      ScaledToMode ? ScaledToMode : Mode);
+    RHDMCTuneAccessForDisplay(rhdPtr, Crtc->Id, Mode,
+			ScaledToMode ? ScaledToMode : Mode);
 }
 
 /*
@@ -1007,7 +1012,7 @@ D2ViewPortStart(struct rhdCrtc *Crtc, CARD16 X, CARD16 Y)
 /*
  *
  */
-static void
+static Bool
 D1CRTCDisable(struct rhdCrtc *Crtc)
 {
     if (RHDRegRead(Crtc, D1CRTC_CONTROL) & 0x00000001) {
@@ -1021,18 +1026,20 @@ D1CRTCDisable(struct rhdCrtc *Crtc)
 	    if (!(RHDRegRead(Crtc, D1CRTC_CONTROL) & 0x00010000)) {
 		RHDDebug(Crtc->scrnIndex, "%s: %d loops\n", __func__, i);
 		RHDRegMask(Crtc, D1CRTC_CONTROL, Control, 0x00000300);
-		return;
+		return TRUE;
 	    }
 	xf86DrvMsg(Crtc->scrnIndex, X_ERROR,
 		   "%s: Failed to Unsync %s\n", __func__, Crtc->Name);
 	RHDRegMask(Crtc, D1CRTC_CONTROL, Control, 0x00000300);
+	return FALSE;
     }
+    return TRUE;
 }
 
 /*
  *
  */
-static void
+static Bool
 D2CRTCDisable(struct rhdCrtc *Crtc)
 {
     if (RHDRegRead(Crtc, D2CRTC_CONTROL) & 0x00000001) {
@@ -1046,20 +1053,23 @@ D2CRTCDisable(struct rhdCrtc *Crtc)
 	    if (!(RHDRegRead(Crtc, D2CRTC_CONTROL) & 0x00010000)) {
 		RHDDebug(Crtc->scrnIndex, "%s: %d loops\n", __func__, i);
 		RHDRegMask(Crtc, D2CRTC_CONTROL, Control, 0x00000300);
-		return;
+		return TRUE;
 	    }
 	xf86DrvMsg(Crtc->scrnIndex, X_ERROR,
 		   "%s: Failed to Unsync %s\n", __func__, Crtc->Name);
 	RHDRegMask(Crtc, D2CRTC_CONTROL, Control, 0x00000300);
+	return FALSE;
     }
+    return TRUE;
 }
 
 /*
  *
  */
-static void
+static Bool
 D1Power(struct rhdCrtc *Crtc, int Power)
 {
+    Bool ret;
     RHDFUNC(Crtc);
 
     switch (Power) {
@@ -1068,26 +1078,26 @@ D1Power(struct rhdCrtc *Crtc, int Power)
 	usleep(2);
 	RHDRegMask(Crtc, D1CRTC_CONTROL, 0, 0x01000000); /* enable read requests */
 	RHDRegMask(Crtc, D1CRTC_CONTROL, 1, 1);
-	return;
+	return TRUE;
     case RHD_POWER_RESET:
 	RHDRegMask(Crtc, D1CRTC_CONTROL, 0x01000000, 0x01000000); /* disable read requests */
-	D1CRTCDisable(Crtc);
-	return;
+	return D1CRTCDisable(Crtc);
     case RHD_POWER_SHUTDOWN:
     default:
 	RHDRegMask(Crtc, D1CRTC_CONTROL, 0x01000000, 0x01000000); /* disable read requests */
-	D1CRTCDisable(Crtc);
+	ret = D1CRTCDisable(Crtc);
 	RHDRegMask(Crtc, D1GRPH_ENABLE, 0, 0x00000001);
-	return;
+	return ret;
     }
 }
 
 /*
  *
  */
-static void
+static Bool
 D2Power(struct rhdCrtc *Crtc, int Power)
 {
+    Bool ret;
     RHDFUNC(Crtc);
 
     switch (Power) {
@@ -1096,17 +1106,16 @@ D2Power(struct rhdCrtc *Crtc, int Power)
 	usleep(2);
 	RHDRegMask(Crtc, D2CRTC_CONTROL, 0, 0x01000000); /* enable read requests */
 	RHDRegMask(Crtc, D2CRTC_CONTROL, 1, 1);
-	return;
+	return TRUE;
     case RHD_POWER_RESET:
 	RHDRegMask(Crtc, D2CRTC_CONTROL, 0x01000000, 0x01000000); /* disable read requests */
-	D2CRTCDisable(Crtc);
-	return;
+	return D2CRTCDisable(Crtc);
     case RHD_POWER_SHUTDOWN:
     default:
 	RHDRegMask(Crtc, D2CRTC_CONTROL, 0x01000000, 0x01000000); /* disable read requests */
-	D2CRTCDisable(Crtc);
+	ret = D2CRTCDisable(Crtc);
 	RHDRegMask(Crtc, D2GRPH_ENABLE, 0, 0x00000001);
-	return;
+	return ret;
     }
 }
 
