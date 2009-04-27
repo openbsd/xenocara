@@ -1,3 +1,37 @@
+2009-03-20  Werner Lemberg  <wl@gnu.org>
+	    Tavis Ormandy <taviso@google.com>
+
+	Fix validation for various cmap table formats.
+
+	* src/sfnt/ttcmap.c (tt_cmap8_validate, tt_cmap10_validate,
+	tt_cmap12_validate): Check `length' correctly.
+	(tt_cmap_14_validate): Check `length' and `numMappings' correctly.
+
+2009-03-20  Werner Lemberg  <wl@gnu.org>
+
+	Protect against too large glyphs.
+
+	Problem reported by Tavis Ormandy <taviso@google.com>.
+
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic): Don't allow
+	`width' or `pitch' to be larger than 0xFFFF.
+
+2009-03-20  Werner Lemberg  <wl@gnu.org>
+
+	Protect against malformed compressed data.
+
+	* src/lsw/ftzopen.c (ft_lzwstate_io): Test whether `state->prefix' is
+	zero.
+
+2009-03-20  Werner Lemberg  <wl@gnu.org>
+
+	Protect against invalid SID values in CFFs.
+
+	Problem reported by Tavis Ormandy <taviso@google.com>.
+
+	* src/cff/cffload.c (cff_charset_load): Reject SID values larger
+	than 64999.
+
 2009-03-12  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.3.9 released.
