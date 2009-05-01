@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.39 2009/03/28 16:38:54 martynas Exp $
+ * $Id: xevents.c,v 1.40 2009/05/01 17:50:20 okan Exp $
  */
 
 /*
@@ -358,15 +358,17 @@ void
 xev_handle_randr(struct xevent *xev, XEvent *ee)
 {
 	XRRScreenChangeNotifyEvent	*rev = (XRRScreenChangeNotifyEvent *)ee;
-	struct client_ctx		*cc;
 	struct screen_ctx		*sc;
+	int				 i;
 
-	if ((cc = client_find(rev->window)) != NULL) {
-		XRRUpdateConfiguration(ee);
-		sc = CCTOSC(cc);
-		sc->xmax = rev->width;
-		sc->ymax = rev->height;
-		screen_init_xinerama(sc);
+	i = XRRRootToScreen(X_Dpy, rev->root);
+	TAILQ_FOREACH(sc, &Screenq, entry) {
+		if (sc->which == (u_int)i) {
+			XRRUpdateConfiguration(ee);
+			sc->xmax = rev->width;
+			sc->ymax = rev->height;
+			screen_init_xinerama(sc);
+		}
 	}
 }
 
