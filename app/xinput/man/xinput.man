@@ -1,5 +1,5 @@
-.\" $Id: xinput.man,v 1.1.1.1 2008/09/07 13:28:46 matthieu Exp $
-.TH xinput 1 "$Date: 2008/09/07 13:28:46 $" "Frederic Lepied"
+.\" $Id: xinput.man,v 1.2 2009/05/02 15:24:13 matthieu Exp $
+.TH xinput 1 "$Date: 2009/05/02 15:24:13 $" "Frederic Lepied"
 
 .SH NAME
 xinput - utility to configure and test XInput devices
@@ -56,6 +56,24 @@ Change the button mapping of \fIdevice_name\fP. Uses XSetDeviceButtonMapping(3).
 Query the device state. Uses XQueryDeviceState(3).
 .PP
 .TP 8
+.B xinput list-props \fIdevice_name\fP [\fIdevice_name\fP...]
+Lists properties that can be set for the given device(s).
+.PP
+.TP 8
+.B xinput set-int-prop \fIdevice_name\fP \fIproperty\fP \fIformat\fP \fIvalue\fP
+Sets an integer property for the device.  Appropriate values for \fIformat\fP
+are 8, 16, or 32, depending on the property.
+.PP
+.TP 8
+.B xinput watch-props \fIdevice_name\fP
+Prints to standard out when property changes occur.
+.PP
+.TP 8
+.B xinput delete-prop \fIdevice_name\fP \fIproperty\fP
+Delete the property from the device.
+.PP
+.PP
+.TP 8
 .B xinput test [-proximity] \fIdevice_name\fP
 Register all extended events from \fIdevice_name\fP and enter an endless
 loop displaying events received. If the -proximity is given, ProximityIn
@@ -63,6 +81,8 @@ and ProximityOut are registered.
 .PP
 \fIdevice_name\fP can be the device name as a string or the XID of the
 device.
+.PP
+\fIproperty\fP can be the property as a string or the Atom value.
 .PP
 
 .SH COPYRIGHT

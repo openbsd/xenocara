@@ -1,19 +1,19 @@
 /*
  * Copyright 1996 by Frederic Lepied, France. <Frederic.Lepied@sugix.frmug.org>
- *                                                                            
+ *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is  hereby granted without fee, provided that
  * the  above copyright   notice appear  in   all  copies and  that both  that
  * copyright  notice   and   this  permission   notice  appear  in  supporting
- * documentation, and that   the  name of  Frederic   Lepied not  be  used  in
+ * documentation, and that   the  name of  the authors  not  be  used  in
  * advertising or publicity pertaining to distribution of the software without
- * specific,  written      prior  permission.     Frederic  Lepied   makes  no
+ * specific,  written      prior  permission.     The authors  make  no
  * representations about the suitability of this software for any purpose.  It
- * is provided "as is" without express or implied warranty.                   
- *                                                                            
- * FREDERIC  LEPIED DISCLAIMS ALL   WARRANTIES WITH REGARD  TO  THIS SOFTWARE,
+ * is provided "as is" without express or implied warranty.
+ *
+ * THE AUTHORS DISCLAIM ALL   WARRANTIES WITH REGARD  TO  THIS SOFTWARE,
  * INCLUDING ALL IMPLIED   WARRANTIES OF MERCHANTABILITY  AND   FITNESS, IN NO
- * EVENT  SHALL FREDERIC  LEPIED BE   LIABLE   FOR ANY  SPECIAL, INDIRECT   OR
+ * EVENT  SHALL THE AUTHORS  BE   LIABLE   FOR ANY  SPECIAL, INDIRECT   OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
  * DATA  OR PROFITS, WHETHER  IN  AN ACTION OF  CONTRACT,  NEGLIGENCE OR OTHER
  * TORTIOUS  ACTION, ARISING    OUT OF OR   IN  CONNECTION  WITH THE USE    OR
@@ -32,7 +32,7 @@ typedef int (*prog)(
 #endif
 );
 
-typedef struct 
+typedef struct
 {
     char	*func_name;
     char	*arg_desc;
@@ -53,6 +53,10 @@ static entry drivers[] =
      "<device name> <feedback id> <value>",
      set_integer_feedback
     },
+    {"get-button-map",
+     "<device name>",
+     get_button_map
+    },
     {"set-button-map",
      "<device name> <map button 1> [<map button 2> [...]]",
      set_button_map
@@ -66,7 +70,7 @@ static entry drivers[] =
      set_mode
     },
     {"list",
-     "[--short || <device name>...]",
+     "[--loop || --short || <device name>...]",
      list
     },
     {"query-state",
@@ -81,7 +85,53 @@ static entry drivers[] =
      "",
      version
     },
-    {0, 0, 0
+#if HAVE_XI2
+    { "create-master",
+      "<id> [sendCore (dflt:1)] [enable (dflt:1)]",
+      create_master
+    },
+    { "remove-master",
+      "<id> [returnMode (dflt:Floating)] [returnPointer] [returnKeyboard]",
+      remove_master
+    },
+    { "reattach",
+      "<id> <master>",
+      change_attachment
+    },
+    { "float",
+      "<id>",
+      float_device
+    },
+    { "set-cp",
+      "<window> <device>",
+      set_clientpointer
+    },
+#endif
+    { "list-props",
+      "<device> [<device> ...]",
+      list_props
+    },
+    { "set-int-prop",
+      "<device> <property> <format (8, 16, 32)> <val> [<val> ...]",
+      set_int_prop
+    },
+    { "set-float-prop",
+      "<device> <property> <val> [<val> ...]",
+      set_float_prop
+    },
+    { "set-atom-prop",
+      "<device> <property> <val> [<val> ...]",
+      set_atom_prop
+    },
+    { "watch-props",
+      "<device>",
+      watch_props
+    },
+    { "delete-prop",
+      "<device> <property>",
+      delete_prop
+    },
+    {NULL, NULL, NULL
     }
 };
 
@@ -90,8 +140,12 @@ is_xinput_present(Display	*display)
 {
     XExtensionVersion	*version;
     Bool		present;
-    
+
+#if HAVE_XI2
+    version = XQueryInputVersion(display, XI_2_Major, XI_2_Minor);
+#else
     version = XGetExtensionVersion(display, INAME);
+#endif
 
     if (version && (version != (XExtensionVersion*) NoSuchExtension)) {
 	present = version->present;
@@ -113,7 +167,7 @@ find_device_info(Display	*display,
     int		num_devices;
     int		len = strlen(name);
     Bool	is_id = True;
-    XID		id;
+    XID		id = (XID)-1;
 
     for(loop=0; loop<len; loop++) {
 	if (!isdigit(name[loop])) {
@@ -137,6 +191,7 @@ find_device_info(Display	*display,
 	                "Warning: There are multiple devices named \"%s\".\n"
 	                "To ensure the correct one is selected, please use "
 	                "the device ID instead.\n\n", name);
+		return NULL;
 	    } else {
 		found = &devices[loop];
 	    }
@@ -146,7 +201,7 @@ find_device_info(Display	*display,
 }
 
 static void
-usage()
+usage(void)
 {
     entry	*pdriver = drivers;
 
@@ -190,7 +245,7 @@ main(int argc, char * argv[])
 	if (strcmp(driver->func_name, func) == 0) {
 	    int	r = (*driver->func)(display, argc-2, argv+2,
 				    driver->func_name, driver->arg_desc);
-	    XFlush(display);
+	    XSync(display, False);
 	    return r;
 	}
 	driver++;
