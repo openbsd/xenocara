@@ -76,7 +76,7 @@ system used by many packages, you will need to have the following
 GNU autotools packages installed:
 
     - automake 1.9 (devel/automake/1.9)
-    - autoconf 2.59 (devel/autoconf/2.59)
+    - autoconf 2.62 (devel/autoconf/2.62)
     - metaauto 0.6 (or later) (devel/metaauto)
     - libtool 1.5.22 (or later) (devel/libtool)
 
@@ -207,4 +207,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.25 2008/10/10 05:32:58 matthieu Exp $
+$OpenBSD: README,v 1.26 2009/05/02 13:51:29 matthieu Exp $
