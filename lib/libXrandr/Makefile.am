@@ -23,9 +23,15 @@
 
 SUBDIRS = src man 
 
-AM_CFLAGS = $(RANDR_CFLAGS) $(X_CFLAGS)
-
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xrandr.pc
 
-EXTRA_DIST = xrandr.pc.in autogen.sh
+EXTRA_DIST = xrandr.pc.in ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

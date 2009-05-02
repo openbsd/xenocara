@@ -1,7 +1,4 @@
 /*
- * $XFree86: xc/lib/Xrandr/Xrandrint.h,v 1.2 2001/06/07 15:33:43 keithp Exp $
- *
- *
  * Copyright © 2000, Compaq Computer Corporation, 
  * Copyright © 2002, Hewlett Packard, Inc.
  *
@@ -38,8 +35,7 @@
 #include <X11/extensions/randr.h>
 #include <X11/extensions/randrproto.h>
 
-extern XExtensionInfo XrandrExtensionInfo;
-extern char XrandrExtensionName[];
+extern char XRRExtensionName[];
 
 #define RRCheckExtension(dpy,i,val) \
   XextCheckExtension (dpy, i, XRRExtensionName, val)
@@ -91,13 +87,14 @@ typedef struct _randrVersionState {
     int		    minor_version;
 } _XRRVersionState;
 
-extern char XRRExtensionName[];
-
 Bool
 _XRRVersionHandler (Display	*dpy,
 		    xReply	*rep,
 		    char	*buf,
 		    int		len,
 		    XPointer    data);
+
+_X_HIDDEN Bool
+_XRRHasRates (int major, int minor);
 
 #endif /* _XRANDRINT_H_ */

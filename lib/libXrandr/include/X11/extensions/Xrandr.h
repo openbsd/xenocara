@@ -2,6 +2,7 @@
  * Copyright © 2000 Compaq Computer Corporation, Inc.
  * Copyright © 2002 Hewlett-Packard Company, Inc.
  * Copyright © 2006 Intel Corporation
+ * Copyright © 2008 Red Hat, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -29,6 +30,7 @@
 #define _XRANDR_H_
 
 #include <X11/extensions/randr.h>
+#include <X11/extensions/Xrender.h>
 
 #include <X11/Xfuncproto.h>
 
@@ -119,10 +121,12 @@ typedef struct {
 /* internal representation is private to the library */
 typedef struct _XRRScreenConfiguration XRRScreenConfiguration;	
 
-Bool XRRQueryExtension (Display *dpy, int *event_basep, int *error_basep);
+Bool XRRQueryExtension (Display *dpy,
+			int *event_base_return,
+			int *error_base_return);
 Status XRRQueryVersion (Display *dpy,
-			    int     *major_versionp,
-			    int     *minor_versionp);
+			    int     *major_version_return,
+			    int     *minor_version_return);
 
 XRRScreenConfiguration *XRRGetScreenInfo (Display *dpy,
 					  Window window);
@@ -177,8 +181,6 @@ int XRRRootToScreen(Display *dpy, Window root);
  */
 
 
-XRRScreenConfiguration *XRRScreenConfig(Display *dpy, int screen);
-XRRScreenConfiguration *XRRConfig(Screen *screen);
 void XRRSelectInput(Display *dpy, Window window, int mask);
 
 /* 
@@ -371,12 +373,82 @@ XRRSetCrtcGamma (Display *dpy, RRCrtc crtc, XRRCrtcGamma *gamma);
 void
 XRRFreeGamma (XRRCrtcGamma *gamma);
 
-/* 
+/* Version 1.3 additions */
+
+XRRScreenResources *
+XRRGetScreenResourcesCurrent (Display *dpy, Window window);
+
+void
+XRRSetCrtcTransform (Display	*dpy,
+		     RRCrtc	crtc, 
+		     XTransform	*transform,
+		     char	*filter,
+		     XFixed	*params,
+		     int	nparams);
+
+typedef struct _XRRCrtcTransformAttributes {
+    XTransform	pendingTransform;
+    char	*pendingFilter;
+    int		pendingNparams;
+    XFixed	*pendingParams;
+    XTransform	currentTransform;
+    char	*currentFilter;
+    int		currentNparams;
+    XFixed	*currentParams;
+} XRRCrtcTransformAttributes;
+
+/*
+ * Get current crtc transforms and filters.
+ * Pass *attributes to XFree to free
+ */
+Status
+XRRGetCrtcTransform (Display	*dpy,
+		     RRCrtc	crtc,
+		     XRRCrtcTransformAttributes **attributes);
+
+/*
  * intended to take RRScreenChangeNotify,  or 
  * ConfigureNotify (on the root window)
  * returns 1 if it is an event type it understands, 0 if not
  */
 int XRRUpdateConfiguration(XEvent *event);
+
+typedef struct _XRRPanning {
+    Time            timestamp;
+    unsigned int left;
+    unsigned int top;
+    unsigned int width;
+    unsigned int height;
+    unsigned int track_left;
+    unsigned int track_top;
+    unsigned int track_width;
+    unsigned int track_height;
+    int          border_left;
+    int          border_top;
+    int          border_right;
+    int          border_bottom;
+} XRRPanning;
+
+XRRPanning *
+XRRGetPanning (Display *dpy, XRRScreenResources *resources, RRCrtc crtc);
+
+void
+XRRFreePanning (XRRPanning *panning);
+
+Status
+XRRSetPanning (Display *dpy,
+	       XRRScreenResources *resources,
+	       RRCrtc crtc,
+	       XRRPanning *panning);
+
+void
+XRRSetOutputPrimary(Display *dpy,
+		    Window window,
+		    RROutput output);
+
+RROutput
+XRRGetOutputPrimary(Display *dpy,
+		    Window window);
 
 _XFUNCPROTOEND
 

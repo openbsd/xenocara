@@ -35,11 +35,11 @@
 .nf    
 .sp
 Bool XRRQueryExtension \^(\^Display *\fIdpy\fP, 
-	int *\fIevent_basep\fP, int *\fIerror_basep\fP\^);
+	int *\fIevent_base_return\fP, int *\fIerror_base_return\fP\^);
 .sp
 Status XRRQueryVersion \^(\^Display *\fIdpy\fP,
-	int *\fImajor_versionp\fP,
-	int *\fIminor_versionp\fP\^);
+	int *\fImajor_version_return\fP,
+	int *\fIminor_version_return\fP\^);
 .sp
 XRRScreenConfiguration *XRRGetScreenInfo \^(\^Display *dpy,
 	Drawable \fIdraw\fP\^);
@@ -89,11 +89,6 @@ short XRRConfigCurrentRate \^(\^
 int XRRRootToScreen\^(\^
 	Display *\fIdpy\fP, 
 	Window \fIroot\fP\^);
-.sp
-XRRScreenConfiguration *XRRScreenConfig\^(\^
-	Display *\fIdpy\fP, int \fIscreen\fP\^);
-.sp
-XRRScreenConfiguration *XRRConfig\^(\^Screen *\fIscreen\fP\^);
 .sp
 void XRRSelectInput\^(\^Display *\fIdpy\fP, Window \fIwindow\fP, int \fImask\fP\^);
 .sp

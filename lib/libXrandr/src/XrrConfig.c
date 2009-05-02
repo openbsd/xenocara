@@ -69,7 +69,7 @@ short *XRRConfigRates (XRRScreenConfiguration *config, int sizeID, int *nrates)
     if (!nents)
     {
 	*nrates = 0;
-	return 0;
+	return NULL;
     }
     *nrates = (int) *r;
     return r + 1;

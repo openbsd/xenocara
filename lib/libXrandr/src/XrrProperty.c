@@ -38,12 +38,10 @@ XRRListOutputProperties (Display *dpy, RROutput output, int *nprop)
     XExtDisplayInfo		*info = XRRFindDisplay(dpy);
     xRRListOutputPropertiesReply rep;
     xRRListOutputPropertiesReq	*req;
-    int				nbytes, nbytesRead, rbytes;
-    int				i;
-    xRRQueryVersionReq		*vreq;
-    Atom			*props;
+    int				nbytes, rbytes;
+    Atom			*props = NULL;
 
-    RRCheckExtension (dpy, info, 0);
+    RRCheckExtension (dpy, info, NULL);
 
     LockDisplay (dpy);
     GetReq (RRListOutputProperties, req);
@@ -87,11 +85,9 @@ XRRQueryOutputProperty (Display *dpy, RROutput output, Atom property)
     xRRQueryOutputPropertyReply rep;
     xRRQueryOutputPropertyReq	*req;
     int				rbytes, nbytes;
-    int				i;
-    xRRQueryVersionReq		*vreq;
     XRRPropertyInfo		*prop_info;
 
-    RRCheckExtension (dpy, info, 0);
+    RRCheckExtension (dpy, info, NULL);
 
     LockDisplay (dpy);
     GetReq (RRQueryOutputProperty, req);
@@ -140,7 +136,6 @@ XRRConfigureOutputProperty (Display *dpy, RROutput output, Atom property,
 {
     XExtDisplayInfo		    *info = XRRFindDisplay(dpy);
     xRRConfigureOutputPropertyReq   *req;
-    xRRQueryVersionReq		    *vreq;
     long len;
 
     RRSimpleCheckExtension (dpy, info);
@@ -173,7 +168,6 @@ XRRChangeOutputProperty (Display *dpy, RROutput output,
 {
     XExtDisplayInfo		*info = XRRFindDisplay(dpy);
     xRRChangeOutputPropertyReq	*req;
-    xRRQueryVersionReq		*vreq;
     long len;
 
     RRSimpleCheckExtension (dpy, info);
@@ -258,9 +252,7 @@ XRRGetOutputProperty (Display *dpy, RROutput output,
     XExtDisplayInfo		*info = XRRFindDisplay(dpy);
     xRRGetOutputPropertyReply	rep;
     xRRGetOutputPropertyReq	*req;
-    long    			nbytes, rbytes, nbytesRead;
-    int				i;
-    xRRQueryVersionReq		*vreq;
+    long    			nbytes, rbytes;
 
     RRCheckExtension (dpy, info, 1);
 
