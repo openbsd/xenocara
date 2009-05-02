@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.69 2009/04/27 19:31:31 matthieu Exp $
+# $OpenBSD: MODULES,v 1.70 2009/05/02 15:24:59 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -52,7 +52,7 @@ app/xgamma		1.0.2	7.3
 app/xgc			1.0.1	7.0
 app/xhost		1.0.2	7.3
 app/xinit		1.1.1	7.4+	needs-update
-app/xinput		1.4.1	7.4+	needs-update
+app/xinput		1.4.1	7.4+
 app/xkbcomp		1.0.5	7.4
 app/xkbevd		1.0.2	7.1
 app/xkbprint		1.0.1	7.0
@@ -70,7 +70,7 @@ app/xmodmap		1.0.3	7.3
 app/xmore		1.0.1	7.0
 app/xpr			1.0.2	7.2+
 app/xprop		1.0.4	7.4
-app/xrandr		1.3.0	7.4+	needs-update
+app/xrandr		1.3.0	7.4+
 app/xrdb		1.0.5	7.4
 app/xrefresh		1.0.2	7.1
 app/xset		1.0.4	7.4
@@ -92,7 +92,7 @@ doc/xorg-sgml-doctools	1.1.1	7.2RC2
 
 driver/xf86-input-acecad	1.3.0	7.4+	needs-update
 driver/xf86-input-calcomp	1.1.2	7.4	deprectated
-driver/xf86-input-citron	2.2.1	7.4
+driver/xf86-input-citron	2.2.2	7.4	needs-update
 driver/xf86-input-digitaledge	1.1.1	7.1	deprecated
 driver/xf86-input-dmc		1.1.2	7.4	deprecated
 driver/xf86-input-dynapro	1.1.2	7.4	deprecated
@@ -127,7 +127,7 @@ driver/xf86-video-glint		1.2.2	7.4+
 driver/xf86-video-i128		1.3.1	7.4
 driver/xf86-video-i740		1.3.0	7.4+
 driver/xf86-video-intel		2.6.3	7.4+	needs-update
-driver/xf86-video-mach64	6.8.0	7.4
+driver/xf86-video-mach64	6.8.1	7.4	needs-update
 driver/xf86-video-mga		1.4.10	7.4+	needs-update
 driver/xf86-video-neomagic	1.2.2	7.4
 driver/xf86-video-newport	0.2.1	7.2RC1
@@ -139,7 +139,7 @@ driver/xf86-video-rendition	4.2.1	7.4+
 driver/xf86-video-s3		0.6.1	7.4+
 driver/xf86-video-s3virge	1.10.2	7.4+
 driver/xf86-video-savage	2.2.1	7.4
-driver/xf86-video-siliconmotion	1.7.0	7.4+
+driver/xf86-video-siliconmotion	1.7.1	7.4+	needs-update
 driver/xf86-video-sis		0.10.1	7.4+	needs-update
 driver/xf86-video-sisusb	0.9.1	7.4
 driver/xf86-video-sunbw2	1.1.0	7.1
@@ -216,14 +216,14 @@ lib/libXfixes			4.0.3	7.2RC2
 lib/libXfont			1.4.0	7.4+	needs-update
 lib/libXfontcache		1.0.4	7.2RC4
 lib/libXft			2.1.12	7.2RC4
-lib/libXi			1.2.1	7.4+	needs-update
+lib/libXi			1.2.1	7.4+
 lib/libXinerama			1.0.3	7.4
 lib/libXmu			1.0.3	7.2RC2
 lib/libXp			1.0.0	7.0
 lib/libXpm			3.5.7	7.3
 lib/libXprintAppUtil		1.0.1	7.0	deprecated
 lib/libXprintUtil		1.0.1	7.0	deprecated
-lib/libXrandr			1.3.0	7.4+	needs-update
+lib/libXrandr			1.3.0	7.4+
 lib/libXrender			0.9.4	7.3
 lib/libXt			1.0.5	7.2+
 lib/libXtst			1.0.3	7.3
@@ -245,18 +245,18 @@ lib/pixman			0.15.2	7.4+	needs-update
 proto/bigreqsproto		1.0.2	7.0	needs-rel
 proto/compositeproto		0.4	7.3
 proto/damageproto		1.1.0	7.3
-proto/dri2proto			2.0	7.4+	needs-update 
+proto/dri2proto			2.0	7.4+
 proto/dmxproto			2.2.2	7.0
 proto/evieproto			1.0.2	7.0	deprecated
 proto/fixesproto		4.0	7.1
 proto/fontcacheproto		0.1.2	7.0
 proto/fontsproto		2.0.2	7.0
 proto/glproto			1.4.9	7.4
-proto/inputproto		1.5.0	7.4+	needs-update
+proto/inputproto		1.5.0	7.4+
 proto/kbproto			1.0.3	7.2RC1
 proto/pmproto			1.0.2	7.0	deprecated
 proto/printproto		1.0.4	7.4	deprecated
-proto/randrproto		1.3.0	7.4+	needs-update
+proto/randrproto		1.3.0	7.4+
 proto/recordproto		1.13.2	7.0
 proto/renderproto		0.9.3	7.3
 proto/resourceproto		1.0.2	7.0
