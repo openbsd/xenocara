@@ -1,4 +1,4 @@
-/*	$OpenBSD: xvctl.c,v 1.1.1.1 2006/11/26 10:59:22 matthieu Exp $	*/
+/*	$OpenBSD: xvctl.c,v 1.2 2009/05/02 19:18:13 oga Exp $	*/
 /*
  * Copyright (c) 2001 Marc Espie.
  *
@@ -37,9 +37,9 @@ void
 usage()
 {
 	fprintf(stderr,  "usage:\t%s\n\t%s\n\t%s\n",
-	    "xvctl [-n] [-d display] [-s screen] [-a adaptor] variable ...",
-	    "xvctl [-n] [-d display] [-s screen] [-a adaptor] -w variable=value ...",
-	    "xvctl [-n] [-d display] [-s screen] [-a adaptor] -a");
+	    "xvctl [-n] [-d display] [-s screen] [-A adaptor] variable ...",
+	    "xvctl [-n] [-d display] [-s screen] [-A adaptor] -w variable=value ...",
+	    "xvctl [-n] [-d display] [-s screen] [-A adaptor] -a");
 	exit(1);
 }
 
