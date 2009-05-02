@@ -21,6 +21,15 @@
 
 bin_PROGRAMS = xrandr
 
+bin_SCRIPTS = xkeystone
+
+xkeystone: keystone.5c
+	(echo '#!/usr/bin/env nickle'; cat ${srcdir}/keystone.5c) > $@
+	chmod +x $@
+
+clean-local:
+	rm -f xkeystone
+
 AM_CFLAGS = $(XRANDR_CFLAGS)
 xrandr_LDADD = $(XRANDR_LIBS)
 
@@ -34,9 +43,8 @@ appmandir = $(APP_MAN_DIR)
 
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
-EXTRA_DIST = $(appman_PRE) ChangeLog autogen.sh xrandr_test.pl
+EXTRA_DIST = $(appman_PRE) xrandr_test.pl keystone.5c
 CLEANFILES = $(appman_DATA)
-MAINTAINERCLEANFILES = ChangeLog
 
 SED = sed
 
@@ -62,11 +70,13 @@ SUFFIXES = .$(APP_MAN_SUFFIX) .man
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
 
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || \
-	(touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 

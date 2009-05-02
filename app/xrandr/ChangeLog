@@ -1,3 +1,370 @@
+commit beb228842c77fab4a446e028dd501a01f0fb3fd3
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Feb 17 13:45:32 2009 -0500
+
+    Allow zero replies from GetPanning to mean panning is unavailable.
+
+commit 9418f5523bd923b122f6e67c33c40e0e9c29ab50
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Mar 4 15:49:10 2009 -0800
+
+    Set the screen config on the correct screen.
+    
+    Otherwise, "DISPLAY=:0.0 xrandr --screen 1 -s 1" fails.
+
+commit 39a16783a3d1c0c722b4b18fab60a91b9f6ed578
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Mar 6 14:49:43 2009 +0100
+
+    Revert "Move outputs among crtcs as necessary. Fixes 14570"
+    
+    This reverts commit 4dcc8ae1a6903434def1a2706f7c68ff9e2a17c4.
+    The commit broke uncloning completely again.
+    
+    Conflicts:
+    
+    	xrandr.c
+
+commit 880f045202d1e70368b855c3783604e19be946b8
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 1 14:39:30 2009 +0100
+
+    Bump to 1.2.99.4
+
+commit 010dfc4bdd309256aecd006bb2b5b6937c2a119c
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 1 14:34:15 2009 +0100
+
+    Document the --primary and --noprimary options
+
+commit 48014498d275a9aab986b4bf295538a5b38ddfeb
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 1 14:12:21 2009 +0100
+
+    Document the --current option
+
+commit 909defc8a2b009ab845d875ba10e1ca01fb9d648
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Jan 30 20:37:34 2009 -0800
+
+    Add --noprimary option
+
+commit 6c70e0ee693ea293e8674d049249b462f3d36855
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Jan 30 20:11:10 2009 -0800
+
+    Add --primary option
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 77891e7900765a320ad3d43b56bbb1f3081b6582
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Jan 30 20:11:02 2009 -0800
+
+    Add --nograb option
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 6f3e2bb207cff069791811ef2bbe7798759ed810
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Dec 9 21:26:50 2008 -0800
+
+    Add --current option to use new XRRGetScreenResourcesCurrent API
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit d98d1f4055d8fbae1dc8d8c54467bfef21010694
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Jan 30 17:46:05 2009 +0100
+
+    Several fatal() were missing \n.
+
+commit 9ea6e4210d49c13991a7d07e54f6f59e3dc8ce72
+Author: Éric Piel <E.A.B.Piel@tudelft.nl>
+Date:   Mon Jan 19 16:18:46 2009 +0100
+
+    Add docs for --transform and --scale.
+    
+    The new --transform and --scale options were added, but not yet
+    documented. This includes also an example of usage of panning and
+    scaling at the same time.
+
+commit 4d381d6a88fe147f8b6eabd765a2f42c6402d8c6
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jan 26 16:40:59 2009 -0200
+
+    Correct make distcheck and gcc/sparse warnings.
+
+commit 7509ecb290689e0b1d5e1000c9fbd312f1efb4ca
+Author: Maarten Maathuis <madman2003@gmail.com>
+Date:   Mon Jan 5 19:47:21 2009 +0100
+
+    Stay away from doublescan modes unless a refresh rate is specified.
+
+commit f77ad847c0d3f8f0c6e8ffbf0bec39e5e9c5ded0
+Author: Maarten Maathuis <madman2003@gmail.com>
+Date:   Mon Dec 22 19:46:24 2008 +0100
+
+    Fix gamma computation.
+    
+    - The previous version sometimes overflowed.
+
+commit 5ddde7151841a8db99a2f38689a176114b2a45e5
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Dec 18 16:09:39 2008 +0100
+
+    Print multiple Atom and INT32 properties.
+    
+    Improve output formating of strings.
+
+commit 96af64f0de71f4149740b486baaefca744bb1bc1
+Author: Maarten Maathuis <madman2003@gmail.com>
+Date:   Wed Dec 17 17:18:14 2008 +0100
+
+    randr-1.2: support gamma changes.
+
+commit 9b7a2a3d4ac7891bd5372a581e6a55a1c81497ef
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Dec 15 20:39:43 2008 +0100
+
+    Bump to 1.2.99.3
+
+commit e80add8a407a9327bda209ff11a97dc3336e0cab
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Dec 15 21:00:55 2008 +0100
+
+    Add keystone.5c to EXTRA_DIST
+
+commit c98591b0bf4753c4c075eccde6023ef644f8bf96
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Dec 15 20:36:40 2008 +0100
+
+    Don't trash panning area, except if --panning or --fb is given.
+    
+    Almost anything used to reduce the screen size to the current mode size, which
+    is counter-productive when panning is active.
+
+commit 8cb63b6df9e46e8b06a57cb54ad460355b604399
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Dec 11 17:09:47 2008 +0100
+
+    Panning tracking areas describe full screen if set to 0. Use it as default.
+    
+    Also improve reduced output on default tracking and borders.
+
+commit b5efbb31ec7c27895507add4497dbfc87f930bb3
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 8 16:37:59 2008 -0500
+
+    Accept --props synonym for --prop
+
+commit 57cabac91099a8abd5afad75de64e54930c078ec
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Dec 8 12:24:37 2008 +0100
+
+    Only set transforms if actually changed.
+    
+    Re-enables other crtc settings if transforms are not supported.
+
+commit 970f689651fc86fa7a2ba24f0fab5f86f01af349
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Dec 4 17:47:05 2008 +0100
+
+    Add manpage entry.
+
+commit d030ae78e8516b916e9ea1ea81e3b4859bf35875
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Dec 4 15:57:22 2008 +0100
+
+    Bump to 1.2.99.2, RandR requirements to 1.2.99.2
+
+commit f6b5862f87ba7e1729c46136ef7754a06301853f
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Nov 28 17:16:11 2008 +0100
+
+    Add panning support.
+
+commit 1dc67ca918446cb7db4819f60f36e7bc6f4c047b
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Dec 6 11:40:53 2008 +0100
+
+    Don't use GNU make only constructs.
+
+commit 7963d4217c12d2e4b0c38ad4ff185462784609f7
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Dec 1 23:27:51 2008 +0100
+
+    Require libXrandr 1.2.91
+
+commit ba78e14c8c43a141fc5227e7bb75d6cfd0f70dba
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Dec 1 21:45:47 2008 +0100
+
+    Fix build outside of the source dir
+
+commit 63ba316bcbe8ad61ba63d9fe62c82e7d56dcc399
+Merge: a813c4d... 1b95e32...
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Dec 1 21:33:35 2008 +0100
+
+    Merge branch 'transform-proposal' of git.freedesktop.org:/git/xorg/app/xrandr
+
+commit 1b95e32b4b0a4a114e0fbebe8a18316d2f9010cf
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Nov 14 14:14:24 2008 -0800
+
+    Add --scale and --transform to --help output
+
+commit e9a5d1c598cd0440f062240430a9b86b4d514ada
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Nov 14 14:13:51 2008 -0800
+
+    Check return value from XRRGetCrtcTransform
+    
+    XRRGetCrtcTransform will return 0 if the X server does not support this
+    request.
+
+commit a813c4da7f0b166ee9001fa97c5d8d64e5b5b560
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Aug 19 09:39:00 2008 -0700
+
+    Man page typo fix
+
+commit 8ef4595aef15b7326822849a50c273f2a2b4ba30
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Aug 15 21:23:13 2008 +0200
+
+    Manpage typo fixes
+
+commit 977275a13be0687efc3db1fd3763174ff1256210
+Author: Eric Piel <E.A.B.Piel@tudelft.nl>
+Date:   Sun Aug 10 23:28:25 2008 +0200
+
+    update the manpage
+    
+    Describe all the options supported, including: --dryrun, -display,
+    --q1, --q12, and --rate for 1.1
+    Describe all short and long version of the option.
+    Use the usual man style for the option arugments.
+    Move the four --*mode options out of the output section as they are
+    independant of an output.
+    Mention cvt for computing modelines.
+    Gives some examples.
+
+commit 3046799a06ecb79211ef0f4a2db9de4eec7233fb
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sun Aug 3 13:24:49 2008 +0200
+
+    Fix for 64bit: feed a pointer to the right size variable to scanf().
+    
+    XID is unsigned long, however %x in scanf takes a pointer to an unsigned int.
+    Thus with XID xid, a sscanf(..., "0x%x", &xid) will most likely produce the
+    wrong results.
+
+commit 0d2082e9eb25cb7410309eed908b7f95abb8da79
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Apr 1 23:46:02 2008 -0700
+
+    Exit when select output is not available
+
+commit 18a189993b3df8bc54a79e0d62240ef203d6f34f
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Apr 1 23:44:50 2008 -0700
+
+    Fix up xkeystone to use current screen/output settings
+
+commit 9e8860f9231926090462ea20132cc9e1d64e5fe4
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Mar 30 19:03:53 2008 -0700
+
+    Execute xrandr to set keystone correction
+
+commit 206bfbea4ebe854fdfa66e8a6fbd9296b6004c0e
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Mar 30 19:03:29 2008 -0700
+
+    add --transform none to reset to identity
+
+commit 443e1f80c885133ae6df590f1a7663833c76b7f3
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Mar 21 23:29:41 2008 -0700
+
+    Build and install xkeystone program from keystone.5c
+
+commit a7a7eea510b5a87c1e12516fadae4d13bd26e0a0
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Mar 21 23:26:30 2008 -0700
+
+    Track toolkit name change (chrome->nichrome)
+
+commit 74dae9d4b06369a1863e7a68b7b3772751e06ff1
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Mar 21 03:17:44 2008 -0700
+
+    Add keystone.5c program to help compute transforms.
+
+commit 46bd35dd9004c0f9f47dc44b77a8c28e3ab7ced1
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Mar 21 03:17:40 2008 -0700
+
+    Make screen undersize a warning instead of an error
+
+commit b816bf38b418618c2f1cb5ded09aa3b346f8eb15
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Mar 18 16:04:34 2008 -0700
+
+    Add --transform to pass arbitrary transforms to the server
+
+commit 3809884530223e32f7026ec987257cb91e2122a9
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Mar 18 16:04:22 2008 -0700
+
+    Eliminate inverse matrix from randr transform protocol
+    
+    It is easier, and potentially more precise, to compute the inverse in the
+    server where everything can eventually be kept in floating point form.
+
+commit 854a7c2916455fec5ec1ba87576e26706d151381
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Mar 17 13:59:40 2008 -0700
+
+    Transform mode bounds when computing sizes.
+    
+    Ensure screen sizes are compared with projected mode image, including
+    rotation and transformation.
+
+commit bed3da4feaa505a5b50a4c94b0e6661bdac1fcbd
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Mar 15 00:35:08 2008 -0700
+
+    Manage transform filters. Use bilinear for non-identity scale.
+    
+    This involved creating a compound transform datatype to hold all of the
+    relevant transform and filter information. Adding arbitrary transforms
+    should be fairly easy at this point.
+
+commit ba35bb5d306f4edf9a47b92f249132a0814f5db1
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Mar 10 21:19:41 2008 -0700
+
+    Add output scaling using the 1.3 transform requests
+
+commit 4dcc8ae1a6903434def1a2706f7c68ff9e2a17c4
+Author: Hong Liu <hong.liu@intel.com>
+Date:   Mon Mar 10 21:37:09 2008 -0700
+
+    Move outputs among crtcs as necessary. Fixes 14570
+    
+    This patch makes new requests override existing crtc allocations. Outputs
+    with restricted crtc usage can now force existing outputs to switch
+    automatcially.
+
+commit 7465357396e2f32325791e27f28cbbe9753db3ab
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Mar 7 16:38:28 2008 -0500
+
+    xrandr 1.2.3
+
 commit 4450756d2d1d86f3c0bfaef81f6265f795468f32
 Author: Brice Goglin <bgoglin@debian.org>
 Date:   Sat Dec 15 00:59:00 2007 +0100
