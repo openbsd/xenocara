@@ -1,4 +1,3 @@
-#
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 # 
 # Permission to use, copy, modify, distribute, and sell this software and its
@@ -51,7 +50,9 @@ libman_PRE = \
 	XSetDeviceButtonMapping.man \
 	XSetDeviceFocus.man \
 	XSetDeviceMode.man \
-	XSetDeviceValuators.man
+	XSetDeviceValuators.man \
+	XListDeviceProperties.man \
+	XGetDeviceProperty.man
 
 BUILT_SOURCES = shadows.DONE
 
@@ -89,7 +90,8 @@ all_shadows =                                \
     $(XOpenDevice_shadows)                   \
     $(XSetDeviceButtonMapping_shadows)       \
     $(XSetDeviceFocus_shadows)               \
-    $(XSelectExtensionEvent_shadows)
+    $(XSelectExtensionEvent_shadows)         \
+    $(XGetDeviceProperty_shadows)
 
 
 XGetDeviceControl_shadows =                 \
@@ -134,6 +136,10 @@ XSetDeviceFocus_shadows =                   \
 XSelectExtensionEvent_shadows =             \
     XGetSelectedExtensionEvents
 
+XGetDeviceProperty_shadows =                \
+    XDeleteDeviceProperty \
+    XChangeDeviceProperty
+
 shadows.DONE:
 	-rm -f $(all_shadows:=.@LIB_MAN_SUFFIX@)
 	(for i in $(XGetDeviceControl_shadows:=.@LIB_MAN_SUFFIX@) ; do \
@@ -177,4 +183,7 @@ shadows.DONE:
 	 done)
 	(for i in $(XSelectExtensionEvent_shadows:=.@LIB_MAN_SUFFIX@) ; do \
 	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XSelectExtensionEvent.$(LIB_MAN_SUFFIX) > $$i; \
+	 done)
+	(for i in $(XGetDeviceProperty_shadows:=.@LIB_MAN_SUFFIX@) ; do \
+	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGetDeviceProperty.$(LIB_MAN_SUFFIX) > $$i; \
 	 done)

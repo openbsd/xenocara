@@ -104,6 +104,12 @@ XGetDeviceControl(dpy, dev, control)
 	sav = d;
 	_XRead(dpy, (char *)d, nbytes);
 
+        /* In theory, we should just be able to use d->length to get the size.
+         * Turns out that a number of X servers (up to and including server
+         * 1.4) sent the wrong length value down the wire. So to not break
+         * apps that run against older servers, we have to calculate the size
+         * manually.
+         */
 	switch (d->control) {
 	case DEVICE_RESOLUTION:
 	{
@@ -116,17 +122,18 @@ XGetDeviceControl(dpy, dev, control)
 	}
         case DEVICE_ABS_CALIB:
         {
-            size += sizeof(xDeviceAbsCalibState);
+            size += sizeof(XDeviceAbsCalibState);
             break;
         }
         case DEVICE_ABS_AREA:
         {
-            size += sizeof(xDeviceAbsAreaState);
+            size += sizeof(XDeviceAbsAreaState);
             break;
         }
         case DEVICE_CORE:
         {
-            size += sizeof(xDeviceCoreState);
+            size += sizeof(XDeviceCoreState);
+            break;
         }
 	default:
 	    size += d->length;
@@ -170,7 +177,7 @@ XGetDeviceControl(dpy, dev, control)
             XDeviceAbsCalibState *C = (XDeviceAbsCalibState *) Device;
 
             C->control = DEVICE_ABS_CALIB;
-            C->length = sizeof(C);
+            C->length = sizeof(XDeviceAbsCalibState);
             C->min_x = c->min_x;
             C->max_x = c->max_x;
             C->min_y = c->min_y;
@@ -188,7 +195,7 @@ XGetDeviceControl(dpy, dev, control)
             XDeviceAbsAreaState *A = (XDeviceAbsAreaState *) Device;
 
             A->control = DEVICE_ABS_AREA;
-            A->length = sizeof(A);
+            A->length = sizeof(XDeviceAbsAreaState);
             A->offset_x = a->offset_x;
             A->offset_y = a->offset_y;
             A->width = a->width;
@@ -204,7 +211,7 @@ XGetDeviceControl(dpy, dev, control)
             XDeviceCoreState *C = (XDeviceCoreState *) Device;
 
             C->control = DEVICE_CORE;
-            C->length = sizeof(C);
+            C->length = sizeof(XDeviceCoreState);
             C->status = c->status;
             C->iscore = c->iscore;
 

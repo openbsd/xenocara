@@ -115,6 +115,8 @@ Time stop;
     savp = readp = (int *)Xmalloc(size);
     bufp = (int *)Xmalloc(size2);
     if (!bufp || !savp) {
+	Xfree(bufp);
+	Xfree(savp);
 	*nEvents = 0;
 	_XEatData(dpy, (unsigned long)size);
 	UnlockDisplay(dpy);

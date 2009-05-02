@@ -59,14 +59,15 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libXi_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_libXi_la_OBJECTS = XAllowDv.lo XChgDCtl.lo XChgFCtl.lo XChgKbd.lo \
-	XChgKMap.lo XChgPnt.lo XChgProp.lo XCloseDev.lo XDevBell.lo \
-	XExtToWire.lo XGetBMap.lo XGetDCtl.lo XGetFCtl.lo XGetKMap.lo \
-	XGetMMap.lo XGetProp.lo XGetVers.lo XGMotion.lo XGrabDev.lo \
-	XGrDvBut.lo XGrDvKey.lo XGtFocus.lo XGtSelect.lo XListDev.lo \
-	XOpenDev.lo XQueryDv.lo XSelect.lo XSetBMap.lo XSetDVal.lo \
-	XSetMMap.lo XSetMode.lo XSndExEv.lo XStFocus.lo XUngrDev.lo \
-	XUngrDvB.lo XUngrDvK.lo XExtInt.lo
+am_libXi_la_OBJECTS = XAllowDv.lo XChgDCtl.lo XChgFCtl.lo XChDProp.lo \
+	XChgKbd.lo XChgKMap.lo XChgPnt.lo XChgProp.lo XCloseDev.lo \
+	XDelDProp.lo XDevBell.lo XExtToWire.lo XGetBMap.lo XGetDCtl.lo \
+	XGetDProp.lo XGetFCtl.lo XGetKMap.lo XGetMMap.lo XGetProp.lo \
+	XGetVers.lo XGMotion.lo XGrabDev.lo XGrDvBut.lo XGrDvKey.lo \
+	XGtFocus.lo XGtSelect.lo XListDev.lo XListDProp.lo XOpenDev.lo \
+	XQueryDv.lo XSelect.lo XSetBMap.lo XSetDVal.lo XSetMMap.lo \
+	XSetMode.lo XSndExEv.lo XStFocus.lo XUngrDev.lo XUngrDvB.lo \
+	XUngrDvK.lo XExtInt.lo
 libXi_la_OBJECTS = $(am_libXi_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -111,6 +112,7 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -121,6 +123,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -140,6 +143,7 @@ MAKEINFO = @MAKEINFO@
 MALLOC_ZERO_CFLAGS = @MALLOC_ZERO_CFLAGS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -150,6 +154,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -158,13 +163,9 @@ XI_CFLAGS = @XI_CFLAGS@
 XI_LIBS = @XI_LIBS@
 XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -181,23 +182,30 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -207,15 +215,18 @@ libXi_la_SOURCES = \
 		  XAllowDv.c \
 		  XChgDCtl.c \
 		  XChgFCtl.c \
+		  XChDProp.c \
 		  XChgKbd.c \
 		  XChgKMap.c \
 		  XChgPnt.c \
 		  XChgProp.c \
 		  XCloseDev.c \
+		  XDelDProp.c \
 		  XDevBell.c \
 		  XExtToWire.c \
 		  XGetBMap.c \
 		  XGetDCtl.c \
+		  XGetDProp.c \
 		  XGetFCtl.c \
 		  XGetKMap.c \
 		  XGetMMap.c \
@@ -228,6 +239,7 @@ libXi_la_SOURCES = \
 		  XGtFocus.c \
 		  XGtSelect.c \
 		  XListDev.c \
+		  XListDProp.c \
 		  XOpenDev.c \
 		  XQueryDv.c \
 		  XSelect.c \
@@ -340,6 +352,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XAllowDv.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XChDProp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XChgDCtl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XChgFCtl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XChgKMap.Plo@am__quote@
@@ -347,12 +360,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XChgPnt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XChgProp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XCloseDev.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XDelDProp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XDevBell.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XExtInt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XExtToWire.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGMotion.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGetBMap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGetDCtl.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGetDProp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGetFCtl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGetKMap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGetMMap.Plo@am__quote@
@@ -363,6 +378,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGrabDev.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGtFocus.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGtSelect.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XListDProp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XListDev.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XOpenDev.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XQueryDv.Plo@am__quote@

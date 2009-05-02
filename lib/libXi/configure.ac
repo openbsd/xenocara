@@ -4,7 +4,7 @@ dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
 
-AC_INIT(libXi, 1.1.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXi)
+AC_INIT(libXi, 1.2.1, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXi)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -15,7 +15,7 @@ AC_PROG_CC
 AC_PROG_LIBTOOL
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XI, xproto x11 xextproto xext inputproto >= 1.4)
+PKG_CHECK_MODULES(XI, xproto x11 xextproto xext inputproto >= 1.5)
 AC_SUBST(XI_CFLAGS)
 AC_SUBST(XI_LIBS)
 

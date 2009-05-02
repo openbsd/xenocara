@@ -121,7 +121,9 @@ XEXT_GENERATE_FIND_DISPLAY(XInput_find_display, xinput_info,
     {XI_Present, XI_Add_XChangeDeviceControl_Major,
      XI_Add_XChangeDeviceControl_Minor},
     {XI_Present, XI_Add_DevicePresenceNotify_Major,
-     XI_Add_DevicePresenceNotify_Minor}
+     XI_Add_DevicePresenceNotify_Minor},
+    {XI_Present, XI_Add_DeviceProperties_Major,
+        XI_Add_DeviceProperties_Minor},
     };
 
 /***********************************************************************
@@ -696,6 +698,21 @@ XInputWireToEvent(dpy, re, event)
 	return (ENQUEUE_EVENT);
     }
 	break;
+
+    case XI_DevicePropertyNotify:
+
+        {
+            XDevicePropertyNotifyEvent* ev = (XDevicePropertyNotifyEvent*)re;
+            devicePropertyNotify *ev2 = (devicePropertyNotify*)event;
+
+            *ev = *(XDevicePropertyNotifyEvent*)save;
+            ev->time = ev2->time;
+            ev->deviceid = ev2->deviceid;
+            ev->atom = ev2->atom;
+            ev->state = ev2->state;
+            return ENQUEUE_EVENT;
+        }
+        break;
 
     default:
 	printf("XInputWireToEvent: UNKNOWN WIRE EVENT! type=%d\n", type);

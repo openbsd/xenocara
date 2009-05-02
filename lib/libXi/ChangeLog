@@ -1,3 +1,124 @@
+commit 69422ae36ede8fd5d7975c1e2b74c32906ad8535
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Feb 26 09:20:44 2009 +1000
+
+    libXi 1.2.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f63ea39a328ce0e5e6c980243e2ebea15634dc7d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Feb 25 17:00:16 2009 +1000
+
+    XGetDeviceControl: size the libXi structs, not the wire structs (#20293)
+    
+    X.Org Bug 20293 <http://bugs.freedesktop.org/show_bug.cgi?id=20293>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit cbdc33d903ec6f90a42ec3c31905eeaef9ecf0a2)
+
+commit 6e65cf0776019b2eec6be4a06fef7838562e94a8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Feb 25 16:59:04 2009 +1000
+
+    XGetDeviceControl: Add a missing break leading to wrong length calculation.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 78f64722c57ff5ec5d0ae35da0c8f151598e6d6b)
+
+commit 17df06d5aeceb4798caf487a1d57efe58fa7e3fa
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 2 20:34:34 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    (cherry picked from commit 6e1159a9059d762d6b5d24455237a088e839fe2c)
+
+commit f2f92b1df861c1f571edc89eddbb8d72a228e2a8
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jan 29 19:30:30 2009 -0200
+
+    Return NULL on error, and match LockDisplay with UnlockDisplay.
+    (cherry picked from commit ba2546a51d5f9087ec54fba7cae46ea1f210198a)
+
+commit 2d586065649304b2864afddee6f6225a4a61a0c9
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Wed Dec 3 12:50:45 2008 +1000
+
+    libXi 1.2.0
+    
+    Requires inputproto 1.5.0 or later.
+
+commit 305d356e43462834a2fdd2cf59d47b055c2416fd
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Nov 17 11:50:06 2008 +1000
+
+    Add support for XI 1.5 device properties.
+    
+    This is a manual merge from master onto libXi 1.1.4. The branches have
+    diverged too much to make cherry-picking reasonable and readable.
+    
+    This patch includes the property support provided by the combination of the
+    following patches:
+    - 7d5bb99ffce3200f82420c5a5ebac3b445aac633
+    - 0211e3e8277c590349903989f1676f6af4baa44b
+    - bfd2e08f3530091fbcd8c078f684e9aab9057df0
+    - bec02767629ed795582ba3f645299d7036093511
+    - f9a5371d43b2c6023745f766d0e8ceff2acdff60
+    - e179b124aac13387c6f730197b8852c1f69eb9e3
+    
+    Man pages are copied from the parsed docbook output from master.
+
+commit 45b73dc157f326785e1022f5476bfc1f9f514d6e
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Nov 17 11:44:31 2008 +1000
+
+    Add XI_JOYSTICK to list of defined types.
+    (cherry picked from commit e5c529813b04327babc20e51ca56006210cb0c37)
+    
+    Conflicts:
+    
+    	man/XI.xml
+
+commit 88e2bf75cc619bb1ddc51e5dc65ddb9d712f69f5
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Nov 17 11:35:59 2008 +1000
+
+    Bump to 1.1.99.2.
+    
+    1.1.99.1 was used by master for a while.
+
+commit f0ecfd1952289f5ff33297e3358552365e047f09
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Nov 17 11:12:39 2008 +1000
+
+    libXi 1.1.4
+
+commit 3e99cc281509c70c9240e71ae55cf4e62c6569ba
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 08:30:32 2008 +0100
+
+    nuke RCS Ids
+
+commit 411340ccb7070e2e966a36f64f2fb3019ea0242a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Nov 29 13:49:21 2007 -0800
+
+    Coverity #743/744: Returned without freeing storage bufp/savp
+    
+    If either bufp or savp failed to malloc, we returned without freeing the other.
+
+commit 5ac8f5dcfb2cf5f695c903179a5a95ac6bd4303e
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Tue Nov 27 10:47:56 2007 +1030
+
+    GetDeviceControl: calculate the length field correctly.
+    
+    Length field should indicate the length of the struct in bytes. Not the length
+    of the pointer to the struct...
+    (cherry picked from commit ddcc71df2a273a410cb5a933aef5501fa56d84cf)
+
 commit 0239ef13d66113024066b7db8ade3942af563656
 Author: Eric Anholt <eric@anholt.net>
 Date:   Wed Sep 5 09:45:20 2007 -0700

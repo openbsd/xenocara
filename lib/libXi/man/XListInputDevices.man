@@ -97,6 +97,7 @@ XI_DATAGLOVE
 XI_EYETRACKER
 XI_CURSORKEYS
 XI_FOOTMOUSE
+XI_JOYSTICK
 .DE
 .LP
 These names may be directly compared with the name field of the
