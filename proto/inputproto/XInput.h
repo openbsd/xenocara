@@ -72,6 +72,10 @@ SOFTWARE.
 #define _deviceStateNotify	0
 #define _deviceMappingNotify	1
 #define _changeDeviceNotify	2
+/* Space of 3 between is necessary! Reserved for DeviceKeyStateNotify,
+   DeviceButtonStateNotify, DevicePresenceNotify (essentially unused). This
+   code has to be in sync with FixExtensionEvents() in xserver/Xi/extinit.c */
+#define _propertyNotify		6
 
 #define FindTypeAndClass(d,type,_class,classid,offset) \
     { int _i; XInputClassInfo *_ip; \
@@ -118,6 +122,9 @@ SOFTWARE.
 
 #define ChangeDeviceNotify(d,type,_class) \
     FindTypeAndClass(d, type, _class, OtherClass, _changeDeviceNotify)
+
+#define DevicePropertyNotify(d, type, _class) \
+    FindTypeAndClass(d, type, _class, OtherClass, _propertyNotify)
 
 #define DevicePointerMotionHint(d,type,_class) \
     { _class =  ((XDevice *) d)->device_id << 8 | _devicePointerMotionHint;}
@@ -447,6 +454,22 @@ typedef struct {
     XID           deviceid;
     XID           control;
 } XDevicePresenceNotifyEvent;
+
+/*
+ * Notifies the client that a property on a device has changed value. The
+ * client is expected to query the server for updated value of the property.
+ */
+typedef struct {
+    int           type;
+    unsigned long serial;       /* # of last request processed by server */
+    Bool          send_event;   /* true if this came from a SendEvent request */
+    Display       *display;     /* Display the event was read from */
+    Window        window;       /* unused */
+    Time          time;
+    XID           deviceid;     /* id of the device that changed */
+    Atom          atom;         /* the property that changed */
+    int           state;        /* PropertyNewValue or PropertyDeleted */
+} XDevicePropertyNotifyEvent;
 
 /*******************************************************************
  *
@@ -1194,6 +1217,56 @@ extern void	XFreeDeviceMotionEvents(
 extern void	XFreeDeviceControl(
     XDeviceControl*	/* control */
 );
+
+typedef struct {
+    Bool    pending;
+    Bool    range;
+    Bool    immutable;
+    Bool    fromClient;
+    int     num_values;
+    long    *values;
+} XIPropertyInfo;
+
+extern Atom*   XListDeviceProperties(
+    Display*            /* dpy */,
+    XDevice*            /* dev */,
+    int*                /* nprops_return */
+);
+
+extern void XChangeDeviceProperty(
+    Display*            /* dpy */,
+    XDevice*            /* dev */,
+    Atom                /* property */,
+    Atom                /* type */,
+    int                 /* format */,
+    int                 /* mode */,
+    _Xconst unsigned char * /*data */,
+    int                 /* nelements */
+);
+
+extern void
+XDeleteDeviceProperty(
+    Display*            /* dpy */,
+    XDevice*            /* dev */,
+    Atom                /* property */
+);
+
+extern Status
+XGetDeviceProperty(
+     Display*           /* dpy*/,
+     XDevice*           /* dev*/,
+     Atom               /* property*/,
+     long               /* offset*/,
+     long               /* length*/,
+     Bool               /* delete*/,
+     Atom               /* req_type*/,
+     Atom*              /* actual_type*/,
+     int*               /* actual_format*/,
+     unsigned long*     /* nitems*/,
+     unsigned long*     /* bytes_after*/,
+     unsigned char**    /* prop*/
+);
+
 
 _XFUNCPROTOEND
 

@@ -106,6 +106,12 @@ SOFTWARE.
 #define sz_xGetDeviceControlReply		32
 #define sz_xChangeDeviceControlReq		8
 #define sz_xChangeDeviceControlReply		32
+#define sz_xListDevicePropertiesReq             8
+#define sz_xListDevicePropertiesReply           32
+#define sz_xChangeDevicePropertyReq             20
+#define sz_xDeleteDevicePropertyReq             12
+#define sz_xGetDevicePropertyReq                24
+#define sz_xGetDevicePropertyReply              32
 
 #define INAME 			"XInputExtension"
 
@@ -127,6 +133,7 @@ SOFTWARE.
 #define XI_EYETRACKER	"EYETRACKER"
 #define XI_CURSORKEYS	"CURSORKEYS"
 #define XI_FOOTMOUSE	"FOOTMOUSE"
+#define XI_JOYSTICK	"JOYSTICK"
 
 #define Dont_Check			0
 #define XInput_Initial_Release		1
@@ -134,6 +141,7 @@ SOFTWARE.
 #define XInput_Add_XSetDeviceValuators	3
 #define XInput_Add_XChangeDeviceControl	4
 #define XInput_Add_DevicePresenceNotify	5
+#define XInput_Add_DeviceProperties	6
 
 #define XI_Absent		0
 #define XI_Present		1
@@ -152,6 +160,9 @@ SOFTWARE.
 
 #define XI_Add_DevicePresenceNotify_Major	1
 #define XI_Add_DevicePresenceNotify_Minor	4
+
+#define XI_Add_DeviceProperties_Major		1
+#define XI_Add_DeviceProperties_Minor		5
 
 #define DEVICE_RESOLUTION	1
 #define DEVICE_ABS_CALIB        2

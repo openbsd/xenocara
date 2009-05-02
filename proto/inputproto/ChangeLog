@@ -1,3 +1,98 @@
+commit d38e79ca3ddd6031ca4a335eb2faf99294a6731f
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Wed Nov 26 21:37:06 2008 +1000
+
+    inputproto 1.5.0
+
+commit 5829370cafb112e488156e7ac1dd7902cfd1659a
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Nov 17 10:58:31 2008 +1000
+
+    Remove Configure/QueryDeviceProperty.
+    (cherry picked from commit 18ef04f8a2026cca5d2d2b796ec2ea1c949bad36)
+    
+    Removing Configure/QueryDevice property from XInput.h as well.
+    Not cherry-picked as XInput.h is moved to libXi in master.
+    
+    Conflicts:
+    
+    	XIproto.h
+
+commit 6a4aefa04bb95c05d223027cebbe83c4117829f0
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Thu Sep 18 16:28:09 2008 +0930
+
+    Add XI_JOYSTICK type.
+    (cherry picked from commit c9454a8e84b2dce54bb346ff1aafb32e3c0ac5b9)
+
+commit 6af8447fab4a06d943398e6540e6b869d8a714ae
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Nov 17 10:13:15 2008 +1000
+
+    Undef Atom after we're done so we don't pollute users of XIproto.h
+    (cherry picked from commit 36c8a6f3faf56a8f8ca31455812c9132b379b1b3)
+    
+    Conflicts:
+    
+    	XIproto.h
+
+commit 72fb0941fff83f00fb039f865edcf5d25584757c
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Nov 17 10:12:50 2008 +1000
+
+    Make sure Atoms are defined as CARD32.
+    (cherry picked from commit c919917e375aefaf473570c1b25b3c22231e858d)
+    
+    Conflicts:
+    
+    	XIproto.h
+
+commit 6ee1ad8951ff811dc2618c9bd26cd42096ab2ecc
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Fri Aug 15 14:21:24 2008 +0930
+
+    Remove RCS tags, typo fix.
+    (cherry picked from commit c2d47b04c55cf72aef6c13a9e2cc4b41abfca673)
+
+commit d81ca85c4bcdcab208e4731a5d0f7d9bffbfab67
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Fri Oct 31 17:53:39 2008 +1030
+
+    PropertyNotify, move deviceid back to last byte.
+    
+    This way, it can be type-cast to deviceKeyButtonPointer to extract the
+    deviceid, which is (aside from time) the only thing it has in common with
+    those anyway.
+    (cherry picked from commit f8064629496c6061bedb7a99b788fb9d3a170f11)
+
+commit e22b0ace88447a87c0b19d062a678880529b1b3b
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Aug 25 11:34:47 2008 +0930
+
+    Add libXi's property interfaces.
+    
+    XInput.h was removed from inputproto, hence this commit is not a cherry-pick
+    but a copy of the changes to XInput.h in libXi.
+
+commit 0a87cb3aac72adbbb81c7ac7ac04551547bf8b56
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Fri Aug 15 14:50:23 2008 +0930
+
+    Protect against C++ includes.
+    (cherry picked from commit fabe087cebb11c6a2600e57c6f7a52fda2efea29)
+
+commit e507aaaa74eeb02896843eb1815b614adf47a24a
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Aug 25 10:19:37 2008 +0930
+
+    Back out Device Properties from XI 2, push into XI 1.5.
+    (cherry picked from commit 7c9620d8232e5c05115746055a832363a528ac2d)
+    
+    Conflicts:
+    
+    	XI.h
+    	XIproto.h
+
 commit c109e2ddb9cab22f185a877ab7e48002d1087400
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Jul 29 09:10:09 2008 +0930
