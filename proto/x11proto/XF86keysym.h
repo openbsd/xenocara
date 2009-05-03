@@ -183,6 +183,32 @@
 #define XF86XK_Pictures		0x1008FF91   /* Show pictures             */
 #define XF86XK_Music		0x1008FF92   /* Launch music application  */
 
+#define XF86XK_Battery		0x1008FF93   /* Display battery information */
+#define XF86XK_Bluetooth	0x1008FF94   /* Enable/disable Bluetooth    */
+#define XF86XK_WLAN		0x1008FF95   /* Enable/disable WLAN         */
+#define XF86XK_UWB		0x1008FF96   /* Enable/disable UWB	    */
+
+#define XF86XK_AudioForward	0x1008FF97   /* fast-forward audio track    */
+#define XF86XK_AudioRepeat	0x1008FF98   /* toggle repeat mode          */
+#define XF86XK_AudioRandomPlay	0x1008FF99   /* toggle shuffle mode         */
+#define XF86XK_Subtitle		0x1008FF9A   /* cycle through subtitle      */
+#define XF86XK_AudioCycleTrack	0x1008FF9B   /* cycle through audio tracks  */
+#define XF86XK_CycleAngle	0x1008FF9C   /* cycle through angles        */
+#define XF86XK_FrameBack	0x1008FF9D   /* video: go one frame back    */
+#define XF86XK_FrameForward	0x1008FF9E   /* video: go one frame forward */
+#define XF86XK_Time		0x1008FF9F   /* display, or shows an entry for time seeking */
+#define XF86XK_Select		0x1008FFA0   /* Select button on joypads and remotes */
+#define XF86XK_View		0x1008FFA1   /* Show a view options/properties */
+#define XF86XK_TopMenu		0x1008FFA2   /* Go to a top-level menu in a video */
+
+#define XF86XK_Red		0x1008FFA3   /* Red button                  */
+#define XF86XK_Green		0x1008FFA4   /* Green button                */
+#define XF86XK_Yellow		0x1008FFA5   /* Yellow button               */
+#define XF86XK_Blue             0x1008FFA6   /* Blue button                 */
+
+#define XF86XK_Suspend		0x1008FFA7   /* Sleep to RAM                */
+#define XF86XK_Hibernate	0x1008FFA8   /* Sleep to disk               */
+
 /* Keys for special action keys (hot keys) */
 /* Virtual terminals on some operating systems */
 #define XF86XK_Switch_VT_1	0x1008FE01
