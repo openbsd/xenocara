@@ -63,7 +63,7 @@
 
 #define NOTAVAIL ((errno == ENODEV) || (errno == ENXIO) || (errno == ENOENT))
 
-#define milisleep(ms) xf86usleep (ms * 1000)
+#define milisleep(ms) usleep (ms * 1000)
 
 #define SYSCALL(call) while(((call) == -1) && (errno == EINTR))
 

@@ -1,3 +1,62 @@
+commit 1685d3b518cf5fe4cc6a8fb3e3c28beb9b3ddb82
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Feb 24 13:22:46 2009 +1000
+
+    acecad 1.3.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 61ad1d4470491bd49484de0b6e4eb65a7a51c799
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Feb 2 18:02:43 2009 -0200
+
+    Janitor: Correct make distcheck and minor configure.ac cleanup.
+
+commit 482471e4fe445da6d5307d3a16e53de6afa143e8
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 29 15:09:23 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit ef3446502993c8492149fd319a49f6bd894efb7a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:09:43 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit b9497ba77692f2d44a9a1339ae2d0ff436abed70
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Nov 28 04:48:50 2008 -0200
+
+    Correct wrong check for Linux libsysfs.
+    
+      This patch was the original one, and the previous test was a wrong
+    attempt to simplify the change.
+      Triggered by tinderbox build.
+
+commit 36675d65ddc1ed35190f5fdbb18d5b460c7ba972
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Nov 28 01:45:54 2008 -0200
+
+    Dont dlopen libsysfs.so, instead, link with it when available.
+
+commit 791cbbf9df621d9712731990271bf3b53076673a
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 26 22:00:23 2008 +0930
+
+    Check for XINPUT ABI 3.
+
+commit 33e64334db17ed3d2307e3ac465450c5c9b39ad9
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Sun Mar 16 03:01:23 2008 -0300
+
+    Compile warning fixes.
+    
+    Don't call xf86usleep, just call usleep directly.
+    Remove unused variables.
+    
+    Signed-off-by: Peter Hutterer <peter@cs.unisa.edu.au>
+
 commit 60270d38257797a82eff74a56d1561068a6c348e
 Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
 Date:   Sun Feb 10 08:52:46 2008 +0100

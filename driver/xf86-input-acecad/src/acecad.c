@@ -245,54 +245,48 @@ AceCadAutoDevProbe(LocalDevicePtr local, int verb)
     char *link = NULL;
     struct dlist *devs = NULL;
     struct dlist *links = NULL;
-    unsigned int major = 0, minor = 0;
-    void *libsysfs = NULL;
 
-    if (libsysfs = dlopen("libsysfs.so", RTLD_NOW | RTLD_GLOBAL)) {
-        xf86MsgVerb(X_INFO, verb, "%s: querying sysfs for Acecad tablets\n", local->name);
-        usb_bus = sysfs_open_bus(usb_bus_name);
-        if (usb_bus) {
-            xf86MsgVerb(X_PROBED, 4, "%s: usb bus opened\n", local->name);
-            acecad_driver = sysfs_get_bus_driver(usb_bus, acecad_driver_name);
-            if (acecad_driver) {
-                xf86MsgVerb(X_PROBED, 4, "%s: usb_acecad driver opened\n", local->name);
-                devs = sysfs_get_driver_devices(acecad_driver);
-                if (devs) {
-                    xf86MsgVerb(X_PROBED, 4, "%s: usb_acecad devices retrieved\n", local->name);
-                    dlist_for_each_data(devs, candidate, struct sysfs_device) {
-                        xf86MsgVerb(X_PROBED, 4, "%s: device %s at %s\n", local->name, candidate->name, candidate->path);
-                        links = sysfs_open_link_list(candidate->path);
-                        dlist_for_each_data(links, link, char) {
-                            if (sscanf(link, "input:event%d", &i) == 1) {
-                                xf86MsgVerb(X_PROBED, 4, "%s: device %s at %s: %s\n", local->name, candidate->name, candidate->path, link);
-                                break;
-                            }
-                        }
-                        sysfs_close_list(links);
-                        if (i > 0) /* We found something */
-                            break;
-                    }
-                } else
-                    xf86MsgVerb(X_WARNING, 4, "%s: no usb_acecad devices found\n", local->name);
-            } else
-                xf86MsgVerb(X_WARNING, 4, "%s: usb_acecad driver not found\n", local->name);
-        } else
-            xf86MsgVerb(X_WARNING, 4, "%s: usb bus not found\n", local->name);
-        sysfs_close_bus(usb_bus);
-        dlclose(libsysfs);
-
-        if (i > 0) {
-            /* We found something */
-            np = SET_EVENT_NUM(fname, i);
-            if (np < 0 || np >= EV_DEV_NAME_MAXLEN) {
-                xf86MsgVerb(X_WARNING, verb, "%s: unable to manage event device %d\n", local->name, i);
-            } else {
-                goto ProbeFound;
-            }
-        } else
-            xf86MsgVerb(X_WARNING, verb, "%s: no Acecad devices found via sysfs\n", local->name);
+    xf86MsgVerb(X_INFO, verb, "%s: querying sysfs for Acecad tablets\n", local->name);
+    usb_bus = sysfs_open_bus(usb_bus_name);
+    if (usb_bus) {
+	xf86MsgVerb(X_PROBED, 4, "%s: usb bus opened\n", local->name);
+	acecad_driver = sysfs_get_bus_driver(usb_bus, acecad_driver_name);
+	if (acecad_driver) {
+	    xf86MsgVerb(X_PROBED, 4, "%s: usb_acecad driver opened\n", local->name);
+	    devs = sysfs_get_driver_devices(acecad_driver);
+	    if (devs) {
+		xf86MsgVerb(X_PROBED, 4, "%s: usb_acecad devices retrieved\n", local->name);
+		dlist_for_each_data(devs, candidate, struct sysfs_device) {
+		    xf86MsgVerb(X_PROBED, 4, "%s: device %s at %s\n", local->name, candidate->name, candidate->path);
+		    links = sysfs_open_link_list(candidate->path);
+		    dlist_for_each_data(links, link, char) {
+			if (sscanf(link, "input:event%d", &i) == 1) {
+			    xf86MsgVerb(X_PROBED, 4, "%s: device %s at %s: %s\n", local->name, candidate->name, candidate->path, link);
+			    break;
+			}
+		    }
+		    sysfs_close_list(links);
+		    if (i > 0) /* We found something */
+			break;
+		}
+	    } else
+		xf86MsgVerb(X_WARNING, 4, "%s: no usb_acecad devices found\n", local->name);
+	} else
+	    xf86MsgVerb(X_WARNING, 4, "%s: usb_acecad driver not found\n", local->name);
     } else
-        xf86MsgVerb(X_WARNING, 4, "%s: libsysfs not found\n", local->name);
+	xf86MsgVerb(X_WARNING, 4, "%s: usb bus not found\n", local->name);
+    sysfs_close_bus(usb_bus);
+
+    if (i > 0) {
+	/* We found something */
+	np = SET_EVENT_NUM(fname, i);
+	if (np < 0 || np >= EV_DEV_NAME_MAXLEN) {
+	    xf86MsgVerb(X_WARNING, verb, "%s: unable to manage event device %d\n", local->name, i);
+	} else {
+	    goto ProbeFound;
+	}
+    } else
+	xf86MsgVerb(X_WARNING, verb, "%s: no Acecad devices found via sysfs\n", local->name);
 
 #endif
 
@@ -658,7 +652,10 @@ DeviceInit (DeviceIntPtr dev)
 
 
     /* 3 axes */
-    if (InitValuatorClassDeviceStruct (dev, 3, xf86GetMotionEvents,
+    if (InitValuatorClassDeviceStruct (dev, 3,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
+                xf86GetMotionEvents,
+#endif
                 local->history_size,
                 ((priv->flags & ABSOLUTE_FLAG)? Absolute: Relative)|OutOfProximity)
             == FALSE)
