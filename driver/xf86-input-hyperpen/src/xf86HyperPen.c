@@ -41,14 +41,7 @@
 #include "config.h"
 #endif
 
-#include <xf86Version.h>
-
-#if XF86_VERSION_CURRENT >= XF86_VERSION_NUMERIC(3,9,0,0,0)
-#define XFREE86_V4 1
-#endif
-
-#ifdef XFREE86_V4
-/* post 3.9 headers */
+#include <xorgVersion.h>
 
 #include <unistd.h>
 #include <errno.h>
@@ -104,56 +97,6 @@ static const char *default_options[] =
 static InputDriverPtr hypDrv;
 
 
-#else  /* pre 3.9 headers */
-
-#include <X11/Xos.h>
-#include <signal.h>
-#include <stdio.h>
-
-#define NEED_EVENTS
-#include <X11/X.h>
-#include <X11/Xproto.h>
-#include "misc.h"
-#include "inputstr.h"
-#include "scrnintstr.h"
-#include <X11/extensions/XI.h>
-#include <X11/extensions/XIproto.h>
-
-#if defined(sun) && !defined(i386)
-#define POSIX_TTY
-#include <errno.h>
-#include <termio.h>
-#include <fcntl.h>
-#include <ctype.h>
-
-#include "extio.h"
-#else
-#include "compiler.h"
-
-#ifdef XFree86LOADER
-#include "xf86_libc.h"
-#endif
-#include "xf86.h"
-#include "xf86Procs.h"
-#include "xf86_OSlib.h"
-#include "xf86_Config.h"
-#include "xf86Xinput.h"
-#include "atKeynames.h"
-#include "xf86Version.h"
-#endif
-
-#if !defined(sun) || defined(i386)
-#include "osdep.h"
-#include "exevents.h"
-
-#include "extnsionst.h"
-#include "extinit.h"
-#endif
-
-#if defined(__QNX__) || defined(__QNXNTO__)
-#define POSIX_TTY
-#endif
-#endif /* pre 3.9 headers */
 
 /*
 ** Debugging macros
@@ -237,65 +180,6 @@ static struct MODEL_ID {
 */
 #define HYPERPEN_SECTION_NAME "HyperPen"
 
-#ifndef XFREE86_V4
-
-#define PORT		1
-#define DEVICENAME	2
-#define THE_MODE	3
-#define CURSOR		4
-#define BORDER		5
-#define DEBUG_LEVEL     6
-#define HISTORY_SIZE	7
-#define ALWAYS_CORE	8
-#define ACTIVE_AREA	9
-#define ACTIVE_OFFSET	10
-#define INVX		11
-#define INVY		12
-#define BAUD_RATE	13
-#define PMIN            14
-#define PMAX            15
-
-#if !defined(sun) || defined(i386)
-static SymTabRec HypTab[] = {
-	{ENDSUBSECTION,		"endsubsection"},
-	{PORT,			"port"},
-	{DEVICENAME,		"devicename"},
-	{THE_MODE,		"mode"},
-	{CURSOR,		"cursor"},
-	{BORDER,		"border"},
-	{DEBUG_LEVEL,		"debuglevel"},
-	{HISTORY_SIZE,		"historysize"},
-	{ALWAYS_CORE,		"alwayscore"},
-	{ACTIVE_AREA,		"activearea"},
-	{ACTIVE_OFFSET,		"activeoffset"},
-	{INVX,			"invx"},
-	{INVY,			"invy"},
-	{BAUD_RATE,		"baudrate"},
-	{PMIN,                  "pmin"},
-	{PMAX,                  "pmax"}, 
-	{-1,			""}
-};
-
-#define RELATIVE	1
-#define ABSOLUTE	2
-
-static SymTabRec HypModeTabRec[] = {
-	{RELATIVE,	"relative"},
-	{ABSOLUTE,	"absolute"},
-	{-1,		""}
-};
-
-#define PUCK		1
-#define STYLUS		2
-
-static SymTabRec HypPointTabRec[] = {
-	{PUCK,		"puck"},
-	{STYLUS,	"stylus"},
-	{-1,		""}
-};
-
-#endif
-#endif /* Pre 3.9 headers */
 
 /*
 ** Contants and macro
@@ -339,286 +223,6 @@ static const char * ss_initstr = SS_STREAM_MODE;
 ** External declarations
 */
 
-#ifndef XFREE86_V4
-
-#if defined(sun) && !defined(i386)
-#define ENQUEUE	suneqEnqueue
-#else
-#define ENQUEUE	xf86eqEnqueue
-
-extern void xf86eqEnqueue(
-			     xEventPtr	/*e */
-    );
-#endif
-
-extern void miPointerDeltaCursor(
-				    int /*dx */ ,
-				    int /*dy */ ,
-				    unsigned long	/*time */
-    );
-
-
-#ifndef XFREE86_V4
-/*
- ***************************************************************************
- *
- * set_serial_speed --
- *
- *      Set speed of the serial port.
- *
- ***************************************************************************
- */
-static int
-set_serial_speed(int fd, int speed_code)
-{
-    struct termios      termios_tty;
-    int                 err;
-#ifdef POSIX_TTY
-    SYSCALL(err = tcgetattr(fd, &termios_tty));
-    if (err == -1) {
-        ErrorF("HyperPen tcgetattr error : %s\n", strerror(errno));
-        return !Success;
-    }
-    termios_tty.c_iflag = IXOFF;
-    termios_tty.c_oflag = 0;
-    termios_tty.c_cflag = speed_code|CS8|CREAD|CLOCAL|HUPCL|PARENB|PARODD;
-    termios_tty.c_lflag = 0;
-    termios_tty.c_cc[VINTR] = 0;
-    termios_tty.c_cc[VQUIT] = 0;
-    termios_tty.c_cc[VERASE] = 0;
-    termios_tty.c_cc[VEOF] = 0;
-#ifdef VWERASE
-    termios_tty.c_cc[VWERASE] = 0;
-#endif
-#ifdef VREPRINT
-    termios_tty.c_cc[VREPRINT] = 0;
-#endif
-    termios_tty.c_cc[VKILL] = 0;
-    termios_tty.c_cc[VEOF] = 0;
-    termios_tty.c_cc[VEOL] = 0;
-#ifdef VEOL2
-    termios_tty.c_cc[VEOL2] = 0;
-#endif
-    termios_tty.c_cc[VSUSP] = 0;
-#ifdef VDSUSP
-    termios_tty.c_cc[VDSUSP] = 0;
-#endif
-#ifdef VDISCARD
-    termios_tty.c_cc[VDISCARD] = 0;
-#endif
-#ifdef VLNEXT
-    termios_tty.c_cc[VLNEXT] = 0;
-#endif
-    /* minimum 1 character in one read call and timeout to 100 ms */
-    termios_tty.c_cc[VMIN] = 1;
-    termios_tty.c_cc[VTIME] = 10;
-    SYSCALL(err = tcsetattr(fd, TCSANOW, &termios_tty));
-    if (err == -1) {
-        ErrorF("HyperPen tcsetattr TCSANOW error : %s\n", strerror(errno));
-        return !Success;
-    }
-#else
-    Code for OSs without POSIX tty functions
-#endif
-    return Success;
-}
-#endif /* Pre 3.9 stuff */
-
-#if !defined(sun) || defined(i386)
-/*
-** xf86HypConfig
-** Reads the HyperPen section from the XF86Config file
-*/
-static Bool
-xf86HypConfig(LocalDevicePtr *array, int inx, int max, LexPtr val)
-{
-    LocalDevicePtr	dev = array[inx];
-    HyperPenDevicePtr	priv = (HyperPenDevicePtr)(dev->private);
-    int			token;
-    int			mtoken;
-
-    DBG(1, ErrorF("xf86HypConfig\n"));
-
-    priv->AutoPT=1;
-    priv->PMax=1000;
-
-    while ((token = xf86GetToken(HypTab)) != ENDSUBSECTION) {
-	switch(token) {
-	case DEVICENAME:
-	    if (xf86GetToken(NULL) != STRING)
-		xf86ConfigError("Option string expected");
-	    else {
-		dev->name = strdup(val->str);
-		if (xf86Verbose)
-		    ErrorF("%s HyperPen X device name is %s\n", XCONFIG_GIVEN,
-			   dev->name);
-	    }
-	    break;
-
-	case PORT:
-	    if (xf86GetToken(NULL) != STRING)
-		xf86ConfigError("Option string expected");
-	    else {
-		priv->hypDevice = strdup(val->str);
-		if (xf86Verbose)
-		    ErrorF("%s HyperPen port is %s\n", XCONFIG_GIVEN,
-			   priv->hypDevice);
-	    }
-	    break;
-
-	case THE_MODE:
-	    mtoken = xf86GetToken(HypModeTabRec);
-	    if ((mtoken == EOF) || (mtoken == STRING) || (mtoken == NUMBER)) 
-		xf86ConfigError("Mode type token expected");
-	    else {
-		switch (mtoken) {
-		case ABSOLUTE:
-		    priv->flags |= ABSOLUTE_FLAG;
-		    break;
-		case RELATIVE:
-		    priv->flags &= ~ABSOLUTE_FLAG;
-		    break;
-		default:
-		    xf86ConfigError("Illegal Mode type");
-		    break;
-		}
-	    }
-	    break;
-
-	case CURSOR:
-	    mtoken = xf86GetToken(HypPointTabRec);
-	    if ((mtoken == EOF) || (mtoken == STRING) || (mtoken == NUMBER)) 
-		xf86ConfigError("Cursor token expected");
-	    else {
-		switch (mtoken) {
-		case STYLUS:
-		    priv->flags |= STYLUS_FLAG;
-		    break;
-		case PUCK:
-		    priv->flags &= ~STYLUS_FLAG;
-		    break;
-		default:
-		    xf86ConfigError("Illegal cursor type");
-		    break;
-		}
-	    }
-	    break;
-
-	case DEBUG_LEVEL:
-	    if (xf86GetToken(NULL) != NUMBER)
-		xf86ConfigError("Option number expected");
-	    debug_level = val->num;
-	    if (xf86Verbose) {
-#if DEBUG
-		ErrorF("%s HyperPen debug level set to %d\n", XCONFIG_GIVEN,
-		       debug_level);
-#else
-		ErrorF("%s HyperPen debug level not set to %d because"
-		       " debugging is not compiled with the xf86HyperPen driver\n", XCONFIG_GIVEN,
-		       debug_level);
-#endif
-	    }
-	    break;
-
-	case HISTORY_SIZE:
-	    if (xf86GetToken(NULL) != NUMBER)
-		xf86ConfigError("Option number expected");
-	    dev->history_size = val->num;
-	    if (xf86Verbose)
-		ErrorF("%s HyperPen Motion history size is %d\n", XCONFIG_GIVEN,
-		       dev->history_size);      
-	    break;
-
-	case ALWAYS_CORE:
-	    xf86AlwaysCore(dev, TRUE);
-	    if (xf86Verbose)
-		ErrorF("%s HyperPen device always stays core pointer\n",
-		       XCONFIG_GIVEN);
-	    break;
-
-	case ACTIVE_AREA:
-	    if (xf86GetToken(NULL) != NUMBER)
-		xf86ConfigError("Option number expected");
-	    priv->hypXSize = val->realnum * 100;
-	    if (xf86GetToken(NULL) != NUMBER)
-		xf86ConfigError("Option number expected");
-	    priv->hypYSize = val->realnum * 100;
-	    if (xf86Verbose)
-		ErrorF("%s HyperPen active area: %d.%02dx%d.%02d"
-		       " inches\n", XCONFIG_GIVEN, priv->hypXSize / 100,
-		       priv->hypXSize % 100, priv->hypYSize / 100,
-		       priv->hypYSize % 100);
-	    break;
-
-	case ACTIVE_OFFSET:
-	    if (xf86GetToken(NULL) != NUMBER)
-		xf86ConfigError("Option number expected");
-	    priv->hypXOffset = val->realnum * 100;
-	    if (xf86GetToken(NULL) != NUMBER)
-		xf86ConfigError("Option number expected");
-	    priv->hypYOffset = val->realnum * 100;
-	    if (xf86Verbose)
-		ErrorF("%s HyperPen active area offsets: %d.%02d %d.%02d"
-		       " inches\n", XCONFIG_GIVEN, priv->hypXOffset / 100,
-		       priv->hypXOffset % 100, priv->hypYOffset / 100,
-		       priv->hypYOffset % 100);
-	    break;
-	case INVX:
-	    priv->flags |= INVX_FLAG;
-	    break;
-	case INVY:
-	    priv->flags |= INVY_FLAG;
-	    break;
-	case BAUD_RATE:
-	    if (xf86GetToken(NULL) != NUMBER)
-		xf86ConfigError("Option number expected");
-	    switch (val->num) {
-		case 19200:
-		   priv->flags |= BAUD_19200_FLAG;
-		   break;
-		case 9600:
-		   priv->flags &= ~BAUD_19200_FLAG;
-		   break;
-		default:
-		    xf86ConfigError("Illegal speed value");
-		    break;
-	    }
-	    break;
-	case PMIN:
-	    if (xf86GetToken(NULL) != NUMBER)
-		xf86ConfigError("Option number expected");
-	    if (val->num < 2)
-		xf86ConfigError("Illegal minimum pressure");
-	    else
-	      {
-		priv->AutoPT = 0;  /* desactivate auto threshold adjustment*/
-		priv->PT = val->num;
-	      };
-	    break;
-	case PMAX:
-	    if (xf86GetToken(NULL) != NUMBER)
-		xf86ConfigError("Option number expected");
-	    if (val->num < 3)
-		xf86ConfigError("Illegal maximum pressure");
-	    else
-	        priv->PMax = val->num;
-	    break;
-	case EOF:
-	    FatalError("Unexpected EOF (missing EndSubSection)");
-	    break;
-
-	default:
-	    xf86ConfigError("HyperPen subsection keyword expected");
-	    break;
-	}
-    }
-
-    DBG(1, ErrorF("xf86HypConfig name=%s\n", priv->hypDevice));
-
-    return Success;
-}
-#endif
-#endif /* pre 3.9 headers */
 
 /*
 ** xf86HypConvert
@@ -876,10 +480,6 @@ static char *
 xf86HypWriteAndRead(int fd, char *data, char *buffer, int len, int cr_term)
 {
     int err, numread = 0;
-#ifndef XFREE86_V4
-    fd_set readfds;
-    struct timeval timeout;
-#endif
 
     SYSCALL(err = write(fd, data, strlen(data)));
     if (err == -1) {
@@ -887,19 +487,8 @@ xf86HypWriteAndRead(int fd, char *data, char *buffer, int len, int cr_term)
 	return NULL;
     }
 
-#ifndef XFREE86_V4
-    FD_ZERO(&readfds);
-    FD_SET(fd, &readfds);
-#endif
     while (numread < len) {
-#ifndef XFREE86_V4
-	timeout.tv_sec = 0;
-	timeout.tv_usec = 100000;
-
-	SYSCALL(err = select(FD_SETSIZE, &readfds, NULL, NULL, &timeout));
-#else
 	err = xf86WaitForInput(fd, 100000);
-#endif
 	if (err == -1) {
 	    Error("HyperPen select");
 	    return NULL;
@@ -932,31 +521,16 @@ xf86HypWriteAndRead(int fd, char *data, char *buffer, int len, int cr_term)
 ** Open and initialize the tablet, as well as probe for any needed data.
 */
 
-#ifdef XFREE86_V4
 #define WAIT(t)                                                 \
     err = xf86WaitForInput(-1, ((t) * 1000));                   \
     if (err == -1) {                                            \
         ErrorF("HyperPen select error : %s\n", strerror(errno));   \
         return !Success;                                        \
     }
-#else
-#define WAIT(t)                                                 \
-    timeout.tv_sec = 0;                                         \
-    timeout.tv_usec = (t) * 1000;                               \
-    SYSCALL(err = select(0, NULL, NULL, NULL, &timeout));       \
-    if (err == -1) {                                            \
-        ErrorF("HyperPen select error : %s\n", strerror(errno));   \
-        return !Success;                                        \
-    }
-#endif
 
 static Bool
 xf86HypOpen(LocalDevicePtr local)
 {
-#ifndef XFREE86_V4
-    struct termios	termios_tty;
-    struct timeval	timeout;
-#endif
     char		buffer[256];
     int			err, idx;
     int			i, n;
@@ -966,24 +540,15 @@ xf86HypOpen(LocalDevicePtr local)
 
     DBG(1, ErrorF("opening %s\n", priv->hypDevice));
 
-#ifdef XFREE86_V4
     local->fd = xf86OpenSerial(local->options);
-#else
-    SYSCALL(local->fd = open(priv->hypDevice, O_RDWR | O_NDELAY, 0));
-#endif
     if (local->fd == -1) {
 	Error(priv->hypDevice);
 	return !Success;
     }
     DBG(2, ErrorF("%s opened as fd %d\n", priv->hypDevice, local->fd));
 
-#ifdef XFREE86_V4
    if (xf86SetSerialSpeed(local->fd, 9600) < 0)
       return !Success;
-#else
-   if (set_serial_speed(local->fd, B9600) == !Success)
-       return !Success;
-#endif
 
     DBG(1, ErrorF("initializing HyperPen tablet\n"));
 
@@ -1113,14 +678,9 @@ if (xf86Verbose)
 	        WAIT(10);
 
 		    /* Set the speed of the serial link to 19200 */
-#ifdef XFREE86_V4
 		   if (xf86SetSerialSpeed(local->fd, 19200) < 0) {
 			          return !Success;
 				     }
-#else
-		       if (set_serial_speed(local->fd, B19200) == !Success)
-			               return !Success;
-#endif
 
 		       DBG(6, ErrorF("set serial speed to 19200\n"));
     }
@@ -1242,7 +802,9 @@ xf86HypProc(DeviceIntPtr pHyp, int what)
 
 	    if (InitValuatorClassDeviceStruct(pHyp,
 		   nbaxes,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
 		   xf86GetMotionEvents,
+#endif
 		   local->history_size,
 		   (priv->flags & ABSOLUTE_FLAG)? Absolute: Relative)
 		   == FALSE) {
@@ -1251,9 +813,6 @@ xf86HypProc(DeviceIntPtr pHyp, int what)
 	    }
 /* allocate the motion history buffer if needed */
 	    xf86MotionHistoryAllocate(local);
-#ifndef XFREE86_V4
-	    AssignTypeAndName(pHyp, local->atom, local->name);
-#endif
 /* open the device to gather informations */
 	    xf86HypOpenDevice(pHyp);
 	    break;
@@ -1264,11 +823,7 @@ xf86HypProc(DeviceIntPtr pHyp, int what)
 	    if ((local->fd < 0) && (!xf86HypOpenDevice(pHyp))) {
 		return !Success;
 	    }
-#ifdef XFREE86_V4
 	    xf86AddEnabledDevice(local);
-#else
-	    AddEnabledDevice(local->fd);
-#endif
 	    pHyp->public.on = TRUE;
 	    break;
 
@@ -1276,11 +831,7 @@ xf86HypProc(DeviceIntPtr pHyp, int what)
 	    DBG(1, ErrorF("xf86HypProc  pHyp=%p what=%s\n", (void *)pHyp,
 		   (what == DEVICE_CLOSE) ? "CLOSE" : "OFF"));
 	    if (local->fd >= 0)
-#ifdef XFREE86_V4
 		xf86RemoveEnabledDevice(local);
-#else
-		RemoveEnabledDevice(local->fd);
-#endif
 	    pHyp->public.on = FALSE;
 	    break;
 
@@ -1373,11 +924,7 @@ xf86HypSwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
 static LocalDevicePtr
 xf86HypAllocate(void)
 {
-#ifdef XFREE86_V4
     LocalDevicePtr	local = xf86AllocateInput(hypDrv, 0);
-#else
-    LocalDevicePtr	local = (LocalDevicePtr)xalloc(sizeof(LocalDeviceRec));
-#endif
     HyperPenDevicePtr	priv = (HyperPenDevicePtr)xalloc(sizeof(HyperPenDeviceRec));
 #if defined (sun) && !defined(i386)
     char		*dev_name = getenv("HYPERPEN_DEV");
@@ -1386,11 +933,6 @@ xf86HypAllocate(void)
     local->name = XI_NAME;
     local->type_name = "HyperPen Tablet";
     local->flags = 0; /*XI86_NO_OPEN_ON_INIT;*/
-#ifndef XFREE86_V4
-#if !defined(sun) || defined(i386)
-    local->device_config = xf86HypConfig;
-#endif
-#endif
     local->device_control = xf86HypProc;
     local->read_input = xf86HypReadInput;
     local->control_proc = xf86HypChangeControl;
@@ -1434,85 +976,6 @@ xf86HypAllocate(void)
     return local;
 }
 
-#ifndef XFREE86_V4
-
-/*
-** HyperPen device association
-** Device section name and allocation function.
-*/
-DeviceAssocRec hypmasketch_assoc =
-{
-  HYPERPEN_SECTION_NAME,        /* config_section_name */
-  xf86HypAllocate               /* device_allocate */
-};
-
-#ifdef DYNAMIC_MODULE
-/*
-** init_module
-** Entry point for dynamic module.
-*/
-int
-#ifndef DLSYM_BUG
-init_module(unsigned long server_version)
-#else
-init_xf86HyperPen(unsigned long server_version)
-#endif
-{
-    xf86AddDeviceAssoc(&hypmasketch_assoc);
-
-    if (server_version != XF86_VERSION_CURRENT) {
-	ErrorF("Warning: HyperPen module compiled for version %s\n",
-	       XF86_VERSION);
-	return 0;
-    } else {
-	return 1;
-    }
-}
-#endif
-
-#ifdef XFree86LOADER
-/*
- * Entry point for the loader code
- */
-XF86ModuleVersionInfo xf86HyperPenVersion = {
-    "hyperpen",
-    MODULEVENDORSTRING,
-    MODINFOSTRING1,
-    MODINFOSTRING2,
-    XORG_VERSION_CURRENT,
-    0x00010000,
-    {0,0,0,0}
-};
-
-void
-xf86HyperPenModuleInit(data, magic)
-    pointer *data;
-    INT32 *magic;
-{
-    static int cnt = 0;
-
-    switch (cnt) {
-      case 0:
-      *magic = MAGIC_VERSION;
-      *data = &xf86HyperPenVersion;
-      cnt++;
-      break;
-      
-      case 1:
-      *magic = MAGIC_ADD_XINPUT_DEVICE;
-      *data = &hypmasketch_assoc;
-      cnt++;
-      break;
-
-      default:
-      *magic = MAGIC_DONE;
-      *data = NULL;
-      break;
-    } 
-}
-#endif
-
-#else
 
 /*
  * xf86HypUninit --
@@ -1776,6 +1239,5 @@ _X_EXPORT XF86ModuleData hyperpenModuleData = {
 };
 
 #endif /* XFree86LOADER */
-#endif /* XFREE86_V4 */
 
 /* end of xf86HyperPen.c */
