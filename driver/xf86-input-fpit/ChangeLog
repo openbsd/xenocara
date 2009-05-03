@@ -1,45 +1,371 @@
-2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+commit 3cabac9b8d43269dabcd65dbe7477981a3945daa
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Feb 18 11:28:19 2009 +1000
 
-	* configure.ac:
-	* src/xf86Fpit.c:
-	Unlibcwrap.  Bump server version requirement.  Bump to 1.1.0.
+    fpit 1.3.0
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit f4ffa85973d2c3306994f93902d1159d8831a0d0
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Feb 2 20:02:18 2009 -0200
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    Janitor: make distcheck, .gitignore.
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 05333d30eec20f699ce6c487e9efd30a4f8e12f7
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:19:03 2009 -0800
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Add README with pointers to mailing list, bugzilla & git repos
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit b3cde1b14703c81ee387a125d381044b6ed0156a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:13:25 2009 -0800
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    Remove xorgconfig & xorgcfg from See Also list in man page
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 118466f0b94a686545ae9a8ef4da028ff406b04b
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Thu Aug 14 15:36:15 2008 +0930
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Fix build, xf86Version.h -> xorgVersion.h
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit e8620e98b8dce2e5dfe6f24fedc8b3942927bff1
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 26 22:07:38 2008 +0930
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    Check for XINPUT ABI 3.
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit 95676d89c7954cc5550ed386b784b470034320cc
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Wed Jan 30 13:30:59 2008 +1030
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    Set is_core_pointer to 0 by default.
+    
+    Server 1.4 does not do physical core devices.
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 01a4da993a2ecd0f017baef49b6e57b82c05316d
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Jan 14 10:50:54 2008 +1030
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    Don't crash with xserver 1.4
+    
+    xf86IsCorePointer() is gone.
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 2823f7c3f3784a1a398b8d5a9157c2e5263b6285
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Tue Apr 8 16:00:36 2008 +0930
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+    Revert "Don't call xf86IsCorePointer."
+    
+    This reverts commit 9ea880913d5775454311b0257bbaebf773cd4285.
+
+commit 164eb7570b10add2087ce293995319798ca3c345
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 20 15:36:01 2008 -0400
+
+    fpit 1.2.0
+
+commit f69bd251763ce59102d999c14ee751d4283a73eb
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 22:57:19 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit 9ea880913d5775454311b0257bbaebf773cd4285
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com>
+Date:   Tue Feb 5 02:45:34 2008 -0200
+
+    Don't call xf86IsCorePointer.
+    
+    Check xinput abi version to know if the function is available,
+    otherwise run code as if it had returned 0, what should match
+    the new API.
+    
+    Signed-off-by: Peter Hutterer <peter@cs.unisa.edu.au>
+
+commit 47ecabff271fc1b8dfcc40656934fb70264b7a0e
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:52:09 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit e7fc5453728fe5991bef5b55f31319b677a91ce5
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:25:26 2007 -0400
+
+    Rename .cvsignore to .gitignore
+
+commit 39a7bdaa21b792cf351fb361be0aa05a3012d620
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Mon Aug 6 23:16:37 2007 +0200
+
+    Use PACKAGE_VERSION_MAJOR/MINOR/PATCHLEVEL in version_rec
+
+commit cb6adfe32f929e57eedcab189e9f359fc9e970ab
+Author: Justin Blanchard <justinb04@aim.com>
+Date:   Tue Jan 30 20:15:50 2007 -0500
+
+    update from Justin Blanchard - part 3
+    
+    * Adds support for detecting/responding to screen resize and rotate events
+    (i.e., fixing bug 3421 for FPIT users). This corrects both cursor-related and
+    extended events.
+    * The fix is disabled unless the user adds 'Option "TrackRandR"' to the
+    InputDevice section. This is to avoid breaking setups where some nightmarish
+    workaround was already in place.
+    * Use of RRGetRotation may break driver under XFree86. If this is a problem I
+    think xf86GetRotation can be used instead.
+
+commit 979c283a6ecb1ba718790a147b3e910a106cb473
+Author: Justin Blanchard <justinb04@aim.com>
+Date:   Tue Jan 30 20:13:52 2007 -0500
+
+    update from Justin Blanchard - part 2
+    
+    * Fix a bug that prevents active-pen users from right-clicking while hovering.
+    * Bug was introduced with passive pen support; fix is simple and has been
+    recommended in forums since Oct 2006
+    (http://ubuntuforums.org/showpost.php?p=1620646&postcount=15).
+    For some reason I don't see a bug report for the issue.
+
+commit 4b06c8f70e8b1d6cfaeb41e1584f9efcfef83bb0
+Author: Justin Blanchard <justinb04@aim.com>
+Date:   Tue Jan 30 20:12:07 2007 -0500
+
+    Updates from Justin Blanchard - patch 1
+    
+    * Make the docs reflect more accurately what the code actually does.
+    * Update the docs: remove material specific to XFree86 3.x/4.0. Re-organize to
+    reflect the wider variety of machines that use this device. Change the link to
+    linuxslate.com. Expand troubleshooting section.
+    * Code cleanup: assorted trivial changes.
+
+commit 5eb263e776a8193035d86a17fc3939e5fcf0c26d
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 17:32:14 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.1.0.
+
+commit 717318ea9f56e7875f31906afd4b5669191df3cc
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:56 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit befa71531a1c7870d81ae748b8c3cfcf833a033e
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:50 2005 +0000
+
+    Stub COPYING files
+
+commit d7b4d51674ad4b168180e38343306701c0a926f9
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Dec 19 09:07:49 2005 +0000
+
+    Typo fixes, mailing list & url updates, and other changes to prepare for
+        X11R6.9 & 7.0 releases.
+
+commit 0f86389792ca4249548e21546fbb7fa3a6bf4e39
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:14 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit d831f3931d9da9ad3afbf0b00f27ab49f1f6b27e
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:29 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit a3a2ab78dbfd1e0f08da6891dbb1c08a6eece8a5
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:30 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 417800aea164e837ea95a8dd02e706dc50fe820d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:05 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit eff2a9e33c7a34f8ab180f6a191a0e9f16998c18
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:55 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 19a3f95a129ea51d3cadcbe6eb8fcf079aa582b9
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:06 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 68d8dcce160b4d4938bf0b0108c858b9daa75b06
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:03 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit b872507476e8469cefa151067f106c3e0a097d3d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:11 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 1df2fab075a5bec86b57a10909c1df71db60f579
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:50 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit d8bd9a9edf93f337b6359e671cb1bb6e69083bea
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:00 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit e4df0542bfbba112ce0df38dfeba19350ad370ff
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:51 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit ad8d71d6b8b81aaac51425bef24cc65801749ffb
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:27 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit de780dd318c07b71df98f7409da74f5d5d46743c
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:08:55 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 699531cf87ad64107ceaa59208ca071a74501f2c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 5 02:54:07 2005 +0000
+
+    Add readme.txt to EXTRA_DIST
+
+commit 64f6e8d6197030627533c6fab93af9818c816c74
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:38 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 3691cd67b2880ceab3f7ff22caf6cf1eaff0ee4f
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Aug 10 14:07:23 2005 +0000
+
+    Don\'t lose existing CFLAGS in all the input drivers and some of the video
+        drivers
+
+commit c0a5f83b6d7ddf630b5d389fa38264de4dc7121a
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:40 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit ad8d1c474ca4e3211b2ebde287aa08f4cf03f59e
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 13 20:03:21 2005 +0000
+
+    Make the module dir configurable
+
+commit e9375c5e27068e39a60a59f74c22ec8183631499
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 13 02:20:59 2005 +0000
+
+    Update all input drivers to pass distcheck
+
+commit 638054c0ab5f13821f77db7a58e78215cfda9f61
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Jul 12 06:15:08 2005 +0000
+
+    Build skeletons for input drivers. Should basically work.
+
+commit 4f36fab598723200ae39b4e1e2d7577302aa24b2
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:37:59 2005 +0000
+
+    Prep input drivers for modularizing by adding guarded #include "config.h"
+
+commit a9d50047f11215eedc7b2da4263e5ff1839d16d0
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jun 27 18:32:54 2005 +0000
+
+    Various input drivers set their InputDriverRec to be static when doing a
+        loadable build, and the same symbol can't be both static and _X_EXPORT.
+        Pointed out by Alan Coopersmith.
+
+commit 53077bd40c9cc93819a8851d6408c76dd37f0c7f
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:17:01 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit ff4e6c2efd7460eee7c73120dca2656ba13ebbac
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Sat Feb 5 17:37:53 2005 +0000
+
+    -Add passive pen support to the fpit driver (David M. Clay), bug 2440
+
+commit 825269b37ecd67b5062c2a2f7dcbc3fd951937ec
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:54:03 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 3e0303798c108226a2856a5e32f36cb3f55224c2
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:51 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit aacf28f7dece252d25a8f4bafd7659b28fa15c9c
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:33 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 8a885e69a39e6547c28475c37fed11cdc1f1a060
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:36:00 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 0551d757750966c7cae04c1015ca6647c9f7ae01
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:34 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 1054c6379ef3bff6a55281e01b6109caea863fae
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:48 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit b4945314d930385662db5e0d008cb9ae3bbabd72
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:56 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit c2b9298a935089f40c06d1061f4b300afd6a80fe
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:56 2003 +0000
+
+    Initial revision

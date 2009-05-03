@@ -55,7 +55,7 @@
 #include "config.h"
 #endif
 
-#include <xf86Version.h>
+#include <xorgVersion.h>
 
 #include <unistd.h>
 #include <errno.h>
@@ -231,6 +231,7 @@ static void xf86FpitReadInput(LocalDevicePtr local)
 {
 	FpitPrivatePtr priv = (FpitPrivatePtr) local->private;
 	int len, loop;
+	int is_core_pointer = 0;
 	int x, y, buttons, prox;
 	DeviceIntPtr device;
 	int conv_x, conv_y;
@@ -318,18 +319,17 @@ static void xf86FpitReadInput(LocalDevicePtr local)
 		prox = (priv->fpitData[loop] & PROXIMITY_BIT) ? 0 : 1;
 		buttons = (priv->fpitData[loop] & BUTTON_BITS);
 		device = local->dev;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
+		is_core_pointer = xf86IsCorePointer(device);
+#endif
 
 		xf86FpitConvert(local, 0, 2, x, y, 0, 0, 0, 0, &conv_x, &conv_y);
 		xf86XInputSetScreen(local, priv->screen_no, conv_x, conv_y);
 
 		/* coordinates are ready we can send events */
 
-		if (prox!=priv->fpitOldProximity) { /* proximity changed */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-			if (xf86IsCorePointer(device) == 0)
-#endif
-			xf86PostProximityEvent(device, prox, 0, 2, x, y);
-		}
+		if (prox!=priv->fpitOldProximity) /* proximity changed */
+			if (!is_core_pointer) xf86PostProximityEvent(device, prox, 0, 2, x, y);
 
 		if (priv->fpitOldX != x || priv->fpitOldY != y) /* position changed */
 			xf86PostMotionEvent(device, 1, 0, 2, x, y);
@@ -434,7 +434,11 @@ static Bool xf86FpitControl(DeviceIntPtr dev, int mode)
 				ErrorF("Unable to allocate PtrFeedBackClassDeviceStruct\n");
 			}
 	      
-			if (InitValuatorClassDeviceStruct(dev, 2, xf86GetMotionEvents, local->history_size, Absolute) == FALSE) {
+			if (InitValuatorClassDeviceStruct(dev, 2,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
+                                    xf86GetMotionEvents,
+#endif
+                                    local->history_size, Absolute) == FALSE) {
 				ErrorF("Unable to allocate Fpit touchscreen ValuatorClassDeviceStruct\n");
 				return !Success;
 			}

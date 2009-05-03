@@ -151,7 +151,7 @@ For Stylistic 3400:
 .fi
 
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__).
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__).
 .SH AUTHORS
 Original FPIT port:
 Rob Tsuk <rob@tsuk.com> and John Apfelbaum <johnapf@linuxslate.com>
