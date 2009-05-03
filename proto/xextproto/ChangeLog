@@ -1,3 +1,27 @@
+commit e1773d8ad7d36535f856dcb308be9a1b0601c1fc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 18 10:10:42 2008 +1000
+
+    Bump to 7.0.4
+
+commit e7f0c4261c59da82da1c151dd1bd0d143a32906a
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Dec 1 14:44:03 2008 +1000
+
+    Clean up XGE documentation.
+
+commit b0080664e432f8ee569ce099a536c0232dd64d3e
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Dec 1 15:41:16 2008 +1000
+
+    geproto: remote trailing whitespaces.
+
+commit f7e5f23e37e62cc0a981d9b002b69d90b8a7daa9
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Fri Sep 26 14:54:19 2008 +0930
+
+    Xge.h: include Xmd.h for CARD8
+
 commit db08133016b421ef12c65db9c4a2819078f01b06
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Wed May 28 17:18:14 2008 +0930
