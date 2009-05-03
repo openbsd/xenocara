@@ -1,3 +1,88 @@
+commit 0536f70861f11192820439d36de951ef106d4e5e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Feb 19 16:32:32 2009 +1000
+
+    penmount 1.4.0
+
+commit ae5faa7a024cf63b766b916ef09adf3e66d1a170
+Author: mjs <mjs@core7.eu>
+Date:   Tue Feb 17 01:48:43 2009 +0100
+
+    Add DMC9512 support #19885
+    
+    Add new value for the ControllerModel option because we can not auto-detect it (looks like a DMC8910).
+    The only relevant difference between the DMC8910 and DMC9512 is the device initialization.
+    
+    Signed-off-by: mjs <mjs@core7.eu>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ec3379232341ea024b6fb2b612733fdb99537c5e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:28:40 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit 0627c2743471791f57fe8b8e96d7df3db676aca9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:22:15 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit e94c776512adba9398a01406e630271cf912bf21
+Author: Arrigo Marchiori <ardovm@yahoo.it>
+Date:   Thu Nov 20 09:57:34 2008 +1000
+
+    Fix y axis inversion for axis ranges with a non-zero minimum.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@redhat.com>
+
+commit d112cca181b9fc9586391e83b8c0ff26ca22ff9e
+Author: Steve Bian <s@pictorii.com>
+Date:   Tue Sep 23 20:43:23 2008 +0930
+
+    Init axes according to configuration.
+    
+    When reporting mode is TS_Raw since we do no scaling, it will just be the
+    values in xorg.conf. If however reporting mode is TS_Scaled however,
+    xf86ScaleAxis will return a value between 0 screen_width/screen_height, so we
+    must setup the axis accordingly or there will be strange behaviour
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@redhat.com>
+
+commit 22fca7467a943539b44a520a7b9d827508f01538
+Author: Steve Bian <s@pictorii.com>
+Date:   Tue Sep 23 20:42:33 2008 +0930
+
+    InvertY should be disabled by default.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@redhat.com>
+
+commit 8a9ff94e3db692736f86d52e569f65f6f363b0e0
+Author: Arrigo Marchiori <ardovm@yahoo.it>
+Date:   Sun Jun 22 18:00:57 2008 +0930
+
+    Fix scaling behaviour if the axes are swapped. #13535
+    
+    First swapping, then inverting and scaling. I think it's the most
+    intuitive solution to the problem, because it makes minX, maxX & co. act on
+    the _actual_ X and Y axes, from the user/developer point of view.
+    
+    Signed-off-by: Peter Hutterer <peter@cs.unisa.edu.au>
+    
+    X.Org Bug 13535 <http://bugs.freedesktop.org/show_bug.cgi?id=13535>
+
+commit 5e1c22ff2c21cd20b204394731e2ad8ce1980091
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 26 22:19:12 2008 +0930
+
+    Check for XINPUT ABI 3.
+
+commit d66c0b070d6a80b7b5d98cf364149fbc2df81fac
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 20 16:40:15 2008 -0400
+
+    penmount 1.3.0
+
 commit 600e029c61c012c7a7eb1075a805fbc01681962a
 Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
 Date:   Wed Jan 30 17:37:28 2008 -0200

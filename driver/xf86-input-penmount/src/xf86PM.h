@@ -74,6 +74,7 @@ PenMountPrivateRec, *PenMountPrivatePtr;
 #define CHIP_UNKNOWN	0
 #define DMC8910			1
 #define DMC9000			2
+#define DMC9512			3
 
 
 /******************************************************************************

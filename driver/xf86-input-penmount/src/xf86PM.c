@@ -4,6 +4,9 @@
  * CoAuthor: Mayk Langer <langer@vsys.de>
  * 
  * History:
+ * 02/01/2009: mjs <mjs@core7.eu>
+ * - Added DMC9512 controller protocol support
+ *   based on old code from http://www.salt.com.tw/Download/Driver/PenMount/DMC9512/
  * 09/16/2005: Jaya Kumar <jayakumar.xorg@gmail.com> 
  * - Added DMC9000 controller protocol support
  * - DMC9000 support work was sponsored by CIS(M) Sdn Bhd
@@ -105,7 +108,9 @@ static const char *reqSymbols[] = {
 	"xf86CollectInputOptions",
 	"xf86ErrorFVerb",
 	"xf86FindOptionValue",
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
 	"xf86GetMotionEvents",
+#endif
 	"xf86GetVerbosity",
 	"xf86MotionHistoryAllocate",
 	"xf86NameCmp",
@@ -175,6 +180,7 @@ ProcessDeviceInit(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr pInfo)
 {
 	unsigned char map[] =
 	{0, 1};
+	int min_x, min_y, max_x, max_y;
 	/*
 	 * these have to be here instead of in the SetupProc, because when the
 	 * SetupProc is run at server startup, screenInfo is not setup yet
@@ -195,7 +201,10 @@ ProcessDeviceInit(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr pInfo)
 	 * Device reports motions on 2 axes in absolute coordinates.
 	 * Axes min and max values are reported in raw coordinates.
 	 */
-	if (InitValuatorClassDeviceStruct (dev, 2, xf86GetMotionEvents,
+	if (InitValuatorClassDeviceStruct (dev, 2,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
+					   xf86GetMotionEvents,
+#endif
 					   pInfo->history_size, Absolute) == FALSE)
 		{
 			ErrorF ("Unable to allocate PenMount ValuatorClassDeviceStruct\n");
@@ -203,11 +212,33 @@ ProcessDeviceInit(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr pInfo)
 		}
 	else
 		{
-			InitValuatorAxisStruct (dev, 0, priv->min_x, priv->max_x,
+			/* max_* min_* refer to the max/min values we will emit to the core.
+			 * When reporting mode is TS_Raw since we do no scaling, it will
+			 * just be the values in xorg.conf. If however reporting mode is
+			 * TS_Scaled however, xf86ScaleAxis will return a value between 0
+			 * screen_width/screen_height, so we must setup the axis accordingly
+			 * or there will be strange behaviour
+			 */
+			if ( priv->reporting_mode == TS_Raw )
+				{
+					max_x = priv->max_x;
+					min_x = priv->min_x;
+					max_y = priv->max_y;
+					min_y = priv->min_y;
+				}
+			else
+				{
+					max_x = priv->screen_width;
+					min_x = 0;
+					max_y = priv->screen_height;
+					min_y = 0;
+				}
+
+			InitValuatorAxisStruct (dev, 0, min_x, max_x,
 						9500,
 						0 /* min_res */ ,
 						9500 /* max_res */ );
-			InitValuatorAxisStruct (dev, 1, priv->min_y, priv->max_y,
+			InitValuatorAxisStruct (dev, 1, min_y, max_y,
 						10500,
 						0 /* min_res */ ,
 						10500 /* max_res */ );
@@ -320,6 +351,119 @@ DMC9000_DeviceControl (DeviceIntPtr dev, int mode)
 
 }
 
+static Bool
+DMC9512_ProcessDeviceOn(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr pInfo)
+{
+	unsigned char	buf[5] = { 'D', 'G', 0x02, 0x80, 0x00 };
+
+	XisbBlockDuration (priv->buffer, 500000);
+
+	if ( PenMountSendPacket(priv, buf, 5) != Success )
+	{
+		return !Success;
+	}
+
+	/* wait for right response */
+	priv->lex_mode = PenMount_Response0;
+
+	if (PenMountGetPacket (priv) != Success )
+	{
+		return !Success;
+	}
+
+	if ( ! (priv->packet[0] == 0xff && priv->packet[1] == 0x70) )
+	{
+		return !Success;
+	}
+
+	xf86Msg(X_NOTICE, "%s: DMC9512: found\n", pInfo->name);
+	priv->chip = DMC9512;
+
+	/* disable DMC9512 */
+	buf[2] = 0x0a;
+	buf[3] = 0x00;
+	buf[4] = 0x00;
+	PenMountSendPacket(priv,buf,5);
+	priv->lex_mode = PenMount_Response0;
+	PenMountGetPacket(priv);
+
+	/* set screen width */
+	buf[2] = 0x02;
+	buf[3] = 0x03; /*(priv->screen_width & 0x0fff) >> 8;*/
+	buf[4] = 0xfc; /*priv->screen_width & 0xff;*/
+	PenMountSendPacket(priv,buf,5);
+	priv->lex_mode = PenMount_Response0;
+	PenMountGetPacket(priv);
+
+	/* set screen height */
+	buf[2] = 0x02;
+	buf[3] = 0x13; /*(priv->screen_height & 0x0fff) >> 8;*/
+	buf[4] = 0xfc; /*priv->screen_height & 0xff;*/
+	buf[3] |= 0x10;
+	PenMountSendPacket(priv,buf,5);
+	priv->lex_mode = PenMount_Response0;
+	PenMountGetPacket(priv);
+
+	/* Set Calibration Data */
+	/* Set X-coordinate of the Left Top corner */
+	buf[2] = 0x02;
+	buf[3] = 0x40;
+	buf[4] = 0x03;
+	PenMountSendPacket(priv,buf,5);
+	priv->lex_mode = PenMount_Response0;
+	PenMountGetPacket(priv);
+
+	/* Set Y-coordinate of the Left Top corner */
+	buf[2] = 0x02;
+	buf[3] = 0x50;
+	buf[4] = 0x03;
+	PenMountSendPacket(priv,buf,5);
+	priv->lex_mode = PenMount_Response0;
+	PenMountGetPacket(priv);
+
+	/* Set X-coordinate of the Right bottom corner */
+	buf[2] = 0x02;
+	buf[3] = 0x60;
+	buf[4] = 0xfc;
+	PenMountSendPacket(priv,buf,5);
+	priv->lex_mode = PenMount_Response0;
+	PenMountGetPacket(priv);
+
+	/* Set Y-coordinate of the Right bottom corner */
+	buf[2] = 0x02;
+	buf[3] = 0x70;
+	buf[4] = 0xfc;
+	PenMountSendPacket(priv,buf,5);
+	priv->lex_mode = PenMount_Response0;
+	PenMountGetPacket(priv);
+
+	/* Set Screen Width Again */
+	buf[2] = 0x02;
+	buf[3] = 0x03;
+	buf[4] = 0xfc;
+	PenMountSendPacket(priv,buf,5);
+	priv->lex_mode = PenMount_Response0;
+	PenMountGetPacket(priv);
+
+	/* Set Screen Height Again */
+	buf[2] = 0x02;
+	buf[3] = 0x13;
+	buf[4] = 0xfc;
+	PenMountSendPacket(priv,buf,5);
+	priv->lex_mode = PenMount_Response0;
+	PenMountGetPacket(priv);
+
+	/* enable DMC9512 */
+	buf[2] = 0x0a;
+	buf[3] = 0x01;
+	buf[4] = 0x00;
+	PenMountSendPacket(priv,buf,5);
+	priv->lex_mode = PenMount_Response0;
+	PenMountGetPacket(priv);
+
+	return Success;
+}
+
 static InputInfoPtr
 PenMountPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 {              
@@ -384,7 +528,7 @@ PenMountPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->screen_num = xf86SetIntOption( pInfo->options, "ScreenNumber", 0 );
 	priv->button_number = xf86SetIntOption( pInfo->options, "ButtonNumber", 1 );
 	priv->swap_xy = xf86SetIntOption( pInfo->options, "SwapXY", 0 );
-	priv->invert_y = xf86SetIntOption( pInfo->options, "InvertY", 1 );
+	priv->invert_y = xf86SetIntOption( pInfo->options, "InvertY", 0 );
 	priv->buffer = NULL;
 	s = xf86FindOptionValue (pInfo->options, "ReportingMode");
 	if ((s) && (xf86NameCmp (s, "raw") == 0))
@@ -397,6 +541,8 @@ PenMountPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		priv->chip = DMC9000;
 		pInfo->device_control = DMC9000_DeviceControl;
 		pInfo->read_input = DMC9000_ReadInput;
+	} else if ((s) && (xf86NameCmp (s, "DMC9512") == 0)) {
+		priv->chip = DMC9512;
 	}
 
 	priv->proximity = FALSE;
@@ -458,6 +604,18 @@ DeviceControl (DeviceIntPtr dev, int mode)
 				return (!Success);
 			}
 /*			if (isatty (pInfo->fd))		check if DMC8910 is found */
+
+			if (priv->chip == DMC9512)
+			{
+				if (DMC9512_ProcessDeviceOn(priv,dev,pInfo) != Success)
+				{
+					xf86Msg(X_WARNING, "%s: DMC9512: could not initialize", pInfo->name);
+					return !Success;
+				}
+				// else continue to the code below which does common stuff
+				// between 8910/9512 again
+			}
+			else
 			{
 /* echo Success Code */
 				unsigned char	buf[5] = { 'D', 'G', 0x02, 0x80, 0x00 };
@@ -545,7 +703,7 @@ ReadInput (InputInfoPtr pInfo)
 	XisbBlockDuration (priv->buffer, -1);
 	while (1)
 	{
-		if ( priv->chip != DMC8910 )
+		if ( priv->chip != DMC8910 && priv->chip != DMC9512 )
 		{
 			if ( PenMountGetPacket (priv) != Success)
 				break;
@@ -680,15 +838,15 @@ DMC9000_ReadInput (InputInfoPtr pInfo)
 		}
 		x = ((((unsigned int) (priv->packet[1]&0x07)) << 7)  | (priv->packet[2]&0x7F));
 		y = ((((unsigned int) (priv->packet[3]&0x07)) << 7)  | (priv->packet[4]&0x7F));
-		if (priv->invert_y) 
-		{
-			y = priv->max_y - y;
-		}
 		if ( priv->swap_xy)
 		{
 			tmp = y;
 			y = x;
-			x = tmp;	
+			x = tmp;
+		}
+		if (priv->invert_y)
+		{
+			y = priv->max_y - y + priv->min_y;
 		}
 		priv->packet[0] = priv->pen_down ? 0x01 : 0x00;
 
@@ -870,7 +1028,7 @@ PenMountGetPacket (PenMountPrivatePtr priv)
 		switch (priv->lex_mode)
 		{
 		case PenMount_byte0:
-			if ( priv->chip != DMC8910 )
+			if ( priv->chip != DMC8910 && priv->chip != DMC9512 )
 			{
 				if (!(c & 0x08) )
 					return (!Success);
@@ -892,7 +1050,7 @@ PenMountGetPacket (PenMountPrivatePtr priv)
 		case PenMount_byte2:
 			priv->packet[2] = (unsigned char) c;
 			priv->lex_mode = PenMount_byte0;
-			if ( priv->chip != DMC8910 )
+			if ( priv->chip != DMC8910 && priv->chip != DMC9512 )
 				return (Success);
 			if (( priv->packet[2] == 0xfe ) && ( priv->packet[1] == 0xfe ))
 				return (Success);
