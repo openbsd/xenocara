@@ -76,7 +76,7 @@ void* drmAllocCpy(void *array, int count, int entry_size)
  * A couple of free functions.
  */
 
-void drmModeFreeModeInfo(struct drm_mode_modeinfo *ptr)
+void drmModeFreeModeInfo(drmModeModeInfoPtr ptr)
 {
 	if (!ptr)
 		return;
@@ -273,7 +273,7 @@ drmModeCrtcPtr drmModeGetCrtc(int fd, uint32_t crtcId)
 
 int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
                    uint32_t x, uint32_t y, uint32_t *connectors, int count,
-		   struct drm_mode_modeinfo *mode)
+		   drmModeModeInfoPtr mode)
 {
 	struct drm_mode_crtc crtc;
 
@@ -395,7 +395,8 @@ drmModeConnectorPtr drmModeGetConnector(int fd, uint32_t connector_id)
 	r->connection   = conn.connection;
 	r->mmWidth      = conn.mm_width;
 	r->mmHeight     = conn.mm_height;
-	r->subpixel     = conn.subpixel;
+	/* convert subpixel from kernel to userspace */
+	r->subpixel     = conn.subpixel + 1;
 	r->count_modes  = conn.count_modes;
 	/* TODO we should test if these alloc & cpy fails. */
 	r->count_props  = conn.count_props;
@@ -419,7 +420,7 @@ err_allocs:
 	return r;
 }
 
-int drmModeAttachMode(int fd, uint32_t connector_id, struct drm_mode_modeinfo *mode_info)
+int drmModeAttachMode(int fd, uint32_t connector_id, drmModeModeInfoPtr mode_info)
 {
 	struct drm_mode_mode_cmd res;
 
@@ -429,7 +430,7 @@ int drmModeAttachMode(int fd, uint32_t connector_id, struct drm_mode_modeinfo *m
 	return drmIoctl(fd, DRM_IOCTL_MODE_ATTACHMODE, &res);
 }
 
-int drmModeDetachMode(int fd, uint32_t connector_id, struct drm_mode_modeinfo *mode_info)
+int drmModeDetachMode(int fd, uint32_t connector_id, drmModeModeInfoPtr mode_info)
 {
 	struct drm_mode_mode_cmd res;
 

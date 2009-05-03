@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2009/01/26 23:14:37 oga Exp $
+# $OpenBSD: Makefile,v 1.3 2009/05/03 19:43:26 oga Exp $
 .include <bsd.xconf.mk>
 
 .if ${MACHINE_ARCH} == "i386" || ${MACHINE_ARCH} == "amd64"
@@ -9,7 +9,7 @@ LIB=		drm
 
 DRM_MAJOR=	2
 DRM_MINOR=	4
-DRM_TINY=	4
+DRM_TINY=	9
 
 INCSDIR=	${X11BASE}/include/
 
