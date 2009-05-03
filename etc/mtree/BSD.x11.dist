@@ -1,4 +1,4 @@
-#	$OpenBSD: BSD.x11.dist,v 1.16 2009/04/05 19:10:45 matthieu Exp $
+#	$OpenBSD: BSD.x11.dist,v 1.17 2009/05/03 21:33:20 matthieu Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 .
@@ -241,6 +241,8 @@
                         ..
                         en_US.UTF-8
                         ..
+			fi_FI.UTF-8
+			..
                         georgian-academy
                         ..
                         georgian-ps
@@ -315,6 +317,8 @@
                         ..
                         pt_BR.UTF-8
                         ..
+			ru_RU.UTF-8
+			..
                         tatar-cyr
                         ..
                         th_TH
