@@ -69,9 +69,6 @@ endif
 
 DIST_SUBDIRS = privileged_startx
 
-xinitrc: xinitrc.cpp Makefile
-startx: startx.cpp Makefile
-
 xinitrc_DATA = xinitrc
 
 CLEANFILES = xinitrc startx $(appman_DATA) $(launchagents_DATA)

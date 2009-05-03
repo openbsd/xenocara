@@ -1,6 +1,6 @@
 /* $Xorg: xinit.c,v 1.5 2001/02/09 02:05:49 xorgcvs Exp $ */
 /* $XdotOrg: xc/programs/xinit/xinit.c,v 1.4 2005/10/04 01:27:34 ajax Exp $ */
-/* $OpenBSD: xinit.c,v 1.6 2008/06/18 20:31:51 matthieu Exp $ */
+/* $OpenBSD: xinit.c,v 1.7 2009/05/03 13:17:37 matthieu Exp $ */
 
 /*
 
@@ -60,6 +60,13 @@ in this Software without prior written authorization from The Open Group.
 #include <errno.h>
 #include <setjmp.h>
 #include <stdarg.h>
+
+#ifdef __APPLE__
+#include <AvailabilityMacros.h>
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+#include <vproc.h>
+#endif
+#endif
 
 #if !defined(SIGCHLD) && defined(SIGCLD)
 #define SIGCHLD SIGCLD
@@ -251,6 +258,11 @@ main(int argc, char *argv[], char *envp[])
 	int client_args_given = 0, server_args_given = 0;
 	int start_of_client_args, start_of_server_args;
 	struct sigaction sa;
+#ifdef __APPLE__
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+	vproc_transaction_t vt;
+#endif
+#endif
 
 #ifdef __UNIXOS2__
 	envsave = envp;	/* circumvent an EMX problem */
@@ -427,6 +439,13 @@ main(int argc, char *argv[], char *envp[])
 
 	signal(SIGALRM, sigAlarm);
 	signal(SIGUSR1, sigUsr1);
+
+#ifdef __APPLE__
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+	vt = vproc_transaction_begin(NULL);
+#endif
+#endif
+
 	if (startServer(server) > 0
 	 && startClient(client) > 0) {
 		pid = -1;
@@ -435,6 +454,13 @@ main(int argc, char *argv[], char *envp[])
 			)
 			pid = wait(NULL);
 	}
+
+#ifdef __APPLE__
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+	vproc_transaction_end(NULL, vt);
+#endif
+#endif
+
 	signal(SIGTERM, SIG_IGN);
 	signal(SIGQUIT, SIG_IGN);
 	signal(SIGINT, SIG_IGN);
@@ -465,15 +491,23 @@ waitforserver(void)
 	int	ncycles	 = 120;		/* # of cycles to wait */
 	int	cycles;			/* Wait cycle count */
 
+#ifdef __APPLE__
+	/* For Apple, we don't get signaled by the server when it's ready, so we just
+	 * want to sleep now since we're going to sleep later anyways and this allows us
+	 * to avoid the awkard, "why is there an error message in the log" questions
+	 * from users.
+         */
+
+	sleep(2);
+#endif
+
 	for (cycles = 0; cycles < ncycles; cycles++) {
 		if ((xd = XOpenDisplay(displayNum))) {
 			return(TRUE);
 		}
 		else {
-#define MSG "X server to begin accepting connections"
-		    if (!processTimeout (1, MSG)) 
+		    if (!processTimeout (1, "X server to begin accepting connections")) 
 		      break;
-#undef MSG
 		}
 	}
 

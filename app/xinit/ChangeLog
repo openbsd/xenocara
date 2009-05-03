@@ -1,3 +1,125 @@
+commit 46d641fdd020d07a9b4bd0364cf126643342a7e3
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Dec 17 15:19:38 2008 -0800
+
+    xinit 1.1.1
+
+commit c340932db548d1a3d4fc5bbc682b7730e5b2cf4a
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Dec 17 13:00:23 2008 -0800
+
+    Apple: Allow defaults option that maps to a -dpi server command line in startx
+
+commit 89c1675d128da3477cac6858c4249b839ec68346
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Sat Dec 13 00:14:54 2008 -0800
+
+    OSX: Don't use login/bash -c hack anymore for org.x.startx LaunchAgent
+
+commit 13accec7614960965470f17894bc9212842ea6d7
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Tue Dec 9 21:15:13 2008 -0800
+
+    OSX: More prefix fixes
+
+commit e06ebf63e2c91e590fc1091e5ea2e49bab835526
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Dec 3 11:19:48 2008 -0800
+
+    OSX: Fixed bad prefix
+
+commit 4ee72a6f1fc5d045adb71260107ca605ec68a84a
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Tue Dec 2 20:56:11 2008 -0800
+
+    OSX Tiger: Fix discovery of mach port
+
+commit ca9cb9750d2dd480240a37cdbd94fdba0a34da4c
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Tue Dec 2 20:31:10 2008 -0800
+
+    Apple: Honor X11_PREFS_DOMAIN if it's set (1.4.2-apple26 and later)
+
+commit 754efe651165ea7dd034f6b0ce75ef785deab826
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Fri Nov 28 23:23:14 2008 -0800
+
+    OSX Tiger: Hopefully the last fix for Tiger users...
+
+commit f04db53e71c681379ec49494c9ab727bc5269b30
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Fri Nov 28 11:20:25 2008 -0800
+
+    OSX Tiger: More compilation fixes...
+
+commit ed6dc88f5cbaaad08a282c44ae333a938f6f4216
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Nov 27 00:47:31 2008 -0800
+
+    OSX: Create privleged_startx on Tiger
+    
+    Launchd in Tiger doesn't support OnDemand loading, so this is
+    a KeepAlive idle daemon on Tiger.
+
+commit 9f761b5a8512a8ad8b1475a3684e1a23d953916f
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Sat Nov 22 10:52:35 2008 -0800
+
+    Apple: Use AvailabilityMacros.h for Tiger compatability
+
+commit 0c0b73812efe75496e154730787402538a268bac
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Aug 28 19:10:59 2008 -0700
+
+    Apple: Make VPATH builds work on darwin
+    
+    Patch from Peter O'Gorman <peter@pogma.com>
+
+commit 0753882b89a451c9bdd053c2915a80fbcdbb0b77
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Tue Aug 5 14:58:48 2008 -0700
+
+    Apple: sleep() to avoid innocent error message spew
+
+commit 79871c9b9daa1fad1b84af8f7eb54fced7526b2e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Aug 5 14:11:24 2008 -0700
+
+    Fix build of startx & xinitrc with Solaris make
+    
+    For some reason, having the dependencies explictly listed
+    causes it to ignore the suffix implicit rule for .cpp.
+
+commit 9cc39e441b8741b4b0b878d00e09f0366ff36146
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Mon Aug 4 14:40:49 2008 -0700
+
+    Support the instant-off API in SnowLeopard.
+
+commit 7d41013b0e295ec0444c2f9099679bb6018c812f
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Jul 2 16:36:24 2008 -0700
+
+    Apple: Using eval to protect people who have spaces in their home path.
+
+commit 9632367abd03108f3636b05e9f2fd92f5c28dabe
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Sun Jun 29 18:24:13 2008 -0700
+
+    startx.cpp: Made some things a little more friendly for people who have spaces in pathnames.
+
+commit c5bd51b3a31b3b290dec9f978779a56161308bb4
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Sun Jun 29 17:50:44 2008 -0700
+
+    Apple: privleged_startx: Increase the timeout so slower machines don't get a stray process warning in their system log.
+
+commit a5a8ea7c8452908c2c4c9c822f5b4f7382c03630
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jun 12 15:27:11 2008 -0400
+
+    xinit 1.1.0
+
 commit 44e2ee01b456deb2630d21786d19ee2734d2f40a
 Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
 Date:   Wed May 28 12:01:35 2008 -0700

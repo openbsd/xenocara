@@ -4,18 +4,25 @@
 <dict>
 	<key>Label</key>
 		<string>org.x.privileged_startx</string>
-	<key>MachServices</key>
-		<dict>
-			<key>org.x.privileged_startx</key>
-				<true/>
-		</dict>
 	<key>ProgramArguments</key>
 		<array>
 			<string>XINITDIR/privileged_startx</string>
 			<string>-d</string>
 			<string>SCRIPTDIR</string>
 		</array>
+#ifdef TIGER_LAUNCHD
+	<key>KeepAlive</key>
+		<true/>
+#else
+	<key>MachServices</key>
+		<dict>
+			<key>org.x.privileged_startx</key>
+				<true/>
+		</dict>
 	<key>TimeOut</key>
-		<integer>60</integer>
+		<integer>120</integer>
+	<key>EnableTransactions</key>
+		<true/>
+#endif
 </dict>
 </plist>

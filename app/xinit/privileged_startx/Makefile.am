@@ -34,8 +34,11 @@ xinitrc_PROGRAMS = privileged_startx
 privstartx_SCRIPTS = 10-tmpdirs 20-font_cache
 
 AM_CPPFLAGS = -DXINITDIR=\"$(xinitrcdir)\" -DSCRIPTDIR=\"$(privstartxdir)\" -DBINDIR=\"$(bindir)\"
-
 CPP_FILES_FLAGS = -DXINITDIR="$(xinitrcdir)" -DSCRIPTDIR="$(privstartxdir)" -DBINDIR="$(bindir)"
+
+if TIGER_LAUNCHD
+CPP_FILES_FLAGS += -DTIGER_LAUNCHD
+endif
 
 dist_privileged_startx_SOURCES = \
 	server.c \
@@ -70,5 +73,5 @@ EXTRA_DIST = \
 	privileged_startx.defs \
 	privileged_startx_types.h
 
-$(BUILT_SOURCES): privileged_startx.defs
-	mig -sheader privileged_startxServer.h privileged_startx.defs
+$(BUILT_SOURCES): $(srcdir)/privileged_startx.defs
+	mig -sheader privileged_startxServer.h $(srcdir)/privileged_startx.defs

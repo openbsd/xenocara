@@ -27,9 +27,9 @@ XCOMM promote the sale, use or other dealings in this Software without
 XCOMM prior written authorization.
 
 if [ -x BINDIR/font_cache ] ; then
-	BINDIR/font_cache &
+	BINDIR/font_cache -s &
 elif [ -x BINDIR/font_cache.sh ] ; then
 	BINDIR/font_cache.sh -s &
-elif [ -x /usr/X11/bin/fc-cache ] ; then
+elif [ -x BINDIR/fc-cache ] ; then
 	BINDIR/fc-cache &
 fi

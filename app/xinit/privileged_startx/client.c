@@ -34,6 +34,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include <AvailabilityMacros.h>
+
 #include "privileged_startx.h"
 
 int client_main(void) {
@@ -42,7 +44,11 @@ int client_main(void) {
     
     kr = bootstrap_look_up(bootstrap_port, BOOTSTRAP_NAME, &mp);
     if (kr != KERN_SUCCESS) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
         fprintf(stderr, "bootstrap_look_up(): %s\n", bootstrap_strerror(kr));
+#else
+        fprintf(stderr, "bootstrap_look_up(): %ul\n", (unsigned long)kr);
+#endif
         exit(EXIT_FAILURE);
     }
     

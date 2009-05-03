@@ -40,7 +40,6 @@
 #include <sys/time.h>
 #include <launch.h>
 #include <asl.h>
-#include <pthread.h>
 #include <errno.h>
 
 #include "privileged_startx.h"
@@ -50,6 +49,10 @@ union MaxMsgSize {
     union __RequestUnion__privileged_startx_subsystem req;
     union __ReplyUnion__privileged_startx_subsystem rep; 
 };
+
+#ifdef LAUNCH_JOBKEY_MACHSERVICES
+#include <pthread.h>
+static void* idle_thread(void* param __attribute__((unused)));
 
 /* globals to trigger idle exit */
 #define DEFAULT_IDLE_TIMEOUT 60 /* 60 second timeout, then the server exits */
@@ -61,6 +64,7 @@ struct idle_globals {
 };
 
 struct idle_globals idle_globals;
+#endif
 
 #ifndef SCRIPTDIR
 #define SCRIPTDIR="/usr/X11/lib/X11/xinit/privileged_startx.d"
@@ -69,13 +73,46 @@ struct idle_globals idle_globals;
 /* Default script dir */
 const char *script_dir = SCRIPTDIR;
 
-static void* idle_thread(void* param __attribute__((unused)));
+#ifndef LAUNCH_JOBKEY_MACHSERVICES
+static mach_port_t checkin_or_register(char *bname) {
+    kern_return_t kr;
+    mach_port_t mp;
+    
+    /* If we're started by launchd or the old mach_init */
+    kr = bootstrap_check_in(bootstrap_port, bname, &mp);
+    if (kr == KERN_SUCCESS)
+        return mp;
+    
+    /* We probably were not started by launchd or the old mach_init */
+    kr = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE, &mp);
+    if (kr != KERN_SUCCESS) {
+        fprintf(stderr, "mach_port_allocate(): %s\n", mach_error_string(kr));
+        exit(EXIT_FAILURE);
+    }
+    
+    kr = mach_port_insert_right(mach_task_self(), mp, mp, MACH_MSG_TYPE_MAKE_SEND);
+    if (kr != KERN_SUCCESS) {
+        fprintf(stderr, "mach_port_insert_right(): %s\n", mach_error_string(kr));
+        exit(EXIT_FAILURE);
+    }
+    
+    kr = bootstrap_register(bootstrap_port, bname, mp);
+    if (kr != KERN_SUCCESS) {
+        fprintf(stderr, "bootstrap_register(): %s\n", mach_error_string(kr));
+        exit(EXIT_FAILURE);
+    }
+    
+    return mp;
+}
+#endif
 
 int server_main(const char *dir) {
     mach_msg_size_t mxmsgsz = sizeof(union MaxMsgSize) + MAX_TRAILER_SIZE;
     mach_port_t mp;
     kern_return_t kr;
+#ifdef LAUNCH_JOBKEY_MACHSERVICES
     long idle_timeout = DEFAULT_IDLE_TIMEOUT;
+#endif
 
     launch_data_t config = NULL, checkin = NULL;
     checkin = launch_data_new_string(LAUNCH_KEY_CHECKIN);
@@ -85,18 +122,19 @@ int server_main(const char *dir) {
         exit(EXIT_FAILURE);
     }
 
+    if(dir) {
+        script_dir = dir;
+        asl_log(NULL, NULL, ASL_LEVEL_DEBUG,
+                "script directory set: %s", script_dir);
+    }
+
+#ifdef LAUNCH_JOBKEY_MACHSERVICES
     launch_data_t tmv;
     tmv = launch_data_dict_lookup(config, LAUNCH_JOBKEY_TIMEOUT);
     if (tmv) {
         idle_timeout = launch_data_get_integer(tmv);
         asl_log(NULL, NULL, ASL_LEVEL_DEBUG,
                 "idle timeout set: %ld seconds", idle_timeout);
-    }
-
-    if(dir) {
-        script_dir = dir;
-        asl_log(NULL, NULL, ASL_LEVEL_DEBUG,
-                "script directory set: %s", script_dir);
     }
 
     launch_data_t svc;
@@ -114,6 +152,10 @@ int server_main(const char *dir) {
     }
 
     mp = launch_data_get_machport(svc);
+#else
+    mp = checkin_or_register("org.x.privileged_startx");
+#endif
+
     if (mp == MACH_PORT_NULL) {
         asl_log(NULL, NULL, ASL_LEVEL_ERR, "NULL mach service: %s",
                 BOOTSTRAP_NAME);
@@ -129,12 +171,14 @@ int server_main(const char *dir) {
         exit(EXIT_FAILURE);
     }
 
+#ifdef LAUNCH_JOBKEY_MACHSERVICES
     /* spawn a thread to monitor our idle timeout */
     pthread_t thread;
     idle_globals.mp = mp;
     idle_globals.timeout = idle_timeout;
     gettimeofday(&idle_globals.lastmsg, NULL);
     pthread_create(&thread, NULL, &idle_thread, NULL);
+#endif
 
     /* Main event loop */
     kr = mach_msg_server(privileged_startx_server, mxmsgsz, mp, 0);
@@ -161,8 +205,10 @@ kern_return_t do_privileged_startx(mach_port_t test_port __attribute__((unused))
 
     const char * path_argv[2] = {script_dir, NULL};
 
+#ifdef LAUNCH_JOBKEY_MACHSERVICES
     /* Store that we were called, so the idle timer will reset */
     gettimeofday(&idle_globals.lastmsg, NULL);
+#endif
 
     /* script_dir contains a set of files to run with root privs when X11 starts */
     ftsp = fts_open(path_argv, FTS_PHYSICAL, ftscmp);
@@ -222,6 +268,7 @@ kern_return_t do_privileged_startx(mach_port_t test_port __attribute__((unused))
 }
 
 kern_return_t do_idle_exit(mach_port_t test_port __attribute__((unused))) {
+#ifdef LAUNCH_JOBKEY_MACHSERVICES
     struct timeval now;
     gettimeofday(&now, NULL);
 
@@ -231,8 +278,12 @@ kern_return_t do_idle_exit(mach_port_t test_port __attribute__((unused))) {
     }
 
     return KERN_SUCCESS;
+#else
+    return KERN_FAILURE;
+#endif
 }
 
+#ifdef LAUNCH_JOBKEY_MACHSERVICES
 static void *idle_thread(void* param __attribute__((unused))) {
     for(;;) {
         struct timeval now;
@@ -248,3 +299,4 @@ static void *idle_thread(void* param __attribute__((unused))) {
     }
     return NULL;
 }
+#endif

@@ -6,9 +6,6 @@
 		<string>org.x.startx</string>
 	<key>ProgramArguments</key>
 		<array>
-			<string>/bin/bash</string>
-			<string>--login</string>
-			<string>-c</string>
 			<string>__bindir__/startx</string>
 		</array>
 	<key>Sockets</key>
@@ -20,6 +17,8 @@
 				</dict>
 		</dict>
 	<key>ServiceIPC</key>
+		<true/>
+	<key>EnableTransactions</key>
 		<true/>
 </dict>
 </plist>

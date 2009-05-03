@@ -84,27 +84,31 @@ serverargs=""
 
 #ifdef __APPLE__
 
+if [ "x$X11_PREFS_DOMAIN" = x ] ; then
+    X11_PREFS_DOMAIN="org.x.X11"
+fi
+
 XCOMM Initialize defaults (this will cut down on "safe" error messages)
-if ! defaults read org.x.X11 cache_fonts >& /dev/null ; then
-    defaults write org.x.X11 cache_fonts -bool true
+if ! defaults read $X11_PREFS_DOMAIN cache_fonts >& /dev/null ; then
+    defaults write $X11_PREFS_DOMAIN cache_fonts -bool true
 fi
 
-if ! defaults read org.x.X11 no_auth >& /dev/null ; then
-    defaults write org.x.X11 no_auth -bool false
+if ! defaults read $X11_PREFS_DOMAIN no_auth >& /dev/null ; then
+    defaults write $X11_PREFS_DOMAIN no_auth -bool false
 fi
 
-if ! defaults read org.x.X11 nolisten_tcp >& /dev/null ; then
-    defaults write org.x.X11 nolisten_tcp -bool true
+if ! defaults read $X11_PREFS_DOMAIN nolisten_tcp >& /dev/null ; then
+    defaults write $X11_PREFS_DOMAIN nolisten_tcp -bool true
 fi
 
 XCOMM First, start caching fonts
-if [ x`defaults read org.x.X11 cache_fonts` = x1 ] ; then
-    if [ -x /usr/X11/bin/font_cache ] ; then
-        /usr/X11/bin/font_cache &
-    elif [ -x /usr/X11/bin/font_cache.sh ] ; then
-        /usr/X11/bin/font_cache.sh &
-    elif [ -x /usr/X11/bin/fc-cache ] ; then
-        /usr/X11/bin/fc-cache &
+if [ x`defaults read $X11_PREFS_DOMAIN cache_fonts` = x1 ] ; then
+    if [ -x $bindir/font_cache ] ; then
+        $bindir/font_cache &
+    elif [ -x $bindir/font_cache.sh ] ; then
+        $bindir/font_cache.sh &
+    elif [ -x $bindir/fc-cache ] ; then
+        $bindir/fc-cache &
     fi
 fi
 
@@ -114,14 +118,18 @@ if [ -x XINITDIR/privileged_startx ] ; then
 	XINITDIR/privileged_startx
 fi
 
-if [ x`defaults read org.x.X11 no_auth` = x0 ] ; then
+if [ x`defaults read $X11_PREFS_DOMAIN no_auth` = x0 ] ; then
     enable_xauth=1
 else
     enable_xauth=0
 fi
 
-if [ x`defaults read org.x.X11 nolisten_tcp` = x1 ] ; then
+if [ x`defaults read $X11_PREFS_DOMAIN nolisten_tcp` = x1 ] ; then
     defaultserverargs="$defaultserverargs -nolisten tcp"
+fi
+
+if defaults read $X11_PREFS_DOMAIN dpi >& /dev/null ; then
+    defaultserverargs="$defaultserverargs -dpi `defaults read $X11_PREFS_DOMAIN dpi`"
 fi
 
 for ((d=0; ; d++)) ; do
@@ -132,19 +140,6 @@ defaultdisplay=":$d"
 #else
 enable_xauth=1
 #endif
-
-
-if [ -f $userclientrc ]; then
-    defaultclientargs=$userclientrc
-elif [ -f $sysclientrc ]; then
-    defaultclientargs=$sysclientrc
-#if defined(__SCO__) || defined(__UNIXWARE__)
-elif [ -f $scouserclientrc ]; then
-    defaultclientargs=$scouserclientrc
-elif [ -f $scosysclientrc ]; then
-    defaultclientargs=$scosysclientrc
-#endif
-fi
 
 #if defined(__SCO__) || defined(__UNIXWARE__)
 
@@ -202,11 +197,23 @@ done
 
 XCOMM process client arguments
 if [ x"$client" = x ]; then
+    client=$defaultclient
+
     XCOMM if no client arguments either, use rc file instead
     if [ x"$clientargs" = x ]; then
-	client="$defaultclientargs"
-    else
-	client=$defaultclient
+        if [ -f "$userclientrc" ]; then
+            client=$userclientrc
+        elif [ -f "$sysclientrc" ]; then
+            client=$sysclientrc
+#if defined(__SCO__) || defined(__UNIXWARE__)
+        elif [ -f "$scouserclientrc" ]; then
+            client=$scouserclientrc
+        elif [ -f "$scosysclientrc" ]; then
+            client=$scosysclientrc
+#endif
+        fi
+
+        clientargs=$defaultclientargs
     fi
 fi
 
@@ -217,9 +224,9 @@ if [ x"$server" = x ]; then
     XCOMM if no server arguments or display either, use defaults
     if [ x"$serverargs" = x -a x"$display" = x ]; then
 	XCOMM For compatibility reasons, only use xserverrc if there were no server command line arguments
-	if [ -f $userserverrc ]; then
+	if [ -f "$userserverrc" ]; then
 	    server=$userserverrc
-	elif [ -f $sysserverrc ]; then
+	elif [ -f "$sysserverrc" ]; then
 	    server=$sysserverrc
 	fi
 
@@ -268,11 +275,15 @@ if [ x"$enable_xauth" = x1 ] ; then
 
     XCOMM create a file with auth information for the server. ':0' is a dummy.
     xserverauthfile=$HOME/.serverauth.$$
-    trap "rm -f $xserverauthfile" HUP INT QUIT ILL TRAP KILL BUS TERM
-    xauth -q -f $xserverauthfile << EOF
+    trap "rm -f '$xserverauthfile'" HUP INT QUIT ILL TRAP KILL BUS TERM
+    xauth -q -f "$xserverauthfile" << EOF
 add :$dummy . $mcookie
 EOF
+#ifdef __APPLE__
+    serverargs=${serverargs}" -auth '"${xserverauthfile}"'"
+#else
     serverargs=${serverargs}" -auth "${xserverauthfile}
+#endif
 
     XCOMM now add the same credentials to the client authority file
     XCOMM if '$displayname' already exists do not overwrite it as another
@@ -287,7 +298,7 @@ EOF
         removelist="$displayname $removelist"
         else
             dummy=$(($dummy+1));
-            XAUTH -q -f $xserverauthfile << EOF
+            XAUTH -q -f "$xserverauthfile" << EOF
 add :$dummy . $authcookie
 EOF
         fi
@@ -298,10 +309,16 @@ fi
 if [ "$REMOTE_SERVER" = "TRUE" ]; then
         exec SHELL_CMD ${client}
 else
-        XINIT $client $clientargs -- $server $display $serverargs
+        XINIT "$client" $clientargs -- "$server" $display $serverargs
 fi
 #else
-XINIT $client $clientargs -- $server $display $serverargs
+
+#ifdef __APPLE__
+eval XINIT \"$client\" $clientargs -- \"$server\" $display $serverargs
+#else
+XINIT "$client" $clientargs -- "$server" $display $serverargs
+#endif
+
 #endif
 
 if [ x"$enable_xauth" = x1 ] ; then
@@ -309,7 +326,7 @@ if [ x"$enable_xauth" = x1 ] ; then
         XAUTH remove $removelist
     fi
     if [ x"$xserverauthfile" != x ]; then
-        rm -f $xserverauthfile
+        rm -f "$xserverauthfile"
     fi
 fi
 
