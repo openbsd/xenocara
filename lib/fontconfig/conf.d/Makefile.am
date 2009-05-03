@@ -37,6 +37,7 @@ CONF_FILES = \
 	25-unhint-nonlatin.conf \
 	30-urw-aliases.conf \
 	30-metric-aliases.conf \
+	31-nonmst.conf \
 	40-nonlatin.conf \
 	45-latin.conf \
 	49-sansserif.conf \
@@ -58,6 +59,7 @@ CONF_LINKS = \
 	20-unhint-small-vera.conf \
 	30-urw-aliases.conf \
 	30-metric-aliases.conf \
+	31-nonmst.conf \
 	40-nonlatin.conf \
 	45-latin.conf \
 	49-sansserif.conf \
