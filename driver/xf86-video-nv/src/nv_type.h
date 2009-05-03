@@ -14,13 +14,13 @@
 #define NV_ARCH_40  0x40
 
 
-#define BITMASK(t,b) (((unsigned)(1U << (((t)-(b)+1)))-1)  << (b))
-#define MASKEXPAND(mask) BITMASK(1?mask,0?mask)
-#define SetBF(mask,value) ((value) << (0?mask))
-#define GetBF(var,mask) (((unsigned)((var) & MASKEXPAND(mask))) >> (0?mask) )
-#define SetBitField(value,from,to) SetBF(to, GetBF(value,from))
-#define SetBit(n) (1<<(n))
-#define Set8Bits(value) ((value)&0xff)
+#define NV_BITMASK(t,b) (((unsigned)(1U << (((t)-(b)+1)))-1)  << (b))
+#define NV_MASKEXPAND(mask) NV_BITMASK(1?mask,0?mask)
+#define NV_SetBF(mask,value) ((value) << (0?mask))
+#define NV_GetBF(var,mask) (((unsigned)((var) & NV_MASKEXPAND(mask))) >> (0?mask) )
+#define NV_SetBitField(value,from,to) NV_SetBF(to, NV_GetBF(value,from))
+#define NV_SetBit(n) (1<<(n))
+#define NV_Set8Bits(value) ((value)&0xff)
 
 typedef struct {
     int bitsPerPixel;

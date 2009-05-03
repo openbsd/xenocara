@@ -1,3 +1,97 @@
+commit c0cc7d1247798867c695aeddcffe88edacbb6c7c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Apr 7 13:34:26 2009 -0400
+
+    Remove README.NV1
+    
+    There's no nv1 support here, so.
+
+commit b278aca7d7b92b7fd62045d1aab44d78f694d608
+Author: Bryce Harrington <bryce@bryceharrington.org>
+Date:   Thu Mar 12 16:56:57 2009 -0700
+
+    Add missing pci id for GeForce 7100 GS
+    
+    Signed-off-by: Bryce Harrington <bryce@bryceharrington.org>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 74758ef3b184a37d211572d0deb826bd30d0de13
+Author: Chris Ball <cjb@laptop.org>
+Date:   Fri Feb 27 10:55:11 2009 -0500
+
+    Revert "Build fix: set EXA_DRIVER_KNOWN_MAJOR=3"
+    
+    This reverts commit 492513bf047f7660ef9fd32fda7ebc28704079be.
+    The EXA developers have backed out this ABI bump.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 492513bf047f7660ef9fd32fda7ebc28704079be
+Author: Chris Ball <cjb@laptop.org>
+Date:   Tue Feb 24 23:44:47 2009 -0500
+
+    Build fix: set EXA_DRIVER_KNOWN_MAJOR=3
+    
+    EXA in server HEAD requires this now.  Since this driver doesn't
+    use {Prepare,Finish}Access or UploadToScratch, the change is safe.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit b9140a510efa49b36973d02f1e110d33d22e653d
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Feb 3 13:28:07 2009 -0800
+
+    Add NV_/RIVA_ prefixes to fix build warnings.
+    
+    xserver commit 5e0967f5 pollutes the namespace by adding a "SetBit" macro to
+    inputstr.h that conflicts with the preexisting ones in nv_type.h and
+    riva_type.h.
+
+commit 3890a0aefc4c133999a10fad9d32745b635634ac
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:43:04 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit 302ffbefb880afb7e297c4a41ed3c106b7623fdb
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:31:55 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit 6c6511f4bd933410778e93429bd37e2f24b78618
+Author: Chris Ball <cjb@laptop.org>
+Date:   Mon Nov 3 20:08:32 2008 -0500
+
+    Build fix, s/pNv->/pRiva->/.
+    
+    Fixes 52c034f5a41195f2b3193ec8c18b3f4ed7a763a3.
+
+commit 52c034f5a41195f2b3193ec8c18b3f4ed7a763a3
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Nov 3 15:01:58 2008 -0500
+
+    Do E-EDID if built against a server that supports it.
+
+commit b5f33108fea77280c9acd219954f20401f760faf
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Oct 27 17:54:36 2008 -0400
+
+    Adjust the nv34 panel tweak for Toshiba Tecra M2.
+
+commit e387bf31aae78d4447b4af555a8d09f79f72e6e7
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Oct 17 20:45:18 2008 -0700
+
+    Only match PCI display devices in our display driver.
+    
+    Apparently the server needs the driver to tell it that no, we really don't want
+    screen sections on our NIC, USB hubs, bridge devices, etc.
+    
+    Stop whining about PROBE_DETECT in G80 PreInit and just bail out instead.
+    
+    Bug #18099: Xorg -configure tries to create a screen for every nvidia device.
+
 commit 27e2a98531e8b190a73d126508400283e0fb02df
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Thu Aug 28 11:19:04 2008 -0700
@@ -547,7 +641,7 @@ Date:   Mon Jun 4 22:38:14 2007 -0700
     Move some register writes into G80CreateSor.
 
 commit 402b1d1526f0dacd2e3a2564cc89958c32d3100e
-Merge: 1f4790a... 9b8470e...
+Merge: 1f4790a 9b8470e
 Author: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Date:   Sun Jun 3 11:18:50 2007 +1000
 
@@ -619,7 +713,7 @@ Date:   Mon Apr 16 02:23:26 2007 -0700
     No acceleration yet.
 
 commit c6e4105ce40ef053e026cc0ffe4925ab568ea700
-Merge: 5d9b75b... 4ff648c...
+Merge: 5d9b75b 4ff648c
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Tue Apr 24 15:43:48 2007 -0700
 

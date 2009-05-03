@@ -42,8 +42,21 @@ NVDACPanelTweaks(NVPtr pNv, NVRegPtr state)
           we can do is experiment and apply hacks. */
 
        if(((pNv->Chipset & 0xffff) == 0x0328) && (state->bpp == 32)) {
-          /* At least one NV34 laptop needs this workaround. */
-          tweak = -1;
+#if XSERVER_LIBPCIACCESS
+          if (((pNv->PciInfo->subvendor_id & 0xffff) == 0x1179) &&
+              ((pNv->PciInfo->subdevice_id & 0xffff) == 0x0020))
+#else
+          if (((pNv->PciInfo->subsysVendor & 0xffff) == 0x1179) &&
+              ((pNv->PciInfo->subsysCard & 0xffff) == 0x0020))
+#endif
+          {
+
+             /* Toshiba Tecra M2 */
+             tweak = 1;
+          } else {
+             /* At least one NV34 laptop needs this workaround. */
+             tweak = -1;
+          }
        }
 
        if((pNv->Chipset & 0xfff0) == 0x0310) {
@@ -105,58 +118,58 @@ NVDACInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
            horizTotal += 2;
     }
 
-    pVga->CRTC[0x0]  = Set8Bits(horizTotal);
-    pVga->CRTC[0x1]  = Set8Bits(horizDisplay);
-    pVga->CRTC[0x2]  = Set8Bits(horizBlankStart);
-    pVga->CRTC[0x3]  = SetBitField(horizBlankEnd,4:0,4:0) 
-                       | SetBit(7);
-    pVga->CRTC[0x4]  = Set8Bits(horizStart);
-    pVga->CRTC[0x5]  = SetBitField(horizBlankEnd,5:5,7:7)
-                       | SetBitField(horizEnd,4:0,4:0);
-    pVga->CRTC[0x6]  = SetBitField(vertTotal,7:0,7:0);
-    pVga->CRTC[0x7]  = SetBitField(vertTotal,8:8,0:0)
-                       | SetBitField(vertDisplay,8:8,1:1)
-                       | SetBitField(vertStart,8:8,2:2)
-                       | SetBitField(vertBlankStart,8:8,3:3)
-                       | SetBit(4)
-                       | SetBitField(vertTotal,9:9,5:5)
-                       | SetBitField(vertDisplay,9:9,6:6)
-                       | SetBitField(vertStart,9:9,7:7);
-    pVga->CRTC[0x9]  = SetBitField(vertBlankStart,9:9,5:5)
-                       | SetBit(6)
+    pVga->CRTC[0x0]  = NV_Set8Bits(horizTotal);
+    pVga->CRTC[0x1]  = NV_Set8Bits(horizDisplay);
+    pVga->CRTC[0x2]  = NV_Set8Bits(horizBlankStart);
+    pVga->CRTC[0x3]  = NV_SetBitField(horizBlankEnd,4:0,4:0) 
+                       | NV_SetBit(7);
+    pVga->CRTC[0x4]  = NV_Set8Bits(horizStart);
+    pVga->CRTC[0x5]  = NV_SetBitField(horizBlankEnd,5:5,7:7)
+                       | NV_SetBitField(horizEnd,4:0,4:0);
+    pVga->CRTC[0x6]  = NV_SetBitField(vertTotal,7:0,7:0);
+    pVga->CRTC[0x7]  = NV_SetBitField(vertTotal,8:8,0:0)
+                       | NV_SetBitField(vertDisplay,8:8,1:1)
+                       | NV_SetBitField(vertStart,8:8,2:2)
+                       | NV_SetBitField(vertBlankStart,8:8,3:3)
+                       | NV_SetBit(4)
+                       | NV_SetBitField(vertTotal,9:9,5:5)
+                       | NV_SetBitField(vertDisplay,9:9,6:6)
+                       | NV_SetBitField(vertStart,9:9,7:7);
+    pVga->CRTC[0x9]  = NV_SetBitField(vertBlankStart,9:9,5:5)
+                       | NV_SetBit(6)
                        | ((mode->Flags & V_DBLSCAN) ? 0x80 : 0x00);
-    pVga->CRTC[0x10] = Set8Bits(vertStart);
-    pVga->CRTC[0x11] = SetBitField(vertEnd,3:0,3:0) | SetBit(5);
-    pVga->CRTC[0x12] = Set8Bits(vertDisplay);
+    pVga->CRTC[0x10] = NV_Set8Bits(vertStart);
+    pVga->CRTC[0x11] = NV_SetBitField(vertEnd,3:0,3:0) | NV_SetBit(5);
+    pVga->CRTC[0x12] = NV_Set8Bits(vertDisplay);
     pVga->CRTC[0x13] = ((pLayout->displayWidth/8)*(pLayout->bitsPerPixel/8));
-    pVga->CRTC[0x15] = Set8Bits(vertBlankStart);
-    pVga->CRTC[0x16] = Set8Bits(vertBlankEnd);
+    pVga->CRTC[0x15] = NV_Set8Bits(vertBlankStart);
+    pVga->CRTC[0x16] = NV_Set8Bits(vertBlankEnd);
 
     pVga->Attribute[0x10] = 0x01;
 
     if(pNv->Television)
        pVga->Attribute[0x11] = 0x00;
 
-    nvReg->screen = SetBitField(horizBlankEnd,6:6,4:4)
-                  | SetBitField(vertBlankStart,10:10,3:3)
-                  | SetBitField(vertStart,10:10,2:2)
-                  | SetBitField(vertDisplay,10:10,1:1)
-                  | SetBitField(vertTotal,10:10,0:0);
+    nvReg->screen = NV_SetBitField(horizBlankEnd,6:6,4:4)
+                  | NV_SetBitField(vertBlankStart,10:10,3:3)
+                  | NV_SetBitField(vertStart,10:10,2:2)
+                  | NV_SetBitField(vertDisplay,10:10,1:1)
+                  | NV_SetBitField(vertTotal,10:10,0:0);
 
-    nvReg->horiz  = SetBitField(horizTotal,8:8,0:0) 
-                  | SetBitField(horizDisplay,8:8,1:1)
-                  | SetBitField(horizBlankStart,8:8,2:2)
-                  | SetBitField(horizStart,8:8,3:3);
+    nvReg->horiz  = NV_SetBitField(horizTotal,8:8,0:0) 
+                  | NV_SetBitField(horizDisplay,8:8,1:1)
+                  | NV_SetBitField(horizBlankStart,8:8,2:2)
+                  | NV_SetBitField(horizStart,8:8,3:3);
 
-    nvReg->extra  = SetBitField(vertTotal,11:11,0:0)
-                    | SetBitField(vertDisplay,11:11,2:2)
-                    | SetBitField(vertStart,11:11,4:4)
-                    | SetBitField(vertBlankStart,11:11,6:6);
+    nvReg->extra  = NV_SetBitField(vertTotal,11:11,0:0)
+                    | NV_SetBitField(vertDisplay,11:11,2:2)
+                    | NV_SetBitField(vertStart,11:11,4:4)
+                    | NV_SetBitField(vertBlankStart,11:11,6:6);
 
     if(mode->Flags & V_INTERLACE) {
        horizTotal = (horizTotal >> 1) & ~1;
-       nvReg->interlace = Set8Bits(horizTotal);
-       nvReg->horiz |= SetBitField(horizTotal,8:8,4:4);
+       nvReg->interlace = NV_Set8Bits(horizTotal);
+       nvReg->horiz |= NV_SetBitField(horizTotal,8:8,4:4);
     } else {
        nvReg->interlace = 0xff;  /* interlace off */
     }

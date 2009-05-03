@@ -303,6 +303,7 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE0167, "GeForce Go 6200" },
   { 0x10DE0168, "GeForce Go 6400" },
   { 0x10DE0169, "GeForce 6250" },
+  { 0x10DE016A, "GeForce 7100 GS" },
 
   { 0x10DE0211, "GeForce 6800" },
   { 0x10DE0212, "GeForce 6800 LE" },

@@ -9,13 +9,13 @@
 #include "xf86int10.h"
 
 
-#define BITMASK(t,b) (((unsigned)(1U << (((t)-(b)+1)))-1)  << (b))
-#define MASKEXPAND(mask) BITMASK(1?mask,0?mask)
-#define SetBF(mask,value) ((value) << (0?mask))
-#define GetBF(var,mask) (((unsigned)((var) & MASKEXPAND(mask))) >> (0?mask) )
-#define SetBitField(value,from,to) SetBF(to, GetBF(value,from))
-#define SetBit(n) (1<<(n))
-#define Set8Bits(value) ((value)&0xff)
+#define RIVA_BITMASK(t,b) (((unsigned)(1U << (((t)-(b)+1)))-1)  << (b))
+#define RIVA_MASKEXPAND(mask) RIVA_BITMASK(1?mask,0?mask)
+#define RIVA_SetBF(mask,value) ((value) << (0?mask))
+#define RIVA_GetBF(var,mask) (((unsigned)((var) & RIVA_MASKEXPAND(mask))) >> (0?mask) )
+#define RIVA_SetBitField(value,from,to) RIVA_SetBF(to, RIVA_GetBF(value,from))
+#define RIVA_SetBit(n) (1<<(n))
+#define RIVA_Set8Bits(value) ((value)&0xff)
 
 typedef RIVA_HW_STATE* RivaRegPtr;
 

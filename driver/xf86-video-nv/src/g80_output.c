@@ -307,7 +307,11 @@ ProbeDDC(I2CBusPtr i2c)
             "Probing for EDID on I2C bus %i...\n", bus);
     pNv->reg[addr/4] = 7;
     /* Should probably use xf86OutputGetEDID here */
+#ifdef EDID_COMPLETE_RAWDATA
+    monInfo = xf86DoEEDID(pScrn->scrnIndex, i2c, TRUE);
+#else
     monInfo = xf86DoEDID_DDC2(pScrn->scrnIndex, i2c);
+#endif
     pNv->reg[addr/4] = 3;
 
     if(monInfo) {
