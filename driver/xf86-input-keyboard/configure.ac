@@ -22,9 +22,14 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-keyboard],
-        1.3.1,
+        1.3.2,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-keyboard)
+
+# Require xorg-macros version 1.2 or newer for XORG_CWARNFLAGS and
+# XORG_CHANGELOG macros
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2.1 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.2.1)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(.)
@@ -43,8 +48,6 @@ AC_PROG_LIBTOOL
 AC_PROG_CC
 
 AH_TOP([#include "xorg-server.h"])
-
-m4_ifdef([AS_HELP_STRING], , [m4_define([AS_HELP_STRING], m4_defn([AC_HELP_STRING]))])
 
 case $host_os in
   linux*)
@@ -98,8 +101,7 @@ AC_ARG_WITH(xorg-module-dir,
                            [Default xorg module directory [[default=$libdir/xorg/modules]]]),
             [moduledir="$withval"],
             [moduledir="$libdir/xorg/modules"])
-inputdir=${moduledir}/input
-AC_SUBST(inputdir)
+AC_SUBST(moduledir)
 
 # Checks for extensions
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
@@ -110,8 +112,9 @@ XORG_DRIVER_CHECK_EXT(XKB, kbproto)
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.2.99.0] xproto $REQUIRED_MODULES)
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
-CFLAGS="$CFLAGS $XORG_CFLAGS "' -I$(top_srcdir)/src'
-AC_SUBST([CFLAGS])
+XORG_CWARNFLAGS
+XORG_CFLAGS="$CWARNFLAGS $XORG_CFLAGS"
+AC_SUBST([XORG_CFLAGS])
 
 # Checks for libraries.
 
@@ -120,5 +123,6 @@ AC_HEADER_STDC
 
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
+XORG_CHANGELOG
 
 AC_OUTPUT([Makefile src/Makefile man/Makefile])

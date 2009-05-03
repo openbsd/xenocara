@@ -1,51 +1,663 @@
-2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+commit 708ecbf8557d9e676e3bb07c1f83170f6d9f7cd7
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Jan 7 15:09:01 2009 -0200
 
-	* configure.ac:
-	* src/kbd.c:
-	Unlibcwrap.  Bump server version requirement.  Bump to 1.1.0.
+    Update for servers newer then 1.5 or git master.
+    
+      The atKeynames.h header was moved to the kbd driver sources as
+    well as the xf86CommonSpecialKey() function. This problem probably
+    got unnoticed for quite sometime, mainly because most people doing
+    regular builds should either not have been building the kbd driver,
+    or had atKeynames.h in /usr/include/xorg from a previous install.
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 9294caab68d58d13f429b7c0b23541b99f2b0dae
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Nov 18 18:40:58 2008 -0800
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    Renamed subdir .cvsignore files to .gitignore
 
-2005-12-19  Alan Coopersmith  <alan.coopersmith@sun.com>
+commit 74b6461c5362e3401fdcf5a080bf71e6f7908e09
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Nov 11 17:35:55 2008 -0800
 
-	* man/kbd.man: 
-	* man/keyboard.man:
-	Correct documentation of XKB default settings
-	
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    sun_kbd.c: Don't try to repeat shutdown actions on already closed keyboard
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+commit 3e28d68b50d291938734e9684b8296ca864f3892
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Mon Oct 13 15:22:32 2008 +0200
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Set TERMINATE_FALLBACK to 0.
+    
+    This stops the keyboard driver from sending 2 extra ctrl-alt-backspace
+    events to the server.
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+commit eecfd24481b5768692409666b16b666e71ec97f8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Aug 19 15:28:02 2008 -0400
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Remove useless call to xf86AddModuleInfo
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+commit 574442b906fa8ff600d2fd32fdb2bf953b3bb5fa
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Aug 19 10:20:47 2008 -0400
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Remove XFree86-Misc leftovers.
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+commit 80b04aa649f5e65294439264b6bbb0dc90c22a7c
+Author: Kristian HÃ¸gsberg <krh@redhat.com>
+Date:   Thu Jul 24 16:39:02 2008 -0400
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+    Move atKeynames.h and xf86CommonSpecialKey() here.
 
-	* configure.ac:
-	Only build dlloader modules by default.
+commit ef7873db2861a9aa103eaabbe84b4396e64ff3a1
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 15:39:59 2008 -0400
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    keyboard 1.3.1
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+commit a1866e2e73f0b401cd8e92fc9ee8db1791585936
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Apr 9 14:36:58 2008 -0300
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Don't send events in DEVICE_INIT, only after DEVICE_ON.
+    
+    See http://bugs.freedesktop.org/show_bug.cgi?id=2243#c15 for a description of
+    the problem fixed in this patch.
+    
+    Now only the driver leds state is synched with virtual console state, and if
+    required, events are post in DEVICE_ON.
+    This also defines an internal INITFLAG state to know when DEVICE_ON is called
+    after DEVICE_INIT, otherwise, it will only send events for leds that changed
+    state while the device was in "DEVICE_OFF state".
+    
+    Signed-off-by: Peter Hutterer <peter@cs.unisa.edu.au>
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+commit 86b16003ef1134a2471cd3f7ac217db574fa714c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 20 16:05:05 2008 -0400
+
+    keyboard 1.3.0
+
+commit af3adb8e24c03fcd86ad63208ce525cd4db876ac
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Mar 17 19:19:45 2008 -0700
+
+    Correct COPYING file and note which notices apply to which code/OS'es
+
+commit 49bf7022f85886d06ba4991364e6e28f17d78f2b
+Author: Daniel Drake <ddrake@brontes3d.com>
+Date:   Mon May 21 13:53:01 2007 -0800
+
+    Bug 11026: xf86-input-keyboard COPYING file
+    
+    X.Org Bugzilla #11026 <https://bugs.freedesktop.org/show_bug.cgi?id=11026>
+
+commit 0382ed1c0c29ee19cfa8bff213ee32a7d0c06da9
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Feb 8 19:00:57 2008 -0200
+
+    Alternate patch to preserve NumLock & CapsLock leds at X Server startup.
+    
+      This patch requires reverting commits:
+    7148a0c3e04668b7608295ebdf94579f6acfa544 and
+    0f3716db01681876cc385727beeb842af5b950d3
+      Also, it is assumed that the os specific GetLeds will properly
+    use bit 0 for caps lock and bit 1 for num lock.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 382ad4ef28b8393b385ac1d2426c5b22076ea165
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Mar 17 18:48:47 2008 -0700
+
+    Revert previous attempts to sync lock state & LEDs
+    
+    See next commit for improved fix
+
+commit 0c8220690c726d61a250ad5aec9171009f523043
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Mar 17 18:46:15 2008 -0700
+
+    Use $(XKBPATH) for xkb file path in man page
+
+commit e32e610b719c7dc7a78a1b991b12521863877e51
+Author: Matej Kosik <kosik@fiit.stuba.sk>
+Date:   Fri Feb 15 08:53:48 2008 -0800
+
+    Add information & example of XKB options to man page
+
+commit ea46dd17058f6a880ed38102d1fde1dcba1f8215
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 23:04:13 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit 0f3716db01681876cc385727beeb842af5b950d3
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Wed Jan 16 10:18:59 2008 +1030
+
+    lnx: Automatically inherit the vt's numlock and capslock status (Bug #2243)
+    
+    X.Org Bug #2243 <https://bugs.freedesktop.org/show_bug.cgi?id=2243>
+
+commit 882b28a452db6ebe1499d9558d0028cebb0e032f
+Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
+Date:   Wed Dec 12 22:43:04 2007 +0100
+
+    Fix parameters order for printWsType().
+
+commit b139da4553e71896689e8f522e5cff58f5bb7674
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 3 11:57:40 2007 -0500
+
+    Don't sleep(1) on VT entry.
+
+commit ec247cd91cf147a8d1e79b0746680b049269798f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 11 16:42:33 2007 -0700
+
+    Update kbd man page to say it has replaced keyboard driver now.
+
+commit 278c7d8f44ba7393a95ab1a4a557d6f385044022
+Author: David Marx <david.marx@sun.com>
+Date:   Wed Oct 10 16:18:12 2007 -0700
+
+    Sun bug #6425775 Xserver is blocked when a program rings keyboard-bell
+    
+    Use KIOCMKTONE ioctl instead on Solaris versions that have it
+    <http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6425775>
+
+commit 10792dc1eebf9f718e0cad0b425a8b8307a7ebc7
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Thu Sep 6 18:41:28 2007 +0200
+
+    Remove the legacy keyboard driver's manpage
+
+commit 3d88a17403df55d28e85ebc445b798cdce23e581
+Author: Eric Anholt <eric@anholt.net>
+Date:   Wed Sep 5 09:09:06 2007 -0700
+
+    Bump version to 1.2.2 for release.
+
+commit 3b87c8e164a5a4e79900b70e38e09c85bc99ce25
+Author: Eric Anholt <eric@anholt.net>
+Date:   Mon Aug 20 15:36:37 2007 -0700
+
+    Bug #9748: Include GPL license by Rik Faith for some lnx_kbd.c contents.
+    
+    The code in question was clearly copy-and-pasted from the kbdrate.c.c file.
+
+commit 095c59f70b58b87e627b3150f3a4694d66b75746
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jul 18 18:32:59 2007 -0700
+
+    Remove unused variables
+
+commit 7148a0c3e04668b7608295ebdf94579f6acfa544
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jul 18 17:29:16 2007 -0700
+
+    Sun bug 6312042: Preserve NumLock & CapsLock state on Xorg startup
+    
+    If either the NumLock or CapsLock leds on the keyboard are on at startup,
+    generate fake NumLock/CapsLock keypresses to set the server state to match.
+    <http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6312042>
+    
+    Based on earlier Xsun fix for Sun bug #4185550
+    <http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=4185550>
+
+commit db0254abb0ba68c6dfb2443d1170d9d1e895021d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jul 18 16:30:35 2007 -0700
+
+    Remove old wrappers used for sharing code between keyboard & kbd drivers
+
+commit 256da8cc284a3a66a4a41ec7708b0b467c30b369
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jul 18 11:07:12 2007 -0700
+
+    Update key mappings before we walk them looking for modifiers, not after
+
+commit 8fe8b62ab3fcc8c51d61dcc2e658e6733da3edfb
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jul 17 20:11:17 2007 -0700
+
+    renamed: .cvsignore -> .gitignore
+
+commit 7e412914fc1e2372890c2af46263f4cefab8cbfe
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jul 17 20:10:50 2007 -0700
+
+    Update Solaris port to work with os layer move into kbd driver
+    
+    Also remove old code only needed for obsolete "keyboard" driver
+    Fix default keysym map on Solaris to work correctly when XKB fails
+
+commit 36cf953910002a00a3694033d49c6c38319b0283
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Jun 13 23:02:58 2007 +1000
+
+    Keep module version up-to-date using PACKAGE_VERSION_*
+
+commit 05dd89ef03cee6853e7c2db518b6b22785cc3e7c
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Mon Feb 5 14:29:54 2007 -0800
+
+    Fix key led update
+    
+    Cf: https://bugs.freedesktop.org/show_bug.cgi?id=313
+        https://bugs.freedesktop.org/attachment.cgi?id=8396&action=view
+    
+     ------- Comment  #8 From Samuel Thibault  2007-01-14 14:28:16  [reply] -------
+    
+    Created an attachment (id=8396) [details]
+    fix key led update
+    
+    Ok, found the problem: when XKB is used (!pKbd->noXkb), pKbd->keyLeds is not
+    updated, so that UpdateLeds(), even if it called at the right places, actually
+    just clears all LEDs.  Here is a patch.
+
+commit caeb0f364c1a95a9ad3e64dd722c8ddc88077a86
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Dec 8 09:09:24 2006 +0200
+
+    don't release keys on newer servers
+    On newer servers, we take care of the key release over VT switch already,
+    so don't do it twice; that will lead to hilarious results.
+
+commit fd51e4d27d7a31ed9d4a075c3814b36320af4612
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Nov 7 00:10:54 2006 +0200
+
+    add xf86Keymap.h, fix _SOURCES -> _SRCS in Makefile.am
+
+commit 976e12d85920d5bd09f6d0ba005835f733b296b7
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Nov 4 21:01:55 2006 +0200
+
+    bump to 1.2.1
+
+commit 08aa290b0125eb681f872ef821ecffd5818caeb6
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Nov 4 21:01:49 2006 +0200
+
+    add xf86OSKbd.h to build system, _SOURCES -> _SRCS
+    Add xf86OSKbd.h to the build system, and change _SOURCES use to _SRCS,
+    except when explicitly referring to a target.  This keeps automake 1.10
+    happy.
+
+commit 95e5d2521fc39a661e13b313e5aa2514ddac9a5e
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Nov 2 00:24:24 2006 +0200
+
+    move os keyboard layer into kbd driver, remove legacy keyboard driver
+    Completely remove the old 'keyboard' driver.
+    Move the OS keyboard layer from the Xorg DDX into the kbd driver.  Right
+    now, BSD, Linux, SCO, and Solaris, have been dragged over.
+    Bump to 1.2.0, as we'll collide badly with the existing OS keyboard layer.
+
+commit 3bfed2fc2e401bc4b5f74a3f20014d4a5c7dad30
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Oct 13 18:26:38 2006 -0400
+
+    Bump to 1.1.1
+
+commit d3c6014290a90a985679c9258fe65be3d89bf7b9
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Jul 9 19:57:36 2006 +0200
+
+    Added some missing includes.
+
+commit c94229993dc2a8672802ef8ab35717089b74ab80
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 17:47:17 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.1.0.
+
+commit 01744910cd7c4034fa1dd14ef734d7087832647d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:57 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 9bd0521c65760d4e555ac992a92ce74ce8d55437
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:51 2005 +0000
+
+    Stub COPYING files
+
+commit 75d352b91ff79b5b55dbd7c5d3952470de87704f
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Dec 19 09:07:50 2005 +0000
+
+    Typo fixes, mailing list & url updates, and other changes to prepare for
+        X11R6.9 & 7.0 releases.
+
+commit 29309dd08deb535262625c2eb73558c6eae69336
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:14 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit a459e2028834e76e21117070d073cc9489b0d65f
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:30 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit 9c5c0e3d211fcce658aa667d8be7f979b9cb83cd
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:31 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit edb6ec6c311543686230a43885183071e92dc60d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:05 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit 0721c4b4a75fe836d17445550746ed415f06d126
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:56 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 9885aa10eeb6e42212a0e21861790b72adc3ce71
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:07 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit ec4425c0ddb1dd45fb24e3984d490a68ff211b08
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:05 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit e5451950a80744b183f5e8f4259ff2e596952a13
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:31:23 2005 +0000
+
+    Bump version numbers for X11R6.9/X11R7 RC2.
+
+commit 066e7c7d2768dec2c033a2ce723abbe31495f6d0
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:12 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 4442fdf90f51cc265679b61cc341f6ed32e134a1
+Author: Kean Johnson <kean@armory.com>
+Date:   Tue Nov 8 06:33:28 2005 +0000
+
+    See ChangeLog entry 2005-11-07 for details.
+
+commit 85dfda745021f49f01424d6a01c6396865d1723d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:50 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit 288c4a7f79b9fb4b0531fe7cf21dec7f7f4a3668
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:00 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 4861d1586d6ce54a8563047fa01016b658517d8f
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Oct 18 15:46:36 2005 +0000
+
+    Do the following to make the drivers pass distcheck:
+    - Only define EXTRA_DIST when there are actually man pages to be processed
+    - Add missing man pages to keyboard and ati drivers EXTRA_DIST
+
+commit f7e91cad97e22e05b87de3d16a0f4299ea471a88
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:51 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 9e5a8ec5b63ec730916c0312cf6d65c26fd138d5
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:28 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit f06abf1decb60bdaf453b0d73f05f45b833b843a
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:08:58 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 8668a70c065a3cba91a0f4b75c34c4478099bedd
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Sun Oct 16 19:01:25 2005 +0000
+
+    Remove note about kbd being experimental. Add Solaris to supported OS list
+        for kbd.
+    Add note about plans to move to kbd in a future release.
+
+commit a228e916cc1ffa85446c95a6c42380b39d67b9f6
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Oct 1 17:30:58 2005 +0000
+
+    Bug #3411: fix handling of keyboard Autorepeat rate in xorg.conf.
+
+commit 66693592a767baabca9eae015b57e9c6660a080b
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:39 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit ea7e6dfb03714a48edfb04053ac49f71f553872d
+Author: SÃ¸ren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Aug 10 14:07:23 2005 +0000
+
+    Don\'t lose existing CFLAGS in all the input drivers and some of the video
+        drivers
+
+commit 8f930fc988f0d43bf2d964721e846fcf5fed6e4b
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Aug 2 00:51:34 2005 +0000
+
+    AS_HELP_STRING workaround
+
+commit c392a4c091e70d42b498f9e8a55737feedbe2871
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:41 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit b1379685a2fce1f1b2092814d3170cc29f4fd039
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 13 20:03:22 2005 +0000
+
+    Make the module dir configurable
+
+commit 9f91bf7017f10ed23e2d313e47934d803e292dbc
+Author: Alan Hourihane <alanh@fairlite.demon.co.uk>
+Date:   Wed Jul 13 12:30:04 2005 +0000
+
+    //bugs.freedesktop.org/show_bug.cgi?id=2587> Fix keyboard mapping on Sun
+        keyboards in the keyboard module.
+
+commit da10828e418bc7fdbdcd03162ee92b0a999a11b7
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 13 02:21:00 2005 +0000
+
+    Update all input drivers to pass distcheck
+
+commit c9b223867b4922c646dd85c7468b8f79bf5257d5
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Jul 12 06:15:09 2005 +0000
+
+    Build skeletons for input drivers. Should basically work.
+
+commit c9097dd3204d4fe2a3a21cec23948f27ec6292ed
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:38:00 2005 +0000
+
+    Prep input drivers for modularizing by adding guarded #include "config.h"
+
+commit 83efe32bd4a9372467680cafd5880438e551db31
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Jul 1 22:43:22 2005 +0000
+
+    Change all misc.h and os.h references to <X11/foo.h>.
+
+commit ebf2b80b2027ebb99dbe44c7d77fd9f7a43f2e72
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:17:02 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 3360f15f5f4cdd4a6cf204ff8af70a90c314ada3
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Tue May 10 00:12:17 2005 +0000
+
+    Bugzilla #2561: Disable some keycode translations on PC98, which had
+        various bad effects including modifier keys not working.
+
+commit 2ca94be67112a926721ef699f495bc158c4963a4
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:34 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit d157c2188389c84f3ee7594ddd0980f1a3553e97
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Jan 11 14:59:02 2005 +0000
+
+    Minor format fix.
+    Added explanatory comment and debug code.
+    Added comment.
+
+commit b7f68e909640008e831c2ddb67ca4fb9515cec04
+Author: Egbert Eich <eich@suse.de>
+Date:   Mon Jan 10 17:44:39 2005 +0000
+
+    PC keyboards internally generate a different scan code when the ALT
+        modifier is pressed with the SysReq/Print key. Since X expects the same
+        scancode regardless of the modifier the keyboard driver has to 'map the
+        code back'. So far it does so when seeing the SysReq scancode without
+        checking if the modifier is on. If this scancode is also sent by
+        another key on an extended keyboard it receives the same remapping.
+        Fix: Add check for ALT modifier down before doing the remapping (Helmut
+        Fahrion).
+
+commit b04ef340e213badb2e44fb669583b490f7278969
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Dec 6 21:51:11 2004 +0000
+
+    Previous fix broke hardware-based autorepeat. This fix mimics the behaviour
+        of the legacy driver by making a local copy of the autoRepeat flag.
+
+commit db3b5cb60a71f2d5e536797559001dc59090ab6c
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Fri Dec 3 23:30:48 2004 +0000
+
+    programs/Xserver/hw/xfree86/input/keyboard/kbd.c
+    - set default XkbModel to pc105 (like legacy keyboard driver did)
+    - fix autorepeat (Bugzilla #1651, Petter Urkedal).
+
+commit b9bece29e9733bdf4bb44da6ced4d3e0e433f6e5
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Aug 31 01:36:13 2004 +0000
+
+    Fix keyboard driver regression (Bug #1238, Kristian Hoegsberg).
+
+commit 3d97e8a41a8a15769f43233a2ed7692387cb0b81
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sun Aug 29 21:06:00 2004 +0000
+
+    Fix make install when BuildServersOnly is YES (Bug #1213).
+    Fix build failures when UseDeprecatedKeyboardDriver is YES and
+        DoLoadableServer is NO (Bug #1229, Kristian Høgsberg).
+    Fix failure when using DLL loader and LD_BIND_NOW is set (Bug #1212, Adam
+        Jackson).
+
+commit 9e2172ffef436acb9a88147f276c9ddf12739a14
+Author: Kevin E Martin <kem@kem.org>
+Date:   Mon Aug 16 22:48:51 2004 +0000
+
+    Update release and date for first RC.
+    Fix kbd/keyboard driver for DoLoadableServer NO.
+    Revert change since it is better to set date in the config files.
+
+commit 58f47a9c32cf379fd473f01b18ddc57b90e47b0b
+Author: Kevin E Martin <kem@kem.org>
+Date:   Mon Aug 16 20:17:52 2004 +0000
+
+    Add kdb <-> keyboard aliasing when UseDeprecatedKeyboardDriver is NO (Bug
+        #1072, Kristian Høgsberg).
+
+commit 32d5ece27279bf7f1211346f15a292f73ff334d6
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:54:03 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit cbec87bb621bd6bb2fddf1fe9aa970a09acba8f7
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:52 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit f078d9ca112038d16eb9b28d331a900f0ab7bd62
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:33 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit e5e92f4396bc0a73ddda050403d422cee9bdfd2f
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:36:00 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 1056cd4925dc787f72b9f6b5900e55e00d7ba973
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:34 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 1c8924b7c1728653ebe49a663dd6125cef010bc8
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Dec 19 20:55:25 2003 +0000
+
+    XFree86 4.3.99.902 (RC 2)
+
+commit 01eff4e6297717400f8b9517a9e4ccdc067d07d3
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:48 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 303235b2d4a53231a6aa74d4d74d683842477b27
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:56 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 724aeb56e7d6e5940ad6d329f53f5b80a9fc38ae
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:56 2003 +0000
+
+    Initial revision

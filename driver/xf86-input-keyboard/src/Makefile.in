@@ -76,14 +76,14 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(driverdir)"
-driverLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(driver_LTLIBRARIES)
+am__installdirs = "$(DESTDIR)$(kbd_drv_ladir)"
+kbd_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(kbd_drv_la_LTLIBRARIES)
 kbd_drv_la_LIBADD =
 am__kbd_drv_la_SOURCES_DIST = kbd.c xf86OSKbd.h xf86Keymap.h \
-	bsd_KbdMap.c bsd_kbd.c bsd_kbd.h at_scancode.c sun_kbd.c \
-	sun_kbd.h sun_kbdMap.c lnx_KbdMap.c lnx_kbd.c lnx_kbd.h \
-	sco_KbdMap.c sco_kbd.c sco_kbd.h hurd_kbd.c
+	atKeynames.h bsd_KbdMap.c bsd_kbd.c bsd_kbd.h at_scancode.c \
+	sun_kbd.c sun_kbd.h sun_kbdMap.c lnx_KbdMap.c lnx_kbd.c \
+	lnx_kbd.h sco_KbdMap.c sco_kbd.c sco_kbd.h hurd_kbd.c
 am__objects_1 = bsd_KbdMap.lo bsd_kbd.lo at_scancode.lo
 @BSD_TRUE@am__objects_2 = $(am__objects_1)
 am__objects_3 = sun_kbd.lo sun_kbdMap.lo
@@ -131,8 +131,10 @@ BSD_TRUE = @BSD_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -154,6 +156,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 HURD_FALSE = @HURD_FALSE@
 HURD_TRUE = @HURD_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -198,15 +201,9 @@ STRIP = @STRIP@
 VERSION = @VERSION@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -223,34 +220,43 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
-inputdir = @inputdir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
+moduledir = @moduledir@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-driverdir = @inputdir@
-driver_LTLIBRARIES = kbd_drv.la
+AM_CFLAGS = @XORG_CFLAGS@
+kbd_drv_la_LTLIBRARIES = kbd_drv.la
 kbd_drv_la_LDFLAGS = -avoid-version -module
-kbd_drv_la_SOURCES = kbd.c xf86OSKbd.h xf86Keymap.h $(am__append_1) \
-	$(am__append_2) $(am__append_3) $(am__append_4) \
-	$(am__append_5)
+kbd_drv_la_SOURCES = kbd.c xf86OSKbd.h xf86Keymap.h atKeynames.h \
+	$(am__append_1) $(am__append_2) $(am__append_3) \
+	$(am__append_4) $(am__append_5)
+kbd_drv_ladir = @moduledir@/input
 BSD_SRCS = bsd_KbdMap.c bsd_kbd.c bsd_kbd.h at_scancode.c
 HURD_SRCS = hurd_kbd.c at_scancode.c
 LINUX_SRCS = lnx_KbdMap.c lnx_kbd.c lnx_kbd.h at_scancode.c
@@ -290,35 +296,35 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-driverLTLIBRARIES: $(driver_LTLIBRARIES)
+install-kbd_drv_laLTLIBRARIES: $(kbd_drv_la_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
-	test -z "$(driverdir)" || $(mkdir_p) "$(DESTDIR)$(driverdir)"
-	@list='$(driver_LTLIBRARIES)'; for p in $$list; do \
+	test -z "$(kbd_drv_ladir)" || $(mkdir_p) "$(DESTDIR)$(kbd_drv_ladir)"
+	@list='$(kbd_drv_la_LTLIBRARIES)'; for p in $$list; do \
 	  if test -f $$p; then \
 	    f=$(am__strip_dir) \
-	    echo " $(LIBTOOL) --mode=install $(driverLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(driverdir)/$$f'"; \
-	    $(LIBTOOL) --mode=install $(driverLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(driverdir)/$$f"; \
+	    echo " $(LIBTOOL) --mode=install $(kbd_drv_laLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(kbd_drv_ladir)/$$f'"; \
+	    $(LIBTOOL) --mode=install $(kbd_drv_laLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(kbd_drv_ladir)/$$f"; \
 	  else :; fi; \
 	done
 
-uninstall-driverLTLIBRARIES:
+uninstall-kbd_drv_laLTLIBRARIES:
 	@$(NORMAL_UNINSTALL)
-	@set -x; list='$(driver_LTLIBRARIES)'; for p in $$list; do \
+	@set -x; list='$(kbd_drv_la_LTLIBRARIES)'; for p in $$list; do \
 	  p=$(am__strip_dir) \
-	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(driverdir)/$$p'"; \
-	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(driverdir)/$$p"; \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(kbd_drv_ladir)/$$p'"; \
+	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(kbd_drv_ladir)/$$p"; \
 	done
 
-clean-driverLTLIBRARIES:
-	-test -z "$(driver_LTLIBRARIES)" || rm -f $(driver_LTLIBRARIES)
-	@list='$(driver_LTLIBRARIES)'; for p in $$list; do \
+clean-kbd_drv_laLTLIBRARIES:
+	-test -z "$(kbd_drv_la_LTLIBRARIES)" || rm -f $(kbd_drv_la_LTLIBRARIES)
+	@list='$(kbd_drv_la_LTLIBRARIES)'; for p in $$list; do \
 	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
 	  test "$$dir" != "$$p" || dir=.; \
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
 kbd_drv.la: $(kbd_drv_la_OBJECTS) $(kbd_drv_la_DEPENDENCIES) 
-	$(LINK) -rpath $(driverdir) $(kbd_drv_la_LDFLAGS) $(kbd_drv_la_OBJECTS) $(kbd_drv_la_LIBADD) $(LIBS)
+	$(LINK) -rpath $(kbd_drv_ladir) $(kbd_drv_la_LDFLAGS) $(kbd_drv_la_OBJECTS) $(kbd_drv_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -448,7 +454,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES)
 installdirs:
-	for dir in "$(DESTDIR)$(driverdir)"; do \
+	for dir in "$(DESTDIR)$(kbd_drv_ladir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -477,7 +483,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-driverLTLIBRARIES clean-generic clean-libtool \
+clean-am: clean-generic clean-kbd_drv_laLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -496,7 +502,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-driverLTLIBRARIES
+install-data-am: install-kbd_drv_laLTLIBRARIES
 
 install-exec-am:
 
@@ -524,20 +530,20 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-driverLTLIBRARIES uninstall-info-am
+uninstall-am: uninstall-info-am uninstall-kbd_drv_laLTLIBRARIES
 
-.PHONY: CTAGS GTAGS all all-am check check-am clean \
-	clean-driverLTLIBRARIES clean-generic clean-libtool ctags \
-	distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-driverLTLIBRARIES install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
-	pdf pdf-am ps ps-am tags uninstall uninstall-am \
-	uninstall-driverLTLIBRARIES uninstall-info-am
+.PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
+	clean-kbd_drv_laLTLIBRARIES clean-libtool ctags distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am install-exec \
+	install-exec-am install-info install-info-am \
+	install-kbd_drv_laLTLIBRARIES install-man install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-info-am \
+	uninstall-kbd_drv_laLTLIBRARIES
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

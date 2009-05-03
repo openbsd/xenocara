@@ -219,8 +219,11 @@ KbdOff(InputInfoPtr pInfo, int what)
     int i;
 
     /* restore original state */
-    
-    sunKbdSetLeds(pInfo, priv->oleds);
+
+    if (priv->oleds != -1) {
+	sunKbdSetLeds(pInfo, priv->oleds);
+	priv->oleds = -1;
+    }
     
     if (priv->otranslation != -1) {
         SYSCALL(i = ioctl(pInfo->fd, KIOCTRANS, &priv->otranslation));
@@ -251,6 +254,7 @@ KbdOff(InputInfoPtr pInfo, int what)
 		    "%s: cannot pop module '%s' off keyboard device: %s\n",
 		    pInfo->name, priv->strmod, strerror(errno));
 	}
+	priv->strmod = NULL;
     }
 
     return Success;

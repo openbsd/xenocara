@@ -1,6 +1,3 @@
-/* $XdotOrg: driver/xf86-input-keyboard/src/kbd.c,v 1.19 2005/11/09 21:31:23 kem Exp $ */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/input/keyboard/kbd.c,v 1.8 2003/11/03 05:11:47 tsi Exp $ */
-
 /*
  * Copyright (c) 2002 by The XFree86 Project, Inc.
  * Author: Ivan Pascal.
@@ -12,7 +9,6 @@
  * xf86Events.c and xf86Io.c which are
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
  */
-/* $XdotOrg: driver/xf86-input-keyboard/src/kbd.c,v 1.19 2005/11/09 21:31:23 kem Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -211,6 +207,39 @@ SetXkbOption(InputInfoPtr pInfo, char *name, char **option)
        }
     }
 }
+
+
+#define ModifierIsSet(k) ((modifiers & (k)) == (k))
+
+static Bool
+CommonSpecialKey(int key, Bool down, int modifiers)
+{
+  if ((!ModifierIsSet(ShiftMask)) &&
+      (((ModifierIsSet(ControlMask | AltMask)) ||
+        (ModifierIsSet(ControlMask | AltLangMask))))) {
+      switch (key) {
+	
+      case KEY_BackSpace:
+	xf86ProcessActionEvent(ACTION_TERMINATE, NULL);
+	break;
+
+	/*
+	 * The idea here is to pass the scancode down to a list of
+	 * registered routines. There should be some standard conventions
+	 * for processing certain keys.
+	 */
+      case KEY_KP_Minus:   /* Keypad - */
+	if (down) xf86ProcessActionEvent(ACTION_PREV_MODE, NULL);
+	break;
+	
+      case KEY_KP_Plus:   /* Keypad + */
+	if (down) xf86ProcessActionEvent(ACTION_NEXT_MODE, NULL);
+	break;
+      }
+  }
+  return FALSE;
+}
+
 
 static InputInfoPtr
 KbdPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
@@ -432,12 +461,14 @@ static void
 InitKBD(InputInfoPtr pInfo, Bool init)
 {
   char            rad;
-  unsigned int    i;
   xEvent          kevent;
   KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 1
   DeviceIntPtr    pKeyboard = pInfo->dev;
   KeyClassRec     *keyc = pKeyboard->key;
   KeySym          *map = keyc->curKeySyms.map;
+  unsigned int    i;
+#endif
 
   kevent.u.keyButtonPointer.time = GetTimeInMillis();
   kevent.u.keyButtonPointer.rootX = 0;
@@ -658,7 +689,7 @@ PostKbdEvent(InputInfoPtr pInfo, unsigned int scanCode, Bool down)
   }
 
 #ifndef TERMINATE_FALLBACK
-#define TERMINATE_FALLBACK 1
+#define TERMINATE_FALLBACK 0
 #endif
 #ifdef XKB
   if (noXkbExtension
@@ -668,7 +699,7 @@ PostKbdEvent(InputInfoPtr pInfo, unsigned int scanCode, Bool down)
      )
 #endif
   {    
-      if (xf86CommonSpecialKey(specialkey, down, keyc->state))
+      if (CommonSpecialKey(specialkey, down, keyc->state))
 	  return;
       if (pKbd->SpecialKey != NULL)
 	  if (pKbd->SpecialKey(pInfo, specialkey, down, keyc->state))
@@ -852,13 +883,8 @@ xf86KbdPlug(pointer	module,
 {
     static Bool Initialised = FALSE;
 
-    if (!Initialised) {
+    if (!Initialised)
 	Initialised = TRUE;
-#ifndef REMOVE_LOADER_CHECK_MODULE_INFO
-	if (xf86LoaderCheckSymbol("xf86AddModuleInfo"))
-#endif
-	xf86AddModuleInfo(&KbdInfo, module);
-    }
 
     xf86AddInputDriver(&KBD, module, 0);
 
