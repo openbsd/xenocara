@@ -1,3 +1,11 @@
+2009-04-13  Y.C. Chen  <yc_chen@aspedtech.com>
+        * src/ast.h, ast_cursor.c
+        - Fixed xorg bugzilla #20606
+        * src/ast_driver.c
+        - Fixed xorg bugzilla #20472
+        * src/ast_accel.c
+        - Fixed desktop display abnormal if video buffer is above than 16MB
+ 
 2009-01-16  Y.C. Chen  <yc_chen@aspedtech.com>
         * src/ast_driver.c
         - Fixed Support Modes Incorrect Issues on Solaris 10 x86

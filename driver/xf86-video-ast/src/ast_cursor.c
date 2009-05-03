@@ -203,6 +203,10 @@ ASTSetCursorColors(ScrnInfoPtr pScrn, int bg, int fg)
     
     pAST->HWCInfo.fg = (fg & 0x0F) | (((fg>>8) & 0x0F) << 4) | (((fg>>16) & 0x0F) << 8);
     pAST->HWCInfo.bg = (bg & 0x0F) | (((bg>>8) & 0x0F) << 4) | (((bg>>16) & 0x0F) << 8);    
+
+    /* Fixed xorg bugzilla #20609, ycchen@031209 */    
+    ASTLoadCursorImage(pScrn, pAST->HWCInfo.cursorpattern);
+
 }
 
 static void
@@ -222,6 +226,10 @@ ASTLoadCursorImage(ScrnInfoPtr pScrn, UCHAR *src)
     pAST->HWCInfo.height = (USHORT) MAX_HWC_HEIGHT;
     pAST->HWCInfo.offset_x = MAX_HWC_WIDTH - pAST->HWCInfo.width;
     pAST->HWCInfo.offset_y = MAX_HWC_HEIGHT - pAST->HWCInfo.height;
+
+    /* copy to hwc info */
+    for (i=0; i< MAX_HWC_WIDTH*MAX_HWC_HEIGHT/4; i+=4)
+       *(ULONG *) (pAST->HWCInfo.cursorpattern + i) = *(ULONG *) (src + i);
 
     /* copy cursor image to cache */
     pjSrcXor = src;

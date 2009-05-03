@@ -658,10 +658,12 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
    
    pAST->FbMapSize = pScrn->videoRam * 1024;
    
+#if 0   
    if (!ASTMapMem(pScrn)) {
       xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Map FB Memory Failed \n");      	
       return FALSE;
    }
+#endif
 
    pScrn->memPhysBase = (ULONG)pAST->FBPhysAddr;
    pScrn->fbOffset = 0;
@@ -797,6 +799,11 @@ ASTScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
    pScrn = xf86Screens[pScreen->myNum];
    pAST = ASTPTR(pScrn);
    hwp = VGAHWPTR(pScrn);
+
+   if (!ASTMapMem(pScrn)) {
+      xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Map FB Memory Failed \n");      	
+      return FALSE;
+   }
       
 /*   if (!pAST->noAccel) */
    {

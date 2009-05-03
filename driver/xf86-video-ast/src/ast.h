@@ -132,7 +132,8 @@ typedef struct {
     USHORT   		offset_y;
     ULONG		fg;
     ULONG		bg;
-    
+
+    UCHAR               cursorpattern[1024];    
         
 } HWCINFO, *PHWCINFO;
 

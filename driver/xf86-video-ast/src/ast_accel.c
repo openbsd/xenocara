@@ -351,22 +351,29 @@ ASTSubsequentScreenToScreenCopy(ScrnInfoPtr pScrn, int x1, int y1, int x2,
         else
             cmdreg &= ~CMD_ENABLE_CLIP;        
         srcbase = dstbase = 0;
+
+        if (x1 < x2)
+            cmdreg |= CMD_X_DEC;     	
+
+        if (y1 < y2)
+            cmdreg |= CMD_Y_DEC;     	
     
-        if (y1 >= MAX_SRC_Y)
+        if ((y1 + height) >= MAX_SRC_Y)
         {       
             srcbase=pAST->VideoModeInfo.ScreenPitch*y1;
+            y1 = 0;
         }       
         
-        if (y2 >= pScrn->virtualY) 
+        if ((y2 + height) >= pScrn->virtualY) 
         {   
             dstbase=pAST->VideoModeInfo.ScreenPitch*y2;
+            y2 = 0;
         }
               
-        if (x1 < x2)
+        if (cmdreg & CMD_X_DEC)
         {
-        	src_x = x1 + width - 1;
-        	dst_x = x2 + width - 1;
-        	cmdreg |= CMD_X_DEC;     	
+            src_x = x1 + width - 1;
+            dst_x = x2 + width - 1;
         }
         else
         {
@@ -374,20 +381,13 @@ ASTSubsequentScreenToScreenCopy(ScrnInfoPtr pScrn, int x1, int y1, int x2,
             dst_x = x2;	
         }
      
-        if (y1 < y2)
-        {
-            if (srcbase) y1 = 0;
-            if (dstbase) y2 = 0;
-        	
+        if (cmdreg & CMD_Y_DEC)
+        {        	
             src_y = y1 + height - 1;
             dst_y = y2 + height - 1;
-            cmdreg |= CMD_Y_DEC;     	
         }
         else
         {
-            if (srcbase) y1 = 0;
-            if (dstbase) y2 = 0;
-        	
             src_y = y1;
             dst_y = y2;	
         }
