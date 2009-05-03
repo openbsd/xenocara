@@ -22,9 +22,13 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-mouse],
-        1.3.0,
+        1.4.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-mouse)
+
+# Require xorg-macros version >= 1.2.0 for XORG_CWARNFLAGS & XORG_CHANGELOG
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.2)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(.)
@@ -41,26 +45,9 @@ AM_CONFIG_HEADER([config.h])
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CC
+XORG_CWARNFLAGS
 
 AH_TOP([#include "xorg-server.h"])
-
-#AC_DEFINE(XFree86LOADER,1,[Stub define for loadable drivers])
-#
-#AC_ARG_ENABLE(XINPUT, AS_HELP_STRING([--enable-xinput],
-#              [Build XInput support (default: yes)]),
-#              [XINPUT=$enableval],[XINPUT=yes])
-#AM_CONDITIONAL(XINPUT, test "x$XINPUT" = "xyes")
-#if test "x$XINPUT" = "xyes" ; then
-#    AC_DEFINE(XINPUT,1,[Enable XInput support])
-#fi
-#
-#AC_ARG_ENABLE(XKB, AS_HELP_STRING([--enable-xkb],
-#              [Build XKB support (default: yes)]),
-#              [XKB=$enableval],[XKB=yes])
-#AM_CONDITIONAL(XKB, test "x$XKB" = "xyes")
-#if test "x$XKB" = "xyes" ; then
-#    AC_DEFINE(XKB,1,[Enable XKB support])
-#fi
 
 AC_ARG_WITH(xorg-module-dir,
             AC_HELP_STRING([--with-xorg-module-dir=DIR],
@@ -78,16 +65,34 @@ XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901] xproto $REQUIRED_MODULES)
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
-CFLAGS="$CFLAGS $XORG_CFLAGS "' -I$(top_srcdir)/src'
-AC_SUBST([CFLAGS])
-
 # Checks for libraries.
 
 # Checks for header files.
 AC_HEADER_STDC
 
+# Work out which OS mouse driver we need to build
+case $host_os in
+  linux*)
+    OS_MOUSE_NAME=lnx
+    ;;
+  freebsd*|kfreebsd*-gnu|dragonfly*|netbsd*|openbsd*)
+    OS_MOUSE_NAME=bsd
+    ;;
+  solaris*)
+    OS_MOUSE_NAME=sun
+    ;;
+  gnu*)
+    OS_MOUSE_NAME=hurd
+    ;;
+esac
+AC_SUBST([OS_MOUSE_NAME])
+
+dnl Allow checking code with lint, sparse, etc.
+XORG_WITH_LINT
+
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
+XORG_CHANGELOG
 
 XORG_CHECK_LINUXDOC
 

@@ -1,9 +1,8 @@
-.\" $XFree86: xc/programs/Xserver/hw/xfree86/input/mouse/mouse.man,v 1.6 2003/04/03 22:18:31 dawes Exp $ 
 .\" shorthand for double quote that works everywhere.
 .ds q \N'34'
 .TH MOUSE __drivermansuffix__ __vendorversion__
 .SH NAME
-mouse \- Mouse input driver
+mouse \- __xservername__ mouse input driver
 .SH SYNOPSIS
 .nf
 .B "Section \*qInputDevice\*q"
@@ -16,9 +15,9 @@ mouse \- Mouse input driver
 .fi
 .SH DESCRIPTION
 .B mouse 
-is an __xservername__ input driver for mice.  The driver supports most available
-mouse types and interfaces.  USB mice are only supported on some OSs,
-and the level of support for PS/2 mice depends on the OS.
+is an __xservername__ input driver for mice.  The driver supports most 
+available mouse types and interfaces, though the level of support for 
+types of mice depends on the OS.
 .PP
 The
 .B mouse
@@ -26,14 +25,58 @@ driver functions as a pointer input device, and may be used as the
 X server's core pointer.  Multiple mice are supported by multiple
 instances of this driver.
 .SH SUPPORTED HARDWARE
-There is a detailed list of hardware that the
-.B mouse
-driver supports in the
-.I README.mouse
-document.  This can be found
-in __projectroot__/lib/X11/doc/, or online at
-http://www.x.org/current/mouse.html.
+.TP
+USB mouse
+USB (Universal Serial Bus) ports are present on most modern
+computers. Several devices can be plugged into this bus, including
+mice and keyboards.  Support for USB mice is platform specific.
+.TP
+PS/2 mouse
+The PS/2 mouse is an intelligent device and may have more than
+three buttons and a wheel or a roller.
+The PS/2 mouse is usually compatible with the original PS/2 mouse from IBM
+immediately after power up.
+The PS/2 mouse with additional features requires a specialized
+initialization procedure to enable these features.
+Without proper initialization, it behaves as though it were an ordinary
+two or three button mouse.
+.TP
+Serial mouse
+There have been numerous serial mouse models from a number of
+manufacturers.
+Despite the wide range of variations, there have been relatively
+few protocols (data format) with which the serial mouse talks
+to the host computer.
+
+The modern serial mouse conforms to the PnP COM device specification
+so that the host computer can automatically detect the mouse
+and load an appropriate driver.
+This driver supports this specification and can detect
+popular PnP serial mouse models on most platforms.
+.TP 
+Bus mouse
+The bus mouse connects to a dedicated interface card in an expansion
+slot.
+Some older video cards, notably those from ATI, and integrated I/O
+cards may also have a bus mouse connector.
+.PP
+The interface type of the mouse can be determined by looking at the connector 
+of the mouse.
+USB mice have a thin rectangular connector.
+PS/2 mice are equipped with a small, round DIN 6-pin connector.
+Serial mouse have a D-Sub female 9- or 25-pin connector.
+Bus mice have either a D-Sub male 9-pin connector 
+or a round DIN 9-pin connector.
+Some mice come with adapters with which the connector can 
+be converted to another.  If you are to use such an adapter,
+remember that the connector at the very end of the mouse/adapter pair is 
+what matters.
 .SH CONFIGURATION DETAILS
+.PP
+Depending on the X server version in use, input device options may be set
+in either a __xconfigfile__ file, or in the configuration files read by the
+Hardware Abstraction Layer (HAL) daemon, hald(1).
+.PP
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details and for options that can be used with all input drivers.  This
 section only covers configuration details specific to this driver.
@@ -69,7 +112,8 @@ default protocol setting, and specifying this option is mandatory.
 .BI "Option \*qDevice\*q \*q" string \*q
 Specifies the device through which the mouse can be accessed.  A common
 setting is "/dev/mouse", which is often a symbolic link to the real
-device.  This option is mandatory, and there is no default setting.
+device.  This option is mandatory, and there is no default setting. The server
+may however attempt to probe some default devices if this option is missing.
 .TP 7
 .BI "Option \*qButtons\*q \*q" integer \*q
 Specifies the number of mouse buttons.  In cases where the number of buttons
@@ -254,5 +298,8 @@ There are some other options that may be used to control various parameters
 for serial port communication, but they are not documented here because
 the driver sets them correctly for each mouse protocol type.
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__),
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__),
+Xserver(__appmansuffix__), X(__miscmansuffix__),
 README.mouse.
+
+hal(__miscmansuffix__), hald(__adminmansuffix__), fdi(__filemansuffix__).

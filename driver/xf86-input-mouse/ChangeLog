@@ -1,112 +1,835 @@
-2006-05-15  Matthias Hopf  <mhopf@suse.de>
+commit 5058dc340278f2498dd1b4db129dc6dd6b0e0964
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 18:38:57 2009 -0800
 
-	* configure.ac,src/mouse.c:
-	Bump to 1.1.1.
+    Version 1.4.0
 
-2006-04-21  Matthias Hopf  <mhopf@suse.de>
+commit 194fed98fee47801f1ca8eb926bc10a57b7582cb
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 14:41:26 2009 -0800
 
-	* man/mouse.man:
-	Fixed default for YAxisMapping.
-	Changed default for ZAxisMapping. Added short explanation.
-	* src/mouse.c: (MouseCommonOptions), (MouseReadInput):
-	Autodetect (one way only) single wheel only for EXPS2.
-	Use singlebit protocol for multiwheel EXPS2 mice.
+    Add note on hal-based configuration to man page
 
-2006-04-20  Matthias Hopf  <mhopf@suse.de>
+commit 299bd6c164e4e91cf69c41b3c7b97879cfcc0d32
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 08:45:38 2009 -0800
 
-	* src/mouse.c: (MousePostEvent):
-	Overhaul of wheel processing. Does work correctly with multibit
-	zaxis events now.
+    Add copyright notices for OS mouse code to COPYING file
 
-2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+commit 0968d56233804515d347b2001bf817d0fa3611ea
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 8 21:48:13 2009 -0800
 
-	* configure.ac:
-	* src/mouse.c:
-	* src/pnp.c:
-	Unlibcwrap.  Bump server version requirement.  Bump to 1.1.0.
+    Unifdef XFree86LOADER
 
-2006-03-09  Eric Anholt  <anholt@FreeBSD.org>
+commit 47c5e3a368a2922c4cc5e3a9769501fe399287ae
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 8 21:43:58 2009 -0800
 
-	* src/mouse.c: (MouseCommonOptions):
-	Coverity #875: Correct several memory leaks in options parsing.
+    Remove some #if 1 statements
 
-2006-02-28  Adam Jackson  <ajax@freedesktop.org>
+commit 7039165d70079f2e8573ada9323fbc582c825248
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 8 21:38:54 2009 -0800
 
-	* configure.ac:
-	* src/mouse.c:
-	Bump to 1.0.4.
+    Comment typo fixes
 
-2006-02-02  Matthias Hopf  <mhopf@suse.de>
+commit a61f0f92299037fe818a54c2cd9a2d3836698b43
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 8 21:29:00 2009 -0800
 
-	* man/mouse.man:
-	Fixed ButtonMapping default.
+    sun_mouse: fallback to commonOptions for StreamsModule too
 
-2006-01-17  Matthias Hopf  <mhopf@suse.de>
+commit 4623258b48f01306309ff9d39a85565bce57946e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 8 21:21:18 2009 -0800
 
-	* src/mouse.c: (MouseDoPostEvent):
-	Bug #5071: EmulateWheelTimeout didn't work as anticipated.
+    Clear assorted compiler, sparse & lint warnings
+    
+    mouse.c:1004:35: warning: Using plain integer as NULL pointer
+    sun_mouse.c:325: warning: 'absX' might be used uninitialized in this function
+    sun_mouse.c:325: warning: 'absY' might be used uninitialized in this function
+    sun_mouse.c: (158) warning: constant truncated by assignment
+    
+    declared global, could be static:
+        hardProtocolList    mouse.c(3151)
+        softProtocolList    mouse.c(3163)
+        serialDefaultsList  mouse.c(3366)
 
-2006-01-09  Daniel Stone  <daniel@freedesktop.org>
+commit 6f14e8569150b0d6fac7186968cde8b031a1fefc
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 8 21:20:58 2009 -0800
 
-	* src/mouse.c:
-	Remove #ifdef PNP_MOUSE blocks, as it was always defined in the
-	monolith.
+    Add XORG_CWARNFLAGS & XORG_WITH_LINT for more compiler checking
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 24d9306546d325089c5fb6b78b90c24b38c86338
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 8 20:40:10 2009 -0800
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    Replace static changelog with one generated via XORG_CHANGELOG
 
-2005-12-19  Alan Coopersmith  <alan.coopersmith@sun.com>
+commit cd476cc0932bf9440a05e460cd22dbe584585746
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Wed Nov 19 22:23:34 2008 +0100
 
-	* man/mouse.man:
-	Update URL for mouse docs online.
-	Add VUID to supported protocols (used on Solaris).
+    Fix linux build
+    
+    HAVE_XORG_CONFIG_H is a leftover from the server sources (where this file used
+    to reside).
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@redhat.com>
 
-	* README.sgml:
-	Update docs for X11R6.9 & 7.0 releases.
-	Add note about new ButtonMapping option.
-	Explain changes due to "virtual mouse" support in Solaris 10.
-	Change "mices" to "mice".
+commit 003c297d2902092074ede131db0dbc08d9116a5b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Dec 1 14:36:06 2008 -0800
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    sun_mouse: check for Device in commonOptions if pInfo->options isn't set yet
 
-	* configure.ac:
-	* src/mouse.c:
-	Update package version number for final X11R7 release candidate.
-	Bump driver version number.
+commit 1e23b944aae3ef50cc764e6d2f0198deabe790ad
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Nov 22 17:36:14 2008 +0100
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    W axis support for bsd_mouse.
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+commit e7e3cd9bed2bfeb848d62062d0859aa813bf786d
+Author: Matthieu Herrb <matthieu@deville.herrb.net>
+Date:   Fri Nov 21 19:59:22 2008 +0100
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    prevent a double free of mouse private structure.
+    
+    Mark pInfo->private as NULL after freeing it on the error path.
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+commit c98bc45557174f771b031d4a003b54d06b857785
+Author: Matthieu Herrb <matthieu@deville.herrb.net>
+Date:   Fri Nov 21 16:14:01 2008 +0100
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Include xorg-server.h to get the WSCONS_SUPPORT define from
+    xerver SDK configuration.
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+commit 87f20b0c06bc13ed603d36cca881ccf69ac0a68a
+Author: Matthieu Herrb <matthieu@deville.herrb.net>
+Date:   Fri Nov 21 15:42:31 2008 +0100
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+    Build fix: Add a prototype for FindDevice function.
 
-	* configure.ac:
-	Only build dlloader modules by default.
+commit 790a78d3b3d81ea06fc1a31108a330adba8cc069
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Nov 5 21:47:30 2008 -0800
 
-2005-11-22  Daniel Stone  <daniel@freedesktop.org>
+    Fix solarisMouseAutoProbe to use device name & protocol specified by HAL
 
-	* configure.ac:
-	Update dependency on xorg-server to >= 0.99.3, for MouseDriverRec changes.
+commit daac081f34baab7388a8c42e5a80a42cd6810d75
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Nov 5 19:26:38 2008 -0800
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    sun_mouse.c: Use miPointerGetScreen instead of miPointerCurrentScreen
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+commit 431982e7c04ec076eeafd57190db4d7d901efa7c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Nov 5 19:04:32 2008 -0800
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    sun_mouse.c: remove unused variables
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+commit 7bb59519636a7e0028e6f0f63d8256a68a24792d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Nov 5 18:55:07 2008 -0800
+
+    Remove checks for Solaris x86 versions older than Solaris 8
+
+commit 898dfc9ce731ea9515f7819a9f0583af81d7d8b2
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Nov 5 18:51:04 2008 -0800
+
+    Rename OS_SOURCES to stop automake complaints about not building program "OS"
+
+commit ea5cfe804e112f320f14ad896c7802d53551d3e6
+Author: Roland Scheidegger <zak@linux-x.site.my>
+Date:   Sat Oct 4 16:02:08 2008 +0200
+
+    fix compilation (upper/lower case typo)
+
+commit da2ab45e3ee85f164b5430a4d0c5d60cdf71a5ec
+Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
+Date:   Tue Aug 26 22:39:27 2008 -0400
+
+    Change screen private key to an integer variable.
+    
+    Prepares for a devPrivates system that will store an index.
+
+commit d4ed78710b19a8b1c9b5349eacd44599ba075527
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Aug 19 15:12:52 2008 -0700
+
+    Fix sun_mouse.c build on Solaris
+
+commit 04730f0be48d464401796a224109adbee9cd51de
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Aug 19 15:28:48 2008 -0400
+
+    Remove useless call to xf86AddModuleInfo
+
+commit f3f0a5520ed7edac3867a97f5a001b91c870563e
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Jul 20 04:33:07 2008 +0300
+
+    Add OS mouse sources to the driver build
+    
+    Copy across the OS mouse sources and add them to the driver build.  For
+    convenience, the OS mouse versioning stuff was removed, but we have
+    always had the same featureset in all modular builds, so that's okay.
+    
+    Only compile-tested, not runtime-tested.
+
+commit 1214c4ce571caf0bcdb3d9dc04a2b34f4a23c3c0
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jun 10 14:38:26 2008 -0700
+
+    Merge some hardware support information from README.mouse into man page
+
+commit 705d0def1092a2121867fae4e7bc944a240d789a
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 26 21:57:59 2008 +0930
+
+    Check for XINPUT ABI 3.
+
+commit 5d9d865b4ac2d7739ae93a8e0e682535aeb46b6d
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 19 20:28:04 2008 +0930
+
+    Nuke RCS tags.
+
+commit bf634290f7bdf1f5b922f4c28b333a739057f2f0
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Sun Mar 16 02:28:16 2008 -0300
+
+    Compile warning fixes.
+    
+      Ansify a function with K&R style definition.
+      Obey gcc in warning suggest parentheses around assignment used as truth value.
+      Remove some unused variables.
+      Remaining warning is about xf86AddModuleInfo being deprecated.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 7f0623807366b1bc6c0be2e065220be94b669ea7
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Jan 30 17:28:34 2008 -0200
+
+    Make sure xf86MouseProtocolIDToName is of public visibility.
+    
+    This function is called by code in the xf86misc to change mouse parameters,
+    after checking it's availability using LoaderSymbol().
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 82231d2309a54ecf7de3f29809416b2ea5f2d3cd
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Tue Apr 15 15:54:17 2008 +0930
+
+    man: Note that the server may probe default "Device" options.
+    
+    X.Org Bug 15245 <http://bugs.freedesktop.org/show_bug.cgi?id=15425>
+
+commit 9192640066e3917062cb3ee1c761a83196bfb721
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 20 16:26:52 2008 -0400
+
+    mouse 1.3.0
+
+commit d6ceabc1b58d752cb2af03519c15012206904f70
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 23:10:03 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit 78272e117ceea12b8863f31688da66b20e160311
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 3 13:27:02 2008 -0800
+
+    Update Emulate3Button default in mouse man page to cover Emulate3ButtonsSoft
+
+commit 6a03e8bd9699a33dabcdd2bbcf51a001ddfd5534
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Fri Nov 16 16:45:45 2007 +1030
+
+    Bug #13144: Don't flush buttons, release events can cause paste events.
+
+commit 76a2231f87551f7c1943df18bc537b9b15987562
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 3 11:59:12 2007 -0500
+
+    Don't sleep(0.3) on shutdown.
+
+commit 0352a4db368eaab2df5fa77d4003e1363b3ea4fb
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Wed Oct 3 14:06:50 2007 +0200
+
+    Bumped version to 1.2.3.
+
+commit f42ea3027c13046dfa7a603737b476fbf2833764
+Author: Fredrik Rinnestam <fredrik@obra.se>
+Date:   Wed Sep 19 23:24:13 2007 +0200
+
+    Bug #12145: Don't confine the pointer to one screen in zaphod mode.
+    
+    Fix ported from evdev's b4a5a20476f7bc77d54a860d7cdd81c223bdb81f.
+
+commit 53bdd4db01f05595beb37e68842118eb649308d3
+Author: Daniel Drake <ddrake@brontes3d.com>
+Date:   Tue May 29 12:14:00 2007 -0800
+
+    Bug #11089: xf86-input-mouse COPYING file
+    
+    X.Org Bugzilla #11089 <https://bugs.freedesktop.org/show_bug.cgi?id=11089>
+
+commit 111081a2f15b416c2fd05b667bca3b3982f93245
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Aug 1 15:55:51 2007 +0200
+
+    bump to 1.2.2
+
+commit 8d329a4a23cdaa970e41fa33ee2babc4687189f2
+Author: Brice Goglin <Brice.Goglin@ens-lyon.org>
+Date:   Wed Jul 25 19:22:27 2007 +0200
+
+    Fix typo in mousedrv.man
+    
+    Reported by "A. Costa" <agcosta@gis.net> in
+    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=432060
+
+commit c7c012d8bf735dfa894146b379a2e1fd55f57fca
+Author: Drew Parsons <dparsons@debian.org>
+Date:   Thu Jun 14 00:24:07 2007 +1000
+
+    Update version using PACKAGE_VERSION_*
+
+commit e567cb0792ea3dc2cd68c46628332c1f8bbb173d
+Author: Jürgen Appel <jappel@linux01.gwdg.de>
+Date:   Mon Apr 23 15:54:08 2007 +0200
+
+    Added "Sensitivity" option. Use for slowing down high resolution mice.
+
+commit 4666e5f14b2cb63f5cd7c863331fe69658c989df
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 26 13:36:15 2007 -0800
+
+    renamed: .cvsignore -> .gitignore
+
+commit 92a8e2a39d7c9d6bfdaa0a5ac0118599008638ff
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 26 13:35:42 2007 -0800
+
+    Update text version of README to match sgml
+    
+    Oops - forgot to regen text when the sgml changes were checked in for
+    commit 28c5410df7ba8af07b994c0907519e869c9df750
+
+commit e355dc2e04b1b4756d4ad8553794b4e97210000c
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Nov 30 19:57:28 2006 +0200
+
+    bump to 1.2.1
+
+commit fb347fb74e1a50fa900f225d13eee1aa829fa2f9
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Nov 23 18:17:33 2006 +0100
+
+    Work around race condition during VT switch.
+    
+    https://bugzilla.novell.com/show_bug.cgi?id=219946
+
+commit 7a866ae143c3638d6b1e3836d48f16e300e90b09
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Nov 2 04:47:12 2006 +0200
+
+    bump to 1.2.0
+
+commit ddc0db4fe85e2b8de31ad67a6d4f97808bce018f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Nov 2 00:07:01 2006 +0200
+
+    port to new motion history api, add right number of args to IPDS
+    
+    Use new motion history API from the DIX if available, and also use the
+    right number of args to InitPointerDeviceStruct, depending on the ABI
+    version.
+
+commit 167dbbc2af6cad5d3b320e4e384bd78dd3450a5c
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Oct 13 18:28:46 2006 -0400
+
+    Bump to 1.1.2
+
+commit 40cfeffc5bea7ecdc20bbbe4db50fd725a62f29b
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Aug 27 13:06:31 2006 +0300
+
+    move manpage to mousedrv.man to avoid conflict with mouse.4
+
+commit ac0dc7451be0a8aba703fd4d9a78e17544c40842
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Jul 9 20:01:26 2006 +0200
+
+    Bug #5285: added some missing includes, avoid redefinition of
+    NEED_XF86_TYPES.
+
+commit 6dbc6ad05d147831a62b161e23f5da29101f2cfa
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri May 26 13:55:39 2006 +0000
+
+    Bump to 1.1.1.
+
+commit 12bd04878774154fe83d785418b87dd37b4f2f15
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Apr 21 11:15:23 2006 +0000
+
+    Fixed default for YAxisMapping. Changed default for ZAxisMapping. Added
+        short explanation.
+    Autodetect (one way only) single wheel only for EXPS2. Use singlebit
+        protocol for multiwheel EXPS2 mice.
+
+commit 2ce9bbe76c788fe7c41d2607577c867e5a3d9608
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Apr 20 18:25:32 2006 +0000
+
+    Overhaul of wheel processing. Does work correctly with multibit zaxis
+        events now.
+
+commit 5e9624b3695cf37fff7986d1585e4227bad789f5
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 17:59:54 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.1.0.
+
+commit 270fe8e1ccd2f5af114e8292bee8c4d27a1d93ab
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Apr 3 21:18:50 2006 +0000
+
+    Coverity #875: Correct several memory leaks in options parsing.
+
+commit abe3a020a70859f680163a8105cebeac42695f72
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Feb 28 19:44:45 2006 +0000
+
+    Bump to 1.0.4.
+
+commit 6de7233e0fdb63d4794df45d76391a4a6f04ec8d
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Feb 2 11:53:50 2006 +0000
+
+    Fixed ButtonMapping default.
+
+commit 9ec6a9a1c1b01e37ea60611160a4c15c2f308086
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Jan 17 11:49:57 2006 +0000
+
+    Bug #5071: EmulateWheelTimeout didn't work as anticipated.
+
+commit 745e3d38594938742f16508a61bd0ce9598fcf30
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Jan 9 02:30:15 2006 +0000
+
+    Remove unconditionally-defined #ifdef PNP_MOUSE blocks.
+
+commit b9db086daae7aacae068e4db85575737ebe76f45
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:57 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit d84b58ede20c31f4acbf886197c92b6f69d32da8
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:51 2005 +0000
+
+    Stub COPYING files
+
+commit 28c5410df7ba8af07b994c0907519e869c9df750
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Dec 19 09:07:50 2005 +0000
+
+    Typo fixes, mailing list & url updates, and other changes to prepare for
+        X11R6.9 & 7.0 releases.
+
+commit c231bba8457cbe98c516f0ee90ebc2c4b5a936a9
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:21:33 2005 +0000
+
+    Update package version number for final X11R7 release candidate. Bump
+        driver version number.
+
+commit c356477c8dab15a68fa6deb06181c28d2e9d1c54
+Author: Kevin E Martin <kem@kem.org>
+Date:   Mon Dec 12 06:59:54 2005 +0000
+
+    Bug #1752: When emulating 3 buttons in "auto" mode, timeout immediately
+        when a mouse movement is detected (Egbert Eich, Kean Johnston, Kevin
+        Martin).
+
+commit 4180beef7023dc3a860dd9895c986317326c5236
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:31 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit bef647bfb75c9be08046ba041e775e2be483bc05
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:31 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit e8f1d1cc8f021c8034087c7d2d26a945fda41467
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:45:18 2005 +0000
+
+    Bump version numbers for X11R6.9/X11R7 RC3.
+
+commit 1e537674ebd4df0b7245b4b2119bcf33be9d3f51
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:06 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit 7b4b12a977e4c84d861f103613245570f34d31ce
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:56 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 1c95c00528b69db9a2345af0bcc871f63e2b8d89
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:07 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 90cda6b6d1f9e8db9d77423943b663e3e010b06c
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Nov 22 04:03:23 2005 +0000
+
+    Bump dependency on xorg-server to >= 0.99.3 for MouseDeviceRec changes.
+
+commit 4b37d5d1d2f80da983346e15e900fb07de7d2cf8
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:06 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit 31c63c83f7dbe8c538d67d3f9a1e3064ea78e278
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Nov 14 14:25:09 2005 +0000
+
+    Bug #4915: ButtonMapping default changed from one-to-one mapping to "1 2 3
+        8 9 10 11...".
+
+commit 5bca72458c8f9637f9c8f0871bb2048d824c6974
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Nov 14 14:19:52 2005 +0000
+
+    Bug #4915: Move buttonMapping initialization before calling OS specific
+        PreInit.
+
+commit f00e2a8c9689465f6e173e08d0b51407e19f385b
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Thu Nov 10 03:37:47 2005 +0000
+
+    Unrevert default ZAxisMapping change now that the default is back to "4 5 6
+        7"
+
+commit 77975bfe30f984f45f908d22a0e9c8fa0311aef0
+Author: Kean Johnson <kean@armory.com>
+Date:   Thu Nov 10 02:41:20 2005 +0000
+
+    Dont pass wheel mouse buttons as real buttons, map them as Z-Axis movement
+        on SCO and USL. Re-instate the ZAxisMapping default for the mouse
+        driver.
+
+commit aa6bdb84ec4d22f0916b1e471b89d056a684d7d4
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:31:23 2005 +0000
+
+    Bump version numbers for X11R6.9/X11R7 RC2.
+
+commit f8bf605528c78c1cb6670ee096837e5c04e1b61a
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:12 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 75a30c52706057cd70407271eda647c699a5a66d
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Nov 9 17:05:40 2005 +0000
+
+    Bug #4915: ButtonMapping option which allows to define arbitrary button
+        mappings (including left-handed mouse etc.). Fixed incorrect usage of
+        non-reversed, but ZAxisMapped buttons for state detection. Nuked unused
+        part of reverseMap.
+
+commit 2372fba8f5f6e8d3bfa48edc980f2186fc9e87ee
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Nov 9 16:32:51 2005 +0000
+
+    Reflect changes in ZAxisMapping default.
+
+commit 823f49c8238595a377f7d0494d742f5e50d34eca
+Author: Kean Johnson <kean@armory.com>
+Date:   Tue Nov 8 06:33:28 2005 +0000
+
+    See ChangeLog entry 2005-11-07 for details.
+
+commit 640006296296b33dceaf33675a4db3335765aac6
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:50 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit 8dca995860193bc3132301f1b0f79ada06bffd4c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:01 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 9dffd55847ebac6b381d8359ad67f056fb66cf2b
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:52 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 08905305e064e8f20e5db529b850aaa87b578b2c
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:29 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit bcabac6b1f0c39e20bca6e1abd4efe70d7eeac69
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:08:59 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 34856ca1f73108ca19c20d9223457be328890dc1
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Oct 4 20:01:02 2005 +0000
+
+    Check in generated README files
+
+commit 55e29446456e51ccdca57f348ed4660f65ab7dee
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Mon Oct 3 21:22:06 2005 +0000
+
+    - For all drivers that have a <driver>.sgml file, add code in their build
+        system to build the README file at make dist time
+    - in util/macros/xorg-macros.m4, add a new XORG_CHECK_LINUXDOC macro that
+        will check if the required tools and files exist, and if so set a
+        conditional.
+    - util/modular/symlink.sh
+    - Link all the <driver>.sgml to xf86-video-<driver>/README.sgml
+    - Add all the README.<driver> to the list of excluded files
+    - xc/programs/Xserver/hw/xfree86/doc/sgml/SiS.sgml: Various changes to make
+        it spew less warnings when the text file is built.
+
+commit 79a6d468c7995032988a3888324fddf798021553
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Wed Aug 31 23:38:47 2005 +0000
+
+    Fix EmulateWheelTimeout Option. Spotted by Richard Neill, bug 4291
+
+commit 70e4c1b572ea98e9cdf85b4c5ea3b63a89647d3d
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Aug 26 07:12:34 2005 +0000
+
+    Extend Genius NetMouse support. (Debian #040)
+
+commit 8227eb1ff74c7c61690359e2af00a5a6c23b56e9
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:40 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 4b08d9746296a4d9fc756a059f2bfba3490192a6
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Aug 15 23:48:35 2005 +0000
+
+    Set ZAxisMapping default to "4 5 6 7".
+
+commit f355ef63c60adc7a72517ca71fdc9983f3881db9
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Aug 10 14:07:23 2005 +0000
+
+    Don\'t lose existing CFLAGS in all the input drivers and some of the video
+        drivers
+
+commit fd37fdea221cdf13a26e075758c9d1b405da5c06
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:41 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 0159c76ac33cc7072a5b30129b5b622053f23b08
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Jul 13 20:03:22 2005 +0000
+
+    Make the module dir configurable
+
+commit 84c284202386be7c46d60cfa8a58f031d05ac84f
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Jul 12 23:16:59 2005 +0000
+
+    Update driver to pass distcheck
+
+commit e955a67245f83da020632a2bf82c04c03a697322
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Jul 12 06:15:09 2005 +0000
+
+    Build skeletons for input drivers. Should basically work.
+
+commit 5f673ca035ec1c3c4abdc162f50c864c89ed84d4
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:38:00 2005 +0000
+
+    Prep input drivers for modularizing by adding guarded #include "config.h"
+
+commit c2bc3b67c121ffb1152333e268b675643f9f477f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Jul 1 22:43:23 2005 +0000
+
+    Change all misc.h and os.h references to <X11/foo.h>.
+
+commit 25eb972e71e11208cd6426f5583d33490d82829d
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:17:02 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit e9fd033c9c6903b681f1e82c3cd03098c3fbf2a4
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon May 9 23:41:06 2005 +0000
+
+    Bugzilla #2389: Document the maximum number of buttons a mouse can have.
+        Correct a missing period I noticed while I was here.
+
+commit 0367a3a65a30fa461a1f2c4facf28821dbf10a77
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed May 4 04:14:58 2005 +0000
+
+    Port X.Org to FreeBSD/powerpc. This makes a bit of math for sysmouse in
+        mouse.c explicitly signed, avoiding the need for -fsigned-chars. (Peter
+        Grehan, grehan at FreeBSD dot org)
+
+commit b538c125e4cd103c743ed26ec4d288d4a5b35b24
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:34 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 39eeceba31b6a8b42be175db472c92b4aebb82c6
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Sun Oct 17 22:45:57 2004 +0000
+
+    - Fix DFP detection in r128 driver (bug 1386, Klaus Kusche)
+    - Fix EmulateWheelInertia defaults (bug 1115, Andrew Pimlott)
+
+commit a257b41d741b49268c55e739b6d793be3de6586a
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Sun Oct 17 20:29:35 2004 +0000
+
+    - Add interlaced support to S3 driver (bug 332, Leo Savernik)
+    - EmulateWheelTimeout (bug 323, Mathias Fröhlich)
+    - single button double-click (bug 322, Rob Brown)
+
+commit 1a49e855396dd927dc69c63c2a32e115fd8f504c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Sep 3 16:18:23 2004 +0000
+
+    First set of documentation updates.
+    Include more correct fix for rootless interaction with damage (Bug #1168,
+        Keith Packard).
+
+commit 014853d848b04ce496afc8ff3f0273872e8f761a
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Jul 26 23:20:22 2004 +0000
+
+    - Change xf86config to xorgconfig
+    - Update Solaris mouse support information
+
+commit 4ef4fa01917112bd937b32793ade3230de0b0d4b
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Jul 24 17:35:39 2004 +0000
+
+    Fix a problem with wsmouse driver loosing events on 64bit architectures
+        (XFree86 Bugzilla #1438, John Heasley). "To fix this, I've added a
+        mouse buffer (Xisb buffer) "scale" value to the MouseDevPtr type. If
+        set, it is used as structure size of which we want space for a few."
+
+commit 3fed730ac9f9b95503bc457d8688896cbda502f1
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:54:04 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 3e37718d9046394e1f89df80c9280727681c2b59
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:52 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit 2714a22dc4f13db3bf1a050d403cb3b2692a6d20
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:34 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit fb74889ec7baa2bf9162f43517d6db36414a5c32
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:36:00 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit be8481276bdfee635dd3e4da33e65780aa5b7660
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:34 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 53bc8cd30c7ef1f888db318ad174ff4f028ce634
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Dec 19 20:55:25 2003 +0000
+
+    XFree86 4.3.99.902 (RC 2)
+
+commit 8e2fe5d5a02c4c8da8f4ced432da6fe88272b975
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:48 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 92595648d1140139f0c0a42cbb2c548fc6864575
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:56 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit c9c7e96897229ba1d457a58f66121dd1f9210382
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:56 2003 +0000
+
+    Initial revision
+
+commit 95b194f6e3456b46c2f994f4f6655fabfcf89c76
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 15:54:49 2003 +0000
+
+    R6.6 is the Xorg base-line

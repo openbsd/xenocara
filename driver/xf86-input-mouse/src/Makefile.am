@@ -18,6 +18,8 @@
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+AM_CFLAGS = $(CWARNFLAGS) 
+AM_CPPFLAGS = $(XORG_CFLAGS) -I$(top_srcdir)/src
 
 # this is obnoxious:
 # -module lets us name the module exactly how we want
@@ -28,4 +30,24 @@
 @DRIVER_NAME@_drv_la_LDFLAGS = -module -avoid-version
 @DRIVER_NAME@_drv_ladir = @inputdir@
 
-@DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c @DRIVER_NAME@.h pnp.c mousePriv.h
+# We have to list all the mouse drivers here, even if we don't build them, so
+# they get included in distcheck.
+OS_SRCS = bsd_mouse.c hurd_mouse.c lnx_mouse.c sun_mouse.c
+
+@DRIVER_NAME@_drv_la_SOURCES = \
+	mouse.c \
+	mouse.h \
+	pnp.c \
+	mousePriv.h \
+	xf86OSmouse.h \
+	@OS_MOUSE_NAME@_mouse.c
+
+EXTRA_DIST = $(OS_SRCS)
+
+if LINT
+ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+                $(AM_CPPFLAGS) $(CPPFLAGS)
+
+lint:
+	$(LINT) $(ALL_LINT_FLAGS) $(@DRIVER_NAME@_drv_la_SOURCES)
+endif LINT
