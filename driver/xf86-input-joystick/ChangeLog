@@ -1,3 +1,532 @@
+commit 88a084952f547ebc2f30a257e441930024a69be9
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Apr 14 22:33:01 2009 +0200
+
+    Fail configure on xorg-server >= 1.6.99
+    
+    The 1.4 branch is broken on xorg-server >= 1.6.99. Use master instead.
+
+commit 7d6a068c29e372747fc621020976797df9f61bac
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Apr 14 22:25:49 2009 +0200
+
+    Bump 1.4.1
+
+commit e1710072396a97369ef71b1fd1738ad092a5e902
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Mar 19 21:14:22 2009 +0100
+
+    Fix compiler warning about stray INT8-CARD8 conversion
+
+commit 7af61c78fd48ea9cc2442fb55570ba0d9f37f8c8
+Merge: bc430cc 4b9aafd
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Mar 19 21:13:13 2009 +0100
+
+    Merge branch 'pwm'
+
+commit bc430cc2aacdcda45ddc38d457b84ff040be6a8c
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Mar 19 21:08:30 2009 +0100
+
+    Missing initialization of button amplify
+    
+    Always initialize button[]->amplify with 1.0
+
+commit dca19bde2bdd275744e9182dd49a2f2dd81f8c81
+Merge: 6f2a211 c6217b5
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Mar 19 08:36:10 2009 +0100
+
+    Merge branch 'master' of sascha:develop/xorg/xf86-input-joystick
+
+commit 4b9aafd82bf78e86b2b2ddc78c37d73ccc7c25d5
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Mar 18 18:13:12 2009 +0100
+
+    Mention PWM mode in man page
+
+commit 6f2a211b7c3b45e8de9a90835fb7f1a24635c8e5
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Mar 18 17:39:07 2009 +0100
+
+    Fix build on FreeBSD with USB2
+    
+    Including dev/usb/usb_ioctl.h fixes missing declaration
+    of USB_GET_REPORT_ID on FreeBSD-Current.
+
+commit c6217b5849b1c2680a9a8c29ca26b3468955b1c1
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Mar 1 21:06:52 2009 +0100
+
+    Comment float properties in joystick-properties.h
+    
+    Signed-off-by: Sascha Hlusiak <saschahlusiak@arcor.de>
+
+commit 367c32bab57d69d85e95f4e76e2f1c8aaab45189
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Mar 1 21:00:18 2009 +0100
+
+    Support for float properties
+    
+    Signed-off-by: Sascha Hlusiak <saschahlusiak@arcor.de>
+
+commit 4978e78e7c49bc0aabf5c7ade4223c2529a9f046
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Feb 19 23:40:58 2009 +0100
+
+    Add PWM key generation when axis in accelerated mode
+    
+    When axis is in accelerated mode and keyhigh/keylow is set,
+    the deflection of the axis will be linked to the _percent of time_ the key
+    will be down. Full deflection will set the key permanently down (old behaviour).
+    
+    50% deflection will result in the key being  50ms down and 50ms up.
+    75% deflection will result in the key being 150ms down and 50ms up.
+    etc.
+    Minimum interval is 50ms, maximum is 600ms.
+
+commit d4bb86ddb0ba570de0f501cd0edb13861456b711
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Feb 19 23:37:46 2009 +0100
+
+    Don't set axis.oldvalue in backend
+    
+    The value needs to be set where it's needed, like in timers.
+
+commit 4ec4376522b1c393ee44f25adcd28b12d7cadff6
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Feb 17 20:18:05 2009 +0100
+
+    Fix for sparse warning of uninitialized variable
+    
+    If axis is inside deadzone, 0.0 should be assumed.
+
+commit b70b1f7d827b87ceb63110c781b01175363fb7d0
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Feb 4 18:23:00 2009 -0200
+
+    Janitor: gcc 4.5 and sparse warnings.
+    
+    It is still required a patch in the X Server sdk to correct some
+    remaining warnings. Isn't it amazing that <X11/extensions/XKBsrv.h>
+    and $sdkdir/xkbsrv.h both use the #ifndef _XKBSRV_H_ include guard?
+    
+    Signed-off-by: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+
+commit 76b82a41a6733ef5a2a89dd370357320ea78792a
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Feb 4 18:10:26 2009 -0200
+
+    Janitor: make distcheck, .gitignore.
+    
+    The correction for make distcheck uses the same solution proposed
+    for xf86-input-evdev, that uses the new configure option --with-sdkdir.
+    
+    Signed-off-by: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+
+commit 4671904035d4da4d112f53cce8781bcc77b0d0db
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Feb 2 00:10:42 2009 +0100
+
+    Use InitKeyboardDeviceStruct instead of nonexistant XkbInitKeyboardDeviceStruct
+    
+    Realizing XkbInitKeyboardDeviceStruct has been removed, we do need to use InitKeyboardDeviceStruct.
+    This breaks custom keymaps on ABI_XINPUT_VERSION >= 5.
+    
+    Hopefully this can be reimplemented later.
+
+commit 3984947ada771619f21b511507a2fb9cca3ed645
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:23:09 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit fb632ba226725a7101c5c1a3bfc2201905532b6f
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Jan 26 20:48:00 2009 +0100
+
+    Fix build on master. All hail XKB!
+
+commit f62159e4dfc22550ec2de3eb4fd46027d85a1e88
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:14:12 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit 43e2f0526894cb5eacac8730a21ccdf415421d72
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Dec 28 18:57:36 2008 +0100
+
+    Prepare for 1.4.0 release
+
+commit fd80f1c2b5b91e0260dc28e9b5e259025ea379e5
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Dec 28 17:32:44 2008 +0100
+
+    Matched comments in joystick-properties.h with previous commit
+
+commit f81b9077d13b614262556a7401068f016fe2b365
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Dec 28 17:28:50 2008 +0100
+
+    Export JSTK_* constants with joystick-properties.h
+
+commit 79028fc80fe7cbd452a18b4ddf92c328a1fe1393
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Dec 28 17:24:08 2008 +0100
+
+    Rename constants for better distinction
+    
+    @jstk.h:
+        TYPE_* -> JSTK_TYPE_*
+        MAPPING_* -> JSTK_MAPPING_*
+
+commit 38b4c9b3bd814296971abfe6ef01f531367a43bb
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Oct 13 10:46:10 2008 +1030
+
+    properties: handle checkonly flag in SetProperty.
+    
+    If checkonly is TRUE, don't touch any values, just check vor validity of the
+    data.
+    
+    Signed-off-by: Sascha Hlusiak <saschahlusiak@arcor.de>
+
+commit 0da072fde42d899b56cc7b05d7b3db2815ac3b9a
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Oct 1 23:14:22 2008 +0200
+
+    Install joystick-properties.h and xorg-joystick.pc for clients.
+    
+    Let's clients be aware of properties made available by the driver.
+
+commit 3c2a323a3a14bc27a7a5d9f4470b4abd83c424ec
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Oct 1 21:43:49 2008 +0200
+
+    Option for per-axis valuators. Defaults to off for all axes.
+    
+    Old: Each axis had an extra valuator, starting with 2 (0 and 1 are pointer movement)
+    New: Add "valuator" to axis option to give it an extra valuator of range -32768 to 32768.
+    Default: Off for all axes, since rarely used (and broken anyway right now).
+
+commit 432805db42b1f7d69131406c8b58571d224e1c47
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Sep 30 19:02:17 2008 +0200
+
+    Remove XKB calls since we don't make use of it anyway.
+    
+    No error messages because of missing xkb rules, yay.
+
+commit 8a5b8e08aa27c5a33982ab293c68c026cba789c5
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Sep 30 18:35:27 2008 +0200
+
+    Do not require randrproto
+
+commit ba8ea1799cf8911c22b0d90a865cb6e215b23e1c
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Sep 30 18:13:19 2008 +0200
+
+    Support for setting Button Number property
+    
+    does not change the button map, which is assumed to be default. Buttons can still be
+    reordered using xmodmap.
+
+commit 5c72d146865982dfa727d469d789ceaa6ac33b8d
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Sep 30 18:08:04 2008 +0200
+
+    Replace dynamic button map with static one
+    
+    Saves some configuration efforts but caps logical button numbers to BUTTONMAP_SIZE=32.
+    Makes property support much easier.
+
+commit 03175f968c4177de2208a2d8e73f9c8106630a6b
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Sep 30 00:35:01 2008 +0200
+
+    Name all properties uppercase
+    
+    Just looks better
+
+commit 34ca7d26830b5c58a35b9aec7f7cdd6d4446c456
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Sep 30 00:30:24 2008 +0200
+
+    Do not accept fewer values anymore when setting properties
+    
+    Supplied number of values have to match the numbers of axes/buttons exactly. Fewer values are not accepted
+    anymore, because the omitted information get lost. That way we ensure that the properties are always complete
+    when requested by clients.
+
+commit e1c3b5e3041c2fda5d4080f24aa988399cb793bd
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Sep 30 00:17:41 2008 +0200
+
+    Exporting num_axes values instead of MAXAXES
+    
+    Only export the number of axes/buttons in properties that we actually have.
+    No need to export MAXAXES values, if we don't support them.
+
+commit ab79083b13bcf2810f57ae26444d179f6323ec03
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Sep 30 00:01:38 2008 +0200
+
+    Save probed number of axes/buttons for joystick backend
+
+commit e8432b7f8e8c515faa55d25f6028b7e5e7ce9c7c
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Sep 30 00:01:16 2008 +0200
+
+    Probed number of buttons shall not exceed MAXBUTTONS
+    
+    Same for axes.
+
+commit 06c607ebc10945342728dd3552eee6b894f55c51
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Sep 29 23:47:53 2008 +0200
+
+    Compile fix on BSD
+
+commit f4be58b1ea017d5f17aeba228b53c30a1f8609bf
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Sep 29 23:36:12 2008 +0200
+
+    Probe device once on INIT and re-use found information.
+    
+    Makes reopening a device on vt-enter much smoother and throws less warnings.
+    Remember number of found axes and buttons.
+
+commit b56085c73d8780d8353380ecbc4b9cdb3f085b2f
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Sep 29 22:56:29 2008 +0200
+
+    Export number of configurable buttons/axes as readonly properties.
+    
+    This number does not need to match the number of valuators/buttons.
+
+commit ebf31b61b3d1d9ad0048429a75b99bf5952ad6b8
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Sep 28 16:41:17 2008 +0200
+
+    jstk_key.c: missing include
+    
+    xf86optionListDup is defined in xf86Optrec.h
+
+commit 3794afd9784480fa503cbffa16382c0e38e1fa8b
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Fri Sep 26 17:19:29 2008 +0930
+
+    Adjust joystick properties to new property API.
+    
+    ConfigureProperty doesn't exist anymore, ChangeProperty has two parameters
+    less. SetProperty handler must return Status.
+    Mark all properties as non-deletable.
+
+commit 6e635e394a7423734d36d99dc744203b759a8d42
+Merge: f04e3c8 a1b87df
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Sep 16 20:58:40 2008 +0200
+
+    Merge branch 'input-properties'
+    
+    Conflicts:
+    	src/jstk.h
+    	src/jstk_key.c
+
+commit a1b87df15dd2ad2a5593fed198b32053be5825cc
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Sep 15 19:29:07 2008 +0200
+
+    Set type_name of slave keyboard device to XI_JOYSTICK as well.
+
+commit 57d1201f584a74b9d6822e55ff66a0786de4ea2b
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Sep 15 19:27:52 2008 +0200
+
+    Set type_name to XI_JOYSTICK. Let's not claim we are XI_MOUSE.
+
+commit f04e3c822229b51e5a4048d7e91fa34f69e361e9
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Sep 15 19:24:40 2008 +0200
+
+    Set type_name to XI_JOYSTICK. Let's not claim we are XI_MOUSE.
+
+commit 282fc3068ed734e099efe272c740e6c8e5495176
+Author: Christoph Brill <egore911@egore911.de>
+Date:   Sun Sep 7 11:11:50 2008 +0200
+
+    Make "less joystick.man" work
+
+commit 838dfffe9833b52626d5a528fc08d2838438ee46
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Sep 6 19:05:29 2008 +0200
+
+    Initialize PtrFeedbackClassDeviceStruct for pointer device
+
+commit f691491bc96d1c7944f4036dde4090f11066aea4
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Sep 6 19:03:52 2008 +0200
+
+    Silence warning about implicit cast
+
+commit 911986c4c702979fe48d3a2c18e238710a513449
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Sep 6 17:26:32 2008 +0200
+
+    Always add second input device for keys only
+    
+    Having one device for both mouse and keyboard events breaks with MPX and custom keymaps, because the keymap is
+    copied to the core pointer instead of the core keyboard.
+    
+    Easiest fix for that is to have two separate input devices. One single instance of the driver will now create
+    a second input device that has only keyboard capabilities. It shares all the config with the master and will
+    be removed when the master device is removed.
+    
+    The creation of this second device is a little hack-ish. I hope things are done right.
+
+commit 5a3ecea272a980df0ac4c40826cf095399e7b022
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Sep 6 13:08:51 2008 +0200
+
+    make dist hook: git-log > git log
+    
+    I somehow don't have those nice aliases. This should make it work on every system.
+
+commit 9d42b7f972f58a7cf97b8a57e1b6b85984c6476a
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Sep 6 12:58:41 2008 +0200
+
+    Update man page concerning custom driver options through hal
+    
+    Warning is obsoleted by xorg-server-1.5
+
+commit 235f5d12489f5f5f662e8f7b617108a01fdffed0
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Sep 6 12:55:08 2008 +0200
+
+    Bump to 1.3.3
+
+commit 30333076a39dd50e6356789cd03c49712b43427c
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Sep 6 12:40:12 2008 +0200
+
+    Add ChangeLog to .gitignore
+
+commit 579670d163d7ab2623d975ac85f6626a5499bf32
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Sep 6 12:39:12 2008 +0200
+
+    Remove duplicated code in jstkInitKeys
+    
+    Too much copy'n'paste
+
+commit 17c4f79d50ab69f954fec5a8daa327c4a1a64597
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Sep 6 12:38:16 2008 +0200
+
+    Adding empty ctrlProc to prevent crashing of X when running without XKB
+    
+    X calls ctrlProc without checks for NULL in some places, especially when running "X -kb". Adding
+    that function back to be safe.
+
+commit ea36125872ad4411f3529392761bff6e35006ce4
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Mon Sep 1 00:05:07 2008 +0200
+
+    Adding empty ctrlProc to prevent crashing of X when running without XKB
+    
+    X calls ctrlProc without checks for NULL in some places, especially when running "X -kb". Adding
+    that function back to be safe.
+
+commit c39d709366332bd2d1ef306a0b801333f6cd3f7a
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Aug 31 19:24:38 2008 +0200
+
+    Remove duplicated code in jstkInitKeys
+    
+    Too much copy'n'paste
+
+commit 28c1dad7be2419a1ffa7b5f0897e88a1ccac36f5
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Aug 31 00:42:39 2008 +0200
+
+    Added valid-values-information to properties
+    
+    Show user, what cryptic numbers are valid for axis type, axis mapping and button mapping.
+
+commit eb866c65372fd880e5ffa80318cdb6dcf8c86e30
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Aug 31 00:30:11 2008 +0200
+
+    Typo in valid values for property "Generate Key Events"
+
+commit 63fd6fdd9c012e0017e310d22cfcb45a2a741547
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Aug 31 00:28:37 2008 +0200
+
+    Property support for axis type, axis mapping and button mapping
+    
+    Added prototypes for unimplemented properties.
+
+commit 13813e0982e5274e2ef6d9ea167ebffbea9dbd9c
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Aug 23 23:38:57 2008 +0200
+
+    Add ChangeLog to .gitignore
+
+commit 0410505147a416844fae6dcf6f9ea782f1b74863
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Aug 23 23:31:33 2008 +0200
+
+    Expose device properties for mouse_enabled, keys_enabled and axes deadzones.
+    
+    Deadzones takes up to MAXAXES 32 bit numbers. If only one value is supplied, it is applied to all axes the same. If multiple values are
+    supplied, they are applied to the axis they stand for, all other values are untouched.
+
+commit e64b4ebcd121a9080d1da39e5037182df7edfdbb
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Aug 23 22:02:54 2008 +0200
+
+    Add support for device properties.
+    
+    Only exported property for now is DebugLevel.
+
+commit 5e91f0bdd4fa529d1d5f0f8ffc87aaf9fbec2a88
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Aug 23 21:18:41 2008 +0200
+
+    Remove stale comment
+
+commit a4d96de5fdbeedec1f196c2b5f4e5b498bf8e31f
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Aug 23 17:01:40 2008 +0200
+
+    Fix check for BSD dev/usb/usbhid.h (needs dev/usb/usb.h).
+
+commit 7d6f9a32ab7e6e3e8d241fa3a230ffcf91dec468
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Thu Aug 14 15:41:37 2008 +0930
+
+    Fix build. xf86Version.h -> xorgVersion.h
+
+commit 1d67c9d801a6304267f8a821af13328fda95e497
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Thu Jun 19 11:10:02 2008 +0200
+
+    Added more examples for the x11_options properties of xorg-server-1.5
+    
+    Since xorg-server-1.5 you can pass arbitrary options using the x11_options namespace. No additional
+    hacks are neccessary to make hal hotplug the joystick driver.
+
+commit 10203ddef9adbd27f2a9ac51d98703308f86d982
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 26 22:09:32 2008 +0930
+
+    Check for XINPUT ABI 3.
+
 commit 0961ffa84825f3f32d9c973f054400ab9d2b7c08
 Author: Sascha Hlusiak <saschahlusiak@arcor.de>
 Date:   Sun Apr 27 19:16:29 2008 +0200

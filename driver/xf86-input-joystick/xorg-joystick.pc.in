@@ -1,0 +1,7 @@
+prefix=@prefix@
+includedir=@includedir@
+
+Name: xorg-joystick
+Description: X.Org joystick input driver.
+Version: @PACKAGE_VERSION@
+Cflags: -I${includedir}

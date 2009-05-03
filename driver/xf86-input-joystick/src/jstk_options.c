@@ -43,31 +43,6 @@
 
 /***********************************************************************
  *
- * jstkGetButtonNumberInMap --
- *
- * Adds a button number to the button map and returns the index
- *
- ***********************************************************************
- */
-
-int
-jstkGetButtonNumberInMap(JoystickDevPtr priv,
-                         int buttonnumber)
-{
-    int j;
-    for (j=1; j<=priv->buttonmap.size; j++)
-        if (priv->buttonmap.map[j] == buttonnumber)
-            break;
-    if (j > MAXBUTTONS+1) return 0;
-    priv->buttonmap.map[j] = buttonnumber;
-    if (j > priv->buttonmap.size) priv->buttonmap.size = j;
-    return j;
-}
-
-
-
-/***********************************************************************
- *
  * jstkGetKeyNumberInMap --
  *
  * Adds a KeySym to the keymap and returns the index
@@ -75,7 +50,7 @@ jstkGetButtonNumberInMap(JoystickDevPtr priv,
  ***********************************************************************
  */
 
-int
+static int
 jstkGetKeyNumberInMap(JoystickDevPtr priv,
                       KeySym keysym)
 {
@@ -102,7 +77,7 @@ jstkGetKeyNumberInMap(JoystickDevPtr priv,
  ***********************************************************************
  */
 
-static JOYSTICKMAPPING
+static JSTK_MAPPING
 jstkGetAxisMapping(float *value, const char* param, const char* name) 
 {
     if (sscanf(param, "%f", value)==0) {
@@ -110,17 +85,17 @@ jstkGetAxisMapping(float *value, const char* param, const char* name)
             *value *= -1.0;
     }
     if (strstr(param, "key") != NULL)
-        return MAPPING_KEY;
+        return JSTK_MAPPING_KEY;
     else if (strstr(param, "zx") != NULL)
-        return MAPPING_ZX;
+        return JSTK_MAPPING_ZX;
     else if (strstr(param, "zy") != NULL)
-        return MAPPING_ZY;
+        return JSTK_MAPPING_ZY;
     else if (strstr(param, "x") != NULL)
-        return MAPPING_X;
+        return JSTK_MAPPING_X;
     else if (strstr(param, "y") != NULL)
-        return MAPPING_Y;
+        return JSTK_MAPPING_Y;
 
-    return MAPPING_NONE;
+    return JSTK_MAPPING_NONE;
 }
 
 
@@ -153,27 +128,32 @@ jstkParseButtonOption(const char* org,
 /*    for (tmp = param; *tmp; tmp++) *tmp = tolower(*tmp); */
 
     if (strcmp(param, "none") == 0) {
-        button->mapping = MAPPING_NONE;
+        button->mapping = JSTK_MAPPING_NONE;
     } else if (sscanf(param, "button=%d", &value) == 1) {
-        button->mapping      = MAPPING_BUTTON;
-        button->buttonnumber = jstkGetButtonNumberInMap(priv, value);
+        if (value<0 || value >BUTTONMAP_SIZE) {
+            xf86Msg(X_WARNING, "%s: button number out of range (0..%d): %d.\n", 
+                    name, BUTTONMAP_SIZE,  value);
+        } else {
+            button->mapping      = JSTK_MAPPING_BUTTON;
+            button->buttonnumber = value;
+        }
     } else if (sscanf(param, "axis=%15s", p) == 1) {
         p[15]='\0';
         fvalue = 1.0f;
         button->mapping = jstkGetAxisMapping(&fvalue, p, name);
         button->amplify = fvalue;
         button->currentspeed = 1.0f;
-        if (button->mapping == MAPPING_NONE)
+        if (button->mapping == JSTK_MAPPING_NONE)
             xf86Msg(X_WARNING, "%s: error parsing axis: %s.\n", 
                     name, p);
     } else if (sscanf(param, "amplify=%f", &fvalue) == 1) {
-        button->mapping = MAPPING_SPEED_MULTIPLY;
+        button->mapping = JSTK_MAPPING_SPEED_MULTIPLY;
         button->amplify = fvalue;
     } else if (sscanf(param, "key=%30s", p) == 1) {
         char *current, *next;
         p[30]='\0';
         current = p;
-        button->mapping = MAPPING_KEY;
+        button->mapping = JSTK_MAPPING_KEY;
 
         for (value = 0; value < MAXKEYSPERBUTTON; value++) if (current != NULL) {
             unsigned key;
@@ -195,11 +175,11 @@ jstkParseButtonOption(const char* org,
             current = next;
         } else button->keys[value] = 0;
     } else if (strcmp(param, "disable-all") == 0) {
-        button->mapping = MAPPING_DISABLE;
+        button->mapping = JSTK_MAPPING_DISABLE;
     } else if (strcmp(param, "disable-mouse") == 0) {
-        button->mapping = MAPPING_DISABLE_MOUSE;
+        button->mapping = JSTK_MAPPING_DISABLE_MOUSE;
     } else if (strcmp(param, "disable-keys") == 0) {
-        button->mapping = MAPPING_DISABLE_KEYS;
+        button->mapping = JSTK_MAPPING_DISABLE_KEYS;
     } else {
         xf86Msg(X_WARNING, "%s: error parsing button parameter.\n", 
                 name);
@@ -238,16 +218,16 @@ jstkParseAxisOption(const char* org,
         if (sscanf(tmp, "mode=%15s", p) == 1) {
             p[15] = '\0';
             if (strcmp(p, "relative") == 0) {
-                axis->type = TYPE_BYVALUE;
+                axis->type = JSTK_TYPE_BYVALUE;
             } else if (strcmp(p, "accelerated") == 0) {
-                axis->type = TYPE_ACCELERATED;
+                axis->type = JSTK_TYPE_ACCELERATED;
                 axis->currentspeed = 1.0f;
             } else if (strcmp(p, "absolute") == 0) {
-                axis->type = TYPE_ABSOLUTE;
+                axis->type = JSTK_TYPE_ABSOLUTE;
             } else if (strcmp(p, "none") == 0) {
-                axis->type = TYPE_NONE;
+                axis->type = JSTK_TYPE_NONE;
             } else {
-                axis->type = TYPE_NONE;
+                axis->type = JSTK_TYPE_NONE;
                 xf86Msg(X_WARNING, "%s: \"%s\": error parsing mode.\n", 
                         name, param);
             }
@@ -260,19 +240,23 @@ jstkParseAxisOption(const char* org,
             p[15] = '\0';
             fvalue = 1.0f;
             axis->mapping = jstkGetAxisMapping(&fvalue, p, name);
-            if ((axis->type == TYPE_ABSOLUTE) &&
+            if ((axis->type == JSTK_TYPE_ABSOLUTE) &&
                 ((fvalue <= 1.1)&&(fvalue >= -1.1))) {
-                if (axis->mapping == MAPPING_X)
+                if (axis->mapping == JSTK_MAPPING_X)
                     fvalue *= (int)screenInfo.screens[0]->width;
-                if (axis->mapping == MAPPING_Y)
+                if (axis->mapping == JSTK_MAPPING_Y)
                     fvalue *= (int)screenInfo.screens[0]->height;
             }
             axis->amplify = fvalue;
-            if (axis->mapping == MAPPING_NONE)
+            if (axis->mapping == JSTK_MAPPING_NONE)
                 xf86Msg(X_WARNING, "%s: error parsing axis: %s.\n",
                         name, p);
         }else xf86Msg(X_WARNING, "%s: error parsing axis.\n",
                       name);
+    }
+
+    if ((tmp = strstr(param, "valuator")) != NULL ) {
+        axis->valuator = 0; /* Will be renumbered appropriately on DEVICE_INIT */
     }
 
     if ((tmp = strstr(param, "keylow=")) != NULL) {
@@ -281,7 +265,7 @@ jstkParseAxisOption(const char* org,
             unsigned int key;
             p[30]='\0';
             current = p;
-            axis->mapping = MAPPING_KEY;
+            axis->mapping = JSTK_MAPPING_KEY;
             for (value = 0; value < MAXKEYSPERBUTTON; value++) 
                 if (current != NULL) {
                     next = strchr(current, ',');
@@ -311,7 +295,7 @@ jstkParseAxisOption(const char* org,
             unsigned int key;
             p[30]='\0';
             current = p;
-            axis->mapping = MAPPING_KEY;
+            axis->mapping = JSTK_MAPPING_KEY;
             for (value = 0; value < MAXKEYSPERBUTTON; value++) 
                 if (current != NULL) {
                     next = strchr(current, ',');

@@ -81,9 +81,10 @@ LTLIBRARIES = $(@DRIVER_NAME@_drv_la_LTLIBRARIES)
 @DRIVER_NAME@_drv_la_LIBADD =
 am__@DRIVER_NAME@_drv_la_SOURCES_DIST = jstk.c jstk.h jstk_axis.c \
 	jstk_axis.h jstk_key.c jstk_key.h jstk_options.c \
-	jstk_options.h StrKeysym.c StrKeysym.h ks_tables.h \
-	backend_bsd.c backend_bsd.h backend_joystick.c \
-	backend_joystick.h backend_evdev.c backend_evdev.h
+	jstk_options.h jstk_properties.c jstk_properties.h StrKeysym.c \
+	StrKeysym.h ks_tables.h backend_bsd.c backend_bsd.h \
+	backend_joystick.c backend_joystick.h backend_evdev.c \
+	backend_evdev.h
 am__objects_1 = backend_bsd.lo
 @BSD_BACKEND_TRUE@am__objects_2 = $(am__objects_1)
 am__objects_3 = backend_joystick.lo
@@ -91,8 +92,8 @@ am__objects_3 = backend_joystick.lo
 am__objects_5 = backend_evdev.lo
 @EVDEV_BACKEND_TRUE@am__objects_6 = $(am__objects_5)
 am_@DRIVER_NAME@_drv_la_OBJECTS = jstk.lo jstk_axis.lo jstk_key.lo \
-	jstk_options.lo StrKeysym.lo $(am__objects_2) $(am__objects_4) \
-	$(am__objects_6)
+	jstk_options.lo jstk_properties.lo StrKeysym.lo \
+	$(am__objects_2) $(am__objects_4) $(am__objects_6)
 @DRIVER_NAME@_drv_la_OBJECTS = $(am_@DRIVER_NAME@_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -128,8 +129,10 @@ BSD_BACKEND_TRUE = @BSD_BACKEND_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -155,6 +158,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -193,15 +197,9 @@ STRIP = @STRIP@
 VERSION = @VERSION@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -218,25 +216,34 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 inputdir = @inputdir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
+sdkdir = @sdkdir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
@@ -246,13 +253,15 @@ target_alias = @target_alias@
 # -avoid-version prevents gratuitous .0.0.0 version numbers on the end
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
+AM_CFLAGS = $(XORG_CFLAGS)
 @DRIVER_NAME@_drv_la_LTLIBRARIES = @DRIVER_NAME@_drv.la
 @DRIVER_NAME@_drv_la_LDFLAGS = -module -avoid-version $(am__append_2)
 @DRIVER_NAME@_drv_ladir = @inputdir@
+INCLUDES = -I$(top_srcdir)/include/
 @DRIVER_NAME@_drv_la_SOURCES = jstk.c jstk.h jstk_axis.c jstk_axis.h \
 	jstk_key.c jstk_key.h jstk_options.c jstk_options.h \
-	StrKeysym.c StrKeysym.h ks_tables.h $(am__append_1) \
-	$(am__append_3) $(am__append_4)
+	jstk_properties.c jstk_properties.h StrKeysym.c StrKeysym.h \
+	ks_tables.h $(am__append_1) $(am__append_3) $(am__append_4)
 BSD_SRCS = backend_bsd.c backend_bsd.h
 LINUX_SRCS = backend_joystick.c backend_joystick.h
 EVDEV_SRCS = backend_evdev.c backend_evdev.h
@@ -334,6 +343,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jstk_axis.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jstk_key.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jstk_options.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jstk_properties.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

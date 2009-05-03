@@ -24,11 +24,16 @@
 #ifndef __JSTK_H_INCLUDED__
 #define __JSTK_H_INCLUDED__
 
+#include <xf86Xinput.h>
+#include <X11/extensions/XIproto.h>
+#include "joystick-properties.h" /* definitions */
+
 
 #define MAXBUTTONS 32
 #define MAXAXES 32
 #define MAXKEYSPERBUTTON 4
 #define MIN_KEYCODE 8
+#define BUTTONMAP_SIZE 32
 
 
 /******************************************************************************
@@ -39,11 +44,17 @@
 #endif
 
 #if DEBUG
-    extern int debug_level;
+    extern char debug_level;
     #define DBG(lvl, f) {if ((lvl) <= debug_level) f;}
 #else
     #define DBG(lvl, f)
 #endif
+
+
+#ifndef XI_JOYSTICK
+#define XI_JOYSTICK "JOYSTICK"
+#endif
+
 
 typedef enum _JOYSTICKEVENT {
     EVENT_NONE=0,
@@ -53,37 +64,16 @@ typedef enum _JOYSTICKEVENT {
 
 typedef struct _JoystickDevRec *JoystickDevPtr;
 
+typedef int(*jstkOpenDeviceProc)(JoystickDevPtr joystick, Bool probe);
 typedef void(*jstkCloseDeviceProc)(JoystickDevPtr joystick);
 typedef int(*jstkReadDataProc)(JoystickDevPtr joystick,
                                JOYSTICKEVENT *event, int *number);
 
-
-typedef enum _JOYSTICKTYPE{
-    TYPE_NONE=0,      /* Axis value is not relevant */
-    TYPE_BYVALUE,     /* Speed of cursor is relative to amplitude */
-    TYPE_ACCELERATED, /* Speed is accelerated */
-    TYPE_ABSOLUTE     /* The amplitude defines the cursor position */
-} JOYSTICKTYPE;
-
-typedef enum _JOYSTICKMAPPING{
-    MAPPING_NONE=0,           /* Nothing */
-    MAPPING_X,              /* X-Axis */
-    MAPPING_Y,              /* Y-Axis */
-    MAPPING_ZX,             /* Horizontal scrolling */
-    MAPPING_ZY,             /* Vertical scrolling */
-    MAPPING_BUTTON,         /* Mouse button */
-    MAPPING_KEY,            /* Keyboard event */
-    MAPPING_SPEED_MULTIPLY, /* Will amplify all axis movement */
-    MAPPING_DISABLE,        /* Disable mouse and key events */
-    MAPPING_DISABLE_MOUSE,  /* Disable only mouse events */
-    MAPPING_DISABLE_KEYS    /* Disable only key events */
-} JOYSTICKMAPPING;
-
 typedef unsigned int KEYSCANCODES [MAXKEYSPERBUTTON];
 
 typedef struct _AXIS {
-    JOYSTICKTYPE    type;
-    JOYSTICKMAPPING mapping;
+    JSTK_TYPE    type;
+    JSTK_MAPPING mapping;
     int             value, oldvalue;
     int             valuator;
     int             deadzone;
@@ -91,11 +81,15 @@ typedef struct _AXIS {
     float           previousposition; /* TYPE_ABSOLUTE */
     float           amplify;
     float           subpixel; /* Pending subpixel movement */
+
     KEYSCANCODES    keys_low, keys_high;  /* MAPPING_KEY */
+    int             key_isdown;
+    OsTimerPtr      timer;
+    Bool            timerrunning;
 } AXIS;
 
 typedef struct _BUTTON {
-    JOYSTICKMAPPING mapping;
+    JSTK_MAPPING mapping;
     char            pressed;
     int             buttonnumber;    /* MAPPING_BUTTON */
     float           amplify;       /* MAPPING_X/Y/ZX/ZY, 
@@ -107,10 +101,12 @@ typedef struct _BUTTON {
 
 typedef struct _JoystickDevRec {
     int          fd;          /* Actual file descriptor */
+    jstkOpenDeviceProc open_proc; /* Call for re-open backend */
     jstkCloseDeviceProc close_proc; /* Callback for closing the backend */
     jstkReadDataProc read_proc; /* Callback for reading data from the backend */
     void         *devicedata; /* Extra platform device dependend data */
     char         *device;     /* Name of the device */
+    LocalDevicePtr keyboard_device; /* Slave device for keyboard events */
 
     OsTimerPtr   timer;       /* Timer for axis movement */
     Bool         timerrunning;
@@ -120,11 +116,8 @@ typedef struct _JoystickDevRec {
 
     int          repeat_delay, repeat_interval; /* Key autorepeat */
 
-    struct _BUTTONMAP {
-        int size;
-        CARD8 scrollbutton[4];     /* Logical button numbers for scrollwheel */
-        CARD8 map[MAXBUTTONS+1];
-    } buttonmap;
+    CARD8        num_buttons, num_axes; /* Detected number of buttons/axes */
+
     struct _KEYMAP {
         int size;
         KeySym map[256-MIN_KEYCODE];

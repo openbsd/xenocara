@@ -48,6 +48,12 @@
 #include "backend_joystick.h"
 
 
+static void jstkCloseDevice_joystick(JoystickDevPtr joystick);
+static int jstkReadData_joystick(JoystickDevPtr joystick,
+                                 JOYSTICKEVENT *event,
+                                 int *number);
+
+
 /***********************************************************************
  *
  * jstkOpenDevice --
@@ -60,7 +66,7 @@
  */
 
 int
-jstkOpenDevice_joystick(JoystickDevPtr joystick)
+jstkOpenDevice_joystick(JoystickDevPtr joystick, Bool probe)
 {
     char joy_name[128];
     unsigned char axes, buttons;
@@ -110,9 +116,19 @@ jstkOpenDevice_joystick(JoystickDevPtr joystick)
         return -1;
     }
 
-    xf86Msg(X_INFO, "Joystick: %s. %d axes, %d buttons\n", 
-            joy_name, axes, buttons);
+    if (probe == TRUE) {
+        xf86Msg(X_INFO, "Joystick: %s. %d axes, %d buttons\n", 
+                joy_name, axes, buttons);
+    }
 
+    if (buttons > MAXBUTTONS)
+        buttons = MAXBUTTONS;
+    if (axes > MAXAXES)
+        axes = MAXAXES;
+    joystick->num_buttons = buttons;
+    joystick->num_axes = axes;
+
+    joystick->open_proc = jstkOpenDevice_joystick;
     joystick->read_proc = jstkReadData_joystick;
     joystick->close_proc = jstkCloseDevice_joystick;
     return joystick->fd;
@@ -128,7 +144,7 @@ jstkOpenDevice_joystick(JoystickDevPtr joystick)
  ***********************************************************************
  */
 
-void
+static void
 jstkCloseDevice_joystick(JoystickDevPtr joystick)
 {
     if ((joystick->fd >= 0)) {
@@ -150,7 +166,7 @@ jstkCloseDevice_joystick(JoystickDevPtr joystick)
  ***********************************************************************
  */
 
-int
+static int
 jstkReadData_joystick(JoystickDevPtr joystick,
                       JOYSTICKEVENT *event,
                       int *number)
@@ -177,15 +193,11 @@ jstkReadData_joystick(JoystickDevPtr joystick,
             if (abs(js.value) < joystick->axis[js.number].deadzone) {
                 /* We only want one event when in deadzone */
                 if (joystick->axis[js.number].value != 0) {
-                    joystick->axis[js.number].oldvalue = 
-                        joystick->axis[js.number].value;
                     joystick->axis[js.number].value = 0;
                     if (event != NULL) *event = EVENT_AXIS;
                     if (number != NULL) *number = js.number;
                 }
             }else{
-                joystick->axis[js.number].oldvalue = 
-                    joystick->axis[js.number].value;
                 joystick->axis[js.number].value = js.value;
                 if (event != NULL) *event = EVENT_AXIS;
                 if (number != NULL) *number = js.number;

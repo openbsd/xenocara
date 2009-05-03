@@ -17,6 +17,9 @@
 /* Define to 1 if you have the <dev/usb/usb.h> header file. */
 #undef HAVE_DEV_USB_USB_H
 
+/* Define to 1 if you have the <dev/usb/usb_ioctl.h> header file. */
+#undef HAVE_DEV_USB_USB_IOCTL_H
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 

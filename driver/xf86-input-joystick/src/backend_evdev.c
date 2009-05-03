@@ -61,6 +61,11 @@ struct jstk_evdev_data {
 };
 
 
+static void jstkCloseDevice_evdev(JoystickDevPtr joystick);
+static int jstkReadData_evdev(JoystickDevPtr joystick,
+                              JOYSTICKEVENT *event,
+                              int *number);
+
 /***********************************************************************
  *
  * jstkOpenDevice --
@@ -73,7 +78,7 @@ struct jstk_evdev_data {
  */
 
 int
-jstkOpenDevice_evdev(JoystickDevPtr joystick)
+jstkOpenDevice_evdev(JoystickDevPtr joystick, Bool probe)
 {
     int driver_version;
     char name[256];
@@ -176,13 +181,23 @@ jstkOpenDevice_evdev(JoystickDevPtr joystick)
     if (ioctl(joystick->fd, EVIOCGUNIQ(sizeof(uniq)), uniq) == -1)
         strcpy(uniq, "No name");
 
-    xf86Msg(X_INFO, "Joystick: %s. bus 0x%x vendor 0x%x product 0x%x version 0x%x\n",
-	name, id.bustype, id.vendor, id.product, id.version);
-    xf86Msg(X_INFO, "Joystick: found %d axes, %d buttons\n", axes, buttons);
+    if (probe == TRUE) {
+        xf86Msg(X_INFO, "Joystick: %s. bus 0x%x vendor 0x%x product 0x%x version 0x%x\n",
+	    name, id.bustype, id.vendor, id.product, id.version);
+        xf86Msg(X_INFO, "Joystick: found %d axes, %d buttons\n", axes, buttons);
+    }
 
+    joystick->open_proc = jstkOpenDevice_evdev;
     joystick->read_proc = jstkReadData_evdev;
     joystick->close_proc = jstkCloseDevice_evdev;
     joystick->devicedata = (void*) evdevdata;
+
+    if (buttons > MAXBUTTONS)
+        buttons = MAXBUTTONS;
+    if (axes > MAXAXES)
+        axes = MAXAXES;
+    joystick->num_buttons = buttons;
+    joystick->num_axes = axes;
     return joystick->fd;
 }
 
@@ -196,7 +211,7 @@ jstkOpenDevice_evdev(JoystickDevPtr joystick)
  ***********************************************************************
  */
 
-void
+static void
 jstkCloseDevice_evdev(JoystickDevPtr joystick)
 {
     if ((joystick->fd >= 0)) {
@@ -222,7 +237,7 @@ jstkCloseDevice_evdev(JoystickDevPtr joystick)
  ***********************************************************************
  */
 
-int
+static int
 jstkReadData_evdev(JoystickDevPtr joystick,
                    JOYSTICKEVENT *event,
                    int *number)
@@ -266,15 +281,11 @@ jstkReadData_evdev(JoystickDevPtr joystick,
                 if (abs(value) < joystick->axis[axis->number].deadzone) {
                     /* We only want one event when in deadzone */
                     if (joystick->axis[axis->number].value != 0) {
-                        joystick->axis[axis->number].oldvalue = 
-                            joystick->axis[axis->number].value;
                         joystick->axis[axis->number].value = 0;
                         if (event != NULL) *event = EVENT_AXIS;
                         if (number != NULL) *number = axis->number;
                     }
                 }else{
-                    joystick->axis[axis->number].oldvalue = 
-                        joystick->axis[axis->number].value;
                     joystick->axis[axis->number].value = value;
                     if (event != NULL) *event = EVENT_AXIS;
                     if (number != NULL) *number = axis->number;

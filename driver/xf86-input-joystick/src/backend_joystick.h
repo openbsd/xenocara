@@ -26,10 +26,6 @@
 
 #include "jstk.h"
 
-int jstkOpenDevice_joystick(JoystickDevPtr joystick);
-void jstkCloseDevice_joystick(JoystickDevPtr joystick);
-int jstkReadData_joystick(JoystickDevPtr joystick,
-                          JOYSTICKEVENT *event,
-                          int *number);
+int jstkOpenDevice_joystick(JoystickDevPtr joystick, Bool probe);
 
 #endif

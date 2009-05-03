@@ -4,12 +4,43 @@
     <match key="info.capabilities" contains="input">
       <!-- Match on anything you like from lshal -->
       <match key="input.product" string="Logitech Logitech Dual Action">
-        <!-- Currently Xorg looks for these two capabilities, so
-             we need to add them. This might confuse other hal clients. -->
-        <append key="info.capabilities" type="strlist">input.keys</append> 
-        <append key="info.capabilities" type="strlist">input.mouse</append>
+        <!-- xorg-server<1.5 will only hotplug devices where these two capatilities
+             are set. This hack can confuse other hal clients. -->
+	<!--
+	<append key="info.capabilities" type="strlist">input.keys</append>
+	<append key="info.capabilities" type="strlist">input.mouse</append>
+	-->
+	
         <merge key="input.x11_driver" type="string">joystick</merge>
-        <!-- How to add custom parameters to configure the device? -->
+	
+        <!-- Arbitrary options can be passed to the driver using 
+	     the input.x11_options property since xorg-server-1.5. -->
+
+	<!-- DEFAULT CONFIGURATION 
+	     Change this to override the default settings of the input driver.
+	-->
+        <merge key="input.x11_options.MapButton1" type="string">button=1</merge>
+        <merge key="input.x11_options.MapButton2" type="string">button=2</merge>
+        <merge key="input.x11_options.MapButton3" type="string">button=3</merge>
+
+        <merge key="input.x11_options.MapAxis1" type="string">mode=relative axis=+1x deadzone=5000</merge>
+        <merge key="input.x11_options.MapAxis2" type="string">mode=relative axis=+1y deadzone=5000</merge>
+        <merge key="input.x11_options.MapAxis3" type="string">mode=relative axis=+1zx deadzone=5000</merge>
+        <merge key="input.x11_options.MapAxis4" type="string">mode=relative axis=+1zy deadzone=5000</merge>
+        <merge key="input.x11_options.MapAxis5" type="string">mode=accelerated axis=+1x deadzone=5000</merge>
+        <merge key="input.x11_options.MapAxis6" type="string">mode=accelerated axis=+1y deadzone=5000</merge>
+
+	<!-- EXAMPLES
+	<merge key="input.x11_options.DebugLevel" type="string">5</merge>
+	<merge key="input.x11_options.AutoRepeat" type="string">500 4</merge>
+	<merge key="input.x11_options.MapButton4" type="string">key=Alt_L+Tab</merge>
+	<merge key="input.x11_options.MapButton8" type="string">amplify=0.3</merge>
+	<merge key="input.x11_options.MapButton9" type="string">disable-mouse</merge>
+	<merge key="input.x11_options.MapButton10" type="string">key=space</merge>
+
+	<merge key="input.x11_options.MapAxis1" type="string">mode=accelerated keylow=Left keyhigh=Right</merge>
+	<merge key="input.x11_options.MapAxis2" type="string">mode=accelerated keylow=Up keyhigh=Down</merge>
+	-->
       </match>
     </match>
   </device>

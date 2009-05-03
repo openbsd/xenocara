@@ -1,3 +1,4 @@
+.\" shorthand for double quote that works everywhere.
 .ds q \N'34'
 .TH joystick __drivermansuffix__ __vendorversion__
 .SH NAME
@@ -127,6 +128,16 @@ Every axis which's mode is not
 .B none
 will be reported as an additional valuator.
 .TP 7
+.B \*qvaluator\*q
+Send extra valuator events for this axis. The valuators will be numbered ascending, starting with 2 (valuator 0 and 1 are reserved for pointer movement). The range of the valuators is always 
+.IR -32767 " to " 32768 .
+Neither
+.B mode
+nor
+.B axis
+needs to be set to generate extra valuator events.
+Default: not set.
+.TP 7
 .BI "\*qaxis="[<factor>]<axis> \*q
 Where
 .I <axis>
@@ -163,7 +174,11 @@ If
 .B mode
 is set to 
 .IR accelerated :
-One keydown event is generated, when the axis is moved out of the deadzone, the keyup event is generated, when the axis moves back to the deadzone. The keys will be autorepeated according to the keyboard settings.
+Keydown and keyup events will be generated repeatedly. The time between a keydown and a keyup event corresponds to the deflection of the axis.
+If the axis is deflected by 30%, the key will be considered to be down 300ms out of 1 second. The exact intervals may vary and can be adjusted with the
+.I amplify
+parameter. If the axis is deflected by 100%, there will only be one keydown event, so the key is considered down all the time.
+The keys will be autorepeated according to the Xorg keyboard settings.
 
 See special section about key events below.
 .TP 7
@@ -302,17 +317,6 @@ and the second and fourth axis to the arrow keys
 The keys for the first two axes will be generated in an interval according to the value of the axis. The autorepeat speed of the first axis will be half the speed of that of the second axis.
 The keys for the third and fourth axis are generated once when the axis moves out of the deadzone and when it moves back into the deadzone. X.Org will autorepeat those keys according to current keyboard settings.
 
-.SH "VALUATORS"
-The driver reports relative cursor movement as valuators 0 and 1.
-
-Every axis will be associated with an additional valuator,
-reporting the absolute raw values of the axis in the range of
-.IR "-32768 " to " 32768" .
-
-Axes in the mode 
-.B "\*qnone\*q"
-will be ignored. The mode has no effect on the reported value. The axis does not need to be assigned to a direction.
-
 .SH "NOTES"
 The driver does not do hotplugging on it's own. The joystick needs to be plugged in when the driver is loaded.
 If the joystick is unplugged, the device will be automatically deactivated.
@@ -321,7 +325,8 @@ There is an example hal policy in
 .I ${sourcecode}/config/50-x11-input-joystick.fdi
 which will take care of hotplugging. Place it in
 .I /etc/hal/fdi/policy 
-and customize it to your needs. This is HIGHLY experimental and you can't pass any options to the driver, yet.
+and customize it to your needs. Pass custom options to the driver using x11_options properties. This requires xorg-server-1.5 or 
+higher.
 .P
 Make sure you add the 
 .I \*qSendCoreEvents\*q
@@ -338,7 +343,7 @@ Example:
 
 
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__), xmodmap(1)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__), xmodmap(1)
 .SH AUTHORS
 Sascha Hlusiak (2007-2008),
 .fi

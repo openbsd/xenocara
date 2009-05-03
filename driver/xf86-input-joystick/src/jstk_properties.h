@@ -21,12 +21,11 @@
  *
  */
 
-#ifndef _XF86JSTK_AXIS_H_INCLUDED_
-#define _XF86JSTK_AXIS_H_INCLUDED_
+#ifndef __JSTK_PROPERTIES_INCLUDED__
+#define __JSTK_PROPERTIES_INCLUDED__
 
-void jstkStartAxisTimer(LocalDevicePtr device, int number);
-void jstkStartButtonAxisTimer(LocalDevicePtr device, int number);
-void jstkHandleAbsoluteAxis(LocalDevicePtr device, int number);
-void jstkHandlePWMAxis(LocalDevicePtr device, int number);
+#include "jstk.h"
+
+Bool jstkInitProperties(DeviceIntPtr pJstk, JoystickDevPtr priv);
 
 #endif
