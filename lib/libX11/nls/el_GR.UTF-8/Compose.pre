@@ -127,10 +127,10 @@ XCOMM Special Character
 <Multi_key> <underscore> <a>		: "ª"	ordfeminine
 <Multi_key> <A> <underscore>		: "ª"	ordfeminine
 <Multi_key> <underscore> <A>		: "ª"	ordfeminine
-<Multi_key> <o> <underscore>		: "º"	masculine
-<Multi_key> <underscore> <o>		: "º"	masculine
-<Multi_key> <O> <underscore>		: "º"	masculine
-<Multi_key> <underscore> <O>		: "º"	masculine
+<Multi_key> <o> <underscore>		: "º"	ordmasculine
+<Multi_key> <underscore> <o>		: "º"	ordmasculine
+<Multi_key> <O> <underscore>		: "º"	ordmasculine
+<Multi_key> <underscore> <O>		: "º"	ordmasculine
 <Multi_key> <less> <less>		: "«"	guillemotleft
 <Multi_key> <greater> <greater>		: "»"	guillemotright
 <Multi_key> <0> <asciicircum>		: "°"	degree
@@ -249,9 +249,13 @@ XCOMM Accented Alphabet
 <Multi_key> <acute> <C>			: "Ç"	Ccedilla
 <Multi_key> <acute> <c>			: "ç"	ccedilla
 <Multi_key> <C> <comma>			: "Ç"	Ccedilla
+<Multi_key> <C> <cedilla>		: "Ç"	Ccedilla
 <Multi_key> <comma> <C>			: "Ç"	Ccedilla
+<Multi_key> <cedilla> <C>		: "Ç"	Ccedilla
 <Multi_key> <c> <comma>			: "ç"	ccedilla
+<Multi_key> <c> <cedilla>		: "ç"	ccedilla
 <Multi_key> <comma> <c>			: "ç"	ccedilla
+<Multi_key> <cedilla> <c>		: "ç"	ccedilla
 <Multi_key> <minus> <D>			: "Ð"	ETH
 <Multi_key> <D> <minus>			: "Ð"	ETH
 <Multi_key> <minus> <d>			: "ð"	eth
@@ -2381,5 +2385,31 @@ XCOMM Miscellaneous extensions.
 <Multi_key> <Greek_DELTA> <Greek_rho>	: "₯"	U20af
 <Multi_key> <Greek_delta> <Greek_RHO>	: "₯"	U20af
 <Multi_key> <Greek_delta> <Greek_rho>	: "₯"	U20af
+
+<Multi_key> <question> <exclam>         : "‽"   U203D # INTERROBANG
+<Multi_key> <exclam> <question>         : "‽"   U203D # INTERROBANG
+
+<Multi_key> <1> <3>			: "⅓"	U2153 # VULGAR FRACTION ONE THIRD
+<Multi_key> <2> <3>			: "⅔"	U2154 # VULGAR FRACTION TWO THIRDS
+<Multi_key> <1> <5>			: "⅕"	U2155 # VULGAR FRACTION ONE FIFTH
+<Multi_key> <2> <5>			: "⅖"	U2156 # VULGAR FRACTION TWO FIFTHS
+<Multi_key> <3> <5>			: "⅗"	U2157 # VULGAR FRACTION THREE FIFTHS
+<Multi_key> <4> <5>			: "⅘"	U2158 # VULGAR FRACTION FOUR FIFTHS
+<Multi_key> <1> <6>			: "⅙"	U2159 # VULGAR FRACTION ONE SIXTH
+<Multi_key> <5> <6>			: "⅚"	U215A # VULGAR FRACTION FIVE SIXTHS
+<Multi_key> <1> <8>			: "⅛"	U215B # VULGAR FRACTION ONE EIGHTH
+<Multi_key> <3> <8>			: "⅜"	U215C # VULGAR FRACTION THREE EIGHTHS
+<Multi_key> <5> <8>			: "⅝"	U215D # VULGAR FRACTION FIVE EIGHTHS
+<Multi_key> <7> <8>			: "⅞"	U215E # VULGAR FRACTION SEVEN EIGHTHS
+
+XCOMM
+XCOMM Khmer digraphs
+XCOMM
+
+<U17ff> :   "ាំ"
+<U17fe> :   "ោះ"
+<U17fd> :   "េះ"
+<U17fc> :   "ុំ"
+<U17fb> :   "ុះ"
 
 XCOMM End

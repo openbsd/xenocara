@@ -16,17 +16,17 @@ makes no representations about the suitability of this software for
 any purpose.  It is provided "as is" without express or implied
 warranty.
 
-FUJITSU LIMITED AND DIGITAL EQUIPMENT CORPORATION DISCLAIM ALL 
-WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED 
-WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL 
-FUJITSU LIMITED AND DIGITAL EQUIPMENT CORPORATION BE LIABLE FOR 
-ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES 
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER 
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, 
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF 
+FUJITSU LIMITED AND DIGITAL EQUIPMENT CORPORATION DISCLAIM ALL
+WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
+FUJITSU LIMITED AND DIGITAL EQUIPMENT CORPORATION BE LIABLE FOR
+ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 
-  Author:    Takashi Fujiwara     FUJITSU LIMITED 
+  Author:    Takashi Fujiwara     FUJITSU LIMITED
                                	  fujiwara@a80.tech.yk.fujitsu.co.jp
   Modifier:  Franky Ling          Digital Equipment Corporation
 	                          frankyling@hgrd01.enet.dec.com
@@ -61,21 +61,25 @@ Private XIMMethodsRec      Xim_im_thai_methods = {
 #define THAI_LANGUAGE_NAME 	"th"
 
 Bool
-_XimCheckIfThaiProcessing(im)
-    Xim          im;
+_XimCheckIfThaiProcessing(Xim im)
 {
     char *language;
 
     _XGetLCValues(im->core.lcd, XlcNLanguage, &language, NULL);
-    if(strcmp(language, THAI_LANGUAGE_NAME) == 0) {
+    if(strcmp(language, THAI_LANGUAGE_NAME) == 0 &&
+       (strcmp(im->core.im_name, "") == 0 ||
+        strcmp(im->core.im_name, "BasicCheck") == 0 ||
+        strcmp(im->core.im_name, "Strict") == 0 ||
+        strcmp(im->core.im_name, "Thaicat") == 0 ||
+        strcmp(im->core.im_name, "Passthrough") == 0))
+    {
 	return(True);
     }
     return(False);
 }
 
 Public Bool
-_XimThaiOpenIM(im)
-    Xim		 im;
+_XimThaiOpenIM(Xim im)
 {
     XLCd		 lcd = im->core.lcd;
     XlcConv		 conv;
@@ -144,8 +148,7 @@ Open_Error :
 }
 
 Public void
-_XimThaiIMFree(im)
-    Xim		im;
+_XimThaiIMFree(Xim im)
 {
     if(im->core.im_resources) {
 	Xfree(im->core.im_resources);
@@ -215,8 +218,7 @@ _XimThaiIMFree(im)
 }
 
 Public Status
-_XimThaiCloseIM(xim)
-    XIM		xim;
+_XimThaiCloseIM(XIM xim)
 {
     Xim		im = (Xim)xim;
     XIC		ic;

@@ -1,5 +1,5 @@
 /*
- * $Id: x11_trans.c,v 1.1.1.1 2006/11/25 16:37:31 matthieu Exp $
+ * $Id: x11_trans.c,v 1.2 2009/05/03 12:59:11 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -21,12 +21,12 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
- 
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#define X11_t
-#define TRANS_CLIENT
+#define X11_t 1
+#define TRANS_CLIENT 1
 #include <X11/Xtrans/transport.c>
 

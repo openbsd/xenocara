@@ -45,7 +45,6 @@ host_triplet = @host@
 @UDC_TRUE@am__append_2 = udcInf.c
 @THRSTUBS_TRUE@am__append_3 = UIThrStubs.c
 @XCB_TRUE@am__append_4 = \
-@XCB_TRUE@                  xcb_lock.c \
 @XCB_TRUE@                  xcb_disp.c \
 @XCB_TRUE@                  xcb_io.c \
 @XCB_TRUE@                  Xxcbint.h
@@ -140,13 +139,13 @@ am__libX11_la_SOURCES_DIST = AllCells.c AllowEv.c AllPlanes.c \
 	UngrabSvr.c UninsCmap.c UnldFont.c UnmapSubs.c UnmapWin.c \
 	VisUtil.c WarpPtr.c Window.c WinEvent.c Withdraw.c WMGeom.c \
 	WMProps.c WrBitF.c Xatomtype.h Xintatom.h Xintconn.h \
-	XlibAsync.c XlibInt.c XomGeneric.h Xresinternal.h Xrm.c XrmI.h \
-	os2Stubs.c udcInf.c UIThrStubs.c xcb_lock.c xcb_disp.c \
+	XlibAsync.c XlibInt.c Xprivate.h XomGeneric.h Xresinternal.h \
+	Xrm.c XrmI.h os2Stubs.c udcInf.c UIThrStubs.c xcb_disp.c \
 	xcb_io.c Xxcbint.h ConnDis.c x11_trans.c
 @OS2_TRUE@am__objects_1 = os2Stubs.lo
 @UDC_TRUE@am__objects_2 = udcInf.lo
 @THRSTUBS_TRUE@am__objects_3 = UIThrStubs.lo
-@XCB_TRUE@am__objects_4 = xcb_lock.lo xcb_disp.lo xcb_io.lo
+@XCB_TRUE@am__objects_4 = xcb_disp.lo xcb_io.lo
 @XCB_FALSE@am__objects_5 = ConnDis.lo x11_trans.lo
 am_libX11_la_OBJECTS = AllCells.lo AllowEv.lo AllPlanes.lo AutoRep.lo \
 	Backgnd.lo BdrWidth.lo Bell.lo Border.lo ChAccCon.lo \
@@ -208,9 +207,6 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
-	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
-	$(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -247,9 +243,12 @@ BIGFONT_CFLAGS = @BIGFONT_CFLAGS@
 BIGFONT_LIBS = @BIGFONT_LIBS@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
+CC_FOR_BUILD = @CC_FOR_BUILD@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -257,6 +256,7 @@ CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DOLT_BASH = @DOLT_BASH@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DSYMUTIL = @DSYMUTIL@
@@ -270,6 +270,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 I18N_MODULE_LIBS = @I18N_MODULE_LIBS@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -293,6 +294,8 @@ LINT_FALSE = @LINT_FALSE@
 LINT_FLAGS = @LINT_FLAGS@
 LINT_TRUE = @LINT_TRUE@
 LN_S = @LN_S@
+LTCOMPILE = @LTCOMPILE@
+LTCXXCOMPILE = @LTCXXCOMPILE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -362,19 +365,11 @@ XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
 XPROTO_CFLAGS = @XPROTO_CFLAGS@
 XPROTO_LIBS = @XPROTO_LIBS@
 XTHREADLIB = @XTHREADLIB@
-XTHREADS = @XTHREADS@
 XTHREAD_CFLAGS = @XTHREAD_CFLAGS@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
-XUSE_MTSAFE_API = @XUSE_MTSAFE_API@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -391,23 +386,31 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -504,8 +507,8 @@ libX11_la_SOURCES = AllCells.c AllowEv.c AllPlanes.c AutoRep.c \
 	UngrabSvr.c UninsCmap.c UnldFont.c UnmapSubs.c UnmapWin.c \
 	VisUtil.c WarpPtr.c Window.c WinEvent.c Withdraw.c WMGeom.c \
 	WMProps.c WrBitF.c Xatomtype.h Xintatom.h Xintconn.h \
-	XlibAsync.c XlibInt.c XomGeneric.h Xresinternal.h Xrm.c XrmI.h \
-	$(am__append_1) $(am__append_2) $(am__append_3) \
+	XlibAsync.c XlibInt.c Xprivate.h XomGeneric.h Xresinternal.h \
+	Xrm.c XrmI.h $(am__append_1) $(am__append_2) $(am__append_3) \
 	$(am__append_4) $(am__append_6)
 x11datadir = @X11_DATADIR@
 x11data_DATA = XKeysymDB XErrorDB
@@ -893,7 +896,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x11_xcb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xcb_disp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xcb_io.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xcb_lock.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
