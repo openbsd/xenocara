@@ -902,6 +902,6 @@ is the duration in [ms].
 "60" 
 
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1), X(__miscmansuffix__).
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(1), X(__miscmansuffix__).
 .SH "AUTHORS"
 2000\-2005 \- written  by  Citron GmbH (support@citron.de)

@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.2 2008/08/23 13:05:44 matthieu Exp $
+# $Id: Makefile.am,v 1.3 2009/05/03 13:37:01 matthieu Exp $
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -21,10 +21,12 @@
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = src man
 
-CLEANFILES = ChangeLog
 EXTRA_DIST = ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
 
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

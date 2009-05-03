@@ -1,3 +1,59 @@
+commit 7c202dd28ae9c6fffd7ae958a21463ae69c51a8a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Apr 28 17:51:32 2009 -0700
+
+    Version 2.2.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit d411ee98f95c62bb63cab88a5fa97be6e4fb057e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Apr 28 17:50:51 2009 -0700
+
+    Delete duplicate EXTRA_DIST line from Makefile
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 32dbc726871bf7e3a7535d788f169f8e11c981fd
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Feb 2 18:32:11 2009 -0200
+
+    Janitor: correct make distcheck.
+
+commit 6f479966a1f5f9ab376a0b6144548e5f3da76b12
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:17:02 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit 52b092a77ef19c77bf40cd6896c0d1e54d5f5f62
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:11:02 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit 0297c49fd3743e15900a05169ba36e6a0fb438c0
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Thu Aug 14 14:55:59 2008 +0930
+
+    Fix build, XF86_VERSION_CURRENT doesn't exist anymore.
+
+commit 591674bee43061f1169ebeede653fb6d98147724
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 26 22:03:52 2008 +0930
+
+    Check for XINPUT ABI 3.
+
+commit a59ffb3cdc9d68a0ad21f04831e4255ad0e985d8
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com>
+Date:   Mon Feb 4 01:10:27 2008 -0200
+
+    Don't call xf86SoundKbdBell and xf86XInputSetSendCoreEvents
+    
+    Only call those functions if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0.
+    
+    Signed-off-by: Peter Hutterer <peter@cs.unisa.edu.au>
+
 commit 9a4d7854273a34c1a32f46fb52f2f8c3a227cd12
 Author: Tilman Sauerbeck <tilman@code-monkey.de>
 Date:   Sun Sep 9 17:09:45 2007 +0200

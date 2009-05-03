@@ -1,4 +1,4 @@
-/* $Id: citron.c,v 1.2 2008/08/23 13:05:44 matthieu Exp $
+/* $Id: citron.c,v 1.3 2009/05/03 13:37:01 matthieu Exp $
  * Copyright (c) 1998  Metro Link Incorporated
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -305,7 +305,7 @@ static XF86ModuleVersionInfo VersionRec =
 	MODULEVENDORSTRING,			/* vendor specific string */
 	MODINFOSTRING1,				
 	MODINFOSTRING2,
-	XF86_VERSION_CURRENT,		/* Current XFree version */
+	XORG_VERSION_CURRENT,		/* Current Xorg version */
 	CITOUCH_VERSION_MAJOR,		/* Module-specific major version */
 	CITOUCH_VERSION_MINOR,		/* Module-specific minor version */
 	CITOUCH_VERSION_PATCH,		/* Module-specific patch level */
@@ -1368,7 +1368,10 @@ DeviceInit (DeviceIntPtr dev)
 	 * screen to fit one meter.
 	 * Device may reports touch pressure on the 3rd axis.
 	 */
-	if (InitValuatorClassDeviceStruct (dev, 2, xf86GetMotionEvents,
+	if (InitValuatorClassDeviceStruct (dev, 2,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
+                    xf86GetMotionEvents,
+#endif
 									local->history_size, Absolute) == FALSE)
 	{
 		ErrorF ("%sUnable to allocate Citron touchscreen ValuatorClassDeviceStruct\n", CI_ERROR);
@@ -2058,12 +2061,14 @@ SwitchMode (ClientPtr client, DeviceIntPtr dev, int mode)
 		DBG(6, ErrorF("%s\treporting mode = %s\n", CI_INFO, mode==TS_Raw?"raw":"scaled"));
 		return (Success);
 	}
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 	else if ((mode == SendCoreEvents) || (mode == DontSendCoreEvents))
 	{
 		xf86XInputSetSendCoreEvents (local, (mode == SendCoreEvents));
 		DBG(6, ErrorF("%s\tmode = %sSend Core Events\n", CI_INFO, mode==DontSendCoreEvents?"Don\'t ":""));
 		return (Success);
 	}
+#endif
 #ifdef CIT_MODE_EXT
 	else if (mode == ClickMode_Enter)
 	{
@@ -2466,6 +2471,7 @@ cit_Beep(cit_PrivatePtr priv, int press)
 	if(priv->beep == 0)
 		return;
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 	/* ring release bell */
 	if(press == 0)
 
@@ -2492,6 +2498,7 @@ cit_Beep(cit_PrivatePtr priv, int press)
 	else
 	/* ring press bell */
 		xf86SoundKbdBell(priv->press_vol,priv->press_pitch, priv->press_dur);
+#endif
 
 	DBG(7, ErrorF("%scit_Beep called - %s\n", CI_INFO, (press == 0) ? "release" : "press"));
 #endif
@@ -2508,6 +2515,7 @@ cit_BeepKey(cit_PrivatePtr priv, int press)
 	if(priv->beepkey == 0)
 		return;
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 	/* ring release bell */
 	if(press <= 0)
 
@@ -2532,6 +2540,7 @@ cit_BeepKey(cit_PrivatePtr priv, int press)
 	else
 	/* ring press bell */
 		xf86SoundKbdBell(priv->presskey_vol,priv->presskey_pitch, priv->presskey_dur);
+#endif
 
 	DBG(7, ErrorF("%scit_BeepKey called - %s\n", CI_INFO, (press == 0) ? "release" : "press"));
 #endif
