@@ -2,6 +2,9 @@
 
 #include "xorg-server.h"
 
+/* Define absolute valuator axes */
+#undef ABS_VALUATOR_AXES
+
 /* Call conversion_proc from within the driver, as Xserver doesn't */
 #undef CALL_CONVERSION_PROC
 

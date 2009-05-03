@@ -51,3 +51,16 @@ The driver is composed of three different layers:
      are still transmitted on the PS/2 port so it is necessary
      to be set up to receive those interrupts like a standard
      PS/2 driver, but the actual data on the PS/2 port is ignored.
+
+vmmouse_detect
+--------------
+
+A simple program to detect whether the vmmouse device is present.
+It is used by the HAL callout script to automatically detect a
+vmmouse device.
+
+Returns 0 if we are running in a virtual machine where the vmmouse
+device is present.
+
+Returns 1 otherwise (either we are not in a VM or the vmmouse device
+was disabled).

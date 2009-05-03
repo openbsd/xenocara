@@ -1,0 +1,58 @@
+.\" This manpage is copyright (C) 2007 Canonical, Ltd
+.\" Author: Bryce Harrington <bryce@ubuntu.com>
+.\"
+.\" This is free software; you may redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2,
+.\" or (at your option) any later version.
+.\"
+.\" This is distributed in the hope that it will be useful, but
+.\" WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with the Debian GNU/Linux system; if not, write to the Free
+.\" Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+.\" 02111-1307 USA
+.\"
+.\" That's right, although mdetect itself is under the QPL, this manpage is
+.\" under the GPL.  Enjoy!
+.TH vmmouse_detect 1 "2007-07-19" "Debian GNU/Linux"
+.SH NAME
+vmmouse_detect \- VMware mouse device autodetection tool
+.SH SYNOPSIS
+vmmouse_detect
+.SH OPTIONS
+vmmouse_detect has no options
+.SH DESCRIPTION
+.B vmmouse_detect
+is a tool for detecting if running in a VMware environment where vmmouse
+is used.  It exits with a 0 return value if the vmmouse client is
+enabled, and 1 if not.
+.SH DIAGNOSTICS
+.BR vmmouse_detect 's
+exit status is used to communicate information.
+.IP 0
+.B vmmouse_detect
+found a mouse and exited normally.
+.IP 1
+Either the vmmouse client was not enabled, or it is not being run from
+within a VMware virtual machine.
+.SH BUGS
+Please report bugs in
+.B vmmouse_detect
+<https://bugs.launchpad.net/ubuntu/+source/mdetect/vmmouse_detect>.
+.SH AUTHORS
+.B vmmouse_detect
+is copyright 2007 VMware, Inc.
+.SH LICENSING
+The
+.B vmmouse_detect
+source code is licensed under a BSD-like license.  See COPYING for
+details.
+.PP
+This manual page is licensed under the GNU General Public License.
+.SH SEE ALSO
+.IR mdetect (1),
+.IR XFree86 (1)

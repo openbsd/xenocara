@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-vmmouse],
-        12.5.1,
+        12.6.3,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-vmmouse)
 
@@ -70,6 +70,32 @@ AC_ARG_WITH(xorg-module-dir,
 inputdir=${moduledir}/input
 AC_SUBST(inputdir)
 
+AC_ARG_WITH(hal_bin_dir,
+	    AC_HELP_STRING([--with-hal-bin-dir=DIR],
+			   [Directory where HAL binaries where installed [[default=$bindir]]]),
+	    [halbindir="$withval"],
+	    [halbindir="$bindir"])
+HAL_BIN_DIR=${halbindir}
+AC_SUBST(HAL_BIN_DIR)
+
+AC_ARG_WITH(hal_callouts_dir,
+	    AC_HELP_STRING([--with-hal-callouts-dir=DIR],
+			   [Directory where HAL expects its callout scripts to be located
+			    [[default=$libdir/hal]]]),
+	    [halcalloutsdir="$withval"],
+	    [halcalloutsdir="$libdir/hal"])
+HAL_CALLOUTS_DIR=${halcalloutsdir}
+AC_SUBST(HAL_CALLOUTS_DIR)
+
+AC_ARG_WITH(hal_fdi_dir,
+	    AC_HELP_STRING([--with-hal-fdi-dir=DIR],
+			   [Directory where HAL expects its fdi files to be located
+			   [[default=$datadir/hal/fdi/policy/20thirdparty]]]),
+	    [halfdidir="$withval"],
+	    [halfdidir="$datadir/hal/fdi/policy/20thirdparty"])
+HAL_FDI_DIR=${halfdidir}
+AC_SUBST(HAL_FDI_DIR)
+
 # Checks for extensions
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
@@ -86,6 +112,9 @@ PKG_CHECK_EXISTS([xorg-server >= 1.3.99.0 xorg-server <= 1.4.0.90],
                  [AC_DEFINE([CALL_CONVERSION_PROC], 1,
                             [Call conversion_proc from within the driver, as
                              Xserver doesn't])])
+PKG_CHECK_EXISTS([xorg-server > 1.4.0.90],
+		 [AC_DEFINE([ABS_VALUATOR_AXES], 1,
+			    [Define absolute valuator axes])])
 
 CFLAGS="$CFLAGS $XORG_CFLAGS "' -I$(top_srcdir)/src'
 AC_SUBST([CFLAGS])
@@ -98,4 +127,4 @@ AC_HEADER_STDC
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
 
-AC_OUTPUT([Makefile src/Makefile man/Makefile])
+AC_OUTPUT([Makefile shared/Makefile src/Makefile tools/Makefile fdi/Makefile man/Makefile])

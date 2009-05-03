@@ -94,8 +94,8 @@
  * Version constants
  */
 #define VMMOUSE_MAJOR_VERSION 12
-#define VMMOUSE_MINOR_VERSION 5
-#define VMMOUSE_PATCHLEVEL 1
+#define VMMOUSE_MINOR_VERSION 6
+#define VMMOUSE_PATCHLEVEL 2
 #define VMMOUSE_DRIVER_VERSION \
    (VMMOUSE_MAJOR_VERSION * 65536 + VMMOUSE_MINOR_VERSION * 256 + VMMOUSE_PATCHLEVEL)
 #define VMMOUSE_DRIVER_VERSION_STRING \
@@ -310,6 +310,9 @@ VMMousePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
    if (!mPriv) {
       return NULL;
    }
+
+   mPriv->relative = TRUE;
+
    /*
     * try to enable vmmouse here
     */
@@ -603,8 +606,7 @@ VMMousePostEvent(InputInfoPtr pInfo, int buttons, int dx, int dy, int dz, int dw
  *
  * FlushButtons --
  *
- * 	FlushButtons -- send button up events for sanity. It is called
- *	during DEVICE_ON in VMMouseDeviceControl
+ * 	FlushButtons -- reset button states.
  *
  * Results:
  * 	None
@@ -618,18 +620,8 @@ VMMousePostEvent(InputInfoPtr pInfo, int buttons, int dx, int dy, int dz, int dw
 static void
 FlushButtons(MouseDevPtr pMse)
 {
-
-    /* If no button down is pending xf86PostButtonEvent()
-     * will discard them. So we are on the safe side. */
-
-    int i, blocked;
-
     pMse->lastButtons = 0;
-
-    blocked = xf86BlockSIGIO ();
-    for (i = 1; i <= 5; i++)
-	xf86PostButtonEvent(pMse->device,0,i,0,0,0);
-    xf86UnblockSIGIO (blocked);
+    pMse->lastMappedButtons = 0;
 }
 
 
@@ -675,7 +667,7 @@ MouseCommonOptions(InputInfoPtr pInfo)
    /*
     * Process option for ZAxisMapping
     */
-   s = xf86SetStrOption(pInfo->options, "ZAxisMapping", NULL);
+   s = xf86SetStrOption(pInfo->options, "ZAxisMapping", "4 5");
    if (s) {
       int b1 = 0, b2 = 0, b3 = 0, b4 = 0;
       char *msg = NULL;
@@ -795,7 +787,7 @@ VMMouseDeviceControl(DeviceIntPtr device, int mode)
 			      min(pMse->buttons, MSE_MAXBUTTONS),
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 				miPointerGetMotionEvents,
-#else
+#elif GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
                                 GetMotionHistory,
 #endif
                                 pMse->Ctrl,
@@ -807,10 +799,18 @@ VMMouseDeviceControl(DeviceIntPtr device, int mode)
                                 );
 
       /* X valuator */
+#ifdef ABS_VALUATOR_AXES
+      xf86InitValuatorAxisStruct(device, 0, 0, 65535, 10000, 0, 10000);
+#else
       xf86InitValuatorAxisStruct(device, 0, 0, -1, 1, 0, 1);
+#endif
       xf86InitValuatorDefaults(device, 0);
       /* Y valuator */
+#ifdef ABS_VALUATOR_AXES
+      xf86InitValuatorAxisStruct(device, 1, 0, 65535, 10000, 0, 10000);
+#else
       xf86InitValuatorAxisStruct(device, 1, 0, -1, 1, 0, 1);
+#endif
       xf86InitValuatorDefaults(device, 1);
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
       xf86MotionHistoryAllocate(pInfo);
@@ -846,8 +846,6 @@ VMMouseDeviceControl(DeviceIntPtr device, int mode)
 		  return FALSE;
 	       } else {
 		  mPriv->vmmouseAvailable = TRUE;
-		  VMMouseClient_RequestAbsolute();
-		  mPriv->relative = FALSE;
 		  xf86Msg(X_INFO, "VMWARE(0): vmmouse enabled\n");
 	       }
 	    }
@@ -868,6 +866,7 @@ VMMouseDeviceControl(DeviceIntPtr device, int mode)
 	 if( mPriv->vmmouseAvailable ) {
 	    VMMouseClient_Disable();
 	    mPriv->vmmouseAvailable = FALSE;
+            mPriv->relative = TRUE;
 	 }
 
 	 xf86RemoveEnabledDevice(pInfo);
@@ -916,6 +915,12 @@ VMMouseReadInput(InputInfoPtr pInfo)
 
    pMse = pInfo->private;
    mPriv = pMse->mousePriv;
+
+   if (mPriv->relative) {
+      VMMouseClient_RequestAbsolute();
+      mPriv->relative = FALSE;
+      xf86Msg(X_INFO, "VMWARE(0): vmmouse enable absolute mode\n");
+   }
 
    /*
     * First read the bytes in input device to clear the regular PS/2 fd so
@@ -1180,13 +1185,8 @@ VMMousePlug(pointer	module,
 
    xf86LoaderReqSymLists(reqSymbols, NULL);
 
-   if (!Initialised) {
+   if (!Initialised)
       Initialised = TRUE;
-#ifndef REMOVE_LOADER_CHECK_MODULE_INFO
-      if (xf86LoaderCheckSymbol("xf86AddModuleInfo"))
-#endif
-	 xf86AddModuleInfo(&VMMouseInfo, module);
-   }
 
    xf86Msg(X_INFO, "VMWARE(0): VMMOUSE module was loaded\n");
    xf86AddInputDriver(&VMMOUSE, module, 0);

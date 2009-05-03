@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-#  Copyright 2005 Adam Jackson.
+#  Copyright 2008 VMware, Inc.
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -30,9 +30,10 @@
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 #  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.  IN NO EVENT SHALL
-#  ADAM JACKSON BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+#  VMWARE, INC. BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -56,7 +57,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = src
+bin_PROGRAMS = @DRIVER_NAME@_detect$(EXEEXT)
+subdir = tools
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -65,19 +67,15 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
-am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
-am__vpath_adj = case $$p in \
-    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
-    *) f=$$p;; \
-  esac;
-am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(@DRIVER_NAME@_drv_ladir)"
-@DRIVER_NAME@_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(@DRIVER_NAME@_drv_la_LTLIBRARIES)
-@DRIVER_NAME@_drv_la_DEPENDENCIES =  \
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(calloutsdir)"
+binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
+PROGRAMS = $(bin_PROGRAMS)
+am_@DRIVER_NAME@_detect_OBJECTS = vmmouse_detect.$(OBJEXT)
+@DRIVER_NAME@_detect_OBJECTS = $(am_@DRIVER_NAME@_detect_OBJECTS)
+@DRIVER_NAME@_detect_DEPENDENCIES =  \
 	$(top_builddir)/shared/lib@DRIVER_NAME@.la
-am_@DRIVER_NAME@_drv_la_OBJECTS = @DRIVER_NAME@.lo
-@DRIVER_NAME@_drv_la_OBJECTS = $(am_@DRIVER_NAME@_drv_la_OBJECTS)
+calloutsSCRIPT_INSTALL = $(INSTALL_SCRIPT)
+SCRIPTS = $(callouts_SCRIPTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -89,8 +87,8 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(@DRIVER_NAME@_drv_la_SOURCES)
-DIST_SOURCES = $(@DRIVER_NAME@_drv_la_SOURCES)
+SOURCES = $(@DRIVER_NAME@_detect_SOURCES)
+DIST_SOURCES = $(@DRIVER_NAME@_detect_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -221,12 +219,13 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-@DRIVER_NAME@_drv_la_LTLIBRARIES = @DRIVER_NAME@_drv.la
-@DRIVER_NAME@_drv_la_LDFLAGS = -module -avoid-version
-@DRIVER_NAME@_drv_la_LIBADD = $(top_builddir)/shared/lib@DRIVER_NAME@.la
-@DRIVER_NAME@_drv_ladir = @inputdir@
 INCLUDES = -I$(top_srcdir)/shared
-@DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c xf86OSmouse.h
+@DRIVER_NAME@_detect_SOURCES = vmmouse_detect.c
+@DRIVER_NAME@_detect_LDADD = $(top_builddir)/shared/lib@DRIVER_NAME@.la
+calloutsdir = $(HAL_CALLOUTS_DIR)
+callouts_SCRIPTS = hal-probe-vmmouse
+EXTRA_DIST = hal-probe-vmmouse.in
+CLEANFILES = hal-probe-vmmouse
 all: all-am
 
 .SUFFIXES:
@@ -240,9 +239,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  tools/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --gnu  tools/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -260,35 +259,56 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-@DRIVER_NAME@_drv_laLTLIBRARIES: $(@DRIVER_NAME@_drv_la_LTLIBRARIES)
+install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
-	test -z "$(@DRIVER_NAME@_drv_ladir)" || $(mkdir_p) "$(DESTDIR)$(@DRIVER_NAME@_drv_ladir)"
-	@list='$(@DRIVER_NAME@_drv_la_LTLIBRARIES)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    f=$(am__strip_dir) \
-	    echo " $(LIBTOOL) --mode=install $(@DRIVER_NAME@_drv_laLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(@DRIVER_NAME@_drv_ladir)/$$f'"; \
-	    $(LIBTOOL) --mode=install $(@DRIVER_NAME@_drv_laLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(@DRIVER_NAME@_drv_ladir)/$$f"; \
+	test -z "$(bindir)" || $(mkdir_p) "$(DESTDIR)$(bindir)"
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  if test -f $$p \
+	     || test -f $$p1 \
+	  ; then \
+	    f=`echo "$$p1" | sed 's,^.*/,,;$(transform);s/$$/$(EXEEXT)/'`; \
+	   echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(binPROGRAMS_INSTALL) '$$p' '$(DESTDIR)$(bindir)/$$f'"; \
+	   $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(binPROGRAMS_INSTALL) "$$p" "$(DESTDIR)$(bindir)/$$f" || exit 1; \
 	  else :; fi; \
 	done
 
-uninstall-@DRIVER_NAME@_drv_laLTLIBRARIES:
+uninstall-binPROGRAMS:
 	@$(NORMAL_UNINSTALL)
-	@set -x; list='$(@DRIVER_NAME@_drv_la_LTLIBRARIES)'; for p in $$list; do \
-	  p=$(am__strip_dir) \
-	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(@DRIVER_NAME@_drv_ladir)/$$p'"; \
-	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(@DRIVER_NAME@_drv_ladir)/$$p"; \
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  f=`echo "$$p" | sed 's,^.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
+	  echo " rm -f '$(DESTDIR)$(bindir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(bindir)/$$f"; \
 	done
 
-clean-@DRIVER_NAME@_drv_laLTLIBRARIES:
-	-test -z "$(@DRIVER_NAME@_drv_la_LTLIBRARIES)" || rm -f $(@DRIVER_NAME@_drv_la_LTLIBRARIES)
-	@list='$(@DRIVER_NAME@_drv_la_LTLIBRARIES)'; for p in $$list; do \
-	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
-	  test "$$dir" != "$$p" || dir=.; \
-	  echo "rm -f \"$${dir}/so_locations\""; \
-	  rm -f "$${dir}/so_locations"; \
+clean-binPROGRAMS:
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  echo " rm -f $$p $$f"; \
+	  rm -f $$p $$f ; \
 	done
-@DRIVER_NAME@_drv.la: $(@DRIVER_NAME@_drv_la_OBJECTS) $(@DRIVER_NAME@_drv_la_DEPENDENCIES) 
-	$(LINK) -rpath $(@DRIVER_NAME@_drv_ladir) $(@DRIVER_NAME@_drv_la_LDFLAGS) $(@DRIVER_NAME@_drv_la_OBJECTS) $(@DRIVER_NAME@_drv_la_LIBADD) $(LIBS)
+@DRIVER_NAME@_detect$(EXEEXT): $(@DRIVER_NAME@_detect_OBJECTS) $(@DRIVER_NAME@_detect_DEPENDENCIES) 
+	@rm -f @DRIVER_NAME@_detect$(EXEEXT)
+	$(LINK) $(@DRIVER_NAME@_detect_LDFLAGS) $(@DRIVER_NAME@_detect_OBJECTS) $(@DRIVER_NAME@_detect_LDADD) $(LIBS)
+install-calloutsSCRIPTS: $(callouts_SCRIPTS)
+	@$(NORMAL_INSTALL)
+	test -z "$(calloutsdir)" || $(mkdir_p) "$(DESTDIR)$(calloutsdir)"
+	@list='$(callouts_SCRIPTS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  if test -f $$d$$p; then \
+	    f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
+	    echo " $(calloutsSCRIPT_INSTALL) '$$d$$p' '$(DESTDIR)$(calloutsdir)/$$f'"; \
+	    $(calloutsSCRIPT_INSTALL) "$$d$$p" "$(DESTDIR)$(calloutsdir)/$$f"; \
+	  else :; fi; \
+	done
+
+uninstall-calloutsSCRIPTS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(callouts_SCRIPTS)'; for p in $$list; do \
+	  f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
+	  echo " rm -f '$(DESTDIR)$(calloutsdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(calloutsdir)/$$f"; \
+	done
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -296,7 +316,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/@DRIVER_NAME@.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmmouse_detect.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -406,9 +426,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES)
+all-am: Makefile $(PROGRAMS) $(SCRIPTS)
 installdirs:
-	for dir in "$(DESTDIR)$(@DRIVER_NAME@_drv_ladir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(calloutsdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -428,6 +448,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -437,8 +458,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-@DRIVER_NAME@_drv_laLTLIBRARIES clean-generic \
-	clean-libtool mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -456,9 +476,9 @@ info: info-am
 
 info-am:
 
-install-data-am: install-@DRIVER_NAME@_drv_laLTLIBRARIES
+install-data-am: install-calloutsSCRIPTS
 
-install-exec-am:
+install-exec-am: install-binPROGRAMS
 
 install-info: install-info-am
 
@@ -484,23 +504,27 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-@DRIVER_NAME@_drv_laLTLIBRARIES \
+uninstall-am: uninstall-binPROGRAMS uninstall-calloutsSCRIPTS \
 	uninstall-info-am
 
-.PHONY: CTAGS GTAGS all all-am check check-am clean \
-	clean-@DRIVER_NAME@_drv_laLTLIBRARIES clean-generic \
-	clean-libtool ctags distclean distclean-compile \
+.PHONY: CTAGS GTAGS all all-am check check-am clean clean-binPROGRAMS \
+	clean-generic clean-libtool ctags distclean distclean-compile \
 	distclean-generic distclean-libtool distclean-tags distdir dvi \
-	dvi-am html html-am info info-am install \
-	install-@DRIVER_NAME@_drv_laLTLIBRARIES install-am \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
+	dvi-am html html-am info info-am install install-am \
+	install-binPROGRAMS install-calloutsSCRIPTS install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-@DRIVER_NAME@_drv_laLTLIBRARIES \
-	uninstall-am uninstall-info-am
+	tags uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-calloutsSCRIPTS uninstall-info-am
 
+
+hal-probe-vmmouse:
+	sed -e 's|__BIN_PREFIX__|$(bindir)|g' \
+	    -e 's|__HAL_BIN_PREFIX__|$(HAL_BIN_DIR)|g' \
+	    < $(srcdir)/$@.in > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

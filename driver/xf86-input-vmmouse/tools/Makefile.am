@@ -1,4 +1,4 @@
-#  Copyright 2005 Adam Jackson.
+#  Copyright 2008 VMware, Inc.
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -14,16 +14,25 @@
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 #  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.  IN NO EVENT SHALL
-#  ADAM JACKSON BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+#  VMWARE, INC. BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-@DRIVER_NAME@_drv_la_LTLIBRARIES = @DRIVER_NAME@_drv.la
-@DRIVER_NAME@_drv_la_LDFLAGS = -module -avoid-version
-@DRIVER_NAME@_drv_la_LIBADD = $(top_builddir)/shared/lib@DRIVER_NAME@.la
-@DRIVER_NAME@_drv_ladir = @inputdir@
+bin_PROGRAMS = @DRIVER_NAME@_detect
 
 INCLUDES = -I$(top_srcdir)/shared
 
-@DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c xf86OSmouse.h
-                               
+@DRIVER_NAME@_detect_SOURCES = vmmouse_detect.c
+@DRIVER_NAME@_detect_LDADD = $(top_builddir)/shared/lib@DRIVER_NAME@.la
+
+calloutsdir=$(HAL_CALLOUTS_DIR)
+callouts_SCRIPTS = hal-probe-vmmouse
+
+hal-probe-vmmouse:
+	sed -e 's|__BIN_PREFIX__|$(bindir)|g' \
+	    -e 's|__HAL_BIN_PREFIX__|$(HAL_BIN_DIR)|g' \
+	    < $(srcdir)/$@.in > $@
+
+EXTRA_DIST = hal-probe-vmmouse.in
+
+CLEANFILES = hal-probe-vmmouse
