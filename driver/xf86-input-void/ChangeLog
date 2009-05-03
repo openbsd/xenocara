@@ -1,3 +1,48 @@
+commit c1932081e5a6ba2f6196b8f862fe246668e92124
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Feb 25 08:52:53 2009 +1000
+
+    void 1.2.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2154cf5b31c7868e32e1cdc6865ed32c2bff5e88
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Feb 5 17:30:18 2009 -0200
+
+    Janitor: update for ABI_XINPUT_VERSION >= 5
+    
+    This driver should be seen as the simplest possible input
+    driver, and somewhat as a skeleton/model for newer ones.
+      Having it at least compiling with current xorg sdk is a plus.
+    
+    Signed-off-by: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 48295279acfcd2b6902daa49a5eb944318240586
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 29 14:54:32 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit 2d53d8bf892c39e9a327676da37e766d51557877
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:24:27 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit 2ad046c73fd4bf1b880cc19899d161b07608c8c3
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 26 22:24:22 2008 +0930
+
+    Check for XINPUT ABI 3.
+
+commit b57f5e54c8a2ee15d83be98a739e16b2595fdf28
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 23:18:51 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
 commit 4e43b6206bc719d68ced1ca793ca4e3b938d8e8e
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Sep 7 12:36:56 2007 -0700

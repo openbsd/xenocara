@@ -57,6 +57,7 @@
 /******************************************************************************
  * Function/Macro keys variables
  *****************************************************************************/
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 5
 static KeySym void_map[] = 
 {
 	NoSymbol,	NoSymbol,	NoSymbol,	NoSymbol,
@@ -130,6 +131,7 @@ static KeySymsRec void_keysyms = {
   /* map	minKeyCode	maxKeyCode	width */
   void_map,	8,		255,		1
 };
+#endif	/* GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 5 */
 
 static const char *DEFAULTS[] = {
     NULL
@@ -172,6 +174,10 @@ xf86VoidControlProc(DeviceIntPtr device, int what)
     InputInfoPtr pInfo;
     unsigned char map[MAXBUTTONS + 1];
     int i;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 5
+    XkbRMLVOSet rmlvo;
+#endif
+    Bool result;
     
     pInfo = device->public.devicePrivate;
     
@@ -202,14 +208,25 @@ xf86VoidControlProc(DeviceIntPtr device, int what)
 	  return !Success;
 	}
 */
-	if (InitKeyboardDeviceStruct((DevicePtr)device, &void_keysyms, NULL, BellProc, KeyControlProc) == FALSE) {
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 5
+	memset(&rmlvo, 0, sizeof(XkbRMLVOSet));
+	result = InitKeyboardDeviceStruct(device, &rmlvo,
+					  BellProc, KeyControlProc);
+#else
+	result = InitKeyboardDeviceStruct((DevicePtr)device, &void_keysyms,
+					  NULL, BellProc, KeyControlProc);
+#endif
+	if (!result) {
 	  ErrorF("unable to init keyboard device\n");
 	  return !Success;
 	}
 
 	if (InitValuatorClassDeviceStruct(device, 
 					  2,
-					  xf86GetMotionEvents, 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
+					  xf86GetMotionEvents,
+#endif
 					  0,
 					  Absolute) == FALSE) {
 	  InitValuatorAxisStruct(device,
