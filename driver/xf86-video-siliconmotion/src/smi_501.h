@@ -1333,7 +1333,7 @@ typedef union smi_cli_entry {
 } smi_cli_entry_t;
 
 
-#ifdef SMI501_CLI_DEBUG
+#if SMI501_CLI_DEBUG
 
 /* ensure there are "count" command list "slots" 8 bytes wide free */
 #define BATCH_BEGIN(COUNT)						\

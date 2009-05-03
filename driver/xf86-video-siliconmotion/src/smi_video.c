@@ -1057,10 +1057,10 @@ SMI_PutVideo(
     dstBox.x2 = drw_x + drw_w;
     dstBox.y2 = drw_y + drw_h;
 
-    if(!xf86_crtc_clip_video_helper(pScrn, &crtc, NULL, &dstBox, &x1, &x2, &y1, &y2, clipBoxes, width, height))
+    if(!xf86_crtc_clip_video_helper(pScrn, &crtc, crtcConf->crtc[0], &dstBox, &x1, &x2, &y1, &y2, clipBoxes, width, height))
 	LEAVE(Success);
 
-    if(pSmi->Dualhead && crtc == crtcConf->crtc[0])
+    if(pSmi->Dualhead && crtc == crtcConf->crtc[1])
 	LEAVE(Success);
 
     /* Transform dstBox to the CRTC coordinates */
@@ -1516,7 +1516,7 @@ SMI_PutImage(
 	    LEAVE(Success);
     }
     else {
-	if (!xf86_crtc_clip_video_helper(pScrn, &crtc, NULL, &dstBox,
+	if (!xf86_crtc_clip_video_helper(pScrn, &crtc, crtcConf->crtc[0], &dstBox,
 					 &x1, &x2, &y1, &y2, clipBoxes,
 					 width, height))
 	    LEAVE(Success);
@@ -1629,7 +1629,7 @@ SMI_PutImage(
 				 drw_w, drw_h);
     }
     else{
-	if(!pSmi->Dualhead || crtc == crtcConf->crtc[1])
+	if(crtc == crtcConf->crtc[0])
 	    SMI_DisplayVideo(pScrn, id, offset, width, height, dstPitch, x1, y1, x2, y2,
 			     &dstBox, src_w, src_h, drw_w, drw_h);
     }
@@ -2461,7 +2461,7 @@ SMI_DisplaySurface(
     dstBox.y1 = drw_y;
     dstBox.y2 = drw_y + drw_h;
 
-    if(!xf86_crtc_clip_video_helper(surface->pScrn, &crtc, NULL, &dstBox,
+    if(!xf86_crtc_clip_video_helper(surface->pScrn, &crtc, crtcConf->crtc[0], &dstBox,
 				    &x1, &x2, &y1, &y2, clipBoxes, surface->width, surface->height))
 	LEAVE(Success);
 
@@ -2485,7 +2485,7 @@ SMI_DisplaySurface(
 			     surface->height, surface->pitches[0], x1, y1,
 			     x2, y2, &dstBox, vid_w, vid_h, drw_w, drw_h);
     else{
-	if(!pSmi->Dualhead || crtc == crtcConf->crtc[1])
+	if(crtc == crtcConf->crtc[0])
 	    SMI_DisplayVideo(surface->pScrn, surface->id, surface->offsets[0],
 			     surface->width, surface->height, surface->pitches[0], x1, y1, x2,
 			     y2, &dstBox, vid_w, vid_h, drw_w, drw_h);

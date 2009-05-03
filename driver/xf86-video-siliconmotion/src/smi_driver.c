@@ -792,9 +792,13 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 		   	  pSmi->PciInfo->func);
 #endif
 
-    pSmi->Dualhead = FALSE;
-
     from = X_DEFAULT;
+    if(pSmi->Chipset == SMI_LYNX3DM &&
+       pScrn->bitsPerPixel == 16)
+	pSmi->Dualhead = TRUE;
+    else
+	pSmi->Dualhead = FALSE;
+
     if (xf86GetOptValBool(pSmi->Options, OPTION_DUALHEAD, &pSmi->Dualhead))
 	from = X_CONFIG;
 
@@ -914,8 +918,7 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
     pSmi->clockRange.next = NULL;
     pSmi->clockRange.minClock = 20000;
 
-    if (pSmi->Chipset == SMI_LYNX3DM ||
-	pSmi->Chipset == SMI_COUGAR3DR ||
+    if (SMI_LYNXM_SERIES(pSmi->Chipset) ||
 	IS_MSOC(pSmi))
 	pSmi->clockRange.maxClock = 200000;
     else
@@ -1535,7 +1538,7 @@ SMI_MapMem(ScrnInfoPtr pScrn)
 	pSmi->FBReserved = pSmi->FBCursorOffset = pSmi->videoRAMBytes -
 	    (pSmi->Dualhead ? SMI501_CURSOR_SIZE << 1 : SMI501_CURSOR_SIZE);
 
-# ifdef SMI501_CLI_DEBUG
+# if SMI501_CLI_DEBUG
 	if (pSmi->useEXA) {
 	    pSmi->batch_active = FALSE;
 	    pSmi->batch_length = 4096;

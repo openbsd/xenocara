@@ -1,3 +1,99 @@
+commit abf1ba79f2bfe61f24cfa43deb0400d7c5f95bd5
+Author: Francisco Jerez <currojerez@riseup.net>
+Date:   Tue Apr 21 21:37:45 2009 +0200
+
+    Increase the maximum clock value to 200MHz on SM712.
+    
+    The default MCLK setting was higher than the clock limit, and it
+    failed.
+
+commit 41e5c49024d4e27a7be3da02017000a22b59016f
+Author: Francisco Jerez <currojerez@riseup.net>
+Date:   Tue Apr 21 21:36:10 2009 +0200
+
+    Don't attempt monitor detection on SM712.
+    
+    The databook says nothing about it, and it doesn't work.
+
+commit 6691678b5f04d52a1e08f9eaa6d511df9b7eeb4d
+Author: Jamie Lentin <jm@lentin.co.uk>
+Date:   Thu Mar 19 21:54:12 2009 +0000
+
+    Stop clearing of "VESA compliance power down mode" bit
+    
+    Clearing this bit causes an OQO 01+ w/SMI720 to power down the LCD,
+    leave it alone.
+    
+    Signed-off-by: Jamie Lentin <jm@lentin.co.uk>
+    Signed-off-by: Francisco Jerez <currojerez@riseup.net>
+
+commit 05480382c508bd27c1755405518ce9c339f0f80e
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Fri Mar 13 21:19:16 2009 +0100
+
+    Fix direct access to IO space on chipsets with no IOBase mapping.
+    
+    Signed-off-by: Francisco Jerez <currojerez@riseup.net>
+
+commit e62807140ede74e262ed70c846017dc3506b511e
+Author: Niels de Vos <niels.devos@wincor-nixdorf.com>
+Date:   Wed Feb 11 10:10:13 2009 +0100
+
+    siliconmotion: Fix disabling of debugging if SMI501_CLI_DEBUG is set to 0
+    
+    Due to checking if SMI501_CLI_DEBUG is defined, some debugging will
+    be enabled if SMI501_CLI_DEBUG is set to 0. A single #if should be
+    used instead. Some debugging code already does this.
+    
+    Signed-off-by: Niels de Vos <niels.devos@wincor-nixdorf.com>
+    Signed-off-by: Francisco Jerez <currojerez@riseup.net>
+
+commit 0b34c4a29fcf45ac24361b4691cca0fd99cc3a3f
+Author: Francisco Jerez <currojerez@riseup.net>
+Date:   Wed Feb 4 03:49:08 2009 +0100
+
+    Wait for vertical retrace before writing registers at SMILynx_CrtcDPMS_*
+
+commit 1d46cca27b0d38d5355b5f93dd0ed0fe4f250d3f
+Author: Francisco Jerez <currojerez@riseup.net>
+Date:   Tue Feb 3 22:15:45 2009 +0100
+
+    Drop the outdated configuration options documentation in README.
+
+commit 64f722c3121a8f28cfc5b532ddec0ac83095ac95
+Author: Francisco Jerez <currojerez@riseup.net>
+Date:   Tue Feb 3 22:17:33 2009 +0100
+
+    Minor corrections at the man page.
+
+commit 94d9c659b71c84db46fa279d9d8736e1589e155c
+Author: Francisco Jerez <currojerez@riseup.net>
+Date:   Tue Feb 3 22:18:14 2009 +0100
+
+    Set dualhead to on by default on SM72x chipsets.
+
+commit 4d98e9c6a6e357ed736cd312a957c1e0a7b1d36b
+Author: Francisco Jerez <currojerez@riseup.net>
+Date:   Wed Feb 4 01:56:20 2009 +0100
+
+    Dynamically switch virtual refresh mode.
+    
+    Probably this makes dualhead mode more useful because it makes
+    possible displaying video on the LCD as long as the CRT output is
+    disabled or cloned.
+
+commit 1c57cfa814504c33fcad51115d77f2d166fb7903
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 21:00:17 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit 2aee107d992cb58bfbb2f527cfa73ea9f6957998
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:33:43 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
 commit fdc2c50682b240e5966e4e5a7b45552ee2043bfc
 Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
 Date:   Mon Dec 29 18:41:05 2008 -0200

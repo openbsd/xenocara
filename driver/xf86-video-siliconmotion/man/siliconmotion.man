@@ -106,12 +106,12 @@ Turn on interlaced video capturing.  Default: off.
 .TP
 .BI "Option \*qUseBIOS\*q \*q" boolean \*q
 Use the BIOS to set the modes. This is used for custom panel timings.
-Default: on.
+Default: off for SM72x and SM5xx, otherwise on.
 .TP
 .BI "Option \*qDualhead\*q \*q" boolean \*q
 Enable dualhead mode.
-Currently not all chips are supported and on lynx chipsets hardware video
-overlay (XV) will only work on the secondary VGA output.
+Currently not all chips are supported and hardware video
+overlay (XV) support may have some limitations.
 Default: off.
 .TP
 .BI "Option \*qPanelSize\*q \*q" width x height \*q
@@ -191,7 +191,7 @@ recent PCI chipsets.  Default: value of
 option.
 
 .SH SEE ALSO
-__xservername__(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1), X(__miscmansuffix__)
+__xservername__(1), __xconfigfile__(__filemansuffix__), Xserver(1), X(__miscmansuffix__)
 
 .SH SUPPORT
 For assistance with this driver, or __xservername__ in general, check the web

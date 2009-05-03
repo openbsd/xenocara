@@ -82,17 +82,25 @@ SMILynx_OutputDPMS_lcd(xf86OutputPtr output, int mode)
     ScrnInfoPtr pScrn = output->scrn;
     SMIPtr pSmi = SMIPTR(pScrn);
     SMIRegPtr reg = pSmi->mode;
+    xf86CrtcConfigPtr crtcConf = XF86_CRTC_CONFIG_PTR(pScrn);
 
     ENTER();
 
     switch (mode) {
     case DPMSModeOn:
-	if(pSmi->lcd == 2 /* LCD is DSTN */
-	   || pSmi->Dualhead /* Virtual Refresh is enabled */)
+	if(pSmi->Dualhead &&
+	   output->crtc == crtcConf->crtc[1]){
+	    /* Virtual Refresh is enabled */
+
 	    reg->SR21 &= ~0x10; /* Enable LCD framebuffer read operation and DSTN dithering engine */
-	if(pSmi->lcd == 2 /* LCD is DSTN */
-	   && !pSmi->Dualhead /* Virtual Refresh is disabled */)
-	    reg->SR21 &= ~0x20; /* Enable LCD framebuffer write operation */
+	}else{
+	    if(pSmi->lcd == 2){
+		/* LCD is DSTN */
+
+		reg->SR21 &= ~0x10; /* Enable LCD framebuffer read operation and DSTN dithering engine */
+		reg->SR21 &= ~0x20; /* Enable LCD framebuffer write operation */
+	    }
+	}
 
 	reg->SR31 |= 0x01; /* Enable LCD display*/
 	break;
@@ -269,18 +277,17 @@ SMILynx_OutputPreInit(ScrnInfoPtr pScrn)
 
 	output->interlaceAllowed = FALSE;
 	output->doubleScanAllowed = FALSE;
-	output->possible_crtcs = 1 << 0;
-	if(pSmi->Dualhead)
-	    output->possible_clones = 0;
-	else
-	    output->possible_clones = 1 << 1;
+	output->possible_crtcs = (1 << 0) | (1 << 1);
+	output->possible_clones = 1 << 1;
 
-	if(!pSmi->useBIOS){
+	if(pSmi->Dualhead){
 	    /* Output 1 is CRT */
 	    SMI_OutputFuncsInit_base(&outputFuncs);
 	    outputFuncs->dpms = SMILynx_OutputDPMS_crt;
 	    outputFuncs->get_modes = SMILynx_OutputGetModes_crt;
-	    outputFuncs->detect = SMILynx_OutputDetect_crt;
+
+	    if(pSmi->Chipset == SMI_LYNX3DM)
+		outputFuncs->detect = SMILynx_OutputDetect_crt;
 
 	    if(! (output = xf86OutputCreate(pScrn,outputFuncs,"VGA")))
 		LEAVE(FALSE);
@@ -288,13 +295,8 @@ SMILynx_OutputPreInit(ScrnInfoPtr pScrn)
 	    output->interlaceAllowed = FALSE;
 	    output->doubleScanAllowed = FALSE;
 
-	    if(pSmi->Dualhead){
-		output->possible_crtcs = 1 << 1;
-		output->possible_clones = 0;
-	    }else{
-		output->possible_crtcs = 1 << 0;
-		output->possible_clones = 1 << 0;
-	    }
+	    output->possible_crtcs = 1 << 0;
+	    output->possible_clones = 1 << 0;
 	}
     }
 

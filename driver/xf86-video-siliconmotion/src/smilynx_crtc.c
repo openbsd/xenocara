@@ -194,7 +194,7 @@ SMILynx_CrtcAdjustFrame(xf86CrtcPtr crtc, int x, int y)
 	WRITE_VPR(pSmi, 0x0C, Base);
 	WRITE_FPR(pSmi, FPR0C, Base);
     }else{
-	if(pSmi->Dualhead && crtc == crtcConf->crtc[0]){
+	if(pSmi->Dualhead && crtc == crtcConf->crtc[1]){
 	    /* LCD */
 
 	    /* FIFO1 read start address */
@@ -857,6 +857,7 @@ SMILynx_CrtcDPMS_crt(xf86CrtcPtr crtc, int mode)
     ScrnInfoPtr pScrn = crtc->scrn;
     SMIPtr pSmi = SMIPTR(pScrn);
     SMIRegPtr reg = pSmi->mode;
+    vgaHWPtr hwp = VGAHWPTR(pScrn);
 
     ENTER();
 
@@ -865,7 +866,40 @@ SMILynx_CrtcDPMS_crt(xf86CrtcPtr crtc, int mode)
     else
 	reg->SR21 &= ~0x88; /* Enable DAC and color palette RAM */
 
+    /* Wait for vertical retrace */
+    while (hwp->readST01(hwp) & 0x8) ;
+    while (!(hwp->readST01(hwp) & 0x8)) ;
+
     VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x21, reg->SR21);
+
+    if(mode == DPMSModeOn){
+	/* Reload the LUT */
+	SMILynx_CrtcLoadLUT_crt(crtc);
+    }
+
+    LEAVE();
+}
+
+static void
+SMILynx_CrtcDPMS_lcd(xf86CrtcPtr crtc, int mode)
+{
+    ScrnInfoPtr pScrn = crtc->scrn;
+    SMIPtr pSmi = SMIPTR(pScrn);
+    SMIRegPtr reg = pSmi->mode;
+    vgaHWPtr hwp = VGAHWPTR(pScrn);
+
+    ENTER();
+
+    if(mode == DPMSModeOff)
+	reg->SR31 &= ~0x80; /* Disable Virtual Refresh */
+    else
+	reg->SR31 |= 0x80; /* Enable Virtual Refresh */
+
+    /* Wait for vertical retrace */
+    while (hwp->readST01(hwp) & 0x8) ;
+    while (!(hwp->readST01(hwp) & 0x8)) ;
+
+    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x31, reg->SR31);
 
     LEAVE();
 }
@@ -912,56 +946,52 @@ SMILynx_CrtcPreInit(ScrnInfoPtr pScrn)
 	    LEAVE(FALSE);
 	crtc->driver_private = crtcPriv;
     }else{
+	/* CRTC0 can drive both outputs when virtual refresh is
+	   disabled, and only the VGA output with virtual refresh
+	   enabled. */
+	SMI_CrtcFuncsInit_base(&crtcFuncs, &crtcPriv);
+
+	if(pSmi->useBIOS){
+	    crtcFuncs->mode_set = SMILynx_CrtcModeSet_bios;
+	}else{
+	    crtcFuncs->dpms = SMILynx_CrtcDPMS_crt;
+
+	    if(pSmi->Dualhead){
+		/* The standard VGA CRTC registers get locked in
+		   virtual refresh mode. */
+		crtcFuncs->mode_set = SMILynx_CrtcModeSet_crt;
+
+	    }else{
+		crtcFuncs->mode_set = SMILynx_CrtcModeSet_vga;
+	    }
+	}
+
+	crtcFuncs->mode_fixup = SMILynx_CrtcModeFixup;
+	crtcPriv->adjust_frame = SMILynx_CrtcAdjustFrame;
+	crtcPriv->video_init = SMILynx_CrtcVideoInit_crt;
+	crtcPriv->load_lut = SMILynx_CrtcLoadLUT_crt;
+
+	if(pSmi->HwCursor){
+	    crtcFuncs->set_cursor_colors = SMILynx_CrtcSetCursorColors_crt;
+	    crtcFuncs->set_cursor_position = SMILynx_CrtcSetCursorPosition_crt;
+	    crtcFuncs->show_cursor = SMILynx_CrtcShowCursor_crt;
+	    crtcFuncs->hide_cursor = SMILynx_CrtcHideCursor_crt;
+	    crtcFuncs->load_cursor_image = SMILynx_CrtcLoadCursorImage_crt;
+	}
+
+	if(! (crtc = xf86CrtcCreate(pScrn,crtcFuncs)))
+	    LEAVE(FALSE);
+	crtc->driver_private = crtcPriv;
+
 	if(pSmi->Dualhead){
-	    /* CRTC is LCD*/
+	    /* CRTC1 drives LCD when enabled. */
 	    SMI_CrtcFuncsInit_base(&crtcFuncs, &crtcPriv);
 	    crtcFuncs->mode_set = SMILynx_CrtcModeSet_lcd;
 	    crtcFuncs->mode_fixup = SMILynx_CrtcModeFixup;
+	    crtcFuncs->dpms = SMILynx_CrtcDPMS_lcd;
 	    crtcPriv->adjust_frame = SMILynx_CrtcAdjustFrame;
 	    crtcPriv->video_init = SMILynx_CrtcVideoInit_lcd;
 	    crtcPriv->load_lut = SMILynx_CrtcLoadLUT_lcd;
-
-	    if(! (crtc = xf86CrtcCreate(pScrn,crtcFuncs)))
-		LEAVE(FALSE);
-	    crtc->driver_private = crtcPriv;
-
-	    /* CRTC1 is CRT */
-	    SMI_CrtcFuncsInit_base(&crtcFuncs, &crtcPriv);
-	    crtcFuncs->dpms = SMILynx_CrtcDPMS_crt;
-	    crtcFuncs->mode_set = SMILynx_CrtcModeSet_crt;
-	    crtcFuncs->mode_fixup = SMILynx_CrtcModeFixup;
-	    crtcPriv->adjust_frame = SMILynx_CrtcAdjustFrame;
-	    crtcPriv->video_init = SMILynx_CrtcVideoInit_crt;
-	    crtcPriv->load_lut = SMILynx_CrtcLoadLUT_crt;
-
-	    if(! (crtc = xf86CrtcCreate(pScrn,crtcFuncs)))
-		LEAVE(FALSE);
-	    crtc->driver_private = crtcPriv;
-
-	}else{
-	    /* CRTC0 is LCD, but in standard refresh mode
-	       it is controlled through the primary VGA registers */
-	    SMI_CrtcFuncsInit_base(&crtcFuncs, &crtcPriv);
-
-	    if(pSmi->useBIOS){
-		crtcFuncs->mode_set = SMILynx_CrtcModeSet_bios;
-	    }else{
-		crtcFuncs->dpms = SMILynx_CrtcDPMS_crt;
-		crtcFuncs->mode_set = SMILynx_CrtcModeSet_vga;
-	    }
-
-	    crtcFuncs->mode_fixup = SMILynx_CrtcModeFixup;
-	    crtcPriv->adjust_frame = SMILynx_CrtcAdjustFrame;
-	    crtcPriv->video_init = SMILynx_CrtcVideoInit_crt;
-	    crtcPriv->load_lut = SMILynx_CrtcLoadLUT_crt;
-
-	    if(pSmi->HwCursor){
-		crtcFuncs->set_cursor_colors = SMILynx_CrtcSetCursorColors_crt;
-		crtcFuncs->set_cursor_position = SMILynx_CrtcSetCursorPosition_crt;
-		crtcFuncs->show_cursor = SMILynx_CrtcShowCursor_crt;
-		crtcFuncs->hide_cursor = SMILynx_CrtcHideCursor_crt;
-		crtcFuncs->load_cursor_image = SMILynx_CrtcLoadCursorImage_crt;
-	    }
 
 	    if(! (crtc = xf86CrtcCreate(pScrn,crtcFuncs)))
 		LEAVE(FALSE);

@@ -80,19 +80,12 @@ SMILynx_HWInit(ScrnInfoPtr pScrn)
 	/* Set DPMS state to Off */
 	mode->SR22 |= 0x30;
 
-	/* VESA compliance power down mode */
-	mode->SR24 &= ~0x01;
-
 	if (pSmi->Chipset != SMI_COUGAR3DR) {
 	    /* Select no displays */
 	    mode->SR31 &= ~0x07;
 
-	    /* Enable virtual refresh */
-	    if(pSmi->Dualhead){
-		mode->SR31 |= 0x80;
-	    }else{
-		mode->SR31 &= ~0x80;
-	    }
+	    /* Disable virtual refresh */
+	    mode->SR31 &= ~0x80;
 
 	    /* Disable expansion */
 	    mode->SR32 &= ~0x03;
@@ -131,7 +124,6 @@ SMILynx_HWInit(ScrnInfoPtr pScrn)
     VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x20, mode->SR20);
     VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x21, mode->SR21);
     VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x22, mode->SR22);
-    VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x24, mode->SR24);
     VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x31, mode->SR31);
     VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x32, mode->SR32);
     VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x34, mode->SR34);

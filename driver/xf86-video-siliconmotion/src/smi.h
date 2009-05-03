@@ -264,7 +264,7 @@ typedef struct
 					   structure */
     void (*BlockHandler)(int i, pointer blockData, pointer pTimeout,
 					 pointer pReadMask);
-#ifdef SMI501_CLI_DEBUG
+#if SMI501_CLI_DEBUG
     /* SMI 501/502 Command List Interpreter */
     Bool		 batch_active;
     int64_t		*batch_handle;	/* Virtual address */
