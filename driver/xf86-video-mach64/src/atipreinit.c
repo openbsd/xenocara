@@ -57,8 +57,8 @@
 /*
  * FreeScreen handles the clean-up.
  */
-static Bool
-Mach64GetRec(ScrnInfoPtr pScrn)
+Bool
+ATIGetRec(ScrnInfoPtr pScrn)
 {
     if (!pScrn->driverPrivate) {
         pScrn->driverPrivate = xnfcalloc(sizeof(ATIRec), 1);
@@ -540,7 +540,7 @@ ATIPreInit
         return FALSE;
     }
 
-    if (!Mach64GetRec(pScreenInfo))
+    if (!ATIGetRec(pScreenInfo))
         return FALSE;
 
     pATI = ATIPTR(pScreenInfo);
@@ -551,7 +551,9 @@ ATIPreInit
     pResources = pEntity->resources;
 
     pATI->iEntity = pEntity->index;
+#ifndef XSERVER_LIBPCIACCESS
     pATI->Chip = pEntity->chipset;
+#endif
     pVideo = xf86GetPciInfoForEntity(pATI->iEntity);
 
     xfree(pEntity);
