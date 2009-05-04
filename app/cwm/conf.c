@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.57 2009/02/07 21:07:00 martynas Exp $
+ * $Id: conf.c,v 1.58 2009/05/04 19:13:33 okan Exp $
  */
 
 #include "headers.h"
@@ -57,7 +57,7 @@ conf_font(struct conf *c)
 
 	sc = screen_current();
 
-	c->DefaultFont = font_make(sc, Conf.DefaultFontName);
+	c->DefaultFont = font_make(sc, c->DefaultFontName);
 	c->FontHeight = font_ascent() + font_descent() + 1;
 }
 
