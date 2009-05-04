@@ -62,6 +62,7 @@
 ./etc/fonts/conf.avail/25-unhint-nonlatin.conf
 ./etc/fonts/conf.avail/30-metric-aliases.conf
 ./etc/fonts/conf.avail/30-urw-aliases.conf
+./etc/fonts/conf.avail/31-nonmst.conf
 ./etc/fonts/conf.avail/40-nonlatin.conf
 ./etc/fonts/conf.avail/45-latin.conf
 ./etc/fonts/conf.avail/49-sansserif.conf
@@ -81,6 +82,7 @@
 ./etc/fonts/conf.d/20-unhint-small-vera.conf
 ./etc/fonts/conf.d/30-metric-aliases.conf
 ./etc/fonts/conf.d/30-urw-aliases.conf
+./etc/fonts/conf.d/31-nonmst.conf
 ./etc/fonts/conf.d/40-nonlatin.conf
 ./etc/fonts/conf.d/45-latin.conf
 ./etc/fonts/conf.d/49-sansserif.conf

@@ -490,6 +490,7 @@
 ./usr/X11R6/bin/xkbprint
 ./usr/X11R6/bin/xkbvleds
 ./usr/X11R6/bin/xkbwatch
+./usr/X11R6/bin/xkeystone
 ./usr/X11R6/bin/xkill
 ./usr/X11R6/bin/xload
 ./usr/X11R6/bin/xlock

@@ -32,7 +32,7 @@
 ./usr/X11R6/lib/libGLw_pic.a
 ./usr/X11R6/lib/libICE.so.9.0
 ./usr/X11R6/lib/libSM.so.8.0
-./usr/X11R6/lib/libX11.so.11.1
+./usr/X11R6/lib/libX11.so.11.2
 ./usr/X11R6/lib/libXRes.so.4.0
 ./usr/X11R6/lib/libXTrap.so.10.0
 ./usr/X11R6/lib/libXau.so.9.0
@@ -49,7 +49,7 @@
 ./usr/X11R6/lib/libXfont.so.8.0
 ./usr/X11R6/lib/libXfontcache.so.4.0
 ./usr/X11R6/lib/libXft.so.7.0
-./usr/X11R6/lib/libXi.so.10.0
+./usr/X11R6/lib/libXi.so.10.1
 ./usr/X11R6/lib/libXinerama.so.5.0
 ./usr/X11R6/lib/libXmu.so.10.0
 ./usr/X11R6/lib/libXmuu.so.5.0
@@ -57,7 +57,7 @@
 ./usr/X11R6/lib/libXpm.so.8.0
 ./usr/X11R6/lib/libXprintAppUtil.so.1.0
 ./usr/X11R6/lib/libXprintUtil.so.1.0
-./usr/X11R6/lib/libXrandr.so.6.0
+./usr/X11R6/lib/libXrandr.so.6.1
 ./usr/X11R6/lib/libXrender.so.5.0
 ./usr/X11R6/lib/libXss.so.5.0
 ./usr/X11R6/lib/libXt.so.10.0

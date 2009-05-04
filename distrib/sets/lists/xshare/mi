@@ -357,6 +357,8 @@
 ./usr/X11R6/include/X11/extensions/dmxproto.h
 ./usr/X11R6/include/X11/extensions/dpms.h
 ./usr/X11R6/include/X11/extensions/dpmsstr.h
+./usr/X11R6/include/X11/extensions/dri2proto.h
+./usr/X11R6/include/X11/extensions/dri2tokens.h
 ./usr/X11R6/include/X11/extensions/extutil.h
 ./usr/X11R6/include/X11/extensions/fontcache.h
 ./usr/X11R6/include/X11/extensions/fontcacheP.h
@@ -664,6 +666,7 @@
 ./usr/X11R6/include/freetype2/freetype/tttags.h
 ./usr/X11R6/include/freetype2/freetype/ttunpat.h
 ./usr/X11R6/include/pciaccess.h
+./usr/X11R6/include/xorg/joystick-properties.h
 ./usr/X11R6/lib/X11/config
 ./usr/X11R6/lib/X11/config/Amoeba.cf
 ./usr/X11R6/lib/X11/config/DGUX.cf
@@ -820,6 +823,7 @@
 ./usr/X11R6/lib/pkgconfig/damageproto.pc
 ./usr/X11R6/lib/pkgconfig/dmx.pc
 ./usr/X11R6/lib/pkgconfig/dmxproto.pc
+./usr/X11R6/lib/pkgconfig/dri2proto.pc
 ./usr/X11R6/lib/pkgconfig/evieproto.pc
 ./usr/X11R6/lib/pkgconfig/fixesproto.pc
 ./usr/X11R6/lib/pkgconfig/fontcacheproto.pc
@@ -872,6 +876,7 @@
 ./usr/X11R6/lib/pkgconfig/xkbui.pc
 ./usr/X11R6/lib/pkgconfig/xmu.pc
 ./usr/X11R6/lib/pkgconfig/xmuu.pc
+./usr/X11R6/lib/pkgconfig/xorg-joystick.pc
 ./usr/X11R6/lib/pkgconfig/xp.pc
 ./usr/X11R6/lib/pkgconfig/xpm.pc
 ./usr/X11R6/lib/pkgconfig/xprintapputil.pc
@@ -1329,6 +1334,7 @@
 ./usr/X11R6/man/man3/XChangeDeviceControl.3
 ./usr/X11R6/man/man3/XChangeDeviceDontPropagateList.3
 ./usr/X11R6/man/man3/XChangeDeviceKeyMapping.3
+./usr/X11R6/man/man3/XChangeDeviceProperty.3
 ./usr/X11R6/man/man3/XChangeFeedbackControl.3
 ./usr/X11R6/man/man3/XChangeGC.3
 ./usr/X11R6/man/man3/XChangeKeyboardControl.3
@@ -1404,6 +1410,7 @@
 ./usr/X11R6/man/man3/XDefaultString.3
 ./usr/X11R6/man/man3/XDefineCursor.3
 ./usr/X11R6/man/man3/XDeleteContext.3
+./usr/X11R6/man/man3/XDeleteDeviceProperty.3
 ./usr/X11R6/man/man3/XDeleteModifiermapEntry.3
 ./usr/X11R6/man/man3/XDeleteProperty.3
 ./usr/X11R6/man/man3/XDestroyIC.3
@@ -1491,6 +1498,7 @@
 ./usr/X11R6/man/man3/XGetDeviceKeyMapping.3
 ./usr/X11R6/man/man3/XGetDeviceModifierMapping.3
 ./usr/X11R6/man/man3/XGetDeviceMotionEvents.3
+./usr/X11R6/man/man3/XGetDeviceProperty.3
 ./usr/X11R6/man/man3/XGetErrorDatabaseText.3
 ./usr/X11R6/man/man3/XGetErrorText.3
 ./usr/X11R6/man/man3/XGetExtensionVersion.3
@@ -1564,6 +1572,7 @@
 ./usr/X11R6/man/man3/XKeysymToString.3
 ./usr/X11R6/man/man3/XKillClient.3
 ./usr/X11R6/man/man3/XListDepths.3
+./usr/X11R6/man/man3/XListDeviceProperties.3
 ./usr/X11R6/man/man3/XListExtensions.3
 ./usr/X11R6/man/man3/XListFonts.3
 ./usr/X11R6/man/man3/XListFontsWithInfo.3
@@ -1633,7 +1642,6 @@
 ./usr/X11R6/man/man3/XQueryTextExtents.3
 ./usr/X11R6/man/man3/XQueryTextExtents16.3
 ./usr/X11R6/man/man3/XQueryTree.3
-./usr/X11R6/man/man3/XRRConfig.3
 ./usr/X11R6/man/man3/XRRConfigCurrentConfiguration.3
 ./usr/X11R6/man/man3/XRRConfigCurrentRate.3
 ./usr/X11R6/man/man3/XRRConfigRates.3
@@ -1645,7 +1653,6 @@
 ./usr/X11R6/man/man3/XRRQueryExtension.3
 ./usr/X11R6/man/man3/XRRQueryVersion.3
 ./usr/X11R6/man/man3/XRRRootToScreen.3
-./usr/X11R6/man/man3/XRRScreenConfig.3
 ./usr/X11R6/man/man3/XRRSelectInput.3
 ./usr/X11R6/man/man3/XRRSetScreenConfig.3
 ./usr/X11R6/man/man3/XRRSetScreenConfigAndRate.3
@@ -2606,6 +2613,10 @@
 ./usr/X11R6/share/X11/locale/en_US.UTF-8/Compose
 ./usr/X11R6/share/X11/locale/en_US.UTF-8/XI18N_OBJS
 ./usr/X11R6/share/X11/locale/en_US.UTF-8/XLC_LOCALE
+./usr/X11R6/share/X11/locale/fi_FI.UTF-8
+./usr/X11R6/share/X11/locale/fi_FI.UTF-8/Compose
+./usr/X11R6/share/X11/locale/fi_FI.UTF-8/XI18N_OBJS
+./usr/X11R6/share/X11/locale/fi_FI.UTF-8/XLC_LOCALE
 ./usr/X11R6/share/X11/locale/georgian-academy
 ./usr/X11R6/share/X11/locale/georgian-academy/Compose
 ./usr/X11R6/share/X11/locale/georgian-academy/XI18N_OBJS
@@ -2756,6 +2767,10 @@
 ./usr/X11R6/share/X11/locale/pt_BR.UTF-8/Compose
 ./usr/X11R6/share/X11/locale/pt_BR.UTF-8/XI18N_OBJS
 ./usr/X11R6/share/X11/locale/pt_BR.UTF-8/XLC_LOCALE
+./usr/X11R6/share/X11/locale/ru_RU.UTF-8
+./usr/X11R6/share/X11/locale/ru_RU.UTF-8/Compose
+./usr/X11R6/share/X11/locale/ru_RU.UTF-8/XI18N_OBJS
+./usr/X11R6/share/X11/locale/ru_RU.UTF-8/XLC_LOCALE
 ./usr/X11R6/share/X11/locale/tatar-cyr
 ./usr/X11R6/share/X11/locale/tatar-cyr/Compose
 ./usr/X11R6/share/X11/locale/tatar-cyr/XI18N_OBJS
