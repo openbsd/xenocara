@@ -358,6 +358,10 @@ ATIProcessOptions
     Accel = CacheMMIO = HWCursor = TRUE;
 
     ReferenceClock = ((double)157500000.0) / ((double)11.0);
+#ifdef __sparc__
+    if (pATI->Chip == ATI_CHIP_264XL || pATI->Chip == ATI_CHIP_MOBILITY)
+	    ReferenceClock = 29500000.0;
+#endif
 
     ShadowFB = TRUE;
 
