@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.23 2009/01/27 00:42:53 oga Exp $
+ * $Id: group.c,v 1.24 2009/05/14 16:24:04 oga Exp $
  */
 
 #include "headers.h"
@@ -210,6 +210,23 @@ group_hidetoggle(int idx)
 		_group_hide(gc);
 		if (TAILQ_EMPTY(&gc->clients))
 			Group_active = gc;
+	}
+}
+
+void
+group_only(int idx)
+{
+	int	 i;
+
+	if (idx < 0 || idx >= CALMWM_NGROUPS)
+		err(1, "group_only: index out of range (%d)", idx);
+
+	for (i = 0; i < CALMWM_NGROUPS; i++) {
+		if (i == idx) {
+			_group_show(&Groups[i]);
+		} else {
+			_group_hide(&Groups[i]);
+		}
 	}
 }
 

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.36 2009/02/07 21:07:00 martynas Exp $
+ * $Id: kbfunc.c,v 1.37 2009/05/14 16:24:04 oga Exp $
  */
 
 #include <paths.h>
@@ -436,6 +436,12 @@ void
 kbfunc_client_group(struct client_ctx *cc, union arg *arg)
 {
 	group_hidetoggle(KBTOGROUP(arg->i));
+}
+
+void
+kbfunc_client_grouponly(struct client_ctx *cc, union arg *arg)
+{
+	group_only(KBTOGROUP(arg->i));
 }
 
 void

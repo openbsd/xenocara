@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.58 2009/05/04 19:13:33 okan Exp $
+ * $Id: conf.c,v 1.59 2009/05/14 16:24:04 oga Exp $
  */
 
 #include "headers.h"
@@ -272,6 +272,15 @@ struct {
 	{ "group7", kbfunc_client_group, 0, {.i = 7} },
 	{ "group8", kbfunc_client_group, 0, {.i = 8} },
 	{ "group9", kbfunc_client_group, 0, {.i = 9} },
+	{ "grouponly1", kbfunc_client_grouponly, 0, {.i = 1} },
+	{ "grouponly2", kbfunc_client_grouponly, 0, {.i = 2} },
+	{ "grouponly3", kbfunc_client_grouponly, 0, {.i = 3} },
+	{ "grouponly4", kbfunc_client_grouponly, 0, {.i = 4} },
+	{ "grouponly5", kbfunc_client_grouponly, 0, {.i = 5} },
+	{ "grouponly6", kbfunc_client_grouponly, 0, {.i = 6} },
+	{ "grouponly7", kbfunc_client_grouponly, 0, {.i = 7} },
+	{ "grouponly8", kbfunc_client_grouponly, 0, {.i = 8} },
+	{ "grouponly9", kbfunc_client_grouponly, 0, {.i = 9} },
 	{ "nogroup", kbfunc_client_nogroup, 0, {0} },
 	{ "cyclegroup", kbfunc_client_cyclegroup, 0, {.i = CWM_CYCLEGROUP} },
 	{ "rcyclegroup", kbfunc_client_cyclegroup, 0, {.i = CWM_RCYCLEGROUP} },

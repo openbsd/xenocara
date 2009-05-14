@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwmrc.5,v 1.22 2009/05/04 22:01:35 okan Exp $
+.\"	$OpenBSD: cwmrc.5,v 1.23 2009/05/14 16:24:04 oga Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: May 4 2009 $
+.Dd $Mdocdate: May 14 2009 $
 .Dt CWMRC 5
 .Os
 .Sh NAME
@@ -242,6 +242,10 @@ Launch
 menu.
 .It group[n]
 Select group n, where n is 1-9.
+.It grouponly[n]
+Like
+.Ar group[n]
+but also hides the other groups.
 .It nogroup
 Select all groups.
 .It grouptoggle
