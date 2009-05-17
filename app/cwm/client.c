@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.48 2009/05/17 16:51:43 sthen Exp $
+ * $Id: client.c,v 1.49 2009/05/17 23:40:57 okan Exp $
  */
 
 #include "headers.h"
@@ -403,25 +403,25 @@ void
 client_draw_border(struct client_ctx *cc)
 {
 	struct screen_ctx	*sc = CCTOSC(cc);
-	u_long			 pixl;
+	unsigned long		 pixel;
 
 	if (cc->active)
 		switch (cc->highlight) {
-		case CLIENT_HIGHLIGHT_BLUE:
-			pixl = sc->bluepixl;
+		case CLIENT_HIGHLIGHT_GROUP:
+			pixel = sc->color[CWM_COLOR_BORDER_GROUP].pixel;
 			break;
-		case CLIENT_HIGHLIGHT_RED:
-			pixl = sc->redpixl;
+		case CLIENT_HIGHLIGHT_UNGROUP:
+			pixel = sc->color[CWM_COLOR_BORDER_UNGROUP].pixel;
 			break;
 		default:
-			pixl = sc->whitepixl;
+			pixel = sc->color[CWM_COLOR_BORDOR_ACTIVE].pixel;
 			break;
 		}
 	else
-		pixl = sc->graypixl;
+		pixel = sc->color[CWM_COLOR_BORDER_INACTIVE].pixel;
 
 	XSetWindowBorderWidth(X_Dpy, cc->win, cc->bwidth);
-	XSetWindowBorder(X_Dpy, cc->win, pixl);
+	XSetWindowBorder(X_Dpy, cc->win, pixel);
 }
 
 void

@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwmrc.5,v 1.24 2009/05/17 17:04:59 sthen Exp $
+.\"	$OpenBSD: cwmrc.5,v 1.25 2009/05/17 23:40:57 okan Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -83,6 +83,18 @@ application.
 .It Ic borderwidth Ar pixels
 Set the window border width to
 .Ar pixels .
+.Pp
+.It Ic color activeborder Ar color
+Set the color of the active border.
+.Pp
+.It Ic color groupborder Ar color
+Set the color of the border while grouping a window.
+.Pp
+.It Ic color inactiveborder Ar color
+Set the color of the inactive border.
+.Pp
+.It Ic color ungroupborder Ar color
+Set the color of the border while ungrouping a window.
 .Pp
 .It Ic command Ar name Ar path
 Every

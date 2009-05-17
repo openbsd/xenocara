@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.36 2009/04/15 14:01:45 okan Exp $
+ * $Id: calmwm.c,v 1.37 2009/05/17 23:40:57 okan Exp $
  */
 
 #include "headers.h"
@@ -162,8 +162,6 @@ x_teardown(void)
 void
 x_setupscreen(struct screen_ctx *sc, u_int which)
 {
-	XColor			 tmp;
-	XGCValues		 gv;
 	Window			*wins, w0, w1;
 	XWindowAttributes	 winattr;
 	XSetWindowAttributes	 rootattr;
@@ -173,41 +171,11 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 	Curscreen = sc;
 
 	sc->which = which;
-	sc->rootwin = RootWindow(X_Dpy, which);
-
+	sc->rootwin = RootWindow(X_Dpy, sc->which);
 	sc->xmax = DisplayWidth(X_Dpy, sc->which);
 	sc->ymax = DisplayHeight(X_Dpy, sc->which);
 
-	XAllocNamedColor(X_Dpy, DefaultColormap(X_Dpy, which),
-	    "black", &sc->fgcolor, &tmp);
-	XAllocNamedColor(X_Dpy, DefaultColormap(X_Dpy, which),
-	    "#00cc00", &sc->bgcolor, &tmp);
-	XAllocNamedColor(X_Dpy,DefaultColormap(X_Dpy, which),
-	    "blue", &sc->fccolor, &tmp);
-	XAllocNamedColor(X_Dpy, DefaultColormap(X_Dpy, which),
-	    "red", &sc->redcolor, &tmp);
-	XAllocNamedColor(X_Dpy, DefaultColormap(X_Dpy, which),
-	    "#666666", &sc->graycolor, &tmp);
-	XAllocNamedColor(X_Dpy, DefaultColormap(X_Dpy, which),
-	    "white", &sc->whitecolor, &tmp);
-	XAllocNamedColor(X_Dpy, DefaultColormap(X_Dpy, which),
-	    "black", &sc->blackcolor, &tmp);
-
-	sc->blackpixl = BlackPixel(X_Dpy, sc->which);
-	sc->whitepixl = WhitePixel(X_Dpy, sc->which);
-	sc->bluepixl = sc->fccolor.pixel;
-	sc->redpixl = sc->redcolor.pixel;
-	sc->graypixl = sc->graycolor.pixel;
-
-	gv.foreground = sc->blackpixl^sc->whitepixl;
-	gv.background = sc->whitepixl;
-	gv.function = GXxor;
-	gv.line_width = 1;
-	gv.subwindow_mode = IncludeInferiors;
-
-	sc->gc = XCreateGC(X_Dpy, sc->rootwin,
-	    GCForeground|GCBackground|GCFunction|
-	    GCLineWidth|GCSubwindowMode, &gv);
+	conf_color(&Conf);
 
 	font_init(sc);
 	conf_font(&Conf);

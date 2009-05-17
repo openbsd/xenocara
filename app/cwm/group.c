@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.27 2009/05/17 23:37:52 okan Exp $
+ * $Id: group.c,v 1.28 2009/05/17 23:40:57 okan Exp $
  */
 
 #include "headers.h"
@@ -168,10 +168,10 @@ group_sticky_toggle_enter(struct client_ctx *cc)
 
 	if (gc == cc->group) {
 		_group_remove(cc);
-		cc->highlight = CLIENT_HIGHLIGHT_RED;
+		cc->highlight = CLIENT_HIGHLIGHT_UNGROUP;
 	} else {
 		_group_add(gc, cc);
-		cc->highlight = CLIENT_HIGHLIGHT_BLUE;
+		cc->highlight = CLIENT_HIGHLIGHT_GROUP;
 	}
 
 	client_draw_border(cc);
