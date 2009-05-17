@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.61 2009/05/17 23:40:57 okan Exp $
+ * $Id: conf.c,v 1.62 2009/05/17 23:54:17 okan Exp $
  */
 
 #include "headers.h"
@@ -79,12 +79,16 @@ conf_color(struct conf *c)
 void
 conf_reload(struct conf *c)
 {
+	struct client_ctx	*cc;
+
 	if (parse_config(c->conf_path, c) == -1) {
 		warnx("config file %s has errors, not reloading", c->conf_path);
 		return;
 	}
 
 	conf_color(c);
+	TAILQ_FOREACH(cc, &Clientq, entry)
+		client_draw_border(cc);
 	conf_font(c);
 }
 
