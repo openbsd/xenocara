@@ -11,10 +11,10 @@
 ./usr/X11R6/include/GL/glu.h
 ./usr/X11R6/include/GL/glx.h
 ./usr/X11R6/include/GL/glxext.h
-./usr/X11R6/include/GL/internal/dri_sarea.h
 ./usr/X11R6/include/GL/osmesa.h
 ./usr/X11R6/include/xf86drmMode.h
 ./usr/X11R6/include/xorg/dixaccess.h
+./usr/X11R6/include/xorg/joystick-properties.h
 ./usr/X11R6/include/xorg/privates.h
 ./usr/X11R6/include/xorg/registry.h
 ./usr/X11R6/include/xorg/xkbfile.h
@@ -22,7 +22,7 @@
 ./usr/X11R6/lib/X11/Options
 ./usr/X11R6/lib/libFS.so.8.0
 ./usr/X11R6/lib/libGL.a
-./usr/X11R6/lib/libGL.so.8.0
+./usr/X11R6/lib/libGL.so.9.0
 ./usr/X11R6/lib/libGLU.a
 ./usr/X11R6/lib/libGLU.so.7.0
 ./usr/X11R6/lib/libGLU_pic.a
@@ -83,6 +83,7 @@
 ./usr/X11R6/lib/pkgconfig/gl.pc
 ./usr/X11R6/lib/pkgconfig/glu.pc
 ./usr/X11R6/lib/pkgconfig/glw.pc
+./usr/X11R6/lib/pkgconfig/xorg-joystick.pc
 ./usr/X11R6/lib/xorg/protocol.txt
 ./usr/X11R6/man/cat1/glxgears.0
 ./usr/X11R6/man/cat1/glxinfo.0

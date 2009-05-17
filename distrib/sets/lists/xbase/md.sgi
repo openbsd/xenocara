@@ -13,7 +13,6 @@
 ./usr/X11R6/include/GL/glx.h
 ./usr/X11R6/include/GL/glxext.h
 ./usr/X11R6/include/GL/internal/dri_interface.h
-./usr/X11R6/include/GL/internal/dri_sarea.h
 ./usr/X11R6/include/GL/osmesa.h
 ./usr/X11R6/include/X11/dri/xf86dri.h
 ./usr/X11R6/include/X11/dri/xf86dristr.h
@@ -40,7 +39,7 @@
 ./usr/X11R6/lib/X11/Options
 ./usr/X11R6/lib/libFS.so.8.0
 ./usr/X11R6/lib/libGL.a
-./usr/X11R6/lib/libGL.so.8.0
+./usr/X11R6/lib/libGL.so.9.0
 ./usr/X11R6/lib/libGLU.a
 ./usr/X11R6/lib/libGLU.so.7.0
 ./usr/X11R6/lib/libGLw.a

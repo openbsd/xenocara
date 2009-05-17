@@ -666,7 +666,6 @@
 ./usr/X11R6/include/freetype2/freetype/tttags.h
 ./usr/X11R6/include/freetype2/freetype/ttunpat.h
 ./usr/X11R6/include/pciaccess.h
-./usr/X11R6/include/xorg/joystick-properties.h
 ./usr/X11R6/lib/X11/config
 ./usr/X11R6/lib/X11/config/Amoeba.cf
 ./usr/X11R6/lib/X11/config/DGUX.cf
@@ -876,7 +875,6 @@
 ./usr/X11R6/lib/pkgconfig/xkbui.pc
 ./usr/X11R6/lib/pkgconfig/xmu.pc
 ./usr/X11R6/lib/pkgconfig/xmuu.pc
-./usr/X11R6/lib/pkgconfig/xorg-joystick.pc
 ./usr/X11R6/lib/pkgconfig/xp.pc
 ./usr/X11R6/lib/pkgconfig/xpm.pc
 ./usr/X11R6/lib/pkgconfig/xprintapputil.pc
