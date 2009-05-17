@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2009/01/10 16:02:04 oga Exp $
+#	$OpenBSD: Makefile,v 1.5 2009/05/17 20:20:23 matthieu Exp $
 
 LIB=	i915_dri.so
 
@@ -14,6 +14,7 @@ DRIVER_SOURCES = \
 	intel_regions.c \
 	intel_buffer_objects.c \
 	intel_batchbuffer.c \
+	intel_clear.c \
 	intel_mipmap_tree.c \
 	i915_tex_layout.c \
 	intel_tex_layout.c \
@@ -26,10 +27,11 @@ DRIVER_SOURCES = \
 	intel_pixel.c \
 	intel_pixel_bitmap.c \
 	intel_pixel_copy.c \
-	intel_pixel_read.c \
 	intel_pixel_draw.c \
+	intel_pixel_read.c \
 	intel_buffers.c \
 	intel_blit.c \
+	intel_swapbuffers.c \
 	i915_tex.c \
 	i915_texstate.c \
 	i915_context.c \
@@ -42,7 +44,6 @@ DRIVER_SOURCES = \
 	i915_vtbl.c \
 	intel_context.c \
 	intel_decode.c \
-	intel_ioctl.c \
 	intel_screen.c \
 	intel_span.c \
 	intel_state.c \
@@ -52,16 +53,17 @@ DRIVER_SOURCES = \
 
 SRCS= \
 	$(COMMON_SOURCES) \
-	$(COMMON_BM_SOURCES) \
 	$(DRIVER_SOURCES)
 
 DRIVER_DEFINES= \
 	-I$(MESA)/drivers/dri/i915 \
 	-I$(MESA)/drivers/dri/intel \
 	-I$(MESA)/drivers/dri/intel/server \
-	-DI915 -DDRM_VBLANK_FLIP=DRM_VBLANK_FLIP
+	-DI915
 
 .include <bsd.xorg.mk>
+
+LDADD+=	-ldrm_intel
 
 .PATH: ${MESA}/drivers/dri/i915
 .PATH: ${MESA}/drivers/dri/intel

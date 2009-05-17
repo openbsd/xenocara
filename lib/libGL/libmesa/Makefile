@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.7 2009/01/10 16:06:51 oga Exp $
+# $OpenBSD: Makefile,v 1.8 2009/05/17 20:20:24 matthieu Exp $
 
 MESA=	${.CURDIR}/../../../dist/Mesa/src/mesa
 MESA_INCLUDE=	${.CURDIR}/../../../dist/Mesa/include
@@ -43,6 +43,7 @@ CPPFLAGS += \
 # main
 MAIN_SOURCES= \
 	api_arrayelt.c \
+	api_exec.c \
 	api_loopback.c \
 	api_noop.c \
 	api_validate.c \
@@ -52,6 +53,7 @@ MAIN_SOURCES= \
 	blend.c \
 	bufferobj.c \
 	buffers.c \
+	clear.c \
 	clip.c \
 	colortab.c \
 	context.c \
@@ -60,6 +62,7 @@ MAIN_SOURCES= \
 	depth.c \
 	depthstencil.c \
 	dlist.c \
+	dlopen.c \
 	drawpix.c \
 	enable.c \
 	enums.c \
@@ -68,6 +71,7 @@ MAIN_SOURCES= \
 	extensions.c \
 	fbobject.c \
 	feedback.c \
+	ffvertex_prog.c \
 	fog.c \
 	framebuffer.c \
 	get.c \
@@ -82,23 +86,30 @@ MAIN_SOURCES= \
 	matrix.c \
 	mipmap.c \
 	mm.c \
+	multisample.c \
 	pixel.c \
+	pixelstore.c \
 	points.c \
 	polygon.c \
 	queryobj.c \
 	rastpos.c \
 	rbadaptors.c \
+	readpix.c \
 	renderbuffer.c \
+	scissor.c \
 	shaders.c \
 	state.c \
 	stencil.c \
 	texcompress.c \
 	texcompress_s3tc.c \
 	texcompress_fxt1.c \
+	texenv.c \
 	texenvprogram.c \
 	texformat.c \
+	texgen.c \
 	teximage.c \
 	texobj.c \
+	texparam.c \
 	texrender.c \
 	texstate.c \
 	texstore.c \
@@ -115,62 +126,6 @@ MATH_SOURCES= \
 	m_translate.c \
 	m_vector.c \
 	m_xform.c
-
-VBO_SOURCES = \
-	vbo_context.c \
-	vbo_exec.c \
-	vbo_exec_api.c \
-	vbo_exec_array.c \
-	vbo_exec_draw.c \
-	vbo_exec_eval.c \
-	vbo_rebase.c \
-	vbo_split.c \
-	vbo_split_copy.c \
-	vbo_split_inplace.c \
-	vbo_save.c \
-	vbo_save_api.c \
-	vbo_save_draw.c \
-	vbo_save_loopback.c 
-
-# tnl
-TNL_SOURCES= \
-	t_context.c \
-	t_pipeline.c \
-	t_draw.c \
-	t_vb_program.c \
-	t_vb_render.c \
-	t_vb_texgen.c \
-	t_vb_texmat.c \
-	t_vb_vertex.c \
-	t_vb_cull.c \
-	t_vb_fog.c \
-	t_vb_light.c \
-	t_vb_normals.c \
-	t_vb_points.c \
-	t_vp_build.c \
-	t_vertex.c \
-	t_vertex_sse.c \
-	t_vertex_generic.c \
-
-# shader
-SHADER_SOURCES=	\
-	arbprogparse.c \
-	arbprogram.c \
-	atifragshader.c \
-	grammar_mesa.c \
-	nvfragparse.c \
-	nvprogram.c \
-	nvvertparse.c \
-	program.c \
-	prog_debug.c \
-	prog_execute.c \
-	prog_instruction.c \
-	prog_parameter.c \
-	prog_print.c \
-	prog_statevars.c \
-	prog_uniform.c \
-	programopt.c \
-	shader_api.c \
 
 # swrast
 SWRAST_SOURCES= \
@@ -209,8 +164,64 @@ SWRAST_SETUP_SOURCES= \
 	ss_context.c \
 	ss_triangle.c
 
-COMMON_DRIVER_SOURCES = \
-	driverfuncs.c
+# tnl
+TNL_SOURCES= \
+	t_context.c \
+	t_pipeline.c \
+	t_draw.c \
+	t_rasterpos.c \
+	t_vb_program.c \
+	t_vb_render.c \
+	t_vb_texgen.c \
+	t_vb_texmat.c \
+	t_vb_vertex.c \
+	t_vb_cull.c \
+	t_vb_fog.c \
+	t_vb_light.c \
+	t_vb_normals.c \
+	t_vb_points.c \
+	t_vp_build.c \
+	t_vertex.c \
+	t_vertex_sse.c \
+	t_vertex_generic.c
+
+VBO_SOURCES = \
+	vbo_context.c \
+	vbo_exec.c \
+	vbo_exec_api.c \
+	vbo_exec_array.c \
+	vbo_exec_draw.c \
+	vbo_exec_eval.c \
+	vbo_rebase.c \
+	vbo_split.c \
+	vbo_split_copy.c \
+	vbo_split_inplace.c \
+	vbo_save.c \
+	vbo_save_api.c \
+	vbo_save_draw.c \
+	vbo_save_loopback.c 
+
+# shader
+SHADER_SOURCES=	\
+	arbprogparse.c \
+	arbprogram.c \
+	atifragshader.c \
+	grammar_mesa.c \
+	nvfragparse.c \
+	nvprogram.c \
+	nvvertparse.c \
+	program.c \
+	prog_cache.c \
+	prog_debug.c \
+	prog_execute.c \
+	prog_instruction.c \
+	prog_noise.c \
+	prog_parameter.c \
+	prog_print.c \
+	prog_statevars.c \
+	prog_uniform.c \
+	programopt.c \
+	shader_api.c
 
 # shader/slang
 SLANG_SOURCES= \
@@ -224,7 +235,6 @@ SLANG_SOURCES= \
 	slang_emit.c	\
 	slang_ir.c	\
 	slang_label.c	\
-	slang_library_noise.c	\
 	slang_link.c	\
 	slang_log.c	\
 	slang_mem.c	\
@@ -283,7 +293,10 @@ ASM_C_SOURCES= \
 	common_ppc.c
 .endif
 
-SOLO_SOURCES = \
+COMMON_DRIVER_SOURCES = \
+	driverfuncs.c
+
+MESA_SOURCES = \
 	$(MAIN_SOURCES)		\
 	$(MATH_SOURCES)		\
 	$(VBO_SOURCES)		\
@@ -295,7 +308,7 @@ SOLO_SOURCES = \
 	$(ASM_C_SOURCES)	\
 	$(SLANG_SOURCES)
 
-SRCS=	${SOLO_SOURCES}	\
+SRCS=	${MESA_SOURCES}	\
 	${ASM_SOURCES}
 
 OBJS+=  ${SRCS:N*.h:R:S/$/.so/g}

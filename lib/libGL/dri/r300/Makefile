@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2008/11/02 15:01:32 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2009/05/17 20:20:23 matthieu Exp $
 
 LIB=	r300_dri.so
 

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.8 2009/01/10 16:06:51 oga Exp $
+# $OpenBSD: Makefile.inc,v 1.9 2009/05/17 20:20:23 matthieu Exp $
 .include <bsd.xconf.mk>
 
 MESA= ${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -13,10 +13,6 @@ COMMON_SOURCES = \
 	dri_util.c \
 	xmlconfig.c \
 	drirenderbuffer.c
-
-COMMON_BM_SOURCES = \
-	dri_bufmgr.c \
-        dri_bufmgr_fake.c
 
 CFLAGS+= -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING -DPTHREADS $(INCLUDES) $(DRIVER_DEFINES)
 
