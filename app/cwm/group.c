@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.24 2009/05/14 16:24:04 oga Exp $
+ * $Id: group.c,v 1.25 2009/05/17 17:04:59 sthen Exp $
  */
 
 #include "headers.h"
@@ -143,7 +143,16 @@ group_init(void)
 		TAILQ_INSERT_TAIL(&Groupq, &Groups[i], entry);
 	}
 
-	Group_active = &Groups[0];
+}
+
+void
+group_movetogroup(struct client_ctx *cc, int idx)
+{
+	if (idx < 0 || idx >= CALMWM_NGROUPS)
+		err(1, "group_movetogroup: index out of range (%d)", idx);
+
+	client_hide(cc);
+	_group_add(&Groups[idx], cc);
 }
 
 /*

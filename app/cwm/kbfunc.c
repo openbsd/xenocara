@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.37 2009/05/14 16:24:04 oga Exp $
+ * $Id: kbfunc.c,v 1.38 2009/05/17 17:04:59 sthen Exp $
  */
 
 #include <paths.h>
@@ -464,6 +464,12 @@ kbfunc_client_grouptoggle(struct client_ctx *cc, union arg *arg)
 	    GrabModeAsync, GrabModeAsync, CurrentTime);
 
 	group_sticky_toggle_enter(cc);
+}
+
+void
+kbfunc_client_movetogroup(struct client_ctx *cc, union arg *arg)
+{
+	group_movetogroup(cc, KBTOGROUP(arg->i));
 }
 
 void
