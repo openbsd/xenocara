@@ -1,4 +1,3 @@
-/* $XFree86$ */
 /**************************************************************************
 
 Copyright 2003 Eric Anholt
@@ -31,11 +30,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "dri_util.h"
 
-#include "context.h"
+#include "main/context.h"
 #include "utils.h"
-#include "imports.h"
-#include "framebuffer.h"
-#include "renderbuffer.h"
+#include "main/imports.h"
+#include "main/framebuffer.h"
+#include "main/renderbuffer.h"
 
 #include "sis_context.h"
 #include "sis_dri.h"
@@ -76,8 +75,8 @@ sisFillInModes(__DRIscreenPrivate *psp, int bpp)
    static const GLenum back_buffer_modes[] = {
       GLX_NONE, GLX_SWAP_UNDEFINED_OML
    };
-   u_int8_t depth_bits_array[4];
-   u_int8_t stencil_bits_array[4];
+   uint8_t depth_bits_array[4];
+   uint8_t stencil_bits_array[4];
 
    depth_bits_array[0] = 0;
    stencil_bits_array[0] = 0;

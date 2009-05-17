@@ -24,7 +24,6 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
-/* $XFree86: xc/lib/GL/mesa/src/drv/i810/i810context.c,v 1.3 2002/10/30 12:51:33 alanh Exp $ */
 
 /*
  * Authors:
@@ -33,14 +32,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
-#include "glheader.h"
-#include "context.h"
-#include "matrix.h"
-#include "simple_list.h"
-#include "extensions.h"
-#include "framebuffer.h"
-#include "imports.h"
-#include "points.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/matrix.h"
+#include "main/simple_list.h"
+#include "main/extensions.h"
+#include "main/framebuffer.h"
+#include "main/imports.h"
+#include "main/points.h"
 
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"

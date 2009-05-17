@@ -1,4 +1,3 @@
-/* $XFree86: xc/lib/GL/mesa/src/drv/r128/r128_context.c,v 1.8 2002/10/30 12:51:38 alanh Exp $ */
 /**************************************************************************
 
 Copyright 1999, 2000 ATI Technologies Inc. and Precision Insight, Inc.,
@@ -33,12 +32,12 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 
-#include "glheader.h"
-#include "context.h"
-#include "simple_list.h"
-#include "imports.h"
-#include "matrix.h"
-#include "extensions.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/simple_list.h"
+#include "main/imports.h"
+#include "main/matrix.h"
+#include "main/extensions.h"
 
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"

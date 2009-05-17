@@ -1,11 +1,11 @@
 #ifndef INTEL_BATCHBUFFER_H
 #define INTEL_BATCHBUFFER_H
 
-#include "mtypes.h"
+#include "main/mtypes.h"
 
-#include "dri_bufmgr.h"
-
-struct intel_context;
+#include "intel_context.h"
+#include "intel_bufmgr.h"
+#include "intel_reg.h"
 
 #define BATCH_SZ 16384
 #define BATCH_RESERVED 16
@@ -19,6 +19,9 @@ enum cliprect_mode {
    /**
     * Batchbuffer contents require looping over per cliprect at batch submit
     * time.
+    *
+    * This will be upgraded to NO_LOOP_CLIPRECTS when there's a single
+    * constant cliprect, as in DRI2 or FBO rendering.
     */
    LOOP_CLIPRECTS,
    /**
@@ -29,8 +32,10 @@ enum cliprect_mode {
    /**
     * Batchbuffer contents contain drawing that already handles cliprects, such
     * as 2D drawing to front/back/depth that doesn't respect DRAWING_RECTANGLE.
+    *
     * Equivalent behavior to NO_LOOP_CLIPRECTS, but may not persist in batch
-    * outside of LOCK/UNLOCK.
+    * outside of LOCK/UNLOCK.  This is upgraded to just NO_LOOP_CLIPRECTS when
+    * there's a constant cliprect, as in DRI2 or FBO rendering.
     */
    REFERENCES_CLIPRECTS
 };
@@ -40,7 +45,8 @@ struct intel_batchbuffer
    struct intel_context *intel;
 
    dri_bo *buf;
-   dri_fence *last_fence;
+
+   GLubyte *buffer;
 
    GLubyte *map;
    GLubyte *ptr;
@@ -48,6 +54,12 @@ struct intel_batchbuffer
    enum cliprect_mode cliprect_mode;
 
    GLuint size;
+
+   /** Tracking of BEGIN_BATCH()/OUT_BATCH()/ADVANCE_BATCH() debugging */
+   struct {
+      GLuint total;
+      GLubyte *start_ptr;
+   } emit;
 
    GLuint dirty_state;
 };
@@ -57,8 +69,6 @@ struct intel_batchbuffer *intel_batchbuffer_alloc(struct intel_context
 
 void intel_batchbuffer_free(struct intel_batchbuffer *batch);
 
-
-void intel_batchbuffer_finish(struct intel_batchbuffer *batch);
 
 void _intel_batchbuffer_flush(struct intel_batchbuffer *batch,
 			      const char *file, int line);
@@ -82,14 +92,16 @@ void intel_batchbuffer_release_space(struct intel_batchbuffer *batch,
 
 GLboolean intel_batchbuffer_emit_reloc(struct intel_batchbuffer *batch,
                                        dri_bo *buffer,
-                                       GLuint flags, GLuint offset);
+				       uint32_t read_domains,
+				       uint32_t write_domain,
+				       uint32_t offset);
 
 /* Inline functions - might actually be better off with these
  * non-inlined.  Certainly better off switching all command packets to
  * be passed as structs rather than dwords, but that's a little bit of
  * work...
  */
-static INLINE GLuint
+static INLINE GLint
 intel_batchbuffer_space(struct intel_batchbuffer *batch)
 {
    return (batch->size - BATCH_RESERVED) - (batch->ptr - batch->map);
@@ -114,6 +126,11 @@ intel_batchbuffer_require_space(struct intel_batchbuffer *batch,
    if (intel_batchbuffer_space(batch) < sz)
       intel_batchbuffer_flush(batch);
 
+   if ((cliprect_mode == LOOP_CLIPRECTS ||
+	cliprect_mode == REFERENCES_CLIPRECTS) &&
+       batch->intel->constant_cliprect)
+      cliprect_mode = NO_LOOP_CLIPRECTS;
+
    if (cliprect_mode != IGNORE_CLIPRECTS) {
       if (batch->cliprect_mode == IGNORE_CLIPRECTS) {
 	 batch->cliprect_mode = cliprect_mode;
@@ -132,16 +149,36 @@ intel_batchbuffer_require_space(struct intel_batchbuffer *batch,
 
 #define BEGIN_BATCH(n, cliprect_mode) do {				\
    intel_batchbuffer_require_space(intel->batch, (n)*4, cliprect_mode); \
+   assert(intel->batch->emit.start_ptr == NULL);			\
+   intel->batch->emit.total = (n) * 4;					\
+   intel->batch->emit.start_ptr = intel->batch->ptr;			\
 } while (0)
 
-#define OUT_BATCH(d)  intel_batchbuffer_emit_dword(intel->batch, d)
+#define OUT_BATCH(d) intel_batchbuffer_emit_dword(intel->batch, d)
 
-#define OUT_RELOC(buf, cliprect_mode, delta) do { 			\
+#define OUT_RELOC(buf, read_domains, write_domain, delta) do {		\
    assert((delta) >= 0);						\
-   intel_batchbuffer_emit_reloc(intel->batch, buf, cliprect_mode, delta); \
+   intel_batchbuffer_emit_reloc(intel->batch, buf,			\
+				read_domains, write_domain, delta);	\
 } while (0)
 
-#define ADVANCE_BATCH() do { } while(0)
+#define ADVANCE_BATCH() do {						\
+   unsigned int _n = intel->batch->ptr - intel->batch->emit.start_ptr;	\
+   assert(intel->batch->emit.start_ptr != NULL);			\
+   if (_n != intel->batch->emit.total) {				\
+      fprintf(stderr, "ADVANCE_BATCH: %d of %d dwords emitted\n",	\
+	      _n, intel->batch->emit.total);				\
+      abort();								\
+   }									\
+   intel->batch->emit.start_ptr = NULL;					\
+} while(0)
 
+
+static INLINE void
+intel_batchbuffer_emit_mi_flush(struct intel_batchbuffer *batch)
+{
+   intel_batchbuffer_require_space(batch, 4, IGNORE_CLIPRECTS);
+   intel_batchbuffer_emit_dword(batch, MI_FLUSH);
+}
 
 #endif

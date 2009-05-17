@@ -35,23 +35,23 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * \author Nicolai Haehnle <prefect_@gmx.net>
  */
 
-#include "glheader.h"
-#include "state.h"
-#include "imports.h"
-#include "enums.h"
-#include "macros.h"
-#include "context.h"
-#include "dd.h"
-#include "simple_list.h"
+#include "main/glheader.h"
+#include "main/state.h"
+#include "main/imports.h"
+#include "main/enums.h"
+#include "main/macros.h"
+#include "main/context.h"
+#include "main/dd.h"
+#include "main/simple_list.h"
+#include "main/api_arrayelt.h"
+#include "main/texformat.h"
 
-#include "api_arrayelt.h"
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
 #include "shader/prog_parameter.h"
 #include "shader/prog_statevars.h"
 #include "vbo/vbo.h"
 #include "tnl/tnl.h"
-#include "texformat.h"
 
 #include "radeon_ioctl.h"
 #include "radeon_state.h"
@@ -974,15 +974,9 @@ static void r300StencilFuncSeparate(GLcontext * ctx, GLenum face,
 {
 	r300ContextPtr rmesa = R300_CONTEXT(ctx);
 	GLuint refmask =
-	    (((ctx->Stencil.
-	       Ref[0] & 0xff) << R300_STENCILREF_SHIFT) | ((ctx->
-							    Stencil.
-							    ValueMask
-							    [0] &
-							    0xff)
-							   <<
-							   R300_STENCILMASK_SHIFT));
-
+	    ((ctx->Stencil.Ref[0] & 0xff) << R300_STENCILREF_SHIFT)
+	     | ((ctx->Stencil.ValueMask[0] & 0xff) << R300_STENCILMASK_SHIFT);
+	const unsigned back = ctx->Stencil._BackFace;
 	GLuint flag;
 
 	R300_STATECHANGE(rmesa, zs);
@@ -1000,8 +994,7 @@ static void r300StencilFuncSeparate(GLcontext * ctx, GLenum face,
 	rmesa->hw.zs.cmd[R300_ZS_CNTL_1] |=
 	    (flag << R300_S_FRONT_FUNC_SHIFT);
 
-	if (ctx->Stencil._TestTwoSide)
-		flag = translate_func(ctx->Stencil.Function[1]);
+	flag = translate_func(ctx->Stencil.Function[back]);
 
 	rmesa->hw.zs.cmd[R300_ZS_CNTL_1] |=
 	    (flag << R300_S_BACK_FUNC_SHIFT);
@@ -1026,6 +1019,7 @@ static void r300StencilOpSeparate(GLcontext * ctx, GLenum face,
 				  GLenum fail, GLenum zfail, GLenum zpass)
 {
 	r300ContextPtr rmesa = R300_CONTEXT(ctx);
+	const unsigned back = ctx->Stencil._BackFace;
 
 	R300_STATECHANGE(rmesa, zs);
 	/* It is easier to mask what's left.. */
@@ -1042,23 +1036,13 @@ static void r300StencilOpSeparate(GLcontext * ctx, GLenum face,
 	    | (translate_stencil_op(ctx->Stencil.ZPassFunc[0]) <<
 	       R300_S_FRONT_ZPASS_OP_SHIFT);
 
-	if (ctx->Stencil._TestTwoSide) {
-		rmesa->hw.zs.cmd[R300_ZS_CNTL_1] |=
-		    (translate_stencil_op(ctx->Stencil.FailFunc[1]) <<
-		     R300_S_BACK_SFAIL_OP_SHIFT)
-		    | (translate_stencil_op(ctx->Stencil.ZFailFunc[1]) <<
-		       R300_S_BACK_ZFAIL_OP_SHIFT)
-		    | (translate_stencil_op(ctx->Stencil.ZPassFunc[1]) <<
-		       R300_S_BACK_ZPASS_OP_SHIFT);
-	} else {
-		rmesa->hw.zs.cmd[R300_ZS_CNTL_1] |=
-		    (translate_stencil_op(ctx->Stencil.FailFunc[0]) <<
-		     R300_S_BACK_SFAIL_OP_SHIFT)
-		    | (translate_stencil_op(ctx->Stencil.ZFailFunc[0]) <<
-		       R300_S_BACK_ZFAIL_OP_SHIFT)
-		    | (translate_stencil_op(ctx->Stencil.ZPassFunc[0]) <<
-		       R300_S_BACK_ZPASS_OP_SHIFT);
-	}
+	rmesa->hw.zs.cmd[R300_ZS_CNTL_1] |=
+	    (translate_stencil_op(ctx->Stencil.FailFunc[back]) <<
+	     R300_S_BACK_SFAIL_OP_SHIFT)
+	    | (translate_stencil_op(ctx->Stencil.ZFailFunc[back]) <<
+	       R300_S_BACK_ZFAIL_OP_SHIFT)
+	    | (translate_stencil_op(ctx->Stencil.ZPassFunc[back]) <<
+	       R300_S_BACK_ZPASS_OP_SHIFT);
 }
 
 /* =============================================================
@@ -1214,7 +1198,7 @@ r300FetchStateParameter(GLcontext * ctx,
 
 		case STATE_R300_TEXRECT_FACTOR:{
 				struct gl_texture_object *t =
-				    ctx->Texture.Unit[state[2]].CurrentRect;
+				    ctx->Texture.Unit[state[2]].CurrentTex[TEXTURE_RECT_INDEX];
 
 				if (t && t->Image[0][t->BaseLevel]) {
 					struct gl_texture_image *image =
@@ -1503,7 +1487,7 @@ static void r300SetupTextures(GLcontext * ctx)
 #endif
 			tmu_mappings[i] = hw_tmu;
 
-			t = r300->state.texture.unit[i].texobj;
+			t = (r300TexObjPtr) r300->state.texture.unit[i].texobj->DriverData;
 			/* XXX questionable fix for bug 9170: */
 			if (!t)
 				continue;
@@ -1675,6 +1659,13 @@ static void r300SetupRSUnit(GLcontext * ctx)
 		rs_col_count += count;
 	}
 
+	if (InputsRead & FRAG_BIT_FOGC) {
+		/* XXX FIX THIS
+		 * Just turn off the bit for now.
+		 * Need to do something similar to the color/texcoord inputs.
+		 */
+		InputsRead &= ~FRAG_BIT_FOGC;
+	}
 
 	for (i = 0; i < ctx->Const.MaxTextureUnits; i++) {
 		int swiz;

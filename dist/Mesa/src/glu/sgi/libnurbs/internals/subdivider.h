@@ -31,8 +31,6 @@
 /*
  * subdivider.h
  *
- * $Date: 2008/11/02 14:58:11 $ $Revision: 1.2 $
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/subdivider.h,v 1.2 2008/11/02 14:58:11 matthieu Exp $
  */
 
 #ifndef __glusubdivider_h_

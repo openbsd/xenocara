@@ -28,7 +28,6 @@
  * Silicon Graphics, Inc.
  */
 /*
-** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/nurbtess/Attic/primitiveStream.h,v 1.2 2008/11/02 14:58:11 matthieu Exp $
 */
 
 /*we do not use the constans GL_... so that this file is independent of 

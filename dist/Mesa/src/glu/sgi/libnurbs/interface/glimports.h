@@ -31,8 +31,6 @@
 /*
  * glimports.h
  *
- * $Date: 2008/11/02 14:58:10 $ $Revision: 1.2 $
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/interface/Attic/glimports.h,v 1.2 2008/11/02 14:58:10 matthieu Exp $
  */
 
 #ifndef __gluimports_h_

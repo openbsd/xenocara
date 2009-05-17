@@ -1,4 +1,4 @@
-/* $XFree86$ */ /* -*- mode: c; c-basic-offset: 3 -*- */
+/* -*- mode: c; c-basic-offset: 3 -*- */
 /*
  * Copyright 2000 Gareth Hughes
  * All Rights Reserved.
@@ -36,7 +36,7 @@
 #include "drm.h"
 #include "mach64_drm.h"
 
-#include "mtypes.h"
+#include "main/mtypes.h"
 
 #include "mach64_reg.h"
 

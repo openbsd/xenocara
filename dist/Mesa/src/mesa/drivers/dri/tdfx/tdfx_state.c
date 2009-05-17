@@ -23,7 +23,6 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-/* $XFree86: xc/lib/GL/mesa/src/drv/tdfx/tdfx_state.c,v 1.7 2002/10/30 12:52:00 alanh Exp $ */
 
 /*
  * New fixes:
@@ -39,11 +38,11 @@
  *
  */
 
-#include "mtypes.h"
-#include "colormac.h"
-#include "texformat.h"
-#include "texstore.h"
-#include "teximage.h"
+#include "main/mtypes.h"
+#include "main/colormac.h"
+#include "main/texformat.h"
+#include "main/texstore.h"
+#include "main/teximage.h"
 
 #include "swrast/swrast.h"
 #include "vbo/vbo.h"

@@ -65,7 +65,7 @@ struct brw_reg
    GLuint abs:1;		/* source only */
    GLuint vstride:4;		/* source only */
    GLuint width:3;		/* src only, align1 only */
-   GLuint hstride:2;   		/* src only, align1 only */
+   GLuint hstride:2;   		/* align1 only */
    GLuint address_mode:1;	/* relative addressing, hopefully! */
    GLuint pad0:1;
 
@@ -91,6 +91,11 @@ struct brw_indirect {
 };
 
 
+struct brw_glsl_label;
+struct brw_glsl_call;
+
+
+
 #define BRW_EU_MAX_INSN_STACK 5
 #define BRW_EU_MAX_INSN 1200
 
@@ -106,7 +111,20 @@ struct brw_compile {
    GLuint flag_value;
    GLboolean single_program_flow;
    struct brw_context *brw;
+
+   struct brw_glsl_label *first_label;  /**< linked list of labels */
+   struct brw_glsl_call *first_call;    /**< linked list of CALs */
 };
+
+
+void
+brw_save_label(struct brw_compile *c, const char *name, GLuint position);
+
+void
+brw_save_call(struct brw_compile *c, const char *name, GLuint call_pos);
+
+void
+brw_resolve_cals(struct brw_compile *c);
 
 
 
@@ -129,17 +147,28 @@ static INLINE int type_sz( GLuint type )
    }
 }
 
+/**
+ * Construct a brw_reg.
+ * \param file  one of the BRW_x_REGISTER_FILE values
+ * \param nr  register number/index
+ * \param subnr  register sub number
+ * \param type  one of BRW_REGISTER_TYPE_x
+ * \param vstride  one of BRW_VERTICAL_STRIDE_x
+ * \param width  one of BRW_WIDTH_x
+ * \param hstride  one of BRW_HORIZONTAL_STRIDE_x
+ * \param swizzle  one of BRW_SWIZZLE_x
+ * \param writemask  WRITEMASK_X/Y/Z/W bitfield
+ */
 static INLINE struct brw_reg brw_reg( GLuint file,
-					GLuint nr,
-					GLuint subnr,
-					GLuint type,
-					GLuint vstride,
-					GLuint width,
-					GLuint hstride,
-					GLuint swizzle,
-					GLuint writemask)
+                                      GLuint nr,
+                                      GLuint subnr,
+                                      GLuint type,
+                                      GLuint vstride,
+                                      GLuint width,
+                                      GLuint hstride,
+                                      GLuint swizzle,
+                                      GLuint writemask )
 {
-      
    struct brw_reg reg;
    reg.type = type;
    reg.file = file;
@@ -166,6 +195,7 @@ static INLINE struct brw_reg brw_reg( GLuint file,
    return reg;
 }
 
+/** Construct float[16] register */
 static INLINE struct brw_reg brw_vec16_reg( GLuint file,
 					      GLuint nr,
 					      GLuint subnr )
@@ -181,6 +211,7 @@ static INLINE struct brw_reg brw_vec16_reg( GLuint file,
 		  WRITEMASK_XYZW);
 }
 
+/** Construct float[8] register */
 static INLINE struct brw_reg brw_vec8_reg( GLuint file,
 					     GLuint nr,
 					     GLuint subnr )
@@ -196,7 +227,7 @@ static INLINE struct brw_reg brw_vec8_reg( GLuint file,
 		  WRITEMASK_XYZW);
 }
 
-
+/** Construct float[4] register */
 static INLINE struct brw_reg brw_vec4_reg( GLuint file,
 					      GLuint nr,
 					      GLuint subnr )
@@ -212,7 +243,7 @@ static INLINE struct brw_reg brw_vec4_reg( GLuint file,
 		  WRITEMASK_XYZW);
 }
 
-
+/** Construct float[2] register */
 static INLINE struct brw_reg brw_vec2_reg( GLuint file,
 					      GLuint nr,
 					      GLuint subnr )
@@ -228,6 +259,7 @@ static INLINE struct brw_reg brw_vec2_reg( GLuint file,
 		  WRITEMASK_XY);
 }
 
+/** Construct float[1] register */
 static INLINE struct brw_reg brw_vec1_reg( GLuint file,
 					     GLuint nr,
 					     GLuint subnr )
@@ -277,6 +309,7 @@ static INLINE struct brw_reg byte_offset( struct brw_reg reg,
 }
    
 
+/** Construct unsigned word[16] register */
 static INLINE struct brw_reg brw_uw16_reg( GLuint file,
 					     GLuint nr,
 					     GLuint subnr )
@@ -284,6 +317,7 @@ static INLINE struct brw_reg brw_uw16_reg( GLuint file,
    return suboffset(retype(brw_vec16_reg(file, nr, 0), BRW_REGISTER_TYPE_UW), subnr);
 }
 
+/** Construct unsigned word[8] register */
 static INLINE struct brw_reg brw_uw8_reg( GLuint file,
 					    GLuint nr,
 					    GLuint subnr )
@@ -291,6 +325,7 @@ static INLINE struct brw_reg brw_uw8_reg( GLuint file,
    return suboffset(retype(brw_vec8_reg(file, nr, 0), BRW_REGISTER_TYPE_UW), subnr);
 }
 
+/** Construct unsigned word[1] register */
 static INLINE struct brw_reg brw_uw1_reg( GLuint file,
 					    GLuint nr,
 					    GLuint subnr )
@@ -311,6 +346,7 @@ static INLINE struct brw_reg brw_imm_reg( GLuint type )
 		   0);      
 }
 
+/** Construct float immediate register */
 static INLINE struct brw_reg brw_imm_f( GLfloat f )
 {
    struct brw_reg imm = brw_imm_reg(BRW_REGISTER_TYPE_F);
@@ -318,6 +354,7 @@ static INLINE struct brw_reg brw_imm_f( GLfloat f )
    return imm;
 }
 
+/** Construct integer immediate register */
 static INLINE struct brw_reg brw_imm_d( GLint d )
 {
    struct brw_reg imm = brw_imm_reg(BRW_REGISTER_TYPE_D);
@@ -325,6 +362,7 @@ static INLINE struct brw_reg brw_imm_d( GLint d )
    return imm;
 }
 
+/** Construct uint immediate register */
 static INLINE struct brw_reg brw_imm_ud( GLuint ud )
 {
    struct brw_reg imm = brw_imm_reg(BRW_REGISTER_TYPE_UD);
@@ -332,6 +370,7 @@ static INLINE struct brw_reg brw_imm_ud( GLuint ud )
    return imm;
 }
 
+/** Construct ushort immediate register */
 static INLINE struct brw_reg brw_imm_uw( GLushort uw )
 {
    struct brw_reg imm = brw_imm_reg(BRW_REGISTER_TYPE_UW);
@@ -339,6 +378,7 @@ static INLINE struct brw_reg brw_imm_uw( GLushort uw )
    return imm;
 }
 
+/** Construct short immediate register */
 static INLINE struct brw_reg brw_imm_w( GLshort w )
 {
    struct brw_reg imm = brw_imm_reg(BRW_REGISTER_TYPE_W);
@@ -350,8 +390,7 @@ static INLINE struct brw_reg brw_imm_w( GLshort w )
  * numbers alias with _V and _VF below:
  */
 
-/* Vector of eight signed half-byte values: 
- */
+/** Construct vector of eight signed half-byte values */
 static INLINE struct brw_reg brw_imm_v( GLuint v )
 {
    struct brw_reg imm = brw_imm_reg(BRW_REGISTER_TYPE_V);
@@ -362,8 +401,7 @@ static INLINE struct brw_reg brw_imm_v( GLuint v )
    return imm;
 }
 
-/* Vector of four 8-bit float values:
- */
+/** Construct vector of four 8-bit float values */
 static INLINE struct brw_reg brw_imm_vf( GLuint v )
 {
    struct brw_reg imm = brw_imm_reg(BRW_REGISTER_TYPE_VF);
@@ -400,38 +438,43 @@ static INLINE struct brw_reg brw_address( struct brw_reg reg )
    return brw_imm_uw(reg.nr * REG_SIZE + reg.subnr);
 }
 
-
-static INLINE struct brw_reg brw_vec1_grf( GLuint nr,
-					       GLuint subnr )
+/** Construct float[1] general-purpose register */
+static INLINE struct brw_reg brw_vec1_grf( GLuint nr, GLuint subnr )
 {
    return brw_vec1_reg(BRW_GENERAL_REGISTER_FILE, nr, subnr);
 }
 
-static INLINE struct brw_reg brw_vec8_grf( GLuint nr,
-					     GLuint subnr )
-{
-   return brw_vec8_reg(BRW_GENERAL_REGISTER_FILE, nr, subnr);
-}
-
-static INLINE struct brw_reg brw_vec4_grf( GLuint nr,
-					     GLuint subnr )
-{
-   return brw_vec4_reg(BRW_GENERAL_REGISTER_FILE, nr, subnr);
-}
-
-
-static INLINE struct brw_reg brw_vec2_grf( GLuint nr,
-					     GLuint subnr )
+/** Construct float[2] general-purpose register */
+static INLINE struct brw_reg brw_vec2_grf( GLuint nr, GLuint subnr )
 {
    return brw_vec2_reg(BRW_GENERAL_REGISTER_FILE, nr, subnr);
 }
 
-static INLINE struct brw_reg brw_uw8_grf( GLuint nr,
-					    GLuint subnr )
+/** Construct float[4] general-purpose register */
+static INLINE struct brw_reg brw_vec4_grf( GLuint nr, GLuint subnr )
+{
+   return brw_vec4_reg(BRW_GENERAL_REGISTER_FILE, nr, subnr);
+}
+
+/** Construct float[8] general-purpose register */
+static INLINE struct brw_reg brw_vec8_grf( GLuint nr, GLuint subnr )
+{
+   return brw_vec8_reg(BRW_GENERAL_REGISTER_FILE, nr, subnr);
+}
+
+
+static INLINE struct brw_reg brw_uw8_grf( GLuint nr, GLuint subnr )
 {
    return brw_uw8_reg(BRW_GENERAL_REGISTER_FILE, nr, subnr);
 }
 
+static INLINE struct brw_reg brw_uw16_grf( GLuint nr, GLuint subnr )
+{
+   return brw_uw16_reg(BRW_GENERAL_REGISTER_FILE, nr, subnr);
+}
+
+
+/** Construct null register (usually used for setting condition codes) */
 static INLINE struct brw_reg brw_null_reg( void )
 {
    return brw_vec8_reg(BRW_ARCHITECTURE_REGISTER_FILE, 
@@ -518,12 +561,12 @@ static INLINE struct brw_reg stride( struct brw_reg reg,
 				       GLuint width,
 				       GLuint hstride )
 {
-   
    reg.vstride = cvt(vstride);
    reg.width = cvt(width) - 1;
    reg.hstride = cvt(hstride);
    return reg;
 }
+
 
 static INLINE struct brw_reg vec16( struct brw_reg reg )
 {
@@ -549,6 +592,7 @@ static INLINE struct brw_reg vec1( struct brw_reg reg )
 {
    return stride(reg, 0,1,0);
 }
+
 
 static INLINE struct brw_reg get_element( struct brw_reg reg, GLuint elt )
 {
@@ -681,7 +725,7 @@ static INLINE struct brw_indirect brw_indirect( GLuint addr_subnr, GLint offset 
 
 static INLINE struct brw_instruction *current_insn( struct brw_compile *p)
 {
-	return &p->store[p->nr_insn];
+   return &p->store[p->nr_insn];
 }
 
 void brw_pop_insn_state( struct brw_compile *p );
@@ -727,6 +771,7 @@ ALU2(ADD)
 ALU2(MUL)
 ALU1(FRC)
 ALU1(RNDD)
+ALU1(RNDZ)
 ALU2(MAC)
 ALU2(MACH)
 ALU1(LZD)

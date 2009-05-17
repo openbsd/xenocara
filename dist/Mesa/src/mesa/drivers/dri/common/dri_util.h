@@ -53,10 +53,9 @@
 #include <drm.h>
 #include <drm_sarea.h>
 #include <xf86drm.h>
-#include "glheader.h"
+#include "main/glheader.h"
 #include "GL/internal/glcore.h"
 #include "GL/internal/dri_interface.h"
-#include "GL/internal/dri_sarea.h"
 
 #define GLX_BAD_CONTEXT                    5
 
@@ -106,6 +105,28 @@ do {                                                                    \
 	DRM_SPINUNLOCK(&psp->pSAREA->drawable_lock, psp->drawLockID);   \
                                                                         \
 	DRM_LIGHT_LOCK(psp->fd, &psp->pSAREA->lock, hwContext);         \
+    }                                                                   \
+} while (0)
+
+/**
+ * Same as above, but for two drawables simultaneously.
+ *
+ */
+
+#define DRI_VALIDATE_TWO_DRAWABLES_INFO(psp, pdp, prp)			\
+do {								\
+    while (*((pdp)->pStamp) != (pdp)->lastStamp ||			\
+	   *((prp)->pStamp) != (prp)->lastStamp) {			\
+        register unsigned int hwContext = (psp)->pSAREA->lock.lock &	\
+	    ~(DRM_LOCK_HELD | DRM_LOCK_CONT);				\
+	DRM_UNLOCK((psp)->fd, &(psp)->pSAREA->lock, hwContext);		\
+									\
+	DRM_SPINLOCK(&(psp)->pSAREA->drawable_lock, (psp)->drawLockID);	\
+	DRI_VALIDATE_DRAWABLE_INFO_ONCE(pdp);                           \
+	DRI_VALIDATE_DRAWABLE_INFO_ONCE(prp);				\
+	DRM_SPINUNLOCK(&(psp)->pSAREA->drawable_lock, (psp)->drawLockID); \
+									\
+	DRM_LIGHT_LOCK((psp)->fd, &(psp)->pSAREA->lock, hwContext);	\
     }                                                                   \
 } while (0)
 
@@ -204,16 +225,8 @@ struct __DriverAPIRec {
 
 
 
-    /* DRI2 Entry points */
+    /* DRI2 Entry point */
     const __DRIconfig **(*InitScreen2) (__DRIscreen * priv);
-    void (*HandleDrawableConfig)(__DRIdrawable *dPriv,
-				__DRIcontext *pcp,
-				__DRIDrawableConfigEvent *event);
-
-    void (*HandleBufferAttach)(__DRIdrawable *dPriv,
-			       __DRIcontext *pcp,
-			       __DRIBufferAttachEvent *ba);
-
 };
 
 extern const struct __DriverAPIRec driDriverAPI;
@@ -223,7 +236,7 @@ struct __DRIswapInfoRec {
     /** 
      * Number of swapBuffers operations that have been *completed*. 
      */
-    u_int64_t swap_count;
+    uint64_t swap_count;
 
     /**
      * Unadjusted system time of the last buffer swap.  This is the time
@@ -237,7 +250,7 @@ struct __DRIswapInfoRec {
      * swap, it has missed its deadline.  If swap_interval is 0, then the
      * swap deadline is 1 frame after the previous swap.
      */
-    u_int64_t swap_missed_count;
+    uint64_t swap_missed_count;
 
     /**
      * Amount of time used by the last swap that missed its deadline.  This
@@ -369,10 +382,6 @@ struct __DRIdrawableRec {
      * GLX_MESA_swap_control.
      */
     unsigned int swap_interval;
-    struct {
-	unsigned int tail;
-	unsigned int drawable_id;
-    } dri2;
 };
 
 /**
@@ -524,13 +533,7 @@ struct __DRIscreenRec {
 	/* Flag to indicate that this is a DRI2 screen.  Many of the above
 	 * fields will not be valid or initializaed in that case. */
 	int enabled;
-#ifdef TTM_API
-	drmBO sareaBO;
-#endif
-	void *sarea;
-	__DRIEventBuffer *buffer;
-	__DRILock *lock;
-	__DRIloaderExtension *loader;
+	__DRIdri2LoaderExtension *loader;
     } dri2;
 
     /* The lock actually in use, old sarea or DRI2 */
@@ -543,9 +546,6 @@ __driUtilMessage(const char *f, ...);
 
 extern void
 __driUtilUpdateDrawableInfo(__DRIdrawable *pdp);
-
-extern int
-__driParseEvents(__DRIcontext *psp, __DRIdrawable *pdp);
 
 extern float
 driCalculateSwapUsage( __DRIdrawable *dPriv,

@@ -33,13 +33,13 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *   Keith Whitwell <keith@tungstengraphics.com>
  */
 
-#include "glheader.h"
-#include "imports.h"
-#include "api_arrayelt.h"
-#include "enums.h"
-#include "colormac.h"
-#include "light.h"
-#include "framebuffer.h"
+#include "main/glheader.h"
+#include "main/imports.h"
+#include "main/api_arrayelt.h"
+#include "main/enums.h"
+#include "main/colormac.h"
+#include "main/light.h"
+#include "main/framebuffer.h"
 
 #include "swrast/swrast.h"
 #include "vbo/vbo.h"
@@ -902,7 +902,7 @@ static void r200PolygonMode( GLcontext *ctx, GLenum face, GLenum mode )
 static void r200UpdateSpecular( GLcontext *ctx )
 {
    r200ContextPtr rmesa = R200_CONTEXT(ctx);
-   u_int32_t p = rmesa->hw.ctx.cmd[CTX_PP_CNTL];
+   uint32_t p = rmesa->hw.ctx.cmd[CTX_PP_CNTL];
 
    R200_STATECHANGE( rmesa, tcl );
    R200_STATECHANGE( rmesa, vtx );

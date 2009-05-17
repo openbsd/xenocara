@@ -28,7 +28,6 @@
  * Silicon Graphics, Inc.
  */
 /*
-** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/interface/Attic/bezierEval.h,v 1.2 2008/11/02 14:58:10 matthieu Exp $
 */
 
 #ifndef _BEZIEREVAL_H

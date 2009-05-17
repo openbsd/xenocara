@@ -25,12 +25,11 @@
  * Authors:
  *    Ian Romanick <idr@us.ibm.com>
  */
-/* $XFree86:$ */
 
 #ifndef DRI_VBLANK_H
 #define DRI_VBLANK_H
 
-#include "context.h"
+#include "main/context.h"
 #include "dri_util.h"
 #include "xmlconfig.h"
 

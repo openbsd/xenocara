@@ -1,4 +1,4 @@
-/* $XFree86$ */ /* -*- mode: c; c-basic-offset: 3 -*- */
+/* -*- mode: c; c-basic-offset: 3 -*- */
 /*
  * Copyright 2000 Gareth Hughes
  * All Rights Reserved.
@@ -36,9 +36,9 @@
 #include "mach64_vb.h"
 #include "mach64_tex.h"
 
-#include "context.h"
-#include "enums.h"
-#include "colormac.h"
+#include "main/context.h"
+#include "main/enums.h"
+#include "main/colormac.h"
 #include "swrast/swrast.h"
 #include "vbo/vbo.h"
 #include "tnl/tnl.h"

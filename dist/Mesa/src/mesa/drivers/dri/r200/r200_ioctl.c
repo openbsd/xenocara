@@ -35,10 +35,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <sched.h>
 #include <errno.h>
 
-#include "glheader.h"
-#include "imports.h"
-#include "macros.h"
-#include "context.h"
+#include "main/glheader.h"
+#include "main/imports.h"
+#include "main/macros.h"
+#include "main/context.h"
 #include "swrast/swrast.h"
 
 #include "r200_context.h"
@@ -333,11 +333,11 @@ void r200AllocDmaRegion( r200ContextPtr rmesa,
  * SwapBuffers with client-side throttling
  */
 
-static u_int32_t r200GetLastFrame(r200ContextPtr rmesa)
+static uint32_t r200GetLastFrame(r200ContextPtr rmesa)
 {
    drm_radeon_getparam_t gp;
    int ret;
-   u_int32_t frame;
+   uint32_t frame;
 
    gp.param = RADEON_PARAM_LAST_FRAME;
    gp.value = (int *)&frame;

@@ -1,4 +1,3 @@
-/* $Id: wgl.c,v 1.3 2008/11/02 14:58:19 matthieu Exp $ */
 
 /*
  * This library is free software; you can redistribute it and/or
@@ -602,8 +601,9 @@ WINGDIAPI BOOL GLAPIENTRY wglCopyContext(HGLRC hglrcSrc,
 WINGDIAPI HGLRC GLAPIENTRY wglCreateLayerContext(HDC hdc,
 						 int iLayerPlane)
 {
-    (void) hdc; (void) iLayerPlane;
     SetLastError(0);
+    if (iLayerPlane == 0)
+        return wglCreateContext( hdc );
     return(NULL);
 }
 

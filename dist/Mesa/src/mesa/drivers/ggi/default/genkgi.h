@@ -1,4 +1,4 @@
-/* $Id: genkgi.h,v 1.1 2008/11/02 14:58:19 matthieu Exp $
+/* 
 ******************************************************************************
 
    GGIMesa - KGIcon specific overrides for fbcon-mesa

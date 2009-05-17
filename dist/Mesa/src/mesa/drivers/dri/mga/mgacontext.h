@@ -1,4 +1,3 @@
-/* $XFree86: xc/lib/GL/mesa/src/drv/mga/mgacontext.h,v 1.7 2002/12/16 16:18:52 dawes Exp $*/
 /*
  * Copyright 2000-2001 VA Linux Systems, Inc.
  * All Rights Reserved.
@@ -33,12 +32,12 @@
 #include "drm.h"
 #include "mga_drm.h"
 #include "dri_util.h"
-#include "mtypes.h"
 #include "xf86drm.h"
-#include "mm.h"
-#include "colormac.h"
+#include "main/mtypes.h"
+#include "main/mm.h"
+#include "main/colormac.h"
+#include "main/macros.h"
 #include "texmem.h"
-#include "macros.h"
 #include "xmlconfig.h"
 
 #define MGA_SET_FIELD(reg,mask,val)  reg = ((reg) & (mask)) | ((val) & ~(mask))

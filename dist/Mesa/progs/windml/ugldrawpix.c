@@ -7,10 +7,6 @@
  */
 
 /*
- * $Log: ugldrawpix.c,v $
- * Revision 1.2  2008/11/02 14:58:09  matthieu
- * Mesa 7.2, Tested by ckuethe@, naddy@, oga@, and others.
- *
  * Revision 1.2  2001/09/10 19:21:13  brianp
  * WindML updates (Stephane Raimbault)
  *

@@ -50,15 +50,15 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
  * no bugs...
  */
 
-#include "glheader.h"
-#include "state.h"
-#include "imports.h"
-#include "enums.h"
-#include "macros.h"
-#include "context.h"
-#include "dd.h"
-#include "simple_list.h"
-#include "api_arrayelt.h"
+#include "main/glheader.h"
+#include "main/state.h"
+#include "main/imports.h"
+#include "main/enums.h"
+#include "main/macros.h"
+#include "main/context.h"
+#include "main/dd.h"
+#include "main/simple_list.h"
+#include "main/api_arrayelt.h"
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
 #include "vbo/vbo.h"
@@ -208,7 +208,8 @@ static void r300FireEB(r300ContextPtr rmesa, unsigned long addr,
 	e32(R300_VAP_VF_CNTL__PRIM_WALK_INDICES | (vertex_count << 16) | type | R300_VAP_VF_CNTL__INDEX_SIZE_32bit);
 
 	start_packet3(CP_PACKET3(R300_PACKET3_INDX_BUFFER, 2), 2);
-	e32(R300_EB_UNK1 | (0 << 16) | R300_EB_UNK2);
+	e32(R300_INDX_BUFFER_ONE_REG_WR | (0 << R300_INDX_BUFFER_SKIP_SHIFT) |
+	    (R300_VAP_PORT_IDX0 >> 2));
 	e32(addr);
 	e32(vertex_count);
 }
@@ -346,6 +347,8 @@ static GLboolean r300RunRender(GLcontext * ctx,
 static int r300Fallback(GLcontext * ctx)
 {
 	r300ContextPtr r300 = R300_CONTEXT(ctx);
+	const unsigned back = ctx->Stencil._BackFace;
+
 	/* Do we need to use new-style shaders?
 	 * Also is there a better way to do this? */
 	if (r300->radeon.radeonScreen->chip_family >= CHIP_FAMILY_RV515) {
@@ -370,12 +373,14 @@ static int r300Fallback(GLcontext * ctx)
 
 	FALLBACK_IF(ctx->RenderMode != GL_RENDER);
 
-	FALLBACK_IF(ctx->Stencil._TestTwoSide
-		    && (ctx->Stencil.Ref[0] != ctx->Stencil.Ref[1]
-			|| ctx->Stencil.ValueMask[0] !=
-			ctx->Stencil.ValueMask[1]
-			|| ctx->Stencil.WriteMask[0] !=
-			ctx->Stencil.WriteMask[1]));
+	/* If GL_EXT_stencil_two_side is disabled, this fallback check can
+	 * be removed.
+	 */
+	FALLBACK_IF(ctx->Stencil.Ref[0] != ctx->Stencil.Ref[back]
+		    || ctx->Stencil.ValueMask[0] !=
+		    ctx->Stencil.ValueMask[back]
+		    || ctx->Stencil.WriteMask[0] !=
+		    ctx->Stencil.WriteMask[back]);
 
 	if (ctx->Extensions.NV_point_sprite || ctx->Extensions.ARB_point_sprite)
 		FALLBACK_IF(ctx->Point.PointSprite);

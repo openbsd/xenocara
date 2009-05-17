@@ -1,4 +1,3 @@
-/* $Id: multiwindow.c,v 1.1 2008/11/02 14:58:09 matthieu Exp $ */
 
 /*
  * A skeleton/template GLUT program
@@ -8,10 +7,6 @@
 
 
 /*
- * $Log: multiwindow.c,v $
- * Revision 1.1  2008/11/02 14:58:09  matthieu
- * Mesa 7.2, Tested by ckuethe@, naddy@, oga@, and others.
- *
  * Revision 1.1  2001/08/21 14:25:31  brianp
  * simple multi-window GLUT test prog
  *

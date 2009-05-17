@@ -29,7 +29,7 @@
 #include "intel_mipmap_tree.h"
 #include "intel_regions.h"
 #include "intel_chipset.h"
-#include "enums.h"
+#include "main/enums.h"
 
 #define FILE_DEBUG_FLAG DEBUG_MIPTREE
 
@@ -103,7 +103,8 @@ intel_miptree_create(struct intel_context *intel,
 		     GLuint last_level,
 		     GLuint width0,
 		     GLuint height0,
-		     GLuint depth0, GLuint cpp, GLuint compress_byte)
+		     GLuint depth0, GLuint cpp, GLuint compress_byte,
+		     GLboolean expect_accelerated_upload)
 {
    struct intel_mipmap_tree *mt;
 
@@ -111,13 +112,17 @@ intel_miptree_create(struct intel_context *intel,
 				      first_level, last_level, width0,
 				      height0, depth0, cpp, compress_byte);
    /*
-    * pitch == 0 indicates the null texture
+    * pitch == 0 || height == 0  indicates the null texture
     */
-   if (!mt || !mt->pitch)
+   if (!mt || !mt->pitch || !mt->total_height)
       return NULL;
 
    mt->region = intel_region_alloc(intel,
-				   mt->cpp, mt->pitch, mt->total_height);
+				   mt->cpp,
+				   mt->pitch,
+				   mt->total_height,
+				   mt->pitch,
+				   expect_accelerated_upload);
 
    if (!mt->region) {
        free(mt);
@@ -141,7 +146,7 @@ intel_miptree_create_for_region(struct intel_context *intel,
 
    mt = intel_miptree_create_internal(intel, target, internal_format,
 				      first_level, last_level,
-				      region->pitch, region->height, depth0,
+				      region->width, region->height, 1,
 				      region->cpp, compress_byte);
    if (!mt)
       return mt;
@@ -160,7 +165,7 @@ intel_miptree_create_for_region(struct intel_context *intel,
    mt->pitch = region->pitch;
 #endif
 
-   mt->region = region;
+   intel_region_reference(&mt->region, region);
 
    return mt;
  }

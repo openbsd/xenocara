@@ -30,12 +30,12 @@
  * dma buffers.  Use strip/fan hardware acceleration where possible.
  *
  */
-#include "glheader.h"
-#include "context.h"
-#include "macros.h"
-#include "imports.h"
-#include "mtypes.h"
-#include "enums.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/macros.h"
+#include "main/imports.h"
+#include "main/mtypes.h"
+#include "main/enums.h"
 
 #include "tnl/t_context.h"
 #include "tnl/t_vertex.h"
@@ -67,7 +67,7 @@
 
 #define HAVE_ELTS        0
 
-static GLuint hw_prim[GL_POLYGON + 1] = {
+static uint32_t hw_prim[GL_POLYGON + 1] = {
    0,
    PRIM3D_LINELIST,
    PRIM3D_LINESTRIP,
@@ -114,9 +114,29 @@ intelDmaPrimitive(struct intel_context *intel, GLenum prim)
       fprintf(stderr, "%s %s\n", __FUNCTION__, _mesa_lookup_enum_by_nr(prim));
    INTEL_FIREVERTICES(intel);
    intel->vtbl.reduced_primitive_state(intel, reduced_prim[prim]);
-   intelStartInlinePrimitive(intel, hw_prim[prim], LOOP_CLIPRECTS);
+   intel_set_prim(intel, hw_prim[prim]);
 }
 
+static inline GLuint intel_get_vb_max(struct intel_context *intel)
+{
+   GLuint ret;
+
+   if (intel->intelScreen->no_vbo)
+      ret = intel->batch->size - 1500;
+   else
+      ret = INTEL_VB_SIZE;
+   ret /= (intel->vertex_size * 4);
+   return ret;
+}
+
+static inline GLuint intel_get_current_max(struct intel_context *intel)
+{
+
+   if (intel->intelScreen->no_vbo)
+      return intel_get_vb_max(intel);
+   else
+      return (INTEL_VB_SIZE - intel->prim.current_offset) / (intel->vertex_size * 4);
+}
 
 #define LOCAL_VARS struct intel_context *intel = intel_context(ctx)
 #define INIT( prim ) 				\
@@ -126,12 +146,10 @@ do {						\
 
 #define FLUSH() INTEL_FIREVERTICES(intel)
 
-#define GET_SUBSEQUENT_VB_MAX_VERTS() \
-  ((intel->batch->size - 1500) / (intel->vertex_size*4))
-#define GET_CURRENT_VB_MAX_VERTS() GET_SUBSEQUENT_VB_MAX_VERTS()
+#define GET_SUBSEQUENT_VB_MAX_VERTS() intel_get_vb_max(intel)
+#define GET_CURRENT_VB_MAX_VERTS() intel_get_current_max(intel)
 
-#define ALLOC_VERTS( nr ) \
-   intelExtendInlinePrimitive( intel, (nr) * intel->vertex_size )
+#define ALLOC_VERTS(nr) intel_get_prim_space(intel, nr)
 
 #define EMIT_VERTS( ctx, j, nr, buf ) \
   _tnl_emit_vertices_to_buffer(ctx, j, (j)+(nr), buf )

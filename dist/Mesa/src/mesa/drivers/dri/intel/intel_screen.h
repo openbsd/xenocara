@@ -30,6 +30,7 @@
 
 #include <sys/time.h>
 #include "dri_util.h"
+#include "intel_bufmgr.h"
 #include "i915_drm.h"
 #include "xmlconfig.h"
 
@@ -66,12 +67,18 @@ typedef struct
    int logTextureGranularity;
 
    __DRIscreenPrivate *driScrnPriv;
-   unsigned int sarea_priv_offset;
+
+   volatile drm_i915_sarea_t *sarea;
 
    int drmMinor;
 
    int irq_active;
-   int allow_batchbuffer;
+
+   GLboolean no_hw;
+
+   GLboolean no_vbo;
+   int ttm;
+   dri_bufmgr *bufmgr;
 
    /**
    * Configuration cache with default values for all contexts
@@ -85,10 +92,6 @@ extern GLboolean intelMapScreenRegions(__DRIscreenPrivate * sPriv);
 
 extern void intelUnmapScreenRegions(intelScreenPrivate * intelScreen);
 
-extern void
-intelUpdateScreenFromSAREA(intelScreenPrivate * intelScreen,
-                           struct drm_i915_sarea * sarea);
-
 extern void intelDestroyContext(__DRIcontextPrivate * driContextPriv);
 
 extern GLboolean intelUnbindContext(__DRIcontextPrivate * driContextPriv);
@@ -97,11 +100,6 @@ extern GLboolean
 intelMakeCurrent(__DRIcontextPrivate * driContextPriv,
                  __DRIdrawablePrivate * driDrawPriv,
                  __DRIdrawablePrivate * driReadPriv);
-
-extern void intelSwapBuffers(__DRIdrawablePrivate * dPriv);
-
-extern void
-intelCopySubBuffer(__DRIdrawablePrivate * dPriv, int x, int y, int w, int h);
 
 extern struct intel_context *intelScreenContext(intelScreenPrivate *intelScreen);
 

@@ -34,7 +34,7 @@
 #include "brw_state.h"
 #include "brw_defines.h"
 
-#include "macros.h"
+#include "main/macros.h"
 
 
 
@@ -95,6 +95,7 @@ struct wm_sampler_key {
    int sampler_count;
 
    struct wm_sampler_entry {
+      GLenum tex_target;
       GLenum wrap_r, wrap_s, wrap_t;
       float maxlod, minlod;
       float lod_bias;
@@ -168,19 +169,20 @@ static void brw_update_sampler_state(struct wm_sampler_entry *key,
       }  
    }
 
-   sampler->ss1.r_wrap_mode = translate_wrap_mode(key->wrap_r);
-   sampler->ss1.s_wrap_mode = translate_wrap_mode(key->wrap_s);
-   sampler->ss1.t_wrap_mode = translate_wrap_mode(key->wrap_t);
-
-   /* Fulsim complains if I don't do this.  Hardware doesn't mind:
-    */
-#if 0
-   if (texObj->Target == GL_TEXTURE_CUBE_MAP_ARB) {
+   if (key->tex_target == GL_TEXTURE_CUBE_MAP &&
+       (key->minfilter != GL_NEAREST || key->magfilter != GL_NEAREST)) {
+      /* If we're using anything but nearest sampling for a cube map, we
+       * need to set this wrap mode to avoid GPU lock-ups.
+       */
       sampler->ss1.r_wrap_mode = BRW_TEXCOORDMODE_CUBE;
       sampler->ss1.s_wrap_mode = BRW_TEXCOORDMODE_CUBE;
       sampler->ss1.t_wrap_mode = BRW_TEXCOORDMODE_CUBE;
    }
-#endif
+   else {
+      sampler->ss1.r_wrap_mode = translate_wrap_mode(key->wrap_r);
+      sampler->ss1.s_wrap_mode = translate_wrap_mode(key->wrap_s);
+      sampler->ss1.t_wrap_mode = translate_wrap_mode(key->wrap_t);
+   }
 
    /* Set shadow function: 
     */
@@ -220,15 +222,21 @@ static void
 brw_wm_sampler_populate_key(struct brw_context *brw,
 			    struct wm_sampler_key *key)
 {
+   GLcontext *ctx = &brw->intel.ctx;
    int unit;
 
    memset(key, 0, sizeof(*key));
 
    for (unit = 0; unit < BRW_MAX_TEX_UNIT; unit++) {
-      if (brw->attribs.Texture->Unit[unit]._ReallyEnabled) {
+      if (ctx->Texture.Unit[unit]._ReallyEnabled) {
 	 struct wm_sampler_entry *entry = &key->sampler[unit];
-	 struct gl_texture_unit *texUnit = &brw->attribs.Texture->Unit[unit];
+	 struct gl_texture_unit *texUnit = &ctx->Texture.Unit[unit];
 	 struct gl_texture_object *texObj = texUnit->_Current;
+	 struct intel_texture_object *intelObj = intel_texture_object(texObj);
+	 struct gl_texture_image *firstImage =
+	    texObj->Image[0][intelObj->firstLevel];
+
+         entry->tex_target = texObj->Target;
 
 	 entry->wrap_r = texObj->WrapR;
 	 entry->wrap_s = texObj->WrapS;
@@ -241,11 +249,25 @@ brw_wm_sampler_populate_key(struct brw_context *brw,
 	 entry->minfilter = texObj->MinFilter;
 	 entry->magfilter = texObj->MagFilter;
 	 entry->comparemode = texObj->CompareMode;
-    entry->comparefunc = texObj->CompareFunc;
+         entry->comparefunc = texObj->CompareFunc;
 
 	 dri_bo_unreference(brw->wm.sdc_bo[unit]);
-	 brw->wm.sdc_bo[unit] = upload_default_color(brw, texObj->BorderColor);
-
+	 if (firstImage->_BaseFormat == GL_DEPTH_COMPONENT) {
+	    float bordercolor[4] = {
+	       texObj->BorderColor[0],
+	       texObj->BorderColor[0],
+	       texObj->BorderColor[0],
+	       texObj->BorderColor[0]
+	    };
+	    /* GL specs that border color for depth textures is taken from the
+	     * R channel, while the hardware uses A.  Spam R into all the
+	     * channels for safety.
+	     */
+	    brw->wm.sdc_bo[unit] = upload_default_color(brw, bordercolor);
+	 } else {
+	    brw->wm.sdc_bo[unit] = upload_default_color(brw,
+							texObj->BorderColor);
+	 }
 	 key->sampler_count = unit + 1;
       }
    }
@@ -255,11 +277,11 @@ brw_wm_sampler_populate_key(struct brw_context *brw,
  * complicates various things.  However, this is still too confusing -
  * FIXME: simplify all the different new texture state flags.
  */
-static int upload_wm_samplers( struct brw_context *brw )
+static void upload_wm_samplers( struct brw_context *brw )
 {
+   GLcontext *ctx = &brw->intel.ctx;
    struct wm_sampler_key key;
    int i;
-   int ret = 0;
 
    brw_wm_sampler_populate_key(brw, &key);
 
@@ -271,7 +293,7 @@ static int upload_wm_samplers( struct brw_context *brw )
    dri_bo_unreference(brw->wm.sampler_bo);
    brw->wm.sampler_bo = NULL;
    if (brw->wm.sampler_count == 0)
-      return 0;
+      return;
 
    brw->wm.sampler_bo = brw_search_cache(&brw->cache, BRW_SAMPLER,
 					 &key, sizeof(key),
@@ -301,22 +323,17 @@ static int upload_wm_samplers( struct brw_context *brw )
 
       /* Emit SDC relocations */
       for (i = 0; i < BRW_MAX_TEX_UNIT; i++) {
-	 if (!brw->attribs.Texture->Unit[i]._ReallyEnabled)
+	 if (!ctx->Texture.Unit[i]._ReallyEnabled)
 	    continue;
 
-	 ret |= dri_bufmgr_check_aperture_space(brw->wm.sdc_bo[i]);
-	 dri_emit_reloc(brw->wm.sampler_bo,
-			DRM_BO_FLAG_MEM_TT | DRM_BO_FLAG_READ,
-			0,
-			i * sizeof(struct brw_sampler_state) +
-			offsetof(struct brw_sampler_state, ss2),
-			brw->wm.sdc_bo[i]);
+	 dri_bo_emit_reloc(brw->wm.sampler_bo,
+			   I915_GEM_DOMAIN_SAMPLER, 0,
+			   0,
+			   i * sizeof(struct brw_sampler_state) +
+			   offsetof(struct brw_sampler_state, ss2),
+			   brw->wm.sdc_bo[i]);
       }
    }
-
-   ret |= dri_bufmgr_check_aperture_space(brw->wm.sampler_bo);
-   return ret;
-
 }
 
 const struct brw_tracked_state brw_wm_samplers = {

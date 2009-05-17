@@ -20,7 +20,6 @@ Status
 
 Version
 
-    $Date: 2008/11/02 14:58:06 $ $Revision: 1.1 $
 
 Number
 

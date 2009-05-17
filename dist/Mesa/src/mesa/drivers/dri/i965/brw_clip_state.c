@@ -32,7 +32,7 @@
 #include "brw_context.h"
 #include "brw_state.h"
 #include "brw_defines.h"
-#include "macros.h"
+#include "main/macros.h"
 
 struct brw_clip_unit_key {
    unsigned int total_grf;
@@ -88,7 +88,21 @@ clip_unit_create_from_key(struct brw_context *brw,
 
    clip.thread4.nr_urb_entries = key->nr_urb_entries;
    clip.thread4.urb_entry_allocation_size = key->urb_size - 1;
-   clip.thread4.max_threads = 1; /* 2 threads */
+   /* If we have enough clip URB entries to run two threads, do so.
+    */
+   if (key->nr_urb_entries >= 10) {
+      /* Half of the URB entries go to each thread, and it has to be an
+       * even number.
+       */
+      assert(key->nr_urb_entries % 2 == 0);
+      clip.thread4.max_threads = 2 - 1;
+   } else {
+      assert(key->nr_urb_entries >= 5);
+      clip.thread4.max_threads = 1 - 1;
+   }
+
+   if (INTEL_DEBUG & DEBUG_SINGLE_THREAD)
+      clip.thread4.max_threads = 0;
 
    if (INTEL_DEBUG & DEBUG_STATS)
       clip.thread4.stats_enable = 1;
@@ -102,7 +116,7 @@ clip_unit_create_from_key(struct brw_context *brw,
    clip.clip5.api_mode = BRW_CLIP_API_OGL;
    clip.clip5.clip_mode = key->clip_mode;
 
-   if (BRW_IS_GM45(brw) || BRW_IS_G4X(brw))
+   if (BRW_IS_G4X(brw))
       clip.clip5.negative_w_clip_test = 1;
 
    clip.clip6.clipper_viewport_state_ptr = 0;
@@ -119,19 +133,19 @@ clip_unit_create_from_key(struct brw_context *brw,
 
    /* Emit clip program relocation */
    assert(brw->clip.prog_bo);
-   dri_emit_reloc(bo,
-		  DRM_BO_FLAG_MEM_TT | DRM_BO_FLAG_READ,
-		  clip.thread0.grf_reg_count << 1,
-		  offsetof(struct brw_clip_unit_state, thread0),
-		  brw->clip.prog_bo);
+   dri_bo_emit_reloc(bo,
+		     I915_GEM_DOMAIN_INSTRUCTION,
+		     0,
+		     clip.thread0.grf_reg_count << 1,
+		     offsetof(struct brw_clip_unit_state, thread0),
+		     brw->clip.prog_bo);
 
    return bo;
 }
 
-static int upload_clip_unit( struct brw_context *brw )
+static void upload_clip_unit( struct brw_context *brw )
 {
    struct brw_clip_unit_key key;
-   int ret = 0;
 
    clip_unit_populate_key(brw, &key);
 
@@ -143,9 +157,6 @@ static int upload_clip_unit( struct brw_context *brw )
    if (brw->clip.state_bo == NULL) {
       brw->clip.state_bo = clip_unit_create_from_key(brw, &key);
    }
-
-   ret = dri_bufmgr_check_aperture_space(brw->clip.state_bo);
-   return ret;
 }
 
 const struct brw_tracked_state brw_clip_unit = {

@@ -26,7 +26,7 @@
  **************************************************************************/
 
 #include "i830_context.h"
-#include "imports.h"
+#include "main/imports.h"
 #include "texmem.h"
 #include "intel_tex.h"
 #include "tnl/tnl.h"
@@ -80,6 +80,9 @@ i830CreateContext(const __GLcontextModes * mesaVis,
    /* Install the customized pipeline: */
    _tnl_destroy_pipeline(ctx);
    _tnl_install_pipeline(ctx, intel_pipeline);
+
+   if (intel->no_rast)
+      FALLBACK(intel, INTEL_FALLBACK_USER, 1);
 
    intel->ctx.Const.MaxTextureUnits = I830_TEX_UNITS;
    intel->ctx.Const.MaxTextureImageUnits = I830_TEX_UNITS;

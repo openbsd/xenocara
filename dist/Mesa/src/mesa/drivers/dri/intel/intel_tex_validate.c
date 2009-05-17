@@ -1,5 +1,5 @@
-#include "mtypes.h"
-#include "macros.h"
+#include "main/mtypes.h"
+#include "main/macros.h"
 
 #include "intel_context.h"
 #include "intel_batchbuffer.h"
@@ -125,12 +125,9 @@ intel_finalize_mipmap_tree(struct intel_context *intel, GLuint unit)
    struct intel_texture_object *intelObj = intel_texture_object(tObj);
    int comp_byte = 0;
    int cpp;
-
    GLuint face, i;
    GLuint nr_faces = 0;
    struct intel_texture_image *firstImage;
-
-   GLboolean need_flush = GL_FALSE;
 
    /* We know/require this is true by now: 
     */
@@ -144,10 +141,7 @@ intel_finalize_mipmap_tree(struct intel_context *intel, GLuint unit)
 
    /* Fallback case:
     */
-   if (firstImage->base.Border ||
-       ((firstImage->base._BaseFormat == GL_DEPTH_COMPONENT) &&
-        ((tObj->WrapS == GL_CLAMP_TO_BORDER) ||
-         (tObj->WrapT == GL_CLAMP_TO_BORDER)))) {
+   if (firstImage->base.Border) {
       if (intelObj->mt) {
          intel_miptree_release(intel, &intelObj->mt);
       }
@@ -212,7 +206,8 @@ intel_finalize_mipmap_tree(struct intel_context *intel, GLuint unit)
                                           firstImage->base.Height,
                                           firstImage->base.Depth,
                                           cpp,
-                                          comp_byte);
+                                          comp_byte,
+					  GL_TRUE);
    }
 
    /* Pull in any images not in the object's tree:
@@ -227,20 +222,9 @@ intel_finalize_mipmap_tree(struct intel_context *intel, GLuint unit)
           */
          if (intelObj->mt != intelImage->mt) {
             copy_image_data_to_tree(intel, intelObj, intelImage);
-	    need_flush = GL_TRUE;
          }
       }
    }
-
-#ifdef I915
-   /* XXX: what is this flush about?
-    * On 965, it causes a batch flush in the middle of the state relocation
-    * emits, which means that the eventual rendering doesn't have all of the
-    * required relocations in place.
-    */
-   if (need_flush)
-      intel_batchbuffer_flush(intel->batch);
-#endif
 
    return GL_TRUE;
 }

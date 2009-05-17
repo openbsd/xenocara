@@ -27,11 +27,11 @@
 
 
 
-#include "glheader.h"
-#include "mtypes.h"
-#include "imports.h"
-#include "macros.h"
-#include "colormac.h"
+#include "main/glheader.h"
+#include "main/mtypes.h"
+#include "main/imports.h"
+#include "main/macros.h"
+#include "main/colormac.h"
 
 #include "tnl/t_context.h"
 #include "tnl/t_vertex.h"
@@ -39,11 +39,12 @@
 #include "intel_batchbuffer.h"
 #include "intel_tex.h"
 #include "intel_regions.h"
+#include "intel_tris.h"
 
 #include "i915_reg.h"
 #include "i915_context.h"
 
-#include "glapi.h"
+#include "glapi/glapi.h"
 
 static void
 i915_render_prevalidate(struct intel_context *intel)
@@ -172,7 +173,7 @@ i915_emit_invarient_state(struct intel_context *intel)
 {
    BATCH_LOCALS;
 
-   BEGIN_BATCH(200, IGNORE_CLIPRECTS);
+   BEGIN_BATCH(20, IGNORE_CLIPRECTS);
 
    OUT_BATCH(_3DSTATE_AA_CMD |
              AA_LINE_ECAAR_WIDTH_ENABLE |
@@ -296,9 +297,9 @@ i915_emit_state(struct intel_context *intel)
 {
    struct i915_context *i915 = i915_context(&intel->ctx);
    struct i915_hw_state *state = i915->current;
-   int i;
-   int ret, count;
+   int i, count, aper_count;
    GLuint dirty;
+   dri_bo *aper_array[3 + I915_TEX_UNITS];
    GET_CURRENT_CONTEXT(ctx);
    BATCH_LOCALS;
 
@@ -313,28 +314,32 @@ i915_emit_state(struct intel_context *intel)
     * Set the space as LOOP_CLIPRECTS now, since that's what our primitives
     * will be emitted under.
     */
-   intel_batchbuffer_require_space(intel->batch, get_state_size(state) + 8,
+   intel_batchbuffer_require_space(intel->batch,
+				   get_state_size(state) + INTEL_PRIM_EMIT_SIZE,
 				   LOOP_CLIPRECTS);
    count = 0;
  again:
+   aper_count = 0;
    dirty = get_dirty(state);
 
-   ret = 0;
+   aper_array[aper_count++] = intel->batch->buf;
    if (dirty & I915_UPLOAD_BUFFERS) {
-     ret |= dri_bufmgr_check_aperture_space(state->draw_region->buffer);
-     if (state->depth_region)
-        ret |= dri_bufmgr_check_aperture_space(state->depth_region->buffer);
+      aper_array[aper_count++] = state->draw_region->buffer;
+      if (state->depth_region)
+	 aper_array[aper_count++] = state->depth_region->buffer;
    }
 
    if (dirty & I915_UPLOAD_TEX_ALL) {
-     for (i = 0; i < I915_TEX_UNITS; i++)
-       if (dirty & I915_UPLOAD_TEX(i)) {
-	   if (state->tex_buffer[i]) {
-	       ret |= dri_bufmgr_check_aperture_space(state->tex_buffer[i]);
-	   }
-       }
+      for (i = 0; i < I915_TEX_UNITS; i++) {
+	 if (dirty & I915_UPLOAD_TEX(i)) {
+	    if (state->tex_buffer[i]) {
+	       aper_array[aper_count++] = state->tex_buffer[i];
+	    }
+	 }
+      }
    }
-   if (ret) {
+
+   if (dri_bufmgr_check_aperture_space(aper_array, aper_count)) {
        if (count == 0) {
 	   count++;
 	   intel_batchbuffer_flush(intel->batch);
@@ -371,20 +376,29 @@ i915_emit_state(struct intel_context *intel)
    }
 
    if (dirty & I915_UPLOAD_BUFFERS) {
+      GLuint count = 9;
+
       if (INTEL_DEBUG & DEBUG_STATE)
          fprintf(stderr, "I915_UPLOAD_BUFFERS:\n");
-      BEGIN_BATCH(I915_DEST_SETUP_SIZE + 2, IGNORE_CLIPRECTS);
+
+      if (state->depth_region)
+          count += 3;
+
+      if (intel->constant_cliprect)
+          count += 6;
+
+      BEGIN_BATCH(count, IGNORE_CLIPRECTS);
       OUT_BATCH(state->Buffer[I915_DESTREG_CBUFADDR0]);
       OUT_BATCH(state->Buffer[I915_DESTREG_CBUFADDR1]);
       OUT_RELOC(state->draw_region->buffer,
-                DRM_BO_FLAG_MEM_TT | DRM_BO_FLAG_WRITE,
+		I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER,
                 state->draw_region->draw_offset);
 
       if (state->depth_region) {
          OUT_BATCH(state->Buffer[I915_DESTREG_DBUFADDR0]);
          OUT_BATCH(state->Buffer[I915_DESTREG_DBUFADDR1]);
          OUT_RELOC(state->depth_region->buffer,
-                   DRM_BO_FLAG_MEM_TT | DRM_BO_FLAG_WRITE,
+		   I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER,
                    state->depth_region->draw_offset);
       }
 
@@ -394,6 +408,17 @@ i915_emit_state(struct intel_context *intel)
       OUT_BATCH(state->Buffer[I915_DESTREG_SR0]);
       OUT_BATCH(state->Buffer[I915_DESTREG_SR1]);
       OUT_BATCH(state->Buffer[I915_DESTREG_SR2]);
+
+      if (intel->constant_cliprect) {
+	 assert(state->Buffer[I915_DESTREG_DRAWRECT0] != MI_NOOP);
+	 OUT_BATCH(state->Buffer[I915_DESTREG_DRAWRECT0]);
+	 OUT_BATCH(state->Buffer[I915_DESTREG_DRAWRECT1]);
+	 OUT_BATCH(state->Buffer[I915_DESTREG_DRAWRECT2]);
+	 OUT_BATCH(state->Buffer[I915_DESTREG_DRAWRECT3]);
+	 OUT_BATCH(state->Buffer[I915_DESTREG_DRAWRECT4]);
+	 OUT_BATCH(state->Buffer[I915_DESTREG_DRAWRECT5]);
+      }
+
       ADVANCE_BATCH();
    }
 
@@ -427,7 +452,7 @@ i915_emit_state(struct intel_context *intel)
 
             if (state->tex_buffer[i]) {
                OUT_RELOC(state->tex_buffer[i],
-                         DRM_BO_FLAG_MEM_TT | DRM_BO_FLAG_READ,
+			 I915_GEM_DOMAIN_SAMPLER, 0,
                          state->tex_offset[i]);
             }
             else if (state == &i915->meta) {
@@ -485,6 +510,13 @@ i915_destroy_context(struct intel_context *intel)
    GLuint i;
    struct i915_context *i915 = i915_context(&intel->ctx);
 
+   intel_region_release(&i915->state.draw_region);
+   intel_region_release(&i915->state.depth_region);
+   intel_region_release(&i915->meta.draw_region);
+   intel_region_release(&i915->meta.depth_region);
+   intel_region_release(&i915->initial.draw_region);
+   intel_region_release(&i915->initial.depth_region);
+
    for (i = 0; i < I915_TEX_UNITS; i++) {
       if (i915->state.tex_buffer[i] != NULL) {
 	 dri_bo_unreference(i915->state.tex_buffer[i]);
@@ -509,6 +541,7 @@ i915_state_draw_region(struct intel_context *intel,
                        struct intel_region *depth_region)
 {
    struct i915_context *i915 = i915_context(&intel->ctx);
+   GLcontext *ctx = &intel->ctx;
    GLuint value;
 
    ASSERT(state == &i915->state || state == &i915->meta);
@@ -560,6 +593,24 @@ i915_state_draw_region(struct intel_context *intel,
       value |= DEPTH_FRMT_16_FIXED;
    }
    state->Buffer[I915_DESTREG_DV1] = value;
+
+   if (intel->constant_cliprect) {
+      state->Buffer[I915_DESTREG_DRAWRECT0] = _3DSTATE_DRAWRECT_INFO;
+      state->Buffer[I915_DESTREG_DRAWRECT1] = 0;
+      state->Buffer[I915_DESTREG_DRAWRECT2] = 0; /* xmin, ymin */
+      state->Buffer[I915_DESTREG_DRAWRECT3] =
+	 (ctx->DrawBuffer->Width & 0xffff) |
+	 (ctx->DrawBuffer->Height << 16);
+      state->Buffer[I915_DESTREG_DRAWRECT4] = 0; /* xoff, yoff */
+      state->Buffer[I915_DESTREG_DRAWRECT5] = 0;
+   } else {
+      state->Buffer[I915_DESTREG_DRAWRECT0] = MI_NOOP;
+      state->Buffer[I915_DESTREG_DRAWRECT1] = MI_NOOP;
+      state->Buffer[I915_DESTREG_DRAWRECT2] = MI_NOOP;
+      state->Buffer[I915_DESTREG_DRAWRECT3] = MI_NOOP;
+      state->Buffer[I915_DESTREG_DRAWRECT4] = MI_NOOP;
+      state->Buffer[I915_DESTREG_DRAWRECT5] = MI_NOOP;
+   }
 
    I915_STATECHANGE(i915, I915_UPLOAD_BUFFERS);
 }
@@ -629,4 +680,5 @@ i915InitVtbl(struct i915_context *i915)
    i915->intel.vtbl.flush_cmd = i915_flush_cmd;
    i915->intel.vtbl.assert_not_dirty = i915_assert_not_dirty;
    i915->intel.vtbl.note_unlock = i915_note_unlock; 
+   i915->intel.vtbl.finish_batch = intel_finish_vb;
 }

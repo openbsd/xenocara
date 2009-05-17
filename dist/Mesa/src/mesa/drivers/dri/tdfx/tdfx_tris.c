@@ -23,7 +23,6 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-/* $XFree86: xc/lib/GL/mesa/src/drv/tdfx/tdfx_tris.c,v 1.4 2002/10/30 12:52:01 alanh Exp $ */
 
 /* New fixes:
  *	Daniel Borca <dborca@users.sourceforge.net>, 19 Jul 2004
@@ -32,10 +31,10 @@
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
 
-#include "glheader.h"
-#include "mtypes.h"
-#include "macros.h"
-#include "colormac.h"
+#include "main/glheader.h"
+#include "main/mtypes.h"
+#include "main/macros.h"
+#include "main/colormac.h"
 
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"

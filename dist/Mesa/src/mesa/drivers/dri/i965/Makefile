@@ -9,20 +9,21 @@ DRIVER_SOURCES = \
 	intel_blit.c \
 	intel_buffer_objects.c \
 	intel_buffers.c \
-	intel_bufmgr_ttm.c \
+	intel_clear.c \
 	intel_context.c \
 	intel_decode.c \
 	intel_depthstencil.c \
 	intel_fbo.c \
-	intel_ioctl.c \
 	intel_mipmap_tree.c \
 	intel_regions.c \
 	intel_screen.c \
 	intel_span.c \
 	intel_pixel.c \
-	intel_pixel_copy.c \
 	intel_pixel_bitmap.c \
+	intel_pixel_copy.c \
+	intel_pixel_draw.c \
 	intel_state.c \
+	intel_swapbuffers.c \
 	intel_tex.c \
 	intel_tex_copy.c \
 	intel_tex_format.c \
@@ -50,9 +51,9 @@ DRIVER_SOURCES = \
 	brw_gs.c \
 	brw_gs_emit.c \
 	brw_gs_state.c \
-	brw_metaops.c \
 	brw_misc_state.c \
 	brw_program.c \
+	brw_queryobj.c \
 	brw_sf.c \
 	brw_sf_emit.c \
 	brw_sf_state.c \
@@ -68,7 +69,6 @@ DRIVER_SOURCES = \
 	brw_vs_constval.c \
 	brw_vs_emit.c \
 	brw_vs_state.c \
-	brw_vs_tnl.c \
 	brw_vtbl.c \
 	brw_wm.c \
 	brw_wm_debug.c \
@@ -85,13 +85,14 @@ DRIVER_SOURCES = \
 
 C_SOURCES = \
 	$(COMMON_SOURCES) \
-	$(COMMON_BM_SOURCES) \
 	$(MINIGLX_SOURCES) \
 	$(DRIVER_SOURCES)
 
 ASM_SOURCES = 
 
 DRIVER_DEFINES = -I../intel -I../intel/server
+
+DRI_LIB_DEPS += -ldrm_intel
 
 include ../Makefile.template
 

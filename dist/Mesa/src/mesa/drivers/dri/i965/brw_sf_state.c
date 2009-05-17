@@ -34,53 +34,37 @@
 #include "brw_context.h"
 #include "brw_state.h"
 #include "brw_defines.h"
-#include "macros.h"
+#include "main/macros.h"
 #include "intel_fbo.h"
 
-static int upload_sf_vp(struct brw_context *brw)
+static void upload_sf_vp(struct brw_context *brw)
 {
    GLcontext *ctx = &brw->intel.ctx;
    const GLfloat depth_scale = 1.0F / ctx->DrawBuffer->_DepthMaxF;
    struct brw_sf_viewport sfv;
-   struct intel_renderbuffer *irb =
-      intel_renderbuffer(ctx->DrawBuffer->_ColorDrawBuffers[0]);
    GLfloat y_scale, y_bias;
 
    memset(&sfv, 0, sizeof(sfv));
 
-   if (ctx->DrawBuffer->Name) {
-      /* User-created FBO */
-      if (irb && !irb->RenderToTexture) {
-	 y_scale = -1.0;
-	 y_bias = ctx->DrawBuffer->Height;
-      } else {
-	 y_scale = 1.0;
-	 y_bias = 0;
-      }
-   } else {
+   if (intel_rendering_to_texture(ctx)) {
+      y_scale = 1.0;
+      y_bias = 0;
+   }
+   else {
       y_scale = -1.0;
       y_bias = ctx->DrawBuffer->Height;
    }
 
-   /* _NEW_VIEWPORT, BRW_NEW_METAOPS */
+   /* _NEW_VIEWPORT */
 
-   if (!brw->metaops.active) {
-      const GLfloat *v = ctx->Viewport._WindowMap.m;
+   const GLfloat *v = ctx->Viewport._WindowMap.m;
 
-      sfv.viewport.m00 = v[MAT_SX];
-      sfv.viewport.m11 = v[MAT_SY] * y_scale;
-      sfv.viewport.m22 = v[MAT_SZ] * depth_scale;
-      sfv.viewport.m30 = v[MAT_TX];
-      sfv.viewport.m31 = v[MAT_TY] * y_scale + y_bias;
-      sfv.viewport.m32 = v[MAT_TZ] * depth_scale;
-   } else {
-      sfv.viewport.m00 =   1;
-      sfv.viewport.m11 = - 1;
-      sfv.viewport.m22 =   1;
-      sfv.viewport.m30 =   0;
-      sfv.viewport.m31 =   ctx->DrawBuffer->Height;
-      sfv.viewport.m32 =   0;
-   }
+   sfv.viewport.m00 = v[MAT_SX];
+   sfv.viewport.m11 = v[MAT_SY] * y_scale;
+   sfv.viewport.m22 = v[MAT_SZ] * depth_scale;
+   sfv.viewport.m30 = v[MAT_TX];
+   sfv.viewport.m31 = v[MAT_TY] * y_scale + y_bias;
+   sfv.viewport.m32 = v[MAT_TZ] * depth_scale;
 
    /* _NEW_SCISSOR */
 
@@ -91,22 +75,30 @@ static int upload_sf_vp(struct brw_context *brw)
     * Note that the hardware's coordinates are inclusive, while Mesa's min is
     * inclusive but max is exclusive.
     */
-   sfv.scissor.xmin = ctx->DrawBuffer->_Xmin;
-   sfv.scissor.xmax = ctx->DrawBuffer->_Xmax - 1;
-   sfv.scissor.ymin = ctx->DrawBuffer->Height - ctx->DrawBuffer->_Ymax;
-   sfv.scissor.ymax = ctx->DrawBuffer->Height - ctx->DrawBuffer->_Ymin - 1;
+   if (intel_rendering_to_texture(ctx)) {
+      /* texmemory: Y=0=bottom */
+      sfv.scissor.xmin = ctx->DrawBuffer->_Xmin;
+      sfv.scissor.xmax = ctx->DrawBuffer->_Xmax - 1;
+      sfv.scissor.ymin = ctx->DrawBuffer->_Ymin;
+      sfv.scissor.ymax = ctx->DrawBuffer->_Ymax - 1;
+   }
+   else {
+      /* memory: Y=0=top */
+      sfv.scissor.xmin = ctx->DrawBuffer->_Xmin;
+      sfv.scissor.xmax = ctx->DrawBuffer->_Xmax - 1;
+      sfv.scissor.ymin = ctx->DrawBuffer->Height - ctx->DrawBuffer->_Ymax;
+      sfv.scissor.ymax = ctx->DrawBuffer->Height - ctx->DrawBuffer->_Ymin - 1;
+   }
 
    dri_bo_unreference(brw->sf.vp_bo);
    brw->sf.vp_bo = brw_cache_data( &brw->cache, BRW_SF_VP, &sfv, NULL, 0 );
-
-   return dri_bufmgr_check_aperture_space(brw->sf.vp_bo);
 }
 
 const struct brw_tracked_state brw_sf_vp = {
    .dirty = {
       .mesa  = (_NEW_VIEWPORT | 
 		_NEW_SCISSOR),
-      .brw   = BRW_NEW_METAOPS,
+      .brw   = 0,
       .cache = 0
    },
    .prepare = upload_sf_vp
@@ -122,11 +114,13 @@ struct brw_sf_unit_key {
    GLboolean scissor, line_smooth, point_sprite, point_attenuated;
    float line_width;
    float point_size;
+   GLboolean render_to_texture;
 };
 
 static void
 sf_unit_populate_key(struct brw_context *brw, struct brw_sf_unit_key *key)
 {
+   GLcontext *ctx = &brw->intel.ctx;
    memset(key, 0, sizeof(*key));
 
    /* CACHE_NEW_SF_PROG */
@@ -138,20 +132,22 @@ sf_unit_populate_key(struct brw_context *brw, struct brw_sf_unit_key *key)
    key->urb_size = brw->urb.vsize;
    key->sfsize = brw->urb.sfsize;
 
-   key->scissor = brw->attribs.Scissor->Enabled;
-   key->front_face = brw->attribs.Polygon->FrontFace;
+   key->scissor = ctx->Scissor.Enabled;
+   key->front_face = ctx->Polygon.FrontFace;
 
-   if (brw->attribs.Polygon->CullFlag)
-      key->cull_face = brw->attribs.Polygon->CullFaceMode;
+   if (ctx->Polygon.CullFlag)
+      key->cull_face = ctx->Polygon.CullFaceMode;
    else
       key->cull_face = GL_NONE;
 
-   key->line_width = brw->attribs.Line->Width;
-   key->line_smooth = brw->attribs.Line->SmoothFlag;
+   key->line_width = ctx->Line.Width;
+   key->line_smooth = ctx->Line.SmoothFlag;
 
-   key->point_sprite = brw->attribs.Point->PointSprite;
-   key->point_size = brw->attribs.Point->Size;
-   key->point_attenuated = brw->attribs.Point->_Attenuated;
+   key->point_sprite = ctx->Point.PointSprite;
+   key->point_size = ctx->Point.Size;
+   key->point_attenuated = ctx->Point._Attenuated;
+
+   key->render_to_texture = intel_rendering_to_texture(&brw->intel.ctx);
 }
 
 static dri_bo *
@@ -174,7 +170,8 @@ sf_unit_create_from_key(struct brw_context *brw, struct brw_sf_unit_key *key,
 
    sf.thread4.nr_urb_entries = key->nr_urb_entries;
    sf.thread4.urb_entry_allocation_size = key->sfsize - 1;
-   sf.thread4.max_threads = MIN2(12, key->nr_urb_entries / 2) - 1;
+   /* Each SF thread produces 1 PUE, and there can be up to 24 threads */
+   sf.thread4.max_threads = MIN2(24, key->nr_urb_entries) - 1;
 
    if (INTEL_DEBUG & DEBUG_SINGLE_THREAD)
       sf.thread4.max_threads = 0;
@@ -196,6 +193,11 @@ sf_unit_create_from_key(struct brw_context *brw, struct brw_sf_unit_key *key,
       sf.sf5.front_winding = BRW_FRONTWINDING_CCW;
    else
       sf.sf5.front_winding = BRW_FRONTWINDING_CW;
+
+   /* The viewport is inverted for rendering to texture, and that inverts
+    * polygon front/back orientation.
+    */
+   sf.sf5.front_winding ^= key->render_to_texture;
 
    switch (key->cull_face) {
    case GL_FRONT:
@@ -253,27 +255,26 @@ sf_unit_create_from_key(struct brw_context *brw, struct brw_sf_unit_key *key,
 			 NULL, NULL);
 
    /* Emit SF program relocation */
-   dri_emit_reloc(bo,
-		  DRM_BO_FLAG_MEM_TT | DRM_BO_FLAG_READ,
-		  sf.thread0.grf_reg_count << 1,
-		  offsetof(struct brw_sf_unit_state, thread0),
-		  brw->sf.prog_bo);
+   dri_bo_emit_reloc(bo,
+		     I915_GEM_DOMAIN_INSTRUCTION, 0,
+		     sf.thread0.grf_reg_count << 1,
+		     offsetof(struct brw_sf_unit_state, thread0),
+		     brw->sf.prog_bo);
 
    /* Emit SF viewport relocation */
-   dri_emit_reloc(bo,
-		  DRM_BO_FLAG_MEM_TT | DRM_BO_FLAG_READ,
-		  sf.sf5.front_winding | (sf.sf5.viewport_transform << 1),
-		  offsetof(struct brw_sf_unit_state, sf5),
-		  brw->sf.vp_bo);
+   dri_bo_emit_reloc(bo,
+		     I915_GEM_DOMAIN_INSTRUCTION, 0,
+		     sf.sf5.front_winding | (sf.sf5.viewport_transform << 1),
+		     offsetof(struct brw_sf_unit_state, sf5),
+		     brw->sf.vp_bo);
 
    return bo;
 }
 
-static int upload_sf_unit( struct brw_context *brw )
+static void upload_sf_unit( struct brw_context *brw )
 {
    struct brw_sf_unit_key key;
    dri_bo *reloc_bufs[2];
-   int ret = 0;
 
    sf_unit_populate_key(brw, &key);
 
@@ -288,15 +289,6 @@ static int upload_sf_unit( struct brw_context *brw )
    if (brw->sf.state_bo == NULL) {
       brw->sf.state_bo = sf_unit_create_from_key(brw, &key, reloc_bufs);
    }
-
-   if (reloc_bufs[0])
-     ret |= dri_bufmgr_check_aperture_space(reloc_bufs[0]);
-
-   if (reloc_bufs[1])
-     ret |= dri_bufmgr_check_aperture_space(reloc_bufs[1]);
-
-   ret |= dri_bufmgr_check_aperture_space(brw->sf.state_bo);
-   return ret;
 }
 
 const struct brw_tracked_state brw_sf_unit = {
@@ -305,8 +297,7 @@ const struct brw_tracked_state brw_sf_unit = {
 		_NEW_LINE | 
 		_NEW_POINT | 
 		_NEW_SCISSOR),
-      .brw   = (BRW_NEW_URB_FENCE |
-		BRW_NEW_METAOPS),
+      .brw   = BRW_NEW_URB_FENCE,
       .cache = (CACHE_NEW_SF_VP |
 		CACHE_NEW_SF_PROG)
    },

@@ -22,7 +22,8 @@ AC_CONFIG_AUX_DIR([bin])
 AC_CANONICAL_HOST
 
 dnl Versions for external dependencies
-LIBDRM_REQUIRED=2.3.1
+LIBDRM_REQUIRED=2.4.3
+DRI2PROTO_REQUIRED=1.99.3
 
 dnl Check for progs
 AC_PROG_CPP
@@ -45,10 +46,14 @@ esac
 MKDEP_OPTIONS=-fdepend
 dnl Ask gcc where it's keeping its secret headers
 if test "x$GCC" = xyes; then
-    GCC_INCLUDES=`$CC -print-file-name=include`
-    if test "x$GCC_INCLUDES" != x; then
-        MKDEP_OPTIONS="$MKDEP_OPTIONS -I$GCC_INCLUDES"
-    fi
+    for dir in include include-fixed; do
+        GCC_INCLUDES=`$CC -print-file-name=$dir`
+        if test "x$GCC_INCLUDES" != x && \
+           test "$GCC_INCLUDES" != "$dir" && \
+           test -d "$GCC_INCLUDES"; then
+            MKDEP_OPTIONS="$MKDEP_OPTIONS -I$GCC_INCLUDES"
+        fi
+    done
 fi
 AC_SUBST([MKDEP_OPTIONS])
 
@@ -82,11 +87,8 @@ dnl Compiler macros
 DEFINES=""
 AC_SUBST([DEFINES])
 case "$host_os" in
-linux*)
-if test "x$GCC" = xyes; then
-    DEFINES="$DEFINES -D_POSIX_SOURCE -D_POSIX_C_SOURCE=199309L -D_BSD_SOURCE"
-fi
-    DEFINES="$DEFINES -D_SVID_SOURCE -D_GNU_SOURCE -DPTHREADS"
+linux*|*-gnu*)
+    DEFINES="$DEFINES -D_GNU_SOURCE -DPTHREADS"
     ;;
 solaris*)
     DEFINES="$DEFINES -DPTHREADS -DSVR4"
@@ -270,14 +272,14 @@ if test "x$enable_asm" = xyes; then
     case "$host_cpu" in
     i?86)
         case "$host_os" in
-        linux* | freebsd* | dragonfly*)
+        linux* | *freebsd* | dragonfly*)
             test "x$enable_64bit" = xyes && asm_arch=x86_64 || asm_arch=x86
             ;;
         esac
         ;;
     x86_64)
         case "$host_os" in
-        linux* | freebsd* | dragonfly*)
+        linux* | *freebsd* | dragonfly*)
             test "x$enable_32bit" = xyes && asm_arch=x86 || asm_arch=x86_64
             ;;
         esac
@@ -344,17 +346,6 @@ if test "x$enable_selinux" = "xyes"; then
     DEFINES="$DEFINES -DMESA_SELINUX"
 fi
 
-dnl OS-specific libraries
-OS_LIBS=""
-case "$host_os" in
-solaris*)
-    OS_LIBS="-lc"
-    if test "x$GXX" != xyes; then
-        OS_CPLUSPLUS_LIBS="-lCrun $OS_LIBS"
-    fi
-    ;;
-esac
-
 dnl
 dnl Driver configuration. Options are xlib, dri and osmesa right now.
 dnl More later: directfb, fbdev, ...
@@ -364,10 +355,10 @@ default_driver="xlib"
 case "$host_os" in
 linux*)
     case "$host_cpu" in
-    i*86|x86_64|powerpc*) default_driver="dri";;
+    i*86|x86_64|powerpc*|sparc*) default_driver="dri";;
     esac
     ;;
-freebsd* | dragonfly*)
+*freebsd* | dragonfly*)
     case "$host_cpu" in
     i*86|x86_64) default_driver="dri";;
     esac
@@ -506,14 +497,18 @@ case "$mesa_driver" in
 xlib)
     if test "$x11_pkgconfig" = yes; then
         PKG_CHECK_MODULES([XLIBGL], [x11 xext])
+        GL_PC_REQ_PRIV="x11 xext"
         X11_INCLUDES="$X11_INCLUDES $XLIBGL_CFLAGS"
         GL_LIB_DEPS="$XLIBGL_LIBS"
     else
         # should check these...
         X11_INCLUDES="$X11_INCLUDES $X_CFLAGS"
         GL_LIB_DEPS="$X_LIBS -lX11 -lXext"
+        GL_PC_LIB_PRIV="$GL_LIB_DEPS"
+        GL_PC_CFLAGS="$X11_INCLUDES"
     fi
-    GL_LIB_DEPS="$GL_LIB_DEPS $SELINUX_LIBS -lm -lpthread $OS_LIBS"
+    GL_LIB_DEPS="$GL_LIB_DEPS $SELINUX_LIBS -lm -lpthread"
+    GL_PC_LIB_PRIV="$GL_PC_LIB_PRIV $SELINUX_LIBS -lm -lpthread"
 
     # if static, move the external libraries to the programs
     # and empty the libraries for libGL
@@ -530,6 +525,9 @@ dri)
 
     # Check for libdrm
     PKG_CHECK_MODULES([LIBDRM], [libdrm >= $LIBDRM_REQUIRED])
+    PKG_CHECK_MODULES([DRI2PROTO], [dri2proto >= $DRI2PROTO_REQUIRED])
+    GL_PC_REQ_PRIV="libdrm >= $LIBDRM_REQUIRED dri2proto >= $DRI2PROTO_REQUIRED"
+    DRI_PC_REQ_PRIV="libdrm >= $LIBDRM_REQUIRED"
 
     # find the DRI deps for libGL
     if test "$x11_pkgconfig" = yes; then
@@ -540,30 +538,39 @@ dri)
         fi
 
         PKG_CHECK_MODULES([DRIGL], [$dri_modules])
+        GL_PC_REQ_PRIV="$GL_PC_REQ_PRIV $dri_modules"
         X11_INCLUDES="$X11_INCLUDES $DRIGL_CFLAGS"
         GL_LIB_DEPS="$DRIGL_LIBS"
     else
         # should check these...
         X11_INCLUDES="$X11_INCLUDES $X_CFLAGS"
         GL_LIB_DEPS="$X_LIBS -lX11 -lXext -lXxf86vm -lXdamage -lXfixes"
+        GL_PC_LIB_PRIV="$GL_LIB_DEPS"
+        GL_PC_CFLAGS="$X11_INCLUDES"
 
         # XCB can only be used from pkg-config
         if test "$enable_xcb" = yes; then
             PKG_CHECK_MODULES([XCB],[x11-xcb xcb-glx])
+            GL_PC_REQ_PRIV="$GL_PC_REQ_PRIV x11-xcb xcb-glx"
             X11_INCLUDES="$X11_INCLUDES $XCB_CFLAGS"
             GL_LIB_DEPS="$GL_LIB_DEPS $XCB_LIBS"
         fi
     fi
 
     # need DRM libs, -lpthread, etc.
-    GL_LIB_DEPS="$GL_LIB_DEPS $LIBDRM_LIBS -lm -lpthread $DLOPEN_LIBS $OS_LIBS"
+    GL_LIB_DEPS="$GL_LIB_DEPS $LIBDRM_LIBS -lm -lpthread $DLOPEN_LIBS"
+    GL_PC_LIB_PRIV="-lm -lpthread $DLOPEN_LIBS"
     ;;
 osmesa)
     # No libGL for osmesa
-    GL_LIB_DEPS="$OS_LIBS"
+    GL_LIB_DEPS=""
     ;;
 esac
 AC_SUBST([GL_LIB_DEPS])
+AC_SUBST([GL_PC_REQ_PRIV])
+AC_SUBST([GL_PC_LIB_PRIV])
+AC_SUBST([GL_PC_CFLAGS])
+AC_SUBST([DRI_PC_REQ_PRIV])
 
 dnl
 dnl More X11 setup
@@ -593,20 +600,6 @@ AC_ARG_ENABLE([driglx-direct],
         [enable direct rendering in GLX for DRI @<:@default=enabled@:>@])],
     [driglx_direct="$enableval"],
     [driglx_direct="yes"])
-dnl ttm support
-AC_ARG_ENABLE([ttm-api],
-    [AS_HELP_STRING([--enable-ttm-api],
-        [enable TTM API users @<:@default=disabled@:>@])],
-    [ttmapi="$enableval"],
-    [ttmapi="no"])
-
-if test "x$ttmapi" = "xyes"; then
-    save_CFLAGS=$CFLAGS
-    CFLAGS=$LIBDRM_CFLAGS
-    AC_CHECK_HEADERS([xf86mm.h],[],[AC_MSG_ERROR([xf86mm.h required for TTM.])],[#include "stdint.h"\n#include "drm.h"])
-    CFLAGS=$save_CFLAGS
-fi
-
 dnl Which drivers to build - default is chosen by platform
 AC_ARG_WITH([dri-drivers],
     [AS_HELP_STRING([--with-dri-drivers@<:@=DIRS...@:>@],
@@ -646,10 +639,6 @@ if test "$mesa_driver" = dri; then
     # Use TLS in GLX?
     if test "x$GLX_USE_TLS" = xyes; then
         DEFINES="$DEFINES -DGLX_USE_TLS -DPTHREADS"
-    fi
-
-    if test "x$ttmapi" = xyes; then
-        DEFINES="$DEFINES -DTTM_API"
     fi
 
     if test "x$USING_EGL" = x1; then
@@ -802,6 +791,7 @@ osmesa)
         OSMESA_LIB_DEPS=""
     fi
     OSMESA_MESA_DEPS=""
+    OSMESA_PC_LIB_PRIV="-lm -lpthread $SELINUX_LIBS"
     ;;
 *)
     # Link OSMesa to libGL otherwise
@@ -812,13 +802,17 @@ osmesa)
     else
         OSMESA_MESA_DEPS=""
     fi
+    OSMESA_PC_REQ="gl"
     ;;
 esac
 if test "$enable_static" = no; then
-    OSMESA_LIB_DEPS="$OSMESA_LIB_DEPS $OS_LIBS"
+    OSMESA_LIB_DEPS="$OSMESA_LIB_DEPS"
 fi
+OSMESA_PC_LIB_PRIV="$OSMESA_PC_LIB_PRIV"
 AC_SUBST([OSMESA_LIB_DEPS])
 AC_SUBST([OSMESA_MESA_DEPS])
+AC_SUBST([OSMESA_PC_REQ])
+AC_SUBST([OSMESA_PC_LIB_PRIV])
 
 dnl
 dnl GLU configuration
@@ -841,6 +835,7 @@ if test "x$enable_glu" = xyes; then
 
         # Link libGLU to libOSMesa instead of libGL
         GLU_LIB_DEPS=""
+        GLU_PC_REQ="osmesa"
         if test "$enable_static" = no; then
             GLU_MESA_DEPS='-l$(OSMESA_LIB)'
         else
@@ -849,6 +844,8 @@ if test "x$enable_glu" = xyes; then
         ;;
     *)
         # If static, empty GLU_LIB_DEPS and add libs for programs to link
+        GLU_PC_REQ="gl"
+        GLU_PC_LIB_PRIV="-lm"
         if test "$enable_static" = no; then
             GLU_LIB_DEPS="-lm"
             GLU_MESA_DEPS='-l$(GL_LIB)'
@@ -863,8 +860,13 @@ fi
 if test "$enable_static" = no; then
     GLU_LIB_DEPS="$GLU_LIB_DEPS $OS_CPLUSPLUS_LIBS"
 fi
+GLU_PC_LIB_PRIV="$GLU_PC_LIB_PRIV $OS_CPLUSPLUS_LIBS"
 AC_SUBST([GLU_LIB_DEPS])
 AC_SUBST([GLU_MESA_DEPS])
+AC_SUBST([GLU_PC_REQ])
+AC_SUBST([GLU_PC_REQ_PRIV])
+AC_SUBST([GLU_PC_LIB_PRIV])
+AC_SUBST([GLU_PC_CFLAGS])
 
 dnl
 dnl GLw configuration
@@ -889,10 +891,13 @@ if test "x$enable_glw" = xyes; then
     SRC_DIRS="$SRC_DIRS glw"
     if test "$x11_pkgconfig" = yes; then
         PKG_CHECK_MODULES([GLW],[x11 xt])
+        GLW_PC_REQ_PRIV="x11 xt"
         GLW_LIB_DEPS="$GLW_LIBS"
     else
         # should check these...
         GLW_LIB_DEPS="$X_LIBS -lXt -lX11"
+        GLW_PC_LIB_PRIV="$GLW_LIB_DEPS"
+        GLW_PC_CFLAGS="$X11_INCLUDES"
     fi
 
     GLW_SOURCES="GLwDrawA.c"
@@ -911,12 +916,15 @@ if test "x$enable_glw" = xyes; then
         fi
         # MOTIF_LIBS is prepended to GLW_LIB_DEPS since Xm needs Xt/X11
         GLW_LIB_DEPS="$MOTIF_LIBS $GLW_LIB_DEPS"
+        GLW_PC_LIB_PRIV="$MOTIF_LIBS $GLW_PC_LIB_PRIV"
+        GLW_PC_CFLAGS="$MOTIF_CFLAGS $GLW_PC_CFLAGS"
     fi
 
     # If static, empty GLW_LIB_DEPS and add libs for programs to link
+    GLW_PC_LIB_PRIV="$GLW_PC_LIB_PRIV"
     if test "$enable_static" = no; then
         GLW_MESA_DEPS='-l$(GL_LIB)'
-        GLW_LIB_DEPS="$GLW_LIB_DEPS $OS_LIBS"
+        GLW_LIB_DEPS="$GLW_LIB_DEPS"
     else
         APP_LIB_DEPS="$APP_LIB_DEPS $GLW_LIB_DEPS"
         GLW_LIB_DEPS=""
@@ -927,6 +935,9 @@ AC_SUBST([GLW_LIB_DEPS])
 AC_SUBST([GLW_MESA_DEPS])
 AC_SUBST([GLW_SOURCES])
 AC_SUBST([MOTIF_CFLAGS])
+AC_SUBST([GLW_PC_REQ_PRIV])
+AC_SUBST([GLW_PC_LIB_PRIV])
+AC_SUBST([GLW_PC_CFLAGS])
 
 dnl
 dnl GLUT configuration
@@ -961,12 +972,16 @@ if test "x$enable_glut" = xyes; then
     fi
     if test "$x11_pkgconfig" = yes; then
         PKG_CHECK_MODULES([GLUT],[x11 xmu xi])
+        GLUT_PC_REQ_PRIV="x11 xmu xi"
         GLUT_LIB_DEPS="$GLUT_LIBS"
     else
         # should check these...
         GLUT_LIB_DEPS="$X_LIBS -lX11 -lXmu -lXi"
+        GLUT_PC_LIB_PRIV="$GLUT_LIB_DEPS"
+        GLUT_PC_CFLAGS="$X11_INCLUDES"
     fi
-    GLUT_LIB_DEPS="$GLUT_LIB_DEPS -lm $OS_LIBS"
+    GLUT_LIB_DEPS="$GLUT_LIB_DEPS -lm"
+    GLUT_PC_LIB_PRIV="$GLUT_PC_LIB_PRIV -lm"
 
     # If glut is available, we can build most programs
     if test "$with_demos" = yes; then
@@ -985,6 +1000,9 @@ fi
 AC_SUBST([GLUT_LIB_DEPS])
 AC_SUBST([GLUT_MESA_DEPS])
 AC_SUBST([GLUT_CFLAGS])
+AC_SUBST([GLUT_PC_REQ_PRIV])
+AC_SUBST([GLUT_PC_LIB_PRIV])
+AC_SUBST([GLUT_PC_CFLAGS])
 
 dnl
 dnl Program library dependencies
@@ -1048,8 +1066,8 @@ else
     echo "        DRI drivers:     $dri_dirs"
 fi
     echo "        DRI driver dir:  $DRI_DRIVER_INSTALL_DIR"
-    echo "        TTM API support: $ttmapi"
 fi
+echo "        Use XCB:         $enable_xcb"
 
 dnl Libraries
 echo ""

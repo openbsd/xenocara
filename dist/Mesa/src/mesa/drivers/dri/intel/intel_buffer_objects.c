@@ -26,14 +26,14 @@
  **************************************************************************/
 
 
-#include "imports.h"
-#include "mtypes.h"
-#include "bufferobj.h"
+#include "main/imports.h"
+#include "main/mtypes.h"
+#include "main/bufferobj.h"
 
 #include "intel_context.h"
 #include "intel_buffer_objects.h"
+#include "intel_batchbuffer.h"
 #include "intel_regions.h"
-#include "dri_bufmgr.h"
 
 static GLboolean intel_bufferobj_unmap(GLcontext * ctx,
 				       GLenum target,
@@ -45,8 +45,7 @@ intel_bufferobj_alloc_buffer(struct intel_context *intel,
 			     struct intel_buffer_object *intel_obj)
 {
    intel_obj->buffer = dri_bo_alloc(intel->bufmgr, "bufferobj",
-				    intel_obj->Base.Size, 64,
-				    DRM_BO_FLAG_MEM_LOCAL | DRM_BO_FLAG_CACHED | DRM_BO_FLAG_CACHED_MAPPED);
+				    intel_obj->Base.Size, 64);
 }
 
 /**

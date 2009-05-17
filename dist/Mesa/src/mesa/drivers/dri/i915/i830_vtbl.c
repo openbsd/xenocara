@@ -25,12 +25,13 @@
  * 
  **************************************************************************/
 
-#include "glapi.h"
+#include "glapi/glapi.h"
 
 #include "i830_context.h"
 #include "i830_reg.h"
 #include "intel_batchbuffer.h"
 #include "intel_regions.h"
+#include "intel_tris.h"
 #include "tnl/t_context.h"
 #include "tnl/t_vertex.h"
 
@@ -296,7 +297,7 @@ i830_emit_invarient_state(struct intel_context *intel)
 {
    BATCH_LOCALS;
 
-   BEGIN_BATCH(40, IGNORE_CLIPRECTS);
+   BEGIN_BATCH(30, IGNORE_CLIPRECTS);
 
    OUT_BATCH(_3DSTATE_DFLT_DIFFUSE_CMD);
    OUT_BATCH(0);
@@ -419,10 +420,12 @@ i830_emit_state(struct intel_context *intel)
 {
    struct i830_context *i830 = i830_context(&intel->ctx);
    struct i830_hw_state *state = i830->current;
-   int i, ret, count;
+   int i, count;
    GLuint dirty;
    GET_CURRENT_CONTEXT(ctx);
    BATCH_LOCALS;
+   dri_bo *aper_array[3 + I830_TEX_UNITS];
+   int aper_count;
 
    /* We don't hold the lock at this point, so want to make sure that
     * there won't be a buffer wrap between the state emits and the primitive
@@ -435,26 +438,29 @@ i830_emit_state(struct intel_context *intel)
     * Set the space as LOOP_CLIPRECTS now, since that's what our primitives
     * will be emitted under.
     */
-   intel_batchbuffer_require_space(intel->batch, get_state_size(state) + 8,
+   intel_batchbuffer_require_space(intel->batch,
+				   get_state_size(state) + INTEL_PRIM_EMIT_SIZE,
 				   LOOP_CLIPRECTS);
    count = 0;
  again:
+   aper_count = 0;
    dirty = get_dirty(state);
 
-   ret = 0;
+   aper_array[aper_count++] = intel->batch->buf;
    if (dirty & I830_UPLOAD_BUFFERS) {
-     ret |= dri_bufmgr_check_aperture_space(state->draw_region->buffer);
-     ret |= dri_bufmgr_check_aperture_space(state->depth_region->buffer);
+      aper_array[aper_count++] = state->draw_region->buffer;
+      if (state->depth_region)
+         aper_array[aper_count++] = state->depth_region->buffer;
    }
-   
+
    for (i = 0; i < I830_TEX_UNITS; i++)
      if (dirty & I830_UPLOAD_TEX(i)) {
 	if (state->tex_buffer[i]) {
-	  ret |= dri_bufmgr_check_aperture_space(state->tex_buffer[i]);
+	   aper_array[aper_count++] = state->tex_buffer[i];
 	}
      }
 
-   if (ret) {
+   if (dri_bufmgr_check_aperture_space(aper_array, aper_count)) {
        if (count == 0) {
 	   count++;
 	   intel_batchbuffer_flush(intel->batch);
@@ -485,19 +491,28 @@ i830_emit_state(struct intel_context *intel)
    }
 
    if (dirty & I830_UPLOAD_BUFFERS) {
+      GLuint count = 9; 
+
       DBG("I830_UPLOAD_BUFFERS:\n");
-      BEGIN_BATCH(I830_DEST_SETUP_SIZE + 2, IGNORE_CLIPRECTS);
+
+      if (state->depth_region)
+          count += 3;
+
+      if (intel->constant_cliprect)
+          count += 6;
+
+      BEGIN_BATCH(count, IGNORE_CLIPRECTS);
       OUT_BATCH(state->Buffer[I830_DESTREG_CBUFADDR0]);
       OUT_BATCH(state->Buffer[I830_DESTREG_CBUFADDR1]);
       OUT_RELOC(state->draw_region->buffer,
-                DRM_BO_FLAG_MEM_TT | DRM_BO_FLAG_WRITE,
+		I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER,
                 state->draw_region->draw_offset);
 
       if (state->depth_region) {
          OUT_BATCH(state->Buffer[I830_DESTREG_DBUFADDR0]);
          OUT_BATCH(state->Buffer[I830_DESTREG_DBUFADDR1]);
          OUT_RELOC(state->depth_region->buffer,
-                   DRM_BO_FLAG_MEM_TT | DRM_BO_FLAG_WRITE,
+		   I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER,
                    state->depth_region->draw_offset);
       }
 
@@ -507,6 +522,16 @@ i830_emit_state(struct intel_context *intel)
       OUT_BATCH(state->Buffer[I830_DESTREG_SR0]);
       OUT_BATCH(state->Buffer[I830_DESTREG_SR1]);
       OUT_BATCH(state->Buffer[I830_DESTREG_SR2]);
+
+      if (intel->constant_cliprect) {
+	 assert(state->Buffer[I830_DESTREG_DRAWRECT0] != MI_NOOP);
+	 OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT0]);
+	 OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT1]);
+	 OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT2]);
+	 OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT3]);
+	 OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT4]);
+	 OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT5]);
+      }
       ADVANCE_BATCH();
    }
    
@@ -524,7 +549,7 @@ i830_emit_state(struct intel_context *intel)
 
          if (state->tex_buffer[i]) {
             OUT_RELOC(state->tex_buffer[i],
-                      DRM_BO_FLAG_MEM_TT | DRM_BO_FLAG_READ,
+		      I915_GEM_DOMAIN_SAMPLER, 0,
                       state->tex_offset[i] | TM0S0_USE_FENCE);
          }
 	 else if (state == &i830->meta) {
@@ -541,6 +566,8 @@ i830_emit_state(struct intel_context *intel)
          OUT_BATCH(state->Tex[i][I830_TEXREG_TM0S4]);
          OUT_BATCH(state->Tex[i][I830_TEXREG_MCS]);
          OUT_BATCH(state->Tex[i][I830_TEXREG_CUBE]);
+
+         ADVANCE_BATCH();
       }
 
       if (dirty & I830_UPLOAD_TEXBLEND(i)) {
@@ -561,6 +588,13 @@ i830_destroy_context(struct intel_context *intel)
    GLuint i;
    struct i830_context *i830 = i830_context(&intel->ctx);
 
+   intel_region_release(&i830->state.draw_region);
+   intel_region_release(&i830->state.depth_region);
+   intel_region_release(&i830->meta.draw_region);
+   intel_region_release(&i830->meta.depth_region);
+   intel_region_release(&i830->initial.draw_region);
+   intel_region_release(&i830->initial.depth_region);
+
    for (i = 0; i < I830_TEX_UNITS; i++) {
       if (i830->state.tex_buffer[i] != NULL) {
 	 dri_bo_unreference(i830->state.tex_buffer[i]);
@@ -579,6 +613,7 @@ i830_state_draw_region(struct intel_context *intel,
 		       struct intel_region *depth_region)
 {
    struct i830_context *i830 = i830_context(&intel->ctx);
+   GLcontext *ctx = &intel->ctx;
    GLuint value;
 
    ASSERT(state == &i830->state || state == &i830->meta);
@@ -630,6 +665,24 @@ i830_state_draw_region(struct intel_context *intel,
       value |= DEPTH_FRMT_16_FIXED;
    }
    state->Buffer[I830_DESTREG_DV1] = value;
+
+   if (intel->constant_cliprect) {
+      state->Buffer[I830_DESTREG_DRAWRECT0] = _3DSTATE_DRAWRECT_INFO;
+      state->Buffer[I830_DESTREG_DRAWRECT1] = 0;
+      state->Buffer[I830_DESTREG_DRAWRECT2] = 0; /* xmin, ymin */
+      state->Buffer[I830_DESTREG_DRAWRECT3] =
+	 (ctx->DrawBuffer->Width & 0xffff) |
+	 (ctx->DrawBuffer->Height << 16);
+      state->Buffer[I830_DESTREG_DRAWRECT4] = 0; /* xoff, yoff */
+      state->Buffer[I830_DESTREG_DRAWRECT5] = 0;
+   } else {
+      state->Buffer[I830_DESTREG_DRAWRECT0] = MI_NOOP;
+      state->Buffer[I830_DESTREG_DRAWRECT1] = MI_NOOP;
+      state->Buffer[I830_DESTREG_DRAWRECT2] = MI_NOOP;
+      state->Buffer[I830_DESTREG_DRAWRECT3] = MI_NOOP;
+      state->Buffer[I830_DESTREG_DRAWRECT4] = MI_NOOP;
+      state->Buffer[I830_DESTREG_DRAWRECT5] = MI_NOOP;
+   }
 
    I830_STATECHANGE(i830, I830_UPLOAD_BUFFERS);
 
@@ -717,4 +770,5 @@ i830InitVtbl(struct i830_context *i830)
    i830->intel.vtbl.render_prevalidate = i830_render_prevalidate;
    i830->intel.vtbl.assert_not_dirty = i830_assert_not_dirty;
    i830->intel.vtbl.note_unlock = i830_note_unlock; 
+   i830->intel.vtbl.finish_batch = intel_finish_vb;
 }

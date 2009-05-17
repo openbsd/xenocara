@@ -38,7 +38,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/* $Id: miniglx_events.c,v 1.1 2008/11/02 14:58:12 matthieu Exp $ */
 
 
 #include <assert.h>

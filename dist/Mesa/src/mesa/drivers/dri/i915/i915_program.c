@@ -27,9 +27,9 @@
 
 #include <strings.h>
 
-#include "glheader.h"
-#include "macros.h"
-#include "enums.h"
+#include "main/glheader.h"
+#include "main/macros.h"
+#include "main/enums.h"
 
 #include "tnl/t_context.h"
 #include "intel_batchbuffer.h"
@@ -190,6 +190,9 @@ i915_emit_arith(struct i915_fragment_program * p,
    *(p->csr++) = (A1_SRC0(src0) | A1_SRC1(src1));
    *(p->csr++) = (A2_SRC1(src1) | A2_SRC2(src2));
 
+   if (GET_UREG_TYPE(dest) == REG_TYPE_R)
+      p->register_phases[GET_UREG_NR(dest)] = p->nr_tex_indirect;
+
    p->nr_alu_insn++;
    return dest;
 }
@@ -237,10 +240,35 @@ GLuint i915_emit_texld( struct i915_fragment_program *p,
    else {
       assert(GET_UREG_TYPE(dest) != REG_TYPE_CONST);
       assert(dest = UREG(GET_UREG_TYPE(dest), GET_UREG_NR(dest)));
+      /* Can't use unsaved temps for coords, as the phase boundary would result
+       * in the contents becoming undefined.
+       */
+      assert(GET_UREG_TYPE(coord) != REG_TYPE_U);
 
-      if (GET_UREG_TYPE(coord) != REG_TYPE_T) {
-	 p->nr_tex_indirect++;
+      if ((GET_UREG_TYPE(coord) != REG_TYPE_R) &&
+          (GET_UREG_TYPE(coord) != REG_TYPE_OC) &&
+          (GET_UREG_TYPE(coord) != REG_TYPE_OD) &&
+          (GET_UREG_TYPE(coord) != REG_TYPE_T)) {
+          GLuint  tmpCoord = get_free_rreg(p, live_regs);
+          
+          if (tmpCoord == UREG_BAD) 
+              return 0;
+
+          i915_emit_arith(p, A0_MOV, tmpCoord, A0_DEST_CHANNEL_ALL, 0, coord, 0, 0);
+          coord = tmpCoord;
       }
+
+      /* Output register being oC or oD defines a phase boundary */
+      if (GET_UREG_TYPE(dest) == REG_TYPE_OC ||
+	  GET_UREG_TYPE(dest) == REG_TYPE_OD)
+	 p->nr_tex_indirect++;
+
+      /* Reading from an r# register whose contents depend on output of the
+       * current phase defines a phase boundary.
+       */
+      if (GET_UREG_TYPE(coord) == REG_TYPE_R &&
+	  p->register_phases[GET_UREG_NR(coord)] == p->nr_tex_indirect)
+	 p->nr_tex_indirect++;
 
       *(p->csr++) = (op | 
 		     T0_DEST( dest ) |
@@ -248,6 +276,9 @@ GLuint i915_emit_texld( struct i915_fragment_program *p,
 
       *(p->csr++) = T1_ADDRESS_REG( coord );
       *(p->csr++) = T2_MBZ;
+
+      if (GET_UREG_TYPE(dest) == REG_TYPE_R)
+	 p->register_phases[GET_UREG_NR(dest)] = p->nr_tex_indirect;
 
       p->nr_tex_insn++;
       return dest;
@@ -413,7 +444,8 @@ i915_init_program(struct i915_context *i915, struct i915_fragment_program *p)
    p->on_hardware = 0;
    p->error = 0;
 
-   p->nr_tex_indirect = 1;      /* correct? */
+   memset(&p->register_phases, 0, sizeof(p->register_phases));
+   p->nr_tex_indirect = 1;
    p->nr_tex_insn = 0;
    p->nr_alu_insn = 0;
    p->nr_decl_insn = 0;

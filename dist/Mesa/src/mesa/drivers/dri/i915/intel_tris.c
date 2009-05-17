@@ -25,13 +25,19 @@
  * 
  **************************************************************************/
 
-#include "glheader.h"
-#include "context.h"
-#include "macros.h"
-#include "enums.h"
-#include "texobj.h"
-#include "state.h"
-#include "dd.h"
+/** @file intel_tris.c
+ *
+ * This file contains functions for managing the vertex buffer and emitting
+ * primitives into it.
+ */
+
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/macros.h"
+#include "main/enums.h"
+#include "main/texobj.h"
+#include "main/state.h"
+#include "main/dd.h"
 
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
@@ -47,13 +53,14 @@
 #include "intel_reg.h"
 #include "intel_span.h"
 #include "intel_tex.h"
+#include "intel_chipset.h"
+#include "i830_context.h"
+#include "i830_reg.h"
 
 static void intelRenderPrimitive(GLcontext * ctx, GLenum prim);
 static void intelRasterPrimitive(GLcontext * ctx, GLenum rprim,
                                  GLuint hwprim);
 
-/*
- */
 static void
 intel_flush_inline_primitive(struct intel_context *intel)
 {
@@ -80,22 +87,16 @@ intel_flush_inline_primitive(struct intel_context *intel)
    intel->prim.flush = 0;
 }
 
-
-/* Emit a primitive referencing vertices in a vertex buffer.
- */
-void
-intelStartInlinePrimitive(struct intel_context *intel,
-                          GLuint prim, GLuint batch_flags)
+static void intel_start_inline(struct intel_context *intel, uint32_t prim)
 {
    BATCH_LOCALS;
-
-   intel_wait_flips(intel);
+   uint32_t batch_flags = LOOP_CLIPRECTS;
 
    intel->vtbl.emit_state(intel);
 
    intel->no_batch_wrap = GL_TRUE;
 
-/*    _mesa_printf("%s *", __progname); */
+   /*_mesa_printf("%s *", __progname);*/
 
    /* Emit a slot which will be filled with the inline primitive
     * command later.
@@ -113,24 +114,19 @@ intelStartInlinePrimitive(struct intel_context *intel,
    ADVANCE_BATCH();
 
    intel->no_batch_wrap = GL_FALSE;
-
 /*    _mesa_printf(">"); */
 }
 
-
-void
-intelWrapInlinePrimitive(struct intel_context *intel)
+static void intel_wrap_inline(struct intel_context *intel)
 {
    GLuint prim = intel->prim.primitive;
-   enum cliprect_mode cliprect_mode = intel->batch->cliprect_mode;
 
    intel_flush_inline_primitive(intel);
    intel_batchbuffer_flush(intel->batch);
-   intelStartInlinePrimitive(intel, prim, cliprect_mode);  /* ??? */
+   intel_start_inline(intel, prim);  /* ??? */
 }
 
-GLuint *
-intelExtendInlinePrimitive(struct intel_context *intel, GLuint dwords)
+static GLuint *intel_extend_inline(struct intel_context *intel, GLuint dwords)
 {
    GLuint sz = dwords * sizeof(GLuint);
    GLuint *ptr;
@@ -138,7 +134,7 @@ intelExtendInlinePrimitive(struct intel_context *intel, GLuint dwords)
    assert(intel->prim.flush == intel_flush_inline_primitive);
 
    if (intel_batchbuffer_space(intel->batch) < sz)
-      intelWrapInlinePrimitive(intel);
+      intel_wrap_inline(intel);
 
 /*    _mesa_printf("."); */
 
@@ -150,7 +146,184 @@ intelExtendInlinePrimitive(struct intel_context *intel, GLuint dwords)
    return ptr;
 }
 
+/** Sets the primitive type for a primitive sequence, flushing as needed. */
+void intel_set_prim(struct intel_context *intel, uint32_t prim)
+{
+   /* if we have no VBOs */
 
+   if (intel->intelScreen->no_vbo) {
+      intel_start_inline(intel, prim);
+      return;
+   }
+   if (prim != intel->prim.primitive) {
+      INTEL_FIREVERTICES(intel);
+      intel->prim.primitive = prim;
+   }
+}
+
+/** Returns mapped VB space for the given number of vertices */
+uint32_t *intel_get_prim_space(struct intel_context *intel, unsigned int count)
+{
+   uint32_t *addr;
+
+   if (intel->intelScreen->no_vbo) {
+      return intel_extend_inline(intel, count * intel->vertex_size);
+   }
+
+   /* Check for space in the existing VB */
+   if (intel->prim.vb_bo == NULL ||
+       (intel->prim.current_offset +
+	count * intel->vertex_size * 4) > INTEL_VB_SIZE ||
+       (intel->prim.count + count) >= (1 << 16)) {
+      /* Flush existing prim if any */
+      INTEL_FIREVERTICES(intel);
+
+      intel_finish_vb(intel);
+
+      /* Start a new VB */
+      if (intel->prim.vb == NULL)
+	 intel->prim.vb = malloc(INTEL_VB_SIZE);
+      intel->prim.vb_bo = dri_bo_alloc(intel->bufmgr, "vb",
+				       INTEL_VB_SIZE, 4);
+      intel->prim.start_offset = 0;
+      intel->prim.current_offset = 0;
+   }
+
+   intel->prim.flush = intel_flush_prim;
+
+   addr = (uint32_t *)(intel->prim.vb + intel->prim.current_offset);
+   intel->prim.current_offset += intel->vertex_size * 4 * count;
+   intel->prim.count += count;
+
+   return addr;
+}
+
+/** Dispatches the accumulated primitive to the batchbuffer. */
+void intel_flush_prim(struct intel_context *intel)
+{
+   BATCH_LOCALS;
+   dri_bo *aper_array[2];
+   dri_bo *vb_bo;
+   unsigned int offset, count;
+
+   /* Must be called after an intel_start_prim. */
+   assert(intel->prim.primitive != ~0);
+
+   if (intel->prim.count == 0)
+      return;
+
+   /* Clear the current prims out of the context state so that a batch flush
+    * flush triggered by emit_state doesn't loop back to flush_prim again.
+    */
+   vb_bo = intel->prim.vb_bo;
+   dri_bo_reference(vb_bo);
+   count = intel->prim.count;
+   intel->prim.count = 0;
+   offset = intel->prim.start_offset;
+   intel->prim.start_offset = intel->prim.current_offset;
+   if (!IS_9XX(intel->intelScreen->deviceID))
+      intel->prim.start_offset = ALIGN(intel->prim.start_offset, 128);
+   intel->prim.flush = NULL;
+
+   intel->vtbl.emit_state(intel);
+
+   aper_array[0] = intel->batch->buf;
+   aper_array[1] = vb_bo;
+   if (dri_bufmgr_check_aperture_space(aper_array, 2)) {
+      intel_batchbuffer_flush(intel->batch);
+      intel->vtbl.emit_state(intel);
+   }
+
+   /* Ensure that we don't start a new batch for the following emit, which
+    * depends on the state just emitted. emit_state should be making sure we
+    * have the space for this.
+    */
+   intel->no_batch_wrap = GL_TRUE;
+
+   /* Check that we actually emitted the state into this batch, using the
+    * UPLOAD_CTX bit as the signal.
+    */
+   assert((intel->batch->dirty_state & (1<<1)) == 0);
+
+#if 0
+   printf("emitting %d..%d=%d vertices size %d\n", offset,
+	  intel->prim.current_offset, count,
+	  intel->vertex_size * 4);
+#endif
+
+   if (IS_9XX(intel->intelScreen->deviceID)) {
+      BEGIN_BATCH(5, LOOP_CLIPRECTS);
+      OUT_BATCH(_3DSTATE_LOAD_STATE_IMMEDIATE_1 |
+		I1_LOAD_S(0) | I1_LOAD_S(1) | 1);
+      assert((offset & !S0_VB_OFFSET_MASK) == 0);
+      OUT_RELOC(vb_bo, I915_GEM_DOMAIN_VERTEX, 0, offset);
+      OUT_BATCH((intel->vertex_size << S1_VERTEX_WIDTH_SHIFT) |
+		(intel->vertex_size << S1_VERTEX_PITCH_SHIFT));
+
+      OUT_BATCH(_3DPRIMITIVE |
+		PRIM_INDIRECT |
+		PRIM_INDIRECT_SEQUENTIAL |
+		intel->prim.primitive |
+		count);
+      OUT_BATCH(0); /* Beginning vertex index */
+      ADVANCE_BATCH();
+   } else {
+      struct i830_context *i830 = i830_context(&intel->ctx);
+
+      BEGIN_BATCH(5, LOOP_CLIPRECTS);
+      OUT_BATCH(_3DSTATE_LOAD_STATE_IMMEDIATE_1 |
+		I1_LOAD_S(0) | I1_LOAD_S(2) | 1);
+      /* S0 */
+      assert((offset & !S0_VB_OFFSET_MASK_830) == 0);
+      OUT_RELOC(vb_bo, I915_GEM_DOMAIN_VERTEX, 0,
+		offset | (intel->vertex_size << S0_VB_PITCH_SHIFT_830) |
+		S0_VB_ENABLE_830);
+      /* S2
+       * This is somewhat unfortunate -- VB width is tied up with
+       * vertex format data that we've already uploaded through
+       * _3DSTATE_VFT[01]_CMD.  We may want to replace emits of VFT state with
+       * STATE_IMMEDIATE_1 like this to avoid duplication.
+       */
+      OUT_BATCH((i830->state.Ctx[I830_CTXREG_VF] & VFT0_TEX_COUNT_MASK) >>
+		VFT0_TEX_COUNT_SHIFT << S2_TEX_COUNT_SHIFT_830 |
+		(i830->state.Ctx[I830_CTXREG_VF2] << 16) |
+		intel->vertex_size << S2_VERTEX_0_WIDTH_SHIFT_830);
+
+      OUT_BATCH(_3DPRIMITIVE |
+		PRIM_INDIRECT |
+		PRIM_INDIRECT_SEQUENTIAL |
+		intel->prim.primitive |
+		count);
+      OUT_BATCH(0); /* Beginning vertex index */
+      ADVANCE_BATCH();
+   }
+
+   intel->no_batch_wrap = GL_FALSE;
+
+   dri_bo_unreference(vb_bo);
+}
+
+/**
+ * Uploads the locally-accumulated VB into the buffer object.
+ *
+ * This avoids us thrashing the cachelines in and out as the buffer gets
+ * filled, dispatched, then reused as the hardware completes rendering from it,
+ * and also lets us clflush less if we dispatch with a partially-filled VB.
+ *
+ * This is called normally from get_space when we're finishing a BO, but also
+ * at batch flush time so that we don't try accessing the contents of a
+ * just-dispatched buffer.
+ */
+void intel_finish_vb(struct intel_context *intel)
+{
+   if (intel->prim.vb_bo == NULL)
+      return;
+
+   dri_bo_subdata(intel->prim.vb_bo, 0, intel->prim.start_offset,
+		  intel->prim.vb);
+   dri_bo_unreference(intel->prim.vb_bo);
+   intel->prim.vb_bo = NULL;
+}
 
 /***********************************************************************
  *                    Emit primitives as inline vertices               *
@@ -182,7 +355,7 @@ intel_draw_quad(struct intel_context *intel,
                 intelVertexPtr v1, intelVertexPtr v2, intelVertexPtr v3)
 {
    GLuint vertsize = intel->vertex_size;
-   GLuint *vb = intelExtendInlinePrimitive(intel, 6 * vertsize);
+   GLuint *vb = intel_get_prim_space(intel, 6);
    int j;
 
    COPY_DWORDS(j, vb, vertsize, v0);
@@ -210,7 +383,7 @@ intel_draw_triangle(struct intel_context *intel,
                     intelVertexPtr v0, intelVertexPtr v1, intelVertexPtr v2)
 {
    GLuint vertsize = intel->vertex_size;
-   GLuint *vb = intelExtendInlinePrimitive(intel, 3 * vertsize);
+   GLuint *vb = intel_get_prim_space(intel, 3);
    int j;
 
    COPY_DWORDS(j, vb, vertsize, v0);
@@ -224,7 +397,7 @@ intel_draw_line(struct intel_context *intel,
                 intelVertexPtr v0, intelVertexPtr v1)
 {
    GLuint vertsize = intel->vertex_size;
-   GLuint *vb = intelExtendInlinePrimitive(intel, 2 * vertsize);
+   GLuint *vb = intel_get_prim_space(intel, 2);
    int j;
 
    COPY_DWORDS(j, vb, vertsize, v0);
@@ -236,7 +409,7 @@ static void
 intel_draw_point(struct intel_context *intel, intelVertexPtr v0)
 {
    GLuint vertsize = intel->vertex_size;
-   GLuint *vb = intelExtendInlinePrimitive(intel, vertsize);
+   GLuint *vb = intel_get_prim_space(intel, 1);
    int j;
 
    /* Adjust for sub pixel position -- still required for conform. */
@@ -745,7 +918,7 @@ intelFastRenderClippedPoly(GLcontext * ctx, const GLuint * elts, GLuint n)
 {
    struct intel_context *intel = intel_context(ctx);
    const GLuint vertsize = intel->vertex_size;
-   GLuint *vb = intelExtendInlinePrimitive(intel, (n - 2) * 3 * vertsize);
+   GLuint *vb = intel_get_prim_space(intel, (n - 2) * 3);
    GLubyte *vertptr = (GLubyte *) intel->verts;
    const GLuint *start = (const GLuint *) V(elts[0]);
    int i, j;
@@ -816,7 +989,7 @@ intelChooseRenderState(GLcontext * ctx)
             intel->draw_tri = intel_fallback_tri;
 
          if (flags & DD_TRI_SMOOTH) {
-	    if (intel->strict_conformance)
+	    if (intel->conformance_mode > 0)
 	       intel->draw_tri = intel_fallback_tri;
 	 }
 
@@ -828,7 +1001,7 @@ intelChooseRenderState(GLcontext * ctx)
 	 }
 
 	 if (flags & DD_POINT_SMOOTH) {
-	    if (intel->strict_conformance)
+	    if (intel->conformance_mode > 0)
 	       intel->draw_point = intel_fallback_point;
 	 }
 
@@ -950,7 +1123,7 @@ intelRasterPrimitive(GLcontext * ctx, GLenum rprim, GLuint hwprim)
    if (hwprim != intel->prim.primitive) {
       INTEL_FIREVERTICES(intel);
 
-      intelStartInlinePrimitive(intel, hwprim, LOOP_CLIPRECTS);
+      intel_set_prim(intel, hwprim);
    }
 }
 
@@ -1083,15 +1256,18 @@ intel_meta_draw_poly(struct intel_context *intel,
    union fi *vb;
    GLint i;
    GLboolean was_locked = intel->locked;
+   unsigned int saved_vertex_size = intel->vertex_size;
 
    if (!was_locked)
        LOCK_HARDWARE(intel);
 
+   intel->vertex_size = 6;
+
    /* All 3d primitives should be emitted with LOOP_CLIPRECTS,
     * otherwise the drawing origin (DR4) might not be set correctly.
     */
-   intelStartInlinePrimitive(intel, PRIM3D_TRIFAN, LOOP_CLIPRECTS);
-   vb = (union fi *) intelExtendInlinePrimitive(intel, n * 6);
+   intel_set_prim(intel, PRIM3D_TRIFAN);
+   vb = (union fi *) intel_get_prim_space(intel, n);
 
    for (i = 0; i < n; i++) {
       vb[0].f = xy[i][0];
@@ -1104,6 +1280,8 @@ intel_meta_draw_poly(struct intel_context *intel,
    }
 
    INTEL_FIREVERTICES(intel);
+
+   intel->vertex_size = saved_vertex_size;
 
    if (!was_locked)
        UNLOCK_HARDWARE(intel);

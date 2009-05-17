@@ -26,12 +26,12 @@
 
 #include "dri_util.h"
 #include "utils.h"
-#include "glheader.h"
-#include "context.h"
-#include "framebuffer.h"
-#include "renderbuffer.h"
-#include "matrix.h"
-#include "simple_list.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/framebuffer.h"
+#include "main/renderbuffer.h"
+#include "main/matrix.h"
+#include "main/simple_list.h"
 #include "vblank.h"
 
 #include "via_state.h"
@@ -340,8 +340,8 @@ viaFillInModes( __DRIscreenPrivate *psp,
     /* The 32-bit depth-buffer mode isn't supported yet, so don't actually
      * enable it.
      */
-    static const u_int8_t depth_bits_array[4]   = { 0, 16, 24, 32 };
-    static const u_int8_t stencil_bits_array[4] = { 0,  0,  8,  0 };
+    static const uint8_t depth_bits_array[4]   = { 0, 16, 24, 32 };
+    static const uint8_t stencil_bits_array[4] = { 0,  0,  8,  0 };
     const unsigned depth_buffer_factor = 3;
 
     if ( pixel_bits == 16 ) {

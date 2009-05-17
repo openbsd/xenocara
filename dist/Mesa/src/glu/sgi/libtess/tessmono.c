@@ -30,8 +30,6 @@
 /*
 ** Author: Eric Veach, July 1994.
 **
-** $Date: 2008/11/02 14:58:11 $ $Revision: 1.2 $
-** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libtess/Attic/tessmono.c,v 1.2 2008/11/02 14:58:11 matthieu Exp $
 */
 
 #include "gluos.h"

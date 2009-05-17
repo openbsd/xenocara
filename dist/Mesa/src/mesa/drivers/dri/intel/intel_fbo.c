@@ -26,14 +26,14 @@
  **************************************************************************/
 
 
-#include "imports.h"
-#include "mtypes.h"
-#include "fbobject.h"
-#include "framebuffer.h"
-#include "renderbuffer.h"
-#include "context.h"
-#include "texformat.h"
-#include "texrender.h"
+#include "main/imports.h"
+#include "main/mtypes.h"
+#include "main/fbobject.h"
+#include "main/framebuffer.h"
+#include "main/renderbuffer.h"
+#include "main/context.h"
+#include "main/texformat.h"
+#include "main/texrender.h"
 
 #include "intel_context.h"
 #include "intel_buffers.h"
@@ -77,43 +77,6 @@ intel_get_renderbuffer(struct gl_framebuffer *fb, int attIndex)
       return NULL;
 }
 
-
-void
-intel_flip_renderbuffers(struct intel_framebuffer *intel_fb)
-{
-   int current_page = intel_fb->pf_current_page;
-   int next_page = (current_page + 1) % intel_fb->pf_num_pages;
-   struct gl_renderbuffer *tmp_rb;
-
-   /* Exchange renderbuffers if necessary but make sure their reference counts
-    * are preserved.
-    */
-   if (intel_fb->color_rb[current_page] &&
-       intel_fb->Base.Attachment[BUFFER_FRONT_LEFT].Renderbuffer !=
-       &intel_fb->color_rb[current_page]->Base) {
-      tmp_rb = NULL;
-      _mesa_reference_renderbuffer(&tmp_rb,
-	 intel_fb->Base.Attachment[BUFFER_FRONT_LEFT].Renderbuffer);
-      tmp_rb = &intel_fb->color_rb[current_page]->Base;
-      _mesa_reference_renderbuffer(
-	 &intel_fb->Base.Attachment[BUFFER_FRONT_LEFT].Renderbuffer, tmp_rb);
-      _mesa_reference_renderbuffer(&tmp_rb, NULL);
-   }
-
-   if (intel_fb->color_rb[next_page] &&
-       intel_fb->Base.Attachment[BUFFER_BACK_LEFT].Renderbuffer !=
-       &intel_fb->color_rb[next_page]->Base) {
-      tmp_rb = NULL;
-      _mesa_reference_renderbuffer(&tmp_rb,
-	 intel_fb->Base.Attachment[BUFFER_BACK_LEFT].Renderbuffer);
-      tmp_rb = &intel_fb->color_rb[next_page]->Base;
-      _mesa_reference_renderbuffer(
-	 &intel_fb->Base.Attachment[BUFFER_BACK_LEFT].Renderbuffer, tmp_rb);
-      _mesa_reference_renderbuffer(&tmp_rb, NULL);
-   }
-}
-
-
 struct intel_region *
 intel_get_rb_region(struct gl_framebuffer *fb, GLuint attIndex)
 {
@@ -152,6 +115,9 @@ intel_delete_renderbuffer(struct gl_renderbuffer *rb)
    if (irb->PairedStencil || irb->PairedDepth) {
       intel_unpair_depth_stencil(ctx, irb);
    }
+
+   if (irb->span_cache != NULL)
+      _mesa_free(irb->span_cache);
 
    if (intel && irb->region) {
       intel_region_release(&irb->region);
@@ -209,6 +175,14 @@ intel_alloc_renderbuffer_storage(GLcontext * ctx, struct gl_renderbuffer *rb,
    case GL_RGB10:
    case GL_RGB12:
    case GL_RGB16:
+      rb->_ActualFormat = GL_RGB8;
+      rb->DataType = GL_UNSIGNED_BYTE;
+      rb->RedBits = 8;
+      rb->GreenBits = 8;
+      rb->BlueBits = 8;
+      rb->AlphaBits = 0;
+      cpp = 4;
+      break;
    case GL_RGBA:
    case GL_RGBA2:
    case GL_RGBA4:
@@ -237,11 +211,18 @@ intel_alloc_renderbuffer_storage(GLcontext * ctx, struct gl_renderbuffer *rb,
       cpp = 4;
       break;
    case GL_DEPTH_COMPONENT16:
+#if 0
       rb->_ActualFormat = GL_DEPTH_COMPONENT16;
       rb->DataType = GL_UNSIGNED_SHORT;
       rb->DepthBits = 16;
       cpp = 2;
       break;
+#else
+      /* fall-through.
+       * 16bpp depth renderbuffer can't be paired with a stencil buffer so
+       * always used combined depth/stencil format.
+       */
+#endif
    case GL_DEPTH_COMPONENT:
    case GL_DEPTH_COMPONENT24:
    case GL_DEPTH_COMPONENT32:
@@ -285,7 +266,8 @@ intel_alloc_renderbuffer_storage(GLcontext * ctx, struct gl_renderbuffer *rb,
       DBG("Allocating %d x %d Intel RBO (pitch %d)\n", width,
 	  height, pitch);
 
-      irb->region = intel_region_alloc(intel, cpp, pitch, height);
+      irb->region = intel_region_alloc(intel, cpp, width, height, pitch,
+				       GL_TRUE);
       if (!irb->region)
          return GL_FALSE;       /* out of memory? */
 
@@ -293,9 +275,6 @@ intel_alloc_renderbuffer_storage(GLcontext * ctx, struct gl_renderbuffer *rb,
 
       rb->Width = width;
       rb->Height = height;
-
-      /* This sets the Get/PutRow/Value functions */
-      intel_set_span_functions(&irb->Base);
 
       return GL_TRUE;
    }
@@ -336,7 +315,7 @@ intel_resize_buffers(GLcontext *ctx, struct gl_framebuffer *fb,
    }
 
    /* Make sure all window system renderbuffers are up to date */
-   for (i = 0; i < 3; i++) {
+   for (i = 0; i < 2; i++) {
       struct gl_renderbuffer *rb = &intel_fb->color_rb[i]->Base;
 
       /* only resize if size is changing */
@@ -366,7 +345,6 @@ intel_renderbuffer_set_region(struct intel_renderbuffer *rb,
    intel_region_reference(&rb->region, region);
    intel_region_release(&old);
 
-   rb->pfMap = region->map;
    rb->pfPitch = region->pitch;
 }
 
@@ -446,8 +424,6 @@ intel_create_renderbuffer(GLenum intFormat)
    irb->Base.Delete = intel_delete_renderbuffer;
    irb->Base.AllocStorage = intel_alloc_window_storage;
    irb->Base.GetPointer = intel_get_pointer;
-   /* This sets the Get/PutRow/Value functions */
-   intel_set_span_functions(&irb->Base);
 
    return irb;
 }
@@ -519,25 +495,30 @@ intel_framebuffer_renderbuffer(GLcontext * ctx,
 
 static GLboolean
 intel_update_wrapper(GLcontext *ctx, struct intel_renderbuffer *irb, 
-                          struct gl_texture_image *texImage)
+		     struct gl_texture_image *texImage)
 {
    if (texImage->TexFormat == &_mesa_texformat_argb8888) {
       irb->Base._ActualFormat = GL_RGBA8;
       irb->Base._BaseFormat = GL_RGBA;
+      irb->Base.DataType = GL_UNSIGNED_BYTE;
       DBG("Render to RGBA8 texture OK\n");
    }
    else if (texImage->TexFormat == &_mesa_texformat_rgb565) {
       irb->Base._ActualFormat = GL_RGB5;
       irb->Base._BaseFormat = GL_RGB;
+      irb->Base.DataType = GL_UNSIGNED_SHORT;
       DBG("Render to RGB5 texture OK\n");
    }
    else if (texImage->TexFormat == &_mesa_texformat_z16) {
       irb->Base._ActualFormat = GL_DEPTH_COMPONENT16;
       irb->Base._BaseFormat = GL_DEPTH_COMPONENT;
+      irb->Base.DataType = GL_UNSIGNED_SHORT;
       DBG("Render to DEPTH16 texture OK\n");
-   } else if (texImage->TexFormat == &_mesa_texformat_z24_s8) {
+   }
+   else if (texImage->TexFormat == &_mesa_texformat_s8_z24) {
       irb->Base._ActualFormat = GL_DEPTH24_STENCIL8_EXT;
       irb->Base._BaseFormat = GL_DEPTH_STENCIL_EXT;
+      irb->Base.DataType = GL_UNSIGNED_INT_24_8_EXT;
       DBG("Render to DEPTH_STENCIL texture OK\n");
    }
    else {
@@ -549,7 +530,6 @@ intel_update_wrapper(GLcontext *ctx, struct intel_renderbuffer *irb,
    irb->Base.InternalFormat = irb->Base._ActualFormat;
    irb->Base.Width = texImage->Width;
    irb->Base.Height = texImage->Height;
-   irb->Base.DataType = GL_UNSIGNED_BYTE;       /* FBO XXX fix */
    irb->Base.RedBits = texImage->TexFormat->RedBits;
    irb->Base.GreenBits = texImage->TexFormat->GreenBits;
    irb->Base.BlueBits = texImage->TexFormat->BlueBits;
@@ -558,7 +538,6 @@ intel_update_wrapper(GLcontext *ctx, struct intel_renderbuffer *irb,
 
    irb->Base.Delete = intel_delete_renderbuffer;
    irb->Base.AllocStorage = intel_nop_alloc_storage;
-   intel_set_span_functions(&irb->Base);
 
    irb->RenderToTexture = GL_TRUE;
 
@@ -616,7 +595,14 @@ intel_render_texture(GLcontext * ctx,
 
    ASSERT(newImage);
 
-   if (!irb) {
+   if (newImage->Border != 0) {
+      /* Fallback on drawing to a texture with a border, which won't have a
+       * miptree.
+       */
+       _mesa_reference_renderbuffer(&att->Renderbuffer, NULL);
+       _mesa_render_texture(ctx, fb, att);
+       return;
+   } else if (!irb) {
       irb = intel_wrap_texture(ctx, newImage);
       if (irb) {
          /* bind the wrapper to the attachment point */

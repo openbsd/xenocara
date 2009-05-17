@@ -25,25 +25,14 @@
  * 
  **************************************************************************/
 
-#include "intel_screen.h"
 #include "intel_context.h"
-#include "intel_blit.h"
 #include "intel_buffers.h"
-#include "intel_chipset.h"
-#include "intel_depthstencil.h"
 #include "intel_fbo.h"
 #include "intel_regions.h"
 #include "intel_batchbuffer.h"
-#include "intel_reg.h"
-#include "context.h"
-#include "utils.h"
+#include "main/framebuffer.h"
 #include "drirenderbuffer.h"
-#include "framebuffer.h"
-#include "swrast/swrast.h"
-#include "vblank.h"
-#include "i915_drm.h"
 
-#define FILE_DEBUG_FLAG DEBUG_BLIT
 
 /**
  * XXX move this into a new dri/common/cliprects.c file.
@@ -107,667 +96,38 @@ intel_readbuf_region(struct intel_context *intel)
       return NULL;
 }
 
-
-
-/**
- * Update the following fields for rendering to a user-created FBO:
- *   intel->numClipRects
- *   intel->pClipRects
- *   intel->drawX
- *   intel->drawY
- */
-static void
-intelSetRenderbufferClipRects(struct intel_context *intel)
-{
-   assert(intel->ctx.DrawBuffer->Width > 0);
-   assert(intel->ctx.DrawBuffer->Height > 0);
-   intel->fboRect.x1 = 0;
-   intel->fboRect.y1 = 0;
-   intel->fboRect.x2 = intel->ctx.DrawBuffer->Width;
-   intel->fboRect.y2 = intel->ctx.DrawBuffer->Height;
-   intel->numClipRects = 1;
-   intel->pClipRects = &intel->fboRect;
-   intel->drawX = 0;
-   intel->drawY = 0;
-}
-
-
-/**
- * As above, but for rendering to front buffer of a window.
- * \sa intelSetRenderbufferClipRects
- */
-static void
-intelSetFrontClipRects(struct intel_context *intel)
+void
+intel_get_cliprects(struct intel_context *intel,
+		    struct drm_clip_rect **cliprects,
+		    unsigned int *num_cliprects,
+		    int *x_off, int *y_off)
 {
    __DRIdrawablePrivate *dPriv = intel->driDrawable;
 
-   if (!dPriv)
-      return;
+   if (intel->constant_cliprect) {
+      /* FBO or DRI2 rendering, which can just use the fb's size. */
+      intel->fboRect.x1 = 0;
+      intel->fboRect.y1 = 0;
+      intel->fboRect.x2 = intel->ctx.DrawBuffer->Width;
+      intel->fboRect.y2 = intel->ctx.DrawBuffer->Height;
 
-   intel->numClipRects = dPriv->numClipRects;
-   intel->pClipRects = dPriv->pClipRects;
-   intel->drawX = dPriv->x;
-   intel->drawY = dPriv->y;
-}
-
-
-/**
- * As above, but for rendering to back buffer of a window.
- */
-static void
-intelSetBackClipRects(struct intel_context *intel)
-{
-   __DRIdrawablePrivate *dPriv = intel->driDrawable;
-   struct intel_framebuffer *intel_fb;
-
-   if (!dPriv)
-      return;
-
-   intel_fb = dPriv->driverPrivate;
-
-   if (intel_fb->pf_active || dPriv->numBackClipRects == 0) {
+      *cliprects = &intel->fboRect;
+      *num_cliprects = 1;
+      *x_off = 0;
+      *y_off = 0;
+   } else if (intel->front_cliprects || dPriv->numBackClipRects == 0) {
       /* use the front clip rects */
-      intel->numClipRects = dPriv->numClipRects;
-      intel->pClipRects = dPriv->pClipRects;
-      intel->drawX = dPriv->x;
-      intel->drawY = dPriv->y;
+      *cliprects = dPriv->pClipRects;
+      *num_cliprects = dPriv->numClipRects;
+      *x_off = dPriv->x;
+      *y_off = dPriv->y;
    }
    else {
       /* use the back clip rects */
-      intel->numClipRects = dPriv->numBackClipRects;
-      intel->pClipRects = dPriv->pBackClipRects;
-      intel->drawX = dPriv->backX;
-      intel->drawY = dPriv->backY;
-   }
-}
-
-static void
-intelUpdatePageFlipping(struct intel_context *intel,
-			GLint areaA, GLint areaB)
-{
-   __DRIdrawablePrivate *dPriv = intel->driDrawable;
-   struct intel_framebuffer *intel_fb = dPriv->driverPrivate;
-   GLboolean pf_active;
-   GLint pf_planes;
-
-   /* Update page flipping info */
-   pf_planes = 0;
-
-   if (areaA > 0)
-      pf_planes |= 1;
-
-   if (areaB > 0)
-      pf_planes |= 2;
-
-   intel_fb->pf_current_page = (intel->sarea->pf_current_page >>
-				(intel_fb->pf_planes & 0x2)) & 0x3;
-
-   intel_fb->pf_num_pages = 2;
-
-   pf_active = pf_planes && (pf_planes & intel->sarea->pf_active) == pf_planes;
-
-   if (INTEL_DEBUG & DEBUG_LOCK)
-      if (pf_active != intel_fb->pf_active)
-	 _mesa_printf("%s - Page flipping %sactive\n", __progname,
-		      pf_active ? "" : "in");
-
-   intel_fb->pf_active = pf_active;
-   intel_flip_renderbuffers(intel_fb);
-   intel_draw_buffer(&intel->ctx, intel->ctx.DrawBuffer);
-}
-
-/*
- * Correct a drawablePrivate's set of vblank flags WRT the current context.
- * When considering multiple crtcs.
- */
-GLuint
-intelFixupVblank(struct intel_context *intel, __DRIdrawablePrivate *dPriv)
-{
-   if (!intel->intelScreen->driScrnPriv->dri2.enabled &&
-       intel->intelScreen->driScrnPriv->ddx_version.minor >= 7) {
-      volatile struct drm_i915_sarea *sarea = intel->sarea;
-      drm_clip_rect_t drw_rect = { .x1 = dPriv->x, .x2 = dPriv->x + dPriv->w,
-				   .y1 = dPriv->y, .y2 = dPriv->y + dPriv->h };
-      drm_clip_rect_t planeA_rect = { .x1 = sarea->planeA_x, .y1 = sarea->planeA_y,
-				     .x2 = sarea->planeA_x + sarea->planeA_w,
-				     .y2 = sarea->planeA_y + sarea->planeA_h };
-      drm_clip_rect_t planeB_rect = { .x1 = sarea->planeB_x, .y1 = sarea->planeB_y,
-				     .x2 = sarea->planeB_x + sarea->planeB_w,
-				     .y2 = sarea->planeB_y + sarea->planeB_h };
-      GLint areaA = driIntersectArea( drw_rect, planeA_rect );
-      GLint areaB = driIntersectArea( drw_rect, planeB_rect );
-      GLuint flags = dPriv->vblFlags;
-
-      /* Update vblank info
-       */
-      if (areaB > areaA || (areaA == areaB && areaB > 0)) {
-	 flags = dPriv->vblFlags | VBLANK_FLAG_SECONDARY;
-      } else {
-	 flags = dPriv->vblFlags & ~VBLANK_FLAG_SECONDARY;
-      }
-
-      /* Do the stupid test: Is one of them actually disabled?
-       */
-      if (sarea->planeA_w == 0 || sarea->planeA_h == 0) {
-	 flags = dPriv->vblFlags | VBLANK_FLAG_SECONDARY;
-      } else if (sarea->planeB_w == 0 || sarea->planeB_h == 0) {
-	 flags = dPriv->vblFlags & ~VBLANK_FLAG_SECONDARY;
-      }
-
-      return flags;
-   } else {
-	return dPriv->vblFlags & ~VBLANK_FLAG_SECONDARY;
-   }
-}
-
-/**
- * This will be called whenever the currently bound window is moved/resized.
- * XXX: actually, it seems to NOT be called when the window is only moved (BP).
- */
-void
-intelWindowMoved(struct intel_context *intel)
-{
-   GLcontext *ctx = &intel->ctx;
-   __DRIdrawablePrivate *dPriv = intel->driDrawable;
-   struct intel_framebuffer *intel_fb = dPriv->driverPrivate;
-
-   if (!intel->ctx.DrawBuffer) {
-      /* when would this happen? -BP */
-      intelSetFrontClipRects(intel);
-   }
-   else if (intel->ctx.DrawBuffer->Name != 0) {
-      /* drawing to user-created FBO - do nothing */
-      /* Cliprects would be set from intelDrawBuffer() */
-   }
-   else {
-      /* drawing to a window */
-      switch (intel_fb->Base._ColorDrawBufferIndexes[0]) {
-      case BUFFER_FRONT_LEFT:
-         intelSetFrontClipRects(intel);
-         break;
-      case BUFFER_BACK_LEFT:
-         intelSetBackClipRects(intel);
-         break;
-      default:
-         intelSetFrontClipRects(intel);
-      }
-	
-   }
-
-   if (!intel->intelScreen->driScrnPriv->dri2.enabled &&
-       intel->intelScreen->driScrnPriv->ddx_version.minor >= 7) {
-      GLuint flags = intelFixupVblank(intel, dPriv);
-
-      /* Check to see if we changed pipes */
-      if (flags != dPriv->vblFlags && dPriv->vblFlags &&
-	  !(dPriv->vblFlags & VBLANK_FLAG_NO_IRQ)) {
-	 int64_t count;
-	 drmVBlank vbl;
-	 int i;
-
-	 /*
-	  * Deal with page flipping
-	  */
-	 vbl.request.type = DRM_VBLANK_ABSOLUTE;
-
-	 if ( dPriv->vblFlags & VBLANK_FLAG_SECONDARY ) {
-	    vbl.request.type |= DRM_VBLANK_SECONDARY;
-	 }
-
-	 for (i = 0; i < intel_fb->pf_num_pages; i++) {
-	    if (!intel_fb->color_rb[i] ||
-		(intel_fb->vbl_waited - intel_fb->color_rb[i]->vbl_pending) <=
-		(1<<23))
-	       continue;
-
-	    vbl.request.sequence = intel_fb->color_rb[i]->vbl_pending;
-	    drmWaitVBlank(intel->driFd, &vbl);
-	 }
-
-	 /*
-	  * Update msc_base from old pipe
-	  */
-	 driDrawableGetMSC32(dPriv->driScreenPriv, dPriv, &count);
-	 dPriv->msc_base = count;
-	 /*
-	  * Then get new vblank_base and vblSeq values
-	  */
-	 dPriv->vblFlags = flags;
-	 driGetCurrentVBlank(dPriv);
-	 dPriv->vblank_base = dPriv->vblSeq;
-
-	 intel_fb->vbl_waited = dPriv->vblSeq;
-
-	 for (i = 0; i < intel_fb->pf_num_pages; i++) {
-	    if (intel_fb->color_rb[i])
-	       intel_fb->color_rb[i]->vbl_pending = intel_fb->vbl_waited;
-	 }
-      }
-   } else {
-      dPriv->vblFlags &= ~VBLANK_FLAG_SECONDARY;
-   }
-
-   /* Update Mesa's notion of window size */
-   driUpdateFramebufferSize(ctx, dPriv);
-   intel_fb->Base.Initialized = GL_TRUE; /* XXX remove someday */
-
-   /* Update hardware scissor */
-   if (ctx->Driver.Scissor != NULL) {
-      ctx->Driver.Scissor(ctx, ctx->Scissor.X, ctx->Scissor.Y,
-			  ctx->Scissor.Width, ctx->Scissor.Height);
-   }
-
-   /* Re-calculate viewport related state */
-   if (ctx->Driver.DepthRange != NULL)
-      ctx->Driver.DepthRange( ctx, ctx->Viewport.Near, ctx->Viewport.Far );
-}
-
-
-
-/* A true meta version of this would be very simple and additionally
- * machine independent.  Maybe we'll get there one day.
- */
-static void
-intelClearWithTris(struct intel_context *intel, GLbitfield mask)
-{
-   GLcontext *ctx = &intel->ctx;
-   struct gl_framebuffer *fb = ctx->DrawBuffer;
-   GLuint buf;
-
-   intel->vtbl.install_meta_state(intel);
-
-   /* Back and stencil cliprects are the same.  Try and do both
-    * buffers at once:
-    */
-   if (mask & (BUFFER_BIT_BACK_LEFT | BUFFER_BIT_STENCIL | BUFFER_BIT_DEPTH)) {
-      struct intel_region *backRegion =
-	 intel_get_rb_region(fb, BUFFER_BACK_LEFT);
-      struct intel_region *depthRegion =
-	 intel_get_rb_region(fb, BUFFER_DEPTH);
-
-      intel->vtbl.meta_draw_region(intel, backRegion, depthRegion);
-
-      if (mask & BUFFER_BIT_BACK_LEFT)
-	 intel->vtbl.meta_color_mask(intel, GL_TRUE);
-      else
-	 intel->vtbl.meta_color_mask(intel, GL_FALSE);
-
-      if (mask & BUFFER_BIT_STENCIL)
-	 intel->vtbl.meta_stencil_replace(intel,
-					  intel->ctx.Stencil.WriteMask[0],
-					  intel->ctx.Stencil.Clear);
-      else
-	 intel->vtbl.meta_no_stencil_write(intel);
-
-      if (mask & BUFFER_BIT_DEPTH)
-	 intel->vtbl.meta_depth_replace(intel);
-      else
-	 intel->vtbl.meta_no_depth_write(intel);
-
-      intel->vtbl.meta_draw_quad(intel,
-				 fb->_Xmin,
-				 fb->_Xmax,
-				 fb->_Ymin,
-				 fb->_Ymax,
-				 intel->ctx.Depth.Clear,
-				 intel->ClearColor8888,
-				 0, 0, 0, 0);   /* texcoords */
-
-      mask &= ~(BUFFER_BIT_BACK_LEFT | BUFFER_BIT_STENCIL | BUFFER_BIT_DEPTH);
-   }
-
-   /* clear the remaining (color) renderbuffers */
-   for (buf = 0; buf < BUFFER_COUNT && mask; buf++) {
-      const GLuint bufBit = 1 << buf;
-      if (mask & bufBit) {
-	 struct intel_renderbuffer *irbColor =
-	    intel_renderbuffer(fb->Attachment[buf].Renderbuffer);
-
-	 ASSERT(irbColor);
-
-	 intel->vtbl.meta_no_depth_write(intel);
-	 intel->vtbl.meta_no_stencil_write(intel);
-	 intel->vtbl.meta_color_mask(intel, GL_TRUE);
-	 intel->vtbl.meta_draw_region(intel, irbColor->region, NULL);
-
-	 intel->vtbl.meta_draw_quad(intel,
-				    fb->_Xmin,
-				    fb->_Xmax,
-				    fb->_Ymin,
-				    fb->_Ymax,
-				    0, intel->ClearColor8888,
-				    0, 0, 0, 0);   /* texcoords */
-
-	 mask &= ~bufBit;
-      }
-   }
-
-   intel->vtbl.leave_meta_state(intel);
-}
-
-static const char *buffer_names[] = {
-   [BUFFER_FRONT_LEFT] = "front",
-   [BUFFER_BACK_LEFT] = "back",
-   [BUFFER_FRONT_RIGHT] = "front right",
-   [BUFFER_BACK_RIGHT] = "back right",
-   [BUFFER_AUX0] = "aux0",
-   [BUFFER_AUX1] = "aux1",
-   [BUFFER_AUX2] = "aux2",
-   [BUFFER_AUX3] = "aux3",
-   [BUFFER_DEPTH] = "depth",
-   [BUFFER_STENCIL] = "stencil",
-   [BUFFER_ACCUM] = "accum",
-   [BUFFER_COLOR0] = "color0",
-   [BUFFER_COLOR1] = "color1",
-   [BUFFER_COLOR2] = "color2",
-   [BUFFER_COLOR3] = "color3",
-   [BUFFER_COLOR4] = "color4",
-   [BUFFER_COLOR5] = "color5",
-   [BUFFER_COLOR6] = "color6",
-   [BUFFER_COLOR7] = "color7",
-};
-
-/**
- * Called by ctx->Driver.Clear.
- */
-static void
-intelClear(GLcontext *ctx, GLbitfield mask)
-{
-   struct intel_context *intel = intel_context(ctx);
-   const GLuint colorMask = *((GLuint *) & ctx->Color.ColorMask);
-   GLbitfield tri_mask = 0;
-   GLbitfield blit_mask = 0;
-   GLbitfield swrast_mask = 0;
-   struct gl_framebuffer *fb = ctx->DrawBuffer;
-   GLuint i;
-
-   if (0)
-      fprintf(stderr, "%s\n", __FUNCTION__);
-
-   /* HW color buffers (front, back, aux, generic FBO, etc) */
-   if (colorMask == ~0) {
-      /* clear all R,G,B,A */
-      /* XXX FBO: need to check if colorbuffers are software RBOs! */
-      blit_mask |= (mask & BUFFER_BITS_COLOR);
-   }
-   else {
-      /* glColorMask in effect */
-      tri_mask |= (mask & BUFFER_BITS_COLOR);
-   }
-
-   /* HW stencil */
-   if (mask & BUFFER_BIT_STENCIL) {
-      const struct intel_region *stencilRegion
-         = intel_get_rb_region(fb, BUFFER_STENCIL);
-      if (stencilRegion) {
-         /* have hw stencil */
-         if (IS_965(intel->intelScreen->deviceID) ||
-	     (ctx->Stencil.WriteMask[0] & 0xff) != 0xff) {
-	    /* We have to use the 3D engine if we're clearing a partial mask
-	     * of the stencil buffer, or if we're on a 965 which has a tiled
-	     * depth/stencil buffer in a layout we can't blit to.
-	     */
-            tri_mask |= BUFFER_BIT_STENCIL;
-         }
-         else {
-            /* clearing all stencil bits, use blitting */
-            blit_mask |= BUFFER_BIT_STENCIL;
-         }
-      }
-   }
-
-   /* HW depth */
-   if (mask & BUFFER_BIT_DEPTH) {
-      /* clear depth with whatever method is used for stencil (see above) */
-      if (IS_965(intel->intelScreen->deviceID) ||
-	  tri_mask & BUFFER_BIT_STENCIL)
-         tri_mask |= BUFFER_BIT_DEPTH;
-      else
-         blit_mask |= BUFFER_BIT_DEPTH;
-   }
-
-   /* SW fallback clearing */
-   swrast_mask = mask & ~tri_mask & ~blit_mask;
-
-   for (i = 0; i < BUFFER_COUNT; i++) {
-      GLuint bufBit = 1 << i;
-      if ((blit_mask | tri_mask) & bufBit) {
-         if (!fb->Attachment[i].Renderbuffer->ClassID) {
-            blit_mask &= ~bufBit;
-            tri_mask &= ~bufBit;
-            swrast_mask |= bufBit;
-         }
-      }
-   }
-
-   if (blit_mask) {
-      if (INTEL_DEBUG & DEBUG_BLIT) {
-	 DBG("blit clear:");
-	 for (i = 0; i < BUFFER_COUNT; i++) {
-	    if (blit_mask & (1 << i))
-	       DBG(" %s", buffer_names[i]);
-	 }
-	 DBG("\n");
-      }
-      intelClearWithBlit(ctx, blit_mask);
-   }
-
-   if (tri_mask) {
-      if (INTEL_DEBUG & DEBUG_BLIT) {
-	 DBG("tri clear:");
-	 for (i = 0; i < BUFFER_COUNT; i++) {
-	    if (tri_mask & (1 << i))
-	       DBG(" %s", buffer_names[i]);
-	 }
-	 DBG("\n");
-      }
-      intelClearWithTris(intel, tri_mask);
-   }
-
-   if (swrast_mask) {
-      if (INTEL_DEBUG & DEBUG_BLIT) {
-	 DBG("swrast clear:");
-	 for (i = 0; i < BUFFER_COUNT; i++) {
-	    if (swrast_mask & (1 << i))
-	       DBG(" %s", buffer_names[i]);
-	 }
-	 DBG("\n");
-      }
-      _swrast_Clear(ctx, swrast_mask);
-   }
-}
-
-
-/* Emit wait for pending flips */
-void
-intel_wait_flips(struct intel_context *intel)
-{
-   struct intel_framebuffer *intel_fb =
-      (struct intel_framebuffer *) intel->ctx.DrawBuffer;
-   struct intel_renderbuffer *intel_rb =
-      intel_get_renderbuffer(&intel_fb->Base,
-			     intel_fb->Base._ColorDrawBufferIndexes[0] ==
-			     BUFFER_FRONT_LEFT ? BUFFER_FRONT_LEFT :
-			     BUFFER_BACK_LEFT);
-
-   if (intel_fb->Base.Name == 0 && intel_rb &&
-       intel_rb->pf_pending == intel_fb->pf_seq) {
-      GLint pf_planes = intel_fb->pf_planes;
-      BATCH_LOCALS;
-
-      /* Wait for pending flips to take effect */
-      BEGIN_BATCH(2, NO_LOOP_CLIPRECTS);
-      OUT_BATCH(pf_planes & 0x1 ? (MI_WAIT_FOR_EVENT | MI_WAIT_FOR_PLANE_A_FLIP)
-		: 0);
-      OUT_BATCH(pf_planes & 0x2 ? (MI_WAIT_FOR_EVENT | MI_WAIT_FOR_PLANE_B_FLIP)
-		: 0);
-      ADVANCE_BATCH();
-
-      intel_rb->pf_pending--;
-   }
-}
-
-
-/* Flip the front & back buffers
- */
-static GLboolean
-intelPageFlip(const __DRIdrawablePrivate * dPriv)
-{
-   return GL_FALSE;
-}
-
-static GLboolean
-intelScheduleSwap(__DRIdrawablePrivate * dPriv, GLboolean *missed_target)
-{
-   struct intel_framebuffer *intel_fb = dPriv->driverPrivate;
-   unsigned int interval;
-   struct intel_context *intel =
-      intelScreenContext(dPriv->driScreenPriv->private);
-   const intelScreenPrivate *intelScreen = intel->intelScreen;
-   unsigned int target;
-   drm_i915_vblank_swap_t swap;
-   GLboolean ret;
-
-   if (!dPriv->vblFlags ||
-       (dPriv->vblFlags & VBLANK_FLAG_NO_IRQ) ||
-       intelScreen->drmMinor < (intel_fb->pf_active ? 9 : 6))
-      return GL_FALSE;
-
-   interval = driGetVBlankInterval(dPriv);
-
-   swap.seqtype = DRM_VBLANK_ABSOLUTE;
-
-   if (dPriv->vblFlags & VBLANK_FLAG_SYNC) {
-      swap.seqtype |= DRM_VBLANK_NEXTONMISS;
-   } else if (interval == 0)
-      return GL_FALSE;
-
-   swap.drawable = dPriv->hHWDrawable;
-   target = swap.sequence = dPriv->vblSeq + interval;
-
-   if ( dPriv->vblFlags & VBLANK_FLAG_SECONDARY ) {
-      swap.seqtype |= DRM_VBLANK_SECONDARY;
-   }
-
-   LOCK_HARDWARE(intel);
-
-   intel_batchbuffer_flush(intel->batch);
-
-   if ( intel_fb->pf_active ) {
-      swap.seqtype |= DRM_VBLANK_FLIP;
-
-      intel_fb->pf_current_page = (((intel->sarea->pf_current_page >>
-				     (intel_fb->pf_planes & 0x2)) & 0x3) + 1) %
-				  intel_fb->pf_num_pages;
-   }
-
-   if (!drmCommandWriteRead(intel->driFd, DRM_I915_VBLANK_SWAP, &swap,
-			    sizeof(swap))) {
-      dPriv->vblSeq = swap.sequence;
-      swap.sequence -= target;
-      *missed_target = swap.sequence > 0 && swap.sequence <= (1 << 23);
-
-      intel_get_renderbuffer(&intel_fb->Base, BUFFER_BACK_LEFT)->vbl_pending =
-	 intel_get_renderbuffer(&intel_fb->Base,
-				BUFFER_FRONT_LEFT)->vbl_pending =
-	 dPriv->vblSeq;
-
-      if (swap.seqtype & DRM_VBLANK_FLIP) {
-	 intel_flip_renderbuffers(intel_fb);
-	 intel_draw_buffer(&intel->ctx, intel->ctx.DrawBuffer);
-      }
-
-      ret = GL_TRUE;
-   } else {
-      if (swap.seqtype & DRM_VBLANK_FLIP) {
-	 intel_fb->pf_current_page = ((intel->sarea->pf_current_page >>
-					(intel_fb->pf_planes & 0x2)) & 0x3) %
-				     intel_fb->pf_num_pages;
-      }
-
-      ret = GL_FALSE;
-   }
-
-   UNLOCK_HARDWARE(intel);
-
-   return ret;
-}
-  
-void
-intelSwapBuffers(__DRIdrawablePrivate * dPriv)
-{
-   __DRIscreenPrivate *psp = dPriv->driScreenPriv;
-
-   if (dPriv->driContextPriv && dPriv->driContextPriv->driverPrivate) {
-      GET_CURRENT_CONTEXT(ctx);
-      struct intel_context *intel;
-
-      if (ctx == NULL)
-	 return;
-
-      intel = intel_context(ctx);
-
-      if (ctx->Visual.doubleBufferMode) {
-	 GLboolean missed_target;
-	 struct intel_framebuffer *intel_fb = dPriv->driverPrivate;
-	 int64_t ust;
-         
-	 _mesa_notifySwapBuffers(ctx);  /* flush pending rendering comands */
-
-         if (!intelScheduleSwap(dPriv, &missed_target)) {
-	    driWaitForVBlank(dPriv, &missed_target);
-
-	    /*
-	     * Update each buffer's vbl_pending so we don't get too out of
-	     * sync
-	     */
-	    intel_get_renderbuffer(&intel_fb->Base,
-				   BUFFER_BACK_LEFT)->vbl_pending = 
-		    intel_get_renderbuffer(&intel_fb->Base,
-					   BUFFER_FRONT_LEFT)->vbl_pending =
-		    dPriv->vblSeq;
-	    if (!intelPageFlip(dPriv)) {
-	       intelCopyBuffer(dPriv, NULL);
-	    }
-	 }
-
-	 intel_fb->swap_count++;
-	 (*psp->systemTime->getUST) (&ust);
-	 if (missed_target) {
-	    intel_fb->swap_missed_count++;
-	    intel_fb->swap_missed_ust = ust - intel_fb->swap_ust;
-	 }
-
-	 intel_fb->swap_ust = ust;
-      }
-   }
-   else {
-      /* XXX this shouldn't be an error but we can't handle it for now */
-      fprintf(stderr, "%s: drawable has no context!\n", __FUNCTION__);
-   }
-}
-
-void
-intelCopySubBuffer(__DRIdrawablePrivate * dPriv, int x, int y, int w, int h)
-{
-   if (dPriv->driContextPriv && dPriv->driContextPriv->driverPrivate) {
-      struct intel_context *intel =
-         (struct intel_context *) dPriv->driContextPriv->driverPrivate;
-      GLcontext *ctx = &intel->ctx;
-
-      if (ctx->Visual.doubleBufferMode) {
-         drm_clip_rect_t rect;
-         rect.x1 = x + dPriv->x;
-         rect.y1 = (dPriv->h - y - h) + dPriv->y;
-         rect.x2 = rect.x1 + w;
-         rect.y2 = rect.y1 + h;
-         _mesa_notifySwapBuffers(ctx);  /* flush pending rendering comands */
-         intelCopyBuffer(dPriv, &rect);
-      }
-   }
-   else {
-      /* XXX this shouldn't be an error but we can't handle it for now */
-      fprintf(stderr, "%s: drawable has no context!\n", __FUNCTION__);
+      *num_cliprects = dPriv->numBackClipRects;
+      *cliprects = dPriv->pBackClipRects;
+      *x_off = dPriv->backX;
+      *y_off = dPriv->backY;
    }
 }
 
@@ -788,7 +148,6 @@ intel_draw_buffer(GLcontext * ctx, struct gl_framebuffer *fb)
    struct intel_context *intel = intel_context(ctx);
    struct intel_region *colorRegions[MAX_DRAW_BUFFERS], *depthRegion = NULL;
    struct intel_renderbuffer *irbDepth = NULL, *irbStencil = NULL;
-   int front = 0;               /* drawing to front color buffer? */
 
    if (!fb) {
       /* this can happen during the initial context initialization */
@@ -816,63 +175,51 @@ intel_draw_buffer(GLcontext * ctx, struct gl_framebuffer *fb)
    if (fb->Name)
       intel_validate_paired_depth_stencil(ctx, fb);
 
-   /* If the batch contents require looping over cliprects, flush them before
-    * we go changing which cliprects get referenced when that happens.
-    */
-   if (intel->batch->cliprect_mode == LOOP_CLIPRECTS)
-      intel_batchbuffer_flush(intel->batch);
-
    /*
     * How many color buffers are we drawing into?
     */
    if (fb->_NumColorDrawBuffers == 0) {
       /* writing to 0  */
-      FALLBACK(intel, INTEL_FALLBACK_DRAW_BUFFER, GL_TRUE);
       colorRegions[0] = NULL;
-
-      if (fb->Name != 0)
-	 intelSetRenderbufferClipRects(intel);
+      intel->constant_cliprect = GL_TRUE;
    } else if (fb->_NumColorDrawBuffers > 1) {
        int i;
        struct intel_renderbuffer *irb;
-       FALLBACK(intel, INTEL_FALLBACK_DRAW_BUFFER, GL_FALSE);
 
-       if (fb->Name != 0)
-           intelSetRenderbufferClipRects(intel);
        for (i = 0; i < fb->_NumColorDrawBuffers; i++) {
            irb = intel_renderbuffer(fb->_ColorDrawBuffers[i]);
-           colorRegions[i] = (irb && irb->region) ? irb->region : NULL;
+           colorRegions[i] = irb ? irb->region : NULL;
        }
+       intel->constant_cliprect = GL_TRUE;
    }
    else {
-      /* draw to exactly one color buffer */
-      /*_mesa_debug(ctx, "Hardware rendering\n");*/
-      FALLBACK(intel, INTEL_FALLBACK_DRAW_BUFFER, GL_FALSE);
-      if (fb->_ColorDrawBufferIndexes[0] == BUFFER_FRONT_LEFT) {
-         front = 1;
-      }
-
-      /*
-       * Get the intel_renderbuffer for the colorbuffer we're drawing into.
-       * And set up cliprects.
+      /* Get the intel_renderbuffer for the single colorbuffer we're drawing
+       * into, and set up cliprects if it's .
        */
       if (fb->Name == 0) {
+	 intel->constant_cliprect = intel->driScreen->dri2.enabled;
 	 /* drawing to window system buffer */
-	 if (front) {
-	    intelSetFrontClipRects(intel);
+	 if (fb->_ColorDrawBufferIndexes[0] == BUFFER_FRONT_LEFT) {
+	    if (!intel->constant_cliprect && !intel->front_cliprects)
+	       intel_batchbuffer_flush(intel->batch);
+	    intel->front_cliprects = GL_TRUE;
 	    colorRegions[0] = intel_get_rb_region(fb, BUFFER_FRONT_LEFT);
+
+	    intel->front_buffer_dirty = GL_TRUE;
 	 }
 	 else {
-	    intelSetBackClipRects(intel);
+	    if (!intel->constant_cliprect && intel->front_cliprects)
+	       intel_batchbuffer_flush(intel->batch);
+	    intel->front_cliprects = GL_FALSE;
 	    colorRegions[0]= intel_get_rb_region(fb, BUFFER_BACK_LEFT);
 	 }
       }
       else {
 	 /* drawing to user-created FBO */
 	 struct intel_renderbuffer *irb;
-	 intelSetRenderbufferClipRects(intel);
 	 irb = intel_renderbuffer(fb->_ColorDrawBuffers[0]);
 	 colorRegions[0] = (irb && irb->region) ? irb->region : NULL;
+	 intel->constant_cliprect = GL_TRUE;
       }
    }
 
@@ -961,13 +308,11 @@ intel_draw_buffer(GLcontext * ctx, struct gl_framebuffer *fb)
 	fb->_NumColorDrawBuffers);
 
    /* update viewport since it depends on window size */
-   if (ctx->Driver.Viewport) {
-      ctx->Driver.Viewport(ctx, ctx->Viewport.X, ctx->Viewport.Y,
-			   ctx->Viewport.Width, ctx->Viewport.Height);
-   } else {
-      ctx->NewState |= _NEW_VIEWPORT;
-   }
-
+#ifdef I915
+   intelCalcViewport(ctx);
+#else
+   ctx->NewState |= _NEW_VIEWPORT;
+#endif
    /* Set state we know depends on drawable parameters:
     */
    if (ctx->Driver.Scissor)
@@ -985,6 +330,12 @@ intel_draw_buffer(GLcontext * ctx, struct gl_framebuffer *fb)
 static void
 intelDrawBuffer(GLcontext * ctx, GLenum mode)
 {
+   if ((ctx->DrawBuffer != NULL) && (ctx->DrawBuffer->Name == 0)) {
+      struct intel_context *const intel = intel_context(ctx);
+
+      intel->is_front_buffer_rendering = (mode == GL_FRONT_LEFT);
+   }
+
    intel_draw_buffer(ctx, ctx->DrawBuffer);
 }
 
@@ -1009,7 +360,6 @@ intelReadBuffer(GLcontext * ctx, GLenum mode)
 void
 intelInitBufferFuncs(struct dd_function_table *functions)
 {
-   functions->Clear = intelClear;
    functions->DrawBuffer = intelDrawBuffer;
    functions->ReadBuffer = intelReadBuffer;
 }

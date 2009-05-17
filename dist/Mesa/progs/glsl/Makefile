@@ -15,15 +15,21 @@ PROGS = \
 	bump \
 	convolutions \
 	deriv \
+	fragcoord \
 	mandelbrot \
+	multinoise \
 	multitex \
 	noise \
 	points \
 	pointcoord \
+	samplers \
+	skinning \
 	texdemo1 \
 	toyball \
 	twoside \
-	trirast
+	trirast \
+	vert-or-frag-only \
+	vert-tex
 
 
 ##### RULES #####
@@ -105,6 +111,13 @@ deriv: deriv.o shaderutil.o
 	$(CC) -I$(INCDIR) $(CFLAGS) $(LDFLAGS) deriv.o shaderutil.o $(LIBS) -o $@
 
 
+fragcoord.o: fragcoord.c extfuncs.h shaderutil.h
+	$(CC) -c -I$(INCDIR) $(CFLAGS) fragcoord.c
+
+fragcoord: fragcoord.o shaderutil.o
+	$(CC) -I$(INCDIR) $(CFLAGS) $(LDFLAGS) fragcoord.o shaderutil.o $(LIBS) -o $@
+
+
 mandelbrot.o: mandelbrot.c extfuncs.h shaderutil.h
 	$(CC) -c -I$(INCDIR) $(CFLAGS) mandelbrot.c
 
@@ -140,6 +153,20 @@ pointcoord: pointcoord.o readtex.o shaderutil.o
 	$(CC) -I$(INCDIR) $(CFLAGS) $(LDFLAGS) pointcoord.o readtex.o shaderutil.o $(LIBS) -o $@
 
 
+samplers.o: samplers.c readtex.h extfuncs.h shaderutil.h
+	$(CC) -c -I$(INCDIR) $(CFLAGS) samplers.c
+
+samplers: samplers.o readtex.o shaderutil.o
+	$(CC) -I$(INCDIR) $(CFLAGS) $(LDFLAGS) samplers.o readtex.o shaderutil.o $(LIBS) -o $@
+
+
+skinning.o: skinning.c readtex.h extfuncs.h shaderutil.h
+	$(CC) -c -I$(INCDIR) $(CFLAGS) skinning.c
+
+skinning: skinning.o readtex.o shaderutil.o
+	$(CC) -I$(INCDIR) $(CFLAGS) $(LDFLAGS) skinning.o readtex.o shaderutil.o $(LIBS) -o $@
+
+
 texdemo1.o: texdemo1.c readtex.h extfuncs.h shaderutil.h
 	$(CC) -c -I$(INCDIR) $(CFLAGS) texdemo1.c
 
@@ -167,6 +194,20 @@ trirast.o: trirast.c extfuncs.h shaderutil.h
 trirast: trirast.o shaderutil.o
 	$(CC) -I$(INCDIR) $(CFLAGS) $(LDFLAGS) trirast.o shaderutil.o $(LIBS) -o $@
 
+
+vert-or-frag-only.o: vert-or-frag-only.c extfuncs.h shaderutil.h
+	$(CC) -c -I$(INCDIR) $(CFLAGS) vert-or-frag-only.c
+
+vert-or-frag-only: vert-or-frag-only.o shaderutil.o
+	$(CC) -I$(INCDIR) $(CFLAGS) $(LDFLAGS) vert-or-frag-only.o shaderutil.o $(LIBS) -o $@
+
+
+
+vert-tex.o: vert-tex.c extfuncs.h shaderutil.h
+	$(CC) -c -I$(INCDIR) $(CFLAGS) vert-tex.c
+
+vert-tex: vert-tex.o shaderutil.o
+	$(CC) -I$(INCDIR) $(CFLAGS) $(LDFLAGS) vert-tex.o shaderutil.o $(LIBS) -o $@
 
 
 

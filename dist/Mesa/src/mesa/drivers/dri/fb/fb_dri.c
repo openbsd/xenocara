@@ -47,14 +47,14 @@
 #include "drirenderbuffer.h"
 
 #include "buffers.h"
-#include "extensions.h"
-#include "framebuffer.h"
-#include "renderbuffer.h"
+#include "main/extensions.h"
+#include "main/framebuffer.h"
+#include "main/renderbuffer.h"
 #include "vbo/vbo.h"
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
 #include "tnl/tnl.h"
-#include "tnl/t_context.h"
+#include "tnl/tcontext.h"
 #include "tnl/t_pipeline.h"
 #include "drivers/common/driverfuncs.h"
 
@@ -678,8 +678,8 @@ fbFillInModes( __DRIscreenPrivate *psp,
       GLX_NONE, GLX_SWAP_UNDEFINED_OML /*, GLX_SWAP_COPY_OML */
    };
 
-   u_int8_t depth_bits_array[2];
-   u_int8_t stencil_bits_array[2];
+   uint8_t depth_bits_array[2];
+   uint8_t stencil_bits_array[2];
 
 
    depth_bits_array[0] = depth_bits;

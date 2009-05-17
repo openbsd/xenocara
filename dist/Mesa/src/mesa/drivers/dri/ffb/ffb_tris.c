@@ -1,4 +1,4 @@
-/* $XFree86: xc/lib/GL/mesa/src/drv/ffb/ffb_tris.c,v 1.3 2002/10/30 12:51:28 alanh Exp $
+/* 
  *
  * GLX Hardware Device Driver for Sun Creator/Creator3D
  * Copyright (C) 2000, 2001 David S. Miller
@@ -25,12 +25,12 @@
  *    David S. Miller <davem@redhat.com>
  */
 
-#include "glheader.h"
-#include "mtypes.h"
-#include "macros.h"
+#include "main/glheader.h"
+#include "main/mtypes.h"
+#include "main/macros.h"
 #include "swrast/swrast.h"
-#include "swrast_setup/swrast_setup.h"
 #include "swrast/s_context.h"
+#include "swrast_setup/swrast_setup.h"
 #include "tnl/t_context.h"
 #include "tnl/t_pipeline.h"
 

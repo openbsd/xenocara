@@ -26,11 +26,11 @@
  * 
  **************************************************************************/
 
-#include "mtypes.h"
-#include "texobj.h"
-#include "texstore.h"
-#include "texcompress.h"
-#include "enums.h"
+#include "main/mtypes.h"
+#include "main/texobj.h"
+#include "main/texstore.h"
+#include "main/texcompress.h"
+#include "main/enums.h"
 
 #include "intel_context.h"
 #include "intel_tex.h"
@@ -183,4 +183,19 @@ intelTexSubImage1D(GLcontext * ctx,
                     width, 1, 1,
                     format, type, pixels, packing, texObj, texImage);
 
+}
+
+void
+intelCompressedTexSubImage2D(GLcontext * ctx,
+			     GLenum target,
+			     GLint level,
+			     GLint xoffset, GLint yoffset,
+			     GLsizei width, GLsizei height,
+			     GLenum format, GLsizei imageSize,
+			     const GLvoid * pixels,
+			     struct gl_texture_object *texObj,
+			     struct gl_texture_image *texImage)
+{
+   fprintf(stderr, "stubbed CompressedTexSubImage2D: %dx%d@%dx%d\n",
+	   width, height, xoffset, yoffset);
 }

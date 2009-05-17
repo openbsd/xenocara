@@ -27,11 +27,11 @@
 
 #include <stdlib.h>
 
-#include "glheader.h"
-#include "context.h"
-#include "state.h"
-#include "api_validate.h"
-#include "enums.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/state.h"
+#include "main/api_validate.h"
+#include "main/enums.h"
 
 #include "brw_draw.h"
 #include "brw_defines.h"
@@ -39,7 +39,6 @@
 #include "brw_state.h"
 #include "brw_fallback.h"
 
-#include "intel_ioctl.h"
 #include "intel_batchbuffer.h"
 #include "intel_buffer_objects.h"
 #include "intel_tex.h"
@@ -228,10 +227,7 @@ static void wrap_buffers( struct brw_context *brw,
    if (brw->vb.upload.bo != NULL)
       dri_bo_unreference(brw->vb.upload.bo);
    brw->vb.upload.bo = dri_bo_alloc(brw->intel.bufmgr, "temporary VBO",
-				    size, 1,
-				    DRM_BO_FLAG_MEM_LOCAL |
-				    DRM_BO_FLAG_CACHED |
-				    DRM_BO_FLAG_CACHED_MAPPED);
+				    size, 1);
 
    /* Set the internal VBO\ to no-backing-store.  We only use them as a
     * temporary within a brw_try_draw_prims while the lock is held.
@@ -254,10 +250,10 @@ static void get_space( struct brw_context *brw,
       wrap_buffers(brw, size);
    }
 
+   assert(*bo_return == NULL);
    dri_bo_reference(brw->vb.upload.bo);
    *bo_return = brw->vb.upload.bo;
    *offset_return = brw->vb.upload.offset;
-
    brw->vb.upload.offset += size;
 }
 
@@ -304,9 +300,7 @@ copy_array_to_vbo_array( struct brw_context *brw,
    }
 }
 
-int brw_prepare_vertices( struct brw_context *brw,
-			       GLuint min_index,
-			       GLuint max_index )
+static void brw_prepare_vertices(struct brw_context *brw)
 {
    GLcontext *ctx = &brw->intel.ctx;
    struct intel_context *intel = intel_context(ctx);
@@ -314,7 +308,8 @@ int brw_prepare_vertices( struct brw_context *brw,
    GLuint i;
    const unsigned char *ptr = NULL;
    GLuint interleave = 0;
-   int ret = 0;
+   unsigned int min_index = brw->vb.min_index;
+   unsigned int max_index = brw->vb.max_index;
 
    struct brw_vertex_element *enabled[VERT_ATTRIB_MAX];
    GLuint nr_enabled = 0;
@@ -342,8 +337,10 @@ int brw_prepare_vertices( struct brw_context *brw,
     * cases with > 17 vertex attributes enabled, so it probably
     * isn't an issue at this point.
     */
-   if (nr_enabled >= BRW_VEP_MAX)
-       return -1;
+   if (nr_enabled >= BRW_VEP_MAX) {
+      intel->Fallback = 1;
+      return;
+   }
 
    for (i = 0; i < nr_enabled; i++) {
       struct brw_vertex_element *input = enabled[i];
@@ -356,22 +353,31 @@ int brw_prepare_vertices( struct brw_context *brw,
 	    intel_buffer_object(input->glarray->BufferObj);
 
 	 /* Named buffer object: Just reference its contents directly. */
+	 dri_bo_unreference(input->bo);
 	 input->bo = intel_bufferobj_buffer(intel, intel_buffer,
 					    INTEL_READ);
 	 dri_bo_reference(input->bo);
 	 input->offset = (unsigned long)input->glarray->Ptr;
 	 input->stride = input->glarray->StrideB;
-
-	 ret |= dri_bufmgr_check_aperture_space(input->bo);
       } else {
+	 if (input->bo != NULL) {
+	    /* Already-uploaded vertex data is present from a previous
+	     * prepare_vertices, but we had to re-validate state due to
+	     * check_aperture failing and a new batch being produced.
+	     */
+	    continue;
+	 }
+
 	 /* Queue the buffer object up to be uploaded in the next pass,
 	  * when we've decided if we're doing interleaved or not.
 	  */
 	 if (i == 0) {
 	    /* Position array not properly enabled:
 	     */
-	    if (input->glarray->StrideB == 0)
-	      return -1;
+            if (input->glarray->StrideB == 0) {
+               intel->Fallback = 1;
+               return;
+            }
 
 	    interleave = input->glarray->StrideB;
 	    ptr = input->glarray->Ptr;
@@ -403,7 +409,6 @@ int brw_prepare_vertices( struct brw_context *brw,
        */
       copy_array_to_vbo_array(brw, upload[0], interleave);
 
-      ret |= dri_bufmgr_check_aperture_space(upload[0]->bo);
       for (i = 1; i < nr_uploads; i++) {
 	 /* Then, just point upload[i] at upload[0]'s buffer. */
 	 upload[i]->stride = interleave;
@@ -417,23 +422,19 @@ int brw_prepare_vertices( struct brw_context *brw,
       /* Upload non-interleaved arrays */
       for (i = 0; i < nr_uploads; i++) {
           copy_array_to_vbo_array(brw, upload[i], upload[i]->element_size);
-          if (upload[i]->bo) {
-              ret |= dri_bufmgr_check_aperture_space(upload[i]->bo);
-          }
       }
    }
 
+   brw_prepare_query_begin(brw);
 
-   if (ret)
-     return 1;
+   for (i = 0; i < nr_enabled; i++) {
+      struct brw_vertex_element *input = enabled[i];
 
-
-   return 0;
+      brw_add_validated_bo(brw, input->bo);
+   }
 }
 
-void brw_emit_vertices( struct brw_context *brw,
-                        GLuint min_index,
-                        GLuint max_index )
+static void brw_emit_vertices(struct brw_context *brw)
 {
    GLcontext *ctx = &brw->intel.ctx;
    struct intel_context *intel = intel_context(ctx);
@@ -451,6 +452,7 @@ void brw_emit_vertices( struct brw_context *brw,
       enabled[nr_enabled++] = input;
    }
 
+   brw_emit_query_begin(brw);
 
    /* Now emit VB and VEP state packets.
     *
@@ -469,16 +471,10 @@ void brw_emit_vertices( struct brw_context *brw,
 		BRW_VB0_ACCESS_VERTEXDATA |
 		(input->stride << BRW_VB0_PITCH_SHIFT));
       OUT_RELOC(input->bo,
-		DRM_BO_FLAG_MEM_TT | DRM_BO_FLAG_READ,
+		I915_GEM_DOMAIN_VERTEX, 0,
 		input->offset);
-      OUT_BATCH(max_index);
+      OUT_BATCH(brw->vb.max_index);
       OUT_BATCH(0); /* Instance data step rate */
-
-      /* Unreference the buffer so it can get freed, now that we won't
-       * touch it any more.
-       */
-      dri_bo_unreference(input->bo);
-      input->bo = NULL;
    }
    ADVANCE_BATCH();
 
@@ -515,18 +511,31 @@ void brw_emit_vertices( struct brw_context *brw,
    ADVANCE_BATCH();
 }
 
-int brw_prepare_indices( struct brw_context *brw,
-			 const struct _mesa_index_buffer *index_buffer,
-			 dri_bo **bo_return,
-			 GLuint *offset_return)
+const struct brw_tracked_state brw_vertices = {
+   .dirty = {
+      .mesa = 0,
+      .brw = BRW_NEW_BATCH | BRW_NEW_VERTICES,
+      .cache = 0,
+   },
+   .prepare = brw_prepare_vertices,
+   .emit = brw_emit_vertices,
+};
+
+static void brw_prepare_indices(struct brw_context *brw)
 {
    GLcontext *ctx = &brw->intel.ctx;
    struct intel_context *intel = &brw->intel;
-   GLuint ib_size = get_size(index_buffer->type) * index_buffer->count;
-   dri_bo *bo;
-   struct gl_buffer_object *bufferobj = index_buffer->obj;
-   GLuint offset = (GLuint)index_buffer->ptr;
-   int ret;
+   const struct _mesa_index_buffer *index_buffer = brw->ib.ib;
+   GLuint ib_size;
+   dri_bo *bo = NULL;
+   struct gl_buffer_object *bufferobj;
+   GLuint offset;
+
+   if (index_buffer == NULL)
+      return;
+
+   ib_size = get_size(index_buffer->type) * index_buffer->count;
+   bufferobj = index_buffer->obj;;
 
    /* Turn into a proper VBO:
     */
@@ -540,6 +549,8 @@ int brw_prepare_indices( struct brw_context *brw,
        */
       dri_bo_subdata(bo, offset, ib_size, index_buffer->ptr);
    } else {
+      offset = (GLuint)index_buffer->ptr;
+
       /* If the index buffer isn't aligned to its element size, we have to
        * rebase it into a temporary.
        */
@@ -562,19 +573,24 @@ int brw_prepare_indices( struct brw_context *brw,
        }
    }
 
-   *bo_return = bo;
-   *offset_return = offset;
-   ret = dri_bufmgr_check_aperture_space(bo);
-   return ret;
+   dri_bo_unreference(brw->ib.bo);
+   brw->ib.bo = bo;
+   brw->ib.offset = offset;
+
+   brw_add_validated_bo(brw, brw->ib.bo);
 }
 
-void brw_emit_indices(struct brw_context *brw,
-                      const struct _mesa_index_buffer *index_buffer,
-                      dri_bo *bo,
-                      GLuint offset)
+static void brw_emit_indices(struct brw_context *brw)
 {
    struct intel_context *intel = &brw->intel;
-   GLuint ib_size = get_size(index_buffer->type) * index_buffer->count;
+   const struct _mesa_index_buffer *index_buffer = brw->ib.ib;
+   GLuint ib_size;
+
+   if (index_buffer == NULL)
+      return;
+
+   ib_size = get_size(index_buffer->type) * index_buffer->count;
+
    /* Emit the indexbuffer packet:
     */
    {
@@ -590,13 +606,23 @@ void brw_emit_indices(struct brw_context *brw,
 
       BEGIN_BATCH(4, IGNORE_CLIPRECTS);
       OUT_BATCH( ib.header.dword );
-      OUT_RELOC( bo, DRM_BO_FLAG_MEM_TT | DRM_BO_FLAG_READ, offset);
-      OUT_RELOC( bo, DRM_BO_FLAG_MEM_TT | DRM_BO_FLAG_READ,
-		 offset + ib_size);
+      OUT_RELOC(brw->ib.bo,
+		I915_GEM_DOMAIN_VERTEX, 0,
+		brw->ib.offset);
+      OUT_RELOC(brw->ib.bo,
+		I915_GEM_DOMAIN_VERTEX, 0,
+		brw->ib.offset + ib_size);
       OUT_BATCH( 0 );
       ADVANCE_BATCH();
-
-      dri_bo_unreference(bo);
    }
 }
 
+const struct brw_tracked_state brw_indices = {
+   .dirty = {
+      .mesa = 0,
+      .brw = BRW_NEW_BATCH | BRW_NEW_INDICES,
+      .cache = 0,
+   },
+   .prepare = brw_prepare_indices,
+   .emit = brw_emit_indices,
+};

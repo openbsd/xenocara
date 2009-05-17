@@ -28,7 +28,6 @@
  * Silicon Graphics, Inc.
  */
 /*
-** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/dataTransform.h,v 1.2 2008/11/02 14:58:10 matthieu Exp $
 */
 
 #ifndef _DATA_TRANSFORM_H

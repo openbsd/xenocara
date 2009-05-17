@@ -27,11 +27,11 @@
 
 #include <stdlib.h>
 
-#include "glheader.h"
-#include "context.h"
-#include "state.h"
-#include "api_validate.h"
-#include "enums.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/state.h"
+#include "main/api_validate.h"
+#include "main/enums.h"
 
 #include "brw_draw.h"
 #include "brw_defines.h"
@@ -39,7 +39,6 @@
 #include "brw_state.h"
 #include "brw_fallback.h"
 
-#include "intel_ioctl.h"
 #include "intel_batchbuffer.h"
 #include "intel_buffer_objects.h"
 
@@ -50,7 +49,7 @@
 
 #define FILE_DEBUG_FLAG DEBUG_BATCH
 
-static GLuint hw_prim[GL_POLYGON+1] = {
+static GLuint prim_to_hw_prim[GL_POLYGON+1] = {
    _3DPRIM_POINTLIST,
    _3DPRIM_LINELIST,
    _3DPRIM_LINELOOP,
@@ -83,18 +82,19 @@ static const GLenum reduced_prim[GL_POLYGON+1] = {
  * programs be immune to the active primitive (ie. cope with all
  * possibilities).  That may not be realistic however.
  */
-static GLuint brw_set_prim(struct brw_context *brw, GLenum prim, GLboolean *need_flush)
+static GLuint brw_set_prim(struct brw_context *brw, GLenum prim)
 {
-   int ret;
+   GLcontext *ctx = &brw->intel.ctx;
+
    if (INTEL_DEBUG & DEBUG_PRIMS)
       _mesa_printf("PRIM: %s\n", _mesa_lookup_enum_by_nr(prim));
    
    /* Slight optimization to avoid the GS program when not needed:
     */
    if (prim == GL_QUAD_STRIP &&
-       brw->attribs.Light->ShadeModel != GL_FLAT &&
-       brw->attribs.Polygon->FrontMode == GL_FILL &&
-       brw->attribs.Polygon->BackMode == GL_FILL)
+       ctx->Light.ShadeModel != GL_FLAT &&
+       ctx->Polygon.FrontMode == GL_FILL &&
+       ctx->Polygon.BackMode == GL_FILL)
       prim = GL_TRIANGLE_STRIP;
 
    if (prim != brw->primitive) {
@@ -105,13 +105,9 @@ static GLuint brw_set_prim(struct brw_context *brw, GLenum prim, GLboolean *need
 	 brw->intel.reduced_primitive = reduced_prim[prim];
 	 brw->state.dirty.brw |= BRW_NEW_REDUCED_PRIMITIVE;
       }
-
-      ret = brw_validate_state(brw);
-      if (ret)
-         *need_flush = GL_TRUE;
    }
 
-   return hw_prim[prim];
+   return prim_to_hw_prim[prim];
 }
 
 
@@ -126,12 +122,11 @@ static GLuint trim(GLenum prim, GLuint length)
 }
 
 
-static void brw_emit_prim( struct brw_context *brw, 
-			   const struct _mesa_prim *prim )
-
+static void brw_emit_prim(struct brw_context *brw,
+			  const struct _mesa_prim *prim,
+			  uint32_t hw_prim)
 {
    struct brw_3d_primitive prim_packet;
-   GLboolean need_flush = GL_FALSE;
 
    if (INTEL_DEBUG & DEBUG_PRIMS)
       _mesa_printf("PRIM: %s %d %d\n", _mesa_lookup_enum_by_nr(prim->mode), 
@@ -140,7 +135,7 @@ static void brw_emit_prim( struct brw_context *brw,
    prim_packet.header.opcode = CMD_3D_PRIM;
    prim_packet.header.length = sizeof(prim_packet)/4 - 2;
    prim_packet.header.pad = 0;
-   prim_packet.header.topology = brw_set_prim(brw, prim->mode, &need_flush);
+   prim_packet.header.topology = hw_prim;
    prim_packet.header.indexed = prim->indexed;
 
    prim_packet.verts_per_instance = trim(prim->mode, prim->count);
@@ -149,34 +144,35 @@ static void brw_emit_prim( struct brw_context *brw,
    prim_packet.start_instance_location = 0;
    prim_packet.base_vert_location = 0;
 
+   /* Can't wrap here, since we rely on the validated state. */
+   brw->no_batch_wrap = GL_TRUE;
    if (prim_packet.verts_per_instance) {
       intel_batchbuffer_data( brw->intel.batch, &prim_packet,
 			      sizeof(prim_packet), LOOP_CLIPRECTS);
    }
-
-   assert(need_flush == GL_FALSE);
+   brw->no_batch_wrap = GL_FALSE;
 }
 
 static void brw_merge_inputs( struct brw_context *brw,
 		       const struct gl_client_array *arrays[])
 {
-   struct brw_vertex_element *inputs = brw->vb.inputs;
    struct brw_vertex_info old = brw->vb.info;
    GLuint i;
 
-   memset(inputs, 0, sizeof(*inputs));
+   for (i = 0; i < VERT_ATTRIB_MAX; i++)
+      dri_bo_unreference(brw->vb.inputs[i].bo);
+
+   memset(&brw->vb.inputs, 0, sizeof(brw->vb.inputs));
    memset(&brw->vb.info, 0, sizeof(brw->vb.info));
 
    for (i = 0; i < VERT_ATTRIB_MAX; i++) {
       brw->vb.inputs[i].glarray = arrays[i];
 
-      /* XXX: metaops passes null arrays */
-      if (arrays[i]) {
-	 if (arrays[i]->StrideB != 0)
-	    brw->vb.info.varying |= 1 << i;
+      if (arrays[i]->StrideB != 0)
+	 brw->vb.info.varying |= 1 << i;
 
-	 brw->vb.info.sizes[i/16] |= (inputs[i].glarray->Size - 1) << ((i%16) * 2);
-      }
+	 brw->vb.info.sizes[i/16] |= (brw->vb.inputs[i].glarray->Size - 1) <<
+	    ((i%16) * 2);
    }
 
    /* Raise statechanges if input sizes and varying have changed: 
@@ -195,12 +191,20 @@ static GLboolean check_fallbacks( struct brw_context *brw,
 				  const struct _mesa_prim *prim,
 				  GLuint nr_prims )
 {
+   GLcontext *ctx = &brw->intel.ctx;
    GLuint i;
 
-   if (!brw->intel.strict_conformance)
+   /* If we don't require strict OpenGL conformance, never 
+    * use fallbacks.  If we're forcing fallbacks, always
+    * use fallfacks.
+    */
+   if (brw->intel.conformance_mode == 0)
       return GL_FALSE;
 
-   if (brw->attribs.Polygon->SmoothFlag) {
+   if (brw->intel.conformance_mode == 2)
+      return GL_TRUE;
+
+   if (ctx->Polygon.SmoothFlag) {
       for (i = 0; i < nr_prims; i++)
 	 if (reduced_prim[prim[i].mode] == GL_TRIANGLES) 
 	    return GL_TRUE;
@@ -209,7 +213,7 @@ static GLboolean check_fallbacks( struct brw_context *brw,
    /* BRW hardware will do AA lines, but they are non-conformant it
     * seems.  TBD whether we keep this fallback:
     */
-   if (brw->attribs.Line->SmoothFlag) {
+   if (ctx->Line.SmoothFlag) {
       for (i = 0; i < nr_prims; i++)
 	 if (reduced_prim[prim[i].mode] == GL_LINES) 
 	    return GL_TRUE;
@@ -218,28 +222,61 @@ static GLboolean check_fallbacks( struct brw_context *brw,
    /* Stipple -- these fallbacks could be resolved with a little
     * bit of work?
     */
-   if (brw->attribs.Line->StippleFlag) {
+   if (ctx->Line.StippleFlag) {
       for (i = 0; i < nr_prims; i++) {
 	 /* GS doesn't get enough information to know when to reset
 	  * the stipple counter?!?
 	  */
-	 if (prim[i].mode == GL_LINE_LOOP) 
+	 if (prim[i].mode == GL_LINE_LOOP || prim[i].mode == GL_LINE_STRIP) 
 	    return GL_TRUE;
 	    
 	 if (prim[i].mode == GL_POLYGON &&
-	     (brw->attribs.Polygon->FrontMode == GL_LINE ||
-	      brw->attribs.Polygon->BackMode == GL_LINE))
+	     (ctx->Polygon.FrontMode == GL_LINE ||
+	      ctx->Polygon.BackMode == GL_LINE))
 	    return GL_TRUE;
       }
    }
 
-
-   if (brw->attribs.Point->SmoothFlag) {
+   if (ctx->Point.SmoothFlag) {
       for (i = 0; i < nr_prims; i++)
 	 if (prim[i].mode == GL_POINTS) 
 	    return GL_TRUE;
    }
+
+   /* BRW hardware doesn't handle GL_CLAMP texturing correctly;
+    * brw_wm_sampler_state:translate_wrap_mode() treats GL_CLAMP
+    * as GL_CLAMP_TO_EDGE instead.  If we're using GL_CLAMP, and
+    * we want strict conformance, force the fallback.
+    * Right now, we only do this for 2D textures.
+    */
+   {
+      int u;
+      for (u = 0; u < ctx->Const.MaxTextureCoordUnits; u++) {
+         struct gl_texture_unit *texUnit = &ctx->Texture.Unit[u];
+         if (texUnit->Enabled) {
+            if (texUnit->Enabled & TEXTURE_1D_BIT) {
+               if (texUnit->CurrentTex[TEXTURE_1D_INDEX]->WrapS == GL_CLAMP) {
+                   return GL_TRUE;
+               }
+            }
+            if (texUnit->Enabled & TEXTURE_2D_BIT) {
+               if (texUnit->CurrentTex[TEXTURE_2D_INDEX]->WrapS == GL_CLAMP ||
+                   texUnit->CurrentTex[TEXTURE_2D_INDEX]->WrapT == GL_CLAMP) {
+                   return GL_TRUE;
+               }
+            }
+            if (texUnit->Enabled & TEXTURE_3D_BIT) {
+               if (texUnit->CurrentTex[TEXTURE_3D_INDEX]->WrapS == GL_CLAMP ||
+                   texUnit->CurrentTex[TEXTURE_3D_INDEX]->WrapT == GL_CLAMP ||
+                   texUnit->CurrentTex[TEXTURE_3D_INDEX]->WrapR == GL_CLAMP) {
+                   return GL_TRUE;
+               }
+            }
+         }
+      }
+   }
       
+   /* Nothing stopping us from the fast path now */
    return GL_FALSE;
 }
 
@@ -257,21 +294,36 @@ static GLboolean brw_try_draw_prims( GLcontext *ctx,
    struct intel_context *intel = intel_context(ctx);
    struct brw_context *brw = brw_context(ctx);
    GLboolean retval = GL_FALSE;
+   GLboolean warn = GL_FALSE;
+   GLboolean first_time = GL_TRUE;
    GLuint i;
-   GLuint ib_offset;
-   dri_bo *ib_bo;
-   GLboolean force_flush = GL_FALSE;
-   int ret;
 
    if (ctx->NewState)
       _mesa_update_state( ctx );
 
+   /* We have to validate the textures *before* checking for fallbacks;
+    * otherwise, the software fallback won't be able to rely on the
+    * texture state, the firstLevel and lastLevel fields won't be
+    * set in the intel texture object (they'll both be 0), and the 
+    * software fallback will segfault if it attempts to access any
+    * texture level other than level 0.
+    */
    brw_validate_textures( brw );
+
+   if (check_fallbacks(brw, prim, nr_prims))
+      return GL_FALSE;
 
    /* Bind all inputs, derive varying and size information:
     */
    brw_merge_inputs( brw, arrays );
-      
+
+   brw->ib.ib = ib;
+   brw->state.dirty.brw |= BRW_NEW_INDICES;
+
+   brw->vb.min_index = min_index;
+   brw->vb.max_index = max_index;
+   brw->state.dirty.brw |= BRW_NEW_VERTICES;
+
    /* Have to validate state quite late.  Will rebuild tnl_program,
     * which depends on varying information.  
     * 
@@ -281,12 +333,14 @@ static GLboolean brw_try_draw_prims( GLcontext *ctx,
 
    LOCK_HARDWARE(intel);
 
-   if (brw->intel.numClipRects == 0) {
+   if (!intel->constant_cliprect && intel->driDrawable->numClipRects == 0) {
       UNLOCK_HARDWARE(intel);
       return GL_TRUE;
    }
 
-   {
+   for (i = 0; i < nr_prims; i++) {
+      uint32_t hw_prim;
+
       /* Flush the batch if it's approaching full, so that we don't wrap while
        * we've got validated state that needs to be in the same batch as the
        * primitives.  This fraction is just a guess (minimal full state plus
@@ -294,75 +348,57 @@ static GLboolean brw_try_draw_prims( GLcontext *ctx,
        * an upper bound of how much we might emit in a single
        * brw_try_draw_prims().
        */
-   flush:
-      if (force_flush)
-         brw->no_batch_wrap = GL_FALSE;
+      intel_batchbuffer_require_space(intel->batch, intel->batch->size / 4,
+				      LOOP_CLIPRECTS);
 
-      if (intel->batch->ptr - intel->batch->map > intel->batch->size * 3 / 4
-	/* brw_emit_prim may change the cliprect_mode to LOOP_CLIPRECTS */
-	  || intel->batch->cliprect_mode != LOOP_CLIPRECTS || (force_flush == GL_TRUE))
-	      intel_batchbuffer_flush(intel->batch);
+      hw_prim = brw_set_prim(brw, prim[i].mode);
 
-      force_flush = GL_FALSE;
-      brw->no_batch_wrap = GL_TRUE;
+      if (first_time || (brw->state.dirty.brw & BRW_NEW_PRIMITIVE)) {
+	 first_time = GL_FALSE;
 
-      /* Set the first primitive early, ahead of validate_state:
-       */
-      brw_set_prim(brw, prim[0].mode, &force_flush);
+	 brw_validate_state(brw);
 
-      /* XXX:  Need to separate validate and upload of state.  
-       */
-      ret = brw_validate_state( brw );
-      if (ret) {
-         force_flush = GL_TRUE;
-         goto flush;
+	 /* Various fallback checks:  */
+	 if (brw->intel.Fallback)
+	    goto out;
+
+	 /* Check that we can fit our state in with our existing batchbuffer, or
+	  * flush otherwise.
+	  */
+	 if (dri_bufmgr_check_aperture_space(brw->state.validated_bos,
+					     brw->state.validated_bo_count)) {
+	    static GLboolean warned;
+	    intel_batchbuffer_flush(intel->batch);
+
+	    /* Validate the state after we flushed the batch (which would have
+	     * changed the set of dirty state).  If we still fail to
+	     * check_aperture, warn of what's happening, but attempt to continue
+	     * on since it may succeed anyway, and the user would probably rather
+	     * see a failure and a warning than a fallback.
+	     */
+	    brw_validate_state(brw);
+	    if (!warned &&
+		dri_bufmgr_check_aperture_space(brw->state.validated_bos,
+						brw->state.validated_bo_count)) {
+	       warn = GL_TRUE;
+	       warned = GL_TRUE;
+	    }
+	 }
+
+	 brw_upload_state(brw);
       }
 
-      /* Various fallback checks:
-       */
-      if (brw->intel.Fallback) 
-	 goto out;
-
-      if (check_fallbacks( brw, prim, nr_prims ))
-	 goto out;
-
-      /* need to account for index buffer and vertex buffer */
-      if (ib) {
-         ret = brw_prepare_indices( brw, ib , &ib_bo, &ib_offset);
-         if (ret) {
-            force_flush = GL_TRUE;
-            goto flush;
-         }
-      }
-
-      ret = brw_prepare_vertices( brw, min_index, max_index);
-      if (ret < 0)
-         goto out;
-
-      if (ret > 0) {
-         force_flush = GL_TRUE;
-         goto flush;
-      }
-	  
-      /* Upload index, vertex data: 
-       */
-      if (ib)
-	brw_emit_indices( brw, ib, ib_bo, ib_offset);
-
-      brw_emit_vertices( brw, min_index, max_index);
-
-      for (i = 0; i < nr_prims; i++) {
-	 brw_emit_prim(brw, &prim[i]);
-      }
+      brw_emit_prim(brw, &prim[i], hw_prim);
 
       retval = GL_TRUE;
    }
 
  out:
-
-   brw->no_batch_wrap = GL_FALSE;
-
    UNLOCK_HARDWARE(intel);
+
+   if (warn)
+      fprintf(stderr, "i965: Single primitive emit potentially exceeded "
+	      "available aperture space\n");
 
    if (!retval)
       DBG("%s failed\n", __FUNCTION__);
@@ -420,7 +456,6 @@ void brw_draw_prims( GLcontext *ctx,
       return;
    }
 
-
    /* Make a first attempt at drawing:
     */
    retval = brw_try_draw_prims(ctx, arrays, prim, nr_prims, ib, min_index, max_index);
@@ -433,6 +468,7 @@ void brw_draw_prims( GLcontext *ctx,
        _swsetup_Wakeup(ctx);
       _tnl_draw_prims(ctx, arrays, prim, nr_prims, ib, min_index, max_index);
    }
+
 }
 
 void brw_draw_init( struct brw_context *brw )
@@ -447,8 +483,18 @@ void brw_draw_init( struct brw_context *brw )
 
 void brw_draw_destroy( struct brw_context *brw )
 {
+   int i;
+
    if (brw->vb.upload.bo != NULL) {
       dri_bo_unreference(brw->vb.upload.bo);
       brw->vb.upload.bo = NULL;
    }
+
+   for (i = 0; i < VERT_ATTRIB_MAX; i++) {
+      dri_bo_unreference(brw->vb.inputs[i].bo);
+      brw->vb.inputs[i].bo = NULL;
+   }
+
+   dri_bo_unreference(brw->ib.bo);
+   brw->ib.bo = NULL;
 }

@@ -17,7 +17,6 @@ Status
 
 Version
 
-    $Id: MESA_packed_depth_stencil.spec,v 1.1 2008/11/02 14:58:06 matthieu Exp $
 
 Number
 

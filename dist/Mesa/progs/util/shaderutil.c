@@ -6,6 +6,7 @@
  */
 
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glut.h>
@@ -80,6 +81,7 @@ CompileShaderFile(GLenum shaderType, const char *filename)
 
    FILE *f = fopen(filename, "r");
    if (!f) {
+      fprintf(stderr, "Unable to open shader file %s\n", filename);
       return 0;
    }
 
@@ -105,8 +107,12 @@ LinkShaders(GLuint vertShader, GLuint fragShader)
 {
    GLuint program = glCreateProgram_func();
 
-   glAttachShader_func(program, fragShader);
-   glAttachShader_func(program, vertShader);
+   assert(vertShader || fragShader);
+
+   if (fragShader)
+      glAttachShader_func(program, fragShader);
+   if (vertShader)
+      glAttachShader_func(program, vertShader);
    glLinkProgram_func(program);
 
    /* check link */

@@ -1,4 +1,3 @@
-/* $Id: nurbscrv.c,v 1.1 2008/11/02 14:58:10 matthieu Exp $ */
 
 /*
  * Mesa 3-D graphics library

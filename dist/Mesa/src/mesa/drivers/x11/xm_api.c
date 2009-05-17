@@ -63,16 +63,15 @@
 #endif
 
 #include "glxheader.h"
-#include "GL/xmesa.h"
 #include "xmesaP.h"
 #include "main/context.h"
 #include "main/extensions.h"
 #include "main/framebuffer.h"
-#include "glapi/glthread.h"
 #include "main/imports.h"
 #include "main/macros.h"
 #include "main/renderbuffer.h"
 #include "main/teximage.h"
+#include "glapi/glthread.h"
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
 #include "vbo/vbo.h"
@@ -2464,13 +2463,13 @@ XMesaBindTexImage(XMesaDisplay *dpy, XMesaBuffer drawable, int buffer,
 #if 0
    switch (drawable->TextureTarget) {
    case GLX_TEXTURE_1D_EXT:
-      texObj = texUnit->Current1D;
+      texObj = texUnit->CurrentTex[TEXTURE_1D_INDEX];
       break;
    case GLX_TEXTURE_2D_EXT:
-      texObj = texUnit->Current2D;
+      texObj = texUnit->CurrentTex[TEXTURE_2D_INDEX];
       break;
    case GLX_TEXTURE_RECTANGLE_EXT:
-      texObj = texUnit->CurrentRect;
+      texObj = texUnit->CurrentTex[TEXTURE_RECT_INDEX];
       break;
    default:
       return; /* BadMatch error */

@@ -1,4 +1,3 @@
-/* $Id: glstate.c,v 1.2 2008/11/02 14:58:09 matthieu Exp $ */
 
 /*
  * Print GL state information (for debugging)
@@ -21,10 +20,6 @@
 
 
 /*
- * $Log: glstate.c,v $
- * Revision 1.2  2008/11/02 14:58:09  matthieu
- * Mesa 7.2, Tested by ckuethe@, naddy@, oga@, and others.
- *
  * Revision 1.1  1999/08/19 00:55:42  jtg
  * Initial revision
  *

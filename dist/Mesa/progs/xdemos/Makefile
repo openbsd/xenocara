@@ -12,6 +12,7 @@ LIBS = -L$(TOP)/$(LIB_DIR) -l$(GL_LIB) $(APP_LIB_DEPS)
 
 PROGS = \
 	corender \
+	glsync \
 	glthreads \
 	glxdemo \
 	glxgears \
@@ -97,7 +98,7 @@ xrotfontdemo.o: xrotfontdemo.c xuserotfont.h
 	$(CC) -c -I. -I$(INCDIR) $(X11_INCLUDES) $(CFLAGS) xrotfontdemo.c
 
 corender: corender.o ipc.o
-	$(CC) $(CFLAGS) corender.o ipc.o $(LIBS) -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) corender.o ipc.o $(LIBS) -o $@
 
 corender.o: corender.c ipc.h
 	$(CC) -c -I. -I$(INCDIR) $(X11_INCLUDES) $(CFLAGS) corender.c

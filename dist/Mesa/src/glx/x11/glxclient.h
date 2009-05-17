@@ -53,7 +53,7 @@
 #include "GL/glxint.h"
 #include "GL/glxproto.h"
 #include "GL/internal/glcore.h"
-#include "glapitable.h"
+#include "glapi/glapitable.h"
 #include "glxhash.h"
 #if defined( USE_XTHREADS )
 # include <X11/Xthreads.h>
@@ -62,6 +62,23 @@
 #endif
 
 #include "glxextensions.h"
+
+
+/* If we build the library with gcc's -fvisibility=hidden flag, we'll
+ * use the PUBLIC macro to mark functions that are to be exported.
+ *
+ * We also need to define a USED attribute, so the optimizer doesn't 
+ * inline a static function that we later use in an alias. - ajax
+ */
+#if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__) >= 303
+#  define PUBLIC __attribute__((visibility("default")))
+#  define USED __attribute__((used))
+#else
+#  define PUBLIC
+#  define USED
+#endif
+
+
 
 #define GLX_MAJOR_VERSION	1	/* current version numbers */
 #define GLX_MINOR_VERSION	4
@@ -118,6 +135,12 @@ struct __GLXDRIscreenRec {
 					XID drawable,
 					GLXDrawable glxDrawable,
 					const __GLcontextModes *modes);
+
+    void (*swapBuffers)(__GLXDRIdrawable *pdraw);
+    void (*copySubBuffer)(__GLXDRIdrawable *pdraw,
+			  int x, int y, int width, int height);
+    void (*waitX)(__GLXDRIdrawable *pdraw);
+    void (*waitGL)(__GLXDRIdrawable *pdraw);
 };
 
 struct __GLXDRIcontextRec {
@@ -136,8 +159,8 @@ struct __GLXDRIdrawableRec {
     XID xDrawable;
     XID drawable;
     __GLXscreenConfigs *psc;
-    __DRIdrawable *driDrawable;
     GLenum textureTarget;
+    __DRIdrawable *driDrawable;
 };
 
 /*
@@ -146,6 +169,7 @@ struct __GLXDRIdrawableRec {
 */
 extern __GLXDRIdisplay *driswCreateDisplay(Display *dpy);
 extern __GLXDRIdisplay *driCreateDisplay(Display *dpy);
+extern __GLXDRIdisplay *dri2CreateDisplay(Display *dpy);
 
 extern void DRI_glXUseXFont( Font font, int first, int count, int listbase );
 
@@ -463,6 +487,7 @@ struct __GLXscreenConfigsRec {
     const __DRIcoreExtension *core;
     const __DRIlegacyExtension *legacy;
     const __DRIswrastExtension *swrast;
+    const __DRIdri2Extension *dri2;
     __glxHashTable *drawHash;
     Display *dpy;
     int scr, fd;
@@ -471,7 +496,7 @@ struct __GLXscreenConfigsRec {
     __GLXDRIscreen *driScreen;
 
 #ifdef __DRI_COPY_SUB_BUFFER
-    const __DRIcopySubBufferExtension *copySubBuffer;
+    const __DRIcopySubBufferExtension *driCopySubBuffer;
 #endif
 
 #ifdef __DRI_SWAP_CONTROL
@@ -564,6 +589,7 @@ struct __GLXdisplayPrivateRec {
      */
     __GLXDRIdisplay *driswDisplay;
     __GLXDRIdisplay *driDisplay;
+    __GLXDRIdisplay *dri2Display;
 #endif
 };
 
@@ -715,8 +741,10 @@ extern void _XSend(Display*, const void*, long);
 extern void __glXInitializeVisualConfigFromTags( __GLcontextModes *config,
     int count, const INT32 *bp, Bool tagged_only, Bool fbconfig_style_tags );
 
-extern char * __glXGetStringFromServer( Display * dpy, int opcode,
-    CARD32 glxCode, CARD32 for_whom, CARD32 name );
+extern char * __glXQueryServerString(Display* dpy, int opcode,
+                                     CARD32 screen, CARD32 name);
+extern char * __glXGetString(Display* dpy, int opcode,
+                             CARD32 screen, CARD32 name);
 
 extern char *__glXstrdup(const char *str);
 

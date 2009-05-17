@@ -21,12 +21,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <allegro.h>
-#include "buffers.h"
-#include "context.h"
-#include "imports.h"
-#include "matrix.h"
-#include "mtypes.h"
-#include "GL/amesa.h"
+#include "main/buffers.h"
+#include "main/context.h"
+#include "main/imports.h"
+#include "main/matrix.h"
+#include "main/mtypes.h"
+#include "amesa.h"
 
 
 struct amesa_visual

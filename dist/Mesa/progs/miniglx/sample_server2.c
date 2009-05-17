@@ -1,4 +1,3 @@
-/* $Id: sample_server2.c,v 1.1 2008/11/02 14:58:08 matthieu Exp $ */
 
 /*
  * Sample server that just keeps first available window mapped.

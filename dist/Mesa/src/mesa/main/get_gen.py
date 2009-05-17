@@ -50,7 +50,8 @@ TypeStrings = {
 #  - the GL state name, such as GL_CURRENT_COLOR
 #  - the state datatype, one of GLint, GLfloat, GLboolean or GLenum
 #  - list of code fragments to get the state, such as ["ctx->Foo.Bar"]
-#  - optional extra code or empty string
+#  - optional extra code or empty string.  If present, "CONVERSION" will be
+#    replaced by ENUM_TO_FLOAT, INT_TO_FLOAT, etc.
 #  - optional extensions to check, or None
 #
 StateVars = [
@@ -179,7 +180,7 @@ StateVars = [
 	( "GL_DEPTH_BIAS", GLfloat, ["ctx->Pixel.DepthBias"], "", None ),
 	( "GL_DEPTH_BITS", GLint, ["ctx->DrawBuffer->Visual.depthBits"],
 	  "", None ),
-	( "GL_DEPTH_CLEAR_VALUE", GLfloatN, ["ctx->Depth.Clear"], "", None ),
+	( "GL_DEPTH_CLEAR_VALUE", GLfloatN, ["((GLfloat) ctx->Depth.Clear)"], "", None ),
 	( "GL_DEPTH_FUNC", GLenum, ["ctx->Depth.Func"], "", None ),
 	( "GL_DEPTH_RANGE", GLfloatN,
 	  [ "ctx->Viewport.Near", "ctx->Viewport.Far" ], "", None ),
@@ -431,15 +432,15 @@ StateVars = [
 	( "GL_TEXTURE_1D_ARRAY_EXT", GLboolean, ["_mesa_IsEnabled(GL_TEXTURE_1D_ARRAY_EXT)"], "", ["MESA_texture_array"] ),
 	( "GL_TEXTURE_2D_ARRAY_EXT", GLboolean, ["_mesa_IsEnabled(GL_TEXTURE_2D_ARRAY_EXT)"], "", ["MESA_texture_array"] ),
 	( "GL_TEXTURE_BINDING_1D", GLint,
-	  ["ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current1D->Name"], "", None ),
+	  ["ctx->Texture.Unit[ctx->Texture.CurrentUnit].CurrentTex[TEXTURE_1D_INDEX]->Name"], "", None ),
 	( "GL_TEXTURE_BINDING_2D", GLint,
-	  ["ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current2D->Name"], "", None ),
+	  ["ctx->Texture.Unit[ctx->Texture.CurrentUnit].CurrentTex[TEXTURE_2D_INDEX]->Name"], "", None ),
 	( "GL_TEXTURE_BINDING_3D", GLint,
-	  ["ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current3D->Name"], "", None ),
+	  ["ctx->Texture.Unit[ctx->Texture.CurrentUnit].CurrentTex[TEXTURE_3D_INDEX]->Name"], "", None ),
 	( "GL_TEXTURE_BINDING_1D_ARRAY_EXT", GLint,
-	  ["ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current1DArray->Name"], "", ["MESA_texture_array"] ),
+	  ["ctx->Texture.Unit[ctx->Texture.CurrentUnit].CurrentTex[TEXTURE_1D_ARRAY_INDEX]->Name"], "", ["MESA_texture_array"] ),
 	( "GL_TEXTURE_BINDING_2D_ARRAY_EXT", GLint,
-	  ["ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current2DArray->Name"], "", ["MESA_texture_array"] ),
+	  ["ctx->Texture.Unit[ctx->Texture.CurrentUnit].CurrentTex[TEXTURE_2D_ARRAY_INDEX]->Name"], "", ["MESA_texture_array"] ),
 	( "GL_TEXTURE_GEN_S", GLboolean,
 	  ["((ctx->Texture.Unit[ctx->Texture.CurrentUnit].TexGenEnabled & S_BIT) ? 1 : 0)"], "", None ),
 	( "GL_TEXTURE_GEN_T", GLboolean,
@@ -514,7 +515,7 @@ StateVars = [
 	( "GL_TEXTURE_CUBE_MAP_ARB", GLboolean,
 	  ["_mesa_IsEnabled(GL_TEXTURE_CUBE_MAP_ARB)"], "", ["ARB_texture_cube_map"] ),
 	( "GL_TEXTURE_BINDING_CUBE_MAP_ARB", GLint,
-	  ["ctx->Texture.Unit[ctx->Texture.CurrentUnit].CurrentCubeMap->Name"],
+	  ["ctx->Texture.Unit[ctx->Texture.CurrentUnit].CurrentTex[TEXTURE_CUBE_INDEX]->Name"],
 	  "", ["ARB_texture_cube_map"] ),
 	( "GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB", GLint,
 	  ["(1 << (ctx->Const.MaxCubeTextureLevels - 1))"],
@@ -532,7 +533,7 @@ StateVars = [
          GLuint i, n = _mesa_get_compressed_formats(ctx, formats, GL_FALSE);
          ASSERT(n <= 100);
          for (i = 0; i < n; i++)
-            params[i] = ENUM_TO_INT(formats[i]);""",
+            params[i] = CONVERSION(formats[i]);""",
 	  ["ARB_texture_compression"] ),
 
 	# GL_EXT_compiled_vertex_array
@@ -794,7 +795,7 @@ StateVars = [
 	( "GL_TEXTURE_RECTANGLE_NV", GLboolean,
 	  ["_mesa_IsEnabled(GL_TEXTURE_RECTANGLE_NV)"], "", ["NV_texture_rectangle"] ),
 	( "GL_TEXTURE_BINDING_RECTANGLE_NV", GLint,
-	  ["ctx->Texture.Unit[ctx->Texture.CurrentUnit].CurrentRect->Name"],
+	  ["ctx->Texture.Unit[ctx->Texture.CurrentUnit].CurrentTex[TEXTURE_RECT_INDEX]->Name"],
 	  "", ["NV_texture_rectangle"] ),
 	( "GL_MAX_RECTANGLE_TEXTURE_SIZE_NV", GLint,
 	  ["ctx->Const.MaxTextureRectSize"], "", ["NV_texture_rectangle"] ),
@@ -1083,10 +1084,11 @@ def EmitGetFunction(stateVars, returnType):
 				assert len(extensions) == 4
 				print ('         CHECK_EXT4(%s, %s, %s, %s, "%s");' %
 					   (extensions[0], extensions[1], extensions[2], extensions[3], function))
+		conversion = ConversionFunc(varType, returnType)
 		if optionalCode:
+			optionalCode = string.replace(optionalCode, "CONVERSION", conversion);	
 			print "         {"
 			print "         " + optionalCode
-		conversion = ConversionFunc(varType, returnType)
 		n = len(state)
 		for i in range(n):
 			if conversion:
@@ -1128,10 +1130,6 @@ def EmitHeader():
 #define FLOAT_TO_BOOLEAN(X)   ( (X) ? GL_TRUE : GL_FALSE )
 
 #define INT_TO_BOOLEAN(I)     ( (I) ? GL_TRUE : GL_FALSE )
-
-#define ENUM_TO_BOOLEAN(E)    ( (E) ? GL_TRUE : GL_FALSE )
-#define ENUM_TO_INT(E)        ( (GLint) (E) )
-#define ENUM_TO_FLOAT(E)      ( (GLfloat) (E) )
 
 #define BOOLEAN_TO_INT(B)     ( (GLint) (B) )
 #define BOOLEAN_TO_FLOAT(B)   ( (B) ? 1.0F : 0.0F )

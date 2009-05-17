@@ -34,10 +34,10 @@
 #include "brw_state.h"
 #include "brw_defines.h"
 #include "brw_util.h"
-#include "macros.h"
-#include "enums.h"
+#include "main/macros.h"
+#include "main/enums.h"
 
-static int upload_cc_vp( struct brw_context *brw )
+static void prepare_cc_vp( struct brw_context *brw )
 {
    struct brw_cc_viewport ccv;
 
@@ -48,7 +48,6 @@ static int upload_cc_vp( struct brw_context *brw )
 
    dri_bo_unreference(brw->cc.vp_bo);
    brw->cc.vp_bo = brw_cache_data( &brw->cache, BRW_CC_VP, &ccv, NULL, 0 );
-   return dri_bufmgr_check_aperture_space(brw->cc.vp_bo);
 }
 
 const struct brw_tracked_state brw_cc_vp = {
@@ -57,7 +56,7 @@ const struct brw_tracked_state brw_cc_vp = {
       .brw = BRW_NEW_CONTEXT,
       .cache = 0
    },
-   .prepare = upload_cc_vp
+   .prepare = prepare_cc_vp
 };
 
 struct brw_cc_unit_key {
@@ -84,59 +83,60 @@ struct brw_cc_unit_key {
 static void
 cc_unit_populate_key(struct brw_context *brw, struct brw_cc_unit_key *key)
 {
-   struct gl_stencil_attrib *stencil = brw->attribs.Stencil;
+   GLcontext *ctx = &brw->intel.ctx;
+   const unsigned back = ctx->Stencil._BackFace;
 
    memset(key, 0, sizeof(*key));
 
-   key->stencil = stencil->Enabled;
-   key->stencil_two_side = stencil->_TestTwoSide;
+   key->stencil = ctx->Stencil.Enabled;
+   key->stencil_two_side = ctx->Stencil._TestTwoSide;
 
    if (key->stencil) {
-      key->stencil_func[0] = stencil->Function[0];
-      key->stencil_fail_op[0] = stencil->FailFunc[0];
-      key->stencil_pass_depth_fail_op[0] = stencil->ZFailFunc[0];
-      key->stencil_pass_depth_pass_op[0] = stencil->ZPassFunc[0];
-      key->stencil_ref[0] = stencil->Ref[0];
-      key->stencil_write_mask[0] = stencil->WriteMask[0];
-      key->stencil_test_mask[0] = stencil->ValueMask[0];
+      key->stencil_func[0] = ctx->Stencil.Function[0];
+      key->stencil_fail_op[0] = ctx->Stencil.FailFunc[0];
+      key->stencil_pass_depth_fail_op[0] = ctx->Stencil.ZFailFunc[0];
+      key->stencil_pass_depth_pass_op[0] = ctx->Stencil.ZPassFunc[0];
+      key->stencil_ref[0] = ctx->Stencil.Ref[0];
+      key->stencil_write_mask[0] = ctx->Stencil.WriteMask[0];
+      key->stencil_test_mask[0] = ctx->Stencil.ValueMask[0];
    }
    if (key->stencil_two_side) {
-      key->stencil_func[1] = stencil->Function[1];
-      key->stencil_fail_op[1] = stencil->FailFunc[1];
-      key->stencil_pass_depth_fail_op[1] = stencil->ZFailFunc[1];
-      key->stencil_pass_depth_pass_op[1] = stencil->ZPassFunc[1];
-      key->stencil_ref[1] = stencil->Ref[1];
-      key->stencil_write_mask[1] = stencil->WriteMask[1];
-      key->stencil_test_mask[1] = stencil->ValueMask[1];
+      key->stencil_func[1] = ctx->Stencil.Function[back];
+      key->stencil_fail_op[1] = ctx->Stencil.FailFunc[back];
+      key->stencil_pass_depth_fail_op[1] = ctx->Stencil.ZFailFunc[back];
+      key->stencil_pass_depth_pass_op[1] = ctx->Stencil.ZPassFunc[back];
+      key->stencil_ref[1] = ctx->Stencil.Ref[back];
+      key->stencil_write_mask[1] = ctx->Stencil.WriteMask[back];
+      key->stencil_test_mask[1] = ctx->Stencil.ValueMask[back];
    }
 
-   if (brw->attribs.Color->_LogicOpEnabled)
-      key->logic_op = brw->attribs.Color->LogicOp;
+   if (ctx->Color._LogicOpEnabled)
+      key->logic_op = ctx->Color.LogicOp;
    else
       key->logic_op = GL_COPY;
 
-   key->color_blend = brw->attribs.Color->BlendEnabled;
+   key->color_blend = ctx->Color.BlendEnabled;
    if (key->color_blend) {
-      key->blend_eq_rgb = brw->attribs.Color->BlendEquationRGB;
-      key->blend_eq_a = brw->attribs.Color->BlendEquationA;
-      key->blend_src_rgb = brw->attribs.Color->BlendSrcRGB;
-      key->blend_dst_rgb = brw->attribs.Color->BlendDstRGB;
-      key->blend_src_a = brw->attribs.Color->BlendSrcA;
-      key->blend_dst_a = brw->attribs.Color->BlendDstA;
+      key->blend_eq_rgb = ctx->Color.BlendEquationRGB;
+      key->blend_eq_a = ctx->Color.BlendEquationA;
+      key->blend_src_rgb = ctx->Color.BlendSrcRGB;
+      key->blend_dst_rgb = ctx->Color.BlendDstRGB;
+      key->blend_src_a = ctx->Color.BlendSrcA;
+      key->blend_dst_a = ctx->Color.BlendDstA;
    }
 
-   key->alpha_enabled = brw->attribs.Color->AlphaEnabled;
+   key->alpha_enabled = ctx->Color.AlphaEnabled;
    if (key->alpha_enabled) {
-      key->alpha_func = brw->attribs.Color->AlphaFunc;
-      key->alpha_ref = brw->attribs.Color->AlphaRef;
+      key->alpha_func = ctx->Color.AlphaFunc;
+      key->alpha_ref = ctx->Color.AlphaRef;
    }
 
-   key->dither = brw->attribs.Color->DitherFlag;
+   key->dither = ctx->Color.DitherFlag;
 
-   key->depth_test = brw->attribs.Depth->Test;
+   key->depth_test = ctx->Depth.Test;
    if (key->depth_test) {
-      key->depth_func = brw->attribs.Depth->Func;
-      key->depth_write = brw->attribs.Depth->Mask;
+      key->depth_func = ctx->Depth.Func;
+      key->depth_write = ctx->Depth.Mask;
    }
 }
 
@@ -256,16 +256,17 @@ cc_unit_create_from_key(struct brw_context *brw, struct brw_cc_unit_key *key)
 			 NULL, NULL);
 
    /* Emit CC viewport relocation */
-   dri_emit_reloc(bo,
-		  DRM_BO_FLAG_MEM_TT | DRM_BO_FLAG_READ,
-		  0,
-		  offsetof(struct brw_cc_unit_state, cc4),
-		  brw->cc.vp_bo);
+   dri_bo_emit_reloc(bo,
+		     I915_GEM_DOMAIN_INSTRUCTION,
+		     0,
+		     0,
+		     offsetof(struct brw_cc_unit_state, cc4),
+		     brw->cc.vp_bo);
 
    return bo;
 }
 
-static int prepare_cc_unit( struct brw_context *brw )
+static void prepare_cc_unit( struct brw_context *brw )
 {
    struct brw_cc_unit_key key;
 
@@ -279,7 +280,6 @@ static int prepare_cc_unit( struct brw_context *brw )
 
    if (brw->cc.state_bo == NULL)
       brw->cc.state_bo = cc_unit_create_from_key(brw, &key);
-   return dri_bufmgr_check_aperture_space(brw->cc.state_bo);
 }
 
 const struct brw_tracked_state brw_cc_unit = {

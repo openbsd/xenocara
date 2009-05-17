@@ -31,8 +31,6 @@
 /*
  * mystdlib.h
  *
- * $Date: 2008/11/02 14:58:10 $ $Revision: 1.2 $
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/interface/Attic/mystdlib.h,v 1.2 2008/11/02 14:58:10 matthieu Exp $
  */
 
 #ifndef __glumystdlib_h_

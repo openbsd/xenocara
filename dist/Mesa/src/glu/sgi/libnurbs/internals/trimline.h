@@ -31,8 +31,6 @@
 /*
  * trimline.h
  *
- * $Date: 2008/11/02 14:58:11 $ $Revision: 1.2 $
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/trimline.h,v 1.2 2008/11/02 14:58:11 matthieu Exp $
  */
 
 #ifndef __glutrimline_h_

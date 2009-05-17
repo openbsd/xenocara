@@ -28,7 +28,6 @@
  * Silicon Graphics, Inc.
  */
 /*
-** $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/nurbtess/Attic/sampleMonoPoly.h,v 1.2 2008/11/02 14:58:11 matthieu Exp $
 */
 
 #ifndef _SAMPLEMONOPOLY_H

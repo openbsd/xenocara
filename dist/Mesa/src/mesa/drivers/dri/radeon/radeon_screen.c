@@ -1,4 +1,3 @@
-/* $XFree86: xc/lib/GL/mesa/src/drv/radeon/radeon_screen.c,v 1.7 2003/03/26 20:43:51 tsi Exp $ */
 /**************************************************************************
 
 Copyright 2000, 2001 ATI Technologies Inc., Ontario, Canada, and
@@ -36,11 +35,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * \author  Gareth Hughes <gareth@valinux.com>
  */
 
-#include "glheader.h"
-#include "imports.h"
-#include "mtypes.h"
-#include "framebuffer.h"
-#include "renderbuffer.h"
+#include "main/glheader.h"
+#include "main/imports.h"
+#include "main/mtypes.h"
+#include "main/framebuffer.h"
+#include "main/renderbuffer.h"
 
 #define STANDALONE_MMIO
 #include "radeon_chipset.h"
@@ -63,7 +62,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endif
 
 #include "utils.h"
-#include "context.h"
 #include "vblank.h"
 #include "drirenderbuffer.h"
 
@@ -261,8 +259,6 @@ radeonFillInModes( __DRIscreenPrivate *psp,
     __GLcontextModes *m;
     unsigned depth_buffer_factor;
     unsigned back_buffer_factor;
-    GLenum fb_format;
-    GLenum fb_type;
     int i;
 
     /* Right now GLX_SWAP_COPY_OML isn't supported, but it would be easy
@@ -274,8 +270,8 @@ radeonFillInModes( __DRIscreenPrivate *psp,
 	GLX_NONE, GLX_SWAP_UNDEFINED_OML /*, GLX_SWAP_COPY_OML */
     };
 
-    u_int8_t depth_bits_array[2];
-    u_int8_t stencil_bits_array[2];
+    uint8_t depth_bits_array[2];
+    uint8_t stencil_bits_array[2];
 
 
     depth_bits_array[0] = depth_bits;
@@ -291,19 +287,24 @@ radeonFillInModes( __DRIscreenPrivate *psp,
     depth_buffer_factor = ((depth_bits != 0) || (stencil_bits != 0)) ? 2 : 1;
     back_buffer_factor  = (have_back_buffer) ? 2 : 1;
 
-    if ( pixel_bits == 16 ) {
-        fb_format = GL_RGB;
-        fb_type = GL_UNSIGNED_SHORT_5_6_5;
-    }
-    else {
-        fb_format = GL_BGRA;
-        fb_type = GL_UNSIGNED_INT_8_8_8_8_REV;
-    }
+    if (pixel_bits == 16) {
+	__DRIconfig **configs_a8r8g8b8;
+	__DRIconfig **configs_r5g6b5;
 
-    configs = driCreateConfigs(fb_format, fb_type,
-			       depth_bits_array, stencil_bits_array,
-			       depth_buffer_factor,
-			       back_buffer_modes, back_buffer_factor);
+	configs_r5g6b5 = driCreateConfigs(GL_RGB, GL_UNSIGNED_SHORT_5_6_5,
+					  depth_bits_array, stencil_bits_array,
+					  depth_buffer_factor, back_buffer_modes,
+					  back_buffer_factor);
+	configs_a8r8g8b8 = driCreateConfigs(GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+					    depth_bits_array, stencil_bits_array,
+					    1, back_buffer_modes, 1);
+	configs = driConcatConfigs(configs_r5g6b5, configs_a8r8g8b8);
+   } else
+	configs = driCreateConfigs(GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+				   depth_bits_array, stencil_bits_array,
+				   depth_buffer_factor,
+				   back_buffer_modes, back_buffer_factor);
+
     if (configs == NULL) {
 	fprintf( stderr, "[%s:%u] Error creating FBConfig!\n",
 		 __func__, __LINE__ );
@@ -431,7 +432,7 @@ radeonCreateScreen( __DRIscreenPrivate *sPriv )
       __driUtilMessage("%s: drmMap (2) failed\n", __FUNCTION__ );
       return NULL;
    }
-   screen->scratch = (__volatile__ u_int32_t *)
+   screen->scratch = (__volatile__ uint32_t *)
       ((GLubyte *)screen->status.map + RADEON_SCRATCH_REG_OFFSET);
 
    screen->buffers = drmMapBufs( sPriv->fd );
@@ -536,11 +537,8 @@ radeonCreateScreen( __DRIscreenPrivate *sPriv )
       screen->chip_family = CHIP_FAMILY_RS300;
       break;
 
-      /* 9500 with 1 pipe verified by: Reid Linnemann <lreid@cs.okstate.edu> */
+
    case PCI_CHIP_R300_AD:
-      screen->chip_family = CHIP_FAMILY_RV350;
-      screen->chip_flags = RADEON_CHIPSET_TCL;
-      break;
    case PCI_CHIP_R300_AE:
    case PCI_CHIP_R300_AF:
    case PCI_CHIP_R300_AG:
@@ -663,6 +661,12 @@ radeonCreateScreen( __DRIscreenPrivate *sPriv )
    case PCI_CHIP_RC410_5A61:
    case PCI_CHIP_RC410_5A62:
       screen->chip_family = CHIP_FAMILY_RS400;
+      break;
+
+   case PCI_CHIP_RS600_793F:
+   case PCI_CHIP_RS600_7941:
+   case PCI_CHIP_RS600_7942:
+      screen->chip_family = CHIP_FAMILY_RS600;
       break;
 
    case PCI_CHIP_RS690_791E:
@@ -823,14 +827,14 @@ radeonCreateScreen( __DRIscreenPrivate *sPriv )
    ret = radeonGetParam( sPriv->fd, RADEON_PARAM_FB_LOCATION,
                          &temp);
    if (ret) {
-           FREE( screen );
-           fprintf(stderr, "Unable to get fb location need newer drm\n");
-           return NULL;
+       FREE( screen );
+       fprintf(stderr, "Unable to get fb location need newer drm\n");
+       return NULL;
    } else {
        screen->fbLocation = (temp & 0xffff) << 16;
    }
 
-   if (screen->chip_family >= CHIP_FAMILY_RV515) {
+   if (screen->chip_family >= CHIP_FAMILY_R300) {
        ret = radeonGetParam( sPriv->fd, RADEON_PARAM_NUM_GB_PIPES,
 			     &temp);
        if (ret) {
@@ -858,6 +862,18 @@ radeonCreateScreen( __DRIscreenPrivate *sPriv )
        } else {
 	   screen->num_gb_pipes = temp;
        }
+
+       /* pipe overrides */
+       switch (dri_priv->deviceID) {
+       case PCI_CHIP_R300_AD: /* 9500 with 1 quadpipe verified by: Reid Linnemann <lreid@cs.okstate.edu> */
+       case PCI_CHIP_RV410_5E4C: /* RV410 SE only have 1 quadpipe */
+       case PCI_CHIP_RV410_5E4F: /* RV410 SE only have 1 quadpipe */
+	   screen->num_gb_pipes = 1;
+	   break;
+       default:
+	   break;
+       }
+
    }
 
    if ( sPriv->drm_version.minor >= 10 ) {
@@ -881,7 +897,7 @@ radeonCreateScreen( __DRIscreenPrivate *sPriv )
    screen->depthHasSurface = (sPriv->ddx_version.major > 4) ||
       /* these chips don't use tiled z without hyperz. So always pretend
          we have set up a surface which will cause linear reads/writes */
-      ((screen->chip_family & RADEON_CLASS_R100) &&
+      (IS_R100_CLASS(screen) &&
       !(screen->chip_flags & RADEON_CHIPSET_TCL));
 
    if ( dri_priv->textureSize == 0 ) {

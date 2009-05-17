@@ -29,9 +29,9 @@
   *   Keith Whitwell <keith@tungstengraphics.com>
   */
       
-#include "glheader.h"
-#include "macros.h"
-#include "enums.h"
+#include "main/glheader.h"
+#include "main/macros.h"
+#include "main/enums.h"
 
 #include "intel_batchbuffer.h"
 
@@ -162,10 +162,9 @@ static void populate_key( struct brw_context *brw,
 
 /* Calculate interpolants for triangle and line rasterization.
  */
-static int prepare_gs_prog( struct brw_context *brw )
+static void prepare_gs_prog(struct brw_context *brw)
 {
    struct brw_gs_prog_key key;
-   int ret = 0;
    /* Populate the key:
     */
    populate_key(brw, &key);
@@ -183,11 +182,7 @@ static int prepare_gs_prog( struct brw_context *brw )
 					 &brw->gs.prog_data);
       if (brw->gs.prog_bo == NULL)
 	 compile_gs_prog( brw, &key );
-
-      ret |= dri_bufmgr_check_aperture_space(brw->gs.prog_bo);
    }
-
-   return ret;
 }
 
 

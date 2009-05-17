@@ -29,29 +29,29 @@
  */
 
 #include "glxheader.h"
-#include "bufferobj.h"
-#include "buffers.h"
-#include "context.h"
-#include "colormac.h"
-#include "depth.h"
-#include "drawpix.h"
-#include "extensions.h"
-#include "framebuffer.h"
-#include "macros.h"
-#include "image.h"
-#include "imports.h"
-#include "mtypes.h"
-#include "state.h"
-#include "texobj.h"
-#include "teximage.h"
-#include "texstore.h"
-#include "texformat.h"
-#include "xmesaP.h"
+#include "main/bufferobj.h"
+#include "main/buffers.h"
+#include "main/context.h"
+#include "main/colormac.h"
+#include "main/depth.h"
+#include "main/drawpix.h"
+#include "main/extensions.h"
+#include "main/framebuffer.h"
+#include "main/macros.h"
+#include "main/image.h"
+#include "main/imports.h"
+#include "main/mtypes.h"
+#include "main/state.h"
+#include "main/texobj.h"
+#include "main/teximage.h"
+#include "main/texstore.h"
+#include "main/texformat.h"
 #include "swrast/swrast.h"
 #include "swrast/s_context.h"
 #include "swrast_setup/swrast_setup.h"
 #include "tnl/tnl.h"
 #include "tnl/t_context.h"
+#include "xmesaP.h"
 
 
 
@@ -1086,9 +1086,9 @@ xmesa_new_query_object(GLcontext *ctx, GLuint id)
 
 
 static void
-xmesa_begin_query(GLcontext *ctx, GLenum target, struct gl_query_object *q)
+xmesa_begin_query(GLcontext *ctx, struct gl_query_object *q)
 {
-   if (target == GL_TIME_ELAPSED_EXT) {
+   if (q->Target == GL_TIME_ELAPSED_EXT) {
       struct xmesa_query_object *xq = (struct xmesa_query_object *) q;
       (void) gettimeofday(&xq->StartTime, NULL);
    }
@@ -1113,9 +1113,9 @@ time_diff(const struct timeval *t0, const struct timeval *t1)
 
 
 static void
-xmesa_end_query(GLcontext *ctx, GLenum target, struct gl_query_object *q)
+xmesa_end_query(GLcontext *ctx, struct gl_query_object *q)
 {
-   if (target == GL_TIME_ELAPSED_EXT) {
+   if (q->Target == GL_TIME_ELAPSED_EXT) {
       struct xmesa_query_object *xq = (struct xmesa_query_object *) q;
       struct timeval endTime;
       (void) gettimeofday(&endTime, NULL);

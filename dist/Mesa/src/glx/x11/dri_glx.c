@@ -37,7 +37,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <X11/Xlib.h>
 #include <X11/extensions/Xfixes.h>
 #include <X11/extensions/Xdamage.h>
-#include "glheader.h"
 #include "glxclient.h"
 #include "glcontextmodes.h"
 #include "xf86dri.h"
@@ -570,6 +569,18 @@ static __GLXDRIdrawable *driCreateDrawable(__GLXscreenConfigs *psc,
     return pdraw;
 }
 
+static void driSwapBuffers(__GLXDRIdrawable *pdraw)
+{
+   (*pdraw->psc->core->swapBuffers)(pdraw->driDrawable);
+}
+
+static void driCopySubBuffer(__GLXDRIdrawable *pdraw,
+			     int x, int y, int width, int height)
+{
+    (*pdraw->psc->driCopySubBuffer->copySubBuffer)(pdraw->driDrawable,
+						   x, y, width, height);
+}
+
 static void driDestroyScreen(__GLXscreenConfigs *psc)
 {
     /* Free the direct rendering per screen data */
@@ -589,7 +600,7 @@ static __GLXDRIscreen *driCreateScreen(__GLXscreenConfigs *psc, int screen,
     char *driverName;
     int i;
 
-    psp = Xmalloc(sizeof *psp);
+    psp = Xcalloc(1, sizeof *psp);
     if (psp == NULL)
 	return NULL;
 
@@ -637,10 +648,15 @@ static __GLXDRIscreen *driCreateScreen(__GLXscreenConfigs *psc, int screen,
     }
 
     driBindExtensions(psc, 0);
+    if (psc->driCopySubBuffer)
+	psp->copySubBuffer = driCopySubBuffer;
 
     psp->destroyScreen = driDestroyScreen;
     psp->createContext = driCreateContext;
     psp->createDrawable = driCreateDrawable;
+    psp->swapBuffers = driSwapBuffers;
+    psp->waitX = NULL;
+    psp->waitGL = NULL;
 
     return psp;
 }

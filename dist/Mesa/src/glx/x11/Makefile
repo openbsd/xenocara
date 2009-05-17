@@ -35,7 +35,9 @@ SOURCES = \
 	  dri_common.c \
 	  dri_glx.c \
 	  XF86dri.c \
-	  glxhash.c
+	  glxhash.c \
+	  dri2_glx.c \
+	  dri2.c
 
 include $(TOP)/src/mesa/sources
 
@@ -48,9 +50,10 @@ OBJECTS = $(SOURCES:.c=.o) $(MESA_GLAPI_OBJECTS)
 INCLUDES = -I. \
 	-I$(TOP)/include \
 	-I$(TOP)/include/GL/internal \
-	-I$(TOP)/src/mesa/main \
+	-I$(TOP)/src/mesa \
 	-I$(TOP)/src/mesa/glapi \
 	$(LIBDRM_CFLAGS) \
+	$(DRI2PROTO_CFLAGS) \
 	$(X11_INCLUDES)
 
 

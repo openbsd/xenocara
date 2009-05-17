@@ -25,321 +25,364 @@
  * 
  **************************************************************************/
 
-#include "glheader.h"
-#include "enums.h"
-#include "image.h"
-#include "mtypes.h"
-#include "macros.h"
-#include "bufferobj.h"
+#include "main/glheader.h"
+#include "main/enums.h"
+#include "main/image.h"
+#include "main/mtypes.h"
+#include "main/macros.h"
+#include "main/bufferobj.h"
+#include "main/teximage.h"
+#include "main/texenv.h"
+#include "main/texobj.h"
+#include "main/texstate.h"
+#include "main/texparam.h"
+#include "main/varray.h"
+#include "main/attrib.h"
+#include "main/enable.h"
+#include "main/buffers.h"
+#include "main/fbobject.h"
+#include "main/renderbuffer.h"
+#include "main/depth.h"
+#include "main/hash.h"
+#include "main/blend.h"
+#include "glapi/dispatch.h"
 #include "swrast/swrast.h"
 
 #include "intel_screen.h"
 #include "intel_context.h"
-#include "intel_ioctl.h"
 #include "intel_batchbuffer.h"
 #include "intel_blit.h"
 #include "intel_buffers.h"
 #include "intel_regions.h"
 #include "intel_pixel.h"
 #include "intel_buffer_objects.h"
-#include "intel_tris.h"
-
-
+#include "intel_fbo.h"
 
 static GLboolean
-do_texture_drawpixels(GLcontext * ctx,
-                      GLint x, GLint y,
-                      GLsizei width, GLsizei height,
-                      GLenum format, GLenum type,
-                      const struct gl_pixelstore_attrib *unpack,
-                      const GLvoid * pixels)
+intel_texture_drawpixels(GLcontext * ctx,
+			 GLint x, GLint y,
+			 GLsizei width, GLsizei height,
+			 GLenum format,
+			 GLenum type,
+			 const struct gl_pixelstore_attrib *unpack,
+			 const GLvoid *pixels)
 {
    struct intel_context *intel = intel_context(ctx);
-   struct intel_region *dst = intel_drawbuf_region(intel);
-   struct intel_buffer_object *src = intel_buffer_object(unpack->BufferObj);
-   GLuint rowLength = unpack->RowLength ? unpack->RowLength : width;
-   GLuint src_offset;
+   GLuint texname;
+   GLfloat vertices[4][4];
+   GLfloat texcoords[4][2];
+   GLfloat z;
+   GLint old_active_texture;
+   GLenum internalFormat;
 
-   if (INTEL_DEBUG & DEBUG_PIXEL)
-      fprintf(stderr, "%s\n", __FUNCTION__);
-
-   intelFlush(&intel->ctx);
-
-   if (!dst)
-      return GL_FALSE;
-
-   intel->vtbl.render_start(intel);
-   intel->vtbl.emit_state(intel);
-
-   if (src) {
-      if (!_mesa_validate_pbo_access(2, unpack, width, height, 1,
-                                     format, type, pixels)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION, "glDrawPixels");
-         return GL_TRUE;
-      }
-   }
-   else {
-      /* PBO only for now:
-       */
-/*       _mesa_printf("%s - not PBO\n", __FUNCTION__); */
-      return GL_FALSE;
-   }
-
-   /* There are a couple of things we can't do yet, one of which is
-    * set the correct state for pixel operations when GL texturing is
-    * enabled.  That's a pretty rare state and probably not worth the
-    * effort.  A completely device-independent version of this may do
-    * more.
-    *
-    * Similarly, we make no attempt to merge metaops processing with
-    * an enabled fragment program, though it would certainly be
-    * possible.
+   /* We're going to mess with texturing with no regard to existing texture
+    * state, so if there is some set up we have to bail.
     */
-   if (!intel_check_meta_tex_fragment_ops(ctx)) {
-      if (INTEL_DEBUG & DEBUG_PIXEL)
-         _mesa_printf("%s - bad GL fragment state for metaops texture\n",
-                      __FUNCTION__);
+   if (ctx->Texture._EnabledUnits != 0) {
+      if (INTEL_DEBUG & DEBUG_FALLBACKS)
+	 fprintf(stderr, "glDrawPixels() fallback: texturing enabled\n");
       return GL_FALSE;
    }
 
-   intel->vtbl.install_meta_state(intel);
-
-
-   /* Is this true?  Also will need to turn depth testing on according
-    * to state:
+   /* Can't do textured DrawPixels with a fragment program, unless we were
+    * to generate a new program that sampled our texture and put the results
+    * in the fragment color before the user's program started.
     */
-   intel->vtbl.meta_no_stencil_write(intel);
-   intel->vtbl.meta_no_depth_write(intel);
+   if (ctx->FragmentProgram.Enabled) {
+      if (INTEL_DEBUG & DEBUG_FALLBACKS)
+	 fprintf(stderr, "glDrawPixels() fallback: fragment program enabled\n");
+      return GL_FALSE;
+   }
 
-   /* Set the 3d engine to draw into the destination region:
+   /* We don't have a way to generate fragments with stencil values which
+    * will set the resulting stencil value.
     */
-   intel->vtbl.meta_draw_region(intel, dst, intel->depth_region);
+   if (format == GL_STENCIL_INDEX)
+      return GL_FALSE;
 
-   intel->vtbl.meta_import_pixel_state(intel);
+   /* Check that we can load in a texture this big. */
+   if (width > (1 << (ctx->Const.MaxTextureLevels - 1)) ||
+       height > (1 << (ctx->Const.MaxTextureLevels - 1))) {
+      if (INTEL_DEBUG & DEBUG_FALLBACKS)
+	 fprintf(stderr, "glDrawPixels() fallback: bitmap too large (%dx%d)\n",
+		 width, height);
+      return GL_FALSE;
+   }
 
-   src_offset = (GLuint) _mesa_image_address(2, unpack, pixels, width, height,
-                                             format, type, 0, 0, 0);
-
-
-   /* Setup the pbo up as a rectangular texture, if possible.
-    *
-    * TODO: This is almost always possible if the i915 fragment
-    * program is adjusted to correctly swizzle the sampled colors.
-    * The major exception is any 24bit texture, like RGB888, for which
-    * there is no hardware support.  
+   /* To do DEPTH_COMPONENT, we would need to change our setup to not draw to
+    * the color buffer, and sample the texture values into the fragment depth
+    * in a program.
     */
-   if (!intel->vtbl.meta_tex_rect_source(intel, src->buffer, src_offset,
-                                         rowLength, height, format, type)) {
-      intel->vtbl.leave_meta_state(intel);
+   if (format == GL_DEPTH_COMPONENT) {
+      if (INTEL_DEBUG & DEBUG_FALLBACKS)
+	 fprintf(stderr,
+		 "glDrawPixels() fallback: format == GL_DEPTH_COMPONENT\n");
       return GL_FALSE;
    }
 
-   intel->vtbl.meta_texture_blend_replace(intel);
+   _mesa_PushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT |
+		    GL_CURRENT_BIT);
+   _mesa_PushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
 
+   /* XXX: pixel store stuff */
+   _mesa_Disable(GL_POLYGON_STIPPLE);
 
-   LOCK_HARDWARE(intel);
-
-   if (intel->driDrawable->numClipRects) {
-      __DRIdrawablePrivate *dPriv = intel->driDrawable;
-      GLint srcx, srcy;
-      GLint dstx, dsty;
-
-      dstx = x;
-      dsty = dPriv->h - (y + height);
-
-      srcx = 0;                 /* skiprows/pixels already done */
-      srcy = 0;
-
-      if (0) {
-         const GLint orig_x = dstx;
-         const GLint orig_y = dsty;
-
-         if (!_mesa_clip_to_region(0, 0, dst->pitch, dst->height,
-                                   &dstx, &dsty, &width, &height))
-            goto out;
-
-         srcx += dstx - orig_x;
-         srcy += dsty - orig_y;
-      }
-
-
-      if (INTEL_DEBUG & DEBUG_PIXEL)
-         _mesa_printf("draw %d,%d %dx%d\n", dstx, dsty, width, height);
-
-      /* Must use the regular cliprect mechanism in order to get the
-       * drawing origin set correctly.  Otherwise scissor state is in
-       * incorrect coordinate space.  Does this even need to hold the
-       * lock???
-       */
-      intel->vtbl.meta_draw_quad(intel,
-				 dstx, dstx + width * ctx->Pixel.ZoomX,
-				 dPriv->h - (y + height * ctx->Pixel.ZoomY),
-				 dPriv->h - (y),
-				 -ctx->Current.RasterPos[2] * .5,
-				 0x00ff00ff,
-				 srcx, srcx + width, srcy + height, srcy);
-    out:
-      intel->vtbl.leave_meta_state(intel);
-      intel_batchbuffer_flush(intel->batch);
-   }
-   UNLOCK_HARDWARE(intel);
-   return GL_TRUE;
-}
-
-
-
-
-
-/* Pros:  
- *   - no waiting for idle before updating framebuffer.
- *   
- * Cons:
- *   - if upload is by memcpy, this may actually be slower than fallback path.
- *   - uploads the whole image even if destination is clipped
- *   
- * Need to benchmark.
- *
- * Given the questions about performance, implement for pbo's only.
- * This path is definitely a win if the pbo is already in agp.  If it
- * turns out otherwise, we can add the code necessary to upload client
- * data to agp space before performing the blit.  (Though it may turn
- * out to be better/simpler just to use the texture engine).
- */
-static GLboolean
-do_blit_drawpixels(GLcontext * ctx,
-                   GLint x, GLint y,
-                   GLsizei width, GLsizei height,
-                   GLenum format, GLenum type,
-                   const struct gl_pixelstore_attrib *unpack,
-                   const GLvoid * pixels)
-{
-   struct intel_context *intel = intel_context(ctx);
-   struct intel_region *dest = intel_drawbuf_region(intel);
-   struct intel_buffer_object *src = intel_buffer_object(unpack->BufferObj);
-   GLuint src_offset;
-   GLuint rowLength;
-   dri_fence *fence = NULL;
-
-   if (INTEL_DEBUG & DEBUG_PIXEL)
-      _mesa_printf("%s\n", __FUNCTION__);
-
-
-   if (!dest) {
-      if (INTEL_DEBUG & DEBUG_PIXEL)
-         _mesa_printf("%s - no dest\n", __FUNCTION__);
-      return GL_FALSE;
-   }
-
-   if (src) {
-      /* This validation should be done by core mesa:
-       */
-      if (!_mesa_validate_pbo_access(2, unpack, width, height, 1,
-                                     format, type, pixels)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION, "glDrawPixels");
-         return GL_TRUE;
-      }
-   }
-   else {
-      /* PBO only for now:
-       */
-      if (INTEL_DEBUG & DEBUG_PIXEL)
-         _mesa_printf("%s - not PBO\n", __FUNCTION__);
-      return GL_FALSE;
-   }
-
-   if (!intel_check_blit_format(dest, format, type)) {
-      if (INTEL_DEBUG & DEBUG_PIXEL)
-         _mesa_printf("%s - bad format for blit\n", __FUNCTION__);
-      return GL_FALSE;
-   }
-
-   if (!intel_check_blit_fragment_ops(ctx, GL_FALSE)) {
-      if (INTEL_DEBUG & DEBUG_PIXEL)
-         _mesa_printf("%s - bad GL fragment state for blitter\n",
-                      __FUNCTION__);
-      return GL_FALSE;
-   }
-
-   if (ctx->Pixel.ZoomX != 1.0F) {
-      if (INTEL_DEBUG & DEBUG_PIXEL)
-         _mesa_printf("%s - bad PixelZoomX for blit\n", __FUNCTION__);
-      return GL_FALSE;
-   }
-
-
-   if (unpack->RowLength > 0)
-      rowLength = unpack->RowLength;
+   old_active_texture = ctx->Texture.CurrentUnit;
+   _mesa_ActiveTextureARB(GL_TEXTURE0_ARB);
+   _mesa_Enable(GL_TEXTURE_2D);
+   _mesa_GenTextures(1, &texname);
+   _mesa_BindTexture(GL_TEXTURE_2D, texname);
+   _mesa_TexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+   _mesa_TexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+   _mesa_TexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+   if (type == GL_ALPHA)
+      internalFormat = GL_ALPHA;
    else
-      rowLength = width;
+      internalFormat = GL_RGBA;
+   _mesa_TexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format,
+		    type, pixels);
 
-   if (ctx->Pixel.ZoomY == -1.0F) {
-      if (INTEL_DEBUG & DEBUG_PIXEL)
-         _mesa_printf("%s - bad PixelZoomY for blit\n", __FUNCTION__);
-      return GL_FALSE;          /* later */
-      y -= height;
-   }
-   else if (ctx->Pixel.ZoomY == 1.0F) {
-      rowLength = -rowLength;
-   }
-   else {
-      if (INTEL_DEBUG & DEBUG_PIXEL)
-         _mesa_printf("%s - bad PixelZoomY for blit\n", __FUNCTION__);
-      return GL_FALSE;
-   }
+   intel_meta_set_passthrough_transform(intel);
 
-   src_offset = (GLuint) _mesa_image_address(2, unpack, pixels, width, height,
-                                             format, type, 0, 0, 0);
+   /* convert rasterpos Z from [0,1] to NDC coord in [-1,1] */
+   z = -1.0 + 2.0 * ctx->Current.RasterPos[2];
 
-   intelFlush(&intel->ctx);
-   LOCK_HARDWARE(intel);
+   /* Create the vertex buffer based on the current raster pos.  The x and y
+    * we're handed are ctx->Current.RasterPos[0,1] rounded to integers.
+    * We also apply the depth.  However, the W component is already multiplied
+    * into ctx->Current.RasterPos[0,1,2] and we can ignore it at this point.
+    */
+   vertices[0][0] = x;
+   vertices[0][1] = y;
+   vertices[0][2] = z;
+   vertices[0][3] = 1.0;
+   vertices[1][0] = x + width * ctx->Pixel.ZoomX;
+   vertices[1][1] = y;
+   vertices[1][2] = z;
+   vertices[1][3] = 1.0;
+   vertices[2][0] = x + width * ctx->Pixel.ZoomX;
+   vertices[2][1] = y + height * ctx->Pixel.ZoomY;
+   vertices[2][2] = z;
+   vertices[2][3] = 1.0;
+   vertices[3][0] = x;
+   vertices[3][1] = y + height * ctx->Pixel.ZoomY;
+   vertices[3][2] = z;
+   vertices[3][3] = 1.0;
 
-   if (intel->driDrawable->numClipRects) {
-      __DRIdrawablePrivate *dPriv = intel->driDrawable;
-      int nbox = dPriv->numClipRects;
-      drm_clip_rect_t *box = dPriv->pClipRects;
-      drm_clip_rect_t rect;
-      drm_clip_rect_t dest_rect;
-      dri_bo *src_buffer = intel_bufferobj_buffer(intel, src, INTEL_READ);
-      int i;
+   texcoords[0][0] = 0.0;
+   texcoords[0][1] = 0.0;
+   texcoords[1][0] = 1.0;
+   texcoords[1][1] = 0.0;
+   texcoords[2][0] = 1.0;
+   texcoords[2][1] = 1.0;
+   texcoords[3][0] = 0.0;
+   texcoords[3][1] = 1.0;
 
-      dest_rect.x1 = dPriv->x + x;
-      dest_rect.y1 = dPriv->y + dPriv->h - (y + height);
-      dest_rect.x2 = dest_rect.x1 + width;
-      dest_rect.y2 = dest_rect.y1 + height;
+   _mesa_VertexPointer(4, GL_FLOAT, 4 * sizeof(GLfloat), &vertices);
+   _mesa_ClientActiveTextureARB(GL_TEXTURE0);
+   _mesa_TexCoordPointer(2, GL_FLOAT, 2 * sizeof(GLfloat), &texcoords);
+   _mesa_Enable(GL_VERTEX_ARRAY);
+   _mesa_Enable(GL_TEXTURE_COORD_ARRAY);
+   CALL_DrawArrays(ctx->Exec, (GL_TRIANGLE_FAN, 0, 4));
 
-      for (i = 0; i < nbox; i++) {
-         if (!intel_intersect_cliprects(&rect, &dest_rect, &box[i]))
-            continue;
+   intel_meta_restore_transform(intel);
 
-         intelEmitCopyBlit(intel,
-                           dest->cpp,
-                           rowLength, src_buffer, src_offset, GL_FALSE,
-                           dest->pitch, dest->buffer, 0, dest->tiled,
-                           rect.x1 - dest_rect.x1,
-                           rect.y2 - dest_rect.y2,
-                           rect.x1,
-                           rect.y1, rect.x2 - rect.x1, rect.y2 - rect.y1,
-			   ctx->Color.ColorLogicOpEnabled ?
-			   ctx->Color.LogicOp : GL_COPY);
-      }
-      intel_batchbuffer_flush(intel->batch);
-      fence = intel->batch->last_fence;
-      dri_fence_reference(fence);
-   }
-   UNLOCK_HARDWARE(intel);
+   _mesa_ActiveTextureARB(GL_TEXTURE0_ARB + old_active_texture);
+   _mesa_PopClientAttrib();
+   _mesa_PopAttrib();
 
-   if (fence) {
-      dri_fence_wait(fence);
-      dri_fence_unreference(fence);
-   }
-
-   if (INTEL_DEBUG & DEBUG_PIXEL)
-      _mesa_printf("%s - DONE\n", __FUNCTION__);
+   _mesa_DeleteTextures(1, &texname);
 
    return GL_TRUE;
 }
 
+static GLboolean
+intel_stencil_drawpixels(GLcontext * ctx,
+			 GLint x, GLint y,
+			 GLsizei width, GLsizei height,
+			 GLenum format,
+			 GLenum type,
+			 const struct gl_pixelstore_attrib *unpack,
+			 const GLvoid *pixels)
+{
+   struct intel_context *intel = intel_context(ctx);
+   GLuint texname, rb_name, fb_name, old_fb_name;
+   GLfloat vertices[4][2];
+   GLfloat texcoords[4][2];
+   struct intel_renderbuffer *irb;
+   struct intel_renderbuffer *depth_irb;
+   struct gl_renderbuffer *rb;
+   struct gl_pixelstore_attrib old_unpack;
+   GLstencil *stencil_pixels;
+   int row;
+   GLint old_active_texture;
 
+   if (format != GL_STENCIL_INDEX)
+      return GL_FALSE;
+
+   /* If there's nothing to write, we're done. */
+   if (ctx->Stencil.WriteMask[0] == 0)
+      return GL_TRUE;
+
+   /* Can't do a per-bit writemask while treating stencil as rgba data. */
+   if ((ctx->Stencil.WriteMask[0] & 0xff) != 0xff) {
+      if (INTEL_DEBUG & DEBUG_FALLBACKS)
+	 fprintf(stderr, "glDrawPixels(STENCIL_INDEX) fallback: "
+		 "stencil mask enabled\n");
+      return GL_FALSE;
+   }
+
+   /* We don't support stencil testing/ops here */
+   if (ctx->Stencil.Enabled)
+      return GL_FALSE;
+
+   /* We use FBOs for our wrapping of the depthbuffer into a color
+    * destination.
+    */
+   if (!ctx->Extensions.EXT_framebuffer_object)
+      return GL_FALSE;
+
+   /* We're going to mess with texturing with no regard to existing texture
+    * state, so if there is some set up we have to bail.
+    */
+   if (ctx->Texture._EnabledUnits != 0) {
+      if (INTEL_DEBUG & DEBUG_FALLBACKS)
+	 fprintf(stderr, "glDrawPixels(STENCIL_INDEX) fallback: "
+		 "texturing enabled\n");
+      return GL_FALSE;
+   }
+
+   /* Can't do textured DrawPixels with a fragment program, unless we were
+    * to generate a new program that sampled our texture and put the results
+    * in the fragment color before the user's program started.
+    */
+   if (ctx->FragmentProgram.Enabled) {
+      if (INTEL_DEBUG & DEBUG_FALLBACKS)
+	 fprintf(stderr, "glDrawPixels(STENCIL_INDEX) fallback: "
+		 "fragment program enabled\n");
+      return GL_FALSE;
+   }
+
+   /* Check that we can load in a texture this big. */
+   if (width > (1 << (ctx->Const.MaxTextureLevels - 1)) ||
+       height > (1 << (ctx->Const.MaxTextureLevels - 1))) {
+      if (INTEL_DEBUG & DEBUG_FALLBACKS)
+	 fprintf(stderr, "glDrawPixels(STENCIL_INDEX) fallback: "
+		 "bitmap too large (%dx%d)\n",
+		 width, height);
+      return GL_FALSE;
+   }
+
+   _mesa_PushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT |
+		    GL_CURRENT_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   _mesa_PushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+   old_fb_name = ctx->DrawBuffer->Name;
+   old_active_texture = ctx->Texture.CurrentUnit;
+
+   _mesa_Disable(GL_POLYGON_STIPPLE);
+   _mesa_Disable(GL_DEPTH_TEST);
+   _mesa_Disable(GL_STENCIL_TEST);
+
+   /* Unpack the supplied stencil values into a ubyte buffer. */
+   assert(sizeof(GLstencil) == sizeof(GLubyte));
+   stencil_pixels = _mesa_malloc(width * height * sizeof(GLstencil));
+   for (row = 0; row < height; row++) {
+      GLvoid *source = _mesa_image_address2d(unpack, pixels,
+					     width, height,
+					     GL_COLOR_INDEX, type,
+					     row, 0);
+      _mesa_unpack_stencil_span(ctx, width, GL_UNSIGNED_BYTE,
+				stencil_pixels +
+				row * width * sizeof(GLstencil),
+				type, source, unpack, ctx->_ImageTransferState);
+   }
+
+   /* Take the current depth/stencil renderbuffer, and make a new one wrapping
+    * it which will be treated as GL_RGBA8 so we can render to it as a color
+    * buffer.
+    */
+   depth_irb = intel_get_renderbuffer(ctx->DrawBuffer, BUFFER_DEPTH);
+   irb = intel_create_renderbuffer(GL_RGBA8);
+   rb = &irb->Base;
+   irb->Base.Width = depth_irb->Base.Width;
+   irb->Base.Height = depth_irb->Base.Height;
+   intel_renderbuffer_set_region(irb, depth_irb->region);
+
+   /* Create a name for our renderbuffer, which lets us use other mesa
+    * rb functions for convenience.
+    */
+   _mesa_GenRenderbuffersEXT(1, &rb_name);
+   irb->Base.RefCount++;
+   _mesa_HashInsert(ctx->Shared->RenderBuffers, rb_name, &irb->Base);
+
+   /* Bind the new renderbuffer to the color attachment point. */
+   _mesa_GenFramebuffersEXT(1, &fb_name);
+   _mesa_BindFramebufferEXT(GL_FRAMEBUFFER_EXT, fb_name);
+   _mesa_FramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT,
+				    GL_COLOR_ATTACHMENT0_EXT,
+				    GL_RENDERBUFFER_EXT,
+				    rb_name);
+   /* Choose to render to the color attachment. */
+   _mesa_DrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+
+   _mesa_DepthMask(GL_FALSE);
+   _mesa_ColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
+
+   _mesa_ActiveTextureARB(GL_TEXTURE0_ARB);
+   _mesa_Enable(GL_TEXTURE_2D);
+   _mesa_GenTextures(1, &texname);
+   _mesa_BindTexture(GL_TEXTURE_2D, texname);
+   _mesa_TexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+   _mesa_TexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+   _mesa_TexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+   old_unpack = ctx->Unpack;
+   ctx->Unpack = ctx->DefaultPacking;
+   _mesa_TexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY, width, height, 0,
+		    GL_RED, GL_UNSIGNED_BYTE, stencil_pixels);
+   ctx->Unpack = old_unpack;
+   _mesa_free(stencil_pixels);
+
+   intel_meta_set_passthrough_transform(intel);
+
+   vertices[0][0] = x;
+   vertices[0][1] = y;
+   vertices[1][0] = x + width * ctx->Pixel.ZoomX;
+   vertices[1][1] = y;
+   vertices[2][0] = x + width * ctx->Pixel.ZoomX;
+   vertices[2][1] = y + height * ctx->Pixel.ZoomY;
+   vertices[3][0] = x;
+   vertices[3][1] = y + height * ctx->Pixel.ZoomY;
+
+   texcoords[0][0] = 0.0;
+   texcoords[0][1] = 0.0;
+   texcoords[1][0] = 1.0;
+   texcoords[1][1] = 0.0;
+   texcoords[2][0] = 1.0;
+   texcoords[2][1] = 1.0;
+   texcoords[3][0] = 0.0;
+   texcoords[3][1] = 1.0;
+
+   _mesa_VertexPointer(2, GL_FLOAT, 2 * sizeof(GLfloat), &vertices);
+   _mesa_ClientActiveTextureARB(GL_TEXTURE0);
+   _mesa_TexCoordPointer(2, GL_FLOAT, 2 * sizeof(GLfloat), &texcoords);
+   _mesa_Enable(GL_VERTEX_ARRAY);
+   _mesa_Enable(GL_TEXTURE_COORD_ARRAY);
+   CALL_DrawArrays(ctx->Exec, (GL_TRIANGLE_FAN, 0, 4));
+
+   intel_meta_restore_transform(intel);
+
+   _mesa_ActiveTextureARB(GL_TEXTURE0_ARB + old_active_texture);
+   _mesa_BindFramebufferEXT(GL_FRAMEBUFFER_EXT, old_fb_name);
+
+   _mesa_PopClientAttrib();
+   _mesa_PopAttrib();
+
+   _mesa_DeleteTextures(1, &texname);
+   _mesa_DeleteFramebuffersEXT(1, &fb_name);
+   _mesa_DeleteRenderbuffersEXT(1, &rb_name);
+
+   return GL_TRUE;
+}
 
 void
 intelDrawPixels(GLcontext * ctx,
@@ -350,39 +393,17 @@ intelDrawPixels(GLcontext * ctx,
                 const struct gl_pixelstore_attrib *unpack,
                 const GLvoid * pixels)
 {
-   if (do_blit_drawpixels(ctx, x, y, width, height, format, type,
-                          unpack, pixels))
+   if (intel_texture_drawpixels(ctx, x, y, width, height, format, type,
+				unpack, pixels))
       return;
 
-   if (do_texture_drawpixels(ctx, x, y, width, height, format, type,
-                             unpack, pixels))
+   if (intel_stencil_drawpixels(ctx, x, y, width, height, format, type,
+				unpack, pixels))
       return;
-
 
    if (INTEL_DEBUG & DEBUG_PIXEL)
       _mesa_printf("%s: fallback to swrast\n", __FUNCTION__);
 
-   if (ctx->FragmentProgram._Current == ctx->FragmentProgram._TexEnvProgram) {
-      /*
-       * We don't want the i915 texenv program to be applied to DrawPixels.
-       * This is really just a performance optimization (mesa will other-
-       * wise happily run the fragment program on each pixel in the image).
-       */
-      struct gl_fragment_program *fpSave = ctx->FragmentProgram._Current;
-   /* can't just set current frag prog to 0 here as on buffer resize
-      we'll get new state checks which will segfault. Remains a hack. */
-      ctx->FragmentProgram._Current = NULL;
-      ctx->FragmentProgram._UseTexEnvProgram = GL_FALSE;
-      ctx->FragmentProgram._Active = GL_FALSE;
-      _swrast_DrawPixels( ctx, x, y, width, height, format, type,
-                          unpack, pixels );
-      ctx->FragmentProgram._Current = fpSave;
-      ctx->FragmentProgram._UseTexEnvProgram = GL_TRUE;
-      ctx->FragmentProgram._Active = GL_TRUE;
-      _swrast_InvalidateState(ctx, _NEW_PROGRAM);
-   }
-   else {
-      _swrast_DrawPixels( ctx, x, y, width, height, format, type,
-                          unpack, pixels );
-   }
+   _swrast_DrawPixels(ctx, x, y, width, height, format, type,
+		      unpack, pixels);
 }

@@ -1,4 +1,3 @@
-/* $XFree86: xc/lib/GL/mesa/src/drv/r128/r128_state.c,v 1.11 2002/10/30 12:51:39 alanh Exp $ */
 /**************************************************************************
 
 Copyright 1999, 2000 ATI Technologies Inc. and Precision Insight, Inc.,
@@ -40,9 +39,9 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "r128_tris.h"
 #include "r128_tex.h"
 
-#include "context.h"
-#include "enums.h"
-#include "colormac.h"
+#include "main/context.h"
+#include "main/enums.h"
+#include "main/colormac.h"
 #include "swrast/swrast.h"
 #include "vbo/vbo.h"
 #include "tnl/tnl.h"

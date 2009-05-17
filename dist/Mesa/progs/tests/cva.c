@@ -1,4 +1,3 @@
-/* $Id: cva.c,v 1.1 2008/11/02 14:58:09 matthieu Exp $ */
 
 /*
  * Trivial CVA test, good for testing driver fastpaths (especially

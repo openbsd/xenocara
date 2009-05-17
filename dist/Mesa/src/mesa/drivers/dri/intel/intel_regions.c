@@ -39,12 +39,16 @@
  * last moment.
  */
 
+#include <sys/ioctl.h>
+#include <errno.h>
+
 #include "intel_context.h"
 #include "intel_regions.h"
 #include "intel_blit.h"
 #include "intel_buffer_objects.h"
-#include "dri_bufmgr.h"
+#include "intel_bufmgr.h"
 #include "intel_batchbuffer.h"
+#include "intel_chipset.h"
 
 #define FILE_DEBUG_FLAG DEBUG_REGION
 
@@ -77,8 +81,9 @@ intel_region_unmap(struct intel_context *intel, struct intel_region *region)
 
 static struct intel_region *
 intel_region_alloc_internal(struct intel_context *intel,
-			    GLuint cpp, GLuint pitch, GLuint height,
-			    GLuint tiled, dri_bo *buffer)
+			    GLuint cpp,
+			    GLuint width, GLuint height, GLuint pitch,
+			    dri_bo *buffer)
 {
    struct intel_region *region;
 
@@ -89,33 +94,72 @@ intel_region_alloc_internal(struct intel_context *intel,
 
    region = calloc(sizeof(*region), 1);
    region->cpp = cpp;
+   region->width = width;
+   region->height = height;
    region->pitch = pitch;
-   region->height = height;     /* needed? */
    region->refcount = 1;
-   region->tiled = tiled;
    region->buffer = buffer;
+
+   /* Default to no tiling */
+   region->tiling = I915_TILING_NONE;
+   region->bit_6_swizzle = I915_BIT_6_SWIZZLE_NONE;
 
    return region;
 }
 
 struct intel_region *
 intel_region_alloc(struct intel_context *intel,
-                   GLuint cpp, GLuint pitch, GLuint height)
+                   GLuint cpp, GLuint width, GLuint height, GLuint pitch,
+		   GLboolean expect_accelerated_upload)
 {
    dri_bo *buffer;
 
-   buffer = dri_bo_alloc(intel->bufmgr, "region",
-			 pitch * cpp * height, 64,
-			 DRM_BO_FLAG_MEM_LOCAL |
-			 DRM_BO_FLAG_CACHED |
-			 DRM_BO_FLAG_CACHED_MAPPED);
+   if (expect_accelerated_upload) {
+      buffer = drm_intel_bo_alloc_for_render(intel->bufmgr, "region",
+					     pitch * cpp * height, 64);
+   } else {
+      buffer = drm_intel_bo_alloc(intel->bufmgr, "region",
+				  pitch * cpp * height, 64);
+   }
 
-   return intel_region_alloc_internal(intel, cpp, pitch, height, 0, buffer);
+   return intel_region_alloc_internal(intel, cpp, width, height, pitch, buffer);
+}
+
+struct intel_region *
+intel_region_alloc_for_handle(struct intel_context *intel,
+			      GLuint cpp,
+			      GLuint width, GLuint height, GLuint pitch,
+			      GLuint handle, const char *name)
+{
+   struct intel_region *region;
+   dri_bo *buffer;
+   int ret;
+
+   buffer = intel_bo_gem_create_from_name(intel->bufmgr, name, handle);
+
+   region = intel_region_alloc_internal(intel, cpp,
+					width, height, pitch, buffer);
+   if (region == NULL)
+      return region;
+
+   ret = dri_bo_get_tiling(region->buffer, &region->tiling,
+			   &region->bit_6_swizzle);
+   if (ret != 0) {
+      fprintf(stderr, "Couldn't get tiling of buffer %d (%s): %s\n",
+	      handle, name, strerror(-ret));
+      intel_region_release(&region);
+      return NULL;
+   }
+
+   return region;
 }
 
 void
 intel_region_reference(struct intel_region **dst, struct intel_region *src)
 {
+   if (src)
+      DBG("%s %d\n", __FUNCTION__, src->refcount);
+
    assert(*dst == NULL);
    if (src) {
       src->refcount++;
@@ -124,26 +168,34 @@ intel_region_reference(struct intel_region **dst, struct intel_region *src)
 }
 
 void
-intel_region_release(struct intel_region **region)
+intel_region_release(struct intel_region **region_handle)
 {
-   if (!*region)
+   struct intel_region *region = *region_handle;
+
+   if (region == NULL)
       return;
 
-   DBG("%s %d\n", __FUNCTION__, (*region)->refcount - 1);
+   DBG("%s %d\n", __FUNCTION__, region->refcount - 1);
 
-   ASSERT((*region)->refcount > 0);
-   (*region)->refcount--;
+   ASSERT(region->refcount > 0);
+   region->refcount--;
 
-   if ((*region)->refcount == 0) {
-      assert((*region)->map_refcount == 0);
+   if (region->refcount == 0) {
+      assert(region->map_refcount == 0);
 
-      if ((*region)->pbo)
-	 (*region)->pbo->region = NULL;
-      (*region)->pbo = NULL;
-      dri_bo_unreference((*region)->buffer);
-      free(*region);
+      if (region->pbo)
+	 region->pbo->region = NULL;
+      region->pbo = NULL;
+      dri_bo_unreference(region->buffer);
+
+      if (region->classic_map != NULL) {
+	 drmUnmap(region->classic_map,
+			region->pitch * region->cpp * region->height);
+      }
+
+      free(region);
    }
-   *region = NULL;
+   *region_handle = NULL;
 }
 
 /*
@@ -258,8 +310,8 @@ intel_region_copy(struct intel_context *intel,
 
    intelEmitCopyBlit(intel,
                      dst->cpp,
-                     src->pitch, src->buffer, src_offset, src->tiled,
-                     dst->pitch, dst->buffer, dst_offset, dst->tiled,
+                     src->pitch, src->buffer, src_offset, src->tiling,
+                     dst->pitch, dst->buffer, dst_offset, dst->tiling,
                      srcx, srcy, dstx, dsty, width, height,
 		     GL_COPY);
 }
@@ -289,7 +341,7 @@ intel_region_fill(struct intel_context *intel,
 
    intelEmitFillBlit(intel,
                      dst->cpp,
-                     dst->pitch, dst->buffer, dst_offset, dst->tiled,
+                     dst->pitch, dst->buffer, dst_offset, dst->tiling,
                      dstx, dsty, width, height, color);
 }
 
@@ -341,10 +393,7 @@ intel_region_release_pbo(struct intel_context *intel,
 
    region->buffer = dri_bo_alloc(intel->bufmgr, "region",
 				 region->pitch * region->cpp * region->height,
-				 64,
-				 DRM_BO_FLAG_MEM_LOCAL |
-				 DRM_BO_FLAG_CACHED |
-				 DRM_BO_FLAG_CACHED_MAPPED);
+				 64);
 }
 
 /* Break the COW tie to the pbo.  Both the pbo and the region end up
@@ -368,23 +417,19 @@ intel_region_cow(struct intel_context *intel, struct intel_region *region)
    /* Now blit from the texture buffer to the new buffer: 
     */
 
-   intel_batchbuffer_flush(intel->batch);
-
    was_locked = intel->locked;
-   if (intel->locked)
+   if (!was_locked)
       LOCK_HARDWARE(intel);
 
    intelEmitCopyBlit(intel,
 		     region->cpp,
-		     region->pitch, region->buffer, 0, region->tiled,
-		     region->pitch, pbo->buffer, 0, region->tiled,
+		     region->pitch, region->buffer, 0, region->tiling,
+		     region->pitch, pbo->buffer, 0, region->tiling,
 		     0, 0, 0, 0,
 		     region->pitch, region->height,
 		     GL_COPY);
 
-   intel_batchbuffer_flush(intel->batch);
-
-   if (was_locked)
+   if (!was_locked)
       UNLOCK_HARDWARE(intel);
 }
 
@@ -409,6 +454,7 @@ intel_recreate_static(struct intel_context *intel,
 		      intelRegion *region_desc)
 {
    intelScreenPrivate *intelScreen = intel->intelScreen;
+   int ret;
 
    if (region == NULL) {
       region = calloc(sizeof(*region), 1);
@@ -421,15 +467,63 @@ intel_recreate_static(struct intel_context *intel,
       region->cpp = intel->ctx.Visual.rgbBits / 8;
    region->pitch = intelScreen->pitch;
    region->height = intelScreen->height;     /* needed? */
-   region->tiled = region_desc->tiled;
 
-   region->buffer = dri_bo_alloc_static(intel->bufmgr,
-					name,
-					region_desc->offset,
-					intelScreen->pitch *
-					intelScreen->height,
-					region_desc->map,
-					DRM_BO_FLAG_MEM_TT);
+   if (region->buffer != NULL) {
+      dri_bo_unreference(region->buffer);
+      region->buffer = NULL;
+   }
+
+   if (intel->ttm) {
+      assert(region_desc->bo_handle != -1);
+      region->buffer = intel_bo_gem_create_from_name(intel->bufmgr,
+						     name,
+						     region_desc->bo_handle);
+
+      ret = dri_bo_get_tiling(region->buffer, &region->tiling,
+			      &region->bit_6_swizzle);
+      if (ret != 0) {
+	 fprintf(stderr, "Couldn't get tiling of buffer %d (%s): %s\n",
+		 region_desc->bo_handle, name, strerror(-ret));
+	 intel_region_release(&region);
+	 return NULL;
+      }
+   } else {
+      if (region->classic_map != NULL) {
+	 drmUnmap(region->classic_map,
+		  region->pitch * region->cpp * region->height);
+	 region->classic_map = NULL;
+      }
+      ret = drmMap(intel->driFd, region_desc->handle,
+		   region->pitch * region->cpp * region->height,
+		   &region->classic_map);
+      if (ret != 0) {
+	 fprintf(stderr, "Failed to drmMap %s buffer\n", name);
+	 free(region);
+	 return NULL;
+      }
+
+      region->buffer = intel_bo_fake_alloc_static(intel->bufmgr,
+						  name,
+						  region_desc->offset,
+						  region->pitch * region->cpp *
+						  region->height,
+						  region->classic_map);
+
+      /* The sarea just gives us a boolean for whether it's tiled or not,
+       * instead of which tiling mode it is.  Guess.
+       */
+      if (region_desc->tiled) {
+	 if (IS_965(intel->intelScreen->deviceID) &&
+	     region_desc == &intelScreen->depth)
+	    region->tiling = I915_TILING_Y;
+	 else
+	    region->tiling = I915_TILING_X;
+      } else {
+	 region->tiling = I915_TILING_NONE;
+      }
+
+      region->bit_6_swizzle = I915_BIT_6_SWIZZLE_NONE;
+   }
 
    assert(region->buffer != NULL);
 

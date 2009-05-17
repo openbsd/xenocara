@@ -42,7 +42,44 @@
 #define SF 3
 #define CS 4
 
-/* XXX: Are the min_entry_size numbers useful?
+/** @file brw_urb.c
+ *
+ * Manages the division of the URB space between the various fixed-function
+ * units.
+ *
+ * See the Thread Initiation Management section of the GEN4 B-Spec, and
+ * the individual *_STATE structures for restrictions on numbers of
+ * entries and threads.
+ */
+
+/*
+ * Generally, a unit requires a min_nr_entries based on how many entries
+ * it produces before the downstream unit gets unblocked and can use and
+ * dereference some of its handles.
+ *
+ * The SF unit preallocates a PUE at the start of thread dispatch, and only
+ * uses that one.  So it requires one entry per thread.
+ *
+ * For CLIP, the SF unit will hold the previous primitive while the
+ * next is getting assembled, meaning that linestrips require 3 CLIP VUEs
+ * (vertices) to ensure continued processing, trifans require 4, and tristrips
+ * require 5.  There can be 1 or 2 threads, and each has the same requirement.
+ *
+ * GS has the same requirement as CLIP, but it never handles tristrips,
+ * so we can lower the minimum to 4 for the POLYGONs (trifans) it produces.
+ * We only run it single-threaded.
+ *
+ * For VS, the number of entries may be 8, 12, 16, or 32 (or 64 on G4X).
+ * Each thread processes 2 preallocated VUEs (vertices) at a time, and they
+ * get streamed down as soon as threads processing earlier vertices get
+ * theirs accepted.
+ *
+ * Each unit will take the number of URB entries we give it (based on the
+ * entry size calculated in brw_vs_emit.c for VUEs, brw_sf_emit.c for PUEs,
+ * and brw_curbe.c for the CURBEs) and decide its maximum number of
+ * threads it can support based on that. in brw_*_state.c.
+ *
+ * XXX: Are the min_entry_size numbers useful?
  * XXX: Verify min_nr_entries, esp for VS.
  * XXX: Verify SF min_entry_size.
  */
@@ -54,7 +91,7 @@ static const struct {
 } limits[CS+1] = {
    { 16, 32, 1, 5 },			/* vs */
    { 4, 8,  1, 5 },			/* gs */
-   { 6, 8,  1, 5 },			/* clp */
+   { 5, 10,  1, 5 },			/* clp */
    { 1, 8,  1, 12 },		        /* sf */
    { 1, 4,  1, 32 }			/* cs */
 };
@@ -74,7 +111,7 @@ static GLboolean check_urb_layout( struct brw_context *brw )
 /* Most minimal update, forces re-emit of URB fence packet after GS
  * unit turned on/off.
  */
-static int recalculate_urb_fence( struct brw_context *brw )
+static void recalculate_urb_fence( struct brw_context *brw )
 {
    GLuint csize = brw->curbe.total_size;
    GLuint vsize = brw->vs.prog_data->urb_entry_size;
@@ -92,9 +129,9 @@ static int recalculate_urb_fence( struct brw_context *brw )
    if (brw->urb.vsize < vsize ||
        brw->urb.sfsize < sfsize ||
        brw->urb.csize < csize ||
-       (brw->urb.constrained && (brw->urb.vsize > brw->urb.vsize ||
-				 brw->urb.sfsize > brw->urb.sfsize ||
-				 brw->urb.csize > brw->urb.csize))) {
+       (brw->urb.constrained && (brw->urb.vsize > vsize ||
+				 brw->urb.sfsize > sfsize ||
+				 brw->urb.csize > csize))) {
       
 
       brw->urb.csize = csize;
@@ -114,6 +151,10 @@ static int recalculate_urb_fence( struct brw_context *brw )
 	 brw->urb.nr_sf_entries = limits[SF].min_nr_entries;	
 	 brw->urb.nr_cs_entries = limits[CS].min_nr_entries;	
 
+	 /* Mark us as operating with constrained nr_entries, so that next
+	  * time we recalculate we'll resize the fences in the hope of
+	  * escaping constrained mode and getting back to normal performance.
+	  */
 	 brw->urb.constrained = 1;
 	 
 	 if (!check_urb_layout(brw)) {
@@ -142,7 +183,6 @@ static int recalculate_urb_fence( struct brw_context *brw )
       
       brw->state.dirty.brw |= BRW_NEW_URB_FENCE;
    }
-   return 0;
 }
 
 
@@ -187,15 +227,3 @@ void brw_upload_urb_fence(struct brw_context *brw)
 
    BRW_BATCH_STRUCT(brw, &uf);
 }
-
-
-#if 0
-const struct brw_tracked_state brw_urb_fence = {
-   .dirty = {
-      .mesa = 0,
-      .brw = BRW_NEW_URB_FENCE | BRW_NEW_PSP,
-      .cache = 0
-   },
-   .update = brw_upload_urb_fence
-};
-#endif

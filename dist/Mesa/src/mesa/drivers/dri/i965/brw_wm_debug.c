@@ -130,6 +130,9 @@ void brw_wm_print_insn( struct brw_wm_compile *c,
    case WM_FB_WRITE:
       _mesa_printf(" = FB_WRITE");
       break;
+   case WM_FRONTFACING:
+      _mesa_printf(" = FRONTFACING");
+      break;
    default:
       _mesa_printf(" = %s", _mesa_opcode_string(inst->opcode));
       break;
@@ -163,9 +166,9 @@ void brw_wm_print_program( struct brw_wm_compile *c,
 {
    GLuint insn;
 
-   _mesa_printf("\n\n\n%s:\n", stage);
+   _mesa_printf("%s:\n", stage);
    for (insn = 0; insn < c->nr_insns; insn++)
       brw_wm_print_insn(c, &c->instruction[insn]);
-   _mesa_printf("\n\n\n");
+   _mesa_printf("\n");
 }
 

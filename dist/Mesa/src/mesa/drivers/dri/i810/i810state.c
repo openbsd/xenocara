@@ -1,12 +1,16 @@
-/* $XFree86: xc/lib/GL/mesa/src/drv/i810/i810state.c,v 1.9 2002/10/30 12:51:33 alanh Exp $ */
 
 #include <stdio.h>
 
-#include "glheader.h"
-#include "context.h"
-#include "macros.h"
-#include "dd.h"
-#include "colormac.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/macros.h"
+#include "main/dd.h"
+#include "main/colormac.h"
+#include "swrast/swrast.h"
+#include "tnl/tnl.h"
+#include "tnl/t_pipeline.h"
+#include "vbo/vbo.h"
+#include "swrast_setup/swrast_setup.h"
 
 #include "texmem.h"
 
@@ -20,12 +24,6 @@
 #include "i810tris.h"
 #include "i810ioctl.h"
 
-#include "swrast/swrast.h"
-#include "tnl/tnl.h"
-#include "vbo/vbo.h"
-#include "swrast_setup/swrast_setup.h"
-
-#include "tnl/t_pipeline.h"
 
 static INLINE GLuint i810PackColor(GLuint format,
 				       GLubyte r, GLubyte g,

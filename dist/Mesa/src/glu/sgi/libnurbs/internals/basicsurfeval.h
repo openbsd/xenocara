@@ -31,8 +31,6 @@
 /*
  * basicsurfeval.h
  *
- * $Date: 2008/11/02 14:58:10 $ $Revision: 1.2 $
- * $Header: /home/cvs/xenocara/dist/Mesa/src/glu/sgi/libnurbs/internals/Attic/basicsurfeval.h,v 1.2 2008/11/02 14:58:10 matthieu Exp $
  */
 
 #ifndef __glubasicsurfeval_h_

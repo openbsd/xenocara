@@ -1,14 +1,9 @@
-# $Id: sampleMakefile,v 1.2 2008/11/02 14:58:09 matthieu Exp $
 
 # Sample makefile for compiling OpenGL/Mesa applications on Unix.
 # This example assumes Linux with gcc.
 
 # This makefile is in the public domain
 
-# $Log: sampleMakefile,v $
-# Revision 1.2  2008/11/02 14:58:09  matthieu
-# Mesa 7.2, Tested by ckuethe@, naddy@, oga@, and others.
-#
 # Revision 1.1  1999/08/19 00:55:42  jtg
 # Initial revision
 #

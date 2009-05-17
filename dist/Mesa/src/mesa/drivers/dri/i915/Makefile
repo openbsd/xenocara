@@ -18,6 +18,7 @@ DRIVER_SOURCES = \
 	intel_regions.c \
 	intel_buffer_objects.c \
 	intel_batchbuffer.c \
+	intel_clear.c \
 	intel_mipmap_tree.c \
 	i915_tex_layout.c \
 	intel_tex_layout.c \
@@ -30,10 +31,11 @@ DRIVER_SOURCES = \
 	intel_pixel.c \
 	intel_pixel_bitmap.c \
 	intel_pixel_copy.c \
-	intel_pixel_read.c \
 	intel_pixel_draw.c \
+	intel_pixel_read.c \
 	intel_buffers.c \
 	intel_blit.c \
+	intel_swapbuffers.c \
 	i915_tex.c \
 	i915_texstate.c \
 	i915_context.c \
@@ -46,18 +48,15 @@ DRIVER_SOURCES = \
 	i915_vtbl.c \
 	intel_context.c \
 	intel_decode.c \
-	intel_ioctl.c \
 	intel_screen.c \
 	intel_span.c \
 	intel_state.c \
 	intel_tris.c \
 	intel_fbo.c \
-	intel_depthstencil.c \
-	intel_bufmgr_ttm.c
+	intel_depthstencil.c
 
 C_SOURCES = \
 	$(COMMON_SOURCES) \
-	$(COMMON_BM_SOURCES) \
 	$(DRIVER_SOURCES)
 
 ASM_SOURCES = 
@@ -66,9 +65,12 @@ DRIVER_DEFINES = -I../intel -I../intel/server -DI915 \
 	$(shell pkg-config libdrm --atleast-version=2.3.1 \
 				&& echo "-DDRM_VBLANK_FLIP=DRM_VBLANK_FLIP")
 
+DRI_LIB_DEPS += -ldrm_intel
+
 include ../Makefile.template
 
 intel_decode.o: ../intel/intel_decode.c
+
 intel_tex_layout.o: ../intel/intel_tex_layout.c
 
 symlinks:

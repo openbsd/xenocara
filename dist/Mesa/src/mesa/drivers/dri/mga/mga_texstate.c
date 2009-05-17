@@ -26,23 +26,22 @@
  *    Ian Romanick <idr@us.ibm.com>
  *    Keith Whitwell <keithw@tungstengraphics.com>
  */
-/* $XFree86:$ */
 
 #include <stdlib.h>
-#include "mm.h"
+#include "main/mm.h"
 #include "mgacontext.h"
 #include "mgatex.h"
 #include "mgaregs.h"
 #include "mgatris.h"
 #include "mgaioctl.h"
 
-#include "context.h"
-#include "enums.h"
-#include "macros.h"
-#include "imports.h"
+#include "main/context.h"
+#include "main/enums.h"
+#include "main/macros.h"
+#include "main/imports.h"
 
-#include "simple_list.h"
-#include "texformat.h"
+#include "main/simple_list.h"
+#include "main/texformat.h"
 
 #define MGA_USE_TABLE_FOR_FORMAT
 #ifdef MGA_USE_TABLE_FOR_FORMAT
@@ -207,8 +206,8 @@ static void mgaUpdateTextureEnvG200( GLcontext *ctx, GLuint unit )
    mgaTextureObjectPtr t = (mgaTextureObjectPtr) tObj->DriverData;
    GLenum format = tObj->Image[0][tObj->BaseLevel]->_BaseFormat;
 
-   if (tObj != ctx->Texture.Unit[0].Current2D &&
-       tObj != ctx->Texture.Unit[0].CurrentRect)
+   if (tObj != ctx->Texture.Unit[0].CurrentTex[TEXTURE_2D_INDEX] &&
+       tObj != ctx->Texture.Unit[0].CurrentTex[TEXTURE_RECT_INDEX])
       return;
 
 
@@ -636,8 +635,8 @@ static void mgaUpdateTextureEnvG400( GLcontext *ctx, GLuint unit )
    mgaTextureObjectPtr t = (mgaTextureObjectPtr) tObj->DriverData;
    GLenum format = tObj->Image[0][tObj->BaseLevel]->_BaseFormat;
 
-   if (tObj != ctx->Texture.Unit[source].Current2D &&
-       tObj != ctx->Texture.Unit[source].CurrentRect)
+   if (tObj != ctx->Texture.Unit[source].CurrentTex[TEXTURE_2D_INDEX] &&
+       tObj != ctx->Texture.Unit[source].CurrentTex[TEXTURE_RECT_INDEX])
       return;
 
    switch (ctx->Texture.Unit[source].EnvMode) {

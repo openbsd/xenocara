@@ -28,10 +28,9 @@
 #ifndef BRW_DRAW_H
 #define BRW_DRAW_H
 
-#include "mtypes.h"		/* for GLcontext... */
+#include "main/mtypes.h"		/* for GLcontext... */
 #include "vbo/vbo.h"
 
-#include "dri_bufmgr.h"
 struct brw_context;
 
 
@@ -50,28 +49,5 @@ void brw_draw_destroy( struct brw_context *brw );
  */
 void brw_init_current_values(GLcontext *ctx,
 			     struct gl_client_array *arrays);
-
-
-/* brw_draw_upload.c
- */
-int brw_prepare_indices( struct brw_context *brw,
-			 const struct _mesa_index_buffer *index_buffer,
-			 dri_bo **bo_return,
-			 GLuint *offset_return);
-
-void brw_emit_indices( struct brw_context *brw,
-		       const struct _mesa_index_buffer *index_buffer,
-		       dri_bo *bo,
-		       GLuint offset);
-
-int brw_prepare_vertices( struct brw_context *brw,
-			       GLuint min_index,
-			       GLuint max_index );
-
-void brw_emit_vertices( struct brw_context *brw,
-			       GLuint min_index,
-			       GLuint max_index );
-
-
 
 #endif

@@ -58,7 +58,7 @@
 
 #include "brw_state.h"
 #include "intel_batchbuffer.h"
-#include "imports.h"
+#include "main/imports.h"
 
 /* XXX: Fixme - have to include these to get the sizes of the prog_key
  * structs:
@@ -214,10 +214,7 @@ brw_upload_cache( struct brw_cache *cache,
 
    /* Create the buffer object to contain the data */
    bo = dri_bo_alloc(cache->brw->intel.bufmgr,
-		     cache->name[cache_id], data_size, 1 << 6,
-		     DRM_BO_FLAG_MEM_LOCAL |
-		     DRM_BO_FLAG_CACHED |
-		     DRM_BO_FLAG_CACHED_MAPPED);
+		     cache->name[cache_id], data_size, 1 << 6);
 
 
    /* Set up the memory containing the key, aux_data, and reloc_bufs */
@@ -500,9 +497,10 @@ void brw_destroy_cache( struct brw_context *brw )
    GLuint i;
 
    brw_clear_cache(brw);
-   for (i = 0; i < BRW_MAX_CACHE; i++)
+   for (i = 0; i < BRW_MAX_CACHE; i++) {
+      dri_bo_unreference(brw->cache.last_bo[i]);
       free(brw->cache.name[i]);
-
+   }
    free(brw->cache.items);
    brw->cache.items = NULL;
    brw->cache.size = 0;

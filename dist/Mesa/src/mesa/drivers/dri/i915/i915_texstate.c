@@ -25,10 +25,9 @@
  * 
  **************************************************************************/
 
-#include "mtypes.h"
-#include "enums.h"
-#include "texformat.h"
-#include "dri_bufmgr.h"
+#include "main/mtypes.h"
+#include "main/enums.h"
+#include "main/texformat.h"
 
 #include "intel_mipmap_tree.h"
 #include "intel_tex.h"
@@ -296,6 +295,13 @@ i915_update_tex_unit(struct intel_context *intel, GLuint unit, GLuint ss3)
            wt == GL_CLAMP_TO_BORDER || wr == GL_CLAMP_TO_BORDER))
          return GL_FALSE;
 
+      /* Only support TEXCOORDMODE_CLAMP_EDGE and TEXCOORDMODE_CUBE (not 
+       * used) when using cube map texture coordinates
+       */
+      if (tObj->Target == GL_TEXTURE_CUBE_MAP_ARB &&
+          (((ws != GL_CLAMP) && (ws != GL_CLAMP_TO_EDGE)) ||
+           ((wt != GL_CLAMP) && (wt != GL_CLAMP_TO_EDGE))))
+          return GL_FALSE;
 
       state[I915_TEXREG_SS3] = ss3;     /* SS3_NORMALIZED_COORDS */
 
@@ -308,10 +314,21 @@ i915_update_tex_unit(struct intel_context *intel, GLuint unit, GLuint ss3)
    }
 
 
-   state[I915_TEXREG_SS4] = INTEL_PACKCOLOR8888(tObj->_BorderChan[0],
-                                                tObj->_BorderChan[1],
-                                                tObj->_BorderChan[2],
-                                                tObj->_BorderChan[3]);
+   if (firstImage->_BaseFormat == GL_DEPTH_COMPONENT) {
+      /* GL specs that border color for depth textures is taken from the
+       * R channel, while the hardware uses A.  Spam R into all the channels
+       * for safety.
+       */
+      state[I915_TEXREG_SS4] = INTEL_PACKCOLOR8888(tObj->_BorderChan[0],
+						   tObj->_BorderChan[0],
+						   tObj->_BorderChan[0],
+						   tObj->_BorderChan[0]);
+   } else {
+      state[I915_TEXREG_SS4] = INTEL_PACKCOLOR8888(tObj->_BorderChan[0],
+						   tObj->_BorderChan[1],
+						   tObj->_BorderChan[2],
+						   tObj->_BorderChan[3]);
+   }
 
 
    I915_ACTIVESTATE(i915, I915_UPLOAD_TEX(unit), GL_TRUE);

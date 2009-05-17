@@ -65,7 +65,13 @@
 #define I915_DESTREG_SR0 9
 #define I915_DESTREG_SR1 10
 #define I915_DESTREG_SR2 11
-#define I915_DEST_SETUP_SIZE 12
+#define I915_DESTREG_DRAWRECT0 12
+#define I915_DESTREG_DRAWRECT1 13
+#define I915_DESTREG_DRAWRECT2 14
+#define I915_DESTREG_DRAWRECT3 15
+#define I915_DESTREG_DRAWRECT4 16
+#define I915_DESTREG_DRAWRECT5 17
+#define I915_DEST_SETUP_SIZE 18
 
 #define I915_CTXREG_STATE4		0
 #define I915_CTXREG_LI	        	1
@@ -125,6 +131,9 @@ struct i915_fragment_program
    GLboolean on_hardware;
    GLboolean error;             /* If program is malformed for any reason. */
 
+   /** Record of which phases R registers were last written in. */
+   GLuint register_phases[16];
+   GLuint indirections;
    GLuint nr_tex_indirect;
    GLuint nr_tex_insn;
    GLuint nr_alu_insn;
