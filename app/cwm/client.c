@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.47 2009/01/23 20:47:45 okan Exp $
+ * $Id: client.c,v 1.48 2009/05/17 16:51:43 sthen Exp $
  */
 
 #include "headers.h"
@@ -396,6 +396,7 @@ client_unhide(struct client_ctx *cc)
 	cc->highlight = 0;
 	cc->flags &= ~CLIENT_HIDDEN;
 	xu_setstate(cc, NormalState);
+	client_draw_border(cc);
 }
 
 void
