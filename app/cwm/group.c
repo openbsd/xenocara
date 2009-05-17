@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.25 2009/05/17 17:04:59 sthen Exp $
+ * $Id: group.c,v 1.26 2009/05/17 22:48:47 okan Exp $
  */
 
 #include "headers.h"
@@ -143,6 +143,7 @@ group_init(void)
 		TAILQ_INSERT_TAIL(&Groupq, &Groups[i], entry);
 	}
 
+	Group_active = &Groups[0];
 }
 
 void
