@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.89 2009/05/18 00:14:19 oga Exp $
+ * $Id: calmwm.h,v 1.90 2009/05/18 00:17:46 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -471,7 +471,6 @@ void			 group_init(void);
 void			 group_hidetoggle(int);
 void			 group_only(int);
 void			 group_cycle(int);
-void			 group_only(int);
 void			 group_sticky(struct client_ctx *);
 void			 group_client_delete(struct client_ctx *);
 void			 group_menu(XButtonEvent *);
