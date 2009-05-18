@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-vmmouse],
-        12.6.3,
+        12.6.4,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-vmmouse)
 
@@ -70,7 +70,7 @@ AC_ARG_WITH(xorg-module-dir,
 inputdir=${moduledir}/input
 AC_SUBST(inputdir)
 
-AC_ARG_WITH(hal_bin_dir,
+AC_ARG_WITH(hal-bin-dir,
 	    AC_HELP_STRING([--with-hal-bin-dir=DIR],
 			   [Directory where HAL binaries where installed [[default=$bindir]]]),
 	    [halbindir="$withval"],
@@ -78,7 +78,7 @@ AC_ARG_WITH(hal_bin_dir,
 HAL_BIN_DIR=${halbindir}
 AC_SUBST(HAL_BIN_DIR)
 
-AC_ARG_WITH(hal_callouts_dir,
+AC_ARG_WITH(hal-callouts-dir,
 	    AC_HELP_STRING([--with-hal-callouts-dir=DIR],
 			   [Directory where HAL expects its callout scripts to be located
 			    [[default=$libdir/hal]]]),
@@ -87,7 +87,7 @@ AC_ARG_WITH(hal_callouts_dir,
 HAL_CALLOUTS_DIR=${halcalloutsdir}
 AC_SUBST(HAL_CALLOUTS_DIR)
 
-AC_ARG_WITH(hal_fdi_dir,
+AC_ARG_WITH(hal-fdi-dir,
 	    AC_HELP_STRING([--with-hal-fdi-dir=DIR],
 			   [Directory where HAL expects its fdi files to be located
 			   [[default=$datadir/hal/fdi/policy/20thirdparty]]]),

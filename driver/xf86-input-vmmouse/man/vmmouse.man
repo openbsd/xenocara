@@ -41,7 +41,7 @@ See the
 .B mouse(__drivermansuffix__)
 man page for details on these options.
 .SH "SEE ALSO"
-__xservername__(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1), X(__miscmansuffix__),
+__xservername__(1), __xconfigfile__(__filemansuffix__), Xserver(1), X(__miscmansuffix__),
 mouse(__drivermansuffix__)
 .SH AUTHORS
 Copyright (c) 1999-2007 VMware, Inc.

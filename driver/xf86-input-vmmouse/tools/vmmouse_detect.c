@@ -30,10 +30,16 @@
 #include <signal.h>
 #include "vmmouse_client.h"
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 void
 segvCB(int sig)
 {
+#if defined HAVE_XORG_SERVER_1_1_0
    exit(1);
+#endif
 }
 
 

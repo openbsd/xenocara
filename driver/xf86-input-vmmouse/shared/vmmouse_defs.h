@@ -57,6 +57,12 @@
 #define VMMOUSE_ERROR		        0xffff0000
 
 /*
+ * VMMouse Input packet flags
+ */
+#define VMMOUSE_MOVE_RELATIVE	        1
+#define VMMOUSE_MOVE_ABSOLUTE	        0
+
+/*
  * VMMouse Input button flags
  */
 #define VMMOUSE_LEFT_BUTTON	        0x20

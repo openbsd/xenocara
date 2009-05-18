@@ -95,7 +95,7 @@
  */
 #define VMMOUSE_MAJOR_VERSION 12
 #define VMMOUSE_MINOR_VERSION 6
-#define VMMOUSE_PATCHLEVEL 2
+#define VMMOUSE_PATCHLEVEL 4
 #define VMMOUSE_DRIVER_VERSION \
    (VMMOUSE_MAJOR_VERSION * 65536 + VMMOUSE_MINOR_VERSION * 256 + VMMOUSE_PATCHLEVEL)
 #define VMMOUSE_DRIVER_VERSION_STRING \
@@ -138,9 +138,11 @@ static void MouseCtrl(DeviceIntPtr device, PtrCtrl *ctrl);
  *		Definitions
  *****************************************************************************/
 typedef struct {
-   int 		screenNum;
-   Bool 	vmmouseAvailable;
-   Bool		relative;
+   int                 screenNum;
+   Bool                vmmouseAvailable;
+   VMMOUSE_INPUT_DATA  vmmousePrevInput;
+   Bool                isCurrRelative;
+   Bool                absoluteRequested;
 } VMMousePrivRec, *VMMousePrivPtr;
 
 static const char *reqSymbols[] = {
@@ -311,7 +313,7 @@ VMMousePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
       return NULL;
    }
 
-   mPriv->relative = TRUE;
+   mPriv->absoluteRequested = FALSE;
 
    /*
     * try to enable vmmouse here
@@ -479,6 +481,7 @@ VMMouseDoPostEvent(InputInfoPtr pInfo, int buttons, int dx, int dy)
     VMMousePrivPtr mPriv;
     int truebuttons;
     int id, change;
+    Bool mouseMoved = FALSE;
 
     pMse = pInfo->private;
     mPriv = (VMMousePrivPtr)pMse->mousePriv;
@@ -492,7 +495,14 @@ VMMouseDoPostEvent(InputInfoPtr pInfo, int buttons, int dx, int dy)
 
     buttons = reverseBits(reverseMap, buttons);
 
-    if (dx || dy) {
+    if (mPriv->isCurrRelative) {
+       mouseMoved = dx || dy;
+    } else {
+       mouseMoved = (dx != mPriv->vmmousePrevInput.X) ||
+                    (dy != mPriv->vmmousePrevInput.Y) ||
+                    (mPriv->vmmousePrevInput.Flags & VMMOUSE_MOVE_RELATIVE);
+    }
+    if (mouseMoved) {
 
 #ifdef CALL_CONVERSION_PROC
         /*
@@ -501,7 +511,7 @@ VMMouseDoPostEvent(InputInfoPtr pInfo, int buttons, int dx, int dy)
          */
         VMMouseConvertProc(pInfo, 0, 2, dx, dy, 0, 0, 0, 0, &dx, &dy);
 #endif
-        xf86PostMotionEvent(pInfo->dev, !mPriv->relative, 0, 2, dx, dy);
+        xf86PostMotionEvent(pInfo->dev, !mPriv->isCurrRelative, 0, 2, dx, dy);
     }
 
     if (truebuttons != pMse->lastButtons) {
@@ -549,7 +559,7 @@ VMMousePostEvent(InputInfoPtr pInfo, int buttons, int dx, int dy, int dz, int dw
 	break;
     case MSE_MAPTOX:
 	if (dz != 0) {
-	   if(mPriv->relative)
+	   if(mPriv->isCurrRelative)
 	      dx = dz;
 	   else
 	      dx += dz;
@@ -558,7 +568,7 @@ VMMousePostEvent(InputInfoPtr pInfo, int buttons, int dx, int dy, int dz, int dw
 	break;
     case MSE_MAPTOY:
 	if (dz != 0) {
-	   if(mPriv->relative)
+	   if(mPriv->isCurrRelative)
 	      dy = dz;
 	   else
 	      dy += dz;
@@ -593,7 +603,7 @@ VMMousePostEvent(InputInfoPtr pInfo, int buttons, int dx, int dy, int dz, int dw
      */
     if (zbutton) {
 	buttons &= ~zbutton;
-	if(mPriv->relative)
+	if(mPriv->isCurrRelative)
 	   VMMouseDoPostEvent(pInfo, buttons, 0, 0);
 	else
 	   VMMouseDoPostEvent(pInfo, buttons, dx, dy);
@@ -621,7 +631,6 @@ static void
 FlushButtons(MouseDevPtr pMse)
 {
     pMse->lastButtons = 0;
-    pMse->lastMappedButtons = 0;
 }
 
 
@@ -865,8 +874,8 @@ VMMouseDeviceControl(DeviceIntPtr device, int mode)
 	 VMMousePrivPtr mPriv = (VMMousePrivPtr)pMse->mousePriv;
 	 if( mPriv->vmmouseAvailable ) {
 	    VMMouseClient_Disable();
-	    mPriv->vmmouseAvailable = FALSE;
-            mPriv->relative = TRUE;
+            mPriv->vmmouseAvailable = FALSE;
+            mPriv->absoluteRequested = FALSE;
 	 }
 
 	 xf86RemoveEnabledDevice(pInfo);
@@ -916,9 +925,14 @@ VMMouseReadInput(InputInfoPtr pInfo)
    pMse = pInfo->private;
    mPriv = pMse->mousePriv;
 
-   if (mPriv->relative) {
+   if (!mPriv->absoluteRequested) {
+      /*
+       * We can request for absolute mode, but it depends on
+       * host whether it will send us absolute or relative
+       * position.
+       */
       VMMouseClient_RequestAbsolute();
-      mPriv->relative = FALSE;
+      mPriv->absoluteRequested = TRUE;
       xf86Msg(X_INFO, "VMWARE(0): vmmouse enable absolute mode\n");
    }
 
@@ -973,12 +987,14 @@ VMMouseReadInput(InputInfoPtr pInfo)
 static void
 GetVMMouseMotionEvent(InputInfoPtr pInfo){
    MouseDevPtr pMse;
+   VMMousePrivPtr mPriv;
    int buttons, dx, dy, dz, dw;
    VMMOUSE_INPUT_DATA  vmmouseInput;
    int ps2Buttons = 0;
    int numPackets;
 
    pMse = pInfo->private;
+   mPriv = (VMMousePrivPtr)pMse->mousePriv;
    while((numPackets = VMMouseClient_GetInput(&vmmouseInput))){
       if (numPackets == VMMOUSE_ERROR) {
          VMMouseClient_Disable();
@@ -1003,8 +1019,13 @@ GetVMMouseMotionEvent(InputInfoPtr pInfo){
       dy = vmmouseInput.Y;
       dz = (char)vmmouseInput.Z;
       dw = 0;
+      /*
+       * Get the per package relative or absolute information.
+       */
+      mPriv->isCurrRelative = vmmouseInput.Flags & VMMOUSE_MOVE_RELATIVE;
       /* post an event */
       pMse->PostEvent(pInfo, buttons, dx, dy, dz, dw);
+      mPriv->vmmousePrevInput = vmmouseInput;
    }
 }
 
@@ -1106,7 +1127,7 @@ VMMouseConvertProc(InputInfoPtr pInfo, int first, int num, int v0, int v1, int v
    if (first != 0 || num != 2)
       return FALSE;
 
-   if(mPriv->relative) {
+   if(mPriv->isCurrRelative) {
       *x = v0;
       *y = v1;
    } else {

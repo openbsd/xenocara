@@ -49,6 +49,15 @@
 #include "xf86_libc.h"
 #endif
 
+/* Map Solaris/Sun compiler #defines to gcc equivalents */
+#if !defined __i386__ && defined __i386
+# define __i386__
+#endif
+
+#if !defined __x86_64__ && defined __amd64
+# define __x86_64__
+#endif
+
 #if !defined __i386__ && !defined __x86_64__
 #error The vmmouse protocol is only supported on x86 architectures.
 #endif
