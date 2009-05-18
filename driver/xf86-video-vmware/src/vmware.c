@@ -83,7 +83,7 @@ char rcsId_vmware[] =
 #define VMWARE_DRIVER_NAME "vmware"
 #define VMWARE_MAJOR_VERSION	10
 #define VMWARE_MINOR_VERSION	16
-#define VMWARE_PATCHLEVEL	5
+#define VMWARE_PATCHLEVEL	6
 #define VMWARE_DRIVER_VERSION \
    (VMWARE_MAJOR_VERSION * 65536 + VMWARE_MINOR_VERSION * 256 + VMWARE_PATCHLEVEL)
 #define VMWARE_DRIVER_VERSION_STRING \
@@ -921,6 +921,11 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
     clockRanges->doubleScanAllowed = FALSE;
     clockRanges->ClockMulFactor = 1;
     clockRanges->ClockDivFactor = 1;
+   
+    /*
+     * Get the default supported modelines
+     */
+    vmwareGetSupportedModelines(&pScrn->monitor->Modes);
 
     i = xf86ValidateModes(pScrn, pScrn->monitor->Modes, pScrn->display->modes,
                           clockRanges, NULL, 256, pVMWARE->maxWidth, 32 * 32,
@@ -1779,8 +1784,7 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
      * We will lazily add the dynamic modes as the are needed when new
      * modes are requested through the control extension.
      */
-    pVMWARE->dynMode1 = NULL;
-    pVMWARE->dynMode2 = NULL;
+    memset(&pVMWARE->dynModes, 0, sizeof pVMWARE->dynModes);
 
 #if VMWARE_DRIVER_FUNC
     pScrn->DriverFunc = VMWareDriverFunc;

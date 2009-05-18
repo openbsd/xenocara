@@ -116,19 +116,20 @@ VMwareCtrlDoSetRes(ScrnInfoPtr pScrn,
                    CARD32 y,
                    Bool resetXinerama)
 {
+   int modeIndex;
    DisplayModePtr mode;
    VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
 
    if (pScrn && pScrn->modes) {
       VmwareLog(("DoSetRes: %d %d\n", x, y));
-  
+
       if (resetXinerama) {
          xfree(pVMWARE->xineramaNextState);
          pVMWARE->xineramaNextState = NULL;
          pVMWARE->xineramaNextNumOutputs = 0;
       }
 
-      /* 
+      /*
        * Don't resize larger than possible but don't
        * return an X Error either.
        */
@@ -138,20 +139,30 @@ VMwareCtrlDoSetRes(ScrnInfoPtr pScrn,
       }
 
       /*
-       * Switch the dynamic modes so that we alternate
-       * which one gets updated on each call.
+       * Find an dynamic mode which isn't current, and replace it with
+       * the requested mode. Normally this will cause us to alternate
+       * between two dynamic mode slots, but there are some important
+       * corner cases to consider. For example, adding the same mode
+       * multiple times, adding a mode that we never switch to, or
+       * adding a mode which is a duplicate of a built-in mode. The
+       * best way to handle all of these cases is to directly test the
+       * dynamic mode against the current mode pointer for this
+       * screen.
        */
-      mode = pVMWARE->dynMode1;
-      pVMWARE->dynMode1 = pVMWARE->dynMode2;
-      pVMWARE->dynMode2 = mode;
 
-      /*
-       * Initialise the dynamic mode if it hasn't been used before.
-       */
-      if (!pVMWARE->dynMode1) {
-         pVMWARE->dynMode1 = VMWAREAddDisplayMode(pScrn, "DynMode", 1, 1);
+      for (modeIndex = 0; modeIndex < NUM_DYN_MODES; modeIndex++) {
+         /*
+          * Initialise the dynamic mode if it hasn't been used before.
+          */
+         if (!pVMWARE->dynModes[modeIndex]) {
+            pVMWARE->dynModes[modeIndex] = VMWAREAddDisplayMode(pScrn, "DynMode", 1, 1);
+         }
+
+         mode = pVMWARE->dynModes[modeIndex];
+         if (mode != pScrn->currentMode) {
+            break;
+         }
       }
-      mode = pVMWARE->dynMode1;
 
       mode->HDisplay = x;
       mode->VDisplay = y;

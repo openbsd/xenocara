@@ -290,6 +290,7 @@ vmwareCursorInit(ScreenPtr pScreen)
     infoPtr->MaxWidth = MAX_CURS;
     infoPtr->MaxHeight = MAX_CURS;
     infoPtr->Flags = HARDWARE_CURSOR_BIT_ORDER_MSBFIRST |
+                     HARDWARE_CURSOR_UPDATE_UNHIDDEN |
                      HARDWARE_CURSOR_SOURCE_MASK_NOT_INTERLEAVED;
     infoPtr->SetCursorColors = vmwareSetCursorColors;
     infoPtr->SetCursorPosition = vmwareSetCursorPosition;

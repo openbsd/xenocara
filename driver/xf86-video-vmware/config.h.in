@@ -38,6 +38,9 @@
 /* Has version 1.1.0 or greater of the Xserver */
 #undef HAVE_XORG_SERVER_1_1_0
 
+/* Has version 1.2.0 or greater of the Xserver */
+#undef HAVE_XORG_SERVER_1_2_0
+
 /* Name of package */
 #undef PACKAGE
 

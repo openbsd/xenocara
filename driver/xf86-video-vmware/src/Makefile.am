@@ -48,5 +48,6 @@ vmware_drv_la_SOURCES = \
          vmwarectrl.h \
          vmwarectrlproto.h \
          vmwarexinerama.c \
-         vmwarevideo.c
+         vmwarevideo.c \
+         vmwaremodes.c
 

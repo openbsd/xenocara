@@ -43,8 +43,17 @@
 #include "svga_reg.h"
 #include "svga_struct.h"
 
-/* Arbitrarily choose max cursor dimensions.  The emulation doesn't care. */
-#define MAX_CURS        32
+/*
+ * The virtual hardware's cursor limits are pretty big. Some VMware
+ * product versions limit to 1024x1024 pixels, others limit to 128
+ * kilobytes of cursor data. We just choose an arbitrary maximum
+ * cursor size. 64x64 is a common value for real hardware, so we'll go
+ * with that.
+ */
+#define MAX_CURS        64
+
+#define NUM_DYN_MODES   2
+
 
 typedef struct {
     CARD32 svga_reg_enable;
@@ -94,8 +103,7 @@ typedef struct {
     VMWARERegRec SavedReg;
     VMWARERegRec ModeReg;
 
-    DisplayModePtr dynMode1;
-    DisplayModePtr dynMode2;
+    DisplayModePtr dynModes[NUM_DYN_MODES];
 
     Bool* pvtSema;
 
@@ -294,4 +302,8 @@ void vmwareCheckVideoSanity(
    ScrnInfoPtr pScrn
    );
 
+/* vmwaremode.c */
+void vmwareGetSupportedModelines(
+   DisplayModePtr *monitorModes
+   );
 #endif
