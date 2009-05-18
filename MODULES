@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.72 2009/05/17 08:17:26 matthieu Exp $
+# $OpenBSD: MODULES,v 1.73 2009/05/18 20:59:42 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -52,7 +52,7 @@ app/xgamma		1.0.2	7.3
 app/xgc			1.0.1	7.0
 app/xhost		1.0.2	7.3
 app/xinit		1.1.1	7.4+
-app/xinput		1.4.2	7.4+	needs-update
+app/xinput		1.4.2	7.4+
 app/xkbcomp		1.0.5	7.4
 app/xkbevd		1.0.2	7.1
 app/xkbprint		1.0.1	7.0
@@ -113,7 +113,7 @@ driver/xf86-input-penmount	1.4.0	7.4+
 driver/xf86-input-spaceorb	1.1.1	7.1	deprecated
 driver/xf86-input-summa		1.2.0	7.4	deprecated
 driver/xf86-input-tek4957	1.2.0	7.4	deprecated
-driver/xf86-input-vmmouse	12.6.4	7.4+	needs-update
+driver/xf86-input-vmmouse	12.6.4	7.4+
 driver/xf86-input-void		1.2.0	7.4+
 driver/xf86-video-apm		1.2.1	7.4+
 driver/xf86-video-ark		0.7.1	7.4+
@@ -139,7 +139,7 @@ driver/xf86-video-rendition	4.2.1	7.4+
 driver/xf86-video-s3		0.6.1	7.4+
 driver/xf86-video-s3virge	1.10.2	7.4+
 driver/xf86-video-savage	2.2.1	7.4
-driver/xf86-video-siliconmotion	1.7.1	7.4+	needs-update
+driver/xf86-video-siliconmotion	1.7.1	7.4+
 driver/xf86-video-sis		0.10.1	7.4+	needs-update
 driver/xf86-video-sisusb	0.9.1	7.4
 driver/xf86-video-sunbw2	1.1.0	7.1
@@ -154,7 +154,7 @@ driver/xf86-video-tga		1.2.0	7.0
 driver/xf86-video-trident	1.3.1	7.4+
 driver/xf86-video-tseng		1.2.1	7.4+
 driver/xf86-video-vesa		2.2.0	7.4+
-driver/xf86-video-vmware	10.16.6	7.4+	needs-update
+driver/xf86-video-vmware	10.16.6	7.4+
 driver/xf86-video-voodoo	1.2.1	7.4+
 driver/xf86-video-wsfb		0.2.1	7.2
 
