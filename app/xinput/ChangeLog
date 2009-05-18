@@ -1,3 +1,94 @@
+commit 5600d953531f377b5be114c9b72aca281f9bbca5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 7 15:21:16 2009 +1000
+
+    xinput 1.4.2
+
+commit 0996eebd20b017078b7a61e42b13b3c1c5acd1b8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 7 14:00:46 2009 +1000
+
+    XCloseDisplay when we're done.
+    
+    This isn't really necessary, but we might as well be correct.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 4832dc1f3ee8d11eadc99b5cd4e8158773d11f9b)
+
+commit c6c2736a31c00717c5915e97a22b85d96ce163fe
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri May 1 11:22:53 2009 +1000
+
+    Create the float property if it doesn't exist.
+    
+    If we don't have the float property we won't be able to use float properties
+    for device configuration since the drivers may not understand it.
+    We might still want to apply properties for client settings though.
+    
+    Reported-by: Simon Thum <simon.thum@gmx.de>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 4b4b2e3f31cf08073887d8583997eb3340a6c2e1)
+
+commit c7df478676b6573a07f74484668f9130706c4a1f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Apr 30 14:50:08 2009 +1000
+
+    If there's multiple null-terminated strings in the property, print all.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Simon Thum <simon.thum@gmx.de>
+    (cherry picked from commit 42dca922d287ffddcf2185ca96738f1505a04c27)
+
+commit 0616fc2e8c76c70d95173377abf39b2c7edfce19
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri May 1 09:14:46 2009 +1000
+
+    The float_atom should actually be an Atom
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit e9af7c5f602b5580df36c77ee1c2ed22ccf72134)
+
+commit 4fa194b42a5a6a15b533be070d21d981751b9b83
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Thu Apr 16 09:20:16 2009 -0400
+
+    Fix set-float-prop on 64-bit architectures.
+    
+    Since 32-byte data on 64-bit machines must be passed in as 64-bit longs, let's
+    typecast around a bit.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@redhat.com>
+    (cherry picked from commit a577bada8dddf3241a59cab812f5128131c46b29)
+
+commit 7abb366e80d3a309d4ab8cd459ce184c6806b6d1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Apr 14 09:13:15 2009 -0400
+
+    fix 64 bit issues with set-int-prop and list-props.
+    
+    libX11 uses longs for 32 bit values, increasing hilarity on 64 bit machines.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit de6326a75de810752a5b4e4c2f5fe98a2f7241a9)
+
+commit 4dc5f13e13c9434d6fa9ed9f10a8e12a55aedc24
+Author: Simon Thum <simon.thum@gmx.de>
+Date:   Thu Mar 26 13:52:15 2009 +0100
+
+    xinput: include device type in device list
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 2f8f2193fdfe783c0854772cc46f1b2e0b2e3ec4)
+
+commit 61b2df1cd0135d90c65219cfa17caedbe60a44a2
+Author: Simon Thum <simon.thum@gmx.de>
+Date:   Thu Mar 26 15:19:47 2009 +0100
+
+    xinput: mention set-float-prop in manpage
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 17d537fd65ba9b1c99a0dde7833eb4069cc624a8)
+
 commit 286724a1417ffda447be918e8bcf46cc37ed715b
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Apr 6 09:54:07 2009 +1000
@@ -201,7 +292,7 @@ Date:   Tue Apr 29 11:20:03 2008 +0930
     Use new XQueryInputVersion() request to tell the server we can do XI 2.
 
 commit e3b705dc15d07bbb478ced6b54a5e0553d978113
-Merge: ac3498c... 834422a...
+Merge: ac3498c 834422a
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Mon Apr 7 17:24:16 2008 +0930
 

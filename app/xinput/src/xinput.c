@@ -246,6 +246,7 @@ main(int argc, char * argv[])
 	    int	r = (*driver->func)(display, argc-2, argv+2,
 				    driver->func_name, driver->arg_desc);
 	    XSync(display, False);
+	    XCloseDisplay(display);
 	    return r;
 	}
 	driver++;
