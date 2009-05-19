@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.29 2009/05/18 00:23:35 okan Exp $
+ * $Id: group.c,v 1.30 2009/05/19 12:49:37 sthen Exp $
  */
 
 #include "headers.h"
@@ -152,7 +152,8 @@ group_movetogroup(struct client_ctx *cc, int idx)
 	if (idx < 0 || idx >= CALMWM_NGROUPS)
 		err(1, "group_movetogroup: index out of range (%d)", idx);
 
-	client_hide(cc);
+	if(Group_active != &Groups[idx])
+		client_hide(cc);
 	group_add(&Groups[idx], cc);
 }
 
