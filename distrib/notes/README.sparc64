@@ -11,147 +11,10 @@ Single, unaccelerated display
 -----------------------------
 This setup is by far the easiest to configure and is supported on just
 about every machine OpenBSD/sparc64 runs on (both PCI and SBus based
-machines).  A sample /etc/X11/xorg.conf is given at the end of this
-section, but it may need to be customized to fit the machine.  Mostly
-these just entails configuring where mouse input comes from.
+machines).  These setup do not require any configuration file.
 
-- For systems with serial mice on Zilog ports (zstty), the following
-'ServerLayout' section should be used in place of the one provided:
-
-Section "ServerLayout"
-	Identifier	"wsfb"
-	Screen 0	"Screen0" 0 0
-	InputDevice	"zsmouse0" "CorePointer"
-	InputDevice	"Keyboard0" "CoreKeyboard"
-EndSection
-
-- For systems with serial mice on 'com' ports, the following
-'ServerLayout' section should be used in place of the one provided:
-
-Section "ServerLayout"
-	Identifier	"wsfb"
-	Screen 0	"Screen0" 0 0
-	InputDevice	"commouse0" "CorePointer"
-	InputDevice	"Keyboard0" "CoreKeyboard"
-EndSection
-
-- For systems with USB mice or PS/2 mice, the following 'ServerLayout'
-section should be used in place of the one provided:
-
-Section "ServerLayout"
-	Identifier	"wsfb"
-	Screen 0	"Screen0" 0 0
-	InputDevice	"wsmouse0" "CorePointer"
-	InputDevice	"Keyboard0" "CoreKeyboard"
-EndSection
-
-- For systems with both UPA and VGA framebuffers, the device parameter
-in the "Device" section must match the wsdisplay device corresponding
-to the console (/dev/ttyC0 for wsdisplay0, /dev/ttyD0 for wsdisplay1,
-etc).
-
-- For systems with UPA Creator/Creator3D/Elite3D framebuffers use 
-	DefaultDepth 24
-  in the "Screen" section.
-
-- For systems with Expert3D framebuffers (using the ifb(4) kernel
-  driver), the driver name in the "Device" section should be "wildcatfb"
-  instead of "wsfb":
-	Driver		"wildcatfb"
-
-- What follows is a  whole sample configuration file. Copy it to
-  /etc/X11/xorg.conf and customize it as described above. 
-
--- Cut Here --
-#
-# Unaccelerated, single display configuration
-#
-Section "ServerLayout"
-	Identifier	"wsfb"
-	Screen	0	"Screen0" 0 0
-	InputDevice    "wsmouse0" "CorePointer"
-	InputDevice    "Keyboard0" "CoreKeyboard"
-EndSection
-	
-Section "Files"
-	FontPath     "/usr/X11R6/lib/X11/fonts/misc/"
-	FontPath     "/usr/X11R6/lib/X11/fonts/TTF/"
-	FontPath     "/usr/X11R6/lib/X11/fonts/OTF"
-	FontPath     "/usr/X11R6/lib/X11/fonts/Type1/"
-	FontPath     "/usr/X11R6/lib/X11/fonts/75dpi/"
-EndSection
-
-# All Sun keyboards (USB Type 6, Serial Type 3/4/5/6)
-Section "InputDevice"
-	Identifier  "Keyboard0"
-	Driver      "kbd"
-	Option	    "XkbModel" 	  "sun"
-EndSection
-
-# USB Mice
-Section "InputDevice"
-	Identifier	"wsmouse0"
-	Driver		"mouse"
-	Option		"Protocol" "wsmouse"
-	Option		"Device"   "/dev/wsmouse"
-EndSection
-
-# Serial mice on zstty ports
-Section "InputDevice"
-	Identifier	"zsmouse0"
-	Driver		"mouse"
-	Option		"Protocol" "SunMouse"
-	Option		"Device" "/dev/ttyc"
-	Option		"Baudrate" "1200"
-EndSection
-
-# Serial mice on com ports
-Section "InputDevice"
-	Identifier	"commouse0"
-	Driver		"mouse"
-	Option		"Protocol" "SunMouse"
-	Option		"Device" "/dev/tty00"
-	Option		"Baudrate" "1200"
-EndSection
-
-# All monitors
-Section "Monitor"
-	Identifier   "Monitor"
-	VendorName   "Unknown"
-	ModelName    "Unknown"
-# Adjust those to your monitor before using another device than wsfb 
-# or you can destroy it !!
-	HorizSync    31.5-60
-	VertRefresh  50-70
-EndSection
-
-# All framebuffers
-Section "Device"
-	Identifier	"Wsdisplay0"
-	Driver		"wsfb"
-	Option		"device" "/dev/ttyC0"
-EndSection
-
-# All framebuffers
-Section "Screen"
-	Identifier "Screen0"
-	Device     "Wsdisplay0"
-	Monitor    "Monitor"
-	DefaultDepth 8
-	SubSection "Display"
-		Depth     8
-	EndSubSection
-	SubSection "Display"
-		Depth     16
-	EndSubSection
-	SubSection "Display"
-		Depth     24
-	EndSubSection
-EndSection
-#
-# EOF
-#
--- Cut Here --
+To use xdm from rc.conf, it is necessary to disable /dev/console in
+/etc/ttys, change the 'status' of /dev/console to 'off'.
 
 Single, accelerated display
 ---------------------------
@@ -165,7 +28,7 @@ of the video card, eg:
 	wsdisplay0 at vgafb0: console (std, sun emulation), using wskbd0
 
 The framebuffer is on bus 0, device 19, function 0.  Now, using the
-configuration in the first section as a guide, replace the "Device" section
+configuration in the first section as a guide, add a "Device" section
 with something like the following (replace 0:19:0 with the bus:dev:func
 of the framebuffer):
 
@@ -178,92 +41,49 @@ of the framebuffer):
 		# Option	"reference_clock" "29.5MHz"
 	EndSection
 
-For UPA Creator framebuffers, the device can be automatically detected if 
-you don't have an xorg.conf file. Otherwise the "Device" section would 
-be something like:
-
-	Section "Device"
-		Identifier	"Card0"
-		Driver		"sunffb"
-	EndSection
-
-It is also important that you modify the Monitor section and change the
-HorizSync and VertRefresh parameters with those of the monitor in use.
-Finally, customization of the Screen section will allow switching of
-resolutions and setting the default bit depth, e.g.:
-
-Section "Screen"
-	Identifier	"Screen0"
-	Device		"Card0"
-	Monitor		"Monitor"
-	DefaultDepth	24
-	SubSection "Display"
-		Depth	8
-		Modes	"640x480" "800x600" "1024x768"
-	EndSubSection
-	SubSection "Display"
-		Depth	16
-		Modes	"640x480" "800x600" "1024x768"
-	EndSubSection
-	SubSection "Display"
-		Depth	24
-		Modes	"640x480" "800x600" "1024x768"
-	EndSubSection
-EndSection
-
 See xorg.conf(5) for more options.
+
+For UPA Creator framebuffers, the device will be automatically detected
+and you don't need to have an xorg.conf file.
+
+To use xdm from rc.conf, it is necessary to disable /dev/console in
+/etc/ttys, change the 'status' of /dev/console to 'off'.
 
 Dual, unaccelerated display
 ---------------------------
 Dual-headed displays are only supported on machines with SBus framebuffers.
-Starting with the configuration in the first section, three additional
-sections are added for the second framebuffer:
+These configurations will require a configuration file.
+Create /etc/X11/xorg.conf, with these two sections for each framebuffer:
 
-Section "Device"
-	Identifier      "Wsdisplay1"
-	Driver          "wsfb"
-	Option          "device" "/dev/ttyD0"
-EndSection
+	Section "Device"
+		Identifier	"Wsdisplay0"
+		Driver		"wsfb"
+		Option		"device"	"/dev/ttyC0"
+	EndSection
 
-Section "Monitor"
-	Identifier   "Monitor1"
-	VendorName   "Unknown"
-	ModelName    "Unknown"
-# Adjust those to your monitor before using another device than wsfb
-# or you can destroy it !!
-	HorizSync    31.5-60
-	VertRefresh  50-70
-EndSection
+	Section "Screen"
+		Identifier	"Screen0"
+		Device		"Wsdisplay0"
+	EndSection
 
-Section "Screen"
-	Identifier "Screen1"
-	Device     "Wsdisplay1"
-	Monitor    "Monitor1"
-	DefaultDepth 8
-	SubSection "Display"
-		Depth     8
-	EndSubSection
-	SubSection "Display"
-		Depth     16
-	EndSubSection
-	SubSection "Display"
-		Depth     24
-	EndSubSection
-EndSection
+This example is for the first screen. For the others, increment the
+"Wsdisplay" and "Screen" numbers, and change the device to /dev/ttyD0
+for the second display, /dev/ttyE0 for the third, and so on.
 
-The ServerLayout section is also changed to include the second framebuffer
-and its logical location relative to the first, e.g.:
+Then, you'll need to create a ServerLayout section describing all the
+displays and their location relative to the first, as in:
 
-Section "ServerLayout"
-	Identifier	"wsfb"
-	Screen  0       "Screen0"
-	Screen  1       "Screen1" RightOf "Screen0"
-	InputDevice	"zsmouse0" "CorePointer"
-	InputDevice	"Keyboard0" "CoreKeyboard"
-EndSection
+	Section "ServerLayout"
+		Identifier	"wsfb"
+		Screen  0       "Screen0"
+		Screen  1       "Screen1" RightOf "Screen0"
+	EndSection
 
 See xorg.conf(5) for more options.
 
+To use xdm from rc.conf, it is necessary to disable /dev/console in
+/etc/ttys, change the 'status' of /dev/console to 'off'.
+
 problem_blurb
 
-$OpenBSD: README.sparc64,v 1.8 2009/02/15 15:27:40 matthieu Exp $
+$OpenBSD: README.sparc64,v 1.9 2009/05/20 18:26:35 miod Exp $
