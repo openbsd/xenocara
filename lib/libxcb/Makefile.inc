@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.2 2009/05/22 16:53:05 matthieu Exp $
+#	$OpenBSD: Makefile.inc,v 1.3 2009/05/22 21:39:17 matthieu Exp $
 
 LIBXCB=	${.CURDIR}/../../../dist/libxcb
 
@@ -6,9 +6,12 @@ CPPFLAGS=	-I${X11BASE}/include \
 		-I${.CURDIR}/../src -I${LIBXCB}/src \
 		-DHAVE_CONFIG_H
 
-.PATH:	${LIBXCB}
+.SUFFIXES: .in
+
 .PATH:	${LIBXCB}/src
 .PATH:	${.CURDIR}/../src
+.PATH.in: ${LIBXCB}
+.PATH.xml: ${DATADIR}/xcb
 
 obj: _xenocara_obj
 
