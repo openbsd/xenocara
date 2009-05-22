@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.31 2009/05/22 15:34:15 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.32 2009/05/22 15:46:13 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -83,7 +83,7 @@ ${PKGCONFIG}: ${PKGCONFIG}.in
 	    -e 's#@includedir@#$${prefix}/include#g' \
 	    -e 's#@PACKAGE_VERSION@#${PACKAGE_VERSION}#g' \
 	    ${EXTRA_PKGCONFIG_SUBST} \
-	< ${_SRCDIR}/${PKGCONFIG}.in > $@
+	< $? > $@
 
 install-pc: ${PKGCONFIG}
 	${INSTALL_DATA} ${PKGCONFIG} ${DESTDIR}${LIBDIR}/pkgconfig
