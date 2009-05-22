@@ -30,7 +30,7 @@
 #ifndef HAVE_PTHREAD_SELF
 #define NEED_ZERO_STUB
 # ifdef SUPPORT_ATTRIBUTE_ALIAS
-int pthread_self() __attribute__ ((weak, alias ("__pthread_zero_stub")));
+pthread_t pthread_self() __attribute__ ((weak, alias ("__pthread_zero_stub")));
 # else
 #  pragma weak pthread_self = __pthread_zero_stub
 # endif
