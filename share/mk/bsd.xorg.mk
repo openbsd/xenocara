@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.30 2009/05/22 15:21:21 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.31 2009/05/22 15:34:15 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -21,6 +21,7 @@
 
 AUTOMAKE_VERSION=	1.9
 AUTOCONF_VERSION=	2.62
+PYTHON_VERSION=		2.6
 
 # Where source lives
 XSRCDIR?=		/usr/xenocara
@@ -67,7 +68,9 @@ AUTOTOOLS_ENV=  AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 
 # pkgconfig
 .if defined(PKGCONFIG)
+.if !defined(PACKAGE_VERSION)
 PACKAGE_VERSION!=m4 ${XSRCDIR}/share/mk/package_version.m4 ${_SRCDIR}/configure.ac
+.endif
 
 all: ${PKGCONFIG}
 
