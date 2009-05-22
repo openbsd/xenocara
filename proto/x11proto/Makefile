@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2008/03/25 23:28:20 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2009/05/22 15:11:02 matthieu Exp $
 
 HEADERS_SUBDIR=	X11/
 HEADERS=	ap_keysym.h DECkeysym.h HPkeysym.h keysymdef.h keysym.h \
@@ -9,7 +9,7 @@ HEADERS=	ap_keysym.h DECkeysym.h HPkeysym.h keysymdef.h keysym.h \
 GENERATED_HEADERS= Xfuncproto.h Xpoll.h
 PKGCONFIG=	xproto.pc
 
-all:: ${GENERATED_HEADERS}
+all: ${GENERATED_HEADERS}
 
 Xfuncproto.h: Xfuncproto.h.in
 	@sed -e 's,^#undef NARROWPROTO,#define NARROWPROTO,' \
@@ -19,14 +19,18 @@ Xfuncproto.h: Xfuncproto.h.in
 Xpoll.h: Xpoll.h.in
 	@sed -e 's#@USE_FDS_BITS@#fds_bits#g' ${.CURDIR}/Xpoll.h.in > $@
 
-install::  ${GENERATED_HEADERS}
+install-gh:  ${GENERATED_HEADERS}
 	@echo installing ${GENERATED_HEADERS} in ${INCSDIR}/${HEADERS_SUBDIR}
 	@for i in ${GENERATED_HEADERS}; do \
 	    cmp -s $$i ${DESTDIR}${INCSDIR}/$$i || \
 		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/${HEADERS_SUBDIR}$$i;\
 	done
 
-clean::
+clean-gh:
 	rm -f ${GENERATED_HEADERS}
+
+realinstall:	install-gh
+
+clean:	clean-gh
 
 .include <bsd.xorg.mk>
