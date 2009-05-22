@@ -1,4 +1,4 @@
-#	$OpenBSD: BSD.x11.dist,v 1.18 2009/05/22 15:15:52 matthieu Exp $
+#	$OpenBSD: BSD.x11.dist,v 1.19 2009/05/22 17:57:23 matthieu Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 .
@@ -137,6 +137,8 @@
                 ..
                 pixman-1
                 ..
+		xcb
+		..
                 xorg
                 ..
             ..
@@ -373,6 +375,8 @@
                 ..
                 mk
                 ..
+		xcb
+		..
             ..
         ..
         local
