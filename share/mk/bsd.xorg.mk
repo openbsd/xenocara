@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.28 2009/05/22 15:03:03 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.29 2009/05/22 15:09:28 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -69,7 +69,7 @@ AUTOTOOLS_ENV=  AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 .if defined(PKGCONFIG)
 PACKAGE_VERSION!=m4 ${XSRCDIR}/share/mk/package_version.m4 ${_SRCDIR}/configure.ac
 
-all:: ${PKGCONFIG}
+all: ${PKGCONFIG}
 
 ${PKGCONFIG}: ${PKGCONFIG}.in
 	@sed -e 's#@prefix@#${X11BASE}#g' \
@@ -79,30 +79,40 @@ ${PKGCONFIG}: ${PKGCONFIG}.in
 	    -e 's#@PACKAGE_VERSION@#${PACKAGE_VERSION}#g' \
 	< ${_SRCDIR}/${PKGCONFIG}.in > $@
 
-install:: ${PKGCONFIG}
+install-pc: ${PKGCONFIG}
 	${INSTALL_DATA} ${PKGCONFIG} ${DESTDIR}${LIBDIR}/pkgconfig
 
-clean::
-	rm -f ${PKGCONFIG}
+clean-pc:
+	rm -rf ${PKGCONFIG}
+
+realinstall: install-pc
+
+clean:	clean-pc
+
+
 .endif
 
 # headers
 .if defined(HEADERS)
-install::
+install-headers:
 	@echo installing ${HEADERS} in ${INCSDIR}/${HEADERS_SUBDIR}
 	@cd ${_SRCDIR}; for i in ${HEADERS}; do \
 	    cmp -s $$i ${DESTDIR}${INCSDIR}/${HEADERS_SUBDIR}$$i || \
 		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/${HEADERS_SUBDIR}$$i;\
 	done
+
+realinstall: install-headers
 .endif
 .if defined(HEADERS_SUBDIRS)
 .for d in ${HEADERS_SUBDIRS}
-install::
+install-headers-subdirs::
 	@echo installing ${HEADERS_${d:S/\//_/}} in ${INCSDIR}/${d}
 	@cd ${_SRCDIR}; for i in ${HEADERS_${d:S/\//_/}}; do \
 	    cmp -s $$i ${DESTDIR}${INCSDIR}/$d/$$i || \
 		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/${d}; \
 	done
+
+realinstall: install-headers-subdirs
 .endfor
 .endif
 
