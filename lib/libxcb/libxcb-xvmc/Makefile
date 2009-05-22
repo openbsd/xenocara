@@ -1,10 +1,10 @@
-#	$OpenBSD: Makefile,v 1.2 2009/05/22 16:22:48 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2009/05/22 16:53:05 matthieu Exp $
 
-LIB=	xcb-xvmc
+LIB=		xcb-xvmc
 
-HDRS=	xvmc.h
+HEADERS=	xvmc.h
 
-SRCS=	xvmc.c
+SRCS=		xvmc.c
 
 PKGCONFIG=	xcb-xvmc.pc
 

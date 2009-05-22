@@ -1,10 +1,10 @@
-#	$OpenBSD: Makefile,v 1.2 2009/05/22 16:22:47 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2009/05/22 16:53:05 matthieu Exp $
 
-LIB=	xcb-damage
+LIB=		xcb-damage
 
-HDRS=	damage.h
+HEADERS=	damage.h
 
-SRCS=	damage.c
+SRCS=		damage.c
 
 PKGCONFIG=	xcb-damage.pc
 

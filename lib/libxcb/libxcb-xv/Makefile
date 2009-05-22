@@ -1,10 +1,10 @@
-#	$OpenBSD: Makefile,v 1.2 2009/05/22 16:22:48 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2009/05/22 16:53:05 matthieu Exp $
 
-LIB=	xcb-xv
+LIB=		xcb-xv
 
-HDRS=	xv.h
+HEADERS=	xv.h
 
-SRCS=	xv.c
+SRCS=		xv.c
 
 PKGCONFIG=	xcb-xv.pc
 

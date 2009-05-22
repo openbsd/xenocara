@@ -1,9 +1,11 @@
-#	$OpenBSD: Makefile,v 1.1.1.1 2009/05/22 16:09:01 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2009/05/22 16:53:05 matthieu Exp $
 
-LIB=	xcb
+LIB=		xcb
 
-HDRS=	xcb.h \
-	xcb_ext.h
+HEADERS=	xcb.h \
+		xcbext.h
+
+_SRCDIR=	${LIBXCB}/src
 
 SRCS= \
 	xcb_conn.c \
