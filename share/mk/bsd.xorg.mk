@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.29 2009/05/22 15:09:28 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.30 2009/05/22 15:21:21 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -73,10 +73,13 @@ all: ${PKGCONFIG}
 
 ${PKGCONFIG}: ${PKGCONFIG}.in
 	@sed -e 's#@prefix@#${X11BASE}#g' \
+	    -e 's#@datarootdir@#$${prefix}/share#g' \
+	    -e 's#@datadir@#$${datarootdir}#g' \
 	    -e 's#@exec_prefix@#$${prefix}#g' \
 	    -e 's#@libdir@#$${exec_prefix}/lib#g' \
 	    -e 's#@includedir@#$${prefix}/include#g' \
 	    -e 's#@PACKAGE_VERSION@#${PACKAGE_VERSION}#g' \
+	    ${EXTRA_PKGCONFIG_SUBST} \
 	< ${_SRCDIR}/${PKGCONFIG}.in > $@
 
 install-pc: ${PKGCONFIG}
