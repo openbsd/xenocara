@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.27 2009/05/02 13:51:29 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.28 2009/05/22 15:03:03 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -192,12 +192,12 @@ build:
 
 .if !target(clean)
 clean:
-	-@if [ -e Makefile ]; then exec ${MAKE} clean; fi
+	-@if [ -f Makefile ]; then exec ${MAKE} clean; fi
 .endif
 
 .if !target(cleandir)
 cleandir: clean
-	-@if [ -e Makefile ]; then exec ${MAKE} distclean; fi
+	-@if [ -f Makefile ]; then exec ${MAKE} distclean; fi
 .endif
 
 #
