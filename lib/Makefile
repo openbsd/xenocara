@@ -1,8 +1,12 @@
-# $OpenBSD: Makefile,v 1.13 2008/12/23 21:55:41 david Exp $
+# $OpenBSD: Makefile,v 1.14 2009/05/22 17:58:45 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
-SUBDIR= freetype fontconfig libxtrans libXau libXdmcp \
+.if ${XENOCARA_BUILD_XCB:L} == "yes"
+XCB_LIBS=	libpthread-stubs libxcb
+.endif
+
+SUBDIR= freetype fontconfig libxtrans libXau libXdmcp ${XCB_LIBS}\
 	libX11  libXext  libXrender libXft libdmx libfontenc \
 	libFS libICE liblbxutil libSM libXt \
 	libXmu libXpm libXp libXaw libXfixes libXcomposite \

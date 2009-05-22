@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xconf.mk,v 1.8 2008/11/02 15:20:26 matthieu Exp $
+# $OpenBSD: bsd.xconf.mk,v 1.9 2009/05/22 17:58:45 matthieu Exp $
 
 # Shared libs?
 .if ${MACHINE} == "mvme88k" || ${MACHINE} == "vax"
@@ -15,3 +15,6 @@ XENOCARA_BUILD_DRI?=no
 XENOCARA_BUILD_GL?=yes
 XENOCARA_BUILD_DRI?=yes
 .endif
+
+# Build XCB
+XENOCARA_BUILD_XCB?=no
