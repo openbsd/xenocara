@@ -1,0 +1,76 @@
+commit a223ab5e6a215d86e4bf072369b331506f689f83
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Apr 20 14:08:19 2009 -0400
+
+    Bump to 2.0 and release
+
+commit f46b6ca29b2da54cf6e6db57d464bea9476594c6
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Jan 9 06:07:59 2009 +0100
+
+    Distribute the protocol documentation
+
+commit ac787752bf67f8f1ea8167191e5fb9d7fbbe7c7f
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Jan 27 20:06:28 2009 -0200
+
+    Janitor: Correct make distcheck and dont distribute autogen.sh
+
+commit 65c7097d549ada25d11738b15996b18c9e57a847
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 1 20:57:40 2008 -0500
+
+    Bump to 1.99.3 and back out the value bitmask from the CopyRegion request.
+
+commit f7b737bef90df4430ac491d65accc7742bc6ca38
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 1 14:01:42 2008 -0500
+
+    Bump version to 1.99.2.
+
+commit 8cab3f0e6f551220bd11074779f4ccec1e948e00
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Oct 14 23:19:15 2008 -0400
+
+    Add protocol documentation, update to DRI2CopyRegion request.
+
+commit abb1edc487543c26856afdbe6a7e2c088a1e82ee
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Aug 12 12:52:33 2008 -0400
+
+    Update to 1.99.1 - drop sarea and perform swap buffer in X server.
+    
+    Still to resolve is the swap buffer request.  It should probably be
+    broken into two requests, one to post the swap request and one to wait
+    for it to be completed.  Also, need to find a good solution to
+    CopySubBuffer that doesn't require a roundtrip per rectangle.
+    
+    Don't need to solve all this for 2.0, though, can add requests later on.
+
+commit b9d7a0c1b0f5b40dfe8ca7a33693198bf91244ca
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Apr 2 19:11:32 2008 -0400
+
+    Adjust pkg-config cflags to match other proto modules.
+
+commit b515bee843d5ab91fc0fe30b8eb13aadd69b5131
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Mar 26 16:00:05 2008 -0400
+
+    Add reemitDrawableInfo protocol.
+    
+    Also, remove the screen number where it's redundant and rename
+    drmDrawable in the create drawable request to just 'handle' now that
+    we don't rely on drm drawables.
+
+commit d2c2ffde8f3762af30ea6953d8a10b487f78733e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Mar 12 17:50:34 2008 -0400
+
+    Fix typo in xDRI2QueryVersionReq req type field.
+
+commit 672baf47cc5dfcdad4e70b4745e3316b209089a3
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Mar 11 00:12:55 2008 -0400
+
+    Initial commit.

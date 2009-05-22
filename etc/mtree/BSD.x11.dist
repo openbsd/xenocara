@@ -1,4 +1,4 @@
-#	$OpenBSD: BSD.x11.dist,v 1.17 2009/05/03 21:33:20 matthieu Exp $
+#	$OpenBSD: BSD.x11.dist,v 1.18 2009/05/22 15:15:52 matthieu Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 .
@@ -360,6 +360,8 @@
                     ..
                     damageproto
                     ..
+		    dri2proto
+		    ..
                     fontconfig
                         fontconfig-devel
                         ..

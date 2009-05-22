@@ -1,0 +1,493 @@
+			  The DRI2 Extension
+			      Version 2.0
+			      2008-09-04
+      
+			  Kristian Høgsberg
+			    krh@redhat.com
+			     Red Hat, Inc
+
+
+1. Introduction
+
+The DRI2 extension is designed to associate and access auxillary
+rendering buffers with an X drawable.
+
+DRI2 is a essentially a helper extension to support implementation of
+direct rendering drivers/libraries/technologies.
+
+The main consumer of this extension will be a direct rendering OpenGL
+driver, but the DRI2 extension is not designed to be OpenGL specific.
+Direct rendering implementations of OpenVG, Xv, cairo and other
+graphics APIs should find the functionality exposed by this extension
+helpful and hopefully sufficient.
+
+Relation to XF86DRI
+
+
+1.1. Acknowledgements
+
+Kevin E. Martin <kem@redhat.com>
+Keith Packard <keithp@keithp.com>
+Eric Anholt <eric@anholt.net>
+Keith Whitwell <keith@tungstengraphics.com>
+Jerome Glisse <glisse@freedesktop.org>
+Ian Romanick <ian.d.romanick@intel.com>
+Michel Dänzer <michel@tungstengraphics.com>
+
+
+			     ⚙ ⚙ ⚙  ⚙ ⚙ ⚙
+
+
+2. DRI2 Concepts
+
+
+2.1. Attachment points
+
+Stolen from OpenGL FBOs, I guess.
+
+
+2.2. Kernel rendering manager
+
+This specification assumes a rendering architechture, where an
+underlying kernel rendering manager that can provide 32 bit integer
+handles to video memory buffers.  These handles can be passed between
+processes, which, through a direct rendering driver, submit rendering
+to the kernel rendering manager, targeting and/or sourcing from these
+buffers.  This extension provides a means to communicate about such
+buffers as associated with an X drawable.
+
+The details of how the a direct rendering driver use the buffer names
+and submit the rendering requests is outside the scope of this
+specification.  However, Appendix B does discuss implementation of
+this specification on the Graphics Execution Manager (GEM).
+
+
+2.3. Request ordering
+
+No ordering between swap buffers and X rendering.  X rendering to src
+buffers will block if they have a vblank pending.
+
+
+2.4 Authentication model
+
+The purpose of the DRM authentication scheme is to grant access to the
+kernel rendering manager buffers created by the X server if, and only
+if, the client has access to the X server.  This is achieved in a
+three-step protocol:
+
+	1) The client gets a token from the kernel rendering manager
+	that uniquely identifies it.  The token is a 32 bit integer.
+
+	2) The client passes the token to the X server in the
+	DRI2Authenticate request.  This request is a round trip to
+	make sure the X server has received and processed the
+	authentication before the client starts accessing the DRM.
+
+	3) The X server authorizes the client by passing the token to
+	the kernel rendering manager.
+
+A kernel rendering manager can choose not to implement any
+authentication and just allow access to all buffers.
+
+
+2.5 Rendering to the X front buffer
+
+OpenGL allows the client to render to the front buffer, either by
+using a single-buffered configuration or but explicitly setting the
+draw buffer to GL_FRONT_LEFT.  Not allowed!
+
+The client must ask for a fake front buffer, render to that and then
+use DRI2CopyRegion to copy contents back and forth between the fake
+front buffer and the real front buffer.  When X and direct rendering
+to a front buffer is interleaved, it is the responsibility of the
+application to synchronize access using glXWaitGL and glXWaitX.  A
+DRI2 implementation of direct rendering GLX, should use these enty
+points to copy contents back and forth to as necessary to ensure
+consistent rendering.
+
+
+			     ⚙ ⚙ ⚙  ⚙ ⚙ ⚙
+
+
+3. Data Types
+
+The server side region support specified in the Xfixes extension
+version 2 is used in the CopyRegion request.
+
+
+			     ⚙ ⚙ ⚙  ⚙ ⚙ ⚙
+
+
+4. Errors
+
+No errrors defined by the DRI2 extension.
+
+
+			     ⚙ ⚙ ⚙  ⚙ ⚙ ⚙
+
+
+5. Protocol Types
+
+DRI2DRIVER { DRI2DriverDRI }
+
+	These values describe the type of driver the client will want
+	to load.  The server sends back the name of the driver to use
+	for the screen in question.
+
+DRI2ATTACHMENT { DRI2BufferFrontLeft
+	       	 DRI2BufferBackLeft
+	       	 DRI2BufferFrontRight
+	       	 DRI2BufferBackRight
+	       	 DRI2BufferDepth
+	       	 DRI2BufferStencil
+	       	 DRI2BufferAccum
+		 DRI2BufferFakeFrontLeft
+		 DRI2BufferFakeFrontRight }
+
+	These values describe various attachment points for DRI2
+	buffers.
+
+DRI2BUFFER { attachment: CARD32
+    	     name: CARD32
+	     pitch: CARD32
+    	     cpp: CARD32
+	     flags: CARD32 }
+
+	The DRI2BUFFER describes an auxillary rendering buffer
+	associated with an X drawable.  'attachment' describes the
+	attachment point for the buffer, 'name' is the name of the
+	underlying kernel buffer,
+
+
+			     ⚙ ⚙ ⚙  ⚙ ⚙ ⚙
+
+
+6. Extension Initialization
+
+The name of this extension is "DRI2".
+
+┌───
+    DRI2QueryVersion
+	client-major-version:	CARD32
+	client-minor-version:	CARD32
+      ▶
+	major-version:		CARD32
+	minor-version:		CARD32
+└───
+
+	The client sends the highest supported version to the server
+	and the server sends the highest version it supports, but no
+	higher than the requested version. Major versions changes can
+	introduce incompatibilities in existing functionality, minor
+	version changes introduce only backward compatible changes.
+	It is the clients responsibility to ensure that the server
+	supports a version which is compatible with its expectations.
+
+	Backwards compatible changes included addition of new
+	requests, but also new value types in the DRI2CopyRegion
+	request.  When new values are introduced, the minor version
+	will be increased so the client can know which values the X
+	server understands from the version number.
+
+
+			     ⚙ ⚙ ⚙  ⚙ ⚙ ⚙
+
+
+7. Extension Requests
+
+┌───
+    DRI2Connect
+	window: WINDOW
+	driverType: DRI2DRIVER
+      ▶
+	driver: STRING
+	device: STRING
+└───
+
+	Returns the driver name and device file to use for the
+	specified driver type for the screen associated with 'window'.
+
+	'type' identifies the type of driver to query for.
+
+	'driver' is the name of the driver to load.  The client is
+	assumed to know where to look for the drivers and what to do
+	with it.
+
+	'device' is the filename of the DRM device file.
+
+	If the client is not local, or the request driver type is
+	unknown or not available, 'driver' and 'device' will be empty
+	strings, 'group' will be '0'.  We are not using an regular X
+	error here to indicate failure, which will allow the client
+	fall back to other options more easily.
+
+	ISSUE: We could add the list of supported attachments and the
+	supported DRI2CopyRegion values here (just the bitmask of all
+	supported values).
+	
+┌───
+    DRI2Authenticate
+	window: WINDOW
+	token: CARD32
+      ▶
+        authenticated: CARD32
+└───
+	Errors: Window
+
+	Request that the X server authenticates 'token', allowing the
+	client to access the DRM buffers created by the X server on
+	the screen associated with 'window'.
+
+	Authentication shouldn't fail at this point, except if an
+	invalid token is passed, in which case authenticated is False.
+
+┌───
+    DRI2GetBuffers
+	drawable: DRAWABLE
+	attachments: LISTofDRI2ATTACHMENTS
+      ▶	
+	width, height: CARD32
+	buffers: LISTofDRI2BUFFER
+└───
+	Errors: Window
+
+	Get buffers for the provided attachment points for the given
+	drawable.
+
+	If the DDX driver does not support one or more of the
+	specified attachment points, a Value error is generated, with
+	the first unsupported attachment point as the error value.
+
+	'width' and 'height' describes the dimensions of the drawable.
+
+	'buffers' is a list of DRI2BUFFER for the given DRI2
+	attachment points.
+
+┌───
+    DRI2CopyRegion
+	drawable: DRAWABLE
+	region: REGION
+	source: DRI2ATTACHMENT
+	destination: DRI2ATTACHMENT
+      ▶	
+└───
+	Errors: Window, Value
+
+	Schedule a copy from one DRI2 buffer to another.
+
+	The DRICopyRegion request has a reply but it is empty.  The
+	reply is there to let the direct rendering client wait until
+	the server has seen the request before proceeding with
+	rendering the next frame.
+
+
+			     ⚙ ⚙ ⚙  ⚙ ⚙ ⚙
+
+
+8. Extension Versioning
+
+The DRI2 extension has undergone a number of revisions before
+
+	1.0: Released, but never used.  Relied on a number of
+		constructs from the XF86DRI extension, such as a
+		shared memory area (SAREA) to communicate changes in
+		cliprects and window sizes, and
+
+	1.99.1: Move the swap buffer functionality into the X server,
+		introduce SwapBuffer request to copy back buffer
+		contents to the X drawable.
+
+	1.99.2: Rethink the SwapBuffer request as an asynchronous
+		request to copy a region between DRI2 buffers.  Drop
+		CreateDrawable and DestroyDrawable, update Connect to
+		support different driver types and to send the
+		authentication group.
+
+	1.99.3: Drop the bitmask argument intended to indicate
+		presence of optional arguments for CopyRegion.
+
+	2.0: Awesomeness!
+
+Compatibility up to 2.0 is not preserved, but was also never released.
+
+
+			     ⚙ ⚙ ⚙  ⚙ ⚙ ⚙
+
+
+10. Relationship with other extensions
+
+As an extension designed to support other extensions, there is
+naturally some interactions with other extensions.
+
+
+10.1 GLX
+
+The GL auxilary buffers map directly to the DRI2 buffers... eh
+
+
+10.2 DBE
+
+The DBE back buffer must correspond to the DRI2_BUFFER_FRONT_LEFT
+DRI2 buffer for servers that support both DBE and DRI2.
+
+
+10.3 XvMC / Xv
+
+We might add a DRI2_BUFFER_YUV to do vsynced colorspace conversion
+blits.  Maybe... not really sure.
+
+
+			     ⚙ ⚙ ⚙  ⚙ ⚙ ⚙
+
+
+Appendix A. Protocol Encoding
+
+Syntactic Conventions
+
+This document uses the same syntactic conventions as the core X
+protocol encoding document.
+
+
+A.1 Common Types
+
+┌───
+    DRI2DRIVER
+	0x0	DRI2DriverDRI
+└───
+
+┌───
+    DRI2ATTACHMENT
+	0x0	DRI2BufferFrontLeft
+	0x1	DRI2BufferBackLeft
+	0x2	DRI2BufferFrontRight
+	0x3	DRI2BufferBackRight
+	0x4	DRI2BufferDepth
+	0x5	DRI2BufferStencil
+	0x6	DRI2BufferAccum
+	0x7	DRI2BufferFakeFrontLeft
+	0x8	DRI2BufferFakeFrontRight
+└───
+	Used to encode the possible attachment points.
+
+┌───
+    DRI2BUFFER
+	4	CARD32	attachment
+	4	CARD32	name
+	4	CARD32	pitch
+	4	CARD32	cpp
+	4	CARD32	flags
+└───
+	A DRI2 buffer specifies the attachment, the kernel memory
+	manager name, the pitch and chars per pixel for a buffer
+	attached to a given drawable.
+
+
+A.2 Protocol Requests
+
+┌───
+    DRI2QueryVersion
+	1	CARD8			major opcode
+	1	0			DRI2 opcode
+	2	3			length
+	4	CARD32			major version
+	4	CARD32			minor version
+      ▶
+	1	1			Reply
+        1				unused
+	2	CARD16			sequence number
+	4	0			reply length
+	4	CARD32			major version
+        4	CARD32			minor version
+	16				unused	
+└───
+
+┌───
+    DRI2Connect
+	1	CARD8			major opcode
+	1	1			DRI2 opcode
+	2	3+(n+p)/4		length
+	4	WINDOW			window
+	4	CARD32			driver type
+      ▶
+	1	1			Reply
+        1				unused
+	2	CARD16			sequence number
+	4	(n+m+p)/4		reply length
+	4	n			driver name length
+	4	m			device name length
+	16				unused
+	n	CARD8			driver name
+	m	CARD8			device name
+	p				unused, p=pad(n+m)
+└───
+
+┌───
+    DRI2Authenticate
+	1	CARD8			major opcode
+	1	2			DRI2 opcode
+	2	3			length
+	4	WINDOW			window
+	4	CARD32			authentication token
+      ▶
+	1	1			Reply
+        1				unused
+	2	CARD16			sequence number
+	4	0			reply length
+	4	CARD32			authenticated
+	20				unused	
+└───
+
+┌───
+    DRI2GetBuffers
+	1	CARD8			major opcode
+	1	3			DRI2 opcode
+	2	3			length
+	4	DRAWABLE		drawable
+	4	n			number of attachments
+	4n	LISTofDRI2ATTACHMENTS	attachments
+      ▶	
+	1	1			Reply
+        1				unused
+	2	CARD16			sequence number
+	4	0			reply length
+	4	CARD32			width of drawable
+	4	CARD32			height of drawable
+	4	CARD32			buffer count
+	12				unused	
+	5n	LISTofDRI2BUFFER	buffers
+└───
+
+┌───
+    DRI2CopyRegion
+	1	CARD8			major opcode
+	1	4			DRI2 opcode
+	2	3			length
+	4	DRAWABLE		drawable
+	4	REGION			region
+	4	DRI2ATTACHMENT		source
+	4	DRI2ATTACHMENT		destination
+      ▶	
+	1	1			Reply
+        1				unused
+	2	CARD16			sequence number
+	4	0			reply length
+	24				unused	
+└───
+
+
+A.3 Protocol Events
+
+The DRI2 extension specifies no events.
+
+
+A.4 Protocol Errors
+
+The DRI2 extension specifies no errors.
+
+
+			     ⚙ ⚙ ⚙  ⚙ ⚙ ⚙
+
+
+Appendix B. Implementation on GEM
+
+Where to begin...
