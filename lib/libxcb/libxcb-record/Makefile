@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1.1.1 2009/05/22 16:10:18 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2009/05/22 16:22:47 matthieu Exp $
 
 LIB=	xcb-record
 
@@ -6,7 +6,7 @@ HDRS=	record.h
 
 SRCS=	record.c
 
-PC=	xcb-record.pc
+PKGCONFIG=	xcb-record.pc
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
