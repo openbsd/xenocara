@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2009/05/22 16:06:29 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2009/05/22 20:29:06 matthieu Exp $
 
 PKGCONFIG=	xcb-proto.pc
 
@@ -31,6 +31,7 @@ FILES= \
 	xvmc.xml
 
 XCBDATADIR=	${X11BASE}/share/xcb
+PYTHONDIR=	${X11BASE}/lib/python${PYTHON_VERSION}/site-packages
 
 EXTRA_PKGCONFIG_SUBST=	'-e s,@xcbincludedir@,$${datadir}/xcb,g' \
 	'-e s,@pythondir@,$${prefix}/lib/python${PYTHON_VERSION}/site-packages,g'
@@ -43,5 +44,28 @@ realinstall:
 		echo "\tinstalling $$i"; \
 		eval "$$j"; \
 	done
+
+.if defined(XENOCARA_REBUILD_XCB) && ${XENOCARA_REBUILD_XCB:L} == "yes"
+
+XCBGEN_SRCS= \
+	__init__.py \
+	error.py \
+	expr.py \
+	matcher.py \
+	state.py \
+	xtypes.py
+
+install-py:
+	mkdir -p ${DESTDIR}${PYTHONDIR}/xcbgen
+	cd ${.CURDIR}/xcbgen ; for i in ${XCBGEN_SRCS}; do \
+		${INSTALL_DATA} $$i ${DESTDIR}${PYTHONDIR}/xcbgen; \
+	done
+	cd ${DESTDIR}${PYTHONDIR}/xcbgen; \
+	env PYTHON=python${PYTHON_VERSION} ${SHELL} ${.CURDIR}/py-compile \
+	--basedir ${PYTHONDIR}/xcbgen ${XCBGEN_SRCS}
+	
+realinstall: install-py
+
+.endif
 
 .include <bsd.xorg.mk>
