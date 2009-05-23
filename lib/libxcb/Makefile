@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1.1.1 2009/05/22 16:09:01 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2009/05/23 15:08:50 matthieu Exp $
 
 SUBDIR=\
 	libxcb \
@@ -22,7 +22,6 @@ SUBDIR=\
 	libxcb-xtest \
 	libxcb-xv \
 	libxcb-xvmc
-
 
 .include <bsd.subdir.mk>
 .include <bsd.xorg.mk>
