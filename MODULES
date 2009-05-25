@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.73 2009/05/18 20:59:42 matthieu Exp $
+# $OpenBSD: MODULES,v 1.74 2009/05/25 19:03:46 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -236,11 +236,13 @@ lib/libdmx			1.0.2	7.1
 lib/libfontenc			1.0.3	7.2RC1
 lib/liblbxutil			1.0.4	7.2RC4	deprecated
 lib/libpciaccess		0.10.6	7.4+	needs-update
-lib/libxcb			1.2	7.4+	needs-import
+lib/libpthread-stubs		0.1	7.4
+lib/libxcb			1.2	7.4+
 lib/libxkbfile			1.0.5	7.4
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.2.3	7.4+
 lib/pixman			0.15.4	7.4+	needs-update
+lib/xcb-util			0.3.4	7.4+
 
 proto/bigreqsproto		1.0.2	7.0	needs-rel
 proto/compositeproto		0.4	7.3
@@ -264,6 +266,7 @@ proto/scrnsaverproto		1.1.0	7.1
 proto/trapproto			3.4.3	7.0
 proto/videoproto		2.2.2	7.0
 proto/x11proto			7.0.15	7.4+
+proto/xcb-proto			1.4	7.4+
 proto/xcmiscproto		1.1.2	7.0
 proto/xextproto			7.0.4	7.4+
 proto/xf86bigfontproto		1.1.2	7.0
