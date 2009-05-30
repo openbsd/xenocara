@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.62 2009/05/17 23:54:17 okan Exp $
+ * $Id: conf.c,v 1.63 2009/05/30 00:30:27 okan Exp $
  */
 
 #include "headers.h"
@@ -269,17 +269,12 @@ conf_client(struct client_ctx *cc)
 	char		*wname = cc->name;
 	int		 ignore = 0;
 
-	/* Can wname be NULL? */
-	if (wname != NULL) {
-		TAILQ_FOREACH(wm, &Conf.ignoreq, entry) {
-			if (strncasecmp(wm->title, wname, strlen(wm->title))
-			    == 0) {
-				ignore = 1;
-				break;
-			}
+	TAILQ_FOREACH(wm, &Conf.ignoreq, entry) {
+		if (strncasecmp(wm->title, wname, strlen(wm->title)) == 0) {
+			ignore = 1;
+			break;
 		}
-	} else
-		ignore = 1;
+	}
 
 	cc->bwidth = ignore ? 0 : Conf.bwidth;
 	cc->flags |= ignore ? CLIENT_IGNORE : 0;
