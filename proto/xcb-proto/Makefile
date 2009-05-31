@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2009/05/22 20:29:06 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2009/05/31 16:35:28 matthieu Exp $
 
 PKGCONFIG=	xcb-proto.pc
 
@@ -63,7 +63,7 @@ install-py:
 	cd ${DESTDIR}${PYTHONDIR}/xcbgen; \
 	env PYTHON=python${PYTHON_VERSION} ${SHELL} ${.CURDIR}/py-compile \
 	--basedir ${PYTHONDIR}/xcbgen ${XCBGEN_SRCS}
-	
+
 realinstall: install-py
 
 .endif
