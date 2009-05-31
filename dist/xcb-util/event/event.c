@@ -35,6 +35,7 @@
 void
 xcb_event_handlers_init(xcb_connection_t *c, xcb_event_handlers_t *evenths)
 {
+    memset(evenths, 0, sizeof(xcb_event_handlers_t));
     evenths->c = c;
 }
 

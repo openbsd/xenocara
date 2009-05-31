@@ -208,6 +208,17 @@ xcb_aux_create_window_checked (xcb_connection_t       *c,
 }
 
 xcb_void_cookie_t
+xcb_aux_change_window_attributes_checked (xcb_connection_t      *c,
+                                          xcb_window_t           window,
+                                          uint32_t               mask,
+                                          const xcb_params_cw_t *params)
+{
+	uint32_t value_list[16];
+	pack_list(mask, (const uint32_t *)params, value_list);
+	return xcb_change_window_attributes_checked( c, window, mask, value_list );
+}
+
+xcb_void_cookie_t
 xcb_aux_change_window_attributes (xcb_connection_t      *c,
                                   xcb_window_t           window,
                                   uint32_t               mask,

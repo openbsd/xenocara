@@ -1,11 +1,27 @@
 AC_PREREQ(2.57)
-AC_INIT([xcb-util],0.3.4,[xcb@lists.freedesktop.org])
+AC_INIT([xcb-util],0.3.5,[xcb@lists.freedesktop.org])
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
-AC_CHECK_PROGS(M4, m4, [no])
+AC_CHECK_PROGS(M4, [m4 gm4], [no])
+if test $M4 != "no" ; then
+	AC_MSG_CHECKING([if $M4 supports -I])
+	if $M4 -I. /dev/null > /dev/null 2>&1 ; then
+		AC_MSG_RESULT([yes])
+	else
+		AC_MSG_RESULT([no])
+		# Try finding the gnu version
+		AC_CHECK_PROGS(GM4, gm4, [no])
+		if test $GM4 = "no" ; then
+			AC_PATH_PROGS(GNUM4, m4, [no], [/usr/gnu/bin])
+			M4="$GNUM4"
+		else
+			M4="$GM4"
+		fi
+	fi
+fi
 if test $M4 = "no"; then
-	AC_MSG_ERROR([Can't find m4, please install it and try again])
+	AC_MSG_ERROR([Can't find usable m4, please install it and try again])
 fi
 AC_CHECK_PROGS(GPERF, gperf, [no])
 if test $GPERF = "no"; then
@@ -31,7 +47,26 @@ AC_SUBST(xcbincludedir)
 pkgconfigdir='${libdir}/pkgconfig'
 AC_SUBST(pkgconfigdir)
 
-PKG_CHECK_MODULES(XCB, xcb >= 1.0)
+PKG_CHECK_MODULES(XCB, xcb >= 1.2)
+
+######
+# Check version of xcb-proto that xcb was compiled against
+######
+xcbproto_required=1.5
+
+# Moved from AX_COMPARE_VERSION to maintain proper output
+AC_PROG_AWK
+
+AC_MSG_CHECKING([whether libxcb was compiled against xcb-proto >= $xcbproto_required])
+xcbproto_version=`$PKG_CONFIG --variable=xcbproto_version xcb`
+AX_COMPARE_VERSION([$xcbproto_version],[ge],[$xcbproto_required], xcbproto_ok="yes", xcbproto_ok="no")
+AC_MSG_RESULT([$xcbproto_ok])
+
+if test $xcbproto_ok = no; then
+	AC_MSG_ERROR([libxcb was compiled against xcb-proto $xcbproto_version; it needs needs to be compiled against version $xcbproto_required or higher])
+fi
+
+
 PKG_CHECK_MODULES(XCB_SHM, xcb-shm)
 PKG_CHECK_MODULES(XCB_RENDER, xcb-render)
 PKG_CHECK_MODULES(XPROTO, xproto >= 7.0.8)

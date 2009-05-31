@@ -64,7 +64,7 @@ xcb_get_text_property_reply(xcb_connection_t *c,
   prop->_reply = reply;
   prop->encoding = prop->_reply->type;
   prop->format = prop->_reply->format;
-  prop->name_len = xcb_get_property_value_length(prop->_reply) * prop->format >> 3;
+  prop->name_len = xcb_get_property_value_length(prop->_reply);
   prop->name = xcb_get_property_value(prop->_reply);
 
   return 1;
@@ -434,7 +434,7 @@ xcb_get_wm_size_hints_from_reply(xcb_size_hints_t *hints, xcb_get_property_reply
   if(!reply)
     return 0;
 
-  int length = xcb_get_property_value_length(reply);
+  int length = xcb_get_property_value_length(reply) / (reply->format / 8);
 
   if (!(reply->type == WM_SIZE_HINTS &&
         (reply->format == 8  || reply->format == 16 ||
@@ -627,16 +627,16 @@ xcb_get_wm_hints_from_reply(xcb_wm_hints_t *hints,
     return 0;
 
   int length = xcb_get_property_value_length(reply);
+  int num_elem = length / (reply->format / 8);
 
-  if ((reply->type != WM_HINTS) ||
-      (length < (XCB_NUM_WM_HINTS_ELEMENTS - 1)) ||
-      (reply->format != 32))
+  if (reply->type != WM_HINTS
+      || reply->format != 32
+      || num_elem < XCB_NUM_WM_HINTS_ELEMENTS - 1)
     return 0;
 
-  memcpy(hints, (xcb_size_hints_t *) xcb_get_property_value(reply),
-         length * reply->format >> 3);
+  memcpy(hints, (xcb_size_hints_t *) xcb_get_property_value(reply), length);
 
-  if(length < XCB_NUM_WM_HINTS_ELEMENTS)
+  if(num_elem < XCB_NUM_WM_HINTS_ELEMENTS)
     hints->window_group = XCB_NONE;
 
   return 1;

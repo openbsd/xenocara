@@ -3,6 +3,10 @@
 
 #include <xcb/xcb.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum xcb_atom_fast_tag_t {
 	TAG_COOKIE,
 	TAG_VALUE
@@ -104,5 +108,9 @@ extern const xcb_atom_t FULL_NAME;
 extern const xcb_atom_t CAP_HEIGHT;
 extern const xcb_atom_t WM_CLASS;
 extern const xcb_atom_t WM_TRANSIENT_FOR;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __XCB_ATOM_H__ */

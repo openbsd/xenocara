@@ -102,6 +102,12 @@ xcb_aux_change_window_attributes (xcb_connection_t      *c,
                                   uint32_t               mask,
                                   const xcb_params_cw_t *params);
 
+xcb_void_cookie_t
+xcb_aux_change_window_attributes_checked (xcb_connection_t      *c,
+                                          xcb_window_t           window,
+                                          uint32_t               mask,
+                                          const xcb_params_cw_t *params);
+
 typedef struct {
     int32_t  x;
     int32_t  y;
