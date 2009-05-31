@@ -91,6 +91,14 @@ typedef struct xcb_input_get_extension_version_reply_t {
     uint8_t  pad1[19]; /**<  */
 } xcb_input_get_extension_version_reply_t;
 
+typedef enum xcb_input_device_use_t {
+    XCB_INPUT_DEVICE_USE_IS_X_POINTER = 0,
+    XCB_INPUT_DEVICE_USE_IS_X_KEYBOARD = 1,
+    XCB_INPUT_DEVICE_USE_IS_X_EXTENSION_DEVICE = 2,
+    XCB_INPUT_DEVICE_USE_IS_X_EXTENSION_KEYBOARD = 3,
+    XCB_INPUT_DEVICE_USE_IS_X_EXTENSION_POINTER = 4
+} xcb_input_device_use_t;
+
 /**
  * @brief xcb_input_device_info_t
  **/
@@ -142,13 +150,15 @@ typedef struct xcb_input_list_input_devices_reply_t {
     uint8_t  pad1[23]; /**<  */
 } xcb_input_list_input_devices_reply_t;
 
-typedef enum xcb_input_device_use_t {
-    XCB_INPUT_DEVICE_USE_IS_X_POINTER = 0,
-    XCB_INPUT_DEVICE_USE_IS_X_KEYBOARD = 1,
-    XCB_INPUT_DEVICE_USE_IS_X_EXTENSION_DEVICE = 2,
-    XCB_INPUT_DEVICE_USE_IS_X_EXTENSION_KEYBOARD = 3,
-    XCB_INPUT_DEVICE_USE_IS_X_EXTENSION_POINTER = 4
-} xcb_input_device_use_t;
+typedef enum xcb_input_input_class_t {
+    XCB_INPUT_INPUT_CLASS_KEY = 0,
+    XCB_INPUT_INPUT_CLASS_BUTTON = 1,
+    XCB_INPUT_INPUT_CLASS_VALUATOR = 2,
+    XCB_INPUT_INPUT_CLASS_FEEDBACK = 3,
+    XCB_INPUT_INPUT_CLASS_PROXIMITY = 4,
+    XCB_INPUT_INPUT_CLASS_FOCUS = 5,
+    XCB_INPUT_INPUT_CLASS_OTHER = 6
+} xcb_input_input_class_t;
 
 /**
  * @brief xcb_input_input_info_t
@@ -211,8 +221,8 @@ typedef struct xcb_input_button_info_iterator_t {
  **/
 typedef struct xcb_input_axis_info_t {
     uint32_t resolution; /**<  */
-    uint32_t minimum; /**<  */
-    uint32_t maximum; /**<  */
+    int32_t  minimum; /**<  */
+    int32_t  maximum; /**<  */
 } xcb_input_axis_info_t;
 
 /**
@@ -293,16 +303,6 @@ typedef struct xcb_input_open_device_reply_t {
     uint8_t  num_classes; /**<  */
     uint8_t  pad1[23]; /**<  */
 } xcb_input_open_device_reply_t;
-
-typedef enum xcb_input_input_class_t {
-    XCB_INPUT_INPUT_CLASS_KEY = 0,
-    XCB_INPUT_INPUT_CLASS_BUTTON = 1,
-    XCB_INPUT_INPUT_CLASS_VALUATOR = 2,
-    XCB_INPUT_INPUT_CLASS_FEEDBACK = 3,
-    XCB_INPUT_INPUT_CLASS_PROXIMITY = 4,
-    XCB_INPUT_INPUT_CLASS_FOCUS = 5,
-    XCB_INPUT_INPUT_CLASS_OTHER = 6
-} xcb_input_input_class_t;
 
 /** Opcode for xcb_input_close_device. */
 #define XCB_INPUT_CLOSE_DEVICE 4
@@ -699,6 +699,15 @@ typedef struct xcb_input_ungrab_device_button_request_t {
     uint8_t      grabbed_device; /**<  */
 } xcb_input_ungrab_device_button_request_t;
 
+typedef enum xcb_input_device_input_mode_t {
+    XCB_INPUT_DEVICE_INPUT_MODE_ASYNC_THIS_DEVICE,
+    XCB_INPUT_DEVICE_INPUT_MODE_SYNC_THIS_DEVICE,
+    XCB_INPUT_DEVICE_INPUT_MODE_REPLAY_THIS_DEVICE,
+    XCB_INPUT_DEVICE_INPUT_MODE_ASYNC_OTHER_DEVICES,
+    XCB_INPUT_DEVICE_INPUT_MODE_ASYNC_ALL,
+    XCB_INPUT_DEVICE_INPUT_MODE_SYNC_ALL
+} xcb_input_device_input_mode_t;
+
 /** Opcode for xcb_input_allow_device_events. */
 #define XCB_INPUT_ALLOW_DEVICE_EVENTS 19
 
@@ -797,6 +806,15 @@ typedef struct xcb_input_get_feedback_control_reply_t {
     uint16_t num_feedback; /**<  */
     uint8_t  pad1[22]; /**<  */
 } xcb_input_get_feedback_control_reply_t;
+
+typedef enum xcb_input_feedback_class_t {
+    XCB_INPUT_FEEDBACK_CLASS_KEYBOARD,
+    XCB_INPUT_FEEDBACK_CLASS_POINTER,
+    XCB_INPUT_FEEDBACK_CLASS_STRING,
+    XCB_INPUT_FEEDBACK_CLASS_INTEGER,
+    XCB_INPUT_FEEDBACK_CLASS_LED,
+    XCB_INPUT_FEEDBACK_CLASS_BELL
+} xcb_input_feedback_class_t;
 
 /**
  * @brief xcb_input_feedback_state_t
@@ -1825,7 +1843,7 @@ typedef struct xcb_input_focus_in_event_t {
 /** Opcode for xcb_input_focus_out. */
 #define XCB_INPUT_FOCUS_OUT 7
 
-typedef xcb_input_device_key_press_event_t xcb_input_focus_out_event_t;
+typedef xcb_input_focus_in_event_t xcb_input_focus_out_event_t;
 
 /** Opcode for xcb_input_device_state_notify. */
 #define XCB_INPUT_DEVICE_STATE_NOTIFY 10
@@ -1922,6 +1940,66 @@ typedef struct xcb_input_device_presence_notify_event_t {
     uint16_t        control; /**<  */
     uint8_t         pad1[20]; /**<  */
 } xcb_input_device_presence_notify_event_t;
+
+/** Opcode for xcb_input_device. */
+#define XCB_INPUT_DEVICE 0
+
+/**
+ * @brief xcb_input_device_error_t
+ **/
+typedef struct xcb_input_device_error_t {
+    uint8_t  response_type; /**<  */
+    uint8_t  error_code; /**<  */
+    uint16_t sequence; /**<  */
+} xcb_input_device_error_t;
+
+/** Opcode for xcb_input_event. */
+#define XCB_INPUT_EVENT 1
+
+/**
+ * @brief xcb_input_event_error_t
+ **/
+typedef struct xcb_input_event_error_t {
+    uint8_t  response_type; /**<  */
+    uint8_t  error_code; /**<  */
+    uint16_t sequence; /**<  */
+} xcb_input_event_error_t;
+
+/** Opcode for xcb_input_mode. */
+#define XCB_INPUT_MODE 2
+
+/**
+ * @brief xcb_input_mode_error_t
+ **/
+typedef struct xcb_input_mode_error_t {
+    uint8_t  response_type; /**<  */
+    uint8_t  error_code; /**<  */
+    uint16_t sequence; /**<  */
+} xcb_input_mode_error_t;
+
+/** Opcode for xcb_input_device_busy. */
+#define XCB_INPUT_DEVICE_BUSY 3
+
+/**
+ * @brief xcb_input_device_busy_error_t
+ **/
+typedef struct xcb_input_device_busy_error_t {
+    uint8_t  response_type; /**<  */
+    uint8_t  error_code; /**<  */
+    uint16_t sequence; /**<  */
+} xcb_input_device_busy_error_t;
+
+/** Opcode for xcb_input_class. */
+#define XCB_INPUT_CLASS 4
+
+/**
+ * @brief xcb_input_class_error_t
+ **/
+typedef struct xcb_input_class_error_t {
+    uint8_t  response_type; /**<  */
+    uint8_t  error_code; /**<  */
+    uint16_t sequence; /**<  */
+} xcb_input_class_error_t;
 
 /**
  * Get the next element of the iterator

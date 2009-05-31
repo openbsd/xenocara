@@ -107,7 +107,7 @@ typedef struct xcb_test_fake_input_request_t {
     uint8_t      detail; /**<  */
     uint8_t      pad0[2]; /**<  */
     uint32_t     time; /**<  */
-    xcb_window_t window; /**<  */
+    xcb_window_t root; /**<  */
     uint8_t      pad1[8]; /**<  */
     uint16_t     rootX; /**<  */
     uint16_t     rootY; /**<  */
@@ -317,7 +317,7 @@ xcb_test_compare_cursor_reply (xcb_connection_t                  *c  /**< */,
  ** @param uint8_t           type
  ** @param uint8_t           detail
  ** @param uint32_t          time
- ** @param xcb_window_t      window
+ ** @param xcb_window_t      root
  ** @param uint16_t          rootX
  ** @param uint16_t          rootY
  ** @param uint8_t           deviceid
@@ -330,7 +330,7 @@ xcb_test_fake_input_checked (xcb_connection_t *c  /**< */,
                              uint8_t           type  /**< */,
                              uint8_t           detail  /**< */,
                              uint32_t          time  /**< */,
-                             xcb_window_t      window  /**< */,
+                             xcb_window_t      root  /**< */,
                              uint16_t          rootX  /**< */,
                              uint16_t          rootY  /**< */,
                              uint8_t           deviceid  /**< */);
@@ -352,7 +352,7 @@ xcb_test_fake_input_checked (xcb_connection_t *c  /**< */,
  ** @param uint8_t           type
  ** @param uint8_t           detail
  ** @param uint32_t          time
- ** @param xcb_window_t      window
+ ** @param xcb_window_t      root
  ** @param uint16_t          rootX
  ** @param uint16_t          rootY
  ** @param uint8_t           deviceid
@@ -365,7 +365,7 @@ xcb_test_fake_input (xcb_connection_t *c  /**< */,
                      uint8_t           type  /**< */,
                      uint8_t           detail  /**< */,
                      uint32_t          time  /**< */,
-                     xcb_window_t      window  /**< */,
+                     xcb_window_t      root  /**< */,
                      uint16_t          rootX  /**< */,
                      uint16_t          rootY  /**< */,
                      uint8_t           deviceid  /**< */);

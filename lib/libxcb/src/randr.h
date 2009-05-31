@@ -14,13 +14,14 @@
 
 #include "xcb.h"
 #include "xproto.h"
+#include "render.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define XCB_RANDR_MAJOR_VERSION 1
-#define XCB_RANDR_MINOR_VERSION 2
+#define XCB_RANDR_MINOR_VERSION 3
   
 extern xcb_extension_t xcb_randr_id;
 
@@ -171,6 +172,13 @@ typedef struct xcb_randr_query_version_reply_t {
     uint8_t  pad1[16]; /**<  */
 } xcb_randr_query_version_reply_t;
 
+typedef enum xcb_randr_set_config_t {
+    XCB_RANDR_SET_CONFIG_SUCCESS = 0,
+    XCB_RANDR_SET_CONFIG_INVALID_CONFIG_TIME = 1,
+    XCB_RANDR_SET_CONFIG_INVALID_TIME = 2,
+    XCB_RANDR_SET_CONFIG_FAILED = 3
+} xcb_randr_set_config_t;
+
 /**
  * @brief xcb_randr_set_screen_config_cookie_t
  **/
@@ -212,12 +220,12 @@ typedef struct xcb_randr_set_screen_config_reply_t {
     uint8_t         pad0[10]; /**<  */
 } xcb_randr_set_screen_config_reply_t;
 
-typedef enum xcb_randr_set_config_t {
-    XCB_RANDR_SET_CONFIG_SUCCESS = 0,
-    XCB_RANDR_SET_CONFIG_INVALID_CONFIG_TIME = 1,
-    XCB_RANDR_SET_CONFIG_INVALID_TIME = 2,
-    XCB_RANDR_SET_CONFIG_FAILED = 3
-} xcb_randr_set_config_t;
+typedef enum xcb_randr_notify_mask_t {
+    XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE = 1,
+    XCB_RANDR_NOTIFY_MASK_CRTC_CHANGE = 2,
+    XCB_RANDR_NOTIFY_MASK_OUTPUT_CHANGE = 4,
+    XCB_RANDR_NOTIFY_MASK_OUTPUT_PROPERTY = 8
+} xcb_randr_notify_mask_t;
 
 /** Opcode for xcb_randr_select_input. */
 #define XCB_RANDR_SELECT_INPUT 4
@@ -846,12 +854,229 @@ typedef struct xcb_randr_set_crtc_gamma_request_t {
     uint8_t          pad0[2]; /**<  */
 } xcb_randr_set_crtc_gamma_request_t;
 
-typedef enum xcb_randr_notify_mask_t {
-    XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE = 1,
-    XCB_RANDR_NOTIFY_MASK_CRTC_CHANGE = 2,
-    XCB_RANDR_NOTIFY_MASK_OUTPUT_CHANGE = 4,
-    XCB_RANDR_NOTIFY_MASK_OUTPUT_PROPERTY = 8
-} xcb_randr_notify_mask_t;
+/**
+ * @brief xcb_randr_get_screen_resources_current_cookie_t
+ **/
+typedef struct xcb_randr_get_screen_resources_current_cookie_t {
+    unsigned int sequence; /**<  */
+} xcb_randr_get_screen_resources_current_cookie_t;
+
+/** Opcode for xcb_randr_get_screen_resources_current. */
+#define XCB_RANDR_GET_SCREEN_RESOURCES_CURRENT 25
+
+/**
+ * @brief xcb_randr_get_screen_resources_current_request_t
+ **/
+typedef struct xcb_randr_get_screen_resources_current_request_t {
+    uint8_t      major_opcode; /**<  */
+    uint8_t      minor_opcode; /**<  */
+    uint16_t     length; /**<  */
+    xcb_window_t window; /**<  */
+} xcb_randr_get_screen_resources_current_request_t;
+
+/**
+ * @brief xcb_randr_get_screen_resources_current_reply_t
+ **/
+typedef struct xcb_randr_get_screen_resources_current_reply_t {
+    uint8_t         response_type; /**<  */
+    uint8_t         pad0; /**<  */
+    uint16_t        sequence; /**<  */
+    uint32_t        length; /**<  */
+    xcb_timestamp_t timestamp; /**<  */
+    xcb_timestamp_t config_timestamp; /**<  */
+    uint16_t        num_crtcs; /**<  */
+    uint16_t        num_outputs; /**<  */
+    uint16_t        num_modes; /**<  */
+    uint16_t        names_len; /**<  */
+    uint8_t         pad1[8]; /**<  */
+} xcb_randr_get_screen_resources_current_reply_t;
+
+/** Opcode for xcb_randr_set_crtc_transform. */
+#define XCB_RANDR_SET_CRTC_TRANSFORM 26
+
+/**
+ * @brief xcb_randr_set_crtc_transform_request_t
+ **/
+typedef struct xcb_randr_set_crtc_transform_request_t {
+    uint8_t                major_opcode; /**<  */
+    uint8_t                minor_opcode; /**<  */
+    uint16_t               length; /**<  */
+    xcb_randr_crtc_t       crtc; /**<  */
+    xcb_render_transform_t transform; /**<  */
+    uint16_t               filter_len; /**<  */
+    uint8_t                pad0[2]; /**<  */
+} xcb_randr_set_crtc_transform_request_t;
+
+/**
+ * @brief xcb_randr_get_crtc_transform_cookie_t
+ **/
+typedef struct xcb_randr_get_crtc_transform_cookie_t {
+    unsigned int sequence; /**<  */
+} xcb_randr_get_crtc_transform_cookie_t;
+
+/** Opcode for xcb_randr_get_crtc_transform. */
+#define XCB_RANDR_GET_CRTC_TRANSFORM 27
+
+/**
+ * @brief xcb_randr_get_crtc_transform_request_t
+ **/
+typedef struct xcb_randr_get_crtc_transform_request_t {
+    uint8_t          major_opcode; /**<  */
+    uint8_t          minor_opcode; /**<  */
+    uint16_t         length; /**<  */
+    xcb_randr_crtc_t crtc; /**<  */
+} xcb_randr_get_crtc_transform_request_t;
+
+/**
+ * @brief xcb_randr_get_crtc_transform_reply_t
+ **/
+typedef struct xcb_randr_get_crtc_transform_reply_t {
+    uint8_t                response_type; /**<  */
+    uint8_t                pad0; /**<  */
+    uint16_t               sequence; /**<  */
+    uint32_t               length; /**<  */
+    xcb_render_transform_t pending_transform; /**<  */
+    uint8_t                has_transforms; /**<  */
+    uint8_t                pad1[3]; /**<  */
+    xcb_render_transform_t current_transform; /**<  */
+    uint8_t                pad2[4]; /**<  */
+    uint16_t               pending_len; /**<  */
+    uint16_t               pending_nparams; /**<  */
+    uint16_t               current_len; /**<  */
+    uint16_t               current_nparams; /**<  */
+} xcb_randr_get_crtc_transform_reply_t;
+
+/**
+ * @brief xcb_randr_get_panning_cookie_t
+ **/
+typedef struct xcb_randr_get_panning_cookie_t {
+    unsigned int sequence; /**<  */
+} xcb_randr_get_panning_cookie_t;
+
+/** Opcode for xcb_randr_get_panning. */
+#define XCB_RANDR_GET_PANNING 28
+
+/**
+ * @brief xcb_randr_get_panning_request_t
+ **/
+typedef struct xcb_randr_get_panning_request_t {
+    uint8_t          major_opcode; /**<  */
+    uint8_t          minor_opcode; /**<  */
+    uint16_t         length; /**<  */
+    xcb_randr_crtc_t crtc; /**<  */
+} xcb_randr_get_panning_request_t;
+
+/**
+ * @brief xcb_randr_get_panning_reply_t
+ **/
+typedef struct xcb_randr_get_panning_reply_t {
+    uint8_t         response_type; /**<  */
+    uint8_t         status; /**<  */
+    uint16_t        sequence; /**<  */
+    uint32_t        length; /**<  */
+    xcb_timestamp_t timestamp; /**<  */
+    uint16_t        left; /**<  */
+    uint16_t        top; /**<  */
+    uint16_t        width; /**<  */
+    uint16_t        height; /**<  */
+    uint16_t        track_left; /**<  */
+    uint16_t        track_top; /**<  */
+    uint16_t        track_width; /**<  */
+    uint16_t        track_height; /**<  */
+    int16_t         border_left; /**<  */
+    int16_t         border_top; /**<  */
+    int16_t         border_right; /**<  */
+    int16_t         border_bottom; /**<  */
+} xcb_randr_get_panning_reply_t;
+
+/**
+ * @brief xcb_randr_set_panning_cookie_t
+ **/
+typedef struct xcb_randr_set_panning_cookie_t {
+    unsigned int sequence; /**<  */
+} xcb_randr_set_panning_cookie_t;
+
+/** Opcode for xcb_randr_set_panning. */
+#define XCB_RANDR_SET_PANNING 29
+
+/**
+ * @brief xcb_randr_set_panning_request_t
+ **/
+typedef struct xcb_randr_set_panning_request_t {
+    uint8_t          major_opcode; /**<  */
+    uint8_t          minor_opcode; /**<  */
+    uint16_t         length; /**<  */
+    xcb_randr_crtc_t crtc; /**<  */
+    xcb_timestamp_t  timestamp; /**<  */
+    uint16_t         left; /**<  */
+    uint16_t         top; /**<  */
+    uint16_t         width; /**<  */
+    uint16_t         height; /**<  */
+    uint16_t         track_left; /**<  */
+    uint16_t         track_top; /**<  */
+    uint16_t         track_width; /**<  */
+    uint16_t         track_height; /**<  */
+    int16_t          border_left; /**<  */
+    int16_t          border_top; /**<  */
+    int16_t          border_right; /**<  */
+    int16_t          border_bottom; /**<  */
+} xcb_randr_set_panning_request_t;
+
+/**
+ * @brief xcb_randr_set_panning_reply_t
+ **/
+typedef struct xcb_randr_set_panning_reply_t {
+    uint8_t         response_type; /**<  */
+    uint8_t         status; /**<  */
+    uint16_t        sequence; /**<  */
+    uint32_t        length; /**<  */
+    xcb_timestamp_t timestamp; /**<  */
+} xcb_randr_set_panning_reply_t;
+
+/** Opcode for xcb_randr_set_output_primary. */
+#define XCB_RANDR_SET_OUTPUT_PRIMARY 30
+
+/**
+ * @brief xcb_randr_set_output_primary_request_t
+ **/
+typedef struct xcb_randr_set_output_primary_request_t {
+    uint8_t            major_opcode; /**<  */
+    uint8_t            minor_opcode; /**<  */
+    uint16_t           length; /**<  */
+    xcb_window_t       window; /**<  */
+    xcb_randr_output_t output; /**<  */
+} xcb_randr_set_output_primary_request_t;
+
+/**
+ * @brief xcb_randr_get_output_primary_cookie_t
+ **/
+typedef struct xcb_randr_get_output_primary_cookie_t {
+    unsigned int sequence; /**<  */
+} xcb_randr_get_output_primary_cookie_t;
+
+/** Opcode for xcb_randr_get_output_primary. */
+#define XCB_RANDR_GET_OUTPUT_PRIMARY 31
+
+/**
+ * @brief xcb_randr_get_output_primary_request_t
+ **/
+typedef struct xcb_randr_get_output_primary_request_t {
+    uint8_t      major_opcode; /**<  */
+    uint8_t      minor_opcode; /**<  */
+    uint16_t     length; /**<  */
+    xcb_window_t window; /**<  */
+} xcb_randr_get_output_primary_request_t;
+
+/**
+ * @brief xcb_randr_get_output_primary_reply_t
+ **/
+typedef struct xcb_randr_get_output_primary_reply_t {
+    uint8_t            response_type; /**<  */
+    uint8_t            pad0; /**<  */
+    uint16_t           sequence; /**<  */
+    uint32_t           length; /**<  */
+    xcb_randr_output_t output; /**<  */
+} xcb_randr_get_output_primary_reply_t;
 
 /** Opcode for xcb_randr_screen_change_notify. */
 #define XCB_RANDR_SCREEN_CHANGE_NOTIFY 0
@@ -3724,6 +3949,892 @@ xcb_randr_set_crtc_gamma (xcb_connection_t *c  /**< */,
                           const uint16_t   *red  /**< */,
                           const uint16_t   *green  /**< */,
                           const uint16_t   *blue  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_screen_resources_current_cookie_t xcb_randr_get_screen_resources_current
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_window_t      window
+ ** @returns xcb_randr_get_screen_resources_current_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_screen_resources_current_cookie_t
+xcb_randr_get_screen_resources_current (xcb_connection_t *c  /**< */,
+                                        xcb_window_t      window  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will cause
+ * a reply to be generated. Any returned error will be
+ * placed in the event queue.
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_screen_resources_current_cookie_t xcb_randr_get_screen_resources_current_unchecked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_window_t      window
+ ** @returns xcb_randr_get_screen_resources_current_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_screen_resources_current_cookie_t
+xcb_randr_get_screen_resources_current_unchecked (xcb_connection_t *c  /**< */,
+                                                  xcb_window_t      window  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_crtc_t * xcb_randr_get_screen_resources_current_crtcs
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns xcb_randr_crtc_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_crtc_t *
+xcb_randr_get_screen_resources_current_crtcs (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_screen_resources_current_crtcs_length
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_screen_resources_current_crtcs_length (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_randr_get_screen_resources_current_crtcs_end
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_randr_get_screen_resources_current_crtcs_end (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_output_t * xcb_randr_get_screen_resources_current_outputs
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns xcb_randr_output_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_output_t *
+xcb_randr_get_screen_resources_current_outputs (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_screen_resources_current_outputs_length
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_screen_resources_current_outputs_length (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_randr_get_screen_resources_current_outputs_end
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_randr_get_screen_resources_current_outputs_end (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_mode_info_t * xcb_randr_get_screen_resources_current_modes
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns xcb_randr_mode_info_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_mode_info_t *
+xcb_randr_get_screen_resources_current_modes (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_screen_resources_current_modes_length
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_screen_resources_current_modes_length (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_mode_info_iterator_t xcb_randr_get_screen_resources_current_modes_iterator
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns xcb_randr_mode_info_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_mode_info_iterator_t
+xcb_randr_get_screen_resources_current_modes_iterator (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** uint8_t * xcb_randr_get_screen_resources_current_names
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns uint8_t *
+ **
+ *****************************************************************************/
+ 
+uint8_t *
+xcb_randr_get_screen_resources_current_names (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_screen_resources_current_names_length
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_screen_resources_current_names_length (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_randr_get_screen_resources_current_names_end
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_randr_get_screen_resources_current_names_end (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */);
+
+/**
+ * Return the reply
+ * @param c      The connection
+ * @param cookie The cookie
+ * @param e      The xcb_generic_error_t supplied
+ *
+ * Returns the reply of the request asked by
+ * 
+ * The parameter @p e supplied to this function must be NULL if
+ * xcb_randr_get_screen_resources_current_unchecked(). is used.
+ * Otherwise, it stores the error if any.
+ *
+ * The returned value must be freed by the caller using free().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_screen_resources_current_reply_t * xcb_randr_get_screen_resources_current_reply
+ ** 
+ ** @param xcb_connection_t                                 *c
+ ** @param xcb_randr_get_screen_resources_current_cookie_t   cookie
+ ** @param xcb_generic_error_t                             **e
+ ** @returns xcb_randr_get_screen_resources_current_reply_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_screen_resources_current_reply_t *
+xcb_randr_get_screen_resources_current_reply (xcb_connection_t                                 *c  /**< */,
+                                              xcb_randr_get_screen_resources_current_cookie_t   cookie  /**< */,
+                                              xcb_generic_error_t                             **e  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will not cause
+ * a reply to be generated. Any returned error will be
+ * saved for handling by xcb_request_check().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_randr_set_crtc_transform_checked
+ ** 
+ ** @param xcb_connection_t         *c
+ ** @param xcb_randr_crtc_t          crtc
+ ** @param xcb_render_transform_t    transform
+ ** @param uint16_t                  filter_len
+ ** @param const char               *filter_name
+ ** @param uint32_t                  filter_params_len
+ ** @param const xcb_render_fixed_t *filter_params
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_randr_set_crtc_transform_checked (xcb_connection_t         *c  /**< */,
+                                      xcb_randr_crtc_t          crtc  /**< */,
+                                      xcb_render_transform_t    transform  /**< */,
+                                      uint16_t                  filter_len  /**< */,
+                                      const char               *filter_name  /**< */,
+                                      uint32_t                  filter_params_len  /**< */,
+                                      const xcb_render_fixed_t *filter_params  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_randr_set_crtc_transform
+ ** 
+ ** @param xcb_connection_t         *c
+ ** @param xcb_randr_crtc_t          crtc
+ ** @param xcb_render_transform_t    transform
+ ** @param uint16_t                  filter_len
+ ** @param const char               *filter_name
+ ** @param uint32_t                  filter_params_len
+ ** @param const xcb_render_fixed_t *filter_params
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_randr_set_crtc_transform (xcb_connection_t         *c  /**< */,
+                              xcb_randr_crtc_t          crtc  /**< */,
+                              xcb_render_transform_t    transform  /**< */,
+                              uint16_t                  filter_len  /**< */,
+                              const char               *filter_name  /**< */,
+                              uint32_t                  filter_params_len  /**< */,
+                              const xcb_render_fixed_t *filter_params  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_crtc_transform_cookie_t xcb_randr_get_crtc_transform
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_randr_crtc_t  crtc
+ ** @returns xcb_randr_get_crtc_transform_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_crtc_transform_cookie_t
+xcb_randr_get_crtc_transform (xcb_connection_t *c  /**< */,
+                              xcb_randr_crtc_t  crtc  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will cause
+ * a reply to be generated. Any returned error will be
+ * placed in the event queue.
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_crtc_transform_cookie_t xcb_randr_get_crtc_transform_unchecked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_randr_crtc_t  crtc
+ ** @returns xcb_randr_get_crtc_transform_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_crtc_transform_cookie_t
+xcb_randr_get_crtc_transform_unchecked (xcb_connection_t *c  /**< */,
+                                        xcb_randr_crtc_t  crtc  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** char * xcb_randr_get_crtc_transform_pending_filter_name
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns char *
+ **
+ *****************************************************************************/
+ 
+char *
+xcb_randr_get_crtc_transform_pending_filter_name (const xcb_randr_get_crtc_transform_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_crtc_transform_pending_filter_name_length
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_crtc_transform_pending_filter_name_length (const xcb_randr_get_crtc_transform_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_randr_get_crtc_transform_pending_filter_name_end
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_randr_get_crtc_transform_pending_filter_name_end (const xcb_randr_get_crtc_transform_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_render_fixed_t * xcb_randr_get_crtc_transform_pending_params
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns xcb_render_fixed_t *
+ **
+ *****************************************************************************/
+ 
+xcb_render_fixed_t *
+xcb_randr_get_crtc_transform_pending_params (const xcb_randr_get_crtc_transform_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_crtc_transform_pending_params_length
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_crtc_transform_pending_params_length (const xcb_randr_get_crtc_transform_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_randr_get_crtc_transform_pending_params_end
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_randr_get_crtc_transform_pending_params_end (const xcb_randr_get_crtc_transform_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** char * xcb_randr_get_crtc_transform_current_filter_name
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns char *
+ **
+ *****************************************************************************/
+ 
+char *
+xcb_randr_get_crtc_transform_current_filter_name (const xcb_randr_get_crtc_transform_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_crtc_transform_current_filter_name_length
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_crtc_transform_current_filter_name_length (const xcb_randr_get_crtc_transform_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_randr_get_crtc_transform_current_filter_name_end
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_randr_get_crtc_transform_current_filter_name_end (const xcb_randr_get_crtc_transform_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_render_fixed_t * xcb_randr_get_crtc_transform_current_params
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns xcb_render_fixed_t *
+ **
+ *****************************************************************************/
+ 
+xcb_render_fixed_t *
+xcb_randr_get_crtc_transform_current_params (const xcb_randr_get_crtc_transform_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_crtc_transform_current_params_length
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_crtc_transform_current_params_length (const xcb_randr_get_crtc_transform_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_randr_get_crtc_transform_current_params_end
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_randr_get_crtc_transform_current_params_end (const xcb_randr_get_crtc_transform_reply_t *R  /**< */);
+
+/**
+ * Return the reply
+ * @param c      The connection
+ * @param cookie The cookie
+ * @param e      The xcb_generic_error_t supplied
+ *
+ * Returns the reply of the request asked by
+ * 
+ * The parameter @p e supplied to this function must be NULL if
+ * xcb_randr_get_crtc_transform_unchecked(). is used.
+ * Otherwise, it stores the error if any.
+ *
+ * The returned value must be freed by the caller using free().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_crtc_transform_reply_t * xcb_randr_get_crtc_transform_reply
+ ** 
+ ** @param xcb_connection_t                       *c
+ ** @param xcb_randr_get_crtc_transform_cookie_t   cookie
+ ** @param xcb_generic_error_t                   **e
+ ** @returns xcb_randr_get_crtc_transform_reply_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_crtc_transform_reply_t *
+xcb_randr_get_crtc_transform_reply (xcb_connection_t                       *c  /**< */,
+                                    xcb_randr_get_crtc_transform_cookie_t   cookie  /**< */,
+                                    xcb_generic_error_t                   **e  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_panning_cookie_t xcb_randr_get_panning
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_randr_crtc_t  crtc
+ ** @returns xcb_randr_get_panning_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_panning_cookie_t
+xcb_randr_get_panning (xcb_connection_t *c  /**< */,
+                       xcb_randr_crtc_t  crtc  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will cause
+ * a reply to be generated. Any returned error will be
+ * placed in the event queue.
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_panning_cookie_t xcb_randr_get_panning_unchecked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_randr_crtc_t  crtc
+ ** @returns xcb_randr_get_panning_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_panning_cookie_t
+xcb_randr_get_panning_unchecked (xcb_connection_t *c  /**< */,
+                                 xcb_randr_crtc_t  crtc  /**< */);
+
+/**
+ * Return the reply
+ * @param c      The connection
+ * @param cookie The cookie
+ * @param e      The xcb_generic_error_t supplied
+ *
+ * Returns the reply of the request asked by
+ * 
+ * The parameter @p e supplied to this function must be NULL if
+ * xcb_randr_get_panning_unchecked(). is used.
+ * Otherwise, it stores the error if any.
+ *
+ * The returned value must be freed by the caller using free().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_panning_reply_t * xcb_randr_get_panning_reply
+ ** 
+ ** @param xcb_connection_t                *c
+ ** @param xcb_randr_get_panning_cookie_t   cookie
+ ** @param xcb_generic_error_t            **e
+ ** @returns xcb_randr_get_panning_reply_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_panning_reply_t *
+xcb_randr_get_panning_reply (xcb_connection_t                *c  /**< */,
+                             xcb_randr_get_panning_cookie_t   cookie  /**< */,
+                             xcb_generic_error_t            **e  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_set_panning_cookie_t xcb_randr_set_panning
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_randr_crtc_t  crtc
+ ** @param xcb_timestamp_t   timestamp
+ ** @param uint16_t          left
+ ** @param uint16_t          top
+ ** @param uint16_t          width
+ ** @param uint16_t          height
+ ** @param uint16_t          track_left
+ ** @param uint16_t          track_top
+ ** @param uint16_t          track_width
+ ** @param uint16_t          track_height
+ ** @param int16_t           border_left
+ ** @param int16_t           border_top
+ ** @param int16_t           border_right
+ ** @param int16_t           border_bottom
+ ** @returns xcb_randr_set_panning_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_set_panning_cookie_t
+xcb_randr_set_panning (xcb_connection_t *c  /**< */,
+                       xcb_randr_crtc_t  crtc  /**< */,
+                       xcb_timestamp_t   timestamp  /**< */,
+                       uint16_t          left  /**< */,
+                       uint16_t          top  /**< */,
+                       uint16_t          width  /**< */,
+                       uint16_t          height  /**< */,
+                       uint16_t          track_left  /**< */,
+                       uint16_t          track_top  /**< */,
+                       uint16_t          track_width  /**< */,
+                       uint16_t          track_height  /**< */,
+                       int16_t           border_left  /**< */,
+                       int16_t           border_top  /**< */,
+                       int16_t           border_right  /**< */,
+                       int16_t           border_bottom  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will cause
+ * a reply to be generated. Any returned error will be
+ * placed in the event queue.
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_set_panning_cookie_t xcb_randr_set_panning_unchecked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_randr_crtc_t  crtc
+ ** @param xcb_timestamp_t   timestamp
+ ** @param uint16_t          left
+ ** @param uint16_t          top
+ ** @param uint16_t          width
+ ** @param uint16_t          height
+ ** @param uint16_t          track_left
+ ** @param uint16_t          track_top
+ ** @param uint16_t          track_width
+ ** @param uint16_t          track_height
+ ** @param int16_t           border_left
+ ** @param int16_t           border_top
+ ** @param int16_t           border_right
+ ** @param int16_t           border_bottom
+ ** @returns xcb_randr_set_panning_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_set_panning_cookie_t
+xcb_randr_set_panning_unchecked (xcb_connection_t *c  /**< */,
+                                 xcb_randr_crtc_t  crtc  /**< */,
+                                 xcb_timestamp_t   timestamp  /**< */,
+                                 uint16_t          left  /**< */,
+                                 uint16_t          top  /**< */,
+                                 uint16_t          width  /**< */,
+                                 uint16_t          height  /**< */,
+                                 uint16_t          track_left  /**< */,
+                                 uint16_t          track_top  /**< */,
+                                 uint16_t          track_width  /**< */,
+                                 uint16_t          track_height  /**< */,
+                                 int16_t           border_left  /**< */,
+                                 int16_t           border_top  /**< */,
+                                 int16_t           border_right  /**< */,
+                                 int16_t           border_bottom  /**< */);
+
+/**
+ * Return the reply
+ * @param c      The connection
+ * @param cookie The cookie
+ * @param e      The xcb_generic_error_t supplied
+ *
+ * Returns the reply of the request asked by
+ * 
+ * The parameter @p e supplied to this function must be NULL if
+ * xcb_randr_set_panning_unchecked(). is used.
+ * Otherwise, it stores the error if any.
+ *
+ * The returned value must be freed by the caller using free().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_set_panning_reply_t * xcb_randr_set_panning_reply
+ ** 
+ ** @param xcb_connection_t                *c
+ ** @param xcb_randr_set_panning_cookie_t   cookie
+ ** @param xcb_generic_error_t            **e
+ ** @returns xcb_randr_set_panning_reply_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_set_panning_reply_t *
+xcb_randr_set_panning_reply (xcb_connection_t                *c  /**< */,
+                             xcb_randr_set_panning_cookie_t   cookie  /**< */,
+                             xcb_generic_error_t            **e  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will not cause
+ * a reply to be generated. Any returned error will be
+ * saved for handling by xcb_request_check().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_randr_set_output_primary_checked
+ ** 
+ ** @param xcb_connection_t   *c
+ ** @param xcb_window_t        window
+ ** @param xcb_randr_output_t  output
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_randr_set_output_primary_checked (xcb_connection_t   *c  /**< */,
+                                      xcb_window_t        window  /**< */,
+                                      xcb_randr_output_t  output  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_randr_set_output_primary
+ ** 
+ ** @param xcb_connection_t   *c
+ ** @param xcb_window_t        window
+ ** @param xcb_randr_output_t  output
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_randr_set_output_primary (xcb_connection_t   *c  /**< */,
+                              xcb_window_t        window  /**< */,
+                              xcb_randr_output_t  output  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_output_primary_cookie_t xcb_randr_get_output_primary
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_window_t      window
+ ** @returns xcb_randr_get_output_primary_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_output_primary_cookie_t
+xcb_randr_get_output_primary (xcb_connection_t *c  /**< */,
+                              xcb_window_t      window  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will cause
+ * a reply to be generated. Any returned error will be
+ * placed in the event queue.
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_output_primary_cookie_t xcb_randr_get_output_primary_unchecked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_window_t      window
+ ** @returns xcb_randr_get_output_primary_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_output_primary_cookie_t
+xcb_randr_get_output_primary_unchecked (xcb_connection_t *c  /**< */,
+                                        xcb_window_t      window  /**< */);
+
+/**
+ * Return the reply
+ * @param c      The connection
+ * @param cookie The cookie
+ * @param e      The xcb_generic_error_t supplied
+ *
+ * Returns the reply of the request asked by
+ * 
+ * The parameter @p e supplied to this function must be NULL if
+ * xcb_randr_get_output_primary_unchecked(). is used.
+ * Otherwise, it stores the error if any.
+ *
+ * The returned value must be freed by the caller using free().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_output_primary_reply_t * xcb_randr_get_output_primary_reply
+ ** 
+ ** @param xcb_connection_t                       *c
+ ** @param xcb_randr_get_output_primary_cookie_t   cookie
+ ** @param xcb_generic_error_t                   **e
+ ** @returns xcb_randr_get_output_primary_reply_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_output_primary_reply_t *
+xcb_randr_get_output_primary_reply (xcb_connection_t                       *c  /**< */,
+                                    xcb_randr_get_output_primary_cookie_t   cookie  /**< */,
+                                    xcb_generic_error_t                   **e  /**< */);
 
 /**
  * Get the next element of the iterator

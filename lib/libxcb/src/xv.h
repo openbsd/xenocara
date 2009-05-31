@@ -70,6 +70,28 @@ typedef enum xcb_xv_attribute_flag_t {
     XCB_XV_ATTRIBUTE_FLAG_SETTABLE = 2
 } xcb_xv_attribute_flag_t;
 
+typedef enum xcb_xv_video_notify_reason_t {
+    XCB_XV_VIDEO_NOTIFY_REASON_STARTED,
+    XCB_XV_VIDEO_NOTIFY_REASON_STOPPED,
+    XCB_XV_VIDEO_NOTIFY_REASON_BUSY,
+    XCB_XV_VIDEO_NOTIFY_REASON_PREEMPTED,
+    XCB_XV_VIDEO_NOTIFY_REASON_HARD_ERROR
+} xcb_xv_video_notify_reason_t;
+
+typedef enum xcb_xv_scanline_order_t {
+    XCB_XV_SCANLINE_ORDER_TOP_TO_BOTTOM,
+    XCB_XV_SCANLINE_ORDER_BOTTOM_TO_TOP
+} xcb_xv_scanline_order_t;
+
+typedef enum xcb_xv_grab_port_status_t {
+    XCB_XV_GRAB_PORT_STATUS_SUCCESS,
+    XCB_XV_GRAB_PORT_STATUS_BAD_EXTENSION,
+    XCB_XV_GRAB_PORT_STATUS_ALREADY_GRABBED,
+    XCB_XV_GRAB_PORT_STATUS_INVALID_TIME,
+    XCB_XV_GRAB_PORT_STATUS_BAD_REPLY,
+    XCB_XV_GRAB_PORT_STATUS_BAD_ALLOC
+} xcb_xv_grab_port_status_t;
+
 /**
  * @brief xcb_xv_rational_t
  **/

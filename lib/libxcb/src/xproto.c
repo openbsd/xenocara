@@ -3440,7 +3440,7 @@ xcb_get_property_value (const xcb_get_property_reply_t *R  /**< */)
 int
 xcb_get_property_value_length (const xcb_get_property_reply_t *R  /**< */)
 {
-    return R->value_len;
+    return (R->value_len * (R->format / 8));
 }
 
 
@@ -3457,7 +3457,7 @@ xcb_generic_iterator_t
 xcb_get_property_value_end (const xcb_get_property_reply_t *R  /**< */)
 {
     xcb_generic_iterator_t i;
-    i.data = ((char *) (R + 1)) + (R->value_len);
+    i.data = ((char *) (R + 1)) + ((R->value_len * (R->format / 8)));
     i.rem = 0;
     i.index = (char *) i.data - (char *) R;
     return i;

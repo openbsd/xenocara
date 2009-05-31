@@ -29,6 +29,10 @@ typedef enum xcb_render_pict_type_t {
     XCB_RENDER_PICT_TYPE_DIRECT
 } xcb_render_pict_type_t;
 
+typedef enum xcb_render_picture_enum_t {
+    XCB_RENDER_PICTURE_NONE
+} xcb_render_picture_enum_t;
+
 typedef enum xcb_render_pict_op_t {
     XCB_RENDER_PICT_OP_CLEAR,
     XCB_RENDER_PICT_OP_SRC,

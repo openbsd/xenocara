@@ -46,10 +46,10 @@ typedef struct xcb_shm_completion_event_t {
     uint8_t        pad0; /**<  */
     uint16_t       sequence; /**<  */
     xcb_drawable_t drawable; /**<  */
-    xcb_shm_seg_t  shmseg; /**<  */
     uint16_t       minor_event; /**<  */
     uint8_t        major_event; /**<  */
     uint8_t        pad1; /**<  */
+    xcb_shm_seg_t  shmseg; /**<  */
     uint32_t       offset; /**<  */
 } xcb_shm_completion_event_t;
 

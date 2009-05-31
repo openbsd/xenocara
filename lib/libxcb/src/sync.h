@@ -491,6 +491,8 @@ typedef struct xcb_sync_alarm_notify_event_t {
     xcb_sync_int64_t counter_value; /**<  */
     xcb_sync_int64_t alarm_value; /**<  */
     xcb_timestamp_t  timestamp; /**<  */
+    uint8_t          state; /**<  */
+    uint8_t          pad0[3]; /**<  */
 } xcb_sync_alarm_notify_event_t;
 
 /**

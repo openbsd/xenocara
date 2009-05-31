@@ -8,6 +8,7 @@
 #include "xcbext.h"
 #include "randr.h"
 #include "xproto.h"
+#include "render.h"
 
 xcb_extension_t xcb_randr_id = { "RANDR", 0 };
 
@@ -3512,6 +3513,1164 @@ xcb_randr_set_crtc_gamma (xcb_connection_t *c  /**< */,
     xcb_parts[9].iov_len = -xcb_parts[8].iov_len & 3;
     xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
     return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_screen_resources_current_cookie_t xcb_randr_get_screen_resources_current
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_window_t      window
+ ** @returns xcb_randr_get_screen_resources_current_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_screen_resources_current_cookie_t
+xcb_randr_get_screen_resources_current (xcb_connection_t *c  /**< */,
+                                        xcb_window_t      window  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_randr_id,
+        /* opcode */ XCB_RANDR_GET_SCREEN_RESOURCES_CURRENT,
+        /* isvoid */ 0
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_randr_get_screen_resources_current_cookie_t xcb_ret;
+    xcb_randr_get_screen_resources_current_request_t xcb_out;
+    
+    xcb_out.window = window;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_screen_resources_current_cookie_t xcb_randr_get_screen_resources_current_unchecked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_window_t      window
+ ** @returns xcb_randr_get_screen_resources_current_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_screen_resources_current_cookie_t
+xcb_randr_get_screen_resources_current_unchecked (xcb_connection_t *c  /**< */,
+                                                  xcb_window_t      window  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_randr_id,
+        /* opcode */ XCB_RANDR_GET_SCREEN_RESOURCES_CURRENT,
+        /* isvoid */ 0
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_randr_get_screen_resources_current_cookie_t xcb_ret;
+    xcb_randr_get_screen_resources_current_request_t xcb_out;
+    
+    xcb_out.window = window;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_crtc_t * xcb_randr_get_screen_resources_current_crtcs
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns xcb_randr_crtc_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_crtc_t *
+xcb_randr_get_screen_resources_current_crtcs (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */)
+{
+    return (xcb_randr_crtc_t *) (R + 1);
+}
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_screen_resources_current_crtcs_length
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_screen_resources_current_crtcs_length (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */)
+{
+    return R->num_crtcs;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_randr_get_screen_resources_current_crtcs_end
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_randr_get_screen_resources_current_crtcs_end (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */)
+{
+    xcb_generic_iterator_t i;
+    i.data = ((xcb_randr_crtc_t *) (R + 1)) + (R->num_crtcs);
+    i.rem = 0;
+    i.index = (char *) i.data - (char *) R;
+    return i;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_output_t * xcb_randr_get_screen_resources_current_outputs
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns xcb_randr_output_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_output_t *
+xcb_randr_get_screen_resources_current_outputs (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */)
+{
+    xcb_generic_iterator_t prev = xcb_randr_get_screen_resources_current_crtcs_end(R);
+    return (xcb_randr_output_t *) ((char *) prev.data + XCB_TYPE_PAD(xcb_randr_output_t, prev.index) + 0);
+}
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_screen_resources_current_outputs_length
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_screen_resources_current_outputs_length (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */)
+{
+    return R->num_outputs;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_randr_get_screen_resources_current_outputs_end
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_randr_get_screen_resources_current_outputs_end (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */)
+{
+    xcb_generic_iterator_t i;
+    xcb_generic_iterator_t child = xcb_randr_get_screen_resources_current_crtcs_end(R);
+    i.data = ((xcb_randr_output_t *) child.data) + (R->num_outputs);
+    i.rem = 0;
+    i.index = (char *) i.data - (char *) R;
+    return i;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_mode_info_t * xcb_randr_get_screen_resources_current_modes
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns xcb_randr_mode_info_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_mode_info_t *
+xcb_randr_get_screen_resources_current_modes (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */)
+{
+    xcb_generic_iterator_t prev = xcb_randr_get_screen_resources_current_outputs_end(R);
+    return (xcb_randr_mode_info_t *) ((char *) prev.data + XCB_TYPE_PAD(xcb_randr_mode_info_t, prev.index) + 0);
+}
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_screen_resources_current_modes_length
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_screen_resources_current_modes_length (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */)
+{
+    return R->num_modes;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_mode_info_iterator_t xcb_randr_get_screen_resources_current_modes_iterator
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns xcb_randr_mode_info_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_mode_info_iterator_t
+xcb_randr_get_screen_resources_current_modes_iterator (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */)
+{
+    xcb_randr_mode_info_iterator_t i;
+    xcb_generic_iterator_t prev = xcb_randr_get_screen_resources_current_outputs_end(R);
+    i.data = (xcb_randr_mode_info_t *) ((char *) prev.data + XCB_TYPE_PAD(xcb_randr_mode_info_t, prev.index));
+    i.rem = R->num_modes;
+    i.index = (char *) i.data - (char *) R;
+    return i;
+}
+
+
+/*****************************************************************************
+ **
+ ** uint8_t * xcb_randr_get_screen_resources_current_names
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns uint8_t *
+ **
+ *****************************************************************************/
+ 
+uint8_t *
+xcb_randr_get_screen_resources_current_names (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */)
+{
+    xcb_generic_iterator_t prev = xcb_randr_mode_info_end(xcb_randr_get_screen_resources_current_modes_iterator(R));
+    return (uint8_t *) ((char *) prev.data + XCB_TYPE_PAD(uint8_t, prev.index) + 0);
+}
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_screen_resources_current_names_length
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_screen_resources_current_names_length (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */)
+{
+    return R->names_len;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_randr_get_screen_resources_current_names_end
+ ** 
+ ** @param const xcb_randr_get_screen_resources_current_reply_t *R
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_randr_get_screen_resources_current_names_end (const xcb_randr_get_screen_resources_current_reply_t *R  /**< */)
+{
+    xcb_generic_iterator_t i;
+    xcb_generic_iterator_t child = xcb_randr_mode_info_end(xcb_randr_get_screen_resources_current_modes_iterator(R));
+    i.data = ((uint8_t *) child.data) + (R->names_len);
+    i.rem = 0;
+    i.index = (char *) i.data - (char *) R;
+    return i;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_screen_resources_current_reply_t * xcb_randr_get_screen_resources_current_reply
+ ** 
+ ** @param xcb_connection_t                                 *c
+ ** @param xcb_randr_get_screen_resources_current_cookie_t   cookie
+ ** @param xcb_generic_error_t                             **e
+ ** @returns xcb_randr_get_screen_resources_current_reply_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_screen_resources_current_reply_t *
+xcb_randr_get_screen_resources_current_reply (xcb_connection_t                                 *c  /**< */,
+                                              xcb_randr_get_screen_resources_current_cookie_t   cookie  /**< */,
+                                              xcb_generic_error_t                             **e  /**< */)
+{
+    return (xcb_randr_get_screen_resources_current_reply_t *) xcb_wait_for_reply(c, cookie.sequence, e);
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_randr_set_crtc_transform_checked
+ ** 
+ ** @param xcb_connection_t         *c
+ ** @param xcb_randr_crtc_t          crtc
+ ** @param xcb_render_transform_t    transform
+ ** @param uint16_t                  filter_len
+ ** @param const char               *filter_name
+ ** @param uint32_t                  filter_params_len
+ ** @param const xcb_render_fixed_t *filter_params
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_randr_set_crtc_transform_checked (xcb_connection_t         *c  /**< */,
+                                      xcb_randr_crtc_t          crtc  /**< */,
+                                      xcb_render_transform_t    transform  /**< */,
+                                      uint16_t                  filter_len  /**< */,
+                                      const char               *filter_name  /**< */,
+                                      uint32_t                  filter_params_len  /**< */,
+                                      const xcb_render_fixed_t *filter_params  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 6,
+        /* ext */ &xcb_randr_id,
+        /* opcode */ XCB_RANDR_SET_CRTC_TRANSFORM,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[8];
+    xcb_void_cookie_t xcb_ret;
+    xcb_randr_set_crtc_transform_request_t xcb_out;
+    
+    xcb_out.crtc = crtc;
+    xcb_out.transform = transform;
+    xcb_out.filter_len = filter_len;
+    memset(xcb_out.pad0, 0, 2);
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_parts[4].iov_base = (char *) filter_name;
+    xcb_parts[4].iov_len = filter_len * sizeof(char);
+    xcb_parts[5].iov_base = 0;
+    xcb_parts[5].iov_len = -xcb_parts[4].iov_len & 3;
+    xcb_parts[6].iov_base = (char *) filter_params;
+    xcb_parts[6].iov_len = filter_params_len * sizeof(xcb_render_fixed_t);
+    xcb_parts[7].iov_base = 0;
+    xcb_parts[7].iov_len = -xcb_parts[6].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_randr_set_crtc_transform
+ ** 
+ ** @param xcb_connection_t         *c
+ ** @param xcb_randr_crtc_t          crtc
+ ** @param xcb_render_transform_t    transform
+ ** @param uint16_t                  filter_len
+ ** @param const char               *filter_name
+ ** @param uint32_t                  filter_params_len
+ ** @param const xcb_render_fixed_t *filter_params
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_randr_set_crtc_transform (xcb_connection_t         *c  /**< */,
+                              xcb_randr_crtc_t          crtc  /**< */,
+                              xcb_render_transform_t    transform  /**< */,
+                              uint16_t                  filter_len  /**< */,
+                              const char               *filter_name  /**< */,
+                              uint32_t                  filter_params_len  /**< */,
+                              const xcb_render_fixed_t *filter_params  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 6,
+        /* ext */ &xcb_randr_id,
+        /* opcode */ XCB_RANDR_SET_CRTC_TRANSFORM,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[8];
+    xcb_void_cookie_t xcb_ret;
+    xcb_randr_set_crtc_transform_request_t xcb_out;
+    
+    xcb_out.crtc = crtc;
+    xcb_out.transform = transform;
+    xcb_out.filter_len = filter_len;
+    memset(xcb_out.pad0, 0, 2);
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_parts[4].iov_base = (char *) filter_name;
+    xcb_parts[4].iov_len = filter_len * sizeof(char);
+    xcb_parts[5].iov_base = 0;
+    xcb_parts[5].iov_len = -xcb_parts[4].iov_len & 3;
+    xcb_parts[6].iov_base = (char *) filter_params;
+    xcb_parts[6].iov_len = filter_params_len * sizeof(xcb_render_fixed_t);
+    xcb_parts[7].iov_base = 0;
+    xcb_parts[7].iov_len = -xcb_parts[6].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_crtc_transform_cookie_t xcb_randr_get_crtc_transform
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_randr_crtc_t  crtc
+ ** @returns xcb_randr_get_crtc_transform_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_crtc_transform_cookie_t
+xcb_randr_get_crtc_transform (xcb_connection_t *c  /**< */,
+                              xcb_randr_crtc_t  crtc  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_randr_id,
+        /* opcode */ XCB_RANDR_GET_CRTC_TRANSFORM,
+        /* isvoid */ 0
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_randr_get_crtc_transform_cookie_t xcb_ret;
+    xcb_randr_get_crtc_transform_request_t xcb_out;
+    
+    xcb_out.crtc = crtc;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_crtc_transform_cookie_t xcb_randr_get_crtc_transform_unchecked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_randr_crtc_t  crtc
+ ** @returns xcb_randr_get_crtc_transform_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_crtc_transform_cookie_t
+xcb_randr_get_crtc_transform_unchecked (xcb_connection_t *c  /**< */,
+                                        xcb_randr_crtc_t  crtc  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_randr_id,
+        /* opcode */ XCB_RANDR_GET_CRTC_TRANSFORM,
+        /* isvoid */ 0
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_randr_get_crtc_transform_cookie_t xcb_ret;
+    xcb_randr_get_crtc_transform_request_t xcb_out;
+    
+    xcb_out.crtc = crtc;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** char * xcb_randr_get_crtc_transform_pending_filter_name
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns char *
+ **
+ *****************************************************************************/
+ 
+char *
+xcb_randr_get_crtc_transform_pending_filter_name (const xcb_randr_get_crtc_transform_reply_t *R  /**< */)
+{
+    return (char *) (R + 1);
+}
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_crtc_transform_pending_filter_name_length
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_crtc_transform_pending_filter_name_length (const xcb_randr_get_crtc_transform_reply_t *R  /**< */)
+{
+    return R->pending_len;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_randr_get_crtc_transform_pending_filter_name_end
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_randr_get_crtc_transform_pending_filter_name_end (const xcb_randr_get_crtc_transform_reply_t *R  /**< */)
+{
+    xcb_generic_iterator_t i;
+    i.data = ((char *) (R + 1)) + (R->pending_len);
+    i.rem = 0;
+    i.index = (char *) i.data - (char *) R;
+    return i;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_render_fixed_t * xcb_randr_get_crtc_transform_pending_params
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns xcb_render_fixed_t *
+ **
+ *****************************************************************************/
+ 
+xcb_render_fixed_t *
+xcb_randr_get_crtc_transform_pending_params (const xcb_randr_get_crtc_transform_reply_t *R  /**< */)
+{
+    xcb_generic_iterator_t prev = xcb_randr_get_crtc_transform_pending_filter_name_end(R);
+    return (xcb_render_fixed_t *) ((char *) prev.data + XCB_TYPE_PAD(xcb_render_fixed_t, prev.index) + 0);
+}
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_crtc_transform_pending_params_length
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_crtc_transform_pending_params_length (const xcb_randr_get_crtc_transform_reply_t *R  /**< */)
+{
+    return R->pending_nparams;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_randr_get_crtc_transform_pending_params_end
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_randr_get_crtc_transform_pending_params_end (const xcb_randr_get_crtc_transform_reply_t *R  /**< */)
+{
+    xcb_generic_iterator_t i;
+    xcb_generic_iterator_t child = xcb_randr_get_crtc_transform_pending_filter_name_end(R);
+    i.data = ((xcb_render_fixed_t *) child.data) + (R->pending_nparams);
+    i.rem = 0;
+    i.index = (char *) i.data - (char *) R;
+    return i;
+}
+
+
+/*****************************************************************************
+ **
+ ** char * xcb_randr_get_crtc_transform_current_filter_name
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns char *
+ **
+ *****************************************************************************/
+ 
+char *
+xcb_randr_get_crtc_transform_current_filter_name (const xcb_randr_get_crtc_transform_reply_t *R  /**< */)
+{
+    xcb_generic_iterator_t prev = xcb_randr_get_crtc_transform_pending_params_end(R);
+    return (char *) ((char *) prev.data + XCB_TYPE_PAD(char, prev.index) + 0);
+}
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_crtc_transform_current_filter_name_length
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_crtc_transform_current_filter_name_length (const xcb_randr_get_crtc_transform_reply_t *R  /**< */)
+{
+    return R->current_len;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_randr_get_crtc_transform_current_filter_name_end
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_randr_get_crtc_transform_current_filter_name_end (const xcb_randr_get_crtc_transform_reply_t *R  /**< */)
+{
+    xcb_generic_iterator_t i;
+    xcb_generic_iterator_t child = xcb_randr_get_crtc_transform_pending_params_end(R);
+    i.data = ((char *) child.data) + (R->current_len);
+    i.rem = 0;
+    i.index = (char *) i.data - (char *) R;
+    return i;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_render_fixed_t * xcb_randr_get_crtc_transform_current_params
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns xcb_render_fixed_t *
+ **
+ *****************************************************************************/
+ 
+xcb_render_fixed_t *
+xcb_randr_get_crtc_transform_current_params (const xcb_randr_get_crtc_transform_reply_t *R  /**< */)
+{
+    xcb_generic_iterator_t prev = xcb_randr_get_crtc_transform_current_filter_name_end(R);
+    return (xcb_render_fixed_t *) ((char *) prev.data + XCB_TYPE_PAD(xcb_render_fixed_t, prev.index) + 0);
+}
+
+
+/*****************************************************************************
+ **
+ ** int xcb_randr_get_crtc_transform_current_params_length
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_randr_get_crtc_transform_current_params_length (const xcb_randr_get_crtc_transform_reply_t *R  /**< */)
+{
+    return R->current_nparams;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_randr_get_crtc_transform_current_params_end
+ ** 
+ ** @param const xcb_randr_get_crtc_transform_reply_t *R
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_randr_get_crtc_transform_current_params_end (const xcb_randr_get_crtc_transform_reply_t *R  /**< */)
+{
+    xcb_generic_iterator_t i;
+    xcb_generic_iterator_t child = xcb_randr_get_crtc_transform_current_filter_name_end(R);
+    i.data = ((xcb_render_fixed_t *) child.data) + (R->current_nparams);
+    i.rem = 0;
+    i.index = (char *) i.data - (char *) R;
+    return i;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_crtc_transform_reply_t * xcb_randr_get_crtc_transform_reply
+ ** 
+ ** @param xcb_connection_t                       *c
+ ** @param xcb_randr_get_crtc_transform_cookie_t   cookie
+ ** @param xcb_generic_error_t                   **e
+ ** @returns xcb_randr_get_crtc_transform_reply_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_crtc_transform_reply_t *
+xcb_randr_get_crtc_transform_reply (xcb_connection_t                       *c  /**< */,
+                                    xcb_randr_get_crtc_transform_cookie_t   cookie  /**< */,
+                                    xcb_generic_error_t                   **e  /**< */)
+{
+    return (xcb_randr_get_crtc_transform_reply_t *) xcb_wait_for_reply(c, cookie.sequence, e);
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_panning_cookie_t xcb_randr_get_panning
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_randr_crtc_t  crtc
+ ** @returns xcb_randr_get_panning_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_panning_cookie_t
+xcb_randr_get_panning (xcb_connection_t *c  /**< */,
+                       xcb_randr_crtc_t  crtc  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_randr_id,
+        /* opcode */ XCB_RANDR_GET_PANNING,
+        /* isvoid */ 0
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_randr_get_panning_cookie_t xcb_ret;
+    xcb_randr_get_panning_request_t xcb_out;
+    
+    xcb_out.crtc = crtc;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_panning_cookie_t xcb_randr_get_panning_unchecked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_randr_crtc_t  crtc
+ ** @returns xcb_randr_get_panning_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_panning_cookie_t
+xcb_randr_get_panning_unchecked (xcb_connection_t *c  /**< */,
+                                 xcb_randr_crtc_t  crtc  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_randr_id,
+        /* opcode */ XCB_RANDR_GET_PANNING,
+        /* isvoid */ 0
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_randr_get_panning_cookie_t xcb_ret;
+    xcb_randr_get_panning_request_t xcb_out;
+    
+    xcb_out.crtc = crtc;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_panning_reply_t * xcb_randr_get_panning_reply
+ ** 
+ ** @param xcb_connection_t                *c
+ ** @param xcb_randr_get_panning_cookie_t   cookie
+ ** @param xcb_generic_error_t            **e
+ ** @returns xcb_randr_get_panning_reply_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_panning_reply_t *
+xcb_randr_get_panning_reply (xcb_connection_t                *c  /**< */,
+                             xcb_randr_get_panning_cookie_t   cookie  /**< */,
+                             xcb_generic_error_t            **e  /**< */)
+{
+    return (xcb_randr_get_panning_reply_t *) xcb_wait_for_reply(c, cookie.sequence, e);
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_set_panning_cookie_t xcb_randr_set_panning
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_randr_crtc_t  crtc
+ ** @param xcb_timestamp_t   timestamp
+ ** @param uint16_t          left
+ ** @param uint16_t          top
+ ** @param uint16_t          width
+ ** @param uint16_t          height
+ ** @param uint16_t          track_left
+ ** @param uint16_t          track_top
+ ** @param uint16_t          track_width
+ ** @param uint16_t          track_height
+ ** @param int16_t           border_left
+ ** @param int16_t           border_top
+ ** @param int16_t           border_right
+ ** @param int16_t           border_bottom
+ ** @returns xcb_randr_set_panning_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_set_panning_cookie_t
+xcb_randr_set_panning (xcb_connection_t *c  /**< */,
+                       xcb_randr_crtc_t  crtc  /**< */,
+                       xcb_timestamp_t   timestamp  /**< */,
+                       uint16_t          left  /**< */,
+                       uint16_t          top  /**< */,
+                       uint16_t          width  /**< */,
+                       uint16_t          height  /**< */,
+                       uint16_t          track_left  /**< */,
+                       uint16_t          track_top  /**< */,
+                       uint16_t          track_width  /**< */,
+                       uint16_t          track_height  /**< */,
+                       int16_t           border_left  /**< */,
+                       int16_t           border_top  /**< */,
+                       int16_t           border_right  /**< */,
+                       int16_t           border_bottom  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_randr_id,
+        /* opcode */ XCB_RANDR_SET_PANNING,
+        /* isvoid */ 0
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_randr_set_panning_cookie_t xcb_ret;
+    xcb_randr_set_panning_request_t xcb_out;
+    
+    xcb_out.crtc = crtc;
+    xcb_out.timestamp = timestamp;
+    xcb_out.left = left;
+    xcb_out.top = top;
+    xcb_out.width = width;
+    xcb_out.height = height;
+    xcb_out.track_left = track_left;
+    xcb_out.track_top = track_top;
+    xcb_out.track_width = track_width;
+    xcb_out.track_height = track_height;
+    xcb_out.border_left = border_left;
+    xcb_out.border_top = border_top;
+    xcb_out.border_right = border_right;
+    xcb_out.border_bottom = border_bottom;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_set_panning_cookie_t xcb_randr_set_panning_unchecked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_randr_crtc_t  crtc
+ ** @param xcb_timestamp_t   timestamp
+ ** @param uint16_t          left
+ ** @param uint16_t          top
+ ** @param uint16_t          width
+ ** @param uint16_t          height
+ ** @param uint16_t          track_left
+ ** @param uint16_t          track_top
+ ** @param uint16_t          track_width
+ ** @param uint16_t          track_height
+ ** @param int16_t           border_left
+ ** @param int16_t           border_top
+ ** @param int16_t           border_right
+ ** @param int16_t           border_bottom
+ ** @returns xcb_randr_set_panning_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_set_panning_cookie_t
+xcb_randr_set_panning_unchecked (xcb_connection_t *c  /**< */,
+                                 xcb_randr_crtc_t  crtc  /**< */,
+                                 xcb_timestamp_t   timestamp  /**< */,
+                                 uint16_t          left  /**< */,
+                                 uint16_t          top  /**< */,
+                                 uint16_t          width  /**< */,
+                                 uint16_t          height  /**< */,
+                                 uint16_t          track_left  /**< */,
+                                 uint16_t          track_top  /**< */,
+                                 uint16_t          track_width  /**< */,
+                                 uint16_t          track_height  /**< */,
+                                 int16_t           border_left  /**< */,
+                                 int16_t           border_top  /**< */,
+                                 int16_t           border_right  /**< */,
+                                 int16_t           border_bottom  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_randr_id,
+        /* opcode */ XCB_RANDR_SET_PANNING,
+        /* isvoid */ 0
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_randr_set_panning_cookie_t xcb_ret;
+    xcb_randr_set_panning_request_t xcb_out;
+    
+    xcb_out.crtc = crtc;
+    xcb_out.timestamp = timestamp;
+    xcb_out.left = left;
+    xcb_out.top = top;
+    xcb_out.width = width;
+    xcb_out.height = height;
+    xcb_out.track_left = track_left;
+    xcb_out.track_top = track_top;
+    xcb_out.track_width = track_width;
+    xcb_out.track_height = track_height;
+    xcb_out.border_left = border_left;
+    xcb_out.border_top = border_top;
+    xcb_out.border_right = border_right;
+    xcb_out.border_bottom = border_bottom;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_set_panning_reply_t * xcb_randr_set_panning_reply
+ ** 
+ ** @param xcb_connection_t                *c
+ ** @param xcb_randr_set_panning_cookie_t   cookie
+ ** @param xcb_generic_error_t            **e
+ ** @returns xcb_randr_set_panning_reply_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_set_panning_reply_t *
+xcb_randr_set_panning_reply (xcb_connection_t                *c  /**< */,
+                             xcb_randr_set_panning_cookie_t   cookie  /**< */,
+                             xcb_generic_error_t            **e  /**< */)
+{
+    return (xcb_randr_set_panning_reply_t *) xcb_wait_for_reply(c, cookie.sequence, e);
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_randr_set_output_primary_checked
+ ** 
+ ** @param xcb_connection_t   *c
+ ** @param xcb_window_t        window
+ ** @param xcb_randr_output_t  output
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_randr_set_output_primary_checked (xcb_connection_t   *c  /**< */,
+                                      xcb_window_t        window  /**< */,
+                                      xcb_randr_output_t  output  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_randr_id,
+        /* opcode */ XCB_RANDR_SET_OUTPUT_PRIMARY,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_void_cookie_t xcb_ret;
+    xcb_randr_set_output_primary_request_t xcb_out;
+    
+    xcb_out.window = window;
+    xcb_out.output = output;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_randr_set_output_primary
+ ** 
+ ** @param xcb_connection_t   *c
+ ** @param xcb_window_t        window
+ ** @param xcb_randr_output_t  output
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_randr_set_output_primary (xcb_connection_t   *c  /**< */,
+                              xcb_window_t        window  /**< */,
+                              xcb_randr_output_t  output  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_randr_id,
+        /* opcode */ XCB_RANDR_SET_OUTPUT_PRIMARY,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_void_cookie_t xcb_ret;
+    xcb_randr_set_output_primary_request_t xcb_out;
+    
+    xcb_out.window = window;
+    xcb_out.output = output;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_output_primary_cookie_t xcb_randr_get_output_primary
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_window_t      window
+ ** @returns xcb_randr_get_output_primary_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_output_primary_cookie_t
+xcb_randr_get_output_primary (xcb_connection_t *c  /**< */,
+                              xcb_window_t      window  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_randr_id,
+        /* opcode */ XCB_RANDR_GET_OUTPUT_PRIMARY,
+        /* isvoid */ 0
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_randr_get_output_primary_cookie_t xcb_ret;
+    xcb_randr_get_output_primary_request_t xcb_out;
+    
+    xcb_out.window = window;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_output_primary_cookie_t xcb_randr_get_output_primary_unchecked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_window_t      window
+ ** @returns xcb_randr_get_output_primary_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_output_primary_cookie_t
+xcb_randr_get_output_primary_unchecked (xcb_connection_t *c  /**< */,
+                                        xcb_window_t      window  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_randr_id,
+        /* opcode */ XCB_RANDR_GET_OUTPUT_PRIMARY,
+        /* isvoid */ 0
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_randr_get_output_primary_cookie_t xcb_ret;
+    xcb_randr_get_output_primary_request_t xcb_out;
+    
+    xcb_out.window = window;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_randr_get_output_primary_reply_t * xcb_randr_get_output_primary_reply
+ ** 
+ ** @param xcb_connection_t                       *c
+ ** @param xcb_randr_get_output_primary_cookie_t   cookie
+ ** @param xcb_generic_error_t                   **e
+ ** @returns xcb_randr_get_output_primary_reply_t *
+ **
+ *****************************************************************************/
+ 
+xcb_randr_get_output_primary_reply_t *
+xcb_randr_get_output_primary_reply (xcb_connection_t                       *c  /**< */,
+                                    xcb_randr_get_output_primary_cookie_t   cookie  /**< */,
+                                    xcb_generic_error_t                   **e  /**< */)
+{
+    return (xcb_randr_get_output_primary_reply_t *) xcb_wait_for_reply(c, cookie.sequence, e);
 }
 
 

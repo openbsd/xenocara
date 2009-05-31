@@ -236,6 +236,10 @@ typedef struct xcb_xfixes_bad_region_error_t {
     uint16_t sequence; /**<  */
 } xcb_xfixes_bad_region_error_t;
 
+typedef enum xcb_xfixes_region_enum_t {
+    XCB_XFIXES_REGION_NONE
+} xcb_xfixes_region_enum_t;
+
 /** Opcode for xcb_xfixes_create_region. */
 #define XCB_XFIXES_CREATE_REGION 5
 
