@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2009/05/23 15:08:51 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.5 2009/05/31 18:01:28 matthieu Exp $
 
 LIB=		xcb
 
@@ -31,9 +31,7 @@ NEEDED=		pthread-stubs xau >= 0.99.2 xdmcp
 EXTRA_PKGCONFIG_SUBST=	 '-e s,@NEEDED@,${NEEDED},g' \
 			    '-e s,@LIBS@,,g' \
 
-NEEDED_LIBS!=	pkg-config --libs "${NEEDED}"
-
-LDADD=		${NEEDED_LIBS}
+LDADD=		`pkg-config --libs "${NEEDED}"`
 
 install-ext:
 	@echo installing ${EXTHEADERS} in ${INCSDIR}/${HEADER_SUBDIR}

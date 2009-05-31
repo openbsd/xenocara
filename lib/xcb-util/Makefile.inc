@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.1.1.1 2009/05/23 14:43:12 matthieu Exp $
+#	$OpenBSD: Makefile.inc,v 1.2 2009/05/31 18:01:28 matthieu Exp $
 
 XCBUTIL=	${.CURDIR}/../../../dist/xcb-util
 
@@ -16,9 +16,7 @@ LIB?=		xcb-${SUBLIB}
 _SRCDIR?=	${XCBUTIL}/${SUBLIB}
 PKGCONFIG?=	xcb-${SUBLIB}.pc
 
-LIBADD!=	pkg-config --libs xcb 
-
-LDADD?=		${LIBADD}
+LDADD?=		`pkg-config --libs xcb`
 
 .PATH:		${XCBUTIL}/${SUBLIB}
 

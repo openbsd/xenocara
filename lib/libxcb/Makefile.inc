@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.4 2009/05/23 15:08:50 matthieu Exp $
+#	$OpenBSD: Makefile.inc,v 1.5 2009/05/31 18:01:28 matthieu Exp $
 
 LIBXCB=	${.CURDIR}/../../../dist/libxcb
 
@@ -6,9 +6,7 @@ CPPFLAGS=	-I${X11BASE}/include \
 		-I${.CURDIR}/../src -I${LIBXCB}/src \
 		-DHAVE_CONFIG_H
 
-XCB_LIBS!=	pkg-config --libs xcb
-
-LDADD?=		${XCB_LIBS}
+LDADD?=		`pkg-config --libs xcb`
 
 .SUFFIXES: .in
 
