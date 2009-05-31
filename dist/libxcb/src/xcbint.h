@@ -60,6 +60,10 @@ enum lazy_reply_tag
 #define offsetof(type,member) ((size_t) &((type *)0)->member)
 #endif
 
+#ifndef MIN
+#define MIN(x,y) ((x) < (y) ? (x) : (y))
+#endif
+
 #define container_of(pointer,type,member) ((type *)(((char *)(pointer)) - offsetof(type, member)))
 
 /* xcb_list.c */

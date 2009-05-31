@@ -31,12 +31,16 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <netinet/in.h>
-#include <sys/select.h>
 #include <fcntl.h>
 #include <errno.h>
 
 #include "xcb.h"
 #include "xcbint.h"
+#if USE_POLL
+#include <poll.h>
+#else
+#include <sys/select.h>
+#endif
 
 typedef struct {
     uint8_t  status;
@@ -258,7 +262,11 @@ void _xcb_conn_shutdown(xcb_connection_t *c)
 int _xcb_conn_wait(xcb_connection_t *c, pthread_cond_t *cond, struct iovec **vector, int *count)
 {
     int ret;
+#if USE_POLL
+    struct pollfd fd;
+#else
     fd_set rfds, wfds;
+#endif
 
     /* If the thing I should be doing is already being done, wait for it. */
     if(count ? c->out.writing : c->in.reading)
@@ -267,20 +275,38 @@ int _xcb_conn_wait(xcb_connection_t *c, pthread_cond_t *cond, struct iovec **vec
         return 1;
     }
 
+#if USE_POLL
+    memset(&fd, 0, sizeof(fd));
+    fd.fd = c->fd;
+    fd.events = POLLIN;
+#else
     FD_ZERO(&rfds);
     FD_SET(c->fd, &rfds);
+#endif
     ++c->in.reading;
 
+#if USE_POLL
+    if(count)
+    {
+        fd.events |= POLLOUT;
+        ++c->out.writing;
+    }
+#else
     FD_ZERO(&wfds);
     if(count)
     {
         FD_SET(c->fd, &wfds);
         ++c->out.writing;
     }
+#endif
 
     pthread_mutex_unlock(&c->iolock);
     do {
+#if USE_POLL
+    ret = poll(&fd, 1, -1);
+#else
 	ret = select(c->fd + 1, &rfds, &wfds, 0, 0);
+#endif
     } while (ret == -1 && errno == EINTR);
     if (ret < 0)
     {
@@ -291,10 +317,18 @@ int _xcb_conn_wait(xcb_connection_t *c, pthread_cond_t *cond, struct iovec **vec
 
     if(ret)
     {
+#if USE_POLL
+        if((fd.revents & POLLIN) == POLLIN)
+#else
         if(FD_ISSET(c->fd, &rfds))
+#endif
             ret = ret && _xcb_in_read(c);
 
+#if USE_POLL
+        if((fd.revents & POLLOUT) == POLLOUT)
+#else
         if(FD_ISSET(c->fd, &wfds))
+#endif
             ret = ret && write_vec(c, vector, count);
     }
 

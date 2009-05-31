@@ -1,3 +1,12 @@
+Release 1.3 (2009-05-29)
+========================
+* Copy full IPv4 mapping (Bug #20665)
+* Fix XID allocation
+* Use poll() instead of select() when available
+* Fix local socket connection on Hurd
+* Fix XDM-AUTHORIZATION-1
+* Disable Nagle on TCP socket
+
 Release 1.2 (2009-02-17)
 ========================
 * Stop packaging auto-generated C files into tarball.

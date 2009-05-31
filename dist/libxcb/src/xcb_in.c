@@ -30,12 +30,16 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <sys/select.h>
 #include <errno.h>
 
 #include "xcb.h"
 #include "xcbext.h"
 #include "xcbint.h"
+#if USE_POLL
+#include <poll.h>
+#else
+#include <sys/select.h>
+#endif
 
 #define XCB_ERROR 0
 #define XCB_REPLY 1
@@ -268,12 +272,22 @@ static int read_block(const int fd, void *buf, const ssize_t len)
             done += ret;
         if(ret < 0 && errno == EAGAIN)
         {
+#if USE_POLL
+            struct pollfd pfd;
+            pfd.fd = fd;
+            pfd.events = POLLIN;
+            pfd.revents = 0;
+            do {
+                ret = poll(&pfd, 1, -1);
+            } while (ret == -1 && errno == EINTR);
+#else
             fd_set fds;
             FD_ZERO(&fds);
             FD_SET(fd, &fds);
 	    do {
 		ret = select(fd + 1, &fds, 0, 0, 0);
 	    } while (ret == -1 && errno == EINTR);
+#endif
         }
         if(ret <= 0)
             return ret;

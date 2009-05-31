@@ -135,6 +135,9 @@ def c_open(self):
     _ns = self.namespace
     _ns.c_ext_global_name = _n(_ns.prefix + ('id',))
 
+    # Build the type-name collision avoidance table used by c_enum
+    build_collision_table()
+
     _h_setlevel(0)
     _c_setlevel(0)
 
@@ -216,13 +219,26 @@ def c_close(self):
             cfile.write('\n')
     cfile.close()
 
+def build_collision_table():
+    global namecount
+    namecount = {}
+
+    for v in module.types.values():
+        name = _t(v[0])
+        namecount[name] = (namecount.get(name) or 0) + 1
+
 def c_enum(self, name):
     '''
     Exported function that handles enum declarations.
     '''
+
+    tname = _t(name)
+    if namecount[tname] > 1:
+        tname = _t(name + ('enum',))
+
     _h_setlevel(0)
     _h('')
-    _h('typedef enum %s {', _t(name))
+    _h('typedef enum %s {', tname)
 
     count = len(self.values)
 
@@ -232,7 +248,7 @@ def c_enum(self, name):
         comma = ',' if count > 0 else ''
         _h('    %s%s%s%s', _n(name + (enam,)).upper(), equals, eval, comma)
 
-    _h('} %s;', _t(name))
+    _h('} %s;', tname)
 
 def _c_type_setup(self, name, postfix):
     '''
