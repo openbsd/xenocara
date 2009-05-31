@@ -15,6 +15,10 @@ for licensing information.
     <item name="Direct" />
   </enum>
 
+  <enum name="Picture">
+    <item name="None" />
+  </enum>
+
   <!-- Disjoint* and Conjoint* are new in version 0.2 -->
   <enum name="PictOp">
     <item name="Clear" />
@@ -129,7 +133,7 @@ for licensing information.
 
   <struct name="PICTFORMINFO">
     <field type="PICTFORMAT" name="id" />
-    <field type="CARD8" name="type" />
+    <field type="CARD8" name="type" enum="PictType" />
     <field type="CARD8" name="depth" />
     <pad bytes="2" />
     <field type="DIRECTFORMAT" name="direct" />
@@ -233,7 +237,7 @@ for licensing information.
       <list type="PICTSCREEN" name="screens">
         <fieldref>num_screens</fieldref>
       </list>
-      <list type="CARD32" name="subpixels">
+      <list type="CARD32" name="subpixels" enum="SubPixel" >
         <fieldref>num_subpixel</fieldref>
       </list>
     </reply>
@@ -282,10 +286,10 @@ for licensing information.
   </request>
 
   <request name="Composite" opcode="8">
-    <field type="CARD8" name="op" />
+    <field type="CARD8" name="op" enum="PictOp" />
     <pad bytes="3" />
     <field type="PICTURE" name="src" />
-    <field type="PICTURE" name="mask" />
+    <field type="PICTURE" name="mask" altenum="Picture" />
     <field type="PICTURE" name="dst" />
     <field type="INT16" name="src_x" />
     <field type="INT16" name="src_y" />
@@ -300,7 +304,7 @@ for licensing information.
   <!-- opcode 9 reserved for Scale -->
 
   <request name="Trapezoids" opcode="10">
-    <field type="CARD8" name="op" />
+    <field type="CARD8" name="op" enum="PictOp" />
     <pad bytes="3" />
     <field type="PICTURE" name="src" />
     <field type="PICTURE" name="dst" />
@@ -311,7 +315,7 @@ for licensing information.
   </request>
 
   <request name="Triangles" opcode="11">
-    <field type="CARD8" name="op" />
+    <field type="CARD8" name="op" enum="PictOp" />
     <pad bytes="3" />
     <field type="PICTURE" name="src" />
     <field type="PICTURE" name="dst" />
@@ -322,7 +326,7 @@ for licensing information.
   </request>
 
   <request name="TriStrip" opcode="12">
-    <field type="CARD8" name="op" />
+    <field type="CARD8" name="op" enum="PictOp" />
     <pad bytes="3" />
     <field type="PICTURE" name="src" />
     <field type="PICTURE" name="dst" />
@@ -333,7 +337,7 @@ for licensing information.
   </request>
 
   <request name="TriFan" opcode="13">
-    <field type="CARD8" name="op" />
+    <field type="CARD8" name="op" enum="PictOp" />
     <pad bytes="3" />
     <field type="PICTURE" name="src" />
     <field type="PICTURE" name="dst" />
@@ -383,7 +387,7 @@ for licensing information.
   </request>
 
   <request name="CompositeGlyphs8" opcode="23">
-    <field type="CARD8" name="op" />
+    <field type="CARD8" name="op" enum="PictOp" />
     <pad bytes="3" />
     <field type="PICTURE" name="src" />
     <field type="PICTURE" name="dst" />
@@ -395,7 +399,7 @@ for licensing information.
   </request>
 
   <request name="CompositeGlyphs16" opcode="24">
-    <field type="CARD8" name="op" />
+    <field type="CARD8" name="op" enum="PictOp" />
     <pad bytes="3" />
     <field type="PICTURE" name="src" />
     <field type="PICTURE" name="dst" />
@@ -407,7 +411,7 @@ for licensing information.
   </request>
 
   <request name="CompositeGlyphs32" opcode="25">
-    <field type="CARD8" name="op" />
+    <field type="CARD8" name="op" enum="PictOp" />
     <pad bytes="3" />
     <field type="PICTURE" name="src" />
     <field type="PICTURE" name="dst" />
@@ -421,7 +425,7 @@ for licensing information.
   <!-- new in version 0.1 -->
 
   <request name="FillRectangles" opcode="26">
-    <field type="CARD8" name="op" />
+    <field type="CARD8" name="op" enum="PictOp" />
     <pad bytes="3" />
     <field type="PICTURE" name="dst" />
     <field type="COLOR" name="color" />

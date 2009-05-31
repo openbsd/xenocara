@@ -65,14 +65,21 @@ authorization from the authors.
 
   <request name="Disable" opcode="5" />
 
+  <enum name="DPMSMode">
+    <item name="On" />
+    <item name="Standby" />
+    <item name="Suspend" />
+    <item name="Off" />
+  </enum>
+
   <request name="ForceLevel" opcode="6">
-    <field type="CARD16" name="power_level" />
+    <field type="CARD16" name="power_level" enum="DPMSMode" />
   </request>
 
   <request name="Info" opcode="7">
     <reply>
       <pad bytes="1" />
-      <field type="CARD16" name="power_level" />
+      <field type="CARD16" name="power_level" enum="DPMSMode" />
       <field type="BOOL" name="state" />
       <pad bytes="21" />
     </reply>

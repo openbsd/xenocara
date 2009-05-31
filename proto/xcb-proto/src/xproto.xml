@@ -127,6 +127,41 @@ authorization from the authors.
     </list>
   </struct>
 
+  <enum name="EventMask">
+    <item name="NoEvent">           <value>0</value></item>
+    <item name="KeyPress">            <bit>0</bit></item>
+    <item name="KeyRelease">          <bit>1</bit></item>
+    <item name="ButtonPress">         <bit>2</bit></item>
+    <item name="ButtonRelease">       <bit>3</bit></item>
+    <item name="EnterWindow">         <bit>4</bit></item>
+    <item name="LeaveWindow">         <bit>5</bit></item>
+    <item name="PointerMotion">       <bit>6</bit></item>
+    <item name="PointerMotionHint">   <bit>7</bit></item>
+    <item name="Button1Motion">       <bit>8</bit></item>
+    <item name="Button2Motion">       <bit>9</bit></item>
+    <item name="Button3Motion">       <bit>10</bit></item>
+    <item name="Button4Motion">       <bit>11</bit></item>
+    <item name="Button5Motion">       <bit>12</bit></item>
+    <item name="ButtonMotion">        <bit>13</bit></item>
+    <item name="KeymapState">         <bit>14</bit></item>
+    <item name="Exposure">            <bit>15</bit></item>
+    <item name="VisibilityChange">    <bit>16</bit></item>
+    <item name="StructureNotify">     <bit>17</bit></item>
+    <item name="ResizeRedirect">      <bit>18</bit></item>
+    <item name="SubstructureNotify">  <bit>19</bit></item>
+    <item name="SubstructureRedirect"><bit>20</bit></item>
+    <item name="FocusChange">         <bit>21</bit></item>
+    <item name="PropertyChange">      <bit>22</bit></item>
+    <item name="ColorMapChange">      <bit>23</bit></item>
+    <item name="OwnerGrabButton">     <bit>24</bit></item>
+  </enum>
+
+  <enum name="BackingStore">
+    <item name="NotUseful"> <value>0</value></item>
+    <item name="WhenMapped"><value>1</value></item>
+    <item name="Always">    <value>2</value></item>
+  </enum>
+
   <struct name="SCREEN">
     <field type="WINDOW" name="root" />
     <field type="COLORMAP" name="default_colormap" />
@@ -236,6 +271,27 @@ authorization from the authors.
     <item name="3">      <bit>5</bit></item>
     <item name="4">      <bit>6</bit></item>
     <item name="5">      <bit>7</bit></item>
+    <item name="Any">    <bit>15</bit></item>
+  </enum>
+
+  <enum name="KeyButMask">
+    <item name="Shift">  <bit>0</bit></item>
+    <item name="Lock">   <bit>1</bit></item>
+    <item name="Control"><bit>2</bit></item>
+    <item name="Mod1">   <bit>3</bit></item>
+    <item name="Mod2">   <bit>4</bit></item>
+    <item name="Mod3">   <bit>5</bit></item>
+    <item name="Mod4">   <bit>6</bit></item>
+    <item name="Mod5">   <bit>7</bit></item>
+    <item name="Button1"><bit>8</bit></item>
+    <item name="Button2"><bit>9</bit></item>
+    <item name="Button3"><bit>10</bit></item>
+    <item name="Button4"><bit>11</bit></item>
+    <item name="Button5"><bit>12</bit></item>
+  </enum>
+
+  <enum name="Window">
+    <item name="None"> <value>0</value></item>
   </enum>
 
   <event name="KeyPress" number="2">
@@ -243,12 +299,12 @@ authorization from the authors.
     <field type="TIMESTAMP" name="time" />
     <field type="WINDOW" name="root" />
     <field type="WINDOW" name="event" />
-    <field type="WINDOW" name="child" />
+    <field type="WINDOW" name="child" altenum="Window" />
     <field type="INT16" name="root_x" />
     <field type="INT16" name="root_y" />
     <field type="INT16" name="event_x" />
     <field type="INT16" name="event_y" />
-    <field type="CARD16" name="state" />
+    <field type="CARD16" name="state" mask="KeyButMask" />
     <field type="BOOL" name="same_screen" />
     <pad bytes="1" />
   </event>
@@ -269,12 +325,12 @@ authorization from the authors.
     <field type="TIMESTAMP" name="time" />
     <field type="WINDOW" name="root" />
     <field type="WINDOW" name="event" />
-    <field type="WINDOW" name="child" />
+    <field type="WINDOW" name="child" altenum="Window" />
     <field type="INT16" name="root_x" />
     <field type="INT16" name="root_y" />
     <field type="INT16" name="event_x" />
     <field type="INT16" name="event_y" />
-    <field type="CARD16" name="state" />
+    <field type="CARD16" name="state" mask="KeyButMask" />
     <field type="BOOL" name="same_screen" />
     <pad bytes="1" />
   </event>
@@ -292,12 +348,12 @@ authorization from the authors.
     <field type="TIMESTAMP" name="time" />
     <field type="WINDOW" name="root" />
     <field type="WINDOW" name="event" />
-    <field type="WINDOW" name="child" />
+    <field type="WINDOW" name="child" altenum="Window" />
     <field type="INT16" name="root_x" />
     <field type="INT16" name="root_y" />
     <field type="INT16" name="event_x" />
     <field type="INT16" name="event_y" />
-    <field type="CARD16" name="state" />
+    <field type="CARD16" name="state" mask="KeyButMask" />
     <field type="BOOL" name="same_screen" />
     <pad bytes="1" />
   </event>
@@ -325,12 +381,12 @@ authorization from the authors.
     <field type="TIMESTAMP" name="time" />
     <field type="WINDOW" name="root" />
     <field type="WINDOW" name="event" />
-    <field type="WINDOW" name="child" />
+    <field type="WINDOW" name="child" altenum="Window" />
     <field type="INT16" name="root_x" />
     <field type="INT16" name="root_y" />
     <field type="INT16" name="event_x" />
     <field type="INT16" name="event_y" />
-    <field type="CARD16" name="state" />
+    <field type="CARD16" name="state" mask="KeyButMask" />
     <field type="BYTE" name="mode" enum="NotifyMode" />
     <field type="BYTE" name="same_screen_focus" />
   </event>
@@ -451,7 +507,7 @@ authorization from the authors.
     <pad bytes="1" />
     <field type="WINDOW" name="event" />
     <field type="WINDOW" name="window" />
-    <field type="WINDOW" name="above_sibling" />
+    <field type="WINDOW" name="above_sibling" altenum="Window" />
     <field type="INT16" name="x" />
     <field type="INT16" name="y" />
     <field type="CARD16" name="width" />
@@ -465,7 +521,7 @@ authorization from the authors.
     <field type="BYTE" name="stack_mode" enum="StackMode" />
     <field type="WINDOW" name="parent" />
     <field type="WINDOW" name="window" />
-    <field type="WINDOW" name="sibling" />
+    <field type="WINDOW" name="sibling" altenum="Window" />
     <field type="INT16" name="x" />
     <field type="INT16" name="y" />
     <field type="CARD16" name="width" />
@@ -526,23 +582,31 @@ authorization from the authors.
     <field type="ATOM" name="selection" />
   </event>
 
+  <enum name="Time">
+    <item name="CurrentTime"> <value>0</value> </item>
+  </enum>
+
+  <enum name="Atom">
+    <item name="None"> <value>0</value></item>
+  </enum>
+
   <event name="SelectionRequest" number="30">
     <pad bytes="1" />
-    <field type="TIMESTAMP" name="time" />
+    <field type="TIMESTAMP" name="time" altenum="Time" />
     <field type="WINDOW" name="owner" />
     <field type="WINDOW" name="requestor" />
     <field type="ATOM" name="selection" />
     <field type="ATOM" name="target" />
-    <field type="ATOM" name="property" />
+    <field type="ATOM" name="property" altenum="Atom" />
   </event>
 
   <event name="SelectionNotify" number="31">
     <pad bytes="1" />
-    <field type="TIMESTAMP" name="time" />
+    <field type="TIMESTAMP" name="time" altenum="Time" />
     <field type="WINDOW" name="requestor" />
     <field type="ATOM" name="selection" />
     <field type="ATOM" name="target" />
-    <field type="ATOM" name="property" />
+    <field type="ATOM" name="property" altenum="Atom" />
   </event>
 
   <enum name="ColormapState">
@@ -550,10 +614,14 @@ authorization from the authors.
     <item name="Installed">  <value>1</value></item>
   </enum>
 
+  <enum name="Colormap">
+    <item name="None"> <value>0</value></item>
+  </enum>
+
   <event name="ColormapNotify" number="32">
     <pad bytes="1" />
     <field type="WINDOW" name="window" />
-    <field type="COLORMAP" name="colormap" />
+    <field type="COLORMAP" name="colormap" altenum="Colormap" />
     <field type="BOOL" name="new" />
     <field type="BYTE" name="state" enum="ColormapState" />
     <pad bytes="2" />
@@ -676,42 +744,6 @@ authorization from the authors.
     <item name="Static">   <value>10</value></item>
   </enum>
 
-  <!-- Also used in XCBSCREEN field backing_stores -->
-  <enum name="BackingStore">
-    <item name="NotUseful"> <value>0</value></item>
-    <item name="WhenMapped"><value>1</value></item>
-    <item name="Always">    <value>2</value></item>
-  </enum>
-
-  <enum name="EventMask">
-    <item name="NoEvent">           <value>0</value></item>
-    <item name="KeyPress">            <bit>0</bit></item>
-    <item name="KeyRelease">          <bit>1</bit></item>
-    <item name="ButtonPress">         <bit>2</bit></item>
-    <item name="ButtonRelease">       <bit>3</bit></item>
-    <item name="EnterWindow">         <bit>4</bit></item>
-    <item name="LeaveWindow">         <bit>5</bit></item>
-    <item name="PointerMotion">       <bit>6</bit></item>
-    <item name="PointerMotionHint">   <bit>7</bit></item>
-    <item name="Button1Motion">       <bit>8</bit></item>
-    <item name="Button2Motion">       <bit>9</bit></item>
-    <item name="Button3Motion">       <bit>10</bit></item>
-    <item name="Button4Motion">       <bit>11</bit></item>
-    <item name="Button5Motion">       <bit>12</bit></item>
-    <item name="ButtonMotion">        <bit>13</bit></item>
-    <item name="KeymapState">         <bit>14</bit></item>
-    <item name="Exposure">            <bit>15</bit></item>
-    <item name="VisibilityChange">    <bit>16</bit></item>
-    <item name="StructureNotify">     <bit>17</bit></item>
-    <item name="ResizeRedirect">      <bit>18</bit></item>
-    <item name="SubstructureNotify">  <bit>19</bit></item>
-    <item name="SubstructureRedirect"><bit>20</bit></item>
-    <item name="FocusChange">         <bit>21</bit></item>
-    <item name="PropertyChange">      <bit>22</bit></item>
-    <item name="ColorMapChange">      <bit>23</bit></item>
-    <item name="OwnerGrabButton">     <bit>24</bit></item>
-  </enum>
-
   <request name="CreateWindow" opcode="1">
     <field type="CARD8" name="depth" />
     <field type="WINDOW" name="wid" />
@@ -757,7 +789,7 @@ authorization from the authors.
       <field type="BOOL" name="map_is_installed" />
       <field type="CARD8" name="map_state" enum="MapState" />
       <field type="BOOL" name="override_redirect" />
-      <field type="COLORMAP" name="colormap" />
+      <field type="COLORMAP" name="colormap" altenum="Colormap" />
       <field type="CARD32" name="all_event_masks" mask="EventMask" />
       <field type="CARD32" name="your_event_mask" mask="EventMask" />
       <field type="CARD16" name="do_not_propagate_mask" mask="EventMask" />
@@ -871,7 +903,7 @@ authorization from the authors.
     <reply>
       <pad bytes="1" />
       <field type="WINDOW" name="root" />
-      <field type="WINDOW" name="parent" />
+      <field type="WINDOW" name="parent" altenum="Window" />
       <field type="CARD16" name="children_len" />
       <pad bytes="14" />
       <list type="WINDOW" name="children">
@@ -889,7 +921,7 @@ authorization from the authors.
     </list>
     <reply>
       <pad bytes="1" />
-      <field type="ATOM" name="atom" />
+      <field type="ATOM" name="atom" altenum="Atom" />
     </reply>
   </request>
 
@@ -945,7 +977,7 @@ authorization from the authors.
     <field type="BOOL" name="delete" />
     <field type="WINDOW" name="window" />
     <field type="ATOM" name="property" />
-    <field type="ATOM" name="type" enum="GetPropertyType" />
+    <field type="ATOM" name="type" altenum="GetPropertyType" />
     <field type="CARD32" name="long_offset" />
     <field type="CARD32" name="long_length" />
     <reply>
@@ -955,7 +987,13 @@ authorization from the authors.
       <field type="CARD32" name="value_len" />
       <pad bytes="12" />
       <list type="void" name="value">
-        <fieldref>value_len</fieldref>
+	<op op="*">
+	  <fieldref>value_len</fieldref>
+	  <op op="/">
+	    <fieldref>format</fieldref>
+	    <value>8</value>
+	  </op>
+	</op>
       </list>
     </reply>
   </request>
@@ -975,9 +1013,9 @@ authorization from the authors.
 
   <request name="SetSelectionOwner" opcode="22">
     <pad bytes="1" />
-    <field type="WINDOW" name="owner" />
+    <field type="WINDOW" name="owner" altenum="Window" />
     <field type="ATOM" name="selection" />
-    <field type="TIMESTAMP" name="time" />
+    <field type="TIMESTAMP" name="time" altenum="Time" />
   </request>
 
   <request name="GetSelectionOwner" opcode="23">
@@ -985,7 +1023,7 @@ authorization from the authors.
     <field type="ATOM" name="selection" />
     <reply>
       <pad bytes="1" />
-      <field type="WINDOW" name="owner" />
+      <field type="WINDOW" name="owner" altenum="Window" />
     </reply>
   </request>
 
@@ -994,8 +1032,8 @@ authorization from the authors.
     <field type="WINDOW" name="requestor" />
     <field type="ATOM" name="selection" />
     <field type="ATOM" name="target" />
-    <field type="ATOM" name="property" />
-    <field type="TIMESTAMP" name="time" />
+    <field type="ATOM" name="property" altenum="Atom" />
+    <field type="TIMESTAMP" name="time" altenum="Time" />
   </request>
 
   <enum name="SendEventDest">
@@ -1005,7 +1043,7 @@ authorization from the authors.
 
   <request name="SendEvent" opcode="25">
     <field type="BOOL" name="propagate" />
-    <field type="WINDOW" name="destination" />
+    <field type="WINDOW" name="destination" altenum="SendEventDest" />
     <field type="CARD32" name="event_mask" mask="EventMask" />
     <list type="char" name="event"><value>32</value></list>
   </request>
@@ -1023,15 +1061,19 @@ authorization from the authors.
     <item name="Frozen">        <value>4</value></item>
   </enum>
 
+  <enum name="Cursor">
+    <item name="None"> <value>0</value></item>
+  </enum>
+
   <request name="GrabPointer" opcode="26">
     <field type="BOOL" name="owner_events" />
     <field type="WINDOW" name="grab_window" />
     <field type="CARD16" name="event_mask" mask="EventMask" />
     <field type="BYTE" name="pointer_mode" enum="GrabMode" />
     <field type="BYTE" name="keyboard_mode" enum="GrabMode" />
-    <field type="WINDOW" name="confine_to" />
-    <field type="CURSOR" name="cursor" />
-    <field type="TIMESTAMP" name="time" />
+    <field type="WINDOW" name="confine_to" altenum="Window" />
+    <field type="CURSOR" name="cursor" altenum="Cursor" />
+    <field type="TIMESTAMP" name="time" altenum="Time" />
     <reply>
       <field type="BYTE" name="status" enum="GrabStatus" />
     </reply>
@@ -1039,7 +1081,7 @@ authorization from the authors.
 
   <request name="UngrabPointer" opcode="27">
     <pad bytes="1" />
-    <field type="TIMESTAMP" name="time" />
+    <field type="TIMESTAMP" name="time" altenum="Time" />
   </request>
 
   <enum name="ButtonIndex">
@@ -1057,8 +1099,8 @@ authorization from the authors.
     <field type="CARD16" name="event_mask" mask="EventMask" />
     <field type="CARD8" name="pointer_mode" enum="GrabMode" />
     <field type="CARD8" name="keyboard_mode" enum="GrabMode" />
-    <field type="WINDOW" name="confine_to" />
-    <field type="CURSOR" name="cursor" />
+    <field type="WINDOW" name="confine_to" altenum="Window" />
+    <field type="CURSOR" name="cursor" altenum="Cursor" />
     <field type="CARD8" name="button" enum="ButtonIndex" />
     <pad bytes="1" />
     <field type="CARD16" name="modifiers" mask="ModMask" />
@@ -1073,8 +1115,8 @@ authorization from the authors.
 
   <request name="ChangeActivePointerGrab" opcode="30">
     <pad bytes="1" />
-    <field type="CURSOR" name="cursor" />
-    <field type="TIMESTAMP" name="time" />
+    <field type="CURSOR" name="cursor" altenum="Cursor" />
+    <field type="TIMESTAMP" name="time" altenum="Time" />
     <field type="CARD16" name="event_mask" mask="EventMask" />
     <pad bytes="2" />
   </request>
@@ -1082,7 +1124,7 @@ authorization from the authors.
   <request name="GrabKeyboard" opcode="31">
     <field type="BOOL" name="owner_events" />
     <field type="WINDOW" name="grab_window" />
-    <field type="TIMESTAMP" name="time" />
+    <field type="TIMESTAMP" name="time" altenum="Time" />
     <field type="BYTE" name="pointer_mode" enum="GrabMode" />
     <field type="BYTE" name="keyboard_mode" enum="GrabMode" />
     <pad bytes="2" />
@@ -1093,7 +1135,7 @@ authorization from the authors.
 
   <request name="UngrabKeyboard" opcode="32">
     <pad bytes="1" />
-    <field type="TIMESTAMP" name="time" />
+    <field type="TIMESTAMP" name="time" altenum="Time" />
   </request>
 
   <!-- Use KEYCODE any = { XCBGrabAny }; to grab any key -->
@@ -1105,14 +1147,14 @@ authorization from the authors.
     <field type="BOOL" name="owner_events" />
     <field type="WINDOW" name="grab_window" />
     <field type="CARD16" name="modifiers" mask="ModMask" />
-    <field type="KEYCODE" name="key" />
+    <field type="KEYCODE" name="key" altenum="Grab" />
     <field type="CARD8" name="pointer_mode" enum="GrabMode" />
     <field type="CARD8" name="keyboard_mode" enum="GrabMode" />
     <pad bytes="3" />
   </request>
 
   <request name="UngrabKey" opcode="34">
-    <field type="KEYCODE" name="key" />
+    <field type="KEYCODE" name="key" altenum="Grab" />
     <field type="WINDOW" name="grab_window" />
     <field type="CARD16" name="modifiers" mask="ModMask" />
     <pad bytes="2" />
@@ -1131,7 +1173,7 @@ authorization from the authors.
 
   <request name="AllowEvents" opcode="35">
     <field type="CARD8" name="mode" enum="Allow" />
-    <field type="TIMESTAMP" name="time" />
+    <field type="TIMESTAMP" name="time" altenum="Time" />
   </request>
 
   <request name="GrabServer" opcode="36" />
@@ -1144,12 +1186,12 @@ authorization from the authors.
     <reply>
       <field type="BOOL" name="same_screen" />
       <field type="WINDOW" name="root" />
-      <field type="WINDOW" name="child" />
+      <field type="WINDOW" name="child" altenum="Window" />
       <field type="INT16" name="root_x" />
       <field type="INT16" name="root_y" />
       <field type="INT16" name="win_x" />
       <field type="INT16" name="win_y" />
-      <field type="CARD16" name="mask" />
+      <field type="CARD16" name="mask" mask="KeyButMask" />
       <pad bytes="2" />
     </reply>
   </request>
@@ -1163,8 +1205,8 @@ authorization from the authors.
   <request name="GetMotionEvents" opcode="39">
     <pad bytes="1" />
     <field type="WINDOW" name="window" />
-    <field type="TIMESTAMP" name="start" />
-    <field type="TIMESTAMP" name="stop" />
+    <field type="TIMESTAMP" name="start" altenum="Time" />
+    <field type="TIMESTAMP" name="stop" altenum="Time" />
     <reply>
       <pad bytes="1" />
       <field type="CARD32" name="events_len" />
@@ -1183,7 +1225,7 @@ authorization from the authors.
     <field type="INT16" name="src_y" />
     <reply>
       <field type="BOOL" name="same_screen" />
-      <field type="WINDOW" name="child" />
+      <field type="WINDOW" name="child" altenum="Window" />
       <field type="CARD16" name="dst_x" />
       <field type="CARD16" name="dst_y" />
     </reply>
@@ -1191,8 +1233,8 @@ authorization from the authors.
 
   <request name="WarpPointer" opcode="41">
     <pad bytes="1" />
-    <field type="WINDOW" name="src_window" />
-    <field type="WINDOW" name="dst_window" />
+    <field type="WINDOW" name="src_window" altenum="Window" />
+    <field type="WINDOW" name="dst_window" altenum="Window" />
     <field type="INT16" name="src_x" />
     <field type="INT16" name="src_y" />
     <field type="CARD16" name="src_width" />
@@ -1206,18 +1248,19 @@ authorization from the authors.
     <item name="None">       <value>0</value></item>
     <item name="PointerRoot"><value>1</value></item>
     <item name="Parent">     <value>2</value></item>  <!-- revert_to only -->
+    <item name="FollowKeyboard"><value>3</value></item>  <!-- xinput extension only -->
   </enum>
 
   <request name="SetInputFocus" opcode="42">
     <field type="CARD8" name="revert_to" enum="InputFocus" />
-    <field type="WINDOW" name="focus" />
-    <field type="TIMESTAMP" name="time" />
+    <field type="WINDOW" name="focus" altenum="InputFocus" />
+    <field type="TIMESTAMP" name="time" altenum="Time" />
   </request>
 
   <request name="GetInputFocus" opcode="43">
     <reply>
       <field type="CARD8" name="revert_to" enum="InputFocus" />
-      <field type="WINDOW" name="focus" />
+      <field type="WINDOW" name="focus" altenum="InputFocus" />
     </reply>
   </request>
 
@@ -1456,7 +1499,7 @@ authorization from the authors.
   </enum>
 
   <enum name="JoinStyle">
-    <item name="Mitre">     <value>0</value></item>
+    <item name="Miter">     <value>0</value></item>
     <item name="Round">     <value>1</value></item>
     <item name="Bevel">     <value>2</value></item>
   </enum>
@@ -1940,11 +1983,15 @@ authorization from the authors.
     </reply>
   </request>
 
+  <enum name="Pixmap">
+    <item name="None"> <value>0</value></item>
+  </enum>
+
   <request name="CreateCursor" opcode="93">
     <pad bytes="1" />
     <field type="CURSOR" name="cid" />
     <field type="PIXMAP" name="source" />
-    <field type="PIXMAP" name="mask" />
+    <field type="PIXMAP" name="mask" altenum="Pixmap" />
     <field type="CARD16" name="fore_red" />
     <field type="CARD16" name="fore_green" />
     <field type="CARD16" name="fore_blue" />
@@ -1955,11 +2002,15 @@ authorization from the authors.
     <field type="CARD16" name="y" />
   </request>
 
+  <enum name="Font">
+    <item name="None"> <value>0</value></item>
+  </enum>
+
   <request name="CreateGlyphCursor" opcode="94">
     <pad bytes="1" />
     <field type="CURSOR" name="cid" />
     <field type="FONT" name="source_font" />
-    <field type="FONT" name="mask_font" />
+    <field type="FONT" name="mask_font" altenum="Font" />
     <field type="CARD16" name="source_char" />
     <field type="CARD16" name="mask_char" />
     <field type="CARD16" name="fore_red" />
@@ -2223,7 +2274,7 @@ authorization from the authors.
 
   <request name="KillClient" opcode="113">
     <pad bytes="1" />
-    <field type="CARD32" name="resource" enum="Kill" />
+    <field type="CARD32" name="resource" altenum="Kill" />
   </request>
 
   <request name="RotateProperties" opcode="114">

@@ -55,9 +55,9 @@ for licensing information.
 
   <struct name="TRIGGER">
     <field type="COUNTER" name="counter" />
-    <field type="CARD32" name="wait_type" />
+    <field type="CARD32" name="wait_type" enum="VALUETYPE" />
     <field type="INT64" name="wait_value" />
-    <field type="CARD32" name="test_type" />
+    <field type="CARD32" name="test_type" enum="TESTTYPE" />
   </struct>
 
   <struct name="WAITCONDITION">
@@ -155,7 +155,7 @@ for licensing information.
       <field type="TRIGGER" name="trigger" />
       <field type="INT64" name="delta" />
       <field type="BOOL" name="events" />
-      <field type="CARD8" name="state" />
+      <field type="CARD8" name="state" enum="ALARMSTATE" />
       <pad bytes="2" />
     </reply>
   </request>
@@ -190,5 +190,7 @@ for licensing information.
     <field type="INT64" name="counter_value" />
     <field type="INT64" name="alarm_value" />
     <field type="TIMESTAMP" name="timestamp" />
+    <field type="CARD8" name="state" enum="ALARMSTATE" />
+    <pad bytes="3" />
   </event>
 </xcb>

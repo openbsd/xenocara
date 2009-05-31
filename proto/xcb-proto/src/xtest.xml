@@ -66,7 +66,7 @@ authorization from the authors.
             3. Simulate mouse motion:
                 type   = XCBMotionNotify
                 detail = 0 or 1
-                window = XCBNone or a root window id
+                root = XCBNone or a root window id
                 rootX,
                 rootY  = position (relative if detail==1)
 
@@ -86,7 +86,7 @@ authorization from the authors.
         <field type="BYTE"   name="detail" />
         <pad bytes="2" />
         <field type="CARD32" name="time" />
-        <field type="WINDOW" name="window" />
+        <field type="WINDOW" name="root" />
         <pad bytes="8" />
         <field type="CARD16" name="rootX" />
         <field type="CARD16" name="rootY" />

@@ -59,9 +59,9 @@ authorization from the authors.
   </enum>
 
   <request name="ChangeSaveSet" opcode="1">
-    <field type="BYTE" name="mode" />   <!-- SaveSetMode -->
-    <field type="BYTE" name="target" /> <!-- SaveSetTarget -->
-    <field type="BYTE" name="map" />    <!-- SaveSetMapping -->
+    <field type="BYTE" name="mode"   enum="SaveSetMode" />
+    <field type="BYTE" name="target" enum="SaveSetTarget" />
+    <field type="BYTE" name="map"    enum="SaveSetMapping" />
     <pad bytes="1" />
     <field type="WINDOW" name="window" />
   </request>
@@ -79,7 +79,7 @@ authorization from the authors.
   </enum>
 
   <event name="SelectionNotify" number="0">
-    <field type="CARD8"     name="subtype" /> <!-- SelectionEvent -->
+    <field type="CARD8"     name="subtype" enum="SelectionEvent" />
     <field type="WINDOW"    name="window" />
     <field type="WINDOW"    name="owner" />
     <field type="ATOM"      name="selection" />
@@ -91,7 +91,7 @@ authorization from the authors.
   <request name="SelectSelectionInput" opcode="2">
     <field type="WINDOW" name="window" />
     <field type="ATOM"   name="selection" />
-    <field type="CARD32" name="event_mask" /> <!-- SelectionEventMask -->
+    <field type="CARD32" name="event_mask" mask="SelectionEventMask" />
   </request>
 
   <enum name="CursorNotify">
@@ -103,17 +103,17 @@ authorization from the authors.
   </enum>
 
   <event name="CursorNotify" number="1">
-    <field type="CARD8"     name="subtype" /> <!-- CursorNotify -->
+    <field type="CARD8"     name="subtype" enum="CursorNotify" />
     <field type="WINDOW"    name="window" />
     <field type="CARD32"    name="cursor_serial" />
     <field type="TIMESTAMP" name="timestamp" />
-    <field type="ATOM"      name="name" /> <!-- Added in version 2 -->
+    <field type="ATOM"      name="name" altenum="Atom" /> <!-- Added in version 2 -->
     <pad bytes="12" />
   </event>
 
   <request name="SelectCursorInput" opcode="3">
     <field type="WINDOW" name="window" />
-    <field type="CARD32" name="event_mask" /> <!-- CursorNotifyMask -->
+    <field type="CARD32" name="event_mask" mask="CursorNotifyMask" />
   </request>
 
   <request name="GetCursorImage" opcode="4">
@@ -142,6 +142,10 @@ authorization from the authors.
 
   <error name="BadRegion" number="0" />
 
+  <enum name="Region">
+    <item name="None" />
+  </enum>
+
   <request name="CreateRegion" opcode="5">
     <field type="REGION"    name="region" />
     <list  type="RECTANGLE" name="rectangles" />
@@ -155,7 +159,7 @@ authorization from the authors.
   <request name="CreateRegionFromWindow" opcode="7">
     <field type="REGION"     name="region" />
     <field type="WINDOW"     name="window" />
-    <field type="shape:KIND" name="kind" />
+    <field type="shape:KIND" name="kind"   enum="SK" />
     <pad bytes="3" />
   </request>
 
@@ -232,23 +236,23 @@ authorization from the authors.
 
   <request name="SetGCClipRegion" opcode="20">
     <field type="GCONTEXT" name="gc" />
-    <field type="REGION"   name="region" />
+    <field type="REGION"   name="region" altenum="Region" />
     <field type="INT16"    name="x_origin" />
     <field type="INT16"    name="y_origin" />
   </request>
 
   <request name="SetWindowShapeRegion" opcode="21">
     <field type="WINDOW"     name="dest" />
-    <field type="shape:KIND" name="dest_kind" />
+    <field type="shape:KIND" name="dest_kind" enum="SK" />
     <pad bytes="3" />
     <field type="INT16"      name="x_offset" />
     <field type="INT16"      name="y_offset" />
-    <field type="REGION"     name="region" />
+    <field type="REGION"     name="region" altenum="Region" />
   </request>
 
   <request name="SetPictureClipRegion" opcode="22">
     <field type="PICTURE" name="picture" />
-    <field type="REGION"  name="region" />
+    <field type="REGION"  name="region" altenum="Region" />
     <field type="INT16"   name="x_origin" />
     <field type="INT16"   name="y_origin" />
   </request>
@@ -264,7 +268,7 @@ authorization from the authors.
     <field type="CURSOR" name="cursor" />
     <reply>
       <pad bytes="1" />
-      <field type="ATOM"   name="atom" />
+      <field type="ATOM"   name="atom" altenum="Atom" />
       <field type="CARD16" name="nbytes" />
       <pad bytes="18" />
       <list  type="char"   name="name"><fieldref>nbytes</fieldref></list>
@@ -281,7 +285,7 @@ authorization from the authors.
       <field type="CARD16" name="xhot" />
       <field type="CARD16" name="yhot" />
       <field type="CARD32" name="cursor_serial" />
-      <field type="ATOM"   name="cursor_atom" />
+      <field type="ATOM"   name="cursor_atom" altenum="Atom" />
       <field type="CARD16" name="nbytes" />
       <pad bytes="2" />
       <list  type="char"   name="name"><fieldref>nbytes</fieldref></list>

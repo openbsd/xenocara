@@ -57,18 +57,26 @@ authorization from the authors.
 	    <pad bytes="1" />
 	    <field type="CARD16" name="server_major" />
 	    <field type="CARD16" name="server_minor" />
-	    <field type="CARD8" name="present" />
+	    <field type="BOOL" name="present" />
 	    <pad bytes="19" />
 	</reply>
     </request>
 
     <!-- ListInputDevices -->
 
+    <enum name="DeviceUse">
+	<item name="IsXPointer"><value>0</value></item>
+	<item name="IsXKeyboard"><value>1</value></item>
+	<item name="IsXExtensionDevice"><value>2</value></item>
+	<item name="IsXExtensionKeyboard"><value>3</value></item>
+	<item name="IsXExtensionPointer"><value>4</value></item>
+    </enum>
+
     <struct name="DeviceInfo">
 	<field type="ATOM" name="device_type" />
 	<field type="CARD8" name="device_id" />
 	<field type="CARD8" name="num_class_info" />
-	<field type="CARD8" name="device_use" />
+	<field type="CARD8" name="device_use" enum="DeviceUse" />
 	<pad bytes="1" />
     </struct>
 
@@ -85,21 +93,23 @@ authorization from the authors.
 	</reply>
     </request>
 
-    <enum name="DeviceUse">
-	<item name="IsXPointer"><value>0</value></item>
-	<item name="IsXKeyboard"><value>1</value></item>
-	<item name="IsXExtensionDevice"><value>2</value></item>
-	<item name="IsXExtensionKeyboard"><value>3</value></item>
-	<item name="IsXExtensionPointer"><value>4</value></item>
+    <enum name="InputClass">
+	<item name="Key"><value>0</value></item>
+	<item name="Button"><value>1</value></item>
+	<item name="Valuator"><value>2</value></item>
+	<item name="Feedback"><value>3</value></item>
+	<item name="Proximity"><value>4</value></item>
+	<item name="Focus"><value>5</value></item>
+	<item name="Other"><value>6</value></item>
     </enum>
 
     <struct name="InputInfo">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="InputClass" />
 	<field type="CARD8" name="len" />
     </struct>
 
     <struct name="KeyInfo">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="InputClass" />
 	<field type="CARD8" name="len" />
 	<field type="KeyCode" name="min_keycode" />
 	<field type="KeyCode" name="max_keycode" />
@@ -108,22 +118,22 @@ authorization from the authors.
     </struct>
 
     <struct name="ButtonInfo">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="InputClass" />
 	<field type="CARD8" name="len" />
 	<field type="CARD16" name="num_buttons" />
     </struct>
 
     <struct name="AxisInfo">
 	<field type="CARD32" name="resolution" />
-	<field type="CARD32" name="minimum" />
-	<field type="CARD32" name="maximum" />
+	<field type="INT32" name="minimum" />
+	<field type="INT32" name="maximum" />
     </struct>
 
     <struct name="ValuatorInfo">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="InputClass" />
 	<field type="CARD8" name="len" />
 	<field type="CARD8" name="axes_len" />
-	<field type="CARD8" name="mode" />
+	<field type="CARD8" name="mode" enum="ValuatorMode" />
 	<field type="CARD32" name="motion_size" />
 	<list type="AxisInfo" name="axes">
 	    <fieldref>axes_len</fieldref>
@@ -133,7 +143,7 @@ authorization from the authors.
     <!-- OpenDevice -->
 
     <struct name="InputClassInfo">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="InputClass" />
 	<field type="CARD8" name="event_type_base" />
     </struct>
 
@@ -150,16 +160,6 @@ authorization from the authors.
 	</reply>
     </request>
 
-    <enum name="InputClass">
-	<item name="Key"><value>0</value></item>
-	<item name="Button"><value>1</value></item>
-	<item name="Valuator"><value>2</value></item>
-	<item name="Feedback"><value>3</value></item>
-	<item name="Proximity"><value>4</value></item>
-	<item name="Focus"><value>5</value></item>
-	<item name="Other"><value>6</value></item>
-    </enum>
-
     <!-- CloseDevice -->
 
     <request name="CloseDevice" opcode="4">
@@ -171,11 +171,11 @@ authorization from the authors.
 
     <request name="SetDeviceMode" opcode="5">
 	<field type="CARD8" name="device_id" />
-	<field type="CARD8" name="mode" />
+	<field type="CARD8" name="mode" enum="ValuatorMode" />
 	<pad bytes="2" />
 	<reply>
 	    <pad bytes="1" />
-	    <field type="CARD8" name="status" />
+	    <field type="CARD8" name="status" altenum="GrabStatus" />
 	    <pad bytes="23" />
 	</reply>
     </request>
@@ -214,7 +214,7 @@ authorization from the authors.
     <request name="ChangeDeviceDontPropagateList" opcode="8">
 	<field type="WINDOW" name="window" />
 	<field type="CARD16" name="num_classes" />
-	<field type="CARD8" name="mode" />
+	<field type="CARD8" name="mode" enum="PropagateMode" />
 	<pad bytes="1" />
 	<list type="EventClass" name="classes">
 	    <fieldref>num_classes</fieldref>
@@ -239,13 +239,13 @@ authorization from the authors.
 
     <request name="GetDeviceMotionEvents" opcode="10">
 	<field type="TIMESTAMP" name="start" />
-	<field type="TIMESTAMP" name="stop" />
+	<field type="TIMESTAMP" name="stop" altenum="Time" />
 	<field type="CARD8" name="device_id" />
 	<reply>
 	    <pad bytes="1" />
 	    <field type="CARD32" name="num_coords" />
 	    <field type="CARD8" name="num_axes" />
-	    <field type="CARD8" name="device_mode" />
+	    <field type="CARD8" name="device_mode" enum="ValuatorMode" />
 	    <pad bytes="18" />
 	    <!-- Uninterpreted: list of DeviceTimeCoord structures -->
 	</reply>
@@ -262,7 +262,7 @@ authorization from the authors.
 	<pad bytes="3" />
 	<reply>
 	    <pad bytes="1" />
-	    <field type="CARD8" name="status" />
+	    <field type="CARD8" name="status" altenum="GrabStatus" />
 	    <pad bytes="23" />
 	</reply>
     </request>
@@ -276,7 +276,7 @@ authorization from the authors.
 	<pad bytes="1" />
 	<reply>
 	    <pad bytes="1" />
-	    <field type="CARD8" name="status" />
+	    <field type="CARD8" name="status" altenum="GrabStatus" />
 	    <pad bytes="23" />
 	</reply>
     </request>
@@ -285,10 +285,10 @@ authorization from the authors.
 
     <request name="GrabDevice" opcode="13">
 	<field type="WINDOW" name="grab_window" />
-	<field type="TIMESTAMP" name="time" />
+	<field type="TIMESTAMP" name="time" altenum="Time" />
 	<field type="CARD16" name="num_classes" />
-	<field type="CARD8" name="this_device_mode" />
-	<field type="CARD8" name="other_device_mode" />
+	<field type="CARD8" name="this_device_mode" enum="GrabMode" />
+	<field type="CARD8" name="other_device_mode" enum="GrabMode" />
 	<field type="BOOL" name="owner_events" />
 	<field type="CARD8" name="device_id" />
 	<pad bytes="2" />
@@ -297,7 +297,7 @@ authorization from the authors.
 	</list>
 	<reply>
 	    <pad bytes="1" />
-	    <field type="CARD8" name="status" />
+	    <field type="CARD8" name="status" enum="GrabStatus" />
 	    <pad bytes="23" />
 	</reply>
     </request>
@@ -305,7 +305,7 @@ authorization from the authors.
     <!-- UngrabDevice -->
 
     <request name="UngrabDevice" opcode="14">
-	<field type="TIMESTAMP" name="time" />
+	<field type="TIMESTAMP" name="time" altenum="Time" />
 	<field type="CARD8" name="device_id" />
     </request>
 
@@ -314,12 +314,12 @@ authorization from the authors.
     <request name="GrabDeviceKey" opcode="15">
 	<field type="WINDOW" name="grab_window" />
 	<field type="CARD16" name="num_classes" />
-	<field type="CARD16" name="modifiers" />
+	<field type="CARD16" name="modifiers" mask="ModMask" />
 	<field type="CARD8" name="modifier_device" />
 	<field type="CARD8" name="grabbed_device" />
-	<field type="CARD8" name="key" />
-	<field type="CARD8" name="this_device_mode" />
-	<field type="CARD8" name="other_device_mode" />
+	<field type="CARD8" name="key" altenum="Grab" />
+	<field type="CARD8" name="this_device_mode" enum="GrabMode" />
+	<field type="CARD8" name="other_device_mode" enum="GrabMode" />
 	<field type="BOOL" name="owner_events" />
 	<pad bytes="2" />
 	<list type="EventClass" name="classes">
@@ -331,9 +331,9 @@ authorization from the authors.
 
     <request name="UngrabDeviceKey" opcode="16">
 	<field type="WINDOW" name="grabWindow" />
-	<field type="CARD16" name="modifiers" />
+	<field type="CARD16" name="modifiers" mask="ModMask" />
 	<field type="CARD8" name="modifier_device" />
-	<field type="CARD8" name="key" />
+	<field type="CARD8" name="key" altenum="Grab" />
 	<field type="CARD8" name="grabbed_device" />
     </request>
 
@@ -344,10 +344,10 @@ authorization from the authors.
 	<field type="CARD8" name="grabbed_device" />
 	<field type="CARD8" name="modifier_device" />
 	<field type="CARD16" name="num_classes" />
-	<field type="CARD16" name="modifiers" />
-	<field type="CARD8" name="this_device_mode" />
-	<field type="CARD8" name="other_device_mode" />
-	<field type="CARD8" name="button" />
+	<field type="CARD16" name="modifiers" mask="ModMask" />
+	<field type="CARD8" name="this_device_mode" enum="GrabMode" />
+	<field type="CARD8" name="other_device_mode" enum="GrabMode" />
+	<field type="CARD8" name="button" altenum="Grab" />
 	<field type="CARD8" name="owner_events" />
 	<pad bytes="2" />
 	<list type="EventClass" name="classes">
@@ -359,18 +359,27 @@ authorization from the authors.
 
     <request name="UngrabDeviceButton" opcode="18">
 	<field type="WINDOW" name="grab_window" />
-	<field type="CARD16" name="modifiers" />
+	<field type="CARD16" name="modifiers" mask="ModMask" />
 	<field type="CARD8" name="modifier_device" />
-	<field type="CARD8" name="button" />
+	<field type="CARD8" name="button" altenum="Grab" />
 	<field type="CARD8" name="grabbed_device" />
     </request>
 
     <!-- AllowDeviceEvents -->
 
+    <enum name="DeviceInputMode">
+	<item name="AsyncThisDevice" />
+	<item name="SyncThisDevice" />
+	<item name="ReplayThisDevice" />
+	<item name="AsyncOtherDevices" />
+	<item name="AsyncAll" />
+	<item name="SyncAll" />
+    </enum>
+
     <request name="AllowDeviceEvents" opcode="19">
-	<field type="TIMESTAMP" name="time" />
-	<field type="CARD8" name="mode" />
-    <field type="CARD8" name="device_id" />
+	<field type="TIMESTAMP" name="time" altenum="Time" />
+	<field type="CARD8" name="mode" enum="DeviceInputMode" />
+	<field type="CARD8" name="device_id" />
     </request>
 
     <!-- GetDeviceFocus -->
@@ -380,9 +389,9 @@ authorization from the authors.
 	<pad bytes="3" />
 	<reply>
 	    <pad bytes="1" />
-	    <field type="WINDOW" name="focus" />
+	    <field type="WINDOW" name="focus" altenum="InputFocus" />
 	    <field type="TIMESTAMP" name="time" />
-	    <field type="CARD8" name="revert_to" />
+	    <field type="CARD8" name="revert_to" enum="InputFocus" />
 	    <pad bytes="15" />
 	</reply>
     </request>
@@ -390,9 +399,9 @@ authorization from the authors.
     <!-- SetDeviceFocus -->
 
     <request name="SetDeviceFocus" opcode="21">
-	<field type="WINDOW" name="focus" />
-	<field type="TIMESTAMP" name="time" />
-	<field type="CARD8" name="revert_to" />
+	<field type="WINDOW" name="focus" altenum="InputFocus" />
+	<field type="TIMESTAMP" name="time" altenum="Time" />
+	<field type="CARD8" name="revert_to" enum="InputFocus" />
 	<field type="CARD8" name="device_id" />
     </request>
 
@@ -409,14 +418,23 @@ authorization from the authors.
 	</reply>
     </request>
 
+    <enum name="FeedbackClass">
+	<item name="Keyboard" />
+	<item name="Pointer" />
+	<item name="String" />
+	<item name="Integer" />
+	<item name="Led" />
+	<item name="Bell" />
+    </enum>
+
     <struct name="FeedbackState">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="FeedbackClass" />
 	<field type="CARD8" name="id" />
 	<field type="CARD16" name="len" />
     </struct>
     
     <struct name="KbdFeedbackState">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="FeedbackClass" />
 	<field type="CARD8" name="id" />
 	<field type="CARD16" name="len" />
 	<field type="CARD16" name="pitch" />
@@ -431,7 +449,7 @@ authorization from the authors.
     </struct>
 
     <struct name="PtrFeedbackState">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="FeedbackClass" />
 	<field type="CARD8" name="id" />
 	<field type="CARD16" name="len" />
 	<pad bytes="2" />
@@ -441,7 +459,7 @@ authorization from the authors.
     </struct>
 
     <struct name="IntegerFeedbackState">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="FeedbackClass" />
 	<field type="CARD8" name="id" />
 	<field type="CARD16" name="len" />
 	<field type="CARD32" name="resolution" />
@@ -450,7 +468,7 @@ authorization from the authors.
     </struct>
 
     <struct name="StringFeedbackState">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="FeedbackClass" />
 	<field type="CARD8" name="id" />
 	<field type="CARD16" name="len" />
 	<field type="CARD16" name="max_symbols" />
@@ -461,7 +479,7 @@ authorization from the authors.
     </struct>
 
     <struct name="BellFeedbackState">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="FeedbackClass" />
 	<field type="CARD8" name="id" />
 	<field type="CARD16" name="len" />
 	<field type="CARD8" name="percent" />
@@ -471,7 +489,7 @@ authorization from the authors.
     </struct>
 
     <struct name="LedFeedbackState">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="FeedbackClass" />
 	<field type="CARD8" name="id" />
 	<field type="CARD16" name="len" />
 	<field type="CARD32" name="led_mask" />
@@ -490,13 +508,13 @@ authorization from the authors.
     -->
 
     <struct name="FeedbackCtl">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="FeedbackClass" />
 	<field type="CARD8" name="id" />
 	<field type="CARD16" name="len" />
     </struct>
 
     <struct name="KbdFeedbackCtl">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="FeedbackClass" />
 	<field type="CARD8" name="id" />
 	<field type="CARD16" name="len" />
 	<field type="KeyCode" name="key" />
@@ -510,7 +528,7 @@ authorization from the authors.
     </struct>
 
     <struct name="PtrFeedbackCtl">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="FeedbackClass" />
 	<field type="CARD8" name="id" />
 	<field type="CARD16" name="len" />
 	<pad bytes="2" />
@@ -520,14 +538,14 @@ authorization from the authors.
     </struct>
 
     <struct name="IntegerFeedbackCtl">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="FeedbackClass" />
 	<field type="CARD8" name="id" />
 	<field type="CARD16" name="len" />
 	<field type="INT32" name="int_to_display" />
     </struct>
 
     <struct name="StringFeedbackCtl">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="FeedbackClass" />
 	<field type="CARD8" name="id" />
 	<field type="CARD16" name="len" />
 	<pad bytes="2" />
@@ -538,7 +556,7 @@ authorization from the authors.
     </struct>
 
     <struct name="BellFeedbackCtl">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="FeedbackClass" />
 	<field type="CARD8" name="id" />
 	<field type="CARD16" name="len" />
 	<field type="INT8" name="percent" />
@@ -548,7 +566,7 @@ authorization from the authors.
     </struct>
 
     <struct name="LedFeedbackCtl">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="FeedbackClass" />
 	<field type="CARD8" name="id" />
 	<field type="CARD16" name="len" />
 	<field type="CARD32" name="led_mask" />
@@ -618,7 +636,7 @@ authorization from the authors.
 	</list>
 	<reply>
 	    <pad bytes="1" />
-	    <field type="CARD8" name="status" />
+	    <field type="CARD8" name="status" enum="MappingStatus" />
 	    <pad bytes="23" />
 	</reply>
     </request>
@@ -649,7 +667,7 @@ authorization from the authors.
 	</list>
 	<reply>
 	    <pad bytes="1" />
-	    <field type="CARD8" name="status" />
+	    <field type="CARD8" name="status" enum="MappingStatus" />
 	    <pad bytes="23" />
 	</reply>
     </request>
@@ -668,13 +686,13 @@ authorization from the authors.
     </request>
 
     <struct name="InputState">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="InputClass" />
 	<field type="CARD8" name="len" />
 	<field type="CARD8" name="num_items" />
     </struct>
 
     <struct name="KeyState">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="InputClass" />
 	<field type="CARD8" name="len" />
 	<field type="CARD8" name="num_keys" />
 	<pad bytes="1" />
@@ -684,7 +702,7 @@ authorization from the authors.
     </struct>
 
     <struct name="ButtonState">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="InputClass" />
 	<field type="CARD8" name="len" />
 	<field type="CARD8" name="num_buttons" />
 	<pad bytes="1" />
@@ -694,7 +712,7 @@ authorization from the authors.
     </struct>
 
     <struct name="ValuatorState">
-	<field type="CARD8" name="class_id" />
+	<field type="CARD8" name="class_id" enum="InputClass" />
 	<field type="CARD8" name="len" />
 	<field type="CARD8" name="num_valuators" />
 	<field type="CARD8" name="mode" />
@@ -744,7 +762,7 @@ authorization from the authors.
 	</list>
 	<reply>
 	    <pad bytes="1" />
-	    <field type="CARD8" name="status" />
+	    <field type="CARD8" name="status" enum="GrabStatus" />
 	    <pad bytes="23" />
 	</reply>
     </request>
@@ -757,7 +775,7 @@ authorization from the authors.
 	<pad bytes="1" />
 	<reply>
 	    <pad bytes="1" />
-	    <field type="CARD8" name="status" />
+	    <field type="CARD8" name="status" altenum="GrabStatus" />
 	    <pad bytes="23" />
 	    <!-- Uninterpreted: list of DeviceState structures -->
 	</reply>
@@ -831,7 +849,7 @@ authorization from the authors.
 	Uninterpreted: list of DeviceCtl structures
 	<reply>
             <pad byte="1" />
-            <field type="CARD8" name="status" />
+            <field type="CARD8" name="status" altenum="GrabStatus" />
             <pad bytes="23" />
 	</reply>
     </request>
@@ -906,7 +924,7 @@ authorization from the authors.
 	<field type="TIMESTAMP" name="time" />
 	<field type="WINDOW" name="root" />
 	<field type="WINDOW" name="event" />
-	<field type="WINDOW" name="child" />
+	<field type="WINDOW" name="child" altenum="Window" />
 	<field type="INT16" name="root_x" />
 	<field type="INT16" name="root_y" />
 	<field type="INT16" name="event_x" />
@@ -924,15 +942,15 @@ authorization from the authors.
     <eventcopy name="ProximityOut" number="9" ref="DeviceKeyPress" />
 
     <event name="FocusIn" number="6">
-	<field type="BYTE" name="detail" />
+	<field type="BYTE" name="detail" enum="NotifyDetail" />
 	<field type="TIMESTAMP" name="time" />
 	<field type="WINDOW" name="window" />
-	<field type="BYTE" name="mode" />
+	<field type="BYTE" name="mode" enum="NotifyMode" />
 	<field type="CARD8" name="device_id" />
 	<pad bytes="18" />
     </event>
 
-    <eventcopy name="FocusOut" number="7" ref="DeviceKeyPress" />
+    <eventcopy name="FocusOut" number="7" ref="FocusIn" />
 
     <event name="DeviceStateNotify" number="10">
 	<field type="BYTE" name="device_id" />
@@ -991,4 +1009,12 @@ authorization from the authors.
         <field type="CARD16" name="control" />
 	<pad bytes="20" />
     </event>
+
+    <!-- ERRORS -->
+    <error name="Device" number="0" />
+    <error name="Event" number="1" />
+    <error name="Mode" number="2" />
+    <error name="DeviceBusy" number="3" />
+    <error name="Class" number="4" />
+
 </xcb>

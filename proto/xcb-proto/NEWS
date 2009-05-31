@@ -1,3 +1,14 @@
+Release 1.5 (2009-05-09)
+========================
+* Add support for mod mask Any
+* Add and use altenum (non-exhaustive enum)
+* Tweak some XInput specs
+* Fix milter spelling
+* Correct the length calculation for the value field of GetPropertyReply
+* xtest: rename window field to root
+* randr: add version 1.3 requests
+* shm: fix ShmCompletion event
+
 Release 1.4 (2009-02-16)
 ========================
 * Add explicit padding in various protocol description.

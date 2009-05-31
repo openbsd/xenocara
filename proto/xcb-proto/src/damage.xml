@@ -57,7 +57,7 @@ authorization from the authors.
   <request name="Create" opcode="1">
     <field type="DAMAGE"   name="damage" />
     <field type="DRAWABLE" name="drawable" />
-    <field type="CARD8"    name="level" /> <!-- ReportLevel -->
+    <field type="CARD8"    name="level" enum="ReportLevel" />
     <pad bytes="3" />
   </request>
 
@@ -67,8 +67,8 @@ authorization from the authors.
 
   <request name="Subtract" opcode="3">
     <field type="DAMAGE" name="damage" />
-    <field type="REGION" name="repair" />
-    <field type="REGION" name="parts" />
+    <field type="REGION" name="repair" altenum="Region" />
+    <field type="REGION" name="parts" altenum="Region" />
   </request>
 
   <request name="Add" opcode="4">
@@ -77,7 +77,7 @@ authorization from the authors.
   </request>
 
   <event name="Notify" number="0">
-    <field type="CARD8"     name="level" /> <!-- ReportLevel -->
+    <field type="CARD8"     name="level" enum="ReportLevel" />
     <field type="DRAWABLE"  name="drawable" />
     <field type="DAMAGE"    name="damage" />
     <field type="TIMESTAMP" name="timestamp" />

@@ -34,10 +34,10 @@ authorization from the authors.
   <event name="Completion" number="0">
     <pad bytes="1" />
     <field type="DRAWABLE" name="drawable" />
-    <field type="SEG" name="shmseg" />
     <field type="CARD16" name="minor_event" />
     <field type="BYTE" name="major_event" />
     <pad bytes="1" />
+    <field type="SEG" name="shmseg" />
     <field type="CARD32" name="offset" />
   </event>
 

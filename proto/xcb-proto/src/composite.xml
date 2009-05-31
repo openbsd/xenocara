@@ -49,25 +49,25 @@ authorization from the authors.
 
   <request name="RedirectWindow" opcode="1">
     <field type="WINDOW" name="window" />
-    <field type="CARD8" name="update" />
+    <field type="CARD8" name="update" enum="Redirect" />
     <pad bytes="3" />
   </request>
 
   <request name="RedirectSubwindows" opcode="2">
     <field type="WINDOW" name="window" />
-    <field type="CARD8" name="update" />
+    <field type="CARD8" name="update" enum="Redirect" />
     <pad bytes="3" />
   </request>
 
   <request name="UnredirectWindow" opcode="3">
     <field type="WINDOW" name="window" />
-    <field type="CARD8" name="update" />
+    <field type="CARD8" name="update" enum="Redirect" />
     <pad bytes="3" />
   </request>
 
   <request name="UnredirectSubwindows" opcode="4">
     <field type="WINDOW" name="window" />
-    <field type="CARD8" name="update" />
+    <field type="CARD8" name="update" enum="Redirect" />
     <pad bytes="3" />
   </request>
 
