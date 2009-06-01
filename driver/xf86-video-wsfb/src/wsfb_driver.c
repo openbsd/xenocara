@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.14 2008/09/29 22:04:43 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.15 2009/06/01 20:57:20 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -60,8 +60,12 @@
 #include "dgaproc.h"
 
 /* For visuals */
-#include "xf1bpp.h"
-#include "xf4bpp.h"
+#ifdef HAVE_XF1BPP
+# include "xf1bpp.h"
+#endif
+#ifdef HAVE_XF4BPP
+# include "xf4bpp.h"
+#endif
 #include "fb.h"
 
 #include "xf86Resources.h"
@@ -748,14 +752,18 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 
 	/* Load bpp-specific modules. */
 	switch(pScrn->bitsPerPixel) {
+#ifdef HAVE_XF1BPP
 	case 1:
 		mod = "xf1bpp";
 		reqSym = "xf1bppScreenInit";
 		break;
+#endif
+#ifdef HAVE_XF4BPP
 	case 4:
 		mod = "xf4bpp";
 		reqSym = "xf4bppScreenInit";
 		break;
+#endif
 	default:
 		mod = "fb";
 		break;
@@ -939,17 +947,21 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
 	switch (pScrn->bitsPerPixel) {
 	case 1:
+#ifdef HAVE_XF1BPP
 		ret = xf1bppScreenInit(pScreen, fPtr->fbstart,
 				       pScrn->virtualX, pScrn->virtualY,
 				       pScrn->xDpi, pScrn->yDpi,
 				       fPtr->linebytes * 8);
 		break;
+#endif
 	case 4:
+#ifdef HAVE_XF4BPP
 		ret = xf4bppScreenInit(pScreen, fPtr->fbstart,
 				       pScrn->virtualX, pScrn->virtualY,
 				       pScrn->xDpi, pScrn->yDpi,
 				       fPtr->linebytes * 2);
 		break;
+#endif
 	case 8:
 	case 16:
 	case 24:

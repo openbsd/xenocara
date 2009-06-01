@@ -61,6 +61,13 @@ sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 # Checks for header files.
 AC_HEADER_STDC
 
+# Check for xf1bpp & xf4bpp (removed in xorg-server 1.6 & later)
+SAVE_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
+AC_CHECK_HEADER(xf1bpp.h,[AC_DEFINE(HAVE_XF1BPP, 1, [Have 1bpp support])],[])
+AC_CHECK_HEADER(xf4bpp.h,[AC_DEFINE(HAVE_XF4BPP, 1, [Have 4bpp support])],[])
+CPPFLAGS="$SAVE_CPPFLAGS"
+
 AC_SUBST([XORG_CFLAGS])
 AC_SUBST([moduledir])
 
