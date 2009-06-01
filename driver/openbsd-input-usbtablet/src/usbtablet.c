@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.4 2007/12/14 23:14:26 sthen Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.5 2009/06/01 21:29:06 matthieu Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -151,7 +151,7 @@ static XF86ModuleVersionInfo VersionRec = {
 	MODULEVENDORSTRING,
 	MODINFOSTRING1,
 	MODINFOSTRING2,
-	XF86_VERSION_CURRENT,
+	XORG_VERSION_CURRENT,
 	1, 0, 0,
 	ABI_CLASS_XINPUT,
 	ABI_XINPUT_VERSION,
@@ -178,20 +178,8 @@ static const OptionInfoRec USBTOptions[] = {
 };
 
 
-#ifdef XFree86LOADER
-
 XF86ModuleData usbtabletModuleData = {&VersionRec,
 				      SetupProc, TearDownProc };
-
-ModuleInfoRec UsbTabletInfo = {
-	1,
-	"USBTABLET",
-	NULL,
-	0,
-	UsbTabletAvailableOptions,
-};
-
-#endif
 
 InputDriverRec USBTABLET = {
 	1,
@@ -236,10 +224,6 @@ SetupProc(pointer module,
 
 	if (!Initialised) {
 		Initialised = TRUE;
-#ifndef REMOVE_LOADER_CHECK_MODULE_INFO
-		if (xf86LoaderCheckSymbol("xf86AddModuleInfo")) 
-#endif
-			xf86AddModuleInfo(&UsbTabletInfo, module);
 		
 		xf86Msg(X_INFO, "USB Tablet driver\n");
 		xf86AddInputDriver(&USBTABLET, module, 0);
@@ -296,7 +280,10 @@ UsbTabletProc(DeviceIntPtr pUSBT, int what)
 		}
 
 		if (InitValuatorClassDeviceStruct(
-			pUSBT, NAXES, xf86GetMotionEvents, 
+			pUSBT, NAXES, 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
+			xf86GetMotionEvents, 
+#endif
 			pInfo->history_size,
 			((priv->flags & ABSOLUTE_FLAG) ? Absolute : Relative) |
 			 OutOfProximity) == FALSE) {
