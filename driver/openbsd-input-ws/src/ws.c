@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.6 2008/09/20 16:07:42 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.7 2009/06/01 21:15:50 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -83,7 +83,7 @@ static XF86ModuleVersionInfo VersionRec = {
 	MODULEVENDORSTRING,
 	MODINFOSTRING1,
 	MODINFOSTRING2,
-	XF86_VERSION_CURRENT,
+	XORG_VERSION_CURRENT,
 	1, 0, 0,
 	ABI_CLASS_XINPUT,
 	ABI_XINPUT_VERSION,
@@ -120,18 +120,9 @@ static const OptionInfoRec WSOptions[] = {
 	{ -1, NULL, OPTV_NONE, {0}, FALSE }
 };
 
-#ifdef XFree86LOADER
 XF86ModuleData wsModuleData = {&VersionRec,
 			       SetupProc, TearDownProc };
 
-ModuleInfoRec wsInfo = {
-	1,
-	"WS",
-	NULL,
-	0,
-	wsAvailableOptions,
-};
-#endif
 
 InputDriverRec WS = {
 	1,
@@ -160,10 +151,6 @@ SetupProc(pointer module, pointer options, int *errmaj, int *errmin)
 	static Bool Initialised = FALSE;
 	
 	if (!Initialised) {
-#ifndef REMOVE_LOADER_CHECK_MODULE_INFO
-		if (xf86LoaderCheckSymbol("xf86AddModuleInfo"))
-#endif
-			xf86AddModuleInfo(&wsInfo, module);
 		xf86AddInputDriver(&WS, module, 0);
 		Initialised = TRUE;
 	}
@@ -374,7 +361,7 @@ wsProc(DeviceIntPtr pWS, int what)
 				min(priv->buttons, NBUTTONS),
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 		    miPointerGetMotionEvents,
-#else
+#elif GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
 		    GetMotionHistory, 
 #endif
 		    wsControlProc, 
