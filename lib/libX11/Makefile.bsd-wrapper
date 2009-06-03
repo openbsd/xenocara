@@ -1,11 +1,11 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2009/05/03 12:59:09 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2009/06/03 23:56:07 matthieu Exp $
+.include <bsd.xconf.mk>
 
 SHARED_LIBS=	X11 11.2
 
 CONFIGURE_ARGS= --without-xcb --enable-tcp-transport --enable-unix-transport --enable-ipv6
 
-# no PIC
-.if ${MACHINE} == landisk || ${MACHINE_ARCH} == m88k || ${MACHINE} == vax
+.if ${XENOCARA_HAVE_SHARED_LIBS:L} == "no"
 CONFIGURE_ARGS+= --disable-loadable-xcursor
 .endif
 
