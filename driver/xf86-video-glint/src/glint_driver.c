@@ -2098,9 +2098,12 @@ GLINTPreInit(ScrnInfoPtr pScrn, int flags)
     {
 	xf86MonPtr pMon = NULL;
 	
-	if (pGlint->DDCBus)
+	if (pGlint->DDCBus) {
+	    GLINTMapMem(pScrn);
 	    pMon = xf86DoEDID_DDC2(pScrn->scrnIndex, pGlint->DDCBus);
-	    
+	    GLINTUnmapMem(pScrn);
+	}
+	
 	if (!pMon)
 	    /* Try DDC1 */;
 	    
