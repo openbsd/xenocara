@@ -1101,7 +1101,6 @@ GLINTPreInit(ScrnInfoPtr pScrn, int flags)
     pScrn->monitor = pScrn->confScreen->monitor;
     /*
      * The first thing we should figure out is the depth, bpp, etc.
-     * Our default depth is 8, so pass it to the helper function.
      * We support both 24bpp and 32bpp layouts, so indicate that.
      */
     if (FBDevProbed) {
@@ -1115,7 +1114,7 @@ GLINTPreInit(ScrnInfoPtr pScrn, int flags)
 	if (!xf86SetDepthBpp(pScrn, default_depth, default_depth, fbbpp,0))
 		return FALSE;
     } else {
-	if (!xf86SetDepthBpp(pScrn, 8, 0, 0, Support24bppFb | Support32bppFb 
+	if (!xf86SetDepthBpp(pScrn, 0, 0, 0, Support24bppFb | Support32bppFb 
 	 	/*| SupportConvert32to24 | PreferConvert32to24*/))
 		return FALSE;
     }
