@@ -1,9 +1,13 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2009/06/03 23:56:07 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.9 2009/06/04 00:13:56 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SHARED_LIBS=	X11 11.2
 
-CONFIGURE_ARGS= --without-xcb --enable-tcp-transport --enable-unix-transport --enable-ipv6
+CONFIGURE_ARGS= --enable-tcp-transport --enable-unix-transport --enable-ipv6
+
+.if ${XENOCARA_BUILD_XCB:L} == "no"
+CONFIGURE_ARGS+= --disable-xcb
+.endif
 
 .if ${XENOCARA_HAVE_SHARED_LIBS:L} == "no"
 CONFIGURE_ARGS+= --disable-loadable-xcursor
