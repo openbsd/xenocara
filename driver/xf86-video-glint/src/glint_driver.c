@@ -2469,13 +2469,13 @@ GLINTMapMem(ScrnInfoPtr pScrn)
      */ 
 #ifndef XSERVER_LIBPCIACCESS
     pGlint->IOBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO_32BIT, 
-	       pGlint->PciTag, pGlint->IOAddress, 0x20000);
+	       pGlint->PciTag, pGlint->IOAddress, 0x10000);
 #else
     {
       void** result = (void**)&pGlint->IOBase;
       int err = pci_device_map_range(pGlint->PciInfo,
 				     pGlint->IOAddress,
-				     0x20000,
+				     0x10000,
 				     PCI_DEV_MAP_FLAG_WRITABLE,
 				     result);
       
@@ -2543,9 +2543,9 @@ GLINTUnmapMem(ScrnInfoPtr pScrn)
      * Unmap IO registers to virtual address space
      */ 
 #ifndef XSERVER_LIBPCIACCESS
-    xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pGlint->IOBase, 0x20000);
+    xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pGlint->IOBase, 0x10000);
 #else
-    pci_device_unmap_range(pGlint->PciInfo, pGlint->IOBase, 0x20000);
+    pci_device_unmap_range(pGlint->PciInfo, pGlint->IOBase, 0x10000);
 #endif
     pGlint->IOBase = NULL;
 
