@@ -1438,6 +1438,7 @@ GLINTPreInit(ScrnInfoPtr pScrn, int flags)
     }
     }
 
+#if !defined(__sparc__)
     /* Initialize the card through int10 interface if needed */
     if (pGlint->Chipset != PCI_VENDOR_3DLABS_CHIP_GAMMA && 
 	pGlint->Chipset != PCI_VENDOR_3DLABS_CHIP_GAMMA2 &&
@@ -1452,6 +1453,7 @@ GLINTPreInit(ScrnInfoPtr pScrn, int flags)
 	    xf86FreeInt10(pInt);
         }
     }
+#endif
 
     pGlint->FbMapSize = 0;
 
