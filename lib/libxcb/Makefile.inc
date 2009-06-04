@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.5 2009/05/31 18:01:28 matthieu Exp $
+#	$OpenBSD: Makefile.inc,v 1.6 2009/06/04 16:11:25 matthieu Exp $
 
 LIBXCB=	${.CURDIR}/../../../dist/libxcb
 
@@ -21,4 +21,4 @@ HEADERS_SUBDIR=	xcb/
 
 _SRCDIR?=	${.CURDIR}/../src
 
-PACKAGE_VERSION!=m4 ${XSRCDIR}/share/mk/package_version.m4 ${LIBXCB}/configure.ac
+PACKAGE_VERSION!=m4 ${.CURDIR}/../../../share/mk/package_version.m4 ${LIBXCB}/configure.ac
