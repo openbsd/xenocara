@@ -1,12 +1,9 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2008/05/24 13:29:07 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2009/06/04 00:40:05 matthieu Exp $
+.include <bsd.xconf.mk>
 
 SHARED_LIBS=	Xfont 8.0
 
-.if ${MACHINE} == landisk || ${MACHINE} == vax
-CONFIGURE_ARGS+= --disable-loadable-font-modules
-.endif
-
-.if ${MACHINE} == landisk || ${MACHINE} == vax
+.if ${XENOCARA_HAVE_SHARED_LIBS:L} == "no"
 CONFIGURE_ARGS+= --disable-loadable-font-modules
 .endif
 
