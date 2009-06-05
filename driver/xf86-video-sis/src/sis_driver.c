@@ -57,8 +57,6 @@
 #include "mibank.h"
 #include "mipointer.h"
 #include "mibstore.h"
-#define _XF86MISC_SERVER_
-#include <X11/extensions/xf86misc.h>
 #include "edid.h"
 
 #define SIS_NEED_inSISREG
@@ -669,11 +667,7 @@ SISProbe(DriverPtr drv, int flags)
 	    pScrn->LeaveVT          = SISLeaveVT;
 	    pScrn->FreeScreen       = SISFreeScreen;
 	    pScrn->ValidMode        = SISValidMode;
-#ifdef X_XF86MiscPassMessage
-	    if(xf86GetVersion() >= XF86_VERSION_NUMERIC(4,3,99,2,0)) {
-	       pScrn->HandleMessage = SISHandleMessage;
-	    }
-#endif
+
 	    foundScreen = TRUE;
 	}
 

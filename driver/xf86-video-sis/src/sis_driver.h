@@ -1577,10 +1577,6 @@ void	    SISAdjustFrame(int scrnIndex, int x, int y, int flags);
 #ifdef SISDUALHEAD
 static Bool 	  SISSaveScreenDH(ScreenPtr pScreen, int mode);
 #endif
-#ifdef X_XF86MiscPassMessage
-extern int	  SISHandleMessage(int scrnIndex, const char *msgtype,
-				const char *msgval, char **retmsg);
-#endif
 static void       SISFreeScreen(int scrnIndex, int flags);
 static ModeStatus SISValidMode(int scrnIndex, DisplayModePtr mode,
 				Bool verbose, int flags);
