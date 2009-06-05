@@ -40,6 +40,8 @@ typedef struct {
 
 #define PREFIX(x) pixman_region32##x
 
+#define N_TMP_BOXES (16)
+
 pixman_bool_t
 pixman_region32_copy_from_region16 (pixman_region32_t *dst,
 				    pixman_region16_t *src)
@@ -47,12 +49,16 @@ pixman_region32_copy_from_region16 (pixman_region32_t *dst,
     int n_boxes, i;
     pixman_box16_t *boxes16;
     pixman_box32_t *boxes32;
+    pixman_box32_t tmp_boxes[N_TMP_BOXES];
     pixman_bool_t retval;
     
     boxes16 = pixman_region_rectangles (src, &n_boxes);
 
-    boxes32 = pixman_malloc_ab (n_boxes, sizeof (pixman_box32_t));
-
+    if (n_boxes > N_TMP_BOXES)
+	boxes32 = pixman_malloc_ab (n_boxes, sizeof (pixman_box32_t));
+    else
+	boxes32 = tmp_boxes;
+    
     if (!boxes32)
 	return FALSE;
     
@@ -66,7 +72,10 @@ pixman_region32_copy_from_region16 (pixman_region32_t *dst,
 
     pixman_region32_fini (dst);
     retval = pixman_region32_init_rects (dst, boxes32, n_boxes);
-    free (boxes32);
+
+    if (boxes32 != tmp_boxes)
+	free (boxes32);
+
     return retval;
 }
 

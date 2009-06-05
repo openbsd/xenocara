@@ -88,6 +88,8 @@ AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
 AR = @AR@
+ARM_NEON_CFLAGS = @ARM_NEON_CFLAGS@
+ARM_SIMD_CFLAGS = @ARM_SIMD_CFLAGS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -115,6 +117,7 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
+GREP = @GREP@
 GTK_CFLAGS = @GTK_CFLAGS@
 GTK_LIBS = @GTK_LIBS@
 HAVE_GTK_FALSE = @HAVE_GTK_FALSE@
@@ -132,6 +135,7 @@ LTLIBOBJS = @LTLIBOBJS@
 LT_VERSION_INFO = @LT_VERSION_INFO@
 MAKEINFO = @MAKEINFO@
 MMX_CFLAGS = @MMX_CFLAGS@
+MMX_LDFLAGS = @MMX_LDFLAGS@
 NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -151,7 +155,14 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SSE2_CFLAGS = @SSE2_CFLAGS@
+SSE2_LDFLAGS = @SSE2_LDFLAGS@
 STRIP = @STRIP@
+USE_ARM_NEON_FALSE = @USE_ARM_NEON_FALSE@
+USE_ARM_NEON_TRUE = @USE_ARM_NEON_TRUE@
+USE_ARM_SIMD_FALSE = @USE_ARM_SIMD_FALSE@
+USE_ARM_SIMD_TRUE = @USE_ARM_SIMD_TRUE@
+USE_GCC_INLINE_ASM_FALSE = @USE_GCC_INLINE_ASM_FALSE@
+USE_GCC_INLINE_ASM_TRUE = @USE_GCC_INLINE_ASM_TRUE@
 USE_MMX_FALSE = @USE_MMX_FALSE@
 USE_MMX_TRUE = @USE_MMX_TRUE@
 USE_SSE2_FALSE = @USE_SSE2_FALSE@
@@ -160,15 +171,9 @@ USE_VMX_FALSE = @USE_VMX_FALSE@
 USE_VMX_TRUE = @USE_VMX_TRUE@
 VERSION = @VERSION@
 VMX_CFLAGS = @VMX_CFLAGS@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -185,23 +190,30 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -226,6 +238,7 @@ md5_tgz = $(tar_gz).md5
 sha1_tbz2 = $(tar_bz2).sha1
 md5_tbz2 = $(tar_bz2).md5
 gpg_file = $(sha1_tgz).asc
+HASHFILES = $(sha1_tgz) $(sha1_tbz2) $(md5_tgz) $(md5_tbz2)
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -692,7 +705,7 @@ $(pkgconfig_DATA): pixman-1.pc.in
 
 snapshot:
 	distdir="$(distdir)-`date '+%Y%m%d'`"; \
-	test -d "$(srcdir)/.git" && distdir=$$distdir-`cd "$(srcdir)" && git-rev-parse HEAD | cut -c 1-6`; \
+	test -d "$(srcdir)/.git" && distdir=$$distdir-`cd "$(srcdir)" && git rev-parse HEAD | cut -c 1-6`; \
 	$(MAKE) $(AM_MAKEFLAGS) distdir="$$distdir" dist
 
 $(sha1_tgz): $(tar_gz)
@@ -724,16 +737,16 @@ release-verify-newer:
 	@echo "Good."
 
 release-remove-old:
-	$(RM) $(tar_gz) $(tar_bz2) $(sha1_tgz) $(gpg_file)
+	$(RM) $(tar_gz) $(tar_bz2) $(HASHFILES) $(gpg_file)
 
 ensure-prev:
 	@if [[ "$(PREV)" == "" ]]; then							\
 		echo ""							          &&	\
 		echo "You must set the PREV variable on the make command line to" &&	\
-		echo "the last version."				  &&	\
+		echo "the last version."				  	  &&	\
 		echo ""								  &&	\
 		echo "For example:"						  &&	\
-		echo "      make PREV=0.7.3"				  &&	\
+		echo "      make PREV=0.7.3"				  	  &&	\
 		echo ""								  &&	\
 		false;									\
 	fi
@@ -741,15 +754,15 @@ ensure-prev:
 release-check: ensure-prev release-verify-newer release-remove-old distcheck
 
 release-tag:
-	git-tag -u $(GPGKEY) -m "$(PACKAGE) $(VERSION) release" $(PACKAGE)-$(VERSION)
+	git tag -u $(GPGKEY) -m "$(PACKAGE) $(VERSION) release" $(PACKAGE)-$(VERSION)
 
-release-upload: release-check $(tar_gz) $(tar_bz2) $(sha1_tgz) $(gpg_file)
+release-upload: release-check $(tar_gz) $(tar_bz2) $(sha1_tgz) $(sha1_tbz2) $(md5_tgz) $(gpg_file)
 	mkdir -p releases
 	scp $(tar_gz) $(sha1_tgz) $(gpg_file) $(RELEASE_CAIRO_HOST):$(RELEASE_CAIRO_DIR)
 	scp $(tar_gz) $(tar_bz2) $(RELEASE_XORG_HOST):$(RELEASE_XORG_DIR)
 	ssh $(RELEASE_CAIRO_HOST) "rm -f $(RELEASE_CAIRO_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(tar_gz) $(RELEASE_CAIRO_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
 
-release-publish-message: $(sha1_tgz) $(md5_tgz) $(sha1_tbz2) $(md5_tbz2) ensure-prev
+release-publish-message: $(HASHFILES) ensure-prev
 	@echo "Please follow the instructions in RELEASING to push stuff out and"
 	@echo "send out the announcement mails.  Here is the excerpt you need:"
 	@echo ""
@@ -784,7 +797,7 @@ release-publish-message: $(sha1_tgz) $(md5_tgz) $(sha1_tbz2) $(md5_tbz2) ensure-
 	@echo "	tag: $(PACKAGE)-$(VERSION)"
 	@echo ""
 	@echo "Log:"
-	@git-log --no-merges "$(PACKAGE)-$(PREV)".."$(PACKAGE)-$(VERSION)" | git shortlog | awk '{ printf "\t"; print ; }' | cut -b1-80
+	@git log --no-merges "$(PACKAGE)-$(PREV)".."$(PACKAGE)-$(VERSION)" | git shortlog | awk '{ printf "\t"; print ; }' | cut -b1-80
 	@echo "============================== CUT HERE =============================="
 	@echo ""
 

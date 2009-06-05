@@ -47,10 +47,10 @@ while (<STDIN>) {
 
     # Shifts and masks for green, blue, and alpha.
     s/#define G_SHIFT\b/$& $size/;
-    s/#define B_SHIFT\b/$& $size * 2/;
+    s/#define R_SHIFT\b/$& $size * 2/;
     s/#define A_SHIFT\b/$& $size * 3/;
     s/#define G_MASK\b/$& $g_mask/;
-    s/#define B_MASK\b/$& $b_mask/;
+    s/#define R_MASK\b/$& $b_mask/;
     s/#define A_MASK\b/$& $a_mask/;
 
     # Special values for dealing with red + blue at the same time.
@@ -60,10 +60,10 @@ while (<STDIN>) {
     s/#define RB_MASK_PLUS_ONE\b/$& $rb_mask_plus_one/;
 
     # Add 32/64 suffix to combining function types.
-    s/\bCombineFuncC\b/CombineFuncC$pixel_size/;
-    s/\bCombineFuncU\b/CombineFuncU$pixel_size/;
-    s/\bCombineMaskU\b/CombineMaskU$pixel_size/;
+    s/\bCombineFunc\b/CombineFunc$pixel_size/;
     s/\bFbComposeFunctions\b/FbComposeFunctions$pixel_size/;
+    s/combine_width/combine_$pixel_size/;
+    s/_pixman_setup_combiner_functions_width/_pixman_setup_combiner_functions_$pixel_size/;
 
     # Convert comp*_t values into the appropriate real types.
     s/comp1_t/uint${size}_t/g;

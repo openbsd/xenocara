@@ -4,8 +4,6 @@
 
       - Use of fbCompositeOver_x888x8x8888sse2()
 
-      - Use pixmanFillsse2 and pixmanBltsse2
-
   - Update the RLEASING file
 
   - Things to keep in mind if breaking ABI:
@@ -177,6 +175,8 @@
 
 
 done:
+
+- Use pixmanFillsse2 and pixmanBltsse2
 
 - Be consistent about calling sse2 sse2
 

@@ -7,6 +7,7 @@
 
 #include "pixman.h"
 #include <time.h>
+#include <assert.h>
 
 #ifndef FALSE
 #define FALSE 0
@@ -67,7 +68,16 @@
 #endif
 
 #ifdef _MSC_VER
-#define inline __inline
+/* 'inline' is available only in C++ in MSVC */
+#   define inline __inline
+#   define force_inline __forceinline
+#elif defined __GNUC__ || (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
+#   define inline __inline__
+#   define force_inline __inline__ __attribute__ ((__always_inline__))
+#else
+# ifndef force_inline
+#  define force_inline inline
+# endif
 #endif
 
 #define FB_SHIFT    5
@@ -143,9 +153,7 @@ typedef struct point point_t;
  */
 
 #define FASTCALL
-typedef FASTCALL void (*CombineMaskU32) (uint32_t *src, const uint32_t *mask, int width);
-typedef FASTCALL void (*CombineFuncU32) (uint32_t *dest, const uint32_t *src, int width);
-typedef FASTCALL void (*CombineFuncC32) (uint32_t *dest, uint32_t *src, uint32_t *mask, int width);
+typedef FASTCALL void (*CombineFunc32) (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width);
 typedef FASTCALL void (*fetchProc32)(bits_image_t *pict, int x, int y, int width,
                                      uint32_t *buffer);
 typedef FASTCALL uint32_t (*fetchPixelProc32)(bits_image_t *pict, int offset, int line);
@@ -153,9 +161,7 @@ typedef FASTCALL void (*storeProc32)(pixman_image_t *, uint32_t *bits,
                                      const uint32_t *values, int x, int width,
                                      const pixman_indexed_t *);
 
-typedef FASTCALL void (*CombineMaskU64) (uint64_t *src, const uint64_t *mask, int width);
-typedef FASTCALL void (*CombineFuncU64) (uint64_t *dest, const uint64_t *src, int width);
-typedef FASTCALL void (*CombineFuncC64) (uint64_t *dest, uint64_t *src, uint64_t *mask, int width);
+typedef FASTCALL void (*CombineFunc64) (uint64_t *dest, const uint64_t *src, const uint64_t *mask, int width);
 typedef FASTCALL void (*fetchProc64)(bits_image_t *pict, int x, int y, int width,
                                      uint64_t *buffer);
 typedef FASTCALL uint64_t (*fetchPixelProc64)(bits_image_t *pict, int offset, int line);
@@ -177,21 +183,6 @@ typedef struct _FbComposeData {
     uint16_t	 width;
     uint16_t	 height;
 } FbComposeData;
-
-typedef struct _FbComposeFunctions32 {
-    CombineFuncU32 *combineU;
-    CombineFuncC32 *combineC;
-    CombineMaskU32 combineMaskU;
-} FbComposeFunctions32;
-
-typedef struct _FbComposeFunctions64 {
-    CombineFuncU64 *combineU;
-    CombineFuncC64 *combineC;
-    CombineMaskU64 combineMaskU;
-} FbComposeFunctions64;
-
-extern FbComposeFunctions32 pixman_composeFunctions;
-extern FbComposeFunctions64 pixman_composeFunctions64;
 
 void pixman_composite_rect_general_accessors (const FbComposeData *data,
                                               void *src_buffer,
@@ -217,15 +208,12 @@ storeProc64 pixman_storeProcForPicture64_accessors (bits_image_t *);
 void pixman_expand(uint64_t *dst, const uint32_t *src, pixman_format_code_t, int width);
 void pixman_contract(uint32_t *dst, const uint64_t *src, int width);
 
-void pixmanFetchSourcePict(source_image_t *, int x, int y, int width,
+void pixmanFetchGradient (gradient_t *, int x, int y, int width,
                            uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
-void pixmanFetchSourcePict64(source_image_t *, int x, int y, int width,
-                             uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
-
+void _pixman_image_get_scanline_64_generic (pixman_image_t * pict, int x, int y, int width,
+					    uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
 void fbFetchTransformed(bits_image_t *, int x, int y, int width,
                         uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
-void fbStoreExternalAlpha(bits_image_t *, int x, int y, int width,
-                          uint32_t *buffer);
 void fbFetchExternalAlpha(bits_image_t *, int x, int y, int width,
                           uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
 
@@ -237,22 +225,6 @@ void fbStoreExternalAlpha_accessors(bits_image_t *, int x, int y, int width,
 void fbFetchExternalAlpha_accessors(bits_image_t *, int x, int y, int width,
                                     uint32_t *buffer, uint32_t *mask,
                                     uint32_t maskBits);
-
-void fbFetchTransformed64(bits_image_t *, int x, int y, int width,
-                          uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
-void fbStoreExternalAlpha64(bits_image_t *, int x, int y, int width,
-                            uint64_t *buffer);
-void fbFetchExternalAlpha64(bits_image_t *, int x, int y, int width,
-                            uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
-
-void fbFetchTransformed64_accessors(bits_image_t *, int x, int y, int width,
-                                    uint64_t *buffer, uint64_t *mask,
-                                    uint32_t maskBits);
-void fbStoreExternalAlpha64_accessors(bits_image_t *, int x, int y, int width,
-                                      uint64_t *buffer);
-void fbFetchExternalAlpha64_accessors(bits_image_t *, int x, int y, int width,
-                                      uint64_t *buffer, uint64_t *mask,
-                                      uint32_t maskBits);
 
 /* end */
 
@@ -271,13 +243,61 @@ typedef enum
 {
     SOURCE_IMAGE_CLASS_UNKNOWN,
     SOURCE_IMAGE_CLASS_HORIZONTAL,
-    SOURCE_IMAGE_CLASS_VERTICAL
+    SOURCE_IMAGE_CLASS_VERTICAL,
 } source_pict_class_t;
+
+typedef void (*scanStoreProc)(bits_image_t *img, int x, int y, int width, uint32_t *buffer);
+typedef void (*scanFetchProc)(pixman_image_t *, int, int, int, uint32_t *,
+			      uint32_t *, uint32_t);
+
+source_pict_class_t _pixman_image_classify (pixman_image_t *image,
+					    int             x,
+					    int             y,
+					    int             width,
+					    int             height);
+
+void
+_pixman_image_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
+			       uint32_t *buffer, uint32_t *mask, uint32_t mask_bits);
+
+/* Even thought the type of buffer is uint32_t *, the function actually expects
+ * a uint64_t *buffer.
+ */
+void
+_pixman_image_get_scanline_64 (pixman_image_t *image, int x, int y, int width,
+			       uint32_t *buffer, uint32_t *unused, uint32_t unused2);
+
+void
+_pixman_image_store_scanline_32 (bits_image_t *image, int x, int y, int width,
+				 uint32_t *buffer);
+/* Even thought the type of buffer is uint32_t *, the function actually expects
+ * a uint64_t *buffer.
+ */
+void
+_pixman_image_store_scanline_64 (bits_image_t *image, int x, int y, int width,
+				 uint32_t *buffer);
+
+pixman_image_t *
+_pixman_image_allocate (void);
+
+pixman_bool_t
+_pixman_init_gradient (gradient_t     *gradient,
+		       const pixman_gradient_stop_t *stops,
+		       int	       n_stops);
+void
+_pixman_image_reset_clip_region (pixman_image_t *image);
 
 struct point
 {
     int16_t x, y;
 };
+
+typedef source_pict_class_t (* classify_func_t) (pixman_image_t *image,
+						 int             x,
+						 int             y,
+						 int             width,
+						 int             height);
+typedef void (* property_changed_func_t)        (pixman_image_t *image);
 
 struct image_common
 {
@@ -297,6 +317,10 @@ struct image_common
     pixman_bool_t		component_alpha;
     pixman_read_memory_func_t	read_func;
     pixman_write_memory_func_t	write_func;
+    classify_func_t		classify;
+    property_changed_func_t	property_changed;
+    scanFetchProc		get_scanline_32;
+    scanFetchProc		get_scanline_64;
 };
 
 struct source_image
@@ -364,6 +388,9 @@ struct bits_image
     uint32_t *			bits;
     uint32_t *			free_me;
     int				rowstride; /* in number of uint32_t's */
+
+    scanStoreProc		store_scanline_32;
+    scanStoreProc		store_scanline_64;
 };
 
 union pixman_image
@@ -371,12 +398,46 @@ union pixman_image
     image_type_t		type;
     image_common_t		common;
     bits_image_t		bits;
+    source_image_t		source;
     gradient_t			gradient;
     linear_gradient_t		linear;
     conical_gradient_t		conical;
     radial_gradient_t		radial;
     solid_fill_t		solid;
 };
+
+/* Gradient walker
+ */
+typedef struct
+{
+    uint32_t        left_ag;
+    uint32_t        left_rb;
+    uint32_t        right_ag;
+    uint32_t        right_rb;
+    int32_t       left_x;
+    int32_t       right_x;
+    int32_t       stepper;
+
+    pixman_gradient_stop_t	*stops;
+    int                      num_stops;
+    unsigned int             spread;
+
+    int		  need_reset;
+} GradientWalker;
+
+void
+_pixman_gradient_walker_init (GradientWalker  *walker,
+			      gradient_t      *gradient,
+			      unsigned int     spread);
+
+void
+_pixman_gradient_walker_reset (GradientWalker       *walker,
+			       pixman_fixed_32_32_t  pos);
+
+uint32_t
+_pixman_gradient_walker_pixel (GradientWalker       *walker,
+			       pixman_fixed_32_32_t  x);
+
 
 
 #define LOG2_BITMAP_PAD 5
@@ -573,9 +634,9 @@ union pixman_image
 
 #define READ(img, ptr)		(*(ptr))
 #define WRITE(img, ptr, val)	(*(ptr) = (val))
-#define MEMCPY_WRAPPED(img, dst, src, size)					\
+#define MEMCPY_WRAPPED(img, dst, src, size)				\
     memcpy(dst, src, size)
-#define MEMSET_WRAPPED(img, dst, val, size)					\
+#define MEMSET_WRAPPED(img, dst, val, size)				\
     memset(dst, val, size)
 
 #endif
@@ -600,7 +661,7 @@ union pixman_image
 		(res) = READ(img, (uint32_t *)bits__);			\
 		break;							\
 	    case 24:							\
-		(res) = Fetch24(img, (uint8_t *) bits__);			\
+		(res) = Fetch24(img, (uint8_t *) bits__);		\
 		break;							\
 	    case 16:							\
 		(res) = READ(img, (uint16_t *) bits__);			\
@@ -791,5 +852,230 @@ void pixman_timer_register (PixmanTimer *timer);
     }
 
 #endif /* PIXMAN_TIMING */
+
+typedef struct pixman_implementation_t pixman_implementation_t;
+
+typedef void (* pixman_combine_32_func_t) (pixman_implementation_t *	imp,
+					   pixman_op_t			op,
+					   uint32_t *			dest,
+					   const uint32_t *		src,
+					   const uint32_t *		mask,
+					   int				width);
+
+typedef void (* pixman_combine_64_func_t) (pixman_implementation_t *	imp,
+					   pixman_op_t			op,
+					   uint64_t *			dest,
+					   const uint64_t *		src,
+					   const uint64_t *		mask,
+					   int				width);
+
+typedef void (* pixman_composite_func_t)  (pixman_implementation_t *	imp,
+					   pixman_op_t			op,
+					   pixman_image_t *		src,
+					   pixman_image_t *		mask,
+					   pixman_image_t *		dest,
+					   int32_t			src_x,
+					   int32_t			src_y,
+					   int32_t			mask_x,
+					   int32_t			mask_y,
+					   int32_t			dest_x,
+					   int32_t			dest_y,
+					   int32_t			width,
+					   int32_t			height);
+typedef pixman_bool_t (* pixman_blt_func_t) (pixman_implementation_t *	imp,
+					     uint32_t *			src_bits,
+					     uint32_t *			dst_bits,
+					     int			src_stride,
+					     int			dst_stride,
+					     int			src_bpp,
+					     int			dst_bpp,
+					     int			src_x,
+					     int			src_y,
+					     int			dst_x,
+					     int			dst_y,
+					     int			width,
+					     int			height);
+typedef pixman_bool_t (* pixman_fill_func_t) (pixman_implementation_t *imp,
+					      uint32_t *bits,
+					      int stride,
+					      int bpp,
+					      int x,
+					      int y,
+					      int width,
+					      int height,
+					      uint32_t xor);
+
+void
+_pixman_walk_composite_region (pixman_implementation_t *imp,
+			      pixman_op_t op,
+			      pixman_image_t * pSrc,
+			      pixman_image_t * pMask,
+			      pixman_image_t * pDst,
+			      int16_t xSrc,
+			      int16_t ySrc,
+			      int16_t xMask,
+			      int16_t yMask,
+			      int16_t xDst,
+			      int16_t yDst,
+			      uint16_t width,
+			      uint16_t height,
+			      pixman_bool_t srcRepeat,
+			      pixman_bool_t maskRepeat,
+			       pixman_composite_func_t compositeRect);
+
+void _pixman_setup_combiner_functions_32 (pixman_implementation_t *imp);
+void _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp);
+
+/* These "formats" both have depth 0, so they
+ * will never clash with any real ones
+ */
+#define PIXMAN_null		PIXMAN_FORMAT(0,0,0,0,0,0)
+#define PIXMAN_solid		PIXMAN_FORMAT(0,1,0,0,0,0)
+
+#define NEED_COMPONENT_ALPHA		(1 << 0)
+#define NEED_PIXBUF			(1 << 1)
+#define NEED_SOLID_MASK		        (1 << 2)
+
+typedef struct
+{
+    pixman_op_t			op;
+    pixman_format_code_t	src_format;
+    pixman_format_code_t	mask_format;
+    pixman_format_code_t	dest_format;
+    pixman_composite_func_t	func;
+    uint32_t			flags;
+} FastPathInfo;
+
+struct pixman_implementation_t
+{
+    pixman_implementation_t *	toplevel;
+    pixman_implementation_t *	delegate;
+
+    pixman_composite_func_t	composite;
+    pixman_blt_func_t		blt;
+    pixman_fill_func_t		fill;
+    
+    pixman_combine_32_func_t	combine_32[PIXMAN_OP_LAST];
+    pixman_combine_32_func_t	combine_32_ca[PIXMAN_OP_LAST];
+    pixman_combine_64_func_t	combine_64[PIXMAN_OP_LAST];
+    pixman_combine_64_func_t	combine_64_ca[PIXMAN_OP_LAST];
+};
+
+pixman_implementation_t *
+_pixman_implementation_create (pixman_implementation_t *toplevel,
+			       pixman_implementation_t *delegate);
+
+void
+_pixman_implementation_combine_32 (pixman_implementation_t *	imp,
+				   pixman_op_t			op,
+				   uint32_t *			dest,
+				   const uint32_t *		src,
+				   const uint32_t *		mask,
+				   int				width);
+void
+_pixman_implementation_combine_64 (pixman_implementation_t *	imp,
+				   pixman_op_t			op,
+				   uint64_t *			dest,
+				   const uint64_t *		src,
+				   const uint64_t *		mask,
+				   int				width);
+void
+_pixman_implementation_combine_32_ca (pixman_implementation_t *	imp,
+				      pixman_op_t		op,
+				      uint32_t *		dest,
+				      const uint32_t *		src,
+				      const uint32_t *		mask,
+				      int			width);
+void
+_pixman_implementation_combine_64_ca (pixman_implementation_t *	imp,
+				      pixman_op_t		op,
+				      uint64_t *		dest,
+				      const uint64_t *		src,
+				      const uint64_t *		mask,
+				      int			width);
+void
+_pixman_implementation_composite (pixman_implementation_t *	imp,
+				  pixman_op_t			op,
+				  pixman_image_t *		src,
+				  pixman_image_t *		mask,
+				  pixman_image_t *		dest,
+				  int32_t			src_x,
+				  int32_t			src_y,
+				  int32_t			mask_x,
+				  int32_t			mask_y,
+				  int32_t			dest_x,
+				  int32_t			dest_y,
+				  int32_t			width,
+				  int32_t			height);
+
+pixman_bool_t
+_pixman_implementation_blt (pixman_implementation_t *	imp,
+			    uint32_t *			src_bits,
+			    uint32_t *			dst_bits,
+			    int				src_stride,
+			    int				dst_stride,
+			    int				src_bpp,
+			    int				dst_bpp,
+			    int				src_x,
+			    int				src_y,
+			    int				dst_x,
+			    int				dst_y,
+			    int				width,
+			    int				height);
+pixman_bool_t
+_pixman_implementation_fill (pixman_implementation_t *   imp,
+			     uint32_t *bits,
+			     int stride,
+			     int bpp,
+			     int x,
+			     int y,
+			     int width,
+			     int height,
+			     uint32_t xor);
+    
+/* Specific implementations */
+pixman_implementation_t *
+_pixman_implementation_create_general (pixman_implementation_t *toplevel);
+pixman_implementation_t *
+_pixman_implementation_create_fast_path (pixman_implementation_t *toplevel);
+#ifdef USE_MMX
+pixman_implementation_t *
+_pixman_implementation_create_mmx (pixman_implementation_t *toplevel);
+#endif
+#ifdef USE_SSE2
+pixman_implementation_t *
+_pixman_implementation_create_sse2 (pixman_implementation_t *toplevel);
+#endif
+#ifdef USE_ARM_SIMD
+pixman_implementation_t *
+_pixman_implementation_create_arm_simd (pixman_implementation_t *toplevel);
+#endif
+#ifdef USE_ARM_NEON
+pixman_implementation_t *
+_pixman_implementation_create_arm_neon (pixman_implementation_t *toplevel);
+#endif
+#ifdef USE_VMX
+pixman_implementation_t *
+_pixman_implementation_create_vmx (pixman_implementation_t *toplevel);
+#endif
+
+pixman_bool_t
+_pixman_run_fast_path (const FastPathInfo *paths,
+		       pixman_implementation_t *imp,
+		       pixman_op_t op,
+		       pixman_image_t *src,
+		       pixman_image_t *mask,
+		       pixman_image_t *dest,
+		       int32_t src_x,
+		       int32_t src_y,
+		       int32_t mask_x,
+		       int32_t mask_y,
+		       int32_t dest_x,
+		       int32_t dest_y,
+		       int32_t width,
+		       int32_t height);
+    
+pixman_implementation_t *
+_pixman_choose_implementation (void);
 
 #endif /* PIXMAN_PRIVATE_H */

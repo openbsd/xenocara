@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2008/09/23 19:11:40 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2009/06/05 20:14:27 matthieu Exp $
 
-SHARED_LIBS=	pixman-1 12.0
+SHARED_LIBS=	pixman-1 15.8
 
 .if ${MACHINE} == amd64
 CONFIGURE_ARGS += --disable-sse2

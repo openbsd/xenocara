@@ -49,6 +49,7 @@ SOURCES = \
 	pixman-trap.c					\
 	pixman-compute-region.c		\
 	pixman-timer.c					\
+	pixman-matrix.c					\
 	$(NULL)
 
 # MMX compilation flags

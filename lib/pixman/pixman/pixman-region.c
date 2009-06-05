@@ -572,7 +572,7 @@ pixman_region_appendNonO (
 {									\
     int newRects;							\
     if ((newRects = rEnd - r)) {					\
-	RECTALLOC(newReg, newRects);					\
+	RECTALLOC_BAIL(newReg, newRects, bail);					\
 	memmove((char *)PIXREGION_TOP(newReg),(char *)r, 			\
               newRects * sizeof(box_type_t));				\
 	newReg->data->numRects += newRects;				\
@@ -752,7 +752,8 @@ pixman_op(
 		bot = MIN(r1->y2, r2y1);
 		if (top != bot)	{
 		    curBand = newReg->data->numRects;
-		    pixman_region_appendNonO(newReg, r1, r1BandEnd, top, bot);
+		    if (!pixman_region_appendNonO(newReg, r1, r1BandEnd, top, bot))
+			goto bail;
 		    Coalesce(newReg, prevBand, curBand);
 		}
 	    }
@@ -763,7 +764,8 @@ pixman_op(
 		bot = MIN(r2->y2, r1y1);
 		if (top != bot) {
 		    curBand = newReg->data->numRects;
-		    pixman_region_appendNonO(newReg, r2, r2BandEnd, top, bot);
+		    if (!pixman_region_appendNonO(newReg, r2, r2BandEnd, top, bot))
+			goto bail;
 		    Coalesce(newReg, prevBand, curBand);
 		}
 	    }
@@ -779,8 +781,12 @@ pixman_op(
 	ybot = MIN(r1->y2, r2->y2);
 	if (ybot > ytop) {
 	    curBand = newReg->data->numRects;
-	    (* overlapFunc)(newReg, r1, r1BandEnd, r2, r2BandEnd, ytop, ybot,
-			    pOverlap);
+	    if (!(* overlapFunc)(newReg,
+				 r1, r1BandEnd,
+				 r2, r2BandEnd,
+				 ytop, ybot,
+				 pOverlap))
+		goto bail;
 	    Coalesce(newReg, prevBand, curBand);
 	}
 
@@ -805,7 +811,10 @@ pixman_op(
 	/* Do first nonOverlap1Func call, which may be able to coalesce */
 	FindBand(r1, r1BandEnd, r1End, r1y1);
 	curBand = newReg->data->numRects;
-	pixman_region_appendNonO(newReg, r1, r1BandEnd, MAX(r1y1, ybot), r1->y2);
+	if (!pixman_region_appendNonO(newReg,
+				      r1, r1BandEnd,
+				      MAX(r1y1, ybot), r1->y2))
+	    goto bail;
 	Coalesce(newReg, prevBand, curBand);
 	/* Just append the rest of the boxes  */
 	AppendRegions(newReg, r1BandEnd, r1End);
@@ -814,7 +823,10 @@ pixman_op(
 	/* Do first nonOverlap2Func call, which may be able to coalesce */
 	FindBand(r2, r2BandEnd, r2End, r2y1);
 	curBand = newReg->data->numRects;
-	pixman_region_appendNonO(newReg, r2, r2BandEnd, MAX(r2y1, ybot), r2->y2);
+	if (!pixman_region_appendNonO(newReg,
+				      r2, r2BandEnd,
+				      MAX(r2y1, ybot), r2->y2))
+	    goto bail;
 	Coalesce(newReg, prevBand, curBand);
 	/* Append rest of boxes */
 	AppendRegions(newReg, r2BandEnd, r2End);
@@ -840,6 +852,11 @@ pixman_op(
     }
 
     return TRUE;
+
+bail:
+    if (oldData)
+	free(oldData);
+    return pixman_break (newReg);
 }
 
 /*-
@@ -1330,6 +1347,8 @@ validate (region_type_t * badreg,
 	int	    curBand;
     } RegionInfo;
 
+    RegionInfo stack_regions[64];
+
 	     int	numRects;   /* Original numRects for badreg	    */
 	     RegionInfo *ri;	    /* Array of current regions		    */
     	     int	numRI;      /* Number of entries used in ri	    */
@@ -1379,10 +1398,8 @@ validate (region_type_t * badreg,
 
     /* Set up the first region to be the first rectangle in badreg */
     /* Note that step 2 code will never overflow the ri[0].reg rects array */
-    ri = (RegionInfo *) pixman_malloc_ab (4, sizeof(RegionInfo));
-    if (!ri)
-	return pixman_break (badreg);
-    sizeRI = 4;
+    ri = stack_regions;
+    sizeRI = sizeof (stack_regions) / sizeof (stack_regions[0]);
     numRI = 1;
     ri[0].prevBand = 0;
     ri[0].curBand = 0;
@@ -1451,9 +1468,16 @@ validate (region_type_t * badreg,
             data_size = sizeRI * sizeof(RegionInfo);
             if (data_size / sizeRI != sizeof(RegionInfo))
                 goto bail;
-            rit = (RegionInfo *) realloc(ri, data_size);
-	    if (!rit)
-		goto bail;
+	    if (ri == stack_regions) {
+		rit = malloc (data_size);
+		if (!rit)
+		    goto bail;
+		memcpy (rit, ri, numRI * sizeof (RegionInfo));
+	    } else {
+		rit = (RegionInfo *) realloc(ri, data_size);
+		if (!rit)
+		    goto bail;
+	    }
 	    ri = rit;
 	    rit = &ri[numRI];
 	}
@@ -1509,13 +1533,15 @@ NextRect: ;
 	    goto bail;
     }
     *badreg = ri[0].reg;
-    free(ri);
+    if (ri != stack_regions)
+	free(ri);
     good(badreg);
     return ret;
 bail:
     for (i = 0; i < numRI; i++)
 	freeData(&ri[i].reg);
-    free (ri);
+    if (ri != stack_regions)
+	free (ri);
 
     return pixman_break (badreg);
 }
@@ -1998,7 +2024,9 @@ PREFIX(_contains_point) (region_type_t * region,
         return(FALSE);
     if (numRects == 1)
     {
-	*box = region->extents;
+        if (box)
+	    *box = region->extents;
+
 	return(TRUE);
     }
     for (pbox = PIXREGION_BOXPTR(region), pboxEnd = pbox + numRects;
@@ -2011,7 +2039,10 @@ PREFIX(_contains_point) (region_type_t * region,
 	   break;		/* missed it */
 	if (x >= pbox->x2)
 	   continue;		/* not there yet */
-	*box = *pbox;
+
+        if (box)
+	    *box = *pbox;
+
 	return(TRUE);
     }
     return(FALSE);

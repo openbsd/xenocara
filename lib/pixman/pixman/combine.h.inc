@@ -3,12 +3,12 @@
 #define MASK
 #define ONE_HALF
 
-#define G_SHIFT
-#define B_SHIFT
 #define A_SHIFT
-#define G_MASK
-#define B_MASK
+#define R_SHIFT
+#define G_SHIFT
 #define A_MASK
+#define R_MASK
+#define G_MASK
 
 #define RB_MASK
 #define AG_MASK
@@ -97,39 +97,25 @@
                                                                         \
         t = (x & G_MASK) * a + (y & G_MASK) * b;                        \
         t += (t >> G_SHIFT) + (ONE_HALF << G_SHIFT);                    \
-        t >>= B_SHIFT;                                                  \
+        t >>= R_SHIFT;                                                  \
                                                                         \
-        t |= r << B_SHIFT;                                              \
+        t |= r << R_SHIFT;                                              \
         t |= RB_MASK_PLUS_ONE - ((t >> G_SHIFT) & RB_MASK);             \
         t &= RB_MASK;                                                   \
         t <<= G_SHIFT;                                                  \
                                                                         \
-        r = ((x >> B_SHIFT) & MASK) * a +                               \
-            ((y >> B_SHIFT) & MASK) * b + ONE_HALF;                     \
+        r = ((x >> R_SHIFT) & MASK) * a +                               \
+            ((y >> R_SHIFT) & MASK) * b + ONE_HALF;                     \
         r += (r >> G_SHIFT);                                            \
         r >>= G_SHIFT;                                                  \
                                                                         \
         x = (x & MASK) * a + (y & MASK) * b + ONE_HALF;                 \
         x += (x >> G_SHIFT);                                            \
         x >>= G_SHIFT;                                                  \
-        x |= r << B_SHIFT;                                              \
+        x |= r << R_SHIFT;                                              \
         x |= RB_MASK_PLUS_ONE - ((x >> G_SHIFT) & RB_MASK);             \
         x &= RB_MASK;                                                   \
         x |= t;                                                         \
-    } while (0)
-
-/*
-  x_c = (x_c * a + y_c *b) / 256
-*/
-#define FbByteAddMul_256(x, a, y, b) do {                               \
-        comp4_t t = (x & RB_MASK) * a + (y & RB_MASK) * b;              \
-        t >>= G_SHIFT;                                                  \
-        t &= RB_MASK;                                                   \
-                                                                        \
-        x = ((x >> G_SHIFT) & RB_MASK) * a +                            \
-            ((y >> G_SHIFT) & RB_MASK) * b;                             \
-        x &= AG_MASK;                                                   \
-        x += t;                                                         \
     } while (0)
 
 /*
@@ -138,14 +124,14 @@
 #define FbByteMulC(x, a) do {                                           \
         comp4_t t;                                                      \
         comp4_t r = (x & MASK) * (a & MASK);                            \
-        r |= (x & B_MASK) * ((a >> B_SHIFT) & MASK);                    \
+        r |= (x & R_MASK) * ((a >> R_SHIFT) & MASK);                    \
         r += RB_ONE_HALF;                                               \
         r = (r + ((r >> G_SHIFT) & RB_MASK)) >> G_SHIFT;                \
         r &= RB_MASK;                                                   \
                                                                         \
         x >>= G_SHIFT;                                                  \
         t = (x & MASK) * ((a >> G_SHIFT) & MASK);                       \
-        t |= (x & B_MASK) * (a >> A_SHIFT);                             \
+        t |= (x & R_MASK) * (a >> A_SHIFT);                             \
         t += RB_ONE_HALF;                                               \
         t = t + ((t >> G_SHIFT) & RB_MASK);                             \
         x = r | (t & AG_MASK);                                          \
@@ -157,7 +143,7 @@
 #define FbByteMulAddC(x, a, y) do {                                     \
         comp4_t t;                                                      \
         comp4_t r = (x & MASK) * (a & MASK);                            \
-        r |= (x & B_MASK) * ((a >> B_SHIFT) & MASK);                    \
+        r |= (x & R_MASK) * ((a >> R_SHIFT) & MASK);                    \
         r += RB_ONE_HALF;                                               \
         r = (r + ((r >> G_SHIFT) & RB_MASK)) >> G_SHIFT;                \
         r &= RB_MASK;                                                   \
@@ -167,7 +153,7 @@
                                                                         \
         x >>= G_SHIFT;                                                  \
         t = (x & MASK) * ((a >> G_SHIFT) & MASK);                       \
-        t |= (x & B_MASK) * (a >> A_SHIFT);                             \
+        t |= (x & R_MASK) * (a >> A_SHIFT);                             \
         t += RB_ONE_HALF;                                               \
         t = (t + ((t >> G_SHIFT) & RB_MASK)) >> G_SHIFT;                \
         t &= RB_MASK;                                                   \
@@ -189,22 +175,22 @@
                                                                         \
         t = (x & G_MASK) * ((a >> G_SHIFT) & MASK) + (y & G_MASK) * b;  \
         t += (t >> G_SHIFT) + (ONE_HALF << G_SHIFT);                    \
-        t >>= B_SHIFT;                                                  \
+        t >>= R_SHIFT;                                                  \
                                                                         \
-        t |= r << B_SHIFT;                                              \
+        t |= r << R_SHIFT;                                              \
         t |= RB_MASK_PLUS_ONE - ((t >> G_SHIFT) & RB_MASK);             \
         t &= RB_MASK;                                                   \
         t <<= G_SHIFT;                                                  \
                                                                         \
-        r = ((x >> B_SHIFT) & MASK) * ((a >> B_SHIFT) & MASK) +         \
-            ((y >> B_SHIFT) & MASK) * b + ONE_HALF;                     \
+        r = ((x >> R_SHIFT) & MASK) * ((a >> R_SHIFT) & MASK) +         \
+            ((y >> R_SHIFT) & MASK) * b + ONE_HALF;                     \
         r += (r >> G_SHIFT);                                            \
         r >>= G_SHIFT;                                                  \
                                                                         \
         x = (x & MASK) * (a & MASK) + (y & MASK) * b + ONE_HALF;        \
         x += (x >> G_SHIFT);                                            \
         x >>= G_SHIFT;                                                  \
-        x |= r << B_SHIFT;                                              \
+        x |= r << R_SHIFT;                                              \
         x |= RB_MASK_PLUS_ONE - ((x >> G_SHIFT) & RB_MASK);             \
         x &= RB_MASK;                                                   \
         x |= t;                                                         \
