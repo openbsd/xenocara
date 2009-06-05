@@ -1,6 +1,4 @@
 /*
- * Id: newport_driver.c,v 1.2 2000/11/29 20:58:10 agx Exp $ 
- *
  * Driver for the SGI Indy's Newport graphics card
  * 
  * This driver is based on the newport.c & newport_con.c kernel code
@@ -30,7 +28,6 @@
  * Project.
  *
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/newport/newport_driver.c,v 1.25 2003/04/23 21:51:41 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -62,9 +59,9 @@
 #define NEWPORT_VERSION		4000
 #define NEWPORT_NAME		"NEWPORT"
 #define NEWPORT_DRIVER_NAME	"newport"
-#define NEWPORT_MAJOR_VERSION	0
-#define NEWPORT_MINOR_VERSION	2
-#define NEWPORT_PATCHLEVEL	0
+#define NEWPORT_MAJOR_VERSION	PACKAGE_VERSION_MAJOR
+#define NEWPORT_MINOR_VERSION	PACKAGE_VERSION_MINOR
+#define NEWPORT_PATCHLEVEL	PACKAGE_VERSION_PATCHLEVEL
 
 
 /* Prototypes ------------------------------------------------------- */
@@ -272,17 +269,13 @@ NewportProbe(DriverPtr drv, int flags)
 					int entity;
 					ScrnInfoPtr pScrn = NULL;
 
-					/* This is a hack because don't have the RAC info(and don't want it).  
-					 * Set it as an ISA entity to get the entity field set up right.
-					 */
-					entity = xf86ClaimIsaSlot(drv, 0, dev, TRUE);
+					entity = xf86ClaimNoSlot(drv, 0, dev, TRUE);
 					base = (NEWPORT_BASE_ADDR0
 						+ busID * NEWPORT_BASE_OFFSET);
 					RANGE(range[0], base, base + sizeof(NewportRegs),\
 							ResExcMemBlock);
-					pScrn = xf86ConfigIsaEntity(pScrn, 0, entity, NULL, range, \
-							NULL, NULL, NULL, NULL);
-					/* Allocate a ScrnInfoRec */
+					pScrn = xf86AllocateScreen(drv, 0);
+					xf86AddEntityToScreen(pScrn, entity);
 					pScrn->driverVersion = NEWPORT_VERSION;
 					pScrn->driverName    = NEWPORT_DRIVER_NAME;
 					pScrn->name          = NEWPORT_NAME;
@@ -593,11 +586,14 @@ NewportScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
 	pNewport->NoAccel = FALSE;
 	if (xf86ReturnOptValBool(pNewport->Options, OPTION_NOACCEL, FALSE)) 
 	{
-	    if (!xf86LoadSubModule(pScrn, "xaa"))
-		return FALSE;
-	    xf86LoaderReqSymLists(xaaSymbols, NULL);
 	    pNewport->NoAccel = TRUE;
 	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Acceleration disabled\n");
+	}
+	if (!pNewport->NoAccel) {
+	    if (!xf86LoadSubModule(pScrn, "xaa"))
+		pNewport->NoAccel = TRUE;
+	    else
+		xf86LoaderReqSymLists(xaaSymbols, NULL);
 	}
 #if 0    
 	if (pScrn->bitsPerPixel < 24)

@@ -39,7 +39,7 @@ Enable or disable the HW cursor. Default: on.
 .BI "Option \*qBusID\*q \*q"integer \*q
 Set to 1 for the Indigo2 XL. Default: 0
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
 .SH AUTHORS
 Authors:
 Guido GÜnther \fIagx@sigxcpu.org\fP
