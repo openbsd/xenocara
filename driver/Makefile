@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.30 2009/06/04 18:36:30 kettenis Exp $
+# $OpenBSD: Makefile,v 1.31 2009/06/05 21:26:36 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	openbsd-input-usbtablet \
@@ -13,12 +13,6 @@ INPUT_DRV_COMMON= \
 	xf86-input-elographics xf86-input-fpit \
 	xf86-input-hyperpen xf86-input-joystick \
 	xf86-input-mutouch xf86-input-penmount
-
-# deprecated
-# xf86-input-calcomp xf86-input-digitaledge xf86-input-dmc 
-# xf86-input-dynapro xf86-input-elo2300  xf86-input-jamstudio 
-# xf86-input-magellan xf86-input-microtouch xf86-input-palmax 
-# xf86-input-spaceorb xf86-input-summa xf86-input-tek4957
 
 INPUT_DRV_alpha= ${INPUT_DRV_COMMON}
 
@@ -41,9 +35,6 @@ INPUT_DRV_sparc64= ${INPUT_DRV_COMMON}
 INPUT_DRV_vax=
 
 INPUT_DRV_zaurus= ${INPUT_DRV_DEFAULT}
-
-# deprecated
-# xf86-input-magictouch
 
 .if defined(INPUT_DRV_${MACHINE})
 INPUT_DRV= ${INPUT_DRV_${MACHINE}}
