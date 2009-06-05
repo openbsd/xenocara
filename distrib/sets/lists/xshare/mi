@@ -2844,6 +2844,8 @@
 ./usr/X11R6/share/doc/compositeproto/compositeproto.txt
 ./usr/X11R6/share/doc/damageproto
 ./usr/X11R6/share/doc/damageproto/damageproto.txt
+./usr/X11R6/share/doc/dri2proto
+./usr/X11R6/share/doc/dri2proto/dri2proto.txt
 ./usr/X11R6/share/doc/fontconfig
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel.pdf
