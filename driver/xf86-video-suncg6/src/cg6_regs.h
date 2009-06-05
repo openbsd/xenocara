@@ -20,7 +20,7 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* $XFree86$ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/suncg6/cg6_regs.h,v 1.1 2000/05/23 04:47:43 dawes Exp $ */
 
 #ifndef CG6_REGS_H
 #define CG6_REGS_H

@@ -20,7 +20,6 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/suncg6/cg6_driver.c,v 1.7 2002/12/06 16:44:38 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -30,7 +29,6 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86Version.h"
 #include "mipointer.h"
 #include "mibstore.h"
 #include "micmap.h"
@@ -65,9 +63,9 @@ void CG6Sync(ScrnInfoPtr pScrn);
 #define CG6_VERSION 4000
 #define CG6_NAME "SUNCG6"
 #define CG6_DRIVER_NAME "suncg6"
-#define CG6_MAJOR_VERSION 1
-#define CG6_MINOR_VERSION 1
-#define CG6_PATCHLEVEL 0
+#define CG6_MAJOR_VERSION PACKAGE_VERSION_MAJOR
+#define CG6_MINOR_VERSION PACKAGE_VERSION_MINOR
+#define CG6_PATCHLEVEL PACKAGE_VERSION_PATCHLEVEL
 
 /* 
  * This contains the functions needed by the server after loading the driver
@@ -334,7 +332,7 @@ CG6PreInit(ScrnInfoPtr pScrn, int flags)
     deal with depth
     *********************/
     
-    if (!xf86SetDepthBpp(pScrn, 0, 0, 0, NoDepth24Support)) {
+    if (!xf86SetDepthBpp(pScrn, 8, 0, 0, NoDepth24Support)) {
 	return FALSE;
     } else {
 	/* Check that the returned depth is one we support */
