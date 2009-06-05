@@ -20,7 +20,6 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/suntcx/tcx_driver.c,v 1.6 2001/08/07 07:04:51 keithp Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -30,7 +29,6 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86Version.h"
 #include "mipointer.h"
 #include "mibstore.h"
 #include "micmap.h"
@@ -66,9 +64,9 @@ void TCXSync(ScrnInfoPtr pScrn);
 #define TCX_VERSION 4000
 #define TCX_NAME "SUNTCX"
 #define TCX_DRIVER_NAME "suntcx"
-#define TCX_MAJOR_VERSION 1
-#define TCX_MINOR_VERSION 1
-#define TCX_PATCHLEVEL 0
+#define TCX_MAJOR_VERSION PACKAGE_VERSION_MAJOR
+#define TCX_MINOR_VERSION PACKAGE_VERSION_MINOR
+#define TCX_PATCHLEVEL PACKAGE_VERSION_PATCHLEVEL
 
 /* 
  * This contains the functions needed by the server after loading the driver
