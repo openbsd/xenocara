@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1.1.1 2009/06/06 17:55:01 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2009/06/06 19:42:19 matthieu Exp $
 
 XKB_SUBDIR=	rules/compat
 TOP=		../../../..
@@ -6,30 +6,30 @@ TOP=		../../../..
 transform_files=layoutRename.lst variantRename.lst
 
 transform_scripts= \
-ln_s.sh \
-lnv_s.sh \
-ml_s.sh \
-mlv_s.sh \
-ml1_s.sh \
-ml1v_s.sh \
-ml1v1_s.sh
+	ln_s.sh \
+	lnv_s.sh \
+	ml_s.sh \
+	mlv_s.sh \
+	ml1_s.sh \
+	ml1v_s.sh \
+	ml1v1_s.sh
 
 dist_parts=base.o_s.part
 
 scripts= \
-base.l2_s.part \
-base.l3_s.part \
-base.l4_s.part \
-base.l2v2_s.part \
-base.l3v3_s.part \
-base.l4v4_s.part \
-base.ml_s.part \
-base.ml1_s.part \
-base.mlv_s.part \
-base.ml1v1_s.part \
-base.ml_s.part
+	base.l2_s.part \
+	base.l3_s.part \
+	base.l4_s.part \
+	base.l2v2_s.part \
+	base.l3v3_s.part \
+	base.l4v4_s.part \
+	base.ml_s.part \
+	base.ml1_s.part \
+	base.mlv_s.part \
+	base.ml1v1_s.part \
+	base.ml_s.part
 
-all:	${scripts}
+depend all:	${scripts}
 
 srcdir=	${XKB_DIR}/${XKB_SUBDIR}
 
