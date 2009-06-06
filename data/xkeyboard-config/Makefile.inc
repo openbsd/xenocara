@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.1.1.1 2009/06/06 17:55:01 matthieu Exp $
+#	$OpenBSD: Makefile.inc,v 1.2 2009/06/06 19:44:01 matthieu Exp $
 
 TOP?=		../../..
 XKB_DIR=	${.CURDIR}/${TOP}/dist/xkeyboard-config
@@ -17,7 +17,7 @@ ${DIR_DATA}: ${DATA}
 	rm -f $@
 	cd ${.CURDIR} && ${XKBCOMP} -lfhlpR -o ${.OBJDIR}/$@ '*'
 
-install:	${DATA} install-dir _SUBDIRUSE
+install:	${DATA} install-dir install-files _SUBDIRUSE
 	@for f in ${DATA}; do \
 	echo installing "$$f" ; \
 	cmp -s ${XKB_DIR}/${XKB_SUBDIR}/$$f ${XKB_BASE}/${XKB_SUBDIR}/$$f || ${INSTALL_DATA} ${XKB_DIR}/${XKB_SUBDIR}/$$f ${XKB_BASE}/${XKB_SUBDIR}/$$f; done
@@ -27,6 +27,10 @@ install-dir: ${DIR_DATA}
 	${INSTALL_DATA} ${DIR_DATA} ${XKB_BASE}/${XKB_SUBDIR}
 .else
 install-dir:
+.endif
+
+.if !target(intall-files)
+install-files:
 .endif
 
 .if defined(DIR_DATA) && !target(clean)
