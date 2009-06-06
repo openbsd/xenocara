@@ -1,0 +1,2 @@
+  pc98		=	evdev(pc98)
+  *		=	evdev
