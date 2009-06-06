@@ -162,6 +162,8 @@
 ./usr/X11R6/lib/modules/dri/swrast_dri.so
 ./usr/X11R6/lib/modules/drivers/ati_drv.la
 ./usr/X11R6/lib/modules/drivers/ati_drv.so
+./usr/X11R6/lib/modules/drivers/glint_drv.la
+./usr/X11R6/lib/modules/drivers/glint_drv.so
 ./usr/X11R6/lib/modules/drivers/mach64_drv.la
 ./usr/X11R6/lib/modules/drivers/mach64_drv.so
 ./usr/X11R6/lib/modules/drivers/r128_drv.la
@@ -282,6 +284,7 @@
 ./usr/X11R6/man/man4/exa.4
 ./usr/X11R6/man/man4/fbdevhw.4
 ./usr/X11R6/man/man4/fpit.4
+./usr/X11R6/man/man4/glint.4
 ./usr/X11R6/man/man4/joystick.4
 ./usr/X11R6/man/man4/kbd.4
 ./usr/X11R6/man/man4/mouse.4
