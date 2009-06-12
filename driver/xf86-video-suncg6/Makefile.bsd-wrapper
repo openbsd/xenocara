@@ -1,3 +1,0 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2008/08/23 15:41:06 kettenis Exp $
-
-.include <bsd.xorg.mk>
