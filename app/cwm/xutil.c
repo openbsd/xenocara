@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xutil.c,v 1.15 2009/05/17 23:40:57 okan Exp $
+ * $Id: xutil.c,v 1.16 2009/06/17 13:08:37 okan Exp $
  */
 
 #include "headers.h"
@@ -161,8 +161,8 @@ xu_setstate(struct client_ctx *cc, int state)
 {
 	long	 dat[2];
 
-	dat[0] = (long)state;
-	dat[1] = (long)None;
+	dat[0] = state;
+	dat[1] = None;
 
 	cc->state = state;
 	XChangeProperty(X_Dpy, cc->win, WM_STATE, WM_STATE, 32,
