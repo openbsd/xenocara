@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.51 2009/05/30 00:30:17 okan Exp $
+ * $Id: client.c,v 1.52 2009/06/17 12:45:01 okan Exp $
  */
 
 #include "headers.h"
@@ -66,11 +66,6 @@ client_new(Window win, struct screen_ctx *sc, int mapped)
 	cc->size = XAllocSizeHints();
 
 	XGetWMNormalHints(X_Dpy, cc->win, cc->size, &tmp);
-	if (cc->size->width_inc == 0)
-		cc->size->width_inc = 1;
-	if (cc->size->height_inc == 0)
-		cc->size->height_inc = 1;
-
 	if (cc->size->flags & PBaseSize) {
 		cc->geom.min_dx = cc->size->base_width;
 		cc->geom.min_dy = cc->size->base_height;
