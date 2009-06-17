@@ -14,13 +14,11 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: search.c,v 1.15 2009/05/18 00:23:35 okan Exp $
+ * $Id: search.c,v 1.16 2009/06/17 12:30:17 okan Exp $
  */
 
 #include "headers.h"
 #include "calmwm.h"
-
-#define SearchMask (KeyPressMask|ExposureMask)
 
 static int	strsubmatch(char *, char *, int);
 

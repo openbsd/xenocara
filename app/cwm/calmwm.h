@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.90 2009/05/18 00:17:46 oga Exp $
+ * $Id: calmwm.h,v 1.91 2009/06/17 12:30:17 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -33,6 +33,12 @@
 #define ChildMask	(SubstructureRedirectMask|SubstructureNotifyMask)
 #define ButtonMask	(ButtonPressMask|ButtonReleaseMask)
 #define MouseMask	(ButtonMask|PointerMotionMask)
+#define KeyMask		(KeyPressMask|ExposureMask)
+#define MenuMask 	(ButtonMask|ButtonMotionMask|ExposureMask| \
+			PointerMotionMask)
+#define MenuGrabMask	(ButtonMask|ButtonMotionMask|StructureNotifyMask|\
+			PointerMotionMask)
+#define SearchMask	(KeyPressMask|ExposureMask)
 
 enum cwmcolor {
 	CWM_COLOR_BORDOR_ACTIVE,
