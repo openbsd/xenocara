@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwm.1,v 1.41 2009/06/18 20:44:40 sobrado Exp $
+.\"	$OpenBSD: cwm.1,v 1.42 2009/06/19 10:43:49 sobrado Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: June 18 2009 $
+.Dd $Mdocdate: June 19 2009 $
 .Dt CWM 1
 .Os
 .Sh NAME
@@ -94,11 +94,11 @@ Toggle full-screen size of current window.
 Toggle vertical maximization of current window.
 .It Ic M-?
 Spawn
-.Dq Exec program
+.Dq exec program
 dialog.
 .It Ic M-.
 Spawn
-.Dq Ssh to
+.Dq ssh to
 dialog.
 This parses
 .Pa $HOME/.ssh/known_hosts
@@ -107,7 +107,7 @@ to provide host auto-completion.
 will be executed via the configured terminal emulator.
 .It Ic CM-w
 Spawn
-.Dq Exec WindowManager
+.Dq exec WindowManager
 dialog; allows you to switch from
 .Nm
 to another window manager without restarting the X server.
