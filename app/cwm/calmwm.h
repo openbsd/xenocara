@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.91 2009/06/17 12:30:17 okan Exp $
+ * $Id: calmwm.h,v 1.92 2009/06/20 00:22:39 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -394,9 +394,6 @@ void			 xfree(void *);
 void			*xmalloc(size_t);
 void			*xcalloc(size_t, size_t);
 char			*xstrdup(const char *);
-
-#define XMALLOC(p, t) ((p) = (t *)xmalloc(sizeof * (p)))
-#define XCALLOC(p, t) ((p) = (t *)xcalloc(1, sizeof * (p)))
 
 struct screen_ctx	*screen_fromroot(Window);
 struct screen_ctx	*screen_current(void);

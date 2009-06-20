@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: mousefunc.c,v 1.10 2009/06/17 12:45:01 okan Exp $
+ * $Id: mousefunc.c,v 1.11 2009/06/20 00:22:39 okan Exp $
  */
 
 #include "headers.h"
@@ -234,7 +234,7 @@ mousefunc_menu_unhide(struct client_ctx *cc, void *arg)
 			if (wname == NULL)
 				continue;
 
-			XCALLOC(mi, struct menu);
+			mi = xcalloc(1, sizeof(*mi));
 			strlcpy(mi->text, wname, sizeof(mi->text));
 			mi->ctx = cc;
 			TAILQ_INSERT_TAIL(&menuq, mi, entry);
@@ -268,7 +268,7 @@ mousefunc_menu_cmd(struct client_ctx *cc, void *arg)
 
 	TAILQ_INIT(&menuq);
 	TAILQ_FOREACH(cmd, &Conf.cmdq, entry) {
-		XCALLOC(mi, struct menu);
+		mi = xcalloc(1, sizeof(*mi));
 		strlcpy(mi->text, cmd->label, sizeof(mi->text));
 		mi->ctx = cmd;
 		TAILQ_INSERT_TAIL(&menuq, mi, entry);

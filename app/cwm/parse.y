@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.20 2009/05/17 23:40:57 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.21 2009/06/20 00:22:39 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -132,7 +132,7 @@ main		: FONTNAME STRING		{
 				YYERROR;
 			}
 
-			XCALLOC(aw, struct autogroupwin);
+			aw = xcalloc(1, sizeof(*aw));
 
 			if ((p = strchr($3, ',')) == NULL) {
 				aw->name = NULL;
@@ -151,7 +151,7 @@ main		: FONTNAME STRING		{
 		| IGNORE STRING {
 			struct winmatch	*wm;
 
-			XCALLOC(wm, struct winmatch);
+			wm = xcalloc(1, sizeof(*wm));
 			strlcpy(wm->title, $2, sizeof(wm->title));
 			TAILQ_INSERT_TAIL(&conf->ignoreq, wm, entry);
 
@@ -503,7 +503,7 @@ parse_config(const char *filename, struct conf *xconf)
 {
 	int			 errors = 0;
 
-	XCALLOC(conf, struct conf);
+	conf = xcalloc(1, sizeof(*conf));
 
 	if ((file = pushfile(filename)) == NULL) {
 		free(conf);

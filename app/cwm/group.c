@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.30 2009/05/19 12:49:37 sthen Exp $
+ * $Id: group.c,v 1.31 2009/06/20 00:22:39 okan Exp $
  */
 
 #include "headers.h"
@@ -304,7 +304,7 @@ group_menu(XButtonEvent *e)
 		if (TAILQ_EMPTY(&gc->clients))
 			continue;
 
-		XCALLOC(mi, struct menu);
+		mi = xcalloc(1, sizeof(*mi));
 		if (gc->hidden)
 			snprintf(mi->text, sizeof(mi->text), "%d: [%s]",
 			    gc->shortcut, shortcut_to_name[gc->shortcut]);

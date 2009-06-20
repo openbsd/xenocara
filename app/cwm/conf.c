@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.64 2009/06/20 00:19:56 okan Exp $
+ * $Id: conf.c,v 1.65 2009/06/20 00:22:39 okan Exp $
  */
 
 #include "headers.h"
@@ -41,8 +41,7 @@ conf_cmd_add(struct conf *c, char *image, char *label, int flags)
 	else if (strcmp(label, "lock") == 0)
 		strlcpy(c->lockpath, image, sizeof(c->lockpath));
 	else {
-		struct cmd *cmd;
-		XMALLOC(cmd, struct cmd);
+		struct cmd *cmd = xmalloc(sizeof(*cmd));
 		cmd->flags = flags;
 		strlcpy(cmd->image, image, sizeof(cmd->image));
 		strlcpy(cmd->label, label, sizeof(cmd->label));
@@ -429,7 +428,7 @@ conf_bindname(struct conf *c, char *name, char *binding)
 	char			*substring;
 	int			 iter;
 
-	XCALLOC(current_binding, struct keybinding);
+	current_binding = xcalloc(1, sizeof(*current_binding));
 
 	if (strchr(name, 'C') != NULL &&
 	    strchr(name, 'C') < strchr(name, '-'))
@@ -541,7 +540,7 @@ conf_mousebind(struct conf *c, char *name, char *binding)
 	const char		*errstr;
 	int			 iter;
 
-	XCALLOC(current_binding, struct mousebinding);
+	current_binding = xcalloc(1, sizeof(*current_binding));
 
 	if (strchr(name, 'C') != NULL &&
 	    strchr(name, 'C') < strchr(name, '-'))

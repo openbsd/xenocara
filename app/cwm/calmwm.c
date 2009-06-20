@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.39 2009/05/18 00:23:35 okan Exp $
+ * $Id: calmwm.c,v 1.40 2009/06/20 00:22:39 okan Exp $
  */
 
 #include "headers.h"
@@ -111,7 +111,7 @@ x_setup(void)
 	int			 i;
 
 	for (i = 0; i < ScreenCount(X_Dpy); i++) {
-		XCALLOC(sc, struct screen_ctx);
+		sc = xcalloc(1, sizeof(*sc));
 		x_setupscreen(sc, i);
 		TAILQ_INSERT_TAIL(&Screenq, sc, entry);
 	}
