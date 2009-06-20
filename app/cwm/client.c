@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.52 2009/06/17 12:45:01 okan Exp $
+ * $Id: client.c,v 1.53 2009/06/20 00:19:56 okan Exp $
  */
 
 #include "headers.h"
@@ -166,7 +166,6 @@ client_delete(struct client_ctx *cc)
 	}
 
 	client_freehints(cc);
-
 	xfree(cc);
 
 	return (0);
@@ -439,7 +438,6 @@ client_update(struct client_ctx *cc)
 void
 client_send_delete(struct client_ctx *cc)
 {
-
 	if (cc->xproto & CLIENT_PROTO_DELETE)
 		xu_sendmsg(cc, WM_PROTOCOLS, WM_DELETE_WINDOW);
 	else

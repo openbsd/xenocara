@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.63 2009/05/30 00:30:27 okan Exp $
+ * $Id: conf.c,v 1.64 2009/06/20 00:19:56 okan Exp $
  */
 
 #include "headers.h"
@@ -68,7 +68,6 @@ conf_color(struct conf *c)
 	int			 i;
 
 	sc = screen_current();
-
 
 	for (i = 0; i < CWM_COLOR_MAX; i++) {
 		xu_freecolor(sc, sc->color[i].pixel);
@@ -408,7 +407,6 @@ conf_grab(struct conf *c, struct keybinding *kb)
 
 	TAILQ_FOREACH(sc, &Screenq, entry)
 		xu_key_grab(sc->rootwin, kb->modmask, kb->keysym);
-
 }
 
 /*
