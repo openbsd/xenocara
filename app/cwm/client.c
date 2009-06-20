@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.54 2009/06/20 00:22:39 okan Exp $
+ * $Id: client.c,v 1.55 2009/06/20 00:55:41 okan Exp $
  */
 
 #include "headers.h"
@@ -113,11 +113,7 @@ client_new(Window win, struct screen_ctx *sc, int mapped)
 	/* Notify client of its configuration. */
 	xev_reconfig(cc);
 
-	if (state == IconicState)
-		client_hide(cc);
-	else
-		client_unhide(cc);
-
+	(state == IconicState) ? client_hide(cc) : client_unhide(cc);
 	xu_setstate(cc, cc->state);
 
 	XSync(X_Dpy, False);
@@ -345,11 +341,7 @@ client_ptrwarp(struct client_ctx *cc)
 		y = cc->geom.height / 2;
 	}
 
-	if (cc->state == IconicState)
-		client_unhide(cc);
-	else
-		client_raise(cc);
-
+	(cc->state == IconicState) ? client_unhide(cc) : client_raise(cc);
 	xu_ptr_setpos(cc->win, x, y);
 }
 

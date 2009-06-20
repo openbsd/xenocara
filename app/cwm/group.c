@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.31 2009/06/20 00:22:39 okan Exp $
+ * $Id: group.c,v 1.32 2009/06/20 00:55:42 okan Exp $
  */
 
 #include "headers.h"
@@ -325,10 +325,7 @@ group_menu(XButtonEvent *e)
 
 	gc = (struct group_ctx *)mi->ctx;
 
-	if (gc->hidden)
-		group_show(gc);
-	else
-		group_hide(gc);
+	(gc->hidden) ? group_show(gc) : group_hide(gc);
 
 cleanup:
 	while ((mi = TAILQ_FIRST(&menuq)) != NULL) {
@@ -349,10 +346,7 @@ group_alltoggle(void)
 			group_hide(&Groups[i]);
 	}
 
-	if (Grouphideall)
-		Grouphideall = 0;
-	else
-		Grouphideall = 1;
+	Grouphideall = (Grouphideall) ? 0 : 1;
 }
 
 void

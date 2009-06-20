@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: mousefunc.c,v 1.11 2009/06/20 00:22:39 okan Exp $
+ * $Id: mousefunc.c,v 1.12 2009/06/20 00:55:42 okan Exp $
  */
 
 #include "headers.h"
@@ -226,11 +226,7 @@ mousefunc_menu_unhide(struct client_ctx *cc, void *arg)
 	TAILQ_INIT(&menuq);
 	TAILQ_FOREACH(cc, &Clientq, entry)
 		if (cc->flags & CLIENT_HIDDEN) {
-			if (cc->label != NULL)
-				wname = cc->label;
-			else
-				wname = cc->name;
-
+			wname = (cc->label) ? cc->label : cc->name;
 			if (wname == NULL)
 				continue;
 
