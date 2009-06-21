@@ -1400,6 +1400,42 @@ drm_intel_fake_bo_exec(drm_intel_bo *bo, int used,
    return 0;
 }
 
+static int
+drm_intel_fake_pin(drm_intel_bo *bo, uint32_t alignment)
+{
+   drm_intel_bufmgr_fake *bufmgr_fake = (drm_intel_bufmgr_fake *)bo->bufmgr;
+   drm_intel_bo_fake *bo_fake = (drm_intel_bo_fake *)bo;
+
+   assert(bo_fake->is_static == 0);
+
+   bo_fake->alignment = alignment;
+   if (drm_intel_fake_bo_validate(bo) == -1)
+      return ENOMEM;
+
+   bo_fake->is_static = 1;
+   bo->virtual = bo_fake->block->virtual;
+   /* we should be on the on_hardware list, take us off for now */
+   DRMLISTDEL(bo_fake->block);
+
+   return 0;
+}
+
+static int
+drm_intel_fake_unpin(drm_intel_bo *bo)
+{
+   drm_intel_bufmgr_fake *bufmgr_fake = (drm_intel_bufmgr_fake *)bo->bufmgr;
+   drm_intel_bo_fake *bo_fake = (drm_intel_bo_fake *)bo;
+
+   assert(bo_fake->is_static);
+
+   bo_fake->is_static = 0;
+   bo->virtual = NULL;
+   DRMLISTDEL(bo_fake->block);
+   DRMLISTADDTAIL(bo_fake->block, &bufmgr_fake->on_hardware);
+
+   return 0;
+}
+
 /**
  * Return an error if the list of BOs will exceed the aperture size.
  *
@@ -1517,6 +1553,8 @@ drm_intel_bufmgr_fake_init(int fd,
    bufmgr_fake->bufmgr.bo_unmap = drm_intel_fake_bo_unmap;
    bufmgr_fake->bufmgr.bo_wait_rendering = drm_intel_fake_bo_wait_rendering;
    bufmgr_fake->bufmgr.bo_emit_reloc = drm_intel_fake_emit_reloc;
+   bufmgr_fake->bufmgr.bo_pin = drm_intel_fake_pin;
+   bufmgr_fake->bufmgr.bo_unpin = drm_intel_fake_unpin;
    bufmgr_fake->bufmgr.destroy = drm_intel_fake_destroy;
    bufmgr_fake->bufmgr.bo_exec = drm_intel_fake_bo_exec;
    bufmgr_fake->bufmgr.check_aperture_space = drm_intel_fake_check_aperture_space;
