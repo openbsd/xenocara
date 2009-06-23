@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.40 2009/06/20 00:22:39 okan Exp $
+ * $Id: calmwm.c,v 1.41 2009/06/23 21:52:38 okan Exp $
  */
 
 #include "headers.h"
@@ -69,13 +69,15 @@ main(int argc, char **argv)
 	if (signal(SIGCHLD, sigchld_cb) == SIG_ERR)
 		err(1, "signal");
 
-	group_init();
-
 	Starting = 1;
 	dpy_init(display_name);
+
+	screen_init();
+	group_init();
+	client_init();
+
 	bzero(&Conf, sizeof(Conf));
 	conf_setup(&Conf, conf_file);
-	client_setup();
 	xu_getatoms();
 	x_setup();
 	Starting = 0;
@@ -99,8 +101,6 @@ dpy_init(const char *dpyname)
 	XSetErrorHandler(x_errorhandler);
 
 	HasRandr = XRRQueryExtension(X_Dpy, &Randr_ev, &i);
-
-	TAILQ_INIT(&Screenq);
 }
 
 void
