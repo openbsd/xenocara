@@ -1,0 +1,14 @@
+/*
+ * Convert CSC fix point values to floats
+ */
+
+real fixval (int fix)
+{
+    int exp = fix >> 9;
+    int mant = fix & ((1 << 9) - 1);
+    real ret;
+    if (exp == 0x7)
+	return 1.0;
+    ret = (2 ** -exp) * mant / (1 << 9);
+    return ret;
+}

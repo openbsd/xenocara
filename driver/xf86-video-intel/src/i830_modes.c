@@ -31,7 +31,6 @@
  * Authors: David Dawes <dawes@xfree86.org>
  *	    Eric Anholt <eric.anholt@intel.com>
  *
- * $XFree86: xc/programs/Xserver/hw/xfree86/os-support/vbe/vbeModes.c,v 1.6 2002/11/02 01:38:25 dawes Exp $
  */
 /*
  * Modified by Alan Hourihane <alanh@tungstengraphics.com>

@@ -446,12 +446,12 @@ do {									\
 #define FS_END()							\
 do {									\
     int _i, _pad = (_cur_shader_commands & 0x1) ? 0 : 1;		\
-    BEGIN_LP_RING(_cur_shader_commands * 3 + 1 + _pad);			\
-    OUT_RING(_3DSTATE_PIXEL_SHADER_PROGRAM |				\
+    BEGIN_BATCH(_cur_shader_commands * 3 + 1 + _pad);			\
+    OUT_BATCH(_3DSTATE_PIXEL_SHADER_PROGRAM |				\
 	     (_cur_shader_commands * 3 - 1));				\
     for (_i = 0; _i < _cur_shader_commands * 3; _i++)			\
-	OUT_RING(_shader_buf[_i]);					\
+	OUT_BATCH(_shader_buf[_i]);					\
     if (_pad != 0)							\
-	OUT_RING(MI_NOOP);						\
-    ADVANCE_LP_RING();							\
+	OUT_BATCH(MI_NOOP);						\
+    ADVANCE_BATCH();							\
 } while (0);

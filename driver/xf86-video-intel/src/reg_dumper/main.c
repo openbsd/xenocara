@@ -34,13 +34,6 @@
 
 #include "reg_dumper.h"
 
-#ifdef __OpenBSD__
-#define DEV_APERTURE "/dev/mem"
-int devMemFd = -1;
-#include <errno.h>
-#include <fcntl.h>
-#endif
-
 int main(int argc, char **argv)
 {
     struct pci_device *dev;
@@ -54,15 +47,6 @@ int main(int argc, char **argv)
 	fprintf(stderr, "Couldn't initialize PCI system: %s\n", strerror(err));
 	exit(1);
     }
-
-#ifdef __OpenBSD__
-    devMemFd = open(DEV_APERTURE, O_RDWR);
-    if (devMemFd < 0) {
-	    fprintf(stderr, "Could not open aperture driver: %s\n", strerror(errno));
-	    exit(1);
-    }
-    pci_system_init_dev_mem(devMemFd);
-#endif
 
     /* Grab the graphics card */
     dev = pci_device_find_by_slot(0, 0, 2, 0);

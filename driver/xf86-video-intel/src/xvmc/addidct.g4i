@@ -1,0 +1,152 @@
+/*
+ * Copyright © 2008 Intel Corporation
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ * Author:
+ *    Zou Nan hai <nanhai.zou@intel.com>
+ *    Zhang Hua jun <huajun.zhang@intel.com>
+ *    Xing Dong sheng <dongsheng.xing@intel.com>
+ *
+ */
+mov (8) g1.0<1>UD g76.0<8,8,1>UD{align1};
+//mov (8) g2.0<1>UD g77.0<8,8,1>UD{align1};
+
+mov (16) g44.1<2>UB 0W {align1};
+mov (16) g45.1<2>UB 0W {align1};
+mov (16) g46.1<2>UB 0W {align1};
+mov (16) g47.1<2>UB 0W {align1};
+mov (16) g48.1<2>UB 0W {align1};
+mov (16) g49.1<2>UB 0W {align1};
+mov (16) g50.1<2>UB 0W {align1};
+mov (16) g51.1<2>UB 0W {align1};
+
+and.nz (1) null g1.30<1,1,1>UB 1UW {align1};       //dct_type
+(f0) jmpi field_dct;
+//jmpi field_dct;
+add (16) g28.0<1>W g3.0<16,16,1>W g28.0<16,16,2>UB {align1};
+add (16) g29.0<1>W g4.0<16,16,1>W g29.0<16,16,2>UB {align1};
+add (16) g30.0<1>W g5.0<16,16,1>W g30.0<16,16,2>UB {align1};
+add (16) g31.0<1>W g6.0<16,16,1>W g31.0<16,16,2>UB {align1};
+add (16) g32.0<1>W g7.0<16,16,1>W g32.0<16,16,2>UB {align1};
+add (16) g33.0<1>W g8.0<16,16,1>W g33.0<16,16,2>UB {align1};
+add (16) g34.0<1>W g9.0<16,16,1>W g34.0<16,16,2>UB {align1};
+add (16) g35.0<1>W g10.0<16,16,1>W g35.0<16,16,2>UB {align1};
+add (16) g36.0<1>W g11.0<16,16,1>W g36.0<16,16,2>UB {align1};
+add (16) g37.0<1>W g12.0<16,16,1>W g37.0<16,16,2>UB {align1};
+add (16) g38.0<1>W g13.0<16,16,1>W g38.0<16,16,2>UB {align1};
+add (16) g39.0<1>W g14.0<16,16,1>W g39.0<16,16,2>UB {align1};
+add (16) g40.0<1>W g15.0<16,16,1>W g40.0<16,16,2>UB {align1};
+add (16) g41.0<1>W g16.0<16,16,1>W g41.0<16,16,2>UB {align1};
+add (16) g42.0<1>W g17.0<16,16,1>W g42.0<16,16,2>UB {align1};
+add (16) g43.0<1>W g18.0<16,16,1>W g43.0<16,16,2>UB {align1};
+jmpi write_back;
+
+field_dct:
+add (16) g28.0<1>W g3.0<16,16,1>W g28.0<16,16,2>UB {align1};
+add (16) g29.0<1>W g11.0<16,16,1>W g29.0<16,16,2>UB {align1};
+add (16) g30.0<1>W g4.0<16,16,1>W g30.0<16,16,2>UB {align1};
+add (16) g31.0<1>W g12.0<16,16,1>W g31.0<16,16,2>UB {align1};
+add (16) g32.0<1>W g5.0<16,16,1>W g32.0<16,16,2>UB {align1};
+add (16) g33.0<1>W g13.0<16,16,1>W g33.0<16,16,2>UB {align1};
+add (16) g34.0<1>W g6.0<16,16,1>W g34.0<16,16,2>UB {align1};
+add (16) g35.0<1>W g14.0<16,16,1>W g35.0<16,16,2>UB {align1};
+add (16) g36.0<1>W g7.0<16,16,1>W g36.0<16,16,2>UB {align1};
+add (16) g37.0<1>W g15.0<16,16,1>W g37.0<16,16,2>UB {align1};
+add (16) g38.0<1>W g8.0<16,16,1>W g38.0<16,16,2>UB {align1};
+add (16) g39.0<1>W g16.0<16,16,1>W g39.0<16,16,2>UB {align1};
+add (16) g40.0<1>W g9.0<16,16,1>W g40.0<16,16,2>UB {align1};
+add (16) g41.0<1>W g17.0<16,16,1>W g41.0<16,16,2>UB {align1};
+add (16) g42.0<1>W g10.0<16,16,1>W g42.0<16,16,2>UB {align1};
+add (16) g43.0<1>W g18.0<16,16,1>W g43.0<16,16,2>UB {align1};
+
+write_back:
+mov (1) g1.8<1>UD 0x00F000FUD {align1};
+mov.sat (16) g28.0<2>UB g28.0<16,16,1>W {align1};
+mov.sat (16) g29.0<2>UB g29.0<16,16,1>W {align1};
+mov.sat (16) g30.0<2>UB g30.0<16,16,1>W {align1};
+mov.sat (16) g31.0<2>UB g31.0<16,16,1>W {align1};
+mov.sat (16) g32.0<2>UB g32.0<16,16,1>W {align1};
+mov.sat (16) g33.0<2>UB g33.0<16,16,1>W {align1};
+mov.sat (16) g34.0<2>UB g34.0<16,16,1>W {align1};
+mov.sat (16) g35.0<2>UB g35.0<16,16,1>W {align1};
+mov.sat (16) g36.0<2>UB g36.0<16,16,1>W {align1};
+mov.sat (16) g37.0<2>UB g37.0<16,16,1>W {align1};
+mov.sat (16) g38.0<2>UB g38.0<16,16,1>W {align1};
+mov.sat (16) g39.0<2>UB g39.0<16,16,1>W {align1};
+mov.sat (16) g40.0<2>UB g40.0<16,16,1>W {align1};
+mov.sat (16) g41.0<2>UB g41.0<16,16,1>W {align1};
+mov.sat (16) g42.0<2>UB g42.0<16,16,1>W {align1};
+mov.sat (16) g43.0<2>UB g43.0<16,16,1>W {align1};
+
+mov (16) m1.0<1>UB g28.0<16,16,2>UB {align1};
+mov (16) m1.16<1>UB g29.0<16,16,2>UB {align1};
+mov (16) m2.0<1>UB g30.0<16,16,2>UB {align1};
+mov (16) m2.16<1>UB g31.0<16,16,2>UB {align1};
+mov (16) m3.0<1>UB g32.0<16,16,2>UB {align1};
+mov (16) m3.16<1>UB g33.0<16,16,2>UB {align1};
+mov (16) m4.0<1>UB g34.0<16,16,2>UB {align1};
+mov (16) m4.16<1>UB g35.0<16,16,2>UB {align1};
+mov (16) m5.0<1>UB g36.0<16,16,2>UB {align1};
+mov (16) m5.16<1>UB g37.0<16,16,2>UB {align1};
+mov (16) m6.0<1>UB g38.0<16,16,2>UB {align1};
+mov (16) m6.16<1>UB g39.0<16,16,2>UB {align1};
+mov (16) m7.0<1>UB g40.0<16,16,2>UB {align1};
+mov (16) m7.16<1>UB g41.0<16,16,2>UB {align1};
+mov (16) m8.0<1>UB g42.0<16,16,2>UB {align1};
+mov (16) m8.16<1>UB g43.0<16,16,2>UB {align1};
+send (16) 0 acc0<1>UW g1<8,8,1>UW write(0,0,2,0) mlen 9 rlen 0 {align1};
+
+//U
+mov (1) g1.8<1>UD 0x0070007UD  { align1 };
+shr (2) g1.0<1>UD g1.0<2,2,1>UD 1D {align1};
+add (16) g44.0<1>UW g19.0<16,16,1>W g44.0<16,16,1>UW {align1};
+add (16) g45.0<1>UW g20.0<16,16,1>W g45.0<16,16,1>UW {align1};
+add (16) g46.0<1>UW g21.0<16,16,1>W g46.0<16,16,1>UW {align1};
+add (16) g47.0<1>UW g22.0<16,16,1>W g47.0<16,16,1>UW {align1};
+mov.sat (16) g44.0<2>UB g44.0<16,16,1>UW {align1};
+mov.sat (16) g45.0<2>UB g45.0<16,16,1>UW {align1};
+mov.sat (16) g46.0<2>UB g46.0<16,16,1>UW {align1};
+mov.sat (16) g47.0<2>UB g47.0<16,16,1>UW {align1};
+
+mov (16) m1.0<1>UB g44.0<16,16,2>UB {align1};
+mov (16) m1.16<1>UB g45.0<16,16,2>UB {align1};
+mov (16) m2.0<1>UB g46.0<16,16,2>UB {align1};
+mov (16) m2.16<1>UB g47.0<16,16,2>UB {align1};
+send (16) 0 acc0<1>UW g1<8,8,1>UW write(1, 0, 2, 0) mlen 3 rlen 0 { align1 };
+
+//V
+add (16) g48.0<1>UW g23.0<16,16,1>W g48.0<16,16,1>UW {align1};
+add (16) g49.0<1>UW g24.0<16,16,1>W g49.0<16,16,1>UW {align1};
+add (16) g50.0<1>UW g25.0<16,16,1>W g50.0<16,16,1>UW {align1};
+add (16) g51.0<1>UW g26.0<16,16,1>W g51.0<16,16,1>UW {align1};
+mov.sat (16) g48.0<2>UB g48.0<16,16,1>UW {align1};
+mov.sat (16) g49.0<2>UB g49.0<16,16,1>UW {align1};
+mov.sat (16) g50.0<2>UB g50.0<16,16,1>UW {align1};
+mov.sat (16) g51.0<2>UB g51.0<16,16,1>UW {align1};
+
+mov (16) m1.0<1>UB g48.0<16,16,2>UB {align1};
+mov (16) m1.16<1>UB g49.0<16,16,2>UB {align1};
+mov (16) m2.0<1>UB g50.0<16,16,2>UB {align1};
+mov (16) m2.16<1>UB g51.0<16,16,2>UB {align1};
+send (16) 0 acc0<1>UW g1<8,8,1>UW write(2, 0, 2, 0) mlen 3 rlen 0 { align1 };
+
+send (16) 0 acc0<1>UW g0<8,8,1>UW
+        thread_spawner(0, 0, 0) mlen 1 rlen 0 { align1 EOT};

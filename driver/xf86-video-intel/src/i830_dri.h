@@ -59,5 +59,4 @@ typedef struct {
    int dummy;
 } I830DRIContextRec, *I830DRIContextPtr;
 
-
 #endif

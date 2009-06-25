@@ -840,8 +840,24 @@ struct brw_wm_unit_state
    float global_depth_offset_scale;   
 };
 
-struct brw_sampler_default_color {
+/* The hardware supports two different modes for border color. The
+ * default (OpenGL) mode uses floating-point color channels, while the
+ * legacy mode uses 4 bytes.
+ *
+ * More significantly, the legacy mode respects the components of the
+ * border color for channels not present in the source, (whereas the
+ * default mode will ignore the border color's alpha channel and use
+ * alpha==1 for an RGB source, for example).
+ *
+ * The legacy mode matches the semantics specified by the Render
+ * extension.
+ */
+struct brw_sampler_default_border_color {
    float color[4];
+};
+
+struct brw_sampler_legacy_border_color {
+   uint8_t color[4];
 };
 
 struct brw_sampler_state
@@ -857,7 +873,7 @@ struct brw_sampler_state
       unsigned int base_level:5; 
       unsigned int pad:1;
       unsigned int lod_preclamp:1; 
-      unsigned int default_color_mode:1; 
+      unsigned int border_color_mode:1; 
       unsigned int pad0:1;
       unsigned int disable:1; 
    } ss0;
@@ -876,7 +892,7 @@ struct brw_sampler_state
    struct
    {
       unsigned int pad:5;
-      unsigned int default_color_pointer:27; 
+      unsigned int border_color_pointer:27; 
    } ss2;
    
    struct

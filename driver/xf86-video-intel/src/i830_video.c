@@ -81,10 +81,6 @@
 #include "i915_hwmc.h"
 #endif
 
-#ifndef USE_USLEEP_FOR_VIDEO
-#define USE_USLEEP_FOR_VIDEO 0
-#endif
-
 #define OFF_DELAY 	250		/* milliseconds */
 #define FREE_DELAY 	15000
 
@@ -117,6 +113,7 @@ static int I830QueryImageAttributesTextured(ScrnInfoPtr, int, unsigned short *,
 
 static Atom xvBrightness, xvContrast, xvSaturation, xvColorKey, xvPipe, xvDoubleBuffer;
 static Atom xvGamma0, xvGamma1, xvGamma2, xvGamma3, xvGamma4, xvGamma5;
+static Atom xvSyncToVblank;
 
 /* Limits for the overlay/textured video source sizes.  The documented hardware
  * limits are 2048x2048 or better for overlay and both of our textured video
@@ -247,10 +244,11 @@ static XF86AttributeRec Attributes[NUM_ATTRIBUTES] = {
     {XvSettable | XvGettable, 0, 1, "XV_DOUBLE_BUFFER"}
 };
 
-#define NUM_TEXTURED_ATTRIBUTES 2
-static XF86AttributeRec TexturedAttributes[NUM_ATTRIBUTES] = {
+#define NUM_TEXTURED_ATTRIBUTES 3
+static XF86AttributeRec TexturedAttributes[NUM_TEXTURED_ATTRIBUTES] = {
     {XvSettable | XvGettable, -128, 127, "XV_BRIGHTNESS"},
     {XvSettable | XvGettable, 0, 255, "XV_CONTRAST"},
+    {XvSettable | XvGettable, -1, 1, "XV_SYNC_TO_VBLANK"},
 };
 
 #define GAMMA_ATTRIBUTES 6
@@ -446,7 +444,7 @@ i830_overlay_on(ScrnInfoPtr pScrn)
     I830PortPrivPtr	pPriv = pI830->adaptor->pPortPrivates[0].ptr;
     Bool		deactivate = FALSE;
     
-    if (*pI830->overlayOn)
+    if (pI830->overlayOn)
 	return;
 
     /*
@@ -480,7 +478,7 @@ i830_overlay_on(ScrnInfoPtr pScrn)
 	i830_pipe_a_require_deactivate (pScrn);
 
     OVERLAY_DEBUG("overlay_on\n");
-    *pI830->overlayOn = TRUE;
+    pI830->overlayOn = TRUE;
 
     overlay->OCMD |= OVERLAY_ENABLE;
 }
@@ -492,7 +490,7 @@ i830_overlay_continue(ScrnInfoPtr pScrn, Bool update_filter)
     uint32_t		flip_addr;
     I830OverlayRegPtr	overlay = I830OVERLAYREG(pI830);
 
-    if (!*pI830->overlayOn)
+    if (!pI830->overlayOn)
 	return;
 
     if (OVERLAY_NOPHYSICAL(pI830))
@@ -518,7 +516,7 @@ i830_overlay_off(ScrnInfoPtr pScrn)
     I830Ptr pI830 = I830PTR(pScrn);
     I830OverlayRegPtr	overlay = I830OVERLAYREG(pI830);
 
-    if (!*pI830->overlayOn)
+    if (!pI830->overlayOn)
 	return;
 
     /*
@@ -556,7 +554,7 @@ i830_overlay_off(ScrnInfoPtr pScrn)
 	ADVANCE_BATCH();
 	i830WaitSync(pScrn);
     }
-    *pI830->overlayOn = FALSE;
+    pI830->overlayOn = FALSE;
     OVERLAY_DEBUG("overlay_off\n");
 }
 
@@ -611,7 +609,6 @@ I830InitVideo(ScreenPtr pScreen)
     {
 	texturedAdaptor = I830SetupImageVideoTextured(pScreen);
 	if (texturedAdaptor != NULL) {
-	    adaptors[num_adaptors++] = texturedAdaptor;
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Set up textured video\n");
 	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -621,11 +618,10 @@ I830InitVideo(ScreenPtr pScreen)
 
     /* Set up overlay video if we can do it at this depth. */
     if (!OVERLAY_NOEXIST(pI830) && pScrn->bitsPerPixel != 8 &&
-	    pI830->overlay_regs != NULL)
+	!pI830->use_drm_mode && pI830->overlay_regs != NULL)
     {
 	overlayAdaptor = I830SetupImageVideoOverlay(pScreen);
 	if (overlayAdaptor != NULL) {
-	    adaptors[num_adaptors++] = overlayAdaptor;
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Set up overlay video\n");
 	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -633,6 +629,16 @@ I830InitVideo(ScreenPtr pScreen)
 	}
 	I830InitOffscreenImages(pScreen);
     }
+
+    if (overlayAdaptor && pI830->XvPreferOverlay)
+       adaptors[num_adaptors++] = overlayAdaptor;
+
+    if (texturedAdaptor)
+       adaptors[num_adaptors++] = texturedAdaptor;
+
+    if (overlayAdaptor && !pI830->XvPreferOverlay)
+       adaptors[num_adaptors++] = overlayAdaptor;
+
 #ifdef INTEL_XVMC
     if (intel_xvmc_probe(pScrn)) {
 	if (texturedAdaptor)
@@ -640,8 +646,13 @@ I830InitVideo(ScreenPtr pScreen)
     }
 #endif
 
-    if (num_adaptors)
+    if (num_adaptors) {
 	xf86XVScreenInit(pScreen, adaptors, num_adaptors);
+    } else {
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		   "Disabling Xv because no adaptors could be initialized.\n");
+	pI830->XvEnabled = FALSE;
+    }
 
 #ifdef INTEL_XVMC
     if (xvmc_status)
@@ -1008,6 +1019,7 @@ I830SetupImageVideoTextured(ScreenPtr pScreen)
 	pPriv->doubleBuffer = 0;
 
 	pPriv->rotation = RR_Rotate_0;
+	pPriv->SyncToVblank = 1;
 
 	/* gotta uninit this someplace, XXX: shouldn't be necessary for textured */
 	REGION_NULL(pScreen, &pPriv->clip);
@@ -1015,42 +1027,15 @@ I830SetupImageVideoTextured(ScreenPtr pScreen)
 	adapt->pPortPrivates[i].ptr = (pointer) (pPriv);
     }
 
+    xvSyncToVblank = MAKE_ATOM("XV_SYNC_TO_VBLANK");
+
     return adapt;
-}
-
-static Bool
-RegionsEqual(RegionPtr A, RegionPtr B)
-{
-    int *dataA, *dataB;
-    int num;
-
-    num = REGION_NUM_RECTS(A);
-    if (num != REGION_NUM_RECTS(B))
-	return FALSE;
-
-    if ((A->extents.x1 != B->extents.x1) ||
-	(A->extents.x2 != B->extents.x2) ||
-	(A->extents.y1 != B->extents.y1) || (A->extents.y2 != B->extents.y2))
-	return FALSE;
-
-    dataA = (int *)REGION_RECTS(A);
-    dataB = (int *)REGION_RECTS(B);
-
-    while (num--) {
-	if ((dataA[0] != dataB[0]) || (dataA[1] != dataB[1]))
-	    return FALSE;
-	dataA += 2;
-	dataB += 2;
-    }
-
-    return TRUE;
 }
 
 static void
 I830StopVideo(ScrnInfoPtr pScrn, pointer data, Bool shutdown)
 {
     I830PortPrivPtr pPriv = (I830PortPrivPtr) data;
-    I830Ptr pI830 = I830PTR(pScrn);
 
     if (pPriv->textured)
 	return;
@@ -1062,15 +1047,15 @@ I830StopVideo(ScrnInfoPtr pScrn, pointer data, Bool shutdown)
     if (shutdown) {
 	if (pPriv->videoStatus & CLIENT_VIDEO_ON) {
 	    i830_overlay_off(pScrn);
-	    if (pI830->entityPrivate)
-		pI830->entityPrivate->XvInUse = -1;
 	}
-	/* Sync before freeing the buffer, because the pages will be unbound.
-	 */
-	I830Sync(pScrn);
-	i830_free_memory(pScrn, pPriv->buf);
-	pPriv->buf = NULL;
-	pPriv->videoStatus = 0;
+
+	if (pPriv->buf) {
+	    if (!pPriv->textured)
+		drm_intel_bo_unpin(pPriv->buf);
+	    drm_intel_bo_unreference(pPriv->buf);
+	    pPriv->buf = NULL;
+	    pPriv->videoStatus = 0;
+	}
     } else {
 	if (pPriv->videoStatus & CLIENT_VIDEO_ON) {
 	    pPriv->videoStatus |= OFF_TIMER;
@@ -1096,6 +1081,12 @@ I830SetPortAttributeTextured(ScrnInfoPtr pScrn,
 	    return BadValue;
 	pPriv->contrast = value;
 	return Success;
+    } else if (attribute == xvSyncToVblank) {
+        if ((value < -1) || (value > 1))
+            return BadValue;
+        
+        pPriv->SyncToVblank = value;
+        return Success;
     } else {
 	return BadMatch;
     }
@@ -1174,7 +1165,7 @@ I830SetPortAttribute(ScrnInfoPtr pScrn,
 	if ((value < 0) || (value > 1))
 	    return BadValue;
 	/* Do not allow buffer change while playing video */
-	if(!*pI830->overlayOn)
+	if(!pI830->overlayOn)
 	    pPriv->doubleBuffer = value;
     } else
 	return BadMatch;
@@ -1231,7 +1222,9 @@ I830GetPortAttribute(ScrnInfoPtr pScrn,
 	*value = pPriv->colorKey;
     } else if (attribute == xvDoubleBuffer) {
 	*value = pPriv->doubleBuffer;
-    } else 
+    } else if (attribute == xvSyncToVblank) {
+        *value = pPriv->SyncToVblank;
+    } else
 	return BadMatch;
 
     return Success;
@@ -1260,7 +1253,7 @@ I830CopyPackedData(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv,
 		   int dstPitch, int top, int left, int h, int w)
 {
     I830Ptr pI830 = I830PTR(pScrn);
-    unsigned char *src, *dst;
+    unsigned char *src, *dst, *dst_base;
     int i,j;
     unsigned char *s;
 
@@ -1272,10 +1265,18 @@ I830CopyPackedData(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv,
 
     src = buf + (top * srcPitch) + (left << 1);
 
+    if (pPriv->textured) {
+	drm_intel_bo_map(pPriv->buf, TRUE);
+	dst_base = pPriv->buf->virtual;
+    } else {
+	drm_intel_gem_bo_start_gtt_access(pPriv->buf, TRUE);
+	dst_base = pI830->FbBase;
+    }
+
     if (pPriv->currentBuf == 0)
-	dst = pI830->FbBase + pPriv->YBuf0offset;
+	dst = dst_base + pPriv->YBuf0offset;
     else
-	dst = pI830->FbBase + pPriv->YBuf1offset;
+	dst = dst_base + pPriv->YBuf1offset;
 
     switch (pPriv->rotation) {
     case RR_Rotate_0:
@@ -1348,6 +1349,9 @@ I830CopyPackedData(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv,
 	}
 	break;
     }
+
+    if (pPriv->textured)
+	drm_intel_bo_unmap(pPriv->buf);
 }
 
 static void
@@ -1358,7 +1362,7 @@ I830CopyPlanarData(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv,
 {
     I830Ptr pI830 = I830PTR(pScrn);
     int i, j = 0;
-    unsigned char *src1, *src2, *src3, *dst1, *dst2, *dst3;
+    unsigned char *src1, *src2, *src3, *dst_base, *dst1, *dst2, *dst3;
     unsigned char *s;
     int dstPitch2 = dstPitch << 1;
 
@@ -1375,10 +1379,19 @@ I830CopyPlanarData(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv,
     ErrorF("src1 is %p, offset is %ld\n", src1,
 	   (unsigned long)src1 - (unsigned long)buf);
 #endif
+
+    if (pPriv->textured) {
+	drm_intel_bo_map(pPriv->buf, TRUE);
+	dst_base = pPriv->buf->virtual;
+    } else {
+	drm_intel_gem_bo_start_gtt_access(pPriv->buf, TRUE);
+	dst_base = pI830->FbBase;
+    }
+
     if (pPriv->currentBuf == 0)
-	dst1 = pI830->FbBase + pPriv->YBuf0offset;
+	dst1 = dst_base + pPriv->YBuf0offset;
     else
-	dst1 = pI830->FbBase + pPriv->YBuf1offset;
+	dst1 = dst_base + pPriv->YBuf1offset;
 
     switch (pPriv->rotation) {
     case RR_Rotate_0:
@@ -1428,14 +1441,14 @@ I830CopyPlanarData(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv,
 #endif
     if (pPriv->currentBuf == 0) {
 	if (id == FOURCC_I420)
-	    dst2 = pI830->FbBase + pPriv->UBuf0offset;
+	    dst2 = dst_base + pPriv->UBuf0offset;
 	else
-	    dst2 = pI830->FbBase + pPriv->VBuf0offset;
+	    dst2 = dst_base + pPriv->VBuf0offset;
     } else {
 	if (id == FOURCC_I420)
-	    dst2 = pI830->FbBase + pPriv->UBuf1offset;
+	    dst2 = dst_base + pPriv->UBuf1offset;
 	else
-	    dst2 = pI830->FbBase + pPriv->VBuf1offset;
+	    dst2 = dst_base + pPriv->VBuf1offset;
     }
 
     switch (pPriv->rotation) {
@@ -1487,14 +1500,14 @@ I830CopyPlanarData(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv,
 #endif
     if (pPriv->currentBuf == 0) {
 	if (id == FOURCC_I420)
-	    dst3 = pI830->FbBase + pPriv->VBuf0offset;
+	    dst3 = dst_base + pPriv->VBuf0offset;
 	else
-	    dst3 = pI830->FbBase + pPriv->UBuf0offset;
+	    dst3 = dst_base + pPriv->UBuf0offset;
     } else {
 	if (id == FOURCC_I420)
-	    dst3 = pI830->FbBase + pPriv->VBuf1offset;
+	    dst3 = dst_base + pPriv->VBuf1offset;
 	else
-	    dst3 = pI830->FbBase + pPriv->UBuf1offset;
+	    dst3 = dst_base + pPriv->UBuf1offset;
     }
 
     switch (pPriv->rotation) {
@@ -1536,6 +1549,9 @@ I830CopyPlanarData(ScrnInfoPtr pScrn, I830PortPrivPtr pPriv,
 	}
 	break;
     }
+
+    if (pPriv->textured)
+	drm_intel_bo_unmap(pPriv->buf);
 }
 
 typedef struct {
@@ -2104,6 +2120,7 @@ i830_display_video(ScrnInfoPtr pScrn, xf86CrtcPtr crtc,
 
 static Bool
 i830_clip_video_helper (ScrnInfoPtr pScrn,
+			I830PortPrivPtr pPriv,
 			xf86CrtcPtr *crtc_ret,
 			BoxPtr	    dst,
 			INT32	    *xa,
@@ -2124,14 +2141,13 @@ i830_clip_video_helper (ScrnInfoPtr pScrn,
      */
     if (crtc_ret)
     {
-	I830Ptr		pI830 = I830PTR(pScrn);
-	I830PortPrivPtr pPriv = pI830->adaptor->pPortPrivates[0].ptr;
 	BoxRec		crtc_box;
 	xf86CrtcPtr	crtc = i830_covering_crtc (pScrn, dst,
 						   pPriv->desired_crtc,
 						   &crtc_box);
 	
-	if (crtc)
+	/* For textured video, we don't actually want to clip at all. */
+	if (crtc && !pPriv->textured)
 	{
 	    REGION_INIT (pScreen, &crtc_region_local, &crtc_box, 1);
 	    crtc_region = &crtc_region_local;
@@ -2215,7 +2231,7 @@ I830PutImage(ScrnInfoPtr pScrn,
     int top, left, npixels, nlines, size;
     BoxRec dstBox;
     int pitchAlignMask;
-    int alloc_size, extraLinear;
+    int alloc_size;
     xf86CrtcPtr	crtc;
 
     if (pPriv->textured)
@@ -2229,28 +2245,16 @@ I830PutImage(ScrnInfoPtr pScrn,
 	   drw_w, drw_h, width, height);
 #endif
 
-    if (pI830->entityPrivate) {
-	if (pI830->entityPrivate->XvInUse != -1 &&
-	    pI830->entityPrivate->XvInUse != i830_crtc_pipe (pPriv->current_crtc)) {
-#ifdef PANORAMIX
-	    if (!noPanoramiXExtension) {
-		return Success; /* faked for trying to share it */
-	    } else
-#endif
-	    {
-		return BadAlloc;
-	    }
-	}
+    if (!pPriv->textured) {
+        /* If dst width and height are less than 1/8th the src size, the
+         * src/dst scale factor becomes larger than 8 and doesn't fit in
+         * the scale register. */
+        if(src_w >= (drw_w * 8))
+            drw_w = src_w/7;
 
-	pI830->entityPrivate->XvInUse = i830_crtc_pipe (pPriv->current_crtc);;
+        if(src_h >= (drw_h * 8))
+            drw_h = src_h/7;
     }
-
-    /* Clamp dst width & height to 7x of src (overlay limit) */
-    if(drw_w > (src_w * 7))
-	drw_w = src_w * 7;
-
-    if(drw_h > (src_h * 7))
-	drw_h = src_h * 7;
 
     /* Clip */
     x1 = src_x;
@@ -2264,7 +2268,8 @@ I830PutImage(ScrnInfoPtr pScrn,
     dstBox.y2 = drw_y + drw_h;
 
     if (!i830_clip_video_helper(pScrn, 
-				pPriv->textured ? NULL : &crtc,
+				pPriv,
+				&crtc,
 				&dstBox, &x1, &x2, &y1, &y2, clipBoxes,
 				width, height))
 	return Success;
@@ -2289,6 +2294,8 @@ I830PutImage(ScrnInfoPtr pScrn,
 	break;
 #ifdef INTEL_XVMC
     case FOURCC_XVMC:
+	srcPitch = (width + 0x3) & ~0x3;
+	srcPitch2 = ((width >> 1) + 0x3) & ~0x3;
 	break;
 #endif
     case FOURCC_UYVY:
@@ -2356,51 +2363,59 @@ I830PutImage(ScrnInfoPtr pScrn,
     ErrorF("srcPitch: %d, dstPitch: %d, size: %d\n", srcPitch, dstPitch, size);
 #endif
 
-    if (IS_I965G(pI830))
-	extraLinear = BRW_LINEAR_EXTRA;
-    else
-	extraLinear = 0;
-
     alloc_size = size;
     if (pPriv->doubleBuffer)
 	alloc_size *= 2;
-    alloc_size += extraLinear;
-
-    if (pPriv->buf) {
-	/* Wait for any previous acceleration to the buffer to have completed.
-	 * When we start using BOs for rendering, we won't have to worry
-	 * because mapping or freeing will take care of it automatically.
-	 */
-	I830Sync(pScrn);
-    }
 
     /* Free the current buffer if we're going to have to reallocate */
     if (pPriv->buf && pPriv->buf->size < alloc_size) {
-	i830_free_memory(pScrn, pPriv->buf);
+	if (!pPriv->textured)
+	    drm_intel_bo_unpin(pPriv->buf);
+	drm_intel_bo_unreference(pPriv->buf);
 	pPriv->buf = NULL;
     }
 
-    if (pPriv->buf == NULL) {
-	pPriv->buf = i830_allocate_memory(pScrn, "xv buffer", alloc_size, 16,
-					  0);
+#ifdef INTEL_XVMC
+    if (id == FOURCC_XVMC && 
+        pPriv->rotation == RR_Rotate_0) {
+        if (pPriv->buf) {
+            assert(pPriv->textured);
+            drm_intel_bo_unreference(pPriv->buf);
+            pPriv->buf = NULL;
+        }
+    } else {
+#endif
+        if (pPriv->buf == NULL) {
+            pPriv->buf = drm_intel_bo_alloc(pI830->bufmgr,
+                                         "xv buffer", alloc_size, 4096);
+            if (pPriv->buf == NULL)
+                return BadAlloc;
+            if (!pPriv->textured && drm_intel_bo_pin(pPriv->buf, 4096) != 0) {
+                drm_intel_bo_unreference(pPriv->buf);
+                pPriv->buf = NULL;
+                xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                           "Failed to pin xv buffer\n");
+                return BadAlloc;
+            }
+        }
+#ifdef INTEL_XVMC
     }
-
-    if (pPriv->buf == NULL)
-	return BadAlloc;
-
-    pPriv->extra_offset = pPriv->buf->offset +
-    (pPriv->doubleBuffer ? size * 2 : size);
+#endif
 
     /* fixup pointers */
 #ifdef INTEL_XVMC
     if (id == FOURCC_XVMC && IS_I915(pI830)) {
-	pPriv->YBuf0offset = (uint32_t)buf;
+	pPriv->YBuf0offset = (uint32_t)((uintptr_t)buf);
 	pPriv->VBuf0offset = pPriv->YBuf0offset + (dstPitch2 * height);
 	pPriv->UBuf0offset = pPriv->VBuf0offset + (dstPitch * height / 2);
 	destId = FOURCC_YV12;
     } else {
 #endif
-	pPriv->YBuf0offset = pPriv->buf->offset;
+	if (pPriv->textured)
+	    pPriv->YBuf0offset = 0;
+	else
+	    pPriv->YBuf0offset = pPriv->buf->offset;
+
 	if (pPriv->rotation & (RR_Rotate_90 | RR_Rotate_270)) {
 	    pPriv->UBuf0offset = pPriv->YBuf0offset + (dstPitch * 2 * width);
 	    pPriv->VBuf0offset = pPriv->UBuf0offset + (dstPitch * width / 2);
@@ -2423,7 +2438,7 @@ I830PutImage(ScrnInfoPtr pScrn,
 #endif
 
     /* Pick the idle buffer */
-    if (!pPriv->textured && *pI830->overlayOn && pPriv->doubleBuffer)
+    if (!pPriv->textured && pI830->overlayOn && pPriv->doubleBuffer)
 	pPriv->currentBuf = !((INREG(DOVSTA) & OC_BUF) >> 20);
 
     /* copy data */
@@ -2447,6 +2462,13 @@ I830PutImage(ScrnInfoPtr pScrn,
 	break;
 #ifdef INTEL_XVMC
     case FOURCC_XVMC:
+	if (pPriv->rotation != RR_Rotate_0) {
+	    top &= ~1;
+	    nlines = ((((y2 + 0xffff) >> 16) + 1) & ~1) - top;
+	    I830CopyPlanarData(pScrn, pPriv, buf, srcPitch, srcPitch2, dstPitch,
+		    height, top, left, nlines, npixels, id);
+	}
+
 	break;
 #endif
     default:
@@ -2460,13 +2482,13 @@ I830PutImage(ScrnInfoPtr pScrn,
     }
 
 #ifdef I830_USE_EXA
-    if (pPriv->textured && pI830->useEXA) {
+    if (pPriv->textured && pI830->accel == ACCEL_EXA) {
 	/* Force the pixmap into framebuffer so we can draw to it. */
 	exaMoveInPixmap(pPixmap);
     }
 #endif
 
-    if (pPriv->textured && !pI830->useEXA &&
+    if (pPriv->textured && pI830->accel <= ACCEL_XAA &&
 	    (((char *)pPixmap->devPrivate.ptr < (char *)pI830->FbBase) ||
 	     ((char *)pPixmap->devPrivate.ptr >= (char *)pI830->FbBase +
 	      pI830->FbMapSize))) {
@@ -2482,18 +2504,64 @@ I830PutImage(ScrnInfoPtr pScrn,
 			   drw_w, drw_h);
 	
 	/* update cliplist */
-	if (!RegionsEqual(&pPriv->clip, clipBoxes)) {
+	if (!REGION_EQUAL(pScrn->pScreen, &pPriv->clip, clipBoxes)) {
 	    REGION_COPY(pScrn->pScreen, &pPriv->clip, clipBoxes);
 	    i830_fill_colorkey (pScreen, pPriv->colorKey, clipBoxes);
 	}
-    } else if (IS_I965G(pI830)) {
-	I965DisplayVideoTextured(pScrn, pPriv, destId, clipBoxes, width, height,
-				 dstPitch, x1, y1, x2, y2,
-				 src_w, src_h, drw_w, drw_h, pPixmap);
     } else {
-	I915DisplayVideoTextured(pScrn, pPriv, destId, clipBoxes, width, height,
-				 dstPitch, dstPitch2, x1, y1, x2, y2,
-				 src_w, src_h, drw_w, drw_h, pPixmap);
+        Bool sync = TRUE;
+        
+        if (crtc == NULL) {
+            sync = FALSE;
+        } else if (pPriv->SyncToVblank == 0) {
+            sync = FALSE;
+        }
+
+        if (sync) {
+	    BoxPtr box;
+	    int y1, y2;
+            int event, pipe;
+	    I830CrtcPrivatePtr intel_crtc = crtc->driver_private;
+
+	    if (intel_crtc->pipe == 0) {
+		event = MI_WAIT_FOR_PIPEA_SCAN_LINE_WINDOW;
+		pipe = MI_LOAD_SCAN_LINES_DISPLAY_PIPEA;
+	    } else {
+		event = MI_WAIT_FOR_PIPEB_SCAN_LINE_WINDOW;
+		pipe = MI_LOAD_SCAN_LINES_DISPLAY_PIPEB;
+	    }
+
+	    box = REGION_EXTENTS(unused, clipBoxes);
+	    y1 = box->y1 - crtc->y;
+	    y2 = box->y2 - crtc->y;
+
+            BEGIN_BATCH(5);
+	    /* The documentation says that the LOAD_SCAN_LINES command
+	     * always comes in pairs. Don't ask me why. */
+	    OUT_BATCH(MI_LOAD_SCAN_LINES_INCL | pipe);
+	    OUT_BATCH((y1 << 16) | y2);
+	    OUT_BATCH(MI_LOAD_SCAN_LINES_INCL | pipe);
+	    OUT_BATCH((y1 << 16) | y2);
+            OUT_BATCH(MI_WAIT_FOR_EVENT | event);
+            ADVANCE_BATCH();
+        }
+
+        if (IS_I965G(pI830)) {
+#ifdef INTEL_XVMC
+            if (id == FOURCC_XVMC && pPriv->rotation == RR_Rotate_0) {
+                pPriv->YBuf0offset = buf -  pI830->FbBase;
+                pPriv->UBuf0offset = pPriv->YBuf0offset + height*width; 
+                pPriv->VBuf0offset = pPriv->UBuf0offset + height*width/4; 
+            }
+#endif
+            I965DisplayVideoTextured(pScrn, pPriv, destId, clipBoxes, width, height,
+                                     dstPitch, x1, y1, x2, y2,
+                                     src_w, src_h, drw_w, drw_h, pPixmap);
+        } else {
+            I915DisplayVideoTextured(pScrn, pPriv, destId, clipBoxes, width, height,
+                                     dstPitch, dstPitch2, x1, y1, x2, y2,
+                                     src_w, src_h, drw_w, drw_h, pPixmap);
+        }
     }
     if (pPriv->textured) {
 	DamageDamageRegion(pDraw, clipBoxes);
@@ -2636,17 +2704,12 @@ I830VideoBlockHandler(int i, pointer blockData, pointer pTimeout,
 
 		pPriv->videoStatus = FREE_TIMER;
 		pPriv->freeTime = now + FREE_DELAY;
-
-		if (pI830->entityPrivate)
-		    pI830->entityPrivate->XvInUse = -1;
 	    }
 	} else {				/* FREE_TIMER */
 	    if (pPriv->freeTime < now) {
-		/* Sync before freeing the buffer, because the pages will be
-		 * unbound.
-		 */
-		I830Sync(pScrn);
-		i830_free_memory(pScrn, pPriv->buf);
+		if (!pPriv->textured)
+		    drm_intel_bo_unpin(pPriv->buf);
+		drm_intel_bo_unreference(pPriv->buf);
 		pPriv->buf = NULL;
 		pPriv->videoStatus = 0;
 	    }
@@ -2659,7 +2722,6 @@ I830VideoBlockHandler(int i, pointer blockData, pointer pTimeout,
  ***************************************************************************/
 
 typedef struct {
-    i830_memory *buf;
     Bool isOn;
 } OffscreenPrivRec, *OffscreenPrivPtr;
 
@@ -2704,14 +2766,6 @@ I830AllocateSurface(ScrnInfoPtr pScrn,
     fbpitch = pI830->cpp * pScrn->displayWidth;
     size = pitch * h;
 
-    pPriv->buf = i830_allocate_memory(pScrn, "xv surface buffer", size, 16, 0);
-    if (pPriv->buf == NULL) {
-	xfree(surface->pitches);
-	xfree(surface->offsets);
-	xfree(pPriv);
-	return BadAlloc;
-    }
-
     surface->width = w;
     surface->height = h;
 
@@ -2720,10 +2774,8 @@ I830AllocateSurface(ScrnInfoPtr pScrn,
     surface->pScrn = pScrn;
     surface->id = id;
     surface->pitches[0] = pitch;
-    surface->offsets[0] = pPriv->buf->offset;
+    surface->offsets[0] = 0;
     surface->devPrivate.ptr = (pointer) pPriv;
-
-    memset(pI830->FbBase + surface->offsets[0], 0, size);
 
     return Success;
 }
@@ -2735,14 +2787,9 @@ I830StopSurface(XF86SurfacePtr surface)
     ScrnInfoPtr pScrn = surface->pScrn;
 
     if (pPriv->isOn) {
-	I830Ptr pI830 = I830PTR(pScrn);
-
 	OVERLAY_DEBUG("StopSurface\n");
 
 	i830_overlay_off (pScrn);
-
-	if (pI830->entityPrivate)
-	    pI830->entityPrivate->XvInUse = -1;
 
 	pPriv->isOn = FALSE;
     }
@@ -2753,14 +2800,7 @@ I830StopSurface(XF86SurfacePtr surface)
 static int
 I830FreeSurface(XF86SurfacePtr surface)
 {
-    ScrnInfoPtr pScrn = surface->pScrn;
-    OffscreenPrivPtr pPriv = (OffscreenPrivPtr) surface->devPrivate.ptr;
-
     I830StopSurface(surface);
-    /* Sync before freeing the buffer, because the pages will be unbound. */
-    I830Sync(pScrn);
-    i830_free_memory(surface->pScrn, pPriv->buf);
-    pPriv->buf = NULL;
     xfree(surface->pitches);
     xfree(surface->offsets);
     xfree(surface->devPrivate.ptr);
@@ -2798,22 +2838,6 @@ I830DisplaySurface(XF86SurfacePtr surface,
 
     OVERLAY_DEBUG("I830DisplaySurface\n");
 
-    if (pI830->entityPrivate) {
-	if (pI830->entityPrivate->XvInUse != -1 &&
-	    pI830->entityPrivate->XvInUse != i830_crtc_pipe (pI830Priv->current_crtc)) {
-#ifdef PANORAMIX
-	    if (!noPanoramiXExtension) {
-		return Success; /* faked for trying to share it */
-	    } else
-#endif
-	    {
-		return BadAlloc;
-	    }
-	}
-
-	pI830->entityPrivate->XvInUse = i830_crtc_pipe (pI830Priv->current_crtc);
-    }
-
     x1 = src_x;
     x2 = src_x + src_w;
     y1 = src_y;
@@ -2824,7 +2848,7 @@ I830DisplaySurface(XF86SurfacePtr surface,
     dstBox.y1 = drw_y;
     dstBox.y2 = drw_y + drw_h;
 
-    if (!i830_clip_video_helper (pScrn, &crtc, &dstBox,
+    if (!i830_clip_video_helper (pScrn, pI830Priv, &crtc, &dstBox,
 				 &x1, &x2, &y1, &y2, clipBoxes,
 				 surface->width, surface->height))
 	return Success;
@@ -2834,7 +2858,7 @@ I830DisplaySurface(XF86SurfacePtr surface,
     pI830Priv->YBuf1offset = pI830Priv->YBuf0offset;
 
     /* Pick the idle buffer */
-    if (!pI830Priv->textured && *pI830->overlayOn && pI830Priv->doubleBuffer) 
+    if (!pI830Priv->textured && pI830->overlayOn && pI830Priv->doubleBuffer)
 	pI830Priv->currentBuf = !((INREG(DOVSTA) & OC_BUF) >> 20);
 
     i830_display_video(pScrn, crtc, surface->id, surface->width, surface->height,

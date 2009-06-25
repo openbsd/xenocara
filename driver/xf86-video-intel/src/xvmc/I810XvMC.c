@@ -126,7 +126,7 @@ void i810_free_privContext(i810XvMCContext *pI810XvMC) {
 //        returned by XvMCListSurfaceTypes.
 // Returns: Status
 ***************************************************************************/
-Status XvMCCreateContext(Display *display, XvPortID port,
+_X_EXPORT Status XvMCCreateContext(Display *display, XvPortID port,
 			 int surface_type_id, int width, int height, int flags,
 			 XvMCContext *context) {  
   i810XvMCContext *pI810XvMC;
@@ -373,7 +373,7 @@ Status XvMCCreateContext(Display *display, XvPortID port,
 //
 // Returns: Status
 ***************************************************************************/
-Status XvMCDestroyContext(Display *display, XvMCContext *context) {
+_X_EXPORT Status XvMCDestroyContext(Display *display, XvMCContext *context) {
   i810XvMCContext *pI810XvMC;
 
   if(context == NULL) {
@@ -422,7 +422,7 @@ Status XvMCDestroyContext(Display *display, XvMCContext *context) {
 /***************************************************************************
 // Function: XvMCCreateSurface
 ***************************************************************************/
-Status XvMCCreateSurface( Display *display, XvMCContext *context,
+_X_EXPORT Status XvMCCreateSurface( Display *display, XvMCContext *context,
 			  XvMCSurface *surface) {
   i810XvMCContext *pI810XvMC;
   i810XvMCSurface *pI810Surface;
@@ -589,7 +589,7 @@ Status XvMCCreateSurface( Display *display, XvMCContext *context,
 /***************************************************************************
 // Function: XvMCDestroySurface
 ***************************************************************************/
-Status XvMCDestroySurface(Display *display, XvMCSurface *surface) {
+_X_EXPORT Status XvMCDestroySurface(Display *display, XvMCSurface *surface) {
   i810XvMCSurface *pI810Surface;
   i810XvMCContext *pI810XvMC;
 
@@ -618,7 +618,7 @@ Status XvMCDestroySurface(Display *display, XvMCSurface *surface) {
 /***************************************************************************
 // Function: XvMCCreateBlocks
 ***************************************************************************/
-Status XvMCCreateBlocks(Display *display, XvMCContext *context,
+_X_EXPORT Status XvMCCreateBlocks(Display *display, XvMCContext *context,
 			unsigned int num_blocks,
 			XvMCBlockArray *block) {
 
@@ -642,7 +642,7 @@ Status XvMCCreateBlocks(Display *display, XvMCContext *context,
 /***************************************************************************
 // Function: XvMCDestroyBlocks
 ***************************************************************************/
-Status XvMCDestroyBlocks(Display *display, XvMCBlockArray *block) {
+_X_EXPORT Status XvMCDestroyBlocks(Display *display, XvMCBlockArray *block) {
   if(display == NULL) {
     return BadValue;
   }
@@ -657,7 +657,7 @@ Status XvMCDestroyBlocks(Display *display, XvMCBlockArray *block) {
 /***************************************************************************
 // Function: XvMCCreateMacroBlocks
 ***************************************************************************/
-Status XvMCCreateMacroBlocks(Display *display, XvMCContext *context,
+_X_EXPORT Status XvMCCreateMacroBlocks(Display *display, XvMCContext *context,
 			     unsigned int num_blocks,
 			     XvMCMacroBlockArray *blocks) {
 
@@ -682,7 +682,7 @@ Status XvMCCreateMacroBlocks(Display *display, XvMCContext *context,
 /***************************************************************************
 // Function: XvMCDestroyMacroBlocks
 ***************************************************************************/
-Status XvMCDestroyMacroBlocks(Display *display, XvMCMacroBlockArray *block) {
+_X_EXPORT Status XvMCDestroyMacroBlocks(Display *display, XvMCMacroBlockArray *block) {
   if((display == NULL) || (block == NULL)) {
     return BadValue;
   }
@@ -2409,7 +2409,7 @@ static __inline__ void renderDualPrimeinFrameDCT0(uint **datay,uint **datau,
 //  U and V surfaces.
 ***************************************************************************/
 #define UV_QUEUE 14
-Status XvMCRenderSurface(Display *display, XvMCContext *context,
+_X_EXPORT Status XvMCRenderSurface(Display *display, XvMCContext *context,
 			 unsigned int picture_structure,
 			 XvMCSurface *target_surface,
 			 XvMCSurface *past_surface,
@@ -2818,7 +2818,7 @@ Status XvMCRenderSurface(Display *display, XvMCContext *context,
 //   possible to catch up before we have to check on its progress. This
 //   makes it unlikely that we have to wait on the last flip.
 ***************************************************************************/
-Status XvMCPutSurface(Display *display,XvMCSurface *surface,
+_X_EXPORT Status XvMCPutSurface(Display *display,XvMCSurface *surface,
 		      Drawable draw, short srcx, short srcy,
 		      unsigned short srcw, unsigned short srch,
 		      short destx, short desty,
@@ -3258,7 +3258,7 @@ Status XvMCPutSurface(Display *display,XvMCSurface *surface,
 // Info:
 // Returns: Status
 ***************************************************************************/
-Status XvMCSyncSurface(Display *display,XvMCSurface *surface) {
+_X_EXPORT Status XvMCSyncSurface(Display *display,XvMCSurface *surface) {
   Status ret;
   int stat=0;
   /*
@@ -3284,7 +3284,7 @@ Status XvMCSyncSurface(Display *display,XvMCSurface *surface) {
 //   render. There is little gain to be had with 4k buffers.
 // Returns: Status
 ***************************************************************************/
-Status XvMCFlushSurface(Display * display, XvMCSurface *surface) {
+_X_EXPORT Status XvMCFlushSurface(Display * display, XvMCSurface *surface) {
   return Success;
 }
 
@@ -3300,7 +3300,7 @@ Status XvMCFlushSurface(Display * display, XvMCSurface *surface) {
 //    XVMC_DISPLAYING - The surface is currently being displayed or a
 //                     display is pending.
 ***************************************************************************/
-Status XvMCGetSurfaceStatus(Display *display, XvMCSurface *surface,
+_X_EXPORT Status XvMCGetSurfaceStatus(Display *display, XvMCSurface *surface,
 			    int *stat) {
   i810XvMCSurface *privSurface;
   i810XvMCContext *pI810XvMC;
@@ -3376,7 +3376,7 @@ Status XvMCGetSurfaceStatus(Display *display, XvMCSurface *surface,
 //
 // Returns: Status
 ***************************************************************************/
-Status XvMCHideSurface(Display *display, XvMCSurface *surface) {
+_X_EXPORT Status XvMCHideSurface(Display *display, XvMCSurface *surface) {
   i810XvMCSurface *pI810Surface;
   i810XvMCContext *pI810XvMC;
   int ss, xx;
@@ -3473,7 +3473,7 @@ Status XvMCHideSurface(Display *display, XvMCSurface *surface) {
 //
 // Returns: Status
 ***************************************************************************/
-Status XvMCCreateSubpicture(Display *display, XvMCContext *context,
+_X_EXPORT Status XvMCCreateSubpicture(Display *display, XvMCContext *context,
                           XvMCSubpicture *subpicture,
                           unsigned short width, unsigned short height,
                           int xvimage_id) {
@@ -3603,7 +3603,7 @@ Status XvMCCreateSubpicture(Display *display, XvMCContext *context,
 //
 // Returns: Status
 ***************************************************************************/
-Status XvMCClearSubpicture(Display *display, XvMCSubpicture *subpicture,
+_X_EXPORT Status XvMCClearSubpicture(Display *display, XvMCSubpicture *subpicture,
                           short x, short y,
                           unsigned short width, unsigned short height,
                           unsigned int color) {
@@ -3658,7 +3658,7 @@ Status XvMCClearSubpicture(Display *display, XvMCSubpicture *subpicture,
 //
 // Returns: Status
 ***************************************************************************/
-Status XvMCCompositeSubpicture(Display *display, XvMCSubpicture *subpicture,
+_X_EXPORT Status XvMCCompositeSubpicture(Display *display, XvMCSubpicture *subpicture,
                                XvImage *image,
                                short srcx, short srcy,
                                unsigned short width, unsigned short height,
@@ -3722,7 +3722,7 @@ Status XvMCCompositeSubpicture(Display *display, XvMCSubpicture *subpicture,
 //
 // Returns: Status
 ***************************************************************************/
-Status XvMCDestroySubpicture(Display *display, XvMCSubpicture *subpicture) {
+_X_EXPORT Status XvMCDestroySubpicture(Display *display, XvMCSubpicture *subpicture) {
 
   i810XvMCSubpicture *pI810Subpicture;
   i810XvMCContext *pI810XvMC;
@@ -3766,7 +3766,7 @@ Status XvMCDestroySubpicture(Display *display, XvMCSubpicture *subpicture) {
 // Returns: Status
 ***************************************************************************/
 
-Status XvMCSetSubpicturePalette(Display *display, XvMCSubpicture *subpicture,
+_X_EXPORT Status XvMCSetSubpicturePalette(Display *display, XvMCSubpicture *subpicture,
 				unsigned char *palette) {
  i810XvMCSubpicture *privSubpicture;
  int i,j;
@@ -3811,7 +3811,7 @@ Status XvMCSetSubpicturePalette(Display *display, XvMCSubpicture *subpicture,
 //
 // Returns: Status
 ***************************************************************************/
-Status XvMCBlendSubpicture(Display *display, XvMCSurface *target_surface,
+_X_EXPORT Status XvMCBlendSubpicture(Display *display, XvMCSurface *target_surface,
                          XvMCSubpicture *subpicture,
                          short subx, short suby,
                          unsigned short subw, unsigned short subh,
@@ -3849,7 +3849,7 @@ Status XvMCBlendSubpicture(Display *display, XvMCSurface *target_surface,
 //
 // Returns: Status
 ***************************************************************************/
-Status XvMCBlendSubpicture2(Display *display, 
+_X_EXPORT Status XvMCBlendSubpicture2(Display *display, 
                           XvMCSurface *source_surface,
                           XvMCSurface *target_surface,
                           XvMCSubpicture *subpicture,
@@ -4227,7 +4227,7 @@ Status XvMCBlendSubpicture2(Display *display,
 //
 // Returns: Status
 ***************************************************************************/
-Status XvMCSyncSubpicture(Display *display, XvMCSubpicture *subpicture) {
+_X_EXPORT Status XvMCSyncSubpicture(Display *display, XvMCSubpicture *subpicture) {
   Status ret;
   int stat=0;
   do {
@@ -4250,7 +4250,7 @@ Status XvMCSyncSubpicture(Display *display, XvMCSubpicture *subpicture) {
 // Returns: Status
 // NOTES: i810 always dispatches commands so flush is a no-op
 ***************************************************************************/
-Status XvMCFlushSubpicture(Display *display, XvMCSubpicture *subpicture) {
+_X_EXPORT Status XvMCFlushSubpicture(Display *display, XvMCSubpicture *subpicture) {
   if(display == NULL) {
     return BadValue;
   }
@@ -4280,7 +4280,7 @@ Status XvMCFlushSubpicture(Display *display, XvMCSubpicture *subpicture) {
 //  never actually displaying, only a copy of it is displaying. We only
 //  have to worry about the rendering case.
 ***************************************************************************/
-Status XvMCGetSubpictureStatus(Display *display, XvMCSubpicture *subpicture,
+_X_EXPORT Status XvMCGetSubpictureStatus(Display *display, XvMCSubpicture *subpicture,
                              int *stat) {
 
   i810XvMCSubpicture *privSubpicture;
@@ -4341,7 +4341,7 @@ static XvAttribute I810_XVMC_ATTRIBUTES[] = {
 //    XV_CONTRAST
 //    XV_SATURATION
 ***************************************************************************/
-XvAttribute *XvMCQueryAttributes(Display *display, XvMCContext *context,
+_X_EXPORT XvAttribute *XvMCQueryAttributes(Display *display, XvMCContext *context,
 				 int *number) {
   i810XvMCContext *pI810XvMC;
   XvAttribute *attributes;
@@ -4397,7 +4397,7 @@ XvAttribute *XvMCQueryAttributes(Display *display, XvMCContext *context,
 //    XV_CONTRAST
 //    XV_SATURATION
 ***************************************************************************/
-Status XvMCSetAttribute(Display *display, XvMCContext *context,
+_X_EXPORT Status XvMCSetAttribute(Display *display, XvMCContext *context,
 			Atom attribute, int value) {
   i810XvMCContext *pI810XvMC;
 
@@ -4468,7 +4468,7 @@ Status XvMCSetAttribute(Display *display, XvMCContext *context,
 //    XV_CONTRAST
 //    XV_SATURATION
 ***************************************************************************/
-Status XvMCGetAttribute(Display *display, XvMCContext *context,
+_X_EXPORT Status XvMCGetAttribute(Display *display, XvMCContext *context,
 			Atom attribute, int *value) {
   i810XvMCContext *pI810XvMC;
 

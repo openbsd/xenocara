@@ -25,7 +25,7 @@ the 830M and later.
 .B intel
 supports the i810, i810-DC100, i810e, i815, i830M, 845G, 852GM, 855GM,
 865G, 915G, 915GM, 945G, 945GM, 965G, 965Q, 946GZ, 965GM, 945GME,
-G33, Q33, and Q35 chipsets.
+G33, Q33, Q35, G35, GM45, G45, Q45, G43 and G41 chipsets.
 
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
@@ -33,18 +33,21 @@ details.  This section only covers configuration details specific to this
 driver.
 .PP
 The Intel 8xx and 9xx families of integrated graphics chipsets have a unified
-memory architecture and uses system memory for video ram.  For the i810 and
-i815 family of chipset, operating system support for allocating system
-memory for video use is required in order to use this driver.  For the 830M
-and later, this is required in order for the driver to use more video ram
+memory architecture meaning that system memory is used as video RAM.  For the
+i810 and i815 family of chipsets, operating system support for allocating system
+memory is required in order to use this driver.  For the 830M
+and later, this is required in order for the driver to use more video RAM
 than has been pre-allocated at boot time by the BIOS.  This is usually
 achieved with an "agpgart" or "agp" kernel driver.  Linux, FreeBSD, OpenBSD,
 NetBSD, and Solaris have such kernel drivers available.
 .PP
-By default, the i810 will use 8 megabytes
-of system memory for graphics.  For the 830M and later, the driver will
-automatically size its memory allocation according to the features it will
-support.  The
+By default, the i810/i815 will use 8 MB of system memory for graphics if AGP
+allocable memory is < 128 MB, 16 MB if < 192 MB or 24 MB if higher. Use the
+.B VideoRam
+option to change the default value.
+.PP
+For the 830M and later, the driver will automatically size its memory
+allocation according to the features it will support.  Therefore, the
 .B VideoRam
 option, which in the past had been necessary to allow more than some small
 amount of memory to be allocated, is now ignored.
@@ -54,15 +57,13 @@ The following driver
 are supported
 .TP
 .BI "Option \*qNoAccel\*q \*q" boolean \*q
-Disable or enable acceleration.  Default: acceleration is enabled.
-.TP
-.BI "Option \*qSWCursor\*q \*q" boolean \*q
-Disable or enable software cursor.  Default: software cursor is disable
-and a hardware cursor is used for configurations where the hardware cursor
-is available.
+Disable or enable acceleration.
+.IP
+Default: acceleration is enabled.
 .TP
 .BI "Option \*qColorKey\*q \*q" integer \*q
 This sets the default pixel value for the YUV video overlay key.
+.IP
 Default: undefined.
 .TP
 .BI "Option \*qCacheLines\*q \*q" integer \*q
@@ -70,6 +71,7 @@ This allows the user to change the amount of graphics memory used for
 2D acceleration and video when XAA acceleration is enabled.  Decreasing this
 amount leaves more for 3D textures.  Increasing it can improve 2D performance
 at the expense of 3D performance.
+.IP
 Default: depends on the resolution, depth, and available video memory.  The
 driver attempts to allocate space for at 3 screenfuls of pixmaps plus an
 HD-sized XV video.  The default used for a specific configuration can be found
@@ -80,15 +82,19 @@ This option controls whether the framebuffer compression feature is enabled.
 If possible, the front buffer will be allocated in a tiled format and compressed
 periodically to save memory bandwidth and power.
 This option is only available on mobile chipsets.
+.IP
 Default: enabled on supported configurations.
 .TP
 .BI "Option \*qTiling\*q \*q" boolean \*q
 This option controls whether memory buffers are allocated in tiled mode.  In
-many cases (especially for complex rendering), tiling can improve performance.
+most cases (especially for complex rendering), tiling dramatically improves
+performance.
+.IP
 Default: enabled.
 .TP
 .BI "Option \*qDRI\*q \*q" boolean \*q
 Disable or enable DRI support.
+.IP
 Default: DRI is enabled for configurations where it is supported.
 
 .PP
@@ -98,16 +104,26 @@ are supported for the i810 and i815 chipsets:
 .TP
 .BI "Option \*qDDC\*q \*q" boolean \*q
 Disable or enable DDC support.
+.IP
 Default: enabled.
 .TP
 .BI "Option \*qDac6Bit\*q \*q" boolean \*q
 Enable or disable 6-bits per RGB for 8-bit modes.
+.IP
 Default: 8-bits per RGB for 8-bit modes.
 .TP
 .BI "Option \*qXvMCSurfaces\*q \*q" integer \*q
 This option enables XvMC.  The integer parameter specifies the number of
 surfaces to use.  Valid values are 6 and 7.
+.IP
 Default: XvMC is disabled.
+.TP
+.BI "VideoRam " integer
+This option specifies the amount of system memory to use for graphics, in KB.
+.IP
+The default is 8192 if AGP allocable memory is < 128 MB, 16384 if < 192 MB,
+24576 if higher. DRI require at least a value of 16384. Higher values may give
+better 3D performance, at expense of available system memory.
 
 .PP
 The following driver
@@ -120,68 +136,43 @@ This is the same as the
 option described above.  It is provided for compatibility with most
 other drivers.
 .TP
-.BI "Option \*qXVideo\*q \*q" boolean \*q
-Disable or enable XVideo support.
-Default: XVideo is enabled for configurations where it is supported.
-.TP
-.BI "Option \*qLegacy3D\*q \*q" boolean \*q
-Enable support for the legacy i915_dri.so 3D driver.
-This will, among other things, make the 2D driver tell libGL to
-load the 3D driver i915_dri.so instead of the newer i915tex_dri.so.
-This option is only used for chipsets in the range i830-i945.
-Default for i830-i945 series: Enabled.
-Default for i810: The option is not used.
-Default for i965: The option is always true.
-.TP
-.BI "Option \*qAperTexSize\*q \*q" integer \*q
-Give the size in kiB of the AGP aperture area that is reserved for the
-DRM memory manager present in i915 drm from version 1.7.0 and upwards,
-and that is used with the 3D driver in Mesa from version 6.5.2 and
-upwards. If the size is set too high to make room for pre-allocated
-VideoRam, the driver will try to reduce it automatically. If you use only
-older Mesa or DRM versions, you may set this value to zero, and
-activate the legacy texture pool (see 
-.B "Option \*qLegacy3D\*q"
-). If you run 3D programs with large texture memory requirements, you might
-gain some performance by increasing this value.
-Default: 32768.
-.TP
-.BI "Option \*qPageFlip\*q \*q" boolean \*q
-Enable support for page flipping. This should improve 3D performance at the
-potential cost of worse performance with mixed 2D/3D. Also note that this gives
-no benefit without corresponding support in the Mesa 3D driver and may not give
-the full benefit without triple buffering (see
-.B "Option \*qTripleBuffer\*q"
-).
-Default for i810: The option is not used.
-Default for i830 and above: Disabled (This option is currently unstable).
-.TP
-.BI "Option \*qTripleBuffer\*q \*q" boolean \*q
-Enable support for triple buffering. This should improve 3D performance at the
-potential cost of worse performance with mixed 2D/3D. Also note that this gives
-no benefit without corresponding support in the Mesa 3D driver and may not give
-any benefit without page flipping either (see
-.B "Option \*qPageFlip\*q"
-).
-Default for i810: The option is not used.
-Default for i830 and above: Disabled.
+.BI "Option \*qXvPreferOverlay\*q \*q" boolean \*q
+Make hardware overlay be the first XV adaptor.
+The overlay behaves incorrectly in the presence of compositing, but some prefer
+it due to it syncing to vblank in the absence of compositing.  While most
+XV-using applications have options to select which XV adaptor to use, this
+option can be used to place the overlay first for applications which don't
+have options for selecting adaptors.
+.IP
+Default: Textured video adaptor is preferred.
 .TP
 .BI "Option \*qAccelMethod\*q \*q" string \*q
-Choose acceleration architecture, either "XAA" or "EXA".  XAA is the old
-XFree86 based acceleration architecture.  EXA is a newer and simpler
+Choose acceleration architecture, either "XAA", "EXA", or "UXA".  XAA is the old
+XFree86 based acceleration architecture.  EXA is a simpler
 acceleration architecture designed to better accelerate the X Render extension.
-Default: "EXA".
+UXA is a newer acceleration architecture built from the EXA acceleration
+code but taking advantage of kernel memory management to provide simpler,
+faster code.
+.IP
+Default: "UXA" if kernel-modesetting is available, "EXA" otherwise.
 .TP
 .BI "Option \*qModeDebug\*q \*q" boolean \*q
 Enable printing of additional debugging information about modesetting to
 the server log.
+.IP
+Default: Disabled
+.TP
+.BI "Option \*qFallbackDebug\*q \*q" boolean \*q
+Enable printing of debugging information on acceleration fallbacks to the
+server log.
+.IP
+Default: Disabled
 .TP
 .BI "Option \*qForceEnablePipeA\*q \*q" boolean \*q
 Force the driver to leave pipe A enabled.  May be necessary in configurations
 where the BIOS accesses pipe registers during display hotswitch or lid close,
 causing a crash.  If you find that your platform needs this option, please file
-a bug against xf86-video-intel at http://bugs.freedesktop.org which includes
-the output of 'lspci -v' and 'lspci -vn'.
+a bug (see REPORTING BUGS below) including the output of 'lspci -v' and 'lspci -vn'.
 .TP
 .BI "Option \*qLVDS24Bit\*q \*q" boolean \*q
 Specify 24 bit pixel format (i.e. 8 bits per color) to be used for the
@@ -194,7 +185,9 @@ within the X server.  This option instead selects the physical format
 / sequencing of the digital bits sent to the display.  Setting the
 frame buffer color depth is really a matter of preference by the user,
 while setting the pixel format here is a requirement of the connected
-hardware.  Leaving this unset implies the default value of false,
+hardware.
+.IP
+Leaving this unset implies the default value of false,
 which is almost always going to be right choice.  If your
 LVDS-connected display on the other hand is extremely washed out
 (e.g. white on a lighter white), trying this option might clear the
@@ -202,7 +195,9 @@ problem.
 .TP
 .BI "Option \*qLVDSFixedMode\*q \*q" boolean \*q
 Use a fixed set of timings for the LVDS output, independent of normal
-xorg specified timings.  The default value if left unspecified is
+xorg specified timings.
+.IP
+The default value if left unspecified is
 true, which is what you want for a normal LVDS-connected LCD type of
 panel.  If you are not sure about this, leave it at its default, which
 allows the driver to automatically figure out the correct fixed panel
@@ -212,6 +207,7 @@ information.
 .BI "Option \*qXvMC\*q \*q" boolean \*q
 Enable XvMC driver. Current support MPEG2 MC on 915/945 and G33 series.
 User should provide absolute path to libIntelXvMC.so in XvMCConfig file.
+.IP
 Default: Disabled.
 
 .SH OUTPUT CONFIGURATION
@@ -220,7 +216,7 @@ detected outputs.  You can use the
 .B xrandr
 tool to control outputs on the command line.  Each output listed below may have
 one or more properties associated with it (like a binary EDID block if one is
-found).  Some outputs have unique properties which are described below.
+found).  Some outputs have unique properties which are described below.  See the "MULTIHEAD CONFIGURATIONS" section below for additional information.
 
 .SS "VGA"
 VGA output port (typically exposed via an HD15 connector).
@@ -281,7 +277,31 @@ Integrated TV output.  Available properties include:
 .B BOTTOM, RIGHT, TOP, LEFT
 - margins
 .TP 2
-Adjusting these properties allows you to control the placement of your TV output buffer on the screen.
+Adjusting these properties allows you to control the placement of your TV output buffer on the screen. The options with the same name can also be set in xorg.conf with integer value.
+
+.PP
+.B BRIGHTNESS
+- TV brightness, range 0-255
+.TP 2
+Adjust TV brightness, default value is 128.
+
+.PP
+.B CONTRAST
+- TV contrast, range 0-255
+.TP 2
+Adjust TV contrast, default value is 1.0 in chipset specific format.
+
+.PP
+.B SATURATION
+- TV saturation, range 0-255
+.TP 2
+Adjust TV saturation, default value is 1.0 in chipset specific format.
+
+.PP
+.B HUE
+- TV hue, range 0-255
+.TP 2
+Adjust TV hue, default value is 0.
 
 .PP
 .B TV_FORMAT
@@ -289,11 +309,25 @@ Adjusting these properties allows you to control the placement of your TV output
 .TP 2
 This property allows you to control the output standard used on your TV output port.  You can select between NTSC-M, NTSC-443, NTSC-J, PAL-M, PAL-N, and PAL.
 
+.PP
+.B TV_Connector
+- connector type
+.TP 2
+This config option should be added to xorg.conf TV monitor's section, it allows you to force the TV output connector type, which bypass load detect and TV will always be taken as connected. You can select between S-Video, Composite and Component.
+
 .SS "TMDS-1"
 First DVI SDVO output
 
 .SS "TMDS-2"
 Second DVI SDVO output
+
+.SS "TMDS-1", "TMDS-2", "HDMI-1", "HDMI-2"
+DVI/HDMI outputs. Avaliable common properties include:
+.PP
+.B BROADCAST_RGB
+- method used to set RGB color range(full range 0-255, not full range 16-235)
+.TP 2
+Adjusting this propertie allows you to set RGB color range on each channel in order to match HDTV requirment(default 0 for full range). Setting 1 means RGB color range is 16-235, 0 means RGB color range is 0-255 on each channel.
 
 .PP
 SDVO and DVO TV outputs are not supported by the driver at this time.
@@ -382,8 +416,71 @@ what is needed.  Set LVDSFixedMode to false and then the user has full
 control over the resolution and timings sent to the LVDS-connected
 device, through the usual means in xorg.
 
+.SH MULTIHEAD CONFIGURATIONS
+
+The number of independent outputs is dictated by the number of CRTCs
+(in X parlance) a given chip supports.  Most recent Intel chips have
+two CRTCs, meaning that two separate framebuffers can be displayed
+simultaneously, in an extended desktop configuration.  If a chip
+supports more outputs than it has CRTCs (say local flat panel, VGA and
+TV in the case of many outputs), two of the outputs will have to be
+"cloned", meaning that they display the same framebuffer contents (or
+one displays a subset of another's framebuffer if the modes aren't
+equal).
+
+You can use the "xrandr" tool, or various desktop utilities, to change
+your output configuration at runtime.  To statically configure your
+outputs, you can use the "Monitor-<type>" options along with
+additional monitor sections in your xorg.conf to create your screen
+topology.  The example below puts the VGA output to the right of the
+builtin laptop screen, both running at 1024x768.
+
+.nf
+.B "Section \*qMonitor\*q"
+.BI "  Identifier \*qLaptop FooBar Internal Display\*q"
+.BI "  Option \*qPosition\*q \*q0 0\*q"
+.B "EndSection"
+
+.B "Section \*qMonitor\*q"
+.BI "  Identifier \*qSome Random CRT\*q"
+.BI "  Option \*qPosition\*q \*q1024 0\*q"
+.BI "  Option \*qRightOf\*q \*qLaptop FoodBar Internal Display\*q"
+.B "EndSection"
+
+.B "Section \*qDevice\*q"
+.BI "  Driver \*qintel\*q"
+.BI "  Option \*qmonitor-LVDS\*q \*qLaptop FooBar Internal Display\*q"
+.BI "  Option \*qmonitor-VGA\*q \*qSome Random CRT\*q"
+.B "EndSection"
+
+.SH TEXTURED VIDEO ATTRIBUTES
+The driver supports the following X11 Xv attributes for Textured Video.
+You can use the "xvattr" tool to query/set those attributes at runtime.
+
+.SS "XV_SYNC_TO_VBLANK"
+XV_SYNC_TO_VBLANK is used to control whether textured adapter synchronizes 
+the screen update to the vblank to eliminate tearing. It is a Boolean
+attribute with values of 0 (never sync) or 1 (always sync). An historic
+value of -1 (sync for large windows only) will now be interpreted as 1,
+(since the current approach for sync is not costly even with small
+video windows).
+
+.SS "XV_BRIGHTNESS"
+        
+.SS "XV_CONTRAST"
+        
+.SH REPORTING BUGS
+
+The xf86-video-intel driver is part of the X.Org and Freedesktop.org
+umbrella projects.  Details on bug reporting can be found at
+http://www.intellinuxgraphics.org/how_to_report_bug.html.  Mailing
+lists are also commonly used to report experiences and ask questions
+about configuration and other topics.  See lists.freedesktop.org for
+more information (the xorg@lists.freedesktop.org mailing list is the
+most appropriate place to ask X.Org and driver related questions).
+
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
 .SH AUTHORS
 Authors include: Keith Whitwell, and also Jonathan Bian, Matthew J Sottek,
 Jeff Hartmann, Mark Vojkovich, Alan Hourihane, H. J. Lu.  830M and 845G

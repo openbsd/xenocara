@@ -34,18 +34,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     if (I810_DEBUG & DEBUG_VERBOSE_RING)				\
 	ErrorF("OUT_RING 0x%08x: 0x%08x, (mask %x)\n",			\
 	       pI830->ring_next, (unsigned int)(n),			\
-	       pI830->LpRing->tail_mask);				\
-    *(volatile uint32_t *)(pI830->LpRing->virtual_start +		\
+	       pI830->ring.tail_mask);					\
+    *(volatile uint32_t *)(pI830->ring.virtual_start +			\
 			   pI830->ring_next) = n;			\
     pI830->ring_used += 4;						\
     pI830->ring_next += 4;						\
-    pI830->ring_next &= pI830->LpRing->tail_mask;			\
+    pI830->ring_next &= pI830->ring.tail_mask;				\
 } while (0)
-
-union intfloat {
-	float f;
-	unsigned int ui;
-};
 
 #define OUT_RING_F(x) do {			\
 	union intfloat tmp;			\
@@ -65,8 +60,8 @@ union intfloat {
 	FatalError("%s: ADVANCE_LP_RING: under-used allocation %d/%d\n ", \
 		   __FUNCTION__, pI830->ring_used,			\
 		   pI830->ring_emitting);				\
-    pI830->LpRing->tail = pI830->ring_next;				\
-    pI830->LpRing->space -= pI830->ring_used;				\
+    pI830->ring.tail = pI830->ring_next;				\
+    pI830->ring.space -= pI830->ring_used;				\
     if (pI830->ring_next & 0x07)					\
 	FatalError("%s: ADVANCE_LP_RING: "				\
 		   "ring_next (0x%x) isn't on a QWord boundary\n",	\
@@ -85,9 +80,9 @@ do {									\
     pI830->ring_emitting = (n) * 4;					\
     if ((n) & 1)							\
 	pI830->ring_emitting += 4;					\
-    if (pI830->LpRing->space < pI830->ring_emitting)			\
+    if (pI830->ring.space < pI830->ring_emitting)			\
 	WaitRingFunc(pScrn, pI830->ring_emitting, 0);			\
-    pI830->ring_next = pI830->LpRing->tail;				\
+    pI830->ring_next = pI830->ring.tail;				\
     if (I810_DEBUG & DEBUG_VERBOSE_RING)				\
 	ErrorF( "BEGIN_LP_RING %d in %s\n", n, FUNCTION_NAME);		\
     pI830->ring_used = 0;						\

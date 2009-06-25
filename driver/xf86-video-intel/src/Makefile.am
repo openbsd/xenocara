@@ -30,13 +30,14 @@ SUBDIRS = xvmc bios_reader ch7017 ch7xxx ivch sil164 tfp410 $(REGDUMPER)
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
 
-AM_CFLAGS = @WARN_CFLAGS@ @XORG_CFLAGS@ @DRI_CFLAGS@ @PCIACCESS_CFLAGS@ \
-	@XMODES_CFLAGS@ -DI830_XV -DI830_USE_XAA -DI830_USE_EXA
+AM_CFLAGS = @WARN_CFLAGS@ @XORG_CFLAGS@ @DRM_CFLAGS@ @DRI_CFLAGS@ \
+	@PCIACCESS_CFLAGS@ -I$(top_srcdir)/uxa \
+	@XMODES_CFLAGS@ -DI830_XV -DI830_USE_XAA -DI830_USE_EXA -DI830_USE_UXA
 
 intel_drv_la_LTLIBRARIES = intel_drv.la
 intel_drv_la_LDFLAGS = -module -avoid-version
 intel_drv_ladir = @moduledir@/drivers
-intel_drv_la_LIBADD =
+intel_drv_la_LIBADD = -lm @DRM_LIBS@ -ldrm_intel ../uxa/libuxa.la
 if XSERVER_LIBPCIACCESS
 intel_drv_la_LIBADD += @PCIACCESS_LIBS@
 endif
@@ -69,7 +70,9 @@ INTEL_XVMC_SRCS = \
 	 i830_hwmc.h \
 	 i830_hwmc.c \
          i915_hwmc.c \
-         i915_hwmc.h
+         i915_hwmc.h \
+         i965_hwmc.c \
+         i965_hwmc.h
 
 
 intel_drv_la_SOURCES = \
@@ -93,6 +96,8 @@ intel_drv_la_SOURCES = \
          i830_accel.c \
          i830_bios.c \
          i830_bios.h \
+         i830_batchbuffer.c \
+         i830_batchbuffer.h \
          i830_common.h \
 	 i830_crt.c \
          i830_cursor.c \
@@ -127,7 +132,8 @@ intel_drv_la_SOURCES = \
 	 i830_xaa.c \
 	 i830_render.c \
 	 i915_render.c \
-	 i965_render.c
+	 i965_render.c \
+	 drmmode_display.c
 
 INTEL_G4A =				\
 	packed_yuv_sf.g4a		\
@@ -154,7 +160,6 @@ INTEL_G4I =				\
 	exa_wm.g4i			\
 	exa_wm_affine.g4i		\
 	exa_wm_projective.g4i
-
 
 INTEL_G4B = 				\
 	packed_yuv_sf.g4b		\

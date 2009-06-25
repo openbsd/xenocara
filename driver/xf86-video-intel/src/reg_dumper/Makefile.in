@@ -36,8 +36,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-noinst_PROGRAMS = intel_reg_dumper$(EXEEXT) intel_idle$(EXEEXT) \
-	intel_stepping$(EXEEXT) intel_hotplug$(EXEEXT)
+noinst_PROGRAMS = intel_reg_dumper$(EXEEXT) intel_gtt$(EXEEXT) \
+	intel_idle$(EXEEXT) intel_stepping$(EXEEXT) \
+	intel_statuspage$(EXEEXT) intel_hotplug$(EXEEXT)
 subdir = src/reg_dumper
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -49,10 +50,13 @@ mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
+am_intel_gtt_OBJECTS = gtt.$(OBJEXT) util.$(OBJEXT)
+intel_gtt_OBJECTS = $(am_intel_gtt_OBJECTS)
+am__DEPENDENCIES_1 =
+intel_gtt_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_intel_hotplug_OBJECTS = hotplug.$(OBJEXT) xprintf.$(OBJEXT) \
 	i830_debug.$(OBJEXT)
 intel_hotplug_OBJECTS = $(am_intel_hotplug_OBJECTS)
-am__DEPENDENCIES_1 =
 intel_hotplug_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_intel_idle_OBJECTS = idle.$(OBJEXT) xprintf.$(OBJEXT) \
 	i830_debug.$(OBJEXT)
@@ -62,6 +66,9 @@ am_intel_reg_dumper_OBJECTS = main.$(OBJEXT) xprintf.$(OBJEXT) \
 	i830_debug.$(OBJEXT)
 intel_reg_dumper_OBJECTS = $(am_intel_reg_dumper_OBJECTS)
 intel_reg_dumper_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_intel_statuspage_OBJECTS = statuspage.$(OBJEXT) util.$(OBJEXT)
+intel_statuspage_OBJECTS = $(am_intel_statuspage_OBJECTS)
+intel_statuspage_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_intel_stepping_OBJECTS = stepping.$(OBJEXT)
 intel_stepping_OBJECTS = $(am_intel_stepping_OBJECTS)
 intel_stepping_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -73,10 +80,12 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(intel_hotplug_SOURCES) $(intel_idle_SOURCES) \
-	$(intel_reg_dumper_SOURCES) $(intel_stepping_SOURCES)
-DIST_SOURCES = $(intel_hotplug_SOURCES) $(intel_idle_SOURCES) \
-	$(intel_reg_dumper_SOURCES) $(intel_stepping_SOURCES)
+SOURCES = $(intel_gtt_SOURCES) $(intel_hotplug_SOURCES) \
+	$(intel_idle_SOURCES) $(intel_reg_dumper_SOURCES) \
+	$(intel_statuspage_SOURCES) $(intel_stepping_SOURCES)
+DIST_SOURCES = $(intel_gtt_SOURCES) $(intel_hotplug_SOURCES) \
+	$(intel_idle_SOURCES) $(intel_reg_dumper_SOURCES) \
+	$(intel_statuspage_SOURCES) $(intel_stepping_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -117,6 +126,10 @@ DRI_CFLAGS = @DRI_CFLAGS@
 DRI_FALSE = @DRI_FALSE@
 DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
+DRM_CFLAGS = @DRM_CFLAGS@
+DRM_LIBS = @DRM_LIBS@
+DRM_MODE_CFLAGS = @DRM_MODE_CFLAGS@
+DRM_MODE_LIBS = @DRM_MODE_LIBS@
 DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
@@ -128,6 +141,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 HAVE_GEN4ASM_FALSE = @HAVE_GEN4ASM_FALSE@
 HAVE_GEN4ASM_TRUE = @HAVE_GEN4ASM_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -172,6 +186,8 @@ PKG_CONFIG = @PKG_CONFIG@
 PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
 SED = @SED@
+SERVER_1_5_CFLAGS = @SERVER_1_5_CFLAGS@
+SERVER_1_5_LIBS = @SERVER_1_5_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -179,6 +195,8 @@ VERSION = @VERSION@
 VIDEO_DEBUG_FALSE = @VIDEO_DEBUG_FALSE@
 VIDEO_DEBUG_TRUE = @VIDEO_DEBUG_TRUE@
 WARN_CFLAGS = @WARN_CFLAGS@
+XEXT_CFLAGS = @XEXT_CFLAGS@
+XEXT_LIBS = @XEXT_LIBS@
 XMODES_CFLAGS = @XMODES_CFLAGS@
 XMODES_FALSE = @XMODES_FALSE@
 XMODES_TRUE = @XMODES_TRUE@
@@ -190,15 +208,9 @@ XVMCLIB_CFLAGS = @XVMCLIB_CFLAGS@
 XVMCLIB_LIBS = @XVMCLIB_LIBS@
 XVMC_FALSE = @XVMC_FALSE@
 XVMC_TRUE = @XVMC_TRUE@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -215,6 +227,9 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 gen4asm = @gen4asm@
 host = @host@
@@ -222,18 +237,22 @@ host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 moduledir = @moduledir@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -243,6 +262,11 @@ intel_reg_dumper_SOURCES = \
 	reg_dumper.h \
 	xprintf.c \
 	../i830_debug.c
+
+intel_gtt_SOURCES = \
+	gtt.c \
+	reg_dumper.h \
+	util.c
 
 intel_idle_SOURCES = \
 	idle.c \
@@ -259,10 +283,17 @@ intel_hotplug_SOURCES = \
 intel_stepping_SOURCES = \
 	stepping.c
 
+intel_statuspage_SOURCES = \
+	statuspage.c \
+	reg_dumper.h \
+	util.c
+
 intel_hotplug_LDADD = $(PCIACCESS_LIBS)
 intel_reg_dumper_LDADD = $(PCIACCESS_LIBS)
+intel_gtt_LDADD = $(PCIACCESS_LIBS)
 intel_idle_LDADD = $(PCIACCESS_LIBS)
 intel_stepping_LDADD = $(PCIACCESS_LIBS)
+intel_statuspage_LDADD = $(PCIACCESS_LIBS)
 AM_CFLAGS = $(PCIACCESS_CFLAGS) $(WARN_CFLAGS) \
 	-I$(srcdir)/.. -DREG_DUMPER
 
@@ -306,6 +337,9 @@ clean-noinstPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
+intel_gtt$(EXEEXT): $(intel_gtt_OBJECTS) $(intel_gtt_DEPENDENCIES) 
+	@rm -f intel_gtt$(EXEEXT)
+	$(LINK) $(intel_gtt_LDFLAGS) $(intel_gtt_OBJECTS) $(intel_gtt_LDADD) $(LIBS)
 intel_hotplug$(EXEEXT): $(intel_hotplug_OBJECTS) $(intel_hotplug_DEPENDENCIES) 
 	@rm -f intel_hotplug$(EXEEXT)
 	$(LINK) $(intel_hotplug_LDFLAGS) $(intel_hotplug_OBJECTS) $(intel_hotplug_LDADD) $(LIBS)
@@ -315,6 +349,9 @@ intel_idle$(EXEEXT): $(intel_idle_OBJECTS) $(intel_idle_DEPENDENCIES)
 intel_reg_dumper$(EXEEXT): $(intel_reg_dumper_OBJECTS) $(intel_reg_dumper_DEPENDENCIES) 
 	@rm -f intel_reg_dumper$(EXEEXT)
 	$(LINK) $(intel_reg_dumper_LDFLAGS) $(intel_reg_dumper_OBJECTS) $(intel_reg_dumper_LDADD) $(LIBS)
+intel_statuspage$(EXEEXT): $(intel_statuspage_OBJECTS) $(intel_statuspage_DEPENDENCIES) 
+	@rm -f intel_statuspage$(EXEEXT)
+	$(LINK) $(intel_statuspage_LDFLAGS) $(intel_statuspage_OBJECTS) $(intel_statuspage_LDADD) $(LIBS)
 intel_stepping$(EXEEXT): $(intel_stepping_OBJECTS) $(intel_stepping_DEPENDENCIES) 
 	@rm -f intel_stepping$(EXEEXT)
 	$(LINK) $(intel_stepping_LDFLAGS) $(intel_stepping_OBJECTS) $(intel_stepping_LDADD) $(LIBS)
@@ -325,11 +362,14 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gtt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hotplug.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_debug.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/idle.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/statuspage.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stepping.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xprintf.Po@am__quote@
 
 .c.o:

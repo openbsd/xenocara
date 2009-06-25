@@ -1,0 +1,62 @@
+Authors of xf86-video-intel (since 2003-11-14 when revision-control
+history begins, sorted roughly by number of commits, descending):
+
+Eric Anholt
+Keith Packard
+Zhenyu Wang
+Jesse Barnes
+Alan Hourihane
+Carl Worth
+Dave Airlie
+Michel Dänzer
+Zou Nan Hai
+Kristian Høgsberg
+Adam Jackson
+Nian Wu
+Xian, Haihao
+Egbert Eich
+Kevin E Martin
+Alan Coopersmith
+Hong Liu
+Julien Cristau
+Ma Ling
+Bryce Harrington
+Daniel Stone
+Kaleb Keithley
+Paulo Cesar Pereira de Andrade
+Eamon Walsh
+Matthieu Herrb
+Owain G. Ainsworth
+Søren Sandmann Pedersen
+Brice Goglin
+Ian Romanick
+Lukáš Hejtmánek
+Matthias Hopf
+Olivier Fourdan
+Robert Noland
+Rémi Cardona
+Shuang He
+Wu Fengguang
+and many others (with 1 or 2 commits)
+
+Other authors (from before revision-control history begins):
+
+Keith Whitwell
+Jonathan Bian
+Matthew J Sottek
+Jeff Hartmann
+Mark Vojkovich
+H. J. Lu
+David Dawes
+
+If the above list is missing anyone, please accept our apologies and
+let us know.
+
+The X.Org version of this driver is maintained by Intel Corporation:
+
+	http://www.intellinuxgraphics.org
+
+The X11R6 version of this driver originally came from XFree86 4.4 rc2.
+ 
+The XFree86 version of this driver was donated to The XFree86 Project
+by Precision Insight, Inc.; Cedar Park, TX; USA

@@ -1,106 +1,47 @@
-Information for Intel graphics driver users
-Eric Anholt
-2007-07-02
+xf86-video-intel
+Open-source X.org graphics driver for Intel graphics
+http://www.intellinuxgraphics.com/
 
-This document provides a brief summary of the Intel graphics support provided
-by the xf86-video-intel driver.  More information can also be found in the
-intel(4) manual page.
+What is xf86-video-intel
+------------------------
+The xf86-video-intel module is an open-source 2D graphics driver for
+the X Window System as implemented by X.org. It supports a variety of
+Intel graphics chipsets including:
 
-Supported Hardware:
-	i810,
-  	i810-dc100,
-	i810e
-	i815
-	i830
-	i845
-	i852
-	i855
-	915G
-	915GM
-	945G
-	945GM/GME
-	946GZ
-	G965
-	GM/GME965
-	G33/Q33/Q35
+	i810/i810e/i810-dc100,i815,
+	i830M,845G,852GM,855GM,865G,
+	915G/GM,945G/GM/GME,946GZ
+	G/GM/GME/Q965,
+	G/Q33,G/Q35,G41,G/Q43,G/GM/Q45
 
-Features
-- Full support for 8, 15, 16, and 24 bit pixel depths.
-- Hardware accelerated 2D drawing engine support for 8, 15, 16 and 24 bit
-  pixel depths.
-- Hardware accelerated 3D drawing using OpenGL and the DRI.
-- Hardware cursor support to reduce sprite flicker.
-- Textured video XV implementation on i915 through i965.
-- Hardware overlay XV implementation up through i945.
-- Screen resize and rotation.
+Where to get more information about the driver
+----------------------------------------------
+The primary source of information about this and other open-source
+drivers for Intel graphics is:
 
-Technical Notes
-- Interlace modes cannot be supported.
-- This driver  requires kernel support for AGP, which is included in Linux
-  kernels 2.3.42 and higher, and FreeBSD 4.1 and higher.
-- This driver may be built against xserver 1.2.0 or newer.  If built
-  from git source against an older server, a copy of xserver 1.3.0 source is
-  needed to complete the build, which is chosen with the --with-xserver-source
-  argument to ./configure.  The compatibility mode with xserver 1.2.0 will have
-  limited functionality, in particular by not supporting RandR 1.2 or the
-  new Damage 1.1 updated needed for 3D applications to work with display
-  rotation.
+	http://intellinuxgraphics.org/
 
-Configuration
+Documentation specific to the xf86-video-intel driver including
+possible configuration options for the xorg.conf file can be found in
+the intel(4) manual page. After installing the driver this
+documentation can be read with the following command:
 
-The driver auto-detects all device information necessary to
-initialize the card.  The only lines you should need in the "Device"
-section of your xorg.conf file are:
+	man intel
 
-       Section "Device"
-           Identifier "intel"
-           Driver     "intel"
-       EndSection
+Mailing list for communication with users and developers of
+xf86-video-intel:
 
-Please refer to the intel(4) manual page for information on configuration
-options.
+	intel-gfx@lists.freedesktop.org.
 
+	Note: Subscription is required before posting, but anyone is
+	free to subscribe. See instructions (and archives) here:
 
-Known Limitations
-- No support for "zaphod mode" dualhead.  This is the mode in which two
-  Device sections are placed in the config file, and doesn't support DRI or
-  many other features.  Instead, only "MergedFB-style" dualhead is supported.
-- No support for X Screens larger than 2048 pixels in either direction
-  before the 965.  This reflects hardware limitations in the x direction on
-  those older chips, and limits dualhead functionality.  It may be possible to
-  extend the limit vertically on these older chips.
-- i855 XV may cause hangs.  This was present in the previous release, and no
-  workaround is known.
-- SDVO TV-out cards not supported.  This should be fixed in the next
-  release.
-- Gray output with integrated TV-out and PAL TVs.
-- EXA support unstable on i845.
-- Some GM965 systems, such as the Thinkpad T61, probe the TV as being connected
-  even when no output connector is available.  This results in the gnome-panel
-  issue noted below.
+	http://lists.freedesktop.org/mailman/listinfo/intel-gfx
 
-Common issues not caused by the driver
-- Font sizes (DPI) are wrong.  Some displays incorrectly report their
-  physical size, which is harmless on most OSes that always assume 96dpi
-  displays.  This can be fixed through quirks for specific monitors in the X
-  Server, and the output of xrandr --prop along with a physical measurement of
-  the screen size in a bug report against the server can help get that fixed.
-- gnome-panel is located in the middle of the screen.  gnome-panel places
-  itself within head #0's boundaries, which doesn't work well with a second
-  head covering the same area as head #0 but larger.
-- Older resolution-changing applications have poor results in
-  multihead systems.  Previous extensions such as RandR 1.1 exposed only a
-  single output to client programs, and those requests map poorly to multi-head
-  systems.  Currently, those requests map to just one of the outputs in the
-  RandR 1.2 environment, and those applications need to be updated to RandR 1.2
-  API when available for better results.
+To report bugs encountered with the driver, see:
 
-The X11R6 version of this driver originally came from XFree86 4.4 rc2.
+	http://intellinuxgraphics.org/how_to_report_bug.html
 
-The XFree86 version of this driver was donated to The XFree86 Project by:
-    Precision Insight, Inc.
-    Cedar Park, TX
-    USA
+To see bugs that are targeted to be fixed in the next release:
 
-The X.Org version of this driver is maintained by Intel Corporation.
-<http://www.intellinuxgraphics.org>
+	https://bugs.freedesktop.org/show_bug.cgi?id=intel-2d-release

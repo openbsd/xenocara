@@ -50,8 +50,8 @@ struct i830_sdvo_caps {
     uint8_t vendor_id;
     uint8_t device_id;
     uint8_t device_rev_id;
-    uint8_t sdvo_version_major;
     uint8_t sdvo_version_minor;
+    uint8_t sdvo_version_major;
     unsigned int sdvo_input_count:2;
     unsigned int smooth_scaling:1;
     unsigned int sharp_scaling:1;
@@ -101,6 +101,9 @@ struct i830_sdvo_preferred_input_timing_args {
     uint16_t clock;
     uint16_t width;
     uint16_t height;
+    uint8_t interlace:1;
+    uint8_t scaled:1;
+    uint8_t pad:6;
 } __attribute__((packed));
 
 /* I2C registers for SDVO */
@@ -210,7 +213,8 @@ struct i830_sdvo_in_out_map {
 struct i830_sdvo_get_interrupt_event_source_response {
     uint16_t interrupt_status;
     unsigned int ambient_light_interrupt:1;
-    unsigned int pad:7;
+    unsigned int hdmi_audio_encrypt_change:1;
+    unsigned int pad:6;
 } __attribute__((packed));
 
 /**
@@ -336,15 +340,15 @@ struct i830_sdvo_tv_format {
     unsigned int hdtv_std_smpte_240m_1080i_60:1;
     unsigned int hdtv_std_smpte_260m_1080i_59:1;
     unsigned int hdtv_std_smpte_260m_1080i_60:1;
-    unsigned int hdtv_std_smpte_270m_1080i_50:1;
-
     unsigned int hdtv_std_smpte_274m_1080i_50:1;
+
     unsigned int hdtv_std_smpte_274m_1080i_59:1;
     unsigned int hdtv_std_smpte_274m_1080i_60:1;
     unsigned int hdtv_std_smpte_274m_1080p_23:1;
     unsigned int hdtv_std_smpte_274m_1080p_24:1;
     unsigned int hdtv_std_smpte_274m_1080p_25:1;
     unsigned int hdtv_std_smpte_274m_1080p_29:1;
+    unsigned int hdtv_std_smpte_274m_1080p_30:1;
     unsigned int hdtv_std_smpte_274m_1080p_50:1;
 
     unsigned int hdtv_std_smpte_274m_1080p_59:1;
@@ -356,7 +360,7 @@ struct i830_sdvo_tv_format {
     unsigned int hdtv_std_smpte_296m_720p_50:1;
     unsigned int hdtv_std_smpte_293m_480p_59:1;
 
-    unsigned int hdtv_std_smpte_270m_480i_59:1;
+    unsigned int hdtv_std_smpte_170m_480i_59:1;
     unsigned int hdtv_std_iturbt601_576i_50:1;
     unsigned int hdtv_std_iturbt601_576p_50:1;
     unsigned int hdtv_std_eia_7702a_480i_60:1;
@@ -385,7 +389,17 @@ struct i830_sdvo_sdtv_resolution_request {
     unsigned int pal_n:1;
     unsigned int pal_nc:1;
     unsigned int pal_60:1;
+    unsigned int secam_b:1;
+    unsigned int secam_d:1;
+    unsigned int secam_g:1;
+    unsigned int secam_k:1;
+
+    unsigned int secam_k1:1;
+    unsigned int secam_l:1;
+    unsigned int secam_60:1;
+    unsigned int pad:5;
 } __attribute__((packed));
+
 struct i830_sdvo_sdtv_resolution_reply {
     unsigned int res_320x200:1;
     unsigned int res_320x240:1;
@@ -401,6 +415,7 @@ struct i830_sdvo_sdtv_resolution_reply {
     unsigned int res_720x480:1;
     unsigned int res_720x540:1;
     unsigned int res_720x576:1;
+    unsigned int res_768x576:1;
     unsigned int res_800x600:1;
     unsigned int res_832x624:1;
 
@@ -410,13 +425,166 @@ struct i830_sdvo_sdtv_resolution_reply {
     unsigned int pad:5;
 } __attribute__((packed));
 
+/* Get supported resolution with squire pixel aspect ratio that can be
+   scaled for the requested HDTV format */
+#define SDVO_CMD_GET_SCALED_HDTV_RESOLUTION_SUPPORT		0x85
+
+struct i830_sdvo_hdtv_resolution_request {
+    unsigned int hdtv_std_smpte_240m_1080i_59:1;
+    unsigned int hdtv_std_smpte_240m_1080i_60:1;
+    unsigned int hdtv_std_smpte_260m_1080i_59:1;
+    unsigned int hdtv_std_smpte_260m_1080i_60:1;
+    unsigned int hdtv_std_smpte_274m_1080i_50:1;
+    unsigned int hdtv_std_smpte_274m_1080i_59:1;
+    unsigned int hdtv_std_smpte_274m_1080i_60:1;
+    unsigned int hdtv_std_smpte_274m_1080p_23:1;
+
+    unsigned int hdtv_std_smpte_274m_1080p_24:1;
+    unsigned int hdtv_std_smpte_274m_1080p_25:1;
+    unsigned int hdtv_std_smpte_274m_1080p_29:1;
+    unsigned int hdtv_std_smpte_274m_1080p_30:1;
+    unsigned int hdtv_std_smpte_274m_1080p_50:1;
+    unsigned int hdtv_std_smpte_274m_1080p_59:1;
+    unsigned int hdtv_std_smpte_274m_1080p_60:1;
+    unsigned int hdtv_std_smpte_295m_1080i_50:1;
+
+    unsigned int hdtv_std_smpte_295m_1080p_50:1;
+    unsigned int hdtv_std_smpte_296m_720p_59:1;
+    unsigned int hdtv_std_smpte_296m_720p_60:1;
+    unsigned int hdtv_std_smpte_296m_720p_50:1;
+    unsigned int hdtv_std_smpte_293m_480p_59:1;
+    unsigned int hdtv_std_smpte_170m_480i_59:1;
+    unsigned int hdtv_std_iturbt601_576i_50:1;
+    unsigned int hdtv_std_iturbt601_576p_50:1;
+
+    unsigned int hdtv_std_eia_7702a_480i_60:1;
+    unsigned int hdtv_std_eia_7702a_480p_60:1;
+    unsigned int pad:6;
+} __attribute__((packed));
+
+struct i830_sdvo_hdtv_resolution_reply {
+    unsigned int res_640x480:1;
+    unsigned int res_800x600:1;
+    unsigned int res_1024x768:1;
+    unsigned int res_1280x960:1;
+    unsigned int res_1400x1050:1;
+    unsigned int res_1600x1200:1;
+    unsigned int res_1920x1440:1;
+    unsigned int res_2048x1536:1;
+
+    unsigned int res_2560x1920:1;
+    unsigned int res_3200x2400:1;
+    unsigned int res_3840x2880:1;
+    unsigned int pad1:5;
+
+    unsigned int res_848x480:1;
+    unsigned int res_1064x600:1;
+    unsigned int res_1280x720:1;
+    unsigned int res_1360x768:1;
+    unsigned int res_1704x960:1;
+    unsigned int res_1864x1050:1;
+    unsigned int res_1920x1080:1;
+    unsigned int res_2128x1200:1;
+
+    unsigned int res_2560x1400:1;
+    unsigned int res_2728x1536:1;
+    unsigned int res_3408x1920:1;
+    unsigned int res_4264x2400:1;
+    unsigned int res_5120x2880:1;
+    unsigned int pad2:3;
+
+    unsigned int res_768x480:1;
+    unsigned int res_960x600:1;
+    unsigned int res_1152x720:1;
+    unsigned int res_1124x768:1;
+    unsigned int res_1536x960:1;
+    unsigned int res_1680x1050:1;
+    unsigned int res_1728x1080:1;
+    unsigned int res_1920x1200:1;
+
+    unsigned int res_2304x1440:1;
+    unsigned int res_2456x1536:1;
+    unsigned int res_3072x1920:1;
+    unsigned int res_3840x2400:1;
+    unsigned int res_4608x2880:1;
+    unsigned int pad3:3;
+
+    unsigned int res_1280x1024:1;
+    unsigned int pad4:7;
+
+    unsigned int res_1280x768:1;
+    unsigned int pad5:7;
+} __attribute__((packed));
+
+/* Get supported power state returns info for encoder and monitor, rely on
+   last SetTargetInput and SetTargetOutput calls */
 #define SDVO_CMD_GET_SUPPORTED_POWER_STATES		0x2a
-#define SDVO_CMD_GET_ENCODER_POWER_STATE		0x2b
+/* Get power state returns info for encoder and monitor, rely on last
+   SetTargetInput and SetTargetOutput calls */
+#define SDVO_CMD_GET_POWER_STATE			0x2b
+/* Set encoder power state */
 #define SDVO_CMD_SET_ENCODER_POWER_STATE		0x2c
 # define SDVO_ENCODER_STATE_ON					(1 << 0)
 # define SDVO_ENCODER_STATE_STANDBY				(1 << 1)
 # define SDVO_ENCODER_STATE_SUSPEND				(1 << 2)
 # define SDVO_ENCODER_STATE_OFF					(1 << 3)
+# define SDVO_MONITOR_STATE_ON					(1 << 4)
+# define SDVO_MONITOR_STATE_STANDBY				(1 << 5)
+# define SDVO_MONITOR_STATE_SUSPEND				(1 << 6)
+# define SDVO_MONITOR_STATE_OFF					(1 << 7)
+
+#define SDVO_CMD_GET_MAX_PANEL_POWER_SEQUENCING		0x2d
+#define SDVO_CMD_GET_PANEL_POWER_SEQUENCING		0x2e
+#define SDVO_CMD_SET_PANEL_POWER_SEQUENCING		0x2f
+/**
+ * The panel power sequencing parameters are in units of milliseconds.
+ * The high fields are bits 8:9 of the 10-bit values.
+ */
+struct sdvo_panel_power_sequencing {
+    uint8_t t0;
+    uint8_t t1;
+    uint8_t t2;
+    uint8_t t3;
+    uint8_t t4;
+
+    unsigned int t0_high:2;
+    unsigned int t1_high:2;
+    unsigned int t2_high:2;
+    unsigned int t3_high:2;
+
+    unsigned int t4_high:2;
+    unsigned int pad:6;
+} __attribute__((packed));
+
+#define SDVO_CMD_GET_MAX_BACKLIGHT_LEVEL		0x30
+struct sdvo_max_backlight_reply {
+    uint8_t max_value;
+    uint8_t default_value;
+} __attribute__((packed));
+
+#define SDVO_CMD_GET_BACKLIGHT_LEVEL			0x31
+#define SDVO_CMD_SET_BACKLIGHT_LEVEL			0x32
+
+#define SDVO_CMD_GET_AMBIENT_LIGHT			0x33
+struct sdvo_get_ambient_light_reply {
+    uint16_t trip_low;
+    uint16_t trip_high;
+    uint16_t value;
+} __attribute__((packed));
+#define SDVO_CMD_SET_AMBIENT_LIGHT			0x34
+struct sdvo_set_ambient_light_reply {
+    uint16_t trip_low;
+    uint16_t trip_high;
+    unsigned int enable:1;
+    unsigned int pad:7;
+} __attribute__((packed));
+
+/* Set display power state */
+#define SDVO_CMD_SET_DISPLAY_POWER_STATE		0x7d
+# define SDVO_DISPLAY_STATE_ON				(1 << 0)
+# define SDVO_DISPLAY_STATE_STANDBY			(1 << 1)
+# define SDVO_DISPLAY_STATE_SUSPEND			(1 << 2)
+# define SDVO_DISPLAY_STATE_OFF				(1 << 3)
 
 #define SDVO_CMD_GET_SUPPORTED_ENHANCEMENTS		0x84
 struct i830_sdvo_enhancements_reply {
@@ -447,7 +615,7 @@ struct i830_sdvo_enhancements_reply {
 #define SDVO_CMD_GET_MAX_2D_FLICKER_FITER		0x52
 #define SDVO_CMD_GET_MAX_SATURATION			0x55
 #define SDVO_CMD_GET_MAX_HUE				0x58
-#define SDVO_CMD_GET_MAX_BRIGHTNESS			0x5c
+#define SDVO_CMD_GET_MAX_BRIGHTNESS			0x5b
 #define SDVO_CMD_GET_MAX_CONTRAST			0x5e
 #define SDVO_CMD_GET_MAX_OVERSCAN_H			0x61
 #define SDVO_CMD_GET_MAX_OVERSCAN_V			0x64
@@ -461,8 +629,17 @@ struct i830_sdvo_enhancement_limits_reply {
     uint16_t default_value;
 } __attribute__((packed));
 
-#define SDVO_CMD_GET_FLICKER_FITER			0x4d
-#define SDVO_CMD_SET_FLICKER_FITER			0x4e
+#define SDVO_CMD_GET_LVDS_PANEL_INFORMATION		0x7f
+#define SDVO_CMD_SET_LVDS_PANEL_INFORMATION		0x80
+# define SDVO_LVDS_COLOR_DEPTH_18			(0 << 0)
+# define SDVO_LVDS_COLOR_DEPTH_24			(1 << 0)
+# define SDVO_LVDS_CONNECTOR_SPWG			(0 << 2)
+# define SDVO_LVDS_CONNECTOR_OPENLDI			(1 << 2)
+# define SDVO_LVDS_SINGLE_CHANNEL			(0 << 4)
+# define SDVO_LVDS_DUAL_CHANNEL				(1 << 4)
+
+#define SDVO_CMD_GET_FLICKER_FILTER			0x4e
+#define SDVO_CMD_SET_FLICKER_FILTER			0x4f
 #define SDVO_CMD_GET_ADAPTIVE_FLICKER_FITER		0x50
 #define SDVO_CMD_SET_ADAPTIVE_FLICKER_FITER		0x51
 #define SDVO_CMD_GET_2D_FLICKER_FITER			0x53

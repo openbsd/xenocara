@@ -1,0 +1,223 @@
+/*
+ * Copyright © 2008 Intel Corporation
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ * Author:
+ *    Zou Nan hai <nanhai.zou@intel.com>
+ *    Zhang Hua jun <huajun.zhang@intel.com>
+ *    Xing Dong sheng <dongsheng.xing@intel.com>
+ *
+ */
+mov (8) g76.0<1>UD g1.0<8,8,1>UD {align1};
+//mov (8) g77.0<1>UD g2.0<8,8,1>UD {align1};
+
+include(`block_clear.g4i')
+mov (8) g115.0<1>UD g1.0<8,8,1>UD {align1};
+mov (8) g116.0<1>UD g1.0<8,8,1>UD {align1};
+
+/* forward---Y---first vector*/
+mov(1) g115.8<1>UD 0x007001fUD  { align1 };
+asr (2) g115.14<1>W g1.14<2,2,1>W 1W {align1};
+add (2) g115.0<1>D g116.0<2,2,1>D g115.14<2,2,1>W {align1};
+and (1) g115.4<1>UD g115.4<1,1,1>UD 0xFFFFFFFEUD {align1};
+mov(1) g115.8<1>UD 0x1fUD  { align1 }; //read 1 line, 32 columns.
+and.nz (1) null g1.31<1,1,1>UB 0x1UW {align1};
+(f0) add (1) g115.4<1>D g115.4<1,1,1>D 1D {align1};
+define(`surface',`4')
+define(`mv1',`g1.14')
+define(`mv2',`g1.16')
+include(`motion_field_y_igd.g4i')
+mov (8) g52.0<1>UD g96.0<8,8,1>UD {align1};
+mov (8) g54.0<1>UD g97.0<8,8,1>UD {align1};
+mov (8) g56.0<1>UD g98.0<8,8,1>UD {align1};
+mov (8) g58.0<1>UD g99.0<8,8,1>UD {align1};
+mov (8) g60.0<1>UD g100.0<8,8,1>UD {align1};
+mov (8) g62.0<1>UD g101.0<8,8,1>UD {align1};
+mov (8) g64.0<1>UD g102.0<8,8,1>UD {align1};
+mov (8) g66.0<1>UD g103.0<8,8,1>UD {align1};
+
+/*forward---Y---second vector*/
+asr (2) g115.14<1>W g1.22<2,2,1>W 1W {align1};
+add (2) g115.0<1>D g116.0<2,2,1>D g115.14<2,2,1>W {align1};
+and (1) g115.4<1>UD g115.4<1,1,1>UD 0xFFFFFFFEUD {align1};
+mov(1) g115.8<1>UD 0x1fUD { align1 }; //read 1 line, 32 columns.
+and.nz (1) null g1.31<1,1,1>UB 0x4UD {align1};
+(f0) add (1) g115.4<1>D g115.4<1,1,1>D 1D {align1};
+define(`surface',`4')
+define(`mv1',`g1.22')
+define(`mv2',`g1.24')
+include(`motion_field_y_igd.g4i')
+mov (8) g53.0<1>UD g96.0<8,8,1>UD {align1};
+mov (8) g55.0<1>UD g97.0<8,8,1>UD {align1};
+mov (8) g57.0<1>UD g98.0<8,8,1>UD {align1};
+mov (8) g59.0<1>UD g99.0<8,8,1>UD {align1};
+mov (8) g61.0<1>UD g100.0<8,8,1>UD {align1};
+mov (8) g63.0<1>UD g101.0<8,8,1>UD {align1};
+mov (8) g65.0<1>UD g102.0<8,8,1>UD {align1};
+mov (8) g67.0<1>UD g103.0<8,8,1>UD {align1};
+
+/*forward---UV---first vector*/
+mov(1) g115.8<1>UD 0x007000fUD  { align1 };
+asr (2) g115.14<1>W g1.14<2,2,1>W 2W {align1};
+asr (2) g115.0<1>D g116.0<2,2,1>D 1D {align1};
+add (2) g115.0<1>D g115.0<2,2,1>D g115.14<2,2,1>W {align1};
+and (1) g115.4<1>UD g115.4<1,1,1>UD 0xFFFFFFFEUD {align1};
+and.nz (1) null g1.31<1,1,1>UB 0x1UW {align1};
+(f0) add (1) g115.4<1>UD g115.4<1,1,1>UD 1UD {align1};
+define(`surface_u',`5')
+define(`surface_v',`6')
+define(`mv1',`g1.14')
+define(`mv2',`g1.16')
+include(`motion_field_uv_igd.g4i')
+mov (8) g68.0<1>UW g78.0<8,8,1>UW {align1};
+mov (8) g69.0<1>UW g79.0<8,8,1>UW {align1};
+mov (8) g70.0<1>UW g80.0<8,8,1>UW {align1};
+mov (8) g71.0<1>UW g81.0<8,8,1>UW {align1};
+mov (8) g72.0<1>UW g82.0<8,8,1>UW {align1};
+mov (8) g73.0<1>UW g83.0<8,8,1>UW {align1};
+mov (8) g74.0<1>UW g84.0<8,8,1>UW {align1};
+mov (8) g75.0<1>UW g85.0<8,8,1>UW {align1};
+
+/*forward---UV---second vector */
+asr (2) g115.14<1>W g1.22<2,2,1>W 2W {align1};
+asr (2) g115.0<1>D g116.0<2,2,1>D 1D {align1};
+add (2) g115.0<1>D g115.0<2,2,1>D g115.14<2,2,1>W {align1};
+and (1) g115.4<1>UD g115.4<1,1,1>UD 0xFFFFFFFEUD {align1};
+and.nz (1) null g1.31<1,1,1>UB 0x4UW {align1};
+(f0) add (1) g115.4<1>UD g115.4<1,1,1>UD 1UD {align1};
+define(`mv1',`g1.24')
+define(`mv2',`g1.26')
+include(`motion_field_uv_igd.g4i')
+mov (8) g68.16<1>UW g78.0<8,8,1>UW {align1};
+mov (8) g69.16<1>UW g79.0<8,8,1>UW {align1};
+mov (8) g70.16<1>UW g80.0<8,8,1>UW {align1};
+mov (8) g71.16<1>UW g81.0<8,8,1>UW {align1};
+mov (8) g72.16<1>UW g82.0<8,8,1>UW {align1};
+mov (8) g73.16<1>UW g83.0<8,8,1>UW {align1};
+mov (8) g74.16<1>UW g84.0<8,8,1>UW {align1};
+mov (8) g75.16<1>UW g85.0<8,8,1>UW {align1};
+
+/*backward---Y---first vector */
+mov(8) g1.0<1>UD g116.0<8,8,1>UD {align1};
+mov(1) g115.8<1>UD 0x007001fUD  { align1 };
+mov(1) g1.8<1>UD 0x007000fUD  { align1 };
+asr (2) g115.14<1>W g1.18<2,2,1>W 1W {align1};
+add (2) g115.0<1>D g116.0<2,2,1>D g115.14<2,2,1>W {align1};
+and (1) g115.4<1>UD g115.4<1,1,1>UD 0xFFFFFFFEUD {align1};
+mov(1) g115.8<1>UD 0x1fUD  { align1 }; //read 1 line, 32 columns.
+and.nz (1) null g1.31<1,1,1>UB 0x2UW {align1};
+(f0) add (1) g115.4<1>D g115.4<1,1,1>D 1D {align1};
+define(`surface',`7')
+define(`mv1',`g1.18')
+define(`mv2',`g1.20')
+include(`motion_field_y_igd.g4i')
+mov (8) g28.0<1>UD g96.0<8,8,1>UD {align1};
+mov (8) g30.0<1>UD g97.0<8,8,1>UD {align1};
+mov (8) g32.0<1>UD g98.0<8,8,1>UD {align1};
+mov (8) g34.0<1>UD g99.0<8,8,1>UD {align1};
+mov (8) g36.0<1>UD g100.0<8,8,1>UD {align1};
+mov (8) g38.0<1>UD g101.0<8,8,1>UD {align1};
+mov (8) g40.0<1>UD g102.0<8,8,1>UD {align1};
+mov (8) g42.0<1>UD g103.0<8,8,1>UD {align1};
+
+/*backward---Y---second vector */
+asr (2) g115.14<1>W g1.26<2,2,1>W 1W {align1};
+add (2) g115.0<1>D g116.0<2,2,1>D g115.14<2,2,1>W {align1};
+and (1) g115.4<1>UD g115.4<1,1,1>UD 0xFFFFFFFEUD {align1};
+mov(1) g115.8<1>UD 0x1fUD  { align1 }; //read 1 line, 32 columns.
+and.nz (1) null g2.20<1,1,1>UD 0x8UD {align1};
+(f0) add (1) g115.4<1>D g115.4<1,1,1>D 1D {align1};
+define(`surface',`7')
+define(`mv1',`g1.26')
+define(`mv2',`g1.28')
+include(`motion_field_y_igd.g4i')
+
+avg.sat (16) g28.0<1>UW g52.0<16,16,1>UW g28.0<16,16,1>UW {align1};
+avg.sat (16) g29.0<1>UW g53.0<16,16,1>UW g96.0<16,16,1>UW {align1};
+avg.sat (16) g30.0<1>UW g54.0<16,16,1>UW g30.0<16,16,1>UW {align1};
+avg.sat (16) g31.0<1>UW g55.0<16,16,1>UW g97.0<16,16,1>UW {align1};
+avg.sat (16) g32.0<1>UW g56.0<16,16,1>UW g32.0<16,16,1>UW {align1};
+avg.sat (16) g33.0<1>UW g57.0<16,16,1>UW g98.0<16,16,1>UW {align1};
+avg.sat (16) g34.0<1>UW g58.0<16,16,1>UW g34.0<16,16,1>UW {align1};
+avg.sat (16) g35.0<1>UW g59.0<16,16,1>UW g99.0<16,16,1>UW {align1};
+avg.sat (16) g36.0<1>UW g60.0<16,16,1>UW g36.0<16,16,1>UW {align1};
+avg.sat (16) g37.0<1>UW g61.0<16,16,1>UW g100.0<16,16,1>UW {align1};
+avg.sat (16) g38.0<1>UW g62.0<16,16,1>UW g38.0<16,16,1>UW {align1};
+avg.sat (16) g39.0<1>UW g63.0<16,16,1>UW g101.0<16,16,1>UW {align1};
+avg.sat (16) g40.0<1>UW g64.0<16,16,1>UW g40.0<16,16,1>UW {align1};
+avg.sat (16) g41.0<1>UW g65.0<16,16,1>UW g102.0<16,16,1>UW {align1};
+avg.sat (16) g42.0<1>UW g66.0<16,16,1>UW g42.0<16,16,1>UW {align1};
+avg.sat (16) g43.0<1>UW g67.0<16,16,1>UW g103.0<16,16,1>UW {align1};
+
+/*backward---UV---first vector */
+mov(1) g115.8<1>UD 0x007000fUD  { align1 };
+asr (2) g115.14<1>W g1.18<2,2,1>W 2W {align1};
+asr (2) g115.0<1>D g116.0<2,2,1>D 1D {align1};
+add (2) g115.0<1>D g115.0<2,2,1>D g115.14<2,2,1>W {align1};
+and (1) g115.4<1>UD g115.4<1,1,1>UD 0xFFFFFFFEUD {align1};
+and.nz (1) null g1.31<1,1,1>UB 0x2UW {align1};
+(f0) add (1) g115.4<1>UD g115.4<1,1,1>UD 1UD {align1};
+define(`surface_u',`8')
+define(`surface_v',`9')
+define(`mv1',`g1.18')
+define(`mv2',`g1.20')
+include(`motion_field_uv_igd.g4i')
+mov (8) g44.0<1>UW g78.0<8,8,1>UW {align1};
+mov (8) g45.0<1>UW g79.0<8,8,1>UW {align1};
+mov (8) g46.0<1>UW g80.0<8,8,1>UW {align1};
+mov (8) g47.0<1>UW g81.0<8,8,1>UW {align1};
+mov (8) g48.0<1>UW g82.0<8,8,1>UW {align1};
+mov (8) g49.0<1>UW g83.0<8,8,1>UW {align1};
+mov (8) g50.0<1>UW g84.0<8,8,1>UW {align1};
+mov (8) g51.0<1>UW g85.0<8,8,1>UW {align1};
+
+/*backward---UV---second vector */
+asr (2) g115.14<1>W g1.26<2,2,1>W 2W {align1};
+asr (2) g115.0<1>D g116.0<2,2,1>D 1D {align1};
+add (2) g115.0<1>D g115.0<2,2,1>D g115.14<2,2,1>W {align1};
+and (1) g115.4<1>UD g115.4<1,1,1>UD 0xFFFFFFFEUD {align1};
+and.nz (1) null g1.31<1,1,1>UB 0x8UW {align1};
+(f0) add (1) g115.4<1>UD g115.4<1,1,1>UD 1UD {align1};
+define(`mv1',`g1.26')
+define(`mv2',`g1.28')
+include(`motion_field_uv_igd.g4i')
+mov (8) g44.16<1>UW g78.0<8,8,1>UW {align1};
+mov (8) g45.16<1>UW g79.0<8,8,1>UW {align1};
+mov (8) g46.16<1>UW g80.0<8,8,1>UW {align1};
+mov (8) g47.16<1>UW g81.0<8,8,1>UW {align1};
+mov (8) g48.16<1>UW g82.0<8,8,1>UW {align1};
+mov (8) g49.16<1>UW g83.0<8,8,1>UW {align1};
+mov (8) g50.16<1>UW g84.0<8,8,1>UW {align1};
+mov (8) g51.16<1>UW g85.0<8,8,1>UW {align1};
+
+avg.sat (16) g44.0<1>UW g68.0<16,16,1>UW g44.0<16,16,1>UW {align1};
+avg.sat (16) g45.0<1>UW g69.0<16,16,1>UW g45.0<16,16,1>UW {align1};
+avg.sat (16) g46.0<1>UW g70.0<16,16,1>UW g46.0<16,16,1>UW {align1};
+avg.sat (16) g47.0<1>UW g71.0<16,16,1>UW g47.0<16,16,1>UW {align1};
+avg.sat (16) g48.0<1>UW g72.0<16,16,1>UW g48.0<16,16,1>UW {align1};
+avg.sat (16) g49.0<1>UW g73.0<16,16,1>UW g49.0<16,16,1>UW {align1};
+avg.sat (16) g50.0<1>UW g74.0<16,16,1>UW g50.0<16,16,1>UW {align1};
+avg.sat (16) g51.0<1>UW g75.0<16,16,1>UW g51.0<16,16,1>UW {align1};
+
+include(`addidct.g4i')
+
+//send (16) 0 acc0<1>UW g0<8,8,1>UW 
+//	thread_spawner(0, 0, 0) mlen 1 rlen 0 { align1 EOT};

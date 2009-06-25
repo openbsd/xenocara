@@ -39,15 +39,16 @@
 struct idle_flags {
     uint32_t instdone_flag;
     char *name;
+    int ignore;
     unsigned int count;
 };
 
 struct idle_flags i915_idle_flags[] = {
-    {IDCT_DONE, "IDCT"},
-    {IQ_DONE, "IQ"},
-    {PR_DONE, "PR"},
-    {VLD_DONE, "VLD"},
-    {IP_DONE, "IP"},
+    {IDCT_DONE, "IDCT", 1},
+    {IQ_DONE, "IQ", 1},
+    {PR_DONE, "PR", 1},
+    {VLD_DONE, "VLD", 1},
+    {IP_DONE, "IP", 1},
     {FBC_DONE, "FBC"},
     {BINNER_DONE, "BINNER"},
     {SF_DONE, "SF"},
@@ -66,8 +67,8 @@ struct idle_flags i915_idle_flags[] = {
     {PS_DONE, "PS"},
     {CC_DONE, "CC"},
     {MAP_FILTER_DONE, "map filter"},
-    {MAP_L2_IDLE, "map L2"},
-
+    {MAP_L2_IDLE, "map L2", 1},
+    {0x80000038, "reserved bits", 1},
     {0, "total"},
     {0, "other"},
 };
@@ -103,10 +104,11 @@ setup_other_flags(I830Ptr pI830,
 
     for (i = 0; i < idle_flag_count - 2; i++) {
 	other_idle_flags &= ~idle_flags[i].instdone_flag;
-	total_idle_flags |= idle_flags[i].instdone_flag;
+	if (!idle_flags[i].ignore)
+	    total_idle_flags |= idle_flags[i].instdone_flag;
     }
-    idle_flags[i - 1].instdone_flag = total_idle_flags;
-    idle_flags[i].instdone_flag = other_idle_flags;
+    idle_flags[idle_flag_count - 2].instdone_flag = total_idle_flags;
+    idle_flags[idle_flag_count - 1].instdone_flag = other_idle_flags;
 }
 
 int main(int argc, char **argv)
@@ -193,7 +195,11 @@ int main(int argc, char **argv)
 	}
 
 	for (j = 0; j < idle_flag_count; j++) {
-	    printf("%25s: %3d\n", idle_flags[j].name, idle_flags[j].count);
+	    if (!idle_flags[j].ignore)
+		printf("%25s: %3d\n", idle_flags[j].name, idle_flags[j].count);
+	    else
+		printf("%25s: %3d (unreliable)\n",
+		       idle_flags[j].name, idle_flags[j].count);
 	    idle_flags[j].count = 0;
 	}
 	printf("\n");

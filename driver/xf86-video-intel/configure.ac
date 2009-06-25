@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-intel],
-        2.4.3,
+        2.7.1,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-intel)
 
@@ -84,13 +84,26 @@ XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XORG, [xorg-server xproto fontsproto $REQUIRED_MODULES])
+
+PKG_CHECK_MODULES(SERVER_1_5, [xorg-server >= 1.5],
+			      [SERVER_1_5=yes], [SERVER_1_5=no])
+
+if test "$SERVER_1_5" = yes; then
+   AC_DEFINE(SERVER_1_5, 1, [Building against server 1.5])
+fi
+
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
+drm_cflags=$(pkg-config --cflags libdrm)
 
 # Checks for libraries.
 
 # Checks for header files.
 AC_HEADER_STDC
 
+save_CFLAGS="$CFLAGS"
+CFLAGS="$XORG_CFLAGS $DRI_CFLAGS $drm_cflags"
+CPPFLAGS="$XORG_CFLAGS $DRI_CFLAGS $drm_cflags"
+AC_MSG_CHECKING([whether to include DRI support])
 if test x$DRI != xno; then
         AC_CHECK_FILE([${sdkdir}/dri.h],
                       [have_dri_h="yes"], [have_dri_h="no"])
@@ -98,8 +111,6 @@ if test x$DRI != xno; then
                       [have_sarea_h="yes"], [have_sarea_h="no"])
         AC_CHECK_FILE([${sdkdir}/dristruct.h],
                       [have_dristruct_h="yes"], [have_dristruct_h="no"])
-	AC_CHECK_FILE([${sdkdir}/damage.h],
-                      [have_damage_h="yes"], [have_damage_h="no"])
 fi
 AC_MSG_CHECKING([whether to include DRI support])
 if test x$DRI = xauto; then
@@ -113,8 +124,6 @@ if test x$DRI = xauto; then
 fi
 AC_MSG_RESULT([$DRI])
 
-save_CFLAGS="$CFLAGS"
-CFLAGS="$XORG_CFLAGS"
 AC_CHECK_HEADER(xf86Modes.h,[XMODES=yes],[XMODES=no],[#include "xorg-server.h"])
 AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
 	      [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
@@ -197,25 +206,19 @@ if test "x$GCC" = "xyes"; then
 	-Wnested-externs -fno-strict-aliasing"
 fi
 
+PKG_CHECK_MODULES(DRM, [libdrm >= 2.4.6])
 AM_CONDITIONAL(DRI, test x$DRI = xyes)
 if test "$DRI" = yes; then
-        PKG_CHECK_MODULES(DRI, [libdrm xf86driproto glproto])
+        PKG_CHECK_MODULES(DRI, [xf86driproto glproto])
         AC_DEFINE(XF86DRI,1,[Enable DRI driver support])
         AC_DEFINE(XF86DRI_DEVEL,1,[Enable developmental DRI driver support])
-	if test "$have_damage_h" = yes; then
-		AC_DEFINE(DAMAGE,1,[Use Damage extension])
-	fi
+fi
 
-	save_CFLAGS="$CFLAGS"
-	CFLAGS="$XORG_CFLAGS $DRI_CFLAGS"
-	AC_CHECK_TYPE(drm_i915_flip_t,
-		      [AC_DEFINE(HAVE_I915_FLIP, 1,
-			         [Have drm_i915_flip_t and related definitions])],
-		      [], [
-#include <inttypes.h>
-#include <i915_drm.h>
-])
-	CFLAGS="$save_CFLAGS"
+dnl Server 1.5's set_mode_major required for DRM_MODE.
+PKG_CHECK_MODULES(DRM_MODE, [xorg-server >= 1.5],
+		 [DRM_MODE=yes], [DRM_MODE=no])
+if test "x$DRM_MODE" = xyes; then
+	AC_DEFINE(XF86DRM_MODE,1,[DRM kernel modesetting])
 fi
 
 AM_CONDITIONAL(VIDEO_DEBUG, test x$VIDEO_DEBUG = xyes)
@@ -231,6 +234,7 @@ if test "$XVMC" = yes && test "$DRI" = no; then
 fi
 if test "$XVMC" = yes; then
 	PKG_CHECK_MODULES(XVMCLIB, [xvmc], [XVMC=yes], [XVMC=no])
+	PKG_CHECK_MODULES(XEXT, [xext])
 fi
 AC_MSG_CHECKING([whether to include XvMC support])
 AC_MSG_RESULT([$XVMC])
@@ -239,7 +243,6 @@ if test "$XVMC" = yes; then
 	AC_DEFINE(ENABLE_XVMC,1,[Enable XvMC support])
     	AC_SUBST([XVMCLIB_CFLAGS])
 fi
-
 
 AC_SUBST([DRI_CFLAGS])
 AC_SUBST([XORG_CFLAGS])
@@ -258,6 +261,7 @@ XORG_CHECK_LINUXDOC
 
 AC_OUTPUT([
 	Makefile
+	uxa/Makefile
 	src/Makefile
 	src/xvmc/Makefile
 	src/bios_reader/Makefile

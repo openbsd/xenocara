@@ -36,7 +36,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-noinst_PROGRAMS = bios_reader$(EXEEXT) $(am__EXEEXT_1)
+noinst_PROGRAMS = bios_reader$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2)
 subdir = src/bios_reader
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -48,6 +48,7 @@ mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 @LIBPCIACCESS_TRUE@am__EXEEXT_1 = bios_dumper$(EXEEXT)
+@LIBPCIACCESS_TRUE@am__EXEEXT_2 = swf_dumper$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
 am__bios_dumper_SOURCES_DIST = bios_dumper.c
 @LIBPCIACCESS_TRUE@am_bios_dumper_OBJECTS = bios_dumper.$(OBJEXT)
@@ -57,6 +58,10 @@ am__DEPENDENCIES_1 =
 bios_reader_SOURCES = bios_reader.c
 bios_reader_OBJECTS = bios_reader.$(OBJEXT)
 bios_reader_LDADD = $(LDADD)
+am__swf_dumper_SOURCES_DIST = swf_dumper.c
+@LIBPCIACCESS_TRUE@am_swf_dumper_OBJECTS = swf_dumper.$(OBJEXT)
+swf_dumper_OBJECTS = $(am_swf_dumper_OBJECTS)
+@LIBPCIACCESS_TRUE@swf_dumper_DEPENDENCIES = $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -65,8 +70,9 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(bios_dumper_SOURCES) bios_reader.c
-DIST_SOURCES = $(am__bios_dumper_SOURCES_DIST) bios_reader.c
+SOURCES = $(bios_dumper_SOURCES) bios_reader.c $(swf_dumper_SOURCES)
+DIST_SOURCES = $(am__bios_dumper_SOURCES_DIST) bios_reader.c \
+	$(am__swf_dumper_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -107,6 +113,10 @@ DRI_CFLAGS = @DRI_CFLAGS@
 DRI_FALSE = @DRI_FALSE@
 DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
+DRM_CFLAGS = @DRM_CFLAGS@
+DRM_LIBS = @DRM_LIBS@
+DRM_MODE_CFLAGS = @DRM_MODE_CFLAGS@
+DRM_MODE_LIBS = @DRM_MODE_LIBS@
 DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
@@ -118,6 +128,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 HAVE_GEN4ASM_FALSE = @HAVE_GEN4ASM_FALSE@
 HAVE_GEN4ASM_TRUE = @HAVE_GEN4ASM_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -162,6 +173,8 @@ PKG_CONFIG = @PKG_CONFIG@
 PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
 SED = @SED@
+SERVER_1_5_CFLAGS = @SERVER_1_5_CFLAGS@
+SERVER_1_5_LIBS = @SERVER_1_5_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -169,6 +182,8 @@ VERSION = @VERSION@
 VIDEO_DEBUG_FALSE = @VIDEO_DEBUG_FALSE@
 VIDEO_DEBUG_TRUE = @VIDEO_DEBUG_TRUE@
 WARN_CFLAGS = @WARN_CFLAGS@
+XEXT_CFLAGS = @XEXT_CFLAGS@
+XEXT_LIBS = @XEXT_LIBS@
 XMODES_CFLAGS = @XMODES_CFLAGS@
 XMODES_FALSE = @XMODES_FALSE@
 XMODES_TRUE = @XMODES_TRUE@
@@ -180,15 +195,9 @@ XVMCLIB_CFLAGS = @XVMCLIB_CFLAGS@
 XVMCLIB_LIBS = @XVMCLIB_LIBS@
 XVMC_FALSE = @XVMC_FALSE@
 XVMC_TRUE = @XVMC_TRUE@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -205,6 +214,9 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 gen4asm = @gen4asm@
 host = @host@
@@ -212,26 +224,35 @@ host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 moduledir = @moduledir@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-AM_CFLAGS = @WARN_CFLAGS@ @XORG_CFLAGS@ @XMODES_CFLAGS@ @PCIACCESS_CFLAGS@
+AM_CFLAGS = @WARN_CFLAGS@ @XORG_CFLAGS@ @XMODES_CFLAGS@ @PCIACCESS_CFLAGS@ \
+	-DREG_DUMPER
+
 @LIBPCIACCESS_TRUE@BIOS_DUMPER = bios_dumper
 @LIBPCIACCESS_TRUE@bios_dumper_SOURCES = bios_dumper.c
 @LIBPCIACCESS_TRUE@bios_dumper_LDADD = $(PCIACCESS_LIBS)
+@LIBPCIACCESS_TRUE@SWF_DUMPER = swf_dumper
+@LIBPCIACCESS_TRUE@swf_dumper_SOURCES = swf_dumper.c
+@LIBPCIACCESS_TRUE@swf_dumper_LDADD = $(PCIACCESS_LIBS)
 all: all-am
 
 .SUFFIXES:
@@ -278,6 +299,9 @@ bios_dumper$(EXEEXT): $(bios_dumper_OBJECTS) $(bios_dumper_DEPENDENCIES)
 bios_reader$(EXEEXT): $(bios_reader_OBJECTS) $(bios_reader_DEPENDENCIES) 
 	@rm -f bios_reader$(EXEEXT)
 	$(LINK) $(bios_reader_LDFLAGS) $(bios_reader_OBJECTS) $(bios_reader_LDADD) $(LIBS)
+swf_dumper$(EXEEXT): $(swf_dumper_OBJECTS) $(swf_dumper_DEPENDENCIES) 
+	@rm -f swf_dumper$(EXEEXT)
+	$(LINK) $(swf_dumper_LDFLAGS) $(swf_dumper_OBJECTS) $(swf_dumper_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -287,6 +311,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bios_dumper.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bios_reader.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swf_dumper.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

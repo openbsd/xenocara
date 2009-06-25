@@ -1,0 +1,154 @@
+Release 2.7.1 (2009-05-12)
+--------------------------
+This is a maintenance release on the 2.7 branch. Compared to 2.7.0 it
+consists only of a few carefully hand-picked fixes for bugs,
+(including GPU crashers). We encourage all users of 2.7.0 to upgrade
+to 2.7.1.
+
+Bug fixes since 2.7.0:
+
+    * KMS: Hook up output properties for RANDR, (this allows output
+      properties to be controlled in the KMS case just as in the UMS
+      case). [Zhenyu Wang <zhenyu.z.wang@intel.com>]
+
+    * Fix multiplication error when computing required batch space.
+      This could fix any number of cases where the driver did
+      inexplicable things (due to having computed the wrong
+      size). [Keith Packard <keithp@keithp.com>]
+
+    * Hold reference to video binding table until all rects are
+      painted. This prevent general chaos in the buffer
+      manager. [Keith Packard <keithp@keithp.com>]
+
+    * Split i915 textured video commands to fit into batch
+      buffers. Video and 3D setup commands share the same batch
+      buffer, so without this fix, various problems could occur when
+      video and 3D clients were both heavily active at the same
+      time. [Keith Packard <keithp@keithp.com>]
+
+    * Fix crash with XV with large virtual display (> 2049). [Albert
+      Damen <albrt@gmx.net>]
+
+    * Provide missing value to 3D_STATE_VERTEX_BUFFERS command. We
+      don't know that this was causing any problem, but the change
+      does bring the driver into conformance with what the
+      specification says the hardware requires here. [Keith Packard
+      <keithp@keithp.com>]
+
+Release 2.7.0 (2009-04-15)
+--------------------------
+Compared to the 2.6 series, 2.7.0 has a large number of bug fixes, but
+also a few significant features, such as:
+
+        SDVO-TV support, available on ADD2 card (bug#9992) and
+        D945GCLF2 board (bug#17776).
+
+        Basic SDVO-LVDS support
+
+        XV video display without tearing
+	[Though this isn't working for all users yet, see
+	https://bugs.freedesktop.org/show_bug.cgi?id=21076 ]
+
+	Various fixes for UXA, DRI2, and Kernel modesetting.
+
+We encourage users to use kernel modesetting and UXA acceleration with
+this release, which should give the best performance and
+robustness. When KMS is available, UXA is the default acceleration
+used by the driver, (EXA is the default otherwise).
+
+Known issue:
+
+	Some Linux kernel versions (such as 2.6.29) are known to have
+	broken PAT code that causes recent versions of this driver to
+	fail, (which can manifest as the X server simply not
+	starting). This can be verified by adding the "nopat" option
+	to the kernel command-line and seeing the failure go away. We
+	hope that newer kernels in the 2.6.29.x as well as 2.6.30 and
+	above will have working PAT code.
+
+Some of the most notable bugs fixed in 2.7.0 include:
+
+	[GM45 965GM] bad htotal causes panel startup failure
+	https://bugs.freedesktop.org/show_bug.cgi?id=17292
+
+	[xrandr TV] need TV output property control
+	https://bugs.freedesktop.org/show_bug.cgi?id=12763
+
+	[TV] "xrandr --set TV_FORMAT" gets BadMatch error
+	https://bugs.freedesktop.org/show_bug.cgi?id=16566
+
+	[945 tiling] Low performance due to no A17 workaround
+	https://bugs.freedesktop.org/show_bug.cgi?id=16835
+
+	[TV]Flicker when launching applications in the 2.4-branch
+	https://bugs.freedesktop.org/show_bug.cgi?id=17405
+
+	[945GM FBC] FBC causes underruns & flicker
+	https://bugs.freedesktop.org/show_bug.cgi?id=18651
+
+	[xv] Textured video suffers from tearing
+	https://bugs.freedesktop.org/show_bug.cgi?id=19635
+
+	[G45] Random hangs with UXA
+	https://bugs.freedesktop.org/show_bug.cgi?id=19734
+
+	[945GM] Any 3D app is slow in resolution higher than 800x600
+	with UXA+DRI2, due to tiling
+	https://bugs.freedesktop.org/show_bug.cgi?id=19738
+
+	[i915 UXA,EXA] rotation messes display with tiling on
+	https://bugs.freedesktop.org/show_bug.cgi?id=20265
+
+	[G45] DRI2/UXA gives solid white instead of transparency
+	https://bugs.freedesktop.org/show_bug.cgi?id=20321
+
+	LVDS output not detected
+	https://bugs.freedesktop.org/show_bug.cgi?id=20517
+
+	xf86-video-intel-2.6.3: Xv crashes X server
+	https://bugs.freedesktop.org/show_bug.cgi?id=20525
+
+	[G965 non-GEM] systray in KDE 4 completely broken
+	https://bugs.freedesktop.org/show_bug.cgi?id=20527
+
+	[SDVO-TV]the desktop is teared in four sections on the screen
+	https://bugs.freedesktop.org/show_bug.cgi?id=20550
+
+	Intel video driver 2.6.3 crashes with XVideo
+	https://bugs.freedesktop.org/show_bug.cgi?id=20563
+
+	[855GM] Xv crash with non-KMS
+	https://bugs.freedesktop.org/show_bug.cgi?id=20585
+
+	2.6.99.902 breaks native 1680x1050 mode on TMDS -- EDID miss
+	https://bugs.freedesktop.org/show_bug.cgi?id=20594
+
+	[945GM TV] 2.6.99.902 sets a too high CONTRAST-value
+	https://bugs.freedesktop.org/show_bug.cgi?id=20670
+
+	[915GM] fail to detect LVDS with new VBT code
+	https://bugs.freedesktop.org/show_bug.cgi?id=20752
+
+	[regression i965]tiled output when start X
+	https://bugs.freedesktop.org/show_bug.cgi?id=20803
+
+	2.6.99.902: LVDS wrongly detected as disconnected
+	https://bugs.freedesktop.org/show_bug.cgi?id=20826
+
+	vt switching fails and crashes X
+	https://bugs.freedesktop.org/show_bug.cgi?id=20863
+
+	[HDMI] The screen will flicker when some application runs on
+	G45-64
+	https://bugs.freedesktop.org/show_bug.cgi?id=20875
+
+	TexturedVideo is offsetted wrongly on dualhead
+	https://bugs.freedesktop.org/show_bug.cgi?id=20980
+
+	[EXA] xvideo hang X
+	https://bugs.freedesktop.org/show_bug.cgi?id=21027
+
+	[EXA] x11perf performance regression
+	https://bugs.freedesktop.org/show_bug.cgi?id=21029
+
+	And many others...

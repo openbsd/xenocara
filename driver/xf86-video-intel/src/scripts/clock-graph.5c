@@ -1,0 +1,174 @@
+autoload Cairo;
+import Cairo;
+library "examples/sort.5c";
+import Sort;
+
+int width = 1000, height = 200;
+int min_vco = 1400000000;
+int max_vco = 2800000000;
+int min = 0xffffffff;
+int max = 0;
+
+int max_clocks = 2000;
+int[4][max_clocks] clocks;
+int[4][max_clocks] vcos;
+int[4] clock_count = {0...};
+
+int[4] p2vals = {5,10,7,14};
+
+cairo_t cr = Cairo::new(width, height);
+
+void calc_p2(int p2i)
+{
+	int p2 = p2vals[p2i];
+	int min_p, max_p;
+
+	clocks[p2i] = (int [max_clocks]){0...};
+
+		if (p2 == 7 || p2 == 14) {
+		/* LVDS */
+		min_p = 7;
+		max_p = 98;
+	} else {
+		/* SDVO/DAC */
+		min_p = 5;
+		max_p = 80;
+	}
+
+	for (int m1 = 10; m1 <= 22; m1++) {
+		for (int m2 = 5; m2 <= 9; m2++) {
+			for (int n = 1; n <= 5; n++) {
+				for (int p1 = 1; p1 <= 8; p1++) {
+					int ref = 96000000;
+					int m = 5 * (m1 + 2) + (m2 + 2);
+					int p = p1 * p2;
+					int vco = floor(ref * m / (n + 2));
+					int clock = floor(vco / p);
+
+					if (p < min_p || p > max_p)
+						continue;
+					if (m < 70 || m > 120)
+						continue;
+					if (m2 > m1)
+						continue; /* won't happen */
+					if (vco < min_vco || vco > max_vco)
+						continue;
+
+/*
+					printf("clock: %d (%d,%d), %d, "
+						"(%d,%d)\n",
+						floor(clock / 1000),
+						m1, m2, n, p1, p2);
+*/
+
+					clocks[p2i][clock_count[p2i]] = clock;
+					vcos[p2i][clock_count[p2i]] = vco;
+					clock_count[p2i]++;
+				}
+			}
+		}
+	}
+}
+
+bool sort_p2(poly a, poly b)
+{
+	return a > b;
+}
+
+int min_rate = 25000 * 1000;
+int max_rate = 200000 * 1000;
+
+real scale_x(real clock)
+{
+	int min_x = 75, max_x = width - 50;
+
+	real frac = (clock - min_rate) / (max_rate - min_rate);
+
+	return min_x + frac * (max_x - min_x);
+}
+
+for (p2i = 0; p2i < dim(p2vals); p2i++) {
+	int p2 = p2vals[p2i]; 
+	calc_p2(p2i);
+	real row_y1 = (p2i + 1) / (dim(p2vals) + 1) * height;
+	real row_y2 = p2i / (dim(p2vals) + 1) * height;
+
+	/*qsort(&p2vals[p2i], sort_p2);*/
+
+	switch (p2) {
+	case 5:
+		set_source_rgb(cr, 1,0,0);
+		break;
+	case 10:
+		set_source_rgb(cr, 0,1,0);
+		break;
+	case 7:
+		set_source_rgb(cr, 0,0,1);
+		break;
+	case 14:
+		set_source_rgb(cr, 0,0,0);
+		break;
+	}
+
+	/* draw the line for the clock */
+	for (int i = 0; i < clock_count[p2i]; i++) {
+		int clock = clocks[p2i][i];
+		real xpos;
+
+		if (clock < min_rate || clock > max_rate)
+			continue;
+
+		xpos = scale_x(clock);
+		move_to(cr, xpos, row_y1);
+		line_to(cr, xpos, row_y2);
+		stroke(cr);
+	}
+
+	set_source_rgb(cr, 1, 1, 1);
+	/* add a mark for the vco value of the clocks at each location */
+	for (int i = 0; i < clock_count[p2i]; i++) {
+		int clock = clocks[p2i][i];
+		int vco = vcos[p2i][i];
+		real mark_center;
+
+		if (clock < min_rate || clock > max_rate)
+			continue;
+
+		real xpos = scale_x(clock);
+		real vcofrac = (vco - min_vco) / (max_vco - min_vco);
+		real mark_height = (row_y1 + vcofrac * (row_y2 - row_y1));
+
+		move_to(cr, xpos, mark_height - 1);
+		line_to(cr, xpos, mark_height + 1);
+		stroke(cr);
+	}
+
+	set_source_rgb(cr, 0, 0, 0);
+	string p2label = sprintf("p2 = %d", p2);
+	move_to(cr, 5, (p2i + .5) / (dim(p2vals) + 1) * height + 4);
+	show_text(cr, p2label);
+}
+
+void label_clock(real clock) {
+	real center_x = scale_x(clock);
+	string label = sprintf("%d", floor((clock + 500) / 1000000));
+		text_extents_t e = text_extents(cr, label);
+	real left_x = center_x - e.x_advance / 2;
+	save(cr);
+	move_to(cr, left_x, height - 20);
+	show_text(cr, label);
+	restore(cr);
+}
+
+label_clock(min_rate);
+label_clock(max_rate);
+label_clock(140 * 1000 * 1000);
+label_clock(115 * 1000 * 1000);
+label_clock(100 * 1000 * 1000);
+label_clock(82 * 1000 * 1000);
+
+string xlabel = "Clock in Mhz";
+text_extents_t e = text_extents(cr, xlabel);
+move_to(cr, width / 2 - e.x_advance / 2, height - 5);
+show_text(cr, xlabel);
+sleep(10);

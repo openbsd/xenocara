@@ -47,7 +47,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "xaa.h"
 #include "xf86Cursor.h"
 #include "xf86xv.h"
-#include "xf86int10.h"
 #include "vbe.h"
 #include "vgaHW.h"
 
@@ -71,7 +70,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define I810_VERSION 4000
 #define I810_NAME "intel"
 #define I810_DRIVER_NAME "intel"
-#define I810_LEGACY_DRIVER_NAME "i810"
 
 #define INTEL_VERSION_MAJOR PACKAGE_VERSION_MAJOR
 #define INTEL_VERSION_MINOR PACKAGE_VERSION_MINOR
@@ -275,6 +273,8 @@ typedef struct _I810Rec {
    Bool have3DWindows;
    int  drmMinor;
 } I810Rec;
+
+extern const char *I810vbeSymbols[];
 
 #define I810PTR(p) ((I810Ptr)((p)->driverPrivate))
 

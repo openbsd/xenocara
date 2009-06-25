@@ -34,23 +34,6 @@
 #include "i830.h"
 #include "i830_reg.h"
 
-#ifdef I830DEBUG
-#define DEBUG_I830FALLBACK 1
-#endif
-
-#ifdef DEBUG_I830FALLBACK
-#define I830FALLBACK(s, arg...)				\
-do {							\
-	DPRINTF(PFX, "EXA fallback: " s "\n", ##arg); 	\
-	return FALSE;					\
-} while(0)
-#else
-#define I830FALLBACK(s, arg...) 			\
-do { 							\
-	return FALSE;					\
-} while(0)
-#endif
-
 struct blendinfo {
     Bool dst_alpha;
     Bool src_alpha;
@@ -160,6 +143,8 @@ static struct formatinfo i830_tex_formats[] = {
 
 static Bool i830_get_dest_format(PicturePtr pDstPicture, uint32_t *dst_format)
 {
+    ScrnInfoPtr pScrn = xf86Screens[pDstPicture->pDrawable->pScreen->myNum];
+
     switch (pDstPicture->format) {
     case PICT_a8r8g8b8:
     case PICT_x8r8g8b8:
@@ -227,6 +212,7 @@ static uint32_t i830_get_blend_cntl(int op, PicturePtr pMask,
 
 static Bool i830_check_composite_texture(PicturePtr pPict, int unit)
 {
+    ScrnInfoPtr pScrn = xf86Screens[pPict->pDrawable->pScreen->myNum];
     int w = pPict->pDrawable->width;
     int h = pPict->pDrawable->height;
     int i;
@@ -244,8 +230,8 @@ static Bool i830_check_composite_texture(PicturePtr pPict, int unit)
         I830FALLBACK("Unsupported picture format 0x%x\n",
 		     (int)pPict->format);
 
-    if (pPict->repeat && pPict->repeatType != RepeatNormal)
-	I830FALLBACK("unsupport repeat type\n");
+    if (pPict->repeatType > RepeatReflect)
+        I830FALLBACK("Unsupported picture repeat %d\n", pPict->repeatType);
 
     if (pPict->filter != PictFilterNearest &&
         pPict->filter != PictFilterBilinear)
@@ -275,10 +261,9 @@ i830_texture_setup(PicturePtr pPict, PixmapPtr pPix, int unit)
 
     ScrnInfoPtr pScrn = xf86Screens[pPict->pDrawable->pScreen->myNum];
     I830Ptr pI830 = I830PTR(pScrn);
-    uint32_t format, offset, pitch, filter;
-    uint32_t wrap_mode = TEXCOORDMODE_CLAMP_BORDER;
+    uint32_t format, pitch, filter;
+    uint32_t wrap_mode;
 
-    offset = intel_get_pixmap_offset(pPix);
     pitch = intel_get_pixmap_pitch(pPix);
     pI830->scale_units[unit][0] = pPix->drawable.width;
     pI830->scale_units[unit][1] = pPix->drawable.height;
@@ -286,8 +271,22 @@ i830_texture_setup(PicturePtr pPict, PixmapPtr pPix, int unit)
 
     format = i8xx_get_card_format(pPict);
 
-    if (pPict->repeat)
+    switch (pPict->repeatType) {
+    case RepeatNone:
+	wrap_mode = TEXCOORDMODE_CLAMP_BORDER;
+	break;
+    case RepeatNormal:
 	wrap_mode = TEXCOORDMODE_WRAP;
+	break;
+    case RepeatPad:
+	wrap_mode = TEXCOORDMODE_CLAMP;
+	break;
+    case RepeatReflect:
+	wrap_mode = TEXCOORDMODE_MIRROR;
+	break;
+    default:
+	FatalError("Unkown repeat type %d\n", pPict->repeatType);
+    }
 
     switch (pPict->filter) {
     case PictFilterNearest:
@@ -314,7 +313,7 @@ i830_texture_setup(PicturePtr pPict, PixmapPtr pPix, int unit)
 
 	BEGIN_BATCH(10);
 	OUT_BATCH(_3DSTATE_LOAD_STATE_IMMEDIATE_2 | LOAD_TEXTURE_MAP(unit) | 4);
-	OUT_BATCH((offset & TM0S0_ADDRESS_MASK) | TM0S0_USE_FENCE);
+	OUT_RELOC_PIXMAP(pPix, I915_GEM_DOMAIN_SAMPLER, 0, TM0S0_USE_FENCE);
 	OUT_BATCH(((pPix->drawable.height - 1) << TM0S1_HEIGHT_SHIFT) |
 		  ((pPix->drawable.width - 1) << TM0S1_WIDTH_SHIFT) | format);
 	OUT_BATCH((pitch/4 - 1) << TM0S2_PITCH_SHIFT | TM0S2_MAP_2D);
@@ -358,6 +357,7 @@ Bool
 i830_check_composite(int op, PicturePtr pSrcPicture, PicturePtr pMaskPicture,
 		     PicturePtr pDstPicture)
 {
+    ScrnInfoPtr pScrn = xf86Screens[pDstPicture->pDrawable->pScreen->myNum];
     uint32_t tmp1;
 
     /* Check for unsupported compositing operations. */
@@ -394,7 +394,7 @@ i830_prepare_composite(int op, PicturePtr pSrcPicture,
 {
     ScrnInfoPtr pScrn = xf86Screens[pSrcPicture->pDrawable->pScreen->myNum];
     I830Ptr pI830 = I830PTR(pScrn);
-    uint32_t dst_format, dst_offset, dst_pitch;
+    uint32_t dst_format, dst_pitch;
     Bool is_affine_src, is_affine_mask;
     Bool is_nearest = FALSE;
 
@@ -404,11 +404,10 @@ i830_prepare_composite(int op, PicturePtr pSrcPicture,
     i830_exa_check_pitch_3d(pDst);
 
     IntelEmitInvarientState(pScrn);
-    *pI830->last_3d = LAST_3D_RENDER;
+    pI830->last_3d = LAST_3D_RENDER;
 
     if (!i830_get_dest_format(pDstPicture, &dst_format))
 	return FALSE;
-    dst_offset = intel_get_pixmap_offset(pDst);
     dst_pitch = intel_get_pixmap_pitch(pDst);
 
     if (!i830_texture_setup(pSrcPicture, pSrc, 0))
@@ -446,7 +445,7 @@ i830_prepare_composite(int op, PicturePtr pSrcPicture,
 	OUT_BATCH(_3DSTATE_BUF_INFO_CMD);
 	OUT_BATCH(BUF_3D_ID_COLOR_BACK| BUF_3D_USE_FENCE |
 		  BUF_3D_PITCH(dst_pitch));
-	OUT_BATCH(BUF_3D_ADDR(dst_offset));
+	OUT_RELOC_PIXMAP(pDst, I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER, 0);
 	OUT_BATCH(MI_NOOP);
 
 	OUT_BATCH(_3DSTATE_DST_BUF_VARS_CMD);
@@ -734,15 +733,4 @@ i830_composite(PixmapPtr pDst, int srcX, int srcY, int maskX, int maskY,
     }
 
     ADVANCE_BATCH();
-}
-
-/**
- * Do any cleanup from the Composite operation.
- *
- * This is shared between i830 through i965.
- */
-void
-i830_done_composite(PixmapPtr pDst)
-{
-    /* NO-OP */
 }

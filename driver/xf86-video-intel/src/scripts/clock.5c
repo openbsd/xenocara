@@ -1,0 +1,40 @@
+int p2 = 14;
+int min_p, max_p;
+
+if (p2 == 7 || p2 == 14) {
+	/* LVDS */
+	min_p = 7;
+	max_p = 98;
+} else {
+	/* SDVO/DAC */
+	min_p = 5;
+	max_p = 80;
+}
+
+for (int m1 = 10; m1 <= 22; m1++) {
+	for (int m2 = 5; m2 <= 9; m2++) {
+		for (int n = 1; n <= 6; n++) {
+			for (int p1 = 1; p1 <= 8; p1++) {
+				int ref = 96000000;
+				int m = 5 * (m1 + 2) + (m2 + 2);
+				int p = p1 * p2;
+				int vco = floor(ref * m / (n + 2));
+				int clock = floor(vco / p);
+
+				if (p < min_p || p > max_p)
+					continue;
+				if (m < 70 || m > 120)
+					continue;
+				if (m2 > m1)
+					continue; /* won't happen */
+				if (vco < 1400000000 ||
+				    vco > 2800000000)
+					continue;
+
+				printf("clock: %d (%d,%d),%d,(%d,%d)\n",
+					floor(clock / 1000),
+					m1, m2, n, p1, p2);
+			}
+		}
+	}
+}

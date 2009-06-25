@@ -56,20 +56,15 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libI810XvMC_la_DEPENDENCIES =
-am__libI810XvMC_la_SOURCES_DIST = I810XvMC.c I810XvMC.h
-@XVMC_TRUE@am_libI810XvMC_la_OBJECTS = libI810XvMC_la-I810XvMC.lo
+am_libI810XvMC_la_OBJECTS = libI810XvMC_la-I810XvMC.lo
 libI810XvMC_la_OBJECTS = $(am_libI810XvMC_la_OBJECTS)
 @XVMC_TRUE@am_libI810XvMC_la_rpath = -rpath $(libdir)
 libIntelXvMC_la_DEPENDENCIES =
-am__libIntelXvMC_la_SOURCES_DIST = intel_xvmc.c intel_xvmc.h \
-	intel_xvmc_dump.c i915_structs.h i915_program.h i915_xvmc.c \
-	i915_xvmc.h intel_batchbuffer.c intel_batchbuffer.h xf86dri.c \
-	xf86dri.h xf86dristr.h
-@XVMC_TRUE@am_libIntelXvMC_la_OBJECTS = libIntelXvMC_la-intel_xvmc.lo \
-@XVMC_TRUE@	libIntelXvMC_la-intel_xvmc_dump.lo \
-@XVMC_TRUE@	libIntelXvMC_la-i915_xvmc.lo \
-@XVMC_TRUE@	libIntelXvMC_la-intel_batchbuffer.lo \
-@XVMC_TRUE@	libIntelXvMC_la-xf86dri.lo
+am_libIntelXvMC_la_OBJECTS = libIntelXvMC_la-intel_xvmc.lo \
+	libIntelXvMC_la-intel_xvmc_dump.lo \
+	libIntelXvMC_la-i915_xvmc.lo libIntelXvMC_la-i965_xvmc.lo \
+	libIntelXvMC_la-intel_batchbuffer.lo \
+	libIntelXvMC_la-xf86dri.lo
 libIntelXvMC_la_OBJECTS = $(am_libIntelXvMC_la_OBJECTS)
 @XVMC_TRUE@am_libIntelXvMC_la_rpath = -rpath $(libdir)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -81,8 +76,7 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libI810XvMC_la_SOURCES) $(libIntelXvMC_la_SOURCES)
-DIST_SOURCES = $(am__libI810XvMC_la_SOURCES_DIST) \
-	$(am__libIntelXvMC_la_SOURCES_DIST)
+DIST_SOURCES = $(libI810XvMC_la_SOURCES) $(libIntelXvMC_la_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -123,6 +117,10 @@ DRI_CFLAGS = @DRI_CFLAGS@
 DRI_FALSE = @DRI_FALSE@
 DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
+DRM_CFLAGS = @DRM_CFLAGS@
+DRM_LIBS = @DRM_LIBS@
+DRM_MODE_CFLAGS = @DRM_MODE_CFLAGS@
+DRM_MODE_LIBS = @DRM_MODE_LIBS@
 DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
@@ -134,6 +132,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 HAVE_GEN4ASM_FALSE = @HAVE_GEN4ASM_FALSE@
 HAVE_GEN4ASM_TRUE = @HAVE_GEN4ASM_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -178,6 +177,8 @@ PKG_CONFIG = @PKG_CONFIG@
 PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
 SED = @SED@
+SERVER_1_5_CFLAGS = @SERVER_1_5_CFLAGS@
+SERVER_1_5_LIBS = @SERVER_1_5_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -185,6 +186,8 @@ VERSION = @VERSION@
 VIDEO_DEBUG_FALSE = @VIDEO_DEBUG_FALSE@
 VIDEO_DEBUG_TRUE = @VIDEO_DEBUG_TRUE@
 WARN_CFLAGS = @WARN_CFLAGS@
+XEXT_CFLAGS = @XEXT_CFLAGS@
+XEXT_LIBS = @XEXT_LIBS@
 XMODES_CFLAGS = @XMODES_CFLAGS@
 XMODES_FALSE = @XMODES_FALSE@
 XMODES_TRUE = @XMODES_TRUE@
@@ -196,15 +199,9 @@ XVMCLIB_CFLAGS = @XVMCLIB_CFLAGS@
 XVMCLIB_LIBS = @XVMCLIB_LIBS@
 XVMC_FALSE = @XVMC_FALSE@
 XVMC_TRUE = @XVMC_TRUE@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -221,6 +218,9 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 gen4asm = @gen4asm@
 host = @host@
@@ -228,51 +228,143 @@ host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 moduledir = @moduledir@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 @XVMC_TRUE@lib_LTLIBRARIES = libI810XvMC.la libIntelXvMC.la
-@XVMC_TRUE@libI810XvMC_la_SOURCES = I810XvMC.c \
-@XVMC_TRUE@			 I810XvMC.h
+libI810XvMC_la_SOURCES = I810XvMC.c \
+			 I810XvMC.h
 
-@XVMC_TRUE@libI810XvMC_la_CFLAGS = @WARN_CFLAGS@ @XORG_CFLAGS@ @DRI_CFLAGS@ \
-@XVMC_TRUE@	-I$(top_srcdir)/src -DTRUE=1 -DFALSE=0
+libI810XvMC_la_CFLAGS = @WARN_CFLAGS@ @XORG_CFLAGS@ @DRM_CFLAGS@ @DRI_CFLAGS@ \
+	-I$(top_srcdir)/src -DTRUE=1 -DFALSE=0
 
-@XVMC_TRUE@libI810XvMC_la_LDFLAGS = -version-number 1:0:0
-@XVMC_TRUE@libI810XvMC_la_LIBADD = @DRI_LIBS@ 
-@XVMC_TRUE@libIntelXvMC_la_SOURCES = intel_xvmc.c \
-@XVMC_TRUE@			 intel_xvmc.h \
-@XVMC_TRUE@			 intel_xvmc_dump.c \
-@XVMC_TRUE@			 i915_structs.h \
-@XVMC_TRUE@			 i915_program.h \
-@XVMC_TRUE@			 i915_xvmc.c \
-@XVMC_TRUE@                         i915_xvmc.h \
-@XVMC_TRUE@                         intel_batchbuffer.c \
-@XVMC_TRUE@                         intel_batchbuffer.h \
-@XVMC_TRUE@                         xf86dri.c \
-@XVMC_TRUE@                         xf86dri.h \
-@XVMC_TRUE@                         xf86dristr.h
+libI810XvMC_la_LDFLAGS = -version-number 1:0:0
+libI810XvMC_la_LIBADD = @DRI_LIBS@ @DRM_LIBS@ @XVMCLIB_LIBS@
+libIntelXvMC_la_SOURCES = intel_xvmc.c \
+        intel_xvmc.h                   \
+        intel_xvmc_dump.c              \
+        i915_structs.h                 \
+        i915_program.h                 \
+        i915_xvmc.c                    \
+        i915_xvmc.h                    \
+        i965_xvmc.c                    \
+        i965_xvmc.h                    \
+        intel_batchbuffer.c            \
+        intel_batchbuffer.h            \
+        xf86dri.c                      \
+        xf86dri.h                      \
+        xf86dristr.h
 
-@XVMC_TRUE@libIntelXvMC_la_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@ @XVMCLIB_CFLAGS@ -I$(top_srcdir)/src -DTRUE=1 -DFALSE=0
-@XVMC_TRUE@libIntelXvMC_la_LDFLAGS = -version-number 1:0:0
-@XVMC_TRUE@libIntelXvMC_la_LIBADD = @DRI_LIBS@
-all: all-am
+libIntelXvMC_la_CFLAGS = @XORG_CFLAGS@ @DRM_CFLAGS@ @DRI_CFLAGS@ \
+	@XVMCLIB_CFLAGS@ -I$(top_srcdir)/src -DTRUE=1 -DFALSE=0
+
+libIntelXvMC_la_LDFLAGS = -version-number 1:0:0
+libIntelXvMC_la_LIBADD = @DRI_LIBS@ @DRM_LIBS@ @XVMCLIB_LIBS@ @XEXT_LIBS@ -lpthread
+INTEL_G4A = \
+        dual_prime_igd.g4a              \
+        field_backward_igd.g4a          \
+        field_f_b_igd.g4a               \
+        field_forward_igd.g4a           \
+        frame_backward_igd.g4a          \
+        frame_f_b_igd.g4a               \
+        frame_forward_igd.g4a           \
+        dual_prime.g4a              \
+        field_backward.g4a          \
+        field_f_b.g4a               \
+        field_forward.g4a           \
+        frame_backward.g4a          \
+        frame_f_b.g4a               \
+        frame_forward.g4a           \
+        ipicture.g4a                \
+        null.g4a
+
+INTEL_G4I = \
+        addidct.g4i                              \
+        block_clear.g4i                          \
+        read_frame_x0y0_y.g4i                    \
+        read_frame_x0y1_y.g4i                    \
+        read_frame_x1y0_y.g4i                    \
+        read_frame_x1y1_y.g4i                    \
+        read_frame_x0y0_uv.g4i                   \
+        read_frame_x0y1_uv.g4i                   \
+        read_frame_x1y0_uv.g4i                   \
+        read_frame_x1y1_uv.g4i                   \
+        read_frame_x0y0_y_igd.g4i                    \
+        read_frame_x0y1_y_igd.g4i                    \
+        read_frame_x1y0_y_igd.g4i                    \
+        read_frame_x1y1_y_igd.g4i                    \
+        read_frame_x0y0_uv_igd.g4i                   \
+        read_frame_x0y1_uv_igd.g4i                   \
+        read_frame_x1y0_uv_igd.g4i                   \
+        read_frame_x1y1_uv_igd.g4i                   \
+        motion_frame_y.g4i                       \
+        motion_frame_uv.g4i                      \
+        read_field_x0y0_y.g4i                    \
+        read_field_x0y1_y.g4i                    \
+        read_field_x1y0_y.g4i                    \
+        read_field_x1y1_y.g4i                    \
+        read_field_x0y0_uv.g4i                   \
+        read_field_x0y1_uv.g4i                   \
+        read_field_x1y0_uv.g4i                   \
+        read_field_x1y1_uv.g4i                   \
+        read_field_x0y0_y_igd.g4i                    \
+        read_field_x0y1_y_igd.g4i                    \
+        read_field_x1y0_y_igd.g4i                    \
+        read_field_x1y1_y_igd.g4i                    \
+        read_field_x0y0_uv_igd.g4i                   \
+        read_field_x0y1_uv_igd.g4i                   \
+        read_field_x1y0_uv_igd.g4i                   \
+        read_field_x1y1_uv_igd.g4i                   \
+        motion_field_y.g4i                       \
+        motion_field_uv.g4i
+
+INTEL_G4B = \
+        dual_prime.g4b              \
+        field_backward.g4b          \
+        field_f_b.g4b               \
+        field_forward.g4b           \
+        frame_backward.g4b          \
+        frame_f_b.g4b               \
+        frame_forward.g4b           \
+        dual_prime_igd.g4b              \
+        field_backward_igd.g4b          \
+        field_f_b_igd.g4b               \
+        field_forward_igd.g4b           \
+        frame_backward_igd.g4b          \
+        frame_f_b_igd.g4b               \
+        frame_forward_igd.g4b           \
+        ipicture.g4b                \
+        null.g4b
+
+EXTRA_DIST = \
+        $(INTEL_G4A)    \
+        $(INTEL_G4I)    \
+        $(INTEL_G4B)    
+
+@HAVE_GEN4ASM_TRUE@SUFFIXES = .g4a .g4b
+@HAVE_GEN4ASM_TRUE@BUILT_SOURCES = $(INTEL_G4B)
+all: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .lo .o .obj
+.SUFFIXES: .g4a .g4b .c .lo .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -342,6 +434,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libI810XvMC_la-I810XvMC.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libIntelXvMC_la-i915_xvmc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libIntelXvMC_la-i965_xvmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libIntelXvMC_la-intel_batchbuffer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libIntelXvMC_la-intel_xvmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libIntelXvMC_la-intel_xvmc_dump.Plo@am__quote@
@@ -395,6 +488,13 @@ libIntelXvMC_la-i915_xvmc.lo: i915_xvmc.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='i915_xvmc.c' object='libIntelXvMC_la-i915_xvmc.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libIntelXvMC_la_CFLAGS) $(CFLAGS) -c -o libIntelXvMC_la-i915_xvmc.lo `test -f 'i915_xvmc.c' || echo '$(srcdir)/'`i915_xvmc.c
+
+libIntelXvMC_la-i965_xvmc.lo: i965_xvmc.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libIntelXvMC_la_CFLAGS) $(CFLAGS) -MT libIntelXvMC_la-i965_xvmc.lo -MD -MP -MF "$(DEPDIR)/libIntelXvMC_la-i965_xvmc.Tpo" -c -o libIntelXvMC_la-i965_xvmc.lo `test -f 'i965_xvmc.c' || echo '$(srcdir)/'`i965_xvmc.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libIntelXvMC_la-i965_xvmc.Tpo" "$(DEPDIR)/libIntelXvMC_la-i965_xvmc.Plo"; else rm -f "$(DEPDIR)/libIntelXvMC_la-i965_xvmc.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='i965_xvmc.c' object='libIntelXvMC_la-i965_xvmc.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libIntelXvMC_la_CFLAGS) $(CFLAGS) -c -o libIntelXvMC_la-i965_xvmc.lo `test -f 'i965_xvmc.c' || echo '$(srcdir)/'`i965_xvmc.c
 
 libIntelXvMC_la-intel_batchbuffer.lo: intel_batchbuffer.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libIntelXvMC_la_CFLAGS) $(CFLAGS) -MT libIntelXvMC_la-intel_batchbuffer.lo -MD -MP -MF "$(DEPDIR)/libIntelXvMC_la-intel_batchbuffer.Tpo" -c -o libIntelXvMC_la-intel_batchbuffer.lo `test -f 'intel_batchbuffer.c' || echo '$(srcdir)/'`intel_batchbuffer.c; \
@@ -496,13 +596,15 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: check-am
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(LTLIBRARIES)
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
-install: install-am
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -526,9 +628,11 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
+@HAVE_GEN4ASM_FALSE@clean-local:
 clean: clean-am
 
-clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool clean-local \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -578,7 +682,7 @@ ps-am:
 uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libLTLIBRARIES clean-libtool ctags distclean \
+	clean-libLTLIBRARIES clean-libtool clean-local ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-exec \
@@ -590,6 +694,13 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
 	tags uninstall uninstall-am uninstall-info-am \
 	uninstall-libLTLIBRARIES
 
+@HAVE_GEN4ASM_TRUE@.g4a.g4b:
+@HAVE_GEN4ASM_TRUE@	m4 $*.g4a > $*.g4m && intel-gen4asm -o $@ $*.g4m && rm $*.g4m
+
+@HAVE_GEN4ASM_TRUE@$(INTEL_G4B): $(INTEL_G4I)
+
+@HAVE_GEN4ASM_TRUE@clean-local:
+@HAVE_GEN4ASM_TRUE@	-rm -f $(INTEL_G4B)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

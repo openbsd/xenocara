@@ -77,7 +77,8 @@ struct intel_xvmc_command {
     unsigned int subPicNo;
     unsigned int flags;
     unsigned int real_id;
-    unsigned int pad[6];
+    unsigned int surf_offset;
+    unsigned int pad[5];
 };
 
 #ifdef _INTEL_XVMC_SERVER_
@@ -98,7 +99,7 @@ struct intel_xvmc_driver {
 
 extern struct intel_xvmc_driver *xvmc_driver;
 extern struct intel_xvmc_driver i915_xvmc_driver;
-/* extern struct intel_xvmc_driver i965_xvmc_driver; */
+extern struct intel_xvmc_driver i965_xvmc_driver;
 
 extern Bool intel_xvmc_set_driver(struct intel_xvmc_driver *);
 extern Bool intel_xvmc_probe(ScrnInfoPtr);

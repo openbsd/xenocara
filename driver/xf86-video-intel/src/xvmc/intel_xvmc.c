@@ -264,7 +264,7 @@ intel_xvmc_surface_ptr intel_xvmc_find_surface(XID id)
 *        returned by XvMCListSurfaceTypes.
 * Returns: Status
 */
-Status XvMCCreateContext(Display *display, XvPortID port,
+_X_EXPORT Status XvMCCreateContext(Display *display, XvPortID port,
                          int surface_type_id, int width, int height,
                          int flags, XvMCContext *context)
 {
@@ -291,12 +291,6 @@ Status XvMCCreateContext(Display *display, XvPortID port,
     }
 
     intel_xvmc_debug_init();
-
-    /* Open DRI Device */
-    if((fd = drmOpen("i915", NULL)) < 0) {
-        XVMC_ERR("DRM Device could not be opened.");
-        return BadValue;
-    }
 
     /*
        Width, Height, and flags are checked against surface_type_id
@@ -341,6 +335,8 @@ Status XvMCCreateContext(Display *display, XvPortID port,
 		xvmc_driver = &i915_xvmc_mc_driver;
 		break;
 	    case XVMC_I965_MPEG2_MC:
+		xvmc_driver = &i965_xvmc_mc_driver;
+		break;
 	    case XVMC_I945_MPEG2_VLD:
 	    case XVMC_I965_MPEG2_VLD:
 	    default:
@@ -355,8 +351,6 @@ Status XvMCCreateContext(Display *display, XvPortID port,
 	XVMC_ERR("fail to load xvmc driver for type %d\n", comm->type);
 	return BadValue;
     }
-
-    xvmc_driver->fd = fd;
 
     XVMC_INFO("decoder type is %s", intel_xvmc_decoder_string(comm->type));
 
@@ -387,6 +381,16 @@ Status XvMCCreateContext(Display *display, XvPortID port,
 	XFree(priv_data);
         return BadValue;
     }
+
+    /* Open DRI Device */
+    if((fd = drmOpen("i915", curBusID)) < 0) {
+        XVMC_ERR("DRM Device could not be opened.");
+        XFree(priv_data);
+        XFree(curBusID);
+        return BadValue;
+    }
+
+    xvmc_driver->fd = fd;
 
     strncpy(xvmc_driver->busID, curBusID, 20);
     xvmc_driver->busID[20] = '\0';
@@ -455,7 +459,7 @@ Status XvMCCreateContext(Display *display, XvPortID port,
  *   context - The context to be destroyed.
  *
  */
-Status XvMCDestroyContext(Display *display, XvMCContext *context)
+_X_EXPORT Status XvMCDestroyContext(Display *display, XvMCContext *context)
 {
     Status ret;
     int screen;
@@ -499,7 +503,7 @@ Status XvMCDestroyContext(Display *display, XvMCContext *context)
 /*
  * Function: XvMCCreateSurface
  */
-Status XvMCCreateSurface(Display *display, XvMCContext *context, XvMCSurface *surface)
+_X_EXPORT Status XvMCCreateSurface(Display *display, XvMCContext *context, XvMCSurface *surface)
 {
     Status ret;
     int priv_count;
@@ -548,7 +552,7 @@ Status XvMCCreateSurface(Display *display, XvMCContext *context, XvMCSurface *su
 /*
  * Function: XvMCDestroySurface
  */
-Status XvMCDestroySurface(Display *display, XvMCSurface *surface)
+_X_EXPORT Status XvMCDestroySurface(Display *display, XvMCSurface *surface)
 {
     intel_xvmc_surface_ptr intel_surf;
 
@@ -574,16 +578,17 @@ Status XvMCDestroySurface(Display *display, XvMCSurface *surface)
 /*
  * Function: XvMCCreateBlocks
  */
-Status XvMCCreateBlocks(Display *display, XvMCContext *context,
+_X_EXPORT Status XvMCCreateBlocks(Display *display, XvMCContext *context,
                         unsigned int num_blocks,
                         XvMCBlockArray *block)
 {
+    Status ret;
     if (!display || !context || !num_blocks || !block)
         return BadValue;
 
     memset(block, 0, sizeof(XvMCBlockArray));
 
-    if (!(block->blocks = (short *)malloc(num_blocks << 6 * sizeof(short))))
+    if (!(block->blocks = (short *)malloc((num_blocks << 6) * sizeof(short))))
         return BadAlloc;
 
     block->num_blocks = num_blocks;
@@ -596,8 +601,9 @@ Status XvMCCreateBlocks(Display *display, XvMCContext *context,
 /*
  * Function: XvMCDestroyBlocks
  */
-Status XvMCDestroyBlocks(Display *display, XvMCBlockArray *block)
+_X_EXPORT Status XvMCDestroyBlocks(Display *display, XvMCBlockArray *block)
 {
+    Status ret;
     if (!display || !block)
         return BadValue;
 
@@ -615,7 +621,7 @@ Status XvMCDestroyBlocks(Display *display, XvMCBlockArray *block)
 /*
  * Function: XvMCCreateMacroBlocks
  */
-Status XvMCCreateMacroBlocks(Display *display, XvMCContext *context,
+_X_EXPORT Status XvMCCreateMacroBlocks(Display *display, XvMCContext *context,
                              unsigned int num_blocks,
                              XvMCMacroBlockArray *blocks)
 {
@@ -638,7 +644,7 @@ Status XvMCCreateMacroBlocks(Display *display, XvMCContext *context,
 /*
  * Function: XvMCDestroyMacroBlocks
  */
-Status XvMCDestroyMacroBlocks(Display *display, XvMCMacroBlockArray *block)
+_X_EXPORT Status XvMCDestroyMacroBlocks(Display *display, XvMCMacroBlockArray *block)
 {
     if (!display || !block)
         return BadValue;
@@ -660,7 +666,7 @@ Status XvMCDestroyMacroBlocks(Display *display, XvMCMacroBlockArray *block)
  *  macroblock structures it dispatched the hardware commands to execute
  *  them.
  */
-Status XvMCRenderSurface(Display *display, XvMCContext *context,
+_X_EXPORT Status XvMCRenderSurface(Display *display, XvMCContext *context,
                          unsigned int picture_structure,
                          XvMCSurface *target_surface,
                          XvMCSurface *past_surface,
@@ -721,7 +727,7 @@ Status XvMCRenderSurface(Display *display, XvMCContext *context,
  *	XVMC_BOTTOM_FIELD - Display only the Bottom Field of the surface.
  *	XVMC_FRAME_PICTURE - Display both fields or frame.
  */
-Status XvMCPutSurface(Display *display,XvMCSurface *surface,
+_X_EXPORT Status XvMCPutSurface(Display *display,XvMCSurface *surface,
                       Drawable draw, short srcx, short srcy,
                       unsigned short srcw, unsigned short srch,
                       short destx, short desty,
@@ -750,7 +756,6 @@ Status XvMCPutSurface(Display *display,XvMCSurface *surface,
 	intel_surf->gc = XCreateGC(display, draw, 0, NULL);
     }
     intel_surf->last_draw = draw;
-
     /* fill intel_surf->data */
     ret = (xvmc_driver->put_surface)(display, surface, draw, srcx, srcy,
 	    srcw, srch, destx, desty, destw, desth, flags, &intel_surf->data);
@@ -758,11 +763,9 @@ Status XvMCPutSurface(Display *display,XvMCSurface *surface,
 	XVMC_ERR("put surface fail\n");
 	return ret;
     }
-
     ret = XvPutImage(display, context->port, draw, intel_surf->gc,
 	    intel_surf->image, srcx, srcy, srcw, srch, destx, desty,
 	    destw, desth);
-
     return ret;
 }
 
@@ -772,7 +775,7 @@ Status XvMCPutSurface(Display *display,XvMCSurface *surface,
  *   display - Connection to the X server
  *   surface - The surface to synchronize
  */
-Status XvMCSyncSurface(Display *display, XvMCSurface *surface)
+_X_EXPORT Status XvMCSyncSurface(Display *display, XvMCSurface *surface)
 {
     Status ret;
     int stat = 0;
@@ -797,7 +800,7 @@ Status XvMCSyncSurface(Display *display, XvMCSurface *surface)
  *   surface - Surface to flush
  * Returns: Status
  */
-Status XvMCFlushSurface(Display * display, XvMCSurface *surface)
+_X_EXPORT Status XvMCFlushSurface(Display * display, XvMCSurface *surface)
 {
     if (!display || !surface)
 	return XvMCBadSurface;
@@ -816,7 +819,7 @@ Status XvMCFlushSurface(Display * display, XvMCSurface *surface)
  *    XVMC_DISPLAYING - The surface is currently being displayed or a
  *                     display is pending.
  */
-Status XvMCGetSurfaceStatus(Display *display, XvMCSurface *surface, int *stat)
+_X_EXPORT Status XvMCGetSurfaceStatus(Display *display, XvMCSurface *surface, int *stat)
 {
     Status ret;
 
@@ -841,7 +844,7 @@ Status XvMCGetSurfaceStatus(Display *display, XvMCSurface *surface, int *stat)
  *
  * Returns: Status
  */
-Status XvMCHideSurface(Display *display, XvMCSurface *surface)
+_X_EXPORT Status XvMCHideSurface(Display *display, XvMCSurface *surface)
 {
     int stat = 0;
     Status ret;
@@ -880,7 +883,7 @@ Status XvMCHideSurface(Display *display, XvMCSurface *surface)
  *
  * Returns: Status
  */
-Status XvMCCreateSubpicture(Display *display, XvMCContext *context,
+_X_EXPORT Status XvMCCreateSubpicture(Display *display, XvMCContext *context,
                             XvMCSubpicture *subpicture,
                             unsigned short width, unsigned short height,
                             int xvimage_id)
@@ -901,7 +904,7 @@ Status XvMCCreateSubpicture(Display *display, XvMCContext *context,
  *
  * Returns: Status
  */
-Status XvMCClearSubpicture(Display *display, XvMCSubpicture *subpicture,
+_X_EXPORT Status XvMCClearSubpicture(Display *display, XvMCSubpicture *subpicture,
                            short x, short y,
                            unsigned short width, unsigned short height,
                            unsigned int color)
@@ -925,7 +928,7 @@ Status XvMCClearSubpicture(Display *display, XvMCSubpicture *subpicture,
  *
  * Returns: Status
  */
-Status XvMCCompositeSubpicture(Display *display, XvMCSubpicture *subpicture,
+_X_EXPORT Status XvMCCompositeSubpicture(Display *display, XvMCSubpicture *subpicture,
                                XvImage *image,
                                short srcx, short srcy,
                                unsigned short width, unsigned short height,
@@ -945,7 +948,7 @@ Status XvMCCompositeSubpicture(Display *display, XvMCSubpicture *subpicture,
  *
  * Returns: Status
  */
-Status XvMCDestroySubpicture(Display *display, XvMCSubpicture *subpicture)
+_X_EXPORT Status XvMCDestroySubpicture(Display *display, XvMCSubpicture *subpicture)
 {
     XVMC_ERR("XvMCDestroySubpicture not implemented!");
     return BadValue;
@@ -962,7 +965,7 @@ Status XvMCDestroySubpicture(Display *display, XvMCSubpicture *subpicture)
  *     is num_palette_entries * entry_bytes in size.
  * Returns: Status
  */
-Status XvMCSetSubpicturePalette(Display *display, XvMCSubpicture *subpicture,
+_X_EXPORT Status XvMCSetSubpicturePalette(Display *display, XvMCSubpicture *subpicture,
                                 unsigned char *palette)
 {
     XVMC_ERR("XvMCSetSubpicturePalette not implemented!");
@@ -992,7 +995,7 @@ Status XvMCSetSubpicturePalette(Display *display, XvMCSubpicture *subpicture,
  *
  * Returns: Status
  */
-Status XvMCBlendSubpicture(Display *display, XvMCSurface *target_surface,
+_X_EXPORT Status XvMCBlendSubpicture(Display *display, XvMCSurface *target_surface,
                            XvMCSubpicture *subpicture,
                            short subx, short suby,
                            unsigned short subw, unsigned short subh,
@@ -1029,7 +1032,7 @@ Status XvMCBlendSubpicture(Display *display, XvMCSurface *target_surface,
  *
  * Returns: Status
  */
-Status XvMCBlendSubpicture2(Display *display,
+_X_EXPORT Status XvMCBlendSubpicture2(Display *display,
                             XvMCSurface *source_surface,
                             XvMCSurface *target_surface,
                             XvMCSubpicture *subpicture,
@@ -1052,7 +1055,7 @@ Status XvMCBlendSubpicture2(Display *display,
  *
  * Returns: Status
  */
-Status XvMCSyncSubpicture(Display *display, XvMCSubpicture *subpicture)
+_X_EXPORT Status XvMCSyncSubpicture(Display *display, XvMCSubpicture *subpicture)
 {
     XVMC_ERR("XvMCSyncSubpicture not implemented!");
     return BadValue;
@@ -1069,7 +1072,7 @@ Status XvMCSyncSubpicture(Display *display, XvMCSubpicture *subpicture)
  *
  * Returns: Status
  */
-Status XvMCFlushSubpicture(Display *display, XvMCSubpicture *subpicture)
+_X_EXPORT Status XvMCFlushSubpicture(Display *display, XvMCSubpicture *subpicture)
 {
     XVMC_ERR("XvMCFlushSubpicture not implemented!");
     return BadValue;
@@ -1089,7 +1092,7 @@ Status XvMCFlushSubpicture(Display *display, XvMCSubpicture *subpicture)
  *
  * Returns: Status
  */
-Status XvMCGetSubpictureStatus(Display *display, XvMCSubpicture *subpicture,
+_X_EXPORT Status XvMCGetSubpictureStatus(Display *display, XvMCSubpicture *subpicture,
                                int *stat)
 {
     XVMC_ERR("XvMCGetSubpictureStatus not implemented!");
@@ -1110,7 +1113,7 @@ Status XvMCGetSubpictureStatus(Display *display, XvMCSubpicture *subpicture,
  * Returns:
  *  An array of XvAttributes.
  */
-XvAttribute *XvMCQueryAttributes(Display *display, XvMCContext *context,
+_X_EXPORT XvAttribute *XvMCQueryAttributes(Display *display, XvMCContext *context,
                                  int *number)
 {
     /* now XvMC has no extra attribs than Xv */
@@ -1131,7 +1134,7 @@ XvAttribute *XvMCQueryAttributes(Display *display, XvMCContext *context,
  * Returns:
  *  Status
  */
-Status XvMCSetAttribute(Display *display, XvMCContext *context,
+_X_EXPORT Status XvMCSetAttribute(Display *display, XvMCContext *context,
                         Atom attribute, int value)
 {
     return Success;
@@ -1151,7 +1154,7 @@ Status XvMCSetAttribute(Display *display, XvMCContext *context,
  * Returns:
  *  Status
  */
-Status XvMCGetAttribute(Display *display, XvMCContext *context,
+_X_EXPORT Status XvMCGetAttribute(Display *display, XvMCContext *context,
                         Atom attribute, int *value)
 {
     return Success;

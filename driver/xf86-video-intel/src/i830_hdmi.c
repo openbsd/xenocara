@@ -33,12 +33,19 @@
 #include "i830.h"
 #include "xf86Modes.h"
 #include "i830_display.h"
+#include "X11/Xatom.h"
 
 struct i830_hdmi_priv {
     uint32_t output_reg;
 
     uint32_t save_SDVO;
+
+    Bool has_hdmi_sink;
+    /* Default 0 for full RGB range 0-255, 1 is for RGB range 16-235 */
+    uint32_t broadcast_rgb;
 };
+
+static Atom broadcast_atom;
 
 static int
 i830_hdmi_mode_valid(xf86OutputPtr output, DisplayModePtr mode)
@@ -78,6 +85,10 @@ i830_hdmi_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 	SDVO_BORDER_ENABLE |
 	SDVO_VSYNC_ACTIVE_HIGH |
 	SDVO_HSYNC_ACTIVE_HIGH;
+
+    if (dev_priv->has_hdmi_sink)
+	    sdvox |= SDVO_AUDIO_ENABLE;
+
     if (intel_crtc->pipe == 1)
 	sdvox |= SDVO_PIPE_B_SELECT;
 
@@ -139,12 +150,16 @@ i830_hdmi_detect(xf86OutputPtr output)
     struct i830_hdmi_priv *dev_priv = intel_output->dev_priv;
     I830Ptr pI830 = I830PTR(pScrn);
     uint32_t temp, bit;
+    xf86OutputStatus status;
+    xf86MonPtr edid_mon;
 
-    /* For G4X, PEG_BAND_GAP_DATA 3:0 must first be written 0xd.
+    dev_priv->has_hdmi_sink = FALSE;
+
+    /* For G4X desktop chip, PEG_BAND_GAP_DATA 3:0 must first be written 0xd.
      * Failure to do so will result in spurious interrupts being
      * generated on the port when a cable is not attached.
      */
-    if (IS_G4X(pI830)) {
+    if (IS_G4X(pI830) && !IS_GM45(pI830)) {
 	temp = INREG(PEG_BAND_GAP_DATA);
 	OUTREG(PEG_BAND_GAP_DATA, (temp & ~0xf) | 0xd);
     }
@@ -171,9 +186,26 @@ i830_hdmi_detect(xf86OutputPtr output)
     }
 
     if ((INREG(PORT_HOTPLUG_STAT) & bit) != 0)
-	return XF86OutputStatusConnected;
+	status = XF86OutputStatusConnected;
     else
 	return XF86OutputStatusDisconnected;
+
+    edid_mon = xf86OutputGetEDID (output, intel_output->pDDCBus);
+    if (!edid_mon || !DIGITAL(edid_mon->features.input_type))
+	status = XF86OutputStatusDisconnected;
+
+    if (xf86LoaderCheckSymbol("xf86MonitorIsHDMI") &&
+	    xf86MonitorIsHDMI(edid_mon))
+	dev_priv->has_hdmi_sink = TRUE;
+
+    if (pI830->debug_modes)
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+			"%s monitor detected on HDMI-%d\n",
+			dev_priv->has_hdmi_sink ? "HDMI" : "DVI",
+			(dev_priv->output_reg == SDVOB) ? 1 : 2);
+
+    xfree(edid_mon);
+    return status;
 }
 
 static void
@@ -187,7 +219,91 @@ i830_hdmi_destroy (xf86OutputPtr output)
     }
 }
 
+static void
+i830_hdmi_create_resources(xf86OutputPtr output)
+{
+    ScrnInfoPtr                 pScrn = output->scrn;
+    I830Ptr                     pI830 = I830PTR(pScrn);
+    I830OutputPrivatePtr        intel_output = output->driver_private;
+    struct i830_hdmi_priv       *dev_priv = intel_output->dev_priv;
+    INT32			broadcast_range[2];
+    int                         err;
+
+    /* only R G B are 8bit color mode */
+    if (pScrn->depth != 24 ||
+        /* only 965G and G4X platform */
+        !(IS_I965G(pI830) || IS_G4X(pI830)))
+        return;
+
+    broadcast_atom =
+        MakeAtom("BROADCAST_RGB", sizeof("BROADCAST_RGB") - 1, TRUE);
+
+    broadcast_range[0] = 0;
+    broadcast_range[1] = 1;
+    err = RRConfigureOutputProperty(output->randr_output,
+                                    broadcast_atom,
+                                    FALSE, TRUE, FALSE, 2, broadcast_range);
+    if (err != 0) {
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                   "RRConfigureOutputProperty error, %d\n", err);
+        return;
+    }
+    /* Set the current value of the broadcast property as full range */
+    dev_priv->broadcast_rgb = 0;
+    err = RRChangeOutputProperty(output->randr_output,
+                                 broadcast_atom,
+                                 XA_INTEGER, 32, PropModeReplace,
+                                 1, &dev_priv->broadcast_rgb,
+                                 FALSE, TRUE);
+    if (err != 0) {
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                   "RRChangeOutputProperty error, %d\n", err);
+        return;
+    }
+}
+
+static Bool
+i830_hdmi_set_property(xf86OutputPtr output, Atom property,
+                       RRPropertyValuePtr value)
+{
+    ScrnInfoPtr             pScrn = output->scrn;
+    I830Ptr                 pI830 = I830PTR(pScrn);
+    I830OutputPrivatePtr    intel_output = output->driver_private;
+    struct i830_hdmi_priv   *dev_priv = intel_output->dev_priv;
+    uint32_t temp;
+
+    if (property == broadcast_atom) {
+        uint32_t val;
+
+        if (value->type != XA_INTEGER || value->format != 32 ||
+            value->size != 1)
+        {
+            return FALSE;
+        }
+
+        val = *(INT32 *)value->data;
+        if (val < 0 || val > 1)
+        {
+            return FALSE;
+        }
+        if (val == dev_priv->broadcast_rgb)
+            return TRUE;
+
+        temp = INREG(dev_priv->output_reg);
+
+        if (val == 1)
+            temp |= SDVO_COLOR_NOT_FULL_RANGE;
+        else if (val == 0)
+            temp &= ~SDVO_COLOR_NOT_FULL_RANGE;
+
+        OUTREG(dev_priv->output_reg, temp);
+        dev_priv->broadcast_rgb = val;
+    }
+    return TRUE;
+}
+
 static const xf86OutputFuncsRec i830_hdmi_output_funcs = {
+    .create_resources = i830_hdmi_create_resources,
     .dpms = i830_hdmi_dpms,
     .save = i830_hdmi_save,
     .restore = i830_hdmi_restore,
@@ -198,6 +314,7 @@ static const xf86OutputFuncsRec i830_hdmi_output_funcs = {
     .commit = i830_output_commit,
     .detect = i830_hdmi_detect,
     .get_modes = i830_ddc_get_modes,
+    .set_property = i830_hdmi_set_property,
     .destroy = i830_hdmi_destroy
 };
 
@@ -224,6 +341,7 @@ i830_hdmi_init(ScrnInfoPtr pScrn, int output_reg)
 
     dev_priv = (struct i830_hdmi_priv *)(intel_output + 1);
     dev_priv->output_reg = output_reg;
+    dev_priv->has_hdmi_sink = FALSE;
 
     intel_output->dev_priv = dev_priv;
     intel_output->type = I830_OUTPUT_HDMI;

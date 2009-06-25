@@ -1,0 +1,159 @@
+/*
+ * Copyright © 2008 Intel Corporation
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ * Author:
+ *    Zou Nan hai <nanhai.zou@intel.com>
+ *    Zhang Hua jun <huajun.zhang@intel.com>
+ *    Xing Dong sheng <dongsheng.xing@intel.com>
+ *
+ */
+and (1) g2.24<1>UD g2.0<1,1,1>UD 0x3UD {align1};
+send (16) 0 g86.0<1>UW g2<8,8,1>UW read(input_surface1, 2, 0, 2) mlen 1 rlen 4 {align1};
+send (16) 0 g94.0<1>UW g2<8,8,1>UW read(input_surface2, 2, 0, 2) mlen 1 rlen 4 {align1};
+mov (1) g2.8<1>UD 0x01001FUD {align1};
+add (1) g2.4<1>UD g2.4<1,1,1>UD 8D {align1};
+send (16) 0 g90.0<1>UW g2<8,8,1>UW read(input_surface1, 2, 0, 2) mlen 1 rlen 1 {align1};
+send (16) 0 g98.0<1>UW g2<8,8,1>UW read(input_surface2, 2, 0, 2) mlen 1 rlen 1 {align1};
+mov (1) g2.8<1>UD 0x007000fUD  {align1};
+mul(1) g2.24<1>UD g2.24<1,1,1>UD 25UD {align1};
+jmpi g2.24<1,1,1>D;
+
+add (16) g44.0<1>UW g86.0<16,8,1>UB g86.1<16,8,1>UB{align1};
+add (16) g45.0<1>UW g87.0<16,8,1>UB g87.1<16,8,1>UB{align1};
+add (16) g46.0<1>UW g88.0<16,8,1>UB g88.1<16,8,1>UB{align1};
+add (16) g47.0<1>UW g89.0<16,8,1>UB g89.1<16,8,1>UB{align1};
+add (16) g44.0<1>UW g44.0<16,16,1>UW g87.0<16,8,1>UB{align1};
+add (16) g45.0<1>UW g45.0<16,16,1>UW g88.0<16,8,1>UB{align1};
+add (16) g46.0<1>UW g46.0<16,16,1>UW g89.0<16,8,1>UB{align1};
+add (16) g47.0<1>UW g47.0<16,16,1>UW g90.0<16,8,1>UB{align1};
+
+add (16) g44.0<1>UW g44.0<16,16,1>UW g87.1<16,8,1>UB{align1};
+add (16) g45.0<1>UW g45.0<16,16,1>UW g88.1<16,8,1>UB{align1};
+add (16) g46.0<1>UW g46.0<16,16,1>UW g89.1<16,8,1>UB{align1};
+add (16) g47.0<1>UW g47.0<16,16,1>UW g90.1<16,8,1>UB{align1};
+add (16) g48.0<1>UW g94.0<16,8,1>UB g95.0<16,8,1>UB{align1};
+add (16) g49.0<1>UW g95.0<16,8,1>UB g96.0<16,8,1>UB{align1};
+add (16) g50.0<1>UW g96.0<16,8,1>UB g97.0<16,8,1>UB{align1};
+add (16) g51.0<1>UW g97.0<16,8,1>UB g98.0<16,8,1>UB{align1};
+
+add (16) g48.0<1>UW g48.0<16,16,1>UW g94.1<16,8,1>UB{align1};
+add (16) g49.0<1>UW g49.0<16,16,1>UW g95.1<16,8,1>UB{align1};
+add (16) g50.0<1>UW g50.0<16,16,1>UW g96.1<16,8,1>UB{align1};
+add (16) g51.0<1>UW g51.0<16,16,1>UW g97.1<16,8,1>UB{align1};
+add (16) g48.0<1>UW g48.0<16,16,1>UW g95.1<16,8,1>UB{align1};
+add (16) g49.0<1>UW g49.0<16,16,1>UW g96.1<16,8,1>UB{align1};
+add (16) g50.0<1>UW g50.0<16,16,1>UW g97.1<16,8,1>UB{align1};
+add (16) g51.0<1>UW g51.0<16,16,1>UW g98.1<16,8,1>UB{align1};
+jmpi out;
+
+add (16) g44.0<1>UW g86.1<16,8,1>UB g86.2<16,8,1>UB{align1};
+add (16) g45.0<1>UW g87.1<16,8,1>UB g87.2<16,8,1>UB{align1};
+add (16) g46.0<1>UW g88.1<16,8,1>UB g88.2<16,8,1>UB{align1};
+add (16) g47.0<1>UW g89.1<16,8,1>UB g89.2<16,8,1>UB{align1};
+add (16) g44.0<1>UW g44.0<16,16,1>UW g87.1<16,8,1>UB{align1};
+add (16) g45.0<1>UW g45.0<16,16,1>UW g88.1<16,8,1>UB{align1};
+add (16) g46.0<1>UW g46.0<16,16,1>UW g89.1<16,8,1>UB{align1};
+add (16) g47.0<1>UW g47.0<16,16,1>UW g90.1<16,8,1>UB{align1};
+
+add (16) g44.0<1>UW g44.0<16,16,1>UW g87.2<16,8,1>UB{align1};
+add (16) g45.0<1>UW g45.0<16,16,1>UW g88.2<16,8,1>UB{align1};
+add (16) g46.0<1>UW g46.0<16,16,1>UW g89.2<16,8,1>UB{align1};
+add (16) g47.0<1>UW g47.0<16,16,1>UW g90.2<16,8,1>UB{align1};
+add (16) g48.0<1>UW g94.1<16,8,1>UB g95.1<16,8,1>UB{align1};
+add (16) g49.0<1>UW g95.1<16,8,1>UB g96.1<16,8,1>UB{align1};
+add (16) g50.0<1>UW g96.1<16,8,1>UB g97.1<16,8,1>UB{align1};
+add (16) g51.0<1>UW g97.1<16,8,1>UB g98.1<16,8,1>UB{align1};
+
+add (16) g48.0<1>UW g48.0<16,16,1>UW g94.2<16,8,1>UB{align1};
+add (16) g49.0<1>UW g49.0<16,16,1>UW g95.2<16,8,1>UB{align1};
+add (16) g50.0<1>UW g50.0<16,16,1>UW g96.2<16,8,1>UB{align1};
+add (16) g51.0<1>UW g51.0<16,16,1>UW g97.2<16,8,1>UB{align1};
+add (16) g48.0<1>UW g48.0<16,16,1>UW g95.2<16,8,1>UB{align1};
+add (16) g49.0<1>UW g49.0<16,16,1>UW g96.2<16,8,1>UB{align1};
+add (16) g50.0<1>UW g50.0<16,16,1>UW g97.2<16,8,1>UB{align1};
+add (16) g51.0<1>UW g51.0<16,16,1>UW g98.2<16,8,1>UB{align1};
+jmpi out;
+
+add (16) g44.0<1>UW g86.2<16,8,1>UB g86.3<16,8,1>UB{align1};
+add (16) g45.0<1>UW g87.2<16,8,1>UB g87.3<16,8,1>UB{align1};
+add (16) g46.0<1>UW g88.2<16,8,1>UB g88.3<16,8,1>UB{align1};
+add (16) g47.0<1>UW g89.2<16,8,1>UB g89.3<16,8,1>UB{align1};
+add (16) g44.0<1>UW g44.0<16,16,1>UW g87.2<16,8,1>UB{align1};
+add (16) g45.0<1>UW g45.0<16,16,1>UW g88.2<16,8,1>UB{align1};
+add (16) g46.0<1>UW g46.0<16,16,1>UW g89.2<16,8,1>UB{align1};
+add (16) g47.0<1>UW g47.0<16,16,1>UW g90.2<16,8,1>UB{align1};
+
+add (16) g44.0<1>UW g44.0<16,16,1>UW g87.3<16,8,1>UB{align1};
+add (16) g45.0<1>UW g45.0<16,16,1>UW g88.3<16,8,1>UB{align1};
+add (16) g46.0<1>UW g46.0<16,16,1>UW g89.3<16,8,1>UB{align1};
+add (16) g47.0<1>UW g47.0<16,16,1>UW g90.3<16,8,1>UB{align1};
+add (16) g48.0<1>UW g94.2<16,8,1>UB g95.2<16,8,1>UB{align1};
+add (16) g49.0<1>UW g95.2<16,8,1>UB g96.2<16,8,1>UB{align1};
+add (16) g50.0<1>UW g96.2<16,8,1>UB g97.2<16,8,1>UB{align1};
+add (16) g51.0<1>UW g97.2<16,8,1>UB g98.2<16,8,1>UB{align1};
+
+add (16) g48.0<1>UW g48.0<16,16,1>UW g94.3<16,8,1>UB{align1};
+add (16) g49.0<1>UW g49.0<16,16,1>UW g95.3<16,8,1>UB{align1};
+add (16) g50.0<1>UW g50.0<16,16,1>UW g96.3<16,8,1>UB{align1};
+add (16) g51.0<1>UW g51.0<16,16,1>UW g97.3<16,8,1>UB{align1};
+add (16) g48.0<1>UW g48.0<16,16,1>UW g95.3<16,8,1>UB{align1};
+add (16) g49.0<1>UW g49.0<16,16,1>UW g96.3<16,8,1>UB{align1};
+add (16) g50.0<1>UW g50.0<16,16,1>UW g97.3<16,8,1>UB{align1};
+add (16) g51.0<1>UW g51.0<16,16,1>UW g98.3<16,8,1>UB{align1};
+jmpi out;
+
+add (16) g44.0<1>UW g86.3<16,8,1>UB g86.4<16,8,1>UB{align1};
+add (16) g45.0<1>UW g87.3<16,8,1>UB g87.4<16,8,1>UB{align1};
+add (16) g46.0<1>UW g88.3<16,8,1>UB g88.4<16,8,1>UB{align1};
+add (16) g47.0<1>UW g89.3<16,8,1>UB g89.4<16,8,1>UB{align1};
+add (16) g44.0<1>UW g44.0<16,16,1>UW g87.3<16,8,1>UB{align1};
+add (16) g45.0<1>UW g45.0<16,16,1>UW g88.3<16,8,1>UB{align1};
+add (16) g46.0<1>UW g46.0<16,16,1>UW g89.3<16,8,1>UB{align1};
+add (16) g47.0<1>UW g47.0<16,16,1>UW g90.3<16,8,1>UB{align1};
+
+add (16) g44.0<1>UW g44.0<16,16,1>UW g87.4<16,8,1>UB{align1};
+add (16) g45.0<1>UW g45.0<16,16,1>UW g88.4<16,8,1>UB{align1};
+add (16) g46.0<1>UW g46.0<16,16,1>UW g89.4<16,8,1>UB{align1};
+add (16) g47.0<1>UW g47.0<16,16,1>UW g90.4<16,8,1>UB{align1};
+add (16) g48.0<1>UW g94.3<16,8,1>UB g95.3<16,8,1>UB{align1};
+add (16) g49.0<1>UW g95.3<16,8,1>UB g96.3<16,8,1>UB{align1};
+add (16) g50.0<1>UW g96.3<16,8,1>UB g97.3<16,8,1>UB{align1};
+add (16) g51.0<1>UW g97.3<16,8,1>UB g98.3<16,8,1>UB{align1};
+
+add (16) g48.0<1>UW g48.0<16,16,1>UW g94.4<16,8,1>UB{align1};
+add (16) g49.0<1>UW g49.0<16,16,1>UW g95.4<16,8,1>UB{align1};
+add (16) g50.0<1>UW g50.0<16,16,1>UW g96.4<16,8,1>UB{align1};
+add (16) g51.0<1>UW g51.0<16,16,1>UW g97.4<16,8,1>UB{align1};
+add (16) g48.0<1>UW g48.0<16,16,1>UW g95.4<16,8,1>UB{align1};
+add (16) g49.0<1>UW g49.0<16,16,1>UW g96.4<16,8,1>UB{align1};
+add (16) g50.0<1>UW g50.0<16,16,1>UW g97.4<16,8,1>UB{align1};
+add (16) g51.0<1>UW g51.0<16,16,1>UW g98.4<16,8,1>UB{align1};
+out:
+
+shr.sat (16) g44.0<1>UW g44.0<16,16,1>UW 2UW {align1};
+shr.sat (16) g45.0<1>UW g45.0<16,16,1>UW 2UW {align1};
+shr.sat (16) g46.0<1>UW g46.0<16,16,1>UW 2UW {align1};
+shr.sat (16) g47.0<1>UW g47.0<16,16,1>UW 2UW {align1};
+shr.sat (16) g48.0<1>UW g48.0<16,16,1>UW 2UW {align1};
+shr.sat (16) g49.0<1>UW g49.0<16,16,1>UW 2UW {align1};
+shr.sat (16) g50.0<1>UW g50.0<16,16,1>UW 2UW {align1};
+shr.sat (16) g51.0<1>UW g51.0<16,16,1>UW 2UW {align1};

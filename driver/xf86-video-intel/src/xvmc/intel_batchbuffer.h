@@ -6,32 +6,37 @@
 extern int VERBOSE;
 #endif
 
-#define BATCH_LOCALS    char *batch_ptr;
+#define BATCH_LOCALS    unsigned char *batch_ptr;
 
 #define BEGIN_BATCH(n)                                                  \
     do {                                                                \
-        if (VERBOSE) fprintf(stderr,                                    \
-                             "BEGIN_BATCH(%ld) in %s, %d dwords free\n", \
-                             ((unsigned long)n), __FUNCTION__,          \
-                             xvmc_driver->batch.space/4);                     \
-        if (xvmc_driver->batch.space < (n)*4)                                 \
-            intelFlushBatch(TRUE);                            \
-        batch_ptr = xvmc_driver->batch.ptr;                                   \
+        if (xvmc_driver->batch.space < (n)*4)                           \
+            intelFlushBatch(TRUE);                            		\
+        batch_ptr = xvmc_driver->batch.ptr;                             \
     } while (0)
 
 #define OUT_BATCH(n)                                                    \
     do {                                                                \
-        *(GLuint *)batch_ptr = (n);                                     \
-        if (VERBOSE) fprintf(stderr, " -- %08x at %s/%d\n", (n), __FILE__, __LINE__); \
+        *(unsigned int *)batch_ptr = (n);                               \
         batch_ptr += 4;                                                 \
     } while (0)
 
-#define ADVANCE_BATCH()                                        \
-    do {                                                       \
-        if (VERBOSE) fprintf(stderr, "ADVANCE_BATCH()\n");     \
-        xvmc_driver->batch.space -= (batch_ptr - xvmc_driver->batch.ptr);  \
-        xvmc_driver->batch.ptr = batch_ptr;                          \
-        assert(xvmc_driver->batch.space >= 0);                       \
+#define OUT_BATCH_SHORT(n)                                              \
+    do {                                                                \
+        *(short *)batch_ptr = (n);                                      \
+        batch_ptr += 2;                                                 \
+    } while (0)
+
+#define OUT_BATCH_CHAR(n)                                               \
+	do {                                                                \
+		*(char *)batch_ptr = (n);                                       \
+		batch_ptr ++;                                                   \
+	} while (0)
+#define ADVANCE_BATCH()                                                  \
+    do {                                                                 \
+        xvmc_driver->batch.space -= (batch_ptr - xvmc_driver->batch.ptr);\
+        xvmc_driver->batch.ptr = batch_ptr;                              \
+        assert(xvmc_driver->batch.space >= 0);                           \
     } while(0)
 
 extern void intelFlushBatch(Bool);

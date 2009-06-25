@@ -201,6 +201,7 @@ typedef struct _intel_xvmc_driver {
 } intel_xvmc_driver_t, *intel_xvmc_driver_ptr;
 
 extern struct _intel_xvmc_driver i915_xvmc_mc_driver;
+extern struct _intel_xvmc_driver i965_xvmc_mc_driver;
 extern struct _intel_xvmc_driver *xvmc_driver;
 
 #define SET_BLOCKED_SIGSET()   do {    \

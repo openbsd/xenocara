@@ -48,6 +48,32 @@
 #define DEBUGSTRING(func) static char *func(I830Ptr pI830, int reg, \
 					    uint32_t val)
 
+DEBUGSTRING(i830_16bit_func)
+{
+    return XNFprintf("0x%04x", (uint16_t)val);
+}
+
+DEBUGSTRING(i830_debug_chdecmisc)
+{
+    char *enhmodesel = NULL;
+
+    switch ((val >> 5) & 3) {
+    case 1: enhmodesel = "XOR bank/rank"; break;
+    case 2: enhmodesel = "swap bank"; break;
+    case 3: enhmodesel = "XOR bank"; break;
+    case 0: enhmodesel = "none"; break;
+    }
+
+    return XNFprintf("%s, ch2 enh %sabled, ch1 enh %sabled, ch0 enh %sabled, "
+		     "flex %sabled, ep %spresent",
+		     enhmodesel,
+		     (val & (1 << 4)) ? "en" : "dis",
+		     (val & (1 << 3)) ? "en" : "dis",
+		     (val & (1 << 2)) ? "en" : "dis",
+		     (val & (1 << 1)) ? "en" : "dis",
+		     (val & (1 << 0)) ? "" : "not ");
+}
+
 DEBUGSTRING(i830_debug_xyminus1)
 {
     return XNFprintf("%d, %d", (val & 0xffff) + 1,
@@ -163,6 +189,12 @@ DEBUGSTRING(i830_debug_vgacntrl)
 
 DEBUGSTRING(i830_debug_fp)
 {
+    if (IS_IGD(pI830)) {
+	return XNFprintf("n = %d, m1 = %d, m2 = %d",
+			 ffs((val & FP_N_IGD_DIV_MASK) >> FP_N_DIV_SHIFT) - 1,
+			 ((val & FP_M1_DIV_MASK) >> FP_M1_DIV_SHIFT),
+			 ((val & FP_M2_IGD_DIV_MASK) >> FP_M2_DIV_SHIFT));
+    }
     return XNFprintf("n = %d, m1 = %d, m2 = %d",
 		     ((val & FP_N_DIV_MASK) >> FP_N_DIV_SHIFT),
 		     ((val & FP_M1_DIV_MASK) >> FP_M1_DIV_SHIFT),
@@ -230,8 +262,13 @@ DEBUGSTRING(i830_debug_dpll)
     int p1, p2 = 0;
 
     if (IS_I9XX(pI830)) {
-	p1 = ffs((val & DPLL_FPA01_P1_POST_DIV_MASK) >>
-		 DPLL_FPA01_P1_POST_DIV_SHIFT);
+	if (IS_IGD(pI830)) {
+	    p1 = ffs((val & DPLL_FPA01_P1_POST_DIV_MASK_IGD) >>
+		     DPLL_FPA01_P1_POST_DIV_SHIFT_IGD);
+	} else {
+	    p1 = ffs((val & DPLL_FPA01_P1_POST_DIV_MASK) >>
+		     DPLL_FPA01_P1_POST_DIV_SHIFT);
+	}
 	switch (val & DPLL_MODE_MASK) {
 	case DPLLB_MODE_DAC_SERIAL:
 	    mode = "DAC/serial";
@@ -466,21 +503,29 @@ DEBUGSTRING(i830_debug_dspclk_gate_d)
 		      OVLUNIT);
 }
 
-#if 0
-DEBUGSTRING(i810_debug_fence_new)
+#if 1
+DEBUGSTRING(i810_debug_fence_start)
 {
-    char *enable = (val & FENCE_VALID) ? "enabled" : "disabled";
+    char *enable = (val & FENCE_VALID) ? " enabled" : "disabled";
     char format = (val & I965_FENCE_Y_MAJOR) ? 'Y' : 'X';
     int pitch = ((val & 0xffc) >> 2) * 128;
     unsigned int offset = val & 0xfffff000;
 
-    return XNFprintf("%s, %c tile walk, %d pitch, 0x%08x offset",
+    return XNFprintf("%s, %c tile walk, %4d pitch, 0x%08x start",
 		     enable, format, pitch, offset);
+}
+DEBUGSTRING(i810_debug_fence_end)
+{
+    unsigned int end = val & 0xfffff000;
+
+    return XNFprintf("                                   0x%08x end", end);
 }
 #endif
 
 #define DEFINEREG(reg) \
 	{ reg, #reg, NULL, 0 }
+#define DEFINEREG_16BIT(reg) \
+	{ reg, #reg, i830_16bit_func, 0 }
 #define DEFINEREG2(reg, func) \
 	{ reg, #reg, func, 0 }
 
@@ -490,6 +535,20 @@ static struct i830SnapshotRec {
     char *(*debug_output)(I830Ptr pI830, int reg, uint32_t val);
     uint32_t val;
 } i830_snapshot[] = {
+    DEFINEREG2(CHDECMISC, i830_debug_chdecmisc),
+    DEFINEREG_16BIT(C0DRB0),
+    DEFINEREG_16BIT(C0DRB1),
+    DEFINEREG_16BIT(C0DRB2),
+    DEFINEREG_16BIT(C0DRB3),
+    DEFINEREG_16BIT(C1DRB0),
+    DEFINEREG_16BIT(C1DRB1),
+    DEFINEREG_16BIT(C1DRB2),
+    DEFINEREG_16BIT(C1DRB3),
+    DEFINEREG_16BIT(C0DRA01),
+    DEFINEREG_16BIT(C0DRA23),
+    DEFINEREG_16BIT(C1DRA01),
+    DEFINEREG_16BIT(C1DRA23),
+
     DEFINEREG2(VCLK_DIVISOR_VGA0, i830_debug_fp),
     DEFINEREG2(VCLK_DIVISOR_VGA1, i830_debug_fp),
     DEFINEREG2(VCLK_POST_DIV, i830_debug_vga_pd),
@@ -521,6 +580,9 @@ static struct i830SnapshotRec {
 
     DEFINEREG2(PP_CONTROL, i830_debug_pp_control),
     DEFINEREG2(PP_STATUS, i830_debug_pp_status),
+    DEFINEREG(PP_ON_DELAYS),
+    DEFINEREG(PP_OFF_DELAYS),
+    DEFINEREG(PP_DIVISOR),
     DEFINEREG(PFIT_CONTROL),
     DEFINEREG(PFIT_PGM_RATIOS),
     DEFINEREG(PORT_HOTPLUG_EN),
@@ -653,23 +715,26 @@ static struct i830SnapshotRec {
     DEFINEREG(DPD_AUX_CH_DATA4),
     DEFINEREG(DPD_AUX_CH_DATA5),
 
-#if 0
-    DEFINEREG2(FENCE_NEW + 0, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 8, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 16, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 24, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 32, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 40, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 48, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 56, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 64, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 72, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 80, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 88, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 96, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 104, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 112, i810_debug_fence_new),
-    DEFINEREG2(FENCE_NEW + 120, i810_debug_fence_new),
+#define DEFINEFENCE(i) \
+	{ FENCE_NEW+i*8, "FENCE START " #i, i810_debug_fence_start, 0 }, \
+	{ FENCE_NEW+i*8+4, "FENCE END " #i, i810_debug_fence_end, 0 }
+#if 1
+    DEFINEFENCE(0),
+    DEFINEFENCE(1),
+    DEFINEFENCE(2),
+    DEFINEFENCE(3),
+    DEFINEFENCE(4),
+    DEFINEFENCE(5),
+    DEFINEFENCE(6),
+    DEFINEFENCE(7),
+    DEFINEFENCE(8),
+    DEFINEFENCE(9),
+    DEFINEFENCE(10),
+    DEFINEFENCE(11),
+    DEFINEFENCE(12),
+    DEFINEFENCE(13),
+    DEFINEFENCE(14),
+    DEFINEFENCE(15),
 #endif
 };
 #undef DEFINEREG
@@ -839,7 +904,11 @@ void i830DumpRegs (ScrnInfoPtr pScrn)
 		    break;
 		}
 	    }
-	    switch ((dpll >> 16) & 0xff) {
+	    if (IS_IGD(pI830))
+		i = (dpll >> DPLL_FPA01_P1_POST_DIV_SHIFT_IGD) & 0x1ff;
+	    else
+		i = (dpll >> DPLL_FPA01_P1_POST_DIV_SHIFT) & 0xff;
+	    switch (i) {
 	    case 1:
 		p1 = 1; break;
 	    case 2:
@@ -856,6 +925,11 @@ void i830DumpRegs (ScrnInfoPtr pScrn)
 		p1 = 7; break;
 	    case 128:
 		p1 = 8; break;
+            case 256:
+		if (IS_IGD(pI830)) {
+		    p1 = 9;
+		    break;
+		} /* fallback */
 	    default:
 		p1 = 1;
 		xf86DrvMsg (pScrn->scrnIndex, X_WARNING, "p1 out of range\n");
@@ -945,11 +1019,19 @@ void i830DumpRegs (ScrnInfoPtr pScrn)
 			"fp select out of range\n");
 	    break;
 	}
-	n = ((fp >> 16) & 0x3f);
 	m1 = ((fp >> 8) & 0x3f);
-	m2 = ((fp >> 0) & 0x3f);
-	m = 5 * (m1 + 2) + (m2 + 2);
-	dot = (ref * (5 * (m1 + 2) + (m2 + 2)) / (n + 2)) / (p1 * p2);
+	if (IS_IGD(pI830)) {
+	    n = ffs((fp & FP_N_IGD_DIV_MASK) >> FP_N_DIV_SHIFT) - 1;
+	    m2 = (fp & FP_M2_IGD_DIV_MASK) >> FP_M2_DIV_SHIFT;
+	    m = m2 + 2;
+	    dot = (ref * m) / n / (p1 * p2);
+	} else {
+	    n = ((fp >> 16) & 0x3f);
+	    m2 = ((fp >> 0) & 0x3f);
+	    m = 5 * (m1 + 2) + (m2 + 2);
+	    dot = (ref * (5 * (m1 + 2) + (m2 + 2)) / (n + 2)) / (p1 * p2);
+	}
+
 	xf86DrvMsg (pScrn->scrnIndex, X_INFO, "pipe %s dot %d n %d m1 %d m2 %d p1 %d p2 %d\n",
 		    pipe == 0 ? "A" : "B", dot, n, m1, m2, p1, p2);
     }
@@ -1314,6 +1396,8 @@ i830_valid_command (uint32_t cmd)
 	if (!mi_cmds[opcode])
 	    return -1;
 	break;
+    case 1:
+	return -1;
     case 2:			    /* 2D */
 	count = (cmd & 0x1f) + 2;
 	opcode = (cmd >> 22) & 0x7f;
@@ -1397,9 +1481,9 @@ i830_valid_chain (ScrnInfoPtr pScrn, unsigned int ring, unsigned int end)
     
     head = (INREG (LP_RING + RING_HEAD)) & I830_HEAD_MASK;
     tail = INREG (LP_RING + RING_TAIL) & I830_TAIL_MASK;
-    mask = pI830->LpRing->tail_mask;
+    mask = pI830->ring.tail_mask;
     
-    virt = pI830->LpRing->virtual_start;
+    virt = pI830->ring.virtual_start;
     ErrorF ("Ring at virtual %p head 0x%x tail 0x%x count %d\n",
 	    virt, head, tail, (((tail + mask + 1) - head) & mask) >> 2);
 
@@ -1471,13 +1555,12 @@ i830_dump_cmds (ScrnInfoPtr		pScrn,
 	    /* check for MI_BATCH_BUFFER_START */
 	    if ((data & batch_start_mask) == batch_start_cmd)
 	    {
-		uint32_t    batch = ptr[1];
+		uint32_t    batch = ptr[1] & ~3;
 		if (batch < pI830->FbMapSize) {
 		    ErrorF ("\t%08x: %08x\n", (ring + 4) & mask, batch);
 		    ErrorF ("Batch buffer at 0x%08x {\n", batch);
 		    i830_dump_cmds (pScrn, pI830->FbBase, batch,
-				    pI830->FbMapSize - batch,
-				    0xffffffff, acthd);
+				    batch + 256, 0xffffffff, acthd);
 		    ErrorF ("}\n");
 		    ring = (ring + (count - 1) * 4) & mask;
 		}
@@ -1498,11 +1581,11 @@ i830_dump_ring(ScrnInfoPtr pScrn, uint32_t acthd)
     
     head = (INREG (LP_RING + RING_HEAD)) & I830_HEAD_MASK;
     tail = INREG (LP_RING + RING_TAIL) & I830_TAIL_MASK;
-    mask = pI830->LpRing->tail_mask;
+    mask = pI830->ring.tail_mask;
     
-    virt = pI830->LpRing->virtual_start;
-    ErrorF ("Ring at virtual %p head 0x%x tail 0x%x count %d\n",
-	    virt, head, tail, (((tail + mask + 1) - head) & mask) >> 2);
+    virt = pI830->ring.virtual_start;
+    ErrorF ("Ring at virtual %p head 0x%x tail 0x%x count %d acthd 0x%x\n",
+	    virt, head, tail, (((tail + mask + 1) - head) & mask) >> 2, acthd);
 
     /* walk back by instructions */
     for (cmd = (head - 256) & mask;
@@ -1547,7 +1630,7 @@ i830_dump_error_state(ScrnInfoPtr pScrn)
 
     ErrorF("hwstam: 0x%04x ier: 0x%04x imr: 0x%04x iir: 0x%04x\n",
 	   INREG16(HWSTAM), INREG16(IER), INREG16(IMR), INREG16(IIR));
-    i830_dump_ring (pScrn, 0);
+    i830_dump_ring (pScrn, INREG(ACTHD));
 }
 
 void
@@ -1584,7 +1667,7 @@ i965_dump_error_state(ScrnInfoPtr pScrn)
 	   "imr: 0x%08x iir: 0x%08x\n",
 	   INREG(HWSTAM), INREG(IER), INREG(IMR), INREG(IIR));
 
-    acthd = INREG(ACTHD);
+    acthd = INREG(ACTHD_I965);
     ErrorF("acthd: 0x%08x dma_fadd_p: 0x%08x\n",
 	   acthd, INREG(DMA_FADD_P));
     ErrorF("ecoskpd: 0x%08x excc: 0x%08x\n",
@@ -1645,8 +1728,6 @@ i830_check_error_state(ScrnInfoPtr pScrn)
     I830Ptr pI830 = I830PTR(pScrn);
     int errors = 0;
     unsigned long temp, head, tail;
-
-    if (!I830IsPrimary(pScrn)) return TRUE;
 
     temp = INREG16(ESR);
     if (temp != 0) {
@@ -1716,7 +1797,7 @@ i830_check_error_state(ScrnInfoPtr pScrn)
 	errors++;
     }
     temp = INREG(LP_RING + RING_LEN);
-    if (temp & 1) {
+    if (!pI830->memory_manager && (temp & 1)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "PRB0_CTL (0x%08lx) indicates ring buffer enabled\n", temp);
 	errors++;

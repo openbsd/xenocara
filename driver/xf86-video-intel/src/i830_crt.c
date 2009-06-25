@@ -84,11 +84,23 @@ i830_crt_restore (xf86OutputPtr output)
 static int
 i830_crt_mode_valid(xf86OutputPtr output, DisplayModePtr pMode)
 {
+    ScrnInfoPtr pScrn = output->scrn;
+    I830Ptr	pI830 = I830PTR(pScrn);
+    int		maxclock;
+
     if (pMode->Flags & V_DBLSCAN)
 	return MODE_NO_DBLESCAN;
 
-    if (pMode->Clock > 400000 || pMode->Clock < 25000)
-	return MODE_CLOCK_RANGE;
+    if (pMode->Clock < 25000)
+	return MODE_CLOCK_LOW;
+
+    if (!IS_I9XX(pI830))
+	maxclock = 350000;
+    else
+	maxclock = 400000;
+
+    if (pMode->Clock > maxclock)
+	return MODE_CLOCK_HIGH;
 
     return MODE_OK;
 }
@@ -158,28 +170,55 @@ i830_crt_detect_hotplug(xf86OutputPtr output)
 {
     ScrnInfoPtr	pScrn = output->scrn;
     I830Ptr	pI830 = I830PTR(pScrn);
-    uint32_t	temp;
+    uint32_t	hotplug_en, temp;
     const int	timeout_ms = 1000;
     int		starttime, curtime;
+    int		tries = 1;
+    int		try;
 
-    temp = INREG(PORT_HOTPLUG_EN);
+    /* On 4 series desktop, CRT detect sequence need to be done twice
+     * to get a reliable result. */
+    if (IS_G4X(pI830) && !IS_GM45(pI830))
+	tries = 2;
+    else
+	tries = 1;
 
-    OUTREG(PORT_HOTPLUG_EN, temp | CRT_HOTPLUG_FORCE_DETECT | (1 << 5));
+    hotplug_en = INREG(PORT_HOTPLUG_EN);
 
-    for (curtime = starttime = GetTimeInMillis();
-	 (curtime - starttime) < timeout_ms; curtime = GetTimeInMillis())
-    {
-	if ((INREG(PORT_HOTPLUG_EN) & CRT_HOTPLUG_FORCE_DETECT) == 0)
-	    break;
+    hotplug_en &= ~CRT_HOTPLUG_MASK;
+
+    /* This starts the detection sequence */
+    hotplug_en |= CRT_HOTPLUG_FORCE_DETECT;
+
+    /* GM45 requires a longer activation period to reliably
+     * detect CRT
+     */
+    if (IS_GM45(pI830))
+	hotplug_en |= CRT_HOTPLUG_ACTIVATION_PERIOD_64;
+
+    /* Use the default voltage value */
+    hotplug_en |= CRT_HOTPLUG_VOLTAGE_COMPARE_50;
+
+    for (try = 0; try < tries; try++) {
+	/* turn FORCE_DETECT on */
+	OUTREG(PORT_HOTPLUG_EN, hotplug_en);
+
+	/* wait for FORCE_DETECT to go off */
+	for (curtime = starttime = GetTimeInMillis();
+	     (curtime - starttime) < timeout_ms;
+	     curtime = GetTimeInMillis())
+	{
+	    temp = INREG(PORT_HOTPLUG_EN);
+
+	    if ((temp & CRT_HOTPLUG_FORCE_DETECT) == 0)
+		break;
+	}
     }
 
-    if ((INREG(PORT_HOTPLUG_STAT) & CRT_HOTPLUG_MONITOR_MASK) ==
-	CRT_HOTPLUG_MONITOR_COLOR)
-    {
-	return TRUE;
-    } else {
-	return FALSE;
-    }
+    /* Check the status to see if both blue and green are on now */
+    temp = INREG(PORT_HOTPLUG_STAT);
+    return ((temp & CRT_HOTPLUG_MONITOR_MASK) ==
+	    CRT_HOTPLUG_MONITOR_COLOR);
 }
 
 /**
@@ -327,13 +366,19 @@ i830_crt_detect_load (xf86CrtcPtr	    crtc,
 static Bool
 i830_crt_detect_ddc(xf86OutputPtr output)
 {
+    ScrnInfoPtr		    pScrn = output->scrn;
     I830OutputPrivatePtr    i830_output = output->driver_private;
+    Bool detect;
 
     /* CRT should always be at 0, but check anyway */
     if (i830_output->type != I830_OUTPUT_ANALOG)
 	return FALSE;
 
-    return xf86I2CProbeAddress(i830_output->pDDCBus, 0x00A0);
+    I830I2CInit(pScrn, &i830_output->pDDCBus, GPIOA, "CRTDDC_A");
+    detect = xf86I2CProbeAddress(i830_output->pDDCBus, 0x00A0);
+    xf86DestroyI2CBusRec(i830_output->pDDCBus, TRUE, TRUE);
+
+    return detect;
 }
 
 /**
@@ -410,6 +455,56 @@ i830_crt_get_crtc(xf86OutputPtr output)
 }
 #endif
 
+static xf86MonPtr
+i830_get_edid(xf86OutputPtr output, int gpio_reg, char *gpio_str)
+{
+    I830OutputPrivatePtr    intel_output = output->driver_private;
+    xf86MonPtr		    edid_mon = NULL;
+
+    /* Set up the DDC bus. */
+    I830I2CInit(output->scrn, &intel_output->pDDCBus, gpio_reg, gpio_str);
+
+    edid_mon = xf86OutputGetEDID (output, intel_output->pDDCBus);
+
+    if (!edid_mon || DIGITAL(edid_mon->features.input_type)) {
+	xf86DestroyI2CBusRec(intel_output->pDDCBus, TRUE, TRUE);
+	intel_output->pDDCBus = NULL;
+	if (edid_mon) {
+	    xfree(edid_mon);
+	    edid_mon = NULL;
+	}
+    }
+
+    return edid_mon;
+}
+
+static DisplayModePtr
+i830_crt_get_modes (xf86OutputPtr output)
+{
+    DisplayModePtr	    modes;
+    xf86MonPtr		    edid_mon = NULL;
+    I830OutputPrivatePtr    intel_output = output->driver_private;
+
+    /* Try to probe normal CRT port, and also digital port for output
+       in DVI-I mode. */
+    if ((edid_mon = i830_get_edid(output, GPIOA, "CRTDDC_A")))
+	goto found;
+    if ((edid_mon = i830_get_edid(output, GPIOD, "CRTDDC_D")))
+	goto found;
+    if ((edid_mon = i830_get_edid(output, GPIOE, "CRTDDC_E")))
+	goto found;
+found:
+    /* Destroy DDC bus after probe, so every other new probe will
+       scan all ports again */
+    if (intel_output->pDDCBus)
+	xf86DestroyI2CBusRec(intel_output->pDDCBus, TRUE, TRUE);
+
+    xf86OutputSetEDID (output, edid_mon);
+
+    modes = xf86OutputGetEDIDModes (output);
+    return modes;
+}
+
 static const xf86OutputFuncsRec i830_crt_output_funcs = {
     .dpms = i830_crt_dpms,
     .save = i830_crt_save,
@@ -420,7 +515,7 @@ static const xf86OutputFuncsRec i830_crt_output_funcs = {
     .mode_set = i830_crt_mode_set,
     .commit = i830_output_commit,
     .detect = i830_crt_detect,
-    .get_modes = i830_ddc_get_modes,
+    .get_modes = i830_crt_get_modes,
     .destroy = i830_crt_destroy,
 #ifdef RANDR_GET_CRTC_INTERFACE
     .get_crtc = i830_crt_get_crtc,
@@ -433,6 +528,9 @@ i830_crt_init(ScrnInfoPtr pScrn)
     xf86OutputPtr	    output;
     I830OutputPrivatePtr    i830_output;
     I830Ptr		    pI830 = I830PTR(pScrn);
+
+    if (pI830->quirk_flag & QUIRK_IGNORE_CRT)
+	return;
 
     output = xf86OutputCreate (pScrn, &i830_crt_output_funcs, "VGA");
     if (!output)
@@ -455,7 +553,4 @@ i830_crt_init(ScrnInfoPtr pScrn)
     output->driver_private = i830_output;
     output->interlaceAllowed = FALSE;
     output->doubleScanAllowed = FALSE;
-
-    /* Set up the DDC bus. */
-    I830I2CInit(pScrn, &i830_output->pDDCBus, GPIOA, "CRTDDC_A");
 }

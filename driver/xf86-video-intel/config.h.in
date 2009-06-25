@@ -2,9 +2,6 @@
 
 #include "xorg-server.h"
 
-/* Use Damage extension */
-#undef DAMAGE
-
 /* Enable XvMC support */
 #undef ENABLE_XVMC
 
@@ -13,9 +10,6 @@
 
 /* have new FreeShadow API */
 #undef HAVE_FREE_SHADOW
-
-/* Have drm_i915_flip_t and related definitions */
-#undef HAVE_I915_FLIP
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
@@ -80,6 +74,9 @@
 /* Patch version of this package */
 #undef PACKAGE_VERSION_PATCHLEVEL
 
+/* Building against server 1.5 */
+#undef SERVER_1_5
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
@@ -94,6 +91,9 @@
 
 /* Enable developmental DRI driver support */
 #undef XF86DRI_DEVEL
+
+/* DRM kernel modesetting */
+#undef XF86DRM_MODE
 
 /* X server has built-in mode code */
 #undef XMODES

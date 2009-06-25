@@ -90,44 +90,47 @@ intel_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(intel_drv_la_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 @DRI_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
-intel_drv_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+intel_drv_la_DEPENDENCIES = ../uxa/libuxa.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_2)
 am__intel_drv_la_SOURCES_DIST = brw_defines.h brw_structs.h common.h \
 	i2c_vid.h i810_accel.c i810_common.h i810_cursor.c i810_dga.c \
 	i810_driver.c i810.h i810_io.c i810_memory.c i810_reg.h \
 	i810_ring.h i810_video.c i810_wmark.c i830_3d.c i830_accel.c \
-	i830_bios.c i830_bios.h i830_common.h i830_crt.c i830_cursor.c \
-	i830_debug.c i830_debug.h i830_display.c i830_display.h \
-	i830_quirks.c i830_driver.c i830_dvo.c i830.h i830_hdmi.c \
-	i830_i2c.c i830_io.c i830_lvds.c i830_memory.c i830_modes.c \
-	i830_video.c i830_video.h i830_reg.h i830_ring.h i830_sdvo.c \
-	i830_sdvo.h i830_sdvo_regs.h i830_tv.c i915_3d.c i915_3d.h \
-	i915_reg.h i915_video.c i965_video.c i830_exa.c i830_xaa.c \
-	i830_render.c i915_render.c i965_render.c local_xf86Rename.h \
-	parser/xf86Parser.h parser/xf86Optrec.h modes/xf86Modes.h \
-	modes/xf86Modes.c modes/xf86cvt.c modes/xf86Crtc.h \
-	modes/xf86Crtc.c modes/xf86Cursors.c modes/xf86EdidModes.c \
-	modes/xf86RandR12.c modes/xf86RandR12.h modes/xf86Rename.h \
-	modes/xf86Rotate.c modes/xf86DiDGA.c i810_dri.c i810_dri.h \
-	i830_dri.c i810_hwmc.c i830_dri.h i830_hwmc.h i830_hwmc.c \
-	i915_hwmc.c i915_hwmc.h
+	i830_bios.c i830_bios.h i830_batchbuffer.c i830_batchbuffer.h \
+	i830_common.h i830_crt.c i830_cursor.c i830_debug.c \
+	i830_debug.h i830_display.c i830_display.h i830_quirks.c \
+	i830_driver.c i830_dvo.c i830.h i830_hdmi.c i830_i2c.c \
+	i830_io.c i830_lvds.c i830_memory.c i830_modes.c i830_video.c \
+	i830_video.h i830_reg.h i830_ring.h i830_sdvo.c i830_sdvo.h \
+	i830_sdvo_regs.h i830_tv.c i915_3d.c i915_3d.h i915_reg.h \
+	i915_video.c i965_video.c i830_exa.c i830_xaa.c i830_render.c \
+	i915_render.c i965_render.c drmmode_display.c \
+	local_xf86Rename.h parser/xf86Parser.h parser/xf86Optrec.h \
+	modes/xf86Modes.h modes/xf86Modes.c modes/xf86cvt.c \
+	modes/xf86Crtc.h modes/xf86Crtc.c modes/xf86Cursors.c \
+	modes/xf86EdidModes.c modes/xf86RandR12.c modes/xf86RandR12.h \
+	modes/xf86Rename.h modes/xf86Rotate.c modes/xf86DiDGA.c \
+	i810_dri.c i810_dri.h i830_dri.c i810_hwmc.c i830_dri.h \
+	i830_hwmc.h i830_hwmc.c i915_hwmc.c i915_hwmc.h i965_hwmc.c \
+	i965_hwmc.h
 am__objects_1 = xf86Modes.lo xf86cvt.lo xf86Crtc.lo xf86Cursors.lo \
 	xf86EdidModes.lo xf86RandR12.lo xf86Rotate.lo xf86DiDGA.lo
 @XMODES_TRUE@am__objects_2 = $(am__objects_1)
 am__objects_3 = i810_dri.lo i830_dri.lo i810_hwmc.lo
 @DRI_TRUE@am__objects_4 = $(am__objects_3)
-am__objects_5 = i830_hwmc.lo i915_hwmc.lo
+am__objects_5 = i830_hwmc.lo i915_hwmc.lo i965_hwmc.lo
 @XVMC_TRUE@am__objects_6 = $(am__objects_5)
 am_intel_drv_la_OBJECTS = i810_accel.lo i810_cursor.lo i810_dga.lo \
 	i810_driver.lo i810_io.lo i810_memory.lo i810_video.lo \
 	i810_wmark.lo i830_3d.lo i830_accel.lo i830_bios.lo \
-	i830_crt.lo i830_cursor.lo i830_debug.lo i830_display.lo \
-	i830_quirks.lo i830_driver.lo i830_dvo.lo i830_hdmi.lo \
-	i830_i2c.lo i830_io.lo i830_lvds.lo i830_memory.lo \
-	i830_modes.lo i830_video.lo i830_sdvo.lo i830_tv.lo i915_3d.lo \
-	i915_video.lo i965_video.lo i830_exa.lo i830_xaa.lo \
-	i830_render.lo i915_render.lo i965_render.lo $(am__objects_2) \
-	$(am__objects_4) $(am__objects_6)
+	i830_batchbuffer.lo i830_crt.lo i830_cursor.lo i830_debug.lo \
+	i830_display.lo i830_quirks.lo i830_driver.lo i830_dvo.lo \
+	i830_hdmi.lo i830_i2c.lo i830_io.lo i830_lvds.lo \
+	i830_memory.lo i830_modes.lo i830_video.lo i830_sdvo.lo \
+	i830_tv.lo i915_3d.lo i915_video.lo i965_video.lo i830_exa.lo \
+	i830_xaa.lo i830_render.lo i915_render.lo i965_render.lo \
+	drmmode_display.lo $(am__objects_2) $(am__objects_4) \
+	$(am__objects_6)
 intel_drv_la_OBJECTS = $(am_intel_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -187,6 +190,10 @@ DRI_CFLAGS = @DRI_CFLAGS@
 DRI_FALSE = @DRI_FALSE@
 DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
+DRM_CFLAGS = @DRM_CFLAGS@
+DRM_LIBS = @DRM_LIBS@
+DRM_MODE_CFLAGS = @DRM_MODE_CFLAGS@
+DRM_MODE_LIBS = @DRM_MODE_LIBS@
 DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
@@ -198,6 +205,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 HAVE_GEN4ASM_FALSE = @HAVE_GEN4ASM_FALSE@
 HAVE_GEN4ASM_TRUE = @HAVE_GEN4ASM_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -242,6 +250,8 @@ PKG_CONFIG = @PKG_CONFIG@
 PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
 SED = @SED@
+SERVER_1_5_CFLAGS = @SERVER_1_5_CFLAGS@
+SERVER_1_5_LIBS = @SERVER_1_5_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -249,6 +259,8 @@ VERSION = @VERSION@
 VIDEO_DEBUG_FALSE = @VIDEO_DEBUG_FALSE@
 VIDEO_DEBUG_TRUE = @VIDEO_DEBUG_TRUE@
 WARN_CFLAGS = @WARN_CFLAGS@
+XEXT_CFLAGS = @XEXT_CFLAGS@
+XEXT_LIBS = @XEXT_LIBS@
 XMODES_CFLAGS = @XMODES_CFLAGS@
 XMODES_FALSE = @XMODES_FALSE@
 XMODES_TRUE = @XMODES_TRUE@
@@ -260,15 +272,9 @@ XVMCLIB_CFLAGS = @XVMCLIB_CFLAGS@
 XVMCLIB_LIBS = @XVMCLIB_LIBS@
 XVMC_FALSE = @XVMC_FALSE@
 XVMC_TRUE = @XVMC_TRUE@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -285,6 +291,9 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 gen4asm = @gen4asm@
 host = @host@
@@ -292,18 +301,22 @@ host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 moduledir = @moduledir@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -316,13 +329,15 @@ SUBDIRS = xvmc bios_reader ch7017 ch7xxx ivch sil164 tfp410 $(REGDUMPER)
 # -avoid-version prevents gratuitous .0.0.0 version numbers on the end
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
-AM_CFLAGS = @WARN_CFLAGS@ @XORG_CFLAGS@ @DRI_CFLAGS@ @PCIACCESS_CFLAGS@ \
-	@XMODES_CFLAGS@ -DI830_XV -DI830_USE_XAA -DI830_USE_EXA
+AM_CFLAGS = @WARN_CFLAGS@ @XORG_CFLAGS@ @DRM_CFLAGS@ @DRI_CFLAGS@ \
+	@PCIACCESS_CFLAGS@ -I$(top_srcdir)/uxa \
+	@XMODES_CFLAGS@ -DI830_XV -DI830_USE_XAA -DI830_USE_EXA -DI830_USE_UXA
 
 intel_drv_la_LTLIBRARIES = intel_drv.la
 intel_drv_la_LDFLAGS = -module -avoid-version
 intel_drv_ladir = @moduledir@/drivers
-intel_drv_la_LIBADD = $(am__append_1) $(am__append_4)
+intel_drv_la_LIBADD = -lm @DRM_LIBS@ -ldrm_intel ../uxa/libuxa.la \
+	$(am__append_1) $(am__append_4)
 XMODE_SRCS = \
 	 local_xf86Rename.h \
 	 parser/xf86Parser.h \
@@ -351,20 +366,23 @@ INTEL_XVMC_SRCS = \
 	 i830_hwmc.h \
 	 i830_hwmc.c \
          i915_hwmc.c \
-         i915_hwmc.h
+         i915_hwmc.h \
+         i965_hwmc.c \
+         i965_hwmc.h
 
 intel_drv_la_SOURCES = brw_defines.h brw_structs.h common.h i2c_vid.h \
 	i810_accel.c i810_common.h i810_cursor.c i810_dga.c \
 	i810_driver.c i810.h i810_io.c i810_memory.c i810_reg.h \
 	i810_ring.h i810_video.c i810_wmark.c i830_3d.c i830_accel.c \
-	i830_bios.c i830_bios.h i830_common.h i830_crt.c i830_cursor.c \
-	i830_debug.c i830_debug.h i830_display.c i830_display.h \
-	i830_quirks.c i830_driver.c i830_dvo.c i830.h i830_hdmi.c \
-	i830_i2c.c i830_io.c i830_lvds.c i830_memory.c i830_modes.c \
-	i830_video.c i830_video.h i830_reg.h i830_ring.h i830_sdvo.c \
-	i830_sdvo.h i830_sdvo_regs.h i830_tv.c i915_3d.c i915_3d.h \
-	i915_reg.h i915_video.c i965_video.c i830_exa.c i830_xaa.c \
-	i830_render.c i915_render.c i965_render.c $(am__append_2) \
+	i830_bios.c i830_bios.h i830_batchbuffer.c i830_batchbuffer.h \
+	i830_common.h i830_crt.c i830_cursor.c i830_debug.c \
+	i830_debug.h i830_display.c i830_display.h i830_quirks.c \
+	i830_driver.c i830_dvo.c i830.h i830_hdmi.c i830_i2c.c \
+	i830_io.c i830_lvds.c i830_memory.c i830_modes.c i830_video.c \
+	i830_video.h i830_reg.h i830_ring.h i830_sdvo.c i830_sdvo.h \
+	i830_sdvo_regs.h i830_tv.c i915_3d.c i915_3d.h i915_reg.h \
+	i915_video.c i965_video.c i830_exa.c i830_xaa.c i830_render.c \
+	i915_render.c i965_render.c drmmode_display.c $(am__append_2) \
 	$(am__append_3) $(am__append_5)
 INTEL_G4A = \
 	packed_yuv_sf.g4a		\
@@ -493,6 +511,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drmmode_display.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i810_accel.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i810_cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i810_dga.Plo@am__quote@
@@ -505,6 +524,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i810_wmark.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_3d.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_accel.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_batchbuffer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_bios.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_crt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_cursor.Plo@am__quote@
@@ -531,6 +551,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i915_hwmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i915_render.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i915_video.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i965_hwmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i965_render.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i965_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Crtc.Plo@am__quote@

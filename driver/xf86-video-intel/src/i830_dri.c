@@ -65,6 +65,12 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -83,24 +89,11 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "i915_drm.h"
 
-/* This block and the corresponding configure test can be removed when
- * libdrm >= 2.3.1 is required.
- */
-#ifndef HAVE_I915_FLIP
-
-#define DRM_VBLANK_FLIP 0x8000000
-
-typedef struct drm_i915_flip {
-   int pipes;
-} drm_i915_flip_t;
-
-#undef DRM_IOCTL_I915_FLIP
-#define DRM_IOCTL_I915_FLIP DRM_IOW(DRM_COMMAND_BASE + DRM_I915_FLIP, \
-				    drm_i915_flip_t)
-
-#endif
-
 #include "dristruct.h"
+
+#ifdef DRI2
+#include "dri2.h"
+#endif
 
 static Bool I830InitVisualConfigs(ScreenPtr pScreen);
 static Bool I830CreateContext(ScreenPtr pScreen, VisualPtr visual,
@@ -119,24 +112,12 @@ static void I830DRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 
 static void I830DRITransitionTo2d(ScreenPtr pScreen);
 static void I830DRITransitionTo3d(ScreenPtr pScreen);
-#if defined(DAMAGE) && (DRIINFO_MAJOR_VERSION > 5 ||		\
-			(DRIINFO_MAJOR_VERSION == 5 && DRIINFO_MINOR_VERSION >= 1))
-#define DRI_SUPPORTS_CLIP_NOTIFY 1
-#else
-#define DRI_SUPPORTS_CLIP_NOTIFY 0
-static void I830DRITransitionMultiToSingle3d(ScreenPtr pScreen);
-static void I830DRITransitionSingleToMulti3d(ScreenPtr pScreen);
-#endif
 
 #if (DRIINFO_MAJOR_VERSION > 5 || \
      (DRIINFO_MAJOR_VERSION == 5 && DRIINFO_MINOR_VERSION >= 4))
 #define DRI_DRIVER_FRAMEBUFFER_MAP 1
 #else
 #define DRI_DRIVER_FRAMEBUFFER_MAP 0
-#endif
-
-#if DRI_SUPPORTS_CLIP_NOTIFY
-static void I830DRIClipNotify(ScreenPtr pScreen, WindowPtr *ppWin, int num);
 #endif
 
 extern void GlxSetVisualConfigs(int nconfigs,
@@ -165,29 +146,38 @@ static Bool
 I830InitDma(ScrnInfoPtr pScrn)
 {
    I830Ptr pI830 = I830PTR(pScrn);
-   I830RingBuffer *ring = pI830->LpRing;
+   I830RingBuffer *ring = &pI830->ring;
    I830DRIPtr pI830DRI = (I830DRIPtr) pI830->pDRIInfo->devPrivate;
    drmI830Init info;
 
    memset(&info, 0, sizeof(drmI830Init));
    info.func = I830_INIT_DMA;
 
-   info.ring_start = ring->mem->offset + pI830->LinearAddr;
-   info.ring_end = ring->mem->end + pI830->LinearAddr;
-   info.ring_size = ring->mem->size;
+   /* Initialize fields that are used in the absence of GEM */
+   if (!pI830->memory_manager && !pI830->use_drm_mode) {
+       info.ring_start = ring->mem->offset + pI830->LinearAddr;
+       info.ring_end = ring->mem->end + pI830->LinearAddr;
+       info.ring_size = ring->mem->size;
 
-   info.mmio_offset = -1;
+       /* Not used as of the middle of GEM development. */
+       info.mmio_offset = (unsigned int)pI830DRI->regs;
+
+       /* Not used as of before GEM development */
+       info.front_offset = pI830->front_buffer->offset;
+       info.back_offset = pI830->back_buffer->offset;
+       info.depth_offset = pI830->depth_buffer->offset;
+       info.pitch = pScrn->displayWidth;
+       info.back_pitch = pScrn->displayWidth;
+       info.depth_pitch = pScrn->displayWidth;
+       info.w = pScrn->virtualX;
+       info.h = pScrn->virtualY;
+   }
+
 
    info.sarea_priv_offset = sizeof(XF86DRISAREARec);
 
-   info.front_offset = pI830->front_buffer->offset;
-   info.back_offset = pI830->back_buffer->offset;
-   info.depth_offset = pI830->depth_buffer->offset;
-   info.w = pScrn->virtualX;
-   info.h = pScrn->virtualY;
-   info.pitch = pScrn->displayWidth;
-   info.back_pitch = pScrn->displayWidth;
-   info.depth_pitch = pScrn->displayWidth;
+   /* This should probably have been moved alongside offset/pitch in the sarea.
+    */
    info.cpp = pI830->cpp;
 
    if (drmCommandWrite(pI830->drmSubFD, DRM_I830_INIT,
@@ -594,12 +584,8 @@ I830DRIScreenInit(ScreenPtr pScreen)
 
 #if DRIINFO_MAJOR_VERSION > 5 || \
     (DRIINFO_MAJOR_VERSION == 5 && DRIINFO_MINOR_VERSION >= 3)
-      if (pI830->useEXA)
+      if (pI830->accel == ACCEL_EXA)
 	 pDRIInfo->texOffsetStart = I830TexOffsetStart;
-#endif
-
-#if DRI_SUPPORTS_CLIP_NOTIFY
-      pDRIInfo->ClipNotify = I830DRIClipNotify;
 #endif
 
 #if DRI_DRIVER_FRAMEBUFFER_MAP
@@ -620,11 +606,6 @@ I830DRIScreenInit(ScreenPtr pScreen)
 
    pDRIInfo->TransitionTo2d = I830DRITransitionTo2d;
    pDRIInfo->TransitionTo3d = I830DRITransitionTo3d;
-
-#if !DRI_SUPPORTS_CLIP_NOTIFY
-   pDRIInfo->TransitionSingleToMulti3D = I830DRITransitionSingleToMulti3d;
-   pDRIInfo->TransitionMultiToSingle3D = I830DRITransitionMultiToSingle3d;
-#endif
 
    /* do driver-independent DRI screen initialization here */
    if (!DRIScreenInit(pScreen, pDRIInfo, &pI830->drmSubFD)) {
@@ -728,14 +709,6 @@ I830DRIScreenInit(ScreenPtr pScreen)
 	    return FALSE;
 	 }
 	 pI830->drmMinor = version->version_minor;
-#ifdef DAMAGE
-	 if (pI830->allowPageFlip && pI830->drmMinor < 9) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		       "DRM version 1.9 or newer required for Page flipping. "
-		       "Disabling.\n");
-	    pI830->allowPageFlip = FALSE;
-	 }
-#endif	 
 	 drmFreeVersion(version);
       }
    }
@@ -771,6 +744,51 @@ I830InitTextureHeap(ScrnInfoPtr pScrn)
    }
 }
 
+/*
+ * Map registers & ring buffer
+ */
+static Bool
+I830DRIMapHW(ScreenPtr pScreen)
+{
+   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   I830Ptr pI830 = I830PTR(pScrn);
+   DRIInfoPtr pDRIInfo = pI830->pDRIInfo;
+   I830DRIPtr pI830DRI = pDRIInfo->devPrivate;
+
+   /* Kernel deals with direct hw access in this case */
+   if (pI830->use_drm_mode)
+       return TRUE;
+
+   DPRINTF(PFX, "I830DRIMapHW\n");
+   pI830DRI->regsSize = I830_REG_SIZE;
+   if (drmAddMap(pI830->drmSubFD, (drm_handle_t)pI830->MMIOAddr,
+		 pI830DRI->regsSize, DRM_REGISTERS, 0,
+		 (drmAddress) &pI830DRI->regs) < 0) {
+      xf86DrvMsg(pScreen->myNum, X_ERROR, "[drm] drmAddMap(regs) failed\n");
+      DRICloseScreen(pScreen);
+      return FALSE;
+   }
+   xf86DrvMsg(pScreen->myNum, X_INFO, "[drm] Registers = 0x%08x\n",
+	      (int)pI830DRI->regs);
+
+   if (!pI830->memory_manager) {
+       if (drmAddMap(pI830->drmSubFD,
+		     (drm_handle_t)pI830->ring.mem->offset +
+		     pI830->LinearAddr,
+		     pI830->ring.mem->size, DRM_AGP, 0,
+		     (drmAddress) &pI830->ring_map) < 0) {
+	   xf86DrvMsg(pScreen->myNum, X_ERROR,
+		      "[drm] drmAddMap(ring_map) failed. Disabling DRI\n");
+	   DRICloseScreen(pScreen);
+	   return FALSE;
+       }
+       xf86DrvMsg(pScreen->myNum, X_INFO, "[drm] ring buffer = 0x%08x\n",
+		  (int)pI830->ring_map);
+   }
+
+   return TRUE;
+}
+
 /**
  * Sets up mappings for static, lifetime-fixed allocations, and inital SAREA
  * setup.
@@ -784,29 +802,24 @@ I830DRIDoMappings(ScreenPtr pScreen)
    I830DRIPtr pI830DRI = pDRIInfo->devPrivate;
    drmI830Sarea *sarea = (drmI830Sarea *) DRIGetSAREAPrivate(pScreen);
 
-   DPRINTF(PFX, "I830DRIDoMappings\n");
-
-   if (drmAddMap(pI830->drmSubFD,
-		 (drm_handle_t)pI830->LpRing->mem->offset + pI830->LinearAddr,
-		 pI830->LpRing->mem->size, DRM_AGP, 0,
-		 (drmAddress) &pI830->ring_map) < 0) {
-      xf86DrvMsg(pScreen->myNum, X_ERROR,
-		 "[drm] drmAddMap(ring_map) failed. Disabling DRI\n");
-      DRICloseScreen(pScreen);
-      return FALSE;
+   if (!I830DRIMapHW(pScreen)) {
+       DRICloseScreen(pScreen);
+       return FALSE;
    }
-   xf86DrvMsg(pScreen->myNum, X_INFO, "[drm] ring buffer = 0x%08x\n",
-	      (int)pI830->ring_map);
 
    if (!I830InitDma(pScrn)) {
       DRICloseScreen(pScreen);
       return FALSE;
    }
 
+   if (pI830->memory_manager == NULL)
+       intel_bufmgr_fake_set_last_dispatch(pI830->bufmgr,
+					   (volatile unsigned int *)
+					   &sarea->last_dispatch);
+
    /* init to zero to be safe */
    sarea->front_handle = 0;
    sarea->back_handle = 0;
-   sarea->third_handle = 0;
    sarea->depth_handle = 0;
    sarea->tex_handle = 0;
 
@@ -903,12 +916,14 @@ Bool
 I830DRIResume(ScreenPtr pScreen)
 {
    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   I830Ptr pI830 = I830PTR(pScrn);
 
    DPRINTF(PFX, "I830DRIResume\n");
 
    I830ResumeDma(pScrn);
 
-   I830DRIInstIrqHandler(pScrn);
+   if (!pI830->memory_manager)
+       I830DRIInstIrqHandler(pScrn);
 
    return TRUE;
 }
@@ -922,11 +937,7 @@ I830DRICloseScreen(ScreenPtr pScreen)
 
    DPRINTF(PFX, "I830DRICloseScreen\n");
 
-#ifdef DAMAGE
-   REGION_UNINIT(pScreen, &pI830->driRegion);
-#endif
-
-   if (pI830DRI->irq) {
+   if (!pI830->memory_manager && pI830DRI->irq) {
        drmCtlUninstHandler(pI830->drmSubFD);
        pI830DRI->irq = 0;
    }
@@ -947,6 +958,7 @@ I830DRICloseScreen(ScreenPtr pScreen)
       xfree(pI830->pVisualConfigs);
    if (pI830->pVisualConfigsPriv)
       xfree(pI830->pVisualConfigsPriv);
+   pI830->directRenderingType = DRI_NONE;
 }
 
 static Bool
@@ -978,61 +990,6 @@ I830DRIFinishScreenInit(ScreenPtr pScreen)
    return TRUE;
 }
 
-#ifdef DAMAGE
-/* This should be done *before* XAA syncs,
- * Otherwise will have to sync again???
- */
-static void
-I830DRIDoRefreshArea (ScrnInfoPtr pScrn, int num, BoxPtr pbox, uint32_t dst)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-   int i, cmd, br13 = (pScrn->displayWidth * pI830->cpp) | (0xcc << 16);
-
-   if (pScrn->bitsPerPixel == 32) {
-      cmd = (XY_SRC_COPY_BLT_CMD | XY_SRC_COPY_BLT_WRITE_ALPHA |
-	     XY_SRC_COPY_BLT_WRITE_RGB);
-      br13 |= 3 << 24;
-   } else {
-      cmd = (XY_SRC_COPY_BLT_CMD);
-      br13 |= 1 << 24;
-   }
-
-   for (i = 0 ; i < num ; i++, pbox++) {
-      BEGIN_BATCH(8);
-      OUT_BATCH(cmd);
-      OUT_BATCH(br13);
-      OUT_BATCH((pbox->y1 << 16) | pbox->x1);
-      OUT_BATCH((pbox->y2 << 16) | pbox->x2);
-      OUT_BATCH(dst);
-      OUT_BATCH((pbox->y1 << 16) | pbox->x1);
-      OUT_BATCH(br13 & 0xffff);
-      OUT_BATCH(pI830->front_buffer->offset);
-      ADVANCE_BATCH();
-   }
-}
-
-static void
-I830DRIRefreshArea (ScrnInfoPtr pScrn, int num, BoxPtr pbox)
-{
-   I830Ptr pI830 = I830PTR(pScrn);
-   drmI830Sarea *pSAREAPriv = DRIGetSAREAPrivate(pScrn->pScreen);
-
-   /* Don't want to do this when no 3d is active and pages are
-    * right-way-round :
-    */
-   if (!pSAREAPriv->pf_active && pSAREAPriv->pf_current_page == 0)
-      return;
-
-   I830DRIDoRefreshArea(pScrn, num, pbox, pI830->back_buffer->offset);
-
-   if (pI830->third_buffer) {
-      I830DRIDoRefreshArea(pScrn, num, pbox, pI830->third_buffer->offset);
-   }
-
-   DamageEmpty(pI830->pDamage);
-}
-#endif
-
 static void
 I830DRISwapContext(ScreenPtr pScreen, DRISyncType syncType,
 		   DRIContextType oldContextType, void *oldContext,
@@ -1047,97 +1004,22 @@ I830DRISwapContext(ScreenPtr pScreen, DRISyncType syncType,
       if (I810_DEBUG & DEBUG_VERBOSE_DRI)
 	 ErrorF("i830DRISwapContext (in)\n");
 
-      *pI830->last_3d = LAST_3D_OTHER;
+      pI830->last_3d = LAST_3D_OTHER;
 
       if (!pScrn->vtSema)
      	 return;
       pI830->LockHeld = 1;
-      i830_refresh_ring(pScrn);
+      if (!pI830->memory_manager)
+	  i830_refresh_ring(pScrn);
 
-      I830EmitFlush(pScrn);
-
-#ifdef DAMAGE
-      if (!pI830->pDamage && pI830->allowPageFlip) {
-	 PixmapPtr pPix  = pScreen->GetScreenPixmap(pScreen);
-	 pI830->pDamage = DamageCreate(NULL, NULL, DamageReportNone, TRUE,
-				       pScreen, pPix);
-
-	 if (pI830->pDamage == NULL) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-                       "No screen damage record, page flipping disabled\n");
-            pI830->allowPageFlip = FALSE;
-	 } else {
-	    DamageRegister(&pPix->drawable, pI830->pDamage);
-
-	    DamageDamageRegion(&pPix->drawable,
-			       &WindowTable[pScreen->myNum]->winSize);
-
-            xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                       "Damage tracking initialized for page flipping\n");
-	 }
-    }
-#endif
    } else if (syncType == DRI_2D_SYNC &&
 	      oldContextType == DRI_NO_CONTEXT &&
 	      newContextType == DRI_2D_CONTEXT) {
-#ifdef DAMAGE
-      drmI830Sarea *sPriv = (drmI830Sarea *) DRIGetSAREAPrivate(pScreen);
-#endif
-
       if (I810_DEBUG & DEBUG_VERBOSE_DRI)
 	 ErrorF("i830DRISwapContext (out)\n");
 
       if (!pScrn->vtSema)
      	 return;
-
-#ifdef DAMAGE
-      if (pI830->pDamage) {
-	 RegionPtr pDamageReg = DamageRegion(pI830->pDamage);
-
-	 if (pDamageReg) {
-	    RegionRec region;
-	    int nrects;
-
-	    REGION_NULL(pScreen, &region);
-	    REGION_SUBTRACT(pScreen, &region, pDamageReg, &pI830->driRegion);
-
-	    if ((nrects = REGION_NUM_RECTS(&region)))
-	       I830DRIRefreshArea(pScrn, nrects, REGION_RECTS(&region));
-
-	    REGION_UNINIT(pScreen, &region);
-	 }
-      }
-#endif
-
-      I830EmitFlush(pScrn);
-
-#ifdef DAMAGE
-      /* Try flipping back to the front page if necessary */
-      if (sPriv && !sPriv->pf_enabled && sPriv->pf_current_page != 0) {
-	 drm_i915_flip_t flip = { .pipes = 0 };
-
-	 if (sPriv->pf_current_page & (0x3 << 2)) {
-	    sPriv->pf_current_page = sPriv->pf_current_page & 0x3;
-	    sPriv->pf_current_page |= (sPriv->third_handle ? 2 : 1) << 2;
-
-	    flip.pipes |= 0x2;
-	 }
-
-	 if (sPriv->pf_current_page & 0x3) {
-	    sPriv->pf_current_page = sPriv->pf_current_page & (0x3 << 2);
-	    sPriv->pf_current_page |= sPriv->third_handle ? 2 : 1;
-
-	    flip.pipes |= 0x1;
-	 }
-
-	 drmCommandWrite(pI830->drmSubFD, DRM_I915_FLIP, &flip, sizeof(flip));
-
-	 if (sPriv->pf_current_page != 0)
-	    xf86DrvMsg(pScreen->myNum, X_WARNING,
-		       "[dri] %s: kernel failed to unflip buffers.\n", __func__);
-      }
-#endif
-
       pI830->LockHeld = 0;
    } else if (I810_DEBUG & DEBUG_VERBOSE_DRI)
       ErrorF("i830DRISwapContext (other)\n");
@@ -1148,47 +1030,39 @@ I830DRIInitBuffers(WindowPtr pWin, RegionPtr prgn, CARD32 index)
 {
    ScreenPtr pScreen = pWin->drawable.pScreen;
    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-   BoxPtr pbox = REGION_RECTS(prgn);
-   int nbox = REGION_NUM_RECTS(prgn);
+   BoxPtr pbox;
+   int nbox;
+   int buffer, first_buffer, last_buffer;
 
    if (I810_DEBUG & DEBUG_VERBOSE_DRI)
       ErrorF("I830DRIInitBuffers\n");
 
-   I830SetupForSolidFill(pScrn, 0, GXcopy, -1);
-   while (nbox--) {
-      I830SelectBuffer(pScrn, I830_SELECT_BACK);
-      I830SubsequentSolidFillRect(pScrn, pbox->x1, pbox->y1,
-				  pbox->x2 - pbox->x1, pbox->y2 - pbox->y1);
+   first_buffer = I830_SELECT_BACK;
+   last_buffer = I830_SELECT_DEPTH;
 
-      if (I830PTR(pScrn)->third_buffer) {
-	 I830SelectBuffer(pScrn, I830_SELECT_THIRD);
+   for (buffer = first_buffer; buffer <= last_buffer; buffer++) {
+      pbox = REGION_RECTS(prgn);
+      nbox = REGION_NUM_RECTS(prgn);
+
+      if (!I830SelectBuffer(pScrn, buffer))
+	 continue;
+
+      if (buffer == I830_SELECT_DEPTH) {
+	 switch (pScrn->bitsPerPixel) {
+	 case 16:
+	    I830SetupForSolidFill(pScrn, 0xffff, GXcopy, -1);
+	    break;
+	 case 32:
+	    I830SetupForSolidFill(pScrn, 0xffffff, GXcopy, -1);
+	    break;
+	 }
+      } else
+	 I830SetupForSolidFill(pScrn, 0, GXcopy, -1);
+      while (nbox--) {
 	 I830SubsequentSolidFillRect(pScrn, pbox->x1, pbox->y1,
 				     pbox->x2 - pbox->x1, pbox->y2 - pbox->y1);
+	 pbox++;
       }
-
-      pbox++;
-   }
-
-   /* Clear the depth buffer - uses 0xffff rather than 0.
-    */
-   pbox = REGION_RECTS(prgn);
-   nbox = REGION_NUM_RECTS(prgn);
-
-   I830SelectBuffer(pScrn, I830_SELECT_DEPTH);
-
-   switch (pScrn->bitsPerPixel) {
-   case 16:
-      I830SetupForSolidFill(pScrn, 0xffff, GXcopy, -1);
-      break;
-   case 32:
-      I830SetupForSolidFill(pScrn, 0xffffff, GXcopy, -1);
-      break;
-   }
-
-   while (nbox--) {
-      I830SubsequentSolidFillRect(pScrn, pbox->x1, pbox->y1,
-				  pbox->x2 - pbox->x1, pbox->y2 - pbox->y1);
-      pbox++;
    }
 
    I830SelectBuffer(pScrn, I830_SELECT_FRONT);
@@ -1206,7 +1080,6 @@ I830DRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 {
    ScreenPtr pScreen = pParent->drawable.pScreen;
    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-   I830Ptr pI830 = I830PTR(pScrn);
    BoxPtr pboxTmp, pboxNext, pboxBase;
    DDXPointPtr pptTmp, pptNew2 = NULL;
    int xdir, ydir;
@@ -1229,6 +1102,7 @@ I830DRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 
    int dx = pParent->drawable.x - ptOldOrg.x;
    int dy = pParent->drawable.y - ptOldOrg.y;
+   int buffer, first_buffer, last_buffer;
 
    /* If the copy will overlap in Y, reverse the order */
    if (dy > 0) {
@@ -1310,44 +1184,45 @@ I830DRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
    /* SelectBuffer isn't really a good concept for the i810.
     */
    I830EmitFlush(pScrn);
-   I830SetupForScreenToScreenCopy(pScrn, xdir, ydir, GXcopy, -1, -1);
-   for (; nbox--; pbox++) {
+   first_buffer = I830_SELECT_BACK;
+   last_buffer = I830_SELECT_DEPTH;
 
-      int x1 = pbox->x1;
-      int y1 = pbox->y1;
-      int destx = x1 + dx;
-      int desty = y1 + dy;
-      int w = pbox->x2 - x1 + 1;
-      int h = pbox->y2 - y1 + 1;
-
-      if (destx < 0)
-	 x1 -= destx, w += destx, destx = 0;
-      if (desty < 0)
-	 y1 -= desty, h += desty, desty = 0;
-      if (destx + w > screenwidth)
-	 w = screenwidth - destx;
-      if (desty + h > screenheight)
-	 h = screenheight - desty;
-      if (w <= 0)
+   for (buffer = first_buffer; buffer <= last_buffer; buffer++) {
+      if (!I830SelectBuffer(pScrn, buffer))
 	 continue;
-      if (h <= 0)
-	 continue;
+      I830SetupForScreenToScreenCopy(pScrn, xdir, ydir, GXcopy, -1, -1);
+      pbox = REGION_RECTS(prgnSrc);
+      nbox = REGION_NUM_RECTS(prgnSrc);
+      for (; nbox--; pbox++) {
 
-      if (I810_DEBUG & DEBUG_VERBOSE_DRI)
-	 ErrorF("MoveBuffers %d,%d %dx%d dx: %d dy: %d\n",
-		x1, y1, w, h, dx, dy);
+	 int x1 = pbox->x1;
+	 int y1 = pbox->y1;
+	 int destx = x1 + dx;
+	 int desty = y1 + dy;
+	 int w = pbox->x2 - x1 + 1;
+	 int h = pbox->y2 - y1 + 1;
 
-      I830SelectBuffer(pScrn, I830_SELECT_BACK);
-      I830SubsequentScreenToScreenCopy(pScrn, x1, y1, destx, desty, w, h);
-      if (pI830->third_buffer) {
-	 I830SelectBuffer(pScrn, I830_SELECT_THIRD);
+	 if (destx < 0)
+	    x1 -= destx, w += destx, destx = 0;
+	 if (desty < 0)
+	    y1 -= desty, h += desty, desty = 0;
+	 if (destx + w > screenwidth)
+	    w = screenwidth - destx;
+	 if (desty + h > screenheight)
+	    h = screenheight - desty;
+	 if (w <= 0)
+	    continue;
+	 if (h <= 0)
+	    continue;
+
+	 if (I810_DEBUG & DEBUG_VERBOSE_DRI)
+	    ErrorF("MoveBuffers %d,%d %dx%d dx: %d dy: %d\n",
+		   x1, y1, w, h, dx, dy);
+
 	 I830SubsequentScreenToScreenCopy(pScrn, x1, y1, destx, desty, w, h);
       }
-      if (!IS_I965G(pI830)) {
-         I830SelectBuffer(pScrn, I830_SELECT_DEPTH);
-         I830SubsequentScreenToScreenCopy(pScrn, x1, y1, destx, desty, w, h);
-      }
    }
+
    I830SelectBuffer(pScrn, I830_SELECT_FRONT);
    I830EmitFlush(pScrn);
 
@@ -1362,69 +1237,11 @@ I830DRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
    i830MarkSync(pScrn);
 }
 
-/* Use callbacks from dri.c to support pageflipping mode for a single
- * 3d context without need for any specific full-screen extension.
- *
- * Also see tdfx driver for example of using these callbacks to
- * allocate and free 3d-specific memory on demand.
- */
-
-/* Use the miext/shadow module to maintain a list of dirty rectangles.
- * These are blitted to the back buffer to keep both buffers clean
- * during page-flipping when the 3d application isn't fullscreen.
- *
- * Unlike most use of the shadow code, both buffers are in video
- * memory.
- *
- * An alternative to this would be to organize for all on-screen
- * drawing operations to be duplicated for the two buffers.  That
- * might be faster, but seems like a lot more work...
- */
-
-static void
-I830DRISetPfMask(ScreenPtr pScreen, int pfMask)
-{
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-   I830Ptr pI830 = I830PTR(pScrn);
-   drmI830Sarea *pSAREAPriv = DRIGetSAREAPrivate(pScreen);
-
-   if (pI830->allowPageFlip && pfMask) {
-      pSAREAPriv->pf_enabled = pI830->allowPageFlip;
-      pSAREAPriv->pf_active = pfMask;
-   } else
-      pSAREAPriv->pf_active = 0;
-}
-
-#if !DRI_SUPPORTS_CLIP_NOTIFY
-static void
-I830DRITransitionSingleToMulti3d(ScreenPtr pScreen)
-{
-   /* Tell the clients not to pageflip.  How?
-    *   -- Field in sarea, plus bumping the window counters.
-    *   -- DRM needs to cope with Front-to-Back swapbuffers.
-    */
-   I830DRISetPfMask(pScreen, 0);
-}
-
-static void
-I830DRITransitionMultiToSingle3d(ScreenPtr pScreen)
-{
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-   I830Ptr pI830 = I830PTR(pScrn);
-
-   /* Let the remaining 3d app start page flipping again.
-    */
-   I830DRISetPfMask(pScreen, pI830->allowPageFlip ? 0x3 : 0);
-}
-#endif /* !DRI_SUPPORTS_CLIP_NOTIFY */
-
 static void
 I830DRITransitionTo3d(ScreenPtr pScreen)
 {
    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
    I830Ptr pI830 = I830PTR(pScrn);
-
-   I830DRISetPfMask(pScreen, pI830->allowPageFlip ? 0x3 : 0);
 
    pI830->want_vblank_interrupts = TRUE;
    I830DRISetVBlankInterrupt(pScrn, TRUE);
@@ -1435,66 +1252,31 @@ I830DRITransitionTo2d(ScreenPtr pScreen)
 {
    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
    I830Ptr pI830 = I830PTR(pScrn);
-   drmI830Sarea *sPriv = (drmI830Sarea *) DRIGetSAREAPrivate(pScreen);
-
-   I830DRISetPfMask(pScreen, 0);
-
-   sPriv->pf_enabled = 0;
 
    pI830->want_vblank_interrupts = FALSE;
    I830DRISetVBlankInterrupt(pScrn, FALSE);
 }
 
-#if DRI_SUPPORTS_CLIP_NOTIFY
-static void
-I830DRIClipNotify(ScreenPtr pScreen, WindowPtr *ppWin, int num)
+static int
+i830_name_buffer (ScrnInfoPtr pScrn, i830_memory *mem)
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-   I830Ptr pI830 = I830PTR(pScrn);
-   unsigned pfMask = 0;
-
-   REGION_UNINIT(pScreen, &pI830->driRegion);
-   REGION_NULL(pScreen, &pI830->driRegion);
-
-   if (num > 0) {
-      drmI830Sarea *sPriv = (drmI830Sarea *) DRIGetSAREAPrivate(pScreen);
-      BoxRec crtcBox[2];
-      unsigned numvisible[2] = { 0, 0 };
-      int i, j;
-
-      crtcBox[0].x1 = sPriv->planeA_x;
-      crtcBox[0].y1 = sPriv->planeA_y;
-      crtcBox[0].x2 = crtcBox[0].x1 + sPriv->planeA_w;
-      crtcBox[0].y2 = crtcBox[0].y1 + sPriv->planeA_h;
-      crtcBox[1].x1 = sPriv->planeB_x;
-      crtcBox[1].y1 = sPriv->planeB_y;
-      crtcBox[1].x2 = crtcBox[1].x1 + sPriv->planeB_w;
-      crtcBox[1].y2 = crtcBox[1].y1 + sPriv->planeB_h;
-
-      for (i = 0; i < 2; i++) {
-	 for (j = 0; j < num; j++) {
-	    WindowPtr pWin = ppWin[j];
-
-	    if (pWin) {
-	       if (RECT_IN_REGION(pScreen, &pWin->clipList, &crtcBox[i]) !=
-		   rgnOUT)
-		  numvisible[i]++;
-
-	       if (i == 0)
-		  REGION_UNION(pScreen, &pI830->driRegion, &pWin->clipList,
-			       &pI830->driRegion);
+    if (mem && mem->bo)
+    {
+	if (!mem->gem_name)
+	{
+	    int ret;
+	    ret = dri_bo_flink(mem->bo, &mem->gem_name);
+	    if (ret != 0)
+	    {
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			   "[drm] failed to name buffer %d\n", -errno);
+		return -1;
 	    }
-	 }
-
-	 if (numvisible[i] == 1)
-	    pfMask |= 1 << i;
-      }
-   } else
-      REGION_NULL(pScreen, &pI830->driRegion);
-
-   I830DRISetPfMask(pScreen, pfMask);
+	}
+	return mem->gem_name;
+    }
+    return -1;
 }
-#endif /* DRI_SUPPORTS_CLIP_NOTIFY */
 
 /**
  * Update the SAREA fields with current buffer information.
@@ -1510,6 +1292,9 @@ i830_update_sarea(ScrnInfoPtr pScrn, drmI830Sarea *sarea)
    ScreenPtr pScreen = pScrn->pScreen;
    I830Ptr pI830 = I830PTR(pScrn);
 
+   if (pI830->directRenderingType == DRI_DRI2)
+       return;
+
    sarea->width = pScreen->width;
    sarea->height = pScreen->height;
    sarea->pitch = pScrn->displayWidth;
@@ -1518,29 +1303,14 @@ i830_update_sarea(ScrnInfoPtr pScrn, drmI830Sarea *sarea)
 
    sarea->front_tiled = (pI830->front_buffer->tiling != TILE_NONE);
    sarea->back_tiled = (pI830->back_buffer->tiling != TILE_NONE);
-   if (pI830->third_buffer != NULL)
-       sarea->third_tiled = (pI830->third_buffer->tiling != TILE_NONE);
-   else
-       sarea->third_tiled = FALSE;
    sarea->depth_tiled = (pI830->depth_buffer->tiling != TILE_NONE);
    sarea->rotated_tiled = FALSE;
 
    sarea->log_tex_granularity = pI830->TexGranularity;
 
-   sarea->front_bo_handle = -1;
-   sarea->back_bo_handle = -1;
-   sarea->third_bo_handle = -1;
-   sarea->depth_bo_handle = -1;
-#ifdef XF86DRI_MM
-   if (pI830->front_buffer->bo.size)
-       sarea->front_bo_handle = pI830->front_buffer->bo.handle;
-   if (pI830->back_buffer->bo.size)
-       sarea->back_bo_handle = pI830->back_buffer->bo.handle;
-   if (pI830->third_buffer != NULL && pI830->third_buffer->bo.size)
-       sarea->third_bo_handle = pI830->third_buffer->bo.handle;
-   if (pI830->depth_buffer->bo.size)
-       sarea->depth_bo_handle = pI830->depth_buffer->bo.handle;
-#endif
+   sarea->front_bo_handle = i830_name_buffer (pScrn, pI830->front_buffer);
+   sarea->back_bo_handle = i830_name_buffer (pScrn, pI830->back_buffer);
+   sarea->depth_bo_handle = i830_name_buffer (pScrn, pI830->depth_buffer);
 
    /* The rotation is now handled entirely by the X Server, so just leave the
     * DRI unaware.
@@ -1629,17 +1399,9 @@ i830_update_dri_mappings(ScrnInfoPtr pScrn, drmI830Sarea *sarea)
        return FALSE;
    }
 
-   if (pI830->third_buffer) {
-       if (!i830_do_addmap(pScrn, pI830->third_buffer, &sarea->third_handle,
-			   &sarea->third_size, &sarea->third_offset)) {
-	   xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Disabling DRI.\n");
-	   return FALSE;
-       }
-   } else {
-       sarea->third_handle = 0;
-       sarea->third_offset = 0;
-       sarea->third_size = 0;
-   }
+   sarea->third_handle = 0;
+   sarea->third_offset = 0;
+   sarea->third_size = 0;
 
    if (!i830_do_addmap(pScrn, pI830->depth_buffer, &sarea->depth_handle,
 		       &sarea->depth_size, &sarea->depth_offset)) {
@@ -1682,8 +1444,14 @@ Bool
 i830_update_dri_buffers(ScrnInfoPtr pScrn)
 {
    ScreenPtr pScreen = pScrn->pScreen;
-   drmI830Sarea *sarea = (drmI830Sarea *) DRIGetSAREAPrivate(pScreen);
+   I830Ptr pI830 = I830PTR(pScrn);
+   drmI830Sarea *sarea;
    Bool success;
+
+   if (pI830->directRenderingType != DRI_XF86DRI)
+       return TRUE;
+
+   sarea = (drmI830Sarea *) DRIGetSAREAPrivate(pScreen);
 
    success = i830_update_dri_mappings(pScrn, sarea);
    if (!success)
@@ -1707,7 +1475,7 @@ I830DRISetVBlankInterrupt (ScrnInfoPtr pScrn, Bool on)
     if (!pI830->want_vblank_interrupts)
 	on = FALSE;
 
-    if (pI830->directRenderingEnabled && pI830->drmMinor >= 5) {
+    if (pI830->directRenderingType == DRI_XF86DRI && pI830->drmMinor >= 5) {
 	if (on) {
 	    if (xf86_config->num_crtc > 1 && xf86_config->crtc[1]->enabled)
 		if (pI830->drmMinor >= 6)
@@ -1733,10 +1501,11 @@ I830DRILock(ScrnInfoPtr pScrn)
 {
    I830Ptr pI830 = I830PTR(pScrn);
 
-   if (pI830->directRenderingEnabled && !pI830->LockHeld) {
+   if (pI830->directRenderingType == DRI_XF86DRI && !pI830->LockHeld) {
       DRILock(screenInfo.screens[pScrn->scrnIndex], 0);
       pI830->LockHeld = 1;
-      i830_refresh_ring(pScrn);
+      if (!pI830->memory_manager)
+	  i830_refresh_ring(pScrn);
       return TRUE;
    }
    else
@@ -1750,8 +1519,235 @@ I830DRIUnlock(ScrnInfoPtr pScrn)
 {
    I830Ptr pI830 = I830PTR(pScrn);
 
-   if (pI830->directRenderingEnabled && pI830->LockHeld) {
+   if (pI830->directRenderingType == DRI_XF86DRI && pI830->LockHeld) {
       DRIUnlock(screenInfo.screens[pScrn->scrnIndex]);
       pI830->LockHeld = 0;
    }
 }
+
+#ifdef DRI2
+
+typedef struct {
+    PixmapPtr pPixmap;
+} I830DRI2BufferPrivateRec, *I830DRI2BufferPrivatePtr;
+
+static DRI2BufferPtr
+I830DRI2CreateBuffers(DrawablePtr pDraw, unsigned int *attachments, int count)
+{
+    ScreenPtr pScreen = pDraw->pScreen;
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    I830Ptr pI830 = I830PTR(pScrn);
+    DRI2BufferPtr buffers;
+    dri_bo *bo;
+    int i;
+    I830DRI2BufferPrivatePtr privates;
+    PixmapPtr pPixmap, pDepthPixmap;
+
+    buffers = xcalloc(count, sizeof *buffers);
+    if (buffers == NULL)
+	return NULL;
+    privates = xcalloc(count, sizeof *privates);
+    if (privates == NULL) {
+	xfree(buffers);
+	return NULL;
+    }
+
+    pDepthPixmap = NULL;
+    for (i = 0; i < count; i++) {
+	if (attachments[i] == DRI2BufferFrontLeft) {
+	    if (pDraw->type == DRAWABLE_PIXMAP)
+		pPixmap = (PixmapPtr) pDraw;
+	    else
+		pPixmap = (*pScreen->GetWindowPixmap)((WindowPtr) pDraw);
+	    pPixmap->refcnt++;
+	} else if (attachments[i] == DRI2BufferStencil && pDepthPixmap) {
+	    pPixmap = pDepthPixmap;
+	    pPixmap->refcnt++;
+	} else {
+	    unsigned int hint = 0;
+
+	    switch (attachments[i]) {
+	    case DRI2BufferDepth:
+		if (SUPPORTS_YTILING(pI830))
+		    hint = INTEL_CREATE_PIXMAP_TILING_Y;
+		else
+		    hint = INTEL_CREATE_PIXMAP_TILING_X;
+		break;
+	    case DRI2BufferFakeFrontLeft:
+	    case DRI2BufferFakeFrontRight:
+	    case DRI2BufferBackLeft:
+	    case DRI2BufferBackRight:
+		    hint = INTEL_CREATE_PIXMAP_TILING_X;
+		break;
+	    }
+
+	    if (!pI830->tiling ||
+		(!IS_I965G(pI830) && !pI830->kernel_exec_fencing))
+		hint = 0;
+
+	    pPixmap = (*pScreen->CreatePixmap)(pScreen,
+					       pDraw->width,
+					       pDraw->height,
+					       pDraw->depth,
+					       hint);
+
+	}
+
+	if (attachments[i] == DRI2BufferDepth)
+	    pDepthPixmap = pPixmap;
+
+	buffers[i].attachment = attachments[i];
+	buffers[i].pitch = pPixmap->devKind;
+	buffers[i].cpp = pPixmap->drawable.bitsPerPixel / 8;
+	buffers[i].driverPrivate = &privates[i];
+	buffers[i].flags = 0; /* not tiled */
+	privates[i].pPixmap = pPixmap;
+
+	bo = i830_get_pixmap_bo (pPixmap);
+	if (dri_bo_flink(bo, &buffers[i].name) != 0) {
+	    /* failed to name buffer */
+	}
+
+    }
+
+    return buffers;
+}
+
+static void
+I830DRI2DestroyBuffers(DrawablePtr pDraw, DRI2BufferPtr buffers, int count)
+{
+    ScreenPtr pScreen = pDraw->pScreen;
+    I830DRI2BufferPrivatePtr private;
+    int i;
+
+    for (i = 0; i < count; i++)
+    {
+	private = buffers[i].driverPrivate;
+	(*pScreen->DestroyPixmap)(private->pPixmap);
+    }
+
+    if (buffers)
+    {
+	xfree(buffers[0].driverPrivate);
+	xfree(buffers);
+    }
+}
+
+static void
+I830DRI2CopyRegion(DrawablePtr pDraw, RegionPtr pRegion,
+		   DRI2BufferPtr pDestBuffer, DRI2BufferPtr pSrcBuffer)
+{
+    I830DRI2BufferPrivatePtr private = pSrcBuffer->driverPrivate;
+    ScreenPtr pScreen = pDraw->pScreen;
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    I830Ptr pI830 = I830PTR(pScrn);
+    PixmapPtr pPixmap = private->pPixmap;
+    RegionPtr pCopyClip;
+    GCPtr pGC;
+
+    pGC = GetScratchGC(pDraw->depth, pScreen);
+    pCopyClip = REGION_CREATE(pScreen, NULL, 0);
+    REGION_COPY(pScreen, pCopyClip, pRegion);
+    (*pGC->funcs->ChangeClip) (pGC, CT_REGION, pCopyClip, 0);
+    ValidateGC(pDraw, pGC);
+    (*pGC->ops->CopyArea)(&pPixmap->drawable,
+			  pDraw, pGC, 0, 0, pDraw->width, pDraw->height, 0, 0);
+    FreeScratchGC(pGC);
+
+    /* Emit a flush of the rendering cache, or on the 965 and beyond
+     * rendering results may not hit the framebuffer until significantly
+     * later.
+     */
+    I830EmitFlush(pScrn);
+    pI830->need_mi_flush = FALSE;
+
+    /* We can't rely on getting into the block handler before the DRI
+     * client gets to run again so flush now. */
+    intel_batch_flush(pScrn, TRUE);
+#if ALWAYS_SYNC
+    I830Sync(pScrn);
+#endif
+    drmCommandNone(pI830->drmSubFD, DRM_I915_GEM_THROTTLE);
+
+}
+
+Bool I830DRI2ScreenInit(ScreenPtr pScreen)
+{
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    I830Ptr pI830 = I830PTR(pScrn);
+    DRI2InfoRec info;
+    char *p, buf[64];
+    int i;
+    struct stat sbuf;
+    dev_t d;
+
+    if (pI830->accel != ACCEL_UXA) {
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "DRI2 requires UXA\n");
+	return FALSE;
+    }
+
+    sprintf(buf, "pci:%04x:%02x:%02x.%d",
+	    pI830->PciInfo->domain,
+	    pI830->PciInfo->bus,
+	    pI830->PciInfo->dev,
+	    pI830->PciInfo->func);
+
+    info.fd = -1;
+
+#ifdef XF86DRM_MODE
+    /* Use the already opened (master) fd from modesetting */
+    if (pI830->use_drm_mode)
+	info.fd = pI830->drmSubFD;
+#endif
+
+    if (info.fd < 0)
+	info.fd = drmOpen("i915", buf);
+
+    if (info.fd < 0) {
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "Failed to open DRM device\n");
+	return FALSE;
+    }
+
+    /* The whole drmOpen thing is a fiasco and we need to find a way
+     * back to just using open(2).  For now, however, lets just make
+     * things worse with even more ad hoc directory walking code to
+     * discover the device file name. */
+
+    fstat(info.fd, &sbuf);
+    d = sbuf.st_rdev;
+
+    p = pI830->deviceName;
+    for (i = 0; i < DRM_MAX_MINOR; i++) {
+	sprintf(p, DRM_DEV_NAME, DRM_DIR_NAME, i);
+	if (stat(p, &sbuf) == 0 && sbuf.st_rdev == d)
+	    break;
+    }
+    if (i == DRM_MAX_MINOR) {
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		   "DRI2: failed to open drm device\n");
+	return FALSE;
+    }
+
+    info.driverName = IS_I965G(pI830) ? "i965" : "i915";
+    info.deviceName = p;
+    info.version = 1;
+
+    info.CreateBuffers = I830DRI2CreateBuffers;
+    info.DestroyBuffers = I830DRI2DestroyBuffers;
+    info.CopyRegion = I830DRI2CopyRegion;
+
+    pI830->drmSubFD = info.fd;
+
+    return DRI2ScreenInit(pScreen, &info);
+}
+
+void I830DRI2CloseScreen(ScreenPtr pScreen)
+{
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    I830Ptr pI830 = I830PTR(pScrn);
+
+    DRI2CloseScreen(pScreen);
+    pI830->directRenderingType = DRI_NONE;
+}
+
+#endif
