@@ -2,12 +2,6 @@
 
 #include "xorg-server.h"
 
-/* Enable DRI driver support */
-#undef CHROMEDRI
-
-/* Enable developmental DRI driver support */
-#undef CHROMEDRI_DEVEL
-
 /* Enable debug support */
 #undef HAVE_DEBUG
 
@@ -74,14 +68,14 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Use new Xv ABI (7.1RC1+) */
-#undef USE_NEW_XVABI
-
 /* Version number of package */
 #undef VERSION
 
-/* Build support for Exa */
-#undef VIA_HAVE_EXA
+/* Enable DRI driver support */
+#undef XF86DRI
+
+/* Enable developmental DRI driver support */
+#undef XF86DRI_DEVEL
 
 /* Enable libpciaccess */
 #undef XSERVER_LIBPCIACCESS

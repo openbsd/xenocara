@@ -227,12 +227,22 @@ ViaSetPrimaryFIFO(ScrnInfoPtr pScrn, DisplayModePtr mode)
             ViaSeqMask(hwp, 0x18, 0x00, 0x80);
             break;
         case VIA_P4M890:
+            hwp->writeSeq(hwp, 0x16, 0x13);
+            hwp->writeSeq(hwp, 0x17, 0x2F);
+            hwp->writeSeq(hwp, 0x18, 0x53);
+            hwp->writeSeq(hwp, 0x22, 0x10);
             break;
         case VIA_CX700:
             hwp->writeSeq(hwp, 0x16, 0x26);
             hwp->writeSeq(hwp, 0x17, 0x5F);
             hwp->writeSeq(hwp, 0x18, 0x66);
             hwp->writeSeq(hwp, 0x22, 0x1F);
+            break;
+        case VIA_VX800:
+            hwp->writeSeq(hwp, 0x16, 0x26); /* 152/4   = 38 */
+            hwp->writeSeq(hwp, 0x17, 0x5F); /* 192/2-1 = 95 */
+            hwp->writeSeq(hwp, 0x18, 0x26); /* 152/4   = 38 */ 
+            hwp->writeSeq(hwp, 0x22, 0x10); /*  64/4   = 16 */
             break;
         default:
             xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "ViaSetPrimaryFIFO: "
@@ -380,6 +390,23 @@ ViaSetSecondaryFIFO(ScrnInfoPtr pScrn, DisplayModePtr mode)
             ViaCrtcMask(hwp, 0x92, 0x08, 0x0F);
             ViaCrtcMask(hwp, 0x95, 0x00, 0x07);
 
+            if ((mode->HDisplay >= 1400) && (pScrn->bitsPerPixel == 32))
+                ViaCrtcMask(hwp, 0x94, 0x10, 0x7F);
+            else
+                ViaCrtcMask(hwp, 0x94, 0x20, 0x7F);
+            break;
+        case VIA_VX800:
+            /* {CR68,4,7},{CR94,7,7},{CR95,7,7} : 96/8-1 = 0x0B */
+            ViaCrtcMask(hwp, 0x68, 0xA0, 0xF0); 
+            ViaCrtcMask(hwp, 0x94, 0x00, 0x80);
+            ViaCrtcMask(hwp, 0x95, 0x00, 0x80);
+            /* {CR68,0,3},{CR95,4,6} : 64/4 = 0x10 */
+            ViaCrtcMask(hwp, 0x68, 0x04, 0x0F);
+            ViaCrtcMask(hwp, 0x95, 0x10, 0x70);
+            /* {CR92,0,3},{CR95,0,2} : 32/4 = 0x08 */
+            ViaCrtcMask(hwp, 0x92, 0x08, 0x0F);
+            ViaCrtcMask(hwp, 0x95, 0x00, 0x07);
+            /* {CR94,0,6} : 128/4 = 0x20 */
             if ((mode->HDisplay >= 1400) && (pScrn->bitsPerPixel == 32))
                 ViaCrtcMask(hwp, 0x94, 0x10, 0x7F);
             else

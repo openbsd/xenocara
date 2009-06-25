@@ -97,19 +97,21 @@ LTLIBRARIES = $(openchrome_drv_la_LTLIBRARIES)
 openchrome_drv_la_LIBADD =
 am__openchrome_drv_la_SOURCES_DIST = via.h via_3d.c via_3d.h \
 	via_3d_reg.h via_accel.c via_bandwidth.c via_bios.h \
-	via_ch7xxx.c via_ch7xxx.h via_cursor.c via_dga.c \
-	via_dmabuffer.h via_driver.c via_driver.h via_i2c.c via_id.c \
-	via_id.h via_memcpy.c via_memcpy.h via_memory.c via_mode.c \
-	via_mode.h via_priv.h via_regs.h via_shadow.c via_swov.c \
-	via_swov.h via_vbe.c via_vgahw.c via_vgahw.h via_video.c \
-	via_video.h via_vt162x.c via_vt162x.h via_xvpriv.h via_dri.c \
-	via_dri.h via_drmclient.h via_xvmc.c via_xvmc.h
+	via_ch7xxx.c via_ch7xxx.h via_cursor.c via_crtc.c via_dga.c \
+	via_display.c via_dmabuffer.h via_driver.c via_driver.h \
+	via_i2c.c via_id.c via_id.h via_lvds.c via_memcpy.c \
+	via_memcpy.h via_memory.c via_mode.c via_mode.h via_panel.c \
+	via_priv.h via_regs.h via_shadow.c via_swov.c via_swov.h \
+	via_timing.c via_timing.h via_vbe.c via_vgahw.c via_vgahw.h \
+	via_video.c via_video.h via_vt162x.c via_vt162x.h via_xvpriv.h \
+	via_dri.c via_dri.h via_drmclient.h via_xvmc.c via_xvmc.h
 @DRI_TRUE@am__objects_1 = via_dri.lo via_xvmc.lo
 am_openchrome_drv_la_OBJECTS = via_3d.lo via_accel.lo via_bandwidth.lo \
-	via_ch7xxx.lo via_cursor.lo via_dga.lo via_driver.lo \
-	via_i2c.lo via_id.lo via_memcpy.lo via_memory.lo via_mode.lo \
-	via_shadow.lo via_swov.lo via_vbe.lo via_vgahw.lo via_video.lo \
-	via_vt162x.lo $(am__objects_1)
+	via_ch7xxx.lo via_cursor.lo via_crtc.lo via_dga.lo \
+	via_display.lo via_driver.lo via_i2c.lo via_id.lo via_lvds.lo \
+	via_memcpy.lo via_memory.lo via_mode.lo via_panel.lo \
+	via_shadow.lo via_swov.lo via_timing.lo via_vbe.lo \
+	via_vgahw.lo via_video.lo via_vt162x.lo $(am__objects_1)
 openchrome_drv_la_OBJECTS = $(am_openchrome_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -165,6 +167,7 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -201,19 +204,15 @@ XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 XSERVER_LIBPCIACCESS_FALSE = @XSERVER_LIBPCIACCESS_FALSE@
 XSERVER_LIBPCIACCESS_TRUE = @XSERVER_LIBPCIACCESS_TRUE@
+XVMC_CFLAGS = @XVMC_CFLAGS@
 XVMC_FALSE = @XVMC_FALSE@
+XVMC_LIBS = @XVMC_LIBS@
 XVMC_TRUE = @XVMC_TRUE@
 XV_DEBUG_FALSE = @XV_DEBUG_FALSE@
 XV_DEBUG_TRUE = @XV_DEBUG_TRUE@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -230,24 +229,31 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 moduledir = @moduledir@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -261,10 +267,11 @@ openchrome_drv_la_LDFLAGS = -module -avoid-version
 openchrome_drv_ladir = @moduledir@/drivers
 openchrome_drv_la_SOURCES = via.h via_3d.c via_3d.h via_3d_reg.h \
 	via_accel.c via_bandwidth.c via_bios.h via_ch7xxx.c \
-	via_ch7xxx.h via_cursor.c via_dga.c via_dmabuffer.h \
-	via_driver.c via_driver.h via_i2c.c via_id.c via_id.h \
-	via_memcpy.c via_memcpy.h via_memory.c via_mode.c via_mode.h \
-	via_priv.h via_regs.h via_shadow.c via_swov.c via_swov.h \
+	via_ch7xxx.h via_cursor.c via_crtc.c via_dga.c via_display.c \
+	via_dmabuffer.h via_driver.c via_driver.h via_i2c.c via_id.c \
+	via_id.h via_lvds.c via_memcpy.c via_memcpy.h via_memory.c \
+	via_mode.c via_mode.h via_panel.c via_priv.h via_regs.h \
+	via_shadow.c via_swov.c via_swov.h via_timing.c via_timing.h \
 	via_vbe.c via_vgahw.c via_vgahw.h via_video.c via_video.h \
 	via_vt162x.c via_vt162x.h via_xvpriv.h $(am__append_1)
 all: $(BUILT_SOURCES)
@@ -341,17 +348,22 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_accel.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_bandwidth.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_ch7xxx.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_crtc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_dga.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_display.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_dri.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_driver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_i2c.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_id.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_lvds.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_memcpy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_memory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_mode.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_panel.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_shadow.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_swov.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_timing.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_vbe.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_vgahw.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_video.Plo@am__quote@

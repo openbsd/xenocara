@@ -26,12 +26,10 @@
 #ifndef _VIA_PRIV_H_
 #define _VIA_PRIV_H_ 1
 
-#ifdef CHROMEDRI
+#ifdef OPENCHROMEDRI
 #include "via_drm.h"
 #endif
-#ifdef VIA_HAVE_EXA
 #include "exa.h"
-#endif
 
 /*
  * Alignment macro functions
@@ -141,15 +139,13 @@ typedef struct
 typedef struct {
     unsigned long   base;		/* Offset into fb */
     int    pool;			/* Pool we drew from */
-#ifdef CHROMEDRI
+#ifdef OPENCHROMEDRI
     int    drm_fd;			/* Fd in DRM mode */
     drm_via_mem_t drm;			/* DRM management object */
 #endif
     void  *pVia;			/* VIA driver pointer */
     FBLinearPtr linear;			/* X linear pool info ptr */
-#ifdef VIA_HAVE_EXA
     ExaOffscreenArea *exa;
-#endif
     ScrnInfoPtr pScrn;
 } VIAMem;
 

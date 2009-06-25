@@ -35,12 +35,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 
-#ifndef _XF86DRISTR_H_
-#define _XF86DRISTR_H_
+#ifndef _OPENCHROMEDRISTR_H_
+#define _OPENCHROMEDRISTR_H_
 
 #include "xf86dri.h"
 
-#define XF86DRINAME "XFree86-DRI"
+#define OPENCHROMEDRINAME "XFree86-DRI"
 
 /* The DRI version number.  This was originally set to be the same of the
  * XFree86 version number.  However, this version is really indepedent of
@@ -51,18 +51,18 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *    4.0.1: Patch to bump clipstamp when windows are destroyed, 28 May 02
  *    4.1.0: Add transition from single to multi in DRMInfo rec, 24 Jun 02
  */
-#define XF86DRI_MAJOR_VERSION	4
-#define XF86DRI_MINOR_VERSION	1
-#define XF86DRI_PATCH_VERSION	0
+#define OPENCHROMEDRI_MAJOR_VERSION	4
+#define OPENCHROMEDRI_MINOR_VERSION	1
+#define OPENCHROMEDRI_PATCH_VERSION	0
 
-typedef struct _XF86DRIQueryVersion
+typedef struct _OPENCHROMEDRIQueryVersion
 {
     CARD8 reqType;		       /* always DRIReqCode */
     CARD8 driReqType;		       /* always X_DRIQueryVersion */
     CARD16 length B16;
-} xXF86DRIQueryVersionReq;
+} xOPENCHROMEDRIQueryVersionReq;
 
-#define sz_xXF86DRIQueryVersionReq	4
+#define sz_xOPENCHROMEDRIQueryVersionReq	4
 
 typedef struct
 {
@@ -77,19 +77,19 @@ typedef struct
     CARD32 pad4 B32;
     CARD32 pad5 B32;
     CARD32 pad6 B32;
-} xXF86DRIQueryVersionReply;
+} xOPENCHROMEDRIQueryVersionReply;
 
-#define sz_xXF86DRIQueryVersionReply	32
+#define sz_xOPENCHROMEDRIQueryVersionReply	32
 
-typedef struct _XF86DRIQueryDirectRenderingCapable
+typedef struct _OPENCHROMEDRIQueryDirectRenderingCapable
 {
     CARD8 reqType;		       /* always DRIReqCode */
     CARD8 driReqType;		       /* X_DRIQueryDirectRenderingCapable */
     CARD16 length B16;
     CARD32 screen B32;
-} xXF86DRIQueryDirectRenderingCapableReq;
+} xOPENCHROMEDRIQueryDirectRenderingCapableReq;
 
-#define sz_xXF86DRIQueryDirectRenderingCapableReq	8
+#define sz_xOPENCHROMEDRIQueryDirectRenderingCapableReq	8
 
 typedef struct
 {
@@ -106,19 +106,19 @@ typedef struct
     CARD32 pad7 B32;
     CARD32 pad8 B32;
     CARD32 pad9 B32;
-} xXF86DRIQueryDirectRenderingCapableReply;
+} xOPENCHROMEDRIQueryDirectRenderingCapableReply;
 
-#define sz_xXF86DRIQueryDirectRenderingCapableReply	32
+#define sz_xOPENCHROMEDRIQueryDirectRenderingCapableReply	32
 
-typedef struct _XF86DRIOpenConnection
+typedef struct _OPENCHROMEDRIOpenConnection
 {
     CARD8 reqType;		       /* always DRIReqCode */
     CARD8 driReqType;		       /* always X_DRIOpenConnection */
     CARD16 length B16;
     CARD32 screen B32;
-} xXF86DRIOpenConnectionReq;
+} xOPENCHROMEDRIOpenConnectionReq;
 
-#define sz_xXF86DRIOpenConnectionReq	8
+#define sz_xOPENCHROMEDRIOpenConnectionReq	8
 
 typedef struct
 {
@@ -132,20 +132,20 @@ typedef struct
     CARD32 pad6 B32;
     CARD32 pad7 B32;
     CARD32 pad8 B32;
-} xXF86DRIOpenConnectionReply;
+} xOPENCHROMEDRIOpenConnectionReply;
 
-#define sz_xXF86DRIOpenConnectionReply	32
+#define sz_xOPENCHROMEDRIOpenConnectionReply	32
 
-typedef struct _XF86DRIAuthConnection
+typedef struct _OPENCHROMEDRIAuthConnection
 {
     CARD8 reqType;		       /* always DRIReqCode */
     CARD8 driReqType;		       /* always X_DRICloseConnection */
     CARD16 length B16;
     CARD32 screen B32;
     CARD32 magic B32;
-} xXF86DRIAuthConnectionReq;
+} xOPENCHROMEDRIAuthConnectionReq;
 
-#define sz_xXF86DRIAuthConnectionReq	12
+#define sz_xOPENCHROMEDRIAuthConnectionReq	12
 
 typedef struct
 {
@@ -159,29 +159,29 @@ typedef struct
     CARD32 pad4 B32;
     CARD32 pad5 B32;
     CARD32 pad6 B32;
-} xXF86DRIAuthConnectionReply;
+} xOPENCHROMEDRIAuthConnectionReply;
 
-#define zx_xXF86DRIAuthConnectionReply  32
+#define zx_xOPENCHROMEDRIAuthConnectionReply  32
 
-typedef struct _XF86DRICloseConnection
+typedef struct _OPENCHROMEDRICloseConnection
 {
     CARD8 reqType;		       /* always DRIReqCode */
     CARD8 driReqType;		       /* always X_DRICloseConnection */
     CARD16 length B16;
     CARD32 screen B32;
-} xXF86DRICloseConnectionReq;
+} xOPENCHROMEDRICloseConnectionReq;
 
-#define sz_xXF86DRICloseConnectionReq	8
+#define sz_xOPENCHROMEDRICloseConnectionReq	8
 
-typedef struct _XF86DRIGetClientDriverName
+typedef struct _OPENCHROMEDRIGetClientDriverName
 {
     CARD8 reqType;		       /* always DRIReqCode */
     CARD8 driReqType;		       /* always X_DRIGetClientDriverName */
     CARD16 length B16;
     CARD32 screen B32;
-} xXF86DRIGetClientDriverNameReq;
+} xOPENCHROMEDRIGetClientDriverNameReq;
 
-#define sz_xXF86DRIGetClientDriverNameReq	8
+#define sz_xOPENCHROMEDRIGetClientDriverNameReq	8
 
 typedef struct
 {
@@ -195,11 +195,11 @@ typedef struct
     CARD32 clientDriverNameLength B32;
     CARD32 pad5 B32;
     CARD32 pad6 B32;
-} xXF86DRIGetClientDriverNameReply;
+} xOPENCHROMEDRIGetClientDriverNameReply;
 
-#define sz_xXF86DRIGetClientDriverNameReply	32
+#define sz_xOPENCHROMEDRIGetClientDriverNameReply	32
 
-typedef struct _XF86DRICreateContext
+typedef struct _OPENCHROMEDRICreateContext
 {
     CARD8 reqType;		       /* always DRIReqCode */
     CARD8 driReqType;		       /* always X_DRICreateContext */
@@ -207,9 +207,9 @@ typedef struct _XF86DRICreateContext
     CARD32 screen B32;
     CARD32 visual B32;
     CARD32 context B32;
-} xXF86DRICreateContextReq;
+} xOPENCHROMEDRICreateContextReq;
 
-#define sz_xXF86DRICreateContextReq	16
+#define sz_xOPENCHROMEDRICreateContextReq	16
 
 typedef struct
 {
@@ -223,31 +223,31 @@ typedef struct
     CARD32 pad4 B32;
     CARD32 pad5 B32;
     CARD32 pad6 B32;
-} xXF86DRICreateContextReply;
+} xOPENCHROMEDRICreateContextReply;
 
-#define sz_xXF86DRICreateContextReply	32
+#define sz_xOPENCHROMEDRICreateContextReply	32
 
-typedef struct _XF86DRIDestroyContext
+typedef struct _OPENCHROMEDRIDestroyContext
 {
     CARD8 reqType;		       /* always DRIReqCode */
     CARD8 driReqType;		       /* always X_DRIDestroyContext */
     CARD16 length B16;
     CARD32 screen B32;
     CARD32 context B32;
-} xXF86DRIDestroyContextReq;
+} xOPENCHROMEDRIDestroyContextReq;
 
-#define sz_xXF86DRIDestroyContextReq	12
+#define sz_xOPENCHROMEDRIDestroyContextReq	12
 
-typedef struct _XF86DRICreateDrawable
+typedef struct _OPENCHROMEDRICreateDrawable
 {
     CARD8 reqType;		       /* always DRIReqCode */
     CARD8 driReqType;		       /* always X_DRICreateDrawable */
     CARD16 length B16;
     CARD32 screen B32;
     CARD32 drawable B32;
-} xXF86DRICreateDrawableReq;
+} xOPENCHROMEDRICreateDrawableReq;
 
-#define sz_xXF86DRICreateDrawableReq	12
+#define sz_xOPENCHROMEDRICreateDrawableReq	12
 
 typedef struct
 {
@@ -261,31 +261,31 @@ typedef struct
     CARD32 pad4 B32;
     CARD32 pad5 B32;
     CARD32 pad6 B32;
-} xXF86DRICreateDrawableReply;
+} xOPENCHROMEDRICreateDrawableReply;
 
-#define sz_xXF86DRICreateDrawableReply	32
+#define sz_xOPENCHROMEDRICreateDrawableReply	32
 
-typedef struct _XF86DRIDestroyDrawable
+typedef struct _OPENCHROMEDRIDestroyDrawable
 {
     CARD8 reqType;		       /* always DRIReqCode */
     CARD8 driReqType;		       /* always X_DRIDestroyDrawable */
     CARD16 length B16;
     CARD32 screen B32;
     CARD32 drawable B32;
-} xXF86DRIDestroyDrawableReq;
+} xOPENCHROMEDRIDestroyDrawableReq;
 
-#define sz_xXF86DRIDestroyDrawableReq	12
+#define sz_xOPENCHROMEDRIDestroyDrawableReq	12
 
-typedef struct _XF86DRIGetDrawableInfo
+typedef struct _OPENCHROMEDRIGetDrawableInfo
 {
     CARD8 reqType;		       /* always DRIReqCode */
     CARD8 driReqType;		       /* always X_DRIGetDrawableInfo */
     CARD16 length B16;
     CARD32 screen B32;
     CARD32 drawable B32;
-} xXF86DRIGetDrawableInfoReq;
+} xOPENCHROMEDRIGetDrawableInfoReq;
 
-#define sz_xXF86DRIGetDrawableInfoReq	12
+#define sz_xOPENCHROMEDRIGetDrawableInfoReq	12
 
 typedef struct
 {
@@ -303,19 +303,19 @@ typedef struct
     INT16 backX B16;
     INT16 backY B16;
     CARD32 numBackClipRects B32;
-} xXF86DRIGetDrawableInfoReply;
+} xOPENCHROMEDRIGetDrawableInfoReply;
 
-#define sz_xXF86DRIGetDrawableInfoReply	36
+#define sz_xOPENCHROMEDRIGetDrawableInfoReply	36
 
-typedef struct _XF86DRIGetDeviceInfo
+typedef struct _OPENCHROMEDRIGetDeviceInfo
 {
     CARD8 reqType;		       /* always DRIReqCode */
     CARD8 driReqType;		       /* always X_DRIGetDeviceInfo */
     CARD16 length B16;
     CARD32 screen B32;
-} xXF86DRIGetDeviceInfoReq;
+} xOPENCHROMEDRIGetDeviceInfoReq;
 
-#define sz_xXF86DRIGetDeviceInfoReq	8
+#define sz_xOPENCHROMEDRIGetDeviceInfoReq	8
 
 typedef struct
 {
@@ -329,20 +329,20 @@ typedef struct
     CARD32 framebufferSize B32;
     CARD32 framebufferStride B32;
     CARD32 devPrivateSize B32;
-} xXF86DRIGetDeviceInfoReply;
+} xOPENCHROMEDRIGetDeviceInfoReply;
 
-#define sz_xXF86DRIGetDeviceInfoReply	32
+#define sz_xOPENCHROMEDRIGetDeviceInfoReply	32
 
-typedef struct _XF86DRIOpenFullScreen
+typedef struct _OPENCHROMEDRIOpenFullScreen
 {
     CARD8 reqType;		       /* always DRIReqCode */
     CARD8 driReqType;		       /* always X_DRIOpenFullScreen */
     CARD16 length B16;
     CARD32 screen B32;
     CARD32 drawable B32;
-} xXF86DRIOpenFullScreenReq;
+} xOPENCHROMEDRIOpenFullScreenReq;
 
-#define sz_xXF86DRIOpenFullScreenReq    12
+#define sz_xOPENCHROMEDRIOpenFullScreenReq    12
 
 typedef struct
 {
@@ -356,20 +356,20 @@ typedef struct
     CARD32 pad4 B32;
     CARD32 pad5 B32;
     CARD32 pad6 B32;
-} xXF86DRIOpenFullScreenReply;
+} xOPENCHROMEDRIOpenFullScreenReply;
 
-#define sz_xXF86DRIOpenFullScreenReply  32
+#define sz_xOPENCHROMEDRIOpenFullScreenReply  32
 
-typedef struct _XF86DRICloseFullScreen
+typedef struct _OPENCHROMEDRICloseFullScreen
 {
     CARD8 reqType;		       /* always DRIReqCode */
     CARD8 driReqType;		       /* always X_DRICloseFullScreen */
     CARD16 length B16;
     CARD32 screen B32;
     CARD32 drawable B32;
-} xXF86DRICloseFullScreenReq;
+} xOPENCHROMEDRICloseFullScreenReq;
 
-#define sz_xXF86DRICloseFullScreenReq   12
+#define sz_xOPENCHROMEDRICloseFullScreenReq   12
 
 typedef struct
 {
@@ -383,8 +383,8 @@ typedef struct
     CARD32 pad5 B32;
     CARD32 pad6 B32;
     CARD32 pad7 B32;
-} xXF86DRICloseFullScreenReply;
+} xOPENCHROMEDRICloseFullScreenReply;
 
-#define sz_xXF86DRICloseFullScreenReply  32
+#define sz_xOPENCHROMEDRICloseFullScreenReply  32
 
-#endif /* _XF86DRISTR_H_ */
+#endif /* _OPENCHROMEDRISTR_H_ */

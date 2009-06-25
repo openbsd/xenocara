@@ -36,34 +36,34 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * \author Rickard E. (Rik) Faith <faith@valinux.com>
  */
 
-#ifndef _XF86DRI_H_
-#define _XF86DRI_H_
+#ifndef _OPENCHROMEDRI_H_
+#define _OPENCHROMEDRI_H_
 
 #include <X11/Xfuncproto.h>
 #include <xf86drm.h>
 
-#define X_XF86DRIQueryVersion			0
-#define X_XF86DRIQueryDirectRenderingCapable	1
-#define X_XF86DRIOpenConnection			2
-#define X_XF86DRICloseConnection		3
-#define X_XF86DRIGetClientDriverName		4
-#define X_XF86DRICreateContext			5
-#define X_XF86DRIDestroyContext			6
-#define X_XF86DRICreateDrawable			7
-#define X_XF86DRIDestroyDrawable		8
-#define X_XF86DRIGetDrawableInfo		9
-#define X_XF86DRIGetDeviceInfo			10
-#define X_XF86DRIAuthConnection                 11
-#define X_XF86DRIOpenFullScreen                 12	/* Deprecated */
-#define X_XF86DRICloseFullScreen                13	/* Deprecated */
+#define X_OPENCHROMEDRIQueryVersion			0
+#define X_OPENCHROMEDRIQueryDirectRenderingCapable	1
+#define X_OPENCHROMEDRIOpenConnection			2
+#define X_OPENCHROMEDRICloseConnection		3
+#define X_OPENCHROMEDRIGetClientDriverName		4
+#define X_OPENCHROMEDRICreateContext			5
+#define X_OPENCHROMEDRIDestroyContext			6
+#define X_OPENCHROMEDRICreateDrawable			7
+#define X_OPENCHROMEDRIDestroyDrawable		8
+#define X_OPENCHROMEDRIGetDrawableInfo		9
+#define X_OPENCHROMEDRIGetDeviceInfo			10
+#define X_OPENCHROMEDRIAuthConnection                 11
+#define X_OPENCHROMEDRIOpenFullScreen                 12	/* Deprecated */
+#define X_OPENCHROMEDRICloseFullScreen                13	/* Deprecated */
 
-#define XF86DRINumberEvents		0
+#define OPENCHROMEDRINumberEvents		0
 
-#define XF86DRIClientNotLocal		0
-#define XF86DRIOperationNotSupported	1
-#define XF86DRINumberErrors		(XF86DRIOperationNotSupported + 1)
+#define OPENCHROMEDRIClientNotLocal		0
+#define OPENCHROMEDRIOperationNotSupported	1
+#define OPENCHROMEDRINumberErrors		(XF86DRIOperationNotSupported + 1)
 
-#ifndef _XF86DRI_SERVER_
+#ifndef _OPENCHROMEDRI_SERVER_
 
 _XFUNCPROTOBEGIN
     Bool uniDRIQueryExtension(Display * dpy, int *event_base,
@@ -112,5 +112,5 @@ Bool uniDRIGetDeviceInfo(Display * dpy, int screen,
     int *fbStride, int *devPrivateSize, void **pDevPrivate);
 
 _XFUNCPROTOEND
-#endif /* _XF86DRI_SERVER_ */
-#endif /* _XF86DRI_H_ */
+#endif /* _OPENCHROMEDRI_SERVER_ */
+#endif /* _OPENCHROMEDRI_H_ */

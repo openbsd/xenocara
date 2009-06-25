@@ -42,7 +42,7 @@
 #define VIA_MMIO_REGBASE        0x0
 #define VIA_MMIO_VGABASE        0x8000
 #define VIA_MMIO_BLTBASE        0x200000
-#define VIA_MMIO_BLTSIZE        0x20000
+#define VIA_MMIO_BLTSIZE        0x200000
 
 
 /* defines for VIA 2D registers */
@@ -71,6 +71,33 @@
 #define VIA_REG_MONOPAT1        0x040
 #define VIA_REG_COLORPAT        0x100       /* from 0x100 to 0x1ff */
 
+/* defineds vor VIA 2D registers for VT3353 (M1 engine) */
+#define VIA_REG_GECMD_M1        0x000
+#define VIA_REG_GEMODE_M1       0x004
+#define VIA_REG_GESTATUS_M1     0x004       /* as same as VIA_REG_GEMODE */
+#define VIA_REG_PITCH_M1        0x008       /* pitch of src and dst */
+#define VIA_REG_DIMENSION_M1    0x00C       /* width and height */
+#define VIA_REG_DSTPOS_M1       0x010
+#define VIA_REG_LINE_XY_M1      0x010
+#define VIA_REG_DSTBASE_M1      0x014
+#define VIA_REG_SRCPOS_M1       0x018
+#define VIA_REG_LINE_K1K2_M1    0x018
+#define VIA_REG_SRCBASE_M1      0x01C
+#define VIA_REG_PATADDR_M1      0x020
+#define VIA_REG_MONOPAT0_M1     0x024
+#define VIA_REG_MONOPAT1_M1     0x028
+#define VIA_REG_OFFSET_M1       0x02C
+#define VIA_REG_LINE_ERROR_M1   0x02C
+#define VIA_REG_CLIPTL_M1       0x040       /* top and left of clipping */
+#define VIA_REG_CLIPBR_M1       0x044       /* bottom and right of clipping */
+#define VIA_REG_KEYCONTROL_M1   0x048       /* color key control */
+#define VIA_REG_FGCOLOR_M1      0x04C
+#define VIA_REG_DSTCOLORKEY_M1  0x04C       /* as same as VIA_REG_FG */
+#define VIA_REG_BGCOLOR_M1      0x050
+#define VIA_REG_SRCCOLORKEY_M1  0x050       /* as same as VIA_REG_BG */
+#define VIA_REG_MONOPATFGC_M1   0x058       /* Add foreground color of Pattern */
+#define VIA_REG_MONOPATBGC_M1   0x05C       /* Add background color of Pattern */
+#define VIA_REG_COLORPAT_M1     0x100       /* from 0x100 to 0x1ff */
 
 
 /* defines for VIA video registers */
@@ -86,6 +113,104 @@
 #define VIA_REG_CURSOR_FG       0x2E0
 
 
+/* These regs move about on diffrent hw */
+#define VIA_REG_HI_CONTROL1     VIA_REG_ALPHA_CONTROL
+#define VIA_REG_HI_BASE1        VIA_REG_ALPHA_BASE
+#define VIA_REG_HI_POS1         VIA_REG_ALPHA_POS
+#define VIA_REG_HI_OFFSET1      VIA_REG_ALPHA_OFFSET
+#define VIA_REG_HI_FIFO1        VIA_REG_ALPHA_FIFO
+#define VIA_REG_HI_TRANSKEY1    VIA_REG_ALPHA_TRANSKEY
+
+/* Note that Hardware Icon and Alpha Window overlap */
+#define VIA_REG_ALPHA_CONTROL   0x260
+#define VIA_REG_ALPHA_BASE      0x224
+#define VIA_REG_ALPHA_POS       0x208
+#define VIA_REG_ALPHA_OFFSET    0x20C
+#define VIA_REG_ALPHA_PREFIFO   0x268
+#define VIA_REG_ALPHA_FIFO      0x278
+#define VIA_REG_ALPHA_TRANSKEY  0x270
+
+
+/* These regs move about on diffrent hw */
+#define VIA_REG_HI_CONTROL1     VIA_REG_ALPHA_CONTROL
+#define VIA_REG_HI_BASE1        VIA_REG_ALPHA_BASE
+#define VIA_REG_HI_POS1         VIA_REG_ALPHA_POS
+#define VIA_REG_HI_OFFSET1      VIA_REG_ALPHA_OFFSET
+#define VIA_REG_HI_FIFO1        VIA_REG_ALPHA_FIFO
+#define VIA_REG_HI_TRANSKEY1    VIA_REG_ALPHA_TRANSKEY
+
+/* Note that Hardware Icon and Alpha Window overlap */
+#define VIA_REG_ALPHA_CONTROL   0x260
+#define VIA_REG_ALPHA_BASE      0x224
+#define VIA_REG_ALPHA_POS       0x208
+#define VIA_REG_ALPHA_OFFSET    0x20C
+#define VIA_REG_ALPHA_PREFIFO   0x268
+#define VIA_REG_ALPHA_FIFO      0x278
+#define VIA_REG_ALPHA_TRANSKEY  0x270
+
+
+/* These regs move about on diffrent hw */
+#define VIA_REG_HI_CONTROL1     VIA_REG_ALPHA_CONTROL
+#define VIA_REG_HI_BASE1        VIA_REG_ALPHA_BASE
+#define VIA_REG_HI_POS1         VIA_REG_ALPHA_POS
+#define VIA_REG_HI_OFFSET1      VIA_REG_ALPHA_OFFSET
+#define VIA_REG_HI_FIFO1        VIA_REG_ALPHA_FIFO
+#define VIA_REG_HI_TRANSKEY1    VIA_REG_ALPHA_TRANSKEY
+
+/* Note that Hardware Icon and Alpha Window overlap */
+#define VIA_REG_ALPHA_CONTROL   0x260
+#define VIA_REG_ALPHA_BASE      0x224
+#define VIA_REG_ALPHA_POS       0x208
+#define VIA_REG_ALPHA_OFFSET    0x20C
+#define VIA_REG_ALPHA_PREFIFO   0x268
+#define VIA_REG_ALPHA_FIFO      0x278
+#define VIA_REG_ALPHA_TRANSKEY  0x270
+
+/* secret regs */
+#define VIA_REG_HI_CONTROL0     0x2F0
+#define VIA_REG_HI_BASE0        0x2F4
+#define VIA_REG_HI_POS0         0x2F8
+#define VIA_REG_HI_OFFSET0      0x2FC
+#define VIA_REG_HI_FIFO0        0x2E8
+#define VIA_REG_HI_TRANSKEY0    0x2EC
+
+/* These regs move about on diffrent hw */
+#define VIA_REG_HI_CONTROL1     VIA_REG_ALPHA_CONTROL
+#define VIA_REG_HI_BASE1        VIA_REG_ALPHA_BASE
+#define VIA_REG_HI_POS1         VIA_REG_ALPHA_POS
+#define VIA_REG_HI_OFFSET1      VIA_REG_ALPHA_OFFSET
+#define VIA_REG_HI_FIFO1        VIA_REG_ALPHA_FIFO
+#define VIA_REG_HI_TRANSKEY1    VIA_REG_ALPHA_TRANSKEY
+
+/* Note that Hardware Icon and Alpha Window overlap */
+#define VIA_REG_ALPHA_CONTROL   0x260
+#define VIA_REG_ALPHA_BASE      0x224
+#define VIA_REG_ALPHA_POS       0x208
+#define VIA_REG_ALPHA_OFFSET    0x20C
+#define VIA_REG_ALPHA_PREFIFO   0x268
+#define VIA_REG_ALPHA_FIFO      0x278
+#define VIA_REG_ALPHA_TRANSKEY  0x270
+
+/*CN400 and older Hardware Icon engine register*/
+#define VIA_REG_HI_POSSTART             0x208
+#define VIA_REG_HI_CENTEROFFSET         0x20C
+#define VIA_REG_HI_FBOFFSET             0x224
+#define VIA_REG_HI_CONTROL              0x260
+#define VIA_REG_HI_TRANSPARENT_COLOR    0x270
+#define VIA_REG_HI_INVTCOLOR            0x274
+/* VT3324 primary Hardware Icon engine register */
+#define VIA_REG_PRIM_HI_POSEND          0x290
+#define VIA_REG_V327_HI_INVTCOLOR       0x2E4
+#define VIA_REG_PRIM_HI_FIFO            0x2E8
+#define VIA_REG_PRIM_HI_TRANSCOLOR      0x2EC
+#define VIA_REG_PRIM_HI_CTRL            0x2F0
+#define VIA_REG_PRIM_HI_FBOFFSET        0x2F4
+#define VIA_REG_PRIM_HI_POSSTART        0x2F8
+#define VIA_REG_PRIM_HI_CENTEROFFSET    0x2FC
+#define VIA_REG_PRIM_HI_INVTCOLOR       0x120C
+
+
+
 /* defines for VIA 3D registers */
 #define VIA_REG_STATUS          0x400
 #define VIA_REG_TRANSET         0x43C
@@ -97,6 +222,11 @@
 #define VIA_3D_ENG_BUSY         0x00000001  /* 3D Engine is busy */
 #define VIA_VR_QUEUE_BUSY       0x00020000 /* Virtual Queue is busy */
 
+/* VIA_REG_STATUS(0x400): Egine Status */
+#define VIA_CMD_RGTR_BUSY_H5    0x00000010  /* Command Regulator is busy */
+#define VIA_2D_ENG_BUSY_H5      0x00000002  /* 2D Engine is busy */
+#define VIA_3D_ENG_BUSY_H5      0x00001FE1  /* 3D Engine is busy */
+#define VIA_VR_QUEUE_BUSY_H5    0x00000004  /* Virtual Queue is busy */
 
 /* VIA_REG_GECMD(0x00): 2D Engine Command  */
 #define VIA_GEC_NOOP            0x00000000

@@ -70,7 +70,7 @@ XORG_DRIVER_CHECK_EXT(XF86DRI, xextproto x11)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XORG, [xorg-server xproto xvmc fontsproto libdrm $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XORG, [xorg-server xproto fontsproto libdrm $REQUIRED_MODULES])
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 # Checks for libraries.
@@ -110,8 +110,8 @@ AC_MSG_RESULT([$DRI])
 AM_CONDITIONAL(DRI, test x$DRI = xyes)
 if test "$DRI" = yes; then
         PKG_CHECK_MODULES(DRI, [libdrm xf86driproto])
-        AC_DEFINE(CHROMEDRI,1,[Enable DRI driver support])
-        AC_DEFINE(CHROMEDRI_DEVEL,1,[Enable developmental DRI driver support])
+        AC_DEFINE(XF86DRI,1,[Enable DRI driver support])
+        AC_DEFINE(XF86DRI_DEVEL,1,[Enable developmental DRI driver support])
         case "$host_cpu" in
             i*86)
                 XVMC=yes ;;
@@ -126,6 +126,7 @@ fi
 
 if test "x$XVMC" = xyes; then
 	AC_CHECK_HEADERS(pthread.h sys/ioctl.h sys/time.h time.h,,[XVMC="no"; break],)
+	PKG_CHECK_MODULES(XVMC, [x11 xext xvmc])
 fi
 
 AC_MSG_CHECKING([whether to build XvMC driver support])
@@ -133,33 +134,10 @@ AC_MSG_RESULT([$XVMC])
 
 AM_CONDITIONAL(XVMC, test x$XVMC = xyes)
 
-AC_CHECK_FILE([${sdkdir}/xf86Module.h],
-              [have_xf86Module_h="yes"], [have_xf86Module_h="no"])
-
 # Check the ABI_VIDEODRV_VERSION
 SAVE_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS $XORG_CFLAGS"
 		
-if test "x$have_xf86Module_h" = xyes; then
-AC_MSG_CHECKING([whether to use old Xv ABI])
-        AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
-                           ]])],
-                           [OLD_XVABI=no],
-			   [OLD_XVABI=yes])
-else
-        OLD_XVABI=yes
-        echo -n "xf86Module.h not found, "
-fi
-
-CFLAGS="$SAVE_CFLAGS"
-
-if test "x$OLD_XVABI" = xyes; then
-                echo "yes."
-else
-                echo "no."
-                AC_DEFINE(USE_NEW_XVABI, 1, [Use new Xv ABI (7.1RC1+)])
-fi
-
 AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test x$XSERVER_LIBPCIACCESS = xyes)
 if test "$XSERVER_LIBPCIACCESS" = yes; then
         AC_DEFINE(XSERVER_LIBPCIACCESS,1,[Enable libpciaccess])
@@ -186,7 +164,6 @@ AC_DEFINE(X_USE_LINEARFB,1,[Compatibility define for older Xen])
 AC_DEFINE(X_USE_REGION_NULL,1,[Compatibility define for older Xen])
 AC_DEFINE(X_HAVE_XAAGETROP,1,[Compatibility define for older Xen])
 AC_DEFINE(X_NEED_I2CSTART,1,[Compatibility define for older Xen])
-AC_DEFINE(VIA_HAVE_EXA,1,[Build support for Exa])
 
 DRIVER_MAN_SUFFIX="4"
 AC_SUBST([DRIVER_MAN_SUFFIX])

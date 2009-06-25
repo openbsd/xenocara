@@ -31,14 +31,14 @@
 
 #include "via.h"
 
-#ifdef CHROMEDRI
+#ifdef OPENCHROMEDRI
 #include "xf86drm.h"
 #endif
 
 #include "via_driver.h"
 #include "via_priv.h"
 #include "via_swov.h"
-#ifdef CHROMEDRI
+#ifdef OPENCHROMEDRI
 #include "via_drm.h"
 #endif
 
@@ -52,7 +52,6 @@
  *	2  -  DRM
  */
 
-#ifdef VIA_HAVE_EXA
 static void
 viaExaFBSave(ScreenPtr pScreen, ExaOffscreenArea * exa)
 {
@@ -61,7 +60,6 @@ viaExaFBSave(ScreenPtr pScreen, ExaOffscreenArea * exa)
                "\t\thttp://wiki.openchrome.org/tikiwiki/tiki-index"
                ".php?page=EXAAcceleration .\n");
 }
-#endif
 
 void
 VIAFreeLinear(VIAMemPtr mem)
@@ -71,7 +69,6 @@ VIAFreeLinear(VIAMemPtr mem)
         case 0:
             return;
         case 1:
-#ifdef VIA_HAVE_EXA
             {
                 VIAPtr pVia = VIAPTR(mem->pScrn);
 
@@ -82,13 +79,12 @@ VIAFreeLinear(VIAMemPtr mem)
                     return;
                 }
             }
-#endif
             xf86FreeOffscreenLinear(mem->linear);
             mem->linear = NULL;
             mem->pool = 0;
             return;
         case 2:
-#ifdef CHROMEDRI
+#ifdef OPENCHROMEDRI
             if (drmCommandWrite(mem->drm_fd, DRM_VIA_FREEMEM,
                                 &mem->drm, sizeof(drm_via_mem_t)) < 0)
                 ErrorF("DRM module failed free.\n");
@@ -103,7 +99,6 @@ viaOffScreenLinear(VIAMemPtr mem, ScrnInfoPtr pScrn, unsigned long size)
 {
     int depth = pScrn->bitsPerPixel >> 3;
 
-#ifdef VIA_HAVE_EXA
     VIAPtr pVia = VIAPTR(pScrn);
 
     if (pVia->useEXA && !pVia->NoAccel) {
@@ -118,7 +113,6 @@ viaOffScreenLinear(VIAMemPtr mem, ScrnInfoPtr pScrn, unsigned long size)
         mem->pScrn = pScrn;
         return Success;
     }
-#endif
 
     mem->linear = xf86AllocateOffscreenLinear(pScrn->pScreen,
                                               (size + depth - 1) / depth,
@@ -134,7 +128,7 @@ viaOffScreenLinear(VIAMemPtr mem, ScrnInfoPtr pScrn, unsigned long size)
 int
 VIAAllocLinear(VIAMemPtr mem, ScrnInfoPtr pScrn, unsigned long size)
 {
-#ifdef CHROMEDRI
+#ifdef OPENCHROMEDRI
     VIAPtr pVia = VIAPTR(pScrn);
     int ret;
 
@@ -175,11 +169,9 @@ VIAInitLinear(ScreenPtr pScreen)
     ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
     VIAPtr pVia = VIAPTR(pScrn);
 
-#ifdef VIA_HAVE_EXA
     if (pVia->useEXA && !pVia->NoAccel)
         return;
     else
-#endif
     {
         unsigned long offset = (pVia->FBFreeStart + pVia->Bpp - 1) / pVia->Bpp;
         long size = pVia->FBFreeEnd / pVia->Bpp - offset;

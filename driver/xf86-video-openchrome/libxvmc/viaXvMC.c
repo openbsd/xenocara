@@ -248,7 +248,7 @@ releaseContextResources(Display * display, XvMCContext * context,
     return errType;
 }
 
-Status
+_X_EXPORT Status
 XvMCCreateContext(Display * display, XvPortID port,
     int surface_type_id, int width, int height, int flags,
     XvMCContext * context)
@@ -572,7 +572,7 @@ XvMCCreateContext(Display * display, XvPortID port,
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCDestroyContext(Display * display, XvMCContext * context)
 {
     ViaXvMCContext *pViaXvMC;
@@ -594,7 +594,7 @@ XvMCDestroyContext(Display * display, XvMCContext * context)
     return releaseContextResources(display, context, 1, Success);
 }
 
-Status
+_X_EXPORT Status
 XvMCCreateSurface(Display * display, XvMCContext * context,
     XvMCSurface * surface)
 {
@@ -661,7 +661,7 @@ XvMCCreateSurface(Display * display, XvMCContext * context,
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCDestroySurface(Display * display, XvMCSurface * surface)
 {
     ViaXvMCSurface *pViaSurface;
@@ -684,7 +684,7 @@ XvMCDestroySurface(Display * display, XvMCSurface * surface)
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCPutSlice2(Display * display, XvMCContext * context, char *slice,
     int nBytes, int sliceCode)
 {
@@ -711,7 +711,7 @@ XvMCPutSlice2(Display * display, XvMCContext * context, char *slice,
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCPutSlice(Display * display, XvMCContext * context, char *slice,
     int nBytes)
 {
@@ -781,7 +781,7 @@ updateXVOverlay(Display * display, ViaXvMCContext * pViaXvMC,
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCPutSurface(Display * display, XvMCSurface * surface, Drawable draw,
     short srcx, short srcy, unsigned short srcw,
     unsigned short srch, short destx, short desty,
@@ -964,7 +964,7 @@ debugControl(const XvMCMpegControl * control)
     printf("flags: 0x%x\n", control->flags);
 }
 
-Status
+_X_EXPORT Status
 XvMCBeginSurface(Display * display,
     XvMCContext * context,
     XvMCSurface * target_surface,
@@ -1062,7 +1062,7 @@ XvMCBeginSurface(Display * display,
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCSyncSurface(Display * display, XvMCSurface * surface)
 {
     ViaXvMCSurface *pViaSurface;
@@ -1124,7 +1124,7 @@ XvMCSyncSurface(Display * display, XvMCSurface * surface)
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCLoadQMatrix(Display * display, XvMCContext * context,
     const XvMCQMatrix * qmx)
 {
@@ -1174,7 +1174,7 @@ XvMCLoadQMatrix(Display * display, XvMCContext * context,
  * standard completeness.
  */
 
-Status XvMCRenderSurface
+_X_EXPORT Status XvMCRenderSurface
     (Display * display,
     XvMCContext * context,
     unsigned int picture_structure,
@@ -1189,20 +1189,20 @@ Status XvMCRenderSurface
     return (error_base + XvMCBadContext);
 }
 
-Status XvMCCreateBlocks
+_X_EXPORT Status XvMCCreateBlocks
     (Display * display,
     XvMCContext * context, unsigned int num_blocks, XvMCBlockArray * block)
 {
     return (error_base + XvMCBadContext);
 }
 
-Status
+_X_EXPORT Status
 XvMCDestroyBlocks(Display * display, XvMCBlockArray * block)
 {
     return Success;
 }
 
-Status XvMCCreateMacroBlocks
+_X_EXPORT Status XvMCCreateMacroBlocks
     (Display * display,
     XvMCContext * context,
     unsigned int num_blocks, XvMCMacroBlockArray * blocks)
@@ -1210,13 +1210,13 @@ Status XvMCCreateMacroBlocks
     return (error_base + XvMCBadContext);
 }
 
-Status
+_X_EXPORT Status
 XvMCDestroyMacroBlocks(Display * display, XvMCMacroBlockArray * block)
 {
     return (error_base + XvMCBadContext);
 }
 
-Status
+_X_EXPORT Status
 XvMCCreateSubpicture(Display * display,
     XvMCContext * context,
     XvMCSubpicture * subpicture,
@@ -1277,7 +1277,7 @@ XvMCCreateSubpicture(Display * display,
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCSetSubpicturePalette(Display * display, XvMCSubpicture * subpicture,
     unsigned char *palette)
 {
@@ -1356,7 +1356,7 @@ findOverlap(unsigned width, unsigned height,
     return 0;
 }
 
-Status
+_X_EXPORT Status
 XvMCClearSubpicture(Display * display,
     XvMCSubpicture * subpicture,
     short x,
@@ -1399,7 +1399,7 @@ XvMCClearSubpicture(Display * display,
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCCompositeSubpicture(Display * display,
     XvMCSubpicture * subpicture,
     XvImage * image,
@@ -1463,7 +1463,7 @@ XvMCCompositeSubpicture(Display * display,
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCBlendSubpicture(Display * display,
     XvMCSurface * target_surface,
     XvMCSubpicture * subpicture,
@@ -1503,7 +1503,7 @@ XvMCBlendSubpicture(Display * display,
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCBlendSubpicture2(Display * display,
     XvMCSurface * source_surface,
     XvMCSurface * target_surface,
@@ -1600,7 +1600,7 @@ XvMCBlendSubpicture2(Display * display,
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCSyncSubpicture(Display * display, XvMCSubpicture * subpicture)
 {
     ViaXvMCSubPicture *pViaSubPic;
@@ -1627,7 +1627,7 @@ XvMCSyncSubpicture(Display * display, XvMCSubpicture * subpicture)
     return retVal;
 }
 
-Status
+_X_EXPORT Status
 XvMCFlushSubpicture(Display * display, XvMCSubpicture * subpicture)
 {
     ViaXvMCSubPicture *pViaSubPic;
@@ -1642,7 +1642,7 @@ XvMCFlushSubpicture(Display * display, XvMCSubpicture * subpicture)
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCDestroySubpicture(Display * display, XvMCSubpicture * subpicture)
 {
     ViaXvMCSubPicture *pViaSubPic;
@@ -1681,7 +1681,7 @@ XvMCDestroySubpicture(Display * display, XvMCSubpicture * subpicture)
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCGetSubpictureStatus(Display * display, XvMCSubpicture * subpic, int *stat)
 {
     ViaXvMCSubPicture *pViaSubPic;
@@ -1705,7 +1705,7 @@ XvMCGetSubpictureStatus(Display * display, XvMCSubpicture * subpic, int *stat)
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCFlushSurface(Display * display, XvMCSurface * surface)
 {
     ViaXvMCSurface *pViaSurface;
@@ -1735,7 +1735,7 @@ XvMCFlushSurface(Display * display, XvMCSurface * surface)
     return ret;
 }
 
-Status
+_X_EXPORT Status
 XvMCGetSurfaceStatus(Display * display, XvMCSurface * surface, int *stat)
 {
     ViaXvMCSurface *pViaSurface;
@@ -1770,7 +1770,7 @@ XvMCGetSurfaceStatus(Display * display, XvMCSurface * surface, int *stat)
     return ret;
 }
 
-XvAttribute *
+_X_EXPORT XvAttribute *
 XvMCQueryAttributes(Display * display, XvMCContext * context, int *number)
 {
     ViaXvMCContext *pViaXvMC;
@@ -1797,7 +1797,7 @@ XvMCQueryAttributes(Display * display, XvMCContext * context, int *number)
     return ret;
 }
 
-Status
+_X_EXPORT Status
 XvMCSetAttribute(Display * display,
     XvMCContext * context, Atom attribute, int value)
 {
@@ -1850,7 +1850,7 @@ XvMCSetAttribute(Display * display,
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCGetAttribute(Display * display,
     XvMCContext * context, Atom attribute, int *value)
 {
@@ -1884,7 +1884,7 @@ XvMCGetAttribute(Display * display,
     return Success;
 }
 
-Status
+_X_EXPORT Status
 XvMCHideSurface(Display * display, XvMCSurface * surface)
 {
 

@@ -1460,13 +1460,13 @@ updateLowLevelBuf(XvMCLowLevel * xl, LowLevelBuffer * buf,
 
     if (size != mem->size) {
 	if (mem->size)
-	    drmCommandWrite(xl->fd, DRM_VIA_FREEMEM, mem, sizeof(mem));
+	    drmCommandWrite(xl->fd, DRM_VIA_FREEMEM, mem, sizeof(*mem));
 	mem->context = *(xl->drmcontext);
 	mem->size = size;
 	mem->type = VIA_MEM_VIDEO;
 
 	if (((ret = drmCommandWriteRead(xl->fd, DRM_VIA_ALLOCMEM, mem,
-			sizeof(mem))) < 0) || mem->size != size) {
+			sizeof(*mem))) < 0) || mem->size != size) {
 	    mem->size = 0;
 	    return -1;
 	}
@@ -1484,7 +1484,7 @@ cleanupLowLevelBuf(XvMCLowLevel * xl, LowLevelBuffer * buf)
     drm_via_mem_t *mem = &buf->mem;
 
     if (mem->size)
-	drmCommandWrite(xl->fd, DRM_VIA_FREEMEM, mem, sizeof(mem));
+	drmCommandWrite(xl->fd, DRM_VIA_FREEMEM, mem, sizeof(*mem));
     mem->size = 0;
 }
 

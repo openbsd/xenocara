@@ -112,11 +112,7 @@ static int viaGetPortAttribute(ScrnInfoPtr, Atom, INT32 *, pointer);
 static int viaSetPortAttribute(ScrnInfoPtr, Atom, INT32, pointer);
 static int viaPutImage(ScrnInfoPtr, short, short, short, short, short, short,
     short, short, int, unsigned char *, short, short, Bool,
-    RegionPtr, pointer
-#ifdef USE_NEW_XVABI
-    , DrawablePtr
-#endif
-);
+    RegionPtr, pointer, DrawablePtr);
 static void nv12Blit(unsigned char *nv12Chroma,
     const unsigned char *uBuffer,
     const unsigned char *vBuffer,
@@ -282,7 +278,8 @@ DecideOverlaySupport(ScrnInfoPtr pScrn)
         pVia->ChipId != PCI_CHIP_VT3327 && 
         pVia->ChipId != PCI_CHIP_VT3336 && 
         pVia->ChipId != PCI_CHIP_VT3364 && 
-        pVia->ChipId != PCI_CHIP_VT3324) {
+        pVia->ChipId != PCI_CHIP_VT3324 &&
+	pVia->ChipId != PCI_CHIP_VT3353) {
         CARD32 bandwidth = (mode->HDisplay >> 4) * (mode->VDisplay >> 5) *
             pScrn->bitsPerPixel * mode->VRefresh;
 
@@ -370,14 +367,14 @@ DecideOverlaySupport(ScrnInfoPtr pScrn)
     
         if (pVia->pVbe) {
             refresh = 100;
-	    if (pBIOSInfo->PanelActive)
+            if (pBIOSInfo->Panel->IsActive)
                 refresh = 70;
             if (pBIOSInfo->TVActive)
                 refresh = 60;
         } else {
-	    if (pBIOSInfo->PanelActive) {
-                width = pBIOSInfo->panelX;
-                height = pBIOSInfo->panelY;
+            if (pBIOSInfo->Panel->IsActive) {
+                width = pBIOSInfo->Panel->NativeMode->Width;
+                height = pBIOSInfo->Panel->NativeMode->Height;
                 if ((width == 1400) && (height == 1050)) {
                     width = 1280;
                     height = 1024;
@@ -476,6 +473,10 @@ viaSaveVideo(ScrnInfoPtr pScrn)
 {
     VIAPtr pVia = VIAPTR(pScrn);
     vmmtr viaVidEng = (vmmtr) pVia->VidMapBase;
+    
+    /* Save video registers */
+    /* TODO: Identify which registers should be saved and restored */
+    memcpy(pVia->VideoRegs, (void*)viaVidEng, sizeof(video_via_regs));
 
     pVia->dwV1 = ((vmmtr) viaVidEng)->video1_ctl;
     pVia->dwV3 = ((vmmtr) viaVidEng)->video3_ctl;
@@ -490,6 +491,10 @@ viaRestoreVideo(ScrnInfoPtr pScrn)
 {
     VIAPtr pVia = VIAPTR(pScrn);
     vmmtr viaVidEng = (vmmtr) pVia->VidMapBase;
+    
+    /* Restore video registers */
+    /* TODO: Identify which registers should be saved and restored */
+    memcpy((void*)viaVidEng, pVia->VideoRegs, sizeof(video_via_regs));
 
     viaVidEng->video1_ctl = pVia->dwV1;
     viaVidEng->video3_ctl = pVia->dwV3;
@@ -508,7 +513,7 @@ viaExitVideo(ScrnInfoPtr pScrn)
 
     DBG_DD(ErrorF(" via_video.c : viaExitVideo : \n"));
 
-#ifdef CHROMEDRI
+#ifdef OPENCHROMEDRI
     ViaCleanupXVMC(pScrn, viaAdaptPtr, XV_ADAPT_NUM);
 #endif
 
@@ -558,7 +563,7 @@ viaInitVideo(ScreenPtr pScreen)
     num_new = 0;
 
     pVia->useDmaBlit = FALSE;
-#ifdef CHROMEDRI
+#ifdef OPENCHROMEDRI
     pVia->useDmaBlit = pVia->directRenderingEnabled &&
     ((pVia->Chipset == VIA_CLE266) ||
         (pVia->Chipset == VIA_KM400) ||
@@ -568,6 +573,7 @@ viaInitVideo(ScreenPtr pScreen)
         (pVia->Chipset == VIA_K8M890) ||
         (pVia->Chipset == VIA_P4M900) ||
         (pVia->Chipset == VIA_CX700) ||
+        (pVia->Chipset == VIA_VX800) ||
         (pVia->Chipset == VIA_P4M890));
     if ((pVia->drmVerMajor < 2) ||
         ((pVia->drmVerMajor == 2) && (pVia->drmVerMinor < 9)))
@@ -586,7 +592,7 @@ viaInitVideo(ScreenPtr pScreen)
         (pVia->Chipset == VIA_K8M800) || (pVia->Chipset == VIA_PM800) ||
         (pVia->Chipset == VIA_VM800) || (pVia->Chipset == VIA_K8M890) ||
         (pVia->Chipset == VIA_P4M900) || (pVia->Chipset == VIA_CX700) ||
-        (pVia->Chipset == VIA_P4M890)) {
+        (pVia->Chipset == VIA_P4M890) || (pVia->Chipset == VIA_VX800)) {
         num_new = viaSetupAdaptors(pScreen, &newAdaptors);
         num_adaptors = xf86XVListGenericAdaptors(pScrn, &adaptors);
     } else {
@@ -611,7 +617,7 @@ viaInitVideo(ScreenPtr pScreen)
 
     if (num_adaptors) {
         xf86XVScreenInit(pScreen, allAdaptors, num_adaptors);
-#ifdef CHROMEDRI
+#ifdef OPENCHROMEDRI
         ViaInitXVMC(pScreen);
 #endif
         viaSetColorSpace(pVia, 0, 0, 0, 0, TRUE);
@@ -650,8 +656,6 @@ RegionsEqual(RegionPtr A, RegionPtr B)
     return TRUE;
 }
 
-#ifdef USE_NEW_XVABI
-
 static void
 viaVideoFillPixmap(ScrnInfoPtr pScrn,
         char *base,
@@ -662,7 +666,7 @@ viaVideoFillPixmap(ScrnInfoPtr pScrn,
 {
     int i;
 
-    ErrorF("pitch %lu, depth %d, x %d, y %d, w %d h %d, color 0x%08x\n",
+    ErrorF("pitch %lu, depth %d, x %d, y %d, w %d h %d, color 0x%08lx\n",
             pitch, depth, x, y, w, h, color);
 
     depth = (depth + 7) >> 3;
@@ -750,7 +754,6 @@ viaPaintColorkey(ScrnInfoPtr pScrn, viaPortPrivPtr pPriv, RegionPtr clipBoxes,
 
     return 0;
 }
-#endif
 
 
 /*
@@ -759,11 +762,8 @@ viaPaintColorkey(ScrnInfoPtr pScrn, viaPortPrivPtr pPriv, RegionPtr clipBoxes,
 
 static int
 viaReputImage(ScrnInfoPtr pScrn,
-        short drw_x, short drw_y, RegionPtr clipBoxes, pointer data
-#ifdef USE_NEW_XVABI
-        , DrawablePtr pDraw
-#endif
-)
+        short drw_x, short drw_y, RegionPtr clipBoxes, pointer data,
+        DrawablePtr pDraw)
 {
 
     DDUPDATEOVERLAY UpdateOverlay_Video;
@@ -774,17 +774,12 @@ viaReputImage(ScrnInfoPtr pScrn,
     if (!RegionsEqual(&pPriv->clip, clipBoxes)) {
         REGION_COPY(pScrn->pScreen, &pPriv->clip, clipBoxes);
         if (pPriv->autoPaint) {
-#ifdef USE_NEW_XVABI
             if (pDraw->type == DRAWABLE_WINDOW) {
                 viaPaintColorkey(pScrn, pPriv, clipBoxes, pDraw);
             } else {
                 xf86XVFillKeyHelper(pScrn->pScreen, pPriv->colorKey,
                     clipBoxes);
             }
-#else
-            xf86XVFillKeyHelper(pScrn->pScreen, pPriv->colorKey,
-                clipBoxes);
-#endif
         }
     }
 
@@ -905,7 +900,7 @@ viaSetupAdaptors(ScreenPtr pScreen, XF86VideoAdaptorPtr ** adaptors)
         }
         usedPorts += j;
 
-#ifdef CHROMEDRI
+#ifdef OPENCHROMEDRI
         viaXvMCInitXv(pScrn, viaAdaptPtr[i]);
 #endif
 
@@ -924,8 +919,8 @@ viaStopVideo(ScrnInfoPtr pScrn, pointer data, Bool exit)
     DBG_DD(ErrorF(" via_video.c : viaStopVideo: exit=%d\n", exit));
 
     REGION_EMPTY(pScrn->pScreen, &pPriv->clip);
+    ViaOverlayHide(pScrn);
     if (exit) {
-        ViaOverlayHide(pScrn);
         ViaSwovSurfaceDestroy(pScrn, pPriv);
         if (pPriv->dmaBounceBuffer)
             xfree(pPriv->dmaBounceBuffer);
@@ -1123,7 +1118,7 @@ nv12cp(unsigned char *dst,
             src + w * h, w >> 1, w >> 1, dstPitch, h >> 1);
 }
 
-#ifdef CHROMEDRI
+#ifdef OPENCHROMEDRI
 
 static int
 viaDmaBlitImage(VIAPtr pVia,
@@ -1271,11 +1266,8 @@ viaPutImage(ScrnInfoPtr pScrn,
         short src_w, short src_h,
         short drw_w, short drw_h,
         int id, unsigned char *buf,
-        short width, short height, Bool sync, RegionPtr clipBoxes, pointer data
-#ifdef USE_NEW_XVABI
-        , DrawablePtr pDraw
-#endif
-)
+        short width, short height, Bool sync, RegionPtr clipBoxes,
+        pointer data, DrawablePtr pDraw)
 {
     VIAPtr pVia = VIAPTR(pScrn);
     viaPortPrivPtr pPriv = (viaPortPrivPtr) data;
@@ -1324,7 +1316,7 @@ viaPutImage(ScrnInfoPtr pScrn,
                 dstPitch = pVia->swov.SWDevice.dwPitch;
 
                 if (pVia->useDmaBlit) {
-#ifdef CHROMEDRI
+#ifdef OPENCHROMEDRI
                     if (viaDmaBlitImage(pVia, pPriv, buf,
                         (unsigned char *)pVia->swov.SWDevice.
                         lpSWOverlaySurface[pVia->dwFrameNum & 1] -
@@ -1443,17 +1435,12 @@ viaPutImage(ScrnInfoPtr pScrn,
             if (!RegionsEqual(&pPriv->clip, clipBoxes)) {
                 REGION_COPY(pScrn->pScreen, &pPriv->clip, clipBoxes);
                 if (pPriv->autoPaint) {
-#ifdef USE_NEW_XVABI
                     if (pDraw->type == DRAWABLE_WINDOW) {
                         viaPaintColorkey(pScrn, pPriv, clipBoxes, pDraw);
                     } else {
                         xf86XVFillKeyHelper(pScrn->pScreen, pPriv->colorKey,
                             clipBoxes);
                     }
-#else
-                    xf86XVFillKeyHelper(pScrn->pScreen, pPriv->colorKey,
-                        clipBoxes);
-#endif
                 }
             }
             /*
@@ -1526,7 +1513,7 @@ viaQueryImageAttributes(ScrnInfoPtr pScrn,
             break;
         case FOURCC_XVMC:
             *h = (*h + 1) & ~1;
-#ifdef CHROMEDRI
+#ifdef OPENCHROMEDRI
             size = viaXvMCPutImageSize(pScrn);
 #else
             size = 0;

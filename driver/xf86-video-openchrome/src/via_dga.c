@@ -248,7 +248,7 @@ VIADGASetMode(ScrnInfoPtr pScrn, DGAModePtr pMode)
 
         pScrn->SwitchMode(index, pScrn->currentMode, 0);
         if (pVia->hwcursor)
-            VIAShowCursor(pScrn);
+            viaShowCursor(pScrn);
 
         pVia->DGAactive = FALSE;
     }
@@ -261,7 +261,7 @@ VIADGASetMode(ScrnInfoPtr pScrn, DGAModePtr pMode)
 #endif
 
         if (pVia->hwcursor)
-            VIAHideCursor(pScrn);
+            viaHideCursor(pScrn);
 
         if (!pVia->DGAactive) {  /* save the old parameters */
             pVia->DGAOldDisplayWidth = pScrn->displayWidth;

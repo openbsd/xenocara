@@ -45,7 +45,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 static XExtensionInfo _xf86dri_info_data;
 static XExtensionInfo *xf86dri_info = &_xf86dri_info_data;
-static char xf86dri_extension_name[] = XF86DRINAME;
+static char xf86dri_extension_name[] = OPENCHROMEDRINAME;
 
 #define uniDRICheckExtension(dpy,i,val) \
   XextCheckExtension (dpy, i, xf86dri_extension_name, val)
@@ -114,16 +114,16 @@ uniDRIQueryVersion(dpy, majorVersion, minorVersion, patchVersion)
     int *patchVersion;
 {
     XExtDisplayInfo *info = find_display(dpy);
-    xXF86DRIQueryVersionReply rep;
-    xXF86DRIQueryVersionReq *req;
+    xOPENCHROMEDRIQueryVersionReply rep;
+    xOPENCHROMEDRIQueryVersionReq *req;
 
     TRACE("QueryVersion...");
     uniDRICheckExtension(dpy, info, False);
 
     LockDisplay(dpy);
-    GetReq(XF86DRIQueryVersion, req);
+    GetReq(OPENCHROMEDRIQueryVersion, req);
     req->reqType = info->codes->major_opcode;
-    req->driReqType = X_XF86DRIQueryVersion;
+    req->driReqType = X_OPENCHROMEDRIQueryVersion;
     if (!_XReply(dpy, (xReply *) & rep, 0, xFalse)) {
 	UnlockDisplay(dpy);
 	SyncHandle();
@@ -146,16 +146,16 @@ uniDRIQueryDirectRenderingCapable(dpy, screen, isCapable)
     Bool *isCapable;
 {
     XExtDisplayInfo *info = find_display(dpy);
-    xXF86DRIQueryDirectRenderingCapableReply rep;
-    xXF86DRIQueryDirectRenderingCapableReq *req;
+    xOPENCHROMEDRIQueryDirectRenderingCapableReply rep;
+    xOPENCHROMEDRIQueryDirectRenderingCapableReq *req;
 
     TRACE("QueryDirectRenderingCapable...");
     uniDRICheckExtension(dpy, info, False);
 
     LockDisplay(dpy);
-    GetReq(XF86DRIQueryDirectRenderingCapable, req);
+    GetReq(OPENCHROMEDRIQueryDirectRenderingCapable, req);
     req->reqType = info->codes->major_opcode;
-    req->driReqType = X_XF86DRIQueryDirectRenderingCapable;
+    req->driReqType = X_OPENCHROMEDRIQueryDirectRenderingCapable;
     req->screen = screen;
     if (!_XReply(dpy, (xReply *) & rep, 0, xFalse)) {
 	UnlockDisplay(dpy);
@@ -178,16 +178,16 @@ uniDRIOpenConnection(dpy, screen, hSAREA, busIdString)
     char **busIdString;
 {
     XExtDisplayInfo *info = find_display(dpy);
-    xXF86DRIOpenConnectionReply rep;
-    xXF86DRIOpenConnectionReq *req;
+    xOPENCHROMEDRIOpenConnectionReply rep;
+    xOPENCHROMEDRIOpenConnectionReq *req;
 
     TRACE("OpenConnection...");
     uniDRICheckExtension(dpy, info, False);
 
     LockDisplay(dpy);
-    GetReq(XF86DRIOpenConnection, req);
+    GetReq(OPENCHROMEDRIOpenConnection, req);
     req->reqType = info->codes->major_opcode;
-    req->driReqType = X_XF86DRIOpenConnection;
+    req->driReqType = X_OPENCHROMEDRIOpenConnection;
     req->screen = screen;
     if (!_XReply(dpy, (xReply *) & rep, 0, xFalse)) {
 	UnlockDisplay(dpy);
@@ -227,16 +227,16 @@ uniDRIAuthConnection(dpy, screen, magic)
     drm_magic_t magic;
 {
     XExtDisplayInfo *info = find_display(dpy);
-    xXF86DRIAuthConnectionReq *req;
-    xXF86DRIAuthConnectionReply rep;
+    xOPENCHROMEDRIAuthConnectionReq *req;
+    xOPENCHROMEDRIAuthConnectionReply rep;
 
     TRACE("AuthConnection...");
     uniDRICheckExtension(dpy, info, False);
 
     LockDisplay(dpy);
-    GetReq(XF86DRIAuthConnection, req);
+    GetReq(OPENCHROMEDRIAuthConnection, req);
     req->reqType = info->codes->major_opcode;
-    req->driReqType = X_XF86DRIAuthConnection;
+    req->driReqType = X_OPENCHROMEDRIAuthConnection;
     req->screen = screen;
     req->magic = magic;
     rep.authenticated = 0;
@@ -258,16 +258,16 @@ uniDRICloseConnection(dpy, screen)
     int screen;
 {
     XExtDisplayInfo *info = find_display(dpy);
-    xXF86DRICloseConnectionReq *req;
+    xOPENCHROMEDRICloseConnectionReq *req;
 
     TRACE("CloseConnection...");
 
     uniDRICheckExtension(dpy, info, False);
 
     LockDisplay(dpy);
-    GetReq(XF86DRICloseConnection, req);
+    GetReq(OPENCHROMEDRICloseConnection, req);
     req->reqType = info->codes->major_opcode;
-    req->driReqType = X_XF86DRICloseConnection;
+    req->driReqType = X_OPENCHROMEDRICloseConnection;
     req->screen = screen;
     UnlockDisplay(dpy);
     SyncHandle();
@@ -286,16 +286,16 @@ uniDRIGetClientDriverName(dpy, screen, ddxDriverMajorVersion,
     char **clientDriverName;
 {
     XExtDisplayInfo *info = find_display(dpy);
-    xXF86DRIGetClientDriverNameReply rep;
-    xXF86DRIGetClientDriverNameReq *req;
+    xOPENCHROMEDRIGetClientDriverNameReply rep;
+    xOPENCHROMEDRIGetClientDriverNameReq *req;
 
     TRACE("GetClientDriverName...");
     uniDRICheckExtension(dpy, info, False);
 
     LockDisplay(dpy);
-    GetReq(XF86DRIGetClientDriverName, req);
+    GetReq(OPENCHROMEDRIGetClientDriverName, req);
     req->reqType = info->codes->major_opcode;
-    req->driReqType = X_XF86DRIGetClientDriverName;
+    req->driReqType = X_OPENCHROMEDRIGetClientDriverName;
     req->screen = screen;
     if (!_XReply(dpy, (xReply *) & rep, 0, xFalse)) {
 	UnlockDisplay(dpy);
@@ -336,16 +336,16 @@ uniDRICreateContextWithConfig(dpy, screen, configID, context, hHWContext)
     drm_context_t *hHWContext;
 {
     XExtDisplayInfo *info = find_display(dpy);
-    xXF86DRICreateContextReply rep;
-    xXF86DRICreateContextReq *req;
+    xOPENCHROMEDRICreateContextReply rep;
+    xOPENCHROMEDRICreateContextReq *req;
 
     TRACE("CreateContext...");
     uniDRICheckExtension(dpy, info, False);
 
     LockDisplay(dpy);
-    GetReq(XF86DRICreateContext, req);
+    GetReq(OPENCHROMEDRICreateContext, req);
     req->reqType = info->codes->major_opcode;
-    req->driReqType = X_XF86DRICreateContext;
+    req->driReqType = X_OPENCHROMEDRICreateContext;
     req->visual = configID;
     req->screen = screen;
     *context = XAllocID(dpy);
@@ -380,15 +380,15 @@ uniDRIDestroyContext(Display * ndpy, int screen, XID context)
 {
     Display *const dpy = (Display *) ndpy;
     XExtDisplayInfo *info = find_display(dpy);
-    xXF86DRIDestroyContextReq *req;
+    xOPENCHROMEDRIDestroyContextReq *req;
 
     TRACE("DestroyContext...");
     uniDRICheckExtension(dpy, info, False);
 
     LockDisplay(dpy);
-    GetReq(XF86DRIDestroyContext, req);
+    GetReq(OPENCHROMEDRIDestroyContext, req);
     req->reqType = info->codes->major_opcode;
-    req->driReqType = X_XF86DRIDestroyContext;
+    req->driReqType = X_OPENCHROMEDRIDestroyContext;
     req->screen = screen;
     req->context = context;
     UnlockDisplay(dpy);
@@ -403,16 +403,16 @@ uniDRICreateDrawable(Display * ndpy, int screen,
 {
     Display *const dpy = (Display *) ndpy;
     XExtDisplayInfo *info = find_display(dpy);
-    xXF86DRICreateDrawableReply rep;
-    xXF86DRICreateDrawableReq *req;
+    xOPENCHROMEDRICreateDrawableReply rep;
+    xOPENCHROMEDRICreateDrawableReq *req;
 
     TRACE("CreateDrawable...");
     uniDRICheckExtension(dpy, info, False);
 
     LockDisplay(dpy);
-    GetReq(XF86DRICreateDrawable, req);
+    GetReq(OPENCHROMEDRICreateDrawable, req);
     req->reqType = info->codes->major_opcode;
-    req->driReqType = X_XF86DRICreateDrawable;
+    req->driReqType = X_OPENCHROMEDRICreateDrawable;
     req->screen = screen;
     req->drawable = drawable;
     if (!_XReply(dpy, (xReply *) & rep, 0, xFalse)) {
@@ -433,15 +433,15 @@ uniDRIDestroyDrawable(Display * ndpy, int screen, Drawable drawable)
 {
     Display *const dpy = (Display *) ndpy;
     XExtDisplayInfo *info = find_display(dpy);
-    xXF86DRIDestroyDrawableReq *req;
+    xOPENCHROMEDRIDestroyDrawableReq *req;
 
     TRACE("DestroyDrawable...");
     uniDRICheckExtension(dpy, info, False);
 
     LockDisplay(dpy);
-    GetReq(XF86DRIDestroyDrawable, req);
+    GetReq(OPENCHROMEDRIDestroyDrawable, req);
     req->reqType = info->codes->major_opcode;
-    req->driReqType = X_XF86DRIDestroyDrawable;
+    req->driReqType = X_OPENCHROMEDRIDestroyDrawable;
     req->screen = screen;
     req->drawable = drawable;
     UnlockDisplay(dpy);
@@ -459,17 +459,17 @@ uniDRIGetDrawableInfo(Display * dpy, int screen, Drawable drawable,
     int *numBackClipRects, drm_clip_rect_t ** pBackClipRects)
 {
     XExtDisplayInfo *info = find_display(dpy);
-    xXF86DRIGetDrawableInfoReply rep;
-    xXF86DRIGetDrawableInfoReq *req;
+    xOPENCHROMEDRIGetDrawableInfoReply rep;
+    xOPENCHROMEDRIGetDrawableInfoReq *req;
     int total_rects;
 
     TRACE("GetDrawableInfo...");
     uniDRICheckExtension(dpy, info, False);
 
     LockDisplay(dpy);
-    GetReq(XF86DRIGetDrawableInfo, req);
+    GetReq(OPENCHROMEDRIGetDrawableInfo, req);
     req->reqType = info->codes->major_opcode;
-    req->driReqType = X_XF86DRIGetDrawableInfo;
+    req->driReqType = X_OPENCHROMEDRIGetDrawableInfo;
     req->screen = screen;
     req->drawable = drawable;
 
@@ -498,7 +498,7 @@ uniDRIGetDrawableInfo(Display * dpy, int screen, Drawable drawable,
      * backwards compatibility (Because of the >> 2 shift) but the fix
      * enables multi-threaded apps to work.
      */
-    if (rep.length != ((((SIZEOF(xXF86DRIGetDrawableInfoReply) -
+    if (rep.length != ((((SIZEOF(xOPENCHROMEDRIGetDrawableInfoReply) -
 			SIZEOF(xGenericReply) +
 			total_rects * sizeof(drm_clip_rect_t)) +
 		    3) & ~3) >> 2)) {
@@ -549,16 +549,16 @@ uniDRIGetDeviceInfo(dpy, screen, hFrameBuffer,
     void **pDevPrivate;
 {
     XExtDisplayInfo *info = find_display(dpy);
-    xXF86DRIGetDeviceInfoReply rep;
-    xXF86DRIGetDeviceInfoReq *req;
+    xOPENCHROMEDRIGetDeviceInfoReply rep;
+    xOPENCHROMEDRIGetDeviceInfoReq *req;
 
     TRACE("GetDeviceInfo...");
     uniDRICheckExtension(dpy, info, False);
 
     LockDisplay(dpy);
-    GetReq(XF86DRIGetDeviceInfo, req);
+    GetReq(OPENCHROMEDRIGetDeviceInfo, req);
     req->reqType = info->codes->major_opcode;
-    req->driReqType = X_XF86DRIGetDeviceInfo;
+    req->driReqType = X_OPENCHROMEDRIGetDeviceInfo;
     req->screen = screen;
     if (!_XReply(dpy, (xReply *) & rep, 0, xFalse)) {
 	UnlockDisplay(dpy);

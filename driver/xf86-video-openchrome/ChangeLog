@@ -1,3 +1,323 @@
+2009-03-21  Xavier Bachelot  <xavier@bachelot.org>
+
+	* src/via_bios.h:
+	* src/via_display.c: (ViaDisplaySetStreamOnDFP):
+	* src/via_driver.c: (VIAPreInit), (VIASave), (VIARestore),
+	(VIADPMS):
+	* src/via_driver.h:
+	* src/via_mode.c: (ViaDFPDetect), (ViaOutputsDetect),
+	(ViaOutputsSelect), (ViaDFPPower), (ViaModeSet):
+
+	CX700 integrated TMDS (Patch courtesy Tim Chen from VIA).
+
+2009-02-19  Gabriel Mansi  <gabriel-dot-mansi-at-gmail-dot-com>
+
+	* src/via_driver.c: (VIAScreenInit), (VIAWriteMode):
+
+	Initialize CRTC before a mode switch. Fix bug #260.
+
+2009-01-26  Jon Nettleton <jon.nettleton@gmail.com>
+
+	* src/via_accel.c: (viaInitXAA), (viaExaCheckComposite):
+
+	a couple of small compatibility fixes for XAA and EXA.
+
+2009-01-17  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	* libxvmc/viaLowLevel.c: (viaDMAInitTimeStamp):
+	* src/via_accel.c: (viaDisableVQ):
+	* src/via_video.c: (viaVideoFillPixmap):
+
+	viaLowLevel.c and via_accel.c are fixes by 
+	Bartosz Kosiorek.  The via_video.c is a syntax
+	fix by Robert Bridge.  Thanks for the bug fixes.
+
+2009-01-17  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	* configure.ac:
+	* src/via_accel.c: (viaInitAccel), (viaExitAccel),
+	(viaFinishInitAccel):
+	* src/via_driver.c: (VIASetup), (VIASetupDefaultOptions),
+	(VIAPreInit), (VIAWriteMode), (VIAInitialize3DEngine):
+	* src/via_driver.h:
+	* src/via_memory.c: (viaExaFBSave), (VIAFreeLinear),
+	(viaOffScreenLinear), (VIAInitLinear):
+	* src/via_priv.h:
+
+	Patch submitted by Robert Bridge, originally started by
+	Xavier Bachelot, to remove old EXA support.  We are moving
+	forward with the driver and are no longer supporting the
+	old EXA initializations.	
+
+2009-01-14  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	* src/via_accel.c: (viaDisableVQ), (viaInitialize2DEngine),
+	(viaAccelSync):
+
+	According to VIA's code the P4M900 should have the same
+	acceleration initialization registers as the K8M890.  This
+	patch fixes this and gives about a 10x increase in the 
+	video benchmark numbers.
+
+2009-01-14  Jon Nettleton  <jon.nettletno@gmail.com>
+
+	* src/via_accel.c: (viaFlushPCI):
+
+	remove the check for VIA_3D_ENG_BUSY in the idle loop.
+	This causes xorg to chew a bit more cpu with XAA enabled,
+	and it causes the entire X server to dump if EXA is enabled.
+	I should investigate further, but for now I will just remove
+	it.
+
+2009-01-14  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	* src/via_accel.c: (viaFlushPCI):
+
+	Oops forgot to change registers for the vx800 chipset
+	when waiting for Idle in the engines.  I also added
+	back in waiting for the 3d engine to be idle.  I am
+	not sure if this was removed for a reason.
+
+2009-01-07  Jon Nettleton <jon.nettleton@gmail.com>
+
+	* src/via_bios.h:
+	* src/via_crtc.c: (via_xf86crtc_resize), (ViaPreInitCRTCConfig):
+	* src/via_driver.c: (VIAPreInit):
+
+	Temporary hack to fix a bug with newer Xorg and DRI
+	that crashes if CRTC is not setup.  I am adding this
+	because I am working on this part of the code anyways
+	so it won't get lost in bit rot.
+
+2009-01-06  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	* src/via_mode.c: (ViaModesMonitorFixup), (ViaModesAttachHelper):
+
+	Make sure that the monitor settings will handle our
+	internal Modes set for TV out and LCD Panels.
+
+2009-01-05  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	* src/via_cursor.c: (viaHWCursorInit), (viaLoadCursorImage):
+
+	A couple more tweaks to fix mono hardware cursor on older
+	chipsets.
+
+2009-01-05  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	* src/via_cursor.c: (viaHWCursorInit), (viaUseHWCursorARGB),
+	(viaUseHWCursor):
+	* src/via_driver.c: (VIAScreenInit):
+
+	Missed a couple of changes for the chipset specific
+	cursors.  Moved chipset detection to HWInit.  Removed
+	some extraneous debugging.
+
+2009-01-04  Gabriel Mansi  <gabriel-dot-mansi-at-gmail-dot-com>
+
+	* src/via.h:
+	* src/via_accel.c: (viaInitialize2DEngine):
+	* src/via_crtc.c: (ViaFirstCRTCSetMode), (ViaSecondCRTCSetMode):
+	* src/via_driver.c: (ViaMMIOEnable), (ViaMMIODisable),
+	(VIAWriteMode):
+	* src/via_swov.c: (SetFIFO_V3), (Upd_Video):
+	* src/via_video.c: (DecideOverlaySupport):
+
+	Initial XVideo support for VX800.
+
+2009-01-04  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	* src/via_cursor.c: (viaHWCursorInit), (viaCursorSetFB),
+	(viaUseHWCursorARGB), (viaUseHWCursor), (viaLoadCursorImage),
+	(viaSetCursorColors), (viaLoadCursorARGB):
+	* src/via_driver.h:
+
+	Okay I tried to cheat.  We need to have some chipset
+	specific intelligence.  I have added this back into
+	the initial test to check for HWCursor support.
+
+2009-01-04  Jon Nettleton <jon.nettleton@gmail.com>
+
+	* src/via_accel.c: (viaInitXAA), (viaInitAccel):
+	* src/via_crtc.c: (ViaSecondCRTCSetStartingAddress):
+	* src/via_cursor.c: (viaHWCursorInit), (viaCursorSetFB),
+	(viaCursorStore), (viaCursorRestore), (viaShowCursor),
+	(viaHideCursor), (viaSetCursorPosition), (viaUseHWCursorARGB),
+	(viaUseHWCursor), (viaLoadCursorImage), (viaSetCursorColors),
+	(viaLoadCursorARGB):
+	* src/via_dga.c: (VIADGASetMode):
+	* src/via_driver.c: (VIAFreeRec), (VIASetupDefaultOptions),
+	(VIAPreInit), (VIAEnterVT), (VIALeaveVT), (VIAScreenInit),
+	(VIACloseScreen):
+	* src/via_driver.h:
+	* src/via_regs.h:
+
+	This is a take at reworking HWCursor.  It works off the
+	ttm_branch and the work done in the randr_branch.  It only needs
+	marginal testing as HWCursor was already very broken.
+
+2009-01-04  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	* src/via_driver.c: (VIAMapMMIO), (VIAMapFB):
+
+	Moved pVia->FrameBufferBase setting to within
+	VIAMapFB where it was before being called without
+	being set.
+
+2009-01-04  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	* src/via_driver.c: (VIAPreInit):
+
+	Patch submitted by Robert Bridge to clean up compiler
+        warnings.  Should close trac ticket #243.  Thanks
+	RobbieAB.
+
+2008-12-29  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	* src/via_accel.c: (viaInitXAA):
+	* src/via_driver.c: (VIAMapMMIO), (VIAMapFB):
+
+	Finally tracked down the XAA libpciaccess bug.  Also
+	Realized I had not enabled write-combining on the main
+	framebuffer.  This should give a small speed boost.
+
+2008-12-26  Jon Nettleton <jon.nettleton@gmail.com>
+
+	* src/via_mode.h:
+
+	Added support for all Modes in ViaPanelNativeModes to
+	ViaPanelModes.  Modes used are from Via's released driver
+	in ViaSupportModes.
+
+2008-11-04  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	* src/via_crtc.c: (ViaFirstCRTCSetMode), (ViaSecondCRTCSetMode):
+
+	Found needed register writes that are needed so VX800 doesn't
+	crash when CRT is not enabled.  I also removed NEEDS FIXING
+        comments from them as they are obviously needed.
+
+2008-11-03  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	* src/via_accel.c: (viaSubsequentMono8x8PatternFillRect),
+	(viaSetupForSolidLine), (viaSubsequentSolidHorVertLine),
+	(viaSetupForDashedLine), (viaAccelMarkSync):
+
+	A few more acceleration tweaks for the VX800.  
+	This should fix all the XAA rendering issues.
+	This should also allow 800x480 Panels to work without
+	custom modelines.
+
+2008-11-02  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	* src/via_accel.c: (viaFlushPCI), (viaDisableVQ),
+	(viaInitialize2DEngine), (viaAccelSync), (viaPitchHelper),
+	(viaAccelClippingHelper), (viaAccelSolidHelper),
+	(viaAccelTransparentHelper), (viaAccelCopyHelper),
+	(viaSetupForScreenToScreenCopy), (viaSubsequentScreenToScreenCopy),
+	(viaSetupForSolidFill), (viaSubsequentSolidFillRect),
+	(viaSetupForMono8x8PatternFill),
+	(viaSubsequentMono8x8PatternFillRect),
+	(viaSetupForColor8x8PatternFill),
+	(viaSubsequentColor8x8PatternFillRect),
+	(viaSetupForCPUToScreenColorExpandFill),
+	(viaSubsequentScanlineCPUToScreenColorExpandFill),
+	(viaSetupForImageWrite), (viaSubsequentImageWriteRect),
+	(viaSetupForSolidLine), (viaSubsequentSolidTwoPointLine),
+	(viaSubsequentSolidHorVertLine), (viaSetupForDashedLine),
+	(viaInitXAA), (viaAccelMarkSync), (viaExaPrepareSolid),
+	(viaExaSolid), (viaExaPrepareCopy), (viaExaCopy):
+	* src/via_bandwidth.c: (ViaSetPrimaryFIFO), (ViaSetSecondaryFIFO):
+	* src/via_cursor.c: (viaCursorARGBInit), (viaCursorARGBShow),
+	(viaCursorARGBHide), (viaCursorARGBSetPosition),
+	(viaCursorRecInit):
+	* src/via_driver.c: (VIASetupDefaultOptions), (VIAPreInit),
+	(VIALeaveVT), (VIACloseScreen):
+	* src/via_driver.h:
+	* src/via_id.c:
+	* src/via_id.h:
+	* src/via_mode.c: (ViaOutputsSelect), (VIAGetPanelSize),
+	(ViaPanelGetIndex):
+	* src/via_mode.h:
+	* src/via_panel.c: (ViaPanelPreInit):
+	* src/via_regs.h:
+	* src/via_swov.c: (VIAVidHWDiffInit), (viaCalculateVideoColor),
+	(viaSetColorSpace), (ViaInitVideoStatusFlag), (ViaSetVidCtl),
+	(SetFIFO_V3_64or32or32), (SetFIFO_V3_64or32or16):
+	* src/via_video.c: (viaInitVideo):
+
+        Initial support for the VX800 chipset.  This is based off the
+        Basic chipset support work of Xavier Bachelot and the inital
+        Acceleration work done by Harald Welte.  I verified the changes
+        based off the most recent VIA codebaase and fixed a couple of
+        rendering issues.
+
+        Still needs more work on EXA ( font rendering glitches ) and
+        XVideo.
+
+2008-05-26  Gabriel Mansi <gabriel.mansi@gmail.com>
+
+	* src/Makefile.am:
+	* src/via_accel.c: (viaInitAccel):
+	* src/via_bios.h:
+	* src/via_crtc.c: (ViaCRTCSetGraphicsRegisters),
+	(ViaCRTCSetAttributeRegisters), (ViaCRTCInit),
+	(ViaFirstCRTCSetMode), (ViaFirstCRTCSetStartingAddress),
+	(ViaSecondCRTCSetStartingAddress),
+	(ViaSecondCRTCHorizontalQWCount), (ViaSecondCRTCHorizontalOffset),
+	(ViaSecondCRTCSetMode), (ViaFirstCRTCModeValid),
+	(ViaSecondCRTCModeValid), (ViaShadowCRTCSetMode):
+	* src/via_cursor.c: (viaCursorARGBInit), (viaCursorSetFB),
+	(viaCursorHWInit), (viaCursorHWShow), (viaCursorHWHide),
+	(viaCursorShow), (viaCursorHide), (viaCursorLoadImage),
+	(viaCursorHWSetPosition), (viaCursorSetPosition),
+	(viaCursorSetColors), (viaCursorStore), (viaCursorRestore),
+	(viaCursorARGBShow), (viaCursorARGBHide),
+	(viaCursorARGBSetPosition), (viaCursorARGBUse),
+	(viaCursorARGBLoad), (viaCursorRecInit), (viaCursorRecDestroy),
+	(viaCursorHWUse):
+	* src/via_dga.c: (VIADGASetMode):
+	* src/via_display.c: (ViaSecondDisplayChannelEnable),
+	(ViaSecondDisplayChannelDisable), (ViaDisplayInit),
+	(ViaDisplayEnableSimultaneous), (ViaDisplayDisableSimultaneous),
+	(ViaDisplayEnableCRT), (ViaDisplayDisableCRT),
+	(ViaDisplaySetStreamOnCRT):
+	* src/via_driver.c: (VIAGetRec), (VIAFreeRec),
+	(VIASetupDefaultOptions), (VIAPreInit), (VIAEnterVT), (VIALeaveVT),
+	(ViaGammaDisable), (VIASave), (VIARestore), (ViaMMIOEnable),
+	(ViaMMIODisable), (VIAMapMMIO), (VIAUnmapMem), (VIALoadPalette),
+	(VIAScreenInit), (VIAWriteMode), (VIACloseScreen),
+	(VIAAdjustFrame), (VIADPMS):
+	* src/via_driver.h:
+	* src/via_lvds.c: (ViaLVDSPowerFirstSequence),
+	(ViaLVDSPowerSecondSequence), (ViaLVDSDFPPower),
+	(ViaLVDSPowerChannel), (ViaLVDSPower):
+	* src/via_mode.c: (ViaPrintMode), (ViaOutputsSelect),
+	(VIAGetPanelSize), (ViaPanelGetIndex), (ViaModesAttach),
+	(ViaValidMode), (VIASetLCDMode), (ViaModePrimaryLegacy),
+	(ViaModeSecondaryLegacy), (ViaLCDPower), (ViaModeFirstCRTC),
+	(ViaModeSecondCRTC), (ViaModeSet):
+	* src/via_panel.c: (ViaPanelLookUpModeIndex),
+	(ViaPanelGetNativeModeFromOption),
+	(ViaPanelGetNativeModeFromScratchPad), (ViaPanelScaleDisable),
+	(ViaPanelScale), (ViaPanelGetNativeDisplayMode), (ViaPanelPreInit),
+	(ViaPanelCenterMode), (ViaPanelGetSizeFromEDID),
+	(ViaPanelGetSizeFromDDCv1), (ViaPanelGetSizeFromDDCv2):
+	* src/via_regs.h:
+	* src/via_swov.c: (Upd_Video):
+	* src/via_timing.c: (froundf), (timingGenerateMode),
+	(viaTimingCvt), (viaTimingGtf):
+	* src/via_timing.h:
+	* src/via_vbe.c: (ViaVbeGetActiveDevices), (ViaVbeSetMode),
+	(ViaVbeDoDPMS):
+	* src/via_video.c: (DecideOverlaySupport), (viaSaveVideo),
+	(viaRestoreVideo):
+
+	Merge panel code from randr branch (rev. 427 to 553)
+	Add native mode setting for P4M890, P4M900, K8M890 and CX700
+	Add LVDS power functions for P4M900 and CX700
+	Add ARGB hardware cursor support
+
 2008-03-11  Xavier Bachelot  <xavier-at-bachelot-dot-org>
 
 	* configure.ac:
