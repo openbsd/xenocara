@@ -1,7 +1,7 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2009/06/25 21:27:18 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2009/06/25 21:28:57 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
-CONFIGURE_ARGS+= --disable-dri --enable-debug
+CONFIGURE_ARGS+= --disable-dri
 
 .include <bsd.xorg.mk>
