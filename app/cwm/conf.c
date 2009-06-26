@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.65 2009/06/20 00:22:39 okan Exp $
+ * $Id: conf.c,v 1.66 2009/06/26 12:21:58 okan Exp $
  */
 
 #include "headers.h"
@@ -27,6 +27,9 @@
 	    ((tsp)->tv_nsec cmp (usp)->tv_nsec) :	\
 	    ((tsp)->tv_sec cmp (usp)->tv_sec))
 #endif
+
+static void	 conf_mouseunbind(struct conf *, struct mousebinding *);
+static void	 conf_unbind(struct conf *, struct keybinding *);
 
 extern struct screen_ctx	*Curscreen;
 
@@ -278,7 +281,7 @@ conf_client(struct client_ctx *cc)
 	cc->flags |= ignore ? CLIENT_IGNORE : 0;
 }
 
-struct {
+static struct {
 	char		*tag;
 	void		 (*handler)(struct client_ctx *, union arg *);
 	int		 flags;
@@ -493,7 +496,7 @@ conf_bindname(struct conf *c, char *name, char *binding)
 	return;
 }
 
-void
+static void
 conf_unbind(struct conf *c, struct keybinding *unbind)
 {
 	struct keybinding	*key = NULL, *keynxt;
@@ -515,7 +518,7 @@ conf_unbind(struct conf *c, struct keybinding *unbind)
 	}
 }
 
-struct {
+static struct {
 	char *tag;
 	void (*handler)(struct client_ctx *, void *);
 	int context;
@@ -583,7 +586,7 @@ conf_mousebind(struct conf *c, char *name, char *binding)
 	}
 }
 
-void
+static void
 conf_mouseunbind(struct conf *c, struct mousebinding *unbind)
 {
 	struct mousebinding	*mb = NULL, *mbnxt;

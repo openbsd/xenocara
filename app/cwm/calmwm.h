@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.93 2009/06/23 21:52:38 okan Exp $
+ * $Id: calmwm.h,v 1.94 2009/06/26 12:21:58 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -324,7 +324,6 @@ struct mwm_hints {
 int			 input_keycodetrans(KeyCode, u_int, enum ctltype *,
 			     char *);
 
-int			 x_errorhandler(Display *, XErrorEvent *);
 __dead void		 usage(void);
 
 struct client_ctx	*client_find(Window);
@@ -346,17 +345,11 @@ void			 client_warp(struct client_ctx *);
 void			 client_ptrwarp(struct client_ctx *);
 void			 client_ptrsave(struct client_ctx *);
 void			 client_draw_border(struct client_ctx *);
-void			 client_update(struct client_ctx *);
-void			 client_placecalc(struct client_ctx *);
 void			 client_maximize(struct client_ctx *);
 void			 client_vertmaximize(struct client_ctx *);
 void			 client_map(struct client_ctx *);
 void			 client_mtf(struct client_ctx *);
 struct client_ctx	*client_cycle(int);
-struct client_ctx	*client_mrunext(struct client_ctx *);
-struct client_ctx	*client_mruprev(struct client_ctx *);
-void			 client_gethints(struct client_ctx *);
-void			 client_freehints(struct client_ctx *);
 
 struct menu  		*menu_filter(struct menu_q *, char *, char *, int,
 			     void (*)(struct menu_q *, struct menu_q *, char *),
@@ -407,9 +400,7 @@ void			 conf_client(struct client_ctx *);
 void			 conf_grab(struct conf *, struct keybinding *);
 void			 conf_ungrab(struct conf *, struct keybinding *);
 void			 conf_bindname(struct conf *, char *, char *);
-void			 conf_unbind(struct conf *, struct keybinding *);
 void			 conf_mousebind(struct conf *, char *, char *);
-void			 conf_mouseunbind(struct conf *, struct mousebinding *);
 void			 conf_grab_mouse(struct client_ctx *);
 void			 conf_reload(struct conf *);
 void			 conf_font(struct conf *);
