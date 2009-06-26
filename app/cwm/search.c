@@ -14,9 +14,10 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: search.c,v 1.16 2009/06/17 12:30:17 okan Exp $
+ * $Id: search.c,v 1.17 2009/06/26 12:45:12 oga Exp $
  */
 
+#include <fnmatch.h>
 #include "headers.h"
 #include "calmwm.h"
 
@@ -178,8 +179,9 @@ search_match_exec(struct menu_q *menuq, struct menu_q *resultq, char *search)
 	TAILQ_INIT(resultq);
 
 	TAILQ_FOREACH(mi, menuq, entry) {
-		if (strsubmatch(search, mi->text, 1) == 0)
-			continue;
+		if (strsubmatch(search, mi->text, 1) == 0 &&
+		    fnmatch(search, mi->text, 0) == FNM_NOMATCH)
+				continue;
 		for (mj = TAILQ_FIRST(resultq); mj != NULL;
 		     mj = TAILQ_NEXT(mj, resultentry)) {
 			if (strcasecmp(mi->text, mj->text) < 0) {
