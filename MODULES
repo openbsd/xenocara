@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.77 2009/06/05 21:27:25 matthieu Exp $
+# $OpenBSD: MODULES,v 1.78 2009/06/27 16:12:21 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -45,7 +45,7 @@ app/xeyes		1.0.1	7.0
 app/xf86dga		1.0.2	7.2RC1
 app/xfd			1.0.1	7.0
 app/xfontsel		1.0.2	7.2+
-app/xfs			1.0.8	7.4
+app/xfs			1.1.0	7.4+	needs-update
 app/xfsinfo		1.0.2	7.4
 app/xfwp		1.0.1	7.0
 app/xgamma		1.0.2	7.3
@@ -104,16 +104,16 @@ driver/xf86-input-vmmouse	12.6.4	7.4+
 driver/xf86-input-void		1.2.0	7.4+
 driver/xf86-video-apm		1.2.1	7.4+
 driver/xf86-video-ark		0.7.1	7.4+
-driver/xf86-video-ast		0.89.0	7.4+
+driver/xf86-video-ast		0.89.8	7.4+	needs-update
 driver/xf86-video-ati		6.12.2	7.4+	needs-update
 driver/xf86-video-chips		1.2.1	7.4+
 driver/xf86-video-cirrus	1.3.0	7.4	needs-update
 driver/xf86-video-dummy		0.3.1	7.4+
-driver/xf86-video-geode		2.11.2	7.4+	needs-update
+driver/xf86-video-geode		2.11.3	7.4+	needs-update
 driver/xf86-video-glint		1.2.2	7.4+
 driver/xf86-video-i128		1.3.1	7.4
 driver/xf86-video-i740		1.3.0	7.4+
-driver/xf86-video-intel		2.7.1	7.4+	needs-update
+driver/xf86-video-intel		2.7.1	7.4+
 driver/xf86-video-mach64	6.8.1	7.4	needs-update
 driver/xf86-video-mga		1.4.10	7.4+	needs-update
 driver/xf86-video-neomagic	1.2.2	7.4
@@ -228,20 +228,20 @@ lib/libxcb			1.3	7.4+
 lib/libxkbfile			1.0.5	7.4
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.2.3	7.4+
-lib/pixman			0.15.8	7.4+
+lib/pixman			0.15.10	7.4+	needs-update
 lib/xcb-util			0.3.5	7.4+
 
 proto/bigreqsproto		1.0.2	7.0	needs-rel
 proto/compositeproto		0.4	7.3
 proto/damageproto		1.1.0	7.3
-proto/dri2proto			2.0	7.4+
+proto/dri2proto			2.1	7.4+	needs-update
 proto/dmxproto			2.2.2	7.0
 proto/evieproto			1.0.2	7.0	deprecated
 proto/fixesproto		4.0	7.1
 proto/fontcacheproto		0.1.2	7.0
 proto/fontsproto		2.0.2	7.0
 proto/glproto			1.4.10	7.4	needs-update
-proto/inputproto		1.5.0	7.4+
+proto/inputproto		1.5.1	7.4+	needs-update
 proto/kbproto			1.0.3	7.2RC1
 proto/pmproto			1.0.2	7.0	deprecated
 proto/printproto		1.0.4	7.4	deprecated
@@ -255,7 +255,7 @@ proto/videoproto		2.2.2	7.0
 proto/x11proto			7.0.15	7.4+
 proto/xcb-proto			1.5	7.4+
 proto/xcmiscproto		1.1.2	7.0
-proto/xextproto			7.0.4	7.4+
+proto/xextproto			7.0.5	7.4+	needs-update
 proto/xf86bigfontproto		1.1.2	7.0
 proto/xf86dgaproto		2.0.3	7.3
 proto/xf86driproto		2.0.4	7.4
@@ -266,7 +266,7 @@ proto/xineramaproto		1.1.2	7.0
 util/cf				1.0.2
 util/gccmakedep			1.0.2
 util/imake			1.0.2
-util/macros			1.2.1	7.4+
+util/macros			1.2.2	7.4+	needs-update
 util/makedepend			1.0.1	7.3
 
 xserver				1.6.1	7.4+	needs-update
