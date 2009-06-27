@@ -2060,7 +2060,7 @@ viaExaCheckComposite(int op, PicturePtr pSrcPicture,
         pMaskPicture->pDrawable->height < VIA_MIN_COMPOSITE)
         return FALSE;
 
-    if (pMaskPicture->repeat != RepeatNormal)
+    if (pMaskPicture && pMaskPicture->repeat != RepeatNormal)
         return FALSE;
 
     if (pMaskPicture && pMaskPicture->componentAlpha) {

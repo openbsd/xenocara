@@ -412,6 +412,9 @@ ViaCleanupXVMC(ScrnInfoPtr pScrn, XF86VideoAdaptorPtr * XvAdaptors,
         cleanupViaXvMC(vXvMC, XvAdaptors, XvAdaptorCount);
     }
     for (i = 0; i < XvAdaptorCount; ++i) {
+        if (!XvAdaptors[i])
+            continue;
+
         for (j = 0; j < XvAdaptors[i]->nPorts; ++j) {
             viaPortPrivPtr pPriv = XvAdaptors[i]->pPortPrivates[j].ptr;
 

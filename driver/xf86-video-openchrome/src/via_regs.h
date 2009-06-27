@@ -130,42 +130,6 @@
 #define VIA_REG_ALPHA_FIFO      0x278
 #define VIA_REG_ALPHA_TRANSKEY  0x270
 
-
-/* These regs move about on diffrent hw */
-#define VIA_REG_HI_CONTROL1     VIA_REG_ALPHA_CONTROL
-#define VIA_REG_HI_BASE1        VIA_REG_ALPHA_BASE
-#define VIA_REG_HI_POS1         VIA_REG_ALPHA_POS
-#define VIA_REG_HI_OFFSET1      VIA_REG_ALPHA_OFFSET
-#define VIA_REG_HI_FIFO1        VIA_REG_ALPHA_FIFO
-#define VIA_REG_HI_TRANSKEY1    VIA_REG_ALPHA_TRANSKEY
-
-/* Note that Hardware Icon and Alpha Window overlap */
-#define VIA_REG_ALPHA_CONTROL   0x260
-#define VIA_REG_ALPHA_BASE      0x224
-#define VIA_REG_ALPHA_POS       0x208
-#define VIA_REG_ALPHA_OFFSET    0x20C
-#define VIA_REG_ALPHA_PREFIFO   0x268
-#define VIA_REG_ALPHA_FIFO      0x278
-#define VIA_REG_ALPHA_TRANSKEY  0x270
-
-
-/* These regs move about on diffrent hw */
-#define VIA_REG_HI_CONTROL1     VIA_REG_ALPHA_CONTROL
-#define VIA_REG_HI_BASE1        VIA_REG_ALPHA_BASE
-#define VIA_REG_HI_POS1         VIA_REG_ALPHA_POS
-#define VIA_REG_HI_OFFSET1      VIA_REG_ALPHA_OFFSET
-#define VIA_REG_HI_FIFO1        VIA_REG_ALPHA_FIFO
-#define VIA_REG_HI_TRANSKEY1    VIA_REG_ALPHA_TRANSKEY
-
-/* Note that Hardware Icon and Alpha Window overlap */
-#define VIA_REG_ALPHA_CONTROL   0x260
-#define VIA_REG_ALPHA_BASE      0x224
-#define VIA_REG_ALPHA_POS       0x208
-#define VIA_REG_ALPHA_OFFSET    0x20C
-#define VIA_REG_ALPHA_PREFIFO   0x268
-#define VIA_REG_ALPHA_FIFO      0x278
-#define VIA_REG_ALPHA_TRANSKEY  0x270
-
 /* secret regs */
 #define VIA_REG_HI_CONTROL0     0x2F0
 #define VIA_REG_HI_BASE0        0x2F4
@@ -173,23 +137,6 @@
 #define VIA_REG_HI_OFFSET0      0x2FC
 #define VIA_REG_HI_FIFO0        0x2E8
 #define VIA_REG_HI_TRANSKEY0    0x2EC
-
-/* These regs move about on diffrent hw */
-#define VIA_REG_HI_CONTROL1     VIA_REG_ALPHA_CONTROL
-#define VIA_REG_HI_BASE1        VIA_REG_ALPHA_BASE
-#define VIA_REG_HI_POS1         VIA_REG_ALPHA_POS
-#define VIA_REG_HI_OFFSET1      VIA_REG_ALPHA_OFFSET
-#define VIA_REG_HI_FIFO1        VIA_REG_ALPHA_FIFO
-#define VIA_REG_HI_TRANSKEY1    VIA_REG_ALPHA_TRANSKEY
-
-/* Note that Hardware Icon and Alpha Window overlap */
-#define VIA_REG_ALPHA_CONTROL   0x260
-#define VIA_REG_ALPHA_BASE      0x224
-#define VIA_REG_ALPHA_POS       0x208
-#define VIA_REG_ALPHA_OFFSET    0x20C
-#define VIA_REG_ALPHA_PREFIFO   0x268
-#define VIA_REG_ALPHA_FIFO      0x278
-#define VIA_REG_ALPHA_TRANSKEY  0x270
 
 /*CN400 and older Hardware Icon engine register*/
 #define VIA_REG_HI_POSSTART             0x208

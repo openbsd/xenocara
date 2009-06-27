@@ -599,6 +599,7 @@ viaInitVideo(ScreenPtr pScreen)
         xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
                 "[Xv] Unsupported Chipset. X video functionality disabled.\n");
         num_adaptors = 0;
+        memset(viaAdaptPtr, 0, sizeof(viaAdaptPtr));
     }
 
     DBG_DD(ErrorF(" via_video.c : num_adaptors : %d\n", num_adaptors));
