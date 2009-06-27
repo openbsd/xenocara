@@ -1,15 +1,12 @@
-# $OpenBSD: Makefile,v 1.3 2009/05/03 19:43:26 oga Exp $
+# $OpenBSD: Makefile,v 1.4 2009/06/27 10:02:53 matthieu Exp $
 .include <bsd.xconf.mk>
+.include "${.CURDIR}/Makefile.inc"
 
 .if ${MACHINE_ARCH} == "i386" || ${MACHINE_ARCH} == "amd64"
 SUBDIR=intel
 .endif
 
 LIB=		drm
-
-DRM_MAJOR=	2
-DRM_MINOR=	4
-DRM_TINY=	9
 
 INCSDIR=	${X11BASE}/include/
 
@@ -41,23 +38,11 @@ includes: _SUBDIRUSE
 
 NOPROFILE =
 
+PKGCONFIG=	libdrm.pc
+
 obj: _xenocara_obj
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
-
-libdrm.pc: libdrm.pc.in Makefile
-	sed -e 's,@prefix@,$(X11BASE),' \
-	    -e 's,@exec_prefix@,${X11BASE},' \
-	    -e 's,@libdir@,${LIBDIR},' \
-	    -e 's,@includedir@,${INCSDIR},' \
-	    -e 's,@PACKAGE_VERSION@,$(DRM_MAJOR).$(DRM_MINOR).$(DRM_TINY),' \
-	< ${.CURDIR}/libdrm.pc.in > libdrm.pc
-
-afterinstall: libdrm.pc
-	$(INSTALL) -c -m 644 -o root -g wheel libdrm.pc \
-		${DESTDIR}${LIBDIR}/pkgconfig
-
-CLEANFILES+= libdrm.pc
 
 .include <bsd.subdir.mk>

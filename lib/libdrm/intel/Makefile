@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2009/01/26 23:14:37 oga Exp $
+# $OpenBSD: Makefile,v 1.2 2009/06/27 10:02:53 matthieu Exp $
 .include <bsd.xconf.mk>
 
 LIB=		drm_intel
@@ -16,6 +16,8 @@ SRCS=		intel_bufmgr.c		\
 		intel_bufmgr_fake.c	\
 		intel_bufmgr_gem.c	\
 		mm.c
+
+PKGCONFIG=	libdrm_intel.pc
 
 LDADD+=		-L${X11BASE}/lib -lX11
 
