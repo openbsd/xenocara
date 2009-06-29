@@ -881,7 +881,7 @@ exaDriverInit (ScreenPtr		pScreen,
 
     dixSetPrivate(&pScreen->devPrivates, exaScreenPrivateKey, pExaScr);
 
-    pExaScr->migration = ExaMigrationAlways;
+    pExaScr->migration = ExaMigrationGreedy;
 
     exaDDXDriverInit(pScreen);
 
