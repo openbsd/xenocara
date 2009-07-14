@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.11 2008/11/02 15:26:33 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.12 2009/07/14 18:25:16 oga Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -298,6 +298,7 @@ priv_init(uid_t uid, gid_t gid)
 int
 priv_open_device(const char *path)
 {
+	struct okdev *dev;
 	priv_cmd_t cmd;
 
 	if (priv_fd != -1) {
@@ -305,8 +306,13 @@ priv_open_device(const char *path)
 		strlcpy(cmd.arg.open.path, path, MAXPATHLEN);
 		write(priv_fd, &cmd, sizeof(cmd));
 		return receive_fd(priv_fd);
-	} else 
-		return open(path, O_RDWR | O_NONBLOCK | O_EXCL);
+	} else if ((dev = open_ok(path)) != NULL) {
+		return open(path, dev->flags);
+	} else {
+		errno = EPERM;
+		return -1;
+	}
+	/* NOTREACHED */
 }
 
 /* send signal to parent process */
