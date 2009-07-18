@@ -945,6 +945,9 @@ i830_uxa_create_pixmap (ScreenPtr screen, int w, int h, int depth, unsigned usag
 	return NullPixmap;
 
 #ifdef SERVER_1_5
+    if (usage == CREATE_PIXMAP_USAGE_GLYPH_PICTURE)
+        return fbCreatePixmap (screen, w, h, depth, usage);
+
     pixmap = fbCreatePixmap (screen, 0, 0, depth, usage);
 #else
     pixmap = fbCreatePixmap (screen, 0, 0, depth);
