@@ -144,10 +144,6 @@ struct _drm_intel_bo_gem {
     drm_intel_bo **reloc_target_bo;
     /** Number of entries in relocs */
     int reloc_count;
-    /** Mapped address for the buffer, saved across map/unmap cycles */
-    void *mem_virtual;
-    /** GTT virtual address for the buffer, saved across map/unmap cycles */
-    void *gtt_virtual;
 
     /** BO cache list */
     drmMMListHead head;
@@ -528,10 +524,8 @@ drm_intel_gem_bo_free(drm_intel_bo *bo)
     struct drm_gem_close close;
     int ret;
 
-    if (bo_gem->mem_virtual)
-	munmap (bo_gem->mem_virtual, bo_gem->bo.size);
-    if (bo_gem->gtt_virtual)
-	munmap (bo_gem->gtt_virtual, bo_gem->bo.size);
+    if (bo->virtual)
+	munmap (bo->virtual, bo_gem->bo.size);
 
     /* Close this object */
     memset(&close, 0, sizeof(close));
@@ -606,76 +600,12 @@ drm_intel_gem_bo_unreference(drm_intel_bo *bo)
 static int
 drm_intel_gem_bo_map(drm_intel_bo *bo, int write_enable)
 {
-    drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *)bo->bufmgr;
-    drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *)bo;
-    struct drm_i915_gem_set_domain set_domain;
-    int ret;
-
-    pthread_mutex_lock(&bufmgr_gem->lock);
-
-    /* Allow recursive mapping. Mesa may recursively map buffers with
-     * nested display loops.
-     */
-    if (!bo_gem->mem_virtual) {
-	struct drm_i915_gem_mmap mmap_arg;
-
-	DBG("bo_map: %d (%s)\n", bo_gem->gem_handle, bo_gem->name);
-
-	memset(&mmap_arg, 0, sizeof(mmap_arg));
-	mmap_arg.handle = bo_gem->gem_handle;
-	mmap_arg.offset = 0;
-	mmap_arg.size = bo->size;
-	ret = ioctl(bufmgr_gem->fd, DRM_IOCTL_I915_GEM_MMAP, &mmap_arg);
-	if (ret != 0) {
-	    fprintf(stderr, "%s:%d: Error mapping buffer %d (%s): %s .\n",
-		    __FILE__, __LINE__,
-		    bo_gem->gem_handle, bo_gem->name, strerror(errno));
-	    pthread_mutex_unlock(&bufmgr_gem->lock);
-	    return ret;
-	}
-	bo_gem->mem_virtual = (void *)(uintptr_t)mmap_arg.addr_ptr;
-	bo_gem->swrast = 0;
-    }
-    DBG("bo_map: %d (%s) -> %p\n", bo_gem->gem_handle, bo_gem->name,
-	bo_gem->mem_virtual);
-    bo->virtual = bo_gem->mem_virtual;
-
-    if (bo_gem->global_name != 0 || !bo_gem->swrast) {
-	set_domain.handle = bo_gem->gem_handle;
-	set_domain.read_domains = I915_GEM_DOMAIN_CPU;
-	if (write_enable)
-	    set_domain.write_domain = I915_GEM_DOMAIN_CPU;
-	else
-	    set_domain.write_domain = 0;
-	do {
-	    ret = ioctl(bufmgr_gem->fd, DRM_IOCTL_I915_GEM_SET_DOMAIN,
-			&set_domain);
-	} while (ret == -1 && errno == EINTR);
-	if (ret != 0) {
-	    fprintf (stderr, "%s:%d: Error setting swrast %d: %s\n",
-		     __FILE__, __LINE__, bo_gem->gem_handle, strerror (errno));
-	    pthread_mutex_unlock(&bufmgr_gem->lock);
-	    return ret;
-	}
-	bo_gem->swrast = 1;
-    }
-
-    pthread_mutex_unlock(&bufmgr_gem->lock);
-
-    return 0;
+    return drm_intel_gem_bo_map_gtt(bo);
 }
 
 int
 drm_intel_gem_bo_map_gtt(drm_intel_bo *bo)
 {
-#ifdef __OpenBSD__
-    /*
-     * OpenBSD gtt mapping will work differently, but isn't written yet,
-     * so just fail for now. It's only used in the modesetting paths
-     * anyway.
-     */
-    return EINVAL;
-#else
     drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *)bo->bufmgr;
     drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *)bo;
     struct drm_i915_gem_set_domain set_domain;
@@ -683,65 +613,32 @@ drm_intel_gem_bo_map_gtt(drm_intel_bo *bo)
 
     pthread_mutex_lock(&bufmgr_gem->lock);
 
-    /* Get a mapping of the buffer if we haven't before. */
-    if (bo_gem->gtt_virtual == NULL) {
-	struct drm_i915_gem_mmap_gtt mmap_arg;
+    assert(bo->virtual == NULL);
+    struct drm_i915_gem_mmap mmap_arg;
 
-	DBG("bo_map_gtt: %d (%s)\n", bo_gem->gem_handle, bo_gem->name);
+    DBG("bo_map_gtt: %d (%s)\n", bo_gem->gem_handle, bo_gem->name);
 
-	memset(&mmap_arg, 0, sizeof(mmap_arg));
-	mmap_arg.handle = bo_gem->gem_handle;
+    memset(&mmap_arg, 0, sizeof(mmap_arg));
+    mmap_arg.handle = bo_gem->gem_handle;
+    mmap_arg.size = bo->size;
 
-	/* Get the fake offset back... */
-	ret = ioctl(bufmgr_gem->fd, DRM_IOCTL_I915_GEM_MMAP_GTT, &mmap_arg);
-	if (ret != 0) {
-	    fprintf(stderr,
-		    "%s:%d: Error preparing buffer map %d (%s): %s .\n",
-		    __FILE__, __LINE__,
-		    bo_gem->gem_handle, bo_gem->name,
-		    strerror(errno));
-	    pthread_mutex_unlock(&bufmgr_gem->lock);
-	    return ret;
-	}
-
-	/* and mmap it */
-	bo_gem->gtt_virtual = mmap(0, bo->size, PROT_READ | PROT_WRITE,
-				   MAP_SHARED, bufmgr_gem->fd,
-				   mmap_arg.offset);
-	if (bo_gem->gtt_virtual == MAP_FAILED) {
-	    fprintf(stderr,
-		    "%s:%d: Error mapping buffer %d (%s): %s .\n",
-		    __FILE__, __LINE__,
-		    bo_gem->gem_handle, bo_gem->name,
-		    strerror(errno));
-	    pthread_mutex_unlock(&bufmgr_gem->lock);
-	    return errno;
-	}
+    ret = ioctl(bufmgr_gem->fd, DRM_IOCTL_I915_GEM_MMAP, &mmap_arg);
+    if (ret != 0) {
+        fprintf(stderr, "%s:%d: Error preparing buffer map %d (%s): %s .\n",
+          __FILE__, __LINE__, bo_gem->gem_handle,
+          bo_gem->name, strerror(errno));
+        pthread_mutex_unlock(&bufmgr_gem->lock);
+        return ret;
     }
 
-    bo->virtual = bo_gem->gtt_virtual;
+    bo->virtual = (void *)(uintptr_t)mmap_arg.addr_ptr;
 
     DBG("bo_map: %d (%s) -> %p\n", bo_gem->gem_handle, bo_gem->name,
-	bo_gem->gtt_virtual);
-
-    /* Now move it to the GTT domain so that the CPU caches are flushed */
-    set_domain.handle = bo_gem->gem_handle;
-    set_domain.read_domains = I915_GEM_DOMAIN_GTT;
-    set_domain.write_domain = I915_GEM_DOMAIN_GTT;
-    do {
-	    ret = ioctl(bufmgr_gem->fd, DRM_IOCTL_I915_GEM_SET_DOMAIN,
-			&set_domain);
-    } while (ret == -1 && errno == EINTR);
-
-    if (ret != 0) {
-	    fprintf (stderr, "%s:%d: Error setting domain %d: %s\n",
-		     __FILE__, __LINE__, bo_gem->gem_handle, strerror (errno));
-    }
+	bo->virtual);
 
     pthread_mutex_unlock(&bufmgr_gem->lock);
 
     return 0;
-#endif
 }
 
 int
@@ -755,9 +652,9 @@ drm_intel_gem_bo_unmap_gtt(drm_intel_bo *bo)
     if (bo == NULL)
 	return 0;
 
-    assert(bo_gem->gtt_virtual != NULL);
-
+    assert(bo->virtual != NULL);
     pthread_mutex_lock(&bufmgr_gem->lock);
+    munmap(bo->virtual, bo_gem->bo.size);
     bo->virtual = NULL;
     pthread_mutex_unlock(&bufmgr_gem->lock);
 
@@ -767,28 +664,7 @@ drm_intel_gem_bo_unmap_gtt(drm_intel_bo *bo)
 static int
 drm_intel_gem_bo_unmap(drm_intel_bo *bo)
 {
-    drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *)bo->bufmgr;
-    drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *)bo;
-    struct drm_i915_gem_sw_finish sw_finish;
-    int ret;
-
-    if (bo == NULL)
-	return 0;
-
-    assert(bo_gem->mem_virtual != NULL);
-
-    pthread_mutex_lock(&bufmgr_gem->lock);
-    if (bo_gem->swrast) {
-	sw_finish.handle = bo_gem->gem_handle;
-	do {
-	    ret = ioctl(bufmgr_gem->fd, DRM_IOCTL_I915_GEM_SW_FINISH,
-			&sw_finish);
-	} while (ret == -1 && errno == EINTR);
-	bo_gem->swrast = 0;
-    }
-    bo->virtual = NULL;
-    pthread_mutex_unlock(&bufmgr_gem->lock);
-    return 0;
+    return drm_intel_gem_bo_unmap_gtt(bo);
 }
 
 static int
