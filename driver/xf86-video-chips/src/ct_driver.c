@@ -900,7 +900,6 @@ CHIPSPciProbe(DriverPtr drv, int entity_num, struct pci_device * dev,
 	    intptr_t match_data)
 {
     ScrnInfoPtr pScrn = NULL;
-    EntityInfoPtr pEnt;
     CHIPSPtr cPtr;
 
     /* Allocate a ScrnInfoRec and claim the slot */
@@ -921,12 +920,16 @@ CHIPSPciProbe(DriverPtr drv, int entity_num, struct pci_device * dev,
 	pScrn->FreeScreen	= CHIPSFreeScreen;
 	pScrn->ValidMode	= CHIPSValidMode;
 
+	if (!CHIPSGetRec(pScrn)) {
+	    return FALSE;
+	}
+	cPtr = CHIPSPTR(pScrn);
+	cPtr->Chipset = match_data;
 	/*
 	 * For cards that can do dual head per entity, mark the entity
 	 * as sharable. 
 	 */
-	pEnt = xf86GetEntityInfo(entity_num);
-	if (pEnt->chipset == CHIPS_CT69030) {
+	if (match_data == CHIPS_CT69030) {
 	    CHIPSEntPtr cPtrEnt = NULL;
 	    DevUnion *pPriv;
 
@@ -1202,7 +1205,11 @@ CHIPSPreInit(ScrnInfoPtr pScrn, int flags)
     for (i = 0; i<pScrn->numEntities; i++) {
 	cPtr->pEnt = xf86GetEntityInfo(pScrn->entityList[i]);
 	if (cPtr->pEnt->resources) return FALSE;
-	cPtr->Chipset = cPtr->pEnt->chipset;
+	/* If we are using libpciaccess this is already set in CHIPSPciProbe.
+	 * If we are using something else we need to set it here.
+	 */
+	if (!cPtr->Chipset)
+	    cPtr->Chipset = cPtr->pEnt->chipset;
 	pScrn->chipset = (char *)xf86TokenToString(CHIPSChipsets,
 						   cPtr->pEnt->chipset);
 	if ((cPtr->Chipset == CHIPS_CT64200) ||
