@@ -143,6 +143,9 @@ i830_get_aperture_space(ScrnInfoPtr pScrn, drm_intel_bo **bo_table, int num_bos)
 {
     I830Ptr pI830 = I830PTR(pScrn);
 
+    if (pI830->batch_bo == NULL)
+	I830FALLBACK("VT inactive\n");
+
     bo_table[0] = pI830->batch_bo;
     if (drm_intel_bufmgr_check_aperture_space(bo_table, num_bos) != 0) {
 	intel_batch_flush(pScrn, FALSE);
