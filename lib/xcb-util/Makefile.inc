@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.2 2009/05/31 18:01:28 matthieu Exp $
+#	$OpenBSD: Makefile.inc,v 1.3 2009/07/18 20:54:10 matthieu Exp $
 
 XCBUTIL=	${.CURDIR}/../../../dist/xcb-util
 
@@ -20,4 +20,4 @@ LDADD?=		`pkg-config --libs xcb`
 
 .PATH:		${XCBUTIL}/${SUBLIB}
 
-PACKAGE_VERSION!=m4 ${XSRCDIR}/share/mk/package_version.m4 ${XCBUTIL}/configure.ac
+PACKAGE_VERSION!=m4 ${.CURDIR}/../../../share/mk/package_version.m4 ${XCBUTIL}/configure.ac
