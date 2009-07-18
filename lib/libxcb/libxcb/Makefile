@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2009/05/31 18:01:28 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.6 2009/07/18 20:06:46 matthieu Exp $
 
 LIB=		xcb
 
@@ -28,7 +28,10 @@ PKGCONFIG=	xcb.pc
 
 NEEDED=		pthread-stubs xau >= 0.99.2 xdmcp
 
-EXTRA_PKGCONFIG_SUBST=	 '-e s,@NEEDED@,${NEEDED},g' \
+XCBPROTO_VERSION!=	pkg-config --modversion xcb-proto
+
+EXTRA_PKGCONFIG_SUBST=	'-e s,@NEEDED@,${NEEDED},g' \
+			'-e s,@XCBPROTO_VERSION@,${XCBPROTO_VERSION},g' \
 			    '-e s,@LIBS@,,g' \
 
 LDADD=		`pkg-config --libs "${NEEDED}"`
