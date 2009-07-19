@@ -900,6 +900,9 @@ FFBCloseScreen(int scrnIndex, ScreenPtr pScreen)
 	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
 	FFBPtr pFfb = GET_FFB_FROM_SCRN(pScrn);
 
+	/* Disable hardware cursor. */
+	FFBDacCursorEnableDisable(pFfb, 0);
+
 	/* Restore kernel ramdac state before we unmap registers. */
 	FFBDacFini(pFfb);
 
