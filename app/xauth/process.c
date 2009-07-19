@@ -1500,6 +1500,7 @@ do_extract(char *inputfilename, int lineno, int argc, char **argv)
 
     ed.fp = NULL;
     ed.filename = argv[1];
+    ed.used_stdout = False;
     ed.numeric = (argv[0][0] == 'n');
     ed.nwritten = 0;
     ed.cmd = argv[0];
