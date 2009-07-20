@@ -241,13 +241,15 @@ uint8_t
 xcb_get_wm_class_from_reply(xcb_get_wm_class_reply_t *prop,
                             xcb_get_property_reply_t *reply)
 {
+  int name_len;
+
   if(!reply || reply->type != STRING || reply->format != 8)
     return 0;
 
   prop->_reply = reply;
   prop->instance_name = (char *) xcb_get_property_value(prop->_reply);
 
-  int name_len = strlen(prop->instance_name);
+  name_len = strlen(prop->instance_name);
   if(name_len == xcb_get_property_value_length(prop->_reply))
     name_len--;
 
@@ -430,11 +432,12 @@ uint8_t
 xcb_get_wm_size_hints_from_reply(xcb_size_hints_t *hints, xcb_get_property_reply_t *reply)
 {
   uint32_t flags;
+  int length;
 
   if(!reply)
     return 0;
 
-  int length = xcb_get_property_value_length(reply) / (reply->format / 8);
+  length = xcb_get_property_value_length(reply) / (reply->format / 8);
 
   if (!(reply->type == WM_SIZE_HINTS &&
         (reply->format == 8  || reply->format == 16 ||
@@ -623,11 +626,13 @@ uint8_t
 xcb_get_wm_hints_from_reply(xcb_wm_hints_t *hints,
                             xcb_get_property_reply_t *reply)
 {
+  int length, num_elem;
+
   if(!reply)
     return 0;
 
-  int length = xcb_get_property_value_length(reply);
-  int num_elem = length / (reply->format / 8);
+  length = xcb_get_property_value_length(reply);
+  num_elem = length / (reply->format / 8);
 
   if (reply->type != WM_HINTS
       || reply->format != 32

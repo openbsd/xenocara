@@ -44,13 +44,15 @@ include(atomlist.m4)`'dnl
 
 xcb_atom_t xcb_atom_get(xcb_connection_t *connection, const char *atom_name)
 {
+	xcb_intern_atom_reply_t *reply;
+	xcb_atom_t atom;
 	if(atom_name == NULL)
 		return XCB_NONE;
-	xcb_intern_atom_reply_t *reply = xcb_intern_atom_reply(connection,
+	reply = xcb_intern_atom_reply(connection,
 		xcb_intern_atom(connection, 0, strlen(atom_name), atom_name), NULL);
 	if(!reply)
 		return XCB_NONE;
-	xcb_atom_t atom = reply->atom;
+	atom = reply->atom;
 	free(reply);
 	return atom;
 }
