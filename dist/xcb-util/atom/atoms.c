@@ -1,4 +1,4 @@
-/* C code produced by gperf version 3.0.3 */
+/* C code produced by gperf version 3.0.1 */
 /* Command-line: gperf --output-file atoms.c atoms.gperf  */
 /* Computed positions: -k'3,6,9,$' */
 
@@ -324,9 +324,6 @@ static const struct stringpool_t stringpool_contents =
 #define stringpool ((const char *) &stringpool_contents)
 #ifdef __GNUC__
 __inline
-#ifdef __GNUC_STDC_INLINE__
-__attribute__ ((__gnu_inline__))
-#endif
 #endif
 const struct atom_map *
 in_word_set (str, len)
@@ -678,13 +675,15 @@ static const uint16_t atom_name_offsets[] = {
 
 xcb_atom_t xcb_atom_get(xcb_connection_t *connection, const char *atom_name)
 {
+	xcb_intern_atom_reply_t *reply;
+	xcb_atom_t atom;
 	if(atom_name == NULL)
 		return XCB_NONE;
-	xcb_intern_atom_reply_t *reply = xcb_intern_atom_reply(connection,
+	reply = xcb_intern_atom_reply(connection,
 		xcb_intern_atom(connection, 0, strlen(atom_name), atom_name), NULL);
 	if(!reply)
 		return XCB_NONE;
-	xcb_atom_t atom = reply->atom;
+	atom = reply->atom;
 	free(reply);
 	return atom;
 }
