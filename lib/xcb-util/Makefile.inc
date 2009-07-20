@@ -1,8 +1,8 @@
-#	$OpenBSD: Makefile.inc,v 1.3 2009/07/18 20:54:10 matthieu Exp $
+#	$OpenBSD: Makefile.inc,v 1.4 2009/07/20 20:57:57 matthieu Exp $
 
 XCBUTIL=	${.CURDIR}/../../../dist/xcb-util
 
-CPPFLAGS+=	-I${X11BASE}/include
+CPPFLAGS+=	-I${XCBUTIL}/${SUBLIB} -I${X11BASE}/include
 
 .SUFFIXES:	.in
 
