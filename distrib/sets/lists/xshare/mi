@@ -839,6 +839,7 @@
 ./usr/X11R6/lib/pkgconfig/libfs.pc
 ./usr/X11R6/lib/pkgconfig/pciaccess.pc
 ./usr/X11R6/lib/pkgconfig/printproto.pc
+./usr/X11R6/lib/pkgconfig/pthread-stubs.pc
 ./usr/X11R6/lib/pkgconfig/randrproto.pc
 ./usr/X11R6/lib/pkgconfig/recordproto.pc
 ./usr/X11R6/lib/pkgconfig/renderproto.pc
