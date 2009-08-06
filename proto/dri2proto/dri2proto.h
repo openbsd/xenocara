@@ -35,11 +35,11 @@
 
 #define DRI2_NAME			"DRI2"
 #define DRI2_MAJOR			1
-#define DRI2_MINOR			0
+#define DRI2_MINOR			1
 
 #define DRI2NumberErrors		0
 #define DRI2NumberEvents		0
-#define DRI2NumberRequests		7
+#define DRI2NumberRequests		8
 
 #define X_DRI2QueryVersion		0
 #define X_DRI2Connect			1
@@ -48,6 +48,7 @@
 #define X_DRI2DestroyDrawable		4
 #define X_DRI2GetBuffers		5
 #define X_DRI2CopyRegion		6
+#define X_DRI2GetBuffersWithFormat	7
 
 typedef struct {
     CARD32  attachment B32;

@@ -142,7 +142,8 @@ DRI2ATTACHMENT { DRI2BufferFrontLeft
 	       	 DRI2BufferStencil
 	       	 DRI2BufferAccum
 		 DRI2BufferFakeFrontLeft
-		 DRI2BufferFakeFrontRight }
+		 DRI2BufferFakeFrontRight
+		 DRI2BufferDepthStencil }
 
 	These values describe various attachment points for DRI2
 	buffers.
@@ -158,6 +159,13 @@ DRI2BUFFER { attachment: CARD32
 	attachment point for the buffer, 'name' is the name of the
 	underlying kernel buffer,
 
+
+DRI2ATTACH_FORMAT { attachment: CARD32
+		    format:     CARD32 }
+
+	The DRI2ATTACH_FORMAT describes an attachment and the associated
+	format.  'attachment' describes the attachment point for the buffer,
+	'format' describes an opaque, device-dependent format for the buffer.
 
 			     ⚙ ⚙ ⚙  ⚙ ⚙ ⚙
 
@@ -281,6 +289,31 @@ The name of this extension is "DRI2".
 	rendering the next frame.
 
 
+┌───
+    DRI2GetBuffersWithFormat
+	drawable: DRAWABLE
+	attachments: LISTofDRI2ATTACH_FORMAT
+      ▶
+	width, height: CARD32
+	buffers: LISTofDRI2BUFFER
+└───
+	Errors: Window
+
+	Get buffers for the provided attachment points with the specified
+	formats for the given drawable.
+
+	If the DDX driver does not support one or more of the
+	specified attachment points or formats, a Value error is generated,
+	with the first unsupported attachment point as the error value.
+
+	'width' and 'height' describes the dimensions of the drawable.
+
+	'buffers' is a list of DRI2BUFFER for the given DRI2
+	attachment points.
+
+	This request is only available with protocol version 1.1 or
+	later.
+
 			     ⚙ ⚙ ⚙  ⚙ ⚙ ⚙
 
 
@@ -366,8 +399,11 @@ A.1 Common Types
 	0x6	DRI2BufferAccum
 	0x7	DRI2BufferFakeFrontLeft
 	0x8	DRI2BufferFakeFrontRight
+	0x9	DRI2BufferDepthStencil
 └───
-	Used to encode the possible attachment points.
+	Used to encode the possible attachment points.  The attachment
+	DRI2BufferDepthStencil is only available with protocol version 1.1 or
+	later.
 
 ┌───
     DRI2BUFFER
@@ -381,6 +417,14 @@ A.1 Common Types
 	manager name, the pitch and chars per pixel for a buffer
 	attached to a given drawable.
 
+┌───
+    DRI2ATTACH_FORMAT
+	4	CARD32	attachment
+	4	CARD32	format
+└───
+	Used to describe the attachment and format requested from the server.
+	This data type is only available with protocol version 1.1 or
+	later.
 
 A.2 Protocol Requests
 
@@ -474,6 +518,25 @@ A.2 Protocol Requests
 	24				unused	
 └───
 
+┌───
+    DRI2GetBuffersWithFormat
+	1	CARD8			major opcode
+	1	3			DRI2 opcode
+	2	3			length
+	4	DRAWABLE		drawable
+	4	n			number of attachments
+	8n	LISTofDRI2ATTACH_FORMAT	attachments and formats
+      ▶
+	1	1			Reply
+       1				unused
+	2	CARD16			sequence number
+	4	0			reply length
+	4	CARD32			width of drawable
+	4	CARD32			height of drawable
+	4	CARD32			buffer count
+	12				unused	
+	5n	LISTofDRI2BUFFER	buffers
+└───
 
 A.3 Protocol Events
 

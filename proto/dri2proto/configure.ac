@@ -1,5 +1,5 @@
 AC_PREREQ([2.57])
-AC_INIT([DRI2Proto], [2.0], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
+AC_INIT([DRI2Proto], [2.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 # Require xorg-macros: XORG_CHANGELOG
