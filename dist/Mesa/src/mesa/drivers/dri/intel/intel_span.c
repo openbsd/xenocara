@@ -688,12 +688,15 @@ intel_set_span_functions(struct intel_context *intel,
    struct intel_renderbuffer *irb = (struct intel_renderbuffer *) rb;
    uint32_t tiling;
 
+#ifndef __OpenBSD__ /* openbsd uses fenced gtt writes for tiles p{read,write} */
    /* If in GEM mode, we need to do the tile address swizzling ourselves,
     * instead of the fence registers handling it.
     */
+
    if (intel->ttm)
       tiling = irb->region->tiling;
    else
+#endif
       tiling = I915_TILING_NONE;
 
    if (rb->_ActualFormat == GL_RGB5) {

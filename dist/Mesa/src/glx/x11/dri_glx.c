@@ -40,6 +40,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "glxclient.h"
 #include "glcontextmodes.h"
 #include "xf86dri.h"
+#include "dri2.h"
 #include "sarea.h"
 #include <dlfcn.h>
 #include <sys/types.h>
@@ -75,32 +76,45 @@ struct __GLXDRIcontextPrivateRec {
  */
 static Bool driGetDriverName(Display *dpy, int scrNum, char **driverName)
 {
-   int directCapable;
-   Bool b;
-   int driverMajor, driverMinor, driverPatch;
+    int directCapable;
+    Bool b;
+    int event, error;
+    int driverMajor, driverMinor, driverPatch;
 
-   *driverName = NULL;
+    *driverName = NULL;
 
-   if (!XF86DRIQueryDirectRenderingCapable(dpy, scrNum, &directCapable)) {
-      ErrorMessageF("XF86DRIQueryDirectRenderingCapable failed\n");
-      return False;
-   }
-   if (!directCapable) {
-      ErrorMessageF("XF86DRIQueryDirectRenderingCapable returned false\n");
-      return False;
-   }
+    if (XF86DRIQueryExtension(dpy, &event, &error)) { /* DRI1 */
+	if (!XF86DRIQueryDirectRenderingCapable(dpy, scrNum, &directCapable)) {
+	    ErrorMessageF("XF86DRIQueryDirectRenderingCapable failed\n");
+	    return False;
+	}
+	if (!directCapable) {
+	    ErrorMessageF("XF86DRIQueryDirectRenderingCapable returned false\n");
+	    return False;
+	}
 
-   b = XF86DRIGetClientDriverName(dpy, scrNum, &driverMajor, &driverMinor,
-                                  &driverPatch, driverName);
-   if (!b) {
-      ErrorMessageF("Cannot determine driver name for screen %d\n", scrNum);
-      return False;
-   }
+	b = XF86DRIGetClientDriverName(dpy, scrNum, &driverMajor, &driverMinor,
+		&driverPatch, driverName);
+	if (!b) {
+	    ErrorMessageF("Cannot determine driver name for screen %d\n", scrNum);
+	    return False;
+	}
 
-   InfoMessageF("XF86DRIGetClientDriverName: %d.%d.%d %s (screen %d)\n",
-	     driverMajor, driverMinor, driverPatch, *driverName, scrNum);
+	InfoMessageF("XF86DRIGetClientDriverName: %d.%d.%d %s (screen %d)\n",
+		driverMajor, driverMinor, driverPatch, *driverName, scrNum);
 
-   return True;
+	return True;
+    } else if (DRI2QueryExtension(dpy, &event, &error)) { /* DRI2 */
+	char *dev;
+	Bool ret = DRI2Connect(dpy, RootWindow(dpy, scrNum), driverName, &dev);
+
+	if (ret)
+	    Xfree(dev);
+
+	return ret;
+    }
+
+    return False;
 }
 
 /*
@@ -291,6 +305,7 @@ CallCreateNewScreen(Display *dpy, int scrn, __GLXscreenConfigs *psc,
     drm_handle_t  hFB;
     int        junk;
     const __DRIconfig **driver_configs;
+    __GLcontextModes *visual;
 
     /* DRI protocol version. */
     dri_version.major = driDpy->driMajor;
@@ -402,6 +417,28 @@ CallCreateNewScreen(Display *dpy, int scrn, __GLXscreenConfigs *psc,
 
     psc->configs = driConvertConfigs(psc->core, psc->configs, driver_configs);
     psc->visuals = driConvertConfigs(psc->core, psc->visuals, driver_configs);
+
+    /* Visuals with depth != screen depth are subject to automatic compositing
+     * in the X server, so DRI1 can't render to them properly. Mark them as
+     * non-conformant to prevent apps from picking them up accidentally.
+     */
+    for (visual = psc->visuals; visual; visual = visual->next) {
+	XVisualInfo template;
+	XVisualInfo *visuals;
+	int num_visuals;
+	long mask;
+
+	template.visualid = visual->visualID;
+	mask = VisualIDMask;
+	visuals = XGetVisualInfo(dpy, mask, &template, &num_visuals);
+
+	if (visuals) {
+	    if (num_visuals > 0 && visuals->depth != DefaultDepth(dpy, scrn))
+		visual->visualRating = GLX_NON_CONFORMANT_CONFIG;
+
+	    XFree(visuals);
+	}
+    }
 
     return psp;
 
