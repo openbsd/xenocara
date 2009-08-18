@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.81 2009/08/02 17:02:09 matthieu Exp $
+ $OpenBSD: MODULES,v 1.82 2009/08/18 20:46:33 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -63,14 +63,14 @@ app/xlogo		1.0.1	7.0
 app/xlsatoms		1.0.1	7.0
 app/xlsclients		1.0.1	7.0
 app/xlsfonts		1.0.2	7.2+
-app/xmag		1.0.2	7.3
+app/xmag		1.0.3	7.4+	needs-update
 app/xman		1.0.3	7.3
 app/xmessage		1.0.2	7.3
 app/xmodmap		1.0.3	7.3
 app/xmore		1.0.1	7.0
 app/xpr			1.0.2	7.2+
 app/xprop		1.0.4	7.4
-app/xrandr		1.3.0	7.4+
+app/xrandr		1.3.1	7.4+	needs-update
 app/xrdb		1.0.5	7.4
 app/xrefresh		1.0.2	7.1
 app/xset		1.0.4	7.4
@@ -100,7 +100,7 @@ driver/xf86-input-keyboard	1.3.2	7.4+
 driver/xf86-input-mouse		1.4.0	7.4+
 driver/xf86-input-mutouch	1.2.1	7.4+
 driver/xf86-input-penmount	1.4.0	7.4+
-driver/xf86-input-vmmouse	12.6.4	7.4+
+driver/xf86-input-vmmouse	12.6.5	7.4+	needs-update
 driver/xf86-input-void		1.2.0	7.4+
 driver/xf86-video-apm		1.2.2	7.4+	needs-update
 driver/xf86-video-ark		0.7.1	7.4+
@@ -126,7 +126,7 @@ driver/xf86-video-rendition	4.2.3	7.4+	needs-update
 driver/xf86-video-s3		0.6.3	7.4+	needs-update
 driver/xf86-video-s3virge	1.10.4	7.4+	needs-update
 driver/xf86-video-savage	2.3.1	7.4+	needs-update
-driver/xf86-video-siliconmotion	1.7.2	7.4+	needs-update
+driver/xf86-video-siliconmotion	1.7.3	7.4+	needs-update
 driver/xf86-video-sis		0.10.2	7.4+	needs-update
 driver/xf86-video-sisusb	0.9.3	7.4+	needs-update
 driver/xf86-video-sunbw2	1.1.0	7.1
@@ -138,7 +138,7 @@ driver/xf86-video-sunleo	1.2.0	7.4
 driver/xf86-video-suntcx	1.1.1	7.4+
 driver/xf86-video-tdfx		1.4.3	7.4+	needs-update
 driver/xf86-video-tga		1.2.0	7.0
-driver/xf86-video-trident	1.3.2	7.4+	needs-update
+driver/xf86-video-trident	1.3.3	7.4+	needs-update
 driver/xf86-video-tseng		1.2.2	7.4+	needs-update
 driver/xf86-video-vesa		2.2.1	7.4+	needs-update
 driver/xf86-video-vmware	10.16.7	7.4+	needs-update
@@ -180,13 +180,13 @@ fonts/schumacher-misc		1.0.0
 fonts/screen-cyrillic		1.0.1
 fonts/sony-misc			1.0.0
 fonts/sun-misc			1.0.0
-fonts/util			1.0.1
+fonts/util			1.0.2	needs-update
 fonts/winitzki-cyrillic		1.0.0
 fonts/xfree86-type1		1.0.1
 
 lib/libFS			1.0.2	7.4+	needs-update
 lib/libICE			1.0.5	7.4+
-lib/libSM			1.0.3	7.3
+lib/libSM			1.1.1	7.4+	needs-update
 lib/libX11			1.2.2	7.4+	needs-update
 lib/libXRes			1.0.3	7.2RC4
 lib/libXScrnSaver		1.1.3	7.4
@@ -210,7 +210,7 @@ lib/libXp			1.0.0	7.0
 lib/libXpm			3.5.7	7.3
 lib/libXprintAppUtil		1.0.1	7.0	deprecated
 lib/libXprintUtil		1.0.1	7.0	deprecated
-lib/libXrandr			1.3.0	7.4+
+lib/libXrandr			1.3.1	7.4+	needs-update
 lib/libXrender			0.9.4	7.3
 lib/libXt			1.0.6	7.4+	needs-update
 lib/libXtst			1.0.3	7.3
@@ -228,7 +228,7 @@ lib/libxcb			1.3	7.4+
 lib/libxkbfile			1.0.5	7.4
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.2.4	7.4+	needs-update
-lib/pixman			0.15.16	7.4+	needs-update
+lib/pixman			0.15.20	7.4+	needs-update
 lib/xcb-util			0.3.5	7.4+
 
 proto/bigreqsproto		1.0.2	7.0	needs-rel
@@ -255,7 +255,7 @@ proto/videoproto		2.2.2	7.0
 proto/x11proto			7.0.15	7.4+
 proto/xcb-proto			1.5	7.4+
 proto/xcmiscproto		1.1.2	7.0
-proto/xextproto			7.0.5	7.4+	needs-update
+proto/xextproto			7.1.0	7.4+	needs-update
 proto/xf86bigfontproto		1.1.2	7.0
 proto/xf86dgaproto		2.0.3	7.3
 proto/xf86driproto		2.0.4	7.4
