@@ -1011,10 +1011,10 @@ Boolean XtOwnSelectionIncremental(
 }
 
 
-void XtDisownSelection(widget, selection, time)
-    Widget widget;
-    Atom selection;
-    Time time;
+void XtDisownSelection(
+    Widget widget,
+    Atom selection,
+    Time time)
 {
     Select ctx;
     WIDGET_TO_APPCON(widget);
@@ -1972,7 +1972,7 @@ static void CleanupRequest(
   }
 }
 
-extern void XtCreateSelectionRequest(
+void XtCreateSelectionRequest(
     Widget widget,
     Atom selection)
 {
@@ -1988,7 +1988,7 @@ extern void XtCreateSelectionRequest(
   (void) XFindContext(dpy, window, multipleContext, (XPointer*) &queueInfo);
 
   /* If there is one,  then cancel it */
-  if (queueInfo != 0)
+  if (queueInfo != NULL)
     CleanupRequest(dpy, queueInfo, selection);
   else {
     /* Create it */
@@ -2013,7 +2013,7 @@ extern void XtCreateSelectionRequest(
   UNLOCK_PROCESS;
 }
 
-extern void XtSendSelectionRequest(
+void XtSendSelectionRequest(
     Widget widget,
     Atom selection,
     Time time)
@@ -2098,7 +2098,7 @@ extern void XtSendSelectionRequest(
   UNLOCK_PROCESS;
 }
 
-extern void XtCancelSelectionRequest(
+void XtCancelSelectionRequest(
     Widget widget,
     Atom selection)
 {
@@ -2112,7 +2112,7 @@ extern void XtCancelSelectionRequest(
   queueInfo = NULL;
   (void) XFindContext(dpy, window, multipleContext, (XPointer*) &queueInfo);
   /* If there is one,  then cancel it */
-  if (queueInfo != 0)
+  if (queueInfo != NULL)
     CleanupRequest(dpy, queueInfo, selection);
   UNLOCK_PROCESS;
 }

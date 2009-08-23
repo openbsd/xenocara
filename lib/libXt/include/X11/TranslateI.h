@@ -342,6 +342,8 @@ typedef struct _TMGlobalRec{
 #endif /* TRACE_TM */
 }TMGlobalRec;
 
+_XFUNCPROTOBEGIN
+
 extern TMGlobalRec _XtGlobalTM;
 
 #define TM_MOD_SEGMENT_SIZE 	16
@@ -604,3 +606,4 @@ extern void _XtUnmergeTranslations(
 /* TMKey.c */
 extern void _XtAllocTMContext(XtPerDisplay pd);
 
+_XFUNCPROTOEND

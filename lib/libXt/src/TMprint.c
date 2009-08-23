@@ -729,8 +729,10 @@ void _XtDisplayTranslations(
 				widget->core.tm.translations,
 				NULL,
 				True);
-    printf("%s\n",xString);
-    XtFree(xString);
+    if (xString) {
+	printf("%s\n",xString);
+	XtFree(xString);
+    }
 }
 
 /*ARGSUSED*/
@@ -747,8 +749,10 @@ void _XtDisplayAccelerators(
 				widget->core.accelerators,
 				NULL,
 				True);
-    printf("%s\n",xString);
-    XtFree(xString);
+    if (xString) {
+	printf("%s\n",xString);
+	XtFree(xString);
+    }
 }
 
 /*ARGSUSED*/

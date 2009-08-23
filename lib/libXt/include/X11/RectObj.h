@@ -50,11 +50,16 @@ SOFTWARE.
 #ifndef _XtRect_h
 #define _XtRect_h
 
+_XFUNCPROTOBEGIN
+
 typedef struct _RectObjRec *RectObj;
 typedef struct _RectObjClassRec *RectObjClass;
 
-#ifndef RECTOBJ
+#ifndef VMS
 externalref WidgetClass rectObjClass;
 #endif
+
+_XFUNCPROTOEND
+
 #endif /* _XtRect_h */
 /* DON'T ADD STUFF AFTER THIS #endif */

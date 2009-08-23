@@ -737,7 +737,7 @@ static void FocusDestroyCallback(
     XtPointer closure,		/* Widget */
     XtPointer call_data)
 {
-    XtSetKeyboardFocus((Widget)closure, None);
+    XtSetKeyboardFocus((Widget)closure, NULL);
 }
 
 void XtSetKeyboardFocus(

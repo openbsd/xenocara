@@ -129,7 +129,10 @@ FM(0x1e), FM(0x9e), FM(0x5e), FM(0xde), FM(0x3e), FM(0xbe), FM(0x7e), FM(0xfe)
 { \
     int _i_ = (((key) - (pd)->min_keycode + modmix[(mod) & 0xff]) & \
 	       (TMKEYCACHESIZE-1)); \
-    if ((key) != 0 && /* Xlib XIM composed input */ \
+    if ((key) == 0) { /* Xlib XIM composed input */ \
+	mod_ret = 0; \
+	sym_ret = 0; \
+    } else if (   /* not Xlib XIM composed input */ \
 	(ctx)->keycache.keycode[_i_] == (key) && \
 	(ctx)->keycache.modifiers[_i_] == (mod)) { \
 	mod_ret = MOD_RETURN(ctx, key); \

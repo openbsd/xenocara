@@ -188,7 +188,7 @@ void _XtInherit(void)
 #endif
 
 
-#if defined(__CYGWIN__)
+#if defined (WIN32) || defined(__CYGWIN__)
 /*
  * The Symbol _XtInherit is used in two different manners.
  * First it could be used as a generic function and second
@@ -376,6 +376,7 @@ static void CombineAppUserDefaults(
     Boolean deallocate = False;
 
     if (!(path = getenv("XUSERFILESEARCHPATH"))) {
+#if !defined(WIN32) || !defined(__MINGW32__)
 	char *old_path;
 	char homedir[PATH_MAX];
 	GetRootDirName(homedir, PATH_MAX);
@@ -396,6 +397,7 @@ static void CombineAppUserDefaults(
 		    old_path, old_path, old_path, homedir );
 	}
 	deallocate = True;
+#endif
     }
 
     filename = XtResolvePathname(dpy, NULL, NULL, NULL, path, NULL, 0, NULL);
@@ -411,7 +413,11 @@ static void CombineUserDefaults(
     Display *dpy,
     XrmDatabase *pdb)
 {
+#ifdef __MINGW32__
+    char *slashDotXdefaults = "/Xdefaults";
+#else
     char *slashDotXdefaults = "/.Xdefaults";
+#endif
     char *dpy_defaults = XResourceManagerString(dpy);
 
     if (dpy_defaults) {
@@ -549,7 +555,11 @@ XrmDatabase XtScreenDatabase(
 
 	if (!(filename = getenv("XENVIRONMENT"))) {
 	    int len;
+#ifdef __MINGW32__
+	    char *slashDotXdefaultsDash = "/Xdefaults-";
+#else
 	    char *slashDotXdefaultsDash = "/.Xdefaults-";
+#endif
 
 	    (void) GetRootDirName(filename = filenamebuf,
 			PATH_MAX - strlen (slashDotXdefaultsDash) - 1);
@@ -738,7 +748,7 @@ XrmDatabase _XtPreparseCommandLine(
     String *displayName,
     String *language)
 {
-    XrmDatabase db = 0;
+    XrmDatabase db = NULL;
     XrmOptionDescRec *options;
     Cardinal num_options;
     XrmName name_list[3];

@@ -60,6 +60,8 @@ in this Software without prior written authorization from The Open Group.
 #define KEYBOARD TRUE
 #define POINTER  FALSE
 
+_XFUNCPROTOBEGIN
+
 typedef enum {
     XtNoServerGrab, 
     XtPassiveServerGrab,
@@ -182,5 +184,7 @@ extern void _XtRegisterPassiveGrabs(
 extern void _XtClearAncestorCache(
     Widget		/* widget */
 );
+
+_XFUNCPROTOEND
 
 #endif /* _PDI_h_ */

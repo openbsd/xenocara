@@ -661,6 +661,7 @@ _get_last_part (
 		*part = XtNewString (loose);
 		return ('*');
 	}
+	*part = NULL;
 
 	return ('0');	/* error - return 0 */
 }

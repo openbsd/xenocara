@@ -55,6 +55,8 @@ SOFTWARE.
 
 #include <X11/Core.h>
 
+_XFUNCPROTOBEGIN
+
 externalref int _XtInheritTranslations;
 
 #define XtInheritTranslations  ((String) &_XtInheritTranslations)
@@ -166,6 +168,8 @@ typedef struct _WidgetClassRec {
 
 externalref WidgetClassRec widgetClassRec;
 #define coreClassRec widgetClassRec
+
+_XFUNCPROTOEND
 
 #endif /* _XtCoreP_h */
 /* DON'T ADD STUFF AFTER THIS #endif */

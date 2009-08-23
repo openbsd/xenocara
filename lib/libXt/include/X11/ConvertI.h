@@ -48,6 +48,8 @@ SOFTWARE.
 ******************************************************************/
 /* $XFree86: xc/lib/Xt/ConvertI.h,v 1.3 2001/12/14 19:56:09 dawes Exp $ */
 
+_XFUNCPROTOBEGIN
+
 /* Representation types */
 
 extern	XrmQuark  _XtQString;
@@ -94,3 +96,4 @@ extern Boolean _XtConvert(
 
 void _XtConvertInitialize(void);
 
+_XFUNCPROTOEND

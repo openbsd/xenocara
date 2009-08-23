@@ -52,6 +52,8 @@ SOFTWARE.
 
 #include <X11/Composite.h>
 
+_XFUNCPROTOBEGIN
+
 /************************************************************************
  *
  * Additional instance fields for widgets of (sub)class 'Composite' 
@@ -100,6 +102,8 @@ typedef struct _CompositeClassRec {
 } CompositeClassRec;
 
 externalref CompositeClassRec compositeClassRec;
+
+_XFUNCPROTOEND
 
 #define XtCompositeExtensionVersion 2L
 #define XtInheritGeometryManager ((XtGeometryHandler) _XtInherit)

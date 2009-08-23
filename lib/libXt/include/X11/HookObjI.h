@@ -29,6 +29,8 @@ in this Software without prior written authorization from The Open Group.
 #ifndef _XtHookObjI_h
 #define _XtHookObjI_h
 
+_XFUNCPROTOBEGIN
+
 /* This object is implementation-dependent and private to the library. */
 
 typedef struct _HookObjRec *HookObject;
@@ -65,6 +67,8 @@ typedef struct _HookObjClassRec {
 } HookObjClassRec;
 
 externalref HookObjClassRec hookObjClassRec;
+
+_XFUNCPROTOEND
 
 #endif /* ifndef _Xt_HookObjI_h */
 

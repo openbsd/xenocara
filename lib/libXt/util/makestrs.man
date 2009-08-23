@@ -40,16 +40,16 @@ If
 is not specified
 .I makestrs
 will read from
-.I stdin.
+.IR stdin .
 The C source file is always written to
-.I stdout.
+.IR stdout .
 .I makestrs
 creates one or more C header files as specified in the source file.
 The following options may be specified:
-.I -sparcabi,
-.I -intelabi,
-.I -functionabi,
-.I -arrayperabi,
+.IR -sparcabi ,
+.IR -intelabi ,
+.IR -functionabi ,
+.IR -arrayperabi ,
 and
 .I -defaultabi.
 .LP

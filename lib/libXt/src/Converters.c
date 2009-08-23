@@ -487,12 +487,12 @@ Boolean XtCvtStringToPixel(
     colormap = *((Colormap *) args[1].addr);
 
     if (CompareISOLatin1(str, XtDefaultBackground) == 0) {
-	*closure_ret = False;
+	*closure_ret = NULL;
 	if (pd->rv) donestr(Pixel, BlackPixelOfScreen(screen), XtRPixel)
 	else	    donestr(Pixel, WhitePixelOfScreen(screen), XtRPixel);
     }
     if (CompareISOLatin1(str, XtDefaultForeground) == 0) {
-	*closure_ret = False;
+	*closure_ret = NULL;
 	if (pd->rv) donestr(Pixel, WhitePixelOfScreen(screen), XtRPixel)
         else	    donestr(Pixel, BlackPixelOfScreen(screen), XtRPixel);
     }
@@ -515,7 +515,7 @@ Boolean XtCvtStringToPixel(
 
 	XtAppWarningMsg(pd->appContext, type, "cvtStringToPixel",
 			XtCXtToolkitError, msg, params, &num_params);
-	*closure_ret = False;
+	*closure_ret = NULL;
 	return False;
     } else {
 	*closure_ret = (char*)True;

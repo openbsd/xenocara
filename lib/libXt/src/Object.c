@@ -60,7 +60,6 @@ in this Software without prior written authorization from The Open Group.
 */
 /* $XFree86: xc/lib/Xt/Object.c,v 1.5 2001/01/17 19:43:06 dawes Exp $ */
 
-#define OBJECT
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif

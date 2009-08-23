@@ -1,3 +1,213 @@
+commit 28677468c56888b18c44d71a62903d23e5c294cf
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue May 19 23:25:15 2009 +0100
+
+    Cygwin/X: Build fix
+    
+    Commit c59dd27ecb1751f0b097046b2f892028e5a10a3e replaces __CYGWIN__ with WIN32
+    in a preprocessor check, as the code is appropriate for both Cygwin and Mingw.
+    
+    But this isn't quite the right was to do this. Being a Win32 platform is
+    Cygwin's secret shame, and WIN32 isn't actually defined to avoid turning on
+    code specific to native-Win API ports
+    
+    (See http://www.cygwin.com/faq/faq.programming.html#faq.programming.preprocessor)
+    
+    Yes, this probably means WIN32 could bereplaced by __MINGW32__ everywhere in the
+    X sources...
+
+commit 535f8c5324205b92c15e8755008c33a2766832c8
+Author: John McKernan <john.mckernan@sun.com>
+Date:   Fri May 1 13:53:03 2009 -0700
+
+    Sun bug 4010369: Too slow to process Keycode 0 events in Xt Translation Mgr.
+    
+    Evaluation from original bug report against Solaris 2.6 in 1996:
+    
+        According to my investigation with the problem using debuggable
+        libXt and libXm, keycode 0 keypress events, which are given to
+        Xt's Translation Manager when inputting any cyrillic/greek characters,
+        are not cached in Xt's Translation Manager. At the TRANSLATE macro
+        in the Xt's source lib/Xt/TMkey.c, keycode 0 keyevents are always
+        given to XtTranslateKeycode() and it consumes a long time to parse
+        Motif's Translation Manager tables as many times as keycode 0
+        keyevent are given.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 061d3eebf7a0502afcd9c1831d67c8961feece8d
+Author: John McKernan <john.mckernan@sun.com>
+Date:   Fri May 1 13:41:26 2009 -0700
+
+    Sun bug #1237023:  Dtterm crashes in XtDisplayAccelerators()
+    
+    Don't try to printf if returned string is NULL
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit e500631954c8d390e8705fde7f50d1acc006406e
+Author: Jeremy Huddleston <jeremy@yuffie.local>
+Date:   Thu Mar 12 01:03:39 2009 -0700
+
+    darwin: Don't use poll() on versions of darwin before darwin10
+
+commit 81792a4cb402c4e5275d63465bc5d65599e34a25
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 2 20:34:36 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit f56a69f2cf7df1e7cdf2494c5408786e53467374
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Jan 30 18:22:10 2009 -0200
+
+    Janitor: ansification, make distcheck, compiler warnings, .gitignore.
+    
+      Most "compiler" warnings were actually sparse warnings, due to
+    assigning a integer to a pointer, or an external symbol without
+    a previous declaration.
+
+commit c1f227f94aec6f4555182965fc0d2d8f33fef01f
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Mon Oct 20 18:50:37 2008 -0700
+
+    X.Org Bug 17942: libXt manpage formatting
+    
+    <http://bugs.freedesktop.org/show_bug.cgi?id=17942>
+
+commit f488a6a218da6b543d1495e607ff1b31b0b48900
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Sep 23 19:14:09 2008 +0300
+
+    configure.ac: Minor thinko
+
+commit 36e9f0d351afbf7fd2595990b2d39e7c551f6420
+Author: John Tapsell <johnflux@gmail.com>
+Date:   Tue Sep 23 19:00:42 2008 +0300
+
+    configure.ac: Use native compiler for build tools
+    
+    makestrs is used during the build, so use the native compiler (either
+    gcc or cc in $PATH, can be overridden as $CC_FOR_BUILD) instead of the
+    (possibly cross-) compiler.
+
+commit ace1676b0630dfe739c3bd712ed2b6e46bdb52f1
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Jun 23 20:04:29 2008 -0700
+
+    Update ac_define_dir.m4 to 2008-04-12 version
+
+commit 556918e21fbb67131d979b04f29a0b59fcd87575
+Author: Alan Hourihane <alanh@tungstengraphics.com>
+Date:   Wed Apr 30 19:15:14 2008 +0100
+
+    Set a blank default search path for WIN32
+
+commit 56444103a3b2159d334aa87d782fbca987118bbc
+Author: Alan Hourihane <alanh@tungstengraphics.com>
+Date:   Tue Apr 29 22:44:54 2008 +0100
+
+    less speed, more haste
+
+commit a393450cbde80b6e7f0e1c4112363eb1313a6cdb
+Author: Alan Hourihane <alanh@tungstengraphics.com>
+Date:   Tue Apr 29 22:16:05 2008 +0100
+
+    fix logic inverted problem
+
+commit cd83cf47412b4a5979e152990c3b0870751aee07
+Author: Colin Harrison <colin.harrison-at-virgin.net>
+Date:   Tue Apr 29 19:45:50 2008 +0100
+
+    Reduce the path searches on mingw
+
+commit bb6d2a09b87560ae396085ef0981b700924333cd
+Author: Colin Harrison <colin.harrison-at-virgin.net>
+Date:   Tue Apr 29 13:45:06 2008 +0100
+
+    Xming specific configuration file settings
+
+commit 6baea764567c3327f1d85ba91375adaea6dab46d
+Author: Alan Hourihane <alanh@tungstengraphics.com>
+Date:   Tue Apr 29 10:22:35 2008 +0100
+
+    Link with winsock for WIN32 platforms
+
+commit c59dd27ecb1751f0b097046b2f892028e5a10a3e
+Author: Colin Harrison <colin.harrison-at-virgin.net>
+Date:   Tue Apr 29 10:19:55 2008 +0100
+
+    Fix some build issues for Win32 platforms
+
+commit 8e95cb765e88d36c35f868f650c86c62c31ad635
+Author: Colin Harrison <colin.harrison-at-virgin.net>
+Date:   Wed Apr 23 13:56:28 2008 +0100
+
+    Add __MINGW32__
+
+commit 4b64b821a48fe493056271216dbe29d43376954b
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 08:42:48 2008 +0100
+
+    nuke RCS Ids
+
+commit b648ed992d2c3ea8a7462a595e51a07085bf4688
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Mar 7 15:52:27 2008 -0800
+
+    Solaris builds need to pass -intelabi to makestrs, even on SPARC
+    
+    For some reason, when Solaris moved to X11R6.0, the intelabi version
+    of StringDefs.c/.h was used on SPARC, so now we're stuck with 10+ years
+    of binaries built to use it.
+
+commit c044ea620446db676ee076484fed3268c4d7c695
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:20 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
+commit 6b483e355de6c5ee5dc635ab9b817bf72680b016
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Jun 23 15:20:09 2007 +0100
+
+    Allow C++ apps to build using libXt
+
+commit 845e51c740574db2f72a5e7c5462d8f56a3c4e22
+Author: Andreas Luik <luik@orthogon.com>
+Date:   Sun Apr 8 00:43:56 2007 +0300
+
+    Recalculate fd_set more aggressively (bug #808)
+    
+    select() can modify the fd set, so be a bit pessimistic and recalculate
+    it more often.
+
+commit 007d9e5f8b2edc3ff8ce8b2f96b8f56a417bb78d
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Feb 26 18:27:43 2007 +0100
+
+    Sync XtGetErrorDatabaseText() prototype with reality.
+
+commit 4e7031510d05471e77ff48355b23fc8e4302648c
+Author: Ben Byer <bbyer@bbyer.(none)>
+Date:   Tue Feb 20 01:05:27 2007 -0800
+
+    added -flat_namespace to CFLAGS for Darwin
+
+commit 92452ca7a51fa77ea60eacd320dbd970e32653c9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Jan 27 22:29:03 2007 -0800
+
+    Version bump: 1.0.5
+
+commit a5c7d56278e569257d3d64ff7681d0a484a1f817
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Jan 27 22:26:55 2007 -0800
+
+    Replace static ChangeLog with dist-hook to generate from git log
+
 commit 67772a3f39c5e8c4019336b0bf4d32e70726b0c0
 Author: Eric S. Raymond <esr@thyrsus.com>
 Date:   Tue Jan 2 17:49:17 2007 -0800
@@ -7,7 +217,7 @@ Date:   Tue Jan 2 17:49:17 2007 -0800
     <https://bugs.freedesktop.org/show_bug.cgi?id=9514>
 
 commit 75f83503ba1db628137ffc9d1d9e4f2a7a2fd97a
-Merge: 2f201b1... 153264a...
+Merge: 2f201b1 153264a
 Author: Jeremy C. Reed <reed@glacier.reedmedia.net>
 Date:   Sat Dec 9 09:31:02 2006 -0600
 

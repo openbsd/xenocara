@@ -60,7 +60,6 @@ in this Software without prior written authorization from The Open Group.
 */
 /* $XFree86: xc/lib/Xt/Composite.c,v 1.5 2001/08/22 22:52:17 dawes Exp $ */
 
-#define XT_COMPOSITE
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -71,7 +70,7 @@ static XtResource resources[] = {
     {XtNchildren, XtCReadOnly, XtRWidgetList, sizeof(WidgetList),
      XtOffsetOf(CompositeRec, composite.children), XtRImmediate, NULL},
     {XtNnumChildren, XtCReadOnly, XtRCardinal, sizeof(Cardinal),
-     XtOffsetOf(CompositeRec, composite.num_children), XtRImmediate, 0},
+     XtOffsetOf(CompositeRec, composite.num_children), XtRImmediate, NULL},
     {XtNinsertPosition, XtCInsertPosition, XtRFunction, sizeof(XtOrderProc),
      XtOffsetOf(CompositeRec, composite.insert_position), XtRImmediate, NULL},
 };

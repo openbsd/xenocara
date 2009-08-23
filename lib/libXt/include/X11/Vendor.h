@@ -65,7 +65,11 @@ SOFTWARE.
 
 typedef struct _VendorShellClassRec *VendorShellWidgetClass;
 
+_XFUNCPROTOBEGIN
+
 externalref WidgetClass vendorShellWidgetClass;
+
+_XFUNCPROTOEND
 
 #endif /* _XtVendor_h */
 /* DON'T ADD STUFF AFTER THIS #endif */

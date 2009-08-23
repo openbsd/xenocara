@@ -72,6 +72,8 @@ SOFTWARE.
 
 /* New fields for the VendorShell widget class record */
 
+_XFUNCPROTOBEGIN
+
 typedef struct {
     XtPointer       extension;          /* pointer to extension record      */
 } VendorShellClassPart;
@@ -99,5 +101,7 @@ typedef  struct {
 	WMShellPart	wm;
 	VendorShellPart	vendor;
 } VendorShellRec, *VendorShellWidget;
+
+_XFUNCPROTOEND
 
 #endif  /* _XtVendorPrivate_h */

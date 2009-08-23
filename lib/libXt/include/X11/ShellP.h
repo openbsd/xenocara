@@ -67,6 +67,8 @@ SOFTWARE.
  * *****
  */
 
+_XFUNCPROTOBEGIN
+
 /***********************************************************************
  *
  * Shell Widget Private Data
@@ -214,7 +216,11 @@ typedef  struct {
 	WMShellPart	wm;
 } WMShellRec, *WMShellWidget;
 
+_XFUNCPROTOEND
+
 #include <X11/VendorP.h>
+
+_XFUNCPROTOBEGIN
 
 /***********************************************************************
  *
@@ -424,5 +430,7 @@ typedef  struct {
 	ApplicationShellPart application;
 	SessionShellPart session;
 } SessionShellRec, *SessionShellWidget;
+
+_XFUNCPROTOEND
 
 #endif /* _XtShellPrivate_h */

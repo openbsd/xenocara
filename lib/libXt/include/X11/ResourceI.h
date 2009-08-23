@@ -61,6 +61,8 @@ SOFTWARE.
 #define StringToName(string) XrmStringToName(string)
 #define StringToClass(string) XrmStringToClass(string)
 
+_XFUNCPROTOBEGIN
+
 extern void _XtDependencies(
     XtResourceList  * /* class_resp */,
     Cardinal	    * /* class_num_resp */,
@@ -96,5 +98,6 @@ extern XrmResourceList* _XtCreateIndirectionTable(XtResourceList resources,
 						  Cardinal num_resources);
 extern void _XtResourceListInitialize(void);
 
+_XFUNCPROTOEND
 
 #endif /* _XtresourceI_h */

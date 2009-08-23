@@ -65,6 +65,8 @@ typedef struct _XtGrabRec  *XtGrabList;
 
 #include "PassivGraI.h"
 
+_XFUNCPROTOBEGIN
+
 extern void _XtEventInitialize(
     void
 );
@@ -130,5 +132,7 @@ extern void _XtFillAncestorList(Widget **listPtr, int *maxElemsPtr,
 
 /* NextEvent.c */
 extern Boolean XtAppPeekEvent_SkipTimer;
+
+_XFUNCPROTOEND
 
 #endif /* _Event_h_ */

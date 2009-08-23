@@ -194,7 +194,7 @@ void XtSetValues(
     XtGeometryResult result;
     XtWidgetGeometry geoReq, geoReply;
     WidgetClass     wc;
-    ConstraintWidgetClass cwc = 0;
+    ConstraintWidgetClass cwc = NULL;
     Boolean	    hasConstraints;
     XtAlmostProc set_values_almost;
     XtAppContext app = XtWidgetToApplicationContext(w);

@@ -84,6 +84,8 @@ SOFTWARE.
 #include <X11/Xos.h>
 #include <X11/Xpoll.h>
 
+_XFUNCPROTOBEGIN
+
 typedef struct _TimerEventRec {
         struct timeval        te_timer_value;
 	struct _TimerEventRec *te_next;
@@ -425,5 +427,7 @@ extern XrmDatabase _XtPreparseCommandLine(XrmOptionDescRec *urlist,
 			Cardinal num_urs, int argc, String *argv,
 			String *applName, String *displayName,
 			String *language);
+
+_XFUNCPROTOEND
 
 #endif /* _XtinitialI_h */

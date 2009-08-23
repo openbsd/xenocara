@@ -59,8 +59,6 @@ in this Software without prior written authorization from The Open Group.
 
 */
 
-#define _XT_CORE_C
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif

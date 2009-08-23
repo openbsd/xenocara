@@ -97,7 +97,7 @@ extern void XtChangeManagedSet(
 
 _XFUNCPROTOEND
 
-#ifndef XT_COMPOSITE
+#ifndef VMS
 externalref WidgetClass compositeWidgetClass;
 #endif
 

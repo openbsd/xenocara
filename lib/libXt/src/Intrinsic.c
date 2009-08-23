@@ -559,7 +559,7 @@ static Widget SearchChildren(
     NameMatchProc matchproc,
     int in_depth, int *out_depth, int *found_depth)
 {
-    Widget w1 = 0, w2;
+    Widget w1 = NULL, w2;
     int d1, d2;
 
     if (XtIsComposite(root)) {
@@ -873,6 +873,11 @@ static int AccessFile (
     if (access_file (path, pathbuf, len_pathbuf, pathret))
 	return 1;
 
+#if defined(WIN32) && defined(__MINGW32__)
+    /* don't try others */
+    return 0;
+#endif
+
     /* try the places set in the environment */
     drive = getenv ("_XBASEDRIVE");
 #ifdef __UNIXOS2__
@@ -952,9 +957,6 @@ static Boolean TestFile(
 #else
 	    (status.st_mode & S_IFMT) != S_IFDIR);	/* not a directory */
 #endif /* X_NOT_POSIX else */
-#if defined(WIN32)
-    XtStackFree ((XtPointer)bufp, buf);
-#endif
     return ret;
 #else /* VMS */
     return TRUE;	/* Who knows what to do here? */
@@ -1313,7 +1315,11 @@ static void FillInLangSubs(
  */
 static char *implementation_default_path(void)
 {
-#if defined(WIN32) || defined(__UNIXOS2__)
+#if defined(WIN32)
+    static char xfilesearchpath[] = "";
+
+    return xfilesearchpath;
+#elif defined(__UNIXOS2__)
     /* if you know how to pass % thru the compiler let me know */
     static char xfilesearchpath[] = XFILESEARCHPATHDEFAULT;
     static Bool fixed;
@@ -1377,10 +1383,11 @@ String XtResolvePathname(
 		defaultPath = impl_default;
 	}
 	path = defaultPath;
-#else
-	path = "";	/* NULL would kill us later */
 #endif /* VMS */
     }
+
+    if (path == NULL)
+	path = "";	/* NULL would kill us later */
 
     if (filename == NULL) {
 	filename = XrmClassToString(pd->class);

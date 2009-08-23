@@ -20,17 +20,16 @@
 
 SUBDIRS = util src include man
 
-AM_CFLAGS = $(XT_CFLAGS) -I$(top_srcdir)/include -I$(top_srcdir)/include/X11 -I$(top_builddir)/include/X11
-
-
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xt.pc
 
-EXTRA_DIST = xt.pc.in ChangeLog autogen.sh
+EXTRA_DIST = xt.pc.in ChangeLog
 MAINTAINERCLEANFILES=ChangeLog
 
+.PHONY: ChangeLog
+
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 

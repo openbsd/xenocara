@@ -87,8 +87,7 @@ CallClassPartInit(WidgetClass ancestor, WidgetClass wc)
 }
 
 void
-XtInitializeWidgetClass(wc)
-    WidgetClass wc;
+XtInitializeWidgetClass(WidgetClass wc)
 {
     XtEnum inited;
     LOCK_PROCESS;

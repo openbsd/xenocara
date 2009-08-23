@@ -52,6 +52,8 @@ SOFTWARE.
 
 #include <X11/Constraint.h>
 
+_XFUNCPROTOBEGIN
+
 typedef struct _ConstraintPart {
     XtPointer   mumble;		/* No new fields, keep C compiler happy */
 } ConstraintPart;
@@ -87,6 +89,8 @@ typedef struct _ConstraintClassRec {
 } ConstraintClassRec;
 
 externalref ConstraintClassRec constraintClassRec;
+
+_XFUNCPROTOEND
 
 #define XtConstraintExtensionVersion 1L
 

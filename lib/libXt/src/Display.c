@@ -244,7 +244,7 @@ Display *XtOpenDisplay(
 	String *argv)
 {
 	Display *d;
-	XrmDatabase db = 0;
+	XrmDatabase db = NULL;
 	XtPerDisplay pd;
 	String language = NULL;
 
@@ -357,7 +357,7 @@ XtDisplayInitialize(
 	)
 {
     XtPerDisplay pd;
-    XrmDatabase db = 0;
+    XrmDatabase db = NULL;
 
     LOCK_APP(app);
     pd = InitPerDisplay(dpy, app, name, classname);

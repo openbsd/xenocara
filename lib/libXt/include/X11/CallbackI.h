@@ -58,6 +58,8 @@ typedef XrmResource **CallbackTable;
 #define _XtCBCalling 1
 #define _XtCBFreeAfterCalling 2
 
+_XFUNCPROTOBEGIN
+
 typedef struct internalCallbackRec {
     unsigned short count;
     char	   is_padded;	/* contains NULL padding for external form */
@@ -115,3 +117,5 @@ extern void _XtCallConditionalCallbackList(
     XtPointer			/* call_data */,
     _XtConditionProc		/* cond_proc */
 );
+
+_XFUNCPROTOEND

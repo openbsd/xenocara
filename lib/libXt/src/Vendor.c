@@ -67,7 +67,7 @@ SOFTWARE.
  *
  ***************************************************************************/
 
-#if defined(__UNIXOS2__) || defined(__CYGWIN__)
+#if defined(__UNIXOS2__) || defined(__CYGWIN__) || defined(__MINGW32__)
 /* to fix the EditRes problem because of wrong linker semantics */
 extern WidgetClass vendorShellWidgetClass;
 
@@ -87,7 +87,7 @@ unsigned long _DLL_InitTerm(unsigned long mod,unsigned long flag)
 }
 #endif
 
-#if defined(__CYGWIN__)
+#if defined(__CYGWIN__) || defined(__MINGW32__)
 int __stdcall
 DllMain(unsigned long mod_handle, unsigned long flag, void *routine)
 {

@@ -194,6 +194,8 @@ SOFTWARE.
 #define ERRORDB "/usr/lib/X11/XtErrorDB"
 #endif
 
+_XFUNCPROTOBEGIN
+
 extern String XtCXtToolkitError;
 
 extern void _XtAllocError(
@@ -256,6 +258,8 @@ extern char* __XtCalloc (
 #define __XtMalloc XtMalloc
 #define __XtCalloc XtCalloc
 #endif
+
+_XFUNCPROTOEND
 
 #endif /* _XtintrinsicI_h */
 /* DON'T ADD STUFF AFTER THIS #endif */

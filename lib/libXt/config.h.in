@@ -6,6 +6,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the `ws2_32' library (-lws2_32). */
+#undef HAVE_LIBWS2_32
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -32,6 +35,9 @@
 
 /* Define to 1 if Xalloca.h should include <alloca.h> */
 #undef INCLUDE_ALLOCA_H
+
+/* Define to 1 if your C compiler doesn't accept -c and -o together. */
+#undef NO_MINUS_C_MINUS_O
 
 /* Name of package */
 #undef PACKAGE
@@ -63,10 +69,10 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Define to 1 if you have the `poll' function. */
+/* Define to 1 if you have the "poll" function. */
 #undef USE_POLL
 
-/* Define to 1 if you have the `snprintf' function. */
+/* Define to 1 if you have the "snprintf" function. */
 #undef USE_SNPRINTF
 
 /* Version number of package */

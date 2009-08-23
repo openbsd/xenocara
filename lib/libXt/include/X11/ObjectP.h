@@ -52,6 +52,8 @@ SOFTWARE.
 
 #include <X11/Object.h>
 
+_XFUNCPROTOBEGIN
+
 /**********************************************************
  * Object Instance Data Structures
  *
@@ -131,6 +133,8 @@ typedef struct _ObjectClassRec {
 } ObjectClassRec;
 
 externalref ObjectClassRec objectClassRec;
+
+_XFUNCPROTOEND
 
 #define XtObjectExtensionVersion 1L
 #define XtInheritAllocate ((XtAllocateProc) _XtInherit)

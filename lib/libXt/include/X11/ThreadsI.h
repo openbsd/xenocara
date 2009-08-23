@@ -81,6 +81,8 @@ typedef void (*ThreadAppRestoreLockProc)(
     Boolean* /* pushed_thread */
 );
 
+_XFUNCPROTOBEGIN
+
 extern void (*_XtProcessLock)(
     void
 );
@@ -92,6 +94,8 @@ extern void (*_XtProcessUnlock)(
 extern void (*_XtInitAppLock)(
     XtAppContext /* app */
 );
+
+_XFUNCPROTOEND
 
 #define INIT_APP_LOCK(app) if(_XtInitAppLock) (*_XtInitAppLock)(app)
 #define FREE_APP_LOCK(app) if(app && app->free_lock)(*app->free_lock)(app)
@@ -111,7 +115,7 @@ extern void (*_XtInitAppLock)(
 	XtWidgetToApplicationContext(w) : NULL)
 
 #define DPY_TO_APPCON(d) \
-    XtAppContext app = (_XtProcessLock ? XtDisplayToApplicationContext(d): 0)
+    XtAppContext app = (_XtProcessLock ? XtDisplayToApplicationContext(d): NULL)
 
 #else /* defined(XTHREADS) */
 

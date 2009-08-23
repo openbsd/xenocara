@@ -60,8 +60,6 @@ in this Software without prior written authorization from The Open Group.
 
 */
 
-#define SHELL
-
 #ifndef DEFAULT_WM_TIMEOUT
 #define DEFAULT_WM_TIMEOUT 5000
 #endif
@@ -152,7 +150,7 @@ static XtResource shellResources[]=
 	    XtRBoolean, sizeof(Boolean), Offset(shell.override_redirect),
 	    XtRImmediate, (XtPointer)False},
 	{ XtNvisual, XtCVisual, XtRVisual, sizeof(Visual*),
-	    Offset(shell.visual), XtRImmediate, CopyFromParent}
+	    Offset(shell.visual), XtRImmediate, (XtPointer)CopyFromParent}
 };
 
 static void ClassPartInitialize(WidgetClass);

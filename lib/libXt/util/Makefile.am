@@ -4,6 +4,8 @@ else
 noinst_PROGRAMS = makestrs
 endif
 
+CC = @CC_FOR_BUILD@
+
 EXTRA_DIST = \
 	Shell.ht \
 	StrDefs.ct \

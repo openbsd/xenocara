@@ -215,7 +215,7 @@ which contains at least 6 entries.  These entries
 must contain the following substitutions:
 
 .nf
-.ta .3i 2i 2.5i
+.ta 3n 23n 27n
 1.	%C, %N, %S, %T, %L	or	%C, %N, %S, %T, %l, %t, %c
 2.	%C, %N, %S, %T, %l
 3.	%C, %N, %S, %T
