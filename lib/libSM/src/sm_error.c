@@ -45,18 +45,9 @@ in this Software without prior written authorization from The Open Group.
  */
 
 void
-_SmcDefaultErrorHandler (smcConn, swap,
-    offendingMinorOpcode, offendingSequence,
-    errorClass, severity, values)
-
-SmcConn		smcConn;
-Bool		swap;
-int 		offendingMinorOpcode;
-unsigned long 	offendingSequence;
-int 		errorClass;
-int 		severity;
-SmPointer 	values;
-
+_SmcDefaultErrorHandler(SmcConn smcConn, Bool swap, int offendingMinorOpcode,
+			unsigned long offendingSequence, int errorClass,
+			int severity, SmPointer values)
 {
     char *pData = (char *) values;
     const char *str;
@@ -177,18 +168,9 @@ SmPointer 	values;
  */
 
 void
-_SmsDefaultErrorHandler (smsConn, swap,
-    offendingMinorOpcode, offendingSequence,
-    errorClass, severity, values)
-
-SmsConn		smsConn;
-Bool		swap;
-int 		offendingMinorOpcode;
-unsigned long 	offendingSequence;
-int 		errorClass;
-int 		severity;
-SmPointer 	values;
-
+_SmsDefaultErrorHandler(SmsConn smsConn, Bool swap, int offendingMinorOpcode,
+			unsigned long offendingSequence, int errorClass,
+			int severity, SmPointer values)
 {
     char *pData = (char *) values;
     const char *str;
@@ -301,10 +283,7 @@ SmPointer 	values;
  */
  
 SmcErrorHandler
-SmcSetErrorHandler (handler)
-
-SmcErrorHandler handler;
-
+SmcSetErrorHandler(SmcErrorHandler handler)
 {
     SmcErrorHandler oldHandler = _SmcErrorHandler;
 
@@ -325,10 +304,7 @@ SmcErrorHandler handler;
  */
  
 SmsErrorHandler
-SmsSetErrorHandler (handler)
-
-SmsErrorHandler handler;
-
+SmsSetErrorHandler(SmsErrorHandler handler)
 {
     SmsErrorHandler oldHandler = _SmsErrorHandler;
 

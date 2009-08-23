@@ -68,17 +68,9 @@ in this Software without prior written authorization from The Open Group.
 
 
 void
-_SmcProcessMessage (iceConn, clientData, opcode,
-    length, swap, replyWait, replyReadyRet)
-
-IceConn		 iceConn;
-IcePointer	 clientData;
-int		 opcode;
-unsigned long	 length;
-Bool		 swap;
-IceReplyWaitInfo *replyWait;
-Bool		 *replyReadyRet;
-
+_SmcProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
+		   unsigned long length, Bool swap,
+		   IceReplyWaitInfo *replyWait, Bool *replyReadyRet)
 {
     SmcConn	smcConn = (SmcConn) clientData;
 
@@ -423,14 +415,8 @@ Bool		 *replyReadyRet;
 
 
 void
-_SmsProcessMessage (iceConn, clientData, opcode, length, swap)
-
-IceConn		 iceConn;
-IcePointer       clientData;
-int		 opcode;
-unsigned long	 length;
-Bool		 swap;
-
+_SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
+		   unsigned long length, Bool swap)
 {
     SmsConn	smsConn = (SmsConn) clientData;
 
