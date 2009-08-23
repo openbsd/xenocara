@@ -1,7 +1,4 @@
-/* $XdotOrg: xc/lib/FS/FSlibos.h,v 1.3 2005/06/09 15:52:02 ago Exp $ */
-/* $Xorg: FSlibos.h,v 1.4 2001/02/09 02:03:25 xorgcvs Exp $ */
-
-/* @(#)FSlibos.h	4.1	91/05/02
+/*
  * Copyright 1990 Network Computing Devices;
  * Portions Copyright 1987 by Digital Equipment Corporation
  *
@@ -51,7 +48,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/lib/FS/FSlibos.h,v 3.10 2003/09/01 20:50:10 herrb Exp $ */
 
 /*
  * FSlib networking & os include file
@@ -228,7 +224,7 @@ typedef unsigned long FdSet[MSKCNT];
 #endif
 
 #if (MSKCNT>4)
-#define COPYBITS(src, dst) bcopy((caddr_t) src, (caddr_t) dst, sizeof(FdSet))
+#define COPYBITS(src, dst) memmove((caddr_t) dst, (caddr_t) src, sizeof(FdSet))
 #define CLEARBITS(buf) bzero((caddr_t) buf, sizeof(FdSet))
 #define MASKANDSETBITS(dst, b1, b2)  \
 		      { int cri;			\
@@ -300,33 +296,5 @@ typedef fd_set FdSet;
 #define FSrealloc(ptr, size) realloc((ptr), (size))
 #define FScalloc(nelem, elsize) calloc((nelem), (elsize))
 #endif
-
-/*
- *	ReadvFromServer and WritevToSever use struct iovec, normally found
- *	in Berkeley systems in <sys/uio.h>.  See the readv(2) and writev(2)
- *	manual pages for details.
- *
- *	struct iovec {
- *		caddr_t iov_base;
- *		int iov_len;
- *	};
- */
-
-#ifdef USG
-
-#if defined(USG) && !defined(CRAY) && !defined(umips) && !defined(MOTOROLA)
-#ifndef __TIMEVAL__
-#define __TIMEVAL__
-struct timeval {		/* BSD has in <sys/time.h> */
-    long        tv_sec;
-    long        tv_usec;
-};
-
-#endif				/* __TIMEVAL__ */
-
-#endif				/* not CRAY or umips */
-
-#endif				/* USG */
-
 
 #define SearchString(string, char) index((string), (char))

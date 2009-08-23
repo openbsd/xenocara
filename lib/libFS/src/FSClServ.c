@@ -1,6 +1,4 @@
-/* $Xorg: FSClServ.c,v 1.4 2001/02/09 02:03:25 xorgcvs Exp $ */
-
-/* @(#)FSClServ.c	4.1	91/05/02
+/*
  * Copyright 1990 Network Computing Devices;
  * Portions Copyright 1987 by Digital Equipment Corporation
  *
@@ -24,7 +22,6 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS 
  * SOFTWARE.
  */
-/* $XFree86: xc/lib/FS/FSClServ.c,v 1.4 2001/01/17 19:41:27 dawes Exp $ */
 
 /*
 
@@ -57,8 +54,6 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #include	"FSlib.h"
 #include	"FSlibint.h"
-
-extern FSServer *_FSHeadOfServerList;
 
 int 
 FSCloseServer(FSServer *svr)

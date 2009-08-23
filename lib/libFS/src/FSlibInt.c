@@ -1,5 +1,3 @@
-/* $Xorg: FSlibInt.c,v 1.5 2001/02/09 02:03:25 xorgcvs Exp $ */
-
 /*
  * Copyright 1990 Network Computing Devices;
  * Portions Copyright 1987 by Digital Equipment Corporation
@@ -50,7 +48,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/lib/FS/FSlibInt.c,v 3.10tsi Exp $ */
 
 /*
  *	FSlibInt.c - Internal support routines for the C subroutine
@@ -964,7 +961,7 @@ _FSDefaultIOError(FSServer *svr)
 
 		   errno, _SysErrorMsg(errno),
 #endif
-		   FSServerString(svr));
+		   FSServerString(svr) ? FSServerString(svr) : "");
     (void) fprintf(stderr,
 		   "      after %lu requests (%lu known processed) with %d events remaining.\r\n",
 		   FSNextRequest(svr) - 1, FSLastKnownRequestProcessed(svr),
@@ -1120,7 +1117,7 @@ Data(
     long	 len)
 {
     if (svr->bufptr + (len) <= svr->bufmax) {
-	bcopy(data, svr->bufptr, (int) len);
+	memmove(svr->bufptr, data, len);
 	svr->bufptr += ((len) + 3) & ~3;
     } else {
 	_FSSend(svr, data, len);
@@ -1288,9 +1285,6 @@ _FSFreeQ(void)
 #endif
 #endif
 #ifdef hpux
-#define NEED_UTSNAME
-#endif
-#ifdef USG
 #define NEED_UTSNAME
 #endif
 #ifdef SVR4

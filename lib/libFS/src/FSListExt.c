@@ -1,6 +1,4 @@
-/* $Xorg: FSListExt.c,v 1.4 2001/02/09 02:03:25 xorgcvs Exp $ */
-
-/* @(#)FSListExt.c	4.1	91/05/02
+/*
  * Copyright 1990 Network Computing Devices;
  * Portions Copyright 1987 by Digital Equipment Corporation
  *
@@ -24,7 +22,6 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS 
  * SOFTWARE.
  */
-/* $XFree86: xc/lib/FS/FSListExt.c,v 1.6tsi Exp $ */
 
 /*
 

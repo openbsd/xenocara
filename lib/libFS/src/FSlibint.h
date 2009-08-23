@@ -1,5 +1,3 @@
-/* $Xorg: FSlibint.h,v 1.4 2001/02/09 02:03:25 xorgcvs Exp $ */
-
 /*
  * Copyright 1990 Network Computing Devices;
  * Portions Copyright 1987 by Digital Equipment Corporation
@@ -50,29 +48,13 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/lib/FS/FSlibint.h,v 3.8 2003/08/29 18:01:12 herrb Exp $ */
 
 /*
  * FSlib internal decls
  */
 #include <X11/Xos.h>
 #include <stdio.h>
-
-/* This is all probably superfluous given Xos.h above */
-#ifdef USG
-#ifndef __TYPES__
-#include <sys/types.h>			/* forgot to protect it... */
-#define __TYPES__
-#endif /* __TYPES__ */
-#else
-#if defined(_POSIX_SOURCE) && defined(MOTOROLA)
-#undef _POSIX_SOURCE
 #include <sys/types.h>
-#define _POSIX_SOURCE
-#else
-#include <sys/types.h>
-#endif
-#endif /* USG */
 
 #include	"FSlib.h"
 #include	"FSlibos.h"
@@ -117,6 +99,9 @@ extern int _FSGetHostname ( char *buf, int maxlen );
 
 extern FSErrorHandler  FSSetErrorHandler ( FSErrorHandler handler );
 extern FSIOErrorHandler FSSetIOErrorHandler ( FSIOErrorHandler handler );
+
+extern _FSQEvent *_FSqfree;
+extern FSServer *_FSHeadOfServerList;
 
 #ifndef BUFSIZE
 #define BUFSIZE 2048		/* FS output buffer size. */
@@ -285,7 +270,7 @@ extern void Data();
 #else
 #define Data(svr, data, len) \
 	if (svr->bufptr + (len) <= svr->bufmax) {\
-		bcopy(data, svr->bufptr, (int)len);\
+		memmove(svr->bufptr, data, len);\
 		svr->bufptr += ((len) + 3) & ~3;\
 	} else\
 		_FSSend(svr, data, len)
@@ -337,7 +322,7 @@ extern void Data();
 #define STARTITERATE(tpvar,type,start,endcond,decr) \
   { register char *cpvar; \
   for (cpvar = (char *) start; endcond; cpvar = NEXTPTR(cpvar,type), decr) { \
-    type dummy; bcopy (cpvar, (char *) &dummy, SIZEOF(type)); \
+    type dummy; memmove ((char *) &dummy, cpvar, SIZEOF(type)); \
     tpvar = (type *) cpvar;
 #define ENDITERATE }}
 

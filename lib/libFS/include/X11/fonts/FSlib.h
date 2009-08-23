@@ -1,5 +1,3 @@
-/* $Xorg: FSlib.h,v 1.5 2001/02/09 02:03:25 xorgcvs Exp $ */
-
 /*
  * Copyright 1990 Network Computing Devices;
  * Portions Copyright 1987 by Digital Equipment Corporation
@@ -24,7 +22,6 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS 
  * SOFTWARE.
  */
-/* $XFree86: xc/lib/FS/FSlib.h,v 1.6 2001/12/14 19:53:33 dawes Exp $ */
 
 /*
 
@@ -277,8 +274,9 @@ extern int FSSync ( FSServer *svr, Bool discard );
 
 extern int FSCloseServer ( FSServer *svr );
 extern int FSCloseFont ( FSServer *svr, Font fid );
-extern int FSGetErrorDatabaseText ( FSServer *svr, char *name, char *type, 
-				    char *defaultp, char *buffer, int nbytes );
+extern int FSGetErrorDatabaseText ( FSServer *svr, const char *name,
+				    const char *type, const char *defaultp,
+				    char *buffer, int nbytes );
 extern int FSGetErrorText ( FSServer *svr, int code, char *buffer, 
 			    
 			    int nbytes );

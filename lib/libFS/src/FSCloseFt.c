@@ -1,6 +1,4 @@
-/* $Xorg: FSCloseFt.c,v 1.4 2001/02/09 02:03:25 xorgcvs Exp $ */
-
-/* @(#)FSCloseFt.c	4.1	91/05/02
+/*
  * Copyright 1990 Network Computing Devices;
  * Portions Copyright 1987 by Digital Equipment Corporation
  *

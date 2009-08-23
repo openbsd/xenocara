@@ -1,6 +1,4 @@
-/* $Xorg: FSErrDis.c,v 1.4 2001/02/09 02:03:25 xorgcvs Exp $ */
-
-/* @(#)FSErrDis.c	4.1	91/05/02
+/*
  * Copyright 1990 Network Computing Devices;
  * Portions Copyright 1987 by Digital Equipment Corporation
  *
@@ -58,7 +56,7 @@ in this Software without prior written authorization from The Open Group.
 #include "FSlibint.h"
 #include <X11/Xos.h>
 
-char       *FSErrorList[] = {
+static const char *FSErrorList[] = {
      /* FSBadRequest	 */ "BadRequest, invalid request code or no such operation",
      /* FSBadFormat	 */ "BadFormat, bad font format mask",
      /* FSBadFont	 */ "BadFont, invalid Font parameter",
@@ -72,21 +70,21 @@ char       *FSErrorList[] = {
      /* FSBadLength	 */ "BadLength, request too large or internal FSlib length error",
      /* FSBadImplementation */ "BadImplementation, request unsupported",
 };
-int         FSErrorListSize = sizeof(FSErrorList);
+static int FSErrorListSize = sizeof(FSErrorList);
 
 
 /* ARGSUSED */
 int FSGetErrorDatabaseText(
     FSServer		*svr,
-    register char	*name,
-    register char	*type,
-    char		*defaultp,
+    const char		*name,
+    const char		*type,
+    const char		*defaultp,
     char		*buffer,
     int			 nbytes)
 {
     if (nbytes == 0)
 	return 0;
-    (void) strncpy(buffer, (char *) defaultp, nbytes);
+    (void) strncpy(buffer, defaultp, nbytes);
     if ((strlen(defaultp) + 1) > nbytes)
 	buffer[nbytes - 1] = '\0';
     return 1;
@@ -99,7 +97,7 @@ int FSGetErrorText(
     int			 nbytes)
 {
 
-    char       *defaultp = NULL;
+    const char *defaultp = NULL;
     char        buf[32];
     register _FSExtension *ext;
 

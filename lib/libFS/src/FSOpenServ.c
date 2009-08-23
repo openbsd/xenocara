@@ -1,6 +1,4 @@
-/* $Xorg: FSOpenServ.c,v 1.4 2001/02/09 02:03:25 xorgcvs Exp $ */
-
-/* @(#)FSOpenServ.c	4.1	91/05/02
+/*
  * Copyright 1990 Network Computing Devices;
  * Portions Copyright 1987 by Digital Equipment Corporation
  *
@@ -24,7 +22,6 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS 
  * SOFTWARE.
  */
-/* $XFree86: xc/lib/FS/FSOpenServ.c,v 1.8tsi Exp $ */
 
 /*
 
@@ -63,7 +60,7 @@ in this Software without prior written authorization from The Open Group.
 #include	"FSlibint.h"
 #include 	<X11/Xtrans/Xtrans.h>
 
-int         _FSdebug = 0;
+static int _FSdebug = 0;
 
 static fsReq _dummy_request = {
     0, 0, 0
@@ -91,8 +88,8 @@ void OutOfMemory(
     FSServer	*svr,
     char	*setup)
 {
-
-    _FSDisconnectServer(svr->trans_conn);
+    if (svr->trans_conn)
+	_FSDisconnectServer(svr->trans_conn);
     _FSFreeServerStructure(svr);
     FSfree(setup);
     errno = ENOMEM;
@@ -111,12 +108,12 @@ FSOpenServer(char *server)
     int         endian;
     fsConnClientPrefix client;
     fsConnSetup prefix;
-    char       *setup;
+    char       *setup = NULL;
     fsConnSetupAccept conn;
-    char       *auth_data;
-    char       *alt_data,
+    char       *auth_data = NULL;
+    char       *alt_data = NULL,
                *ad;
-    AlternateServer *alts;
+    AlternateServer *alts = NULL;
     int         altlen;
     char       *vendor_string;
     unsigned long        setuplength;
@@ -131,9 +128,15 @@ FSOpenServer(char *server)
 	errno = ENOMEM;
 	return (FSServer *) NULL;
     }
+
+    if ((svr->server_name = FSmalloc((unsigned) (strlen(server) + 1)))
+	    == NULL) {
+	goto fail;
+    }
+    (void) strcpy(svr->server_name, server);
+
     if ((svr->trans_conn = _FSConnectServer(server)) == NULL) {
-	FSfree((char *) svr);
-	return (FSServer *) NULL;
+	goto fail;
     }
 
     svr->fd = _FSTransGetConnectionNumber (svr->trans_conn);
@@ -157,29 +160,21 @@ FSOpenServer(char *server)
     if (setuplength > (SIZE_MAX>>2)
 	|| (alt_data = (char *)
 	 (setup = FSmalloc((unsigned) setuplength))) == NULL) {
-	errno = ENOMEM;
-	FSfree((char *) svr);
-	return (FSServer *) NULL;
+	goto fail;
     }
     _FSRead(svr, (char *) alt_data, setuplength);
     ad = alt_data;
 
 #if SIZE_MAX <= UINT_MAX
     if (prefix.num_alternates > SIZE_MAX / sizeof(AlternateServer)) {
-	errno = ENOMEM;
-	FSfree((char *) alt_data);
-	FSfree((char *) svr);
-	return (FSServer *) 0;
+	goto fail;
     }
 #endif
 
     alts = (AlternateServer *)
 	FSmalloc(sizeof(AlternateServer) * prefix.num_alternates);
     if (!alts) {
-	errno = ENOMEM;
-	FSfree((char *) alt_data);
-	FSfree((char *) svr);
-	return (FSServer *) 0;
+	goto fail;
     }
     for (i = 0; i < prefix.num_alternates; i++) {
 	alts[i].subset = (Bool) *ad++;
@@ -189,17 +184,14 @@ FSOpenServer(char *server)
 	    while (--i) {
 		FSfree((char *) alts[i].name);
 	    }
-	    FSfree((char *) alts);
-	    FSfree((char *) alt_data);
-	    FSfree((char *) svr);
-	    errno = ENOMEM;
-	    return (FSServer *) 0;
+	    goto fail;
 	}
-	bcopy(ad, alts[i].name, altlen);
+	memmove(alts[i].name, ad, altlen);
 	alts[i].name[altlen] = '\0';
 	ad += altlen + ((4 - (altlen + 2)) & 3);
     }
     FSfree((char *) alt_data);
+    alt_data = NULL;
 
     svr->alternate_servers = alts;
     svr->num_alternates = prefix.num_alternates;
@@ -208,31 +200,21 @@ FSOpenServer(char *server)
     if (setuplength > (SIZE_MAX>>2) 
 	|| (auth_data = (char *)
 	 (setup = FSmalloc((unsigned) setuplength))) == NULL) {
-	errno = ENOMEM;
-	FSfree((char *) alts);
-	FSfree((char *) svr);
-	return (FSServer *) NULL;
+	goto fail;
     }
     _FSRead(svr, (char *) auth_data, setuplength);
 
     if (prefix.status != AuthSuccess) {
 	fprintf(stderr, "%s: connection to \"%s\" refused by server\r\n%s: ",
 		"FSlib", server, "FSlib");
-	FSfree((char *) alts);
-	FSfree((char *) svr);
-	FSfree(setup);
-	return (FSServer *) NULL;
+	goto fail;
     }
     /* get rest */
     _FSRead(svr, (char *) &conn, (long) SIZEOF(fsConnSetupAccept));
 
     if ((vendor_string = (char *)
 	 FSmalloc((unsigned) conn.vendor_len + 1)) == NULL) {
-	errno = ENOMEM;
-	FSfree((char *) auth_data);
-	FSfree((char *) alts);
-	FSfree((char *) svr);
-	return (FSServer *) NULL;
+	goto fail;
     }
     _FSReadPad(svr, (char *) vendor_string, conn.vendor_len);
 
@@ -260,17 +242,9 @@ FSOpenServer(char *server)
     svr->last_request_read = 0;
     svr->last_req = (char *) &_dummy_request;
 
-    if ((svr->server_name = FSmalloc((unsigned) (strlen(server) + 1)))
-	    == NULL) {
-	OutOfMemory(svr, setup);
-	return (FSServer *) NULL;
-    }
-    (void) strcpy(svr->server_name, server);
-
     /* setup the output buffers */
     if ((svr->bufptr = svr->buffer = FSmalloc(BUFSIZE)) == NULL) {
-	OutOfMemory(svr, setup);
-	return (FSServer *) NULL;
+	goto fail;
     }
     svr->bufmax = svr->buffer + BUFSIZE;
 
@@ -279,6 +253,7 @@ FSOpenServer(char *server)
     svr->qlen = 0;
 
     FSfree(setup);
+    setup = NULL;
 
     (void) FSSynchronize(svr, _FSdebug);
 
@@ -286,4 +261,12 @@ FSOpenServer(char *server)
     _FSHeadOfServerList = svr;
 
     return (svr);
+
+  fail: /* Failure: clean up and return null */
+    FSfree((char *) alts);
+    FSfree((char *) alt_data);
+    FSfree((char *) auth_data);
+    OutOfMemory(svr, setup);
+    return (FSServer *) NULL;
+
 }

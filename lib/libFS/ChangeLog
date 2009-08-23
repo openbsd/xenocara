@@ -1,3 +1,95 @@
+commit 364af12a2426358461f5ed5b142c97411cad80c5
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jul 7 15:47:36 2009 -0700
+
+    Version 1.0.2
+
+commit 040bfd8f055f7e49f15e457842b8bca4f8d2020a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jul 7 15:45:50 2009 -0700
+
+    Move CWARNFLAGS to Makefile.am for easier build-time overriding
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 233b72428a47272b599a6be0708b06f7ed674f7c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jul 7 08:57:53 2009 -0700
+
+    Strip out-of-date RCS/CVS & SCCS version tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit f85f04b1287717d00cc29aaea2dc44bd59a2d2b3
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jul 7 08:45:41 2009 -0700
+
+    Constify FSErrorList
+    
+    Matches the code in libX11/src/ErrDes.c this is based on.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b6c63181aded7f8e8879914b0f92767a47aa47cf
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jun 17 16:05:03 2009 -0700
+
+    Drop #ifdef USG checks for some truly ancient (pre-SVR4) SysV's
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b566d33d344876392254941d8ef73c848194c432
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jun 17 15:36:54 2009 -0700
+
+    Fix server name handling in IOError messages during connection setup
+    
+     - Don't try to sprintf a NULL string for the server name
+     - Initialize the server name pointer in the srv struct sooner,
+       so errors during connection initialization can print it instead
+       of a null string in the error message
+    
+    Had to update the error paths that freed the partially constructed
+    structure, so combined them into a common implmentation via "goto fail".
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit eab796dabe05b4db2e193ab225deae613ac46a7b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue May 19 01:58:38 2009 -0700
+
+    Make FSlib.txt prototypes match those in headers.
+    
+    Both conversion to ANSI C89 format and fixing some long standing mistakes.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 39be8ae0ac4d5281a006de67ae11f7877f443bc8
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue May 19 01:44:26 2009 -0700
+
+    Move API doc from xorg-doc/doc/FSlib.doc
+
+commit 84d71a733b6ab93318260a5641d7609dbc38a198
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 2 20:34:29 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 3779550c57db5fe845f955bec141ca24800f2fdb
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Jan 28 16:41:28 2009 -0200
+
+    Janitor: Correct make distcheck and compiler warnings.
+
+commit 84cd6e7402382862abb473e7686a375db29f4d99
+Author: Peter Korsgaard <jacmet@sunsite.dk>
+Date:   Wed Oct 22 10:34:59 2008 -0400
+
+    bcopy -> memmove
+
 commit 9cbdb6ab49d8f9e6174a00d6b509bf6f1e3c1e78
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed May 21 18:40:05 2008 -0700
