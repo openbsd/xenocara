@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.41 2009/05/18 00:14:19 oga Exp $
+ * $Id: xevents.c,v 1.42 2009/08/24 23:49:04 okan Exp $
  */
 
 /*
@@ -171,12 +171,11 @@ xev_handle_propertynotify(XEvent *ee)
 {
 	XPropertyEvent		*e = &ee->xproperty;
 	struct client_ctx	*cc;
-	long			 tmp;
 
 	if ((cc = client_find(e->window)) != NULL) {
 		switch (e->atom) {
 		case XA_WM_NORMAL_HINTS:
-			XGetWMNormalHints(X_Dpy, cc->win, cc->size, &tmp);
+			client_getsizehints(cc);
 			break;
 		case XA_WM_NAME:
 			client_setname(cc);
