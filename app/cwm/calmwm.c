@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.42 2009/06/26 12:21:58 okan Exp $
+ * $Id: calmwm.c,v 1.43 2009/08/24 21:22:48 oga Exp $
  */
 
 #include "headers.h"
@@ -29,10 +29,10 @@ Cursor				 Cursor_select;
 Cursor				 Cursor_default;
 Cursor				 Cursor_question;
 
-struct screen_ctx_q		 Screenq;
+struct screen_ctx_q		 Screenq = TAILQ_HEAD_INITIALIZER(Screenq);
 struct screen_ctx		*Curscreen;
 
-struct client_ctx_q		 Clientq;
+struct client_ctx_q		 Clientq = TAILQ_HEAD_INITIALIZER(Clientq);
 
 int				 HasXinerama, HasRandr, Randr_ev;
 int				 Starting;
@@ -73,9 +73,7 @@ main(int argc, char **argv)
 	Starting = 1;
 	dpy_init(display_name);
 
-	screen_init();
 	group_init();
-	client_init();
 
 	bzero(&Conf, sizeof(Conf));
 	conf_setup(&Conf, conf_file);

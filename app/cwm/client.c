@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.58 2009/08/24 17:04:39 oga Exp $
+ * $Id: client.c,v 1.59 2009/08/24 21:22:48 oga Exp $
  */
 
 #include "headers.h"
@@ -31,12 +31,6 @@ static int			 client_inbound(struct client_ctx *, int, int);
 
 static char		 emptystring[] = "";
 struct client_ctx	*_curcc = NULL;
-
-void
-client_init(void)
-{
-	TAILQ_INIT(&Clientq);
-}
 
 struct client_ctx *
 client_find(Window win)

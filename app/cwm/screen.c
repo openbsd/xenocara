@@ -15,19 +15,13 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: screen.c,v 1.16 2009/06/26 12:21:58 okan Exp $
+ * $Id: screen.c,v 1.17 2009/08/24 21:22:48 oga Exp $
  */
 
 #include "headers.h"
 #include "calmwm.h"
 
 extern struct screen_ctx	*Curscreen;
-
-void
-screen_init(void)
-{
-	TAILQ_INIT(&Screenq);
-}
 
 struct screen_ctx *
 screen_fromroot(Window rootwin)
