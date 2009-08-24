@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.57 2009/06/26 12:21:58 okan Exp $
+ * $Id: client.c,v 1.58 2009/08/24 17:04:39 oga Exp $
  */
 
 #include "headers.h"
@@ -302,8 +302,7 @@ calc:
 void
 client_resize(struct client_ctx *cc)
 {
-	if (cc->flags & (CLIENT_MAXIMIZED | CLIENT_VMAXIMIZED))
-		cc->flags &= ~(CLIENT_MAXIMIZED | CLIENT_VMAXIMIZED);
+	cc->flags &= ~(CLIENT_MAXIMIZED | CLIENT_VMAXIMIZED);
 
 	if (cc->flags & CLIENT_DOMAXIMIZE) {
 		cc->flags &= ~CLIENT_DOMAXIMIZE;
