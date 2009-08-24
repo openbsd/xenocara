@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.82 2009/08/18 20:46:33 matthieu Exp $
+ $OpenBSD: MODULES,v 1.83 2009/08/24 19:16:03 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -106,7 +106,7 @@ driver/xf86-video-apm		1.2.2	7.4+	needs-update
 driver/xf86-video-ark		0.7.1	7.4+
 driver/xf86-video-ast		0.89.9	7.4+	needs-update
 driver/xf86-video-ati		6.12.2	7.4+	needs-update
-driver/xf86-video-chips		1.2.1	7.4+
+driver/xf86-video-chips		1.2.1	7.4+	needs-update
 driver/xf86-video-cirrus	1.3.2	7.4	needs-update
 driver/xf86-video-dummy		0.3.2	7.4+	needs-update
 driver/xf86-video-geode		2.11.3	7.4+	needs-update
@@ -184,9 +184,9 @@ fonts/util			1.0.2	needs-update
 fonts/winitzki-cyrillic		1.0.0
 fonts/xfree86-type1		1.0.1
 
-lib/libFS			1.0.2	7.4+	needs-update
+lib/libFS			1.0.2	7.4+
 lib/libICE			1.0.5	7.4+
-lib/libSM			1.1.1	7.4+	needs-update
+lib/libSM			1.1.1	7.4+
 lib/libX11			1.2.2	7.4+	needs-update
 lib/libXRes			1.0.3	7.2RC4
 lib/libXScrnSaver		1.1.3	7.4
@@ -212,7 +212,7 @@ lib/libXprintAppUtil		1.0.1	7.0	deprecated
 lib/libXprintUtil		1.0.1	7.0	deprecated
 lib/libXrandr			1.3.1	7.4+	needs-update
 lib/libXrender			0.9.4	7.3
-lib/libXt			1.0.6	7.4+	needs-update
+lib/libXt			1.0.6	7.4+
 lib/libXtst			1.0.3	7.3
 lib/libXv			1.0.4	7.4
 lib/libXvMC			1.0.4	7.2RC4
@@ -224,12 +224,12 @@ lib/libfontenc			1.0.3	7.2RC1
 lib/liblbxutil			1.0.4	7.2RC4	deprecated
 lib/libpciaccess		0.10.6	7.4+	needs-update
 lib/libpthread-stubs		0.1	7.4
-lib/libxcb			1.3	7.4+
+lib/libxcb			1.4	7.4+	needs-updste
 lib/libxkbfile			1.0.5	7.4
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.2.4	7.4+	needs-update
 lib/pixman			0.15.20	7.4+	needs-update
-lib/xcb-util			0.3.5	7.4+
+lib/xcb-util			0.3.6	7.4+	needs-update
 
 proto/bigreqsproto		1.0.2	7.0	needs-rel
 proto/compositeproto		0.4	7.3
