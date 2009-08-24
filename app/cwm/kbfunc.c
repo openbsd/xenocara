@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.40 2009/06/20 00:55:42 okan Exp $
+ * $Id: kbfunc.c,v 1.41 2009/08/24 23:54:41 oga Exp $
  */
 
 #include <paths.h>
@@ -479,6 +479,12 @@ void
 kbfunc_client_vmaximize(struct client_ctx *cc, union arg *arg)
 {
 	client_vertmaximize(cc);
+}
+
+void
+kbfunc_client_hmaximize(struct client_ctx *cc, union arg *arg)
+{
+	client_horizmaximize(cc);
 }
 
 void

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.96 2009/08/24 23:49:04 okan Exp $
+ * $Id: calmwm.h,v 1.97 2009/08/24 23:54:41 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -96,6 +96,8 @@ TAILQ_HEAD(screen_ctx_q, screen_ctx);
 #define CLIENT_MAXIMIZED	0x08
 #define CLIENT_DOVMAXIMIZE	0x10
 #define CLIENT_VMAXIMIZED	0x20
+#define CLIENT_DOHMAXIMIZE	0x40
+#define CLIENT_HMAXIMIZED	0x80
 
 #define CLIENT_HIGHLIGHT_GROUP		1
 #define CLIENT_HIGHLIGHT_UNGROUP	2
@@ -347,6 +349,7 @@ void			 client_ptrsave(struct client_ctx *);
 void			 client_draw_border(struct client_ctx *);
 void			 client_maximize(struct client_ctx *);
 void			 client_vertmaximize(struct client_ctx *);
+void			 client_horizmaximize(struct client_ctx *);
 void			 client_map(struct client_ctx *);
 void			 client_mtf(struct client_ctx *);
 struct client_ctx	*client_cycle(int);
@@ -435,6 +438,8 @@ void			 kbfunc_client_movetogroup(struct client_ctx *,
 void			 kbfunc_client_maximize(struct client_ctx *,
 			     union arg *);
 void			 kbfunc_client_vmaximize(struct client_ctx *,
+			     union arg *);
+void			 kbfunc_client_hmaximize(struct client_ctx *,
 			     union arg *);
 void			 kbfunc_reload(struct client_ctx *, union arg *);
 void			 kbfunc_quit_wm(struct client_ctx *, union arg *);
