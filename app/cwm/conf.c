@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.69 2009/08/25 01:44:39 oga Exp $
+ * $Id: conf.c,v 1.70 2009/08/25 12:05:11 okan Exp $
  */
 
 #include "headers.h"
@@ -93,7 +93,7 @@ conf_reload(struct conf *c)
 	conf_font(c);
 }
 
-struct defbind {
+static struct {
 	char	*key;
 	char	*func;
 } kb_binds[] = {
@@ -437,7 +437,7 @@ conf_ungrab(struct conf *c, struct keybinding *kb)
 		xu_key_ungrab(sc->rootwin, kb->modmask, kb->keysym);
 }
 
-struct {
+static struct {
 	char	chr;
 	int	mask;
 } bind_mods[] = {
